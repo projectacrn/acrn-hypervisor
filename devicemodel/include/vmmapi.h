@@ -89,6 +89,9 @@ enum vm_mmap_style {
 
 #define	VM_MEMSEG_NAME(m)	((m)->name[0] != '\0' ? (m)->name : NULL)
 
+#define	PROT_RW		(PROT_READ | PROT_WRITE)
+#define	PROT_ALL	(PROT_READ | PROT_WRITE | PROT_EXEC)
+
 struct vm_lapic_msi {
 	uint64_t	msg;
 	uint64_t	addr;
@@ -120,6 +123,8 @@ void	vm_set_suspend_mode(enum vm_suspend_how how);
 int	vm_get_suspend_mode(void);
 void	vm_destroy(struct vmctx *ctx);
 int	vm_parse_memsize(const char *optarg, size_t *memsize);
+int	vm_map_memseg_vma(struct vmctx *ctx, size_t len, vm_paddr_t gpa,
+	uint64_t vma, int prot);
 int	vm_setup_memory(struct vmctx *ctx, size_t len, enum vm_mmap_style s);
 void	vm_unsetup_memory(struct vmctx *ctx);
 bool	check_hugetlb_support(void);
