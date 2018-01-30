@@ -68,9 +68,6 @@
  */
 #define	VM_MMAP_GUARD_SIZE	(4 * MB)
 
-#define	PROT_RW		(PROT_READ | PROT_WRITE)
-#define	PROT_ALL	(PROT_READ | PROT_WRITE | PROT_EXEC)
-
 #define SUPPORT_VHM_API_VERSION_MAJOR	1
 #define SUPPORT_VHM_API_VERSION_MINOR	0
 
@@ -315,6 +312,22 @@ int
 vm_get_memflags(struct vmctx *ctx)
 {
 	return ctx->memflags;
+}
+
+int
+vm_map_memseg_vma(struct vmctx *ctx, size_t len, vm_paddr_t gpa,
+	uint64_t vma, int prot)
+{
+	struct vm_memmap memmap;
+
+	bzero(&memmap, sizeof(struct vm_memmap));
+	memmap.type = VM_SYSMEM;
+	memmap.using_vma = 1;
+	memmap.vma_base = vma;
+	memmap.len = len;
+	memmap.gpa = gpa;
+	memmap.prot = prot;
+	return ioctl(ctx->fd, IC_SET_MEMSEG, &memmap);
 }
 
 static int

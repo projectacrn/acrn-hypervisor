@@ -487,6 +487,18 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 	}
 	printf("total_size 0x%lx\n\n", total_size);
 
+	/* map ept for lowmem*/
+	if (vm_map_memseg_vma(ctx, ctx->lowmem, 0,
+		(uint64_t)ctx->baseaddr, PROT_ALL) < 0)
+		goto err;
+
+	/* map ept for highmem*/
+	if (ctx->highmem > 0) {
+		if (vm_map_memseg_vma(ctx, ctx->highmem, 4 * GB,
+			(uint64_t)(ctx->baseaddr + 4 * GB), PROT_ALL) < 0)
+			goto err;
+	}
+
 	return 0;
 
 err:
