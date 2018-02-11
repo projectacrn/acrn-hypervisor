@@ -294,7 +294,7 @@ struct vring_used {
  */
 #define	VIRTIO_CR_ISR_QUEUES		0x01
 				/* re-scan queues */
-#define	VIRTIO_CR_ISR_CONF_CHANGED	0x80
+#define	VIRTIO_CR_ISR_CONF_CHANGED	0x02
 				/* configuration changed */
 
 #define VIRTIO_MSI_NO_VECTOR	0xFFFF
@@ -518,6 +518,30 @@ vq_interrupt(struct virtio_base *vb, struct virtio_vq_info *vq)
 	else {
 		VIRTIO_BASE_LOCK(vb);
 		vb->isr |= VIRTIO_CR_ISR_QUEUES;
+		pci_generate_msi(vb->dev, 0);
+		pci_lintr_assert(vb->dev);
+		VIRTIO_BASE_UNLOCK(vb);
+	}
+}
+
+/**
+ * @brief Deliver an config changed interrupt to guest.
+ *
+ * MSI-X or a generic MSI interrupt with config changed event.
+ *
+ * @param vb Pointer to struct virtio_base.
+ *
+ * @return NULL.
+ */
+static inline void
+virtio_config_changed(struct virtio_base *vb)
+{
+
+	if (pci_msix_enabled(vb->dev))
+		pci_generate_msix(vb->dev, vb->msix_cfg_idx);
+	else {
+		VIRTIO_BASE_LOCK(vb);
+		vb->isr |= VIRTIO_CR_ISR_CONF_CHANGED;
 		pci_generate_msi(vb->dev, 0);
 		pci_lintr_assert(vb->dev);
 		VIRTIO_BASE_UNLOCK(vb);
