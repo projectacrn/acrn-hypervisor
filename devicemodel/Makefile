@@ -40,6 +40,7 @@ endif
 endif
 
 LDFLAGS += -Wl,-z,noexecstack
+LDFLAGS += -Wl,-z,relro,-z,now
 
 LIBS = -lrt
 LIBS += -lpthread
