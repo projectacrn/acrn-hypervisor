@@ -28,6 +28,8 @@ CFLAGS += -fshort-wchar -ffreestanding
 CFLAGS += -m64
 CFLAGS += -mno-red-zone
 CFLAGS += -static -nostdinc -nostdlib -fno-common
+CFLAGS += -O2 -D_FORTIFY_SOURCE=2
+CFLAGS += -Wformat -Wformat-security
 
 ifdef STACK_PROTECTOR
 ifeq (true, $(shell [ $(GCC_MAJOR) -gt 4 ] && echo true))
