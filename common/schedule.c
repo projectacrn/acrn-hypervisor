@@ -147,6 +147,9 @@ static void context_switch_out(struct vcpu *vcpu)
 	if (vcpu == NULL)
 		return;
 
+	/* cancel event(int, gp, nmi and exception) injection */
+	cancel_event_injection(vcpu);
+
 	atomic_store_rel_32(&vcpu->running, 0);
 	/* do prev vcpu context switch out */
 	/* For now, we don't need to invalid ept.
