@@ -92,8 +92,6 @@ static const int BSP;
 
 static cpuset_t cpumask;
 
-static void do_close_pre(struct vmctx *ctx);
-static void do_close_post(struct vmctx *ctx);
 static void vm_loop(struct vmctx *ctx);
 
 static int quit_vm_loop;
@@ -532,24 +530,6 @@ do_open(const char *vmname)
 }
 
 static void
-do_close_pre(struct vmctx *ctx)
-{
-	vm_destroy(ctx);
-	vm_close(ctx);
-}
-
-static void
-do_close_post(struct vmctx *ctx)
-{
-	pci_irq_deinit(ctx);
-	deinit_pci(ctx);
-	atkbdc_deinit(ctx);
-	vrtc_deinit(ctx);
-	vm_destroy(ctx);
-	vm_close(ctx);
-}
-
-static void
 sig_handler_term(int signo)
 {
 	printf("Receive SIGINT to terminate application...\n");
@@ -768,30 +748,26 @@ main(int argc, char *argv[])
 		/* set IOReq buffer page */
 		error = vm_set_shared_io_page(ctx, (unsigned long)vhm_req_buf);
 		if (error)
-			do_close_pre(ctx);
-		assert(error == 0);
+			goto fail;
 
 		if (guest_ncpus < 1) {
 			fprintf(stderr, "Invalid guest vCPUs (%d)\n",
 				guest_ncpus);
-			do_close_pre(ctx);
-			exit(1);
+			goto fail;
 		}
 
 		max_vcpus = num_vcpus_allowed(ctx);
 		if (guest_ncpus > max_vcpus) {
 			fprintf(stderr, "%d vCPUs requested but %d available\n",
 				guest_ncpus, max_vcpus);
-			do_close_pre(ctx);
-			exit(1);
+			goto fail;
 		}
 
 		vm_set_memflags(ctx, memflags);
 		err = vm_setup_memory(ctx, memsize, VM_MMAP_ALL);
 		if (err) {
 			fprintf(stderr, "Unable to setup memory (%d)\n", errno);
-			do_close_pre(ctx);
-			exit(1);
+			goto fail;
 		}
 
 		init_mem();
@@ -809,8 +785,7 @@ main(int argc, char *argv[])
 		 * initialization
 		 */
 		if (init_pci(ctx) != 0) {
-			do_close_pre(ctx);
-			exit(1);
+			goto pci_fail;
 		}
 
 		if (gdb_port != 0)
@@ -825,27 +800,23 @@ main(int argc, char *argv[])
 		if (mptgen) {
 			error = mptable_build(ctx, guest_ncpus);
 			if (error) {
-				do_close_post(ctx);
-				exit(1);
+				goto vm_fail;
 			}
 		}
 
 		error = smbios_build(ctx);
 		if (error)
-			do_close_post(ctx);
-		assert(error == 0);
+			goto vm_fail;
 
 		if (acpi) {
 			error = acpi_build(ctx, guest_ncpus);
 			if (error)
-				do_close_post(ctx);
-			assert(error == 0);
+				goto vm_fail;
 		}
 
 		error = acrn_sw_load(ctx);
 		if (error)
-			do_close_post(ctx);
-		assert(error == 0);
+			goto vm_fail;
 
 		/*
 		 * Change the proc title to include the VM name.
@@ -865,16 +836,34 @@ main(int argc, char *argv[])
 		 */
 		mevent_dispatch();
 
-		monitor_close();
 		vm_pause(ctx);
 		fbsdrun_deletecpu(ctx, BSP);
-		vm_unsetup_memory(ctx);
-		do_close_post(ctx);
-		_ctx = 0;
 
 		if (vm_get_suspend_mode() != VM_SUSPEND_RESET)
 			break;
+
+		pci_irq_deinit(ctx);
+		deinit_pci(ctx);
+		monitor_close();
+		vrtc_deinit(ctx);
+		atkbdc_deinit(ctx);
+		vm_unsetup_memory(ctx);
+		vm_destroy(ctx);
+		vm_close(ctx);
+		_ctx = 0;
+
 		vm_set_suspend_mode(VM_SUSPEND_NONE);
 	}
+vm_fail:
+	pci_irq_deinit(ctx);
+	deinit_pci(ctx);
+pci_fail:
+	monitor_close();
+	vrtc_deinit(ctx);
+	atkbdc_deinit(ctx);
+	vm_unsetup_memory(ctx);
+fail:
+	vm_destroy(ctx);
+	vm_close(ctx);
 	exit(0);
 }
