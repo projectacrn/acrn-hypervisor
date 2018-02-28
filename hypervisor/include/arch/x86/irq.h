@@ -161,4 +161,6 @@ int interrupt_win_exiting_handler(struct vcpu *vcpu);
 int external_interrupt_handler(struct vcpu *vcpu);
 int acrn_do_intr_process(struct vcpu *vcpu);
 int interrupt_init(uint32_t logical_id);
+
+void cancel_event_injection(struct vcpu *vcpu);
 #endif /* IRQ_H */

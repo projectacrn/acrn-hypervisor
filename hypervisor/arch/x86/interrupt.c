@@ -293,6 +293,18 @@ int acrn_do_intr_process(struct vcpu *vcpu)
 	if (bitmap_test_and_clear(ACRN_REQUEST_TMR_UPDATE, pending_intr_bits))
 		vioapic_update_tmr(vcpu);
 
+	/* handling cancelled event injection when vcpu is switched out */
+	if (vcpu->arch_vcpu.inject_event_pending) {
+		exec_vmwrite(VMX_ENTRY_EXCEPTION_EC,
+			vcpu->arch_vcpu.inject_info.error_code);
+
+		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
+			vcpu->arch_vcpu.inject_info.intr_info);
+
+		vcpu->arch_vcpu.inject_event_pending = false;
+		goto INTR_WIN;
+	}
+
 	/* handling pending vector injection:
 	 * there are many reason inject failed, we need re-inject again
 	 */
@@ -378,6 +390,30 @@ INTR_WIN:
 	}
 
 	return ret;
+}
+
+void cancel_event_injection(struct vcpu *vcpu)
+{
+	uint32_t intinfo;
+
+	intinfo = exec_vmread(VMX_ENTRY_INT_INFO_FIELD);
+
+	/*
+	 * If event is injected, we clear VMX_ENTRY_INT_INFO_FIELD,
+	 * save injection info, and mark inject event pending.
+	 * The event will be re-injected in next acrn_do_intr_process
+	 * call.
+	 */
+	if (intinfo & VMX_INT_INFO_VALID) {
+		vcpu->arch_vcpu.inject_event_pending = true;
+
+		if (intinfo & (EXCEPTION_ERROR_CODE_VALID << 8))
+			vcpu->arch_vcpu.inject_info.error_code =
+				exec_vmread(VMX_ENTRY_EXCEPTION_EC);
+
+		vcpu->arch_vcpu.inject_info.intr_info = intinfo;
+		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD, 0);
+	}
 }
 
 int exception_handler(struct vcpu *vcpu)

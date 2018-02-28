@@ -185,6 +185,11 @@ struct run_context {
 #define NORMAL_WORLD	0
 #define SECURE_WORLD	1
 
+struct event_injection_info {
+	uint32_t intr_info;
+	uint32_t error_code;
+};
+
 struct vcpu_arch {
 	int cur_context;
 	struct run_context contexts[NR_WORLD];
@@ -221,6 +226,8 @@ struct vcpu_arch {
 
 	/* interrupt injection information */
 	uint64_t pending_intr;
+	bool inject_event_pending;
+	struct event_injection_info inject_info;
 
 	/* per vcpu lapic */
 	void *vlapic;
