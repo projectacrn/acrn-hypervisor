@@ -110,6 +110,7 @@ C_SRCS += arch/x86/interrupt.c
 C_SRCS += arch/x86/vmexit.c
 C_SRCS += arch/x86/vmx.c
 C_SRCS += arch/x86/assign.c
+C_SRCS += arch/x86/trusty.c
 C_SRCS += arch/x86/guest/vcpu.c
 C_SRCS += arch/x86/guest/vm.c
 C_SRCS += arch/x86/guest/instr_emul_wrapper.c
