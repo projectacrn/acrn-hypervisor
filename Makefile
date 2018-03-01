@@ -88,6 +88,7 @@ D_SRCS += debug/sbuf.c
 D_SRCS += debug/printf.c
 C_SRCS += boot/acpi.c
 C_SRCS += boot/dmar_parse.c
+C_SRCS += boot/multiboot.c
 C_SRCS += arch/x86/ioapic.c
 C_SRCS += arch/x86/intr_lapic.c
 S_SRCS += arch/x86/cpu_secondary.S

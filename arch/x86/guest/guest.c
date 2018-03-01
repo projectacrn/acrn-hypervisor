@@ -38,8 +38,6 @@
 #include <hv_debug.h>
 #include <multiboot.h>
 
-#define BOOT_ARGS_LOAD_ADDR				0x24EFC000
-
 #define ACRN_DBG_GUEST	6
 
 /* for VM0 e820 */
@@ -119,57 +117,6 @@ inline bool vm_lapic_disabled(struct vm *vm)
 	}
 
 	return true;
-}
-
-int init_vm0_boot_info(struct vm *vm)
-{
-	struct multiboot_module *mods = NULL;
-	struct multiboot_info *mbi = NULL;
-
-	if (!is_vm0(vm)) {
-		pr_err("just for vm0 to get info!");
-		return -EINVAL;
-	}
-
-	if (boot_regs[0] != MULTIBOOT_INFO_MAGIC) {
-		ASSERT(0, "no multiboot info found");
-		return -EINVAL;
-	}
-
-	mbi = (struct multiboot_info *)((uint64_t)boot_regs[1]);
-
-	dev_dbg(ACRN_DBG_GUEST, "Multiboot detected, flag=0x%x", mbi->mi_flags);
-	if (!(mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS)) {
-		ASSERT(0, "no sos kernel info found");
-		return -EINVAL;
-	}
-
-	dev_dbg(ACRN_DBG_GUEST, "mod counts=%d\n", mbi->mi_mods_count);
-
-	/* mod[0] is for kernel&cmdline, other mod for ramdisk/firmware info*/
-	mods = (struct multiboot_module *)(uint64_t)mbi->mi_mods_addr;
-
-	dev_dbg(ACRN_DBG_GUEST, "mod0 start=0x%x, end=0x%x",
-		mods[0].mm_mod_start, mods[0].mm_mod_end);
-	dev_dbg(ACRN_DBG_GUEST, "cmd addr=0x%x, str=%s", mods[0].mm_string,
-		(char *) (uint64_t)mods[0].mm_string);
-
-	vm->sw.kernel_type = VM_LINUX_GUEST;
-	vm->sw.kernel_info.kernel_src_addr =
-		(void *)(uint64_t)mods[0].mm_mod_start;
-	vm->sw.kernel_info.kernel_size =
-		mods[0].mm_mod_end - mods[0].mm_mod_start;
-	vm->sw.kernel_info.kernel_load_addr =
-		(void *)(uint64_t)mods[0].mm_mod_start;
-
-	vm->sw.linux_info.bootargs_src_addr =
-		(void *)(uint64_t)mods[0].mm_string;
-	vm->sw.linux_info.bootargs_load_addr =
-		(void *)BOOT_ARGS_LOAD_ADDR;
-	vm->sw.linux_info.bootargs_size =
-		strnlen_s((char *)(uint64_t) mods[0].mm_string, MEM_2K);
-
-	return 0;
 }
 
 uint64_t gva2gpa(struct vm *vm, uint64_t cr3, uint64_t gva)
