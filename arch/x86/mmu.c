@@ -140,6 +140,12 @@ void mmu_invept(struct vcpu *vcpu)
 		desc.eptp = (uint64_t) vcpu->vm->arch_vm.nworld_eptp
 			| (3 << 3) | 6;
 		_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
+		if (vcpu->vm->sworld_control.sworld_enabled) {
+			desc.eptp = (uint64_t) vcpu->vm->arch_vm.sworld_eptp
+				| (3 << 3) | 6;
+			_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
+
+		}
 	} else if (check_invept_global_support())
 		_invept(INVEPT_TYPE_ALL_CONTEXTS, desc);
 }
