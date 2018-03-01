@@ -33,6 +33,7 @@
 #include <hv_arch.h>
 #include <bsp_extern.h>
 #include <hv_debug.h>
+#include <multiboot.h>
 
 /* Local variables */
 
