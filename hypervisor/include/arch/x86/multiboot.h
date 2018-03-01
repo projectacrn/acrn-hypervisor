@@ -101,5 +101,6 @@ struct multiboot_module {
 };
 
 int parse_hv_cmdline(void);
+int init_vm0_boot_info(struct vm *vm);
 
 #endif

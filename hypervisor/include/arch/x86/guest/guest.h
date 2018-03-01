@@ -82,7 +82,6 @@ struct vm_lu_mem_map {
 bool is_vm0(struct vm *vm);
 bool vm_lapic_disabled(struct vm *vm);
 uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask);
-int init_vm0_boot_info(struct vm *vm);
 
 uint64_t gva2gpa(struct vm *vm, uint64_t cr3, uint64_t gva);
 
