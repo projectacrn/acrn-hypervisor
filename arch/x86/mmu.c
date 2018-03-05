@@ -137,7 +137,8 @@ void mmu_invept(struct vcpu *vcpu)
 	struct invept_desc desc = {0};
 
 	if (check_invept_single_support()) {
-		desc.eptp = (uint64_t) vcpu->vm->arch_vm.ept | (3 << 3) | 6;
+		desc.eptp = (uint64_t) vcpu->vm->arch_vm.nworld_eptp
+			| (3 << 3) | 6;
 		_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
 	} else if (check_invept_global_support())
 		_invept(INVEPT_TYPE_ALL_CONTEXTS, desc);

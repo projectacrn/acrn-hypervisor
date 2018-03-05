@@ -159,7 +159,8 @@ int64_t hcall_create_vm(struct vm *vm, uint64_t param)
 	}
 
 	memset(&vm_desc, 0, sizeof(vm_desc));
-	vm_desc.secure_world_enabled = cv.secure_world_enabled;
+	vm_desc.sworld_enabled =
+		(!!(cv.vm_flag & (SECURE_WORLD_ENABLED)));
 	memcpy_s(&vm_desc.GUID[0], 16, &cv.GUID[0], 16);
 	ret = create_vm(&vm_desc, &target_vm);
 
@@ -541,10 +542,10 @@ int64_t hcall_assign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
 
 	/* create a iommu domain for target VM if not created */
 	if (!target_vm->iommu_domain) {
-		ASSERT(target_vm->arch_vm.ept, "EPT of VM not set!");
+		ASSERT(target_vm->arch_vm.nworld_eptp, "EPT of VM not set!");
 		/* TODO: how to get vm's address width? */
 		target_vm->iommu_domain = create_iommu_domain(vmid,
-				target_vm->arch_vm.ept, 48);
+				target_vm->arch_vm.nworld_eptp, 48);
 		ASSERT(target_vm->iommu_domain,
 				"failed to created iommu domain!");
 	}
