@@ -1905,6 +1905,8 @@ pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus, int slot, int func,
 			}
 			pci_set_cfgdata32(dev, coff, bar);
 
+		} else if (coff == PCIR_BIOS) {
+			/* ignore ROM BAR length request */
 		} else if (pci_emul_iscap(dev, coff)) {
 			pci_emul_capwrite(dev, coff, bytes, *eax);
 		} else if (coff >= PCIR_COMMAND && coff < PCIR_REVID) {
