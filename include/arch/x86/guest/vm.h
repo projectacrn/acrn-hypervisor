@@ -109,7 +109,13 @@ struct vm_state_info {
 
 struct vm_arch {
 	void *guest_pml4;	/* Guest pml4 */
-	void *ept;		/* EPT hierarchy  */
+	/* EPT hierarchy for Normal World */
+	void *nworld_eptp;
+	/* EPT hierarchy for Secure World
+	 * Secure world can access Normal World's memory,
+	 * but Normal World can not access Secure World's memory.
+	 */
+	void *sworld_eptp;
 	void *m2p;		/* machine address to guest physical address */
 	void *tmp_pg_array;	/* Page array for tmp guest paging struct */
 	void *iobitmap[2];/* IO bitmap page array base address for this VM */
@@ -160,7 +166,7 @@ struct vm {
 	spinlock_t ptdev_lock;
 
 	unsigned char GUID[16];
-	unsigned int secure_world_enabled;
+	struct secure_world_control sworld_control;
 };
 
 struct vm_description {
@@ -178,7 +184,8 @@ struct vm_description {
 	bool                   vm_created;
 	/* Index indicating VM's privilege level */
 	unsigned int           vm_state_info_privilege;
-	unsigned int           secure_world_enabled; /* secure_world enabled? */
+	/* Whether secure world is enabled for current VM. */
+	bool                   sworld_enabled;
 };
 
 struct vm_description_array {

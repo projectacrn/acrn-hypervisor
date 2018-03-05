@@ -132,8 +132,8 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 #endif
 		} else {
 			/* populate UOS vm fields according to vm_desc */
-			vm->secure_world_enabled =
-				vm_desc->secure_world_enabled;
+			vm->sworld_control.sworld_enabled =
+				vm_desc->sworld_enabled;
 			memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
 						&vm_desc->GUID[0],
 						sizeof(vm_desc->GUID));
