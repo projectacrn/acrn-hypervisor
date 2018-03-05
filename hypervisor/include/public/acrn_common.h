@@ -63,6 +63,9 @@
 #define REQUEST_READ	0
 #define REQUEST_WRITE	1
 
+/* Generic VM flags from guest OS */
+#define SECURE_WORLD_ENABLED    (1<<0)  /* Whether secure world is enabled */
+
 /**
  * @brief Hypercall
  *
@@ -148,11 +151,13 @@ struct acrn_create_vm {
 	/** the GUID of this VM */
 	uint8_t	 GUID[16];
 
-	/** whether Secure World is enabled for this VM */
-	uint8_t	 secure_world_enabled;
+	/* VM flag bits from Guest OS, now used
+	 *  SECURE_WORLD_ENABLED          (1<<0)
+	 */
+	uint64_t vm_flag;
 
 	/** Reserved for future use*/
-	uint8_t  reserved[31];
+	uint8_t  reserved[24];
 } __aligned(8);
 
 /**

@@ -40,6 +40,7 @@
 #include <msr.h>
 #include <io.h>
 #include <vcpu.h>
+#include <trusty.h>
 #include <vm.h>
 #include <cpuid.h>
 #include <mmu.h>
