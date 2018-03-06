@@ -152,6 +152,11 @@ void init_msr_emulation(struct vcpu *vcpu)
 			i <= MSR_IA32_MTRR_FIX4K_F8000; i++) {
 			enable_msr_interception(msr_bitmap, i);
 		}
+
+		for (i = MSR_IA32_VMX_BASIC;
+			i <= MSR_IA32_VMX_TRUE_ENTRY_CTLS; i++) {
+			enable_msr_interception(msr_bitmap, i);
+		}
 	}
 
 	/* Set up MSR bitmap - pg 2904 24.6.9 */
@@ -192,6 +197,7 @@ int rdmsr_handler(struct vcpu *vcpu)
 	case MSR_IA32_MTRR_DEF_TYPE:
 	case MSR_IA32_MTRR_PHYSBASE_0 ... MSR_IA32_MTRR_PHYSMASK_9:
 	case MSR_IA32_MTRR_FIX64K_00000 ... MSR_IA32_MTRR_FIX4K_F8000:
+	case MSR_IA32_VMX_BASIC ... MSR_IA32_VMX_TRUE_ENTRY_CTLS:
 	{
 		vcpu_inject_gp(vcpu);
 		break;
@@ -232,6 +238,7 @@ int rdmsr_handler(struct vcpu *vcpu)
 	default:
 	{
 		pr_warn("rdmsr: %lx should not come here!", msr);
+		vcpu_inject_gp(vcpu);
 		v = 0;
 		break;
 	}
@@ -280,6 +287,7 @@ int wrmsr_handler(struct vcpu *vcpu)
 	case MSR_IA32_MTRR_DEF_TYPE:
 	case MSR_IA32_MTRR_PHYSBASE_0 ... MSR_IA32_MTRR_PHYSMASK_9:
 	case MSR_IA32_MTRR_FIX64K_00000 ... MSR_IA32_MTRR_FIX4K_F8000:
+	case MSR_IA32_VMX_BASIC ... MSR_IA32_VMX_TRUE_ENTRY_CTLS:
 	{
 		vcpu_inject_gp(vcpu);
 		break;
@@ -329,8 +337,8 @@ int wrmsr_handler(struct vcpu *vcpu)
 	}
 	default:
 	{
-		ASSERT(0, "wrmsr: %lx should not come here!", msr);
-		msr_write(msr, v);
+		pr_warn(0, "wrmsr: %lx should not come here!", msr);
+		vcpu_inject_gp(vcpu);
 		break;
 	}
 	}
