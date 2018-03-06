@@ -84,6 +84,7 @@ bool vm_lapic_disabled(struct vm *vm);
 uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask);
 
 uint64_t gva2gpa(struct vm *vm, uint64_t cr3, uint64_t gva);
+void vm_gva2gpa(struct vcpu *vcpu, uint64_t gla, uint64_t *gpa);
 
 struct vcpu *get_primary_vcpu(struct vm *vm);
 struct vcpu *vcpu_from_vid(struct vm *vm, int vcpu_id);
