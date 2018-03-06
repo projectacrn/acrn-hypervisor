@@ -37,6 +37,9 @@
 #include <bsp_extern.h>
 #include <hv_debug.h>
 
+#include "instr_emul_wrapper.h"
+#include "instr_emul.h"
+
 #include "time.h"
 #include "vlapic_priv.h"
 
@@ -2053,10 +2056,17 @@ int vlapic_create(struct vcpu *vcpu)
 	vlapic->apic_page = (struct lapic *) apic_page;
 
 	if (is_apicv_enabled()) {
-		vlapic->ops.apicv_set_intr_ready = apicv_set_intr_ready;
-		vlapic->ops.apicv_pending_intr = apicv_pending_intr;
-		vlapic->ops.apicv_set_tmr = apicv_set_tmr;
-		vlapic->ops.apicv_batch_set_tmr = apicv_batch_set_tmr;
+		if (is_apicv_virq_enabled()) {
+			vlapic->ops.apicv_set_intr_ready =
+					apicv_set_intr_ready;
+
+			vlapic->ops.apicv_pending_intr =
+					apicv_pending_intr;
+
+			vlapic->ops.apicv_set_tmr = apicv_set_tmr;
+			vlapic->ops.apicv_batch_set_tmr =
+					apicv_batch_set_tmr;
+		}
 
 		vlapic->pir_desc =
 			(struct pir_desc *)(&(vlapic->pir));
@@ -2306,9 +2316,28 @@ apicv_inject_pir(struct vlapic *vlapic)
 	}
 }
 
-int apicv_access_exit_handler(__unused struct vcpu *vcpu)
+int apicv_access_exit_handler(struct vcpu *vcpu)
 {
-	TRACE_2L(TRC_VMEXIT_APICV_ACCESS, 0, 0);
+	bool ret;
+	int access_type, offset;
+	uint64_t qual;
+	struct vlapic *vlapic;
+
+	qual = exec_vmread(VMX_EXIT_QUALIFICATION);
+	access_type = APIC_ACCESS_TYPE(qual);
+	offset = APIC_ACCESS_OFFSET(qual);
+
+	vlapic = vcpu->arch_vcpu.vlapic;
+
+	analyze_instruction(vcpu, &vcpu->mmio);
+	if (access_type == 1) {
+		if (!emulate_instruction(vcpu, &vcpu->mmio))
+			vlapic_write(vlapic, 1, offset, vcpu->mmio.value, &ret);
+	} else if (access_type == 0) {
+		vlapic_read(vlapic, 1, offset, &vcpu->mmio.value, &ret);
+		emulate_instruction(vcpu, &vcpu->mmio);
+	}
+
 	return 0;
 }
 

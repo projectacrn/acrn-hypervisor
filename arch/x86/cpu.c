@@ -64,11 +64,18 @@ DEFINE_CPU_DATA(void *, vcpu);
 DEFINE_CPU_DATA(int, state);
 
 /* TODO: add more capability per requirement */
+/*Define APICv features*/
+#define APICV_FEATURE_VAPIC			(1 << 0)
+#define APICV_FEATURE_VAPIC_REGS		(1 << 1)
+#define APICV_FEATURE_VIRQ			(1 << 2)
+#define APICV_FEATURE_USE_TPR_SHADOW		(1 << 3)
+#define APICV_FEATURE_POST_IRQ			(1 << 4)
+
 struct cpu_capability {
 	bool tsc_adjust_supported;
 	bool ibrs_ibpb_supported;
 	bool stibp_supported;
-	bool apicv_supported;
+	uint8_t apicv_features;
 	bool monitor_supported;
 };
 static struct cpu_capability cpu_caps;
@@ -596,29 +603,60 @@ static bool is_ctrl_setting_allowed(uint64_t msr_val, uint32_t ctrl)
 
 static void apicv_cap_detect(void)
 {
-	uint64_t val64;
-	uint32_t ctrl;
-	bool     result;
+	uint8_t features;
+	uint64_t msr_val;
 
-	ctrl = VMX_PROCBASED_CTLS_TPR_SHADOW;
-	val64 = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
+	features = 0;
 
-	result = is_ctrl_setting_allowed(val64, ctrl);
-	if (result) {
-		ctrl = VMX_PROCBASED_CTLS2_VAPIC |
-			VMX_PROCBASED_CTLS2_VAPIC_REGS |
-			VMX_PROCBASED_CTLS2_VIRQ;
-
-		val64 = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
-		result = is_ctrl_setting_allowed(val64, ctrl);
+	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
+	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC)) {
+		cpu_caps.apicv_features = 0;
+		return;
 	}
 
-	cpu_caps.apicv_supported = result;
+	features |= APICV_FEATURE_VAPIC;
+
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC_REGS))
+		features |= APICV_FEATURE_VAPIC_REGS;
+
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VIRQ)) {
+		features |= APICV_FEATURE_VIRQ;
+
+		msr_val = msr_read(MSR_IA32_VMX_PINBASED_CTLS);
+		if (is_ctrl_setting_allowed(msr_val,
+						VMX_PINBASED_CTLS_POST_IRQ))
+			features |= APICV_FEATURE_POST_IRQ;
+	}
+
+	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS_TPR_SHADOW))
+		features |= APICV_FEATURE_USE_TPR_SHADOW;
+
+	cpu_caps.apicv_features = features;
 }
 
 bool is_apicv_enabled(void)
 {
-	return cpu_caps.apicv_supported;
+	uint8_t features;
+
+	features = (APICV_FEATURE_VAPIC | APICV_FEATURE_USE_TPR_SHADOW);
+	return ((cpu_caps.apicv_features & features) == features);
+}
+
+bool is_apicv_virq_enabled(void)
+{
+	if (!is_apicv_enabled())
+		return false;
+
+	return ((cpu_caps.apicv_features & APICV_FEATURE_VIRQ) != 0);
+}
+
+bool is_apicv_vapic_regs_enabled(void)
+{
+	if (!is_apicv_enabled())
+		return false;
+
+	return ((cpu_caps.apicv_features & APICV_FEATURE_VAPIC_REGS) != 0);
 }
 
 static void monitor_cap_detect(void)

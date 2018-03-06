@@ -947,10 +947,13 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 		    VMX_PROCBASED_CTLS2_UNRESTRICT);
 
 	if (is_apicv_enabled()) {
-		value32 |=
-			(VMX_PROCBASED_CTLS2_VAPIC |
-			VMX_PROCBASED_CTLS2_VAPIC_REGS |
-			VMX_PROCBASED_CTLS2_VIRQ);
+		value32 |= VMX_PROCBASED_CTLS2_VAPIC;
+
+		if (is_apicv_vapic_regs_enabled())
+			value32 |= VMX_PROCBASED_CTLS2_VAPIC_REGS;
+
+		if (is_apicv_virq_enabled())
+			value32 |= VMX_PROCBASED_CTLS2_VIRQ;
 	}
 
 	exec_vmwrite(VMX_PROC_VM_EXEC_CONTROLS2, value32);
@@ -967,10 +970,16 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 		exec_vmwrite64(VMX_VIRTUAL_APIC_PAGE_ADDR_FULL,
 						value64);
 
-		exec_vmwrite64(VMX_EOI_EXIT0_FULL, -1UL);
-		exec_vmwrite64(VMX_EOI_EXIT1_FULL, -1UL);
-		exec_vmwrite64(VMX_EOI_EXIT2_FULL, -1UL);
-		exec_vmwrite64(VMX_EOI_EXIT3_FULL, -1UL);
+		if (is_apicv_virq_enabled()) {
+			/* these fields are supported only on processors
+			 * that support the 1-setting of the "virtual-interrupt
+			 * delivery" VM-execution control
+			 */
+			exec_vmwrite64(VMX_EOI_EXIT0_FULL, -1UL);
+			exec_vmwrite64(VMX_EOI_EXIT1_FULL, -1UL);
+			exec_vmwrite64(VMX_EOI_EXIT2_FULL, -1UL);
+			exec_vmwrite64(VMX_EOI_EXIT3_FULL, -1UL);
+		}
 	}
 
 	/* Check for EPT support */
