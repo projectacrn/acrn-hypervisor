@@ -45,7 +45,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Project ACRN'
+project = u'Project ACRN™'
 copyright = u'2018, Project ACRN'
 author = u'Project ARCN developers'
 
@@ -103,7 +103,7 @@ else:
 #
 # html_theme_options = {}
 
-html_logo = 'images/ACRNlogo.png'
+html_logo = 'images/ACRN_Logo_300w.png'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

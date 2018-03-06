@@ -14,12 +14,17 @@ help:
 
 .PHONY: help Makefile
 
+# Generate the doxygen xml (for Sphinx) and copy the doxygen html to the
+# api folder for publishing along with the Sphinx-generated API docs.
 
-doxy: 
-	$(Q)(cat doxyfile) | doxygen -  2>&1 
+doxy:
+	$(Q)(cat doxyfile) | doxygen -  2>&1
+	$(Q)mkdir -p _build/html/api/doxygen
+	$(Q)cp -r doxygen/html/* _build/html/api/doxygen
+
 
 clean:
-	$(Q)(rm -fr $(BUILDDIR) doxygen) 
+	$(Q)(rm -fr $(BUILDDIR) doxygen)
 
 
 # Catch-all target: route all unknown targets to Sphinx using the new
