@@ -15,3 +15,20 @@ pre.fragment {
   white-space: pre;
   background-color: #D8D8D8;
 }
+
+#projectlogo
+{
+	vertical-align: middle;
+}
+
+#projectname
+{
+	font: 200% Tahoma, Arial,sans-serif;
+	color: #006469;
+
+}
+    
+#projectbrief
+{
+	color: #006469;
+}
