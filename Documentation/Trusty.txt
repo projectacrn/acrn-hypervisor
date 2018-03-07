@@ -1,0 +1,157 @@
+                                    Trusty on ACRN 
+Overview
+Trusty Architecture
+Trusty specific Hypercalls
+Trusty Boot flow
+EPT Hierarchy
+
+********
+Overview
+********
+Trusty is a set of software components supporting a Trusted Execution Environment (TEE).
+Trusty consists of:
+    1. An operating system (the Trusty OS) that runs on a processor intended to provide a TEE
+    2. Drivers for the Android kernel (Linux) to facilitate communication with applications
+       running under the Trusty OS
+    3. A set of libraries for Android/Linux systems software to facilitate communication with
+       trusted applications executed within the Trusty OS using the kernel drivers
+
+LK (Little Kernel) is a tiny operating system suited for small embedded devices, bootloaders,
+and other environments where OS primitives like threads, mutexes, and timers are needed, but
+there's a desire to keep things small and lightweight. LK has been chosen as the Trusty OS kernel.
+
+
+*******************
+Trusty Architecture
+*******************
+                  +---------------------------+
+                  |VMn                        |
+                  |        ......             |
++------------+  +---------------------------+ |
+|VM0         |  |VM1                        | |
+|            |  | +--------+     +--------+ | |
+|            |  | |        |     |        | | |
+|    SOS     |  | | Normal |     | Secure | | |
+|            |  | | World  |     | World  | |-+
+|            |  | |        |     |        | |
+|            |  | +--------+     +--------+ |
++------------+  +---------------------------+
++-------------------------------------------+
+|             ACRN Hypervisor               |
++-------------------------------------------+
++-------------------------------------------+
+|                   HW                      |
++-------------------------------------------+
+
+Note: Trusty OS is running in Secure World in the architecture above.
+
+
+**************************
+Trusty specific Hypercalls
+**************************
+1. HC_LAUNCH_TRUSTY
+   ->This Hypercall is used by UOSloader to request ACRN to launch Trusty.
+   ->The Trusty memory region range, entry point must be specified.
+   ->Hypervisor needs to save current vCPU contexts (Normal World).
+2. HC_WORLD_SWITCH
+   ->Simulate ARM SMC (Secure Monitor Call, or SMC) instruction to do world switch.
+   ->Hypervisor needs to save current world vCPU contexts, and load next world vCPU contexts.
+   ->Update rdi, rsi, rdx, rbx to next world vCPU contexts.
+
+API
+---
+1. hcall_launch_trusty(vm_t *vm);
+2. hcall_world_switch(vm_t *vm);
+
+
+****************
+Trusty Boot flow
+****************
+Per design, AOSloader will trigger boot of Trusty. So the boot flow will be:
+    AOSloader --> ACRN --> Trusty --> ACRN --> AOSloader
+
+Detail:
+1. UOSloader
+   1.1 load and verify trusty image from virtual disk.
+   1.2 allocate runtime memory for trusty.
+   1.3 do ELF relocation of trusty image and get entry address.
+   1.4 call HC_LAUNCH_TRUSTY with trusty memory base and entry address.
+2. ACRN(HC_LAUNCH_TRUSTY)
+   2.1 save World context for Normal World.
+   2.2 init World context for Secure World(RIP, RSP, EPT, etc.).
+   2.3 resume to Secure World.
+3. Trusty
+   3.1 booting up
+   3.2 call HC_WORLD_SWITCH to switch back to Normal World if boot completed.
+4. ACRN(HC_WORLD_SWITCH)
+   4.1 save World context for the World which caused this vmexit(Secure World)
+   4.2 restore World context for next World(Normal World(UOSloader))
+   4.3 resume to next World(UOSloader)
+5. UOSloader
+   5.1 continue to boot.
+
+
+*************
+EPT Hierarchy
+*************
+Per Trusty design, Trusty can access Normal World's memory, but Normal World cannot
+access Secure World's memory. Hence it means Secure World EPTP page table hierarchy
+must contain normal world GPA address space, while Trusty world's GPA address space
+must be removed from the Normal world EPTP page table hierarchy.
+
+Design:
+Put Secure World's GPA to very high position: 511G-512G. The PML4/PDPT for Trusty
+World are separated from Normal World. PD/PT for low memory (<511G) are shared in
+both Trusty World's EPT and Normal World's EPT. PD/PT for high memory (>=511G) are
+valid for Trusty World's EPT only.
+
+Benefit:
+This design will benefit the EPT changes of Normal World. There are requirement to
+modify Normal World's EPT during runtime such as memory increasing, attribute
+change, etc. If such behavior happened, only PD and PT for Normal World need to
+be updated.
+
+ABSTRACT EPT hierarchy for 2 Worlds:
+====================================================================        ==================================================
+: Normal World                                                     :        : Secure World                                   :
+:           PML4                                                   :        :                                PML4            :
+:        +--------+                                                :        :                             +--------+         :
+:        |        |                                                :        :                             |        |         :
+:        |        |                                                :        :     PD                      |        |         :
+:        |        |                                                :        :  +-------+                  |        |         :
+:        |        |                                                :        :  |       |                  |        |         :
+:        | 0-512G |--+                                             :        :  |       |               +--| 0-512G |         :
+:EPTP -->+--------+  |                                             :        :  |       |               |  +--------+<-- EPTP :
+:                    |      PDPT                                   :        :  |       |      PDPT     |                     :
+:                    |   +--------+                                :        :  |       |   +--------+  |                     :
+:                    |   | >=511G |---> Not present                :        :  +-------+<--| >=511G |  |                     :
+:                    |   |________|                                :        :              |________|  |                     :
+:                    |   |        |                                :        :              |        |  |                     :
+:                    |   | <511G  |->+<----------------------------:--------:--------------| <511G  |  |                     :
+:                    |   |        |  |                             :        :              |        |  |                     :
+:                    +-->+--------+  |        PD              PT   :        :              +--------+<-+                     :
+:                                    |       ...             ...   :        ==================================================
+:                                    |    +-------+      +-------+ :
+:                                    |   +-------+|     +-------+| :
+:                                    |   |       ||     |       || :
+:                                    |   |       ||     |       || :
+:                                    |   |  PDE  |--+   |       || :
+:                                    |   |       || |   |       || :
+:                                    |   |       |+ |   |       |+ :
+:                                    +-->+-------+  +-->+-------+  :
+:                                                                  :
+====================================================================
+
+API
+----
+/*
+Create Secure World EPT hierarchy, construct new PML4/PDPT, reuse PD/PT parse from
+vm->arch_vm->ept
+
+Parameters:
+	vm:		VM with 2 Worlds
+	gpa:		original gpa allocated from vSBL
+	size:		LK size(16M by default)
+	rebase_offset:	rebase the gpa to offset xxx(511G_OFFSET)
+*/
+int create_secure_world_ept(vm_t *vm, uint64_t gpa, uint64_t size, uint64_t rebase_offset)

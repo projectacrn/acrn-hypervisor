@@ -1,0 +1,466 @@
+/*
+ * Copyright (C) 2018 Intel Corporation. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *   * Neither the name of Intel Corporation nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <hypervisor.h>
+#include <hv_lib.h>
+#include <acrn_common.h>
+#include <hv_arch.h>
+#include <bsp_extern.h>
+#include <hv_debug.h>
+
+#include "instr_emul_wrapper.h"
+#include "instr_emul.h"
+
+struct emul_cnx {
+	struct vie vie;
+	struct vm_guest_paging paging;
+	struct vcpu *vcpu;
+	struct mem_io *mmio;
+};
+
+static DEFINE_CPU_DATA(struct emul_cnx, g_inst_ctxt);
+
+static int
+encode_vmcs_seg_desc(int seg, uint32_t *base, uint32_t *lim, uint32_t *acc);
+
+static int32_t
+get_vmcs_field(int ident);
+
+static bool
+is_segment_register(int reg);
+
+static bool
+is_descriptor_table(int reg);
+
+int vm_get_register(struct vcpu *vcpu, int reg, uint64_t *retval)
+{
+	struct run_context *cur_context;
+
+	if (!vcpu)
+		return -EINVAL;
+	if ((reg >= VM_REG_LAST) || (reg < VM_REG_GUEST_RAX))
+		return -EINVAL;
+
+	if ((reg >= VM_REG_GUEST_RAX) && (reg <= VM_REG_GUEST_RDI)) {
+		cur_context =
+			&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+		*retval = cur_context->guest_cpu_regs.longs[reg];
+	} else if ((reg > VM_REG_GUEST_RDI) && (reg < VM_REG_LAST)) {
+		int32_t field = get_vmcs_field(reg);
+
+		if (field != -1)
+			*retval = exec_vmread(field);
+		else
+			return -EINVAL;
+	}
+
+	return 0;
+}
+
+int vm_set_register(struct vcpu *vcpu, int reg, uint64_t val)
+{
+	struct run_context *cur_context;
+
+	if (!vcpu)
+		return -EINVAL;
+	if ((reg >= VM_REG_LAST) || (reg < VM_REG_GUEST_RAX))
+		return -EINVAL;
+
+	if ((reg >= VM_REG_GUEST_RAX) && (reg <= VM_REG_GUEST_RDI)) {
+		cur_context =
+			&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+		cur_context->guest_cpu_regs.longs[reg] = val;
+	} else if ((reg > VM_REG_GUEST_RDI) && (reg < VM_REG_LAST)) {
+		int32_t field = get_vmcs_field(reg);
+
+		if (field != -1)
+			exec_vmwrite(field, val);
+		else
+			return -EINVAL;
+	}
+
+	return 0;
+}
+
+int vm_set_seg_desc(struct vcpu *vcpu, int seg, struct seg_desc *ret_desc)
+{
+	int error;
+	uint32_t base, limit, access;
+
+	if ((!vcpu) || (!ret_desc))
+		return -EINVAL;
+
+	if (!is_segment_register(seg) && !is_descriptor_table(seg))
+		return -EINVAL;
+
+	error = encode_vmcs_seg_desc(seg, &base, &limit, &access);
+	if ((error != 0) || (access == 0xffffffff))
+		return -EINVAL;
+
+	exec_vmwrite(base, ret_desc->base);
+	exec_vmwrite(limit, ret_desc->limit);
+	exec_vmwrite(access, ret_desc->access);
+
+	return 0;
+}
+
+int vm_get_seg_desc(struct vcpu *vcpu, int seg, struct seg_desc *desc)
+{
+	int error;
+	uint32_t base, limit, access;
+
+	if ((!vcpu) || (!desc))
+		return -EINVAL;
+
+	if (!is_segment_register(seg) && !is_descriptor_table(seg))
+		return -EINVAL;
+
+	error = encode_vmcs_seg_desc(seg, &base, &limit, &access);
+	if ((error != 0) || (access == 0xffffffff))
+		return -EINVAL;
+
+	desc->base = exec_vmread(base);
+	desc->limit = exec_vmread(limit);
+	desc->access = exec_vmread(access);
+
+	return 0;
+}
+
+int vm_restart_instruction(struct vcpu *vcpu)
+{
+	if (!vcpu)
+		return -EINVAL;
+
+	VCPU_RETAIN_RIP(vcpu);
+	return 0;
+}
+
+static bool is_descriptor_table(int reg)
+{
+	switch (reg) {
+	case VM_REG_GUEST_IDTR:
+	case VM_REG_GUEST_GDTR:
+		return true;
+	default:
+		return false;
+	}
+}
+
+static bool is_segment_register(int reg)
+{
+	switch (reg) {
+	case VM_REG_GUEST_ES:
+	case VM_REG_GUEST_CS:
+	case VM_REG_GUEST_SS:
+	case VM_REG_GUEST_DS:
+	case VM_REG_GUEST_FS:
+	case VM_REG_GUEST_GS:
+	case VM_REG_GUEST_TR:
+	case VM_REG_GUEST_LDTR:
+		return true;
+	default:
+		return false;
+	}
+}
+
+static int encode_vmcs_seg_desc(int seg, uint32_t *base, uint32_t *lim,
+		uint32_t *acc)
+{
+	switch (seg) {
+	case VM_REG_GUEST_ES:
+		*base = VMX_GUEST_ES_BASE;
+		*lim = VMX_GUEST_ES_LIMIT;
+		*acc = VMX_GUEST_ES_ATTR;
+		break;
+	case VM_REG_GUEST_CS:
+		*base = VMX_GUEST_CS_BASE;
+		*lim = VMX_GUEST_CS_LIMIT;
+		*acc = VMX_GUEST_CS_ATTR;
+		break;
+	case VM_REG_GUEST_SS:
+		*base = VMX_GUEST_SS_BASE;
+		*lim = VMX_GUEST_SS_LIMIT;
+		*acc = VMX_GUEST_SS_ATTR;
+		break;
+	case VM_REG_GUEST_DS:
+		*base = VMX_GUEST_DS_BASE;
+		*lim = VMX_GUEST_DS_LIMIT;
+		*acc = VMX_GUEST_DS_ATTR;
+		break;
+	case VM_REG_GUEST_FS:
+		*base = VMX_GUEST_FS_BASE;
+		*lim = VMX_GUEST_FS_LIMIT;
+		*acc = VMX_GUEST_FS_ATTR;
+		break;
+	case VM_REG_GUEST_GS:
+		*base = VMX_GUEST_GS_BASE;
+		*lim = VMX_GUEST_GS_LIMIT;
+		*acc = VMX_GUEST_GS_ATTR;
+		break;
+	case VM_REG_GUEST_TR:
+		*base = VMX_GUEST_TR_BASE;
+		*lim = VMX_GUEST_TR_LIMIT;
+		*acc = VMX_GUEST_TR_ATTR;
+		break;
+	case VM_REG_GUEST_LDTR:
+		*base = VMX_GUEST_LDTR_BASE;
+		*lim = VMX_GUEST_LDTR_LIMIT;
+		*acc = VMX_GUEST_LDTR_ATTR;
+		break;
+	case VM_REG_GUEST_IDTR:
+		*base = VMX_GUEST_IDTR_BASE;
+		*lim = VMX_GUEST_IDTR_LIMIT;
+		*acc = 0xffffffff;
+		break;
+	case VM_REG_GUEST_GDTR:
+		*base = VMX_GUEST_GDTR_BASE;
+		*lim = VMX_GUEST_GDTR_LIMIT;
+		*acc = 0xffffffff;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int32_t get_vmcs_field(int ident)
+{
+	switch (ident) {
+	case VM_REG_GUEST_CR0:
+		return VMX_GUEST_CR0;
+	case VM_REG_GUEST_CR3:
+		return VMX_GUEST_CR3;
+	case VM_REG_GUEST_CR4:
+		return VMX_GUEST_CR4;
+	case VM_REG_GUEST_DR7:
+		return VMX_GUEST_DR7;
+	case VM_REG_GUEST_RSP:
+		return VMX_GUEST_RSP;
+	case VM_REG_GUEST_RIP:
+		return VMX_GUEST_RIP;
+	case VM_REG_GUEST_RFLAGS:
+		return VMX_GUEST_RFLAGS;
+	case VM_REG_GUEST_ES:
+		return VMX_GUEST_ES_SEL;
+	case VM_REG_GUEST_CS:
+		return VMX_GUEST_CS_SEL;
+	case VM_REG_GUEST_SS:
+		return VMX_GUEST_SS_SEL;
+	case VM_REG_GUEST_DS:
+		return VMX_GUEST_DS_SEL;
+	case VM_REG_GUEST_FS:
+		return VMX_GUEST_FS_SEL;
+	case VM_REG_GUEST_GS:
+		return VMX_GUEST_GS_SEL;
+	case VM_REG_GUEST_TR:
+		return VMX_GUEST_TR_SEL;
+	case VM_REG_GUEST_LDTR:
+		return VMX_GUEST_LDTR_SEL;
+	case VM_REG_GUEST_EFER:
+		return VMX_GUEST_IA32_EFER_FULL;
+	case VM_REG_GUEST_PDPTE0:
+		return VMX_GUEST_PDPTE0_FULL;
+	case VM_REG_GUEST_PDPTE1:
+		return VMX_GUEST_PDPTE1_FULL;
+	case VM_REG_GUEST_PDPTE2:
+		return VMX_GUEST_PDPTE2_FULL;
+	case VM_REG_GUEST_PDPTE3:
+		return VMX_GUEST_PDPTE3_FULL;
+	default:
+		return -1;
+	}
+}
+
+static enum vm_cpu_mode get_vmx_cpu_mode(void)
+{
+	uint32_t csar;
+
+	if (exec_vmread(VMX_GUEST_IA32_EFER_FULL) & EFER_LMA) {
+		csar = exec_vmread(VMX_GUEST_CS_ATTR);
+		if (csar & 0x2000)
+			return CPU_MODE_64BIT;        /* CS.L = 1 */
+		else
+			return CPU_MODE_COMPATIBILITY;
+	} else if (exec_vmread(VMX_GUEST_CR0) & CR0_PE) {
+		return CPU_MODE_PROTECTED;
+	} else {
+		return CPU_MODE_REAL;
+	}
+}
+
+static void get_guest_paging_info(struct vcpu *vcpu, struct emul_cnx *emul_cnx)
+{
+	uint32_t cpl, csar;
+
+	ASSERT(emul_cnx != NULL && vcpu != NULL, "Error in input arguments");
+
+	csar = exec_vmread(VMX_GUEST_CS_ATTR);
+	cpl = (csar >> 5) & 3;
+	emul_cnx->paging.cr3 =
+		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3;
+	emul_cnx->paging.cpl = cpl;
+	emul_cnx->paging.cpu_mode = get_vmx_cpu_mode();
+	emul_cnx->paging.paging_mode = PAGING_MODE_FLAT;/*maybe change later*/
+}
+
+static int mmio_read(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t *rval,
+		__unused int size, __unused void *arg)
+{
+	struct emul_cnx *emul_cnx;
+	struct mem_io *mmio;
+
+	if (!vcpu)
+		return -EINVAL;
+
+	emul_cnx = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
+	mmio = emul_cnx->mmio;
+
+	ASSERT(mmio != NULL, "invalid mmio when reading");
+
+	*rval = mmio->value;
+
+	return 0;
+}
+
+static int mmio_write(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t wval,
+		__unused int size, __unused void *arg)
+{
+	struct emul_cnx *emul_cnx;
+	struct mem_io *mmio;
+
+	if (!vcpu)
+		return -EINVAL;
+
+	emul_cnx = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
+	mmio = emul_cnx->mmio;
+
+	ASSERT(mmio != NULL, "invalid mmio when writing");
+
+	mmio->value = wval;
+
+	return 0;
+}
+
+void vm_gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa)
+{
+
+	ASSERT(gpa != NULL, "Error in input arguments");
+	ASSERT(vcpu != NULL,
+		"Invalid vcpu id when gva2gpa");
+
+	*gpa = gva2gpa(vcpu->vm,
+		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3, gva);
+}
+
+int analyze_instruction(struct vcpu *vcpu, struct mem_io *mmio)
+{
+	uint64_t guest_rip_gva, guest_rip_gpa;
+	char *guest_rip_hva;
+	struct emul_cnx *emul_cnx;
+	uint32_t csar;
+	int retval = 0;
+	enum vm_cpu_mode cpu_mode;
+	int i;
+
+	guest_rip_gva =
+		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip;
+
+	guest_rip_gpa = gva2gpa(vcpu->vm,
+		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3,
+		guest_rip_gva);
+
+	guest_rip_hva = GPA2HVA(vcpu->vm, guest_rip_gpa);
+	emul_cnx = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
+	emul_cnx->mmio = mmio;
+	emul_cnx->vcpu = vcpu;
+
+	/* by now, HVA <-> HPA is 1:1 mapping, so use hpa is OK*/
+	vie_init(&emul_cnx->vie, guest_rip_hva,
+		vcpu->arch_vcpu.inst_len);
+
+	get_guest_paging_info(vcpu, emul_cnx);
+	csar = exec_vmread(VMX_GUEST_CS_ATTR);
+	cpu_mode = get_vmx_cpu_mode();
+
+	mmio->private_data = emul_cnx;
+
+	retval = vmm_decode_instruction(vcpu, guest_rip_gva,
+			cpu_mode, SEG_DESC_DEF32(csar), &emul_cnx->vie);
+
+	mmio->access_size = emul_cnx->vie.opsize;
+
+	if (retval != 0) {
+		/* dump to instruction when decoding failed */
+		pr_err("decode following instruction failed @ 0x%016llx:",
+			exec_vmread(VMX_GUEST_RIP));
+		for (i = 0; i < emul_cnx->vie.num_valid; i++) {
+			if (i >= VIE_INST_SIZE)
+				break;
+
+			if (i == 0)
+				pr_err("\n");
+			pr_err("%d=%02hhx ",
+				i, emul_cnx->vie.inst[i]);
+		}
+	}
+
+	return retval;
+}
+
+int emulate_instruction(struct vcpu *vcpu, struct mem_io *mmio)
+{
+	struct emul_cnx *emul_cnx = (struct emul_cnx *)(mmio->private_data);
+	struct vm_guest_paging *paging = &emul_cnx->paging;
+	int i, retval = 0;
+	uint64_t gpa = mmio->paddr;
+	mem_region_read_t mread = mmio_read;
+	mem_region_write_t mwrite = mmio_write;
+
+	retval = vmm_emulate_instruction(vcpu, gpa,
+			&emul_cnx->vie, paging, mread, mwrite, &retval);
+
+	if (retval != 0) {
+		/* dump to instruction when emulation failed */
+		pr_err("emulate following instruction failed @ 0x%016llx:",
+			exec_vmread(VMX_GUEST_RIP));
+		for (i = 0; i < emul_cnx->vie.num_valid; i++) {
+			if (i >= VIE_INST_SIZE)
+				break;
+
+			if (i == 0)
+				pr_err("\n");
+
+			pr_err("%d=%02hhx ",
+				i, emul_cnx->vie.inst[i]);
+		}
+	}
+	return retval;
+}
