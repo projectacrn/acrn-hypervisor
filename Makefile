@@ -31,7 +31,7 @@ doxy: pullsource
 # Remove generated content (Sphinx and doxygen)
 
 clean:
-	$(Q)rm -fr $(BUILDDIR) doxygen hypervisor devicemodel
+	$(Q)rm -fr $(BUILDDIR) doxygen _source
 
 # Copy material over to the GitHub pages staging repo
 
