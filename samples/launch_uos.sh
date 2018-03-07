@@ -1,0 +1,36 @@
+#!/bin/bash
+
+function launch_clear()
+{
+vm_name=vm$1
+
+
+#check if the vm is running or not
+vm_ps=$(pgrep -a -f acrn-dm)
+result=$(echo $vm_ps | grep "${vm_name}")
+if [[ "$result" != "" ]]; then
+  echo "$vm_name is running, can't create twice!"
+  exit
+fi
+
+
+#for memsize setting
+memsize=`cat /proc/meminfo|head -n 1|awk '{print $2}'`
+if [ $memsize -gt 4000000 ];then
+    mem_size=1750M
+fi
+
+mem_size=1000M
+
+./acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
+  -s 5,virtio-console,@pty:pty_port \
+  -s 6,virtio-hyper_dmabuf \
+  -s 3,virtio-blk,/home/root/clear.img \
+  -s 4,virtio-net,tap0 -k /home/root/bzImage \
+  -B "root=/dev/vda3 rw rootwait noxsave maxcpus=$2 nohpet console=tty0 console=hvc0 \
+  console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
+  consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=$4 \
+  i915.enable_hangcheck=0 i915.nuclear_pageflip=1" $vm_name
+}
+
+launch_clear 2 1 "64 448 8" 0x00000C clear

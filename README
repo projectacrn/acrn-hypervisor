@@ -1,0 +1,18 @@
+BUILD DEPENDANCE 
+
+	for CentOS
+	yum install libuuid-devel
+
+BUILD
+	make
+
+CLEAN
+	make clean
+
+
+RUN DEPENDANCE
+
+	for CentOS
+	yum install openssl-libs
+	yum install zlib
+	yum install libuuid
