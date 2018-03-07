@@ -104,6 +104,7 @@ else:
 # html_theme_options = {}
 
 html_logo = 'images/ACRN_Logo_300w.png'
+html_favicon = 'images/ACRN-favicon-32x32.png'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
