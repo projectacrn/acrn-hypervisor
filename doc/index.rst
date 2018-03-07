@@ -25,6 +25,7 @@ Sections
    :maxdepth: 1
 
    introduction/index.rst
+   hardware.rst
    getting_started/index.rst
    hypervisor_primer/index.rst
    release_notes.rst
