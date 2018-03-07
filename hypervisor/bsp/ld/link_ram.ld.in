@@ -1,0 +1,94 @@
+#include "bsp_cfg.h"
+
+ENTRY(cpu_primary_start_32)
+
+MEMORY
+{
+    /* Low 1MB of memory for secondary processor start-up */
+    lowram  :   ORIGIN = CONFIG_LOW_RAM_START, LENGTH = CONFIG_LOW_RAM_SIZE
+
+    /* 32 MBytes of RAM for HV */
+    ram     :   ORIGIN = CONFIG_RAM_START, LENGTH = CONFIG_RAM_SIZE
+}
+
+SECTIONS
+{
+    .boot :
+    {
+        _ld_ram_start = . ;
+        KEEP(*(multiboot_header)) ;
+    } > ram
+
+    .entry :
+    {
+        KEEP(*(entry)) ;
+
+    } > ram
+
+    .text :
+    {
+        *(.text .text*) ;
+        *(.gnu.linkonce.t*)
+        *(.note.gnu.build-id)
+    } > ram
+
+    .rodata :
+    {
+        *(.rodata*) ;
+
+    } > ram
+
+    _ld_cpu_secondary_reset_load = .;
+
+    .cpu_secondary : AT (_ld_cpu_secondary_reset_load)
+    {
+        _ld_cpu_secondary_reset_start = .;
+        *(.cpu_secondary_reset);
+        . = ALIGN(4);
+        _ld_cpu_secondary_reset_end = .;
+
+    } > lowram
+
+    _ld_cpu_secondary_reset_size = _ld_cpu_secondary_reset_end - _ld_cpu_secondary_reset_start;
+
+    .data (_ld_cpu_secondary_reset_load + _ld_cpu_secondary_reset_size):
+    {
+        *(.data) ;
+        *(.data*) ;
+        *(.sdata)
+        *(.gnu.linkonce.d*)
+
+    } > ram
+
+    .bss_noinit (NOLOAD):
+    {
+	. = ALIGN(4) ;
+	*(.bss_noinit) ;
+	*(.bss_noinit*) ;
+	. = ALIGN(4) ;
+    } > ram
+
+    .bss (NOLOAD):
+    {
+        . = ALIGN(4) ;
+        _ld_bss_start = . ;
+        *(.bss) ;
+        *(.bss*) ;
+        *(COMMON) ;
+        . = ALIGN(4) ;
+        _ld_bss_end = . ;
+    } > ram
+
+    .discard (NOLOAD):
+    {
+        . = ALIGN(4096) ;
+        _ld_cpu_data_start = .;
+        *(.cpu_data) ;
+        . = ALIGN(4096) ;
+        _ld_cpu_data_end = .;
+    } > ram
+
+    _ld_ram_size = LENGTH(ram) ;
+    _ld_ram_end = _ld_ram_size + _ld_ram_start ;
+}
+
