@@ -57,7 +57,7 @@ int acrn_vpic_inject_irq(struct vm *vm, int irq, enum irq_mode mode);
  *
  * The function only return api version information when VM is VM0.
  *
- * @param VM Pointer to VM data structure
+ * @param vm Pointer to VM data structure
  * @param param guest physical memory address. The api version returned
  *              will be copied to this gpa
  *
@@ -72,7 +72,7 @@ int64_t hcall_get_api_version(struct vm *vm, uint64_t param);
  * limitation for calling times of this function, will add MAX_VM_NUM
  * support later.
  *
- * @param VM Pointer to VM data structure
+ * @param vm Pointer to VM data structure
  * @param param guest physical memory address. This gpa points to
  *              struct acrn_create_vm
  *
@@ -125,7 +125,7 @@ int64_t hcall_pause_vm(uint64_t vmid);
  * freed physical cpus, if there is no available pcpu, the function will
  * return -1.
  *
- * @param VM Pointer to VM data structure
+ * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param guest physical addressx. This gpa points to
  *              struct acrn_create_vcpu
@@ -141,7 +141,7 @@ int64_t hcall_create_vcpu(struct vm *vm, uint64_t vmid, uint64_t param);
  * normally it will active a level IRQ.
  * The function will return -1 if the target VM does not exist.
  *
- * @param VM Pointer to VM data structure
+ * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to struct acrn_irqline
  *
@@ -156,7 +156,7 @@ int64_t hcall_assert_irqline(struct vm *vm, uint64_t vmid, uint64_t param);
  * normally it will deactive a level IRQ.
  * The function will return -1 if the target VM does not exist.
  *
- * @param VM Pointer to VM data structure
+ * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to struct acrn_irqline
  *
@@ -171,7 +171,7 @@ int64_t hcall_deassert_irqline(struct vm *vm, uint64_t vmid, uint64_t param);
  * or IOAPIC, normally it triggers an edge IRQ.
  * The function will return -1 if the target VM does not exist.
  *
- * @param VM Pointer to VM data structure
+ * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to struct acrn_irqline
  *
@@ -185,7 +185,7 @@ int64_t hcall_pulse_irqline(struct vm *vm, uint64_t vmid, uint64_t param);
  * Inject a MSI interrupt for a VM.
  * The function will return -1 if the target VM does not exist.
  *
- * @param VM Pointer to VM data structure
+ * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to struct acrn_msi_entry
  *
@@ -199,7 +199,7 @@ int64_t hcall_inject_msi(struct vm *vm, uint64_t vmid, uint64_t param);
  * Set the ioreq share buffer for a VM.
  * The function will return -1 if the target VM does not exist.
  *
- * @param VM Pointer to VM data structure
+ * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to
  *              struct acrn_set_ioreq_buffer
@@ -227,7 +227,7 @@ int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t param);
  * Set the ept memory mapping for a VM.
  * The function will return -1 if the target VM does not exist.
  *
- * @param VM Pointer to VM data structure
+ * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to
  *              struct vm_set_memmap
@@ -242,7 +242,7 @@ int64_t hcall_set_vm_memmap(struct vm *vm, uint64_t vmid, uint64_t param);
  * Remap a PCI MSI interrupt from a VM's virtual vector to native vector.
  * The function will return -1 if the target VM does not exist.
  *
- * @param VM Pointer to VM data structure
+ * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to
  *              struct acrn_vm_pci_msix_remap
@@ -257,7 +257,7 @@ int64_t hcall_remap_pci_msix(struct vm *vm, uint64_t vmid, uint64_t param);
  * Translate guest physical address to host physical address for a VM.
  * The function will return -1 if the target VM does not exist.
  *
- * @param VM Pointer to VM data structure
+ * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to struct vm_gpa2hpa
  *
@@ -268,7 +268,7 @@ int64_t hcall_gpa_to_hpa(struct vm *vm, uint64_t vmid, uint64_t param);
 /**
  * @brief Assign one passthrough dev to VM.
  *
- * @param VM Pointer to VM data structure
+ * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to
  *              physical BDF of the assigning ptdev
@@ -280,7 +280,7 @@ int64_t hcall_assign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param);
 /**
  * @brief Deassign one passthrough dev from VM.
  *
- * @param VM Pointer to VM data structure
+ * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to
  *              physical BDF of the deassigning ptdev
@@ -292,7 +292,7 @@ int64_t hcall_deassign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param);
 /**
  * @brief Set interrupt mapping info of ptdev.
  *
- * @param VM Pointer to VM data structure
+ * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to data structure of
  *              hc_ptdev_irq including intr remapping info
@@ -304,7 +304,7 @@ int64_t hcall_set_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param);
 /**
  * @brief Clear interrupt mapping info of ptdev.
  *
- * @param VM Pointer to VM data structure
+ * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to data structure of
  *              hc_ptdev_irq including intr remapping info
@@ -317,7 +317,7 @@ int64_t hcall_reset_ptdev_intr_info(struct vm *vm, uint64_t vmid,
 /**
  * @brief Setup a share buffer for a VM.
  *
- * @param VM Pointer to VM data structure
+ * @param vm Pointer to VM data structure
  * @param param guest physical address. This gpa points to
  *              struct sbuf_setup_param
  *
