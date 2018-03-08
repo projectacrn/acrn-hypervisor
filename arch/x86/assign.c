@@ -747,7 +747,15 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 					info->phys_pin, pic_pin);
 		} else
 			goto END;
-	}
+	} else
+		/* info->phys_pin need be used by ptdev_build_native_rte when
+		 * updating entry.
+		 *
+		 * TODO: currently ptdev entry is virtual based, the better
+		 * solution should be physical based, then we will not have
+		 * this problem.
+		 */
+		info->phys_pin = entry->intx.phys_pin;
 
 	/* phys_pin from native IOAPIC */
 	phys_pin = entry->intx.phys_pin;
