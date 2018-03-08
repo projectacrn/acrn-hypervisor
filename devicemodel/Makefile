@@ -80,6 +80,8 @@ DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 
 PROGRAM := acrn-dm
 
+SAMPLES := $(wildcard samples/*)
+
 all: include/version.h $(PROGRAM)
 	@echo -n ""
 
@@ -117,5 +119,9 @@ $(DM_OBJDIR)/%.o: %.c $(HEADERS)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(CFLAGS) -c $< -o $@
 
-install: $(DM_OBJDIR)/$(PROGRAM)
+install: $(DM_OBJDIR)/$(PROGRAM) install-samples
 	install -D $(DM_OBJDIR)/$(PROGRAM) $(DESTDIR)/usr/bin/$(PROGRAM)
+
+install-samples: $(SAMPLES)
+	install -d $(DESTDIR)/usr/share/acrn/demo
+	install -t $(DESTDIR)/usr/share/acrn/demo $^
