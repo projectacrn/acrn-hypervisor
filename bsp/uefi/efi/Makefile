@@ -80,7 +80,7 @@ all: $(EFIBIN)
 	$(OBJCOPY)  --add-section .hv="$(HV_OBJDIR)/$(HV_FILE).bin"  --change-section-vma .hv=0x6e000 --set-section-flags .hv=alloc,data,contents,load  --section-alignment 0x1000 $(EFI_OBJDIR)/boot.efi  $(EFIBIN)
 
 install: $(EFIBIN)
-	install -D $(EFIBIN) $(DESTDIR)/usr/share/$(HV_FILE).efi
+	install -D $(EFIBIN) $(DESTDIR)/usr/share/acrn/$(HV_FILE).efi
 
 $(EFIBIN): $(BOOT)
 
