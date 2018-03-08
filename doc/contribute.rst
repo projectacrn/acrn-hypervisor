@@ -111,12 +111,16 @@ on https://github.com and have Git tools available on your development system.
 Repository layout
 *****************
 
-To clone the main project ACRN repository use::
+To clone the ACRN hypervisor repository use::
 
     git clone https://github.com/projectacrn/acrn-hypervisor
+    
+To clone the ACRN device model repository use::
+
+    git clone https://github.com/projectacrn/acrn-devicemodel
 
 The project ACRN directory structure is described in the `Hypervisor
-Primer`_ document. In addition to the project ACRN hypervisor itself,
+Primer`_ document. In addition to the ACRN hypervisor and device model itself,
 you'll also find the sources for technical documentation, sample code
 and supported board configurations.  All of these are available for
 developers to contribute to and enhance.
