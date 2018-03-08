@@ -4,7 +4,7 @@ Contribution Guidelines
 #######################
 
 As an open-source project, we welcome and encourage the community to
-submit patches directly to Project ACRN.  In our collaborative open
+submit patches directly to project ACRN.  In our collaborative open
 source environment, standards and methods for submitting changes help
 reduce the chaos that can result from an active development community.
 
@@ -34,7 +34,7 @@ Developer Certification of Origin (DCO)
 ***************************************
 
 To make a good faith effort to ensure licensing criteria are met,
-Project ACRN requires the Developer Certificate of Origin (DCO) process
+project ACRN requires the Developer Certificate of Origin (DCO) process
 to be followed.
 
 The DCO is an attestation attached to every contribution made by every
@@ -92,12 +92,12 @@ already you'll need to force push your branch after this with ``git push -f``.
 Prerequisites
 *************
 
-.. _Project ACRN website: https://projectacrn.org
+.. _project ACRN website: https://projectacrn.org
 
-As a contributor, you'll want to be familiar with Project ACRN, how to
-configure, install, and use it as explained in the `Project ACRN website`_
+As a contributor, you'll want to be familiar with project ACRN, how to
+configure, install, and use it as explained in the `project ACRN website`_
 and how to set up your development environment as introduced in the
-Project ACRN `Getting Started Guide`_.
+project ACRN `Getting Started Guide`_.
 
 .. _Getting Started Guide:
    https://projectacrn.github.io/getting_started/
@@ -111,12 +111,12 @@ on https://github.com and have Git tools available on your development system.
 Repository layout
 *****************
 
-To clone the main Project ACRN repository use::
+To clone the main project ACRN repository use::
 
     git clone https://github.com/projectacrn/acrn-hypervisor
 
-The Project ACRN directory structure is described in the `Hypervisor
-Primer`_ document. In addition to the Project ACRN hypervisor itself,
+The project ACRN directory structure is described in the `Hypervisor
+Primer`_ document. In addition to the project ACRN hypervisor itself,
 you'll also find the sources for technical documentation, sample code
 and supported board configurations.  All of these are available for
 developers to contribute to and enhance.
@@ -192,11 +192,11 @@ One general practice we encourage, is to make small,
 controlled changes. This practice simplifies review, makes merging and
 rebasing easier, and keeps the change history clear and clean.
 
-When contributing to Project ACRN, it is also important you provide as much
+When contributing to project ACRN, it is also important you provide as much
 information as you can about your change, update appropriate documentation,
 and test your changes thoroughly before submitting.
 
-The general GitHub workflow used by Project ACRN developers uses a combination of
+The general GitHub workflow used by project ACRN developers uses a combination of
 command line Git commands and browser interaction with GitHub.  As it is with
 Git, there are multiple ways of getting a task done.  We'll describe a typical
 workflow here:
@@ -333,7 +333,7 @@ In cases where the file is imported from an external project, the commit
 message shall contain details regarding the original project, the location of
 the project, the SHA-id of the origin commit for the file, the intended
 purpose, and if the file will be maintained by the acrn-hypervisor project,
-(whether or not Project ACRN will contain a localized branch or if
+(whether or not project ACRN will contain a localized branch or if
 it is a downstream copy).
 
 For example, a copy of a locally maintained import::
