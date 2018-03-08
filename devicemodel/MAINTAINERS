@@ -32,4 +32,3 @@ S: Supported
 L: https://lists.projectacrn.org/g/acrn-dev
 T: git - https://github.com/projectacrn/acrn-devicemodel.git
 M: Anthony Xu <anthony.xu@intel.com>
-M: Hao Li <hao.l.li@intel.com>
