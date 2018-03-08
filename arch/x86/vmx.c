@@ -94,38 +94,15 @@ static inline int exec_vmxon(void *addr)
 	return status;
 }
 
-int check_vmx_support(void)
+bool get_vmx_cap(void)
 {
 	uint32_t eax, ebx, ecx, edx;
-	int ret_val = 0;
-	uint64_t tmp64;
 
 	/* Run CPUID to determine if VTX support available */
 	cpuid(CPUID_FEATURES, &eax, &ebx, &ecx, &edx);
 
 	/* See if VMX feature bit is set in ECX */
-	if (!(ecx & CPUID_ECX_VMX)) {
-		/* Log and return error */
-		pr_fatal("VMX not supported by CPU");
-		ret_val = -EINVAL;
-	} else {
-		/* Read feature control MSR */
-		tmp64 = msr_read(MSR_IA32_FEATURE_CONTROL);
-
-		/* See if feature control MSR is locked and VMX not enabled
-		 * appropriately
-		 */
-		if ((tmp64 & MSR_IA32_FEATURE_CONTROL_LOCK) &&
-		    (!(tmp64 & MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX))) {
-			/* Log and return error */
-			pr_fatal("MSR_IA32_FEATURE_CONTROL: Lock bit is on and VMXON bit is off");
-			pr_fatal(" Cannot do vmxon");
-			ret_val = -EINVAL;
-		}
-	}
-
-	/* Return status to caller */
-	return ret_val;
+	return !!(ecx & CPUID_ECX_VMX);
 }
 
 int exec_vmxon_instr(void)
