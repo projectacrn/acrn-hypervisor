@@ -32,4 +32,4 @@ S: Supported
 L: https://lists.projectacrn.org/g/acrn-dev
 T: git - https://github.com/projectacrn/acrn-hypervisor.git
 M: Eddie Dong <eddie.dong@intel.com>
-M: Jason Chen <jason.cj.chen@intel.com>
+M: Anthony Xu <anthony.xu@intel.com>
