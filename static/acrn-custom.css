@@ -5,11 +5,22 @@
    max-width: none;
 }
 
+/* (temporarily) add an under development tagline to the bread crumb */
 .wy-breadcrumbs::after {
    content: " (Content under development)";
    background-color: #FFFACD;
    color: red;
    font-weight: bold;
+}
+
+/* Make the version number more visible */
+.wy-side-nav-search>div.version {
+    color: rgba(255,255,255,1);
+}
+
+p.caption  {
+#    border-top: 1px solid;
+    margin-top: 1em;
 }
 
 /*  make .. hlist:: tables fill the page */
