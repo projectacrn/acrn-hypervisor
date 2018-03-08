@@ -2,9 +2,12 @@
 # ACRN Hypervisor
 #
 
-
 MAJOR_VERSION=0
 MINOR_VERSION=1
+RC_VERSION=1
+
+API_MAJOR_VERSION=1
+API_MINOR_VERSION=0
 
 RELEASE ?= 0
 
@@ -209,6 +212,9 @@ $(VERSION):
 	cat license_header > $(VERSION);\
 	echo "#define HV_MAJOR_VERSION $(MAJOR_VERSION)" >> $(VERSION);\
 	echo "#define HV_MINOR_VERSION $(MINOR_VERSION)" >> $(VERSION);\
+	echo "#define HV_RC_VERSION $(RC_VERSION)" >> $(VERSION);\
+	echo "#define HV_API_MAJOR_VERSION $(API_MAJOR_VERSION)" >> $(VERSION);\
+	echo "#define HV_API_MINOR_VERSION $(API_MINOR_VERSION)" >> $(VERSION);\
 	echo "#define HV_BUILD_VERSION "\""$$PATCH"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_TIME "\""$$TIME"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_USER "\""$(USER)"\""" >> $(VERSION)

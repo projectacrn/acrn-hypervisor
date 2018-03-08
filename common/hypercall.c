@@ -47,8 +47,8 @@ int64_t hcall_get_api_version(struct vm *vm, uint64_t param)
 	if (!is_vm0(vm))
 		return -1;
 
-	version.major_version = HV_MAJOR_VERSION;
-	version.minor_version = HV_MINOR_VERSION;
+	version.major_version = HV_API_MAJOR_VERSION;
+	version.minor_version = HV_API_MINOR_VERSION;
 
 	if (copy_to_vm(vm, &version, param)) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
