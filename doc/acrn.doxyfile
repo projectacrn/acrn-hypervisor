@@ -724,7 +724,7 @@ CITE_BIB_FILES         =
 # messages are off.
 # The default value is: NO.
 
-QUIET                  = NO
+QUIET                  = YES
 
 # The WARNINGS tag can be used to turn on/off the warning messages that are
 # generated to standard error (stderr) by doxygen. If WARNINGS is set to YES
@@ -791,7 +791,11 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  =  custom-doxygen/mainpage.md \
-                          _source/
+                          ../acrn-hypervisor/include/common/hypercall.h \
+                          ../acrn-hypervisor/include/public/acrn_common.h \
+                          ../acrn-hypervisor/include/public/acrn_hv_defs.h \
+                          ../acrn-devicemodel/include/virtio.h
+
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses

@@ -31,3 +31,9 @@ Sections
    release_notes.rst
    contribute.rst
    api/index.rst
+
+Indices and Tables
+******************
+
+* :ref:`glossary`
+* :ref:`genindex`

@@ -1,8 +1,14 @@
 # Minimal makefile for Sphinx documentation
 #
 
+ifeq ($(VERBOSE),1)
+  Q =
+else
+  Q = @
+endif
+
 # You can set these variables from the command line.
-SPHINXOPTS    =
+SPHINXOPTS    = -q
 SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = "Project ACRN"
 SOURCEDIR     = .
@@ -17,7 +23,7 @@ help:
 .PHONY: help Makefile
 
 pullsource:
-	$(Q)scripts/pullsource.sh
+	scripts/pullsource.sh
 
 
 # Generate the doxygen xml (for Sphinx) and copy the doxygen html to the
@@ -25,21 +31,19 @@ pullsource:
 
 doxy: pullsource
 	$(Q)(cat acrn.doxyfile) | doxygen -  2>&1
-	$(Q)mkdir -p _build/html/api/doxygen
-	$(Q)cp -r doxygen/html/* _build/html/api/doxygen
 
 # Remove generated content (Sphinx and doxygen)
 
 clean:
-	$(Q)rm -fr $(BUILDDIR) doxygen _source
+	rm -fr $(BUILDDIR) doxygen
 
 # Copy material over to the GitHub pages staging repo
+# along with a README
 
 publish:
-	$(Q)mv $(PUBLISHDIR)/README.md $(PUBLISHDIR)/.README.md
-	$(Q)rm -fr $(PUBLISHDIR)/*
-	$(Q)mv $(PUBLISHDIR)/.README.md $(PUBLISHDIR)/README.md
-	$(Q)cp -r _build/html/* $(PUBLISHDIR)
+	rm -fr $(PUBLISHDIR)/*
+	cp -r $(BUILDDIR)/html/* $(PUBLISHDIR)
+	cp scripts/publish-README.md $(PUBLISHDIR)/README.md
 
 
 # Catch-all target: route all unknown targets to Sphinx using the new
