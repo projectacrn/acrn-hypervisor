@@ -19,7 +19,7 @@ Licensing is very important to open source projects. It helps ensure the
 software continues to be available under the terms that the author
 desired.
 
-Project ACRN uses a BSD license, as found in the license_header in
+Project ACRN uses a BSD-3-Clause license, as found in the license_header in
 the project's GitHub repo.
 
 A license tells you what rights you have as a developer, as provided by
@@ -81,7 +81,7 @@ DCO Sign-Off Methods
 The DCO requires a sign-off message in the following format appear on each
 commit in the pull request::
 
-   Signed-off-by: acrnus acrn <acrnus@projectacrn.org>
+   Signed-off-by: Acrnus Jones <acrnusj@gmail.com>
 
 The DCO text can either be manually added to your commit body, or you can add
 either ``-s`` or ``--signoff`` to your usual Git commit commands. If you forget
@@ -100,13 +100,13 @@ and how to set up your development environment as introduced in the
 Project ACRN `Getting Started Guide`_.
 
 .. _Getting Started Guide:
-   https://acrnproject.github.com/acrn-documentation/getting_started.html
+   https://projectacrn.github.io/getting_started/
 
 You should be familiar with common developer tools such as Git and CMake, and
 platforms such as GitHub.
 
 If you haven't already done so, you'll need to create a (free) GitHub account
-on http://github.com and have Git tools available on your development system.
+on https://github.com and have Git tools available on your development system.
 
 Repository layout
 *****************
@@ -115,13 +115,14 @@ To clone the main Project ACRN repository use::
 
     git clone https://github.com/projectacrn/acrn-hypervisor
 
-The Project ACRN directory structure is described in `Source Tree Structure`_
-documentation. In addition to the Project ACRN hypervisor itself, you'll also find the
-sources for technical documentation, sample code and supported board
-configurations. All of these are available for developers to contribute to and enhance.
+The Project ACRN directory structure is described in the `Hypervisor
+Primer`_ document. In addition to the Project ACRN hypervisor itself,
+you'll also find the sources for technical documentation, sample code
+and supported board configurations.  All of these are available for
+developers to contribute to and enhance.
 
-.. _Source Tree Structure:
-   https://projectacrn.github.io/acrn-documentation/
+.. _Hypervisor Primer:
+   https://projectacrn.github.io/hypervisor_primer
 
 Pull Requests and Issues
 ************************
@@ -201,7 +202,7 @@ Git, there are multiple ways of getting a task done.  We'll describe a typical
 workflow here:
 
 .. _Create a Fork of acrn-hypervisor:
-   https://github.com/projecacrn/acrn-hypervisor#fork-destination-box
+   https://github.com/projectacrn/acrn-hypervisor#fork-destination-box
 
 #. `Create a Fork of acrn-hypervisor`_
    to your personal account on GitHub. (Click on the fork button in the top
@@ -246,11 +247,11 @@ workflow here:
 
    The ``-s`` option automatically adds your ``Signed-off-by:`` to your commit
    message.  Your commit will be rejected without this line that indicates your
-   agreement with the `DCO`_.  See the `Commit Guidelines`_ section for
-   specific guidelines for writing your commit messages.
+   agreement with the `DCO`_.  See the `Commit Guidelines`_ section
+   below for specific guidelines for writing your commit messages.
 
 #. Prepare patches for e-mail submission and send to the projectacrn
-   mailing list for review
+   mailing list for review::
 
      git format-patch
 
@@ -265,7 +266,7 @@ Changes are submitted as Git commits. Each commit message must contain:
 * A short and descriptive subject line that is less than 72 characters,
   followed by a blank line. The subject line must include a prefix that
   identifies the subsystem being changed, followed by a colon, and a short
-  title, for example:  ``doc: update wiki references to new site``.
+  title, for example:  ``doc: update commit guidelines instructions``.
   (If you're updating an existing file, you can use
   ``git log <filename>`` to see what developers used as the prefix for
   previous patches of this file.)
