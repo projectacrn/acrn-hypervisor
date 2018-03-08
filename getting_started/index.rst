@@ -1,7 +1,7 @@
 .. _getting_started:
 
-Getting Started
-###############
+Getting Started Guide
+#####################
 
 This Getting Started Guide (GSG) provides information for setting up
 your host development computer with the needed software and tools for
