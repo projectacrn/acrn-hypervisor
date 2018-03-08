@@ -14,3 +14,10 @@ the hardware (physical memory, interrupt management and I/O). It
 provides the Guest OS with an abstraction of a virtual processor,
 allowing the guest to think it is executing directly on a logical
 processor.
+
+.. _source tree structure:
+
+Source Tree Structure
+*********************
+
+blah blah

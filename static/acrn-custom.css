@@ -5,6 +5,13 @@
    max-width: none;
 }
 
+.wy-breadcrumbs::after {
+   content: " (Content under development)";
+   background-color: #FFFACD;
+   color: red;
+   font-weight: bold;
+}
+
 /*  make .. hlist:: tables fill the page */
 table.hlist {
     width: 95% !important;
