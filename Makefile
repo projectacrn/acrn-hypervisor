@@ -3,6 +3,7 @@
 #
 MAJOR_VERSION=0
 MINOR_VERSION=1
+RC_VERSION=1
 BASEDIR := $(shell pwd)
 DM_OBJDIR ?= $(CURDIR)/build
 
@@ -111,6 +112,7 @@ include/version.h:
 	cat license_header > include/version.h;\
 	echo "#define DM_MAJOR_VERSION $(MAJOR_VERSION)" >> include/version.h;\
 	echo "#define DM_MINOR_VERSION $(MINOR_VERSION)" >> include/version.h;\
+	echo "#define DM_RC_VERSION $(RC_VERSION)" >> include/version.h;\
 	echo "#define DM_BUILD_VERSION "\""$$PATCH"\""" >> include/version.h;\
 	echo "#define DM_BUILD_TIME "\""$$TIME"\""" >> include/version.h;\
 	echo "#define DM_BUILD_USER "\""$(USER)"\""" >> include/version.h

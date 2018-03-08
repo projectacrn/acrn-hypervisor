@@ -160,9 +160,14 @@ usage(int code)
 static void
 print_version(void)
 {
-	fprintf(stderr, "DM version is: %d.%d-%s, build by %s@%s\n",
-		DM_MAJOR_VERSION, DM_MINOR_VERSION, DM_BUILD_VERSION,
-		DM_BUILD_USER, DM_BUILD_TIME);
+	if (DM_RC_VERSION)
+		fprintf(stderr, "DM version is: %d.%d-%d-%s, build by %s@%s\n",
+			DM_MAJOR_VERSION, DM_MINOR_VERSION, DM_RC_VERSION,
+			DM_BUILD_VERSION, DM_BUILD_USER, DM_BUILD_TIME);
+	else
+		fprintf(stderr, "DM version is: %d.%d-%s, build by %s@%s\n",
+			DM_MAJOR_VERSION, DM_MINOR_VERSION, DM_BUILD_VERSION,
+			DM_BUILD_USER, DM_BUILD_TIME);
 
 	exit(0);
 }
