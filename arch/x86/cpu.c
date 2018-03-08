@@ -74,9 +74,10 @@ struct cpu_capability {
 static struct cpu_capability cpu_caps;
 
 static void apicv_cap_detect(void);
+static void monitor_cap_detect(void);
 static void cpu_set_logical_id(uint32_t logical_id);
 static void print_hv_banner(void);
-bool check_monitor_support(void);
+static inline bool get_monitor_cap(void);
 int cpu_find_logical_id(uint32_t lapic_id);
 #ifndef CONFIG_EFI_STUB
 static void start_cpus();
@@ -309,6 +310,8 @@ void bsp_boot_init(void)
 	check_cpu_capability();
 
 	apicv_cap_detect();
+
+	monitor_cap_detect();
 
 	/* Set state for this CPU to initializing */
 	cpu_set_current_state(CPU_BOOT_ID, CPU_STATE_INITIALIZING);
@@ -557,7 +560,7 @@ static void pcpu_sync_sleep(unsigned long *sync, int mask_bit)
 {
 	int wake_sync = (1 << mask_bit);
 
-	if (check_monitor_support()) {
+	if (get_monitor_cap()) {
 		/* Wait for the event to be set using monitor/mwait */
 		asm volatile ("1: cmpl      %%ebx,(%%eax)\n"
 			      "   je        2f\n"
@@ -653,7 +656,7 @@ static void monitor_cap_detect(void)
 	}
 }
 
-bool check_monitor_support(void)
+static inline bool get_monitor_cap(void)
 {
 	return cpu_caps.monitor_supported;
 }
