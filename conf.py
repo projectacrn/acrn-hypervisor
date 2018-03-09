@@ -77,7 +77,9 @@ except:
     pass
 finally:
     if version_major and version_minor and version_rc :
-        version = release = "v " + version_major + '.' + version_minor + '.' + version_rc
+        version = release = "v " + version_major + '.' + version_minor
+        if int(version_rc) > 0 :
+           version = release = version + '-rc' + version_rc
     else:
         sys.stderr.write('Warning: Could not extract hypervisor version from Makefile\n')
         version = release = "unknown"
