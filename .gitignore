@@ -1,4 +1,4 @@
 doxygen
 _build
-devicemodel
-hypervisor
+*.bak
+*.sav
