@@ -11,5 +11,15 @@ if [ ! -d "../acrn-devicemodel" ]; then
   exit -1
 fi
 
-cd ../acrn-hypervisor;git pull
-cd ../acrn-devicemodel;git pull
+cd ../acrn-hypervisor
+git checkout master;
+git fetch upstream
+git merge upstream/master
+git push origin master
+
+
+cd ../acrn-devicemodel
+git checkout master;
+git fetch upstream
+git merge upstream/master
+git push origin master

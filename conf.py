@@ -61,6 +61,7 @@ author = u'Project ARCN developers'
 try:
     version_major = None
     version_minor = None
+    version_rc = None
     for line in open(os.path.normpath("../acrn-hypervisor/Makefile")) :
         if line.count("=") :
            key, val = [x.strip() for x in line.split('=', 2)]
@@ -68,13 +69,15 @@ try:
               version_major = val
            if key == 'MINOR_VERSION':
               version_minor = val
-           if version_major and version_minor :
+           if key == 'RC_VERSION':
+              version_rc = val
+           if version_major and version_minor and version_rc :
               break
 except:
     pass
 finally:
-    if version_major and version_minor :
-        version = release = "v " + version_major + '.' + version_minor
+    if version_major and version_minor and version_rc :
+        version = release = "v " + version_major + '.' + version_minor + '.' + version_rc
     else:
         sys.stderr.write('Warning: Could not extract hypervisor version from Makefile\n')
         version = release = "unknown"
