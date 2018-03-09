@@ -128,8 +128,8 @@ developers to contribute to and enhance.
 .. _Hypervisor Primer:
    https://projectacrn.github.io/hypervisor_primer
 
-Pull Requests and Issues
-************************
+Submitting Issues
+******************
 
 .. _ACRN-dev mailing list:
    https://lists.projectacrn.org/g/acrn-dev
