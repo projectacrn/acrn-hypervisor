@@ -41,6 +41,7 @@
 #include <pthread.h>
 #include <sysexits.h>
 #include <stdbool.h>
+#include <getopt.h>
 
 #include "types.h"
 #include "vmm.h"
@@ -546,6 +547,37 @@ sig_handler_term(int signo)
 	mevent_notify();
 }
 
+static struct option long_options[] = {
+	{"no_x2apic_mode",	no_argument,		0, 'a' },
+	{"acpi",		no_argument,		0, 'A' },
+	{"bvmcons",		no_argument,		0, 'b' },
+	{"pincpu",		required_argument,	0, 'p' },
+	{"ncpus",		required_argument,	0, 'c' },
+	{"memflags_incore",	no_argument,		0, 'C' },
+	{"gdb_port",		required_argument,	0, 'g' },
+	{"lpc",			required_argument,	0, 'l' },
+	{"pci_slot",		required_argument,	0, 's' },
+	{"memflags_wired",	no_argument,		0, 'S' },
+	{"memsize",		required_argument,	0, 'm' },
+	{"ioapic",		no_argument,		0, 'I' },
+	{"vmexit_pause",	no_argument,		0, 'p' },
+	{"strictio",		no_argument,		0, 'e' },
+	{"rtc_localtime",	no_argument,		0, 'u' },
+	{"uuid",		required_argument,	0, 'U' },
+	{"strictmsr",		no_argument,		0, 'w' },
+	{"virtio_msix",		no_argument,		0, 'W' },
+	{"x2apic_mode",		no_argument,		0, 'x' },
+	{"mptgen",		no_argument,		0, 'Y' },
+	{"kernel",		required_argument,	0, 'k' },
+	{"ramdisk",		required_argument,	0, 'r' },
+	{"bootargs",		required_argument,	0, 'B' },
+	{"ptdev_msi",		no_argument,		0, 'M' },
+	{"version",		no_argument,		0, 'v' },
+	{"gvtargs",		required_argument,	0, 'G' },
+	{"help",		no_argument,		0, 'h' },
+	{0,			0,			0,  0  },
+};
+
 int
 main(int argc, char *argv[])
 {
@@ -555,6 +587,7 @@ main(int argc, char *argv[])
 	struct vmctx *ctx;
 	size_t memsize;
 	char *optstr;
+	int option_idx = 0;
 
 	bvmcons = 0;
 	progname = basename(argv[0]);
@@ -570,7 +603,8 @@ main(int argc, char *argv[])
 		fprintf(stderr, "cannot register handler for SIGINT\n");
 
 	optstr = "abehuwxACHIMPSWYvk:r:B:p:g:c:s:m:l:U:G:";
-	while ((c = getopt(argc, argv, optstr)) != -1) {
+	while ((c = getopt_long(argc, argv, optstr, long_options,
+			&option_idx)) != -1) {
 		switch (c) {
 		case 'a':
 			x2apic_mode = 0;
