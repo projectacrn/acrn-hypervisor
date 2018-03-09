@@ -49,4 +49,5 @@ EOF
 fi
 
 # add tap device under the bridge
+ifconfig acrn_tap0 up
 brctl addif acrn-br0 acrn_tap0
