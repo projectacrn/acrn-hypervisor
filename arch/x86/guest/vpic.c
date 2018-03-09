@@ -930,7 +930,7 @@ void *vpic_init(struct vm *vm)
 
 	vpic_register_io_handler(vm);
 
-	vpic = malloc(sizeof(struct vpic));
+	vpic = calloc(1, sizeof(struct vpic));
 	ASSERT(vpic != NULL, "");
 	vpic->vm = vm;
 	vpic->pic[0].mask = 0xff;
