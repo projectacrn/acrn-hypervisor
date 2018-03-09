@@ -43,6 +43,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <uuid/uuid.h>
 
 #include "types.h"
 #include "cpuset.h"
@@ -54,6 +55,8 @@
 
 #include "vmmapi.h"
 #include "mevent.h"
+
+#include "dm.h"
 
 #define	MB	(1024 * 1024UL)
 #define	GB	(1024 * 1024 * 1024UL)
@@ -113,6 +116,7 @@ vm_open(const char *name)
 	struct vmctx *ctx;
 	struct acrn_create_vm create_vm;
 	int error, retry = 10;
+	uuid_t vm_uuid;
 
 	ctx = malloc(sizeof(struct vmctx) + strlen(name) + 1);
 	assert(ctx != NULL);
@@ -126,6 +130,19 @@ vm_open(const char *name)
 
 	if (check_api(devfd) < 0)
 		goto err;
+
+	if (guest_uuid_str == NULL)
+		guest_uuid_str = "d2795438-25d6-11e8-864e-cb7a18b34643";
+
+	error = uuid_parse(guest_uuid_str, vm_uuid);
+	if (error != 0)
+		goto err;
+
+	/* save vm uuid to ctx */
+	uuid_copy(ctx->vm_uuid, vm_uuid);
+
+	/* Pass uuid as parameter of create vm*/
+	uuid_copy(create_vm.GUID, vm_uuid);
 
 	ctx->fd = devfd;
 	ctx->memflags = 0;
