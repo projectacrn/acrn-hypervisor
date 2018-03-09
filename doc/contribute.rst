@@ -214,7 +214,7 @@ workflow here:
 
 #. On your development computer, clone the fork you just made::
 
-      git clone https://github.com/<your github id>/acrn-hypervisor
+     git clone https://github.com/<your github id>/acrn-hypervisor
 
    This would be a good time to let Git know about the upstream repo too::
 
@@ -254,67 +254,63 @@ workflow here:
    agreement with the `DCO`_.  See the `Commit Guidelines`_ section
    below for specific guidelines for writing your commit messages.
 
-#.	Push your topic branch with your changes to your fork in your personal 
-    GitHub account:
+#. Push your topic branch with your changes to your fork in your personal
+   GitHub account::
 
-      git push origin fix_comment_typo
-     
-#.	In your web browser, go to your forked repo and click on the Compare & pull 
-    request button for the branch you just worked on and you want to open a pull 
-    request with.
-    
-#.	Review the pull request changes, and verify that you are opening a pull request
-    for the appropriate branch. The title and message from your commit message should
-    appear as well.
-    
-#.	If you’re working on a subsystem branch that’s not master, you may need to change
-    the intended branch for the pull request here, for example, by changing the base 
-    branch from master to net.
-    
-#.	GitHub will assign one or more suggested reviewers (based on the CODEOWNERS file
-    in the repo). If you are a project member, you can select additional reviewers 
-    now too.
-    
-#.	Click on the submit button and your pull request is sent and awaits review. 
-    Email will be sent as review comments are made, or you can check on your 
-    pull request at https://github.com/projectacrn/acrn-hypervisor/pulls. 
-    
-#.	While you’re waiting for your pull request to be accepted and merged, you can 
-    create another branch to work on another issue. (Be sure to make your new branch
-    off of master and not the previous branch.):
+     git push origin fix_comment_typo
 
-      git checkout master
-      git checkout -b fix_another_issue
-    
-    and use the same process described above to work on this new topic branch.
-    
-#.	If reviewers do request changes to your patch, you can interactively rebase 
-    commit(s) to fix review issues. In your development repo:
-    
-      git fetch --all
-      git rebase --ignore-whitespace upstream/master
-      
-    The --ignore-whitespace option stops git apply (called by rebase) from changing 
-    any whitespace. Continuing:
-    
-      git rebase -i <offending-commit-id>
-      
-    In the interactive rebase editor, replace pick with edit to select a specific 
-    commit (if there’s more than one in your pull request), or remove the line to 
-    delete a commit entirely. Then edit files to fix the issues in the review.
-    
-    As before, inspect and test your changes. When ready, continue the patch submission:
-    
+#. In your web browser, go to your forked repo and click on the Compare & pull
+   request button for the branch you just worked on and you want to open a pull
+   request with.
+
+#. Review the pull request changes, and verify that you are opening a pull request
+   for the appropriate branch. The title and message from your commit message should
+   appear as well.
+
+#. GitHub will assign one or more suggested reviewers (based on the CODEOWNERS file
+   in the repo). If you are a project member, you can select additional reviewers
+   now too.
+
+#. Click on the submit button and your pull request is sent and awaits review.
+   Email will be sent as review comments are made, or you can check on your
+   pull request at https://github.com/projectacrn/acrn-hypervisor/pulls.
+
+#. While you’re waiting for your pull request to be accepted and merged, you can
+   create another branch to work on another issue. (Be sure to make your new branch
+   off of master and not the previous branch.)::
+
+     git checkout master
+     git checkout -b fix_another_issue
+
+   and use the same process described above to work on this new topic branch.
+
+#. If reviewers do request changes to your patch, you can interactively rebase
+   commit(s) to fix review issues. In your development repo::
+
+     git fetch --all
+     git rebase --ignore-whitespace upstream/master
+
+   The ``--ignore-whitespace`` option stops git apply (called by rebase) from changing
+   any whitespace. Continuing::
+
+     git rebase -i <offending-commit-id>
+
+   In the interactive rebase editor, replace pick with edit to select a specific
+   commit (if there’s more than one in your pull request), or remove the line to
+   delete a commit entirely. Then edit files to fix the issues in the review.
+
+   As before, inspect and test your changes. When ready, continue the
+   patch submission::
+
       git add [file(s)]
       git rebase --continue
 
-    Update commit comment if needed, and continue:
-    
-      git push --force origin fix_comment_typo
-      
-    By force pushing your update, your original pull request will be updated with 
-    your changes so you won’t need to resubmit the pull request.
+   Update commit comment if needed, and continue::
 
+      git push --force origin fix_comment_typo
+
+   By force pushing your update, your original pull request will be updated with
+   your changes so you won’t need to resubmit the pull request.
 
 
 Commit Guidelines
