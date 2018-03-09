@@ -30,6 +30,7 @@
 #define	_VMMAPI_H_
 
 #include <sys/param.h>
+#include <uuid/uuid.h>
 #include "types.h"
 #include "vmm.h"
 
@@ -52,6 +53,7 @@ struct vmctx {
 	char    *mmap_highmem;
 	char    *baseaddr;
 	char    *name;
+	uuid_t	vm_uuid;
 };
 
 /*
