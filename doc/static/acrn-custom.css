@@ -29,6 +29,10 @@ span.caption-number::after {
    content: ": ";
 }
 
+table.align-center {
+   display: table !important;
+}
+
 /*  make .. hlist:: tables fill the page */
 table.hlist {
     width: 95% !important;
