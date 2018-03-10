@@ -8,7 +8,7 @@ Version 0.1 release (March 2018)
 
 In March 2018, Intel announced the open source Project ACRN at the
 `Embedded Linux Conference and OpenIoT Summit North America 2018
-<ELC18>`.
+<ELC18>`_.
 
 .. _ELC18:
    https://events.linuxfoundation.org/events/elc-openiot-north-america-2018/
@@ -17,18 +17,17 @@ ACRN is a flexible, lightweight reference hypervisor, built with
 real-time and safety-criticality in mind, optimized to streamline
 embedded development through an open source platform.
 
-The project ACRN reference code can be found on GitHug in https://github.com/projectacrn
-It includes the ACRN hypervisor, the ACRN device model and
-documentation.
-ACRN is a flexible, lightweight hypervisor, built with real-time and
-safety-criticality in mind,it is optimized to streamline embedded
-development through an open source reference platform. ACRNs key
-features include:
+The project ACRN reference code can be found on GitHug in
+https://github.com/projectacrn.  It includes the ACRN hypervisor, the
+ACRN device model and documentation.  ACRN is a flexible, lightweight
+hypervisor, built with real-time and safety-criticality in mind,it is
+optimized to streamline embedded development through an open source
+reference platform. ACRNs key features include:
 
 * Small footprint
-* Built with Real-Time in Mind
-* Virtualization of Embedded IoT Device functions
-* Safety Critical Workload Considerations
+* Built with real-time in mind
+* Virtualization of embedded IoT device functions
+* Safety-critical workload considerations
 * Adaptable
 * Open Source
 
