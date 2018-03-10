@@ -33,7 +33,7 @@ ACRN hypervisor source tree
 
 **arch/x86/**
   hypervisor architecture, which includes arch x86 related source files
-  to run the hypervisor, such as CPU, memory, interrupt, and vmx.
+  to run the hypervisor, such as CPU, memory, interrupt, and VMX.
 
 **boot/**
   boot stuff mainly including ACPI related
@@ -69,7 +69,7 @@ ACRN Device Model source tree
      ACPI table generator.
 
   **pci/**
-     PCI devices, including VBS-Us (virtio backend drivers in user-space).
+     PCI devices, including VBS-Us (Virtio backend drivers in user-space).
 
   **platform/**
      platform devices such as uart, and keyboard.
@@ -413,7 +413,7 @@ Graphic mediation
 
 Intel |reg| Graphics Virtualization Technology –g (Intel |reg| GVT-g)
 provides GPU sharing capability to multiple VMs by using a mediated
-pass-through techniquer. This allows a VM to access performance critical
+pass-through technique. This allows a VM to access performance critical
 I/O resources (usually partitioned) directly, without intervention from
 the hypervisor in most cases.
 
@@ -456,7 +456,7 @@ mapping relation, and replaces the guest vector with a real native
 vector for the device:
 
 **PCI MSI/MSI-X**
-  PCI Message Signalled Interrupts (MSI/MSX-x) from
+  PCI Message Signaled Interrupts (MSI/MSX-x) from
   devices can be triggered from a hypercall when a guest program
   vectors. All PCI devices are programed with real vectors
   allocated by the Hypervisor.
@@ -678,7 +678,7 @@ example:
 
 - a CMOS RTC device may access 0x70/0x71 PIO to get the CMOS time,
 - a GPU PCI device may access its MMIO or PIO BAR space to complete
-  its framebuffer rendering, or
+  its frame buffer rendering, or
 - the bootloader may access PCI devices' CFG
   SPACE for BAR reprogramming.
 
@@ -691,21 +691,21 @@ Virtio Devices
 **************
 
 This section introduces the Virtio devices supported by ACRN.  Currently
-all the Back-end virtio drivers are implemented using the virtio APIs
-and the FE drivers are re-using Linux standard Front-end virtio drivers.
+all the Back-end Virtio drivers are implemented using the Virtio APIs
+and the FE drivers are re-using Linux standard Front-end Virtio drivers.
 
 Virtio-rnd
 =================
 
-The virtio-rnd entropy device supplies high-quality randomness for guest
-use. The virtio device ID of the virtio-rnd device is 4, and supports
+The Virtio-rnd entropy device supplies high-quality randomness for guest
+use. The Virtio device ID of the Virtio-rnd device is 4, and supports
 one virtqueue of 64 entries (configurable in the source code). No
 feature bits are defined.
 
 When the FE driver requires random bytes, the BE device places bytes of
 random data onto the virtqueue.
 
-To launch the virtio-rnd device, you can use the following command:
+To launch the Virtio-rnd device, you can use the following command:
 
 .. code-block:: bash
 
@@ -727,11 +727,11 @@ To verify the result in user OS side, you can use the following command:
 Virtio-blk
 ==========
 
-The virtio-blk device is a simple virtual block device. The FE driver
+The Virtio-blk device is a simple virtual block device. The FE driver
 will place read, write, and other requests onto the virtqueue, so that
 the BE driver can process them accordingly.
 
-The virtio device ID of the virtio-blk is 2, and it supports one
+The Virtio device ID of the Virtio-blk is 2, and it supports one
 virtqueue with 64 entries, configurable in the source code. The feature
 bits supported by the BE device are as follows:
 
@@ -747,7 +747,7 @@ bits supported by the BE device are as follows:
 **VTBLK\_F\_TOPOLOGY(bit 10)**
   device exports information on optimal I/O alignment.
 
-To use the virtio-blk device, use the following command:
+To use the Virtio-blk device, use the following command:
 
 .. code-block:: bash
 
@@ -764,8 +764,8 @@ successfully.
 Virtio-net
 ==========
 
-The virtio-net device is a virtual Ethernet device. The virtio device ID
-of the virtio-net is 1. The virtio-net device supports two virtqueues,
+The Virtio-net device is a virtual Ethernet device. The Virtio device ID
+of the Virtio-net is 1. The Virtio-net device supports two virtqueues,
 one for transmitting packets and the other for receiving packets. The
 FE driver will place empty buffers onto one virtqueue for receiving
 packets, and enqueue outgoing packets onto the other virtqueue for
@@ -786,7 +786,7 @@ device linking under the L2 virtual switch. See
 Currently the feature bits supported by the BE device are:
 
 **VIRTIO\_NET\_F\_MAC(bit 5)**
-  device has given MAC adderss.
+  device has given MAC address.
 
 **VIRTIO\_NET\_F\_MRG\_RXBUF(bit 15)**
   BE driver can merge receive buffers.
@@ -798,7 +798,7 @@ Currently the feature bits supported by the BE device are:
   device will issue an interrupt if it runs out of available
   descriptors on a virtqueue.
 
-To enable the virtio-net device, use the following command:
+To enable the Virtio-net device, use the following command:
 
 .. code-block:: bash
 
@@ -816,14 +816,14 @@ network should be accessible from the user OS.
 Virtio-console
 ==============
 
-The virtio-console device is a simple device for data input and output.
-The virtio device ID of the virtio-console device is 3. A device could
+The Virtio-console device is a simple device for data input and output.
+The Virtio device ID of the Virtio-console device is 3. A device could
 have from one to 16 ports. Each port has a pair of input and output
 virtqueues used to communicate information between the FE and BE
 drivers. Currently the size of each virtqueue is 64, configurable in the
 source code.
 
-Similar to virtio-net device, the two virtqueues specific to a port are
+Similar to Virtio-net device, the two virtqueues specific to a port are
 for transmitting virtqueue and receiving virtqueue. The FE driver will
 place empty buffers onto the receiving virtqueue for incoming data, and
 enqueue outgoing characters onto transmitting virtqueue.
@@ -847,7 +847,7 @@ specify which backend to use:
 
    virtio-console,[@]stdio\|tty\|pty:portname[=portpath][,[@]stdio\|tty\|pty:portname[=portpath]]
 
-For example, to use stdio as a virtio-console backend, use the following
+For example, to use stdio as a Virtio-console backend, use the following
 command:
 
 .. code-block:: bash

@@ -275,7 +275,7 @@ workflow here:
    Email will be sent as review comments are made, or you can check on your
    pull request at https://github.com/projectacrn/acrn-hypervisor/pulls.
 
-#. While you’re waiting for your pull request to be accepted and merged, you can
+#. While you're waiting for your pull request to be accepted and merged, you can
    create another branch to work on another issue. (Be sure to make your new branch
    off of master and not the previous branch.)::
 
@@ -296,7 +296,7 @@ workflow here:
      git rebase -i <offending-commit-id>
 
    In the interactive rebase editor, replace pick with edit to select a specific
-   commit (if there’s more than one in your pull request), or remove the line to
+   commit (if there's more than one in your pull request), or remove the line to
    delete a commit entirely. Then edit files to fix the issues in the review.
 
    As before, inspect and test your changes. When ready, continue the
@@ -310,7 +310,7 @@ workflow here:
       git push --force origin fix_comment_typo
 
    By force pushing your update, your original pull request will be updated with
-   your changes so you won’t need to resubmit the pull request.
+   your changes so you won't need to resubmit the pull request.
    
    You can follow the same workflow for contributing to acrn-devicemodel.
 
