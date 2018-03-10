@@ -33,6 +33,14 @@ table.align-center {
    display: table !important;
 }
 
+
+.code-block-caption {
+    color: #000;
+    font: italic 85%/1 arial,sans-serif;
+    padding: 1em 0;
+    text-align: center;
+}
+`
 /*  make .. hlist:: tables fill the page */
 table.hlist {
     width: 95% !important;
