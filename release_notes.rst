@@ -17,7 +17,7 @@ ACRN is a flexible, lightweight reference hypervisor, built with
 real-time and safety-criticality in mind, optimized to streamline
 embedded development through an open source platform.
 
-The project ACRN reference code can be found on GitHug in
+The project ACRN reference code can be found on GitHub in
 https://github.com/projectacrn.  It includes the ACRN hypervisor, the
 ACRN device model and documentation.  ACRN is a flexible, lightweight
 hypervisor, built with real-time and safety-criticality in mind,it is
@@ -35,9 +35,9 @@ This version 0.1 release has the following software components:
 
 * The ACRN Hypervisor
 * The ACRN Device Model
-* The ACRN VirtIO framework
-* The ACRN Block & NIC & console VirtIO drivers
-* The ACRN VirtIO Backend Service(VBS) & VirIO and Hypervisor Service Module(VHM).
+* The ACRN Virtio framework
+* The ACRN Block & NIC & console Virtio drivers
+* The ACRN Virtio Backend Service(VBS) & Vibrio and Hypervisor Service Module(VHM).
 
 Version 0.1 features include:
 
