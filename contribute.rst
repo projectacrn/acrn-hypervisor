@@ -311,6 +311,8 @@ workflow here:
 
    By force pushing your update, your original pull request will be updated with
    your changes so you won’t need to resubmit the pull request.
+   
+   You can follow the same workflow for contributing to acrn-devicemodel.
 
 
 Commit Guidelines
@@ -321,7 +323,7 @@ Changes are submitted as Git commits. Each commit message must contain:
 * A short and descriptive subject line that is less than 72 characters,
   followed by a blank line. The subject line must include a prefix that
   identifies the subsystem being changed, followed by a colon, and a short
-  title, for example:  ``doc: update commit guidelines instructions``.
+  title, for example:  ``doc: upda  te commit guidelines instructions``.
   (If you're updating an existing file, you can use
   ``git log <filename>`` to see what developers used as the prefix for
   previous patches of this file.)
