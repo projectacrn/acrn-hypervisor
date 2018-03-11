@@ -45,7 +45,7 @@ Set up a Clear Linux Operating System
 
 Currently, an installable version of ARCN does not exist. Therefore, we
 need to setup a base Clear Linux OS to bootstrap ACRN. ACRN requires
-Clear Linux version 21190 or newer.
+Clear Linux version 21260 or newer.
 
 1. Follow this `Clear Linux installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
@@ -222,19 +222,19 @@ Set up Reference UOS
 
    .. code-block:: none
 
-      # curl -O https://download.clearlinux.org/image/clear-21180-kvm.img.xz
+      # curl -O https://download.clearlinux.org/image/clear-21260-kvm.img.xz
 
 #. Uncompress it.
 
    .. code-block:: none
 
-      # unxz clear-21180-kvm.img.xz
+      # unxz clear-21260-kvm.img.xz
 
 #. Deploy the UOS kernel modules to UOS virtual disk image
 
    .. code-block:: none
 
-      # losetup -f -P --show /root/clear-21180-kvm.img
+      # losetup -f -P --show /root/clear-21260-kvm.img
       # ls /dev/loop0*
       # mount /dev/**loop0p3** /mnt
       # cp -r /usr/lib/doc/modules/4.14.23-19.pk414-standard /mnt/lib/doc/modules/
