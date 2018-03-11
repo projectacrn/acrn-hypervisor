@@ -44,6 +44,7 @@ publish:
 	rm -fr $(PUBLISHDIR)/*
 	cp -r $(BUILDDIR)/html/* $(PUBLISHDIR)
 	cp scripts/publish-README.md $(PUBLISHDIR)/README.md
+	cd $(PUBLISHDIR); git add -A; git commit -s -m "publish"; git push origin master;
 
 
 # Catch-all target: route all unknown targets to Sphinx using the new
