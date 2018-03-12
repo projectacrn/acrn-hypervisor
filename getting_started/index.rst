@@ -105,12 +105,10 @@ Clear Linux version 21260 or newer.
       | kernel-pk          | Run the Intel "PK" kernel(product kernel source)  |
       |                    | and enterprise-style kernel with backports        |
       +--------------------+---------------------------------------------------+
-      | os-clr-on-clr-dev  | Install dependent packages and libs               |
-      +--------------------+---------------------------------------------------+
 
    .. code-block:: none
 
-      # swupd bundle-add vim curl network-basic service-os kernel-pk os-clr-on-clr-dev
+      # swupd bundle-add vim curl network-basic service-os kernel-pk
 
 Add the ACRN hypervisor to the EFI Partition
 ============================================
@@ -136,7 +134,7 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # cp /usr/share/acrn.efi /mnt/EFI/org.clearlinux
+      # cp /usr/share/acrn/demo/acrn.efi /mnt/EFI/org.clearlinux
 
 #. Create a boot entry for ACRN. It must contain these settings:
 
@@ -158,8 +156,8 @@ partition. Follow these steps:
    .. literalinclude:: ../../acrn-hypervisor/bsp/uefi/clearlinux/acrn.conf
       :caption: acrn-hypervisor/bsp/uefi/clearlinux/acrn.conf
 
-   You can download ``acrn.conf`` and copy it to
-   ``/mnt/loader/entries/acrn.conf`` and use it directly.  If you're following
+   You need to copy it into
+   ``/mnt/loader/entries/acrn.conf`` and use it then.  If you're following
    the instructions above, the partition (``root=/dev/sda3``) and image
    locatations will match.
 
@@ -207,7 +205,7 @@ folder) as shown here:
    :caption: acrn-devicemodel/samples/bridge.sh
    :language: bash
 
-You can download ``bridge.sh``, copy it to your root home
+by default, it is located to /usr/share/acrn/demo/
 directory, and use it directly by making it executable and running it:
 
 .. code-block:: none
@@ -251,7 +249,7 @@ Set up Reference UOS
       :caption: acrn-devicemodel/samples/launch_uos.sh
       :language: bash
 
-   You can download ``launch_uos.sh``, copy it to your root home
+   by defualt, it is located to /usr/share/acrn/demo/
    directory, and use it directly by making it executable and running it:
 
    .. code-block:: none
