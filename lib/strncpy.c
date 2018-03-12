@@ -66,8 +66,15 @@ char *strncpy_s(char *d, size_t dmax, const char *s, size_t slen)
 	size_t dest_avail;
 	uint64_t overlap_guard;
 
-	ASSERT((d != NULL) && (s != NULL), "invlaid input d or s");
-	ASSERT((dmax != 0) && (slen != 0), "invlaid input dmax or slen");
+	if (d == NULL || s == NULL) {
+		pr_err("%s: invlaid src or dest buffer", __func__);
+		return NULL;
+	}
+
+	if (dmax == 0 || slen == 0) {
+		pr_err("%s: invlaid length of src or dest buffer", __func__);
+		return NULL;
+	}
 
 	if (d == s)
 		return d;
@@ -78,7 +85,11 @@ char *strncpy_s(char *d, size_t dmax, const char *s, size_t slen)
 	dest_avail = dmax;
 
 	while (dest_avail > 0) {
-		ASSERT(overlap_guard != 0, "overlap happened.");
+		if (overlap_guard == 0) {
+			pr_err("%s: overlap happened.", __func__);
+			*(--d) = '\0';
+			return NULL;
+		}
 
 		if (slen == 0) {
 			*d = '\0';
@@ -96,7 +107,7 @@ char *strncpy_s(char *d, size_t dmax, const char *s, size_t slen)
 		overlap_guard--;
 	}
 
-	ASSERT(false, "dest buffer has no enough space.");
+	pr_err("%s: dest buffer has no enough space.", __func__);
 
 	/*
 	 * to avoid a string that is not
