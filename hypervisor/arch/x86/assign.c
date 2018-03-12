@@ -967,7 +967,7 @@ int get_ptdev_info(char *str, int str_max)
 	uint64_t dest;
 	bool lvl_tm;
 	int pin, vpin, bdf, vbdf;
-	struct list_head *pos = NULL, *vm_pos;
+	struct list_head *pos, *vm_pos;
 	struct vm *vm;
 
 	len = snprintf(str, size,
@@ -977,7 +977,7 @@ int get_ptdev_info(char *str, int str_max)
 
 	spinlock_obtain(&vm_list_lock);
 	list_for_each(vm_pos, &vm_list) {
-		vm = list_entry(pos, struct vm, list);
+		vm = list_entry(vm_pos, struct vm, list);
 		spinlock_obtain(&vm->ptdev_lock);
 		list_for_each(pos, &vm->ptdev_list) {
 			entry = list_entry(pos, struct ptdev_remapping_info,
