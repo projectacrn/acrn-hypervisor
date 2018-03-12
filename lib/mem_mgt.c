@@ -266,7 +266,8 @@ void *malloc(unsigned int num_bytes)
 	}
 
 	/* Check if memory allocation is successful */
-	ASSERT(memory != NULL, "");
+	if (memory == NULL)
+		pr_err("Memory allocation failure: 0x%08x Byte", num_bytes);
 
 	/* Return memory pointer to caller */
 	return memory;
@@ -280,7 +281,8 @@ void *alloc_pages(unsigned int page_num)
 	memory = allocate_mem(&Paging_Memory_Pool, page_num * CPU_PAGE_SIZE);
 
 	/* Check if memory allocation is successful */
-	ASSERT(memory != NULL, "");
+	if (memory == NULL)
+		pr_err("Memory allocation failure: %d pages", page_num);
 
 	return memory;
 }

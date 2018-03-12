@@ -54,7 +54,8 @@
  *
  *   OUTPUTS
  *
- *       void *             pointer to destination address
+ *       void *             pointer to destination address if successful,
+ * 			    or else return null.
  *
  ***********************************************************************/
 void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
@@ -67,12 +68,16 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
 	if (d == s)
 		return d;
 
-	ASSERT((slen != 0) && (dmax != 0) && (dmax >= slen),
-		"invalid slen or dmax.");
+	if ((slen == 0) || (dmax == 0) || (dmax < slen)) {
+		pr_err("invalid slen or dmax.");
+		return NULL;
+	}
 
-	ASSERT(((d > s) && (d > s + slen - 1))
-		|| ((d < s) && (s > d + dmax - 1)),
-		"overlap happened.");
+	if (((d > s) && (d <= s + slen - 1))
+		|| ((d < s) && (s <= d + dmax - 1))) {
+		pr_err("overlap happened.");
+		return NULL;
+	}
 
 	dest8 = (uint8_t *)d;
 	src8 = (uint8_t *)s;
