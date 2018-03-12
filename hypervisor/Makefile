@@ -153,6 +153,19 @@ ifeq ($(PLATFORM),uefi)
 C_SRCS += bsp/$(PLATFORM)/cmdline.c
 endif
 
+# retpoline support
+ifeq (true, $(shell [ $(GCC_MAJOR) -eq 7 ] && [ $(GCC_MINOR) -ge 3 ] && echo true))
+CFLAGS += -mindirect-branch=thunk-extern -mindirect-branch-register
+CFLAGS += -DCONFIG_RETPOLINE
+S_SRCS += arch/x86/retpoline-thunk.S
+else
+ifeq (true, $(shell [ $(GCC_MAJOR) -ge 8 ] && echo true))
+CFLAGS += -mindirect-branch=thunk-extern -mindirect-branch-register
+CFLAGS += -DCONFIG_RETPOLINE
+S_SRCS += arch/x86/retpoline-thunk.S
+endif
+endif
+
 C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(C_SRCS))
 ifeq ($(RELEASE),0)
 C_OBJS += $(patsubst %.c,$(HV_OBJDIR)/%.o,$(D_SRCS))

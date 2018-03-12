@@ -30,6 +30,7 @@ SECTIONS
         *(.text .text*) ;
         *(.gnu.linkonce.t*)
         *(.note.gnu.build-id)
+        *(.retpoline_thunk)
     } > ram
 
     .rodata :

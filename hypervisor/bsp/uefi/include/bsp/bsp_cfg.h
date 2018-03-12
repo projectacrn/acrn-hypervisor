@@ -48,5 +48,4 @@
 #define	CONFIG_DMAR_PARSE_ENABLED	1
 #define	CONFIG_GPU_SBDF		0x00000010	/* 0000:00:02.0 */
 #define CONFIG_EFI_STUB       1
-#define	CONFIG_RETPOLINE
 #endif /* BSP_CFG_H */
