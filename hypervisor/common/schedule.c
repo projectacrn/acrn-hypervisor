@@ -199,14 +199,26 @@ static void switch_to(struct vcpu *curr)
 	if (curr == NULL) {
 		asm volatile ("movq %1, %%rsp\n"
 				"movq $0, %%rdi\n"
-				"jmp *%0\n"
+				"call 22f\n"
+				"11: \n"
+				"pause\n"
+				"jmp 11b\n"
+				"22:\n"
+				"mov %0, (%%rsp)\n"
+				"ret\n"
 				:
 				: "a"(default_idle), "r"(cur_sp)
 				: "memory");
 	} else {
 		asm volatile ("movq %2, %%rsp\n"
 				"movq %0, %%rdi\n"
-				"jmp *%1\n"
+				"call 44f\n"
+				"33: \n"
+				"pause\n"
+				"jmp 33b\n"
+				"44:\n"
+				"mov %1, (%%rsp)\n"
+				"ret\n"
 				:
 				: "c"(curr), "a"(vcpu_thread), "r"(cur_sp)
 				: "memory");
