@@ -22,12 +22,9 @@ The recommended NUC hardware configuration is:
 
 - NUC: `NUC Kit
   NUC6CAYH <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc6cayh.html>`__
+- `UEFI BIOS (version 0047) <https://downloadcenter.intel.com/product/95062/Intel-NUC-Kit-NUC6CAYH>`__.
 - Memory: 8G DDR3
 - SSD: 120G SATA
-
-In the software setup, we'll ensure the NUC is running the latest
-(version 0047)
-`UEFI BIOS <https://downloadcenter.intel.com/product/95062/Intel-NUC-Kit-NUC6CAYH>`__.
 
 Software setup
 **************
@@ -44,8 +41,8 @@ Set up a Clear Linux Operating System
 =====================================
 
 Currently, an installable version of ARCN does not exist. Therefore, we
-need to setup a base Clear Linux OS to bootstrap ACRN. ACRN requires
-Clear Linux version 21260 or newer.
+need to setup a base Clear Linux OS to bootstrap ACRN.
+**ACRN requires Clear Linux version 21260 or newer.**
 
 1. Follow this `Clear Linux installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
@@ -86,6 +83,10 @@ Clear Linux version 21260 or newer.
 
 6. Use the ``swupd bundle-add`` command and add these Clear Linux bundles:
 
+   .. code-block:: none
+
+      # swupd bundle-add vim curl network-basic service-os kernel-pk
+
    .. table:: Clear Linux bundles
       :widths: auto
       :name: CL-bundles
@@ -105,10 +106,6 @@ Clear Linux version 21260 or newer.
       | kernel-pk          | Run the Intel "PK" kernel(product kernel source)  |
       |                    | and enterprise-style kernel with backports        |
       +--------------------+---------------------------------------------------+
-
-   .. code-block:: none
-
-      # swupd bundle-add vim curl network-basic service-os kernel-pk
 
 Add the ACRN hypervisor to the EFI Partition
 ============================================
@@ -130,7 +127,8 @@ partition. Follow these steps:
     kernel-org.clearlinux.pk414-standard.4.14.23-19
     loaderx64.efi
 
-#. Copy the ``acrn.efi`` hypervisor application to the EFI partition.
+#. Copy the ``acrn.efi`` hypervisor application (included in the Clear
+   Linux release) to the EFI partition.
 
    .. code-block:: none
 
@@ -150,16 +148,22 @@ partition. Follow these steps:
 
    A sample `acrn.conf
    <https://github.com/projectacrn/acrn-hypervisor/tree/master/bsp/uefi/clearlinux/acrn.conf>`__
-   is available in the acrn-hypervisor GitHub repo (in the bsp/uefi/clearlinux
+   is included in the Clear Linux release, and is also available in the
+   acrn-hypervisor GitHub repo (in the bsp/uefi/clearlinux
    folder) as shown here:
 
    .. literalinclude:: ../../acrn-hypervisor/bsp/uefi/clearlinux/acrn.conf
       :caption: acrn-hypervisor/bsp/uefi/clearlinux/acrn.conf
 
-   You need to copy it into
-   ``/mnt/loader/entries/acrn.conf`` and use it then.  If you're following
+   Copy the ``acrn.conf`` file to the EFI partition we mounted earlier:
+
+   .. code-block:: none
+
+      # cp /usr/share/acrn/demo/acrn.conf /mnt/loader/entries/
+
+   If you're following
    the instructions above, the partition (``root=/dev/sda3``) and image
-   locatations will match.
+   locations used in the ``arcn.conf`` file will match.
 
 #. Add a timeout period for Systemd-Boot to wait, otherwise it will not
    present the boot menu and will always boot the base Clear Linux
@@ -198,18 +202,20 @@ other.
 
 A sample `bridge.sh
 <https://github.com/projectacrn/acrn-devicemodel/tree/master/samples/bridge.sh>`__
-is available in the acrn-devicemodel GitHub repo (in the samples
+is included in the Clear Linux release, and
+is also available in the acrn-devicemodel GitHub repo (in the samples
 folder) as shown here:
 
 .. literalinclude:: ../../acrn-devicemodel/samples/bridge.sh
    :caption: acrn-devicemodel/samples/bridge.sh
    :language: bash
 
-by default, it is located to /usr/share/acrn/demo/
-directory, and use it directly by making it executable and running it:
+By default, it is located in the ``/usr/share/acrn/demo/``
+directory. Use it directly by making it executable and running it:
 
 .. code-block:: none
 
+   # cd /usr/share/acrn/demo/
    # chmod +x ./bridge.sh
    # ./bridge.sh
 
@@ -239,21 +245,23 @@ Set up Reference UOS
       # umount /mnt
       # sync
 
-#. Create the launch_uos.sh script and run it to launch the UOS.
+#. Run the launch_uos.sh script to launch the UOS.
    A sample `launch_uos.sh
    <https://github.com/projectacrn/acrn-devicemodel/tree/master/samples/launch_uos.sh>`__
-   is available in the acrn-devicemodel GitHub repo (in the samples
+   is included in the Clear Linux release, and
+   is also available in the acrn-devicemodel GitHub repo (in the samples
    folder) as shown here:
 
    .. literalinclude:: ../../acrn-devicemodel/samples/launch_uos.sh
       :caption: acrn-devicemodel/samples/launch_uos.sh
       :language: bash
 
-   by defualt, it is located to /usr/share/acrn/demo/
-   directory, and use it directly by making it executable and running it:
+   By default, it is located in the ``/usr/share/acrn/demo/``
+   directory. Use it directly by making it executable and running it:
 
    .. code-block:: none
 
+      # cd /usr/share/acrn/demo/
       # chmod +x ./launch_uos.sh
       # ./launch_uos.sh
 
