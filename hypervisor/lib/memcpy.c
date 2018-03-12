@@ -54,7 +54,8 @@
  *
  *   OUTPUTS
  *
- *       void *             pointer to destination address
+ *       void *             pointer to destination address if successful,
+ * 			    or else return null.
  *
  ***********************************************************************/
 void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
@@ -63,16 +64,20 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
 	uint8_t *dest8;
 	uint8_t *src8;
 
+	if (slen == 0 || dmax == 0 || dmax < slen) {
+		pr_err("%s: invalid src, dest buffer or length.", __func__);
+		return NULL;
+	}
+
+	if ((d > s && d <= s + slen - 1)
+		|| (d < s && s <= d + dmax - 1)) {
+		pr_err("%s: overlap happened.", __func__);
+		return NULL;
+	}
+
 	/*same memory block, no need to copy*/
 	if (d == s)
 		return d;
-
-	ASSERT((slen != 0) && (dmax != 0) && (dmax >= slen),
-		"invalid slen or dmax.");
-
-	ASSERT(((d > s) && (d > s + slen - 1))
-		|| ((d < s) && (s > d + dmax - 1)),
-		"overlap happened.");
 
 	dest8 = (uint8_t *)d;
 	src8 = (uint8_t *)s;
