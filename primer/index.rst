@@ -490,21 +490,21 @@ PIO/MMIO trap Flow
 
 Here is a description of the PIO/MMIO trap flow:
 
-1. Instruction decoder: get the Guest Physical Address (GPA) from VM
+#. Instruction decoder: get the Guest Physical Address (GPA) from VM
    Exit, go through gla2gpa() page walker if necessary.
 
-2. Emulate the instruction. Here the hypervisor will have an address
+#. Emulate the instruction. Here the hypervisor will have an address
    range check to see if the hypervisor is interested in this IO
    port or MMIO GPA access.
 
-3. Hypervisor emulates vLAPIC, vIOAPIC, vPIC, and vUART only (for
+#. Hypervisor emulates vLAPIC, vIOAPIC, vPIC, and vUART only (for
    Service OS only). Any other emulation request are forwarded to
    the SOS for handling. The vCPU raising the I/O request will
    halt until this I/O request is processed successfully. An IPI will
    send to vCPU0 of SOS to notify there is an I/O request waiting for
    service.
 
-4. Service OS VHM module takes the I/O request and dispatches the request
+#. Service OS VHM module takes the I/O request and dispatches the request
    to multiple clients. These clients could be SOS kernel space
    VBS-K, MPT, or User-land Device model. VHM I/O request server
    selects a default fallback client responsible to handle any I/O
@@ -514,7 +514,7 @@ Here is a description of the PIO/MMIO trap flow:
    request falls into the client range, the I/O request server will
    send the request to that client.
 
-5. Multiple clients - fallback client (Device Model in user-land),
+#. Multiple clients - fallback client (Device Model in user-land),
    VBS-K client, MPT client.
    Once the I/O request emulation completes, the client updates the
    request status and notifies the hypervisor by a hypercall.
@@ -560,12 +560,12 @@ hypervisor will support APIC-v and Post interrupts in a future release.
 
 vLAPIC provides the same feature as a native LAPIC:
 
--  Mask/Unmask vectors
--  Inject virtual vectors (Level or Edge trigger mode) to vCPU
--  Notify vIOAPIC of EOI processing
--  Provide TSC Timer service
--  vLAPIC support CR8 to update TPR
--  INIT/STARTUP handling
+- Mask/Unmask vectors
+- Inject virtual vectors (Level or Edge trigger mode) to vCPU
+- Notify vIOAPIC of EOI processing
+- Provide TSC Timer service
+- vLAPIC support CR8 to update TPR
+- INIT/STARTUP handling
 
 Virtual IOAPIC
 ==============
@@ -695,7 +695,7 @@ all the Back-end Virtio drivers are implemented using the Virtio APIs
 and the FE drivers are re-using Linux standard Front-end Virtio drivers.
 
 Virtio-rnd
-=================
+==========
 
 The Virtio-rnd entropy device supplies high-quality randomness for guest
 use. The Virtio device ID of the Virtio-rnd device is 4, and supports
