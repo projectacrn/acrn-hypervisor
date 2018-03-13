@@ -2032,6 +2032,7 @@ pci_emul_diow(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 	      uint64_t offset, int size, uint64_t value)
 {
 	int i;
+	void *offset_ptr;
 	struct pci_emul_dummy *dummy = dev->arg;
 
 	if (baridx == 0) {
@@ -2041,12 +2042,13 @@ pci_emul_diow(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 			return;
 		}
 
+		offset_ptr = (void *) &dummy->ioregs[offset];
 		if (size == 1)
-			dummy->ioregs[offset] = value & 0xff;
+			*(uint8_t *)offset_ptr = value & 0xff;
 		else if (size == 2)
-			*(uint16_t *)&dummy->ioregs[offset] = value & 0xffff;
+			*(uint16_t *)offset_ptr = value & 0xffff;
 		else if (size == 4)
-			*(uint32_t *)&dummy->ioregs[offset] = value;
+			*(uint32_t *)offset = value;
 		else
 			printf("diow: iow unknown size %d\n", size);
 
@@ -2071,14 +2073,15 @@ pci_emul_diow(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 
 		i = baridx - 1;		/* 'memregs' index */
 
+		offset_ptr = (void *) &dummy->memregs[i][offset];
 		if (size == 1)
-			dummy->memregs[i][offset] = value;
+			*(uint8_t *)offset_ptr = value;
 		else if (size == 2)
-			*(uint16_t *)&dummy->memregs[i][offset] = value;
+			*(uint16_t *)offset_ptr = value;
 		else if (size == 4)
-			*(uint32_t *)&dummy->memregs[i][offset] = value;
+			*(uint32_t *)offset_ptr = value;
 		else if (size == 8)
-			*(uint64_t *)&dummy->memregs[i][offset] = value;
+			*(uint64_t *)offset_ptr = value;
 		else
 			printf("diow: memw unknown size %d\n", size);
 
@@ -2098,6 +2101,7 @@ pci_emul_dior(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 	struct pci_emul_dummy *dummy = dev->arg;
 	uint32_t value = 0;
 	int i;
+	void *offset_ptr;
 
 	if (baridx == 0) {
 		if (offset + size > DIOSZ) {
@@ -2107,12 +2111,13 @@ pci_emul_dior(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 		}
 
 		value = 0;
+		offset_ptr = (void *) &dummy->ioregs[offset];
 		if (size == 1)
-			value = dummy->ioregs[offset];
+			value = *(uint8_t *)offset_ptr;
 		else if (size == 2)
-			value = *(uint16_t *) &dummy->ioregs[offset];
+			value = *(uint16_t *)offset_ptr;
 		else if (size == 4)
-			value = *(uint32_t *) &dummy->ioregs[offset];
+			value = *(uint32_t *)offset_ptr;
 		else
 			printf("dior: ior unknown size %d\n", size);
 	}
@@ -2126,14 +2131,15 @@ pci_emul_dior(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 
 		i = baridx - 1;		/* 'memregs' index */
 
+		offset_ptr = (void *) &dummy->memregs[i][offset];
 		if (size == 1)
-			value = dummy->memregs[i][offset];
+			value = *(uint8_t *)offset_ptr;
 		else if (size == 2)
-			value = *(uint16_t *) &dummy->memregs[i][offset];
+			value = *(uint16_t *)offset_ptr;
 		else if (size == 4)
-			value = *(uint32_t *) &dummy->memregs[i][offset];
+			value = *(uint32_t *)offset_ptr;
 		else if (size == 8)
-			value = *(uint64_t *) &dummy->memregs[i][offset];
+			value = *(uint64_t *)offset_ptr;
 		else
 			printf("dior: ior unknown size %d\n", size);
 	}

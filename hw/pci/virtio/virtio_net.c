@@ -280,6 +280,7 @@ virtio_net_tap_tx(struct virtio_net *net, struct iovec *iov, int iovcnt,
 		  int len)
 {
 	static char pad[60]; /* all zero bytes */
+	ssize_t ret;
 
 	if (net->tapfd == -1)
 		return;
@@ -294,7 +295,8 @@ virtio_net_tap_tx(struct virtio_net *net, struct iovec *iov, int iovcnt,
 		iov[iovcnt].iov_len = 60 - len;
 		iovcnt++;
 	}
-	(void) writev(net->tapfd, iov, iovcnt);
+	ret = writev(net->tapfd, iov, iovcnt);
+	(void)ret; /*avoid compiler warning*/
 }
 
 /*
@@ -335,6 +337,7 @@ virtio_net_tap_rx(struct virtio_net *net)
 	void *vrx;
 	int len, n;
 	uint16_t idx;
+	ssize_t ret;
 
 	/*
 	 * Should never be called without a valid tap fd
@@ -349,7 +352,9 @@ virtio_net_tap_rx(struct virtio_net *net)
 		/*
 		 * Drop the packet and try later.
 		 */
-		(void) read(net->tapfd, dummybuf, sizeof(dummybuf));
+		ret = read(net->tapfd, dummybuf, sizeof(dummybuf));
+		(void)ret; /*avoid compiler warning*/
+
 		return;
 	}
 
@@ -362,7 +367,9 @@ virtio_net_tap_rx(struct virtio_net *net)
 		 * Drop the packet and try later.  Interrupt on
 		 * empty, if that's negotiated.
 		 */
-		(void) read(net->tapfd, dummybuf, sizeof(dummybuf));
+		ret = read(net->tapfd, dummybuf, sizeof(dummybuf));
+		(void)ret; /*avoid compiler warning*/
+
 		vq_endchains(vq, 1);
 		return;
 	}
