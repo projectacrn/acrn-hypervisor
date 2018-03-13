@@ -19,6 +19,11 @@
     color: rgba(255,255,255,1);
 }
 
+/* squish the space between a paragraph before a list */
+div > p + ul, div > p + ol {
+   margin-top: -20px;
+}
+
 /* add some space before the figure caption */
 p.caption  {
 #    border-top: 1px solid;

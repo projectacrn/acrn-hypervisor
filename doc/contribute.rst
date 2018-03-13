@@ -78,8 +78,8 @@ agreement is shown below and at http://developercertificate.org/.
 DCO Sign-Off Methods
 ====================
 
-The DCO requires a sign-off message in the following format appear on each
-commit in the pull request::
+The DCO requires that a sign-off message, in the following format,
+appears on each commit in the pull request::
 
    Signed-off-by: Acrnus Jones <acrnusj@gmail.com>
 
@@ -95,9 +95,9 @@ Prerequisites
 .. _project ACRN website: https://projectacrn.org
 
 As a contributor, you'll want to be familiar with project ACRN, how to
-configure, install, and use it as explained in the `project ACRN website`_
-and how to set up your development environment as introduced in the
-project ACRN `Getting Started Guide`_.
+configure, install, and use it as explained on the
+`project ACRN website`_, and how to set up your development environment
+as introduced in the project ACRN `Getting Started Guide`_.
 
 .. _Getting Started Guide:
    https://projectacrn.github.io/getting_started/
@@ -114,16 +114,23 @@ Repository layout
 To clone the ACRN hypervisor repository use::
 
     git clone https://github.com/projectacrn/acrn-hypervisor
-    
+
 To clone the ACRN device model repository use::
 
     git clone https://github.com/projectacrn/acrn-devicemodel
 
+To clone the ACRN documentation repository use::
+
+    git clone https://github.com/projectacrn/acrn-documentation
+
 The project ACRN directory structure is described in the `Hypervisor
 Primer`_ document. In addition to the ACRN hypervisor and device model itself,
-you'll also find the sources for technical documentation, sample code
-and supported board configurations.  All of these are available for
+you'll also find the sources for technical documentation available from
+the `ACRN documentation site`_.  All of these are available for
 developers to contribute to and enhance.
+
+.. _ACRN documentation site:
+   https://projectacrn.github.io/
 
 .. _Hypervisor Primer:
    https://projectacrn.github.io/hypervisor_primer
@@ -134,8 +141,9 @@ Submitting Issues
 .. _ACRN-dev mailing list:
    https://lists.projectacrn.org/g/acrn-dev
 
-Before starting on a patch, first check in our issues in the `ACRN-dev
-mailing list`_ system to see what's been reported on the issue you'd
+Issue tracking for ACRN is done using the `ACRN-dev mailing list`_.
+Before starting on a patch, first read through discussions in the `ACRN-dev
+mailing list`_ to see what's been reported on the issue you'd
 like to address.  Have a conversation on the `ACRN-dev mailing list`_ to
 see what others think of your issue (and proposed solution).  You may
 find others that have encountered the issue you're finding, or that have
@@ -158,7 +166,7 @@ Signed-off-by
 
 The name in the commit message ``Signed-off-by:`` line and your email must
 match the change authorship information. Make sure your :file:`.gitconfig`
-is set up correctly:
+is set up correctly by using:
 
 .. code-block:: console
 
@@ -203,7 +211,8 @@ and test your changes thoroughly before submitting.
 The general GitHub workflow used by project ACRN developers uses a combination of
 command line Git commands and browser interaction with GitHub.  As it is with
 Git, there are multiple ways of getting a task done.  We'll describe a typical
-workflow here:
+workflow here for the acrn-hypervisor repo that can also be used for the
+acrn-devicemodel and acrn-documentation repos:
 
 .. _Create a Fork of acrn-hypervisor:
    https://github.com/projectacrn/acrn-hypervisor#fork-destination-box
@@ -232,14 +241,18 @@ workflow here:
 
 #. Make changes, test locally, change, test, test again, ...
 
-#. When things look good, start the pull request process by adding your changed
-   files::
+#. When things look good, start the pull request process by checking
+   which files have not been staged::
+
+     git status
+
+   Then add the changed files::
 
      git add [file(s) that changed, add -p if you want to be more specific]
 
-   You can see files that are not yet staged using::
+   (or to have all changed files added use)::
 
-     git status
+     git add -A
 
 #. Verify changes to be committed look as you expected::
 
@@ -259,9 +272,9 @@ workflow here:
 
      git push origin fix_comment_typo
 
-#. In your web browser, go to your forked repo and click on the Compare & pull
-   request button for the branch you just worked on and you want to open a pull
-   request with.
+#. In your web browser, go to your personal forked repo and click on the Compare & pull
+   request button for the branch you just worked on and you want to
+   submit to the upstream repo.
 
 #. Review the pull request changes, and verify that you are opening a pull request
    for the appropriate branch. The title and message from your commit message should
@@ -285,7 +298,12 @@ workflow here:
    and use the same process described above to work on this new topic branch.
 
 #. If reviewers do request changes to your patch, you can interactively rebase
-   commit(s) to fix review issues. In your development repo::
+   commit(s) to fix review issues. In your development repo, make the
+   needed changes on the branch you made the initial submission::
+
+     git checkout fix-comment-typo
+
+   then::
 
      git fetch --all
      git rebase --ignore-whitespace upstream/master
@@ -311,8 +329,9 @@ workflow here:
 
    By force pushing your update, your original pull request will be updated with
    your changes so you won't need to resubmit the pull request.
-   
-   You can follow the same workflow for contributing to acrn-devicemodel.
+
+   You can follow the same workflow for contributing to acrn-devicemodel
+   or acrn-documentation repos.
 
 
 Commit Guidelines

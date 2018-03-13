@@ -15,14 +15,14 @@ In March 2018, Intel announced the open source Project ACRN at the
 
 ACRN is a flexible, lightweight reference hypervisor, built with
 real-time and safety-criticality in mind, optimized to streamline
-embedded development through an open source platform.
+embedded development through an open source platform. Check out the
+:ref:`introduction` for more information.
 
 The project ACRN reference code can be found on GitHub in
 https://github.com/projectacrn.  It includes the ACRN hypervisor, the
-ACRN device model and documentation.  ACRN is a flexible, lightweight
-hypervisor, built with real-time and safety-criticality in mind,it is
-optimized to streamline embedded development through an open source
-reference platform. ACRNs key features include:
+ACRN device model, and documentation.
+
+ACRN's key features include:
 
 * Small footprint
 * Built with real-time in mind
@@ -37,7 +37,7 @@ This version 0.1 release has the following software components:
 * The ACRN Device Model
 * The ACRN Virtio framework
 * The ACRN Block & NIC & console Virtio drivers
-* The ACRN Virtio Backend Service(VBS) & Vibrio and Hypervisor Service Module(VHM).
+* The ACRN Virtio Backend Service(VBS) & Virtio and Hypervisor Service Module(VHM).
 
 Version 0.1 features include:
 
