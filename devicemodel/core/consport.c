@@ -84,17 +84,20 @@ ttyread(void)
 	char rb;
 
 	if (tty_char_available()) {
-		read(STDIN_FILENO, &rb, 1);
-		return (rb & 0xff);
-	} else {
-		return -1;
+		if (read(STDIN_FILENO, &rb, 1) > 0)
+			return (rb & 0xff);
 	}
+	return -1;
 }
 
-static void
+
+static	int
 ttywrite(unsigned char wb)
 {
-	(void) write(STDOUT_FILENO, &wb, 1);
+	if (write(STDOUT_FILENO, &wb, 1) > 0)
+		return 1;
+
+	return -1;
 }
 
 static int

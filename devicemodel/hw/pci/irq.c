@@ -248,11 +248,24 @@ pirq_dsdt(void)
 	for (irq = 0; irq < nitems(irq_counts); irq++) {
 		if (!IRQ_PERMITTED(irq))
 			continue;
-		if (irq_prs == NULL)
-			asprintf(&irq_prs, "%d", irq);
-		else {
+		if (irq_prs == NULL) {
+			if (asprintf(&irq_prs, "%d", irq) < 0) {
+				/*error*/
+				if (irq_prs != NULL)
+					free(irq_prs);
+
+				return;
+			}
+		} else {
 			old = irq_prs;
-			asprintf(&irq_prs, "%s,%d", old, irq);
+			if (asprintf(&irq_prs, "%s,%d", old, irq) < 0) {
+				/*error*/
+				if (irq_prs != NULL)
+					free(irq_prs);
+
+				free(old);
+				return;
+			}
 			free(old);
 		}
 	}

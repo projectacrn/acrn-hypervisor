@@ -109,7 +109,8 @@ mevent_pipe_read(int fd, enum ev_type type, void *param)
 	} while (status == MEVENT_MAX);
 }
 
-void
+/*On error, -1 is returned, else return zero*/
+int
 mevent_notify(void)
 {
 	char c;
@@ -119,7 +120,9 @@ mevent_notify(void)
 	 * pipe to force the i/o thread to exit the blocking epoll call.
 	 */
 	if (mevent_pipefd[1] != 0 && pthread_self() != mevent_tid)
-		write(mevent_pipefd[1], &c, 1);
+		if (write(mevent_pipefd[1], &c, 1) <= 0)
+			return -1;
+	return 0;
 }
 
 static int

@@ -421,11 +421,17 @@ pci_lpc_deinit(struct vmctx *ctx, struct pci_vdev *pi, char *opts)
 char *
 lpc_pirq_name(int pin)
 {
-	char *name;
+	char *name = NULL;
 
 	if (lpc_bridge == NULL)
 		return NULL;
-	asprintf(&name, "\\_SB.PCI0.ISA.LNK%c,", 'A' + pin - 1);
+
+	if (asprintf(&name, "\\_SB.PCI0.ISA.LNK%c,", 'A' + pin - 1) < 0) {
+		if (name != NULL)
+			free(name);
+
+		return NULL;
+	}
 	return name;
 }
 

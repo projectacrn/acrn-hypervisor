@@ -148,16 +148,20 @@ ttyread(struct ttyfd *tf)
 {
 	unsigned char rb;
 
-	if (read(tf->fd, &rb, 1) == 1)
+	if (read(tf->fd, &rb, 1) > 0)
 		return rb;
-	else
-		return -1;
+
+	return -1;
 }
 
-static void
+static int
 ttywrite(struct ttyfd *tf, unsigned char wb)
 {
-	(void)write(tf->fd, &wb, 1);
+
+	if (write(tf->fd, &wb, 1) > 0)
+		return 1;
+
+	return -1;
 }
 
 static void
