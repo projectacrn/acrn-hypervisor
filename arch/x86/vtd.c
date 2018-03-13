@@ -196,6 +196,12 @@ static struct list_head iommu_domains;
 static void dmar_register_hrhd(struct dmar_drhd_rt *drhd_rt);
 static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus,
 					   uint8_t devfun);
+
+static inline void clflush(volatile void *p)
+{
+	asm volatile ("clflush (%0)" :: "r"(p));
+}
+
 static int register_hrhd_units(void)
 {
 	struct dmar_info *info = get_dmar_info();
@@ -251,6 +257,19 @@ static void iommu_write64(struct dmar_drhd_rt *dmar_uint, uint32_t offset,
 
 	temp = value >> 32;
 	mmio_write_long(temp, dmar_uint->drhd->reg_base_addr + offset + 4);
+}
+
+static void iommu_flush_cache(struct dmar_drhd_rt *dmar_uint,
+			      void *p, uint32_t size)
+{
+	uint32_t i;
+
+	/* if vtd support page-walk coherency, no need to flush cacheline */
+	if (iommu_ecap_c(dmar_uint->ecap))
+		return;
+
+	for (i = 0; i < size; i += CACHE_LINE_SIZE)
+		clflush((char *)p + i);
 }
 
 #if DBG_IOMMU
@@ -976,6 +995,8 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 
 		root_entry->upper = 0;
 		root_entry->lower = lower;
+		iommu_flush_cache(dmar_uint, root_entry,
+				sizeof(root_entry));
 	} else {
 		context_table_addr = DMAR_GET_BITSLICE(root_entry->lower,
 				ROOT_ENTRY_LOWER_CTP);
@@ -1030,6 +1051,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 	context_entry->upper = upper;
 	context_entry->lower = lower;
 
+	iommu_flush_cache(dmar_uint, context_entry, sizeof(context_entry));
 	return 0;
 }
 
@@ -1073,6 +1095,8 @@ remove_iommu_device(struct iommu_domain *domain, uint16_t segment,
 	/* clear the present bit first */
 	context_entry->lower = 0;
 	context_entry->upper = 0;
+
+	iommu_flush_cache(dmar_uint, context_entry, sizeof(context_entry));
 
 	/* if caching mode is present, need to invalidate translation cache */
 	/* if(cap_caching_mode(dmar_uint->cap)) { */
