@@ -17,7 +17,10 @@ partitioning hypervisors. The ACRN hypervisor architecture partitions
 the system into different functional domains, with carefully selected
 guest OS sharing optimizations for IoT and embedded devices.
 
-An interesting use case example for the ACRN Hypervisor is in automotive
+Automotive Use Case Example
+***************************
+
+An interesting use case example for the ACRN Hypervisor is in an automotive
 scenario.  The ACRN hypervisor can be used for building a Software
 Defined Cockpit (SDC) or an In-Vehicle Experience (IVE) solution.  As a
 reference implementation, ACRN provides the basis for embedded
@@ -33,28 +36,28 @@ considerations.
 An **Instrument Cluster (IC)** system is used to show the driver operational
 information about the vehicle, such as:
 
--  the speed, the fuel level, trip mile and other driving information of
-   the car;
--  projecting heads-up images on the windshield, with alerts for low
-   fuel or tire pressure;
--  showing rear-view camera, and surround-view for parking assistance.
+- the speed, the fuel level, trip mile and other driving information of
+  the car;
+- projecting heads-up images on the windshield, with alerts for low
+  fuel or tire pressure;
+- showing rear-view camera, and surround-view for parking assistance.
 
 An **In-Vehicle Infotainment (IVI)** system's capabilities can include:
 
--  navigation systems, radios, and other entertainment systems;
--  connection to mobile devices for phone calls, music, and applications
-   via voice recognition;
--  control interaction by gesture recognition or touch.
+- navigation systems, radios, and other entertainment systems;
+- connection to mobile devices for phone calls, music, and applications
+  via voice recognition;
+- control interaction by gesture recognition or touch.
 
 A **Rear Seat Entertainment (RSE)** system could run:
 
--  entertainment system;
--  virtual office;
--  connection to the front-seat IVI system and mobile devices (cloud
-   connectivity).
--  connection to mobile devices for phone calls, music, and
-   applications via voice recognition;
--  control interaction by gesture recognition or touch
+- entertainment system;
+- virtual office;
+- connection to the front-seat IVI system and mobile devices (cloud
+  connectivity).
+- connection to mobile devices for phone calls, music, and
+  applications via voice recognition;
+- control interaction by gesture recognition or touch
 
 The ACRN hypervisor can support both Linux\* VM and Android\* VM as a
 User OS, with the User OS managed by the ACRN hypervisor. Developers and
@@ -73,14 +76,14 @@ hypervisor.
 
 This ACRN hypervisor block diagram shows:
 
--  The ACRN hypervisor sits right on top of the bootloader for fast
-   booting capabilities.
--  Partitioning of resources to ensure safety-critical and non-safety
-   critical domains are able to coexist on one platform.
--  Rich I/O mediators allows various I/O devices shared across VMs, and
-   thus delivers a comprehensive user experience
--  Multiple operating systems are supported by one SoC through efficient
-   virtualization.
+- The ACRN hypervisor sits right on top of the bootloader for fast
+  booting capabilities.
+- Partitioning of resources to ensure safety-critical and non-safety
+  critical domains are able to coexist on one platform.
+- Rich I/O mediators allows various I/O devices shared across VMs, and
+  thus delivers a comprehensive user experience
+- Multiple operating systems are supported by one SoC through efficient
+  virtualization.
 
 .. note::
    The yellow color parts in :numref:`ivi-block` are part of the project
@@ -145,11 +148,11 @@ on an Intel |reg| Architecture platform NUC (see :ref:`hardware`).
 
 The Boot process proceeds as follows:
 
-1. UEFI verifies and boots the ACRN hypervisor and Service OS Bootloader
-2. UEFI (or Service OS Bootloader) verifies and boots Service OS kernel
-3. Service OS kernel verifies and loads ACRN Device Model and Virtual
+#. UEFI verifies and boots the ACRN hypervisor and Service OS Bootloader
+#. UEFI (or Service OS Bootloader) verifies and boots Service OS kernel
+#. Service OS kernel verifies and loads ACRN Device Model and Virtual
    bootloader through dm-verity
-4. Virtual bootloader starts the User-side verified boot process
+#. Virtual bootloader starts the User-side verified boot process
 
 
 ACRN Hypervisor Architecture
@@ -243,14 +246,14 @@ used to give VM applications (and OSes) access to these shared devices.
 Traditionally there are three architectural approaches to device
 emulation:
 
-* The first architecture is device emulation within the hypervisor which
+* The first architecture is **device emulation within the hypervisor** which
   is a common method implemented within the VMware\* workstation product
   (an operating system-based hypervisor). In this method, the hypervisor
   includes emulations of common devices that the various guest operating
   systems can share, including virtual disks, virtual network adapters,
   and other necessary platform elements.
 
-* The second architecture is called user space device emulation. As the
+* The second architecture is called **user space device emulation**. As the
   name implies, rather than the device emulation being embedded within
   the hypervisor, it is instead implemented in a separate user space
   application. QEMU, for example, provides this kind of device emulation
@@ -262,7 +265,7 @@ emulation:
   functionality.
 
 * The third variation on hypervisor-based device emulation is
-  paravirtualized (PV) drivers. In this model introduced by the `XEN
+  **paravirtualized (PV) drivers**. In this model introduced by the `XEN
   project`_ the hypervisor includes the physical drivers, and each guest
   operating system includes a hypervisor-aware driver that works in
   concert with the hypervisor drivers.

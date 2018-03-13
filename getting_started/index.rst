@@ -5,9 +5,9 @@ Getting Started Guide
 
 After reading the :ref:`introduction`, use this guide to get started
 using ACRN in a reference setup.  We'll show how to set up your
-development and target hardware, and then how to boot up of the ACRN
+development and target hardware, and then how to boot up the ACRN
 hypervisor and the `Clear Linux`_ Service OS and Guest OS on the Intel
-|reg| NUC, using the UEFI BIOS.
+|reg| NUC.
 
 .. _Clear Linux: https://clearlinux.org
 
@@ -16,7 +16,7 @@ Hardware setup
 
 The Intel |reg| NUC (NUC6CAYH) is the supported reference target
 platform for ACRN work, as described in :ref:`hardware`, and is the only
-platform tested with these setup instructions.
+platform currently tested with these setup instructions.
 
 The recommended NUC hardware configuration is:
 
@@ -40,9 +40,11 @@ for downloading and flashing an updated BIOS for the NUC.
 Set up a Clear Linux Operating System
 =====================================
 
-Currently, an installable version of ARCN does not exist. Therefore, we
-need to setup a base Clear Linux OS to bootstrap ACRN.
-**ACRN requires Clear Linux version 21260 or newer.**
+Currently, an installable version of ARCN does not exist. Therefore, you
+need to setup a base Clear Linux OS to bootstrap ACRN on the NUC. You'll
+need a network connection for your NUC to complete this setup.
+
+.. note:: ACRN requires Clear Linux version 21260 or newer.
 
 1. Follow this `Clear Linux installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
@@ -71,11 +73,11 @@ need to setup a base Clear Linux OS to bootstrap ACRN.
       | /dev/sda3   | 111.3G   | Linux root (x86-64)   |
       +-------------+----------+-----------------------+
 
-4. After installation is complete, boot into Clear Linux and log in as
-   root and set a password.
+4. After installation is complete, boot into Clear Linux, login as
+   root, and set a password.
 
-5. Clear Linux is set to automatically update. If you do not wish for
-   autoupdate, issue this command:
+5. Clear Linux is set to automatically update itself. If you do not want
+   it to autoupdate, issue this command:
 
    .. code-block:: none
 
@@ -110,7 +112,7 @@ need to setup a base Clear Linux OS to bootstrap ACRN.
 Add the ACRN hypervisor to the EFI Partition
 ============================================
 
-In order to boot the ACRN SOS on the NUC, we need to add it to the EFI
+In order to boot the ACRN SOS on the NUC, you'll need to add it to the EFI
 partition. Follow these steps:
 
 #. Mount the EFI partition and verify you have the following files:
@@ -210,8 +212,9 @@ folder) as shown here:
    :caption: acrn-devicemodel/samples/bridge.sh
    :language: bash
 
-By default, it is located in the ``/usr/share/acrn/demo/``
-directory. Use it directly by making it executable and running it:
+By default, the script is located in the ``/usr/share/acrn/demo/``
+directory. Use it directly by making it executable and run it to create
+a network bridge:
 
 .. code-block:: none
 
@@ -256,8 +259,9 @@ Set up Reference UOS
       :caption: acrn-devicemodel/samples/launch_uos.sh
       :language: bash
 
-   By default, it is located in the ``/usr/share/acrn/demo/``
-   directory. Use it directly by making it executable and running it:
+   By default, the script is located in the ``/usr/share/acrn/demo/``
+   directory. Use it directly by making it executable and run it to
+   launch the User OS:
 
    .. code-block:: none
 
@@ -266,7 +270,7 @@ Set up Reference UOS
       # ./launch_uos.sh
 
 #. At this point, you've successfully booted the ACRN system,
-   hypervisor, SOS and UOS:
+   hypervisor, SOS, and UOS:
 
    .. figure:: images/gsg-successful-boot.png
       :align: center
@@ -277,7 +281,7 @@ Build ACRN from Source
 **********************
 
 If you would like to build ACRN hypervisor and device model from source,
-follow these steps:
+follow these steps, using your NUC as a development system:
 
 #. On your Clear Linux system, install the os-clr-on-clr bundle to get
    the necessary tools.
