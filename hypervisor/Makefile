@@ -12,6 +12,20 @@ API_MINOR_VERSION=0
 GCC_MAJOR=$(shell echo __GNUC__ | $(CC) -E -x c - | tail -n 1)
 GCC_MINOR=$(shell echo __GNUC_MINOR__ | $(CC) -E -x c - | tail -n 1)
 
+# With V=1 means verbose build. Will show full build commands
+#
+# Without V means silient build. Only show customed message. And we
+# could put more focous on warning.
+ifdef V
+  Q :=
+  vecho := @true
+  SUBOPT := "V=1"
+else
+  Q := @
+  vecho := @echo
+  SUBOPT:= "--no-print-directory"
+endif
+
 #enable stack overflow check
 STACK_PROTECTOR := 1
 
@@ -191,53 +205,61 @@ VERSION := bsp/$(CONFIG_PLATFORM)/include/bsp/version.h
 
 .PHONY: all
 all: $(VERSION) $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
-	rm -f $(VERSION)
+	$(Q)rm -f $(VERSION)
 
 ifeq ($(CONFIG_PLATFORM), uefi)
 all: efi
 .PHONY: efi
 efi: $(HV_OBJDIR)/$(HV_FILE).bin
-	echo "building hypervisor as EFI executable..."
-	make -C bsp/uefi/efi HV_OBJDIR=$(HV_OBJDIR)
+	$(vecho) "Building hypervisor as EFI executable..."
+	$(Q)make -C bsp/uefi/efi $(SUBOPT) HV_OBJDIR=$(HV_OBJDIR)
 
 install: efi
-	make -C bsp/uefi/efi HV_OBJDIR=$(HV_OBJDIR) install
+	$(vecho) "Install efi executable..."
+	$(Q)make -C bsp/uefi/efi $(SUBOPT) HV_OBJDIR=$(HV_OBJDIR) install
 endif
 
 ifeq ($(CONFIG_PLATFORM), sbl)
 install: $(VERSION) $(HV_OBJDIR)/$(HV_FILE).32.out
-	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).sbl
+	$(vecho) "Install $(HV_FILE).32.out..."
+	$(Q)install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).sbl
 endif
 
 $(HV_OBJDIR)/$(HV_FILE).32.out: $(HV_OBJDIR)/$(HV_FILE).out
-	$(OBJCOPY) -S --section-alignment=0x1000 -O elf32-i386 $< $@
+	$(vecho) "Generate `basename $@`..."
+	$(Q)$(OBJCOPY) -S --section-alignment=0x1000 -O elf32-i386 $< $@
 
 $(HV_OBJDIR)/$(HV_FILE).bin: $(HV_OBJDIR)/$(HV_FILE).out
-	$(OBJCOPY) -O binary $< $(HV_OBJDIR)/$(HV_FILE).bin
+	$(vecho) "Generate `basename $@`..."
+	$(Q)$(OBJCOPY) -O binary $< $(HV_OBJDIR)/$(HV_FILE).bin
 
 $(HV_OBJDIR)/$(HV_FILE).out: $(C_OBJS) $(S_OBJS)
-	$(CC) -E -x c $(patsubst %, -I%, $(INCLUDE_PATH)) $(ARCH_LDSCRIPT_IN) | grep -v '^#' > $(ARCH_LDSCRIPT)
-	$(CC) -Wl,-Map=$(HV_OBJDIR)/$(HV_FILE).map -o $@ $(LDFLAGS) $(ARCH_LDFLAGS) -T$(ARCH_LDSCRIPT) $^
+	$(vecho) "Generate `basename $@`..."
+	$(Q)$(CC) -E -x c $(patsubst %, -I%, $(INCLUDE_PATH)) $(ARCH_LDSCRIPT_IN) | grep -v '^#' > $(ARCH_LDSCRIPT)
+	$(Q)$(CC) -Wl,-Map=$(HV_OBJDIR)/$(HV_FILE).map -o $@ $(LDFLAGS) $(ARCH_LDFLAGS) -T$(ARCH_LDSCRIPT) $^
 
 .PHONY: clean
 clean:
-	rm -f $(C_OBJS)
-	rm -f $(S_OBJS)
-	rm -f $(VERSION)
-	rm -rf $(HV_OBJDIR)
+	$(vecho) "Clean up..."
+	$(Q)rm -f $(C_OBJS)
+	$(Q)rm -f $(S_OBJS)
+	$(Q)rm -f $(VERSION)
+	$(Q)rm -rf $(HV_OBJDIR)
 
 .PHONY: distclean
 distclean:
-	rm -f $(DISTCLEAN_OBJS)
-	rm -f $(C_OBJS)
-	rm -f $(S_OBJS)
-	rm -f $(VERSION)
-	rm -rf $(HV_OBJDIR)
-	rm -f tags TAGS cscope.files cscope.in.out cscope.out cscope.po.out GTAGS GPATH GRTAGS GSYMS
+	$(vecho) "dist clean up..."
+	$(Q)rm -f $(DISTCLEAN_OBJS)
+	$(Q)rm -f $(C_OBJS)
+	$(Q)rm -f $(S_OBJS)
+	$(Q)rm -f $(VERSION)
+	$(Q)rm -rf $(HV_OBJDIR)
+	$(Q)rm -f tags TAGS cscope.files cscope.in.out cscope.out cscope.po.out GTAGS GPATH GRTAGS GSYMS
 
 PHONY: (VERSION)
 $(VERSION):
-	touch $(VERSION)
+	$(vecho) "Generate version..."
+	$(Q)touch $(VERSION)
 	@COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
 	DIRTY=`git diff-index --name-only HEAD`;\
 	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
@@ -259,9 +281,11 @@ $(VERSION):
 	echo "#define HV_BUILD_USER "\""$$USER"\""" >> $(VERSION)
 
 $(HV_OBJDIR)/%.o: %.c $(HV_OBJDIR)/$(HV_CONFIG_H)
-	[ ! -e $@ ] && mkdir -p $(dir $@); \
+	$(vecho) "--> Build $<"
+	$(Q)[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. -c $(CFLAGS) $(ARCH_CFLAGS) $< -o $@
 
 $(HV_OBJDIR)/%.o: %.S $(HV_OBJDIR)/$(HV_CONFIG_H)
-	[ ! -e $@ ] && mkdir -p $(dir $@); \
+	$(vecho) "--> Build $<"
+	$(Q)[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. $(ASFLAGS) $(ARCH_ASFLAGS) -c $< -o $@
