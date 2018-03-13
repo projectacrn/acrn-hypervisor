@@ -2,3 +2,5 @@ doxygen
 _build
 *.bak
 *.sav
+*.log
+*.warnings
