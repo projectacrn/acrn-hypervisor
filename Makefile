@@ -23,7 +23,7 @@ help:
 .PHONY: help Makefile
 
 pullsource:
-	scripts/pullsource.sh
+	$(Q)scripts/pullsource.sh
 
 
 # Generate the doxygen xml (for Sphinx) and copy the doxygen html to the
@@ -31,6 +31,11 @@ pullsource:
 
 doxy: pullsource
 	$(Q)(cat acrn.doxyfile) | doxygen -  2>&1
+
+html: doxy
+	$(Q)$(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)" "$(SPHINXOPTS)" $(O) > doc.log 2>&1
+	$(Q)./scripts/filter-doc-log.sh doc.log
+
 
 # Remove generated content (Sphinx and doxygen)
 
