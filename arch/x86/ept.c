@@ -414,7 +414,7 @@ int ept_violation_handler(struct vcpu *vcpu)
 	uint64_t gpa;
 
 	/* Handle page fault from guest */
-	exit_qual = exec_vmread(VMX_EXIT_QUALIFICATION);
+	exit_qual = vcpu->arch_vcpu.exit_qualification;
 
 	memset(&vcpu->req, 0, sizeof(struct vhm_request));
 

@@ -2316,7 +2316,7 @@ int apicv_virtualized_eoi_exit_handler(struct vcpu *vcpu)
 {
 	struct vlapic *vlapic = NULL;
 
-	int vector = exec_vmread(VMX_EXIT_QUALIFICATION) & 0xFF;
+	int vector;
 	struct lapic *lapic;
 	struct lapic_reg *tmrptr;
 	uint32_t idx, mask;
@@ -2325,6 +2325,7 @@ int apicv_virtualized_eoi_exit_handler(struct vcpu *vcpu)
 
 	vlapic =  vcpu->arch_vcpu.vlapic;
 	lapic = vlapic->apic_page;
+	vector = (vcpu->arch_vcpu.exit_qualification) & 0xFF;
 
 	tmrptr = &lapic->tmr[0];
 	idx = vector / 32;
@@ -2347,7 +2348,7 @@ int apicv_write_exit_handler(struct vcpu *vcpu)
 	int error, handled, offset;
 	struct vlapic *vlapic = NULL;
 
-	qual = exec_vmread(VMX_EXIT_QUALIFICATION);
+	qual = vcpu->arch_vcpu.exit_qualification;
 	offset = (qual & 0xFFF);
 
 	handled = 1;
