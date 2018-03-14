@@ -41,6 +41,12 @@
  */
 #define	VMMAPI_VERSION	0103	/* 2 digit major followed by 2 digit minor */
 
+#define	MB	(1024 * 1024UL)
+#define	GB	(1024 * 1024 * 1024UL)
+
+#define ALIGN_UP(x, align)	(((x) + ((align)-1)) & ~((align)-1))
+#define ALIGN_DOWN(x, align)	((x) & ~((align)-1))
+
 struct iovec;
 
 struct vmctx {
@@ -116,6 +122,9 @@ void	vm_destroy(struct vmctx *ctx);
 int	vm_parse_memsize(const char *optarg, size_t *memsize);
 int	vm_setup_memory(struct vmctx *ctx, size_t len, enum vm_mmap_style s);
 void	vm_unsetup_memory(struct vmctx *ctx);
+bool	check_hugetlb_support(void);
+int	hugetlb_setup_memory(struct vmctx *ctx);
+void	hugetlb_unsetup_memory(struct vmctx *ctx);
 void	*vm_map_gpa(struct vmctx *ctx, vm_paddr_t gaddr, size_t len);
 uint32_t vm_get_lowmem_limit(struct vmctx *ctx);
 void	vm_set_lowmem_limit(struct vmctx *ctx, uint32_t limit);
@@ -150,4 +159,5 @@ int	vm_create_vcpu(struct vmctx *ctx, int vcpu_id);
 
 int	vm_get_cpu_state(struct vmctx *ctx, void *state_buf);
 
+extern bool hugetlb;
 #endif	/* _VMMAPI_H_ */

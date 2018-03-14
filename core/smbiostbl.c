@@ -39,9 +39,6 @@
 #include "dm.h"
 #include "smbiostbl.h"
 
-#define	MB			(1024*1024)
-#define	GB			(1024ULL*1024*1024)
-
 #define SMBIOS_BASE		0xF1000
 
 /* ACRN-DM_ACPI_BASE - SMBIOS_BASE) */

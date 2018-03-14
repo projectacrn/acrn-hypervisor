@@ -58,9 +58,6 @@
 
 #include "dm.h"
 
-#define	MB	(1024 * 1024UL)
-#define	GB	(1024 * 1024 * 1024UL)
-
 #define MAP_NOCORE 0
 #define MAP_ALIGNED_SUPER 0
 
@@ -387,6 +384,9 @@ vm_setup_memory(struct vmctx *ctx, size_t memsize, enum vm_mmap_style vms)
 		objsize = ctx->lowmem;
 	}
 
+	if (hugetlb)
+		return hugetlb_setup_memory(ctx);
+
 	/*
 	 * Stake out a contiguous region covering the guest physical memory
 	 * and the adjoining guard regions.
@@ -430,6 +430,11 @@ vm_setup_memory(struct vmctx *ctx, size_t memsize, enum vm_mmap_style vms)
 void
 vm_unsetup_memory(struct vmctx *ctx)
 {
+	if (hugetlb) {
+		hugetlb_unsetup_memory(ctx);
+		return;
+	}
+
 	if (ctx->lowmem > 0)
 		munmap(ctx->mmap_lowmem, ctx->lowmem);
 
