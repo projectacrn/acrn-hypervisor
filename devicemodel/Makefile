@@ -100,7 +100,7 @@ SRCS += core/consport.c
 SRCS += core/vmmapi.c
 SRCS += core/mptbl.c
 SRCS += core/main.c
-
+SRCS += core/hugetlb.c
 
 OBJS := $(patsubst %.c,$(DM_OBJDIR)/%.o,$(SRCS))
 
