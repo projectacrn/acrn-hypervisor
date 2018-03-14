@@ -63,8 +63,10 @@ char *strcpy_s(char *d, size_t dmax, const char *s)
 	size_t dest_avail;
 	uint64_t overlap_guard;
 
-	ASSERT(s != NULL, "invalid input s.");
-	ASSERT((d != NULL) && (dmax != 0), "invalid input d or dmax.");
+	if (s == NULL || (d == NULL) || (dmax == 0)) {
+		pr_err("strcpy_s: invalid input s, d or dmax.");
+		return NULL;
+	}
 
 	if (s == d)
 		return d;
@@ -75,7 +77,11 @@ char *strcpy_s(char *d, size_t dmax, const char *s)
 	dest_base = d;
 
 	while (dest_avail > 0) {
-		ASSERT(overlap_guard != 0, "overlap happened.");
+		if (overlap_guard == 0) {
+			pr_err("strcpy_s: overlap happened.");
+			*(--d) = '\0';
+			return NULL;
+		}
 
 		*d = *s;
 		if (*d == '\0')
@@ -87,7 +93,7 @@ char *strcpy_s(char *d, size_t dmax, const char *s)
 		overlap_guard--;
 	}
 
-	ASSERT(false, "dest buffer has no enough space.");
+	pr_err("strcpy_s: dest buffer has no enough space.");
 
 	/*
 	 * to avoid a string that is not
