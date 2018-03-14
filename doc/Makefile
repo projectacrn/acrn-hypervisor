@@ -33,7 +33,7 @@ doxy: pullsource
 	$(Q)(cat acrn.doxyfile) | doxygen -  2>&1
 
 html: doxy
-	$(Q)$(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)" "$(SPHINXOPTS)" $(O) > doc.log 2>&1
+	$(Q)$(SPHINXBUILD) -b html -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(O) > doc.log 2>&1
 	$(Q)./scripts/filter-doc-log.sh doc.log
 
 
