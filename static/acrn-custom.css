@@ -35,6 +35,11 @@ span.caption-number::after {
    content: ": ";
 }
 
+p.extrafooter {
+   text-align: right;
+   margin-top: -36px;
+}
+
 table.align-center {
    display: table !important;
 }
