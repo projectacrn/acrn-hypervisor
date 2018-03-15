@@ -71,6 +71,11 @@ reset_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 			error = vm_suspend(ctx, VM_SUSPEND_RESET);
 			assert(error == 0 || errno == EALREADY);
 		}
+
+		/* cold reset should clear the value in 0xcf9 */
+		if (reset_control & 0x8) {
+			reset_control = 0;
+		}
 	}
 	return 0;
 }
