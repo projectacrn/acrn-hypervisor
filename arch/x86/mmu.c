@@ -166,7 +166,6 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 		int ept_entry, enum mem_map_request_type request_type)
 {
 	uint64_t table_entry;
-	uint64_t table_present;
 	uint32_t table_offset;
 	uint32_t mapped_size;
 
@@ -237,21 +236,6 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 
 	/* Check to see if mapping should occur */
 	if (mapped_size != 0) {
-		/* Get current table entry */
-		uint64_t tmp = MEM_READ64(table_base + table_offset);
-
-		/* Check if EPT entry */
-		if (ept_entry) {
-			/* Use read/write/execute bits to determine presence of
-			 * entry
-			 */
-			table_present = (IA32E_EPT_R_BIT |
-					 IA32E_EPT_W_BIT | IA32E_EPT_X_BIT);
-		} else {
-			/* Use the P bit to determine if an entry is present */
-			table_present = IA32E_COMM_P_BIT;
-		}
-
 		switch (request_type) {
 		case PAGING_REQUEST_TYPE_MAP:
 		{
@@ -271,7 +255,10 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 		}
 		case PAGING_REQUEST_TYPE_UNMAP:
 		{
-			if (tmp & table_present) {
+			/* Get current table entry */
+			uint64_t entry = MEM_READ64(table_base + table_offset);
+
+			if (entry) {
 				/* Table is present.
 				 * Write the table entry to map this memory
 				 */
