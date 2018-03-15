@@ -351,6 +351,11 @@
 #define VMX_INT_TYPE_HW_EXP		3
 #define VMX_INT_TYPE_SW_EXP		6
 
+/*VM exit qulifications for APIC-access*/
+#define APIC_ACCESS_OFFSET(qual)	((qual) & 0xFFF)
+#define APIC_ACCESS_TYPE(qual)		(((qual) >> 12) & 0xF)
+
+
 #define VM_SUCCESS	0
 #define VM_FAIL		-1
 
