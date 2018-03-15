@@ -393,7 +393,7 @@ basl_fwrite_fadt(FILE *fp)
 	EFPRINTF(fp, "[0008]\t\tAddress : 0000000000000CF9\n");
 	EFPRINTF(fp, "\n");
 
-	EFPRINTF(fp, "[0001]\t\tValue to cause reset : 06\n");
+	EFPRINTF(fp, "[0001]\t\tValue to cause reset : 0E\n");
 	EFPRINTF(fp, "[0002]\t\tARM Flags (decoded below): 0000\n");
 	EFPRINTF(fp, "\t\t\tPSCI Compliant : 0\n");
 	EFPRINTF(fp, "\t\t\tMust use HVC for PSCI : 0\n");
