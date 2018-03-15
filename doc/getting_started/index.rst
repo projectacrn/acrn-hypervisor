@@ -281,32 +281,69 @@ Build ACRN from Source
 **********************
 
 If you would like to build ACRN hypervisor and device model from source,
-follow these steps, using your NUC as a development system:
+follow these steps.
 
-#. On your Clear Linux system, install the os-clr-on-clr bundle to get
-   the necessary tools.
+Install build tools and dependencies
+====================================
 
-   .. code-block:: none
+ARCN development is supported on popular Linux distributions,
+each with their own way to install development tools:
 
-      # swupd bundle-add os-clr-on-clr
+* On a Clear Linux development system, install the ``os-clr-on-clr`` bundle to get
+  the necessary tools:
+
+  .. code-block:: console
+
+     $ sudo swupd bundle-add os-clr-on-clr
+
+* On a Ubuntu/Debian development system:
+
+  .. code-block:: console
+
+     $ sudo apt install git \
+          gnu-efi \
+          libssl-dev \
+          libpciaccess-dev \
+          uuid-dev
+
+* On a Fedora/doc/Redhat development system:
+
+  .. code-block:: console
+
+     $ sudo dnf install gcc \
+          libuuid-devel \
+          openssl-devel \
+          libpciaccess-devel
+
+* On a CentOS development system:
+
+  .. code-block:: console
+
+     $ sudo yum install gcc \
+             libuuid-devel \
+             openssl-devel \
+             libpciaccess-devel
+
+Build the hypervisor and device model
+=====================================
 
 #. Download the ACRN hypervisor and build it.
 
-   .. code-block:: none
+   .. code-block:: console
 
-      # git clone https://github.com/projectacrn/acrn-hypervisor
-      # cd acrn-hypervisor
-      # make PLATFORM=uefi
+      $ git clone https://github.com/projectacrn/acrn-hypervisor
+      $ cd acrn-hypervisor
+      $ make PLATFORM=uefi
 
    The build results are found in the ``build`` directory.
 
 #. Download the ACRN device model and build it.
 
-   .. code-block:: none
+   .. code-block:: console
 
-      # git clone https://github.com/projectacrn/acrn-devicemodel
-      # cd acrn-devicemodel
-      # make
+      $ git clone https://github.com/projectacrn/acrn-devicemodel
+      $ cd acrn-devicemodel
+      $ make
 
    The build results are found in the ``build`` directory.
 
