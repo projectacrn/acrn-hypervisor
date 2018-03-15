@@ -87,6 +87,11 @@ static inline void _invept(uint64_t type, struct invept_desc desc)
 	ASSERT(error == 0, "invept error");
 }
 
+static inline void inv_tlb_one_page(void *addr)
+{
+	asm volatile ("invlpg %0"  : : "m" (*(char *)(addr)) : "memory");
+}
+
 static void check_mmu_capability(void)
 {
 	uint64_t val;
@@ -236,6 +241,9 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 
 	/* Check to see if mapping should occur */
 	if (mapped_size != 0) {
+		/* Get current table entry */
+		uint64_t entry = MEM_READ64(table_base + table_offset);
+
 		switch (request_type) {
 		case PAGING_REQUEST_TYPE_MAP:
 		{
@@ -251,18 +259,25 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 
 			/* Write the table entry to map this memory */
 			MEM_WRITE64(table_base + table_offset, table_entry);
+			/* Invalidate TLB and page-structure cache,
+			 * if it is the first mapping no need to invalidate TLB
+			 */
+			if (entry && table_type == PTT_HOST)
+				inv_tlb_one_page(vaddr);
 			break;
 		}
 		case PAGING_REQUEST_TYPE_UNMAP:
 		{
-			/* Get current table entry */
-			uint64_t entry = MEM_READ64(table_base + table_offset);
-
 			if (entry) {
 				/* Table is present.
 				 * Write the table entry to map this memory
 				 */
 				MEM_WRITE64(table_base + table_offset, 0);
+				/* Unmap, need to invalidate TLB and
+				 * page-structure cache
+				 */
+				if (table_type == PTT_HOST)
+					inv_tlb_one_page(vaddr);
 			}
 			break;
 		}
@@ -276,7 +291,11 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 
 			/* Write the table entry to map this memory */
 			MEM_WRITE64(table_base + table_offset, table_entry);
-
+			/* Modify, need to invalidate TLB and
+			 * page-structure cache
+			 */
+			if (table_type == PTT_HOST)
+				inv_tlb_one_page(vaddr);
 			break;
 		}
 		default:
