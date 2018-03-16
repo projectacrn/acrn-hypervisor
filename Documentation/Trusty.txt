@@ -68,7 +68,7 @@ API
 Trusty Boot flow
 ****************
 Per design, AOSloader will trigger boot of Trusty. So the boot flow will be:
-    AOSloader --> ACRN --> Trusty --> ACRN --> AOSloader
+    UOSloader --> ACRN --> Trusty --> ACRN --> UOSloader
 
 Detail:
 1. UOSloader
