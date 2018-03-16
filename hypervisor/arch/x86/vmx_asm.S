@@ -109,6 +109,9 @@ next:
     /* Execute a VM resume */
     vmresume
 
+    /* jump to vm_exit directly when it fails in vmresume */
+    jmp         vm_exit
+
 vm_launch:
 
     /* Execute a VM launch */
