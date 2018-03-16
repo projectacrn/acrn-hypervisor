@@ -640,7 +640,7 @@ void obtain_last_page_table_entry(struct map_params *map_params,
 	}
 
 	/* Obtain page table entry from PD table*/
-	table_addr = (void *)(table_entry&IA32E_REF_MASK);
+	table_addr = (void *)(table_entry & IA32E_REF_MASK);
 	table_entry = get_table_entry(map_params, addr,
 			table_addr, IA32E_PD);
 	table_present = check_page_table_present(map_params, table_entry);
@@ -667,7 +667,7 @@ void obtain_last_page_table_entry(struct map_params *map_params,
 	}
 
 	/* Obtain page table entry from PT table*/
-	table_addr = (void *)(table_entry&IA32E_REF_MASK);
+	table_addr = (void *)(table_entry & IA32E_REF_MASK);
 	table_entry = get_table_entry(map_params, addr,
 			table_addr, IA32E_PT);
 	table_present = check_page_table_present(map_params, table_entry);
