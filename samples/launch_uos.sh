@@ -19,7 +19,7 @@ mem_size=1000M
 acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 5,virtio-console,@pty:pty_port \
   -s 6,virtio-hyper_dmabuf \
-  -s 3,virtio-blk,/root/clear-21180-kvm.img \
+  -s 3,virtio-blk,/root/clear-21260-kvm.img \
   -s 4,virtio-net,tap0 \
   -k /usr/lib/kernel/org.clearlinux.pk414-standard.4.14.23-19 \
   -B "root=/dev/vda3 rw rootwait noxsave maxcpus=$2 nohpet console=tty0 console=hvc0 \
