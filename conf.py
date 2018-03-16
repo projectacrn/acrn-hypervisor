@@ -57,13 +57,17 @@ author = u'Project ARCN developers'
 # Makefile from the acrn-hypervisor repo by finding these lines:
 #   MAJOR_VERSION=0
 #   MINOR_VERSION=1
+#   RC_VERSION=1
 
 try:
     version_major = None
     version_minor = None
     version_rc = None
     for line in open(os.path.normpath("../acrn-hypervisor/Makefile")) :
-        if line.count("=") :
+        # remove comments
+        line = line.split('#', 1)[0]
+        line = line.rstrip()
+        if (line.count("=") == 1) :
            key, val = [x.strip() for x in line.split('=', 2)]
            if key == 'MAJOR_VERSION':
               version_major = val
@@ -124,6 +128,7 @@ except ImportError:
             'searchbox.html',
             ]
         }
+    sys.stderr.write('Warning: sphinx_rtd_theme missing. Use pip to install it.\n')
 else:
     html_theme = "sphinx_rtd_theme"
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
