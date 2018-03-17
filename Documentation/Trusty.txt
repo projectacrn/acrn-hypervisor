@@ -50,7 +50,7 @@ Note: Trusty OS is running in Secure World in the architecture above.
 Trusty specific Hypercalls
 **************************
 1. HC_LAUNCH_TRUSTY
-   ->This Hypercall is used by UOSloader to request ACRN to launch Trusty.
+   ->This Hypercall is used by UOSloader (User OS Bootloader) to request ACRN to launch Trusty.
    ->The Trusty memory region range, entry point must be specified.
    ->Hypervisor needs to save current vCPU contexts (Normal World).
 2. HC_WORLD_SWITCH
@@ -67,7 +67,7 @@ API
 ****************
 Trusty Boot flow
 ****************
-Per design, AOSloader will trigger boot of Trusty. So the boot flow will be:
+Per design, UOSloader will trigger boot of Trusty. So the boot flow will be:
     UOSloader --> ACRN --> Trusty --> ACRN --> UOSloader
 
 Detail:
