@@ -56,11 +56,28 @@
 uint32_t efi_physical_available_ap_bitmap = 0;
 uint32_t efi_wake_up_ap_bitmap = 0;
 struct efi_ctx* efi_ctx = NULL;
+struct lapic_regs uefi_lapic_regs;
 extern uint32_t up_count;
 extern unsigned long pcpu_sync;
 
 void efi_spurious_handler(int vector)
 {
+	struct vcpu* vcpu;
+	int ret;
+
+	if (get_cpu_id() != 0)
+		return;
+
+	vcpu = per_cpu(vcpu, 0);
+	if (vcpu && vcpu->arch_vcpu.vlapic) {
+		ret = vlapic_set_intr(vcpu, vector, 0);
+		if (ret)
+			pr_err("%s vlapic set intr fail, interrupt lost\n",
+				__func__);
+	} else
+		pr_err("%s vcpu or vlapic is not ready, interrupt lost\n",
+			__func__);
+
 	return;
 }
 
@@ -116,9 +133,14 @@ int uefi_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	if (!is_vm0(vm))
 		return load_guest(vm, vcpu);
 
+	vlapic_restore(vcpu->arch_vcpu.vlapic, &uefi_lapic_regs);
+
 	vcpu->entry_addr = efi_ctx->entry;
 	cur_context->guest_cpu_regs.regs.rcx = efi_ctx->handle;
 	cur_context->guest_cpu_regs.regs.rdx = efi_ctx->table;
+
+	/* defer irq enabling till vlapic is ready */
+	CPU_IRQ_ENABLE();
 
 	return ret;
 }
@@ -135,5 +157,7 @@ void init_bsp(void)
 	vm_sw_loader = uefi_sw_loader;
 
 	spurious_handler = efi_spurious_handler;
+
+	save_lapic(&uefi_lapic_regs);
 #endif
 }

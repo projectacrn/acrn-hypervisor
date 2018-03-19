@@ -1282,9 +1282,10 @@ static void override_uefi_vmcs(struct vcpu *vcpu)
 
 	/* Interrupt */
 	field = VMX_GUEST_RFLAGS;
-	cur_context->rflags = 0x2;
-	cur_context->rflags |= 1 << 9; 	/* enable intr for efi stub */
+	/* clear flags for CF/PF/AF/ZF/SF/OF */
+	cur_context->rflags = efi_ctx->rflags & ~(0x8d5);
 	exec_vmwrite(field, cur_context->rflags);
+	pr_dbg("VMX_GUEST_RFLAGS: 0x%016llx ", cur_context->rflags);
 }
 #endif
 
