@@ -266,6 +266,32 @@ int init_lapic(uint32_t cpu_id)
 	return 0;
 }
 
+void save_lapic(struct lapic_regs *regs)
+{
+	regs->id = read_lapic_reg32(LAPIC_ID_REGISTER);
+	regs->tpr = read_lapic_reg32(LAPIC_TASK_PRIORITY_REGISTER);
+	regs->apr = read_lapic_reg32(LAPIC_ARBITRATION_PRIORITY_REGISTER);
+	regs->ppr = read_lapic_reg32(LAPIC_PROCESSOR_PRIORITY_REGISTER);
+	regs->ldr = read_lapic_reg32(LAPIC_LOGICAL_DESTINATION_REGISTER);
+	regs->dfr = read_lapic_reg32(LAPIC_DESTINATION_FORMAT_REGISTER);
+	regs->tmr[0] = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_0);
+	regs->tmr[1] = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_1);
+	regs->tmr[2] = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_2);
+	regs->tmr[3] = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_3);
+	regs->tmr[4] = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_4);
+	regs->tmr[5] = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_5);
+	regs->tmr[6] = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_6);
+	regs->tmr[7] = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_7);
+	regs->svr = read_lapic_reg32(LAPIC_SPURIOUS_VECTOR_REGISTER);
+	regs->lvtt = read_lapic_reg32(LAPIC_LVT_TIMER_REGISTER);
+	regs->lvt0 = read_lapic_reg32(LAPIC_LVT_LINT0_REGISTER);
+	regs->lvt1 = read_lapic_reg32(LAPIC_LVT_LINT1_REGISTER);
+	regs->lvterr = read_lapic_reg32(LAPIC_LVT_ERROR_REGISTER);
+	regs->ticr = read_lapic_reg32(LAPIC_INITIAL_COUNT_REGISTER);
+	regs->tccr = read_lapic_reg32(LAPIC_CURRENT_COUNT_REGISTER);
+	regs->tdcr = read_lapic_reg32(LAPIC_DIVIDE_CONFIGURATION_REGISTER);
+}
+
 int send_lapic_eoi(void)
 {
 	write_lapic_reg32(LAPIC_EOI_REGISTER, 0);
