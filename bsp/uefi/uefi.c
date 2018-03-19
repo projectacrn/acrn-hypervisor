@@ -56,32 +56,12 @@
 uint32_t efi_physical_available_ap_bitmap = 0;
 uint32_t efi_wake_up_ap_bitmap = 0;
 struct efi_ctx* efi_ctx = NULL;
-int efi_launch_vector;
 extern uint32_t up_count;
 extern unsigned long pcpu_sync;
 
-bool in_efi_boot_svc(void)
+void efi_spurious_handler(int vector)
 {
-	return (efi_wake_up_ap_bitmap != efi_physical_available_ap_bitmap);
-}
-
-int efi_spurious_handler(int vector)
-{
-	struct vcpu* vcpu;
-
-	if (get_cpu_id() != 0)
-		return 0;
-
-	vcpu = per_cpu(vcpu, 0);
-	if (vcpu && vcpu->launched) {
-		int ret = vlapic_set_intr(vcpu, vector, 0);
-		if (ret && in_efi_boot_svc())
-			exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
-				VMX_INT_INFO_VALID | vector);
-	} else
-		efi_launch_vector = vector;
-
-	return 1;
+	return;
 }
 
 int sipi_from_efi_boot_service_exit(uint32_t dest, uint32_t mode, uint32_t vec)
@@ -155,6 +135,5 @@ void init_bsp(void)
 	vm_sw_loader = uefi_sw_loader;
 
 	spurious_handler = efi_spurious_handler;
-	efi_launch_vector = -1;
 #endif
 }
