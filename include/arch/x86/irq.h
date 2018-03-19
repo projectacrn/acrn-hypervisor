@@ -111,7 +111,7 @@ void update_irq_handler(int irq, irq_handler_t func);
 
 int init_default_irqs(unsigned int cpu);
 
-int dispatch_interrupt(struct intr_ctx *ctx);
+void dispatch_interrupt(struct intr_ctx *ctx);
 
 struct dev_handler_node*
 pri_register_handler(int irq,
@@ -133,7 +133,7 @@ int get_cpu_interrupt_info(char *str, int str_max);
 
 void setup_notification(void);
 
-typedef int (*spurious_handler_t)(int);
+typedef void (*spurious_handler_t)(int);
 extern spurious_handler_t spurious_handler;
 
 /*

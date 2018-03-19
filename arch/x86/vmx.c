@@ -36,7 +36,6 @@
 #ifdef CONFIG_EFI_STUB
 #include <acrn_efi.h>
 extern struct efi_ctx* efi_ctx;
-extern int efi_launch_vector;
 #endif
 
 #define PAT_POWER_ON_VALUE	(PAT_MEM_TYPE_WB + \
@@ -1282,16 +1281,10 @@ static void override_uefi_vmcs(struct vcpu *vcpu)
 	}
 
 	/* Interrupt */
-	if (efi_launch_vector > 0) {
-		field = VMX_GUEST_RFLAGS;
-		cur_context->rflags = 0x2;
-		cur_context->rflags |= 1 << 9; 	/* enable intr for efi stub */
-		exec_vmwrite(field, cur_context->rflags);
-		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
-				VMX_INT_INFO_VALID |
-				(efi_launch_vector & 0xFF));
-		efi_launch_vector = -1;
-	}
+	field = VMX_GUEST_RFLAGS;
+	cur_context->rflags = 0x2;
+	cur_context->rflags |= 1 << 9; 	/* enable intr for efi stub */
+	exec_vmwrite(field, cur_context->rflags);
 }
 #endif
 
