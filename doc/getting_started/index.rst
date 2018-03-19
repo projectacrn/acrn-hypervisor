@@ -44,11 +44,17 @@ Currently, an installable version of ARCN does not exist. Therefore, you
 need to setup a base Clear Linux OS to bootstrap ACRN on the NUC. You'll
 need a network connection for your NUC to complete this setup.
 
-.. note:: ACRN requires Clear Linux version 21260 or newer.
+.. note::
+   ACRN requires Clear Linux version 21260 or newer. The instructions below
+   have been validated with version 21260 and need some adjustment to work
+   with newer versions. You will see a note when the instruction needs to be
+   adjusted.
 
 1. Follow this `Clear Linux installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
-   as a starting point for installing Clear Linux onto your NUC.
+   as a starting point for installing Clear Linux onto your NUC. Download the
+   ``clear-21260-installer.img.xz`` from the https://download.clearlinux.org/releases/21260/clear/
+   folder to get Clear Linux version 21260.
 
 2. At the "Choose Installation Type" screen, choose the "< Automatic >"
    option. This will install the minimum Clear Linux components.
@@ -87,7 +93,7 @@ need a network connection for your NUC to complete this setup.
 
    .. code-block:: none
 
-      # swupd bundle-add vim curl network-basic service-os kernel-pk
+      # swupd bundle-add vim network-basic service-os kernel-pk
 
    .. table:: Clear Linux bundles
       :widths: auto
@@ -97,8 +103,6 @@ need a network connection for your NUC to complete this setup.
       | Bundle             | Description                                       |
       +====================+===================================================+
       | vim                | vim text editor                                   |
-      +--------------------+---------------------------------------------------+
-      | curl               | Provide the curl command-line utility             |
       +--------------------+---------------------------------------------------+
       | network-basic      | Run network utilities and modify network settings |
       +--------------------+---------------------------------------------------+
@@ -122,19 +126,24 @@ partition. Follow these steps:
 
     # mount /dev/sda1 /mnt
 
-    # ls /mnt/EFI/org.clearlinux
+    # ls -1 /mnt/EFI/org.clearlinux
     bootloaderx64.efi
     kernel-org.clearlinux.native.4.15.7-536
     kernel-org.clearlinux.pk414-sos.4.14.23-19
     kernel-org.clearlinux.pk414-standard.4.14.23-19
     loaderx64.efi
 
+    .. note::
+       Take note of the exact kernel versions (``*-sos`` and ``*-standard``)
+       as you will need them later.
+
+
 #. Copy the ``acrn.efi`` hypervisor application (included in the Clear
    Linux release) to the EFI partition.
 
    .. code-block:: none
 
-      # cp /usr/share/acrn/demo/acrn.efi /mnt/EFI/org.clearlinux
+      # cp /usr/share/acrn/acrn.efi /mnt/EFI/org.clearlinux
 
 #. Create a boot entry for ACRN. It must contain these settings:
 
@@ -167,6 +176,10 @@ partition. Follow these steps:
    the instructions above, the partition (``root=/dev/sda3``) and image
    locations used in the ``arcn.conf`` file will match.
 
+   .. note::
+      Please make sure that the kernel version and root filesystem image (``clear-<version>-kvm.img``)
+      match your set-up.
+
 #. Add a timeout period for Systemd-Boot to wait, otherwise it will not
    present the boot menu and will always boot the base Clear Linux
    kernel.
@@ -185,7 +198,7 @@ partition. Follow these steps:
 
       ACRN Hypervisor Boot menu
 
-#. After booting up the ACRN hypervisor, the Service OS be launched
+#. After booting up the ACRN hypervisor, the Service OS will be launched
    automatically by default, as shown in :numref:`gsg-sos-console`:
 
    .. figure:: images/gsg-sos-console.png
@@ -194,7 +207,10 @@ partition. Follow these steps:
 
       Service OS Console
 
-#. From here you can login as root and set the first-time root password.
+   ..  note:: You may need to hit ``Enter`` to get a clean login prompt
+
+#. From here you can login as root using the password you set previously when
+   you installed Clear Linux.
 
 Create a Network Bridge
 =======================
@@ -213,14 +229,13 @@ folder) as shown here:
    :language: bash
 
 By default, the script is located in the ``/usr/share/acrn/demo/``
-directory. Use it directly by making it executable and run it to create
-a network bridge:
+directory. Run it to create a network bridge:
 
 .. code-block:: none
 
    # cd /usr/share/acrn/demo/
-   # chmod +x ./bridge.sh
    # ./bridge.sh
+   # cd
 
 Set up Reference UOS
 ====================
@@ -229,7 +244,12 @@ Set up Reference UOS
 
    .. code-block:: none
 
-      # curl -O https://download.clearlinux.org/image/clear-21260-kvm.img.xz
+      # curl -O https://download.clearlinux.org/releases/21260/clear/clear-21260-kvm.img.xz
+
+   .. note::
+      In case you want to use or try out a newer version of Clear Linux as the UOS, you can
+      download the latest from http://download.clearlinux.org/image. Make sure to adjust the steps
+      described below accordingly (image file name and kernel modules version).
 
 #. Uncompress it.
 
@@ -243,7 +263,7 @@ Set up Reference UOS
 
       # losetup -f -P --show /root/clear-21260-kvm.img
       # ls /dev/loop0*
-      # mount /dev/**loop0p3** /mnt
+      # mount /dev/loop0p3 /mnt
       # cp -r /usr/lib/doc/modules/4.14.23-19.pk414-standard /mnt/lib/doc/modules/
       # umount /mnt
       # sync
@@ -258,19 +278,26 @@ Set up Reference UOS
    .. literalinclude:: ../../acrn-devicemodel/samples/launch_uos.sh
       :caption: acrn-devicemodel/samples/launch_uos.sh
       :language: bash
+      :emphasize-lines: 22,24
+
+   .. note::
+      In case you have downloaded a different Clear Linux image than the one above
+      (``clear-21260-kvm.img.xz``), you will need to modify the Clear Linux file name
+      and version number highlighted above (the ``-s 3,virtio-blk`` argument) to match
+      what you have downloaded above. Likewise, you may need to adjust the kernel file
+      name on the second line highlighted (check the exact name to be used using:
+      ``ls /usr/lib/doc/kernel/org.clearlinux*-standard*``).
 
    By default, the script is located in the ``/usr/share/acrn/demo/``
-   directory. Use it directly by making it executable and run it to
-   launch the User OS:
+   directory. Run it directly to launch the User OS:
 
    .. code-block:: none
 
       # cd /usr/share/acrn/demo/
-      # chmod +x ./launch_uos.sh
       # ./launch_uos.sh
 
-#. At this point, you've successfully booted the ACRN system,
-   hypervisor, SOS, and UOS:
+#. At this point, you've successfully booted the ACRN hypervisor,
+   SOS, and UOS:
 
    .. figure:: images/gsg-successful-boot.png
       :align: center
