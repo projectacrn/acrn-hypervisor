@@ -1608,6 +1608,31 @@ vlapic_init(struct vlapic *vlapic)
 	vlapic_reset(vlapic);
 }
 
+void vlapic_restore(struct vlapic *vlapic, struct lapic_regs *regs)
+{
+	struct lapic *lapic;
+	int i;
+
+	lapic = vlapic->apic_page;
+
+	lapic->tpr = regs->tpr;
+	lapic->apr = regs->apr;
+	lapic->ppr = regs->ppr;
+	lapic->ldr = regs->ldr;
+	lapic->dfr = regs->dfr;
+	for (i = 0; i < 8; i++)
+		lapic->tmr[i].val = regs->tmr[i];
+	lapic->svr = regs->svr;
+	vlapic_svr_write_handler(vlapic);
+	lapic->lvt_timer = regs->lvtt;
+	lapic->lvt_lint0 = regs->lvt0;
+	lapic->lvt_lint1 = regs->lvt1;
+	lapic->lvt_error = regs->lvterr;
+	lapic->icr_timer = regs->ticr;
+	lapic->ccr_timer = regs->tccr;
+	lapic->dcr_timer = regs->tdcr;
+}
+
 void
 vlapic_cleanup(__unused struct vlapic *vlapic)
 {
