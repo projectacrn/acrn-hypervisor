@@ -55,8 +55,15 @@ endif
 INCDIR := /usr/include
 
 # gnuefi sometimes installs these under a gnuefi/ directory, and sometimes not
-CRT0 := $(LIBDIR)/crt0-efi-$(ARCH).o
-LDSCRIPT := $(LIBDIR)/elf_$(ARCH)_efi.lds
+ifneq ("$(wildcard $(LIBDIR)/gnuefi/crt0-efi-$(ARCH).o)","")
+	CRT0 := $(LIBDIR)/gnuefi/crt0-efi-$(ARCH).o
+	LDSCRIPT := $(LIBDIR)/gnuefi/elf_$(ARCH)_efi.lds
+else
+	CRT0 := $(LIBDIR)/crt0-efi-$(ARCH).o
+	LDSCRIPT := $(LIBDIR)/elf_$(ARCH)_efi.lds
+endif
+
+
 
 CFLAGS=-I. -I.. -I$(INCDIR)/efi -I$(INCDIR)/efi/$(ARCH) \
 		-DEFI_FUNCTION_WRAPPER -fPIC -fshort-wchar -ffreestanding \
