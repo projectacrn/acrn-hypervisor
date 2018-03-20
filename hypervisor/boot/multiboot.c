@@ -37,6 +37,7 @@
 #include <acrn_hv_defs.h>
 #include <hv_debug.h>
 #include <multiboot.h>
+#include <zeropage.h>
 
 #define BOOT_ARGS_LOAD_ADDR				0x24EFC000
 
@@ -102,6 +103,25 @@ static void parse_other_modules(struct vm *vm,
 	}
 }
 
+static void *get_kernel_load_addr(void *kernel_src_addr)
+{
+	struct zero_page *zeropage;
+
+	/* According to the explaination for pref_address
+	 * in Documentation/x86/boot.txt, a relocating
+	 * bootloader should attempt to load kernel at pref_address
+	 * if possible. A non-relocatable kernel will unconditionally
+	 * move itself and to run at this address, so no need to copy
+	 * kernel to perf_address by bootloader, if kernel is
+	 * non-relocatable.
+	 */
+	zeropage = (struct zero_page *)kernel_src_addr;
+	if (zeropage->hdr.relocatable_kernel)
+		return (void *)zeropage->hdr.pref_addr;
+
+	return kernel_src_addr;
+}
+
 int init_vm0_boot_info(struct vm *vm)
 {
 	struct multiboot_module *mods = NULL;
@@ -141,7 +161,7 @@ int init_vm0_boot_info(struct vm *vm)
 	vm->sw.kernel_info.kernel_size =
 		mods[0].mm_mod_end - mods[0].mm_mod_start;
 	vm->sw.kernel_info.kernel_load_addr =
-		(void *)(uint64_t)mods[0].mm_mod_start;
+		get_kernel_load_addr(vm->sw.kernel_info.kernel_src_addr);
 
 	vm->sw.linux_info.bootargs_src_addr =
 		(void *)(uint64_t)mods[0].mm_string;
