@@ -46,7 +46,7 @@ void create_secure_world_ept(struct vm *vm, uint64_t gpa,
 	if (vm->sworld_control.sworld_enabled && !vm->arch_vm.sworld_eptp)
 		vm->arch_vm.sworld_eptp = alloc_paging_struct();
 
-	map_params.page_table_type = PT_EPT;
+	map_params.page_table_type = PTT_EPT;
 	map_params.pml4_inverted = vm->arch_vm.m2p;
 
 	/* unmap gpa~gpa+size from guest ept mapping */
