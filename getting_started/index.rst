@@ -338,6 +338,7 @@ each with their own way to install development tools:
   .. code-block:: console
 
      $ sudo dnf install gcc \
+          gnu-efi \
           libuuid-devel \
           openssl-devel \
           libpciaccess-devel
@@ -347,6 +348,7 @@ each with their own way to install development tools:
   .. code-block:: console
 
      $ sudo yum install gcc \
+             gnu-efi-devel \
              libuuid-devel \
              openssl-devel \
              libpciaccess-devel
