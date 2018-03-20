@@ -125,7 +125,7 @@ uint64_t apicv_get_apic_access_addr(struct vm *vm);
 uint64_t apicv_get_apic_page_addr(struct vlapic *vlapic);
 bool vlapic_apicv_enabled(struct vcpu *vcpu);
 void apicv_inject_pir(struct vlapic *vlapic);
-int apicv_access_exit_handler(struct vcpu *vcpu);
+int apic_access_exit_handler(struct vcpu *vcpu);
 int apicv_write_exit_handler(struct vcpu *vcpu);
 int apicv_virtualized_eoi_exit_handler(struct vcpu *vcpu);
 
