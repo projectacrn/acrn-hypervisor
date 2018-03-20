@@ -124,18 +124,18 @@ partition. Follow these steps:
    .. code-block:: none
 
 
-    # mount /dev/sda1 /mnt
+      # mount /dev/sda1 /mnt
 
-    # ls -1 /mnt/EFI/org.clearlinux
-    bootloaderx64.efi
-    kernel-org.clearlinux.native.4.15.7-536
-    kernel-org.clearlinux.pk414-sos.4.14.23-19
-    kernel-org.clearlinux.pk414-standard.4.14.23-19
-    loaderx64.efi
+      # ls -1 /mnt/EFI/org.clearlinux
+      bootloaderx64.efi
+      kernel-org.clearlinux.native.4.15.7-536
+      kernel-org.clearlinux.pk414-sos.4.14.23-19
+      kernel-org.clearlinux.pk414-standard.4.14.23-19
+      loaderx64.efi
 
-    .. note::
-       Take note of the exact kernel versions (``*-sos`` and ``*-standard``)
-       as you will need them later.
+   .. note::
+      Take note of the exact kernel versions (``*-sos`` and ``*-standard``)
+      as you will need them later.
 
 
 #. Copy the ``acrn.efi`` hypervisor application (included in the Clear
