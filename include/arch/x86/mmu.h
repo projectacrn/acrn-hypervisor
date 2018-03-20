@@ -259,8 +259,8 @@ struct entry_params {
 };
 
 enum _page_table_type {
-	PT_HOST = 0,  /* Mapping for hypervisor */
-	PT_EPT = 1,
+	PTT_HOST = 0,  /* Mapping for hypervisor */
+	PTT_EPT = 1,
 	PAGETABLE_TYPE_UNKNOWN,
 };
 
