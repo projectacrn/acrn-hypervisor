@@ -37,6 +37,7 @@
 #include <acrn_hv_defs.h>
 #include <hv_debug.h>
 #include <multiboot.h>
+#include <zeropage.h>
 
 #define ACRN_DBG_GUEST	6
 
