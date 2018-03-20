@@ -60,6 +60,8 @@ int efi_launch_vector;
 extern uint32_t up_count;
 extern unsigned long pcpu_sync;
 
+extern int cpu_find_logical_id(uint32_t lapic_id);
+
 bool in_efi_boot_svc(void)
 {
 	return (efi_wake_up_ap_bitmap != efi_physical_available_ap_bitmap);
@@ -137,8 +139,8 @@ int uefi_sw_loader(struct vm *vm, struct vcpu *vcpu)
 		return load_guest(vm, vcpu);
 
 	vcpu->entry_addr = efi_ctx->entry;
-	cur_context->guest_cpu_regs.regs.rcx = efi_ctx->handle;
-	cur_context->guest_cpu_regs.regs.rdx = efi_ctx->table;
+	cur_context->guest_cpu_regs.regs.rcx = (uint64_t) efi_ctx->handle;
+	cur_context->guest_cpu_regs.regs.rdx = (uint64_t) efi_ctx->table;
 
 	return ret;
 }
