@@ -39,12 +39,6 @@
 
 #define PRINT_STRING_MAX_LEN 4096
 
-/** Command for the emit function: copy string to output. */
-#define PRINT_CMD_COPY			0x00000000
-
-/** Command for the emit function: fill output with first character. */
-#define PRINT_CMD_FILL			0x00000001
-
 /** Use upper case letters for hexadecimal format. */
 #define PRINT_FLAG_UPPER		0x00000001
 
