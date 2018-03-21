@@ -2384,6 +2384,9 @@ int apicv_write_exit_handler(struct vcpu *vcpu)
 	case APIC_OFFSET_ID:
 		vlapic_id_write_handler(vlapic);
 		break;
+	case APIC_OFFSET_EOI:
+		vlapic_process_eoi(vlapic);
+		break;
 	case APIC_OFFSET_LDR:
 		vlapic_ldr_write_handler(vlapic);
 		break;
