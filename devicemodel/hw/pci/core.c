@@ -48,6 +48,7 @@
 #include "pci_core.h"
 #include "irq.h"
 #include "lpc.h"
+#include "sw_load.h"
 
 #define CONF1_ADDR_PORT    0x0cf8
 #define CONF1_DATA_PORT    0x0cfc
@@ -161,7 +162,7 @@ pci_parse_slot(char *opt)
 {
 	struct businfo *bi;
 	struct slotinfo *si;
-	char *emul, *config, *str, *cp;
+	char *emul, *config, *str, *cp, *b = NULL;
 	int error, bnum, snum, fnum;
 
 	error = -1;
@@ -180,6 +181,11 @@ pci_parse_slot(char *opt)
 		if (cp != NULL) {
 			*cp = '\0';
 			config = cp + 1;
+			cp = strchr(config, ',');
+			if (cp != NULL) {
+				*cp = '\0';
+				b = cp + 1;
+			}
 		}
 	} else {
 		pci_parse_slot_usage(opt);
@@ -227,6 +233,12 @@ pci_parse_slot(char *opt)
 	/* saved fi param in case reboot */
 	si->si_funcs[fnum].fi_param_saved = config;
 
+	if (b != NULL) {
+		if ((strcmp("virtio-blk", emul) == 0) &&  (b != NULL) &&
+			(strchr(b, 'b') != NULL)) {
+			vsbl_set_bdf(bnum, snum, fnum);
+		}
+	}
 done:
 	if (error)
 		free(str);
