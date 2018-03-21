@@ -61,11 +61,9 @@
 #include "smbiostbl.h"
 #include "rtc.h"
 #include "version.h"
+#include "sw_load.h"
 
 #define GUEST_NIO_PORT		0x488	/* guest upcalls via i/o port */
-
-#define MB		(1024UL * 1024)
-#define GB		(1024UL * MB)
 
 typedef int (*vmexit_handler_t)(struct vmctx *,
 		struct vhm_request *, int *vcpu);
