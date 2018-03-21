@@ -216,18 +216,35 @@ extern int phy_cpu_num;
 /* get percpu data for current pcpu */
 #define get_cpu_var(name)	per_cpu(name, get_cpu_id())
 
+/* CPUID feature words */
+enum feature_word {
+	FEAT_1_ECX,         /* CPUID[1].ECX */
+	FEAT_1_EDX,         /* CPUID[1].EDX */
+	FEAT_7_0_EBX,       /* CPUID[EAX=7,ECX=0].EBX */
+	FEAT_7_0_ECX,       /* CPUID[EAX=7,ECX=0].ECX */
+	FEAT_7_0_EDX,       /* CPUID[EAX=7,ECX=0].EDX */
+	FEAT_8000_0001_ECX, /* CPUID[8000_0001].ECX */
+	FEAT_8000_0001_EDX, /* CPUID[8000_0001].EDX */
+	FEATURE_WORDS,
+};
+
+struct cpuinfo_x86 {
+	uint8_t x86, x86_model;
+	uint32_t cpuid_leaves[FEATURE_WORDS];
+};
+
+extern struct cpuinfo_x86 boot_cpu_data;
+
 /* Function prototypes */
 void cpu_halt(uint32_t logical_id);
 uint64_t cpu_cycles_per_second(void);
 uint64_t tsc_cycles_in_period(uint16_t timer_period_in_us);
 void cpu_secondary_reset(void);
 int hv_main(int cpu_id);
-bool check_tsc_adjust_support(void);
-bool check_ibrs_ibpb_support(void);
-bool check_stibp_support(void);
 bool is_vapic_supported(void);
 bool is_vapic_intr_delivery_supported(void);
 bool is_vapic_virt_reg_supported(void);
+bool get_vmx_cap(void);
 
 /* Read control register */
 #define CPU_CR_READ(cr, result_ptr)                         \
