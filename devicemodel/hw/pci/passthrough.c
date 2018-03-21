@@ -1578,6 +1578,236 @@ write_dsdt_hdas(struct pci_vdev *dev)
 }
 
 static void
+write_dsdt_ipu_i2c(struct pci_vdev *dev)
+{
+	printf("write virt-%x:%x.%x in dsdt for ipu's i2c-bus @ 00:16.0\n",
+			dev->bus, dev->slot, dev->func);
+
+	/* physical I2C 0:16.0 */
+	dsdt_line("Device (I2C1)");
+	dsdt_line("{");
+	dsdt_line("    Name (_ADR, 0x%04X%04X)", dev->slot, dev->func);
+	dsdt_line("    Name (_DDN, \"Intel(R) I2C Controller #1\")");
+	dsdt_line("    Name (_UID, One)");
+	dsdt_line("    Name (LINK, \"\\\\_SB.PCI0.I2C1\")");
+	dsdt_line("    Name (RBUF, ResourceTemplate ()");
+	dsdt_line("    {");
+	dsdt_line("    })");
+	dsdt_line("    Name (IC0S, 0x00061A80)");
+	dsdt_line("    Name (_DSD, Package (0x02)");
+	dsdt_line("    {");
+	dsdt_line("        ToUUID (\"daffd814-6eba-4d8c-8a91-bc9bbf4aa301\")"
+				" ,");
+	dsdt_line("        Package (0x01)");
+	dsdt_line("        {");
+	dsdt_line("            Package (0x02)");
+	dsdt_line("            {");
+	dsdt_line("                \"clock-frequency\", ");
+	dsdt_line("                IC0S");
+	dsdt_line("            }");
+	dsdt_line("        }");
+	dsdt_line("    })");
+
+	dsdt_line("    Method (FMCN, 0, Serialized)");
+	dsdt_line("    {");
+	dsdt_line("        Name (PKG, Package (0x03)");
+	dsdt_line("        {");
+	dsdt_line("            0x64, ");
+	dsdt_line("            0xD6, ");
+	dsdt_line("            0x1C");
+	dsdt_line("        })");
+	dsdt_line("        Return (PKG)");
+	dsdt_line("    }");
+	dsdt_line("");
+
+	dsdt_line("    Method (FPCN, 0, Serialized)");
+	dsdt_line("    {");
+	dsdt_line("        Name (PKG, Package (0x03)");
+	dsdt_line("        {");
+	dsdt_line("            0x26, ");
+	dsdt_line("            0x50, ");
+	dsdt_line("            0x0C");
+	dsdt_line("        })");
+	dsdt_line("        Return (PKG)");
+	dsdt_line("    }");
+	dsdt_line("");
+
+	dsdt_line("    Method (HSCN, 0, Serialized)");
+	dsdt_line("    {");
+	dsdt_line("        Name (PKG, Package (0x03)");
+	dsdt_line("        {");
+	dsdt_line("            0x05, ");
+	dsdt_line("            0x18, ");
+	dsdt_line("            0x0C");
+	dsdt_line("        })");
+	dsdt_line("        Return (PKG)");
+	dsdt_line("    }");
+	dsdt_line("");
+
+	dsdt_line("    Method (SSCN, 0, Serialized)");
+	dsdt_line("    {");
+	dsdt_line("        Name (PKG, Package (0x03)");
+	dsdt_line("        {");
+	dsdt_line("            0x0244, ");
+	dsdt_line("            0x02DA, ");
+	dsdt_line("            0x1C");
+	dsdt_line("        })");
+	dsdt_line("        Return (PKG)");
+	dsdt_line("    }");
+	dsdt_line("");
+
+	dsdt_line("    Method (_CRS, 0, NotSerialized)");
+	dsdt_line("    {");
+	dsdt_line("        Return (RBUF)");
+	dsdt_line("    }");
+	dsdt_line("");
+
+	/* CAM1 */
+	dsdt_line("    Device (CAM1)");
+	dsdt_line("    {");
+	dsdt_line("        Name (_ADR, Zero)  // _ADR: Address");
+	dsdt_line("        Name (_HID, \"ADV7481A\")  // _HID: Hardware ID");
+	dsdt_line("        Name (_CID, \"ADV7481A\")  // _CID: Compatible ID");
+	dsdt_line("        Name (_UID, One)  // _UID: Unique ID");
+
+	dsdt_line("        Method (_CRS, 0, Serialized)");
+	dsdt_line("        {");
+	dsdt_line("            Name (SBUF, ResourceTemplate ()");
+	dsdt_line("            {");
+	dsdt_line("                GpioIo (Exclusive, PullDefault, 0x0000, "
+					"0x0000, IoRestrictionInputOnly,");
+	dsdt_line("                    \"\\\\_SB.GPO0\", 0x00, "
+					"ResourceConsumer, ,");
+	dsdt_line("                    )");
+	dsdt_line("                    {   // Pin list");
+	dsdt_line("                        0x001E");
+	dsdt_line("                    }");
+	dsdt_line("                I2cSerialBusV2 (0x0070, "
+					"ControllerInitiated, 0x00061A80,");
+	dsdt_line("                    AddressingMode7Bit, "
+						"\"\\\\_SB.PCI0.I2C1\",");
+	dsdt_line("                    0x00, ResourceConsumer, , Exclusive,");
+	dsdt_line("                    )");
+	dsdt_line("            })");
+	dsdt_line("            Return (SBUF)");
+	dsdt_line("        }");
+
+	dsdt_line("        Method (_DSM, 4, NotSerialized)");
+	dsdt_line("        {");
+	dsdt_line("            If ((Arg0 == ToUUID ("
+				"\"377ba76a-f390-4aff-ab38-9b1bf33a3015\")))");
+	dsdt_line("            {");
+	dsdt_line("                Return (\"ADV7481A\")");
+	dsdt_line("            }");
+	dsdt_line("");
+	dsdt_line("            If ((Arg0 == ToUUID ("
+				"\"ea3b7bd8-e09b-4239-ad6e-ed525f3f26ab\")))");
+	dsdt_line("            {");
+	dsdt_line("                Return (0x40)");
+	dsdt_line("            }");
+	dsdt_line("");
+	dsdt_line("            If ((Arg0 == ToUUID ("
+				"\"8dbe2651-70c1-4c6f-ac87-a37cb46e4af6\")))");
+	dsdt_line("            {");
+	dsdt_line("                Return (0xFF)");
+	dsdt_line("            }");
+	dsdt_line("");
+	dsdt_line("            If ((Arg0 == ToUUID ("
+				"\"26257549-9271-4ca4-bb43-c4899d5a4881\")))");
+	dsdt_line("            {");
+	dsdt_line("                If (Arg2 == One)");
+	dsdt_line("                {");
+	dsdt_line("                    Return (0x02)");
+	dsdt_line("                }");
+	dsdt_line("                If (Arg2 == 0x02)");
+	dsdt_line("                {");
+	dsdt_line("                    Return (0x02001000)");
+	dsdt_line("                }");
+	dsdt_line("                If (Arg2 == 0x03)");
+	dsdt_line("                {");
+	dsdt_line("                    Return (0x02000E01)");
+	dsdt_line("                }");
+	dsdt_line("            }");
+	dsdt_line("            Return (Zero)");
+	dsdt_line("        }");
+	dsdt_line("    }");
+	dsdt_line("");
+
+	/* CAM2 */
+	dsdt_line("    Device (CAM2)");
+	dsdt_line("    {");
+	dsdt_line("        Name (_ADR, Zero)  // _ADR: Address");
+	dsdt_line("        Name (_HID, \"ADV7481B\")  // _HID: Hardware ID");
+	dsdt_line("        Name (_CID, \"ADV7481B\")  // _CID: Compatible ID");
+	dsdt_line("        Name (_UID, One)  // _UID: Unique ID");
+
+	dsdt_line("        Method (_CRS, 0, Serialized)");
+	dsdt_line("        {");
+	dsdt_line("            Name (SBUF, ResourceTemplate ()");
+	dsdt_line("            {");
+	dsdt_line("                GpioIo (Exclusive, PullDefault, 0x0000, "
+					"0x0000, IoRestrictionInputOnly,");
+	dsdt_line("                    \"\\\\_SB.GPO0\", 0x00, "
+					"ResourceConsumer, ,");
+	dsdt_line("                    )");
+	dsdt_line("                    {   // Pin list");
+	dsdt_line("                        0x001E");
+	dsdt_line("                    }");
+	dsdt_line("                I2cSerialBusV2 (0x0071, "
+					"ControllerInitiated, 0x00061A80,");
+	dsdt_line("                    AddressingMode7Bit, "
+						"\"\\\\_SB.PCI0.I2C1\",");
+	dsdt_line("                    0x00, ResourceConsumer, , Exclusive,");
+	dsdt_line("                    )");
+	dsdt_line("            })");
+	dsdt_line("            Return (SBUF)");
+	dsdt_line("        }");
+
+	dsdt_line("        Method (_DSM, 4, NotSerialized) ");
+	dsdt_line("        {");
+	dsdt_line("            If ((Arg0 == ToUUID ("
+				"\"377ba76a-f390-4aff-ab38-9b1bf33a3015\")))");
+	dsdt_line("            {");
+	dsdt_line("                Return (\"ADV7481B\")");
+	dsdt_line("            }");
+	dsdt_line("");
+	dsdt_line("            If ((Arg0 == ToUUID ("
+				"\"ea3b7bd8-e09b-4239-ad6e-ed525f3f26ab\")))");
+	dsdt_line("            {");
+	dsdt_line("                Return (0x14)");
+	dsdt_line("            }");
+	dsdt_line("");
+	dsdt_line("            If ((Arg0 == ToUUID ("
+				"\"8dbe2651-70c1-4c6f-ac87-a37cb46e4af6\")))");
+	dsdt_line("            {");
+	dsdt_line("                Return (0xFF)");
+	dsdt_line("            }");
+	dsdt_line("");
+	dsdt_line("            If ((Arg0 == ToUUID ("
+				"\"26257549-9271-4ca4-bb43-c4899d5a4881\")))");
+	dsdt_line("            {");
+	dsdt_line("                If (Arg2 == One)");
+	dsdt_line("                {");
+	dsdt_line("                    Return (0x02)");
+	dsdt_line("                }");
+	dsdt_line("                If (Arg2 == 0x02)");
+	dsdt_line("                {");
+	dsdt_line("                    Return (0x02001000)");
+	dsdt_line("                }");
+	dsdt_line("                If (Arg2 == 0x03)");
+	dsdt_line("                {");
+	dsdt_line("                    Return (0x02000E01)");
+	dsdt_line("                }");
+	dsdt_line("            }");
+	dsdt_line("            Return (Zero)");
+	dsdt_line("        }");
+	dsdt_line("    }");
+	dsdt_line("");
+
+	dsdt_line("}");
+}
+
+static void
 passthru_write_dsdt(struct pci_vdev *dev)
 {
 	struct passthru_dev *ptdev = (struct passthru_dev *) dev->arg;
@@ -1600,6 +1830,9 @@ passthru_write_dsdt(struct pci_vdev *dev)
 	else if (device == 0x5a98)
 		/* HDAS @ 00:e.0 */
 		write_dsdt_hdas(dev);
+	else if (device == 0x5aac)
+		/* i2c @ 00:16.0 for ipu */
+		write_dsdt_ipu_i2c(dev);
 
 }
 
