@@ -254,9 +254,7 @@ static void set_fs_base(void)
 
 void bsp_boot_init(void)
 {
-#ifdef HV_DEBUG
 	uint64_t start_tsc = rdtsc();
-#endif
 
 	/* Clear BSS */
 	memset(_ld_bss_start, 0, _ld_bss_end - _ld_bss_start);
@@ -346,8 +344,6 @@ void bsp_boot_init(void)
 	init_logmsg(LOG_BUF_SIZE,
 		       LOG_DESTINATION);
 
-#ifdef HV_DEBUG
-	/* Log first messages */
 	if (HV_RC_VERSION)
 		printf("HV version %d.%d-rc%d-%s-%s build by %s, start time %lluus\r\n",
 			HV_MAJOR_VERSION, HV_MINOR_VERSION, HV_RC_VERSION,
@@ -361,7 +357,7 @@ void bsp_boot_init(void)
 
 	printf("API version %d.%d\r\n",
 			HV_API_MAJOR_VERSION, HV_API_MINOR_VERSION);
-#endif
+
 	pr_dbg("Core %d is up", CPU_BOOT_ID);
 
 	/* Warn for security feature not ready */
