@@ -83,6 +83,7 @@ SRCS += hw/acpi/acpi.c
 #SRCS += core/bootrom.c
 SRCS += core/sw_load_common.c
 SRCS += core/sw_load_bzimage.c
+SRCS += core/sw_load_vsbl.c
 SRCS += core/smbiostbl.c
 SRCS += core/mevent.c
 SRCS += core/gc.c
