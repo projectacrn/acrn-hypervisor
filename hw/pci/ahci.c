@@ -2312,10 +2312,11 @@ pci_ahci_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 static int
 pci_ahci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts, int atapi)
 {
-	char bident[sizeof("XX:XX:XX")];
+	char bident[16];
 	struct blockif_ctxt *bctxt;
 	struct pci_ahci_vdev *ahci_dev;
-	int ret, slots, p;
+	int ret, slots;
+	uint8_t p;
 	MD5_CTX mdctx;
 	u_char digest[16];
 	char *next, *next2;
@@ -2365,7 +2366,7 @@ pci_ahci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts, int atapi)
 		 * Attempt to open the backing image. Use the PCI slot/func
 		 * and the port number for the identifier string.
 		 */
-		snprintf(bident, sizeof(bident), "%d:%d:%d", dev->slot,
+		snprintf(bident, sizeof(bident), "%02x:%02x:%02x", dev->slot,
 		    dev->func, p);
 		bctxt = blockif_open(opts, bident);
 		if (bctxt == NULL) {
