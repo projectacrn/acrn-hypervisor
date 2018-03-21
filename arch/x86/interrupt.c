@@ -141,7 +141,7 @@ static int vcpu_do_pending_event(struct vcpu *vcpu)
 	int vector = 0;
 	int ret = 0;
 
-	if (is_apicv_enabled()) {
+	if (is_vapic_intr_delivery_supported()) {
 		apicv_inject_pir(vlapic);
 		return 0;
 	}

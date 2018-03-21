@@ -128,6 +128,7 @@ void apicv_inject_pir(struct vlapic *vlapic);
 int apic_access_exit_handler(struct vcpu *vcpu);
 int apicv_write_exit_handler(struct vcpu *vcpu);
 int apicv_virtualized_eoi_exit_handler(struct vcpu *vcpu);
+int apic_tpr_below_threshold_exit_handler(struct vcpu *vcpu);
 
 void calcvdest(struct vm *vm, uint64_t *dmask, uint32_t dest, bool phys);
 #endif	/* _VLAPIC_H_ */

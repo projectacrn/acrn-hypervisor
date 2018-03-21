@@ -2080,38 +2080,41 @@ int vlapic_create(struct vcpu *vcpu)
 	vlapic->vcpu = vcpu;
 	vlapic->apic_page = (struct lapic *) apic_page;
 
-	if (is_apicv_enabled()) {
-		vlapic->ops.apicv_set_intr_ready = apicv_set_intr_ready;
-		vlapic->ops.apicv_pending_intr = apicv_pending_intr;
-		vlapic->ops.apicv_set_tmr = apicv_set_tmr;
-		vlapic->ops.apicv_batch_set_tmr = apicv_batch_set_tmr;
+	if (is_vapic_supported()) {
+		if (is_vapic_intr_delivery_supported()) {
+			vlapic->ops.apicv_set_intr_ready =
+					apicv_set_intr_ready;
 
-		vlapic->pir_desc =
-			(struct pir_desc *)(&(vlapic->pir));
+			vlapic->ops.apicv_pending_intr =
+					apicv_pending_intr;
+
+			vlapic->ops.apicv_set_tmr = apicv_set_tmr;
+			vlapic->ops.apicv_batch_set_tmr =
+					apicv_batch_set_tmr;
+
+			vlapic->pir_desc = (struct pir_desc *)(&(vlapic->pir));
+		}
+
 		if (is_vcpu_bsp(vcpu)) {
 			ept_mmap(vcpu->vm,
-					apicv_get_apic_access_addr(vcpu->vm),
-					DEFAULT_APIC_BASE,
-					CPU_PAGE_SIZE,
-					MAP_MMIO,
-					MMU_MEM_ATTR_WRITE |
-					MMU_MEM_ATTR_READ |
-					MMU_MEM_ATTR_UNCACHED);
+				apicv_get_apic_access_addr(vcpu->vm),
+				DEFAULT_APIC_BASE, CPU_PAGE_SIZE, MAP_MMIO,
+				MMU_MEM_ATTR_WRITE | MMU_MEM_ATTR_READ |
+				MMU_MEM_ATTR_UNCACHED);
 		}
-	}
-
-	vcpu->arch_vcpu.vlapic = vlapic;
-
-	vlapic_init(vlapic);
-
-	if (!is_apicv_enabled()) {
-		return register_mmio_emulation_handler(vcpu->vm,
+	} else {
+		/*No APICv support*/
+		if (register_mmio_emulation_handler(vcpu->vm,
 				vlapic_mmio_access_handler,
 				(uint64_t)DEFAULT_APIC_BASE,
 				(uint64_t)DEFAULT_APIC_BASE +
 				CPU_PAGE_SIZE,
-				(void *) 0);
+				(void *) 0))
+			return -1;
 	}
+
+	vcpu->arch_vcpu.vlapic = vlapic;
+	vlapic_init(vlapic);
 
 	return 0;
 }
@@ -2131,7 +2134,7 @@ void vlapic_free(struct vcpu *vcpu)
 	if (vlapic->last_timer > 0)
 		cancel_timer(vlapic->last_timer, vcpu->pcpu_id);
 
-	if (!is_apicv_enabled()) {
+	if (!is_vapic_supported()) {
 		unregister_mmio_emulation_handler(vcpu->vm,
 			(uint64_t)DEFAULT_APIC_BASE,
 			(uint64_t)DEFAULT_APIC_BASE + CPU_PAGE_SIZE);
@@ -2450,4 +2453,10 @@ int apicv_write_exit_handler(struct vcpu *vcpu)
 	TRACE_2L(TRC_VMEXIT_APICV_WRITE, offset, 0);
 
 	return handled;
+}
+
+int apic_tpr_below_threshold_exit_handler(__unused struct vcpu *vcpu)
+{
+	pr_err("Unhandled %s,", __func__);
+	return 0;
 }
