@@ -427,7 +427,6 @@
 #define PAGE_PROTECTED_MODE     2
 
 /* External Interfaces */
-bool get_vmx_cap(void);
 int exec_vmxon_instr(void);
 uint64_t exec_vmread(uint32_t field);
 uint64_t exec_vmread64(uint32_t field_full);

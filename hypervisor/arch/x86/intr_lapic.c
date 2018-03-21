@@ -325,8 +325,6 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	union apic_icr icr;
 	uint8_t shorthand;
 	int status = 0;
-	uint32_t eax, ebx, ecx, edx;
-	uint32_t family;
 
 	if (cpu_startup_shorthand >= INTR_CPU_STARTUP_UNKNOWN)
 		status = -EINVAL;
@@ -344,15 +342,6 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 		icr.value_32.hi_32 = 0;
 	}
 
-	/*
-	 * family calculation from SDM Vol. 2A
-	 * CPUID with INPUT EAX=01h:Returns Model, Family, Stepping Information
-	 */
-	cpuid(CPUID_FEATURES, &eax, &ebx, &ecx, &edx);
-	family = (eax >> 8) & 0xff;
-	if (family == 0xF)
-		family += (eax >> 20) & 0xff;
-
 	/* Assert INIT IPI */
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_1, icr.value_32.hi_32);
 	icr.bits.shorthand = shorthand;
@@ -365,7 +354,7 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	/* Give 10ms for INIT sequence to complete for old processors.
 	 * Modern processors (family == 6) don't need to wait here.
 	 */
-	if (family != 6)
+	if (boot_cpu_data.x86 != 6)
 		mdelay(10);
 
 	/* De-assert INIT IPI */
@@ -383,7 +372,7 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_0, icr.value_32.lo_32);
 	wait_for_delivery();
 
-	if (family == 6) /* 10us is enough for Modern processors */
+	if (boot_cpu_data.x86 == 6) /* 10us is enough for Modern processors */
 		udelay(10);
 	else /* 200us for old processors */
 		udelay(200);

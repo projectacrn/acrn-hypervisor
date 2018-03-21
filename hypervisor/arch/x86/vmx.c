@@ -93,17 +93,6 @@ static inline int exec_vmxon(void *addr)
 	return status;
 }
 
-bool get_vmx_cap(void)
-{
-	uint32_t eax, ebx, ecx, edx;
-
-	/* Run CPUID to determine if VTX support available */
-	cpuid(CPUID_FEATURES, &eax, &ebx, &ecx, &edx);
-
-	/* See if VMX feature bit is set in ECX */
-	return !!(ecx & CPUID_ECX_VMX);
-}
-
 int exec_vmxon_instr(void)
 {
 	uint64_t tmp64;
