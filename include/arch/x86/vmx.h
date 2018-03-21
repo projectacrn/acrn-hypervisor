@@ -351,6 +351,20 @@
 #define VMX_INT_TYPE_HW_EXP		3
 #define VMX_INT_TYPE_SW_EXP		6
 
+/*VM exit qulifications for APIC-access
+ * Access type:
+ *  0  = linear access for a data read during instruction execution
+ *  1  = linear access for a data write during instruction execution
+ *  2  = linear access for an instruction fetch
+ *  3  = linear access (read or write) during event delivery
+ *  10 = guest-physical access during event delivery
+ *  15 = guest-physical access for an instructon fetch or during
+ *       instruction execution
+ */
+#define APIC_ACCESS_TYPE(qual)		(((qual) >> 12) & 0xF)
+#define APIC_ACCESS_OFFSET(qual)	((qual) & 0xFFF)
+
+
 #define VM_SUCCESS	0
 #define VM_FAIL		-1
 

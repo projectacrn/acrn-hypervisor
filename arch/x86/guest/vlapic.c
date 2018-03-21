@@ -37,6 +37,9 @@
 #include <bsp_extern.h>
 #include <hv_debug.h>
 
+#include "instr_emul_wrapper.h"
+#include "instr_emul.h"
+
 #include "time.h"
 #include "vlapic_priv.h"
 
@@ -2331,9 +2334,32 @@ apicv_inject_pir(struct vlapic *vlapic)
 	}
 }
 
-int apicv_access_exit_handler(__unused struct vcpu *vcpu)
+int apic_access_exit_handler(struct vcpu *vcpu)
 {
-	TRACE_2L(TRC_VMEXIT_APICV_ACCESS, 0, 0);
+	bool ret;
+	int access_type, offset;
+	uint64_t qual;
+	struct vlapic *vlapic;
+
+	qual =  vcpu->arch_vcpu.exit_qualification;
+	access_type = APIC_ACCESS_TYPE(qual);
+
+	/*parse offset if linear access*/
+	if (access_type <= 3)
+		offset = APIC_ACCESS_OFFSET(qual);
+
+	vlapic = vcpu->arch_vcpu.vlapic;
+
+	analyze_instruction(vcpu, &vcpu->mmio);
+	if (access_type == 1) {
+		if (!emulate_instruction(vcpu, &vcpu->mmio))
+			vlapic_write(vlapic, 1, offset, vcpu->mmio.value, &ret);
+	} else if (access_type == 0) {
+		vlapic_read(vlapic, 1, offset, &vcpu->mmio.value, &ret);
+		emulate_instruction(vcpu, &vcpu->mmio);
+	}
+
+	TRACE_2L(TRC_VMEXIT_APICV_ACCESS, qual, (uint64_t)vlapic);
 	return 0;
 }
 
