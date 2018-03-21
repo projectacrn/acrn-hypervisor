@@ -76,16 +76,7 @@ AR = ar
 LD = gcc
 POSTLD = objcopy
 
-D_SRCS += debug/dump.c
-D_SRCS += debug/logmsg.c
-D_SRCS += debug/shell_internal.c
-D_SRCS += debug/shell_public.c
-D_SRCS += debug/vuart.c
-D_SRCS += debug/serial.c
-D_SRCS += debug/uart16550.c
-D_SRCS += debug/console.c
-D_SRCS += debug/sbuf.c
-D_SRCS += debug/printf.c
+D_SRCS += $(wildcard debug/*.c)
 C_SRCS += boot/acpi.c
 C_SRCS += boot/dmar_parse.c
 C_SRCS += boot/multiboot.c
