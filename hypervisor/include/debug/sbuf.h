@@ -150,6 +150,13 @@ static inline int sbuf_put(
 	return 0;
 }
 
+static inline int sbuf_share_setup(
+		__unused uint32_t pcpu_id,
+		__unused uint32_t sbuf_id,
+		__unused uint64_t *hva)
+{
+	return -1;
+}
 #endif /* HV_DEBUG */
 
 #endif /* SHARED_BUFFER_H */
