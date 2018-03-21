@@ -338,7 +338,7 @@ each with their own way to install development tools:
   .. code-block:: console
 
      $ sudo dnf install gcc \
-          gnu-efi \
+          gnu-efi-devel \
           libuuid-devel \
           openssl-devel \
           libpciaccess-devel
