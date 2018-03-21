@@ -285,7 +285,7 @@ virtio_blk_notify(void *vdev, struct virtio_vq_info *vq)
 static int
 virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
-	char bident[sizeof("XX:X:X")];
+	char bident[16];
 	struct blockif_ctxt *bctxt;
 	MD5_CTX mdctx;
 	u_char digest[16];
