@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2017 Intel Corporation
+ * Copyright (c) 2018 Intel Corporation
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,43 +34,39 @@
 
 #include "acrn_common.h"
 #include "vmmapi.h"
-
-#define STR_LEN	1024
+#include "sw_load.h"
 
 #define SETUP_SIG 0x5a5aaa55
 
-#define	KB	(1024UL)
-#define	MB	(1024 * 1024UL)
-#define	GB	(1024 * 1024 * 1024UL)
+/* If we load kernel/ramdisk/bootargs directly, the UOS
+ * memory layout will be like:
+ *
+ * | ...                                                 |
+ * +-----------------------------------------------------+
+ * | offset: 0xf2400 (ACPI table)                        |
+ * +-----------------------------------------------------+
+ * | ...                                                 |
+ * +-----------------------------------------------------+
+ * | offset: 16MB (kernel image)                         |
+ * +-----------------------------------------------------+
+ * | ...                                                 |
+ * +-----------------------------------------------------+
+ * | offset: lowmem - 4MB (ramdisk image)                |
+ * +-----------------------------------------------------+
+ * | offset: lowmem - 8K (bootargs)                      |
+ * +-----------------------------------------------------+
+ * | offset: lowmem - 6K (kernel entry address)          |
+ * +-----------------------------------------------------+
+ * | offset: lowmem - 4K (zero_page include e820 table)  |
+ * +-----------------------------------------------------+
+ */
 
-/* E820 memory types */
-#define E820_TYPE_RAM           1   /* EFI 1, 2, 3, 4, 5, 6, 7 */
-/* EFI 0, 11, 12, 13 (everything not used elsewhere) */
-#define E820_TYPE_RESERVED      2
-#define E820_TYPE_ACPI_RECLAIM  3   /* EFI 9 */
-#define E820_TYPE_ACPI_NVS      4   /* EFI 10 */
-#define E820_TYPE_UNUSABLE      5   /* EFI 8 */
-
-#define NUM_E820_ENTRIES	4
-#define LOWRAM_E820_ENTRIES	0
-#define HIGHRAM_E820_ENTRIES	3
-
-/* see below e820 default mapping for more info about ctx->lowmem */
+/* Check default e820 table in sw_load_common.c for info about ctx->lowmem */
 #define RAMDISK_LOAD_OFF(ctx)	(ctx->lowmem - 4*MB)
 #define BOOTARGS_LOAD_OFF(ctx)	(ctx->lowmem - 8*KB)
 #define KERNEL_ENTRY_OFF(ctx)	(ctx->lowmem - 6*KB)
 #define ZEROPAGE_LOAD_OFF(ctx)	(ctx->lowmem - 4*KB)
 #define KERNEL_LOAD_OFF(ctx)	(16*MB)
-
-/* Defines a single entry in an E820 memory map. */
-struct e820_entry {
-	/** The base address of the memory range. */
-	uint64_t baseaddr;
-	/** The length of the memory range. */
-	uint64_t length;
-	/** The type of memory region. */
-	uint32_t type;
-} __attribute__((packed));
 
 /* The real mode kernel header, refer to Documentation/x86/boot.txt */
 struct _zeropage {
@@ -96,59 +92,12 @@ struct _zeropage {
 	uint8_t pad4[0x330];                    /* 0xcd0 */
 } __attribute__((packed));
 
-static char bootargs[STR_LEN];
 static char ramdisk_path[STR_LEN];
 static char kernel_path[STR_LEN];
-static int with_bootargs;
 static int with_ramdisk;
 static int with_kernel;
 static int ramdisk_size;
 static int kernel_size;
-
-/*
- * Default e820 mem map:
- *
- * there is reserved memory hole for PCI hole and APIC etc
- * so the memory layout could be separated into lowmem & highmem.
- * - if request memory size <= ctx->lowmem_limit, then there is only
- *   map[0]:0~ctx->lowmem for RAM
- *   ctx->lowmem = request_memory_size
- * - if request memory size > ctx->lowmem_limit, then there are
- *   map[0]:0~ctx->lowmem_limit & map[2]:4G~ctx->highmem for RAM
- *   ctx->highmem = request_memory_size - ctx->lowmem_limit
- *
- *             Begin      End         Type         Length
- * 0:             0 -     lowmem      RAM          lowmem
- * 1:        lowmem -     bff_fffff   (reserved)   0xc00_00000-lowmem
- * 2:   0xc00_00000 -     dff_fffff   PCI hole     512MB
- * 3:   0xe00_00000 -     fff_fffff   (reserved)   512MB
- * 2:   1_000_00000 -     highmem     RAM          highmem-4G
- */
-const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
-	{	/* 0 to lowmem */
-		.baseaddr =  0x00000000,
-		.length   =  0x49000000,
-		.type     =  E820_TYPE_RAM
-	},
-
-	{	/* lowmem to lowmem_limit*/
-		.baseaddr =  0x49000000,
-		.length   =  0x77000000,
-		.type     =  E820_TYPE_RESERVED
-	},
-
-	{	/* lowmem_limit to 4G */
-		.baseaddr =  0xe0000000,
-		.length   =  0x20000000,
-		.type     =  E820_TYPE_RESERVED
-	},
-
-	{
-		.baseaddr =  0x100000000,
-		.length   =  0x000100000,
-		.type     =  E820_TYPE_RESERVED
-	},
-};
 
 static int
 acrn_get_bzimage_setup_size(struct vmctx *ctx)
@@ -174,19 +123,6 @@ acrn_get_bzimage_setup_size(struct vmctx *ctx)
 				"size in kernel %s\n",
 				kernel_path);
 	return size;
-}
-
-static int
-check_image(char *path)
-{
-	FILE *fp;
-
-	fp = fopen(path, "r");
-	if (fp == NULL)
-		return -1;
-
-	fclose(fp);
-	return 0;
 }
 
 int
@@ -218,21 +154,6 @@ acrn_parse_ramdisk(char *arg)
 
 		with_ramdisk = 1;
 		printf("SW_LOAD: get ramdisk path %s\n", ramdisk_path);
-		return 0;
-	} else
-		return -1;
-}
-
-int
-acrn_parse_bootargs(char *arg)
-{
-	int len = strlen(arg);
-
-	if (len < STR_LEN) {
-		strncpy(bootargs, arg, len);
-		bootargs[len] = '\0';
-		with_bootargs = 1;
-		printf("SW_LOAD: get bootargs %s\n", bootargs);
 		return 0;
 	} else
 		return -1;
@@ -316,38 +237,6 @@ acrn_prepare_kernel(struct vmctx *ctx)
 	return 0;
 }
 
-static uint32_t
-acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
-{
-	uint32_t k;
-
-	memcpy(e820, e820_default_entries, sizeof(e820_default_entries));
-
-	if (ctx->lowmem > 0) {
-		e820[LOWRAM_E820_ENTRIES].length = ctx->lowmem;
-		e820[LOWRAM_E820_ENTRIES+1].baseaddr = ctx->lowmem;
-		e820[LOWRAM_E820_ENTRIES+1].length =
-			ctx->lowmem_limit - ctx->lowmem;
-	}
-
-	if (ctx->highmem > 0) {
-		e820[HIGHRAM_E820_ENTRIES].type = E820_TYPE_RAM;
-		e820[HIGHRAM_E820_ENTRIES].length = ctx->highmem;
-	}
-
-	printf("SW_LOAD: build e820 %d entries to addr: %p\n",
-			NUM_E820_ENTRIES, (void *)e820);
-
-	for (k = 0; k < NUM_E820_ENTRIES; k++)
-		printf("SW_LOAD: entry[%d]: addr 0x%016lx, size 0x%016lx, "
-			" type 0x%x\n",
-				k, e820[k].baseaddr,
-				e820[k].length,
-				e820[k].type);
-
-	return NUM_E820_ENTRIES;
-}
-
 static int
 acrn_prepare_zeropage(struct vmctx *ctx, int setup_size)
 {
@@ -390,7 +279,7 @@ acrn_prepare_zeropage(struct vmctx *ctx, int setup_size)
 }
 
 int
-acrn_sw_load(struct vmctx *ctx)
+acrn_sw_load_direct(struct vmctx *ctx)
 {
 	int ret, setup_size;
 	uint64_t *cfg_offset = (uint64_t *)(ctx->baseaddr + GUEST_CFG_OFFSET);
@@ -398,7 +287,7 @@ acrn_sw_load(struct vmctx *ctx)
 	*cfg_offset = ctx->lowmem;
 
 	if (with_bootargs) {
-		strcpy(ctx->baseaddr + BOOTARGS_LOAD_OFF(ctx), bootargs);
+		strcpy(ctx->baseaddr + BOOTARGS_LOAD_OFF(ctx), get_bootargs());
 		printf("SW_LOAD: bootargs copied to guest 0x%lx\n",
 				BOOTARGS_LOAD_OFF(ctx));
 	}
@@ -432,3 +321,4 @@ acrn_sw_load(struct vmctx *ctx)
 
 	return 0;
 }
+
