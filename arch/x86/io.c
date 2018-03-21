@@ -103,8 +103,6 @@ int io_instr_handler(struct vcpu *vcpu)
 	direction = VM_EXIT_IO_INSTRUCTION_ACCESS_DIRECTION(exit_qual);
 	mask = 0xfffffffful >> (32 - 8 * sz);
 
-	memset(&vcpu->req, 0, sizeof(struct vhm_request));
-
 	TRACE_4I(TRC_VMEXIT_IO_INSTRUCTION, port, direction, sz,
 		cur_context_idx);
 
@@ -149,6 +147,7 @@ int io_instr_handler(struct vcpu *vcpu)
 	if (status != 0) {
 		uint64_t *rax = &cur_context->guest_cpu_regs.regs.rax;
 
+		memset(&vcpu->req, 0, sizeof(struct vhm_request));
 		dm_emulate_pio_pre(vcpu, exit_qual, sz, *rax);
 		status = acrn_insert_request_wait(vcpu, &vcpu->req);
 	}
