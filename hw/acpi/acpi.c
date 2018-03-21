@@ -74,6 +74,7 @@
  * the individual tables
  */
 #define ACPI_BASE		0xf2400
+#define	ACPI_LENGTH		(0x100000 - ACPI_BASE)
 #define RSDT_OFFSET		0x040
 #define XSDT_OFFSET		0x080
 #define MADT_OFFSET		0x100
@@ -971,6 +972,18 @@ acpi_table_enable(int num)
 	}
 
 	basl_ftables[num].valid = true;
+}
+
+uint32_t
+get_acpi_base(void)
+{
+	return basl_acpi_base;
+}
+
+uint32_t
+get_acpi_table_length(void)
+{
+	return ACPI_LENGTH;
 }
 
 int
