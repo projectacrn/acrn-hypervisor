@@ -31,6 +31,7 @@ Sections
    release_notes.rst
    contribute.rst
    api/index.rst
+   docbuild.rst
 
 Indices and Tables
 ******************
