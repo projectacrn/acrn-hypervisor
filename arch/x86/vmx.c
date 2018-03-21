@@ -901,7 +901,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	value32 &= ~(VMX_PROCBASED_CTLS_CR3_LOAD |
 			VMX_PROCBASED_CTLS_CR3_STORE);
 
-	if (is_apicv_enabled()) {
+	if (is_vapic_supported()) {
 		value32 |= VMX_PROCBASED_CTLS_TPR_SHADOW;
 	} else {
 		/* Add CR8 VMExit for vlapic */
@@ -922,17 +922,30 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 		    /* VMX_PROCBASED_CTLS2_RDTSCP | */
 		    VMX_PROCBASED_CTLS2_UNRESTRICT);
 
-	if (is_apicv_enabled()) {
-		value32 |=
-			(VMX_PROCBASED_CTLS2_VAPIC |
-			VMX_PROCBASED_CTLS2_VAPIC_REGS |
-			VMX_PROCBASED_CTLS2_VIRQ);
+	if (is_vapic_supported()) {
+		value32 |= VMX_PROCBASED_CTLS2_VAPIC;
+
+		if (is_vapic_virt_reg_supported())
+			value32 |= VMX_PROCBASED_CTLS2_VAPIC_REGS;
+
+		if (is_vapic_intr_delivery_supported())
+			value32 |= VMX_PROCBASED_CTLS2_VIRQ;
+		else
+			/*
+			 * This field exists only on processors that support
+			 * the 1-setting  of the "use TPR shadow"
+			 * VM-execution control.
+			 *
+			 * Set up TPR threshold for virtual interrupt delivery
+			 * - pg 2904 24.6.8
+			 */
+			exec_vmwrite(VMX_TPR_THRESHOLD, 0);
 	}
 
 	exec_vmwrite(VMX_PROC_VM_EXEC_CONTROLS2, value32);
 	pr_dbg("VMX_PROC_VM_EXEC_CONTROLS2: 0x%x ", value32);
 
-	if (is_apicv_enabled()) {
+	if (is_vapic_supported()) {
 		/*APIC-v, config APIC-access address*/
 		value64 = apicv_get_apic_access_addr(vcpu->vm);
 		exec_vmwrite64(VMX_APIC_ACCESS_ADDR_FULL,
@@ -943,10 +956,16 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 		exec_vmwrite64(VMX_VIRTUAL_APIC_PAGE_ADDR_FULL,
 						value64);
 
-		exec_vmwrite64(VMX_EOI_EXIT0_FULL, -1UL);
-		exec_vmwrite64(VMX_EOI_EXIT1_FULL, -1UL);
-		exec_vmwrite64(VMX_EOI_EXIT2_FULL, -1UL);
-		exec_vmwrite64(VMX_EOI_EXIT3_FULL, -1UL);
+		if (is_vapic_intr_delivery_supported()) {
+			/* these fields are supported only on processors
+			 * that support the 1-setting of the "virtual-interrupt
+			 * delivery" VM-execution control
+			 */
+			exec_vmwrite64(VMX_EOI_EXIT0_FULL, -1UL);
+			exec_vmwrite64(VMX_EOI_EXIT1_FULL, -1UL);
+			exec_vmwrite64(VMX_EOI_EXIT2_FULL, -1UL);
+			exec_vmwrite64(VMX_EOI_EXIT3_FULL, -1UL);
+		}
 	}
 
 	/* Check for EPT support */
@@ -988,11 +1007,6 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	 * target-value regs to evaluate
 	 */
 	exec_vmwrite(VMX_CR3_TARGET_COUNT, 0);
-
-	/* Set up TPR threshold for virtual interrupt delivery * - pg 2904
-	 * 24.6.8
-	 */
-	exec_vmwrite(VMX_TPR_THRESHOLD, 0);
 
 	/* Set up IO bitmap register A and B - pg 2902 24.6.4 */
 	value64 = (int64_t) vm->arch_vm.iobitmap[0];

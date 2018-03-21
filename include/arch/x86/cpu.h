@@ -225,7 +225,9 @@ int hv_main(int cpu_id);
 bool check_tsc_adjust_support(void);
 bool check_ibrs_ibpb_support(void);
 bool check_stibp_support(void);
-bool is_apicv_enabled(void);
+bool is_vapic_supported(void);
+bool is_vapic_intr_delivery_supported(void);
+bool is_vapic_virt_reg_supported(void);
 
 /* Read control register */
 #define CPU_CR_READ(cr, result_ptr)                         \
