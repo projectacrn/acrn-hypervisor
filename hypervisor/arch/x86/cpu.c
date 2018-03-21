@@ -64,16 +64,24 @@ DEFINE_CPU_DATA(void *, vcpu);
 DEFINE_CPU_DATA(int, state);
 
 /* TODO: add more capability per requirement */
+/*APICv features*/
+#define VAPIC_FEATURE_VIRT_ACCESS		(1 << 0)
+#define VAPIC_FEATURE_VIRT_REG			(1 << 1)
+#define VAPIC_FEATURE_INTR_DELIVERY		(1 << 2)
+#define VAPIC_FEATURE_TPR_SHADOW		(1 << 3)
+#define VAPIC_FEATURE_POST_INTR		(1 << 4)
+#define VAPIC_FEATURE_VX2APIC_MODE		(1 << 5)
+
 struct cpu_capability {
 	bool tsc_adjust_supported;
 	bool ibrs_ibpb_supported;
 	bool stibp_supported;
-	bool apicv_supported;
+	uint8_t vapic_features;
 	bool monitor_supported;
 };
 static struct cpu_capability cpu_caps;
 
-static void apicv_cap_detect(void);
+static void vapic_cap_detect(void);
 static void monitor_cap_detect(void);
 static void cpu_set_logical_id(uint32_t logical_id);
 static void print_hv_banner(void);
@@ -309,7 +317,7 @@ void bsp_boot_init(void)
 
 	check_cpu_capability();
 
-	apicv_cap_detect();
+	vapic_cap_detect();
 
 	monitor_cap_detect();
 
@@ -597,31 +605,58 @@ static bool is_ctrl_setting_allowed(uint64_t msr_val, uint32_t ctrl)
 	return ((((uint32_t)(msr_val >> 32)) & ctrl) == ctrl);
 }
 
-static void apicv_cap_detect(void)
+static void vapic_cap_detect(void)
 {
-	uint64_t val64;
-	uint32_t ctrl;
-	bool     result;
+	uint8_t features;
+	uint64_t msr_val;
 
-	ctrl = VMX_PROCBASED_CTLS_TPR_SHADOW;
-	val64 = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
+	features = 0;
 
-	result = is_ctrl_setting_allowed(val64, ctrl);
-	if (result) {
-		ctrl = VMX_PROCBASED_CTLS2_VAPIC |
-			VMX_PROCBASED_CTLS2_VAPIC_REGS |
-			VMX_PROCBASED_CTLS2_VIRQ;
+	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
+	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS_TPR_SHADOW)) {
+		cpu_caps.vapic_features = 0;
+		return;
+	}
+	features |= VAPIC_FEATURE_TPR_SHADOW;
 
-		val64 = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
-		result = is_ctrl_setting_allowed(val64, ctrl);
+	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
+	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC)) {
+		cpu_caps.vapic_features = features;
+		return;
+	}
+	features |= VAPIC_FEATURE_VIRT_ACCESS;
+
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC_REGS))
+		features |= VAPIC_FEATURE_VIRT_REG;
+
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VX2APIC))
+		features |= VAPIC_FEATURE_VX2APIC_MODE;
+
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VIRQ)) {
+		features |= VAPIC_FEATURE_INTR_DELIVERY;
+
+		msr_val = msr_read(MSR_IA32_VMX_PINBASED_CTLS);
+		if (is_ctrl_setting_allowed(msr_val,
+						VMX_PINBASED_CTLS_POST_IRQ))
+			features |= VAPIC_FEATURE_POST_INTR;
 	}
 
-	cpu_caps.apicv_supported = result;
+	cpu_caps.vapic_features = features;
 }
 
-bool is_apicv_enabled(void)
+bool is_vapic_supported(void)
 {
-	return cpu_caps.apicv_supported;
+	return ((cpu_caps.vapic_features & VAPIC_FEATURE_VIRT_ACCESS) != 0);
+}
+
+bool is_vapic_intr_delivery_supported(void)
+{
+	return ((cpu_caps.vapic_features & VAPIC_FEATURE_INTR_DELIVERY) != 0);
+}
+
+bool is_vapic_virt_reg_supported(void)
+{
+	return ((cpu_caps.vapic_features & VAPIC_FEATURE_VIRT_REG) != 0);
 }
 
 static void monitor_cap_detect(void)
