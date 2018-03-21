@@ -416,8 +416,6 @@ int ept_violation_handler(struct vcpu *vcpu)
 	/* Handle page fault from guest */
 	exit_qual = vcpu->arch_vcpu.exit_qualification;
 
-	memset(&vcpu->req, 0, sizeof(struct vhm_request));
-
 	/* Specify if read or write operation */
 	if (exit_qual & 0x2) {
 		/* Write operation */
@@ -486,6 +484,8 @@ int ept_violation_handler(struct vcpu *vcpu)
 		 * instruction emulation. For MMIO read, ask DM to run MMIO
 		 * emulation at first.
 		 */
+		memset(&vcpu->req, 0, sizeof(struct vhm_request));
+
 		status = dm_emulate_mmio_pre(vcpu, exit_qual);
 		if (status != 0)
 			goto out;
