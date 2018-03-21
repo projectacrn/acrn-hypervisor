@@ -51,7 +51,9 @@ int interrupt_init(uint32_t cpu_id)
 	if (status != 0)
 		return -ENODEV;
 
+#ifndef CONFIG_EFI_STUB
 	CPU_IRQ_ENABLE();
+#endif
 
 	return status;
 }

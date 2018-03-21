@@ -119,6 +119,7 @@ uint8_t vlapic_get_apicid(struct vlapic *vlapic);
 int vlapic_create(struct vcpu *vcpu);
 void vlapic_free(struct vcpu *vcpu);
 void vlapic_init(struct vlapic *vlapic);
+void vlapic_restore(struct vlapic *vlapic, struct lapic_regs *regs);
 bool vlapic_enabled(struct vlapic *vlapic);
 uint64_t apicv_get_apic_access_addr(struct vm *vm);
 uint64_t apicv_get_apic_page_addr(struct vlapic *vlapic);

@@ -270,9 +270,10 @@ int external_interrupt_handler(struct vcpu *vcpu)
 	struct intr_ctx ctx;
 
 	ctx.vector = vector;
-	/* do not RETAIN RIP for spurious interrupt */
-	if (dispatch_interrupt(&ctx) == 0)
-		VCPU_RETAIN_RIP(vcpu);
+
+	dispatch_interrupt(&ctx);
+
+	VCPU_RETAIN_RIP(vcpu);
 
 	TRACE_2L(TRC_VMEXIT_EXTERNAL_INTERRUPT, vector, 0);
 

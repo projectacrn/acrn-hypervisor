@@ -443,7 +443,7 @@ void dispatch_exception(struct intr_ctx *ctx)
 	cpu_halt(cpu_id);
 }
 
-int handle_spurious_interrupt(int vector)
+void handle_spurious_interrupt(int vector)
 {
 	send_lapic_eoi();
 
@@ -452,13 +452,11 @@ int handle_spurious_interrupt(int vector)
 	pr_warn("Spurious vector: 0x%x.", vector);
 
 	if (spurious_handler)
-		return spurious_handler(vector);
-	else
-		return 0;
+		spurious_handler(vector);
 }
 
 /* do_IRQ() */
-int dispatch_interrupt(struct intr_ctx *ctx)
+void dispatch_interrupt(struct intr_ctx *ctx)
 {
 	int vr = ctx->vector;
 	int irq = vector_to_irq[vr];
@@ -479,9 +477,10 @@ int dispatch_interrupt(struct intr_ctx *ctx)
 	}
 
 	desc->irq_handler(desc, desc->handler_data);
-	return 0;
+	return;
 ERR:
-	return handle_spurious_interrupt(vr);
+	handle_spurious_interrupt(vr);
+	return;
 }
 
 int handle_level_interrupt_common(struct irq_desc *desc,
