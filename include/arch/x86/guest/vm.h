@@ -39,7 +39,7 @@ enum vm_privilege_level {
 
 #define	MAX_VM_NAME_LEN		16
 struct vm_attr {
-	char name[16];	/* Virtual machine name string */
+	char name[MAX_VM_NAME_LEN];	/* Virtual machine name string */
 	int id;		/* Virtual machine identifier */
 	int boot_idx;	/* Index indicating the boot sequence for this VM */
 };
@@ -134,6 +134,19 @@ struct vm_arch {
 	/* reference to virtual platform to come here (as needed) */
 };
 
+#define CPUID_CHECK_SUBLEAF	(1 << 0)
+#define MAX_VM_VCPUID_ENTRIES	64
+struct vcpuid_entry {
+	uint32_t eax;
+	uint32_t ebx;
+	uint32_t ecx;
+	uint32_t edx;
+	uint32_t leaf;
+	uint32_t subleaf;
+	uint32_t flags;
+	uint32_t padding;
+};
+
 struct vpic;
 struct vm {
 	struct vm_attr attr;	/* Reference to this VM's attributes */
@@ -167,6 +180,9 @@ struct vm {
 
 	unsigned char GUID[16];
 	struct secure_world_control sworld_control;
+
+	uint32_t vcpuid_entry_nr, vcpuid_level, vcpuid_xlevel;
+	struct vcpuid_entry vcpuid_entries[MAX_VM_VCPUID_ENTRIES];
 };
 
 struct vm_description {

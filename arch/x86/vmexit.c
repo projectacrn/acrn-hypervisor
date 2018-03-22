@@ -316,7 +316,7 @@ int cpuid_handler(struct vcpu *vcpu)
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 
-	emulate_cpuid(vcpu, (uint32_t)cur_context->guest_cpu_regs.regs.rax,
+	guest_cpuid(vcpu,
 		(uint32_t *)&cur_context->guest_cpu_regs.regs.rax,
 		(uint32_t *)&cur_context->guest_cpu_regs.regs.rbx,
 		(uint32_t *)&cur_context->guest_cpu_regs.regs.rcx,
