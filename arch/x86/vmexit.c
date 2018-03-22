@@ -123,12 +123,12 @@ static const struct vm_exit_dispatch dispatch_table[] = {
 	[VMX_EXIT_REASON_ENTRY_FAILURE_MACHINE_CHECK] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_TPR_BELOW_THRESHOLD] = {
-		.handler = apic_tpr_below_threshold_exit_handler},
+		.handler = tpr_below_threshold_vmexit_handler},
 	[VMX_EXIT_REASON_APIC_ACCESS] = {
-		.handler = apic_access_exit_handler,
+		.handler = apic_access_vmexit_handler,
 		.need_exit_qualification = 1},
 	[VMX_EXIT_REASON_VIRTUALIZED_EOI] = {
-		.handler = apicv_virtualized_eoi_exit_handler,
+		.handler = veoi_vmexit_handler,
 		.need_exit_qualification = 1},
 	[VMX_EXIT_REASON_GDTR_IDTR_ACCESS] = {
 		.handler = unhandled_vmexit_handler},
@@ -153,7 +153,7 @@ static const struct vm_exit_dispatch dispatch_table[] = {
 	[VMX_EXIT_REASON_XSETBV] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_APIC_WRITE] = {
-		.handler = apicv_write_exit_handler,
+		.handler = apic_write_vmexit_handler,
 		.need_exit_qualification = 1}
 };
 

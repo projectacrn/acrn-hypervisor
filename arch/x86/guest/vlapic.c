@@ -2337,7 +2337,7 @@ apicv_inject_pir(struct vlapic *vlapic)
 	}
 }
 
-int apic_access_exit_handler(struct vcpu *vcpu)
+int apic_access_vmexit_handler(struct vcpu *vcpu)
 {
 	bool ret;
 	int access_type, offset;
@@ -2366,7 +2366,7 @@ int apic_access_exit_handler(struct vcpu *vcpu)
 	return 0;
 }
 
-int apicv_virtualized_eoi_exit_handler(struct vcpu *vcpu)
+int veoi_vmexit_handler(struct vcpu *vcpu)
 {
 	struct vlapic *vlapic = NULL;
 
@@ -2395,7 +2395,7 @@ int apicv_virtualized_eoi_exit_handler(struct vcpu *vcpu)
 	return 0;
 }
 
-int apicv_write_exit_handler(struct vcpu *vcpu)
+int apic_write_vmexit_handler(struct vcpu *vcpu)
 {
 	bool retu;
 	uint64_t qual;
@@ -2455,8 +2455,8 @@ int apicv_write_exit_handler(struct vcpu *vcpu)
 	return handled;
 }
 
-int apic_tpr_below_threshold_exit_handler(__unused struct vcpu *vcpu)
+int tpr_below_threshold_vmexit_handler(__unused struct vcpu *vcpu)
 {
-	pr_err("Unhandled %s,", __func__);
+	pr_err("Unhandled %s.", __func__);
 	return 0;
 }
