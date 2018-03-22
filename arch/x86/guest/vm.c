@@ -170,7 +170,9 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 			ptdev_vm_init(vm);
 			vm->sw.req_buf = 0;
 
-			vm->state = VM_CREATED;
+			status = set_vcpuid_entries(vm);
+			if (status)
+				vm->state = VM_CREATED;
 		}
 
 	}
