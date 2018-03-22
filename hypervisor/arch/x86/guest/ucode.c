@@ -40,7 +40,7 @@ uint64_t get_microcode_version(void)
 	uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0;
 
 	msr_write(MSR_IA32_BIOS_SIGN_ID, 0);
-	native_cpuid_count(CPUID_FEATURES, 0, &eax, &ebx, &ecx, &edx);
+	cpuid(CPUID_FEATURES, &eax, &ebx, &ecx, &edx);
 	val = msr_read(MSR_IA32_BIOS_SIGN_ID);
 
 	return val;

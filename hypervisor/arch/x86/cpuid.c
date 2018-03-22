@@ -33,163 +33,317 @@
 #include <acrn_common.h>
 #include <hv_arch.h>
 #include <cpu.h>
+#include <hv_debug.h>
 
-void emulate_cpuid(struct vcpu *vcpu, uint32_t src_op, uint32_t *eax_ptr,
-	uint32_t *ebx_ptr, uint32_t *ecx_ptr, uint32_t *edx_ptr)
+static inline struct vcpuid_entry *find_vcpuid_entry(struct vcpu *vcpu,
+					uint32_t leaf, uint32_t subleaf)
 {
-	uint32_t apicid = vlapic_get_id(vcpu->arch_vcpu.vlapic);
-	static const char sig[12] = "ACRNACRNACRN";
-	const uint32_t *sigptr = (const uint32_t *)sig;
-	uint32_t count = *ecx_ptr;
+	int i = 0, nr, half;
+	struct vcpuid_entry *entry = NULL;
+	struct vm *vm = vcpu->vm;
 
-	if ((src_op != 0x40000000) && (src_op != 0x40000010))
-		cpuid_count(src_op, count, eax_ptr, ebx_ptr, ecx_ptr, edx_ptr);
+	nr = vm->vcpuid_entry_nr;
+	half = nr / 2;
+	if (vm->vcpuid_entries[half].leaf < leaf)
+		i = half;
 
-	switch (src_op) {
-		/* Virtualize cpuid 0x01 */
-	case 0x01:
-		/* Patching initial APIC ID */
-		*ebx_ptr &= ~APIC_ID_MASK;
-		*ebx_ptr |= (apicid & APIC_ID_MASK);
+	for (; i < nr; i++) {
+		struct vcpuid_entry *tmp = &vm->vcpuid_entries[i];
 
-		/* mask mtrr */
-		*edx_ptr &= ~CPUID_EDX_MTRR;
+		if (tmp->leaf < leaf)
+			continue;
+		if (tmp->leaf == leaf) {
+			if ((tmp->flags & CPUID_CHECK_SUBLEAF) &&
+				(tmp->subleaf != subleaf))
+				continue;
+			entry = tmp;
+			break;
+		} else if (tmp->leaf > leaf)
+			break;
+	}
 
-		/* Patching X2APIC, X2APIC mode is disabled by default. */
-		if (x2apic_enabled)
-			*ecx_ptr |= CPUID_ECX_x2APIC;
+	if (entry == NULL) {
+		uint32_t limit;
+
+		if (leaf & 0x80000000)
+			limit = vm->vcpuid_xlevel;
 		else
-			*ecx_ptr &= ~CPUID_ECX_x2APIC;
+			limit = vm->vcpuid_level;
 
-		/* mask pcid */
-		*ecx_ptr &= ~CPUID_ECX_PCID;
+		if (leaf > limit) {
+			/* Intel documentation states that invalid EAX input
+			 * will return the same information as EAX=cpuid_level
+			 * (Intel SDM Vol. 2A - Instruction Set Reference -
+			 * CPUID)
+			 */
+			leaf = vm->vcpuid_level;
+			return find_vcpuid_entry(vcpu, leaf, subleaf);
+		}
 
-		/*mask vmx to guest os */
-		*ecx_ptr &= ~CPUID_ECX_VMX;
+	}
 
-		break;
+	return entry;
+}
 
-		/* Virtualize cpuid 0x07 */
+static inline int set_vcpuid_entry(struct vm *vm,
+				struct vcpuid_entry *entry)
+{
+	struct vcpuid_entry *tmp;
+	size_t entry_size = sizeof(struct vcpuid_entry);
+
+	tmp = &vm->vcpuid_entries[vm->vcpuid_entry_nr++];
+	if (vm->vcpuid_entry_nr > MAX_VM_VCPUID_ENTRIES) {
+		pr_err("%s, vcpuid entry over MAX_VM_VCPUID_ENTRIES(%d)\n",
+				__func__, MAX_VM_VCPUID_ENTRIES);
+		return -ENOMEM;
+	}
+	memcpy_s(tmp, entry_size, entry, entry_size);
+	return 0;
+}
+
+/**
+ * initialization of virtual CPUID leaf
+ */
+static void init_vcpuid_entry(__unused struct vm *vm,
+			uint32_t leaf, uint32_t subleaf,
+			uint32_t flags, struct vcpuid_entry *entry)
+{
+	entry->leaf = leaf;
+	entry->subleaf = subleaf;
+	entry->flags = flags;
+
+	switch (leaf) {
 	case 0x07:
-		/* mask invpcid */
-		*ebx_ptr &= ~CPUID_EBX_INVPCID;
-
+		if (!subleaf) {
+			cpuid(leaf,
+				&entry->eax, &entry->ebx,
+				&entry->ecx, &entry->edx);
+			/* mask invpcid */
+			entry->ebx &= ~CPUID_EBX_INVPCID;
+		} else {
+			entry->eax = 0;
+			entry->ebx = 0;
+			entry->ecx = 0;
+			entry->edx = 0;
+		}
 		break;
 
 	case 0x0a:
 		/* not support pmu */
-		*eax_ptr &= ~0xff;
+		entry->eax = 0;
+		entry->ebx = 0;
+		entry->ecx = 0;
+		entry->edx = 0;
 		break;
 
-		/* Virtualize cpuid 0x0b */
+	/*
+	 * Leaf 0x40000000
+	 * This leaf returns the CPUID leaf range supported by the
+	 * hypervisor and the hypervisor vendor signature.
+	 *
+	 * EAX: The maximum input value for CPUID supported by the
+	 *	hypervisor.
+	 * EBX, ECX, EDX: Hypervisor vendor ID signature.
+	 */
+	case 0x40000000:
+	{
+		static const char sig[12] = "ACRNACRNACRN";
+		const uint32_t *sigptr = (const uint32_t *)sig;
+
+		entry->eax = 0x40000010;
+		entry->ebx = sigptr[0];
+		entry->ecx = sigptr[1];
+		entry->edx = sigptr[2];
+		break;
+	}
+
+	/*
+	 * Leaf 0x40000010 - Timing Information.
+	 * This leaf returns the current TSC frequency and
+	 * current Bus frequency in kHz.
+	 *
+	 * EAX: (Virtual) TSC frequency in kHz.
+	 *      TSC frequency is calculated from PIT in ACRN
+	 * EBX: (Virtual) Bus (local apic timer) frequency in kHz.
+	 *      Bus (local apic timer) frequency is hardcoded as
+	 *      (128 * 1024 * 1024) in ACRN
+	 * ECX, EDX: RESERVED (reserved fields are set to zero).
+	 */
+	case 0x40000010:
+		entry->eax = (uint32_t)(tsc_clock_freq / 1000);
+		entry->ebx = (128 * 1024 * 1024) / 1000;
+		entry->ecx = 0;
+		entry->edx = 0;
+		break;
+
+	default:
+		cpuid_subleaf(leaf, subleaf,
+				&entry->eax, &entry->ebx,
+				&entry->ecx, &entry->edx);
+		break;
+	}
+}
+
+int set_vcpuid_entries(struct vm *vm)
+{
+	int result;
+	struct vcpuid_entry entry;
+	uint32_t limit;
+	uint32_t i, j;
+
+	init_vcpuid_entry(vm, 0, 0, 0, &entry);
+	result = set_vcpuid_entry(vm, &entry);
+	if (result)
+		return result;
+	vm->vcpuid_level = limit = entry.eax;
+
+	for (i = 1; i <= limit; i++) {
+		/* cpuid 1/0xb is percpu related */
+		if (i == 1 || i == 0xb)
+			continue;
+
+		switch (i) {
+		case 0x02:
+		{
+			uint32_t times;
+
+			init_vcpuid_entry(vm, i, 0,
+				CPUID_CHECK_SUBLEAF, &entry);
+			result = set_vcpuid_entry(vm, &entry);
+			if (result)
+				return result;
+
+			times = entry.eax & 0xff;
+			for (j = 1; j < times; j++) {
+				init_vcpuid_entry(vm, i, j,
+					CPUID_CHECK_SUBLEAF, &entry);
+				result = set_vcpuid_entry(vm, &entry);
+				if (result)
+					return result;
+			}
+			break;
+		}
+
+		case 0x04:
+		case 0x0d:
+			for (j = 0; ; j++) {
+				if (i == 0x0d && j == 64)
+					break;
+
+				init_vcpuid_entry(vm, i, j,
+					CPUID_CHECK_SUBLEAF, &entry);
+				if (i == 0x04 && entry.eax == 0)
+					break;
+				if (i == 0x0d && entry.eax == 0)
+					continue;
+				result = set_vcpuid_entry(vm, &entry);
+				if (result)
+					return result;
+			}
+			break;
+
+		default:
+			init_vcpuid_entry(vm, i, 0, 0, &entry);
+			result = set_vcpuid_entry(vm, &entry);
+			if (result)
+				return result;
+			break;
+		}
+	}
+
+	init_vcpuid_entry(vm, 0x40000000, 0, 0, &entry);
+	result = set_vcpuid_entry(vm, &entry);
+	if (result)
+		return result;
+
+	init_vcpuid_entry(vm, 0x40000010, 0, 0, &entry);
+	result = set_vcpuid_entry(vm, &entry);
+	if (result)
+		return result;
+
+	init_vcpuid_entry(vm, 0x80000000, 0, 0, &entry);
+	result = set_vcpuid_entry(vm, &entry);
+	if (result)
+		return result;
+
+	vm->vcpuid_xlevel = limit = entry.eax;
+	for (i = 0x80000001; i <= limit; i++) {
+		init_vcpuid_entry(vm, i, 0, 0, &entry);
+		result = set_vcpuid_entry(vm, &entry);
+		if (result)
+			return result;
+	}
+
+	return 0;
+}
+
+void guest_cpuid(struct vcpu *vcpu,
+		uint32_t *eax, uint32_t *ebx,
+		uint32_t *ecx, uint32_t *edx)
+{
+	uint32_t leaf = *eax;
+	uint32_t subleaf = *ecx;
+
+	/* vm related */
+	if (leaf != 0x1 && leaf != 0xb) {
+		struct vcpuid_entry *entry =
+			find_vcpuid_entry(vcpu, leaf, subleaf);
+
+		if (entry) {
+			*eax = entry->eax;
+			*ebx = entry->ebx;
+			*ecx = entry->ecx;
+			*edx = entry->edx;
+		} else {
+			*eax = 0;
+			*ebx = 0;
+			*ecx = 0;
+			*edx = 0;
+		}
+
+		return;
+	}
+
+	/* percpu related */
+	switch (leaf) {
+	case 0x01:
+	{
+		cpuid(leaf, eax, ebx, ecx, edx);
+		uint32_t apicid = vlapic_get_id(vcpu->arch_vcpu.vlapic);
+		/* Patching initial APIC ID */
+		*ebx &= ~APIC_ID_MASK;
+		*ebx |= (apicid & APIC_ID_MASK);
+
+		/* mask mtrr */
+		*edx &= ~CPUID_EDX_MTRR;
+
+		/* Patching X2APIC, X2APIC mode is disabled by default. */
+		if (x2apic_enabled)
+			*ecx |= CPUID_ECX_x2APIC;
+		else
+			*ecx &= ~CPUID_ECX_x2APIC;
+
+		/* mask pcid */
+		*ecx &= ~CPUID_ECX_PCID;
+
+		/*mask vmx to guest os */
+		*ecx &= ~CPUID_ECX_VMX;
+
+		break;
+	}
+
 	case 0x0b:
 		/* Patching X2APIC */
 		if (!x2apic_enabled) {
-			*eax_ptr = 0;
-			*ebx_ptr = 0;
-			*ecx_ptr = 0;
-			*edx_ptr = 0;
-		}
-		break;
-
-		/*
-		* Leaf 0x40000000
-		* This leaf returns the CPUID leaf range supported by the
-		* hypervisor and the hypervisor vendor signature.
-		*
-		* EAX: The maximum input value for CPUID supported by the
-		*	hypervisor.
-		* EBX, ECX, EDX: Hypervisor vendor ID signature.
-		*/
-	case 0x40000000:
-		*eax_ptr = 0x40000010;
-		*ebx_ptr = sigptr[0];
-		*ecx_ptr = sigptr[1];
-		*edx_ptr = sigptr[2];
-		break;
-
-		/*
-		* Leaf 0x40000010 - Timing Information.
-		* This leaf returns the current TSC frequency and
-		* current Bus frequency in kHz.
-		*
-		* EAX: (Virtual) TSC frequency in kHz.
-		*      TSC frequency is calculated from PIT in ACRN
-		* EBX: (Virtual) Bus (local apic timer) frequency in kHz.
-		*      Bus (local apic timer) frequency is hardcoded as
-		*      (128 * 1024 * 1024) in ACRN
-		* ECX, EDX: RESERVED (reserved fields are set to zero).
-		*/
-	case 0x40000010:
-		*eax_ptr = (uint32_t)(tsc_clock_freq / 1000);
-		*ebx_ptr = (128 * 1024 * 1024) / 1000;
-		*ecx_ptr = 0;
-		*edx_ptr = 0;
+			*eax = 0;
+			*ebx = 0;
+			*ecx = 0;
+			*edx = 0;
+		} else
+			cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
 		break;
 
 	default:
 		break;
 	}
 }
-
-static DEFINE_CPU_DATA(struct cpuid_cache_entry[CPUID_EXTEND_FEATURE_CACHE_MAX],
-		cpuid_cache);
-
-static inline struct cpuid_cache_entry *find_cpuid_cache_entry(uint32_t op,
-	uint32_t count)
-{
-	int pcpu_id = get_cpu_id();
-	enum cpuid_cache_idx idx = CPUID_EXTEND_FEATURE_CACHE_MAX;
-
-	if ((count != 0))
-		return NULL;
-
-	switch (op) {
-	case CPUID_VENDORSTRING:
-		idx = CPUID_VENDORSTRING_CACHE_IDX;
-		break;
-
-	case CPUID_FEATURES:
-		idx = CPUID_FEATURES_CACHE_IDX;
-		break;
-
-	case CPUID_EXTEND_FEATURE:
-		idx = CPUID_EXTEND_FEATURE_CACHE_IDX;
-		break;
-
-	default:
-		break;
-	}
-
-	if (idx == CPUID_EXTEND_FEATURE_CACHE_MAX)
-		return NULL;
-
-	return &per_cpu(cpuid_cache, pcpu_id)[idx];
-}
-
-inline void cpuid_count(uint32_t op, uint32_t count,
-	uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d)
-{
-	struct cpuid_cache_entry *entry;
-
-	entry = find_cpuid_cache_entry(op, count);
-
-	if (entry == NULL) {
-		native_cpuid_count(op, count, a, b, c, d);
-	} else if (entry->inited) {
-		*a = entry->a;
-		*b = entry->b;
-		*c = entry->c;
-		*d = entry->d;
-	} else {
-		native_cpuid_count(op, count, a, b, c, d);
-
-		entry->a = *a;
-		entry->b = *b;
-		entry->c = *c;
-		entry->d = *d;
-
-		entry->inited = 1;
-	}
-}
-

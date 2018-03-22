@@ -115,38 +115,39 @@
 #define CPUID_EXTEND_FEATURE    7
 #define CPUID_EXTEND_FUNCTION_1 0x80000001
 
-
-enum cpuid_cache_idx {
-	CPUID_VENDORSTRING_CACHE_IDX = 0,
-	CPUID_FEATURES_CACHE_IDX,
-	CPUID_EXTEND_FEATURE_CACHE_IDX,
-	CPUID_EXTEND_FEATURE_CACHE_MAX
-};
-
-struct cpuid_cache_entry {
-	uint32_t a;
-	uint32_t b;
-	uint32_t c;
-	uint32_t d;
-	uint32_t inited;
-	uint32_t reserved;
-};
-
-static inline void native_cpuid_count(uint32_t op, uint32_t count,
-	uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d)
+static inline void __cpuid(uint32_t *eax, uint32_t *ebx,
+				uint32_t *ecx, uint32_t *edx)
 {
 	/* Execute CPUID instruction and save results */
-	asm volatile("cpuid":"=a"(*a), "=b"(*b),
-			"=c"(*c), "=d"(*d)
-			: "a"(op), "c" (count));
+	asm volatile("cpuid":"=a"(*eax), "=b"(*ebx),
+			"=c"(*ecx), "=d"(*edx)
+			: "0" (*eax), "2" (*ecx)
+			: "memory");
 }
 
-void cpuid_count(uint32_t op, uint32_t count,
-	uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d);
+static inline void cpuid(uint32_t leaf,
+			uint32_t *eax, uint32_t *ebx,
+			uint32_t *ecx, uint32_t *edx)
+{
+	*eax = leaf;
+	*ecx = 0;
 
-#define cpuid(op, a, b, c, d) cpuid_count(op, 0, a, b, c, d)
+	__cpuid(eax, ebx, ecx, edx);
+}
 
-void emulate_cpuid(struct vcpu *vcpu, uint32_t src_op, uint32_t *eax_ptr,
-	uint32_t *ebx_ptr, uint32_t *ecx_ptr, uint32_t *edx_ptr);
+static inline void cpuid_subleaf(uint32_t leaf, uint32_t subleaf,
+				uint32_t *eax, uint32_t *ebx,
+				uint32_t *ecx, uint32_t *edx)
+{
+	*eax = leaf;
+	*ecx = subleaf;
+
+	__cpuid(eax, ebx, ecx, edx);
+}
+
+int set_vcpuid_entries(struct vm *vm);
+void guest_cpuid(struct vcpu *vcpu,
+			uint32_t *eax, uint32_t *ebx,
+			uint32_t *ecx, uint32_t *edx);
 
 #endif /* CPUID_H_ */
