@@ -37,9 +37,10 @@ typedef struct {
 } __attribute__((packed)) dt_addr_t;
 
 struct efi_ctx {
-	void* entry;
-	void* handle;
-	void* table;
+	void *entry;
+	void *handle;
+	void *table;
+	void *rsdp;
 	dt_addr_t  gdt;
 	dt_addr_t  idt;
 	uint16_t   tr_sel;
@@ -58,5 +59,7 @@ struct efi_ctx {
 	uint64_t   rsp;
 	uint64_t   efer;
 }__attribute__((packed));
+
+void *get_rsdp_from_uefi(void);
 
 #endif /* UEFI_H*/

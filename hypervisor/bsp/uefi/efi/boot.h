@@ -76,7 +76,8 @@ struct e820_entry {
 struct efi_ctx {
 	EFI_IMAGE_ENTRY_POINT entry;
 	EFI_HANDLE handle;
-	EFI_SYSTEM_TABLE* table;
+	EFI_SYSTEM_TABLE *table;
+	VOID *rsdp;
 	dt_addr_t  gdt;
 	dt_addr_t  idt;
 	uint16_t   tr_sel;
