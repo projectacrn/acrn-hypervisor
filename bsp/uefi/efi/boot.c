@@ -41,8 +41,6 @@
 #define ERROR_STRING_LENGTH	32
 #define EFI_LOADER_SIGNATURE    "EL64"
 
-#define LEAGCY_BIOS
-
 #define ACPI_XSDT_ENTRY_SIZE        (sizeof (UINT64))
 #define ACPI_NAME_SIZE                  4
 #define ACPI_OEM_ID_SIZE                6
@@ -448,11 +446,8 @@ again:
 	mbi->mi_cmdline = (UINTN)"uart=disabled";
 	mbi->mi_mmap_addr = (UINTN)mmap;
 
-#ifdef LEAGCY_BIOS
-	/* copy rsdt in low memory space(0~0x1000) for hypervisor parsing */
-	memcpy((void *)0x500, (void*)rsdp, sizeof(struct acpi_table_rsdp));
-	*(UINT16*)(0x40E) = 0x50;
-#endif
+	pe->rsdp = rsdp;
+
 	//Print(L"start 9!\n");
 
 	asm volatile ("mov %%cr0, %0":"=r"(pe->cr0));

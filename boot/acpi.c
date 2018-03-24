@@ -35,6 +35,9 @@
 #include <hv_arch.h>
 #include <hv_debug.h>
 #include "acpi.h"
+#ifdef CONFIG_EFI_STUB
+#include <acrn_efi.h>
+#endif
 
 #define ACPI_SIG_RSDP             "RSD PTR " /* Root System Description Ptr */
 #define ACPI_OEM_ID_SIZE           6
@@ -139,6 +142,12 @@ static void *get_rsdp(void)
 {
 	struct acpi_table_rsdp *rsdp = NULL;
 	uint16_t *addr;
+
+#ifdef CONFIG_EFI_STUB
+	rsdp = get_rsdp_from_uefi();
+	if (rsdp)
+		return rsdp;
+#endif
 
 	/* EBDA is addressed by the 16 bit pointer at 0x40E */
 	addr = (uint16_t *)0x40E;

@@ -53,12 +53,15 @@
 #define UEFI_PCI_IRQ_ASSIGNMENT_NUM 28
 
 #ifdef CONFIG_EFI_STUB
+static void efi_init(void);
+
 uint32_t efi_physical_available_ap_bitmap = 0;
 uint32_t efi_wake_up_ap_bitmap = 0;
 struct efi_ctx* efi_ctx = NULL;
 struct lapic_regs uefi_lapic_regs;
 extern uint32_t up_count;
 extern unsigned long pcpu_sync;
+static int efi_initialized;
 
 void efi_spurious_handler(int vector)
 {
@@ -144,14 +147,18 @@ int uefi_sw_loader(struct vm *vm, struct vcpu *vcpu)
 
 	return ret;
 }
-#endif
 
-void init_bsp(void)
+void *get_rsdp_from_uefi(void)
 {
-	parse_hv_cmdline();
+	if (!efi_initialized)
+		efi_init();
 
-#ifdef CONFIG_EFI_STUB
-	efi_ctx = (struct efi_ctx*)(uint64_t)boot_regs[2];
+	return efi_ctx->rsdp;
+}
+
+static void efi_init(void)
+{
+	efi_ctx = (struct efi_ctx *)(uint64_t)(uint32_t)boot_regs[2];
 	ASSERT(efi_ctx != NULL, "");
 
 	vm_sw_loader = uefi_sw_loader;
@@ -159,5 +166,17 @@ void init_bsp(void)
 	spurious_handler = efi_spurious_handler;
 
 	save_lapic(&uefi_lapic_regs);
+
+	efi_initialized = 1;
+}
+#endif
+
+void init_bsp(void)
+{
+	parse_hv_cmdline();
+
+#ifdef CONFIG_EFI_STUB
+	if (!efi_initialized)
+		efi_init();
 #endif
 }
