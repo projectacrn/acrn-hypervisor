@@ -85,8 +85,7 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info);
 void ptdev_softirq(int cpu);
 void ptdev_init(void);
-void ptdev_vm_init(struct vm *vm);
-void ptdev_vm_deinit(struct vm *vm);
+void ptdev_release_all_entries(struct vm *vm);
 void ptdev_add_intx_remapping(struct vm *vm, uint16_t virt_bdf,
 	uint16_t phys_bdf, uint8_t virt_pin, uint8_t phys_pin, bool pic_pin);
 void ptdev_remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin);
