@@ -42,12 +42,13 @@
 static struct list_head softirq_dev_entry_list;
 /* passthrough device link */
 static struct list_head ptdev_list;
+static spinlock_t ptdev_lock;
 
 /*
  * entry could both be in ptdev_list and softirq_dev_entry_list.
  * When release entry, we need make sure entry deleted from both
  * lists. We have to require two locks and the lock sequence is:
- *   vm->ptdev_lock
+ *   ptdev_lock
  *     softirq_dev_lock
  */
 static spinlock_t softirq_dev_lock;
@@ -115,9 +116,9 @@ get_remapping_entry(struct vm *vm, uint32_t id)
 {
 	struct ptdev_remapping_info *entry;
 
-	spinlock_obtain(&vm->ptdev_lock);
+	spinlock_obtain(&ptdev_lock);
 	entry = _get_remapping_entry(vm, id);
-	spinlock_release(&vm->ptdev_lock);
+	spinlock_release(&ptdev_lock);
 	return entry;
 }
 
@@ -297,7 +298,7 @@ static void check_deactive_pic_intx(struct vm *vm, uint8_t phys_pin)
 	if (phys_pin >= NR_LEGACY_IRQ)
 		return;
 
-	spinlock_obtain(&vm->ptdev_lock);
+	spinlock_obtain(&ptdev_lock);
 	list_for_each(pos, &ptdev_list) {
 		entry = list_entry(pos, struct ptdev_remapping_info,
 				entry_node);
@@ -315,7 +316,7 @@ static void check_deactive_pic_intx(struct vm *vm, uint8_t phys_pin)
 				entry->vm->attr.id, entry->intx.virt_pin);
 		}
 	}
-	spinlock_release(&vm->ptdev_lock);
+	spinlock_release(&ptdev_lock);
 }
 
 static bool ptdev_native_owned_intx(struct vm *vm, struct ptdev_intx_info *info)
@@ -430,7 +431,7 @@ add_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 {
 	struct ptdev_remapping_info *entry;
 
-	spinlock_obtain(&vm->ptdev_lock);
+	spinlock_obtain(&ptdev_lock);
 	entry = _get_remapping_entry(vm,
 			entry_id_from_msix(virt_bdf, msix_entry_index));
 	if (!entry) {
@@ -439,7 +440,7 @@ add_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 		entry->phys_bdf = phys_bdf;
 		entry->msi.msix_entry_index = msix_entry_index;
 	}
-	spinlock_release(&vm->ptdev_lock);
+	spinlock_release(&ptdev_lock);
 
 	dev_dbg(ACRN_DBG_IRQ,
 		"VM%d MSIX add vector mapping vbdf%x:pbdf%x idx=%d",
@@ -453,7 +454,7 @@ remove_msix_remapping(struct vm *vm, uint16_t virt_bdf, int msix_entry_index)
 {
 	struct ptdev_remapping_info *entry;
 
-	spinlock_obtain(&vm->ptdev_lock);
+	spinlock_obtain(&ptdev_lock);
 	entry = _get_remapping_entry(vm,
 			entry_id_from_msix(virt_bdf, msix_entry_index));
 	if (!entry)
@@ -471,7 +472,7 @@ remove_msix_remapping(struct vm *vm, uint16_t virt_bdf, int msix_entry_index)
 	release_entry(entry);
 
 END:
-	spinlock_release(&vm->ptdev_lock);
+	spinlock_release(&ptdev_lock);
 
 }
 
@@ -483,7 +484,7 @@ add_intx_remapping(struct vm *vm, uint8_t virt_pin, uint8_t phys_pin, bool pic_p
 	enum ptdev_vpin_source vpin_src =
 		pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
 
-	spinlock_obtain(&vm->ptdev_lock);
+	spinlock_obtain(&ptdev_lock);
 	entry = _get_remapping_entry(vm,
 		entry_id_from_intx(virt_pin, vpin_src));
 	if (!entry) {
@@ -494,7 +495,7 @@ add_intx_remapping(struct vm *vm, uint8_t virt_pin, uint8_t phys_pin, bool pic_p
 	/* update existing */
 	entry->intx.virt_pin = virt_pin;
 	entry->intx.phys_pin = phys_pin;
-	spinlock_release(&vm->ptdev_lock);
+	spinlock_release(&ptdev_lock);
 
 	dev_dbg(ACRN_DBG_IRQ,
 		"VM%d INTX add pin mapping vpin%d:ppin%d",
@@ -511,7 +512,7 @@ void remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin)
 	enum ptdev_vpin_source vpin_src =
 		pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
 
-	spinlock_obtain(&vm->ptdev_lock);
+	spinlock_obtain(&ptdev_lock);
 	entry = _get_remapping_entry(vm,
 		entry_id_from_intx(virt_pin, vpin_src));
 	if (!entry)
@@ -537,7 +538,7 @@ void remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin)
 	release_entry(entry);
 
 END:
-	spinlock_release(&vm->ptdev_lock);
+	spinlock_release(&ptdev_lock);
 }
 
 static void ptdev_intr_handle_irq(struct vm *vm,
@@ -860,21 +861,17 @@ void ptdev_init(void)
 		return;
 
 	INIT_LIST_HEAD(&ptdev_list);
+	spinlock_init(&ptdev_lock);
 	INIT_LIST_HEAD(&softirq_dev_entry_list);
 	spinlock_init(&softirq_dev_lock);
-}
-
-void ptdev_vm_init(struct vm *vm)
-{
-	spinlock_init(&vm->ptdev_lock);
 }
 
 void ptdev_vm_deinit(struct vm *vm)
 {
 	/* VM already down */
-	spinlock_obtain(&vm->ptdev_lock);
+	spinlock_obtain(&ptdev_lock);
 	release_all_entry(vm);
-	spinlock_release(&vm->ptdev_lock);
+	spinlock_release(&ptdev_lock);
 }
 
 void ptdev_add_intx_remapping(struct vm *vm,
@@ -979,33 +976,29 @@ int get_ptdev_info(char *str, int str_max)
 	uint64_t dest;
 	bool lvl_tm;
 	int pin, vpin, bdf, vbdf;
-	struct list_head *pos, *vm_pos;
-	struct vm *vm;
+	struct list_head *pos;
 
 	len = snprintf(str, size,
 		"\r\nVM\tTYPE\tIRQ\tVEC\tDEST\tTM\tPIN\tVPIN\tBDF\tVBDF");
 	size -= len;
 	str += len;
 
-	spinlock_obtain(&vm_list_lock);
-	list_for_each(vm_pos, &vm_list) {
-		vm = list_entry(vm_pos, struct vm, list);
-		spinlock_obtain(&vm->ptdev_lock);
-		list_for_each(pos, &ptdev_list) {
-			entry = list_entry(pos, struct ptdev_remapping_info,
-					entry_node);
-			if (entry_is_active(entry)) {
-				get_entry_info(entry, type, &irq, &vector,
+	spinlock_obtain(&ptdev_lock);
+	list_for_each(pos, &ptdev_list) {
+		entry = list_entry(pos, struct ptdev_remapping_info,
+				entry_node);
+		if (entry_is_active(entry)) {
+			get_entry_info(entry, type, &irq, &vector,
 					&dest, &lvl_tm, &pin, &vpin,
 					&bdf, &vbdf);
-				len = snprintf(str, size,
+			len = snprintf(str, size,
 					"\r\n%d\t%s\t%d\t0x%X\t0x%X",
 					entry->vm->attr.id, type,
 					irq, vector, dest);
-				size -= len;
-				str += len;
+			size -= len;
+			str += len;
 
-				len = snprintf(str, size,
+			len = snprintf(str, size,
 					"\t%s\t%d\t%d\t%x:%x.%x\t%x:%x.%x",
 					entry_is_active(entry) ?
 					(lvl_tm ? "level" : "edge") : "none",
@@ -1014,13 +1007,11 @@ int get_ptdev_info(char *str, int str_max)
 					(bdf & 0xf8) >> 3, bdf & 0x7,
 					(vbdf & 0xff00) >> 8,
 					(vbdf & 0xf8) >> 3, vbdf & 0x7);
-				size -= len;
-				str += len;
-			}
+			size -= len;
+			str += len;
 		}
-		spinlock_release(&vm->ptdev_lock);
 	}
-	spinlock_release(&vm_list_lock);
+	spinlock_release(&ptdev_lock);
 
 	snprintf(str, size, "\r\n");
 	return 0;
