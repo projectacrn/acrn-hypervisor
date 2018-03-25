@@ -203,7 +203,7 @@ int shutdown_vm(struct vm *vm)
 	list_del_init(&vm->list);
 	spinlock_release(&vm_list_lock);
 
-	ptdev_vm_deinit(vm);
+	ptdev_release_all_entries(vm);
 
 	/* cleanup and free vioapic */
 	vioapic_cleanup(vm->arch_vm.virt_ioapic);
