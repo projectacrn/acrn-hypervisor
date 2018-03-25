@@ -96,7 +96,7 @@ entry_is_active(struct ptdev_remapping_info *entry)
 
 /* require ptdev_lock protect */
 static inline struct ptdev_remapping_info *
-_get_remapping_entry(struct vm *vm, uint32_t id)
+_get_entry(struct vm *vm, uint32_t id)
 {
 	struct ptdev_remapping_info *entry;
 	struct list_head *pos;
@@ -112,12 +112,12 @@ _get_remapping_entry(struct vm *vm, uint32_t id)
 }
 
 static inline struct ptdev_remapping_info *
-get_remapping_entry(struct vm *vm, uint32_t id)
+get_entry(struct vm *vm, uint32_t id)
 {
 	struct ptdev_remapping_info *entry;
 
 	spinlock_obtain(&ptdev_lock);
-	entry = _get_remapping_entry(vm, id);
+	entry = _get_entry(vm, id);
 	spinlock_release(&ptdev_lock);
 	return entry;
 }
@@ -153,6 +153,58 @@ ptdev_dequeue_softirq(void)
 
 	spinlock_irqrestore_release(&softirq_dev_lock);
 	return entry;
+}
+
+/* require ptdev_lock protect */
+static struct ptdev_remapping_info *
+alloc_entry(struct vm *vm, enum ptdev_intr_type type)
+{
+	struct ptdev_remapping_info *entry;
+
+	/* allocate */
+	entry = calloc(1, sizeof(*entry));
+	ASSERT(entry, "alloc memory failed");
+	entry->type = type;
+	entry->vm = vm;
+	atomic_clear_int(&entry->active, ACTIVE_FLAG);
+	list_add(&entry->entry_node, &ptdev_list);
+
+	return entry;
+}
+
+/* require ptdev_lock protect */
+static void
+release_entry(struct ptdev_remapping_info *entry)
+{
+	spinlock_rflags;
+
+	/* remove entry from ptdev_list */
+	list_del_init(&entry->entry_node);
+
+	/*
+	 * remove entry from softirq list.the ptdev_lock
+	 * is required before calling release_entry.
+	 */
+	spinlock_irqsave_obtain(&softirq_dev_lock);
+	list_del_init(&entry->softirq_node);
+	spinlock_irqrestore_release(&softirq_dev_lock);
+
+	free(entry);
+}
+
+/* require ptdev_lock protect */
+static void
+release_all_entries(struct vm *vm)
+{
+	struct ptdev_remapping_info *entry;
+	struct list_head *pos, *tmp;
+
+	list_for_each_safe(pos, tmp, &ptdev_list) {
+		entry = list_entry(pos, struct ptdev_remapping_info,
+				entry_node);
+		if (entry->vm == vm)
+			release_entry(entry);
+	}
 }
 
 /* interrupt context */
@@ -201,58 +253,6 @@ ptdev_update_irq_handler(struct vm *vm, struct ptdev_remapping_info *entry)
 			update_irq_handler(phys_irq, common_dev_handler_level);
 		else
 			update_irq_handler(phys_irq, common_handler_edge);
-	}
-}
-
-/* require ptdev_lock protect */
-static struct ptdev_remapping_info *
-alloc_entry(struct vm *vm, enum ptdev_intr_type type)
-{
-	struct ptdev_remapping_info *entry;
-
-	/* allocate */
-	entry = calloc(1, sizeof(*entry));
-	ASSERT(entry, "alloc memory failed");
-	entry->type = type;
-	entry->vm = vm;
-	atomic_clear_int(&entry->active, ACTIVE_FLAG);
-	list_add(&entry->entry_node, &ptdev_list);
-
-	return entry;
-}
-
-/* require ptdev_lock protect */
-static void
-release_entry(struct ptdev_remapping_info *entry)
-{
-	spinlock_rflags;
-
-	/* remove entry from ptdev_list */
-	list_del_init(&entry->entry_node);
-
-	/*
-	 * remove entry from softirq list.the ptdev_lock
-	 * is required before calling release_entry.
-	 */
-	spinlock_irqsave_obtain(&softirq_dev_lock);
-	list_del_init(&entry->softirq_node);
-	spinlock_irqrestore_release(&softirq_dev_lock);
-
-	free(entry);
-}
-
-/* require ptdev_lock protect */
-static void
-release_all_entry(struct vm *vm)
-{
-	struct ptdev_remapping_info *entry;
-	struct list_head *pos, *tmp;
-
-	list_for_each_safe(pos, tmp, &ptdev_list) {
-		entry = list_entry(pos, struct ptdev_remapping_info,
-				entry_node);
-		if (entry->vm == vm)
-			release_entry(entry);
 	}
 }
 
@@ -319,7 +319,7 @@ static void check_deactive_pic_intx(struct vm *vm, uint8_t phys_pin)
 	spinlock_release(&ptdev_lock);
 }
 
-static bool ptdev_native_owned_intx(struct vm *vm, struct ptdev_intx_info *info)
+static bool ptdev_hv_owned_intx(struct vm *vm, struct ptdev_intx_info *info)
 {
 	/* vm0 pin 4 (uart) is owned by hypervisor */
 	if (is_vm0(vm) && info->virt_pin == 4)
@@ -328,14 +328,14 @@ static bool ptdev_native_owned_intx(struct vm *vm, struct ptdev_intx_info *info)
 		return false;
 }
 
-static void ptdev_build_native_msi(struct vm *vm, struct ptdev_msi_info *info,
+static void ptdev_build_physical_msi(struct vm *vm, struct ptdev_msi_info *info,
 		int vector)
 {
 	uint64_t vdmask, pdmask;
 	uint32_t dest, delmode;
 	bool phys;
 
-	/* native destination cpu mask */
+	/* physical destination cpu mask */
 	dest = (info->vmsi_addr >> 12) & 0xff;
 	phys = ((info->vmsi_addr &
 			(MSI_ADDR_RH | MSI_ADDR_LOG)) !=
@@ -343,17 +343,17 @@ static void ptdev_build_native_msi(struct vm *vm, struct ptdev_msi_info *info,
 	calcvdest(vm, &vdmask, dest, phys);
 	pdmask = vcpumask2pcpumask(vm, vdmask);
 
-	/* native delivery mode */
+	/* physical delivery mode */
 	delmode = info->vmsi_data & APIC_DELMODE_MASK;
 	if (delmode != APIC_DELMODE_FIXED && delmode != APIC_DELMODE_LOWPRIO)
 		delmode = APIC_DELMODE_LOWPRIO;
 
-	/* update native delivery mode & vector */
+	/* update physical delivery mode & vector */
 	info->pmsi_data = info->vmsi_data;
 	info->pmsi_data &= ~0x7FF;
 	info->pmsi_data |= delmode | vector;
 
-	/* update native dest mode & dest field */
+	/* update physical dest mode & dest field */
 	info->pmsi_addr = info->vmsi_addr;
 	info->pmsi_addr &= ~0xFF00C;
 	info->pmsi_addr |= pdmask << 12 |
@@ -364,8 +364,8 @@ static void ptdev_build_native_msi(struct vm *vm, struct ptdev_msi_info *info,
 		info->pmsi_addr, info->pmsi_data);
 }
 
-static uint64_t ptdev_build_native_rte(struct vm *vm, struct ptdev_intx_info *info,
-				int vector)
+static uint64_t ptdev_build_physical_rte(struct vm *vm,
+		struct ptdev_intx_info *info, int vector)
 {
 	uint64_t rte;
 
@@ -378,24 +378,24 @@ static uint64_t ptdev_build_native_rte(struct vm *vm, struct ptdev_intx_info *in
 		low = rte;
 		high = rte >> 32;
 
-		/* native destination cpu mask */
+		/* physical destination cpu mask */
 		phys = ((low & IOAPIC_RTE_DESTMOD) == IOAPIC_RTE_DESTPHY);
 		dest = high >> APIC_ID_SHIFT;
 		calcvdest(vm, &vdmask, dest, phys);
 		pdmask = vcpumask2pcpumask(vm, vdmask);
 
-		/* native delivery mode */
+		/* physical delivery mode */
 		delmode = low & IOAPIC_RTE_DELMOD;
 		if ((delmode != IOAPIC_RTE_DELFIXED) &&
 			(delmode != IOAPIC_RTE_DELLOPRI))
 			delmode = IOAPIC_RTE_DELLOPRI;
 
-		/* update native delivery mode, dest mode(logical) & vector */
+		/* update physical delivery mode, dest mode(logical) & vector */
 		low &= ~(IOAPIC_RTE_DESTMOD |
 			IOAPIC_RTE_DELMOD | IOAPIC_RTE_INTVEC);
 		low |= IOAPIC_RTE_DESTLOG | delmode | vector;
 
-		/* update native dest field */
+		/* update physical dest field */
 		high &= ~IOAPIC_RTE_DEST;
 		high |= pdmask << 24;
 
@@ -407,18 +407,18 @@ static uint64_t ptdev_build_native_rte(struct vm *vm, struct ptdev_intx_info *in
 	} else {
 		enum vpic_trigger trigger;
 		int phys_irq = pin_to_irq(info->phys_pin);
-		uint64_t native_rte;
+		uint64_t physical_rte;
 
 		/* just update trigger mode */
-		ioapic_get_rte(phys_irq, &native_rte);
-		rte = native_rte;
+		ioapic_get_rte(phys_irq, &physical_rte);
+		rte = physical_rte;
 		rte &= ~IOAPIC_RTE_TRGRMOD;
 		vpic_get_irq_trigger(vm, info->virt_pin, &trigger);
 		if (trigger == LEVEL_TRIGGER)
 			rte |= IOAPIC_RTE_TRGRLVL;
 
 		dev_dbg(ACRN_DBG_IRQ, "IOAPIC RTE = 0x%x:%x(P) -> 0x%x:%x(P)",
-				native_rte >> 32, (uint32_t)native_rte,
+				physical_rte >> 32, (uint32_t)physical_rte,
 				rte >> 32, (uint32_t)rte);
 	}
 
@@ -432,7 +432,7 @@ add_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 	struct ptdev_remapping_info *entry;
 
 	spinlock_obtain(&ptdev_lock);
-	entry = _get_remapping_entry(vm,
+	entry = _get_entry(vm,
 			entry_id_from_msix(virt_bdf, msix_entry_index));
 	if (!entry) {
 		entry = alloc_entry(vm, PTDEV_INTR_MSI);
@@ -455,7 +455,7 @@ remove_msix_remapping(struct vm *vm, uint16_t virt_bdf, int msix_entry_index)
 	struct ptdev_remapping_info *entry;
 
 	spinlock_obtain(&ptdev_lock);
-	entry = _get_remapping_entry(vm,
+	entry = _get_entry(vm,
 			entry_id_from_msix(virt_bdf, msix_entry_index));
 	if (!entry)
 		goto END;
@@ -485,7 +485,7 @@ add_intx_remapping(struct vm *vm, uint8_t virt_pin, uint8_t phys_pin, bool pic_p
 		pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
 
 	spinlock_obtain(&ptdev_lock);
-	entry = _get_remapping_entry(vm,
+	entry = _get_entry(vm,
 		entry_id_from_intx(virt_pin, vpin_src));
 	if (!entry) {
 		entry = alloc_entry(vm, PTDEV_INTR_INTX);
@@ -513,7 +513,7 @@ void remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin)
 		pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
 
 	spinlock_obtain(&ptdev_lock);
-	entry = _get_remapping_entry(vm,
+	entry = _get_entry(vm,
 		entry_id_from_intx(virt_pin, vpin_src));
 	if (!entry)
 		goto END;
@@ -583,6 +583,43 @@ static void ptdev_intr_handle_irq(struct vm *vm,
 	}
 }
 
+void ptdev_softirq(__unused int cpu)
+{
+	while (1) {
+		struct ptdev_remapping_info *entry = ptdev_dequeue_softirq();
+		struct vm *vm;
+
+		if (!entry)
+			break;
+
+		/* skip any inactive entry */
+		if (!entry_is_active(entry)) {
+			/* service next item */
+			continue;
+		}
+
+		/* TBD: need valid vm */
+		vm = entry->vm;
+
+		/* handle real request */
+		if (entry->type == PTDEV_INTR_INTX)
+			ptdev_intr_handle_irq(vm, entry);
+		else {
+			/* TODO: msi destmode check required */
+			vlapic_intr_msi(vm, entry->msi.vmsi_addr,
+					entry->msi.vmsi_data);
+			dev_dbg(ACRN_DBG_PTIRQ,
+				"dev-assign: irq=0x%x MSI VR: 0x%x-0x%x",
+				dev_to_irq(entry->node),
+				entry->msi.virt_vector,
+				irq_to_vector(dev_to_irq(entry->node)));
+			dev_dbg(ACRN_DBG_PTIRQ,
+				" vmsi_addr: 0x%x vmsi_data: 0x%x",
+				entry->msi.vmsi_addr, entry->msi.vmsi_data);
+		}
+	}
+}
+
 void ptdev_intx_ack(struct vm *vm, int virt_pin,
 		enum ptdev_vpin_source vpin_src)
 {
@@ -590,7 +627,7 @@ void ptdev_intx_ack(struct vm *vm, int virt_pin,
 	struct ptdev_remapping_info *entry;
 	int phys_pin;
 
-	entry = get_remapping_entry(vm, entry_id_from_intx(virt_pin, vpin_src));
+	entry = get_entry(vm, entry_id_from_intx(virt_pin, vpin_src));
 	if (!entry)
 		return;
 
@@ -630,7 +667,7 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 	struct ptdev_remapping_info *entry;
 	bool lowpri = !is_vm0(vm);
 
-	entry = get_remapping_entry(vm,
+	entry = get_entry(vm,
 			entry_id_from_msix(virt_bdf, info->msix_entry_index));
 	if (!entry) {
 		/* VM0 we add mapping dynamically */
@@ -655,8 +692,8 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 		ptdev_activate_entry(entry, -1, lowpri);
 	}
 
-	/* build native config MSI, update to info->pmsi_xxx */
-	ptdev_build_native_msi(vm, info,
+	/* build physical config MSI, update to info->pmsi_xxx */
+	ptdev_build_physical_msi(vm, info,
 			dev_to_vector(entry->node));
 	entry->msi = *info;
 	entry->msi.virt_vector = info->vmsi_data & 0xFF;
@@ -691,7 +728,8 @@ static bool vpin_masked(struct vm *vm, uint8_t virt_pin,
 		return vpic_is_pin_mask(vm->vpic, virt_pin);
 }
 
-static void update_active_native_ioapic(struct vm *vm, struct ptdev_intx_info *info,
+static void activate_physical_ioapic(struct vm *vm,
+		struct ptdev_intx_info *info,
 		struct ptdev_remapping_info *entry, int phys_irq)
 {
 	uint64_t rte;
@@ -699,8 +737,8 @@ static void update_active_native_ioapic(struct vm *vm, struct ptdev_intx_info *i
 	/* disable interrupt */
 	GSI_MASK_IRQ(phys_irq);
 
-	/* build native IOAPIC RTE, update to info->rte */
-	rte = ptdev_build_native_rte(vm, info,
+	/* build physical IOAPIC RTE, update to info->rte */
+	rte = ptdev_build_physical_rte(vm, info,
 			dev_to_vector(entry->node));
 
 	/* set rte entry */
@@ -724,16 +762,16 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 
 	/*
 	 * virt pin could come from vpic master, vpic slave or vioapic
-	 * while  phys pin is always means for native IOAPIC
+	 * while  phys pin is always means for physical IOAPIC
 	 * Device Model should tell us the mapping information
 	 */
 
-	/* no fix for native owned intx */
-	if (ptdev_native_owned_intx(vm, info))
+	/* no fix for hypervisor owned intx */
+	if (ptdev_hv_owned_intx(vm, info))
 		goto END;
 
 	/* query if we have virt to phys mapping */
-	entry = get_remapping_entry(vm, entry_id_from_intx(info->virt_pin,
+	entry = get_entry(vm, entry_id_from_intx(info->virt_pin,
 					info->vpin_src));
 	if (!entry) {
 		/* allocate entry during first unmask */
@@ -743,7 +781,7 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 			bool pic_pin = (info->vpin_src == PTDEV_VPIN_PIC);
 
 			info->phys_pin = info->virt_pin;
-			/* fix vPIC pin to correct native IOAPIC pin */
+			/* fix vPIC pin to correct physical IOAPIC pin */
 			if (pic_pin)
 				info->phys_pin =
 					legacy_irq_to_pin[info->virt_pin];
@@ -753,7 +791,7 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 		} else
 			goto END;
 	} else
-		/* info->phys_pin need be used by ptdev_build_native_rte when
+		/* info->phys_pin need be used by ptdev_build_physical_rte when
 		 * updating entry.
 		 *
 		 * TODO: currently ptdev entry is virtual based, the better
@@ -762,7 +800,7 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 		 */
 		info->phys_pin = entry->intx.phys_pin;
 
-	/* phys_pin from native IOAPIC */
+	/* phys_pin from physical IOAPIC */
 	phys_pin = entry->intx.phys_pin;
 	phys_irq = pin_to_irq(phys_pin);
 	if (!irq_is_gsi(phys_irq))
@@ -786,19 +824,19 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 			goto END;
 		} else {
 			/*update rte*/
-			update_active_native_ioapic(vm, info, entry, phys_irq);
+			activate_physical_ioapic(vm, info, entry, phys_irq);
 		}
 	} else if (entry_is_active(entry)
 		&& info->vpin_src == PTDEV_VPIN_PIC) {
 		/* only update here
 		 * deactive vPIC entry when IOAPIC take it over
 		 */
-		update_active_native_ioapic(vm, info, entry, phys_irq);
+		activate_physical_ioapic(vm, info, entry, phys_irq);
 	} else {
 		/*
-		 * both vIOAPIC & vPIC take native IOAPIC path
-		 *  vIOAPIC: build native RTE according vIOAPIC configuration
-		 *  vPIC: keep native RTE configuration in setup_ioapic_irq()
+		 * both vIOAPIC & vPIC take physical IOAPIC path
+		 *  vIOAPIC: build physical RTE according vIOAPIC configuration
+		 *  vPIC: keep physical RTE configuration in setup_ioapic_irq()
 		 */
 		if (info->vpin_src == PTDEV_VPIN_IOAPIC)
 			check_deactive_pic_intx(vm, phys_pin);
@@ -806,7 +844,7 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 		/* active entry */
 		ptdev_activate_entry(entry, phys_irq, lowpri);
 
-		update_active_native_ioapic(vm, info, entry, phys_irq);
+		activate_physical_ioapic(vm, info, entry, phys_irq);
 
 		dev_dbg(ACRN_DBG_IRQ,
 			"IOAPIC pin=%d pirq=%d assigned to vm%d %s vpin=%d",
@@ -816,62 +854,6 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 	}
 END:
 	return 0;
-}
-
-void ptdev_softirq(__unused int cpu)
-{
-	while (1) {
-		struct ptdev_remapping_info *entry = ptdev_dequeue_softirq();
-		struct vm *vm;
-
-		if (!entry)
-			break;
-
-		/* skip any inactive entry */
-		if (!entry_is_active(entry)) {
-			/* service next item */
-			continue;
-		}
-
-		/* TBD: need valid vm */
-		vm = entry->vm;
-
-		/* handle real request */
-		if (entry->type == PTDEV_INTR_INTX)
-			ptdev_intr_handle_irq(vm, entry);
-		else {
-			/* TODO: msi destmode check required */
-			vlapic_intr_msi(vm, entry->msi.vmsi_addr,
-					entry->msi.vmsi_data);
-			dev_dbg(ACRN_DBG_PTIRQ,
-				"dev-assign: irq=0x%x MSI VR: 0x%x-0x%x",
-				dev_to_irq(entry->node),
-				entry->msi.virt_vector,
-				irq_to_vector(dev_to_irq(entry->node)));
-			dev_dbg(ACRN_DBG_PTIRQ,
-				" vmsi_addr: 0x%x vmsi_data: 0x%x",
-				entry->msi.vmsi_addr, entry->msi.vmsi_data);
-		}
-	}
-}
-
-void ptdev_init(void)
-{
-	if (get_cpu_id() > 0)
-		return;
-
-	INIT_LIST_HEAD(&ptdev_list);
-	spinlock_init(&ptdev_lock);
-	INIT_LIST_HEAD(&softirq_dev_entry_list);
-	spinlock_init(&softirq_dev_lock);
-}
-
-void ptdev_vm_deinit(struct vm *vm)
-{
-	/* VM already down */
-	spinlock_obtain(&ptdev_lock);
-	release_all_entry(vm);
-	spinlock_release(&ptdev_lock);
 }
 
 void ptdev_add_intx_remapping(struct vm *vm,
@@ -916,6 +898,25 @@ void ptdev_remove_msix_remapping(struct vm *vm, uint16_t virt_bdf, int vector_co
 
 	for (i = 0; i < vector_count; i++)
 		remove_msix_remapping(vm, virt_bdf, i);
+}
+
+void ptdev_init(void)
+{
+	if (get_cpu_id() > 0)
+		return;
+
+	INIT_LIST_HEAD(&ptdev_list);
+	spinlock_init(&ptdev_lock);
+	INIT_LIST_HEAD(&softirq_dev_entry_list);
+	spinlock_init(&softirq_dev_lock);
+}
+
+void ptdev_release_all_entries(struct vm *vm)
+{
+	/* VM already down */
+	spinlock_obtain(&ptdev_lock);
+	release_all_entries(vm);
+	spinlock_release(&ptdev_lock);
 }
 
 static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
