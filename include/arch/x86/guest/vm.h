@@ -174,8 +174,6 @@ struct vm {
 		struct _vm_virtual_device_node *tail;
 	} virtual_device_list;
 
-	/* passthrough device link */
-	struct list_head ptdev_list;
 	spinlock_t ptdev_lock;
 
 	unsigned char GUID[16];
