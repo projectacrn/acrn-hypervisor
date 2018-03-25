@@ -40,12 +40,7 @@ void __assert(uint32_t line, const char *file, char *txt);
 		__assert(__LINE__, __FILE__, "fatal error");\
 	}
 #else
-#define ASSERT(x, ...)				\
-	if (!(x)) {				\
-		do {				\
-			asm volatile ("pause" ::: "memory");	\
-		} while (1);			\
-	}
+#define ASSERT(x, ...)	do { } while(0)
 #endif
 
 /* Force a compilation error if condition is false */
