@@ -167,7 +167,6 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 
 			/* Populate return VM handle */
 			*rtn_vm = vm;
-			ptdev_vm_init(vm);
 			vm->sw.req_buf = 0;
 
 			status = set_vcpuid_entries(vm);
