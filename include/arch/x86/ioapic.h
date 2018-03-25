@@ -36,6 +36,7 @@
  */
 #define IOAPIC_MAX_LINES	120
 #define NR_LEGACY_IRQ		16
+#define NR_LEGACY_PIN	NR_LEGACY_IRQ
 #define NR_MAX_GSI	(NR_IOAPICS*IOAPIC_MAX_LINES)
 
 #define GSI_MASK_IRQ(irq) irq_gsi_mask_unmask((irq), true)
@@ -54,4 +55,5 @@ void ioapic_set_rte(int irq, uint64_t rte);
 void ioapic_get_rte(int irq, uint64_t *rte);
 
 extern uint16_t legacy_irq_to_pin[];
+extern uint16_t pic_ioapic_pin_map[];
 #endif /* IOAPIC_H */
