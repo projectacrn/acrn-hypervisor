@@ -76,8 +76,26 @@ uint16_t legacy_irq_to_pin[NR_LEGACY_IRQ] = {
 	15, /* IRQ15*/
 };
 
-static void *map_ioapic(
-		uint64_t ioapic_paddr)
+uint16_t pic_ioapic_pin_map[NR_LEGACY_PIN] = {
+	2, /* pin0*/
+	1, /* pin1*/
+	0, /* pin2*/
+	3, /* pin3*/
+	4, /* pin4*/
+	5, /* pin5*/
+	6, /* pin6*/
+	7, /* pin7*/
+	8, /* pin8*/
+	9, /* pin9*/
+	10, /* pin10*/
+	11, /* pin11*/
+	12, /* pin12*/
+	13, /* pin13*/
+	14, /* pin14*/
+	15, /* pin15*/
+};
+
+static void *map_ioapic(uint64_t ioapic_paddr)
 {
 	/* At some point we may need to translate this paddr to a vaddr.
 	 * 1:1 mapping for now.
