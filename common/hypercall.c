@@ -618,12 +618,12 @@ int64_t hcall_set_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
 	}
 
 	if (irq.type == IRQ_INTX)
-		ptdev_add_intx_remapping(target_vm,
+		ret = ptdev_add_intx_remapping(target_vm,
 				irq.virt_bdf, irq.phys_bdf,
 				irq.is.intx.virt_pin, irq.is.intx.phys_pin,
 				irq.is.intx.pic_pin);
 	else if (irq.type == IRQ_MSI || irq.type == IRQ_MSIX)
-		ptdev_add_msix_remapping(target_vm,
+		ret = ptdev_add_msix_remapping(target_vm,
 				irq.virt_bdf, irq.phys_bdf,
 				irq.is.msix.vector_cnt);
 
