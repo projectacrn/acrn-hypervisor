@@ -40,6 +40,8 @@
 
 /* SOFTIRQ_DEV_ASSIGN list for all CPUs */
 static struct list_head softirq_dev_entry_list;
+/* passthrough device link */
+static struct list_head ptdev_list;
 
 /*
  * entry could both be in ptdev_list and softirq_dev_entry_list.
@@ -98,10 +100,10 @@ _get_remapping_entry(struct vm *vm, uint32_t id)
 	struct ptdev_remapping_info *entry;
 	struct list_head *pos;
 
-	list_for_each(pos, &vm->ptdev_list) {
+	list_for_each(pos, &ptdev_list) {
 		entry = list_entry(pos, struct ptdev_remapping_info,
 				entry_node);
-		if (entry_id(entry) == id)
+		if (entry_id(entry) == id && entry->vm == vm)
 			return entry;
 	}
 
@@ -213,7 +215,7 @@ alloc_entry(struct vm *vm, enum ptdev_intr_type type)
 	entry->type = type;
 	entry->vm = vm;
 	atomic_clear_int(&entry->active, ACTIVE_FLAG);
-	list_add(&entry->entry_node, &vm->ptdev_list);
+	list_add(&entry->entry_node, &ptdev_list);
 
 	return entry;
 }
@@ -245,10 +247,11 @@ release_all_entry(struct vm *vm)
 	struct ptdev_remapping_info *entry;
 	struct list_head *pos, *tmp;
 
-	list_for_each_safe(pos, tmp, &vm->ptdev_list) {
+	list_for_each_safe(pos, tmp, &ptdev_list) {
 		entry = list_entry(pos, struct ptdev_remapping_info,
 				entry_node);
-		release_entry(entry);
+		if (entry->vm == vm)
+			release_entry(entry);
 	}
 }
 
@@ -295,13 +298,14 @@ static void check_deactive_pic_intx(struct vm *vm, uint8_t phys_pin)
 		return;
 
 	spinlock_obtain(&vm->ptdev_lock);
-	list_for_each(pos, &vm->ptdev_list) {
+	list_for_each(pos, &ptdev_list) {
 		entry = list_entry(pos, struct ptdev_remapping_info,
 				entry_node);
 		if (entry->type == PTDEV_INTR_INTX &&
 			entry->intx.vpin_src == PTDEV_VPIN_PIC &&
 			entry->intx.phys_pin == phys_pin &&
-			entry_is_active(entry)) {
+			entry_is_active(entry) &&
+			entry->vm == vm) {
 			GSI_MASK_IRQ(pin_to_irq(phys_pin));
 			ptdev_deactivate_entry(entry);
 			dev_dbg(ACRN_DBG_IRQ,
@@ -855,13 +859,13 @@ void ptdev_init(void)
 	if (get_cpu_id() > 0)
 		return;
 
+	INIT_LIST_HEAD(&ptdev_list);
 	INIT_LIST_HEAD(&softirq_dev_entry_list);
 	spinlock_init(&softirq_dev_lock);
 }
 
 void ptdev_vm_init(struct vm *vm)
 {
-	INIT_LIST_HEAD(&vm->ptdev_list);
 	spinlock_init(&vm->ptdev_lock);
 }
 
@@ -987,7 +991,7 @@ int get_ptdev_info(char *str, int str_max)
 	list_for_each(vm_pos, &vm_list) {
 		vm = list_entry(vm_pos, struct vm, list);
 		spinlock_obtain(&vm->ptdev_lock);
-		list_for_each(pos, &vm->ptdev_list) {
+		list_for_each(pos, &ptdev_list) {
 			entry = list_entry(pos, struct ptdev_remapping_info,
 					entry_node);
 			if (entry_is_active(entry)) {
