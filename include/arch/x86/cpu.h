@@ -147,6 +147,8 @@
 
 #ifndef ASSEMBLER
 
+int cpu_find_logical_id(uint32_t lapic_id);
+
 /**********************************/
 /* EXTERNAL VARIABLES             */
 /**********************************/

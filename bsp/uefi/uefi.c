@@ -136,8 +136,8 @@ int uefi_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	vlapic_restore(vcpu->arch_vcpu.vlapic, &uefi_lapic_regs);
 
 	vcpu->entry_addr = efi_ctx->entry;
-	cur_context->guest_cpu_regs.regs.rcx = efi_ctx->handle;
-	cur_context->guest_cpu_regs.regs.rdx = efi_ctx->table;
+	cur_context->guest_cpu_regs.regs.rcx = (uint64_t) efi_ctx->handle;
+	cur_context->guest_cpu_regs.regs.rdx = (uint64_t) efi_ctx->table;
 
 	/* defer irq enabling till vlapic is ready */
 	CPU_IRQ_ENABLE();
