@@ -321,8 +321,8 @@ static void check_deactive_pic_intx(struct vm *vm, uint8_t phys_pin)
 
 static bool ptdev_hv_owned_intx(struct vm *vm, struct ptdev_intx_info *info)
 {
-	/* vm0 pin 4 (uart) is owned by hypervisor */
-	if (is_vm0(vm) && info->virt_pin == 4)
+	/* vm0 pin 4 (uart) is owned by hypervisor under debug version */
+	if (is_vm0(vm) && vm->vuart && info->virt_pin == 4)
 		return true;
 	else
 		return false;
