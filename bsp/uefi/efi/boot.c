@@ -244,7 +244,7 @@ load_sos_image(EFI_HANDLE image, CHAR16 *name, CHAR16 *cmdline)
 	struct multiboot_mmap *mmap;
 	struct multiboot_info *mbi;
 
-	struct acpi_table_rsdp *rsdp;
+	struct acpi_table_rsdp *rsdp = NULL;
 	int i, j;
 
 
