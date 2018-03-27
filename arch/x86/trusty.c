@@ -39,6 +39,38 @@ _Static_assert(NR_WORLD == 2, "Only 2 Worlds supported!");
 /* Trusty EPT rebase gpa: 511G */
 #define TRUSTY_EPT_REBASE_GPA (511ULL*1024ULL*1024ULL*1024ULL)
 
+#define TRUSTY_VERSION 1
+
+struct trusty_startup_param {
+	uint32_t size_of_this_struct;
+	uint32_t mem_size;
+	uint64_t tsc_per_ms;
+	uint64_t trusty_mem_base;
+	uint32_t reserved;
+	uint8_t padding[4];
+};
+
+struct trusty_mem {
+	/* The first page of trusty memory is reserved for key_info and
+	 * trusty_startup_param.
+	 */
+	union {
+		struct {
+			struct key_info key_info;
+			struct trusty_startup_param startup_param;
+		};
+		uint8_t page[CPU_PAGE_SIZE];
+	} first_page;
+
+	/* The left memory is for trusty's code/data/heap/stack
+	 */
+	uint8_t left_mem[0];
+};
+
+_Static_assert(sizeof(struct trusty_startup_param)
+			+ sizeof(struct key_info) < 0x1000,
+		"trusty_startup_param + key_info > 1Page size(4KB)!");
+
 #define save_segment(seg, SEG_NAME) \
 { \
 	seg.selector = exec_vmread(VMX_GUEST_##SEG_NAME##_SEL); \
@@ -238,4 +270,105 @@ void switch_world(struct vcpu *vcpu, int next_world)
 
 	/* Update world index */
 	arch_vcpu->cur_context = next_world;
+}
+
+/* Put key_info and trusty_startup_param in the first Page of Trusty
+ * runtime memory
+ */
+static void setup_trusty_info(struct vcpu *vcpu,
+			uint32_t mem_size, uint64_t mem_base_hpa)
+{
+	struct trusty_mem *mem;
+
+	mem = (struct trusty_mem *)(HPA2HVA(mem_base_hpa));
+
+	/* TODO: prepare vkey_info */
+
+	/* Prepare trusty startup info */
+	mem->first_page.startup_param.size_of_this_struct =
+			sizeof(struct trusty_startup_param);
+	mem->first_page.startup_param.mem_size = mem_size;
+	mem->first_page.startup_param.tsc_per_ms = TIME_MS_DELTA;
+	mem->first_page.startup_param.trusty_mem_base = TRUSTY_EPT_REBASE_GPA;
+
+	/* According to trusty boot protocol, it will use RDI as the
+	 * address(GPA) of startup_param on boot. Currently, the startup_param
+	 * is put in the first page of trusty memory just followed by key_info.
+	 */
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].guest_cpu_regs.regs.rdi
+		= (uint64_t)TRUSTY_EPT_REBASE_GPA + sizeof(struct key_info);
+}
+
+/* Secure World will reuse environment of UOS_Loder since they are
+ * both booting from and running in 64bit mode, except GP registers.
+ * RIP, RSP and RDI are specified below, other GP registers are leaved
+ * as 0.
+ */
+static void init_secure_world_env(struct vcpu *vcpu,
+				uint64_t entry_gpa,
+				uint64_t base_hpa,
+				uint32_t size)
+{
+	vcpu->arch_vcpu.inst_len = 0;
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].rip = entry_gpa;
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].rsp =
+		TRUSTY_EPT_REBASE_GPA + size;
+	exec_vmwrite(VMX_GUEST_RSP,
+		TRUSTY_EPT_REBASE_GPA + size);
+
+	setup_trusty_info(vcpu, size, base_hpa);
+}
+
+bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
+{
+	uint64_t trusty_entry_gpa, trusty_base_gpa, trusty_base_hpa;
+	struct vm *vm = vcpu->vm;
+	struct trusty_boot_param *boot_param =
+			(struct trusty_boot_param *)(gpa2hpa(vm, param));
+
+	if (sizeof(struct trusty_boot_param) !=
+			boot_param->size_of_this_struct) {
+		pr_err("%s: sizeof(struct trusty_boot_param) mismatch!\n",
+			__func__);
+		return false;
+	}
+
+	if (boot_param->version != TRUSTY_VERSION) {
+		pr_err("%s: version of(trusty_boot_param) mismatch!\n",
+			__func__);
+		return false;
+	}
+
+	if (!boot_param->entry_point) {
+		pr_err("%s: Invalid entry point\n", __func__);
+		return false;
+	}
+
+	if (!boot_param->base_addr) {
+		pr_err("%s: Invalid memory base address\n", __func__);
+		return false;
+	}
+
+	trusty_entry_gpa = (uint64_t)boot_param->entry_point;
+	trusty_base_gpa = (uint64_t)boot_param->base_addr;
+
+	create_secure_world_ept(vm, trusty_base_gpa, boot_param->mem_size,
+						TRUSTY_EPT_REBASE_GPA);
+	trusty_base_hpa = vm->sworld_control.sworld_memory.base_hpa;
+
+	exec_vmwrite64(VMX_EPT_POINTER_FULL,
+			((uint64_t)vm->arch_vm.sworld_eptp) | (3<<3) | 6);
+
+	/* save Normal World context */
+	save_world_ctx(&vcpu->arch_vcpu.contexts[NORMAL_WORLD]);
+
+	/* init secure world environment */
+	init_secure_world_env(vcpu,
+		trusty_entry_gpa - trusty_base_gpa + TRUSTY_EPT_REBASE_GPA,
+		trusty_base_hpa, boot_param->mem_size);
+
+	/* switch to Secure World */
+	vcpu->arch_vcpu.cur_context = SECURE_WORLD;
+
+	return true;
 }

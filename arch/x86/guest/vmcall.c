@@ -138,6 +138,10 @@ int vmcall_handler(struct vcpu *vcpu)
 		ret = hcall_world_switch(vcpu);
 		break;
 
+	case HC_INITIALIZE_TRUSTY:
+		ret = hcall_initialize_trusty(vcpu, param1);
+		break;
+
 	default:
 		pr_err("op %d: Invalid hypercall\n", hypcall_id);
 		ret = -1;
