@@ -128,7 +128,8 @@ usage(int code)
 	fprintf(stderr,
 		"Usage: %s [-abehuwxACHPSWY] [-c vcpus] [-g <gdb port>] [-l <lpc>]\n"
 		"       %*s [-m mem] [-p vcpu:hostcpu] [-s <pci>] [-U uuid] \n"
-		"       %*s [--vsbl vsbl_file_name] <vm>\n"
+		"       %*s [--vsbl vsbl_file_name] [--part_info part_info_name]\n"
+		"	%*s <vm>\n"
 		"       -a: local apic is in xAPIC mode (deprecated)\n"
 		"       -A: create ACPI tables\n"
 		"       -c: # cpus (default 1)\n"
@@ -154,8 +155,10 @@ usage(int code)
 		"       -r: ramdisk image path\n"
 		"       -B: bootargs for kernel\n"
 		"       -v: version\n"
-		"       --vsbl: vsbl file path\n",
-		progname, (int)strlen(progname), "", (int)strlen(progname), "");
+		"       --vsbl: vsbl file path\n"
+		"       --part_info: guest partition info file path\n",
+		progname, (int)strlen(progname), "", (int)strlen(progname), "",
+		(int)strlen(progname), "");
 
 	exit(code);
 }
@@ -551,6 +554,7 @@ sig_handler_term(int signo)
 
 enum {
 	CMD_OPT_VSBL = 1000,
+	CMD_OPT_PART_INFO,
 };
 
 static struct option long_options[] = {
@@ -584,6 +588,7 @@ static struct option long_options[] = {
 
 	/* Following cmd option only has long option */
 	{"vsbl",		required_argument,	0, CMD_OPT_VSBL},
+	{"part_info",		required_argument,	0, CMD_OPT_PART_INFO},
 	{0,			0,			0,  0  },
 };
 
@@ -721,6 +726,14 @@ main(int argc, char *argv[])
 		case CMD_OPT_VSBL:
 			if (acrn_parse_vsbl(optarg) != 0) {
 				errx(EX_USAGE, "invalid vsbl param %s", optarg);
+				exit(1);
+			}
+			break;
+		case CMD_OPT_PART_INFO:
+			if (acrn_parse_guest_part_info(optarg) != 0) {
+				errx(EX_USAGE,
+					"invalid guest partition info param %s",
+					optarg);
 				exit(1);
 			}
 			break;

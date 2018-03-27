@@ -64,7 +64,7 @@ int acrn_parse_ramdisk(char *arg);
 int acrn_parse_bootargs(char *arg);
 int acrn_parse_gvtargs(char *arg);
 int acrn_parse_vsbl(char *arg);
-int acrn_parse_partation_blob(char *arg);
+int acrn_parse_guest_part_info(char *arg);
 char *get_bootargs(void);
 void vsbl_set_bdf(int bnum, int snum, int fnum);
 
