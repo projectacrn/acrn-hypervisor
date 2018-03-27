@@ -152,9 +152,9 @@ void create_secure_world_ept(struct vm *vm, uint64_t gpa,
 
 	/* Backup secure world info, will be used when
 	 * destroy secure world */
-	vm0->sworld_control.sworld_memory.base_gpa = gpa;
-	vm0->sworld_control.sworld_memory.base_hpa = hpa;
-	vm0->sworld_control.sworld_memory.length = size;
+	vm->sworld_control.sworld_memory.base_gpa = gpa;
+	vm->sworld_control.sworld_memory.base_hpa = hpa;
+	vm->sworld_control.sworld_memory.length = size;
 
 	mmu_invept(vm->current_vcpu);
 	mmu_invept(vm0->current_vcpu);
