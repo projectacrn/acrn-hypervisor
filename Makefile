@@ -60,6 +60,7 @@ ARCH_LDSCRIPT_IN = bsp/ld/link_ram.ld.in
 
 INCLUDE_PATH += include
 INCLUDE_PATH += include/lib
+INCLUDE_PATH += include/lib/crypto
 INCLUDE_PATH += include/common
 INCLUDE_PATH += include/arch/x86
 INCLUDE_PATH += include/arch/x86/guest
