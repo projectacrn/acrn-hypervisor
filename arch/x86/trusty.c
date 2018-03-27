@@ -33,6 +33,7 @@
 #include <hv_arch.h>
 #include <acrn_hv_defs.h>
 #include <hv_debug.h>
+#include <hkdf.h>
 
 _Static_assert(NR_WORLD == 2, "Only 2 Worlds supported!");
 
@@ -65,6 +66,13 @@ struct trusty_mem {
 	/* The left memory is for trusty's code/data/heap/stack
 	 */
 	uint8_t left_mem[0];
+};
+
+static struct key_info g_key_info = {
+	.size_of_this_struct = sizeof(g_key_info),
+	.version = 0,
+	.platform = 3,
+	.num_seeds = 1
 };
 
 _Static_assert(sizeof(struct trusty_startup_param)
@@ -275,14 +283,35 @@ void switch_world(struct vcpu *vcpu, int next_world)
 /* Put key_info and trusty_startup_param in the first Page of Trusty
  * runtime memory
  */
-static void setup_trusty_info(struct vcpu *vcpu,
+static bool setup_trusty_info(struct vcpu *vcpu,
 			uint32_t mem_size, uint64_t mem_base_hpa)
 {
+	uint32_t i;
 	struct trusty_mem *mem;
 
 	mem = (struct trusty_mem *)(HPA2HVA(mem_base_hpa));
 
 	/* TODO: prepare vkey_info */
+
+	/* copy key_info to the first page of trusty memory */
+	mem->first_page.key_info = g_key_info;
+
+	memset(mem->first_page.key_info.dseed_list, 0,
+			sizeof(mem->first_page.key_info.dseed_list));
+	/* Derive dvseed from dseed for Trusty */
+	for (i = 0; i < g_key_info.num_seeds; i++) {
+		if (!hkdf_sha256(mem->first_page.key_info.dseed_list[i].seed,
+				BUP_MKHI_BOOTLOADER_SEED_LEN,
+				g_key_info.dseed_list[i].seed,
+				BUP_MKHI_BOOTLOADER_SEED_LEN,
+				NULL, 0,
+				vcpu->vm->GUID, sizeof(vcpu->vm->GUID))) {
+			memset(&mem->first_page.key_info, 0,
+					sizeof(struct key_info));
+			pr_err("%s: derive dvseed failed!", __func__);
+			return false;
+		}
+	}
 
 	/* Prepare trusty startup info */
 	mem->first_page.startup_param.size_of_this_struct =
@@ -297,6 +326,8 @@ static void setup_trusty_info(struct vcpu *vcpu,
 	 */
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].guest_cpu_regs.regs.rdi
 		= (uint64_t)TRUSTY_EPT_REBASE_GPA + sizeof(struct key_info);
+
+	return true;
 }
 
 /* Secure World will reuse environment of UOS_Loder since they are
@@ -304,7 +335,7 @@ static void setup_trusty_info(struct vcpu *vcpu,
  * RIP, RSP and RDI are specified below, other GP registers are leaved
  * as 0.
  */
-static void init_secure_world_env(struct vcpu *vcpu,
+static bool init_secure_world_env(struct vcpu *vcpu,
 				uint64_t entry_gpa,
 				uint64_t base_hpa,
 				uint32_t size)
@@ -316,7 +347,7 @@ static void init_secure_world_env(struct vcpu *vcpu,
 	exec_vmwrite(VMX_GUEST_RSP,
 		TRUSTY_EPT_REBASE_GPA + size);
 
-	setup_trusty_info(vcpu, size, base_hpa);
+	return setup_trusty_info(vcpu, size, base_hpa);
 }
 
 bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
@@ -363,12 +394,14 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 	save_world_ctx(&vcpu->arch_vcpu.contexts[NORMAL_WORLD]);
 
 	/* init secure world environment */
-	init_secure_world_env(vcpu,
+	if (init_secure_world_env(vcpu,
 		trusty_entry_gpa - trusty_base_gpa + TRUSTY_EPT_REBASE_GPA,
-		trusty_base_hpa, boot_param->mem_size);
+		trusty_base_hpa, boot_param->mem_size)) {
 
-	/* switch to Secure World */
-	vcpu->arch_vcpu.cur_context = SECURE_WORLD;
+		/* switch to Secure World */
+		vcpu->arch_vcpu.cur_context = SECURE_WORLD;
+		return true;
+	}
 
-	return true;
+	return false;
 }

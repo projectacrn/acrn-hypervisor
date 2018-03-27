@@ -122,8 +122,6 @@ struct secure_world_memory {
 struct secure_world_control {
 	/* Whether secure world is enabled for current VM */
 	bool sworld_enabled;
-	/* key info structure */
-	struct key_info key_info;
 	/* Secure world memory structure */
 	struct secure_world_memory sworld_memory;
 };
