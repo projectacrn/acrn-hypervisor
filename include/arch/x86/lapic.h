@@ -179,6 +179,7 @@ struct lapic_regs {
 	uint32_t tdcr;
 };
 
+void write_lapic_reg32(uint32_t offset, uint32_t value);
 void save_lapic(struct lapic_regs *regs);
 int early_init_lapic(void);
 int init_lapic(uint32_t cpu_id);
