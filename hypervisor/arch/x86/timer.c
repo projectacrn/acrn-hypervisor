@@ -174,16 +174,17 @@ _search_nearest_timer(struct per_cpu_timers *cpu_timer)
 static struct timer*
 _search_timer_by_handle(struct per_cpu_timers *cpu_timer, long handle)
 {
-	struct timer *timer;
+	struct timer *timer = NULL, *tmp;
 	struct list_head *pos;
 
 	list_for_each(pos, &cpu_timer->timer_list) {
-		timer = list_entry(pos, struct timer, node);
-		if (timer->handle == handle)
-			goto FOUND;
+		tmp = list_entry(pos, struct timer, node);
+		if (tmp->handle == handle) {
+			timer = tmp;
+			break;
+		}
 	}
-	timer = NULL;
-FOUND:
+
 	return timer;
 }
 
@@ -296,9 +297,10 @@ static void init_tsc_deadline_timer(void)
 	uint32_t val;
 
 	val = VECTOR_TIMER;
-	val |= 0x40000; /* TSC deadline and unmask */
-	mmio_write_long(val, LAPIC_BASE + LAPIC_LVT_TIMER_REGISTER);
+	val |= APIC_LVTT_TM_TSCDLT; /* TSC deadline and unmask */
+	write_lapic_reg32(LAPIC_LVT_TIMER_REGISTER, val);
 	asm volatile("mfence" : : : "memory");
+
 	/* disarm timer */
 	msr_write(MSR_IA32_TSC_DEADLINE, 0UL);
 }
