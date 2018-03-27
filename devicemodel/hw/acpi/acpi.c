@@ -921,7 +921,7 @@ basl_make_templates(void)
 			len--;
 		basl_template[len] = '/';
 		strncpy(&basl_template[len + 1], ASL_TEMPLATE,
-					sizeof(ASL_TEMPLATE));
+					MAXPATHLEN - len - 1);
 	} else
 		err = -1;
 
@@ -934,10 +934,10 @@ basl_make_templates(void)
 			strncpy(basl_stemplate, tmpdir, len);
 			basl_stemplate[len] = '/';
 			strncpy(&basl_stemplate[len + 1], ASL_TEMPLATE,
-					sizeof(ASL_TEMPLATE));
+					MAXPATHLEN - len - 1);
 			len += sizeof(ASL_TEMPLATE);
 			strncpy(&basl_stemplate[len], ASL_SUFFIX,
-					sizeof(ASL_SUFFIX));
+					sizeof(ASL_TEMPLATE));
 		} else
 			err = -1;
 	}
