@@ -45,8 +45,6 @@ int dm_emulate_pio_post(struct vcpu *vcpu)
 		0xFFFFFFFFul >> (32 - 8 * vcpu->req.reqs.pio_request.size);
 	uint64_t *rax;
 
-	ASSERT(cur_context == 0, "pio emulation only happen in normal wrold");
-
 	rax = &vcpu->arch_vcpu.contexts[cur_context].guest_cpu_regs.regs.rax;
 	vcpu->req.reqs.pio_request.value =
 		req_buf->req_queue[cur].reqs.pio_request.value;
@@ -91,9 +89,6 @@ int io_instr_handler(struct vcpu *vcpu)
 	int cur_context_idx = vcpu->arch_vcpu.cur_context;
 	struct run_context *cur_context;
 	int status = -EINVAL;
-
-	ASSERT(cur_context_idx == 0,
-		"pio emulation only happen in normal wrold");
 
 	cur_context = &vcpu->arch_vcpu.contexts[cur_context_idx];
 	exit_qual = vcpu->arch_vcpu.exit_qualification;
