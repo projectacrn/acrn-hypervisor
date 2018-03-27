@@ -292,40 +292,57 @@ void bsp_boot_init(void)
 	/* Build time sanity checks to make sure hard-coded offset
 	*  is matching the actual offset!
 	*/
-	STATIC_ASSERT(offsetof(struct cpu_regs, rax) ==
-		VMX_MACHINE_T_GUEST_RAX_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, rbx) ==
-		VMX_MACHINE_T_GUEST_RBX_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, rcx) ==
-		VMX_MACHINE_T_GUEST_RCX_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, rdx) ==
-		VMX_MACHINE_T_GUEST_RDX_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, rbp) ==
-		VMX_MACHINE_T_GUEST_RBP_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, rsi) ==
-		VMX_MACHINE_T_GUEST_RSI_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, rdi) ==
-		VMX_MACHINE_T_GUEST_RDI_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, r8) ==
-		VMX_MACHINE_T_GUEST_R8_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, r9) ==
-		VMX_MACHINE_T_GUEST_R9_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, r10) ==
-		VMX_MACHINE_T_GUEST_R10_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, r11) ==
-		VMX_MACHINE_T_GUEST_R11_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, r12) ==
-		VMX_MACHINE_T_GUEST_R12_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, r13) ==
-		VMX_MACHINE_T_GUEST_R13_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, r14) ==
-		VMX_MACHINE_T_GUEST_R14_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, r15) ==
-		VMX_MACHINE_T_GUEST_R15_OFFSET);
-	STATIC_ASSERT(offsetof(struct run_context, cr2) ==
-		VMX_MACHINE_T_GUEST_CR2_OFFSET);
-	STATIC_ASSERT(offsetof(struct run_context, ia32_spec_ctrl) ==
-		VMX_MACHINE_T_GUEST_SPEC_CTRL_OFFSET);
+	_Static_assert(offsetof(struct cpu_regs, rax) ==
+		VMX_MACHINE_T_GUEST_RAX_OFFSET,
+		"cpu_regs rax offset not match");
+	_Static_assert(offsetof(struct cpu_regs, rbx) ==
+		VMX_MACHINE_T_GUEST_RBX_OFFSET,
+		"cpu_regs rbx offset not match");
+	_Static_assert(offsetof(struct cpu_regs, rcx) ==
+		VMX_MACHINE_T_GUEST_RCX_OFFSET,
+		"cpu_regs rcx offset not match");
+	_Static_assert(offsetof(struct cpu_regs, rdx) ==
+		VMX_MACHINE_T_GUEST_RDX_OFFSET,
+		"cpu_regs rdx offset not match");
+	_Static_assert(offsetof(struct cpu_regs, rbp) ==
+		VMX_MACHINE_T_GUEST_RBP_OFFSET,
+		"cpu_regs rbp offset not match");
+	_Static_assert(offsetof(struct cpu_regs, rsi) ==
+		VMX_MACHINE_T_GUEST_RSI_OFFSET,
+		"cpu_regs rsi offset not match");
+	_Static_assert(offsetof(struct cpu_regs, rdi) ==
+		VMX_MACHINE_T_GUEST_RDI_OFFSET,
+		"cpu_regs rdi offset not match");
+	_Static_assert(offsetof(struct cpu_regs, r8) ==
+		VMX_MACHINE_T_GUEST_R8_OFFSET,
+		"cpu_regs r8 offset not match");
+	_Static_assert(offsetof(struct cpu_regs, r9) ==
+		VMX_MACHINE_T_GUEST_R9_OFFSET,
+		"cpu_regs r9 offset not match");
+	_Static_assert(offsetof(struct cpu_regs, r10) ==
+		VMX_MACHINE_T_GUEST_R10_OFFSET,
+		"cpu_regs r10 offset not match");
+	_Static_assert(offsetof(struct cpu_regs, r11) ==
+		VMX_MACHINE_T_GUEST_R11_OFFSET,
+		"cpu_regs r11 offset not match");
+	_Static_assert(offsetof(struct cpu_regs, r12) ==
+		VMX_MACHINE_T_GUEST_R12_OFFSET,
+		"cpu_regs r12 offset not match");
+	_Static_assert(offsetof(struct cpu_regs, r13) ==
+		VMX_MACHINE_T_GUEST_R13_OFFSET,
+		"cpu_regs r13 offset not match");
+	_Static_assert(offsetof(struct cpu_regs, r14) ==
+		VMX_MACHINE_T_GUEST_R14_OFFSET,
+		"cpu_regs r14 offset not match");
+	_Static_assert(offsetof(struct cpu_regs, r15) ==
+		VMX_MACHINE_T_GUEST_R15_OFFSET,
+		"cpu_regs r15 offset not match");
+	_Static_assert(offsetof(struct run_context, cr2) ==
+		VMX_MACHINE_T_GUEST_CR2_OFFSET,
+		"run_context cr2 offset not match");
+	_Static_assert(offsetof(struct run_context, ia32_spec_ctrl) ==
+		VMX_MACHINE_T_GUEST_SPEC_CTRL_OFFSET,
+		"run_context ia32_spec_ctrl offset not match");
 
 	/* Initialize the hypervisor paging */
 	init_paging();
