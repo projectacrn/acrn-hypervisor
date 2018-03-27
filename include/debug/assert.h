@@ -43,7 +43,4 @@ void __assert(uint32_t line, const char *file, char *txt);
 #define ASSERT(x, ...)	do { } while(0)
 #endif
 
-/* Force a compilation error if condition is false */
-#define STATIC_ASSERT(condition) ((void)sizeof(char[(condition) ? 1 : -1]))
-
 #endif /* ASSERT_H */
