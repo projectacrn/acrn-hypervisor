@@ -279,7 +279,7 @@ acrn_prepare_zeropage(struct vmctx *ctx, int setup_size)
 }
 
 int
-acrn_sw_load_direct(struct vmctx *ctx)
+acrn_sw_load_bzimage(struct vmctx *ctx)
 {
 	int ret, setup_size;
 	uint64_t *cfg_offset = (uint64_t *)(ctx->baseaddr + GUEST_CFG_OFFSET);
