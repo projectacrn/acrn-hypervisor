@@ -51,7 +51,7 @@ int64_t hcall_world_switch(struct vcpu *vcpu)
 	}
 
 	if (!vcpu->vm->arch_vm.sworld_eptp) {
-		pr_err("Trusty is not launched!\n");
+		pr_err("Trusty is not initialized!\n");
 		return -1;
 	}
 
@@ -59,5 +59,33 @@ int64_t hcall_world_switch(struct vcpu *vcpu)
 		"world_id exceed max number of Worlds");
 
 	switch_world(vcpu, next_world_id);
+	return 0;
+}
+
+int64_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param)
+{
+	if (!is_hypercall_from_ring0()) {
+		pr_err("%s() is only allowed from RING-0!\n", __func__);
+		return -1;
+	}
+
+	if (!vcpu->vm->sworld_control.sworld_enabled) {
+		pr_err("Secure World is not enabled!\n");
+		return -1;
+	}
+
+	if (vcpu->vm->arch_vm.sworld_eptp) {
+		pr_err("Trusty already initialized!\n");
+		return -1;
+	}
+
+	ASSERT(vcpu->arch_vcpu.cur_context == NORMAL_WORLD,
+		"The Trusty Initialize hypercall must be from Normal World");
+
+	if (!initialize_trusty(vcpu, param)) {
+		pr_err("Failed to initialize trusty!\n");
+		return -1;
+	}
+
 	return 0;
 }
