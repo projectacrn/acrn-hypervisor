@@ -153,5 +153,5 @@ acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 int
 acrn_sw_load(struct vmctx *ctx)
 {
-	return acrn_sw_load_direct(ctx);
+	return acrn_sw_load_bzimage(ctx);
 }
