@@ -229,9 +229,8 @@ int rdmsr_handler(struct vcpu *vcpu)
 	}
 	case MSR_IA32_APIC_BASE:
 	{
-		bool ret;
 		/* Read APIC base */
-		vlapic_rdmsr(vcpu, msr, &v, &ret);
+		vlapic_rdmsr(vcpu, msr, &v);
 		break;
 	}
 	default:
@@ -270,9 +269,7 @@ int wrmsr_handler(struct vcpu *vcpu)
 	switch (msr) {
 	case MSR_IA32_TSC_DEADLINE:
 	{
-		bool ret;
-		/* Write APIC base */
-		vlapic_wrmsr(vcpu, msr, v, &ret);
+		vlapic_wrmsr(vcpu, msr, v);
 		vcpu->guest_msrs[IDX_TSC_DEADLINE] = v;
 		break;
 	}
@@ -324,9 +321,7 @@ int wrmsr_handler(struct vcpu *vcpu)
 	}
 	case MSR_IA32_APIC_BASE:
 	{
-		bool ret;
-		/* Write APIC base */
-		vlapic_wrmsr(vcpu, msr, v, &ret);
+		vlapic_wrmsr(vcpu, msr, v);
 		break;
 	}
 	default:
