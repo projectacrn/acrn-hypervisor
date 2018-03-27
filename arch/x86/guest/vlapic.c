@@ -110,10 +110,10 @@ static void *apicv_apic_access_addr;
 
 static int
 vlapic_write(struct vlapic *vlapic, int mmio_access, uint64_t offset,
-		uint64_t data, bool *retu);
+		uint64_t data);
 static int
 vlapic_read(struct vlapic *vlapic, int mmio_access, uint64_t offset,
-		uint64_t *data, bool *retu);
+		uint64_t *data);
 
 static int
 apicv_set_intr_ready(struct vlapic *vlapic, int vector, bool level);
@@ -370,7 +370,7 @@ vlapic_dcr_write_handler(struct vlapic *vlapic)
 
 	divisor = vlapic_timer_divisor(lapic->dcr_timer);
 	dev_dbg(ACRN_DBG_LAPIC, "vlapic dcr_timer=%#x, divisor=%d",
-	    lapic->dcr_timer, divisor);
+			lapic->dcr_timer, divisor);
 
 	/*
 	 * Update the timer frequency and the timer period.
@@ -1095,7 +1095,7 @@ vlapic_get_cr8(struct vlapic *vlapic)
 }
 
 static int
-vlapic_icrlo_write_handler(struct vlapic *vlapic, bool *retu)
+vlapic_icrlo_write_handler(struct vlapic *vlapic)
 {
 	int i;
 	bool phys;
@@ -1219,7 +1219,6 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic, bool *retu)
 					target_vcpu->vm->attr.id);
 			schedule_vcpu(target_vcpu);
 
-			*retu = true;
 			return 0;
 		}
 	}
@@ -1342,7 +1341,7 @@ vlapic_svr_write_handler(struct vlapic *vlapic)
 
 static int
 vlapic_read(struct vlapic *vlapic, int mmio_access, uint64_t offset,
-		uint64_t *data, bool *retu)
+		uint64_t *data)
 {
 	struct lapic *lapic = vlapic->apic_page;
 	int i;
@@ -1446,7 +1445,6 @@ vlapic_read(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 	case APIC_OFFSET_RRR:
 	default:
 		*data = 0;
-		*retu = true;
 		break;
 	}
 done:
@@ -1457,7 +1455,7 @@ done:
 
 static int
 vlapic_write(struct vlapic *vlapic, int mmio_access, uint64_t offset,
-		uint64_t data, bool *retu)
+		uint64_t data)
 {
 	struct lapic *lapic = vlapic->apic_page;
 	uint32_t *regptr;
@@ -1508,7 +1506,7 @@ vlapic_write(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 		break;
 	case APIC_OFFSET_ICR_LOW:
 		lapic->icr_lo = data;
-		retval = vlapic_icrlo_write_handler(vlapic, retu);
+		retval = vlapic_icrlo_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_ICR_HI:
 		lapic->icr_hi = data;
@@ -1927,29 +1925,31 @@ static int tsc_periodic_time(uint64_t data)
 }
 
 int
-vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval,
-		bool *retu)
+vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval)
 {
-	int error;
+	int error = 0;
 	uint32_t offset;
 	struct vlapic *vlapic;
 
 	dev_dbg(ACRN_DBG_LAPIC, "cpu[%d] rdmsr: %x", vcpu->vcpu_id, msr);
 	vlapic = vcpu->arch_vcpu.vlapic;
 
-	if (msr == MSR_IA32_APIC_BASE) {
+	switch (msr) {
+	case MSR_IA32_APIC_BASE:
 		*rval = vlapic_get_apicbase(vlapic);
-		error = 0;
-	} else {
+		break;
+
+	default:
 		offset = x2apic_msr_to_regoff(msr);
-		error = vlapic_read(vlapic, 0, offset, rval, retu);
+		error = vlapic_read(vlapic, 0, offset, rval);
+		break;
 	}
 
 	return error;
 }
 
 int
-vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val, bool *retu)
+vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val)
 {
 	int error;
 	uint32_t offset;
@@ -1959,9 +1959,12 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val, bool *retu)
 	vlapic = vcpu->arch_vcpu.vlapic;
 	lapic = vlapic->apic_page;
 
-	if (msr == MSR_IA32_APIC_BASE) {
+	switch (msr) {
+	case MSR_IA32_APIC_BASE:
 		error = vlapic_set_apicbase(vlapic, val);
-	} else if (msr == MSR_IA32_TSC_DEADLINE) {
+		break;
+
+	case MSR_IA32_TSC_DEADLINE:
 		error = 0;
 		if (!VLAPIC_TSCDEADLINE(lapic->lvt_timer))
 			return error;
@@ -1981,9 +1984,12 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val, bool *retu)
 				error = -1;
 			}
 		}
-	} else {
+		break;
+
+	default:
 		offset = x2apic_msr_to_regoff(msr);
-		error = vlapic_write(vlapic, 0, offset, val, retu);
+		error = vlapic_write(vlapic, 0, offset, val);
+		break;
 	}
 
 	dev_dbg(ACRN_DBG_LAPIC, "cpu[%d] wrmsr: %x val=%#x",
@@ -1997,7 +2003,6 @@ vlapic_mmio_write(struct vcpu *vcpu, uint64_t gpa, uint64_t wval, int size)
 	int error;
 	uint64_t off;
 	struct vlapic *vlapic;
-	bool arg;
 
 	off = gpa - DEFAULT_APIC_BASE;
 
@@ -2009,7 +2014,7 @@ vlapic_mmio_write(struct vcpu *vcpu, uint64_t gpa, uint64_t wval, int size)
 		return -EINVAL;
 
 	vlapic = vcpu->arch_vcpu.vlapic;
-	error = vlapic_write(vlapic, 1, off, wval, &arg);
+	error = vlapic_write(vlapic, 1, off, wval);
 	return error;
 }
 
@@ -2020,7 +2025,6 @@ vlapic_mmio_read(struct vcpu *vcpu, uint64_t gpa, uint64_t *rval,
 	int error;
 	uint64_t off;
 	struct vlapic *vlapic;
-	bool arg;
 
 	off = gpa - DEFAULT_APIC_BASE;
 
@@ -2034,7 +2038,7 @@ vlapic_mmio_read(struct vcpu *vcpu, uint64_t gpa, uint64_t *rval,
 		return -EINVAL;
 
 	vlapic = vcpu->arch_vcpu.vlapic;
-	error = vlapic_read(vlapic, 1, off, rval, &arg);
+	error = vlapic_read(vlapic, 1, off, rval);
 	return error;
 }
 
@@ -2339,7 +2343,6 @@ apicv_inject_pir(struct vlapic *vlapic)
 
 int apic_access_vmexit_handler(struct vcpu *vcpu)
 {
-	bool ret;
 	int access_type, offset;
 	uint64_t qual;
 	struct vlapic *vlapic;
@@ -2356,9 +2359,9 @@ int apic_access_vmexit_handler(struct vcpu *vcpu)
 	analyze_instruction(vcpu, &vcpu->mmio);
 	if (access_type == 1) {
 		if (!emulate_instruction(vcpu, &vcpu->mmio))
-			vlapic_write(vlapic, 1, offset, vcpu->mmio.value, &ret);
+			vlapic_write(vlapic, 1, offset, vcpu->mmio.value);
 	} else if (access_type == 0) {
-		vlapic_read(vlapic, 1, offset, &vcpu->mmio.value, &ret);
+		vlapic_read(vlapic, 1, offset, &vcpu->mmio.value);
 		emulate_instruction(vcpu, &vcpu->mmio);
 	}
 
@@ -2397,7 +2400,6 @@ int veoi_vmexit_handler(struct vcpu *vcpu)
 
 int apic_write_vmexit_handler(struct vcpu *vcpu)
 {
-	bool retu;
 	uint64_t qual;
 	int error, handled, offset;
 	struct vlapic *vlapic = NULL;
@@ -2429,9 +2431,8 @@ int apic_write_vmexit_handler(struct vcpu *vcpu)
 		vlapic_esr_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_ICR_LOW:
-		retu = false;
-		error = vlapic_icrlo_write_handler(vlapic, &retu);
-		if (error != 0 || retu)
+		error = vlapic_icrlo_write_handler(vlapic);
+		if (error != 0)
 			handled = 0;
 		break;
 	case APIC_OFFSET_CMCI_LVT:
