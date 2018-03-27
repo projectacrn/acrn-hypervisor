@@ -134,6 +134,10 @@ int vmcall_handler(struct vcpu *vcpu)
 		ret = hcall_setup_sbuf(vm, param1);
 		break;
 
+	case HC_WORLD_SWITCH:
+		ret = hcall_world_switch(vcpu);
+		break;
+
 	default:
 		pr_err("op %d: Invalid hypercall\n", hypcall_id);
 		ret = -1;

@@ -140,6 +140,7 @@ C_SRCS += lib/crypto/tinycrypt/sha256.c
 C_SRCS += lib/crypto/hkdf.c
 C_SRCS += common/hv_main.c
 C_SRCS += common/hypercall.c
+C_SRCS += common/trusty_hypercall.c
 C_SRCS += common/schedule.c
 C_SRCS += common/vm_load.c
 

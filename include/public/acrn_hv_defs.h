@@ -229,4 +229,5 @@ struct hc_api_version {
 /**
  * @}
  */
+
 #endif /* ACRN_HV_DEFS_H */

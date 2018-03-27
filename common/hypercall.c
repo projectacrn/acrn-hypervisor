@@ -40,6 +40,18 @@
 
 #define ACRN_DBG_HYCALL	6
 
+bool is_hypercall_from_ring0(void)
+{
+	uint64_t cs_sel;
+
+	cs_sel = exec_vmread(VMX_GUEST_CS_SEL);
+	/* cs_selector[1:0] is CPL */
+	if ((cs_sel & 0x3) == 0)
+		return true;
+
+	return false;
+}
+
 int64_t hcall_get_api_version(struct vm *vm, uint64_t param)
 {
 	struct hc_api_version version;

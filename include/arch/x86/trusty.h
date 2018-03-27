@@ -128,5 +128,7 @@ struct secure_world_control {
 	struct secure_world_memory sworld_memory;
 };
 
+void switch_world(struct vcpu *vcpu, int next_world);
+
 #endif /* TRUSTY_H_ */
 

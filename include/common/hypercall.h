@@ -39,6 +39,7 @@
 
 struct vhm_request;
 
+bool is_hypercall_from_ring0(void);
 int acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req);
 int acrn_insert_request_nowait(struct vcpu *vcpu, struct vhm_request *req);
 int get_req_info(char *str, int str_max);
@@ -324,6 +325,15 @@ int64_t hcall_reset_ptdev_intr_info(struct vm *vm, uint64_t vmid,
  * @return 0 on success, non-zero on error.
  */
 int64_t hcall_setup_sbuf(struct vm *vm, uint64_t param);
+
+/**
+ * @brief Switch VCPU state between Normal/Secure World.
+ *
+ * @param VCPU Pointer to VCPU data structure
+ *
+ * @return 0 on success, non-zero on error.
+ */
+int64_t hcall_world_switch(struct vcpu *vcpu);
 
 /**
  * @}
