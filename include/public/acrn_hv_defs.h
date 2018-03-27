@@ -95,7 +95,7 @@
 
 /* Trusty */
 #define HC_ID_TRUSTY_BASE           0x70UL
-#define HC_LAUNCH_TRUSTY            _HC_ID(HC_ID, HC_ID_TRUSTY_BASE + 0x00)
+#define HC_INITIALIZE_TRUSTY        _HC_ID(HC_ID, HC_ID_TRUSTY_BASE + 0x00)
 #define HC_WORLD_SWITCH             _HC_ID(HC_ID, HC_ID_TRUSTY_BASE + 0x01)
 #define HC_GET_SEC_INFO             _HC_ID(HC_ID, HC_ID_TRUSTY_BASE + 0x02)
 
@@ -224,6 +224,26 @@ struct hc_api_version {
 
 	/** hypervisor api minor version */
 	uint32_t minor_version;
+} __aligned(8);
+
+/**
+ * Trusty boot params, used for HC_INITIALIZE_TRUSTY
+ */
+struct trusty_boot_param {
+	/** sizeof this structure */
+	uint32_t size_of_this_struct;
+
+	/** version of this structure */
+	uint32_t version;
+
+	/** trusty runtime memory base address */
+	uint32_t base_addr;
+
+	/** trusty entry point */
+	uint32_t entry_point;
+
+	/** trusty runtime memory size */
+	uint32_t mem_size;
 } __aligned(8);
 
 /**

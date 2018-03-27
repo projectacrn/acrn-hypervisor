@@ -336,6 +336,17 @@ int64_t hcall_setup_sbuf(struct vm *vm, uint64_t param);
 int64_t hcall_world_switch(struct vcpu *vcpu);
 
 /**
+ * @brief Initialize environment for Trusty-OS on a VCPU.
+ *
+ * @param VCPU Pointer to VCPU data structure
+ * @param param's guest physical address. This gpa points to
+ *              struct trusty_boot_param
+ *
+ * @return 0 on success, non-zero on error.
+ */
+int64_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param);
+
+/**
  * @}
  */
 

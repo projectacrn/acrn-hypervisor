@@ -49,8 +49,8 @@ Note: Trusty OS is running in Secure World in the architecture above.
 **************************
 Trusty specific Hypercalls
 **************************
-1. HC_LAUNCH_TRUSTY
-   ->This Hypercall is used by UOSloader (User OS Bootloader) to request ACRN to launch Trusty.
+1. HC_INITIALIZE_TRUSTY
+   ->This Hypercall is used by UOS_Loader to request ACRN to initialize Trusty.
    ->The Trusty memory region range, entry point must be specified.
    ->Hypervisor needs to save current vCPU contexts (Normal World).
 2. HC_WORLD_SWITCH
@@ -60,7 +60,7 @@ Trusty specific Hypercalls
 
 API
 ---
-1. hcall_launch_trusty(vm_t *vm);
+1. hcall_initialize_trusty(vm_t *vm);
 2. hcall_world_switch(vm_t *vm);
 
 
@@ -71,12 +71,12 @@ Per design, UOSloader will trigger boot of Trusty. So the boot flow will be:
     UOSloader --> ACRN --> Trusty --> ACRN --> UOSloader
 
 Detail:
-1. UOSloader
+1. UOS_Loader
    1.1 load and verify trusty image from virtual disk.
    1.2 allocate runtime memory for trusty.
    1.3 do ELF relocation of trusty image and get entry address.
-   1.4 call HC_LAUNCH_TRUSTY with trusty memory base and entry address.
-2. ACRN(HC_LAUNCH_TRUSTY)
+   1.4 call HC_INITIALIZE_TRUSTY with trusty memory base and entry address.
+2. ACRN(HC_INITIALIZE_TRUSTY)
    2.1 save World context for Normal World.
    2.2 init World context for Secure World(RIP, RSP, EPT, etc.).
    2.3 resume to Secure World.
@@ -85,9 +85,9 @@ Detail:
    3.2 call HC_WORLD_SWITCH to switch back to Normal World if boot completed.
 4. ACRN(HC_WORLD_SWITCH)
    4.1 save World context for the World which caused this vmexit(Secure World)
-   4.2 restore World context for next World(Normal World(UOSloader))
-   4.3 resume to next World(UOSloader)
-5. UOSloader
+   4.2 restore World context for next World(Normal World(UOS_Loader))
+   4.3 resume to next World(UOS_Loader)
+5. UOS_Loader
    5.1 continue to boot.
 
 
