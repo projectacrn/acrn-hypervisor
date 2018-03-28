@@ -7,9 +7,7 @@ RC_VERSION=2
 BASEDIR := $(shell pwd)
 DM_OBJDIR ?= $(CURDIR)/build
 
-ifneq ($(TARGET_YOCTO), TRUE)
-CC := gcc
-endif
+CC ?= gcc
 
 CFLAGS := -g -O0 -std=gnu11
 CFLAGS += -D_GNU_SOURCE
