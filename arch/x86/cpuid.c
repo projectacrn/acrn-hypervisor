@@ -285,7 +285,7 @@ void guest_cpuid(struct vcpu *vcpu,
 	uint32_t subleaf = *ecx;
 
 	/* vm related */
-	if (leaf != 0x1 && leaf != 0xb) {
+	if (leaf != 0x1 && leaf != 0xb && leaf != 0xd) {
 		struct vcpuid_entry *entry =
 			find_vcpuid_entry(vcpu, leaf, subleaf);
 
@@ -329,12 +329,34 @@ void guest_cpuid(struct vcpu *vcpu,
 		/*mask vmx to guest os */
 		*ecx &= ~CPUID_ECX_VMX;
 
+		/*no xsave support for guest if it is not enabled on host*/
+		if (!(*ecx & CPUID_ECX_OSXSAVE))
+			*ecx &= ~CPUID_ECX_XSAVE;
+
+		*ecx &= ~CPUID_ECX_OSXSAVE;
+		if (*ecx & CPUID_ECX_XSAVE) {
+			uint64_t cr4;
+			/*read guest CR4*/
+			cr4 = exec_vmread(VMX_GUEST_CR4);
+			if (cr4 & CR4_OSXSAVE)
+				*ecx |= CPUID_ECX_OSXSAVE;
+		}
 		break;
 	}
 
 	case 0x0b:
 		/* Patching X2APIC */
 		if (!x2apic_enabled) {
+			*eax = 0;
+			*ebx = 0;
+			*ecx = 0;
+			*edx = 0;
+		} else
+			cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
+		break;
+
+	case 0x0d:
+		if (!is_xsave_supported()) {
 			*eax = 0;
 			*ebx = 0;
 			*ecx = 0;
