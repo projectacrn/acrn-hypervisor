@@ -70,11 +70,11 @@ INCLUDE_PATH += bsp/include
 INCLUDE_PATH += bsp/$(PLATFORM)/include/bsp
 INCLUDE_PATH += boot/include
 
-CC = gcc
-AS = as
-AR = ar
-LD = gcc
-POSTLD = objcopy
+CC ?= gcc
+AS ?= as
+AR ?= ar
+LD ?= ld
+OBJCOPY ?= objcopy
 
 D_SRCS += $(wildcard debug/*.c)
 C_SRCS += boot/acpi.c
@@ -187,14 +187,14 @@ install: efi
 endif
 
 $(HV_OBJDIR)/$(HV_FILE).32.out: $(HV_OBJDIR)/$(HV_FILE).out
-	$(POSTLD) -S --section-alignment=0x1000 -O elf32-i386 $< $@
+	$(OBJCOPY) -S --section-alignment=0x1000 -O elf32-i386 $< $@
 
 $(HV_OBJDIR)/$(HV_FILE).bin: $(HV_OBJDIR)/$(HV_FILE).out
-	$(POSTLD) -O binary $< $(HV_OBJDIR)/$(HV_FILE).bin
+	$(OBJCOPY) -O binary $< $(HV_OBJDIR)/$(HV_FILE).bin
 
 $(HV_OBJDIR)/$(HV_FILE).out: $(C_OBJS) $(S_OBJS)
 	$(CC) -E -x c $(patsubst %, -I%, $(INCLUDE_PATH)) $(ARCH_LDSCRIPT_IN) | grep -v '^#' > $(ARCH_LDSCRIPT)
-	$(LD) -Wl,-Map=$(HV_OBJDIR)/$(HV_FILE).map -o $@ $(LDFLAGS) $(ARCH_LDFLAGS) -T$(ARCH_LDSCRIPT) $^
+	$(CC) -Wl,-Map=$(HV_OBJDIR)/$(HV_FILE).map -o $@ $(LDFLAGS) $(ARCH_LDFLAGS) -T$(ARCH_LDSCRIPT) $^
 
 .PHONY: clean
 clean:
