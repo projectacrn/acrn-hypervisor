@@ -80,6 +80,7 @@ static struct cpu_capability cpu_caps;
 struct cpuinfo_x86 boot_cpu_data;
 
 static void vapic_cap_detect(void);
+static void cpu_xsave_init(void);
 static void cpu_set_logical_id(uint32_t logical_id);
 static void print_hv_banner(void);
 int cpu_find_logical_id(uint32_t lapic_id);
@@ -364,6 +365,8 @@ void bsp_boot_init(void)
 
 	vapic_cap_detect();
 
+	cpu_xsave_init();
+
 	/* Set state for this CPU to initializing */
 	cpu_set_current_state(CPU_BOOT_ID, CPU_STATE_INITIALIZING);
 
@@ -489,6 +492,8 @@ void cpu_secondary_init(void)
 	check_tsc();
 
 	pr_dbg("Core %d is up", get_cpu_id());
+
+	cpu_xsave_init();
 
 	/* Release secondary boot spin-lock to allow one of the next CPU(s) to
 	 * perform this common initialization
@@ -698,4 +703,27 @@ bool is_vapic_intr_delivery_supported(void)
 bool is_vapic_virt_reg_supported(void)
 {
 	return ((cpu_caps.vapic_features & VAPIC_FEATURE_VIRT_REG) != 0);
+}
+
+bool is_xsave_supported(void)
+{
+	/*
+	 *todo:
+	 *below flag also should be tested, but current it will be false
+	 *as it is not updated after turning on the host's CR4.OSXSAVE bit,
+	 *will be fixed in cpuid related patch.
+	 *boot_cpu_data.cpuid_leaves[FEAT_1_ECX] & CPUID_ECX_OSXSAVE
+	 **/
+	return !!(boot_cpu_data.cpuid_leaves[FEAT_1_ECX] & CPUID_ECX_XSAVE);
+}
+
+static void cpu_xsave_init(void)
+{
+	uint64_t val64;
+
+	if (is_xsave_supported()) {
+		CPU_CR_READ(cr4, &val64);
+		val64 |= CR4_OSXSAVE;
+		CPU_CR_WRITE(cr4, val64);
+	}
 }

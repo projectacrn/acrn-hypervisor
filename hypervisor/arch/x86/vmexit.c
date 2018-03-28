@@ -37,6 +37,7 @@
 static int rdtscp_handler(struct vcpu *vcpu);
 static int unhandled_vmexit_handler(struct vcpu *vcpu);
 static int rdtsc_handler(struct vcpu *vcpu);
+static int xsetbv_vmexit_handler(struct vcpu *vcpu);
 /* VM Dispatch table for Exit condition handling */
 static const struct vm_exit_dispatch dispatch_table[] = {
 	[VMX_EXIT_REASON_EXCEPTION_OR_NMI] = {
@@ -151,7 +152,7 @@ static const struct vm_exit_dispatch dispatch_table[] = {
 	[VMX_EXIT_REASON_WBINVD] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_XSETBV] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = xsetbv_vmexit_handler},
 	[VMX_EXIT_REASON_APIC_WRITE] = {
 		.handler = apic_write_vmexit_handler,
 		.need_exit_qualification = 1}
@@ -418,26 +419,57 @@ int invlpg_handler(__unused struct vcpu *vcpu)
 
 	return 0;
 }
+#endif
 
 /*
- * XSETBV instruction set's the XCR0 that is used to tell for which components
- * states can be saved on a context switch using xsave.
- *
- * We don't handle this right now because we are on a platform that does not
- * support XSAVE/XRSTORE feature as reflected by the instruction CPUID.
- *
- * to make sure this never get called until we support it we can prevent the
- * reading of this bit in CPUID VMEXIT.
- *
- * Linux checks this in CPUID: cpufeature.h: #define cpu_has_xsave
+ * XSETBV instruction set's the XCR0 that is used to tell for which
+ * components states can be saved on a context switch using xsave.
  */
-static int xsetbv_instr_handler(__unused struct vcpu *vcpu)
+static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 {
-	ASSERT("Not Supported" == 0, "XSETBV executed");
+	int idx;
+	uint64_t val64;
+	struct run_context *ctx_ptr;
 
+	val64 = exec_vmread(VMX_GUEST_CR4);
+	if (!(val64 & CR4_OSXSAVE)) {
+		vcpu_inject_gp(vcpu);
+		return -1;
+	}
+
+	idx = vcpu->arch_vcpu.cur_context;
+	if (idx >= NR_WORLD)
+		return -1;
+
+	ctx_ptr = &(vcpu->arch_vcpu.contexts[idx]);
+
+	/*to access XCR0,'rcx' should be 0*/
+	if (ctx_ptr->guest_cpu_regs.regs.rcx != 0) {
+		vcpu_inject_gp(vcpu);
+		return -1;
+	}
+
+	val64 = ((ctx_ptr->guest_cpu_regs.regs.rax) & 0xffffffff) |
+			(ctx_ptr->guest_cpu_regs.regs.rdx << 32);
+
+	/*bit 0(x87 state) of XCR0 can't be cleared*/
+	if (!(val64 & 0x01)) {
+		vcpu_inject_gp(vcpu);
+		return -1;
+	}
+
+	/*XCR0[2:1] (SSE state & AVX state) can't not be
+	 *set to 10b as it is necessary to set both bits
+	 *to use AVX instructions.
+	 **/
+	if (((val64 >> 1) & 0x3) == 0x2) {
+		vcpu_inject_gp(vcpu);
+		return -1;
+	}
+
+	write_xcr(0, val64);
 	return 0;
 }
-#endif
 
 static int rdtsc_handler(struct vcpu *vcpu)
 {
