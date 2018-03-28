@@ -247,6 +247,7 @@ bool is_vapic_supported(void);
 bool is_vapic_intr_delivery_supported(void);
 bool is_vapic_virt_reg_supported(void);
 bool get_vmx_cap(void);
+bool is_xsave_supported(void);
 
 /* Read control register */
 #define CPU_CR_READ(cr, result_ptr)                         \
@@ -427,6 +428,15 @@ msr_write(uint32_t reg_num, uint64_t value64)
 	CPU_MSR_WRITE(reg_num, value64);
 }
 
+static inline void
+write_xcr(int reg, uint64_t val)
+{
+	uint32_t low, high;
+
+	low = val;
+	high = val >> 32;
+	asm volatile("xsetbv" : : "c" (reg), "a" (low), "d" (high));
+}
 #else /* ASSEMBLER defined */
 
 #endif /* ASSEMBLER defined */

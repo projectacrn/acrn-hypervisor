@@ -931,6 +931,11 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 			exec_vmwrite(VMX_TPR_THRESHOLD, 0);
 	}
 
+	if (is_xsave_supported()) {
+		exec_vmwrite64(VMX_XSS_EXITING_BITMAP_FULL, 0);
+		value32 |= VMX_PROCBASED_CTLS2_XSVE_XRSTR;
+	}
+
 	exec_vmwrite(VMX_PROC_VM_EXEC_CONTROLS2, value32);
 	pr_dbg("VMX_PROC_VM_EXEC_CONTROLS2: 0x%x ", value32);
 
