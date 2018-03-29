@@ -34,21 +34,15 @@
 #ifndef __ACRNBOOT_H__
 #define __ACRNBOOT_H__
 
+#include <bsp_cfg.h>
+
 #define E820_RAM		1
 #define E820_RESERVED		2
 #define E820_ACPI		3
 #define E820_NVS		4
 #define E820_UNUSABLE		5
 
-#define ACRN_HV_SIZE 0x2000000
-#define ACRN_HV_ADDR 0x20000000
-
-#define ACRN_SECONDARY_SIZE 0xf000
-#define ACRN_SECONDARY_ADDR 0x8000
-
-
 EFI_STATUS get_pe_section(CHAR8 *base, char *section, UINTN *vaddr, UINTN *size);
-EFI_STATUS load_sos_image(EFI_HANDLE image, CHAR16 *name, CHAR16 *cmdline);
 
 struct efi_info {
 	UINT32 efi_loader_signature;
@@ -74,9 +68,7 @@ struct e820_entry {
 
 
 struct efi_ctx {
-	EFI_IMAGE_ENTRY_POINT entry;
-	EFI_HANDLE handle;
-	EFI_SYSTEM_TABLE *table;
+	uint64_t rip;
 	VOID *rsdp;
 	dt_addr_t  gdt;
 	dt_addr_t  idt;
@@ -93,8 +85,23 @@ struct efi_ctx {
 	uint16_t   ds_sel;
 	uint16_t   fs_sel;
 	uint16_t   gs_sel;
-	uint64_t   rsp;
 	uint64_t   efer;
+	uint64_t   rax;
+	uint64_t   rbx;
+	uint64_t   rcx;
+	uint64_t   rdx;
+	uint64_t   rdi;
+	uint64_t   rsi;
+	uint64_t   rsp;
+	uint64_t   rbp;
+	uint64_t   r8;
+	uint64_t   r9;
+	uint64_t   r10;
+	uint64_t   r11;
+	uint64_t   r12;
+	uint64_t   r13;
+	uint64_t   r14;
+	uint64_t   r15;
 }__attribute__((packed));
 
 #endif

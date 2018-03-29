@@ -36,6 +36,7 @@ HV_FILE:=acrn
 EFI_OBJDIR:=$(HV_OBJDIR)/bsp/uefi/efi
 C_SRCS = boot.c pe.c malloc.c
 ACRN_OBJS := $(patsubst %.c,$(EFI_OBJDIR)/%.o,$(C_SRCS))
+INCLUDE_PATH += ../include/bsp/
 
 OBJCOPY=objcopy
 
