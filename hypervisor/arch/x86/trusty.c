@@ -34,6 +34,7 @@
 #include <acrn_hv_defs.h>
 #include <hv_debug.h>
 #include <hkdf.h>
+#include "rtl.h"
 
 _Static_assert(NR_WORLD == 2, "Only 2 Worlds supported!");
 
@@ -294,7 +295,8 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 	/* TODO: prepare vkey_info */
 
 	/* copy key_info to the first page of trusty memory */
-	mem->first_page.key_info = g_key_info;
+	memcpy_s(&mem->first_page.key_info, sizeof(g_key_info),
+			&g_key_info, sizeof(g_key_info));
 
 	memset(mem->first_page.key_info.dseed_list, 0,
 			sizeof(mem->first_page.key_info.dseed_list));
