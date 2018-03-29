@@ -541,9 +541,9 @@ virtio_find_cr(int offset) {
  * If it's part of the virtio standard stuff, do that.
  * Otherwise dispatch to the actual driver.
  */
-uint64_t
-virtio_pci_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
-		int baridx, uint64_t offset, int size)
+static uint64_t
+virtio_pci_legacy_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
+		       int baridx, uint64_t offset, int size)
 {
 	struct virtio_base *base = dev->arg;
 	struct virtio_ops *vops;
@@ -553,13 +553,6 @@ virtio_pci_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	uint32_t newoff;
 	uint32_t value;
 	int error;
-
-	if (base->flags & VIRTIO_USE_MSIX) {
-		if (baridx == pci_msix_table_bar(dev) ||
-		    baridx == pci_msix_pba_bar(dev)) {
-			return pci_emul_msix_tread(dev, offset, size);
-		}
-	}
 
 	/* XXX probably should do something better than just assert() */
 	assert(baridx == base->legacy_pio_bar_idx);
@@ -662,9 +655,9 @@ done:
  * If it's part of the virtio standard stuff, do that.
  * Otherwise dispatch to the actual driver.
  */
-void
-virtio_pci_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
-		 int baridx, uint64_t offset, int size, uint64_t value)
+static void
+virtio_pci_legacy_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
+			int baridx, uint64_t offset, int size, uint64_t value)
 {
 	struct virtio_base *base = dev->arg;
 	struct virtio_vq_info *vq;
@@ -674,14 +667,6 @@ virtio_pci_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	const char *name;
 	uint32_t newoff;
 	int error;
-
-	if (base->flags & VIRTIO_USE_MSIX) {
-		if (baridx == pci_msix_table_bar(dev) ||
-		    baridx == pci_msix_pba_bar(dev)) {
-			pci_emul_msix_twrite(dev, offset, size, value);
-			return;
-		}
-	}
 
 	/* XXX probably should do something better than just assert() */
 	assert(baridx == base->legacy_pio_bar_idx);
@@ -929,4 +914,319 @@ virtio_set_modern_bar(struct virtio_base *base, bool use_notify_pio)
 			VIRTIO_MODERN_MMIO_BAR_IDX);
 
 	return rc;
+}
+
+static struct cap_region {
+	uint64_t	cap_offset;	/* offset of capability region */
+	int		cap_size;	/* size of capability region */
+	int		cap_id;		/* capability id */
+} cap_regions[] = {
+	{VIRTIO_CAP_COMMON_OFFSET, VIRTIO_CAP_COMMON_SIZE,
+		VIRTIO_PCI_CAP_COMMON_CFG},
+	{VIRTIO_CAP_ISR_OFFSET, VIRTIO_CAP_ISR_SIZE,
+		VIRTIO_PCI_CAP_ISR_CFG},
+	{VIRTIO_CAP_DEVICE_OFFSET, VIRTIO_CAP_DEVICE_SIZE,
+		VIRTIO_PCI_CAP_DEVICE_CFG},
+	{VIRTIO_CAP_NOTIFY_OFFSET, VIRTIO_CAP_NOTIFY_SIZE,
+		VIRTIO_PCI_CAP_NOTIFY_CFG},
+};
+
+static inline int
+virtio_get_cap_id(uint64_t offset, int size)
+{
+	int i, rc = -1;
+
+	for (i = 0; i < ARRAY_SIZE(cap_regions); i++) {
+		if (offset >= cap_regions[i].cap_offset &&
+			offset + size <= cap_regions[i].cap_offset +
+			cap_regions[i].cap_size)
+			return cap_regions[i].cap_id;
+	}
+
+	return rc;
+}
+
+static uint32_t
+virtio_common_cfg_read(struct pci_vdev *dev, uint64_t offset, int size)
+{
+	/* TODO: to be implemented */
+	return 0;
+}
+
+static void
+virtio_common_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
+			uint64_t value)
+{
+	/* TODO: to be implemented */
+}
+
+/* ignore driver writes to ISR region, and only support ISR region read */
+static uint32_t
+virtio_isr_cfg_read(struct pci_vdev *dev, uint64_t offset, int size)
+{
+	/* TODO: to be implemented */
+	return 0;
+}
+
+static uint32_t
+virtio_device_cfg_read(struct pci_vdev *dev, uint64_t offset, int size)
+{
+	/* TODO: to be implemented */
+	return 0;
+}
+
+static void
+virtio_device_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
+			uint64_t value)
+{
+	/* TODO: to be implemented */
+}
+
+/*
+ * ignore driver reads from notify region, and only support notify region
+ * write
+ */
+static void
+virtio_notify_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
+			uint64_t value)
+{
+	/* TODO: to be implemented */
+}
+
+static uint32_t
+virtio_pci_modern_mmio_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
+			    int baridx, uint64_t offset, int size)
+{
+	struct virtio_base *base = dev->arg;
+	struct virtio_ops *vops;
+	const char *name;
+	uint32_t value;
+	int capid;
+
+	assert(base->modern_mmio_bar_idx == baridx);
+
+	vops = base->vops;
+	name = vops->name;
+	value = size == 1 ? 0xff : size == 2 ? 0xffff : 0xffffffff;
+
+	if (size != 1 && size != 2 && size != 4) {
+		fprintf(stderr,
+			"%s: read from [%d:0x%lx] bad size %d\r\n",
+			name, baridx, offset, size);
+		return value;
+	}
+
+	capid = virtio_get_cap_id(offset, size);
+	if (capid < 0) {
+		fprintf(stderr,
+			"%s: read from [%d:0x%lx] bad range %d\r\n",
+			name, baridx, offset, size);
+		return value;
+	}
+
+	if (base->mtx)
+		pthread_mutex_lock(base->mtx);
+
+	switch (capid) {
+	case VIRTIO_PCI_CAP_COMMON_CFG:
+		offset -= VIRTIO_CAP_COMMON_OFFSET;
+		value = virtio_common_cfg_read(dev, offset, size);
+		break;
+	case VIRTIO_PCI_CAP_ISR_CFG:
+		offset -= VIRTIO_CAP_ISR_OFFSET;
+		value = virtio_isr_cfg_read(dev, offset, size);
+		break;
+	case VIRTIO_PCI_CAP_DEVICE_CFG:
+		offset -= VIRTIO_CAP_DEVICE_OFFSET;
+		value = virtio_device_cfg_read(dev, offset, size);
+		break;
+	default: /* guest driver should not read from notify region */
+		fprintf(stderr,
+			"%s: read from [%d:0x%lx] size %d not supported\r\n",
+			name, baridx, offset, size);
+	}
+
+	if (base->mtx)
+		pthread_mutex_unlock(base->mtx);
+	return value;
+}
+
+static void
+virtio_pci_modern_mmio_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
+			     int baridx, uint64_t offset, int size,
+			     uint64_t value)
+{
+	struct virtio_base *base = dev->arg;
+	struct virtio_ops *vops;
+	const char *name;
+	int capid;
+
+	assert(base->modern_mmio_bar_idx == baridx);
+
+	vops = base->vops;
+	name = vops->name;
+
+	if (size != 1 && size != 2 && size != 4) {
+		fprintf(stderr,
+			"%s: write to [%d:0x%lx] bad size %d\r\n",
+			name, baridx, offset, size);
+		return;
+	}
+
+	capid = virtio_get_cap_id(offset, size);
+	if (capid < 0) {
+		fprintf(stderr,
+			"%s: write to [%d:0x%lx] bad range %d\r\n",
+			name, baridx, offset, size);
+		return;
+	}
+
+	if (base->mtx)
+		pthread_mutex_lock(base->mtx);
+
+	switch (capid) {
+	case VIRTIO_PCI_CAP_COMMON_CFG:
+		offset -= VIRTIO_CAP_COMMON_OFFSET;
+		virtio_common_cfg_write(dev, offset, size, value);
+		break;
+	case VIRTIO_PCI_CAP_DEVICE_CFG:
+		offset -= VIRTIO_CAP_DEVICE_OFFSET;
+		virtio_device_cfg_write(dev, offset, size, value);
+		break;
+	case VIRTIO_PCI_CAP_NOTIFY_CFG:
+		offset -= VIRTIO_CAP_NOTIFY_OFFSET;
+		virtio_notify_cfg_write(dev, offset, size, value);
+		break;
+	default: /* guest driver should not write to ISR region */
+		fprintf(stderr,
+			"%s: write to [%d:0x%lx] size %d not supported\r\n",
+			name, baridx, offset, size);
+	}
+
+	if (base->mtx)
+		pthread_mutex_unlock(base->mtx);
+}
+
+static uint32_t
+virtio_pci_modern_pio_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
+			   int baridx, uint64_t offset, int size)
+{
+	struct virtio_base *base = dev->arg;
+
+	assert(base->modern_pio_bar_idx == baridx);
+	/* guest driver should not read notify pio */
+	return 0;
+}
+
+static void
+virtio_pci_modern_pio_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
+			    int baridx, uint64_t offset, int size,
+			    uint64_t value)
+{
+	struct virtio_base *base = dev->arg;
+	struct virtio_vq_info *vq;
+	struct virtio_ops *vops;
+	const char *name;
+	uint64_t idx;
+
+	assert(base->modern_pio_bar_idx == baridx);
+
+	vops = base->vops;
+	name = vops->name;
+	idx = value;
+
+	if (size != 1 && size != 2 && size != 4) {
+		fprintf(stderr,
+			"%s: write to [%d:0x%lx] bad size %d\r\n",
+			name, baridx, offset, size);
+		return;
+	}
+
+	if (idx >= vops->nvq) {
+		fprintf(stderr,
+			"%s: queue %lu notify out of range\r\n", name, idx);
+		return;
+	}
+
+	if (base->mtx)
+		pthread_mutex_lock(base->mtx);
+
+	vq = &base->queues[idx];
+	if (vq->notify)
+		(*vq->notify)(DEV_STRUCT(base), vq);
+	else if (vops->qnotify)
+		(*vops->qnotify)(DEV_STRUCT(base), vq);
+	else
+		fprintf(stderr,
+			"%s: qnotify queue %lu: missing vq/vops notify\r\n",
+			name, idx);
+
+	if (base->mtx)
+		pthread_mutex_unlock(base->mtx);
+}
+
+uint64_t
+virtio_pci_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
+		int baridx, uint64_t offset, int size)
+{
+	struct virtio_base *base = dev->arg;
+
+	if (base->flags & VIRTIO_USE_MSIX) {
+		if (baridx == pci_msix_table_bar(dev) ||
+		    baridx == pci_msix_pba_bar(dev)) {
+			return pci_emul_msix_tread(dev, offset, size);
+		}
+	}
+
+	if (baridx == base->legacy_pio_bar_idx)
+		return virtio_pci_legacy_read(ctx, vcpu, dev, baridx,
+			offset, size);
+
+	if (baridx == base->modern_mmio_bar_idx)
+		return virtio_pci_modern_mmio_read(ctx, vcpu, dev, baridx,
+			offset, size);
+
+	if (baridx == base->modern_pio_bar_idx)
+		return virtio_pci_modern_pio_read(ctx, vcpu, dev, baridx,
+			offset, size);
+
+	fprintf(stderr, "%s: read unexpected baridx %d\r\n",
+		base->vops->name, baridx);
+	return size == 1 ? 0xff : size == 2 ? 0xffff : 0xffffffff;
+}
+
+void
+virtio_pci_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
+		 int baridx, uint64_t offset, int size, uint64_t value)
+{
+	struct virtio_base *base = dev->arg;
+
+	if (base->flags & VIRTIO_USE_MSIX) {
+		if (baridx == pci_msix_table_bar(dev) ||
+		    baridx == pci_msix_pba_bar(dev)) {
+			pci_emul_msix_twrite(dev, offset, size, value);
+			return;
+		}
+	}
+
+	if (baridx == base->legacy_pio_bar_idx) {
+		virtio_pci_legacy_write(ctx, vcpu, dev, baridx,
+			offset, size, value);
+		return;
+	}
+
+	if (baridx == base->modern_mmio_bar_idx) {
+		virtio_pci_modern_mmio_write(ctx, vcpu, dev, baridx,
+			offset, size, value);
+		return;
+	}
+
+	if (baridx == base->modern_pio_bar_idx) {
+		virtio_pci_modern_pio_write(ctx, vcpu, dev, baridx,
+			offset, size, value);
+		return;
+	}
+
+	fprintf(stderr, "%s: write unexpected baridx %d\r\n",
+		base->vops->name, baridx);
 }
