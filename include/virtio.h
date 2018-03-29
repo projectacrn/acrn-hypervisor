@@ -318,7 +318,8 @@ struct vring_used {
 
 /* From section 2.3, "Virtqueue Configuration", of the virtio specification */
 /**
- * @brief Calculate size of a virtual ring.
+ * @brief Calculate size of a virtual ring, this interface is only valid for
+ * legacy virtio.
  *
  * @param qsz Size of raw data in a certain virtqueue.
  *
