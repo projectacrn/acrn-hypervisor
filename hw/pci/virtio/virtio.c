@@ -1260,8 +1260,15 @@ bad_qindex:
 static uint32_t
 virtio_isr_cfg_read(struct pci_vdev *dev, uint64_t offset, int size)
 {
-	/* TODO: to be implemented */
-	return 0;
+	struct virtio_base *base = dev->arg;
+	uint32_t value = 0;
+
+	value = base->isr;
+	base->isr = 0;		/* a read clears this flag */
+	if (value)
+		pci_lintr_deassert(dev);
+
+	return value;
 }
 
 static uint32_t
