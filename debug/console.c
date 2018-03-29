@@ -231,6 +231,6 @@ void console_setup_timer(void)
 {
 	/* Start an one-shot timer */
 	if (add_timer(console_timer_callback, 0,
-		rdtsc() + TIME_MS_DELTA * CONSOLE_KICK_TIMER_TIMEOUT) < 0)
+		rdtsc() + CYCLES_PER_MS * CONSOLE_KICK_TIMER_TIMEOUT) < 0)
 		pr_err("Failed to add console kick timer");
 }
