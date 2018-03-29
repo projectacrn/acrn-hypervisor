@@ -30,16 +30,62 @@
 
 #include <hypervisor.h>
 #include <hv_lib.h>
+#include <acrn_common.h>
+#include <hv_arch.h>
+#include <hypercall.h>
+#include <acrn_hv_defs.h>
+#include <hv_debug.h>
 
-void udelay(int loop_count)
+int64_t hcall_world_switch(struct vcpu *vcpu)
 {
-	uint64_t dest_tsc, delta_tsc;
+	int next_world_id = !(vcpu->arch_vcpu.cur_context);
 
-	/* Calculate number of ticks to wait */
-	delta_tsc = CYCLES_PER_MS * loop_count;
-	dest_tsc = rdtsc() + delta_tsc;
+	if (!is_hypercall_from_ring0()) {
+		pr_err("%s() is only allowed from RING-0!\n", __func__);
+		return -1;
+	}
 
-	/* Loop until time expired */
-	while
-		(rdtsc() < dest_tsc);
+	if (!vcpu->vm->sworld_control.sworld_enabled) {
+		pr_err("Secure World is not enabled!\n");
+		return -1;
+	}
+
+	if (!vcpu->vm->arch_vm.sworld_eptp) {
+		pr_err("Trusty is not initialized!\n");
+		return -1;
+	}
+
+	ASSERT(next_world_id < NR_WORLD,
+		"world_id exceed max number of Worlds");
+
+	switch_world(vcpu, next_world_id);
+	return 0;
+}
+
+int64_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param)
+{
+	if (!is_hypercall_from_ring0()) {
+		pr_err("%s() is only allowed from RING-0!\n", __func__);
+		return -1;
+	}
+
+	if (!vcpu->vm->sworld_control.sworld_enabled) {
+		pr_err("Secure World is not enabled!\n");
+		return -1;
+	}
+
+	if (vcpu->vm->arch_vm.sworld_eptp) {
+		pr_err("Trusty already initialized!\n");
+		return -1;
+	}
+
+	ASSERT(vcpu->arch_vcpu.cur_context == NORMAL_WORLD,
+		"The Trusty Initialize hypercall must be from Normal World");
+
+	if (!initialize_trusty(vcpu, param)) {
+		pr_err("Failed to initialize trusty!\n");
+		return -1;
+	}
+
+	return 0;
 }

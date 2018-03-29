@@ -60,6 +60,7 @@ ARCH_LDSCRIPT_IN = bsp/ld/link_ram.ld.in
 
 INCLUDE_PATH += include
 INCLUDE_PATH += include/lib
+INCLUDE_PATH += include/lib/crypto
 INCLUDE_PATH += include/common
 INCLUDE_PATH += include/arch/x86
 INCLUDE_PATH += include/arch/x86/guest
@@ -134,6 +135,7 @@ C_SRCS += lib/crypto/hkdf.c
 C_SRCS += lib/sprintf.c
 C_SRCS += common/hv_main.c
 C_SRCS += common/hypercall.c
+C_SRCS += common/trusty_hypercall.c
 C_SRCS += common/schedule.c
 C_SRCS += common/vm_load.c
 

@@ -105,7 +105,7 @@
 #define IOMMU_LOCK(u) spinlock_obtain(&((u)->lock))
 #define IOMMU_UNLOCK(u) spinlock_release(&((u)->lock))
 
-#define DMAR_OP_TIMEOUT TIME_MS_DELTA
+#define DMAR_OP_TIMEOUT CYCLES_PER_MS
 
 #define DMAR_WAIT_COMPLETION(offset, condition, status) \
 	do {                                                \
@@ -114,7 +114,7 @@
 			status = iommu_read32(dmar_uint, offset);   \
 			if (condition)                              \
 				break;                                  \
-			ASSERT((rdtsc() - start < TIME_MS_DELTA),        \
+			ASSERT((rdtsc() - start < CYCLES_PER_MS),        \
 				"DMAR OP Timeout!");   \
 			asm volatile ("pause" ::: "memory");        \
 		}                                               \
