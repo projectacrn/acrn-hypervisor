@@ -96,56 +96,68 @@ _Static_assert(sizeof(struct trusty_startup_param)
 	exec_vmwrite(VMX_GUEST_##SEG_NAME##_ATTR, seg.attr); \
 }
 
-void create_secure_world_ept(struct vm *vm, uint64_t gpa,
-		uint64_t size, uint64_t rebased_gpa)
+static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
+		uint64_t size, uint64_t gpa_rebased)
 {
-	int i = 0;
-	uint64_t pml4e = 0;
-	uint64_t entry = 0;
+	uint64_t nworld_pml4e = 0;
+	uint64_t sworld_pml4e = 0;
 	struct map_params map_params;
-	uint64_t hpa = gpa2hpa(vm, gpa);
+	uint64_t gpa = 0;
+	uint64_t hpa = gpa2hpa(vm, gpa_orig);
+	uint64_t table_present = (IA32E_EPT_R_BIT |
+				IA32E_EPT_W_BIT |
+				IA32E_EPT_X_BIT);
+	void *sub_table_addr = NULL;
 	struct vm *vm0 = get_vm_from_vmid(0);
 
-	/* Create secure world eptp */
-	if (vm->sworld_control.sworld_enabled && !vm->arch_vm.sworld_eptp)
-		vm->arch_vm.sworld_eptp = alloc_paging_struct();
+	if (!vm->sworld_control.sworld_enabled
+			|| vm->arch_vm.sworld_eptp != NULL) {
+		pr_err("Sworld is not enabled or Sworld eptp is not NULL");
+		return;
+	}
 
 	map_params.page_table_type = PTT_EPT;
 	map_params.pml4_inverted = vm->arch_vm.m2p;
 
-	/* unmap gpa~gpa+size from guest ept mapping */
+	/* Unmap gpa_orig~gpa_orig+size from guest normal world ept mapping */
 	map_params.pml4_base = vm->arch_vm.nworld_eptp;
-	unmap_mem(&map_params, (void *)hpa, (void *)gpa, size, 0);
+	unmap_mem(&map_params, (void *)hpa, (void *)gpa_orig, size, 0);
 
 	/* Copy PDPT entries from Normal world to Secure world
 	 * Secure world can access Normal World's memory,
 	 * but Normal World can not access Secure World's memory.
-	 * The PML4/PDPT for Secure world are separated from Normal World.
-	 * PD/PT are shared in both Secure world's EPT and Normal World's EPT
+	 * The PML4/PDPT for Secure world are separated from
+	 * Normal World.PD/PT are shared in both Secure world's EPT
+	 * and Normal World's EPT
 	 */
-	for (i = 0; i < IA32E_NUM_ENTRIES; i++) {
-		pml4e = MEM_READ64(vm->arch_vm.nworld_eptp);
-		entry = MEM_READ64((pml4e & IA32E_REF_MASK)
-				+ (i * IA32E_COMM_ENTRY_SIZE));
-		pml4e = MEM_READ64(vm->arch_vm.sworld_eptp);
-		MEM_WRITE64((pml4e & IA32E_REF_MASK)
-				+ (i * IA32E_COMM_ENTRY_SIZE),
-				entry);
-	}
+	vm->arch_vm.sworld_eptp = alloc_paging_struct();
 
-	/* Map rebased_gpa~rebased_gpa+size
+	/* The trusty memory is remapped to guest physical address
+	 * of gpa_rebased to gpa_rebased + size
+	 */
+	sub_table_addr = alloc_paging_struct();
+	sworld_pml4e = HVA2HPA(sub_table_addr)
+			| table_present;
+	MEM_WRITE64(vm->arch_vm.sworld_eptp, sworld_pml4e);
+
+	nworld_pml4e = MEM_READ64(vm->arch_vm.nworld_eptp);
+	memcpy_s(HPA2HVA(sworld_pml4e & IA32E_REF_MASK), CPU_PAGE_SIZE,
+			HPA2HVA(nworld_pml4e & IA32E_REF_MASK), CPU_PAGE_SIZE);
+
+	/* Map gpa_rebased~gpa_rebased+size
 	 * to secure ept mapping
 	 */
 	map_params.pml4_base = vm->arch_vm.sworld_eptp;
 	map_mem(&map_params, (void *)hpa,
-			(void *)rebased_gpa, size,
+			(void *)gpa_rebased, size,
 			(MMU_MEM_ATTR_READ |
 			 MMU_MEM_ATTR_WRITE |
 			 MMU_MEM_ATTR_EXECUTE |
 			 MMU_MEM_ATTR_WB_CACHE));
 
-	/* Unap gap~gpa+size from sos ept mapping*/
+	/* Unmap trusty memory space from sos ept mapping*/
 	map_params.pml4_base = vm0->arch_vm.nworld_eptp;
+	map_params.pml4_inverted = vm0->arch_vm.m2p;
 	/* Get the gpa address in SOS */
 	gpa = hpa2gpa(vm0, hpa);
 	unmap_mem(&map_params, (void *)hpa, (void *)gpa, size, 0);
