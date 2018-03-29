@@ -839,6 +839,21 @@ uint64_t virtio_pci_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
  */
 void virtio_pci_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		      int baridx, uint64_t offset, int size, uint64_t value);
+
+/**
+ * @brief Set modern BAR (usually 4) to map PCI config registers.
+ *
+ * Set modern MMIO BAR (usually 4) to map virtio 1.0 capabilities and optional
+ * set modern PIO BAR (usually 2) to map notify capability. This interface is
+ * only valid for modern virtio.
+ *
+ * @param base Pointer to struct virtio_base.
+ * @param use_notify_pio Whether use pio for notify capability.
+ *
+ * @return 0 on success and non-zero on fail.
+ */
+int virtio_set_modern_bar(struct virtio_base *base, bool use_notify_pio);
+
 /**
  * @}
  */
