@@ -230,6 +230,8 @@ int	pci_emul_alloc_bar(struct pci_vdev *pdi, int idx,
 int	pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx,
 			    uint64_t hostbase, enum pcibar_type type,
 			    uint64_t size);
+int	pci_emul_add_capability(struct pci_vdev *dev, u_char *capdata,
+				int caplen);
 int	pci_emul_add_msicap(struct pci_vdev *pi, int msgnum);
 int	pci_emul_add_pciecap(struct pci_vdev *pi, int pcie_device_type);
 void	pci_generate_msi(struct pci_vdev *pi, int msgnum);
