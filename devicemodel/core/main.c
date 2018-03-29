@@ -157,6 +157,7 @@ usage(int code)
 		"       -k: kernel image path\n"
 		"       -r: ramdisk image path\n"
 		"       -B: bootargs for kernel\n"
+		"       -G: GVT args: low_gm_size, high_gm_size, fence_sz\n"
 		"       -v: version\n"
 		"       -i: ioc boot parameters\n"
 		"       --vsbl: vsbl file path\n"
@@ -764,6 +765,12 @@ main(int argc, char *argv[])
 				exit(1);
 			else
 				break;
+			break;
+		case 'G':
+			if (acrn_parse_gvtargs(optarg) != 0) {
+				errx(EX_USAGE, "invalid GVT param %s", optarg);
+				exit(1);
+			}
 			break;
 		case 'M':
 			ptdev_prefer_msi(false);
