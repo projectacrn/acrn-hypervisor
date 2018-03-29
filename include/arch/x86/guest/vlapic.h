@@ -59,8 +59,8 @@ void vlapic_intr_accepted(struct vlapic *vlapic, int vector);
 struct vlapic *vm_lapic_from_vcpuid(struct vm *vm, int vcpu_id);
 struct vlapic *vm_lapic_from_pcpuid(struct vm *vm, int pcpu_id);
 bool vlapic_msr(uint32_t num);
-int vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval, bool *retu);
-int vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval, bool *retu);
+int vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval);
+int vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval);
 
 int vlapic_mmio_read(struct vcpu *vcpu, uint64_t gpa, uint64_t *rval, int size);
 int vlapic_mmio_write(struct vcpu *vcpu, uint64_t gpa, uint64_t wval, int size);
@@ -119,14 +119,16 @@ uint8_t vlapic_get_apicid(struct vlapic *vlapic);
 int vlapic_create(struct vcpu *vcpu);
 void vlapic_free(struct vcpu *vcpu);
 void vlapic_init(struct vlapic *vlapic);
+void vlapic_restore(struct vlapic *vlapic, struct lapic_regs *regs);
 bool vlapic_enabled(struct vlapic *vlapic);
 uint64_t apicv_get_apic_access_addr(struct vm *vm);
 uint64_t apicv_get_apic_page_addr(struct vlapic *vlapic);
 bool vlapic_apicv_enabled(struct vcpu *vcpu);
 void apicv_inject_pir(struct vlapic *vlapic);
-int apicv_access_exit_handler(struct vcpu *vcpu);
-int apicv_write_exit_handler(struct vcpu *vcpu);
-int apicv_virtualized_eoi_exit_handler(struct vcpu *vcpu);
+int apic_access_vmexit_handler(struct vcpu *vcpu);
+int apic_write_vmexit_handler(struct vcpu *vcpu);
+int veoi_vmexit_handler(struct vcpu *vcpu);
+int tpr_below_threshold_vmexit_handler(struct vcpu *vcpu);
 
 void calcvdest(struct vm *vm, uint64_t *dmask, uint32_t dest, bool phys);
 #endif	/* _VLAPIC_H_ */

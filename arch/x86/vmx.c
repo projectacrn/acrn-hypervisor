@@ -36,7 +36,6 @@
 #ifdef CONFIG_EFI_STUB
 #include <acrn_efi.h>
 extern struct efi_ctx* efi_ctx;
-extern int efi_launch_vector;
 #endif
 
 #define PAT_POWER_ON_VALUE	(PAT_MEM_TYPE_WB + \
@@ -92,17 +91,6 @@ static inline int exec_vmxon(void *addr)
 
 	/* Return result to caller */
 	return status;
-}
-
-bool get_vmx_cap(void)
-{
-	uint32_t eax, ebx, ecx, edx;
-
-	/* Run CPUID to determine if VTX support available */
-	cpuid(CPUID_FEATURES, &eax, &ebx, &ecx, &edx);
-
-	/* See if VMX feature bit is set in ECX */
-	return !!(ecx & CPUID_ECX_VMX);
 }
 
 int exec_vmxon_instr(void)
@@ -902,7 +890,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	value32 &= ~(VMX_PROCBASED_CTLS_CR3_LOAD |
 			VMX_PROCBASED_CTLS_CR3_STORE);
 
-	if (is_apicv_enabled()) {
+	if (is_vapic_supported()) {
 		value32 |= VMX_PROCBASED_CTLS_TPR_SHADOW;
 	} else {
 		/* Add CR8 VMExit for vlapic */
@@ -923,17 +911,30 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 		    /* VMX_PROCBASED_CTLS2_RDTSCP | */
 		    VMX_PROCBASED_CTLS2_UNRESTRICT);
 
-	if (is_apicv_enabled()) {
-		value32 |=
-			(VMX_PROCBASED_CTLS2_VAPIC |
-			VMX_PROCBASED_CTLS2_VAPIC_REGS |
-			VMX_PROCBASED_CTLS2_VIRQ);
+	if (is_vapic_supported()) {
+		value32 |= VMX_PROCBASED_CTLS2_VAPIC;
+
+		if (is_vapic_virt_reg_supported())
+			value32 |= VMX_PROCBASED_CTLS2_VAPIC_REGS;
+
+		if (is_vapic_intr_delivery_supported())
+			value32 |= VMX_PROCBASED_CTLS2_VIRQ;
+		else
+			/*
+			 * This field exists only on processors that support
+			 * the 1-setting  of the "use TPR shadow"
+			 * VM-execution control.
+			 *
+			 * Set up TPR threshold for virtual interrupt delivery
+			 * - pg 2904 24.6.8
+			 */
+			exec_vmwrite(VMX_TPR_THRESHOLD, 0);
 	}
 
 	exec_vmwrite(VMX_PROC_VM_EXEC_CONTROLS2, value32);
 	pr_dbg("VMX_PROC_VM_EXEC_CONTROLS2: 0x%x ", value32);
 
-	if (is_apicv_enabled()) {
+	if (is_vapic_supported()) {
 		/*APIC-v, config APIC-access address*/
 		value64 = apicv_get_apic_access_addr(vcpu->vm);
 		exec_vmwrite64(VMX_APIC_ACCESS_ADDR_FULL,
@@ -944,10 +945,16 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 		exec_vmwrite64(VMX_VIRTUAL_APIC_PAGE_ADDR_FULL,
 						value64);
 
-		exec_vmwrite64(VMX_EOI_EXIT0_FULL, -1UL);
-		exec_vmwrite64(VMX_EOI_EXIT1_FULL, -1UL);
-		exec_vmwrite64(VMX_EOI_EXIT2_FULL, -1UL);
-		exec_vmwrite64(VMX_EOI_EXIT3_FULL, -1UL);
+		if (is_vapic_intr_delivery_supported()) {
+			/* these fields are supported only on processors
+			 * that support the 1-setting of the "virtual-interrupt
+			 * delivery" VM-execution control
+			 */
+			exec_vmwrite64(VMX_EOI_EXIT0_FULL, -1UL);
+			exec_vmwrite64(VMX_EOI_EXIT1_FULL, -1UL);
+			exec_vmwrite64(VMX_EOI_EXIT2_FULL, -1UL);
+			exec_vmwrite64(VMX_EOI_EXIT3_FULL, -1UL);
+		}
 	}
 
 	/* Check for EPT support */
@@ -989,11 +996,6 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	 * target-value regs to evaluate
 	 */
 	exec_vmwrite(VMX_CR3_TARGET_COUNT, 0);
-
-	/* Set up TPR threshold for virtual interrupt delivery * - pg 2904
-	 * 24.6.8
-	 */
-	exec_vmwrite(VMX_TPR_THRESHOLD, 0);
 
 	/* Set up IO bitmap register A and B - pg 2902 24.6.4 */
 	value64 = (int64_t) vm->arch_vm.iobitmap[0];
@@ -1282,16 +1284,11 @@ static void override_uefi_vmcs(struct vcpu *vcpu)
 	}
 
 	/* Interrupt */
-	if (efi_launch_vector > 0) {
-		field = VMX_GUEST_RFLAGS;
-		cur_context->rflags = 0x2;
-		cur_context->rflags |= 1 << 9; 	/* enable intr for efi stub */
-		exec_vmwrite(field, cur_context->rflags);
-		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
-				VMX_INT_INFO_VALID |
-				(efi_launch_vector & 0xFF));
-		efi_launch_vector = -1;
-	}
+	field = VMX_GUEST_RFLAGS;
+	/* clear flags for CF/PF/AF/ZF/SF/OF */
+	cur_context->rflags = efi_ctx->rflags & ~(0x8d5);
+	exec_vmwrite(field, cur_context->rflags);
+	pr_dbg("VMX_GUEST_RFLAGS: 0x%016llx ", cur_context->rflags);
 }
 #endif
 

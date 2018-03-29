@@ -32,10 +32,14 @@
 #include <acrn_common.h>
 #include <hv_arch.h>
 #include <hv_debug.h>
+#include <ucode.h>
 
 /*MRS need to be emulated, the order in this array better as freq of ops*/
 static const uint32_t emulated_msrs[] = {
 	MSR_IA32_TSC_DEADLINE,  /* Enable TSC_DEADLINE VMEXIT */
+	MSR_IA32_BIOS_UPDT_TRIG, /* Enable MSR_IA32_BIOS_UPDT_TRIG */
+	MSR_IA32_BIOS_SIGN_ID, /* Enable MSR_IA32_BIOS_SIGN_ID */
+
 
 /* following MSR not emulated now */
 /*
@@ -51,6 +55,8 @@ static const uint32_t emulated_msrs[] = {
 /* the index is matched with emulated msrs array*/
 enum {
 	IDX_TSC_DEADLINE,
+	IDX_BIOS_UPDT_TRIG,
+	IDX_BIOS_SIGN_ID,
 
 	IDX_MAX_MSR
 };
@@ -185,6 +191,11 @@ int rdmsr_handler(struct vcpu *vcpu)
 		vcpu_inject_gp(vcpu);
 		break;
 	}
+	case MSR_IA32_BIOS_SIGN_ID:
+	{
+		v = get_microcode_version();
+		break;
+	}
 
 	/* following MSR not emulated now just left for future */
 	case MSR_IA32_SYSENTER_CS:
@@ -218,9 +229,8 @@ int rdmsr_handler(struct vcpu *vcpu)
 	}
 	case MSR_IA32_APIC_BASE:
 	{
-		bool ret;
 		/* Read APIC base */
-		vlapic_rdmsr(vcpu, msr, &v, &ret);
+		vlapic_rdmsr(vcpu, msr, &v);
 		break;
 	}
 	default:
@@ -259,9 +269,7 @@ int wrmsr_handler(struct vcpu *vcpu)
 	switch (msr) {
 	case MSR_IA32_TSC_DEADLINE:
 	{
-		bool ret;
-		/* Write APIC base */
-		vlapic_wrmsr(vcpu, msr, v, &ret);
+		vlapic_wrmsr(vcpu, msr, v);
 		vcpu->guest_msrs[IDX_TSC_DEADLINE] = v;
 		break;
 	}
@@ -271,6 +279,17 @@ int wrmsr_handler(struct vcpu *vcpu)
 	case MSR_IA32_MTRR_FIX64K_00000 ... MSR_IA32_MTRR_FIX4K_F8000:
 	{
 		vcpu_inject_gp(vcpu);
+		break;
+	}
+	case MSR_IA32_BIOS_SIGN_ID:
+	{
+		break;
+	}
+	case MSR_IA32_BIOS_UPDT_TRIG:
+	{
+		/* We only allow SOS to do uCode update */
+		if (is_vm0(vcpu->vm))
+			acrn_update_ucode(vcpu, v);
 		break;
 	}
 
@@ -302,9 +321,7 @@ int wrmsr_handler(struct vcpu *vcpu)
 	}
 	case MSR_IA32_APIC_BASE:
 	{
-		bool ret;
-		/* Write APIC base */
-		vlapic_wrmsr(vcpu, msr, v, &ret);
+		vlapic_wrmsr(vcpu, msr, v);
 		break;
 	}
 	default:

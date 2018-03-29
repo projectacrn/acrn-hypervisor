@@ -71,24 +71,16 @@ INCLUDE_PATH += bsp/include
 INCLUDE_PATH += bsp/$(PLATFORM)/include/bsp
 INCLUDE_PATH += boot/include
 
-CC = gcc
-AS = as
-AR = ar
-LD = gcc
-POSTLD = objcopy
+CC ?= gcc
+AS ?= as
+AR ?= ar
+LD ?= ld
+OBJCOPY ?= objcopy
 
-D_SRCS += debug/dump.c
-D_SRCS += debug/logmsg.c
-D_SRCS += debug/shell_internal.c
-D_SRCS += debug/shell_public.c
-D_SRCS += debug/vuart.c
-D_SRCS += debug/serial.c
-D_SRCS += debug/uart16550.c
-D_SRCS += debug/console.c
-D_SRCS += debug/sbuf.c
-C_SRCS += debug/printf.c
-D_SRCS += boot/acpi.c
+D_SRCS += $(wildcard debug/*.c)
+C_SRCS += boot/acpi.c
 C_SRCS += boot/dmar_parse.c
+C_SRCS += boot/multiboot.c
 C_SRCS += arch/x86/ioapic.c
 C_SRCS += arch/x86/intr_lapic.c
 S_SRCS += arch/x86/cpu_secondary.S
@@ -122,6 +114,7 @@ C_SRCS += arch/x86/guest/vpic.c
 C_SRCS += arch/x86/guest/vmsr.c
 C_SRCS += arch/x86/guest/vioapic.c
 C_SRCS += arch/x86/guest/instr_emul.c
+C_SRCS += arch/x86/guest/ucode.c
 C_SRCS += lib/spinlock.c
 C_SRCS += lib/udelay.c
 C_SRCS += lib/strnlen.c
@@ -139,6 +132,7 @@ C_SRCS += lib/strncpy.c
 C_SRCS += lib/crypto/tinycrypt/hmac.c
 C_SRCS += lib/crypto/tinycrypt/sha256.c
 C_SRCS += lib/crypto/hkdf.c
+C_SRCS += lib/sprintf.c
 C_SRCS += common/hv_main.c
 C_SRCS += common/hypercall.c
 C_SRCS += common/trusty_hypercall.c
@@ -195,14 +189,14 @@ install: efi
 endif
 
 $(HV_OBJDIR)/$(HV_FILE).32.out: $(HV_OBJDIR)/$(HV_FILE).out
-	$(POSTLD) -S --section-alignment=0x1000 -O elf32-i386 $< $@
+	$(OBJCOPY) -S --section-alignment=0x1000 -O elf32-i386 $< $@
 
 $(HV_OBJDIR)/$(HV_FILE).bin: $(HV_OBJDIR)/$(HV_FILE).out
-	$(POSTLD) -O binary $< $(HV_OBJDIR)/$(HV_FILE).bin
+	$(OBJCOPY) -O binary $< $(HV_OBJDIR)/$(HV_FILE).bin
 
 $(HV_OBJDIR)/$(HV_FILE).out: $(C_OBJS) $(S_OBJS)
 	$(CC) -E -x c $(patsubst %, -I%, $(INCLUDE_PATH)) $(ARCH_LDSCRIPT_IN) | grep -v '^#' > $(ARCH_LDSCRIPT)
-	$(LD) -Wl,-Map=$(HV_OBJDIR)/$(HV_FILE).map -o $@ $(LDFLAGS) $(ARCH_LDFLAGS) -T$(ARCH_LDSCRIPT) $^
+	$(CC) -Wl,-Map=$(HV_OBJDIR)/$(HV_FILE).map -o $@ $(LDFLAGS) $(ARCH_LDFLAGS) -T$(ARCH_LDSCRIPT) $^
 
 .PHONY: clean
 clean:

@@ -167,7 +167,7 @@
 #define     IA32E_INDEX_MASK_BITS           9
 #define     IA32E_NUM_ENTRIES               512
 #define     IA32E_INDEX_MASK                (uint64_t)(IA32E_NUM_ENTRIES - 1)
-#define     IA32E_REF_MASK                  0x7FFFFFFFFFFFF000
+#define     IA32E_REF_MASK                  0x000FFFFFFFFFF000
 #define     IA32E_FIRST_BLOCK_INDEX         1
 
 /* Macro to get PML4 index given an address */
@@ -238,8 +238,8 @@
 #define     MMU_MEM_ATTR_TYPE_WRITE_PROTECTED \
 		(IA32E_PDPTE_PAT_BIT | IA32E_COMM_PCD_BIT | IA32E_COMM_PWT_BIT)
 
-#define ROUND_PAGE_UP(addr)  (((addr) + CPU_PAGE_SIZE - 1) & IA32E_REF_MASK)
-#define ROUND_PAGE_DOWN(addr) ((addr) & IA32E_REF_MASK)
+#define ROUND_PAGE_UP(addr)  (((addr) + CPU_PAGE_SIZE - 1) & CPU_PAGE_MASK)
+#define ROUND_PAGE_DOWN(addr) ((addr) & CPU_PAGE_MASK)
 
 struct map_params {
 	/* enum _page_table_type: HOST or EPT*/
@@ -259,8 +259,8 @@ struct entry_params {
 };
 
 enum _page_table_type {
-	PT_HOST = 0,  /* Mapping for hypervisor */
-	PT_EPT = 1,
+	PTT_HOST = 0,  /* Mapping for hypervisor */
+	PTT_EPT = 1,
 	PAGETABLE_TYPE_UNKNOWN,
 };
 

@@ -200,4 +200,3 @@ int vm_get_seg_desc(struct vcpu *vcpu, int reg,
 int vm_set_seg_desc(struct vcpu *vcpu, int reg,
 		struct seg_desc *desc);
 int vm_restart_instruction(struct vcpu *vcpu);
-void vm_gva2gpa(struct vcpu *vcpu, uint64_t gla, uint64_t *gpa);

@@ -64,40 +64,93 @@ DEFINE_CPU_DATA(void *, vcpu);
 DEFINE_CPU_DATA(int, state);
 
 /* TODO: add more capability per requirement */
+/*APICv features*/
+#define VAPIC_FEATURE_VIRT_ACCESS		(1 << 0)
+#define VAPIC_FEATURE_VIRT_REG			(1 << 1)
+#define VAPIC_FEATURE_INTR_DELIVERY		(1 << 2)
+#define VAPIC_FEATURE_TPR_SHADOW		(1 << 3)
+#define VAPIC_FEATURE_POST_INTR		(1 << 4)
+#define VAPIC_FEATURE_VX2APIC_MODE		(1 << 5)
+
 struct cpu_capability {
-	bool tsc_adjust_supported;
-	bool ibrs_ibpb_supported;
-	bool stibp_supported;
-	bool apicv_supported;
-	bool monitor_supported;
+	uint8_t vapic_features;
 };
 static struct cpu_capability cpu_caps;
 
-static void apicv_cap_detect(void);
-static void monitor_cap_detect(void);
+struct cpuinfo_x86 boot_cpu_data;
+
+static void vapic_cap_detect(void);
 static void cpu_set_logical_id(uint32_t logical_id);
 static void print_hv_banner(void);
-static inline bool get_monitor_cap(void);
 int cpu_find_logical_id(uint32_t lapic_id);
 #ifndef CONFIG_EFI_STUB
 static void start_cpus();
 #endif
 static void pcpu_sync_sleep(unsigned long *sync, int mask_bit);
 int ibrs_type;
-static void check_cpu_capability(void)
+
+static inline bool get_tsc_adjust_cap(void)
 {
-	uint32_t  eax, ebx, ecx, edx;
+	return !!(boot_cpu_data.cpuid_leaves[FEAT_7_0_EBX] & CPUID_EBX_TSC_ADJ);
+}
 
-	memset(&cpu_caps, 0, sizeof(struct cpu_capability));
+static inline bool get_ibrs_ibpb_cap(void)
+{
+	return !!(boot_cpu_data.cpuid_leaves[FEAT_7_0_EDX] &
+		CPUID_EDX_IBRS_IBPB);
+}
 
-	cpuid(CPUID_EXTEND_FEATURE, &eax, &ebx, &ecx, &edx);
+static inline bool get_stibp_cap(void)
+{
+	return !!(boot_cpu_data.cpuid_leaves[FEAT_7_0_EDX] & CPUID_EDX_STIBP);
+}
 
-	cpu_caps.tsc_adjust_supported = (ebx & CPUID_EBX_TSC_ADJ) ?
-							(true) : (false);
-	cpu_caps.ibrs_ibpb_supported = (edx & CPUID_EDX_IBRS_IBPB) ?
-							(true) : (false);
-	cpu_caps.stibp_supported = (edx & CPUID_EDX_STIBP) ?
-							(true) : (false);
+static inline bool get_monitor_cap(void)
+{
+	if (boot_cpu_data.cpuid_leaves[FEAT_1_ECX] & CPUID_ECX_MONITOR) {
+		/* don't use monitor for CPU (family: 0x6 model: 0x5c)
+		 * in hypervisor, but still expose it to the guests and
+		 * let them handle it correctly
+		 */
+		if (boot_cpu_data.x86 != 0x6 || boot_cpu_data.x86_model != 0x5c)
+			return true;
+	}
+
+	return false;
+}
+
+inline bool get_vmx_cap(void)
+{
+	return !!(boot_cpu_data.cpuid_leaves[FEAT_1_ECX] & CPUID_ECX_VMX);
+}
+
+static void get_cpu_capabilities(void)
+{
+	uint32_t eax, unused;
+	uint32_t family, model;
+
+	cpuid(CPUID_FEATURES, &eax, &unused,
+		&boot_cpu_data.cpuid_leaves[FEAT_1_ECX],
+		&boot_cpu_data.cpuid_leaves[FEAT_1_EDX]);
+	family = (eax >> 8) & 0xff;
+	if (family == 0xF)
+		family += (eax >> 20) & 0xff;
+	boot_cpu_data.x86 = family;
+
+	model = (eax >> 4) & 0xf;
+	if (family >= 0x06)
+		model += ((eax >> 16) & 0xf) << 4;
+	boot_cpu_data.x86_model = model;
+
+
+	cpuid(CPUID_EXTEND_FEATURE, &unused,
+		&boot_cpu_data.cpuid_leaves[FEAT_7_0_EBX],
+		&boot_cpu_data.cpuid_leaves[FEAT_7_0_ECX],
+		&boot_cpu_data.cpuid_leaves[FEAT_7_0_EDX]);
+
+	cpuid(CPUID_EXTEND_FUNCTION_1, &unused, &unused,
+		&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_ECX],
+		&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_EDX]);
 
 	/* For speculation defence.
 	 * The default way is to set IBRS at vmexit and then do IBPB at vcpu
@@ -115,27 +168,12 @@ static void check_cpu_capability(void)
 	 * should be set all the time instead of relying on retpoline
 	 */
 #ifndef CONFIG_RETPOLINE
-	if (cpu_caps.ibrs_ibpb_supported) {
+	if (get_ibrs_ibpb_cap()) {
 		ibrs_type = IBRS_RAW;
-		if (cpu_caps.stibp_supported)
+		if (get_stibp_cap())
 			ibrs_type = IBRS_OPT;
 	}
 #endif
-}
-
-bool check_tsc_adjust_support(void)
-{
-	return cpu_caps.tsc_adjust_supported;
-}
-
-bool check_ibrs_ibpb_support(void)
-{
-	return cpu_caps.ibrs_ibpb_supported;
-}
-
-bool check_stibp_support(void)
-{
-	return cpu_caps.stibp_supported;
 }
 
 static void alloc_phy_cpu_data(int pcpu_num)
@@ -246,9 +284,7 @@ static void set_fs_base(void)
 
 void bsp_boot_init(void)
 {
-#ifdef HV_DEBUG
 	uint64_t start_tsc = rdtsc();
-#endif
 
 	/* Clear BSS */
 	memset(_ld_bss_start, 0, _ld_bss_end - _ld_bss_start);
@@ -256,40 +292,57 @@ void bsp_boot_init(void)
 	/* Build time sanity checks to make sure hard-coded offset
 	*  is matching the actual offset!
 	*/
-	STATIC_ASSERT(offsetof(struct cpu_regs, rax) ==
-		VMX_MACHINE_T_GUEST_RAX_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, rbx) ==
-		VMX_MACHINE_T_GUEST_RBX_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, rcx) ==
-		VMX_MACHINE_T_GUEST_RCX_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, rdx) ==
-		VMX_MACHINE_T_GUEST_RDX_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, rbp) ==
-		VMX_MACHINE_T_GUEST_RBP_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, rsi) ==
-		VMX_MACHINE_T_GUEST_RSI_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, rdi) ==
-		VMX_MACHINE_T_GUEST_RDI_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, r8) ==
-		VMX_MACHINE_T_GUEST_R8_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, r9) ==
-		VMX_MACHINE_T_GUEST_R9_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, r10) ==
-		VMX_MACHINE_T_GUEST_R10_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, r11) ==
-		VMX_MACHINE_T_GUEST_R11_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, r12) ==
-		VMX_MACHINE_T_GUEST_R12_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, r13) ==
-		VMX_MACHINE_T_GUEST_R13_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, r14) ==
-		VMX_MACHINE_T_GUEST_R14_OFFSET);
-	STATIC_ASSERT(offsetof(struct cpu_regs, r15) ==
-		VMX_MACHINE_T_GUEST_R15_OFFSET);
-	STATIC_ASSERT(offsetof(struct run_context, cr2) ==
-		VMX_MACHINE_T_GUEST_CR2_OFFSET);
-	STATIC_ASSERT(offsetof(struct run_context, ia32_spec_ctrl) ==
-		VMX_MACHINE_T_GUEST_SPEC_CTRL_OFFSET);
+	_Static_assert(offsetof(struct cpu_regs, rax) ==
+		VMX_MACHINE_T_GUEST_RAX_OFFSET,
+		"cpu_regs rax offset not match");
+	_Static_assert(offsetof(struct cpu_regs, rbx) ==
+		VMX_MACHINE_T_GUEST_RBX_OFFSET,
+		"cpu_regs rbx offset not match");
+	_Static_assert(offsetof(struct cpu_regs, rcx) ==
+		VMX_MACHINE_T_GUEST_RCX_OFFSET,
+		"cpu_regs rcx offset not match");
+	_Static_assert(offsetof(struct cpu_regs, rdx) ==
+		VMX_MACHINE_T_GUEST_RDX_OFFSET,
+		"cpu_regs rdx offset not match");
+	_Static_assert(offsetof(struct cpu_regs, rbp) ==
+		VMX_MACHINE_T_GUEST_RBP_OFFSET,
+		"cpu_regs rbp offset not match");
+	_Static_assert(offsetof(struct cpu_regs, rsi) ==
+		VMX_MACHINE_T_GUEST_RSI_OFFSET,
+		"cpu_regs rsi offset not match");
+	_Static_assert(offsetof(struct cpu_regs, rdi) ==
+		VMX_MACHINE_T_GUEST_RDI_OFFSET,
+		"cpu_regs rdi offset not match");
+	_Static_assert(offsetof(struct cpu_regs, r8) ==
+		VMX_MACHINE_T_GUEST_R8_OFFSET,
+		"cpu_regs r8 offset not match");
+	_Static_assert(offsetof(struct cpu_regs, r9) ==
+		VMX_MACHINE_T_GUEST_R9_OFFSET,
+		"cpu_regs r9 offset not match");
+	_Static_assert(offsetof(struct cpu_regs, r10) ==
+		VMX_MACHINE_T_GUEST_R10_OFFSET,
+		"cpu_regs r10 offset not match");
+	_Static_assert(offsetof(struct cpu_regs, r11) ==
+		VMX_MACHINE_T_GUEST_R11_OFFSET,
+		"cpu_regs r11 offset not match");
+	_Static_assert(offsetof(struct cpu_regs, r12) ==
+		VMX_MACHINE_T_GUEST_R12_OFFSET,
+		"cpu_regs r12 offset not match");
+	_Static_assert(offsetof(struct cpu_regs, r13) ==
+		VMX_MACHINE_T_GUEST_R13_OFFSET,
+		"cpu_regs r13 offset not match");
+	_Static_assert(offsetof(struct cpu_regs, r14) ==
+		VMX_MACHINE_T_GUEST_R14_OFFSET,
+		"cpu_regs r14 offset not match");
+	_Static_assert(offsetof(struct cpu_regs, r15) ==
+		VMX_MACHINE_T_GUEST_R15_OFFSET,
+		"cpu_regs r15 offset not match");
+	_Static_assert(offsetof(struct run_context, cr2) ==
+		VMX_MACHINE_T_GUEST_CR2_OFFSET,
+		"run_context cr2 offset not match");
+	_Static_assert(offsetof(struct run_context, ia32_spec_ctrl) ==
+		VMX_MACHINE_T_GUEST_SPEC_CTRL_OFFSET,
+		"run_context ia32_spec_ctrl offset not match");
 
 	/* Initialize the hypervisor paging */
 	init_paging();
@@ -307,11 +360,9 @@ void bsp_boot_init(void)
 	set_fs_base();
 #endif
 
-	check_cpu_capability();
+	get_cpu_capabilities();
 
-	apicv_cap_detect();
-
-	monitor_cap_detect();
+	vapic_cap_detect();
 
 	/* Set state for this CPU to initializing */
 	cpu_set_current_state(CPU_BOOT_ID, CPU_STATE_INITIALIZING);
@@ -338,8 +389,6 @@ void bsp_boot_init(void)
 	init_logmsg(LOG_BUF_SIZE,
 		       LOG_DESTINATION);
 
-#ifdef HV_DEBUG
-	/* Log first messages */
 	if (HV_RC_VERSION)
 		printf("HV version %d.%d-rc%d-%s-%s build by %s, start time %lluus\r\n",
 			HV_MAJOR_VERSION, HV_MINOR_VERSION, HV_RC_VERSION,
@@ -353,11 +402,11 @@ void bsp_boot_init(void)
 
 	printf("API version %d.%d\r\n",
 			HV_API_MAJOR_VERSION, HV_API_MINOR_VERSION);
-#endif
+
 	pr_dbg("Core %d is up", CPU_BOOT_ID);
 
 	/* Warn for security feature not ready */
-	if (!check_ibrs_ibpb_support() && !check_stibp_support()) {
+	if (!get_ibrs_ibpb_cap() && !get_stibp_cap()) {
 		pr_fatal("SECURITY WARNING!!!!!!");
 		pr_fatal("Please apply the latest CPU uCode patch!");
 	}
@@ -597,66 +646,56 @@ static bool is_ctrl_setting_allowed(uint64_t msr_val, uint32_t ctrl)
 	return ((((uint32_t)(msr_val >> 32)) & ctrl) == ctrl);
 }
 
-static void apicv_cap_detect(void)
+static void vapic_cap_detect(void)
 {
-	uint64_t val64;
-	uint32_t ctrl;
-	bool     result;
+	uint8_t features;
+	uint64_t msr_val;
 
-	ctrl = VMX_PROCBASED_CTLS_TPR_SHADOW;
-	val64 = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
+	features = 0;
 
-	result = is_ctrl_setting_allowed(val64, ctrl);
-	if (result) {
-		ctrl = VMX_PROCBASED_CTLS2_VAPIC |
-			VMX_PROCBASED_CTLS2_VAPIC_REGS |
-			VMX_PROCBASED_CTLS2_VIRQ;
+	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
+	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS_TPR_SHADOW)) {
+		cpu_caps.vapic_features = 0;
+		return;
+	}
+	features |= VAPIC_FEATURE_TPR_SHADOW;
 
-		val64 = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
-		result = is_ctrl_setting_allowed(val64, ctrl);
+	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
+	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC)) {
+		cpu_caps.vapic_features = features;
+		return;
+	}
+	features |= VAPIC_FEATURE_VIRT_ACCESS;
+
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC_REGS))
+		features |= VAPIC_FEATURE_VIRT_REG;
+
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VX2APIC))
+		features |= VAPIC_FEATURE_VX2APIC_MODE;
+
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VIRQ)) {
+		features |= VAPIC_FEATURE_INTR_DELIVERY;
+
+		msr_val = msr_read(MSR_IA32_VMX_PINBASED_CTLS);
+		if (is_ctrl_setting_allowed(msr_val,
+						VMX_PINBASED_CTLS_POST_IRQ))
+			features |= VAPIC_FEATURE_POST_INTR;
 	}
 
-	cpu_caps.apicv_supported = result;
+	cpu_caps.vapic_features = features;
 }
 
-bool is_apicv_enabled(void)
+bool is_vapic_supported(void)
 {
-	return cpu_caps.apicv_supported;
+	return ((cpu_caps.vapic_features & VAPIC_FEATURE_VIRT_ACCESS) != 0);
 }
 
-static void monitor_cap_detect(void)
+bool is_vapic_intr_delivery_supported(void)
 {
-	uint32_t  eax, ebx, ecx, edx;
-	uint32_t family;
-	uint32_t model;
-
-	/* Run CPUID to determine if MONITOR support available */
-	cpuid(CPUID_FEATURES, &eax, &ebx, &ecx, &edx);
-
-	/* See if MONITOR feature bit is set in ECX */
-	if (ecx & CPUID_ECX_MONITOR)
-		cpu_caps.monitor_supported = true;
-
-	/* don't use monitor for CPU (family: 0x6 model: 0x5c)
-	 * in hypervisor, but still expose it to the guests and
-	 * let them handle it correctly
-	 */
-	family = (eax >> 8) & 0xff;
-	if (family == 0xF)
-        family += (eax >> 20) & 0xff;
-
-	model = (eax >> 4) & 0xf;
-	if (family >= 0x06)
-		model += ((eax >> 16) & 0xf) << 4;
-
-	if (cpu_caps.monitor_supported &&
-		(family == 0x06) &&
-		(model == 0x5c)) {
-		cpu_caps.monitor_supported = false;
-	}
+	return ((cpu_caps.vapic_features & VAPIC_FEATURE_INTR_DELIVERY) != 0);
 }
 
-static inline bool get_monitor_cap(void)
+bool is_vapic_virt_reg_supported(void)
 {
-	return cpu_caps.monitor_supported;
+	return ((cpu_caps.vapic_features & VAPIC_FEATURE_VIRT_REG) != 0);
 }

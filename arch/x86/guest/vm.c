@@ -33,6 +33,7 @@
 #include <hv_arch.h>
 #include <bsp_extern.h>
 #include <hv_debug.h>
+#include <multiboot.h>
 
 /* Local variables */
 
@@ -166,10 +167,11 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 
 			/* Populate return VM handle */
 			*rtn_vm = vm;
-			ptdev_vm_init(vm);
 			vm->sw.req_buf = 0;
 
-			vm->state = VM_CREATED;
+			status = set_vcpuid_entries(vm);
+			if (status)
+				vm->state = VM_CREATED;
 		}
 
 	}
@@ -201,7 +203,7 @@ int shutdown_vm(struct vm *vm)
 	list_del_init(&vm->list);
 	spinlock_release(&vm_list_lock);
 
-	ptdev_vm_deinit(vm);
+	ptdev_release_all_entries(vm);
 
 	/* cleanup and free vioapic */
 	vioapic_cleanup(vm->arch_vm.virt_ioapic);

@@ -37,6 +37,9 @@
 #include <bsp_extern.h>
 #include <hv_debug.h>
 
+#include "instr_emul_wrapper.h"
+#include "instr_emul.h"
+
 #include "time.h"
 #include "vlapic_priv.h"
 
@@ -107,10 +110,10 @@ static void *apicv_apic_access_addr;
 
 static int
 vlapic_write(struct vlapic *vlapic, int mmio_access, uint64_t offset,
-		uint64_t data, bool *retu);
+		uint64_t data);
 static int
 vlapic_read(struct vlapic *vlapic, int mmio_access, uint64_t offset,
-		uint64_t *data, bool *retu);
+		uint64_t *data);
 
 static int
 apicv_set_intr_ready(struct vlapic *vlapic, int vector, bool level);
@@ -367,7 +370,7 @@ vlapic_dcr_write_handler(struct vlapic *vlapic)
 
 	divisor = vlapic_timer_divisor(lapic->dcr_timer);
 	dev_dbg(ACRN_DBG_LAPIC, "vlapic dcr_timer=%#x, divisor=%d",
-	    lapic->dcr_timer, divisor);
+			lapic->dcr_timer, divisor);
 
 	/*
 	 * Update the timer frequency and the timer period.
@@ -1092,7 +1095,7 @@ vlapic_get_cr8(struct vlapic *vlapic)
 }
 
 static int
-vlapic_icrlo_write_handler(struct vlapic *vlapic, bool *retu)
+vlapic_icrlo_write_handler(struct vlapic *vlapic)
 {
 	int i;
 	bool phys;
@@ -1216,7 +1219,6 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic, bool *retu)
 					target_vcpu->vm->attr.id);
 			schedule_vcpu(target_vcpu);
 
-			*retu = true;
 			return 0;
 		}
 	}
@@ -1339,7 +1341,7 @@ vlapic_svr_write_handler(struct vlapic *vlapic)
 
 static int
 vlapic_read(struct vlapic *vlapic, int mmio_access, uint64_t offset,
-		uint64_t *data, bool *retu)
+		uint64_t *data)
 {
 	struct lapic *lapic = vlapic->apic_page;
 	int i;
@@ -1443,7 +1445,6 @@ vlapic_read(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 	case APIC_OFFSET_RRR:
 	default:
 		*data = 0;
-		*retu = true;
 		break;
 	}
 done:
@@ -1454,7 +1455,7 @@ done:
 
 static int
 vlapic_write(struct vlapic *vlapic, int mmio_access, uint64_t offset,
-		uint64_t data, bool *retu)
+		uint64_t data)
 {
 	struct lapic *lapic = vlapic->apic_page;
 	uint32_t *regptr;
@@ -1505,7 +1506,7 @@ vlapic_write(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 		break;
 	case APIC_OFFSET_ICR_LOW:
 		lapic->icr_lo = data;
-		retval = vlapic_icrlo_write_handler(vlapic, retu);
+		retval = vlapic_icrlo_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_ICR_HI:
 		lapic->icr_hi = data;
@@ -1606,6 +1607,31 @@ vlapic_init(struct vlapic *vlapic)
 		vlapic->msr_apicbase |= APICBASE_BSP;
 
 	vlapic_reset(vlapic);
+}
+
+void vlapic_restore(struct vlapic *vlapic, struct lapic_regs *regs)
+{
+	struct lapic *lapic;
+	int i;
+
+	lapic = vlapic->apic_page;
+
+	lapic->tpr = regs->tpr;
+	lapic->apr = regs->apr;
+	lapic->ppr = regs->ppr;
+	lapic->ldr = regs->ldr;
+	lapic->dfr = regs->dfr;
+	for (i = 0; i < 8; i++)
+		lapic->tmr[i].val = regs->tmr[i];
+	lapic->svr = regs->svr;
+	vlapic_svr_write_handler(vlapic);
+	lapic->lvt_timer = regs->lvtt;
+	lapic->lvt_lint0 = regs->lvt0;
+	lapic->lvt_lint1 = regs->lvt1;
+	lapic->lvt_error = regs->lvterr;
+	lapic->icr_timer = regs->ticr;
+	lapic->ccr_timer = regs->tccr;
+	lapic->dcr_timer = regs->tdcr;
 }
 
 void
@@ -1899,29 +1925,31 @@ static int tsc_periodic_time(uint64_t data)
 }
 
 int
-vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval,
-		bool *retu)
+vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval)
 {
-	int error;
+	int error = 0;
 	uint32_t offset;
 	struct vlapic *vlapic;
 
 	dev_dbg(ACRN_DBG_LAPIC, "cpu[%d] rdmsr: %x", vcpu->vcpu_id, msr);
 	vlapic = vcpu->arch_vcpu.vlapic;
 
-	if (msr == MSR_IA32_APIC_BASE) {
+	switch (msr) {
+	case MSR_IA32_APIC_BASE:
 		*rval = vlapic_get_apicbase(vlapic);
-		error = 0;
-	} else {
+		break;
+
+	default:
 		offset = x2apic_msr_to_regoff(msr);
-		error = vlapic_read(vlapic, 0, offset, rval, retu);
+		error = vlapic_read(vlapic, 0, offset, rval);
+		break;
 	}
 
 	return error;
 }
 
 int
-vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val, bool *retu)
+vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val)
 {
 	int error;
 	uint32_t offset;
@@ -1931,9 +1959,12 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val, bool *retu)
 	vlapic = vcpu->arch_vcpu.vlapic;
 	lapic = vlapic->apic_page;
 
-	if (msr == MSR_IA32_APIC_BASE) {
+	switch (msr) {
+	case MSR_IA32_APIC_BASE:
 		error = vlapic_set_apicbase(vlapic, val);
-	} else if (msr == MSR_IA32_TSC_DEADLINE) {
+		break;
+
+	case MSR_IA32_TSC_DEADLINE:
 		error = 0;
 		if (!VLAPIC_TSCDEADLINE(lapic->lvt_timer))
 			return error;
@@ -1953,9 +1984,12 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val, bool *retu)
 				error = -1;
 			}
 		}
-	} else {
+		break;
+
+	default:
 		offset = x2apic_msr_to_regoff(msr);
-		error = vlapic_write(vlapic, 0, offset, val, retu);
+		error = vlapic_write(vlapic, 0, offset, val);
+		break;
 	}
 
 	dev_dbg(ACRN_DBG_LAPIC, "cpu[%d] wrmsr: %x val=%#x",
@@ -1969,7 +2003,6 @@ vlapic_mmio_write(struct vcpu *vcpu, uint64_t gpa, uint64_t wval, int size)
 	int error;
 	uint64_t off;
 	struct vlapic *vlapic;
-	bool arg;
 
 	off = gpa - DEFAULT_APIC_BASE;
 
@@ -1981,7 +2014,7 @@ vlapic_mmio_write(struct vcpu *vcpu, uint64_t gpa, uint64_t wval, int size)
 		return -EINVAL;
 
 	vlapic = vcpu->arch_vcpu.vlapic;
-	error = vlapic_write(vlapic, 1, off, wval, &arg);
+	error = vlapic_write(vlapic, 1, off, wval);
 	return error;
 }
 
@@ -1992,7 +2025,6 @@ vlapic_mmio_read(struct vcpu *vcpu, uint64_t gpa, uint64_t *rval,
 	int error;
 	uint64_t off;
 	struct vlapic *vlapic;
-	bool arg;
 
 	off = gpa - DEFAULT_APIC_BASE;
 
@@ -2006,7 +2038,7 @@ vlapic_mmio_read(struct vcpu *vcpu, uint64_t gpa, uint64_t *rval,
 		return -EINVAL;
 
 	vlapic = vcpu->arch_vcpu.vlapic;
-	error = vlapic_read(vlapic, 1, off, rval, &arg);
+	error = vlapic_read(vlapic, 1, off, rval);
 	return error;
 }
 
@@ -2052,38 +2084,41 @@ int vlapic_create(struct vcpu *vcpu)
 	vlapic->vcpu = vcpu;
 	vlapic->apic_page = (struct lapic *) apic_page;
 
-	if (is_apicv_enabled()) {
-		vlapic->ops.apicv_set_intr_ready = apicv_set_intr_ready;
-		vlapic->ops.apicv_pending_intr = apicv_pending_intr;
-		vlapic->ops.apicv_set_tmr = apicv_set_tmr;
-		vlapic->ops.apicv_batch_set_tmr = apicv_batch_set_tmr;
+	if (is_vapic_supported()) {
+		if (is_vapic_intr_delivery_supported()) {
+			vlapic->ops.apicv_set_intr_ready =
+					apicv_set_intr_ready;
 
-		vlapic->pir_desc =
-			(struct pir_desc *)(&(vlapic->pir));
+			vlapic->ops.apicv_pending_intr =
+					apicv_pending_intr;
+
+			vlapic->ops.apicv_set_tmr = apicv_set_tmr;
+			vlapic->ops.apicv_batch_set_tmr =
+					apicv_batch_set_tmr;
+
+			vlapic->pir_desc = (struct pir_desc *)(&(vlapic->pir));
+		}
+
 		if (is_vcpu_bsp(vcpu)) {
 			ept_mmap(vcpu->vm,
-					apicv_get_apic_access_addr(vcpu->vm),
-					DEFAULT_APIC_BASE,
-					CPU_PAGE_SIZE,
-					MAP_MMIO,
-					MMU_MEM_ATTR_WRITE |
-					MMU_MEM_ATTR_READ |
-					MMU_MEM_ATTR_UNCACHED);
+				apicv_get_apic_access_addr(vcpu->vm),
+				DEFAULT_APIC_BASE, CPU_PAGE_SIZE, MAP_MMIO,
+				MMU_MEM_ATTR_WRITE | MMU_MEM_ATTR_READ |
+				MMU_MEM_ATTR_UNCACHED);
 		}
-	}
-
-	vcpu->arch_vcpu.vlapic = vlapic;
-
-	vlapic_init(vlapic);
-
-	if (!is_apicv_enabled()) {
-		return register_mmio_emulation_handler(vcpu->vm,
+	} else {
+		/*No APICv support*/
+		if (register_mmio_emulation_handler(vcpu->vm,
 				vlapic_mmio_access_handler,
 				(uint64_t)DEFAULT_APIC_BASE,
 				(uint64_t)DEFAULT_APIC_BASE +
 				CPU_PAGE_SIZE,
-				(void *) 0);
+				(void *) 0))
+			return -1;
 	}
+
+	vcpu->arch_vcpu.vlapic = vlapic;
+	vlapic_init(vlapic);
 
 	return 0;
 }
@@ -2103,7 +2138,7 @@ void vlapic_free(struct vcpu *vcpu)
 	if (vlapic->last_timer > 0)
 		cancel_timer(vlapic->last_timer, vcpu->pcpu_id);
 
-	if (!is_apicv_enabled()) {
+	if (!is_vapic_supported()) {
 		unregister_mmio_emulation_handler(vcpu->vm,
 			(uint64_t)DEFAULT_APIC_BASE,
 			(uint64_t)DEFAULT_APIC_BASE + CPU_PAGE_SIZE);
@@ -2306,17 +2341,39 @@ apicv_inject_pir(struct vlapic *vlapic)
 	}
 }
 
-int apicv_access_exit_handler(__unused struct vcpu *vcpu)
+int apic_access_vmexit_handler(struct vcpu *vcpu)
 {
-	TRACE_2L(TRC_VMEXIT_APICV_ACCESS, 0, 0);
+	int access_type, offset;
+	uint64_t qual;
+	struct vlapic *vlapic;
+
+	qual =  vcpu->arch_vcpu.exit_qualification;
+	access_type = APIC_ACCESS_TYPE(qual);
+
+	/*parse offset if linear access*/
+	if (access_type <= 3)
+		offset = APIC_ACCESS_OFFSET(qual);
+
+	vlapic = vcpu->arch_vcpu.vlapic;
+
+	analyze_instruction(vcpu, &vcpu->mmio);
+	if (access_type == 1) {
+		if (!emulate_instruction(vcpu, &vcpu->mmio))
+			vlapic_write(vlapic, 1, offset, vcpu->mmio.value);
+	} else if (access_type == 0) {
+		vlapic_read(vlapic, 1, offset, &vcpu->mmio.value);
+		emulate_instruction(vcpu, &vcpu->mmio);
+	}
+
+	TRACE_2L(TRC_VMEXIT_APICV_ACCESS, qual, (uint64_t)vlapic);
 	return 0;
 }
 
-int apicv_virtualized_eoi_exit_handler(struct vcpu *vcpu)
+int veoi_vmexit_handler(struct vcpu *vcpu)
 {
 	struct vlapic *vlapic = NULL;
 
-	int vector = exec_vmread(VMX_EXIT_QUALIFICATION) & 0xFF;
+	int vector;
 	struct lapic *lapic;
 	struct lapic_reg *tmrptr;
 	uint32_t idx, mask;
@@ -2325,6 +2382,7 @@ int apicv_virtualized_eoi_exit_handler(struct vcpu *vcpu)
 
 	vlapic =  vcpu->arch_vcpu.vlapic;
 	lapic = vlapic->apic_page;
+	vector = (vcpu->arch_vcpu.exit_qualification) & 0xFF;
 
 	tmrptr = &lapic->tmr[0];
 	idx = vector / 32;
@@ -2340,14 +2398,13 @@ int apicv_virtualized_eoi_exit_handler(struct vcpu *vcpu)
 	return 0;
 }
 
-int apicv_write_exit_handler(struct vcpu *vcpu)
+int apic_write_vmexit_handler(struct vcpu *vcpu)
 {
-	bool retu;
 	uint64_t qual;
 	int error, handled, offset;
 	struct vlapic *vlapic = NULL;
 
-	qual = exec_vmread(VMX_EXIT_QUALIFICATION);
+	qual = vcpu->arch_vcpu.exit_qualification;
 	offset = (qual & 0xFFF);
 
 	handled = 1;
@@ -2357,6 +2414,9 @@ int apicv_write_exit_handler(struct vcpu *vcpu)
 	switch (offset) {
 	case APIC_OFFSET_ID:
 		vlapic_id_write_handler(vlapic);
+		break;
+	case APIC_OFFSET_EOI:
+		vlapic_process_eoi(vlapic);
 		break;
 	case APIC_OFFSET_LDR:
 		vlapic_ldr_write_handler(vlapic);
@@ -2371,9 +2431,8 @@ int apicv_write_exit_handler(struct vcpu *vcpu)
 		vlapic_esr_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_ICR_LOW:
-		retu = false;
-		error = vlapic_icrlo_write_handler(vlapic, &retu);
-		if (error != 0 || retu)
+		error = vlapic_icrlo_write_handler(vlapic);
+		if (error != 0)
 			handled = 0;
 		break;
 	case APIC_OFFSET_CMCI_LVT:
@@ -2395,4 +2454,10 @@ int apicv_write_exit_handler(struct vcpu *vcpu)
 	TRACE_2L(TRC_VMEXIT_APICV_WRITE, offset, 0);
 
 	return handled;
+}
+
+int tpr_below_threshold_vmexit_handler(__unused struct vcpu *vcpu)
+{
+	pr_err("Unhandled %s.", __func__);
+	return 0;
 }

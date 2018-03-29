@@ -166,15 +166,19 @@ struct lapic_info {
 
 static struct lapic_info lapic_info;
 
-static uint32_t read_lapic_reg32(uint32_t offset)
+static inline uint32_t read_lapic_reg32(uint32_t offset)
 {
-	ASSERT((offset >= 0x020) && (offset <= 0x3FF), "");
+	if (offset < 0x20 || offset > 0x3ff)
+		return 0;
+
 	return mmio_read_long(lapic_info.xapic.vaddr + offset);
 }
 
-static void write_lapic_reg32(uint32_t offset, uint32_t value)
+inline void write_lapic_reg32(uint32_t offset, uint32_t value)
 {
-	ASSERT((offset >= 0x020) && (offset <= 0x3FF), "");
+	if (offset < 0x20 || offset > 0x3ff)
+		return;
+
 	mmio_write_long(value, lapic_info.xapic.vaddr + offset);
 }
 
@@ -266,6 +270,32 @@ int init_lapic(uint32_t cpu_id)
 	return 0;
 }
 
+void save_lapic(struct lapic_regs *regs)
+{
+	regs->id = read_lapic_reg32(LAPIC_ID_REGISTER);
+	regs->tpr = read_lapic_reg32(LAPIC_TASK_PRIORITY_REGISTER);
+	regs->apr = read_lapic_reg32(LAPIC_ARBITRATION_PRIORITY_REGISTER);
+	regs->ppr = read_lapic_reg32(LAPIC_PROCESSOR_PRIORITY_REGISTER);
+	regs->ldr = read_lapic_reg32(LAPIC_LOGICAL_DESTINATION_REGISTER);
+	regs->dfr = read_lapic_reg32(LAPIC_DESTINATION_FORMAT_REGISTER);
+	regs->tmr[0] = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_0);
+	regs->tmr[1] = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_1);
+	regs->tmr[2] = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_2);
+	regs->tmr[3] = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_3);
+	regs->tmr[4] = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_4);
+	regs->tmr[5] = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_5);
+	regs->tmr[6] = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_6);
+	regs->tmr[7] = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_7);
+	regs->svr = read_lapic_reg32(LAPIC_SPURIOUS_VECTOR_REGISTER);
+	regs->lvtt = read_lapic_reg32(LAPIC_LVT_TIMER_REGISTER);
+	regs->lvt0 = read_lapic_reg32(LAPIC_LVT_LINT0_REGISTER);
+	regs->lvt1 = read_lapic_reg32(LAPIC_LVT_LINT1_REGISTER);
+	regs->lvterr = read_lapic_reg32(LAPIC_LVT_ERROR_REGISTER);
+	regs->ticr = read_lapic_reg32(LAPIC_INITIAL_COUNT_REGISTER);
+	regs->tccr = read_lapic_reg32(LAPIC_CURRENT_COUNT_REGISTER);
+	regs->tdcr = read_lapic_reg32(LAPIC_DIVIDE_CONFIGURATION_REGISTER);
+}
+
 int send_lapic_eoi(void)
 {
 	write_lapic_reg32(LAPIC_EOI_REGISTER, 0);
@@ -299,8 +329,6 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	union apic_icr icr;
 	uint8_t shorthand;
 	int status = 0;
-	uint32_t eax, ebx, ecx, edx;
-	uint32_t family;
 
 	if (cpu_startup_shorthand >= INTR_CPU_STARTUP_UNKNOWN)
 		status = -EINVAL;
@@ -318,15 +346,6 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 		icr.value_32.hi_32 = 0;
 	}
 
-	/*
-	 * family calculation from SDM Vol. 2A
-	 * CPUID with INPUT EAX=01h:Returns Model, Family, Stepping Information
-	 */
-	cpuid(CPUID_FEATURES, &eax, &ebx, &ecx, &edx);
-	family = (eax >> 8) & 0xff;
-	if (family == 0xF)
-		family += (eax >> 20) & 0xff;
-
 	/* Assert INIT IPI */
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_1, icr.value_32.hi_32);
 	icr.bits.shorthand = shorthand;
@@ -339,7 +358,7 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	/* Give 10ms for INIT sequence to complete for old processors.
 	 * Modern processors (family == 6) don't need to wait here.
 	 */
-	if (family != 6)
+	if (boot_cpu_data.x86 != 6)
 		mdelay(10);
 
 	/* De-assert INIT IPI */
@@ -357,7 +376,7 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_0, icr.value_32.lo_32);
 	wait_for_delivery();
 
-	if (family == 6) /* 10us is enough for Modern processors */
+	if (boot_cpu_data.x86 == 6) /* 10us is enough for Modern processors */
 		udelay(10);
 	else /* 200us for old processors */
 		udelay(200);

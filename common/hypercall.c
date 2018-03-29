@@ -644,7 +644,6 @@ hcall_reset_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-#ifdef HV_DEBUG
 int64_t hcall_setup_sbuf(struct vm *vm, uint64_t param)
 {
 	struct sbuf_setup_param ssp;
@@ -664,13 +663,6 @@ int64_t hcall_setup_sbuf(struct vm *vm, uint64_t param)
 
 	return sbuf_share_setup(ssp.pcpu_id, ssp.sbuf_id, hva);
 }
-#else /* HV_DEBUG */
-int64_t hcall_setup_sbuf(__unused struct vm *vm,
-		__unused uint64_t param)
-{
-	return -1;
-}
-#endif /* HV_DEBUG */
 
 static void fire_vhm_interrupt(void)
 {
@@ -690,7 +682,6 @@ static void fire_vhm_interrupt(void)
 	vlapic_intr_edge(vcpu, VECTOR_VIRT_IRQ_VHM);
 }
 
-#ifdef HV_DEBUG
 static void acrn_print_request(int vcpu_id, struct vhm_request *req)
 {
 	switch (req->type) {
@@ -720,12 +711,6 @@ static void acrn_print_request(int vcpu_id, struct vhm_request *req)
 		break;
 	}
 }
-#else
-static void acrn_print_request(__unused int vcpu_id,
-		__unused struct vhm_request *req)
-{
-}
-#endif
 
 int acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 {

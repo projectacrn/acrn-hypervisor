@@ -28,19 +28,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ASSERT_H
-#define ASSERT_H
+#ifndef	_ARCH_X86_UCODE_H
+#define	_ARCH_X86_UCODE_H
 
-#ifdef HV_DEBUG
-void __assert(uint32_t line, const char *file, char *txt);
+struct ucode_header {
+	uint32_t	header_ver;
+	uint32_t	update_ver;
+	uint32_t	date;
+	uint32_t	proc_sig;
+	uint32_t	checksum;
+	uint32_t	loader_ver;
+	uint32_t	proc_flags;
+	uint32_t	data_size;
+	uint32_t	total_size;
+	uint32_t	reserved[3];
+};
 
-#define ASSERT(x, ...) \
-	if (!(x)) {\
-		pr_fatal(__VA_ARGS__);\
-		__assert(__LINE__, __FILE__, "fatal error");\
-	}
-#else
-#define ASSERT(x, ...)	do { } while(0)
+void acrn_update_ucode(struct vcpu *vcpu, uint64_t v);
+uint64_t get_microcode_version(void);
+
 #endif
-
-#endif /* ASSERT_H */

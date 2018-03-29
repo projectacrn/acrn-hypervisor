@@ -31,6 +31,7 @@
 #ifndef PRINTF_H
 #define PRINTF_H
 
+#ifdef HV_DEBUG
 /** The well known printf() function.
  *
  *  Formats a string and writes it to the console output.
@@ -55,34 +56,18 @@ int printf(const char *fmt, ...);
 
 int vprintf(const char *fmt, va_list args);
 
-/**  The well known vsnprintf() function.
- *
- *  Formats and writes a string with a max. size to memory.
- *
- * @param dst A pointer to the destination memory.
- * @param sz The size of the destination memory.
- * @param fmt A pointer to the NUL terminated format string.
- * @param args The variable long argument list as va_list.
- * @return The number of bytes which would be written, even if the destination
- *         is smaller. On error a negative number is returned.
- */
+#else /* HV_DEBUG */
 
-int vsnprintf(char *dst, int sz, const char *fmt, va_list args);
+static inline int printf(__unused const char *fmt, ...)
+{
+	return 0;
+}
 
-/** The well known snprintf() function.
- *
- *  Formats a string and writes it to the console output.
- *
- *  @param dest Pointer to the destination memory.
- *  @param sz   Max. size of dest.
- *  @param fmt  A pointer to the NUL terminated format string.
- *
- *  @return The number of characters would by written or a negative
- *          number if an error occurred.
- *
- *  @bug    sz == 0 doesn't work
- */
+static inline int vprintf(__unused const char *fmt, __unused va_list args)
+{
+	return 0;
+}
 
-int snprintf(char *dest, int sz, const char *fmt, ...);
+#endif /* HV_DEBUG */
 
 #endif /* PRINTF_H */

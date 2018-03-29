@@ -1,1 +1,3 @@
 build/
+bsp/uefi/include/bsp/version.h
+bsp/sbl/include/bsp/version.h

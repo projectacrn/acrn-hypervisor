@@ -146,7 +146,7 @@ uint64_t gpa2hpa_check(struct vm *vm, uint64_t gpa,
 	struct entry_params entry;
 	struct map_params map_params;
 
-	map_params.page_table_type = PT_EPT;
+	map_params.page_table_type = PTT_EPT;
 	map_params.pml4_base = vm->arch_vm.nworld_eptp;
 	map_params.pml4_inverted = vm->arch_vm.m2p;
 	obtain_last_page_table_entry(&map_params, &entry,
@@ -185,7 +185,7 @@ uint64_t hpa2gpa(struct vm *vm, uint64_t hpa)
 	struct entry_params entry;
 	struct map_params map_params;
 
-	map_params.page_table_type = PT_EPT;
+	map_params.page_table_type = PTT_EPT;
 	map_params.pml4_base = vm->arch_vm.nworld_eptp;
 	map_params.pml4_inverted = vm->arch_vm.m2p;
 
@@ -414,9 +414,7 @@ int ept_violation_handler(struct vcpu *vcpu)
 	uint64_t gpa;
 
 	/* Handle page fault from guest */
-	exit_qual = exec_vmread(VMX_EXIT_QUALIFICATION);
-
-	memset(&vcpu->req, 0, sizeof(struct vhm_request));
+	exit_qual = vcpu->arch_vcpu.exit_qualification;
 
 	/* Specify if read or write operation */
 	if (exit_qual & 0x2) {
@@ -486,6 +484,8 @@ int ept_violation_handler(struct vcpu *vcpu)
 		 * instruction emulation. For MMIO read, ask DM to run MMIO
 		 * emulation at first.
 		 */
+		memset(&vcpu->req, 0, sizeof(struct vhm_request));
+
 		status = dm_emulate_mmio_pre(vcpu, exit_qual);
 		if (status != 0)
 			goto out;
@@ -535,7 +535,7 @@ int ept_mmap(struct vm *vm, uint64_t hpa,
 	struct vcpu *vcpu;
 
 	/* Setup memory map parameters */
-	map_params.page_table_type = PT_EPT;
+	map_params.page_table_type = PTT_EPT;
 	if (vm->arch_vm.nworld_eptp) {
 		map_params.pml4_base = vm->arch_vm.nworld_eptp;
 		map_params.pml4_inverted = vm->arch_vm.m2p;
