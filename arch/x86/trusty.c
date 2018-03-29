@@ -317,7 +317,7 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 	mem->first_page.startup_param.size_of_this_struct =
 			sizeof(struct trusty_startup_param);
 	mem->first_page.startup_param.mem_size = mem_size;
-	mem->first_page.startup_param.tsc_per_ms = TIME_MS_DELTA;
+	mem->first_page.startup_param.tsc_per_ms = CYCLES_PER_MS;
 	mem->first_page.startup_param.trusty_mem_base = TRUSTY_EPT_REBASE_GPA;
 
 	/* According to trusty boot protocol, it will use RDI as the
