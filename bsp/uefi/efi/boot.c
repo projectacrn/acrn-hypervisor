@@ -36,15 +36,6 @@
 #include "efilinux.h"
 #include "stdlib.h"
 #include "boot.h"
-#include "multiboot.h"
-
-#define ERROR_STRING_LENGTH	32
-#define EFI_LOADER_SIGNATURE    "EL64"
-
-#define ACPI_XSDT_ENTRY_SIZE        (sizeof (UINT64))
-#define ACPI_NAME_SIZE                  4
-#define ACPI_OEM_ID_SIZE                6
-#define ACPI_OEM_TABLE_ID_SIZE          8
 
 EFI_SYSTEM_TABLE *sys_table;
 EFI_BOOT_SERVICES *boot;
@@ -127,36 +118,6 @@ static void print_ch(char *str)
 	free(buf);
 }
 #endif
-
-
-
-
-struct acpi_table_rsdp {
-    char signature[8];  /* ACPI signature, contains "RSD PTR " */
-    UINT8 checksum;        /* ACPI 1.0 checksum */
-    char oem_id[ACPI_OEM_ID_SIZE];  /* OEM identification */
-    UINT8 revision;        /* Must be (0) for ACPI 1.0 or (2) for ACPI 2.0+ */
-    UINT32 rsdt_physical_address;  /* 32-bit physical address of the RSDT */
-    UINT32 length;     /* Table length in bytes, including header (ACPI 2.0+) */
-    UINT64 xsdt_physical_address;  /* 64-bit physical address of the XSDT (ACPI 2.0+) */
-    UINT8 extended_checksum;   /* Checksum of entire table (ACPI 2.0+) */
-    UINT8 reserved[3];     /* Reserved, must be zero */
-};
-
-struct acpi_table_header {
-    char signature[ACPI_NAME_SIZE]; /* ASCII table signature */
-    UINT32 length;     /* Length of table in bytes, including this header */
-    UINT8 revision;        /* ACPI Specification minor version number */
-    UINT8 checksum;        /* To make sum of entire table == 0 */
-    char oem_id[ACPI_OEM_ID_SIZE];  /* ASCII OEM identification */
-    char oem_table_id[ACPI_OEM_TABLE_ID_SIZE];  /* ASCII OEM table identification */
-    UINT32 oem_revision;   /* OEM revision number */
-    char asl_compiler_id[ACPI_NAME_SIZE];   /* ASCII ASL compiler vendor ID */
-    UINT32 asl_compiler_revision;  /* ASL compiler version */
-};
-
-typedef void(*hv_func)(int, struct multiboot_info*);
-EFI_IMAGE_ENTRY_POINT get_pe_entry(CHAR8 *base);
 
 static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
 			struct multiboot_info *mbi, struct efi_ctx *efi_ctx)
