@@ -284,6 +284,12 @@ struct vring_used {
 				/* guest OS driver is loaded */
 #define	VIRTIO_CR_STATUS_DRIVER_OK	0x04
 				/* guest OS driver ready */
+#define	VIRTIO_CR_STATUS_FEATURES_OK	0x08
+				/* features negotiation complete */
+#define	VIRTIO_CR_STATUS_NEEDS_RESET	0x40
+				/* device experienced an error and cannot
+				 * recover, guest driver must reset it
+				 */
 #define	VIRTIO_CR_STATUS_FAILED		0x80
 				/* guest has given up on this dev */
 
@@ -306,6 +312,9 @@ struct vring_used {
 #define	VIRTIO_F_NOTIFY_ON_EMPTY	(1 << 24)
 #define	VIRTIO_RING_F_INDIRECT_DESC	(1 << 28)
 #define	VIRTIO_RING_F_EVENT_IDX		(1 << 29)
+
+/* v1.0 compliant. */
+#define VIRTIO_F_VERSION_1		(1UL << 32)
 
 /* From section 2.3, "Virtqueue Configuration", of the virtio specification */
 /**
@@ -368,6 +377,87 @@ struct virtio_vq_info;
 #define	VIRTIO_USE_MSIX		0x01
 #define	VIRTIO_EVENT_IDX	0x02	/* use the event-index values */
 #define	VIRTIO_BROKED		0x08	/* ??? */
+
+/* Common configuration */
+#define VIRTIO_PCI_CAP_COMMON_CFG	1
+/* Notifications */
+#define VIRTIO_PCI_CAP_NOTIFY_CFG	2
+/* ISR access */
+#define VIRTIO_PCI_CAP_ISR_CFG		3
+/* Device specific configuration */
+#define VIRTIO_PCI_CAP_DEVICE_CFG	4
+/* PCI configuration access */
+#define VIRTIO_PCI_CAP_PCI_CFG		5
+
+#define VIRTIO_COMMON_DFSELECT		0
+#define VIRTIO_COMMON_DF		4
+#define VIRTIO_COMMON_GFSELECT		8
+#define VIRTIO_COMMON_GF		12
+#define VIRTIO_COMMON_MSIX		16
+#define VIRTIO_COMMON_NUMQ		18
+#define VIRTIO_COMMON_STATUS		20
+#define VIRTIO_COMMON_CFGGENERATION	21
+#define VIRTIO_COMMON_Q_SELECT		22
+#define VIRTIO_COMMON_Q_SIZE		24
+#define VIRTIO_COMMON_Q_MSIX		26
+#define VIRTIO_COMMON_Q_ENABLE		28
+#define VIRTIO_COMMON_Q_NOFF		30
+#define VIRTIO_COMMON_Q_DESCLO		32
+#define VIRTIO_COMMON_Q_DESCHI		36
+#define VIRTIO_COMMON_Q_AVAILLO		40
+#define VIRTIO_COMMON_Q_AVAILHI		44
+#define VIRTIO_COMMON_Q_USEDLO		48
+#define VIRTIO_COMMON_Q_USEDHI		52
+
+/* Fields in VIRTIO_PCI_CAP_COMMON_CFG: */
+struct virtio_pci_common_cfg {
+	/* About the whole device. */
+	uint32_t device_feature_select;	/* read-write */
+	uint32_t device_feature;	/* read-only */
+	uint32_t guest_feature_select;	/* read-write */
+	uint32_t guest_feature;		/* read-write */
+	uint16_t msix_config;		/* read-write */
+	uint16_t num_queues;		/* read-only */
+	uint8_t device_status;		/* read-write */
+	uint8_t config_generation;	/* read-only */
+
+	/* About a specific virtqueue. */
+	uint16_t queue_select;		/* read-write */
+	uint16_t queue_size;		/* read-write, power of 2. */
+	uint16_t queue_msix_vector;	/* read-write */
+	uint16_t queue_enable;		/* read-write */
+	uint16_t queue_notify_off;	/* read-only */
+	uint32_t queue_desc_lo;		/* read-write */
+	uint32_t queue_desc_hi;		/* read-write */
+	uint32_t queue_avail_lo;	/* read-write */
+	uint32_t queue_avail_hi;	/* read-write */
+	uint32_t queue_used_lo;		/* read-write */
+	uint32_t queue_used_hi;		/* read-write */
+};
+
+/* PCI capability header: */
+struct virtio_pci_cap {
+	uint8_t cap_vndr;	/* Generic PCI field: PCI_CAP_ID_VNDR */
+	uint8_t cap_next;	/* Generic PCI field: next ptr. */
+	uint8_t cap_len;	/* Generic PCI field: capability length */
+	uint8_t cfg_type;	/* Identifies the structure. */
+	uint8_t bar;		/* Where to find it. */
+	uint8_t padding[3];	/* Pad to full dword. */
+	uint32_t offset;	/* Offset within bar. */
+	uint32_t length;	/* Length of the structure, in bytes. */
+};
+
+/* Fields in VIRTIO_PCI_CAP_NOTIFY_CFG: */
+struct virtio_pci_notify_cap {
+	struct virtio_pci_cap cap;
+	uint32_t notify_off_multiplier;	/* Multiplier for queue_notify_off. */
+};
+
+/* Fields in VIRTIO_PCI_CAP_PCI_CFG: */
+struct virtio_pci_cfg_cap {
+	struct virtio_pci_cap cap;
+	uint8_t pci_cfg_data[4]; /* Data for BAR access. */
+};
 
 /**
  * @brief Base component to any virtio device
