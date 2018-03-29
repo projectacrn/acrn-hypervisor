@@ -1267,15 +1267,62 @@ virtio_isr_cfg_read(struct pci_vdev *dev, uint64_t offset, int size)
 static uint32_t
 virtio_device_cfg_read(struct pci_vdev *dev, uint64_t offset, int size)
 {
-	/* TODO: to be implemented */
-	return 0;
+	struct virtio_base *base = dev->arg;
+	struct virtio_ops *vops;
+	const char *name;
+	uint32_t value;
+	uint64_t max;
+	int error;
+
+	vops = base->vops;
+	name = vops->name;
+	value = size == 1 ? 0xff : size == 2 ? 0xffff : 0xffffffff;
+	max = vops->cfgsize ? vops->cfgsize : 0x100000000;
+
+	if (offset + size > max) {
+		fprintf(stderr,
+			"%s: reading from 0x%lx size %d exceeds limit\r\n",
+			name, offset, size);
+		return value;
+	}
+
+	error = (*vops->cfgread)(DEV_STRUCT(base), offset, size, &value);
+	if (error) {
+		fprintf(stderr,
+			"%s: reading from 0x%lx size %d failed %d\r\n",
+			name, offset, size, error);
+		value = size == 1 ? 0xff : size == 2 ? 0xffff : 0xffffffff;
+	}
+
+	return value;
 }
 
 static void
 virtio_device_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
 			uint64_t value)
 {
-	/* TODO: to be implemented */
+	struct virtio_base *base = dev->arg;
+	struct virtio_ops *vops;
+	const char *name;
+	uint64_t max;
+	int error;
+
+	vops = base->vops;
+	name = vops->name;
+	max = vops->cfgsize ? vops->cfgsize : 0x100000000;
+
+	if (offset + size > max) {
+		fprintf(stderr,
+			"%s: writing to 0x%lx size %d exceeds limit\r\n",
+			name, offset, size);
+		return;
+	}
+
+	error = (*vops->cfgwrite)(DEV_STRUCT(base), offset, size, value);
+	if (error)
+		fprintf(stderr,
+			"%s: writing ot 0x%lx size %d failed %d\r\n",
+			name, offset, size, error);
 }
 
 /*
