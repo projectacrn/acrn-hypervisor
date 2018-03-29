@@ -96,6 +96,13 @@ virtio_reset_dev(struct virtio_base *base)
 		vq->save_used = 0;
 		vq->pfn = 0;
 		vq->msix_idx = VIRTIO_MSI_NO_VECTOR;
+		vq->gpa_desc[0] = 0;
+		vq->gpa_desc[1] = 0;
+		vq->gpa_avail[0] = 0;
+		vq->gpa_avail[1] = 0;
+		vq->gpa_used[0] = 0;
+		vq->gpa_used[1] = 0;
+		vq->enabled = 0;
 	}
 	base->negotiated_caps = 0;
 	base->curq = 0;
@@ -104,6 +111,9 @@ virtio_reset_dev(struct virtio_base *base)
 		pci_lintr_deassert(base->dev);
 	base->isr = 0;
 	base->msix_cfg_idx = VIRTIO_MSI_NO_VECTOR;
+	base->device_feature_select = 0;
+	base->driver_feature_select = 0;
+	base->config_generation = 0;
 }
 
 /*

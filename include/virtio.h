@@ -378,6 +378,43 @@ struct virtio_vq_info;
 #define	VIRTIO_EVENT_IDX	0x02	/* use the event-index values */
 #define	VIRTIO_BROKED		0x08	/* ??? */
 
+/*
+ * virtio pci device bar layout
+ * 0	: legacy PIO bar
+ * 1	: MSIX bar
+ * 2	: modern PIO bar, used as notify
+ * 4+5	: modern 64-bit MMIO bar
+ *
+ * pci bar layout for legacy/modern/transitional devices
+ * legacy				: (0) + (1)
+ * modern (no pio notify)		: (1) + (4+5)
+ * modern (with pio notify)		: (1) + (2) + (4+5)
+ * transitional (no pio notify)		: (0) + (1) + (4+5)
+ * transitional (with pio notify)	: (0) + (1) + (2) + (4+5)
+ */
+#define VIRTIO_LEGACY_PIO_BAR_IDX	0
+#define VIRTIO_MODERN_PIO_BAR_IDX	2
+#define VIRTIO_MODERN_MMIO_BAR_IDX	4
+
+/*
+ * region layout in modern mmio bar
+ * one 4KB region for one capability
+ */
+#define VIRTIO_CAP_COMMON_OFFSET	0x0000
+#define VIRTIO_CAP_COMMON_SIZE		0x1000
+#define VIRTIO_CAP_ISR_OFFSET		0x1000
+#define VIRTIO_CAP_ISR_SIZE		0x1000
+#define VIRTIO_CAP_DEVICE_OFFSET	0x2000
+#define VIRTIO_CAP_DEVICE_SIZE		0x1000
+#define VIRTIO_CAP_NOTIFY_OFFSET	0x3000
+#define VIRTIO_CAP_NOTIFY_SIZE		0x1000
+
+#define VIRTIO_MODERN_MEM_BAR_SIZE	(VIRTIO_CAP_NOTIFY_OFFSET + \
+					VIRTIO_CAP_NOTIFY_SIZE)
+
+/* 4-byte notify register for one virtqueue */
+#define VIRTIO_MODERN_NOTIFY_OFF_MULT	4
+
 /* Common configuration */
 #define VIRTIO_PCI_CAP_COMMON_CFG	1
 /* Notifications */
@@ -467,12 +504,18 @@ struct virtio_base {
 	int	flags;			/**< VIRTIO_* flags from above */
 	pthread_mutex_t *mtx;		/**< POSIX mutex, if any */
 	struct pci_vdev *dev;		/**< PCI device instance */
-	uint32_t negotiated_caps;	/**< negotiated capabilities */
+	uint64_t negotiated_caps;	/**< negotiated capabilities */
 	struct virtio_vq_info *queues;	/**< one per nvq */
 	int	curq;			/**< current queue */
 	uint8_t	status;			/**< value from last status write */
 	uint8_t	isr;			/**< ISR flags, if not MSI-X */
 	uint16_t msix_cfg_idx;		/**< MSI-X vector for config event */
+	uint32_t legacy_pio_bar_idx;	/**< index of legacy pio bar */
+	uint32_t modern_pio_bar_idx;	/**< index of modern pio bar */
+	uint32_t modern_mmio_bar_idx;	/**< index of modern mmio bar */
+	uint8_t config_generation;	/**< configuration generation */
+	uint32_t device_feature_select;	/**< current selected device feature */
+	uint32_t driver_feature_select;	/**< current selected guest feature */
 };
 
 #define	VIRTIO_BASE_LOCK(vb)					\
@@ -553,6 +596,10 @@ struct virtio_vq_info {
 	volatile struct vring_used *used;
 				/**< the "used" ring */
 
+	uint32_t gpa_desc[2];	/**< gpa of descriptors */
+	uint32_t gpa_avail[2];	/**< gpa of avail_ring */
+	uint32_t gpa_used[2];	/**< gpa of used_ring */
+	bool enabled;		/**< whether the virtqueue is enabled */
 };
 
 /* as noted above, these are sort of backwards, name-wise */
