@@ -159,23 +159,26 @@ typedef void(*hv_func)(int, struct multiboot_info*, struct efi_ctx*);
 EFI_IMAGE_ENTRY_POINT get_pe_entry(CHAR8 *base);
 
 static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
-			struct multiboot_info* mbi, struct efi_ctx* pe)
+			struct multiboot_info *mbi, struct efi_ctx *efi_ctx)
 {
 	hv_func hf;
 
+	efi_ctx->rip = (uint64_t)__builtin_return_address(0);
+
+	/* The 64-bit entry of acrn hypervisor is 0x200 from the start
+	 * address of hv image. But due to there is multiboot header,
+	 * so it has to be added with 0x10.
+	 *
+	 * FIXME: The hardcode value 0x210 should be worked out
+	 * from the link address of cpu_primary_start_64 in acrn.out
+	 */
+	hf = (hv_func)(hv_start + 0x210);
+
 	asm volatile ("cli");
 
-	/* The 64-bit kernel entry is 512 bytes after the start. */
-	hf = (hv_func)(hv_start + 0x200);
-
-        /*
-         * The first parameter is a dummy because the kernel expects
-         * boot_params in %[re]si.
-         */
-	hf(MULTIBOOT_INFO_MAGIC, mbi, pe);
+	/* jump to acrn hypervisor */
+	hf(MULTIBOOT_INFO_MAGIC, mbi, efi_ctx);
 }
-
-
 
 EFI_STATUS get_path(CHAR16* name, EFI_LOADED_IMAGE *info, EFI_DEVICE_PATH **path)
 {
@@ -226,74 +229,28 @@ out:
 	FreePool(pathstr);
 	return efi_status;
 }
-/**
- * load_kernel - Load a kernel image into memory from the boot device
- */
-EFI_STATUS
-load_sos_image(EFI_HANDLE image, CHAR16 *name, CHAR16 *cmdline)
+
+static EFI_STATUS
+switch_to_guest_mode(EFI_HANDLE image)
 {
 	UINTN map_size, _map_size, map_key;
 	UINT32 desc_version;
 	UINTN desc_size;
 	EFI_MEMORY_DESCRIPTOR *map_buf;
 	EFI_PHYSICAL_ADDRESS addr;
-	EFI_LOADED_IMAGE *info = NULL;
 	EFI_STATUS err;
 	struct multiboot_mmap *mmap;
 	struct multiboot_info *mbi;
+	struct efi_ctx *efi_ctx;
 
 	struct acpi_table_rsdp *rsdp = NULL;
 	int i, j;
 
-
-	err = handle_protocol(image, &LoadedImageProtocol, (void **)&info);
-	if (err != EFI_SUCCESS)
-		goto out;
-
-
-	EFI_HANDLE bz_hd;
-	EFI_DEVICE_PATH *path;
-	EFI_LOADED_IMAGE *bz_info = NULL;
-	EFI_IMAGE_ENTRY_POINT pe_entry;
-	struct efi_ctx* pe;
-
-	err = get_path(name, info, &path);
-	if (err != EFI_SUCCESS) {
-		Print(L"fail to get bzImage.efi path");
-		goto out;
-	}
-
-	err = uefi_call_wrapper(BS->LoadImage, 6, FALSE, image, path, NULL, 0, &bz_hd);
-
-	if (err != EFI_SUCCESS) {
-	    Print(L"failed to load bzImage %lx\n", err);
-		goto out;
-	}
-
-	err = handle_protocol(bz_hd, &LoadedImageProtocol, (void **)&bz_info);
-	if (err != EFI_SUCCESS)
-		goto out;
-
-	if (cmdline) {
-		bz_info->LoadOptions = cmdline;
-		bz_info->LoadOptionsSize = (StrLen(cmdline) + 1) * sizeof(CHAR16);
-	}
-
-	pe_entry = get_pe_entry(bz_info->ImageBase);
-
-	if (pe_entry == NULL) {
-		Print(L"fail to get pe entry of bzImage\n");
-		goto out;
-	}
-
 	err = emalloc(sizeof(struct efi_ctx), 8, &addr);
 	if (err != EFI_SUCCESS)
 		goto out;
-	pe = (struct efi_ctx*)(UINTN)addr;
-	pe->entry = pe_entry;
-	pe->handle = bz_hd;
-	pe->table = sys_table;
 
+	efi_ctx = (struct efi_ctx *)(UINTN)addr;
 
 	/* multiboot info */
 	err = emalloc(16384, 8, &addr);
@@ -411,13 +368,17 @@ again:
 		}
 		if (e820_type == E820_RAM) {
 			UINT64 start = d->PhysicalStart;
-			UINT64 end  =  d->PhysicalStart + (d->NumberOfPages<<EFI_PAGE_SHIFT);
-			if (start <= ACRN_HV_ADDR && end > (ACRN_HV_ADDR  + ACRN_HV_SIZE))
-				Print(L"e820[%d] start=%lx len=%lx\n", i, d->PhysicalStart, d->NumberOfPages << EFI_PAGE_SHIFT);
+			UINT64 end  =  d->PhysicalStart
+			+ (d->NumberOfPages<<EFI_PAGE_SHIFT);
+			if (start <= CONFIG_RAM_START && end >
+				(CONFIG_RAM_START  + CONFIG_RAM_SIZE))
+				Print(L"e820[%d] start=%lx len=%lx\n", i,
+			d->PhysicalStart, d->NumberOfPages << EFI_PAGE_SHIFT);
 		}
 
 		if (j && mmap[j-1].mm_type == e820_type &&
-			(mmap[j-1].mm_base_addr + mmap[j-1].mm_length) == d->PhysicalStart) {
+			(mmap[j-1].mm_base_addr + mmap[j-1].mm_length)
+			== d->PhysicalStart) {
 			mmap[j-1].mm_length += d->NumberOfPages << EFI_PAGE_SHIFT;
 		} else {
 			mmap[j].mm_base_addr = d->PhysicalStart;
@@ -427,14 +388,17 @@ again:
 		}
 	}
 
-	/* switch hv memory region(0x20000000 ~ 0x22000000) to availiable RAM in e820 table */
-	mmap[j].mm_base_addr = ACRN_HV_ADDR;
-	mmap[j].mm_length = ACRN_HV_SIZE;
+	/* switch hv memory region(0x20000000 ~ 0x22000000) to
+	 * available RAM in e820 table
+	 */
+	mmap[j].mm_base_addr = CONFIG_RAM_START;
+	mmap[j].mm_length = CONFIG_RAM_SIZE;
 	mmap[j].mm_type = E820_RAM;
 	j++;
 
 	/* reserve secondary memory region(0x1000 ~ 0x10000) for hv */
-	err = __emalloc(ACRN_SECONDARY_SIZE, ACRN_SECONDARY_ADDR, &addr, EfiReservedMemoryType);
+	err = __emalloc(CONFIG_LOW_RAM_SIZE, CONFIG_LOW_RAM_START,
+		&addr, EfiReservedMemoryType);
 	if (err != EFI_SUCCESS)
 		goto out;
 
@@ -446,85 +410,62 @@ again:
 	mbi->mi_cmdline = (UINTN)"uart=disabled";
 	mbi->mi_mmap_addr = (UINTN)mmap;
 
-	pe->rsdp = rsdp;
+	efi_ctx->rsdp = rsdp;
 
 	//Print(L"start 9!\n");
 
-	asm volatile ("mov %%cr0, %0":"=r"(pe->cr0));
-	asm volatile ("mov %%cr3, %0":"=r"(pe->cr3));
-	asm volatile ("mov %%cr4, %0":"=r"(pe->cr4));
-	asm volatile ("sidt %0" :: "m" (pe->idt));
-	asm volatile ("sgdt %0" :: "m" (pe->gdt));
-	asm volatile ("str %0" :: "m" (pe->tr_sel));
-	asm volatile ("sldt %0" :: "m" (pe->ldt_sel));
+	asm volatile ("mov %%cr0, %0" : "=r"(efi_ctx->cr0));
+	asm volatile ("mov %%cr3, %0" : "=r"(efi_ctx->cr3));
+	asm volatile ("mov %%cr4, %0" : "=r"(efi_ctx->cr4));
+	asm volatile ("sidt %0" :: "m" (efi_ctx->idt));
+	asm volatile ("sgdt %0" :: "m" (efi_ctx->gdt));
+	asm volatile ("str %0" :: "m" (efi_ctx->tr_sel));
+	asm volatile ("sldt %0" :: "m" (efi_ctx->ldt_sel));
 
-	asm volatile ("mov %%cs, %%ax": "=a"(pe->cs_sel));
+	asm volatile ("mov %%cs, %%ax" : "=a"(efi_ctx->cs_sel));
 	asm volatile ("lar %%eax, %%eax"
-					:"=a"(pe->cs_ar)
-					:"a"(pe->cs_sel)
+					: "=a"(efi_ctx->cs_ar)
+					: "a"(efi_ctx->cs_sel)
 					);
-	pe->cs_ar = (pe->cs_ar >> 8) & 0xf0ff; /* clear bits 11:8 */
+	efi_ctx->cs_ar = (efi_ctx->cs_ar >> 8) & 0xf0ff; /* clear bits 11:8 */
 
-	asm volatile ("mov %%es, %%ax": "=a"(pe->es_sel));
-	asm volatile ("mov %%ss, %%ax": "=a"(pe->ss_sel));
-	asm volatile ("mov %%ds, %%ax": "=a"(pe->ds_sel));
-	asm volatile ("mov %%fs, %%ax": "=a"(pe->fs_sel));
-	asm volatile ("mov %%gs, %%ax": "=a"(pe->gs_sel));
-
+	asm volatile ("mov %%es, %%ax" : "=a"(efi_ctx->es_sel));
+	asm volatile ("mov %%ss, %%ax" : "=a"(efi_ctx->ss_sel));
+	asm volatile ("mov %%ds, %%ax" : "=a"(efi_ctx->ds_sel));
+	asm volatile ("mov %%fs, %%ax" : "=a"(efi_ctx->fs_sel));
+	asm volatile ("mov %%gs, %%ax" : "=a"(efi_ctx->gs_sel));
 
 	uint32_t idx = 0xC0000080; /* MSR_IA32_EFER */
 	uint32_t msrl, msrh;
-	asm volatile ("rdmsr":"=a"(msrl), "=d"(msrh): "c"(idx));
-	pe->efer = ((uint64_t)msrh<<32) | msrl;
+	asm volatile ("rdmsr" : "=a"(msrl), "=d"(msrh) : "c"(idx));
+	efi_ctx->efer = ((uint64_t)msrh<<32) | msrl;
 
 	asm volatile ("pushf\n\t"
 					"pop %0\n\t"
-					:"=r"(pe->rflags):);
+					: "=r"(efi_ctx->rflags)
+					: );
 
-	asm volatile ("movq %%rsp, %0":"=r"(pe->rsp));
+	asm volatile ("movq %%rax, %0" : "=r"(efi_ctx->rax));
+	asm volatile ("movq %%rbx, %0" : "=r"(efi_ctx->rbx));
+	asm volatile ("movq %%rcx, %0" : "=r"(efi_ctx->rcx));
+	asm volatile ("movq %%rdx, %0" : "=r"(efi_ctx->rdx));
+	asm volatile ("movq %%rdi, %0" : "=r"(efi_ctx->rdi));
+	asm volatile ("movq %%rsi, %0" : "=r"(efi_ctx->rsi));
+	asm volatile ("movq %%rsp, %0" : "=r"(efi_ctx->rsp));
+	asm volatile ("movq %%rbp, %0" : "=r"(efi_ctx->rbp));
+	asm volatile ("movq %%r8, %0" : "=r"(efi_ctx->r8));
+	asm volatile ("movq %%r9, %0" : "=r"(efi_ctx->r9));
+	asm volatile ("movq %%r10, %0" : "=r"(efi_ctx->r10));
+	asm volatile ("movq %%r11, %0" : "=r"(efi_ctx->r11));
+	asm volatile ("movq %%r12, %0" : "=r"(efi_ctx->r12));
+	asm volatile ("movq %%r13, %0" : "=r"(efi_ctx->r13));
+	asm volatile ("movq %%r14, %0" : "=r"(efi_ctx->r14));
+	asm volatile ("movq %%r15, %0" : "=r"(efi_ctx->r15));
 
-	hv_jump(ACRN_HV_ADDR, mbi, pe);
+	hv_jump(CONFIG_RAM_START, mbi, efi_ctx);
 out:
 	return err;
 }
-
-
-static EFI_STATUS
-parse_args(CHAR16 *options, UINT32 size, CHAR16 **name,
-		CHAR16 **hcmdline, CHAR16 **scmdline)
-{
-	CHAR16 *n, *p, *cmdline, *search;
-	UINTN i = 0;
-
-	*hcmdline = NULL;
-	*scmdline = NULL;
-	*name = NULL;
-
-	cmdline = StrDuplicate(options);
-
-	search = PoolPrint(L"sos=");
-	n = strstr_16(cmdline, search);
-	if (!n) {
-		Print(L"Failed to get sos\n");
-		return EFI_OUT_OF_RESOURCES;
-	}
-	FreePool(search);
-
-
-	n += 4;
-	p = n;
-	i = 0;
-	while (*n && !isspace((CHAR8)*n)) {
-		n++; i++;
-	}
-	*n++ = '\0';
-	*name = p;
-
-	*scmdline = n;
-
-	return EFI_SUCCESS;
-}
-
 
 /**
  * efi_main - The entry point for the OS loader image.
@@ -538,13 +479,13 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	EFI_STATUS err;
 	EFI_LOADED_IMAGE *info;
 	EFI_PHYSICAL_ADDRESS addr;
-	CHAR16 *options = NULL, *name;
-	UINT32 options_size = 0;
-	CHAR16 *hcmdline, *scmdline;
 	UINTN sec_addr;
 	UINTN sec_size;
 	char *section;
-
+	EFI_DEVICE_PATH *path;
+	CHAR16 *bootloader_name;
+	CHAR16 *bootloader_name_with_path;
+	EFI_HANDLE bootloader_image;
 
 	InitializeLib(image, _table);
 
@@ -560,13 +501,6 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	if (err != EFI_SUCCESS)
 		goto failed;
 
-	options = info->LoadOptions;
-	options_size = info->LoadOptionsSize;
-
-	err = parse_args(options,  options_size, &name, &hcmdline, &scmdline);
-	if (err != EFI_SUCCESS) 
-		return err;
-
 	section = ".hv";
 	err = get_pe_section(info->ImageBase, section, &sec_addr, &sec_size);
 	if (EFI_ERROR(err)) {
@@ -574,23 +508,49 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 		goto failed;
 	}
 
-  	err = __emalloc(ACRN_HV_SIZE, ACRN_HV_ADDR, &addr, EfiReservedMemoryType);
+	err = __emalloc(CONFIG_RAM_SIZE, CONFIG_RAM_START, &addr,
+		EfiReservedMemoryType);
 	if (err != EFI_SUCCESS)
 		goto failed;
 
 	/* Copy ACRNHV binary to fixed phys addr. LoadImage and StartImage ?? */
 	memcpy((char*)addr, info->ImageBase + sec_addr, sec_size);
 
-	/* load sos and run hypervisor */
-	err = load_sos_image(image, name, scmdline);
+	/* load hypervisor and begin to run on it */
+	err = switch_to_guest_mode(image);
 
 	if (err != EFI_SUCCESS)
+		goto failed;
+
+	/* load and start the default bootloader */
+	bootloader_name = ch8_2_ch16(CONFIG_UEFI_OS_LOADER_NAME);
+	bootloader_name_with_path =
+		PoolPrint(L"%s%s", L"\\EFI\\BOOT\\", bootloader_name);
+	path = FileDevicePath(info->DeviceHandle, bootloader_name_with_path);
+	if (!path)
 		goto free_args;
+
+	FreePool(bootloader_name);
+
+	err = uefi_call_wrapper(boot->LoadImage, 6, FALSE, image,
+		path, NULL, 0, &bootloader_image);
+	if (EFI_ERROR(err)) {
+		uefi_call_wrapper(boot->Stall, 1, 3 * 1000 * 1000);
+		goto failed;
+	}
+
+	err = uefi_call_wrapper(boot->StartImage, 3, bootloader_image,
+		NULL, NULL);
+	if (EFI_ERROR(err)) {
+		uefi_call_wrapper(boot->Stall, 1, 3 * 1000 * 1000);
+		goto failed;
+	}
+	uefi_call_wrapper(boot->UnloadImage, 1, bootloader_image);
 
 	return EFI_SUCCESS;
 
 free_args:
-	free(name);
+	FreePool(bootloader_name);
 failed:
 	/*
 	 * We need to be careful not to trash 'err' here. If we fail

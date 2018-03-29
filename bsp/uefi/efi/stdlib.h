@@ -134,4 +134,20 @@ static inline CHAR16 *strstr_16(CHAR16 *haystack, CHAR16 *needle)
 	return (CHAR16*)word;
 }
 
+static inline CHAR16 *ch8_2_ch16(char *str8)
+{
+	UINTN len, i;
+	CHAR16 *str16;
+
+	len = strlen(str8);
+	str16 = AllocatePool((len + 1) * sizeof(CHAR16));
+
+	for (i = 0; i < len; i++)
+		str16[i] = str8[i];
+
+	str16[len] = 0;
+
+	return str16;
+}
+
 #endif /* __STDLIB_H__ */
