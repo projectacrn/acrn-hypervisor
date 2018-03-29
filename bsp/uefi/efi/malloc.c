@@ -100,6 +100,10 @@ failed:
  * @addr: a pointer to the allocated address on success
  *
  * If we cannot satisfy @align we return 0.
+ *
+ * FIXME: This function cannot guarantee to return address under 4G,
+ * and the hypervisor cannot handle params, which address is above 4G,
+ * delivered from efi stub.
  */
 EFI_STATUS emalloc(UINTN size, UINTN align, EFI_PHYSICAL_ADDRESS *addr)
 {
@@ -160,7 +164,12 @@ fail:
 	return err;
 }
 
-EFI_STATUS __emalloc(UINTN size, UINTN align, EFI_PHYSICAL_ADDRESS *addr, EFI_MEMORY_TYPE mem_type)
+/* FIXME: This function cannot guarantee to return address under 4G,
+ * and the hypervisor cannot handle params, which address is above 4G,
+ * delivered from efi stub.
+ */
+EFI_STATUS __emalloc(UINTN size, UINTN align, EFI_PHYSICAL_ADDRESS *addr,
+	EFI_MEMORY_TYPE mem_type)
 {
 	UINTN map_size, map_key, desc_size;
 	EFI_MEMORY_DESCRIPTOR *map_buf;
