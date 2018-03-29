@@ -674,6 +674,10 @@ vq_interrupt(struct virtio_base *vb, struct virtio_vq_info *vq)
 static inline void
 virtio_config_changed(struct virtio_base *vb)
 {
+	if (!(vb->status & VIRTIO_CR_STATUS_DRIVER_OK))
+		return;
+
+	vb->config_generation++;
 
 	if (pci_msix_enabled(vb->dev))
 		pci_generate_msix(vb->dev, vb->msix_cfg_idx);
