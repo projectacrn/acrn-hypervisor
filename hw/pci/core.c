@@ -665,6 +665,20 @@ pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx, uint64_t hostbase,
 	return 0;
 }
 
+void
+pci_emul_free_bars(struct pci_vdev *pdi)
+{
+	int i;
+
+	for (i = 0; i < PCI_BARMAX; i++) {
+		if ((pdi->bar[i].type != PCIBAR_NONE) &&
+			(pdi->bar[i].type != PCIBAR_MEMHI64)){
+			unregister_bar(pdi, i);
+			pdi->bar[i].type = PCIBAR_NONE;
+		}
+	}
+}
+
 #define	CAP_START_OFFSET	0x40
 int
 pci_emul_add_capability(struct pci_vdev *dev, u_char *capdata, int caplen)
@@ -772,6 +786,8 @@ pci_emul_deinit(struct vmctx *ctx, struct pci_vdev_ops *ops, int bus, int slot,
 		(*ops->vdev_deinit)(ctx, fi->fi_devi, fi->fi_param);
 	if (fi->fi_param)
 		free(fi->fi_param);
+
+	pci_emul_free_bars(fi->fi_devi);
 	if (fi->fi_devi)
 		free(fi->fi_devi);
 }
