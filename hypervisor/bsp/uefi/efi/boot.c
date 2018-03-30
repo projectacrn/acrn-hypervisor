@@ -63,27 +63,18 @@ static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
 	hf(MULTIBOOT_INFO_MAGIC, mbi);
 }
 
-static EFI_STATUS
-switch_to_guest_mode(EFI_HANDLE image)
+EFI_STATUS
+construct_mbi(struct multiboot_info **mbi_ret, struct efi_ctx *efi_ctx)
 {
 	UINTN map_size, _map_size, map_key;
 	UINT32 desc_version;
 	UINTN desc_size;
 	EFI_MEMORY_DESCRIPTOR *map_buf;
 	EFI_PHYSICAL_ADDRESS addr;
-	EFI_STATUS err;
-	struct multiboot_mmap *mmap;
+	EFI_STATUS err = EFI_SUCCESS;
 	struct multiboot_info *mbi;
-	struct efi_ctx *efi_ctx;
-
-	struct acpi_table_rsdp *rsdp = NULL;
+	struct multiboot_mmap *mmap;
 	int i, j;
-
-	err = emalloc(sizeof(struct efi_ctx), 8, &addr);
-	if (err != EFI_SUCCESS)
-		goto out;
-
-	efi_ctx = (struct efi_ctx *)(UINTN)addr;
 
 	/* multiboot info */
 	err = emalloc(16384, 8, &addr);
@@ -99,28 +90,6 @@ switch_to_guest_mode(EFI_HANDLE image)
 		goto out;
 	mmap = (struct multiboot_mmap *)(UINTN)addr;
 	memset((void *)mmap, 0x0, sizeof(*mmap)*128);
-
-
-	EFI_CONFIGURATION_TABLE *config_table = sys_table->ConfigurationTable;
-	for (i = 0; i < sys_table->NumberOfTableEntries;i++) {
-		EFI_GUID acpi_20_table_guid = ACPI_20_TABLE_GUID;
-		EFI_GUID acpi_table_guid = ACPI_TABLE_GUID;
-		if (CompareGuid(&acpi_20_table_guid, &config_table->VendorGuid) == 0) {
-			rsdp = config_table->VendorTable;
-			break;
-		}
-
-		if (CompareGuid(&acpi_table_guid, &config_table->VendorGuid) == 0)
-			rsdp = config_table->VendorTable;
-
-		config_table++;
-	}
-	
-	if (!rsdp) {
-		Print(L"unable to find RSDP\n");
-		goto out;
-	}
-
 
 	/* We're just interested in the map's size for now */
 	map_size = 0;
@@ -199,15 +168,6 @@ again:
 		default:
 			continue;
 		}
-		if (e820_type == E820_RAM) {
-			UINT64 start = d->PhysicalStart;
-			UINT64 end  =  d->PhysicalStart
-			+ (d->NumberOfPages<<EFI_PAGE_SHIFT);
-			if (start <= CONFIG_RAM_START && end >
-				(CONFIG_RAM_START  + CONFIG_RAM_SIZE))
-				Print(L"e820[%d] start=%lx len=%lx\n", i,
-			d->PhysicalStart, d->NumberOfPages << EFI_PAGE_SHIFT);
-		}
 
 		if (j && mmap[j-1].mm_type == e820_type &&
 			(mmap[j-1].mm_base_addr + mmap[j-1].mm_length)
@@ -246,9 +206,58 @@ again:
 	mbi->mi_flags |= MULTIBOOT_INFO_HAS_DRIVES;
 	mbi->mi_drives_addr = (UINT32)(UINTN)efi_ctx;
 
+	*mbi_ret = mbi;
+out:
+	return err;
+}
+
+static EFI_STATUS
+switch_to_guest_mode(EFI_HANDLE image)
+{
+	EFI_PHYSICAL_ADDRESS addr;
+	EFI_STATUS err;
+	struct multiboot_info *mbi = NULL;
+	struct efi_ctx *efi_ctx;
+	struct acpi_table_rsdp *rsdp = NULL;
+	int i;
+	EFI_CONFIGURATION_TABLE *config_table;
+
+	err = emalloc(sizeof(struct efi_ctx), 8, &addr);
+	if (err != EFI_SUCCESS)
+		goto out;
+
+	efi_ctx = (struct efi_ctx *)(UINTN)addr;
+
+	config_table = sys_table->ConfigurationTable;
+
+	for (i = 0; i < sys_table->NumberOfTableEntries; i++) {
+		EFI_GUID acpi_20_table_guid = ACPI_20_TABLE_GUID;
+		EFI_GUID acpi_table_guid = ACPI_TABLE_GUID;
+
+		if (CompareGuid(&acpi_20_table_guid,
+			&config_table->VendorGuid) == 0) {
+			rsdp = config_table->VendorTable;
+			break;
+		}
+
+		if (CompareGuid(&acpi_table_guid,
+			&config_table->VendorGuid) == 0)
+			rsdp = config_table->VendorTable;
+
+		config_table++;
+	}
+
+	if (!rsdp) {
+		Print(L"unable to find RSDP\n");
+		goto out;
+	}
+
 	efi_ctx->rsdp = rsdp;
 
-	//Print(L"start 9!\n");
+	/* construct multiboot info and deliver it to hypervisor */
+	err = construct_mbi(&mbi, efi_ctx);
+	if (err != EFI_SUCCESS)
+		goto out;
 
 	asm volatile ("mov %%cr0, %0" : "=r"(efi_ctx->cr0));
 	asm volatile ("mov %%cr3, %0" : "=r"(efi_ctx->cr3));
