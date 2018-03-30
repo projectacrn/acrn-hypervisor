@@ -593,6 +593,12 @@ vrtc_create_timer(struct vrtc *vrtc, time_t sec, time_t nsec, void (*cb)())
 	return timerid;
 }
 
+static void
+vrtc_delete_timer(timer_t timerid)
+{
+	timer_delete(timerid);
+}
+
 static int
 vrtc_time_update(struct vrtc *vrtc, time_t newtime, time_t newbase)
 {
@@ -1103,6 +1109,7 @@ vrtc_init(struct vmctx *ctx, int local_time)
 	assert(vrtc != NULL);
 	memset(vrtc, 0, sizeof(struct vrtc));
 	vrtc->vm = ctx;
+	ctx->vrtc = vrtc;
 
 	pthread_mutex_init(&vrtc->mtx, NULL);
 
@@ -1157,7 +1164,24 @@ vrtc_init(struct vmctx *ctx, int local_time)
 }
 
 void
-vrtc_cleanup(struct vrtc *vrtc)
+vrtc_deinit(struct vmctx *ctx)
 {
+	struct vrtc *vrtc = ctx->vrtc;
+	struct inout_port iop;
+
+	memset(&iop, 0, sizeof(struct inout_port));
+	iop.name = "rtc";
+	iop.port = IO_RTC;
+	iop.size = 1;
+	unregister_inout(&iop);
+
+	memset(&iop, 0, sizeof(struct inout_port));
+	iop.name = "rtc";
+	iop.port = IO_RTC + 1;
+	iop.size = 1;
+	unregister_inout(&iop);
+
+	vrtc_delete_timer(vrtc->update_timer_id);
 	free(vrtc);
+	ctx->vrtc = NULL;
 }

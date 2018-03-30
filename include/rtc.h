@@ -37,7 +37,7 @@ struct vrtc;
 struct vmctx;
 
 struct vrtc  *vrtc_init(struct vmctx *ctx, int local_time);
-void vrtc_cleanup(struct vrtc *vrtc);
+void vrtc_deinit(struct vmctx *ctx);
 void vrtc_reset(struct vrtc *vrtc);
 time_t vrtc_get_time(struct vrtc *vrtc);
 int vrtc_set_time(struct vrtc *vrtc, time_t secs);

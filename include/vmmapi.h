@@ -59,6 +59,7 @@ struct vmctx {
 
 	/* fields to track virtual devices */
 	struct atkbdc_base *atkbdc_base;
+	struct vrtc *vrtc;
 };
 
 /*
