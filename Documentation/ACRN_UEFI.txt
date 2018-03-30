@@ -1,0 +1,14 @@
+*******************
+Usage of acrn.efi
+*******************
+
+Suggest to follow the following step:
+a. Build out the acrn.efi image with command "make PLATFORM=uefi".
+b. Rename the original os loader file that is located at
+\\EFI\\BOOT\\BOOTX64.EFI as CL_BL.EFI which name can be user defined
+in the config file bsp/uefi/include/bsp/bsp_cfg.h, the default name
+is CL_BL.EFI.
+c. Copy acrn.efi to \\EFI\\BOOT\\, and rename it to BOOTX64.EFI
+d. Reboot
+e. If you want to recover to origianal os loader, just replace
+the BOOTX64.EFI with the CL_BL.EFI.
