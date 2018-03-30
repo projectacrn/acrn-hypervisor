@@ -542,6 +542,7 @@ do_close_post(struct vmctx *ctx)
 {
 	pci_irq_deinit(ctx);
 	deinit_pci(ctx);
+	atkbdc_deinit(ctx);
 	vm_destroy(ctx);
 	vm_close(ctx);
 }
