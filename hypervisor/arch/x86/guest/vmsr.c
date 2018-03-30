@@ -39,7 +39,7 @@ static const uint32_t emulated_msrs[] = {
 	MSR_IA32_TSC_DEADLINE,  /* Enable TSC_DEADLINE VMEXIT */
 	MSR_IA32_BIOS_UPDT_TRIG, /* Enable MSR_IA32_BIOS_UPDT_TRIG */
 	MSR_IA32_BIOS_SIGN_ID, /* Enable MSR_IA32_BIOS_SIGN_ID */
-
+	MSR_IA32_TIME_STAMP_COUNTER,
 
 /* following MSR not emulated now */
 /*
@@ -48,7 +48,6 @@ static const uint32_t emulated_msrs[] = {
  *	MSR_IA32_SYSENTER_ESP,
  *	MSR_IA32_SYSENTER_EIP,
  *	MSR_IA32_TSC_AUX,
- *	MSR_IA32_TIME_STAMP_COUNTER,
  */
 };
 
@@ -57,6 +56,7 @@ enum {
 	IDX_TSC_DEADLINE,
 	IDX_BIOS_UPDT_TRIG,
 	IDX_BIOS_SIGN_ID,
+	IDX_TSC,
 
 	IDX_MAX_MSR
 };
@@ -169,7 +169,6 @@ int rdmsr_handler(struct vcpu *vcpu)
 {
 	uint32_t msr;
 	uint64_t v = 0;
-	uint32_t id;
 	int cur_context = vcpu->arch_vcpu.cur_context;
 
 	/* Read the msr value */
@@ -180,6 +179,12 @@ int rdmsr_handler(struct vcpu *vcpu)
 	case MSR_IA32_TSC_DEADLINE:
 	{
 		v = vcpu->guest_msrs[IDX_TSC_DEADLINE];
+		break;
+	}
+	case MSR_IA32_TIME_STAMP_COUNTER:
+	{
+		/*Add the TSC_offset to host TSC to get guest TSC */
+		v = rdtsc() + exec_vmread64(VMX_TSC_OFFSET_FULL);
 		break;
 	}
 
@@ -216,15 +221,6 @@ int rdmsr_handler(struct vcpu *vcpu)
 	case MSR_IA32_TSC_AUX:
 	{
 		v = vcpu->arch_vcpu.msr_tsc_aux;
-		break;
-	}
-	case MSR_IA32_TIME_STAMP_COUNTER:
-	{
-		/* Read the host TSC value */
-		CPU_RDTSCP_EXECUTE(&v, &id);
-
-		/* Add the TSC_offset to host TSC and return the value */
-		v += exec_vmread64(VMX_TSC_OFFSET_FULL);
 		break;
 	}
 	case MSR_IA32_APIC_BASE:
@@ -273,6 +269,13 @@ int wrmsr_handler(struct vcpu *vcpu)
 		vcpu->guest_msrs[IDX_TSC_DEADLINE] = v;
 		break;
 	}
+	case MSR_IA32_TIME_STAMP_COUNTER:
+	{
+		/*Caculate TSC offset from changed TSC MSR value*/
+		exec_vmwrite64(VMX_TSC_OFFSET_FULL, v - rdtsc());
+		break;
+	}
+
 	case MSR_IA32_MTRR_CAP:
 	case MSR_IA32_MTRR_DEF_TYPE:
 	case MSR_IA32_MTRR_PHYSBASE_0 ... MSR_IA32_MTRR_PHYSMASK_9:
