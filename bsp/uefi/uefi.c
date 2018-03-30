@@ -138,7 +138,7 @@ int uefi_sw_loader(struct vm *vm, struct vcpu *vcpu)
 
 	vlapic_restore(vcpu->arch_vcpu.vlapic, &uefi_lapic_regs);
 
-	vcpu->entry_addr = efi_ctx->rip;
+	vcpu->entry_addr = (void *)efi_ctx->rip;
 	cur_context->guest_cpu_regs.regs.rax = efi_ctx->rax;
 	cur_context->guest_cpu_regs.regs.rbx = efi_ctx->rbx;
 	cur_context->guest_cpu_regs.regs.rdx = efi_ctx->rcx;
@@ -171,8 +171,18 @@ void *get_rsdp_from_uefi(void)
 
 static void efi_init(void)
 {
-	efi_ctx = (struct efi_ctx *)(uint64_t)(uint32_t)boot_regs[2];
-	ASSERT(efi_ctx != NULL, "");
+	struct multiboot_info *mbi = NULL;
+
+	if (boot_regs[0] != MULTIBOOT_INFO_MAGIC)
+		ASSERT(0, "no multiboot info found");
+
+	mbi = (struct multiboot_info *)((uint64_t)(uint32_t)boot_regs[1]);
+
+	if (!(mbi->mi_flags & MULTIBOOT_INFO_HAS_DRIVES))
+		ASSERT(0, "no multiboot drivers for uefi found");
+
+	efi_ctx = (struct efi_ctx *)(uint64_t)mbi->mi_drives_addr;
+	ASSERT(efi_ctx != NULL, "no uefi context found");
 
 	vm_sw_loader = uefi_sw_loader;
 
