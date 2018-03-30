@@ -32,6 +32,7 @@
 struct atkbdc_base;
 
 struct ps2mouse_info *ps2mouse_init(struct atkbdc_base *base);
+void ps2mouse_deinit(struct atkbdc_base *base);
 
 int ps2mouse_read(struct ps2mouse_info *mouse, uint8_t *val);
 void ps2mouse_write(struct ps2mouse_info *mouse, uint8_t val, int insert);

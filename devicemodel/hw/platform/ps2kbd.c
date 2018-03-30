@@ -475,3 +475,11 @@ ps2kbd_init(struct atkbdc_base *base)
 
 	return kbd;
 }
+
+void
+ps2kbd_deinit(struct atkbdc_base *base)
+{
+	console_kbd_unregister();
+	free(base->ps2kbd);
+	base->ps2kbd = NULL;
+}
