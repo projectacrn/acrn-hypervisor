@@ -32,6 +32,7 @@
 struct atkbdc_base;
 
 struct ps2kbd_info *ps2kbd_init(struct atkbdc_base *base);
+void ps2kbd_deinit(struct atkbdc_base *base);
 
 int ps2kbd_read(struct ps2kbd_info *kbd, uint8_t *val);
 void ps2kbd_write(struct ps2kbd_info *kbd, uint8_t val);

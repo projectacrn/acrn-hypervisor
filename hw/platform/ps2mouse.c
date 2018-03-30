@@ -410,3 +410,12 @@ ps2mouse_init(struct atkbdc_base *base)
 
 	return mouse;
 }
+
+void
+ps2mouse_deinit(struct atkbdc_base *base)
+{
+	console_ptr_unregister();
+	fifo_reset(base->ps2mouse);
+	free(base->ps2mouse);
+	base->ps2mouse = NULL;
+}

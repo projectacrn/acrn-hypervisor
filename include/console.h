@@ -45,9 +45,11 @@ void	console_fb_register(fb_render_func_t render_cb, void *arg);
 void	console_refresh(void);
 
 void	console_kbd_register(kbd_event_func_t event_cb, void *arg, int pri);
+void	console_kbd_unregister(void);
 void	console_key_event(int down, uint32_t keysym);
 
 void	console_ptr_register(ptr_event_func_t event_cb, void *arg, int pri);
+void	console_ptr_unregister(void);
 void	console_ptr_event(uint8_t button, int x, int y);
 
 #endif /* _CONSOLE_H_ */

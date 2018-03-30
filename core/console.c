@@ -24,6 +24,7 @@
  * SUCH DAMAGE.
  */
 
+#include <stdio.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
@@ -92,6 +93,14 @@ console_kbd_register(kbd_event_func_t event_cb, void *arg, int pri)
 }
 
 void
+console_kbd_unregister(void)
+{
+	console.kbd_event_cb = NULL;
+	console.kbd_arg = NULL;
+	console.kbd_priority = 0;
+}
+
+void
 console_ptr_register(ptr_event_func_t event_cb, void *arg, int pri)
 {
 	if (pri > console.ptr_priority) {
@@ -99,6 +108,14 @@ console_ptr_register(ptr_event_func_t event_cb, void *arg, int pri)
 		console.ptr_arg = arg;
 		console.ptr_priority = pri;
 	}
+}
+
+void
+console_ptr_unregister()
+{
+	console.ptr_event_cb = NULL;
+	console.ptr_arg = NULL;
+	console.ptr_priority = 0;
 }
 
 void
