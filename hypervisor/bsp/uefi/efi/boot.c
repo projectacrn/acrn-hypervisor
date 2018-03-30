@@ -155,7 +155,7 @@ struct acpi_table_header {
     UINT32 asl_compiler_revision;  /* ASL compiler version */
 };
 
-typedef void(*hv_func)(int, struct multiboot_info*, struct efi_ctx*);
+typedef void(*hv_func)(int, struct multiboot_info*);
 EFI_IMAGE_ENTRY_POINT get_pe_entry(CHAR8 *base);
 
 static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
@@ -177,7 +177,7 @@ static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
 	asm volatile ("cli");
 
 	/* jump to acrn hypervisor */
-	hf(MULTIBOOT_INFO_MAGIC, mbi, efi_ctx);
+	hf(MULTIBOOT_INFO_MAGIC, mbi);
 }
 
 EFI_STATUS get_path(CHAR16* name, EFI_LOADED_IMAGE *info, EFI_DEVICE_PATH **path)
@@ -409,6 +409,9 @@ again:
 	//mbi->mi_cmdline = (UINTN)"uart=port@0x3F8";
 	mbi->mi_cmdline = (UINTN)"uart=disabled";
 	mbi->mi_mmap_addr = (UINTN)mmap;
+
+	mbi->mi_flags |= MULTIBOOT_INFO_HAS_DRIVES;
+	mbi->mi_drives_addr = (UINT32)(UINTN)efi_ctx;
 
 	efi_ctx->rsdp = rsdp;
 
