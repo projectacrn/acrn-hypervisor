@@ -304,8 +304,6 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 
 	mem = (struct trusty_mem *)(HPA2HVA(mem_base_hpa));
 
-	/* TODO: prepare vkey_info */
-
 	/* copy key_info to the first page of trusty memory */
 	memcpy_s(&mem->first_page.key_info, sizeof(g_key_info),
 			&g_key_info, sizeof(g_key_info));
@@ -327,7 +325,7 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 		}
 	}
 
-	/* Prepare trusty startup info */
+	/* Prepare trusty startup param */
 	mem->first_page.startup_param.size_of_this_struct =
 			sizeof(struct trusty_startup_param);
 	mem->first_page.startup_param.mem_size = mem_size;
