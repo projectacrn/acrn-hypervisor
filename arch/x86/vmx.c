@@ -880,7 +880,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	 * the IA32_VMX_PROCBASED_CTRLS MSR are always read as 1 --- A.3.2
 	 */
 	value32 = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
-	value32 |= (/* VMX_PROCBASED_CTLS_TSC_OFF | */
+	value32 |= (VMX_PROCBASED_CTLS_TSC_OFF |
 		    /* VMX_PROCBASED_CTLS_RDTSC | */
 		    VMX_PROCBASED_CTLS_IO_BITMAP |
 		    VMX_PROCBASED_CTLS_MSR_BITMAP |
@@ -1016,7 +1016,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	exec_vmwrite64(VMX_EXECUTIVE_VMCS_PTR_FULL, 0);
 
 	/* Setup Time stamp counter offset - pg 2902 24.6.5 */
-	/* exec_vmwrite64(VMX_TSC_OFFSET_FULL, VMX_TSC_OFFSET_HIGH, 0); */
+	exec_vmwrite64(VMX_TSC_OFFSET_FULL, 0);
 
 	/* Set up the link pointer */
 	exec_vmwrite64(VMX_VMS_LINK_PTR_FULL, 0xFFFFFFFFFFFFFFFF);
