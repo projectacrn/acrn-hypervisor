@@ -422,6 +422,7 @@ atkbdc_init(struct vmctx *ctx)
 	assert(base != NULL);
 
 	base->ctx = ctx;
+	ctx->atkbdc_base = base;
 
 	pthread_mutex_init(&base->mtx, NULL);
 
@@ -455,6 +456,33 @@ atkbdc_init(struct vmctx *ctx)
 
 	base->ps2kbd = ps2kbd_init(base);
 	base->ps2mouse = ps2mouse_init(base);
+}
+
+void
+atkbdc_deinit(struct vmctx *ctx)
+{
+	struct inout_port iop;
+	struct atkbdc_base *base = ctx->atkbdc_base;
+
+	ps2kbd_deinit(base);
+	base->ps2kbd = NULL;
+	ps2mouse_deinit(base);
+	base->ps2mouse = NULL;
+
+	bzero(&iop, sizeof(struct inout_port));
+	iop.name = "atkdbc";
+	iop.port = KBD_DATA_PORT;
+	iop.size = 1;
+	unregister_inout(&iop);
+
+	bzero(&iop, sizeof(struct inout_port));
+	iop.name = "atkdbc";
+	iop.port = KBD_STS_CTL_PORT;
+	iop.size = 1;
+	unregister_inout(&iop);
+
+	free(base);
+	ctx->atkbdc_base = NULL;
 }
 
 static void

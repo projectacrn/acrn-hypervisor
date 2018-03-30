@@ -114,6 +114,7 @@ struct atkbdc_base {
 };
 
 void atkbdc_init(struct vmctx *ctx);
+void atkbdc_deinit(struct vmctx *ctx);
 void atkbdc_event(struct atkbdc_base *base, int iskbd);
 
 #endif /* _ATKBDC_H_ */

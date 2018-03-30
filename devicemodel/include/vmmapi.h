@@ -34,6 +34,8 @@
 #include "types.h"
 #include "vmm.h"
 
+#include "atkbdc.h"
+
 /*
  * API version for out-of-tree consumers for making compile time decisions.
  */
@@ -54,6 +56,9 @@ struct vmctx {
 	char    *baseaddr;
 	char    *name;
 	uuid_t	vm_uuid;
+
+	/* fields to track virtual devices */
+	struct atkbdc_base *atkbdc_base;
 };
 
 /*
