@@ -118,9 +118,6 @@ cpu_primary_start_64:
     /* save the MULTBOOT magic number & MBI */
     movl    %edi, (boot_regs)
     movl    %esi, (boot_regs+4)
-#ifdef CONFIG_EFI_STUB
-    movl    %edx, (boot_regs+8)
-#endif
 
 primary_start_long_mode:
 
@@ -187,9 +184,6 @@ loop:
 boot_regs:
     .long   0x00000000
     .long   0x00000000
-#ifdef CONFIG_EFI_STUB
-    .long   0x00000000
-#endif
 
     /* GDT table */
     .align  4

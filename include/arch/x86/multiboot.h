@@ -34,6 +34,7 @@
 #define MULTIBOOT_INFO_MAGIC		    	0x2BADB002
 #define MULTIBOOT_INFO_HAS_CMDLINE		0x00000004
 #define MULTIBOOT_INFO_HAS_MODS			0x00000008
+#define MULTIBOOT_INFO_HAS_DRIVES	0x00000080
 
 struct multiboot_info {
 	uint32_t               mi_flags;
