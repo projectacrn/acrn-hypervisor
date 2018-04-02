@@ -65,7 +65,6 @@ struct per_cpu_timers {
 	struct timer *timers_pool; 	/* it's timers pool for allocation */
 	uint64_t free_bitmap;
 	struct list_head timer_list;	/* it's for runtime active timer list */
-	spinlock_t lock;
 	int cpu_id;
 	struct timer_statistics stat;
 };
@@ -85,13 +84,9 @@ static struct timer *alloc_timer(int cpu_id)
 	struct per_cpu_timers *cpu_timer;
 	struct timer *timer;
 
-	spinlock_rflags;
-
 	cpu_timer = &per_cpu(cpu_timers, cpu_id);
-	spinlock_irqsave_obtain(&cpu_timer->lock);
 	idx = bitmap_ffs(&cpu_timer->free_bitmap);
 	if (idx < 0) {
-		spinlock_irqrestore_release(&cpu_timer->lock);
 		return NULL;
 	}
 
@@ -102,7 +97,6 @@ static struct timer *alloc_timer(int cpu_id)
 	/* assign unique handle and never duplicate */
 	timer = cpu_timer->timers_pool + idx;
 	timer->handle = cpu_timer->stat.total_added_cnt;
-	spinlock_irqrestore_release(&cpu_timer->lock);
 
 	ASSERT((cpu_timer->timers_pool[cpu_id].cpu_id == cpu_id),
 		"timer cpu_id did not match");
@@ -113,16 +107,12 @@ static void release_timer(struct timer *timer)
 {
 	struct per_cpu_timers *cpu_timer;
 
-	spinlock_rflags;
-
 	cpu_timer = &per_cpu(cpu_timers, timer->cpu_id);
 	timer->priv_data = 0;
 	timer->func = NULL;
 	timer->deadline = 0;
-	spinlock_irqsave_obtain(&cpu_timer->lock);
 	bitmap_set(timer->id, &cpu_timer->free_bitmap);
 	cpu_timer->stat.pending_cnt--;
-	spinlock_irqrestore_release(&cpu_timer->lock);
 }
 
 static int get_target_cpu(void)
@@ -137,9 +127,6 @@ find_expired_timer(struct per_cpu_timers *cpu_timer, uint64_t tsc_now)
 	struct timer *timer;
 	struct list_head *pos;
 
-	spinlock_rflags;
-
-	spinlock_irqsave_obtain(&cpu_timer->lock);
 	list_for_each(pos, &cpu_timer->timer_list) {
 		timer = list_entry(pos, struct timer, node);
 		if (timer->deadline <= tsc_now)
@@ -147,7 +134,6 @@ find_expired_timer(struct per_cpu_timers *cpu_timer, uint64_t tsc_now)
 	}
 	timer = NULL;
 UNLOCK:
-	spinlock_irqrestore_release(&cpu_timer->lock);
 	return timer;
 }
 
@@ -191,12 +177,9 @@ _search_timer_by_handle(struct per_cpu_timers *cpu_timer, long handle)
 static void
 run_timer(struct per_cpu_timers *cpu_timer, struct timer *timer)
 {
-	spinlock_rflags;
 
 	/* remove from list first */
-	spinlock_irqsave_obtain(&cpu_timer->lock);
 	list_del(&timer->node);
-	spinlock_irqrestore_release(&cpu_timer->lock);
 
 	/* deadline = 0 means stop timer, we should skip */
 	if (timer->func && timer->deadline != 0UL)
@@ -223,15 +206,11 @@ static inline void schedule_next_timer(int cpu)
 	struct timer *timer;
 	struct per_cpu_timers *cpu_timer = &per_cpu(cpu_timers, cpu);
 
-	spinlock_rflags;
-
-	spinlock_irqsave_obtain(&cpu_timer->lock);
 	timer = _search_nearest_timer(cpu_timer);
 	if (timer) {
 		/* it is okay to program a expired time */
 		msr_write(MSR_IA32_TSC_DEADLINE, timer->deadline);
 	}
-	spinlock_irqrestore_release(&cpu_timer->lock);
 }
 
 int request_timer_irq(int cpu, dev_handler_t func, void *data, const char *name)
@@ -280,7 +259,6 @@ static void init_timer_pool(void)
 		cpu_timer->free_bitmap = (1UL<<MAX_TIMER_ACTIONS)-1;
 
 		INIT_LIST_HEAD(&cpu_timer->timer_list);
-		spinlock_init(&cpu_timer->lock);
 		for (j = 0; j < MAX_TIMER_ACTIONS; j++) {
 			timers_pool[j].id = j;
 			timers_pool[j].cpu_id = i;
@@ -371,8 +349,6 @@ long add_timer(timer_handle_t func, uint64_t data, uint64_t deadline)
 	struct per_cpu_timers *cpu_timer;
 	int cpu_id = get_target_cpu();
 
-	spinlock_rflags;
-
 	if (deadline == 0 || func == NULL)
 		return -1;
 
@@ -389,12 +365,10 @@ long add_timer(timer_handle_t func, uint64_t data, uint64_t deadline)
 	cpu_timer = &per_cpu(cpu_timers, timer->cpu_id);
 
 	/* We need irqsave here even softirq enabled to protect timer_list */
-	spinlock_irqsave_obtain(&cpu_timer->lock);
 	list_add_tail(&timer->node, &cpu_timer->timer_list);
 	cpu_timer->stat.last.added_id = timer->id;
 	cpu_timer->stat.last.added_time = rdtsc();
 	cpu_timer->stat.last.added_deadline = timer->deadline;
-	spinlock_irqrestore_release(&cpu_timer->lock);
 	TRACE_4I(TRACE_TIMER_ACTION_ADDED, timer->id, timer->deadline,
 		timer->deadline >> 32, cpu_timer->stat.total_added_cnt);
 
@@ -413,14 +387,12 @@ update_timer(long handle, timer_handle_t func, uint64_t data,
 	struct per_cpu_timers *cpu_timer;
 	int cpu_id = get_target_cpu();
 
-	spinlock_rflags;
 	bool ret = false;
 
 	if (deadline == 0)
 		return -1;
 
 	cpu_timer = &per_cpu(cpu_timers, cpu_id);
-	spinlock_irqsave_obtain(&cpu_timer->lock);
 	timer = _search_timer_by_handle(cpu_timer, handle);
 	if (timer) {
 		/* update deadline and re-sort */
@@ -432,7 +404,6 @@ update_timer(long handle, timer_handle_t func, uint64_t data,
 			cpu_timer->stat.total_added_cnt);
 		ret = true;
 	}
-	spinlock_irqrestore_release(&cpu_timer->lock);
 
 	if (ret)
 		schedule_next_timer(cpu_id);
@@ -451,11 +422,9 @@ bool cancel_timer(long handle, int cpu_id)
 	struct timer *timer;
 	struct per_cpu_timers *cpu_timer;
 
-	spinlock_rflags;
 	bool ret = false;
 
 	cpu_timer = &per_cpu(cpu_timers, cpu_id);
-	spinlock_irqsave_obtain(&cpu_timer->lock);
 	timer = _search_timer_by_handle(cpu_timer, handle);
 	if (timer) {
 		/* NOTE: we can not directly release timer here.
@@ -466,7 +435,6 @@ bool cancel_timer(long handle, int cpu_id)
 		timer->func = NULL;
 		ret = true;
 	}
-	spinlock_irqrestore_release(&cpu_timer->lock);
 	return ret;
 }
 
@@ -476,8 +444,6 @@ void dump_timer_pool_info(int cpu_id)
 			&per_cpu(cpu_timers, cpu_id);
 	struct list_head *pos;
 	int cn = 0;
-
-	spinlock_rflags;
 
 	if (cpu_id >= phy_cpu_num)
 		return;
@@ -500,13 +466,11 @@ void dump_timer_pool_info(int cpu_id)
 		cpu_timer->stat.last.added_time,
 		cpu_timer->stat.last.added_deadline);
 
-	spinlock_irqsave_obtain(&cpu_timer->lock);
 	list_for_each(pos, &cpu_timer->timer_list) {
 		cn++;
 		pr_info("-->pending: %d trigger: 0x%llx", cn,
 			list_entry(pos, struct timer, node)->deadline);
 	}
-	spinlock_irqrestore_release(&cpu_timer->lock);
 }
 
 void check_tsc(void)
