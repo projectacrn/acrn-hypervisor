@@ -27,7 +27,7 @@ Descriptions of section entries:
 
 Maintainers List
 ----------------
-W: N/A
+W: https://projectacrn.org/ and https://projectacrn.github.io/
 S: Supported
 L: https://lists.projectacrn.org/g/acrn-dev
 T: git - https://github.com/projectacrn/acrn-devicemodel.git
