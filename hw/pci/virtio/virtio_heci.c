@@ -39,6 +39,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -121,6 +122,17 @@ struct virtio_heci {
 	struct virtio_vq_info		vqs[VIRTIO_HECI_VQNUM];
 	pthread_mutex_t			mutex;
 	struct mei_enumerate_me_clients	me_clients_map;
+	volatile bool			deiniting;
+	volatile bool			resetting;
+
+	pthread_t			tx_thread;
+	pthread_mutex_t			tx_mutex;
+	pthread_cond_t			tx_cond;
+
+	pthread_t			rx_thread;
+	pthread_mutex_t			rx_mutex;
+	pthread_cond_t			rx_cond;
+	bool				rx_need_sched;
 
 	struct virtio_heci_config	*config;
 
@@ -137,6 +149,7 @@ static int virtio_heci_debug;
 #define WPRINTF(params) (printf params)
 
 static void virtio_heci_reset(void *);
+static void virtio_heci_virtual_fw_reset(struct virtio_heci *vheci);
 static void virtio_heci_rx_callback(int fd, enum ev_type type, void *param);
 static void virtio_heci_notify_rx(void *, struct virtio_vq_info *);
 static void virtio_heci_notify_tx(void *, struct virtio_vq_info *);
@@ -218,6 +231,34 @@ virtio_heci_add_client(struct virtio_heci *vheci,
 	pthread_mutex_lock(&vheci->list_mutex);
 	LIST_INSERT_HEAD(&vheci->active_clients, client, list);
 	pthread_mutex_unlock(&vheci->list_mutex);
+}
+
+static struct virtio_heci_client *
+virtio_heci_find_client(struct virtio_heci *vheci, int client_addr)
+{
+	struct virtio_heci_client *pclient, *client = NULL;
+
+	pthread_mutex_lock(&vheci->list_mutex);
+	LIST_FOREACH(pclient, &vheci->active_clients, list) {
+		if (pclient->client_addr == client_addr) {
+			client = virtio_heci_client_get(pclient);
+			break;
+		}
+	}
+	pthread_mutex_unlock(&vheci->list_mutex);
+	return client;
+}
+
+static struct virtio_heci_client *
+virtio_heci_get_hbm_client(struct virtio_heci *vheci)
+{
+	struct virtio_heci_client *client = NULL;
+
+	pthread_mutex_lock(&vheci->list_mutex);
+	if (vheci->hbm_client)
+		client = virtio_heci_client_get(vheci->hbm_client);
+	pthread_mutex_unlock(&vheci->list_mutex);
+	return client;
 }
 
 static void
@@ -354,7 +395,7 @@ virtio_heci_destroy_client(struct virtio_heci *vheci,
 				client->client_id, client->client_fd,
 				client->client_addr));
 	virtio_heci_del_client(vheci, client);
-	if (client->type != TYPE_HBM)
+	if (client->type != TYPE_HBM && !vheci->deiniting)
 		mevent_delete_close(client->rx_mevp);
 	free(client->send_buf);
 	free(client->recv_buf);
@@ -391,6 +432,22 @@ native_heci_read(struct virtio_heci_client *client)
 	return client->recv_offset;
 }
 
+static int
+native_heci_write(struct virtio_heci_client *client)
+{
+	int len;
+
+	if (client->client_fd <= 0) {
+		DPRINTF(("vheci: write failed! invalid client_fd[%d]\r\n",
+					client->client_fd));
+		return -1;
+	}
+	len = write(client->client_fd, client->send_buf, client->send_idx);
+	if (len < 0)
+		WPRINTF(("vheci: write failed! write error[%d]\r\n", errno));
+	return len;
+}
+
 static void
 virtio_heci_rx_callback(int fd, enum ev_type type, void *param)
 {
@@ -403,16 +460,27 @@ virtio_heci_rx_callback(int fd, enum ev_type type, void *param)
 		return;
 	}
 
+	pthread_mutex_lock(&vheci->rx_mutex);
+	if (client->recv_offset != 0 || vheci->resetting) {
+		/* still has data in recv_buf, wait guest reading */
+		goto out;
+	}
+
 	/* read data from mei driver */
 	ret = native_heci_read(client);
-	if (ret < 0)
+	if (ret > 0)
+		vheci->rx_need_sched = true;
+	else
 		/* read failed, no data available */
 		goto out;
 
 	DPRINTF(("vheci: RX: ME[%d]fd[%d] read %d bytes from MEI.\r\n",
 				client->client_id, fd, ret));
 
+	// wake up rx thread.
+	pthread_cond_signal(&vheci->rx_cond);
 out:
+	pthread_mutex_unlock(&vheci->rx_mutex);
 	virtio_heci_client_put(vheci, client);
 }
 
@@ -425,24 +493,469 @@ virtio_heci_reset(void *vth)
 	virtio_reset_dev(&vheci->base);
 }
 
+static inline bool
+hdr_is_hbm(struct heci_msg_hdr *heci_hdr)
+{
+	return heci_hdr->host_addr == 0 && heci_hdr->me_addr == 0;
+}
+
+static inline bool
+hdr_is_fixed(struct heci_msg_hdr *heci_hdr)
+{
+	return heci_hdr->host_addr == 0 && heci_hdr->me_addr != 0;
+}
+
+static void
+populate_heci_hdr(struct virtio_heci_client *client,
+		struct heci_msg_hdr *hdr, int len, int complete)
+{
+	assert(hdr != NULL);
+	memset(hdr, 0, sizeof(*hdr));
+	hdr->me_addr = client->client_id;
+	hdr->host_addr = client->client_addr;
+	hdr->length = len;
+	hdr->msg_complete = complete;
+}
+
+static void
+virtio_heci_hbm_response(struct virtio_heci *vheci,
+		struct heci_msg_hdr *hdr, void *data, int len)
+{
+	/* TODO: heci hbm response */
+}
+
+static void
+virtio_heci_proc_tx(struct virtio_heci *vheci, struct virtio_vq_info *vq)
+{
+	struct iovec iov[VIRTIO_HECI_TXSEGS + 1];
+	struct heci_msg_hdr *heci_hdr;
+	uint16_t idx;
+	struct virtio_heci_client *client = NULL, *hbm_client;
+	int tlen, len;
+	int n;
+	struct heci_msg_hdr hdr;
+	struct heci_hbm_flow_ctl flow_ctl_req = {{0} };
+
+	/*
+	 * Obtain chain of descriptors.
+	 * The first one is heci_hdr, the second is for payload.
+	 */
+	n = vq_getchain(vq, &idx, iov, VIRTIO_HECI_TXSEGS, NULL);
+	assert(n == 2);
+	heci_hdr = (struct heci_msg_hdr *)iov[0].iov_base;
+	tlen = iov[0].iov_len + iov[1].iov_len;
+	DPRINTF(("vheci: TX: UOS -> DM, hdr[%08x] length[%ld]\n\r",
+				*(uint32_t *)heci_hdr, iov[1].iov_len));
+	print_hex((uint8_t *)iov[1].iov_base, iov[1].iov_len);
+
+	if (hdr_is_hbm(heci_hdr)) {
+		/*
+		 * TODO: hbm client handler
+		 */
+	} else if (hdr_is_fixed(heci_hdr)) {
+		/*
+		 * TODO: fixed address client handler
+		 * fixed address client don't need receive, connectless
+		 */
+	} else {
+		/* general client client
+		 * must be in active_clients list.
+		 */
+		client = virtio_heci_find_client(vheci, heci_hdr->host_addr);
+		if (!client) {
+			DPRINTF(("vheci: TX: NO client mapping "
+				"for ME[%d]!\n\r", heci_hdr->host_addr));
+			goto failed;
+		}
+
+		DPRINTF(("vheci: TX: found ME[%d]fd[%d]:FE[%d]\n\r",
+				client->client_id, client->client_fd,
+				client->client_addr));
+		if (client->send_buf_sz - client->send_idx < heci_hdr->length) {
+			DPRINTF(("vheci: TX: ME[%d]fd[%d] overflow "
+					"max_message_length in sendbuf!\n\r",
+					client->client_id, client->client_fd));
+			/* TODO: close the connection according to spec */
+			goto out;
+		}
+		/* copy buffer from virtqueue to send_buf */
+		memcpy(client->send_buf + client->send_idx,
+			(uint8_t *)iov[1].iov_base, heci_hdr->length);
+		client->send_idx += heci_hdr->length;
+		if (heci_hdr->msg_complete) {
+			/* send complete msg to HW */
+			DPRINTF(("vheci: TX: ME[%d]fd[%d] complete msg,"
+					" pass send_buf to MEI!\n\r",
+					client->client_id, client->client_fd));
+			len = native_heci_write(client);
+			if (len != client->send_idx) {
+				DPRINTF(("vheci: TX: ME[%d]fd[%d] "
+						" write data to MEI fail!\n\r",
+					client->client_id, client->client_fd));
+				client->send_idx -= heci_hdr->length;
+				goto send_failed;
+			}
+			/* reset index to indicate send buffer is empty */
+			client->send_idx = 0;
+
+			/* Give guest a flow control credit */
+			flow_ctl_req.hbm_cmd.cmd = HECI_HBM_FLOW_CONTROL;
+			flow_ctl_req.me_addr = client->client_id;
+			/*
+			 * single recv buffer client,
+			 */
+			if (client->props.single_recv_buf)
+				flow_ctl_req.host_addr = 0;
+			else
+				flow_ctl_req.host_addr = client->client_addr;
+			hbm_client = virtio_heci_get_hbm_client(vheci);
+			if (hbm_client) {
+				populate_heci_hdr(hbm_client, &hdr,
+					sizeof(struct heci_hbm_flow_ctl), 1);
+				DPRINTF(("vheci: TX: DM(flow ctl,ME[%d]fd[%d]) "
+					 "-> UOS(FE[%d]): len[%d] last[%d]\n\r",
+					client->client_id,
+					client->client_fd, client->client_addr,
+					hdr.length, hdr.msg_complete));
+				print_hex((uint8_t *)&flow_ctl_req,
+						sizeof(flow_ctl_req));
+				virtio_heci_hbm_response(vheci, &hdr,
+					&flow_ctl_req, sizeof(flow_ctl_req));
+				virtio_heci_client_put(vheci, hbm_client);
+			}
+		}
+out:
+		virtio_heci_client_put(vheci, client);
+	}
+
+	/* chain is processed, release it and set tlen */
+	vq_relchain(vq, idx, tlen);
+	DPRINTF(("vheci: TX: release OUT-vq idx[%d]\r\n", idx));
+
+	if (vheci->rx_need_sched) {
+		pthread_mutex_lock(&vheci->rx_mutex);
+		pthread_cond_signal(&vheci->rx_cond);
+		pthread_mutex_unlock(&vheci->rx_mutex);
+	}
+
+	return;
+send_failed:
+	virtio_heci_client_put(vheci, client);
+failed:
+	/* drop the data */
+	vq_relchain(vq, idx, tlen);
+}
+
+
+/*
+ * Thread which will handle processing of TX desc
+ */
+static void *virtio_heci_tx_thread(void *param)
+{
+	struct virtio_heci *vheci = param;
+	struct virtio_vq_info *vq;
+	int error;
+
+	vq = &vheci->vqs[VIRTIO_HECI_TXQ];
+
+	/*
+	 * Let us wait till the tx queue pointers get initialized &
+	 * first tx signaled
+	 */
+	pthread_mutex_lock(&vheci->tx_mutex);
+	error = pthread_cond_wait(&vheci->tx_cond, &vheci->tx_mutex);
+	assert(error == 0);
+
+	while (!vheci->deiniting) {
+		/* note - tx mutex is locked here */
+		while (!vq_has_descs(vq)) {
+			vq->used->flags &= ~VRING_USED_F_NO_NOTIFY;
+			mb();
+			if (vq_has_descs(vq) && !vheci->resetting)
+				break;
+
+			error = pthread_cond_wait(&vheci->tx_cond,
+					&vheci->tx_mutex);
+			assert(error == 0);
+			if (vheci->deiniting)
+				goto out;
+		}
+		vq->used->flags |= VRING_USED_F_NO_NOTIFY;
+		pthread_mutex_unlock(&vheci->tx_mutex);
+
+		do {
+			/*
+			 * Run through entries, send them
+			 */
+			virtio_heci_proc_tx(vheci, vq);
+		} while (vq_has_descs(vq));
+
+		vq_endchains(vq, 1);
+
+		pthread_mutex_lock(&vheci->tx_mutex);
+	}
+out:
+	pthread_mutex_unlock(&vheci->tx_mutex);
+	pthread_exit(NULL);
+}
+
+/* caller need hold rx_mutex
+ * return:
+ *	true  - data processed
+ *	fasle - need resched
+ */
+static bool virtio_heci_proc_rx(struct virtio_heci *vheci,
+		struct virtio_vq_info *vq)
+{
+	struct iovec iov[VIRTIO_HECI_RXSEGS + 1];
+	struct heci_msg_hdr *heci_hdr;
+	int n;
+	uint16_t idx;
+	struct virtio_heci_client *pclient, *client = NULL;
+	uint8_t *buf;
+	int len;
+	bool finished = false;
+
+	/* search all clients who has message received to fill the recv buf */
+	pthread_mutex_lock(&vheci->list_mutex);
+	LIST_FOREACH(pclient, &vheci->active_clients, list) {
+		if (pclient->recv_offset - pclient->recv_handled > 0) {
+			client = virtio_heci_client_get(pclient);
+			break;
+		}
+	}
+	pthread_mutex_unlock(&vheci->list_mutex);
+
+	/* no client has data received, ignore RX request! */
+	if (!client) {
+		DPRINTF(("vheci: RX: none client has data!\n\r"));
+		vheci->rx_need_sched = false;
+		return false;
+	}
+
+	/*
+	 * Obtain chain of descriptors.
+	 * The first dword is heci_hdr, the rest are for payload.
+	 */
+	n = vq_getchain(vq, &idx, iov, VIRTIO_HECI_RXSEGS, NULL);
+	assert(n == VIRTIO_HECI_RXSEGS);
+	heci_hdr = (struct heci_msg_hdr *)iov[0].iov_base;
+
+	/* buffer length need remove HECI header */
+	len = (vheci->config->buf_depth - 1) * sizeof(struct heci_msg_hdr);
+	buf = (uint8_t  *)iov[0].iov_base + sizeof(struct heci_msg_hdr);
+
+	if (client->type == TYPE_HBM) {
+		/* HBM client has data to FE */
+		len = client->recv_offset - client->recv_handled;
+		memcpy(iov[0].iov_base,
+				client->recv_buf + client->recv_handled, len);
+		DPRINTF(("vheci: RX: data DM:ME[%d]fd[%d]off[%d]"
+				       " -> UOS:client_addr[%d] len[%d]\n\r",
+					client->client_id, client->client_fd,
+					client->recv_handled,
+					client->client_addr, len));
+		print_hex(iov[0].iov_base, len);
+		client->recv_offset = client->recv_handled = 0;
+		finished = true;
+		goto out;
+	}
+
+	if (client->recv_creds == 0) {
+		/*
+		 * FE client is not ready to recv message
+		 * return 1 here to unmask rx_need_sched, to avoid spin in
+		 * this checking loop, tag rx_need_sched when we receive creds
+		 */
+		DPRINTF(("vheci: RX: ME[%d]fd[%d] recv_creds is not ready\n\r",
+					client->client_id, client->client_fd));
+		virtio_heci_client_put(vheci, client);
+		vq_retchain(vq);
+		return true;
+	} else if (client->recv_offset - client->recv_handled > len) {
+		/* this client has data to guest, and
+		 * need split the data into multi buffers
+		 * FE only support one buffer now. Need expand later.
+		 */
+		populate_heci_hdr(client, heci_hdr, len, 0);
+		memcpy(buf, client->recv_buf + client->recv_handled, len);
+		DPRINTF(("vheci: RX: data(partly) DM:ME[%d]fd[%d]off[%d]"
+				       " -> UOS:client_addr[%d] len[%d]\n\r",
+					client->client_id, client->client_fd,
+					client->recv_handled,
+					client->client_addr, len));
+		client->recv_handled += len;
+		finished = false;
+		len += sizeof(struct heci_msg_hdr);
+	} else {
+		/* this client has data to guest, can be in one recv buf */
+		len = client->recv_offset - client->recv_handled;
+		populate_heci_hdr(client, heci_hdr, len, 1);
+		memcpy(buf, client->recv_buf + client->recv_handled, len);
+		client->recv_offset = client->recv_handled = 0;
+		finished = true;
+		client->recv_creds--;
+		len += sizeof(struct heci_msg_hdr);
+		DPRINTF(("vheci: RX: data(end) DM:ME[%d]fd[%d]off[%d]"
+				       "-> UOS:client_addr[%d] len[%d]\n\r",
+					client->client_id, client->client_fd,
+					client->recv_handled,
+					client->client_addr, len));
+		print_hex((uint8_t *)iov[0].iov_base, len);
+	}
+
+out:
+	virtio_heci_client_put(vheci, client);
+	/* chain is processed, release it and set tlen */
+	vq_relchain(vq, idx, len);
+	DPRINTF(("vheci: RX: release IN-vq idx[%d]\r\n", idx));
+
+	return finished;
+}
+
+/*
+ * Thread which will handle processing of RX desc
+ */
+static void *virtio_heci_rx_thread(void *param)
+{
+	struct virtio_heci *vheci = param;
+	struct virtio_vq_info *vq;
+	int error;
+
+	vq = &vheci->vqs[VIRTIO_HECI_RXQ];
+
+	/*
+	 * Let us wait till the rx queue pointers get initialised &
+	 * first tx signaled
+	 */
+	pthread_mutex_lock(&vheci->rx_mutex);
+	error = pthread_cond_wait(&vheci->rx_cond, &vheci->rx_mutex);
+	assert(error == 0);
+
+	while (!vheci->deiniting) {
+		/* note - rx mutex is locked here */
+		while (vq_ring_ready(vq)) {
+			vq->used->flags &= ~VRING_USED_F_NO_NOTIFY;
+			mb();
+			if (vq_has_descs(vq) &&
+				vheci->rx_need_sched &&
+				!vheci->resetting)
+				break;
+
+			error = pthread_cond_wait(&vheci->rx_cond,
+					&vheci->rx_mutex);
+			assert(error == 0);
+			if (vheci->deiniting)
+				goto out;
+		}
+		vq->used->flags |= VRING_USED_F_NO_NOTIFY;
+
+		do {
+			if (virtio_heci_proc_rx(vheci, vq))
+				vheci->rx_need_sched = false;
+		} while (vq_has_descs(vq) && vheci->rx_need_sched);
+
+		if (!vq_has_descs(vq))
+			vq_endchains(vq, 1);
+
+	}
+out:
+	pthread_mutex_unlock(&vheci->rx_mutex);
+	pthread_exit(NULL);
+}
 static void
 virtio_heci_notify_rx(void *heci, struct virtio_vq_info *vq)
 {
+	struct virtio_heci *vheci = heci;
 	/*
 	 * Any ring entries to process?
 	 */
 	if (!vq_has_descs(vq))
 		return;
+
+	/* Signal the rx thread for processing */
+	pthread_mutex_lock(&vheci->rx_mutex);
+	DPRINTF(("vheci: RX: New IN buffer available!\n\r"));
+	vq->used->flags |= VRING_USED_F_NO_NOTIFY;
+	pthread_cond_signal(&vheci->rx_cond);
+	pthread_mutex_unlock(&vheci->rx_mutex);
 }
 
 static void
 virtio_heci_notify_tx(void *heci, struct virtio_vq_info *vq)
 {
+	struct virtio_heci *vheci = heci;
 	/*
 	 * Any ring entries to process?
 	 */
 	if (!vq_has_descs(vq))
 		return;
+
+	/* Signal the tx thread for processing */
+	pthread_mutex_lock(&vheci->tx_mutex);
+	DPRINTF(("vheci: TX: New OUT buffer available!\n\r"));
+	vq->used->flags |= VRING_USED_F_NO_NOTIFY;
+	pthread_cond_signal(&vheci->tx_cond);
+	pthread_mutex_unlock(&vheci->tx_mutex);
+}
+
+static int
+virtio_heci_start(struct virtio_heci *vheci)
+{
+	int status = 0;
+
+	vheci->hbm_client = virtio_heci_create_client(vheci, 0, 0, &status);
+	if (!vheci->hbm_client)
+		return -1;
+	vheci->config->hw_ready = 1;
+
+	return 0;
+}
+
+static int
+virtio_heci_stop(struct virtio_heci *vheci)
+{
+	vheci->deiniting = true;
+	pthread_mutex_lock(&vheci->tx_mutex);
+	pthread_cond_signal(&vheci->tx_cond);
+	pthread_mutex_unlock(&vheci->tx_mutex);
+
+	pthread_mutex_lock(&vheci->rx_mutex);
+	pthread_cond_signal(&vheci->rx_cond);
+	pthread_mutex_unlock(&vheci->rx_mutex);
+
+	virtio_heci_virtual_fw_reset(vheci);
+
+	pthread_join(vheci->rx_thread, NULL);
+	pthread_join(vheci->tx_thread, NULL);
+
+	pthread_mutex_destroy(&vheci->rx_mutex);
+	pthread_mutex_destroy(&vheci->tx_mutex);
+	pthread_mutex_destroy(&vheci->list_mutex);
+	return 0;
+}
+
+static void
+virtio_heci_virtual_fw_reset(struct virtio_heci *vheci)
+{
+	struct virtio_heci_client *client = NULL, *pclient = NULL;
+
+	vheci->resetting = true;
+	vheci->config->hw_ready = 0;
+
+	pthread_mutex_lock(&vheci->list_mutex);
+	list_foreach_safe(client, &vheci->active_clients, list, pclient)
+		virtio_heci_client_put(vheci, client);
+	pthread_mutex_unlock(&vheci->list_mutex);
+
+	/* clients might be referred by other threads here
+	 * Let's wait all clients destroyed
+	 */
+	while (!LIST_EMPTY(&vheci->active_clients))
+		;
+	vheci->hbm_client = NULL;
+
+	vheci->resetting = false;
 }
 
 static int
@@ -459,7 +972,17 @@ virtio_heci_cfgread(void *vsc, int offset, int size, uint32_t *retval)
 static int
 virtio_heci_cfgwrite(void *vsc, int offset, int size, uint32_t val)
 {
-	/* TODO: need handle device config writing */
+	struct virtio_heci *vheci = vsc;
+
+	if (offset == offsetof(struct virtio_heci_config, host_reset)) {
+		if (size == sizeof(uint8_t) && val == 1) {
+			DPRINTF(("vheci cfgwrite: host_reset [%d]\r\n", val));
+			/* guest initate reset need restart */
+			virtio_heci_virtual_fw_reset(vheci);
+			virtio_heci_start(vheci);
+			virtio_config_changed(&vheci->base);
+		}
+	}
 	return 0;
 }
 
@@ -467,8 +990,9 @@ static int
 virtio_heci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	struct virtio_heci *vheci;
+	char tname[MAXCOMLEN + 1];
 	pthread_mutexattr_t attr;
-	int i, rc, status = 0;
+	int i, rc;
 
 	vheci = calloc(1, sizeof(struct virtio_heci));
 	if (!vheci) {
@@ -532,6 +1056,26 @@ virtio_heci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	virtio_set_io_bar(&vheci->base, 0);
 
 	/*
+	 * tx stuff, thread, mutex, cond
+	 */
+	pthread_mutex_init(&vheci->tx_mutex, &attr);
+	pthread_cond_init(&vheci->tx_cond, NULL);
+	pthread_create(&vheci->tx_thread, NULL,
+		virtio_heci_tx_thread, (void *)vheci);
+	snprintf(tname, sizeof(tname), "vheci-%d:%d tx", dev->slot, dev->func);
+	pthread_setname_np(vheci->tx_thread, tname);
+
+	/*
+	 * rx stuff
+	 */
+	pthread_mutex_init(&vheci->rx_mutex, &attr);
+	pthread_cond_init(&vheci->rx_cond, NULL);
+	pthread_create(&vheci->rx_thread, NULL,
+			virtio_heci_rx_thread, (void *)vheci);
+	snprintf(tname, sizeof(tname), "vheci-%d:%d rx", dev->slot, dev->func);
+	pthread_setname_np(vheci->rx_thread, tname);
+
+	/*
 	 * init clients
 	 */
 	pthread_mutexattr_init(&attr);
@@ -540,13 +1084,14 @@ virtio_heci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	LIST_INIT(&vheci->active_clients);
 
 	/*
-	 * create a client for HBM
+	 * start heci backend
 	 */
-	vheci->hbm_client = virtio_heci_create_client(vheci, 0, 0, &status);
-	if (!vheci->hbm_client)
-		goto fail;
+	if (virtio_heci_start(vheci) < 0)
+		goto start_fail;
 
 	return 0;
+start_fail:
+	virtio_heci_stop(vheci);
 setup_fail:
 	pthread_mutex_destroy(&vheci->mutex);
 fail:
@@ -560,8 +1105,7 @@ virtio_heci_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	struct virtio_heci *vheci = (struct virtio_heci *)dev->arg;
 
-	virtio_heci_client_put(vheci, vheci->hbm_client);
-	pthread_mutex_destroy(&vheci->list_mutex);
+	virtio_heci_stop(vheci);
 	pthread_mutex_destroy(&vheci->mutex);
 	free(vheci->config);
 	free(vheci);
