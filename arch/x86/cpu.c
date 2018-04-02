@@ -84,7 +84,7 @@ static void cpu_set_logical_id(uint32_t logical_id);
 static void print_hv_banner(void);
 int cpu_find_logical_id(uint32_t lapic_id);
 #ifndef CONFIG_EFI_STUB
-static void start_cpus();
+static void start_cpus(void);
 #endif
 static void pcpu_sync_sleep(unsigned long *sync, int mask_bit);
 int ibrs_type;
@@ -206,7 +206,7 @@ static int init_phy_cpu_storage(void)
 	 * allocate memory to save all lapic_id detected in parse_mdt.
 	 * We allocate 4K size which could save 4K CPUs lapic_id info.
 	 */
-	lapic_id_base = alloc_page(CPU_PAGE_SIZE);
+	lapic_id_base = alloc_page();
 	ASSERT(lapic_id_base != NULL, "fail to alloc page");
 
 	pcpu_num = parse_madt(lapic_id_base);
