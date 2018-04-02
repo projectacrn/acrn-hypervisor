@@ -282,6 +282,7 @@ acrn_sw_load_vsbl(struct vmctx *ctx)
 	*vsbl_entry = *((uint32_t *) vsbl_start_addr);
 
 	vsbl_para->boot_device_address = boot_blk_bdf;
+	vsbl_para->trusty_enabled = trusty_enabled;
 
 	return 0;
 }

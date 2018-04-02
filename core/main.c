@@ -74,6 +74,7 @@ char *vmname;
 int guest_ncpus;
 char *guest_uuid_str;
 char *vsbl_file_name;
+uint8_t trusty_enabled;
 bool stdio_in_use;
 
 static int guest_vmexit_on_hlt, guest_vmexit_on_pause;
@@ -129,7 +130,7 @@ usage(int code)
 		"Usage: %s [-abehuwxACHPSWY] [-c vcpus] [-g <gdb port>] [-l <lpc>]\n"
 		"       %*s [-m mem] [-p vcpu:hostcpu] [-s <pci>] [-U uuid] \n"
 		"       %*s [--vsbl vsbl_file_name] [--part_info part_info_name]\n"
-		"	%*s <vm>\n"
+		"	%*s [--enable_trusty] <vm>\n"
 		"       -a: local apic is in xAPIC mode (deprecated)\n"
 		"       -A: create ACPI tables\n"
 		"       -c: # cpus (default 1)\n"
@@ -156,7 +157,8 @@ usage(int code)
 		"       -B: bootargs for kernel\n"
 		"       -v: version\n"
 		"       --vsbl: vsbl file path\n"
-		"       --part_info: guest partition info file path\n",
+		"       --part_info: guest partition info file path\n"
+		"	--enable_trusty: enable trusty for guest\n",
 		progname, (int)strlen(progname), "", (int)strlen(progname), "",
 		(int)strlen(progname), "");
 
@@ -555,6 +557,7 @@ sig_handler_term(int signo)
 enum {
 	CMD_OPT_VSBL = 1000,
 	CMD_OPT_PART_INFO,
+	CMD_OPT_TRUSTY_ENABLE,
 };
 
 static struct option long_options[] = {
@@ -589,6 +592,8 @@ static struct option long_options[] = {
 	/* Following cmd option only has long option */
 	{"vsbl",		required_argument,	0, CMD_OPT_VSBL},
 	{"part_info",		required_argument,	0, CMD_OPT_PART_INFO},
+	{"enable_trusty",	no_argument,		0,
+					CMD_OPT_TRUSTY_ENABLE},
 	{0,			0,			0,  0  },
 };
 
@@ -736,6 +741,9 @@ main(int argc, char *argv[])
 					optarg);
 				exit(1);
 			}
+			break;
+		case CMD_OPT_TRUSTY_ENABLE:
+			trusty_enabled = 1;
 			break;
 		case 'h':
 			usage(0);
