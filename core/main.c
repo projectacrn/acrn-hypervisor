@@ -63,6 +63,7 @@
 #include "rtc.h"
 #include "version.h"
 #include "sw_load.h"
+#include "monitor.h"
 
 #define GUEST_NIO_PORT		0x488	/* guest upcalls via i/o port */
 
@@ -801,6 +802,7 @@ main(int argc, char *argv[])
 
 		vrtc_init(ctx, rtc_localtime);
 		sci_init(ctx);
+		monitor_init(ctx);
 
 		/*
 		 * Exit if a device emulation finds an error in its
@@ -863,6 +865,7 @@ main(int argc, char *argv[])
 		 */
 		mevent_dispatch();
 
+		monitor_close();
 		vm_pause(ctx);
 		fbsdrun_deletecpu(ctx, BSP);
 		vm_unsetup_memory(ctx);
