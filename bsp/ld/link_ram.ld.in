@@ -1,5 +1,8 @@
 #include "bsp_cfg.h"
 
+#define RSDP_EBDA_ADDR		0x40E
+#define RSDP_F_ADDR		0xE0000
+
 ENTRY(cpu_primary_start_32)
 
 MEMORY
@@ -43,11 +46,27 @@ SECTIONS
 
     .cpu_secondary : AT (_ld_cpu_secondary_reset_load)
     {
-        _ld_cpu_secondary_reset_start = .;
+        PROVIDE(_ld_cpu_secondary_reset_start = .);
         *(.cpu_secondary_reset);
         . = ALIGN(4);
         _ld_cpu_secondary_reset_end = .;
 
+        . = ALIGN(4096);
+        PROVIDE(_ld_guest_initial_page_table_start = .);
+
+        /* Here try to make sure there is enough memory space for guest init page tables
+         * for both SOS & UOS.
+         *
+         * For SOS: no override to RSDP_EBDA_ADDR/RSDP_F_ADDR and above cpu_secondary_reset code
+         * For UOS: no override to MPTABLE(from 0xF0000) and ACPI (from 0xF2400)
+         * So the final range of guest_init_page_table is set as below:
+         *    RSDP_EBDA_ADDR(0x40E) < guest_init_page_tables < RSDP_F_ADDR(0xE0000)
+         */
+	ASSERT(_ld_cpu_secondary_reset_start + CONFIG_LOW_RAM_START > RSDP_EBDA_ADDR,
+	        "LOW_RAM may override ACPI 0x40e, pls redefine it");
+	ASSERT(_ld_guest_initial_page_table_start + CONFIG_LOW_RAM_START +
+                CONFIG_GUEST_INIT_PT_PG_NUM * 0x1000 < RSDP_F_ADDR,
+	        "LOW_RAM may override ACPI 0xe0000, pls redefine it");
     } > lowram
 
     _ld_cpu_secondary_reset_size = _ld_cpu_secondary_reset_end - _ld_cpu_secondary_reset_start;

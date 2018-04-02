@@ -154,6 +154,7 @@ int cpu_find_logical_id(uint32_t lapic_id);
 /**********************************/
 extern const uint8_t          _ld_cpu_secondary_reset_load[];
 extern uint8_t                _ld_cpu_secondary_reset_start[];
+extern uint8_t                _ld_guest_initial_page_table_start[];
 extern const uint64_t         _ld_cpu_secondary_reset_size;
 extern uint8_t                _ld_bss_start[];
 extern uint8_t                _ld_bss_end[];
