@@ -113,7 +113,8 @@
 #define CPUID_TLB               2
 #define CPUID_SERIALNUM         3
 #define CPUID_EXTEND_FEATURE    7
-#define CPUID_EXTEND_FUNCTION_1 0x80000001
+#define CPUID_MAX_EXTENDED_FUNCTION  0x80000000
+#define CPUID_EXTEND_FUNCTION_1      0x80000001
 
 static inline void __cpuid(uint32_t *eax, uint32_t *ebx,
 				uint32_t *ecx, uint32_t *edx)

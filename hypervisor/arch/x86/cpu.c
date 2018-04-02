@@ -128,6 +128,7 @@ inline bool get_vmx_cap(void)
 static void get_cpu_capabilities(void)
 {
 	uint32_t eax, unused;
+	uint32_t max_extended_function_idx;
 	uint32_t family, model;
 
 	cpuid(CPUID_FEATURES, &eax, &unused,
@@ -148,6 +149,12 @@ static void get_cpu_capabilities(void)
 		&boot_cpu_data.cpuid_leaves[FEAT_7_0_EBX],
 		&boot_cpu_data.cpuid_leaves[FEAT_7_0_ECX],
 		&boot_cpu_data.cpuid_leaves[FEAT_7_0_EDX]);
+
+	cpuid(CPUID_MAX_EXTENDED_FUNCTION,
+		&max_extended_function_idx,
+		&unused, &unused, &unused);
+	boot_cpu_data.cpuid_leaves[FEAT_8000_0000_EAX] =
+		max_extended_function_idx;
 
 	cpuid(CPUID_EXTEND_FUNCTION_1, &unused, &unused,
 		&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_ECX],
