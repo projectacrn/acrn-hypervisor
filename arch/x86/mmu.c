@@ -512,6 +512,14 @@ void *alloc_paging_struct(void)
 	return ptr;
 }
 
+void free_paging_struct(void *ptr)
+{
+	if (ptr) {
+		memset(ptr, 0, CPU_PAGE_SIZE);
+		free(ptr);
+	}
+}
+
 uint64_t config_page_table_attr(struct map_params *map_params, uint32_t flags)
 {
 	int  table_type = map_params->page_table_type;

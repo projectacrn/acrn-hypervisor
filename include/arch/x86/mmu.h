@@ -315,6 +315,7 @@ struct mem_io_node {
 
 void *get_paging_pml4(void);
 void *alloc_paging_struct(void);
+void free_paging_struct(void *ptr);
 void enable_paging(void *pml4_base_addr);
 void init_paging(void);
 void map_mem(struct map_params *map_params, void *paddr, void *vaddr,

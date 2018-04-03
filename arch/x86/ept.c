@@ -57,12 +57,11 @@ void *create_guest_paging(struct vm *vm)
 	return (void *)CPU_Boot_Page_Tables_Start_VM;
 }
 
-static void *find_next_table(uint32_t table_offset,
-						     void *table_base)
+static uint64_t find_next_table(uint32_t table_offset, void *table_base)
 {
 	uint64_t table_entry;
 	uint64_t table_present;
-	void *sub_table_addr = 0;
+	uint64_t sub_table_addr = 0;
 
 	/* Read the table entry */
 	table_entry = MEM_READ64(table_base
@@ -83,12 +82,11 @@ static void *find_next_table(uint32_t table_offset,
 	}
 
 	/* Get address of the sub-table */
-	sub_table_addr = (void *)(table_entry & IA32E_REF_MASK);
+	sub_table_addr = table_entry & IA32E_REF_MASK;
 
 	/* Return the next table in the walk */
 	return sub_table_addr;
 }
-
 
 void free_ept_mem(void *pml4_addr)
 {
@@ -99,16 +97,22 @@ void free_ept_mem(void *pml4_addr)
 	uint32_t pdpt_index;
 	uint32_t pde_index;
 
+	if (pml4_addr == NULL) {
+		ASSERT(false, "EPTP is NULL");
+		return;
+	}
+
 	for (pml4_index = 0; pml4_index < IA32E_NUM_ENTRIES; pml4_index++) {
 		/* Walk from the PML4 table to the PDPT table */
-		pdpt_addr = find_next_table(pml4_index, pml4_addr);
+		pdpt_addr = HPA2HVA(find_next_table(pml4_index, pml4_addr));
 		if (pdpt_addr == NULL)
 			continue;
 
 		for (pdpt_index = 0; pdpt_index < IA32E_NUM_ENTRIES;
 				pdpt_index++) {
 			/* Walk from the PDPT table to the PD table */
-			pde_addr = find_next_table(pdpt_index, pdpt_addr);
+			pde_addr = HPA2HVA(find_next_table(pdpt_index,
+						pdpt_addr));
 
 			if (pde_addr == NULL)
 				continue;
@@ -116,20 +120,20 @@ void free_ept_mem(void *pml4_addr)
 			for (pde_index = 0; pde_index < IA32E_NUM_ENTRIES;
 					pde_index++) {
 				/* Walk from the PD table to the page table */
-				pte_addr = find_next_table(pde_index,
-						pde_addr);
+				pte_addr = HPA2HVA(find_next_table(pde_index,
+						pde_addr));
 
 				/* Free page table entry table */
 				if (pte_addr)
-					free(pte_addr);
+					free_paging_struct(pte_addr);
 			}
 			/* Free page directory entry table */
 			if (pde_addr)
-				free(pde_addr);
+				free_paging_struct(pde_addr);
 		}
-		free(pdpt_addr);
+		free_paging_struct(pdpt_addr);
 	}
-	free(pml4_addr);
+	free_paging_struct(pml4_addr);
 }
 
 void destroy_ept(struct vm *vm)
