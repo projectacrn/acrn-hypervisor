@@ -140,11 +140,10 @@ void invept(struct vcpu *vcpu)
 	struct invept_desc desc = {0};
 
 	if (check_invept_single_support()) {
-		desc.eptp = (uint64_t) vcpu->vm->arch_vm.nworld_eptp
-			| (3 << 3) | 6;
+		desc.eptp = vcpu->vm->arch_vm.nworld_eptp | (3 << 3) | 6;
 		_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
 		if (vcpu->vm->sworld_control.sworld_enabled) {
-			desc.eptp = (uint64_t) vcpu->vm->arch_vm.sworld_eptp
+			desc.eptp = vcpu->vm->arch_vm.sworld_eptp
 				| (3 << 3) | 6;
 			_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
 
