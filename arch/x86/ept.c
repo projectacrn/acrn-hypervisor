@@ -140,6 +140,9 @@ void destroy_ept(struct vm *vm)
 {
 	free_ept_mem(vm->arch_vm.nworld_eptp);
 	free_ept_mem(vm->arch_vm.m2p);
+	/* Destroy Secure world ept */
+	if (vm->sworld_control.sworld_enabled)
+		free_ept_mem(vm->arch_vm.sworld_eptp);
 }
 
 uint64_t gpa2hpa_check(struct vm *vm, uint64_t gpa,
