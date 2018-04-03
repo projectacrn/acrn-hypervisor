@@ -208,6 +208,9 @@ int shutdown_vm(struct vm *vm)
 	/* cleanup and free vioapic */
 	vioapic_cleanup(vm->arch_vm.virt_ioapic);
 
+	/* Destroy secure world */
+	if (vm->sworld_control.sworld_enabled)
+		destroy_secure_world(vm);
 	/* Free EPT allocated resources assigned to VM */
 	destroy_ept(vm);
 

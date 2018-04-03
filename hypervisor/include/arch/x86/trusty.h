@@ -128,6 +128,7 @@ struct secure_world_control {
 
 void switch_world(struct vcpu *vcpu, int next_world);
 bool initialize_trusty(struct vcpu *vcpu, uint64_t param);
+void destroy_secure_world(struct vm *vm);
 
 #endif /* TRUSTY_H_ */
 
