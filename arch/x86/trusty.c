@@ -173,6 +173,30 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 
 }
 
+void  destroy_secure_world(struct vm *vm)
+{
+	struct map_params  map_params;
+	struct vm *vm0 = get_vm_from_vmid(0);
+
+	/* clear trusty memory space */
+	memset(HPA2HVA(vm->sworld_control.sworld_memory.base_hpa),
+			0, vm->sworld_control.sworld_memory.length);
+
+	/* restore memory to SOS ept mapping */
+	map_params.page_table_type = PTT_EPT;
+	map_params.pml4_base = vm0->arch_vm.nworld_eptp;
+	map_params.pml4_inverted = vm0->arch_vm.m2p;
+
+	map_mem(&map_params, (void *)vm->sworld_control.sworld_memory.base_hpa,
+			(void *)vm->sworld_control.sworld_memory.base_gpa,
+			vm->sworld_control.sworld_memory.length,
+			(MMU_MEM_ATTR_READ |
+			 MMU_MEM_ATTR_WRITE |
+			 MMU_MEM_ATTR_EXECUTE |
+			 MMU_MEM_ATTR_WB_CACHE));
+
+}
+
 static void save_world_ctx(struct run_context *context)
 {
 	/* VMCS Execution field */
