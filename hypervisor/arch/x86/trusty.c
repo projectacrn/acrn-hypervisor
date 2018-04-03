@@ -38,9 +38,6 @@
 
 _Static_assert(NR_WORLD == 2, "Only 2 Worlds supported!");
 
-/* Trusty EPT rebase gpa: 511G */
-#define TRUSTY_EPT_REBASE_GPA (511ULL*1024ULL*1024ULL*1024ULL)
-
 #define TRUSTY_VERSION 1
 
 struct trusty_startup_param {

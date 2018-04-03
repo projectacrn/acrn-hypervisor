@@ -41,21 +41,6 @@
 
 #define ACRN_DBG_EPT	6
 
-void *create_guest_paging(struct vm *vm)
-{
-	void *hva_dest;
-	void *hva_src;
-
-	/* copy guest identity mapped 4G page table to guest */
-	hva_dest = GPA2HVA(vm,
-			(uint64_t)CPU_Boot_Page_Tables_Start_VM);
-	hva_src = (void *)(_ld_cpu_secondary_reset_load
-			+ (CPU_Boot_Page_Tables_Start_VM
-			- _ld_cpu_secondary_reset_start));
-	/* 2MB page size, need to copy 6 pages */
-	memcpy_s(hva_dest, 6 * CPU_PAGE_SIZE, hva_src, 6 * CPU_PAGE_SIZE);
-	return (void *)CPU_Boot_Page_Tables_Start_VM;
-}
 
 static uint64_t find_next_table(uint32_t table_offset, void *table_base)
 {

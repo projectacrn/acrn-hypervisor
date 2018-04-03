@@ -335,3 +335,132 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 			CONFIG_RAM_SIZE, MAP_UNMAP, 0);
 	return 0;
 }
+
+/*******************************************************************
+ *         GUEST initial page table
+ *
+ * guest starts with long mode, HV needs to prepare Guest identity
+ * mapped page table.
+ * For SOS:
+ *   Guest page tables cover 0~4G space with 2M page size, will use
+ *   6 pages memory for page tables.
+ * For UOS(Trusty not enabled):
+ *   Guest page tables cover 0~4G space with 2M page size, will use
+ *    6 pages memory for page tables.
+ * For UOS(Trusty enabled):
+ *   Guest page tables cover 0~4G and trusy memory space with 2M page size,
+ *   will use 7 pages memory for page tables.
+ * This API assume that the trusty memory is remapped to guest physical address
+ * of 511G to 511G + 16MB
+ *
+ * FIXME: here using hard code GUEST_INIT_PAGE_TABLE_START as guest init page
+ * table gpa start, and it will occupy at most GUEST_INIT_PT_PAGE_NUM pages.
+ * Some check here:
+ * - guest page table space should not override cpu_secondary_reset code area
+ *   (it's a little tricky here, as under current identical mapping, HV & SOS
+ *   share same memory under 1M; under uefi boot mode, the defered AP startup
+ *   need cpu_secondary_reset code area which reserved by uefi stub keep there
+ *   no change even after SOS startup)
+ * - guest page table space should not override possible RSDP fix segment
+ *
+ * Anyway, it's a tmp solution, the init page tables should be totally removed
+ * after guest realmode/32bit no paging mode got supported.
+ ******************************************************************/
+#define GUEST_INIT_PAGE_TABLE_SKIP_SIZE	0x8000UL
+#define GUEST_INIT_PAGE_TABLE_START	(CONFIG_LOW_RAM_START +	\
+					GUEST_INIT_PAGE_TABLE_SKIP_SIZE)
+#define GUEST_INIT_PT_PAGE_NUM		7
+#define RSDP_F_ADDR			0xE0000
+uint64_t create_guest_initial_paging(struct vm *vm)
+{
+	uint64_t i = 0;
+	uint64_t entry = 0;
+	uint64_t entry_num = 0;
+	uint64_t pdpt_base_paddr = 0;
+	uint64_t pd_base_paddr = 0;
+	uint64_t table_present = 0;
+	uint64_t table_offset = 0;
+	void *addr = NULL;
+	void *pml4_addr = GPA2HVA(vm, GUEST_INIT_PAGE_TABLE_START);
+
+	_Static_assert((GUEST_INIT_PAGE_TABLE_START + 7 * PAGE_SIZE_4K) <
+		RSDP_F_ADDR, "RSDP fix segment could be override");
+
+	if (GUEST_INIT_PAGE_TABLE_SKIP_SIZE <
+		(unsigned long)&_ld_cpu_secondary_reset_size) {
+		panic("guest init PTs override cpu_secondary_reset code");
+	}
+
+	/* Using continuous memory for guest page tables, the total 4K page
+	 * number for it(without trusty) is GUEST_INIT_PT_PAGE_NUM-1.
+	 * here make sure they are init as 0 (page entry no present)
+	 */
+	memset(pml4_addr, 0, PAGE_SIZE_4K * GUEST_INIT_PT_PAGE_NUM-1);
+
+	/* Write PML4E */
+	table_present = (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT);
+	/* PML4 used 1 page, skip it to fetch PDPT */
+	pdpt_base_paddr = GUEST_INIT_PAGE_TABLE_START + PAGE_SIZE_4K;
+	entry = pdpt_base_paddr | table_present;
+	MEM_WRITE64(pml4_addr, entry);
+
+	/* Write PDPTE, PDPT used 1 page, skip it to fetch PD */
+	pd_base_paddr = pdpt_base_paddr + PAGE_SIZE_4K;
+	addr = pml4_addr + PAGE_SIZE_4K;
+	/* Guest page tables cover 0~4G space with 2M page size */
+	for (i = 0; i < 4; i++) {
+		entry = ((pd_base_paddr + (i * PAGE_SIZE_4K))
+				| table_present);
+		MEM_WRITE64(addr, entry);
+		addr += IA32E_COMM_ENTRY_SIZE;
+	}
+
+	/* Write PDE, PT used 4 pages */
+	table_present = (IA32E_PDPTE_PS_BIT
+			| IA32E_COMM_P_BIT
+			| IA32E_COMM_RW_BIT);
+	/* Totally 2048(512*4) entries with 2M page size for 0~4G*/
+	entry_num = IA32E_NUM_ENTRIES * 4;
+	addr = pml4_addr + 2 * PAGE_SIZE_4K;
+	for (i = 0; i < entry_num; i++) {
+		entry = (i * (1 << MMU_PDE_PAGE_SHIFT)) | table_present;
+		MEM_WRITE64(addr, entry);
+		addr += IA32E_COMM_ENTRY_SIZE;
+	}
+
+	/* For UOS, if trusty is enabled,
+	 * need to setup tempory page table for trusty
+	 * FIXME: this is a tempory solution for trusty enabling,
+	 * the final solution is that vSBL will setup guest page tables
+	 */
+	if (vm->sworld_control.sworld_enabled && !is_vm0(vm)) {
+		/* clear page entry for trusty */
+		memset(pml4_addr + 6 * PAGE_SIZE_4K, 0, PAGE_SIZE_4K);
+
+		/* Write PDPTE for trusy memory, PD will use 7th page */
+		pd_base_paddr = GUEST_INIT_PAGE_TABLE_START +
+				(6 * PAGE_SIZE_4K);
+		table_offset =
+			IA32E_PDPTE_INDEX_CALC(TRUSTY_EPT_REBASE_GPA);
+		addr = (pml4_addr + PAGE_SIZE_4K + table_offset);
+		table_present = (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT);
+		entry = (pd_base_paddr | table_present);
+		MEM_WRITE64(addr, entry);
+
+		/* Write PDE for trusty with 2M page size */
+		entry_num = TRUSTY_MEMORY_SIZE / (1 << MMU_PDE_PAGE_SHIFT);
+		addr = pml4_addr + 6 * PAGE_SIZE_4K;
+		table_present = (IA32E_PDPTE_PS_BIT
+				| IA32E_COMM_P_BIT
+				| IA32E_COMM_RW_BIT);
+		for (i = 0; i < entry_num; i++) {
+			entry = (TRUSTY_EPT_REBASE_GPA +
+				(i * (1 << MMU_PDE_PAGE_SHIFT)))
+				| table_present;
+			MEM_WRITE64(addr, entry);
+			addr += IA32E_COMM_ENTRY_SIZE;
+		}
+	}
+
+	return GUEST_INIT_PAGE_TABLE_START;
+}
