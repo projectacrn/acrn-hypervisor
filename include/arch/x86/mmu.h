@@ -157,6 +157,8 @@
 
 #ifndef ASSEMBLER
 
+#include <cpu.h>
+
 /* Define cache line size (in bytes) */
 #define     CACHE_LINE_SIZE                 64
 
@@ -167,7 +169,8 @@
 #define     IA32E_INDEX_MASK_BITS           9
 #define     IA32E_NUM_ENTRIES               512
 #define     IA32E_INDEX_MASK                (uint64_t)(IA32E_NUM_ENTRIES - 1)
-#define     IA32E_REF_MASK                  0x000FFFFFFFFFF000
+#define     IA32E_REF_MASK			\
+	(boot_cpu_data.physical_address_mask)
 #define     IA32E_FIRST_BLOCK_INDEX         1
 
 /* Macro to get PML4 index given an address */
