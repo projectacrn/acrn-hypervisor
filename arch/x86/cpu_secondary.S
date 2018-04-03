@@ -162,36 +162,4 @@ cpu_secondary_pdt_addr:
     address = address + 0x200000
     .endr
 
-
-/*******************************************************************
- *         GUEST initial 4G page table
- *
- * guest starts with long mode, HV needs to prepare Guest identity
- * mapped page table.
- *
- * guest page tables covers 4G size, with 2M page size.
- *
- * HV copy this page table (6 pages) to guest address
- * CPU_Boot_Page_Tables_Start_VM before  executing guest instruction.
- *
- ******************************************************************/
-    .align  CPU_PAGE_SIZE
-    .global CPU_Boot_Page_Tables_Start_VM
-CPU_Boot_Page_Tables_Start_VM:
-    .quad   vm_cpu_pdpt_addr + (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT)
-    .align  CPU_PAGE_SIZE
-vm_cpu_pdpt_addr:
-    address = 0
-    .rept   4
-    .quad   vm_cpu_pdt_addr + address + (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT)
-    address = address + CPU_PAGE_SIZE
-    .endr
-    .align  CPU_PAGE_SIZE
-vm_cpu_pdt_addr:
-    address = 0
-    .rept  2048
-    .quad  address + (IA32E_PDPTE_PS_BIT | IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT)
-    address = address + 0x200000
-    .endr
-
     .end

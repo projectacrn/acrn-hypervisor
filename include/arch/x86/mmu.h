@@ -381,7 +381,7 @@ extern uint8_t CPU_Boot_Page_Tables_Start_VM[];
 
 /* External Interfaces */
 int     is_ept_supported(void);
-void   *create_guest_paging(struct vm *vm);
+uint64_t create_guest_initial_paging(struct vm *vm);
 void    destroy_ept(struct vm *vm);
 uint64_t  gpa2hpa(struct vm *vm, uint64_t gpa);
 uint64_t  gpa2hpa_check(struct vm *vm, uint64_t gpa,

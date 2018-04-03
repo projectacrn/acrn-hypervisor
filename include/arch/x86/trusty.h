@@ -36,6 +36,10 @@
 #define MMC_PROD_NAME_WITH_PSN_LEN      15
 #define BUP_MKHI_BOOTLOADER_SEED_LEN    64
 
+/* Trusty EPT rebase gpa: 511G */
+#define TRUSTY_EPT_REBASE_GPA (511ULL*1024ULL*1024ULL*1024ULL)
+#define TRUSTY_MEMORY_SIZE        0x01000000
+
 /* Structure of seed info */
 struct seed_info {
 	uint8_t cse_svn;

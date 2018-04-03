@@ -98,9 +98,10 @@ int create_vcpu(int cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	/* Is this VCPU a VM BSP, create page hierarchy for this VM */
 	if (is_vcpu_bsp(vcpu)) {
 		/* Set up temporary guest page tables */
-		vm->arch_vm.guest_pml4 = create_guest_paging(vm);
+		vm->arch_vm.guest_init_pml4 = create_guest_initial_paging(vm);
 		pr_info("VM *d VCPU %d CR3: 0x%016llx ",
-			vm->attr.id, vcpu->vcpu_id, vm->arch_vm.guest_pml4);
+			vm->attr.id, vcpu->vcpu_id,
+			vm->arch_vm.guest_init_pml4);
 	}
 
 	/* Allocate VMCS region for this VCPU */

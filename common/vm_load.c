@@ -124,7 +124,7 @@ int load_guest(struct vm *vm, struct vcpu *vcpu)
 	pr_info("VCPU%d Entry: 0x%llx, RSI: 0x%016llx, cr3: 0x%016llx",
 			vcpu->vcpu_id, vcpu->entry_addr,
 			cur_context->guest_cpu_regs.regs.rsi,
-			vm->arch_vm.guest_pml4);
+			vm->arch_vm.guest_init_pml4);
 
 	return ret;
 }
