@@ -557,6 +557,38 @@ virtio_heci_hbm_response(struct virtio_heci *vheci,
 	virtio_heci_client_put(vheci, client);
 }
 
+/*
+ * This function is intend to send HBM disconnection command to guest.
+ * Although the default name is for virtual, using vclient here for
+ * better understanding.
+ */
+static void
+virtio_heci_disconnect_vclient(struct virtio_heci *vheci,
+		struct virtio_heci_client *client)
+{
+	struct heci_msg_hdr hdr = {0};
+	struct heci_hbm_client_disconnect_req disconnect_req = {{0} };
+	struct virtio_heci_client *hbm_client;
+
+	disconnect_req.hbm_cmd.cmd = HECI_HBM_CLIENT_DISCONNECT;
+	disconnect_req.me_addr = client->client_id;
+	disconnect_req.host_addr = client->client_addr;
+
+	hbm_client = virtio_heci_get_hbm_client(vheci);
+	if (!hbm_client) {
+		DPRINTF(("vheci: HBM client get fail!!\r\n"));
+		return;
+	}
+	populate_heci_hdr(hbm_client, &hdr,
+			sizeof(struct heci_hbm_client_disconnect_req), 1);
+
+	DPRINTF(("vheci: DM -> UOS disconnect client[%d]!\r\n",
+				client->client_id));
+	virtio_heci_hbm_response(vheci, &hdr,
+			&disconnect_req, sizeof(disconnect_req));
+	virtio_heci_client_put(vheci, hbm_client);
+}
+
 static void
 virtio_heci_hbm_handler(struct virtio_heci *vheci, void *data)
 {
@@ -824,7 +856,8 @@ virtio_heci_proc_tx(struct virtio_heci *vheci, struct virtio_vq_info *vq)
 			DPRINTF(("vheci: TX: ME[%d]fd[%d] overflow "
 					"max_message_length in sendbuf!\n\r",
 					client->client_id, client->client_fd));
-			/* TODO: close the connection according to spec */
+			/* close the connection according to spec */
+			virtio_heci_disconnect_vclient(vheci, client);
 			goto out;
 		}
 		/* copy buffer from virtqueue to send_buf */
