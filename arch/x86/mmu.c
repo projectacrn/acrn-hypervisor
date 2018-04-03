@@ -424,10 +424,10 @@ static void *walk_paging_struct(void *addr, void *table_base,
 			 * sub-table
 			 */
 			MEM_WRITE64(table_base + table_offset,
-				    (uint64_t) sub_table_addr | table_present);
+				    HVA2HPA(sub_table_addr) | table_present);
 		} else {
 			/* Get address of the sub-table */
-			sub_table_addr = (void *)(table_entry & IA32E_REF_MASK);
+			sub_table_addr = HPA2HVA(table_entry & IA32E_REF_MASK);
 		}
 	}
 
@@ -617,7 +617,7 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 	if (table_present == PT_NOT_PRESENT) {
 		/* PML4E not present, return PML4 base address */
 		entry->entry_level  = IA32E_PML4;
-		entry->entry_base = (uint64_t)table_addr;
+		entry->entry_base = table_addr;
 		entry->entry_present = PT_NOT_PRESENT;
 		entry->page_size = check_mmu_1gb_support(map_params) ?
 			(PAGE_SIZE_1G) : (PAGE_SIZE_2M);
@@ -627,7 +627,7 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 	}
 
 	/* Obtain page table entry from PDPT table*/
-	table_addr = (void *)(table_entry & IA32E_REF_MASK);
+	table_addr = HPA2HVA(table_entry & IA32E_REF_MASK);
 	ret = get_table_entry(addr, table_addr, IA32E_PDPT, &table_entry);
 	if (ret < 0)
 		return ret;
@@ -635,7 +635,7 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 	if (table_present == PT_NOT_PRESENT) {
 		/* PDPTE not present, return PDPT base address */
 		entry->entry_level  = IA32E_PDPT;
-		entry->entry_base = (uint64_t)table_addr;
+		entry->entry_base = table_addr;
 		entry->entry_present = PT_NOT_PRESENT;
 		entry->page_size = check_mmu_1gb_support(map_params) ?
 			(PAGE_SIZE_1G) : (PAGE_SIZE_2M);
@@ -646,7 +646,7 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 	if (table_entry & IA32E_PDPTE_PS_BIT) {
 		/* 1GB page size, return the base addr of the pg entry*/
 		entry->entry_level  = IA32E_PDPT;
-		entry->entry_base = (uint64_t)table_addr;
+		entry->entry_base = table_addr;
 		entry->page_size = check_mmu_1gb_support(map_params) ?
 			(PAGE_SIZE_1G) : (PAGE_SIZE_2M);
 		entry->entry_present = PT_PRESENT;
@@ -656,7 +656,7 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 	}
 
 	/* Obtain page table entry from PD table*/
-	table_addr = (void *)(table_entry & IA32E_REF_MASK);
+	table_addr = HPA2HVA(table_entry & IA32E_REF_MASK);
 	ret = get_table_entry(addr, table_addr, IA32E_PD, &table_entry);
 	if (ret < 0)
 		return ret;
@@ -664,7 +664,7 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 	if (table_present == PT_NOT_PRESENT) {
 		/* PDE not present, return PDE base address */
 		entry->entry_level  = IA32E_PD;
-		entry->entry_base = (uint64_t)table_addr;
+		entry->entry_base = table_addr;
 		entry->entry_present = PT_NOT_PRESENT;
 		entry->page_size  = PAGE_SIZE_2M;
 		entry->entry_off = fetch_page_table_offset(addr, IA32E_PD);
@@ -675,7 +675,7 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 	if (table_entry & IA32E_PDE_PS_BIT) {
 		/* 2MB page size, return the base addr of the pg entry*/
 		entry->entry_level  = IA32E_PD;
-		entry->entry_base = (uint64_t)table_addr;
+		entry->entry_base = table_addr;
 		entry->entry_present = PT_PRESENT;
 		entry->page_size  = PAGE_SIZE_2M;
 		entry->entry_off = fetch_page_table_offset(addr, IA32E_PD);
@@ -684,7 +684,7 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 	}
 
 	/* Obtain page table entry from PT table*/
-	table_addr = (void *)(table_entry & IA32E_REF_MASK);
+	table_addr = HPA2HVA(table_entry & IA32E_REF_MASK);
 	ret = get_table_entry(addr, table_addr, IA32E_PT, &table_entry);
 	if (ret < 0)
 		return ret;
@@ -692,7 +692,7 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 	entry->entry_present = ((table_present == PT_PRESENT)
 			? (PT_PRESENT):(PT_NOT_PRESENT));
 	entry->entry_level  = IA32E_PT;
-	entry->entry_base = (uint64_t)table_addr;
+	entry->entry_base = table_addr;
 	entry->page_size  = PAGE_SIZE_4K;
 	entry->entry_off = fetch_page_table_offset(addr, IA32E_PT);
 	entry->entry_val =  table_entry;
@@ -837,8 +837,8 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 			 * (here &0x07)
 			 */
 			MEM_WRITE64(entry.entry_base + entry.entry_off,
-					((entry.entry_val & 0x07) |
-					 ((uint64_t)sub_tab_addr)));
+					(entry.entry_val & 0x07) |
+					 HVA2HPA(sub_tab_addr));
 		} else {
 			/* Write the table entry to map this memory,
 			 * SDM chapter4 figure 4-11
@@ -846,8 +846,8 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 			 * bit5(A) bit6(D or Ignore)
 			 */
 			MEM_WRITE64(entry.entry_base + entry.entry_off,
-					((entry.entry_val & 0x7f) |
-					 ((uint64_t)sub_tab_addr)));
+					(entry.entry_val & 0x7f) |
+					 HVA2HPA(sub_tab_addr));
 		}
 	}
 

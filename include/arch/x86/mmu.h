@@ -255,7 +255,7 @@ struct map_params {
 struct entry_params {
 	uint32_t entry_level;
 	uint32_t entry_present;
-	uint64_t entry_base;
+	void *entry_base;
 	uint64_t entry_off;
 	uint64_t entry_val;
 	uint64_t page_size;
