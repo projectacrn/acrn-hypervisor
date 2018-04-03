@@ -113,7 +113,7 @@ struct vm_state_info {
 };
 
 struct vm_arch {
-	void *guest_pml4;	/* Guest pml4 */
+	uint64_t guest_init_pml4;/* Guest init pml4 */
 	/* EPT hierarchy for Normal World */
 	uint64_t nworld_eptp;
 	/* EPT hierarchy for Secure World

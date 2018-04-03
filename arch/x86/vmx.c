@@ -270,7 +270,7 @@ static void init_guest_state(struct vcpu *vcpu)
 	} else if (get_vcpu_mode(vcpu) == PAGE_PROTECTED_MODE) {
 		cur_context->cr0 = ((uint64_t)CR0_PG | CR0_PE | CR0_NE);
 		cur_context->cr4 = ((uint64_t)CR4_PSE | CR4_PAE | CR4_MCE | CR4_VMXE);
-		cur_context->cr3 = (uint64_t)vm->arch_vm.guest_pml4 | CR3_PWT;
+		cur_context->cr3 = vm->arch_vm.guest_init_pml4 | CR3_PWT;
 	}
 
 	value = cur_context->cr0;
