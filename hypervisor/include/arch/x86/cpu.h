@@ -228,11 +228,13 @@ enum feature_word {
 	FEAT_8000_0000_EAX, /* CPUID[8000_0000].EAX */
 	FEAT_8000_0001_ECX, /* CPUID[8000_0001].ECX */
 	FEAT_8000_0001_EDX, /* CPUID[8000_0001].EDX */
+	FEAT_8000_0008_EAX, /* CPUID[8000_0008].EAX */
 	FEATURE_WORDS,
 };
 
 struct cpuinfo_x86 {
 	uint8_t x86, x86_model;
+	uint64_t physical_address_mask;
 	uint32_t cpuid_leaves[FEATURE_WORDS];
 };
 
