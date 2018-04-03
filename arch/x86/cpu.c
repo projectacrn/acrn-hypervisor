@@ -125,6 +125,11 @@ inline bool get_vmx_cap(void)
 	return !!(boot_cpu_data.cpuid_leaves[FEAT_1_ECX] & CPUID_ECX_VMX);
 }
 
+static uint64_t get_address_mask(uint8_t limit)
+{
+	return ((1ULL << limit) - 1) & CPU_PAGE_MASK;
+}
+
 static void get_cpu_capabilities(void)
 {
 	uint32_t eax, unused;
@@ -156,9 +161,22 @@ static void get_cpu_capabilities(void)
 	boot_cpu_data.cpuid_leaves[FEAT_8000_0000_EAX] =
 		max_extended_function_idx;
 
+	if (max_extended_function_idx < CPUID_EXTEND_ADDRESS_SIZE) {
+		panic("CPU w/o CPUID.80000008H is not supported");
+	}
+
 	cpuid(CPUID_EXTEND_FUNCTION_1, &unused, &unused,
 		&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_ECX],
 		&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_EDX]);
+
+	cpuid(CPUID_EXTEND_ADDRESS_SIZE,
+		&eax, &unused, &unused, &unused);
+	boot_cpu_data.cpuid_leaves[FEAT_8000_0008_EAX] = eax;
+	/* EAX bits 07-00: #Physical Address Bits
+	 *     bits 15-08: #Linear Address Bits
+	 */
+	boot_cpu_data.physical_address_mask =
+		get_address_mask(eax & 0xff);
 
 	/* For speculation defence.
 	 * The default way is to set IBRS at vmexit and then do IBPB at vcpu
@@ -352,6 +370,11 @@ void bsp_boot_init(void)
 		VMX_MACHINE_T_GUEST_SPEC_CTRL_OFFSET,
 		"run_context ia32_spec_ctrl offset not match");
 
+	/* Get CPU capabilities thru CPUID, including the physical address bit
+	 * limit which is required for initializing paging.
+	 */
+	get_cpu_capabilities();
+
 	/* Initialize the hypervisor paging */
 	init_paging();
 
@@ -367,8 +390,6 @@ void bsp_boot_init(void)
 #ifdef STACK_PROTECTOR
 	set_fs_base();
 #endif
-
-	get_cpu_capabilities();
 
 	vapic_cap_detect();
 
