@@ -521,8 +521,231 @@ static void
 virtio_heci_hbm_response(struct virtio_heci *vheci,
 		struct heci_msg_hdr *hdr, void *data, int len)
 {
-	/* TODO: heci hbm response */
+	struct virtio_heci_client *client;
+
+	client = virtio_heci_get_hbm_client(vheci);
+	if (!client) {
+		DPRINTF(("vheci: HBM client has been released, ignore.\r\n"));
+		return;
+	}
+	pthread_mutex_lock(&vheci->rx_mutex);
+	memcpy(client->recv_buf + client->recv_offset, hdr,
+			sizeof(struct heci_msg_hdr));
+	client->recv_offset += sizeof(struct heci_msg_hdr);
+	memcpy(client->recv_buf + client->recv_offset, data, len);
+	client->recv_offset += len;
+	vheci->rx_need_sched = true;
+
+	pthread_mutex_unlock(&vheci->rx_mutex);
+	virtio_heci_client_put(vheci, client);
 }
+
+static void
+virtio_heci_hbm_handler(struct virtio_heci *vheci, void *data)
+{
+	struct heci_hbm_cmd *hbm_cmd = (struct heci_hbm_cmd *)data;
+	struct heci_msg_hdr *phdr, hdr = {0};
+	struct virtio_heci_client *client = NULL;
+	struct mei_request_client_params params_req = {0};
+	int ret = 0, status = 0;
+
+	struct heci_hbm_host_ver_res ver_res = {{0} };
+	struct heci_hbm_host_enum_req *enum_req;
+	struct heci_hbm_host_enum_res enum_res = {{0} };
+	struct heci_hbm_host_client_prop_req *client_prop_req;
+	struct heci_hbm_host_client_prop_res client_prop_res = {{0} };
+	struct heci_hbm_client_connect_req *connect_req;
+	struct heci_hbm_client_connect_res connect_res = {{0} };
+	struct heci_hbm_client_disconnect_res disconnect_res = {{0} };
+	struct heci_hbm_flow_ctl flow_ctl_req = {{0} };
+	struct heci_hbm_flow_ctl *pflow_ctl_req;
+
+	DPRINTF(("vheci: HBM cmd[%d] is handling\n\r",	hbm_cmd->cmd));
+	phdr = &hdr;
+	switch (hbm_cmd->cmd) {
+	case HECI_HBM_HOST_VERSION:
+		ver_res = *(struct heci_hbm_host_ver_res *)data;
+		ver_res.hbm_cmd.is_response = 1;
+		/* always support host request version */
+		ver_res.host_ver_support = 1;
+		populate_heci_hdr(vheci->hbm_client, phdr,
+				sizeof(struct heci_hbm_host_ver_res), 1);
+		DPRINTF(("vheci: HBM cmd[%d] response: hdr[%08x]\n\r",
+					hbm_cmd->cmd, *(unsigned int *)phdr));
+		print_hex((unsigned char *)&ver_res, sizeof(ver_res));
+		virtio_heci_hbm_response(vheci, phdr,
+				&ver_res, sizeof(ver_res));
+		break;
+	case HECI_HBM_HOST_STOP:
+		/* TODO:
+		 * disconnect all clients
+		 */
+		DPRINTF(("vheci: %s HBM cmd[%d] not support for now\n\r",
+					__func__, hbm_cmd->cmd));
+		break;
+	case HECI_HBM_ME_STOP:
+		/* TODO:
+		 * reset all device
+		 */
+		DPRINTF(("vheci: %s HBM cmd[%d] not support for now\n\r",
+					__func__, hbm_cmd->cmd));
+		break;
+	case HECI_HBM_HOST_ENUM:
+		enum_req = (struct heci_hbm_host_enum_req *)data;
+		enum_res.hbm_cmd = enum_req->hbm_cmd;
+		enum_res.hbm_cmd.is_response = 1;
+		/* copy valid_addresses for hbm enum request */
+		memcpy(enum_res.valid_addresses, &vheci->me_clients_map,
+				sizeof(enum_res.valid_addresses));
+		populate_heci_hdr(vheci->hbm_client, phdr,
+				sizeof(struct heci_hbm_host_enum_res), 1);
+		DPRINTF(("vheci: HBM cmd[%d] response: hdr[%08x]\n\r",
+					hbm_cmd->cmd, *(unsigned int *)phdr));
+		print_hex((unsigned char *)&enum_res, sizeof(enum_res));
+		virtio_heci_hbm_response(vheci, phdr,
+				&enum_res, sizeof(enum_res));
+		break;
+	case HECI_HBM_HOST_CLIENT_PROP:
+		client_prop_req = (struct heci_hbm_host_client_prop_req *)data;
+		client_prop_res.hbm_cmd = client_prop_req->hbm_cmd;
+		client_prop_res.hbm_cmd.is_response = 1;
+
+		client_prop_res.status = HECI_HBM_SUCCESS;
+		/* get the client's props */
+		client_prop_res.address = params_req.client_id =
+			client_prop_req->address;
+		ret = ioctl(vheci->hbm_client->client_fd,
+				IOCTL_MEI_REQUEST_CLIENT_PROP, &params_req);
+		if (ret < 0) {
+			/* not client found */
+			client_prop_res.status = HECI_HBM_CLIENT_NOT_FOUND;
+		}
+		memcpy(&client_prop_res.props, params_req.data,
+				sizeof(struct heci_client_properties));
+		populate_heci_hdr(vheci->hbm_client, phdr,
+			sizeof(struct heci_hbm_host_client_prop_res), 1);
+		DPRINTF(("vheci: HBM cmd[%d] response: hdr[%08x]\n\r",
+					hbm_cmd->cmd, *(unsigned int *)phdr));
+		print_hex((unsigned char *)&client_prop_res,
+				sizeof(client_prop_res));
+		virtio_heci_hbm_response(vheci, phdr,
+				&client_prop_res, sizeof(client_prop_res));
+		break;
+	case HECI_HBM_CLIENT_CONNECT:
+		/*
+		 * need handle some driver probed clients.
+		 * There are some single connection clients with kernel
+		 * driver probed, like DAL's VM clients, we need emulate
+		 * the response to guest and setup the link between
+		 * virtio_heci_client and front-end client
+		 */
+		connect_req = (struct heci_hbm_client_connect_req *)data;
+		connect_res =
+			*(struct heci_hbm_client_connect_res *)connect_req;
+		connect_res.hbm_cmd.is_response = 1;
+		client = virtio_heci_find_client(vheci,	connect_req->host_addr);
+		if (!client) {
+			/* no client mapping in mediator, need create */
+			client = virtio_heci_create_client(vheci,
+					connect_req->me_addr,
+					connect_req->host_addr, &status);
+			if (!client) {
+				/* create client failed
+				 * TODO: need change the status according to
+				 * the status of virtio_heci_create_client.
+				 */
+				connect_res.status = status;
+			} else
+				virtio_heci_client_get(client);
+		} else {
+			/* already exist, return @HECI_HBM_ALREADY_EXISTS */
+			connect_res.status = HECI_HBM_ALREADY_EXISTS;
+		}
+		populate_heci_hdr(vheci->hbm_client, phdr,
+				sizeof(struct heci_hbm_client_connect_res), 1);
+		DPRINTF(("vheci: HBM cmd[%d] response: hdr[%08x]\n\r",
+					hbm_cmd->cmd, *(unsigned int *)phdr));
+		print_hex((unsigned char *)&connect_res, sizeof(connect_res));
+		virtio_heci_hbm_response(vheci, phdr,
+				&connect_res, sizeof(connect_res));
+
+		/* create client failed, not need to send flow control */
+		if (!client) {
+			DPRINTF(("vheci: create client failed.\r\n"));
+			break;
+		}
+
+		/* Give guest a flow control credit to let it send msssage */
+		flow_ctl_req.hbm_cmd.cmd = HECI_HBM_FLOW_CONTROL;
+		flow_ctl_req.me_addr = client->client_id;
+		/*
+		 * single recv buffer client,
+		 */
+		if (client->props.single_recv_buf)
+			flow_ctl_req.host_addr = 0;
+		else
+			flow_ctl_req.host_addr = client->client_addr;
+
+		virtio_heci_client_put(vheci, client);
+		populate_heci_hdr(vheci->hbm_client, phdr,
+				sizeof(struct heci_hbm_flow_ctl), 1);
+		DPRINTF(("vheci: HBM flow control: hdr[%08x]\n\r",
+				       *(unsigned int *)phdr));
+		print_hex((unsigned char *)&flow_ctl_req, sizeof(flow_ctl_req));
+		virtio_heci_hbm_response(vheci, phdr,
+				&flow_ctl_req, sizeof(flow_ctl_req));
+		break;
+	case HECI_HBM_CLIENT_DISCONNECT:
+		disconnect_res = *(struct heci_hbm_client_disconnect_res *)data;
+		if (!hbm_cmd->is_response) {
+			disconnect_res.hbm_cmd.is_response = 1;
+			disconnect_res.status = 0;
+			populate_heci_hdr(vheci->hbm_client, phdr,
+				sizeof(struct heci_hbm_client_disconnect_res),
+				1);
+			virtio_heci_hbm_response(vheci, phdr,
+				&disconnect_res, sizeof(disconnect_res));
+		}
+		client = virtio_heci_find_client(vheci,
+				disconnect_res.host_addr);
+		if (client) {
+			virtio_heci_client_put(vheci, client);
+			/* put once more as find_client will get ref */
+			virtio_heci_client_put(vheci, client);
+		} else
+			DPRINTF(("vheci: client has been disconnected!!\r\n"));
+		break;
+	case HECI_HBM_FLOW_CONTROL:
+		/*
+		 * FE client is ready, we can send message
+		 */
+		pflow_ctl_req = (struct heci_hbm_flow_ctl *)data;
+		client = virtio_heci_find_client(vheci,
+				pflow_ctl_req->host_addr);
+		if (client) {
+			client->recv_creds++;
+			virtio_heci_client_put(vheci, client);
+			pthread_mutex_lock(&vheci->rx_mutex);
+			vheci->rx_need_sched = true;
+			pthread_mutex_unlock(&vheci->rx_mutex);
+		} else
+			DPRINTF(("vheci: client has been released.\r\n"));
+		break;
+	case HECI_HBM_CLIENT_CONNECTION_RESET:
+		/* TODO:
+		 * disconnect all clients
+		 */
+		DPRINTF(("vheci: %s HBM cmd[%d] not support for now\n\r",
+					__func__, hbm_cmd->cmd));
+		break;
+	default:
+		DPRINTF(("vheci: %s HBM cmd[%d] not support for now\n\r",
+					__func__, hbm_cmd->cmd));
+		break;
+	}
+	DPRINTF(("vheci: HBM cmd[%d] is done!\n\r", hbm_cmd->cmd));
+}
+
 
 static void
 virtio_heci_proc_tx(struct virtio_heci *vheci, struct virtio_vq_info *vq)
@@ -550,8 +773,17 @@ virtio_heci_proc_tx(struct virtio_heci *vheci, struct virtio_vq_info *vq)
 
 	if (hdr_is_hbm(heci_hdr)) {
 		/*
-		 * TODO: hbm client handler
+		 * hbm client handler
+		 * all hbm will be complete in one msg package,
+		 * so handle here directly
 		 */
+		hbm_client = virtio_heci_get_hbm_client(vheci);
+		if (!hbm_client) {
+			DPRINTF(("vheci: TX: HBM client get fail!!\r\n"));
+			goto failed;
+		}
+		virtio_heci_hbm_handler(vheci, (void *)iov[1].iov_base);
+		virtio_heci_client_put(vheci, hbm_client);
 	} else if (hdr_is_fixed(heci_hdr)) {
 		/*
 		 * TODO: fixed address client handler
