@@ -124,6 +124,7 @@ struct virtio_heci {
 	struct mei_enumerate_me_clients	me_clients_map;
 	volatile bool			deiniting;
 	volatile bool			resetting;
+	volatile bool			pending_reset;
 
 	pthread_t			tx_thread;
 	pthread_mutex_t			tx_mutex;
@@ -409,6 +410,7 @@ virtio_heci_destroy_client(struct virtio_heci *vheci,
 static int
 native_heci_read(struct virtio_heci_client *client)
 {
+	struct virtio_heci *vheci = client->vheci;
 	int len;
 
 	if (client->client_fd <= 0) {
@@ -421,6 +423,8 @@ native_heci_read(struct virtio_heci_client *client)
 	len = read(client->client_fd, client->recv_buf, client->recv_buf_sz);
 	if (len < 0) {
 		WPRINTF(("vheci: read failed! read error[%d]\r\n", errno));
+		if (errno == ENODEV)
+			vheci->pending_reset = true;
 		return len;
 	}
 	DPRINTF(("vheci: RX: ME[%d]fd[%d] Append data(len[%d]) "
@@ -435,6 +439,7 @@ native_heci_read(struct virtio_heci_client *client)
 static int
 native_heci_write(struct virtio_heci_client *client)
 {
+	struct virtio_heci *vheci = client->vheci;
 	int len;
 
 	if (client->client_fd <= 0) {
@@ -443,8 +448,11 @@ native_heci_write(struct virtio_heci_client *client)
 		return -1;
 	}
 	len = write(client->client_fd, client->send_buf, client->send_idx);
-	if (len < 0)
+	if (len < 0) {
 		WPRINTF(("vheci: write failed! write error[%d]\r\n", errno));
+		if (errno == ENODEV)
+			vheci->pending_reset = true;
+	}
 	return len;
 }
 
@@ -482,6 +490,14 @@ virtio_heci_rx_callback(int fd, enum ev_type type, void *param)
 out:
 	pthread_mutex_unlock(&vheci->rx_mutex);
 	virtio_heci_client_put(vheci, client);
+	if (vheci->pending_reset) {
+		vheci->pending_reset = false;
+		virtio_heci_virtual_fw_reset(vheci);
+		/* Let's wait 100ms for HBM enumeration done */
+		usleep(100000);
+		virtio_config_changed(&vheci->base);
+	}
+
 }
 
 static void
@@ -490,6 +506,7 @@ virtio_heci_reset(void *vth)
 	struct virtio_heci *vheci = vth;
 
 	DPRINTF(("vheci: device reset requested !\r\n"));
+	virtio_heci_virtual_fw_reset(vheci);
 	virtio_reset_dev(&vheci->base);
 }
 
@@ -874,6 +891,13 @@ out:
 send_failed:
 	virtio_heci_client_put(vheci, client);
 failed:
+	if (vheci->pending_reset) {
+		vheci->pending_reset = false;
+		virtio_heci_virtual_fw_reset(vheci);
+		/* Let's wait 100ms for HBM enumeration done */
+		usleep(100000);
+		virtio_config_changed(&vheci->base);
+	}
 	/* drop the data */
 	vq_relchain(vq, idx, tlen);
 }
