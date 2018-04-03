@@ -138,11 +138,11 @@ void free_ept_mem(void *pml4_addr)
 
 void destroy_ept(struct vm *vm)
 {
-	free_ept_mem(vm->arch_vm.nworld_eptp);
-	free_ept_mem(vm->arch_vm.m2p);
+	free_ept_mem(HPA2HVA(vm->arch_vm.nworld_eptp));
+	free_ept_mem(HPA2HVA(vm->arch_vm.m2p));
 	/* Destroy Secure world ept */
 	if (vm->sworld_control.sworld_enabled)
-		free_ept_mem(vm->arch_vm.sworld_eptp);
+		free_ept_mem(HPA2HVA(vm->arch_vm.sworld_eptp));
 }
 
 uint64_t gpa2hpa_check(struct vm *vm, uint64_t gpa,
@@ -154,8 +154,8 @@ uint64_t gpa2hpa_check(struct vm *vm, uint64_t gpa,
 	struct map_params map_params;
 
 	map_params.page_table_type = PTT_EPT;
-	map_params.pml4_base = vm->arch_vm.nworld_eptp;
-	map_params.pml4_inverted = vm->arch_vm.m2p;
+	map_params.pml4_base = HPA2HVA(vm->arch_vm.nworld_eptp);
+	map_params.pml4_inverted = HPA2HVA(vm->arch_vm.m2p);
 	obtain_last_page_table_entry(&map_params, &entry,
 			(void *)gpa, true);
 	if (entry.entry_present == PT_PRESENT
@@ -193,8 +193,8 @@ uint64_t hpa2gpa(struct vm *vm, uint64_t hpa)
 	struct map_params map_params;
 
 	map_params.page_table_type = PTT_EPT;
-	map_params.pml4_base = vm->arch_vm.nworld_eptp;
-	map_params.pml4_inverted = vm->arch_vm.m2p;
+	map_params.pml4_base = HPA2HVA(vm->arch_vm.nworld_eptp);
+	map_params.pml4_inverted = HPA2HVA(vm->arch_vm.m2p);
 
 	obtain_last_page_table_entry(&map_params, &entry,
 			(void *)hpa, false);
@@ -544,14 +544,13 @@ int ept_mmap(struct vm *vm, uint64_t hpa,
 	/* Setup memory map parameters */
 	map_params.page_table_type = PTT_EPT;
 	if (vm->arch_vm.nworld_eptp) {
-		map_params.pml4_base = vm->arch_vm.nworld_eptp;
-		map_params.pml4_inverted = vm->arch_vm.m2p;
+		map_params.pml4_base = HPA2HVA(vm->arch_vm.nworld_eptp);
+		map_params.pml4_inverted = HPA2HVA(vm->arch_vm.m2p);
 	} else {
-		map_params.pml4_base =
-			alloc_paging_struct();
-		vm->arch_vm.nworld_eptp = map_params.pml4_base;
+		map_params.pml4_base = alloc_paging_struct();
+		vm->arch_vm.nworld_eptp = HVA2HPA(map_params.pml4_base);
 		map_params.pml4_inverted = alloc_paging_struct();
-		vm->arch_vm.m2p = map_params.pml4_inverted;
+		vm->arch_vm.m2p = HVA2HPA(map_params.pml4_inverted);
 	}
 
 	if (type == MAP_MEM || type == MAP_MMIO) {

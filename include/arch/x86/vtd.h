@@ -242,7 +242,7 @@ int unassign_iommu_device(struct iommu_domain *domain,
 
 /* Create a iommu domain for a VM specified by vm_id */
 struct iommu_domain *create_iommu_domain(int vm_id,
-	void *translation_table, int addr_width);
+	uint64_t translation_table, int addr_width);
 
 /* Destroy the iommu domain */
 int destroy_iommu_domain(struct iommu_domain *domain);

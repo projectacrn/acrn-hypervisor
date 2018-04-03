@@ -115,13 +115,13 @@ struct vm_state_info {
 struct vm_arch {
 	void *guest_pml4;	/* Guest pml4 */
 	/* EPT hierarchy for Normal World */
-	void *nworld_eptp;
+	uint64_t nworld_eptp;
 	/* EPT hierarchy for Secure World
 	 * Secure world can access Normal World's memory,
 	 * but Normal World can not access Secure World's memory.
 	 */
-	void *sworld_eptp;
-	void *m2p;		/* machine address to guest physical address */
+	uint64_t sworld_eptp;
+	uint64_t m2p;		/* machine address to guest physical address */
 	void *tmp_pg_array;	/* Page array for tmp guest paging struct */
 	void *iobitmap[2];/* IO bitmap page array base address for this VM */
 	void *msr_bitmap;	/* MSR bitmap page base address for this VM */
