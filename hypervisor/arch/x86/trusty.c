@@ -107,11 +107,11 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	uint64_t table_present = (IA32E_EPT_R_BIT |
 				IA32E_EPT_W_BIT |
 				IA32E_EPT_X_BIT);
-	void *sub_table_addr = NULL;
+	void *sub_table_addr = NULL, *pml4_base = NULL;
 	struct vm *vm0 = get_vm_from_vmid(0);
 
 	if (!vm->sworld_control.sworld_enabled
-			|| vm->arch_vm.sworld_eptp != NULL) {
+			|| vm->arch_vm.sworld_eptp != 0) {
 		pr_err("Sworld is not enabled or Sworld eptp is not NULL");
 		return;
 	}
@@ -123,10 +123,10 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	}
 
 	map_params.page_table_type = PTT_EPT;
-	map_params.pml4_inverted = vm->arch_vm.m2p;
+	map_params.pml4_inverted = HPA2HVA(vm->arch_vm.m2p);
 
 	/* Unmap gpa_orig~gpa_orig+size from guest normal world ept mapping */
-	map_params.pml4_base = vm->arch_vm.nworld_eptp;
+	map_params.pml4_base = HPA2HVA(vm->arch_vm.nworld_eptp);
 	unmap_mem(&map_params, (void *)hpa, (void *)gpa_orig, size, 0);
 
 	/* Copy PDPT entries from Normal world to Secure world
@@ -136,24 +136,25 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	 * Normal World.PD/PT are shared in both Secure world's EPT
 	 * and Normal World's EPT
 	 */
-	vm->arch_vm.sworld_eptp = alloc_paging_struct();
+	pml4_base = alloc_paging_struct();
+	vm->arch_vm.sworld_eptp = HVA2HPA(pml4_base);
 
 	/* The trusty memory is remapped to guest physical address
 	 * of gpa_rebased to gpa_rebased + size
 	 */
 	sub_table_addr = alloc_paging_struct();
-	sworld_pml4e = HVA2HPA(sub_table_addr)
-			| table_present;
-	MEM_WRITE64(vm->arch_vm.sworld_eptp, sworld_pml4e);
+	sworld_pml4e = HVA2HPA(sub_table_addr) | table_present;
+	MEM_WRITE64(pml4_base, sworld_pml4e);
 
-	nworld_pml4e = MEM_READ64(vm->arch_vm.nworld_eptp);
+
+	nworld_pml4e = MEM_READ64(HPA2HVA(vm->arch_vm.nworld_eptp));
 	memcpy_s(HPA2HVA(sworld_pml4e & IA32E_REF_MASK), CPU_PAGE_SIZE,
 			HPA2HVA(nworld_pml4e & IA32E_REF_MASK), CPU_PAGE_SIZE);
 
 	/* Map gpa_rebased~gpa_rebased+size
 	 * to secure ept mapping
 	 */
-	map_params.pml4_base = vm->arch_vm.sworld_eptp;
+	map_params.pml4_base = pml4_base;
 	map_mem(&map_params, (void *)hpa,
 			(void *)gpa_rebased, size,
 			(MMU_MEM_ATTR_READ |
@@ -162,8 +163,8 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 			 MMU_MEM_ATTR_WB_CACHE));
 
 	/* Unmap trusty memory space from sos ept mapping*/
-	map_params.pml4_base = vm0->arch_vm.nworld_eptp;
-	map_params.pml4_inverted = vm0->arch_vm.m2p;
+	map_params.pml4_base = HPA2HVA(vm0->arch_vm.nworld_eptp);
+	map_params.pml4_inverted = HPA2HVA(vm0->arch_vm.m2p);
 	/* Get the gpa address in SOS */
 	gpa = hpa2gpa(vm0, hpa);
 	unmap_mem(&map_params, (void *)hpa, (void *)gpa, size, 0);
@@ -190,8 +191,8 @@ void  destroy_secure_world(struct vm *vm)
 
 	/* restore memory to SOS ept mapping */
 	map_params.page_table_type = PTT_EPT;
-	map_params.pml4_base = vm0->arch_vm.nworld_eptp;
-	map_params.pml4_inverted = vm0->arch_vm.m2p;
+	map_params.pml4_base = HPA2HVA(vm0->arch_vm.nworld_eptp);
+	map_params.pml4_inverted = HPA2HVA(vm0->arch_vm.m2p);
 
 	map_mem(&map_params, (void *)vm->sworld_control.sworld_memory.base_hpa,
 			(void *)vm->sworld_control.sworld_memory.base_gpa,
@@ -313,10 +314,10 @@ void switch_world(struct vcpu *vcpu, int next_world)
 	/* load EPTP for next world */
 	if (next_world == NORMAL_WORLD) {
 		exec_vmwrite64(VMX_EPT_POINTER_FULL,
-			((uint64_t)vcpu->vm->arch_vm.nworld_eptp) | (3<<3) | 6);
+			vcpu->vm->arch_vm.nworld_eptp | (3<<3) | 6);
 	} else {
 		exec_vmwrite64(VMX_EPT_POINTER_FULL,
-			((uint64_t)vcpu->vm->arch_vm.sworld_eptp) | (3<<3) | 6);
+			vcpu->vm->arch_vm.sworld_eptp | (3<<3) | 6);
 	}
 
 	/* Update world index */
@@ -430,7 +431,7 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 	trusty_base_hpa = vm->sworld_control.sworld_memory.base_hpa;
 
 	exec_vmwrite64(VMX_EPT_POINTER_FULL,
-			((uint64_t)vm->arch_vm.sworld_eptp) | (3<<3) | 6);
+			vm->arch_vm.sworld_eptp | (3<<3) | 6);
 
 	/* save Normal World context */
 	save_world_ctx(&vcpu->arch_vcpu.contexts[NORMAL_WORLD]);

@@ -972,7 +972,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	 * TODO: introduce API to make this data driven based
 	 * on VMX_EPT_VPID_CAP
 	 */
-	value64 = ((uint64_t) vm->arch_vm.nworld_eptp) | (3 << 3) | 6;
+	value64 = vm->arch_vm.nworld_eptp | (3 << 3) | 6;
 	exec_vmwrite64(VMX_EPT_POINTER_FULL, value64);
 	pr_dbg("VMX_EPT_POINTER: 0x%016llx ", value64);
 

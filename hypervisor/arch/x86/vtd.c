@@ -176,7 +176,7 @@ struct iommu_domain {
 	uint16_t dom_id;
 	int vm_id;
 	uint32_t addr_width;   /* address width of the domain */
-	void *trans_table_ptr;
+	uint64_t trans_table_ptr;
 };
 
 static struct list_head dmar_drhd_units;
@@ -522,7 +522,7 @@ static struct iommu_domain *create_host_domain(void)
 	domain->is_host = true;
 	domain->dom_id = alloc_domain_id();
 	/* dmar uint need to support translation passthrough */
-	domain->trans_table_ptr = NULL;
+	domain->trans_table_ptr = 0;
 	domain->addr_width = 48;
 
 	return domain;
@@ -853,7 +853,7 @@ static void dmar_disable(struct dmar_drhd_rt *dmar_uint)
 	dmar_fault_event_mask(dmar_uint);
 }
 
-struct iommu_domain *create_iommu_domain(int vm_id, void *translation_table,
+struct iommu_domain *create_iommu_domain(int vm_id, uint64_t translation_table,
 		int addr_width)
 {
 	struct iommu_domain *domain;
@@ -1023,7 +1023,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 
 	upper = DMAR_SET_BITSLICE(upper, CTX_ENTRY_UPPER_DID, domain->dom_id);
 	lower = DMAR_SET_BITSLICE(lower, CTX_ENTRY_LOWER_SLPTPTR,
-				  (uint64_t)domain->trans_table_ptr >> 12);
+				  domain->trans_table_ptr >> 12);
 	lower = DMAR_SET_BITSLICE(lower, CTX_ENTRY_LOWER_P, 1);
 
 	context_entry->upper = upper;
