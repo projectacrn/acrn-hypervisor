@@ -727,7 +727,8 @@ int acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 
 	/* ACRN insert request to VHM and inject upcall */
 	cur = vcpu->vcpu_id;
-	req_buf->req_queue[cur] = *req;
+	memcpy_s(&req_buf->req_queue[cur], sizeof(struct vhm_request),
+		 req, sizeof(struct vhm_request));
 
 	/* Must clear the signal before we mark req valid
 	 * Once we mark to valid, VHM may process req and signal us
