@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This repository contains a number of Dockerfile that include
+This folder contains a number of Dockerfile that include
 all the build tools and dependencies to build the ACRN Project
 components, i.e. the `acrn-hypervisor` and `acrn-devicemodel`
 
