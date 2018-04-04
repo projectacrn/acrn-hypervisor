@@ -1,0 +1,16 @@
+# Build container based on Fedora 26
+FROM fedora:26
+
+RUN dnf -y update && dnf clean all
+RUN dnf -y install gcc \
+                   git \
+                   make \
+                   vim \
+                   libuuid-devel \
+                   openssl-devel \
+                   libpciaccess-devel \
+                   gnu-efi-devel
+
+WORKDIR /root/acrn
+
+CMD ["/bin/bash"]
