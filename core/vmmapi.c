@@ -720,3 +720,9 @@ vm_get_device_fd(struct vmctx *ctx)
 {
 	return ctx->fd;
 }
+
+int
+vm_get_cpu_state(struct vmctx *ctx, void *state_buf)
+{
+	return ioctl(ctx->fd, IC_PM_GET_CPU_STATE, state_buf);
+}
