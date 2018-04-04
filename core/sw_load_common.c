@@ -132,6 +132,61 @@ check_image(char *path)
 	return 0;
 }
 
+/* Assumption:
+ * the range [start, start + size] belongs to one entry of e820 table
+ */
+int
+add_e820_entry(struct e820_entry *e820, int len, uint64_t start,
+	uint64_t size, uint32_t type)
+{
+	int i, length = len;
+	uint64_t e_s, e_e;
+
+	for (i = 0; i < len; i++) {
+		e_s = e820[i].baseaddr;
+		e_e = e820[i].baseaddr + e820[i].length;
+		if ((e_s <= start) && ((start + size) <= e_e)) {
+			int index_s = 0, index_e = 3;
+			uint64_t pt[4];
+			uint32_t pt_t[3];
+
+			pt[0] = e_s;
+			pt[1] = start;
+			pt[2] = start + size;
+			pt[3] = e_e;
+
+			pt_t[0] = e820[i].type;
+			pt_t[1] = type;
+			pt_t[2] = e820[i].type;
+
+			if (e_s == start) {
+				index_s = 1;
+			}
+
+			if (e_e == (start + size)) {
+				index_e = 2;
+			}
+			length += index_e - index_s - 1;
+
+			if ((i != (len - 1) && ((index_e - index_s) > 1))) {
+				memmove(&e820[i + index_e - index_s],
+					&e820[i + 1], (len - i - 1) *
+					sizeof(struct e820_entry));
+			}
+
+			for (; index_s < index_e; index_s++, i++) {
+				e820[i].baseaddr = pt[index_s];
+				e820[i].length = pt[index_s + 1] - pt[index_s];
+				e820[i].type = pt_t[index_s];
+			}
+
+			break;
+		}
+	}
+
+	return length;
+}
+
 uint32_t
 acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 {
@@ -152,12 +207,12 @@ acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 		e820[HIGHRAM_E820_ENTRIES].length = ctx->highmem;
 	}
 
-	printf("SW_LOAD: build e820 %d entries to addr: %p\n",
+	printf("SW_LOAD: build e820 %d entries to addr: %p\r\n",
 			NUM_E820_ENTRIES, (void *)e820);
 
 	for (k = 0; k < NUM_E820_ENTRIES; k++)
 		printf("SW_LOAD: entry[%d]: addr 0x%016lx, size 0x%016lx, "
-				" type 0x%x\n",
+				" type 0x%x\r\n",
 				k, e820[k].baseaddr,
 				e820[k].length,
 				e820[k].type);
