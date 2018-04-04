@@ -346,27 +346,22 @@ static inline uint32_t check_page_table_present(struct map_params *map_params,
 	return (table_entry) ? PT_PRESENT : PT_NOT_PRESENT;
 }
 
-static uint64_t get_table_entry(struct map_params *map_params, void *addr,
-		void *table_base, uint32_t table_level)
+static int get_table_entry(void *addr, void *table_base,
+		uint32_t table_level, uint64_t *table_entry)
 {
 	uint32_t table_offset;
-	uint64_t table_entry;
-	int status = 0;
 
-	if (table_base == NULL
-			|| table_level >= IA32E_UNKNOWN
-			|| map_params == NULL)	{
-		status = -EINVAL;
+	if (table_base == NULL || table_level >= IA32E_UNKNOWN)	{
+		ASSERT(0, "Incorrect Arguments");
+		return -EINVAL;
 	}
-	ASSERT(status == 0, "Incorrect Arguments");
 
 	table_offset = fetch_page_table_offset(addr, table_level);
 
 	/* Read the table entry */
-	table_entry = MEM_READ64(table_base + table_offset);
+	*table_entry = MEM_READ64(table_base + table_offset);
 
-	/* Return the next table in the walk */
-	return table_entry;
+	return 0;
 }
 
 static void  *walk_paging_struct(void *addr, void *table_base,
@@ -602,18 +597,20 @@ uint64_t config_page_table_attr(struct map_params *map_params, uint32_t flags)
 
 }
 
-void obtain_last_page_table_entry(struct map_params *map_params,
+int obtain_last_page_table_entry(struct map_params *map_params,
 		struct entry_params *entry, void *addr, bool direct)
 {
 	uint64_t table_entry;
 	uint32_t table_present = 0;
+	int ret = 0;
 	/* Obtain the PML4 address */
 	void *table_addr = direct ? (map_params->pml4_base)
 				: (map_params->pml4_inverted);
 
 	/* Obtain page table entry from PML4 table*/
-	table_entry = get_table_entry(map_params, addr,
-			table_addr, IA32E_PML4);
+	ret = get_table_entry(addr, table_addr, IA32E_PML4, &table_entry);
+	if (ret < 0)
+		return ret;
 	table_present = check_page_table_present(map_params, table_entry);
 	if (table_present == PT_NOT_PRESENT) {
 		/* PML4E not present, return PML4 base address */
@@ -624,13 +621,14 @@ void obtain_last_page_table_entry(struct map_params *map_params,
 			(PAGE_SIZE_1G) : (PAGE_SIZE_2M);
 		entry->entry_off = fetch_page_table_offset(addr, IA32E_PML4);
 		entry->entry_val =  table_entry;
-		return;
+		return 0;
 	}
 
 	/* Obtain page table entry from PDPT table*/
 	table_addr = (void *)(table_entry & IA32E_REF_MASK);
-	table_entry = get_table_entry(map_params, addr,
-			table_addr, IA32E_PDPT);
+	ret = get_table_entry(addr, table_addr, IA32E_PDPT, &table_entry);
+	if (ret < 0)
+		return ret;
 	table_present = check_page_table_present(map_params, table_entry);
 	if (table_present == PT_NOT_PRESENT) {
 		/* PDPTE not present, return PDPT base address */
@@ -641,7 +639,7 @@ void obtain_last_page_table_entry(struct map_params *map_params,
 			(PAGE_SIZE_1G) : (PAGE_SIZE_2M);
 		entry->entry_off = fetch_page_table_offset(addr, IA32E_PDPT);
 		entry->entry_val =  table_entry;
-		return;
+		return 0;
 	}
 	if (table_entry & IA32E_PDPTE_PS_BIT) {
 		/* 1GB page size, return the base addr of the pg entry*/
@@ -652,13 +650,14 @@ void obtain_last_page_table_entry(struct map_params *map_params,
 		entry->entry_present = PT_PRESENT;
 		entry->entry_off = fetch_page_table_offset(addr, IA32E_PDPT);
 		entry->entry_val =  table_entry;
-		return;
+		return 0;
 	}
 
 	/* Obtain page table entry from PD table*/
 	table_addr = (void *)(table_entry & IA32E_REF_MASK);
-	table_entry = get_table_entry(map_params, addr,
-			table_addr, IA32E_PD);
+	ret = get_table_entry(addr, table_addr, IA32E_PD, &table_entry);
+	if (ret < 0)
+		return ret;
 	table_present = check_page_table_present(map_params, table_entry);
 	if (table_present == PT_NOT_PRESENT) {
 		/* PDE not present, return PDE base address */
@@ -668,7 +667,7 @@ void obtain_last_page_table_entry(struct map_params *map_params,
 		entry->page_size  = PAGE_SIZE_2M;
 		entry->entry_off = fetch_page_table_offset(addr, IA32E_PD);
 		entry->entry_val =  table_entry;
-		return;
+		return 0;
 
 	}
 	if (table_entry & IA32E_PDE_PS_BIT) {
@@ -679,13 +678,14 @@ void obtain_last_page_table_entry(struct map_params *map_params,
 		entry->page_size  = PAGE_SIZE_2M;
 		entry->entry_off = fetch_page_table_offset(addr, IA32E_PD);
 		entry->entry_val =  table_entry;
-		return;
+		return 0;
 	}
 
 	/* Obtain page table entry from PT table*/
 	table_addr = (void *)(table_entry & IA32E_REF_MASK);
-	table_entry = get_table_entry(map_params, addr,
-			table_addr, IA32E_PT);
+	ret = get_table_entry(addr, table_addr, IA32E_PT, &table_entry);
+	if (ret < 0)
+		return ret;
 	table_present = check_page_table_present(map_params, table_entry);
 	entry->entry_present = ((table_present == PT_PRESENT)
 			? (PT_PRESENT):(PT_NOT_PRESENT));
@@ -694,6 +694,8 @@ void obtain_last_page_table_entry(struct map_params *map_params,
 	entry->page_size  = PAGE_SIZE_4K;
 	entry->entry_off = fetch_page_table_offset(addr, IA32E_PT);
 	entry->entry_val =  table_entry;
+
+	return 0;
 }
 
 static uint64_t update_page_table_entry(struct map_params *map_params,
@@ -782,7 +784,11 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 	}
 
 	if (page_size != next_page_size) {
-		obtain_last_page_table_entry(map_params, &entry, vaddr, direct);
+		if (obtain_last_page_table_entry(map_params, &entry, vaddr,
+			direct) < 0) {
+			pr_err("Fail to obtain last page table entry");
+			return 0;
+		}
 
 		/* New entry present - need to allocate a new table */
 		sub_tab_addr = alloc_paging_struct();
@@ -871,7 +877,9 @@ static int modify_paging(struct map_params *map_params, void *paddr,
 	 * MAP/UNMAP/MODIFY
 	 */
 	while (remaining_size > 0) {
-		obtain_last_page_table_entry(map_params, &entry, vaddr, direct);
+		if (obtain_last_page_table_entry(map_params, &entry, vaddr,
+			direct) < 0)
+			return -EINVAL;
 		/* filter the unmap request, no action in this case*/
 		page_size =  entry.page_size;
 		if ((request_type == PAGING_REQUEST_TYPE_UNMAP)
