@@ -173,6 +173,7 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 	    || request_type >= PAGING_REQUEST_TYPE_UNKNOWN) {
 		/* Shouldn't go here */
 		ASSERT(false, "Incorrect Arguments. Failed to map region");
+		return 0;
 	}
 
 	/* switch based on  of table */
@@ -280,8 +281,8 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 			break;
 		}
 		default:
-			ASSERT("Bad memory map request type" == 0, "");
-			break;
+			ASSERT(0, "Bad memory map request type");
+			return 0;
 		}
 	}
 
