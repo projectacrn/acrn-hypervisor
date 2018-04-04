@@ -764,6 +764,9 @@ basl_fwrite_dsdt(FILE *fp, struct vmctx *ctx)
 	dsdt_line("      })");
 	dsdt_line("    }");
 	dsdt_line("  }");
+
+	pm_write_dsdt(ctx, basl_ncpu);
+
 	dsdt_line("}");
 
 	if (dsdt_error != 0)

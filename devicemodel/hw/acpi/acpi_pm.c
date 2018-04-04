@@ -86,7 +86,7 @@ static int get_vcpu_px_data(struct vmctx *ctx, int vcpu_id,
 /* _PPC: Performance Present Capabilities
  * hard code _PPC to 0,  all states are available.
  */
-void dsdt_write_ppc(void)
+static void dsdt_write_ppc(void)
 {
 	dsdt_line("    Name (_PPC, Zero)");
 }
@@ -94,7 +94,7 @@ void dsdt_write_ppc(void)
 /* _PCT: Performance Control
  * Both Performance Control and Status Register are set to FFixedHW
  */
-void dsdt_write_pct(void)
+static void dsdt_write_pct(void)
 {
 	dsdt_line("        Method (_PCT, 0, NotSerialized)");
 	dsdt_line("        {");
@@ -124,7 +124,7 @@ void dsdt_write_pct(void)
 
 /* _PSS: Performance Supported States
  */
-void dsdt_write_pss(struct vmctx *ctx, int vcpu_id)
+static void dsdt_write_pss(struct vmctx *ctx, int vcpu_id)
 {
 	uint8_t vcpu_px_cnt;
 	struct cpu_px_data *vcpu_px_data;
@@ -182,4 +182,46 @@ void dsdt_write_pss(struct vmctx *ctx, int vcpu_id)
 
 	free(vcpu_px_data);
 
+}
+
+void pm_write_dsdt(struct vmctx *ctx, int ncpu)
+{
+	/* Scope (_PR) */
+	dsdt_line("");
+	dsdt_line("  Scope (_PR)");
+	dsdt_line("  {");
+	for (int i = 0; i < ncpu; i++) {
+		dsdt_line("    Processor (CPU%d, 0x%02X, 0x00000000, 0x00) {}",
+					i, i);
+	}
+	dsdt_line("  }");
+	dsdt_line("");
+
+	/* Scope (_PR.CPU(N)) */
+	for (int i = 0; i < ncpu; i++) {
+		dsdt_line("  Scope (_PR.CPU%d)", i);
+		dsdt_line("  {");
+		dsdt_line("");
+
+		dsdt_write_pss(ctx, i);
+
+		/* hard code _PPC and _PCT for all vpu */
+		if (i == 0) {
+			dsdt_write_ppc();
+			dsdt_write_pct();
+		} else {
+			dsdt_line("    Method (_PPC, 0, NotSerialized)");
+			dsdt_line("    {");
+			dsdt_line("      Return (^^CPU0._PPC)");
+			dsdt_line("    }");
+			dsdt_line("");
+			dsdt_line("    Method (_PCT, 0, NotSerialized)");
+			dsdt_line("    {");
+			dsdt_line("      Return (^^CPU0._PCT)");
+			dsdt_line("    }");
+			dsdt_line("");
+		}
+
+		dsdt_line("  }");
+	}
 }
