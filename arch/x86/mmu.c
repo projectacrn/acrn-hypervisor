@@ -74,7 +74,7 @@ struct invept_desc {
 	uint64_t _res;
 };
 
-static inline void _invept(uint64_t type, struct invept_desc desc)
+static inline int _invept(uint64_t type, struct invept_desc desc)
 {
 	int error = 0;
 
@@ -85,6 +85,10 @@ static inline void _invept(uint64_t type, struct invept_desc desc)
 			: "memory");
 
 	ASSERT(error == 0, "invept error");
+	if (error != 0)
+		return -EINVAL;
+	else
+		return 0;
 }
 
 static void check_mmu_capability(void)
@@ -132,22 +136,27 @@ static inline bool check_invept_global_support(void)
 			mm_caps.invept_global_context_supported;
 }
 
-void mmu_invept(struct vcpu *vcpu)
+int mmu_invept(struct vcpu *vcpu)
 {
 	struct invept_desc desc = {0};
+	int ret = 0;
 
 	if (check_invept_single_support()) {
 		desc.eptp = (uint64_t) vcpu->vm->arch_vm.nworld_eptp
 			| (3 << 3) | 6;
-		_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
+		ret = _invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
+		if (ret < 0)
+			return ret;
 		if (vcpu->vm->sworld_control.sworld_enabled) {
 			desc.eptp = (uint64_t) vcpu->vm->arch_vm.sworld_eptp
 				| (3 << 3) | 6;
-			_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
+			ret = _invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
 
 		}
 	} else if (check_invept_global_support())
-		_invept(INVEPT_TYPE_ALL_CONTEXTS, desc);
+		ret = _invept(INVEPT_TYPE_ALL_CONTEXTS, desc);
+
+	return ret;
 }
 
 static bool check_mmu_1gb_support(struct map_params *map_params)

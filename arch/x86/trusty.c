@@ -168,9 +168,13 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	vm->sworld_control.sworld_memory.base_hpa = hpa;
 	vm->sworld_control.sworld_memory.length = size;
 
-	mmu_invept(vm->current_vcpu);
-	mmu_invept(vm0->current_vcpu);
+	if (mmu_invept(vm->current_vcpu) < 0) {
+		pr_err("%s: invept failed", __func__);
+	}
 
+	if (mmu_invept(vm0->current_vcpu) < 0) {
+		pr_err("%s: invept failed", __func__);
+	}
 }
 
 static void save_world_ctx(struct run_context *context)
