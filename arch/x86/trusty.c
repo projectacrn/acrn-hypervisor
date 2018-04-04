@@ -116,6 +116,12 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 		return;
 	}
 
+	/* Check the physical address should be continuous */
+	if (!check_continuous_hpa(vm, gpa_orig, size))	{
+		ASSERT(false, "The physical addr is not continuous for Trusty");
+		return;
+	}
+
 	map_params.page_table_type = PTT_EPT;
 	map_params.pml4_inverted = vm->arch_vm.m2p;
 

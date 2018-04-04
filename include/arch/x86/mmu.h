@@ -325,6 +325,7 @@ void unmap_mem(struct map_params *map_params, void *paddr, void *vaddr,
 void modify_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		       uint64_t size, uint32_t flags);
 void mmu_invept(struct vcpu *vcpu);
+bool check_continuous_hpa(struct vm *vm, uint64_t gpa, uint64_t size);
 void obtain_last_page_table_entry(struct map_params *map_params,
 		struct entry_params *entry, void *addr, bool direct);
 
