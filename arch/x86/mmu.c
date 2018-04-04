@@ -520,6 +520,25 @@ void free_paging_struct(void *ptr)
 	}
 }
 
+bool check_continuous_hpa(struct vm *vm, uint64_t gpa, uint64_t size)
+{
+	uint64_t curr_hpa = 0;
+	uint64_t next_hpa = 0;
+
+	/* if size <= PAGE_SIZE_4K, it is continuous,no need check
+	 * if size > PAGE_SIZE_4K, need to fetch next page
+	 */
+	while (size > PAGE_SIZE_4K) {
+		curr_hpa = gpa2hpa(vm, gpa);
+		gpa += PAGE_SIZE_4K;
+		next_hpa = gpa2hpa(vm, gpa);
+		if (next_hpa != (curr_hpa + PAGE_SIZE_4K))
+			return false;
+		size -= PAGE_SIZE_4K;
+	}
+	return true;
+
+}
 uint64_t config_page_table_attr(struct map_params *map_params, uint32_t flags)
 {
 	int  table_type = map_params->page_table_type;
