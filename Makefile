@@ -78,6 +78,7 @@ SRCS += hw/pci/virtio/virtio_hyper_dmabuf.c
 SRCS += hw/pci/irq.c
 SRCS += hw/pci/uart.c
 SRCS += hw/acpi/acpi.c
+SRCS += hw/acpi/acpi_pm.c
 
 # core
 #SRCS += core/bootrom.c
