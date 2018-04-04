@@ -325,7 +325,7 @@ int unmap_mem(struct map_params *map_params, void *paddr, void *vaddr,
 int modify_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		       uint64_t size, uint32_t flags);
 int mmu_invept(struct vcpu *vcpu);
-void obtain_last_page_table_entry(struct map_params *map_params,
+int obtain_last_page_table_entry(struct map_params *map_params,
 		struct entry_params *entry, void *addr, bool direct);
 
 int register_mmio_emulation_handler(struct vm *vm,
