@@ -1040,6 +1040,34 @@ int shell_set_loglevel(struct shell *p_shell, int argc, char **argv)
 	return status;
 }
 
+int shell_cpuid(struct shell *p_shell, int argc, char **argv)
+{
+	char str[MAX_STR_SIZE] = {0};
+	uint32_t leaf, subleaf = 0;
+	uint32_t eax, ebx, ecx, edx;
+
+	if (argc == 2) {
+		leaf = strtoul(argv[1], NULL, 16);
+	} else if (argc == 3) {
+		leaf = strtoul(argv[1], NULL, 16);
+		subleaf = strtoul(argv[2], NULL, 16);
+	} else {
+		shell_puts(p_shell,
+			"Please enter correct cmd with "
+			"cpuid <leaf> [subleaf]\r\n");
+		return -EINVAL;
+	}
+
+	cpuid_subleaf(leaf, subleaf, &eax, &ebx, &ecx, &edx);
+	snprintf(str, MAX_STR_SIZE,
+		"cpuid leaf: 0x%x, subleaf: 0x%x, 0x%x:0x%x:0x%x:0x%x\r\n",
+		leaf, subleaf, eax, ebx, ecx, edx);
+
+	shell_puts(p_shell, str);
+
+	return 0;
+}
+
 int shell_terminate_serial(struct shell *p_shell)
 {
 	/* Shell shouldn't own the serial port handle anymore. */
