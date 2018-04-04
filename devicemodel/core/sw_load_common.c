@@ -52,16 +52,30 @@ static char bootargs[STR_LEN];
  *   ctx->highmem = request_memory_size - ctx->lowmem_limit
  *
  *             Begin      End         Type         Length
- * 0:             0 -     lowmem      RAM          lowmem
- * 1:        lowmem -     bff_fffff   (reserved)   0xc00_00000-lowmem
- * 2:   0xc00_00000 -     dff_fffff   PCI hole     512MB
- * 3:   0xe00_00000 -     fff_fffff   (reserved)   512MB
- * 2:   1_000_00000 -     highmem     RAM          highmem-4G
+ * 0:             0 -     0xF0000     RAM          0xF0000
+ * 1	    0xf0000 -	  0x100000    (reserved)   0x10000
+ * 2       0x100000 -	  lowmem      RAM          lowmem - 0x100000
+ * 3:        lowmem -     bff_fffff   (reserved)   0xc00_00000-lowmem
+ * 4:   0xc00_00000 -     dff_fffff   PCI hole     512MB
+ * 5:   0xe00_00000 -     fff_fffff   (reserved)   512MB
+ * 6:   1_000_00000 -     highmem     RAM          highmem-4G
  */
 const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
-	{	/* 0 to lowmem */
+	{	/* 0 to mptable/smbios/acpi */
 		.baseaddr =  0x00000000,
-		.length   =  0x49000000,
+		.length   =  0xF0000,
+		.type     =  E820_TYPE_RAM
+	},
+
+	{	/* mptable/smbios/acpi to lowmem */
+		.baseaddr = 0xF0000,
+		.length	  = 0x10000,
+		.type	  = E820_TYPE_RESERVED
+	},
+
+	{	/* lowmem to lowmem_limit*/
+		.baseaddr =  0x100000,
+		.length   =  0x48f00000,
 		.type     =  E820_TYPE_RAM
 	},
 
@@ -126,7 +140,8 @@ acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 	memcpy(e820, e820_default_entries, sizeof(e820_default_entries));
 
 	if (ctx->lowmem > 0) {
-		e820[LOWRAM_E820_ENTRIES].length = ctx->lowmem;
+		e820[LOWRAM_E820_ENTRIES].length = ctx->lowmem -
+				e820[LOWRAM_E820_ENTRIES].baseaddr;
 		e820[LOWRAM_E820_ENTRIES+1].baseaddr = ctx->lowmem;
 		e820[LOWRAM_E820_ENTRIES+1].length =
 			ctx->lowmem_limit - ctx->lowmem;
