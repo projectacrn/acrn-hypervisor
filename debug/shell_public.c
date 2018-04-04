@@ -356,6 +356,17 @@ int shell_init(void)
 			pr_err("Error: Command \"%s\" registration failed.",
 				SHELL_CMD_SET_LOG_LVL);
 		}
+
+		status = shell_register_cmd(serial_session,
+					SHELL_CMD_CPUID,
+					SHELL_CMD_CPUID_PARAM,
+					SHELL_CMD_CPUID_HELP,
+					shell_cpuid);
+
+		if (status != 0) {
+			pr_err("Error: Command \"%s\" registration failed.",
+				SHELL_CMD_CPUID);
+		}
 	}
 
 	return status;

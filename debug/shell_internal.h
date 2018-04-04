@@ -149,6 +149,10 @@ struct shell_cmd {
 #define SHELL_CMD_SET_LOG_LVL_PARAM	"<console_loglevel> [mem_loglevel]"
 #define SHELL_CMD_SET_LOG_LVL_HELP	"Set loglevel [0-6]"
 
+#define SHELL_CMD_CPUID			"cpuid"
+#define SHELL_CMD_CPUID_PARAM		"<leaf> [subleaf]"
+#define SHELL_CMD_CPUID_HELP		"cpuid leaf [subleaf], in hexadecimal"
+
 
 /* Global function prototypes */
 int shell_show_req_info(struct shell *p_shell, int argc, char **argv);
@@ -172,6 +176,7 @@ int shell_show_vmexit_profile(struct shell *p_shell, int argc, char **argv);
 int shell_dump_logbuf(struct shell *p_shell, int argc, char **argv);
 int shell_get_loglevel(struct shell *p_shell, int argc, char **argv);
 int shell_set_loglevel(struct shell *p_shell, int argc, char **argv);
+int shell_cpuid(struct shell *p_shell, int argc, char **argv);
 struct shell_cmd *shell_find_cmd(struct shell *p_shell, const char *cmd);
 int shell_process_cmd(struct shell *p_shell, char *p_input_line);
 int shell_terminate_serial(struct shell *p_shell);
