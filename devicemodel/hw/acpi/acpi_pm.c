@@ -38,7 +38,7 @@
 #include "dm.h"
 #include "acpi.h"
 
-uint8_t get_vcpu_px_cnt(struct vmctx *ctx, int vcpu_id)
+static uint8_t get_vcpu_px_cnt(struct vmctx *ctx, int vcpu_id)
 {
 	uint64_t pm_ioctl_buf = 0;
 	enum pm_cmd_type cmd_type = PMCMD_GET_PX_CNT;
@@ -54,7 +54,7 @@ uint8_t get_vcpu_px_cnt(struct vmctx *ctx, int vcpu_id)
 	return (uint8_t)pm_ioctl_buf;
 }
 
-int get_vcpu_px_data(struct vmctx *ctx, int vcpu_id,
+static int get_vcpu_px_data(struct vmctx *ctx, int vcpu_id,
 			int px_num, struct cpu_px_data *vcpu_px_data)
 {
 	uint64_t *pm_ioctl_buf;
@@ -81,4 +81,105 @@ int get_vcpu_px_data(struct vmctx *ctx, int vcpu_id,
 
 	free(pm_ioctl_buf);
 	return 0;
+}
+
+/* _PPC: Performance Present Capabilities
+ * hard code _PPC to 0,  all states are available.
+ */
+void dsdt_write_ppc(void)
+{
+	dsdt_line("    Name (_PPC, Zero)");
+}
+
+/* _PCT: Performance Control
+ * Both Performance Control and Status Register are set to FFixedHW
+ */
+void dsdt_write_pct(void)
+{
+	dsdt_line("        Method (_PCT, 0, NotSerialized)");
+	dsdt_line("        {");
+	dsdt_line("            Return (Package (0x02)");
+	dsdt_line("            {");
+	dsdt_line("                ResourceTemplate ()");
+	dsdt_line("                {");
+	dsdt_line("                    Register (FFixedHW,");
+	dsdt_line("                        0x00,");
+	dsdt_line("                        0x00,");
+	dsdt_line("                        0x0000000000000000,");
+	dsdt_line("                        ,)");
+	dsdt_line("                },");
+	dsdt_line("");
+	dsdt_line("                ResourceTemplate ()");
+	dsdt_line("                {");
+	dsdt_line("                    Register (FFixedHW,");
+	dsdt_line("                        0x00,");
+	dsdt_line("                        0x00,");
+	dsdt_line("                        0x0000000000000000,");
+	dsdt_line("                        ,)");
+	dsdt_line("                }");
+	dsdt_line("            })");
+	dsdt_line("        }");
+
+}
+
+/* _PSS: Performance Supported States
+ */
+void dsdt_write_pss(struct vmctx *ctx, int vcpu_id)
+{
+	uint8_t vcpu_px_cnt;
+	struct cpu_px_data *vcpu_px_data;
+
+	vcpu_px_cnt = get_vcpu_px_cnt(ctx, vcpu_id);
+	if (!vcpu_px_cnt) {
+		return;
+	}
+
+	vcpu_px_data = malloc(vcpu_px_cnt * sizeof(struct cpu_px_data));
+	if (!vcpu_px_data) {
+		return;
+	}
+
+	/* copy and validate px data first */
+	for (int i = 0; i < vcpu_px_cnt; i++) {
+		if (get_vcpu_px_data(ctx, vcpu_id, i, vcpu_px_data + i)) {
+			/* something must be wrong, so skip the write. */
+			free(vcpu_px_data);
+			return;
+		}
+	}
+
+	dsdt_line("");
+	dsdt_line("    Method (_PSS, 0, NotSerialized)");
+	dsdt_line("    {");
+	dsdt_line("      Return (Package (0x%02X)", vcpu_px_cnt);
+	dsdt_line("      {");
+
+	for (int i = 0; i < vcpu_px_cnt; i++) {
+
+		dsdt_line("          Package (0x%02X)", 6);
+		dsdt_line("          {");
+		dsdt_line("             0x%08X,",
+				(vcpu_px_data + i)->core_frequency);
+		dsdt_line("             0x%08X,",
+				(vcpu_px_data + i)->power);
+		dsdt_line("             0x%08X,",
+				(vcpu_px_data + i)->transition_latency);
+		dsdt_line("             0x%08X,",
+				(vcpu_px_data + i)->bus_master_latency);
+		dsdt_line("             0x%08X,",
+				(vcpu_px_data + i)->control);
+		dsdt_line("             0x%08X",
+				(vcpu_px_data + i)->status);
+
+		if (i == (vcpu_px_cnt - 1)) {
+			dsdt_line("          }");
+		} else {
+			dsdt_line("          },");
+		}
+	}
+	dsdt_line("      })");
+	dsdt_line("    }");
+
+	free(vcpu_px_data);
+
 }
