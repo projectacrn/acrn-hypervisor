@@ -236,6 +236,7 @@ struct cpuinfo_x86 {
 	uint8_t x86, x86_model;
 	uint64_t physical_address_mask;
 	uint32_t cpuid_leaves[FEATURE_WORDS];
+	char model_name[64];
 };
 
 extern struct cpuinfo_x86 boot_cpu_data;
