@@ -36,6 +36,7 @@
 #include <schedule.h>
 #include <version.h>
 #include <hv_debug.h>
+#include <cpu_state_tbl.h>
 
 #ifdef CONFIG_EFI_STUB
 extern uint32_t efi_physical_available_ap_bitmap;
@@ -397,6 +398,8 @@ void bsp_boot_init(void)
 	get_cpu_capabilities();
 
 	get_cpu_name();
+
+	load_cpu_state_data();
 
 	/* Initialize the hypervisor paging */
 	init_paging();
