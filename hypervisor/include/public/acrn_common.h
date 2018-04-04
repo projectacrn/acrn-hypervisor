@@ -289,6 +289,19 @@ struct acrn_vm_pci_msix_remap {
 #define GUEST_CFG_OFFSET	0xd0000
 
 /**
+ * @brief Info The power state data of a VCPU.
+ *
+ */
+struct cpu_px_data {
+	uint64_t core_frequency;	/* megahertz */
+	uint64_t power;			/* milliWatts */
+	uint64_t transition_latency;	/* microseconds */
+	uint64_t bus_master_latency;	/* microseconds */
+	uint64_t control;		/* control value */
+	uint64_t status;		/* success indicator */
+} __attribute__((aligned(8)));
+
+/**
  * @}
  */
 #endif /* ACRN_COMMON_H */
