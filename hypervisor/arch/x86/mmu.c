@@ -838,14 +838,13 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 	return next_page_size;
 }
 
-static void modify_paging(struct map_params *map_params, void *paddr,
+static int modify_paging(struct map_params *map_params, void *paddr,
 		void *vaddr, uint64_t size, uint32_t flags,
 		enum mem_map_request_type request_type, bool direct)
 {
 	int64_t  remaining_size;
 	uint64_t adjust_size;
 	uint64_t attr;
-	int status = 0;
 	struct entry_params entry;
 	uint64_t page_size;
 	uint64_t vaddr_end = ((uint64_t)vaddr) + size;
@@ -862,9 +861,9 @@ static void modify_paging(struct map_params *map_params, void *paddr,
 			|| (map_params == NULL)) {
 		pr_err("%s: vaddr=0x%llx size=0x%llx req_type=0x%lx",
 			__func__, vaddr, size, request_type);
-		status = -EINVAL;
+		ASSERT(0, "Incorrect Arguments");
+		return -EINVAL;
 	}
-	ASSERT(status == 0, "Incorrect Arguments");
 
 	attr = config_page_table_attr(map_params, flags);
 	/* Loop until the entire block of memory is appropriately
@@ -912,43 +911,60 @@ static void modify_paging(struct map_params *map_params, void *paddr,
 		paddr += adjust_size;
 		remaining_size -= adjust_size;
 	}
+
+	return 0;
 }
 
-void map_mem(struct map_params *map_params, void *paddr, void *vaddr,
+int map_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		    uint64_t size, uint32_t flags)
 {
+	int ret = 0;
+
 	/* used for MMU and EPT*/
-	modify_paging(map_params, paddr, vaddr, size, flags,
+	ret = modify_paging(map_params, paddr, vaddr, size, flags,
 			PAGING_REQUEST_TYPE_MAP, true);
+	if (ret < 0)
+		return ret;
 	/* only for EPT */
 	if (map_params->page_table_type == PTT_EPT) {
-		modify_paging(map_params, vaddr, paddr, size, flags,
+		ret = modify_paging(map_params, vaddr, paddr, size, flags,
 				PAGING_REQUEST_TYPE_MAP, false);
 	}
+	return ret;
 }
 
-void unmap_mem(struct map_params *map_params, void *paddr, void *vaddr,
+int unmap_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		      uint64_t size, uint32_t flags)
 {
+	int ret = 0;
+
 	/* used for MMU and EPT */
-	modify_paging(map_params, paddr, vaddr, size, flags,
+	ret = modify_paging(map_params, paddr, vaddr, size, flags,
 			PAGING_REQUEST_TYPE_UNMAP, true);
+	if (ret < 0)
+		return ret;
 	/* only for EPT */
 	if (map_params->page_table_type == PTT_EPT) {
-		modify_paging(map_params, vaddr, paddr, size, flags,
+		ret = modify_paging(map_params, vaddr, paddr, size, flags,
 				PAGING_REQUEST_TYPE_UNMAP, false);
 	}
+	return ret;
 }
 
-void modify_mem(struct map_params *map_params, void *paddr, void *vaddr,
+int modify_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		       uint64_t size, uint32_t flags)
 {
+	int ret = 0;
+
 	/* used for MMU and EPT*/
-	modify_paging(map_params, paddr, vaddr, size, flags,
+	ret = modify_paging(map_params, paddr, vaddr, size, flags,
 			PAGING_REQUEST_TYPE_MODIFY, true);
+	if (ret < 0)
+		return ret;
 	/* only for EPT */
 	if (map_params->page_table_type == PTT_EPT) {
-		modify_paging(map_params, vaddr, paddr, size, flags,
+		ret = modify_paging(map_params, vaddr, paddr, size, flags,
 				PAGING_REQUEST_TYPE_MODIFY, false);
 	}
+	return ret;
 }
