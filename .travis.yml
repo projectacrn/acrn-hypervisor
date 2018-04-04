@@ -1,4 +1,12 @@
+sudo: required
+
 language: c
-compiler:
- - gcc
-script: make clean && make all
+
+services:
+  - docker
+
+before_install:
+  - docker ps -a
+
+script:
+  - docker build -t shrmrf/acrn-hypervisor .
