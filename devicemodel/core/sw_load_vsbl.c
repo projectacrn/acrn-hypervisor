@@ -279,6 +279,10 @@ acrn_sw_load_vsbl(struct vmctx *ctx)
 
 	vsbl_para->vsbl_address = VSBL_OFF(ctx);
 	vsbl_para->vsbl_size = vsbl_size;
+
+	vsbl_para->e820_entries = add_e820_entry(e820, vsbl_para->e820_entries,
+		vsbl_para->vsbl_address, vsbl_size, E820_TYPE_RESERVED);
+
 	*vsbl_entry = *((uint32_t *) vsbl_start_addr);
 
 	vsbl_para->boot_device_address = boot_blk_bdf;

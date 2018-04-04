@@ -70,6 +70,8 @@ void vsbl_set_bdf(int bnum, int snum, int fnum);
 
 int check_image(char *path);
 uint32_t acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820);
+int add_e820_entry(struct e820_entry *e820, int len, uint64_t start,
+	uint64_t size, uint32_t type);
 
 int acrn_sw_load_bzimage(struct vmctx *ctx);
 int acrn_sw_load_vsbl(struct vmctx *ctx);
