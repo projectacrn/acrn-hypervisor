@@ -302,6 +302,26 @@ struct cpu_px_data {
 } __attribute__((aligned(8)));
 
 /**
+ * @brief Info PM command from DM/VHM.
+ *
+ * The command would specify request type(i.e. get px count or data) for
+ * specific VM and specific VCPU with specific state number.like P(n).
+ */
+#define PMCMD_VMID_MASK		0xff000000
+#define PMCMD_VCPUID_MASK	0x00ff0000
+#define PMCMD_STATE_NUM_MASK	0x0000ff00
+#define PMCMD_TYPE_MASK		0x000000ff
+
+#define PMCMD_VMID_SHIFT	24
+#define PMCMD_VCPUID_SHIFT	16
+#define PMCMD_STATE_NUM_SHIFT	8
+
+enum pm_cmd_type {
+	PMCMD_GET_PX_CNT,
+	PMCMD_GET_PX_DATA,
+};
+
+/**
  * @}
  */
 #endif /* ACRN_COMMON_H */
