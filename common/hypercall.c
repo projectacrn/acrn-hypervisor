@@ -37,6 +37,7 @@
 #include <acrn_hv_defs.h>
 #include <hv_debug.h>
 #include <version.h>
+#include <cpu_state_tbl.h>
 
 #define ACRN_DBG_HYCALL	6
 
@@ -662,6 +663,45 @@ int64_t hcall_setup_sbuf(struct vm *vm, uint64_t param)
 		hva = (uint64_t *)NULL;
 
 	return sbuf_share_setup(ssp.pcpu_id, ssp.sbuf_id, hva);
+}
+
+int64_t hcall_get_cpu_pm_state(struct vcpu *vcpu, uint64_t cmd, uint64_t param)
+{
+	struct vm *vm = vcpu->vm;
+
+	if (!vm->pm.px_cnt) {
+		return -1;
+	}
+
+	switch (cmd & PMCMD_STATE_TYPE) {
+	case PMCMD_GET_PX_CNT: {
+		if (copy_to_vm(vm, &(vm->pm.px_cnt), param)) {
+			pr_err("%s: Unable copy param to vm\n", __func__);
+			return -1;
+		}
+		return 0;
+	}
+	case PMCMD_GET_PX_DATA: {
+		struct cpu_px_data *px_data;
+		uint8_t pn;
+
+		pn = cmd & PMCMD_STATE_NUM;
+		if (pn >= vm->pm.px_cnt) {
+			return -1;
+		}
+
+		px_data = vm->pm.px_data + pn;
+		if (copy_to_vm(vm, px_data, param)) {
+			pr_err("%s: Unable copy param to vm\n", __func__);
+			return -1;
+		}
+
+		return 0;
+	}
+	default:
+		return -1;
+
+	}
 }
 
 static void fire_vhm_interrupt(void)
