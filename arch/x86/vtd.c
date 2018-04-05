@@ -208,9 +208,8 @@ static int register_hrhd_units(void)
 	}
 
 	for (i = 0; i < info->drhd_count; i++) {
-		drhd_rt = malloc(sizeof(struct dmar_drhd_rt));
+		drhd_rt = calloc(1, sizeof(struct dmar_drhd_rt));
 		ASSERT(drhd_rt != NULL, "");
-		memset(drhd_rt, 0, sizeof(struct dmar_drhd_rt));
 		drhd_rt->drhd = &info->drhd_units[i];
 		dmar_register_hrhd(drhd_rt);
 	}
