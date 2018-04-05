@@ -33,6 +33,7 @@
 #include <hv_arch.h>
 #include <hv_debug.h>
 #include <ucode.h>
+#include <cpu_state_tbl.h>
 
 /*MRS need to be emulated, the order in this array better as freq of ops*/
 static const uint32_t emulated_msrs[] = {
@@ -135,6 +136,8 @@ void init_msr_emulation(struct vcpu *vcpu)
 		for (i = 0; i < msrs_count; i++)
 			enable_msr_interception(msr_bitmap, emulated_msrs[i]);
 
+		enable_msr_interception(msr_bitmap, MSR_IA32_PERF_CTL);
+
 		/* below MSR protected from guest OS, if access to inject gp*/
 		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_CAP);
 		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_DEF_TYPE);
@@ -205,6 +208,11 @@ int rdmsr_handler(struct vcpu *vcpu)
 	case MSR_IA32_BIOS_SIGN_ID:
 	{
 		v = get_microcode_version();
+		break;
+	}
+	case MSR_IA32_PERF_CTL:
+	{
+		v = msr_read(msr);
 		break;
 	}
 
@@ -301,6 +309,14 @@ int wrmsr_handler(struct vcpu *vcpu)
 		/* We only allow SOS to do uCode update */
 		if (is_vm0(vcpu->vm))
 			acrn_update_ucode(vcpu, v);
+		break;
+	}
+	case MSR_IA32_PERF_CTL:
+	{
+		if (validate_pstate(vcpu->vm, v)) {
+			break;
+		}
+		msr_write(msr, v);
 		break;
 	}
 
