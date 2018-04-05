@@ -41,6 +41,7 @@
 #include <io.h>
 #include <vcpu.h>
 #include <trusty.h>
+#include <cpu_state_tbl.h>
 #include <vm.h>
 #include <cpuid.h>
 #include <mmu.h>
