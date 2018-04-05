@@ -787,12 +787,12 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 		/* New entry present - need to allocate a new table */
 		sub_tab_addr = alloc_paging_struct();
 		/* Check to ensure memory available for this structure */
-		if (sub_tab_addr == 0) {
+		if (sub_tab_addr == NULL) {
 			/* Error:
 			 * Unable to find table memory necessary to map memory
 			 */
 			pr_err("Fail to find table memory for map memory");
-			ASSERT(sub_tab_addr == 0, "");
+			ASSERT(0, "fail to alloc table memory for map memory");
 			return 0;
 		}
 
@@ -900,6 +900,8 @@ static int modify_paging(struct map_params *map_params, void *paddr,
 				 */
 				page_size = break_page_table(map_params,
 					paddr, vaddr, page_size, direct);
+				if (page_size == 0)
+					return -EINVAL;
 			}
 		} else {
 			page_size = ((uint64_t)remaining_size < page_size)
