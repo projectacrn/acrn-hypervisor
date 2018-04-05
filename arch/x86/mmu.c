@@ -364,7 +364,7 @@ static int get_table_entry(void *addr, void *table_base,
 	return 0;
 }
 
-static void  *walk_paging_struct(void *addr, void *table_base,
+static void *walk_paging_struct(void *addr, void *table_base,
 		uint32_t table_level, struct map_params *map_params)
 {
 	uint32_t table_offset;
@@ -373,14 +373,13 @@ static void  *walk_paging_struct(void *addr, void *table_base,
 	/* if  table_level == IA32E_PT Just return the same address
 	 * can't walk down any further
 	 */
-	void *sub_table_addr = ((table_level == IA32E_PT) ? table_base:NULL);
-	int status = 0;
+	void *sub_table_addr = (table_level == IA32E_PT) ? table_base : NULL;
 
 	if (table_base == NULL || table_level >= IA32E_UNKNOWN
 	    || map_params == NULL) {
-		status = -EINVAL;
+		ASSERT(0, "Incorrect Arguments");
+		return NULL;
 	}
-	ASSERT(status == 0, "Incorrect Arguments");
 
 	table_offset = fetch_page_table_offset(addr, table_level);
 
@@ -404,18 +403,16 @@ static void  *walk_paging_struct(void *addr, void *table_base,
 		/* Determine if a valid entry exists */
 		if ((table_entry & table_present) == 0) {
 			/* No entry present - need to allocate a new table */
-			sub_table_addr =
-			    alloc_paging_struct();
+			sub_table_addr = alloc_paging_struct();
 			/* Check to ensure memory available for this structure*/
-			if (sub_table_addr == 0) {
+			if (sub_table_addr == NULL) {
 				/* Error: Unable to find table memory necessary
 				 * to map memory
 				 */
-				ASSERT(sub_table_addr == 0,
-					"Fail to find table memory "
+				ASSERT(0, "Fail to alloc table memory "
 					"for map memory");
 
-				return sub_table_addr;
+				return NULL;
 			}
 
 			/* Write entry to current table to reference the new
@@ -712,6 +709,8 @@ static uint64_t update_page_table_entry(struct map_params *map_params,
 	/* Walk from the PML4 table to the PDPT table */
 	table_addr = walk_paging_struct(vaddr, table_addr, IA32E_PML4,
 			map_params);
+	if (table_addr == NULL)
+		return 0;
 
 	if ((remaining_size >= MEM_1G)
 			&& (MEM_ALIGNED_CHECK(vaddr, MEM_1G))
@@ -727,6 +726,8 @@ static uint64_t update_page_table_entry(struct map_params *map_params,
 		/* Walk from the PDPT table to the PD table */
 		table_addr = walk_paging_struct(vaddr, table_addr,
 				IA32E_PDPT, map_params);
+		if (table_addr == NULL)
+			return 0;
 		/* Map this 2 MByte memory region */
 		adjustment_size = map_mem_region(vaddr, paddr,
 				table_addr, attr, IA32E_PD, table_type,
@@ -735,9 +736,13 @@ static uint64_t update_page_table_entry(struct map_params *map_params,
 		/* Walk from the PDPT table to the PD table */
 		table_addr = walk_paging_struct(vaddr,
 				table_addr, IA32E_PDPT, map_params);
+		if (table_addr == NULL)
+			return 0;
 		/* Walk from the PD table to the page table */
 		table_addr = walk_paging_struct(vaddr,
 				table_addr, IA32E_PD, map_params);
+		if (table_addr == NULL)
+			return 0;
 		/* Map this 4 KByte memory region */
 		adjustment_size = map_mem_region(vaddr, paddr,
 				table_addr, attr, IA32E_PT,
@@ -745,7 +750,6 @@ static uint64_t update_page_table_entry(struct map_params *map_params,
 	}
 
 	return adjustment_size;
-
 }
 
 static uint64_t break_page_table(struct map_params *map_params, void *paddr,
@@ -918,6 +922,8 @@ static int modify_paging(struct map_params *map_params, void *paddr,
 		/* The function return the memory size that one entry can map */
 		adjust_size = update_page_table_entry(map_params, paddr, vaddr,
 				page_size, attr, request_type, direct);
+		if (adjust_size == 0)
+			return -EINVAL;
 		vaddr += adjust_size;
 		paddr += adjust_size;
 		remaining_size -= adjust_size;
