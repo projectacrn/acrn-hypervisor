@@ -83,13 +83,12 @@ struct shared_buf *sbuf_allocate(uint32_t ele_num, uint32_t ele_size)
 	if (!sbuf_allocate_size)
 		return NULL;
 
-	sbuf = malloc(sbuf_allocate_size);
+	sbuf = calloc(1, sbuf_allocate_size);
 	if (sbuf == NULL) {
 		pr_err("%s no memory!", __func__);
 		return NULL;
 	}
 
-	memset(sbuf, 0, SBUF_HEAD_SIZE);
 	sbuf->ele_num = ele_num;
 	sbuf->ele_size = ele_size;
 	sbuf->size = ele_num * ele_size;
