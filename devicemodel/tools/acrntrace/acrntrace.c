@@ -340,12 +340,11 @@ int main(int argc, char *argv[])
 
 	/* how many cpus */
 	pcpu_num = get_cpu_num();
-	reader = malloc(sizeof(reader_struct) * pcpu_num);
+	reader = calloc(1, sizeof(reader_struct) * pcpu_num);
 	if (!reader) {
 		pr_err("Failed to allocate reader memory\n");
 		exit(EXIT_FAILURE);
 	}
-	memset(reader, 0, sizeof(reader_struct) * pcpu_num);
 
 	/* create dir for trace file */
 	if (create_trace_file_dir(trace_file_dir)) {

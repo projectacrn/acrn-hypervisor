@@ -118,7 +118,7 @@ vm_open(const char *name)
 	int error, retry = 10;
 	uuid_t vm_uuid;
 
-	ctx = malloc(sizeof(struct vmctx) + strlen(name) + 1);
+	ctx = calloc(1, sizeof(struct vmctx) + strlen(name) + 1);
 	assert(ctx != NULL);
 	assert(devfd == -1);
 
