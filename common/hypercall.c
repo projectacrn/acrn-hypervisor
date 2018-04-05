@@ -37,6 +37,7 @@
 #include <acrn_hv_defs.h>
 #include <hv_debug.h>
 #include <version.h>
+#include <cpu_state_tbl.h>
 
 #define ACRN_DBG_HYCALL	6
 
@@ -662,6 +663,63 @@ int64_t hcall_setup_sbuf(struct vm *vm, uint64_t param)
 		hva = (uint64_t *)NULL;
 
 	return sbuf_share_setup(ssp.pcpu_id, ssp.sbuf_id, hva);
+}
+
+int64_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param)
+{
+	int target_vm_id, target_vcpu_id;
+	struct vm *target_vm;
+	struct vcpu *target_vcpu;
+
+	target_vm_id = (cmd & PMCMD_VMID_MASK) >> PMCMD_VMID_SHIFT;
+	target_vm = get_vm_from_vmid(target_vm_id);
+
+	if (!target_vm) {
+		return -1;
+	}
+
+	switch (cmd & PMCMD_TYPE_MASK) {
+	case PMCMD_GET_PX_CNT: {
+
+		if (!target_vm->pm.px_cnt) {
+			return -1;
+		}
+
+		if (copy_to_vm(vm, &(target_vm->pm.px_cnt), param)) {
+			pr_err("%s: Unable copy param to vm\n", __func__);
+			return -1;
+		}
+		return 0;
+	}
+	case PMCMD_GET_PX_DATA: {
+		int pn;
+		struct cpu_px_data *px_data;
+
+		/* For now we put px data as per-vm,
+		 * If it is stored as per-cpu in the future,
+		 * we need to check PMCMD_VCPUID_MASK in cmd.
+		 */
+		if (!target_vm->pm.px_cnt) {
+			return -1;
+		}
+
+		pn = (cmd & PMCMD_STATE_NUM_MASK) >> PMCMD_STATE_NUM_SHIFT;
+		if (pn >= target_vm->pm.px_cnt) {
+			return -1;
+		}
+
+		px_data = target_vm->pm.px_data + pn;
+		if (copy_to_vm(vm, px_data, param)) {
+			pr_err("%s: Unable copy param to vm\n", __func__);
+			return -1;
+		}
+
+		return 0;
+	}
+	default:
+		return -1;
+
+	}
 }
 
 static void fire_vhm_interrupt(void)

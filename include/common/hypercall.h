@@ -333,6 +333,17 @@ int64_t hcall_setup_sbuf(struct vm *vm, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
+
+int64_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param);
+
+/**
+ * @brief Get VCPU Power state.
+ *
+ * @param VCPU power state data
+ *
+ * @return 0 on success, non-zero on error.
+ */
+
 int64_t hcall_world_switch(struct vcpu *vcpu);
 
 /**
