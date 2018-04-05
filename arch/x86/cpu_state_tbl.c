@@ -107,6 +107,31 @@ void load_cpu_state_data(void)
 
 }
 
+int validate_pstate(struct vm *vm, uint64_t perf_ctl)
+{
+	struct cpu_px_data *px_data;
+	int i, px_cnt;
+
+	if (is_vm0(vm)) {
+		return 0;
+	}
+
+	px_cnt = vm->pm.px_cnt;
+	px_data = vm->pm.px_data;
+
+	if (!px_cnt || !px_data) {
+		return -1;
+	}
+
+	for (i = 0; i < px_cnt; i++) {
+		if ((px_data + i)->control == (perf_ctl & 0xffff)) {
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
 void vm_setup_cpu_px(struct vm *vm)
 {
 	uint32_t px_data_size;

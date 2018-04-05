@@ -39,5 +39,6 @@ struct cpu_state_table {
 
 void load_cpu_state_data(void);
 void vm_setup_cpu_state(struct vm *vm);
+int validate_pstate(struct vm *vm, uint64_t perf_ctl);
 
 #endif /* CPU_STATE_TBL_H */
