@@ -31,6 +31,7 @@
 #include <hv_lib.h>
 #include <cpu.h>
 #include <acrn_common.h>
+#include <hv_arch.h>
 #include <cpu_state_tbl.h>
 
 /* The table includes cpu px info of Intel A3960 SoC */
@@ -104,4 +105,33 @@ void load_cpu_state_data(void)
 
 	boot_cpu_data.px_data = (cpu_state_tbl + tbl_idx)->px_data;
 
+}
+
+void vm_setup_cpu_px(struct vm *vm)
+{
+	uint32_t px_data_size;
+
+	vm->pm.px_cnt = 0;
+	memset(vm->pm.px_data, 0, MAX_PSTATE * sizeof(struct cpu_px_data));
+
+	if ((!boot_cpu_data.px_cnt) || (!boot_cpu_data.px_data)) {
+		return;
+	}
+
+	if (boot_cpu_data.px_cnt > MAX_PSTATE) {
+		vm->pm.px_cnt = MAX_PSTATE;
+	} else {
+		vm->pm.px_cnt = boot_cpu_data.px_cnt;
+	}
+
+	px_data_size = vm->pm.px_cnt * sizeof(struct cpu_px_data);
+
+	memcpy_s(vm->pm.px_data, px_data_size,
+			boot_cpu_data.px_data, px_data_size);
+
+}
+
+void vm_setup_cpu_state(struct vm *vm)
+{
+	vm_setup_cpu_px(vm);
 }

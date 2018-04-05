@@ -38,5 +38,6 @@ struct cpu_state_table {
 };
 
 void load_cpu_state_data(void);
+void vm_setup_cpu_state(struct vm *vm);
 
 #endif /* CPU_STATE_TBL_H */
