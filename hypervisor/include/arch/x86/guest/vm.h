@@ -80,6 +80,11 @@ struct vm_sw_info {
 	uint64_t req_buf;
 };
 
+struct vm_pm_info {
+	uint8_t			px_cnt;
+	struct cpu_px_data	px_data[MAX_PSTATE];
+};
+
 /* VM guest types */
 #define VM_LINUX_GUEST      0x02
 #define VM_MONO_GUEST       0x01
@@ -152,6 +157,7 @@ struct vm {
 	struct vm_attr attr;	/* Reference to this VM's attributes */
 	struct vm_hw_info hw;	/* Reference to this VM's HW information */
 	struct vm_sw_info sw;	/* Reference to SW associated with this VM */
+	struct vm_pm_info pm;	/* Reference to this VM's arch information */
 	struct vm_arch arch_vm;	/* Reference to this VM's arch information */
 	struct vm_state_info state_info;/* State info of this VM */
 	enum vm_state state;	/* VM state */

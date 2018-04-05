@@ -34,6 +34,7 @@
 #include <bsp_extern.h>
 #include <hv_debug.h>
 #include <multiboot.h>
+#include <cpu_state_tbl.h>
 
 /* Local variables */
 
@@ -152,6 +153,8 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 			 * selected IO ranges
 			 */
 			setup_io_bitmap(vm);
+
+			vm_setup_cpu_state(vm);
 
 			/* Create virtual uart */
 			if (is_vm0(vm))
