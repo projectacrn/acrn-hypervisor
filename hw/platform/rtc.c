@@ -1105,9 +1105,8 @@ vrtc_init(struct vmctx *ctx, int local_time)
 	time_t curtime;
 	struct inout_port rtc_addr, rtc_data;
 
-	vrtc = malloc(sizeof(struct vrtc));
+	vrtc = calloc(1, sizeof(struct vrtc));
 	assert(vrtc != NULL);
-	memset(vrtc, 0, sizeof(struct vrtc));
 	vrtc->vm = ctx;
 	ctx->vrtc = vrtc;
 
