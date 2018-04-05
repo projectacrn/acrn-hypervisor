@@ -325,8 +325,10 @@ static uint32_t fetch_page_table_offset(void *addr, uint32_t table_level)
 		break;
 
 	default:
-		pr_err("Wrong page table level = 0x%lx", table_level);
-		ASSERT(false, "Wrong page table level");
+		/* all callers should already make sure it will not come
+		 * to here
+		 */
+		panic("Wrong page table level");
 		break;
 	}
 
