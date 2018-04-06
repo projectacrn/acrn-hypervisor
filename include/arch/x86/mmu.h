@@ -318,14 +318,14 @@ void *alloc_paging_struct(void);
 void free_paging_struct(void *ptr);
 void enable_paging(void *pml4_base_addr);
 void init_paging(void);
-void map_mem(struct map_params *map_params, void *paddr, void *vaddr,
+int map_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		    uint64_t size, uint32_t flags);
-void unmap_mem(struct map_params *map_params, void *paddr, void *vaddr,
+int unmap_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		      uint64_t size, uint32_t flags);
-void modify_mem(struct map_params *map_params, void *paddr, void *vaddr,
+int modify_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		       uint64_t size, uint32_t flags);
-void mmu_invept(struct vcpu *vcpu);
-void obtain_last_page_table_entry(struct map_params *map_params,
+int mmu_invept(struct vcpu *vcpu);
+int obtain_last_page_table_entry(struct map_params *map_params,
 		struct entry_params *entry, void *addr, bool direct);
 
 int register_mmio_emulation_handler(struct vm *vm,
