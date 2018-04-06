@@ -289,6 +289,32 @@ struct acrn_vm_pci_msix_remap {
 #define GUEST_CFG_OFFSET	0xd0000
 
 /**
+ * @brief Info The power state data of a VCPU.
+ *
+ */
+struct cpu_px_data {
+	uint64_t core_frequency;	/* megahertz */
+	uint64_t power;			/* milliWatts */
+	uint64_t transition_latency;	/* microseconds */
+	uint64_t bus_master_latency;	/* microseconds */
+	uint64_t control;		/* control value */
+	uint64_t status;		/* success indicator */
+} __attribute__((aligned(8)));
+
+/**
+ * @brief Info PM command from DM/VHM.
+ *
+ * The command would specify request type(i.e. get px count or data).
+ * If the request is to get a state data like P(0) or P(n), then the state
+ * number (n) is included in command also.
+ */
+#define PMCMD_STATE_TYPE	0xf0000000
+#define PMCMD_STATE_NUM		0x000000ff
+
+#define PMCMD_GET_PX_CNT	0x10000000
+#define PMCMD_GET_PX_DATA	0x20000000
+
+/**
  * @}
  */
 #endif /* ACRN_COMMON_H */

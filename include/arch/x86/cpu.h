@@ -236,9 +236,14 @@ struct cpuinfo_x86 {
 	uint8_t x86, x86_model;
 	uint64_t physical_address_mask;
 	uint32_t cpuid_leaves[FEATURE_WORDS];
+	char model_name[64];
+	uint8_t			px_cnt;
+	struct cpu_px_data	*px_data;
 };
 
 extern struct cpuinfo_x86 boot_cpu_data;
+
+#define MAX_PSTATE	20
 
 /* Function prototypes */
 void cpu_halt(uint32_t logical_id);

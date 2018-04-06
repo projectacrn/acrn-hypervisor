@@ -28,35 +28,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef HV_ARCH_H
-#define HV_ARCH_H
+#ifndef CPU_STATE_TBL_H
+#define CPU_STATE_TBL_H
 
-#include <cpu.h>
-#include <gdt.h>
-#include <idt.h>
-#include <apicreg.h>
-#include <ioapic.h>
-#include <lapic.h>
-#include <msr.h>
-#include <io.h>
-#include <vcpu.h>
-#include <trusty.h>
-#include <cpu_state_tbl.h>
-#include <vm.h>
-#include <cpuid.h>
-#include <mmu.h>
-#include <intr_ctx.h>
-#include <irq.h>
-#include <timer.h>
-#include <softirq.h>
-#include <vmx.h>
-#include <assign.h>
-#include <vtd.h>
+struct cpu_state_table {
+	char			model_name[64];
+	uint8_t			px_cnt;
+	struct cpu_px_data	*px_data;
+};
 
-#include <vpic.h>
-#include <vlapic.h>
-#include <vioapic.h>
-#include <guest.h>
-#include <vmexit.h>
+void load_cpu_state_data(void);
+void vm_setup_cpu_state(struct vm *vm);
+int validate_pstate(struct vm *vm, uint64_t perf_ctl);
 
-#endif /* HV_ARCH_H */
+#endif /* CPU_STATE_TBL_H */

@@ -36,6 +36,7 @@
 #include <schedule.h>
 #include <version.h>
 #include <hv_debug.h>
+#include <cpu_state_tbl.h>
 
 #ifdef CONFIG_EFI_STUB
 extern uint32_t efi_physical_available_ap_bitmap;
@@ -308,6 +309,27 @@ static void set_fs_base(void)
 }
 #endif
 
+static void get_cpu_name(void)
+{
+	cpuid(CPUID_EXTEND_FUNCTION_2,
+		(uint32_t *)(boot_cpu_data.model_name),
+		(uint32_t *)(boot_cpu_data.model_name + 4),
+		(uint32_t *)(boot_cpu_data.model_name + 8),
+		(uint32_t *)(boot_cpu_data.model_name + 12));
+	cpuid(CPUID_EXTEND_FUNCTION_3,
+		(uint32_t *)(boot_cpu_data.model_name + 16),
+		(uint32_t *)(boot_cpu_data.model_name + 20),
+		(uint32_t *)(boot_cpu_data.model_name + 24),
+		(uint32_t *)(boot_cpu_data.model_name + 28));
+	cpuid(CPUID_EXTEND_FUNCTION_4,
+		(uint32_t *)(boot_cpu_data.model_name + 32),
+		(uint32_t *)(boot_cpu_data.model_name + 36),
+		(uint32_t *)(boot_cpu_data.model_name + 40),
+		(uint32_t *)(boot_cpu_data.model_name + 44));
+
+	boot_cpu_data.model_name[48] = '\0';
+}
+
 void bsp_boot_init(void)
 {
 	uint64_t start_tsc = rdtsc();
@@ -375,6 +397,10 @@ void bsp_boot_init(void)
 	 */
 	get_cpu_capabilities();
 
+	get_cpu_name();
+
+	load_cpu_state_data();
+
 	/* Initialize the hypervisor paging */
 	init_paging();
 
@@ -433,6 +459,8 @@ void bsp_boot_init(void)
 
 	printf("API version %d.%d\r\n",
 			HV_API_MAJOR_VERSION, HV_API_MINOR_VERSION);
+
+	printf("Detect processor: %s\n", boot_cpu_data.model_name);
 
 	pr_dbg("Core %d is up", CPU_BOOT_ID);
 
