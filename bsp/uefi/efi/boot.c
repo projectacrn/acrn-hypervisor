@@ -40,13 +40,14 @@
 EFI_SYSTEM_TABLE *sys_table;
 EFI_BOOT_SERVICES *boot;
 EFI_RUNTIME_SERVICES *runtime;
+extern const uint64_t guest_entry;
 
 static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
 			struct multiboot_info *mbi, struct efi_ctx *efi_ctx)
 {
 	hv_func hf;
 
-	efi_ctx->rip = (uint64_t)__builtin_return_address(0);
+	efi_ctx->rip = (uint64_t)&guest_entry;
 
 	/* The 64-bit entry of acrn hypervisor is 0x200 from the start
 	 * address of hv image. But due to there is multiboot header,
@@ -308,6 +309,9 @@ switch_to_guest_mode(EFI_HANDLE image)
 	asm volatile ("movq %%r15, %0" : "=r"(efi_ctx->r15));
 
 	hv_jump(CONFIG_RAM_START, mbi, efi_ctx);
+	asm volatile (".global guest_entry\n\t"
+				  "guest_entry:\n\t");
+
 out:
 	return err;
 }
