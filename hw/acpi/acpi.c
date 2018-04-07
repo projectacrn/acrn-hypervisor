@@ -118,7 +118,7 @@ struct basl_fio {
 #define EFFLUSH(x) fflush(x)
 
 static int
-basl_fwrite_rsdp(FILE *fp)
+basl_fwrite_rsdp(FILE *fp, struct vmctx *ctx)
 {
 	EFPRINTF(fp, "/*\n");
 	EFPRINTF(fp, " * dm RSDP template\n");
@@ -141,7 +141,7 @@ basl_fwrite_rsdp(FILE *fp)
 }
 
 static int
-basl_fwrite_rsdt(FILE *fp)
+basl_fwrite_rsdt(FILE *fp, struct vmctx *ctx)
 {
 	EFPRINTF(fp, "/*\n");
 	EFPRINTF(fp, " * dm RSDT template\n");
@@ -174,7 +174,7 @@ basl_fwrite_rsdt(FILE *fp)
 }
 
 static int
-basl_fwrite_xsdt(FILE *fp)
+basl_fwrite_xsdt(FILE *fp, struct vmctx *ctx)
 {
 	EFPRINTF(fp, "/*\n");
 	EFPRINTF(fp, " * dm XSDT template\n");
@@ -207,7 +207,7 @@ basl_fwrite_xsdt(FILE *fp)
 }
 
 static int
-basl_fwrite_madt(FILE *fp)
+basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 {
 	int i;
 
@@ -291,7 +291,7 @@ basl_fwrite_madt(FILE *fp)
 }
 
 static int
-basl_fwrite_fadt(FILE *fp)
+basl_fwrite_fadt(FILE *fp, struct vmctx *ctx)
 {
 	EFPRINTF(fp, "/*\n");
 	EFPRINTF(fp, " * dm FADT template\n");
@@ -505,7 +505,7 @@ basl_fwrite_fadt(FILE *fp)
 }
 
 static int
-basl_fwrite_hpet(FILE *fp)
+basl_fwrite_hpet(FILE *fp, struct vmctx *ctx)
 {
 	EFPRINTF(fp, "/*\n");
 	EFPRINTF(fp, " * dm HPET template\n");
@@ -547,7 +547,7 @@ basl_fwrite_hpet(FILE *fp)
 }
 
 static int
-basl_fwrite_mcfg(FILE *fp)
+basl_fwrite_mcfg(FILE *fp, struct vmctx *ctx)
 {
 	EFPRINTF(fp, "/*\n");
 	EFPRINTF(fp, " * dm MCFG template\n");
@@ -577,7 +577,7 @@ basl_fwrite_mcfg(FILE *fp)
 }
 
 static int
-basl_fwrite_nhlt(FILE *fp)
+basl_fwrite_nhlt(FILE *fp, struct vmctx *ctx)
 {
 	int offset, len;
 	uint8_t data;
@@ -634,7 +634,7 @@ basl_fwrite_nhlt(FILE *fp)
 }
 
 static int
-basl_fwrite_facs(FILE *fp)
+basl_fwrite_facs(FILE *fp, struct vmctx *ctx)
 {
 	EFPRINTF(fp, "/*\n");
 	EFPRINTF(fp, " * dm FACS template\n");
@@ -729,7 +729,7 @@ dsdt_fixed_mem32(uint32_t base, uint32_t length)
 }
 
 static int
-basl_fwrite_dsdt(FILE *fp)
+basl_fwrite_dsdt(FILE *fp, struct vmctx *ctx)
 {
 	dsdt_fp = fp;
 	dsdt_error = 0;
@@ -852,7 +852,9 @@ basl_load(struct vmctx *ctx, int fd, uint64_t off)
 }
 
 static int
-basl_compile(struct vmctx *ctx, int (*fwrite_section)(FILE *), uint64_t offset)
+basl_compile(struct vmctx *ctx,
+		int (*fwrite_section)(FILE *, struct vmctx *),
+		uint64_t offset)
 {
 	struct basl_fio io[2];
 	static char iaslbuf[3*MAXPATHLEN + 10];
@@ -860,7 +862,7 @@ basl_compile(struct vmctx *ctx, int (*fwrite_section)(FILE *), uint64_t offset)
 
 	err = basl_start(&io[0], &io[1]);
 	if (!err) {
-		err = (*fwrite_section)(io[0].fp);
+		err = (*fwrite_section)(io[0].fp, ctx);
 
 		if (!err) {
 			/*
@@ -947,7 +949,7 @@ basl_make_templates(void)
 }
 
 static struct {
-	int	(*wsect)(FILE *fp);
+	int	(*wsect)(FILE *fp, struct vmctx *ctx);
 	uint64_t  offset;
 	bool	valid;
 } basl_ftables[] = {
