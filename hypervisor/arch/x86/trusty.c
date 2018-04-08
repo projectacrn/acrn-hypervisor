@@ -174,8 +174,8 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	vm->sworld_control.sworld_memory.base_hpa = hpa;
 	vm->sworld_control.sworld_memory.length = size;
 
-	mmu_invept(vm->current_vcpu);
-	mmu_invept(vm0->current_vcpu);
+	invept(vm->current_vcpu);
+	invept(vm0->current_vcpu);
 
 }
 
