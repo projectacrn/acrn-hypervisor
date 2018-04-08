@@ -118,6 +118,9 @@ static void check_mmu_capability(void)
 	cpuid(CPUID_EXTEND_FUNCTION_1, &eax, &ebx, &ecx, &edx);
 	mm_caps.mmu_1gb_page_supported = (edx & CPUID_EDX_PAGE1GB) ?
 							(true) : (false);
+
+	if (!mm_caps.invept_supported)
+		panic("invept must be supported");
 }
 
 static inline bool check_invept_single_support(void)
@@ -132,7 +135,7 @@ static inline bool check_invept_global_support(void)
 			mm_caps.invept_global_context_supported;
 }
 
-void mmu_invept(struct vcpu *vcpu)
+void invept(struct vcpu *vcpu)
 {
 	struct invept_desc desc = {0};
 
