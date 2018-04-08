@@ -127,6 +127,7 @@ static void dsdt_write_pct(void)
 static void dsdt_write_pss(struct vmctx *ctx, int vcpu_id)
 {
 	uint8_t vcpu_px_cnt;
+	int i;
 	struct cpu_px_data *vcpu_px_data;
 
 	vcpu_px_cnt = get_vcpu_px_cnt(ctx, vcpu_id);
@@ -140,7 +141,7 @@ static void dsdt_write_pss(struct vmctx *ctx, int vcpu_id)
 	}
 
 	/* copy and validate px data first */
-	for (int i = 0; i < vcpu_px_cnt; i++) {
+	for (i = 0; i < vcpu_px_cnt; i++) {
 		if (get_vcpu_px_data(ctx, vcpu_id, i, vcpu_px_data + i)) {
 			/* something must be wrong, so skip the write. */
 			free(vcpu_px_data);
@@ -154,7 +155,7 @@ static void dsdt_write_pss(struct vmctx *ctx, int vcpu_id)
 	dsdt_line("      Return (Package (0x%02X)", vcpu_px_cnt);
 	dsdt_line("      {");
 
-	for (int i = 0; i < vcpu_px_cnt; i++) {
+	for (i = 0; i < vcpu_px_cnt; i++) {
 
 		dsdt_line("          Package (0x%02X)", 6);
 		dsdt_line("          {");
@@ -186,11 +187,13 @@ static void dsdt_write_pss(struct vmctx *ctx, int vcpu_id)
 
 void pm_write_dsdt(struct vmctx *ctx, int ncpu)
 {
+	int i;
+
 	/* Scope (_PR) */
 	dsdt_line("");
 	dsdt_line("  Scope (_PR)");
 	dsdt_line("  {");
-	for (int i = 0; i < ncpu; i++) {
+	for (i = 0; i < ncpu; i++) {
 		dsdt_line("    Processor (CPU%d, 0x%02X, 0x00000000, 0x00) {}",
 					i, i);
 	}
@@ -198,7 +201,7 @@ void pm_write_dsdt(struct vmctx *ctx, int ncpu)
 	dsdt_line("");
 
 	/* Scope (_PR.CPU(N)) */
-	for (int i = 0; i < ncpu; i++) {
+	for (i = 0; i < ncpu; i++) {
 		dsdt_line("  Scope (_PR.CPU%d)", i);
 		dsdt_line("  {");
 		dsdt_line("");
