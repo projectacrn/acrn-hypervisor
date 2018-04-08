@@ -289,7 +289,7 @@ int acrn_do_intr_process(struct vcpu *vcpu)
 	uint64_t *pending_intr_bits = &vcpu->arch_vcpu.pending_intr;
 
 	if (bitmap_test_and_clear(ACRN_REQUEST_TLB_FLUSH, pending_intr_bits))
-		mmu_invept(vcpu);
+		invept(vcpu);
 
 	if (bitmap_test_and_clear(ACRN_REQUEST_TMR_UPDATE, pending_intr_bits))
 		vioapic_update_tmr(vcpu);
