@@ -94,25 +94,20 @@ static void start_cpus(void);
 static void pcpu_sync_sleep(unsigned long *sync, int mask_bit);
 int ibrs_type;
 
-static inline bool get_tsc_adjust_cap(void)
+inline bool cpu_has_cap(uint32_t bit)
 {
-	return !!(boot_cpu_data.cpuid_leaves[FEAT_7_0_EBX] & CPUID_EBX_TSC_ADJ);
-}
+	int feat_idx = bit >> 5;
+	int feat_bit = bit & 0x1f;
 
-static inline bool get_ibrs_ibpb_cap(void)
-{
-	return !!(boot_cpu_data.cpuid_leaves[FEAT_7_0_EDX] &
-		CPUID_EDX_IBRS_IBPB);
-}
+	if (feat_idx >= FEATURE_WORDS)
+		return false;
 
-static inline bool get_stibp_cap(void)
-{
-	return !!(boot_cpu_data.cpuid_leaves[FEAT_7_0_EDX] & CPUID_EDX_STIBP);
+	return !!(boot_cpu_data.cpuid_leaves[feat_idx] & (1 << feat_bit));
 }
 
 static inline bool get_monitor_cap(void)
 {
-	if (boot_cpu_data.cpuid_leaves[FEAT_1_ECX] & CPUID_ECX_MONITOR) {
+	if (cpu_has_cap(X86_FEATURE_MONITOR)) {
 		/* don't use monitor for CPU (family: 0x6 model: 0x5c)
 		 * in hypervisor, but still expose it to the guests and
 		 * let them handle it correctly
@@ -122,11 +117,6 @@ static inline bool get_monitor_cap(void)
 	}
 
 	return false;
-}
-
-inline bool get_vmx_cap(void)
-{
-	return !!(boot_cpu_data.cpuid_leaves[FEAT_1_ECX] & CPUID_ECX_VMX);
 }
 
 static uint64_t get_address_mask(uint8_t limit)
@@ -198,9 +188,9 @@ static void get_cpu_capabilities(void)
 	 * should be set all the time instead of relying on retpoline
 	 */
 #ifndef CONFIG_RETPOLINE
-	if (get_ibrs_ibpb_cap()) {
+	if (cpu_has_cap(X86_FEATURE_IBRS_IBPB)) {
 		ibrs_type = IBRS_RAW;
-		if (get_stibp_cap())
+		if (cpu_has_cap(X86_FEATURE_STIBP))
 			ibrs_type = IBRS_OPT;
 	}
 #endif
@@ -470,7 +460,8 @@ void bsp_boot_init(void)
 	pr_dbg("Core %d is up", CPU_BOOT_ID);
 
 	/* Warn for security feature not ready */
-	if (!get_ibrs_ibpb_cap() && !get_stibp_cap()) {
+	if (!cpu_has_cap(X86_FEATURE_IBRS_IBPB) &&
+			!cpu_has_cap(X86_FEATURE_STIBP)) {
 		pr_fatal("SECURITY WARNING!!!!!!");
 		pr_fatal("Please apply the latest CPU uCode patch!");
 	}
@@ -786,7 +777,7 @@ static void cpu_xsave_init(void)
 {
 	uint64_t val64;
 
-	if (is_xsave_supported()) {
+	if (cpu_has_cap(X86_FEATURE_XSAVE)) {
 		CPU_CR_READ(cr4, &val64);
 		val64 |= CR4_OSXSAVE;
 		CPU_CR_WRITE(cr4, val64);
