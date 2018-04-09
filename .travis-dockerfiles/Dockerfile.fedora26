@@ -6,6 +6,7 @@ RUN dnf -y install gcc \
                    git \
                    make \
                    vim \
+                   findutils \
                    libuuid-devel \
                    openssl-devel \
                    libpciaccess-devel \
