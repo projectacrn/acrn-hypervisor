@@ -152,7 +152,7 @@ int hv_main(int cpu_id)
 			"cpu_id/tsc_aux mismatch");
 
 	/* Check if virtualization extensions are supported */
-	ret = get_vmx_cap();
+	ret = cpu_has_cap(X86_FEATURE_VMX);
 	ASSERT(ret == 1, "VMX not supported!");
 
 	/* Enable virtualization extensions */

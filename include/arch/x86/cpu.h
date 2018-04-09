@@ -224,15 +224,15 @@ extern uint64_t pcpu_active_bitmap;
 
 /* CPUID feature words */
 enum feature_word {
-	FEAT_1_ECX,         /* CPUID[1].ECX */
-	FEAT_1_EDX,         /* CPUID[1].EDX */
-	FEAT_7_0_EBX,       /* CPUID[EAX=7,ECX=0].EBX */
-	FEAT_7_0_ECX,       /* CPUID[EAX=7,ECX=0].ECX */
-	FEAT_7_0_EDX,       /* CPUID[EAX=7,ECX=0].EDX */
-	FEAT_8000_0000_EAX, /* CPUID[8000_0000].EAX */
-	FEAT_8000_0001_ECX, /* CPUID[8000_0001].ECX */
-	FEAT_8000_0001_EDX, /* CPUID[8000_0001].EDX */
-	FEAT_8000_0008_EAX, /* CPUID[8000_0008].EAX */
+	FEAT_1_ECX = 0,         /* CPUID[1].ECX */
+	FEAT_1_EDX = 1,         /* CPUID[1].EDX */
+	FEAT_7_0_EBX = 2,       /* CPUID[EAX=7,ECX=0].EBX */
+	FEAT_7_0_ECX = 3,       /* CPUID[EAX=7,ECX=0].ECX */
+	FEAT_7_0_EDX = 4,       /* CPUID[EAX=7,ECX=0].EDX */
+	FEAT_8000_0000_EAX = 5, /* CPUID[8000_0000].EAX */
+	FEAT_8000_0001_ECX = 6, /* CPUID[8000_0001].ECX */
+	FEAT_8000_0001_EDX = 7, /* CPUID[8000_0001].EDX */
+	FEAT_8000_0008_EAX = 8, /* CPUID[8000_0008].EAX */
 	FEATURE_WORDS,
 };
 
@@ -258,8 +258,8 @@ int hv_main(int cpu_id);
 bool is_vapic_supported(void);
 bool is_vapic_intr_delivery_supported(void);
 bool is_vapic_virt_reg_supported(void);
-bool get_vmx_cap(void);
 bool is_xsave_supported(void);
+bool cpu_has_cap(uint32_t bit);
 
 /* Read control register */
 #define CPU_CR_READ(cr, result_ptr)                         \

@@ -58,5 +58,6 @@
 #include <vioapic.h>
 #include <guest.h>
 #include <vmexit.h>
+#include <cpufeatures.h>
 
 #endif /* HV_ARCH_H */
