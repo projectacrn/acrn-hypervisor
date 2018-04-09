@@ -191,8 +191,8 @@ int rdmsr_handler(struct vcpu *vcpu)
 	}
 	case MSR_IA32_TIME_STAMP_COUNTER:
 	{
-		/*Add the TSC_offset to host TSC to get guest TSC */
-		v = rdtsc() + exec_vmread64(VMX_TSC_OFFSET_FULL);
+		/* Add the TSC_offset to host TSC to get guest TSC */
+		v = rdtsc() + vcpu->arch_vcpu.contexts[cur_context].tsc_offset;
 		break;
 	}
 
@@ -287,7 +287,8 @@ int wrmsr_handler(struct vcpu *vcpu)
 	case MSR_IA32_TIME_STAMP_COUNTER:
 	{
 		/*Caculate TSC offset from changed TSC MSR value*/
-		exec_vmwrite64(VMX_TSC_OFFSET_FULL, v - rdtsc());
+		cur_context->tsc_offset = v - rdtsc();
+		exec_vmwrite64(VMX_TSC_OFFSET_FULL, cur_context->tsc_offset);
 		break;
 	}
 
