@@ -258,7 +258,6 @@ int hv_main(int cpu_id);
 bool is_vapic_supported(void);
 bool is_vapic_intr_delivery_supported(void);
 bool is_vapic_virt_reg_supported(void);
-bool is_xsave_supported(void);
 bool cpu_has_cap(uint32_t bit);
 
 /* Read control register */
