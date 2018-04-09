@@ -933,7 +933,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 			exec_vmwrite(VMX_TPR_THRESHOLD, 0);
 	}
 
-	if (is_xsave_supported()) {
+	if (cpu_has_cap(X86_FEATURE_OSXSAVE)) {
 		exec_vmwrite64(VMX_XSS_EXITING_BITMAP_FULL, 0);
 		value32 |= VMX_PROCBASED_CTLS2_XSVE_XRSTR;
 	}
