@@ -761,18 +761,6 @@ bool is_vapic_virt_reg_supported(void)
 	return ((cpu_caps.vapic_features & VAPIC_FEATURE_VIRT_REG) != 0);
 }
 
-bool is_xsave_supported(void)
-{
-	/*
-	 *todo:
-	 *below flag also should be tested, but current it will be false
-	 *as it is not updated after turning on the host's CR4.OSXSAVE bit,
-	 *will be fixed in cpuid related patch.
-	 *boot_cpu_data.cpuid_leaves[FEAT_1_ECX] & CPUID_ECX_OSXSAVE
-	 **/
-	return !!(boot_cpu_data.cpuid_leaves[FEAT_1_ECX] & CPUID_ECX_XSAVE);
-}
-
 static void cpu_xsave_init(void)
 {
 	uint64_t val64;
@@ -781,5 +769,15 @@ static void cpu_xsave_init(void)
 		CPU_CR_READ(cr4, &val64);
 		val64 |= CR4_OSXSAVE;
 		CPU_CR_WRITE(cr4, val64);
+
+		if (get_cpu_id() == CPU_BOOT_ID) {
+			uint32_t ecx, unused;
+			cpuid(CPUID_FEATURES, &unused, &unused, &ecx, &unused);
+
+			/* if set, update it */
+			if (ecx & CPUID_ECX_OSXSAVE)
+				boot_cpu_data.cpuid_leaves[FEAT_1_ECX] |=
+						CPUID_ECX_OSXSAVE;
+		}
 	}
 }

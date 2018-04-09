@@ -356,7 +356,7 @@ void guest_cpuid(struct vcpu *vcpu,
 		break;
 
 	case 0x0d:
-		if (!is_xsave_supported()) {
+		if (!cpu_has_cap(X86_FEATURE_OSXSAVE)) {
 			*eax = 0;
 			*ebx = 0;
 			*ecx = 0;
