@@ -481,9 +481,8 @@ static int rdtsc_handler(struct vcpu *vcpu)
 	/* Read the host TSC value */
 	CPU_RDTSCP_EXECUTE(&host_tsc, &id);
 
-	/* Get the guest TSC offset value from VMCS */
-	tsc_offset =
-	    exec_vmread64(VMX_TSC_OFFSET_FULL);
+	/* Get current world's TSC offset */
+	tsc_offset = cur_context->tsc_offset;
 
 	/* Update the guest TSC value by following: TSC_guest = TSC_host +
 	 * TSC_guest_Offset
@@ -509,9 +508,8 @@ static int rdtscp_handler(struct vcpu *vcpu)
 	/* Read the host TSC value */
 	CPU_RDTSCP_EXECUTE(&host_tsc, &id);
 
-	/* Get the guest TSC offset value from VMCS */
-	tsc_offset =
-	    exec_vmread64(VMX_TSC_OFFSET_FULL);
+	/* Get current world's TSC offset */
+	tsc_offset = cur_context->tsc_offset;
 
 	/* Update the guest TSC value by following: * TSC_guest = TSC_host +
 	 * TSC_guest_Offset
