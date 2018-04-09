@@ -82,6 +82,9 @@
 #define REQUEST_READ	0
 #define REQUEST_WRITE	1
 
+/* Generic VM flags from guest OS */
+#define SECURE_WORLD_ENABLED    (1UL<<0)  /* Whether secure world is enabled */
+
 /**
  * @brief Hypercall
  *
@@ -161,29 +164,31 @@ struct acrn_create_vm {
 	/** created vmid return to VHM. Keep it first field */
 	int32_t vmid;
 
-	/** vcpu numbers this VM want to create */
+	/** VCPU numbers this VM want to create */
 	uint32_t vcpu_num;
 
 	/** the GUID of this VM */
 	uint8_t	 GUID[16];
 
-	/** whether Secure World is enabled for this VM */
-	uint8_t	 secure_world_enabled;
+	/* VM flag bits from Guest OS, now used
+	 *  SECURE_WORLD_ENABLED          (1UL<<0)
+	 */
+	uint64_t vm_flag;
 
 	/** Reserved for future use*/
-	uint8_t  reserved[31];
+	uint8_t  reserved[24];
 } __aligned(8);
 
 /**
- * @brief Info to create a vcpu
+ * @brief Info to create a VCPU
  *
  * the parameter for HC_CREATE_VCPU hypercall
  */
 struct acrn_create_vcpu {
-	/** the virtual cpu id for the vcpu want to create */
+	/** the virtual CPU ID for the VCPU created */
 	uint32_t vcpu_id;
 
-	/** the physical cpu id for the vcpu want to create */
+	/** the physical CPU ID for the VCPU created */
 	uint32_t pcpu_id;
 } __aligned(8);
 
@@ -193,7 +198,7 @@ struct acrn_create_vcpu {
  * the parameter for HC_SET_IOREQ_BUFFER hypercall
  */
 struct acrn_set_ioreq_buffer {
-	/** gpa of per VM request_buffer */
+	/** guest physical address of VM request_buffer */
 	uint64_t req_buf;
 } __aligned(8);
 
@@ -204,7 +209,7 @@ struct acrn_set_ioreq_buffer {
 #define	ACRN_INTR_TYPE_IOAPIC	1
 
 /**
- * @brief Info to assert/deassert/pulse a virtual irq line for a VM
+ * @brief Info to assert/deassert/pulse a virtual IRQ line for a VM
  *
  * the parameter for HC_ASSERT_IRQLINE/HC_DEASSERT_IRQLINE/HC_PULSE_IRQLINE
  * hypercall
@@ -216,76 +221,76 @@ struct acrn_irqline {
 	/** reserved for alignment padding */
 	uint32_t reserved;
 
-	/** pic irq for ISA type */
+	/** pic IRQ for ISA type */
 	uint64_t pic_irq;
 
-	/** ioapic irq for IOAPIC & ISA TYPE,
-	 * if -1 then this irq will not be injected
+	/** ioapic IRQ for IOAPIC & ISA TYPE,
+	 *  if -1 then this IRQ will not be injected
 	 */
 	uint64_t ioapic_irq;
 } __aligned(8);
 
 /**
- * @brief Info to inject a msi interrupt for a VM
+ * @brief Info to inject a MSI interrupt to VM
  *
  * the parameter for HC_INJECT_MSI hypercall
  */
 struct acrn_msi_entry {
-	/** msi addr[19:12] with dest vcpu id */
+	/** MSI addr[19:12] with dest VCPU ID */
 	uint64_t msi_addr;
 
-	/** msi data[7:0] with vector */
+	/** MSI data[7:0] with vector */
 	uint64_t msi_data;
 } __aligned(8);
 
 /**
- * @brief Info to inject a nmi interrupt for a VM
+ * @brief Info to inject a NMI interrupt for a VM
  */
 struct acrn_nmi_entry {
-	/** virtual cpu id to inject */
+	/** virtual CPU ID to inject */
 	int64_t vcpu_id;
 } __aligned(8);
 
 /**
- * @brief Info to remap pass-through pci msi for a VM
+ * @brief Info to remap pass-through PCI MSI for a VM
  *
  * the parameter for HC_VM_PCI_MSIX_REMAP hypercall
  */
 struct acrn_vm_pci_msix_remap {
-	/** pass-through pci device virtual BDF# */
+	/** pass-through PCI device virtual BDF# */
 	uint16_t virt_bdf;
 
-	/** pass-through pci device physical BDF# */
+	/** pass-through PCI device physical BDF# */
 	uint16_t phys_bdf;
 
-	/** pass-through pci device MSI/x cap control data */
+	/** pass-through PCI device MSI/MSI-X cap control data */
 	uint16_t msi_ctl;
 
 	/** reserved for alignment padding */
 	uint16_t reserved;
 
-	/** pass-through pci device msi address to remap, which will
+	/** pass-through PCI device MSI address to remap, which will
 	 * return the caller after remapping
 	 */
 	uint64_t msi_addr;		/* IN/OUT: msi address to fix */
 
-	/** pass-through pci device msi data to remap, which will
+	/** pass-through PCI device MSI data to remap, which will
 	 * return the caller after remapping
 	 */
 	uint32_t msi_data;
 
-	/** pass-through pci device is msi or msix
+	/** pass-through PCI device is MSI or MSI-X
 	 *  0 - MSI, 1 - MSI-X
 	 */
 	int32_t msix;
 
-	/** if the pass-through pci device is msix, this field contains
+	/** if the pass-through PCI device is MSI-X, this field contains
 	 *  the MSI-X entry table index
 	 */
 	int32_t msix_entry_index;
 
-	/** if the pass-through pci device is msix, this field contains
-	 * Vector Control for MSI-X Entry, field defined in MSIX spec
+	/** if the pass-through PCI device is MSI-X, this field contains
+	 *  Vector Control for MSI-X Entry, field defined in MSI-X spec
 	 */
 	uint32_t vector_ctl;
 } __aligned(8);
@@ -294,7 +299,7 @@ struct acrn_vm_pci_msix_remap {
  * @brief The guest config pointer offset.
  *
  * It's designed to support passing DM config data pointer, based on it,
- * hypervisor would parse then pass DM defined configration to GUEST vcpu
+ * hypervisor would parse then pass DM defined configuration to GUEST VCPU
  * when booting guest VM.
  * the address 0xd0000 here is designed by DM, as it arranged all memory
  * layout below 1M, DM should make sure there is no overlap for the address
