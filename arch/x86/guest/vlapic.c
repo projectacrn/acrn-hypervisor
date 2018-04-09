@@ -1973,8 +1973,9 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val)
 			cancel_timer(vlapic->last_timer, vcpu->pcpu_id);
 			vlapic->last_timer = -1;
 		} else {
-			/*transfer guest tsc to host tsc*/
-			val -= exec_vmread64(VMX_TSC_OFFSET_FULL);
+			/* transfer guest tsc to host tsc */
+			val -= vcpu->arch_vcpu.contexts[vcpu->
+					arch_vcpu.cur_context].tsc_offset;
 
 			vlapic->last_timer = update_timer(vlapic->last_timer,
 					tsc_periodic_time,

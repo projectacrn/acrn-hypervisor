@@ -203,11 +203,8 @@ void  destroy_secure_world(struct vm *vm)
 
 static void save_world_ctx(struct run_context *context)
 {
-	/* VMCS Execution field */
-	context->tsc_offset = exec_vmread64(VMX_TSC_OFFSET_FULL);
-
 	/* VMCS GUEST field */
-	/* CR3, RIP, RSP, RFLAGS already saved on VMEXIT */
+	/* TSC_OFFSET, CR3, RIP, RSP, RFLAGS already saved on VMEXIT */
 	context->cr0 = exec_vmread(VMX_GUEST_CR0);
 	context->cr4 = exec_vmread(VMX_GUEST_CR4);
 	context->dr7 = exec_vmread(VMX_GUEST_DR7);
