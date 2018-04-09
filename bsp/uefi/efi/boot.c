@@ -333,7 +333,6 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	char *section;
 	EFI_DEVICE_PATH *path;
 	CHAR16 *bootloader_name;
-	CHAR16 *bootloader_name_with_path;
 	EFI_HANDLE bootloader_image;
 
 	InitializeLib(image, _table);
@@ -367,15 +366,12 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 
 	/* load hypervisor and begin to run on it */
 	err = switch_to_guest_mode(image);
-
 	if (err != EFI_SUCCESS)
 		goto failed;
 
 	/* load and start the default bootloader */
 	bootloader_name = ch8_2_ch16(CONFIG_UEFI_OS_LOADER_NAME);
-	bootloader_name_with_path =
-		PoolPrint(L"%s%s", L"\\EFI\\BOOT\\", bootloader_name);
-	path = FileDevicePath(info->DeviceHandle, bootloader_name_with_path);
+	path = FileDevicePath(info->DeviceHandle, bootloader_name);
 	if (!path)
 		goto free_args;
 
