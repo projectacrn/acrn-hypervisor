@@ -149,7 +149,12 @@ vm_open(const char *name)
 	ctx->lowmem_limit = 2 * GB;
 	ctx->name = (char *)(ctx + 1);
 	strcpy(ctx->name, name);
-	create_vm.secure_world_enabled = trusty_enabled;
+
+	/* Set trusty enable flag */
+	if (trusty_enabled)
+		create_vm.vm_flag |= SECURE_WORLD_ENABLED;
+	else
+		create_vm.vm_flag &= (~SECURE_WORLD_ENABLED);
 
 	while (retry > 0) {
 		error = ioctl(ctx->fd, IC_CREATE_VM, &create_vm);
