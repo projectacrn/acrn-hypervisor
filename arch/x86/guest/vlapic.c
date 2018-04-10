@@ -2271,7 +2271,7 @@ apicv_get_apic_access_addr(__unused struct vm *vm)
 uint64_t
 apicv_get_apic_page_addr(struct vlapic *vlapic)
 {
-	return (uint64_t)(vlapic->apic_page);
+	return HVA2HPA(vlapic->apic_page);
 }
 
 /*
