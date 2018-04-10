@@ -88,6 +88,11 @@ static inline void _invept(uint64_t type, struct invept_desc desc)
 	ASSERT(error == 0, "invept error");
 }
 
+static inline void inv_tlb_one_page(void *addr)
+{
+	asm volatile ("invlpg (%0)"  : : "r" (addr) : "memory");
+}
+
 static void check_mmu_capability(void)
 {
 	uint64_t val;
@@ -271,6 +276,24 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 
 	/* Check to see if mapping should occur */
 	if (mapped_size != 0) {
+		/* Get current table entry */
+		uint64_t entry = MEM_READ64(table_base + table_offset);
+		bool prev_entry_present = false;
+		bool mmu_need_invtlb = false;
+
+		switch(check_page_table_present(table_type, entry)) {
+		case PT_PRESENT:
+			prev_entry_present = true;
+			break;
+		case PT_NOT_PRESENT:
+			prev_entry_present = false;
+			break;
+		case PT_MISCFG_PRESENT:
+		default:
+			ASSERT(0, "entry misconfigurated present bits");
+			return 0;
+		}
+
 		switch (request_type) {
 		case PAGING_REQUEST_TYPE_MAP:
 		{
@@ -286,18 +309,27 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 
 			/* Write the table entry to map this memory */
 			MEM_WRITE64(table_base + table_offset, table_entry);
+
+			/* Invalidate TLB and page-structure cache,
+			 * if it is the first mapping no need to invalidate TLB
+			 */
+			if ((table_type == PTT_HOST) && prev_entry_present)
+				mmu_need_invtlb = true;
 			break;
 		}
 		case PAGING_REQUEST_TYPE_UNMAP:
 		{
-			/* Get current table entry */
-			uint64_t entry = MEM_READ64(table_base + table_offset);
-
-			if (entry) {
+			if (prev_entry_present) {
 				/* Table is present.
 				 * Write the table entry to map this memory
 				 */
 				MEM_WRITE64(table_base + table_offset, 0);
+
+				/* Unmap, need to invalidate TLB and
+				 * page-structure cache
+				 */
+				if (table_type == PTT_HOST)
+					mmu_need_invtlb = true;
 			}
 			break;
 		}
@@ -312,11 +344,35 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 			/* Write the table entry to map this memory */
 			MEM_WRITE64(table_base + table_offset, table_entry);
 
+			/* Modify, need to invalidate TLB and
+			 * page-structure cache
+			 */
+			if (table_type == PTT_HOST)
+				mmu_need_invtlb = true;
 			break;
 		}
 		default:
 			ASSERT(0, "Bad memory map request type");
 			return 0;
+		}
+
+		if (mmu_need_invtlb) {
+			/* currently, all native mmu update is done at BSP,
+			 * the assumption is that after AP start, there
+			 * is no mmu update - so we can avoid shootdown issue
+			 * for MP system.
+			 * For invlpg after AP start, just panic here.
+			 *
+			 * TODO: add shootdown APs operation if MMU will be
+			 * modified after AP start in the future.
+			 */
+			if ((phy_cpu_num != 0) &&
+				(pcpu_active_bitmap &
+				((1UL << phy_cpu_num) - 1))
+				!= (1UL << CPU_BOOT_ID)) {
+				panic("need shootdown for invlpg");
+			}
+			inv_tlb_one_page(vaddr);
 		}
 	}
 

@@ -55,7 +55,7 @@ spinlock_t up_count_spinlock = {
 };
 
 void *per_cpu_data_base_ptr;
-int phy_cpu_num;
+int phy_cpu_num = 0;
 unsigned long pcpu_sync = 0;
 uint32_t up_count = 0;
 
