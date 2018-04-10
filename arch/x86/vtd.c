@@ -965,7 +965,14 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 	}
 
 	if (dmar_uint->root_table_addr == 0) {
-		dmar_uint->root_table_addr = HVA2HPA(alloc_paging_struct());
+		void *root_table_vaddr = alloc_paging_struct();
+
+		if (root_table_vaddr) {
+			dmar_uint->root_table_addr = HVA2HPA(root_table_vaddr);
+		} else {
+			ASSERT(0, "failed to allocate root table!");
+			return 1;
+		}
 	}
 
 	root_table = (uint64_t *)HPA2HVA(dmar_uint->root_table_addr);
@@ -973,19 +980,27 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 	root_entry = (struct dmar_root_entry *)&root_table[bus * 2];
 
 	if (!DMAR_GET_BITSLICE(root_entry->lower, ROOT_ENTRY_LOWER_PRESENT)) {
-		/* create context table for the bus if not present */
-		context_table_addr = HVA2HPA(alloc_paging_struct());
+		void *vaddr = alloc_paging_struct();
 
-		context_table_addr = context_table_addr >> 12;
+		if (vaddr) {
+			/* create context table for the bus if not present */
+			context_table_addr = HVA2HPA(vaddr);
 
-		lower = DMAR_SET_BITSLICE(lower, ROOT_ENTRY_LOWER_CTP,
-					  context_table_addr);
-		lower = DMAR_SET_BITSLICE(lower, ROOT_ENTRY_LOWER_PRESENT, 1);
+			context_table_addr = context_table_addr >> 12;
 
-		root_entry->upper = 0;
-		root_entry->lower = lower;
-		iommu_flush_cache(dmar_uint, root_entry,
+			lower = DMAR_SET_BITSLICE(lower, ROOT_ENTRY_LOWER_CTP,
+					context_table_addr);
+			lower = DMAR_SET_BITSLICE(lower,
+					ROOT_ENTRY_LOWER_PRESENT, 1);
+
+			root_entry->upper = 0;
+			root_entry->lower = lower;
+			iommu_flush_cache(dmar_uint, root_entry,
 				sizeof(struct dmar_root_entry));
+		} else {
+			ASSERT(0, "failed to allocate context table!");
+			return 1;
+		}
 	} else {
 		context_table_addr = DMAR_GET_BITSLICE(root_entry->lower,
 				ROOT_ENTRY_LOWER_CTP);
