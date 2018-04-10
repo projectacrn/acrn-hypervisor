@@ -75,13 +75,7 @@ struct mevent {
 	LIST_ENTRY(mevent) me_list;
 };
 
-struct ctl_event {
-	int op;
-	int fd;
-	struct epoll_event ee;
-};
-
-static LIST_HEAD(listhead, mevent) global_head, change_head;
+static LIST_HEAD(listhead, mevent) global_head;
 
 static void
 mevent_qlock(void)
@@ -141,80 +135,25 @@ mevent_kq_filter(struct mevent *mevp)
 	return retval;
 }
 
-static int
-mevent_kq_flags(struct mevent *mevp)
-{
-	int ret;
-
-	switch (mevp->me_state) {
-	case MEV_ADD:
-		ret = EPOLL_CTL_ADD;		/* implicitly enabled */
-		break;
-	case MEV_DEL_PENDING:
-		ret = EPOLL_CTL_DEL;
-		break;
-	default:
-		assert(0);
-		break;
-	}
-
-	return ret;
-}
-
-static int
-mevent_build(int mfd, struct ctl_event *kev)
-{
-	struct mevent *mevp, *tmpp;
-	int i;
-
-	i = 0;
-
-	mevent_qlock();
-
-	list_foreach_safe(mevp, &change_head, me_list, tmpp) {
-		if (mevp->me_closefd) {
-			/*
-			 * A close of the file descriptor will remove the
-			 * event
-			 */
-			close(mevp->me_fd);
-		} else {
-			kev[i].fd = mevp->me_fd;
-			kev[i].ee.events = mevent_kq_filter(mevp);
-			kev[i].op = mevent_kq_flags(mevp);
-			kev[i].ee.data.ptr = mevp;
-			i++;
-		}
-
-		mevp->me_cq = 0;
-		LIST_REMOVE(mevp, me_list);
-
-		if (mevp->me_state == MEV_DEL_PENDING)
-			free(mevp);
-		else
-			LIST_INSERT_HEAD(&global_head, mevp, me_list);
-
-		assert(i < MEVENT_MAX);
-	}
-
-	mevent_qunlock();
-
-	return i;
-}
-
 static void
 mevent_destroy()
 {
 	struct mevent *mevp, *tmpp;
+	struct epoll_event ee;
 
 	mevent_qlock();
 
 	list_foreach_safe(mevp, &global_head, me_list, tmpp) {
+		LIST_REMOVE(mevp, me_list);
+		ee.events = mevent_kq_filter(mevp);
+		ee.data.ptr = mevp;
+		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, mevp->me_fd, &ee);
+
 		if ((mevp->me_type == EVF_READ ||
 			mevp->me_type == EVF_WRITE)
 			&& mevp->me_fd != STDIN_FILENO)
 			close(mevp->me_fd);
-		LIST_REMOVE(mevp, me_list);
+
 		free(mevp);
 	}
 
@@ -239,6 +178,8 @@ struct mevent *
 mevent_add(int tfd, enum ev_type type,
 	   void (*func)(int, enum ev_type, void *), void *param)
 {
+	int ret;
+	struct epoll_event ee;
 	struct mevent *lp, *mevp;
 
 	if (tfd < 0 || func == NULL)
@@ -247,44 +188,41 @@ mevent_add(int tfd, enum ev_type type,
 	if (type == EVF_TIMER)
 		return NULL;
 
-	mevp = NULL;
-
 	mevent_qlock();
-
-	/*
-	 * Verify that the fd/type tuple is not present in any list
-	 */
+	/* Verify that the fd/type tuple is not present in the list */
 	LIST_FOREACH(lp, &global_head, me_list) {
-		if (lp->me_fd == tfd && lp->me_type == type)
-			goto exit;
+		if (lp->me_fd == tfd && lp->me_type == type) {
+			mevent_qunlock();
+			return lp;
+		}
 	}
-
-	LIST_FOREACH(lp, &change_head, me_list) {
-		if (lp->me_fd == tfd && lp->me_type == type)
-			goto exit;
-	}
+	mevent_qunlock();
 
 	/*
-	 * Allocate an entry, populate it, and add it to the change list.
+	 * Allocate an entry, populate it, and add it to the list.
 	 */
 	mevp = calloc(1, sizeof(struct mevent));
 	if (mevp == NULL)
-		goto exit;
+		return NULL;
 
 	mevp->me_fd = tfd;
 	mevp->me_type = type;
 	mevp->me_func = func;
 	mevp->me_param = param;
 
-	LIST_INSERT_HEAD(&change_head, mevp, me_list);
-	mevp->me_cq = 1;
-	mevp->me_state = MEV_ADD;
-	mevent_notify();
+	ee.events = mevent_kq_filter(mevp);
+	ee.data.ptr = mevp;
+	ret = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, mevp->me_fd, &ee);
+	if (ret == 0) {
+		mevent_qlock();
+		LIST_INSERT_HEAD(&global_head, mevp, me_list);
+		mevent_qunlock();
 
-exit:
-	mevent_qunlock();
-
-	return mevp;
+		return mevp;
+	} else {
+		free(mevp);
+		return NULL;
+	}
 }
 
 int
@@ -302,25 +240,20 @@ mevent_disable(struct mevent *evp)
 static int
 mevent_delete_event(struct mevent *evp, int closefd)
 {
+	struct epoll_event ee;
+
 	mevent_qlock();
-
-	/*
-	 * Place the entry onto the changed list if not already there, and
-	 * mark as to be deleted.
-	 */
-	if (evp->me_cq == 0) {
-		evp->me_cq = 1;
-		LIST_REMOVE(evp, me_list);
-		LIST_INSERT_HEAD(&change_head, evp, me_list);
-		mevent_notify();
-	}
-	evp->me_state = MEV_DEL_PENDING;
-
-	if (closefd)
-		evp->me_closefd = 1;
-
+	LIST_REMOVE(evp, me_list);
 	mevent_qunlock();
 
+	ee.events = mevent_kq_filter(evp);
+	ee.data.ptr = evp;
+	epoll_ctl(epoll_fd, EPOLL_CTL_DEL, evp->me_fd, &ee);
+
+	if (closefd)
+		close(evp->me_fd);
+
+	free(evp);
 	return 0;
 }
 
@@ -364,11 +297,9 @@ mevent_deinit(void)
 void
 mevent_dispatch(void)
 {
-	struct ctl_event clist[MEVENT_MAX];
 	struct epoll_event eventlist[MEVENT_MAX];
 
 	struct mevent *pipev;
-	int numev;
 	int ret;
 
 	mevent_tid = pthread_self();
@@ -393,24 +324,6 @@ mevent_dispatch(void)
 
 	for (;;) {
 		/*
-		 * Build changelist if required.
-		 * XXX the changelist can be put into the blocking call
-		 * to eliminate the extra syscall. Currently better for
-		 * debug.
-		 */
-		int i;
-		struct epoll_event *e;
-
-		numev = mevent_build(epoll_fd, clist);
-
-		for (i = 0; i < numev; i++) {
-			e = &clist[i].ee;
-			ret = epoll_ctl(epoll_fd, clist[i].op, clist[i].fd, e);
-			if (ret == -1)
-				perror("Error return from epoll_ctl");
-		}
-
-		/*
 		 * Block awaiting events
 		 */
 		ret = epoll_wait(epoll_fd, eventlist, MEVENT_MAX, -1);
@@ -425,5 +338,4 @@ mevent_dispatch(void)
 		if (vm_get_suspend_mode() != VM_SUSPEND_NONE)
 			break;
 	}
-	mevent_build(epoll_fd, clist);
 }

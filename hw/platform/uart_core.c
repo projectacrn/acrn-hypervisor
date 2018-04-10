@@ -267,8 +267,11 @@ static void
 uart_opentty(struct uart_vdev *uart)
 {
 	ttyopen(&uart->tty);
-	uart->mev = mevent_add(uart->tty.fd, EVF_READ, uart_drain, uart);
-	assert(uart->mev != NULL);
+	if (isatty(uart->tty.fd)) {
+		uart->mev = mevent_add(uart->tty.fd, EVF_READ,
+			uart_drain, uart);
+		assert(uart->mev != NULL);
+	}
 }
 
 static uint8_t
