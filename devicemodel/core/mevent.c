@@ -58,6 +58,7 @@
 #define	MEV_DISABLE	3
 #define	MEV_DEL_PENDING	4
 
+static int epoll_fd;
 static pthread_t mevent_tid;
 static int mevent_pipefd[2];
 static pthread_mutex_t mevent_lmutex = PTHREAD_MUTEX_INITIALIZER;
@@ -341,6 +342,25 @@ mevent_set_name(void)
 	pthread_setname_np(mevent_tid, "mevent");
 }
 
+int
+mevent_init(void)
+{
+	epoll_fd = epoll_create1(0);
+	assert(epoll_fd >= 0);
+
+	if (epoll_fd >= 0)
+		return 0;
+	else
+		return -1;
+}
+
+void
+mevent_deinit(void)
+{
+	mevent_destroy();
+	close(epoll_fd);
+}
+
 void
 mevent_dispatch(void)
 {
@@ -348,15 +368,11 @@ mevent_dispatch(void)
 	struct epoll_event eventlist[MEVENT_MAX];
 
 	struct mevent *pipev;
-	int mfd;
 	int numev;
 	int ret;
 
 	mevent_tid = pthread_self();
 	mevent_set_name();
-
-	mfd = epoll_create1(0);
-	assert(mfd > 0);
 
 	/*
 	 * Open the pipe that will be used for other threads to force
@@ -385,11 +401,11 @@ mevent_dispatch(void)
 		int i;
 		struct epoll_event *e;
 
-		numev = mevent_build(mfd, clist);
+		numev = mevent_build(epoll_fd, clist);
 
 		for (i = 0; i < numev; i++) {
 			e = &clist[i].ee;
-			ret = epoll_ctl(mfd, clist[i].op, clist[i].fd, e);
+			ret = epoll_ctl(epoll_fd, clist[i].op, clist[i].fd, e);
 			if (ret == -1)
 				perror("Error return from epoll_ctl");
 		}
@@ -397,7 +413,7 @@ mevent_dispatch(void)
 		/*
 		 * Block awaiting events
 		 */
-		ret = epoll_wait(mfd, eventlist, MEVENT_MAX, -1);
+		ret = epoll_wait(epoll_fd, eventlist, MEVENT_MAX, -1);
 		if (ret == -1 && errno != EINTR)
 			perror("Error return from epoll_wait");
 
@@ -409,7 +425,5 @@ mevent_dispatch(void)
 		if (vm_get_suspend_mode() != VM_SUSPEND_NONE)
 			break;
 	}
-	mevent_build(mfd, clist);
-	mevent_destroy();
-	close(mfd);
+	mevent_build(epoll_fd, clist);
 }

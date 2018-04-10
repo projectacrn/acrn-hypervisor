@@ -49,6 +49,8 @@ int	mevent_delete_close(struct mevent *evp);
 int	mevent_notify(void);
 
 void	mevent_dispatch(void);
+int	mevent_init(void);
+void	mevent_deinit(void);
 
 #define list_foreach_safe(var, head, field, tvar)	\
 for ((var) = LIST_FIRST((head));			\
