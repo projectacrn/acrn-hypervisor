@@ -864,6 +864,8 @@ static int
 usb_dev_native_sys_disconn_cb(struct libusb_context *ctx, struct libusb_device
 		*ldev, libusb_hotplug_event event, void *pdata)
 {
+	uint8_t port;
+
 	UPRINTF(LDBG, "disconnect event\r\n");
 
 	if (!ctx || !ldev) {
@@ -871,8 +873,9 @@ usb_dev_native_sys_disconn_cb(struct libusb_context *ctx, struct libusb_device
 		return -1;
 	}
 
+	port = libusb_get_port_number(ldev);
 	if (g_ctx.disconn_cb)
-		g_ctx.disconn_cb(g_ctx.hci_data, NULL);
+		g_ctx.disconn_cb(g_ctx.hci_data, &port);
 
 	return 0;
 }
