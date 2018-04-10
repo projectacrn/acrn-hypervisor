@@ -974,8 +974,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 
 	if (!DMAR_GET_BITSLICE(root_entry->lower, ROOT_ENTRY_LOWER_PRESENT)) {
 		/* create context table for the bus if not present */
-		context_table_addr =
-			(uint64_t)alloc_paging_struct();
+		context_table_addr = HVA2HPA(alloc_paging_struct());
 
 		context_table_addr = context_table_addr >> 12;
 
@@ -994,7 +993,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 
 	context_table_addr = context_table_addr << 12;
 
-	context_table = (uint64_t *)context_table_addr;
+	context_table = (uint64_t *)HPA2HVA(context_table_addr);
 	context_entry = (struct dmar_context_entry *)&context_table[devfun * 2];
 
 	/* the context entry should not be present */
@@ -1073,7 +1072,7 @@ remove_iommu_device(struct iommu_domain *domain, uint16_t segment,
 	context_table_addr = DMAR_GET_BITSLICE(root_entry->lower,
 						   ROOT_ENTRY_LOWER_CTP);
 	context_table_addr = context_table_addr << 12;
-	context_table = (uint64_t *)context_table_addr;
+	context_table = (uint64_t *)HPA2HVA(context_table_addr);
 
 	context_entry = (struct dmar_context_entry *)&context_table[devfun * 2];
 
