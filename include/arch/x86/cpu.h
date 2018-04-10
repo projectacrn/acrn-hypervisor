@@ -198,6 +198,7 @@ EXTERN_CPU_DATA(uint8_t[STACK_SIZE], stack) __aligned(16);
 
 extern void *per_cpu_data_base_ptr;
 extern int phy_cpu_num;
+extern uint64_t pcpu_active_bitmap;
 
 #define	PER_CPU_DATA_OFFSET(sym_addr)					\
 	((uint64_t)(sym_addr) - (uint64_t)(_ld_cpu_data_start))
