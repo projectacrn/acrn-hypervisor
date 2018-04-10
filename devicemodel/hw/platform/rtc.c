@@ -30,6 +30,7 @@
 #include <pthread.h>
 #include <string.h>
 #include <assert.h>
+#include <stddef.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,8 +49,6 @@
 #else
 # define RTC_DEBUG(format, ...)      do { } while (0)
 #endif
-
-#define offsetof(type, member)	((size_t)(&((type *)0)->member))
 
 /* Register layout of the RTC */
 struct rtcdev {
