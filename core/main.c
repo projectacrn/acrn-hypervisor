@@ -770,6 +770,13 @@ main(int argc, char *argv[])
 			goto fail;
 		}
 
+		err = mevent_init();
+		if (err) {
+			fprintf(stderr, "Unable to initialize mevent (%d)\n",
+				errno);
+			goto mevent_fail;
+		}
+
 		init_mem();
 		init_inout();
 		pci_irq_init(ctx);
@@ -848,6 +855,7 @@ main(int argc, char *argv[])
 		vrtc_deinit(ctx);
 		atkbdc_deinit(ctx);
 		vm_unsetup_memory(ctx);
+		mevent_deinit();
 		vm_destroy(ctx);
 		vm_close(ctx);
 		_ctx = 0;
@@ -861,6 +869,7 @@ pci_fail:
 	monitor_close();
 	vrtc_deinit(ctx);
 	atkbdc_deinit(ctx);
+mevent_fail:
 	vm_unsetup_memory(ctx);
 fail:
 	vm_destroy(ctx);
