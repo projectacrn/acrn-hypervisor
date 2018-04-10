@@ -667,9 +667,8 @@ int64_t hcall_setup_sbuf(struct vm *vm, uint64_t param)
 
 int64_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param)
 {
-	int target_vm_id, target_vcpu_id;
+	int target_vm_id;
 	struct vm *target_vm;
-	struct vcpu *target_vcpu;
 
 	target_vm_id = (cmd & PMCMD_VMID_MASK) >> PMCMD_VMID_SHIFT;
 	target_vm = get_vm_from_vmid(target_vm_id);
