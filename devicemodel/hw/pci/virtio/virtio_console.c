@@ -691,12 +691,14 @@ virtio_console_add_backend(struct virtio_console *console,
 	}
 
 	if (virtio_console_backend_can_read(be_type)) {
-		be->evp = mevent_add(fd, EVF_READ,
-			virtio_console_backend_read, be);
-		if (be->evp == NULL) {
-			WPRINTF(("vtcon: mevent_add failed\n"));
-			error = -1;
-			goto out;
+		if (isatty(fd)) {
+			be->evp = mevent_add(fd, EVF_READ,
+					virtio_console_backend_read, be);
+			if (be->evp == NULL) {
+				WPRINTF(("vtcon: mevent_add failed\n"));
+				error = -1;
+				goto out;
+			}
 		}
 	}
 
