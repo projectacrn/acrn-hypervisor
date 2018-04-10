@@ -2263,7 +2263,7 @@ apicv_get_apic_access_addr(__unused struct vm *vm)
 
 		memset((void *)apicv_apic_access_addr, 0, CPU_PAGE_SIZE);
 	}
-	return (uint64_t)(apicv_apic_access_addr);
+	return HVA2HPA(apicv_apic_access_addr);
 }
 
 /**
