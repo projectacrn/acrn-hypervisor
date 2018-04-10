@@ -325,6 +325,7 @@ static void pci_xhci_set_evtrb(struct xhci_trb *evtrb, uint64_t port,
 static int pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 		struct usb_data_xfer *xfer, uint32_t slot, uint32_t epid,
 		int *do_intr);
+static inline int pci_xhci_is_valid_portnum(int n);
 
 static int
 pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
@@ -417,6 +418,49 @@ errout:
 static int
 pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 {
+	struct pci_xhci_vdev *xdev;
+	struct pci_xhci_dev_emu *edev;
+	struct usb_dev *udev;
+	uint8_t port, native_port;
+
+	assert(hci_data);
+	assert(dev_data);
+
+	xdev = hci_data;
+	assert(xdev->devices);
+
+	native_port = *((uint8_t *)dev_data);
+	if (!pci_xhci_is_valid_portnum(native_port)) {
+		UPRINTF(LFTL, "invalid physical port %d\r\n", native_port);
+		return -1;
+	}
+
+	for (port = 1; port < XHCI_MAX_DEVS; ++port) {
+		edev = xdev->devices[port];
+		if (!edev)
+			continue;
+
+		udev = edev->dev_instance;
+		if (udev->port == native_port)
+			break;
+	}
+
+	if (port == XHCI_MAX_DEVS) {
+		UPRINTF(LFTL, "fail to find physical port %d\r\n", native_port);
+		return -1;
+	}
+
+	UPRINTF(LDBG, "report virtual port %d status\r\n", port);
+	if (pci_xhci_port_chg(xdev, port, 0)) {
+		UPRINTF(LFTL, "fail to report event\r\n");
+		return -1;
+	}
+
+	/*
+	 * At this point, the resources allocated for virtual device
+	 * should not be released, it should be released in the
+	 * pci_xhci_cmd_disable_slot function.
+	 */
 	return 0;
 }
 
@@ -1110,6 +1154,7 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 {
 	struct pci_xhci_dev_emu *dev;
 	uint32_t cmderr;
+	int i;
 
 	UPRINTF(LDBG, "pci_xhci disable slot %u\r\n", slot);
 
@@ -1132,6 +1177,19 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 			/* TODO: reset events and endpoints */
 		}
 	}
+
+	for (i = 0; i < XHCI_MAX_DEVS; ++i)
+		if (dev == xdev->devices[i])
+			break;
+
+	if (i < XHCI_MAX_DEVS && XHCI_PORTREG_PTR(xdev, i)) {
+		XHCI_PORTREG_PTR(xdev, i)->portsc &= ~(XHCI_PS_CSC |
+				XHCI_PS_CCS | XHCI_PS_PED | XHCI_PS_PP);
+		xdev->devices[i] = NULL;
+		xdev->slots[slot] = NULL;
+		pci_xhci_dev_destroy(dev);
+	} else
+		UPRINTF(LWRN, "invalid slot %d\r\n", slot);
 
 done:
 	return cmderr;
