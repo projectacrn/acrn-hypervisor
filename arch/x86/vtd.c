@@ -965,14 +965,10 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 	}
 
 	if (dmar_uint->root_table_addr == 0) {
-		/* 1:1 mapping for hypervisor HEAP,
-		 * physical address equals virtual address
-		 */
-		dmar_uint->root_table_addr =
-			(uint64_t)alloc_paging_struct();
+		dmar_uint->root_table_addr = HVA2HPA(alloc_paging_struct());
 	}
 
-	root_table = (uint64_t *)dmar_uint->root_table_addr;
+	root_table = (uint64_t *)HPA2HVA(dmar_uint->root_table_addr);
 
 	root_entry = (struct dmar_root_entry *)&root_table[bus * 2];
 
@@ -1071,7 +1067,7 @@ remove_iommu_device(struct iommu_domain *domain, uint16_t segment,
 		return 1;
 	}
 
-	root_table = (uint64_t *)dmar_uint->root_table_addr;
+	root_table = (uint64_t *)HPA2HVA(dmar_uint->root_table_addr);
 	root_entry = (struct dmar_root_entry *)&root_table[bus * 2];
 
 	context_table_addr = DMAR_GET_BITSLICE(root_entry->lower,
