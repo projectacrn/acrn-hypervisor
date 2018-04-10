@@ -33,6 +33,11 @@
 #define _IOC_H_
 
 #include <stdint.h>
+#include <pthread.h>
+
+#include <sys/queue.h>
+#include <sys/epoll.h>
+
 /*
  * Carrier Board Communication(CBC) frame definition
  * +---+---------+-----------+---------------+---------+----------+---------+
@@ -661,4 +666,50 @@ struct cbc_pkt {
 	struct cbc_config *cfg;		/* CBC and whitelist configurations */
 	enum cbc_queue_type qtype;	/* Routes cbc_request to queue */
 };
+
+/*
+ * CBC simple queue head definition.
+ */
+SIMPLEQ_HEAD(cbc_qhead, cbc_request);
+
+/*
+ * IOC device structure.
+ * IOC device is a virtual device and DM has virtual device data structure
+ * for virtual devices management in the further.
+ * So export the ioc_dev definition to the IOC header file.
+ */
+struct ioc_dev {
+	char name[16];			/* Core thread name */
+	int closing;			/* Close IOC mediator device flag */
+	int epfd;			/* Epoll fd */
+	struct epoll_event *evts;	/* Epoll events table */
+	struct cbc_request *pool;	/* CBC requests pool */
+	struct cbc_ring ring;		/* Ring buffer */
+	pthread_t tid;			/* Core thread id */
+	struct cbc_qhead free_qhead;	/* Free queue head */
+	pthread_mutex_t free_mtx;	/* Free queue mutex */
+
+	char rx_name[16];		/* Rx thread name */
+	struct cbc_qhead rx_qhead;	/* Rx queue head */
+	struct cbc_config rx_config;	/* Rx configuration */
+	pthread_t rx_tid;
+	pthread_cond_t rx_cond;
+	pthread_mutex_t rx_mtx;
+	void (*ioc_dev_rx)(struct cbc_pkt *pkt);
+
+	char tx_name[16];		/* Tx thread name */
+	struct cbc_qhead tx_qhead;	/* Tx queue head */
+	struct cbc_config tx_config;	/* Tx configuration */
+	pthread_t tx_tid;
+	pthread_cond_t tx_cond;
+	pthread_mutex_t tx_mtx;
+	void (*ioc_dev_tx)(struct cbc_pkt *pkt);
+};
+
+/* Parse IOC parameters */
+int ioc_parse(const char *opts);
+
+/* IOC mediator common ops */
+struct ioc_dev *ioc_init(void);
+void ioc_deinit(struct ioc_dev *dev);
 #endif
