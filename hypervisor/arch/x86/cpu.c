@@ -510,7 +510,7 @@ void bsp_boot_init(void)
 	hv_main(CPU_BOOT_ID);
 
 	/* Control should not come here */
-	cpu_halt(CPU_BOOT_ID);
+	cpu_dead(CPU_BOOT_ID);
 }
 
 void cpu_secondary_init(void)
@@ -580,7 +580,7 @@ void cpu_secondary_init(void)
 	/* Control will only come here for secondary CPUs not configured for
 	 * use or if an error occurs in hv_main
 	 */
-	cpu_halt(get_cpu_id());
+	cpu_dead(get_cpu_id());
 }
 
 int cpu_find_logical_id(uint32_t lapic_id)
@@ -643,7 +643,7 @@ static void start_cpus()
 }
 #endif
 
-void cpu_halt(uint32_t logical_id)
+void cpu_dead(uint32_t logical_id)
 {
 	/* For debug purposes, using a stack variable in the while loop enables
 	 * us to modify the value using a JTAG probe and resume if needed.
