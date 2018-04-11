@@ -171,6 +171,30 @@ static bool check_mmu_1gb_support(struct map_params *map_params)
 	return status;
 }
 
+static inline uint32_t check_page_table_present(int page_table_type,
+		uint64_t table_entry)
+{
+	if (page_table_type == PTT_EPT) {
+		table_entry &= (IA32E_EPT_R_BIT | IA32E_EPT_W_BIT |
+				IA32E_EPT_X_BIT);
+		/* RWX misconfiguration for:
+		 * - write-only
+		 * - write-execute
+		 * - execute-only (if cap not support)
+		 * no check for reserved bits
+		 */
+		if ((table_entry == IA32E_EPT_W_BIT) ||
+			(table_entry == (IA32E_EPT_W_BIT | IA32E_EPT_X_BIT)) ||
+			((table_entry == IA32E_EPT_X_BIT) &&
+			!check_ept_x_only_support()))
+			return PT_MISCFG_PRESENT;
+	} else {
+		table_entry &= (IA32E_COMM_P_BIT);
+	}
+
+	return (table_entry) ? PT_PRESENT : PT_NOT_PRESENT;
+}
+
 static uint32_t map_mem_region(void *vaddr, void *paddr,
 		void *table_base, uint64_t attr, uint32_t table_level,
 		int table_type, enum mem_map_request_type request_type)
@@ -345,19 +369,6 @@ static uint32_t fetch_page_table_offset(void *addr, uint32_t table_level)
 	return table_offset;
 }
 
-static inline uint32_t check_page_table_present(struct map_params *map_params,
-		uint64_t table_entry)
-{
-	if (map_params->page_table_type == PTT_EPT) {
-		table_entry &= (IA32E_EPT_R_BIT | IA32E_EPT_W_BIT |
-				IA32E_EPT_X_BIT);
-	} else {
-		table_entry &= (IA32E_COMM_P_BIT);
-	}
-
-	return (table_entry) ? PT_PRESENT : PT_NOT_PRESENT;
-}
-
 static int get_table_entry(void *addr, void *table_base,
 		uint32_t table_level, uint64_t *table_entry)
 {
@@ -381,7 +392,7 @@ static void *walk_paging_struct(void *addr, void *table_base,
 {
 	uint32_t table_offset;
 	uint64_t table_entry;
-	uint64_t table_present;
+	uint64_t entry_present;
 	/* if  table_level == IA32E_PT Just return the same address
 	 * can't walk down any further
 	 */
@@ -405,15 +416,15 @@ static void *walk_paging_struct(void *addr, void *table_base,
 			/* Set table present bits to any of the
 			 * read/write/execute bits
 			 */
-			table_present = (IA32E_EPT_R_BIT | IA32E_EPT_W_BIT |
+			entry_present = (IA32E_EPT_R_BIT | IA32E_EPT_W_BIT |
 					 IA32E_EPT_X_BIT);
 		} else {
 			/* Set table preset bits to P bit or r/w bit */
-			table_present = (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT);
+			entry_present = (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT);
 		}
 
 		/* Determine if a valid entry exists */
-		if ((table_entry & table_present) == 0) {
+		if ((table_entry & entry_present) == 0) {
 			/* No entry present - need to allocate a new table */
 			sub_table_addr = alloc_paging_struct();
 			/* Check to ensure memory available for this structure*/
@@ -431,7 +442,7 @@ static void *walk_paging_struct(void *addr, void *table_base,
 			 * sub-table
 			 */
 			MEM_WRITE64(table_base + table_offset,
-				    HVA2HPA(sub_table_addr) | table_present);
+				    HVA2HPA(sub_table_addr) | entry_present);
 		} else {
 			/* Get address of the sub-table */
 			sub_table_addr = HPA2HVA(table_entry & IA32E_REF_MASK);
@@ -610,7 +621,7 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 		struct entry_params *entry, void *addr, bool direct)
 {
 	uint64_t table_entry;
-	uint32_t table_present = 0;
+	uint32_t entry_present = 0;
 	int ret = 0;
 	/* Obtain the PML4 address */
 	void *table_addr = direct ? (map_params->pml4_base)
@@ -620,8 +631,12 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 	ret = get_table_entry(addr, table_addr, IA32E_PML4, &table_entry);
 	if (ret < 0)
 		return ret;
-	table_present = check_page_table_present(map_params, table_entry);
-	if (table_present == PT_NOT_PRESENT) {
+	entry_present = check_page_table_present(map_params->page_table_type,
+			table_entry);
+	if (entry_present == PT_MISCFG_PRESENT) {
+		pr_err("Present bits misconfigurated");
+		return -EINVAL;
+	} else if (entry_present == PT_NOT_PRESENT) {
 		/* PML4E not present, return PML4 base address */
 		entry->entry_level  = IA32E_PML4;
 		entry->entry_base = table_addr;
@@ -638,8 +653,12 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 	ret = get_table_entry(addr, table_addr, IA32E_PDPT, &table_entry);
 	if (ret < 0)
 		return ret;
-	table_present = check_page_table_present(map_params, table_entry);
-	if (table_present == PT_NOT_PRESENT) {
+	entry_present = check_page_table_present(map_params->page_table_type,
+			table_entry);
+	if (entry_present == PT_MISCFG_PRESENT) {
+		pr_err("Present bits misconfigurated");
+		return -EINVAL;
+	} else if (entry_present == PT_NOT_PRESENT) {
 		/* PDPTE not present, return PDPT base address */
 		entry->entry_level  = IA32E_PDPT;
 		entry->entry_base = table_addr;
@@ -667,8 +686,12 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 	ret = get_table_entry(addr, table_addr, IA32E_PD, &table_entry);
 	if (ret < 0)
 		return ret;
-	table_present = check_page_table_present(map_params, table_entry);
-	if (table_present == PT_NOT_PRESENT) {
+	entry_present = check_page_table_present(map_params->page_table_type,
+			table_entry);
+	if (entry_present == PT_MISCFG_PRESENT) {
+		pr_err("Present bits misconfigurated");
+		return -EINVAL;
+	} else if (entry_present == PT_NOT_PRESENT) {
 		/* PDE not present, return PDE base address */
 		entry->entry_level  = IA32E_PD;
 		entry->entry_base = table_addr;
@@ -677,7 +700,6 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 		entry->entry_off = fetch_page_table_offset(addr, IA32E_PD);
 		entry->entry_val =  table_entry;
 		return 0;
-
 	}
 	if (table_entry & IA32E_PDE_PS_BIT) {
 		/* 2MB page size, return the base addr of the pg entry*/
@@ -695,8 +717,13 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 	ret = get_table_entry(addr, table_addr, IA32E_PT, &table_entry);
 	if (ret < 0)
 		return ret;
-	table_present = check_page_table_present(map_params, table_entry);
-	entry->entry_present = ((table_present == PT_PRESENT)
+	entry_present = check_page_table_present(map_params->page_table_type,
+			table_entry);
+	if (entry_present == PT_MISCFG_PRESENT) {
+		pr_err("Present bits misconfigurated");
+		return -EINVAL;
+	}
+	entry->entry_present = ((entry_present == PT_PRESENT)
 			? (PT_PRESENT):(PT_NOT_PRESENT));
 	entry->entry_level  = IA32E_PT;
 	entry->entry_base = table_addr;

@@ -280,6 +280,7 @@ enum _page_table_level {
 enum _page_table_present {
 	PT_NOT_PRESENT = 0,
 	PT_PRESENT = 1,
+	PT_MISCFG_PRESENT = 2,
 };
 
 /* Page size */
