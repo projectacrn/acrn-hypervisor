@@ -440,7 +440,7 @@ void dispatch_exception(struct intr_ctx *ctx)
 	spinlock_release(&exception_spinlock);
 
 	/* Halt the CPU */
-	cpu_halt(cpu_id);
+	cpu_dead(cpu_id);
 }
 
 void handle_spurious_interrupt(int vector)
