@@ -39,11 +39,12 @@ int dm_emulate_pio_post(struct vcpu *vcpu)
 {
 	int cur = vcpu->vcpu_id;
 	int cur_context = vcpu->arch_vcpu.cur_context;
-	struct vhm_request_buffer *req_buf =
-		(void *)HPA2HVA(vcpu->vm->sw.req_buf);
+	struct vhm_request_buffer *req_buf = NULL;
 	uint32_t mask =
 		0xFFFFFFFFul >> (32 - 8 * vcpu->req.reqs.pio_request.size);
 	uint64_t *rax;
+
+	req_buf = (struct vhm_request_buffer *)(vcpu->vm->sw.req_buf);
 
 	rax = &vcpu->arch_vcpu.contexts[cur_context].guest_cpu_regs.regs.rax;
 	vcpu->req.reqs.pio_request.value =

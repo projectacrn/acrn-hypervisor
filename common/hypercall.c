@@ -213,7 +213,7 @@ int64_t hcall_resume_vm(uint64_t vmid)
 
 	if (target_vm == NULL)
 		return -1;
-	if (target_vm->sw.req_buf == 0)
+	if (target_vm->sw.req_buf == NULL)
 		ret = -1;
 	else
 		ret = start_vm(target_vm);
@@ -323,6 +323,7 @@ int64_t hcall_inject_msi(struct vm *vm, uint64_t vmid, uint64_t param)
 int64_t hcall_set_ioreq_buffer(struct vm *vm, uint64_t vmid, uint64_t param)
 {
 	int64_t ret = 0;
+	uint64_t hpa = 0;
 	struct acrn_set_ioreq_buffer iobuf;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
@@ -336,11 +337,17 @@ int64_t hcall_set_ioreq_buffer(struct vm *vm, uint64_t vmid, uint64_t param)
 		return -1;
 	}
 
-	dev_dbg(ACRN_DBG_HYCALL, "[%d] SET BUFFER=0x%x",
+	dev_dbg(ACRN_DBG_HYCALL, "[%d] SET BUFFER=0x%p",
 			vmid, iobuf.req_buf);
 
-	/* store gpa of guest request_buffer */
-	target_vm->sw.req_buf = gpa2hpa(vm, iobuf.req_buf);
+	hpa = gpa2hpa(vm, iobuf.req_buf);
+	if (hpa == 0) {
+		pr_err("%s: invalid GPA.\n", __func__);
+		target_vm->sw.req_buf = NULL;
+		return -EINVAL;
+	}
+
+	target_vm->sw.req_buf = HPA2HVA(hpa);
 
 	return ret;
 }
@@ -386,8 +393,8 @@ int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
 	/* make sure we have set req_buf */
-	if (!target_vm || target_vm->sw.req_buf == 0)
-		return -1;
+	if (!target_vm || target_vm->sw.req_buf == NULL)
+		return -EINVAL;
 
 	dev_dbg(ACRN_DBG_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
 			vmid, vcpu_id);
@@ -779,16 +786,17 @@ static void acrn_print_request(int vcpu_id, struct vhm_request *req)
 
 int acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 {
-	struct vhm_request_buffer *req_buf =
-		(void *)HPA2HVA(vcpu->vm->sw.req_buf);
+	struct vhm_request_buffer *req_buf = NULL;
 	long cur;
 
 	ASSERT(sizeof(*req) == (4096/VHM_REQUEST_MAX),
 			"vhm_request page broken!");
 
 
-	if (!vcpu || !req || vcpu->vm->sw.req_buf == 0)
-		return -1;
+	if (!vcpu || !req || vcpu->vm->sw.req_buf == NULL)
+		return -EINVAL;
+
+	req_buf = (struct vhm_request_buffer *)(vcpu->vm->sw.req_buf);
 
 	/* ACRN insert request to VHM and inject upcall */
 	cur = vcpu->vcpu_id;
@@ -820,9 +828,9 @@ int acrn_insert_request_nowait(struct vcpu *vcpu, struct vhm_request *req)
 	long cur;
 
 	if (!vcpu || !req || !vcpu->vm->sw.req_buf)
-		return -1;
+		return -EINVAL;
 
-	req_buf = (void *)gpa2hpa(vcpu->vm, vcpu->vm->sw.req_buf);
+	req_buf = (struct vhm_request_buffer *)(vcpu->vm->sw.req_buf);
 
 	/* ACRN insert request to VHM and inject upcall */
 	cur = vcpu->vcpu_id;
