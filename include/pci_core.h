@@ -270,14 +270,14 @@ static inline void
 pci_set_cfgdata16(struct pci_vdev *pi, int offset, uint16_t val)
 {
 	assert(offset <= (PCI_REGMAX - 1) && (offset & 1) == 0);
-	*(uint16_t *)((uint16_t *)pi->cfgdata + offset) = val;
+	*(uint16_t *)(pi->cfgdata + offset) = val;
 }
 
 static inline void
 pci_set_cfgdata32(struct pci_vdev *pi, int offset, uint32_t val)
 {
 	assert(offset <= (PCI_REGMAX - 3) && (offset & 3) == 0);
-	*(uint32_t *)((uint32_t *)pi->cfgdata + offset) = val;
+	*(uint32_t *)(pi->cfgdata + offset) = val;
 }
 
 static inline uint8_t
@@ -291,14 +291,14 @@ static inline uint16_t
 pci_get_cfgdata16(struct pci_vdev *pi, int offset)
 {
 	assert(offset <= (PCI_REGMAX - 1) && (offset & 1) == 0);
-	return (*(uint16_t *)((uint16_t *)pi->cfgdata + offset));
+	return (*(uint16_t *)(pi->cfgdata + offset));
 }
 
 static inline uint32_t
 pci_get_cfgdata32(struct pci_vdev *pi, int offset)
 {
 	assert(offset <= (PCI_REGMAX - 3) && (offset & 3) == 0);
-	return (*(uint32_t *)((uint32_t *)pi->cfgdata + offset));
+	return (*(uint32_t *)(pi->cfgdata + offset));
 }
 
 #endif /* _PCI_CORE_H_ */
