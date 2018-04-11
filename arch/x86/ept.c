@@ -344,8 +344,9 @@ int dm_emulate_mmio_post(struct vcpu *vcpu)
 {
 	int ret = 0;
 	int cur = vcpu->vcpu_id;
-	struct vhm_request_buffer *req_buf =
-		(void *)HPA2HVA(vcpu->vm->sw.req_buf);
+	struct vhm_request_buffer *req_buf;
+
+	req_buf = (struct vhm_request_buffer *)(vcpu->vm->sw.req_buf);
 
 	vcpu->req.reqs.mmio_request.value =
 		req_buf->req_queue[cur].reqs.mmio_request.value;
