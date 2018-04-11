@@ -1808,6 +1808,28 @@ write_dsdt_ipu_i2c(struct pci_vdev *dev)
 }
 
 static void
+write_dsdt_urt1(struct pci_vdev *dev)
+{
+	printf("write virt-%x:%x.%x in dsdt for URT1 @ 00:18.0\n",
+	       dev->bus,
+	       dev->slot,
+	       dev->func);
+	dsdt_line("Device (URT1)");
+	dsdt_line("{");
+	dsdt_line("    Name (_ADR, 0x%04X%04X)", dev->slot, dev->func);
+	dsdt_line("    Name (_DDN, \"Intel(R) HS-UART Controller #1\")");
+	dsdt_line("    Name (_UID, One)");
+	dsdt_line("    Name (RBUF, ResourceTemplate ()");
+	dsdt_line("    {");
+	dsdt_line("    })");
+	dsdt_line("    Method (_CRS, 0, NotSerialized)");
+	dsdt_line("    {");
+	dsdt_line("        Return (RBUF)");
+	dsdt_line("    }");
+	dsdt_line("}");
+}
+
+static void
 passthru_write_dsdt(struct pci_vdev *dev)
 {
 	struct passthru_dev *ptdev = (struct passthru_dev *) dev->arg;
@@ -1833,6 +1855,9 @@ passthru_write_dsdt(struct pci_vdev *dev)
 	else if (device == 0x5aac)
 		/* i2c @ 00:16.0 for ipu */
 		write_dsdt_ipu_i2c(dev);
+	else if (device == 0x5abc)
+		/* URT1 @ 00:18.0 for bluetooth*/
+		write_dsdt_urt1(dev);
 
 }
 
