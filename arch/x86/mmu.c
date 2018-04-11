@@ -45,6 +45,7 @@ enum mem_map_request_type {
 };
 
 struct mm_capability {
+	bool ept_x_only_supported;
 	/* EPT and MMU 1-GByte page supported flag */
 	bool ept_1gb_page_supported;
 	bool invept_supported;
@@ -96,6 +97,8 @@ static void check_mmu_capability(void)
 
 	/* Read the MSR register of EPT and VPID Capability -  SDM A.10 */
 	val = msr_read(MSR_IA32_VMX_EPT_VPID_CAP);
+	mm_caps.ept_x_only_supported = (val & MSR_VMX_EPT_X_ONLY)
+		? (true) : (false);
 	mm_caps.ept_1gb_page_supported = (val & MSR_VMX_EPT_VPID_CAP_1GB)
 		? (true) : (false);
 	mm_caps.invept_supported =
@@ -121,6 +124,11 @@ static void check_mmu_capability(void)
 
 	if (!mm_caps.invept_supported)
 		panic("invept must be supported");
+}
+
+static inline bool check_ept_x_only_support(void)
+{
+	return mm_caps.ept_x_only_supported;
 }
 
 static inline bool check_invept_single_support(void)
