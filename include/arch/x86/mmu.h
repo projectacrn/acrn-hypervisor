@@ -376,6 +376,11 @@ static inline void *mmu_pt_for_pde(uint32_t *pd, uint32_t vaddr)
 	asm volatile ("   wbinvd\n" : : : "memory");	\
 }
 
+static inline void clflush(volatile void *p)
+{
+	asm volatile ("clflush (%0)" :: "r"(p));
+}
+
 /* External variable declarations */
 extern uint8_t CPU_Boot_Page_Tables_Start_VM[];
 
