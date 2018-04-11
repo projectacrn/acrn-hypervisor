@@ -444,6 +444,14 @@ int64_t hcall_set_vm_memmap(struct vm *vm, uint64_t vmid, uint64_t param)
 	dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x size=0x%x",
 			vmid, memmap.remote_gpa, hpa, memmap.length);
 
+	if (((hpa <= CONFIG_RAM_START) &&
+		(hpa + memmap.length > CONFIG_RAM_START)) ||
+		((hpa >= CONFIG_RAM_START) &&
+		(hpa < CONFIG_RAM_START + CONFIG_RAM_SIZE))) {
+		pr_err("%s: ERROR! overlap the HV memory region.", __func__);
+		return -1;
+	}
+
 	/* Check prot */
 	attr = 0;
 	if (memmap.type != MAP_UNMAP) {
