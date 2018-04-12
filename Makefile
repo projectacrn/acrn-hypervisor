@@ -16,7 +16,7 @@ CFLAGS += -m64
 CFLAGS += -Wall -ffunction-sections
 CFLAGS += -Werror
 CFLAGS += -O2 -D_FORTIFY_SOURCE=2
-CFLAGS += -Wformat -Wformat-security
+CFLAGS += -Wformat -Wformat-security -fno-strict-aliasing
 
 CFLAGS += -I$(BASEDIR)/include
 CFLAGS += -I$(BASEDIR)/include/public
