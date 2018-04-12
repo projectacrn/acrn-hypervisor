@@ -43,6 +43,7 @@
 #define	BVM_CONSOLE_PORT	0x220
 #define	BVM_CONS_SIG		('b' << 8 | 'v')
 
+static bool bvmcons_enabled = false;
 static struct termios tio_orig, tio_new;
 
 static void
@@ -147,7 +148,23 @@ static struct inout_port consport = {
 };
 
 void
+enable_bvmcons(void)
+{
+	bvmcons_enabled = true;
+}
+
+int
 init_bvmcons(void)
 {
-	register_inout(&consport);
+	if (bvmcons_enabled)
+		register_inout(&consport);
+
+	return 0;
+}
+
+void
+deinit_bvmcons(void)
+{
+	if (bvmcons_enabled)
+		unregister_inout(&consport);
 }
