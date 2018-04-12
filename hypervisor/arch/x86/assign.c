@@ -166,6 +166,10 @@ alloc_entry(struct vm *vm, enum ptdev_intr_type type)
 	ASSERT(entry, "alloc memory failed");
 	entry->type = type;
 	entry->vm = vm;
+
+	INIT_LIST_HEAD(&entry->softirq_node);
+	INIT_LIST_HEAD(&entry->entry_node);
+
 	atomic_clear_int(&entry->active, ACTIVE_FLAG);
 	list_add(&entry->entry_node, &ptdev_list);
 
