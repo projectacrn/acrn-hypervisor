@@ -34,9 +34,7 @@
 #include <hv_arch.h>
 #include <hv_debug.h>
 
-static int rdtscp_handler(struct vcpu *vcpu);
 static int unhandled_vmexit_handler(struct vcpu *vcpu);
-static int rdtsc_handler(struct vcpu *vcpu);
 static int xsetbv_vmexit_handler(struct vcpu *vcpu);
 /* VM Dispatch table for Exit condition handling */
 static const struct vm_exit_dispatch dispatch_table[] = {
@@ -73,7 +71,7 @@ static const struct vm_exit_dispatch dispatch_table[] = {
 	[VMX_EXIT_REASON_RDPMC] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_RDTSC] = {
-		.handler = rdtsc_handler},
+		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_RSM] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_VMCALL] = {
@@ -144,7 +142,7 @@ static const struct vm_exit_dispatch dispatch_table[] = {
 	[VMX_EXIT_REASON_INVEPT] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_RDTSCP] = {
-		.handler = rdtscp_handler},
+		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_VMX_PREEMPTION_TIMER_EXPIRED] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_INVVPID] = {
@@ -468,60 +466,5 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	}
 
 	write_xcr(0, val64);
-	return 0;
-}
-
-static int rdtsc_handler(struct vcpu *vcpu)
-{
-	uint64_t host_tsc, guest_tsc, tsc_offset;
-	uint32_t id;
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-
-	/* Read the host TSC value */
-	CPU_RDTSCP_EXECUTE(&host_tsc, &id);
-
-	/* Get current world's TSC offset */
-	tsc_offset = cur_context->tsc_offset;
-
-	/* Update the guest TSC value by following: TSC_guest = TSC_host +
-	 * TSC_guest_Offset
-	 */
-	guest_tsc = host_tsc + tsc_offset;
-
-	/* Return the TSC_guest in rax:rdx */
-	cur_context->guest_cpu_regs.regs.rax = (uint32_t) guest_tsc;
-	cur_context->guest_cpu_regs.regs.rdx = (uint32_t) (guest_tsc >> 32);
-
-	TRACE_2L(TRC_VMEXIT_RDTSC, host_tsc, tsc_offset);
-
-	return 0;
-}
-
-static int rdtscp_handler(struct vcpu *vcpu)
-{
-	uint64_t host_tsc, guest_tsc, tsc_offset;
-	uint32_t id;
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-
-	/* Read the host TSC value */
-	CPU_RDTSCP_EXECUTE(&host_tsc, &id);
-
-	/* Get current world's TSC offset */
-	tsc_offset = cur_context->tsc_offset;
-
-	/* Update the guest TSC value by following: * TSC_guest = TSC_host +
-	 * TSC_guest_Offset
-	 */
-	guest_tsc = host_tsc + tsc_offset;
-
-	/* Return the TSC_guest in rax:rdx and IA32_TSC_AUX in rcx */
-	cur_context->guest_cpu_regs.regs.rax = (uint32_t) guest_tsc;
-	cur_context->guest_cpu_regs.regs.rdx = (uint32_t) (guest_tsc >> 32);
-	cur_context->guest_cpu_regs.regs.rcx = vcpu->arch_vcpu.msr_tsc_aux;
-
-	TRACE_2L(TRC_VMEXIT_RDTSCP, guest_tsc, vcpu->arch_vcpu.msr_tsc_aux);
-
 	return 0;
 }
