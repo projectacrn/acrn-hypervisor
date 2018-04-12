@@ -69,13 +69,13 @@ static inline int spinlock_release(spinlock_t *lock)
 
 .macro spinlock_obtain lock
 	movl $1, % eax
-	lea \lock, % ebx
-	lock xaddl % eax, SYNC_SPINLOCK_HEAD_OFFSET(%ebx)
-	cmpl % eax, SYNC_SPINLOCK_TAIL_OFFSET(%ebx)
+	lea \lock, % rbx
+	lock xaddl % eax, SYNC_SPINLOCK_HEAD_OFFSET(%rbx)
+	cmpl % eax, SYNC_SPINLOCK_TAIL_OFFSET(%rbx)
 	jz 1f
 2 :
 	pause
-	cmpl % eax, SYNC_SPINLOCK_TAIL_OFFSET(%ebx)
+	cmpl % eax, SYNC_SPINLOCK_TAIL_OFFSET(%rbx)
 	jnz 2b
 1 :
 .endm
@@ -83,8 +83,8 @@ static inline int spinlock_release(spinlock_t *lock)
 #define spinlock_obtain(x) spinlock_obtain lock = (x)
 
 .macro spinlock_release lock
-	lea \lock, % ebx
-	lock incl SYNC_SPINLOCK_TAIL_OFFSET(%ebx)
+	lea \lock, % rbx
+	lock incl SYNC_SPINLOCK_TAIL_OFFSET(%rbx)
 .endm
 
 #define spinlock_release(x) spinlock_release lock = (x)
