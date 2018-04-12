@@ -634,7 +634,7 @@ static int charmem(int cmd, const char *s, int sz, void *hnd)
 				n++;
 			}
 
-		} else {
+		} else if (sz > 0) {
 			while (*s && n < sz) {
 				if (n < param->sz - param->wrtn)
 					*p = *s;
