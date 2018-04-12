@@ -98,17 +98,18 @@ int exec_vmxon_instr(void)
 	uint64_t tmp64;
 	uint32_t tmp32;
 	int ret_val = -EINVAL;
-	void *vmxon_region;
+	void *vmxon_region_va;
+	uint64_t vmxon_region_pa;
 
 	/* Allocate page aligned memory for VMXON region */
-	vmxon_region = alloc_page();
+	vmxon_region_va = alloc_page();
 
-	if (vmxon_region != 0) {
+	if (vmxon_region_va != 0) {
 		/* Initialize vmxon page with revision id from IA32 VMX BASIC
 		 * MSR
 		 */
 		tmp32 = msr_read(MSR_IA32_VMX_BASIC);
-		memcpy_s((uint32_t *) vmxon_region, 4, &tmp32, 4);
+		memcpy_s((uint32_t *) vmxon_region_va, 4, &tmp32, 4);
 
 		/* Turn on CR0.NE and CR4.VMXE */
 		CPU_CR_READ(cr0, &tmp64);
@@ -117,7 +118,8 @@ int exec_vmxon_instr(void)
 		CPU_CR_WRITE(cr4, tmp64 | CR4_VMXE);
 
 		/* Turn ON VMX */
-		ret_val = exec_vmxon(&vmxon_region);
+		vmxon_region_pa = HVA2HPA(vmxon_region_va);
+		ret_val = exec_vmxon(&vmxon_region_pa);
 	}
 
 	return ret_val;
@@ -825,9 +827,9 @@ static void init_host_state(__unused struct vcpu *vcpu)
 
 	/* Set up host instruction pointer on VM Exit */
 	field = VMX_HOST_RIP;
-	value32 = (uint32_t) ((uint64_t) (&vm_exit) & 0xFFFFFFFF);
+	value64 = (uint64_t)&vm_exit;
 	pr_dbg("HOST RIP on VMExit %x ", value32);
-	exec_vmwrite(field, value32);
+	exec_vmwrite(field, value64);
 	pr_dbg("vm exit return address = %x ", value32);
 
 	/* These fields manage host and guest system calls * pg 3069 31.10.4.2
@@ -1003,10 +1005,10 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	exec_vmwrite(VMX_CR3_TARGET_COUNT, 0);
 
 	/* Set up IO bitmap register A and B - pg 2902 24.6.4 */
-	value64 = (int64_t) vm->arch_vm.iobitmap[0];
+	value64 = HVA2HPA(vm->arch_vm.iobitmap[0]);
 	exec_vmwrite64(VMX_IO_BITMAP_A_FULL, value64);
 	pr_dbg("VMX_IO_BITMAP_A: 0x%016llx ", value64);
-	value64 = (int64_t) vm->arch_vm.iobitmap[1];
+	value64 = HVA2HPA(vm->arch_vm.iobitmap[1]);
 	exec_vmwrite64(VMX_IO_BITMAP_B_FULL, value64);
 	pr_dbg("VMX_IO_BITMAP_B: 0x%016llx ", value64);
 
@@ -1301,6 +1303,7 @@ int init_vmcs(struct vcpu *vcpu)
 {
 	uint32_t vmx_rev_id;
 	int status = 0;
+	uint64_t vmcs_pa;
 
 	if (vcpu == NULL)
 		status = -EINVAL;
@@ -1314,11 +1317,12 @@ int init_vmcs(struct vcpu *vcpu)
 	memcpy_s((void *) vcpu->arch_vcpu.vmcs, 4, &vmx_rev_id, 4);
 
 	/* Execute VMCLEAR on current VMCS */
-	status = exec_vmclear((void *)&vcpu->arch_vcpu.vmcs);
+	vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
+	status = exec_vmclear((void *)&vmcs_pa);
 	ASSERT(status == 0, "Failed VMCLEAR during VMCS setup!");
 
 	/* Load VMCS pointer */
-	status = exec_vmptrld((void *)&vcpu->arch_vcpu.vmcs);
+	status = exec_vmptrld((void *)&vmcs_pa);
 	ASSERT(status == 0, "Failed VMCS pointer load!");
 
 	/* Initialize the Virtual Machine Control Structure (VMCS) */
