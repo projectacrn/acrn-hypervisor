@@ -585,7 +585,7 @@ static struct option long_options[] = {
 int
 main(int argc, char *argv[])
 {
-	int c, error, gdb_port, err, bvmcons;
+	int c, error, gdb_port, err;
 	int max_vcpus, mptgen, memflags;
 	int rtc_localtime;
 	struct vmctx *ctx;
@@ -593,7 +593,6 @@ main(int argc, char *argv[])
 	char *optstr;
 	int option_idx = 0;
 
-	bvmcons = 0;
 	progname = basename(argv[0]);
 	gdb_port = 0;
 	guest_ncpus = 1;
@@ -617,7 +616,7 @@ main(int argc, char *argv[])
 			acpi = 1;
 			break;
 		case 'b':
-			bvmcons = 1;
+			enable_bvmcons();
 			break;
 		case 'p':
 			if (pincpu_parse(optarg) != 0) {
@@ -793,6 +792,7 @@ main(int argc, char *argv[])
 
 		vrtc_init(ctx, rtc_localtime);
 		sci_init(ctx);
+		init_bvmcons();
 		monitor_init(ctx);
 
 		/*
@@ -805,9 +805,6 @@ main(int argc, char *argv[])
 
 		if (gdb_port != 0)
 			fprintf(stderr, "dbgport not supported\n");
-
-		if (bvmcons)
-			init_bvmcons();
 
 		/*
 		 * build the guest tables, MP etc.
@@ -860,6 +857,7 @@ main(int argc, char *argv[])
 		pci_irq_deinit(ctx);
 		deinit_pci(ctx);
 		monitor_close();
+		deinit_bvmcons();
 		vrtc_deinit(ctx);
 		atkbdc_deinit(ctx);
 		vm_unsetup_memory(ctx);
@@ -875,6 +873,7 @@ vm_fail:
 	deinit_pci(ctx);
 pci_fail:
 	monitor_close();
+	deinit_bvmcons();
 	vrtc_deinit(ctx);
 	atkbdc_deinit(ctx);
 mevent_fail:
