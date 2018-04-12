@@ -347,6 +347,40 @@ cbc_send_pkt(struct cbc_pkt *pkt)
 }
 
 /*
+ * Update heartbeat state.
+ */
+static void
+cbc_update_heartbeat(struct cbc_pkt *pkt, uint8_t cmd, uint8_t sus_action)
+{
+	uint8_t stat;
+
+	(void) sus_action;
+
+	/*
+	 * If heartbeat state switches(active/inactive), update the new state
+	 * value based on heartbeat commands.
+	 * The default state is inactive.
+	 */
+	if (cmd == CBC_HB_ACTIVE || cmd == CBC_HB_STANDBY ||
+				cmd == CBC_HB_INITIAL)
+		stat = 1;
+	else
+		stat = 0;
+
+	/* Default heartbeat state is zero, that means not active */
+	if (stat != pkt->hb_state) {
+		/*
+		 * Route the cbc request to the tx thread
+		 * and request type is SOC state update
+		 */
+		pkt->qtype = CBC_QUEUE_T_TX;
+		pkt->req->rtype = CBC_REQ_T_SOC;
+		pkt->req->buf[0] = stat;
+		pkt->hb_state = stat;
+	}
+}
+
+/*
  * Update wakeup reason value and notify UOS immediately.
  * Some events can change the wakeup reason include periodic wakeup reason
  * from IOC firmware, IOC bootup reason, heartbeat state changing and VMM
@@ -355,6 +389,37 @@ cbc_send_pkt(struct cbc_pkt *pkt)
 static void
 cbc_update_wakeup_reason(struct cbc_pkt *pkt, uint32_t reason)
 {
+	uint8_t *payload;
+
+	/* TODO: VMM requests S3/S5 do not implement yet */
+	if (pkt->soc_active) {
+		pkt->boot_reason = 0;
+		reason |= CBC_WK_RSN_SOC;
+	} else
+		reason &= ~CBC_WK_RSN_SOC;
+	reason &= CBC_WK_RSN_ALL;
+
+	if (pkt->boot_reason != 0)
+		reason = pkt->boot_reason;
+
+	pkt->reason = reason;
+
+	/* Wakeup reason only has three bytes in CBC payload */
+	payload = pkt->req->buf + CBC_PAYLOAD_POS;
+	payload[0] = reason;
+	payload[1] = reason >> 8;
+	payload[2] = reason >> 16;
+
+	/* For CBC address layer header packing */
+	pkt->req->id = IOC_NATIVE_LFCC;
+
+	/* Fill service header */
+	pkt->req->buf[CBC_SRV_POS] = CBC_SC_WK_RSN;
+	pkt->req->srv_len = 4;
+	pkt->req->link_len = 0;
+
+	/* Send the CBC packet */
+	cbc_send_pkt(pkt);
 }
 
 /*
@@ -364,6 +429,25 @@ cbc_update_wakeup_reason(struct cbc_pkt *pkt, uint32_t reason)
 static void
 cbc_process_lifecycle(struct cbc_pkt *pkt)
 {
+	uint8_t cmd;
+	uint8_t *payload;
+	uint32_t reason;
+
+	cmd = pkt->req->buf[CBC_SRV_POS];
+	payload = pkt->req->buf + CBC_PAYLOAD_POS;
+	switch (cmd) {
+	case CBC_SC_WK_RSN:
+		reason = payload[0] | (payload[1] << 8) | (payload[2] << 16);
+		cbc_update_wakeup_reason(pkt, reason);
+		break;
+	case CBC_SC_HB:
+		cbc_update_heartbeat(pkt, payload[0], payload[1]);
+		break;
+	default:
+		DPRINTF("ioc lifecycle command=%d can not be handled\r\n",
+				cmd);
+		break;
+	}
 }
 
 /*

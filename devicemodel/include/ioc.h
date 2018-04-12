@@ -662,6 +662,7 @@ struct cbc_pkt {
 	uint8_t soc_active;		/* Record soc state */
 	uint8_t hb_state;		/* Record Heartbeat state */
 	uint32_t reason;		/* Record current wakeup reason */
+	uint32_t boot_reason;		/* Record boot up wakeup reason */
 	struct cbc_request *req;	/* CBC packet data */
 	struct cbc_config *cfg;		/* CBC and whitelist configurations */
 	enum cbc_queue_type qtype;	/* Routes cbc_request to queue */

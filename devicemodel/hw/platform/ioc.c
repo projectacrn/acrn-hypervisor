@@ -968,6 +968,7 @@ ioc_rx_thread(void *arg)
 
 	memset(&packet, 0, sizeof(packet));
 	packet.cfg = &ioc->rx_config;
+	packet.boot_reason = ioc_boot_reason;
 	for (;;) {
 		pthread_mutex_lock(&ioc->rx_mtx);
 		while (SIMPLEQ_EMPTY(&ioc->rx_qhead)) {
@@ -1019,6 +1020,7 @@ ioc_tx_thread(void *arg)
 
 	memset(&packet, 0, sizeof(packet));
 	packet.cfg = &ioc->tx_config;
+	packet.boot_reason = ioc_boot_reason;
 	for (;;) {
 		pthread_mutex_lock(&ioc->tx_mtx);
 		while (SIMPLEQ_EMPTY(&ioc->tx_qhead)) {
