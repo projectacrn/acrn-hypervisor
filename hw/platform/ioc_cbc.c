@@ -309,12 +309,46 @@ cbc_disable_signal_group(uint16_t id, struct cbc_group *table, size_t size)
 }
 
 /*
+ * Search one cbc_signal with signal id in the whitelist table.
+ */
+static struct cbc_signal *
+wlist_find_signal(uint16_t id, struct wlist_signal *list, size_t size)
+{
+	int i;
+
+	for (i = 0; i < size; i++) {
+		if (id == list[i].id)
+			return list[i].sig;
+	}
+	return NULL;
+}
+
+/*
+ * Search one cbc_group with group id in the whitelist table.
+ */
+static struct
+cbc_group *wlist_find_group(uint16_t id, struct wlist_group *list, size_t size)
+{
+	int i;
+
+	for (i = 0; i < size; i++) {
+		if (id == list[i].id)
+			return list[i].grp;
+	}
+	return NULL;
+}
+
+/*
  * Whitelist verification for a signal.
  */
 static int
 wlist_verify_signal(uint16_t id, struct wlist_signal *list, size_t size)
 {
-	/* TODO: implementation */
+	struct cbc_signal *sig;
+
+	sig = wlist_find_signal(id, list, size);
+	if (!sig || sig->flag == CBC_INACTIVE)
+		return -1;
 	return 0;
 }
 
@@ -324,7 +358,11 @@ wlist_verify_signal(uint16_t id, struct wlist_signal *list, size_t size)
 static int
 wlist_verify_group(uint16_t id, struct wlist_group *list, size_t size)
 {
-	/* TODO: implementation */
+	struct cbc_group *grp;
+
+	grp = wlist_find_group(id, list, size);
+	if (!grp || grp->flag == CBC_INACTIVE)
+		return -1;
 	return 0;
 }
 
@@ -811,5 +849,49 @@ cbc_tx_handler(struct cbc_pkt *pkt)
 		/* TODO: others request types process */
 		DPRINTF("ioc invalid cbc_request type in tx:%d\r\n",
 				pkt->req->rtype);
+	}
+}
+
+/*
+ * Initialize whitelist node with cbc_group,
+ * so that whitelist can access cbc_group flag via group id.
+ */
+void
+wlist_init_group(struct cbc_group *cbc_tbl, size_t cbc_size,
+		struct wlist_group *wlist_tbl, size_t wlist_size)
+{
+	int i, j;
+
+	if (!cbc_tbl || cbc_size == 0 || !wlist_tbl || wlist_size == 0)
+		return;
+	for (i = 0; i < wlist_size; i++) {
+		for (j = 0; j < cbc_size; j++) {
+			if (wlist_tbl[i].id == cbc_tbl[j].id) {
+				wlist_tbl[i].grp = &cbc_tbl[j];
+				break;
+			}
+		}
+	}
+}
+
+/*
+ * Initialize whitelist node with cbc_signal,
+ * so that whitelist can access cbc_signal flag via signal id.
+ */
+void
+wlist_init_signal(struct cbc_signal *cbc_tbl, size_t cbc_size,
+		struct wlist_signal *wlist_tbl, size_t wlist_size)
+{
+	int i, j;
+
+	if (!cbc_tbl || cbc_size == 0 || !wlist_tbl || wlist_size == 0)
+		return;
+	for (i = 0; i < wlist_size; i++) {
+		for (j = 0; j < cbc_size; j++) {
+			if (wlist_tbl[i].id == cbc_tbl[j].id) {
+				wlist_tbl[i].sig = &cbc_tbl[j];
+				break;
+			}
+		}
 	}
 }
