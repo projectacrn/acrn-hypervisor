@@ -246,13 +246,6 @@ static int write_cr0(struct vcpu *vcpu, uint64_t value)
 		exec_vmwrite(VMX_ENTRY_CONTROLS, value32);
 		pr_dbg("VMX_ENTRY_CONTROLS: 0x%x ", value32);
 
-		/* Disable unrestricted mode */
-		value32 = exec_vmread(VMX_PROC_VM_EXEC_CONTROLS2);
-		value32 |= (VMX_PROCBASED_CTLS2_EPT |
-			    VMX_PROCBASED_CTLS2_RDTSCP);
-		exec_vmwrite(VMX_PROC_VM_EXEC_CONTROLS2, value32);
-		pr_dbg("VMX_PROC_VM_EXEC_CONTROLS2: 0x%x ", value32);
-
 		/* Set up EFER */
 		value64 = exec_vmread64(VMX_GUEST_IA32_EFER_FULL);
 		value64 |= (MSR_IA32_EFER_SCE_BIT |

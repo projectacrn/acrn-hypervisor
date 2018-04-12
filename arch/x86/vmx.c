@@ -910,8 +910,8 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	 */
 	value32 = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
 	value32 |= (VMX_PROCBASED_CTLS2_EPT |
-		    /* VMX_PROCBASED_CTLS2_RDTSCP | */
-		    VMX_PROCBASED_CTLS2_UNRESTRICT);
+			VMX_PROCBASED_CTLS2_RDTSCP |
+			VMX_PROCBASED_CTLS2_UNRESTRICT);
 
 	if (is_vapic_supported()) {
 		value32 |= VMX_PROCBASED_CTLS2_VAPIC;
