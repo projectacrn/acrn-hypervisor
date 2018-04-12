@@ -370,8 +370,8 @@ static inline int check_result(int found)
 	int found = 0;					\
 	typeof(*(ptr)) *h_ptr = (ptr);			\
 	typeof(*(ptr)) *g_ptr =				\
-		(void *)gpa2hpa_check(vm, gpa,		\
-		sizeof(*h_ptr), &found, true);		\
+		HPA2HVA(gpa2hpa_check(vm, gpa,	\
+		sizeof(*h_ptr), &found, true));		\
 	if (found) {					\
 		*h_ptr = *g_ptr;			\
 	}						\
@@ -382,8 +382,8 @@ static inline int check_result(int found)
 	int found = 0;					\
 	typeof(*(ptr)) *h_ptr = (ptr);			\
 	typeof(*(ptr)) *g_ptr =				\
-		(void *)gpa2hpa_check(vm, gpa,		\
-		sizeof(*h_ptr), &found, true);		\
+		HPA2HVA(gpa2hpa_check(vm, gpa,	\
+		sizeof(*h_ptr), &found, true));		\
 	if (found) {					\
 		*g_ptr = *h_ptr;			\
 	}						\
