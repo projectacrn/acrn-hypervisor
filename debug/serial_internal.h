@@ -153,7 +153,7 @@ struct uart_config {
  */
 struct tgt_uart {
 	char uart_id[SERIAL_ID_MAX_LENGTH];
-	mmio_addr_t base_address;
+	uint64_t base_address;
 	uint32_t clock_frequency;
 	uint32_t buffer_size;
 	unsigned int open_count;

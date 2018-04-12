@@ -313,10 +313,10 @@ struct mem_io_node {
 	uint64_t range_end;
 };
 
-void *get_paging_pml4(void);
+uint64_t get_paging_pml4(void);
 void *alloc_paging_struct(void);
 void free_paging_struct(void *ptr);
-void enable_paging(void *pml4_base_addr);
+void enable_paging(uint64_t);
 void init_paging(void);
 int map_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		    uint64_t size, uint32_t flags);
