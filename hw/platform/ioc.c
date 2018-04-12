@@ -90,14 +90,21 @@
 
 #include "ioc.h"
 
-/*
- * Debug printf
- */
+/* For debugging log to a file */
 static int ioc_debug;
-#define	DPRINTF(fmt, args...) \
-	do { if (ioc_debug) printf(fmt, ##args); } while (0)
-#define	WPRINTF(fmt, args...) printf(fmt, ##args)
-
+static FILE *dbg_file;
+#define IOC_LOG_INIT do { if (ioc_debug) {\
+	dbg_file = fopen("/tmp/ioc_log", "w+");\
+if (!dbg_file)\
+	printf("ioc log open failed\r\n"); else cbc_set_log_file(dbg_file);\
+} } while (0)
+#define IOC_LOG_DEINIT do { if (dbg_file) fclose(dbg_file); dbg_file = NULL;\
+cbc_set_log_file(dbg_file);\
+} while (0)
+#define DPRINTF(format, arg...) \
+do { if (ioc_debug && dbg_file) { fprintf(dbg_file, format, arg);\
+	fflush(dbg_file); } } while (0)
+#define	WPRINTF(format, arg...) printf(format, ##arg)
 
 /*
  * Type definition for thread function.
@@ -1096,7 +1103,7 @@ ioc_create_thread(const char *name, pthread_t *tid,
 		ioc_work func, void *arg)
 {
 	if (pthread_create(tid, NULL, func, arg) != 0) {
-		DPRINTF("ioc can not create thread\r\n");
+		DPRINTF("%s", "ioc can not create thread\r\n");
 		return -1;
 	}
 	pthread_setname_np(*tid, name);
@@ -1145,6 +1152,8 @@ ioc_init(void)
 {
 	int i;
 	struct ioc_dev *ioc;
+
+	IOC_LOG_INIT;
 
 	if (ioc_is_platform_supported() != 0)
 		goto ioc_err;
@@ -1261,6 +1270,7 @@ alloc_err:
 	free(ioc->pool);
 	free(ioc);
 ioc_err:
+	IOC_LOG_DEINIT;
 	DPRINTF("%s", "ioc mediator startup failed!!\r\n");
 	return NULL;
 }
@@ -1281,4 +1291,5 @@ ioc_deinit(struct ioc_dev *ioc)
 	free(ioc->evts);
 	free(ioc->pool);
 	free(ioc);
+	IOC_LOG_DEINIT;
 }

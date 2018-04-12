@@ -735,4 +735,7 @@ void wlist_init_signal(struct cbc_signal *cbc_tbl, size_t cbc_size,
 		struct wlist_signal *wlist_tbl, size_t wlist_size);
 void wlist_init_group(struct cbc_group *cbc_tbl, size_t cbc_size,
 		struct wlist_group *wlist_tbl, size_t wlist_size);
+
+/* Set CBC log file */
+void cbc_set_log_file(FILE *f);
 #endif

@@ -41,9 +41,11 @@
  * Debug printf
  */
 static int ioc_cbc_debug;
-#define	DPRINTF(fmt, args...) \
-	do { if (ioc_cbc_debug) printf(fmt, ##args); } while (0)
-#define	WPRINTF(fmt, args...) printf(fmt, ##args)
+static FILE *dbg_file;
+#define DPRINTF(format, arg...) \
+do { if (ioc_cbc_debug && dbg_file) { fprintf(dbg_file, format, arg);\
+	fflush(dbg_file); } } while (0)
+#define	WPRINTF(format, arg...) printf(format, ##arg)
 
 static void cbc_send_pkt(struct cbc_pkt *pkt);
 
@@ -894,4 +896,13 @@ wlist_init_signal(struct cbc_signal *cbc_tbl, size_t cbc_size,
 			}
 		}
 	}
+}
+
+/*
+ * Share log file with IOC.
+ */
+void
+cbc_set_log_file(FILE *f)
+{
+	dbg_file = f;
 }
