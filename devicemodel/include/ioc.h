@@ -729,4 +729,10 @@ int cbc_copy_to_ring(const uint8_t *buf, size_t size, struct cbc_ring *ring);
 
 /* Build a cbc_request based on CBC link layer protocol */
 void cbc_unpack_link(struct ioc_dev *ioc);
+
+/* Whitelist initialization */
+void wlist_init_signal(struct cbc_signal *cbc_tbl, size_t cbc_size,
+		struct wlist_signal *wlist_tbl, size_t wlist_size);
+void wlist_init_group(struct cbc_group *cbc_tbl, size_t cbc_size,
+		struct wlist_group *wlist_tbl, size_t wlist_size);
 #endif

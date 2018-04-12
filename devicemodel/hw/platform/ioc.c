@@ -1183,6 +1183,20 @@ ioc_init(void)
 	if (ioc_ch_init(ioc) != 0)
 		goto chl_err;
 
+	/* Initlialize CBC rx/tx signal and group whitelists */
+	wlist_init_signal(cbc_rx_signal_table, ARRAY_SIZE(cbc_rx_signal_table),
+			wlist_rx_signal_table,
+			ARRAY_SIZE(wlist_rx_signal_table));
+	wlist_init_group(cbc_rx_group_table, ARRAY_SIZE(cbc_rx_group_table),
+			wlist_rx_group_table,
+			ARRAY_SIZE(wlist_rx_group_table));
+	wlist_init_signal(cbc_tx_signal_table, ARRAY_SIZE(cbc_tx_signal_table),
+			wlist_tx_signal_table,
+			ARRAY_SIZE(wlist_tx_signal_table));
+	wlist_init_group(cbc_tx_group_table, ARRAY_SIZE(cbc_tx_group_table),
+			wlist_tx_group_table,
+			ARRAY_SIZE(wlist_tx_group_table));
+
 	/* Setup IOC rx members */
 	snprintf(ioc->rx_name, sizeof(ioc->rx_name), "ioc_rx");
 	ioc->ioc_dev_rx = cbc_rx_handler;
