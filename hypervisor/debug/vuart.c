@@ -153,7 +153,7 @@ static void uart_toggle_intr(struct vuart *vu)
 }
 
 static void uart_write(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, ioport_t offset,
+		struct vm *vm, uint16_t offset,
 		__unused size_t width, uint32_t value)
 {
 	struct vuart *vu = vm_vuart(vm);
@@ -231,7 +231,7 @@ done:
 }
 
 static uint32_t uart_read(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, ioport_t offset,
+		struct vm *vm, uint16_t offset,
 		__unused size_t width)
 {
 	char iir, intr_reason, reg;

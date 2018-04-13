@@ -617,7 +617,7 @@ static void start_cpus()
 
 	/* Broadcast IPIs to all other CPUs */
 	send_startup_ipi(INTR_CPU_STARTUP_ALL_EX_SELF,
-		       -1U, ((paddr_t) cpu_secondary_reset));
+		       -1U, ((uint64_t) cpu_secondary_reset));
 
 	/* Wait until global count is equal to expected CPU up count or
 	 * configured time-out has expired

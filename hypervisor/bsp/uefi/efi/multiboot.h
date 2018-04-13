@@ -38,8 +38,6 @@
 #define _MULTIBOOT_H
 
 #include <stdint.h>
-//typedef uintptr_t uint32_t;
-typedef uintptr_t vaddr_t;
 
 struct multiboot_info;
 extern struct multiboot_info mbi;
