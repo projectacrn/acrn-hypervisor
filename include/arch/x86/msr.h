@@ -515,16 +515,6 @@
 /* LINCROFT specific MSRs */
 #define MSR_LNC_BIOS_CACHE_AS_RAM           0x000002E0	/* Configure CAR */
 
-/* MSR_IA32_VMX_EPT_VPID_CAP: EPT and VPID capability bits */
-#define MSR_VMX_EPT_X_ONLY                (1UL << 0)/* Execute Only */
-#define MSR_VMX_EPT_VPID_CAP_1GB          (1UL << 17)/* EPT 1GB page */
-#define MSR_VMX_INVEPT                    (1UL << 20)/* INVEPT */
-#define MSR_VMX_INVEPT_SINGLE_CONTEXT     (1UL << 25)/* INVEPT Single */
-#define MSR_VMX_INVEPT_GLOBAL_CONTEXT     (1UL << 26)/* INVEPT Global */
-#define MSR_VMX_INVVPID                   (1UL << 32)/* INVVPID */
-#define MSR_VMX_INVVPID_SINGLE_CONTEXT    (1UL << 41)/* INVVPID Single */
-#define MSR_VMX_INVVPID_GLOBAL_CONTEXT    (1UL << 42)/* INVVPID Global */
-
 /* EFER bits */
 #define MSR_IA32_EFER_SCE_BIT                   (1<<0)
 #define MSR_IA32_EFER_LME_BIT                   (1<<8)	/* IA32e mode enable */

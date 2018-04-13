@@ -325,6 +325,34 @@
 #define VMX_PROCBASED_CTLS2_EPT_VE     (1<<18)
 #define VMX_PROCBASED_CTLS2_XSVE_XRSTR (1<<20)
 
+/* MSR_IA32_VMX_EPT_VPID_CAP: EPT and VPID capability bits */
+#define VMX_EPT_EXECUTE_ONLY		(1 << 0)
+#define VMX_EPT_PAGE_WALK_4		(1 << 6)
+#define VMX_EPT_PAGE_WALK_5		(1 << 7)
+#define VMX_EPTP_UC			(1 << 8)
+#define VMX_EPTP_WB			(1 << 14)
+#define VMX_EPT_2MB_PAGE		(1 << 16)
+#define VMX_EPT_1GB_PAGE		(1 << 17)
+#define VMX_EPT_INVEPT			(1 << 20)
+#define VMX_EPT_AD			(1 << 21)
+#define VMX_EPT_INVEPT_SINGLE_CONTEXT	(1 << 25)
+#define VMX_EPT_INVEPT_GLOBAL_CONTEXT	(1 << 26)
+
+#define VMX_VPID_INVVPID			(1 << 0) /* (32 - 32) */
+#define VMX_VPID_INVVPID_INDIVIDUAL_ADDR	(1 << 8) /* (40 - 32) */
+#define VMX_VPID_INVVPID_SINGLE_CONTEXT		(1 << 9) /* (41 - 32) */
+#define VMX_VPID_INVVPID_GLOBAL_CONTEXT		(1 << 10) /* (42 - 32) */
+#define VMX_VPID_INVVPID_SINGLE_NON_GLOBAL	(1 << 11) /* (43 - 32) */
+
+#define VMX_EPT_MT_EPTE_SHIFT		3
+#define VMX_EPTP_PWL_MASK		0x38
+#define VMX_EPTP_PWL_4			0x18
+#define VMX_EPTP_PWL_5			0x20
+#define VMX_EPTP_AD_ENABLE_BIT		(1 << 6)
+#define VMX_EPTP_MT_MASK		0x7
+#define VMX_EPTP_MT_WB			0x6
+#define VMX_EPTP_MT_UC			0x0
+
 /* VMX exit control bits */
 #define VMX_EXIT_CTLS_SAVE_DBG         (1<<2)
 #define VMX_EXIT_CTLS_HOST_ADDR64      (1<<9)
