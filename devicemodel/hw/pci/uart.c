@@ -106,9 +106,22 @@ pci_uart_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	return 0;
 }
 
+static void
+pci_uart_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
+{
+	struct uart_vdev *uart = (struct uart_vdev *)dev->arg;
+
+	if (uart == NULL)
+		return;
+
+	uart_release_backend(uart, opts);
+	uart_deinit(uart);
+}
+
 struct pci_vdev_ops pci_ops_com = {
 	.class_name	= "uart",
 	.vdev_init	= pci_uart_init,
+	.vdev_deinit	= pci_uart_deinit,
 	.vdev_barwrite	= pci_uart_write,
 	.vdev_barread	= pci_uart_read
 };
