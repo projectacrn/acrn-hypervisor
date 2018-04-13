@@ -155,6 +155,38 @@ lpc_uart_io_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 	return 0;
 }
 
+static void
+lpc_deinit(struct vmctx *ctx)
+{
+	struct lpc_uart_vdev *lpc_uart;
+	struct inout_port iop;
+	const char *name;
+	int unit;
+
+	/* COM1 and COM2 */
+	for (unit = 0; unit < LPC_UART_NUM; unit++) {
+		name = lpc_uart_names[unit];
+		lpc_uart = &lpc_uart_vdev[unit];
+
+		if (lpc_uart->enabled == 0)
+			continue;
+
+		bzero(&iop, sizeof(struct inout_port));
+		iop.name = name;
+		iop.port = lpc_uart->iobase;
+		iop.size = UART_IO_BAR_SIZE;
+		iop.flags = IOPORT_F_INOUT;
+		unregister_inout(&iop);
+
+		uart_release_backend(lpc_uart->uart, lpc_uart->opts);
+		uart_deinit(lpc_uart->uart);
+		uart_legacy_dealloc(unit);
+		lpc_uart->uart = NULL;
+		lpc_uart->enabled = 0;
+	}
+}
+
+
 static int
 lpc_init(struct vmctx *ctx)
 {
@@ -173,17 +205,24 @@ lpc_init(struct vmctx *ctx)
 				      &lpc_uart->irq) != 0) {
 			fprintf(stderr, "Unable to allocate resources for "
 			    "LPC device %s\n", name);
-			return -1;
+			goto init_failed;
 		}
 		pci_irq_reserve(lpc_uart->irq);
 
 		lpc_uart->uart = uart_init(lpc_uart_intr_assert,
 				    lpc_uart_intr_deassert, lpc_uart);
 
+		if (lpc_uart->uart < 0) {
+			uart_legacy_dealloc(unit);
+			goto init_failed;
+		}
+
 		if (uart_set_backend(lpc_uart->uart, lpc_uart->opts) != 0) {
 			fprintf(stderr, "Unable to initialize backend '%s' "
 			    "for LPC device %s\n", lpc_uart->opts, name);
-			return -1;
+			uart_deinit(lpc_uart->uart);
+			uart_legacy_dealloc(unit);
+			goto init_failed;
 		}
 
 		bzero(&iop, sizeof(struct inout_port));
@@ -200,23 +239,10 @@ lpc_init(struct vmctx *ctx)
 	}
 
 	return 0;
-}
 
-static void
-lpc_deinit(struct vmctx *ctx)
-{
-	struct lpc_uart_vdev *lpc_uart;
-	int unit;
-
-	/* COM1 and COM2 */
-	for (unit = 0; unit < LPC_UART_NUM; unit++) {
-		lpc_uart = &lpc_uart_vdev[unit];
-
-		uart_legacy_dealloc(unit);
-		uart_deinit(lpc_uart->uart);
-		lpc_uart->uart = NULL;
-		lpc_uart->enabled = 0;
-	}
+init_failed:
+	lpc_deinit(ctx);
+	return -1;
 }
 
 static void
