@@ -141,6 +141,18 @@ enum USB_ERRCODE {
 #define	USB_DATA_XFER_UNLOCK(x)	\
 	pthread_mutex_unlock(&((x)->mtx))
 
+#define LOG_TAG "USB: "
+#define LFTL 0
+#define LWRN 1
+#define LINF 2
+#define LDBG 3
+#define LVRB 4
+#define UPRINTF(lvl, fmt, args...) \
+	do { if (lvl <= usb_log_level) printf(LOG_TAG fmt, ##args); } while (0)
+
+extern int usb_log_level;
+inline int usb_get_log_level(void)		{ return usb_log_level; }
+inline void usb_set_log_level(int level)	{ usb_log_level = level; }
 struct usb_devemu *usb_emu_finddev(char *name);
 
 struct usb_data_xfer_block *usb_data_xfer_append(struct usb_data_xfer *xfer,
