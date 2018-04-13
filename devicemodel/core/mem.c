@@ -235,6 +235,34 @@ register_mem_fallback(struct mem_range *memp)
 }
 
 int
+unregister_mem_fallback(struct mem_range *memp)
+{
+	struct mem_range *mr;
+	struct mmio_rb_range *entry = NULL;
+	int err;
+
+	pthread_rwlock_wrlock(&mmio_rwlock);
+	err = mmio_rb_lookup(&mmio_rb_fallback, memp->base, &entry);
+	if (err == 0) {
+		mr = &entry->mr_param;
+		assert(mr->name == memp->name);
+		assert(mr->base == memp->base && mr->size == memp->size);
+		assert((mr->flags & MEM_F_IMMUTABLE) == 0);
+		RB_REMOVE(mmio_rb_tree, &mmio_rb_fallback, entry);
+
+		/* flush Per-VM cache */
+		if (mmio_hint == entry)
+			mmio_hint = NULL;
+	}
+	pthread_rwlock_unlock(&mmio_rwlock);
+
+	if (entry)
+		free(entry);
+
+	return err;
+}
+
+int
 unregister_mem(struct mem_range *memp)
 {
 	struct mem_range *mr;

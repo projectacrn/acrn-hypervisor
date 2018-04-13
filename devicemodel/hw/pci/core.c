@@ -1204,7 +1204,7 @@ init_pci(struct vmctx *ctx)
 	lowmem = vm_get_lowmem_size(ctx);
 	bzero(&mr, sizeof(struct mem_range));
 	mr.name = "PCI hole";
-	mr.flags = MEM_F_RW | MEM_F_IMMUTABLE;
+	mr.flags = MEM_F_RW;
 	mr.base = lowmem;
 	mr.size = (4ULL * 1024 * 1024 * 1024) - lowmem;
 	mr.handler = pci_emul_fallback_handler;
@@ -1214,7 +1214,7 @@ init_pci(struct vmctx *ctx)
 	/* PCI extended config space */
 	bzero(&mr, sizeof(struct mem_range));
 	mr.name = "PCI ECFG";
-	mr.flags = MEM_F_RW | MEM_F_IMMUTABLE;
+	mr.flags = MEM_F_RW;
 	mr.base = PCI_EMUL_ECFG_BASE;
 	mr.size = PCI_EMUL_ECFG_SIZE;
 	mr.handler = pci_emul_ecfg_handler;
@@ -1232,6 +1232,23 @@ deinit_pci(struct vmctx *ctx)
 	struct slotinfo *si;
 	struct funcinfo *fi;
 	int bus, slot, func;
+	size_t lowmem;
+	struct mem_range mr;
+
+	/* Release PCI extended config space */
+	bzero(&mr, sizeof(struct mem_range));
+	mr.name = "PCI ECFG";
+	mr.base = PCI_EMUL_ECFG_BASE;
+	mr.size = PCI_EMUL_ECFG_SIZE;
+	unregister_mem(&mr);
+
+	/* Release PCI hole space */
+	lowmem = vm_get_lowmem_size(ctx);
+	bzero(&mr, sizeof(struct mem_range));
+	mr.name = "PCI hole";
+	mr.base = lowmem;
+	mr.size = (4ULL * 1024 * 1024 * 1024) - lowmem;
+	unregister_mem_fallback(&mr);
 
 	for (bus = 0; bus < MAXBUSES; bus++) {
 		bi = pci_businfo[bus];
