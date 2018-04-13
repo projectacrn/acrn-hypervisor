@@ -64,6 +64,7 @@ SRCS += hw/platform/block_if.c
 SRCS += hw/platform/ioapic.c
 SRCS += hw/platform/cmos_io.c
 SRCS += hw/platform/ioc.c
+SRCS += hw/platform/ioc_cbc.c
 SRCS += hw/pci/wdt_i6300esb.c
 SRCS += hw/pci/lpc.c
 SRCS += hw/pci/xhci.c

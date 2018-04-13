@@ -718,4 +718,14 @@ void ioc_build_request(struct ioc_dev *ioc, int32_t link_len, int32_t srv_len);
 
 /* Send data to native CBC cdevs and virtual PTY(UART DM) device */
 int ioc_ch_xmit(enum ioc_ch_id id, const uint8_t *buf, size_t size);
+
+/* Main handlers of CBC protocol stack */
+void cbc_rx_handler(struct cbc_pkt *pkt);
+void cbc_tx_handler(struct cbc_pkt *pkt);
+
+/* Copy to buf to the ring buffer */
+int cbc_copy_to_ring(const uint8_t *buf, size_t size, struct cbc_ring *ring);
+
+/* Build a cbc_request based on CBC link layer protocol */
+void cbc_unpack_link(struct ioc_dev *ioc);
 #endif
