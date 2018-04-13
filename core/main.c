@@ -64,6 +64,7 @@
 #include "version.h"
 #include "sw_load.h"
 #include "monitor.h"
+#include "ioc.h"
 
 #define GUEST_NIO_PORT		0x488	/* guest upcalls via i/o port */
 
@@ -155,6 +156,7 @@ usage(int code)
 		"       -r: ramdisk image path\n"
 		"       -B: bootargs for kernel\n"
 		"       -v: version\n"
+		"       -i: ioc boot parameters\n"
 		"       --vsbl: vsbl file path\n"
 		"       --part_info: guest partition info file path\n"
 		"	--enable_trusty: enable trusty for guest\n",
@@ -604,7 +606,7 @@ main(int argc, char *argv[])
 	if (signal(SIGINT, sig_handler_term) == SIG_ERR)
 		fprintf(stderr, "cannot register handler for SIGINT\n");
 
-	optstr = "abehuwxACHIMPSWYvk:r:B:p:g:c:s:m:l:U:G:";
+	optstr = "abehuwxACHIMPSWYvk:r:B:p:g:c:s:m:l:U:G:i:";
 	while ((c = getopt_long(argc, argv, optstr, long_options,
 			&option_idx)) != -1) {
 		switch (c) {
@@ -633,6 +635,11 @@ main(int argc, char *argv[])
 		case 'g':
 			gdb_port = atoi(optarg);
 			break;
+
+		case 'i':
+			ioc_parse(optarg);
+			break;
+
 		case 'l':
 			if (lpc_device_parse(optarg) != 0) {
 				errx(EX_USAGE,
@@ -782,6 +789,7 @@ main(int argc, char *argv[])
 		pci_irq_init(ctx);
 		atkbdc_init(ctx);
 		ioapic_init(ctx);
+		ioc_init();
 
 		vrtc_init(ctx, rtc_localtime);
 		sci_init(ctx);
