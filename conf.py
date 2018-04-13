@@ -87,6 +87,9 @@ finally:
     else:
         sys.stderr.write('Warning: Could not extract hypervisor version from Makefile\n')
         version = release = "unknown"
+
+
+
 #
 # The short X.Y version.
 # version = u'0.1'
@@ -141,8 +144,26 @@ else:
         # Toc options
         'collapse_navigation': False,
         'sticky_navigation': True,
-        'navigation_depth': 4
-}
+        'navigation_depth': 4,
+    }
+
+
+# Here's where we (manually) list the document versions maintained on
+# the published doc website.  On a daily basis we publish to the
+# /latest folder but when releases are made, we publish to a /<relnum>
+# folder (specified via RELEASE=name on the make command).
+
+if tags.has('release'):
+   current_version = version
+else:
+   version = current_version = "latest"
+
+html_context = {
+   'current_version': current_version,
+   'versions': ( ("latest", "/latest/"),
+                 ("0.1-rc4", "/0.1-rc4/"),
+               )
+    }
 
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -258,3 +279,4 @@ breathe_projects = {
 	"Project ACRN" : "doxygen/xml",
 }
 breathe_default_project = "Project ACRN"
+breathe_default_members = ('members', 'undoc-members', 'content-only')

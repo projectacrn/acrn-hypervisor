@@ -1,4 +1,4 @@
-/* -- Extra CSS styles for CWP content (RTD theme) ----------------------- */
+/* -- Extra CSS styles for ACRN content (RTD theme) ----------------------- */
 
 /* make the page width fill the window */
 .wy-nav-content {
@@ -13,6 +13,27 @@
    font-weight: bold;
 }
 */
+
+/* tweak doc version selection */
+.rst-versions {
+   position: static;
+   border-top: none;
+   padding: 0px;
+}
+
+.rst-versions .rst-current-version {
+   padding: 5px;
+   background-color: #2980B9;
+   color: #80FF80;
+}
+
+.rst-versions .rst-other-versions {
+   padding: 5px;
+}
+
+div.rst-other-versions dl {
+   margin-bottom: 0;
+}
 
 /* Make the version number more visible */
 .wy-side-nav-search>div.version {

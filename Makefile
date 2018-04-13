@@ -8,13 +8,15 @@ else
 endif
 
 # You can set these variables from the command line.
-SPHINXOPTS    = -q
+SPHINXOPTS    ?= -q
 SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = "Project ACRN"
 SOURCEDIR     = .
 BUILDDIR      = _build
 
-PUBLISHDIR    = ../projectacrn.github.io
+DOC_TAG      ?= development
+RELEASE      ?= latest
+PUBLISHDIR    = ../projectacrn.github.io/$(RELEASE)
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -30,10 +32,10 @@ pullsource:
 # api folder for publishing along with the Sphinx-generated API docs.
 
 doxy: pullsource
-	$(Q)(cat acrn.doxyfile) | doxygen -  2>&1
+	$(Q)(cat acrn.doxyfile) | doxygen - > doc.log 2>&1
 
 html: doxy
-	-$(Q)$(SPHINXBUILD) -b html -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(O) > doc.log 2>&1
+	-$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b html -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(O) >> doc.log 2>&1
 	$(Q)./scripts/filter-doc-log.sh doc.log
 
 
@@ -48,8 +50,9 @@ clean:
 publish:
 	rm -fr $(PUBLISHDIR)/*
 	cp -r $(BUILDDIR)/html/* $(PUBLISHDIR)
-	cp scripts/publish-README.md $(PUBLISHDIR)/README.md
-	cd $(PUBLISHDIR); git add -A; git commit -s -m "publish"; git push origin master;
+	cp scripts/publish-README.md $(PUBLISHDIR)/../README.md
+	cp scripts/publish-index.html $(PUBLISHDIR)/../index.html
+	cd $(PUBLISHDIR)/..; git add -A; git commit -s -m "publish $(RELEASE)"; git push origin master;
 
 
 # Catch-all target: route all unknown targets to Sphinx using the new
