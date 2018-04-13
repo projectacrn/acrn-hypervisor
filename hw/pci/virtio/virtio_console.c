@@ -766,6 +766,13 @@ virtio_console_close_all(struct virtio_console *console)
 
 		be = (struct virtio_console_backend *)port->arg;
 		if (be) {
+			if (be->evp) {
+				if (be->fd != STDIN_FILENO)
+					mevent_delete_close(be->evp);
+				else
+					mevent_delete(be->evp);
+			}
+
 			virtio_console_close_backend(be);
 			free(be);
 		}
