@@ -1093,6 +1093,9 @@ virtio_net_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		} else
 			fprintf(stderr, "net->tapfd is -1!\n");
 
+		if (net->mevp != NULL)
+			mevent_delete(net->mevp);
+
 		free(net);
 
 		DPRINTF(("%s: done\n", __func__));
