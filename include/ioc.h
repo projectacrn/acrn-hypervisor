@@ -712,4 +712,10 @@ int ioc_parse(const char *opts);
 /* IOC mediator common ops */
 struct ioc_dev *ioc_init(void);
 void ioc_deinit(struct ioc_dev *dev);
+
+/* Build a cbc_request and send it to CBC protocol stack */
+void ioc_build_request(struct ioc_dev *ioc, int32_t link_len, int32_t srv_len);
+
+/* Send data to native CBC cdevs and virtual PTY(UART DM) device */
+int ioc_ch_xmit(enum ioc_ch_id id, const uint8_t *buf, size_t size);
 #endif

@@ -167,12 +167,157 @@ static struct wlist_group wlist_tx_group_table[] = {
 };
 
 /*
+ * Read data from the native CBC cdevs and virtual UART based on
+ * IOC channel ID.
+ */
+static int
+ioc_ch_recv(enum ioc_ch_id id, uint8_t *buf, size_t size)
+{
+	int fd;
+	int count;
+
+	fd = ioc_ch_tbl[id].fd;
+	if (fd < 0 || !buf || size == 0)
+		return -1;
+	count = read(fd, buf, size);
+
+	/*
+	 * Currently epoll work mode is LT, so ignore EAGAIN error.
+	 * If change epoll work mode to ET, need to handle EAGAIN.
+	 */
+	if (count < 0) {
+		DPRINTF("ioc read bytes error:%s\r\n", strerror(errno));
+		return -1;
+	}
+	return count;
+}
+
+/*
+ * Write data to the native CBC cdevs and virtual UART based on
+ * IOC channel ID.
+ */
+int
+ioc_ch_xmit(enum ioc_ch_id id, const uint8_t *buf, size_t size)
+{
+	int count = 0;
+	int fd, rc;
+
+	fd = ioc_ch_tbl[id].fd;
+	if (fd < 0 || !buf || size == 0)
+		return -1;
+	while (count < size) {
+		rc = write(fd, (buf + count), (size - count));
+
+		/*
+		 * Currently epoll work mode is LT, so ignore EAGAIN error.
+		 * If change epoll work mode to ET, need to handle EAGAIN.
+		 */
+		if (rc < 0) {
+			DPRINTF("ioc write error:%s\r\n", strerror(errno));
+			break;
+		}
+		count += rc;
+	}
+	return count;
+}
+
+/*
+ * Open native CBC cdevs.
+ */
+static int
+ioc_open_native_ch(const char *dev_name)
+{
+	int fd;
+
+	if (!dev_name)
+		return -1;
+	fd = open(dev_name, O_RDWR | O_NOCTTY | O_NONBLOCK);
+	if (fd < 0)
+		DPRINTF("ioc open %s failed:%s\r\n", dev_name, strerror(errno));
+	return fd;
+}
+
+/*
+ * Open PTY master device for IOC mediator and the PTY slave device for virtual
+ * UART. The pair(master/slave) can work as a communication channel between
+ * IOC mediator and virtual UART.
+ */
+static int
+ioc_open_virtual_uart(const char *dev_name)
+{
+	int fd;
+	char *slave_name;
+	struct termios attr;
+
+	fd = open("/dev/ptmx", O_RDWR | O_NOCTTY | O_NONBLOCK);
+	if (fd < 0)
+		goto open_err;
+	if (grantpt(fd) < 0)
+		goto pty_err;
+	if (unlockpt(fd) < 0)
+		goto pty_err;
+	slave_name = ptsname(fd);
+	if (!slave_name)
+		goto pty_err;
+	if ((unlink(dev_name) < 0) && errno != ENOENT)
+		goto pty_err;
+	if (symlink(slave_name, dev_name) < 0)
+		goto pty_err;
+	if (chmod(dev_name, 0660) < 0)
+		goto attr_err;
+	if (tcgetattr(fd, &attr) < 0)
+		goto attr_err;
+	cfmakeraw(&attr);
+	attr.c_cflag |= CLOCAL;
+	if (tcsetattr(fd, TCSANOW, &attr) < 0)
+		goto attr_err;
+	return fd;
+
+attr_err:
+	unlink(dev_name);
+pty_err:
+	close(fd);
+open_err:
+	return -1;
+}
+
+/*
  * Open native CBC cdevs and virtual UART.
  */
 static int
 ioc_ch_init(struct ioc_dev *ioc)
 {
-	/* TODO: implementation */
+	int i, fd;
+	struct ioc_ch_info *chl;
+
+	for (i = 0, chl = ioc_ch_tbl; i < ARRAY_SIZE(ioc_ch_tbl); i++, chl++) {
+		if (chl->stat == IOC_CH_OFF)
+			continue;
+
+		switch (i) {
+		case IOC_NATIVE_LFCC:
+		case IOC_NATIVE_SIGNAL:
+		case IOC_NATIVE_RAW0 ... IOC_NATIVE_RAW11:
+			fd = ioc_open_native_ch(chl->name);
+			break;
+		case IOC_VIRTUAL_UART:
+			fd = ioc_open_virtual_uart(virtual_uart_path);
+			break;
+		default:
+			fd = -1;
+			break;
+		}
+
+		/*
+		 * Critical channels must open successfully
+		 * if can not open lifecycle or virtual UART
+		 * ioc needs to exit initilization with failure
+		 */
+		if (fd < 0 && (i == IOC_NATIVE_LFCC || i == IOC_VIRTUAL_UART))
+			return -1;
+
+		chl->fd = fd;
+	}
 	return 0;
 }
 
@@ -182,7 +327,106 @@ ioc_ch_init(struct ioc_dev *ioc)
 static void
 ioc_ch_deinit(void)
 {
-	/* TODO: implementation */
+	int i;
+	struct ioc_ch_info *chl = NULL;
+
+	for (i = 0, chl = ioc_ch_tbl; i < ARRAY_SIZE(ioc_ch_tbl); i++, chl++) {
+		if (chl->fd < 0)
+			continue;
+
+		/*
+		 * No need to call EPOLL_CTL_DEL before close the fd, since
+		 * epoll_wait thread should exit before all channels release.
+		 */
+		close(chl->fd);
+		chl->fd = IOC_INIT_FD;
+	}
+}
+
+/*
+ * Called to put a cbc_request to a specific queue
+ */
+static void
+cbc_request_enqueue(struct ioc_dev *ioc, struct cbc_request *req,
+		enum cbc_queue_type qtype, bool to_head)
+{
+	pthread_cond_t *cond;
+	pthread_mutex_t *mtx;
+	struct cbc_qhead *qhead;
+
+	if (!req)
+		return;
+
+	if (qtype == CBC_QUEUE_T_RX) {
+		cond = &ioc->rx_cond;
+		mtx = &ioc->rx_mtx;
+		qhead = &ioc->rx_qhead;
+	} else if (qtype == CBC_QUEUE_T_TX) {
+		cond = &ioc->tx_cond;
+		mtx = &ioc->tx_mtx;
+		qhead = &ioc->tx_qhead;
+	} else {
+		cond = NULL;
+		mtx = &ioc->free_mtx;
+		qhead = &ioc->free_qhead;
+	}
+
+	pthread_mutex_lock(mtx);
+	if (to_head)
+		SIMPLEQ_INSERT_HEAD(qhead, req, me_queue);
+	else
+		SIMPLEQ_INSERT_TAIL(qhead, req, me_queue);
+	if (cond != NULL)
+		pthread_cond_signal(cond);
+	pthread_mutex_unlock(mtx);
+}
+
+/*
+ * Called to get a cbc_request from a specific queue,
+ * due to rx and tx threads have implemented getting a cbc_request from
+ * related queue and only core thread needs to dequque, so only supports
+ * dequeue from the free queue.
+ */
+static struct cbc_request*
+cbc_request_dequeue(struct ioc_dev *ioc, enum cbc_queue_type qtype)
+{
+	struct cbc_request *free = NULL;
+
+	if (qtype == CBC_QUEUE_T_FREE) {
+		pthread_mutex_lock(&ioc->free_mtx);
+		if (!SIMPLEQ_EMPTY(&ioc->free_qhead)) {
+			free = SIMPLEQ_FIRST(&ioc->free_qhead);
+			SIMPLEQ_REMOVE_HEAD(&ioc->free_qhead, me_queue);
+		}
+		pthread_mutex_unlock(&ioc->free_mtx);
+	}
+	return free;
+}
+
+/*
+ * Build a cbc_request with CBC link frame and add the cbc_request to
+ * the rx queue tail.
+ */
+void
+ioc_build_request(struct ioc_dev *ioc, int32_t link_len, int32_t srv_len)
+{
+	int i, pos;
+	struct cbc_ring *ring = &ioc->ring;
+	struct cbc_request *req;
+
+	req = cbc_request_dequeue(ioc, CBC_QUEUE_T_FREE);
+	if (!req) {
+		WPRINTF(("ioc queue is full!!, drop the data\n\r"));
+		return;
+	}
+	for (i = 0; i < link_len; i++) {
+		pos = (ring->head + i) & (CBC_RING_BUFFER_SIZE - 1);
+
+		req->buf[i] = ring->buf[pos];
+	}
+	req->srv_len = srv_len;
+	req->link_len = link_len;
+	cbc_request_enqueue(ioc, req, CBC_QUEUE_T_RX, false);
 }
 
 /*
@@ -191,7 +435,17 @@ ioc_ch_deinit(void)
 static int
 ioc_process_rx(struct ioc_dev *ioc, enum ioc_ch_id id)
 {
-	/* TODO: implementation */
+	uint8_t c;
+
+	/*
+	 * Read virtual UART data byte one by one
+	 * FIXME: if IOC DM can get several bytes one time
+	 * then need to improve this
+	 */
+	if (ioc_ch_recv(id, &c, sizeof(c)) < 0)
+		return -1;
+
+	/* TODO: Build a cbc_request */
 	return 0;
 }
 
@@ -201,7 +455,33 @@ ioc_process_rx(struct ioc_dev *ioc, enum ioc_ch_id id)
 static int
 ioc_process_tx(struct ioc_dev *ioc, enum ioc_ch_id id)
 {
-	/* TODO: implementation */
+	int count;
+	struct cbc_request *req;
+
+	req = cbc_request_dequeue(ioc, CBC_QUEUE_T_FREE);
+	if (!req) {
+		WPRINTF("ioc free queue is full!!, drop the data\r\n");
+		return -1;
+	}
+
+	/*
+	 * The data from native CBC cdevs and each receiving can read a complete
+	 * CBC service frame, so copy the bytes to the CBC service start
+	 * position.
+	 */
+	count = ioc_ch_recv(id, req->buf + CBC_SRV_POS, CBC_MAX_SERVICE_SIZE);
+	if (count <= 0) {
+		cbc_request_enqueue(ioc, req, CBC_QUEUE_T_FREE, false);
+		DPRINTF("ioc channel=%d,recv error\r\n", id);
+		return -1;
+	}
+
+	/* Build a cbc_request and send it to Tx queue */
+	req->srv_len = count;
+	req->link_len = 0;
+	req->rtype = CBC_REQ_T_PROT;
+	req->id = id;
+	cbc_request_enqueue(ioc, req, CBC_QUEUE_T_TX, false);
 	return 0;
 }
 
@@ -278,7 +558,47 @@ exit:
 static void *
 ioc_rx_thread(void *arg)
 {
-	/* TODO: implementation */
+	struct ioc_dev *ioc = (struct ioc_dev *) arg;
+	struct cbc_request *req = NULL;
+	struct cbc_pkt packet;
+	int err;
+
+	memset(&packet, 0, sizeof(packet));
+	packet.cfg = &ioc->rx_config;
+	for (;;) {
+		pthread_mutex_lock(&ioc->rx_mtx);
+		while (SIMPLEQ_EMPTY(&ioc->rx_qhead)) {
+			err = pthread_cond_wait(&ioc->rx_cond, &ioc->rx_mtx);
+			assert(err == 0);
+			if (ioc->closing)
+				goto exit;
+		}
+		if (ioc->closing)
+			goto exit;
+
+		/* Get a cbc request from the queue head */
+		req = SIMPLEQ_FIRST(&ioc->rx_qhead);
+		SIMPLEQ_REMOVE_HEAD(&ioc->rx_qhead, me_queue);
+		pthread_mutex_unlock(&ioc->rx_mtx);
+		packet.req = req;
+
+		/*
+		 * Reset the queue type to free queue
+		 * prepare for routing after main process
+		 */
+		packet.qtype = CBC_QUEUE_T_FREE;
+
+		/* rx main process */
+		ioc->ioc_dev_rx(&packet);
+
+		/* Route the cbc_request */
+		if (packet.qtype == CBC_QUEUE_T_TX)
+			cbc_request_enqueue(ioc, req, CBC_QUEUE_T_TX, true);
+		else
+			cbc_request_enqueue(ioc, req, CBC_QUEUE_T_FREE, false);
+	}
+exit:
+	pthread_mutex_unlock(&ioc->rx_mtx);
 	return NULL;
 }
 
@@ -289,7 +609,47 @@ ioc_rx_thread(void *arg)
 static void *
 ioc_tx_thread(void *arg)
 {
-	/* TODO: implementation */
+	struct ioc_dev *ioc = (struct ioc_dev *) arg;
+	struct cbc_request *req = NULL;
+	struct cbc_pkt packet;
+	int err;
+
+	memset(&packet, 0, sizeof(packet));
+	packet.cfg = &ioc->tx_config;
+	for (;;) {
+		pthread_mutex_lock(&ioc->tx_mtx);
+		while (SIMPLEQ_EMPTY(&ioc->tx_qhead)) {
+			err =  pthread_cond_wait(&ioc->tx_cond, &ioc->tx_mtx);
+			assert(err == 0);
+			if (ioc->closing)
+				goto exit;
+		}
+		if (ioc->closing)
+			goto exit;
+
+		/* Get a cbc request from the queue head */
+		req = SIMPLEQ_FIRST(&ioc->tx_qhead);
+		SIMPLEQ_REMOVE_HEAD(&ioc->tx_qhead, me_queue);
+		pthread_mutex_unlock(&ioc->tx_mtx);
+		packet.req = req;
+
+		/*
+		 * Reset the queue type to free queue
+		 * prepare for routing after main process
+		 */
+		packet.qtype = CBC_QUEUE_T_FREE;
+
+		/* tx main process */
+		ioc->ioc_dev_tx(&packet);
+
+		/* Route the cbc_request */
+		if (packet.qtype == CBC_QUEUE_T_RX)
+			cbc_request_enqueue(ioc, req, CBC_QUEUE_T_RX, true);
+		else
+			cbc_request_enqueue(ioc, req, CBC_QUEUE_T_FREE, false);
+	}
+exit:
+	pthread_mutex_unlock(&ioc->tx_mtx);
 	return NULL;
 }
 
@@ -299,7 +659,31 @@ ioc_tx_thread(void *arg)
 static void
 ioc_kill_workers(struct ioc_dev *ioc)
 {
-	/* TODO: implementation */
+	ioc->closing = 1;
+
+	/* Stop IOC core thread */
+	close(ioc->epfd);
+	ioc->epfd = IOC_INIT_FD;
+	pthread_join(ioc->tid, NULL);
+
+	/* Stop IOC rx thread */
+	pthread_mutex_lock(&ioc->rx_mtx);
+	pthread_cond_signal(&ioc->rx_cond);
+	pthread_mutex_unlock(&ioc->rx_mtx);
+	pthread_join(ioc->rx_tid, NULL);
+
+	/* Stop IOC tx thread */
+	pthread_mutex_lock(&ioc->tx_mtx);
+	pthread_cond_signal(&ioc->tx_cond);
+	pthread_mutex_unlock(&ioc->tx_mtx);
+	pthread_join(ioc->tx_tid, NULL);
+
+	/* Release the cond and mutex */
+	pthread_mutex_destroy(&ioc->rx_mtx);
+	pthread_cond_destroy(&ioc->rx_cond);
+	pthread_mutex_destroy(&ioc->tx_mtx);
+	pthread_cond_destroy(&ioc->tx_cond);
+	pthread_mutex_destroy(&ioc->free_mtx);
 }
 
 static int
