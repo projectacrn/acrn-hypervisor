@@ -171,7 +171,7 @@ void console_dump_bytes(const void *p, unsigned int len)
 	/* dump all bytes */
 	while (x < e) {
 		/* write the address of the first byte in the row */
-		printf("%08x: ", (vaddr_t) x);
+		printf("%08x: ", (uint64_t) x);
 		/* print one row (16 bytes) as hexadecimal values */
 		for (i = 0; i < 16; i++)
 			printf("%02x ", x[i]);

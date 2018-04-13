@@ -88,26 +88,22 @@ enum UART_REG_IDX{
 #define UART_CLOCK_RATE		CPU_OSC_CLOCK
 #define UART_BUFFER_SIZE		2048
 
-static inline uint32_t uart16550_read_reg(uint32_t base, uint32_t reg_idx)
+static inline uint32_t uart16550_read_reg(uint64_t base, uint32_t reg_idx)
 {
 	if (serial_port_mapped) {
-		return io_read_byte((ioport_t)
-			((uint8_t *)(uint64_t)base + reg_idx));
+		return io_read_byte((uint16_t)base + reg_idx);
 	} else {
-		return mmio_read_long((mmio_addr_t)
-			((uint32_t *)(uint64_t)base + reg_idx));
+		return mmio_read_long((uint64_t)((uint32_t*)base + reg_idx));
 	}
 }
 
-static inline void uart16550_write_reg(uint32_t base,
+static inline void uart16550_write_reg(uint64_t base,
 	uint32_t val, uint32_t reg_idx)
 {
 	if (serial_port_mapped) {
-		io_write_byte(val, (ioport_t)
-			((uint8_t *)(uint64_t)base + reg_idx));
+		io_write_byte(val, (uint16_t)base + reg_idx);
 	} else {
-		mmio_write_long(val, (mmio_addr_t)
-			((uint32_t *)(uint64_t)base + reg_idx));
+		mmio_write_long(val, (uint64_t)((uint32_t*)base + reg_idx));
 	}
 }
 

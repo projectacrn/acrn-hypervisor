@@ -58,10 +58,6 @@ typedef unsigned int uint32_t;
 typedef unsigned long uint64_t;
 typedef signed long int64_t;
 typedef unsigned int size_t;
-typedef unsigned long mmio_addr_t;
-typedef unsigned long vaddr_t;
-typedef unsigned long paddr_t;
-typedef unsigned long ioport_t;
 typedef __builtin_va_list va_list;
 
 typedef uint8_t bool;
