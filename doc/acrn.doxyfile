@@ -150,7 +150,7 @@ INLINE_INHERITED_MEMB  = NO
 # shortest path that makes the file name unique will be used
 # The default value is: YES.
 
-FULL_PATH_NAMES        = NO
+FULL_PATH_NAMES        = YES
 
 # The STRIP_FROM_PATH tag can be used to strip a user-defined part of the path.
 # Stripping is only done if one of the specified strings matches the left-hand
@@ -220,7 +220,7 @@ INHERIT_DOCS           = YES
 # of the file/class/namespace that contains it.
 # The default value is: NO.
 
-SEPARATE_MEMBER_PAGES  = NO
+SEPARATE_MEMBER_PAGES  = YES
 
 # The TAB_SIZE tag can be used to set the number of spaces in a tab. Doxygen
 # uses this value to replace tabs by spaces in code fragments.
@@ -447,13 +447,13 @@ EXTRACT_PRIVATE        = NO
 # scope will be included in the documentation.
 # The default value is: NO.
 
-EXTRACT_PACKAGE        = NO
+EXTRACT_PACKAGE        = YES
 
 # If the EXTRACT_STATIC tag is set to YES, all static members of a file will be
 # included in the documentation.
 # The default value is: NO.
 
-EXTRACT_STATIC         = NO
+EXTRACT_STATIC         = YES
 
 # If the EXTRACT_LOCAL_CLASSES tag is set to YES, classes (and structs) defined
 # locally in source files will be included in the documentation. If set to NO,
@@ -551,7 +551,7 @@ SHOW_INCLUDE_FILES     = YES
 # which file to include in order to use the member.
 # The default value is: NO.
 
-SHOW_GROUPED_MEMB_INC  = NO
+SHOW_GROUPED_MEMB_INC  = YES
 
 # If the FORCE_LOCAL_INCLUDES tag is set to YES then doxygen will list include
 # files with double quotes in the documentation rather than with sharp brackets.
@@ -597,7 +597,7 @@ SORT_MEMBERS_CTORS_1ST = NO
 # appear in their defined order.
 # The default value is: NO.
 
-SORT_GROUP_NAMES       = NO
+SORT_GROUP_NAMES       = YES
 
 # If the SORT_BY_SCOPE_NAME tag is set to YES, the class list will be sorted by
 # fully-qualified names, including namespaces. If set to NO, the class list will
@@ -607,7 +607,7 @@ SORT_GROUP_NAMES       = NO
 # list.
 # The default value is: NO.
 
-SORT_BY_SCOPE_NAME     = NO
+SORT_BY_SCOPE_NAME     = YES
 
 # If the STRICT_PROTO_MATCHING option is enabled and doxygen fails to do proper
 # type resolution of all parameters of a function it will reject a match between
@@ -648,7 +648,7 @@ GENERATE_DEPRECATEDLIST= YES
 # sections, marked by \if <section_label> ... \endif and \cond <section_label>
 # ... \endcond blocks.
 
-ENABLED_SECTIONS       =
+ENABLED_SECTIONS       = YES
 
 # The MAX_INITIALIZER_LINES tag determines the maximum number of lines that the
 # initial value of a variable or macro / define can have for it to appear in the
@@ -1215,7 +1215,7 @@ HTML_TIMESTAMP         = NO
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_DYNAMIC_SECTIONS  = NO
+HTML_DYNAMIC_SECTIONS  = YES
 
 # With HTML_INDEX_NUM_ENTRIES one can control the preferred number of entries
 # shown in the various tree structured indices initially; the user can expand
