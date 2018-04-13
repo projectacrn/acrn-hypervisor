@@ -44,19 +44,15 @@ enum mem_map_request_type {
 	PAGING_REQUEST_TYPE_UNKNOWN,
 };
 
-struct mm_capability {
-	bool ept_x_only_supported;
-	/* EPT and MMU 1-GByte page supported flag */
-	bool ept_1gb_page_supported;
-	bool invept_supported;
-	bool invept_single_context_supported;
-	bool invept_global_context_supported;
-	bool invvpid_supported;
-	bool invvpid_single_context_supported;
-	bool invvpid_global_context_supported;
+static struct vmx_capability {
+	uint32_t ept;
+	uint32_t vpid;
+} vmx_caps;
+
+static struct mm_capability {
+	/* MMU 1-GByte page supported flag */
 	bool mmu_1gb_page_supported;
-};
-static struct mm_capability mm_caps;
+} mm_caps;
 
 #define INVEPT_TYPE_SINGLE_CONTEXT      1UL
 #define INVEPT_TYPE_ALL_CONTEXTS        2UL
@@ -93,31 +89,25 @@ static inline void inv_tlb_one_page(void *addr)
 	asm volatile ("invlpg (%0)"  : : "r" (addr) : "memory");
 }
 
+static inline bool cpu_has_vmx_ept_cap(uint32_t bit_mask)
+{
+	return !!(vmx_caps.ept & bit_mask);
+}
+
+static inline bool cpu_has_vmx_vpid_cap(uint32_t bit_mask)
+{
+	return !!(vmx_caps.vpid & bit_mask);
+}
+
 static void check_mmu_capability(void)
 {
 	uint64_t val;
 	uint32_t  eax, ebx, ecx, edx;
 
-	memset(&mm_caps, 0, sizeof(struct mm_capability));
-
 	/* Read the MSR register of EPT and VPID Capability -  SDM A.10 */
 	val = msr_read(MSR_IA32_VMX_EPT_VPID_CAP);
-	mm_caps.ept_x_only_supported = (val & MSR_VMX_EPT_X_ONLY)
-		? (true) : (false);
-	mm_caps.ept_1gb_page_supported = (val & MSR_VMX_EPT_VPID_CAP_1GB)
-		? (true) : (false);
-	mm_caps.invept_supported =
-		(val & MSR_VMX_INVEPT) ? (true) : (false);
-	mm_caps.invept_single_context_supported =
-		(val & MSR_VMX_INVEPT_SINGLE_CONTEXT) ? (true) : (false);
-	mm_caps.invept_global_context_supported =
-		(val & MSR_VMX_INVEPT_GLOBAL_CONTEXT) ? (true) : (false);
-	mm_caps.invvpid_supported =
-		(val & MSR_VMX_INVVPID) ? (true) : (false);
-	mm_caps.invvpid_single_context_supported =
-		(val & MSR_VMX_INVVPID_SINGLE_CONTEXT) ? (true) : (false);
-	mm_caps.invvpid_global_context_supported =
-		(val & MSR_VMX_INVVPID_GLOBAL_CONTEXT) ? (true) : (false);
+	vmx_caps.ept = (uint32_t) val;
+	vmx_caps.vpid = (uint32_t) (val >> 32);
 
 	/* Read CPUID to check if PAGE1GB is supported
 	 * SDM 4.1.4 If CPUID.80000001H:EDX.Page1GB[bit26]=1,
@@ -127,32 +117,15 @@ static void check_mmu_capability(void)
 	mm_caps.mmu_1gb_page_supported = (edx & CPUID_EDX_PAGE1GB) ?
 							(true) : (false);
 
-	if (!mm_caps.invept_supported)
+	if (!cpu_has_vmx_ept_cap(VMX_EPT_INVEPT))
 		panic("invept must be supported");
-}
-
-static inline bool check_ept_x_only_support(void)
-{
-	return mm_caps.ept_x_only_supported;
-}
-
-static inline bool check_invept_single_support(void)
-{
-	return mm_caps.invept_supported &&
-			mm_caps.invept_single_context_supported;
-}
-
-static inline bool check_invept_global_support(void)
-{
-	return mm_caps.invept_supported &&
-			mm_caps.invept_global_context_supported;
 }
 
 void invept(struct vcpu *vcpu)
 {
 	struct invept_desc desc = {0};
 
-	if (check_invept_single_support()) {
+	if (cpu_has_vmx_ept_cap(VMX_EPT_INVEPT_SINGLE_CONTEXT)) {
 		desc.eptp = vcpu->vm->arch_vm.nworld_eptp | (3 << 3) | 6;
 		_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
 		if (vcpu->vm->sworld_control.sworld_enabled) {
@@ -161,7 +134,7 @@ void invept(struct vcpu *vcpu)
 			_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
 
 		}
-	} else if (check_invept_global_support())
+	} else if (cpu_has_vmx_ept_cap(VMX_EPT_INVEPT_GLOBAL_CONTEXT))
 		_invept(INVEPT_TYPE_ALL_CONTEXTS, desc);
 }
 
@@ -170,7 +143,7 @@ static bool check_mmu_1gb_support(struct map_params *map_params)
 	bool status = false;
 
 	if (map_params->page_table_type == PTT_EPT)
-		status = mm_caps.ept_1gb_page_supported;
+		status = cpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE);
 	else
 		status = mm_caps.mmu_1gb_page_supported;
 	return status;
@@ -191,7 +164,7 @@ static inline uint32_t check_page_table_present(int page_table_type,
 		if ((table_entry == IA32E_EPT_W_BIT) ||
 			(table_entry == (IA32E_EPT_W_BIT | IA32E_EPT_X_BIT)) ||
 			((table_entry == IA32E_EPT_X_BIT) &&
-			!check_ept_x_only_support()))
+			!cpu_has_vmx_ept_cap(VMX_EPT_EXECUTE_ONLY)))
 			return PT_MISCFG_PRESENT;
 	} else {
 		table_entry &= (IA32E_COMM_P_BIT);
@@ -905,7 +878,7 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 		 * current page size, obtain the starting physical address
 		 * aligned of current page size
 		 */
-		pa = ((((uint64_t)paddr) / page_size) * page_size);
+		pa = ((uint64_t)paddr) & ~(page_size - 1);
 		if (map_params->page_table_type == PTT_EPT) {
 			/* Keep original attribute(here &0x3f)
 			 * bit 0(R) bit1(W) bit2(X) bit3~5 MT
