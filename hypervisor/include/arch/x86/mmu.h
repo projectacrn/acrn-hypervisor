@@ -315,6 +315,7 @@ struct mem_io_node {
 };
 
 uint64_t get_paging_pml4(void);
+bool check_mmu_1gb_support(int page_table_type);
 void *alloc_paging_struct(void);
 void free_paging_struct(void *ptr);
 void enable_paging(uint64_t pml4_base_addr);
