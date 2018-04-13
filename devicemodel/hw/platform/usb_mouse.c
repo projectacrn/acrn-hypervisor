@@ -39,10 +39,8 @@
 #include "console.h"
 #include "gc.h"
 
-static int umouse_debug;
-#define	DPRINTF(params) do { if (umouse_debug) printf params; } while (0)
-#define	WPRINTF(params) (printf params)
-
+#undef LOG_TAG
+#define LOG_TAG "umouse: "
 /* USB endpoint context (1-15) for reporting mouse data events*/
 #define	UMOUSE_INTR_ENDPT	1
 
@@ -290,7 +288,7 @@ umouse_init(struct usb_hci *hci, char *opt)
 
 	dev = calloc(1, sizeof(struct umouse_vdev));
 	if (!dev) {
-		WPRINTF(("umouse: calloc returns NULL\n"));
+		UPRINTF(LFTL, "calloc returns NULL\n");
 		return NULL;
 	}
 	dev->hci = hci;
@@ -345,7 +343,7 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 	eshort = 0;
 
 	if (!xfer->ureq) {
-		DPRINTF(("%s: port %d\r\n", __func__, dev->hci->hci_port));
+		UPRINTF(LDBG, "%s: port %d\r\n", __func__, dev->hci->hci_port);
 		goto done;
 	}
 
@@ -353,14 +351,14 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 	index = xfer->ureq->wIndex;
 	len = xfer->ureq->wLength;
 
-	DPRINTF(("%s: port %d, type 0x%x, req 0x%x,"
+	UPRINTF(LDBG, "%s: port %d, type 0x%x, req 0x%x,"
 		 "val 0x%x, idx 0x%x, len %u\r\n", __func__,
 		 dev->hci->hci_port, xfer->ureq->bmRequestType,
-		 xfer->ureq->bRequest, value, index, len));
+		 xfer->ureq->bRequest, value, index, len);
 
 	switch (UREQ(xfer->ureq->bRequest, xfer->ureq->bmRequestType)) {
 	case UREQ(UR_GET_CONFIG, UT_READ_DEVICE):
-		DPRINTF(("umouse: (UR_GET_CONFIG, UT_READ_DEVICE)\r\n"));
+		UPRINTF(LDBG, "(UR_GET_CONFIG, UT_READ_DEVICE)\r\n");
 		if (!data)
 			break;
 
@@ -371,17 +369,17 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 		break;
 
 	case UREQ(UR_GET_DESCRIPTOR, UT_READ_DEVICE):
-		DPRINTF(("umouse: (UR_GET_DESCRIPTOR,UT_READ_DEVICE)"
+		UPRINTF(LDBG, "(UR_GET_DESCRIPTOR,UT_READ_DEVICE)"
 			 "val %x\r\n",
-			value >> 8));
+			value >> 8);
 		if (!data)
 			break;
 
 		switch (value >> 8) {
 		case UDESC_DEVICE:
-			DPRINTF(("umouse: (->UDESC_DEVICE) len %u"
+			UPRINTF(LDBG, "(->UDESC_DEVICE) len %u"
 				 "?= sizeof(umouse_dev_desc) %lu\r\n",
-				 len, sizeof(umouse_dev_desc)));
+				 len, sizeof(umouse_dev_desc));
 			if ((value & 0xFF) != 0) {
 				err = USB_ERR_IOERROR;
 				goto done;
@@ -396,7 +394,7 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 			break;
 
 		case UDESC_CONFIG:
-			DPRINTF(("umouse: (->UDESC_CONFIG)\r\n"));
+			UPRINTF(LDBG, "(->UDESC_CONFIG)\r\n");
 			if ((value & 0xFF) != 0) {
 				err = USB_ERR_IOERROR;
 				goto done;
@@ -412,7 +410,7 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 			break;
 
 		case UDESC_STRING:
-			DPRINTF(("umouse: (->UDESC_STRING)\r\n"));
+			UPRINTF(LDBG, "(->UDESC_STRING)\r\n");
 			str = NULL;
 			if ((value & 0xFF) < UMSTR_MAX)
 				str = umouse_desc_strings[value & 0xFF];
@@ -455,7 +453,7 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 			break;
 
 		case UDESC_BOS:
-			DPRINTF(("umouse: USB3 BOS\r\n"));
+			UPRINTF(LDBG, "USB3 BOS\r\n");
 			if (len > sizeof(umouse_bosd)) {
 				data->blen = len - sizeof(umouse_bosd);
 				len = sizeof(umouse_bosd);
@@ -466,7 +464,7 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 			break;
 
 		default:
-			DPRINTF(("umouse: unknown(%d)->ERROR\r\n", value >> 8));
+			UPRINTF(LDBG, "unknown(%d)->ERROR\r\n", value >> 8);
 			err = USB_ERR_IOERROR;
 			goto done;
 		}
@@ -474,9 +472,9 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 		break;
 
 	case UREQ(UR_GET_DESCRIPTOR, UT_READ_INTERFACE):
-		DPRINTF(("umouse: (UR_GET_DESCRIPTOR, UT_READ_INTERFACE)"
+		UPRINTF(LDBG, "(UR_GET_DESCRIPTOR, UT_READ_INTERFACE)"
 			 "0x%x\r\n",
-			 (value >> 8)));
+			 (value >> 8));
 		if (!data)
 			break;
 
@@ -491,7 +489,7 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 			data->bdone += len;
 			break;
 		default:
-			DPRINTF(("umouse: IO ERROR\r\n"));
+			UPRINTF(LWRN, "IO ERROR\r\n");
 			err = USB_ERR_IOERROR;
 			goto done;
 		}
@@ -499,10 +497,10 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 		break;
 
 	case UREQ(UR_GET_INTERFACE, UT_READ_INTERFACE):
-		DPRINTF(("umouse: (UR_GET_INTERFACE, UT_READ_INTERFACE)\r\n"));
+		UPRINTF(LDBG, "(UR_GET_INTERFACE, UT_READ_INTERFACE)\r\n");
 		if (index != 0) {
-			DPRINTF(("umouse get_interface, invalid index %d\r\n",
-				index));
+			UPRINTF(LDBG, "get_interface, invalid index %d\r\n",
+				index);
 			err = USB_ERR_IOERROR;
 			goto done;
 		}
@@ -519,7 +517,7 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 		break;
 
 	case UREQ(UR_GET_STATUS, UT_READ_DEVICE):
-		DPRINTF(("umouse: (UR_GET_STATUS, UT_READ_DEVICE)\r\n"));
+		UPRINTF(LDBG, "umouse: (UR_GET_STATUS, UT_READ_DEVICE)\r\n");
 		if (!data)
 			break;
 
@@ -537,7 +535,7 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 
 	case UREQ(UR_GET_STATUS, UT_READ_INTERFACE):
 	case UREQ(UR_GET_STATUS, UT_READ_ENDPOINT):
-		DPRINTF(("umouse: (UR_GET_STATUS, UT_READ_INTERFACE)\r\n"));
+		UPRINTF(LDBG, "(UR_GET_STATUS, UT_READ_INTERFACE)\r\n");
 		if (!data)
 			break;
 
@@ -551,28 +549,28 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 
 	case UREQ(UR_SET_ADDRESS, UT_WRITE_DEVICE):
 		/* XXX Controller should've handled this */
-		DPRINTF(("umouse set address %u\r\n", value));
+		UPRINTF(LDBG, "set address %u\r\n", value);
 		break;
 
 	case UREQ(UR_SET_CONFIG, UT_WRITE_DEVICE):
-		DPRINTF(("umouse set config %u\r\n", value));
+		UPRINTF(LDBG, "set config %u\r\n", value);
 		break;
 
 	case UREQ(UR_SET_DESCRIPTOR, UT_WRITE_DEVICE):
-		DPRINTF(("umouse set descriptor %u\r\n", value));
+		UPRINTF(LDBG, "set descriptor %u\r\n", value);
 		break;
 
 
 	case UREQ(UR_CLEAR_FEATURE, UT_WRITE_DEVICE):
-		DPRINTF(("umouse: (UR_SET_FEATURE,UT_WRITE_DEVICE) %x\r\n",
-			 value));
+		UPRINTF(LDBG, "(UR_SET_FEATURE,UT_WRITE_DEVICE) %x\r\n",
+			 value);
 		if (value == UF_DEVICE_REMOTE_WAKEUP)
 			dev->hid.feature = 0;
 		break;
 
 	case UREQ(UR_SET_FEATURE, UT_WRITE_DEVICE):
-		DPRINTF(("umouse: (UR_SET_FEATURE,UT_WRITE_DEVICE) %x\r\n",
-			 value));
+		UPRINTF(LDBG, "(UR_SET_FEATURE,UT_WRITE_DEVICE) %x\r\n",
+			 value);
 		if (value == UF_DEVICE_REMOTE_WAKEUP)
 			dev->hid.feature = UF_DEVICE_REMOTE_WAKEUP;
 		break;
@@ -581,32 +579,32 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 	case UREQ(UR_CLEAR_FEATURE, UT_WRITE_ENDPOINT):
 	case UREQ(UR_SET_FEATURE, UT_WRITE_INTERFACE):
 	case UREQ(UR_SET_FEATURE, UT_WRITE_ENDPOINT):
-		DPRINTF(("umouse: (UR_CLEAR_FEATURE,UT_WRITE_INTERFACE)\r\n"
-			 ));
+		UPRINTF(LDBG, "(UR_CLEAR_FEATURE,UT_WRITE_INTERFACE)\r\n"
+			 );
 		err = USB_ERR_IOERROR;
 		goto done;
 
 	case UREQ(UR_SET_INTERFACE, UT_WRITE_INTERFACE):
-		DPRINTF(("umouse set interface %u\r\n", value));
+		UPRINTF(LDBG, "set interface %u\r\n", value);
 		break;
 
 	case UREQ(UR_ISOCH_DELAY, UT_WRITE_DEVICE):
-		DPRINTF(("umouse set isoch delay %u\r\n", value));
+		UPRINTF(LDBG, "set isoch delay %u\r\n", value);
 		break;
 
 	case UREQ(UR_SET_SEL, 0):
-		DPRINTF(("umouse set sel\r\n"));
+		UPRINTF(LDBG, "set sel\r\n");
 		break;
 
 	case UREQ(UR_SYNCH_FRAME, UT_WRITE_ENDPOINT):
-		DPRINTF(("umouse synch frame\r\n"));
+		UPRINTF(LDBG, "synch frame\r\n");
 		break;
 
 	/* HID device requests */
 
 	case UREQ(UMOUSE_GET_REPORT, UT_READ_CLASS_INTERFACE):
-		DPRINTF(("umouse: (UMOUSE_GET_REPORT,UT_READ_CLASS_INTERFACE) "
-			 "0x%x\r\n", (value >> 8)));
+		UPRINTF(LDBG, "(UMOUSE_GET_REPORT,UT_READ_CLASS_INTERFACE) "
+			 "0x%x\r\n", (value >> 8));
 		if (!data)
 			break;
 
@@ -653,27 +651,27 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 		break;
 
 	case UREQ(UMOUSE_SET_REPORT, UT_WRITE_CLASS_INTERFACE):
-		DPRINTF(("umouse: (UMOUSE_SET_REPORT,"
+		UPRINTF(LDBG, "(UMOUSE_SET_REPORT,"
 			 "UT_WRITE_CLASS_INTERFACE) ignored\r\n"
-			 ));
+			 );
 		break;
 
 	case UREQ(UMOUSE_SET_IDLE, UT_WRITE_CLASS_INTERFACE):
 		dev->hid.idle = xfer->ureq->wValue >> 8;
-		DPRINTF(("umouse: (UMOUSE_SET_IDLE,"
+		UPRINTF(LDBG, "(UMOUSE_SET_IDLE,"
 			 "UT_WRITE_CLASS_INTERFACE) %x\r\n",
-			dev->hid.idle));
+			dev->hid.idle);
 		break;
 
 	case UREQ(UMOUSE_SET_PROTOCOL, UT_WRITE_CLASS_INTERFACE):
 		dev->hid.protocol = xfer->ureq->wValue >> 8;
-		DPRINTF(("umouse: (UR_CLEAR_FEATURE,"
+		UPRINTF(LDBG, "(UR_CLEAR_FEATURE,"
 			 "UT_WRITE_CLASS_INTERFACE) %x\r\n",
-			dev->hid.protocol));
+			dev->hid.protocol);
 		break;
 
 	default:
-		DPRINTF(("**** umouse request unhandled\r\n"));
+		UPRINTF(LDBG, "**** umouse request unhandled\r\n");
 		err = USB_ERR_IOERROR;
 		break;
 	}
@@ -685,8 +683,8 @@ done:
 	else if (eshort)
 		err = USB_ERR_SHORT_XFER;
 
-	DPRINTF(("umouse request error code %d (0=ok), blen %u txlen %u\r\n",
-		err, (data ? data->blen : 0), (data ? data->bdone : 0)));
+	UPRINTF(LDBG, "request error code %d (0=ok), blen %u txlen %u\r\n",
+		err, (data ? data->blen : 0), (data ? data->bdone : 0));
 
 	return err;
 }
@@ -703,8 +701,8 @@ umouse_data_handler(void *scarg, struct usb_data_xfer *xfer, int dir,
 
 	assert(xfer != NULL && xfer->head >= 0);
 
-	DPRINTF(("umouse handle data - DIR=%s|EP=%d, blen %d\r\n",
-		dir ? "IN" : "OUT", epctx, xfer->data[0].blen));
+	UPRINTF(LDBG, "handle data - DIR=%s|EP=%d, blen %d\r\n",
+		dir ? "IN" : "OUT", epctx, xfer->data[0].blen);
 
 	/* find buffer to add data */
 	udata = NULL;
@@ -729,7 +727,7 @@ umouse_data_handler(void *scarg, struct usb_data_xfer *xfer, int dir,
 	len = data->blen;
 
 	if (udata == NULL) {
-		DPRINTF(("umouse no buffer provided for input\r\n"));
+		UPRINTF(LDBG, "no buffer provided for input\r\n");
 		err = USB_ERR_NOMEM;
 		goto done;
 	}

@@ -36,6 +36,7 @@
 #include "usb_core.h"
 
 SET_DECLARE(usb_emu_set, struct usb_devemu);
+int usb_log_level;
 
 struct usb_devemu *
 usb_emu_finddev(char *name)
