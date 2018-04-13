@@ -444,8 +444,8 @@ ioc_process_rx(struct ioc_dev *ioc, enum ioc_ch_id id)
 	 */
 	if (ioc_ch_recv(id, &c, sizeof(c)) < 0)
 		return -1;
-
-	/* TODO: Build a cbc_request */
+	if (cbc_copy_to_ring(&c, 1, &ioc->ring) == 0)
+		cbc_unpack_link(ioc);
 	return 0;
 }
 
@@ -696,26 +696,6 @@ ioc_create_thread(const char *name, pthread_t *tid,
 	}
 	pthread_setname_np(*tid, name);
 	return 0;
-}
-
-/*
- * Process rx direction data flow, the rx direction is that
- * virtual UART -> native CBC cdevs.
- */
-static void
-cbc_rx_handler(struct cbc_pkt *pkt)
-{
-	/* TODO: implementation */
-}
-
-/*
- * Process tx direction data flow, the tx direction is that
- * native CBC cdevs -> virtual UART.
- */
-static void
-cbc_tx_handler(struct cbc_pkt *pkt)
-{
-	/* TODO: implementation */
 }
 
 /*
