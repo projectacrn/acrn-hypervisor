@@ -62,6 +62,7 @@ struct vhm_request;
 struct e820_mem_params {
 	uint64_t mem_bottom;
 	uint64_t mem_top;
+	uint64_t total_mem_size;
 	uint64_t max_ram_blk_base; /* used for the start address of UOS */
 	uint64_t max_ram_blk_size;
 };

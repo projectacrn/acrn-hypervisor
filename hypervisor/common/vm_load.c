@@ -187,6 +187,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 		strcpy_s((char *)hva, MEM_2K,
 				vm->sw.linux_info.bootargs_src_addr);
 
+#ifdef CONFIG_CMA
 		/* add "cma=XXXXM@0xXXXXXXXX" to cmdline*/
 		if (is_vm0(vm) && (e820_mem.max_ram_blk_size > 0)) {
 			snprintf(dyn_bootargs, 100, " cma=%dM@0x%llx\n",
@@ -197,6 +198,32 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 					+vm->sw.linux_info.bootargs_size - 1,
 					100, dyn_bootargs);
 		}
+#else
+		/* add "hugepagesz=1G hugepages=x" to cmdline for 1G hugepage
+		 * reserving. Current strategy is "total_mem_size in Giga -
+		 * remained 1G pages" for reserving.
+		 */
+		if (is_vm0(vm) && check_mmu_1gb_support(PTT_HOST)) {
+			int reserving_1g_pages;
+
+#ifdef CONFIG_REMAIN_1G_PAGES
+			reserving_1g_pages = (e820_mem.total_mem_size >> 30) -
+						CONFIG_REMAIN_1G_PAGES;
+#else
+			reserving_1g_pages = (e820_mem.total_mem_size >> 30) -
+						3;
+#endif
+			if (reserving_1g_pages > 0) {
+				snprintf(dyn_bootargs, 100,
+					" hugepagesz=1G hugepages=%d\n",
+					reserving_1g_pages);
+				/* Delete '\n' at the end of cmdline */
+				strcpy_s((char *)hva
+					+vm->sw.linux_info.bootargs_size - 1,
+					100, dyn_bootargs);
+			}
+		}
+#endif
 
 		/* Check if a RAM disk is present with Linux guest */
 		if (vm->sw.linux_info.ramdisk_src_addr) {
