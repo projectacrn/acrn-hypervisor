@@ -44,4 +44,5 @@ void	uart_legacy_dealloc(int which);
 uint8_t	uart_read(struct uart_vdev *uart, int offset);
 void	uart_write(struct uart_vdev *uart, int offset, uint8_t value);
 int	uart_set_backend(struct uart_vdev *uart, const char *opt);
+void	uart_release_backend(struct uart_vdev *uart, const char *opts);
 #endif

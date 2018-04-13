@@ -274,6 +274,18 @@ uart_opentty(struct uart_vdev *uart)
 	}
 }
 
+static void
+uart_closetty(struct uart_vdev *uart)
+{
+	if (uart->tty.fd != STDIN_FILENO)
+		mevent_delete_close(uart->mev);
+	else
+		mevent_delete(uart->mev);
+
+	uart->mev = 0;
+	ttyclose();
+}
+
 static uint8_t
 modem_status(uint8_t mcr)
 {
@@ -691,4 +703,20 @@ uart_set_backend(struct uart_vdev *uart, const char *opts)
 		uart_opentty(uart);
 
 	return retval;
+}
+
+void
+uart_release_backend(struct uart_vdev *uart, const char *opts)
+{
+	if (opts == NULL)
+		return;
+
+	uart_closetty(uart);
+	if (strcmp("stdio", opts) == 0) {
+		stdio_in_use = false;
+	} else
+		close(uart->tty.fd);
+
+	uart->tty.fd = 0;
+	uart->tty.opened = false;
 }
