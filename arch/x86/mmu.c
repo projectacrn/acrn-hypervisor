@@ -124,11 +124,11 @@ void invept(struct vcpu *vcpu)
 		_invept(INVEPT_TYPE_ALL_CONTEXTS, desc);
 }
 
-static bool check_mmu_1gb_support(struct map_params *map_params)
+bool check_mmu_1gb_support(int page_table_type)
 {
 	bool status = false;
 
-	if (map_params->page_table_type == PTT_EPT)
+	if (page_table_type == PTT_EPT)
 		status = cpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE);
 	else
 		status = cpu_has_cap(X86_FEATURE_PAGE1GB);
@@ -656,7 +656,8 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 		entry->entry_level  = IA32E_PML4;
 		entry->entry_base = table_addr;
 		entry->entry_present = PT_NOT_PRESENT;
-		entry->page_size = check_mmu_1gb_support(map_params) ?
+		entry->page_size =
+			check_mmu_1gb_support(map_params->page_table_type) ?
 			(PAGE_SIZE_1G) : (PAGE_SIZE_2M);
 		entry->entry_off = fetch_page_table_offset(addr, IA32E_PML4);
 		entry->entry_val =  table_entry;
@@ -678,7 +679,8 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 		entry->entry_level  = IA32E_PDPT;
 		entry->entry_base = table_addr;
 		entry->entry_present = PT_NOT_PRESENT;
-		entry->page_size = check_mmu_1gb_support(map_params) ?
+		entry->page_size =
+			check_mmu_1gb_support(map_params->page_table_type) ?
 			(PAGE_SIZE_1G) : (PAGE_SIZE_2M);
 		entry->entry_off = fetch_page_table_offset(addr, IA32E_PDPT);
 		entry->entry_val =  table_entry;
@@ -688,7 +690,8 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 		/* 1GB page size, return the base addr of the pg entry*/
 		entry->entry_level  = IA32E_PDPT;
 		entry->entry_base = table_addr;
-		entry->page_size = check_mmu_1gb_support(map_params) ?
+		entry->page_size =
+			check_mmu_1gb_support(map_params->page_table_type) ?
 			(PAGE_SIZE_1G) : (PAGE_SIZE_2M);
 		entry->entry_present = PT_PRESENT;
 		entry->entry_off = fetch_page_table_offset(addr, IA32E_PDPT);
@@ -769,7 +772,7 @@ static uint64_t update_page_table_entry(struct map_params *map_params,
 	if ((remaining_size >= MEM_1G)
 			&& (MEM_ALIGNED_CHECK(vaddr, MEM_1G))
 			&& (MEM_ALIGNED_CHECK(paddr, MEM_1G))
-			&& check_mmu_1gb_support(map_params)) {
+			&& check_mmu_1gb_support(map_params->page_table_type)) {
 		/* Map this 1 GByte memory region */
 		adjustment_size = map_mem_region(vaddr, paddr,
 				table_addr, attr, IA32E_PDPT,
