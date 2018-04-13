@@ -49,11 +49,6 @@ static struct vmx_capability {
 	uint32_t vpid;
 } vmx_caps;
 
-static struct mm_capability {
-	/* MMU 1-GByte page supported flag */
-	bool mmu_1gb_page_supported;
-} mm_caps;
-
 #define INVEPT_TYPE_SINGLE_CONTEXT      1UL
 #define INVEPT_TYPE_ALL_CONTEXTS        2UL
 #define INVEPT_SET_ERROR_CODE				\
@@ -102,20 +97,11 @@ static inline bool cpu_has_vmx_vpid_cap(uint32_t bit_mask)
 static void check_mmu_capability(void)
 {
 	uint64_t val;
-	uint32_t  eax, ebx, ecx, edx;
 
 	/* Read the MSR register of EPT and VPID Capability -  SDM A.10 */
 	val = msr_read(MSR_IA32_VMX_EPT_VPID_CAP);
 	vmx_caps.ept = (uint32_t) val;
 	vmx_caps.vpid = (uint32_t) (val >> 32);
-
-	/* Read CPUID to check if PAGE1GB is supported
-	 * SDM 4.1.4 If CPUID.80000001H:EDX.Page1GB[bit26]=1,
-	 * 1-GByte pages are supported with 4-level paging
-	 */
-	cpuid(CPUID_EXTEND_FUNCTION_1, &eax, &ebx, &ecx, &edx);
-	mm_caps.mmu_1gb_page_supported = (edx & CPUID_EDX_PAGE1GB) ?
-							(true) : (false);
 
 	if (!cpu_has_vmx_ept_cap(VMX_EPT_INVEPT))
 		panic("invept must be supported");
@@ -145,7 +131,7 @@ static bool check_mmu_1gb_support(struct map_params *map_params)
 	if (map_params->page_table_type == PTT_EPT)
 		status = cpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE);
 	else
-		status = mm_caps.mmu_1gb_page_supported;
+		status = cpu_has_cap(X86_FEATURE_PAGE1GB);
 	return status;
 }
 
