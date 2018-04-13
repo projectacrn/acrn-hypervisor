@@ -33,6 +33,7 @@
  */
 
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "ioc.h"
 
@@ -43,6 +44,8 @@ static int ioc_cbc_debug;
 #define	DPRINTF(fmt, args...) \
 	do { if (ioc_cbc_debug) printf(fmt, ##args); } while (0)
 #define	WPRINTF(fmt, args...) printf(fmt, ##args)
+
+static void cbc_send_pkt(struct cbc_pkt *pkt);
 
 /*
  * Buffer bytes of reading from the virtual UART, because the bytes maybe can
@@ -232,6 +235,197 @@ cbc_unpack_link(struct ioc_dev *ioc)
 
 		/* Drop the bytes from the ring buffer */
 		cbc_ring_skips(ring, frame_len);
+	}
+}
+
+/*
+ * Find a CBC signal from CBC signal table.
+ */
+static inline struct cbc_signal *
+cbc_find_signal(uint16_t id, struct cbc_signal *table, size_t size)
+{
+	int i;
+
+	for (i = 0; i < size; i++) {
+		if (id == table[i].id)
+			return &table[i];
+	}
+	return NULL;
+}
+
+/*
+ * Find a CBC signal group from CBC signal group table.
+ */
+static inline struct cbc_group *
+cbc_find_signal_group(uint16_t id, struct cbc_group *table, size_t size)
+{
+	int i;
+
+	for (i = 0; i < size; i++) {
+		if (id == table[i].id)
+			return &table[i];
+	}
+	return NULL;
+}
+
+/*
+ * Signal length unit is bit in signal definition not byte,
+ * if the length is 3 bits then return 1 byte,
+ * if the length is 10 bits then return 2 bytes.
+ */
+static int
+cbc_get_signal_len(uint16_t id, struct cbc_signal *table, size_t size)
+{
+	struct cbc_signal *p;
+
+	p = cbc_find_signal(id, table, size);
+	return (p == NULL ? 0 : (p->len + 7)/8);
+}
+
+/*
+ * Set signal flag to inactive.
+ */
+static void
+cbc_disable_signal(uint16_t id, struct cbc_signal *table, size_t size)
+{
+	struct cbc_signal *p;
+
+	p = cbc_find_signal(id, table, size);
+	if (p)
+		p->flag = CBC_INACTIVE;
+}
+
+/*
+ * Set signal group flag to inactive.
+ */
+static void
+cbc_disable_signal_group(uint16_t id, struct cbc_group *table, size_t size)
+{
+	struct cbc_group *p;
+
+	p = cbc_find_signal_group(id, table, size);
+	if (p)
+		p->flag = CBC_INACTIVE;
+}
+
+/*
+ * Whitelist verification for a signal.
+ */
+static int
+wlist_verify_signal(uint16_t id, struct wlist_signal *list, size_t size)
+{
+	/* TODO: implementation */
+	return 0;
+}
+
+/*
+ * Whiltelist verification for a signal group.
+ */
+static int
+wlist_verify_group(uint16_t id, struct wlist_group *list, size_t size)
+{
+	/* TODO: implementation */
+	return 0;
+}
+
+/*
+ * CBC invalidates signals/groups.
+ */
+static void
+cbc_set_invalidation(struct cbc_pkt *pkt, int type)
+{
+	int i;
+	uint8_t *payload;
+	uint8_t num;
+	uint16_t id;
+
+	payload = pkt->req->buf + CBC_PAYLOAD_POS;
+
+	/* Number of signals or groups */
+	num = payload[1];
+
+	/*
+	 * Safty check.
+	 * Each signal/group id length is 2 bytes and 2 bytes of service header,
+	 * the service length should less than the maximum service size.
+	 */
+	if ((num * 2 + 2) >= CBC_MAX_SERVICE_SIZE) {
+		DPRINTF("ioc cbc group number is invalid, number is %d\r\n",
+					num);
+		return;
+	}
+	for (i = 0; i < num; i++) {
+		id = payload[i * 2 + 2] | payload[i * 2 + 3] << 8;
+		if (type == CBC_INVAL_T_SIGNAL)
+			cbc_disable_signal(id, pkt->cfg->cbc_sig_tbl,
+					pkt->cfg->cbc_sig_num);
+		else if (type == CBC_INVAL_T_GROUP)
+			cbc_disable_signal_group(id, pkt->cfg->cbc_grp_tbl,
+					pkt->cfg->cbc_grp_num);
+		else
+			DPRINTF("%s", "ioc invalidation is not defined\r\n");
+	}
+}
+
+/*
+ * CBC multi-signal data process.
+ * Forwarding signal should be in whitelist, otherwise abandon the signal.
+ */
+static void
+cbc_forward_signals(struct cbc_pkt *pkt)
+{
+	int i, j;
+	int offset = 1;
+	uint8_t *payload = pkt->req->buf + CBC_PAYLOAD_POS;
+	uint8_t num = 0;
+	uint16_t id;
+	int signal_len;
+	int valids = 1;
+
+	for (i = 0; i < payload[0]; i++) {
+		id = payload[offset] | payload[offset + 1] << 8;
+
+		/* The length includes two bytes of signal ID occupation */
+		signal_len = cbc_get_signal_len(id, pkt->cfg->cbc_sig_tbl,
+				pkt->cfg->cbc_sig_num) + 2;
+
+		/* Whitelist verification */
+		if (wlist_verify_signal(id, pkt->cfg->wlist_sig_tbl,
+					pkt->cfg->wlist_sig_num) == 0) {
+
+			num++;
+			if (valids < offset) {
+				for (j = 0; j < signal_len; j++, valids++)
+					payload[valids] = payload[offset + j];
+			} else
+				valids += signal_len;
+		}
+		offset += signal_len;
+
+		/* Safty check */
+		if (offset + 1 > CBC_MAX_SERVICE_SIZE) {
+			DPRINTF("ioc offset=%d is error in forward signal\r\n",
+					offset);
+			return;
+		}
+	}
+
+	/* Send permitted signals */
+	if (num > 0) {
+		/*
+		 * Set permitted signal numbers
+		 */
+		payload[0] = num;
+
+		/*
+		 * Set multi-signal value for CBC service layer header,
+		 * one service frame is generated completely.
+		 */
+		pkt->req->buf[CBC_SRV_POS] = CBC_SD_MULTI_SIGNAL;
+		pkt->req->srv_len = valids + CBC_SRV_HDR_SIZE;
+
+		/* Send the CBC packet */
+		cbc_send_pkt(pkt);
 	}
 }
 
@@ -457,6 +651,87 @@ cbc_process_lifecycle(struct cbc_pkt *pkt)
 static void
 cbc_process_signal(struct cbc_pkt *pkt)
 {
+	/*
+	 * TODO: put the is_active into pkt structure instead local static
+	 * variable when the cbc_process_signal is seperated.
+	 */
+	static bool is_active;
+	uint8_t cmd;
+	uint8_t *payload;
+	uint16_t id;
+
+	payload = pkt->req->buf + CBC_PAYLOAD_POS;
+	cmd = pkt->req->buf[CBC_SRV_POS];
+
+	/*
+	 * FIXME:seperate the logic in two functions
+	 * link_len is 0 means the packet is transmitted to PTY(UART DM)
+	 * if the signal channel is not active, do not transmit it to PTY
+	 * to CBC cdevs, always forward the signals because signal channel
+	 * status only for UOS
+	 */
+	if (pkt->req->link_len == 0 && is_active == false &&
+			(cmd == CBC_SD_SINGLE_SIGNAL ||
+			 cmd == CBC_SD_MULTI_SIGNAL ||
+			 cmd == CBC_SD_GROUP_SIGNAL))
+		return;
+
+	switch (cmd) {
+	/* Bidirectional command */
+	case CBC_SD_SINGLE_SIGNAL:
+		id = payload[0] | payload[1] << 8;
+		if (wlist_verify_signal(id, pkt->cfg->wlist_sig_tbl,
+					pkt->cfg->wlist_sig_num) == 0)
+			cbc_send_pkt(pkt);
+		break;
+	/* Bidirectional command */
+	case CBC_SD_MULTI_SIGNAL:
+		cbc_forward_signals(pkt);
+		break;
+	/* Bidirectional command */
+	case CBC_SD_GROUP_SIGNAL:
+		id = payload[0] | payload[1] << 8;
+		if (wlist_verify_group(id, pkt->cfg->wlist_grp_tbl,
+					pkt->cfg->wlist_grp_num) == 0)
+			cbc_send_pkt(pkt);
+		break;
+	/* Bidirectional command */
+	case CBC_SD_INVAL_SSIG:
+		id = payload[0] | payload[1] << 8;
+		cbc_disable_signal(id, pkt->cfg->cbc_sig_tbl,
+				pkt->cfg->cbc_sig_num);
+		break;
+	/* Bidirectional command */
+	case CBC_SD_INVAL_MSIG:
+		cbc_set_invalidation(pkt, CBC_INVAL_T_SIGNAL);
+		break;
+	/* Bidirectional command */
+	case CBC_SD_INVAL_SGRP:
+		id = payload[0] | payload[1] << 8;
+		cbc_disable_signal_group(id, pkt->cfg->cbc_grp_tbl,
+				pkt->cfg->cbc_grp_num);
+		break;
+	/* Bidirectional command */
+	case CBC_SD_INVAL_MGRP:
+		cbc_set_invalidation(pkt, CBC_INVAL_T_GROUP);
+		break;
+	/*
+	 * FIXME: seperate into rx signal process
+	 * Open/reset/close are not bidirectional operations
+	 * only for IOC rx thread
+	 */
+	case CBC_SD_OPEN_CHANNEL:
+	case CBC_SD_RESET_CHANNEL:
+		is_active = true;
+		break;
+	case CBC_SD_CLOSE_CHANNEL:
+		is_active = false;
+		break;
+	default:
+		DPRINTF("ioc got an new operation of signal channel=%d\r\n",
+					cmd);
+		break;
+	}
 }
 
 /*
