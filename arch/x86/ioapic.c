@@ -82,7 +82,7 @@ static uint64_t map_ioapic(
 	/* At some point we may need to translate this paddr to a vaddr.
 	 * 1:1 mapping for now.
 	 */
-	return (vaddr_t) ioapic_paddr;
+	return ioapic_paddr;
 }
 
 static inline uint32_t

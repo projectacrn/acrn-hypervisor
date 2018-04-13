@@ -778,7 +778,7 @@ static int vpic_master_handler(struct vm *vm, bool in, int port, int bytes,
 }
 
 static uint32_t vpic_master_io_read(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, ioport_t addr, size_t width)
+		struct vm *vm, uint16_t addr, size_t width)
 {
 	uint32_t val = 0;
 
@@ -789,7 +789,7 @@ static uint32_t vpic_master_io_read(__unused struct vm_io_handler *hdlr,
 }
 
 static void vpic_master_io_write(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, ioport_t addr, size_t width, uint32_t v)
+		struct vm *vm, uint16_t addr, size_t width, uint32_t v)
 {
 	uint32_t val = v;
 
@@ -817,7 +817,7 @@ static int vpic_slave_handler(struct vm *vm, bool in, int port, int bytes,
 }
 
 static uint32_t vpic_slave_io_read(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, ioport_t addr, size_t width)
+		struct vm *vm, uint16_t addr, size_t width)
 {
 	uint32_t val = 0;
 
@@ -828,7 +828,7 @@ static uint32_t vpic_slave_io_read(__unused struct vm_io_handler *hdlr,
 }
 
 static void vpic_slave_io_write(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, ioport_t addr, size_t width, uint32_t v)
+		struct vm *vm, uint16_t addr, size_t width, uint32_t v)
 {
 	uint32_t val = v;
 
@@ -879,7 +879,7 @@ static int vpic_elc_handler(struct vm *vm, bool in, int port, int bytes,
 }
 
 static uint32_t vpic_elc_io_read(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, ioport_t addr, size_t width)
+		struct vm *vm, uint16_t addr, size_t width)
 {
 	uint32_t val = 0;
 
@@ -889,7 +889,7 @@ static uint32_t vpic_elc_io_read(__unused struct vm_io_handler *hdlr,
 }
 
 static void vpic_elc_io_write(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, ioport_t addr, size_t width, uint32_t v)
+		struct vm *vm, uint16_t addr, size_t width, uint32_t v)
 {
 	uint32_t val = v;
 

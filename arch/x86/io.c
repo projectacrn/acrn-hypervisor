@@ -208,14 +208,14 @@ static void deny_guest_io_access(struct vm *vm, uint32_t address, uint32_t nbyte
 
 static uint32_t
 default_io_read(__unused struct vm_io_handler *hdlr, __unused struct vm *vm,
-			ioport_t address, size_t width)
+			uint16_t address, size_t width)
 {
 	uint32_t v = io_read(address, width);
 	return v;
 }
 
 static void default_io_write(__unused struct vm_io_handler *hdlr,
-			__unused struct vm *vm, ioport_t addr,
+			__unused struct vm *vm, uint16_t addr,
 			size_t width, uint32_t v)
 {
 	io_write(v, addr, width);

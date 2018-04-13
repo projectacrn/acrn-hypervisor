@@ -90,7 +90,7 @@ int sipi_from_efi_boot_service_exit(uint32_t dest, uint32_t mode, uint32_t vec)
 		if (mode == APIC_DELMODE_STARTUP) {
 			uint32_t cpu_id = cpu_find_logical_id(dest);
 			send_startup_ipi(INTR_CPU_STARTUP_USE_DEST,
-		       cpu_id, (paddr_t)(vec<<12));
+		       cpu_id, (uint64_t)(vec<<12));
 			efi_wake_up_ap_bitmap |= 1 << dest;
 		}
 
@@ -108,7 +108,7 @@ void efi_deferred_wakeup_pcpu(int cpu_id)
 	expected_up = up_count + 1;
 
 	send_startup_ipi(INTR_CPU_STARTUP_USE_DEST,
-		cpu_id, (paddr_t)cpu_secondary_reset);
+		cpu_id, (uint64_t)cpu_secondary_reset);
 
 	timeout = CPU_UP_TIMEOUT * 1000;
 
