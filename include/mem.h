@@ -53,5 +53,6 @@ int	emulate_mem(struct vmctx *ctx, struct mmio_request *mmio_req);
 int	register_mem(struct mem_range *memp);
 int	register_mem_fallback(struct mem_range *memp);
 int	unregister_mem(struct mem_range *memp);
+int	unregister_mem_fallback(struct mem_range *memp);
 
 #endif	/* _MEM_H_ */
