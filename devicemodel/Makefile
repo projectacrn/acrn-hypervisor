@@ -48,6 +48,7 @@ LIBS += -lcrypto
 LIBS += -lpciaccess
 LIBS += -lz
 LIBS += -luuid
+LIBS += -lusb-1.0
 
 # hw
 SRCS += hw/block_if.c
