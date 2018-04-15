@@ -57,6 +57,7 @@ SRCS += hw/uart_core.c
 SRCS += hw/pci/virtio/virtio.c
 SRCS += hw/pci/virtio/virtio_kernel.c
 SRCS += hw/platform/usb_mouse.c
+SRCS += hw/platform/usb_pmapper.c
 SRCS += hw/platform/atkbdc.c
 SRCS += hw/platform/ps2mouse.c
 SRCS += hw/platform/rtc.c

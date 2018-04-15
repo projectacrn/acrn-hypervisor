@@ -62,7 +62,7 @@ struct usb_devemu {
 #define	USB_EMUL_SET(x)	DATA_SET(usb_emu_set, x)
 
 /*
- * USB device events to notify HCI when state changes
+ * USB device events to notify HCD when state changes
  */
 enum hci_usbev {
 	USBDEV_ATTACH,
