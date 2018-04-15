@@ -48,6 +48,7 @@
 #include "pci_core.h"
 #include "xhci.h"
 #include "usb_core.h"
+#include "usb_pmapper.h"
 
 #undef LOG_TAG
 #define LOG_TAG			"xHCI: "
@@ -314,6 +315,18 @@ static void pci_xhci_update_ep_ring(struct pci_xhci_vdev *xdev,
 				    struct xhci_endp_ctx *ep_ctx,
 				    uint32_t streamid, uint64_t ringaddr,
 				    int ccs);
+
+static int
+pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
+{
+	return 0;
+}
+
+static int
+pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
+{
+	return 0;
+}
 
 static void
 pci_xhci_set_evtrb(struct xhci_trb *evtrb, uint64_t port, uint32_t errcode,
@@ -2841,6 +2854,19 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		goto done;
 	else
 		error = 0;
+
+       /*
+	* TODO:
+	* Will add command line option in subsequent patches for calling
+	* usb_dev_sys_init if new parameters are used.
+	*/
+	if (xdev->ndevices == 0)
+		if (usb_dev_sys_init(pci_xhci_native_usb_dev_conn_cb,
+					pci_xhci_native_usb_dev_disconn_cb,
+					NULL, NULL, xdev,
+					usb_get_log_level()) < 0) {
+			goto done;
+		}
 
 	xdev->caplength = XHCI_SET_CAPLEN(XHCI_CAPLEN) |
 			 XHCI_SET_HCIVERSION(0x0100);

@@ -24,6 +24,57 @@
  * SUCH DAMAGE.
  */
 
+/*
+ * USB emulation designed as following diagram. It devided into three layers:
+ *   HCD: USB host controller device layer, like xHCI, eHCI...
+ *   USB core: middle abstraction layer for USB statck.
+ *   USB Port Mapper: This layer supports to share physical USB
+ *     devices(physical ports) to spcified virtual USB port of
+ *     HCD DM. All the commands and data transfers are through
+ *     Libusb to access native USB stack.
+ *
+ *              +---------------+
+ *              |               |
+ *   +----------+----------+    |
+ *   |       ACRN DM       |    |
+ *   | +-----------------+ |    |
+ *   | |   HCD (xHCI)    | |    |
+ *   | +-----------------+ |    |
+ *   |          |          |    |
+ *   | +-----------------+ |    |
+ *   | |    USB Core     | |    |
+ *   | +-----------------+ |    |
+ *   |          |          |    |
+ *   | +-----------------+ |    |
+ *   | | USB Port Mapper | |    |
+ *   | +-----------------+ |    |
+ *   |          |          |    |
+ *   | +-----------------+ |    |
+ *   | |      Libusb     | |    |
+ *   | +-----------------+ |    |
+ *   +---------------------+    |
+ *    Service OS User Space     |     User OS User Space
+ *                              |
+ *  --------------------------  |  ---------------------------
+ *                              |
+ *   Service OS Kernel Space    |    User OS Kernel Space
+ *                              |
+ *                              |    +-----------------+
+ *                              |    |     USB Core    |
+ *                              |    +-----------------+
+ *                              |             |
+ *                              |    +-----------------+
+ *                              |    |       HCD       |
+ *                              |    | (xHCI/uHCI/...) |
+ *                              |    +--------+--------+
+ *                              |             |
+ *                              +-------------+
+ * Current distribution:
+ *   HCD: xhci.{h,c}
+ *   USB core: usb_core.{h,c}
+ *   USB device: usb_mouse.c usb_pmapper.{h,c}
+ */
+
 #include <sys/cdefs.h>
 #include <sys/types.h>
 #include <sys/queue.h>
