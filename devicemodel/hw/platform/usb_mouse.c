@@ -809,6 +809,7 @@ struct usb_devemu ue_mouse = {
 	.ue_emu =	"tablet",
 	.ue_usbver =	3,
 	.ue_usbspeed =	USB_SPEED_HIGH,
+	.ue_devtype =	USB_DEV_STATIC,
 	.ue_init =	umouse_init,
 	.ue_request =	umouse_request,
 	.ue_data =	umouse_data_handler,
