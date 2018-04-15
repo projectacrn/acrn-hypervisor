@@ -44,6 +44,167 @@
 
 static struct usb_dev_sys_ctx_info g_ctx;
 
+static void
+usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
+{
+	struct usb_dev_req *req;
+	struct usb_data_xfer *xfer;
+	struct usb_data_xfer_block *block;
+	int len, do_intr = 0, short_data = 0;
+	int i, idx, buf_idx, done;
+
+	assert(libusb_xfer);
+	assert(libusb_xfer->user_data);
+
+	req = libusb_xfer->user_data;
+	len = libusb_xfer->actual_length;
+	xfer = req->xfer;
+
+	assert(xfer);
+	assert(xfer->dev);
+	UPRINTF(LDBG, "xfer_comp: ep %d with %d bytes. status %d,%d\n",
+			req->xfer->epid, len, libusb_xfer->status,
+			xfer->ndata);
+
+	/* lock for protecting the transfer */
+	USB_DATA_XFER_LOCK(xfer);
+	xfer->status = USB_ERR_NORMAL_COMPLETION;
+
+	/* in case the xfer is reset by the USB_DATA_XFER_RESET */
+	if (xfer->reset == 1 ||
+			libusb_xfer->status != LIBUSB_TRANSFER_COMPLETED) {
+		UPRINTF(LDBG, "ep%d reset detected\r\n", xfer->epid);
+		xfer->reset = 0;
+		USB_DATA_XFER_UNLOCK(xfer);
+		goto reset_out;
+	}
+
+	/* post process the usb transfer data */
+	buf_idx = 0;
+	idx = req->blk_start;
+	for (i = 0; i < req->blk_count; i++) {
+		done = 0;
+		block = &xfer->data[idx % USB_MAX_XFER_BLOCKS];
+		if (len > buf_idx) {
+			done = block->blen;
+			if (done > len - buf_idx) {
+				done = len - buf_idx;
+				short_data = 1;
+			}
+			if (req->in)
+				memcpy(block->buf, &req->buffer[buf_idx], done);
+		}
+
+		assert(block->processed);
+		buf_idx += done;
+		block->bdone = done;
+		block->blen -= done;
+		idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
+	}
+
+reset_out:
+	if (short_data)
+		xfer->status = USB_ERR_SHORT_XFER;
+
+	/* notify the USB core this transfer is over */
+	if (g_ctx.notify_cb)
+		do_intr = g_ctx.notify_cb(xfer->dev, xfer);
+
+	/* if a interrupt is needed, send it to guest */
+	if (do_intr && g_ctx.intr_cb)
+		g_ctx.intr_cb(xfer->dev, NULL);
+
+	/* unlock and release memory */
+	USB_DATA_XFER_UNLOCK(xfer);
+	libusb_free_transfer(libusb_xfer);
+	if (req && req->buffer)
+		free(req->buffer);
+
+	free(req);
+}
+
+static struct usb_dev_req *
+usb_dev_alloc_req(struct usb_dev *udev, struct usb_data_xfer *xfer, int in,
+		size_t size)
+{
+	struct usb_dev_req *req;
+	static int seq = 1;
+
+	if (!udev || !xfer)
+		return NULL;
+
+	req = calloc(1, sizeof(*req));
+	if (!req)
+		return NULL;
+
+	req->udev = udev;
+	req->in = in;
+	req->xfer = xfer;
+	req->seq = seq++;
+	req->libusb_xfer = libusb_alloc_transfer(0);
+	if (!req->libusb_xfer)
+		goto errout;
+
+	if (size)
+		req->buffer = malloc(size);
+
+	if (!req->buffer)
+		goto errout;
+
+	return req;
+
+errout:
+	if (req && req->buffer)
+		free(req->buffer);
+	if (req && req->libusb_xfer)
+		libusb_free_transfer(req->libusb_xfer);
+	if (req)
+		free(req);
+	return NULL;
+}
+
+static int
+usb_dev_prepare_xfer(struct usb_data_xfer *xfer, int *count, int *size)
+{
+	int found, i, idx, c, s, first;
+	struct usb_data_xfer_block *block = NULL;
+
+	assert(xfer);
+	idx = xfer->head;
+	found = 0;
+	first = -1;
+	c = s = 0;
+	if (!count || !size)
+		return -1;
+
+	for (i = 0; i < xfer->ndata; i++) {
+		block = &xfer->data[idx];
+
+		if (block->processed) {
+			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
+			continue;
+		}
+		if (block->buf && block->blen > 0) {
+			if (!found) {
+				found = 1;
+				first = idx;
+			}
+			c++;
+			s += block->blen;
+
+		} else if (found) {
+			UPRINTF(LWRN, "find a NULL data. %d total %d\n",
+				i, xfer->ndata);
+		}
+		block->processed = 1;
+		idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
+	}
+
+	*count = c;
+	*size = s;
+	return first;
+}
+
 static inline int
 usb_dev_err_convert(int err)
 {
@@ -344,6 +505,104 @@ usb_dev_reset(void *pdata)
 	usb_dev_reset_ep(udev);
 	usb_dev_update_ep(udev);
 	return 0;
+}
+
+int
+usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
+{
+	struct usb_dev *udev;
+	struct usb_dev_req *req;
+	int rc = 0, epid;
+	uint8_t type;
+	int blk_start, data_size, blk_count;
+	int retries = 3, i, buf_idx;
+	struct usb_data_xfer_block *b;
+
+	udev = pdata;
+	assert(udev);
+	xfer->status = USB_ERR_NORMAL_COMPLETION;
+
+	blk_start = usb_dev_prepare_xfer(xfer, &blk_count, &data_size);
+	if (blk_start < 0)
+		goto done;
+
+	type = usb_dev_get_ep_type(udev, dir ? TOKEN_IN : TOKEN_OUT, epctx);
+	epid = dir ? (0x80 | epctx) : epctx;
+
+	if (data_size <= 0)
+		goto done;
+
+	UPRINTF(LDBG, "%s: DIR=%s|EP=%x|*%s*, data %d %d-%d\n", __func__,
+			dir ? "IN" : "OUT", epid, type == USB_ENDPOINT_BULK ?
+			"BULK" : "INT", data_size,
+			blk_start, blk_start + blk_count - 1);
+
+	req = usb_dev_alloc_req(udev, xfer, dir, data_size);
+	if (!req) {
+		xfer->status = USB_ERR_IOERROR;
+		goto done;
+	}
+
+	req->buf_length = data_size;
+	req->blk_start = blk_start;
+	req->blk_count = blk_count;
+
+	if (!dir) {
+		for (i = 0, buf_idx = 0; i < blk_count; i++) {
+			b = &xfer->data[(blk_start + i) % USB_MAX_XFER_BLOCKS];
+			if (b->buf) {
+				memcpy(&req->buffer[buf_idx], b->buf, b->blen);
+				buf_idx += b->blen;
+			}
+		}
+	}
+
+	if (type == USB_ENDPOINT_BULK) {
+		/*
+		 * give data to physical device through libusb.
+		 * This is an asynchronous process, data is sent to libusb.so,
+		 * and it may be not sent to physical device instantly, but
+		 * just return here. After the data is really received by the
+		 * physical device, the callback function usb_dev_comp_req
+		 * will be triggered.
+		 */
+		/*
+		 * TODO: Is there any risk of data missing?
+		 */
+		libusb_fill_bulk_transfer(req->libusb_xfer,
+				udev->handle, epid,
+				req->buffer,
+				data_size,
+				usb_dev_comp_req,
+				req,
+				0);
+		do {
+			rc = libusb_submit_transfer(req->libusb_xfer);
+		} while (rc && retries--);
+
+	} else if (type == USB_ENDPOINT_INT) {
+		/* give data to physical device through libusb */
+		libusb_fill_interrupt_transfer(req->libusb_xfer,
+				udev->handle,
+				epid,
+				req->buffer,
+				data_size,
+				usb_dev_comp_req,
+				req,
+				0);
+		rc = libusb_submit_transfer(req->libusb_xfer);
+	} else {
+		/* TODO isoch transfer is not implemented */
+		UPRINTF(LWRN, "ISOCH transfer still not supported.\n");
+		xfer->status = USB_ERR_INVAL;
+	}
+
+	if (rc) {
+		xfer->status = USB_ERR_IOERROR;
+		UPRINTF(LDBG, "libusb_submit_transfer fail: %d\n", rc);
+	}
+done:
+	return xfer->status;
 }
 
 int
@@ -648,6 +907,8 @@ usb_dev_sys_init(usb_dev_sys_cb conn_cb, usb_dev_sys_cb disconn_cb,
 	g_ctx.hci_data     = hci_data;
 	g_ctx.conn_cb      = conn_cb;
 	g_ctx.disconn_cb   = disconn_cb;
+	g_ctx.notify_cb    = notify_cb;
+	g_ctx.intr_cb      = intr_cb;
 	native_conn_evt    = LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED;
 	native_disconn_evt = LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT;
 	native_pid         = LIBUSB_HOTPLUG_MATCH_ANY;

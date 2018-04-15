@@ -322,6 +322,9 @@ static void pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de);
 static int pci_xhci_port_chg(struct pci_xhci_vdev *xdev, int port, int conn);
 static void pci_xhci_set_evtrb(struct xhci_trb *evtrb, uint64_t port,
 		uint32_t errcode, uint32_t evtype);
+static int pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
+		struct usb_data_xfer *xfer, uint32_t slot, uint32_t epid,
+		int *do_intr);
 
 static int
 pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
@@ -417,6 +420,56 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 	return 0;
 }
 
+/*
+ * return value:
+ * = 0: succeed without interrupt
+ * > 0: succeed with interrupt
+ * < 0: failure
+ */
+static int
+pci_xhci_usb_dev_notify_cb(void *hci_data, void *udev_data)
+{
+	int slot, epid, intr, rc;
+	struct usb_data_xfer *xfer;
+	struct pci_xhci_dev_emu *edev;
+	struct pci_xhci_vdev *xdev;
+
+	xfer = udev_data;
+	if (!xfer)
+		return -1;
+
+	epid = xfer->epid;
+	edev = xfer->dev;
+	if (!edev)
+		return -1;
+
+	xdev = edev->xdev;
+	if (!xdev)
+		return -1;
+
+	slot = edev->hci.hci_address;
+	rc = pci_xhci_xfer_complete(xdev, xfer, slot, epid, &intr);
+
+	if (rc)
+		return -1;
+	else if (intr)
+		return 1;
+	else
+		return 0;
+}
+
+static int
+pci_xhci_usb_dev_intr_cb(void *hci_data, void *udev_data)
+{
+	struct pci_xhci_dev_emu *edev;
+
+	edev = hci_data;
+	if (edev && edev->xdev)
+		pci_xhci_assert_interrupt(edev->xdev);
+
+	return 0;
+}
+
 static struct pci_xhci_dev_emu*
 pci_xhci_dev_create(struct pci_xhci_vdev *xdev, void *dev_data)
 {
@@ -432,15 +485,22 @@ pci_xhci_dev_create(struct pci_xhci_vdev *xdev, void *dev_data)
 	if (!ue)
 		return NULL;
 
-	/* TODO: following function pointers will be populated in future */
+	/*
+	 * TODO: at present, the following functions are
+	 * enough. But for the purpose to be compatible with
+	 * usb_mouse.c, the high level design including the
+	 * function interface should be changed and refined
+	 * in future.
+	 */
 	ue->ue_init     = usb_dev_init;
 	ue->ue_request  = usb_dev_request;
-	ue->ue_data     = NULL;
+	ue->ue_data     = usb_dev_data;
 	ue->ue_info	= usb_dev_info;
 	ue->ue_reset    = usb_dev_reset;
 	ue->ue_remove   = NULL;
 	ue->ue_stop     = NULL;
 	ue->ue_deinit	= usb_dev_deinit;
+	ue->ue_devtype  = USB_DEV_PORT_MAPPER;
 
 	ud = ue->ue_init(dev_data, NULL);
 	if (!ud)
@@ -489,10 +549,16 @@ pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de)
 		ue = de->dev_ue;
 		ud = de->dev_instance;
 		if (ue) {
-			assert(ue->ue_deinit);
-			ue->ue_deinit(ud);
+			if (ue->ue_devtype == USB_DEV_PORT_MAPPER) {
+				assert(ue->ue_deinit);
+				if (ue->ue_deinit)
+					ue->ue_deinit(ud);
+			}
 		}
-		free(ue);
+
+		if (ue->ue_devtype == USB_DEV_PORT_MAPPER)
+			free(ue);
+
 		free(de);
 	}
 }
@@ -879,9 +945,11 @@ pci_xhci_init_ep(struct pci_xhci_dev_emu *dev, int epid)
 
 	if (devep->ep_xfer == NULL) {
 		devep->ep_xfer = malloc(sizeof(struct usb_data_xfer));
-		if (devep->ep_xfer)
+		if (devep->ep_xfer) {
 			USB_DATA_XFER_INIT(devep->ep_xfer);
-		else
+			devep->ep_xfer->dev = (void *)dev;
+			devep->ep_xfer->epid = epid;
+		} else
 			return -1;
 	}
 	return 0;
@@ -1821,6 +1889,7 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 		}
 
 		xfer->ndata--;
+		xfer->head = (xfer->head + 1) % USB_MAX_XFER_BLOCKS;
 		edtla += xfer->data[i].bdone;
 
 		trb->dwTrb3 = (trb->dwTrb3 & ~0x1) | (xfer->data[i].ccs);
@@ -1929,7 +1998,12 @@ pci_xhci_try_usb_xfer(struct pci_xhci_vdev *xdev,
 			if (USB_DATA_GET_ERRCODE(&xfer->data[xfer->head]) ==
 			    USB_NAK)
 				err = XHCI_TRB_ERROR_SUCCESS;
-		} else {
+		}
+		/*
+		 * Only for usb_mouse.c, emulation with port mapping will do it
+		 * by the libusb callback function.
+		 */
+		else if (dev->dev_ue->ue_devtype == USB_DEV_STATIC) {
 			err = pci_xhci_xfer_complete(xdev, xfer, slot, epid,
 						     &do_intr);
 			if (err == XHCI_TRB_ERROR_SUCCESS && do_intr)
@@ -2050,13 +2124,12 @@ retry:
 			/* fall through */
 
 		case XHCI_TRB_TYPE_DATA_STAGE:
-			xfer_block =
-				usb_data_xfer_append(xfer, (void *)(trbflags &
-						     XHCI_TRB_3_IDT_BIT ?
-						     &trb->qwTrb0 :
-						     XHCI_GADDR(xdev,
-							     trb->qwTrb0)),
-			     trb->dwTrb2 & 0x1FFFF, (void *)addr, ccs);
+			xfer_block = usb_data_xfer_append(xfer,
+					(void *)(trbflags & XHCI_TRB_3_IDT_BIT ?
+					&trb->qwTrb0 :
+					XHCI_GADDR(xdev, trb->qwTrb0)),
+					trb->dwTrb2 & 0x1FFFF, (void *)addr,
+					ccs);
 			break;
 
 		case XHCI_TRB_TYPE_STATUS_STAGE:
@@ -2200,8 +2273,14 @@ pci_xhci_device_doorbell(struct pci_xhci_vdev *xdev,
 	if (ep_ctx->qwEpCtx2 == 0)
 		return;
 
+	/*
+	 * In USB emulation with port mapping, the following transfer should
+	 * NOT be called, or else the interrupt transfer will result
+	 * of invalid and infinite loop. It is used by usb_mouse.c only.
+	 */
 	/* handle pending transfers */
-	if (devep->ep_xfer->ndata > 0) {
+	if (dev->dev_ue && dev->dev_ue->ue_devtype == USB_DEV_STATIC &&
+			devep->ep_xfer->ndata > 0) {
 		pci_xhci_try_usb_xfer(xdev, dev, devep, ep_ctx, slot, epid);
 		return;
 	}
@@ -3090,10 +3169,10 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (xdev->ndevices == 0)
 		if (usb_dev_sys_init(pci_xhci_native_usb_dev_conn_cb,
 					pci_xhci_native_usb_dev_disconn_cb,
-					NULL, NULL, xdev,
-					usb_get_log_level()) < 0) {
+					pci_xhci_usb_dev_notify_cb,
+					pci_xhci_usb_dev_intr_cb,
+					xdev, usb_get_log_level()) < 0)
 			goto done;
-		}
 
 	xdev->caplength = XHCI_SET_CAPLEN(XHCI_CAPLEN) |
 			 XHCI_SET_HCIVERSION(0x0100);

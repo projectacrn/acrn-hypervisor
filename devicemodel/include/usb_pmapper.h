@@ -83,6 +83,30 @@ struct usb_dev {
 	libusb_device_handle    *handle;
 };
 
+/*
+ * The purpose to implement struct usb_dev_req is to adapt
+ * struct usb_data_xfer to make a proper data format to talk
+ * with libusb.
+ */
+struct usb_dev_req {
+	struct usb_dev *udev;
+	int    in;
+	int    seq;
+	/*
+	 * buffer could include data from multiple
+	 * usb_data_xfer_block, so here need some
+	 * data to record it.
+	 */
+	uint8_t	*buffer;
+	int     buf_length;
+	int     blk_start;
+	int     blk_count;
+
+	struct usb_data_xfer *xfer;
+	struct libusb_transfer *libusb_xfer;
+	struct usb_data_xfer_block *setup_blk;
+};
+
 /* callback type used by code from HCD layer */
 typedef int (*usb_dev_sys_cb)(void *hci_data, void *dev_data);
 
@@ -100,6 +124,8 @@ struct usb_dev_sys_ctx_info {
 	 */
 	usb_dev_sys_cb conn_cb;
 	usb_dev_sys_cb disconn_cb;
+	usb_dev_sys_cb notify_cb;
+	usb_dev_sys_cb intr_cb;
 
 	/*
 	 * private data from HCD layer
@@ -116,4 +142,5 @@ void usb_dev_deinit(void *pdata);
 int usb_dev_info(void *pdata, int type, void *value, int size);
 int usb_dev_request(void *pdata, struct usb_data_xfer *xfer);
 int usb_dev_reset(void *pdata);
+int usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx);
 #endif

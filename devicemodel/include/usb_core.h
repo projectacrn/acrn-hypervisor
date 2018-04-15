@@ -34,7 +34,8 @@
 #include <stdbool.h>
 #include "types.h"
 
-#define	USB_MAX_XFER_BLOCKS	8
+#define	USB_MAX_XFER_BLOCKS	256
+
 #define	USB_XFER_OUT		0
 #define	USB_XFER_IN		1
 
@@ -64,6 +65,11 @@ enum token_type {
 	TOKEN_SETUP
 };
 
+enum usb_dev_type {
+	USB_DEV_STATIC = 0,
+	USB_DEV_PORT_MAPPER
+};
+
 struct usb_hci;
 struct usb_device_request;
 struct usb_data_xfer;
@@ -73,6 +79,7 @@ struct usb_devemu {
 	char	*ue_emu;	/* name of device emulation */
 	int	ue_usbver;	/* usb version: 2 or 3 */
 	int	ue_usbspeed;	/* usb device speed */
+	int	ue_devtype;
 
 	/* instance creation */
 	void	*(*ue_init)(void *pdata, char *opt);
@@ -134,6 +141,10 @@ struct usb_data_xfer {
 	int	ndata;				/* # of data items */
 	int	head;
 	int	tail;
+	void    *dev;		/* struct pci_xhci_dev_emu *dev */
+	int     epid;		/* related endpoint id */
+	int     pid;		/* token id */
+	int	reset;		/* detect ep reset */
 	int	status;
 	pthread_mutex_t mtx;
 };
@@ -153,15 +164,21 @@ enum USB_ERRCODE {
 
 #define	USB_DATA_OK(x, i)	((x)->data[(i)].buf != NULL)
 
-#define	USB_DATA_XFER_INIT(x)	do {					\
-			memset((x), 0, sizeof(*(x)));			\
-			pthread_mutex_init(&((x)->mtx), NULL);		\
-		} while (0)
+#define	USB_DATA_XFER_INIT(x)	do {					   \
+		pthread_mutexattr_t attr;				   \
+		pthread_mutexattr_init(&attr);				   \
+		pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE); \
+		memset((x), 0, sizeof(*(x)));				   \
+		pthread_mutex_init(&((x)->mtx), &attr);			   \
+	} while (0)
 
 #define	USB_DATA_XFER_RESET(x)	do {					\
+			pthread_mutex_lock(&((x)->mtx));		\
 			memset((x)->data, 0, sizeof((x)->data));	\
 			(x)->ndata = 0;					\
 			(x)->head = (x)->tail = 0;			\
+			(x)->reset = 1;					\
+			pthread_mutex_unlock((&(x)->mtx));		\
 		} while (0)
 
 #define	USB_DATA_XFER_LOCK(x)	\
