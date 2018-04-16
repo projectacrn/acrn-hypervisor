@@ -54,5 +54,5 @@ struct acpi_table_header {
 
 int parse_madt(uint8_t *lapic_id_base);
 
-uint64_t get_dmar_table(void);
+void *get_dmar_table(void);
 #endif /* !ACPI_H */

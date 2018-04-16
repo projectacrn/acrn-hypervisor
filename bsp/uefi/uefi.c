@@ -166,7 +166,7 @@ void *get_rsdp_from_uefi(void)
 	if (!efi_initialized)
 		efi_init();
 
-	return efi_ctx->rsdp;
+	return HPA2HVA(efi_ctx->rsdp);
 }
 
 static void efi_init(void)
