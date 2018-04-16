@@ -176,12 +176,12 @@ static void efi_init(void)
 	if (boot_regs[0] != MULTIBOOT_INFO_MAGIC)
 		ASSERT(0, "no multiboot info found");
 
-	mbi = (struct multiboot_info *)((uint64_t)(uint32_t)boot_regs[1]);
+	mbi = (struct multiboot_info *)HPA2HVA(((uint64_t)(uint32_t)boot_regs[1]));
 
 	if (!(mbi->mi_flags & MULTIBOOT_INFO_HAS_DRIVES))
 		ASSERT(0, "no multiboot drivers for uefi found");
 
-	efi_ctx = (struct efi_ctx *)(uint64_t)mbi->mi_drives_addr;
+	efi_ctx = (struct efi_ctx *)HPA2HVA((uint64_t)mbi->mi_drives_addr);
 	ASSERT(efi_ctx != NULL, "no uefi context found");
 
 	vm_sw_loader = uefi_sw_loader;
