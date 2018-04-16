@@ -203,13 +203,174 @@ virtio_input_cfgwrite(void *vdev, int offset, int size, uint32_t val)
 	return 0;
 }
 
+static void
+virtio_input_notify_event_vq(void *vdev, struct virtio_vq_info *vq)
+{
+	DPRINTF(("%s\n", __func__));
+}
+
+static void
+virtio_input_notify_status_vq(void *vdev, struct virtio_vq_info *vq)
+{
+	/* to be implemented */
+}
+
+static void
+virtio_input_read_event(int fd __attribute__((unused)),
+			enum ev_type t __attribute__((unused)),
+			void *arg)
+{
+	/* to be implemented */
+}
+
 static int
 virtio_input_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
-	/* to be implemented */
-	DPRINTF(("%s\n", __func__));
-	(void)virtio_input_ops;
-	return 0;
+	struct virtio_input *vi;
+	pthread_mutexattr_t attr;
+	bool mutex_initialized = false;
+	char *opt;
+	int flags, ver;
+	int rc;
+
+	/* get evdev path from opts
+	 * -s n,virtio-input,/dev/input/eventX[,serial]
+	 */
+	if (!opts) {
+		WPRINTF(("%s: evdev path is NULL\n", __func__));
+		return -1;
+	}
+
+	vi = calloc(1, sizeof(struct virtio_input));
+	if (!vi) {
+		WPRINTF(("%s: out of memory\n", __func__));
+		return -1;
+	}
+
+	opt = strsep(&opts, ",");
+	if (!opt) {
+		WPRINTF(("%s: evdev path is NULL\n", __func__));
+		goto fail;
+	}
+
+	vi->evdev = strdup(opt);
+	if (!vi->evdev) {
+		WPRINTF(("%s: strdup failed\n", __func__));
+		goto fail;
+	}
+
+	if (opts) {
+		vi->serial = strdup(opts);
+		if (!vi->serial) {
+			WPRINTF(("%s: strdup serial failed\n", __func__));
+			goto fail;
+		}
+	}
+
+	vi->fd = open(vi->evdev, O_RDWR);
+	if (vi->fd < 0) {
+		WPRINTF(("open %s failed %d\n", vi->evdev, errno));
+		goto fail;
+	}
+	flags = fcntl(vi->fd, F_GETFL);
+	fcntl(vi->fd, F_SETFL, flags | O_NONBLOCK);
+
+	rc = ioctl(vi->fd, EVIOCGVERSION, &ver); /* is it a evdev device? */
+	if (rc < 0) {
+		WPRINTF(("%s: get version failed\n", vi->evdev));
+		goto fail;
+	}
+
+	rc = ioctl(vi->fd, EVIOCGRAB, 1); /* exclusive access */
+	if (rc < 0) {
+		WPRINTF(("%s: grab device failed %d\n", vi->evdev, errno));
+		goto fail;
+	}
+
+	/* init mutex attribute properly to avoid deadlock */
+	rc = pthread_mutexattr_init(&attr);
+	if (rc)
+		DPRINTF(("mutexattr init failed with erro %d!\n", rc));
+	rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+	if (rc)
+		DPRINTF(("vtinput: mutexattr_settype failed with "
+			"error %d!\n", rc));
+	rc = pthread_mutex_init(&vi->mtx, &attr);
+	if (rc)
+		DPRINTF(("vtinput: pthread_mutex_init failed with "
+			"error %d!\n", rc));
+	mutex_initialized = (rc == 0) ? true : false;
+
+	vi->event_qsize = VIRTIO_INPUT_PACKET_SIZE;
+	vi->event_qindex = 0;
+	vi->event_queue = calloc(vi->event_qsize,
+		sizeof(struct virtio_input_event_elem));
+	if (!vi->event_queue) {
+		WPRINTF(("vtinput: could not alloc event queue buf\n"));
+		goto fail;
+	}
+
+	vi->mevp = mevent_add(vi->fd, EVF_READ, virtio_input_read_event, vi);
+	if (vi->mevp == NULL) {
+		WPRINTF(("vtinput: could not register event\n"));
+		goto fail;
+	}
+
+	virtio_linkup(&vi->base, &virtio_input_ops, vi, dev, vi->queues);
+	vi->base.mtx = &vi->mtx;
+
+	vi->queues[VIRTIO_INPUT_EVENT_QUEUE].qsize = VIRTIO_INPUT_RINGSZ;
+	vi->queues[VIRTIO_INPUT_EVENT_QUEUE].notify =
+		virtio_input_notify_event_vq;
+
+	vi->queues[VIRTIO_INPUT_STATUS_QUEUE].qsize = VIRTIO_INPUT_RINGSZ;
+	vi->queues[VIRTIO_INPUT_STATUS_QUEUE].notify =
+		virtio_input_notify_status_vq;
+
+	/* initialize config space */
+	pci_set_cfgdata16(dev, PCIR_DEVICE, 0x1040 + VIRTIO_TYPE_INPUT);
+	pci_set_cfgdata16(dev, PCIR_VENDOR, VIRTIO_VENDOR);
+	pci_set_cfgdata8(dev, PCIR_CLASS, PCIC_INPUTDEV);
+	pci_set_cfgdata8(dev, PCIR_SUBCLASS, PCIS_INPUTDEV_OTHER);
+	pci_set_cfgdata16(dev, PCIR_SUBDEV_0, 0x1040 + VIRTIO_TYPE_INPUT);
+	pci_set_cfgdata16(dev, PCIR_SUBVEND_0, VIRTIO_VENDOR);
+
+	if (virtio_interrupt_init(&vi->base, virtio_uses_msix())) {
+		DPRINTF(("%s, interrupt_init failed!\n", __func__));
+		goto fail;
+	}
+	rc = virtio_set_modern_bar(&vi->base, true);
+
+	return rc;
+
+fail:
+	if (vi) {
+		if (mutex_initialized)
+			pthread_mutex_destroy(&vi->mtx);
+		if (vi->event_queue) {
+			free(vi->event_queue);
+			vi->event_queue = NULL;
+		}
+		if (vi->mevp) {
+			mevent_delete(vi->mevp);
+			vi->mevp = NULL;
+		}
+		if (vi->fd > 0) {
+			close(vi->fd);
+			vi->fd = -1;
+		}
+		if (vi->serial) {
+			free(vi->serial);
+			vi->serial = NULL;
+		}
+		if (vi->evdev) {
+			free(vi->evdev);
+			vi->evdev = NULL;
+		}
+		free(vi);
+		vi = NULL;
+	}
+	return -1;
 }
 
 static void
