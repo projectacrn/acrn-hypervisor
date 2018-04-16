@@ -1665,9 +1665,9 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum vm_reg_name seg,
 }
 
 void
-vie_init(struct vie *vie, const char *inst_bytes, int inst_length)
+vie_init(struct vie *vie, const char *inst_bytes, uint32_t inst_length)
 {
-	ASSERT(inst_length >= 0 && inst_length <= VIE_INST_SIZE,
+	ASSERT(inst_length <= VIE_INST_SIZE,
 		"%s: invalid instruction length (%d)", __func__, inst_length);
 
 	memset(vie, 0, sizeof(struct vie));
