@@ -37,9 +37,9 @@ struct vm_exit_dispatch {
 };
 
 struct vm_exit_dispatch *vmexit_handler(struct vcpu *vcpu);
-int vmcall_handler(struct vcpu *vcpu);
-int cpuid_handler(struct vcpu *vcpu);
-int cr_access_handler(struct vcpu *vcpu);
+int vmcall_vmexit_handler(struct vcpu *vcpu);
+int cpuid_vmexit_handler(struct vcpu *vcpu);
+int cr_access_vmexit_handler(struct vcpu *vcpu);
 int get_vmexit_profile(char *str, int str_max);
 
 #define VM_EXIT_QUALIFICATION_BIT_MASK(exit_qual, MSB, LSB)   \

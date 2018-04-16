@@ -167,7 +167,7 @@ struct vm_io_handler {
 #define IO_ATTR_NO_ACCESS       2
 
 /* External Interfaces */
-int io_instr_handler(struct vcpu *vcpu);
+int io_instr_vmexit_handler(struct vcpu *vcpu);
 void   setup_io_bitmap(struct vm *vm);
 void   free_io_emulation_resource(struct vm *vm);
 void   register_io_emulation_handler(struct vm *vm, struct vm_io_range *range,

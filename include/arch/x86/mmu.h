@@ -396,8 +396,8 @@ uint64_t  hpa2gpa(struct vm *vm, uint64_t hpa);
 int ept_mmap(struct vm *vm, uint64_t hpa,
 	uint64_t gpa, uint64_t size, uint32_t type, uint32_t prot);
 
-int     ept_violation_handler(struct vcpu *vcpu);
-int     ept_misconfig_handler(struct vcpu *vcpu);
+int     ept_violation_vmexit_handler(struct vcpu *vcpu);
+int     ept_misconfig_vmexit_handler(struct vcpu *vcpu);
 int     dm_emulate_mmio_post(struct vcpu *vcpu);
 
 #endif /* ASSEMBLER not defined */

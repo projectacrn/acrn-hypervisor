@@ -173,7 +173,7 @@ void init_msr_emulation(struct vcpu *vcpu)
 	memset(vcpu->guest_msrs, 0, msrs_count * sizeof(uint64_t));
 }
 
-int rdmsr_handler(struct vcpu *vcpu)
+int rdmsr_vmexit_handler(struct vcpu *vcpu)
 {
 	uint32_t msr;
 	uint64_t v = 0;
@@ -262,7 +262,7 @@ int rdmsr_handler(struct vcpu *vcpu)
 	return 0;
 }
 
-int wrmsr_handler(struct vcpu *vcpu)
+int wrmsr_vmexit_handler(struct vcpu *vcpu)
 {
 	uint32_t msr;
 	uint64_t v;
