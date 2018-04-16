@@ -245,7 +245,83 @@ virtio_input_notify_event_vq(void *vdev, struct virtio_vq_info *vq)
 static void
 virtio_input_notify_status_vq(void *vdev, struct virtio_vq_info *vq)
 {
-	/* to be implemented */
+	struct virtio_input *vi;
+	struct virtio_input_event event;
+	struct input_event host_event;
+	struct iovec iov;
+	int n, len;
+	uint16_t idx;
+
+	vi = vdev;
+
+	while (vq_has_descs(vq)) {
+		n = vq_getchain(vq, &idx, &iov, 1, NULL);
+		assert(n == 1);
+
+		memcpy(&event, iov.iov_base, sizeof(event));
+		host_event.type = event.type;
+		host_event.code = event.code;
+		host_event.value = event.value;
+		len = write(vi->fd, &host_event, sizeof(host_event));
+		if (len == -1)
+			WPRINTF(("%s: write failed, len = %d, errno = %d\n",
+				__func__, len, errno));
+		vq_relchain(vq, idx, sizeof(event)); /* Release the chain */
+	}
+	vq_endchains(vq, 1);	/* Generate interrupt if appropriate. */
+}
+
+static void
+virtio_input_send_event(struct virtio_input *vi,
+			struct virtio_input_event *event)
+{
+	struct virtio_vq_info *vq;
+	struct iovec iov;
+	int n, i;
+	uint16_t idx;
+
+	if (!vi->ready)
+		return;
+
+	if (vi->event_qindex == vi->event_qsize) {
+		vi->event_qsize++;
+		vi->event_queue = realloc(vi->event_queue,
+			vi->event_qsize *
+			sizeof(struct virtio_input_event_elem));
+		assert(vi->event_queue);
+	}
+	vi->event_queue[vi->event_qindex].event = *event;
+	vi->event_qindex++;
+
+	if (event->type != EV_SYN || event->code != SYN_REPORT)
+		return;
+
+	vq = &vi->queues[VIRTIO_INPUT_EVENT_QUEUE];
+	for (i = 0; i < vi->event_qindex; i++) {
+		if (!vq_has_descs(vq)) {
+			while (i-- > 0)
+				vq_retchain(vq);
+			WPRINTF(("%s: not enough avail descs, dropped:%d\n",
+				__func__, vi->event_qindex));
+			goto out;
+		}
+		n = vq_getchain(vq, &idx, &iov, 1, NULL);
+		assert(n == 1);
+		vi->event_queue[i].iov = iov;
+		vi->event_queue[i].idx = idx;
+	}
+
+	for (i = 0; i < vi->event_qindex; i++) {
+		memcpy(vi->event_queue[i].iov.iov_base,
+			&vi->event_queue[i].event,
+			sizeof(struct virtio_input_event));
+		vq_relchain(vq, vi->event_queue[i].idx,
+			sizeof(struct virtio_input_event));
+	}
+
+out:
+	vi->event_qindex = 0;
+	vq_endchains(vq, 1);
 }
 
 static void
@@ -253,7 +329,26 @@ virtio_input_read_event(int fd __attribute__((unused)),
 			enum ev_type t __attribute__((unused)),
 			void *arg)
 {
-	/* to be implemented */
+	struct virtio_input *vi = arg;
+	struct virtio_input_event event;
+	struct input_event host_event;
+	int len;
+
+	while (1) {
+		len = read(vi->fd, &host_event, sizeof(host_event));
+		if (len != sizeof(host_event)) {
+			if (len == -1 && errno != EAGAIN)
+				WPRINTF(("vtinput: host read failed! "
+					"len = %d, errno = %d\n",
+					len, errno));
+			break;
+		}
+
+		event.type = host_event.type;
+		event.code = host_event.code;
+		event.value = host_event.value;
+		virtio_input_send_event(vi, &event);
+	}
 }
 
 static bool
