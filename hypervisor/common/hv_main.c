@@ -50,13 +50,12 @@ static void run_vcpu_pre_work(struct vcpu *vcpu)
 
 void vcpu_thread(struct vcpu *vcpu)
 {
-	uint64_t vmexit_begin, vmexit_end;
-	uint16_t exit_reason;
+	uint64_t vmexit_begin = 0, vmexit_end = 0;
+	uint16_t basic_exit_reason = 0;
 	uint64_t tsc_aux_hyp_cpu = vcpu->pcpu_id;
 	struct vm_exit_dispatch *vmexit_hdlr;
 	int ret = 0;
 
-	vmexit_begin = vmexit_end = exit_reason = 0;
 	/* If vcpu is not launched, we need to do init_vmcs first */
 	if (!vcpu->launched)
 		init_vmcs(vcpu);
@@ -87,7 +86,7 @@ void vcpu_thread(struct vcpu *vcpu)
 
 		vmexit_end = rdtsc();
 		if (vmexit_begin > 0)
-			per_cpu(vmexit_time, vcpu->pcpu_id)[exit_reason]
+			per_cpu(vmexit_time, vcpu->pcpu_id)[basic_exit_reason]
 				+= (vmexit_end - vmexit_begin);
 		TRACE_2L(TRACE_VM_ENTER, 0, 0);
 
@@ -114,12 +113,12 @@ void vcpu_thread(struct vcpu *vcpu)
 		ASSERT(vmexit_hdlr != 0,
 				"Unable to dispatch VM exit handler!");
 
-		exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFF;
-		per_cpu(vmexit_cnt, vcpu->pcpu_id)[exit_reason]++;
-		TRACE_2L(TRACE_VM_EXIT, exit_reason,
+		basic_exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFF;
+		per_cpu(vmexit_cnt, vcpu->pcpu_id)[basic_exit_reason]++;
+		TRACE_2L(TRACE_VM_EXIT, basic_exit_reason,
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip);
 
-		if (exit_reason == VMX_EXIT_REASON_EXTERNAL_INTERRUPT) {
+		if (basic_exit_reason == VMX_EXIT_REASON_EXTERNAL_INTERRUPT) {
 			/* Handling external_interrupt
 			 * should disable intr
 			 */

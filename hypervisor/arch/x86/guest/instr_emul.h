@@ -72,7 +72,7 @@ int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum vm_reg_name seg,
 	struct seg_desc *desc, uint64_t off, int length, int addrsize, int prot,
 	uint64_t *gla);
 
-void vie_init(struct vie *vie, const char *inst_bytes, int inst_length);
+void vie_init(struct vie *vie, const char *inst_bytes, uint32_t inst_length);
 
 /*
  * Decode the instruction fetched into 'vie' so it can be emulated.
