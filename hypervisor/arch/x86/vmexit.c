@@ -39,9 +39,9 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu);
 /* VM Dispatch table for Exit condition handling */
 static const struct vm_exit_dispatch dispatch_table[] = {
 	[VMX_EXIT_REASON_EXCEPTION_OR_NMI] = {
-		.handler = exception_handler},
+		.handler = exception_vmexit_handler},
 	[VMX_EXIT_REASON_EXTERNAL_INTERRUPT] = {
-		.handler = external_interrupt_handler},
+		.handler = external_interrupt_vmexit_handler},
 	[VMX_EXIT_REASON_TRIPLE_FAULT] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_INIT_SIGNAL] = {
@@ -53,13 +53,13 @@ static const struct vm_exit_dispatch dispatch_table[] = {
 	[VMX_EXIT_REASON_OTHER_SMI] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_INTERRUPT_WINDOW] = {
-		.handler = interrupt_win_exiting_handler},
+		.handler = interrupt_window_vmexit_handler},
 	[VMX_EXIT_REASON_NMI_WINDOW] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_TASK_SWITCH] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_CPUID] = {
-		.handler = cpuid_handler},
+		.handler = cpuid_vmexit_handler},
 	[VMX_EXIT_REASON_GETSEC] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_HLT] = {
@@ -75,7 +75,7 @@ static const struct vm_exit_dispatch dispatch_table[] = {
 	[VMX_EXIT_REASON_RSM] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_VMCALL] = {
-		.handler = vmcall_handler},
+		.handler = vmcall_vmexit_handler},
 	[VMX_EXIT_REASON_VMCLEAR] {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_VMLAUNCH] = {
@@ -95,17 +95,17 @@ static const struct vm_exit_dispatch dispatch_table[] = {
 	[VMX_EXIT_REASON_VMXON] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_CR_ACCESS] = {
-		.handler = cr_access_handler,
+		.handler = cr_access_vmexit_handler,
 		.need_exit_qualification = 1},
 	[VMX_EXIT_REASON_DR_ACCESS] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_IO_INSTRUCTION] = {
-		.handler = io_instr_handler,
+		.handler = io_instr_vmexit_handler,
 		.need_exit_qualification = 1},
 	[VMX_EXIT_REASON_RDMSR] = {
-		.handler = rdmsr_handler},
+		.handler = rdmsr_vmexit_handler},
 	[VMX_EXIT_REASON_WRMSR] = {
-		.handler = wrmsr_handler},
+		.handler = wrmsr_vmexit_handler},
 	[VMX_EXIT_REASON_ENTRY_FAILURE_INVALID_GUEST_STATE] = {
 		.handler = unhandled_vmexit_handler,
 		.need_exit_qualification = 1},
@@ -134,10 +134,10 @@ static const struct vm_exit_dispatch dispatch_table[] = {
 	[VMX_EXIT_REASON_LDTR_TR_ACCESS] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_EPT_VIOLATION] = {
-		.handler = ept_violation_handler,
+		.handler = ept_violation_vmexit_handler,
 		.need_exit_qualification = 1},
 	[VMX_EXIT_REASON_EPT_MISCONFIGURATION] = {
-		.handler = ept_misconfig_handler,
+		.handler = ept_misconfig_vmexit_handler,
 		.need_exit_qualification = 1},
 	[VMX_EXIT_REASON_INVEPT] = {
 		.handler = unhandled_vmexit_handler},
@@ -310,7 +310,7 @@ static int read_cr3(struct vcpu *vcpu, uint64_t *value)
 	return 0;
 }
 
-int cpuid_handler(struct vcpu *vcpu)
+int cpuid_vmexit_handler(struct vcpu *vcpu)
 {
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
@@ -326,7 +326,7 @@ int cpuid_handler(struct vcpu *vcpu)
 	return 0;
 }
 
-int cr_access_handler(struct vcpu *vcpu)
+int cr_access_vmexit_handler(struct vcpu *vcpu)
 {
 	uint64_t *regptr;
 	struct run_context *cur_context =

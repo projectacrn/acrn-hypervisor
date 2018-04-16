@@ -78,7 +78,7 @@ static void dm_emulate_pio_pre(struct vcpu *vcpu, uint64_t exit_qual,
 	vcpu->req.reqs.pio_request.value = req_value;
 }
 
-int io_instr_handler(struct vcpu *vcpu)
+int io_instr_vmexit_handler(struct vcpu *vcpu)
 {
 	uint32_t sz;
 	uint32_t mask;
