@@ -157,6 +157,8 @@ static void virtio_input_neg_features(void *, uint64_t);
 static void virtio_input_set_status(void *, uint64_t);
 static int virtio_input_cfgread(void *, int, int, uint32_t *);
 static int virtio_input_cfgwrite(void *, int, int, uint32_t);
+static bool virtio_input_get_config(struct virtio_input *, uint8_t, uint8_t,
+	struct virtio_input_config *);
 
 static struct virtio_ops virtio_input_ops = {
 	"virtio_input",			/* our name */
@@ -174,32 +176,63 @@ static struct virtio_ops virtio_input_ops = {
 static void
 virtio_input_reset(void *vdev)
 {
-	/* to be implemented */
+	struct virtio_input *vi;
+
+	vi = vdev;
+
+	DPRINTF(("vtinput: device reset requested!\n"));
+	vi->ready = false;
+	virtio_reset_dev(&vi->base);
 }
 
 static void
 virtio_input_neg_features(void *vdev, uint64_t negotiated_features)
 {
-	/* to be implemented */
+	struct virtio_input *vi = vdev;
+
+	vi->features = negotiated_features;
 }
 
 static void
 virtio_input_set_status(void *vdev, uint64_t status)
 {
-	/* to be implemented */
+	struct virtio_input *vi = vdev;
+
+	if (status & VIRTIO_CR_STATUS_DRIVER_OK) {
+		if (!vi->ready)
+			vi->ready = true;
+	}
 }
 
 static int
 virtio_input_cfgread(void *vdev, int offset, int size, uint32_t *retval)
 {
-	/* to be implemented */
+	struct virtio_input *vi = vdev;
+	struct virtio_input_config cfg;
+	bool rc;
+
+	rc = virtio_input_get_config(vi, vi->cfg.select,
+		vi->cfg.subsel, &cfg);
+	if (rc)
+		memcpy(retval, (uint8_t *)&cfg + offset, size);
+	else
+		memset(retval, 0, size);
+
 	return 0;
 }
 
 static int
 virtio_input_cfgwrite(void *vdev, int offset, int size, uint32_t val)
 {
-	/* to be implemented */
+	struct virtio_input *vi = vdev;
+
+	if (offset == offsetof(struct virtio_input_config, select))
+		vi->cfg.select = (uint8_t)val;
+	else if (offset == offsetof(struct virtio_input_config, subsel))
+		vi->cfg.subsel = (uint8_t)val;
+	else
+		DPRINTF(("vtinput: write to readonly reg %d\n", offset));
+
 	return 0;
 }
 
@@ -221,6 +254,14 @@ virtio_input_read_event(int fd __attribute__((unused)),
 			void *arg)
 {
 	/* to be implemented */
+}
+
+static bool
+virtio_input_get_config(struct virtio_input *vi, uint8_t select,
+			uint8_t subsel, struct virtio_input_config *cfg)
+{
+	/* to be implemented */
+	return false;
 }
 
 static int
