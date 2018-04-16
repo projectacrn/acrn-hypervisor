@@ -93,7 +93,7 @@ static inline uint32_t uart16550_read_reg(uint64_t base, uint32_t reg_idx)
 	if (serial_port_mapped) {
 		return io_read_byte((uint16_t)base + reg_idx);
 	} else {
-		return mmio_read_long((void*)((uint32_t*)base + reg_idx));
+		return mmio_read_long((void*)((uint32_t*)HPA2HVA(base) + reg_idx));
 	}
 }
 
@@ -103,7 +103,7 @@ static inline void uart16550_write_reg(uint64_t base,
 	if (serial_port_mapped) {
 		io_write_byte(val, (uint16_t)base + reg_idx);
 	} else {
-		mmio_write_long(val, (void*)((uint32_t*)base + reg_idx));
+		mmio_write_long(val, (void*)((uint32_t*)HPA2HVA(base) + reg_idx));
 	}
 }
 
@@ -339,5 +339,5 @@ void uart16550_set_property(int enabled, int port_mapped, uint64_t base_addr)
 {
 	uart_enabled = enabled;
 	serial_port_mapped = port_mapped;
-	Tgt_Uarts[0].base_address = (uint32_t) base_addr;
+	Tgt_Uarts[0].base_address = base_addr;
 }
