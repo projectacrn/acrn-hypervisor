@@ -93,7 +93,7 @@ static inline uint32_t uart16550_read_reg(uint64_t base, uint32_t reg_idx)
 	if (serial_port_mapped) {
 		return io_read_byte((uint16_t)base + reg_idx);
 	} else {
-		return mmio_read_long((uint64_t)((uint32_t*)base + reg_idx));
+		return mmio_read_long((void*)((uint32_t*)base + reg_idx));
 	}
 }
 
@@ -103,7 +103,7 @@ static inline void uart16550_write_reg(uint64_t base,
 	if (serial_port_mapped) {
 		io_write_byte(val, (uint16_t)base + reg_idx);
 	} else {
-		mmio_write_long(val, (uint64_t)((uint32_t*)base + reg_idx));
+		mmio_write_long(val, (void*)((uint32_t*)base + reg_idx));
 	}
 }
 
