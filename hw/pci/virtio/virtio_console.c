@@ -890,7 +890,8 @@ virtio_console_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		if (backend[0] == '@') {
 			is_console = true;
 			backend++;
-		}
+		} else
+			is_console = false;
 
 		be_type = virtio_console_get_be_type(backend);
 		if (be_type == VIRTIO_CONSOLE_BE_INVALID) {
