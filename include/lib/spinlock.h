@@ -93,14 +93,12 @@ static inline int spinlock_release(spinlock_t *lock)
 
 #define spinlock_rflags unsigned long cpu_int_value
 
-#define spinlock_irq_obtain(l) (CPU_IRQ_DISABLE(), spinlock_obtain((l)))
 #define spinlock_irqsave_obtain(l)			\
 	do {						\
 		CPU_INT_ALL_DISABLE();			\
 		spinlock_obtain((l));			\
 	} while (0)
 
-#define spinlock_irq_release(l) (spinlock_release((l)), CPU_IRQ_ENABLE())
 #define spinlock_irqrestore_release(l)			\
 	do {						\
 		spinlock_release((l));			\
