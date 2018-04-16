@@ -691,7 +691,24 @@ fail:
 static void
 virtio_input_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
-	/* to be implemented */
+	struct virtio_input *vi;
+
+	vi = (struct virtio_input *)dev->arg;
+	if (vi) {
+		pthread_mutex_destroy(&vi->mtx);
+		if (vi->event_queue)
+			free(vi->event_queue);
+		if (vi->mevp)
+			mevent_delete(vi->mevp);
+		if (vi->fd > 0)
+			close(vi->fd);
+		if (vi->evdev)
+			free(vi->evdev);
+		if (vi->serial)
+			free(vi->serial);
+		free(vi);
+		vi = NULL;
+	}
 }
 
 struct pci_vdev_ops pci_ops_virtio_input = {
