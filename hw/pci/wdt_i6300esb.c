@@ -132,7 +132,7 @@ wdt_expired_thread(union sigval v)
 }
 
 static void
-stop_wdt_timer()
+stop_wdt_timer(void)
 {
 	struct itimerspec timer_val;
 
@@ -143,6 +143,19 @@ stop_wdt_timer()
 
 	memset(&timer_val, 0, sizeof(struct itimerspec));
 	timer_settime(wdt_state.wdt_timerid, 0, &timer_val, NULL);
+}
+
+static void
+delete_wdt_timer(void)
+{
+	if (!wdt_state.timer_created)
+		return;
+
+	DPRINTF("%s: timer %ld deleted\n", __func__,
+		(uint64_t)wdt_state.wdt_timerid);
+
+	timer_delete(wdt_state.wdt_timerid);
+	wdt_state.timer_created = false;
 }
 
 static void
@@ -340,11 +353,10 @@ pci_wdt_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	return 0;
 }
 
-
 static void
 pci_wdt_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
-	stop_wdt_timer();
+	delete_wdt_timer();
 	memset(&wdt_state, 0, sizeof(wdt_state));
 }
 
