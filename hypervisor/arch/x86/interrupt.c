@@ -215,11 +215,11 @@ void dump_lapic(void)
 {
 	dev_dbg(ACRN_DBG_INTR,
 		"LAPIC: TIME %08x, init=0x%x cur=0x%x ISR=0x%x IRR=0x%x",
-		mmio_read_long(0xFEE00000 + LAPIC_LVT_TIMER_REGISTER),
-		mmio_read_long(0xFEE00000 + LAPIC_INITIAL_COUNT_REGISTER),
-		mmio_read_long(0xFEE00000 + LAPIC_CURRENT_COUNT_REGISTER),
-		mmio_read_long(0xFEE00000 + LAPIC_IN_SERVICE_REGISTER_7),
-		mmio_read_long(0xFEE00000 + LAPIC_INT_REQUEST_REGISTER_7));
+		mmio_read_long((void*)(0xFEE00000 + LAPIC_LVT_TIMER_REGISTER)),
+		mmio_read_long((void*)(0xFEE00000 + LAPIC_INITIAL_COUNT_REGISTER)),
+		mmio_read_long((void*)(0xFEE00000 + LAPIC_CURRENT_COUNT_REGISTER)),
+		mmio_read_long((void*)(0xFEE00000 + LAPIC_IN_SERVICE_REGISTER_7)),
+		mmio_read_long((void*)(0xFEE00000 + LAPIC_INT_REQUEST_REGISTER_7)));
 }
 
 int vcpu_inject_extint(struct vcpu *vcpu)

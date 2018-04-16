@@ -180,7 +180,7 @@ int dm_emulate_pio_post(struct vcpu *vcpu);
  *  @param value The 32 bit value to write.
  *  @param addr The memory address to write to.
  */
-static inline void mmio_write_long(uint32_t value, uint64_t addr)
+static inline void mmio_write_long(uint32_t value, void *addr)
 {
 	*((uint32_t *)addr) = value;
 }
@@ -190,7 +190,7 @@ static inline void mmio_write_long(uint32_t value, uint64_t addr)
  *  @param value The 16 bit value to write.
  *  @param addr The memory address to write to.
  */
-static inline void mmio_write_word(uint32_t value, uint64_t addr)
+static inline void mmio_write_word(uint32_t value, void *addr)
 {
 	*((uint16_t *)addr) = value;
 }
@@ -200,7 +200,7 @@ static inline void mmio_write_word(uint32_t value, uint64_t addr)
  *  @param value The 8 bit value to write.
  *  @param addr The memory address to write to.
  */
-static inline void mmio_write_byte(uint32_t value, uint64_t addr)
+static inline void mmio_write_byte(uint32_t value, void *addr)
 {
 	*((uint8_t *)addr) = value;
 }
@@ -211,7 +211,7 @@ static inline void mmio_write_byte(uint32_t value, uint64_t addr)
  *
  *  @return The 32 bit value read from the given address.
  */
-static inline uint32_t mmio_read_long(uint64_t addr)
+static inline uint32_t mmio_read_long(void *addr)
 {
 	return *((uint32_t *)addr);
 }
@@ -222,7 +222,7 @@ static inline uint32_t mmio_read_long(uint64_t addr)
  *
  *  @return The 16 bit value read from the given address.
  */
-static inline uint16_t mmio_read_word(uint64_t addr)
+static inline uint16_t mmio_read_word(void *addr)
 {
 	return *((uint16_t *)addr);
 }
@@ -233,7 +233,7 @@ static inline uint16_t mmio_read_word(uint64_t addr)
  *
  *  @return The 8 bit  value read from the given address.
  */
-static inline uint8_t mmio_read_byte(uint64_t addr)
+static inline uint8_t mmio_read_byte(void *addr)
 {
 	return *((uint8_t *)addr);
 }
@@ -245,7 +245,7 @@ static inline uint8_t mmio_read_byte(uint64_t addr)
  *              location.
  *  @param addr The memory address to read from/write to.
  */
-static inline void mmio_or_long(uint32_t mask, uint64_t addr)
+static inline void mmio_or_long(uint32_t mask, void *addr)
 {
 	*((uint32_t *)addr) |= mask;
 }
@@ -257,7 +257,7 @@ static inline void mmio_or_long(uint32_t mask, uint64_t addr)
  *              location.
  *  @param addr The memory address to read from/write to.
  */
-static inline void mmio_or_word(uint32_t mask, uint64_t addr)
+static inline void mmio_or_word(uint32_t mask, void *addr)
 {
 	*((uint16_t *)addr) |= mask;
 }
@@ -269,7 +269,7 @@ static inline void mmio_or_word(uint32_t mask, uint64_t addr)
  *              location.
  *  @param addr The memory address to read from/write to.
  */
-static inline void mmio_or_byte(uint32_t mask, uint64_t addr)
+static inline void mmio_or_byte(uint32_t mask, void *addr)
 {
 	*((uint8_t *)addr) |= mask;
 }
@@ -281,7 +281,7 @@ static inline void mmio_or_byte(uint32_t mask, uint64_t addr)
  *              location.
  *  @param addr The memory address to read from/write to.
  */
-static inline void mmio_and_long(uint32_t mask, uint64_t addr)
+static inline void mmio_and_long(uint32_t mask, void *addr)
 {
 	*((uint32_t *)addr) &= ~mask;
 }
@@ -293,7 +293,7 @@ static inline void mmio_and_long(uint32_t mask, uint64_t addr)
  *              location.
  *  @param addr The memory address to read from/write to.
  */
-static inline void mmio_and_word(uint32_t mask, uint64_t addr)
+static inline void mmio_and_word(uint32_t mask, void *addr)
 {
 	*((uint16_t *)addr) &= ~mask;
 }
@@ -305,7 +305,7 @@ static inline void mmio_and_word(uint32_t mask, uint64_t addr)
  *              location.
  *  @param addr The memory address to read from/write to.
  */
-static inline void mmio_and_byte(uint32_t mask, uint64_t addr)
+static inline void mmio_and_byte(uint32_t mask, void *addr)
 {
 	*((uint8_t *)addr) &= ~mask;
 }
@@ -323,7 +323,7 @@ static inline void mmio_and_byte(uint32_t mask, uint64_t addr)
  *               mask are cleared at the memory address.
  *  @param addr The memory address to read from/write to.
  */
-static inline void mmio_rmw_long(uint32_t set, uint32_t clear, uint64_t addr)
+static inline void mmio_rmw_long(uint32_t set, uint32_t clear, void *addr)
 {
 	*((uint32_t *)addr) =
 	    (*((uint32_t *)addr) & ~clear) | set;
@@ -342,7 +342,7 @@ static inline void mmio_rmw_long(uint32_t set, uint32_t clear, uint64_t addr)
  *               mask are cleared at the memory address.
  *  @param addr The memory address to read from/write to.
  */
-static inline void mmio_rmw_word(uint32_t set, uint32_t clear, uint64_t addr)
+static inline void mmio_rmw_word(uint32_t set, uint32_t clear, void *addr)
 {
 	*((uint16_t *)addr) =
 	    (*((uint16_t *)addr) & ~clear) | set;
@@ -361,7 +361,7 @@ static inline void mmio_rmw_word(uint32_t set, uint32_t clear, uint64_t addr)
  *               mask are cleared at the memory address.
  *  @param addr The memory address to read from/write to.
  */
-static inline void mmio_rmw_byte(uint32_t set, uint32_t clear, uint64_t addr)
+static inline void mmio_rmw_byte(uint32_t set, uint32_t clear, void *addr)
 {
 	*((uint8_t *)addr) = (*((uint8_t *)addr) & ~clear) | set;
 }
@@ -371,7 +371,7 @@ static inline void mmio_rmw_byte(uint32_t set, uint32_t clear, uint64_t addr)
  *  @param value The 32 bit value to write.
  *  @param addr The memory address to write to.
  */
-static inline void __mmio_write_long(uint32_t value, uint64_t addr)
+static inline void __mmio_write_long(uint32_t value, void *addr)
 {
 	*((uint32_t *)addr) = value;
 }
@@ -381,7 +381,7 @@ static inline void __mmio_write_long(uint32_t value, uint64_t addr)
  *  @param value The 16 bit value to write.
  *  @param addr The memory address to write to.
  */
-static inline void __mmio_write_word(uint32_t value, uint64_t addr)
+static inline void __mmio_write_word(uint32_t value, void *addr)
 {
 	*((uint16_t *)addr) = value;
 }
@@ -391,7 +391,7 @@ static inline void __mmio_write_word(uint32_t value, uint64_t addr)
  *  @param value The 8 bit value to write.
  *  @param addr The memory address to write to.
  */
-static inline void __mmio_write_byte(uint32_t value, uint64_t addr)
+static inline void __mmio_write_byte(uint32_t value, void *addr)
 {
 	*((uint8_t *)addr) = value;
 }
@@ -402,7 +402,7 @@ static inline void __mmio_write_byte(uint32_t value, uint64_t addr)
  *
  *  @return The 32 bit value read from the given address.
  */
-static inline uint32_t __mmio_read_long(uint64_t addr)
+static inline uint32_t __mmio_read_long(void *addr)
 {
 	return *((uint32_t *)addr);
 }
@@ -413,7 +413,7 @@ static inline uint32_t __mmio_read_long(uint64_t addr)
  *
  *  @return The 16 bit value read from the given address.
  */
-static inline uint16_t __mmio_read_word(uint64_t addr)
+static inline uint16_t __mmio_read_word(void *addr)
 {
 	return *((uint16_t *)addr);
 }
@@ -424,7 +424,7 @@ static inline uint16_t __mmio_read_word(uint64_t addr)
  *
  *  @return The 32 16 value read from the given address.
  */
-static inline uint8_t __mmio_read_byte(uint64_t addr)
+static inline uint8_t __mmio_read_byte(void *addr)
 {
 	return *((uint8_t *)addr);
 }
@@ -436,7 +436,7 @@ static inline uint8_t __mmio_read_byte(uint64_t addr)
  *              location.
  *  @param addr The memory address to read from/write to.
  */
-static inline void __mmio_or_long(uint32_t mask, uint64_t addr)
+static inline void __mmio_or_long(uint32_t mask, void *addr)
 {
 	*((uint32_t *)addr) |= mask;
 }
@@ -448,7 +448,7 @@ static inline void __mmio_or_long(uint32_t mask, uint64_t addr)
  *              location.
  *  @param addr The memory address to read from/write to.
  */
-static inline void __mmio_or_word(uint32_t mask, uint64_t addr)
+static inline void __mmio_or_word(uint32_t mask, void *addr)
 {
 	*((uint16_t *)addr) |= mask;
 }
@@ -460,7 +460,7 @@ static inline void __mmio_or_word(uint32_t mask, uint64_t addr)
  *              location.
  *  @param addr The memory address to read from/write to.
  */
-static inline void __mmio_or_byte(uint32_t mask, uint64_t addr)
+static inline void __mmio_or_byte(uint32_t mask, void *addr)
 {
 	*((uint8_t *)addr) |= mask;
 }
@@ -472,7 +472,7 @@ static inline void __mmio_or_byte(uint32_t mask, uint64_t addr)
  *              location.
  *  @param addr The memory address to read from/write to.
  */
-static inline void __mmio_and_long(uint32_t mask, uint64_t addr)
+static inline void __mmio_and_long(uint32_t mask, void *addr)
 {
 	*((uint32_t *)addr) &= ~mask;
 }
@@ -484,7 +484,7 @@ static inline void __mmio_and_long(uint32_t mask, uint64_t addr)
  *              location.
  *  @param addr The memory address to read from/write to.
  */
-static inline void __mmio_and_word(uint32_t mask, uint64_t addr)
+static inline void __mmio_and_word(uint32_t mask, void *addr)
 {
 	*((uint16_t *)addr) &= ~mask;
 }
@@ -496,7 +496,7 @@ static inline void __mmio_and_word(uint32_t mask, uint64_t addr)
  *              location.
  *  @param addr The memory address to read from/write to.
  */
-static inline void __mmio_and_byte(uint32_t mask, uint64_t addr)
+static inline void __mmio_and_byte(uint32_t mask, void *addr)
 {
 	*((uint8_t *)addr) &= ~mask;
 }
@@ -516,7 +516,7 @@ static inline void __mmio_and_byte(uint32_t mask, uint64_t addr)
  *  @param addr The memory address to read from/write to.
  */
 static inline void
-__mmio_rmw_long(uint32_t set, uint32_t clear, uint64_t addr)
+__mmio_rmw_long(uint32_t set, uint32_t clear, void *addr)
 {
 	*((uint32_t *)addr) =
 	    (*((uint32_t *)addr) & ~clear) | set;
@@ -537,7 +537,7 @@ __mmio_rmw_long(uint32_t set, uint32_t clear, uint64_t addr)
  *  @param addr The memory address to read from/write to.
  */
 static inline void
-__mmio_rmw_word(uint32_t set, uint32_t clear, uint64_t addr)
+__mmio_rmw_word(uint32_t set, uint32_t clear, void *addr)
 {
 	*((uint16_t *)addr) =
 	    (*((uint16_t *)addr) & ~clear) | set;
@@ -558,7 +558,7 @@ __mmio_rmw_word(uint32_t set, uint32_t clear, uint64_t addr)
  *  @param addr The memory address to read from/write to.
  */
 static inline void
-__mmio_rmw_byte(uint32_t set, uint32_t clear, uint64_t addr)
+__mmio_rmw_byte(uint32_t set, uint32_t clear, void *addr)
 {
 	*((uint8_t *)addr) = (*((uint8_t *)addr) & ~clear) | set;
 }
@@ -570,7 +570,7 @@ __mmio_rmw_byte(uint32_t set, uint32_t clear, uint64_t addr)
  * @param mask    The mask to apply to the value read.
  * @param value   The 32 bit value to write.
  */
-static inline void setl(uint64_t addr, uint32_t mask, uint32_t value)
+static inline void setl(void *addr, uint32_t mask, uint32_t value)
 {
 	mmio_write_long((mmio_read_long(addr) & ~mask) | value, addr);
 }
@@ -582,7 +582,7 @@ static inline void setl(uint64_t addr, uint32_t mask, uint32_t value)
  * @param mask    The mask to apply to the value read.
  * @param value   The 16 bit value to write.
  */
-static inline void setw(uint64_t addr, uint32_t mask, uint32_t value)
+static inline void setw(void *addr, uint32_t mask, uint32_t value)
 {
 	mmio_write_word((mmio_read_word(addr) & ~mask) | value, addr);
 }
@@ -594,7 +594,7 @@ static inline void setw(uint64_t addr, uint32_t mask, uint32_t value)
  * @param mask    The mask to apply to the value read.
  * @param value   The 8 bit value to write.
  */
-static inline void setb(uint64_t addr, uint32_t mask, uint32_t value)
+static inline void setb(void *addr, uint32_t mask, uint32_t value)
 {
 	mmio_write_byte((mmio_read_byte(addr) & ~mask) | value, addr);
 }
