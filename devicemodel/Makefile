@@ -71,6 +71,7 @@ SRCS += hw/pci/xhci.c
 SRCS += hw/pci/core.c
 SRCS += hw/pci/virtio/virtio_console.c
 SRCS += hw/pci/virtio/virtio_block.c
+SRCS += hw/pci/virtio/virtio_input.c
 SRCS += hw/pci/ahci.c
 SRCS += hw/pci/hostbridge.c
 SRCS += hw/pci/passthrough.c
