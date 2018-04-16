@@ -47,7 +47,7 @@ struct ioapic_rte {
 struct gsi_table {
 	uint8_t ioapic_id;
 	uint8_t pin;
-	uint64_t addr;
+	void  *addr;
 };
 static struct gsi_table gsi_table[NR_MAX_GSI];
 static int nr_gsi;
@@ -76,17 +76,17 @@ uint16_t legacy_irq_to_pin[NR_LEGACY_IRQ] = {
 	15, /* IRQ15*/
 };
 
-static uint64_t map_ioapic(
+static void *map_ioapic(
 		uint64_t ioapic_paddr)
 {
 	/* At some point we may need to translate this paddr to a vaddr.
 	 * 1:1 mapping for now.
 	 */
-	return ioapic_paddr;
+	return HPA2HVA(ioapic_paddr);
 }
 
 static inline uint32_t
-ioapic_read_reg32(const uint64_t ioapic_base, const uint8_t offset)
+ioapic_read_reg32(const void *ioapic_base, const uint8_t offset)
 {
 	uint32_t v;
 
@@ -104,7 +104,7 @@ ioapic_read_reg32(const uint64_t ioapic_base, const uint8_t offset)
 }
 
 static inline void
-ioapic_write_reg32(const uint64_t ioapic_base,
+ioapic_write_reg32(const void *ioapic_base,
 		const uint8_t offset, const uint32_t value)
 {
 	spinlock_rflags;
@@ -138,7 +138,7 @@ get_ioapic_base(int apic_id)
 
 
 static inline void
-ioapic_get_rte_entry(uint64_t ioapic_addr,
+ioapic_get_rte_entry(void *ioapic_addr,
 		int pin, struct ioapic_rte *rte)
 {
 	rte->lo_32 = ioapic_read_reg32(ioapic_addr, pin*2 + 0x10);
@@ -146,7 +146,7 @@ ioapic_get_rte_entry(uint64_t ioapic_addr,
 }
 
 static inline void
-ioapic_set_rte_entry(uint64_t ioapic_addr,
+ioapic_set_rte_entry(void *ioapic_addr,
 		int pin, struct ioapic_rte *rte)
 {
 	ioapic_write_reg32(ioapic_addr, pin*2 + 0x10, rte->lo_32);
@@ -204,7 +204,7 @@ create_rte_for_gsi_irq(int irq, int vr)
 
 static void ioapic_set_routing(int gsi, int vr)
 {
-	uint64_t addr;
+	void *addr;
 	struct ioapic_rte rte;
 
 	addr = gsi_table[gsi].addr;
@@ -223,7 +223,7 @@ static void ioapic_set_routing(int gsi, int vr)
 
 void ioapic_get_rte(int irq, uint64_t *rte)
 {
-	uint64_t addr;
+	void *addr;
 	struct ioapic_rte _rte;
 
 	if (!irq_is_gsi(irq))
@@ -238,7 +238,7 @@ void ioapic_get_rte(int irq, uint64_t *rte)
 
 void ioapic_set_rte(int irq, uint64_t raw_rte)
 {
-	uint64_t addr;
+	void *addr;
 	struct ioapic_rte rte;
 
 	if (!irq_is_gsi(irq))
@@ -289,7 +289,7 @@ int pin_to_irq(int pin)
 void
 irq_gsi_mask_unmask(int irq, bool mask)
 {
-	uint64_t addr = gsi_table[irq].addr;
+	void *addr = gsi_table[irq].addr;
 	int pin = gsi_table[irq].pin;
 	struct ioapic_rte rte;
 
@@ -318,7 +318,7 @@ void setup_ioapic_irq(void)
 		int pin;
 		int max_pins;
 		int version;
-		uint64_t addr;
+		void *addr;
 
 		addr = map_ioapic(get_ioapic_base(ioapic_id));
 		version = ioapic_read_reg32(addr, IOAPIC_VER);
@@ -372,7 +372,7 @@ void dump_ioapic(void)
 	int irq;
 
 	for (irq = 0; irq < nr_gsi; irq++) {
-		uint64_t addr = gsi_table[irq].addr;
+		void *addr = gsi_table[irq].addr;
 		int pin = gsi_table[irq].pin;
 		struct ioapic_rte rte;
 
@@ -404,7 +404,7 @@ int get_ioapic_info(char *str, int str_max_len)
 	str += len;
 
 	for (irq = 0; irq < nr_gsi; irq++) {
-		uint64_t addr = gsi_table[irq].addr;
+		void *addr = gsi_table[irq].addr;
 		int pin = gsi_table[irq].pin;
 		struct ioapic_rte rte;
 

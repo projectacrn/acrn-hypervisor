@@ -468,15 +468,15 @@ static void *walk_paging_struct(void *addr, void *table_base,
 	return sub_table_addr;
 }
 
-void *get_paging_pml4(void)
+uint64_t get_paging_pml4(void)
 {
 	/* Return address to caller */
-	return mmu_pml4_addr;
+	return HVA2HPA(mmu_pml4_addr);
 }
 
-void enable_paging(void *pml4_base_addr)
+void enable_paging(uint64_t pml4_base_addr)
 {
-	CPU_CR_WRITE(cr3, (unsigned long)pml4_base_addr);
+	CPU_CR_WRITE(cr3, pml4_base_addr);
 }
 
 void init_paging(void)
@@ -527,7 +527,7 @@ void init_paging(void)
 	pr_dbg("Enabling MMU ");
 
 	/* Enable paging */
-	enable_paging(mmu_pml4_addr);
+	enable_paging(HVA2HPA(mmu_pml4_addr));
 }
 
 void *alloc_paging_struct(void)
