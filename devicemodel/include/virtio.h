@@ -215,6 +215,7 @@ struct vring_used {
 #define	VIRTIO_TYPE_RPMSG	7
 #define	VIRTIO_TYPE_SCSI	8
 #define	VIRTIO_TYPE_9P		9
+#define	VIRTIO_TYPE_INPUT	18
 
 /*
  * ACRN virtio device types
