@@ -156,9 +156,9 @@ int vcpu_inject_nmi(struct vcpu *vcpu);
 int vcpu_inject_gp(struct vcpu *vcpu);
 int vcpu_make_request(struct vcpu *vcpu, int eventid);
 
-int exception_handler(struct vcpu *vcpu);
-int interrupt_win_exiting_handler(struct vcpu *vcpu);
-int external_interrupt_handler(struct vcpu *vcpu);
+int exception_vmexit_handler(struct vcpu *vcpu);
+int interrupt_window_vmexit_handler(struct vcpu *vcpu);
+int external_interrupt_vmexit_handler(struct vcpu *vcpu);
 int acrn_do_intr_process(struct vcpu *vcpu);
 int interrupt_init(uint32_t logical_id);
 

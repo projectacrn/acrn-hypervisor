@@ -400,7 +400,7 @@ static int dm_emulate_mmio_pre(struct vcpu *vcpu, uint64_t exit_qual)
 	return 0;
 }
 
-int ept_violation_handler(struct vcpu *vcpu)
+int ept_violation_vmexit_handler(struct vcpu *vcpu)
 {
 	int status;
 	uint64_t exit_qual;
@@ -499,7 +499,7 @@ out:
 	return status;
 }
 
-int ept_misconfig_handler(__unused struct vcpu *vcpu)
+int ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu)
 {
 	int status;
 

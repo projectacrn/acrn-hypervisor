@@ -35,7 +35,7 @@
 #include <acrn_hv_defs.h>
 #include <hypercall.h>
 
-int vmcall_handler(struct vcpu *vcpu)
+int vmcall_vmexit_handler(struct vcpu *vcpu)
 {
 	int64_t ret = 0;
 	struct vm *vm = vcpu->vm;

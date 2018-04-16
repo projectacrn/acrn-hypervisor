@@ -237,7 +237,7 @@ int vcpu_inject_gp(struct vcpu *vcpu)
 	return vcpu_make_request(vcpu, ACRN_REQUEST_GP);
 }
 
-int interrupt_win_exiting_handler(struct vcpu *vcpu)
+int interrupt_window_vmexit_handler(struct vcpu *vcpu)
 {
 	int value32;
 
@@ -264,7 +264,7 @@ int interrupt_win_exiting_handler(struct vcpu *vcpu)
 	return 0;
 }
 
-int external_interrupt_handler(struct vcpu *vcpu)
+int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 {
 	int vector = exec_vmread(VMX_EXIT_INT_INFO) & 0xFF;
 	struct intr_ctx ctx;
@@ -417,7 +417,7 @@ void cancel_event_injection(struct vcpu *vcpu)
 	}
 }
 
-int exception_handler(struct vcpu *vcpu)
+int exception_vmexit_handler(struct vcpu *vcpu)
 {
 	uint32_t intinfo, int_err_code;
 	uint32_t exception_vector;
