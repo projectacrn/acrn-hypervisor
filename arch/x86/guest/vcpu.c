@@ -136,7 +136,8 @@ int create_vcpu(int cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 
 int start_vcpu(struct vcpu *vcpu)
 {
-	uint64_t rip, instlen;
+	uint32_t instlen;
+	uint64_t rip;
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	int64_t status = 0;
