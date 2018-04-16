@@ -107,7 +107,6 @@ struct acpi_madt_local_apic {
 };
 
 static void *global_rsdp;
-static uint64_t madt;
 
 static struct acpi_table_rsdp*
 biosacpi_search_rsdp(char *base, int length)
@@ -150,14 +149,14 @@ static void *get_rsdp(void)
 #endif
 
 	/* EBDA is addressed by the 16 bit pointer at 0x40E */
-	addr = (uint16_t *)0x40E;
+	addr = (uint16_t *)HPA2HVA(0x40E);
 
-	rsdp = biosacpi_search_rsdp((char *)((uint64_t)(*addr << 4)), 0x400);
+	rsdp = biosacpi_search_rsdp((char *)HPA2HVA((uint64_t)(*addr << 4)), 0x400);
 	if (rsdp != NULL)
 		return rsdp;
 
 	/* Check the upper memory BIOS space, 0xe0000 - 0xfffff. */
-	rsdp = biosacpi_search_rsdp((char *)0xe0000, 0x20000);
+	rsdp = biosacpi_search_rsdp((char *)HPA2HVA(0xe0000), 0x20000);
 	if (rsdp != NULL)
 		return rsdp;
 
@@ -167,7 +166,8 @@ static void *get_rsdp(void)
 static int
 probe_table(uint64_t address, const char *sig)
 {
-	struct acpi_table_header *table = (struct acpi_table_header *)address;
+	void *va =  HPA2HVA(address);
+	struct acpi_table_header *table = (struct acpi_table_header *)va;
 
 	if (strncmp(table->signature, sig, ACPI_NAME_SIZE) != 0)
 		return 0;
@@ -175,7 +175,7 @@ probe_table(uint64_t address, const char *sig)
 	return 1;
 }
 
-uint64_t get_acpi_tbl(char *sig)
+void *get_acpi_tbl(char *sig)
 {
 	struct acpi_table_rsdp *rsdp;
 	struct acpi_table_rsdt *rsdt;
@@ -191,7 +191,7 @@ uint64_t get_acpi_tbl(char *sig)
 		 * the version 1.0 portion of the RSDP.  Version 2.0 has
 		 * an additional checksum that we verify first.
 		 */
-		xsdt = (struct acpi_table_xsdt *)(rsdp->xsdt_physical_address);
+		xsdt = (struct acpi_table_xsdt *)HPA2HVA(rsdp->xsdt_physical_address);
 		count = (xsdt->header.length -
 				sizeof(struct acpi_table_header)) /
 		    sizeof(uint64_t);
@@ -205,7 +205,7 @@ uint64_t get_acpi_tbl(char *sig)
 	} else {
 		/* Root table is an RSDT (32-bit physical addresses) */
 		rsdt = (struct acpi_table_rsdt *)
-				((void *)(uint64_t)rsdp->rsdt_physical_address);
+				HPA2HVA((uint64_t)rsdp->rsdt_physical_address);
 		count = (rsdt->header.length -
 				sizeof(struct acpi_table_header)) /
 			sizeof(uint32_t);
@@ -218,10 +218,10 @@ uint64_t get_acpi_tbl(char *sig)
 		}
 	}
 
-	return addr;
+	return HPA2HVA(addr);
 }
 
-static int _parse_madt(uint64_t madt, uint8_t *lapic_id_base)
+static int _parse_madt(void *madt, uint8_t *lapic_id_base)
 {
 	int pcpu_id = 0;
 	struct acpi_madt_local_apic *processor;
@@ -257,6 +257,8 @@ static int _parse_madt(uint64_t madt, uint8_t *lapic_id_base)
 /* The lapic_id info gotten from madt will be returned in lapic_id_base */
 int parse_madt(uint8_t *lapic_id_base)
 {
+	void *madt;
+
 	global_rsdp = get_rsdp();
 	ASSERT(global_rsdp != NULL, "fail to get rsdp");
 
@@ -266,7 +268,7 @@ int parse_madt(uint8_t *lapic_id_base)
 	return _parse_madt(madt, lapic_id_base);
 }
 
-uint64_t get_dmar_table(void)
+void *get_dmar_table(void)
 {
 	return get_acpi_tbl(ACPI_SIG_DMAR);
 }
