@@ -94,7 +94,7 @@ static inline bool cpu_has_vmx_vpid_cap(uint32_t bit_mask)
 	return !!(vmx_caps.vpid & bit_mask);
 }
 
-static void check_mmu_capability(void)
+int check_vmx_mmu_cap(void)
 {
 	uint64_t val;
 
@@ -103,8 +103,17 @@ static void check_mmu_capability(void)
 	vmx_caps.ept = (uint32_t) val;
 	vmx_caps.vpid = (uint32_t) (val >> 32);
 
-	if (!cpu_has_vmx_ept_cap(VMX_EPT_INVEPT))
-		panic("invept must be supported");
+	if (!cpu_has_vmx_ept_cap(VMX_EPT_INVEPT)) {
+		pr_fatal("%s, invept not supported\n", __func__);
+		return -ENODEV;
+	}
+
+	if (!cpu_has_vmx_vpid_cap(VMX_VPID_INVVPID)) {
+		pr_fatal("%s, invvpid not supported\n", __func__);
+		return -ENODEV;
+	}
+
+	return 0;
 }
 
 void invept(struct vcpu *vcpu)
@@ -494,8 +503,6 @@ void init_paging(void)
 			MMU_MEM_ATTR_UNCACHED);
 
 	pr_dbg("HV MMU Initialization");
-
-	check_mmu_capability();
 
 	/* Allocate memory for Hypervisor PML4 table */
 	mmu_pml4_addr = alloc_paging_struct();

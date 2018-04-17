@@ -170,7 +170,7 @@
 #define     IA32E_NUM_ENTRIES               512
 #define     IA32E_INDEX_MASK                (uint64_t)(IA32E_NUM_ENTRIES - 1)
 #define     IA32E_REF_MASK			\
-	(boot_cpu_data.physical_address_mask)
+		(boot_cpu_data.physical_address_mask)
 #define     IA32E_FIRST_BLOCK_INDEX         1
 
 /* Macro to get PML4 index given an address */
@@ -326,6 +326,7 @@ int unmap_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		      uint64_t size, uint32_t flags);
 int modify_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		       uint64_t size, uint32_t flags);
+int check_vmx_mmu_cap(void);
 void invept(struct vcpu *vcpu);
 bool check_continuous_hpa(struct vm *vm, uint64_t gpa, uint64_t size);
 int obtain_last_page_table_entry(struct map_params *map_params,
