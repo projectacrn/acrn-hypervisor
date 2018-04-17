@@ -236,8 +236,10 @@ enum feature_word {
 };
 
 struct cpu_state_info {
-	uint8_t			px_cnt;
+	uint8_t			px_cnt;		/* count of all Px states */
 	struct cpu_px_data	*px_data;
+	uint8_t 		cx_cnt;		/* count of all Cx entries */
+	struct cpu_cx_data	*cx_data;
 };
 
 struct cpuinfo_x86 {
@@ -254,7 +256,13 @@ struct cpuinfo_x86 {
 
 extern struct cpuinfo_x86 boot_cpu_data;
 
-#define MAX_PSTATE	20
+#define MAX_PSTATE	20	/* max num of supported Px count */
+#define MAX_CSTATE	8	/* max num of supported Cx count */
+
+/* We support MAX_CSTATE num of Cx, means have (MAX_CSTATE - 1) Cx entries,
+ * i.e. supported Cx entry index range from 1 to MAX_CX_ENTRY.
+ */
+#define MAX_CX_ENTRY	(MAX_CSTATE - 1)
 
 /* Function prototypes */
 void cpu_dead(uint32_t logical_id);
