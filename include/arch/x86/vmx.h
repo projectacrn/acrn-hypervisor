@@ -376,6 +376,7 @@
 /* VMX entry/exit Interrupt info */
 #define VMX_INT_INFO_ERR_CODE_VALID	(1<<11)
 #define VMX_INT_INFO_VALID		(1<<31)
+#define VMX_INT_TYPE_MASK		(0x700)
 #define VMX_INT_TYPE_EXT_INT		0
 #define VMX_INT_TYPE_NMI		2
 #define VMX_INT_TYPE_HW_EXP		3
