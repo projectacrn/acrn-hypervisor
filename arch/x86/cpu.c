@@ -126,7 +126,6 @@ static uint64_t get_address_mask(uint8_t limit)
 static void get_cpu_capabilities(void)
 {
 	uint32_t eax, unused;
-	uint32_t max_extended_function_idx;
 	uint32_t family, model;
 
 	cpuid(CPUID_FEATURES, &eax, &unused,
@@ -149,27 +148,27 @@ static void get_cpu_capabilities(void)
 		&boot_cpu_data.cpuid_leaves[FEAT_7_0_EDX]);
 
 	cpuid(CPUID_MAX_EXTENDED_FUNCTION,
-		&max_extended_function_idx,
+		&boot_cpu_data.extended_cpuid_level,
 		&unused, &unused, &unused);
-	boot_cpu_data.cpuid_leaves[FEAT_8000_0000_EAX] =
-		max_extended_function_idx;
 
-	if (max_extended_function_idx < CPUID_EXTEND_ADDRESS_SIZE) {
-		panic("CPU w/o CPUID.80000008H is not supported");
+	if (boot_cpu_data.extended_cpuid_level >= CPUID_EXTEND_FUNCTION_1)
+		cpuid(CPUID_EXTEND_FUNCTION_1, &unused, &unused,
+			&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_ECX],
+			&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_EDX]);
+
+	if (boot_cpu_data.extended_cpuid_level >= CPUID_EXTEND_ADDRESS_SIZE) {
+		cpuid(CPUID_EXTEND_ADDRESS_SIZE, &eax,
+			&boot_cpu_data.cpuid_leaves[FEAT_8000_0008_EBX],
+			&unused, &unused);
+
+			/* EAX bits 07-00: #Physical Address Bits
+			 *     bits 15-08: #Linear Address Bits
+			 */
+			boot_cpu_data.x86_virt_bits = (eax >> 8) & 0xff;
+			boot_cpu_data.x86_phys_bits = eax & 0xff;
+			boot_cpu_data.physical_address_mask =
+				get_address_mask(boot_cpu_data.x86_phys_bits);
 	}
-
-	cpuid(CPUID_EXTEND_FUNCTION_1, &unused, &unused,
-		&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_ECX],
-		&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_EDX]);
-
-	cpuid(CPUID_EXTEND_ADDRESS_SIZE,
-		&eax, &unused, &unused, &unused);
-	boot_cpu_data.cpuid_leaves[FEAT_8000_0008_EAX] = eax;
-	/* EAX bits 07-00: #Physical Address Bits
-	 *     bits 15-08: #Linear Address Bits
-	 */
-	boot_cpu_data.physical_address_mask =
-		get_address_mask(eax & 0xff);
 
 	/* For speculation defence.
 	 * The default way is to set IBRS at vmexit and then do IBPB at vcpu
@@ -193,6 +192,64 @@ static void get_cpu_capabilities(void)
 			ibrs_type = IBRS_OPT;
 	}
 #endif
+}
+
+/*
+ * basic hardware capability check
+ * we should supplement which feature/capability we must support
+ * here later.
+ */
+static int hardware_detect_support(void)
+{
+	int ret;
+
+	/* Long Mode (x86-64, 64-bit support) */
+	if (!cpu_has_cap(X86_FEATURE_LM)) {
+		pr_fatal("%s, LM not supported\n", __func__);
+		return -ENODEV;
+	}
+	if ((boot_cpu_data.x86_phys_bits == 0) ||
+		(boot_cpu_data.x86_virt_bits == 0)) {
+		pr_fatal("%s, can't detect Linear/Physical Address size\n",
+			__func__);
+		return -ENODEV;
+	}
+
+	/* lapic TSC deadline timer */
+	if (!cpu_has_cap(X86_FEATURE_TSC_DEADLINE)) {
+		pr_fatal("%s, TSC deadline not supported\n", __func__);
+		return -ENODEV;
+	}
+
+	/* Execute Disable */
+	if (!cpu_has_cap(X86_FEATURE_NX)) {
+		pr_fatal("%s, NX not supported\n", __func__);
+		return -ENODEV;
+	}
+
+	/* Supervisor-Mode Execution Prevention */
+	if (!cpu_has_cap(X86_FEATURE_SMEP)) {
+		pr_fatal("%s, SMEP not supported\n", __func__);
+		return -ENODEV;
+	}
+
+	/* Supervisor-Mode Access Prevention */
+	if (!cpu_has_cap(X86_FEATURE_SMAP)) {
+		pr_fatal("%s, SMAP not supported\n", __func__);
+		return -ENODEV;
+	}
+
+	if (!cpu_has_cap(X86_FEATURE_VMX)) {
+		pr_fatal("%s, vmx not supported\n", __func__);
+		return -ENODEV;
+	}
+
+	ret = check_vmx_mmu_cap();
+	if (ret)
+		return ret;
+
+	printf("hardware support HV\n");
+	return 0;
 }
 
 static void alloc_phy_cpu_data(int pcpu_num)
@@ -458,6 +515,11 @@ void bsp_boot_init(void)
 
 	pr_dbg("Core %d is up", CPU_BOOT_ID);
 
+	if (hardware_detect_support() != 0) {
+		pr_fatal("hardware not support!\n");
+		return;
+	}
+
 	/* Warn for security feature not ready */
 	if (!cpu_has_cap(X86_FEATURE_IBRS_IBPB) &&
 			!cpu_has_cap(X86_FEATURE_STIBP)) {
@@ -492,7 +554,10 @@ void bsp_boot_init(void)
 
 	ASSERT(get_cpu_id() == CPU_BOOT_ID, "");
 
-	init_iommu();
+	if (init_iommu() != 0) {
+		pr_fatal("%s, init iommu failed\n", __func__);
+		return;
+	}
 
 	console_setup_timer();
 

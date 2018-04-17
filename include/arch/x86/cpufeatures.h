@@ -54,6 +54,7 @@
 #define X86_FEATURE_x2APIC	((FEAT_1_ECX << 5) + 21)
 #define X86_FEATURE_MOVBE	((FEAT_1_ECX << 5) + 22)
 #define X86_FEATURE_POPCNT	((FEAT_1_ECX << 5) + 23)
+#define X86_FEATURE_TSC_DEADLINE	((FEAT_1_ECX << 5) + 24)
 #define X86_FEATURE_AES		((FEAT_1_ECX << 5) + 25)
 #define X86_FEATURE_XSAVE	((FEAT_1_ECX << 5) + 26)
 #define X86_FEATURE_OSXSAVE	((FEAT_1_ECX << 5) + 27)
@@ -93,13 +94,17 @@
 
 /* Intel-defined CPU features, CPUID level 0x00000007 (EBX)*/
 #define X86_FEATURE_TSC_ADJ	((FEAT_7_0_EBX << 5) +  1)
+#define X86_FEATURE_SMEP	((FEAT_7_0_EBX << 5) +  7)
 #define X86_FEATURE_INVPCID	((FEAT_7_0_EBX << 5) + 10)
+#define X86_FEATURE_SMAP	((FEAT_7_0_EBX << 5) + 20)
 
 /* Intel-defined CPU features, CPUID level 0x00000007 (EDX)*/
 #define X86_FEATURE_IBRS_IBPB	((FEAT_7_0_EDX << 5) + 26)
 #define X86_FEATURE_STIBP	((FEAT_7_0_EDX << 5) + 27)
 
 /* Intel-defined CPU features, CPUID level 0x80000001 (EDX)*/
+#define X86_FEATURE_NX		((FEAT_8000_0001_EDX << 5) + 20)
 #define X86_FEATURE_PAGE1GB	((FEAT_8000_0001_EDX << 5) + 26)
+#define X86_FEATURE_LM		((FEAT_8000_0001_EDX << 5) + 29)
 
 #endif /*__X86_CPUFEATURES_H__*/

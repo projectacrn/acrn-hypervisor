@@ -225,14 +225,13 @@ extern uint64_t pcpu_active_bitmap;
 /* CPUID feature words */
 enum feature_word {
 	FEAT_1_ECX = 0,         /* CPUID[1].ECX */
-	FEAT_1_EDX = 1,         /* CPUID[1].EDX */
-	FEAT_7_0_EBX = 2,       /* CPUID[EAX=7,ECX=0].EBX */
-	FEAT_7_0_ECX = 3,       /* CPUID[EAX=7,ECX=0].ECX */
-	FEAT_7_0_EDX = 4,       /* CPUID[EAX=7,ECX=0].EDX */
-	FEAT_8000_0000_EAX = 5, /* CPUID[8000_0000].EAX */
-	FEAT_8000_0001_ECX = 6, /* CPUID[8000_0001].ECX */
-	FEAT_8000_0001_EDX = 7, /* CPUID[8000_0001].EDX */
-	FEAT_8000_0008_EAX = 8, /* CPUID[8000_0008].EAX */
+	FEAT_1_EDX,             /* CPUID[1].EDX */
+	FEAT_7_0_EBX,           /* CPUID[EAX=7,ECX=0].EBX */
+	FEAT_7_0_ECX,           /* CPUID[EAX=7,ECX=0].ECX */
+	FEAT_7_0_EDX,           /* CPUID[EAX=7,ECX=0].EDX */
+	FEAT_8000_0001_ECX,     /* CPUID[8000_0001].ECX */
+	FEAT_8000_0001_EDX,     /* CPUID[8000_0001].EDX */
+	FEAT_8000_0008_EBX,     /* CPUID[8000_0008].EAX */
 	FEATURE_WORDS,
 };
 
@@ -243,6 +242,9 @@ struct cpu_state_info {
 
 struct cpuinfo_x86 {
 	uint8_t x86, x86_model;
+	uint8_t x86_virt_bits;
+	uint8_t x86_phys_bits;
+	uint32_t extended_cpuid_level;
 	uint64_t physical_address_mask;
 	uint32_t cpuid_leaves[FEATURE_WORDS];
 	char model_name[64];
