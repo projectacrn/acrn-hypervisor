@@ -31,6 +31,7 @@
 #include <acrn_common.h>
 #include <hv_lib.h>
 #include <hv_arch.h>
+#include <hv_debug.h>
 
 int validate_pstate(struct vm *vm, uint64_t perf_ctl)
 {
@@ -82,7 +83,35 @@ static void vm_setup_cpu_px(struct vm *vm)
 
 }
 
+static void vm_setup_cpu_cx(struct vm *vm)
+{
+	uint32_t cx_data_size;
+
+	vm->pm.cx_cnt = 0;
+	memset(vm->pm.cx_data, 0, MAX_CSTATE * sizeof(struct cpu_cx_data));
+
+	if ((!boot_cpu_data.state_info.cx_cnt)
+		|| (!boot_cpu_data.state_info.cx_data)) {
+		return;
+	}
+
+	ASSERT ((boot_cpu_data.state_info.cx_cnt <= MAX_CX_ENTRY),
+		"failed to setup cpu cx");
+
+	vm->pm.cx_cnt = boot_cpu_data.state_info.cx_cnt;
+
+	cx_data_size = vm->pm.cx_cnt * sizeof(struct cpu_cx_data);
+
+	/* please note pm.cx_data[0] is a empty space holder,
+	 * pm.cx_data[1...MAX_CX_ENTRY] would be used to store cx entry datas.
+	 */
+	memcpy_s(vm->pm.cx_data + 1, cx_data_size,
+			boot_cpu_data.state_info.cx_data, cx_data_size);
+
+}
+
 void vm_setup_cpu_state(struct vm *vm)
 {
 	vm_setup_cpu_px(vm);
+	vm_setup_cpu_cx(vm);
 }
