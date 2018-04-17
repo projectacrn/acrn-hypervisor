@@ -182,7 +182,7 @@ int dm_emulate_pio_post(struct vcpu *vcpu);
  */
 static inline void mmio_write_long(uint32_t value, void *addr)
 {
-	*((uint32_t *)addr) = value;
+	*((volatile int32_t *)addr) = value;
 }
 
 /** Writes a 16 bit value to a memory mapped IO device.
@@ -192,7 +192,7 @@ static inline void mmio_write_long(uint32_t value, void *addr)
  */
 static inline void mmio_write_word(uint32_t value, void *addr)
 {
-	*((uint16_t *)addr) = value;
+	*((volatile uint16_t *)addr) = value;
 }
 
 /** Writes an 8 bit value to a memory mapped IO device.
@@ -202,7 +202,7 @@ static inline void mmio_write_word(uint32_t value, void *addr)
  */
 static inline void mmio_write_byte(uint32_t value, void *addr)
 {
-	*((uint8_t *)addr) = value;
+	*((volatile uint8_t *)addr) = value;
 }
 
 /** Reads a 32 bit value from a memory mapped IO device.
@@ -213,7 +213,7 @@ static inline void mmio_write_byte(uint32_t value, void *addr)
  */
 static inline uint32_t mmio_read_long(void *addr)
 {
-	return *((uint32_t *)addr);
+	return *((volatile uint32_t *)addr);
 }
 
 /** Reads a 16 bit value from a memory mapped IO device.
@@ -224,7 +224,7 @@ static inline uint32_t mmio_read_long(void *addr)
  */
 static inline uint16_t mmio_read_word(void *addr)
 {
-	return *((uint16_t *)addr);
+	return *((volatile uint16_t *)addr);
 }
 
 /** Reads an 8 bit value from a memory mapped IO device.
@@ -235,7 +235,7 @@ static inline uint16_t mmio_read_word(void *addr)
  */
 static inline uint8_t mmio_read_byte(void *addr)
 {
-	return *((uint8_t *)addr);
+	return *((volatile uint8_t *)addr);
 }
 
 
@@ -246,7 +246,7 @@ static inline uint8_t mmio_read_byte(void *addr)
  */
 static inline void __mmio_write_long(uint32_t value, void *addr)
 {
-	*((uint32_t *)addr) = value;
+	*((volatile uint32_t *)addr) = value;
 }
 
 /** Writes a 16 bit value to a memory mapped IO device (ROM code version).
@@ -256,7 +256,7 @@ static inline void __mmio_write_long(uint32_t value, void *addr)
  */
 static inline void __mmio_write_word(uint32_t value, void *addr)
 {
-	*((uint16_t *)addr) = value;
+	*((volatile uint16_t *)addr) = value;
 }
 
 /** Writes an 8 bit value to a memory mapped IO device (ROM code version).
@@ -266,7 +266,7 @@ static inline void __mmio_write_word(uint32_t value, void *addr)
  */
 static inline void __mmio_write_byte(uint32_t value, void *addr)
 {
-	*((uint8_t *)addr) = value;
+	*((volatile uint8_t *)addr) = value;
 }
 
 /** Reads a 32 bit value from a memory mapped IO device (ROM code version).
@@ -277,7 +277,7 @@ static inline void __mmio_write_byte(uint32_t value, void *addr)
  */
 static inline uint32_t __mmio_read_long(void *addr)
 {
-	return *((uint32_t *)addr);
+	return *((volatile uint32_t *)addr);
 }
 
 /** Reads a 16 bit value from a memory mapped IO device (ROM code version).
@@ -288,7 +288,7 @@ static inline uint32_t __mmio_read_long(void *addr)
  */
 static inline uint16_t __mmio_read_word(void *addr)
 {
-	return *((uint16_t *)addr);
+	return *((volatile uint16_t *)addr);
 }
 
 /** Reads an 8 bit value from a memory mapped IO device (ROM code version).
@@ -299,7 +299,7 @@ static inline uint16_t __mmio_read_word(void *addr)
  */
 static inline uint8_t __mmio_read_byte(void *addr)
 {
-	return *((uint8_t *)addr);
+	return *((volatile uint8_t *)addr);
 }
 
 
