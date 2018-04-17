@@ -36,6 +36,15 @@
 #define USB_NUM_INTERFACE 16
 #define USB_NUM_ENDPOINT  15
 
+enum {
+	USB_INFO_VERSION,
+	USB_INFO_SPEED,
+	USB_INFO_BUS,
+	USB_INFO_PORT,
+	USB_INFO_VID,
+	USB_INFO_PID
+};
+
 struct usb_dev_ep {
 	uint8_t pid;
 	uint8_t type;
@@ -48,6 +57,9 @@ struct usb_dev {
 	int speed;
 	int configuration;
 	uint8_t port;
+	uint8_t bus;
+	uint8_t pid;
+	uint16_t vid;
 
 	/* interface info */
 	int if_num;
@@ -91,5 +103,7 @@ struct usb_dev_sys_ctx_info {
 int usb_dev_sys_init(usb_dev_sys_cb conn_cb, usb_dev_sys_cb disconn_cb,
 		usb_dev_sys_cb notify_cb, usb_dev_sys_cb intr_cb,
 		void *hci_data, int log_level);
-
+void *usb_dev_init(void *pdata, char *opt);
+void usb_dev_deinit(void *pdata);
+int usb_dev_info(void *pdata, int type, void *value, int size);
 #endif
