@@ -215,7 +215,7 @@ struct vcpu_arch {
 
 	/* VCPU context state information */
 	uint32_t exit_reason;
-	uint64_t exit_interrupt_info;
+	uint32_t idt_vectoring_info;
 	uint64_t exit_qualification;
 	uint32_t inst_len;
 
