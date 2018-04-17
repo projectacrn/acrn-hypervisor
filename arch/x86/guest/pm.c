@@ -28,17 +28,61 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CPU_STATE_TBL_H
-#define CPU_STATE_TBL_H
+#include <acrn_common.h>
+#include <hv_lib.h>
+#include <hv_arch.h>
 
-struct cpu_state_table {
-	char			model_name[64];
-	uint8_t			px_cnt;
-	struct cpu_px_data	*px_data;
-};
+int validate_pstate(struct vm *vm, uint64_t perf_ctl)
+{
+	struct cpu_px_data *px_data;
+	int i, px_cnt;
 
-void load_cpu_state_data(void);
-void vm_setup_cpu_state(struct vm *vm);
-int validate_pstate(struct vm *vm, uint64_t perf_ctl);
+	if (is_vm0(vm)) {
+		return 0;
+	}
 
-#endif /* CPU_STATE_TBL_H */
+	px_cnt = vm->pm.px_cnt;
+	px_data = vm->pm.px_data;
+
+	if (!px_cnt || !px_data) {
+		return -1;
+	}
+
+	for (i = 0; i < px_cnt; i++) {
+		if ((px_data + i)->control == (perf_ctl & 0xffff)) {
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
+static void vm_setup_cpu_px(struct vm *vm)
+{
+	uint32_t px_data_size;
+
+	vm->pm.px_cnt = 0;
+	memset(vm->pm.px_data, 0, MAX_PSTATE * sizeof(struct cpu_px_data));
+
+	if ((!boot_cpu_data.state_info.px_cnt)
+		|| (!boot_cpu_data.state_info.px_data)) {
+		return;
+	}
+
+	if (boot_cpu_data.state_info.px_cnt > MAX_PSTATE) {
+		vm->pm.px_cnt = MAX_PSTATE;
+	} else {
+		vm->pm.px_cnt = boot_cpu_data.state_info.px_cnt;
+	}
+
+	px_data_size = vm->pm.px_cnt * sizeof(struct cpu_px_data);
+
+	memcpy_s(vm->pm.px_data, px_data_size,
+			boot_cpu_data.state_info.px_data, px_data_size);
+
+}
+
+void vm_setup_cpu_state(struct vm *vm)
+{
+	vm_setup_cpu_px(vm);
+}

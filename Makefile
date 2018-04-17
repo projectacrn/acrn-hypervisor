@@ -116,6 +116,7 @@ C_SRCS += arch/x86/guest/vmsr.c
 C_SRCS += arch/x86/guest/vioapic.c
 C_SRCS += arch/x86/guest/instr_emul.c
 C_SRCS += arch/x86/guest/ucode.c
+C_SRCS += arch/x86/guest/pm.c
 C_SRCS += lib/spinlock.c
 C_SRCS += lib/udelay.c
 C_SRCS += lib/strnlen.c
