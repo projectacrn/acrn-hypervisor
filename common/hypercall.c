@@ -729,6 +729,40 @@ int64_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param)
 
 		return 0;
 	}
+	case PMCMD_GET_CX_CNT: {
+
+		if (!target_vm->pm.cx_cnt) {
+			return -1;
+		}
+
+		if (copy_to_vm(vm, &(target_vm->pm.cx_cnt), param)) {
+			pr_err("%s: Unable copy param to vm\n", __func__);
+			return -1;
+		}
+		return 0;
+	}
+	case PMCMD_GET_CX_DATA: {
+		uint8_t cx_idx;
+		struct cpu_cx_data *cx_data;
+
+		if (!target_vm->pm.cx_cnt) {
+			return -1;
+		}
+
+		cx_idx = (cmd & PMCMD_STATE_NUM_MASK) >> PMCMD_STATE_NUM_SHIFT;
+		if (!cx_idx || (cx_idx > target_vm->pm.cx_cnt)) {
+			return -1;
+		}
+
+		cx_data = target_vm->pm.cx_data + cx_idx;
+
+		if (copy_to_vm(vm, cx_data, param)) {
+			pr_err("%s: Unable copy param to vm\n", __func__);
+			return -1;
+		}
+
+		return 0;
+	}
 	default:
 		return -1;
 
