@@ -282,9 +282,16 @@ umouse_event(uint8_t button, int x, int y, void *arg)
 }
 
 static void *
-umouse_init(struct usb_hci *hci, char *opt)
+umouse_init(void *pdata, char *opt)
 {
 	struct umouse_vdev *dev;
+	struct usb_hci *hci;
+
+	hci = pdata;
+	if (!hci) {
+		UPRINTF(LFTL, "umouse: invalid hci\r\n");
+		return NULL;
+	}
 
 	dev = calloc(1, sizeof(struct umouse_vdev));
 	if (!dev) {

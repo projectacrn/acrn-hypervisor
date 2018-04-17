@@ -44,6 +44,181 @@
 
 static struct usb_dev_sys_ctx_info g_ctx;
 
+static int
+usb_dev_native_toggle_if_drivers(struct usb_dev *udev, int attach)
+{
+	struct libusb_config_descriptor *config;
+	uint8_t b, p, c, i;
+	int rc = 0, r;
+
+	assert(udev);
+	assert(udev->handle);
+	assert(udev->ldev);
+	assert(attach == 1 || attach == 0);
+
+	b = udev->bus;
+	p = udev->port;
+
+	r = libusb_get_active_config_descriptor(udev->ldev, &config);
+	if (r) {
+		UPRINTF(LWRN, "%d-%d: can't get config\r\n", b, p);
+		return -1;
+	}
+
+	c = config->bConfigurationValue;
+	for (i = 0; i < config->bNumInterfaces; i++) {
+		if (attach == 1)
+			r = libusb_attach_kernel_driver(udev->handle, i);
+		else
+			r = libusb_detach_kernel_driver(udev->handle, i);
+
+		if (r) {
+			rc = -1;
+			UPRINTF(LWRN, "%d-%d:%d.%d can't %stach if driver\r\n",
+					b, p, c, i, attach == 1 ? "at" : "de");
+		}
+	}
+	if (rc)
+		UPRINTF(LWRN, "%d-%d fail to %s rc %d\r\n", b, p,
+				attach == 1 ? "attach" : "detach", rc);
+	libusb_free_config_descriptor(config);
+	return rc;
+}
+
+void *
+usb_dev_init(void *pdata, char *opt)
+{
+	struct usb_dev *udev = NULL;
+	struct libusb_device *ldev;
+	struct libusb_device_descriptor desc;
+	uint8_t bus, port;
+	int speed, ver;
+
+	assert(pdata);
+
+	ldev  = pdata;
+	speed = libusb_get_device_speed(ldev);
+	port  = libusb_get_port_number(ldev);
+	bus   = libusb_get_bus_number(ldev);
+	libusb_get_device_descriptor(ldev, &desc);
+	UPRINTF(LINF, "Found USB device: %d-%d\r\nPID(0x%X), VID(0x%X) "
+			"CLASS(0x%X) SUBCLASS(0x%x) BCD(0x%x)\r\n", bus, port,
+			desc.idProduct, desc.idVendor,
+			desc.bDeviceClass, desc.bDeviceSubClass, desc.bcdUSB);
+
+	/* allocate and populate udev */
+	udev = calloc(1, sizeof(struct usb_dev));
+	if (!udev)
+		goto errout;
+
+	/* this is a root hub */
+	if (port == 0)
+		goto errout;
+
+	switch (desc.bcdUSB) {	/* TODO: implemnt USB3.0 */
+	case 0x300:
+		ver = 2; break;
+	case 0x200:
+	case 0x110:
+		ver = 2; break;
+	default:
+		goto errout;
+	}
+
+	udev->speed   = speed;
+	udev->ldev    = ldev;
+	udev->version = ver;
+	udev->handle  = NULL;
+	udev->port    = port;
+	udev->bus     = bus;
+	udev->pid     = desc.idProduct;
+	udev->vid     = desc.idVendor;
+
+	/* configure physical device through libusb library */
+	if (libusb_open(udev->ldev, &udev->handle)) {
+		UPRINTF(LWRN, "fail to open device.\r\n");
+		goto errout;
+	}
+
+	if (usb_dev_native_toggle_if_drivers(udev, 0) < 0) {
+		UPRINTF(LWRN, "fail to detach interface driver.\r\n");
+		goto errout;
+	}
+	return udev;
+
+errout:
+	if (udev && udev->handle)
+		libusb_close(udev->handle);
+
+	free(udev);
+	return NULL;
+}
+
+void
+usb_dev_deinit(void *pdata)
+{
+	int rc = 0;
+	struct usb_dev *udev;
+
+	udev = pdata;
+	if (udev) {
+		if (udev->handle) {
+			rc = usb_dev_native_toggle_if_drivers(udev, 1);
+			if (rc)
+				UPRINTF(LWRN, "fail to attach if drv rc:%d\r\n",
+						rc);
+			libusb_close(udev->handle);
+		}
+		free(udev);
+	}
+}
+
+int
+usb_dev_info(void *pdata, int type, void *value, int size)
+{
+	struct usb_dev *udev;
+	int sz;
+	void *pv;
+
+	udev = pdata;
+	assert(udev);
+	assert(value);
+
+	switch (type) {
+	case USB_INFO_VERSION:
+		sz = sizeof(udev->version);
+		pv = &udev->version;
+		break;
+	case USB_INFO_SPEED:
+		sz = sizeof(udev->speed);
+		pv = &udev->speed;
+		break;
+	case USB_INFO_BUS:
+		sz = sizeof(udev->bus);
+		pv = &udev->bus;
+		break;
+	case USB_INFO_PORT:
+		sz = sizeof(udev->port);
+		pv = &udev->port;
+		break;
+	case USB_INFO_VID:
+		sz = sizeof(udev->vid);
+		pv = &udev->vid;
+		break;
+	case USB_INFO_PID:
+		sz = sizeof(udev->pid);
+		pv = &udev->pid;
+		break;
+	default:
+		return -1;
+	}
+
+	if (size == sz)
+		memcpy(value, pv, sz);
+
+	return sz == size ? 0 : -1;
+}
+
 static void *
 usb_dev_sys_thread(void *arg)
 {

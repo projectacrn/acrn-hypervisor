@@ -49,15 +49,17 @@ struct usb_devemu {
 	int	ue_usbspeed;	/* usb device speed */
 
 	/* instance creation */
-	void	*(*ue_init)(struct usb_hci *hci, char *opt);
+	void	*(*ue_init)(void *pdata, char *opt);
 
 	/* handlers */
 	int	(*ue_request)(void *sc, struct usb_data_xfer *xfer);
 	int	(*ue_data)(void *sc, struct usb_data_xfer *xfer, int dir,
 			   int epctx);
+	int	(*ue_info)(void *sc, int type, void *value, int size);
 	int	(*ue_reset)(void *sc);
 	int	(*ue_remove)(void *sc);
 	int	(*ue_stop)(void *sc);
+	void	(*ue_deinit)(void *pdata);
 };
 #define	USB_EMUL_SET(x)	DATA_SET(usb_emu_set, x)
 
