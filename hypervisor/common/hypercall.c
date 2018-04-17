@@ -37,7 +37,6 @@
 #include <acrn_hv_defs.h>
 #include <hv_debug.h>
 #include <version.h>
-#include <cpu_state_tbl.h>
 
 #define ACRN_DBG_HYCALL	6
 

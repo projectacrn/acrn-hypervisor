@@ -36,7 +36,6 @@
 #include <schedule.h>
 #include <version.h>
 #include <hv_debug.h>
-#include <cpu_state_tbl.h>
 
 #ifdef CONFIG_EFI_STUB
 extern uint32_t efi_physical_available_ap_bitmap;

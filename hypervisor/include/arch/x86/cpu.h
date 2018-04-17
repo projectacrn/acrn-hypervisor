@@ -236,13 +236,17 @@ enum feature_word {
 	FEATURE_WORDS,
 };
 
+struct cpu_state_info {
+	uint8_t			px_cnt;
+	struct cpu_px_data	*px_data;
+};
+
 struct cpuinfo_x86 {
 	uint8_t x86, x86_model;
 	uint64_t physical_address_mask;
 	uint32_t cpuid_leaves[FEATURE_WORDS];
 	char model_name[64];
-	uint8_t			px_cnt;
-	struct cpu_px_data	*px_data;
+	struct cpu_state_info state_info;
 };
 
 extern struct cpuinfo_x86 boot_cpu_data;
@@ -259,6 +263,7 @@ bool is_vapic_supported(void);
 bool is_vapic_intr_delivery_supported(void);
 bool is_vapic_virt_reg_supported(void);
 bool cpu_has_cap(uint32_t bit);
+void load_cpu_state_data(void);
 
 /* Read control register */
 #define CPU_CR_READ(cr, result_ptr)                         \
