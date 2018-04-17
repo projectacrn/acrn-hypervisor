@@ -309,9 +309,9 @@ int acrn_do_intr_process(struct vcpu *vcpu)
 	/* handling pending vector injection:
 	 * there are many reason inject failed, we need re-inject again
 	 */
-	if (vcpu->arch_vcpu.exit_interrupt_info & VMX_INT_INFO_VALID) {
+	if (vcpu->arch_vcpu.idt_vectoring_info & VMX_INT_INFO_VALID) {
 		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
-				vcpu->arch_vcpu.exit_interrupt_info);
+				vcpu->arch_vcpu.idt_vectoring_info);
 		goto INTR_WIN;
 	}
 
@@ -419,8 +419,8 @@ void cancel_event_injection(struct vcpu *vcpu)
 
 int exception_vmexit_handler(struct vcpu *vcpu)
 {
-	uint32_t intinfo, int_err_code;
-	uint32_t exception_vector;
+	uint32_t intinfo, int_err_code = 0;
+	int32_t exception_vector = -1;
 	uint32_t cpl;
 	int status = 0;
 
@@ -436,24 +436,24 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 
 	/* Obtain VM-Exit information field pg 2912 */
 	intinfo = exec_vmread(VMX_EXIT_INT_INFO);
-	exception_vector = intinfo & 0xFF;
-	/* Check if exception caused by the guest is a HW exception. If the
-	 * exit occurred due to a HW exception obtain the error code to be
-	 * conveyed to get via the stack
-	 */
-	if (intinfo & VMX_INT_INFO_ERR_CODE_VALID) {
-		int_err_code = exec_vmread(VMX_EXIT_INT_EC);
+	if (intinfo & VMX_INT_INFO_VALID) {
+		exception_vector = intinfo & 0xFF;
+		/* Check if exception caused by the guest is a HW exception.
+		 * If the exit occurred due to a HW exception obtain the
+		 * error code to be conveyed to get via the stack
+		 */
+		if (intinfo & VMX_INT_INFO_ERR_CODE_VALID) {
+			int_err_code = exec_vmread(VMX_EXIT_INT_EC);
 
-		/* get current privilege level and fault address */
-		cpl = exec_vmread(VMX_GUEST_CS_ATTR);
-		cpl = (cpl >> 5) & 3;
+			/* get current privilege level and fault address */
+			cpl = exec_vmread(VMX_GUEST_CS_ATTR);
+			cpl = (cpl >> 5) & 3;
 
-		if (cpl < 3)
-			int_err_code &= ~4;
-		else
-			int_err_code |= 4;
-	} else {
-		int_err_code = 0;
+			if (cpl < 3)
+				int_err_code &= ~4;
+			else
+				int_err_code |= 4;
+		}
 	}
 
 	/* Handle all other exceptions */

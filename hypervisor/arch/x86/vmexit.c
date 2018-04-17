@@ -162,7 +162,7 @@ struct vm_exit_dispatch *vmexit_handler(struct vcpu *vcpu)
 	uint16_t basic_exit_reason;
 
 	/* Obtain interrupt info */
-	vcpu->arch_vcpu.exit_interrupt_info =
+	vcpu->arch_vcpu.idt_vectoring_info =
 	    exec_vmread(VMX_IDT_VEC_INFO_FIELD);
 
 	/* Calculate basic exit reason (low 16-bits) */
