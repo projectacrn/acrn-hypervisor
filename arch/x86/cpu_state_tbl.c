@@ -53,6 +53,13 @@ struct cpu_px_data px_a3960[] = {
 	{0x320, 0, 0xA, 0xA, 0x0800, 0x0800}  /* P16 */
 };
 
+/* The table includes cpu cx info of Intel A3960 SoC */
+struct cpu_cx_data cx_a3960[] = {
+	{{SPACE_FFixedHW,  0x0, 0, 0,     0}, 0x1, 0x1, 0x3E8}, /* C1 */
+	{{SPACE_SYSTEM_IO, 0x8, 0, 0, 0x415}, 0x2, 0x32, 0x0A}, /* C2 */
+	{{SPACE_SYSTEM_IO, 0x8, 0, 0, 0x419}, 0x3, 0x96, 0x0A}  /* C3 */
+};
+
 /* The table includes cpu px info of Intel J3455 SoC */
 struct cpu_px_data px_j3455[] = {
 	{0x5DD, 0, 0xA, 0xA, 0x1700, 0x1700}, /* P0 */
@@ -71,10 +78,12 @@ struct cpu_state_table {
 	struct cpu_state_info	state_info;
 } cpu_state_tbl[] = {
 	{"Intel(R) Atom(TM) Processor A3960 @ 1.90GHz",
-		{ARRAY_SIZE(px_a3960), px_a3960}
+		{ARRAY_SIZE(px_a3960), px_a3960,
+		 ARRAY_SIZE(cx_a3960), cx_a3960}
 	},
 	{"Intel(R) Celeron(R) CPU J3455 @ 1.50GHz",
-		{ARRAY_SIZE(px_j3455), px_j3455}
+		{ARRAY_SIZE(px_j3455), px_j3455,
+			0,	NULL}
 	}
 };
 
@@ -122,4 +131,15 @@ void load_cpu_state_data(void)
 
 		boot_cpu_data.state_info.px_data = state_info->px_data;
 	}
+
+	if (state_info->cx_cnt && state_info->cx_data) {
+		if (state_info->cx_cnt > MAX_CX_ENTRY) {
+			boot_cpu_data.state_info.cx_cnt = MAX_CX_ENTRY;
+		} else {
+			boot_cpu_data.state_info.cx_cnt = state_info->cx_cnt;
+		}
+
+		boot_cpu_data.state_info.cx_data = state_info->cx_data;
+	}
+
 }
