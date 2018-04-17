@@ -34,7 +34,6 @@
 #include <bsp_extern.h>
 #include <hv_debug.h>
 #include <multiboot.h>
-#include <cpu_state_tbl.h>
 
 /* Local variables */
 

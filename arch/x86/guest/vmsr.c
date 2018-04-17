@@ -33,7 +33,6 @@
 #include <hv_arch.h>
 #include <hv_debug.h>
 #include <ucode.h>
-#include <cpu_state_tbl.h>
 
 /*MRS need to be emulated, the order in this array better as freq of ops*/
 static const uint32_t emulated_msrs[] = {

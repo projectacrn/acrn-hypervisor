@@ -28,36 +28,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef HV_ARCH_H
-#define HV_ARCH_H
+#ifndef PM_H
+#define PM_H
 
-#include <cpu.h>
-#include <gdt.h>
-#include <idt.h>
-#include <apicreg.h>
-#include <ioapic.h>
-#include <lapic.h>
-#include <msr.h>
-#include <io.h>
-#include <vcpu.h>
-#include <trusty.h>
-#include <pm.h>
-#include <vm.h>
-#include <cpuid.h>
-#include <mmu.h>
-#include <intr_ctx.h>
-#include <irq.h>
-#include <timer.h>
-#include <softirq.h>
-#include <vmx.h>
-#include <assign.h>
-#include <vtd.h>
+void vm_setup_cpu_state(struct vm *vm);
+int validate_pstate(struct vm *vm, uint64_t perf_ctl);
 
-#include <vpic.h>
-#include <vlapic.h>
-#include <vioapic.h>
-#include <guest.h>
-#include <vmexit.h>
-#include <cpufeatures.h>
-
-#endif /* HV_ARCH_H */
+#endif /* PM_H */
