@@ -292,6 +292,30 @@ struct acrn_vm_pci_msix_remap {
  * @brief Info The power state data of a VCPU.
  *
  */
+
+#define SPACE_SYSTEM_MEMORY     0
+#define SPACE_SYSTEM_IO         1
+#define SPACE_PCI_CONFIG        2
+#define SPACE_Embedded_Control  3
+#define SPACE_SMBUS             4
+#define SPACE_PLATFORM_COMM     10
+#define SPACE_FFixedHW          0x7F
+
+struct acrn_register {
+	uint8_t 	space_id;
+	uint8_t 	bit_width;
+	uint8_t 	bit_offset;
+	uint8_t 	access_size;
+	uint64_t	address;
+} __attribute__((aligned(8)));
+
+struct cpu_cx_data {
+	struct acrn_register cx_reg;
+	uint8_t 	type;
+	uint32_t	latency;
+	uint64_t	power;
+} __attribute__((aligned(8)));
+
 struct cpu_px_data {
 	uint64_t core_frequency;	/* megahertz */
 	uint64_t power;			/* milliWatts */
