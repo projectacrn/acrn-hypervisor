@@ -438,41 +438,6 @@ bool cancel_timer(long handle, int cpu_id)
 	return ret;
 }
 
-void dump_timer_pool_info(int cpu_id)
-{
-	struct per_cpu_timers *cpu_timer =
-			&per_cpu(cpu_timers, cpu_id);
-	struct list_head *pos;
-	int cn = 0;
-
-	if (cpu_id >= phy_cpu_num)
-		return;
-
-	pr_info("Timer%d statistics: Pending: %d\n\t"
-		"total_pickup: %lld total_added: %lld total_irq: %lld",
-		cpu_id,
-		cpu_timer->stat.pending_cnt,
-		cpu_timer->stat.total_pickup_cnt,
-		cpu_timer->stat.total_added_cnt,
-		cpu_timer->stat.irq_cnt);
-
-	pr_info("LAST pickup[%d] time: 0x%llx deadline: 0x%llx",
-		cpu_timer->stat.last.pickup_id,
-		cpu_timer->stat.last.pickup_time,
-		cpu_timer->stat.last.pickup_deadline);
-
-	pr_info("LAST added[%d] time: 0x%llx deadline: 0x%llx",
-		cpu_timer->stat.last.added_id,
-		cpu_timer->stat.last.added_time,
-		cpu_timer->stat.last.added_deadline);
-
-	list_for_each(pos, &cpu_timer->timer_list) {
-		cn++;
-		pr_info("-->pending: %d trigger: 0x%llx", cn,
-			list_entry(pos, struct timer, node)->deadline);
-	}
-}
-
 void check_tsc(void)
 {
 	uint64_t temp64;

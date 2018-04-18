@@ -41,7 +41,6 @@ long update_timer(long handle, timer_handle_t func, uint64_t data,
 int timer_softirq(int cpu_id);
 void timer_init(void);
 void timer_cleanup(void);
-void dump_timer_pool_info(int cpu_id);
 void check_tsc(void);
 
 #endif /* TIMER_H */
