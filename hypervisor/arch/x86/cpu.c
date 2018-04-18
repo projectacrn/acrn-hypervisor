@@ -732,11 +732,11 @@ static void print_hv_banner(void)
 
 static void pcpu_sync_sleep(unsigned long *sync, int mask_bit)
 {
-	int wake_sync = (1 << mask_bit);
+	uint64_t wake_sync = (1UL << mask_bit);
 
 	if (get_monitor_cap()) {
 		/* Wait for the event to be set using monitor/mwait */
-		asm volatile ("1: cmpl      %%ebx,(%%eax)\n"
+		asm volatile ("1: cmpq      %%rbx,(%%rax)\n"
 			      "   je        2f\n"
 			      "   monitor\n"
 			      "   mwait\n"
@@ -748,7 +748,7 @@ static void pcpu_sync_sleep(unsigned long *sync, int mask_bit)
 			      : "cc");
 	} else {
 		/* Wait for the event to be set using pause */
-		asm volatile ("1: cmpl      %%ebx,(%%eax)\n"
+		asm volatile ("1: cmpq      %%rbx,(%%rax)\n"
 			      "   je        2f\n"
 			      "   pause\n"
 			      "   jmp       1b\n"
