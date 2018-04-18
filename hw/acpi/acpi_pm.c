@@ -128,6 +128,117 @@ int get_vcpu_cx_data(struct vmctx *ctx, int vcpu_id,
 	return 0;
 }
 
+char *_asi_table[7] = { "SystemMemory",
+		"SystemIO",
+		"PCI_Config",
+		"EmbeddedControl",
+		"SMBus",
+		"PCC",
+		"FFixedHW"};
+
+static char *get_asi_string(uint8_t space_id)
+{
+	switch (space_id) {
+	case SPACE_SYSTEM_MEMORY:
+		return _asi_table[0];
+
+	case SPACE_SYSTEM_IO:
+		return _asi_table[1];
+
+	case SPACE_PCI_CONFIG:
+		return _asi_table[2];
+
+	case SPACE_Embedded_Control:
+		return _asi_table[3];
+
+	case SPACE_SMBUS:
+		return _asi_table[4];
+
+	case SPACE_PLATFORM_COMM:
+		return _asi_table[5];
+
+	case SPACE_FFixedHW:
+		return _asi_table[6];
+
+	default:
+		return NULL;
+	}
+}
+
+/* _CST: C-States
+ */
+void dsdt_write_cst(struct vmctx *ctx, int vcpu_id)
+{
+	int i;
+	uint8_t vcpu_cx_cnt;
+	char *cx_asi;
+	struct acrn_register cx_reg;
+	struct cpu_cx_data *vcpu_cx_data;
+
+	vcpu_cx_cnt = get_vcpu_cx_cnt(ctx, vcpu_id);
+	if (!vcpu_cx_cnt) {
+		return;
+	}
+
+	/* vcpu_cx_data start from C1, cx_cnt is total Cx entry num. */
+	vcpu_cx_data = malloc(vcpu_cx_cnt * sizeof(struct cpu_cx_data));
+	if (!vcpu_cx_data) {
+		return;
+	}
+
+	/* copy and validate cx data first */
+	for (i = 1; i <= vcpu_cx_cnt; i++) {
+		if (get_vcpu_cx_data(ctx, vcpu_id, i, vcpu_cx_data + i - 1)) {
+			/* something must be wrong, so skip the write. */
+			free(vcpu_cx_data);
+			return;
+		}
+	}
+
+	dsdt_line("");
+	dsdt_line("    Method (_CST, 0, NotSerialized)");
+	dsdt_line("    {");
+	dsdt_line("      Return (Package (0x%02X)", vcpu_cx_cnt + 1);
+	dsdt_line("      {");
+
+	dsdt_line("        0x%02X,", vcpu_cx_cnt);
+
+	for (i = 0; i < vcpu_cx_cnt; i++) {
+
+		dsdt_line("        Package (0x04)");
+		dsdt_line("        {");
+
+		cx_reg = (vcpu_cx_data + i)->cx_reg;
+		cx_asi = get_asi_string(cx_reg.space_id);
+
+		dsdt_line("          ResourceTemplate ()");
+		dsdt_line("          {");
+		dsdt_line("            Register (%s,", cx_asi);
+		dsdt_line("            0x%02x,", cx_reg.bit_width);
+		dsdt_line("            0x%02x,", cx_reg.bit_offset);
+		dsdt_line("            0x%016lx,", cx_reg.address);
+		dsdt_line("            0x%02x,", cx_reg.access_size);
+		dsdt_line("            )");
+		dsdt_line("          },");
+
+		dsdt_line("           0x%04X,", (vcpu_cx_data + i)->type);
+		dsdt_line("           0x%04X,", (vcpu_cx_data + i)->latency);
+		dsdt_line("           0x%04X", (vcpu_cx_data + i)->power);
+
+		if (i == (vcpu_cx_cnt - 1)) {
+			dsdt_line("	     }");
+		} else {
+			dsdt_line("          },");
+		}
+
+	}
+
+	dsdt_line("      })");
+	dsdt_line("    }");
+
+	free(vcpu_cx_data);
+}
+
 /* _PPC: Performance Present Capabilities
  * hard code _PPC to 0,  all states are available.
  */
