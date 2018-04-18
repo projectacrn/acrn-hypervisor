@@ -315,17 +315,179 @@ static void pci_xhci_update_ep_ring(struct pci_xhci_vdev *xdev,
 				    struct xhci_endp_ctx *ep_ctx,
 				    uint32_t streamid, uint64_t ringaddr,
 				    int ccs);
+static void pci_xhci_init_port(struct pci_xhci_vdev *xdev, int portn);
+static struct pci_xhci_dev_emu *pci_xhci_dev_create(struct pci_xhci_vdev *
+		xdev, void *dev_data);
+static void pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de);
 
 static int
 pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 {
+	struct pci_xhci_dev_emu *de;
+	struct pci_xhci_vdev *xdev;
+	struct usb_devemu *ue;
+	int port_start, port_end;
+	int slot_start, slot_end;
+	int port, slot;
+	void *ud;
+	uint8_t native_bus, native_pid, native_port;
+	uint16_t native_vid;
+
+	xdev = hci_data;
+
+	assert(xdev);
+	assert(dev_data);
+	assert(xdev->devices);
+	assert(xdev->slots);
+
+	de = pci_xhci_dev_create(xdev, dev_data);
+	if (!de) {
+		UPRINTF(LFTL, "fail to create device\r\n");
+		return -1;
+	}
+
+	/* find free port and slot for the new usb device */
+	ud = de->dev_instance;
+	ue = de->dev_ue;
+
+	assert(ud);
+	assert(ue);
+
+	/* print physical information about new device */
+	ue->ue_info(ud, USB_INFO_BUS, &native_bus, sizeof(native_bus));
+	ue->ue_info(ud, USB_INFO_PORT, &native_port, sizeof(native_port));
+	ue->ue_info(ud, USB_INFO_VID, &native_vid, sizeof(native_vid));
+	ue->ue_info(ud, USB_INFO_PID, &native_pid, sizeof(native_pid));
+	UPRINTF(LDBG, "%X:%X %d-%d connecting.\r\n",
+			native_vid, native_pid, native_bus, native_port);
+
+	if (ue->ue_usbver == 2)
+		port_start = xdev->usb2_port_start;
+	else
+		port_start = xdev->usb3_port_start;
+
+	slot_start = 1;
+	port_end = port_start + (XHCI_MAX_DEVS / 2);
+	slot_end = XHCI_MAX_SLOTS;
+
+	/* find free port */
+	for (port = port_start; port < port_end; port++)
+		if (!xdev->devices[port])
+			break;
+
+	/* find free slot */
+	for (slot = slot_start; slot < slot_end; slot++)
+		if (!xdev->slots[slot])
+			break;
+
+	if (port >= port_end || slot >= slot_end) {
+		UPRINTF(LFTL, "no free resource: port %d slot %d\r\n",
+				port, slot);
+		goto errout;
+	}
+
+	/* use index of devices as port number */
+	xdev->devices[port] = de;
+	xdev->slots[slot] = de;
+	xdev->ndevices++;
+
+	pci_xhci_reset_slot(xdev, slot);
+	pci_xhci_init_port(xdev, port);
+
+	UPRINTF(LDBG, "%X:%X %d-%d locates in slot %d port %d.\r\n",
+			native_vid, native_pid, native_bus, native_port,
+			slot, port);
+
 	return 0;
+errout:
+	pci_xhci_dev_destroy(de);
+	return -1;
 }
 
 static int
 pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 {
 	return 0;
+}
+
+static struct pci_xhci_dev_emu*
+pci_xhci_dev_create(struct pci_xhci_vdev *xdev, void *dev_data)
+{
+	struct usb_devemu *ue = NULL;
+	struct pci_xhci_dev_emu *de = NULL;
+	void *ud = NULL;
+	int rc;
+
+	assert(xdev);
+	assert(dev_data);
+
+	ue = calloc(1, sizeof(struct usb_devemu));
+	if (!ue)
+		return NULL;
+
+	/* TODO: following function pointers will be populated in future */
+	ue->ue_init     = usb_dev_init;
+	ue->ue_request  = NULL;
+	ue->ue_data     = NULL;
+	ue->ue_info	= usb_dev_info;
+	ue->ue_reset    = NULL;
+	ue->ue_remove   = NULL;
+	ue->ue_stop     = NULL;
+	ue->ue_deinit	= usb_dev_deinit;
+
+	ud = ue->ue_init(dev_data, NULL);
+	if (!ud)
+		goto errout;
+
+	rc = ue->ue_info(ud, USB_INFO_VERSION, &ue->ue_usbver,
+			sizeof(ue->ue_usbver));
+	if (rc < 0)
+		goto errout;
+
+	rc = ue->ue_info(ud, USB_INFO_SPEED, &ue->ue_usbspeed,
+			sizeof(ue->ue_usbspeed));
+	if (rc < 0)
+		goto errout;
+
+	de = calloc(1, sizeof(struct pci_xhci_dev_emu));
+	if (!de)
+		goto errout;
+
+	de->xdev            = xdev;
+	de->dev_ue          = ue;
+	de->dev_instance    = ud;
+	de->hci.dev         = NULL;
+	de->hci.hci_intr    = NULL;
+	de->hci.hci_event   = NULL;
+	de->hci.hci_address = 0;
+
+	return de;
+
+errout:
+	if (ud)
+		ue->ue_deinit(ud);
+
+	free(ue);
+	free(de);
+	return NULL;
+}
+
+static void
+pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de)
+{
+	struct usb_devemu *ue;
+	struct usb_dev *ud;
+
+	if (de) {
+		ue = de->dev_ue;
+		ud = de->dev_instance;
+		if (ue) {
+			assert(ue->ue_deinit);
+			ue->ue_deinit(ud);
+		}
+		free(ue);
+		free(de);
+	}
 }
 
 static void
@@ -2797,7 +2959,15 @@ portsfinal:
 		calloc(XHCI_MAX_DEVS, sizeof(struct pci_xhci_portregs));
 
 	if (xdev->ndevices > 0) {
-		/* port and slot numbering start from 1 */
+		/* port and slot numbering start from 1
+		 *
+		 * TODO: This code is really dangerous...
+		 * xdev->devices[0] and xdev->slots[0] are point to one
+		 * invalid address. Only xdev->slots[1] is the real first
+		 * item. Just use this design now due to the original xhci.c
+		 * and the usb_mouse.c depend on it and it will be fixed
+		 * in future.
+		 */
 		xdev->devices--;
 		xdev->portregs--;
 		xdev->slots--;
