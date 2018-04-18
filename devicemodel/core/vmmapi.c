@@ -321,7 +321,7 @@ vm_map_memseg_vma(struct vmctx *ctx, size_t len, vm_paddr_t gpa,
 	struct vm_memmap memmap;
 
 	bzero(&memmap, sizeof(struct vm_memmap));
-	memmap.type = VM_SYSMEM;
+	memmap.type = VM_MEMMAP_SYSMEM;
 	memmap.using_vma = 1;
 	memmap.vma_base = vma;
 	memmap.len = len;
@@ -338,7 +338,7 @@ vm_alloc_set_memseg(struct vmctx *ctx, int segid, size_t len,
 	struct vm_memmap memmap;
 	int error, flags;
 
-	if (segid == VM_SYSMEM) {
+	if (segid == VM_MEMMAP_SYSMEM) {
 		bzero(&memseg, sizeof(struct vm_memseg));
 		memseg.len = len;
 		memseg.gpa = gpa;
@@ -418,8 +418,8 @@ vm_setup_memory(struct vmctx *ctx, size_t memsize, enum vm_mmap_style vms)
 		gpa = 0;
 		len = ctx->lowmem;
 		prot = PROT_ALL;
-		error = vm_alloc_set_memseg(ctx, VM_SYSMEM, len, gpa, prot,
-				baseaddr, &ctx->mmap_lowmem);
+		error = vm_alloc_set_memseg(ctx, VM_MEMMAP_SYSMEM, len, gpa,
+				prot, baseaddr, &ctx->mmap_lowmem);
 		if (error)
 			return error;
 	}
@@ -429,8 +429,8 @@ vm_setup_memory(struct vmctx *ctx, size_t memsize, enum vm_mmap_style vms)
 		gpa = 4*GB;
 		len = ctx->highmem;
 		prot = PROT_ALL;
-		error = vm_alloc_set_memseg(ctx, VM_SYSMEM, len, gpa, prot,
-				baseaddr, &ctx->mmap_highmem);
+		error = vm_alloc_set_memseg(ctx, VM_MEMMAP_SYSMEM, len, gpa,
+				prot, baseaddr, &ctx->mmap_highmem);
 		if (error)
 			return error;
 	}

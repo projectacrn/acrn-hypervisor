@@ -116,7 +116,7 @@ struct vm_memseg {
 	uint64_t gpa;
 };
 
-#define VM_SYSMEM       0
+#define VM_MEMMAP_SYSMEM       0
 #define VM_MMIO         1
 
 /**
@@ -126,7 +126,7 @@ struct vm_memmap {
 	/** @type: memory mapping type */
 	uint32_t type;
 	/** @using_vma: using vma_base to get vm0_gpa,
-	 * only for type == VM_SYSTEM
+	 * only for type == VM_MEMMAP_SYSMEM
 	 */
 	uint32_t using_vma;
 	/** @gpa: user OS guest physical start address of memory mapping */
@@ -138,7 +138,8 @@ struct vm_memmap {
 		 */
 		uint64_t hpa;
 		/** @vma_base: service OS user virtual start address of
-		 * memory, only for type == VM_SYSMEM && using_vma == true
+		 * memory, only for type == VM_MEMMAP_SYSMEM &&
+		 * using_vma == true
 		 */
 		uint64_t vma_base;
 	};
