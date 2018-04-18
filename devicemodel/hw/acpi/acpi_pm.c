@@ -38,20 +38,25 @@
 #include "dm.h"
 #include "acpi.h"
 
-static uint8_t get_vcpu_px_cnt(struct vmctx *ctx, int vcpu_id)
+static inline int get_vcpu_pm_info(struct vmctx *ctx, int vcpu_id,
+				uint64_t pm_type, uint64_t *pm_info)
 {
-	uint64_t pm_ioctl_buf = 0;
-	enum pm_cmd_type cmd_type = PMCMD_GET_PX_CNT;
-
-	pm_ioctl_buf = ((ctx->vmid << PMCMD_VMID_SHIFT) & PMCMD_VMID_MASK)
+	*pm_info = ((ctx->vmid << PMCMD_VMID_SHIFT) & PMCMD_VMID_MASK)
 			| ((vcpu_id << PMCMD_VCPUID_SHIFT) & PMCMD_VCPUID_MASK)
-			| cmd_type;
+			| (pm_type & PMCMD_TYPE_MASK);
 
-	if (vm_get_cpu_state(ctx, &pm_ioctl_buf)) {
+	return vm_get_cpu_state(ctx, pm_info);
+}
+
+static inline uint8_t get_vcpu_px_cnt(struct vmctx *ctx, int vcpu_id)
+{
+	uint64_t px_cnt;
+
+	if (get_vcpu_pm_info(ctx, vcpu_id, PMCMD_GET_PX_CNT, &px_cnt)) {
 		return 0;
 	}
 
-	return (uint8_t)pm_ioctl_buf;
+	return (uint8_t)px_cnt;
 }
 
 static int get_vcpu_px_data(struct vmctx *ctx, int vcpu_id,
