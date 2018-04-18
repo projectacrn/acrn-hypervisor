@@ -363,6 +363,7 @@ void pm_write_dsdt(struct vmctx *ctx, int ncpu)
 		dsdt_line("");
 
 		dsdt_write_pss(ctx, i);
+		dsdt_write_cst(ctx, i);
 
 		/* hard code _PPC and _PCT for all vpu */
 		if (i == 0) {
