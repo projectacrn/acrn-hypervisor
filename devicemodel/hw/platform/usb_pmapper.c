@@ -44,6 +44,21 @@
 
 static struct usb_dev_sys_ctx_info g_ctx;
 
+static inline int
+usb_dev_err_convert(int err)
+{
+	switch (err) {
+	case LIBUSB_ERROR_TIMEOUT: return USB_ERR_TIMEOUT;
+	case LIBUSB_ERROR_PIPE: return USB_ERR_STALLED;
+	case LIBUSB_ERROR_NO_DEVICE: return USB_ERR_INVAL;
+	case LIBUSB_ERROR_BUSY: return USB_ERR_IN_USE;
+	case LIBUSB_ERROR_OVERFLOW: return USB_ERR_TOO_DEEP;
+	default:
+		break; /* add more when required */
+	}
+	return USB_ERR_IOERROR;
+}
+
 static int
 usb_dev_native_toggle_if_drivers(struct usb_dev *udev, int attach)
 {
