@@ -63,19 +63,26 @@ int dm_emulate_pio_post(struct vcpu *vcpu)
 	return 0;
 }
 
-static void dm_emulate_pio_pre(struct vcpu *vcpu, uint64_t exit_qual,
-				uint32_t sz, uint64_t req_value)
+static void dm_emulate_pio_pre(struct vcpu *vcpu, uint16_t port,
+				bool in, uint32_t sz, uint64_t req_value)
 {
 	vcpu->req.type = REQ_PORTIO;
-	if (VM_EXIT_IO_INSTRUCTION_ACCESS_DIRECTION(exit_qual))
+
+	if (in)
 		vcpu->req.reqs.pio_request.direction = REQUEST_READ;
 	else
 		vcpu->req.reqs.pio_request.direction = REQUEST_WRITE;
 
-	vcpu->req.reqs.pio_request.address =
-		VM_EXIT_IO_INSTRUCTION_PORT_NUMBER(exit_qual);
+	vcpu->req.reqs.pio_request.address = port;
 	vcpu->req.reqs.pio_request.size = sz;
 	vcpu->req.reqs.pio_request.value = req_value;
+}
+
+static inline bool pio_range_check(uint16_t src_port, size_t src_len,
+					uint16_t dest_port, size_t dest_len)
+{
+	return ((dest_port >= src_port) &&
+		((dest_port + dest_len) <= (src_port + src_len)));
 }
 
 int io_instr_vmexit_handler(struct vcpu *vcpu)
@@ -84,12 +91,14 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 	uint32_t mask;
 	uint32_t port;
 	int8_t direction;
+	uint64_t *rax;
 	struct vm_io_handler *handler;
 	uint64_t exit_qual;
 	struct vm *vm = vcpu->vm;
 	int cur_context_idx = vcpu->arch_vcpu.cur_context;
 	struct run_context *cur_context;
 	int status = -EINVAL;
+	bool emul_handled = false;
 
 	cur_context = &vcpu->arch_vcpu.contexts[cur_context_idx];
 	exit_qual = vcpu->arch_vcpu.exit_qualification;
@@ -102,26 +111,27 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 	TRACE_4I(TRC_VMEXIT_IO_INSTRUCTION, port, direction, sz,
 		cur_context_idx);
 
+	rax = &cur_context->guest_cpu_regs.regs.rax;
+
 	for (handler = vm->arch_vm.io_handler;
 			handler; handler = handler->next) {
 
-		if ((port >= handler->desc.addr + handler->desc.len) ||
-				(port + sz <= handler->desc.addr))
+		if (!pio_range_check(handler->desc.addr,
+					handler->desc.len, port, sz))
 			continue;
 
-		/* Dom0 do not require IO emulation */
-		if (is_vm0(vm))
-			status = 0;
+		/* to be emulated in hypvervisor */
+		emul_handled = true;
 
 		if (direction == 0) {
 			if (handler->desc.io_write == NULL)
-				continue;
+				break;
 
 			handler->desc.io_write(handler, vm, port, sz,
-				cur_context->guest_cpu_regs.regs.rax);
+				(uint32_t)*rax);
 
 			pr_dbg("IO write on port %04x, data %08x", port,
-				cur_context->guest_cpu_regs.regs.rax & mask);
+				(*rax) & mask);
 
 			status = 0;
 			break;
@@ -129,8 +139,8 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 			uint32_t data = handler->desc.io_read(handler, vm,
 							 port, sz);
 
-			cur_context->guest_cpu_regs.regs.rax &= ~mask;
-			cur_context->guest_cpu_regs.regs.rax |= data & mask;
+			*rax &= ~mask;
+			*rax |= data & mask;
 
 			pr_dbg("IO read on port %04x, data %08x", port, data);
 
@@ -139,12 +149,10 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 		}
 	}
 
-	/* Go for VHM */
-	if (status != 0) {
-		uint64_t *rax = &cur_context->guest_cpu_regs.regs.rax;
-
+	if (!emul_handled) {
+		/* will be emulated in device model*/
 		memset(&vcpu->req, 0, sizeof(struct vhm_request));
-		dm_emulate_pio_pre(vcpu, exit_qual, sz, *rax);
+		dm_emulate_pio_pre(vcpu, port, !!direction, sz, *rax);
 		status = acrn_insert_request_wait(vcpu, &vcpu->req);
 	}
 
