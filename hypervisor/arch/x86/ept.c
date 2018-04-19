@@ -125,8 +125,15 @@ void destroy_ept(struct vm *vm)
 {
 	free_ept_mem(HPA2HVA(vm->arch_vm.nworld_eptp));
 	free_ept_mem(HPA2HVA(vm->arch_vm.m2p));
-	/* Destroy Secure world ept */
-	if (vm->sworld_control.sworld_enabled)
+
+	/*
+	 * If secure world is initialized, destroy Secure world ept.
+	 * There are two cases secure world is not initialized:
+	 *  - trusty is not enabled. Check sworld_enabled.
+	 *  - trusty is enabled. But not initialized yet.
+	 *    Check vm->arch_vm.sworld_eptp.
+	 */
+	if (vm->sworld_control.sworld_enabled && vm->arch_vm.sworld_eptp)
 		free_ept_mem(HPA2HVA(vm->arch_vm.sworld_eptp));
 }
 
