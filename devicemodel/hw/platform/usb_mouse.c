@@ -310,8 +310,6 @@ umouse_init(void *pdata, char *opt)
 	return dev;
 }
 
-#define	UREQ(x, y)	((x) | ((y) << 8))
-
 static int
 umouse_request(void *scarg, struct usb_data_xfer *xfer)
 {

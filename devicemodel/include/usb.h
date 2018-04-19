@@ -107,6 +107,7 @@
 
 #define	USB_BUS_RESET_DELAY	100	/* ms */
 
+#define	UREQ(x, y)	((x) | ((y) << 8))
 /*
  * USB record layout in memory:
  *
