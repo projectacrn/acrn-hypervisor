@@ -95,9 +95,9 @@ ioapic_read_reg32(const void *ioapic_base, const uint8_t offset)
 	spinlock_irqsave_obtain(&ioapic_lock);
 
 	/* Write IOREGSEL */
-	*(uint32_t *)(ioapic_base) = offset;
+	mmio_write_long(offset, (void *)ioapic_base);
 	/* Read  IOWIN */
-	v = *(uint32_t *)(ioapic_base + IOAPIC_WINSWL_OFFSET);
+	v = mmio_read_long((void *)ioapic_base + IOAPIC_WINSWL_OFFSET);
 
 	spinlock_irqrestore_release(&ioapic_lock);
 	return v;
@@ -112,9 +112,9 @@ ioapic_write_reg32(const void *ioapic_base,
 	spinlock_irqsave_obtain(&ioapic_lock);
 
 	/* Write IOREGSEL */
-	*(uint32_t *)(ioapic_base) = offset;
+	mmio_write_long(offset, (void *)ioapic_base);
 	/* Write IOWIN */
-	*(uint32_t *)(ioapic_base + IOAPIC_WINSWL_OFFSET) = value;
+	mmio_write_long(value, (void *)ioapic_base + IOAPIC_WINSWL_OFFSET);
 
 	spinlock_irqrestore_release(&ioapic_lock);
 }
