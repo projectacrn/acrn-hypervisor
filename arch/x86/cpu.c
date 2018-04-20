@@ -128,6 +128,10 @@ static void get_cpu_capabilities(void)
 	uint32_t eax, unused;
 	uint32_t family, model;
 
+	cpuid(CPUID_VENDORSTRING,
+		&boot_cpu_data.cpuid_level,
+		&unused, &unused, &unused);
+
 	cpuid(CPUID_FEATURES, &eax, &unused,
 		&boot_cpu_data.cpuid_leaves[FEAT_1_ECX],
 		&boot_cpu_data.cpuid_leaves[FEAT_1_EDX]);
