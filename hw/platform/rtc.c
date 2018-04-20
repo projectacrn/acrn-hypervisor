@@ -144,6 +144,8 @@ static const int month_days[12] = {
 	31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
 
+static int local_time = 1;
+
 /*
  * This inline avoids some unnecessary modulo operations
  * as compared with the usual macro:
@@ -1096,8 +1098,14 @@ vrtc_reset(struct vrtc *vrtc)
 	pthread_mutex_unlock(&vrtc->mtx);
 }
 
-struct vrtc *
-vrtc_init(struct vmctx *ctx, int local_time)
+void
+vrtc_enable_localtime(int l_time)
+{
+	local_time = l_time;
+}
+
+int
+vrtc_init(struct vmctx *ctx)
 {
 	struct vrtc *vrtc;
 	struct rtcdev *rtc;
@@ -1158,7 +1166,7 @@ vrtc_init(struct vmctx *ctx, int local_time)
 	secs_to_rtc(curtime, vrtc, 0);
 	pthread_mutex_unlock(&vrtc->mtx);
 
-	return vrtc;
+	return 0;
 }
 
 void
