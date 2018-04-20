@@ -244,6 +244,7 @@ struct cpuinfo_x86 {
 	uint8_t x86, x86_model;
 	uint8_t x86_virt_bits;
 	uint8_t x86_phys_bits;
+	uint32_t cpuid_level;
 	uint32_t extended_cpuid_level;
 	uint64_t physical_address_mask;
 	uint32_t cpuid_leaves[FEATURE_WORDS];
