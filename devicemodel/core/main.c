@@ -781,7 +781,7 @@ main(int argc, char *argv[])
 		pci_irq_init(ctx);
 		atkbdc_init(ctx);
 		ioapic_init(ctx);
-		ioc_init();
+		ioc_init(ctx);
 
 		vrtc_init(ctx);
 		sci_init(ctx);

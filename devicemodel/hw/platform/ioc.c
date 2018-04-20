@@ -89,6 +89,7 @@
 #include <sys/types.h>
 
 #include "ioc.h"
+#include "vmmapi.h"
 
 /* For debugging log to a file */
 static int ioc_debug;
@@ -1051,8 +1052,8 @@ ioc_parse(const char *opts)
 /*
  * IOC mediator main entry.
  */
-struct ioc_dev *
-ioc_init(void)
+int
+ioc_init(struct vmctx *ctx)
 {
 	int i;
 	struct ioc_dev *ioc;
@@ -1161,7 +1162,9 @@ ioc_init(void)
 			(void *)ioc) < 0)
 		goto work_err;
 
-	return ioc;
+	ctx->ioc_dev = ioc;
+	return 0;
+
 work_err:
 	pthread_mutex_destroy(&ioc->rx_mtx);
 	pthread_cond_destroy(&ioc->rx_cond);
@@ -1179,15 +1182,17 @@ alloc_err:
 ioc_err:
 	IOC_LOG_DEINIT;
 	DPRINTF("%s", "ioc mediator startup failed!!\r\n");
-	return NULL;
+	return -1;
 }
 
 /*
  * Called by DM in main entry.
  */
 void
-ioc_deinit(struct ioc_dev *ioc)
+ioc_deinit(struct vmctx *ctx)
 {
+	struct ioc_dev *ioc = ctx->ioc_dev;
+
 	if (!ioc) {
 		DPRINTF("%s", "ioc deinit parameter is NULL\r\n");
 		return;
@@ -1199,4 +1204,6 @@ ioc_deinit(struct ioc_dev *ioc)
 	free(ioc->pool);
 	free(ioc);
 	IOC_LOG_DEINIT;
+
+	ctx->ioc_dev = NULL;
 }
