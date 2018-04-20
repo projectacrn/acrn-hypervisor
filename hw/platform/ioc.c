@@ -423,7 +423,7 @@ static struct wlist_signal wlist_rx_signal_table[] = {
 };
 
 static struct wlist_signal wlist_tx_signal_table[] = {
-	{(uint16_t)CBC_SIG_ID_TSE,	DEFAULT_WLIST_NODE},
+	{(uint16_t)CBC_SIG_ID_ATEMP,	DEFAULT_WLIST_NODE},
 	{(uint16_t)CBC_SIG_ID_VSPD,	DEFAULT_WLIST_NODE},
 	{(uint16_t)CBC_SIG_ID_VESP,	DEFAULT_WLIST_NODE},
 	{(uint16_t)CBC_SIG_ID_VECT,	DEFAULT_WLIST_NODE},
