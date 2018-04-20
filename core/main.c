@@ -459,6 +459,63 @@ handle_vmexit(struct vmctx *ctx, struct vhm_request *vhm_req, int vcpu)
 	vm_notify_request_done(ctx, vcpu);
 }
 
+static int
+vm_init_vdevs(struct vmctx *ctx)
+{
+	int ret;
+
+	init_mem();
+	init_inout();
+	pci_irq_init(ctx);
+	atkbdc_init(ctx);
+	ioapic_init(ctx);
+
+	/*
+	 * We don't care ioc_init return value so far.
+	 * Will add return value check once ioc is full function.
+	 */
+	ret = ioc_init(ctx);
+
+	ret = vrtc_init(ctx);
+	if (ret < 0)
+		goto vrtc_fail;
+
+	sci_init(ctx);
+	init_bvmcons();
+
+	ret = monitor_init(ctx);
+	if (ret < 0)
+		goto monitor_fail;
+
+	ret = init_pci(ctx);
+	if (ret < 0)
+		goto pci_fail;
+
+	return 0;
+pci_fail:
+	monitor_close();
+monitor_fail:
+	deinit_bvmcons();
+	vrtc_deinit(ctx);
+vrtc_fail:
+	ioc_deinit(ctx);
+	atkbdc_deinit(ctx);
+	pci_irq_deinit(ctx);
+	return -1;
+}
+
+static void
+vm_deinit_vdevs(struct vmctx *ctx)
+{
+	deinit_pci(ctx);
+	monitor_close();
+	deinit_bvmcons();
+	vrtc_deinit(ctx);
+	ioc_deinit(ctx);
+	atkbdc_deinit(ctx);
+	pci_irq_deinit(ctx);
+}
+
 static void
 vm_loop(struct vmctx *ctx)
 {
@@ -776,28 +833,13 @@ main(int argc, char *argv[])
 			goto mevent_fail;
 		}
 
-		init_mem();
-		init_inout();
-		pci_irq_init(ctx);
-		atkbdc_init(ctx);
-		ioapic_init(ctx);
-		ioc_init(ctx);
-
-		vrtc_init(ctx);
-		sci_init(ctx);
-		init_bvmcons();
-		monitor_init(ctx);
-
-		/*
-		 * Exit if a device emulation finds an error in its
-		 * initialization
-		 */
-		if (init_pci(ctx) != 0) {
-			goto pci_fail;
-		}
-
 		if (gdb_port != 0)
 			fprintf(stderr, "dbgport not supported\n");
+
+		if (vm_init_vdevs(ctx) < 0) {
+			fprintf(stderr, "Unable to init vdev (%d)\n", errno);
+			goto dev_fail;
+		}
 
 		/*
 		 * build the guest tables, MP etc.
@@ -847,28 +889,20 @@ main(int argc, char *argv[])
 		if (vm_get_suspend_mode() != VM_SUSPEND_RESET)
 			break;
 
-		pci_irq_deinit(ctx);
-		deinit_pci(ctx);
-		monitor_close();
-		deinit_bvmcons();
-		vrtc_deinit(ctx);
-		atkbdc_deinit(ctx);
-		vm_unsetup_memory(ctx);
+		vm_deinit_vdevs(ctx);
 		mevent_deinit();
+		vm_unsetup_memory(ctx);
 		vm_destroy(ctx);
 		vm_close(ctx);
 		_ctx = 0;
 
 		vm_set_suspend_mode(VM_SUSPEND_NONE);
 	}
+
 vm_fail:
-	pci_irq_deinit(ctx);
-	deinit_pci(ctx);
-pci_fail:
-	monitor_close();
-	deinit_bvmcons();
-	vrtc_deinit(ctx);
-	atkbdc_deinit(ctx);
+	vm_deinit_vdevs(ctx);
+dev_fail:
+	mevent_deinit();
 mevent_fail:
 	vm_unsetup_memory(ctx);
 fail:
