@@ -710,9 +710,11 @@ struct ioc_dev {
 /* Parse IOC parameters */
 int ioc_parse(const char *opts);
 
+struct vmctx;
+
 /* IOC mediator common ops */
-struct ioc_dev *ioc_init(void);
-void ioc_deinit(struct ioc_dev *dev);
+int ioc_init(struct vmctx *ctx);
+void ioc_deinit(struct vmctx *ctx);
 
 /* Build a cbc_request and send it to CBC protocol stack */
 void ioc_build_request(struct ioc_dev *ioc, int32_t link_len, int32_t srv_len);

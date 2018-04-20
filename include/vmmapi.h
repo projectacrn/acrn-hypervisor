@@ -62,6 +62,7 @@ struct vmctx {
 	/* fields to track virtual devices */
 	void *atkbdc_base;
 	void *vrtc;
+	void *ioc_dev;
 };
 
 /*
