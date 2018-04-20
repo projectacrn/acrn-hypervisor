@@ -38,7 +38,7 @@ static inline void atomic_set_char(unsigned char *p, unsigned char v)
 {
 	__asm __volatile(BUS_LOCK    "orb %b1,%0"
 			:  "+m" (*p)
-			:  "iq" (v)
+			:  "q" (v)
 			:  "cc", "memory");
 }
 
@@ -49,7 +49,7 @@ static inline void atomic_clear_char(unsigned char *p, unsigned char v)
 {
 	__asm __volatile(BUS_LOCK    "andb %b1,%0"
 			:  "+m" (*p)
-			:  "iq" (~v)
+			:  "q" (~v)
 			:  "cc", "memory");
 }
 
@@ -60,7 +60,7 @@ static inline void atomic_add_char(unsigned char *p, unsigned char v)
 {
 	__asm __volatile(BUS_LOCK    "addb %b1,%0"
 			:  "+m" (*p)
-			:  "iq" (v)
+			:  "q" (v)
 			:  "cc", "memory");
 }
 
@@ -71,7 +71,7 @@ static inline void atomic_subtract_char(unsigned char *p, unsigned char v)
 {
 	__asm __volatile(BUS_LOCK "subb %b1,%0"
 			:  "+m" (*p)
-			:  "iq" (v)
+			:  "q" (v)
 			:  "cc", "memory");
 }
 
@@ -82,7 +82,7 @@ static inline void atomic_set_short(unsigned short *p, unsigned short v)
 {
 	__asm __volatile(BUS_LOCK "orw %w1,%0"
 			:  "+m" (*p)
-			:  "ir" (v)
+			:  "r" (v)
 			:  "cc", "memory");
 }
 
@@ -93,7 +93,7 @@ static inline void atomic_clear_short(unsigned short *p, unsigned short v)
 {
 	__asm __volatile(BUS_LOCK "andw %w1,%0"
 			:  "+m" (*p)
-			:  "ir" (~v)
+			:  "r" (~v)
 			:  "cc", "memory");
 }
 
@@ -104,7 +104,7 @@ static inline void atomic_add_short(unsigned short *p, unsigned short v)
 {
 	__asm __volatile(BUS_LOCK "addw %w1,%0"
 			:  "+m" (*p)
-			:  "ir" (v)
+			:  "r" (v)
 			:  "cc", "memory");
 }
 
@@ -115,7 +115,7 @@ static inline void atomic_subtract_short(unsigned short *p, unsigned short v)
 {
 	__asm __volatile(BUS_LOCK "subw %w1,%0"
 			:  "+m" (*p)
-			:  "ir" (v)
+			:  "r" (v)
 			:  "cc", "memory");
 }
 
@@ -126,7 +126,7 @@ static inline void atomic_set_int(unsigned int *p, unsigned int v)
 {
 	__asm __volatile(BUS_LOCK "orl %1,%0"
 			:  "+m" (*p)
-			:  "ir" (v)
+			:  "r" (v)
 			:  "cc", "memory");
 }
 
@@ -137,7 +137,7 @@ static inline void atomic_clear_int(unsigned int *p, unsigned int v)
 {
 	__asm __volatile(BUS_LOCK "andl %1,%0"
 			:  "+m" (*p)
-			:  "ir" (~v)
+			:  "r" (~v)
 			:  "cc", "memory");
 }
 
@@ -148,7 +148,7 @@ static inline void atomic_add_int(unsigned int *p, unsigned int v)
 {
 	__asm __volatile(BUS_LOCK "addl %1,%0"
 			:  "+m" (*p)
-			:  "ir" (v)
+			:  "r" (v)
 			:  "cc", "memory");
 }
 
@@ -159,7 +159,7 @@ static inline void atomic_subtract_int(unsigned int *p, unsigned int v)
 {
 	__asm __volatile(BUS_LOCK "subl %1,%0"
 			:  "+m" (*p)
-			:  "ir" (v)
+			:  "r" (v)
 			:  "cc", "memory");
 }
 
@@ -189,7 +189,7 @@ static inline void atomic_set_long(unsigned long *p, unsigned long v)
 {
 	__asm __volatile(BUS_LOCK "orq %1,%0"
 			:  "+m" (*p)
-			:  "ir" (v)
+			:  "r" (v)
 			:  "cc", "memory");
 }
 
@@ -200,7 +200,7 @@ static inline void atomic_clear_long(unsigned long *p, unsigned long v)
 {
 	__asm __volatile(BUS_LOCK "andq %1,%0"
 			:  "+m" (*p)
-			:  "ir" (~v)
+			:  "r" (~v)
 			:  "cc", "memory");
 }
 
@@ -211,7 +211,7 @@ static inline void atomic_add_long(unsigned long *p, unsigned long v)
 {
 	__asm __volatile(BUS_LOCK "addq %1,%0"
 			:  "+m" (*p)
-			:  "ir" (v)
+			:  "r" (v)
 			:  "cc", "memory");
 }
 
@@ -222,7 +222,7 @@ static inline void atomic_subtract_long(unsigned long *p, unsigned long v)
 {
 	__asm __volatile(BUS_LOCK "subq %1,%0"
 			:  "+m" (*p)
-			:  "ir" (v)
+			:  "r" (v)
 			:  "cc", "memory");
 }
 
@@ -439,7 +439,7 @@ bitmap_set(int mask, unsigned long *bits)
 	/*  (*bits) |= (1UL<<mask); */
 	__asm __volatile(BUS_LOCK "orq %1,%0"
 			:  "+m" (*bits)
-			:  "ir" (1UL<<mask)
+			:  "r" (1UL<<mask)
 			:  "cc", "memory");
 }
 
@@ -449,7 +449,7 @@ bitmap_clr(int mask, unsigned long *bits)
 	/* (*bits) &= ~(1UL<<mask); */
 	__asm __volatile(BUS_LOCK "andq %1,%0"
 			:  "+m" (*bits)
-			:  "ir" (~(1UL<<mask))
+			:  "r" (~(1UL<<mask))
 			:  "cc", "memory");
 }
 
@@ -463,7 +463,7 @@ bitmap_isset(int mask, unsigned long *bits)
 
 	__asm __volatile("btq %2,%1\n\tsbbl %0, %0"
 			: "=r" (ret), "=m" (*bits)
-			: "ir" ((long)(mask) & 0x3f)
+			: "r" ((long)(mask) & 0x3f)
 			: "cc", "memory");
 	return (!!ret);
 }
@@ -475,7 +475,7 @@ bitmap_test_and_set(int mask, unsigned long *bits)
 
 	__asm __volatile(BUS_LOCK  "btsq %2,%1\n\tsbbl %0,%0"
 			: "=r" (ret), "=m" (*bits)
-			: "ir" ((long)(mask & 0x3f))
+			: "r" ((long)(mask & 0x3f))
 			: "cc", "memory");
 	return (!!ret);
 }
@@ -492,7 +492,7 @@ bitmap_test_and_clear(int mask, unsigned long *bits)
 
 	__asm __volatile(BUS_LOCK  "btrq %2,%1\n\tsbbl %0,%0"
 			: "=r" (ret), "=m" (*bits)
-			: "ir" ((long)(mask) & 0x3f)
+			: "r" ((long)(mask) & 0x3f)
 			: "cc", "memory");
 	return (!!ret);
 }
@@ -507,7 +507,7 @@ bitmap_setof(int mask, unsigned long *bits)
 
 	__asm __volatile(BUS_LOCK "xchgq %1,%0"
 			:  "+m" (*bits)
-			:  "ir" ((1UL<<mask))
+			:  "r" ((1UL<<mask))
 			:  "cc", "memory");
 
 }
