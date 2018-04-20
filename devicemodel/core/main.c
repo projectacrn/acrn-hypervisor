@@ -577,7 +577,6 @@ main(int argc, char *argv[])
 {
 	int c, error, gdb_port, err;
 	int max_vcpus, mptgen, memflags;
-	int rtc_localtime;
 	struct vmctx *ctx;
 	size_t memsize;
 	char *optstr;
@@ -588,7 +587,6 @@ main(int argc, char *argv[])
 	guest_ncpus = 1;
 	memsize = 256 * MB;
 	mptgen = 1;
-	rtc_localtime = 1;
 	memflags = 0;
 	quit_vm_loop = 0;
 	hugetlb = 0;
@@ -669,7 +667,7 @@ main(int argc, char *argv[])
 			strictio = 1;
 			break;
 		case 'u':
-			rtc_localtime = 0;
+			vrtc_enable_localtime(0);
 			break;
 		case 'U':
 			guest_uuid_str = optarg;
@@ -785,7 +783,7 @@ main(int argc, char *argv[])
 		ioapic_init(ctx);
 		ioc_init();
 
-		vrtc_init(ctx, rtc_localtime);
+		vrtc_init(ctx);
 		sci_init(ctx);
 		init_bvmcons();
 		monitor_init(ctx);

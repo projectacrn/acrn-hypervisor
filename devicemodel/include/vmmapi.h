@@ -34,8 +34,6 @@
 #include "types.h"
 #include "vmm.h"
 
-#include "atkbdc.h"
-
 /*
  * API version for out-of-tree consumers for making compile time decisions.
  */
@@ -46,8 +44,6 @@
 
 #define ALIGN_UP(x, align)	(((x) + ((align)-1)) & ~((align)-1))
 #define ALIGN_DOWN(x, align)	((x) & ~((align)-1))
-
-struct iovec;
 
 struct vmctx {
 	int     fd;
@@ -64,8 +60,8 @@ struct vmctx {
 	uuid_t	vm_uuid;
 
 	/* fields to track virtual devices */
-	struct atkbdc_base *atkbdc_base;
-	struct vrtc *vrtc;
+	void *atkbdc_base;
+	void *vrtc;
 };
 
 /*

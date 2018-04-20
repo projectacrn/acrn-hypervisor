@@ -36,7 +36,8 @@
 struct vrtc;
 struct vmctx;
 
-struct vrtc  *vrtc_init(struct vmctx *ctx, int local_time);
+int vrtc_init(struct vmctx *ctx);
+void vrtc_enable_localtime(int l_time);
 void vrtc_deinit(struct vmctx *ctx);
 void vrtc_reset(struct vrtc *vrtc);
 time_t vrtc_get_time(struct vrtc *vrtc);
