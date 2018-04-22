@@ -255,7 +255,12 @@ virtio_heci_add_client(struct virtio_heci *vheci,
 		struct virtio_heci_client *client)
 {
 	pthread_mutex_lock(&vheci->list_mutex);
-	LIST_INSERT_HEAD(&vheci->active_clients, client, list);
+	if (client->type == TYPE_HBM)
+		/* make sure hbm client at the head of the list */
+		LIST_INSERT_HEAD(&vheci->active_clients, client, list);
+	else
+		LIST_INSERT_AFTER(LIST_FIRST(&vheci->active_clients),
+				client, list);
 	pthread_mutex_unlock(&vheci->list_mutex);
 }
 
@@ -820,7 +825,6 @@ virtio_heci_hbm_handler(struct virtio_heci *vheci, void *data)
 	DPRINTF(("vheci: HBM cmd[%d] is done!\n\r", hbm_cmd->cmd));
 }
 
-
 static void
 virtio_heci_proc_tx(struct virtio_heci *vheci, struct virtio_vq_info *vq)
 {
@@ -1013,118 +1017,104 @@ out:
 	pthread_exit(NULL);
 }
 
-/* caller need hold rx_mutex
- * return:
- *	true  - data processed
- *	fasle - need resched
+/*
+ * Process the data received from native mei cdev and hbm emulation
+ * handler, assemable related heci header then copy to rx virtqueue.
  */
-static bool virtio_heci_proc_rx(struct virtio_heci *vheci,
+static void
+virtio_heci_proc_vclient_rx(struct virtio_heci_client *client,
 		struct virtio_vq_info *vq)
 {
 	struct iovec iov[VIRTIO_HECI_RXSEGS + 1];
 	struct heci_msg_hdr *heci_hdr;
-	int n;
-	uint16_t idx;
-	struct virtio_heci_client *pclient, *client = NULL;
+	uint16_t idx = 0;
+	int n, len = 0;
 	uint8_t *buf;
-	int len;
-	bool finished = false;
 
-	/* search all clients who has message received to fill the recv buf */
-	pthread_mutex_lock(&vheci->list_mutex);
-	LIST_FOREACH(pclient, &vheci->active_clients, list) {
-		if (pclient->recv_offset - pclient->recv_handled > 0) {
-			client = virtio_heci_client_get(pclient);
-			break;
-		}
-	}
-	pthread_mutex_unlock(&vheci->list_mutex);
-
-	/* no client has data received, ignore RX request! */
-	if (!client) {
-		DPRINTF(("vheci: RX: none client has data!\n\r"));
-		vheci->rx_need_sched = false;
-		return false;
-	}
-
-	/*
-	 * Obtain chain of descriptors.
-	 * The first dword is heci_hdr, the rest are for payload.
-	 */
 	n = vq_getchain(vq, &idx, iov, VIRTIO_HECI_RXSEGS, NULL);
 	assert(n == VIRTIO_HECI_RXSEGS);
-	heci_hdr = (struct heci_msg_hdr *)iov[0].iov_base;
-
-	/* buffer length need remove HECI header */
-	len = (vheci->config->buf_depth - 1) * sizeof(struct heci_msg_hdr);
-	buf = (uint8_t  *)iov[0].iov_base + sizeof(struct heci_msg_hdr);
 
 	if (client->type == TYPE_HBM) {
 		/* HBM client has data to FE */
 		len = client->recv_offset - client->recv_handled;
 		memcpy(iov[0].iov_base,
 				client->recv_buf + client->recv_handled, len);
-		DPRINTF(("vheci: RX: data DM:ME[%d]fd[%d]off[%d]"
-				       " -> UOS:client_addr[%d] len[%d]\n\r",
+		client->recv_offset = client->recv_handled = 0;
+		DPRINTF(("vheci: RX: DM:ME[%d]fd[%d]off[%d]"
+					"-> UOS:client_addr[%d] len[%d]\n\r",
 					client->client_id, client->client_fd,
 					client->recv_handled,
 					client->client_addr, len));
-		print_hex(iov[0].iov_base, len);
-		client->recv_offset = client->recv_handled = 0;
-		finished = true;
 		goto out;
 	}
 
-	if (client->recv_creds == 0) {
-		/*
-		 * FE client is not ready to recv message
-		 * return 1 here to unmask rx_need_sched, to avoid spin in
-		 * this checking loop, tag rx_need_sched when we receive creds
-		 */
-		DPRINTF(("vheci: RX: ME[%d]fd[%d] recv_creds is not ready\n\r",
-					client->client_id, client->client_fd));
-		virtio_heci_client_put(vheci, client);
-		vq_retchain(vq);
-		return true;
-	} else if (client->recv_offset - client->recv_handled > len) {
-		/* this client has data to guest, and
-		 * need split the data into multi buffers
-		 * FE only support one buffer now. Need expand later.
-		 */
+	/* NORMAL client buffer length need remove HECI header */
+	len = (VIRTIO_HECI_FIFOSZ - 1) * sizeof(struct heci_msg_hdr);
+	buf = (uint8_t *)iov[0].iov_base + sizeof(struct heci_msg_hdr);
+	heci_hdr = (struct heci_msg_hdr *)iov[0].iov_base;
+
+	if (client->recv_offset - client->recv_handled > len) {
 		populate_heci_hdr(client, heci_hdr, len, 0);
 		memcpy(buf, client->recv_buf + client->recv_handled, len);
+		client->recv_handled += len;
+		len += sizeof(struct heci_msg_hdr);
 		DPRINTF(("vheci: RX: data(partly) DM:ME[%d]fd[%d]off[%d]"
-				       " -> UOS:client_addr[%d] len[%d]\n\r",
+					" -> UOS:client_addr[%d] len[%d]\n\r",
 					client->client_id, client->client_fd,
 					client->recv_handled,
 					client->client_addr, len));
-		client->recv_handled += len;
-		finished = false;
-		len += sizeof(struct heci_msg_hdr);
 	} else {
 		/* this client has data to guest, can be in one recv buf */
 		len = client->recv_offset - client->recv_handled;
 		populate_heci_hdr(client, heci_hdr, len, 1);
 		memcpy(buf, client->recv_buf + client->recv_handled, len);
 		client->recv_offset = client->recv_handled = 0;
-		finished = true;
 		client->recv_creds--;
 		len += sizeof(struct heci_msg_hdr);
 		DPRINTF(("vheci: RX: data(end) DM:ME[%d]fd[%d]off[%d]"
-				       "-> UOS:client_addr[%d] len[%d]\n\r",
+					" -> UOS:client_addr[%d] len[%d]\n\r",
 					client->client_id, client->client_fd,
 					client->recv_handled,
 					client->client_addr, len));
-		print_hex((uint8_t *)iov[0].iov_base, len);
+	}
+out:
+	vq_relchain(vq, idx, len);
+}
+
+/* caller need hold rx_mutex
+ * return:
+ *	true  - data processed
+ *	fasle - need resched
+ */
+static bool
+virtio_heci_proc_rx(struct virtio_heci *vheci,
+		struct virtio_vq_info *vq)
+{
+	struct virtio_heci_client *pclient, *client = NULL;
+
+	/*
+	 * Traverse the list find all available clients, ignore these normal
+	 * type clients, which have data but it's receieve creds is Zero.
+	 */
+	pthread_mutex_lock(&vheci->list_mutex);
+	LIST_FOREACH(pclient, &vheci->active_clients, list) {
+		if ((pclient->recv_offset - pclient->recv_handled > 0) &&
+		    (pclient->recv_creds > 0 || pclient->type == TYPE_HBM)) {
+			client = virtio_heci_client_get(pclient);
+			break;
+		}
+	}
+	pthread_mutex_unlock(&vheci->list_mutex);
+
+	/* no client has data need to be processed */
+	if (!client) {
+		DPRINTF(("vheci: RX: no available client!\n\r"));
+		return true;
 	}
 
-out:
+	virtio_heci_proc_vclient_rx(client, vq);
 	virtio_heci_client_put(vheci, client);
-	/* chain is processed, release it and set tlen */
-	vq_relchain(vq, idx, len);
-	DPRINTF(("vheci: RX: release IN-vq idx[%d]\r\n", idx));
-
-	return finished;
+	return false;
 }
 
 /*
