@@ -41,12 +41,12 @@ uint64_t tsc_hz = 1000000000;
 
 struct timer {
 	timer_handle_t	func;		/* callback if time reached */
-	uint64_t	priv_data;	/* func private data */
 	uint64_t	deadline;	/* tsc deadline to interrupt */
 	long		handle;		/* unique handle for user */
 	int		pcpu_id;	/* armed on which CPU */
 	int		id;		/* timer ID, used by release */
 	struct list_head node;		/* link all timers */
+	void		*priv_data;	/* func private data */
 };
 
 struct per_cpu_timers {
@@ -95,7 +95,7 @@ static void release_timer(struct timer *timer)
 	struct per_cpu_timers *cpu_timer;
 
 	cpu_timer = &per_cpu(cpu_timers, timer->pcpu_id);
-	timer->priv_data = 0;
+	timer->priv_data = NULL;
 	timer->func = NULL;
 	timer->deadline = 0;
 	bitmap_set(timer->id, &cpu_timer->free_bitmap);
@@ -243,7 +243,7 @@ static void init_timer_pool(void)
 		for (j = 0; j < MAX_TIMER_ACTIONS; j++) {
 			timers_pool[j].id = j;
 			timers_pool[j].pcpu_id = i;
-			timers_pool[j].priv_data = 0;
+			timers_pool[j].priv_data = NULL;
 			timers_pool[j].func = NULL;
 			timers_pool[j].deadline = 0;
 			timers_pool[j].handle = -1UL;
@@ -323,7 +323,7 @@ int timer_softirq(int pcpu_id)
  * return: handle, this handle is unique and can be used to find back
  *  this added timer. handle will be invalid after timer expired
  */
-long add_timer(timer_handle_t func, uint64_t data, uint64_t deadline)
+long add_timer(timer_handle_t func, void *data, uint64_t deadline)
 {
 	struct timer *timer;
 	struct per_cpu_timers *cpu_timer;
@@ -357,7 +357,7 @@ long add_timer(timer_handle_t func, uint64_t data, uint64_t deadline)
  * update_timer existing timer. if not found, add new timer
  */
 long
-update_timer(long handle, timer_handle_t func, uint64_t data,
+update_timer(long handle, timer_handle_t func, void *data,
 		uint64_t deadline)
 {
 	struct timer *timer;

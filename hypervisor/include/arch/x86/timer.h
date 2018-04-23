@@ -31,11 +31,11 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-typedef int (*timer_handle_t)(uint64_t);
+typedef int (*timer_handle_t)(void *);
 
-long add_timer(timer_handle_t func, uint64_t data, uint64_t deadline);
+long add_timer(timer_handle_t func, void *data, uint64_t deadline);
 bool cancel_timer(long handle, int pcpu_id);
-long update_timer(long handle, timer_handle_t func, uint64_t data,
+long update_timer(long handle, timer_handle_t func, void *data,
 		uint64_t deadline);
 
 int timer_softirq(int pcpu_id);
