@@ -36,21 +36,6 @@
 
 #define MAX_TIMER_ACTIONS 32
 
-struct timer_statistics {
-	struct {
-		uint64_t pickup_id;
-		uint64_t pickup_time;
-		uint64_t pickup_deadline;
-		uint64_t added_id;
-		uint64_t added_time;
-		uint64_t added_deadline;
-	} last;
-	uint64_t total_pickup_cnt;
-	uint64_t total_added_cnt;
-	uint64_t irq_cnt;
-	long pending_cnt;
-};
-
 struct timer {
 	timer_handle_t	func;		/* callback if time reached */
 	uint64_t	priv_data;	/* func private data */
@@ -66,7 +51,7 @@ struct per_cpu_timers {
 	uint64_t free_bitmap;
 	struct list_head timer_list;	/* it's for runtime active timer list */
 	int cpu_id;
-	struct timer_statistics stat;
+	uint64_t used_handler;
 };
 
 static DEFINE_CPU_DATA(struct per_cpu_timers, cpu_timers);
@@ -91,12 +76,11 @@ static struct timer *alloc_timer(int cpu_id)
 	}
 
 	bitmap_clr(idx, &cpu_timer->free_bitmap);
-	cpu_timer->stat.total_added_cnt++;
-	cpu_timer->stat.pending_cnt++;
+	cpu_timer->used_handler++;
 
 	/* assign unique handle and never duplicate */
 	timer = cpu_timer->timers_pool + idx;
-	timer->handle = cpu_timer->stat.total_added_cnt;
+	timer->handle = cpu_timer->used_handler;
 
 	ASSERT((cpu_timer->timers_pool[cpu_id].cpu_id == cpu_id),
 		"timer cpu_id did not match");
@@ -112,7 +96,6 @@ static void release_timer(struct timer *timer)
 	timer->func = NULL;
 	timer->deadline = 0;
 	bitmap_set(timer->id, &cpu_timer->free_bitmap);
-	cpu_timer->stat.pending_cnt--;
 }
 
 static int get_target_cpu(void)
@@ -174,8 +157,7 @@ _search_timer_by_handle(struct per_cpu_timers *cpu_timer, long handle)
 	return timer;
 }
 
-static void
-run_timer(struct per_cpu_timers *cpu_timer, struct timer *timer)
+static void run_timer(struct timer *timer)
 {
 
 	/* remove from list first */
@@ -185,13 +167,8 @@ run_timer(struct per_cpu_timers *cpu_timer, struct timer *timer)
 	if (timer->func && timer->deadline != 0UL)
 		timer->func(timer->priv_data);
 
-	cpu_timer->stat.last.pickup_id = timer->id;
-	cpu_timer->stat.last.pickup_deadline = timer->deadline;
-	cpu_timer->stat.last.pickup_time = rdtsc();
-	cpu_timer->stat.total_pickup_cnt++;
-
 	TRACE_4I(TRACE_TIMER_ACTION_PCKUP, timer->id, timer->deadline,
-		timer->deadline >> 32, cpu_timer->stat.total_pickup_cnt);
+		timer->deadline >> 32, 0);
 }
 
 /* run in interrupt context */
@@ -316,7 +293,6 @@ int timer_softirq(int cpu_id)
 
 	/* handle passed timer */
 	cpu_timer = &per_cpu(cpu_timers, cpu_id);
-	cpu_timer->stat.irq_cnt++;
 
 	/* This is to make sure we are not blocked due to delay inside func()
 	 * force to exit irq handler after we serviced >31 timers
@@ -326,7 +302,7 @@ int timer_softirq(int cpu_id)
 	 */
 	timer = find_expired_timer(cpu_timer, rdtsc());
 	while (timer && --max > 0) {
-		run_timer(cpu_timer, timer);
+		run_timer(timer);
 		/* put back to timer pool */
 		release_timer(timer);
 		/* search next one */
@@ -366,11 +342,8 @@ long add_timer(timer_handle_t func, uint64_t data, uint64_t deadline)
 
 	/* We need irqsave here even softirq enabled to protect timer_list */
 	list_add_tail(&timer->node, &cpu_timer->timer_list);
-	cpu_timer->stat.last.added_id = timer->id;
-	cpu_timer->stat.last.added_time = rdtsc();
-	cpu_timer->stat.last.added_deadline = timer->deadline;
 	TRACE_4I(TRACE_TIMER_ACTION_ADDED, timer->id, timer->deadline,
-		timer->deadline >> 32, cpu_timer->stat.total_added_cnt);
+		timer->deadline >> 32, cpu_timer->used_handler);
 
 	schedule_next_timer(cpu_id);
 	return timer->handle;
@@ -401,7 +374,7 @@ update_timer(long handle, timer_handle_t func, uint64_t data,
 		timer->priv_data = data;
 		TRACE_4I(TRACE_TIMER_ACTION_UPDAT, timer->id,
 			timer->deadline, timer->deadline >> 32,
-			cpu_timer->stat.total_added_cnt);
+			cpu_timer->used_handler);
 		ret = true;
 	}
 
