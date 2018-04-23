@@ -216,7 +216,7 @@ static void console_handler(void)
 	shell_kick_session();
 }
 
-static int console_timer_callback(__unused uint64_t data)
+static int console_timer_callback(__unused void *data)
 {
 	/* Kick HV-Shell and Uart-Console tasks */
 	console_handler();
@@ -230,7 +230,7 @@ static int console_timer_callback(__unused uint64_t data)
 void console_setup_timer(void)
 {
 	/* Start an one-shot timer */
-	if (add_timer(console_timer_callback, 0,
+	if (add_timer(console_timer_callback, NULL,
 		rdtsc() + CYCLES_PER_MS * CONSOLE_KICK_TIMER_TIMEOUT) < 0)
 		pr_err("Failed to add console kick timer");
 }

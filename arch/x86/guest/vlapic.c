@@ -1908,7 +1908,7 @@ vlapic_msr(uint32_t msr)
 }
 
 /* interrupt context */
-static int tsc_periodic_time(uint64_t data)
+static int tsc_periodic_time(void *data)
 {
 	struct vcpu *vcpu = (struct vcpu *)data;
 	struct vlapic *vlapic;
@@ -1979,7 +1979,7 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val)
 
 			vlapic->last_timer = update_timer(vlapic->last_timer,
 					tsc_periodic_time,
-					(long)vcpu,
+					(void *)vcpu,
 					val);
 
 			if (vlapic->last_timer < 0) {
