@@ -41,7 +41,7 @@ struct timer {
 	uint64_t	priv_data;	/* func private data */
 	uint64_t	deadline;	/* tsc deadline to interrupt */
 	long		handle;		/* unique handle for user */
-	int		cpu_id;		/* armed on which CPU */
+	int		pcpu_id;	/* armed on which CPU */
 	int		id;		/* timer ID, used by release */
 	struct list_head node;		/* link all timers */
 };
@@ -50,7 +50,7 @@ struct per_cpu_timers {
 	struct timer *timers_pool; 	/* it's timers pool for allocation */
 	uint64_t free_bitmap;
 	struct list_head timer_list;	/* it's for runtime active timer list */
-	int cpu_id;
+	int pcpu_id;
 	uint64_t used_handler;
 };
 
@@ -63,13 +63,13 @@ DEFINE_CPU_DATA(struct dev_handler_node *, timer_node);
 static struct timer*
 find_expired_timer(struct per_cpu_timers *cpu_timer, uint64_t tsc_now);
 
-static struct timer *alloc_timer(int cpu_id)
+static struct timer *alloc_timer(int pcpu_id)
 {
 	int idx;
 	struct per_cpu_timers *cpu_timer;
 	struct timer *timer;
 
-	cpu_timer = &per_cpu(cpu_timers, cpu_id);
+	cpu_timer = &per_cpu(cpu_timers, pcpu_id);
 	idx = bitmap_ffs(&cpu_timer->free_bitmap);
 	if (idx < 0) {
 		return NULL;
@@ -82,8 +82,8 @@ static struct timer *alloc_timer(int cpu_id)
 	timer = cpu_timer->timers_pool + idx;
 	timer->handle = cpu_timer->used_handler;
 
-	ASSERT((cpu_timer->timers_pool[cpu_id].cpu_id == cpu_id),
-		"timer cpu_id did not match");
+	ASSERT((cpu_timer->timers_pool[pcpu_id].pcpu_id == pcpu_id),
+		"timer pcpu_id did not match");
 	return timer;
 }
 
@@ -91,7 +91,7 @@ static void release_timer(struct timer *timer)
 {
 	struct per_cpu_timers *cpu_timer;
 
-	cpu_timer = &per_cpu(cpu_timers, timer->cpu_id);
+	cpu_timer = &per_cpu(cpu_timers, timer->pcpu_id);
 	timer->priv_data = 0;
 	timer->func = NULL;
 	timer->deadline = 0;
@@ -178,10 +178,10 @@ static int tsc_deadline_handler(__unused int irq, __unused void *data)
 	return 0;
 }
 
-static inline void schedule_next_timer(int cpu)
+static inline void schedule_next_timer(int pcpu_id)
 {
 	struct timer *timer;
-	struct per_cpu_timers *cpu_timer = &per_cpu(cpu_timers, cpu);
+	struct per_cpu_timers *cpu_timer = &per_cpu(cpu_timers, pcpu_id);
 
 	timer = _search_nearest_timer(cpu_timer);
 	if (timer) {
@@ -190,21 +190,22 @@ static inline void schedule_next_timer(int cpu)
 	}
 }
 
-int request_timer_irq(int cpu, dev_handler_t func, void *data, const char *name)
+int request_timer_irq(int pcpu_id, dev_handler_t func,
+			void *data, const char *name)
 {
 	struct dev_handler_node *node = NULL;
 
-	if (cpu >= phy_cpu_num)
+	if (pcpu_id >= phy_cpu_num)
 		return -1;
 
-	if (per_cpu(timer_node, cpu)) {
-		pr_err("CPU%d timer isr already added", cpu);
-		unregister_handler_common(per_cpu(timer_node, cpu));
+	if (per_cpu(timer_node, pcpu_id)) {
+		pr_err("CPU%d timer isr already added", pcpu_id);
+		unregister_handler_common(per_cpu(timer_node, pcpu_id));
 	}
 
 	node = pri_register_handler(TIMER_IRQ, VECTOR_TIMER, func, data, name);
 	if (node != NULL) {
-		per_cpu(timer_node, cpu) = node;
+		per_cpu(timer_node, pcpu_id) = node;
 		update_irq_handler(TIMER_IRQ, quick_handler_nolock);
 	} else {
 		pr_err("Failed to add timer isr");
@@ -227,7 +228,7 @@ static void init_timer_pool(void)
 
 	for (i = 0; i < phy_cpu_num; i++) {
 		cpu_timer = &per_cpu(cpu_timers, i);
-		cpu_timer->cpu_id = i;
+		cpu_timer->pcpu_id = i;
 		timers_pool =
 			calloc(MAX_TIMER_ACTIONS, sizeof(struct timer));
 		ASSERT(timers_pool, "Create timers pool failed");
@@ -238,7 +239,7 @@ static void init_timer_pool(void)
 		INIT_LIST_HEAD(&cpu_timer->timer_list);
 		for (j = 0; j < MAX_TIMER_ACTIONS; j++) {
 			timers_pool[j].id = j;
-			timers_pool[j].cpu_id = i;
+			timers_pool[j].pcpu_id = i;
 			timers_pool[j].priv_data = 0;
 			timers_pool[j].func = NULL;
 			timers_pool[j].deadline = 0;
@@ -263,10 +264,10 @@ static void init_tsc_deadline_timer(void)
 void timer_init(void)
 {
 	char name[32] = {0};
-	int cpu = get_cpu_id();
+	int pcpu_id = get_cpu_id();
 
-	snprintf(name, 32, "timer_tick[%d]", cpu);
-	if (request_timer_irq(cpu, tsc_deadline_handler, NULL, name) < 0) {
+	snprintf(name, 32, "timer_tick[%d]", pcpu_id);
+	if (request_timer_irq(pcpu_id, tsc_deadline_handler, NULL, name) < 0) {
 		pr_err("Timer setup failed");
 		return;
 	}
@@ -277,22 +278,22 @@ void timer_init(void)
 
 void timer_cleanup(void)
 {
-	int cpu = get_cpu_id();
+	int pcpu_id = get_cpu_id();
 
-	if (per_cpu(timer_node, cpu))
-		unregister_handler_common(per_cpu(timer_node, cpu));
+	if (per_cpu(timer_node, pcpu_id))
+		unregister_handler_common(per_cpu(timer_node, pcpu_id));
 
-	per_cpu(timer_node, cpu) = NULL;
+	per_cpu(timer_node, pcpu_id) = NULL;
 }
 
-int timer_softirq(int cpu_id)
+int timer_softirq(int pcpu_id)
 {
 	struct per_cpu_timers *cpu_timer;
 	struct timer *timer;
 	int max = MAX_TIMER_ACTIONS;
 
 	/* handle passed timer */
-	cpu_timer = &per_cpu(cpu_timers, cpu_id);
+	cpu_timer = &per_cpu(cpu_timers, pcpu_id);
 
 	/* This is to make sure we are not blocked due to delay inside func()
 	 * force to exit irq handler after we serviced >31 timers
@@ -310,7 +311,7 @@ int timer_softirq(int cpu_id)
 	}
 
 	/* update nearest timer */
-	schedule_next_timer(cpu_id);
+	schedule_next_timer(pcpu_id);
 	return 0;
 }
 
@@ -323,29 +324,29 @@ long add_timer(timer_handle_t func, uint64_t data, uint64_t deadline)
 {
 	struct timer *timer;
 	struct per_cpu_timers *cpu_timer;
-	int cpu_id = get_target_cpu();
+	int pcpu_id = get_target_cpu();
 
 	if (deadline == 0 || func == NULL)
 		return -1;
 
 	/* possible interrupt context please avoid mem alloct here*/
-	timer = alloc_timer(cpu_id);
+	timer = alloc_timer(pcpu_id);
 	if (timer == NULL)
 		return -1;
 
 	timer->func = func;
 	timer->priv_data = data;
 	timer->deadline = deadline;
-	timer->cpu_id = get_target_cpu();
+	timer->pcpu_id = get_target_cpu();
 
-	cpu_timer = &per_cpu(cpu_timers, timer->cpu_id);
+	cpu_timer = &per_cpu(cpu_timers, timer->pcpu_id);
 
 	/* We need irqsave here even softirq enabled to protect timer_list */
 	list_add_tail(&timer->node, &cpu_timer->timer_list);
 	TRACE_4I(TRACE_TIMER_ACTION_ADDED, timer->id, timer->deadline,
 		timer->deadline >> 32, cpu_timer->used_handler);
 
-	schedule_next_timer(cpu_id);
+	schedule_next_timer(pcpu_id);
 	return timer->handle;
 }
 
@@ -358,14 +359,14 @@ update_timer(long handle, timer_handle_t func, uint64_t data,
 {
 	struct timer *timer;
 	struct per_cpu_timers *cpu_timer;
-	int cpu_id = get_target_cpu();
+	int pcpu_id = get_target_cpu();
 
 	bool ret = false;
 
 	if (deadline == 0)
 		return -1;
 
-	cpu_timer = &per_cpu(cpu_timers, cpu_id);
+	cpu_timer = &per_cpu(cpu_timers, pcpu_id);
 	timer = _search_timer_by_handle(cpu_timer, handle);
 	if (timer) {
 		/* update deadline and re-sort */
@@ -379,7 +380,7 @@ update_timer(long handle, timer_handle_t func, uint64_t data,
 	}
 
 	if (ret)
-		schedule_next_timer(cpu_id);
+		schedule_next_timer(pcpu_id);
 	else {
 		/* if update failed, we add to new, and update handle */
 		/* TODO: the correct behavior should be return failure here */
@@ -389,15 +390,15 @@ update_timer(long handle, timer_handle_t func, uint64_t data,
 	return handle;
 }
 
-/* NOTE: cpu_id referred to physical cpu id here */
-bool cancel_timer(long handle, int cpu_id)
+/* NOTE: pcpu_id referred to physical cpu id here */
+bool cancel_timer(long handle, int pcpu_id)
 {
 	struct timer *timer;
 	struct per_cpu_timers *cpu_timer;
 
 	bool ret = false;
 
-	cpu_timer = &per_cpu(cpu_timers, cpu_id);
+	cpu_timer = &per_cpu(cpu_timers, pcpu_id);
 	timer = _search_timer_by_handle(cpu_timer, handle);
 	if (timer) {
 		/* NOTE: we can not directly release timer here.
