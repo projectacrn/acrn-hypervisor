@@ -34,7 +34,10 @@
 #include <hv_arch.h>
 #include <hv_debug.h>
 
-#define MAX_TIMER_ACTIONS 32
+#define MAX_TIMER_ACTIONS	32
+#define CAL_MS			10
+
+uint64_t tsc_hz = 1000000000;
 
 struct timer {
 	timer_handle_t	func;		/* callback if time reached */
@@ -421,21 +424,24 @@ void check_tsc(void)
 	CPU_CR_WRITE(cr4, (temp64 & ~CR4_TSD));
 }
 
-uint64_t tsc_cycles_in_period(uint16_t timer_period_in_us)
+static uint64_t pit_calibrate_tsc(uint16_t cal_ms)
 {
+#define PIT_TICK_RATE	1193182UL
+#define PIT_TARGET	0x3FFF
+#define PIT_MAX_COUNT	0xFFFF
+
 	uint16_t initial_pit;
 	uint16_t current_pit;
-	uint32_t current_tsc;
-#define PIT_TARGET          0x3FFF
+	uint16_t max_cal_ms;
+	uint64_t current_tsc;
 
-	if (timer_period_in_us < 1000)
-		pr_warn("Bad timer_period_in_us: %d\n",
-				timer_period_in_us);
+	max_cal_ms = (PIT_MAX_COUNT - PIT_TARGET) * 1000 / PIT_TICK_RATE;
+	cal_ms = min(cal_ms, max_cal_ms);
 
 	/* Assume the 8254 delivers 18.2 ticks per second when 16 bits fully
 	 * wrap.  This is about 1.193MHz or a clock period of 0.8384uSec
 	 */
-	initial_pit = (uint16_t)(timer_period_in_us*1193000UL/1000000);
+	initial_pit = (uint16_t)(cal_ms * PIT_TICK_RATE / 1000);
 	initial_pit += PIT_TARGET;
 
 	/* Port 0x43 ==> Control word write; Data 0x30 ==> Select Counter 0,
@@ -444,7 +450,7 @@ uint64_t tsc_cycles_in_period(uint16_t timer_period_in_us)
 
 	io_write_byte(0x30, 0x43);
 	io_write_byte(initial_pit & 0x00ff, 0x40);	/* Write LSB */
-	io_write_byte(initial_pit >> 8, 0x40);	/* Write MSB */
+	io_write_byte(initial_pit >> 8, 0x40);		/* Write MSB */
 
 	current_tsc = rdtsc();
 
@@ -461,6 +467,32 @@ uint64_t tsc_cycles_in_period(uint16_t timer_period_in_us)
 
 	current_tsc = rdtsc() - current_tsc;
 
-	return (uint64_t) current_tsc;
+	return current_tsc / cal_ms * 1000;
 }
 
+/*
+ * Determine TSC frequency via CPUID 0x15
+ */
+static uint64_t native_calibrate_tsc(void)
+{
+	if (boot_cpu_data.cpuid_level >= 0x15) {
+		uint32_t eax_denominator, ebx_numerator, ecx_hz, reserved;
+
+		cpuid(0x15, &eax_denominator, &ebx_numerator,
+			&ecx_hz, &reserved);
+
+		if (eax_denominator != 0 && ebx_numerator != 0)
+			return (uint64_t) ecx_hz *
+				ebx_numerator / eax_denominator;
+	}
+
+	return 0;
+}
+
+void calibrate_tsc(void)
+{
+	tsc_hz = native_calibrate_tsc();
+	if (!tsc_hz)
+		tsc_hz = pit_calibrate_tsc(CAL_MS);
+	printf("%s, tsc_hz=%lu\n", __func__, tsc_hz);
+}

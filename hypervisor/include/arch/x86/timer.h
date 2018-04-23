@@ -42,5 +42,6 @@ int timer_softirq(int pcpu_id);
 void timer_init(void);
 void timer_cleanup(void);
 void check_tsc(void);
+void calibrate_tsc(void);
 
 #endif /* TIMER_H */
