@@ -258,8 +258,6 @@ extern struct cpuinfo_x86 boot_cpu_data;
 
 /* Function prototypes */
 void cpu_dead(uint32_t logical_id);
-uint64_t cpu_cycles_per_second(void);
-uint64_t tsc_cycles_in_period(uint16_t timer_period_in_us);
 void cpu_secondary_reset(void);
 int hv_main(int cpu_id);
 bool is_vapic_supported(void);

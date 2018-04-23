@@ -41,8 +41,6 @@
 extern uint32_t efi_physical_available_ap_bitmap;
 #endif
 
-uint64_t tsc_clock_freq = 1000000000;
-
 spinlock_t cpu_secondary_spinlock = {
 	.head = 0,
 	.tail = 0
@@ -494,8 +492,8 @@ void bsp_boot_init(void)
 	/* Make sure rdtsc is enabled */
 	check_tsc();
 
-	/* Calculate TSC Frequency */
-	tsc_clock_freq = tsc_cycles_in_period(1000) / 1000 * 1000000;
+	/* Calibrate TSC Frequency */
+	calibrate_tsc();
 
 	/* Enable logging */
 	init_logmsg(LOG_BUF_SIZE,
