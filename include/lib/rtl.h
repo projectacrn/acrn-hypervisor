@@ -65,12 +65,12 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen);
 int udiv64(uint64_t dividend, uint64_t divisor, struct udiv_result *res);
 int udiv32(uint32_t dividend, uint32_t divisor, struct udiv_result *res);
 
-extern uint64_t tsc_clock_freq;
-#define US_TO_TICKS(x)	((x)*tsc_clock_freq/1000000UL)
+extern uint64_t tsc_hz;
+#define US_TO_TICKS(x)	((x) * tsc_hz / 1000000UL)
 #define CYCLES_PER_MS	US_TO_TICKS(1000UL)
 
-#define TICKS_TO_US(x)	((((x) * (1000000UL >> 8)) / tsc_clock_freq) << 8)
-#define TICKS_TO_MS(x)	(((x) * 1000UL) / tsc_clock_freq)
+#define TICKS_TO_US(x)	((((x) * (1000000UL >> 8)) / tsc_hz) << 8)
+#define TICKS_TO_MS(x)	(((x) * 1000UL) / tsc_hz)
 
 static inline uint64_t rdtsc(void)
 {
