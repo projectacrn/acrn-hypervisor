@@ -34,11 +34,11 @@
 typedef int (*timer_handle_t)(uint64_t);
 
 long add_timer(timer_handle_t func, uint64_t data, uint64_t deadline);
-bool cancel_timer(long handle, int cpu_id);
+bool cancel_timer(long handle, int pcpu_id);
 long update_timer(long handle, timer_handle_t func, uint64_t data,
 		uint64_t deadline);
 
-int timer_softirq(int cpu_id);
+int timer_softirq(int pcpu_id);
 void timer_init(void);
 void timer_cleanup(void);
 void check_tsc(void);
