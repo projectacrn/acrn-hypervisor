@@ -104,6 +104,12 @@ void efi_deferred_wakeup_pcpu(int cpu_id)
 {
 	uint32_t timeout;
 	uint32_t expected_up;
+	static uint32_t waked_pcpu_bitmap;
+
+	if ((1 << cpu_id) & waked_pcpu_bitmap)
+		return;
+
+	waked_pcpu_bitmap |= 1 << cpu_id;
 
 	expected_up = up_count + 1;
 
