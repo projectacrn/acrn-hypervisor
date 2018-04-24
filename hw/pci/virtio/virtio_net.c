@@ -714,6 +714,11 @@ virtio_net_tx_thread(void *param)
 	pthread_mutex_lock(&net->tx_mtx);
 	error = pthread_cond_wait(&net->tx_cond, &net->tx_mtx);
 	assert(error == 0);
+	if (net->closing) {
+		WPRINTF(("vtnet tx thread closing...\n"));
+		pthread_mutex_unlock(&net->tx_mtx);
+		return NULL;
+	}
 
 	for (;;) {
 		/* note - tx mutex is locked here */
@@ -729,6 +734,7 @@ virtio_net_tx_thread(void *param)
 			assert(error == 0);
 			if (net->closing) {
 				WPRINTF(("vtnet tx thread closing...\n"));
+				pthread_mutex_unlock(&net->tx_mtx);
 				return NULL;
 			}
 		}
