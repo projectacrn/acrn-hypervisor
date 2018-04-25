@@ -48,6 +48,10 @@ struct timer {
 	void *priv_data;		/* func private data */
 };
 
+/*
+ * Don't initialize a timer twice if it has been add to the timer list
+ * after call add_timer. If u want, delete the timer from the list first.
+ */
 static inline void initialize_timer(struct timer *timer,
 				timer_handle_t func,
 				void *priv_data,
@@ -65,6 +69,9 @@ static inline void initialize_timer(struct timer *timer,
 	}
 }
 
+/*
+ * Don't call add_timer/del_timer in the timer callback function.
+ */
 int add_timer(struct timer *timer);
 void del_timer(struct timer *timer);
 
