@@ -181,10 +181,15 @@ pci_parse_slot(char *opt)
 		if (cp != NULL) {
 			*cp = '\0';
 			config = cp + 1;
-			cp = strchr(config, ',');
-			if (cp != NULL) {
-				*cp = '\0';
-				b = cp + 1;
+			if (*config == 'b') {
+				b = config;
+				cp = config + 1;
+				if (*cp == ',') {
+					*cp = '\0';
+					config = cp + 1;
+				} else {
+					b = NULL;
+				}
 			}
 		}
 	} else {
