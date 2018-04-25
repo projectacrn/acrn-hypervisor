@@ -1576,10 +1576,7 @@ vlapic_reset(struct vlapic *vlapic)
 
 	vlapic->svr_last = lapic->svr;
 
-	if (vlapic->last_timer > 0) {
-		cancel_timer(vlapic->last_timer, vlapic->vcpu->pcpu_id);
-		vlapic->last_timer = -1;
-	}
+	initialize_timer(&vlapic->timer, NULL, NULL, 0);
 }
 
 void
@@ -1969,22 +1966,19 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val)
 		if (!VLAPIC_TSCDEADLINE(lapic->lvt_timer))
 			return error;
 
-		if (val == 0UL) {
-			cancel_timer(vlapic->last_timer, vcpu->pcpu_id);
-			vlapic->last_timer = -1;
-		} else {
+		del_timer(&vlapic->timer);
+		if (val != 0UL) {
 			/* transfer guest tsc to host tsc */
 			val -= vcpu->arch_vcpu.contexts[vcpu->
 					arch_vcpu.cur_context].tsc_offset;
 
-			vlapic->last_timer = update_timer(vlapic->last_timer,
-					tsc_periodic_time,
-					(void *)vcpu,
+			initialize_timer(&vlapic->timer,
+					tsc_periodic_time, (void *)vcpu,
 					val);
 
-			if (vlapic->last_timer < 0) {
-				pr_err("vLAPIC failed to add timer on VM %d VCPU%d",
-					vcpu->vm->attr.id, vcpu->vcpu_id);
+			if (add_timer(&vlapic->timer) != 0) {
+				pr_err("failed to add timer on VM %d",
+					vcpu->vm->attr.id);
 				error = -1;
 			}
 		}
@@ -2139,8 +2133,7 @@ void vlapic_free(struct vcpu *vcpu)
 	if (vlapic == NULL)
 		return;
 
-	if (vlapic->last_timer > 0)
-		cancel_timer(vlapic->last_timer, vcpu->pcpu_id);
+	del_timer(&vlapic->timer);
 
 	if (!is_vapic_supported()) {
 		unregister_mmio_emulation_handler(vcpu->vm,
