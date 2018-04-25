@@ -48,41 +48,6 @@ struct per_cpu_timers {
 static DEFINE_CPU_DATA(struct per_cpu_timers, cpu_timers);
 static DEFINE_CPU_DATA(struct dev_handler_node *, timer_node);
 
-static struct timer *find_expired_timer(
-			struct per_cpu_timers *cpu_timer,
-			uint64_t tsc_now)
-{
-	struct timer *timer = NULL, *tmp;
-	struct list_head *pos;
-
-	list_for_each(pos, &cpu_timer->timer_list) {
-		tmp = list_entry(pos, struct timer, node);
-		if (tmp->fire_tsc <= tsc_now) {
-			timer = tmp;
-			break;
-		}
-	}
-
-	return timer;
-}
-
-static struct timer *_search_nearest_timer(
-			struct per_cpu_timers *cpu_timer)
-{
-	struct timer *timer;
-	struct timer *target = NULL;
-	struct list_head *pos;
-
-	list_for_each(pos, &cpu_timer->timer_list) {
-		timer = list_entry(pos, struct timer, node);
-		if (target == NULL)
-			target = timer;
-		else if (timer->fire_tsc < target->fire_tsc)
-			target = timer;
-	}
-
-	return target;
-}
 
 static void run_timer(struct timer *timer)
 {
@@ -100,30 +65,64 @@ static int tsc_deadline_handler(__unused int irq, __unused void *data)
 	return 0;
 }
 
-static inline void schedule_next_timer(struct per_cpu_timers *cpu_timer)
+static inline void update_physical_timer(struct per_cpu_timers *cpu_timer)
 {
-	struct timer *timer;
+	struct timer *timer = NULL;
 
-	timer = _search_nearest_timer(cpu_timer);
-	if (timer) {
+	/* find the next event timer */
+	if (!list_empty(&cpu_timer->timer_list)) {
+		timer = list_entry((&cpu_timer->timer_list)->next,
+			struct timer, node);
+
 		/* it is okay to program a expired time */
 		msr_write(MSR_IA32_TSC_DEADLINE, timer->fire_tsc);
 	}
+}
+
+static void __add_timer(struct per_cpu_timers *cpu_timer,
+			struct timer *timer,
+			bool *need_update)
+{
+	struct list_head *pos, *prev;
+	struct timer *tmp;
+	uint64_t tsc = timer->fire_tsc;
+
+	prev = &cpu_timer->timer_list;
+	list_for_each(pos, &cpu_timer->timer_list) {
+		tmp = list_entry(pos, struct timer, node);
+		if (tmp->fire_tsc < tsc)
+			prev = &tmp->node;
+		else
+			break;
+	}
+
+	list_add(&timer->node, prev);
+
+	if (need_update)
+		/* update the physical timer if we're on the timer_list head */
+		*need_update = (prev == &cpu_timer->timer_list);
 }
 
 int add_timer(struct timer *timer)
 {
 	struct per_cpu_timers *cpu_timer;
 	int pcpu_id;
+	bool need_update;
 
 	if (timer == NULL || timer->func == NULL || timer->fire_tsc == 0)
 		return -EINVAL;
 
+	/* limit minimal periodic timer cycle period */
+	if (timer->mode == TICK_MODE_PERIODIC)
+		timer->period_in_cycle = max(timer->period_in_cycle,
+				US_TO_TICKS(MIN_TIMER_PERIOD_US));
+
 	pcpu_id  = get_cpu_id();
 	cpu_timer = &per_cpu(cpu_timers, pcpu_id);
-	list_add_tail(&timer->node, &cpu_timer->timer_list);
+	__add_timer(cpu_timer, timer, &need_update);
 
-	schedule_next_timer(cpu_timer);
+	if (need_update)
+		update_physical_timer(cpu_timer);
 
 	TRACE_2L(TRACE_TIMER_ACTION_ADDED, timer->fire_tsc, 0);
 	return 0;
@@ -212,35 +211,38 @@ int timer_softirq(int pcpu_id)
 {
 	struct per_cpu_timers *cpu_timer;
 	struct timer *timer;
-	int max = MAX_TIMER_ACTIONS;
+	struct list_head *pos, *n;
+	int tries = MAX_TIMER_ACTIONS;
+	uint64_t current_tsc = rdtsc();
 
 	/* handle passed timer */
 	cpu_timer = &per_cpu(cpu_timers, pcpu_id);
 
 	/* This is to make sure we are not blocked due to delay inside func()
 	 * force to exit irq handler after we serviced >31 timers
-	 * caller used to add_timer() in timer->func(), if there is a delay
+	 * caller used to __add_timer() for periodic timer, if there is a delay
 	 * inside func(), it will infinitely loop here, because new added timer
 	 * already passed due to previously func()'s delay.
 	 */
-	timer = find_expired_timer(cpu_timer, rdtsc());
-	while (timer && --max > 0) {
-		del_timer(timer);
+	list_for_each_safe(pos, n, &cpu_timer->timer_list) {
+		timer = list_entry(pos, struct timer, node);
+		/* timer expried */
+		if (timer->fire_tsc <= current_tsc && --tries > 0) {
+			del_timer(timer);
 
-		run_timer(timer);
+			run_timer(timer);
 
-		if (timer->mode == TICK_MODE_PERIODIC) {
-			timer->fire_tsc += max(timer->period_in_cycle,
-					US_TO_TICKS(MIN_TIMER_PERIOD_US));
-			add_timer(timer);
-		}
-
-		/* search next one */
-		timer = find_expired_timer(cpu_timer, rdtsc());
+			if (timer->mode == TICK_MODE_PERIODIC) {
+				/* update periodic timer fire tsc */
+				timer->fire_tsc += timer->period_in_cycle;
+				__add_timer(cpu_timer, timer, NULL);
+			}
+		} else
+			break;
 	}
 
 	/* update nearest timer */
-	schedule_next_timer(cpu_timer);
+	update_physical_timer(cpu_timer);
 	return 0;
 }
 
