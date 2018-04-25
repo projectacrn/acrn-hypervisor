@@ -1,4 +1,5 @@
-objects = log_sys.o
+objects = log_sys.o \
+	  strutils.o
 
 all: check_obj $(objects)
 check_obj:
