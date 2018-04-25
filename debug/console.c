@@ -229,8 +229,15 @@ static int console_timer_callback(__unused void *data)
 
 void console_setup_timer(void)
 {
+	static struct timer console_timer;
+	uint64_t fire_tsc;
+
+	fire_tsc = rdtsc() + CYCLES_PER_MS * CONSOLE_KICK_TIMER_TIMEOUT;
+	initialize_timer(&console_timer,
+			console_timer_callback, NULL,
+			fire_tsc);
+
 	/* Start an one-shot timer */
-	if (add_timer(console_timer_callback, NULL,
-		rdtsc() + CYCLES_PER_MS * CONSOLE_KICK_TIMER_TIMEOUT) < 0)
+	if (add_timer(&console_timer) != 0)
 		pr_err("Failed to add console kick timer");
 }

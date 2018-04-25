@@ -35,97 +35,38 @@
 #include <hv_debug.h>
 
 #define MAX_TIMER_ACTIONS	32
+#define TIMER_IRQ		(NR_MAX_IRQS - 1)
 #define CAL_MS			10
 
 uint64_t tsc_hz = 1000000000;
 
-struct timer {
-	timer_handle_t	func;		/* callback if time reached */
-	uint64_t	deadline;	/* tsc deadline to interrupt */
-	long		handle;		/* unique handle for user */
-	int		pcpu_id;	/* armed on which CPU */
-	int		id;		/* timer ID, used by release */
-	struct list_head node;		/* link all timers */
-	void		*priv_data;	/* func private data */
-};
-
 struct per_cpu_timers {
-	struct timer *timers_pool; 	/* it's timers pool for allocation */
-	uint64_t free_bitmap;
 	struct list_head timer_list;	/* it's for runtime active timer list */
-	int pcpu_id;
-	uint64_t used_handler;
 };
 
 static DEFINE_CPU_DATA(struct per_cpu_timers, cpu_timers);
+static DEFINE_CPU_DATA(struct dev_handler_node *, timer_node);
 
-#define TIMER_IRQ (NR_MAX_IRQS - 1)
-
-DEFINE_CPU_DATA(struct dev_handler_node *, timer_node);
-
-static struct timer*
-find_expired_timer(struct per_cpu_timers *cpu_timer, uint64_t tsc_now);
-
-static struct timer *alloc_timer(int pcpu_id)
+static struct timer *find_expired_timer(
+			struct per_cpu_timers *cpu_timer,
+			uint64_t tsc_now)
 {
-	int idx;
-	struct per_cpu_timers *cpu_timer;
-	struct timer *timer;
-
-	cpu_timer = &per_cpu(cpu_timers, pcpu_id);
-	idx = bitmap_ffs(&cpu_timer->free_bitmap);
-	if (idx < 0) {
-		return NULL;
-	}
-
-	bitmap_clr(idx, &cpu_timer->free_bitmap);
-	cpu_timer->used_handler++;
-
-	/* assign unique handle and never duplicate */
-	timer = cpu_timer->timers_pool + idx;
-	timer->handle = cpu_timer->used_handler;
-
-	ASSERT((cpu_timer->timers_pool[pcpu_id].pcpu_id == pcpu_id),
-		"timer pcpu_id did not match");
-	return timer;
-}
-
-static void release_timer(struct timer *timer)
-{
-	struct per_cpu_timers *cpu_timer;
-
-	cpu_timer = &per_cpu(cpu_timers, timer->pcpu_id);
-	timer->priv_data = NULL;
-	timer->func = NULL;
-	timer->deadline = 0;
-	bitmap_set(timer->id, &cpu_timer->free_bitmap);
-}
-
-static int get_target_cpu(void)
-{
-	/* we should search idle CPU to balance timer service */
-	return get_cpu_id();
-}
-
-static struct timer*
-find_expired_timer(struct per_cpu_timers *cpu_timer, uint64_t tsc_now)
-{
-	struct timer *timer;
+	struct timer *timer = NULL, *tmp;
 	struct list_head *pos;
 
 	list_for_each(pos, &cpu_timer->timer_list) {
-		timer = list_entry(pos, struct timer, node);
-		if (timer->deadline <= tsc_now)
-			goto UNLOCK;
+		tmp = list_entry(pos, struct timer, node);
+		if (tmp->fire_tsc <= tsc_now) {
+			timer = tmp;
+			break;
+		}
 	}
-	timer = NULL;
-UNLOCK:
+
 	return timer;
 }
 
-/* need lock protect outside */
-static struct timer*
-_search_nearest_timer(struct per_cpu_timers *cpu_timer)
+static struct timer *_search_nearest_timer(
+			struct per_cpu_timers *cpu_timer)
 {
 	struct timer *timer;
 	struct timer *target = NULL;
@@ -135,43 +76,20 @@ _search_nearest_timer(struct per_cpu_timers *cpu_timer)
 		timer = list_entry(pos, struct timer, node);
 		if (target == NULL)
 			target = timer;
-		else if (timer->deadline < target->deadline)
+		else if (timer->fire_tsc < target->fire_tsc)
 			target = timer;
 	}
 
 	return target;
 }
 
-/* need lock protect outside */
-static struct timer*
-_search_timer_by_handle(struct per_cpu_timers *cpu_timer, long handle)
-{
-	struct timer *timer = NULL, *tmp;
-	struct list_head *pos;
-
-	list_for_each(pos, &cpu_timer->timer_list) {
-		tmp = list_entry(pos, struct timer, node);
-		if (tmp->handle == handle) {
-			timer = tmp;
-			break;
-		}
-	}
-
-	return timer;
-}
-
 static void run_timer(struct timer *timer)
 {
-
-	/* remove from list first */
-	list_del(&timer->node);
-
 	/* deadline = 0 means stop timer, we should skip */
-	if (timer->func && timer->deadline != 0UL)
+	if (timer->func && timer->fire_tsc != 0UL)
 		timer->func(timer->priv_data);
 
-	TRACE_4I(TRACE_TIMER_ACTION_PCKUP, timer->id, timer->deadline,
-		timer->deadline >> 32, 0);
+	TRACE_2L(TRACE_TIMER_ACTION_PCKUP, timer->fire_tsc, 0);
 }
 
 /* run in interrupt context */
@@ -181,25 +99,50 @@ static int tsc_deadline_handler(__unused int irq, __unused void *data)
 	return 0;
 }
 
-static inline void schedule_next_timer(int pcpu_id)
+static inline void schedule_next_timer(struct per_cpu_timers *cpu_timer)
 {
 	struct timer *timer;
-	struct per_cpu_timers *cpu_timer = &per_cpu(cpu_timers, pcpu_id);
 
 	timer = _search_nearest_timer(cpu_timer);
 	if (timer) {
 		/* it is okay to program a expired time */
-		msr_write(MSR_IA32_TSC_DEADLINE, timer->deadline);
+		msr_write(MSR_IA32_TSC_DEADLINE, timer->fire_tsc);
 	}
 }
 
-int request_timer_irq(int pcpu_id, dev_handler_t func,
-			void *data, const char *name)
+int add_timer(struct timer *timer)
+{
+	struct per_cpu_timers *cpu_timer;
+	int pcpu_id;
+
+	if (timer == NULL || timer->func == NULL || timer->fire_tsc == 0)
+		return -EINVAL;
+
+	pcpu_id  = get_cpu_id();
+	cpu_timer = &per_cpu(cpu_timers, pcpu_id);
+	list_add_tail(&timer->node, &cpu_timer->timer_list);
+
+	schedule_next_timer(cpu_timer);
+
+	TRACE_2L(TRACE_TIMER_ACTION_ADDED, timer->fire_tsc, 0);
+	return 0;
+
+}
+
+void del_timer(struct timer *timer)
+{
+	if (timer && !list_empty(&timer->node))
+		list_del(&timer->node);
+}
+
+static int request_timer_irq(int pcpu_id,
+			dev_handler_t func, void *data,
+			const char *name)
 {
 	struct dev_handler_node *node = NULL;
 
 	if (pcpu_id >= phy_cpu_num)
-		return -1;
+		return -EINVAL;
 
 	if (per_cpu(timer_node, pcpu_id)) {
 		pr_err("CPU%d timer isr already added", pcpu_id);
@@ -212,43 +155,18 @@ int request_timer_irq(int pcpu_id, dev_handler_t func,
 		update_irq_handler(TIMER_IRQ, quick_handler_nolock);
 	} else {
 		pr_err("Failed to add timer isr");
-		return -1;
+		return -ENODEV;
 	}
 
 	return 0;
 }
 
-/*TODO: init in separate cpu */
-static void init_timer_pool(void)
+static void init_percpu_timer(int pcpu_id)
 {
-	int i, j;
 	struct per_cpu_timers *cpu_timer;
-	struct timer *timers_pool;
 
-	/* Make sure only init one time*/
-	if (get_cpu_id() > 0)
-		return;
-
-	for (i = 0; i < phy_cpu_num; i++) {
-		cpu_timer = &per_cpu(cpu_timers, i);
-		cpu_timer->pcpu_id = i;
-		timers_pool =
-			calloc(MAX_TIMER_ACTIONS, sizeof(struct timer));
-		ASSERT(timers_pool, "Create timers pool failed");
-
-		cpu_timer->timers_pool = timers_pool;
-		cpu_timer->free_bitmap = (1UL<<MAX_TIMER_ACTIONS)-1;
-
-		INIT_LIST_HEAD(&cpu_timer->timer_list);
-		for (j = 0; j < MAX_TIMER_ACTIONS; j++) {
-			timers_pool[j].id = j;
-			timers_pool[j].pcpu_id = i;
-			timers_pool[j].priv_data = NULL;
-			timers_pool[j].func = NULL;
-			timers_pool[j].deadline = 0;
-			timers_pool[j].handle = -1UL;
-		}
-	}
+	cpu_timer = &per_cpu(cpu_timers, pcpu_id);
+	INIT_LIST_HEAD(&cpu_timer->timer_list);
 }
 
 static void init_tsc_deadline_timer(void)
@@ -276,7 +194,7 @@ void timer_init(void)
 	}
 
 	init_tsc_deadline_timer();
-	init_timer_pool();
+	init_percpu_timer(pcpu_id);
 }
 
 void timer_cleanup(void)
@@ -306,113 +224,17 @@ int timer_softirq(int pcpu_id)
 	 */
 	timer = find_expired_timer(cpu_timer, rdtsc());
 	while (timer && --max > 0) {
+		del_timer(timer);
+
 		run_timer(timer);
-		/* put back to timer pool */
-		release_timer(timer);
+
 		/* search next one */
 		timer = find_expired_timer(cpu_timer, rdtsc());
 	}
 
 	/* update nearest timer */
-	schedule_next_timer(pcpu_id);
+	schedule_next_timer(cpu_timer);
 	return 0;
-}
-
-/*
- * add_timer is okay to add passed timer but not 0
- * return: handle, this handle is unique and can be used to find back
- *  this added timer. handle will be invalid after timer expired
- */
-long add_timer(timer_handle_t func, void *data, uint64_t deadline)
-{
-	struct timer *timer;
-	struct per_cpu_timers *cpu_timer;
-	int pcpu_id = get_target_cpu();
-
-	if (deadline == 0 || func == NULL)
-		return -1;
-
-	/* possible interrupt context please avoid mem alloct here*/
-	timer = alloc_timer(pcpu_id);
-	if (timer == NULL)
-		return -1;
-
-	timer->func = func;
-	timer->priv_data = data;
-	timer->deadline = deadline;
-	timer->pcpu_id = get_target_cpu();
-
-	cpu_timer = &per_cpu(cpu_timers, timer->pcpu_id);
-
-	/* We need irqsave here even softirq enabled to protect timer_list */
-	list_add_tail(&timer->node, &cpu_timer->timer_list);
-	TRACE_4I(TRACE_TIMER_ACTION_ADDED, timer->id, timer->deadline,
-		timer->deadline >> 32, cpu_timer->used_handler);
-
-	schedule_next_timer(pcpu_id);
-	return timer->handle;
-}
-
-/*
- * update_timer existing timer. if not found, add new timer
- */
-long
-update_timer(long handle, timer_handle_t func, void *data,
-		uint64_t deadline)
-{
-	struct timer *timer;
-	struct per_cpu_timers *cpu_timer;
-	int pcpu_id = get_target_cpu();
-
-	bool ret = false;
-
-	if (deadline == 0)
-		return -1;
-
-	cpu_timer = &per_cpu(cpu_timers, pcpu_id);
-	timer = _search_timer_by_handle(cpu_timer, handle);
-	if (timer) {
-		/* update deadline and re-sort */
-		timer->deadline = deadline;
-		timer->func = func;
-		timer->priv_data = data;
-		TRACE_4I(TRACE_TIMER_ACTION_UPDAT, timer->id,
-			timer->deadline, timer->deadline >> 32,
-			cpu_timer->used_handler);
-		ret = true;
-	}
-
-	if (ret)
-		schedule_next_timer(pcpu_id);
-	else {
-		/* if update failed, we add to new, and update handle */
-		/* TODO: the correct behavior should be return failure here */
-		handle = add_timer(func, data, deadline);
-	}
-
-	return handle;
-}
-
-/* NOTE: pcpu_id referred to physical cpu id here */
-bool cancel_timer(long handle, int pcpu_id)
-{
-	struct timer *timer;
-	struct per_cpu_timers *cpu_timer;
-
-	bool ret = false;
-
-	cpu_timer = &per_cpu(cpu_timers, pcpu_id);
-	timer = _search_timer_by_handle(cpu_timer, handle);
-	if (timer) {
-		/* NOTE: we can not directly release timer here.
-		 * Instead we set deadline to expired and clear func.
-		 * This timer will be reclaim next timer
-		 */
-		timer->deadline = 0;
-		timer->func = NULL;
-		ret = true;
-	}
-	return ret;
 }
 
 void check_tsc(void)

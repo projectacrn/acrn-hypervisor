@@ -33,10 +33,27 @@
 
 typedef int (*timer_handle_t)(void *);
 
-long add_timer(timer_handle_t func, void *data, uint64_t deadline);
-bool cancel_timer(long handle, int pcpu_id);
-long update_timer(long handle, timer_handle_t func, void *data,
-		uint64_t deadline);
+struct timer {
+	struct list_head node;		/* link all timers */
+	uint64_t fire_tsc;		/* tsc deadline to interrupt */
+	timer_handle_t func;		/* callback if time reached */
+	void *priv_data;		/* func private data */
+};
+
+static inline void initialize_timer(struct timer *timer,
+				timer_handle_t func,
+				void *priv_data,
+				uint64_t fire_tsc)
+{
+	if (timer) {
+		timer->func = func;
+		timer->priv_data = priv_data;
+		timer->fire_tsc = fire_tsc;
+	}
+}
+
+int add_timer(struct timer *timer);
+void del_timer(struct timer *timer);
 
 int timer_softirq(int pcpu_id);
 void timer_init(void);

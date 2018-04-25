@@ -122,7 +122,7 @@ struct vlapic {
 	struct bintime	timer_fire_bt;	/* callout expiry time */
 	struct bintime	timer_freq_bt;	/* timer frequency */
 	struct bintime	timer_period_bt; /* timer period */
-	long		last_timer;	/* the last timer id */
+	struct timer	timer;
 
 	spinlock_t	timer_mtx;
 
