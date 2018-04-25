@@ -1576,7 +1576,7 @@ vlapic_reset(struct vlapic *vlapic)
 
 	vlapic->svr_last = lapic->svr;
 
-	initialize_timer(&vlapic->timer, NULL, NULL, 0);
+	initialize_timer(&vlapic->timer, NULL, NULL, 0, 0, 0);
 }
 
 void
@@ -1974,7 +1974,7 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val)
 
 			initialize_timer(&vlapic->timer,
 					tsc_periodic_time, (void *)vcpu,
-					val);
+					val, TICK_MODE_ONESHOT, 0);
 
 			if (add_timer(&vlapic->timer) != 0) {
 				pr_err("failed to add timer on VM %d",

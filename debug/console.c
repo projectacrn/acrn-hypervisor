@@ -221,23 +221,21 @@ static int console_timer_callback(__unused void *data)
 	/* Kick HV-Shell and Uart-Console tasks */
 	console_handler();
 
-	/* Restart the timer */
-	console_setup_timer();
-
 	return 0;
 }
 
 void console_setup_timer(void)
 {
 	static struct timer console_timer;
-	uint64_t fire_tsc;
+	uint64_t period_in_cycle, fire_tsc;
 
-	fire_tsc = rdtsc() + CYCLES_PER_MS * CONSOLE_KICK_TIMER_TIMEOUT;
+	period_in_cycle = CYCLES_PER_MS * CONSOLE_KICK_TIMER_TIMEOUT;
+	fire_tsc = rdtsc() + period_in_cycle;
 	initialize_timer(&console_timer,
 			console_timer_callback, NULL,
-			fire_tsc);
+			fire_tsc, TICK_MODE_PERIODIC, period_in_cycle);
 
-	/* Start an one-shot timer */
+	/* Start an periodic timer */
 	if (add_timer(&console_timer) != 0)
 		pr_err("Failed to add console kick timer");
 }

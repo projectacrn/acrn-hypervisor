@@ -33,9 +33,17 @@
 
 typedef int (*timer_handle_t)(void *);
 
+enum tick_mode {
+	TICK_MODE_ONESHOT = 0,
+	TICK_MODE_PERIODIC,
+};
+
+
 struct timer {
 	struct list_head node;		/* link all timers */
+	int mode;			/* timer mode: one-shot or periodic */
 	uint64_t fire_tsc;		/* tsc deadline to interrupt */
+	uint64_t period_in_cycle;	/* period of the periodic timer in unit of TSC cycles */
 	timer_handle_t func;		/* callback if time reached */
 	void *priv_data;		/* func private data */
 };
@@ -43,12 +51,16 @@ struct timer {
 static inline void initialize_timer(struct timer *timer,
 				timer_handle_t func,
 				void *priv_data,
-				uint64_t fire_tsc)
+				uint64_t fire_tsc,
+				int mode,
+				uint64_t period_in_cycle)
 {
 	if (timer) {
 		timer->func = func;
 		timer->priv_data = priv_data;
 		timer->fire_tsc = fire_tsc;
+		timer->mode = mode;
+		timer->period_in_cycle = period_in_cycle;
 	}
 }
 
