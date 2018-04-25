@@ -211,8 +211,23 @@ err_to_native_heci_resno(int err)
 static struct virtio_heci_client *
 virtio_heci_client_get(struct virtio_heci_client *client)
 {
-	if (__sync_fetch_and_add(&client->ref, 1) == 0)
-		return NULL;
+	int new, val;
+
+	/*
+	 * The active_clients be protected by list_mutex
+	 * so the client never be null
+	 */
+	do {
+		val = *(volatile int *)&client->ref;
+		if (val == 0)
+			return NULL;
+
+		new = val + 1;
+
+		/* check for overflow */
+		assert(new > 0);
+
+	} while (!__sync_bool_compare_and_swap(&client->ref, val, new));
 	return client;
 }
 
@@ -220,8 +235,18 @@ static void
 virtio_heci_client_put(struct virtio_heci *vheci,
 		struct virtio_heci_client *client)
 {
-	assert(client->ref > 0);
-	if (__sync_sub_and_fetch(&client->ref, 1) == 0)
+	int new, val;
+
+	do {
+		val = *(volatile int *)&client->ref;
+		if (val == 0)
+			return;
+
+		new = val - 1;
+
+	} while (!__sync_bool_compare_and_swap(&client->ref, val, new));
+
+	if (client->ref == 0)
 		virtio_heci_destroy_client(vheci, client);
 }
 
