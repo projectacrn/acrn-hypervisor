@@ -412,7 +412,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 	if (ret < 0)
 		goto get_vmname;
 
-	snprintf(cmd, sizeof(cmd), "grep \"acrnctl: \" ./%s.result", argv[1]);
+	snprintf(cmd, sizeof(cmd), "grep -a \"acrnctl: \" ./%s.result", argv[1]);
 	ret = shell_cmd(cmd, cmd_out, sizeof(cmd_out));
 	if (ret < 0)
 		goto get_vmname;
