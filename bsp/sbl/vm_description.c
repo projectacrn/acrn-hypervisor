@@ -41,12 +41,6 @@
 /* Logical CPU IDs assigned to VM0 */
 int VM0_CPUS[VM0_NUM_CPUS] = {0};
 
-/* Number of CPUs in VM1 */
-#define VM1_NUM_CPUS    2
-
-/* Logical CPU IDs assigned with VM1 */
-int VM1_CPUS[VM1_NUM_CPUS] = {3, 1};
-
 const struct vm_description_array vm_desc = {
 	/* Number of user virtual machines */
 	.num_vm_desc = NUM_USER_VMS,
