@@ -37,6 +37,7 @@
 #define MAX_TIMER_ACTIONS	32
 #define TIMER_IRQ		(NR_MAX_IRQS - 1)
 #define CAL_MS			10
+#define MIN_TIMER_PERIOD_US	500
 
 uint64_t tsc_hz = 1000000000;
 
@@ -227,6 +228,12 @@ int timer_softirq(int pcpu_id)
 		del_timer(timer);
 
 		run_timer(timer);
+
+		if (timer->mode == TICK_MODE_PERIODIC) {
+			timer->fire_tsc += max(timer->period_in_cycle,
+					US_TO_TICKS(MIN_TIMER_PERIOD_US));
+			add_timer(timer);
+		}
 
 		/* search next one */
 		timer = find_expired_timer(cpu_timer, rdtsc());
