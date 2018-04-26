@@ -51,6 +51,8 @@ cpu_secondary_reset:
     /* Disable local interrupts */
 
     cli
+    mov %cs, %ax
+    mov %ax, %ds
 
     /* Set DE, PAE, MCE and OS support bits in CR4 */
 
@@ -77,9 +79,7 @@ cpu_secondary_reset:
     mov     %ebx, %cr0
 
     /* Load temportary GDT pointer value */
-
-    mov     $cpu_secondary_gdt_ptr, %ebx
-    lgdt    (%ebx)
+    lgdt    (cpu_secondary_gdt_ptr - cpu_secondary_reset)
 
     /* Perform a long jump based to start executing in 64-bit mode */
 
