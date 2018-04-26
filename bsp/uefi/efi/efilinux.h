@@ -48,7 +48,6 @@
 
 extern EFI_SYSTEM_TABLE *sys_table;
 extern EFI_BOOT_SERVICES *boot;
-extern EFI_RUNTIME_SERVICES *runtime;
 
 /**
  * allocate_pages - Allocate memory pages from the system
