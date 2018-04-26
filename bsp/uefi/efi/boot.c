@@ -331,17 +331,20 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	UINTN sec_size;
 	char *section;
 	EFI_DEVICE_PATH *path;
-	CHAR16 *bootloader_name;
+
+	INTN Argc, i, index;
+	CHAR16 **Argv;
+	CHAR16 *bootloader_name = NULL;
+	CHAR16 bootloader_param[] = L"bootloader=";
 	EFI_HANDLE bootloader_image;
 
 	InitializeLib(image, _table);
-
+	Argc = GetShellArgcArgv(image, &Argv);
 	sys_table = _table;
 	boot = sys_table->BootServices;
 
 	if (CheckCrc(sys_table->Hdr.HeaderSize, &sys_table->Hdr) != TRUE)
 		return EFI_LOAD_ERROR;
-
 
 	err = handle_protocol(image, &LoadedImageProtocol, (void **)&info);
 	if (err != EFI_SUCCESS)
@@ -368,7 +371,27 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 		goto failed;
 
 	/* load and start the default bootloader */
-	bootloader_name = ch8_2_ch16(CONFIG_UEFI_OS_LOADER_NAME);
+
+	/* First check if we were given a bootloader name
+	 * E.g.: "bootloader=\EFI\org.clearlinux\bootloaderx64.efi"
+	 */
+	for (i = 0 ; i < Argc ; ++i) {
+		bootloader_name = strstr_16(Argv[i], bootloader_param);
+		if (bootloader_name) {
+			bootloader_name = bootloader_name + StrLen(bootloader_param);
+			break;
+		}
+	}
+
+	if (!bootloader_name) {
+		/*
+		 * If we reach this point, it means we did not receive a specific
+		 * bootloader name to be used. Fall back to the default bootloader
+		 * as specified in bsp_cfg.h
+		 */
+		bootloader_name = ch8_2_ch16(CONFIG_UEFI_OS_LOADER_NAME);
+	}
+
 	path = FileDevicePath(info->DeviceHandle, bootloader_name);
 	if (!path)
 		goto free_args;
@@ -408,6 +431,13 @@ failed:
 
 	StatusToString(error_buf, err);
 	Print(L": %s\n", error_buf);
+
+	/* If we don't wait for user input, (s)he will not see the error message */
+        uefi_call_wrapper(sys_table->ConOut->OutputString, 2, sys_table->ConOut, \
+                        L"\r\n\r\n\r\nHit any key to exit\r\n");
+        uefi_call_wrapper(sys_table->BootServices->WaitForEvent, 3, 1, \
+                        &sys_table->ConIn->WaitForKey, &index);
+
 	return exit(image, err, ERROR_STRING_LENGTH, error_buf);
 }
 
