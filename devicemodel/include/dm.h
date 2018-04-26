@@ -48,7 +48,6 @@ int vmexit_task_switch(struct vmctx *ctx, struct vhm_request *vhm_req,
 void *paddr_guest2host(struct vmctx *ctx, uintptr_t addr, size_t len);
 void *dm_gpa2hva(uint64_t gpa, size_t size);
 
-void fbsdrun_addcpu(struct vmctx *ctx, int guest_ncpus);
 int  fbsdrun_muxed(void);
 int  fbsdrun_vmexit_on_hlt(void);
 int  fbsdrun_vmexit_on_pause(void);

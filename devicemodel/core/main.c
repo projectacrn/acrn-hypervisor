@@ -267,8 +267,8 @@ fbsdrun_start_thread(void *param)
 	return NULL;
 }
 
-void
-fbsdrun_addcpu(struct vmctx *ctx, int guest_ncpus)
+static void
+add_cpu(struct vmctx *ctx, int guest_ncpus)
 {
 	int i;
 	int error;
@@ -290,7 +290,7 @@ fbsdrun_addcpu(struct vmctx *ctx, int guest_ncpus)
 }
 
 static int
-fbsdrun_deletecpu(struct vmctx *ctx, int vcpu)
+delete_cpu(struct vmctx *ctx, int vcpu)
 {
 	if (!CPU_ISSET(vcpu, &cpumask)) {
 		fprintf(stderr, "Attempting to delete unknown cpu %d\n", vcpu);
@@ -845,7 +845,7 @@ main(int argc, char *argv[])
 		/*
 		 * Add CPU 0
 		 */
-		fbsdrun_addcpu(ctx, guest_ncpus);
+		add_cpu(ctx, guest_ncpus);
 
 		/* Make a copy for ctx */
 		_ctx = ctx;
@@ -856,7 +856,7 @@ main(int argc, char *argv[])
 		mevent_dispatch();
 
 		vm_pause(ctx);
-		fbsdrun_deletecpu(ctx, BSP);
+		delete_cpu(ctx, BSP);
 
 		if (vm_get_suspend_mode() != VM_SUSPEND_RESET)
 			break;
