@@ -1003,7 +1003,7 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			      net->nmd != NULL);
 
 	/* use BAR 1 to map MSI-X table and PBA, if we're using MSI-X */
-	if (virtio_interrupt_init(&net->base, fbsdrun_virtio_msix())) {
+	if (virtio_interrupt_init(&net->base, virtio_uses_msix())) {
 		if (net)
 			free(net);
 		return -1;

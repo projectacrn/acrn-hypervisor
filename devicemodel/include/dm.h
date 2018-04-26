@@ -47,12 +47,6 @@ int vmexit_task_switch(struct vmctx *ctx, struct vhm_request *vhm_req,
 		       int *vcpu);
 void *paddr_guest2host(struct vmctx *ctx, uintptr_t addr, size_t len);
 void *dm_gpa2hva(uint64_t gpa, size_t size);
-
-int  fbsdrun_muxed(void);
-int  fbsdrun_vmexit_on_hlt(void);
-int  fbsdrun_vmexit_on_pause(void);
-int  fbsdrun_disable_x2apic(void);
-int  fbsdrun_virtio_msix(void);
-
+int  virtio_uses_msix(void);
 void ptdev_prefer_msi(bool enable);
 #endif

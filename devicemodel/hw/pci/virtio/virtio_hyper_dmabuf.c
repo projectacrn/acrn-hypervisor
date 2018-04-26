@@ -306,7 +306,7 @@ virtio_hyper_dmabuf_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (rc)
 		DPRINTF("mutexattr init failed with erro %d!\n", rc);
 
-	if (fbsdrun_virtio_msix()) {
+	if (virtio_uses_msix()) {
 		rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_DEFAULT);
 		DPRINTF("virtio_msix: mutexattr_settype ");
 		DPRINTF("failed with error %d!\n", rc);
@@ -347,7 +347,7 @@ virtio_hyper_dmabuf_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_set_cfgdata16(dev, PCIR_SUBDEV_0, VIRTIO_TYPE_HYPERDMABUF);
 	pci_set_cfgdata16(dev, PCIR_SUBVEND_0, INTEL_VENDOR_ID);
 
-	if (virtio_interrupt_init(&hyper_dmabuf->base, fbsdrun_virtio_msix())) {
+	if (virtio_interrupt_init(&hyper_dmabuf->base, virtio_uses_msix())) {
 		if (hyper_dmabuf)
 			free(hyper_dmabuf);
 		return -1;
