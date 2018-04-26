@@ -73,7 +73,7 @@ upstream project ACRN repos (though https clones work too):
    time, visit the **acrn-documentation**, **acrn-hypervisor**, and
    **acrn-devicemodel** repos and do a fork to your personal GitHub account.
 
-   .. image:: images/acrn-doc-fork.png
+   .. image:: acrn-doc-fork.png
       :align: center
 
 #. At a command prompt, create the working folder and clone the three

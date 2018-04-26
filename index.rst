@@ -28,10 +28,10 @@ Sections
    hardware.rst
    getting_started/index.rst
    primer/index.rst
+   howtos/index.rst
    release_notes.rst
    contribute.rst
    api/index.rst
-   docbuild.rst
 
 Indices and Tables
 ******************
