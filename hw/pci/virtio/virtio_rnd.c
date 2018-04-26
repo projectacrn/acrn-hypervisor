@@ -387,7 +387,7 @@ virtio_rnd_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	rc = pthread_mutexattr_init(&attr);
 	if (rc)
 		DPRINTF(("mutexattr init failed with erro %d!\n", rc));
-	if (fbsdrun_virtio_msix()) {
+	if (virtio_uses_msix()) {
 		rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_DEFAULT);
 		if (rc)
 			DPRINTF(("virtio_msix: mutexattr_settype failed with "
@@ -435,7 +435,7 @@ virtio_rnd_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_set_cfgdata16(dev, PCIR_SUBDEV_0, VIRTIO_TYPE_ENTROPY);
 	pci_set_cfgdata16(dev, PCIR_SUBVEND_0, VIRTIO_VENDOR);
 
-	if (virtio_interrupt_init(&rnd->base, fbsdrun_virtio_msix())) {
+	if (virtio_interrupt_init(&rnd->base, virtio_uses_msix())) {
 		if (rnd)
 			free(rnd);
 		return -1;

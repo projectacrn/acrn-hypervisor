@@ -1302,7 +1302,7 @@ virtio_heci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		WPRINTF(("vheci init: mutexattr init fail, erro %d!\r\n", rc));
 		goto fail;
 	}
-	if (fbsdrun_virtio_msix()) {
+	if (virtio_uses_msix()) {
 		rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_DEFAULT);
 		if (rc) {
 			WPRINTF(("vheci init: mutexattr_settype failed with "
@@ -1340,7 +1340,7 @@ virtio_heci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_set_cfgdata16(dev, PCIR_SUBDEV_0, VIRTIO_TYPE_HECI);
 	pci_set_cfgdata16(dev, PCIR_SUBVEND_0, INTEL_VENDOR_ID);
 
-	if (virtio_interrupt_init(&vheci->base, fbsdrun_virtio_msix()))
+	if (virtio_interrupt_init(&vheci->base, virtio_uses_msix()))
 		goto setup_fail;
 	virtio_set_io_bar(&vheci->base, 0);
 

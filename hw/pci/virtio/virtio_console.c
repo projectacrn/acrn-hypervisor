@@ -859,7 +859,7 @@ virtio_console_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_set_cfgdata16(dev, PCIR_SUBDEV_0, VIRTIO_TYPE_CONSOLE);
 	pci_set_cfgdata16(dev, PCIR_SUBVEND_0, VIRTIO_VENDOR);
 
-	if (virtio_interrupt_init(&console->base, fbsdrun_virtio_msix())) {
+	if (virtio_interrupt_init(&console->base, virtio_uses_msix())) {
 		if (console) {
 			if (console->config)
 				free(console->config);

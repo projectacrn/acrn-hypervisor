@@ -231,25 +231,13 @@ dm_gpa2hva(uint64_t gpa, size_t size)
 }
 
 int
-fbsdrun_vmexit_on_pause(void)
-{
-	return guest_vmexit_on_pause;
-}
-
-int
-fbsdrun_vmexit_on_hlt(void)
-{
-	return guest_vmexit_on_hlt;
-}
-
-int
-fbsdrun_virtio_msix(void)
+virtio_uses_msix(void)
 {
 	return virtio_msix;
 }
 
 static void *
-fbsdrun_start_thread(void *param)
+start_thread(void *param)
 {
 	char tname[MAXCOMLEN + 1];
 	struct mt_vmm_info *mtp;
@@ -285,7 +273,7 @@ add_cpu(struct vmctx *ctx, int guest_ncpus)
 	}
 
 	error = pthread_create(&mt_vmm_info[0].mt_thr, NULL,
-	    fbsdrun_start_thread, &mt_vmm_info[0]);
+	    start_thread, &mt_vmm_info[0]);
 	assert(error == 0);
 }
 

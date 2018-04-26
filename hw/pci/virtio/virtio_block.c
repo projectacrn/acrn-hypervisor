@@ -388,7 +388,7 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_set_cfgdata16(dev, PCIR_SUBDEV_0, VIRTIO_TYPE_BLOCK);
 	pci_set_cfgdata16(dev, PCIR_SUBVEND_0, VIRTIO_VENDOR);
 
-	if (virtio_interrupt_init(&blk->base, fbsdrun_virtio_msix())) {
+	if (virtio_interrupt_init(&blk->base, virtio_uses_msix())) {
 		blockif_close(blk->bc);
 		free(blk);
 		return -1;
