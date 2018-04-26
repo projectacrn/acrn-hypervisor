@@ -161,7 +161,7 @@ else:
 html_context = {
    'current_version': current_version,
    'versions': ( ("latest", "/latest/"),
-                 ("0.1-rc4", "/0.1-rc4/"),
+#                 ("0.1-rc4", "/0.1-rc4/"),
                )
     }
 
