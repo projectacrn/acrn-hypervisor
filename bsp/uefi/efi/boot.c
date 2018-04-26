@@ -39,7 +39,6 @@
 
 EFI_SYSTEM_TABLE *sys_table;
 EFI_BOOT_SERVICES *boot;
-EFI_RUNTIME_SERVICES *runtime;
 extern const uint64_t guest_entry;
 
 static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
@@ -339,7 +338,6 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 
 	sys_table = _table;
 	boot = sys_table->BootServices;
-	runtime = sys_table->RuntimeServices;
 
 	if (CheckCrc(sys_table->Hdr.HeaderSize, &sys_table->Hdr) != TRUE)
 		return EFI_LOAD_ERROR;
