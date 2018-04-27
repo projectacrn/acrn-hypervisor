@@ -110,8 +110,24 @@ static void vm_setup_cpu_cx(struct vm *vm)
 
 }
 
+static inline void init_cx_port(struct vm *vm)
+{
+	uint8_t cx_idx;
+
+	for (cx_idx = 2; cx_idx <= vm->pm.cx_cnt; cx_idx++) {
+		struct cpu_cx_data *cx_data = vm->pm.cx_data + cx_idx;
+
+		if (cx_data->cx_reg.space_id == SPACE_SYSTEM_IO) {
+			uint16_t port = (uint16_t)cx_data->cx_reg.address;
+
+			allow_guest_io_access(vm, port, 1);
+		}
+	}
+}
+
 void vm_setup_cpu_state(struct vm *vm)
 {
 	vm_setup_cpu_px(vm);
 	vm_setup_cpu_cx(vm);
+	init_cx_port(vm);
 }
