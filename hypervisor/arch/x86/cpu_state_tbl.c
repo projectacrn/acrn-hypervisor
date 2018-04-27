@@ -73,6 +73,13 @@ struct cpu_px_data px_j3455[] = {
 	{0x320, 0, 0xA, 0xA, 0x0800, 0x0800}  /* P8 */
 };
 
+/* The table includes cpu cx info of Intel J3455 SoC */
+struct cpu_cx_data cx_j3455[] = {
+	{{SPACE_FFixedHW, 0x1, 0x2, 0x1, 0x01}, 0x1, 0x1, 0x3E8}, /* C1 */
+	{{SPACE_FFixedHW, 0x1, 0x2, 0x1, 0x21}, 0x2, 0x32, 0x0A}, /* C2 */
+	{{SPACE_FFixedHW, 0x1, 0x2, 0x1, 0x60}, 0x3, 0x96, 0x0A}  /* C3 */
+};
+
 struct cpu_state_table {
 	char			model_name[64];
 	struct cpu_state_info	state_info;
@@ -83,7 +90,7 @@ struct cpu_state_table {
 	},
 	{"Intel(R) Celeron(R) CPU J3455 @ 1.50GHz",
 		{ARRAY_SIZE(px_j3455), px_j3455,
-			0,	NULL}
+		 ARRAY_SIZE(cx_j3455), cx_j3455}
 	}
 };
 
