@@ -212,8 +212,8 @@ static void deny_guest_io_access(struct vm *vm, uint32_t address, uint32_t nbyte
 	uint32_t i;
 	uint32_t a;
 
+	b = vm->arch_vm.iobitmap[0];
 	for (i = 0; i < nbytes; i++) {
-		b = vm->arch_vm.iobitmap[0];
 		if (address & 0x8000)
 			b = vm->arch_vm.iobitmap[1];
 		a = address & 0x7fff;
