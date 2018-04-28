@@ -500,15 +500,15 @@ void bsp_boot_init(void)
 		       LOG_DESTINATION);
 
 	if (HV_RC_VERSION)
-		printf("HV version %d.%d-rc%d-%s-%s build by %s, start time %lluus\r\n",
+		printf("HV version %d.%d-rc%d-%s-%s %s build by %s, start time %lluus\r\n",
 			HV_MAJOR_VERSION, HV_MINOR_VERSION, HV_RC_VERSION,
-			HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_USER,
-			TICKS_TO_US(start_tsc));
+			HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_TYPE,
+			HV_BUILD_USER, TICKS_TO_US(start_tsc));
 	else
-		printf("HV version %d.%d-%s-%s build by %s, start time %lluus\r\n",
+		printf("HV version %d.%d-%s-%s %s build by %s, start time %lluus\r\n",
 			HV_MAJOR_VERSION, HV_MINOR_VERSION,
-			HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_USER,
-			TICKS_TO_US(start_tsc));
+			HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_TYPE,
+			HV_BUILD_USER, TICKS_TO_US(start_tsc));
 
 	printf("API version %d.%d\r\n",
 			HV_API_MAJOR_VERSION, HV_API_MINOR_VERSION);

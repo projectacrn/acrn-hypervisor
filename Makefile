@@ -222,7 +222,8 @@ $(VERSION):
 	@COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
 	DIRTY=`git diff-index --name-only HEAD`;\
 	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
-	TIME=`date "+%Y%m%d"`;\
+	TIME=`date "+%F %T"`;\
+	if [ $(RELEASE) = 0 ];then BUILD_TYPE="DBG";else BUILD_TYPE="REL";fi;\
 	cat license_header > $(VERSION);\
 	echo "#define HV_MAJOR_VERSION $(MAJOR_VERSION)" >> $(VERSION);\
 	echo "#define HV_MINOR_VERSION $(MINOR_VERSION)" >> $(VERSION);\
@@ -230,6 +231,7 @@ $(VERSION):
 	echo "#define HV_API_MAJOR_VERSION $(API_MAJOR_VERSION)" >> $(VERSION);\
 	echo "#define HV_API_MINOR_VERSION $(API_MINOR_VERSION)" >> $(VERSION);\
 	echo "#define HV_BUILD_VERSION "\""$$PATCH"\""" >> $(VERSION);\
+	echo "#define HV_BUILD_TYPE "\""$$BUILD_TYPE"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_TIME "\""$$TIME"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_USER "\""$(USER)"\""" >> $(VERSION)
 
