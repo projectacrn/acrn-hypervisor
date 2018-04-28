@@ -70,11 +70,10 @@ static void vm_setup_cpu_px(struct vm *vm)
 		return;
 	}
 
-	if (boot_cpu_data.state_info.px_cnt > MAX_PSTATE) {
-		vm->pm.px_cnt = MAX_PSTATE;
-	} else {
-		vm->pm.px_cnt = boot_cpu_data.state_info.px_cnt;
-	}
+	ASSERT ((boot_cpu_data.state_info.px_cnt <= MAX_PSTATE),
+		"failed to setup cpu px");
+
+	vm->pm.px_cnt = boot_cpu_data.state_info.px_cnt;
 
 	px_data_size = vm->pm.px_cnt * sizeof(struct cpu_px_data);
 
