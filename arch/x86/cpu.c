@@ -30,6 +30,7 @@
 
 #include <hypervisor.h>
 #include <hv_lib.h>
+#include <acrn_hv_defs.h>
 #include <acrn_common.h>
 #include <bsp_extern.h>
 #include <hv_arch.h>
@@ -38,8 +39,11 @@
 #include <hv_debug.h>
 
 #ifdef CONFIG_EFI_STUB
+#include <acrn_efi.h>
 extern uint32_t efi_physical_available_ap_bitmap;
 #endif
+
+uint64_t ap_init_code_offset = CONFIG_LOW_RAM_START;
 
 spinlock_t cpu_secondary_spinlock = {
 	.head = 0,
@@ -88,6 +92,7 @@ int cpu_find_logical_id(uint32_t lapic_id);
 #ifndef CONFIG_EFI_STUB
 static void start_cpus(void);
 #endif
+static uint64_t prepare_AP_boot(void);
 static void pcpu_sync_sleep(unsigned long *sync, int mask_bit);
 int ibrs_type;
 
@@ -548,10 +553,7 @@ void bsp_boot_init(void)
 	/* Trigger event to allow secondary CPUs to continue */
 	bitmap_set(0, &pcpu_sync);
 #else
-	memcpy_s(_ld_cpu_secondary_reset_start,
-		(unsigned long)&_ld_cpu_secondary_reset_size,
-		_ld_cpu_secondary_reset_load,
-		(unsigned long)&_ld_cpu_secondary_reset_size);
+	prepare_AP_boot();
 #endif
 
 	ASSERT(get_cpu_id() == CPU_BOOT_ID, "");
@@ -653,6 +655,67 @@ int cpu_find_logical_id(uint32_t lapic_id)
 }
 
 #ifndef CONFIG_EFI_STUB
+static uint64_t  alloc_for_ap_secondary_boot(uint32_t size)
+{
+	//1. search for e820 table to get available memory under 1M
+	//2. alloc memory with param(size) in the region and align
+	uint32_t i;
+	struct e820_entry *entry, *new_entry, *new_entry_2;
+
+	size += (CPU_PAGE_SIZE - 1);
+	size &= ~(CPU_PAGE_SIZE - 1);
+
+	for (i = 0; i < e820_entries; i++) {
+		entry = &e820[i];
+		if ((entry->type != E820_TYPE_RAM)
+			|| (entry->length < size)
+			|| (entry->baseaddr >= MEM_1M)
+			|| (entry->baseaddr + size > MEM_1M)) {
+			continue;
+		}
+
+		if ((entry->length == size) && (entry->baseaddr == 0))
+			continue;
+
+		/* Found available memory */
+		e820_mem.total_mem_size -= size;
+
+		/* found exact size of e820 entry */
+		if (entry->length == size) {
+			entry->type = E820_TYPE_RESERVED;
+
+			return entry->baseaddr;
+		}
+
+		new_entry = &e820[e820_entries];
+		e820_entries++;
+		new_entry->length = size;
+		new_entry->type = E820_TYPE_RESERVED;
+
+		/* We don't want the first page */
+		if (entry->baseaddr == 0) {
+			entry->length -= size;
+			new_entry->baseaddr = entry->baseaddr + CPU_PAGE_SIZE;
+			if (entry->length > CPU_PAGE_SIZE) {
+				new_entry_2 = &e820[e820_entries];
+				e820_entries++;
+				new_entry_2->length = entry->length - CPU_PAGE_SIZE;
+				new_entry_2->type = E820_TYPE_RAM;
+				new_entry_2->baseaddr = entry->baseaddr + CPU_PAGE_SIZE + size;
+				entry->length -= new_entry_2->length;
+			}
+		} else {
+			new_entry->baseaddr = entry->baseaddr;
+			entry->length -= size;
+			entry->baseaddr += size;
+		}
+
+		return new_entry->baseaddr;
+	}
+	pr_fatal("Can't allocate memory under 1M for AP initialization code\n");
+	return ACRN_INVALID_HPA;
+}
+
 /*
  * Start all secondary CPUs.
  */
@@ -660,12 +723,9 @@ static void start_cpus()
 {
 	uint32_t timeout;
 	uint32_t expected_up;
+	uint64_t sipi_vec;
 
-	/*Copy segment for AP initialization code below 1MB */
-	memcpy_s(_ld_cpu_secondary_reset_start,
-		(unsigned long)&_ld_cpu_secondary_reset_size,
-		_ld_cpu_secondary_reset_load,
-		(unsigned long)&_ld_cpu_secondary_reset_size);
+	sipi_vec = prepare_AP_boot();
 
 	/* Set flag showing number of CPUs expected to be up to all
 	 * cpus
@@ -674,7 +734,7 @@ static void start_cpus()
 
 	/* Broadcast IPIs to all other CPUs */
 	send_startup_ipi(INTR_CPU_STARTUP_ALL_EX_SELF,
-		       -1U, ((uint64_t) cpu_secondary_reset));
+		       -1U, ((uint64_t)sipi_vec));
 
 	/* Wait until global count is equal to expected CPU up count or
 	 * configured time-out has expired
@@ -699,6 +759,59 @@ static void start_cpus()
 	}
 }
 #endif
+extern uint8_t _ld_cpu_secondary_reset_end[];
+extern uint8_t ap_long_mode_jump_ref[];
+extern uint8_t CPU_Boot_Page_Tables_Start[];
+extern uint8_t cpu_secondary_pdpt_addr[];
+extern uint8_t cpu_secondary_gdt_ptr[];
+
+static void update_ap_secondary_code(uint64_t dest)
+{
+	uint64_t ptr;
+	int i;
+
+	if (dest == CONFIG_LOW_RAM_START)
+		return;
+
+	/* Update temporary page tables */
+	ptr = dest + (uint64_t)CPU_Boot_Page_Tables_Start;
+	*(uint64_t *)(ptr) += dest;
+
+	ptr = dest + (uint64_t)cpu_secondary_pdpt_addr;
+	for (i = 0; i < 4; i++ ) {
+		*(uint64_t *)(ptr + sizeof(uint64_t) * i) += dest;
+	}
+
+	/* update the gdt base pointer with relocated offset */
+	ptr = dest + (uint64_t)cpu_secondary_gdt_ptr;
+	*(uint64_t *)(ptr + 2) += dest;
+
+	/* update trampline jump pointer with relocated offset */
+	ptr = dest + (uint64_t)ap_long_mode_jump_ref;
+	*(uint64_t *)ptr += dest;
+}
+
+static uint64_t prepare_AP_boot(void)
+{
+	uint64_t size, dest, i;
+
+	size = (uint64_t)_ld_cpu_secondary_reset_end - (uint64_t)cpu_secondary_reset;
+#ifndef CONFIG_EFI_STUB
+	dest = alloc_for_ap_secondary_boot(size);
+#else
+	dest = (uint64_t)get_ap_trampoline_buf_ptr();
+#endif
+
+	/* printf("%s %d ap code: %llx size %x\n", __func__, __LINE__, dest, size); */
+	memcpy_s((void *)dest, size, _ld_cpu_secondary_reset_load, size);
+	for (i = 0; i < size; i += CACHE_LINE_SIZE) {
+		clflush((void *(dest + i));
+	}
+
+	update_ap_secondary_code(dest);
+	ap_init_code_offset = dest;
+	return dest;
+}
 
 void cpu_dead(uint32_t logical_id)
 {
