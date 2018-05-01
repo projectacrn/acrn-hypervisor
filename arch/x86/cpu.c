@@ -805,7 +805,7 @@ static uint64_t prepare_AP_boot(void)
 	/* printf("%s %d ap code: %llx size %x\n", __func__, __LINE__, dest, size); */
 	memcpy_s((void *)dest, size, _ld_cpu_secondary_reset_load, size);
 	for (i = 0; i < size; i += CACHE_LINE_SIZE) {
-		clflush((void *(dest + i));
+		clflush((void *)(dest + i));
 	}
 
 	update_ap_secondary_code(dest);
