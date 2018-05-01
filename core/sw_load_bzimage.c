@@ -133,8 +133,11 @@ acrn_parse_kernel(char *arg)
 	if (len < STR_LEN) {
 		strncpy(kernel_path, arg, len);
 		kernel_path[len] = '\0';
-		assert(check_image(kernel_path) == 0);
-
+		if (check_image(kernel_path) != 0){
+			fprintf(stderr, "SW_LOAD: check_image failed for '%s'\n",
+				kernel_path);
+			exit(10); /* Non-zero */
+		}
 		with_kernel = 1;
 		printf("SW_LOAD: get kernel path %s\n", kernel_path);
 		return 0;
@@ -150,7 +153,11 @@ acrn_parse_ramdisk(char *arg)
 	if (len < STR_LEN) {
 		strncpy(ramdisk_path, arg, len);
 		ramdisk_path[len] = '\0';
-		assert(check_image(ramdisk_path) == 0);
+		if (check_image(ramdisk_path) != 0){
+			fprintf(stderr, "SW_LOAD: check_image failed for '%s'\n",
+				ramdisk_path);
+			exit(11); /* Non-zero */
+		}
 
 		with_ramdisk = 1;
 		printf("SW_LOAD: get ramdisk path %s\n", ramdisk_path);
