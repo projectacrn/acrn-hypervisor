@@ -674,9 +674,8 @@ uint64_t e820_alloc_low_memory(uint32_t size)
  * This API assume that the trusty memory is remapped to guest physical address
  * of 511G to 511G + 16MB
  *
- * FIXME: here using hard code GUEST_INIT_PAGE_TABLE_START as guest init page
- * table gpa start, and it will occupy at most GUEST_INIT_PT_PAGE_NUM pages.
- * Some check here:
+ * FIXME: here the guest init page table will occupy at most
+ * GUEST_INIT_PT_PAGE_NUM pages. Some check here:
  * - guest page table space should not override trampline code area
  *   (it's a little tricky here, as under current identical mapping, HV & SOS
  *   share same memory under 1M; under uefi boot mode, the defered AP startup
@@ -688,7 +687,7 @@ uint64_t e820_alloc_low_memory(uint32_t size)
  * after guest realmode/32bit no paging mode got supported.
  ******************************************************************/
 #define GUEST_INIT_PAGE_TABLE_SKIP_SIZE	0x8000UL
-#define GUEST_INIT_PAGE_TABLE_START	(CONFIG_LOW_RAM_START +	\
+#define GUEST_INIT_PAGE_TABLE_START	(trampline_start16_paddr +	\
 					GUEST_INIT_PAGE_TABLE_SKIP_SIZE)
 #define GUEST_INIT_PT_PAGE_NUM		7
 #define RSDP_F_ADDR			0xE0000
@@ -794,7 +793,7 @@ uint64_t create_guest_initial_paging(struct vm *vm)
  ******************************************************************/
 
 #define GUEST_INIT_GDT_SKIP_SIZE	0x8000UL
-#define GUEST_INIT_GDT_START	(CONFIG_LOW_RAM_START +	\
+#define GUEST_INIT_GDT_START	(trampline_start16_paddr +	\
 					GUEST_INIT_GDT_SKIP_SIZE)
 
 /* The GDT defined below compatible with linux kernel */

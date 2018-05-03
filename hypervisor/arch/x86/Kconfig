@@ -74,15 +74,9 @@ config MEM_LOGLEVEL_DEFAULT
 	int "Default loglevel in memory"
 	default 4
 
-config LOW_RAM_START
-	hex "Address of the beginning of low RAM region"
-	default 0x00001000 if PLATFORM_SBL
-	default 0x00008000 if PLATFORM_UEFI
-
 config LOW_RAM_SIZE
 	hex "Size of the low RAM region"
-	default 0x000cf000 if PLATFORM_SBL
-	default 0x00010000 if PLATFORM_UEFI
+	default 0x00010000
 
 config RAM_START
 	hex "Address of the RAM region assigned to the hypervisor"

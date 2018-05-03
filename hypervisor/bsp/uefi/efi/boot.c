@@ -190,12 +190,6 @@ again:
 	mmap[j].mm_type = E820_RAM;
 	j++;
 
-	/* reserve secondary memory region(0x1000 ~ 0x10000) for hv */
-	err = __emalloc(CONFIG_LOW_RAM_SIZE, CONFIG_LOW_RAM_START,
-		&addr, EfiReservedMemoryType);
-	if (err != EFI_SUCCESS)
-		goto out;
-
 	mbi->mi_flags |= MULTIBOOT_INFO_HAS_MMAP | MULTIBOOT_INFO_HAS_CMDLINE;
 	mbi->mi_mmap_length = j*sizeof(struct multiboot_mmap);
 
@@ -226,6 +220,13 @@ switch_to_guest_mode(EFI_HANDLE image)
 		goto out;
 
 	efi_ctx = (struct efi_ctx *)(UINTN)addr;
+
+	/* reserve secondary memory region for hv */
+	err = emalloc_for_low_mem(&addr, CONFIG_LOW_RAM_SIZE);
+	if (err != EFI_SUCCESS)
+		goto out;
+
+	efi_ctx->ap_trampline_buf = (void *)addr;
 
 	config_table = sys_table->ConfigurationTable;
 

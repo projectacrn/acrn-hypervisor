@@ -26,6 +26,8 @@ volatile uint32_t up_count = 0;
 /* physical cpu active bitmap, support up to 64 cpus */
 uint64_t pcpu_active_bitmap = 0;
 
+uint64_t trampline_start16_paddr;
+
 /* TODO: add more capability per requirement */
 /*APICv features*/
 #define VAPIC_FEATURE_VIRT_ACCESS		(1 << 0)
