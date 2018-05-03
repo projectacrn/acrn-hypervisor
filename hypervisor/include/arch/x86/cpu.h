@@ -169,6 +169,7 @@ extern uint8_t                trampline_pdpt_addr[];
 extern uint8_t                trampline_gdt_ptr[];
 extern uint8_t                trampline_start64_fixup[];
 
+extern uint64_t trampline_start16_paddr;
 extern int ibrs_type;
 
 /*

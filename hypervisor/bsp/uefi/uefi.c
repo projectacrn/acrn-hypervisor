@@ -97,6 +97,11 @@ void *get_rsdp_from_uefi(void)
 	return HPA2HVA(efi_ctx->rsdp);
 }
 
+void *get_ap_trampline_buf(void)
+{
+	return efi_ctx->ap_trampline_buf;
+}
+
 static void efi_init(void)
 {
 	struct multiboot_info *mbi = NULL;
