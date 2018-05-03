@@ -165,14 +165,11 @@ static void init_vcpuid_entry(__unused struct vm *vm,
 	 *
 	 * EAX: (Virtual) TSC frequency in kHz.
 	 *      TSC frequency is calculated from PIT in ACRN
-	 * EBX: (Virtual) Bus (local apic timer) frequency in kHz.
-	 *      Bus (local apic timer) frequency is hardcoded as
-	 *      (128 * 1024 * 1024) in ACRN
-	 * ECX, EDX: RESERVED (reserved fields are set to zero).
+	 * EBX, ECX, EDX: RESERVED (reserved fields are set to zero).
 	 */
 	case 0x40000010:
 		entry->eax = (uint32_t)(tsc_hz / 1000);
-		entry->ebx = (128 * 1024 * 1024) / 1000;
+		entry->ebx = 0;
 		entry->ecx = 0;
 		entry->edx = 0;
 		break;
