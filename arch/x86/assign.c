@@ -488,9 +488,7 @@ add_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 		entry_id_from_msix(phys_bdf, msix_entry_index));
 	if (!entry) {
 		if (_lookup_entry_by_vmsi(vm, virt_bdf, msix_entry_index)) {
-			pr_err("MSIX re-add vbdf%x idx=%d to vm%d",
-				virt_bdf, entry->msi.msix_entry_index,
-				entry->vm->attr.id);
+			pr_err("MSIX re-add vbdf%x", virt_bdf);
 
 			spinlock_release(&ptdev_lock);
 			return &invalid_entry;
@@ -566,8 +564,7 @@ add_intx_remapping(struct vm *vm, uint8_t virt_pin,
 	entry = _lookup_entry_by_id(entry_id_from_intx(phys_pin));
 	if (!entry) {
 		if (_lookup_entry_by_vintx(vm, virt_pin, vpin_src)) {
-			pr_err("INTX re-add vpin %d to vm%d",
-				virt_pin, entry->vm->attr.id);
+			pr_err("INTX re-add vpin %d", virt_pin);
 			spinlock_release(&ptdev_lock);
 			return &invalid_entry;
 		}
