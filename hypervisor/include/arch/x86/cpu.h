@@ -158,9 +158,16 @@ int cpu_find_logical_id(uint32_t lapic_id);
 /**********************************/
 extern const uint8_t          _ld_trampline_load[];
 extern uint8_t                _ld_trampline_start[];
+extern uint8_t                _ld_trampline_end[];
 extern const uint64_t         _ld_trampline_size;
 extern uint8_t                _ld_bss_start[];
 extern uint8_t                _ld_bss_end[];
+
+extern uint8_t                CPU_Boot_Page_Tables_Start[];
+extern uint8_t                CPU_Boot_Page_Tables_ptr[];
+extern uint8_t                trampline_pdpt_addr[];
+extern uint8_t                trampline_gdt_ptr[];
+extern uint8_t                trampline_start64_fixup[];
 
 extern int ibrs_type;
 
