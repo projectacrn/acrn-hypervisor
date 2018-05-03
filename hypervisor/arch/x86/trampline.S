@@ -31,6 +31,7 @@
    .align   4
    .code16
    .global      trampline_start16
+   .org 0
 trampline_start16:
 
     /* Disable local interrupts */
@@ -82,8 +83,9 @@ trampline_fixup_target:
 
     /* Set CR3 to PML4 table address */
 
-    movl    $CPU_Boot_Page_Tables_Start, %edi
-    mov     %edi, %cr3
+    movl    $CPU_Boot_Page_Tables_ptr, %ebx
+    mov     (%ebx), %eax
+    mov     %eax, %cr3
 
     /* Set LME bit in EFER */
 
@@ -104,7 +106,14 @@ trampline_fixup_target:
 
     /* Perform a long jump based to start executing in 64-bit mode */
 
-    data32 ljmp $HOST_GDT_RING0_CODE_SEL, $trampline_start64
+    movl    $trampline_start64_fixup, %ebx
+    ljmpl   *(%ebx)
+
+    .align 8
+    .global trampline_start64_fixup
+trampline_start64_fixup:
+    .long   trampline_start64
+    .word   HOST_GDT_RING0_CODE_SEL
 
     .code64
 trampline_start64:
@@ -119,7 +128,8 @@ trampline_start64:
     mov     %eax, %gs
 
     /* Obtain CPU spin-lock to serialize trampline for different APs */
-    spinlock_obtain(trampline_spinlock)
+    mov     $trampline_spinlock, %rdi
+    spinlock_obtain(%rdi)
 
     /* Initialize temporary stack pointer
        NOTE:  Using the PML4 memory (PDPT address is top of memory
@@ -130,7 +140,7 @@ trampline_start64:
               used for a VERY short period of time, so
               this reuse of PML4 memory should be acceptable. */
 
-    movq    $trampline_pdpt_addr, %rsp
+    lea     trampline_pdpt_addr(%rip), %rsp
 
     /* Push sp magic to top of stack for call trace */
     pushq   $SP_BOTTOM_MAGIC
@@ -139,8 +149,6 @@ trampline_start64:
     movq    main_entry(%rip), %rax
     jmp     %rax
 
-trampline_error:    /* should never come here */
-    jmp     trampline_error
 
 /* main entry */
     .align  8
@@ -158,17 +166,23 @@ trampline_gdt_end:
 
 /* GDT pointer */
     .align  2
+    .global trampline_gdt_ptr
 trampline_gdt_ptr:
     .short  (trampline_gdt_end - trampline_gdt) - 1
     .quad   trampline_gdt
 
 /* PML4, PDPT, and PD tables initialized to map first 4 GBytes of memory */
+    .align  4
+    .global CPU_Boot_Page_Tables_ptr
+CPU_Boot_Page_Tables_ptr:
+    .long CPU_Boot_Page_Tables_Start
 
     .align  CPU_PAGE_SIZE
     .global CPU_Boot_Page_Tables_Start
 CPU_Boot_Page_Tables_Start:
     .quad   trampline_pdpt_addr + (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT)
     .align  CPU_PAGE_SIZE
+    .global trampline_pdpt_addr
 trampline_pdpt_addr:
     address = 0
     .rept   4
