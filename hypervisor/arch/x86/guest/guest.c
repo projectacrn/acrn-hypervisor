@@ -603,6 +603,59 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 	return 0;
 }
 
+uint64_t e820_alloc_low_memory(uint32_t size)
+{
+	uint32_t i;
+	struct e820_entry *entry, *new_entry;
+
+	/* We want memory in page boundary and integral multiple of pages */
+	size = ROUND_PAGE_UP(size);
+
+	for (i = 0; i < e820_entries; i++) {
+		entry = &e820[i];
+		uint64_t start, end, length;
+
+		start = ROUND_PAGE_UP(entry->baseaddr);
+		end = ROUND_PAGE_DOWN(entry->baseaddr + entry->length);
+		length = end - start;
+		length = (end > start) ? (end - start) : 0;
+
+		/* Search for available low memory */
+		if ((entry->type != E820_TYPE_RAM)
+			|| (length < size)
+			|| (start + size > MEM_1M)) {
+			continue;
+		}
+
+		/* found exact size of e820 entry */
+		if (length == size) {
+			entry->type = E820_TYPE_RESERVED;
+			e820_mem.total_mem_size -= size;
+			return start;
+		}
+
+		/*
+		 * found entry with available memory larger than requested
+		 * alocate memory from the end of this entry at page boundary
+		 */
+		new_entry = &e820[e820_entries];
+		new_entry->type = E820_TYPE_RESERVED;
+		new_entry->baseaddr = end - size;
+		new_entry->length = entry->baseaddr +
+			entry->length - new_entry->baseaddr;
+
+		/* Shrink the existing entry and total available memory */
+		entry->length -= new_entry->length;
+		e820_mem.total_mem_size -= new_entry->length;
+		e820_entries++;
+
+		return new_entry->baseaddr;
+	}
+
+	pr_fatal("Can't allocate memory under 1M from E820\n");
+	return ACRN_INVALID_HPA;
+}
+
 #ifdef CONFIG_START_VM0_BSP_64BIT
 /*******************************************************************
  *         GUEST initial page table
