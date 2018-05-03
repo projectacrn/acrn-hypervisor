@@ -420,24 +420,28 @@ uint64_t e820_alloc_low_memory(uint32_t size)
  * after guest realmode/32bit no paging mode got supported.
  ******************************************************************/
 #define GUEST_INIT_PAGE_TABLE_SKIP_SIZE	0x8000UL
-#define GUEST_INIT_PAGE_TABLE_START	(CONFIG_LOW_RAM_START +	\
-					GUEST_INIT_PAGE_TABLE_SKIP_SIZE)
 #define GUEST_INIT_PT_PAGE_NUM		7
 #define RSDP_F_ADDR			0xE0000
+extern uint64_t trampoline_code_paddr;
 uint64_t create_guest_initial_paging(struct vm *vm)
 {
 	uint64_t i = 0;
 	uint64_t entry = 0;
 	uint64_t entry_num = 0;
+	uint64_t base_paddr;
 	uint64_t pdpt_base_paddr = 0;
 	uint64_t pd_base_paddr = 0;
 	uint64_t table_present = 0;
 	uint64_t table_offset = 0;
 	void *addr = NULL;
-	void *pml4_addr = GPA2HVA(vm, GUEST_INIT_PAGE_TABLE_START);
+	void *pml4_addr;
 
-	_Static_assert((GUEST_INIT_PAGE_TABLE_START + 7 * PAGE_SIZE_4K) <
-		RSDP_F_ADDR, "RSDP fix segment could be override");
+	base_paddr = trampoline_code_paddr + GUEST_INIT_PAGE_TABLE_SKIP_SIZE;
+	pml4_addr = GPA2HVA(vm, base_paddr);
+
+	if ((base_paddr + 7 * PAGE_SIZE_4K) > RSDP_F_ADDR) {
+		pr_fatal("RSDP fix segment could be override by guest page tables: %llx", base_paddr);
+	}
 
 	if (GUEST_INIT_PAGE_TABLE_SKIP_SIZE <
 		(unsigned long)&_ld_cpu_secondary_reset_size) {
@@ -453,7 +457,7 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 	/* Write PML4E */
 	table_present = (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT);
 	/* PML4 used 1 page, skip it to fetch PDPT */
-	pdpt_base_paddr = GUEST_INIT_PAGE_TABLE_START + PAGE_SIZE_4K;
+	pdpt_base_paddr = base_paddr + PAGE_SIZE_4K;
 	entry = pdpt_base_paddr | table_present;
 	MEM_WRITE64(pml4_addr, entry);
 
@@ -491,8 +495,7 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 		memset(pml4_addr + 6 * PAGE_SIZE_4K, 0, PAGE_SIZE_4K);
 
 		/* Write PDPTE for trusy memory, PD will use 7th page */
-		pd_base_paddr = GUEST_INIT_PAGE_TABLE_START +
-				(6 * PAGE_SIZE_4K);
+		pd_base_paddr = base_paddr + (6 * PAGE_SIZE_4K);
 		table_offset =
 			IA32E_PDPTE_INDEX_CALC(TRUSTY_EPT_REBASE_GPA);
 		addr = (pml4_addr + PAGE_SIZE_4K + table_offset);
@@ -515,5 +518,5 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 		}
 	}
 
-	return GUEST_INIT_PAGE_TABLE_START;
+	return base_paddr;
 }
