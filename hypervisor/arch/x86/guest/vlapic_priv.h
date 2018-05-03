@@ -118,13 +118,7 @@ struct vlapic {
 	uint32_t		esr_pending;
 	int			esr_firing;
 
-	struct callout	callout;	/* vlapic timer */
-	struct bintime	timer_fire_bt;	/* callout expiry time */
-	struct bintime	timer_freq_bt;	/* timer frequency */
-	struct bintime	timer_period_bt; /* timer period */
 	struct timer	timer;
-
-	spinlock_t	timer_mtx;
 
 	/*
 	 * The 'isrvec_stk' is a stack of vectors injected by the local apic.
@@ -147,7 +141,5 @@ struct vlapic {
 	uint32_t	lvt_last[VLAPIC_MAXLVT_INDEX + 1];
 	struct pir_desc	pir;
 };
-
-void vlapic_cleanup(struct vlapic *vlapic);
 
 #endif	/* _VLAPIC_PRIV_H_ */
