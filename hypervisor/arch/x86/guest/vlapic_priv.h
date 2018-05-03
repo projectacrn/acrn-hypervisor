@@ -31,7 +31,7 @@
 #define	_VLAPIC_PRIV_H_
 
 /*
- * APIC Register:		Offset	   Description
+ * APIC Register:		Offset	Description
  */
 #define APIC_OFFSET_ID		0x20	/* Local APIC ID		*/
 #define APIC_OFFSET_VER		0x30	/* Local APIC Version		*/
