@@ -85,9 +85,6 @@ do {									\
 #define	VLAPIC_CTR_ISR(vlapic, msg)
 #endif
 
-/* TIMER_LVT bit[18:17] == 0x10 TSD DEADLINE mode */
-#define VLAPIC_TSCDEADLINE(lvt) (((lvt) & APIC_LVTT_TM) == APIC_LVTT_TM_TSCDLT)
-
 /*APIC-v APIC-access address */
 static void *apicv_apic_access_addr;
 
@@ -229,6 +226,33 @@ vlapic_id_write_handler(struct vlapic *vlapic)
 	 */
 	lapic = vlapic->apic_page;
 	lapic->id = vlapic_get_id(vlapic);
+}
+
+static inline bool
+vlapic_lvtt_oneshot(struct vlapic *vlapic)
+{
+	return ((vlapic->apic_page->lvt_timer & APIC_LVTT_TM)
+				== APIC_LVTT_TM_ONE_SHOT);
+}
+
+static inline bool
+vlapic_lvtt_period(struct vlapic *vlapic)
+{
+	return ((vlapic->apic_page->lvt_timer & APIC_LVTT_TM)
+				==  APIC_LVTT_TM_PERIODIC);
+}
+
+static inline bool
+vlapic_lvtt_tsc_deadline(struct vlapic *vlapic)
+{
+	return ((vlapic->apic_page->lvt_timer & APIC_LVTT_TM)
+				==  APIC_LVTT_TM_TSCDLT);
+}
+
+static inline bool
+vlapic_lvtt_masked(struct vlapic *vlapic)
+{
+	return !!(vlapic->apic_page->lvt_timer & APIC_LVTT_M);
 }
 
 static uint32_t vlapic_get_ccr(__unused struct vlapic *vlapic)
@@ -606,23 +630,6 @@ vlapic_process_eoi(struct vlapic *vlapic)
 		}
 	}
 	dev_dbg(ACRN_DBG_LAPIC, "Gratuitous EOI");
-}
-
-static inline int
-vlapic_get_lvt_field(uint32_t lvt, uint32_t mask)
-{
-
-	return lvt & mask;
-}
-
-static inline int
-vlapic_periodic_timer(struct vlapic *vlapic)
-{
-	uint32_t lvt;
-
-	lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_TIMER_LVT);
-
-	return vlapic_get_lvt_field(lvt, APIC_LVTT_TM_PERIODIC);
 }
 
 static void
@@ -1087,7 +1094,7 @@ vlapic_svr_write_handler(struct vlapic *vlapic)
 			 * if it is configured in periodic mode.
 			 */
 			dev_dbg(ACRN_DBG_LAPIC, "vlapic is software-enabled");
-			if (vlapic_periodic_timer(vlapic))
+			if (vlapic_lvtt_period(vlapic))
 				vlapic_icrtmr_write_handler(vlapic);
 		}
 	}
@@ -1178,7 +1185,7 @@ vlapic_read(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 		break;
 	case APIC_OFFSET_TIMER_ICR:
 		/* if TSCDEADLINE mode always return 0*/
-		if (VLAPIC_TSCDEADLINE(lapic->lvt_timer))
+		if (vlapic_lvtt_tsc_deadline(vlapic))
 			*data = 0;
 		else
 			*data = vlapic_get_ccr(vlapic);
@@ -1273,7 +1280,7 @@ vlapic_write(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 		break;
 	case APIC_OFFSET_TIMER_ICR:
 		/* if TSCDEADLINE mode ignore icr_timer */
-		if (VLAPIC_TSCDEADLINE(lapic->lvt_timer))
+		if (vlapic_lvtt_tsc_deadline(vlapic))
 			break;
 		lapic->icr_timer = data;
 		vlapic_icrtmr_write_handler(vlapic);
@@ -1657,8 +1664,8 @@ static int tsc_periodic_time(void *data)
 	vlapic = vcpu->arch_vcpu.vlapic;
 	lapic = vlapic->apic_page;
 
-	/* inject vcpu timer interrupt if existing */
-	if (VLAPIC_TSCDEADLINE(lapic->lvt_timer))
+	/* inject vcpu timer interrupt if not masked */
+	if (!vlapic_lvtt_masked(vlapic))
 		vlapic_intr_edge(vcpu, lapic->lvt_timer & APIC_LVTT_VECTOR);
 
 	return 0;
@@ -1694,10 +1701,8 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val)
 	int error;
 	uint32_t offset;
 	struct vlapic *vlapic;
-	struct lapic *lapic;
 
 	vlapic = vcpu->arch_vcpu.vlapic;
-	lapic = vlapic->apic_page;
 
 	switch (msr) {
 	case MSR_IA32_APIC_BASE:
@@ -1706,7 +1711,7 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val)
 
 	case MSR_IA32_TSC_DEADLINE:
 		error = 0;
-		if (!VLAPIC_TSCDEADLINE(lapic->lvt_timer))
+		if (!vlapic_lvtt_tsc_deadline(vlapic))
 			return error;
 
 		del_timer(&vlapic->timer);
