@@ -460,7 +460,7 @@ int shell_cmd_help(struct shell *p_shell,
 
 			/* Calculate spaces needed for alignment */
 			spaces = MAX_INDENT_LEN - strnlen_s(p_cmd->str,
-					MAX_INDENT_LEN) + 1;
+					MAX_INDENT_LEN - 1);
 
 			space_buf[spaces] = '\0';
 			shell_puts(p_shell, space_buf);
@@ -913,6 +913,9 @@ int shell_show_cpu_int(struct shell *p_shell,
 {
 	char *temp_str = alloc_page();
 
+	if (temp_str == NULL)
+		return -ENOMEM;
+
 	get_cpu_interrupt_info(temp_str, CPU_PAGE_SIZE);
 	shell_puts(p_shell, temp_str);
 
@@ -925,6 +928,9 @@ int shell_show_ptdev_info(struct shell *p_shell,
 		__unused int argc, __unused char **argv)
 {
 	char *temp_str = alloc_page();
+
+	if (temp_str == NULL)
+		return -ENOMEM;
 
 	get_ptdev_info(temp_str, CPU_PAGE_SIZE);
 	shell_puts(p_shell, temp_str);
@@ -939,6 +945,9 @@ int shell_show_req_info(struct shell *p_shell,
 {
 	char *temp_str = alloc_page();
 
+	if (temp_str == NULL)
+		return -ENOMEM;
+
 	get_req_info(temp_str, CPU_PAGE_SIZE);
 	shell_puts(p_shell, temp_str);
 
@@ -951,6 +960,9 @@ int shell_show_vioapic_info(struct shell *p_shell, int argc, char **argv)
 {
 	char *temp_str = alloc_page();
 	uint32_t vmid;
+
+	if (temp_str == NULL)
+		return -ENOMEM;
 
 	/* User input invalidation */
 	if (argc != 2) {
@@ -972,6 +984,9 @@ int shell_show_ioapic_info(struct shell *p_shell,
 {
 	char *temp_str = alloc_pages(2);
 
+	if (temp_str == NULL)
+		return -ENOMEM;
+
 	get_ioapic_info(temp_str, 2 * CPU_PAGE_SIZE);
 	shell_puts(p_shell, temp_str);
 
@@ -984,6 +999,9 @@ int shell_show_vmexit_profile(struct shell *p_shell,
 		__unused int argc, __unused char **argv)
 {
 	char *temp_str = alloc_pages(2);
+
+	if (temp_str == NULL)
+		return -ENOMEM;
 
 	get_vmexit_profile(temp_str, 2*CPU_PAGE_SIZE);
 	shell_puts(p_shell, temp_str);

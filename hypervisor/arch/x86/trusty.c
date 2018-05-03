@@ -107,6 +107,11 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	void *sub_table_addr = NULL, *pml4_base = NULL;
 	struct vm *vm0 = get_vm_from_vmid(0);
 
+	if (vm0 == NULL) {
+		pr_err("Parse vm0 context failed.");
+		return;
+	}
+
 	if (!vm->sworld_control.sworld_enabled
 			|| vm->arch_vm.sworld_eptp != 0) {
 		pr_err("Sworld is not enabled or Sworld eptp is not NULL");
@@ -181,6 +186,11 @@ void  destroy_secure_world(struct vm *vm)
 {
 	struct map_params  map_params;
 	struct vm *vm0 = get_vm_from_vmid(0);
+
+	if (vm0 == NULL) {
+		pr_err("Parse vm0 context failed.");
+		return;
+	}
 
 	/* clear trusty memory space */
 	memset(HPA2HVA(vm->sworld_control.sworld_memory.base_hpa),
