@@ -39,6 +39,7 @@ typedef struct {
 struct efi_ctx {
 	uint64_t rip;
 	void *rsdp;
+	void *ap_trampoline_buf;
 	dt_addr_t  gdt;
 	dt_addr_t  idt;
 	uint16_t   tr_sel;
@@ -74,5 +75,6 @@ struct efi_ctx {
 }__attribute__((packed));
 
 void *get_rsdp_from_uefi(void);
+void *get_ap_trampoline_buf(void);
 
 #endif /* UEFI_H*/
