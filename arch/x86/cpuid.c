@@ -91,12 +91,13 @@ static inline int set_vcpuid_entry(struct vm *vm,
 	struct vcpuid_entry *tmp;
 	size_t entry_size = sizeof(struct vcpuid_entry);
 
-	tmp = &vm->vcpuid_entries[vm->vcpuid_entry_nr++];
-	if (vm->vcpuid_entry_nr > MAX_VM_VCPUID_ENTRIES) {
+	if (vm->vcpuid_entry_nr == MAX_VM_VCPUID_ENTRIES) {
 		pr_err("%s, vcpuid entry over MAX_VM_VCPUID_ENTRIES(%d)\n",
 				__func__, MAX_VM_VCPUID_ENTRIES);
 		return -ENOMEM;
 	}
+
+	tmp = &vm->vcpuid_entries[vm->vcpuid_entry_nr++];
 	memcpy_s(tmp, entry_size, entry, entry_size);
 	return 0;
 }
