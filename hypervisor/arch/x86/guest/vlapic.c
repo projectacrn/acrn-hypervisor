@@ -107,6 +107,8 @@ apicv_batch_set_tmr(struct vlapic *vlapic);
  */
 static void vlapic_set_error(struct vlapic *vlapic, uint32_t mask);
 
+static int vlapic_timer_expired(void *data);
+
 static struct vlapic *
 vm_lapic_from_vcpu_id(struct vm *vm, int vcpu_id)
 {
@@ -255,6 +257,58 @@ vlapic_lvtt_masked(struct vlapic *vlapic)
 	return !!(vlapic->apic_page->lvt_timer & APIC_LVTT_M);
 }
 
+static void vlapic_create_timer(struct vlapic *vlapic)
+{
+	struct vlapic_timer *vlapic_timer;
+
+	if (vlapic == NULL)
+		return;
+
+	vlapic_timer = &vlapic->vlapic_timer;
+	memset(vlapic_timer, 0, sizeof(struct vlapic_timer));
+
+	initialize_timer(&vlapic_timer->timer,
+			vlapic_timer_expired, vlapic->vcpu,
+			0, 0, 0);
+}
+
+static void vlapic_reset_timer(struct vlapic *vlapic)
+{
+	struct timer *timer;
+
+	if (vlapic == NULL)
+		return;
+
+	timer = &vlapic->vlapic_timer.timer;
+	del_timer(timer);
+	timer->mode = 0;
+	timer->fire_tsc = 0;
+	timer->period_in_cycle = 0;
+}
+
+static void vlapic_update_lvtt(struct vlapic *vlapic,
+			uint32_t val)
+{
+	uint32_t timer_mode = val & APIC_LVTT_TM;
+	struct vlapic_timer *vlapic_timer = &vlapic->vlapic_timer;
+
+	if (vlapic_timer->mode != timer_mode) {
+		struct timer *timer = &vlapic_timer->timer;
+
+		/*
+		 * A write to the LVT Timer Register that changes
+		 * the timer mode disarms the local APIC timer.
+		 */
+		del_timer(timer);
+		timer->mode = (timer_mode == APIC_LVTT_TM_PERIODIC) ?
+				TICK_MODE_PERIODIC: TICK_MODE_ONESHOT;
+		timer->fire_tsc = 0;
+		timer->period_in_cycle = 0;
+
+		vlapic_timer->mode = timer_mode;
+	}
+}
+
 static uint32_t vlapic_get_ccr(__unused struct vlapic *vlapic)
 {
 	return 0;
@@ -262,6 +316,46 @@ static uint32_t vlapic_get_ccr(__unused struct vlapic *vlapic)
 
 static void vlapic_dcr_write_handler(__unused struct vlapic *vlapic)
 {
+}
+
+static void vlapic_icrtmr_write_handler(__unused struct vlapic *vlapic)
+{
+}
+
+
+static uint64_t vlapic_get_tsc_deadline_msr(struct vlapic *vlapic)
+{
+	if (!vlapic_lvtt_tsc_deadline(vlapic))
+		return 0;
+
+	return (vlapic->vlapic_timer.timer.fire_tsc == 0) ? 0 :
+			vlapic->vcpu->guest_msrs[IDX_TSC_DEADLINE];
+
+}
+
+static void vlapic_set_tsc_deadline_msr(struct vlapic *vlapic,
+			uint64_t val)
+{
+	struct timer *timer;
+
+	if (!vlapic_lvtt_tsc_deadline(vlapic))
+		return;
+
+	vlapic->vcpu->guest_msrs[IDX_TSC_DEADLINE] = val;
+
+	timer = &vlapic->vlapic_timer.timer;
+	del_timer(timer);
+
+	if (val != 0UL) {
+		struct vcpu_arch *arch = &vlapic->vcpu->arch_vcpu;
+
+		/* transfer guest tsc to host tsc */
+		val -= arch->contexts[arch->cur_context].tsc_offset;
+		timer->fire_tsc = val;
+
+		add_timer(timer);
+	} else
+		timer->fire_tsc = 0;
 }
 
 static void
@@ -451,7 +545,9 @@ vlapic_lvt_write_handler(struct vlapic *vlapic, uint32_t offset)
 						"vpic wire mode -> NULL");
 			}
 		}
-	}
+	} else if (offset == APIC_OFFSET_TIMER_LVT)
+		vlapic_update_lvtt(vlapic, val);
+
 	*lvtptr = val;
 	atomic_store_rel_32(&vlapic->lvt_last[idx], val);
 }
@@ -701,10 +797,6 @@ vlapic_trigger_lvt(struct vlapic *vlapic, int vector)
 	}
 	vlapic_fire_lvt(vlapic, lvt);
 	return 0;
-}
-
-static void vlapic_icrtmr_write_handler(__unused struct vlapic *vlapic)
-{
 }
 
 /*
@@ -1332,12 +1424,11 @@ vlapic_reset(struct vlapic *vlapic)
 	vlapic_mask_lvts(vlapic);
 	vlapic_reset_tmr(vlapic);
 
+	lapic->icr_timer = 0;
 	lapic->dcr_timer = 0;
-	vlapic_dcr_write_handler(vlapic);
+	vlapic_reset_timer(vlapic);
 
 	vlapic->svr_last = lapic->svr;
-
-	initialize_timer(&vlapic->timer, NULL, NULL, 0, 0, 0);
 }
 
 void
@@ -1358,6 +1449,8 @@ vlapic_init(struct vlapic *vlapic)
 
 	if (vlapic->vcpu->vcpu_id == 0)
 		vlapic->msr_apicbase |= APICBASE_BSP;
+
+	vlapic_create_timer(vlapic);
 
 	vlapic_reset(vlapic);
 }
@@ -1655,7 +1748,7 @@ vlapic_msr(uint32_t msr)
 }
 
 /* interrupt context */
-static int tsc_periodic_time(void *data)
+static int vlapic_timer_expired(void *data)
 {
 	struct vcpu *vcpu = (struct vcpu *)data;
 	struct vlapic *vlapic;
@@ -1667,6 +1760,9 @@ static int tsc_periodic_time(void *data)
 	/* inject vcpu timer interrupt if not masked */
 	if (!vlapic_lvtt_masked(vlapic))
 		vlapic_intr_edge(vcpu, lapic->lvt_timer & APIC_LVTT_VECTOR);
+
+	if (!vlapic_lvtt_period(vlapic))
+		vlapic->vlapic_timer.timer.fire_tsc = 0;
 
 	return 0;
 }
@@ -1686,6 +1782,10 @@ vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval)
 		*rval = vlapic_get_apicbase(vlapic);
 		break;
 
+	case MSR_IA32_TSC_DEADLINE:
+		*rval = vlapic_get_tsc_deadline_msr(vlapic);
+		break;
+
 	default:
 		offset = x2apic_msr_to_regoff(msr);
 		error = vlapic_read(vlapic, 0, offset, rval);
@@ -1698,7 +1798,7 @@ vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval)
 int
 vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val)
 {
-	int error;
+	int error = 0;
 	uint32_t offset;
 	struct vlapic *vlapic;
 
@@ -1710,26 +1810,7 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val)
 		break;
 
 	case MSR_IA32_TSC_DEADLINE:
-		error = 0;
-		if (!vlapic_lvtt_tsc_deadline(vlapic))
-			return error;
-
-		del_timer(&vlapic->timer);
-		if (val != 0UL) {
-			/* transfer guest tsc to host tsc */
-			val -= vcpu->arch_vcpu.contexts[vcpu->
-					arch_vcpu.cur_context].tsc_offset;
-
-			initialize_timer(&vlapic->timer,
-					tsc_periodic_time, (void *)vcpu,
-					val, TICK_MODE_ONESHOT, 0);
-
-			if (add_timer(&vlapic->timer) != 0) {
-				pr_err("failed to add timer on VM %d",
-					vcpu->vm->attr.id);
-				error = -1;
-			}
-		}
+		vlapic_set_tsc_deadline_msr(vlapic, val);
 		break;
 
 	default:
@@ -1881,7 +1962,7 @@ void vlapic_free(struct vcpu *vcpu)
 	if (vlapic == NULL)
 		return;
 
-	del_timer(&vlapic->timer);
+	del_timer(&vlapic->vlapic_timer.timer);
 
 	if (!is_vapic_supported()) {
 		unregister_mmio_emulation_handler(vcpu->vm,

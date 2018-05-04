@@ -108,6 +108,13 @@ struct vlapic_ops {
 	void (*enable_x2apic_mode)(struct vlapic *vlapic);
 };
 
+struct vlapic_timer {
+	struct timer timer;
+	uint32_t mode;
+	uint32_t tmicr;
+	uint32_t divisor;
+};
+
 struct vlapic {
 	struct vm		*vm;
 	struct vcpu		*vcpu;
@@ -118,7 +125,7 @@ struct vlapic {
 	uint32_t		esr_pending;
 	int			esr_firing;
 
-	struct timer	timer;
+	struct vlapic_timer	vlapic_timer;
 
 	/*
 	 * The 'isrvec_stk' is a stack of vectors injected by the local apic.
