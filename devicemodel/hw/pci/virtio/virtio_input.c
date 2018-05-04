@@ -351,12 +351,191 @@ virtio_input_read_event(int fd __attribute__((unused)),
 	}
 }
 
+static int
+virtio_input_get_bitmap(struct virtio_input *vi, unsigned int cmd, int count,
+			struct virtio_input_config *cfg)
+{
+	int i, size = -1;
+	int rc;
+
+	if (count <= 0)
+		return -1;
+
+	if (!cfg)
+		return -1;
+
+	memset(cfg, 0, sizeof(*cfg));
+	rc = ioctl(vi->fd, cmd, cfg->u.bitmap);
+	if (rc < 0)
+		return -1;
+
+	count = count / 8;
+	for (i = count - 1; i >= 0; i--) {
+		if (cfg->u.bitmap[i]) {
+			size = i + 1;
+			break;
+		}
+	}
+
+	return size;
+}
+
+static bool
+virtio_input_get_propbits(struct virtio_input *vi,
+			  struct virtio_input_config *cfg)
+{
+	unsigned int cmd;
+	int size;
+
+	if (!cfg)
+		return false;
+
+	cmd = EVIOCGPROP(INPUT_PROP_CNT / 8);
+	size = virtio_input_get_bitmap(vi, cmd, INPUT_PROP_CNT, cfg);
+	if (size > 0) {
+		cfg->select = VIRTIO_INPUT_CFG_PROP_BITS;
+		cfg->subsel = 0;
+		cfg->size = size;
+		return true;
+	}
+
+	return false;
+}
+
+static bool
+virtio_input_get_evbits(struct virtio_input *vi, int type,
+			struct virtio_input_config *cfg)
+{
+	unsigned int cmd;
+	int count, size;
+
+	if (!cfg)
+		return false;
+
+	switch (type) {
+	case EV_KEY:
+		count = KEY_CNT;
+		break;
+	case EV_REL:
+		count = REL_CNT;
+		break;
+	case EV_ABS:
+		count = ABS_CNT;
+		break;
+	case EV_MSC:
+		count = MSC_CNT;
+		break;
+	case EV_SW:
+		count = SW_CNT;
+		break;
+	case EV_LED:
+		count = LED_CNT;
+		break;
+	default:
+		return false;
+	}
+
+	cmd = EVIOCGBIT(type, count / 8);
+	size = virtio_input_get_bitmap(vi, cmd, count, cfg);
+	if (size > 0) {
+		cfg->select = VIRTIO_INPUT_CFG_EV_BITS;
+		cfg->subsel = type;
+		cfg->size = size;
+		return true;
+	}
+
+	return false;
+}
+
+static bool
+virtio_input_get_absinfo(struct virtio_input *vi, int axis,
+			 struct virtio_input_config *cfg)
+{
+	struct virtio_input_config ev_cfg;
+	struct input_absinfo abs;
+	bool has_ev_abs;
+	int rc;
+
+	if (!cfg)
+		return false;
+
+	has_ev_abs = virtio_input_get_evbits(vi, EV_ABS, &ev_cfg);
+	if (!has_ev_abs)
+		return false;
+
+	rc = ioctl(vi->fd, EVIOCGABS(axis), &abs);
+	if (rc < 0)
+		return false;
+
+	cfg->u.abs.min = abs.minimum;
+	cfg->u.abs.max = abs.maximum;
+	cfg->u.abs.fuzz = abs.fuzz;
+	cfg->u.abs.flat = abs.flat;
+	cfg->u.abs.res = abs.resolution;
+
+	cfg->select = VIRTIO_INPUT_CFG_ABS_INFO;
+	cfg->subsel = axis;
+	cfg->size = sizeof(struct virtio_input_absinfo);
+	return true;
+}
+
 static bool
 virtio_input_get_config(struct virtio_input *vi, uint8_t select,
 			uint8_t subsel, struct virtio_input_config *cfg)
 {
-	/* to be implemented */
-	return false;
+	struct input_id dev_ids;
+	bool found = false;
+	int rc;
+
+	if (!cfg)
+		return false;
+
+	memset(cfg, 0, sizeof(*cfg));
+
+	switch (select) {
+	case VIRTIO_INPUT_CFG_ID_NAME:
+		rc = ioctl(vi->fd, EVIOCGNAME(sizeof(cfg->u.string) - 1),
+			cfg->u.string);
+		if (rc >= 0) {
+			cfg->select = VIRTIO_INPUT_CFG_ID_NAME;
+			cfg->size = strlen(cfg->u.string);
+			found = true;
+		}
+		break;
+	case VIRTIO_INPUT_CFG_ID_SERIAL:
+		if (vi->serial) {
+			cfg->select = VIRTIO_INPUT_CFG_ID_SERIAL;
+			cfg->size = snprintf(cfg->u.string,
+				sizeof(cfg->u.string), "%s", vi->serial);
+			found = true;
+		}
+		break;
+	case VIRTIO_INPUT_CFG_ID_DEVIDS:
+		rc = ioctl(vi->fd, EVIOCGID, &dev_ids);
+		if (!rc) {
+			cfg->u.ids.bustype = dev_ids.bustype;
+			cfg->u.ids.vendor  = dev_ids.vendor;
+			cfg->u.ids.product = dev_ids.product;
+			cfg->u.ids.version = dev_ids.version;
+			cfg->select = VIRTIO_INPUT_CFG_ID_DEVIDS;
+			cfg->size = sizeof(struct virtio_input_devids);
+			found = true;
+		}
+		break;
+	case VIRTIO_INPUT_CFG_PROP_BITS:
+		found = virtio_input_get_propbits(vi, cfg);
+		break;
+	case VIRTIO_INPUT_CFG_EV_BITS:
+		found = virtio_input_get_evbits(vi, subsel, cfg);
+		break;
+	case VIRTIO_INPUT_CFG_ABS_INFO:
+		found = virtio_input_get_absinfo(vi, subsel, cfg);
+		break;
+	default:
+		break;
+	}
+
+	return found;
 }
 
 static int
