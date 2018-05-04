@@ -51,16 +51,6 @@ static const uint32_t emulated_msrs[] = {
  */
 };
 
-/* the index is matched with emulated msrs array*/
-enum {
-	IDX_TSC_DEADLINE,
-	IDX_BIOS_UPDT_TRIG,
-	IDX_BIOS_SIGN_ID,
-	IDX_TSC,
-
-	IDX_MAX_MSR
-};
-
 static void enable_msr_interception(uint8_t *bitmap, uint32_t msr)
 {
 	uint8_t *read_map;
@@ -185,7 +175,7 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 	switch (msr) {
 	case MSR_IA32_TSC_DEADLINE:
 	{
-		v = vcpu->guest_msrs[IDX_TSC_DEADLINE];
+		vlapic_rdmsr(vcpu, msr, &v);
 		break;
 	}
 	case MSR_IA32_TIME_STAMP_COUNTER:
@@ -280,7 +270,6 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	case MSR_IA32_TSC_DEADLINE:
 	{
 		vlapic_wrmsr(vcpu, msr, v);
-		vcpu->guest_msrs[IDX_TSC_DEADLINE] = v;
 		break;
 	}
 	case MSR_IA32_TIME_STAMP_COUNTER:
