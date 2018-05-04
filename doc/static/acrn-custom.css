@@ -14,12 +14,12 @@
 }
 */
 
-/* tweak doc version selection */
+/* tweak doc version selection
 .rst-versions {
    position: static;
    border-top: none;
    padding: 0px;
-}
+} */
 
 .rst-versions .rst-current-version {
    padding: 5px;
@@ -33,6 +33,15 @@
 
 div.rst-other-versions dl {
    margin-bottom: 0;
+}
+
+/* code block highlight color in rtd changed to lime green, no no no */
+
+.rst-content tt.literal, .rst-content code.literal, .highlight {
+   background: #f0f0f0;
+}
+.rst-content tt.literal, .rst-content code.literal {
+    color: #000000;
 }
 
 /* Make the version number more visible */

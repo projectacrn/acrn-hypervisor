@@ -113,11 +113,11 @@ partition. Follow these steps:
       kernel-org.clearlinux.pk414-standard.4.14.34-28
       loaderx64.efi
 
-      .. note::
-         The Clear Linux project releases updates often, sometimes
-         twice a day, so make note of the specific kernel versions (``*-sos``
-         and ``*-standard``) listed on your system,
-         as you will need them later.
+   .. note::
+      The Clear Linux project releases updates often, sometimes
+      twice a day, so make note of the specific kernel versions (``*-sos``
+      and ``*-standard``) listed on your system,
+      as you will need them later.
 
 #. Put the ``acrn.efi`` hypervisor application (included in the Clear
    Linux release) on the EFI partition with:
@@ -140,13 +140,14 @@ partition. Follow these steps:
       # cd /mnt/EFI/org.clearlinux/
       # cp bootloaderx64.efi bootloaderx64_origin.efi
 
-      .. note::
-         Be aware that a Clearlinux update that includes a kernel upgrade will
-         reset this. A Clearlinux update could happen automatically (if you have
-         not disabled it as described above), if you later install a new
-         bundle to your system or simply if you decide to trigger an update
-         manually. Whenever that happens, double-check the platform boot order
-         using ``efibootmgr -v`` and modify it if needed.
+   .. note::
+      Be aware that a Clearlinux update that includes a kernel upgrade will
+      reset the boot option changes you just made.. A Clearlinux update could
+      happen automatically (if you have
+      not disabled it as described above), if you later install a new
+      bundle to your system, or simply if you decide to trigger an update
+      manually. Whenever that happens, double-check the platform boot order
+      using ``efibootmgr -v`` and modify it if needed.
 
 #. Create a boot entry for the ACRN Service OS by copying a provided ``acrn.conf``
    and editing it to account for the kernel versions noted in a previous step.
@@ -196,6 +197,7 @@ partition. Follow these steps:
 
    .. figure:: images/gsg-bootmenu.png
       :align: center
+      :width: 650px
       :name: gsg-bootmenu
 
       ACRN Service OS Boot menu

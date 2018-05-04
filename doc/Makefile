@@ -21,6 +21,14 @@ PUBLISHDIR    = ../projectacrn.github.io/$(RELEASE)
 # Put it first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	@echo ""
+	@echo "make pullsource"
+	@echo "   fetch and merge upstream source for the project ACRN code repos"
+	@echo ""
+	@echo "make publish"
+	@echo "   publish generated html to projectacrn.github.io site:"
+	@echo "   specify RELEASE=name to publish as a tagged release version"
+	@echo "   and placed in a version subfolder"
 
 .PHONY: help Makefile
 
