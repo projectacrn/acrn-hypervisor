@@ -45,6 +45,17 @@
 		(idx < vm->hw.num_vcpus) & (vcpu != NULL);	\
 		idx++, vcpu = vm->hw.vcpu_array[idx])
 
+
+/* the index is matched with emulated msrs array*/
+enum {
+	IDX_TSC_DEADLINE,
+	IDX_BIOS_UPDT_TRIG,
+	IDX_BIOS_SIGN_ID,
+	IDX_TSC,
+
+	IDX_MAX_MSR
+};
+
 struct vhm_request;
 
 /*
