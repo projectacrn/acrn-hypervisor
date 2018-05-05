@@ -1,0 +1,7 @@
+version: '3'
+services:
+  acrn-make:
+    build: .
+    volumes:
+      - .:/code:rw
+    image: acrn-build
