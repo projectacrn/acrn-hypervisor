@@ -41,6 +41,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include "usb.h"
 #include "usbdi.h"
 #include "xhcireg.h"

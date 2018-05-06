@@ -196,11 +196,17 @@ enum USB_ERRCODE {
 #define UPRINTF(lvl, fmt, args...) \
 	do { if (lvl <= usb_log_level) printf(LOG_TAG fmt, ##args); } while (0)
 
+#define NATIVE_USBSYS_DEVDIR "/sys/bus/usb/devices"
+#define NATIVE_USB2_SPEED "480"
+#define NATIVE_USB3_SPEED "5000"
+
 extern int usb_log_level;
 inline int usb_get_log_level(void)		{ return usb_log_level; }
 inline void usb_set_log_level(int level)	{ usb_log_level = level; }
 struct usb_devemu *usb_emu_finddev(char *name);
-
+int usb_native_is_bus_existed(uint8_t bus_num);
+int usb_native_is_ss_port(uint8_t bus_of_port);
+int usb_native_is_port_existed(uint8_t bus_num, uint8_t port_num);
 struct usb_data_xfer_block *usb_data_xfer_append(struct usb_data_xfer *xfer,
 						 void *buf,
 						 int blen,

@@ -83,7 +83,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-
+#include <fcntl.h>
+#include <unistd.h>
 #include "usb_core.h"
 
 SET_DECLARE(usb_emu_set, struct usb_devemu);
@@ -122,4 +123,99 @@ usb_data_xfer_append(struct usb_data_xfer *xfer, void *buf, int blen,
 	xfer->ndata++;
 	xfer->tail = (xfer->tail + 1) % USB_MAX_XFER_BLOCKS;
 	return xb;
+}
+
+int
+usb_native_is_bus_existed(uint8_t bus_num)
+{
+	char buf[128];
+
+	snprintf(buf, sizeof(buf), "%s/usb%d", NATIVE_USBSYS_DEVDIR, bus_num);
+	return access(buf, R_OK) ? 0 : 1;
+}
+
+int
+usb_native_is_ss_port(uint8_t bus_of_port)
+{
+	char buf[128];
+	char speed[8];
+	int rc, fd;
+	int usb2_speed_sz = sizeof(NATIVE_USB2_SPEED);
+	int usb3_speed_sz = sizeof(NATIVE_USB3_SPEED);
+
+	assert(usb_native_is_bus_existed(bus_of_port));
+	snprintf(buf, sizeof(buf), "%s/usb%d/speed", NATIVE_USBSYS_DEVDIR,
+			bus_of_port);
+	if (access(buf, R_OK)) {
+		UPRINTF(LWRN, "can't find speed file\r\n");
+		return 0;
+	}
+
+	fd = open(buf, O_RDONLY);
+	if (fd < 0) {
+		UPRINTF(LWRN, "fail to open maxchild file\r\n");
+		return 0;
+	}
+
+	rc = read(fd, &speed, sizeof(speed));
+	if (rc < 0) {
+		UPRINTF(LWRN, "fail to read speed file\r\n");
+		goto errout;
+	}
+
+	if (rc < usb2_speed_sz) {
+		UPRINTF(LWRN, "read invalid speed data\r\n");
+		goto errout;
+	}
+
+	if (strncmp(speed, NATIVE_USB3_SPEED, usb3_speed_sz))
+		goto errout;
+
+	close(fd);
+	return 1;
+errout:
+	close(fd);
+	return 0;
+}
+
+int
+usb_native_is_port_existed(uint8_t bus_num, uint8_t port_num)
+{
+	int native_port_cnt;
+	int rc, fd;
+	char buf[128];
+	char cnt[8];
+
+	if (!usb_native_is_bus_existed(bus_num))
+		return 0;
+
+	snprintf(buf, sizeof(buf), "%s/usb%d/maxchild", NATIVE_USBSYS_DEVDIR,
+			bus_num);
+	if (access(buf, R_OK)) {
+		UPRINTF(LWRN, "can't find maxchild file\r\n");
+		return 0;
+	}
+
+	fd = open(buf, O_RDONLY);
+	if (fd < 0) {
+		UPRINTF(LWRN, "fail to open maxchild file\r\n");
+		return 0;
+	}
+
+	rc = read(fd, &cnt, sizeof(cnt));
+	if (rc < 0) {
+		UPRINTF(LWRN, "fail to read maxchild file\r\n");
+		close(fd);
+		return 0;
+	}
+
+	native_port_cnt = atoi(cnt);
+	if (port_num > native_port_cnt || port_num < 0) {
+		UPRINTF(LWRN, "invalid port_num %d, max port count %d\r\n",
+				port_num, native_port_cnt);
+		close(fd);
+		return 0;
+	}
+	close(fd);
+	return 1;
 }
