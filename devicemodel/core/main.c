@@ -648,6 +648,8 @@ main(int argc, char *argv[])
 	quit_vm_loop = 0;
 	hugetlb = 0;
 
+	if (signal(SIGHUP, sig_handler_term) == SIG_ERR)
+		fprintf(stderr, "cannot register handler for SIGHUP\n");
 	if (signal(SIGINT, sig_handler_term) == SIG_ERR)
 		fprintf(stderr, "cannot register handler for SIGINT\n");
 
