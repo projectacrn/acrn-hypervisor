@@ -9,8 +9,8 @@ source environment, standards and methods for submitting changes help
 reduce the chaos that can result from an active development community.
 
 This document explains how to participate in project conversations, log
-bugs and enhancement requests, and submit patches to the project so your
-patch will be accepted quickly in the codebase.
+and track bugs and enhancement requests, and submit patches to the
+project so your patch will be accepted quickly in the codebase.
 
 Licensing
 *********
@@ -89,6 +89,11 @@ to add the sign-off you can also amend a previous commit with the sign-off by
 running ``git commit --amend -s``. If you've pushed your changes to GitHub
 already you'll need to force push your branch after this with ``git push -f``.
 
+.. note::
+   The name and email address of the account you use to submit your PR must
+   match the name and email address on the ``Signed-off-by`` line in
+   your commit message.
+
 Prerequisites
 *************
 
@@ -102,7 +107,7 @@ as introduced in the project ACRN `Getting Started Guide`_.
 .. _Getting Started Guide:
    https://projectacrn.github.io/getting_started/
 
-You should be familiar with common developer tools such as Git and CMake, and
+You should be familiar with common developer tools such as Git, and
 platforms such as GitHub.
 
 If you haven't already done so, you'll need to create a (free) GitHub account
@@ -141,20 +146,27 @@ Submitting Issues
 .. _ACRN-dev mailing list:
    https://lists.projectacrn.org/g/acrn-dev
 
-Issue tracking for ACRN is done using the `ACRN-dev mailing list`_.
-Before starting on a patch, first read through discussions in the `ACRN-dev
-mailing list`_ to see what's been reported on the issue you'd
-like to address.  Have a conversation on the `ACRN-dev mailing list`_ to
-see what others think of your issue (and proposed solution).  You may
-find others that have encountered the issue you're finding, or that have
-similar ideas for changes or additions.  Send a message to the `ACRN-dev
-mailing list`_ to introduce and discuss your idea with the development
-community.
+.. _ACRN hypervisor issues:
+   https://github.com/projectacrn/acrn-hypervisor/issues
 
-It's always a good practice to search for existing or related issues
-before submitting your own. When you submit an issue (bug or feature
-request), the triage team will review and comment on the submission,
-typically within a few business days.
+Issue tracking for project ACRN bugs or enhancement requests is done using
+GitHub issues in the `ACRN hypervisor issues`_ list. Before submitting a
+bug or enhancement request, first check to see what's already been
+reported, and add to that discussion if you have additional information.
+(Be sure to check both the "open" and "closed" issues.)
+You should also read through discusions in the `ACRN-dev mailing list`_
+to see what's been reported on or discussed.  You may find others that
+have encountered the issue you're finding, or that have similar ideas
+for changes or additions.
+
+If you don't find an existing issue listed in the `ACRN hypervisor issues`_
+list, then click on the "New Issue" button and provide a summary title
+and more detailed description of your bug or enhancement request.
+
+When you submit an issue (bug or feature request), the triage team will
+review and comment on the submission, typically within a few business
+days.  Use the `ACRN hypervisor issues`_ list to track the status of
+your submitted issues as well, or to add additional comments.
 
  .. _Contribution Tools:
 
@@ -355,7 +367,11 @@ Changes are submitted as Git commits. Each commit message must contain:
 
 * If the change addresses an issue, include a line of the form::
 
-      Fixes #<brief description about the reported issue>.
+      Fixes #<issue number>
+
+  See `Closing issues using keywords
+  <https://help.github.com/articles/closing-issues-using-keywords>`_
+  for more information about this GitHub feature.
 
 
 All changes and topics sent to GitHub must be well-formed, as described above.
