@@ -44,7 +44,7 @@ int dm_emulate_pio_post(struct vcpu *vcpu)
 		0xFFFFFFFFul >> (32 - 8 * vcpu->req.reqs.pio_request.size);
 	uint64_t *rax;
 
-	req_buf = (struct vhm_request_buffer *)(vcpu->vm->sw.req_buf);
+	req_buf = (struct vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
 
 	rax = &vcpu->arch_vcpu.contexts[cur_context].guest_cpu_regs.regs.rax;
 	vcpu->req.reqs.pio_request.value =

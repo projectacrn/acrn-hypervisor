@@ -169,7 +169,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 
 			/* Populate return VM handle */
 			*rtn_vm = vm;
-			vm->sw.req_buf = NULL;
+			vm->sw.io_shared_page = NULL;
 
 			status = set_vcpuid_entries(vm);
 			if (status)
