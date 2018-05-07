@@ -76,8 +76,8 @@ struct vm_sw_info {
 	struct sw_kernel_info kernel_info;
 	/* Additional information specific to Linux guests */
 	struct sw_linux linux_info;
-	/* HVA to guest OS's request buffer */
-	void *req_buf;
+	/* HVA to IO shared page */
+	void *io_shared_page;
 };
 
 struct vm_pm_info {

@@ -212,7 +212,7 @@ int64_t hcall_resume_vm(uint64_t vmid)
 
 	if (target_vm == NULL)
 		return -1;
-	if (target_vm->sw.req_buf == NULL)
+	if (target_vm->sw.io_shared_page == NULL)
 		ret = -1;
 	else
 		ret = start_vm(target_vm);
@@ -342,11 +342,11 @@ int64_t hcall_set_ioreq_buffer(struct vm *vm, uint64_t vmid, uint64_t param)
 	hpa = gpa2hpa(vm, iobuf.req_buf);
 	if (hpa == 0) {
 		pr_err("%s: invalid GPA.\n", __func__);
-		target_vm->sw.req_buf = NULL;
+		target_vm->sw.io_shared_page = NULL;
 		return -EINVAL;
 	}
 
-	target_vm->sw.req_buf = HPA2HVA(hpa);
+	target_vm->sw.io_shared_page = HPA2HVA(hpa);
 
 	return ret;
 }
@@ -360,7 +360,8 @@ static void complete_request(struct vcpu *vcpu)
 	if (vcpu->state == VCPU_ZOMBIE) {
 		struct vhm_request_buffer *req_buf;
 
-		req_buf = (struct vhm_request_buffer *)vcpu->vm->sw.req_buf;
+		req_buf = (struct vhm_request_buffer *)
+				vcpu->vm->sw.io_shared_page;
 		req_buf->req_queue[vcpu->vcpu_id].valid = false;
 		atomic_store_rel_32(&vcpu->ioreq_pending, 0);
 
@@ -392,7 +393,7 @@ int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
 	/* make sure we have set req_buf */
-	if (!target_vm || target_vm->sw.req_buf == NULL)
+	if (!target_vm || target_vm->sw.io_shared_page == NULL)
 		return -EINVAL;
 
 	dev_dbg(ACRN_DBG_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
@@ -401,7 +402,7 @@ int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
 	vcpu = vcpu_from_vid(target_vm, vcpu_id);
 	ASSERT(vcpu != NULL, "Failed to get VCPU context.");
 
-	req_buf = (struct vhm_request_buffer *)target_vm->sw.req_buf;
+	req_buf = (struct vhm_request_buffer *)target_vm->sw.io_shared_page;
 	req = req_buf->req_queue + vcpu_id;
 
 	if (req->valid &&
@@ -826,10 +827,10 @@ int acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 			"vhm_request page broken!");
 
 
-	if (!vcpu || !req || vcpu->vm->sw.req_buf == NULL)
+	if (!vcpu || !req || vcpu->vm->sw.io_shared_page == NULL)
 		return -EINVAL;
 
-	req_buf = (struct vhm_request_buffer *)(vcpu->vm->sw.req_buf);
+	req_buf = (struct vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
 
 	/* ACRN insert request to VHM and inject upcall */
 	cur = vcpu->vcpu_id;
@@ -860,10 +861,10 @@ int acrn_insert_request_nowait(struct vcpu *vcpu, struct vhm_request *req)
 	struct vhm_request_buffer *req_buf;
 	long cur;
 
-	if (!vcpu || !req || !vcpu->vm->sw.req_buf)
+	if (!vcpu || !req || !vcpu->vm->sw.io_shared_page)
 		return -EINVAL;
 
-	req_buf = (struct vhm_request_buffer *)(vcpu->vm->sw.req_buf);
+	req_buf = (struct vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
 
 	/* ACRN insert request to VHM and inject upcall */
 	cur = vcpu->vcpu_id;
@@ -944,7 +945,7 @@ int get_req_info(char *str, int str_max)
 	spinlock_obtain(&vm_list_lock);
 	list_for_each(pos, &vm_list) {
 		vm = list_entry(pos, struct vm, list);
-		req_buf = (struct vhm_request_buffer *)vm->sw.req_buf;
+		req_buf = (struct vhm_request_buffer *)vm->sw.io_shared_page;
 		if (req_buf) {
 			for (i = 0; i < VHM_REQUEST_MAX; i++) {
 				req = req_buf->req_queue + i;
