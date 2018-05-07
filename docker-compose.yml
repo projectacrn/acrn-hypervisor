@@ -1,7 +1,10 @@
 version: '3'
 services:
   acrn-make:
-    build: .
+    build:
+        context: .
+        args:
+            - http_proxy    
     volumes:
       - .:/code:rw
     image: acrn-build
