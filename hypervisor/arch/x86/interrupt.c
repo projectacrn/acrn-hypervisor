@@ -266,16 +266,25 @@ int interrupt_window_vmexit_handler(struct vcpu *vcpu)
 
 int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 {
-	int vector = exec_vmread(VMX_EXIT_INT_INFO) & 0xFF;
+	uint32_t intr_info;
 	struct intr_ctx ctx;
 
-	ctx.vector = vector;
+	intr_info = exec_vmread(VMX_EXIT_INT_INFO);
+	if ((!(intr_info & VMX_INT_INFO_VALID)) ||
+		(((intr_info & VMX_INT_TYPE_MASK) >> 8)
+		!= VMX_INT_TYPE_EXT_INT)) {
+		pr_err("Invalid VM exit interrupt info:%x", intr_info);
+		VCPU_RETAIN_RIP(vcpu);
+		return -EINVAL;
+	}
+
+	ctx.vector = intr_info & 0xFF;
 
 	dispatch_interrupt(&ctx);
 
 	VCPU_RETAIN_RIP(vcpu);
 
-	TRACE_2L(TRC_VMEXIT_EXTERNAL_INTERRUPT, vector, 0);
+	TRACE_2L(TRC_VMEXIT_EXTERNAL_INTERRUPT, ctx.vector, 0);
 
 	return 0;
 }
