@@ -301,7 +301,7 @@ struct acrn_vm_pci_msix_remap {
 #define SPACE_PLATFORM_COMM     10
 #define SPACE_FFixedHW          0x7F
 
-struct acrn_register {
+struct acpi_generic_address {
 	uint8_t 	space_id;
 	uint8_t 	bit_width;
 	uint8_t 	bit_offset;
@@ -310,7 +310,7 @@ struct acrn_register {
 } __attribute__((aligned(8)));
 
 struct cpu_cx_data {
-	struct acrn_register cx_reg;
+	struct acpi_generic_address cx_reg;
 	uint8_t 	type;
 	uint32_t	latency;
 	uint64_t	power;
