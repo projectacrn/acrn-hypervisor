@@ -61,6 +61,7 @@ static inline void initialize_timer(struct timer *timer,
 		timer->fire_tsc = fire_tsc;
 		timer->mode = mode;
 		timer->period_in_cycle = period_in_cycle;
+		INIT_LIST_HEAD(&timer->node);
 	}
 }
 
