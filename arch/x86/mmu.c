@@ -485,6 +485,12 @@ uint64_t get_paging_pml4(void)
 
 void enable_paging(uint64_t pml4_base_addr)
 {
+	uint64_t tmp64 = 0;
+
+	/* Enable Write Protect, inhibiting writing to read-only pages */
+	CPU_CR_READ(cr0, &tmp64);
+	CPU_CR_WRITE(cr0, tmp64 | CR0_WP);
+
 	CPU_CR_WRITE(cr3, pml4_base_addr);
 }
 
