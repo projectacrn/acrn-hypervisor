@@ -172,7 +172,7 @@ void dsdt_write_cst(struct vmctx *ctx, int vcpu_id)
 	int i;
 	uint8_t vcpu_cx_cnt;
 	char *cx_asi;
-	struct acrn_register cx_reg;
+	struct acpi_generic_address cx_reg;
 	struct cpu_cx_data *vcpu_cx_data;
 
 	vcpu_cx_cnt = get_vcpu_cx_cnt(ctx, vcpu_id);
