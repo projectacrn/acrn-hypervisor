@@ -1,6 +1,7 @@
 objects = log_sys.o \
 	  strutils.o \
-	  cmdutils.o
+	  cmdutils.o \
+	  fsutils.o
 
 all: check_obj $(objects)
 check_obj:
