@@ -100,6 +100,11 @@ int sipi_from_efi_boot_service_exit(uint32_t dest, uint32_t mode, uint32_t vec)
 	return 0;
 }
 
+void *get_ap_trampoline_buf(void)
+{
+	return efi_ctx->ap_trampoline_buf;
+}
+
 void efi_deferred_wakeup_pcpu(int cpu_id)
 {
 	uint32_t timeout;
@@ -114,7 +119,7 @@ void efi_deferred_wakeup_pcpu(int cpu_id)
 	expected_up = up_count + 1;
 
 	send_startup_ipi(INTR_CPU_STARTUP_USE_DEST,
-		cpu_id, (uint64_t)cpu_secondary_reset);
+		cpu_id, (uint64_t)get_ap_trampoline_buf());
 
 	timeout = CPU_UP_TIMEOUT * 1000;
 
