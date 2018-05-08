@@ -88,5 +88,17 @@ void file_reset_init(const char *filename);
 int file_read_int(const char *filename, unsigned int *pcurrent);
 int file_update_int(const char *filename, unsigned int current,
 			unsigned int max);
+int do_copy_eof(const char *src, const char *des);
+int space_available(char *path, int quota);
+int count_lines_in_file(const char *filename);
+int read_full_binary_file(const char *path, unsigned long *size,
+			void **data);
+int file_read_key_value(char *path, char *key, char *value);
+int file_read_key_value_r(char *path, char *key, char *value);
+int dir_contains(const char *dir, const char *filename, int exact,
+		char *fullname);
+int lsdir(const char *dir, char *fullname[], int limit);
+int find_file(char *dir, char *target_file, int depth, char *path[], int limit);
+int read_file(const char *path, unsigned long *size, void **data);
 
 #endif
