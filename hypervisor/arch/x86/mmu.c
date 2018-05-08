@@ -587,7 +587,7 @@ uint64_t config_page_table_attr(struct map_params *map_params, uint32_t flags)
 	if (flags & MMU_MEM_ATTR_READ) {
 		/* Configure for read access */
 		attr |= ((table_type == PTT_EPT)
-			? IA32E_EPT_R_BIT : MMU_MEM_ATTR_BIT_READ_WRITE);
+			? IA32E_EPT_R_BIT : 0);
 	}
 
 	/* Check for write access */
