@@ -25,7 +25,8 @@ $(BUILDDIR)/acrnprobe/bin/acrnprobe: $(BUILDDIR)/acrnprobe/obj/main.o \
 	$(BUILDDIR)/acrnprobe/obj/event_queue.o \
 	$(BUILDDIR)/acrnprobe/obj/event_handler.o \
 	$(BUILDDIR)/acrnprobe/obj/crash_reclassify.o \
-	$(BUILDDIR)/acrnprobe/obj/sender.o
+	$(BUILDDIR)/acrnprobe/obj/sender.o \
+	$(BUILDDIR)/acrnprobe/obj/startupreason.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 clean:
