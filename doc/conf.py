@@ -63,7 +63,7 @@ try:
     version_major = None
     version_minor = None
     version_rc = None
-    for line in open(os.path.normpath("../acrn-hypervisor/Makefile")) :
+    for line in open(os.path.normpath("../hypervisor/Makefile")) :
         # remove comments
         line = line.split('#', 1)[0]
         line = line.rstrip()

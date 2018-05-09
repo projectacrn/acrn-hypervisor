@@ -16,25 +16,18 @@ BUILDDIR      = _build
 
 DOC_TAG      ?= development
 RELEASE      ?= latest
-PUBLISHDIR    = ../projectacrn.github.io/$(RELEASE)
+PUBLISHDIR    = ../../projectacrn.github.io/$(RELEASE)
 
 # Put it first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 	@echo ""
-	@echo "make pullsource"
-	@echo "   fetch and merge upstream source for the project ACRN code repos"
-	@echo ""
 	@echo "make publish"
 	@echo "   publish generated html to projectacrn.github.io site:"
 	@echo "   specify RELEASE=name to publish as a tagged release version"
-	@echo "   and placed in a version subfolder"
+	@echo "   and placed in a version subfolder.  Requires repo merge permission."
 
 .PHONY: help Makefile
-
-pullsource:
-	$(Q)scripts/pullsource.sh
-
 
 # Generate the doxygen xml (for Sphinx) and copy the doxygen html to the
 # api folder for publishing along with the Sphinx-generated API docs.
