@@ -3,3 +3,9 @@ hypervisor/bsp/uefi/include/bsp/version.h
 hypervisor/bsp/sbl/include/bsp/version.h
 devicemdodel/build/
 devicemodel/include/version.h
+doxygen
+_build
+*.bak
+*.sav
+*.log
+*.warnings
