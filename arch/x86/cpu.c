@@ -30,7 +30,6 @@
 
 #include <hypervisor.h>
 #include <hv_lib.h>
-#include <acrn_hv_defs.h>
 #include <acrn_common.h>
 #include <bsp_extern.h>
 #include <hv_arch.h>
@@ -39,11 +38,8 @@
 #include <hv_debug.h>
 
 #ifdef CONFIG_EFI_STUB
-#include <acrn_efi.h>
 extern uint32_t efi_physical_available_ap_bitmap;
 #endif
-
-uint64_t trampoline_code_paddr = 0;
 
 spinlock_t cpu_secondary_spinlock = {
 	.head = 0,
@@ -92,7 +88,6 @@ int cpu_find_logical_id(uint32_t lapic_id);
 #ifndef CONFIG_EFI_STUB
 static void start_cpus(void);
 #endif
-static uint64_t relocate_trampoline_code(void);
 static void pcpu_sync_sleep(unsigned long *sync, int mask_bit);
 int ibrs_type;
 
@@ -553,7 +548,10 @@ void bsp_boot_init(void)
 	/* Trigger event to allow secondary CPUs to continue */
 	bitmap_set(0, &pcpu_sync);
 #else
-	relocate_trampoline_code();
+	memcpy_s(_ld_cpu_secondary_reset_start,
+		(unsigned long)&_ld_cpu_secondary_reset_size,
+		_ld_cpu_secondary_reset_load,
+		(unsigned long)&_ld_cpu_secondary_reset_size);
 #endif
 
 	ASSERT(get_cpu_id() == CPU_BOOT_ID, "");
@@ -662,9 +660,12 @@ static void start_cpus()
 {
 	uint32_t timeout;
 	uint32_t expected_up;
-	uint64_t startup_paddr;
 
-	startup_paddr = relocate_trampoline_code();
+	/*Copy segment for AP initialization code below 1MB */
+	memcpy_s(_ld_cpu_secondary_reset_start,
+		(unsigned long)&_ld_cpu_secondary_reset_size,
+		_ld_cpu_secondary_reset_load,
+		(unsigned long)&_ld_cpu_secondary_reset_size);
 
 	/* Set flag showing number of CPUs expected to be up to all
 	 * cpus
@@ -673,7 +674,7 @@ static void start_cpus()
 
 	/* Broadcast IPIs to all other CPUs */
 	send_startup_ipi(INTR_CPU_STARTUP_ALL_EX_SELF,
-		       -1U, startup_paddr);
+		       -1U, ((uint64_t) cpu_secondary_reset));
 
 	/* Wait until global count is equal to expected CPU up count or
 	 * configured time-out has expired
@@ -698,53 +699,6 @@ static void start_cpus()
 	}
 }
 #endif
-
-static void update_trampoline_code_refs(uint64_t dest_pa)
-{
-	void *ptr;
-	int i;
-
-	if (dest_pa == 0)
-		return;
-
-	/* Update temporary page tables */
-	ptr = HPA2HVA(dest_pa + (uint64_t)CPU_Boot_Page_Tables_ptr);
-	*(uint32_t *)(ptr) += dest_pa;
-
-	ptr = HPA2HVA(dest_pa + (uint64_t)CPU_Boot_Page_Tables_Start);
-	*(uint64_t *)(ptr) += dest_pa;
-
-	ptr = HPA2HVA(dest_pa + (uint64_t)cpu_secondary_pdpt_addr);
-	for (i = 0; i < 4; i++ ) {
-		*(uint64_t *)(ptr + sizeof(uint64_t) * i) += dest_pa;
-	}
-
-	/* update the gdt base pointer with relocated offset */
-	ptr = HPA2HVA(dest_pa + (uint64_t)cpu_secondary_gdt_ptr);
-	*(uint64_t *)(ptr + 2) += dest_pa;
-
-	/* update trampoline jump pointer with relocated offset */
-	ptr = HPA2HVA(dest_pa + (uint64_t)ap_long_mode_jump_ref);
-	*(uint32_t *)ptr += dest_pa;
-}
-
-static uint64_t relocate_trampoline_code(void)
-{
-	uint64_t size, dest_pa;
-
-	size = (uint64_t)_ld_cpu_secondary_reset_end - (uint64_t)cpu_secondary_reset;
-#ifndef CONFIG_EFI_STUB
-	dest_pa = e820_alloc_low_memory(CONFIG_LOW_RAM_SIZE);
-#else
-	dest_pa = (uint64_t)get_ap_trampoline_buf();
-#endif
-
-	/* printf("AP trampoline code: %llx size %x\n", dest_pa, size); */
-	memcpy_s(HPA2HVA(dest_pa), size, _ld_cpu_secondary_reset_load, size);
-	update_trampoline_code_refs(dest_pa);
-	trampoline_code_paddr = dest_pa;
-	return dest_pa;
-}
 
 void cpu_dead(uint32_t logical_id)
 {
