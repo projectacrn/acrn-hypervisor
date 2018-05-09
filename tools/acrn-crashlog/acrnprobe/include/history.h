@@ -22,6 +22,14 @@
 #ifndef __HISTORY_H__
 #define __HISTORY_H__
 
+#define HISTORY_NAME		"history_event"
+
+extern char *history_file;
+
+int prepare_history(void);
 void hist_raise_infoerror(char *type);
+void hist_raise_uptime(char *lastuptime);
+void hist_raise_event(char *event, char *type, char *log, char *lastuptime,
+		char *key);
 
 #endif
