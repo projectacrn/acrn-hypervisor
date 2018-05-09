@@ -33,6 +33,9 @@ struct event_t {
 	char path[0]; /* keep this at tail*/
 };
 
+void event_enqueue(struct event_t *event);
+int events_count(void);
+struct event_t *event_dequeue(void);
 void init_event_queue(void);
 
 #endif
