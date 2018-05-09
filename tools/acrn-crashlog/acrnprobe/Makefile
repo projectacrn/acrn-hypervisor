@@ -27,7 +27,9 @@ $(BUILDDIR)/acrnprobe/bin/acrnprobe: $(BUILDDIR)/acrnprobe/obj/main.o \
 	$(BUILDDIR)/acrnprobe/obj/crash_reclassify.o \
 	$(BUILDDIR)/acrnprobe/obj/sender.o \
 	$(BUILDDIR)/acrnprobe/obj/startupreason.o \
-	$(BUILDDIR)/acrnprobe/obj/property.o
+	$(BUILDDIR)/acrnprobe/obj/property.o \
+	$(BUILDDIR)/acrnprobe/obj/probeutils.o \
+	$(BUILDDIR)/acrnprobe/obj/history.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 clean:
