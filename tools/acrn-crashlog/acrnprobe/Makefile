@@ -1,7 +1,7 @@
 BASEDIR 	:= $(shell pwd)
 
 LIBS		= -lpthread -lxml2 -lcrypto -lrt -lsystemd -ltelemetry
-INCLUDE		+= -I $(BASEDIR)/include
+INCLUDE		+= -I $(BASEDIR)/include -I /usr/include/libxml2
 CFLAGS 		+= $(INCLUDE)
 CFLAGS 		+= -g -O0 -std=gnu11
 CFLAGS 		+= -ffunction-sections -fdata-sections
