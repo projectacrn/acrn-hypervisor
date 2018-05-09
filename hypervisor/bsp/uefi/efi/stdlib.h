@@ -50,7 +50,6 @@ extern void *calloc(UINTN nmemb, UINTN size);
 
 extern EFI_STATUS emalloc(UINTN, UINTN, EFI_PHYSICAL_ADDRESS *);
 extern EFI_STATUS __emalloc(UINTN, UINTN, EFI_PHYSICAL_ADDRESS *, EFI_MEMORY_TYPE);
-extern EFI_STATUS emalloc_for_low_mem(EFI_PHYSICAL_ADDRESS *addr, UINTN size);
 extern void efree(EFI_PHYSICAL_ADDRESS, UINTN);
 
 static inline void memset(void *dstv, char ch, UINTN size)
