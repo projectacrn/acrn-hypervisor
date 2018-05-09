@@ -6,6 +6,33 @@
 #ifndef __EVENT_QUEUE_H__
 #define __EVENT_QUEUE_H__
 
+#include <sys/queue.h>
+
+enum event_type_t {
+	CRASH,
+	INFO,
+	UPTIME,
+	HEART_BEAT,
+	REBOOT,
+	VM,
+	UNKNOWN
+};
+
+__extension__
+struct event_t {
+	int watchfd;
+	enum event_type_t event_type;
+	char *channel;
+	void *private;
+
+	TAILQ_ENTRY(event_t) entries;
+
+	/* dir to storage logs */
+	char *dir;
+	int len;
+	char path[0]; /* keep this at tail*/
+};
+
 void init_event_queue(void);
 
 #endif
