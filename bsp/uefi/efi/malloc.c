@@ -164,67 +164,6 @@ fail:
 	return err;
 }
 
-EFI_STATUS emalloc_for_low_mem(EFI_PHYSICAL_ADDRESS *addr, UINTN size)
-{
-	UINTN map_size, map_key, desc_size;
-	EFI_MEMORY_DESCRIPTOR *map_buf;
-	UINTN d, map_end;
-	UINT32 desc_version;
-	EFI_STATUS err;
-	UINTN nr_pages = EFI_SIZE_TO_PAGES(size);
-
-	err = memory_map(&map_buf, &map_size, &map_key,
-			 &desc_size, &desc_version);
-
-   if (err != EFI_SUCCESS)
-		goto fail;
-
-	d = (UINTN)map_buf;
-	map_end = (UINTN)map_buf + map_size;
-
-	for (; d < map_end; d += desc_size) {
-		EFI_MEMORY_DESCRIPTOR *desc;
-		EFI_PHYSICAL_ADDRESS start, end, aligned;
-
-		desc = (EFI_MEMORY_DESCRIPTOR *)d;
-		if (desc->Type != EfiConventionalMemory)
-			continue;
-
-	   if (desc->NumberOfPages < nr_pages)
-			continue;
-
-		start = desc->PhysicalStart;
-		end = start + (desc->NumberOfPages << EFI_PAGE_SHIFT);
-		size = (size + EFI_PAGE_SIZE - 1) & ~(EFI_PAGE_SIZE - 1);
-
-		/* allocate in low memory only */
-		if (start >= 1 << 20)
-			continue;
-
-		if (end > 1 << 20) {
-			size -= end - (1 << 20);
-			end = (1 << 20);
-		}
-
-		if (end - start >= size) {
-			aligned = end - size;
-			err = allocate_pages(AllocateAddress, EfiReservedMemoryType,
-						 nr_pages, &aligned);
-			if (err == EFI_SUCCESS) {
-				*addr = aligned;
-				break;
-			}
-		}
-	}
-
-  if (d == map_end)
-		err = EFI_OUT_OF_RESOURCES;
-
-	free_pool(map_buf);
-fail:
-	return err;
-}
-
 /* FIXME: This function cannot guarantee to return address under 4G,
  * and the hypervisor cannot handle params, which address is above 4G,
  * delivered from efi stub.
