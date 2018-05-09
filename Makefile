@@ -50,21 +50,22 @@ LIBS += -lz
 LIBS += -luuid
 
 # hw
+SRCS += hw/block_if.c
+SRCS += hw/usb_core.c
+SRCS += hw/uart_core.c
 SRCS += hw/pci/virtio/virtio.c
 SRCS += hw/pci/virtio/virtio_kernel.c
 SRCS += hw/platform/usb_mouse.c
-SRCS += hw/platform/usb_core.c
 SRCS += hw/platform/atkbdc.c
 SRCS += hw/platform/ps2mouse.c
 SRCS += hw/platform/rtc.c
 SRCS += hw/platform/ps2kbd.c
-SRCS += hw/platform/pm.c
-SRCS += hw/platform/uart_core.c
-SRCS += hw/platform/block_if.c
 SRCS += hw/platform/ioapic.c
 SRCS += hw/platform/cmos_io.c
 SRCS += hw/platform/ioc.c
 SRCS += hw/platform/ioc_cbc.c
+SRCS += hw/platform/acpi/acpi.c
+SRCS += hw/platform/acpi/acpi_pm.c
 SRCS += hw/pci/wdt_i6300esb.c
 SRCS += hw/pci/lpc.c
 SRCS += hw/pci/xhci.c
@@ -81,8 +82,6 @@ SRCS += hw/pci/virtio/virtio_hyper_dmabuf.c
 SRCS += hw/pci/virtio/virtio_heci.c
 SRCS += hw/pci/irq.c
 SRCS += hw/pci/uart.c
-SRCS += hw/acpi/acpi.c
-SRCS += hw/acpi/acpi_pm.c
 
 # core
 #SRCS += core/bootrom.c
@@ -102,6 +101,10 @@ SRCS += core/vmmapi.c
 SRCS += core/mptbl.c
 SRCS += core/main.c
 SRCS += core/hugetlb.c
+
+# arch
+SRCS += arch/x86/pm.c
+
 
 OBJS := $(patsubst %.c,$(DM_OBJDIR)/%.o,$(SRCS))
 
