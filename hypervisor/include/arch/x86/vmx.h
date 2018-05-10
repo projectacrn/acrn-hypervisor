@@ -472,6 +472,12 @@ static inline uint8_t get_vcpu_mode(struct vcpu *vcpu)
 {
 	return vcpu->arch_vcpu.cpu_mode;
 }
+
+typedef struct _descriptor_table_{
+	uint16_t limit;
+	uint64_t base;
+}__attribute__((packed)) descriptor_table;
+
 #endif /* ASSEMBLER */
 
 #endif /* VMX_H_ */

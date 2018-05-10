@@ -372,18 +372,18 @@ static void init_guest_state(struct vcpu *vcpu)
 		/* Limit */
 		limit = 0xFFFF;
 	} else if (get_vcpu_mode(vcpu) == PAGE_PROTECTED_MODE) {
-		uint64_t gdtb = 0;
+		descriptor_table gdtb;
 
 		/* Base *//* TODO: Should guest GDTB point to host GDTB ? */
 		/* Obtain the current global descriptor table base */
 		asm volatile ("sgdt %0" : : "m" (gdtb));
-		value32 = gdtb & 0x0ffff;
-		gdtb = gdtb >> 16;	/* base */
 
-		if ((gdtb >> 47 & 0x1))
-			gdtb |= 0xffff000000000000ull;
+		value32 = gdtb.limit;
 
-		base = gdtb;
+		if ((gdtb.base >> 47) & 0x1)
+			gdtb.base |= 0xffff000000000000ull;
+
+		base = gdtb.base;
 
 		/* Limit */
 		limit = HOST_GDT_SIZE - 1;
@@ -407,20 +407,18 @@ static void init_guest_state(struct vcpu *vcpu)
 		/* Limit */
 		limit = 0xFFFF;
 	} else if (get_vcpu_mode(vcpu) == PAGE_PROTECTED_MODE) {
-		uint64_t idtb = 0;
+		descriptor_table idtb ;
 
 		/* TODO: Should guest IDTR point to host IDTR ? */
 		asm volatile ("sidt %0"::"m" (idtb));
-		value32 = idtb & 0x0ffff;
 		/* Limit */
-		limit = value32;
-		idtb = idtb >> 16;	/* base */
+		limit = idtb.limit;
 
-		if ((idtb >> 47 & 0x1))
-			idtb |= 0xffff000000000000ull;
+		if ((idtb.base >> 47) & 0x1)
+			idtb.base |= 0xffff000000000000ull;
 
 		/* Base */
-		base = idtb;
+		base = idtb.base;
 	}
 
 	/* IDTR Base */
@@ -662,8 +660,8 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	uint64_t trbase_lo;
 	uint64_t trbase_hi;
 	uint64_t realtrbase;
-	uint64_t gdtb = 0;
-	uint64_t idtb = 0;
+	descriptor_table gdtb;
+	descriptor_table idtb;
 	uint16_t tr_sel;
 
 	pr_dbg("*********************");
@@ -721,19 +719,18 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	/* TODO: Should guest GDTB point to host GDTB ? */
 	/* Obtain the current global descriptor table base */
 	asm volatile ("sgdt %0"::"m" (gdtb));
-	value32 = gdtb & 0x0ffff;
-	gdtb = gdtb >> 16;	/* base */
+	value32 = gdtb.limit;
 
-	if ((gdtb >> 47) & 0x1)
-		gdtb |= 0xffff000000000000ull;
+	if ((gdtb.base >> 47) & 0x1)
+		gdtb.base |= 0xffff000000000000ull;
 
 	/* Set up the guest and host GDTB base fields with current GDTB base */
 	field = VMX_HOST_GDTR_BASE;
-	exec_vmwrite(field, gdtb);
-	pr_dbg("VMX_HOST_GDTR_BASE: 0x%x ", gdtb);
+	exec_vmwrite(field, gdtb.base);
+	pr_dbg("VMX_HOST_GDTR_BASE: 0x%x ", gdtb.base);
 
 	/* TODO: Should guest TR point to host TR ? */
-	trbase = gdtb + tr_sel;
+	trbase = gdtb.base + tr_sel;
 	if ((trbase >> 47) & 0x1)
 		trbase |= 0xffff000000000000ull;
 
@@ -759,16 +756,13 @@ static void init_host_state(__unused struct vcpu *vcpu)
 
 	/* Obtain the current interrupt descriptor table base */
 	asm volatile ("sidt %0"::"m" (idtb));
-	value32 = idtb & 0x0ffff;
 	/* base */
-	idtb = idtb >> 16;
-
-	if ((idtb >> 47 & 0x1))
-		idtb |= 0xffff000000000000ull;
+	if ((idtb.base >> 47) & 0x1)
+		idtb.base |= 0xffff000000000000ull;
 
 	field = VMX_HOST_IDTR_BASE;
-	exec_vmwrite(field, idtb);
-	pr_dbg("VMX_HOST_IDTR_BASE: 0x%x ", idtb);
+	exec_vmwrite(field, idtb.base);
+	pr_dbg("VMX_HOST_IDTR_BASE: 0x%x ", idtb.base);
 
 	asm volatile ("mov $0x174, %rcx");
 	asm volatile ("rdmsr");
