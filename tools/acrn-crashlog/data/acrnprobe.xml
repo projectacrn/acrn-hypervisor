@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<conf>
+	<senders>
+		<sender id="1" enable="true">
+			<name>crashlog</name>
+			<outdir>/var/log/crashlog</outdir>
+			<maxcrashdirs>1000</maxcrashdirs>
+			<maxlines>5000</maxlines>
+			<spacequota>90</spacequota>
+			<uptime>
+				<name>UPTIME</name>
+				<frequency>5</frequency>
+				<eventhours>6</eventhours>
+			</uptime>
+		</sender>
+		<sender id="2" enable="true">
+			<name>telemd</name>
+			<outdir>/var/log/acrnprobe</outdir>
+			<uptime>
+				<name>UPTIME</name>
+				<frequency>5</frequency>
+				<eventhours>6</eventhours>
+			</uptime>
+		</sender>
+	</senders>
+
+	<triggers>
+		<trigger id="1" enable="true">
+			<name>t_pstore</name>
+			<type>file</type>
+			<path>/sys/fs/pstore/console-ramoops</path>
+		</trigger>
+		<trigger id="2" enable="true">
+			<name>t_boot</name>
+			<type>file</type>
+			<path>/proc/cmdline</path>
+		</trigger>
+		<trigger id="3" enable="true">
+			<name>t_usercrash</name>
+			<type>dir</type>
+			<path>/var/log/usercrashes</path>
+		</trigger>
+	</triggers>
+
+	<vms enable="true">
+		<vm id="1" enable="true">
+			<name>VM1</name>
+			<channel>polling</channel>
+			<interval>60</interval>
+			<syncevent id="1">CRASH/TOMBSTONE</syncevent>
+			<syncevent id="2">CRASH/UIWDT</syncevent>
+			<syncevent id="3">CRASH/IPANIC</syncevent>
+			<syncevent id="4">REBOOT</syncevent>
+		</vm>
+	</vms>
+
+	<logs>
+		<log id="1" enable="true">
+			<name>pstore</name>
+			<type>file</type>
+			<path>/sys/fs/pstore/console-ramoops</path>
+		</log>
+		<log id='2' enable='true'>
+			<name>kmsg</name>
+			<type>cmd</type>
+			<path>dmesg</path>
+		</log>
+		<log id='3' enable='true'>
+			<name>cmdline</name>
+			<type>node</type>
+			<path>/proc/cmdline</path>
+		</log>
+		<log id='4' enable='true'>
+			<name>syslog</name>
+			<type>cmd</type>
+			<path>journalctl -b -0 -n 300 --no-pager</path>
+		</log>
+		<log id='5' enable='true'>
+			<name>acrnlog_cur</name>
+			<type>file_rotation</type>
+			<path>/tmp/acrnlog/acrnlog_cur.[biggest]</path>
+			<lines>500</lines>
+		</log>
+		<log id='6' enable='true'>
+			<name>acrnlog_last</name>
+			<type>file_rotation</type>
+			<path>/tmp/acrnlog/acrnlog_last.[all]</path>
+		</log>
+	</logs>
+
+	<crashes>
+		<crash id='1' inherit='0' enable='true'>
+			<name>IPANIC</name>
+			<trigger>t_pstore</trigger>
+			<channel>oneshot</channel>
+			<log id='1'>pstore</log>
+			<data id='1'>kernel BUG at</data>
+			<data id='2'>EIP is at</data>
+			<data id='3'>Comm:</data>
+		</crash>
+		<crash id='2' inherit='1' enable='true'>
+			<name>IPANIC_SWWDT</name>
+			<content id='1'>BUG: soft lockup - CPU#</content>
+		</crash>
+		<crash id='3' inherit='2' enable='true'>
+			<name>IPANIC_SWWDT_FAKE</name>
+			<mightcontent expression='1' id='1'>EIP: panic_dbg_set</mightcontent>
+			<mightcontent expression='1' id='2'>RIP: panic_dbg_set</mightcontent>
+		</crash>
+		<crash id='4' inherit='0' enable='true'>
+			<name>USERCRASH</name>
+			<trigger>t_usercrash</trigger>
+			<channel>inotify</channel>
+			<log id='1'>kmsg</log>
+			<log id='2'>syslog</log>
+		</crash>
+		<crash id='5' inherit='1' enable='true'>
+			<name>IPANIC_HWWDT</name>
+			<content id='1'>Watchdog detected hard LOCKUP on cpu</content>
+		</crash>
+	</crashes>
+
+	<infos>
+		<info id='1' enable='true'>
+			<name>BOOT_LOGS</name>
+			<trigger>t_boot</trigger>
+			<channel>oneshot</channel>
+			<log id='1'>kmsg</log>
+			<log id='2'>cmdline</log>
+			<log id='3'>acrnlog_cur</log>
+			<log id='4'>acrnlog_last</log>
+		</info>
+	</infos>
+
+
+
+</conf>
