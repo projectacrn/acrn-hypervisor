@@ -25,7 +25,7 @@ HV_FILE := acrn
 CFLAGS += -Wall -W
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -fshort-wchar -ffreestanding
-CFLAGS += -m64
+CFLAGS += -m64 -mno-mmx -mno-sse -mno-sse2 -mno-80387 -mno-fp-ret-in-387
 CFLAGS += -mno-red-zone
 CFLAGS += -static -nostdinc -nostdlib -fno-common
 CFLAGS += -O0 -D_FORTIFY_SOURCE=2
