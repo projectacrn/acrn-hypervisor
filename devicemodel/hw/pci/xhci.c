@@ -42,6 +42,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <ctype.h>
 #include "usb.h"
 #include "usbdi.h"
 #include "xhcireg.h"
@@ -266,6 +267,10 @@ struct pci_xhci_vdev {
 #define	XHCI_HALTED(xdev)	((xdev)->opregs.usbsts & XHCI_STS_HCH)
 #define	XHCI_GADDR(xdev, a)	paddr_guest2host((xdev)->dev->vmctx, (a), \
 				XHCI_PADDR_SZ - ((a) & (XHCI_PADDR_SZ-1)))
+struct pci_xhci_option_elem {
+	char *parse_opt;
+	int (*parse_fn)(struct pci_xhci_vdev *, char *);
+};
 
 static int xhci_in_use;
 
@@ -328,6 +333,11 @@ static int pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 		struct usb_data_xfer *xfer, uint32_t slot, uint32_t epid,
 		int *do_intr);
 static inline int pci_xhci_is_valid_portnum(int n);
+static int pci_xhci_parse_tablet(struct pci_xhci_vdev *xdev, char *opts);
+
+static struct pci_xhci_option_elem xhci_option_table[] = {
+	{"tablet", pci_xhci_parse_tablet}
+};
 
 static int
 pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
@@ -457,7 +467,7 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 		return -1;
 	}
 
-	for (port = 1; port < XHCI_MAX_DEVS; ++port) {
+	for (port = 1; port <= XHCI_MAX_DEVS; ++port) {
 		edev = xdev->devices[port];
 		if (!edev)
 			continue;
@@ -467,7 +477,7 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 			break;
 	}
 
-	if (port == XHCI_MAX_DEVS) {
+	if (port == XHCI_MAX_DEVS + 1) {
 		UPRINTF(LFTL, "fail to find physical port %d\r\n", native_port);
 		return -1;
 	}
@@ -632,7 +642,7 @@ pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de)
 static inline int
 pci_xhci_is_valid_portnum(int n)
 {
-	return n > 0 && n < XHCI_MAX_DEVS;
+	return n > 0 && n <= XHCI_MAX_DEVS;
 }
 
 static int
@@ -1200,11 +1210,11 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 		}
 	}
 
-	for (i = 0; i < XHCI_MAX_DEVS; ++i)
+	for (i = 1; i <= XHCI_MAX_DEVS; ++i)
 		if (dev == xdev->devices[i])
 			break;
 
-	if (i < XHCI_MAX_DEVS && XHCI_PORTREG_PTR(xdev, i)) {
+	if (i <= XHCI_MAX_DEVS && XHCI_PORTREG_PTR(xdev, i)) {
 		XHCI_PORTREG_PTR(xdev, i)->portsc &= ~(XHCI_PS_CSC |
 				XHCI_PS_CCS | XHCI_PS_PED | XHCI_PS_PP);
 		xdev->devices[i] = NULL;
@@ -3060,152 +3070,223 @@ pci_xhci_dev_event(struct usb_hci *hci, enum hci_usbev evid, void *param)
 static void
 pci_xhci_device_usage(char *opt)
 {
-	fprintf(stderr, "Invalid USB emulation \"%s\"\r\n", opt);
+	static const char *usage_str = "usage:\r\n"
+		" -s <n>,xhci,[bus1-port1,bus2-port2]:[tablet]\r\n"
+		" eg: -s 8,xhci,1-2,2-2\r\n"
+		" eg: -s 7,xhci,tablet\r\n"
+		" eg: -s 7,xhci,1-2,2-2:tablet\r\n"
+		" Note: please follow the board hardware design, assign the "
+		" ports according to the receptacle connection\r\n";
+
+	UPRINTF(LFTL, "error: invalid options: \"%s\"\r\n", opt);
+	UPRINTF(LFTL, "%s", usage_str);
+}
+
+static int
+pci_xhci_parse_bus_port(struct pci_xhci_vdev *xdev, char *opts)
+{
+	int rc = 0, cnt;
+	uint32_t port, bus;
+
+	assert(xdev);
+	assert(opts);
+
+	/* 'bus-port' format */
+	cnt = sscanf(opts, "%u-%u", &bus, &port);
+	if (cnt == EOF || cnt < 2) {
+		rc = -1;
+		goto errout;
+	}
+
+	if (!usb_native_is_bus_existed(bus) ||
+			!usb_native_is_port_existed(bus, port)) {
+		rc = -2;
+		goto errout;
+	}
+
+	if (!xdev->native_assign_ports[bus]) {
+		xdev->native_assign_ports[bus] = calloc(USB_NATIVE_NUM_PORT,
+				sizeof(uint8_t));
+		if (!xdev->native_assign_ports[bus]) {
+			rc = -3;
+			goto errout;
+		}
+	}
+
+	xdev->native_assign_ports[bus][port] = 1;
+errout:
+	if (rc)
+		UPRINTF(LWRN, "%s fails, rc=%d\r\n", __func__, rc);
+	return rc;
+}
+
+static int
+pci_xhci_parse_tablet(struct pci_xhci_vdev *xdev, char *opts)
+{
+	char *cfg, *str;
+	void *devins;
+	struct usb_devemu *ue;
+	struct pci_xhci_dev_emu *dev = NULL;
+	uint8_t port_u2, port_u3;
+	int rc = 0;
+
+	assert(xdev);
+	assert(opts);
+
+	if (strncmp(opts, "tablet", sizeof("tablet") - 1)) {
+		rc = -1;
+		goto errout;
+	}
+
+	str = opts;
+	cfg = strchr(str, '=');
+	cfg = cfg ? cfg + 1 : "";
+
+	ue = usb_emu_finddev(opts);
+	if (ue == NULL) {
+		rc = -2;
+		goto errout;
+	}
+
+	dev = calloc(1, sizeof(struct pci_xhci_dev_emu));
+	if (!dev) {
+		rc = -3;
+		goto errout;
+	}
+
+	dev->xdev = xdev;
+	dev->hci.dev = dev;
+	dev->hci.hci_intr = pci_xhci_dev_intr;
+	dev->hci.hci_event = pci_xhci_dev_event;
+
+	/*
+	 * This is a safe operation because there is no other
+	 * device created and port_u2/port_u3 definitely points
+	 * to an empty position in xdev->devices
+	 */
+	port_u2 = xdev->usb3_port_start - 1;
+	port_u3 = xdev->usb2_port_start - 1;
+	if (ue->ue_usbver == 2) {
+		dev->hci.hci_port = port_u2 + 1;
+		xdev->devices[port_u2] = dev;
+	} else {
+		dev->hci.hci_port = port_u3 + 1;
+		xdev->devices[port_u3] = dev;
+	}
+
+	dev->hci.hci_address = 0;
+	devins = ue->ue_init(&dev->hci, cfg);
+	if (devins == NULL) {
+		rc = -4;
+		goto errout;
+	}
+
+	dev->dev_ue = ue;
+	dev->dev_instance = devins;
+
+	/* assign slot number to device */
+	xdev->ndevices++;
+	xdev->slots[xdev->ndevices] = dev;
+	return 0;
+
+errout:
+	if (dev) {
+		if (ue) {
+			if (dev == xdev->devices[port_u2])
+				xdev->devices[port_u2] = NULL;
+			if (dev == xdev->devices[port_u3])
+				xdev->devices[port_u3] = NULL;
+		}
+		free(dev);
+	}
+	UPRINTF(LFTL, "fail to parse tablet, rc=%d\r\n", rc);
+	return rc;
 }
 
 static int
 pci_xhci_parse_opts(struct pci_xhci_vdev *xdev, char *opts)
 {
-	struct pci_xhci_dev_emu	**devices;
-	struct pci_xhci_dev_emu	*dev;
-	struct usb_devemu	*ue;
-	void	*devins;
-	char	*uopt, *xopts, *config;
-	int	usb3_port, usb2_port, i;
+	char *s, *t, *n;
+	int i, rc = 0;
+	struct pci_xhci_option_elem *elem;
+	int (*f)(struct pci_xhci_vdev *, char *);
+	int elem_cnt;
 
-	usb3_port = xdev->usb3_port_start - 1;
-	usb2_port = xdev->usb2_port_start - 1;
-	devices = NULL;
-
-	if (opts == NULL)
-		goto portsfinal;
-
-	devices = calloc(XHCI_MAX_DEVS, sizeof(struct pci_xhci_dev_emu *));
-	if (devices == NULL) {
-		usb2_port = usb3_port = -1;
-		UPRINTF(LWRN, "%s:%d fail to allocate memory(devices)\n",
-			__func__, __LINE__);
-		goto done;
+	assert(xdev);
+	if (!opts) {
+		rc = -1;
+		goto errout;
 	}
 
-	xdev->slots = calloc(XHCI_MAX_SLOTS, sizeof(struct pci_xhci_dev_emu *));
-	if (xdev->slots == NULL) {
-		usb2_port = usb3_port = -1;
-		UPRINTF(LWRN, "%s:%d fail to allocate memory(slots)\n",
-			__func__, __LINE__);
-		goto done;
+	/* allocate neccessary resources during parsing*/
+	xdev->devices = calloc(XHCI_MAX_DEVS + 1, sizeof(*xdev->devices));
+	xdev->slots = calloc(XHCI_MAX_SLOTS, sizeof(*xdev->slots));
+	xdev->portregs = calloc(XHCI_MAX_DEVS + 1, sizeof(*xdev->portregs));
+	if (!xdev->devices || !xdev->slots || !xdev->portregs) {
+		rc = -2;
+		goto errout;
 	}
 
-	xdev->devices = devices;
-	xdev->ndevices = 0;
+	s = strdup(opts);
+	UPRINTF(LDBG, "options: %s\r\n", s);
 
-	uopt = strdup(opts);
-	for (xopts = strtok(uopt, ",");
-	     xopts != NULL;
-	     xopts = strtok(NULL, ",")) {
-		if (usb2_port ==
-			((xdev->usb2_port_start - 1) + XHCI_MAX_DEVS/2) ||
-			usb3_port ==
-			((xdev->usb3_port_start - 1) + XHCI_MAX_DEVS/2)) {
-			UPRINTF(LWRN, "pci_xhci max number of USB 2 or 3 "
-			     "devices reached, max %d\r\n", XHCI_MAX_DEVS/2);
-			usb2_port = usb3_port = -1;
-			goto done;
-		}
+	elem = xhci_option_table;
+	elem_cnt = sizeof(xhci_option_table) / sizeof(*elem);
 
-		/* device[=<config>] */
-		config = strchr(xopts, '=');
-		if (config == NULL)
-			config = "";		/* no config */
-		else
-			*config++ = '\0';
-
-		ue = usb_emu_finddev(xopts);
-		if (ue == NULL) {
-			pci_xhci_device_usage(xopts);
-			UPRINTF(LWRN, "device not found %s\r\n", xopts);
-			usb2_port = usb3_port = -1;
-			goto done;
-		}
-
-		UPRINTF(LDBG, "adding device %s, opts \"%s\"\r\n",
-			 xopts, config);
-
-		dev = calloc(1, sizeof(struct pci_xhci_dev_emu));
-		if (!dev) {
-			usb2_port = usb3_port = -1;
-			UPRINTF(LWRN, "%s:%d fail to allocate memory\n",
-				__func__, __LINE__);
-			goto done;
-		}
-		dev->xdev = xdev;
-		dev->hci.dev = dev;
-		dev->hci.hci_intr = pci_xhci_dev_intr;
-		dev->hci.hci_event = pci_xhci_dev_event;
-
-		if (ue->ue_usbver == 2) {
-			dev->hci.hci_port = usb2_port + 1;
-			devices[usb2_port] = dev;
-			usb2_port++;
+	for (t = strtok(s, ",:"); t; t = strtok(NULL, ",:")) {
+		if (isdigit(t[0])) { /* bus-port */
+			if (pci_xhci_parse_bus_port(xdev, t)) {
+				rc = -3;
+				goto errout;
+			}
 		} else {
-			dev->hci.hci_port = usb3_port + 1;
-			devices[usb3_port] = dev;
-			usb3_port++;
+			for (i = 0; i < elem_cnt; i++) {
+				n = elem[i].parse_opt;
+				f = elem[i].parse_fn;
+
+				if (!n || !f)
+					continue;
+
+				if (!strncmp(t, n, strlen(n))) {
+					f(xdev, t);
+					break;
+				}
+			}
+
+			if (i >= elem_cnt) {
+				rc = -4;
+				goto errout;
+			}
 		}
-
-		dev->hci.hci_address = 0;
-		devins = ue->ue_init(&dev->hci, config);
-		if (devins == NULL) {
-			pci_xhci_device_usage(xopts);
-			usb2_port = usb3_port = -1;
-			goto done;
-		}
-
-		dev->dev_ue = ue;
-		dev->dev_instance = devins;
-
-		/* assign slot number to device */
-		xdev->slots[xdev->ndevices] = dev;
-
-		xdev->ndevices++;
 	}
 
-portsfinal:
-	xdev->portregs =
-		calloc(XHCI_MAX_DEVS, sizeof(struct pci_xhci_portregs));
+	/* do not use the zero index element */
+	for (i = 1; i <= XHCI_MAX_DEVS; i++)
+		pci_xhci_init_port(xdev, i);
 
-	if (xdev->ndevices > 0) {
-		/* port and slot numbering start from 1
-		 *
-		 * TODO: This code is really dangerous...
-		 * xdev->devices[0] and xdev->slots[0] are point to one
-		 * invalid address. Only xdev->slots[1] is the real first
-		 * item. Just use this design now due to the original xhci.c
-		 * and the usb_mouse.c depend on it and it will be fixed
-		 * in future.
-		 */
-		xdev->devices--;
-		xdev->portregs--;
-		xdev->slots--;
-
-		for (i = 1; i <= XHCI_MAX_DEVS; i++)
-			pci_xhci_init_port(xdev, i);
-	} else {
-		UPRINTF(LWRN, "no USB devices configured\r\n");
-		xdev->ndevices = 1;
-	}
-
-done:
-	if (devices != NULL) {
-		if (usb2_port <= 0 && usb3_port <= 0) {
+errout:
+	if (rc) {
+		if (xdev->devices) {
+			for (i = 1; i <= XHCI_MAX_DEVS && xdev->devices[i]; i++)
+				free(xdev->devices[i]);
+			xdev->ndevices = 0;
 			xdev->devices = NULL;
-			for (i = 0; devices[i] != NULL; i++)
-				free(devices[i]);
-			xdev->ndevices = -1;
-
-			free(devices);
+			free(xdev->devices);
 		}
+		if (xdev->slots) {
+			free(xdev->slots);
+			xdev->slots = NULL;
+		}
+		if (xdev->portregs) {
+			free(xdev->portregs);
+			xdev->portregs = NULL;
+		}
+		UPRINTF(LFTL, "fail to parse xHCI options, rc=%d\r\n", rc);
+		pci_xhci_device_usage(opts);
+		return rc;
 	}
+
+	free(s);
 	return xdev->ndevices;
 }
 
@@ -3246,13 +3327,14 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	* Will add command line option in subsequent patches for calling
 	* usb_dev_sys_init if new parameters are used.
 	*/
-	if (xdev->ndevices == 0)
-		if (usb_dev_sys_init(pci_xhci_native_usb_dev_conn_cb,
-					pci_xhci_native_usb_dev_disconn_cb,
-					pci_xhci_usb_dev_notify_cb,
-					pci_xhci_usb_dev_intr_cb,
-					xdev, usb_get_log_level()) < 0)
-			goto done;
+	if (usb_dev_sys_init(pci_xhci_native_usb_dev_conn_cb,
+				pci_xhci_native_usb_dev_disconn_cb,
+				pci_xhci_usb_dev_notify_cb,
+				pci_xhci_usb_dev_intr_cb,
+				xdev, usb_get_log_level()) < 0) {
+		error = -3;
+		goto done;
+	}
 
 	xdev->caplength = XHCI_SET_CAPLEN(XHCI_CAPLEN) |
 			 XHCI_SET_HCIVERSION(0x0100);
@@ -3315,8 +3397,10 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pthread_mutex_init(&xdev->mtx, NULL);
 
 done:
-	if (error)
+	if (error) {
+		UPRINTF(LFTL, "%s fail, error=%d\n", __func__, error);
 		free(xdev);
+	}
 
 	return error;
 }
