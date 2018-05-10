@@ -28,7 +28,7 @@ CFLAGS += -fshort-wchar -ffreestanding
 CFLAGS += -m64
 CFLAGS += -mno-red-zone
 CFLAGS += -static -nostdinc -nostdlib -fno-common
-CFLAGS += -O2 -D_FORTIFY_SOURCE=2
+CFLAGS += -O0 -D_FORTIFY_SOURCE=2
 CFLAGS += -Wformat -Wformat-security
 
 ifdef STACK_PROTECTOR
@@ -50,7 +50,7 @@ LDFLAGS += -Wl,--gc-sections -static -nostartfiles -nostdlib
 LDFLAGS += -Wl,-n,-z,max-page-size=0x1000
 LDFLAGS += -Wl,-z,noexecstack
 
-ARCH_CFLAGS += -gdwarf-2 -O0
+ARCH_CFLAGS += -gdwarf-2
 ARCH_ASFLAGS += -gdwarf-2 -DASSEMBLER=1
 ARCH_ARFLAGS +=
 ARCH_LDFLAGS +=
