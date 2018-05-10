@@ -68,7 +68,7 @@ endif
 
 CFLAGS=-I. -I.. -I$(INCDIR)/efi -I$(INCDIR)/efi/$(ARCH) \
 		-DEFI_FUNCTION_WRAPPER -fPIC -fshort-wchar -ffreestanding \
-		-Wall -I../fs/ -D$(ARCH)
+		-Wall -I../fs/ -D$(ARCH) -O0
 
 ifeq ($(ARCH),ia32)
 	ifeq ($(HOST),x86_64)
