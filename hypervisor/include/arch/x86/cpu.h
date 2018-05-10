@@ -379,8 +379,9 @@ void load_cpu_state_data(void);
 /* Macro to restore rflags register */
 #define CPU_RFLAGS_RESTORE(rflags)                      \
 {                                                       \
-	asm volatile (" push %0" : : "r" (rflags));     \
-	asm volatile (" popf");                         \
+	asm volatile (" push %0\n\t"			\
+			"popf	\n\t": : "r" (rflags)	\
+			:"cc");				\
 }
 
 /* This macro locks out interrupts and saves the current architecture status
