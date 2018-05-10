@@ -347,7 +347,9 @@ static uint64_t get_random_value(void)
 	asm volatile ("1: rdrand %%rax\n"
 			"jnc 1b\n"
 			"mov %%rax, %0\n"
-			: "=r"(random) :: );
+			: "=r"(random)
+			:
+			:"%rax");
 	return random;
 }
 

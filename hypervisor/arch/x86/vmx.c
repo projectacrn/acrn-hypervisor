@@ -82,7 +82,7 @@ static inline int exec_vmxon(void *addr)
 			      "pushfq\n"
 			      "pop %0\n":"=r" (rflags)
 			      : "r"(addr)
-			      : "%rax");
+			      : "%rax", "cc", "memory");
 
 		/* if carry and zero flags are clear operation success */
 		if (rflags & (RFLAGS_C | RFLAGS_Z))
@@ -140,7 +140,7 @@ int exec_vmclear(void *addr)
 		"pushfq\n"
 		"pop %0\n":"=r" (rflags)
 		: "r"(addr)
-		: "%rax");
+		: "%rax", "cc", "memory");
 
 	/* if carry and zero flags are clear operation success */
 	if (rflags & (RFLAGS_C | RFLAGS_Z))
@@ -165,7 +165,7 @@ int exec_vmptrld(void *addr)
 		"pop %0\n"
 		: "=r" (rflags)
 		: "r"(addr)
-		: "%rax");
+		: "%rax", "cc");
 
 	/* if carry and zero flags are clear operation success */
 	if (rflags & (RFLAGS_C | RFLAGS_Z))
