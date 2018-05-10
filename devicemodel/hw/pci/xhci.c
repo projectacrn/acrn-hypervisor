@@ -334,9 +334,11 @@ static int pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 		int *do_intr);
 static inline int pci_xhci_is_valid_portnum(int n);
 static int pci_xhci_parse_tablet(struct pci_xhci_vdev *xdev, char *opts);
+static int pci_xhci_parse_log_level(struct pci_xhci_vdev *xdev, char *opts);
 
 static struct pci_xhci_option_elem xhci_option_table[] = {
-	{"tablet", pci_xhci_parse_tablet}
+	{"tablet", pci_xhci_parse_tablet},
+	{"log", pci_xhci_parse_log_level}
 };
 
 static int
@@ -3071,15 +3073,46 @@ static void
 pci_xhci_device_usage(char *opt)
 {
 	static const char *usage_str = "usage:\r\n"
-		" -s <n>,xhci,[bus1-port1,bus2-port2]:[tablet]\r\n"
+		" -s <n>,xhci,[bus1-port1,bus2-port2]:[tablet]:[log=x]\r\n"
 		" eg: -s 8,xhci,1-2,2-2\r\n"
-		" eg: -s 7,xhci,tablet\r\n"
+		" eg: -s 7,xhci,tablet:log=D\r\n"
 		" eg: -s 7,xhci,1-2,2-2:tablet\r\n"
 		" Note: please follow the board hardware design, assign the "
 		" ports according to the receptacle connection\r\n";
 
 	UPRINTF(LFTL, "error: invalid options: \"%s\"\r\n", opt);
 	UPRINTF(LFTL, "%s", usage_str);
+}
+
+static int
+pci_xhci_parse_log_level(struct pci_xhci_vdev *xdev, char *opts)
+{
+	char level;
+	char *s, *o;
+	int rc = 0;
+
+	assert(opts);
+
+	o = s = strdup(opts);
+	if (!(s && s[0] == 'l' && s[1] == 'o' && s[2] == 'g')) {
+		rc = -1;
+		goto errout;
+	}
+
+	s = strchr(opts, '=');
+	if (!s) {
+		rc = -2;
+		goto errout;
+	}
+
+	level = *(s+1);
+	usb_parse_log_level(level);
+
+errout:
+	if (rc)
+		printf("USB: fail to set log level, rc=%d\r\n", rc);
+	free(o);
+	return rc;
 }
 
 static int
@@ -3322,11 +3355,6 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	else
 		error = 0;
 
-       /*
-	* TODO:
-	* Will add command line option in subsequent patches for calling
-	* usb_dev_sys_init if new parameters are used.
-	*/
 	if (usb_dev_sys_init(pci_xhci_native_usb_dev_conn_cb,
 				pci_xhci_native_usb_dev_disconn_cb,
 				pci_xhci_usb_dev_notify_cb,
