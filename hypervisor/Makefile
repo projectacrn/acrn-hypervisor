@@ -28,7 +28,7 @@ CFLAGS += -fshort-wchar -ffreestanding
 CFLAGS += -m64 -mno-mmx -mno-sse -mno-sse2 -mno-80387 -mno-fp-ret-in-387
 CFLAGS += -mno-red-zone
 CFLAGS += -static -nostdinc -nostdlib -fno-common
-CFLAGS += -O0 -D_FORTIFY_SOURCE=2
+CFLAGS += -O2 -D_FORTIFY_SOURCE=2
 CFLAGS += -Wformat -Wformat-security
 
 ifdef STACK_PROTECTOR

@@ -68,7 +68,7 @@ endif
 
 CFLAGS=-I. -I.. -I$(INCDIR)/efi -I$(INCDIR)/efi/$(ARCH) \
 		-DEFI_FUNCTION_WRAPPER -fPIC -fshort-wchar -ffreestanding \
-		-Wall -I../fs/ -D$(ARCH) -O0
+		-Wall -I../fs/ -D$(ARCH) -O2
 
 CFLAGS += -mno-mmx -mno-sse -mno-sse2 -mno-80387 -mno-fp-ret-in-387
 
