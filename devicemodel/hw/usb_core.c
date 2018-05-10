@@ -219,3 +219,31 @@ usb_native_is_port_existed(uint8_t bus_num, uint8_t port_num)
 	close(fd);
 	return 1;
 }
+
+void usb_parse_log_level(char level)
+{
+	switch (level) {
+	case 'F':
+	case 'f':
+		usb_set_log_level(LFTL);
+		break;
+	case 'W':
+	case 'w':
+		usb_set_log_level(LWRN);
+		break;
+	case 'I':
+	case 'i':
+		usb_set_log_level(LINF);
+		break;
+	case 'D':
+	case 'd':
+		usb_set_log_level(LDBG);
+		break;
+	case 'V':
+	case 'v':
+		usb_set_log_level(LVRB);
+		break;
+	default:
+		usb_set_log_level(LFTL);
+	}
+}
