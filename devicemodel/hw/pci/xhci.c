@@ -256,6 +256,7 @@ struct pci_xhci_vdev {
 
 	int		usb2_port_start;
 	int		usb3_port_start;
+	uint8_t		*native_assign_ports[USB_NATIVE_NUM_BUS];
 };
 
 /* portregs and devices arrays are set up to start from idx=1 */
@@ -368,6 +369,26 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	ue->ue_info(ud, USB_INFO_PID, &native_pid, sizeof(native_pid));
 	UPRINTF(LDBG, "%X:%X %d-%d connecting.\r\n",
 			native_vid, native_pid, native_bus, native_port);
+
+	/* FIXME: will support usb3 in future */
+	if (xdev->native_assign_ports[native_bus] &&
+			usb_native_is_ss_port(native_bus)) {
+		UPRINTF(LDBG, "%X:%X %d-%d not support usb3 device, exit.\r\n",
+				native_vid, native_pid, native_bus,
+				native_port);
+		goto errout;
+	}
+
+	if (!xdev->native_assign_ports[native_bus] ||
+			!xdev->native_assign_ports[native_bus][native_port]) {
+		UPRINTF(LDBG, "%X:%X %d-%d doesn't belong to this vm, bye.\r\n",
+				native_vid, native_pid, native_bus,
+				native_port);
+		goto errout;
+	}
+
+	UPRINTF(LDBG, "%X:%X %d-%d belong to this vm.\r\n", native_vid,
+			native_pid, native_bus, native_port);
 
 	if (ue->ue_usbver == 2)
 		port_start = xdev->usb2_port_start;
