@@ -59,6 +59,9 @@ ACRN hypervisor source tree
 ACRN Device Model source tree
 =============================
 
+**arch/x86/**
+  architecture-specific source files needed for the devicemodel
+
 **core/**
   ACRN Device model core logic (main loop, SOS interface, etc.)
 
@@ -92,6 +95,10 @@ reading now.) Developers can view this content either in its raw form as
 the HTML content and view it with a web browser directly on your
 workstation, useful if you're contributing documentation to the project.
 
+**_templates/**
+  Sphinx configuration updates for the standard read-the-docs templates
+  used to format the generated HTML output
+
 **api/**
   ReST files for API document generation
 
@@ -103,14 +110,17 @@ workstation, useful if you're contributing documentation to the project.
 **getting_started/**
   ReST files and images for the Getting Started Guide
 
-**primer/**
-  ReST files and images for the Developer Primer
+**howtos/**
+  ReST files and images for Technical and Process how-to articles
 
 **images/**
   Image files not specific to a document (logos, and such)
 
 **introduction/**
   ReST files and images for the Introduction to Project ACRN
+
+**primer/**
+  ReST files and images for the Developer Primer
 
 **scripts/**
   Files used to assist building the documentation set

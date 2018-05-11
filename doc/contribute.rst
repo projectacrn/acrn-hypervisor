@@ -107,7 +107,7 @@ as introduced in the project ACRN `Getting Started Guide`_.
 .. _Getting Started Guide:
    https://projectacrn.github.io/getting_started/
 
-You should be familiar with common developer tools such as Git, and
+You should be familiar with common developer tools such as Git and
 platforms such as GitHub.
 
 If you haven't already done so, you'll need to create a (free) GitHub account
@@ -116,29 +116,19 @@ on https://github.com and have Git tools available on your development system.
 Repository layout
 *****************
 
-To clone the ACRN hypervisor repository use::
+To clone the ACRN hypervisor repository (including the hypervisor,
+devicemodel, and doc folders) use::
 
     git clone https://github.com/projectacrn/acrn-hypervisor
 
-To clone the ACRN device model repository use::
-
-    git clone https://github.com/projectacrn/acrn-devicemodel
-
-To clone the ACRN documentation repository use::
-
-    git clone https://github.com/projectacrn/acrn-documentation
-
-The project ACRN directory structure is described in the `Hypervisor
-Primer`_ document. In addition to the ACRN hypervisor and device model itself,
+The project ACRN directory structure is described in the :ref:`primer`
+document. In addition to the ACRN hypervisor and device model itself,
 you'll also find the sources for technical documentation available from
 the `ACRN documentation site`_.  All of these are available for
 developers to contribute to and enhance.
 
 .. _ACRN documentation site:
    https://projectacrn.github.io/
-
-.. _Hypervisor Primer:
-   https://projectacrn.github.io/hypervisor_primer
 
 Submitting Issues
 ******************
@@ -223,8 +213,8 @@ and test your changes thoroughly before submitting.
 The general GitHub workflow used by project ACRN developers uses a combination of
 command line Git commands and browser interaction with GitHub.  As it is with
 Git, there are multiple ways of getting a task done.  We'll describe a typical
-workflow here for the acrn-hypervisor repo that can also be used for the
-acrn-devicemodel and acrn-documentation repos:
+workflow here for the acrn-hypervisor repo, which includes the
+source files for the hypervisor, devicemodel, and documentation:
 
 .. _Create a Fork of acrn-hypervisor:
    https://github.com/projectacrn/acrn-hypervisor#fork-destination-box
@@ -232,6 +222,9 @@ acrn-devicemodel and acrn-documentation repos:
 #. `Create a Fork of acrn-hypervisor`_
    to your personal account on GitHub. (Click on the fork button in the top
    right corner of the project acrn-hypervisor repo page in GitHub.)
+   When you want to submit a pull request with your changes, you'll
+   first submit them to your personal branch, and then to the project's
+   master branch for review and merging by the ACRN maintainers.
 
 #. On your development computer, clone the fork you just made::
 
@@ -251,6 +244,8 @@ acrn-devicemodel and acrn-documentation repos:
      git checkout master
      git checkout -b fix_comment_typo
 
+   Give your branch a short descriptive name.
+
 #. Make changes, test locally, change, test, test again, ...
 
 #. When things look good, start the pull request process by checking
@@ -260,9 +255,9 @@ acrn-devicemodel and acrn-documentation repos:
 
    Then add the changed files::
 
-     git add [file(s) that changed, add -p if you want to be more specific]
+     git add [file(s) that changed]
 
-   (or to have all changed files added use)::
+   (or to have all changed files staged, use)::
 
      git add -A
 
@@ -286,7 +281,7 @@ acrn-devicemodel and acrn-documentation repos:
 
 #. In your web browser, go to your personal forked repo and click on the Compare & pull
    request button for the branch you just worked on and you want to
-   submit to the upstream repo.
+   submit to the upstream ACRN repo.
 
 #. Review the pull request changes, and verify that you are opening a pull request
    for the appropriate branch. The title and message from your commit message should
@@ -294,7 +289,8 @@ acrn-devicemodel and acrn-documentation repos:
 
 #. GitHub will assign one or more suggested reviewers (based on the CODEOWNERS file
    in the repo). If you are a project member, you can select additional reviewers
-   now too.
+   now too. If no reviewers are selected, the ACRN triage team will
+   assign reviewers as appropriate.
 
 #. Click on the submit button and your pull request is sent and awaits review.
    Email will be sent as review comments are made, or you can check on your
@@ -309,19 +305,24 @@ acrn-devicemodel and acrn-documentation repos:
 
    and use the same process described above to work on this new topic branch.
 
-#. If reviewers do request changes to your patch, you can interactively rebase
+#. If reviewers request changes to your patch, you can interactively rebase
    commit(s) to fix review issues. In your development repo, make the
    needed changes on the branch you made the initial submission::
 
      git checkout fix-comment-typo
 
-   then::
+   make the requested changes, and then::
 
      git fetch --all
      git rebase --ignore-whitespace upstream/master
 
-   The ``--ignore-whitespace`` option stops git apply (called by rebase) from changing
-   any whitespace. Continuing::
+   This is an important step to make sure your changes are properly
+   merged with changes from other developers that may have happened while you
+   were working on your changes.
+   The ``--ignore-whitespace`` option
+   stops ``git apply`` (called by rebase) from changing
+   any whitespace. If any merging issues are detected you can address them
+   with::
 
      git rebase -i <offending-commit-id>
 
@@ -367,11 +368,7 @@ Changes are submitted as Git commits. Each commit message must contain:
 
 * If the change addresses an issue, include a line of the form::
 
-      Fixes #<issue number>
-
-  See `Closing issues using keywords
-  <https://help.github.com/articles/closing-issues-using-keywords>`_
-  for more information about this GitHub feature.
+      Fixes #<brief description about the reported issue>.
 
 
 All changes and topics sent to GitHub must be well-formed, as described above.
