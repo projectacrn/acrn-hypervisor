@@ -289,6 +289,9 @@ int shutdown_vm(struct vm *vm)
 	return status;
 }
 
+/**
+ *  * @pre vm != NULL
+ */
 int start_vm(struct vm *vm)
 {
 	struct vcpu *vcpu = NULL;
@@ -303,9 +306,33 @@ int start_vm(struct vm *vm)
 	return 0;
 }
 
-/*
- * DM only pause vm for shutdown/reboot. If we need to
- * extend the pause vm for DM, this API should be extended.
+/**
+ *  * @pre vm != NULL
+ */
+int reset_vm(struct vm *vm)
+{
+	int i;
+	struct vcpu *vcpu = NULL;
+
+	if (vm->state != VM_PAUSED)
+		return -1;
+
+	foreach_vcpu(i, vm, vcpu) {
+		reset_vcpu(vcpu);
+		if (is_vcpu_bsp(vcpu))
+			vm_sw_loader(vm, vcpu);
+
+		vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
+	}
+
+	vioapic_reset(vm->arch_vm.virt_ioapic);
+
+	start_vm(vm);
+	return 0;
+}
+
+/**
+ *  * @pre vm != NULL
  */
 void pause_vm(struct vm *vm)
 {
@@ -323,6 +350,9 @@ void pause_vm(struct vm *vm)
 	}
 }
 
+/**
+ *  * @pre vm != NULL
+ */
 void resume_vm(struct vm *vm)
 {
 	uint16_t i;
@@ -335,13 +365,19 @@ void resume_vm(struct vm *vm)
 	vm->state = VM_STARTED;
 }
 
-/* Resume vm from S3 state
+/**
+ * @brief Resume vm from S3 state
  *
  * To resume vm after guest enter S3 state:
  * - reset BSP
  * - BSP will be put to real mode with entry set as wakeup_vec
  * - init_vmcs BSP. We could call init_vmcs here because we know current
  *   pcpu is mapped to BSP of vm.
+ *
+ * @vm[in]		vm pointer to vm data structure
+ * @wakeup_vec[in]	The resume address of vm
+ *
+ * @pre vm != NULL
  */
 void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec)
 {

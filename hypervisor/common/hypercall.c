@@ -266,6 +266,17 @@ int32_t hcall_create_vcpu(struct vm *vm, uint16_t vmid, uint64_t param)
 	return ret;
 }
 
+int32_t hcall_reset_vm(uint16_t vmid)
+{
+	struct vm *target_vm = get_vm_from_vmid(vmid);
+
+	if ((target_vm == NULL) || is_vm0(target_vm))
+		return -1;
+
+	reset_vm(target_vm);
+	return 0;
+}
+
 int32_t hcall_assert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
