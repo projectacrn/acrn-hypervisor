@@ -1,0 +1,11 @@
+[Unit]
+Description=ACRN hypervisor log
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/acrnlog
+ExecStop=/usr/bin/killall -s TERM acrnlog
+
+[Install]
+WantedBy=multi-user.target
+

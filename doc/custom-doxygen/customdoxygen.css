@@ -1,0 +1,34 @@
+/* Custom CSS */
+
+code {
+  font-family: Monaco,Menlo,Consolas,"Courier New",monospace;
+  background-color: #D8D8D8;
+  padding: 0 0.25em 0 0.25em;
+}
+
+pre.fragment {
+  display: block;
+  font-family: Monaco,Menlo,Consolas,"Courier New",monospace;
+  padding: 1rem;
+  word-break: break-all;
+  word-wrap: break-word;
+  white-space: pre;
+  background-color: #D8D8D8;
+}
+
+#projectlogo
+{
+	vertical-align: middle;
+}
+
+#projectname
+{
+	font: 200% Tahoma, Arial,sans-serif;
+	color: #006469;
+
+}
+    
+#projectbrief
+{
+	color: #006469;
+}

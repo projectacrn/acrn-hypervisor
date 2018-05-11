@@ -1,0 +1,22 @@
+{% extends "!breadcrumbs.html" %}
+{% block breadcrumbs_aside %}
+
+<li class="wy-breadcrumbs-aside">
+   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+      <span class="rst-current-version" data-toggle="rst-current-version">
+         <span class="fa fa-book"> Project ACRN</span>
+         version: {{ current_version }}
+         <span class="fa fa-caret-down"></span>
+      </span>
+      <div class="rst-other-versions">
+         <dl>
+            <dt>Versions</dt>
+               {% for slug, url in versions %}
+               <dd><a href="{{ url }}">{{ slug }}</a></dd>
+              {% endfor %}
+         </dl>
+      </div>
+   </div>
+</li>
+{# {{ super() }} #}
+{% endblock %}
