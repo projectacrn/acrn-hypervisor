@@ -28,8 +28,8 @@ The project's documentation contains the following items:
   are found in this acrn-documentation repo.
 
 * Doxygen-generated material used to create all API-specific documents
-  found at http://projectacrn.github.io/api/.  Clones of the
-  acrn-hypervisor and acrn-devicemodel repos are also used to access the
+  found at http://projectacrn.github.io/api/.  Source files from the
+  acrn-hypervisor/hypervisor and acrn-hypervisor/devicemodel repos are also used to access the
   header files for the the public APIs, but more about that later.
 
 The reStructuredText files are processed by the Sphinx documentation system,
@@ -54,50 +54,47 @@ You'll need git installed to get the working folders set up:
 
      sudo dnf install git
 
-Because we need up-to-date header files to generate API docs, doc
-generation assumes the three repos are cloned as sibling folders.
+We use the source header files to generate API docs and we use github.io
+for publishing the generated documentation.
 Here's the recommended folder setup for documentation contributions and
 generation:
 
 .. code-block: none
 
    projectacrn/
-      acrn-documentation/
       acrn-hypervisor/
-      acrn-devicemodel/
+         devicemodel/
+         doc/
+         hypervisor/
 
-It's best if these folders are ssh clones of your personal forks of the
-upstream project ACRN repos (though https clones work too):
+The parent projectacrn folder is there because we'll also be creating a
+publishing area later in these steps.  It's best if the acrn-hypervisor
+folder is an ssh clone of your personal fork of the upstream project
+repos (though https clones work too):
 
-#. Use your browser to visit https://github.com/projectacrn.  One at a
-   time, visit the **acrn-documentation**, **acrn-hypervisor**, and
-   **acrn-devicemodel** repos and do a fork to your personal GitHub account.
+#. Use your browser to visit https://github.com/projectacrn and do a
+   fork of the **acrn-hypervisor** repo to your personal GitHub account.)
 
    .. image:: acrn-doc-fork.png
       :align: center
 
-#. At a command prompt, create the working folder and clone the three
-   repositories to your local computer:
+#. At a command prompt, create the working folder and clone the acrn-hypervisor
+   repository to your local computer (and if you have publishing rights, the
+   projectacrn.github.io repo).  If you don't have publishing rights
+   you'll still be able to generate the docs locally, but not publish them:
 
    .. code-block:: bash
 
       cd ~
       mkdir projectacrn && cd projectacrn
-      git clone  git@github.com:<github-username>/acrn-documentation.git
-      git clone  git@github.com:<github-username>/acrn-hypervisor.git
-      git clone  git@github.com:<github-username>/acrn-devicemodel.git
+      git clone git@github.com:<github-username>/projectacrn/acrn-hypervisor.git
 
-#. For each of the cloned local repos, tell git about the upstream repos:
+#. For the cloned local repos, tell git about the upstream repo:
 
    .. code-block:: bash
 
-      cd acrn-documentation
-      git remote add upstream git@github.com:projectacrn/acrn-documentation.git
-      cd ../acrn-hypervisor
+      cd acrn-hypervisor
       git remote add upstream git@github.com:projectacrn/acrn-hypervisor.git
-      cd ../acrn-devicemodel
-      git remote add upstream git@github.com:projectacrn/acrn-devicemodel.git
-      cd ..
 
 #. If you haven't do so already, be sure to configure git with your name
    and email address for the signed-off-by line in your commit messages:
@@ -136,10 +133,10 @@ Depending on your Linux version, install the needed tools:
 And for either Linux environment, install the remaining python-based
 tools:
 
-  .. code-block:: bash
+.. code-block:: bash
 
-     cd ~/projectacrn/acrn-documentation
-     pip3 install --user -r scripts/requirements.txt
+   cd ~/projectacrn/acrn-hypervisor/doc
+   pip3 install --user -r scripts/requirements.txt
 
 And with that you're ready to generate the documentation.
 
@@ -148,36 +145,38 @@ Documentation presentation theme
 
 Sphinx supports easy customization of the generated documentation
 appearance through the use of themes.  Replace the theme files and do
-another ``make htmldocs`` and the output layout and style is changed.
+another ``make html`` and the output layout and style is changed.
 The ``read-the-docs`` theme is installed as part of the
 ``requirements.txt`` list above.
 
 Running the documentation processors
 ************************************
 
-The acrn-documentation directory has all the .rst source files, extra tools, and Makefile for
+The acrn-hypervisor/doc directory has all the .rst source files, extra tools, and Makefile for
 generating a local copy of the ACRN technical documentation.
 
 .. code-block:: bash
 
-   cd ~/projectacrn/acrn-documentation
+   cd ~/projectacrn/acrn-hypervisor/doc
    make html
 
 Depending on your development system, it will take about 15 seconds to
 collect and generate the HTML content.  When done, you can view the HTML
-output with your browser started at ``~/projectacrn/acrn-documentation/_build/html/index.html``
+output with your browser started at ``~/projectacrn/acrn-hypervisor/doc/_build/html/index.html``
 
 Publishing content
 ******************
 
-If you have push rights to the projectacrn repo called
+If you have merge rights to the projectacrn repo called
 projectacrn.github.io, you can update the public project documentation
 found at https://projectacrn.github.io.
 
-You'll need to do a one-time clone the upstream repo:
+You'll need to do a one-time clone of the upstream repo (we publish
+directly to the upstream repo rather than to a personal forked copy):
 
 .. code-block:: bash
 
+   cd ~/projectacrn
    git clone git@github.com:projectacrn/projectacrn.github.io.git
 
 Then, after you've verified the generated HTML from ``make html`` looks
@@ -187,7 +186,8 @@ good, you can push directly to the publishing site with:
 
    make publish
 
-This will delete everything in the publishing repo (in case the new version has
+This will delete everything in the publishing repo's **latest** folder
+(in case the new version has
 deleted files) and push a copy of the newly-generated HTML content
 directly to the GitHub pages publishing repo.  The public site at
 https://projectacrn.github.io will be updated (nearly) immediately
