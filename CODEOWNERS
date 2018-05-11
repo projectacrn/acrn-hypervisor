@@ -1,0 +1,19 @@
+# CODEOWNERS for autoreview assigning in github
+
+# File pattern follows the same rules used in .gitignore files,
+# Note: doc/ means files in any folder named doc, and its subfolders
+# while doc/* means files in any folder named doc, but not its subfolders.
+#
+# Ordering is important: the last matching pattern takes precedence.
+# Put global owners at the top, and detailed reviewers later
+#
+# Additional reviewers can be assigned manually
+
+# Default/global reviewers (if not overridden later)
+*                                        @anthonyzxu @dongyaozu
+
+/hypervisor/                             @anthonyzxu @dongyaozu
+/devicemodel/                            @anthonyzxu @dongyaozu
+/doc/                                    @dbkinder
+
+*.rst                                    @dbkinder
