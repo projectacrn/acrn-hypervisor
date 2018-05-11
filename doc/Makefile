@@ -32,7 +32,6 @@ help:
 # Generate the doxygen xml (for Sphinx) and copy the doxygen html to the
 # api folder for publishing along with the Sphinx-generated API docs.
 
-#doxy: pullsource
 doxy:
 	$(Q)(cat acrn.doxyfile) | doxygen - > doc.log 2>&1
 
