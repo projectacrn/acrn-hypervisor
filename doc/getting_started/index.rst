@@ -165,12 +165,12 @@ partition. Follow these steps:
    +-----------+----------------------------------------------------------------+
 
    A starter acrn.conf configuration file is included in the Clear Linux release and is
-   also available in the acrn-hypervisor GitHub repo as `acrn.conf
-   <https://github.com/projectacrn/acrn-hypervisor/tree/master/bsp/uefi/clearlinux/acrn.conf>`__
+   also available in the acrn-hypervisor/hypervisor GitHub repo as `acrn.conf
+   <https://github.com/projectacrn/acrn-hypervisor/hypervisor/tree/master/bsp/uefi/clearlinux/acrn.conf>`__
    as shown here:
 
-   .. literalinclude:: ../../acrn-hypervisor/bsp/uefi/clearlinux/acrn.conf
-      :caption: acrn-hypervisor/bsp/uefi/clearlinux/acrn.conf
+   .. literalinclude:: ../../hypervisor/bsp/uefi/clearlinux/acrn.conf
+      :caption: hypervisor/bsp/uefi/clearlinux/acrn.conf
 
    On the NUC, copy the ``acrn.conf`` file to the EFI partition we mounted earlier:
 
@@ -223,13 +223,13 @@ Without a network bridge, the SOS and UOS are not able to talk to each
 other.
 
 A sample `bridge.sh
-<https://github.com/projectacrn/acrn-devicemodel/tree/master/samples/bridge.sh>`__
+<https://github.com/projectacrn/acrn-hypervisor/devicemodel/tree/master/samples/bridge.sh>`__
 is included in the Clear Linux release, and
-is also available in the acrn-devicemodel GitHub repo (in the samples
+is also available in the acrn-hypervisor/devicemodel GitHub repo (in the samples
 folder) as shown here:
 
-.. literalinclude:: ../../acrn-devicemodel/samples/bridge.sh
-   :caption: acrn-devicemodel/samples/bridge.sh
+.. literalinclude:: ../../devicemodel/samples/bridge.sh
+   :caption: devicemodel/samples/bridge.sh
    :language: bash
 
 By default, the script is located in the ``/usr/share/acrn/demo/``
@@ -277,13 +277,13 @@ Set up Reference UOS
 #. Edit and Run the launch_uos.sh script to launch the UOS.
 
    A sample `launch_uos.sh
-   <https://github.com/projectacrn/acrn-devicemodel/tree/master/samples/launch_uos.sh>`__
+   <https://github.com/projectacrn/acrn-hypervisor/devicemodel/tree/master/samples/launch_uos.sh>`__
    is included in the Clear Linux release, and
-   is also available in the acrn-devicemodel GitHub repo (in the samples
+   is also available in the acrn-hypervisor/devicemodel GitHub repo (in the samples
    folder) as shown here:
 
-   .. literalinclude:: ../../acrn-devicemodel/samples/launch_uos.sh
-      :caption: acrn-devicemodel/samples/launch_uos.sh
+   .. literalinclude:: ../../devicemodel/samples/launch_uos.sh
+      :caption: devicemodel/samples/launch_uos.sh
       :language: bash
       :emphasize-lines: 22,24
 
@@ -368,17 +368,16 @@ Build the hypervisor and device model
    .. code-block:: console
 
       $ git clone https://github.com/projectacrn/acrn-hypervisor
-      $ cd acrn-hypervisor
+      $ cd acrn-hypervisor/hypervisor
       $ make PLATFORM=uefi
 
    The build results are found in the ``build`` directory.
 
-#. Download the ACRN device model and build it.
+#. Build the ACRN device model (included in the acrn-hypervisor repo):
 
    .. code-block:: console
 
-      $ git clone https://github.com/projectacrn/acrn-devicemodel
-      $ cd acrn-devicemodel
+      $ cd ../devicemodel
       $ make
 
    The build results are found in the ``build`` directory.

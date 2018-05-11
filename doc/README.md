@@ -1,5 +1,5 @@
-# Project ACRN Documentation Repo
+# Project ACRN Documentation
 
-This repository hold the source and configuration files used to generate the
+This folder hold the source and configuration files used to generate the
 Project ACRN documentation web site published to
 https://projectacrn.github.io
