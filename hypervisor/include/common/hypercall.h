@@ -77,6 +77,20 @@ int32_t hcall_create_vm(struct vm *vm, uint64_t param);
 int32_t hcall_destroy_vm(uint16_t vmid);
 
 /**
+ * @brief reset virtual machine
+ *
+ * Reset a virtual machine, it will make target VM rerun from
+ * pre-defined entry. Comparing to start vm, this function reset
+ * each vcpu state and do some initialization for guest.
+ * The function will return -1 if the target VM does not exist.
+ *
+ * @param vmid ID of the VM
+ *
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_reset_vm(uint16_t vmid);
+
+/**
  * @brief start virtual machine
  *
  * Start a virtual machine, it will schedule target VM's vcpu to run.

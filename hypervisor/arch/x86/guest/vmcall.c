@@ -65,6 +65,11 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 		ret = hcall_start_vm((uint16_t)param1);
 		break;
 
+	case HC_RESET_VM:
+		/* param1: vmid */
+		ret = hcall_reset_vm((uint16_t)param1);
+		break;
+
 	case HC_PAUSE_VM:
 		/* param1: vmid */
 		ret = hcall_pause_vm((uint16_t)param1);
