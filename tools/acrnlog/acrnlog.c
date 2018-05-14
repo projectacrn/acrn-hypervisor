@@ -127,7 +127,7 @@ static int get_cpu_num(void)
 struct hvlog_msg *hvlog_read_dev(struct hvlog_dev *dev)
 {
 	int ret;
-	size_t len;
+	size_t len = 0;
 	struct hvlog_msg *msg[2];
 	int msg_num;
 
@@ -464,6 +464,8 @@ int main(int argc, char *argv[])
 	last = calloc(pcpu_num, sizeof(struct hvlog_data));
 	if (!last) {
 		printf("Failed to allocate buf for last log buf\n");
+		free(cur);
+		return -1;
 	}
 
 	num_cur = 0;
@@ -499,7 +501,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (num_last && last) {
+	if (num_last) {
 		while (1) {
 			hvlog_dev_read_msg(last, pcpu_num);
 			msg = get_min_seq_msg(last, pcpu_num);
@@ -518,8 +520,7 @@ int main(int argc, char *argv[])
 	}
 
 	free(cur);
-	if (last)
-		free(last);
+	free(last);
 
 	return 0;
 }
