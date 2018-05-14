@@ -636,6 +636,7 @@ int get_vioapic_info(char *str, int str_max, int vmid)
 	size -= len;
 	str += len;
 
+	rte = 0;
 	for (pin = 0 ; pin < vioapic_pincount(vm); pin++) {
 		vioapic_get_rte(vm, pin, (void *)&rte);
 		low = rte;
