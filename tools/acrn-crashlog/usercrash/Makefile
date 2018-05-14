@@ -1,4 +1,4 @@
-all: check_obj usercrash_s usercrash_c
+all: check_obj usercrash_s usercrash_c debugger
 
 CURRDIR := $(shell pwd)
 INCLUDE += -I $(CURRDIR)/include/
@@ -12,6 +12,14 @@ usercrash_s: $(BUILDDIR)/usercrash/obj/protocol.o \
 
 usercrash_c: $(BUILDDIR)/usercrash/obj/protocol.o \
 	$(BUILDDIR)/usercrash/obj/client.o \
+	$(BUILDDIR)/usercrash/obj/crash_dump.o \
+	$(BUILDDIR)/common/obj/log_sys.o \
+	$(BUILDDIR)/common/obj/cmdutils.o \
+	$(BUILDDIR)/common/obj/fsutils.o \
+	$(BUILDDIR)/common/obj/strutils.o
+	$(CC) -g $(CFLAGS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ -lsystemd
+
+debugger: $(BUILDDIR)/usercrash/obj/debugger.o \
 	$(BUILDDIR)/usercrash/obj/crash_dump.o \
 	$(BUILDDIR)/common/obj/log_sys.o \
 	$(BUILDDIR)/common/obj/cmdutils.o \
