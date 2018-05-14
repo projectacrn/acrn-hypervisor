@@ -12,7 +12,11 @@ usercrash_s: $(BUILDDIR)/usercrash/obj/protocol.o \
 
 usercrash_c: $(BUILDDIR)/usercrash/obj/protocol.o \
 	$(BUILDDIR)/usercrash/obj/client.o \
-	$(BUILDDIR)/common/obj/log_sys.o
+	$(BUILDDIR)/usercrash/obj/crash_dump.o \
+	$(BUILDDIR)/common/obj/log_sys.o \
+	$(BUILDDIR)/common/obj/cmdutils.o \
+	$(BUILDDIR)/common/obj/fsutils.o \
+	$(BUILDDIR)/common/obj/strutils.o
 	$(CC) -g $(CFLAGS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ -lsystemd
 
 $(BUILDDIR)/usercrash/obj/%.o:%.c
