@@ -19,8 +19,9 @@ Licensing is very important to open source projects. It helps ensure the
 software continues to be available under the terms that the author
 desired.
 
-Project ACRN uses a BSD-3-Clause license, as found in the license_header in
-the project's GitHub repo.
+Project ACRN uses a BSD-3-Clause license, as found in the
+`LICENSE <https://github.com/projectacrn/acrn-hypervisor/blob/master/LICENSE>`__
+in the project's GitHub repo.
 
 A license tells you what rights you have as a developer, as provided by
 the copyright holder. It is important that the contributor fully
