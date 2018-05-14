@@ -1,11 +1,18 @@
 all: check_obj usercrash_s usercrash_c
 
+CURRDIR := $(shell pwd)
+INCLUDE += -I $(CURRDIR)/include/
+
 LIBS = -levent -lpthread
 
-usercrash_s: $(BUILDDIR)/usercrash/obj/server.o
+usercrash_s: $(BUILDDIR)/usercrash/obj/protocol.o \
+	$(BUILDDIR)/usercrash/obj/server.o \
+	$(BUILDDIR)/common/obj/log_sys.o
 	$(CC) -g $(CFLAGS) $(LIBS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ -lsystemd
 
-usercrash_c: $(BUILDDIR)/usercrash/obj/client.o
+usercrash_c: $(BUILDDIR)/usercrash/obj/protocol.o \
+	$(BUILDDIR)/usercrash/obj/client.o \
+	$(BUILDDIR)/common/obj/log_sys.o
 	$(CC) -g $(CFLAGS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ -lsystemd
 
 $(BUILDDIR)/usercrash/obj/%.o:%.c
