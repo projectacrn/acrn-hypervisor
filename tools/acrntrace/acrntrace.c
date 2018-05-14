@@ -173,9 +173,13 @@ static int create_trace_file_dir(char *dir)
 
 	time(&timep);
 	p = localtime(&timep);
-	snprintf(time_str, TIME_STR_LEN, "%d%02d%02d-%02d%02d%02d",
-		 (1900 + p->tm_year), (1 + p->tm_mon), p->tm_mday,
-		 p->tm_hour, p->tm_min, p->tm_sec);
+	if (p)
+		snprintf(time_str, TIME_STR_LEN, "%d%02d%02d-%02d%02d%02d",
+			 (1900 + p->tm_year), (1 + p->tm_mon), p->tm_mday,
+			 p->tm_hour, p->tm_min, p->tm_sec);
+	else
+		snprintf(time_str, TIME_STR_LEN, "00000000-000000");
+
 	pr_info("start tracing at %s\n", time_str);
 
 	snprintf(dir, TRACE_FILE_DIR_LEN, "%s%s", TRACE_FILE_ROOT, time_str);
