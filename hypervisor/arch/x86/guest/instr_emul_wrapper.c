@@ -269,23 +269,6 @@ static int32_t get_vmcs_field(int ident)
 	}
 }
 
-static enum vm_cpu_mode get_vmx_cpu_mode(void)
-{
-	uint32_t csar;
-
-	if (exec_vmread(VMX_GUEST_IA32_EFER_FULL) & EFER_LMA) {
-		csar = exec_vmread(VMX_GUEST_CS_ATTR);
-		if (csar & 0x2000)
-			return CPU_MODE_64BIT;        /* CS.L = 1 */
-		else
-			return CPU_MODE_COMPATIBILITY;
-	} else if (exec_vmread(VMX_GUEST_CR0) & CR0_PE) {
-		return CPU_MODE_PROTECTED;
-	} else {
-		return CPU_MODE_REAL;
-	}
-}
-
 static void get_guest_paging_info(struct vcpu *vcpu, struct emul_cnx *emul_cnx)
 {
 	uint32_t cpl, csar;
@@ -297,7 +280,7 @@ static void get_guest_paging_info(struct vcpu *vcpu, struct emul_cnx *emul_cnx)
 	emul_cnx->paging.cr3 =
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3;
 	emul_cnx->paging.cpl = cpl;
-	emul_cnx->paging.cpu_mode = get_vmx_cpu_mode();
+	emul_cnx->paging.cpu_mode = get_vcpu_mode(vcpu);
 	emul_cnx->paging.paging_mode = PAGING_MODE_FLAT;/*maybe change later*/
 }
 
@@ -358,7 +341,7 @@ uint8_t decode_instruction(struct vcpu *vcpu)
 
 	get_guest_paging_info(vcpu, emul_cnx);
 	csar = exec_vmread(VMX_GUEST_CS_ATTR);
-	cpu_mode = get_vmx_cpu_mode();
+	cpu_mode = get_vcpu_mode(vcpu);
 
 	retval = __decode_instruction(vcpu, guest_rip_gva,
 			cpu_mode, SEG_DESC_DEF32(csar), &emul_cnx->vie);

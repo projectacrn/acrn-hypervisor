@@ -106,6 +106,23 @@ int create_vcpu(int cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	return 0;
 }
 
+static void set_vcpu_mode(struct vcpu *vcpu, uint32_t cs_attr)
+{
+	struct run_context *cur_context =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+
+	if (cur_context->ia32_efer & MSR_IA32_EFER_LMA_BIT) {
+		if (cs_attr & 0x2000)		/* CS.L = 1 */
+			vcpu->arch_vcpu.cpu_mode = CPU_MODE_64BIT;
+		else
+			vcpu->arch_vcpu.cpu_mode = CPU_MODE_COMPATIBILITY;
+	} else if (cur_context->cr0 & CR0_PE) {
+		vcpu->arch_vcpu.cpu_mode = CPU_MODE_PROTECTED;
+	} else {
+		vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
+	}
+}
+
 int start_vcpu(struct vcpu *vcpu)
 {
 	uint32_t instlen;
@@ -160,6 +177,7 @@ int start_vcpu(struct vcpu *vcpu)
 
 	/* Save guest IA32_EFER register */
 	cur_context->ia32_efer = exec_vmread64(VMX_GUEST_IA32_EFER_FULL);
+	set_vcpu_mode(vcpu, exec_vmread(VMX_GUEST_CS_ATTR));
 
 	/* Obtain current VCPU instruction pointer and length */
 	cur_context->rip = exec_vmread(VMX_GUEST_RIP);
