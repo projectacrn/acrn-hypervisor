@@ -216,7 +216,10 @@ $(VERSION):
 	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
 	TIME=`date "+%F %T"`;\
 	if [ $(RELEASE) = 0 ];then BUILD_TYPE="DBG";else BUILD_TYPE="REL";fi;\
-	cat license_header > $(VERSION);\
+	echo "/*" > $(VERSION); \
+	sed 's/^/ * /' ../LICENSE >> $(VERSION); \
+	echo " */" >> $(VERSION); \
+	echo "" >> $(VERSION); \
 	echo "#define HV_MAJOR_VERSION $(MAJOR_VERSION)" >> $(VERSION);\
 	echo "#define HV_MINOR_VERSION $(MINOR_VERSION)" >> $(VERSION);\
 	echo "#define HV_RC_VERSION $(RC_VERSION)" >> $(VERSION);\
