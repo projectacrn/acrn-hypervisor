@@ -304,15 +304,15 @@ static int mmio_write(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t wval,
 	return 0;
 }
 
-void vm_gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa)
+int vm_gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
+	uint32_t *err_code)
 {
 
 	ASSERT(gpa != NULL, "Error in input arguments");
 	ASSERT(vcpu != NULL,
 		"Invalid vcpu id when gva2gpa");
 
-	*gpa = gva2gpa(vcpu->vm,
-		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3, gva);
+	return gva2gpa(vcpu, gva, gpa, err_code);
 }
 
 uint8_t decode_instruction(struct vcpu *vcpu)
@@ -323,13 +323,19 @@ uint8_t decode_instruction(struct vcpu *vcpu)
 	uint32_t csar;
 	int retval = 0;
 	enum vm_cpu_mode cpu_mode;
+	int error;
+	uint32_t err_code;
 
 	guest_rip_gva =
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip;
 
-	guest_rip_gpa = gva2gpa(vcpu->vm,
-		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3,
-		guest_rip_gva);
+	err_code = PAGE_FAULT_ID_FLAG;
+	error = gva2gpa(vcpu, guest_rip_gva, &guest_rip_gpa, &err_code);
+	if (error) {
+		pr_err("gva2gpa failed for guest_rip_gva  0x%016llx:",
+			guest_rip_gva);
+		return 0;
+	}
 
 	guest_rip_hva = GPA2HVA(vcpu->vm, guest_rip_gpa);
 	emul_cnx = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);

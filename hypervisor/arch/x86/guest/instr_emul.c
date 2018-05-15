@@ -674,6 +674,7 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 	uint64_t dstaddr, srcaddr, dstgpa, srcgpa;
 	uint64_t rcx, rdi, rsi, rflags;
 	int error, fault, opsize, seg, repeat;
+	uint32_t err_code;
 
 	opsize = (vie->op.op_byte == 0xA4) ? 1 : vie->opsize;
 	error = 0;
@@ -713,8 +714,14 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 	if (error || fault)
 		goto done;
 
-	vm_gva2gpa(vcpu, srcaddr, &srcgpa);
-	vm_gva2gpa(vcpu, dstaddr, &dstgpa);
+	err_code = 0;
+	error = vm_gva2gpa(vcpu, srcaddr, &srcgpa, &err_code);
+	if (error)
+		goto done;
+	err_code = PAGE_FAULT_WR_FLAG;
+	error = vm_gva2gpa(vcpu, dstaddr, &dstgpa, &err_code);
+	if (error)
+		goto done;
 	memcpy_s((char *)dstaddr, 16, (char *)srcaddr, opsize);
 
 	error = vie_read_register(vcpu, VM_REG_GUEST_RSI, &rsi);
@@ -1236,6 +1243,7 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 	struct seg_desc ss_desc;
 	uint64_t cr0, rflags, rsp, stack_gla, stack_gpa, val;
 	int error, size, stackaddrsize, pushop;
+	uint32_t err_code = 0;
 
 	memset(&ss_desc, 0, sizeof(ss_desc));
 
@@ -1302,7 +1310,13 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 		return 0;
 	}
 
-	vm_gva2gpa(vcpu, stack_gla, &stack_gpa);
+	if (pushop)
+		err_code |= PAGE_FAULT_WR_FLAG;
+	error = vm_gva2gpa(vcpu, stack_gla, &stack_gpa, &err_code);
+	if (error) {
+		pr_err("%s: failed to translate gva2gpa", __func__);
+		return error;
+	}
 	if (pushop) {
 		error = memread(vcpu, mmio_gpa, &val, size, arg);
 		if (error == 0)
