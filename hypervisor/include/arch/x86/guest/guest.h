@@ -75,11 +75,13 @@ enum vm_cpu_mode {
 	CPU_MODE_64BIT,			/* IA-32E mode (CS.L = 1) */
 };
 
+/* Use # of paging level to identify paging mode */
 enum vm_paging_mode {
-	PAGING_MODE_FLAT,
-	PAGING_MODE_32,
-	PAGING_MODE_PAE,
-	PAGING_MODE_64,
+	PAGING_MODE_0_LEVEL = 0,	/* Flat */
+	PAGING_MODE_2_LEVEL = 2,	/* 32bit paging, 2-level */
+	PAGING_MODE_3_LEVEL = 3,	/* PAE paging, 3-level */
+	PAGING_MODE_4_LEVEL = 4,	/* 64bit paging, 4-level */
+	PAGING_MODE_NUM,
 };
 
 /*
@@ -95,6 +97,8 @@ void vm_gva2gpa(struct vcpu *vcpu, uint64_t gla, uint64_t *gpa);
 struct vcpu *get_primary_vcpu(struct vm *vm);
 struct vcpu *vcpu_from_vid(struct vm *vm, int vcpu_id);
 struct vcpu *vcpu_from_pid(struct vm *vm, int pcpu_id);
+
+enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu);
 
 void init_e820(void);
 void obtain_e820_mem_info(void);
