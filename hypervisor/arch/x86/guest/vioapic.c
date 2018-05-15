@@ -41,7 +41,6 @@
 #define	IOEOI		0x40
 
 #define REDIR_ENTRIES_HW	120 /* SOS align with native ioapic */
-#define REDIR_ENTRIES_UOS	24 /* UOS pins*/
 #define	RTBL_RO_BITS	((uint64_t)(IOAPIC_RTE_REM_IRR | IOAPIC_RTE_DELIVS))
 
 #define ACRN_DBG_IOAPIC	6
@@ -568,7 +567,7 @@ vioapic_pincount(struct vm *vm)
 	if (is_vm0(vm))
 		return REDIR_ENTRIES_HW;
 	else
-		return REDIR_ENTRIES_UOS;
+		return VIOAPIC_RTE_NUM;
 }
 
 int vioapic_mmio_access_handler(struct vcpu *vcpu, struct mem_io *mmio,
