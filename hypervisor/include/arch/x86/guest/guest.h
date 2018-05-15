@@ -123,6 +123,8 @@ extern vm_sw_loader_t vm_sw_loader;
 
 int copy_from_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
 int copy_to_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
+
+uint32_t create_guest_init_gdt(struct vm *vm, uint32_t *limit);
 #endif	/* !ASSEMBLER */
 
 #endif /* GUEST_H*/
