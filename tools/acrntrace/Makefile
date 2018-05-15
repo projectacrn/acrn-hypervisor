@@ -1,5 +1,8 @@
+
+OUT_DIR ?= .
+
 all:
-	gcc -o acrntrace acrntrace.c sbuf.c -I. -lpthread
+	gcc -o $(OUT_DIR)/acrntrace acrntrace.c sbuf.c -I. -lpthread
 
 clean:
 	rm acrntrace
