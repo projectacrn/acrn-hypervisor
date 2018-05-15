@@ -314,7 +314,7 @@ acrn_sw_load_bzimage(struct vmctx *ctx)
 		if (setup_size <= 0)
 			return -1;
 		*kernel_entry_addr = (uint64_t)
-			(KERNEL_LOAD_OFF(ctx) + setup_size + 0x200);
+			(KERNEL_LOAD_OFF(ctx) + setup_size);
 		ret = acrn_prepare_zeropage(ctx, setup_size);
 		if (ret)
 			return ret;
