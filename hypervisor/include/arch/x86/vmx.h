@@ -453,10 +453,6 @@
 			CR4_VMXE | CR4_SMXE | CR4_PGE | CR4_PCIDE)
 #define CR4_READ_SHADOW (CR4_PGE | CR4_PSE)
 
-/* VCPU config definitions */
-#define REAL_MODE               1
-#define PAGE_PROTECTED_MODE     2
-
 /* External Interfaces */
 int exec_vmxon_instr(void);
 uint64_t exec_vmread(uint32_t field);

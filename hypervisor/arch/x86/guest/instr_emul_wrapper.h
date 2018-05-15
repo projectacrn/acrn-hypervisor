@@ -124,20 +124,6 @@ struct seg_desc {
 #define	SEG_DESC_GRANULARITY(access)	(((access) & 0x8000) ? 1 : 0)
 #define	SEG_DESC_UNUSABLE(access)	(((access) & 0x10000) ? 1 : 0)
 
-enum vm_cpu_mode {
-	CPU_MODE_REAL,
-	CPU_MODE_PROTECTED,
-	CPU_MODE_COMPATIBILITY,		/* IA-32E mode (CS.L = 0) */
-	CPU_MODE_64BIT,			/* IA-32E mode (CS.L = 1) */
-};
-
-enum vm_paging_mode {
-	PAGING_MODE_FLAT,
-	PAGING_MODE_32,
-	PAGING_MODE_PAE,
-	PAGING_MODE_64,
-};
-
 struct vm_guest_paging {
 	uint64_t	cr3;
 	int		cpl;

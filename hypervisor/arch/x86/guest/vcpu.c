@@ -265,9 +265,9 @@ void reset_vcpu(struct vcpu *vcpu)
 void init_vcpu(struct vcpu *vcpu)
 {
 	if (is_vcpu_bsp(vcpu))
-		vcpu->arch_vcpu.cpu_mode = PAGE_PROTECTED_MODE;
+		vcpu->arch_vcpu.cpu_mode = CPU_MODE_64BIT;
 	else
-		vcpu->arch_vcpu.cpu_mode = REAL_MODE;
+		vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
 	/* init_vmcs is delayed to vcpu vmcs launch first time */
 }
 
@@ -336,9 +336,9 @@ int prepare_vcpu(struct vm *vm, int pcpu_id)
 		if (!vm_sw_loader)
 			vm_sw_loader = general_sw_loader;
 		vm_sw_loader(vm, vcpu);
-		vcpu->arch_vcpu.cpu_mode = PAGE_PROTECTED_MODE;
+		vcpu->arch_vcpu.cpu_mode = CPU_MODE_64BIT;
 	} else {
-		vcpu->arch_vcpu.cpu_mode = REAL_MODE;
+		vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
 	}
 
 	/* init_vmcs is delayed to vcpu vmcs launch first time */
