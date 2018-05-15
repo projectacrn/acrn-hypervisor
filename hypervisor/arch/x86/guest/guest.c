@@ -153,6 +153,26 @@ int copy_to_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
 	return 0;
 }
 
+enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
+{
+	struct run_context *cur_context =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+	enum vm_cpu_mode cpu_mode;
+
+	cpu_mode = get_vcpu_mode(vcpu);
+
+	if (cpu_mode == CPU_MODE_REAL)
+		return PAGING_MODE_0_LEVEL;
+	else if (cpu_mode == CPU_MODE_PROTECTED) {
+		if (cur_context->cr4 & CR4_PAE)
+			return PAGING_MODE_3_LEVEL;
+		else if (cur_context->cr0 & CR0_PG)
+			return PAGING_MODE_2_LEVEL;
+		return PAGING_MODE_0_LEVEL;
+	} else	/* compatibility or 64bit mode */
+		return PAGING_MODE_4_LEVEL;
+}
+
 uint64_t gva2gpa(struct vm *vm, uint64_t cr3, uint64_t gva)
 {
 	int level, index, shift;

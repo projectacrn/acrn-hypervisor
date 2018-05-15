@@ -281,7 +281,7 @@ static void get_guest_paging_info(struct vcpu *vcpu, struct emul_cnx *emul_cnx)
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3;
 	emul_cnx->paging.cpl = cpl;
 	emul_cnx->paging.cpu_mode = get_vcpu_mode(vcpu);
-	emul_cnx->paging.paging_mode = PAGING_MODE_FLAT;/*maybe change later*/
+	emul_cnx->paging.paging_mode = get_vcpu_paging_mode(vcpu);
 }
 
 static int mmio_read(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t *rval,
