@@ -34,7 +34,6 @@
 #include <bsp_extern.h>
 #include <hv_arch.h>
 #include <schedule.h>
-#include <version.h>
 #include <hv_debug.h>
 
 #ifdef CONFIG_EFI_STUB
@@ -501,16 +500,9 @@ void bsp_boot_init(void)
 	init_logmsg(LOG_BUF_SIZE,
 		       LOG_DESTINATION);
 
-	if (HV_RC_VERSION)
-		printf("HV version %d.%d-rc%d-%s-%s %s build by %s, start time %lluus\r\n",
-			HV_MAJOR_VERSION, HV_MINOR_VERSION, HV_RC_VERSION,
-			HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_TYPE,
-			HV_BUILD_USER, TICKS_TO_US(start_tsc));
-	else
-		printf("HV version %d.%d-%s-%s %s build by %s, start time %lluus\r\n",
-			HV_MAJOR_VERSION, HV_MINOR_VERSION,
-			HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_TYPE,
-			HV_BUILD_USER, TICKS_TO_US(start_tsc));
+	printf("HV version %s, type: %s built by %s@%s, start time %lluus\r\n",
+		HV_VERSION, HV_BUILD_TYPE, HV_BUILD_USER, HV_BUILD_TIME,
+		TICKS_TO_US(start_tsc));
 
 	printf("API version %d.%d\r\n",
 			HV_API_MAJOR_VERSION, HV_API_MINOR_VERSION);

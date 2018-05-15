@@ -2,9 +2,8 @@
 # ACRN Hypervisor
 #
 
-MAJOR_VERSION=0
-MINOR_VERSION=1
-RC_VERSION=4
+HV_VERSION := $(shell git --no-pager describe --tags --always --dirty)
+HV_BUILD_TIME := $(shell date -Iseconds)
 
 API_MAJOR_VERSION=1
 API_MINOR_VERSION=0
@@ -30,6 +29,17 @@ CFLAGS += -mno-red-zone
 CFLAGS += -static -nostdinc -nostdlib -fno-common
 CFLAGS += -O2 -D_FORTIFY_SOURCE=2
 CFLAGS += -Wformat -Wformat-security
+
+CFLAGS += -DHV_VERSION=\"$(HV_VERSION)\"
+CFLAGS += -DHV_BUILD_USER=\"$(USER)\"
+CFLAGS += -DHV_BUILD_TIME=\"$(HV_BUILD_TIME)\"
+ifeq ($(RELEASE),0)
+	CFLAGS += -DHV_BUILD_TYPE=\"DBG\"
+else
+	CFLAGS += -DHV_BUILD_TYPE=\"REL\"
+endif
+CFLAGS += -DHV_API_MAJOR_VERSION=$(API_MAJOR_VERSION)
+CFLAGS += -DHV_API_MINOR_VERSION=$(API_MINOR_VERSION)
 
 ifdef STACK_PROTECTOR
 ifeq (true, $(shell [ $(GCC_MAJOR) -gt 4 ] && echo true))
@@ -173,11 +183,9 @@ endif
 S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(S_SRCS))
 
 DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
-VERSION := bsp/$(PLATFORM)/include/bsp/version.h
 
 .PHONY: all
-all: $(VERSION) $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
-	rm -f $(VERSION)
+all: $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
 ifeq ($(PLATFORM), uefi)
 all: efi
@@ -204,7 +212,6 @@ $(HV_OBJDIR)/$(HV_FILE).out: $(C_OBJS) $(S_OBJS)
 clean:
 	rm -f $(C_OBJS)
 	rm -f $(S_OBJS)
-	rm -f $(VERSION)
 	rm -rf $(HV_OBJDIR)
 
 .PHONY: distclean
@@ -212,28 +219,8 @@ distclean:
 	rm -f $(DISTCLEAN_OBJS)
 	rm -f $(C_OBJS)
 	rm -f $(S_OBJS)
-	rm -f $(VERSION)
 	rm -rf $(HV_OBJDIR)
 	rm -f tags TAGS cscope.files cscope.in.out cscope.out cscope.po.out GTAGS GPATH GRTAGS GSYMS
-
-PHONY: (VERSION)
-$(VERSION):
-	touch $(VERSION)
-	@COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
-	DIRTY=`git diff-index --name-only HEAD`;\
-	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
-	TIME=`date "+%F %T"`;\
-	if [ $(RELEASE) = 0 ];then BUILD_TYPE="DBG";else BUILD_TYPE="REL";fi;\
-	cat license_header > $(VERSION);\
-	echo "#define HV_MAJOR_VERSION $(MAJOR_VERSION)" >> $(VERSION);\
-	echo "#define HV_MINOR_VERSION $(MINOR_VERSION)" >> $(VERSION);\
-	echo "#define HV_RC_VERSION $(RC_VERSION)" >> $(VERSION);\
-	echo "#define HV_API_MAJOR_VERSION $(API_MAJOR_VERSION)" >> $(VERSION);\
-	echo "#define HV_API_MINOR_VERSION $(API_MINOR_VERSION)" >> $(VERSION);\
-	echo "#define HV_BUILD_VERSION "\""$$PATCH"\""" >> $(VERSION);\
-	echo "#define HV_BUILD_TYPE "\""$$BUILD_TYPE"\""" >> $(VERSION);\
-	echo "#define HV_BUILD_TIME "\""$$TIME"\""" >> $(VERSION);\
-	echo "#define HV_BUILD_USER "\""$(USER)"\""" >> $(VERSION)
 
 $(HV_OBJDIR)/%.o: %.c
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
