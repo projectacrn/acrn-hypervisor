@@ -116,9 +116,6 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 		}
 
 		if (direction == 0) {
-			if (handler->desc.io_write == NULL)
-				continue;
-
 			handler->desc.io_write(handler, vm, port, sz,
 				cur_context->guest_cpu_regs.regs.rax);
 
@@ -127,7 +124,7 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 
 			status = 0;
 			break;
-		} else if (handler->desc.io_read) {
+		} else {
 			uint32_t data = handler->desc.io_read(handler, vm,
 							 port, sz);
 
@@ -221,21 +218,6 @@ static void deny_guest_io_access(struct vm *vm, uint32_t address, uint32_t nbyte
 	}
 }
 
-static uint32_t
-default_io_read(__unused struct vm_io_handler *hdlr, __unused struct vm *vm,
-			uint16_t address, size_t width)
-{
-	uint32_t v = io_read(address, width);
-	return v;
-}
-
-static void default_io_write(__unused struct vm_io_handler *hdlr,
-			__unused struct vm *vm, uint16_t addr,
-			size_t width, uint32_t v)
-{
-	io_write(v, addr, width);
-}
-
 static struct vm_io_handler *create_io_handler(uint32_t port, uint32_t len,
 				io_read_fn_t io_read_fn_ptr,
 				io_write_fn_t io_write_fn_ptr)
@@ -280,23 +262,17 @@ void register_io_emulation_handler(struct vm *vm, struct vm_io_range *range,
 		io_write_fn_t io_write_fn_ptr)
 {
 	struct vm_io_handler *handler = NULL;
-	io_read_fn_t io_read_fn = &default_io_read;
-	io_write_fn_t io_write_fn = &default_io_write;
 
-	if (range->flags == IO_ATTR_RW && io_read_fn_ptr && io_write_fn_ptr) {
-		io_read_fn = io_read_fn_ptr;
-		io_write_fn = io_write_fn_ptr;
-	} else if (range->flags == IO_ATTR_R) {
-		if (io_read_fn_ptr)
-			io_read_fn = io_read_fn_ptr;
-		io_write_fn = NULL;
+	if (io_read_fn_ptr == NULL || io_write_fn_ptr == NULL) {
+		pr_err("Invalid IO handler.");
+		return;
 	}
 
 	if (is_vm0(vm))
 		deny_guest_io_access(vm, range->base, range->len);
 
 	handler = create_io_handler(range->base,
-			range->len, io_read_fn, io_write_fn);
+			range->len, io_read_fn_ptr, io_write_fn_ptr);
 
 	register_io_handler(vm, handler);
 }
