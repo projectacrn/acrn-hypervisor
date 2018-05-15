@@ -11,3 +11,10 @@ d. Update the bsp/uefi/clearlinux/acrn.conf file by filling the field <UUID of r
 e. Copy bsp/uefi/clearlinux/acrn.conf to loader\\entries\\ directory.
 f. Reboot.
 g. If you want to recover to original os loader, just replace the bootloaderx64.efi with bootloaderx64_origin.efi.
+
+Note:
+There are two kind of DM memory allocation mechanism - CMA & Hugetlb, they can be choose but hugetlb will become default one.
+- To support CMA, please make sure:
+  a. add "cma=reserved_mem_size@recommend_memory_offset-0" like "cma=2560M@0x100000000-0" to the SOS cmdline in acrn.conf
+  b. start acrn-dm without "-T" option
+- To support Hugetlb, please refer to Documentation/ACRN_HUGETLB.txt
