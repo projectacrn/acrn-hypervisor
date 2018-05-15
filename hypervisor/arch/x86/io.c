@@ -108,10 +108,12 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 		if ((port >= handler->desc.addr + handler->desc.len) ||
 				(port + sz <= handler->desc.addr))
 			continue;
-
-		/* Dom0 do not require IO emulation */
-		if (is_vm0(vm))
-			status = 0;
+		else if (!((port >= handler->desc.addr) && ((port + sz)
+				<= (handler->desc.addr + handler->desc.len)))) {
+			pr_fatal("Err:IO, port 0x%04x, size=%u spans devices",
+					port, sz);
+			return -EIO;
+		}
 
 		if (direction == 0) {
 			if (handler->desc.io_write == NULL)
@@ -149,13 +151,10 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 	}
 
 	if (status != 0) {
-		pr_fatal("IO %s access to port 0x%04x, size=%u",
+		pr_fatal("Err:IO %s access to port 0x%04x, size=%u",
 				direction ? "read" : "write", port, sz);
 
 	}
-
-	/* Catch any problems */
-	ASSERT(status == 0, "Invalid IO access");
 
 	return status;
 }
