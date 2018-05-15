@@ -413,11 +413,61 @@ int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
 	return ret;
 }
 
-int64_t hcall_set_vm_memmap(struct vm *vm, uint64_t vmid, uint64_t param)
+int64_t _set_vm_memmap(struct vm *vm, struct vm *target_vm,
+	struct vm_set_memmap *memmap)
 {
-	int64_t ret = 0;
 	uint64_t hpa;
 	uint32_t attr, prot;
+
+	if ((memmap->length & 0xFFF) != 0) {
+		pr_err("%s: ERROR! [vm%d] map size 0x%x is not page aligned",
+				__func__, target_vm->attr.id, memmap->length);
+		return -1;
+	}
+
+	hpa = gpa2hpa(vm, memmap->vm0_gpa);
+	dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x size=0x%x",
+		target_vm->attr.id, memmap->remote_gpa, hpa, memmap->length);
+
+	if (((hpa <= CONFIG_RAM_START) &&
+		(hpa + memmap->length > CONFIG_RAM_START)) ||
+		((hpa >= CONFIG_RAM_START) &&
+		(hpa < CONFIG_RAM_START + CONFIG_RAM_SIZE))) {
+		pr_err("%s: ERROR! overlap the HV memory region.", __func__);
+		return -1;
+	}
+
+	/* Check prot */
+	attr = 0;
+	if (memmap->type != MAP_UNMAP) {
+		prot = (memmap->prot != 0) ? memmap->prot : memmap->prot_2;
+		if (prot & MEM_ACCESS_READ)
+			attr |= MMU_MEM_ATTR_READ;
+		if (prot & MEM_ACCESS_WRITE)
+			attr |= MMU_MEM_ATTR_WRITE;
+		if (prot & MEM_ACCESS_EXEC)
+			attr |= MMU_MEM_ATTR_EXECUTE;
+		if (prot & MEM_TYPE_WB)
+			attr |= MMU_MEM_ATTR_WB_CACHE;
+		else if (prot & MEM_TYPE_WT)
+			attr |= MMU_MEM_ATTR_WT_CACHE;
+		else if (prot & MEM_TYPE_UC)
+			attr |= MMU_MEM_ATTR_UNCACHED;
+		else if (prot & MEM_TYPE_WC)
+			attr |= MMU_MEM_ATTR_WC;
+		else if (prot & MEM_TYPE_WP)
+			attr |= MMU_MEM_ATTR_WP;
+		else
+			attr |= MMU_MEM_ATTR_UNCACHED;
+	}
+
+	/* create gpa to hpa EPT mapping */
+	return ept_mmap(target_vm, hpa,
+		memmap->remote_gpa, memmap->length, memmap->type, attr);
+}
+
+int64_t hcall_set_vm_memmap(struct vm *vm, uint64_t vmid, uint64_t param)
+{
 	struct vm_set_memmap memmap;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
@@ -441,53 +491,49 @@ int64_t hcall_set_vm_memmap(struct vm *vm, uint64_t vmid, uint64_t param)
 		return -1;
 	}
 
-	if ((memmap.length & 0xFFF) != 0) {
-		pr_err("%s: ERROR! [vm%d] map size 0x%x is not page aligned",
-				__func__, vmid, memmap.length);
+	return _set_vm_memmap(vm, target_vm, &memmap);
+}
+
+int64_t hcall_set_vm_memmaps(struct vm *vm, uint64_t param)
+{
+	struct set_memmaps set_memmaps;
+	struct memory_map *regions;
+	struct vm *target_vm;
+	unsigned int idx;
+
+	if (!is_vm0(vm)) {
+		pr_err("%s: ERROR! Not coming from service vm",
+				__func__);
 		return -1;
 	}
 
-	hpa = gpa2hpa(vm, memmap.vm0_gpa);
-	dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x size=0x%x",
-			vmid, memmap.remote_gpa, hpa, memmap.length);
+	memset((void *)&set_memmaps, 0, sizeof(set_memmaps));
 
-	if (((hpa <= CONFIG_RAM_START) &&
-		(hpa + memmap.length > CONFIG_RAM_START)) ||
-		((hpa >= CONFIG_RAM_START) &&
-		(hpa < CONFIG_RAM_START + CONFIG_RAM_SIZE))) {
-		pr_err("%s: ERROR! overlap the HV memory region.", __func__);
+	if (copy_from_vm(vm, &set_memmaps, param, sizeof(set_memmaps))) {
+		pr_err("%s: Unable copy param from vm\n", __func__);
 		return -1;
 	}
 
-	/* Check prot */
-	attr = 0;
-	if (memmap.type != MAP_UNMAP) {
-		prot = memmap.prot;
-		if (prot & MEM_ACCESS_READ)
-			attr |= MMU_MEM_ATTR_READ;
-		if (prot & MEM_ACCESS_WRITE)
-			attr |= MMU_MEM_ATTR_WRITE;
-		if (prot & MEM_ACCESS_EXEC)
-			attr |= MMU_MEM_ATTR_EXECUTE;
-		if (prot & MEM_TYPE_WB)
-			attr |= MMU_MEM_ATTR_WB_CACHE;
-		else if (prot & MEM_TYPE_WT)
-			attr |= MMU_MEM_ATTR_WT_CACHE;
-		else if (prot & MEM_TYPE_UC)
-			attr |= MMU_MEM_ATTR_UNCACHED;
-		else if (prot & MEM_TYPE_WC)
-			attr |= MMU_MEM_ATTR_WC;
-		else if (prot & MEM_TYPE_WP)
-			attr |= MMU_MEM_ATTR_WP;
-		else
-			attr |= MMU_MEM_ATTR_UNCACHED;
+	target_vm = get_vm_from_vmid(set_memmaps.vmid);
+	if (is_vm0(target_vm)) {
+		pr_err("%s: ERROR! Targeting to service vm",
+				__func__);
+		return -1;
 	}
 
-	/* create gpa to hpa EPT mapping */
-	ret = ept_mmap(target_vm, hpa,
-			memmap.remote_gpa, memmap.length, memmap.type, attr);
-
-	return ret;
+	idx = 0;
+	/*TODO: use copy_from_vm for this buffer page */
+	regions = GPA2HVA(vm, set_memmaps.memmaps_gpa);
+	while (idx < set_memmaps.memmaps_num) {
+		/* the force pointer change below is for back compatible
+		 * to struct vm_set_memmap, it will be removed in the future
+		 */
+		if (_set_vm_memmap(vm, target_vm,
+			(struct vm_set_memmap *)&regions[idx]) < 0)
+			return -1;
+		idx++;
+	}
+	return 0;
 }
 
 int64_t hcall_remap_pci_msix(struct vm *vm, uint64_t vmid, uint64_t param)

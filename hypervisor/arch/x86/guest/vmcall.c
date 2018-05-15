@@ -110,6 +110,10 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 		ret = hcall_set_vm_memmap(vm, param1, param2);
 		break;
 
+	case HC_VM_SET_MEMMAPS:
+		ret = hcall_set_vm_memmaps(vm, param1);
+		break;
+
 	case HC_VM_PCI_MSIX_REMAP:
 		ret = hcall_remap_pci_msix(vm, param1, param2);
 		break;

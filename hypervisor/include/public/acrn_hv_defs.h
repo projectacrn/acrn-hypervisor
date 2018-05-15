@@ -80,6 +80,7 @@
 #define HC_ID_MEM_BASE              0x40UL
 #define HC_VM_SET_MEMMAP            _HC_ID(HC_ID, HC_ID_MEM_BASE + 0x00)
 #define HC_VM_GPA2HPA               _HC_ID(HC_ID, HC_ID_MEM_BASE + 0x01)
+#define HC_VM_SET_MEMMAPS           _HC_ID(HC_ID, HC_ID_MEM_BASE + 0x02)
 
 /* PCI assignment*/
 #define HC_ID_PCI_BASE              0x50UL
@@ -140,8 +141,8 @@ struct vm_set_memmap {
 	/** map type: MAP_MEM, MAP_MMIO or MAP_UNMAP */
 	uint32_t type;
 
-	/** reserved for alignment padding */
-	uint32_t reserved;
+	/** memory attributes: memory type + RWX access right */
+	uint32_t prot;
 
 	/** guest physical address to map */
 	uint64_t remote_gpa;
@@ -152,9 +153,45 @@ struct vm_set_memmap {
 	/** length of the map range */
 	uint64_t length;
 
+	/** old memory attributes(will be removed in the future):
+	 * memory type + RWX access right */
+	uint32_t prot_2;
+} __aligned(8);
+
+struct memory_map {
+	/** map type: MAP_MEM, MAP_MMIO or MAP_UNMAP */
+	uint32_t type;
+
 	/** memory attributes: memory type + RWX access right */
 	uint32_t prot;
+
+	/** guest physical address to map */
+	uint64_t remote_gpa;
+
+	/** VM0's guest physcial address which remote gpa will be mapped to */
+	uint64_t vm0_gpa;
+
+	/** length of the map range */
+	uint64_t length;
+
 } __aligned(8);
+
+/**
+ * multi memmap regions hypercall, used for HC_VM_SET_MEMMAPS
+ */
+struct set_memmaps {
+	/** vmid for this hypercall */
+	uint64_t vmid;
+
+	/**  multi memmaps numbers */
+	uint32_t memmaps_num;
+
+	/** the gpa of memmaps buffer, point to the memmaps array:
+	 *  	struct memory_map regions[memmaps_num]
+	 * the max buffer size is one page.
+	 */
+	uint64_t memmaps_gpa;
+} __attribute__((aligned(8)));
 
 /**
  * Setup parameter for share buffer, used for HC_SETUP_SBUF hypercall
