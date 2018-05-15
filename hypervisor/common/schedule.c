@@ -73,12 +73,8 @@ int allocate_pcpu(void)
 	int i;
 
 	for (i = 0; i < phy_cpu_num; i++) {
-		if (bitmap_test_and_set(i, &pcpu_used_bitmap) == 0) {
-#ifdef CONFIG_EFI_STUB
-			efi_deferred_wakeup_pcpu(i);
-#endif
+		if (bitmap_test_and_set(i, &pcpu_used_bitmap) == 0)
 			return i;
-		}
 	}
 
 	return -1;

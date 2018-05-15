@@ -971,11 +971,6 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 	mode = icrval & APIC_DELMODE_MASK;
 	phys = ((icrval & APIC_DESTMODE_LOG) == 0);
 
-#ifdef CONFIG_EFI_STUB
-	if (sipi_from_efi_boot_service_exit(dest, mode, vec))
-		return 0;
-#endif
-
 	if (mode == APIC_DELMODE_FIXED && vec < 16) {
 		vlapic_set_error(vlapic, APIC_ESR_SEND_ILLEGAL_VECTOR);
 		dev_dbg(ACRN_DBG_LAPIC, "Ignoring invalid IPI %d", vec);

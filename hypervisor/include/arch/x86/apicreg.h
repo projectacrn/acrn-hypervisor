@@ -521,9 +521,4 @@ struct ioapic {
 
 #define IOAPIC_RTE_INTVEC	0x000000ff /*R/W: INT vector field*/
 
-#ifdef CONFIG_EFI_STUB
-int sipi_from_efi_boot_service_exit(uint32_t dest, uint32_t mode, uint32_t vec);
-void efi_deferred_wakeup_pcpu(int cpu_id);
-#endif
-
 #endif /* _APICREG_H_ */
