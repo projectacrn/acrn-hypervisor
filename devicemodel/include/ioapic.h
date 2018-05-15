@@ -36,6 +36,7 @@ struct pci_vdev;
  * Allocate a PCI IRQ from the I/O APIC.
  */
 void	ioapic_init(struct vmctx *ctx);
+void	ioapic_deinit(void);
 int	ioapic_pci_alloc_irq(struct pci_vdev *pi);
 
 #endif
