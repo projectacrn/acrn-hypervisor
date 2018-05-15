@@ -64,6 +64,9 @@ void *memset(void *base, uint8_t v, size_t n);
 void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen);
 int udiv64(uint64_t dividend, uint64_t divisor, struct udiv_result *res);
 int udiv32(uint32_t dividend, uint32_t divisor, struct udiv_result *res);
+int atoi(const char *str);
+long strtol(const char *nptr, char **endptr, register int base);
+uint64_t strtoul(const char *nptr, char **endptr, register int base);
 
 extern uint64_t tsc_hz;
 #define US_TO_TICKS(x)	((x) * tsc_hz / 1000000UL)

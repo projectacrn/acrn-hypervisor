@@ -41,7 +41,6 @@
 #include <util.h>
 #include <list.h>
 #include <bits.h>
-#include <strtol.h>
 #include <sprintf.h>
 
 #endif /* HV_LIB_H */
