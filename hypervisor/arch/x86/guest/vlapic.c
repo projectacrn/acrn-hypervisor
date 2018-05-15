@@ -1049,7 +1049,11 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 			/* put target vcpu to INIT state and wait for SIPI */
 			pause_vcpu(target_vcpu, VCPU_PAUSED);
 			reset_vcpu(target_vcpu);
-			target_vcpu->arch_vcpu.nr_sipi = 2;
+			/* new cpu model only need one SIPI to kick AP run,
+			 * the second SIPI will be ignored as it move out of
+			 * wait-for-SIPI state.
+			 */
+			target_vcpu->arch_vcpu.nr_sipi = 1;
 
 			return 0;
 		}
