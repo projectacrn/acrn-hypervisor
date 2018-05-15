@@ -264,12 +264,12 @@ static void init_guest_state(struct vcpu *vcpu)
 
 	/* Setup guest control register values */
 	/* Set up guest CRO field */
-	if (get_vcpu_mode(vcpu) == REAL_MODE) {
+	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL) {
 		/*cur_context->cr0 = (CR0_CD | CR0_NW | CR0_ET | CR0_NE);*/
 		cur_context->cr0 = CR0_ET | CR0_NE;
 		cur_context->cr3 = 0;
 		cur_context->cr4 = CR4_VMXE;
-	} else if (get_vcpu_mode(vcpu) == PAGE_PROTECTED_MODE) {
+	} else if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
 		cur_context->cr0 = ((uint64_t)CR0_PG | CR0_PE | CR0_NE);
 		cur_context->cr4 = ((uint64_t)CR4_PSE | CR4_PAE | CR4_MCE | CR4_VMXE);
 		cur_context->cr3 = vm->arch_vm.guest_init_pml4 | CR3_PWT;
@@ -303,7 +303,7 @@ static void init_guest_state(struct vcpu *vcpu)
 	/***************************************************/
 	/* Set Code Segment - CS */
 	/***************************************************/
-	if (get_vcpu_mode(vcpu) == REAL_MODE) {
+	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL) {
 		/* AP is initialized with real mode
 		 * and CS value is left shift 8 bits from sipi vector;
 		 */
@@ -343,7 +343,7 @@ static void init_guest_state(struct vcpu *vcpu)
 	/***************************************************/
 	/* Set up guest instruction pointer */
 	field = VMX_GUEST_RIP;
-	if (get_vcpu_mode(vcpu) == REAL_MODE)
+	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL)
 		value32 = 0;
 	else
 		value32 = (uint32_t) ((uint64_t) vcpu->entry_addr & 0xFFFFFFFF);
@@ -351,7 +351,7 @@ static void init_guest_state(struct vcpu *vcpu)
 	pr_dbg("GUEST RIP on VMEntry %x ", value32);
 	exec_vmwrite(field, value32);
 
-	if (get_vcpu_mode(vcpu) == PAGE_PROTECTED_MODE) {
+	if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
 		/* Set up guest stack pointer to 0 */
 		field = VMX_GUEST_RSP;
 		value32 = 0;
@@ -365,13 +365,13 @@ static void init_guest_state(struct vcpu *vcpu)
 	/***************************************************/
 
 	/* GDTR - Global Descriptor Table */
-	if (get_vcpu_mode(vcpu) == REAL_MODE) {
+	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL) {
 		/* Base */
 		base = 0;
 
 		/* Limit */
 		limit = 0xFFFF;
-	} else if (get_vcpu_mode(vcpu) == PAGE_PROTECTED_MODE) {
+	} else if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
 		descriptor_table gdtb = {0, 0};
 
 		/* Base *//* TODO: Should guest GDTB point to host GDTB ? */
@@ -400,13 +400,13 @@ static void init_guest_state(struct vcpu *vcpu)
 	pr_dbg("VMX_GUEST_GDTR_LIMIT: 0x%x ", limit);
 
 	/* IDTR - Interrupt Descriptor Table */
-	if (get_vcpu_mode(vcpu) == REAL_MODE) {
+	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL) {
 		/* Base */
 		base = 0;
 
 		/* Limit */
 		limit = 0xFFFF;
-	} else if (get_vcpu_mode(vcpu) == PAGE_PROTECTED_MODE) {
+	} else if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
 		descriptor_table idtb = {0, 0};
 
 		/* TODO: Should guest IDTR point to host IDTR ? */
@@ -444,11 +444,11 @@ static void init_guest_state(struct vcpu *vcpu)
 	/* ES, CS, SS, DS, FS, GS */
 	/***************************************************/
 	data32_idx = 0x10;
-	if (get_vcpu_mode(vcpu) == REAL_MODE) {
+	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL) {
 		es = ss = ds = fs = gs = data32_idx;
 		limit = 0xffff;
 
-	} else if (get_vcpu_mode(vcpu) == PAGE_PROTECTED_MODE) {
+	} else if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
 		asm volatile ("movw %%es, %%ax":"=a" (es));
 		asm volatile ("movw %%ss, %%ax":"=a" (ss));
 		asm volatile ("movw %%ds, %%ax":"=a" (ds));
@@ -496,9 +496,9 @@ static void init_guest_state(struct vcpu *vcpu)
 	pr_dbg("VMX_GUEST_GS_LIMIT: 0x%x ", limit);
 
 	/* Access */
-	if (get_vcpu_mode(vcpu) == REAL_MODE)
+	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL)
 		value32 = 0x0093;
-	else if (get_vcpu_mode(vcpu) == PAGE_PROTECTED_MODE)
+	else if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT)
 		value32 = 0xc093;
 
 	field = VMX_GUEST_ES_ATTR;
@@ -609,7 +609,7 @@ static void init_guest_state(struct vcpu *vcpu)
 	pr_dbg("VMX_GUEST_IA32_PAT: 0x%016llx ",
 		  value64);
 
-	if (get_vcpu_mode(vcpu) == REAL_MODE) {
+	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL) {
 		/* Disable long mode (clear IA32_EFER.LME) in VMCS IA32_EFER
 		 * MSR
 		 */
@@ -1024,7 +1024,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	fixed0 = msr_read(MSR_IA32_VMX_CR0_FIXED0);
 	fixed1 = msr_read(MSR_IA32_VMX_CR0_FIXED1);
 
-	if (get_vcpu_mode(vcpu) == REAL_MODE) {
+	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL) {
 		/* Check to see if unrestricted guest support is available */
 		if (msr_read(MSR_IA32_VMX_MISC) & (1 << 5)) {
 			/* Adjust fixed bits as they can/will reflect incorrect
@@ -1047,7 +1047,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 
 	}
 
-	/* (get_vcpu_mode(vcpu) == REAL_MODE) */
+	/* (get_vcpu_mode(vcpu) == CPU_MODE_REAL) */
 	/* Output fixed CR0 values */
 	pr_dbg("Fixed0 CR0 value: 0x%x", fixed0);
 	pr_dbg("Fixed1 CR0 value: 0x%x", fixed1);
@@ -1129,7 +1129,7 @@ static void init_entry_ctrl(__unused struct vcpu *vcpu)
 	 * IA32_PAT and IA32_EFER
 	 */
 	value32 = msr_read(MSR_IA32_VMX_ENTRY_CTLS);
-	if (get_vcpu_mode(vcpu) == PAGE_PROTECTED_MODE)
+	if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT)
 		value32 |= (VMX_ENTRY_CTLS_IA32E_MODE);
 
 	value32 |= (VMX_ENTRY_CTLS_LOAD_EFER |
@@ -1197,7 +1197,7 @@ static void override_uefi_vmcs(struct vcpu *vcpu)
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 
-	if (get_vcpu_mode(vcpu) == PAGE_PROTECTED_MODE) {
+	if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
 		/* Set up guest CR0 field */
 		field = VMX_GUEST_CR0;
 		cur_context->cr0 = efi_ctx->cr0 | CR0_PG | CR0_PE | CR0_NE;

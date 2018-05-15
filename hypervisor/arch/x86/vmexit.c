@@ -236,7 +236,7 @@ static int write_cr0(struct vcpu *vcpu, uint64_t value)
 	 * transition from real mode to paged-protected mode
 	 */
 	if (!is_vcpu_bsp(vcpu) &&
-	    (vcpu->arch_vcpu.cpu_mode == REAL_MODE) &&
+	    (vcpu->arch_vcpu.cpu_mode == CPU_MODE_REAL) &&
 	    (value & CR0_PG) && (value & CR0_PE)) {
 		/* Enable protected mode */
 		value32 = exec_vmread(VMX_ENTRY_CONTROLS);

@@ -91,6 +91,20 @@ struct vm_lu_mem_map {
 	uint64_t size;	/* Size of map */
 };
 
+enum vm_cpu_mode {
+	CPU_MODE_REAL,
+	CPU_MODE_PROTECTED,
+	CPU_MODE_COMPATIBILITY,		/* IA-32E mode (CS.L = 0) */
+	CPU_MODE_64BIT,			/* IA-32E mode (CS.L = 1) */
+};
+
+enum vm_paging_mode {
+	PAGING_MODE_FLAT,
+	PAGING_MODE_32,
+	PAGING_MODE_PAE,
+	PAGING_MODE_64,
+};
+
 /*
  * VM related APIs
  */

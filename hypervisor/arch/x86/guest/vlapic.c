@@ -1065,7 +1065,7 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 			if (--target_vcpu->arch_vcpu.nr_sipi > 0)
 				return 0;
 
-			target_vcpu->arch_vcpu.cpu_mode = REAL_MODE;
+			target_vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
 			target_vcpu->arch_vcpu.sipi_vector = vec;
 			pr_err("Start Secondary VCPU%d for VM[%d]...",
 					target_vcpu->vcpu_id,
