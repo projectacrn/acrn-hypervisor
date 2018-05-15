@@ -258,15 +258,6 @@ void reset_vcpu(struct vcpu *vcpu)
 	vlapic_init(vlapic);
 }
 
-void init_vcpu(struct vcpu *vcpu)
-{
-	if (is_vcpu_bsp(vcpu))
-		vcpu->arch_vcpu.cpu_mode = CPU_MODE_64BIT;
-	else
-		vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
-	/* init_vmcs is delayed to vcpu vmcs launch first time */
-}
-
 void pause_vcpu(struct vcpu *vcpu, enum vcpu_state new_state)
 {
 	int pcpu_id = get_cpu_id();

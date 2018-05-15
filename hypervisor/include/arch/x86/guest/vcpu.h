@@ -282,7 +282,6 @@ int shutdown_vcpu(struct vcpu *vcpu);
 int destroy_vcpu(struct vcpu *vcpu);
 
 void reset_vcpu(struct vcpu *vcpu);
-void init_vcpu(struct vcpu *vcpu);
 void pause_vcpu(struct vcpu *vcpu, enum vcpu_state new_state);
 void resume_vcpu(struct vcpu *vcpu);
 void schedule_vcpu(struct vcpu *vcpu);
