@@ -32,10 +32,16 @@ void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 	int data_size, data_page_num;
 	uint8_t *ucode_ptr, *ptr;
 	int chunk_size;
+	int error = 0;
+	uint32_t err_code;
 
 	gva = v - sizeof(struct ucode_header);
 
-	vm_gva2gpa(vcpu, gva, &gpa);
+	err_code = 0;
+	error = vm_gva2gpa(vcpu, gva, &gpa, &err_code);
+	if (error)
+		return;
+
 	uhdr = (struct ucode_header *)GPA2HVA(vcpu->vm, gpa);
 
 	data_size = GET_DATA_SIZE(uhdr) + sizeof(struct ucode_header);
@@ -60,7 +66,12 @@ void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 		ucode_ptr += chunk_size;
 		gva += chunk_size;
 
-		vm_gva2gpa(vcpu, gva, &gpa);
+		err_code = 0;
+		error = vm_gva2gpa(vcpu, gva, &gpa, &err_code);
+		if (error) {
+			free(ucode_ptr);
+			return;
+		}
 		hva = (uint64_t)GPA2HVA(vcpu->vm, gpa);
 	}
 

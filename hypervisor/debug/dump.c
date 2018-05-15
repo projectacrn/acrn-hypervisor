@@ -104,8 +104,16 @@ static void dump_guest_stack(struct vcpu *vcpu)
 	uint64_t page2_size;
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+	uint32_t err_code;
+	int err;
 
-	gpa = gva2gpa(vcpu->vm, cur_context->cr3, cur_context->rsp);
+	err_code = 0;
+	err = gva2gpa(vcpu, cur_context->rsp, &gpa, &err_code);
+	if (err) {
+		printf("gva2gpa failed for guest rsp  0x%016llx\r\n",
+			cur_context->rsp);
+		return;
+	}
 	hpa = gpa2hpa(vcpu->vm, gpa);
 	printf("\r\nGuest Stack:\r\n");
 	printf("Dump stack for vcpu %d, from gva 0x%016llx ->"
@@ -131,8 +139,15 @@ static void dump_guest_stack(struct vcpu *vcpu)
 					"0x%016llx\r\n", (hpa+i*32), tmp[i*4],
 					tmp[i*4+1], tmp[i*4+2], tmp[i*4+3]);
 		}
-		gpa = gva2gpa(vcpu->vm, cur_context->cr3,
+		err_code = 0;
+		err = gva2gpa(vcpu, cur_context->rsp + page1_size, &gpa,
+			&err_code);
+		if (err) {
+			printf("gva2gpa failed for guest rsp  0x%016llx\r\n",
 				cur_context->rsp + page1_size);
+			return;
+
+		}
 		hpa = gpa2hpa(vcpu->vm, gpa);
 		printf("Dump stack for vcpu %d, from gva 0x%016llx ->"
 				"gpa 0x%016llx -> hpa 0x%016llx \r\n",
@@ -159,6 +174,8 @@ static void show_guest_call_trace(struct vcpu *vcpu)
 	uint64_t count = 0;
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+	int err;
+	uint32_t err_code;
 
 	bp =  cur_context->guest_cpu_regs.regs.rbp;
 	printf("Guest Call Trace: **************************************\r\n");
@@ -177,7 +194,11 @@ static void show_guest_call_trace(struct vcpu *vcpu)
 	 *  if the address is invalid, it will cause hv page fault
 	 *  then halt system */
 	while ((count++ < CALL_TRACE_HIERARCHY_MAX) && (bp != 0)) {
-		gpa = gva2gpa(vcpu->vm, cur_context->cr3, bp);
+		err = gva2gpa(vcpu, bp, &gpa, &err_code);
+		if (err) {
+			printf("gva2gpa failed for guest bp 0x%016llx\r\n", bp);
+			break;
+		}
 		hpa  = gpa2hpa(vcpu->vm, gpa);
 		hva = HPA2HVA(hpa);
 		printf("BP_GVA(0x%016llx)->BP_GPA(0x%016llx)"
