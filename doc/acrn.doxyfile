@@ -791,10 +791,10 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  =  custom-doxygen/mainpage.md \
-                          ../acrn-hypervisor/include/common/hypercall.h \
-                          ../acrn-hypervisor/include/public/acrn_common.h \
-                          ../acrn-hypervisor/include/public/acrn_hv_defs.h \
-                          ../acrn-devicemodel/include/virtio.h
+                          ../hypervisor/include/common/hypercall.h \
+                          ../hypervisor/include/public/acrn_common.h \
+                          ../hypervisor/include/public/acrn_hv_defs.h \
+                          ../devicemodel/include/virtio.h
 
 
 # This tag can be used to specify the character encoding of the source files

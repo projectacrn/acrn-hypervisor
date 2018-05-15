@@ -13,7 +13,7 @@ Source code for Project ACRN is maintained in the
 license.
 
 .. _BSD 3-clause license:
-   https://github.com/projectacrn/acrn-hypervisor/blob/doc/master/LICENSE
+   https://github.com/projectacrn/acrn-hypervisor/blob/master/LICENSE
 
 .. _Project ACRN GitHub repo: https://github.com/projectacrn
 

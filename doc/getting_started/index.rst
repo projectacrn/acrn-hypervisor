@@ -270,7 +270,7 @@ Set up Reference UOS
 
       # losetup -f -P --show /root/clear-22140-kvm.img
       # mount /dev/loop0p3 /mnt
-      # cp -r /usr/lib/doc/modules/4.14.34-28.pk414-standard /mnt/lib/doc/modules/
+      # cp -r /usr/lib/modules/4.14.34-28.pk414-standard /mnt/lib/modules/
       # umount /mnt
       # sync
 
@@ -293,7 +293,7 @@ Set up Reference UOS
       and version number highlighted above (the ``-s 3,virtio-blk`` argument) to match
       what you have downloaded above. Likewise, you may need to adjust the kernel file
       name on the second line highlighted (check the exact name to be used using:
-      ``ls /usr/lib/doc/kernel/org.clearlinux*-standard*``).
+      ``ls /usr/lib/kernel/org.clearlinux*-standard*``).
 
    By default, the script is located in the ``/usr/share/acrn/demo/``
    directory. You can edit it there, and then run it to launch the User OS:
@@ -340,7 +340,7 @@ each with their own way to install development tools:
           libpciaccess-dev \
           uuid-dev
 
-* On a Fedora/doc/Redhat development system:
+* On a Fedora/Redhat development system:
 
   .. code-block:: console
 

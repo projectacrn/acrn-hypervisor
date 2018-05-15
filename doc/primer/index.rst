@@ -53,7 +53,7 @@ ACRN hypervisor source tree
   include files for all public APIs (doxygen comments in these source
   files are used to generate the :ref:`acrn_apis` documentation)
 
-**lib/doc/**
+**lib/**
   runtime service libraries
 
 ACRN Device Model source tree
