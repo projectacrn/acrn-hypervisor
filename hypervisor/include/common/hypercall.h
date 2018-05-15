@@ -238,6 +238,17 @@ int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t param);
 int64_t hcall_set_vm_memmap(struct vm *vm, uint64_t vmid, uint64_t param);
 
 /**
+ * @brief setup ept memmory mapping for multi regions
+ *
+ * @param vm Pointer to VM data structure
+ * @param param guest physical address. This gpa points to
+ *              struct set_memmaps
+ *
+ * @return 0 on success, non-zero on error.
+ */
+int64_t hcall_set_vm_memmaps(struct vm *vm, uint64_t param);
+
+/**
  * @brief remap PCI MSI interrupt
  *
  * Remap a PCI MSI interrupt from a VM's virtual vector to native vector.
