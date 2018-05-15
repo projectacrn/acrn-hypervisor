@@ -55,6 +55,10 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 	/* Dispatch the hypercall handler */
 	switch (hypcall_id) {
 	case HC_GET_API_VERSION:
+		/* vm0 will call HC_GET_API_VERSION as first hypercall, fixup
+		 * vm0 vcpu here.
+		 */
+		vm_fixup(vm);
 		ret = hcall_get_api_version(vm, param1);
 		break;
 
