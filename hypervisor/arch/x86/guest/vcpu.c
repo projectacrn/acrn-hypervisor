@@ -7,6 +7,11 @@
 #include <hypervisor.h>
 #include <schedule.h>
 
+#ifdef CONFIG_EFI_STUB
+#include <acrn_efi.h>
+extern struct efi_ctx* efi_ctx;
+#endif
+
 vm_sw_loader_t vm_sw_loader;
 
 /***********************************************************************
@@ -67,14 +72,16 @@ int create_vcpu(int cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 			vcpu->pcpu_id, vcpu->vm->attr.id, vcpu->vcpu_id,
 			is_vcpu_bsp(vcpu) ? "PRIMARY" : "SECONDARY");
 
-	/* Is this VCPU a VM BSP, create page hierarchy for this VM */
-	if (is_vcpu_bsp(vcpu)) {
+#ifdef CONFIG_START_VM0_BSP_64BIT
+	/* Is this VCPU a VM0 BSP, create page hierarchy for this VM */
+	if (is_vcpu_bsp(vcpu) && is_vm0(vcpu->vm)) {
 		/* Set up temporary guest page tables */
 		vm->arch_vm.guest_init_pml4 = create_guest_initial_paging(vm);
 		pr_info("VM *d VCPU %d CR3: 0x%016llx ",
 			vm->attr.id, vcpu->vcpu_id,
 			vm->arch_vm.guest_init_pml4);
 	}
+#endif
 
 	/* Allocate VMCS region for this VCPU */
 	vcpu->arch_vcpu.vmcs = alloc_page();
@@ -319,8 +326,24 @@ int prepare_vcpu(struct vm *vm, int pcpu_id)
 		/* Load VM SW */
 		if (!vm_sw_loader)
 			vm_sw_loader = general_sw_loader;
+		if (is_vm0(vcpu->vm)) {
+			vcpu->arch_vcpu.cpu_mode = CPU_MODE_PROTECTED;
+#ifdef CONFIG_EFI_STUB
+			if ((efi_ctx->efer & MSR_IA32_EFER_LMA_BIT) &&
+			    (efi_ctx->cs_ar & 0x2000))
+				vcpu->arch_vcpu.cpu_mode = CPU_MODE_64BIT;
+#elif CONFIG_START_VM0_BSP_64BIT
+			vcpu->arch_vcpu.cpu_mode = CPU_MODE_64BIT;
+#endif
+		} else {
+#ifdef CONFIG_EFI_STUB
+			/* currently non-vm0 will boot kernel directly */
+			vcpu->arch_vcpu.cpu_mode = CPU_MODE_PROTECTED;
+#else
+			vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
+#endif
+		}
 		vm_sw_loader(vm, vcpu);
-		vcpu->arch_vcpu.cpu_mode = CPU_MODE_64BIT;
 	} else {
 		vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
 	}

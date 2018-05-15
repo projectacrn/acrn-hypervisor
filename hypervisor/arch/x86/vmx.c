@@ -657,6 +657,7 @@ static void init_guest_state(struct vcpu *vcpu)
 		limit = 0xffff;
 
 	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
+		/* Linear data segment in guest init gdt */
 		es = ss = ds = fs = gs = 0x18;
 		limit = 0xffffffff;
 	} else if (vcpu_mode == CPU_MODE_64BIT) {

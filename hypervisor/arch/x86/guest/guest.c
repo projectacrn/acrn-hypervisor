@@ -552,6 +552,7 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 	return 0;
 }
 
+#ifdef CONFIG_START_VM0_BSP_64BIT
 /*******************************************************************
  *         GUEST initial page table
  *
@@ -680,6 +681,7 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 
 	return GUEST_INIT_PAGE_TABLE_START;
 }
+#endif
 
 /*******************************************************************
  *         GUEST initial GDT table
