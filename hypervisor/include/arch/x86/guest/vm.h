@@ -46,6 +46,7 @@ struct vm_attr {
 
 struct vm_hw_info {
 	int num_vcpus;	/* Number of total virtual cores */
+	int exp_num_vcpus;	/* Number of real expected virtual cores */
 	uint32_t created_vcpus;	/* Number of created vcpus */
 	struct vcpu **vcpu_array;	/* vcpu array of this VM */
 	uint64_t gpa_lowtop;    /* top lowmem gpa of this VM */
@@ -218,6 +219,7 @@ int pause_vm(struct vm *vm);
 int start_vm(struct vm *vm);
 int create_vm(struct vm_description *vm_desc, struct vm **vm);
 int prepare_vm0(void);
+void vm_fixup(struct vm *vm);
 
 struct vm *get_vm_from_vmid(int vm_id);
 struct vm_description *get_vm_desc(int idx);
