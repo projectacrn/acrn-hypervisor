@@ -229,62 +229,17 @@ int is_ept_supported(void)
 	return status;
 }
 
-static int check_hv_mmio_range(struct vm *vm, struct mem_io *mmio)
+static int hv_emulate_mmio(struct vcpu *vcpu, struct mem_io *mmio,
+				struct mem_io_node *mmio_handler)
 {
-	int status = false;
-	struct list_head *pos;
-	struct mem_io_node *mmio_node;
-
-
-	list_for_each(pos, &vm->mmio_list) {
-		mmio_node = list_entry(pos, struct mem_io_node, list);
-		/* Check if this handler's range covers this memory access */
-		if ((mmio->paddr >= mmio_node->range_start) &&
-			(mmio->paddr + mmio->access_size <=
-			mmio_node->range_end)) {
-			status = true;
-
-			/* Break from loop - only 1 handler allowed to support
-			 * a given memory range
-			 */
-			break;
-		}
+	if ((mmio->paddr % mmio->access_size) != 0) {
+		pr_err("access size not align with paddr");
+		return -EINVAL;
 	}
 
-	/* Return success for now */
-	return status;
-}
-
-static int hv_emulate_mmio(struct vcpu *vcpu, struct mem_io *mmio)
-{
-	int status = -EINVAL;
-	struct list_head *pos;
-	struct mem_io_node *mmio_node;
-	struct vm *vm = vcpu->vm;
-
-	list_for_each(pos, &vm->mmio_list) {
-		mmio_node = list_entry(pos, struct mem_io_node, list);
-		/* Check if this handler's range covers this memory access */
-		if ((mmio->paddr >= mmio_node->range_start) &&
-			(mmio->paddr + mmio->access_size
-			<= mmio_node->range_end)) {
-
-			ASSERT((mmio->paddr % mmio->access_size) == 0,
-				"access size not align with paddr");
-
-			/* Handle this MMIO operation */
-			status = mmio_node->read_write(vcpu, mmio,
-					mmio_node->handler_private_data);
-
-			/* Break from loop - only 1 handler allowed to support
-			 * given memory range
-			 */
-			break;
-		}
-	}
-
-	/* Return success for now */
-	return status;
+	/* Handle this MMIO operation */
+	return mmio_handler->read_write(vcpu, mmio,
+			mmio_handler->handler_private_data);
 }
 
 int register_mmio_emulation_handler(struct vm *vm,
@@ -409,9 +364,12 @@ static int dm_emulate_mmio_pre(struct vcpu *vcpu, uint64_t exit_qual)
 
 int ept_violation_vmexit_handler(struct vcpu *vcpu)
 {
-	int status;
+	int status = -EINVAL;
 	uint64_t exit_qual;
 	uint64_t gpa;
+	struct list_head *pos;
+	struct mem_io *mmio = &vcpu->mmio;
+	struct mem_io_node *mmio_handler = NULL;
 
 	/* Handle page fault from guest */
 	exit_qual = vcpu->arch_vcpu.exit_qualification;
@@ -419,22 +377,22 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 	/* Specify if read or write operation */
 	if (exit_qual & 0x2) {
 		/* Write operation */
-		vcpu->mmio.read_write = HV_MEM_IO_WRITE;
+		mmio->read_write = HV_MEM_IO_WRITE;
 
 		/* Get write value from appropriate register in context */
 		/* TODO: Need to figure out how to determine value being
 		 * written
 		 */
-		vcpu->mmio.value = 0;
+		mmio->value = 0;
 	} else {
 		/* Read operation */
-		vcpu->mmio.read_write = HV_MEM_IO_READ;
+		mmio->read_write = HV_MEM_IO_READ;
 
 		/* Get sign extension requirements for read */
 		/* TODO: Need to determine how sign extension is determined for
 		 * reads
 		 */
-		vcpu->mmio.sign_extend_read = 0;
+		mmio->sign_extend_read = 0;
 	}
 
 	/* Get the guest physical address */
@@ -444,21 +402,28 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 
 	/* Adjust IPA appropriately and OR page offset to get full IPA of abort
 	 */
-	vcpu->mmio.paddr = gpa;
+	mmio->paddr = gpa;
 
-	/* Check if the MMIO access has a HV registered handler */
-	status = check_hv_mmio_range((struct vm *) vcpu->vm, &vcpu->mmio);
+	list_for_each(pos, &vcpu->vm->mmio_list) {
+		mmio_handler = list_entry(pos, struct mem_io_node, list);
+		if ((mmio->paddr + mmio->access_size <=
+			mmio_handler->range_start) ||
+			(mmio->paddr >= mmio_handler->range_end))
+			continue;
 
-	if (status == true) {
-		/* Fetch and decode current vcpu instruction */
-		status = analyze_instruction(vcpu, &vcpu->mmio);
+		else if (!((mmio->paddr >= mmio_handler->range_start) &&
+			(mmio->paddr + mmio->access_size <=
+			mmio_handler->range_end))) {
+			pr_fatal("Err MMIO, addr:0x%llx, size:%x",
+					mmio->paddr, mmio->access_size);
+			return -EIO;
+		}
 
-		if (status != 0)
+		if (analyze_instruction(vcpu, mmio) != 0)
 			goto out;
 
-		if (vcpu->mmio.read_write == HV_MEM_IO_WRITE) {
-			status = emulate_instruction(vcpu, &vcpu->mmio);
-			if (status != 0)
+		if (mmio->read_write == HV_MEM_IO_WRITE) {
+			if (emulate_instruction(vcpu, mmio) != 0)
 				goto out;
 		}
 
@@ -467,15 +432,18 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 		 * instruction emulation. For MMIO read,
 		 * call hv_emulate_mmio at first.
 		 */
-		status = hv_emulate_mmio(vcpu, &vcpu->mmio);
-
-		if (vcpu->mmio.read_write == HV_MEM_IO_READ) {
+		hv_emulate_mmio(vcpu, mmio, mmio_handler);
+		if (mmio->read_write == HV_MEM_IO_READ) {
 			/* Emulate instruction and update vcpu register set */
-			status = emulate_instruction(vcpu, &vcpu->mmio);
-			if (status != 0)
+			if (emulate_instruction(vcpu, mmio) != 0)
 				goto out;
 		}
-	} else {
+
+		status = 0;
+		break;
+	}
+
+	if (status != 0) {
 		/*
 		 * No mmio handler from HV side, search from VHM in Dom0
 		 *
@@ -486,9 +454,9 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 		 */
 		memset(&vcpu->req, 0, sizeof(struct vhm_request));
 
-		status = dm_emulate_mmio_pre(vcpu, exit_qual);
-		if (status != 0)
+		if (dm_emulate_mmio_pre(vcpu, exit_qual) != 0)
 			goto out;
+
 		status = acrn_insert_request_wait(vcpu, &vcpu->req);
 	}
 
@@ -500,8 +468,6 @@ out:
 
 	pr_fatal("Guest Physical Address address: 0x%016llx",
 			gpa);
-
-	ASSERT(status == true, "EPT violation");
 
 	return status;
 }
