@@ -141,7 +141,10 @@ include/version.h:
 	DIRTY=`git diff-index --name-only HEAD`;\
 	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
 	TIME=`date "+%Y-%m-%d %H:%M:%S"`;\
-	cat license_header > include/version.h;\
+	echo "/*" > include/version.h; \
+	sed 's/^/ * /' ../LICENSE >> include/version.h; \
+	echo " */" >> include/version.h; \
+	echo "" >> include/version.h; \
 	echo "#define DM_MAJOR_VERSION $(MAJOR_VERSION)" >> include/version.h;\
 	echo "#define DM_MINOR_VERSION $(MINOR_VERSION)" >> include/version.h;\
 	echo "#define DM_RC_VERSION $(RC_VERSION)" >> include/version.h;\
