@@ -37,10 +37,6 @@
 #include <version.h>
 #include <hv_debug.h>
 
-#ifdef CONFIG_EFI_STUB
-extern uint32_t efi_physical_available_ap_bitmap;
-#endif
-
 spinlock_t cpu_secondary_spinlock = {
 	.head = 0,
 	.tail = 0
@@ -85,9 +81,7 @@ static void cpu_xsave_init(void);
 static void cpu_set_logical_id(uint32_t logical_id);
 static void print_hv_banner(void);
 int cpu_find_logical_id(uint32_t lapic_id);
-#ifndef CONFIG_EFI_STUB
 static void start_cpus(void);
-#endif
 static void pcpu_sync_sleep(unsigned long *sync, int mask_bit);
 int ibrs_type;
 
@@ -290,21 +284,13 @@ static int init_phy_cpu_storage(void)
 	pcpu_num = parse_madt(lapic_id_base);
 	alloc_phy_cpu_data(pcpu_num);
 
-	for (i = 0; i < pcpu_num; i++) {
+	for (i = 0; i < pcpu_num; i++)
 		per_cpu(lapic_id, i) = *lapic_id_base++;
-#ifdef CONFIG_EFI_STUB
-		efi_physical_available_ap_bitmap |= 1 << per_cpu(lapic_id, i);
-#endif
-	}
 
 	/* free memory after lapic_id are saved in per_cpu data */
 	free(lapic_id_base);
 
 	bsp_lapic_id = get_cur_lapic_id();
-
-#ifdef CONFIG_EFI_STUB
-	efi_physical_available_ap_bitmap &= ~(1 << bsp_lapic_id);
-#endif
 
 	bsp_cpu_id = cpu_find_logical_id(bsp_lapic_id);
 	ASSERT(bsp_cpu_id >= 0, "fail to get phy cpu id");
@@ -543,18 +529,11 @@ void bsp_boot_init(void)
 
 	init_scheduler();
 
-#ifndef CONFIG_EFI_STUB
 	/* Start all secondary cores */
 	start_cpus();
 
 	/* Trigger event to allow secondary CPUs to continue */
 	bitmap_set(0, &pcpu_sync);
-#else
-	memcpy_s(_ld_cpu_secondary_reset_start,
-		(unsigned long)&_ld_cpu_secondary_reset_size,
-		_ld_cpu_secondary_reset_load,
-		(unsigned long)&_ld_cpu_secondary_reset_size);
-#endif
 
 	ASSERT(get_cpu_id() == CPU_BOOT_ID, "");
 
@@ -630,10 +609,6 @@ void cpu_secondary_init(void)
 	/* Wait for boot processor to signal all secondary cores to continue */
 	pcpu_sync_sleep(&pcpu_sync, 0);
 
-#ifdef CONFIG_EFI_STUB
-	bitmap_clr(0, &pcpu_sync);
-#endif
-
 	hv_main(get_cpu_id());
 
 	/* Control will only come here for secondary CPUs not configured for
@@ -654,7 +629,6 @@ int cpu_find_logical_id(uint32_t lapic_id)
 	return -1;
 }
 
-#ifndef CONFIG_EFI_STUB
 /*
  * Start all secondary CPUs.
  */
@@ -700,7 +674,6 @@ static void start_cpus()
 		} while (1);
 	}
 }
-#endif
 
 void cpu_dead(uint32_t logical_id)
 {

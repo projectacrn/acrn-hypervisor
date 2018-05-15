@@ -55,12 +55,8 @@
 #ifdef CONFIG_EFI_STUB
 static void efi_init(void);
 
-uint32_t efi_physical_available_ap_bitmap = 0;
-uint32_t efi_wake_up_ap_bitmap = 0;
 struct efi_ctx* efi_ctx = NULL;
 struct lapic_regs uefi_lapic_regs;
-extern uint32_t up_count;
-extern unsigned long pcpu_sync;
 static int efi_initialized;
 
 void efi_spurious_handler(int vector)
@@ -82,51 +78,6 @@ void efi_spurious_handler(int vector)
 			__func__);
 
 	return;
-}
-
-int sipi_from_efi_boot_service_exit(uint32_t dest, uint32_t mode, uint32_t vec)
-{
-	if (efi_wake_up_ap_bitmap != efi_physical_available_ap_bitmap) {
-		if (mode == APIC_DELMODE_STARTUP) {
-			uint32_t cpu_id = cpu_find_logical_id(dest);
-			send_startup_ipi(INTR_CPU_STARTUP_USE_DEST,
-		       cpu_id, (uint64_t)(vec<<12));
-			efi_wake_up_ap_bitmap |= 1 << dest;
-		}
-
-		return 1;
-	}
-
-	return 0;
-}
-
-void efi_deferred_wakeup_pcpu(int cpu_id)
-{
-	uint32_t timeout;
-	uint32_t expected_up;
-	static uint32_t waked_pcpu_bitmap;
-
-	if ((1 << cpu_id) & waked_pcpu_bitmap)
-		return;
-
-	waked_pcpu_bitmap |= 1 << cpu_id;
-
-	expected_up = up_count + 1;
-
-	send_startup_ipi(INTR_CPU_STARTUP_USE_DEST,
-		cpu_id, (uint64_t)cpu_secondary_reset);
-
-	timeout = CPU_UP_TIMEOUT * 1000;
-
-	while ((up_count != expected_up)) {
-		/* Delay 10us */
-		udelay(10);
-
-		/* Decrement timeout value */
-		timeout -= 10;
-	}
-
-	bitmap_set(0, &pcpu_sync);
 }
 
 int uefi_sw_loader(struct vm *vm, struct vcpu *vcpu)
