@@ -1,11 +1,11 @@
 #
 # ACRN-DM
 #
-MAJOR_VERSION=0
-MINOR_VERSION=1
-RC_VERSION=4
 BASEDIR := $(shell pwd)
 DM_OBJDIR ?= $(CURDIR)/build
+
+DM_VERSION := $(shell git --no-pager describe --tags --always --dirty)
+DM_BUILD_TIME := $(shell date -Iseconds)
 
 CC ?= gcc
 
@@ -17,6 +17,10 @@ CFLAGS += -Wall -ffunction-sections
 CFLAGS += -Werror
 CFLAGS += -O2 -D_FORTIFY_SOURCE=2
 CFLAGS += -Wformat -Wformat-security -fno-strict-aliasing
+
+CFLAGS += -DDM_VERSION=\"$(DM_VERSION)\"
+CFLAGS += -DDM_BUILD_USER=\"$(USER)\"
+CFLAGS += -DDM_BUILD_TIME=\"$(DM_BUILD_TIME)\"
 
 CFLAGS += -I$(BASEDIR)/include
 CFLAGS += -I$(BASEDIR)/include/public
@@ -115,7 +119,7 @@ PROGRAM := acrn-dm
 
 SAMPLES := $(wildcard samples/*)
 
-all: include/version.h $(PROGRAM)
+all: $(PROGRAM)
 	@echo -n ""
 
 $(PROGRAM): $(OBJS)
@@ -123,31 +127,15 @@ $(PROGRAM): $(OBJS)
 
 clean:
 	rm -f $(OBJS)
-	rm -f include/version.h
 	rm -f $(OBJS)
 	rm -rf $(DM_OBJDIR)
 	if test -f $(PROGRAM); then rm $(PROGRAM); fi
 
 distclean:
 	rm -f $(DISTCLEAN_OBJS)
-	rm -f include/version.h
 	rm -f $(OBJS)
 	rm -rf $(DM_OBJDIR)
 	rm -f tags TAGS cscope.files cscope.in.out cscope.out cscope.po.out GTAGS GPATH GRTAGS GSYMS
-
-include/version.h:
-	touch include/version.h
-	@COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
-	DIRTY=`git diff-index --name-only HEAD`;\
-	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
-	TIME=`date "+%Y-%m-%d %H:%M:%S"`;\
-	cat license_header > include/version.h;\
-	echo "#define DM_MAJOR_VERSION $(MAJOR_VERSION)" >> include/version.h;\
-	echo "#define DM_MINOR_VERSION $(MINOR_VERSION)" >> include/version.h;\
-	echo "#define DM_RC_VERSION $(RC_VERSION)" >> include/version.h;\
-	echo "#define DM_BUILD_VERSION "\""$$PATCH"\""" >> include/version.h;\
-	echo "#define DM_BUILD_TIME "\""$$TIME"\""" >> include/version.h;\
-	echo "#define DM_BUILD_USER "\""$(USER)"\""" >> include/version.h
 
 $(DM_OBJDIR)/%.o: %.c $(HEADERS)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
