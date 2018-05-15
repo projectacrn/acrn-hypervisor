@@ -82,6 +82,13 @@
 #define REQUEST_READ	0
 #define REQUEST_WRITE	1
 
+/* IOAPIC device model info */
+#define VIOAPIC_RTE_NUM	48  /* vioapic pins */
+
+#if VIOAPIC_RTE_NUM < 24
+#error "VIOAPIC_RTE_NUM must be larger than 23"
+#endif
+
 /* Generic VM flags from guest OS */
 #define SECURE_WORLD_ENABLED    (1UL<<0)  /* Whether secure world is enabled */
 

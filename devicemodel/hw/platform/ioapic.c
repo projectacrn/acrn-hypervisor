@@ -36,6 +36,9 @@
 #include "pci_core.h"
 #include "lpc.h"
 
+/* 16 IRQs reserved for kdb/mouse, COM1/2, RTC... */
+#define LEGACY_IRQ_NUM	16
+
 /*
  * Assign PCI INTx interrupts to I/O APIC pins in a round-robin
  * fashion.  Note that we have no idea what the HPET is using, but the
@@ -46,29 +49,27 @@
  * PCI devices.
  */
 static int pci_pins;
+static int last_pin;
 
 void
 ioapic_init(struct vmctx *ctx)
 {
-	if (vm_ioapic_pincount(ctx, &pci_pins) < 0) {
-		pci_pins = 0;
-		return;
-	}
+	last_pin = 0;
 
-	/* Ignore the first 16 pins. */
-	if (pci_pins <= 16) {
-		pci_pins = 0;
-		return;
-	}
-	pci_pins -= 16;
+	/* Ignore the first 16 pins for legacy IRQ. */
+	pci_pins = VIOAPIC_RTE_NUM - LEGACY_IRQ_NUM;
+}
+
+void ioapic_deinit(void)
+{
+	last_pin = 0;
 }
 
 int
 ioapic_pci_alloc_irq(struct pci_vdev *dev)
 {
-	static int last_pin;
+	/* No support of vGSI sharing */
+	assert(last_pin < pci_pins);
 
-	if (pci_pins == 0)
-		return -1;
-	return (16 + (last_pin++ % pci_pins));
+	return (LEGACY_IRQ_NUM + (last_pin++ % pci_pins));
 }

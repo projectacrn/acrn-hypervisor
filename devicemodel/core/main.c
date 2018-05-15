@@ -501,6 +501,7 @@ vrtc_fail:
 	ioc_deinit(ctx);
 	atkbdc_deinit(ctx);
 	pci_irq_deinit(ctx);
+	ioapic_deinit();
 	return -1;
 }
 
@@ -514,6 +515,7 @@ vm_deinit_vdevs(struct vmctx *ctx)
 	ioc_deinit(ctx);
 	atkbdc_deinit(ctx);
 	pci_irq_deinit(ctx);
+	ioapic_deinit();
 }
 
 static void

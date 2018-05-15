@@ -619,13 +619,6 @@ vm_isa_pulse_irq(struct vmctx *ctx, int atpic_irq, int ioapic_irq)
 }
 
 int
-vm_ioapic_pincount(struct vmctx *ctx, int *pincount)
-{
-	*pincount = 24;
-	return 0;
-}
-
-int
 vm_assign_ptdev(struct vmctx *ctx, int bus, int slot, int func)
 {
 	uint16_t bdf;
