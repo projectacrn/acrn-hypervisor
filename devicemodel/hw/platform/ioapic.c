@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <err.h>
 
 #include "vmm.h"
 #include "vmmapi.h"
@@ -46,10 +47,13 @@
  * PCI devices.
  */
 static int pci_pins;
+static int last_pin;
 
 void
 ioapic_init(struct vmctx *ctx)
 {
+	last_pin = 0;
+
 	if (vm_ioapic_pincount(ctx, &pci_pins) < 0) {
 		pci_pins = 0;
 		return;
@@ -63,12 +67,20 @@ ioapic_init(struct vmctx *ctx)
 	pci_pins -= 16;
 }
 
+void ioapic_deinit(void)
+{
+	last_pin = 0;
+}
+
 int
 ioapic_pci_alloc_irq(struct pci_vdev *dev)
 {
-	static int last_pin;
-
 	if (pci_pins == 0)
 		return -1;
+
+	if (last_pin >= pci_pins)
+		warnx("PCI pin reuse and virq sharing with vdev %x:%x.%x!",
+		      dev->bus, dev->slot, dev->func);
+
 	return (16 + (last_pin++ % pci_pins));
 }

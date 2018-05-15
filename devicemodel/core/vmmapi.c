@@ -621,7 +621,7 @@ vm_isa_pulse_irq(struct vmctx *ctx, int atpic_irq, int ioapic_irq)
 int
 vm_ioapic_pincount(struct vmctx *ctx, int *pincount)
 {
-	*pincount = 24;
+	*pincount = VIOAPIC_RTE_NUM;
 	return 0;
 }
 
