@@ -1,0 +1,11 @@
+hypervisor/build/
+hypervisor/bsp/uefi/include/bsp/version.h
+hypervisor/bsp/sbl/include/bsp/version.h
+devicemdodel/build/
+devicemodel/include/version.h
+doc/doxygen
+doc/_build
+*.bak
+*.sav
+*.log
+*.warnings
