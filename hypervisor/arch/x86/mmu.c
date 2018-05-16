@@ -947,6 +947,19 @@ static int modify_paging(struct map_params *map_params, void *paddr,
 	}
 
 	attr = config_page_table_attr(map_params, flags);
+	/* Check ept misconfigurations,
+	 * rwx misconfiguration in the following conditions:
+	 * - write-only
+	 * - write-execute
+	 * - execute-only(if capability not support)
+	 * here attr & 0x7, rwx bit0:2
+	 */
+	ASSERT(!((map_params->page_table_type == PTT_EPT) &&
+		(((attr & 0x7) == IA32E_EPT_W_BIT) ||
+		((attr & 0x7) == (IA32E_EPT_W_BIT | IA32E_EPT_X_BIT)) ||
+		(((attr & 0x7) == IA32E_EPT_X_BIT) &&
+		 !cpu_has_vmx_ept_cap(VMX_EPT_EXECUTE_ONLY)))),
+		"incorrect memory attribute set!\n");
 	/* Loop until the entire block of memory is appropriately
 	 * MAP/UNMAP/MODIFY
 	 */
