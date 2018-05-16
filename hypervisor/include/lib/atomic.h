@@ -54,27 +54,26 @@ static inline void atomic_clear_int(unsigned int *p, unsigned int v)
 			:  "cc", "memory");
 }
 
-/*
- *  #define atomic_add_int(P, V)		(*(unsigned int *)(P) += (V))
- */
-static inline void atomic_add_int(unsigned int *p, unsigned int v)
-{
-	__asm __volatile(BUS_LOCK "addl %1,%0"
-			:  "+m" (*p)
-			:  "r" (v)
-			:  "cc", "memory");
+#define build_atomic_inc(name, size, type, ptr)		\
+static inline void name(type *ptr)			\
+{							\
+	asm volatile(BUS_LOCK "inc" size " %0"		\
+			: "=m" (*ptr)			\
+			:  "m" (*ptr));			\
 }
+build_atomic_inc(atomic_inc, "l", int, p)
+build_atomic_inc(atomic_inc64, "q", long, p)
 
-/*
- *  #define atomic_subtract_int(P, V)	(*(unsigned int *)(P) -= (V))
- */
-static inline void atomic_subtract_int(unsigned int *p, unsigned int v)
-{
-	__asm __volatile(BUS_LOCK "subl %1,%0"
-			:  "+m" (*p)
-			:  "r" (v)
-			:  "cc", "memory");
+#define build_atomic_dec(name, size, type, ptr)		\
+static inline void name(type *ptr)			\
+{							\
+	asm volatile(BUS_LOCK "dec" size " %0"		\
+			: "=m" (*ptr)			\
+			:  "m" (*ptr));			\
 }
+build_atomic_dec(atomic_dec, "l", int, p)
+build_atomic_dec(atomic_dec64, "q", long, p)
+
 
 /*
  *  #define atomic_swap_int(P, V) \
@@ -114,28 +113,6 @@ static inline void atomic_clear_long(unsigned long *p, unsigned long v)
 	__asm __volatile(BUS_LOCK "andq %1,%0"
 			:  "+m" (*p)
 			:  "r" (~v)
-			:  "cc", "memory");
-}
-
-/*
- *  #define atomic_add_long(P, V)		(*(unsigned long *)(P) += (V))
- */
-static inline void atomic_add_long(unsigned long *p, unsigned long v)
-{
-	__asm __volatile(BUS_LOCK "addq %1,%0"
-			:  "+m" (*p)
-			:  "r" (v)
-			:  "cc", "memory");
-}
-
-/*
- *  #define atomic_subtract_long(P, V)	(*(unsigned long *)(P) -= (V))
- */
-static inline void atomic_subtract_long(unsigned long *p, unsigned long v)
-{
-	__asm __volatile(BUS_LOCK "subq %1,%0"
-			:  "+m" (*p)
-			:  "r" (v)
 			:  "cc", "memory");
 }
 

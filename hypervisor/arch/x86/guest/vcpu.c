@@ -225,7 +225,7 @@ int destroy_vcpu(struct vcpu *vcpu)
 		(unsigned long *)&vcpu->vm->hw.vcpu_array[vcpu->vcpu_id],
 		(unsigned long)NULL);
 
-	atomic_subtract_int(&vcpu->vm->hw.created_vcpus, 1);
+	atomic_dec(&vcpu->vm->hw.created_vcpus);
 
 	vlapic_free(vcpu);
 	free(vcpu->arch_vcpu.vmcs);
