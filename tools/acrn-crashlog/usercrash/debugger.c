@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include "crash_dump.h"
 #include "log_sys.h"
+#include "version.h"
 
 /**
  * Debugger can work without server when uses "debugger pid" commands to
@@ -33,7 +34,10 @@ int main(int argc, char *argv[])
 
 	if (argc > 1) {
 		if (strcmp(argv[1], "-v") == 0) {
-			printf("debugger version is 1.0\n");
+			printf("version is %d.%d-%s, build by %s@%s\n",
+				UC_MAJOR_VERSION, UC_MINOR_VERSION,
+				UC_BUILD_VERSION, UC_BUILD_USER,
+				UC_BUILD_TIME);
 			return 0;
 		}
 		if (strcmp(argv[1], "-h") == 0) {

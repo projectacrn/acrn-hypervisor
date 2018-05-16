@@ -20,10 +20,10 @@
 #include "event_handler.h"
 #include "channels.h"
 #include "log_sys.h"
+#include "version.h"
 
 #define CONFIG_INSTALL "/usr/share/defaults/telemetrics/acrnprobe.xml"
 #define CONFIG_CUSTOMIZE "/etc/acrnprobe.xml"
-#define VERSION "1.0"
 
 void usage(void)
 {
@@ -79,7 +79,10 @@ int main(int argc, char *argv[])
 			usage();
 			return 0;
 		case 'V':
-			printf(VERSION "\n");
+			printf("version is %d.%d-%s, build by %s@%s\n",
+				AP_MAJOR_VERSION, AP_MINOR_VERSION,
+				AP_BUILD_VERSION, AP_BUILD_USER,
+				AP_BUILD_TIME);
 			return 0;
 		case '?':
 			usage();

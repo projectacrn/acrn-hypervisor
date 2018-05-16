@@ -42,6 +42,7 @@
 #include "packet.h"
 #include "protocol.h"
 #include "log_sys.h"
+#include "version.h"
 
 #define FILE_PATH_LEN_MAX 256
 
@@ -389,7 +390,10 @@ int main(int argc, char *argv[])
 		while ((opt = getopt(argc, argv, "vh")) != -1) {
 			switch (opt) {
 			case 'v':
-				printf("usercrash_s version is 1.0\n");
+				printf("version is %d.%d-%s, build by %s@%s\n",
+					UC_MAJOR_VERSION, UC_MINOR_VERSION,
+					UC_BUILD_VERSION, UC_BUILD_USER,
+					UC_BUILD_TIME);
 				break;
 			case 'h':
 				print_usage();

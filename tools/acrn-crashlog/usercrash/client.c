@@ -30,6 +30,7 @@
 #include "packet.h"
 #include "log_sys.h"
 #include "protocol.h"
+#include "version.h"
 
 /**
  * Usercrash works as C/S model: usercrash_c works as usercrash client to
@@ -185,7 +186,10 @@ int main(int argc, char *argv[])
 
 	if (argc > 1) {
 		if (strcmp(argv[1], "-v") == 0) {
-			printf("usercrash_c version is 1.0\n");
+			printf("version is %d.%d-%s, build by %s@%s\n",
+				UC_MAJOR_VERSION, UC_MINOR_VERSION,
+				UC_BUILD_VERSION, UC_BUILD_USER,
+				UC_BUILD_TIME);
 			return 0;
 		}
 		if (strcmp(argv[1], "-h") == 0) {
