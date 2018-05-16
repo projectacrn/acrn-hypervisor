@@ -331,13 +331,12 @@ vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 			/* mask -> umask */
 			if ((last & IOAPIC_RTE_INTMASK) &&
 				((new & IOAPIC_RTE_INTMASK) == 0)) {
-				if ((vioapic->vm->vpic_wire_mode
-					== VPIC_WIRE_NULL) ||
-					(vioapic->vm->vpic_wire_mode
-					== VPIC_WIRE_INTR)) {
-					atomic_set_int(
-						&vioapic->vm->vpic_wire_mode,
-						VPIC_WIRE_IOAPIC);
+				if ((vioapic->vm->vpic_wire_mode ==
+						VPIC_WIRE_NULL) ||
+						(vioapic->vm->vpic_wire_mode ==
+						VPIC_WIRE_INTR)) {
+					vioapic->vm->vpic_wire_mode =
+						VPIC_WIRE_IOAPIC;
 					dev_dbg(ACRN_DBG_IOAPIC,
 						"vpic wire mode -> IOAPIC");
 				} else {
@@ -347,11 +346,10 @@ vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 			/* unmask -> mask */
 			} else if (((last & IOAPIC_RTE_INTMASK) == 0) &&
 				(new & IOAPIC_RTE_INTMASK)) {
-				if (vioapic->vm->vpic_wire_mode
-					== VPIC_WIRE_IOAPIC) {
-					atomic_set_int(
-						&vioapic->vm->vpic_wire_mode,
-						VPIC_WIRE_INTR);
+				if (vioapic->vm->vpic_wire_mode ==
+						VPIC_WIRE_IOAPIC) {
+					vioapic->vm->vpic_wire_mode =
+						VPIC_WIRE_INTR;
 					dev_dbg(ACRN_DBG_IOAPIC,
 						"vpic wire mode -> INTR");
 				}
