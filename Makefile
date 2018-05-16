@@ -30,5 +30,17 @@ tools:
 clean:
 	rm -rf $(ROOT_OUT)
 	
+.PHONY: install
+install: hypervisor-install devicemodel-install tools-intall
 
+hypervisor-install:
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLAT) RELEASE=$(RELEASE) install
+
+devicemodel-install:
+	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) install
+
+tools-intall:
+	make -C $(T)/tools/acrnlog OUT_DIR=$(TOOLS_OUT) install
+	make -C $(T)/tools/acrn-manager OUT_DIR=$(TOOLS_OUT) install
+	make -C $(T)/tools/acrntrace OUT_DIR=$(TOOLS_OUT) install
 
