@@ -112,10 +112,13 @@ HEADERS := $(shell find $(BASEDIR) -name '*.h')
 DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 
 PROGRAM := acrn-dm
+ACRNLOG := acrnlog
+ACRNTRACE := acrntrace
+ACRNCTL := acrnctl
 
 SAMPLES := $(wildcard samples/*)
 
-all: include/version.h $(PROGRAM)
+all: include/version.h $(PROGRAM) $(ACRNCTL) $(ACRNLOG) $(ACRNTRACE)
 	@echo -n ""
 
 $(PROGRAM): $(OBJS)
@@ -127,6 +130,9 @@ clean:
 	rm -f $(OBJS)
 	rm -rf $(DM_OBJDIR)
 	if test -f $(PROGRAM); then rm $(PROGRAM); fi
+	if test -f tools/acrn-manager/$(ACRNCTL); then rm tools/acrn-manager/$(ACRNCTL); fi
+	if test -f tools/$(ACRNLOG)/$(ACRNLOG); then rm tools/$(ACRNLOG)/$(ACRNLOG); fi
+	if test -f tools/$(ACRNTRACE)/$(ACRNTRACE); then rm tools/$(ACRNTRACE)/$(ACRNTRACE); fi
 
 distclean:
 	rm -f $(DISTCLEAN_OBJS)
@@ -158,7 +164,21 @@ $(DM_OBJDIR)/%.o: %.c $(HEADERS)
 
 install: $(DM_OBJDIR)/$(PROGRAM) install-samples
 	install -D $(DM_OBJDIR)/$(PROGRAM) $(DESTDIR)/usr/bin/$(PROGRAM)
+	install -D tools/acrn-manager/$(ACRNCTL) $(DESTDIR)/usr/bin/$(ACRNCTL)
+	install -D tools/$(ACRNLOG)/$(ACRNLOG) $(DESTDIR)/usr/bin/$(ACRNLOG)
+	install -D tools/$(ACRNLOG)/$(ACRNLOG).service $(DESTDIR)/usr/lib/systemd/system/$(ACRNLOG).service
+	install -D tools/$(ACRNTRACE)/$(ACRNTRACE) $(DESTDIR)/usr/bin/$(ACRNTRACE)
 
 install-samples: $(SAMPLES)
 	install -d $(DESTDIR)/usr/share/acrn/demo
 	install -t $(DESTDIR)/usr/share/acrn/demo $^
+
+$(ACRNCTL):
+	make -C tools/acrn-manager
+
+$(ACRNLOG):
+	make -C tools/$(ACRNLOG)
+
+$(ACRNTRACE):
+	make -C tools/$(ACRNTRACE)
+
