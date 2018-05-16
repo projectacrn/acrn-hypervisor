@@ -281,11 +281,11 @@ void pause_vcpu(struct vcpu *vcpu, enum vcpu_state new_state)
 	vcpu->prev_state = vcpu->state;
 	vcpu->state = new_state;
 
-	get_schedule_lock(pcpu_id);
+	get_schedule_lock(vcpu->pcpu_id);
 	if (atomic_load_acq_32(&vcpu->running) == 1) {
 		remove_vcpu_from_runqueue(vcpu);
 		make_reschedule_request(vcpu);
-		release_schedule_lock(pcpu_id);
+		release_schedule_lock(vcpu->pcpu_id);
 
 		if (vcpu->pcpu_id != pcpu_id) {
 			while (atomic_load_acq_32(&vcpu->running) == 1)
@@ -293,7 +293,7 @@ void pause_vcpu(struct vcpu *vcpu, enum vcpu_state new_state)
 		}
 	} else {
 		remove_vcpu_from_runqueue(vcpu);
-		release_schedule_lock(pcpu_id);
+		release_schedule_lock(vcpu->pcpu_id);
 	}
 }
 
