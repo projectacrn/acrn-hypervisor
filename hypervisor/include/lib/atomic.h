@@ -226,31 +226,29 @@ static inline int atomic_cmpxchg_int(unsigned int *p,
 #define atomic_load_acq_64		atomic_load_acq_long
 #define atomic_store_rel_64		atomic_store_rel_long
 
-/*
- *  #define atomic_xadd_int(P, V) \
- *  (return (*(unsigned long *)(P)); *(unsigned long *)(P) += (V);)
- */
-static inline int atomic_xadd_int(unsigned int *p, unsigned int  v)
-{
-	__asm __volatile(BUS_LOCK  "xaddl %0,%1"
-			:  "+r" (v), "+m" (*p)
-			:
-			:  "cc", "memory");
-	return v;
-}
+#define build_atomic_xadd(name, size, type, ptr, v)		\
+static inline type name(type *ptr, type v)			\
+{								\
+	asm volatile(BUS_LOCK "xadd" size " %0,%1"		\
+			: "+r" (v), "+m" (*p)			\
+			:					\
+			: "cc", "memory");			\
+	return v;						\
+ }
+build_atomic_xadd(atomic_xadd, "l", int, p, v)
+build_atomic_xadd(atomic_xadd64, "q", long, p, v)
 
-static inline int atomic_add_return(int v, unsigned int *p)
-{
-	return v + atomic_xadd_int(p, v);
-}
+#define atomic_add_return(p, v)		( atomic_xadd(p, v) + v )
+#define atomic_sub_return(p, v)		( atomic_xadd(p, -v) - v )
 
-static inline int atomic_sub_return(int v, unsigned int *p)
-{
-	return atomic_xadd_int(p, -v) - v;
-}
+#define atomic_inc_return(v)		atomic_add_return((v), 1)
+#define atomic_dec_return(v)		atomic_sub_return((v), 1)
 
-#define	atomic_inc_return(v)		atomic_add_return(1, (v))
-#define	atomic_dec_return(v)		atomic_sub_return(1, (v))
+#define atomic_add64_return(p, v)	( atomic_xadd64(p, v) + v )
+#define atomic_sub64_return(p, v)	( atomic_xadd64(p, -v) - v )
+
+#define atomic_inc64_return(v)		atomic_add64_return((v), 1)
+#define atomic_dec64_return(v)		atomic_sub64_return((v), 1)
 
 static inline int
 atomic_cmpset_long(unsigned long *dst, unsigned long expect, unsigned long src)
