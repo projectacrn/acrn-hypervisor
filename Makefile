@@ -13,23 +13,18 @@ TOOLS_OUT := $(ROOT_OUT)/tools
 all: hypervisor devicemodel tools
 
 hypervisor:
-	cd $(T)/hypervisor; \
-	make HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLAT) RELEASE=$(RELEASE) clean; \
-	make HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLAT) RELEASE=$(RELEASE)
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLAT) RELEASE=$(RELEASE) clean; \
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLAT) RELEASE=$(RELEASE)
 
 devicemodel:
-	cd $(T)/devicemodel; \
-	make DM_OBJDIR=$(DM_OUT) clean; \
-	make DM_OBJDIR=$(DM_OUT)
+	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) clean; \
+	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT)
 
 tools:
 	mkdir -p $(TOOLS_OUT)
-	cd $(T)/tools/acrnlog; \
-	make OUT_DIR=$(TOOLS_OUT);
-	cd $(T)/tools/acrn-manager; \
-	make OUT_DIR=$(TOOLS_OUT);
-	cd $(T)/tools/acrntrace; \
-	make OUT_DIR=$(TOOLS_OUT);
+	make -C $(T)/tools/acrnlog OUT_DIR=$(TOOLS_OUT);
+	make -C $(T)/tools/acrn-manager OUT_DIR=$(TOOLS_OUT);
+	make -C $(T)/tools/acrntrace OUT_DIR=$(TOOLS_OUT);
 
 .PHONY: clean
 clean:
