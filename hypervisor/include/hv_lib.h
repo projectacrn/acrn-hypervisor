@@ -40,6 +40,7 @@
 #include <stdarg.h>
 #include <util.h>
 #include <list.h>
+#include <atomic.h>
 #include <bits.h>
 #include <sprintf.h>
 
