@@ -80,6 +80,7 @@ SRCS += hw/pci/virtio/virtio_net.c
 SRCS += hw/pci/virtio/virtio_rnd.c
 SRCS += hw/pci/virtio/virtio_hyper_dmabuf.c
 SRCS += hw/pci/virtio/virtio_heci.c
+SRCS += hw/pci/virtio/virtio_rpmb.c
 SRCS += hw/pci/irq.c
 SRCS += hw/pci/uart.c
 SRCS += hw/pci/gvt.c
