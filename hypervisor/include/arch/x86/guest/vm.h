@@ -47,7 +47,7 @@ struct vm_attr {
 struct vm_hw_info {
 	int num_vcpus;	/* Number of total virtual cores */
 	int exp_num_vcpus;	/* Number of real expected virtual cores */
-	uint32_t created_vcpus;	/* Number of created vcpus */
+	int created_vcpus;	/* Number of created vcpus */
 	struct vcpu **vcpu_array;	/* vcpu array of this VM */
 	uint64_t gpa_lowtop;    /* top lowmem gpa of this VM */
 };

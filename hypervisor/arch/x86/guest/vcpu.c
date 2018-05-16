@@ -80,7 +80,7 @@ int create_vcpu(int cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	 * vcpu->vcpu_id = vm->hw.created_vcpus;
 	 * vm->hw.created_vcpus++;
 	 */
-	vcpu->vcpu_id = atomic_xadd_int(&vm->hw.created_vcpus, 1);
+	vcpu->vcpu_id = atomic_xadd(&vm->hw.created_vcpus, 1);
 	/* vm->hw.vcpu_array[vcpu->vcpu_id] = vcpu; */
 	atomic_store_rel_64(
 		(unsigned long *)&vm->hw.vcpu_array[vcpu->vcpu_id],

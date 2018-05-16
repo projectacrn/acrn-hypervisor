@@ -52,7 +52,7 @@ DEFINE_CPU_DATA(struct shared_buf *, earlylog_sbuf);
 
 struct logmsg {
 	uint32_t flags;
-	unsigned int seq;
+	int seq;
 	spinlock_t lock;
 };
 
