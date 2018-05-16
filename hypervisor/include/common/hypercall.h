@@ -366,26 +366,26 @@ static inline int check_result(int found)
 	return found ? 0 : -1;
 }
 
-#define copy_from_vm(vm, ptr, gpa) ({			\
+#define copy_from_vm(vm, ptr, gpa, size) ({		\
 	int found = 0;					\
 	typeof(*(ptr)) *h_ptr = (ptr);			\
 	typeof(*(ptr)) *g_ptr =				\
 		HPA2HVA(gpa2hpa_check(vm, gpa,	\
-		sizeof(*h_ptr), &found, true));		\
+		size, &found, true));			\
 	if (found) {					\
-		*h_ptr = *g_ptr;			\
+		memcpy_s(h_ptr, size, g_ptr, size);	\
 	}						\
 	check_result(found);				\
 })
 
-#define copy_to_vm(vm, ptr, gpa) ({			\
+#define copy_to_vm(vm, ptr, gpa, size) ({		\
 	int found = 0;					\
 	typeof(*(ptr)) *h_ptr = (ptr);			\
 	typeof(*(ptr)) *g_ptr =				\
 		HPA2HVA(gpa2hpa_check(vm, gpa,	\
-		sizeof(*h_ptr), &found, true));		\
+		size, &found, true));			\
 	if (found) {					\
-		*g_ptr = *h_ptr;			\
+		memcpy_s(g_ptr, size, h_ptr, size);	\
 	}						\
 	check_result(found);				\
 })
