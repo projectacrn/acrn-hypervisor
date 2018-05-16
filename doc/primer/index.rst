@@ -911,3 +911,56 @@ or
 .. code-block:: bash
 
    screen /dev/pts/0
+
+UEFI Boot
+*********
+This section introduces UEFI boot support by ACRN.
+
+Usage of acrn.efi
+=================
+
+ACRN supports boot from UEFI FW, this section is the UEFI boot HOWTO under
+Clear Linux environment.
+
+The pre-condition is like below:
+    - You have installed the Service OS (bare-metal for now)
+    - CL Bootloader is "\EFI\org.clearlinux\bootloaderx64.efi"
+    - Boot device is '/dev/sda'
+    - EFI System Partition (ESP) is '1'
+
+Suggest to follow the following step:
+1. Build out the acrn.efi image with command "make PLATFORM=uefi".
+2. Put the acrn.efi under "\EFI\acrn\"
+3. To change the default boot entry to boot the ACRN hypervisor, enter:
+    # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 \
+      -L "ACRN Hypervisor" -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi"
+4. Update the bsp/uefi/clearlinux/acrn.conf file by filling the field
+   <UUID of rootfs partition> with the your native rootfs partition uuid.
+5. Copy bsp/uefi/clearlinux/acrn.conf to loader\\entries\\ directory.
+6. Reboot.
+
+
+DM memory allocation mechanism
+==============================
+
+There are two kinds of DM memory allocation mechanism - CMA & Hugetlb, they can
+be choose to support but hugetlb will become the default one.
+
+To support CMA, please make sure:
+  1) add "cma=reserved_mem_size@recommend_memory_offset-0" like
+     "cma=2560M@0x100000000-0" to the SOS cmdline in acrn.conf
+  2) start acrn-dm without "-T" option
+
+To support Hugetlb, please make sure:
+  1) Do huge page reservation
+   - For 1G huge page reservation, add "hugepagesz=1G hugepages=reserved_pg_num"
+     like "hugepagesz=1G hugepages=4" to the SOS cmdline(in acrn.conf for EFI)
+   - For 2M huge page reservation, after SOS start up,
+     echo reserved_pg_num > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+   - NOTE:
+     You can use 2M reserving method to do reservation for 1G page size, but it
+     may fail.
+     For EFI platform, you may skip 1G page reservation by just using 2M page,
+     but make sure your huge page reservation size is enough for your usage.
+  2) Let acrn-dm use hugetlb
+   - start acrn-dm with "-T" option
