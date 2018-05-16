@@ -266,27 +266,19 @@ static int shell_process(struct shell *p_shell)
 
 struct shell_cmd *shell_find_cmd(struct shell *p_shell, const char *cmd_str)
 {
-	struct shell_cmd *p_cmd;
-	bool is_found = false;
-	struct list_head *pos;
-
-	p_cmd = NULL;
+	uint32_t i;
+	struct shell_cmd *p_cmd = NULL;
 
 	if (p_shell->cmd_count <= 0)
 		return NULL;
 
-	list_for_each(pos, &p_shell->cmd_list) {
-		p_cmd = list_entry(pos, struct shell_cmd, node);
-		pr_dbg("shell: cmd in registered list is '%s' in %s",
-				p_cmd->str, __func__);
-
-		if (strcmp(p_cmd->str, cmd_str) == 0) {
-			is_found = true;
+	for (i = 0; i < p_shell->cmd_count; i++) {
+		p_cmd = &p_shell->shell_cmd[i];
+		if (strcmp(p_cmd->str, cmd_str) == 0)
 			break;
-		}
 	}
 
-	if (!is_found) {
+	if (i == p_shell->cmd_count) {
 		/* No commands in the list. */
 		p_cmd = NULL;
 	}
@@ -360,7 +352,7 @@ int shell_process_cmd(struct shell *p_shell, char *p_input_line)
 
 	/* Determine if there is a command to process. */
 	if (cmd_argc != 0) {
-		/* See if command is in the registered command list. */
+		/* See if command is in cmds supported */
 		p_cmd = shell_find_cmd(p_shell, cmd_argv[0]);
 
 		if (p_cmd != NULL) {
@@ -412,7 +404,6 @@ int shell_cmd_help(struct shell *p_shell,
 {
 	int status = 0;
 	int spaces = 0;
-	int i;
 	struct shell_cmd *p_cmd = NULL;
 	char space_buf[MAX_INDENT_LEN + 1];
 
@@ -428,11 +419,11 @@ int shell_cmd_help(struct shell *p_shell,
 		/* No registered commands */
 		shell_puts(p_shell, "NONE\r\n");
 	} else {
-		struct list_head *pos;
+		int i = 0;
+		uint32_t j;
 
-		i = 0;
-		list_for_each(pos, &p_shell->cmd_list) {
-			p_cmd = list_entry(pos, struct shell_cmd, node);
+		for (j = 0; j < p_shell->cmd_count; j++) {
+			p_cmd = &p_shell->shell_cmd[j];
 
 			/* Check if we've filled the screen with info */
 			/* i + 1 used to avoid 0%SHELL_ROWS=0 */
@@ -1132,11 +1123,7 @@ int shell_construct(struct shell **p_shell)
 	/* Allocate memory for shell session */
 	*p_shell = (struct shell *) calloc(1, sizeof(**p_shell));
 
-	if (*p_shell) {
-		/* Zero-initialize the service control block. */
-		INIT_LIST_HEAD(&(*p_shell)->cmd_list);
-		(*p_shell)->cmd_count = 0;
-	} else {
+	if (!(*p_shell)) {
 		pr_err("Error: out of memory");
 		status = -ENOMEM;
 	}
