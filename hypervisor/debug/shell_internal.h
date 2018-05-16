@@ -53,14 +53,15 @@ struct shell_io {
 #define SHELL_STRING_MAX_LEN		(CPU_PAGE_SIZE << 2)
 
 /* Shell Control Block */
+struct shell_cmd;
 struct shell {
 	struct shell_io session_io;	/* Session I/O information */
 	char input_line[2][SHELL_CMD_MAX_LEN + 1];	/* current & last */
 	char name[SHELL_NAME_MAX_LEN];	/* Session name */
 	uint32_t input_line_len;	/* Length of current input line */
 	uint32_t input_line_active;	/* Active input line index */
-	struct list_head cmd_list;	/* List of registered commands */
-	uint32_t cmd_count;		/* Count of added commands */
+	struct shell_cmd *shell_cmd;	/* cmds supported */
+	uint32_t cmd_count;		/* Count of cmds supported */
 };
 
 /* Shell Command Function */
@@ -68,7 +69,6 @@ typedef int (*shell_cmd_fn_t)(struct shell *, int, char **);
 
 /* Shell Command */
 struct shell_cmd {
-	struct list_head node;	/* Linked list node */
 	char *str;		/* Command string */
 	char *cmd_param;	/* Command parameter string */
 	char *help_str;		/* Help text associated with the command */

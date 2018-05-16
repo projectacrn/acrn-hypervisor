@@ -38,113 +38,116 @@
 /* Shell that uses serial I/O */
 static struct shell *serial_session;
 
-static int shell_register_cmd(struct shell *p_shell,
-			const char *cmd,
-			const char *cmd_param,
-			const char *cmd_help_str,
-			int (*cmd_fcn)(struct shell *, int, char **))
-{
-	int status = 0;
-	struct shell_cmd *p_cmd;
-	uint32_t cmd_mem_size;
-
-	if ((p_shell == NULL) || (cmd == NULL) ||
-		(cmd_help_str == NULL) || (cmd_fcn == NULL)) {
-		return -EINVAL;
-	}
-
-	/* Check if a duplicate command exists */
-	p_cmd = shell_find_cmd(p_shell, cmd);
-	if (p_cmd != NULL) {
-		/* Requested command is already registered */
-		pr_err("Error: Command %s is already registered.", cmd);
-		status = -EINVAL;
-		goto exit;
-	}
-
-	/* Requested command is not already registered. So allocate enough
-	 * memory for the command structure and the command, parameter and the
-	 * help text strings along with the corresponding null terminating
-	 * character/s.
-	 */
-	cmd_mem_size = sizeof(struct shell_cmd)
-			+ (strnlen_s(cmd, SHELL_CMD_MAX_LEN) + 1);
-
-	/* If command takes any parameters, need to allocate memory for storing
-	 * parameter string.
-	 */
-	if (cmd_param)
-		cmd_mem_size += strnlen_s(cmd_param, SHELL_PARA_MAX_LEN) + 1;
-
-	/* If help text is provided for command, need to allocate memory for
-	 * storing help string.
-	 */
-	if (cmd_help_str)
-		cmd_mem_size += strnlen_s(cmd_help_str, SHELL_HELP_MAX_LEN) + 1;
-
-	p_cmd = (struct shell_cmd *) calloc(1, cmd_mem_size);
-	if (p_cmd == NULL) {
-		status = -ENOMEM;
-		goto exit;
-	}
-
-	/* The command structure, command string, it's parameter string and
-	 * the associated help string are all stored in contiguous memory
-	 * locations. So the cmd string immediately follows the command
-	 * structure..
-	 */
-	p_cmd->str = (char *)p_cmd + sizeof(struct shell_cmd);
-	strncpy_s(p_cmd->str, SHELL_CMD_MAX_LEN, cmd, SHELL_CMD_MAX_LEN);
-
-	/* Check if this command does take any parameters... */
-	if (cmd_param) {
-		/* The command parameter string immediately follows the command
-		 * string in memory.
-		 */
-		p_cmd->cmd_param = p_cmd->str
-			+ (strnlen_s(cmd, SHELL_CMD_MAX_LEN) + 1);
-		strcpy_s(p_cmd->cmd_param, SHELL_PARA_MAX_LEN, cmd_param);
-	}
-
-	/* Check if help string is provided for the command.. */
-	if (cmd_help_str) {
-		if (cmd_param) {
-			/* The command help string immediately follows the
-			 * parameter string in memory | cmd_structure |
-			 * cmd_str | param_str | help_str |
-			 */
-			p_cmd->help_str = p_cmd->cmd_param +
-				(strnlen_s(cmd_param, SHELL_PARA_MAX_LEN) + 1);
-
-			strcpy_s(p_cmd->help_str,
-					SHELL_HELP_MAX_LEN, cmd_help_str);
-		} else {
-			/* No command parameter/s. Help string immediately
-			 * follows the cmd string | cmd_structure | cmd_str |
-			 * help_str |
-			 */
-			p_cmd->help_str = p_cmd->str +
-				(strnlen_s(cmd, SHELL_CMD_MAX_LEN) + 1);
-
-			strcpy_s(p_cmd->help_str,
-					SHELL_HELP_MAX_LEN, cmd_help_str);
-		}
-	}
-
-	/* Set the command function. */
-	p_cmd->fcn = cmd_fcn;
-
-	INIT_LIST_HEAD(&p_cmd->node);
-	list_add(&p_cmd->node, &p_shell->cmd_list);
-
-	/* Update command count. */
-	p_shell->cmd_count++;
-
-	status = 0;
-
-exit:
-	return status;
-}
+static struct shell_cmd acrn_cmd[] = {
+	{
+		.str		= SHELL_CMD_HELP,
+		.cmd_param	= SHELL_CMD_HELP_PARAM,
+		.help_str	= SHELL_CMD_HELP_HELP,
+		.fcn		= shell_cmd_help,
+	},
+	{
+		.str		= SHELL_CMD_VM_LIST,
+		.cmd_param	= SHELL_CMD_VM_LIST_PARAM,
+		.help_str	= SHELL_CMD_VM_LIST_HELP,
+		.fcn		= shell_list_vm,
+	},
+	{
+		.str		= SHELL_CMD_VCPU_LIST,
+		.cmd_param	= SHELL_CMD_VCPU_LIST_PARAM,
+		.help_str	= SHELL_CMD_VCPU_LIST_HELP,
+		.fcn		= shell_list_vcpu,
+	},
+	{
+		.str		= SHELL_CMD_VCPU_PAUSE,
+		.cmd_param	= SHELL_CMD_VCPU_PAUSE_PARAM,
+		.help_str	= SHELL_CMD_VCPU_PAUSE_HELP,
+		.fcn		= shell_pause_vcpu,
+	},
+	{
+		.str		= SHELL_CMD_VCPU_RESUME,
+		.cmd_param	= SHELL_CMD_VCPU_RESUME_PARAM,
+		.help_str	= SHELL_CMD_VCPU_RESUME_HELP,
+		.fcn		= shell_resume_vcpu,
+	},
+	{
+		.str		= SHELL_CMD_VCPU_DUMPREG,
+		.cmd_param	= SHELL_CMD_VCPU_DUMPREG_PARAM,
+		.help_str	= SHELL_CMD_VCPU_DUMPREG_HELP,
+		.fcn		= shell_vcpu_dumpreg,
+	},
+	{
+		.str		= SHELL_CMD_VCPU_DUMPMEM,
+		.cmd_param	= SHELL_CMD_VCPU_DUMPMEM_PARAM,
+		.help_str	= SHELL_CMD_VCPU_DUMPMEM_HELP,
+		.fcn		= shell_vcpu_dumpmem,
+	},
+	{
+		.str		= SHELL_CMD_VM_CONSOLE,
+		.cmd_param	= SHELL_CMD_VM_CONSOLE_PARAM,
+		.help_str	= SHELL_CMD_VM_CONSOLE_HELP,
+		.fcn		= shell_to_sos_console,
+	},
+	{
+		.str		= SHELL_CMD_INTERRUPT,
+		.cmd_param	= SHELL_CMD_INTERRUPT_PARAM,
+		.help_str	= SHELL_CMD_INTERRUPT_HELP,
+		.fcn		= shell_show_cpu_int,
+	},
+	{
+		.str		= SHELL_CMD_PTDEV,
+		.cmd_param	= SHELL_CMD_PTDEV_PARAM,
+		.help_str	= SHELL_CMD_PTDEV_HELP,
+		.fcn		= shell_show_ptdev_info,
+	},
+	{
+		.str		= SHELL_CMD_REQ,
+		.cmd_param	= SHELL_CMD_REQ_PARAM,
+		.help_str	= SHELL_CMD_REQ_HELP,
+		.fcn		= shell_show_req_info,
+	},
+	{
+		.str		= SHELL_CMD_VIOAPIC,
+		.cmd_param	= SHELL_CMD_VIOAPIC_PARAM,
+		.help_str	= SHELL_CMD_VIOAPIC_HELP,
+		.fcn		= shell_show_vioapic_info,
+	},
+	{
+		.str		= SHELL_CMD_IOAPIC,
+		.cmd_param	= SHELL_CMD_IOAPIC_PARAM,
+		.help_str	= SHELL_CMD_IOAPIC_HELP,
+		.fcn		= shell_show_ioapic_info,
+	},
+	{
+		.str		= SHELL_CMD_VMEXIT,
+		.cmd_param	= SHELL_CMD_VMEXIT_PARAM,
+		.help_str	= SHELL_CMD_VMEXIT_HELP,
+		.fcn		= shell_show_vmexit_profile,
+	},
+	{
+		.str		= SHELL_CMD_LOGDUMP,
+		.cmd_param	= SHELL_CMD_LOGDUMP_PARAM,
+		.help_str	= SHELL_CMD_LOGDUMP_HELP,
+		.fcn		= shell_dump_logbuf,
+	},
+	{
+		.str		= SHELL_CMD_GET_LOG_LVL,
+		.cmd_param	= SHELL_CMD_GET_LOG_LVL_PARAM,
+		.help_str	= SHELL_CMD_GET_LOG_LVL_HELP,
+		.fcn		= shell_get_loglevel,
+	},
+	{
+		.str		= SHELL_CMD_SET_LOG_LVL,
+		.cmd_param	= SHELL_CMD_SET_LOG_LVL_PARAM,
+		.help_str	= SHELL_CMD_SET_LOG_LVL_HELP,
+		.fcn		= shell_set_loglevel,
+	},
+	{
+		.str		= SHELL_CMD_CPUID,
+		.cmd_param	= SHELL_CMD_CPUID_PARAM,
+		.help_str	= SHELL_CMD_CPUID_HELP,
+		.fcn		= shell_cpuid,
+	},
+};
 
 int shell_init(void)
 {
@@ -162,212 +165,12 @@ int shell_init(void)
 	serial_session->session_io.io_special = shell_special_serial;
 	serial_session->session_io.io_echo_on = (bool)true;
 
+	serial_session->shell_cmd = acrn_cmd;
+	serial_session->cmd_count = ARRAY_SIZE(acrn_cmd);
 	/* Initialize the handler for the serial port that will be used
 	 * for shell i/p and o/p
 	 */
 	status = serial_session->session_io.io_init(serial_session);
-
-	/* Register command handlers for the shell commands that are available
-	 * by default
-	 */
-	if (status == 0) {
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_HELP,
-					SHELL_CMD_HELP_PARAM,
-					SHELL_CMD_HELP_HELP,
-					shell_cmd_help);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_HELP);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_VM_LIST,
-					SHELL_CMD_VM_LIST_PARAM,
-					SHELL_CMD_VM_LIST_HELP,
-					shell_list_vm);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_VM_LIST);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_VCPU_LIST,
-					SHELL_CMD_VCPU_LIST_PARAM,
-					SHELL_CMD_VCPU_LIST_HELP,
-					shell_list_vcpu);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_VCPU_LIST);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_VCPU_PAUSE,
-					SHELL_CMD_VCPU_PAUSE_PARAM,
-					SHELL_CMD_VCPU_PAUSE_HELP,
-					shell_pause_vcpu);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_VCPU_PAUSE);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_VCPU_RESUME,
-					SHELL_CMD_VCPU_RESUME_PARAM,
-					SHELL_CMD_VCPU_RESUME_HELP,
-					shell_resume_vcpu);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_VCPU_RESUME);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_VCPU_DUMPREG,
-					SHELL_CMD_VCPU_DUMPREG_PARAM,
-					SHELL_CMD_VCPU_DUMPREG_HELP,
-					shell_vcpu_dumpreg);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_VCPU_DUMPREG);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_VCPU_DUMPMEM,
-					SHELL_CMD_VCPU_DUMPMEM_PARAM,
-					SHELL_CMD_VCPU_DUMPMEM_HELP,
-					shell_vcpu_dumpmem);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_VCPU_DUMPMEM);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_VM_CONSOLE,
-					SHELL_CMD_VM_CONSOLE_PARAM,
-					SHELL_CMD_VM_CONSOLE_HELP,
-					shell_to_sos_console);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_VM_CONSOLE);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_INTERRUPT,
-					SHELL_CMD_INTERRUPT_PARAM,
-					SHELL_CMD_INTERRUPT_HELP,
-					shell_show_cpu_int);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_INTERRUPT);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_PTDEV,
-					SHELL_CMD_PTDEV_PARAM,
-					SHELL_CMD_PTDEV_HELP,
-					shell_show_ptdev_info);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_PTDEV);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_REQ,
-					SHELL_CMD_REQ_PARAM,
-					SHELL_CMD_REQ_HELP,
-					shell_show_req_info);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_REQ);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_VIOAPIC,
-					SHELL_CMD_VIOAPIC_PARAM,
-					SHELL_CMD_VIOAPIC_HELP,
-					shell_show_vioapic_info);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_VIOAPIC);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_IOAPIC,
-					SHELL_CMD_IOAPIC_PARAM,
-					SHELL_CMD_IOAPIC_HELP,
-					shell_show_ioapic_info);
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_IOAPIC);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_VMEXIT,
-					SHELL_CMD_VMEXIT_PARAM,
-					SHELL_CMD_VMEXIT_HELP,
-					shell_show_vmexit_profile);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_VMEXIT);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_LOGDUMP,
-					SHELL_CMD_LOGDUMP_PARAM,
-					SHELL_CMD_LOGDUMP_HELP,
-					shell_dump_logbuf);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_LOGDUMP);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_GET_LOG_LVL,
-					SHELL_CMD_GET_LOG_LVL_PARAM,
-					SHELL_CMD_GET_LOG_LVL_HELP,
-					shell_get_loglevel);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_GET_LOG_LVL);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_SET_LOG_LVL,
-					SHELL_CMD_SET_LOG_LVL_PARAM,
-					SHELL_CMD_SET_LOG_LVL_HELP,
-					shell_set_loglevel);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_SET_LOG_LVL);
-		}
-
-		status = shell_register_cmd(serial_session,
-					SHELL_CMD_CPUID,
-					SHELL_CMD_CPUID_PARAM,
-					SHELL_CMD_CPUID_HELP,
-					shell_cpuid);
-
-		if (status != 0) {
-			pr_err("Error: Command \"%s\" registration failed.",
-				SHELL_CMD_CPUID);
-		}
-	}
 
 	return status;
 }
