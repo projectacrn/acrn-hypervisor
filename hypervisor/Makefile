@@ -130,6 +130,7 @@ C_SRCS += common/hypercall.c
 C_SRCS += common/trusty_hypercall.c
 C_SRCS += common/schedule.c
 C_SRCS += common/vm_load.c
+C_SRCS += common/io_request.c
 
 ifdef STACK_PROTECTOR
 C_SRCS += common/stack_protector.c
