@@ -27,6 +27,7 @@ Sections
    introduction/index.rst
    hardware.rst
    getting_started/index.rst
+   getting_started/up2.rst
    primer/index.rst
    howtos/index.rst
    release_notes.rst
