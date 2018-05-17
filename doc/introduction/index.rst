@@ -93,7 +93,7 @@ This ACRN hypervisor block diagram shows:
 
    For example: the Service OS and Linux Guest can come from the Clear
    Linux project at https://clearlinux.org and (in later updates) the
-   Android as a Guest support can come from https://01.org/android-ia.
+   Android as a Guest support can come from https://01.org/projectceladon.
 
    For the current ACRN-supported feature list, please see
    :ref:`release_notes`.
