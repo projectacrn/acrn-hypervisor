@@ -319,6 +319,9 @@ static void pci_xhci_init_port(struct pci_xhci_vdev *xdev, int portn);
 static struct pci_xhci_dev_emu *pci_xhci_dev_create(struct pci_xhci_vdev *
 		xdev, void *dev_data);
 static void pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de);
+static int pci_xhci_port_chg(struct pci_xhci_vdev *xdev, int port, int conn);
+static void pci_xhci_set_evtrb(struct xhci_trb *evtrb, uint64_t port,
+		uint32_t errcode, uint32_t evtype);
 
 static int
 pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
@@ -397,6 +400,10 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	UPRINTF(LDBG, "%X:%X %d-%d locates in slot %d port %d.\r\n",
 			native_vid, native_pid, native_bus, native_port,
 			slot, port);
+
+	/* Trigger port change event for the arriving device */
+	if (pci_xhci_port_chg(xdev, port, 1))
+		UPRINTF(LFTL, "fail to report port event\n");
 
 	return 0;
 errout:
@@ -488,6 +495,56 @@ pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de)
 		free(ue);
 		free(de);
 	}
+}
+
+static inline int
+pci_xhci_is_valid_portnum(int n)
+{
+	return n > 0 && n < XHCI_MAX_DEVS;
+}
+
+static int
+pci_xhci_port_chg(struct pci_xhci_vdev *xdev, int port, int conn)
+{
+	int speed, error;
+	struct xhci_trb evtrb;
+	struct pci_xhci_portregs *reg;
+	struct pci_xhci_dev_emu	*dev;
+
+	assert(xdev != NULL);
+
+	reg = XHCI_PORTREG_PTR(xdev, port);
+	dev = XHCI_DEVINST_PTR(xdev, port);
+	if (!dev || !dev->dev_ue || !reg) {
+		UPRINTF(LWRN, "find nullptr with port %d\r\n", port);
+		return -1;
+	}
+
+	/* TODO: add USB 3.0 port state */
+	if (conn == 0) {
+		reg->portsc &= ~XHCI_PS_CCS;
+		reg->portsc |= (XHCI_PS_CSC |
+				XHCI_PS_PLS_SET(UPS_PORT_LS_RX_DET));
+	} else {
+		speed = dev->dev_ue->ue_usbspeed;
+		reg->portsc = XHCI_PS_CCS | XHCI_PS_PP | XHCI_PS_CSC;
+		reg->portsc |= XHCI_PS_SPEED_SET(speed);
+	}
+
+
+	/* make an event for the guest OS */
+	pci_xhci_set_evtrb(&evtrb,
+			port,
+			XHCI_TRB_ERROR_SUCCESS,
+			XHCI_TRB_EVENT_PORT_STS_CHANGE);
+
+	/* put it in the event ring */
+	error = pci_xhci_insert_event(xdev, &evtrb, 1);
+	if (error != XHCI_TRB_ERROR_SUCCESS)
+		UPRINTF(LWRN, "fail to report port change\r\n");
+
+	UPRINTF(LDBG, "%s: port %d:%08X\r\n", __func__, port, reg->portsc);
+	return (error == XHCI_TRB_ERROR_SUCCESS) ? 0 : -1;
 }
 
 static void
