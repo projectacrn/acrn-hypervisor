@@ -1,8 +1,8 @@
 
 # global helper variables
 T := $(CURDIR)
-PLAT := uefi
-RELEASE := 0
+PLATFORM ?= uefi
+RELEASE ?= 0
 
 ROOT_OUT := $(T)/build
 HV_OUT := $(ROOT_OUT)/hypervisor
@@ -13,8 +13,8 @@ TOOLS_OUT := $(ROOT_OUT)/tools
 all: hypervisor devicemodel tools
 
 hypervisor:
-	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLAT) RELEASE=$(RELEASE) clean
-	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLAT) RELEASE=$(RELEASE)
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLATFORM) RELEASE=$(RELEASE) clean
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLATFORM) RELEASE=$(RELEASE)
 
 devicemodel:
 	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) clean
