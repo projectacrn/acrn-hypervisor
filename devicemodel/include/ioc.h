@@ -107,7 +107,8 @@
  * IOC mediator permits button, rtc and cardoor wakeup reasons which comes from
  * IOC firmware, others will be masked.
  */
-#define CBC_WK_RSN_ALL	(CBC_WK_RSN_BTN | CBC_WK_RSN_RTC | CBC_WK_RSN_DOR)
+#define CBC_WK_RSN_ALL \
+	(CBC_WK_RSN_BTN | CBC_WK_RSN_RTC | CBC_WK_RSN_DOR | CBC_WK_RSN_SOC)
 
 /*
  * CBC ring buffer is used to buffer bytes before build one complete CBC frame.

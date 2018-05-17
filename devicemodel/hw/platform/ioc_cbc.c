@@ -617,26 +617,18 @@ cbc_update_heartbeat(struct cbc_pkt *pkt, uint8_t cmd, uint8_t sus_action)
 /*
  * Update wakeup reason value and notify UOS immediately.
  * Some events can change the wakeup reason include periodic wakeup reason
- * from IOC firmware, IOC bootup reason, heartbeat state changing and VMM
- * callback.
+ * from IOC firmware, IOC boot/resume reason, heartbeat state changing.
  */
 static void
 cbc_update_wakeup_reason(struct cbc_pkt *pkt, uint32_t reason)
 {
 	uint8_t *payload;
 
-	/* TODO: VMM requests S3/S5 do not implement yet */
-	if (pkt->soc_active) {
-		pkt->boot_reason = 0;
-		reason |= CBC_WK_RSN_SOC;
-	} else
-		reason &= ~CBC_WK_RSN_SOC;
+	/*
+	 * Mask the bits of wakeup reason that are not allowed by IOC mediator.
+	 * Only allow Ignition button, cardoor, RTC and SoC currently.
+	 */
 	reason &= CBC_WK_RSN_ALL;
-
-	if (pkt->boot_reason != 0)
-		reason = pkt->boot_reason;
-
-	pkt->reason = reason;
 
 	/* Wakeup reason only has three bytes in CBC payload */
 	payload = pkt->req->buf + CBC_PAYLOAD_POS;
@@ -651,17 +643,14 @@ cbc_update_wakeup_reason(struct cbc_pkt *pkt, uint32_t reason)
 	pkt->req->buf[CBC_SRV_POS] = CBC_SC_WK_RSN;
 	pkt->req->srv_len = 4;
 	pkt->req->link_len = 0;
-
-	/* Send the CBC packet */
-	cbc_send_pkt(pkt);
 }
 
 /*
- * CBC service lifecycle process.
- * FIXME: called in rx and tx threads, seperating two functions is better.
+ * CBC wakeup reason processing is main entry for Tx(IOC->UOS) lifecycle
+ * service.
  */
 static void
-cbc_process_lifecycle(struct cbc_pkt *pkt)
+cbc_process_wakeup_reason(struct cbc_pkt *pkt)
 {
 	uint8_t cmd;
 	uint8_t *payload;
@@ -669,19 +658,41 @@ cbc_process_lifecycle(struct cbc_pkt *pkt)
 
 	cmd = pkt->req->buf[CBC_SRV_POS];
 	payload = pkt->req->buf + CBC_PAYLOAD_POS;
-	switch (cmd) {
-	case CBC_SC_WK_RSN:
-		reason = payload[0] | (payload[1] << 8) | (payload[2] << 16);
-		cbc_update_wakeup_reason(pkt, reason);
-		break;
-	case CBC_SC_HB:
-		cbc_update_heartbeat(pkt, payload[0], payload[1]);
-		break;
-	default:
-		DPRINTF("ioc lifecycle command=%d can not be handled\r\n",
-				cmd);
-		break;
+	if (cmd != CBC_SC_WK_RSN) {
+		DPRINTF("Only handle wakeup reason cmd, the cmd:%d\r\n", cmd);
+		return;
 	}
+	reason = payload[0] | (payload[1] << 8) | (payload[2] << 16);
+
+	/*
+	 * Save the reason for UOS status switching from inactive to active,
+	 * since need to send a wakeup reason immediatly after the switching.
+	 */
+	pkt->reason = reason;
+
+	/* Update periodic wakeup reason */
+	cbc_update_wakeup_reason(pkt, reason);
+
+	/* Send wakeup reason */
+	cbc_send_pkt(pkt);
+}
+
+/*
+ * CBC heartbeat processing is main entry for Rx(UOS->IOC) lifecycle service.
+ */
+static void
+cbc_process_heartbeat(struct cbc_pkt *pkt)
+{
+	uint8_t cmd;
+	uint8_t *payload;
+
+	cmd = pkt->req->buf[CBC_SRV_POS];
+	payload = pkt->req->buf + CBC_PAYLOAD_POS;
+	if (cmd != CBC_SC_HB) {
+		DPRINTF("Only handle heartbeat cmd, the cmd:%d\r\n", cmd);
+		return;
+	}
+	cbc_update_heartbeat(pkt, payload[0], payload[1]);
 }
 
 /*
@@ -800,7 +811,7 @@ cbc_rx_handler(struct cbc_pkt *pkt)
 	pkt->req->id = mux;
 	switch (mux) {
 	case IOC_NATIVE_LFCC:
-		cbc_process_lifecycle(pkt);
+		cbc_process_heartbeat(pkt);
 		break;
 	case IOC_NATIVE_SIGNAL:
 		cbc_process_signal(pkt);
@@ -826,7 +837,7 @@ cbc_tx_handler(struct cbc_pkt *pkt)
 	if (pkt->req->rtype == CBC_REQ_T_PROT) {
 		switch (pkt->req->id) {
 		case IOC_NATIVE_LFCC:
-			cbc_process_lifecycle(pkt);
+			cbc_process_wakeup_reason(pkt);
 			break;
 		case IOC_NATIVE_SIGNAL:
 			cbc_process_signal(pkt);
@@ -847,6 +858,9 @@ cbc_tx_handler(struct cbc_pkt *pkt)
 		 */
 		pkt->soc_active = pkt->req->buf[0];
 		cbc_update_wakeup_reason(pkt, pkt->reason);
+
+		/* Send wakeup reason */
+		cbc_send_pkt(pkt);
 	} else {
 		/* TODO: others request types process */
 		DPRINTF("ioc invalid cbc_request type in tx:%d\r\n",
