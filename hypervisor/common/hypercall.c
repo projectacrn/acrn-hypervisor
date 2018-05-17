@@ -363,7 +363,7 @@ static void complete_request(struct vcpu *vcpu)
 		req_buf = (struct vhm_request_buffer *)
 				vcpu->vm->sw.io_shared_page;
 		req_buf->req_queue[vcpu->vcpu_id].valid = false;
-		atomic_store_rel_32(&vcpu->ioreq_pending, 0);
+		atomic_store(&vcpu->ioreq_pending, 0);
 
 		return;
 	}
@@ -900,7 +900,7 @@ int acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 	fire_vhm_interrupt();
 
 	/* pause vcpu, wait for VHM to handle the MMIO request */
-	atomic_store_rel_32(&vcpu->ioreq_pending, 1);
+	atomic_store(&vcpu->ioreq_pending, 1);
 	pause_vcpu(vcpu, VCPU_PAUSED);
 
 	return 0;

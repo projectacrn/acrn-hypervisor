@@ -161,10 +161,10 @@ static int uart16550_init(struct tgt_uart *tgt_uart)
 		status = -ENODEV;
 	} else {
 		if (strcmp(tgt_uart->uart_id, "STDIO") == 0) {
-			atomic_store_rel_int(&tgt_uart->open_count, 0);
+			atomic_store(&tgt_uart->open_count, 0);
 		} else {
 			/* set open count to 1 to prevent open */
-			atomic_store_rel_int(&tgt_uart->open_count, 1);
+			atomic_store(&tgt_uart->open_count, 1);
 			status = -EINVAL;
 		}
 	}

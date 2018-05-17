@@ -82,9 +82,9 @@ int create_vcpu(int cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	 */
 	vcpu->vcpu_id = atomic_xadd(&vm->hw.created_vcpus, 1);
 	/* vm->hw.vcpu_array[vcpu->vcpu_id] = vcpu; */
-	atomic_store_rel_64(
-		(unsigned long *)&vm->hw.vcpu_array[vcpu->vcpu_id],
-		(unsigned long)vcpu);
+	atomic_store64(
+		(long *)&vm->hw.vcpu_array[vcpu->vcpu_id],
+		(long)vcpu);
 
 	ASSERT(vcpu->vcpu_id < vm->hw.num_vcpus,
 			"Allocated vcpu_id is out of range!");
@@ -221,9 +221,9 @@ int destroy_vcpu(struct vcpu *vcpu)
 	ASSERT(vcpu != NULL, "Incorrect arguments");
 
 	/* vcpu->vm->hw.vcpu_array[vcpu->vcpu_id] = NULL; */
-	atomic_store_rel_64(
-		(unsigned long *)&vcpu->vm->hw.vcpu_array[vcpu->vcpu_id],
-		(unsigned long)NULL);
+	atomic_store64(
+		(long *)&vcpu->vm->hw.vcpu_array[vcpu->vcpu_id],
+		(long)NULL);
 
 	atomic_dec(&vcpu->vm->hw.created_vcpus);
 
@@ -282,13 +282,13 @@ void pause_vcpu(struct vcpu *vcpu, enum vcpu_state new_state)
 	vcpu->state = new_state;
 
 	get_schedule_lock(vcpu->pcpu_id);
-	if (atomic_load_acq_32(&vcpu->running) == 1) {
+	if (atomic_load(&vcpu->running) == 1) {
 		remove_vcpu_from_runqueue(vcpu);
 		make_reschedule_request(vcpu);
 		release_schedule_lock(vcpu->pcpu_id);
 
 		if (vcpu->pcpu_id != pcpu_id) {
-			while (atomic_load_acq_32(&vcpu->running) == 1)
+			while (atomic_load(&vcpu->running) == 1)
 				__asm__ __volatile("pause" ::: "memory");
 		}
 	} else {

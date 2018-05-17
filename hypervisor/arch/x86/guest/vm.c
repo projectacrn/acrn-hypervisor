@@ -127,7 +127,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		snprintf(&vm->attr.name[0], MAX_VM_NAME_LEN, "vm_%d",
 			vm->attr.id);
 
-		atomic_store_rel_int(&vm->hw.created_vcpus, 0);
+		atomic_store(&vm->hw.created_vcpus, 0);
 
 		/* gpa_lowtop are used for system start up */
 		vm->hw.gpa_lowtop = 0;

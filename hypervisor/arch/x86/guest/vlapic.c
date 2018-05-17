@@ -484,7 +484,7 @@ vlapic_get_lvt(struct vlapic *vlapic, uint32_t offset)
 	uint32_t val;
 
 	idx = lvt_off_to_idx(offset);
-	val = atomic_load_acq_32(&vlapic->lvt_last[idx]);
+	val = atomic_load((int *)&vlapic->lvt_last[idx]);
 	return val;
 }
 
@@ -547,7 +547,7 @@ vlapic_lvt_write_handler(struct vlapic *vlapic, uint32_t offset)
 		vlapic_update_lvtt(vlapic, val);
 
 	*lvtptr = val;
-	atomic_store_rel_32(&vlapic->lvt_last[idx], val);
+	atomic_store((int *)&vlapic->lvt_last[idx], val);
 }
 
 static void
@@ -1097,7 +1097,7 @@ vlapic_pending_intr(struct vlapic *vlapic, int *vecptr)
 	irrptr = &lapic->irr[0];
 
 	for (i = 7; i >= 0; i--) {
-		val = atomic_load_acq_int(&irrptr[i].val);
+		val = atomic_load((int *)&irrptr[i].val);
 		bitpos = fls(val);
 		if (bitpos >= 0) {
 			vector = i * 32 + bitpos;
@@ -2007,7 +2007,7 @@ apicv_pending_intr(struct vlapic *vlapic, __unused int *vecptr)
 
 	pir_desc = vlapic->pir_desc;
 
-	pending = atomic_load_acq_long(&pir_desc->pending);
+	pending = atomic_load64((long *)&pir_desc->pending);
 	if (!pending)
 		return 0;
 

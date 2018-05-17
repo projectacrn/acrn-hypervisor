@@ -254,8 +254,8 @@ struct vcpu {
 	unsigned long pending_pre_work; /* any pre work pending? */
 	bool launched; /* Whether the vcpu is launched on target pcpu */
 	unsigned int paused_cnt; /* how many times vcpu is paused */
-	unsigned int running; /* vcpu is picked up and run? */
-	unsigned int ioreq_pending; /* ioreq is ongoing or not? */
+	int running; /* vcpu is picked up and run? */
+	int ioreq_pending; /* ioreq is ongoing or not? */
 
 	struct vhm_request req; /* used by io/ept emulation */
 	struct mem_io mmio; /* used by io/ept emulation */
