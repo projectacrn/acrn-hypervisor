@@ -40,9 +40,6 @@
 struct vhm_request;
 
 bool is_hypercall_from_ring0(void);
-int acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req);
-int acrn_insert_request_nowait(struct vcpu *vcpu, struct vhm_request *req);
-int get_req_info(char *str, int str_max);
 
 int acrn_vpic_inject_irq(struct vm *vm, int irq, enum irq_mode mode);
 
