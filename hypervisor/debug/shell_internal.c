@@ -33,6 +33,7 @@
 #include <hv_arch.h>
 #include <hv_debug.h>
 #include <hypercall.h>
+#include <reboot.h>
 #include "shell_internal.h"
 #include "serial_internal.h"
 
@@ -929,6 +930,12 @@ int shell_show_ptdev_info(struct shell *p_shell,
 	free(temp_str);
 
 	return 0;
+}
+
+int shell_reboot(__unused struct shell *p_shell,
+		__unused int argc, __unused char **argv)
+{
+	return warm_reboot();
 }
 
 int shell_show_req_info(struct shell *p_shell,

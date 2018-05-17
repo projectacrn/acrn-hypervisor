@@ -147,6 +147,12 @@ static struct shell_cmd acrn_cmd[] = {
 		.help_str	= SHELL_CMD_CPUID_HELP,
 		.fcn		= shell_cpuid,
 	},
+	{
+		.str		= SHELL_CMD_REBOOT,
+		.cmd_param	= SHELL_CMD_REBOOT_PARAM,
+		.help_str	= SHELL_CMD_REBOOT_HELP,
+		.fcn		= shell_reboot,
+	},
 };
 
 int shell_init(void)

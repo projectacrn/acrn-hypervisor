@@ -117,6 +117,10 @@ struct shell_cmd {
 #define SHELL_CMD_PTDEV_PARAM		NULL
 #define SHELL_CMD_PTDEV_HELP		"show pass-through device info"
 
+#define SHELL_CMD_REBOOT		"reboot"
+#define SHELL_CMD_REBOOT_PARAM		NULL
+#define SHELL_CMD_REBOOT_HELP		"trigger system warm reboot"
+
 #define SHELL_CMD_REQ			"lsreq"
 #define SHELL_CMD_REQ_PARAM		NULL
 #define SHELL_CMD_REQ_HELP		"show ioreq info"
@@ -170,6 +174,7 @@ int shell_trace_cmd(struct shell *p_shell, int argc, char **argv);
 int shell_to_sos_console(struct shell *p_shell, int argc, char **argv);
 int shell_show_cpu_int(struct shell *p_shell, int argc, char **argv);
 int shell_show_ptdev_info(struct shell *p_shell, int argc, char **argv);
+int shell_reboot(struct shell *p_shell, int argc, char **argv);
 int shell_show_vioapic_info(struct shell *p_shell, int argc, char **argv);
 int shell_show_ioapic_info(struct shell *p_shell, int argc, char **argv);
 int shell_show_vmexit_profile(struct shell *p_shell, int argc, char **argv);
