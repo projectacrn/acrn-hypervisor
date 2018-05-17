@@ -140,6 +140,59 @@ static int dummy2_sfd = -1;
 #endif
 
 /*
+ * IOC State Transfer
+ *
+ * +-----------+     RESUME EVENT           +-----------+
+ * |   INIT    +<---------------------------+ SUSPENDED |
+ * +-----+-----+                            +-----------+
+ *       |                                        ^
+ *       |                                        |
+ *       |HB ACTIVE                               |SHUTDOWN
+ *       |EVENT                                   |EVENT
+ *       |                                        |
+ *       |                                        |
+ *       v           RAM REFRESH EVENT/           |
+ * +-----+-----+     HB INACTIVE EVENT      +-----+-----+
+ * |   ACTIVE  +--------------------------->+SUSPENDING |
+ * +-----------+                            +-----------+
+ *
+ * INIT state:   The state is IOC mediator initialized IOC state, all of CBC
+ *               protocol packats are handler normally. In this state, UOS has
+ *               not yet sent active heartbeat.
+ *
+ * ACTIVE state: Enter this state if HB ACTIVE event is triggered that indicates
+ *               UOS state has been active and need to set the bit 23(SoC active
+ *               bit) in the wakeup reason.
+ *
+ * SUSPENDING state: Enter this state if RAM REFRESH event or HB INACTIVE event
+ *		     is triggered, the related event handler needs to set the
+ *		     suspend or shutdown to PM DM and begin to drop the queued
+ *                   CBC protocol packets.
+ *
+ * SUSPENDED state: Enter this state if SHUTDOWN event is triggered to close all
+ *                  native CBC char devices. The IOC mediator will be enter to
+ *                  sleeping until RESUME event is triggered that re-opens
+ *                  closed native CBC char devices and transfer to INIT state.
+ */
+static int process_hb_active_event(struct ioc_dev *ioc);
+static int process_ram_refresh_event(struct ioc_dev *ioc);
+static int process_hb_inactive_event(struct ioc_dev *ioc);
+static int process_shutdown_event(struct ioc_dev *ioc);
+static int process_resume_event(struct ioc_dev *ioc);
+static struct ioc_state_info ioc_state_tbl[] = {
+	{IOC_S_INIT,		IOC_S_ACTIVE,		IOC_E_HB_ACTIVE,
+		process_hb_active_event},
+	{IOC_S_ACTIVE,		IOC_S_SUSPENDING,	IOC_E_RAM_REFRESH,
+		process_ram_refresh_event},
+	{IOC_S_ACTIVE,		IOC_S_SUSPENDING,	IOC_E_HB_INACTIVE,
+		process_hb_inactive_event},
+	{IOC_S_SUSPENDING,	IOC_S_SUSPENDED,	IOC_E_SHUTDOWN,
+		process_shutdown_event},
+	{IOC_S_SUSPENDED,	IOC_S_INIT,		IOC_E_RESUME,
+		process_resume_event},
+};
+
+/*
  * IOC channels definition.
  */
 static struct ioc_ch_info ioc_ch_tbl[] = {
@@ -163,6 +216,7 @@ static struct ioc_ch_info ioc_ch_tbl[] = {
 	{IOC_INIT_FD, IOC_NP_RAW10, IOC_NATIVE_RAW10,	IOC_CH_ON},
 	{IOC_INIT_FD, IOC_NP_RAW11, IOC_NATIVE_RAW11,	IOC_CH_ON},
 	{IOC_INIT_FD, IOC_DP_NONE,  IOC_VIRTUAL_UART,	IOC_CH_ON},
+	{IOC_INIT_FD, IOC_DP_NONE,  IOC_LOCAL_EVENT,	IOC_CH_ON}
 #ifdef IOC_DUMMY
 	{IOC_INIT_FD, IOC_NP_FLF,   IOC_NATIVE_DUMMY0,	IOC_CH_ON},
 	{IOC_INIT_FD, IOC_NP_FSIG,  IOC_NATIVE_DUMMY1,	IOC_CH_ON},
@@ -564,6 +618,7 @@ ioc_ch_init(struct ioc_dev *ioc)
 {
 	int i, fd;
 	struct ioc_ch_info *chl;
+	int pipe_fds[2];
 
 	for (i = 0, chl = ioc_ch_tbl; i < ARRAY_SIZE(ioc_ch_tbl); i++, chl++) {
 		if (chl->stat == IOC_CH_OFF)
@@ -577,6 +632,15 @@ ioc_ch_init(struct ioc_dev *ioc)
 			break;
 		case IOC_VIRTUAL_UART:
 			fd = ioc_open_virtual_uart(virtual_uart_path);
+			break;
+		case IOC_LOCAL_EVENT:
+			if (!pipe(pipe_fds)) {
+				fd = pipe_fds[0];
+				ioc->evt_fd = pipe_fds[1];
+			} else {
+				fd = IOC_INIT_FD;
+				DPRINTF("%s", "ioc open event fd failed\r\n");
+			}
 			break;
 #ifdef IOC_DUMMY
 		/*
@@ -606,7 +670,8 @@ ioc_ch_init(struct ioc_dev *ioc)
 		 * if can not open lifecycle or virtual UART
 		 * ioc needs to exit initilization with failure
 		 */
-		if (fd < 0 && (i == IOC_NATIVE_LFCC || i == IOC_VIRTUAL_UART))
+		if (fd < 0 && (i == IOC_NATIVE_LFCC || i == IOC_VIRTUAL_UART ||
+					i == IOC_LOCAL_EVENT))
 			return -1;
 
 		chl->fd = fd;
@@ -700,6 +765,85 @@ cbc_request_dequeue(struct ioc_dev *ioc, enum cbc_queue_type qtype)
 		pthread_mutex_unlock(&ioc->free_mtx);
 	}
 	return free;
+}
+
+/*
+ * Process hb active event before transfer to next state
+ */
+static int
+process_hb_active_event(struct ioc_dev *ioc)
+{
+	/* TODO: Need implementation */
+	return 0;
+}
+
+/*
+ * Process ram refresh event before transfer to next state
+ */
+static int
+process_ram_refresh_event(struct ioc_dev *ioc)
+{
+	/* TODO: Need implementation */
+	return 0;
+}
+
+/*
+ * Process hb inactive event before transfer to next state
+ */
+static int
+process_hb_inactive_event(struct ioc_dev *ioc)
+{
+	/* TODO: Need implementation */
+	return 0;
+}
+
+/*
+ * Process shutdown reason event before transfer to next state
+ */
+static int
+process_shutdown_event(struct ioc_dev *ioc)
+{
+	/* TODO: Need implementation */
+	return 0;
+}
+
+/*
+ * Process resume event before transfer to next state
+ */
+static int
+process_resume_event(struct ioc_dev *ioc)
+{
+	/* TODO: Need implementation */
+	return 0;
+}
+
+/*
+ * Process IOC local events
+ */
+static void
+ioc_process_events(struct ioc_dev *ioc, enum ioc_ch_id id)
+{
+	int i;
+	uint8_t evt;
+
+	/* Get one event */
+	if (ioc_ch_recv(id, &evt, sizeof(evt)) < 0) {
+		DPRINTF("%s", "ioc state gets event failed\r\n");
+		return;
+	}
+
+	for (i = 0; i < ARRAY_SIZE(ioc_state_tbl); i++) {
+		if (evt == ioc_state_tbl[i].evt &&
+				ioc->state == ioc_state_tbl[i].cur_stat) {
+			if (ioc_state_tbl[i].handler &&
+				ioc_state_tbl[i].handler(ioc) == 0)
+				ioc->state = ioc_state_tbl[i].next_stat;
+			else
+				DPRINTF("ioc state switching failed,%d->%d\r\n",
+						ioc_state_tbl[i].cur_stat,
+						ioc_state_tbl[i].next_stat);
+		}
+	}
 }
 
 /*
@@ -816,6 +960,9 @@ ioc_dispatch(struct ioc_dev *ioc, struct ioc_ch_info *chl)
 	case IOC_VIRTUAL_UART:
 		ioc_process_rx(ioc, chl->id);
 		break;
+	case IOC_LOCAL_EVENT:
+		ioc_process_events(ioc, chl->id);
+		break;
 	default:
 		DPRINTF("ioc dispatch got wrong channel:%d\r\n", chl->id);
 		break;
@@ -881,6 +1028,7 @@ ioc_rx_thread(void *arg)
 	memset(&packet, 0, sizeof(packet));
 	packet.cfg = &ioc->rx_config;
 	packet.boot_reason = ioc_boot_reason;
+
 	for (;;) {
 		pthread_mutex_lock(&ioc->rx_mtx);
 		while (SIMPLEQ_EMPTY(&ioc->rx_qhead)) {
@@ -933,6 +1081,7 @@ ioc_tx_thread(void *arg)
 	memset(&packet, 0, sizeof(packet));
 	packet.cfg = &ioc->tx_config;
 	packet.boot_reason = ioc_boot_reason;
+
 	for (;;) {
 		pthread_mutex_lock(&ioc->tx_mtx);
 		while (SIMPLEQ_EMPTY(&ioc->tx_qhead)) {
@@ -1095,11 +1244,18 @@ ioc_init(struct vmctx *ctx)
 	for (i = 0; i < IOC_MAX_REQUESTS; i++)
 		SIMPLEQ_INSERT_TAIL(&ioc->free_qhead, ioc->pool + i, me_queue);
 
+	/* Initialize IOC state */
+	ioc->state = IOC_S_INIT;
+
+	/* Set event fd to default value */
+	ioc->evt_fd = IOC_INIT_FD;
+
 	/*
 	 * Initialize native CBC cdev and virtual UART.
 	 */
 	if (ioc_ch_init(ioc) != 0)
 		goto chl_err;
+
 
 	/* Initlialize CBC rx/tx signal and group whitelists */
 	wlist_init_signal(cbc_rx_signal_table, ARRAY_SIZE(cbc_rx_signal_table),
@@ -1175,6 +1331,8 @@ work_err:
 chl_err:
 	ioc_ch_deinit();
 	pthread_mutex_destroy(&ioc->free_mtx);
+	if (ioc->evt_fd >= 0)
+		close(ioc->evt_fd);
 	close(ioc->epfd);
 alloc_err:
 	free(ioc->evts);
@@ -1200,6 +1358,8 @@ ioc_deinit(struct vmctx *ctx)
 	}
 	ioc_kill_workers(ioc);
 	ioc_ch_deinit();
+	if (ioc->evt_fd >= 0)
+		close(ioc->evt_fd);
 	close(ioc->epfd);
 	free(ioc->evts);
 	free(ioc->pool);
