@@ -31,12 +31,38 @@
 
 #include <stdlib.h>
 #include <pthread.h>
+#include <stdbool.h>
 #include "types.h"
 
 #define	USB_MAX_XFER_BLOCKS	8
-
 #define	USB_XFER_OUT		0
 #define	USB_XFER_IN		1
+
+#define USB_DIR_OUT              0
+#define USB_DIR_IN               0x80
+
+#define LIBUSB_TIMEOUT           10000
+
+#define USB_CFG_ATT_ONE          (1 << 7) /* should always be set */
+#define USB_CFG_ATT_SELFPOWER    (1 << 6)
+#define USB_CFG_ATT_WAKEUP       (1 << 5)
+#define USB_CFG_ATT_BATTERY      (1 << 4)
+
+enum endpoint_type {
+	USB_ENDPOINT_CONTROL = 0,
+	USB_ENDPOINT_ISOC,
+	USB_ENDPOINT_BULK,
+	USB_ENDPOINT_INT,
+	USB_ENDPOINT_INVALID = 255
+};
+
+#define USB_INTERFACE_INVALID 255
+
+enum token_type {
+	TOKEN_OUT = 0,
+	TOKEN_IN,
+	TOKEN_SETUP
+};
 
 struct usb_hci;
 struct usb_device_request;
@@ -108,6 +134,7 @@ struct usb_data_xfer {
 	int	ndata;				/* # of data items */
 	int	head;
 	int	tail;
+	int	status;
 	pthread_mutex_t mtx;
 };
 

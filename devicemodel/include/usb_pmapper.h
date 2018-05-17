@@ -32,9 +32,17 @@
 #ifndef _USB_DEVICE_H
 #define _USB_DEVICE_H
 #include <libusb-1.0/libusb.h>
+#include "usb_core.h"
 
 #define USB_NUM_INTERFACE 16
 #define USB_NUM_ENDPOINT  15
+
+#define USB_EP_ADDR(d) ((d)->bEndpointAddress)
+#define USB_EP_ATTR(d) ((d)->bmAttributes)
+#define USB_EP_PID(d) (USB_EP_ADDR(d) & USB_DIR_IN ? TOKEN_IN : TOKEN_OUT)
+#define USB_EP_TYPE(d) (USB_EP_ATTR(d) & 0x3)
+#define USB_EP_NR(d) (USB_EP_ADDR(d) & 0xF)
+#define USB_EP_ERR_TYPE 0xFF
 
 enum {
 	USB_INFO_VERSION,
@@ -106,4 +114,6 @@ int usb_dev_sys_init(usb_dev_sys_cb conn_cb, usb_dev_sys_cb disconn_cb,
 void *usb_dev_init(void *pdata, char *opt);
 void usb_dev_deinit(void *pdata);
 int usb_dev_info(void *pdata, int type, void *value, int size);
+int usb_dev_request(void *pdata, struct usb_data_xfer *xfer);
+int usb_dev_reset(void *pdata);
 #endif
