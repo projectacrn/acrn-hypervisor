@@ -427,10 +427,10 @@ pci_xhci_dev_create(struct pci_xhci_vdev *xdev, void *dev_data)
 
 	/* TODO: following function pointers will be populated in future */
 	ue->ue_init     = usb_dev_init;
-	ue->ue_request  = NULL;
+	ue->ue_request  = usb_dev_request;
 	ue->ue_data     = NULL;
 	ue->ue_info	= usb_dev_info;
-	ue->ue_reset    = NULL;
+	ue->ue_reset    = usb_dev_reset;
 	ue->ue_remove   = NULL;
 	ue->ue_stop     = NULL;
 	ue->ue_deinit	= usb_dev_deinit;

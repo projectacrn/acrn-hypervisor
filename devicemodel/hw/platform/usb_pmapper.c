@@ -59,6 +59,129 @@ usb_dev_err_convert(int err)
 	return USB_ERR_IOERROR;
 }
 
+static inline struct usb_dev_ep *
+usb_dev_get_ep(struct usb_dev *udev, int pid, int ep)
+{
+	assert(udev);
+
+	if (ep < 0 || ep >= USB_NUM_ENDPOINT) {
+		UPRINTF(LWRN, "invalid ep %d\r\n", ep);
+		return NULL;
+	}
+
+	if (ep == 0)
+		return &udev->epc;
+
+	if (pid == TOKEN_IN)
+		return udev->epi + ep - 1;
+	else
+		return udev->epo + ep - 1;
+}
+
+static inline void
+usb_dev_set_ep_type(struct usb_dev *udev, int pid, int epnum,
+		uint8_t type)
+{
+	struct usb_dev_ep *ep;
+
+	ep = usb_dev_get_ep(udev, pid, epnum);
+	if (ep)
+		ep->type = type;
+}
+
+static inline uint8_t
+usb_dev_get_ep_type(struct usb_dev *udev, int pid, int epnum)
+{
+	struct usb_dev_ep *ep;
+
+	ep = usb_dev_get_ep(udev, pid, epnum);
+	if (!ep)
+		return USB_EP_ERR_TYPE;
+	else
+		return ep->type;
+}
+
+static void
+usb_dev_reset_ep(struct usb_dev *udev)
+{
+	int ep;
+
+	udev->epc.type = USB_ENDPOINT_CONTROL;
+	for (ep = 0; ep < USB_NUM_ENDPOINT; ep++) {
+		udev->epi[ep].pid = TOKEN_IN;
+		udev->epo[ep].pid = TOKEN_OUT;
+		udev->epi[ep].type = USB_ENDPOINT_INVALID;
+		udev->epo[ep].type = USB_ENDPOINT_INVALID;
+	}
+}
+
+static void
+usb_dev_update_ep(struct usb_dev *udev)
+{
+	struct libusb_config_descriptor *cfg;
+	const struct libusb_interface_descriptor *_if;
+	const struct libusb_endpoint_descriptor *desc;
+	int i, j;
+
+	assert(udev);
+	if (libusb_get_active_config_descriptor(udev->ldev, &cfg))
+		return;
+
+	for (i = 0; i < cfg->bNumInterfaces; i++) {
+		_if = &cfg->interface[i].altsetting[udev->alts[i]];
+
+		for (j = 0; j < _if->bNumEndpoints; j++) {
+			desc = &_if->endpoint[j];
+			usb_dev_set_ep_type(udev,
+					USB_EP_PID(desc),
+					USB_EP_NR(desc),
+					USB_EP_TYPE(desc));
+		}
+	}
+	libusb_free_config_descriptor(cfg);
+}
+
+static int
+usb_dev_native_toggle_if(struct usb_dev *udev, int claim)
+{
+	struct libusb_config_descriptor *config;
+	uint8_t b, p, c, i;
+	int rc = 0, r;
+
+	assert(udev);
+	assert(udev->handle);
+	assert(udev->ldev);
+	assert(claim == 1 || claim == 0);
+
+	b = udev->bus;
+	p = udev->port;
+
+	r = libusb_get_active_config_descriptor(udev->ldev, &config);
+	if (r) {
+		UPRINTF(LWRN, "%d-%d: can't get config\r\n", b, p);
+		return -1;
+	}
+
+	c = config->bConfigurationValue;
+	for (i = 0; i < config->bNumInterfaces; i++) {
+		if (claim == 1)
+			r = libusb_claim_interface(udev->handle, i);
+		else
+			r = libusb_release_interface(udev->handle, i);
+
+		if (r) {
+			rc = -1;
+			UPRINTF(LWRN, "%d-%d:%d.%d can't %s if\r\n", b, p, c, i,
+					claim == 1 ? "claim" : "release");
+		}
+	}
+	if (rc)
+		UPRINTF(LWRN, "%d-%d fail to %s rc %d\r\n", b, p,
+				claim == 1 ? "claim" : "release", rc);
+	libusb_free_config_descriptor(config);
+	return rc;
+}
+
 static int
 usb_dev_native_toggle_if_drivers(struct usb_dev *udev, int attach)
 {
@@ -98,6 +221,220 @@ usb_dev_native_toggle_if_drivers(struct usb_dev *udev, int attach)
 				attach == 1 ? "attach" : "detach", rc);
 	libusb_free_config_descriptor(config);
 	return rc;
+}
+
+static void
+usb_dev_set_config(struct usb_dev *udev, struct usb_data_xfer *xfer, int config)
+{
+	int rc = 0;
+	struct libusb_config_descriptor *cfg;
+
+	assert(udev);
+	assert(udev->ldev);
+	assert(udev->handle);
+
+	/*
+	 * set configuration
+	 * according to the libusb doc, the detach and release work
+	 * should be done before set configuration.
+	 */
+	usb_dev_native_toggle_if_drivers(udev, 0);
+	usb_dev_native_toggle_if(udev, 0);
+
+	rc = libusb_set_configuration(udev->handle, config);
+	if (rc) {
+		UPRINTF(LWRN, "fail to set config rc %d\r\n", rc);
+		goto err2;
+	}
+
+	/* claim all the interfaces of this configuration */
+	rc = libusb_get_active_config_descriptor(udev->ldev, &cfg);
+	if (rc) {
+		UPRINTF(LWRN, "fail to get config rc %d\r\n", rc);
+		goto err2;
+	}
+
+	rc = usb_dev_native_toggle_if(udev, 1);
+	if (rc) {
+		UPRINTF(LWRN, "fail to claim if, rc %d\r\n", rc);
+		goto err1;
+	}
+
+	udev->if_num = cfg->bNumInterfaces;
+	udev->configuration = config;
+
+	usb_dev_reset_ep(udev);
+	usb_dev_update_ep(udev);
+	libusb_free_config_descriptor(cfg);
+	return;
+
+err1:
+	usb_dev_native_toggle_if(udev, 0);
+	libusb_free_config_descriptor(cfg);
+err2:
+	UPRINTF(LWRN, "%d-%d: fail to set config\r\n", udev->bus, udev->port);
+	xfer->status = USB_ERR_STALLED;
+}
+
+static void
+usb_dev_set_if(struct usb_dev *udev, int iface, int alt, struct usb_data_xfer
+		*xfer)
+{
+	assert(udev);
+	assert(xfer);
+	assert(udev->handle);
+
+	if (iface >= USB_NUM_INTERFACE)
+		goto errout;
+
+	UPRINTF(LDBG, "%d-%d set if, iface %d alt %d\r\n", udev->bus,
+			udev->port, iface, alt);
+
+	if (libusb_set_interface_alt_setting(udev->handle, iface, alt))
+		goto errout;
+
+	udev->alts[iface] = alt;
+	/*
+	 * FIXME: Only support single interface USB device first. Need fix in
+	 * future to support composite USB device.
+	 */
+	usb_dev_reset_ep(udev);
+	usb_dev_update_ep(udev);
+	return;
+
+errout:
+	xfer->status = USB_ERR_STALLED;
+	UPRINTF(LDBG, "%d-%d fail to set if, iface %d alt %d\r\n",
+			udev->bus, udev->port, iface, alt);
+}
+
+static struct usb_data_xfer_block *
+usb_dev_prepare_ctrl_xfer(struct usb_data_xfer *xfer)
+{
+	int i, idx;
+	struct usb_data_xfer_block *ret = NULL;
+	struct usb_data_xfer_block *blk = NULL;
+
+	idx = xfer->head;
+	for (i = 0; i < xfer->ndata; i++) {
+		/*
+		 * find out the data block and set every
+		 * block to be processed
+		 */
+		blk = &xfer->data[idx];
+		if (blk->blen > 0 && !ret)
+			ret = blk;
+
+		blk->processed = 1;
+		idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
+	}
+	return ret;
+}
+
+int
+usb_dev_reset(void *pdata)
+{
+	struct usb_dev *udev;
+
+	udev = pdata;
+	assert(udev);
+
+	UPRINTF(LDBG, "reset endpoints\n");
+	libusb_reset_device(udev->handle);
+	usb_dev_reset_ep(udev);
+	usb_dev_update_ep(udev);
+	return 0;
+}
+
+int
+usb_dev_request(void *pdata, struct usb_data_xfer *xfer)
+{
+	struct usb_dev *udev;
+	uint8_t  request_type;
+	uint8_t  request;
+	uint16_t value;
+	uint16_t index;
+	uint16_t len;
+	struct usb_data_xfer_block *blk;
+	uint8_t *data;
+	int rc;
+
+	udev = pdata;
+
+	assert(xfer);
+	assert(udev);
+
+	xfer->status = USB_ERR_NORMAL_COMPLETION;
+	if (!udev->ldev || !xfer->ureq) {
+		UPRINTF(LWRN, "invalid request\r\n");
+		xfer->status = USB_ERR_IOERROR;
+		goto out;
+	}
+
+	request_type = xfer->ureq->bmRequestType;
+	request      = xfer->ureq->bRequest;
+	value        = xfer->ureq->wValue;
+	index        = xfer->ureq->wIndex;
+	len          = xfer->ureq->wLength;
+
+	blk = usb_dev_prepare_ctrl_xfer(xfer);
+	data = blk ? blk->buf : NULL;
+
+	UPRINTF(LDBG,
+		"urb: type 0x%x req 0x%x val 0x%x idx %d len %d data %d\n",
+		 request_type, request, value, index, len,
+		 blk ? blk->blen : 0);
+
+	/*
+	 * according to usb spec, control transfer may have no
+	 * DATA STAGE, so the valid situations are:
+	 *   a. with DATA STAGE: blk != NULL && len > 0
+	 *   b. without DATA STAGE: blk == NULL && len == 0
+	 * any other situations, just skip process
+	 */
+	if ((!blk && len > 0) || (blk && len <= 0))
+		goto out;
+
+	switch (UREQ(request, request_type)) {
+	case UREQ(UR_SET_ADDRESS, UT_READ_DEVICE):
+		UPRINTF(LDBG, "UR_SET_ADDRESS\n");
+		udev->addr = value;
+		goto out;
+	case UREQ(UR_SET_CONFIG, UT_READ_DEVICE):
+		UPRINTF(LDBG, "UR_SET_CONFIG\n");
+		usb_dev_set_config(udev, xfer, value & 0xff);
+		goto out;
+	case UREQ(UR_SET_INTERFACE, UT_READ_INTERFACE):
+		UPRINTF(LDBG, "UR_SET_INTERFACE\n");
+		usb_dev_set_if(udev, index, value, xfer);
+		goto out;
+	case UREQ(UR_CLEAR_FEATURE, UT_WRITE_ENDPOINT):
+		if (value == 0) {
+			UPRINTF(LDBG, "UR_CLEAR_HALT\n");
+			libusb_clear_halt(udev->handle, index);
+			goto out;
+		}
+	}
+
+	/* send it to physical device */
+	/* TODO: should this be async operation? */
+	rc = libusb_control_transfer(udev->handle, request_type, request,
+			value, index, data, len, 100);
+
+	if (rc >= 0 && blk) {
+		blk->blen = len - rc;
+		blk->bdone += rc;
+		xfer->status = blk->blen > 0 ? USB_ERR_SHORT_XFER :
+			USB_ERR_NORMAL_COMPLETION;
+	} else if (rc >= 0)
+		xfer->status = USB_ERR_NORMAL_COMPLETION;
+	else
+		xfer->status = usb_dev_err_convert(rc);
+
+	UPRINTF(LDBG, "usb rc %d, blk %p, blen %u bdon %u\n", rc, blk,
+			blk ? blk->blen : 0, blk ? blk->bdone : 0);
+out:
+	return xfer->status;
 }
 
 void *
