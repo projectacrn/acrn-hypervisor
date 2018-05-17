@@ -56,6 +56,26 @@ static inline void name(volatile type *ptr, type v)	\
 build_atomic_store(atomic_store, "l", int, p, v)
 build_atomic_store(atomic_store64, "q", long, p, v)
 
+#define build_atomic_inc(name, size, type, ptr)		\
+static inline void name(type *ptr)			\
+{							\
+	asm volatile(BUS_LOCK "inc" size " %0"		\
+			: "=m" (*ptr)			\
+			:  "m" (*ptr));			\
+}
+build_atomic_inc(atomic_inc, "l", int, p)
+build_atomic_inc(atomic_inc64, "q", long, p)
+
+#define build_atomic_dec(name, size, type, ptr)		\
+static inline void name(type *ptr)			\
+{							\
+	asm volatile(BUS_LOCK "dec" size " %0"		\
+			: "=m" (*ptr)			\
+			:  "m" (*ptr));			\
+}
+build_atomic_dec(atomic_dec, "l", int, p)
+build_atomic_dec(atomic_dec64, "q", long, p)
+
 /*
  *  #define atomic_set_int(P, V)		(*(unsigned int *)(P) |= (V))
  */
@@ -77,46 +97,6 @@ static inline void atomic_clear_int(unsigned int *p, unsigned int v)
 			:  "r" (~v)
 			:  "cc", "memory");
 }
-
-#define build_atomic_inc(name, size, type, ptr)		\
-static inline void name(type *ptr)			\
-{							\
-	asm volatile(BUS_LOCK "inc" size " %0"		\
-			: "=m" (*ptr)			\
-			:  "m" (*ptr));			\
-}
-build_atomic_inc(atomic_inc, "l", int, p)
-build_atomic_inc(atomic_inc64, "q", long, p)
-
-#define build_atomic_dec(name, size, type, ptr)		\
-static inline void name(type *ptr)			\
-{							\
-	asm volatile(BUS_LOCK "dec" size " %0"		\
-			: "=m" (*ptr)			\
-			:  "m" (*ptr));			\
-}
-build_atomic_dec(atomic_dec, "l", int, p)
-build_atomic_dec(atomic_dec64, "q", long, p)
-
-
-/*
- *  #define atomic_swap_int(P, V) \
- *  (return (*(unsigned int *)(P)); *(unsigned int *)(P) = (V);)
- */
-static inline int atomic_swap_int(unsigned int *p, unsigned int v)
-{
-	__asm __volatile(BUS_LOCK "xchgl %1,%0"
-			:  "+m" (*p), "+r" (v)
-			:
-			:  "cc", "memory");
-	return v;
-}
-
-/*
- *  #define atomic_readandclear_int(P) \
- *  (return (*(unsigned int *)(P)); *(unsigned int *)(P) = 0;)
- */
-#define	atomic_readandclear_int(p)	atomic_swap_int(p, 0)
 
 /*
  *  #define atomic_set_long(P, V)		(*(unsigned long *)(P) |= (V))
@@ -140,37 +120,43 @@ static inline void atomic_clear_long(unsigned long *p, unsigned long v)
 			:  "cc", "memory");
 }
 
-/*
- *  #define atomic_swap_long(P, V) \
- *  (return (*(unsigned long *)(P)); *(unsigned long *)(P) = (V);)
- */
-static inline long atomic_swap_long(unsigned long *p, unsigned long v)
-{
-	__asm __volatile(BUS_LOCK "xchgq %1,%0"
-			:  "+m" (*p), "+r" (v)
-			:
-			:  "cc", "memory");
-	return v;
+#define build_atomic_swap(name, size, type, ptr, v)	\
+static inline type name(type *ptr, type v)		\
+{							\
+	asm volatile(BUS_LOCK "xchg" size " %1,%0"	\
+			:  "+m" (*ptr), "+r" (v)	\
+			:				\
+			:  "cc", "memory");		\
+	return v;					\
 }
+build_atomic_swap(atomic_swap, "l", int, p, v)
+build_atomic_swap(atomic_swap64, "q", long, p, v)
 
-/*
- *  #define atomic_readandclear_long(P) \
- *  (return (*(unsigned long *)(P)); *(unsigned long *)(P) = 0;)
- */
-#define	atomic_readandclear_long(p)	atomic_swap_long(p, 0)
+ /*
+ * #define atomic_readandclear(P) \
+ * (return (*(int *)(P)); *(int *)(P) = 0;)
+  */
+#define atomic_readandclear(p)		atomic_swap(p, 0)
 
-static inline int atomic_cmpxchg_int(unsigned int *p,
-			int old, int new)
-{
-	int ret;
+ /*
+ * #define atomic_readandclear64(P) \
+ * (return (*(long *)(P)); *(long *)(P) = 0;)
+  */
+#define atomic_readandclear64(p)	atomic_swap64(p, 0)
 
-	__asm __volatile(BUS_LOCK "cmpxchgl %2,%1"
-			: "=a" (ret), "+m" (*p)
-			: "r" (new), "0" (old)
-			: "memory");
-
-	return ret;
+#define build_atomic_cmpxchg(name, size, type, ptr, old, new)	\
+static inline type name(volatile type *ptr,			\
+			type old, type new)			\
+{								\
+	type ret;						\
+	asm volatile(BUS_LOCK "cmpxchg" size " %2,%1"		\
+			: "=a" (ret), "+m" (*p)			\
+			: "r" (new), "0" (old)			\
+			: "memory");				\
+	return ret;						\
 }
+build_atomic_cmpxchg(atomic_cmpxchg, "l", int, p, old, new)
+build_atomic_cmpxchg(atomic_cmpxchg64, "q", long, p, old, new)
 
 #define build_atomic_xadd(name, size, type, ptr, v)		\
 static inline type name(type *ptr, type v)			\
@@ -195,18 +181,5 @@ build_atomic_xadd(atomic_xadd64, "q", long, p, v)
 
 #define atomic_inc64_return(v)		atomic_add64_return((v), 1)
 #define atomic_dec64_return(v)		atomic_sub64_return((v), 1)
-
-static inline int
-atomic_cmpset_long(unsigned long *dst, unsigned long expect, unsigned long src)
-{
-	unsigned char res;
-
-	__asm __volatile(BUS_LOCK "cmpxchg %3,%1\n\tsete %0"
-			: "=q" (res), "+m" (*dst), "+a" (expect)
-			: "r" (src)
-			: "memory", "cc");
-
-	return res;
-}
 
 #endif /* ATOMIC_H*/
