@@ -2,7 +2,7 @@
 OUT_DIR ?= .
 
 all:
-	gcc -o $(OUT_DIR)/acrntrace acrntrace.c sbuf.c -I. -lpthread
+	$(CC) -o $(OUT_DIR)/acrntrace acrntrace.c sbuf.c -I. -lpthread
 
 clean:
 	rm $(OUT_DIR)/acrntrace

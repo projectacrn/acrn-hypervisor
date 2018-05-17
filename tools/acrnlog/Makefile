@@ -2,7 +2,7 @@
 OUT_DIR ?= .
 
 all:
-	gcc -g acrnlog.c -o $(OUT_DIR)/acrnlog -lpthread
+	$(CC) -g acrnlog.c -o $(OUT_DIR)/acrnlog -lpthread
 
 clean:
 	rm $(OUT_DIR)/acrnlog
