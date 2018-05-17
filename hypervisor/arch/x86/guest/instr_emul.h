@@ -90,6 +90,6 @@ int vmm_decode_instruction(struct vcpu *vcpu, uint64_t gla,
 		enum vm_cpu_mode cpu_mode, int csd, struct vie *vie);
 
 int emulate_instruction(struct vcpu *vcpu, struct mem_io *mmio);
-int analyze_instruction(struct vcpu *vcpu, struct mem_io *mmio);
+int decode_instruction(struct vcpu *vcpu, struct mem_io *mmio);
 
 #endif	/* _VMM_INSTRUCTION_EMUL_H_ */

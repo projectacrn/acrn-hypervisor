@@ -2178,7 +2178,7 @@ int apic_access_vmexit_handler(struct vcpu *vcpu)
 
 	vlapic = vcpu->arch_vcpu.vlapic;
 
-	analyze_instruction(vcpu, &vcpu->mmio);
+	decode_instruction(vcpu, &vcpu->mmio);
 	if (access_type == 1) {
 		if (!emulate_instruction(vcpu, &vcpu->mmio))
 			vlapic_write(vlapic, 1, offset, vcpu->mmio.value);

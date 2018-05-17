@@ -380,7 +380,7 @@ void vm_gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa)
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3, gva);
 }
 
-int analyze_instruction(struct vcpu *vcpu, struct mem_io *mmio)
+int decode_instruction(struct vcpu *vcpu, struct mem_io *mmio)
 {
 	uint64_t guest_rip_gva, guest_rip_gpa;
 	char *guest_rip_hva;
