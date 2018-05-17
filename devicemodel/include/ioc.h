@@ -526,6 +526,7 @@ enum ioc_ch_id {
 	IOC_NATIVE_RAW10,	/* Native /dev/cbc-raw10 */
 	IOC_NATIVE_RAW11,	/* Native /dev/cbc-raw11 */
 	IOC_VIRTUAL_UART,	/* Virtual UART */
+	IOC_LOCAL_EVENT,	/* Local channel for IOC event */
 	IOC_NATIVE_DUMMY0,	/* Native fake lifecycle channel */
 	IOC_NATIVE_DUMMY1,	/* Native fake signal channel */
 	IOC_NATIVE_DUMMY2,	/* Native Fake oem raw channel */
@@ -575,8 +576,8 @@ enum cbc_queue_type {
  */
 enum cbc_request_type {
 	CBC_REQ_T_PROT,		/* CBC protocol request */
-	CBC_REQ_T_VMM_S3,	/* VMM suspend request */
-	CBC_REQ_T_VMM_S5,	/* VMM shutdown request */
+	CBC_REQ_T_SUSPEND,	/* CBC suspend request */
+	CBC_REQ_T_SHUTDOWN,	/* CBC shutdown request */
 	CBC_REQ_T_SOC		/* SOC state update request */
 };
 
@@ -657,6 +658,28 @@ struct cbc_request {
 };
 
 /*
+ * IOC state types.
+ */
+enum ioc_state_type {
+	IOC_S_INIT,
+	IOC_S_ACTIVE,
+	IOC_S_SUSPENDING,
+	IOC_S_SUSPENDED
+};
+
+/*
+ * IOC event types.
+ */
+enum ioc_event_type {
+	IOC_E_INVALID,
+	IOC_E_HB_ACTIVE,
+	IOC_E_RAM_REFRESH,
+	IOC_E_HB_INACTIVE,
+	IOC_E_SHUTDOWN,
+	IOC_E_RESUME
+};
+
+/*
  * CBC packet is mainly structure for CBC protocol process.
  */
 struct cbc_pkt {
@@ -684,6 +707,8 @@ struct ioc_dev {
 	char name[16];			/* Core thread name */
 	int closing;			/* Close IOC mediator device flag */
 	int epfd;			/* Epoll fd */
+	int32_t evt_fd;			/* Pipe write fd to trigger one event */
+	enum ioc_state_type state;	/* IOC state type */
 	struct epoll_event *evts;	/* Epoll events table */
 	struct cbc_request *pool;	/* CBC requests pool */
 	struct cbc_ring ring;		/* Ring buffer */
@@ -706,6 +731,16 @@ struct ioc_dev {
 	pthread_cond_t tx_cond;
 	pthread_mutex_t tx_mtx;
 	void (*ioc_dev_tx)(struct cbc_pkt *pkt);
+};
+
+/*
+ * IOC state information.
+ */
+struct ioc_state_info {
+	enum ioc_state_type cur_stat;
+	enum ioc_state_type next_stat;
+	enum ioc_event_type evt;
+	int32_t (*handler)(struct ioc_dev *ioc);
 };
 
 /* Parse IOC parameters */
