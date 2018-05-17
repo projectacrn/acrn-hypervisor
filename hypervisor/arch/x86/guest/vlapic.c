@@ -1992,7 +1992,7 @@ apicv_set_intr_ready(struct vlapic *vlapic, int vector, __unused bool level)
 	mask = 1UL << (vector % 64);
 
 	atomic_set_long(&pir_desc->pir[idx], mask);
-	notify = atomic_cmpset_long(&pir_desc->pending, 0, 1);
+	notify = (atomic_cmpxchg64((long *)&pir_desc->pending, 0, 1) == 0);
 	return notify;
 }
 
@@ -2109,7 +2109,7 @@ apicv_inject_pir(struct vlapic *vlapic)
 	struct lapic_reg *irr = NULL;
 
 	pir_desc = vlapic->pir_desc;
-	if (atomic_cmpset_long(&pir_desc->pending, 1, 0) == 0)
+	if (atomic_cmpxchg64((long *)&pir_desc->pending, 1, 0) != 1)
 		return;
 
 	pirval = 0;
@@ -2118,7 +2118,7 @@ apicv_inject_pir(struct vlapic *vlapic)
 	irr = &lapic->irr[0];
 
 	for (i = 0; i < 4; i++) {
-		val = atomic_readandclear_long(&pir_desc->pir[i]);
+		val = atomic_readandclear64((long *)&pir_desc->pir[i]);
 		if (val != 0) {
 			irr[i * 2].val |= val;
 			irr[(i * 2) + 1].val |= val >> 32;
