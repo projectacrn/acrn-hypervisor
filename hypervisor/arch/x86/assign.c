@@ -98,7 +98,7 @@ is_entry_invalid(struct ptdev_remapping_info *entry)
 static inline bool
 is_entry_active(struct ptdev_remapping_info *entry)
 {
-	return atomic_load_acq_int(&entry->active) == ACTIVE_FLAG;
+	return atomic_load((int *)&entry->active) == ACTIVE_FLAG;
 }
 
 /* require ptdev_lock protect */

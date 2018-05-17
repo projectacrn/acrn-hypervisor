@@ -32,6 +32,30 @@
 
 #define	BUS_LOCK	"lock ; "
 
+#define build_atomic_load(name, size, type, ptr)	\
+static inline type name(const volatile type *ptr)	\
+{							\
+	type ret;					\
+	asm volatile("mov" size " %1,%0"		\
+			: "=r" (ret)			\
+			: "m" (*ptr)			\
+			: "cc", "memory");		\
+	return ret;					\
+}
+build_atomic_load(atomic_load, "l", int, p)
+build_atomic_load(atomic_load64, "q", long, p)
+
+#define build_atomic_store(name, size, type, ptr, v)	\
+static inline void name(volatile type *ptr, type v)	\
+{							\
+	asm volatile("mov" size " %1,%0"		\
+			: "=m" (*ptr)			\
+			: "r" (v)			\
+			: "cc", "memory");		\
+}
+build_atomic_store(atomic_store, "l", int, p, v)
+build_atomic_store(atomic_store64, "q", long, p, v)
+
 /*
  *  #define atomic_set_int(P, V)		(*(unsigned int *)(P) |= (V))
  */
@@ -135,56 +159,6 @@ static inline long atomic_swap_long(unsigned long *p, unsigned long v)
  */
 #define	atomic_readandclear_long(p)	atomic_swap_long(p, 0)
 
-/*
- *   #define atomic_load_acq_int(P)		(*(unsigned int*)(P))
- */
-static inline int atomic_load_acq_int(unsigned int *p)
-{
-	int ret;
-
-	__asm __volatile("movl %1,%0"
-			:  "=r"(ret)
-			:  "m" (*p)
-			:  "cc", "memory");
-	return ret;
-}
-
-/*
- *   #define atomic_store_rel_int(P, V)	(*(unsigned int *)(P) = (V))
- */
-static inline void atomic_store_rel_int(unsigned int *p, unsigned int v)
-{
-	__asm __volatile("movl %1,%0"
-			:  "=m" (*p)
-			:  "r" (v)
-			:  "cc", "memory");
-}
-
-/*
- *   #define atomic_load_acq_long(P)		(*(unsigned long*)(P))
- */
-static inline long atomic_load_acq_long(unsigned long *p)
-{
-	long ret;
-
-	__asm __volatile("movq %1,%0"
-			:  "=r"(ret)
-			:  "m" (*p)
-			:  "cc", "memory");
-	return ret;
-}
-
-/*
- *   #define atomic_store_rel_long(P, V)	(*(unsigned long *)(P) = (V))
- */
-static inline void atomic_store_rel_long(unsigned long *p, unsigned long v)
-{
-	__asm __volatile("movq %1,%0"
-			:  "=m" (*p)
-			:  "r" (v)
-			:  "cc", "memory");
-}
-
 static inline int atomic_cmpxchg_int(unsigned int *p,
 			int old, int new)
 {
@@ -197,11 +171,6 @@ static inline int atomic_cmpxchg_int(unsigned int *p,
 
 	return ret;
 }
-
-#define atomic_load_acq_32		atomic_load_acq_int
-#define atomic_store_rel_32		atomic_store_rel_int
-#define atomic_load_acq_64		atomic_load_acq_long
-#define atomic_store_rel_64		atomic_store_rel_long
 
 #define build_atomic_xadd(name, size, type, ptr, v)		\
 static inline type name(type *ptr, type v)			\
