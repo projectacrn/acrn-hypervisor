@@ -339,10 +339,6 @@ static int dm_emulate_mmio_pre(struct vcpu *vcpu, uint64_t exit_qual)
 {
 	int status;
 
-	status = analyze_instruction(vcpu, &vcpu->mmio);
-	if (status != 0)
-		return status;
-
 	if (vcpu->mmio.read_write == HV_MEM_IO_WRITE) {
 		status = emulate_instruction(vcpu, &vcpu->mmio);
 		if (status != 0)
@@ -404,6 +400,9 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 	 */
 	mmio->paddr = gpa;
 
+	if (decode_instruction(vcpu, mmio) != 0)
+		goto out;
+
 	list_for_each(pos, &vcpu->vm->mmio_list) {
 		mmio_handler = list_entry(pos, struct mem_io_node, list);
 		if ((mmio->paddr + mmio->access_size <=
@@ -418,9 +417,6 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 					mmio->paddr, mmio->access_size);
 			return -EIO;
 		}
-
-		if (analyze_instruction(vcpu, mmio) != 0)
-			goto out;
 
 		if (mmio->read_write == HV_MEM_IO_WRITE) {
 			if (emulate_instruction(vcpu, mmio) != 0)
