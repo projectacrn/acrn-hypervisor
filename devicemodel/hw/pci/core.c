@@ -724,6 +724,45 @@ pci_emul_add_capability(struct pci_vdev *dev, u_char *capdata, int caplen)
 	return 0;
 }
 
+/*
+ * p_capoff is used as both input and output. Set *p_capoff to 0 when this
+ * function is called for the first time, it will return offset of the first
+ * matched one in p_capoff. To find the next matched one, please use the
+ * returned *p_capoff from last call as the input, in this case the offset of
+ * the next matched one will be returned in *p_capoff.
+ * Please check the returned value first before touch p_capoff.
+ */
+int
+pci_emul_find_capability(struct pci_vdev *dev, uint8_t capid, int *p_capoff)
+{
+	int coff;
+	uint16_t sts;
+
+	sts = pci_get_cfgdata16(dev, PCIR_STATUS);
+	if ((sts & PCIM_STATUS_CAPPRESENT) == 0)
+		return -1;
+
+	if (!p_capoff)
+		return -1;
+
+	if (*p_capoff == 0)
+		coff = pci_get_cfgdata8(dev, PCIR_CAP_PTR);
+	else if (*p_capoff >= CAP_START_OFFSET && *p_capoff <= dev->prevcap)
+		coff = pci_get_cfgdata8(dev, *p_capoff + 1);
+	else
+		return -1;
+
+	while (coff >= CAP_START_OFFSET && coff <= dev->prevcap) {
+		if (pci_get_cfgdata8(dev, coff) == capid) {
+			*p_capoff = coff;
+			return 0;
+		}
+		coff = pci_get_cfgdata8(dev, coff + 1);
+	}
+
+	return -1;
+}
+
 static struct pci_vdev_ops *
 pci_emul_finddev(char *name)
 {
