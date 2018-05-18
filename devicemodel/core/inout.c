@@ -99,19 +99,26 @@ emulate_inout(struct vmctx *ctx, int *pvcpu, struct pio_request *pio_request,
 	int bytes, flags, in, port;
 	inout_func_t handler;
 	void *arg;
-	int retval;
+	int i, retval;
 
 	bytes = pio_request->size;
 	in = (pio_request->direction == REQUEST_READ);
 	port = pio_request->address;
 
-	assert(port < MAX_IOPORTS);
+	assert(port + bytes - 1 < MAX_IOPORTS);
 	assert(bytes == 1 || bytes == 2 || bytes == 4);
 
 	handler = inout_handlers[port].handler;
 
-	if (strict && handler == default_inout)
-		return -1;
+	if (strict) {
+		if (handler == default_inout)
+			return -1;
+
+		for (i = 1; i < bytes; i++) {
+			if (inout_handlers[port + i].handler != handler)
+				return -1;
+		}
+	}
 
 	flags = inout_handlers[port].flags;
 	arg = inout_handlers[port].arg;
