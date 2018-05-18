@@ -29,6 +29,7 @@
 #include <sys/uio.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <pthread.h>
 
 #include "dm.h"
@@ -877,6 +878,25 @@ done:
 		pthread_mutex_unlock(base->mtx);
 }
 
+static int
+virtio_find_capability(struct virtio_base *base, uint8_t cfg_type)
+{
+	struct pci_vdev *dev = base->dev;
+	uint8_t type;
+	int rc, coff = 0;
+
+	rc = pci_emul_find_capability(dev, PCIY_VENDOR, &coff);
+	while (!rc) {
+		type = pci_get_cfgdata8(dev,
+			coff + offsetof(struct virtio_pci_cap, cfg_type));
+		if (type == cfg_type)
+			return coff;
+		rc = pci_emul_find_capability(dev, PCIY_VENDOR, &coff);
+	}
+
+	return -1;
+}
+
 /*
  * Set virtio modern MMIO BAR (usually 4) to map the 4 capabilities.
  */
@@ -951,6 +971,14 @@ virtio_set_modern_mmio_bar(struct virtio_base *base, int barnum)
 	rc = pci_emul_alloc_bar(base->dev, barnum, PCIBAR_MEM64,
 				VIRTIO_MODERN_MEM_BAR_SIZE);
 	assert(rc == 0);
+
+	base->cfg_coff = virtio_find_capability(base, VIRTIO_PCI_CAP_PCI_CFG);
+	if (base->cfg_coff < 0) {
+		fprintf(stderr,
+			"%s: VIRTIO_PCI_CAP_PCI_CFG not found\r\n",
+			vops->name);
+		return -1;
+	}
 
 	base->modern_mmio_bar_idx = barnum;
 	return 0;
@@ -1649,4 +1677,97 @@ virtio_pci_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 
 	fprintf(stderr, "%s: write unexpected baridx %d\r\n",
 		base->vops->name, baridx);
+}
+
+int
+virtio_pci_modern_cfgread(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
+			  int coff, int bytes, uint32_t *rv)
+{
+	struct virtio_base *base = dev->arg;
+	struct virtio_pci_cfg_cap *cfg;
+	uint32_t value;
+	int cfg_coff = base->cfg_coff;
+	size_t cfg_data_offset;
+
+	cfg_data_offset = offsetof(struct virtio_pci_cfg_cap, pci_cfg_data);
+
+	/* we only need to handle the read to
+	 * virtio_pci_cfg_cap.pci_cfg_data[]
+	 * fallback for anything else by return -1
+	 */
+	if ((cfg_coff > 0) && (coff >= cfg_coff + cfg_data_offset) &&
+		(coff + bytes <= cfg_coff + sizeof(*cfg))) {
+		cfg = (struct virtio_pci_cfg_cap *)&dev->cfgdata[cfg_coff];
+		if (cfg->cap.bar == base->modern_pio_bar_idx)
+			value = virtio_pci_modern_pio_read(ctx, vcpu, dev,
+				cfg->cap.bar, cfg->cap.offset, cfg->cap.length);
+		else if (cfg->cap.bar == base->modern_mmio_bar_idx)
+			value = virtio_pci_modern_mmio_read(ctx, vcpu, dev,
+				cfg->cap.bar, cfg->cap.offset, cfg->cap.length);
+		else {
+			fprintf(stderr, "%s: cfgread unexpected baridx %d\r\n",
+				base->vops->name, cfg->cap.bar);
+			value = 0;
+		}
+
+		/* update pci_cfg_data */
+		if (cfg->cap.length == 1)
+			pci_set_cfgdata8(dev, cfg_coff + cfg_data_offset,
+				value);
+		else if (cfg->cap.length == 2)
+			pci_set_cfgdata16(dev, cfg_coff + cfg_data_offset,
+				value);
+		else
+			pci_set_cfgdata32(dev, cfg_coff + cfg_data_offset,
+				value);
+
+		*rv = value;
+		return 0;
+	}
+
+	return -1;
+}
+
+int
+virtio_pci_modern_cfgwrite(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
+			   int coff, int bytes, uint32_t val)
+{
+	struct virtio_base *base = dev->arg;
+	struct virtio_pci_cfg_cap *cfg;
+	int cfg_coff = base->cfg_coff;
+	size_t cfg_data_offset;
+
+	cfg_data_offset = offsetof(struct virtio_pci_cfg_cap, pci_cfg_data);
+
+	/* we only need to handle the write to
+	 * virtio_pci_cfg_cap.pci_cfg_data[]
+	 * fallback for anything else by return -1
+	 */
+	if ((cfg_coff > 0) && (coff >= cfg_coff + cfg_data_offset) &&
+		(coff + bytes <= cfg_coff + sizeof(*cfg))) {
+		/* default cfg write */
+		if (bytes == 1)
+			pci_set_cfgdata8(dev, coff, val);
+		else if (bytes == 2)
+			pci_set_cfgdata16(dev, coff, val);
+		else
+			pci_set_cfgdata32(dev, coff, val);
+
+		cfg = (struct virtio_pci_cfg_cap *)&dev->cfgdata[cfg_coff];
+		if (cfg->cap.bar == base->modern_pio_bar_idx)
+			virtio_pci_modern_pio_write(ctx, vcpu, dev,
+				cfg->cap.bar, cfg->cap.offset,
+				cfg->cap.length, val);
+		else if (cfg->cap.bar == base->modern_mmio_bar_idx)
+			virtio_pci_modern_mmio_write(ctx, vcpu, dev,
+				cfg->cap.bar, cfg->cap.offset,
+				cfg->cap.length, val);
+		else
+			fprintf(stderr, "%s: cfgwrite unexpected baridx %d\r\n",
+				base->vops->name, cfg->cap.bar);
+
+		return 0;
+	}
+
+	return -1;
 }
