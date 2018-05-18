@@ -34,7 +34,7 @@ clean:
 install: hypervisor-install devicemodel-install tools-install
 
 hypervisor-install:
-	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLAT) RELEASE=$(RELEASE) install
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLATFORM) RELEASE=$(RELEASE) install
 
 devicemodel-install:
 	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) install
