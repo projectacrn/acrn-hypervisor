@@ -518,6 +518,7 @@ struct virtio_base {
 	uint8_t config_generation;	/**< configuration generation */
 	uint32_t device_feature_select;	/**< current selected device feature */
 	uint32_t driver_feature_select;	/**< current selected guest feature */
+	int cfg_coff;			/**< PCI cfg access capability offset */
 };
 
 #define	VIRTIO_BASE_LOCK(vb)					\
@@ -872,6 +873,44 @@ void virtio_dev_error(struct virtio_base *base);
  * @return 0 on success and non-zero on fail.
  */
 int virtio_set_modern_bar(struct virtio_base *base, bool use_notify_pio);
+
+/**
+ * @brief Handle PCI configuration space reads.
+ *
+ * Handle virtio PCI configuration space reads. Only the specific registers
+ * that need speical operation are handled in this callback. For others just
+ * fallback to pci core. This interface is only valid for virtio modern.
+ *
+ * @param ctx Pointer to struct vmctx representing VM context.
+ * @param vcpu VCPU ID.
+ * @param dev Pointer to struct pci_vdev which emulates a PCI device.
+ * @param coff Register offset in bytes within PCI configuration space.
+ * @param bytes Access range in bytes.
+ * @param rv The value returned as read.
+ *
+ * @return 0 on handled and non-zero on non-handled.
+ */
+int virtio_pci_modern_cfgread(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
+			      int coff, int bytes, uint32_t *rv);
+/**
+ * @brief Handle PCI configuration space writes.
+ *
+ * Handle virtio PCI configuration space writes. Only the specific registers
+ * that need speical operation are handled in this callback. For others just
+ * fallback to pci core. This interface is only valid for virtio modern.
+ *
+ * @param ctx Pointer to struct vmctx representing VM context.
+ * @param vcpu VCPU ID.
+ * @param dev Pointer to struct pci_vdev which emulates a PCI device.
+ * @param coff Register offset in bytes within PCI configuration space.
+ * @param bytes Access range in bytes.
+ * @param value The value to write.
+ *
+ * @return 0 on handled and non-zero on non-handled.
+ */
+int virtio_pci_modern_cfgwrite(struct vmctx *ctx, int vcpu,
+			       struct pci_vdev *dev, int coff, int bytes,
+			       uint32_t val);
 
 /**
  * @}
