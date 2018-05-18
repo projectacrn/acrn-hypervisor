@@ -25,11 +25,12 @@ tools:
 	make -C $(T)/tools/acrnlog OUT_DIR=$(TOOLS_OUT)
 	make -C $(T)/tools/acrn-manager OUT_DIR=$(TOOLS_OUT)
 	make -C $(T)/tools/acrntrace OUT_DIR=$(TOOLS_OUT)
+	make -C $(T)/tools/acrn-crashlog OUT_DIR=$(TOOLS_OUT) RELEASE=$(RELEASE)
 
 .PHONY: clean
 clean:
 	rm -rf $(ROOT_OUT)
-	
+
 .PHONY: install
 install: hypervisor-install devicemodel-install tools-install
 
@@ -43,4 +44,4 @@ tools-install:
 	make -C $(T)/tools/acrnlog OUT_DIR=$(TOOLS_OUT) install
 	make -C $(T)/tools/acrn-manager OUT_DIR=$(TOOLS_OUT) install
 	make -C $(T)/tools/acrntrace OUT_DIR=$(TOOLS_OUT) install
-
+	make -C $(T)/tools/acrn-crashlog OUT_DIR=$(TOOLS_OUT) install

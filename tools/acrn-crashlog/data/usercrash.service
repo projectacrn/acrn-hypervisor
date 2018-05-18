@@ -1,0 +1,13 @@
+[Unit]
+Description=ACRN usercrash Demon
+Requires=telemd.socket
+After=telemd.service
+Before=acrnprobe.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/usercrash_s
+ExecStop=/usr/bin/killall -s TERM usercrash_s
+
+[Install]
+WantedBy=multi-user.target

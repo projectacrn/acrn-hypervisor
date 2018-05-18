@@ -6,12 +6,12 @@ all: include/version.h check_obj usercrash_s usercrash_c debugger
 CURRDIR := $(shell pwd)
 INCLUDE += -I $(CURRDIR)/include/
 
-LIBS = -levent -lpthread
+LIBS = -levent -lpthread $(SYSTEMD_LIBS)
 
 usercrash_s: $(BUILDDIR)/usercrash/obj/protocol.o \
 	$(BUILDDIR)/usercrash/obj/server.o \
 	$(BUILDDIR)/common/obj/log_sys.o
-	$(CC) -g $(CFLAGS) $(LIBS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ -lsystemd
+	$(CC) -g $(CFLAGS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ $(LIBS)
 
 usercrash_c: $(BUILDDIR)/usercrash/obj/protocol.o \
 	$(BUILDDIR)/usercrash/obj/client.o \
@@ -20,7 +20,7 @@ usercrash_c: $(BUILDDIR)/usercrash/obj/protocol.o \
 	$(BUILDDIR)/common/obj/cmdutils.o \
 	$(BUILDDIR)/common/obj/fsutils.o \
 	$(BUILDDIR)/common/obj/strutils.o
-	$(CC) -g $(CFLAGS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ -lsystemd
+	$(CC) -g $(CFLAGS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ $(LIBS)
 
 debugger: $(BUILDDIR)/usercrash/obj/debugger.o \
 	$(BUILDDIR)/usercrash/obj/crash_dump.o \
@@ -28,7 +28,7 @@ debugger: $(BUILDDIR)/usercrash/obj/debugger.o \
 	$(BUILDDIR)/common/obj/cmdutils.o \
 	$(BUILDDIR)/common/obj/fsutils.o \
 	$(BUILDDIR)/common/obj/strutils.o
-	$(CC) -g $(CFLAGS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ -lsystemd
+	$(CC) -g $(CFLAGS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ $(LIBS)
 
 $(BUILDDIR)/usercrash/obj/%.o:%.c
 	$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<

@@ -1,0 +1,12 @@
+[Unit]
+Description=ACRN probe prepare
+Requires=telemd.service
+After=telemd.service
+Before=acrnprobe.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /usr/bin/acrnprobe_prepare.sh
+
+[Install]
+WantedBy=multi-user.target
