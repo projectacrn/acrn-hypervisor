@@ -1086,6 +1086,7 @@ pci_emul_capwrite(struct pci_vdev *dev, int offset, int bytes, uint32_t val)
 		pciecap_cfgwrite(dev, capoff, offset, bytes, val);
 		break;
 	default:
+		CFGWRITE(dev, offset, val, bytes);
 		break;
 	}
 }
