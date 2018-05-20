@@ -200,9 +200,17 @@ static int vcpu_do_pending_extint(struct vcpu *vcpu)
 
 static int vcpu_do_pending_gp(__unused struct vcpu *vcpu)
 {
+	/* SDM Vol. 3A 6-37: if the fault condition was detected while loading
+	 * a segment descriptor, the error code contains a segment selecor to or
+	 * IDT vector number for the descriptor; otherwise the error code is 0.
+	 * Since currently there is no such case to inject #GP due to loading a
+	 * segment decriptor, set the error code to 0.
+	 */
+	exec_vmwrite(VMX_ENTRY_EXCEPTION_ERROR_CODE, 0);
 	/* GP vector = 13 */
 	exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
-		VMX_INT_INFO_VALID | 13);
+		VMX_INT_INFO_VALID |
+		((VMX_INT_TYPE_HW_EXP | EXCEPTION_ERROR_CODE_VALID) <<8) | 13);
 	return 0;
 }
 
@@ -337,8 +345,7 @@ int acrn_do_intr_process(struct vcpu *vcpu)
 
 		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
 			VMX_INT_INFO_VALID |
-			((exception_type[vector] & 15) << 8)
-			| (vector & 0xFF));
+			(exception_type[vector] << 8) | (vector & 0xFF));
 
 		vcpu->arch_vcpu.exception_info.exception = -1;
 
@@ -361,23 +368,22 @@ int acrn_do_intr_process(struct vcpu *vcpu)
 	}
 
 	/* Guest interruptable or not */
-	if (!is_guest_irq_enabled(vcpu)) {
-		/* interrupt window unavailable */
-		goto INTR_WIN;
-	}
+	if (is_guest_irq_enabled(vcpu)) {
+		/* Inject external interrupt first */
+		if (bitmap_test_and_clear(ACRN_REQUEST_EXTINT,
+			pending_intr_bits)) {
+			/* has pending external interrupts */
+			ret = vcpu_do_pending_extint(vcpu);
+			goto INTR_WIN;
+		}
 
-	/* Inject external interrupt first */
-	if (bitmap_test_and_clear(ACRN_REQUEST_EXTINT, pending_intr_bits)) {
-		/* has pending external interrupts */
-		ret = vcpu_do_pending_extint(vcpu);
-		goto INTR_WIN;
-	}
-
-	/* Inject vLAPIC vectors */
-	if (bitmap_test_and_clear(ACRN_REQUEST_EVENT, pending_intr_bits)) {
-		/* has pending vLAPIC interrupts */
-		ret = vcpu_do_pending_event(vcpu);
-		goto INTR_WIN;
+		/* Inject vLAPIC vectors */
+		if (bitmap_test_and_clear(ACRN_REQUEST_EVENT,
+			pending_intr_bits)) {
+			/* has pending vLAPIC interrupts */
+			ret = vcpu_do_pending_event(vcpu);
+			goto INTR_WIN;
+		}
 	}
 
 	/* Inject GP event */
