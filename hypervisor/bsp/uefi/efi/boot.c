@@ -314,6 +314,11 @@ out:
 	return err;
 }
 
+static inline EFI_STATUS isspace(CHAR8 ch)
+{
+    return ((unsigned char)ch <= ' ');
+}
+
 /**
  * efi_main - The entry point for the OS loader image.
  * @image: firmware-allocated handle that identifies the image
@@ -331,16 +336,15 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	char *section;
 	EFI_DEVICE_PATH *path;
 
-	INTN Argc, i, index;
-	CHAR16 **Argv;
+	INTN i, index;
 	CHAR16 *bootloader_name = NULL;
 	CHAR16 bootloader_param[] = L"bootloader=";
 	EFI_HANDLE bootloader_image;
 	CHAR16 *options = NULL;
 	UINT32 options_size = 0;
+	CHAR16 *cmdline16, *n;
 
 	InitializeLib(image, _table);
-	Argc = GetShellArgcArgv(image, &Argv);
 	sys_table = _table;
 	boot = sys_table->BootServices;
 
@@ -358,6 +362,30 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	/* convert the options to cmdline */
 	if (options_size > 0)
 		cmdline = ch16_2_ch8(options);
+
+	/* First check if we were given a bootloader name
+	 * E.g.: "bootloader=\EFI\org.clearlinux\bootloaderx64.efi"
+	 */
+	cmdline16 = StrDuplicate(options);
+	bootloader_name = strstr_16(cmdline16, bootloader_param);
+	if (bootloader_name)
+		bootloader_name = bootloader_name + StrLen(bootloader_param);
+
+	n = bootloader_name;
+	i = 0;
+	while (*n && !isspace((CHAR8)*n) && (*n < 0xff)) {
+		n++; i++;
+	}
+	*n++ = '\0';
+
+	if (!bootloader_name) {
+		/*
+		 * If we reach this point, it means we did not receive a specific
+		 * bootloader name to be used. Fall back to the default bootloader
+		 * as specified in bsp_cfg.h
+		 */
+		bootloader_name = ch8_2_ch16(CONFIG_UEFI_OS_LOADER_NAME);
+	}
 
 	section = ".hv";
 	err = get_pe_section(info->ImageBase, section, &sec_addr, &sec_size);
@@ -380,27 +408,6 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 		goto failed;
 
 	/* load and start the default bootloader */
-
-	/* First check if we were given a bootloader name
-	 * E.g.: "bootloader=\EFI\org.clearlinux\bootloaderx64.efi"
-	 */
-	for (i = 0 ; i < Argc ; ++i) {
-		bootloader_name = strstr_16(Argv[i], bootloader_param);
-		if (bootloader_name) {
-			bootloader_name = bootloader_name + StrLen(bootloader_param);
-			break;
-		}
-	}
-
-	if (!bootloader_name) {
-		/*
-		 * If we reach this point, it means we did not receive a specific
-		 * bootloader name to be used. Fall back to the default bootloader
-		 * as specified in bsp_cfg.h
-		 */
-		bootloader_name = ch8_2_ch16(CONFIG_UEFI_OS_LOADER_NAME);
-	}
-
 	path = FileDevicePath(info->DeviceHandle, bootloader_name);
 	if (!path)
 		goto free_args;
