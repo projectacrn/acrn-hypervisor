@@ -39,6 +39,7 @@
 
 EFI_SYSTEM_TABLE *sys_table;
 EFI_BOOT_SERVICES *boot;
+char *cmdline = NULL;
 extern const uint64_t guest_entry;
 
 static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
@@ -198,9 +199,7 @@ again:
 	mbi->mi_flags |= MULTIBOOT_INFO_HAS_MMAP | MULTIBOOT_INFO_HAS_CMDLINE;
 	mbi->mi_mmap_length = j*sizeof(struct multiboot_mmap);
 
-	//mbi->mi_cmdline = (UINTN)"uart=mmio@0x92230000";
-	//mbi->mi_cmdline = (UINTN)"uart=port@0x3F8";
-	mbi->mi_cmdline = (UINTN)"uart=disabled";
+	mbi->mi_cmdline = (UINTN)cmdline;
 	mbi->mi_mmap_addr = (UINTN)mmap;
 
 	mbi->mi_flags |= MULTIBOOT_INFO_HAS_DRIVES;
@@ -337,6 +336,8 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	CHAR16 *bootloader_name = NULL;
 	CHAR16 bootloader_param[] = L"bootloader=";
 	EFI_HANDLE bootloader_image;
+	CHAR16 *options = NULL;
+	UINT32 options_size = 0;
 
 	InitializeLib(image, _table);
 	Argc = GetShellArgcArgv(image, &Argv);
@@ -349,6 +350,14 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	err = handle_protocol(image, &LoadedImageProtocol, (void **)&info);
 	if (err != EFI_SUCCESS)
 		goto failed;
+
+	/* get the options */
+	options = info->LoadOptions;
+	options_size = info->LoadOptionsSize;
+
+	/* convert the options to cmdline */
+	if (options_size > 0)
+		cmdline = ch16_2_ch8(options);
 
 	section = ".hv";
 	err = get_pe_section(info->ImageBase, section, &sec_addr, &sec_size);
