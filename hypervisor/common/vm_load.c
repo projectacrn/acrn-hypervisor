@@ -190,12 +190,11 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 #ifdef CONFIG_CMA
 		/* add "cma=XXXXM@0xXXXXXXXX" to cmdline*/
 		if (is_vm0(vm) && (e820_mem.max_ram_blk_size > 0)) {
-			snprintf(dyn_bootargs, 100, " cma=%dM@0x%llx\n",
+			snprintf(dyn_bootargs, 100, " cma=%dM@0x%llx",
 					(e820_mem.max_ram_blk_size >> 20),
 					e820_mem.max_ram_blk_base);
-			/* Delete '\n' at the end of cmdline */
 			strcpy_s((char *)hva
-					+vm->sw.linux_info.bootargs_size - 1,
+					+vm->sw.linux_info.bootargs_size,
 					100, dyn_bootargs);
 		}
 #else
@@ -215,11 +214,10 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 #endif
 			if (reserving_1g_pages > 0) {
 				snprintf(dyn_bootargs, 100,
-					" hugepagesz=1G hugepages=%d\n",
+					" hugepagesz=1G hugepages=%d",
 					reserving_1g_pages);
-				/* Delete '\n' at the end of cmdline */
 				strcpy_s((char *)hva
-					+vm->sw.linux_info.bootargs_size - 1,
+					+vm->sw.linux_info.bootargs_size,
 					100, dyn_bootargs);
 			}
 		}
