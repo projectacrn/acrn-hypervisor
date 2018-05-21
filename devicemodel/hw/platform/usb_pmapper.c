@@ -937,6 +937,11 @@ usb_dev_sys_init(usb_dev_sys_cb conn_cb, usb_dev_sys_cb disconn_cb,
 		goto errout;
 	}
 
+	/* this is for guest rebooting purpose */
+	g_ctx.conn_handle = native_conn_handle;
+	g_ctx.disconn_handle = native_disconn_handle;
+	g_ctx.thread_exit = 0;
+
 	if (pthread_create(&g_ctx.thread, NULL, usb_dev_sys_thread, NULL)) {
 		libusb_hotplug_deregister_callback(g_ctx.libusb_ctx,
 				native_conn_handle);
@@ -952,4 +957,22 @@ errout:
 
 	g_ctx.libusb_ctx = NULL;
 	return -1;
+}
+
+void
+usb_dev_sys_deinit(void)
+{
+	if (!g_ctx.libusb_ctx)
+		return;
+
+	UPRINTF(LINF, "port-mapper de-initialization\r\n");
+	libusb_hotplug_deregister_callback(g_ctx.libusb_ctx, g_ctx.conn_handle);
+	libusb_hotplug_deregister_callback(g_ctx.libusb_ctx,
+			g_ctx.disconn_handle);
+
+	g_ctx.thread_exit = 1;
+	pthread_join(g_ctx.thread, NULL);
+
+	libusb_exit(g_ctx.libusb_ctx);
+	g_ctx.libusb_ctx = NULL;
 }
