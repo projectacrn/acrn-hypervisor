@@ -981,15 +981,15 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 
 	/* Set up page fault error code mask - second paragraph * pg 2902
 	 * 24.6.3 - guest page fault exception causing * vmexit is governed by
-	 * both VMX_EXCEPTION_BITMAP and * VMX_PF_EC_MASK
+	 * both VMX_EXCEPTION_BITMAP and * VMX_PF_ERROR_CODE_MASK
 	 */
-	exec_vmwrite(VMX_PF_EC_MASK, 0);
+	exec_vmwrite(VMX_PF_ERROR_CODE_MASK, 0);
 
 	/* Set up page fault error code match - second paragraph * pg 2902
 	 * 24.6.3 - guest page fault exception causing * vmexit is governed by
-	 * both VMX_EXCEPTION_BITMAP and * VMX_PF_EC_MATCH
+	 * both VMX_EXCEPTION_BITMAP and * VMX_PF_ERROR_CODE_MATCH
 	 */
-	exec_vmwrite(VMX_PF_EC_MATCH, 0);
+	exec_vmwrite(VMX_PF_ERROR_CODE_MATCH, 0);
 
 	/* Set up CR3 target count - An execution of mov to CR3 * by guest
 	 * causes HW to evaluate operand match with * one of N CR3-Target Value
@@ -1148,7 +1148,7 @@ static void init_entry_ctrl(__unused struct vcpu *vcpu)
 	exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD, 0);
 
 	/* Set up VM entry exception error code - pg 2910 24.8.3 */
-	exec_vmwrite(VMX_ENTRY_EXCEPTION_EC, 0);
+	exec_vmwrite(VMX_ENTRY_EXCEPTION_ERROR_CODE, 0);
 
 	/* Set up VM entry instruction length - pg 2910 24.8.3 */
 	exec_vmwrite(VMX_ENTRY_INSTR_LENGTH, 0);

@@ -305,7 +305,7 @@ int acrn_do_intr_process(struct vcpu *vcpu)
 
 	/* handling cancelled event injection when vcpu is switched out */
 	if (vcpu->arch_vcpu.inject_event_pending) {
-		exec_vmwrite(VMX_ENTRY_EXCEPTION_EC,
+		exec_vmwrite(VMX_ENTRY_EXCEPTION_ERROR_CODE,
 			vcpu->arch_vcpu.inject_info.error_code);
 
 		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
@@ -331,7 +331,7 @@ int acrn_do_intr_process(struct vcpu *vcpu)
 	if (vector >= 0) {
 		if (exception_type[vector] &
 			EXCEPTION_ERROR_CODE_VALID) {
-			exec_vmwrite(VMX_ENTRY_EXCEPTION_EC,
+			exec_vmwrite(VMX_ENTRY_EXCEPTION_ERROR_CODE,
 				vcpu->arch_vcpu.exception_info.error);
 		}
 
@@ -419,7 +419,7 @@ void cancel_event_injection(struct vcpu *vcpu)
 
 		if (intinfo & (EXCEPTION_ERROR_CODE_VALID << 8))
 			vcpu->arch_vcpu.inject_info.error_code =
-				exec_vmread(VMX_ENTRY_EXCEPTION_EC);
+				exec_vmread(VMX_ENTRY_EXCEPTION_ERROR_CODE);
 
 		vcpu->arch_vcpu.inject_info.intr_info = intinfo;
 		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD, 0);
@@ -452,7 +452,7 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 		 * error code to be conveyed to get via the stack
 		 */
 		if (intinfo & VMX_INT_INFO_ERR_CODE_VALID) {
-			int_err_code = exec_vmread(VMX_EXIT_INT_EC);
+			int_err_code = exec_vmread(VMX_EXIT_INT_ERROR_CODE);
 
 			/* get current privilege level and fault address */
 			cpl = exec_vmread(VMX_GUEST_CS_ATTR);
