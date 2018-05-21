@@ -744,6 +744,11 @@ basl_fwrite_dsdt(FILE *fp, struct vmctx *ctx)
 	dsdt_line("DefinitionBlock (\"dm_dsdt.aml\", \"DSDT\", 2,"
 			"\"DM \", \"DMDSDT  \", 0x00000001)");
 	dsdt_line("{");
+	dsdt_line("  Name (_S3, Package ()");
+	dsdt_line("  {");
+	dsdt_line("      0x03,");
+	dsdt_line("      Zero,");
+	dsdt_line("  })");
 	dsdt_line("  Name (_S5, Package ()");
 	dsdt_line("  {");
 	dsdt_line("      0x05,");

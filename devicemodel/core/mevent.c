@@ -316,6 +316,8 @@ mevent_dispatch(void)
 	assert(pipev != NULL);
 
 	for (;;) {
+		int suspend_mode;
+
 		/*
 		 * Block awaiting events
 		 */
@@ -328,8 +330,11 @@ mevent_dispatch(void)
 		 */
 		mevent_handle(eventlist, ret);
 
-		if ((vm_get_suspend_mode() != VM_SUSPEND_NONE) &&
-			(vm_get_suspend_mode() != VM_SUSPEND_SYSTEM_RESET))
+		suspend_mode = vm_get_suspend_mode();
+
+		if ((suspend_mode != VM_SUSPEND_NONE) &&
+			(suspend_mode != VM_SUSPEND_SYSTEM_RESET) &&
+			(suspend_mode != VM_SUSPEND_SUSPEND))
 			break;
 	}
 }
