@@ -119,7 +119,7 @@ static int open_hugetlbfs(struct vmctx *ctx, int level)
 	strncpy(path, hugetlb_priv[level].mount_path, MAX_PATH_LEN);
 
 	/* UUID will use 32 bytes */
-	if (strlen(path) + 32 > MAX_PATH_LEN) {
+	if (strnlen(path, MAX_PATH_LEN) + 32 > MAX_PATH_LEN) {
 		perror("PATH overflow");
 		return -ENOMEM;
 	}
@@ -298,9 +298,10 @@ static int create_hugetlb_dirs(int level)
 		return -EINVAL;
 	}
 
-	strcpy(tmp_path, path);
+	memset(tmp_path, '\0', MAX_PATH_LEN);
+	strncpy(tmp_path, path, MAX_PATH_LEN - 1);
 
-	if (tmp_path[len - 1] != '/')
+	if ((tmp_path[len - 1] != '/') && (strlen(tmp_path) < MAX_PATH_LEN - 1))
 		strcat(tmp_path, "/");
 
 	len = strlen(tmp_path);
