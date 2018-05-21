@@ -57,6 +57,12 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 		return -1;
 	}
 
+	if (!is_vm0(vm) && hypcall_id != HC_WORLD_SWITCH &&
+		hypcall_id != HC_INITIALIZE_TRUSTY) {
+		pr_err("hypercall %d is only allowed from VM0!\n", hypcall_id);
+		return -1;
+	}
+
 	/* Dispatch the hypercall handler */
 	switch (hypcall_id) {
 	case HC_GET_API_VERSION:
