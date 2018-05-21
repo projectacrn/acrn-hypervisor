@@ -400,7 +400,8 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 	 */
 	mmio->paddr = gpa;
 
-	if (decode_instruction(vcpu, mmio) != 0)
+	mmio->access_size = decode_instruction(vcpu);
+	if (mmio->access_size == 0)
 		goto out;
 
 	list_for_each(pos, &vcpu->vm->mmio_list) {
