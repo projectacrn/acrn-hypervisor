@@ -37,19 +37,19 @@ struct intr_excp_ctx;
 #define CALL_TRACE_HIERARCHY_MAX    20
 #define DUMP_STACK_SIZE 0x200
 
+void dump_intr_excp_frame(struct intr_excp_ctx *ctx);
 void dump_exception(struct intr_excp_ctx *ctx, uint32_t cpu_id);
-void dump_interrupt(struct intr_excp_ctx *ctx);
 
 #else
+static inline void dump_intr_excp_frame(__unused struct intr_excp_ctx *ctx)
+{
+}
 
 static inline void dump_exception(__unused struct intr_excp_ctx *ctx,
-				__unused uint32_t cpu_id)
+		__unused uint32_t cpu_id)
 {
 }
 
-static inline void dump_interrupt(__unused struct intr_excp_ctx *ctx)
-{
-}
 #endif
 
 #endif /* DUMP_H */

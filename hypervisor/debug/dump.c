@@ -235,7 +235,7 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp, uint32_t cpu_id)
 	int cb_hierarchy = 0;
 	uint64_t *sp = (uint64_t *)rsp;
 
-	printf("\r\nHost Stack: \r\n");
+	printf("\r\nHost Stack: CPU_ID = %d\r\n", cpu_id);
 	for (i = 0; i < DUMP_STACK_SIZE/32; i++) {
 		printf("addr(0x%llx)	0x%016llx  0x%016llx  0x%016llx  "
 				"0x%016llx\r\n", (rsp+i*32), sp[i*4], sp[i*4+1],
@@ -293,17 +293,16 @@ void __assert(uint32_t line, const char *file, char *txt)
 	} while (1);
 }
 
-void dump_exception(struct intr_excp_ctx *ctx, uint32_t cpu_id)
+void dump_intr_excp_frame(struct intr_excp_ctx *ctx)
 {
 	const char *name = "Not defined";
 
-	if (ctx->vector < 0x20)
-		name = excp_names[ctx->vector];
-
 	printf("\n\n================================================");
 	printf("================================\n=\n");
-	printf("= Unhandled exception: %d (%s)\n", ctx->vector, name);
-	printf("= CPU ID = %d", cpu_id);
+	if (ctx->vector < 0x20) {
+		name = excp_names[ctx->vector];
+		printf("= Unhandled exception: %d (%s)\n", ctx->vector, name);
+	}
 
 	/* Dump host register*/
 	printf("\r\nHost Registers:\r\n");
@@ -325,39 +324,17 @@ void dump_exception(struct intr_excp_ctx *ctx, uint32_t cpu_id)
 			ctx->error_code, ctx->cs, ctx->ss);
 	printf("\r\n");
 
-	/* Dump host stack */
-	show_host_call_trace(ctx->rsp, ctx->rbp, cpu_id);
-
-	/* Dump guest context */
-	dump_guest_context(cpu_id);
-	printf("= System halted\n");
 	printf("=====================================================");
 	printf("===========================\n");
 }
 
-void dump_interrupt(struct intr_excp_ctx *ctx)
+void dump_exception(struct intr_excp_ctx *ctx, uint32_t cpu_id)
 {
-	printf("\n\n==========================================");
-	printf("======================================\n=\n");
-	printf("\n=\n");
-	printf("=  Vector=0x%016llX  RIP=0x%016llX\n",
-		   ctx->vector, ctx->rip);
-	printf("=     RAX=0x%016llX  RBX=0x%016llX  RCX=0x%016llX\n",
-		   ctx->rax, ctx->rbx, ctx->rcx);
-	printf("=     RDX=0x%016llX  RDI=0x%016llX  RSI=0x%016llX\n",
-		   ctx->rdx, ctx->rdi, ctx->rsi);
-	printf("=     RSP=0x%016llX  RBP=0x%016llX  RBX=0x%016llX\n",
-		   ctx->rsp, ctx->rbp, ctx->rbx);
-	printf("=      R8=0x%016llX   R9=0x%016llX  R10=0x%016llX\n",
-		   ctx->r8, ctx->r9, ctx->r10);
-	printf("=     R11=0x%016llX  R12=0x%016llX  R13=0x%016llX\n",
-		   ctx->r11, ctx->r12, ctx->r13);
-	printf("=  RFLAGS=0x%016llX  R14=0x%016llX  R15=0x%016llX\n",
-		   ctx->rflags, ctx->r14, ctx->r15);
-	printf("= ERRCODE=0x%016llX   CS=0x%016llX   SS=0x%016llX\n",
-		   ctx->error_code, ctx->cs, ctx->ss);
-	printf("=\n");
-	printf("= system halted\n");
-	printf("===============================================");
-	printf("=================================\n");
+	/* Dump host context */
+	dump_intr_excp_frame(ctx);
+	/* Show host stack */
+	show_host_call_trace(ctx->rsp, ctx->rbp, cpu_id);
+	/* Dump guest context */
+	dump_guest_context(cpu_id);
+
 }

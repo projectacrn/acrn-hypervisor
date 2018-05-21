@@ -434,6 +434,7 @@ void dispatch_exception(struct intr_excp_ctx *ctx)
 	/* Obtain lock to ensure exception dump doesn't get corrupted */
 	spinlock_obtain(&exception_spinlock);
 
+	/* Dump exception context */
 	dump_exception(ctx, cpu_id);
 
 	/* Release lock to let other CPUs handle exception */
