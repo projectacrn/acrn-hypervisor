@@ -3321,9 +3321,44 @@ done:
 	return error;
 }
 
+static void
+pci_xhci_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
+{
+	int i;
+	struct pci_xhci_vdev *xdev;
+	struct pci_xhci_dev_emu *de;
+
+	assert(dev);
+	xdev = dev->arg;
+
+	UPRINTF(LINF, "de-initialization\r\n");
+	assert(xdev);
+	assert(xdev->devices);
+
+	for (i = 1; i <= XHCI_MAX_DEVS; ++i) {
+		de = xdev->devices[i];
+		if (de) {
+			xdev->devices[i] = NULL;
+			pci_xhci_dev_destroy(de);
+			xdev->ndevices--;
+		}
+	}
+
+	free(xdev->devices);
+	free(xdev->slots);
+	free(xdev->portregs);
+
+	usb_dev_sys_deinit();
+
+	pthread_mutex_destroy(&xdev->mtx);
+	free(xdev);
+	xhci_in_use = 0;
+}
+
 struct pci_vdev_ops pci_ops_xhci = {
 	.class_name	= "xhci",
 	.vdev_init	= pci_xhci_init,
+	.vdev_deinit	= pci_xhci_deinit,
 	.vdev_barwrite	= pci_xhci_write,
 	.vdev_barread	= pci_xhci_read
 };

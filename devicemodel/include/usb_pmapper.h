@@ -118,6 +118,10 @@ struct usb_dev_sys_ctx_info {
 	pthread_t thread;
 	int thread_exit;
 
+	/* handles of callback */
+	libusb_hotplug_callback_handle conn_handle;
+	libusb_hotplug_callback_handle disconn_handle;
+
 	/*
 	 * The following callback funtions will be registered by
 	 * the code from HCD(eg: XHCI, EHCI...) emulation layer.
@@ -137,6 +141,7 @@ struct usb_dev_sys_ctx_info {
 int usb_dev_sys_init(usb_dev_sys_cb conn_cb, usb_dev_sys_cb disconn_cb,
 		usb_dev_sys_cb notify_cb, usb_dev_sys_cb intr_cb,
 		void *hci_data, int log_level);
+void usb_dev_sys_deinit(void);
 void *usb_dev_init(void *pdata, char *opt);
 void usb_dev_deinit(void *pdata);
 int usb_dev_info(void *pdata, int type, void *value, int size);
