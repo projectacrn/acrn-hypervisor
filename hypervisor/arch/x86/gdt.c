@@ -29,7 +29,6 @@
  */
 
 #include <hv_lib.h>
-#include <cpu.h>
 #include <gdt.h>
 
 DEFINE_CPU_DATA(struct tss_64, tss);

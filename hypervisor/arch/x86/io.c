@@ -33,7 +33,6 @@
 #include <acrn_common.h>
 #include <hv_arch.h>
 #include <hv_debug.h>
-#include <hypercall.h>
 
 int dm_emulate_pio_post(struct vcpu *vcpu)
 {

@@ -8,8 +8,6 @@
 #include <hv_arch.h>
 #include <hv_debug.h>
 #include <hypervisor.h>
-#include <util.h>
-#include <macros.h>
 
 /************************************************************************/
 /*  Memory pool declaration (block size = MALLOC_ALIGN)   */

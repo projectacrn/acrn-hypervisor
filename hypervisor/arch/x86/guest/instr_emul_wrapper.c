@@ -32,7 +32,6 @@
 #include <hv_lib.h>
 #include <acrn_common.h>
 #include <hv_arch.h>
-#include <bsp_extern.h>
 #include <hv_debug.h>
 
 #include "instr_emul_wrapper.h"

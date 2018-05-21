@@ -32,7 +32,6 @@
 #include <hv_lib.h>
 #include <acrn_common.h>
 #include <hv_arch.h>
-#include <cpu.h>
 #include <hv_debug.h>
 
 static inline struct vcpuid_entry *find_vcpuid_entry(struct vcpu *vcpu,

@@ -32,8 +32,6 @@
 #include <hv_lib.h>
 #include <acrn_common.h>
 #include <hv_arch.h>
-#include <bsp_extern.h>
-#include <acrn_hv_defs.h>
 #include <hv_debug.h>
 #include <multiboot.h>
 

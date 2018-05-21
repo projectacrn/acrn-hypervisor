@@ -33,7 +33,6 @@
 #include <acrn_common.h>
 #include <hv_arch.h>
 #include <hv_debug.h>
-#include <irq.h>
 
 static struct dev_handler_node *notification_node;
 

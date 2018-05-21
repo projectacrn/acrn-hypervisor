@@ -30,9 +30,6 @@
 #include <hypervisor.h>
 #include <hv_lib.h>
 #include <cpu.h>
-#include <acrn_common.h>
-#include <bsp_extern.h>
-#include <hv_arch.h>
 #include <hv_debug.h>
 #include "acpi.h"
 #ifdef CONFIG_EFI_STUB
