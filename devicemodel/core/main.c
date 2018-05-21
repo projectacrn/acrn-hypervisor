@@ -887,7 +887,7 @@ main(int argc, char *argv[])
 		vm_pause(ctx);
 		delete_cpu(ctx, BSP);
 
-		if (vm_get_suspend_mode() != VM_SUSPEND_RESET)
+		if (vm_get_suspend_mode() != VM_SUSPEND_FULL_RESET)
 			break;
 
 		vm_deinit_vdevs(ctx);

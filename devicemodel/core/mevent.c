@@ -328,7 +328,8 @@ mevent_dispatch(void)
 		 */
 		mevent_handle(eventlist, ret);
 
-		if (vm_get_suspend_mode() != VM_SUSPEND_NONE)
+		if ((vm_get_suspend_mode() != VM_SUSPEND_NONE) &&
+			(vm_get_suspend_mode() != VM_SUSPEND_SYSTEM_RESET))
 			break;
 	}
 }

@@ -105,7 +105,7 @@ wdt_expired_thread(union sigval v)
 			wdt_timeout = 1;
 
 			/* watchdog timer out, set the uos to reboot */
-			vm_set_suspend_mode(VM_SUSPEND_RESET);
+			vm_set_suspend_mode(VM_SUSPEND_FULL_RESET);
 			mevent_notify();
 		} else {
 			/* if not need reboot, just loop timer */
