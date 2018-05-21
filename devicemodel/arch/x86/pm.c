@@ -25,6 +25,9 @@
  * SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+#include <sys/types.h>
+#include <stdio.h>
 #include <assert.h>
 #include <errno.h>
 #include <pthread.h>
@@ -53,7 +56,6 @@ reset_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 	      uint32_t *eax, void *arg)
 {
 	int error;
-
 	static uint8_t reset_control;
 
 	if (bytes != 1)
@@ -63,15 +65,17 @@ reset_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 	else {
 		reset_control = *eax;
 
-		/* Treat hard and soft resets the same. */
-		if (reset_control & 0x4) {
-			error = vm_suspend(ctx, VM_SUSPEND_RESET);
-			assert(error == 0 || errno == EALREADY);
-		}
-
-		/* cold reset should clear the value in 0xcf9 */
-		if (reset_control & 0x8) {
+		if (*eax & 0x8) {
+			fprintf(stderr, "full reset\r\n");
+			error = vm_suspend(ctx, VM_SUSPEND_FULL_RESET);
+			assert(error ==0 || errno == EALREADY);
+			mevent_notify();
 			reset_control = 0;
+		} else if (*eax & 0x4) {
+			fprintf(stderr, "system reset\r\n");
+			error = vm_suspend(ctx, VM_SUSPEND_SYSTEM_RESET);
+			assert(error ==0 || errno == EALREADY);
+			mevent_notify();
 		}
 	}
 	return 0;

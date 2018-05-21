@@ -42,6 +42,7 @@
 #include "ps2kbd.h"
 #include "ps2mouse.h"
 #include "vmmapi.h"
+#include "mevent.h"
 
 static void
 atkbdc_assert_kbd_intr(struct atkbdc_base *base)
@@ -359,8 +360,9 @@ atkbdc_sts_ctl_handler(struct vmctx *ctx, int vcpu, int in, int port,
 			base->status |= KBDS_AUX_BUFFER_FULL |
 					KBDS_KBD_BUFFER_FULL;
 		break;
-	case KBDC_RESET:		/* Pulse "reset" line */
-		error = vm_suspend(ctx, VM_SUSPEND_RESET);
+	case KBDC_RESET:		/* Pulse "cold reset" line */
+		error = vm_suspend(ctx, VM_SUSPEND_FULL_RESET);
+		mevent_notify();
 		assert(error == 0 || errno == EALREADY);
 		break;
 	default:
