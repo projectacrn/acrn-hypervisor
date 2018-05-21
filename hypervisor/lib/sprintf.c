@@ -30,8 +30,6 @@
 
 #include <hypervisor.h>
 #include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
 
 #ifndef NULL
 #define NULL ((void *) 0)

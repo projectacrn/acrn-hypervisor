@@ -31,7 +31,6 @@
 #include <hv_lib.h>
 #include <acrn_common.h>
 #include <hv_arch.h>
-#include <hv_debug.h>
 #include <ucode.h>
 
 uint64_t get_microcode_version(void)

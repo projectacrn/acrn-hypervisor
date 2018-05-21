@@ -8,7 +8,6 @@
  * constants.
  */
 
-#include <types.h>
 #include <hv_lib.h>
 #include <acrn_common.h>
 #include <hv_arch.h>

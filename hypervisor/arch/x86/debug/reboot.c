@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <acrn_common.h>
-#include <io.h>
 
 int warm_reboot(void)
 {

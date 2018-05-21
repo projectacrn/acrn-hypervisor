@@ -32,7 +32,6 @@
 #include <acrn_common.h>
 #include <hv_arch.h>
 #include <hv_debug.h>
-#include <hypercall.h>
 #include <reboot.h>
 #include "shell_internal.h"
 #include "serial_internal.h"

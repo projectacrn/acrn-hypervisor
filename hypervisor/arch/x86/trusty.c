@@ -34,7 +34,6 @@
 #include <acrn_hv_defs.h>
 #include <hv_debug.h>
 #include <hkdf.h>
-#include "rtl.h"
 
 _Static_assert(NR_WORLD == 2, "Only 2 Worlds supported!");
 
