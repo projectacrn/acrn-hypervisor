@@ -1272,9 +1272,6 @@ deinit_pci(struct vmctx *ctx)
 				    func, fi);
 			}
 		}
-
-		pci_businfo[bus] = NULL;
-		free(bi);
 	}
 }
 
