@@ -95,7 +95,7 @@ static void parse_other_modules(struct vm *vm,
 				vm->sw.linux_info.bootargs_src_addr = load_addr;
 			}
 
-			strcpy_s(load_addr + args_size - 1,
+			strcpy_s(load_addr + args_size,
 				100, dyn_bootargs);
 			vm->sw.linux_info.bootargs_size =
 				strnlen_s(load_addr, MEM_2K);
