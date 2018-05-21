@@ -974,9 +974,9 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 
 	/* Set up guest exception mask bitmap setting a bit * causes a VM exit
 	 * on corresponding guest * exception - pg 2902 24.6.3
-	 * enable VM exit on MC and DB
+	 * enable VM exit on MC only
 	 */
-	value32 = (1 << IDT_MC) | (1u << IDT_DB);
+	value32 = (1 << IDT_MC);
 	exec_vmwrite(VMX_EXCEPTION_BITMAP, value32);
 
 	/* Set up page fault error code mask - second paragraph * pg 2902

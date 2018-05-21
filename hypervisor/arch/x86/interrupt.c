@@ -476,6 +476,12 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 	vcpu->arch_vcpu.exception_info.exception = exception_vector;
 	vcpu->arch_vcpu.exception_info.error = int_err_code;
 
+	if (exception_vector == IDT_MC) {
+		/* just print error message for #MC, it then will be injected
+		 * back to guest */
+		pr_fatal("Exception #MC got from guest!");
+	}
+
 	TRACE_4I(TRC_VMEXIT_EXCEPTION_OR_NMI,
 			exception_vector, int_err_code, 2, 0);
 
