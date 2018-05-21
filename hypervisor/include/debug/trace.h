@@ -69,49 +69,10 @@
 
 #include <sbuf.h>
 
-#define GEN_CASE(id) case (id): { id##_FMT; break; }
-
 #define TRACE_CUSTOM			0xFC
 #define TRACE_FUNC_ENTER		0xFD
 #define TRACE_FUNC_EXIT			0xFE
 #define TRACE_STR			0xFF
-
-#define TRACE_TIMER_ACTION_ADDED_FMT				\
-{PR("TIMER_ACTION ADDED: ID %d, deadline %llx total: %d\n",	\
-	(p)->a, ((uint64_t)((p)->c)<<32)|(p)->b, (p)->d); }
-
-#define TRACE_TIMER_ACTION_PCKUP_FMT				\
-{PR("TIMER_ACTION PCKUP: ID %d, deadline %llx total: %d\n",	\
-	(p)->a, ((uint64_t)((p)->c)<<32)|(p)->b, (p)->d); }
-
-#define TRACE_TIMER_ACTION_UPDAT_FMT				\
-{PR("TIMER_ACTION UPDAT: ID %d, deadline %llx total: %d\n",	\
-	(p)->a, ((unsigned long)((p)->c)<<32)|(p)->b, (p)->d); }
-
-#define TRACE_TIMER_IRQ_FMT					\
-PR("TIMER_IRQ total: %llx\n", (p)->e)
-
-#define TRACE_CUSTOM_FMT					\
-PR("CUSTOM: 0x%llx 0x%llx\n", (p)->e, (p)->f)
-
-#define TRACE_FUNC_ENTER_FMT					\
-PR("ENTER: %s\n", (p)->str)
-
-#define TRACE_FUNC_EXIT_FMT					\
-PR("EXIT : %s\n", (p)->str)
-
-#define TRACE_STR_FMT						\
-PR("STR: %s\n", (p)->str)
-
-#define ALL_CASES				\
-	GEN_CASE(TRACE_TIMER_ACTION_ADDED);	\
-	GEN_CASE(TRACE_TIMER_ACTION_PCKUP);	\
-	GEN_CASE(TRACE_TIMER_ACTION_UPDAT);	\
-	GEN_CASE(TRACE_TIMER_IRQ);		\
-	GEN_CASE(TRACE_CUSTOM);			\
-	GEN_CASE(TRACE_STR);			\
-	GEN_CASE(TRACE_FUNC_ENTER);		\
-	GEN_CASE(TRACE_FUNC_EXIT);
 
 /* sizeof(trace_entry) == 3 x 64bit */
 struct trace_entry {
@@ -235,15 +196,6 @@ TRACE_16STR(int evid, const char name[])
 }
 
 #else /* HV_DEBUG */
-
-#define TRACE_TIMER_ACTION_ADDED_FMT
-#define TRACE_TIMER_ACTION_PCKUP_FMT
-#define TRACE_TIMER_ACTION_UPDAT_FMT
-#define TRACE_TIMER_IRQ_FMT
-#define TRACE_CUSTOM_FMT
-#define TRACE_FUNC_ENTER_FMT
-#define TRACE_FUNC_EXIT_FMT
-#define TRACE_STR_FMT
 
 #define TRACE_ENTER
 #define TRACE_EXIT
