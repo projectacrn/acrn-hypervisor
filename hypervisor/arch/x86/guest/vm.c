@@ -233,7 +233,7 @@ int shutdown_vm(struct vm *vm)
 	if (vm->iommu_domain)
 		destroy_iommu_domain(vm->iommu_domain);
 
-	bitmap_clr(vm->attr.id, &vmid_bitmap);
+	bitmap_clear(vm->attr.id, &vmid_bitmap);
 
 	if (vm->vpic)
 		vpic_cleanup(vm);

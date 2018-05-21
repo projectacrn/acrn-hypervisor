@@ -849,7 +849,7 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 		*dmask = 0;
 		amask = vm_active_cpus(vm);
 		while ((vcpu_id = bitmap_ffs(&amask)) >= 0) {
-			bitmap_clr(vcpu_id, &amask);
+			bitmap_clear(vcpu_id, &amask);
 
 			vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
 			dfr = vlapic->apic_page->dfr;
@@ -953,7 +953,7 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 {
 	int i;
 	bool phys;
-	uint64_t dmask;
+	uint64_t dmask = 0;
 	uint64_t icrval;
 	uint32_t dest, vec, mode;
 	struct lapic *lapic;
@@ -984,22 +984,21 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 			vlapic_calcdest(vlapic->vm, &dmask, dest, phys, false);
 			break;
 		case APIC_DEST_SELF:
-			bitmap_setof(vlapic->vcpu->vcpu_id, &dmask);
+			bitmap_set(vlapic->vcpu->vcpu_id, &dmask);
 			break;
 		case APIC_DEST_ALLISELF:
 			dmask = vm_active_cpus(vlapic->vm);
 			break;
 		case APIC_DEST_ALLESELF:
 			dmask = vm_active_cpus(vlapic->vm);
-			bitmap_clr(vlapic->vcpu->vcpu_id, &dmask);
+			bitmap_clear(vlapic->vcpu->vcpu_id, &dmask);
 			break;
 		default:
-			dmask = 0;	/* satisfy gcc */
 			break;
 		}
 
 		while ((i = bitmap_ffs(&dmask)) >= 0) {
-			bitmap_clr(i, &dmask);
+			bitmap_clear(i, &dmask);
 			target_vcpu = vcpu_from_vid(vlapic->vm, i);
 			if (target_vcpu == NULL)
 				return 0;
@@ -1523,7 +1522,7 @@ vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest, bool phys,
 	vlapic_calcdest(vm, &dmask, dest, phys, lowprio);
 
 	while ((vcpu_id = bitmap_ffs(&dmask)) >= 0) {
-		bitmap_clr(vcpu_id, &dmask);
+		bitmap_clear(vcpu_id, &dmask);
 		target_vcpu = vcpu_from_vid(vm, vcpu_id);
 		if (target_vcpu == NULL)
 			return;
@@ -1657,7 +1656,7 @@ int
 vlapic_set_local_intr(struct vm *vm, int cpu_id, int vector)
 {
 	struct vlapic *vlapic;
-	uint64_t dmask;
+	uint64_t dmask = 0;
 	int error;
 
 	if (cpu_id < -1 || cpu_id >= phy_cpu_num)
@@ -1666,10 +1665,10 @@ vlapic_set_local_intr(struct vm *vm, int cpu_id, int vector)
 	if (cpu_id == -1)
 		dmask = vm_active_cpus(vm);
 	else
-		bitmap_setof(cpu_id, &dmask);
+		bitmap_set(cpu_id, &dmask);
 	error = 0;
 	while ((cpu_id = bitmap_ffs(&dmask)) >= 0) {
-		bitmap_clr(cpu_id, &dmask);
+		bitmap_clear(cpu_id, &dmask);
 		vlapic = vm_lapic_from_vcpu_id(vm, cpu_id);
 		error = vlapic_trigger_lvt(vlapic, vector);
 		if (error)

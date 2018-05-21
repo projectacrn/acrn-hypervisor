@@ -685,7 +685,7 @@ void cpu_dead(uint32_t logical_id)
 	/* Set state to show CPU is halted */
 	cpu_set_current_state(logical_id, CPU_STATE_HALTED);
 
-	bitmap_clr(get_cpu_id(), &pcpu_active_bitmap);
+	bitmap_clear(get_cpu_id(), &pcpu_active_bitmap);
 
 	/* Halt the CPU */
 	do {
