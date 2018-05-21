@@ -40,11 +40,6 @@ int64_t hcall_world_switch(struct vcpu *vcpu)
 {
 	int next_world_id = !(vcpu->arch_vcpu.cur_context);
 
-	if (!is_hypercall_from_ring0()) {
-		pr_err("%s() is only allowed from RING-0!\n", __func__);
-		return -1;
-	}
-
 	if (!vcpu->vm->sworld_control.sworld_enabled) {
 		pr_err("Secure World is not enabled!\n");
 		return -1;
@@ -64,11 +59,6 @@ int64_t hcall_world_switch(struct vcpu *vcpu)
 
 int64_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param)
 {
-	if (!is_hypercall_from_ring0()) {
-		pr_err("%s() is only allowed from RING-0!\n", __func__);
-		return -1;
-	}
-
 	if (!vcpu->vm->sworld_control.sworld_enabled) {
 		pr_err("Secure World is not enabled!\n");
 		return -1;
