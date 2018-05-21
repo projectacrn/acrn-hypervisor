@@ -139,6 +139,8 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu);
 typedef int (*vm_sw_loader_t)(struct vm *, struct vcpu *);
 extern vm_sw_loader_t vm_sw_loader;
 
+int copy_from_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
+int copy_to_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
 #endif	/* !ASSEMBLER */
 
 #endif /* GUEST_H*/
