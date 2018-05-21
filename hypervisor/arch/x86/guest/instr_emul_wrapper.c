@@ -380,7 +380,7 @@ void vm_gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa)
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3, gva);
 }
 
-int decode_instruction(struct vcpu *vcpu, struct mem_io *mmio)
+uint8_t decode_instruction(struct vcpu *vcpu)
 {
 	uint64_t guest_rip_gva, guest_rip_gpa;
 	char *guest_rip_hva;
@@ -388,7 +388,6 @@ int decode_instruction(struct vcpu *vcpu, struct mem_io *mmio)
 	uint32_t csar;
 	int retval = 0;
 	enum vm_cpu_mode cpu_mode;
-	int i;
 
 	guest_rip_gva =
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip;
@@ -399,7 +398,7 @@ int decode_instruction(struct vcpu *vcpu, struct mem_io *mmio)
 
 	guest_rip_hva = GPA2HVA(vcpu->vm, guest_rip_gpa);
 	emul_cnx = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
-	emul_cnx->mmio = mmio;
+	emul_cnx->mmio = &vcpu->mmio;
 	emul_cnx->vcpu = vcpu;
 
 	/* by now, HVA <-> HPA is 1:1 mapping, so use hpa is OK*/
@@ -410,29 +409,18 @@ int decode_instruction(struct vcpu *vcpu, struct mem_io *mmio)
 	csar = exec_vmread(VMX_GUEST_CS_ATTR);
 	cpu_mode = get_vmx_cpu_mode();
 
-	mmio->private_data = emul_cnx;
+	vcpu->mmio.private_data = emul_cnx;
 
-	retval = vmm_decode_instruction(vcpu, guest_rip_gva,
+	retval = __decode_instruction(vcpu, guest_rip_gva,
 			cpu_mode, SEG_DESC_DEF32(csar), &emul_cnx->vie);
 
-	mmio->access_size = emul_cnx->vie.opsize;
-
 	if (retval != 0) {
-		/* dump to instruction when decoding failed */
-		pr_err("decode following instruction failed @ 0x%016llx:",
-			exec_vmread(VMX_GUEST_RIP));
-		for (i = 0; i < emul_cnx->vie.num_valid; i++) {
-			if (i >= VIE_INST_SIZE)
-				break;
-
-			if (i == 0)
-				pr_err("\n");
-			pr_err("%d=%02hhx ",
-				i, emul_cnx->vie.inst[i]);
-		}
+		pr_err("decode instruction failed @ 0x%016llx:",
+		exec_vmread(VMX_GUEST_RIP));
+		return 0;
 	}
 
-	return retval;
+	return  emul_cnx->vie.opsize;
 }
 
 int emulate_instruction(struct vcpu *vcpu, struct mem_io *mmio)
