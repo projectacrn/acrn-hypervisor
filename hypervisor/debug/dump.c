@@ -296,11 +296,6 @@ void __assert(uint32_t line, const char *file, char *txt)
 void dump_exception(struct intr_excp_ctx *ctx, uint32_t cpu_id)
 {
 	const char *name = "Not defined";
-	static int nested = 1;
-
-	/* avoid endless loop, only dump the first exception */
-	if (nested++ > 1)
-		return;
 
 	if (ctx->vector < 0x20)
 		name = excp_names[ctx->vector];
