@@ -43,6 +43,13 @@
 
 #define ACRN_DBG_BOOT	6
 
+/* There are two sources for vm0 kernel cmdline:
+ * - cmdline from sbl. mbi->cmdline
+ * - cmdline from acrn stitching tool. mod[0].mm_string
+ * We need to merge them together
+ */
+static char kernel_cmdline[MEM_2K];
+
 /*now modules support: FIRMWARE & RAMDISK */
 static void parse_other_modules(struct vm *vm,
 	struct multiboot_module *mods, int mods_count)
@@ -163,12 +170,38 @@ int init_vm0_boot_info(struct vm *vm)
 	vm->sw.kernel_info.kernel_load_addr =
 		get_kernel_load_addr(vm->sw.kernel_info.kernel_src_addr);
 
-	vm->sw.linux_info.bootargs_src_addr =
-		(void *)(uint64_t)mods[0].mm_string;
-	vm->sw.linux_info.bootargs_load_addr =
-		(void *)BOOT_ARGS_LOAD_ADDR;
-	vm->sw.linux_info.bootargs_size =
-		strnlen_s((char *)(uint64_t) mods[0].mm_string, MEM_2K);
+
+	/*
+	 * If there is cmdline from mbi->mi_cmdline, merge it with
+	 * mods[0].mm_string
+	 */
+	if (mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) {
+		char *cmd_src, *cmd_dst;
+		int off = 0;
+
+		cmd_dst = kernel_cmdline;
+		cmd_src = HPA2HVA((uint64_t)mbi->mi_cmdline);
+		strncpy_s(cmd_dst, MEM_2K, cmd_src, strnlen_s(cmd_src, MEM_2K));
+		off = strnlen_s(cmd_dst, MEM_2K);
+		cmd_dst[off] = ' ';	/* insert space */
+		off += 1;
+
+		cmd_dst += off;
+		cmd_src = HPA2HVA((uint64_t)mods[0].mm_string);
+		strncpy_s(cmd_dst, MEM_2K - off, cmd_src,
+				strnlen_s(cmd_src, MEM_2K - off));
+
+		vm->sw.linux_info.bootargs_src_addr = kernel_cmdline;
+		vm->sw.linux_info.bootargs_size =
+			strnlen_s(kernel_cmdline, MEM_2K);
+	} else {
+		vm->sw.linux_info.bootargs_src_addr =
+			(void *)(uint64_t)mods[0].mm_string;
+		vm->sw.linux_info.bootargs_size =
+			strnlen_s((char *)(uint64_t) mods[0].mm_string, MEM_2K);
+	}
+
+	vm->sw.linux_info.bootargs_load_addr = (void *)BOOT_ARGS_LOAD_ADDR;
 
 	if (mbi->mi_mods_count > 1) {
 		/*parse other modules, like firmware /ramdisk */
