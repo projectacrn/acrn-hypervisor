@@ -922,7 +922,8 @@ basl_make_templates(void)
 	len = strlen(tmpdir);
 
 	if ((len + sizeof(ASL_TEMPLATE) + 1) < MAXPATHLEN) {
-		strncpy(basl_template, tmpdir, len);
+		strncpy(basl_template, tmpdir,
+				MAXPATHLEN - sizeof(ASL_TEMPLATE) - 1);
 		while (len > 0 && basl_template[len - 1] == '/')
 			len--;
 		basl_template[len] = '/';
@@ -937,7 +938,9 @@ basl_make_templates(void)
 		 */
 		if ((len + sizeof(ASL_TEMPLATE) + 1 +
 		     sizeof(ASL_SUFFIX)) < MAXPATHLEN) {
-			strncpy(basl_stemplate, tmpdir, len);
+			strncpy(basl_stemplate, tmpdir,
+				MAXPATHLEN - sizeof(ASL_TEMPLATE)
+				- sizeof(ASL_SUFFIX) - 1);
 			basl_stemplate[len] = '/';
 			strncpy(&basl_stemplate[len + 1], ASL_TEMPLATE,
 					MAXPATHLEN - len - 1);
