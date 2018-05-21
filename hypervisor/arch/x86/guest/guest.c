@@ -120,6 +120,68 @@ inline bool vm_lapic_disabled(struct vm *vm)
 	return true;
 }
 
+/* Caller(Guest) should make sure gpa is continuous.
+ * - gpa from hypercall input which from kernel stack is gpa continous, not
+ *   support kernel stack from vmap
+ * - some other gpa from hypercall parameters, VHM should make sure it's
+ *   continous
+ */
+int copy_from_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
+{
+	uint64_t hpa;
+	uint32_t off_in_pg, len, pg_size;
+	void *g_ptr;
+
+	do {
+		hpa = _gpa2hpa(vm, gpa, &pg_size);
+		if (pg_size == 0) {
+			ASSERT(0, "copy_from_vm: GPA2HPA not found");
+			return -EINVAL;
+		}
+
+		off_in_pg = gpa & (pg_size - 1);
+		if (size > pg_size - off_in_pg)
+			len = pg_size - off_in_pg;
+		else
+			len = size;
+
+		g_ptr = HPA2HVA(hpa);
+		memcpy_s(h_ptr, len, g_ptr, len);
+		gpa += len;
+		size -= len;
+	} while (size > 0);
+
+	return 0;
+}
+
+int copy_to_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
+{
+	uint64_t hpa;
+	uint32_t off_in_pg, len, pg_size;
+	void *g_ptr;
+
+	do {
+		hpa = _gpa2hpa(vm, gpa, &pg_size);
+		if (pg_size == 0) {
+			ASSERT(0, "copy_to_vm: GPA2HPA not found");
+			return -EINVAL;
+		}
+
+		off_in_pg = gpa & (pg_size - 1);
+		if (size > pg_size - off_in_pg)
+			len = pg_size - off_in_pg;
+		else
+			len = size;
+
+		g_ptr = HPA2HVA(hpa);
+		memcpy_s(g_ptr, len, h_ptr, len);
+		gpa += len;
+		size -= len;
+	} while (size > 0);
+
+	return 0;
+}
+
 uint64_t gva2gpa(struct vm *vm, uint64_t cr3, uint64_t gva)
 {
 	int level, index, shift;

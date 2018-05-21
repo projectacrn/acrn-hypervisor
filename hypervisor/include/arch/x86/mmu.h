@@ -392,8 +392,7 @@ int     is_ept_supported(void);
 uint64_t create_guest_initial_paging(struct vm *vm);
 void    destroy_ept(struct vm *vm);
 uint64_t  gpa2hpa(struct vm *vm, uint64_t gpa);
-uint64_t  gpa2hpa_check(struct vm *vm, uint64_t gpa,
-		uint64_t size, int *found, bool assert);
+uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size);
 uint64_t  hpa2gpa(struct vm *vm, uint64_t hpa);
 int ept_mmap(struct vm *vm, uint64_t hpa,
 	uint64_t gpa, uint64_t size, uint32_t type, uint32_t prot);

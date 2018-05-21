@@ -137,46 +137,37 @@ void destroy_ept(struct vm *vm)
 		free_ept_mem(HPA2HVA(vm->arch_vm.sworld_eptp));
 }
 
-uint64_t gpa2hpa_check(struct vm *vm, uint64_t gpa,
-		uint64_t size, int *found, bool assert)
+uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 {
 	uint64_t hpa = 0;
-	int _found = 0;
+	uint32_t pg_size = 0;
 	struct entry_params entry;
 	struct map_params map_params;
 
 	map_params.page_table_type = PTT_EPT;
 	map_params.pml4_base = HPA2HVA(vm->arch_vm.nworld_eptp);
 	map_params.pml4_inverted = HPA2HVA(vm->arch_vm.m2p);
-	obtain_last_page_table_entry(&map_params, &entry,
-			(void *)gpa, true);
-	if (entry.entry_present == PT_PRESENT
-		/* if cross several pages, now not handle it,
-		 * only print error info
-		 */
-		&& ((gpa % entry.page_size) + size)  <= entry.page_size) {
-		_found = 1;
+	obtain_last_page_table_entry(&map_params, &entry, (void *)gpa, true);
+	if (entry.entry_present == PT_PRESENT) {
 		hpa = ((entry.entry_val & (~(entry.page_size - 1)))
 				| (gpa & (entry.page_size - 1)));
-	}
-
-	if (found != NULL)
-		*found = _found;
-
-	if (_found == 0 && assert) {
+		pg_size = entry.page_size;
+		pr_dbg("GPA2HPA: 0x%llx->0x%llx", gpa, hpa);
+	} else {
 		pr_err("VM %d GPA2HPA: failed for gpa 0x%llx",
 				vm->attr.boot_idx, gpa);
-		ASSERT(_found != 0, "GPA2HPA not found");
 	}
 
-	pr_dbg("GPA2HPA: 0x%llx->0x%llx", gpa, hpa);
+	if (size)
+		*size = pg_size;
 
 	return hpa;
 }
 
+/* using return value 0 as failure, make sure guest will not use hpa 0 */
 uint64_t gpa2hpa(struct vm *vm, uint64_t gpa)
 {
-	return gpa2hpa_check(vm, gpa, 0, NULL, true);
+	return _gpa2hpa(vm, gpa, NULL);
 }
 
 uint64_t hpa2gpa(struct vm *vm, uint64_t hpa)

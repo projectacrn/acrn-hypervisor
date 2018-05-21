@@ -372,33 +372,4 @@ int64_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param);
  * @}
  */
 
-static inline int check_result(int found)
-{
-	return found ? 0 : -1;
-}
-
-#define copy_from_vm(vm, ptr, gpa, size) ({		\
-	int found = 0;					\
-	typeof(*(ptr)) *h_ptr = (ptr);			\
-	typeof(*(ptr)) *g_ptr =				\
-		HPA2HVA(gpa2hpa_check(vm, gpa,	\
-		size, &found, true));			\
-	if (found) {					\
-		memcpy_s(h_ptr, size, g_ptr, size);	\
-	}						\
-	check_result(found);				\
-})
-
-#define copy_to_vm(vm, ptr, gpa, size) ({		\
-	int found = 0;					\
-	typeof(*(ptr)) *h_ptr = (ptr);			\
-	typeof(*(ptr)) *g_ptr =				\
-		HPA2HVA(gpa2hpa_check(vm, gpa,	\
-		size, &found, true));			\
-	if (found) {					\
-		memcpy_s(g_ptr, size, h_ptr, size);	\
-	}						\
-	check_result(found);				\
-})
-
 #endif /* HYPERCALL_H*/
