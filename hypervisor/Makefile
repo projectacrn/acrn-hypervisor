@@ -80,7 +80,6 @@ OBJCOPY ?= objcopy
 D_SRCS += $(wildcard debug/*.c)
 C_SRCS += boot/acpi.c
 C_SRCS += boot/dmar_parse.c
-C_SRCS += boot/multiboot.c
 C_SRCS += arch/x86/ioapic.c
 C_SRCS += arch/x86/intr_lapic.c
 S_SRCS += arch/x86/cpu_secondary.S
@@ -142,6 +141,10 @@ C_SRCS += bsp/$(PLATFORM)/$(PLATFORM).c
 
 ifeq ($(PLATFORM),uefi)
 C_SRCS += bsp/$(PLATFORM)/cmdline.c
+else
+ifeq ($(PLATFORM), sbl)
+C_SRCS += boot/sbl/multiboot.c
+endif
 endif
 
 # retpoline support
