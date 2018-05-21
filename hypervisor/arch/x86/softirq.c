@@ -37,7 +37,7 @@ static DEFINE_CPU_DATA(uint64_t, softirq_pending);
 
 void disable_softirq(int cpu_id)
 {
-	bitmap_clr(SOFTIRQ_ATOMIC, &per_cpu(softirq_pending, cpu_id));
+	bitmap_clear(SOFTIRQ_ATOMIC, &per_cpu(softirq_pending, cpu_id));
 }
 
 void enable_softirq(int cpu_id)
@@ -96,7 +96,7 @@ void exec_softirq(void)
 		if ((softirq_id < 0) || (softirq_id >= SOFTIRQ_MAX))
 			break;
 
-		bitmap_clr(softirq_id, bitmap);
+		bitmap_clear(softirq_id, bitmap);
 
 		switch (softirq_id) {
 		case SOFTIRQ_TIMER:

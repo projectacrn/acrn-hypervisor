@@ -87,7 +87,7 @@ void set_pcpu_used(int pcpu_id)
 
 void free_pcpu(int pcpu_id)
 {
-	bitmap_clr(pcpu_id, &pcpu_used_bitmap);
+	bitmap_clear(pcpu_id, &pcpu_used_bitmap);
 }
 
 void add_vcpu_to_runqueue(struct vcpu *vcpu)

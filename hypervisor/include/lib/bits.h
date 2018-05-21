@@ -129,51 +129,51 @@ ffsl(long mask)
 static inline void
 bitmap_set(int mask, unsigned long *bits)
 {
-	/*  (*bits) |= (1UL<<mask); */
-	__asm __volatile(BUS_LOCK "orq %1,%0"
+	/* (*bits) |= (1UL<<mask); */
+	asm volatile(BUS_LOCK "orq %1,%0"
 			:  "+m" (*bits)
 			:  "r" (1UL<<mask)
 			:  "cc", "memory");
 }
 
 static inline void
-bitmap_clr(int mask, unsigned long *bits)
+bitmap_clear(int mask, unsigned long *bits)
 {
 	/* (*bits) &= ~(1UL<<mask); */
-	__asm __volatile(BUS_LOCK "andq %1,%0"
+	asm volatile(BUS_LOCK "andq %1,%0"
 			:  "+m" (*bits)
 			:  "r" (~(1UL<<mask))
 			:  "cc", "memory");
 }
 
-static inline int
-bitmap_isset(int mask, unsigned long *bits)
+static inline bool
+bitmap_test(int mask, unsigned long *bits)
 {
 	/*
-	 * return (*bits) & (1UL<<mask);
+	 * return !!((*bits) & (1UL<<mask));
 	 */
 	int ret;
 
-	__asm __volatile("btq %2,%1\n\tsbbl %0, %0"
-			: "=r" (ret), "=m" (*bits)
-			: "r" ((long)(mask) & 0x3f)
-			: "cc", "memory");
-	return (!!ret);
-}
-
-static inline int
-bitmap_test_and_set(int mask, unsigned long *bits)
-{
-	int ret;
-
-	__asm __volatile(BUS_LOCK  "btsq %2,%1\n\tsbbl %0,%0"
+	asm volatile("btq %2,%1\n\tsbbl %0, %0"
 			: "=r" (ret), "=m" (*bits)
 			: "r" ((long)(mask & 0x3f))
 			: "cc", "memory");
 	return (!!ret);
 }
 
-static inline int
+static inline bool
+bitmap_test_and_set(int mask, unsigned long *bits)
+{
+	int ret;
+
+	asm volatile(BUS_LOCK  "btsq %2,%1\n\tsbbl %0,%0"
+			: "=r" (ret), "=m" (*bits)
+			: "r" ((long)(mask & 0x3f))
+			: "cc", "memory");
+	return (!!ret);
+}
+
+static inline bool
 bitmap_test_and_clear(int mask, unsigned long *bits)
 {
 	/*
@@ -183,26 +183,11 @@ bitmap_test_and_clear(int mask, unsigned long *bits)
 	 */
 	int ret;
 
-	__asm __volatile(BUS_LOCK  "btrq %2,%1\n\tsbbl %0,%0"
+	asm volatile(BUS_LOCK  "btrq %2,%1\n\tsbbl %0,%0"
 			: "=r" (ret), "=m" (*bits)
-			: "r" ((long)(mask) & 0x3f)
+			: "r" ((long)(mask & 0x3f))
 			: "cc", "memory");
 	return (!!ret);
-}
-
-static inline void
-bitmap_setof(int mask, unsigned long *bits)
-{
-	/*
-	 *    *bits = 0;
-	 *    (*bits) |= (1UL<<mask);
-	 */
-
-	__asm __volatile(BUS_LOCK "xchgq %1,%0"
-			:  "+m" (*bits)
-			:  "r" ((1UL<<mask))
-			:  "cc", "memory");
-
 }
 
 static inline int
