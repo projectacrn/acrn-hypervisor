@@ -256,6 +256,11 @@ pm1_control_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 				error = vm_suspend(ctx, VM_SUSPEND_POWEROFF);
 				assert(error == 0 || errno == EALREADY);
 			}
+
+			if ((pm1_control & PM1_SLP_TYP) >> 10 == 3) {
+				error = vm_suspend(ctx, VM_SUSPEND_SUSPEND);
+				assert(error == 0 || errno == EALREADY);
+			}
 		}
 	}
 	return 0;

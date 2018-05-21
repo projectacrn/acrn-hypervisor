@@ -59,6 +59,7 @@
 #include "sw_load.h"
 #include "monitor.h"
 #include "ioc.h"
+#include "pm.h"
 
 #define GUEST_NIO_PORT		0x488	/* guest upcalls via i/o port */
 
@@ -447,6 +448,22 @@ handle_vmexit(struct vmctx *ctx, struct vhm_request *vhm_req, int vcpu)
 	default:
 		exit(1);
 	}
+
+	/* If UOS is not in suspend or system reset mode, we don't
+	 * need to notify request done.
+	 *
+	 * But there is little difference between reset and suspend:
+	 *  - We don't need to notify request done for reset because reset
+	 *    doesn't care it.
+	 *  - We don't need to notify request done for suspend because
+	 *    guest will offline all APs, write PM register to trigger
+	 *    PM. Then the PM register writting will trigger the latest
+	 *    vmexit and it doesn't care request done either.
+	 */
+	if ((VM_SUSPEND_SYSTEM_RESET == vm_get_suspend_mode()) ||
+		(VM_SUSPEND_SUSPEND == vm_get_suspend_mode()))
+		return;
+
 	vm_notify_request_done(ctx, vcpu);
 }
 
@@ -577,6 +594,39 @@ vm_system_reset(struct vmctx *ctx)
 }
 
 static void
+vm_suspend_resume(struct vmctx *ctx)
+{
+	int vcpu_id = 0;
+
+	/*
+	 * If we get warm reboot request, we don't want to exit the
+	 * vcpu_loop/vm_loop/mevent_loop. So we do:
+	 *   1. pause VM
+	 *   2. notify request done to reset ioreq state in vhm
+	 *   3. stop vm watchdog
+	 *   4. wait for resume signal
+	 *   5. reset vm watchdog
+	 *   6. hypercall restart vm
+	 */
+	vm_pause(ctx);
+	for (vcpu_id = 0; vcpu_id < 4; vcpu_id++) {
+		struct vhm_request *vhm_req;
+
+		vhm_req = &vhm_req_buf[vcpu_id];
+		if (vhm_req->valid &&
+			(vhm_req->processed == REQ_STATE_PROCESSING) &&
+			(vhm_req->client == ctx->ioreq_client))
+			vm_notify_request_done(ctx, vcpu_id);
+	}
+
+	vm_stop_watchdog(ctx);
+	wait_for_resume(ctx);
+
+	vm_reset_watchdog(ctx);
+	vm_reset(ctx);
+}
+
+static void
 vm_loop(struct vmctx *ctx)
 {
 	int error;
@@ -605,6 +655,10 @@ vm_loop(struct vmctx *ctx)
 
 		if (VM_SUSPEND_SYSTEM_RESET == vm_get_suspend_mode()) {
 			vm_system_reset(ctx);
+		}
+
+		if (VM_SUSPEND_SUSPEND == vm_get_suspend_mode()) {
+			vm_suspend_resume(ctx);
 		}
 	}
 	quit_vm_loop = 0;
