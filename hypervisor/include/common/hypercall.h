@@ -335,19 +335,21 @@ int64_t hcall_reset_ptdev_intr_info(struct vm *vm, uint64_t vmid,
 int64_t hcall_setup_sbuf(struct vm *vm, uint64_t param);
 
 /**
- * @brief Switch VCPU state between Normal/Secure World.
+ * @brief Get VCPU Power state.
  *
- * @param vcpu Pointer to VCPU data structure
+ * @param cmd cmd to show get which VCPU power state data
+ * @param param VCPU power state data
  *
  * @return 0 on success, non-zero on error.
  */
 
 int64_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param);
 
+
 /**
- * @brief Get VCPU Power state.
+ * @brief Switch VCPU state between Normal/Secure World.
  *
- * @param VCPU power state data
+ * @param vcpu Pointer to VCPU data structure
  *
  * @return 0 on success, non-zero on error.
  */
