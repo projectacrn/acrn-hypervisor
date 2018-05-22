@@ -28,7 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include        <hypervisor.h>
 #include        <cpu.h>
 #include        <mmu.h>
 #include        <gdt.h>

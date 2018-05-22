@@ -29,10 +29,6 @@
  */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
 
 static spinlock_t exception_spinlock = { .head = 0, .tail = 0, };
 

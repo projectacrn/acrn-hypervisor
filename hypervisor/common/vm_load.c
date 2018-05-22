@@ -29,10 +29,6 @@
  */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
 #include <zeropage.h>
 
 static uint32_t create_e820_table(struct e820_entry *_e820)

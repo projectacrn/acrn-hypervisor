@@ -31,10 +31,6 @@
 #define pr_fmt(fmt)	"iommu: " fmt
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
 
 #define DBG_IOMMU 0
 

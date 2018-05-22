@@ -3,10 +3,6 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
 #include <hypervisor.h>
 
 /************************************************************************/

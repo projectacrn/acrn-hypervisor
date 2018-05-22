@@ -33,10 +33,7 @@
  *
  */
 
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
+#include <hypervisor.h>
 
 DEFINE_CPU_DATA(uint64_t * [ACRN_SBUF_ID_MAX], sbuf);
 

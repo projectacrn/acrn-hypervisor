@@ -4,10 +4,6 @@
  */
 
 #include <hypervisor.h>
-#include <acrn_common.h>
-#include <hv_lib.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
 
 #define ACRN_DBG_IOREQUEST	6
 

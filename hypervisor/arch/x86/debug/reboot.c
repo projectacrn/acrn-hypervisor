@@ -2,7 +2,7 @@
  * Copyright (C) <2018> Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include <acrn_common.h>
+#include <hypervisor.h>
 
 int warm_reboot(void)
 {

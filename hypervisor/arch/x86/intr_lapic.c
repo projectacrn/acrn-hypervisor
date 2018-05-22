@@ -29,10 +29,6 @@
  */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
 
 /* Rate range 1 to 1000 or 1uSec to 1mSec */
 #define APIC_TIMER_MAX      0xffffffff

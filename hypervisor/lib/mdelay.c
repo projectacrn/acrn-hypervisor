@@ -28,7 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <hypervisor.h>
 #include <hv_lib.h>
 
 void mdelay(uint32_t loop_count)

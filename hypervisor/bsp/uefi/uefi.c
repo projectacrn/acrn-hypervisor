@@ -29,14 +29,10 @@
  */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
 #include <multiboot.h>
 #ifdef CONFIG_EFI_STUB
 #include <acrn_efi.h>
 #endif
-#include <hv_debug.h>
 
 /* IOAPIC id */
 #define UEFI_IOAPIC_ID   8

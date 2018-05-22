@@ -29,10 +29,6 @@
  */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
 #ifdef CONFIG_EFI_STUB
 #include <acrn_efi.h>
 extern struct efi_ctx* efi_ctx;

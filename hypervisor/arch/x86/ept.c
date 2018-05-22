@@ -29,10 +29,6 @@
  */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_hv_defs.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
 
 #include "guest/instr_emul_wrapper.h"
 #include "guest/instr_emul.h"

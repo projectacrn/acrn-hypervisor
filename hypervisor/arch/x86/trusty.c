@@ -28,11 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <acrn_hv_defs.h>
-#include <hv_debug.h>
+#include <hypervisor.h>
 #include <hkdf.h>
 
 _Static_assert(NR_WORLD == 2, "Only 2 Worlds supported!");

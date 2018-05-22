@@ -28,11 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
+#include <hypervisor.h>
 #include <bsp_extern.h>
-#include <hv_debug.h>
 #include <multiboot.h>
 
 /* Local variables */

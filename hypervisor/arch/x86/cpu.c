@@ -29,13 +29,9 @@
  */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
 #include <bsp_extern.h>
-#include <hv_arch.h>
 #include <schedule.h>
 #include <version.h>
-#include <hv_debug.h>
 
 spinlock_t cpu_secondary_spinlock = {
 	.head = 0,
