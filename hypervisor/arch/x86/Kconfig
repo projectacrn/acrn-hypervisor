@@ -1,0 +1,114 @@
+choice
+	prompt "Platform"
+	default PLATFORM_UEFI
+
+config PLATFORM_UEFI
+	bool "UEFI"
+	select EFI_STUB
+
+config PLATFORM_SBL
+	bool "SBL"
+
+endchoice
+
+config NR_IOAPICS
+	int "Maximum number of IOAPICs supported"
+	default 1
+
+config STACK_SIZE
+	hex "Capacity of each stack used in the hypervisor"
+	default 0x2000
+
+config LOG_BUF_SIZE
+	hex "Capacity of logbuf"
+	default 0x100000
+
+config LOG_DESTINATION
+	int "Bitmap of consoles where logs are printed"
+	default 3
+
+config CPU_UP_TIMEOUT
+	int "Timeout in ms when bringing up secondary CPUs"
+	default 100
+
+choice
+	prompt "serial IO type"
+	default SERIAL_MMIO if PLATFORM_SBL
+	default SERIAL_PIO  if PLATFORM_UEFI
+
+config SERIAL_MMIO
+	bool "MMIO"
+
+config SERIAL_PIO
+	bool "PIO"
+
+endchoice
+
+config SERIAL_MMIO_BASE
+	hex "Base address of serial MMIO region"
+	depends on SERIAL_MMIO
+	default 0xfc000000
+
+config SERIAL_PIO_BASE
+	hex "Base address of serial PIO region"
+	depends on SERIAL_PIO
+	default 0x3f8
+
+config MALLOC_ALIGN
+	int "Block size in the heap for malloc()"
+	default 16
+
+config NUM_ALLOC_PAGES
+	hex "Capacity in pages of the heap for page_alloc()"
+	default 0x1000
+
+config HEAP_SIZE
+	hex "Capacity of the heap for malloc()"
+	default 0x100000
+
+config CONSOLE_LOGLEVEL_DEFAULT
+	int "Default loglevel on the serial console"
+	default 2
+
+config MEM_LOGLEVEL_DEFAULT
+	int "Default loglevel in memory"
+	default 4
+
+config LOW_RAM_START
+	hex "Address of the beginning of low RAM region"
+	default 0x00001000 if PLATFORM_SBL
+	default 0x00008000 if PLATFORM_UEFI
+
+config LOW_RAM_SIZE
+	hex "Size of the low RAM region"
+	default 0x000cf000 if PLATFORM_SBL
+	default 0x00010000 if PLATFORM_UEFI
+
+config RAM_START
+	hex "Address of the RAM region assigned to the hypervisor"
+	default 0x6e000000 if PLATFORM_SBL
+	default 0x20000000 if PLATFORM_UEFI
+
+config RAM_SIZE
+	hex "Size of the RAM region assigned to the hypervisor"
+	default 0x02000000
+
+config DMAR_PARSE_ENABLED
+	bool
+	default n if PLATFORM_SBL
+	default y if PLATFORM_UEFI
+
+config GPU_SBDF
+	hex
+	depends on DMAR_PARSE_ENABLED
+	default 0x00000010
+
+config EFI_STUB
+	bool
+	depends on PLATFORM_UEFI
+	default y
+
+config UEFI_OS_LOADER_NAME
+	string "UEFI OS loader name"
+	depends on PLATFORM_UEFI
+	default "\\EFI\\org.clearlinux\\bootloaderx64.efi"
