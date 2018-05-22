@@ -30,11 +30,58 @@
  *  devices:
  *    tablet             USB tablet mouse
  */
+
+/*
+ * xHCI DRD control flow digram.
+ *  +---------------------------+
+ *  |         ACRN DM           |
+ *  |  +---------------------+  |
+ *  |  |    xhci emulator    |  |
+ *  |  |                     |  |
+ *  |  |  +---------------+  |  |
+ *  |  |  | drd emulator  |<----------+    +----------------------+
+ *  |  |  +---------------+  |  |     |    |        app           |
+ *  |  +---------|-----------+  |     |    +----------------------+
+ *  +------------|--------------+     | echo H or D |
+ *               | SOS USER SPACE     |             |  UOS USER SPACE
+ *  -------------|--------------------|-------------|-----------------
+ *               v SOS KERNEL SPACE   |             v  UOS KERNEL SPACE
+ *  +------------------------------+  |    +--------------------------+
+ *  | native drd sysfs interface   |  |    |native drd sysfs interface|
+ *  +------------------------------+  |    +--------------------------+
+ *               |                    |             |
+ *               v                    |             v
+ *  +------------------------+        |    +----------------------+
+ *  |    natvie drd driver   |        +----|   native drd driver  |
+ *  +------------------------+             +----------------------+
+ *               |
+ *  -------------|---------------------------------------------------
+ *  HARDWARE     |
+ *  +------------|----------+
+ *  |xHCI        v          |     +-----------+
+ *  |   +----------------+  |     |   xDCI    |
+ *  |   | switch control |  |     +-----------+
+ *  |   +-------+--------+  |          |
+ *  +-----------+-----------+          |
+ *              |       |              |
+ *              |       +----+---------+
+ *              |            |
+ *              |     +------+------+
+ *              +-----|   PHY MUX   |
+ *                    +---+-----+---+
+ *                        |     |
+ *                    +---+     +---+
+ *                +---+----+   +----+---+
+ *                |USB2 PHY|   |USB3 PHY|
+ *                +--------+   +--------+
+ */
+
 #include <sys/cdefs.h>
 #include <sys/param.h>
 #include <sys/uio.h>
 #include <sys/types.h>
 #include <sys/queue.h>
+#include <sys/fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -216,6 +263,13 @@ struct pci_xhci_excap_ptr {
 	uint8_t cap_ptr;
 } __attribute__((packed));
 
+struct pci_xhci_excap_drd_apl {
+	struct pci_xhci_excap_ptr excap_ptr;
+	uint8_t padding[102]; /* Followed native xHCI MMIO layout */
+	uint32_t drdcfg0;
+	uint32_t drdcfg1;
+} __attribute__((packed));
+
 struct pci_xhci_excap_prot {
 	struct pci_xhci_excap_ptr excap_ptr;
 	uint8_t rev_min;
@@ -243,6 +297,25 @@ static DEFINE_EXCP_PROT(u3_prot,
 		3,
 		1,
 		XHCI_MAX_DEVS/2);
+
+static DEFINE_EXCP_VENDOR_DRD(XHCI_ID_DRD_INTEL,
+		0x00,
+		0x00,
+		0x00);
+
+/*
+ * Extended capabilities layout of APL platform.
+ * excap start		excap end		register value
+ * 0x8000		0x8010			0x02000802
+ * 0x8020		0x8030			0x03001402
+ * 0x8070		0x80E0			0x000000C0
+ */
+struct pci_xhci_excap excap_group_apl[] = {
+	{0x8000, 0x8010, &excap_u2_prot},
+	{0x8020, 0x8030, &excap_u3_prot},
+	{0x8070, 0x80E0, &excap_drd_apl},
+	{EXCAP_GROUP_END, EXCAP_GROUP_END, EXCAP_GROUP_NULL}
+};
 
 /*
  * default xhci extended capabilities
@@ -302,6 +375,7 @@ struct pci_xhci_vdev {
 	int		ndevices;
 
 	void		*excap_ptr;
+	int (*excap_write)(struct pci_xhci_vdev *, uint64_t, uint64_t);
 	int		usb2_port_start;
 	int		usb3_port_start;
 	uint8_t		*native_assign_ports[USB_NATIVE_NUM_BUS];
@@ -958,15 +1032,88 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 	}
 }
 
+static int
+pci_xhci_apl_drdregs_write(struct pci_xhci_vdev *xdev, uint64_t offset,
+		uint64_t value)
+{
+	int rc = 0, fd;
+	uint32_t drdcfg0 = 0, drdcfg1 = 0;
+	struct pci_xhci_excap *excap;
+	struct pci_xhci_excap_drd_apl *excap_drd;
+
+	assert(xdev);
+
+	excap = xdev->excap_ptr;
+
+	while (excap && excap->start != XHCI_APL_DRDCAP_BASE)
+		excap++;
+
+	if (!excap || !excap->data || excap->start != XHCI_APL_DRDCAP_BASE) {
+		UPRINTF(LWRN, "drd extended capability can't be found\r\n");
+		return -1;
+	}
+
+	excap_drd = excap->data;
+
+	offset -= XHCI_APL_DRDREGS_BASE;
+	if (offset == XHCI_DRD_MUX_CFG0) {
+		fd = open(XHCI_NATIVE_DRD_SWITCH_PATH, O_WRONLY);
+		if (fd == -1) {
+			UPRINTF(LWRN, "drd native interface open failed\r\n");
+			return -1;
+		}
+
+		if (value & XHCI_DRD_CFG0_HOST_MODE)
+			rc = write(fd, XHCI_NATIVE_DRD_HOST_MODE,
+					XHCI_NATIVE_DRD_WRITE_SZ);
+		else if (value & XHCI_DRD_CFG0_DEV_MODE)
+			rc = write(fd, XHCI_NATIVE_DRD_DEV_MODE,
+					XHCI_NATIVE_DRD_WRITE_SZ);
+
+		if (rc == XHCI_NATIVE_DRD_WRITE_SZ) {
+			if (value & XHCI_DRD_CFG0_HOST_MODE) {
+				drdcfg1 |= XHCI_DRD_CFG1_HOST_MODE;
+				drdcfg0 &= ~XHCI_DRD_CFG0_IDPIN;
+				drdcfg0 &= ~XHCI_DRD_CFG0_VBUS_VALID;
+			} else if (value & XHCI_DRD_CFG0_DEV_MODE) {
+				drdcfg1 &= ~XHCI_DRD_CFG1_HOST_MODE;
+				drdcfg0 |= XHCI_DRD_CFG0_IDPIN;
+				drdcfg0 |= XHCI_DRD_CFG0_VBUS_VALID;
+			}
+			drdcfg0 |= XHCI_DRD_CFG0_IDPIN_EN;
+			excap_drd->drdcfg0 = drdcfg0;
+			excap_drd->drdcfg1 = drdcfg1;
+		} else {
+			UPRINTF(LWRN, "drd native inferface write failed, "
+					"returned %d.\r\n", rc);
+			close(fd);
+			return -1;
+		}
+	} else if (offset == XHCI_DRD_MUX_CFG1) {
+		UPRINTF(LWRN, "write to RO register, offset 0x%lx\r\n", offset);
+		return -1;
+	} else
+		return -1;
+
+	return 0;
+}
+
 static void
 pci_xhci_excap_write(struct pci_xhci_vdev *xdev, uint64_t offset,
 			uint64_t value)
 {
-	/* TODO: The default extended capabilities are readonly. Need implement
-	 * related write operations once writable capabilities get supported in
-	 * future.
-	 */
-	UPRINTF(LWRN, "write invalid offset 0x%lx\r\n", offset);
+	int rc = 0;
+
+	assert(xdev);
+
+	if (xdev->excap_ptr && xdev->excap_write)
+		rc = xdev->excap_write(xdev, offset, value);
+	else
+		rc = -1;
+
+	if (rc)
+		UPRINTF(LWRN, "write invalid offset 0x%lx\r\n", offset);
+
 }
 
 struct xhci_dev_ctx *
@@ -3394,7 +3541,8 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	xdev->usb2_port_start = (XHCI_MAX_DEVS/2) + 1;
 	xdev->usb3_port_start = 1;
 
-	xdev->excap_ptr = excap_group_dft;
+	xdev->excap_ptr = excap_group_apl;
+	xdev->excap_write = pci_xhci_apl_drdregs_write;
 
 	/* discover devices */
 	error = pci_xhci_parse_opts(xdev, opts);

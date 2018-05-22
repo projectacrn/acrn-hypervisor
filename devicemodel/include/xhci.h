@@ -102,6 +102,18 @@ enum {
 	.reserve = 0x00							\
 }
 
+/* Intel ApolloLake xHCI extended capability for DRD. */
+#define DEFINE_EXCP_VENDOR_DRD(capid, next_ptr, reg0, reg1)		\
+	struct pci_xhci_excap_drd_apl  excap_drd_apl = {		\
+		{							\
+			.cap_id = capid,				\
+			.cap_ptr = next_ptr				\
+		},							\
+		.padding = {0},						\
+		.drdcfg0 = reg0,					\
+		.drdcfg1 = reg1						\
+	}
+
 struct xhci_slot_ctx {
 	volatile uint32_t	dwSctx0;
 #define	XHCI_SCTX_0_ROUTE_SET(x)		((x) & 0xFFFFF)
