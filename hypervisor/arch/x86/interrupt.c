@@ -210,7 +210,9 @@ static int vcpu_do_pending_gp(__unused struct vcpu *vcpu)
 	/* GP vector = 13 */
 	exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
 		VMX_INT_INFO_VALID |
-		((VMX_INT_TYPE_HW_EXP | EXCEPTION_ERROR_CODE_VALID) <<8) | 13);
+		((VMX_INT_TYPE_HW_EXP | EXCEPTION_ERROR_CODE_VALID) << 8) |
+		IDT_GP);
+
 	return 0;
 }
 
@@ -357,7 +359,7 @@ int acrn_do_intr_process(struct vcpu *vcpu)
 	if (bitmap_test_and_clear(ACRN_REQUEST_NMI, pending_intr_bits)) {
 		/* Inject NMI vector = 2 */
 		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
-			VMX_INT_INFO_VALID | (VMX_INT_TYPE_NMI << 8) | 2);
+			VMX_INT_INFO_VALID | (VMX_INT_TYPE_NMI << 8) | IDT_NMI);
 
 		/* Intel SDM 10.8.1
 		 * NMI, SMI, INIT, ExtINT, or SIPI directly deliver to CPU
