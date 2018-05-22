@@ -958,6 +958,17 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 	}
 }
 
+static void
+pci_xhci_excap_write(struct pci_xhci_vdev *xdev, uint64_t offset,
+			uint64_t value)
+{
+	/* TODO: The default extended capabilities are readonly. Need implement
+	 * related write operations once writable capabilities get supported in
+	 * future.
+	 */
+	UPRINTF(LWRN, "write invalid offset 0x%lx\r\n", offset);
+}
+
 struct xhci_dev_ctx *
 pci_xhci_get_dev_ctx(struct pci_xhci_vdev *xdev, uint32_t slot)
 {
@@ -2732,6 +2743,8 @@ pci_xhci_write(struct vmctx *ctx,
 		pci_xhci_dbregs_write(xdev, offset, value);
 	else if (offset < xdev->excapoff)
 		pci_xhci_rtsregs_write(xdev, offset, value);
+	else if (offset < xdev->regsend)
+		pci_xhci_excap_write(xdev, offset, value);
 	else
 		UPRINTF(LWRN, "write invalid offset %ld\r\n", offset);
 
