@@ -1,0 +1,3 @@
+mainmenu "ACRN Configuration"
+
+source "arch/x86/Kconfig"
