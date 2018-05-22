@@ -92,7 +92,7 @@ void exec_softirq(void)
 		goto ENABLE_AND_EXIT;
 
 	while (1) {
-		softirq_id = bitmap_ffs(bitmap);
+		softirq_id = ffs64(*bitmap);
 		if ((softirq_id < 0) || (softirq_id >= SOFTIRQ_MAX))
 			break;
 

@@ -32,28 +32,6 @@
 
 #define	BUS_LOCK	"lock ; "
 
-static inline unsigned int
-bsrl(unsigned int mask)
-{
-	unsigned int result;
-
-	__asm __volatile("bsrl %1,%0"
-			: "=r" (result)
-			: "rm" (mask));
-	return result;
-}
-
-static inline unsigned long
-bsrq(unsigned long mask)
-{
-	unsigned long result;
-
-	__asm __volatile("bsrq %1,%0"
-			: "=r" (result)
-			: "rm" (mask));
-	return result;
-}
-
 /**
  *
  * fls - Find the Last (most significant) bit Set in value and
@@ -69,61 +47,98 @@ bsrq(unsigned long mask)
  *	...
  *	fls (0x80000001) = 31
  *
- * @param mask: 'int' type value
+ * @param value: 'unsigned int' type value
  *
- * @return value: zero-based bit index, -1 means 'mask' was zero.
+ * @return value: zero-based bit index, -1 means 'value' was zero.
  *
  * **/
-static inline int
-fls(int mask)
+static inline int fls(unsigned int value)
 {
-	return (mask == 0 ? -1 : (int)bsrl((unsigned int)mask));
+	int ret;
+
+	asm volatile("bsrl %1,%0"
+			: "=r" (ret)
+			: "rm" (value), "0" (-1));
+	return ret;
 }
 
-/* 64bit version of fls(). */
-static inline int
-flsl(long mask)
+static inline int fls64(unsigned long value)
 {
-	return (mask == 0 ? -1 : (int)bsrq((unsigned long)mask));
-}
+	int ret;
 
-static inline unsigned long
-bsfq(unsigned long mask)
-{
-	unsigned long result;
-
-	__asm __volatile("bsfq %1,%0"
-			: "=r" (result)
-			: "rm" (mask));
-	return result;
+	asm volatile("bsrq %1,%q0"
+			: "=r" (ret)
+			: "rm" (value), "0" (-1));
+	return ret;
 }
 
 /**
  *
- * ffsl - Find the First (least significant) bit Set in value(Long type)
+ * ffs64 - Find the First (least significant) bit Set in value(Long type)
  * and return the index of that bit.
  *
  *  Bits are numbered starting at 0,the least significant bit.
  *  A return value of -1 means that the argument was zero.
  *
  *  Examples:
- *	ffsl (0x0) = -1
- *	ffsl (0x01) = 0
- *	ffsl (0xf0) = 4
- *	ffsl (0xf00) = 8
+ *	ffs64 (0x0) = -1
+ *	ffs64 (0x01) = 0
+ *	ffs64 (0xf0) = 4
+ *	ffs64 (0xf00) = 8
  *	...
- *	ffsl (0x8000000000000001) = 0
- *	ffsl (0xf000000000000000) = 60
+ *	ffs64 (0x8000000000000001) = 0
+ *	ffs64 (0xf000000000000000) = 60
  *
- * @param mask: 'long' type value
+ * @param value: 'unsigned long' type value
  *
- * @return value: zero-based bit index, -1 means 'mask' was zero.
+ * @return value: zero-based bit index, -1 means 'value' was zero.
  *
  * **/
-static inline int
-ffsl(long mask)
+static inline int ffs64(unsigned long value)
 {
-	return (mask == 0 ? -1 : (int)bsfq((unsigned long)mask));
+	int ret;
+	asm volatile("bsfq %1,%q0"
+			: "=r" (ret)
+			: "rm" (value), "0" (-1));
+	return ret;
+}
+
+/*bit scan forward for the least significant bit '0'*/
+static inline int ffz64(unsigned long value)
+{
+	return ffs64(~value);
+}
+
+/**
+ * Counts leading zeros.
+ *
+ * The number of leading zeros is defined as the number of
+ * most significant bits which are not '1'. E.g.:
+ *    clz(0x80000000)==0
+ *    clz(0x40000000)==1
+ *       ...
+ *    clz(0x00000001)==31
+ *    clz(0x00000000)==32
+ *
+ * @param value:The 32 bit value to count the number of leading zeros.
+ *
+ * @return The number of leading zeros in 'value'.
+ */
+static inline int clz(unsigned int value)
+{
+	return (31 - fls(value));
+}
+
+/**
+ * Counts leading zeros (64 bit version).
+ *
+ * @param value:The 64 bit value to count the number of leading zeros.
+ *
+ * @return The number of leading zeros in 'value'.
+ */
+static inline int clz64(unsigned long value)
+{
+	return (63 - fls64(value));
 }
 
 static inline void
@@ -188,53 +203,6 @@ bitmap_test_and_clear(int mask, unsigned long *bits)
 			: "r" ((long)(mask & 0x3f))
 			: "cc", "memory");
 	return (!!ret);
-}
-
-static inline int
-bitmap_ffs(unsigned long *bits)
-{
-	return ffsl(*bits);
-}
-
-/*bit scan forward for the least significant bit '0'*/
-static inline int
-get_first_zero_bit(unsigned long value)
-{
-	return ffsl(~value);
-}
-
-/**
- * Counts leading zeros.
- *
- * The number of leading zeros is defined as the number of
- * most significant bits which are not '1'. E.g.:
- *    clz(0x80000000)==0
- *    clz(0x40000000)==1
- *       ...
- *    clz(0x00000001)==31
- *    clz(0x00000000)==32
- *
- * @param mask:The 32 bit value to count the number of leading zeros.
- *
- * @return The number of leading zeros in 'mask'.
- */
-static inline int
-clz(int mask)
-{
-	return (31 - fls(mask));
-}
-
-/**
- * Counts leading zeros (64 bit version).
- *
- * @param mask:The 64 bit value to count the number of leading zeros.
- *
- * @return The number of leading zeros in 'mask'.
- */
-static inline int
-clz64(long mask)
-{
-	return (63 - flsl(mask));
 }
 
 #endif /* BITS_H*/

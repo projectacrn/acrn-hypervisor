@@ -97,7 +97,7 @@ inline uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask)
 	uint64_t dmask = 0;
 	struct vcpu *vcpu;
 
-	while ((vcpu_id = bitmap_ffs(&vdmask)) >= 0) {
+	while ((vcpu_id = ffs64(vdmask)) >= 0) {
 		bitmap_clear(vcpu_id, &vdmask);
 		vcpu = vcpu_from_vid(vm, vcpu_id);
 		ASSERT(vcpu, "vcpu_from_vid failed");

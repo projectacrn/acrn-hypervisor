@@ -848,7 +848,7 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 		 */
 		*dmask = 0;
 		amask = vm_active_cpus(vm);
-		while ((vcpu_id = bitmap_ffs(&amask)) >= 0) {
+		while ((vcpu_id = ffs64(amask)) >= 0) {
 			bitmap_clear(vcpu_id, &amask);
 
 			vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
@@ -997,7 +997,7 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 			break;
 		}
 
-		while ((i = bitmap_ffs(&dmask)) >= 0) {
+		while ((i = ffs64(dmask)) >= 0) {
 			bitmap_clear(i, &dmask);
 			target_vcpu = vcpu_from_vid(vlapic->vm, i);
 			if (target_vcpu == NULL)
@@ -1521,7 +1521,7 @@ vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest, bool phys,
 	 */
 	vlapic_calcdest(vm, &dmask, dest, phys, lowprio);
 
-	while ((vcpu_id = bitmap_ffs(&dmask)) >= 0) {
+	while ((vcpu_id = ffs64(dmask)) >= 0) {
 		bitmap_clear(vcpu_id, &dmask);
 		target_vcpu = vcpu_from_vid(vm, vcpu_id);
 		if (target_vcpu == NULL)
@@ -1667,7 +1667,7 @@ vlapic_set_local_intr(struct vm *vm, int cpu_id, int vector)
 	else
 		bitmap_set(cpu_id, &dmask);
 	error = 0;
-	while ((cpu_id = bitmap_ffs(&dmask)) >= 0) {
+	while ((cpu_id = ffs64(dmask)) >= 0) {
 		bitmap_clear(cpu_id, &dmask);
 		vlapic = vm_lapic_from_vcpu_id(vm, cpu_id);
 		error = vlapic_trigger_lvt(vlapic, vector);
@@ -2019,7 +2019,7 @@ apicv_pending_intr(struct vlapic *vlapic, __unused int *vecptr)
 	for (i = 3; i >= 0; i--) {
 		pirval = pir_desc->pir[i];
 		if (pirval != 0) {
-			vpr = (i * 64 + flsl(pirval)) & 0xF0;
+			vpr = (i * 64 + fls64(pirval)) & 0xF0;
 			return (vpr > ppr);
 		}
 	}
@@ -2149,7 +2149,7 @@ apicv_inject_pir(struct vlapic *vlapic)
 	 *   pending bit set, PIR 0
 	 */
 	if (pirval != 0) {
-		rvi = pirbase + flsl(pirval);
+		rvi = pirbase + fls64(pirval);
 
 		intr_status_old = (uint16_t)
 				(0xFFFF &
