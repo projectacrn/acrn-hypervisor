@@ -81,7 +81,7 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
                 /* Find the first occurrence of requested_buffs number of free
                  * buffers. The 0th bit in bitmap represents a free buffer.
                  */
-                for (bit_idx = get_first_zero_bit(pool->bitmap[idx]);
+                for (bit_idx = ffz64(pool->bitmap[idx]);
                      bit_idx < BITMAP_WORD_SIZE; bit_idx++) {
                         /* Check if selected buffer is free */
                         if (pool->bitmap[idx] & (1 << bit_idx))
