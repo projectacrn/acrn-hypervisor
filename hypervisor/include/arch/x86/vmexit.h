@@ -36,7 +36,7 @@ struct vm_exit_dispatch {
 	uint32_t need_exit_qualification;
 };
 
-struct vm_exit_dispatch *vmexit_handler(struct vcpu *vcpu);
+int vmexit_handler(struct vcpu *vcpu);
 int vmcall_vmexit_handler(struct vcpu *vcpu);
 int cpuid_vmexit_handler(struct vcpu *vcpu);
 int cr_access_vmexit_handler(struct vcpu *vcpu);
