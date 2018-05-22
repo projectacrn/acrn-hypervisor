@@ -86,6 +86,22 @@ enum {
 #define	XHCI_TD_ALIGN			64	/* bytes */
 #define	XHCI_PAGE_SIZE			4096	/* bytes */
 
+/* xHCI extended capability supported protocol fileds */
+#define DEFINE_EXCP_PROT(name, next_ptr, revmaj, portoff, portcnt)	\
+	struct pci_xhci_excap_prot excap_##name = {			\
+	{								\
+		.cap_id = XHCI_ID_PROTOCOLS,				\
+		.cap_ptr = next_ptr					\
+	},								\
+	.rev_min = 0x00,						\
+	.rev_maj = revmaj,						\
+	.string = "USB"#revmaj,						\
+	.port_off = portoff,						\
+	.port_cnt = portcnt,						\
+	.psic_prot_def = 0x00,						\
+	.reserve = 0x00							\
+}
+
 struct xhci_slot_ctx {
 	volatile uint32_t	dwSctx0;
 #define	XHCI_SCTX_0_ROUTE_SET(x)		((x) & 0xFFFFF)

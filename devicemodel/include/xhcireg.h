@@ -228,6 +228,17 @@
 #define	XHCI_ID_MSG_IRQ		0x0005
 #define	XHCI_ID_USB_LOCAL_MEM	0x0006
 
+/*
+ * xHCI extended capability pointer in HCCPARAMS1.
+ * The excap offset is calculated by left shift 2
+ * bits which equals 0x8000
+ */
+#define	XHCI_EXCAP_PTR		0x2000
+
+/* xHCI extended capability group end marker */
+#define	EXCAP_GROUP_END		0xFFFF
+#define	EXCAP_GROUP_NULL	NULL
+
 /* XHCI register R/W wrappers */
 #define	XREAD1(sc, what, a) \
 	bus_space_read_1((sc)->sc_io_tag, (sc)->sc_io_hdl, \
