@@ -1,4 +1,4 @@
-.. _contribute:
+.. _contribute_guidelines:
 
 Contribution Guidelines
 #######################
@@ -145,7 +145,7 @@ GitHub issues in the `ACRN hypervisor issues`_ list. Before submitting a
 bug or enhancement request, first check to see what's already been
 reported, and add to that discussion if you have additional information.
 (Be sure to check both the "open" and "closed" issues.)
-You should also read through discusions in the `ACRN-dev mailing list`_
+You should also read through discussions in the `ACRN-dev mailing list`_
 to see what's been reported on or discussed.  You may find others that
 have encountered the issue you're finding, or that have similar ideas
 for changes or additions.

@@ -260,18 +260,7 @@ texinfo_documents = [
 ]
 
 rst_epilog = """
-.. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
-   :ltrim:
-.. |trade|  unicode:: U+02122 .. TRADEMARK SIGN
-   :ltrim:
-.. |reg|    unicode:: U+000AE .. REGISTERED TRADEMARK SIGN
-   :ltrim:
-.. |deg|    unicode:: U+000B0 .. DEGREE SIGN
-   :ltrim:
-.. |plusminus|  unicode:: U+000B1 .. PLUS-MINUS SIGN
-   :rtrim:
-.. |micro|  unicode:: U+000B5 .. MICRO SIGN
-   :rtrim:
+.. include:: /substitutions.txt
 """
 
 
