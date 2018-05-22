@@ -390,6 +390,8 @@
 /* CR4 bits hv want to trap to track status change */
 #define CR4_TRAP_MASK (CR4_PSE | CR4_PAE)
 
+#define VMX_SUPPORT_UNRESTRICTED_GUEST (1<<5)
+
 /* External Interfaces */
 int exec_vmxon_instr(void);
 uint64_t exec_vmread(uint32_t field);
@@ -410,11 +412,15 @@ static inline uint8_t get_vcpu_mode(struct vcpu *vcpu)
 	return vcpu->arch_vcpu.cpu_mode;
 }
 
+static inline bool cpu_has_vmx_unrestricted_guest_cap(void)
+{
+       return !!(msr_read(MSR_IA32_VMX_MISC) & VMX_SUPPORT_UNRESTRICTED_GUEST);
+}
+
 typedef struct _descriptor_table_{
 	uint16_t limit;
 	uint64_t base;
 }__attribute__((packed)) descriptor_table;
-
 #endif /* ASSEMBLER */
 
 #endif /* VMX_H_ */
