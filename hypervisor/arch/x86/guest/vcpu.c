@@ -29,11 +29,7 @@
  */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
 #include <schedule.h>
-#include <hv_debug.h>
 
 vm_sw_loader_t vm_sw_loader;
 

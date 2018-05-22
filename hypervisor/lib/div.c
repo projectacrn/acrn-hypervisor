@@ -28,7 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <hypervisor.h>
 #include <hv_lib.h>
 
 static int do_udiv32(uint32_t dividend, uint32_t divisor,

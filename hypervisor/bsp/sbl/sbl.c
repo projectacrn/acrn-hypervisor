@@ -29,8 +29,6 @@
  */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <vtd.h>
 
 /* IOAPIC id */
 #define SBL_IOAPIC_ID   8

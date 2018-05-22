@@ -28,11 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
-#include <acrn_hv_defs.h>
+#include <hypervisor.h>
 #include <hypercall.h>
 
 int vmcall_vmexit_handler(struct vcpu *vcpu)

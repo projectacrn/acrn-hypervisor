@@ -40,11 +40,6 @@
 #define ACRN_HV_DEFS_H
 
 /*
- * Common structures for ACRN/VHM/DM
- */
-#include "acrn_common.h"
-
-/*
  * Common structures for HV/VHM
  */
 

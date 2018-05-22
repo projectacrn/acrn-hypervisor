@@ -30,11 +30,6 @@
 #define pr_fmt(fmt)	"vlapic: " fmt
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <acrn_hv_defs.h>
-#include <hv_debug.h>
 
 #include "instr_emul_wrapper.h"
 #include "instr_emul.h"

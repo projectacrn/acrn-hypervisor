@@ -28,10 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <acrn_common.h>
-#include <hv_lib.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
+#include <hypervisor.h>
 
 int validate_pstate(struct vm *vm, uint64_t perf_ctl)
 {

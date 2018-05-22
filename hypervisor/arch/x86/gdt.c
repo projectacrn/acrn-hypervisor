@@ -28,8 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <hv_lib.h>
-#include <gdt.h>
+#include <hypervisor.h>
 
 DEFINE_CPU_DATA(struct tss_64, tss);
 DEFINE_CPU_DATA(struct host_gdt, gdt);

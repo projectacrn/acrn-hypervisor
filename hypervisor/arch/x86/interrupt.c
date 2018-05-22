@@ -28,10 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
+#include <hypervisor.h>
 
 #define EXCEPTION_ERROR_CODE_VALID  8
 #define INTERRPUT_QUEUE_BUFF_SIZE   255

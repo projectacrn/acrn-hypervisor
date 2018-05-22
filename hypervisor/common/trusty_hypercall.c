@@ -29,11 +29,7 @@
  */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
 #include <hypercall.h>
-#include <hv_debug.h>
 
 int64_t hcall_world_switch(struct vcpu *vcpu)
 {

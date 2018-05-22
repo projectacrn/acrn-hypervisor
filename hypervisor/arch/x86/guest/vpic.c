@@ -28,10 +28,6 @@
 #define pr_fmt(fmt)	"vpic: " fmt
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
 
 #define	VPIC_LOCK_INIT(vpic)	spinlock_init(&((vpic)->lock))
 #define	VPIC_LOCK(vpic)		spinlock_obtain(&((vpic)->lock))

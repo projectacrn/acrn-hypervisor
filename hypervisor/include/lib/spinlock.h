@@ -31,8 +31,6 @@
 #ifndef SPINLOCK_H
 #define SPINLOCK_H
 
-#include <hypervisor.h>
-
 #ifndef ASSEMBLER
 
 #include <types.h>

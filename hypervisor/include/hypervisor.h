@@ -46,7 +46,13 @@
 #define HYPERVISOR_H
 
 /* Include config header file containing config options */
+#include <types.h>
 #include "bsp_cfg.h"
+#include "acrn_common.h"
+#include <acrn_hv_defs.h>
+#include <hv_lib.h>
+#include <hv_arch.h>
+#include <hv_debug.h>
 
 #ifndef ASSEMBLER
 /* hpa <--> hva, now it is 1:1 mapping */

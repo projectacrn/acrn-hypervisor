@@ -29,10 +29,6 @@
  */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
 #include <multiboot.h>
 
 #define MAX_PORT			0x10000  /* port 0 - 64K */

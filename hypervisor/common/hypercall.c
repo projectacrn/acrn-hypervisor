@@ -29,13 +29,8 @@
  */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
 #include <schedule.h>
 #include <hypercall.h>
-#include <acrn_hv_defs.h>
-#include <hv_debug.h>
 #include <version.h>
 
 #define ACRN_DBG_HYCALL	6

@@ -29,9 +29,6 @@
  */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
 
 static DEFINE_CPU_DATA(uint64_t, softirq_pending);
 

@@ -29,10 +29,6 @@
  */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
 
 #define MAX_TIMER_ACTIONS	32
 #define TIMER_IRQ		(NR_MAX_IRQS - 1)

@@ -28,9 +28,6 @@
  */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <cpu.h>
-#include <hv_debug.h>
 #include "acpi.h"
 #ifdef CONFIG_EFI_STUB
 #include <acrn_efi.h>

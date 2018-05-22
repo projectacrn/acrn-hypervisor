@@ -28,9 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <acrn_common.h>
-#include <hv_lib.h>
-#include <hv_arch.h>
+#include <hypervisor.h>
 
 /* The table includes cpu px info of Intel A3960 SoC */
 struct cpu_px_data px_a3960[] = {
