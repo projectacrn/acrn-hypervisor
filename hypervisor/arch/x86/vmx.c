@@ -372,7 +372,7 @@ static void init_guest_state(struct vcpu *vcpu)
 		/* Limit */
 		limit = 0xFFFF;
 	} else if (get_vcpu_mode(vcpu) == PAGE_PROTECTED_MODE) {
-		descriptor_table gdtb;
+		descriptor_table gdtb = {0, 0};
 
 		/* Base *//* TODO: Should guest GDTB point to host GDTB ? */
 		/* Obtain the current global descriptor table base */
@@ -407,7 +407,7 @@ static void init_guest_state(struct vcpu *vcpu)
 		/* Limit */
 		limit = 0xFFFF;
 	} else if (get_vcpu_mode(vcpu) == PAGE_PROTECTED_MODE) {
-		descriptor_table idtb ;
+		descriptor_table idtb = {0, 0};
 
 		/* TODO: Should guest IDTR point to host IDTR ? */
 		asm volatile ("sidt %0"::"m" (idtb));
@@ -660,8 +660,8 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	uint64_t trbase_lo;
 	uint64_t trbase_hi;
 	uint64_t realtrbase;
-	descriptor_table gdtb;
-	descriptor_table idtb;
+	descriptor_table gdtb = {0, 0};
+	descriptor_table idtb = {0, 0};
 	uint16_t tr_sel;
 
 	pr_dbg("*********************");
