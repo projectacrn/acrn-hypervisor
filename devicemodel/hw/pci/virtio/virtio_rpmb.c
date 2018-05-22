@@ -19,7 +19,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -31,7 +31,7 @@
  * Create virtio rpmb backend VBS-U. This component will work with RPMB FE
  * driver to provide one communication channel between UOS and SOS.
  * The message from RPMB daemon in Android will be transferred over the
- * channel and finally arrived  RPMB physical driver on SOS kernel.
+ * channel and finally arrived RPMB physical driver on SOS kernel.
  *
  */
 
@@ -56,16 +56,18 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <linux/types.h>
-#include <rpmb.h>
+#include "rpmb.h"
+#include "rpmb_sim.h"
+#include "rpmb_backend.h"
 
 #define VIRTIO_RPMB_RINGSZ	64
+#define ADDR_NOT_PRESENT	-2
 
-static int virtio_rpmb_debug;
+static int virtio_rpmb_debug = 1;
 #define DPRINTF(params) do { if (virtio_rpmb_debug) printf params; } while (0)
 #define WPRINTF(params) (printf params)
 
-#define SEQ_CMD_MAX	3	/*support up to 3 cmds*/
-
+static __u16 rpmb_block_count = 0;
 /*
  * virtio-rpmb struct
  */
@@ -237,10 +239,372 @@ virtio_rpmb_map_seq_frames(struct iovec *iov)
 }
 
 static int
+rpmb_check_mac(__u8 *key, struct rpmb_frame *frames, __u8 frame_cnt)
+{
+	int rc = -1;
+	__u8 mac[32];
+
+	if (!key || !frames) {
+		DPRINTF(("key or frames is NULL\n"));
+		return -1;
+	}
+
+	if (frame_cnt == 0) {
+		DPRINTF(("frame count is zero\n"));
+		return -1;
+	}
+
+	rc = rpmb_mac(key, frames, frame_cnt, mac);
+	if (rc < 0) {
+		DPRINTF(("rpmb_calc_mac failed\n"));
+		return rc;
+	}
+
+	if (memcmp(mac, frames[frame_cnt - 1].key_mac, 32)) {
+		DPRINTF(("rpmb mac mismatch:\n"));
+		return -1;
+	}
+
+	return rc;
+}
+
+static int
+rpmb_check_response(const char *cmd_str, enum rpmb_response response_type,
+				const struct rpmb_frame *frames, __u32 frame_cnt,
+				const __u8 *key, const __u8 *nonce, const __u16 *addr)
+{
+	__u32 i;
+	__u8 mac[32];
+
+	for (i = 0; i < frame_cnt; i++) {
+		if (swap16(frames[i].req_resp) != response_type) {
+			DPRINTF(("%s: Bad response type, 0x%x, expected 0x%x\n",
+				cmd_str, swap16(frames[i].req_resp), response_type));
+			return -1;
+		}
+
+		if (swap16(frames[i].result) != RPMB_RES_OK) {
+			if (swap16(frames[i].result) == RPMB_RES_ADDR_FAILURE) {
+				DPRINTF(("%s: Addr failure, %u\n", cmd_str, swap16(frames[i].addr)));
+				return ADDR_NOT_PRESENT;
+			}
+			DPRINTF(("%s: Bad result, 0x%x\n", cmd_str, swap16(frames[i].result)));
+			return -1;
+		}
+
+		if (nonce && memcmp(frames[i].nonce, nonce, sizeof(frames[i].nonce))) {
+			DPRINTF(("%s: Bad nonce\n", cmd_str));
+			return -1;
+		}
+
+		if (addr && *addr != swap16(frames[i].addr)) {
+			DPRINTF(("%s: Bad addr, got %u, expected %u\n",
+				cmd_str, swap16(frames[i].addr), *addr));
+			return -1;
+		}
+	}
+
+	if (key) {
+		if (rpmb_mac(key, frames, frame_cnt, mac)) {
+			DPRINTF(("%s: rpmb_mac failed\n", cmd_str));
+			return -1;
+		}
+
+		if (memcmp(frames[frame_cnt - 1].key_mac, mac, sizeof(mac))) {
+			DPRINTF(("%s: Bad MAC\n", cmd_str));
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+int
+rpmb_get_counter(__u8 mode, __u8 *key, __u32 *counter, __u16 *result)
+{
+	int rc;
+	int fd;
+	struct {
+		struct rpmb_ioc_seq_cmd h;
+		struct rpmb_ioc_cmd cmd[3];
+	} iseq = {};
+	struct rpmb_frame frame_in;
+	struct rpmb_frame frame_out;
+
+	if (!key || !counter || !result) {
+		DPRINTF(("key, counter or result is NULL!\n"));
+		return -1;
+	}
+
+	frame_in.req_resp = swap16(RPMB_REQ_GET_COUNTER);
+
+	iseq.cmd[0].flags = RPMB_F_WRITE;
+	iseq.cmd[0].nframes = 1;
+	iseq.cmd[0].frames_ptr = (__aligned_u64)(intptr_t)(&frame_in);
+	iseq.cmd[1].flags = 0;
+	iseq.cmd[1].nframes = 1;
+	iseq.cmd[1].frames_ptr = (__aligned_u64)(intptr_t)(&frame_out);
+	iseq.h.num_of_cmds = 2;
+
+	if (mode == RPMB_PHY_MODE) {
+		/* open rpmb device.*/
+		fd = open(RPMB_PHY_PATH_NAME, O_RDWR | O_NONBLOCK);
+		if (fd < 0) {
+			DPRINTF(("failed to open %s.\n", RPMB_PHY_PATH_NAME));
+			return fd;
+		}
+
+		/* send ioctl cmd.*/
+		rc = ioctl(fd, RPMB_IOC_SEQ_CMD, &iseq);
+
+		/* close rpmb device.*/
+		close(fd);
+
+		if (rc) {
+			DPRINTF(("get counter for physical rpmb failed.\n"));
+			return rc;
+		}
+	} else {
+		rc = rpmb_sim_send(&iseq);
+		if (rc) {
+			DPRINTF(("get counter for simulated rpmb failed.\n"));
+			return rc;
+		}
+	}
+
+	*result = swap16(frame_out.result);
+	if (*result != RPMB_RES_OK ) {
+		DPRINTF(("get rpmb counter failed(0x%x).\n", *result));
+		return -1;
+	}
+
+	rc = rpmb_check_mac(key, &frame_out, 1);
+	if (rc) {
+		DPRINTF(("rpmb counter check mac failed.\n"));
+		return rc;
+	}
+
+	*counter = swap32(frame_out.write_counter);
+	DPRINTF(("rpmb counter value: 0x%x.\n", *counter));
+
+	return rc;
+}
+
+/* TODO: this function will be used for AttKB */
+#if 0
+static int
+rpmb_write_block(__u8 mode, __u8 *key, __u16 addr, void *buf, __u32 count)
+{
+	int rc;
+	int fd;
+	__u32 i;
+	__u32 write_counter;
+	__u16 result;
+	struct {
+		struct rpmb_ioc_seq_cmd h;
+		struct rpmb_ioc_cmd cmd[3];
+	} iseq = {};
+	struct rpmb_frame frame_write;
+	struct rpmb_frame frame_rel[count];
+	struct rpmb_frame frame_read;
+
+	if (!buf || count == 0) {
+		DPRINTF(("%s:buf or count is invalid!\n", __func__));
+		return -1;
+	}
+
+	rc = rpmb_get_counter(mode, key, &write_counter, &result);
+	if (rc) {
+		DPRINTF(("%s: virtio_rpmb_get_counter failed\n", __func__));
+		return -1;
+	}
+
+	/*fill write frame*/
+	frame_write.addr = swap16(addr);
+	frame_write.req_resp = swap16(RPMB_REQ_RESULT_READ);
+	frame_write.write_counter = swap32(write_counter);
+
+	/*fill rel write frame*/
+	for (i = 0; i < count; i++) {
+		memset(&frame_rel[i], 0, sizeof(frame_rel[i]));
+		memcpy(frame_rel[i].data, buf + i * sizeof(frame_rel[i].data), sizeof(frame_rel[i].data));
+		frame_rel[i].write_counter = swap32(write_counter);
+		frame_rel[i].addr = swap16(addr);
+		frame_rel[i].block_count = swap16(count);
+		frame_rel[i].req_resp = swap16(RPMB_REQ_DATA_WRITE);
+	}
+
+	/*generate rel frame mac*/
+	if (rpmb_mac(key, frame_rel, count, frame_rel[count - 1].key_mac)) {
+		DPRINTF(("%s: rel frame rpmb mac failed\n", __func__));
+		return -1;
+	}
+
+	/*fill io cmd*/
+	iseq.cmd[0].flags = RPMB_F_WRITE | RPMB_F_REL_WRITE;
+	iseq.cmd[0].nframes = count;
+	iseq.cmd[0].frames_ptr = (__aligned_u64)(intptr_t)(frame_rel);
+	iseq.cmd[1].flags = RPMB_F_WRITE;
+	iseq.cmd[1].nframes = 1;
+	iseq.cmd[1].frames_ptr = (__aligned_u64)(intptr_t)(&frame_write);
+	iseq.cmd[2].flags = 0;
+	iseq.cmd[2].nframes = 1;
+	iseq.cmd[2].frames_ptr = (__aligned_u64)(intptr_t)(&frame_read);
+	iseq.h.num_of_cmds = 3;
+
+	if (mode == RPMB_PHY_MODE) {
+		/* open rpmb device.*/
+		fd = open(RPMB_PHY_PATH_NAME, O_RDWR | O_NONBLOCK);
+		if (fd < 0) {
+			DPRINTF(("failed to open %s for read blocks.\n", RPMB_PHY_PATH_NAME));
+			return fd;
+		}
+
+		/* send ioctl cmd.*/
+		rc = ioctl(fd, RPMB_IOC_SEQ_CMD, &iseq);
+
+		/* close rpmb device.*/
+		close(fd);
+
+		if (rc) {
+			DPRINTF(("read blocks for physical rpmb failed.\n"));
+			return rc;
+		}
+	} else {
+		rc = rpmb_sim_send(&iseq);
+		if (rc) {
+			DPRINTF(("read blocks for simulated rpmb failed.\n"));
+			return rc;
+		}
+	}
+
+	rc = rpmb_check_response("write blocks", RPMB_RESP_DATA_WRITE,
+							&frame_read, 1, key, NULL, &addr);
+	return rc;
+}
+#endif
+
+static int
+rpmb_read_block(__u8 mode, __u8 *key, __u16 addr, void *buf, __u32 count)
+{
+	int rc;
+	int fd;
+	__u8 *bufp;
+	__u32 i;
+	struct {
+		struct rpmb_ioc_seq_cmd h;
+		struct rpmb_ioc_cmd cmd[3];
+	} iseq = {};
+	struct rpmb_frame frame_in;
+	struct rpmb_frame frame_out[count];
+
+	if (!buf || count == 0) {
+		DPRINTF(("buf or count is invalid!.\n"));
+		return -1;
+	}
+
+	frame_in.addr = swap16(addr);
+	frame_in.req_resp = swap16(RPMB_REQ_DATA_READ);
+
+	iseq.cmd[0].flags = RPMB_F_WRITE;
+	iseq.cmd[0].nframes = 1;
+	iseq.cmd[0].frames_ptr = (__aligned_u64)(intptr_t)(&frame_in);
+	iseq.cmd[1].flags = 0;
+	iseq.cmd[1].nframes = count;
+	iseq.cmd[1].frames_ptr = (__aligned_u64)(intptr_t)(frame_out);
+	iseq.h.num_of_cmds = 2;
+
+	if (mode == RPMB_PHY_MODE) {
+		/* open rpmb device.*/
+		fd = open(RPMB_PHY_PATH_NAME, O_RDWR | O_NONBLOCK);
+		if (fd < 0) {
+			DPRINTF(("failed to open %s for read blocks.\n", RPMB_PHY_PATH_NAME));
+			return fd;
+		}
+
+		/* send ioctl cmd.*/
+		rc = ioctl(fd, RPMB_IOC_SEQ_CMD, &iseq);
+
+		/* close rpmb device.*/
+		close(fd);
+
+		if (rc) {
+			DPRINTF(("read blocks for physical rpmb failed.\n"));
+			return rc;
+		}
+	} else {
+		rc = rpmb_sim_send(&iseq);
+		if (rc) {
+			DPRINTF(("read blocks for simulated rpmb failed.\n"));
+			return rc;
+		}
+	}
+
+	rc = rpmb_check_response("read blocks", RPMB_RESP_DATA_READ,
+							frame_out, count, key, NULL, &addr);
+
+	if (rc)
+		return rc;
+
+	for (bufp = buf, i = 0; i < count; i++, bufp += sizeof(frame_out[i].data))
+		memcpy(bufp, frame_out[i].data, sizeof(frame_out[i].data));
+
+	return rc;
+}
+
+static int
+rpmb_check(__u8 mode, __u8 *key, __u16 block)
+{
+	int rc;
+	__u8 tmp[RPMB_BLOCK_SIZE];
+
+	rc = rpmb_read_block(mode, key, block, tmp, 1);
+	DPRINTF(("check rpmb_block %d, ret %d\n", block, rc));
+
+	return rc;
+}
+
+static __u32
+rpmb_search_size(__u8 mode, __u8 *key, __u16 hint)
+{
+	int ret;
+	__u32 low = 0;
+	__u16 high = ~0;
+	__u16 curr = hint - 1;
+
+	while (low <= high) {
+		ret = rpmb_check(mode, key, curr);
+		switch (ret) {
+		case 0:
+			low = curr + 1;
+			break;
+		case ADDR_NOT_PRESENT:
+			high = curr - 1;
+			break;
+		default:
+			return 0;
+		};
+		if (ret || curr != hint) {
+			curr = low + (high - low) / 2;
+			hint = curr;
+		} else {
+			curr = curr + 1;
+		}
+	}
+	assert ((__u32)high + 1 == low);
+	return low;
+}
+
+__u16
+rpmb_get_blocks(void)
+{
+	return rpmb_block_count;
+}
+
+static int
 virtio_rpmb_seq_handler(struct virtio_rpmb *rpmb, struct iovec *iov)
 {
 	struct virtio_rpmb_ioctl_cmd *ioc = NULL;
-	int fd;
 	void *pdata;
 	int rc;
 
@@ -268,21 +632,9 @@ virtio_rpmb_seq_handler(struct virtio_rpmb *rpmb, struct iovec *iov)
 		return -1;
 	}
 
-	/* open rpmb device.*/
-	rc = open("/dev/rpmb0", O_RDWR | O_NONBLOCK);
-	if (rc < 0) {
-		DPRINTF(("failed to open /dev/rpmb0.\n"));
-		return rc;
-	}
-	fd = rc;
-
-	/* send ioctl cmd.*/
-	rc = ioctl(fd, ioc->cmd, pdata);
+	rc = rpmb_handler(ioc->cmd, pdata);
 	if (rc)
 		DPRINTF(("seq ioctl cmd failed(%d).\n", rc));
-
-	/* close rpmb device.*/
-	close(fd);
 
 	return rc;
 }
@@ -292,7 +644,7 @@ virtio_rpmb_notify(void *base, struct virtio_vq_info *vq)
 {
 	struct iovec iov;
 	int len;
-	uint16_t idx;
+	__u16 idx;
 	struct virtio_rpmb *rpmb = (struct virtio_rpmb *)base;
 	struct virtio_rpmb_ioctl_cmd *ioc;
 
@@ -358,6 +710,9 @@ virtio_rpmb_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	struct virtio_rpmb *rpmb;
 	pthread_mutexattr_t attr;
 	int rc;
+	__u8 key[RPMB_KEY_32_LEN];
+	__u32 rpmb_counter = 0;
+	__u16 rpmb_result = 0;
 
 	rpmb = calloc(1, sizeof(struct virtio_rpmb));
 	if (!rpmb) {
@@ -411,10 +766,51 @@ virtio_rpmb_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	virtio_set_io_bar(&rpmb->base, 0);
 
+	rc = get_virt_rpmb_key();
+	if (rc == 0) {
+		DPRINTF(("%s: get uos key failed!\n", __func__));
+		goto out;
+	}
+
+	// TODO: keep it for self-adaption rpmb mode
+	/*rc = rpmb_get_counter(RPMB_PHY_MODE, key, &rpmb_counter, &rpmb_result);
+	if (rc) {
+		DPRINTF(("rpmb_get_counter failed\n"));
+		goto out;
+	}*/
+
+	memset(key, 0, RPMB_KEY_32_LEN);
+	/*TODO: hardcode rpmb mode to RPMB_SIM_MODE*/
+	rpmb_result = RPMB_RES_GENERAL_FAILURE;
+	if (rpmb_result == RPMB_RES_OK) {
+		rpmb_mode_init(RPMB_PHY_MODE);
+		rpmb_block_count = rpmb_search_size(RPMB_PHY_MODE, key, 0);
+	} else {
+		rc = rpmb_sim_key_init(key);
+		if (rc) {
+			DPRINTF(("rpmb_sim_key_init failed!\n"));
+			goto out;
+		}
+
+		rc = rpmb_get_counter(RPMB_SIM_MODE, key, &rpmb_counter, &rpmb_result);
+		if (rc) {
+			DPRINTF(("rpmb_get_counter failed\n"));
+			goto out;
+		}
+
+		rpmb_mode_init(RPMB_SIM_MODE);
+
+		rpmb_block_count = rpmb_search_size(RPMB_SIM_MODE, key, 0);
+	}
+
+	memset(key, 0, RPMB_KEY_32_LEN);
+	rpmb_counter_init(rpmb_counter);
+
 	return 0;
 
 out:
 	free(rpmb);
+	memset(key, 0, RPMB_KEY_32_LEN);
 	return rc;
 }
 
