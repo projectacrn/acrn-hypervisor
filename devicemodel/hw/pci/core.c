@@ -792,9 +792,10 @@ pci_emul_deinit(struct vmctx *ctx, struct pci_vdev_ops *ops, int bus, int slot,
 	if (fi->fi_param)
 		free(fi->fi_param);
 
-	pci_emul_free_bars(fi->fi_devi);
-	if (fi->fi_devi)
+	if (fi->fi_devi) {
+		pci_emul_free_bars(fi->fi_devi);
 		free(fi->fi_devi);
+	}
 }
 
 void
