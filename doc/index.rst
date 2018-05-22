@@ -30,7 +30,7 @@ Sections
    primer/index.rst
    howtos/index.rst
    release_notes.rst
-   contribute.rst
+   contribute/index.rst
    api/index.rst
 
 Indices and Tables

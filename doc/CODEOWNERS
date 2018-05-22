@@ -1,6 +1,0 @@
-# CODEOWNERS for autoreview assigning in github
-
-# Get all docs reviewed
-*.rst                                    @dbkinder
-
-*                                        @dbkinder
