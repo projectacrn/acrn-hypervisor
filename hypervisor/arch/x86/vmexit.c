@@ -186,9 +186,6 @@ int vmexit_handler(struct vcpu *vcpu)
 		    exec_vmread(VMX_EXIT_QUALIFICATION);
 	}
 
-	/* Update current vcpu in VM that caused vm exit */
-	vcpu->vm->current_vcpu = vcpu;
-
 	/* exit dispatch handling */
 	if (basic_exit_reason == VMX_EXIT_REASON_EXTERNAL_INTERRUPT) {
 		/* Handling external_interrupt
