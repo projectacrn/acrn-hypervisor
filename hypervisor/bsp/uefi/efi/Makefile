@@ -36,7 +36,7 @@ HV_FILE:=acrn
 EFI_OBJDIR:=$(HV_OBJDIR)/bsp/uefi/efi
 C_SRCS = boot.c pe.c malloc.c
 ACRN_OBJS := $(patsubst %.c,$(EFI_OBJDIR)/%.o,$(C_SRCS))
-INCLUDE_PATH += ../include/bsp/
+INCLUDE_PATH += $(HV_OBJDIR)/include
 
 OBJCOPY=objcopy
 
@@ -68,7 +68,8 @@ endif
 
 CFLAGS=-I. -I.. -I$(INCDIR)/efi -I$(INCDIR)/efi/$(ARCH) \
 		-DEFI_FUNCTION_WRAPPER -fPIC -fshort-wchar -ffreestanding \
-		-Wall -I../fs/ -D$(ARCH) -O2
+		-Wall -I../fs/ -D$(ARCH) -O2 \
+		-include config.h
 
 CFLAGS += -mno-mmx -mno-sse -mno-sse2 -mno-80387 -mno-fp-ret-in-387
 
@@ -107,11 +108,11 @@ install-conf: $(CONF_FILE)
 clean:
 	rm -f $(BOOT) $(HV_OBJDIR)/$(HV_FILE).efi $(EFI_OBJDIR)/boot.so $(ACRN_OBJS) $(FS)
 
-$(EFI_OBJDIR)/%.o:%.S
+$(EFI_OBJDIR)/%.o:%.S $(HV_OBJDIR)/$(HV_CONFIG_H)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(CFLAGS)   -c -o $@ $<
 
-$(EFI_OBJDIR)/%.o: %.c
+$(EFI_OBJDIR)/%.o: %.c $(HV_OBJDIR)/$(HV_CONFIG_H)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. -c $(CFLAGS) $(ARCH_CFLAGS) $< -o $@
 

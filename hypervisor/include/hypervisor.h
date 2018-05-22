@@ -12,8 +12,7 @@
  *
  *   DESCRIPTION
  *
- *       This file includes config header file "bsp_cfg.h" and other
- *       hypervisor used header files.
+ *       This file includes hypervisor used header files.
  *       It should be included in all the source files.
  *
  *
@@ -23,7 +22,6 @@
 
 /* Include config header file containing config options */
 #include <types.h>
-#include "bsp_cfg.h"
 #include "acrn_common.h"
 #include <acrn_hv_defs.h>
 #include <hv_lib.h>

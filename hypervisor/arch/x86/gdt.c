@@ -34,9 +34,9 @@ void load_gdtr_and_tr(void)
 	/* ring 0 data sel descriptor */
 	gdt->host_gdt_data_descriptor.value = 0x00cf93000000ffff;
 
-	tss->ist1 = (uint64_t)get_cpu_var(mc_stack) + STACK_SIZE;
-	tss->ist2 = (uint64_t)get_cpu_var(df_stack) + STACK_SIZE;
-	tss->ist3 = (uint64_t)get_cpu_var(sf_stack) + STACK_SIZE;
+	tss->ist1 = (uint64_t)get_cpu_var(mc_stack) + CONFIG_STACK_SIZE;
+	tss->ist2 = (uint64_t)get_cpu_var(df_stack) + CONFIG_STACK_SIZE;
+	tss->ist3 = (uint64_t)get_cpu_var(sf_stack) + CONFIG_STACK_SIZE;
 	tss->ist4 = 0L;
 
 	/* tss descriptor */

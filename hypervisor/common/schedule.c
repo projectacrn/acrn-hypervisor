@@ -169,7 +169,7 @@ static void switch_to(struct vcpu *curr)
 	 * reset stack pointer here. Otherwise, schedule
 	 * is recursive call and stack will overflow finally.
 	 */
-	uint64_t cur_sp = (uint64_t)&get_cpu_var(stack)[STACK_SIZE];
+	uint64_t cur_sp = (uint64_t)&get_cpu_var(stack)[CONFIG_STACK_SIZE];
 
 	if (curr == NULL) {
 		asm volatile ("movq %1, %%rsp\n"

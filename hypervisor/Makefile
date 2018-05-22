@@ -77,6 +77,7 @@ INCLUDE_PATH += include/common
 INCLUDE_PATH += bsp/include
 INCLUDE_PATH += bsp/$(PLATFORM)/include/bsp
 INCLUDE_PATH += boot/include
+INCLUDE_PATH += $(HV_OBJDIR)/include
 
 CC ?= gcc
 AS ?= as
@@ -180,7 +181,7 @@ DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 VERSION := bsp/$(PLATFORM)/include/bsp/version.h
 
 .PHONY: all
-all: $(BUILD_DEPS) $(VERSION) $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
+all: $(BUILD_DEPS) $(VERSION) oldconfig $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 	rm -f $(VERSION)
 
 ifeq ($(PLATFORM), uefi)
@@ -247,11 +248,10 @@ $(VERSION):
 	echo "#define HV_BUILD_TIME "\""$$TIME"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_USER "\""$(USER)"\""" >> $(VERSION)
 
-$(HV_OBJDIR)/%.o: %.c
+$(HV_OBJDIR)/%.o: %.c $(HV_OBJDIR)/$(HV_CONFIG_H)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. -c $(CFLAGS) $(ARCH_CFLAGS) $< -o $@
 
-$(HV_OBJDIR)/%.o: %.S
+$(HV_OBJDIR)/%.o: %.S $(HV_OBJDIR)/$(HV_CONFIG_H)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. $(ASFLAGS) $(ARCH_ASFLAGS) -c $< -o $@
-

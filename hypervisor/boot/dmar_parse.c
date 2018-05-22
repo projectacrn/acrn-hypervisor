@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include "bsp_cfg.h"
+
 #ifdef CONFIG_DMAR_PARSE_ENABLED
 #include <hypervisor.h>
 #include "vtd.h"

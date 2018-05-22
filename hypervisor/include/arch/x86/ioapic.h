@@ -13,7 +13,7 @@
 #define IOAPIC_MAX_LINES	120
 #define NR_LEGACY_IRQ		16
 #define NR_LEGACY_PIN	NR_LEGACY_IRQ
-#define NR_MAX_GSI	(NR_IOAPICS*IOAPIC_MAX_LINES)
+#define NR_MAX_GSI	(CONFIG_NR_IOAPICS*IOAPIC_MAX_LINES)
 
 #define GSI_MASK_IRQ(irq) irq_gsi_mask_unmask((irq), true)
 #define GSI_UNMASK_IRQ(irq) irq_gsi_mask_unmask((irq), false)

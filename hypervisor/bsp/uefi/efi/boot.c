@@ -380,7 +380,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 		/*
 		 * If we reach this point, it means we did not receive a specific
 		 * bootloader name to be used. Fall back to the default bootloader
-		 * as specified in bsp_cfg.h
+		 * as specified in config.h
 		 */
 		bootloader_name = ch8_2_ch16(CONFIG_UEFI_OS_LOADER_NAME);
 	}
@@ -454,4 +454,3 @@ failed:
 
 	return exit(image, err, ERROR_STRING_LENGTH, error_buf);
 }
-
