@@ -908,7 +908,7 @@ basl_make_templates(void)
 {
 	const char *tmpdir;
 	int err;
-	int len;
+	size_t len;
 
 	err = 0;
 

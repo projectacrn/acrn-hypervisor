@@ -108,7 +108,7 @@ vsbl_set_bdf(int bnum, int snum, int fnum)
 int
 acrn_parse_guest_part_info(char *arg)
 {
-	int len = strlen(arg);
+	size_t len = strlen(arg);
 
 	if (len < STR_LEN) {
 		strncpy(guest_part_info_path, arg, len);
@@ -169,7 +169,7 @@ acrn_prepare_guest_part_info(struct vmctx *ctx)
 int
 acrn_parse_vsbl(char *arg)
 {
-	int len = strlen(arg);
+	size_t len = strlen(arg);
 
 	if (len < STR_LEN) {
 		strncpy(vsbl_path, arg, len);

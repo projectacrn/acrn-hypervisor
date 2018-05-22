@@ -128,7 +128,7 @@ acrn_get_bzimage_setup_size(struct vmctx *ctx)
 int
 acrn_parse_kernel(char *arg)
 {
-	int len = strlen(arg);
+	size_t len = strlen(arg);
 
 	if (len < STR_LEN) {
 		strncpy(kernel_path, arg, len);
@@ -148,7 +148,7 @@ acrn_parse_kernel(char *arg)
 int
 acrn_parse_ramdisk(char *arg)
 {
-	int len = strlen(arg);
+	size_t len = strlen(arg);
 
 	if (len < STR_LEN) {
 		strncpy(ramdisk_path, arg, len);
