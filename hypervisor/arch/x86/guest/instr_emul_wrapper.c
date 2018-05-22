@@ -42,7 +42,6 @@ struct emul_cnx {
 	struct vie vie;
 	struct vm_guest_paging paging;
 	struct vcpu *vcpu;
-	struct mem_io *mmio;
 };
 
 static DEFINE_CPU_DATA(struct emul_cnx, g_inst_ctxt);
@@ -334,38 +333,20 @@ static void get_guest_paging_info(struct vcpu *vcpu, struct emul_cnx *emul_cnx)
 static int mmio_read(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t *rval,
 		__unused int size, __unused void *arg)
 {
-	struct emul_cnx *emul_cnx;
-	struct mem_io *mmio;
-
 	if (!vcpu)
 		return -EINVAL;
 
-	emul_cnx = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
-	mmio = emul_cnx->mmio;
-
-	ASSERT(mmio != NULL, "invalid mmio when reading");
-
-	*rval = mmio->value;
-
+	*rval = vcpu->mmio.value;
 	return 0;
 }
 
 static int mmio_write(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t wval,
 		__unused int size, __unused void *arg)
 {
-	struct emul_cnx *emul_cnx;
-	struct mem_io *mmio;
-
 	if (!vcpu)
 		return -EINVAL;
 
-	emul_cnx = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
-	mmio = emul_cnx->mmio;
-
-	ASSERT(mmio != NULL, "invalid mmio when writing");
-
-	mmio->value = wval;
-
+	vcpu->mmio.value = wval;
 	return 0;
 }
 
@@ -398,7 +379,6 @@ uint8_t decode_instruction(struct vcpu *vcpu)
 
 	guest_rip_hva = GPA2HVA(vcpu->vm, guest_rip_gpa);
 	emul_cnx = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
-	emul_cnx->mmio = &vcpu->mmio;
 	emul_cnx->vcpu = vcpu;
 
 	/* by now, HVA <-> HPA is 1:1 mapping, so use hpa is OK*/
@@ -408,8 +388,6 @@ uint8_t decode_instruction(struct vcpu *vcpu)
 	get_guest_paging_info(vcpu, emul_cnx);
 	csar = exec_vmread(VMX_GUEST_CS_ATTR);
 	cpu_mode = get_vmx_cpu_mode();
-
-	vcpu->mmio.private_data = emul_cnx;
 
 	retval = __decode_instruction(vcpu, guest_rip_gva,
 			cpu_mode, SEG_DESC_DEF32(csar), &emul_cnx->vie);
@@ -423,32 +401,20 @@ uint8_t decode_instruction(struct vcpu *vcpu)
 	return  emul_cnx->vie.opsize;
 }
 
-int emulate_instruction(struct vcpu *vcpu, struct mem_io *mmio)
+int emulate_instruction(struct vcpu *vcpu)
 {
-	struct emul_cnx *emul_cnx = (struct emul_cnx *)(mmio->private_data);
-	struct vm_guest_paging *paging = &emul_cnx->paging;
-	int i, retval = 0;
-	uint64_t gpa = mmio->paddr;
+	struct emul_cnx *emul_cnx;
+	struct vm_guest_paging *paging;
+	int retval = 0;
+	uint64_t gpa = vcpu->mmio.paddr;
 	mem_region_read_t mread = mmio_read;
 	mem_region_write_t mwrite = mmio_write;
+
+	emul_cnx = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
+	paging = &emul_cnx->paging;
 
 	retval = vmm_emulate_instruction(vcpu, gpa,
 			&emul_cnx->vie, paging, mread, mwrite, &retval);
 
-	if (retval != 0) {
-		/* dump to instruction when emulation failed */
-		pr_err("emulate following instruction failed @ 0x%016llx:",
-			exec_vmread(VMX_GUEST_RIP));
-		for (i = 0; i < emul_cnx->vie.num_valid; i++) {
-			if (i >= VIE_INST_SIZE)
-				break;
-
-			if (i == 0)
-				pr_err("\n");
-
-			pr_err("%d=%02hhx ",
-				i, emul_cnx->vie.inst[i]);
-		}
-	}
 	return retval;
 }
