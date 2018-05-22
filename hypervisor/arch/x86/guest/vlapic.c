@@ -2180,11 +2180,11 @@ int apic_access_vmexit_handler(struct vcpu *vcpu)
 
 	decode_instruction(vcpu);
 	if (access_type == 1) {
-		if (!emulate_instruction(vcpu, &vcpu->mmio))
+		if (!emulate_instruction(vcpu))
 			vlapic_write(vlapic, 1, offset, vcpu->mmio.value);
 	} else if (access_type == 0) {
 		vlapic_read(vlapic, 1, offset, &vcpu->mmio.value);
-		emulate_instruction(vcpu, &vcpu->mmio);
+		emulate_instruction(vcpu);
 	}
 
 	TRACE_2L(TRC_VMEXIT_APICV_ACCESS, qual, (uint64_t)vlapic);

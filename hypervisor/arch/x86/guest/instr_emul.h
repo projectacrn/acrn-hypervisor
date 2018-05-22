@@ -89,7 +89,7 @@ void vie_init(struct vie *vie, const char *inst_bytes, uint32_t inst_length);
 int __decode_instruction(struct vcpu *vcpu, uint64_t gla,
 		enum vm_cpu_mode cpu_mode, int csd, struct vie *vie);
 
-int emulate_instruction(struct vcpu *vcpu, struct mem_io *mmio);
+int emulate_instruction(struct vcpu *vcpu);
 uint8_t decode_instruction(struct vcpu *vcpu);
 
 #endif	/* _VMM_INSTRUCTION_EMUL_H_ */

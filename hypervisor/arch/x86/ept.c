@@ -326,7 +326,7 @@ int dm_emulate_mmio_post(struct vcpu *vcpu)
 	if (vcpu->mmio.read_write == HV_MEM_IO_READ) {
 		vcpu->mmio.value = vcpu->req.reqs.mmio_request.value;
 		/* Emulate instruction and update vcpu register set */
-		ret = emulate_instruction(vcpu, &vcpu->mmio);
+		ret = emulate_instruction(vcpu);
 		if (ret != 0)
 			goto out;
 	}
@@ -340,7 +340,7 @@ static int dm_emulate_mmio_pre(struct vcpu *vcpu, uint64_t exit_qual)
 	int status;
 
 	if (vcpu->mmio.read_write == HV_MEM_IO_WRITE) {
-		status = emulate_instruction(vcpu, &vcpu->mmio);
+		status = emulate_instruction(vcpu);
 		if (status != 0)
 			return status;
 		vcpu->req.reqs.mmio_request.value = vcpu->mmio.value;
@@ -420,7 +420,7 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 		}
 
 		if (mmio->read_write == HV_MEM_IO_WRITE) {
-			if (emulate_instruction(vcpu, mmio) != 0)
+			if (emulate_instruction(vcpu) != 0)
 				goto out;
 		}
 
@@ -432,7 +432,7 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 		hv_emulate_mmio(vcpu, mmio, mmio_handler);
 		if (mmio->read_write == HV_MEM_IO_READ) {
 			/* Emulate instruction and update vcpu register set */
-			if (emulate_instruction(vcpu, mmio) != 0)
+			if (emulate_instruction(vcpu) != 0)
 				goto out;
 		}
 
