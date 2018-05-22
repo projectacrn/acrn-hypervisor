@@ -62,6 +62,8 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 				IA32E_EPT_X_BIT);
 	void *sub_table_addr = NULL, *pml4_base = NULL;
 	struct vm *vm0 = get_vm_from_vmid(0);
+	int i;
+	struct vcpu *vcpu;
 
 	if (vm0 == NULL) {
 		pr_err("Parse vm0 context failed.");
@@ -133,9 +135,13 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	vm->sworld_control.sworld_memory.base_hpa = hpa;
 	vm->sworld_control.sworld_memory.length = size;
 
-	invept(vm->current_vcpu);
-	invept(vm0->current_vcpu);
+	foreach_vcpu(i, vm, vcpu) {
+		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
+	}
 
+	foreach_vcpu(i, vm0, vcpu) {
+		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
+	}
 }
 
 void  destroy_secure_world(struct vm *vm)
