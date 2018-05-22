@@ -337,6 +337,7 @@ int64_t hcall_setup_sbuf(struct vm *vm, uint64_t param);
 /**
  * @brief Get VCPU Power state.
  *
+ * @param vm pointer to VM data structure
  * @param cmd cmd to show get which VCPU power state data
  * @param param VCPU power state data
  *
