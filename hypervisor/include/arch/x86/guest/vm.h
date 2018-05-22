@@ -132,7 +132,6 @@ struct vm {
 	struct vm_pm_info pm;	/* Reference to this VM's arch information */
 	struct vm_arch arch_vm;	/* Reference to this VM's arch information */
 	enum vm_state state;	/* VM state */
-	struct vcpu *current_vcpu;	/* VCPU that caused vm exit */
 	void *vuart;		/* Virtual UART */
 	struct vpic *vpic;      /* Virtual PIC */
 	uint32_t vpic_wire_mode;
