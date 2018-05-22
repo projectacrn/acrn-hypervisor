@@ -238,7 +238,7 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp, uint32_t cpu_id)
 
 	printf("Host Call Trace:\r\n");
 	if (rsp >
-	(uint64_t)&per_cpu(stack, cpu_id)[STACK_SIZE - 1]
+	(uint64_t)&per_cpu(stack, cpu_id)[CONFIG_STACK_SIZE - 1]
 		|| rsp < (uint64_t)&per_cpu(stack, cpu_id)[0]) {
 		return;
 	}
@@ -257,7 +257,7 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp, uint32_t cpu_id)
 	 *  if the address is invalid, it will cause hv page fault
 	 *  then halt system */
 	while ((rbp <=
-	(uint64_t)&per_cpu(stack, cpu_id)[STACK_SIZE - 1])
+	(uint64_t)&per_cpu(stack, cpu_id)[CONFIG_STACK_SIZE - 1])
 		&& (rbp >= (uint64_t)&per_cpu(stack, cpu_id)[0])
 		&& (cb_hierarchy++ < CALL_TRACE_HIERARCHY_MAX)) {
 		printf("----> 0x%016llx\r\n",

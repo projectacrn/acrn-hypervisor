@@ -34,7 +34,6 @@
 #ifndef __ACRNBOOT_H__
 #define __ACRNBOOT_H__
 
-#include <bsp_cfg.h>
 #include "multiboot.h"
 
 #define E820_RAM		1
@@ -182,4 +181,3 @@ msr_read(uint32_t reg_num)
 }
 
 #endif
-

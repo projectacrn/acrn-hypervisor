@@ -32,10 +32,10 @@ struct per_cpu_region {
 	struct host_gdt gdt;
 	struct tss_64 tss;
 	int state;
-	uint8_t mc_stack[STACK_SIZE] __aligned(16);
-	uint8_t df_stack[STACK_SIZE] __aligned(16);
-	uint8_t sf_stack[STACK_SIZE] __aligned(16);
-	uint8_t stack[STACK_SIZE] __aligned(16);
+	uint8_t mc_stack[CONFIG_STACK_SIZE] __aligned(16);
+	uint8_t df_stack[CONFIG_STACK_SIZE] __aligned(16);
+	uint8_t sf_stack[CONFIG_STACK_SIZE] __aligned(16);
+	uint8_t stack[CONFIG_STACK_SIZE] __aligned(16);
 	char logbuf[LOG_MESSAGE_MAX_SIZE];
 	uint8_t lapic_id;
 } __aligned(CPU_PAGE_SIZE); //per_cpu_region size aligned with CPU_PAGE_SIZE

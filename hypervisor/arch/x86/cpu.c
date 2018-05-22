@@ -424,7 +424,7 @@ void bsp_boot_init(void)
 	load_gdtr_and_tr();
 
 	/* Switch to run-time stack */
-	CPU_SP_WRITE(&get_cpu_var(stack)[STACK_SIZE - 1]);
+	CPU_SP_WRITE(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
 
 #ifdef STACK_PROTECTOR
 	set_fs_base();
@@ -456,8 +456,8 @@ void bsp_boot_init(void)
 	calibrate_tsc();
 
 	/* Enable logging */
-	init_logmsg(LOG_BUF_SIZE,
-		       LOG_DESTINATION);
+	init_logmsg(CONFIG_LOG_BUF_SIZE,
+		       CONFIG_LOG_DESTINATION);
 
 	if (HV_RC_VERSION)
 		pr_acrnlog("HV version %d.%d-rc%d-%s-%s %s build by %s, start time %lluus",
@@ -556,7 +556,7 @@ void cpu_secondary_init(void)
 	__bitmap_set(get_cpu_id(), &pcpu_active_bitmap);
 
 	/* Switch to run-time stack */
-	CPU_SP_WRITE(&get_cpu_var(stack)[STACK_SIZE - 1]);
+	CPU_SP_WRITE(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
 
 #ifdef STACK_PROTECTOR
 	set_fs_base();
@@ -654,7 +654,7 @@ void start_cpus()
 	/* Wait until global count is equal to expected CPU up count or
 	 * configured time-out has expired
 	 */
-	timeout = CPU_UP_TIMEOUT * 1000;
+	timeout = CONFIG_CPU_UP_TIMEOUT * 1000;
 	while ((up_count != expected_up) && (timeout != 0)) {
 		/* Delay 10us */
 		udelay(10);
@@ -679,7 +679,7 @@ void stop_cpus()
 	int i;
 	uint32_t timeout, expected_up;
 
-	timeout = CPU_UP_TIMEOUT * 1000;
+	timeout = CONFIG_CPU_UP_TIMEOUT * 1000;
 	for (i = 0; i < phy_cpu_num; i++) {
 		if (get_cpu_id() == i)	/* avoid offline itself */
 			continue;

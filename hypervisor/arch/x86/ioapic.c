@@ -304,7 +304,7 @@ void setup_ioapic_irq(void)
 
 	spinlock_init(&ioapic_lock);
 
-	for (ioapic_id = 0, gsi = 0; ioapic_id < NR_IOAPICS; ioapic_id++) {
+	for (ioapic_id = 0, gsi = 0; ioapic_id < CONFIG_NR_IOAPICS; ioapic_id++) {
 		int pin;
 		int max_pins;
 		int version;

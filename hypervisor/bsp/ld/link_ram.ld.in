@@ -1,4 +1,4 @@
-#include "bsp_cfg.h"
+#include "config.h"
 
 ENTRY(cpu_primary_start_32)
 
@@ -83,4 +83,3 @@ SECTIONS
     _ld_ram_size = LENGTH(ram) ;
     _ld_ram_end = _ld_ram_size + _ld_ram_start ;
 }
-

@@ -6,14 +6,15 @@
 #include <hypervisor.h>
 
 /************************************************************************/
-/*  Memory pool declaration (block size = MALLOC_ALIGN)   */
+/*  Memory pool declaration (block size = CONFIG_MALLOC_ALIGN)   */
 /************************************************************************/
 #define __bss_noinit __attribute__((__section__(".bss_noinit")))
 
-static uint8_t __bss_noinit Malloc_Heap[HEAP_SIZE] __aligned(MALLOC_ALIGN);
+static uint8_t __bss_noinit
+Malloc_Heap[CONFIG_HEAP_SIZE] __aligned(CONFIG_MALLOC_ALIGN);
 
-#define MALLOC_HEAP_BUFF_SIZE      MALLOC_ALIGN
-#define MALLOC_HEAP_TOTAL_BUFF     (HEAP_SIZE/MALLOC_HEAP_BUFF_SIZE)
+#define MALLOC_HEAP_BUFF_SIZE      CONFIG_MALLOC_ALIGN
+#define MALLOC_HEAP_TOTAL_BUFF     (CONFIG_HEAP_SIZE/MALLOC_HEAP_BUFF_SIZE)
 #define MALLOC_HEAP_BITMAP_SIZE \
                 INT_DIV_ROUNDUP(MALLOC_HEAP_TOTAL_BUFF, BITMAP_WORD_SIZE)
 static uint32_t Malloc_Heap_Bitmap[MALLOC_HEAP_BITMAP_SIZE];
@@ -22,7 +23,7 @@ static uint32_t Malloc_Heap_Contiguity_Bitmap[MALLOC_HEAP_BITMAP_SIZE];
 struct mem_pool Memory_Pool = {
         .start_addr = Malloc_Heap,
         .spinlock = {.head = 0, .tail = 0},
-        .size = HEAP_SIZE,
+        .size = CONFIG_HEAP_SIZE,
         .buff_size = MALLOC_HEAP_BUFF_SIZE,
         .total_buffs = MALLOC_HEAP_TOTAL_BUFF,
         .bmp_size = MALLOC_HEAP_BITMAP_SIZE,
@@ -34,10 +35,10 @@ struct mem_pool Memory_Pool = {
 /*        Memory pool declaration (block size = CPU_PAGE_SIZE)          */
 /************************************************************************/
 static uint8_t __bss_noinit
-Paging_Heap[NUM_ALLOC_PAGES][CPU_PAGE_SIZE] __aligned(CPU_PAGE_SIZE);
+Paging_Heap[CONFIG_NUM_ALLOC_PAGES][CPU_PAGE_SIZE] __aligned(CPU_PAGE_SIZE);
 
 #define PAGING_HEAP_BUFF_SIZE      CPU_PAGE_SIZE
-#define PAGING_HEAP_TOTAL_BUFF     NUM_ALLOC_PAGES
+#define PAGING_HEAP_TOTAL_BUFF     CONFIG_NUM_ALLOC_PAGES
 #define PAGING_HEAP_BITMAP_SIZE \
                 INT_DIV_ROUNDUP(PAGING_HEAP_TOTAL_BUFF, BITMAP_WORD_SIZE)
 static uint32_t Paging_Heap_Bitmap[PAGING_HEAP_BITMAP_SIZE];
@@ -46,7 +47,7 @@ static uint32_t Paging_Heap_Contiguity_Bitmap[MALLOC_HEAP_BITMAP_SIZE];
 struct mem_pool Paging_Memory_Pool = {
         .start_addr = Paging_Heap,
         .spinlock = {.head = 0, .tail = 0},
-        .size = NUM_ALLOC_PAGES * CPU_PAGE_SIZE,
+        .size = CONFIG_NUM_ALLOC_PAGES * CPU_PAGE_SIZE,
         .buff_size = PAGING_HEAP_BUFF_SIZE,
         .total_buffs = PAGING_HEAP_TOTAL_BUFF,
         .bmp_size = PAGING_HEAP_BITMAP_SIZE,

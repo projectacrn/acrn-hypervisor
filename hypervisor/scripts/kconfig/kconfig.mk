@@ -46,3 +46,5 @@ minimalconfig: $(HV_OBJDIR)/$(HV_CONFIG)
 	@python $(KCONFIG_DIR)/minimalconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG) $(HV_OBJDIR)/$(HV_DEFCONFIG)
 
 -include $(HV_OBJDIR)/$(HV_CONFIG_MK)
+
+CFLAGS += -include $(HV_OBJDIR)/$(HV_CONFIG_H)
