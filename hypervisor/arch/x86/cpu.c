@@ -211,6 +211,11 @@ static int hardware_detect_support(void)
 		return -ENODEV;
 	}
 
+	if (!cpu_has_vmx_unrestricted_guest_cap()) {
+		pr_fatal("%s, unrestricted guest not supported\n", __func__);
+		return -ENODEV;
+	}
+
 	ret = check_vmx_mmu_cap();
 	if (ret)
 		return ret;
