@@ -1043,7 +1043,8 @@ ioc_parse(const char *opts)
 	snprintf(virtual_uart_path, sizeof(virtual_uart_path), "%s", param);
 	if (tmp != NULL) {
 		tmp = strtok(NULL, ",");
-		ioc_boot_reason = strtoul(tmp, 0, 0);
+		if (tmp != NULL)
+			ioc_boot_reason = strtoul(tmp, 0, 0);
 	}
 	free(param);
 	return 0;
