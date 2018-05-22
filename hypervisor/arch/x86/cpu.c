@@ -431,7 +431,7 @@ void bsp_boot_init(void)
 		VMX_MACHINE_T_GUEST_SPEC_CTRL_OFFSET,
 		"run_context ia32_spec_ctrl offset not match");
 
-	bitmap_set(CPU_BOOT_ID, &pcpu_active_bitmap);
+	__bitmap_set(CPU_BOOT_ID, &pcpu_active_bitmap);
 
 	/* Get CPU capabilities thru CPUID, including the physical address bit
 	 * limit which is required for initializing paging.
@@ -533,7 +533,7 @@ void bsp_boot_init(void)
 	start_cpus();
 
 	/* Trigger event to allow secondary CPUs to continue */
-	bitmap_set(0, &pcpu_sync);
+	__bitmap_set(0, &pcpu_sync);
 
 	ASSERT(get_cpu_id() == CPU_BOOT_ID, "");
 
@@ -578,7 +578,7 @@ void cpu_secondary_init(void)
 			      (get_cur_lapic_id()),
 			      CPU_STATE_INITIALIZING);
 
-	bitmap_set(get_cpu_id(), &pcpu_active_bitmap);
+	__bitmap_set(get_cpu_id(), &pcpu_active_bitmap);
 
 	/* Switch to run-time stack */
 	CPU_SP_WRITE(&get_cpu_var(stack)[STACK_SIZE - 1]);
@@ -685,7 +685,7 @@ void cpu_dead(uint32_t logical_id)
 	/* Set state to show CPU is halted */
 	cpu_set_current_state(logical_id, CPU_STATE_HALTED);
 
-	bitmap_clear(get_cpu_id(), &pcpu_active_bitmap);
+	__bitmap_clear(get_cpu_id(), &pcpu_active_bitmap);
 
 	/* Halt the CPU */
 	do {
