@@ -32,6 +32,46 @@
 
 #include <linux/types.h>
 
+
+#define RPMB_PHY_MODE       0
+#define RPMB_SIM_MODE       1
+#define RPMB_BLOCK_SIZE     256
+#define RPMB_FRAME_SIZE     512
+#define RPMB_PHY_PATH_NAME  "/dev/rpmb0"
+#define RPMB_SIM_PATH_NAME  "/data/rpmbfile"
+#define SEQ_CMD_MAX         3	/*support up to 3 cmds*/
+
+#define RPMB_F_WRITE        (1UL << 0)
+#define RPMB_F_REL_WRITE    (1UL << 1)
+
+enum rpmb_request {
+    RPMB_REQ_PROGRAM_KEY                = 0x0001,
+    RPMB_REQ_GET_COUNTER                = 0x0002,
+    RPMB_REQ_DATA_WRITE                 = 0x0003,
+    RPMB_REQ_DATA_READ                  = 0x0004,
+    RPMB_REQ_RESULT_READ                = 0x0005,
+};
+
+enum rpmb_response {
+    RPMB_RESP_PROGRAM_KEY               = 0x0100,
+    RPMB_RESP_GET_COUNTER               = 0x0200,
+    RPMB_RESP_DATA_WRITE                = 0x0300,
+    RPMB_RESP_DATA_READ                 = 0x0400,
+};
+
+enum rpmb_result {
+    RPMB_RES_OK                         = 0x0000,
+    RPMB_RES_GENERAL_FAILURE            = 0x0001,
+    RPMB_RES_AUTH_FAILURE               = 0x0002,
+    RPMB_RES_COUNT_FAILURE              = 0x0003,
+    RPMB_RES_ADDR_FAILURE               = 0x0004,
+    RPMB_RES_WRITE_FAILURE              = 0x0005,
+    RPMB_RES_READ_FAILURE               = 0x0006,
+    RPMB_RES_NO_AUTH_KEY                = 0x0007,
+
+    RPMB_RES_WRITE_COUNTER_EXPIRED      = 0x0080,
+};
+
 /**
  * struct rpmb_cmd: rpmb access command
  *
@@ -139,7 +179,17 @@ struct rpmb_ioc_seq_cmd {
 	struct rpmb_ioc_cmd cmds[0];
 };
 
+struct rpmb_ioc_seq_data {
+	struct rpmb_ioc_seq_cmd h;
+	struct rpmb_ioc_cmd cmd[SEQ_CMD_MAX + 1];
+};
+
+int
+rpmb_get_counter(__u8 mode, __u8 *key, __u32 *counter, __u16 *result);
+
 #define RPMB_IOC_REQ_CMD _IOWR(0xB5, 80, struct rpmb_ioc_req_cmd)
 #define RPMB_IOC_SEQ_CMD _IOWR(0xB5, 81, struct rpmb_ioc_seq_cmd)
+
+__u16 rpmb_get_blocks(void);
 
 #endif /* __RPMB_H__ */
