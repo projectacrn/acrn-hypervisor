@@ -53,7 +53,6 @@ void vcpu_thread(struct vcpu *vcpu)
 	uint64_t vmexit_begin = 0, vmexit_end = 0;
 	uint16_t basic_exit_reason = 0;
 	uint64_t tsc_aux_hyp_cpu = vcpu->pcpu_id;
-	struct vm_exit_dispatch *vmexit_hdlr;
 	int ret = 0;
 
 	/* If vcpu is not launched, we need to do init_vmcs first */
@@ -97,7 +96,11 @@ void vcpu_thread(struct vcpu *vcpu)
 		}
 
 		ret = start_vcpu(vcpu);
-		ASSERT(ret == 0, "vcpu resume failed");
+		if (ret != 0) {
+			pr_fatal("vcpu resume failed");
+			pause_vcpu(vcpu, VCPU_ZOMBIE);
+			continue;
+		}
 
 		vmexit_begin = rdtsc();
 
@@ -106,28 +109,21 @@ void vcpu_thread(struct vcpu *vcpu)
 		CPU_MSR_READ(MSR_IA32_TSC_AUX, &vcpu->msr_tsc_aux_guest);
 		/* Restore native TSC_AUX */
 		CPU_MSR_WRITE(MSR_IA32_TSC_AUX, tsc_aux_hyp_cpu);
-		ASSERT((int)get_cpu_id() == vcpu->pcpu_id, "");
 
 		/* Dispatch handler */
-		vmexit_hdlr = vmexit_handler(vcpu);
-		ASSERT(vmexit_hdlr != 0,
-				"Unable to dispatch VM exit handler!");
+		ret = vmexit_handler(vcpu);
+		if (ret < 0) {
+			pr_fatal("dispatch VM exit handler failed for reason"
+				" %d, ret = %d!",
+				vcpu->arch_vcpu.exit_reason & 0xFFFF, ret);
+			vcpu_inject_gp(vcpu);
+			continue;
+		}
 
 		basic_exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFF;
 		per_cpu(vmexit_cnt, vcpu->pcpu_id)[basic_exit_reason]++;
 		TRACE_2L(TRACE_VM_EXIT, basic_exit_reason,
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip);
-
-		if (basic_exit_reason == VMX_EXIT_REASON_EXTERNAL_INTERRUPT) {
-			/* Handling external_interrupt
-			 * should disable intr
-			 */
-			vmexit_hdlr->handler(vcpu);
-		} else {
-			CPU_IRQ_ENABLE();
-			vmexit_hdlr->handler(vcpu);
-			CPU_IRQ_DISABLE();
-		}
 	} while (1);
 }
 

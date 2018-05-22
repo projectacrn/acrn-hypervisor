@@ -156,10 +156,16 @@ static const struct vm_exit_dispatch dispatch_table[] = {
 		.need_exit_qualification = 1}
 };
 
-struct vm_exit_dispatch *vmexit_handler(struct vcpu *vcpu)
+int vmexit_handler(struct vcpu *vcpu)
 {
 	struct vm_exit_dispatch *dispatch = HV_NULL;
 	uint16_t basic_exit_reason;
+	int ret;
+
+	if ((int)get_cpu_id() != vcpu->pcpu_id) {
+		pr_fatal("vcpu is not running on its pcpu!");
+		return -EINVAL;
+	}
 
 	/* Obtain interrupt info */
 	vcpu->arch_vcpu.idt_vectoring_info =
@@ -190,8 +196,19 @@ struct vm_exit_dispatch *vmexit_handler(struct vcpu *vcpu)
 	/* Update current vcpu in VM that caused vm exit */
 	vcpu->vm->current_vcpu = vcpu;
 
-	/* Return pointer to exit dispatch entry */
-	return dispatch;
+	/* exit dispatch handling */
+	if (basic_exit_reason == VMX_EXIT_REASON_EXTERNAL_INTERRUPT) {
+		/* Handling external_interrupt
+		 * should disable intr
+		 */
+		ret = dispatch->handler(vcpu);
+	} else {
+		CPU_IRQ_ENABLE();
+		ret = dispatch->handler(vcpu);
+		CPU_IRQ_DISABLE();
+	}
+
+	return ret;
 }
 
 static int unhandled_vmexit_handler(__unused struct vcpu *vcpu)
