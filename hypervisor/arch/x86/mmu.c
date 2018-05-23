@@ -46,7 +46,7 @@ static struct vmx_capability {
 
 #define INVEPT_TYPE_SINGLE_CONTEXT      1UL
 #define INVEPT_TYPE_ALL_CONTEXTS        2UL
-#define INVEPT_SET_ERROR_CODE				\
+#define VMFAIL_INVALID_EPT_VPID				\
 	"       jnc 1f\n"				\
 	"       mov $1, %0\n"      /* CF: error = 1 */	\
 	"       jmp 3f\n"				\
@@ -66,7 +66,7 @@ static inline void _invept(uint64_t type, struct invept_desc desc)
 	int error = 0;
 
 	asm volatile ("invept %1, %2\n"
-			INVEPT_SET_ERROR_CODE
+			VMFAIL_INVALID_EPT_VPID
 			: "=r" (error)
 			: "m" (desc), "r" (type)
 			: "memory");
@@ -103,7 +103,9 @@ int check_vmx_mmu_cap(void)
 		return -ENODEV;
 	}
 
-	if (!cpu_has_vmx_vpid_cap(VMX_VPID_INVVPID)) {
+	if (!cpu_has_vmx_vpid_cap(VMX_VPID_INVVPID) ||
+		!cpu_has_vmx_vpid_cap(VMX_VPID_INVVPID_SINGLE_CONTEXT) ||
+		!cpu_has_vmx_vpid_cap(VMX_VPID_INVVPID_GLOBAL_CONTEXT)) {
 		pr_fatal("%s, invvpid not supported\n", __func__);
 		return -ENODEV;
 	}
