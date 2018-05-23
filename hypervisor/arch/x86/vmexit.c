@@ -76,7 +76,7 @@ static const struct vm_exit_dispatch dispatch_table[] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_VMCALL] = {
 		.handler = vmcall_vmexit_handler},
-	[VMX_EXIT_REASON_VMCLEAR] {
+	[VMX_EXIT_REASON_VMCLEAR] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_VMLAUNCH] = {
 		.handler = unhandled_vmexit_handler},
