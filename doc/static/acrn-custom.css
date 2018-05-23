@@ -19,7 +19,8 @@
    position: static;
    border-top: none;
    padding: 0px;
-} */
+}
+*/
 
 .rst-versions .rst-current-version {
    padding: 5px;
@@ -81,7 +82,7 @@ table.align-center {
     padding: 1em 0;
     text-align: center;
 }
-`
+
 /*  make .. hlist:: tables fill the page */
 table.hlist {
     width: 95% !important;
