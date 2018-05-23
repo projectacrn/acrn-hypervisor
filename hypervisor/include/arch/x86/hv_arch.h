@@ -45,7 +45,6 @@
 #include <vm.h>
 #include <cpuid.h>
 #include <mmu.h>
-#include <intr_ctx.h>
 #include <irq.h>
 #include <timer.h>
 #include <softirq.h>
