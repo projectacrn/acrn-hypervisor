@@ -368,6 +368,11 @@ void vm_fixup(struct vm *vm)
 		int i;
 
 		vm_desc = get_vm_desc(0);
+		if (vm_desc == NULL) {
+			pr_err("get VM0 description failed.");
+			return;
+		}
+
 		foreach_vcpu(i, vm, vcpu) {
 			if (!vcpu_in_vm_desc(vcpu, vm_desc)) {
 				pause_vcpu(vcpu, VCPU_ZOMBIE);
