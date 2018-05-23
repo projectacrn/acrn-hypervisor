@@ -33,10 +33,12 @@
 
 /* Logging severity levels */
 #define LOG_FATAL		1
-#define LOG_ERROR		2
-#define LOG_WARNING		3
-#define LOG_INFO		4
-#define LOG_DEBUG		5
+/* For msg should be write to console and sbuf meanwhile but not fatal error */
+#define LOG_ACRN		2
+#define LOG_ERROR		3
+#define LOG_WARNING		4
+#define LOG_INFO		5
+#define LOG_DEBUG		6
 
 /* Logging flags */
 #define LOG_FLAG_STDOUT		0x00000001
@@ -75,6 +77,11 @@ static inline void print_logmsg_buffer(__unused uint32_t cpu_id)
 #define pr_fatal(...)						\
 	do {							\
 		do_logmsg(LOG_FATAL, pr_prefix __VA_ARGS__);	\
+	} while (0)
+
+#define pr_acrnlog(...)						\
+	do {							\
+		do_logmsg(LOG_ACRN, pr_prefix __VA_ARGS__);	\
 	} while (0)
 
 #define pr_err(...)						\
