@@ -374,7 +374,15 @@ each with their own way to install development tools:
           gnu-efi \
           libssl-dev \
           libpciaccess-dev \
-          uuid-dev
+          uuid-dev \
+          libsystemd-dev \
+          libevent-dev \
+          libxml2-dev \
+          libusb-1.0-0-dev
+
+  .. note::
+     Ubuntu 14.04 requires ``libsystemd-journal-dev`` instead of ``libsystemd-dev``
+     as indicated above.
 
 * On a Fedora/Redhat development system:
 
@@ -384,7 +392,12 @@ each with their own way to install development tools:
           gnu-efi-devel \
           libuuid-devel \
           openssl-devel \
-          libpciaccess-devel
+          libpciaccess-devel \
+          systemd-devel \
+          libxml2-devel \
+          libevent-devel \
+          libusbx-devel
+
 
 * On a CentOS development system:
 
@@ -394,17 +407,46 @@ each with their own way to install development tools:
              gnu-efi-devel \
              libuuid-devel \
              openssl-devel \
-             libpciaccess-devel
+             libpciaccess-devel \
+             systemd-devel \
+             libxml2-devel \
+             libevent-devel \
+             libusbx-devel
 
-Build the hypervisor and device model
-=====================================
 
-#. Download the ACRN hypervisor and build it.
+Build the hypervisor, device model and tools
+============================================
+
+The `acrn-hypervisor <https://github.com/projectacrn/acrn-hypervisor/>`_
+repository has three main components in it:
+
+1. The ACRN hypervisor code located in the ``hypervisor`` directory
+#. The ACRN devicemodel code located in the ``devicemodel`` directory
+#. The ACRN tools source code located in the ``tools`` directory
+
+You can build all these components in one go as follows:
+.. code-block:: console
+
+   $ git clone https://github.com/projectacrn/acrn-hypervisor
+   $ cd acrn-hypervisor
+   $ make
+
+The build results are found in the ``build`` directory.
+
+.. note::
+   if you wish to use a different target folder for the build
+   artefacts, set the ``O`` (that is capital letter 'O') to the
+   desired value. Example: ``make O=build-uefi PLATFORM=uefi``.
+
+You can also build these components individually. The following
+steps assume that you have already cloned the ``acrn-hypervisor`` repository
+and are using it as the current working directory.
+
+#. Build the ACRN hypervisor.
 
    .. code-block:: console
 
-      $ git clone https://github.com/projectacrn/acrn-hypervisor
-      $ cd acrn-hypervisor/hypervisor
+      $ cd hypervisor
       $ make PLATFORM=uefi
 
    The build results are found in the ``build`` directory.
@@ -417,6 +459,13 @@ Build the hypervisor and device model
       $ make
 
    The build results are found in the ``build`` directory.
+
+#. Build the ACRN tools (included in the acrn-hypervisor repo):
+
+   .. code-block:: console
+
+      $ cd ../tools
+      $ for d in */; do make -C "$d"; done
 
 Follow the same instructions to boot and test the images you created
 from your build.
