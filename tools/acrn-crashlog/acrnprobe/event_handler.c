@@ -157,7 +157,8 @@ static void *event_handle(void *unused __attribute__((unused)))
 			if (!sender)
 				continue;
 
-			sender->send(e);
+			if (sender->send)
+				sender->send(e);
 		}
 
 		if ((e->dir))
