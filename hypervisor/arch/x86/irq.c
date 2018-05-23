@@ -427,7 +427,7 @@ int init_default_irqs(unsigned int cpu_id)
 	return 0;
 }
 
-void dispatch_exception(struct intr_ctx *ctx)
+void dispatch_exception(struct intr_excp_ctx *ctx)
 {
 	unsigned int cpu_id = get_cpu_id();
 
@@ -456,7 +456,7 @@ void handle_spurious_interrupt(int vector)
 }
 
 /* do_IRQ() */
-void dispatch_interrupt(struct intr_ctx *ctx)
+void dispatch_interrupt(struct intr_excp_ctx *ctx)
 {
 	int vr = ctx->vector;
 	int irq = vector_to_irq[vr];

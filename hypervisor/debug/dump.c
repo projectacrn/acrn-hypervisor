@@ -293,7 +293,7 @@ void __assert(uint32_t line, const char *file, char *txt)
 	} while (1);
 }
 
-void dump_exception(struct intr_ctx *ctx, uint32_t cpu_id)
+void dump_exception(struct intr_excp_ctx *ctx, uint32_t cpu_id)
 {
 	const char *name = "Not defined";
 	static int nested = 1;
@@ -340,7 +340,7 @@ void dump_exception(struct intr_ctx *ctx, uint32_t cpu_id)
 	printf("===========================\n");
 }
 
-void dump_interrupt(struct intr_ctx *ctx)
+void dump_interrupt(struct intr_excp_ctx *ctx)
 {
 	printf("\n\n==========================================");
 	printf("======================================\n=\n");

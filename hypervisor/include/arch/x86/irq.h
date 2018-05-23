@@ -94,7 +94,7 @@ struct irq_routing_entry {
 /*
  * Definition of the stack frame layout
  */
-struct intr_ctx {
+struct intr_excp_ctx {
 	uint64_t r12;
 	uint64_t r13;
 	uint64_t r14;
@@ -141,7 +141,7 @@ void update_irq_handler(int irq, irq_handler_t func);
 
 int init_default_irqs(unsigned int cpu);
 
-void dispatch_interrupt(struct intr_ctx *ctx);
+void dispatch_interrupt(struct intr_excp_ctx *ctx);
 
 struct dev_handler_node*
 pri_register_handler(int irq,
