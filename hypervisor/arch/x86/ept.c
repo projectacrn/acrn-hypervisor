@@ -450,7 +450,6 @@ int ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu)
 	return status;
 }
 
-
 int ept_mmap(struct vm *vm, uint64_t hpa,
 	uint64_t gpa, uint64_t size, uint32_t type, uint32_t prot)
 {
@@ -481,7 +480,7 @@ int ept_mmap(struct vm *vm, uint64_t hpa,
 		ASSERT(0, "unknown map type");
 
 	foreach_vcpu(i, vm, vcpu) {
-		vcpu_make_request(vcpu, ACRN_REQUEST_TLB_FLUSH);
+		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 	}
 
 	dev_dbg(ACRN_DBG_EPT, "ept map: %s hpa: 0x%016llx gpa: 0x%016llx ",

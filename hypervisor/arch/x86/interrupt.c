@@ -372,7 +372,7 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 		return -EFAULT;
 	}
 
-	if (bitmap_test_and_clear(ACRN_REQUEST_TLB_FLUSH, pending_req_bits))
+	if (bitmap_test_and_clear(ACRN_REQUEST_EPT_FLUSH, pending_req_bits))
 		invept(vcpu);
 
 	if (bitmap_test_and_clear(ACRN_REQUEST_TMR_UPDATE, pending_req_bits))
