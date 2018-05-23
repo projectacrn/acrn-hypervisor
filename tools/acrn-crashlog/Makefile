@@ -19,15 +19,20 @@ export INCLUDE
 export BUILDDIR
 export CC
 export RM
-export CFLAGS
 
-SYSTEMD_LIBS = -lsystemd
+EXTRA_LIBS = -lsystemd
 LDCNF := $(shell ldconfig -p)
 LIB_EXIST = $(findstring libsystemd-journal.so, $(LDCNF))
 ifeq ($(strip $(LIB_EXIST)),libsystemd-journal.so)
-	SYSTEMD_LIBS = -lsystemd-journal
+	EXTRA_LIBS = -lsystemd-journal
 endif
-export SYSTEMD_LIBS
+LIB_EXIST = $(findstring libtelemetry.so, $(LDCNF))
+ifeq ($(strip $(LIB_EXIST)),libtelemetryxx.so)
+	CFLAGS	+= -DHAVE_TELEMETRICS_CLIENT
+	EXTRA_LIBS += -ltelemetry
+endif
+export CFLAGS
+export EXTRA_LIBS
 
 .PHONY:all
 all:

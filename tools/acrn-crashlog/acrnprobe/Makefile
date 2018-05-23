@@ -3,7 +3,7 @@ MINOR_VERSION=0
 
 BASEDIR 	:= $(shell pwd)
 
-LIBS		= -lpthread -lxml2 -lcrypto -lrt $(SYSTEMD_LIBS) -ltelemetry
+LIBS		= -lpthread -lxml2 -lcrypto -lrt $(EXTRA_LIBS)
 INCLUDE		+= -I $(BASEDIR)/include -I /usr/include/libxml2
 CFLAGS 		+= $(INCLUDE)
 CFLAGS 		+= -g -O0 -std=gnu11

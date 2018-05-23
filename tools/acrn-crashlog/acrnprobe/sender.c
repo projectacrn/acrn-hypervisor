@@ -23,6 +23,8 @@
 #include "property.h"
 #include "startupreason.h"
 #include "log_sys.h"
+
+#ifdef HAVE_TELEMETRICS_CLIENT
 #include "telemetry.h"
 
 #define CRASH_SEVERITY 4
@@ -34,6 +36,7 @@ struct telemd_data_t {
 	char *eventid;
 	uint32_t severity;
 };
+#endif
 
 /* get_log_file_* only used to copy regular file which can be mmaped */
 static void get_log_file_complete(struct log_t *log, char *desdir)
@@ -272,6 +275,7 @@ static void get_log_cmd(struct log_t *log, char *desdir)
 	out_via_fork(log, desdir);
 }
 
+#ifdef HAVE_TELEMETRICS_CLIENT
 static bool telemd_send_data(char *payload, char *eventid, uint32_t severity,
 				char *class)
 {
@@ -389,6 +393,7 @@ send_nologs:
 	telemd_send_data(msg, d->eventid, d->severity, d->class);
 	free(msg);
 }
+#endif
 
 static void crashlog_get_log(struct log_t *log, void *data)
 {
@@ -427,6 +432,7 @@ static void crashlog_get_log(struct log_t *log, void *data)
 		LOGW("get (%s) spend %ds\n", log->name, spent);
 }
 
+#ifdef HAVE_TELEMETRICS_CLIENT
 static void telemd_send_crash(struct event_t *e)
 {
 	struct crash_t *crash;
@@ -774,6 +780,7 @@ static void telemd_send(struct event_t *e)
 		LOGE("unsupoorted event type %d\n", e->event_type);
 	}
 }
+#endif
 
 static void crashlog_send_crash(struct event_t *e)
 {
@@ -1122,9 +1129,11 @@ int init_sender(void)
 			ret = prepare_history();
 			if (ret)
 				return -1;
+#ifdef HAVE_TELEMETRICS_CLIENT
 		} else if (!strncmp(sender->name, "telemd",
 				    strlen(sender->name))) {
 			sender->send = telemd_send;
+#endif
 		}
 	}
 

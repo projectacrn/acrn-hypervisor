@@ -6,7 +6,7 @@ all: include/version.h check_obj usercrash_s usercrash_c debugger
 CURRDIR := $(shell pwd)
 INCLUDE += -I $(CURRDIR)/include/
 
-LIBS = -levent -lpthread $(SYSTEMD_LIBS)
+LIBS = -levent -lpthread $(EXTRA_LIBS)
 
 usercrash_s: $(BUILDDIR)/usercrash/obj/protocol.o \
 	$(BUILDDIR)/usercrash/obj/server.o \
