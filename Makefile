@@ -4,8 +4,8 @@ T := $(CURDIR)
 PLATFORM ?= uefi
 RELEASE ?= 0
 
-BUILD_DIR := build
-ROOT_OUT := $(T)/$(BUILD_DIR)
+O ?= build
+ROOT_OUT := $(shell mkdir -p $(O);cd $(O);pwd)
 HV_OUT := $(ROOT_OUT)/hypervisor
 DM_OUT := $(ROOT_OUT)/devicemodel
 TOOLS_OUT := $(ROOT_OUT)/tools
