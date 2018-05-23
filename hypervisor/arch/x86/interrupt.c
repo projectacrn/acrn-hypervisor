@@ -277,7 +277,7 @@ int interrupt_window_vmexit_handler(struct vcpu *vcpu)
 int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 {
 	uint32_t intr_info;
-	struct intr_ctx ctx;
+	struct intr_excp_ctx ctx;
 
 	intr_info = exec_vmread(VMX_EXIT_INT_INFO);
 	if ((!(intr_info & VMX_INT_INFO_VALID)) ||
