@@ -453,7 +453,7 @@ int monitor_init(struct vmctx *ctx)
 
 void monitor_close(void)
 {
-	struct vmm_client *client;
+	struct vmm_client *client, *pclient;
 	if (!monitor_thread)
 		return;
 	shutdown(monitor_fd, SHUT_RDWR);
@@ -465,7 +465,8 @@ void monitor_close(void)
 	/* client buf-mem and fd may be still in use by msg-handler */
 	/* which is handled by mevent */
 	pthread_mutex_lock(&client_mutex);
-	LIST_FOREACH(client, &client_head, list) {
+	list_foreach_safe(client, &client_head, list, pclient) {
+		LIST_REMOVE(client, list);
 		vmm_client_free_res(client);
 	}
 	pthread_mutex_unlock(&client_mutex);
