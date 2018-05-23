@@ -586,31 +586,30 @@ cbc_send_pkt(struct cbc_pkt *pkt)
 static void
 cbc_update_heartbeat(struct cbc_pkt *pkt, uint8_t cmd, uint8_t sus_action)
 {
-	uint8_t stat;
+	enum ioc_event_type evt;
 
-	(void) sus_action;
-
-	/*
-	 * If heartbeat state switches(active/inactive), update the new state
-	 * value based on heartbeat commands.
-	 * The default state is inactive.
-	 */
-	if (cmd == CBC_HB_ACTIVE || cmd == CBC_HB_STANDBY ||
-				cmd == CBC_HB_INITIAL)
-		stat = 1;
+	if (cmd == CBC_HB_INITIAL || cmd == CBC_HB_ACTIVE ||
+			cmd == CBC_HB_STANDBY ||
+			cmd == CBC_HB_SD_DLY)
+		evt = IOC_E_HB_ACTIVE;
+	else if (cmd == CBC_HB_SD_PREP)
+		evt = (sus_action == CBC_SS_REFRESH) ? IOC_E_RAM_REFRESH :
+			IOC_E_HB_INACTIVE;
 	else
-		stat = 0;
+		return;
 
-	/* Default heartbeat state is zero, that means not active */
-	if (stat != pkt->hb_state) {
-		/*
-		 * Route the cbc request to the tx thread
-		 * and request type is SOC state update
-		 */
+	/* Update IOC state with a new event */
+	if (evt != pkt->evt) {
+		ioc_update_event(pkt->ioc->evt_fd, evt);
+		pkt->evt = evt;
+	}
+
+	/* Tigger a wakeup reason immediately */
+	if (cmd == CBC_HB_INITIAL) {
+
+		/* Route the cbc request to the tx thread */
 		pkt->qtype = CBC_QUEUE_T_TX;
-		pkt->req->rtype = CBC_REQ_T_SOC;
-		pkt->req->buf[0] = stat;
-		pkt->hb_state = stat;
+		pkt->req->rtype = CBC_REQ_T_HB_INIT;
 	}
 }
 
@@ -669,6 +668,11 @@ cbc_process_wakeup_reason(struct cbc_pkt *pkt)
 	 * since need to send a wakeup reason immediatly after the switching.
 	 */
 	pkt->reason = reason;
+
+	if (pkt->uos_active)
+		reason |= CBC_WK_RSN_SOC;
+	else
+		reason &= ~CBC_WK_RSN_SOC;
 
 	/* Update periodic wakeup reason */
 	cbc_update_wakeup_reason(pkt, reason);
@@ -795,11 +799,18 @@ cbc_rx_handler(struct cbc_pkt *pkt)
 	uint8_t mux, prio;
 
 	/*
-	 * FIXME: need to check CBC request type in the rx handler
-	 * currently simply check is enough, expand the check in the further
+	 * Rx only handle CBC protocol packet currently.
+	 * Drop the packet when the CBC protocl status is not enable.
 	 */
-	if (pkt->req->rtype != CBC_REQ_T_PROT)
+	if (pkt->req->rtype != CBC_REQ_T_PROT ||
+			pkt->ioc->cbc_enable == false) {
+
+		/* Discard the packet */
+		DPRINTF("ioc rx discard the packet, type:%d\r\n",
+				pkt->req->rtype);
 		return;
+	}
+
 	/*
 	 * TODO: use this prio to enable dynamic cbc priority configuration
 	 * feature in the future, currently ignore it.
@@ -834,7 +845,7 @@ cbc_rx_handler(struct cbc_pkt *pkt)
 void
 cbc_tx_handler(struct cbc_pkt *pkt)
 {
-	if (pkt->req->rtype == CBC_REQ_T_PROT) {
+	if (pkt->req->rtype == CBC_REQ_T_PROT && pkt->ioc->cbc_enable) {
 		switch (pkt->req->id) {
 		case IOC_NATIVE_LFCC:
 			cbc_process_wakeup_reason(pkt);
@@ -850,20 +861,39 @@ cbc_tx_handler(struct cbc_pkt *pkt)
 					pkt->req->id);
 			break;
 		}
-	} else if (pkt->req->rtype == CBC_REQ_T_SOC) {
-		/*
-		 * Update wakeup reasons with SoC new state
-		 * the new state update by heartbeat state change
-		 * (active/inactive) in rx thread
-		 */
-		pkt->soc_active = pkt->req->buf[0];
-		cbc_update_wakeup_reason(pkt, pkt->reason);
+	} else if (pkt->req->rtype == CBC_REQ_T_HB_INIT) {
 
-		/* Send wakeup reason */
+		/*
+		 * Boot reason represents the wakeup reason from IOC mediator
+		 * boot command line or resume callback.
+		 */
+		cbc_update_wakeup_reason(pkt, pkt->ioc->boot_reason |
+				CBC_WK_RSN_SOC);
 		cbc_send_pkt(pkt);
+
+		/* Heartbeat init also indicates UOS enter active state */
+		pkt->uos_active = true;
+	} else if (pkt->req->rtype == CBC_REQ_T_UOS_ACTIVE) {
+		cbc_update_wakeup_reason(pkt, pkt->reason | CBC_WK_RSN_SOC);
+		cbc_send_pkt(pkt);
+
+		/* Enable UOS active flag */
+		pkt->uos_active = true;
+	} else if (pkt->req->rtype == CBC_REQ_T_UOS_INACTIVE) {
+		cbc_update_wakeup_reason(pkt, CBC_WK_RSN_SHUTDOWN);
+		cbc_send_pkt(pkt);
+
+		/* Disable UOS active flag */
+		pkt->uos_active = false;
+
+		/*
+		 * After sending shutdown wakeup reason, then trigger shutdown
+		 * IOC event that IOC mediator can enter suspended.
+		 */
+		ioc_update_event(pkt->ioc->evt_fd, IOC_E_SHUTDOWN);
 	} else {
-		/* TODO: others request types process */
-		DPRINTF("ioc invalid cbc_request type in tx:%d\r\n",
+		/* Discard the packet */
+		DPRINTF("ioc tx discard the packet, type:%d\r\n",
 				pkt->req->rtype);
 	}
 }
