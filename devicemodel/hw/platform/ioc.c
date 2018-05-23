@@ -768,13 +768,32 @@ cbc_request_dequeue(struct ioc_dev *ioc, enum cbc_queue_type qtype)
 }
 
 /*
+ * Send a cbc_request to TX handler
+ */
+static int
+send_tx_request(struct ioc_dev *ioc, enum cbc_request_type type)
+{
+	struct cbc_request *req;
+
+	req = cbc_request_dequeue(ioc, CBC_QUEUE_T_FREE);
+	if (!req) {
+		DPRINTF("%s", "ioc sends a tx request failed\r\n");
+		return -1;
+	}
+
+	req->rtype = type;
+	cbc_request_enqueue(ioc, req, CBC_QUEUE_T_TX, true);
+	return 0;
+}
+
+/*
  * Process hb active event before transfer to next state
  */
 static int
 process_hb_active_event(struct ioc_dev *ioc)
 {
-	/* TODO: Need implementation */
-	return 0;
+	/* Enable wakeup reason bit 23 that indicating UOS is active */
+	return send_tx_request(ioc, CBC_REQ_T_UOS_ACTIVE);
 }
 
 /*
@@ -783,8 +802,22 @@ process_hb_active_event(struct ioc_dev *ioc)
 static int
 process_ram_refresh_event(struct ioc_dev *ioc)
 {
-	/* TODO: Need implementation */
-	return 0;
+	int rc;
+
+	/* Rx and Tx threads discard all CBC protocol packets */
+	ioc->cbc_enable = false;
+
+	/*
+	 * Tx handler sents shutdown wakeup reason,
+	 * Then enter suspended state.
+	 */
+	rc = send_tx_request(ioc, CBC_REQ_T_UOS_INACTIVE);
+
+	/*
+	 * TODO: set suspend to PM DM
+	 */
+
+	return rc;
 }
 
 /*
@@ -793,8 +826,22 @@ process_ram_refresh_event(struct ioc_dev *ioc)
 static int
 process_hb_inactive_event(struct ioc_dev *ioc)
 {
-	/* TODO: Need implementation */
-	return 0;
+	int rc;
+
+	/* Rx and Tx threads discard all CBC protocol packets */
+	ioc->cbc_enable = false;
+
+	/*
+	 * Tx sents shutdown wakeup reason,
+	 * Then enter shutdown state.
+	 */
+	rc = send_tx_request(ioc, CBC_REQ_T_UOS_INACTIVE);
+
+	/*
+	 * TODO: set shutdown to PM DM
+	 */
+
+	return rc;
 }
 
 /*
@@ -803,7 +850,26 @@ process_hb_inactive_event(struct ioc_dev *ioc)
 static int
 process_shutdown_event(struct ioc_dev *ioc)
 {
-	/* TODO: Need implementation */
+	int i;
+	struct ioc_ch_info *chl;
+
+	/*
+	 * Due to native CBC driver buffer will be full if the native CBC char
+	 * devices are opened, but not keep reading. So close the native devices
+	 * when removing them from epoll.
+	 */
+	for (i = 0, chl = ioc_ch_tbl; i < ARRAY_SIZE(ioc_ch_tbl); i++, chl++) {
+		switch (i) {
+		case IOC_NATIVE_PMT ... IOC_NATIVE_RAW11:
+			if (chl->stat == IOC_CH_OFF || chl->fd < 0)
+				continue;
+			epoll_ctl(ioc->epfd, EPOLL_CTL_DEL, chl->fd, NULL);
+			close(chl->fd);
+			chl->fd = IOC_INIT_FD;
+			break;
+		}
+	}
+
 	return 0;
 }
 
@@ -813,7 +879,29 @@ process_shutdown_event(struct ioc_dev *ioc)
 static int
 process_resume_event(struct ioc_dev *ioc)
 {
-	/* TODO: Need implementation */
+	int i;
+	struct ioc_ch_info *chl;
+
+	/* Rx and Tx threads begin to process CBC protocol packets */
+	ioc->cbc_enable = true;
+
+	/* re-open native CBC char devices and add them into epoll */
+	for (i = 0, chl = ioc_ch_tbl; i < ARRAY_SIZE(ioc_ch_tbl); i++, chl++) {
+		switch (i) {
+		case IOC_NATIVE_PMT ... IOC_NATIVE_RAW11:
+			if (chl->stat == IOC_CH_OFF || chl->fd != IOC_INIT_FD)
+				continue;
+
+			chl->fd = ioc_open_native_ch(chl->name);
+			if (chl->fd > 0)
+				epoll_ctl(ioc->epfd, EPOLL_CTL_ADD, chl->fd,
+						&ioc->evts[i]);
+			else
+				DPRINTF("ioc open failed, channel:%s\r\n",
+						chl->name);
+			break;
+		}
+	}
 	return 0;
 }
 
@@ -844,6 +932,21 @@ ioc_process_events(struct ioc_dev *ioc, enum ioc_ch_id id)
 						ioc_state_tbl[i].next_stat);
 		}
 	}
+}
+
+/*
+ * For a new event update.
+ * The interface is for mult-threads, currently write one byte to core thread,
+ * So if write more types, needs to add protection for thread safety.
+ */
+void
+ioc_update_event(int fd, enum ioc_event_type evt)
+{
+	uint8_t val = evt;
+
+	if (write(fd, &val, sizeof(val)) < 0)
+		DPRINTF("ioc update event failed, error:%s\r\n",
+				strerror(errno));
 }
 
 /*
@@ -1027,7 +1130,7 @@ ioc_rx_thread(void *arg)
 
 	memset(&packet, 0, sizeof(packet));
 	packet.cfg = &ioc->rx_config;
-	packet.boot_reason = ioc_boot_reason;
+	packet.ioc = ioc;
 
 	for (;;) {
 		pthread_mutex_lock(&ioc->rx_mtx);
@@ -1080,7 +1183,7 @@ ioc_tx_thread(void *arg)
 
 	memset(&packet, 0, sizeof(packet));
 	packet.cfg = &ioc->tx_config;
-	packet.boot_reason = ioc_boot_reason;
+	packet.ioc = ioc;
 
 	for (;;) {
 		pthread_mutex_lock(&ioc->tx_mtx);
@@ -1249,6 +1352,12 @@ ioc_init(struct vmctx *ctx)
 
 	/* Set event fd to default value */
 	ioc->evt_fd = IOC_INIT_FD;
+
+	/* Enable CBC packet processing by default */
+	ioc->cbc_enable = true;
+
+	/* Set boot reason from IOC mediator boot command line */
+	ioc->boot_reason = ioc_boot_reason;
 
 	/*
 	 * Initialize native CBC cdev and virtual UART.

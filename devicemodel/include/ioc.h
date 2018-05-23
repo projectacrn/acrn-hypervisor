@@ -103,6 +103,9 @@
 #define CBC_WK_RSN_DOR	(1 << 11)	/* CBC wakeup reason field cardoor */
 #define CBC_WK_RSN_SOC	(1 << 23)	/* CBC wakeup reason field soc */
 
+/* CBC wakeup reason filed suspend or shutdown */
+#define CBC_WK_RSN_SHUTDOWN	(0)
+
 /*
  * IOC mediator permits button, rtc and cardoor wakeup reasons which comes from
  * IOC firmware, others will be masked.
@@ -578,7 +581,9 @@ enum cbc_request_type {
 	CBC_REQ_T_PROT,		/* CBC protocol request */
 	CBC_REQ_T_SUSPEND,	/* CBC suspend request */
 	CBC_REQ_T_SHUTDOWN,	/* CBC shutdown request */
-	CBC_REQ_T_SOC		/* SOC state update request */
+	CBC_REQ_T_HB_INIT,	/* CBC Heartbeat init request */
+	CBC_REQ_T_UOS_ACTIVE,	/* CBC UOS active request */
+	CBC_REQ_T_UOS_INACTIVE	/* CBC UOS inactive request */
 };
 
 /*
@@ -683,13 +688,13 @@ enum ioc_event_type {
  * CBC packet is mainly structure for CBC protocol process.
  */
 struct cbc_pkt {
-	uint8_t soc_active;		/* Record soc state */
-	uint8_t hb_state;		/* Record Heartbeat state */
+	bool uos_active;		/* Mark UOS active status */
 	uint32_t reason;		/* Record current wakeup reason */
-	uint32_t boot_reason;		/* Record boot up wakeup reason */
 	struct cbc_request *req;	/* CBC packet data */
 	struct cbc_config *cfg;		/* CBC and whitelist configurations */
 	enum cbc_queue_type qtype;	/* Routes cbc_request to queue */
+	enum ioc_event_type evt;	/* Record last event */
+	struct ioc_dev *ioc;		/* IOC device */
 };
 
 /*
@@ -705,9 +710,11 @@ SIMPLEQ_HEAD(cbc_qhead, cbc_request);
  */
 struct ioc_dev {
 	char name[16];			/* Core thread name */
+	bool cbc_enable;		/* Tx and Rx protocol enable flag */
 	int closing;			/* Close IOC mediator device flag */
 	int epfd;			/* Epoll fd */
 	int32_t evt_fd;			/* Pipe write fd to trigger one event */
+	uint32_t boot_reason;		/* Boot or resume wakeup reason */
 	enum ioc_state_type state;	/* IOC state type */
 	struct epoll_event *evts;	/* Epoll events table */
 	struct cbc_request *pool;	/* CBC requests pool */
@@ -776,4 +783,7 @@ void wlist_init_group(struct cbc_group *cbc_tbl, size_t cbc_size,
 
 /* Set CBC log file */
 void cbc_set_log_file(FILE *f);
+
+/* Update IOC state by the event */
+void ioc_update_event(int fd, enum ioc_event_type evt);
 #endif
