@@ -185,6 +185,11 @@ install: efi
 	make -C bsp/uefi/efi HV_OBJDIR=$(HV_OBJDIR) RELEASE=$(RELEASE) install
 endif
 
+ifeq ($(PLATFORM), sbl)
+install: $(VERSION) $(HV_OBJDIR)/$(HV_FILE).32.out
+	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).sbl
+endif
+
 $(HV_OBJDIR)/$(HV_FILE).32.out: $(HV_OBJDIR)/$(HV_FILE).out
 	$(OBJCOPY) -S --section-alignment=0x1000 -O elf32-i386 $< $@
 
