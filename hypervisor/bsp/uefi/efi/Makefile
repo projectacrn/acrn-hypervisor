@@ -30,6 +30,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+include ../../../../Defs.mk
+
 RELEASE:=0
 HV_OBJDIR:=build
 HV_FILE:=acrn
@@ -92,7 +94,7 @@ all: $(EFIBIN)
 	$(OBJCOPY)  --add-section .hv="$(HV_OBJDIR)/$(HV_FILE).bin"  --change-section-vma .hv=0x6e000 --set-section-flags .hv=alloc,data,contents,load  --section-alignment 0x1000 $(EFI_OBJDIR)/boot.efi  $(EFIBIN)
 
 install: $(EFIBIN) install-conf
-	install -D $(EFIBIN) $(DESTDIR)/usr/share/acrn/$(HV_FILE).efi
+	install -D $(EFIBIN) $(DESTDIR)$(INSTALL_LIBDIR)/$(HV_FILE).efi
 
 $(EFIBIN): $(BOOT)
 
@@ -102,8 +104,7 @@ $(EFI_OBJDIR)/boot.so: $(ACRN_OBJS) $(FS)
 	$(LD) $(LDFLAGS) -o $@ $^  -lgnuefi -lefi $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 install-conf: $(CONF_FILE)
-	install -d $(DESTDIR)/usr/share/acrn/demo
-	install -t $(DESTDIR)/usr/share/acrn/demo -m 644 $^
+	install -D --mode=0644 $^ $(DESTDIR)$(INSTALL_SHAREDIR)/demo/acrn.conf
 
 clean:
 	rm -f $(BOOT) $(HV_OBJDIR)/$(HV_FILE).efi $(EFI_OBJDIR)/boot.so $(ACRN_OBJS) $(FS)

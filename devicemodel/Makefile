@@ -1,6 +1,9 @@
 #
 # ACRN-DM
 #
+
+include ../Defs.mk
+
 MAJOR_VERSION=0
 MINOR_VERSION=1
 RC_VERSION=4
@@ -158,8 +161,7 @@ $(DM_OBJDIR)/%.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 install: $(DM_OBJDIR)/$(PROGRAM) install-samples
-	install -D $(DM_OBJDIR)/$(PROGRAM) $(DESTDIR)/usr/bin/$(PROGRAM)
+	install -D --mode=0755 $(DM_OBJDIR)/$(PROGRAM) $(DESTDIR)$(INSTALL_BINDIR)/$(PROGRAM)
 
 install-samples: $(SAMPLES)
-	install -d $(DESTDIR)/usr/share/acrn/demo
-	install -t $(DESTDIR)/usr/share/acrn/demo $^
+	install -D -t $(DESTDIR)$(INSTALL_SHAREDIR)/demo $^

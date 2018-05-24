@@ -1,3 +1,4 @@
+include ../../Defs.mk
 
 OUT_DIR ?= .
 
@@ -8,5 +9,4 @@ clean:
 	rm $(OUT_DIR)/acrntrace
 
 install: $(OUT_DIR)/acrntrace
-	install -d $(DESTDIR)/usr/bin
-	install -t $(DESTDIR)/usr/bin $(OUT_DIR)/acrntrace
+	install -D --mode=0755 $(OUT_DIR)/acrntrace $(DESTDIR)$(INSTALL_BINDIR)/acrntrace
