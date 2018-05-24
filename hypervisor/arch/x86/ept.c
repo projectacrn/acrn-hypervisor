@@ -321,7 +321,7 @@ static int dm_emulate_mmio_pre(struct vcpu *vcpu, uint64_t exit_qual)
 
 int ept_violation_vmexit_handler(struct vcpu *vcpu)
 {
-	int status = -EINVAL;
+	int status = -EINVAL, ret;
 	uint64_t exit_qual;
 	uint64_t gpa;
 	struct list_head *pos;
@@ -361,8 +361,14 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 	 */
 	mmio->paddr = gpa;
 
-	mmio->access_size = decode_instruction(vcpu);
-	if (mmio->access_size == 0)
+	ret = decode_instruction(vcpu);
+	if (ret > 0)
+		mmio->access_size = ret;
+	else if (ret == -EFAULT) {
+		pr_info("page fault happen during decode_instruction");
+		status = 0;
+		goto out;
+	} else
 		goto out;
 
 	list_for_each(pos, &vcpu->vm->mmio_list) {

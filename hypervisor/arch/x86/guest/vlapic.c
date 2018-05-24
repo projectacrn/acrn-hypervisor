@@ -2198,7 +2198,7 @@ apicv_inject_pir(struct vlapic *vlapic)
 
 int apic_access_vmexit_handler(struct vcpu *vcpu)
 {
-	int access_type, offset;
+	int access_type, offset = 0, ret;
 	uint64_t qual;
 	struct vlapic *vlapic;
 
@@ -2211,7 +2211,13 @@ int apic_access_vmexit_handler(struct vcpu *vcpu)
 
 	vlapic = vcpu->arch_vcpu.vlapic;
 
-	decode_instruction(vcpu);
+	ret = decode_instruction(vcpu);
+	/* apic access should already fetched instruction, decode_instruction
+	 * will not trigger #PF, so if it failed, just return error_no
+	 */
+	if (ret < 0)
+		return ret;
+
 	if (access_type == 1) {
 		if (!emulate_instruction(vcpu))
 			vlapic_write(vlapic, 1, offset, vcpu->mmio.value);
