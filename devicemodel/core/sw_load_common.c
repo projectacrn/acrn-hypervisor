@@ -104,8 +104,7 @@ acrn_parse_bootargs(char *arg)
 	size_t len = strlen(arg);
 
 	if (len < STR_LEN) {
-		strncpy(bootargs, arg, len);
-		bootargs[len] = '\0';
+		strncpy(bootargs, arg, len + 1);
 		with_bootargs = 1;
 		printf("SW_LOAD: get bootargs %s\n", bootargs);
 		return 0;
