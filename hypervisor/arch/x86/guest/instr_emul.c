@@ -1674,11 +1674,16 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum vm_reg_name seg,
 	return 0;
 }
 
-void
-vie_init(struct vie *vie, const char *inst_bytes, uint32_t inst_length)
+int
+vie_init(struct vie *vie, struct vcpu *vcpu)
 {
-	ASSERT(inst_length <= VIE_INST_SIZE,
-		"%s: invalid instruction length (%d)", __func__, inst_length);
+	uint32_t inst_len = vcpu->arch_vcpu.inst_len;
+
+	if (inst_len > VIE_INST_SIZE) {
+		pr_err("%s: invalid instruction length (%d)",
+			__func__, inst_len);
+		return -EINVAL;
+	}
 
 	memset(vie, 0, sizeof(struct vie));
 
@@ -1686,11 +1691,24 @@ vie_init(struct vie *vie, const char *inst_bytes, uint32_t inst_length)
 	vie->index_register = VM_REG_LAST;
 	vie->segment_register = VM_REG_LAST;
 
-	if (inst_length) {
-		memcpy_s((char *)vie->inst, VIE_INST_SIZE,
-				(char *)inst_bytes, inst_length);
-		vie->num_valid = inst_length;
+	if (inst_len) {
+		int ret;
+		uint64_t guest_rip_gva =
+		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip;
+		uint32_t err_code;
+
+		err_code = PAGE_FAULT_ID_FLAG;
+		ret = copy_from_gva(vcpu, vie->inst, guest_rip_gva,
+			inst_len, &err_code);
+		if (ret == -EFAULT) {
+			vcpu_inject_pf(vcpu, guest_rip_gva, err_code);
+			return ret;
+		} else if (ret < 0)
+			return ret;
+		vie->num_valid = inst_len;
 	}
+
+	return 0;
 }
 
 static int

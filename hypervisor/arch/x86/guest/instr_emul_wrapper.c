@@ -307,35 +307,25 @@ int vm_gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	return gva2gpa(vcpu, gva, gpa, err_code);
 }
 
-uint8_t decode_instruction(struct vcpu *vcpu)
+int decode_instruction(struct vcpu *vcpu)
 {
-	uint64_t guest_rip_gva, guest_rip_gpa;
-	char *guest_rip_hva;
 	struct emul_cnx *emul_cnx;
 	uint32_t csar;
 	int retval = 0;
 	enum vm_cpu_mode cpu_mode;
-	int error;
-	uint32_t err_code;
 
-	guest_rip_gva =
-		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip;
-
-	err_code = PAGE_FAULT_ID_FLAG;
-	error = gva2gpa(vcpu, guest_rip_gva, &guest_rip_gpa, &err_code);
-	if (error) {
-		pr_err("gva2gpa failed for guest_rip_gva  0x%016llx:",
-			guest_rip_gva);
-		return 0;
-	}
-
-	guest_rip_hva = GPA2HVA(vcpu->vm, guest_rip_gpa);
 	emul_cnx = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
 	emul_cnx->vcpu = vcpu;
 
-	/* by now, HVA <-> HPA is 1:1 mapping, so use hpa is OK*/
-	vie_init(&emul_cnx->vie, guest_rip_hva,
-		vcpu->arch_vcpu.inst_len);
+	retval = vie_init(&emul_cnx->vie, vcpu);
+	if (retval < 0) {
+		if (retval != -EFAULT) {
+			pr_err("decode instruction failed @ 0x%016llx:",
+				vcpu->arch_vcpu.
+				contexts[vcpu->arch_vcpu.cur_context].rip);
+		}
+		return retval;
+	}
 
 	get_guest_paging_info(vcpu, emul_cnx);
 	csar = exec_vmread(VMX_GUEST_CS_ATTR);
@@ -346,8 +336,8 @@ uint8_t decode_instruction(struct vcpu *vcpu)
 
 	if (retval != 0) {
 		pr_err("decode instruction failed @ 0x%016llx:",
-		exec_vmread(VMX_GUEST_RIP));
-		return 0;
+		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip);
+		return -EINVAL;
 	}
 
 	return  emul_cnx->vie.opsize;
