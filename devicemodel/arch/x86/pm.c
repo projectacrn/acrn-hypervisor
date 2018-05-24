@@ -175,6 +175,15 @@ pm1_status_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 	return 0;
 }
 
+void
+pm_backto_wakeup(struct vmctx *ctx)
+{
+	/* According to ACPI 5.0 Table 4-16: bit 15, WAK_STS should be
+	 * set when system trasition to the working state
+	 */
+	pm1_status |= PM1_WAK_STS;
+}
+
 static int
 pm1_enable_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		   uint32_t *eax, void *arg)

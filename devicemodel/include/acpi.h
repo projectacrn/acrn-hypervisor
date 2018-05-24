@@ -58,5 +58,6 @@ void	dsdt_indent(int levels);
 void	dsdt_unindent(int levels);
 void	sci_init(struct vmctx *ctx);
 void	pm_write_dsdt(struct vmctx *ctx, int ncpu);
+void	pm_backto_wakeup(struct vmctx *ctx);
 
 #endif /* _ACPI_H_ */
