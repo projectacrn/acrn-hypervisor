@@ -637,6 +637,7 @@ int shell_resume_vcpu(struct shell *p_shell,
 	return status;
 }
 
+#define DUMPREG_SP_SIZE	32
 int shell_vcpu_dumpreg(struct shell *p_shell,
 		int argc, char **argv)
 {
@@ -645,10 +646,10 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 	char temp_str[MAX_STR_SIZE];
 	struct vm *vm;
 	struct vcpu *vcpu;
-	uint64_t gpa, hpa, i;
-	uint64_t *tmp;
+	uint64_t i;
+	uint64_t tmp[DUMPREG_SP_SIZE];
 	struct run_context *cur_context;
-	uint32_t err_code;
+	uint32_t err_code = 0;
 
 	/* User input invalidation */
 	if (argc != 3) {
@@ -725,19 +726,18 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 	shell_puts(p_shell, temp_str);
 
 	/* dump sp */
-	status = gva2gpa(vcpu, cur_context->rsp, &gpa, &err_code);
-	if (status) {
+	status = copy_from_gva(vcpu, tmp, cur_context->rsp,
+			DUMPREG_SP_SIZE*sizeof(uint64_t), &err_code);
+	if (status < 0) {
+		/* copy_from_gva fail */
 		shell_puts(p_shell, "Cannot handle user gva yet!\r\n");
 	} else {
-		hpa = gpa2hpa(vm, gpa);
 		snprintf(temp_str, MAX_STR_SIZE,
 				"\r\nDump RSP for vm %d, from "
-				"gva 0x%016llx -> gpa 0x%016llx"
-				" -> hpa 0x%016llx:\r\n",
-				vm_id, cur_context->rsp,gpa, hpa);
+				"gva 0x%016llx\r\n",
+				vm_id, cur_context->rsp);
 		shell_puts(p_shell, temp_str);
 
-		tmp = HPA2HVA(hpa);
 		for (i = 0; i < 8; i++) {
 			snprintf(temp_str, MAX_STR_SIZE,
 					"=  0x%016llx  0x%016llx  "
@@ -751,18 +751,19 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 	return status;
 }
 
+#define MAX_MEMDUMP_LEN		(32*8)
 int shell_vcpu_dumpmem(struct shell *p_shell,
 		int argc, char **argv)
 {
 	int status = 0;
 	uint32_t vm_id, vcpu_id;
-	uint64_t gva, gpa, hpa;
-	uint64_t *tmp;
+	uint64_t gva;
+	uint64_t tmp[MAX_MEMDUMP_LEN/8];
 	uint32_t i, length = 32;
 	char temp_str[MAX_STR_SIZE];
 	struct vm *vm;
 	struct vcpu *vcpu;
-	uint32_t err_code;
+	uint32_t err_code = 0;
 
 	/* User input invalidation */
 	if (argc != 4 && argc != 5) {
@@ -789,21 +790,23 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 	if (argc == 5)
 		length = atoi(argv[4]);
 
+	if (length > MAX_MEMDUMP_LEN) {
+		shell_puts(p_shell, "over max length, round back\r\n");
+		length = MAX_MEMDUMP_LEN;
+	}
+
 	vcpu = vcpu_from_vid(vm, (long)vcpu_id);
 	if (vcpu) {
-		status = gva2gpa(vcpu, gva, &gpa, &err_code);
-		if (status) {
+		status = copy_from_gva(vcpu, tmp, gva, length, &err_code);
+		if (status <  0) {
 			shell_puts(p_shell,
-					"Cannot handle user gva yet!\r\n");
+				"Cannot handle user gva yet!\r\n");
 		} else {
-			hpa = gpa2hpa(vcpu->vm, gpa);
 			snprintf(temp_str, MAX_STR_SIZE,
-				"Dump memory for vcpu %d, from gva 0x%016llx ->"
-				"gpa 0x%016llx -> hpa 0x%016llx, length "
-				"%d:\r\n", vcpu_id, gva, gpa, hpa, length);
+				"Dump memory for vcpu %d, from gva 0x%016llx, "
+				"length %d:\r\n", vcpu_id, gva, length);
 			shell_puts(p_shell, temp_str);
 
-			tmp = HPA2HVA(hpa);
 			for (i = 0; i < length/32; i++) {
 				snprintf(temp_str, MAX_STR_SIZE,
 					"=  0x%016llx  0x%016llx  0x%016llx  "
