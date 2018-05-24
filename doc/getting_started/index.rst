@@ -176,7 +176,7 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # cp /usr/share/acrn/demo/acrn.conf /mnt/loader/entries/
+      # cp /usr/share/acrn/samples/nuc/acrn.conf /mnt/loader/entries/
 
    You will need to edit this file to adjust the kernel version (``linux`` section)
    and also insert the ``PARTUUID`` of your ``/dev/sda3`` partition
@@ -232,12 +232,12 @@ folder) as shown here:
    :caption: devicemodel/samples/bridge.sh
    :language: bash
 
-By default, the script is located in the ``/usr/share/acrn/demo/``
+By default, the script is located in the ``/usr/share/acrn/samples/nuc/``
 directory. Run it to create a network bridge:
 
 .. code-block:: none
 
-   # cd /usr/share/acrn/demo/
+   # cd /usr/share/acrn/samples/nuc/
    # ./bridge.sh
    # cd
 
@@ -295,12 +295,12 @@ Set up Reference UOS
       name on the second line highlighted (check the exact name to be used using:
       ``ls /usr/lib/kernel/org.clearlinux*-standard*``).
 
-   By default, the script is located in the ``/usr/share/acrn/demo/``
+   By default, the script is located in the ``/usr/share/acrn/samples/nuc/``
    directory. You can edit it there, and then run it to launch the User OS:
 
    .. code-block:: none
 
-      # cd /usr/share/acrn/demo/
+      # cd /usr/share/acrn/samples/nuc/
       # ./launch_uos.sh
 
 #. At this point, you've successfully booted the ACRN hypervisor,
