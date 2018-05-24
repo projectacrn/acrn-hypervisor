@@ -228,8 +228,8 @@ is included in the Clear Linux release, and
 is also available in the acrn-hypervisor/devicemodel GitHub repo (in the samples
 folder) as shown here:
 
-.. literalinclude:: ../../devicemodel/samples/bridge.sh
-   :caption: devicemodel/samples/bridge.sh
+.. literalinclude:: ../../devicemodel/samples/uefi/bridge.sh
+   :caption: devicemodel/samples/uefi/bridge.sh
    :language: bash
 
 By default, the script is located in the ``/usr/share/acrn/demo/``
@@ -282,8 +282,8 @@ Set up Reference UOS
    is also available in the acrn-hypervisor/devicemodel GitHub repo (in the samples
    folder) as shown here:
 
-   .. literalinclude:: ../../devicemodel/samples/launch_uos.sh
-      :caption: devicemodel/samples/launch_uos.sh
+   .. literalinclude:: ../../devicemodel/samples/uefi/launch_uos.sh
+      :caption: devicemodel/samples/uefi/launch_uos.sh
       :language: bash
       :emphasize-lines: 22,24
 
