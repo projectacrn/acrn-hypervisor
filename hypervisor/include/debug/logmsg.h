@@ -102,8 +102,9 @@ static inline void print_logmsg_buffer(__unused uint32_t cpu_id)
 		do_logmsg(lvl, pr_prefix __VA_ARGS__);	\
 	} while (0)
 
-#define panic(...) \
-	do { pr_fatal("Instruction Decode PANIC: " __VA_ARGS__); \
+#define panic(...) 							\
+	do { pr_fatal("PANIC: %s line: %d\n", __func__, __LINE__);	\
+		pr_fatal(__VA_ARGS__); 					\
 		while (1) { asm volatile ("pause" ::: "memory"); }; } while (0)
 
 #endif /* LOGMSG_H */
