@@ -1,4 +1,6 @@
 
+include ../../Defs.mk
+
 OUT_DIR ?= .
 
 all:
@@ -8,5 +10,4 @@ clean:
 	rm $(OUT_DIR)/acrnlog
 
 install: $(OUT_DIR)/acrnlog
-	install -d $(DESTDIR)/usr/bin
-	install -t $(DESTDIR)/usr/bin $(OUT_DIR)/acrnlog
+	install -D --mode=0755 $(OUT_DIR)/acrnlog $(DESTDIR)$(INSTALL_BINDIR)/acrnlog

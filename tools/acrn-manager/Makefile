@@ -1,3 +1,4 @@
+include ../../Defs.mk
 
 OUT_DIR ?= .
 
@@ -8,5 +9,4 @@ clean:
 	rm -f $(OUT_DIR)/acrnctl
 
 install: $(OUT_DIR)/acrnctl
-	install -d $(DESTDIR)/usr/bin
-	install -t $(DESTDIR)/usr/bin $(OUT_DIR)/acrnctl
+	install -D --mode=0755 $(OUT_DIR)/acrnctl $(DESTDIR)$(INSTALL_BINDIR)/acrnctl
