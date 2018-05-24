@@ -1112,8 +1112,10 @@ vlapic_intr_accepted(struct vlapic *vlapic, int vector)
 	struct lapic_reg *irrptr, *isrptr;
 	int idx, stk_top;
 
-	if (vlapic->ops.apicv_intr_accepted)
-		return (*vlapic->ops.apicv_intr_accepted)(vlapic, vector);
+	if (vlapic->ops.apicv_intr_accepted) {
+		(*vlapic->ops.apicv_intr_accepted)(vlapic, vector);
+		return;
+	}
 
 	/*
 	 * clear the ready bit for vector being accepted in irr
