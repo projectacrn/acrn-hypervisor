@@ -102,8 +102,7 @@ $(EFI_OBJDIR)/boot.so: $(ACRN_OBJS) $(FS)
 	$(LD) $(LDFLAGS) -o $@ $^  -lgnuefi -lefi $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 install-conf: $(CONF_FILE)
-	install -d $(DESTDIR)/usr/share/acrn/demo
-	install -t $(DESTDIR)/usr/share/acrn/demo -m 644 $^
+	install -D --mode=0644 $^ $(DESTDIR)/usr/share/acrn/samples/nuc/acrn.conf
 
 clean:
 	rm -f $(BOOT) $(HV_OBJDIR)/$(HV_FILE).efi $(EFI_OBJDIR)/boot.so $(ACRN_OBJS) $(FS)
