@@ -243,7 +243,6 @@ static uint64_t size2mask[] = {
 	[8] = 0xffffffffffffffff,
 };
 
-
 static int
 vie_read_register(struct vcpu *vcpu, enum vm_reg_name reg, uint64_t *rval)
 {
@@ -671,10 +670,9 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 		__unused mem_region_write_t memwrite,
 		__unused void *arg)
 {
-	uint64_t dstaddr, srcaddr, dstgpa, srcgpa;
+	uint64_t dstaddr, srcaddr;
 	uint64_t rcx, rdi, rsi, rflags;
 	int error, fault, opsize, seg, repeat;
-	uint32_t err_code;
 
 	opsize = (vie->op.op_byte == 0xA4) ? 1 : vie->opsize;
 	error = 0;
@@ -714,14 +712,6 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 	if (error || fault)
 		goto done;
 
-	err_code = 0;
-	error = vm_gva2gpa(vcpu, srcaddr, &srcgpa, &err_code);
-	if (error)
-		goto done;
-	err_code = PAGE_FAULT_WR_FLAG;
-	error = vm_gva2gpa(vcpu, dstaddr, &dstgpa, &err_code);
-	if (error)
-		goto done;
 	memcpy_s((char *)dstaddr, 16, (char *)srcaddr, opsize);
 
 	error = vie_read_register(vcpu, VM_REG_GUEST_RSI, &rsi);
@@ -1310,13 +1300,19 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 		return 0;
 	}
 
+	/* TODO: currently emulate_instruction is only for mmio, so here
+	 * stack_gpa actually is unused for mmio_write & mmio_read, need
+	 * take care of data trans if stack_gpa be used for memwrite in
+	 * the future.
+	 */
 	if (pushop)
 		err_code |= PAGE_FAULT_WR_FLAG;
-	error = vm_gva2gpa(vcpu, stack_gla, &stack_gpa, &err_code);
-	if (error) {
-		pr_err("%s: failed to translate gva2gpa", __func__);
+	error = gva2gpa(vcpu, stack_gla, &stack_gpa, &err_code);
+	if (error == -EFAULT) {
+		vcpu_inject_pf(vcpu, stack_gla, err_code);
 		return error;
-	}
+	} else if (error < 0)
+		return error;
 	if (pushop) {
 		error = memread(vcpu, mmio_gpa, &val, size, arg);
 		if (error == 0)
