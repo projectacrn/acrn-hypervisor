@@ -96,80 +96,33 @@ static void dump_guest_reg(struct vcpu *vcpu)
 
 static void dump_guest_stack(struct vcpu *vcpu)
 {
-	uint64_t gpa;
-	uint64_t hpa;
 	uint32_t i;
-	uint64_t *tmp;
-	uint64_t page1_size;
-	uint64_t page2_size;
+	uint64_t tmp[DUMP_STACK_SIZE];
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-	uint32_t err_code;
-	int err;
+	uint32_t err_code = 0;
 
-	err_code = 0;
-	err = gva2gpa(vcpu, cur_context->rsp, &gpa, &err_code);
-	if (err) {
-		printf("gva2gpa failed for guest rsp  0x%016llx\r\n",
-			cur_context->rsp);
+	if (copy_from_gva(vcpu, tmp, cur_context->rsp, DUMP_STACK_SIZE,
+		&err_code) < 0) {
+		printf("\r\nUnabled to Copy Guest Stack:\r\n");
 		return;
 	}
-	hpa = gpa2hpa(vcpu->vm, gpa);
+
 	printf("\r\nGuest Stack:\r\n");
-	printf("Dump stack for vcpu %d, from gva 0x%016llx ->"
-			"gpa 0x%016llx -> hpa 0x%016llx \r\n",
-			vcpu->vcpu_id, cur_context->rsp, gpa, hpa);
-	/* Need check if cross 2 pages*/
-	if (((cur_context->rsp % CPU_PAGE_SIZE) + DUMP_STACK_SIZE)
-			<= CPU_PAGE_SIZE) {
-		tmp = HPA2HVA(hpa);
-		for (i = 0; i < DUMP_STACK_SIZE/32; i++) {
-			printf("addr(0x%llx):  0x%016llx  0x%016llx  "
-					"0x%016llx  0x%016llx\r\n", (hpa+i*32),
-					tmp[i*4], tmp[i*4+1],
-					tmp[i*4+2], tmp[i*4+3]);
-		}
-
-	} else {
-		tmp = HPA2HVA(hpa);
-		page1_size = CPU_PAGE_SIZE
-			- (cur_context->rsp % CPU_PAGE_SIZE);
-		for (i = 0; i < page1_size/32; i++) {
-			printf("addr(0x%llx): 0x%016llx  0x%016llx  0x%016llx  "
-					"0x%016llx\r\n", (hpa+i*32), tmp[i*4],
-					tmp[i*4+1], tmp[i*4+2], tmp[i*4+3]);
-		}
-		err_code = 0;
-		err = gva2gpa(vcpu, cur_context->rsp + page1_size, &gpa,
-			&err_code);
-		if (err) {
-			printf("gva2gpa failed for guest rsp  0x%016llx\r\n",
-				cur_context->rsp + page1_size);
-			return;
-
-		}
-		hpa = gpa2hpa(vcpu->vm, gpa);
-		printf("Dump stack for vcpu %d, from gva 0x%016llx ->"
-				"gpa 0x%016llx -> hpa 0x%016llx \r\n",
-				vcpu->vcpu_id, cur_context->rsp + page1_size,
-				gpa, hpa);
-		tmp = HPA2HVA(hpa);
-		page2_size = DUMP_STACK_SIZE - page1_size;
-		for (i = 0; i < page2_size/32; i++) {
-			printf("addr(0x%llx): 0x%016llx  0x%016llx  0x%016llx  "
-					"0x%016llx\r\n", (hpa+i*32), tmp[i*4],
-					tmp[i*4+1], tmp[i*4+2], tmp[i*4+3]);
-		}
+	printf("Dump stack for vcpu %d, from gva 0x%016llx\r\n",
+			vcpu->vcpu_id, cur_context->rsp);
+	for (i = 0; i < DUMP_STACK_SIZE/32; i++) {
+		printf("guest_rsp(0x%llx):  0x%016llx  0x%016llx  "
+				"0x%016llx  0x%016llx\r\n",
+				(cur_context->rsp+i*32),
+				tmp[i*4], tmp[i*4+1],
+				tmp[i*4+2], tmp[i*4+3]);
 	}
-
 	printf("\r\n");
 }
 
 static void show_guest_call_trace(struct vcpu *vcpu)
 {
-	uint64_t gpa;
-	uint64_t hpa;
-	uint64_t *hva;
 	uint64_t bp;
 	uint64_t count = 0;
 	struct run_context *cur_context =
@@ -194,18 +147,19 @@ static void show_guest_call_trace(struct vcpu *vcpu)
 	 *  if the address is invalid, it will cause hv page fault
 	 *  then halt system */
 	while ((count++ < CALL_TRACE_HIERARCHY_MAX) && (bp != 0)) {
-		err = gva2gpa(vcpu, bp, &gpa, &err_code);
-		if (err) {
-			printf("gva2gpa failed for guest bp 0x%016llx\r\n", bp);
-			break;
+		uint64_t parent_bp = 0;
+
+		err_code = 0;
+		err = copy_from_gva(vcpu, &parent_bp, bp, sizeof(parent_bp),
+			&err_code);
+		if (err < 0) {
+			printf("\r\nUnabled to get Guest parent BP\r\n");
+			return;
 		}
-		hpa  = gpa2hpa(vcpu->vm, gpa);
-		hva = HPA2HVA(hpa);
-		printf("BP_GVA(0x%016llx)->BP_GPA(0x%016llx)"
-			"->BP_HPA(0x%016llx) RIP=0x%016llx\r\n", bp, gpa, hpa,
-			*(uint64_t *)((uint64_t)hva + sizeof(uint64_t)));
+
+		printf("BP_GVA(0x%016llx) RIP=0x%016llx\r\n", bp, parent_bp);
 		/* Get previous rbp*/
-		bp = *hva;
+		bp = parent_bp;
 	}
 	printf("\r\n");
 }
@@ -329,5 +283,4 @@ void dump_exception(struct intr_excp_ctx *ctx, uint32_t cpu_id)
 	show_host_call_trace(ctx->rsp, ctx->rbp, cpu_id);
 	/* Dump guest context */
 	dump_guest_context(cpu_id);
-
 }
