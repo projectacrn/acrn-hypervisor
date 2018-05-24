@@ -78,7 +78,7 @@ struct shell_cmd {
 #define SHELL_CMD_VCPU_DUMPREG_HELP	"Dump registers for a specific vcpu"
 
 #define SHELL_CMD_VCPU_DUMPMEM		"vcpu_dumpmem"
-#define SHELL_CMD_VCPU_DUMPMEM_PARAM	"<vcpu id, gva, length>"
+#define SHELL_CMD_VCPU_DUMPMEM_PARAM	"<vm_id, vcpu id, gva, length>"
 #define SHELL_CMD_VCPU_DUMPMEM_HELP	"Dump memory for a specific vcpu"
 
 #define SHELL_CMD_VM_CONSOLE		"vm_console"
