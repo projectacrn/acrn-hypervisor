@@ -17,6 +17,11 @@ hypervisor:
 	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLATFORM) RELEASE=$(RELEASE) clean
 	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLATFORM) RELEASE=$(RELEASE)
 
+sbl-hypervisor:
+	@mkdir -p $(HV_OUT)-sbl
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl PLATFORM=sbl RELEASE=$(RELEASE) clean
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl PLATFORM=sbl RELEASE=$(RELEASE)
+
 devicemodel:
 	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) clean
 	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT)
@@ -37,6 +42,9 @@ install: hypervisor-install devicemodel-install tools-install
 
 hypervisor-install:
 	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLATFORM) RELEASE=$(RELEASE) install
+
+sbl-hypervisor-install:
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl PLATFORM=sbl RELEASE=$(RELEASE) install
 
 devicemodel-install:
 	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) install
