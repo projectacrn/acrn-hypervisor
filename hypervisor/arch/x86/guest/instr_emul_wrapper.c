@@ -287,17 +287,6 @@ static int mmio_write(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t wval,
 	return 0;
 }
 
-int vm_gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
-	uint32_t *err_code)
-{
-
-	ASSERT(gpa != NULL, "Error in input arguments");
-	ASSERT(vcpu != NULL,
-		"Invalid vcpu id when gva2gpa");
-
-	return gva2gpa(vcpu, gva, gpa, err_code);
-}
-
 int decode_instruction(struct vcpu *vcpu)
 {
 	struct emul_cnx *emul_cnx;
