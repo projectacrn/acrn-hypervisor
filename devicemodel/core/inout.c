@@ -45,7 +45,7 @@ SET_DECLARE(inout_port_set, struct inout_port);
 #define	MAX_IOPORTS	(1 << 16)
 
 #define	VERIFY_IOPORT(port, size) \
-	assert((port) >= 0 && (size) > 0 && ((port) + (size)) <= MAX_IOPORTS)
+	((port) >= 0 && (size) > 0 && ((port) + (size)) <= MAX_IOPORTS)
 
 static struct {
 	const char	*name;
@@ -80,7 +80,10 @@ register_default_iohandler(int start, int size)
 {
 	struct inout_port iop;
 
-	VERIFY_IOPORT(start, size);
+	if (!VERIFY_IOPORT(start, size)) {
+		printf("invalid input: port:0x%x, size:%d", start, size);
+		return;
+	}
 
 	bzero(&iop, sizeof(iop));
 	iop.name = "default";
@@ -163,7 +166,11 @@ register_inout(struct inout_port *iop)
 {
 	int i;
 
-	VERIFY_IOPORT(iop->port, iop->size);
+	if (!VERIFY_IOPORT(iop->port, iop->size)) {
+		printf("invalid input: port:0x%x, size:%d",
+				iop->port, iop->size);
+		return -1;
+	}
 
 	/*
 	 * Verify that the new registration is not overwriting an already
@@ -190,7 +197,12 @@ int
 unregister_inout(struct inout_port *iop)
 {
 
-	VERIFY_IOPORT(iop->port, iop->size);
+	if (!VERIFY_IOPORT(iop->port, iop->size)) {
+		printf("invalid input: port:0x%x, size:%d",
+				iop->port, iop->size);
+		return -1;
+	}
+
 	assert(inout_handlers[iop->port].name == iop->name);
 
 	register_default_iohandler(iop->port, iop->size);
