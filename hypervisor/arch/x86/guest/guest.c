@@ -148,6 +148,7 @@ int copy_from_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
 		g_ptr = HPA2HVA(hpa);
 		memcpy_s(h_ptr, len, g_ptr, len);
 		gpa += len;
+		h_ptr += len;
 		size -= len;
 	} while (size > 0);
 
@@ -176,6 +177,7 @@ int copy_to_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
 		g_ptr = HPA2HVA(hpa);
 		memcpy_s(g_ptr, len, h_ptr, len);
 		gpa += len;
+		h_ptr += len;
 		size -= len;
 	} while (size > 0);
 
