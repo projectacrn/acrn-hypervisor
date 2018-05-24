@@ -111,8 +111,7 @@ acrn_parse_guest_part_info(char *arg)
 	size_t len = strlen(arg);
 
 	if (len < STR_LEN) {
-		strncpy(guest_part_info_path, arg, len);
-		guest_part_info_path[len] = '\0';
+		strncpy(guest_part_info_path, arg, len + 1);
 		assert(check_image(guest_part_info_path) == 0);
 
 		with_guest_part_info = true;
@@ -172,8 +171,7 @@ acrn_parse_vsbl(char *arg)
 	size_t len = strlen(arg);
 
 	if (len < STR_LEN) {
-		strncpy(vsbl_path, arg, len);
-		vsbl_path[len] = '\0';
+		strncpy(vsbl_path, arg, len + 1);
 		assert(check_image(vsbl_path) == 0);
 
 		vsbl_file_name = vsbl_path;

@@ -108,6 +108,7 @@ static int open_hugetlbfs(struct vmctx *ctx, int level)
 	char uuid_str[48];
 	uint8_t	 UUID[16];
 	char *path;
+	size_t len;
 	struct statfs fs;
 
 	if (level >= HUGETLB_LV_MAX) {
@@ -116,10 +117,12 @@ static int open_hugetlbfs(struct vmctx *ctx, int level)
 	}
 
 	path = hugetlb_priv[level].node_path;
+	memset(path, '\0', MAX_PATH_LEN);
 	strncpy(path, hugetlb_priv[level].mount_path, MAX_PATH_LEN);
 
+	len = strnlen(path, MAX_PATH_LEN);
 	/* UUID will use 32 bytes */
-	if (strnlen(path, MAX_PATH_LEN) + 32 > MAX_PATH_LEN) {
+	if (len + 32 > MAX_PATH_LEN) {
 		perror("PATH overflow");
 		return -ENOMEM;
 	}
@@ -132,6 +135,7 @@ static int open_hugetlbfs(struct vmctx *ctx, int level)
 		UUID[8], UUID[9], UUID[10], UUID[11],
 		UUID[12], UUID[13], UUID[14], UUID[15]);
 
+	*(path + len) = '\0';
 	strncat(path, uuid_str, strlen(uuid_str));
 
 	printf("open hugetlbfs file %s\n", path);
@@ -284,7 +288,8 @@ static int mmap_hugetlbfs_highmem(struct vmctx *ctx)
 static int create_hugetlb_dirs(int level)
 {
 	char tmp_path[MAX_PATH_LEN], *path;
-	int i, len;
+	int i;
+	size_t len;
 
 	if (level >= HUGETLB_LV_MAX) {
 		perror("exceed max hugetlb level");
@@ -293,8 +298,8 @@ static int create_hugetlb_dirs(int level)
 
 	path = hugetlb_priv[level].mount_path;
 	len = strlen(path);
-	if (len >= MAX_PATH_LEN) {
-		perror("exceed max path len");
+	if (len >= MAX_PATH_LEN || len == 0) {
+		perror("invalid path len");
 		return -EINVAL;
 	}
 
