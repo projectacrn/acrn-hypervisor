@@ -125,7 +125,7 @@ partition. Follow these steps:
    .. code-block:: none
 
       # mkdir /mnt/EFI/acrn
-      # cp /usr/share/acrn/acrn.efi /mnt/EFI/acrn/
+      # cp /usr/lib/acrn/acrn.efi /mnt/EFI/acrn/
 
 #. Configure the EFI firmware to boot the ACRN hypervisor by default
 
