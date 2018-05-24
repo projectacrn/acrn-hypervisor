@@ -102,70 +102,6 @@ inline bool vm_lapic_disabled(struct vm *vm)
 	return true;
 }
 
-/* Caller(Guest) should make sure gpa is continuous.
- * - gpa from hypercall input which from kernel stack is gpa continous, not
- *   support kernel stack from vmap
- * - some other gpa from hypercall parameters, VHM should make sure it's
- *   continous
- */
-int copy_from_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
-{
-	uint64_t hpa;
-	uint32_t off_in_pg, len, pg_size;
-	void *g_ptr;
-
-	do {
-		hpa = _gpa2hpa(vm, gpa, &pg_size);
-		if (pg_size == 0) {
-			ASSERT(0, "copy_from_vm: GPA2HPA not found");
-			return -EINVAL;
-		}
-
-		off_in_pg = gpa & (pg_size - 1);
-		if (size > pg_size - off_in_pg)
-			len = pg_size - off_in_pg;
-		else
-			len = size;
-
-		g_ptr = HPA2HVA(hpa);
-		memcpy_s(h_ptr, len, g_ptr, len);
-		gpa += len;
-		h_ptr += len;
-		size -= len;
-	} while (size > 0);
-
-	return 0;
-}
-
-int copy_to_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
-{
-	uint64_t hpa;
-	uint32_t off_in_pg, len, pg_size;
-	void *g_ptr;
-
-	do {
-		hpa = _gpa2hpa(vm, gpa, &pg_size);
-		if (pg_size == 0) {
-			ASSERT(0, "copy_to_vm: GPA2HPA not found");
-			return -EINVAL;
-		}
-
-		off_in_pg = gpa & (pg_size - 1);
-		if (size > pg_size - off_in_pg)
-			len = pg_size - off_in_pg;
-		else
-			len = size;
-
-		g_ptr = HPA2HVA(hpa);
-		memcpy_s(g_ptr, len, h_ptr, len);
-		gpa += len;
-		h_ptr += len;
-		size -= len;
-	} while (size > 0);
-
-	return 0;
-}
-
 enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 {
 	struct run_context *cur_context =
@@ -291,7 +227,6 @@ static int _gva2gpa_pae(struct vcpu *vcpu, struct page_walk_info *pw_info,
 
 out:
 	return ret;
-
 }
 
 /* Refer to SDM Vol.3A 6-39 section 6.15 for the format of paging fault error
@@ -358,6 +293,122 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	return ret;
 }
 
+static inline int32_t _copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
+	uint32_t size, uint32_t fix_pg_size, bool cp_from_vm)
+{
+	uint64_t hpa;
+	uint32_t off_in_pg, len, pg_size;
+	void *g_ptr;
+
+	hpa = _gpa2hpa(vm, gpa, &pg_size);
+	if (pg_size == 0) {
+		pr_err("GPA2HPA not found");
+		return -EINVAL;
+	}
+
+	if (fix_pg_size)
+		pg_size = fix_pg_size;
+
+	off_in_pg = gpa & (pg_size - 1);
+	len = (size > pg_size - off_in_pg) ?
+		(pg_size - off_in_pg) : size;
+
+	g_ptr = HPA2HVA(hpa);
+
+	if (cp_from_vm)
+		memcpy_s(h_ptr, len, g_ptr, len);
+	else
+		memcpy_s(g_ptr, len, h_ptr, len);
+
+	return len;
+}
+
+static inline int copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
+	uint32_t size, bool cp_from_vm)
+{
+	int32_t len;
+
+	if (vm == NULL) {
+		pr_err("guest phy addr copy need vm param");
+		return -EINVAL;
+	}
+
+	do {
+		len = _copy_gpa(vm, h_ptr, gpa, size, 0, cp_from_vm);
+		if (len < 0)
+			return len;
+
+		gpa += len;
+		h_ptr += len;
+		size -= len;
+	} while (size > 0);
+
+	return 0;
+}
+
+static inline int copy_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
+	uint32_t size, uint32_t *err_code, bool cp_from_vm)
+{
+	uint64_t gpa = 0;
+	int32_t len, ret;
+
+	if (vcpu == NULL) {
+		pr_err("guest virt addr copy need vcpu param");
+		return -EINVAL;
+	}
+	if (err_code == NULL) {
+		pr_err("guest virt addr copy need err_code param");
+		return -EINVAL;
+	}
+
+	do {
+		ret = gva2gpa(vcpu, gva, &gpa, err_code);
+		if (ret < 0) {
+			pr_err("error[%d] in GVA2GPA, err_code=0x%x",
+					ret, *err_code);
+			return ret;
+		}
+
+		len = ret = _copy_gpa(vcpu->vm, h_ptr, gpa, size,
+			PAGE_SIZE_4K, cp_from_vm);
+		if (ret < 0)
+			return ret;
+
+		gva += len;
+		h_ptr += len;
+		size -= len;
+	} while (size > 0);
+
+	return 0;
+}
+
+/* Caller(Guest) should make sure gpa is continuous.
+ * - gpa from hypercall input which from kernel stack is gpa continuous, not
+ *   support kernel stack from vmap
+ * - some other gpa from hypercall parameters, VHM should make sure it's
+ *   continuous
+ */
+int copy_from_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
+{
+	return copy_gpa(vm, h_ptr, gpa, size, 1);
+}
+
+int copy_to_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
+{
+	return copy_gpa(vm, h_ptr, gpa, size, 0);
+}
+
+int copy_from_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
+	uint32_t size, uint32_t *err_code)
+{
+	return copy_gva(vcpu, h_ptr, gva, size, err_code, 1);
+}
+
+int copy_to_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
+	uint32_t size, uint32_t *err_code)
+{
+	return copy_gva(vcpu, h_ptr, gva, size, err_code, 0);
+}
 
 void init_e820(void)
 {
