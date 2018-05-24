@@ -425,7 +425,12 @@ vlapic_get_lvtptr(struct vlapic *vlapic, uint32_t offset)
 	switch (offset) {
 	case APIC_OFFSET_CMCI_LVT:
 		return &lapic->lvt_cmci;
-	case APIC_OFFSET_TIMER_LVT ... APIC_OFFSET_ERROR_LVT:
+	case APIC_OFFSET_TIMER_LVT:
+	case APIC_OFFSET_THERM_LVT:
+	case APIC_OFFSET_PERF_LVT:
+	case APIC_OFFSET_LINT0_LVT:
+	case APIC_OFFSET_LINT1_LVT:
+	case APIC_OFFSET_ERROR_LVT:
 		i = (offset - APIC_OFFSET_TIMER_LVT) >> 2;
 		return (&lapic->lvt_timer) + i;
 	default:
@@ -1235,15 +1240,36 @@ vlapic_read(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 	case APIC_OFFSET_SVR:
 		*data = lapic->svr;
 		break;
-	case APIC_OFFSET_ISR0 ... APIC_OFFSET_ISR7:
+	case APIC_OFFSET_ISR0:
+	case APIC_OFFSET_ISR1:
+	case APIC_OFFSET_ISR2:
+	case APIC_OFFSET_ISR3:
+	case APIC_OFFSET_ISR4:
+	case APIC_OFFSET_ISR5:
+	case APIC_OFFSET_ISR6:
+	case APIC_OFFSET_ISR7:
 		i = (offset - APIC_OFFSET_ISR0) >> 4;
 		*data = lapic->isr[i].val;
 		break;
-	case APIC_OFFSET_TMR0 ... APIC_OFFSET_TMR7:
+	case APIC_OFFSET_TMR0:
+	case APIC_OFFSET_TMR1:
+	case APIC_OFFSET_TMR2:
+	case APIC_OFFSET_TMR3:
+	case APIC_OFFSET_TMR4:
+	case APIC_OFFSET_TMR5:
+	case APIC_OFFSET_TMR6:
+	case APIC_OFFSET_TMR7:
 		i = (offset - APIC_OFFSET_TMR0) >> 4;
 		*data = lapic->tmr[i].val;
 		break;
-	case APIC_OFFSET_IRR0 ... APIC_OFFSET_IRR7:
+	case APIC_OFFSET_IRR0:
+	case APIC_OFFSET_IRR1:
+	case APIC_OFFSET_IRR2:
+	case APIC_OFFSET_IRR3:
+	case APIC_OFFSET_IRR4:
+	case APIC_OFFSET_IRR5:
+	case APIC_OFFSET_IRR6:
+	case APIC_OFFSET_IRR7:
 		i = (offset - APIC_OFFSET_IRR0) >> 4;
 		*data = lapic->irr[i].val;
 		break;
@@ -1257,7 +1283,12 @@ vlapic_read(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 		*data = lapic->icr_hi;
 		break;
 	case APIC_OFFSET_CMCI_LVT:
-	case APIC_OFFSET_TIMER_LVT ... APIC_OFFSET_ERROR_LVT:
+	case APIC_OFFSET_TIMER_LVT:
+	case APIC_OFFSET_THERM_LVT:
+	case APIC_OFFSET_PERF_LVT:
+	case APIC_OFFSET_LINT0_LVT:
+	case APIC_OFFSET_LINT1_LVT:
+	case APIC_OFFSET_ERROR_LVT:
 		*data = vlapic_get_lvt(vlapic, offset);
 #ifdef INVARIANTS
 		reg = vlapic_get_lvtptr(vlapic, offset);
@@ -1356,7 +1387,12 @@ vlapic_write(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 		lapic->icr_hi = data;
 		break;
 	case APIC_OFFSET_CMCI_LVT:
-	case APIC_OFFSET_TIMER_LVT ... APIC_OFFSET_ERROR_LVT:
+	case APIC_OFFSET_TIMER_LVT:
+	case APIC_OFFSET_THERM_LVT:
+	case APIC_OFFSET_PERF_LVT:
+	case APIC_OFFSET_LINT0_LVT:
+	case APIC_OFFSET_LINT1_LVT:
+	case APIC_OFFSET_ERROR_LVT:
 		regptr = vlapic_get_lvtptr(vlapic, offset);
 		*regptr = data;
 		vlapic_lvt_write_handler(vlapic, offset);
@@ -1385,10 +1421,12 @@ vlapic_write(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 	case APIC_OFFSET_APR:
 	case APIC_OFFSET_PPR:
 	case APIC_OFFSET_RRR:
-	case APIC_OFFSET_ISR0 ... APIC_OFFSET_ISR7:
-	case APIC_OFFSET_TMR0 ... APIC_OFFSET_TMR7:
-	case APIC_OFFSET_IRR0 ... APIC_OFFSET_IRR7:
 		break;
+/*The following cases fall to the default one:
+ *	APIC_OFFSET_ISR0 ... APIC_OFFSET_ISR7
+ *	APIC_OFFSET_TMR0 ... APIC_OFFSET_TMR7
+ *	APIC_OFFSET_IRR0 ... APIC_OFFSET_IRR7
+ */
 	case APIC_OFFSET_TIMER_CCR:
 		break;
 	default:
@@ -2253,7 +2291,12 @@ int apic_write_vmexit_handler(struct vcpu *vcpu)
 			handled = 0;
 		break;
 	case APIC_OFFSET_CMCI_LVT:
-	case APIC_OFFSET_TIMER_LVT ... APIC_OFFSET_ERROR_LVT:
+	case APIC_OFFSET_TIMER_LVT:
+	case APIC_OFFSET_THERM_LVT:
+	case APIC_OFFSET_PERF_LVT:
+	case APIC_OFFSET_LINT0_LVT:
+	case APIC_OFFSET_LINT1_LVT:
+	case APIC_OFFSET_ERROR_LVT:
 		vlapic_lvt_write_handler(vlapic, offset);
 		break;
 	case APIC_OFFSET_TIMER_ICR:

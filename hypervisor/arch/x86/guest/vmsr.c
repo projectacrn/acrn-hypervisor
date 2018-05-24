@@ -184,9 +184,6 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 
 	case MSR_IA32_MTRR_CAP:
 	case MSR_IA32_MTRR_DEF_TYPE:
-	case MSR_IA32_MTRR_PHYSBASE_0 ... MSR_IA32_MTRR_PHYSMASK_9:
-	case MSR_IA32_MTRR_FIX64K_00000 ... MSR_IA32_MTRR_FIX4K_F8000:
-	case MSR_IA32_VMX_BASIC ... MSR_IA32_VMX_TRUE_ENTRY_CTLS:
 	{
 		vcpu_inject_gp(vcpu);
 		break;
@@ -231,7 +228,14 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 	}
 	default:
 	{
-		pr_warn("rdmsr: %lx should not come here!", msr);
+		if (!((msr >= MSR_IA32_MTRR_PHYSBASE_0 &&
+			msr <= MSR_IA32_MTRR_PHYSMASK_9) ||
+		      (msr >= MSR_IA32_MTRR_FIX64K_00000 &&
+			msr <= MSR_IA32_MTRR_FIX4K_F8000) ||
+		      (msr >= MSR_IA32_VMX_BASIC &&
+			msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS))) {
+			pr_warn("rdmsr: %lx should not come here!", msr);
+		}
 		vcpu_inject_gp(vcpu);
 		v = 0;
 		break;
@@ -279,9 +283,6 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 
 	case MSR_IA32_MTRR_CAP:
 	case MSR_IA32_MTRR_DEF_TYPE:
-	case MSR_IA32_MTRR_PHYSBASE_0 ... MSR_IA32_MTRR_PHYSMASK_9:
-	case MSR_IA32_MTRR_FIX64K_00000 ... MSR_IA32_MTRR_FIX4K_F8000:
-	case MSR_IA32_VMX_BASIC ... MSR_IA32_VMX_TRUE_ENTRY_CTLS:
 	{
 		vcpu_inject_gp(vcpu);
 		break;
@@ -339,7 +340,14 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	}
 	default:
 	{
-		pr_warn(0, "wrmsr: %lx should not come here!", msr);
+		if (!((msr >= MSR_IA32_MTRR_PHYSBASE_0 &&
+			msr <= MSR_IA32_MTRR_PHYSMASK_9) ||
+		      (msr >= MSR_IA32_MTRR_FIX64K_00000 &&
+			msr <= MSR_IA32_MTRR_FIX4K_F8000) ||
+		      (msr >= MSR_IA32_VMX_BASIC &&
+			msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS))) {
+			pr_warn("rdmsr: %lx should not come here!", msr);
+		}
 		vcpu_inject_gp(vcpu);
 		break;
 	}
