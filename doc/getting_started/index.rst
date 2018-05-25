@@ -398,6 +398,8 @@ each with their own way to install development tools:
   .. code-block:: console
 
      $ sudo swupd bundle-add os-clr-on-clr
+     $ sudo swupd bundle-add python-basic
+     $ sudo pip install kconfiglib
 
 * On a Ubuntu/Debian development system:
 
@@ -411,7 +413,10 @@ each with their own way to install development tools:
           libsystemd-dev \
           libevent-dev \
           libxml2-dev \
-          libusb-1.0-0-dev
+          libusb-1.0-0-dev \
+          python \
+          python-pip
+     $ sudo pip install kconfiglib
 
   .. note::
      Ubuntu 14.04 requires ``libsystemd-journal-dev`` instead of ``libsystemd-dev``
@@ -429,7 +434,10 @@ each with their own way to install development tools:
           systemd-devel \
           libxml2-devel \
           libevent-devel \
-          libusbx-devel
+          libusbx-devel \
+          python \
+          python-pip
+     $ sudo pip install kconfiglib
 
 
 * On a CentOS development system:
@@ -444,7 +452,10 @@ each with their own way to install development tools:
              systemd-devel \
              libxml2-devel \
              libevent-devel \
-             libusbx-devel
+             libusbx-devel \
+             python \
+             python-pip
+     $ sudo pip install kconfiglib
 
 
 Build the hypervisor, device model and tools
