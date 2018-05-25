@@ -153,6 +153,13 @@ struct vm {
 	unsigned char GUID[16];
 	struct secure_world_control sworld_control;
 
+	/* Secure World's snapshot
+	 * Currently, Secure World is only running on vcpu[0],
+	 * so the snapshot only stores the vcpu0's run_context
+	 * of secure world.
+	 */
+	struct cpu_context sworld_snapshot;
+
 	uint32_t vcpuid_entry_nr, vcpuid_level, vcpuid_xlevel;
 	struct vcpuid_entry vcpuid_entries[MAX_VM_VCPUID_ENTRIES];
 #ifdef CONFIG_PARTITION_MODE

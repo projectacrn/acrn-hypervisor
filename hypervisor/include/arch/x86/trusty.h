@@ -104,11 +104,13 @@ struct secure_world_memory {
 struct secure_world_control {
 	/* Flag indicates Secure World's state */
 	struct {
-		/* secure world supporting: 0(unsupported), 1(supported) */
+		/* sworld supporting: 0(unsupported), 1(supported) */
 		uint64_t supported :  1;
-		/* secure world running status: 0(inactive), 1(active) */
+		/* sworld running status: 0(inactive), 1(active) */
 		uint64_t active    :  1;
-		uint64_t reserved  : 62;
+		/* sworld context saving status: 0(unsaved), 1(saved) */
+		uint64_t ctx_saved :  1;
+		uint64_t reserved  : 61;
 	} flag;
 	/* Secure world memory structure */
 	struct secure_world_memory sworld_memory;
@@ -126,7 +128,8 @@ struct trusty_startup_param {
 void switch_world(struct vcpu *vcpu, int next_world);
 bool initialize_trusty(struct vcpu *vcpu, uint64_t param);
 void destroy_secure_world(struct vm *vm);
-
+void save_sworld_context(struct vcpu *vcpu);
+void restore_sworld_context(struct vcpu *vcpu);
 void trusty_set_dseed(void *dseed, uint8_t dseed_num);
 
 #endif /* TRUSTY_H_ */
