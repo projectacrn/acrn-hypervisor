@@ -175,8 +175,7 @@ void invept(struct vcpu *vcpu)
 		desc.eptp = HVA2HPA(vcpu->vm->arch_vm.nworld_eptp) |
 				(3UL << 3U) | 6UL;
 		local_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
-		if (vcpu->vm->sworld_control.sworld_enabled &&
-			vcpu->vm->arch_vm.sworld_eptp != NULL) {
+		if (vcpu->vm->sworld_control.flag.active) {
 			desc.eptp = HVA2HPA(vcpu->vm->arch_vm.sworld_eptp)
 				| (3UL << 3U) | 6UL;
 			local_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);

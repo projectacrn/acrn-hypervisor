@@ -92,9 +92,9 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 		return;
 	}
 
-	if (!vm->sworld_control.sworld_enabled
+	if (!vm->sworld_control.flag.supported
 			|| vm->arch_vm.sworld_eptp != NULL) {
-		pr_err("Sworld is not enabled or Sworld eptp is not NULL");
+		pr_err("Sworld is not supported or Sworld eptp is not NULL");
 		return;
 	}
 
@@ -164,8 +164,9 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 			gpa, size);
 
 	/* Backup secure world info, will be used when
-	 * destroy secure world */
-	vm->sworld_control.sworld_memory.base_gpa = gpa;
+	 * destroy secure world and suspend UOS */
+	vm->sworld_control.sworld_memory.base_gpa_in_sos = gpa;
+	vm->sworld_control.sworld_memory.base_gpa_in_uos = gpa_orig;
 	vm->sworld_control.sworld_memory.base_hpa = hpa;
 	vm->sworld_control.sworld_memory.length = size;
 
@@ -194,7 +195,7 @@ void  destroy_secure_world(struct vm *vm)
 	map_params.pml4_inverted = vm0->arch_vm.m2p;
 
 	map_mem(&map_params, (void *)vm->sworld_control.sworld_memory.base_hpa,
-			(void *)vm->sworld_control.sworld_memory.base_gpa,
+		(void *)vm->sworld_control.sworld_memory.base_gpa_in_sos,
 			vm->sworld_control.sworld_memory.length,
 			(IA32E_EPT_R_BIT |
 			 IA32E_EPT_W_BIT |
