@@ -22,6 +22,13 @@ PLATFORM ?= sbl
 HV_OBJDIR ?= $(CURDIR)/build
 HV_FILE := acrn
 
+.PHONY: default
+default: all
+
+include $(BASEDIR)/../scripts/deps.mk
+
+include scripts/kconfig/kconfig.mk
+
 CFLAGS += -Wall -W
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -fshort-wchar -ffreestanding
@@ -173,7 +180,7 @@ DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 VERSION := bsp/$(PLATFORM)/include/bsp/version.h
 
 .PHONY: all
-all: $(VERSION) $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
+all: $(BUILD_DEPS) $(VERSION) $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 	rm -f $(VERSION)
 
 ifeq ($(PLATFORM), uefi)
