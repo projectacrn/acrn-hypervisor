@@ -91,6 +91,11 @@ static pthread_mutex_t ref_cnt_mtx = PTHREAD_MUTEX_INITIALIZER;
 /* Prefer MSI over INTx for ptdev */
 static bool prefer_msi = true;
 
+/* Not check reset capability before assign ptdev.
+ * Set false by default, that is, always check.
+ */
+static bool no_reset = false;
+
 struct passthru_dev {
 	struct pci_vdev *dev;
 	struct pcibar bar[PCI_BARMAX + 1];
@@ -114,6 +119,11 @@ void
 ptdev_prefer_msi(bool enable)
 {
 	prefer_msi = enable;
+}
+
+void ptdev_no_reset(bool enable)
+{
+	no_reset = enable;
 }
 
 static int
@@ -846,7 +856,8 @@ cfginit(struct vmctx *ctx, struct passthru_dev *ptdev, int bus,
 			warnx("No reset capability for PCIe %x/%x/%x, "
 					"remove it from ptdev list!!\n",
 					bus, slot, func);
-			return -1;
+			if (!no_reset)
+				return -1;
 		}
 	}
 
