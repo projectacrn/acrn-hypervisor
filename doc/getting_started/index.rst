@@ -228,7 +228,7 @@ is included in the Clear Linux release, and
 is also available in the acrn-hypervisor/devicemodel GitHub repo (in the samples
 folder) as shown here:
 
-.. literalinclude:: ../../devicemodel/samples/bridge.sh
+.. literalinclude:: ../../devicemodel/samples/nuc/bridge.sh
    :caption: devicemodel/samples/bridge.sh
    :language: bash
 
@@ -282,7 +282,7 @@ Set up Reference UOS
    is also available in the acrn-hypervisor/devicemodel GitHub repo (in the samples
    folder) as shown here:
 
-   .. literalinclude:: ../../devicemodel/samples/launch_uos.sh
+   .. literalinclude:: ../../devicemodel/samples/nuc/launch_uos.sh
       :caption: devicemodel/samples/launch_uos.sh
       :language: bash
       :emphasize-lines: 22,24
