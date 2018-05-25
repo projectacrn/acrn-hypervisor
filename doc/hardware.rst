@@ -30,3 +30,12 @@ recommended memory and storage options noted above.
 
 .. _SimplyNUC:
    https://www.simplynuc.com/?s=NUC6CAYH&post_type=product
+
+UP Squared board
+****************
+
+The `UP Squared board <http://www.up-board.org/upsquared/>`_ (UP2) is the x86 maker board based on Intel Apollo Lake platform. The UP boards have been used in IoT, industrial automation, digital signage and more. The UP2 features Intel `Celeron N3550 <https://ark.intel.com/products/95598/Intel-Celeron-Processor-N3350-2M-Cache-up-to-2_4-GHz>`_ and Intel `Pentium N4200 <https://ark.intel.com/products/95592/Intel-Pentium-Processor-N4200-2M-Cache-up-to-2_5-GHz>`_ SoCs. Both have been confirmed to work with ACRN.
+
+You can purchase this board directly online from `UP Shop <https://up-shop.org/>`_ or contact one of the `local reseller <http://www.up-board.org/up/local-resellers-for-up/>`_.
+
+Visit the :ref:`getting_started_up2` page for instructions on how to set up ACRN on the UP2 board.
