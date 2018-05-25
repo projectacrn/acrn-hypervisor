@@ -7,7 +7,7 @@ After reading the :ref:`introduction`, use this guide to get started
 using ACRN in a reference setup.  We'll show how to set up your
 development and target hardware, and then how to boot up the ACRN
 hypervisor and the `Clear Linux`_ Service OS and Guest OS on the Intel
-|reg| NUC.
+(EFI) platform.
 
 .. _Clear Linux: https://clearlinux.org
 
@@ -142,12 +142,33 @@ partition. Follow these steps:
 
    .. note::
       Be aware that a Clearlinux update that includes a kernel upgrade will
-      reset the boot option changes you just made.. A Clearlinux update could
-      happen automatically (if you have
-      not disabled it as described above), if you later install a new
-      bundle to your system, or simply if you decide to trigger an update
-      manually. Whenever that happens, double-check the platform boot order
-      using ``efibootmgr -v`` and modify it if needed.
+      reset the boot option changes you just made. A Clearlinux update could
+      happen automatically (if you have not disabled it as described above),
+      if you later install a new bundle to your system, or simply if you
+      decide to trigger an update manually. Whenever that happens,
+      double-check the platform boot order using ``efibootmgr -v`` and
+      modify it if needed.
+
+   The ACRN hypervisor (``acrn.efi``) accepts two command-line parameters that
+   tweak its behaviour:
+
+   1. ``bootloader=``: this sets the EFI executable to be loaded once the hypervisor
+      is up and running. This is typically the bootloader of the Service OS and the
+      default value is to use the Clearlinux bootloader, i.e.: ``\EFI\org.clearlinux\bootloaderx64.efi``.
+   #. ``uart=``: this tells the hypervisor where the serial port (UART) is found or
+      whether it should be disabled. There are three forms for this parameter:
+      
+      #. ``uart=disabled``: this disables the serial port completely
+      #. ``uart=mmio@<MMIO address>``: this sets the serial port MMIO address
+      #. ``uart=port@<port address>``: this sets the serial port address
+
+   Here is a more complete example of how to configure the EFI firmware to load the ACRN
+   hypervisor and set these parameters.
+
+   .. code-block::
+
+      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN Hypervisor" \
+            -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=mmio@0x9141e000"
 
 #. Create a boot entry for the ACRN Service OS by copying a provided ``acrn.conf``
    and editing it to account for the kernel versions noted in a previous step.
