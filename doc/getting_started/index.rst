@@ -223,13 +223,13 @@ Without a network bridge, the SOS and UOS are not able to talk to each
 other.
 
 A sample `bridge.sh
-<https://github.com/projectacrn/acrn-hypervisor/devicemodel/tree/master/samples/bridge.sh>`__
+<https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/devicemodel/samples/nuc/bridge.sh>`__
 is included in the Clear Linux release, and
 is also available in the acrn-hypervisor/devicemodel GitHub repo (in the samples
 folder) as shown here:
 
-.. literalinclude:: ../../devicemodel/samples/bridge.sh
-   :caption: devicemodel/samples/bridge.sh
+.. literalinclude:: ../../devicemodel/samples/nuc/bridge.sh
+   :caption: devicemodel/samples/nuc/bridge.sh
    :language: bash
 
 By default, the script is located in the ``/usr/share/acrn/samples/nuc/``
@@ -277,13 +277,13 @@ Set up Reference UOS
 #. Edit and Run the launch_uos.sh script to launch the UOS.
 
    A sample `launch_uos.sh
-   <https://github.com/projectacrn/acrn-hypervisor/devicemodel/tree/master/samples/launch_uos.sh>`__
+   <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/devicemodel/samples/nuc/launch_uos.sh>`__
    is included in the Clear Linux release, and
    is also available in the acrn-hypervisor/devicemodel GitHub repo (in the samples
    folder) as shown here:
 
-   .. literalinclude:: ../../devicemodel/samples/launch_uos.sh
-      :caption: devicemodel/samples/launch_uos.sh
+   .. literalinclude:: ../../devicemodel/samples/nuc/launch_uos.sh
+      :caption: devicemodel/samples/nuc/launch_uos.sh
       :language: bash
       :emphasize-lines: 22,24
 
