@@ -194,7 +194,7 @@ terminal, and from there launch the UOS.
 
 .. code-block:: none
 
-      $ cd /usr/share/acrn/demo
+      $ cd /usr/share/acrn/samples/nuc
       $ sudo ./launch_UOS.sh
 
 |image0|
