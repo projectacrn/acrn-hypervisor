@@ -322,6 +322,16 @@ int vcpu_inject_gp(struct vcpu *vcpu, uint32_t err_code)
 	return vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
 }
 
+int vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code)
+{
+	struct run_context *cur_context =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+
+	cur_context->cr2 = addr;
+	vcpu_queue_exception(vcpu, IDT_PF, err_code);
+	return vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
+}
+
 int interrupt_window_vmexit_handler(struct vcpu *vcpu)
 {
 	int value32;
