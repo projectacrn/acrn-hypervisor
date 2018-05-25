@@ -20,13 +20,13 @@ int32_t hcall_world_switch(struct vcpu *vcpu)
 		return -EINVAL;
 	}
 
-	if (!vcpu->vm->sworld_control.sworld_enabled) {
-		pr_err("%s, Secure World is not enabled!\n", __func__);
+	if (!vcpu->vm->sworld_control.flag.supported) {
+		pr_err("Secure World is not supported!\n");
 		return -EPERM;
 	}
 
-	if (vcpu->vm->arch_vm.sworld_eptp == NULL) {
-		pr_err("%s, Trusty is not initialized!\n", __func__);
+	if (!vcpu->vm->sworld_control.flag.active) {
+		pr_err("Trusty is not initialized!\n");
 		return -EPERM;
 	}
 
@@ -39,13 +39,13 @@ int32_t hcall_world_switch(struct vcpu *vcpu)
  */
 int32_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param)
 {
-	if (!vcpu->vm->sworld_control.sworld_enabled) {
-		pr_err("%s, Secure World is not enabled!\n", __func__);
+	if (!vcpu->vm->sworld_control.flag.supported) {
+		pr_err("Secure World is not supported!\n");
 		return -EPERM;
 	}
 
-	if (vcpu->vm->arch_vm.sworld_eptp != NULL) {
-		pr_err("%s, Trusty already initialized!\n", __func__);
+	if (vcpu->vm->sworld_control.flag.active) {
+		pr_err("Trusty already initialized!\n");
 		return -EPERM;
 	}
 
@@ -58,6 +58,8 @@ int32_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param)
 	if (!initialize_trusty(vcpu, param)) {
 		return -ENODEV;
 	}
+
+	vcpu->vm->sworld_control.flag.active = 1UL;
 
 	return 0;
 }

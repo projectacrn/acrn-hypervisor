@@ -181,7 +181,7 @@ int32_t hcall_create_vm(struct vm *vm, uint64_t param)
 	}
 
 	(void)memset(&vm_desc, 0U, sizeof(vm_desc));
-	vm_desc.sworld_enabled =
+	vm_desc.sworld_supported =
 		((cv.vm_flag & (SECURE_WORLD_ENABLED)) != 0U);
 	(void)memcpy_s(&vm_desc.GUID[0], 16U, &cv.GUID[0], 16U);
 	ret = create_vm(&vm_desc, &target_vm);

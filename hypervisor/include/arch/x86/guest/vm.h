@@ -167,8 +167,8 @@ struct vm_description {
 	uint16_t               *vm_pcpu_ids;
 	unsigned char          GUID[16]; /* GUID of the vm will be created */
 	uint16_t               vm_hw_num_cores;   /* Number of virtual cores */
-	/* Whether secure world is enabled for current VM. */
-	bool                   sworld_enabled;
+	/* Whether secure world is supported for current VM. */
+	bool                   sworld_supported;
 #ifdef CONFIG_PARTITION_MODE
 	uint8_t			vm_id;
 	struct mptable_info	*mptable;

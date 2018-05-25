@@ -804,7 +804,7 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 	 * FIXME: this is a tempory solution for trusty enabling,
 	 * the final solution is that vSBL will setup guest page tables
 	 */
-	if (vm->sworld_control.sworld_enabled && !is_vm0(vm)) {
+	if (vm->sworld_control.flag.supported && !is_vm0(vm)) {
 		/* clear page entry for trusty */
 		(void)memset(pml4_addr + 6U * PAGE_SIZE_4K, 0U, PAGE_SIZE_4K);
 

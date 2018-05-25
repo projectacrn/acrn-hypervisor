@@ -92,7 +92,9 @@ struct trusty_key_info {
 
 struct secure_world_memory {
 	/* The secure world base address of GPA in SOS */
-	uint64_t base_gpa;
+	uint64_t base_gpa_in_sos;
+	/* The original secure world base address allocated by bootloader */
+	uint64_t base_gpa_in_uos;
 	/* The secure world base address of HPA */
 	uint64_t base_hpa;
 	/* Secure world runtime memory size */
@@ -100,8 +102,14 @@ struct secure_world_memory {
 };
 
 struct secure_world_control {
-	/* Whether secure world is enabled for current VM */
-	bool sworld_enabled;
+	/* Flag indicates Secure World's state */
+	struct {
+		/* secure world supporting: 0(unsupported), 1(supported) */
+		uint64_t supported :  1;
+		/* secure world running status: 0(inactive), 1(active) */
+		uint64_t active    :  1;
+		uint64_t reserved  : 62;
+	} flag;
 	/* Secure world memory structure */
 	struct secure_world_memory sworld_memory;
 };

@@ -156,8 +156,8 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 #endif
 	} else {
 		/* populate UOS vm fields according to vm_desc */
-		vm->sworld_control.sworld_enabled =
-			vm_desc->sworld_enabled;
+		vm->sworld_control.flag.supported =
+			vm_desc->sworld_supported;
 		(void)memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
 					&vm_desc->GUID[0],
 					sizeof(vm_desc->GUID));
@@ -266,7 +266,7 @@ int shutdown_vm(struct vm *vm)
 	vioapic_cleanup(vm->arch_vm.virt_ioapic);
 
 	/* Destroy secure world */
-	if (vm->sworld_control.sworld_enabled) {
+	if (vm->sworld_control.flag.active) {
 		destroy_secure_world(vm);
 	}
 	/* Free EPT allocated resources assigned to VM */
