@@ -71,3 +71,34 @@ int32_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param)
 
 	return 0;
 }
+
+int64_t hcall_save_restore_sworld_ctx(struct vcpu *vcpu)
+{
+	struct vm *vm = vcpu->vm;
+
+	if (!vm->sworld_control.flag.supported) {
+		dev_dbg(ACRN_DBG_TRUSTY_HYCALL,
+			"Secure World is not supported!\n");
+		return -EPERM;
+	}
+
+	/* Currently, Secure World is only running on vCPU0 */
+	if (!is_vcpu_bsp(vcpu)) {
+		dev_dbg(ACRN_DBG_TRUSTY_HYCALL,
+			"This hypercall is only allowed from vcpu0!");
+		return -EPERM;
+	}
+
+	if (vm->sworld_control.flag.active) {
+		save_sworld_context(vcpu);
+		vm->sworld_control.flag.ctx_saved = 1UL;
+	} else {
+		if (vm->sworld_control.flag.ctx_saved) {
+			restore_sworld_context(vcpu);
+			vm->sworld_control.flag.ctx_saved = 0UL;
+			vm->sworld_control.flag.active = 1UL;
+		}
+	}
+
+	return 0;
+}

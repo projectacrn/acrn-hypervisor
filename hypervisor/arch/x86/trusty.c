@@ -494,6 +494,30 @@ void trusty_set_dseed(void *dseed, uint8_t dseed_num)
 			dseed, sizeof(struct seed_info) * dseed_num);
 }
 
+void save_sworld_context(struct vcpu *vcpu)
+{
+	memcpy_s(&vcpu->vm->sworld_snapshot,
+			sizeof(struct cpu_context),
+			&vcpu->arch_vcpu.contexts[SECURE_WORLD],
+			sizeof(struct cpu_context));
+}
+
+void restore_sworld_context(struct vcpu *vcpu)
+{
+	struct secure_world_control *sworld_ctl =
+		&vcpu->vm->sworld_control;
+
+	create_secure_world_ept(vcpu->vm,
+		sworld_ctl->sworld_memory.base_gpa_in_uos,
+		sworld_ctl->sworld_memory.length,
+		TRUSTY_EPT_REBASE_GPA);
+
+	memcpy_s(&vcpu->arch_vcpu.contexts[SECURE_WORLD],
+			sizeof(struct cpu_context),
+			&vcpu->vm->sworld_snapshot,
+			sizeof(struct cpu_context));
+}
+
 /**
  * @}
  */ // End of trusty_apis
