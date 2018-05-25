@@ -1,0 +1,12 @@
+[Unit]
+Description=CBC lifecycle service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/cbc_lifecycle
+Restart=always
+Type=notify
+ExecStop=/usr/bin/killall -s TERM cbc_lifecycle
+
+[Install]
+WantedBy=multi-user.target
