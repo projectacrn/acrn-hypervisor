@@ -63,8 +63,8 @@ void vcpu_thread(struct vcpu *vcpu)
 		exec_softirq();
 		CPU_IRQ_DISABLE();
 
-		/* Check and process interrupts */
-		acrn_do_intr_process(vcpu);
+		/* Check and process pending requests(including interrupt) */
+		acrn_handle_pending_request(vcpu);
 
 		if (need_rescheduled(vcpu->pcpu_id)) {
 			/*

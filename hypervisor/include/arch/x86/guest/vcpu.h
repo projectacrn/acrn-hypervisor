@@ -225,7 +225,7 @@ struct vcpu_arch {
 	uint32_t sipi_vector;
 
 	/* interrupt injection information */
-	uint64_t pending_intr;
+	uint64_t pending_req;
 	bool inject_event_pending;
 	struct event_injection_info inject_info;
 

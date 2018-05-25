@@ -111,12 +111,12 @@ static bool vcpu_pending_request(struct vcpu *vcpu)
 		vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 	}
 
-	return vcpu->arch_vcpu.pending_intr != 0;
+	return vcpu->arch_vcpu.pending_req != 0;
 }
 
 int vcpu_make_request(struct vcpu *vcpu, int eventid)
 {
-	bitmap_set(eventid, &vcpu->arch_vcpu.pending_intr);
+	bitmap_set(eventid, &vcpu->arch_vcpu.pending_req);
 	/*
 	 * if current hostcpu is not the target vcpu's hostcpu, we need
 	 * to invoke IPI to wake up target vcpu
@@ -255,7 +255,7 @@ int interrupt_window_vmexit_handler(struct vcpu *vcpu)
 
 	if (vcpu_pending_request(vcpu)) {
 		/* Do nothing
-		 * acrn_do_intr_process will continue for this vcpu
+		 * acrn_handle_pending_request will continue for this vcpu
 		 */
 	} else {
 		/* No interrupts to inject.
@@ -296,18 +296,18 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 	return 0;
 }
 
-int acrn_do_intr_process(struct vcpu *vcpu)
+int acrn_handle_pending_request(struct vcpu *vcpu)
 {
 	int ret = 0;
 	int vector;
 	int tmp;
 	bool intr_pending = false;
-	uint64_t *pending_intr_bits = &vcpu->arch_vcpu.pending_intr;
+	uint64_t *pending_req_bits = &vcpu->arch_vcpu.pending_req;
 
-	if (bitmap_test_and_clear(ACRN_REQUEST_TLB_FLUSH, pending_intr_bits))
+	if (bitmap_test_and_clear(ACRN_REQUEST_TLB_FLUSH, pending_req_bits))
 		invept(vcpu);
 
-	if (bitmap_test_and_clear(ACRN_REQUEST_TMR_UPDATE, pending_intr_bits))
+	if (bitmap_test_and_clear(ACRN_REQUEST_TMR_UPDATE, pending_req_bits))
 		vioapic_update_tmr(vcpu);
 
 	/* handling cancelled event injection when vcpu is switched out */
@@ -353,7 +353,7 @@ int acrn_do_intr_process(struct vcpu *vcpu)
 
 	/* Do pending interrupts process */
 	/* TODO: checkin NMI intr windows before inject */
-	if (bitmap_test_and_clear(ACRN_REQUEST_NMI, pending_intr_bits)) {
+	if (bitmap_test_and_clear(ACRN_REQUEST_NMI, pending_req_bits)) {
 		/* Inject NMI vector = 2 */
 		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
 			VMX_INT_INFO_VALID | (VMX_INT_TYPE_NMI << 8) | IDT_NMI);
@@ -370,7 +370,7 @@ int acrn_do_intr_process(struct vcpu *vcpu)
 	if (is_guest_irq_enabled(vcpu)) {
 		/* Inject external interrupt first */
 		if (bitmap_test_and_clear(ACRN_REQUEST_EXTINT,
-			pending_intr_bits)) {
+			pending_req_bits)) {
 			/* has pending external interrupts */
 			ret = vcpu_do_pending_extint(vcpu);
 			goto INTR_WIN;
@@ -378,7 +378,7 @@ int acrn_do_intr_process(struct vcpu *vcpu)
 
 		/* Inject vLAPIC vectors */
 		if (bitmap_test_and_clear(ACRN_REQUEST_EVENT,
-			pending_intr_bits)) {
+			pending_req_bits)) {
 			/* has pending vLAPIC interrupts */
 			ret = vcpu_do_pending_event(vcpu);
 			goto INTR_WIN;
@@ -386,7 +386,7 @@ int acrn_do_intr_process(struct vcpu *vcpu)
 	}
 
 	/* Inject GP event */
-	if (bitmap_test_and_clear(ACRN_REQUEST_GP, pending_intr_bits)) {
+	if (bitmap_test_and_clear(ACRN_REQUEST_GP, pending_req_bits)) {
 		/* has pending GP interrupts */
 		ret = vcpu_do_pending_gp(vcpu);
 		goto INTR_WIN;
@@ -416,7 +416,7 @@ void cancel_event_injection(struct vcpu *vcpu)
 	/*
 	 * If event is injected, we clear VMX_ENTRY_INT_INFO_FIELD,
 	 * save injection info, and mark inject event pending.
-	 * The event will be re-injected in next acrn_do_intr_process
+	 * The event will be re-injected in next acrn_handle_pending_request
 	 * call.
 	 */
 	if (intinfo & VMX_INT_INFO_VALID) {
