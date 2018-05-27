@@ -42,13 +42,15 @@ static int virtio_rpmb_debug = 1;
 #define DPRINTF(params) do { if (virtio_rpmb_debug) printf params; } while (0)
 #define WPRINTF(params) (printf params)
 
+#define READ_STR_LEN 10
+#define WRITE_STR_LEN 11
 static uint32_t phy_counter = 0;
 static uint32_t virt_counter = 0;
 static uint8_t rpmb_key[RPMB_KEY_32_LEN] = {0};
 static uint8_t virt_rpmb_key[RPMB_KEY_32_LEN] = {0};
 static uint16_t g_rpmb_mode = RPMB_SIM_MODE;
-static const char READ_DATA_STR[] = "read data";
-static const char WRITE_DATA_STR[] = "write data";
+static const char READ_DATA_STR[READ_STR_LEN] = "read data";
+static const char WRITE_DATA_STR[WRITE_STR_LEN] = "write data";
 
 //TODO: will be read from config file.
 static uint16_t get_uos_count(void)

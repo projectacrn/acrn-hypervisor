@@ -133,7 +133,7 @@ static void rpmb_sim_close(void)
 	rpmb_fd = NULL;
 }
 
-static size_t file_write(FILE *fp, const void *buf, size_t size, off_t offset)
+static int file_write(FILE *fp, const void *buf, size_t size, off_t offset)
 {
 	size_t rc = 0;
 
@@ -147,15 +147,14 @@ static size_t file_write(FILE *fp, const void *buf, size_t size, off_t offset)
 		return -1;
 	}
 
-	rc = fflush(fp);
-	if (rc < 0) {
-	return -1;
-	} else {
-		return 0;
+	if (fflush(fp) < 0) {
+		return -1;
 	}
+
+	return rc;
 }
 
-static size_t file_read(FILE *fp, void *buf, size_t size, off_t offset)
+static int file_read(FILE *fp, void *buf, size_t size, off_t offset)
 {
 	size_t rc = 0;
 
