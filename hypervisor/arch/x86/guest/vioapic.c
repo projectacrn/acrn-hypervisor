@@ -28,7 +28,7 @@
  * $FreeBSD$
  */
 
-#define pr_fmt(fmt)	"vioapic: " fmt
+#define pr_prefix	"vioapic: "
 
 #include <hypervisor.h>
 

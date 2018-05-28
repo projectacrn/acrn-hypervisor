@@ -68,38 +68,38 @@ static inline void print_logmsg_buffer(__unused uint32_t cpu_id)
 
 #endif /* HV_DEBUG */
 
-#ifndef pr_fmt
-#define pr_fmt(fmt) fmt
+#ifndef pr_prefix
+#define pr_prefix
 #endif
 
-#define pr_fatal(fmt, ...)						\
-	do {								\
-		do_logmsg(LOG_FATAL, pr_fmt(fmt), ##__VA_ARGS__);	\
-	} while (0)
-
-#define pr_err(fmt, ...)						\
-	do {								\
-		do_logmsg(LOG_ERROR, pr_fmt(fmt), ##__VA_ARGS__);	\
-	} while (0)
-
-#define pr_warn(fmt, ...)						\
-	do {								\
-		do_logmsg(LOG_WARNING, pr_fmt(fmt), ##__VA_ARGS__);	\
-	} while (0)
-
-#define pr_info(fmt, ...)						\
-	do {								\
-		do_logmsg(LOG_INFO, pr_fmt(fmt), ##__VA_ARGS__);	\
-	} while (0)
-
-#define pr_dbg(fmt, ...)						\
-	do {								\
-		do_logmsg(LOG_DEBUG, pr_fmt(fmt), ##__VA_ARGS__);	\
-	} while (0)
-
-#define dev_dbg(lvl, fmt, ...)					\
+#define pr_fatal(...)						\
 	do {							\
-		do_logmsg(lvl, pr_fmt(fmt), ##__VA_ARGS__);	\
+		do_logmsg(LOG_FATAL, pr_prefix __VA_ARGS__);	\
+	} while (0)
+
+#define pr_err(...)						\
+	do {							\
+		do_logmsg(LOG_ERROR, pr_prefix __VA_ARGS__);	\
+	} while (0)
+
+#define pr_warn(...)						\
+	do {							\
+		do_logmsg(LOG_WARNING, pr_prefix __VA_ARGS__);	\
+	} while (0)
+
+#define pr_info(...)						\
+	do {							\
+		do_logmsg(LOG_INFO, pr_prefix __VA_ARGS__);	\
+	} while (0)
+
+#define pr_dbg(...)						\
+	do {							\
+		do_logmsg(LOG_DEBUG, pr_prefix __VA_ARGS__);	\
+	} while (0)
+
+#define dev_dbg(lvl, ...)					\
+	do {							\
+		do_logmsg(lvl, pr_prefix __VA_ARGS__);	\
 	} while (0)
 
 #define panic(...) \
