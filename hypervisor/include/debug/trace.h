@@ -81,19 +81,19 @@ struct trace_entry {
 	union {
 		struct {
 			uint32_t a, b, c, d;
-		};
+		} fields_32;
 		struct {
 			uint8_t a1, a2, a3, a4;
 			uint8_t b1, b2, b3, b4;
 			uint8_t c1, c2, c3, c4;
 			uint8_t d1, d2, d3, d4;
-		};
+		} fields_8;
 		struct {
 			uint64_t e;
 			uint64_t f;
-		};
+		} fields_64;
 		char str[16];
-	};
+	} payload;
 } __attribute__((aligned(8)));
 
 static inline bool
@@ -128,8 +128,8 @@ TRACE_2L(int evid, uint64_t e, uint64_t f)
 	if (!trace_check(cpu_id, evid))
 		return;
 
-	entry.e = e;
-	entry.f = f;
+	entry.payload.fields_64.e = e;
+	entry.payload.fields_64.f = f;
 	_trace_put(cpu_id, evid, &entry);
 }
 
@@ -143,10 +143,10 @@ TRACE_4I(int evid, uint32_t a, uint32_t b, uint32_t c,
 	if (!trace_check(cpu_id, evid))
 		return;
 
-	entry.a = a;
-	entry.b = b;
-	entry.c = c;
-	entry.d = d;
+	entry.payload.fields_32.a = a;
+	entry.payload.fields_32.b = b;
+	entry.payload.fields_32.c = c;
+	entry.payload.fields_32.d = d;
 	_trace_put(cpu_id, evid, &entry);
 }
 
@@ -160,12 +160,12 @@ TRACE_6C(int evid, uint8_t a1, uint8_t a2, uint8_t a3,
 	if (!trace_check(cpu_id, evid))
 		return;
 
-	entry.a1 = a1;
-	entry.a2 = a2;
-	entry.a3 = a3;
-	entry.a4 = a4;
-	entry.b1 = b1;
-	entry.b2 = b2;
+	entry.payload.fields_8.a1 = a1;
+	entry.payload.fields_8.a2 = a2;
+	entry.payload.fields_8.a3 = a3;
+	entry.payload.fields_8.a4 = a4;
+	entry.payload.fields_8.b1 = b1;
+	entry.payload.fields_8.b2 = b2;
 	_trace_put(cpu_id, evid, &entry);
 }
 
@@ -183,15 +183,15 @@ TRACE_16STR(int evid, const char name[])
 	if (!trace_check(cpu_id, evid))
 		return;
 
-	entry.e = 0;
-	entry.f = 0;
+	entry.payload.fields_64.e = 0;
+	entry.payload.fields_64.f = 0;
 
 	len = strnlen_s(name, 20);
 	len = (len > 16) ? 16 : len;
 	for (i = 0; i < len; i++)
-		entry.str[i] = name[i];
+		entry.payload.str[i] = name[i];
 
-	entry.str[15] = 0;
+	entry.payload.str[15] = 0;
 	_trace_put(cpu_id, evid, &entry);
 }
 

@@ -80,7 +80,7 @@ struct ptdev_remapping_info {
 	union {
 		struct ptdev_msi_info msi;
 		struct ptdev_intx_info intx;
-	};
+	} ptdev_intr_info;
 };
 
 void ptdev_intx_ack(struct vm *vm, int virt_pin,

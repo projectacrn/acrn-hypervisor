@@ -134,7 +134,7 @@ union code_segment_descriptor {
 				uint32_t base_31_24:8;
 			} bits;
 		} high32;
-	};
+	} fields;
 } __aligned(8);
 
 /*
@@ -169,7 +169,7 @@ union data_segment_descriptor {
 				uint32_t base_31_24:8;
 			} bits;
 		} high32;
-	};
+	} fields;
 } __aligned(8);
 
 /*
@@ -201,7 +201,7 @@ union system_segment_descriptor {
 				uint32_t base_31_24:8;
 			} bits;
 		} high32;
-	};
+	} fields;
 } __aligned(8);
 
 /*
@@ -242,7 +242,7 @@ union tss_64_descriptor {
 				uint32_t rsvd_31_13:20;
 			} bits;
 		} offset_12;
-	};
+	} fields;
 } __aligned(8);
 
 /*****************************************************************************
