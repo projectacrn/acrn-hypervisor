@@ -28,7 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define pr_fmt(fmt)	"iommu: " fmt
+#define pr_prefix		"iommu: "
 
 #include <hypervisor.h>
 

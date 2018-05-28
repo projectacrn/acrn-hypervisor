@@ -25,7 +25,7 @@
  * SUCH DAMAGE.
  */
 
-#define pr_fmt(fmt)	"vpic: " fmt
+#define pr_prefix	"vpic: "
 
 #include <hypervisor.h>
 
