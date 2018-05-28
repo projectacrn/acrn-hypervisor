@@ -46,9 +46,9 @@ static void set_tss_desc(union tss_64_descriptor *desc,
 	u3 = ((uint64_t)tss & 0x00FF0000) >> 16;
 
 
-	desc->low32.value = u1 | (tss_limit & 0xFFFF);
-	desc->base_addr_63_32 = (uint32_t)((uint64_t)tss >> 32);
-	desc->high32.value = (u2 | ((uint32_t)type << 8) | 0x8000 | u3);
+	desc->fields.low32.value = u1 | (tss_limit & 0xFFFF);
+	desc->fields.base_addr_63_32 = (uint32_t)((uint64_t)tss >> 32);
+	desc->fields.high32.value = (u2 | ((uint32_t)type << 8) | 0x8000 | u3);
 }
 
 void load_gdtr_and_tr(void)

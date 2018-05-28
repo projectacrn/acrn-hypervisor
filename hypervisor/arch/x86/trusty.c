@@ -52,7 +52,7 @@ struct trusty_mem {
 		struct {
 			struct key_info key_info;
 			struct trusty_startup_param startup_param;
-		};
+		} data;
 		uint8_t page[CPU_PAGE_SIZE];
 	} first_page;
 
@@ -331,36 +331,38 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 {
 	uint32_t i;
 	struct trusty_mem *mem;
+	struct key_info *key_info;
 
 	mem = (struct trusty_mem *)(HPA2HVA(mem_base_hpa));
 
 	/* copy key_info to the first page of trusty memory */
-	memcpy_s(&mem->first_page.key_info, sizeof(g_key_info),
+	memcpy_s(&mem->first_page.data.key_info, sizeof(g_key_info),
 			&g_key_info, sizeof(g_key_info));
 
-	memset(mem->first_page.key_info.dseed_list, 0,
-			sizeof(mem->first_page.key_info.dseed_list));
+	memset(mem->first_page.data.key_info.dseed_list, 0,
+			sizeof(mem->first_page.data.key_info.dseed_list));
 	/* Derive dvseed from dseed for Trusty */
+	key_info = &mem->first_page.data.key_info;
 	for (i = 0; i < g_key_info.num_seeds; i++) {
-		if (!hkdf_sha256(mem->first_page.key_info.dseed_list[i].seed,
+		if (!hkdf_sha256(key_info->dseed_list[i].seed,
 				BUP_MKHI_BOOTLOADER_SEED_LEN,
 				g_key_info.dseed_list[i].seed,
 				BUP_MKHI_BOOTLOADER_SEED_LEN,
 				NULL, 0,
 				vcpu->vm->GUID, sizeof(vcpu->vm->GUID))) {
-			memset(&mem->first_page.key_info, 0,
-					sizeof(struct key_info));
+			memset(key_info, 0, sizeof(struct key_info));
 			pr_err("%s: derive dvseed failed!", __func__);
 			return false;
 		}
 	}
 
 	/* Prepare trusty startup param */
-	mem->first_page.startup_param.size_of_this_struct =
+	mem->first_page.data.startup_param.size_of_this_struct =
 			sizeof(struct trusty_startup_param);
-	mem->first_page.startup_param.mem_size = mem_size;
-	mem->first_page.startup_param.tsc_per_ms = CYCLES_PER_MS;
-	mem->first_page.startup_param.trusty_mem_base = TRUSTY_EPT_REBASE_GPA;
+	mem->first_page.data.startup_param.mem_size = mem_size;
+	mem->first_page.data.startup_param.tsc_per_ms = CYCLES_PER_MS;
+	mem->first_page.data.startup_param.trusty_mem_base =
+			TRUSTY_EPT_REBASE_GPA;
 
 	/* According to trusty boot protocol, it will use RDI as the
 	 * address(GPA) of startup_param on boot. Currently, the startup_param
