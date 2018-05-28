@@ -90,99 +90,119 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 {
 	unsigned int id;
 	struct vm *vm;
-	int status = 0;
+	int status;
 
-	if ((vm_desc == NULL) || (rtn_vm == NULL))
-		status = -EINVAL;
-
-	if (status == 0) {
-		/* Allocate memory for virtual machine */
-		vm = calloc(1, sizeof(struct vm));
-		ASSERT(vm != NULL, "vm allocation failed");
-
-		/*
-		 * Map Virtual Machine to its VM Description
-		 */
-		init_vm(vm_desc, vm);
-
-
-		/* Init mmio list */
-		INIT_LIST_HEAD(&vm->mmio_list);
-
-		if (vm->hw.num_vcpus == 0)
-			vm->hw.num_vcpus = phy_cpu_num;
-
-		vm->hw.vcpu_array =
-			calloc(1, sizeof(struct vcpu *) * vm->hw.num_vcpus);
-		ASSERT(vm->hw.vcpu_array != NULL,
-			"vcpu_array allocation failed");
-
-		for (id = 0; id < sizeof(long) * 8; id++)
-			if (bitmap_test_and_set(id, &vmid_bitmap) == 0)
-				break;
-		vm->attr.id = vm->attr.boot_idx = id;
-		snprintf(&vm->attr.name[0], MAX_VM_NAME_LEN, "vm_%d",
-			vm->attr.id);
-
-		atomic_store(&vm->hw.created_vcpus, 0);
-
-		/* gpa_lowtop are used for system start up */
-		vm->hw.gpa_lowtop = 0;
-		/* Only for SOS: Configure VM software information */
-		/* For UOS: This VM software information is configure in DM */
-		if (is_vm0(vm)) {
-			prepare_vm0_memmap_and_e820(vm);
-#ifndef CONFIG_EFI_STUB
-			status = init_vm0_boot_info(vm);
-#endif
-		} else {
-			/* populate UOS vm fields according to vm_desc */
-			vm->sworld_control.sworld_enabled =
-				vm_desc->sworld_enabled;
-			memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
-						&vm_desc->GUID[0],
-						sizeof(vm_desc->GUID));
-		}
-
-		INIT_LIST_HEAD(&vm->list);
-		spinlock_obtain(&vm_list_lock);
-		list_add(&vm->list, &vm_list);
-		spinlock_release(&vm_list_lock);
-
-		/* Ensure VM software information obtained */
-		if (status == 0) {
-
-			/* Set up IO bit-mask such that VM exit occurs on
-			 * selected IO ranges
-			 */
-			setup_io_bitmap(vm);
-
-			vm_setup_cpu_state(vm);
-
-			/* Create virtual uart */
-			if (is_vm0(vm))
-				vm->vuart = vuart_init(vm);
-
-			vm->vpic = vpic_init(vm);
-
-			/* vpic wire_mode default is INTR */
-			vm->vpic_wire_mode = VPIC_WIRE_INTR;
-
-			/* Allocate full emulated vIOAPIC instance */
-			vm->arch_vm.virt_ioapic = vioapic_init(vm);
-
-			/* Populate return VM handle */
-			*rtn_vm = vm;
-			vm->sw.io_shared_page = NULL;
-
-			status = set_vcpuid_entries(vm);
-			if (status)
-				vm->state = VM_CREATED;
-		}
-
+	if ((vm_desc == NULL) || (rtn_vm == NULL)) {
+		pr_err("%s, invalid paramater\n", __func__);
+		return -EINVAL;
 	}
 
-	/* Return status to caller */
+	/* Allocate memory for virtual machine */
+	vm = calloc(1, sizeof(struct vm));
+	if (vm == NULL) {
+		pr_err("%s, vm allocation failed\n", __func__);
+		return -ENOMEM;
+	}
+
+	/*
+	 * Map Virtual Machine to its VM Description
+	 */
+	init_vm(vm_desc, vm);
+
+
+	/* Init mmio list */
+	INIT_LIST_HEAD(&vm->mmio_list);
+
+	if (vm->hw.num_vcpus == 0)
+		vm->hw.num_vcpus = phy_cpu_num;
+
+	vm->hw.vcpu_array =
+		calloc(1, sizeof(struct vcpu *) * vm->hw.num_vcpus);
+	if (vm->hw.vcpu_array == NULL) {
+		pr_err("%s, vcpu_array allocation failed\n", __func__);
+		status = -ENOMEM;
+		goto err1;
+	}
+
+	for (id = 0; id < sizeof(long) * 8; id++)
+		if (bitmap_test_and_set(id, &vmid_bitmap) == 0)
+			break;
+	vm->attr.id = vm->attr.boot_idx = id;
+	snprintf(&vm->attr.name[0], MAX_VM_NAME_LEN, "vm_%d",
+		vm->attr.id);
+
+	atomic_store(&vm->hw.created_vcpus, 0);
+
+	/* gpa_lowtop are used for system start up */
+	vm->hw.gpa_lowtop = 0;
+	/* Only for SOS: Configure VM software information */
+	/* For UOS: This VM software information is configure in DM */
+	if (is_vm0(vm)) {
+		status = prepare_vm0_memmap_and_e820(vm);
+		if (status != 0)
+			goto err2;
+#ifndef CONFIG_EFI_STUB
+		status = init_vm0_boot_info(vm);
+		if (status != 0)
+			goto err2;
+#endif
+	} else {
+		/* populate UOS vm fields according to vm_desc */
+		vm->sworld_control.sworld_enabled =
+			vm_desc->sworld_enabled;
+		memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
+					&vm_desc->GUID[0],
+					sizeof(vm_desc->GUID));
+	}
+
+	INIT_LIST_HEAD(&vm->list);
+	spinlock_obtain(&vm_list_lock);
+	list_add(&vm->list, &vm_list);
+	spinlock_release(&vm_list_lock);
+
+	/* Set up IO bit-mask such that VM exit occurs on
+	 * selected IO ranges
+	 */
+	setup_io_bitmap(vm);
+
+	vm_setup_cpu_state(vm);
+
+	/* Create virtual uart */
+	if (is_vm0(vm))
+		vm->vuart = vuart_init(vm);
+
+	vm->vpic = vpic_init(vm);
+
+	/* vpic wire_mode default is INTR */
+	vm->vpic_wire_mode = VPIC_WIRE_INTR;
+
+	/* Allocate full emulated vIOAPIC instance */
+	vm->arch_vm.virt_ioapic = vioapic_init(vm);
+	if (vm->arch_vm.virt_ioapic == NULL) {
+		status = -ENODEV;
+		goto err3;
+	}
+
+	/* Populate return VM handle */
+	*rtn_vm = vm;
+	vm->sw.io_shared_page = NULL;
+
+	status = set_vcpuid_entries(vm);
+	if (status != 0)
+		goto err4;
+
+	vm->state = VM_CREATED;
+
+	return 0;
+
+err4:
+	vioapic_cleanup(vm->arch_vm.virt_ioapic);
+err3:
+	vpic_cleanup(vm);
+err2:
+	free(vm->hw.vcpu_array);
+err1:
+	free(vm);
 	return status;
 }
 
@@ -300,7 +320,8 @@ int prepare_vm0(void)
 	struct vm_description *vm_desc = &vm0_desc;
 
 	ret = create_vm(vm_desc, &vm);
-	ASSERT(ret == 0, "VM creation failed!");
+	if (ret != 0)
+		return ret;
 
 	/* Allocate all cpus to vm0 at the beginning */
 	for (i = 0; i < phy_cpu_num; i++)

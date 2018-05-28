@@ -159,8 +159,11 @@ int hv_main(int cpu_id)
 	/* X2APIC mode is disabled by default. */
 	x2apic_enabled = false;
 
-	if (is_vm0_bsp(cpu_id))
-		prepare_vm0();
+	if (is_vm0_bsp(cpu_id)) {
+		ret = prepare_vm0();
+		if (ret != 0)
+			return ret;
+	}
 
 	default_idle();
 
