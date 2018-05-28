@@ -156,10 +156,8 @@ int hv_main(int cpu_id)
 
 	/* Enable virtualization extensions */
 	ret = exec_vmxon_instr();
-	if (ret != 0) {
-		pr_err("%s, Unable to enable VMX!\n", __func__);
+	if (ret != 0)
 		return ret;
-	}
 
 	/* X2APIC mode is disabled by default. */
 	x2apic_enabled = false;
