@@ -49,9 +49,10 @@ static inline int exec_vmxon(void *addr)
 	uint64_t tmp64;
 	int status = 0;
 
-	if (addr == NULL)
-		status = -EINVAL;
-	ASSERT(status == 0, "Incorrect arguments");
+	if (addr == NULL) {
+		pr_err("%s, Incorrect arguments\n", __func__);
+		return -EINVAL;
+	}
 
 	/* Read Feature ControL MSR */
 	tmp64 = msr_read(MSR_IA32_FEATURE_CONTROL);
@@ -61,6 +62,7 @@ static inline int exec_vmxon(void *addr)
 		/* See if VMX enabled */
 		if (!(tmp64 & MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX)) {
 			/* Return error - VMX can't be enabled */
+			pr_err("%s, VMX can't be enabled\n", __func__);
 			status = -EINVAL;
 		}
 	} else {
@@ -81,8 +83,10 @@ static inline int exec_vmxon(void *addr)
 			      : "%rax", "cc", "memory");
 
 		/* if carry and zero flags are clear operation success */
-		if (rflags & (RFLAGS_C | RFLAGS_Z))
+		if (rflags & (RFLAGS_C | RFLAGS_Z)) {
+			pr_err("%s, Turn VMX on failed\n", __func__);
 			status = -EINVAL;
+		}
 	}
 
 	/* Return result to caller */
@@ -93,7 +97,7 @@ int exec_vmxon_instr(void)
 {
 	uint64_t tmp64;
 	uint32_t tmp32;
-	int ret_val = -EINVAL;
+	int ret = -ENOMEM;
 	void *vmxon_region_va;
 	uint64_t vmxon_region_pa;
 
@@ -115,10 +119,12 @@ int exec_vmxon_instr(void)
 
 		/* Turn ON VMX */
 		vmxon_region_pa = HVA2HPA(vmxon_region_va);
-		ret_val = exec_vmxon(&vmxon_region_pa);
-	}
+		ret = exec_vmxon(&vmxon_region_pa);
+	} else
+		pr_err("%s, alloc memory for VMXON region failed\n",
+				__func__);
 
-	return ret_val;
+	return ret;
 }
 
 int exec_vmclear(void *addr)
