@@ -185,7 +185,7 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 	case MSR_IA32_MTRR_CAP:
 	case MSR_IA32_MTRR_DEF_TYPE:
 	{
-		vcpu_inject_gp(vcpu);
+		vcpu_inject_gp(vcpu, 0);
 		break;
 	}
 	case MSR_IA32_BIOS_SIGN_ID:
@@ -236,7 +236,7 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 			msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS))) {
 			pr_warn("rdmsr: %lx should not come here!", msr);
 		}
-		vcpu_inject_gp(vcpu);
+		vcpu_inject_gp(vcpu, 0);
 		v = 0;
 		break;
 	}
@@ -284,7 +284,7 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	case MSR_IA32_MTRR_CAP:
 	case MSR_IA32_MTRR_DEF_TYPE:
 	{
-		vcpu_inject_gp(vcpu);
+		vcpu_inject_gp(vcpu, 0);
 		break;
 	}
 	case MSR_IA32_BIOS_SIGN_ID:
@@ -348,7 +348,7 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 			msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS))) {
 			pr_warn("rdmsr: %lx should not come here!", msr);
 		}
-		vcpu_inject_gp(vcpu);
+		vcpu_inject_gp(vcpu, 0);
 		break;
 	}
 	}

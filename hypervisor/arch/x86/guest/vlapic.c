@@ -930,7 +930,7 @@ vlapic_set_cr8(struct vlapic *vlapic, uint64_t val)
 	uint8_t tpr;
 
 	if (val & ~0xf) {
-		vcpu_inject_gp(vlapic->vcpu);
+		vcpu_inject_gp(vlapic->vcpu, 0);
 		return;
 	}
 
