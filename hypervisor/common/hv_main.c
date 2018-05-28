@@ -64,7 +64,12 @@ void vcpu_thread(struct vcpu *vcpu)
 		CPU_IRQ_DISABLE();
 
 		/* Check and process pending requests(including interrupt) */
-		acrn_handle_pending_request(vcpu);
+		ret = acrn_handle_pending_request(vcpu);
+		if (ret < 0) {
+			pr_fatal("vcpu handling pending request fail");
+			pause_vcpu(vcpu, VCPU_ZOMBIE);
+			continue;
+		}
 
 		if (need_rescheduled(vcpu->pcpu_id)) {
 			/*

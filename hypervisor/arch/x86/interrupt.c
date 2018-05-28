@@ -304,6 +304,11 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 	bool intr_pending = false;
 	uint64_t *pending_req_bits = &vcpu->arch_vcpu.pending_req;
 
+	if (bitmap_test_and_clear(ACRN_REQUEST_TRP_FAULT, pending_req_bits)) {
+		pr_fatal("Triple fault happen -> shutdown!");
+		return -EFAULT;
+	}
+
 	if (bitmap_test_and_clear(ACRN_REQUEST_TLB_FLUSH, pending_req_bits))
 		invept(vcpu);
 

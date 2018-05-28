@@ -41,5 +41,7 @@
 #define EIO                4
 /** Indicates that target is busy. */
 #define EBUSY              5
+/** Indicates there is fault. */
+#define EFAULT             6
 
 #endif /* ERRNO_H */
