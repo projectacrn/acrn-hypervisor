@@ -35,6 +35,10 @@
 
 #define ACRN_DBG_INTR	6
 
+#define EXCEPTION_CLASS_BENIGN	1
+#define EXCEPTION_CLASS_CONT	2
+#define EXCEPTION_CLASS_PF	3
+
 static const uint16_t exception_type[] = {
 	[0] = VMX_INT_TYPE_HW_EXP,
 	[1] = VMX_INT_TYPE_HW_EXP,
@@ -227,6 +231,59 @@ void dump_lapic(void)
 		mmio_read_long(HPA2HVA(LAPIC_BASE + LAPIC_CURRENT_COUNT_REGISTER)),
 		mmio_read_long(HPA2HVA(LAPIC_BASE + LAPIC_IN_SERVICE_REGISTER_7)),
 		mmio_read_long(HPA2HVA(LAPIC_BASE + LAPIC_INT_REQUEST_REGISTER_7)));
+}
+
+/* SDM Vol3 -6.15, Table 6-4 - interrupt and exception classes */
+static int get_excep_class(int32_t vector)
+{
+	if (vector == IDT_DE || vector == IDT_TS || vector == IDT_NP ||
+		vector == IDT_SS || vector == IDT_GP)
+		return EXCEPTION_CLASS_CONT;
+	else if (vector == IDT_PF || vector == IDT_VE)
+		return EXCEPTION_CLASS_PF;
+	else
+		return EXCEPTION_CLASS_BENIGN;
+}
+
+int vcpu_queue_exception(struct vcpu *vcpu, int32_t vector,
+	uint32_t err_code)
+{
+	if (vector >= 32) {
+		pr_err("invalid exception vector %d", vector);
+		return -EINVAL;
+	}
+
+	if (vcpu->arch_vcpu.exception_info.exception >= 0) {
+		int32_t prev_vector =
+			vcpu->arch_vcpu.exception_info.exception;
+		int32_t new_class, prev_class;
+
+		/* SDM vol3 - 6.15, Table 6-5 - conditions for generating a
+		 * double fault */
+		prev_class = get_excep_class(prev_vector);
+		new_class = get_excep_class(vector);
+		if (prev_vector == IDT_DF &&
+			new_class != EXCEPTION_CLASS_BENIGN) {
+			/* triple fault happen - shutdwon mode */
+			return vcpu_make_request(vcpu, ACRN_REQUEST_TRP_FAULT);
+		} else if ((prev_class == EXCEPTION_CLASS_CONT &&
+				new_class == EXCEPTION_CLASS_CONT) ||
+				(prev_class == EXCEPTION_CLASS_PF &&
+				 new_class != EXCEPTION_CLASS_BENIGN)) {
+			/* generate double fault */
+			vector = IDT_DF;
+			err_code = 0;
+		}
+	}
+
+	vcpu->arch_vcpu.exception_info.exception = vector;
+
+	if (exception_type[vector] & EXCEPTION_ERROR_CODE_VALID)
+		vcpu->arch_vcpu.exception_info.error = err_code;
+	else
+		vcpu->arch_vcpu.exception_info.error = 0;
+
+	return 0;
 }
 
 int vcpu_inject_extint(struct vcpu *vcpu)
