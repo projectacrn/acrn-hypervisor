@@ -199,24 +199,6 @@ static int vcpu_do_pending_extint(struct vcpu *vcpu)
 	return 0;
 }
 
-static int vcpu_do_pending_gp(__unused struct vcpu *vcpu)
-{
-	/* SDM Vol. 3A 6-37: if the fault condition was detected while loading
-	 * a segment descriptor, the error code contains a segment selecor to or
-	 * IDT vector number for the descriptor; otherwise the error code is 0.
-	 * Since currently there is no such case to inject #GP due to loading a
-	 * segment decriptor, set the error code to 0.
-	 */
-	exec_vmwrite(VMX_ENTRY_EXCEPTION_ERROR_CODE, 0);
-	/* GP vector = 13 */
-	exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
-		VMX_INT_INFO_VALID |
-		((VMX_INT_TYPE_HW_EXP | EXCEPTION_ERROR_CODE_VALID) << 8) |
-		IDT_GP);
-
-	return 0;
-}
-
 /* please keep this for interrupt debug:
  * 1. Timer alive or not
  * 2. native LAPIC interrupt pending/EOI status
@@ -282,6 +264,44 @@ int vcpu_queue_exception(struct vcpu *vcpu, int32_t vector,
 		vcpu->arch_vcpu.exception_info.error = err_code;
 	else
 		vcpu->arch_vcpu.exception_info.error = 0;
+
+	return 0;
+}
+
+static void _vcpu_inject_exception(struct vcpu *vcpu, uint32_t vector)
+{
+	if (exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) {
+		exec_vmwrite(VMX_ENTRY_EXCEPTION_ERROR_CODE,
+				vcpu->arch_vcpu.exception_info.error);
+	}
+
+	exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
+			(exception_type[vector] << 8) | (vector & 0xFF));
+
+	vcpu->arch_vcpu.exception_info.exception = -1;
+}
+
+static int vcpu_inject_hi_exception(struct vcpu *vcpu)
+{
+	int vector = vcpu->arch_vcpu.exception_info.exception;
+
+	if (vector == IDT_MC || vector == IDT_BP || vector == IDT_DB) {
+		_vcpu_inject_exception(vcpu, vector);
+		return 1;
+	}
+
+	return 0;
+}
+
+static int vcpu_inject_lo_exception(struct vcpu *vcpu)
+{
+	int vector = vcpu->arch_vcpu.exception_info.exception;
+
+	/* high priority exception already be injected */
+	if (vector >= 0) {
+		_vcpu_inject_exception(vcpu, vector);
+		return 1;
+	}
 
 	return 0;
 }
@@ -356,7 +376,6 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 int acrn_handle_pending_request(struct vcpu *vcpu)
 {
 	int ret = 0;
-	int vector;
 	int tmp;
 	bool intr_pending = false;
 	uint64_t *pending_req_bits = &vcpu->arch_vcpu.pending_req;
@@ -384,47 +403,30 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 		goto INTR_WIN;
 	}
 
-	/* handling pending vector injection:
-	 * there are many reason inject failed, we need re-inject again
-	 */
-	if (vcpu->arch_vcpu.idt_vectoring_info & VMX_INT_INFO_VALID) {
-		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
-				vcpu->arch_vcpu.idt_vectoring_info);
+	/* SDM Vol 3 - table 6-2, inject high priority exception before
+	 * maskable hardware interrupt */
+	if (vcpu_inject_hi_exception(vcpu))
 		goto INTR_WIN;
-	}
 
-	/* handling exception request */
-	vector = vcpu->arch_vcpu.exception_info.exception;
-
-	/* If there is a valid exception, inject exception to guest */
-	if (vector >= 0) {
-		if (exception_type[vector] &
-			EXCEPTION_ERROR_CODE_VALID) {
-			exec_vmwrite(VMX_ENTRY_EXCEPTION_ERROR_CODE,
-				vcpu->arch_vcpu.exception_info.error);
-		}
-
-		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
-			VMX_INT_INFO_VALID |
-			(exception_type[vector] << 8) | (vector & 0xFF));
-
-		vcpu->arch_vcpu.exception_info.exception = -1;
-
-		goto INTR_WIN;
-	}
-
-	/* Do pending interrupts process */
-	/* TODO: checkin NMI intr windows before inject */
+	/* inject NMI before maskable hardware interrupt */
 	if (bitmap_test_and_clear(ACRN_REQUEST_NMI, pending_req_bits)) {
 		/* Inject NMI vector = 2 */
 		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
 			VMX_INT_INFO_VALID | (VMX_INT_TYPE_NMI << 8) | IDT_NMI);
 
-		/* Intel SDM 10.8.1
-		 * NMI, SMI, INIT, ExtINT, or SIPI directly deliver to CPU
-		 * do not need EOI to LAPIC
-		 * However, ExtINT need EOI to PIC
-		 */
+		goto INTR_WIN;
+	}
+
+	/* handling pending vector injection:
+	 * there are many reason inject failed, we need re-inject again
+	 * here should take care
+	 * - SW exception (not maskable by IF)
+	 * - external interrupt, if IF clear, will keep in IDT_VEC_INFO_FIELD
+	 *   at next vm exit?
+	 */
+	if (vcpu->arch_vcpu.idt_vectoring_info & VMX_INT_INFO_VALID) {
+		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
+				vcpu->arch_vcpu.idt_vectoring_info);
 		goto INTR_WIN;
 	}
 
@@ -447,12 +449,9 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 		}
 	}
 
-	/* Inject GP event */
-	if (bitmap_test_and_clear(ACRN_REQUEST_GP, pending_req_bits)) {
-		/* has pending GP interrupts */
-		ret = vcpu_do_pending_gp(vcpu);
+	/* SDM Vol3 table 6-2, inject lowpri exception */
+	if (vcpu_inject_lo_exception(vcpu))
 		goto INTR_WIN;
-	}
 
 INTR_WIN:
 	/* check if we have new interrupt pending for next VMExit */
