@@ -166,6 +166,23 @@ int vmexit_handler(struct vcpu *vcpu)
 	/* Obtain interrupt info */
 	vcpu->arch_vcpu.idt_vectoring_info =
 	    exec_vmread(VMX_IDT_VEC_INFO_FIELD);
+	/* Filter out HW exception & NMI */
+	if (vcpu->arch_vcpu.idt_vectoring_info & VMX_INT_INFO_VALID) {
+		uint32_t vector_info = vcpu->arch_vcpu.idt_vectoring_info;
+		uint32_t vector = vector_info & 0xff;
+		uint32_t type = (vector_info & VMX_INT_TYPE_MASK) >> 8;
+		uint32_t err_code = 0;
+
+		if (type == VMX_INT_TYPE_HW_EXP) {
+			if (vector_info & VMX_INT_INFO_ERR_CODE_VALID)
+				err_code = exec_vmread(VMX_IDT_VEC_ERROR_CODE);
+			vcpu_queue_exception(vcpu, vector, err_code);
+			vcpu->arch_vcpu.idt_vectoring_info = 0;
+		} else if (type == VMX_INT_TYPE_NMI) {
+			vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
+			vcpu->arch_vcpu.idt_vectoring_info = 0;
+		}
+	}
 
 	/* Calculate basic exit reason (low 16-bits) */
 	basic_exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFF;
