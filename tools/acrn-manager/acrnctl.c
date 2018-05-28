@@ -45,6 +45,7 @@
 #include "monitor_msg.h"
 
 #define ACRNCTL_OPT_ROOT	"/opt/acrn/conf"
+#define MAX_NAME_LEN            (128)
 
 /* helper functions */
 static int shell_cmd(const char *cmd, char *outbuf, int len)
@@ -88,7 +89,7 @@ static void process_msg(struct vmm_msg *msg)
 #define ACRN_DM_SOCK_ROOT	"/run/acrn"
 
 struct vmm_struct {
-	char name[128];
+	char name[MAX_NAME_LEN];
 	unsigned long state;
 	LIST_ENTRY(vmm_struct) list;
 };
@@ -121,7 +122,7 @@ static struct vmm_struct *vmm_list_add(char *name)
 		return NULL;
 	}
 
-	strcpy(s->name, name);
+	strncpy(s->name, name, MAX_NAME_LEN - 1);
 	LIST_INSERT_HEAD(&vmm_head, s, list);
 
 	return s;
@@ -144,12 +145,16 @@ static void vmm_update(void)
 	char *vmname;
 	char *pvmname = NULL;
 	struct vmm_struct *s;
+	size_t len = sizeof(cmd_out);
 
 	snprintf(cmd, sizeof(cmd),
 		 "find %s/add/ -name \"*.sh\" | "
 		 "sed \"s/\\/opt\\/acrn\\/conf\\/add\\///g\" | "
 		 "sed \"s/.sh//g\"", ACRNCTL_OPT_ROOT);
 	shell_cmd(cmd, cmd_out, sizeof(cmd_out));
+
+	/* Properly null-terminate cmd_out */
+	cmd_out[len - 1] = '\0';
 
 	vmname = strtok_r(cmd_out, "\n", &pvmname);
 	while (vmname) {
@@ -167,6 +172,9 @@ static void vmm_update(void)
 		 "sed \"s/\\/run\\/acrn\\///g\" | "
 		 "sed \"s/-monitor.socket//g\"", ACRN_DM_SOCK_ROOT);
 	shell_cmd(cmd, cmd_out, sizeof(cmd_out));
+
+	/* Properly null-terminate cmd_out */
+	cmd_out[len - 1] = '\0';
 
 	vmname = strtok_r(cmd_out, "\n", &pvmname);
 	while (vmname) {
@@ -313,6 +321,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 	int p, i;
 	char cmd_out[256];
 	char vmname[128];
+	size_t len = sizeof(cmd_out);
 
 	if (argc < 2) {
 		acrnctl_add_help();
@@ -374,6 +383,9 @@ static int acrnctl_do_add(int argc, char *argv[])
 
 	find_acrn_dm = 0;
 
+	/* Properly null-terminate buf */
+	buf[MAX_FILE_SIZE - 1] = '\0';
+
 	line = strtok_r(buf, "\n", &line_p);
 	while (line) {
 		word_p = NULL;
@@ -422,6 +434,10 @@ static int acrnctl_do_add(int argc, char *argv[])
 		ret = -1;
 		snprintf(cmd, sizeof(cmd), "cat ./%s.result", argv[1]);
 		shell_cmd(cmd, cmd_out, sizeof(cmd_out));
+
+		/* Properly null-terminate cmd_out */
+		cmd_out[len - 1] = '\0';
+
 		printf("%s can't reach acrn-dm, "
 		       "please try again when you make sure it can launch an UOS\n"
 		       "result:\n%s\n", argv[1], cmd_out);
