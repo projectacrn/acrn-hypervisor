@@ -437,7 +437,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 
 	val64 = exec_vmread(VMX_GUEST_CR4);
 	if (!(val64 & CR4_OSXSAVE)) {
-		vcpu_inject_gp(vcpu);
+		vcpu_inject_gp(vcpu, 0);
 		return -1;
 	}
 
@@ -449,7 +449,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 
 	/*to access XCR0,'rcx' should be 0*/
 	if (ctx_ptr->guest_cpu_regs.regs.rcx != 0) {
-		vcpu_inject_gp(vcpu);
+		vcpu_inject_gp(vcpu, 0);
 		return -1;
 	}
 
@@ -458,7 +458,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 
 	/*bit 0(x87 state) of XCR0 can't be cleared*/
 	if (!(val64 & 0x01)) {
-		vcpu_inject_gp(vcpu);
+		vcpu_inject_gp(vcpu, 0);
 		return -1;
 	}
 
@@ -467,7 +467,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	 *to use AVX instructions.
 	 **/
 	if (((val64 >> 1) & 0x3) == 0x2) {
-		vcpu_inject_gp(vcpu);
+		vcpu_inject_gp(vcpu, 0);
 		return -1;
 	}
 

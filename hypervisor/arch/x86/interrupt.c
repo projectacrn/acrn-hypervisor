@@ -316,9 +316,10 @@ int vcpu_inject_nmi(struct vcpu *vcpu)
 	return vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
 }
 
-int vcpu_inject_gp(struct vcpu *vcpu)
+int vcpu_inject_gp(struct vcpu *vcpu, uint32_t err_code)
 {
-	return vcpu_make_request(vcpu, ACRN_REQUEST_GP);
+	vcpu_queue_exception(vcpu, IDT_GP, err_code);
+	return vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
 }
 
 int interrupt_window_vmexit_handler(struct vcpu *vcpu)
@@ -533,8 +534,8 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 
 	/* Handle all other exceptions */
 	VCPU_RETAIN_RIP(vcpu);
-	vcpu->arch_vcpu.exception_info.exception = exception_vector;
-	vcpu->arch_vcpu.exception_info.error = int_err_code;
+
+	vcpu_queue_exception(vcpu, exception_vector, int_err_code);
 
 	if (exception_vector == IDT_MC) {
 		/* just print error message for #MC, it then will be injected
