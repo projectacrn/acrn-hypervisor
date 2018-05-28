@@ -45,6 +45,7 @@
 #include "monitor_msg.h"
 
 #define ACRNCTL_OPT_ROOT	"/opt/acrn/conf"
+#define MAX_NAME_LEN            (128)
 
 /* helper functions */
 static int shell_cmd(const char *cmd, char *outbuf, int len)
@@ -88,7 +89,7 @@ static void process_msg(struct vmm_msg *msg)
 #define ACRN_DM_SOCK_ROOT	"/run/acrn"
 
 struct vmm_struct {
-	char name[128];
+	char name[MAX_NAME_LEN];
 	unsigned long state;
 	LIST_ENTRY(vmm_struct) list;
 };
@@ -121,7 +122,7 @@ static struct vmm_struct *vmm_list_add(char *name)
 		return NULL;
 	}
 
-	strcpy(s->name, name);
+	strncpy(s->name, name, MAX_NAME_LEN - 1);
 	LIST_INSERT_HEAD(&vmm_head, s, list);
 
 	return s;
