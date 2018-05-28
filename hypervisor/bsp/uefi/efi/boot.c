@@ -368,17 +368,15 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	 */
 	cmdline16 = StrDuplicate(options);
 	bootloader_name = strstr_16(cmdline16, bootloader_param);
-	if (bootloader_name)
+	if (bootloader_name) {
 		bootloader_name = bootloader_name + StrLen(bootloader_param);
-
-	n = bootloader_name;
-	i = 0;
-	while (*n && !isspace((CHAR8)*n) && (*n < 0xff)) {
-		n++; i++;
-	}
-	*n++ = '\0';
-
-	if (!bootloader_name) {
+		n = bootloader_name;
+		i = 0;
+		while (*n && !isspace((CHAR8)*n) && (*n < 0xff)) {
+			n++; i++;
+		}
+		*n++ = '\0';
+	} else {
 		/*
 		 * If we reach this point, it means we did not receive a specific
 		 * bootloader name to be used. Fall back to the default bootloader
