@@ -138,18 +138,28 @@ static bool is_vm0_bsp(int pcpu_id)
 
 int hv_main(int cpu_id)
 {
-	int ret = 0;
+	int ret;
 
 	pr_info("%s, Starting common entry point for CPU %d",
 			__func__, cpu_id);
-	ASSERT(cpu_id < phy_cpu_num, "cpu_id out of range");
 
-	ASSERT((uint64_t) cpu_id == get_cpu_id(),
-			"cpu_id/tsc_aux mismatch");
+	if (cpu_id >= phy_cpu_num) {
+		pr_err("%s, cpu_id %d out of range %d\n",
+			__func__, cpu_id, phy_cpu_num);
+		return -EINVAL;
+	}
+
+	if ((uint32_t) cpu_id != get_cpu_id()) {
+		pr_err("%s, cpu_id %d mismatch\n", __func__, cpu_id);
+		return -EINVAL;
+	}
 
 	/* Enable virtualization extensions */
 	ret = exec_vmxon_instr();
-	ASSERT(ret == 0, "Unable to enable VMX!");
+	if (ret != 0) {
+		pr_err("%s, Unable to enable VMX!\n", __func__);
+		return ret;
+	}
 
 	/* X2APIC mode is disabled by default. */
 	x2apic_enabled = false;
@@ -159,7 +169,7 @@ int hv_main(int cpu_id)
 
 	default_idle();
 
-	return ret;
+	return 0;
 }
 
 int get_vmexit_profile(char *str, int str_max)

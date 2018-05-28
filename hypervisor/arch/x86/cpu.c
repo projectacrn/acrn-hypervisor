@@ -367,6 +367,7 @@ static void get_cpu_name(void)
 
 void bsp_boot_init(void)
 {
+	int ret;
 	uint64_t start_tsc = rdtsc();
 
 	/* Clear BSS */
@@ -541,7 +542,9 @@ void bsp_boot_init(void)
 	console_setup_timer();
 
 	/* Start initializing the VM for this CPU */
-	hv_main(CPU_BOOT_ID);
+	ret = hv_main(CPU_BOOT_ID);
+	if (ret != 0)
+		panic("failed to start VM for bsp\n");
 
 	/* Control should not come here */
 	cpu_dead(CPU_BOOT_ID);
@@ -549,6 +552,7 @@ void bsp_boot_init(void)
 
 void cpu_secondary_init(void)
 {
+	int ret;
 	/* NOTE: Use of local / stack variables in this function is problematic
 	 * since the stack is switched in the middle of the function.  For this
 	 * reason, the logical id is only temporarily stored in a static
@@ -605,7 +609,9 @@ void cpu_secondary_init(void)
 	/* Wait for boot processor to signal all secondary cores to continue */
 	pcpu_sync_sleep(&pcpu_sync, 0);
 
-	hv_main(get_cpu_id());
+	ret = hv_main(get_cpu_id());
+	if (ret != 0)
+		panic("hv_main ret = %d\n", ret);
 
 	/* Control will only come here for secondary CPUs not configured for
 	 * use or if an error occurs in hv_main
