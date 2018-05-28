@@ -240,6 +240,98 @@ uint32_t get_cs_access_rights(void)
 	return usable_ar;
 }
 
+int vmx_write_cr0(struct vcpu *vcpu, uint64_t value)
+{
+	uint32_t value32;
+	uint64_t value64;
+
+	pr_dbg("VMM: Guest trying to write 0x%08x to CR0", value);
+
+	/* Read host mask value */
+	value64 = exec_vmread(VMX_CR0_MASK);
+
+	/* Clear all bits being written by guest that are owned by host */
+	value &= ~value64;
+
+	/* Update CR0 in guest state */
+	vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr0 |= value;
+	exec_vmwrite(VMX_GUEST_CR0,
+		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr0);
+	pr_dbg("VMM: Guest allowed to write 0x%08x to CR0",
+		  vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr0);
+
+	/* If guest is trying to transition vcpu from unpaged real mode to page
+	 * protected mode make necessary changes to VMCS structure to reflect
+	 * transition from real mode to paged-protected mode
+	 */
+	if (!is_vcpu_bsp(vcpu) &&
+	    (vcpu->arch_vcpu.cpu_mode == CPU_MODE_REAL) &&
+	    (value & CR0_PG) && (value & CR0_PE)) {
+		/* Enable protected mode */
+		value32 = exec_vmread(VMX_ENTRY_CONTROLS);
+		value32 |= (VMX_ENTRY_CTLS_IA32E_MODE |
+			    VMX_ENTRY_CTLS_LOAD_PAT |
+			    VMX_ENTRY_CTLS_LOAD_EFER);
+		exec_vmwrite(VMX_ENTRY_CONTROLS, value32);
+		pr_dbg("VMX_ENTRY_CONTROLS: 0x%x ", value32);
+
+		/* Set up EFER */
+		value64 = exec_vmread64(VMX_GUEST_IA32_EFER_FULL);
+		value64 |= (MSR_IA32_EFER_SCE_BIT |
+			    MSR_IA32_EFER_LME_BIT |
+			    MSR_IA32_EFER_LMA_BIT | MSR_IA32_EFER_NXE_BIT);
+		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, value64);
+		pr_dbg("VMX_GUEST_IA32_EFER: 0x%016llx ", value64);
+	}
+
+	return 0;
+}
+
+int vmx_read_cr3(struct vcpu *vcpu, uint64_t *value)
+{
+	*value = vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3;
+
+	pr_dbg("VMM: reading 0x%08x from CR3", *value);
+
+	return 0;
+}
+
+int vmx_write_cr3(struct vcpu *vcpu, uint64_t value)
+{
+	/* Write to guest's CR3 */
+	vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3 = value;
+
+	/* Commit new value to VMCS */
+	exec_vmwrite(VMX_GUEST_CR3,
+		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3);
+
+	return 0;
+}
+
+int vmx_write_cr4(struct vcpu *vcpu, uint64_t value)
+{
+	uint64_t temp64;
+
+	pr_dbg("VMM: Guest trying to write 0x%08x to CR4", value);
+
+	/* Read host mask value */
+	temp64 = exec_vmread(VMX_CR4_MASK);
+
+	/* Clear all bits being written by guest that are owned by host */
+	value &= ~temp64;
+
+	/* Write updated CR4 (bitwise OR of allowed guest bits and CR4 host
+	 * value)
+	 */
+	vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr4 |= value;
+	exec_vmwrite(VMX_GUEST_CR4,
+		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr4);
+	pr_dbg("VMM: Guest allowed to write 0x%08x to CR4",
+		  vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr4);
+
+	return 0;
+}
+
 static void init_guest_state(struct vcpu *vcpu)
 {
 	uint64_t field;
