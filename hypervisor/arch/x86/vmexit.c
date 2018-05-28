@@ -292,20 +292,9 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
 		/* mov to cr0 */
 		vmx_write_cr0(vcpu, *regptr);
 		break;
-
-	case 0x03:
-		/* mov to cr3 */
-		vmx_write_cr3(vcpu, *regptr);
-		break;
-
 	case 0x04:
 		/* mov to cr4 */
 		vmx_write_cr4(vcpu, *regptr);
-		break;
-
-	case 0x13:
-		/* mov from cr3 */
-		vmx_read_cr3(vcpu, regptr);
 		break;
 #if 0
 	case 0x14:

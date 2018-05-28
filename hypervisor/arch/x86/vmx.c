@@ -287,15 +287,6 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t value)
 	return 0;
 }
 
-int vmx_read_cr3(struct vcpu *vcpu, uint64_t *value)
-{
-	*value = vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3;
-
-	pr_dbg("VMM: reading 0x%08x from CR3", *value);
-
-	return 0;
-}
-
 int vmx_write_cr3(struct vcpu *vcpu, uint64_t value)
 {
 	/* Write to guest's CR3 */
