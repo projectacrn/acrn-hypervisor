@@ -6,7 +6,7 @@ env:
    global:
       - OS_TESTED_CL="clearlinux"
       - OS_TESTED_UBUNTU="ubuntu16.04"
-      - OS_TESTED_FEDORA="fedora26"
+      - OS_TESTED_FEDORA="fedora28"
 
    matrix:
       - RELEASE=0

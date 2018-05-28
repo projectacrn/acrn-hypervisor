@@ -1,5 +1,5 @@
-# Build container based on Ubuntu 14.04
-FROM ubuntu:14.04
+# Build container based on Debian 8
+FROM debian:8
 
 # Install dependencies.
 RUN apt-get update \
@@ -8,6 +8,10 @@ RUN apt-get update \
                           libssl-dev \
                           libpciaccess-dev \
                           uuid-dev \
+                          libsystemd-dev \
+                          libevent-dev \
+                          libxml2-dev \
+                          libusb-1.0-0-dev \
     && apt-get clean
 
 WORKDIR /root/acrn

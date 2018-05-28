@@ -9,7 +9,11 @@ RUN yum -y install gcc \
                    libuuid-devel \
                    openssl-devel \
                    libpciaccess-devel \
-                   gnu-efi-devel
+                   gnu-efi-devel \
+                   systemd-devel \
+                   libxml2-devel \
+                   libevent-devel \
+                   libusbx-devel
 
 WORKDIR /root/acrn
 
