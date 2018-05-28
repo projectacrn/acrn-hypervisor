@@ -185,6 +185,7 @@ int vcpu_inject_extint(struct vcpu *vcpu);
 int vcpu_inject_nmi(struct vcpu *vcpu);
 int vcpu_inject_gp(struct vcpu *vcpu);
 int vcpu_make_request(struct vcpu *vcpu, int eventid);
+int vcpu_queue_exception(struct vcpu *vcpu, int32_t vector, uint32_t err_code);
 
 int exception_vmexit_handler(struct vcpu *vcpu);
 int interrupt_window_vmexit_handler(struct vcpu *vcpu);

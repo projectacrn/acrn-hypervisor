@@ -109,6 +109,7 @@
 #define IDT_AC      17  /* #AC: Alignment Check */
 #define IDT_MC      18  /* #MC: Machine Check */
 #define IDT_XF      19  /* #XF: SIMD Floating-Point Exception */
+#define IDT_VE      20  /* #VE: Virtualization Exception */
 
 /*Bits in EFER special registers */
 #define EFER_LMA 0x000000400    /* Long mode active (R) */
