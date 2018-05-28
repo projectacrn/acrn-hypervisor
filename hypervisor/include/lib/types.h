@@ -48,7 +48,6 @@
 /* Define standard data types.  These definitions allow software components
  * to perform in the same manner on different target platforms.
  */
-typedef unsigned int uint32_t;
 typedef signed char int8_t;
 typedef unsigned char uint8_t;
 typedef signed short int16_t;
