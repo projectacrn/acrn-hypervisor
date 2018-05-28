@@ -8,6 +8,10 @@ RUN apt-get update \
                           libssl-dev \
                           libpciaccess-dev \
                           uuid-dev \
+                          libsystemd-dev \
+                          libevent-dev \
+                          libxml2-dev \
+                          libusb-1.0-0-dev \
     && apt-get clean
 
 WORKDIR /root/acrn

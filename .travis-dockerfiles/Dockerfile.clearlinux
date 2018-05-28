@@ -1,0 +1,11 @@
+# Build container based on Clearlinux
+FROM clearlinux:base
+
+RUN swupd bundle-add os-clr-on-clr
+
+RUN mkdir -p /usr/local/bin
+RUN git config --global http.sslVerify false
+
+WORKDIR /root/acrn
+
+CMD ["/bin/bash"]

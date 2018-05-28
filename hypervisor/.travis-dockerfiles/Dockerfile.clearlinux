@@ -1,8 +1,0 @@
-# Build container based on Clearlinux
-FROM clearlinux:base
-
-RUN swupd bundle-add os-core-dev dev-utils-dev
-
-WORKDIR /root/acrn
-
-CMD ["/bin/bash"]
