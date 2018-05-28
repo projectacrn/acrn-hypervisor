@@ -57,7 +57,7 @@ static void acrn_print_request(int vcpu_id, struct vhm_request *req)
 
 int acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 {
-	struct vhm_request_buffer *req_buf = NULL;
+	union vhm_request_buffer *req_buf = NULL;
 	long cur;
 
 	ASSERT(sizeof(*req) == (4096/VHM_REQUEST_MAX),
@@ -67,7 +67,7 @@ int acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 	if (!vcpu || !req || vcpu->vm->sw.io_shared_page == NULL)
 		return -EINVAL;
 
-	req_buf = (struct vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
+	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
 
 	/* ACRN insert request to VHM and inject upcall */
 	cur = vcpu->vcpu_id;
@@ -146,7 +146,7 @@ static void _get_req_info_(struct vhm_request *req, int *id, char *type,
 int get_req_info(char *str, int str_max)
 {
 	int i, len, size = str_max, client_id;
-	struct vhm_request_buffer *req_buf;
+	union vhm_request_buffer *req_buf;
 	struct vhm_request *req;
 	char type[16], state[16], dir[16];
 	long addr, val;
@@ -161,7 +161,7 @@ int get_req_info(char *str, int str_max)
 	spinlock_obtain(&vm_list_lock);
 	list_for_each(pos, &vm_list) {
 		vm = list_entry(pos, struct vm, list);
-		req_buf = (struct vhm_request_buffer *)vm->sw.io_shared_page;
+		req_buf = (union vhm_request_buffer *)vm->sw.io_shared_page;
 		if (req_buf) {
 			for (i = 0; i < VHM_REQUEST_MAX; i++) {
 				req = req_buf->req_queue + i;
