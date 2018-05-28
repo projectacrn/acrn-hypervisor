@@ -30,6 +30,7 @@
 
 #ifndef VM_H_
 #define VM_H_
+#include <bsp_extern.h>
 
 enum vm_privilege_level {
 	VM_PRIVILEGE_LEVEL_HIGH = 0,
@@ -209,11 +210,6 @@ struct vm_description {
 	bool                   sworld_enabled;
 };
 
-struct vm_description_array {
-	int                     num_vm_desc;
-	struct vm_description   vm_desc_array[];
-};
-
 int shutdown_vm(struct vm *vm);
 int pause_vm(struct vm *vm);
 int start_vm(struct vm *vm);
@@ -222,7 +218,6 @@ int prepare_vm0(void);
 void vm_fixup(struct vm *vm);
 
 struct vm *get_vm_from_vmid(int vm_id);
-struct vm_description *get_vm_desc(int idx);
 
 extern struct list_head vm_list;
 extern spinlock_t vm_list_lock;

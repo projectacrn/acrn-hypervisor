@@ -46,12 +46,9 @@
 /**********************************/
 /* EXTERNAL VARIABLES             */
 /**********************************/
+extern struct vm_description vm0_desc;
 
 /* BSP Interfaces */
-void    init_bsp(void);
-
-/* External Interfaces */
-struct _vm_description_array;
-const struct _vm_description_array *get_vm_desc_base(void);
+void init_bsp(void);
 
 #endif /* BSP_EXTERN_H */

@@ -130,10 +130,7 @@ void vcpu_thread(struct vcpu *vcpu)
 
 static bool is_vm0_bsp(int pcpu_id)
 {
-	struct vm_description *vm_desc = get_vm_desc(0);
-
-	ASSERT(vm_desc, "get vm desc failed");
-	return pcpu_id == vm_desc->vm_hw_logical_core_ids[0];
+	return pcpu_id == vm0_desc.vm_hw_logical_core_ids[0];
 }
 
 int hv_main(int cpu_id)

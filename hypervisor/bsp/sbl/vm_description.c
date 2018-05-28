@@ -30,32 +30,16 @@
 
 #include <hypervisor.h>
 
-#define NUM_USER_VMS    2
-
 /* Number of CPUs in VM0 */
 #define VM0_NUM_CPUS    1
 
 /* Logical CPU IDs assigned to VM0 */
 int VM0_CPUS[VM0_NUM_CPUS] = {0};
 
-const struct vm_description_array vm_desc = {
-	/* Number of user virtual machines */
-	.num_vm_desc = NUM_USER_VMS,
-
-	/* Virtual Machine descriptions */
-	.vm_desc_array = {
-		{
-		/* Internal variable, MUSTBE init to -1 */
-		.vm_attr_name = "vm_0",
-		.vm_hw_num_cores = VM0_NUM_CPUS,
-		.vm_hw_logical_core_ids = &VM0_CPUS[0],
-		.vm_state_info_privilege = VM_PRIVILEGE_LEVEL_HIGH,
-		.vm_created = false,
-		},
-	}
+struct vm_description vm0_desc = {
+	.vm_attr_name = "vm_0",
+	.vm_hw_num_cores = VM0_NUM_CPUS,
+	.vm_hw_logical_core_ids = &VM0_CPUS[0],
+	.vm_state_info_privilege = VM_PRIVILEGE_LEVEL_HIGH,
+	.vm_created = false,
 };
-
-const struct vm_description_array *get_vm_desc_base(void)
-{
-	return &vm_desc;
-}

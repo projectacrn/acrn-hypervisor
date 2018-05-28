@@ -292,31 +292,13 @@ int vm_resume(struct vm *vm)
 	return 0;
 }
 
-/* Finally, we will remove the array and only maintain vm0 desc */
-struct vm_description *get_vm_desc(int idx)
-{
-	struct vm_description_array *vm_desc_array;
-
-	/* Obtain base of user defined VM description array data
-	 * structure
-	 */
-	vm_desc_array = (struct vm_description_array *)get_vm_desc_base();
-	/* Obtain VM description array base */
-	if (idx >= vm_desc_array->num_vm_desc)
-		return NULL;
-	else
-		return &vm_desc_array->vm_desc_array[idx];
-}
-
 /* Create vm/vcpu for vm0 */
 int prepare_vm0(void)
 {
 	int i, ret;
 	struct vm *vm = NULL;
-	struct vm_description *vm_desc = NULL;
+	struct vm_description *vm_desc = &vm0_desc;
 
-	vm_desc = get_vm_desc(0);
-	ASSERT(vm_desc, "get vm desc failed");
 	ret = create_vm(vm_desc, &vm);
 	ASSERT(ret == 0, "VM creation failed!");
 
@@ -360,15 +342,9 @@ static inline bool vcpu_in_vm_desc(struct vcpu *vcpu,
 void vm_fixup(struct vm *vm)
 {
 	if (is_vm0(vm) && (vm->hw.exp_num_vcpus < vm->hw.num_vcpus)) {
-		struct vm_description *vm_desc = NULL;
+		struct vm_description *vm_desc = &vm0_desc;
 		struct vcpu *vcpu;
 		int i;
-
-		vm_desc = get_vm_desc(0);
-		if (vm_desc == NULL) {
-			pr_err("get VM0 description failed.");
-			return;
-		}
 
 		foreach_vcpu(i, vm, vcpu) {
 			if (!vcpu_in_vm_desc(vcpu, vm_desc)) {

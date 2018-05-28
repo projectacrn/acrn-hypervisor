@@ -29,7 +29,6 @@
  */
 
 #include <hypervisor.h>
-#include <bsp_extern.h>
 #include <schedule.h>
 #include <version.h>
 
