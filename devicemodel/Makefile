@@ -91,6 +91,7 @@ SRCS += hw/pci/virtio/virtio_rpmb.c
 SRCS += hw/pci/irq.c
 SRCS += hw/pci/uart.c
 SRCS += hw/pci/gvt.c
+SRCS += hw/pci/npk.c
 
 # core
 #SRCS += core/bootrom.c
