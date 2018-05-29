@@ -40,43 +40,7 @@
 #ifndef MONITOR_H
 #define MONITOR_H
 
-#include "monitor_msg.h"
-
 int monitor_init(struct vmctx *ctx);
 void monitor_close(void);
 
-/**
- * monitor broadcast()
- * Developer can use monitor_broadcast() inside acrn-dm, send vmm_msg to all client.
- * @arguements:
- * @msg: any valid vmm_msg data structure, which you want send
- */
-
-int monitor_broadcast(struct vmm_msg *msg);
-
-/* msg_sender will be seen/modify by msg handler */
-struct msg_sender {
-	int fd;			/* msg handler can replay to this fd */
-	char name[CLIENT_NAME_LEN];	/* client have a chance to name itsself */
-	int broadcast;
-};
-
-/**
- * monitor_register_handler()
- * Developer can add vmm_msg handler inside acrn-dm, that means, when a client send a
- * vmm_msg to acrn-dm, the correspoding callback will be called
- * @arguements:
- * @msg: msg->msgid must be set, for which handler will be add.
- * @callback: when a received message match msg->msgid, callback will be envoked.
- *   And these data are pass in to help developer: (a)msg, the received message, from
- *   socket. (b)sender, tell you who send this message, anything wite to sender->fd
- *   will be able to read out by client socket. Developer should only write valid
- *   vmm_msg. (c)priv, that is what you pass to monitor_add_msg_handler();
- * @priv, callback will see this value.
-*/
-
-int monitor_register_handler(struct vmm_msg *msg,
-			     void (*callback) (struct vmm_msg * msg,
-					       struct msg_sender * sender,
-					       void *priv), void *priv);
 #endif

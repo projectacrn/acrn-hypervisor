@@ -20,6 +20,7 @@ CFLAGS += -Wformat -Wformat-security -fno-strict-aliasing
 
 CFLAGS += -I$(BASEDIR)/include
 CFLAGS += -I$(BASEDIR)/include/public
+CFLAGS += -I$(TOOLS_OUT)
 
 GCC_MAJOR=$(shell echo __GNUC__ | $(CC) -E -x c - | tail -n 1)
 GCC_MINOR=$(shell echo __GNUC_MINOR__ | $(CC) -E -x c - | tail -n 1)
@@ -41,6 +42,7 @@ endif
 
 LDFLAGS += -Wl,-z,noexecstack
 LDFLAGS += -Wl,-z,relro,-z,now
+LDFLAGS += -L$(TOOLS_OUT)
 
 LIBS = -lrt
 LIBS += -lpthread
@@ -49,6 +51,7 @@ LIBS += -lpciaccess
 LIBS += -lz
 LIBS += -luuid
 LIBS += -lusb-1.0
+LIBS += -lacrn-mngr
 
 # hw
 SRCS += hw/block_if.c

@@ -42,7 +42,7 @@
 #include <sys/queue.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include "monitor_msg.h"
+#include "acrn_mngr.h"
 
 #define ACRNCTL_OPT_ROOT	"/opt/acrn/conf"
 #define MAX_NAME_LEN            (128)
@@ -70,7 +70,7 @@ static int shell_cmd(const char *cmd, char *outbuf, int len)
 	return ret;
 }
 
-static void process_msg(struct vmm_msg *msg)
+static void process_msg(struct mngr_msg *msg)
 {
 	if (msg->len < sizeof(*msg))
 		return;
@@ -508,7 +508,7 @@ static int send_stop_msg(char *vmname)
 {
 	int fd, ret;
 	struct sockaddr_un addr;
-	struct vmm_msg msg;
+	struct mngr_msg msg;
 	struct timeval timeout;
 	fd_set rfd, wfd;
 	char buf[128];
@@ -530,8 +530,8 @@ static int send_stop_msg(char *vmname)
 		goto connect_err;
 	}
 
-	msg.magic = VMM_MSG_MAGIC;
-	msg.msgid = REQ_STOP;
+	msg.magic = MNGR_MSG_MAGIC;
+	msg.msgid = DM_STOP;
 	msg.len = sizeof(msg);
 
 	timeout.tv_sec = 1;	/* wait 1 second for read/write socket */
