@@ -1,98 +1,100 @@
-``acrnctl``
-===========
+.. _acrnctl:
+
+acrnctl
+#######
 
 
-DESCRIPTION
-___________
+Description
+***********
 
-``acrnctl``: The ``acrnctl`` tool can help user create, delete, launch and stop UOSs.
-It runs under Service OS, and UOSs should be based on ``acrn-dm`` 
-
-
-USAGE
-_____
-
-To see what it can do, just run:
-
-::
-
-# acrnctl
+The ``acrnctl`` tool helps users create, delete, launch, and stop a User
+OS (UOS).  The tool runs under the Service OS, and UOSs should be based
+on ``acrn-dm``.
 
 
-or
 
-::
+Usage
+*****
 
-# acrnctl help
+You can see the available ``acrnctl`` commands by running:
 
-you may see:
+.. code-block:: none
 
-::
+   # acrnctl help
+   support:
+     list
+     start
+     stop
+     del
+     add
+   Use acrnctl [cmd] help for details
 
-  support:
-    list
-    start
-    stop
-    del
-    add
-  Use acrnctl [cmd] help for details
+Here are some usage examples:
 
-There are examples:
+Add a VM
+========
 
-(1) add a VM
-    Each time you can just add one VM. Suppose you have an UOS
-    launch script, such as launch_UOS.sh
+The ``add`` command lets you add a VM by specifying a
+script that will launch a UOS, for example ``launch_UOS.sh``:
 
-    you can run:
+.. code-block:: none
 
-::
+   # acrnctl add launch_UOS.sh -U 1
+   vm1-14:59:30 added
 
-  # acrnctl add launch_UOS.sh -U 1
-    vm1-14:59:30 added
+Note that the launch script must only launch one UOS instance.
+The VM name is important. ``acrnctl`` searches VMs by their
+names so duplicate VM names are not allowed. If the
+launch script changes the VM name at launch time, ``acrnctl``
+will not recognize it.
 
-Note that, launch script shoud be able to launch ONE UOS. If
-it fail, it is better to print some error logs, to tell user
-the reason, so that he knows how to solve it.
-The vmname is important, the acrnctl searchs VMs by their
-names. so duplicated VM names are not allowed. Beside, if the
-launch script changes VM name at launch time, acrnctl will
-not recgonize it.
+Delete VMs
+==========
 
-(2) delete VMs
+Use the ``delete`` command with a VM name to delete that VM:
 
-::
+.. code-block:: none
 
-  # acrnctl del vm1-14:59:30
+   # acrnctl del vm1-14:59:30
 
-(3) show VMs
+List VMs
+========
 
-::
+Use the ``list`` command to display VMs and their state:
 
-  # acrnctl list
-    vm1-14:59:30            untracked
-    vm-yocto                stop
-    vm-android              stop
+.. code-block:: none
 
-(4) start VM
+   # acrnctl list
+   vm1-14:59:30            untracked
+   vm-yocto                stopped
+   vm-android              stopped
 
-    you can start a vm with 'stop' status, each time can start
-    one VM.
+Start VM
+========
 
-::
+If a VM is in a ``stopped`` state, you can start it with the ``start``
+command:
 
-  # acrnctl start vm-yocto
+.. code-block:: none
 
-(5) stop VM
+   # acrnctl start vm-yocto
 
-    you can stop VMs, if their status is not 'stop'
+Stop VM
+=======
 
-::
+Use the ``stop`` command to stop one or more running VM:
 
-  # acrnctl stop vm-yocto vm1-14:59:30 vm-android
+.. code-block:: none
 
-BUILD
-_____
+   # acrnctl stop vm-yocto vm1-14:59:30 vm-android
 
-::
+Build and Install
+*****************
 
-  # make
+Source code for ``acrnctl`` is in the ``tools/acrn-manager`` folder.
+Change to that folder and run:
+
+.. code-block:: none
+
+   # make
+   # make install
