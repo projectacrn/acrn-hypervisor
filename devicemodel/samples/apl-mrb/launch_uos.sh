@@ -352,7 +352,7 @@ case $launch_type in
 		launch_clearlinux 1 3 "64 448 8" 0x000C00 clearlinux 1 $debug
 		;;
 	6) echo "Launch android UOS"
-		launch_android 1 3 "64 448 8" 0x000C00 android 1 $debug
+		launch_android 1 3 "64 448 8" 0x000C02 android 1 $debug
 		;;
 	7) echo "Launch clearlinux UOS + android UOS"
 		launch_android 1 2 "64 448 4" 0x00000C android 1 $debug &
