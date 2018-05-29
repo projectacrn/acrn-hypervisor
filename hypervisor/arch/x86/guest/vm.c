@@ -328,7 +328,7 @@ int prepare_vm0(void)
 	/* start vm0 BSP automatically */
 	start_vm(vm);
 
-	pr_fatal("Start VM0");
+	pr_acrnlog("Start VM0");
 
 	return 0;
 }
