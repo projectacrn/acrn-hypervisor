@@ -15,8 +15,11 @@ Hardware setup
 **************
 
 The Intel |reg| NUC (NUC6CAYH) is the supported reference target
-platform for ACRN work, as described in :ref:`hardware`, and is the only
-platform currently tested with these setup instructions.
+platform for ACRN work, as described in :ref:`hardware`, and is the main
+platform currently tested with these setup instructions. The
+`UP Squared board <http://www.up-board.org/upsquared/>`_ (UP2) is also
+known to work and the few specificities for it are described
+in :ref:`getting_started_up2`.
 
 The recommended NUC hardware configuration is:
 
@@ -26,9 +29,6 @@ The recommended NUC hardware configuration is:
 - Memory: 8G DDR3
 - SSD: 120G SATA
 
-Software setup
-**************
-
 Firmware update on the NUC
 ==========================
 
@@ -37,12 +37,15 @@ Follow these `BIOS Update Instructions
 <https://www.intel.com/content/www/us/en/support/articles/000005636.html>`__
 for downloading and flashing an updated BIOS for the NUC.
 
+Software setup
+**************
+
 Set up a Clear Linux Operating System
 =====================================
 
 Currently, an installable version of ARCN does not exist. Therefore, you
-need to setup a base Clear Linux OS to bootstrap ACRN on the NUC. You'll
-need a network connection for your NUC to complete this setup.
+need to setup a base Clear Linux OS to bootstrap ACRN on your platform. You'll
+need a network connection for your platform to complete this setup.
 
 .. note::
    ACRN requires Clear Linux version 22140 or newer. The instructions below
@@ -54,10 +57,10 @@ need a network connection for your NUC to complete this setup.
    https://download.clearlinux.org/releases/22140/clear/clear-22140-installer.img.xz
    and follow the `Clear Linux installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
-   as a starting point for installing Clear Linux onto your NUC.  Follow the recommended
-   options for choosing an **Automatic** installation type, and using the NUC's
+   as a starting point for installing Clear Linux onto your platform.  Follow the recommended
+   options for choosing an **Automatic** installation type, and using the platform's
    storage as the target device for installation (overwriting the existing data
-   and creating three partitions on the NUC's SSD drive).
+   and creating three partitions on the platform's storage drive).
 
 #. After installation is complete, boot into Clear Linux, login as
    **root**, and set a password.
@@ -97,7 +100,7 @@ need a network connection for your NUC to complete this setup.
 Add the ACRN hypervisor to the EFI Partition
 ============================================
 
-In order to boot the ACRN SOS on the NUC, you'll need to add it to the EFI
+In order to boot the ACRN SOS on the platform, you'll need to add it to the EFI
 partition. Follow these steps:
 
 #. Mount the EFI partition and verify you have the following files:
@@ -119,6 +122,13 @@ partition. Follow these steps:
       and ``*-standard``) listed on your system,
       as you will need them later.
 
+   .. note::
+      The EFI System Partition (ESP) may be different based on your hardware.
+      It will typically be something like ``/dev/mmcblk0p1`` on platforms
+      that have an on-board eMMC or ``/dev/nvme0n1p1`` if your system has
+      a non-volatile storage media attached via a PCI Express (PCIe) bus
+      (NVMe).
+
 #. Put the ``acrn.efi`` hypervisor application (included in the Clear
    Linux release) on the EFI partition with:
 
@@ -136,9 +146,7 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda1 -p 1 -L ACRN
-      # cd /mnt/EFI/org.clearlinux/
-      # cp bootloaderx64.efi bootloaderx64_origin.efi
+      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L ACRN
 
    .. note::
       Be aware that a Clearlinux update that includes a kernel upgrade will
@@ -193,7 +201,7 @@ partition. Follow these steps:
    .. literalinclude:: ../../hypervisor/bsp/uefi/clearlinux/acrn.conf
       :caption: hypervisor/bsp/uefi/clearlinux/acrn.conf
 
-   On the NUC, copy the ``acrn.conf`` file to the EFI partition we mounted earlier:
+   On the platform, copy the ``acrn.conf`` file to the EFI partition we mounted earlier:
 
    .. code-block:: none
 
@@ -204,6 +212,9 @@ partition. Follow these steps:
    (``root=PARTUUID=<><UUID of rootfs partition>``) in the ``options`` section.
 
    Use ``blkid`` to find out what your ``/dev/sda3`` ``PARTUUID`` value is.
+
+   .. note::
+      It is also possible to use the device name directly, e.g. ``root=/dev/sda3``
 
 #. Add a timeout period for Systemd-Boot to wait, otherwise it will not
    present the boot menu and will always boot the base Clear Linux
@@ -265,7 +276,7 @@ directory. Run it to create a network bridge:
 Set up Reference UOS
 ====================
 
-#. On your NUC, download the pre-built reference Clear Linux UOS image into your
+#. On your platform, download the pre-built reference Clear Linux UOS image into your
    (root) home directory:
 
    .. code-block:: none
@@ -295,7 +306,7 @@ Set up Reference UOS
       # umount /mnt
       # sync
 
-#. Edit and Run the launch_uos.sh script to launch the UOS.
+#. Edit and Run the ``launch_uos.sh`` script to launch the UOS.
 
    A sample `launch_uos.sh
    <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/devicemodel/samples/nuc/launch_uos.sh>`__
