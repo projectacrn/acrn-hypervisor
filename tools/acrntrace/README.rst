@@ -1,73 +1,73 @@
-``acrntrace``
-==============
+.. _acrntrace:
 
-DESCRIPTION
-###########
+acrntrace
+#########
 
-``acrntrace``: is a tool running on SOS, to capture trace data.
-scripts directory includes scripts to analyze the trace data.
+Description
+***********
 
-USAGE
-#####
+``acrntrace`` is a tool running on the Service OS (SOS) to capture trace data.
+A ``scripts`` directory includes scripts to analyze the trace data.
 
-Capture trace data on SOS
+Usage
+*****
 
-1) Launch ``acrntrace``
+1. On the SOS, clear buffers before starting a trace, with:
 
-Capture buffered trace data:
+   .. code-block:: none
 
- ::
+      # acrntrace -c
 
-   # acrntrace
+#. Start capturing buffered trace data with:
 
-or clear buffer before tracing start:
+   .. code-block:: none
 
- ::
+      # acrntrace
 
-   # acrntrace -c
+   Trace files are created under ``/tmp/acrntrace/``, with a
+   date-time-based directory name such as ``20171115-101605``
 
-Trace files are created under ``/tmp/acrntrace/``, directory name with time string eg: ``20171115-101605``
+#. When done, stop a running ``acrntrace``, with:
 
-2) To stop acrntrace
+   .. code-block:: none
 
- ::
+      q <enter>
 
-   # q <enter>
+#. Analysis of the collected data is done on a Linux PC, so you'll need
+   to copy the collected trace data to your Linux system (using ``scp`` is
+   recommended):
 
-3) Copy the trace data to linux pc
+   .. code-block:: none
 
- ::
+      # scp -r /tmp/acrntrace/20171115-101605/ \
+          username@hostname:/home/username/trace_data
 
-   # scp -r /tmp/acrntrace/20171115-101605/   xxx@10.239.142.239:/home/xxxx/trace_data
+   Replace username and hostname with appropriate values.
 
+#. On the Linux system, run the provided python2 script to analyze the
+   ``vm_exits`` (currently only vm_exit analysis is supported):
 
-**Analyze the trace data on Linux PC**
+   .. code-block:: none
 
-1) Run the python script to analyze the ``vm_exits``:
+      # acrnalyze.py -i /home/xxxx/trace_data/20171115-101605/0 \
+           -o /home/xxxx/trace_data/20171115-101605/cpu0 --vm_exit
 
-  ::
+   - A preprocess makes some changes to the datafile for processing but
+     a copy of the original data file is saved with suffix ``.orig``.
+   - Analysis report is written to stdout, or to a CSV file if
+     a filename is specified using ``-o filename``.
+   - The scripts require bash and python2.
 
-   # acrnalyze.py -i /home/xxxx/trace_data/20171115-101605/0 -o /home/xxxx/trac
-     e_data/20171115-101605/cpu0 --vm_exit
-   - "--vm_exit" specify the analysis to do, currently, only vm_exit analysis
-     is supported.
-   - A preprocess would be taken out to make the trace data start and end with
-     an VM_ENTER, and a copy of original data file is saved with suffix ".orig";
-   - Analysis report would be given on the std output and in a csv file with
-     name specified via "-o outpu_file";
-   Script usage:
-   [Usage] acrnalyze.py [options] [value] ...
-   [options]
-   -h: print this message
-   -i, --ifile=[string]: input file
-   -o, --ofile=[string]: output file
-   --vm_exit: to generate vm_exit report
+Build and Install
+*****************
 
-The scripts require bash and python2.
+The source files for ``acrntrace`` are in the ``tools/acrntrace`` folder,
+and can be built and installed using:
 
-BUILD
-#####
+.. code-block:: none
 
-::
+   # make
+   # make install
 
-# make
+The processing scripts are in ``tools/acrntrace/scripts`` and need to be
+copied to and run on your Linux system.
