@@ -6,6 +6,7 @@ all: $(OUT_DIR)/libacrn-mngr.a $(OUT_DIR)/acrnctl
 $(OUT_DIR)/libacrn-mngr.a: acrn_mngr.c acrn_mngr.h
 	$(CC) -c acrn_mngr.c -DMNGR_DEBUG -I../../devicemodel/include -Wall -g
 	ar -cr $@ acrn_mngr.o
+	cp ./acrn_mngr.h $(OUT_DIR)/
 
 $(OUT_DIR)/acrnctl: acrnctl.c
 	$(CC) -o $(OUT_DIR)/acrnctl acrnctl.c -I../../devicemodel/include -Wall -g

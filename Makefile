@@ -9,6 +9,7 @@ ROOT_OUT := $(shell mkdir -p $(O);cd $(O);pwd)
 HV_OUT := $(ROOT_OUT)/hypervisor
 DM_OUT := $(ROOT_OUT)/devicemodel
 TOOLS_OUT := $(ROOT_OUT)/tools
+export TOOLS_OUT
 
 .PHONY: all hypervisor devicemodel tools
 all: hypervisor devicemodel tools
@@ -22,7 +23,7 @@ sbl-hypervisor:
 	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl PLATFORM=sbl RELEASE=$(RELEASE) clean
 	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl PLATFORM=sbl RELEASE=$(RELEASE)
 
-devicemodel:
+devicemodel: tools
 	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) clean
 	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT)
 
