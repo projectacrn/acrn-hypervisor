@@ -130,8 +130,8 @@ acrn_parse_kernel(char *arg)
 {
 	size_t len = strlen(arg);
 
-	if (len < STR_LEN) {
-		strncpy(kernel_path, arg, len + 1);
+	if (len < STR_LEN && len > 0) {
+		strcpy(kernel_path, arg);
 		if (check_image(kernel_path) != 0){
 			fprintf(stderr, "SW_LOAD: check_image failed for '%s'\n",
 				kernel_path);
@@ -149,8 +149,8 @@ acrn_parse_ramdisk(char *arg)
 {
 	size_t len = strlen(arg);
 
-	if (len < STR_LEN) {
-		strncpy(ramdisk_path, arg, len + 1);
+	if (len < STR_LEN && len > 0) {
+		strcpy(ramdisk_path, arg);
 		if (check_image(ramdisk_path) != 0){
 			fprintf(stderr, "SW_LOAD: check_image failed for '%s'\n",
 				ramdisk_path);
