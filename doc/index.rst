@@ -33,6 +33,7 @@ Sections
    release_notes.rst
    contribute/index.rst
    api/index.rst
+   tools.rst
 
 Indices and Tables
 ******************

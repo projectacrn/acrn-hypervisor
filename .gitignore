@@ -5,6 +5,7 @@ devicemodel/build/
 devicemodel/include/version.h
 doc/doxygen
 doc/_build
+doc/tools
 build
 *.bak
 *.sav
