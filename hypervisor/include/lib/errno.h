@@ -31,17 +31,21 @@
 #ifndef ERRNO_H
 #define ERRNO_H
 
-/** Indicates that not enough memory. */
-#define ENOMEM             1
-/** Indicates that argument is not valid. */
-#define EINVAL             2
-/** Indicates that no such dev. */
-#define ENODEV             3
+/** Indicates that operation not permitted. */
+#define EPERM		1
 /** Indicates that there is IO error. */
-#define EIO                4
-/** Indicates that target is busy. */
-#define EBUSY              5
+#define EIO		5
+/** Indicates that not enough memory. */
+#define ENOMEM		12
+/** Indicates Permission denied */
+#define EACCES		13
 /** Indicates there is fault. */
-#define EFAULT             6
+#define EFAULT		14
+/** Indicates that target is busy. */
+#define EBUSY		16
+/** Indicates that no such dev. */
+#define ENODEV		19
+/** Indicates that argument is not valid. */
+#define EINVAL		22
 
 #endif /* ERRNO_H */
