@@ -31,9 +31,14 @@
 #include <hypervisor.h>
 #include <hypercall.h>
 
+/*
+ * Pass return value to SOS by register rax.
+ * This function should always return 0 since we shouldn't
+ * deal with hypercall error in hypervisor.
+ */
 int vmcall_vmexit_handler(struct vcpu *vcpu)
 {
-	int64_t ret = 0;
+	int64_t ret = -EACCES;
 	struct vm *vm = vcpu->vm;
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
@@ -50,13 +55,13 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 
 	if (!is_hypercall_from_ring0()) {
 		pr_err("hypercall is only allowed from RING-0!\n");
-		return -1;
+		goto out;
 	}
 
 	if (!is_vm0(vm) && hypcall_id != HC_WORLD_SWITCH &&
 		hypcall_id != HC_INITIALIZE_TRUSTY) {
 		pr_err("hypercall %d is only allowed from VM0!\n", hypcall_id);
-		return -1;
+		goto out;
 	}
 
 	/* Dispatch the hypercall handler */
@@ -163,10 +168,11 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 
 	default:
 		pr_err("op %d: Invalid hypercall\n", hypcall_id);
-		ret = -1;
+		ret = -EPERM;
 		break;
 	}
 
+out:
 	cur_context->guest_cpu_regs.regs.rax = ret;
 
 	TRACE_2L(TRC_VMEXIT_VMCALL, vm->attr.id, hypcall_id);
