@@ -77,10 +77,10 @@ entry_id(struct ptdev_remapping_info *entry)
 	uint32_t id;
 
 	if (entry->type == PTDEV_INTR_INTX)
-		id = entry_id_from_intx(entry->intx.phys_pin);
+		id = entry_id_from_intx(entry->ptdev_intr_info.intx.phys_pin);
 	else
 		id = entry_id_from_msix(entry->phys_bdf,
-				entry->msi.msix_entry_index);
+				entry->ptdev_intr_info.msi.msix_entry_index);
 
 	return id;
 }
@@ -138,7 +138,8 @@ _lookup_entry_by_vmsi(struct vm *vm, uint16_t vbdf, int32_t index)
 		if ((entry->type == PTDEV_INTR_MSI)
 			&& (entry->vm == vm)
 			&& (entry->virt_bdf == vbdf)
-			&& (entry->msi.msix_entry_index == index))
+			&& (entry->ptdev_intr_info.msi.msix_entry_index
+				== index))
 			return entry;
 	}
 
@@ -169,8 +170,8 @@ _lookup_entry_by_vintx(struct vm *vm, uint8_t vpin,
 				entry_node);
 		if ((entry->type == PTDEV_INTR_INTX)
 			&& (entry->vm == vm)
-			&& (entry->intx.virt_pin == vpin)
-			&& (entry->intx.vpin_src == vpin_src))
+			&& (entry->ptdev_intr_info.intx.virt_pin == vpin)
+			&& (entry->ptdev_intr_info.intx.vpin_src == vpin_src))
 			return entry;
 	}
 
@@ -299,12 +300,13 @@ ptdev_update_irq_handler(struct vm *vm, struct ptdev_remapping_info *entry)
 	}
 	/* update irq handler for IOAPIC */
 	if ((entry->type == PTDEV_INTR_INTX)
-		&& (entry->intx.vpin_src == PTDEV_VPIN_IOAPIC)) {
+		&& (entry->ptdev_intr_info.intx.vpin_src
+			== PTDEV_VPIN_IOAPIC)) {
 		uint64_t rte;
 		bool trigger_lvl = false;
 
 		/* VPIN_IOAPIC src means we have vioapic enabled */
-		vioapic_get_rte(vm, entry->intx.virt_pin, &rte);
+		vioapic_get_rte(vm, entry->ptdev_intr_info.intx.virt_pin, &rte);
 		if ((rte & IOAPIC_RTE_TRGRMOD) == IOAPIC_RTE_TRGRLVL)
 			trigger_lvl = true;
 
@@ -315,11 +317,12 @@ ptdev_update_irq_handler(struct vm *vm, struct ptdev_remapping_info *entry)
 	}
 	/* update irq handler for PIC */
 	if ((entry->type == PTDEV_INTR_INTX) && (phys_irq < NR_LEGACY_IRQ)
-		&& (entry->intx.vpin_src == PTDEV_VPIN_PIC)) {
+		&& (entry->ptdev_intr_info.intx.vpin_src == PTDEV_VPIN_PIC)) {
 		enum vpic_trigger trigger;
 
 		/* VPIN_PIC src means we have vpic enabled */
-		vpic_get_irq_trigger(vm, entry->intx.virt_pin, &trigger);
+		vpic_get_irq_trigger(vm,
+			entry->ptdev_intr_info.intx.virt_pin, &trigger);
 		if (trigger == LEVEL_TRIGGER)
 			update_irq_handler(phys_irq, common_dev_handler_level);
 		else
@@ -413,12 +416,12 @@ static uint64_t ptdev_build_physical_rte(struct vm *vm,
 	int phys_irq = dev_to_irq(entry->node);
 	int vector = dev_to_vector(entry->node);
 
-	if (entry->intx.vpin_src == PTDEV_VPIN_IOAPIC) {
+	if (entry->ptdev_intr_info.intx.vpin_src == PTDEV_VPIN_IOAPIC) {
 		uint64_t vdmask, pdmask;
 		uint32_t dest, low, high, delmode;
 		bool phys;
 
-		vioapic_get_rte(vm, entry->intx.virt_pin, &rte);
+		vioapic_get_rte(vm, entry->ptdev_intr_info.intx.virt_pin, &rte);
 		low = rte;
 		high = rte >> 32;
 
@@ -456,7 +459,8 @@ static uint64_t ptdev_build_physical_rte(struct vm *vm,
 		ioapic_get_rte(phys_irq, &physical_rte);
 		rte = physical_rte;
 		rte &= ~IOAPIC_RTE_TRGRMOD;
-		vpic_get_irq_trigger(vm, entry->intx.virt_pin, &trigger);
+		vpic_get_irq_trigger(vm,
+			entry->ptdev_intr_info.intx.virt_pin, &trigger);
 		if (trigger == LEVEL_TRIGGER)
 			rte |= IOAPIC_RTE_TRGRLVL;
 
@@ -492,14 +496,15 @@ add_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 		entry = alloc_entry(vm, PTDEV_INTR_MSI);
 		entry->virt_bdf = virt_bdf;
 		entry->phys_bdf = phys_bdf;
-		entry->msi.msix_entry_index = msix_entry_index;
+		entry->ptdev_intr_info.msi.msix_entry_index = msix_entry_index;
 	} else if ((entry->vm != vm) && is_vm0(entry->vm)) {
 		entry->vm = vm;
 		entry->virt_bdf = virt_bdf;
 	} else if ((entry->vm != vm) && !is_vm0(entry->vm)) {
 		pr_err("MSIX pbdf%x idx=%d already in vm%d with vbdf%x, not "
 			"able to add into vm%d with vbdf%x", entry->phys_bdf,
-			entry->msi.msix_entry_index, entry->vm->attr.id,
+			entry->ptdev_intr_info.msi.msix_entry_index,
+			entry->vm->attr.id,
 			entry->virt_bdf, vm->attr.id, virt_bdf);
 		ASSERT(0, "msix entry pbdf%x idx%d already in vm%d",
 			phys_bdf, msix_entry_index, entry->vm->attr.id);
@@ -565,17 +570,19 @@ add_intx_remapping(struct vm *vm, uint8_t virt_pin,
 			return &invalid_entry;
 		}
 		entry = alloc_entry(vm, PTDEV_INTR_INTX);
-		entry->intx.phys_pin = phys_pin;
-		entry->intx.virt_pin = virt_pin;
-		entry->intx.vpin_src = vpin_src;
+		entry->ptdev_intr_info.intx.phys_pin = phys_pin;
+		entry->ptdev_intr_info.intx.virt_pin = virt_pin;
+		entry->ptdev_intr_info.intx.vpin_src = vpin_src;
 	} else if ((entry->vm != vm) && is_vm0(entry->vm)) {
 		entry->vm = vm;
-		entry->intx.virt_pin = virt_pin;
-		entry->intx.vpin_src = vpin_src;
+		entry->ptdev_intr_info.intx.virt_pin = virt_pin;
+		entry->ptdev_intr_info.intx.vpin_src = vpin_src;
 	} else if ((entry->vm != vm) && !is_vm0(entry->vm)) {
 		pr_err("INTX pin%d already in vm%d with vpin%d, not able to "
-			"add into vm%d with vpin%d", entry->intx.phys_pin,
-			entry->vm->attr.id, entry->intx.virt_pin,
+			"add into vm%d with vpin%d",
+			entry->ptdev_intr_info.intx.phys_pin,
+			entry->vm->attr.id,
+			entry->ptdev_intr_info.intx.virt_pin,
 			vm->attr.id, virt_pin);
 		ASSERT(0, "intx entry pin%d already vm%d",
 			phys_pin, entry->vm->attr.id);
@@ -617,10 +624,12 @@ void remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin)
 		ptdev_deactivate_entry(entry);
 		dev_dbg(ACRN_DBG_IRQ,
 			"deactive %s intx entry:ppin=%d, pirq=%d ",
-			entry->intx.vpin_src == PTDEV_VPIN_PIC ?
-			"vPIC" : "vIOAPIC", entry->intx.phys_pin, phys_irq);
+			entry->ptdev_intr_info.intx.vpin_src == PTDEV_VPIN_PIC ?
+			"vPIC" : "vIOAPIC",
+			entry->ptdev_intr_info.intx.phys_pin, phys_irq);
 		dev_dbg(ACRN_DBG_IRQ, "from vm%d vpin=%d\n",
-			entry->vm->attr.id, entry->intx.virt_pin);
+			entry->vm->attr.id,
+			entry->ptdev_intr_info.intx.virt_pin);
 	}
 
 	release_entry(entry);
@@ -632,21 +641,23 @@ END:
 static void ptdev_intr_handle_irq(struct vm *vm,
 		struct ptdev_remapping_info *entry)
 {
-	switch (entry->intx.vpin_src) {
+	switch (entry->ptdev_intr_info.intx.vpin_src) {
 	case PTDEV_VPIN_IOAPIC:
 	{
 		uint64_t rte;
 		bool trigger_lvl = false;
 
 		/* VPIN_IOAPIC src means we have vioapic enabled */
-		vioapic_get_rte(vm, entry->intx.virt_pin, &rte);
+		vioapic_get_rte(vm, entry->ptdev_intr_info.intx.virt_pin, &rte);
 		if ((rte & IOAPIC_RTE_TRGRMOD) == IOAPIC_RTE_TRGRLVL)
 			trigger_lvl = true;
 
 		if (trigger_lvl)
-			vioapic_assert_irq(vm, entry->intx.virt_pin);
+			vioapic_assert_irq(vm,
+				entry->ptdev_intr_info.intx.virt_pin);
 		else
-			vioapic_pulse_irq(vm, entry->intx.virt_pin);
+			vioapic_pulse_irq(vm,
+				entry->ptdev_intr_info.intx.virt_pin);
 
 		dev_dbg(ACRN_DBG_PTIRQ,
 			"dev-assign: irq=0x%x assert vr: 0x%x vRTE=0x%x",
@@ -659,11 +670,14 @@ static void ptdev_intr_handle_irq(struct vm *vm,
 		enum vpic_trigger trigger;
 
 		/* VPIN_PIC src means we have vpic enabled */
-		vpic_get_irq_trigger(vm, entry->intx.virt_pin, &trigger);
+		vpic_get_irq_trigger(vm,
+			entry->ptdev_intr_info.intx.virt_pin, &trigger);
 		if (trigger == LEVEL_TRIGGER)
-			vpic_assert_irq(vm, entry->intx.virt_pin);
+			vpic_assert_irq(vm,
+				entry->ptdev_intr_info.intx.virt_pin);
 		else
-			vpic_pulse_irq(vm, entry->intx.virt_pin);
+			vpic_pulse_irq(vm,
+				entry->ptdev_intr_info.intx.virt_pin);
 		break;
 	}
 	default:
@@ -694,16 +708,18 @@ void ptdev_softirq(__unused int cpu)
 			ptdev_intr_handle_irq(vm, entry);
 		else {
 			/* TODO: msi destmode check required */
-			vlapic_intr_msi(vm, entry->msi.vmsi_addr,
-					entry->msi.vmsi_data);
+			vlapic_intr_msi(vm,
+					entry->ptdev_intr_info.msi.vmsi_addr,
+					entry->ptdev_intr_info.msi.vmsi_data);
 			dev_dbg(ACRN_DBG_PTIRQ,
 				"dev-assign: irq=0x%x MSI VR: 0x%x-0x%x",
 				dev_to_irq(entry->node),
-				entry->msi.virt_vector,
+				entry->ptdev_intr_info.msi.virt_vector,
 				irq_to_vector(dev_to_irq(entry->node)));
 			dev_dbg(ACRN_DBG_PTIRQ,
 				" vmsi_addr: 0x%x vmsi_data: 0x%x",
-				entry->msi.vmsi_addr, entry->msi.vmsi_data);
+				entry->ptdev_intr_info.msi.vmsi_addr,
+				entry->ptdev_intr_info.msi.vmsi_data);
 		}
 	}
 }
@@ -719,7 +735,7 @@ void ptdev_intx_ack(struct vm *vm, int virt_pin,
 	if (!entry)
 		return;
 
-	phys_pin = entry->intx.phys_pin;
+	phys_pin = entry->ptdev_intr_info.intx.phys_pin;
 	phys_irq = pin_to_irq(phys_pin);
 	if (!irq_is_gsi(phys_irq))
 		return;
@@ -727,7 +743,7 @@ void ptdev_intx_ack(struct vm *vm, int virt_pin,
 	/* NOTE: only Level trigger will process EOI/ACK and if we got here
 	 * means we have this vioapic or vpic or both enabled
 	 */
-	switch (entry->intx.vpin_src) {
+	switch (entry->ptdev_intr_info.intx.vpin_src) {
 	case PTDEV_VPIN_IOAPIC:
 		vioapic_deassert_irq(vm, virt_pin);
 		break;
@@ -798,9 +814,9 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 
 	/* build physical config MSI, update to info->pmsi_xxx */
 	ptdev_build_physical_msi(vm, info, dev_to_vector(entry->node));
-	entry->msi = *info;
-	entry->msi.virt_vector = info->vmsi_data & 0xFF;
-	entry->msi.phys_vector = dev_to_vector(entry->node);
+	entry->ptdev_intr_info.msi = *info;
+	entry->ptdev_intr_info.msi.virt_vector = info->vmsi_data & 0xFF;
+	entry->ptdev_intr_info.msi.phys_vector = dev_to_vector(entry->node);
 
 	/* update irq handler according to info in guest */
 	ptdev_update_irq_handler(vm, entry);
@@ -809,8 +825,10 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 		"PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
 		(entry->virt_bdf >> 8) & 0xFF,
 		(entry->virt_bdf >> 3) & 0x1F,
-		(entry->virt_bdf) & 0x7, entry->msi.msix_entry_index,
-		entry->msi.virt_vector, entry->msi.phys_vector,
+		(entry->virt_bdf) & 0x7,
+		entry->ptdev_intr_info.msi.msix_entry_index,
+		entry->ptdev_intr_info.msi.virt_vector,
+		entry->ptdev_intr_info.msi.phys_vector,
 		entry->vm->attr.id);
 END:
 	return 0;
@@ -938,7 +956,7 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 		goto END;
 
 	/* phys_pin from physical IOAPIC */
-	phys_pin = entry->intx.phys_pin;
+	phys_pin = entry->ptdev_intr_info.intx.phys_pin;
 	phys_irq = pin_to_irq(phys_pin);
 	if (!irq_is_gsi(phys_irq))
 		goto END;
@@ -952,18 +970,21 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 		dev_dbg(ACRN_DBG_IRQ,
 			"IOAPIC pin=%d pirq=%d vpin=%d switch from %s to %s "
 			"vpin=%d for vm%d", phys_pin, phys_irq,
-			entry->intx.virt_pin,
-			entry->intx.vpin_src ? "vPIC" : "vIOAPIC",
-			entry->intx.vpin_src ? "vIOPIC" : "vPIC",
+			entry->ptdev_intr_info.intx.virt_pin,
+			entry->ptdev_intr_info.intx.vpin_src ?
+				"vPIC" : "vIOAPIC",
+			entry->ptdev_intr_info.intx.vpin_src ?
+				"vIOPIC" : "vPIC",
 			info->virt_pin,
 			entry->vm->attr.id);
-		entry->intx.vpin_src = info->vpin_src;
-		entry->intx.virt_pin = info->virt_pin;
+		entry->ptdev_intr_info.intx.vpin_src = info->vpin_src;
+		entry->ptdev_intr_info.intx.virt_pin = info->virt_pin;
 	}
 
 	if (is_entry_active(entry)
-		&& (entry->intx.vpin_src == PTDEV_VPIN_IOAPIC)) {
-		vioapic_get_rte(vm, entry->intx.virt_pin, &rte);
+		&& (entry->ptdev_intr_info.intx.vpin_src
+			== PTDEV_VPIN_IOAPIC)) {
+		vioapic_get_rte(vm, entry->ptdev_intr_info.intx.virt_pin, &rte);
 		if (((uint32_t)rte) == 0x10000) {
 			/* disable interrupt */
 			GSI_MASK_IRQ(phys_irq);
@@ -972,14 +993,15 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 				"IOAPIC pin=%d pirq=%d deassigned ",
 				phys_pin, phys_irq);
 			dev_dbg(ACRN_DBG_IRQ, "from vm%d vIOAPIC vpin=%d",
-				entry->vm->attr.id, entry->intx.virt_pin);
+				entry->vm->attr.id,
+				entry->ptdev_intr_info.intx.virt_pin);
 			goto END;
 		} else {
 			/*update rte*/
 			activate_physical_ioapic(vm, entry);
 		}
 	} else if (is_entry_active(entry)
-		&& (entry->intx.vpin_src == PTDEV_VPIN_PIC)) {
+		&& (entry->ptdev_intr_info.intx.vpin_src == PTDEV_VPIN_PIC)) {
 		/* only update here
 		 * deactive vPIC entry when IOAPIC take it over
 		 */
@@ -993,8 +1015,9 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 		dev_dbg(ACRN_DBG_IRQ,
 			"IOAPIC pin=%d pirq=%d assigned to vm%d %s vpin=%d",
 			phys_pin, phys_irq, entry->vm->attr.id,
-			entry->intx.vpin_src == PTDEV_VPIN_PIC ?
-			"vPIC" : "vIOAPIC", entry->intx.virt_pin);
+			entry->ptdev_intr_info.intx.vpin_src == PTDEV_VPIN_PIC ?
+			"vPIC" : "vIOAPIC",
+			entry->ptdev_intr_info.intx.virt_pin);
 	}
 END:
 	return 0;
@@ -1095,8 +1118,10 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 	if (is_entry_active(entry)) {
 		if (entry->type == PTDEV_INTR_MSI) {
 			strcpy_s(type, 16, "MSI");
-			*dest = (entry->msi.pmsi_addr & 0xFF000) >> 12;
-			if (entry->msi.pmsi_data & APIC_TRIGMOD_LEVEL)
+			*dest = (entry->ptdev_intr_info.msi.pmsi_addr & 0xFF000)
+				>> 12;
+			if (entry->ptdev_intr_info.msi.pmsi_data &
+				APIC_TRIGMOD_LEVEL)
 				*lvl_tm = true;
 			else
 				*lvl_tm = false;
@@ -1105,10 +1130,12 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 			*bdf = entry->phys_bdf;
 			*vbdf = entry->virt_bdf;
 		} else {
-			int phys_irq = pin_to_irq(entry->intx.phys_pin);
+			int phys_irq = pin_to_irq(
+				entry->ptdev_intr_info.intx.phys_pin);
 			uint64_t rte = 0;
 
-			if (entry->intx.vpin_src == PTDEV_VPIN_IOAPIC)
+			if (entry->ptdev_intr_info.intx.vpin_src
+				== PTDEV_VPIN_IOAPIC)
 				strcpy_s(type, 16, "IOAPIC");
 			else
 				strcpy_s(type, 16, "PIC");
@@ -1118,8 +1145,8 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 				*lvl_tm = true;
 			else
 				*lvl_tm = false;
-			*pin = entry->intx.phys_pin;
-			*vpin = entry->intx.virt_pin;
+			*pin = entry->ptdev_intr_info.intx.phys_pin;
+			*vpin = entry->ptdev_intr_info.intx.virt_pin;
 			*bdf = 0;
 			*vbdf = 0;
 		}

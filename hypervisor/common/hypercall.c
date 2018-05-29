@@ -353,9 +353,9 @@ static void complete_request(struct vcpu *vcpu)
 	 * mark ioreq done and don't resume vcpu.
 	 */
 	if (vcpu->state == VCPU_ZOMBIE) {
-		struct vhm_request_buffer *req_buf;
+		union vhm_request_buffer *req_buf;
 
-		req_buf = (struct vhm_request_buffer *)
+		req_buf = (union vhm_request_buffer *)
 				vcpu->vm->sw.io_shared_page;
 		req_buf->req_queue[vcpu->vcpu_id].valid = false;
 		atomic_store(&vcpu->ioreq_pending, 0);
@@ -382,7 +382,7 @@ static void complete_request(struct vcpu *vcpu)
 int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
 {
 	int64_t ret = 0;
-	struct vhm_request_buffer *req_buf;
+	union vhm_request_buffer *req_buf;
 	struct vhm_request *req;
 	struct vcpu *vcpu;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
@@ -397,7 +397,7 @@ int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
 	vcpu = vcpu_from_vid(target_vm, vcpu_id);
 	ASSERT(vcpu != NULL, "Failed to get VCPU context.");
 
-	req_buf = (struct vhm_request_buffer *)target_vm->sw.io_shared_page;
+	req_buf = (union vhm_request_buffer *)target_vm->sw.io_shared_page;
 	req = req_buf->req_queue + vcpu_id;
 
 	if (req->valid &&

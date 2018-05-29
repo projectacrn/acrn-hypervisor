@@ -27,7 +27,7 @@
  * $FreeBSD$
  */
 
-#define pr_fmt(fmt)	"vlapic: " fmt
+#define pr_prefix		"vlapic: "
 
 #include <hypervisor.h>
 

@@ -26,7 +26,8 @@ Build dependencies
    sudo yum install gcc \
           libuuid-devel \
           openssl-devel \
-          libpciaccess-devel
+          libpciaccess-devel \
+          libusb-devel
 
 * For Fedora 27
 
@@ -35,7 +36,8 @@ Build dependencies
    sudo dnf install gcc \
           libuuid-devel \
           openssl-devel \
-          libpciaccess-devel
+          libpciaccess-devel \
+          libusb-devel
 
 Build
 *****
@@ -61,7 +63,8 @@ Runtime dependencies
    sudo yum install openssl-libs \
                     zlib \
                     libpciaccess \
-                    libuuid
+                    libuuid \
+                    libusb
 
 * On Fedora 27
 
@@ -70,7 +73,8 @@ Runtime dependencies
    sudo dnf install openssl-libs \
                     zlib \
                     libpciaccess \
-                    libuuid
+                    libuuid \
+                    libusb
 
 .. _`ACRN Hypervisor`: https://github.com/projectacrn/acrn-hypervisor
 .. _`Project ACRN documentation`: https://projectacrn.github.io/

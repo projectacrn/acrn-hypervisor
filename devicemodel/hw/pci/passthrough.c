@@ -37,6 +37,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <err.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <sysexits.h>
 #include <unistd.h>
@@ -90,6 +91,11 @@ static pthread_mutex_t ref_cnt_mtx = PTHREAD_MUTEX_INITIALIZER;
 /* Prefer MSI over INTx for ptdev */
 static bool prefer_msi = true;
 
+/* Not check reset capability before assign ptdev.
+ * Set false by default, that is, always check.
+ */
+static bool no_reset = false;
+
 struct passthru_dev {
 	struct pci_vdev *dev;
 	struct pcibar bar[PCI_BARMAX + 1];
@@ -102,6 +108,7 @@ struct passthru_dev {
 		int		capoff;
 		int		table_size;
 	} msix;
+	bool pcie_cap;
 	struct pcisel sel;
 	int phys_pin;
 	uint16_t phys_bdf;
@@ -112,6 +119,11 @@ void
 ptdev_prefer_msi(bool enable)
 {
 	prefer_msi = enable;
+}
+
+void ptdev_no_reset(bool enable)
+{
+	no_reset = enable;
 }
 
 static int
@@ -318,7 +330,7 @@ clear_mmc_mme(uint32_t *val)
 #endif
 
 static int
-cfginitmsi(struct vmctx *ctx, struct passthru_dev *ptdev)
+cfginit_cap(struct vmctx *ctx, struct passthru_dev *ptdev)
 {
 	int i, ptr, capptr, cap, sts, caplen, table_size;
 	uint32_t u32;
@@ -393,7 +405,9 @@ cfginitmsi(struct vmctx *ctx, struct passthru_dev *ptdev)
 					caplen -= 4;
 					capptr += 4;
 				}
-			}
+			} else if (cap == PCIY_EXPRESS)
+				ptdev->pcie_cap = true;
+
 			ptr = read_config(phys_dev, ptr + PCICAP_NEXTPTR, 1);
 		}
 	}
@@ -439,11 +453,7 @@ cfginitmsi(struct vmctx *ctx, struct passthru_dev *ptdev)
 		vm_set_ptdev_msix_info(ctx, &ptirq);
 	}
 
-	/* Make sure one of the capabilities is present */
-	if (ptdev->msi.capoff == 0 && ptdev->msix.capoff == 0)
-		return -1;
-	else
-		return 0;
+	return 0;
 }
 
 static uint64_t
@@ -809,16 +819,46 @@ cfginit(struct vmctx *ctx, struct passthru_dev *ptdev, int bus,
 	int slot, int func)
 {
 	int irq_type = IRQ_MSI;
+	char reset_path[60];
+	FILE *f;
 
 	bzero(&ptdev->sel, sizeof(struct pcisel));
 	ptdev->sel.bus = bus;
 	ptdev->sel.dev = slot;
 	ptdev->sel.func = func;
 
-	if (cfginitmsi(ctx, ptdev) != 0) {
+	if (cfginit_cap(ctx, ptdev) != 0) {
+		warnx("Capability check fails for PCI %x/%x/%x",
+		    bus, slot, func);
+		return -1;
+	}
+
+	/* Check MSI or MSIX capabilities */
+	if (ptdev->msi.capoff == 0 && ptdev->msix.capoff == 0) {
 		warnx("MSI not supported for PCI %x/%x/%x",
 		    bus, slot, func);
 		irq_type = IRQ_INTX;
+	}
+
+	/* Check reset method for PCIe dev. If SOS kernel provides 'reset'
+	 * entry in sysfs, related dev has some reset capability, e.g. FLR, or
+	 * secondary bus reset. PCIe dev without any reset capability is
+	 * refused for passthrough.
+	 */
+	if (ptdev->pcie_cap) {
+		snprintf(reset_path, 40,
+			"/sys/bus/pci/devices/0000:%02x:%02x.%x/reset",
+			bus, slot, func);
+
+		if ((f = fopen(reset_path, "r")))
+		       fclose(f);
+		else if (errno == ENOENT) {
+			warnx("No reset capability for PCIe %x/%x/%x, "
+					"remove it from ptdev list!!\n",
+					bus, slot, func);
+			if (!no_reset)
+				return -1;
+		}
 	}
 
 	if (cfginitbar(ctx, ptdev) != 0) {

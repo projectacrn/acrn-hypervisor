@@ -110,10 +110,9 @@ struct pci_request {
 /* vhm_request are 256Bytes aligned */
 struct vhm_request {
 	/* offset: 0bytes - 63bytes */
-	union {
-		uint32_t type;
-		int32_t reserved0[16];
-	};
+	uint32_t type;
+	int32_t reserved0[15];
+
 	/* offset: 64bytes-127bytes */
 	union {
 		struct pio_request pio_request;
@@ -138,11 +137,9 @@ struct vhm_request {
 	int32_t processed;
 } __aligned(256);
 
-struct vhm_request_buffer {
-	union {
-		struct vhm_request req_queue[VHM_REQUEST_MAX];
-		int8_t reserved[4096];
-	};
+union vhm_request_buffer {
+	struct vhm_request req_queue[VHM_REQUEST_MAX];
+	int8_t reserved[4096];
 } __aligned(4096);
 
 /**

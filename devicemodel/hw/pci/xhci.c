@@ -41,6 +41,8 @@
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <ctype.h>
 #include "usb.h"
 #include "usbdi.h"
 #include "xhcireg.h"
@@ -48,11 +50,10 @@
 #include "pci_core.h"
 #include "xhci.h"
 #include "usb_core.h"
+#include "usb_pmapper.h"
 
-static int xhci_debug;
-#define	DPRINTF(params) do { if (xhci_debug) printf params; } while (0)
-#define	WPRINTF(params) (printf params)
-#define	XHCI_NAME		"xhci"
+#undef LOG_TAG
+#define LOG_TAG			"xHCI: "
 #define	XHCI_MAX_DEVS		8	/* 4 USB3 + 4 USB2 devs */
 #define	XHCI_MAX_SLOTS		64	/* min allowed by Windows drivers */
 
@@ -256,6 +257,7 @@ struct pci_xhci_vdev {
 
 	int		usb2_port_start;
 	int		usb3_port_start;
+	uint8_t		*native_assign_ports[USB_NATIVE_NUM_BUS];
 };
 
 /* portregs and devices arrays are set up to start from idx=1 */
@@ -265,6 +267,10 @@ struct pci_xhci_vdev {
 #define	XHCI_HALTED(xdev)	((xdev)->opregs.usbsts & XHCI_STS_HCH)
 #define	XHCI_GADDR(xdev, a)	paddr_guest2host((xdev)->dev->vmctx, (a), \
 				XHCI_PADDR_SZ - ((a) & (XHCI_PADDR_SZ-1)))
+struct pci_xhci_option_elem {
+	char *parse_opt;
+	int (*parse_fn)(struct pci_xhci_vdev *, char *);
+};
 
 static int xhci_in_use;
 
@@ -316,6 +322,374 @@ static void pci_xhci_update_ep_ring(struct pci_xhci_vdev *xdev,
 				    struct xhci_endp_ctx *ep_ctx,
 				    uint32_t streamid, uint64_t ringaddr,
 				    int ccs);
+static void pci_xhci_init_port(struct pci_xhci_vdev *xdev, int portn);
+static struct pci_xhci_dev_emu *pci_xhci_dev_create(struct pci_xhci_vdev *
+		xdev, void *dev_data);
+static void pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de);
+static int pci_xhci_port_chg(struct pci_xhci_vdev *xdev, int port, int conn);
+static void pci_xhci_set_evtrb(struct xhci_trb *evtrb, uint64_t port,
+		uint32_t errcode, uint32_t evtype);
+static int pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
+		struct usb_data_xfer *xfer, uint32_t slot, uint32_t epid,
+		int *do_intr);
+static inline int pci_xhci_is_valid_portnum(int n);
+static int pci_xhci_parse_tablet(struct pci_xhci_vdev *xdev, char *opts);
+static int pci_xhci_parse_log_level(struct pci_xhci_vdev *xdev, char *opts);
+
+static struct pci_xhci_option_elem xhci_option_table[] = {
+	{"tablet", pci_xhci_parse_tablet},
+	{"log", pci_xhci_parse_log_level}
+};
+
+static int
+pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
+{
+	struct pci_xhci_dev_emu *de;
+	struct pci_xhci_vdev *xdev;
+	struct usb_devemu *ue;
+	int port_start, port_end;
+	int slot_start, slot_end;
+	int port, slot;
+	void *ud;
+	uint8_t native_bus, native_pid, native_port;
+	uint16_t native_vid;
+
+	xdev = hci_data;
+
+	assert(xdev);
+	assert(dev_data);
+	assert(xdev->devices);
+	assert(xdev->slots);
+
+	de = pci_xhci_dev_create(xdev, dev_data);
+	if (!de) {
+		UPRINTF(LFTL, "fail to create device\r\n");
+		return -1;
+	}
+
+	/* find free port and slot for the new usb device */
+	ud = de->dev_instance;
+	ue = de->dev_ue;
+
+	assert(ud);
+	assert(ue);
+
+	/* print physical information about new device */
+	ue->ue_info(ud, USB_INFO_BUS, &native_bus, sizeof(native_bus));
+	ue->ue_info(ud, USB_INFO_PORT, &native_port, sizeof(native_port));
+	ue->ue_info(ud, USB_INFO_VID, &native_vid, sizeof(native_vid));
+	ue->ue_info(ud, USB_INFO_PID, &native_pid, sizeof(native_pid));
+	UPRINTF(LDBG, "%X:%X %d-%d connecting.\r\n",
+			native_vid, native_pid, native_bus, native_port);
+
+	/* FIXME: will support usb3 in future */
+	if (xdev->native_assign_ports[native_bus] &&
+			usb_native_is_ss_port(native_bus)) {
+		UPRINTF(LDBG, "%X:%X %d-%d not support usb3 device, exit.\r\n",
+				native_vid, native_pid, native_bus,
+				native_port);
+		goto errout;
+	}
+
+	if (!xdev->native_assign_ports[native_bus] ||
+			!xdev->native_assign_ports[native_bus][native_port]) {
+		UPRINTF(LDBG, "%X:%X %d-%d doesn't belong to this vm, bye.\r\n",
+				native_vid, native_pid, native_bus,
+				native_port);
+		goto errout;
+	}
+
+	UPRINTF(LDBG, "%X:%X %d-%d belong to this vm.\r\n", native_vid,
+			native_pid, native_bus, native_port);
+
+	if (ue->ue_usbver == 2)
+		port_start = xdev->usb2_port_start;
+	else
+		port_start = xdev->usb3_port_start;
+
+	slot_start = 1;
+	port_end = port_start + (XHCI_MAX_DEVS / 2);
+	slot_end = XHCI_MAX_SLOTS;
+
+	/* find free port */
+	for (port = port_start; port < port_end; port++)
+		if (!xdev->devices[port])
+			break;
+
+	/* find free slot */
+	for (slot = slot_start; slot < slot_end; slot++)
+		if (!xdev->slots[slot])
+			break;
+
+	if (port >= port_end || slot >= slot_end) {
+		UPRINTF(LFTL, "no free resource: port %d slot %d\r\n",
+				port, slot);
+		goto errout;
+	}
+
+	/* use index of devices as port number */
+	xdev->devices[port] = de;
+	xdev->slots[slot] = de;
+	xdev->ndevices++;
+
+	pci_xhci_reset_slot(xdev, slot);
+	pci_xhci_init_port(xdev, port);
+
+	UPRINTF(LDBG, "%X:%X %d-%d locates in slot %d port %d.\r\n",
+			native_vid, native_pid, native_bus, native_port,
+			slot, port);
+
+	/* Trigger port change event for the arriving device */
+	if (pci_xhci_port_chg(xdev, port, 1))
+		UPRINTF(LFTL, "fail to report port event\n");
+
+	return 0;
+errout:
+	pci_xhci_dev_destroy(de);
+	return -1;
+}
+
+static int
+pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
+{
+	struct pci_xhci_vdev *xdev;
+	struct pci_xhci_dev_emu *edev;
+	struct usb_dev *udev;
+	uint8_t port, native_port;
+
+	assert(hci_data);
+	assert(dev_data);
+
+	xdev = hci_data;
+	assert(xdev->devices);
+
+	native_port = *((uint8_t *)dev_data);
+	if (!pci_xhci_is_valid_portnum(native_port)) {
+		UPRINTF(LFTL, "invalid physical port %d\r\n", native_port);
+		return -1;
+	}
+
+	for (port = 1; port <= XHCI_MAX_DEVS; ++port) {
+		edev = xdev->devices[port];
+		if (!edev)
+			continue;
+
+		udev = edev->dev_instance;
+		if (udev->port == native_port)
+			break;
+	}
+
+	if (port == XHCI_MAX_DEVS + 1) {
+		UPRINTF(LFTL, "fail to find physical port %d\r\n", native_port);
+		return -1;
+	}
+
+	UPRINTF(LDBG, "report virtual port %d status\r\n", port);
+	if (pci_xhci_port_chg(xdev, port, 0)) {
+		UPRINTF(LFTL, "fail to report event\r\n");
+		return -1;
+	}
+
+	/*
+	 * At this point, the resources allocated for virtual device
+	 * should not be released, it should be released in the
+	 * pci_xhci_cmd_disable_slot function.
+	 */
+	return 0;
+}
+
+/*
+ * return value:
+ * = 0: succeed without interrupt
+ * > 0: succeed with interrupt
+ * < 0: failure
+ */
+static int
+pci_xhci_usb_dev_notify_cb(void *hci_data, void *udev_data)
+{
+	int slot, epid, intr, rc;
+	struct usb_data_xfer *xfer;
+	struct pci_xhci_dev_emu *edev;
+	struct pci_xhci_vdev *xdev;
+
+	xfer = udev_data;
+	if (!xfer)
+		return -1;
+
+	epid = xfer->epid;
+	edev = xfer->dev;
+	if (!edev)
+		return -1;
+
+	xdev = edev->xdev;
+	if (!xdev)
+		return -1;
+
+	slot = edev->hci.hci_address;
+	rc = pci_xhci_xfer_complete(xdev, xfer, slot, epid, &intr);
+
+	if (rc)
+		return -1;
+	else if (intr)
+		return 1;
+	else
+		return 0;
+}
+
+static int
+pci_xhci_usb_dev_intr_cb(void *hci_data, void *udev_data)
+{
+	struct pci_xhci_dev_emu *edev;
+
+	edev = hci_data;
+	if (edev && edev->xdev)
+		pci_xhci_assert_interrupt(edev->xdev);
+
+	return 0;
+}
+
+static struct pci_xhci_dev_emu*
+pci_xhci_dev_create(struct pci_xhci_vdev *xdev, void *dev_data)
+{
+	struct usb_devemu *ue = NULL;
+	struct pci_xhci_dev_emu *de = NULL;
+	void *ud = NULL;
+	int rc;
+
+	assert(xdev);
+	assert(dev_data);
+
+	ue = calloc(1, sizeof(struct usb_devemu));
+	if (!ue)
+		return NULL;
+
+	/*
+	 * TODO: at present, the following functions are
+	 * enough. But for the purpose to be compatible with
+	 * usb_mouse.c, the high level design including the
+	 * function interface should be changed and refined
+	 * in future.
+	 */
+	ue->ue_init     = usb_dev_init;
+	ue->ue_request  = usb_dev_request;
+	ue->ue_data     = usb_dev_data;
+	ue->ue_info	= usb_dev_info;
+	ue->ue_reset    = usb_dev_reset;
+	ue->ue_remove   = NULL;
+	ue->ue_stop     = NULL;
+	ue->ue_deinit	= usb_dev_deinit;
+	ue->ue_devtype  = USB_DEV_PORT_MAPPER;
+
+	ud = ue->ue_init(dev_data, NULL);
+	if (!ud)
+		goto errout;
+
+	rc = ue->ue_info(ud, USB_INFO_VERSION, &ue->ue_usbver,
+			sizeof(ue->ue_usbver));
+	if (rc < 0)
+		goto errout;
+
+	rc = ue->ue_info(ud, USB_INFO_SPEED, &ue->ue_usbspeed,
+			sizeof(ue->ue_usbspeed));
+	if (rc < 0)
+		goto errout;
+
+	de = calloc(1, sizeof(struct pci_xhci_dev_emu));
+	if (!de)
+		goto errout;
+
+	de->xdev            = xdev;
+	de->dev_ue          = ue;
+	de->dev_instance    = ud;
+	de->hci.dev         = NULL;
+	de->hci.hci_intr    = NULL;
+	de->hci.hci_event   = NULL;
+	de->hci.hci_address = 0;
+
+	return de;
+
+errout:
+	if (ud)
+		ue->ue_deinit(ud);
+
+	free(ue);
+	free(de);
+	return NULL;
+}
+
+static void
+pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de)
+{
+	struct usb_devemu *ue;
+	struct usb_dev *ud;
+
+	if (de) {
+		ue = de->dev_ue;
+		ud = de->dev_instance;
+		if (ue) {
+			if (ue->ue_devtype == USB_DEV_PORT_MAPPER) {
+				assert(ue->ue_deinit);
+				if (ue->ue_deinit)
+					ue->ue_deinit(ud);
+			}
+		}
+
+		if (ue->ue_devtype == USB_DEV_PORT_MAPPER)
+			free(ue);
+
+		free(de);
+	}
+}
+
+static inline int
+pci_xhci_is_valid_portnum(int n)
+{
+	return n > 0 && n <= XHCI_MAX_DEVS;
+}
+
+static int
+pci_xhci_port_chg(struct pci_xhci_vdev *xdev, int port, int conn)
+{
+	int speed, error;
+	struct xhci_trb evtrb;
+	struct pci_xhci_portregs *reg;
+	struct pci_xhci_dev_emu	*dev;
+
+	assert(xdev != NULL);
+
+	reg = XHCI_PORTREG_PTR(xdev, port);
+	dev = XHCI_DEVINST_PTR(xdev, port);
+	if (!dev || !dev->dev_ue || !reg) {
+		UPRINTF(LWRN, "find nullptr with port %d\r\n", port);
+		return -1;
+	}
+
+	/* TODO: add USB 3.0 port state */
+	if (conn == 0) {
+		reg->portsc &= ~XHCI_PS_CCS;
+		reg->portsc |= (XHCI_PS_CSC |
+				XHCI_PS_PLS_SET(UPS_PORT_LS_RX_DET));
+	} else {
+		speed = dev->dev_ue->ue_usbspeed;
+		reg->portsc = XHCI_PS_CCS | XHCI_PS_PP | XHCI_PS_CSC;
+		reg->portsc |= XHCI_PS_SPEED_SET(speed);
+	}
+
+
+	/* make an event for the guest OS */
+	pci_xhci_set_evtrb(&evtrb,
+			port,
+			XHCI_TRB_ERROR_SUCCESS,
+			XHCI_TRB_EVENT_PORT_STS_CHANGE);
+
+	/* put it in the event ring */
+	error = pci_xhci_insert_event(xdev, &evtrb, 1);
+	if (error != XHCI_TRB_ERROR_SUCCESS)
+		UPRINTF(LWRN, "fail to report port change\r\n");
+
+	UPRINTF(LDBG, "%s: port %d:%08X\r\n", __func__, port, reg->portsc);
+	return (error == XHCI_TRB_ERROR_SUCCESS) ? 0 : -1;
+}
 
 static void
 pci_xhci_set_evtrb(struct xhci_trb *evtrb, uint64_t port, uint32_t errcode,
@@ -426,20 +800,20 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 	port = (offset - XHCI_PORTREGS_PORT0) / XHCI_PORTREGS_SETSZ;
 	offset = (offset - XHCI_PORTREGS_PORT0) % XHCI_PORTREGS_SETSZ;
 
-	DPRINTF(("pci_xhci: portregs wr offset 0x%lx, port %u: 0x%lx\r\n",
-		offset, port, value));
+	UPRINTF(LDBG, "portregs wr offset 0x%lx, port %u: 0x%lx\r\n",
+		offset, port, value);
 
 	assert(port >= 0);
 
 	if (port > XHCI_MAX_DEVS) {
-		DPRINTF(("pci_xhci: portregs_write port %d > ndevices\r\n",
-			port));
+		UPRINTF(LWRN, "portregs_write port %d > ndevices\r\n",
+			port);
 		return;
 	}
 
 	if (XHCI_DEVINST_PTR(xdev, port) == NULL) {
-		DPRINTF(("pci_xhci: portregs_write to unattached port %d\r\n",
-			port));
+		UPRINTF(LDBG, "portregs_write to unattached port %d\r\n",
+			port);
 	}
 
 	p = XHCI_PORTREG_PTR(xdev, port);
@@ -452,8 +826,8 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 		}
 
 		if ((p->portsc & XHCI_PS_PP) == 0) {
-			WPRINTF(("pci_xhci: portregs_write to unpowered "
-				 "port %d\r\n", port));
+			UPRINTF(LWRN, "portregs_write to unpowered "
+				 "port %d\r\n", port);
 			break;
 		}
 
@@ -489,12 +863,12 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 
 		/* port disable request; for USB3, don't care */
 		if (value & XHCI_PS_PED)
-			DPRINTF(("Disable port %d request\r\n", port));
+			UPRINTF(LDBG, "Disable port %d request\r\n", port);
 
 		if (!(value & XHCI_PS_LWS))
 			break;
 
-		DPRINTF(("Port new PLS: %d\r\n", newpls));
+		UPRINTF(LDBG, "Port new PLS: %d\r\n", newpls);
 		switch (newpls) {
 		case 0: /* U0 */
 		case 3: /* U3 */
@@ -513,8 +887,8 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 			break;
 
 		default:
-			DPRINTF(("Unhandled change port %d PLS %u\r\n",
-				 port, newpls));
+			UPRINTF(LWRN, "Unhandled change port %d PLS %u\r\n",
+				 port, newpls);
 			break;
 		}
 		break;
@@ -524,8 +898,8 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 		break;
 	case 8:
 		/* Port link information register */
-		DPRINTF(("pci_xhci attempted write to PORTLI, port %d\r\n",
-			port));
+		UPRINTF(LDBG, "attempted write to PORTLI, port %d\r\n",
+			port);
 		break;
 	case 12:
 		/*
@@ -549,12 +923,12 @@ pci_xhci_get_dev_ctx(struct pci_xhci_vdev *xdev, uint32_t slot)
 	devctx_addr = xdev->opregs.dcbaa_p->dcba[slot];
 
 	if (devctx_addr == 0) {
-		DPRINTF(("get_dev_ctx devctx_addr == 0\r\n"));
+		UPRINTF(LDBG, "get_dev_ctx devctx_addr == 0\r\n");
 		return NULL;
 	}
 
-	DPRINTF(("pci_xhci: get dev ctx, slot %u devctx addr %016lx\r\n",
-		slot, devctx_addr));
+	UPRINTF(LDBG, "get dev ctx, slot %u devctx addr %016lx\r\n",
+		slot, devctx_addr);
 	devctx = XHCI_GADDR(xdev, devctx_addr & ~0x3FUL);
 
 	return devctx;
@@ -623,7 +997,8 @@ pci_xhci_init_ep(struct pci_xhci_dev_emu *dev, int epid)
 	devep = &dev->eps[epid];
 	pstreams = XHCI_EPCTX_0_MAXP_STREAMS_GET(ep_ctx->dwEpCtx0);
 	if (pstreams > 0) {
-		DPRINTF(("init_ep %d with pstreams %d\r\n", epid, pstreams));
+		UPRINTF(LDBG, "init_ep %d with pstreams %d\r\n",
+				epid, pstreams);
 		assert(devep->ep_sctx_trbs == NULL);
 
 		devep->ep_sctx = XHCI_GADDR(dev->xdev, ep_ctx->qwEpCtx2 &
@@ -638,19 +1013,21 @@ pci_xhci_init_ep(struct pci_xhci_dev_emu *dev, int epid)
 			     XHCI_SCTX_0_DCS_GET(devep->ep_sctx[i].qwSctx0);
 		}
 	} else {
-		DPRINTF(("init_ep %d with no pstreams\r\n", epid));
+		UPRINTF(LDBG, "init_ep %d with no pstreams\r\n", epid);
 		devep->ep_ringaddr = ep_ctx->qwEpCtx2 &
 				     XHCI_EPCTX_2_TR_DQ_PTR_MASK;
 		devep->ep_ccs = XHCI_EPCTX_2_DCS_GET(ep_ctx->qwEpCtx2);
 		devep->ep_tr = XHCI_GADDR(dev->xdev, devep->ep_ringaddr);
-		DPRINTF(("init_ep tr DCS %x\r\n", devep->ep_ccs));
+		UPRINTF(LDBG, "init_ep tr DCS %x\r\n", devep->ep_ccs);
 	}
 
 	if (devep->ep_xfer == NULL) {
 		devep->ep_xfer = malloc(sizeof(struct usb_data_xfer));
-		if (devep->ep_xfer)
+		if (devep->ep_xfer) {
 			USB_DATA_XFER_INIT(devep->ep_xfer);
-		else
+			devep->ep_xfer->dev = (void *)dev;
+			devep->ep_xfer->epid = epid;
+		} else
 			return -1;
 	}
 	return 0;
@@ -663,7 +1040,7 @@ pci_xhci_disable_ep(struct pci_xhci_dev_emu *dev, int epid)
 	struct pci_xhci_dev_ep *devep;
 	struct xhci_endp_ctx   *ep_ctx;
 
-	DPRINTF(("pci_xhci disable_ep %d\r\n", epid));
+	UPRINTF(LDBG, "pci_xhci disable_ep %d\r\n", epid);
 
 	dev_ctx = dev->dev_ctx;
 	ep_ctx = &dev_ctx->ctx_ep[epid];
@@ -690,7 +1067,7 @@ pci_xhci_reset_slot(struct pci_xhci_vdev *xdev, int slot)
 
 	dev = XHCI_SLOTDEV_PTR(xdev, slot);
 	if (!dev)
-		DPRINTF(("xhci reset unassigned slot (%d)?\r\n", slot));
+		UPRINTF(LDBG, "reset unassigned slot (%d)?\r\n", slot);
 	else
 		dev->dev_slotstate = XHCI_ST_DISABLED;
 
@@ -716,21 +1093,21 @@ pci_xhci_insert_event(struct pci_xhci_vdev *xdev,
 	erdp_idx = (erdp - rts->erstba_p[rts->er_deq_seg].qwEvrsTablePtr) /
 		   sizeof(struct xhci_trb);
 
-	DPRINTF(("pci_xhci: insert event 0[%lx] 2[%x] 3[%x]\r\n"
-		 "\terdp idx %d/seg %d, enq idx %d/seg %d, pcs %u\r\n"
-		 "\t(erdp=0x%lx, erst=0x%lx, tblsz=%u, do_intr %d)\r\n",
-		 evtrb->qwTrb0, evtrb->dwTrb2, evtrb->dwTrb3,
-		 erdp_idx, rts->er_deq_seg, rts->er_enq_idx,
-		 rts->er_enq_seg,
-		 rts->event_pcs, erdp, rts->erstba_p->qwEvrsTablePtr,
-		 rts->erstba_p->dwEvrsTableSize, do_intr));
+	UPRINTF(LDBG, "insert event 0[%lx] 2[%x] 3[%x]\r\n"
+			"\terdp idx %d/seg %d, enq idx %d/seg %d, pcs %u\r\n"
+			"\t(erdp=0x%lx, erst=0x%lx, tblsz=%u, do_intr %d)\r\n",
+			evtrb->qwTrb0, evtrb->dwTrb2, evtrb->dwTrb3,
+			erdp_idx, rts->er_deq_seg, rts->er_enq_idx,
+			rts->er_enq_seg,
+			rts->event_pcs, erdp, rts->erstba_p->qwEvrsTablePtr,
+			rts->erstba_p->dwEvrsTableSize, do_intr);
 
 	evtrbptr = &rts->erst_p[rts->er_enq_idx];
 
 	/* TODO: multi-segment table */
 	if (rts->er_events_cnt >= rts->erstba_p->dwEvrsTableSize) {
-		DPRINTF(("pci_xhci[%d] cannot insert event; ring full\r\n",
-			 __LINE__));
+		UPRINTF(LWRN, "[%d] cannot insert event; ring full\r\n",
+			 __LINE__);
 		err = XHCI_TRB_ERROR_EV_RING_FULL;
 		goto done;
 	}
@@ -740,8 +1117,8 @@ pci_xhci_insert_event(struct pci_xhci_vdev *xdev,
 
 		if ((evtrbptr->dwTrb3 & 0x1) == (rts->event_pcs & 0x1)) {
 
-			DPRINTF(("pci_xhci[%d] insert evt err: ring full\r\n",
-				 __LINE__));
+			UPRINTF(LWRN, "[%d] insert evt err: ring full\r\n",
+				 __LINE__);
 
 			errev.qwTrb0 = 0;
 			errev.dwTrb2 = XHCI_TRB_2_ERROR_SET(
@@ -800,8 +1177,8 @@ pci_xhci_cmd_enable_slot(struct pci_xhci_vdev *xdev, uint32_t *slot)
 			}
 		}
 
-	DPRINTF(("pci_xhci enable slot (error=%d) slot %u\r\n",
-		cmderr != XHCI_TRB_ERROR_SUCCESS, *slot));
+	UPRINTF(LDBG, "enable slot (error=%d) slot %u\r\n",
+		cmderr != XHCI_TRB_ERROR_SUCCESS, *slot);
 
 	return cmderr;
 }
@@ -811,8 +1188,9 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 {
 	struct pci_xhci_dev_emu *dev;
 	uint32_t cmderr;
+	int i;
 
-	DPRINTF(("pci_xhci disable slot %u\r\n", slot));
+	UPRINTF(LDBG, "pci_xhci disable slot %u\r\n", slot);
 
 	cmderr = XHCI_TRB_ERROR_NO_SLOTS;
 	if (xdev->portregs == NULL)
@@ -834,6 +1212,19 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 		}
 	}
 
+	for (i = 1; i <= XHCI_MAX_DEVS; ++i)
+		if (dev == xdev->devices[i])
+			break;
+
+	if (i <= XHCI_MAX_DEVS && XHCI_PORTREG_PTR(xdev, i)) {
+		XHCI_PORTREG_PTR(xdev, i)->portsc &= ~(XHCI_PS_CSC |
+				XHCI_PS_CCS | XHCI_PS_PED | XHCI_PS_PP);
+		xdev->devices[i] = NULL;
+		xdev->slots[slot] = NULL;
+		pci_xhci_dev_destroy(dev);
+	} else
+		UPRINTF(LWRN, "invalid slot %d\r\n", slot);
+
 done:
 	return cmderr;
 }
@@ -851,7 +1242,7 @@ pci_xhci_cmd_reset_device(struct pci_xhci_vdev *xdev, uint32_t slot)
 	if (xdev->portregs == NULL)
 		goto done;
 
-	DPRINTF(("pci_xhci reset device slot %u\r\n", slot));
+	UPRINTF(LDBG, "pci_xhci reset device slot %u\r\n", slot);
 
 	dev = XHCI_SLOTDEV_PTR(xdev, slot);
 	if (!dev || dev->dev_slotstate == XHCI_ST_DISABLED)
@@ -910,19 +1301,19 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 
 	cmderr = XHCI_TRB_ERROR_SUCCESS;
 
-	DPRINTF(("pci_xhci: address device, input ctl: D 0x%08x A 0x%08x,\r\n"
+	UPRINTF(LDBG, "address device, input ctl: D 0x%08x A 0x%08x,\r\n"
 		 "          slot %08x %08x %08x %08x\r\n"
 		 "          ep0  %08x %08x %016lx %08x\r\n",
 		input_ctx->ctx_input.dwInCtx0, input_ctx->ctx_input.dwInCtx1,
 		islot_ctx->dwSctx0, islot_ctx->dwSctx1,
 		islot_ctx->dwSctx2, islot_ctx->dwSctx3,
 		ep0_ctx->dwEpCtx0, ep0_ctx->dwEpCtx1, ep0_ctx->qwEpCtx2,
-		ep0_ctx->dwEpCtx4));
+		ep0_ctx->dwEpCtx4);
 
 	/* when setting address: drop-ctx=0, add-ctx=slot+ep0 */
 	if ((input_ctx->ctx_input.dwInCtx0 != 0) ||
 	    (input_ctx->ctx_input.dwInCtx1 & 0x03) != 0x03) {
-		DPRINTF(("pci_xhci: address device, input ctl invalid\r\n"));
+		UPRINTF(LDBG, "address device, input ctl invalid\r\n");
 		cmderr = XHCI_TRB_ERROR_TRB;
 		goto done;
 	}
@@ -933,10 +1324,10 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 		cmderr = XHCI_TRB_ERROR_CONTEXT_STATE;
 		goto done;
 	}
-	DPRINTF(("pci_xhci: address device, dev ctx\r\n"
-		 "          slot %08x %08x %08x %08x\r\n",
+	UPRINTF(LDBG, "address device, dev ctx\r\n"
+		 "      slot %08x %08x %08x %08x\r\n",
 		dev_ctx->ctx_slot.dwSctx0, dev_ctx->ctx_slot.dwSctx1,
-		dev_ctx->ctx_slot.dwSctx2, dev_ctx->ctx_slot.dwSctx3));
+		dev_ctx->ctx_slot.dwSctx2, dev_ctx->ctx_slot.dwSctx3);
 
 	dev = XHCI_SLOTDEV_PTR(xdev, slot);
 	assert(dev != NULL);
@@ -968,13 +1359,13 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 
 	dev->dev_slotstate = XHCI_ST_ADDRESSED;
 
-	DPRINTF(("pci_xhci: address device, output ctx\r\n"
-		 "          slot %08x %08x %08x %08x\r\n"
-		 "          ep0  %08x %08x %016lx %08x\r\n",
+	UPRINTF(LDBG, "address device, output ctx\r\n"
+		 "      slot %08x %08x %08x %08x\r\n"
+		 "      ep0  %08x %08x %016lx %08x\r\n",
 		dev_ctx->ctx_slot.dwSctx0, dev_ctx->ctx_slot.dwSctx1,
 		dev_ctx->ctx_slot.dwSctx2, dev_ctx->ctx_slot.dwSctx3,
 		ep0_ctx->dwEpCtx0, ep0_ctx->dwEpCtx1, ep0_ctx->qwEpCtx2,
-		ep0_ctx->dwEpCtx4));
+		ep0_ctx->dwEpCtx4);
 
 done:
 	return cmderr;
@@ -994,14 +1385,13 @@ pci_xhci_cmd_config_ep(struct pci_xhci_vdev *xdev,
 
 	cmderr = XHCI_TRB_ERROR_SUCCESS;
 
-	DPRINTF(("pci_xhci config_ep slot %u\r\n", slot));
+	UPRINTF(LDBG, "config_ep slot %u\r\n", slot);
 
 	dev = XHCI_SLOTDEV_PTR(xdev, slot);
 	assert(dev != NULL);
 
 	if ((trb->dwTrb3 & XHCI_TRB_3_DCEP_BIT) != 0) {
-		DPRINTF(("pci_xhci config_ep - deconfigure ep slot %u\r\n",
-			slot));
+		UPRINTF(LDBG, "config_ep - deconfigure ep slot %u\r\n", slot);
 		if (dev->dev_ue->ue_stop != NULL)
 			dev->dev_ue->ue_stop(dev->dev_instance);
 
@@ -1032,8 +1422,8 @@ pci_xhci_cmd_config_ep(struct pci_xhci_vdev *xdev,
 	}
 
 	if (dev->dev_slotstate < XHCI_ST_ADDRESSED) {
-		DPRINTF(("pci_xhci: config_ep slotstate x%x != addressed\r\n",
-			dev->dev_slotstate));
+		UPRINTF(LWRN, "config_ep slotstate x%x != addressed\r\n",
+			dev->dev_slotstate);
 		cmderr = XHCI_TRB_ERROR_SLOT_NOT_ON;
 		goto done;
 	}
@@ -1054,16 +1444,16 @@ pci_xhci_cmd_config_ep(struct pci_xhci_vdev *xdev,
 
 	input_ctx = XHCI_GADDR(xdev, trb->qwTrb0 & ~0xFUL);
 	dev_ctx = dev->dev_ctx;
-	DPRINTF(("pci_xhci: config_ep inputctx: D:x%08x A:x%08x 7:x%08x\r\n",
+	UPRINTF(LDBG, "config_ep inputctx: D:x%08x A:x%08x 7:x%08x\r\n",
 		input_ctx->ctx_input.dwInCtx0, input_ctx->ctx_input.dwInCtx1,
-		input_ctx->ctx_input.dwInCtx7));
+		input_ctx->ctx_input.dwInCtx7);
 
 	for (i = 2; i <= 31; i++) {
 		ep_ctx = &dev_ctx->ctx_ep[i];
 
 		if (input_ctx->ctx_input.dwInCtx0 &
 		    XHCI_INCTX_0_DROP_MASK(i)) {
-			DPRINTF((" config ep - dropping ep %d\r\n", i));
+			UPRINTF(LDBG, " config ep - dropping ep %d\r\n", i);
 			pci_xhci_disable_ep(dev, i);
 		}
 
@@ -1071,9 +1461,9 @@ pci_xhci_cmd_config_ep(struct pci_xhci_vdev *xdev,
 		    XHCI_INCTX_1_ADD_MASK(i)) {
 			iep_ctx = &input_ctx->ctx_ep[i];
 
-			DPRINTF((" enable ep[%d]  %08x %08x %016lx %08x\r\n",
+			UPRINTF(LDBG, " enable ep%d %08x %08x %016lx %08x\r\n",
 				i, iep_ctx->dwEpCtx0, iep_ctx->dwEpCtx1,
-				iep_ctx->qwEpCtx2, iep_ctx->dwEpCtx4));
+				iep_ctx->qwEpCtx2, iep_ctx->dwEpCtx4);
 
 			memcpy(ep_ctx, iep_ctx, sizeof(struct xhci_endp_ctx));
 
@@ -1098,10 +1488,12 @@ pci_xhci_cmd_config_ep(struct pci_xhci_vdev *xdev,
 			   input_ctx->ctx_slot.dwSctx0, 0x1F, 27);
 	dev->dev_slotstate = XHCI_ST_CONFIGURED;
 
-	DPRINTF(("EP configured; slot %u [0]=0x%08x [1]=0x%08x [2]=0x%08x "
-		 "[3]=0x%08x\r\n", slot, dev_ctx->ctx_slot.dwSctx0,
-		 dev_ctx->ctx_slot.dwSctx1, dev_ctx->ctx_slot.dwSctx2,
-		 dev_ctx->ctx_slot.dwSctx3));
+	UPRINTF(LDBG, "EP configured; slot %u [0]=0x%08x [1]=0x%08x"
+			" [2]=0x%08x [3]=0x%08x\r\n", slot,
+			dev_ctx->ctx_slot.dwSctx0,
+			dev_ctx->ctx_slot.dwSctx1,
+			dev_ctx->ctx_slot.dwSctx2,
+			dev_ctx->ctx_slot.dwSctx3);
 
 done:
 	return cmderr;
@@ -1125,7 +1517,7 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 
 	epid = XHCI_TRB_3_EP_GET(trb->dwTrb3);
 
-	DPRINTF(("pci_xhci: reset ep %u: slot %u\r\n", epid, slot));
+	UPRINTF(LDBG, "reset ep %u: slot %u\r\n", epid, slot);
 
 	cmderr = XHCI_TRB_ERROR_SUCCESS;
 
@@ -1140,7 +1532,7 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 	}
 
 	if (epid < 1 || epid > 31) {
-		DPRINTF(("pci_xhci: reset ep: invalid epid %u\r\n", epid));
+		UPRINTF(LDBG, "reset ep: invalid epid %u\r\n", epid);
 		cmderr = XHCI_TRB_ERROR_TRB;
 		goto done;
 	}
@@ -1159,9 +1551,9 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 	if (XHCI_EPCTX_0_MAXP_STREAMS_GET(ep_ctx->dwEpCtx0) == 0)
 		ep_ctx->qwEpCtx2 = devep->ep_ringaddr | devep->ep_ccs;
 
-	DPRINTF(("pci_xhci: reset ep[%u] %08x %08x %016lx %08x\r\n",
+	UPRINTF(LDBG, "reset ep[%u] %08x %08x %016lx %08x\r\n",
 		epid, ep_ctx->dwEpCtx0, ep_ctx->dwEpCtx1, ep_ctx->qwEpCtx2,
-		ep_ctx->dwEpCtx4));
+		ep_ctx->dwEpCtx4);
 
 	if (type == XHCI_TRB_TYPE_RESET_EP &&
 	    (dev->dev_ue->ue_reset == NULL ||
@@ -1191,7 +1583,7 @@ pci_xhci_find_stream(struct pci_xhci_vdev *xdev,
 		return XHCI_TRB_ERROR_INVALID_SID;
 
 	if (XHCI_EPCTX_0_LSA_GET(ep->dwEpCtx0) == 0) {
-		DPRINTF(("pci_xhci: find_stream; LSA bit not set\r\n"));
+		UPRINTF(LWRN, "find_stream; LSA bit not set\r\n");
 		return XHCI_TRB_ERROR_INVALID_SID;
 	}
 
@@ -1225,16 +1617,16 @@ pci_xhci_cmd_set_tr(struct pci_xhci_vdev *xdev,
 	dev = XHCI_SLOTDEV_PTR(xdev, slot);
 	assert(dev != NULL);
 
-	DPRINTF(("pci_xhci set_tr: new-tr x%016lx, SCT %u DCS %u\r\n"
-		 "                 stream-id %u, slot %u, epid %u, C %u\r\n",
+	UPRINTF(LDBG, "set_tr: new-tr x%016lx, SCT %u DCS %u\r\n"
+		 "      stream-id %u, slot %u, epid %u, C %u\r\n",
 		 (trb->qwTrb0 & ~0xF),  (uint32_t)((trb->qwTrb0 >> 1) & 0x7),
 		 (uint32_t)(trb->qwTrb0 & 0x1), (trb->dwTrb2 >> 16) & 0xFFFF,
 		 XHCI_TRB_3_SLOT_GET(trb->dwTrb3),
-		 XHCI_TRB_3_EP_GET(trb->dwTrb3), trb->dwTrb3 & 0x1));
+		 XHCI_TRB_3_EP_GET(trb->dwTrb3), trb->dwTrb3 & 0x1);
 
 	epid = XHCI_TRB_3_EP_GET(trb->dwTrb3);
 	if (epid < 1 || epid > 31) {
-		DPRINTF(("pci_xhci: set_tr_deq: invalid epid %u\r\n", epid));
+		UPRINTF(LDBG, "set_tr_deq: invalid epid %u\r\n", epid);
 		cmderr = XHCI_TRB_ERROR_TRB;
 		goto done;
 	}
@@ -1250,8 +1642,8 @@ pci_xhci_cmd_set_tr(struct pci_xhci_vdev *xdev,
 	case XHCI_ST_EPCTX_ERROR:
 		break;
 	default:
-		DPRINTF(("pci_xhci cmd set_tr invalid state %x\r\n",
-			XHCI_EPCTX_0_EPSTATE_GET(ep_ctx->dwEpCtx0)));
+		UPRINTF(LDBG, "cmd set_tr invalid state %x\r\n",
+			XHCI_EPCTX_0_EPSTATE_GET(ep_ctx->dwEpCtx0));
 		cmderr = XHCI_TRB_ERROR_CONTEXT_STATE;
 		goto done;
 	}
@@ -1273,15 +1665,15 @@ pci_xhci_cmd_set_tr(struct pci_xhci_vdev *xdev,
 		}
 	} else {
 		if (streamid != 0) {
-			DPRINTF(("pci_xhci cmd set_tr streamid %x != 0\r\n",
-				streamid));
+			UPRINTF(LDBG, "cmd set_tr streamid %x != 0\r\n",
+				streamid);
 		}
 		ep_ctx->qwEpCtx2 = trb->qwTrb0 & ~0xFUL;
 		devep->ep_ringaddr = ep_ctx->qwEpCtx2 & ~0xFUL;
 		devep->ep_ccs = trb->qwTrb0 & 0x1;
 		devep->ep_tr = XHCI_GADDR(xdev, devep->ep_ringaddr);
 
-		DPRINTF(("pci_xhci set_tr first TRB:\r\n"));
+		UPRINTF(LDBG, "set_tr first TRB:\r\n");
 		pci_xhci_dump_trb(devep->ep_tr);
 	}
 	ep_ctx->dwEpCtx0 = (ep_ctx->dwEpCtx0 & ~0x7) | XHCI_ST_EPCTX_STOPPED;
@@ -1306,19 +1698,19 @@ pci_xhci_cmd_eval_ctx(struct pci_xhci_vdev *xdev,
 	ep0_ctx = &input_ctx->ctx_ep[1];
 
 	cmderr = XHCI_TRB_ERROR_SUCCESS;
-	DPRINTF(("pci_xhci: eval ctx, input ctl: D 0x%08x A 0x%08x,\r\n"
-		 "          slot %08x %08x %08x %08x\r\n"
-		 "          ep0  %08x %08x %016lx %08x\r\n",
+	UPRINTF(LDBG, "eval ctx, input ctl: D 0x%08x A 0x%08x,\r\n"
+		 "      slot %08x %08x %08x %08x\r\n"
+		 "      ep0  %08x %08x %016lx %08x\r\n",
 		input_ctx->ctx_input.dwInCtx0, input_ctx->ctx_input.dwInCtx1,
 		islot_ctx->dwSctx0, islot_ctx->dwSctx1,
 		islot_ctx->dwSctx2, islot_ctx->dwSctx3,
 		ep0_ctx->dwEpCtx0, ep0_ctx->dwEpCtx1, ep0_ctx->qwEpCtx2,
-		ep0_ctx->dwEpCtx4));
+		ep0_ctx->dwEpCtx4);
 
 	/* this command expects drop-ctx=0 & add-ctx=slot+ep0 */
 	if ((input_ctx->ctx_input.dwInCtx0 != 0) ||
 	    (input_ctx->ctx_input.dwInCtx1 & 0x03) == 0) {
-		DPRINTF(("pci_xhci: eval ctx, input ctl invalid\r\n"));
+		UPRINTF(LWRN, "eval ctx, input ctl invalid\r\n");
 		cmderr = XHCI_TRB_ERROR_TRB;
 		goto done;
 	}
@@ -1330,10 +1722,10 @@ pci_xhci_cmd_eval_ctx(struct pci_xhci_vdev *xdev,
 		goto done;
 	}
 
-	DPRINTF(("pci_xhci: eval ctx, dev ctx\r\n"
-		 "          slot %08x %08x %08x %08x\r\n",
+	UPRINTF(LDBG, "eval ctx, dev ctx\r\n"
+		 "      slot %08x %08x %08x %08x\r\n",
 		dev_ctx->ctx_slot.dwSctx0, dev_ctx->ctx_slot.dwSctx1,
-		dev_ctx->ctx_slot.dwSctx2, dev_ctx->ctx_slot.dwSctx3));
+		dev_ctx->ctx_slot.dwSctx2, dev_ctx->ctx_slot.dwSctx3);
 
 	if (input_ctx->ctx_input.dwInCtx1 & 0x01) {	/* slot ctx */
 		/* set max exit latency */
@@ -1355,13 +1747,13 @@ pci_xhci_cmd_eval_ctx(struct pci_xhci_vdev *xdev,
 		ep0_ctx = &dev_ctx->ctx_ep[1];
 	}
 
-	DPRINTF(("pci_xhci: eval ctx, output ctx\r\n"
-		 "          slot %08x %08x %08x %08x\r\n"
-		 "          ep0  %08x %08x %016lx %08x\r\n",
+	UPRINTF(LDBG, "eval ctx, output ctx\r\n"
+		 "      slot %08x %08x %08x %08x\r\n"
+		 "      ep0  %08x %08x %016lx %08x\r\n",
 		dev_ctx->ctx_slot.dwSctx0, dev_ctx->ctx_slot.dwSctx1,
 		dev_ctx->ctx_slot.dwSctx2, dev_ctx->ctx_slot.dwSctx3,
 		ep0_ctx->dwEpCtx0, ep0_ctx->dwEpCtx1, ep0_ctx->qwEpCtx2,
-		ep0_ctx->dwEpCtx4));
+		ep0_ctx->dwEpCtx4);
 
 done:
 	return cmderr;
@@ -1395,10 +1787,10 @@ pci_xhci_complete_commands(struct pci_xhci_vdev *xdev)
 		    (ccs & XHCI_TRB_3_CYCLE_BIT))
 			break;
 
-		DPRINTF(("pci_xhci: cmd type 0x%x, Trb0 x%016lx dwTrb2 x%08x"
+		UPRINTF(LDBG, "cmd type 0x%x, Trb0 x%016lx dwTrb2 x%08x"
 			" dwTrb3 x%08x, TRB_CYCLE %u/ccs %u\r\n",
 			type, trb->qwTrb0, trb->dwTrb2, trb->dwTrb3,
-			trb->dwTrb3 & XHCI_TRB_3_CYCLE_BIT, ccs));
+			trb->dwTrb3 & XHCI_TRB_3_CYCLE_BIT, ccs);
 
 		cmderr = XHCI_TRB_ERROR_SUCCESS;
 		evtrb.dwTrb2 = 0;
@@ -1437,13 +1829,13 @@ pci_xhci_complete_commands(struct pci_xhci_vdev *xdev)
 			break;
 
 		case XHCI_TRB_TYPE_RESET_EP:			/* 0x0E */
-			DPRINTF(("Reset Endpoint on slot %d\r\n", slot));
+			UPRINTF(LDBG, "Reset Endpoint on slot %d\r\n", slot);
 			slot = XHCI_TRB_3_SLOT_GET(trb->dwTrb3);
 			cmderr = pci_xhci_cmd_reset_ep(xdev, slot, trb);
 			break;
 
 		case XHCI_TRB_TYPE_STOP_EP:			/* 0x0F */
-			DPRINTF(("Stop Endpoint on slot %d\r\n", slot));
+			UPRINTF(LDBG, "Stop Endpoint on slot %d\r\n", slot);
 			slot = XHCI_TRB_3_SLOT_GET(trb->dwTrb3);
 			cmderr = pci_xhci_cmd_reset_ep(xdev, slot, trb);
 			break;
@@ -1478,7 +1870,7 @@ pci_xhci_complete_commands(struct pci_xhci_vdev *xdev)
 			break;
 
 		default:
-			DPRINTF(("pci_xhci: unsupported cmd %x\r\n", type));
+			UPRINTF(LDBG, "unsupported cmd %x\r\n", type);
 			break;
 		}
 
@@ -1489,8 +1881,8 @@ pci_xhci_complete_commands(struct pci_xhci_vdev *xdev)
 			evtrb.qwTrb0 = crcr;
 			evtrb.dwTrb2 |= XHCI_TRB_2_ERROR_SET(cmderr);
 			evtrb.dwTrb3 |= XHCI_TRB_3_SLOT_SET(slot);
-			DPRINTF(("pci_xhci: command 0x%x result: 0x%x\r\n",
-				type, cmderr));
+			UPRINTF(LDBG, "command 0x%x result: 0x%x\r\n",
+				type, cmderr);
 			pci_xhci_insert_event(xdev, &evtrb, 1);
 		}
 
@@ -1534,10 +1926,10 @@ pci_xhci_dump_trb(struct xhci_trb *trb)
 	uint32_t type;
 
 	type = XHCI_TRB_3_TYPE_GET(trb->dwTrb3);
-	DPRINTF(("pci_xhci: trb[@%p] type x%02x %s 0:x%016lx 2:x%08x "
+	UPRINTF(LDBG, "trb[@%p] type x%02x %s 0:x%016lx 2:x%08x "
 		"3:x%08x\r\n", trb, type,
 		 type <= XHCI_TRB_TYPE_NOOP_CMD ? trbtypes[type] : "INVALID",
-		 trb->qwTrb0, trb->dwTrb2, trb->dwTrb3));
+		 trb->qwTrb0, trb->dwTrb2, trb->dwTrb3);
 }
 
 static int
@@ -1576,12 +1968,12 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 		trb = XHCI_GADDR(xdev, evtrb.qwTrb0);
 		trbflags = trb->dwTrb3;
 
-		DPRINTF(("pci_xhci: xfer[%d] done?%u:%d trb %x %016lx %x "
+		UPRINTF(LDBG, "xfer[%d] done?%u:%d trb %x %016lx %x "
 			 "(err %d) IOC?%d\r\n",
 			 i, xfer->data[i].processed, xfer->data[i].blen,
 			 XHCI_TRB_3_TYPE_GET(trbflags), evtrb.qwTrb0,
 			 trbflags, err,
-			 trb->dwTrb3 & XHCI_TRB_3_IOC_BIT ? 1 : 0));
+			 trb->dwTrb3 & XHCI_TRB_3_IOC_BIT ? 1 : 0);
 
 		if (!xfer->data[i].processed) {
 			xfer->head = (int)i;
@@ -1589,6 +1981,7 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 		}
 
 		xfer->ndata--;
+		xfer->head = (xfer->head + 1) % USB_MAX_XFER_BLOCKS;
 		edtla += xfer->data[i].bdone;
 
 		trb->dwTrb3 = (trb->dwTrb3 & ~0x1) | (xfer->data[i].ccs);
@@ -1614,7 +2007,7 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 			XHCI_TRB_3_SLOT_SET(slot) | XHCI_TRB_3_EP_SET(epid);
 
 		if (XHCI_TRB_3_TYPE_GET(trbflags) == XHCI_TRB_TYPE_EVENT_DATA) {
-			DPRINTF(("pci_xhci EVENT_DATA edtla %u\r\n", edtla));
+			UPRINTF(LDBG, "EVENT_DATA edtla %u\r\n", edtla);
 			evtrb.qwTrb0 = trb->qwTrb0;
 			evtrb.dwTrb2 = (edtla & 0xFFFFF) |
 				 XHCI_TRB_2_ERROR_SET(err);
@@ -1651,16 +2044,16 @@ pci_xhci_update_ep_ring(struct pci_xhci_vdev *xdev,
 		devep->ep_sctx_trbs[streamid].ccs = ccs & 0x1;
 		ep_ctx->qwEpCtx2 = (ep_ctx->qwEpCtx2 & ~0x1) | (ccs & 0x1);
 
-		DPRINTF(("xhci update ep-ring stream %d, addr %lx\r\n",
-			 streamid, devep->ep_sctx[streamid].qwSctx0));
+		UPRINTF(LDBG, "update ep-ring stream %d, addr %lx\r\n",
+			 streamid, devep->ep_sctx[streamid].qwSctx0);
 	} else {
 		devep->ep_ringaddr = ringaddr & ~0xFUL;
 		devep->ep_ccs = ccs & 0x1;
 		devep->ep_tr = XHCI_GADDR(xdev, ringaddr & ~0xFUL);
 		ep_ctx->qwEpCtx2 = (ringaddr & ~0xFUL) | (ccs & 0x1);
 
-		DPRINTF(("xhci update ep-ring, addr %lx\r\n",
-			(devep->ep_ringaddr | devep->ep_ccs)));
+		UPRINTF(LDBG, "update ep-ring, addr %lx\r\n",
+			(devep->ep_ringaddr | devep->ep_ccs));
 	}
 }
 
@@ -1697,7 +2090,12 @@ pci_xhci_try_usb_xfer(struct pci_xhci_vdev *xdev,
 			if (USB_DATA_GET_ERRCODE(&xfer->data[xfer->head]) ==
 			    USB_NAK)
 				err = XHCI_TRB_ERROR_SUCCESS;
-		} else {
+		}
+		/*
+		 * Only for usb_mouse.c, emulation with port mapping will do it
+		 * by the libusb callback function.
+		 */
+		else if (dev->dev_ue->ue_devtype == USB_DEV_STATIC) {
 			err = pci_xhci_xfer_complete(xdev, xfer, slot, epid,
 						     &do_intr);
 			if (err == XHCI_TRB_ERROR_SUCCESS && do_intr)
@@ -1738,7 +2136,7 @@ pci_xhci_handle_transfer(struct pci_xhci_vdev *xdev,
 	xfer = devep->ep_xfer;
 	USB_DATA_XFER_LOCK(xfer);
 
-	DPRINTF(("pci_xhci handle_transfer slot %u\r\n", slot));
+	UPRINTF(LDBG, "handle_transfer slot %u\r\n", slot);
 
 retry:
 	err = 0;
@@ -1754,8 +2152,9 @@ retry:
 		if (XHCI_TRB_3_TYPE_GET(trbflags) != XHCI_TRB_TYPE_LINK &&
 		    (trbflags & XHCI_TRB_3_CYCLE_BIT) !=
 		    (ccs & XHCI_TRB_3_CYCLE_BIT)) {
-			DPRINTF(("Cycle-bit changed trbflags %x, ccs %x\r\n",
-				 trbflags & XHCI_TRB_3_CYCLE_BIT, ccs));
+			UPRINTF(LDBG, "Cycle-bit changed trbflags %x,"
+					" ccs %x\r\n",
+					trbflags & XHCI_TRB_3_CYCLE_BIT, ccs);
 			break;
 		}
 
@@ -1778,7 +2177,7 @@ retry:
 		case XHCI_TRB_TYPE_SETUP_STAGE:
 			if ((trbflags & XHCI_TRB_3_IDT_BIT) == 0 ||
 			    XHCI_TRB_2_BYTES_GET(trb->dwTrb2) != 8) {
-				DPRINTF(("pci_xhci: invalid setup trb\r\n"));
+				UPRINTF(LDBG, "invalid setup trb\r\n");
 				err = XHCI_TRB_ERROR_TRB;
 				goto errout;
 			}
@@ -1809,21 +2208,20 @@ retry:
 		case XHCI_TRB_TYPE_NORMAL:
 		case XHCI_TRB_TYPE_ISOCH:
 			if (setup_trb != NULL) {
-				DPRINTF(("pci_xhci: trb not supposed to be in "
-					 "ctl scope\r\n"));
+				UPRINTF(LWRN, "trb not supposed to be in "
+					 "ctl scope\r\n");
 				err = XHCI_TRB_ERROR_TRB;
 				goto errout;
 			}
 			/* fall through */
 
 		case XHCI_TRB_TYPE_DATA_STAGE:
-			xfer_block =
-				usb_data_xfer_append(xfer, (void *)(trbflags &
-						     XHCI_TRB_3_IDT_BIT ?
-						     &trb->qwTrb0 :
-						     XHCI_GADDR(xdev,
-							     trb->qwTrb0)),
-			     trb->dwTrb2 & 0x1FFFF, (void *)addr, ccs);
+			xfer_block = usb_data_xfer_append(xfer,
+					(void *)(trbflags & XHCI_TRB_3_IDT_BIT ?
+					&trb->qwTrb0 :
+					XHCI_GADDR(xdev, trb->qwTrb0)),
+					trb->dwTrb2 & 0x1FFFF, (void *)addr,
+					ccs);
 			break;
 
 		case XHCI_TRB_TYPE_STATUS_STAGE:
@@ -1853,16 +2251,16 @@ retry:
 			break;
 
 		default:
-			DPRINTF(("pci_xhci: handle xfer unexpected trb type "
+			UPRINTF(LWRN, "handle xfer unexpected trb type "
 				 "0x%x\r\n",
-				 XHCI_TRB_3_TYPE_GET(trbflags)));
+				 XHCI_TRB_3_TYPE_GET(trbflags));
 			err = XHCI_TRB_ERROR_TRB;
 			goto errout;
 		}
 
 		trb = pci_xhci_trb_next(xdev, trb, &addr);
 
-		DPRINTF(("pci_xhci: next trb: 0x%lx\r\n", (uint64_t)trb));
+		UPRINTF(LDBG, "next trb: 0x%lx\r\n", (uint64_t)trb);
 
 		if (xfer_block) {
 			xfer_block->trbnext = addr;
@@ -1876,14 +2274,14 @@ retry:
 
 		/* handle current batch that requires interrupt on complete */
 		if (trbflags & XHCI_TRB_3_IOC_BIT) {
-			DPRINTF(("pci_xhci: trb IOC bit set\r\n"));
+			UPRINTF(LDBG, "trb IOC bit set\r\n");
 			if (epid == 1)
 				do_retry = 1;
 			break;
 		}
 	}
 
-	DPRINTF(("pci_xhci[%d]: xfer->ndata %u\r\n", __LINE__, xfer->ndata));
+	UPRINTF(LDBG, "[%d]: xfer->ndata %u\r\n", __LINE__, xfer->ndata);
 
 	if (epid == 1) {
 		err = USB_ERR_NOT_STARTED;
@@ -1907,7 +2305,7 @@ retry:
 
 errout:
 	if (err == XHCI_TRB_ERROR_EV_RING_FULL)
-		DPRINTF(("pci_xhci[%d]: event ring full\r\n", __LINE__));
+		UPRINTF(LDBG, "[%d]: event ring full\r\n", __LINE__);
 
 	if (!do_retry)
 		USB_DATA_XFER_UNLOCK(xfer);
@@ -1917,8 +2315,8 @@ errout:
 
 	if (do_retry) {
 		USB_DATA_XFER_RESET(xfer);
-		DPRINTF(("pci_xhci[%d]: retry:continuing with next TRBs\r\n",
-			 __LINE__));
+		UPRINTF(LDBG, "[%d]: retry:continuing with next TRBs\r\n",
+			 __LINE__);
 		goto retry;
 	}
 
@@ -1943,11 +2341,11 @@ pci_xhci_device_doorbell(struct pci_xhci_vdev *xdev,
 	uint64_t	ringaddr;
 	uint32_t	ccs;
 
-	DPRINTF(("pci_xhci doorbell slot %u epid %u stream %u\r\n",
-		slot, epid, streamid));
+	UPRINTF(LDBG, "doorbell slot %u epid %u stream %u\r\n",
+		slot, epid, streamid);
 
 	if (slot == 0 || slot > xdev->ndevices) {
-		DPRINTF(("pci_xhci: invalid doorbell slot %u\r\n", slot));
+		UPRINTF(LWRN, "invalid doorbell slot %u\r\n", slot);
 		return;
 	}
 
@@ -1960,15 +2358,21 @@ pci_xhci_device_doorbell(struct pci_xhci_vdev *xdev,
 
 	sctx_tr = NULL;
 
-	DPRINTF(("pci_xhci: device doorbell ep[%u] %08x %08x %016lx %08x\r\n",
+	UPRINTF(LDBG, "device doorbell ep[%u] %08x %08x %016lx %08x\r\n",
 		epid, ep_ctx->dwEpCtx0, ep_ctx->dwEpCtx1, ep_ctx->qwEpCtx2,
-		ep_ctx->dwEpCtx4));
+		ep_ctx->dwEpCtx4);
 
 	if (ep_ctx->qwEpCtx2 == 0)
 		return;
 
+	/*
+	 * In USB emulation with port mapping, the following transfer should
+	 * NOT be called, or else the interrupt transfer will result
+	 * of invalid and infinite loop. It is used by usb_mouse.c only.
+	 */
 	/* handle pending transfers */
-	if (devep->ep_xfer->ndata > 0) {
+	if (dev->dev_ue && dev->dev_ue->ue_devtype == USB_DEV_STATIC &&
+			devep->ep_xfer->ndata > 0) {
 		pci_xhci_try_usb_xfer(xdev, dev, devep, ep_ctx, slot, epid);
 		return;
 	}
@@ -1979,21 +2383,21 @@ pci_xhci_device_doorbell(struct pci_xhci_vdev *xdev,
 		ringaddr = sctx_tr->ringaddr;
 		ccs = sctx_tr->ccs;
 		trb = XHCI_GADDR(xdev, sctx_tr->ringaddr & ~0xFUL);
-		DPRINTF(("doorbell, stream %u, ccs %lx, trb ccs %x\r\n",
+		UPRINTF(LDBG, "doorbell, stream %u, ccs %lx, trb ccs %x\r\n",
 			streamid, ep_ctx->qwEpCtx2 & XHCI_TRB_3_CYCLE_BIT,
-			trb->dwTrb3 & XHCI_TRB_3_CYCLE_BIT));
+			trb->dwTrb3 & XHCI_TRB_3_CYCLE_BIT);
 	} else {
 		ringaddr = devep->ep_ringaddr;
 		ccs = devep->ep_ccs;
 		trb = devep->ep_tr;
-		DPRINTF(("doorbell, ccs %lx, trb ccs %x\r\n",
+		UPRINTF(LDBG, "doorbell, ccs %lx, trb ccs %x\r\n",
 			ep_ctx->qwEpCtx2 & XHCI_TRB_3_CYCLE_BIT,
-			trb->dwTrb3 & XHCI_TRB_3_CYCLE_BIT));
+			trb->dwTrb3 & XHCI_TRB_3_CYCLE_BIT);
 	}
 
 	if (XHCI_TRB_3_TYPE_GET(trb->dwTrb3) == 0) {
-		DPRINTF(("pci_xhci: ring %lx trb[%lx] EP %u is RESERVED?\r\n",
-			ep_ctx->qwEpCtx2, devep->ep_ringaddr, epid));
+		UPRINTF(LDBG, "ring %lx trb[%lx] EP %u is RESERVED?\r\n",
+			ep_ctx->qwEpCtx2, devep->ep_ringaddr, epid);
 		return;
 	}
 
@@ -2009,11 +2413,11 @@ pci_xhci_dbregs_write(struct pci_xhci_vdev *xdev,
 
 	offset = (offset - xdev->dboff) / sizeof(uint32_t);
 
-	DPRINTF(("pci_xhci: doorbell write offset 0x%lx: 0x%lx\r\n",
-		offset, value));
+	UPRINTF(LDBG, "doorbell write offset 0x%lx: 0x%lx\r\n",
+		offset, value);
 
 	if (XHCI_HALTED(xdev)) {
-		DPRINTF(("pci_xhci: controller halted\r\n"));
+		UPRINTF(LWRN, "pci_xhci: controller halted\r\n");
 		return;
 	}
 
@@ -2035,12 +2439,12 @@ pci_xhci_rtsregs_write(struct pci_xhci_vdev *xdev,
 	offset -= xdev->rtsoff;
 
 	if (offset == 0) {
-		DPRINTF(("pci_xhci attempted write to MFINDEX\r\n"));
+		UPRINTF(LWRN, "attempted write to MFINDEX\r\n");
 		return;
 	}
 
-	DPRINTF(("pci_xhci: runtime regs write offset 0x%lx: 0x%lx\r\n",
-		offset, value));
+	UPRINTF(LDBG, "runtime regs write offset 0x%lx: 0x%lx\r\n",
+		offset, value);
 
 	offset -= 0x20;		/* start of intrreg */
 
@@ -2087,10 +2491,10 @@ pci_xhci_rtsregs_write(struct pci_xhci_vdev *xdev,
 		rts->er_enq_idx = 0;
 		rts->er_events_cnt = 0;
 
-		DPRINTF(("pci_xhci: wr erstba erst (%p) ptr 0x%lx, sz %u\r\n",
+		UPRINTF(LDBG, "wr erstba erst (%p) ptr 0x%lx, sz %u\r\n",
 			rts->erstba_p,
 			rts->erstba_p->qwEvrsTablePtr,
-			rts->erstba_p->dwEvrsTableSize));
+			rts->erstba_p->dwEvrsTableSize);
 		break;
 
 	case 0x18:
@@ -2127,15 +2531,15 @@ pci_xhci_rtsregs_write(struct pci_xhci_vdev *xdev,
 					  rts->erstba_p->dwEvrsTableSize -
 					  (erdp_i - rts->er_enq_idx);
 
-			DPRINTF(("pci_xhci: erdp 0x%lx, events cnt %u\r\n",
-				erdp, rts->er_events_cnt));
+			UPRINTF(LDBG, "erdp 0x%lx, events cnt %u\r\n",
+				erdp, rts->er_events_cnt);
 		}
 
 		break;
 
 	default:
-		DPRINTF(("pci_xhci attempted write to RTS offset 0x%lx\r\n",
-			offset));
+		UPRINTF(LWRN, "attempted write to RTS offset 0x%lx\r\n",
+			offset);
 		break;
 	}
 }
@@ -2152,8 +2556,8 @@ pci_xhci_portregs_read(struct pci_xhci_vdev *xdev, uint64_t offset)
 	port = (offset - 0x3F0) / 0x10;
 
 	if (port > XHCI_MAX_DEVS) {
-		DPRINTF(("pci_xhci: portregs_read port %d >= XHCI_MAX_DEVS\r\n",
-			 port));
+		UPRINTF(LWRN, "portregs_read port %d >= XHCI_MAX_DEVS\r\n",
+			 port);
 
 		/* return default value for unused port */
 		return XHCI_PS_SPEED_SET(3);
@@ -2164,8 +2568,8 @@ pci_xhci_portregs_read(struct pci_xhci_vdev *xdev, uint64_t offset)
 	p = &xdev->portregs[port].portsc;
 	p += offset / sizeof(uint32_t);
 
-	DPRINTF(("pci_xhci: portregs read offset 0x%lx port %u -> 0x%x\r\n",
-		offset, port, *p));
+	UPRINTF(LDBG, "portregs read offset 0x%lx port %u -> 0x%x\r\n",
+		offset, port, *p);
 
 	return *p;
 }
@@ -2178,8 +2582,8 @@ pci_xhci_hostop_write(struct pci_xhci_vdev *xdev,
 	offset -= XHCI_CAPLEN;
 
 	if (offset < 0x400)
-		DPRINTF(("pci_xhci: hostop write offset 0x%lx: 0x%lx\r\n",
-			 offset, value));
+		UPRINTF(LDBG, "hostop write offset 0x%lx: 0x%lx\r\n",
+			 offset, value);
 
 	switch (offset) {
 	case XHCI_USBCMD:
@@ -2241,8 +2645,8 @@ pci_xhci_hostop_write(struct pci_xhci_vdev *xdev,
 		xdev->opregs.dcbaa_p = XHCI_GADDR(xdev, xdev->opregs.dcbaap
 				& ~0x3FUL);
 
-		DPRINTF(("pci_xhci: opregs dcbaap = 0x%lx (vaddr 0x%lx)\r\n",
-		    xdev->opregs.dcbaap, (uint64_t)xdev->opregs.dcbaa_p));
+		UPRINTF(LDBG, "opregs dcbaap = 0x%lx (vaddr 0x%lx)\r\n",
+		    xdev->opregs.dcbaap, (uint64_t)xdev->opregs.dcbaa_p);
 		break;
 
 	case XHCI_CONFIG:
@@ -2274,7 +2678,7 @@ pci_xhci_write(struct vmctx *ctx,
 
 	pthread_mutex_lock(&xdev->mtx);
 	if (offset < XHCI_CAPLEN)	/* read only registers */
-		WPRINTF(("pci_xhci: write RO-CAPs offset %ld\r\n", offset));
+		UPRINTF(LWRN, "write RO-CAPs offset %ld\r\n", offset);
 	else if (offset < xdev->dboff)
 		pci_xhci_hostop_write(xdev, offset, value);
 	else if (offset < xdev->rtsoff)
@@ -2282,7 +2686,7 @@ pci_xhci_write(struct vmctx *ctx,
 	else if (offset < xdev->regsend)
 		pci_xhci_rtsregs_write(xdev, offset, value);
 	else
-		WPRINTF(("pci_xhci: write invalid offset %ld\r\n", offset));
+		UPRINTF(LWRN, "write invalid offset %ld\r\n", offset);
 
 	pthread_mutex_unlock(&xdev->mtx);
 }
@@ -2330,8 +2734,8 @@ pci_xhci_hostcap_read(struct pci_xhci_vdev *xdev, uint64_t offset)
 		break;
 	}
 
-	DPRINTF(("pci_xhci: hostcap read offset 0x%lx -> 0x%lx\r\n",
-		offset, value));
+	UPRINTF(LDBG, "hostcap read offset 0x%lx -> 0x%lx\r\n",
+		offset, value);
 
 	return value;
 }
@@ -2390,8 +2794,8 @@ pci_xhci_hostop_read(struct pci_xhci_vdev *xdev, uint64_t offset)
 	}
 
 	if (offset < 0x400)
-		DPRINTF(("pci_xhci: hostop read offset 0x%lx -> 0x%lx\r\n",
-			offset, value));
+		UPRINTF(LDBG, "hostop read offset 0x%lx -> 0x%lx\r\n",
+			offset, value);
 
 	return value;
 }
@@ -2427,8 +2831,8 @@ pci_xhci_rtsregs_read(struct pci_xhci_vdev *xdev, uint64_t offset)
 		value = *p;
 	}
 
-	DPRINTF(("pci_xhci: rtsregs read offset 0x%lx -> 0x%x\r\n",
-		offset, value));
+	UPRINTF(LDBG, "rtsregs read offset 0x%lx -> 0x%x\r\n",
+		offset, value);
 
 	return value;
 }
@@ -2471,12 +2875,11 @@ pci_xhci_xecp_read(struct pci_xhci_vdev *xdev, uint64_t offset)
 	case 28:
 		break;
 	default:
-		DPRINTF(("pci_xhci: xecp invalid offset 0x%lx\r\n", offset));
+		UPRINTF(LDBG, "xecp invalid offset 0x%lx\r\n", offset);
 		break;
 	}
 
-	DPRINTF(("pci_xhci: xecp read offset 0x%lx -> 0x%x\r\n",
-		offset, value));
+	UPRINTF(LDBG, "xecp read offset 0x%lx -> 0x%x\r\n", offset, value);
 
 	return value;
 }
@@ -2509,7 +2912,7 @@ pci_xhci_read(struct vmctx *ctx,
 		value = pci_xhci_xecp_read(xdev, offset);
 	else {
 		value = 0;
-		WPRINTF(("pci_xhci: read invalid offset %ld\r\n", offset));
+		UPRINTF(LDBG, "read invalid offset %ld\r\n", offset);
 	}
 
 	pthread_mutex_unlock(&xdev->mtx);
@@ -2539,7 +2942,7 @@ pci_xhci_reset_port(struct pci_xhci_vdev *xdev, int portn, int warm)
 
 	assert(portn <= XHCI_MAX_DEVS);
 
-	DPRINTF(("xhci reset port %d\r\n", portn));
+	UPRINTF(LDBG, "reset port %d\r\n", portn);
 
 	port = XHCI_PORTREG_PTR(xdev, portn);
 	dev = XHCI_DEVINST_PTR(xdev, portn);
@@ -2559,8 +2962,8 @@ pci_xhci_reset_port(struct pci_xhci_vdev *xdev, int portn, int warm)
 			     XHCI_TRB_EVENT_PORT_STS_CHANGE);
 			error = pci_xhci_insert_event(xdev, &evtrb, 1);
 			if (error != XHCI_TRB_ERROR_SUCCESS)
-				DPRINTF(("xhci reset port insert event "
-					"failed\n"));
+				UPRINTF(LWRN, "reset port insert event "
+					"failed\n");
 		}
 	}
 }
@@ -2586,10 +2989,11 @@ pci_xhci_init_port(struct pci_xhci_vdev *xdev, int portn)
 			       XHCI_PS_SPEED_SET(dev->dev_ue->ue_usbspeed);
 		}
 
-		DPRINTF(("Init port %d 0x%x\n", portn, port->portsc));
+		UPRINTF(LDBG, "Init port %d 0x%x\n", portn, port->portsc);
 	} else {
 		port->portsc = XHCI_PS_PLS_SET(UPS_PORT_LS_RX_DET) | XHCI_PS_PP;
-		DPRINTF(("Init empty port %d 0x%x\n", portn, port->portsc));
+		UPRINTF(LDBG, "Init empty port %d 0x%x\n",
+				portn, port->portsc);
 	}
 }
 
@@ -2645,12 +3049,12 @@ pci_xhci_dev_intr(struct usb_hci *hci, int epctx)
 	dev_ctx = dev->dev_ctx;
 	ep_ctx = &dev_ctx->ctx_ep[epid];
 	if ((ep_ctx->dwEpCtx0 & 0x7) == XHCI_ST_EPCTX_DISABLED) {
-		DPRINTF(("xhci device interrupt on disabled endpoint %d\r\n",
-			 epid));
+		UPRINTF(LWRN, "device interrupt on disabled endpoint %d\r\n",
+			 epid);
 		return 0;
 	}
 
-	DPRINTF(("xhci device interrupt on endpoint %d\r\n", epid));
+	UPRINTF(LDBG, "device interrupt on endpoint %d\r\n", epid);
 
 	pci_xhci_device_doorbell(xdev, hci->hci_port, epid, 0);
 
@@ -2661,151 +3065,261 @@ done:
 static int
 pci_xhci_dev_event(struct usb_hci *hci, enum hci_usbev evid, void *param)
 {
-	DPRINTF(("xhci device event port %d\r\n", hci->hci_port));
+	UPRINTF(LDBG, "xhci device event port %d\r\n", hci->hci_port);
 	return 0;
 }
 
 static void
 pci_xhci_device_usage(char *opt)
 {
-	fprintf(stderr, "Invalid USB emulation \"%s\"\r\n", opt);
+	static const char *usage_str = "usage:\r\n"
+		" -s <n>,xhci,[bus1-port1,bus2-port2]:[tablet]:[log=x]\r\n"
+		" eg: -s 8,xhci,1-2,2-2\r\n"
+		" eg: -s 7,xhci,tablet:log=D\r\n"
+		" eg: -s 7,xhci,1-2,2-2:tablet\r\n"
+		" Note: please follow the board hardware design, assign the "
+		" ports according to the receptacle connection\r\n";
+
+	UPRINTF(LFTL, "error: invalid options: \"%s\"\r\n", opt);
+	UPRINTF(LFTL, "%s", usage_str);
+}
+
+static int
+pci_xhci_parse_log_level(struct pci_xhci_vdev *xdev, char *opts)
+{
+	char level;
+	char *s, *o;
+	int rc = 0;
+
+	assert(opts);
+
+	o = s = strdup(opts);
+	if (!(s && s[0] == 'l' && s[1] == 'o' && s[2] == 'g')) {
+		rc = -1;
+		goto errout;
+	}
+
+	s = strchr(opts, '=');
+	if (!s) {
+		rc = -2;
+		goto errout;
+	}
+
+	level = *(s+1);
+	usb_parse_log_level(level);
+
+errout:
+	if (rc)
+		printf("USB: fail to set log level, rc=%d\r\n", rc);
+	free(o);
+	return rc;
+}
+
+static int
+pci_xhci_parse_bus_port(struct pci_xhci_vdev *xdev, char *opts)
+{
+	int rc = 0, cnt;
+	uint32_t port, bus;
+
+	assert(xdev);
+	assert(opts);
+
+	/* 'bus-port' format */
+	cnt = sscanf(opts, "%u-%u", &bus, &port);
+	if (cnt == EOF || cnt < 2) {
+		rc = -1;
+		goto errout;
+	}
+
+	if (!usb_native_is_bus_existed(bus) ||
+			!usb_native_is_port_existed(bus, port)) {
+		rc = -2;
+		goto errout;
+	}
+
+	if (!xdev->native_assign_ports[bus]) {
+		xdev->native_assign_ports[bus] = calloc(USB_NATIVE_NUM_PORT,
+				sizeof(uint8_t));
+		if (!xdev->native_assign_ports[bus]) {
+			rc = -3;
+			goto errout;
+		}
+	}
+
+	xdev->native_assign_ports[bus][port] = 1;
+errout:
+	if (rc)
+		UPRINTF(LWRN, "%s fails, rc=%d\r\n", __func__, rc);
+	return rc;
+}
+
+static int
+pci_xhci_parse_tablet(struct pci_xhci_vdev *xdev, char *opts)
+{
+	char *cfg, *str;
+	void *devins;
+	struct usb_devemu *ue;
+	struct pci_xhci_dev_emu *dev = NULL;
+	uint8_t port_u2, port_u3;
+	int rc = 0;
+
+	assert(xdev);
+	assert(opts);
+
+	if (strncmp(opts, "tablet", sizeof("tablet") - 1)) {
+		rc = -1;
+		goto errout;
+	}
+
+	str = opts;
+	cfg = strchr(str, '=');
+	cfg = cfg ? cfg + 1 : "";
+
+	ue = usb_emu_finddev(opts);
+	if (ue == NULL) {
+		rc = -2;
+		goto errout;
+	}
+
+	dev = calloc(1, sizeof(struct pci_xhci_dev_emu));
+	if (!dev) {
+		rc = -3;
+		goto errout;
+	}
+
+	dev->xdev = xdev;
+	dev->hci.dev = dev;
+	dev->hci.hci_intr = pci_xhci_dev_intr;
+	dev->hci.hci_event = pci_xhci_dev_event;
+
+	/*
+	 * This is a safe operation because there is no other
+	 * device created and port_u2/port_u3 definitely points
+	 * to an empty position in xdev->devices
+	 */
+	port_u2 = xdev->usb3_port_start - 1;
+	port_u3 = xdev->usb2_port_start - 1;
+	if (ue->ue_usbver == 2) {
+		dev->hci.hci_port = port_u2 + 1;
+		xdev->devices[port_u2] = dev;
+	} else {
+		dev->hci.hci_port = port_u3 + 1;
+		xdev->devices[port_u3] = dev;
+	}
+
+	dev->hci.hci_address = 0;
+	devins = ue->ue_init(&dev->hci, cfg);
+	if (devins == NULL) {
+		rc = -4;
+		goto errout;
+	}
+
+	dev->dev_ue = ue;
+	dev->dev_instance = devins;
+
+	/* assign slot number to device */
+	xdev->ndevices++;
+	xdev->slots[xdev->ndevices] = dev;
+	return 0;
+
+errout:
+	if (dev) {
+		if (ue) {
+			if (dev == xdev->devices[port_u2])
+				xdev->devices[port_u2] = NULL;
+			if (dev == xdev->devices[port_u3])
+				xdev->devices[port_u3] = NULL;
+		}
+		free(dev);
+	}
+	UPRINTF(LFTL, "fail to parse tablet, rc=%d\r\n", rc);
+	return rc;
 }
 
 static int
 pci_xhci_parse_opts(struct pci_xhci_vdev *xdev, char *opts)
 {
-	struct pci_xhci_dev_emu	**devices;
-	struct pci_xhci_dev_emu	*dev;
-	struct usb_devemu	*ue;
-	void	*devins;
-	char	*uopt, *xopts, *config;
-	int	usb3_port, usb2_port, i;
+	char *s, *t, *n;
+	int i, rc = 0;
+	struct pci_xhci_option_elem *elem;
+	int (*f)(struct pci_xhci_vdev *, char *);
+	int elem_cnt;
 
-	usb3_port = xdev->usb3_port_start - 1;
-	usb2_port = xdev->usb2_port_start - 1;
-	devices = NULL;
-
-	if (opts == NULL)
-		goto portsfinal;
-
-	devices = calloc(XHCI_MAX_DEVS, sizeof(struct pci_xhci_dev_emu *));
-	if (devices == NULL) {
-		usb2_port = usb3_port = -1;
-		WPRINTF(("pci_xhci: %s:%d fail to allocate memory(devices)\n",
-			__func__, __LINE__));
-		goto done;
+	assert(xdev);
+	if (!opts) {
+		rc = -1;
+		goto errout;
 	}
 
-	xdev->slots = calloc(XHCI_MAX_SLOTS, sizeof(struct pci_xhci_dev_emu *));
-	if (xdev->slots == NULL) {
-		usb2_port = usb3_port = -1;
-		WPRINTF(("pci_xhci: %s:%d fail to allocate memory(slots)\n",
-			__func__, __LINE__));
-		goto done;
+	/* allocate neccessary resources during parsing*/
+	xdev->devices = calloc(XHCI_MAX_DEVS + 1, sizeof(*xdev->devices));
+	xdev->slots = calloc(XHCI_MAX_SLOTS, sizeof(*xdev->slots));
+	xdev->portregs = calloc(XHCI_MAX_DEVS + 1, sizeof(*xdev->portregs));
+	if (!xdev->devices || !xdev->slots || !xdev->portregs) {
+		rc = -2;
+		goto errout;
 	}
 
-	xdev->devices = devices;
-	xdev->ndevices = 0;
+	s = strdup(opts);
+	UPRINTF(LDBG, "options: %s\r\n", s);
 
-	uopt = strdup(opts);
-	for (xopts = strtok(uopt, ",");
-	     xopts != NULL;
-	     xopts = strtok(NULL, ",")) {
-		if (usb2_port ==
-			((xdev->usb2_port_start - 1) + XHCI_MAX_DEVS/2) ||
-			usb3_port ==
-			((xdev->usb3_port_start - 1) + XHCI_MAX_DEVS/2)) {
-			WPRINTF(("pci_xhci max number of USB 2 or 3 "
-			     "devices reached, max %d\r\n", XHCI_MAX_DEVS/2));
-			usb2_port = usb3_port = -1;
-			goto done;
-		}
+	elem = xhci_option_table;
+	elem_cnt = sizeof(xhci_option_table) / sizeof(*elem);
 
-		/* device[=<config>] */
-		config = strchr(xopts, '=');
-		if (config == NULL)
-			config = "";		/* no config */
-		else
-			*config++ = '\0';
-
-		ue = usb_emu_finddev(xopts);
-		if (ue == NULL) {
-			pci_xhci_device_usage(xopts);
-			DPRINTF(("pci_xhci device not found %s\r\n", xopts));
-			usb2_port = usb3_port = -1;
-			goto done;
-		}
-
-		DPRINTF(("pci_xhci adding device %s, opts \"%s\"\r\n",
-			 xopts, config));
-
-		dev = calloc(1, sizeof(struct pci_xhci_dev_emu));
-		if (!dev) {
-			usb2_port = usb3_port = -1;
-			WPRINTF(("pci_xhci: %s:%d fail to allocate memory\n",
-				__func__, __LINE__));
-			goto done;
-		}
-		dev->xdev = xdev;
-		dev->hci.dev = dev;
-		dev->hci.hci_intr = pci_xhci_dev_intr;
-		dev->hci.hci_event = pci_xhci_dev_event;
-
-		if (ue->ue_usbver == 2) {
-			dev->hci.hci_port = usb2_port + 1;
-			devices[usb2_port] = dev;
-			usb2_port++;
+	for (t = strtok(s, ",:"); t; t = strtok(NULL, ",:")) {
+		if (isdigit(t[0])) { /* bus-port */
+			if (pci_xhci_parse_bus_port(xdev, t)) {
+				rc = -3;
+				goto errout;
+			}
 		} else {
-			dev->hci.hci_port = usb3_port + 1;
-			devices[usb3_port] = dev;
-			usb3_port++;
+			for (i = 0; i < elem_cnt; i++) {
+				n = elem[i].parse_opt;
+				f = elem[i].parse_fn;
+
+				if (!n || !f)
+					continue;
+
+				if (!strncmp(t, n, strlen(n))) {
+					f(xdev, t);
+					break;
+				}
+			}
+
+			if (i >= elem_cnt) {
+				rc = -4;
+				goto errout;
+			}
 		}
-
-		dev->hci.hci_address = 0;
-		devins = ue->ue_init(&dev->hci, config);
-		if (devins == NULL) {
-			pci_xhci_device_usage(xopts);
-			usb2_port = usb3_port = -1;
-			goto done;
-		}
-
-		dev->dev_ue = ue;
-		dev->dev_instance = devins;
-
-		/* assign slot number to device */
-		xdev->slots[xdev->ndevices] = dev;
-
-		xdev->ndevices++;
 	}
 
-portsfinal:
-	xdev->portregs =
-		calloc(XHCI_MAX_DEVS, sizeof(struct pci_xhci_portregs));
+	/* do not use the zero index element */
+	for (i = 1; i <= XHCI_MAX_DEVS; i++)
+		pci_xhci_init_port(xdev, i);
 
-	if (xdev->ndevices > 0) {
-		/* port and slot numbering start from 1 */
-		xdev->devices--;
-		xdev->portregs--;
-		xdev->slots--;
-
-		for (i = 1; i <= XHCI_MAX_DEVS; i++)
-			pci_xhci_init_port(xdev, i);
-	} else {
-		WPRINTF(("pci_xhci no USB devices configured\r\n"));
-		xdev->ndevices = 1;
-	}
-
-done:
-	if (devices != NULL) {
-		if (usb2_port <= 0 && usb3_port <= 0) {
+errout:
+	if (rc) {
+		if (xdev->devices) {
+			for (i = 1; i <= XHCI_MAX_DEVS && xdev->devices[i]; i++)
+				free(xdev->devices[i]);
+			xdev->ndevices = 0;
 			xdev->devices = NULL;
-			for (i = 0; devices[i] != NULL; i++)
-				free(devices[i]);
-			xdev->ndevices = -1;
-
-			free(devices);
+			free(xdev->devices);
 		}
+		if (xdev->slots) {
+			free(xdev->slots);
+			xdev->slots = NULL;
+		}
+		if (xdev->portregs) {
+			free(xdev->portregs);
+			xdev->portregs = NULL;
+		}
+		UPRINTF(LFTL, "fail to parse xHCI options, rc=%d\r\n", rc);
+		pci_xhci_device_usage(opts);
+		return rc;
 	}
+
+	free(s);
 	return xdev->ndevices;
 }
 
@@ -2816,15 +3330,15 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	int	error;
 
 	if (xhci_in_use) {
-		WPRINTF(("pci_xhci controller already defined\r\n"));
+		UPRINTF(LWRN, "controller already defined\r\n");
 		return -1;
 	}
 	xhci_in_use = 1;
 
 	xdev = calloc(1, sizeof(struct pci_xhci_vdev));
 	if (!xdev) {
-		WPRINTF(("pci_xhci: %s:%d fail to allocate memory\n",
-			__func__, __LINE__));
+		UPRINTF(LWRN, "%s:%d fail to allocate memory\n",
+			__func__, __LINE__);
 		return -1;
 	}
 
@@ -2840,6 +3354,15 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		goto done;
 	else
 		error = 0;
+
+	if (usb_dev_sys_init(pci_xhci_native_usb_dev_conn_cb,
+				pci_xhci_native_usb_dev_disconn_cb,
+				pci_xhci_usb_dev_notify_cb,
+				pci_xhci_usb_dev_intr_cb,
+				xdev, usb_get_log_level()) < 0) {
+		error = -3;
+		goto done;
+	}
 
 	xdev->caplength = XHCI_SET_CAPLEN(XHCI_CAPLEN) |
 			 XHCI_SET_HCIVERSION(0x0100);
@@ -2867,8 +3390,8 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (xdev->rtsoff & 0x1F)
 		xdev->rtsoff = (xdev->rtsoff + 0x1F) & ~0x1F;
 
-	DPRINTF(("pci_xhci dboff: 0x%x, rtsoff: 0x%x\r\n", xdev->dboff,
-		 xdev->rtsoff));
+	UPRINTF(LDBG, "dboff: 0x%x, rtsoff: 0x%x\r\n", xdev->dboff,
+		 xdev->rtsoff);
 
 	xdev->opregs.usbsts = XHCI_STS_HCH;
 	xdev->opregs.pgsz = XHCI_PAGESIZE_4K;
@@ -2895,22 +3418,59 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	/* regsend + xecp registers */
 	pci_emul_alloc_bar(dev, 0, PCIBAR_MEM32, xdev->regsend + 4*32);
-	DPRINTF(("pci_xhci pci_emu_alloc: %d\r\n", xdev->regsend + 4*32));
+	UPRINTF(LDBG, "pci_emu_alloc: %d\r\n", xdev->regsend + 4*32);
 
 	pci_lintr_request(dev);
 
 	pthread_mutex_init(&xdev->mtx, NULL);
 
 done:
-	if (error)
+	if (error) {
+		UPRINTF(LFTL, "%s fail, error=%d\n", __func__, error);
 		free(xdev);
+	}
 
 	return error;
+}
+
+static void
+pci_xhci_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
+{
+	int i;
+	struct pci_xhci_vdev *xdev;
+	struct pci_xhci_dev_emu *de;
+
+	assert(dev);
+	xdev = dev->arg;
+
+	UPRINTF(LINF, "de-initialization\r\n");
+	assert(xdev);
+	assert(xdev->devices);
+
+	for (i = 1; i <= XHCI_MAX_DEVS; ++i) {
+		de = xdev->devices[i];
+		if (de) {
+			xdev->devices[i] = NULL;
+			pci_xhci_dev_destroy(de);
+			xdev->ndevices--;
+		}
+	}
+
+	free(xdev->devices);
+	free(xdev->slots);
+	free(xdev->portregs);
+
+	usb_dev_sys_deinit();
+
+	pthread_mutex_destroy(&xdev->mtx);
+	free(xdev);
+	xhci_in_use = 0;
 }
 
 struct pci_vdev_ops pci_ops_xhci = {
 	.class_name	= "xhci",
 	.vdev_init	= pci_xhci_init,
+	.vdev_deinit	= pci_xhci_deinit,
 	.vdev_barwrite	= pci_xhci_write,
 	.vdev_barread	= pci_xhci_read
 };

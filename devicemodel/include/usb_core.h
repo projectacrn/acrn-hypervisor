@@ -31,12 +31,44 @@
 
 #include <stdlib.h>
 #include <pthread.h>
+#include <stdbool.h>
 #include "types.h"
 
-#define	USB_MAX_XFER_BLOCKS	8
+#define	USB_MAX_XFER_BLOCKS	256
 
 #define	USB_XFER_OUT		0
 #define	USB_XFER_IN		1
+
+#define USB_DIR_OUT              0
+#define USB_DIR_IN               0x80
+
+#define LIBUSB_TIMEOUT           10000
+
+#define USB_CFG_ATT_ONE          (1 << 7) /* should always be set */
+#define USB_CFG_ATT_SELFPOWER    (1 << 6)
+#define USB_CFG_ATT_WAKEUP       (1 << 5)
+#define USB_CFG_ATT_BATTERY      (1 << 4)
+
+enum endpoint_type {
+	USB_ENDPOINT_CONTROL = 0,
+	USB_ENDPOINT_ISOC,
+	USB_ENDPOINT_BULK,
+	USB_ENDPOINT_INT,
+	USB_ENDPOINT_INVALID = 255
+};
+
+#define USB_INTERFACE_INVALID 255
+
+enum token_type {
+	TOKEN_OUT = 0,
+	TOKEN_IN,
+	TOKEN_SETUP
+};
+
+enum usb_dev_type {
+	USB_DEV_STATIC = 0,
+	USB_DEV_PORT_MAPPER
+};
 
 struct usb_hci;
 struct usb_device_request;
@@ -47,22 +79,25 @@ struct usb_devemu {
 	char	*ue_emu;	/* name of device emulation */
 	int	ue_usbver;	/* usb version: 2 or 3 */
 	int	ue_usbspeed;	/* usb device speed */
+	int	ue_devtype;
 
 	/* instance creation */
-	void	*(*ue_init)(struct usb_hci *hci, char *opt);
+	void	*(*ue_init)(void *pdata, char *opt);
 
 	/* handlers */
 	int	(*ue_request)(void *sc, struct usb_data_xfer *xfer);
 	int	(*ue_data)(void *sc, struct usb_data_xfer *xfer, int dir,
 			   int epctx);
+	int	(*ue_info)(void *sc, int type, void *value, int size);
 	int	(*ue_reset)(void *sc);
 	int	(*ue_remove)(void *sc);
 	int	(*ue_stop)(void *sc);
+	void	(*ue_deinit)(void *pdata);
 };
 #define	USB_EMUL_SET(x)	DATA_SET(usb_emu_set, x)
 
 /*
- * USB device events to notify HCI when state changes
+ * USB device events to notify HCD when state changes
  */
 enum hci_usbev {
 	USBDEV_ATTACH,
@@ -106,6 +141,11 @@ struct usb_data_xfer {
 	int	ndata;				/* # of data items */
 	int	head;
 	int	tail;
+	void    *dev;		/* struct pci_xhci_dev_emu *dev */
+	int     epid;		/* related endpoint id */
+	int     pid;		/* token id */
+	int	reset;		/* detect ep reset */
+	int	status;
 	pthread_mutex_t mtx;
 };
 
@@ -124,15 +164,21 @@ enum USB_ERRCODE {
 
 #define	USB_DATA_OK(x, i)	((x)->data[(i)].buf != NULL)
 
-#define	USB_DATA_XFER_INIT(x)	do {					\
-			memset((x), 0, sizeof(*(x)));			\
-			pthread_mutex_init(&((x)->mtx), NULL);		\
-		} while (0)
+#define	USB_DATA_XFER_INIT(x)	do {					   \
+		pthread_mutexattr_t attr;				   \
+		pthread_mutexattr_init(&attr);				   \
+		pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE); \
+		memset((x), 0, sizeof(*(x)));				   \
+		pthread_mutex_init(&((x)->mtx), &attr);			   \
+	} while (0)
 
 #define	USB_DATA_XFER_RESET(x)	do {					\
+			pthread_mutex_lock(&((x)->mtx));		\
 			memset((x)->data, 0, sizeof((x)->data));	\
 			(x)->ndata = 0;					\
 			(x)->head = (x)->tail = 0;			\
+			(x)->reset = 1;					\
+			pthread_mutex_unlock((&(x)->mtx));		\
 		} while (0)
 
 #define	USB_DATA_XFER_LOCK(x)	\
@@ -141,8 +187,29 @@ enum USB_ERRCODE {
 #define	USB_DATA_XFER_UNLOCK(x)	\
 	pthread_mutex_unlock(&((x)->mtx))
 
-struct usb_devemu *usb_emu_finddev(char *name);
+#define LOG_TAG "USB: "
+#define LFTL 0
+#define LWRN 1
+#define LINF 2
+#define LDBG 3
+#define LVRB 4
+#define UPRINTF(lvl, fmt, args...) \
+	do { if (lvl <= usb_log_level) printf(LOG_TAG fmt, ##args); } while (0)
 
+#define NATIVE_USBSYS_DEVDIR "/sys/bus/usb/devices"
+#define NATIVE_USB2_SPEED "480"
+#define NATIVE_USB3_SPEED "5000"
+#define USB_NATIVE_NUM_PORT 255
+#define USB_NATIVE_NUM_BUS 255
+
+extern int usb_log_level;
+inline int usb_get_log_level(void)		{ return usb_log_level; }
+inline void usb_set_log_level(int level)	{ usb_log_level = level; }
+void usb_parse_log_level(char level);
+struct usb_devemu *usb_emu_finddev(char *name);
+int usb_native_is_bus_existed(uint8_t bus_num);
+int usb_native_is_ss_port(uint8_t bus_of_port);
+int usb_native_is_port_existed(uint8_t bus_num, uint8_t port_num);
 struct usb_data_xfer_block *usb_data_xfer_append(struct usb_data_xfer *xfer,
 						 void *buf,
 						 int blen,

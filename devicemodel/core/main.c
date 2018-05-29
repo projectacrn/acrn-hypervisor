@@ -162,7 +162,8 @@ usage(int code)
 		"       -i: ioc boot parameters\n"
 		"       --vsbl: vsbl file path\n"
 		"       --part_info: guest partition info file path\n"
-		"	--enable_trusty: enable trusty for guest\n",
+		"	--enable_trusty: enable trusty for guest\n"
+		"	--ptdev_no_reset: disable reset check for ptdev\n",
 		progname, (int)strlen(progname), "", (int)strlen(progname), "",
 		(int)strlen(progname), "");
 
@@ -593,6 +594,7 @@ enum {
 	CMD_OPT_VSBL = 1000,
 	CMD_OPT_PART_INFO,
 	CMD_OPT_TRUSTY_ENABLE,
+	CMD_OPT_PTDEV_NO_RESET,
 };
 
 static struct option long_options[] = {
@@ -629,6 +631,8 @@ static struct option long_options[] = {
 	{"part_info",		required_argument,	0, CMD_OPT_PART_INFO},
 	{"enable_trusty",	no_argument,		0,
 					CMD_OPT_TRUSTY_ENABLE},
+	{"ptdev_no_reset",	no_argument,		0,
+		CMD_OPT_PTDEV_NO_RESET},
 	{0,			0,			0,  0  },
 };
 
@@ -794,6 +798,9 @@ main(int argc, char *argv[])
 			break;
 		case CMD_OPT_TRUSTY_ENABLE:
 			trusty_enabled = 1;
+			break;
+		case CMD_OPT_PTDEV_NO_RESET:
+			ptdev_no_reset(true);
 			break;
 		case 'h':
 			usage(0);
