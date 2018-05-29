@@ -366,16 +366,21 @@ each with their own way to install development tools:
 
      $ sudo swupd bundle-add os-clr-on-clr
 
-* On a Ubuntu/Debian development system:
+* On a Ubuntu 16.04 development system:
 
   .. code-block:: console
-
-     $ sudo apt install git \
-          gnu-efi \
-          libssl-dev \
-          libpciaccess-dev \
-          uuid-dev
-
+  
+    $ sudo apt-get update
+    $ sudo apt-get install git \
+    libpciaccess-dev \
+    gnu-efi \
+    uuid-dev \
+    libssl-dev \
+    vim \
+    libsystemd-dev \
+    libevent-dev \
+    libxml2-dev 
+ 
 * On a Fedora/Redhat development system:
 
   .. code-block:: console
@@ -396,27 +401,22 @@ each with their own way to install development tools:
              openssl-devel \
              libpciaccess-devel
 
-Build the hypervisor and device model
+Build the hypervisor project
 =====================================
 
-#. Download the ACRN hypervisor and build it.
+#. Download the ACRN hypervisor project and build it.
 
    .. code-block:: console
 
       $ git clone https://github.com/projectacrn/acrn-hypervisor
-      $ cd acrn-hypervisor/hypervisor
+      $ cd acrn-hypervisor
       $ make PLATFORM=uefi
 
    The build results are found in the ``build`` directory.
-
-#. Build the ACRN device model (included in the acrn-hypervisor repo):
-
-   .. code-block:: console
-
-      $ cd ../devicemodel
-      $ make
-
-   The build results are found in the ``build`` directory.
-
-Follow the same instructions to boot and test the images you created
-from your build.
+   For example:
+   
+   $ ls acrn-hypervisor/build
+   
+   devicemodel
+   Hypervisor
+   tools
