@@ -149,6 +149,7 @@ partition. Follow these steps:
       # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L ACRN
 
    .. note::
+
       Be aware that a Clearlinux update that includes a kernel upgrade will
       reset the boot option changes you just made. A Clearlinux update could
       happen automatically (if you have not disabled it as described above),
@@ -165,7 +166,7 @@ partition. Follow these steps:
       default value is to use the Clearlinux bootloader, i.e.: ``\EFI\org.clearlinux\bootloaderx64.efi``.
    #. ``uart=``: this tells the hypervisor where the serial port (UART) is found or
       whether it should be disabled. There are three forms for this parameter:
-      
+
       #. ``uart=disabled``: this disables the serial port completely
       #. ``uart=mmio@<MMIO address>``: this sets the serial port MMIO address
       #. ``uart=port@<port address>``: this sets the serial port address
@@ -173,7 +174,7 @@ partition. Follow these steps:
    Here is a more complete example of how to configure the EFI firmware to load the ACRN
    hypervisor and set these parameters.
 
-   .. code-block::
+   .. code-block:: none
 
       # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN Hypervisor" \
             -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=mmio@0x9141e000"
