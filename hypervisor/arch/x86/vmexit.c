@@ -296,12 +296,6 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
 		/* mov to cr4 */
 		vmx_write_cr4(vcpu, *regptr);
 		break;
-#if 0
-	case 0x14:
-		/* mov from cr4 (this should not happen) */
-	case 0x10:
-		/* mov from cr0 (this should not happen) */
-#endif
 	case 0x08:
 		/* mov to cr8 */
 		vlapic_set_cr8(vcpu->arch_vcpu.vlapic, *regptr);
@@ -323,21 +317,6 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
 
 	return 0;
 }
-
-#if 0
-/*
- * VMX_PROCBASED_CTLS_INVLPG is not enabled in the VM-execution
- * control therefore we don't need it's handler.
- *
- * INVLPG: this instruction Invalidates any translation lookaside buffer
- */
-int invlpg_handler(__unused struct vcpu *vcpu)
-{
-	pr_fatal("INVLPG executed");
-
-	return 0;
-}
-#endif
 
 /*
  * XSETBV instruction set's the XCR0 that is used to tell for which
