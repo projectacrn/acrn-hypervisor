@@ -35,7 +35,10 @@ help:
 doxy:
 	$(Q)(cat acrn.doxyfile) | doxygen - > doc.log 2>&1
 
-html: doxy
+content:
+	$(Q)scripts/extract_content.py
+
+html: doxy content
 	-$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b html -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(O) >> doc.log 2>&1
 	$(Q)./scripts/filter-doc-log.sh doc.log
 
@@ -44,6 +47,7 @@ html: doxy
 
 clean:
 	rm -fr $(BUILDDIR) doxygen
+	rm -fr tools
 
 # Copy material over to the GitHub pages staging repo
 # along with a README
