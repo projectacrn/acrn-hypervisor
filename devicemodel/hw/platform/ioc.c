@@ -124,6 +124,16 @@ typedef void* (*ioc_work)(void *arg);
  */
 static char virtual_uart_path[32];
 
+/*
+ * To activate CBC signal channel(/dev/cbc-signals).
+ * Need to send open channel command to CBC signal char device before receive
+ * signal data.
+ * NOTE: Only send open channel command, no need to send close channel since
+ * close channel command would deactivate the signal channel for all UOS, so
+ * there will be a SOS service to deactivate signal channel in the future.
+ */
+static uint8_t cbc_open_channel_command[] = {0xFD, 0x00, 0x00, 0x00};
+
 /* IOC boot reason(for S5)
  * comes from DM command line parameters.
  */
@@ -1365,6 +1375,16 @@ ioc_init(struct vmctx *ctx)
 	if (ioc_ch_init(ioc) != 0)
 		goto chl_err;
 
+	/*
+	 * Make sure the CBC signal channel is activated after channel
+	 * initialization is successful.
+	 * TODO: Check firmware version before sending open channel command
+	 * since the old IOC firmware needs not use open channel command to
+	 * activate signal channel that is activated by default.
+	 */
+	if (ioc_ch_xmit(IOC_NATIVE_SIGNAL, cbc_open_channel_command,
+				sizeof(cbc_open_channel_command)) <= 0)
+		DPRINTF("%s", "ioc sends CBC open channel command failed\r\n");
 
 	/* Initlialize CBC rx/tx signal and group whitelists */
 	wlist_init_signal(cbc_rx_signal_table, ARRAY_SIZE(cbc_rx_signal_table),
