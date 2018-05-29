@@ -381,21 +381,26 @@ static void complete_request(struct vcpu *vcpu)
 
 int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
 {
-	int64_t ret = 0;
 	union vhm_request_buffer *req_buf;
 	struct vhm_request *req;
 	struct vcpu *vcpu;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
 	/* make sure we have set req_buf */
-	if (!target_vm || target_vm->sw.io_shared_page == NULL)
+	if (!target_vm || target_vm->sw.io_shared_page == NULL) {
+		pr_err("%s, invalid parameter\n", __func__);
 		return -EINVAL;
+	}
 
 	dev_dbg(ACRN_DBG_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
 			vmid, vcpu_id);
 
 	vcpu = vcpu_from_vid(target_vm, vcpu_id);
-	ASSERT(vcpu != NULL, "Failed to get VCPU context.");
+	if (vcpu == NULL) {
+		pr_err("%s, failed to get VCPU %d context from VM %d\n",
+			__func__, vcpu_id, target_vm->attr.id);
+		return -EINVAL;
+	}
 
 	req_buf = (union vhm_request_buffer *)target_vm->sw.io_shared_page;
 	req = req_buf->req_queue + vcpu_id;
@@ -405,7 +410,7 @@ int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
 		 (req->processed == REQ_STATE_FAILED)))
 		complete_request(vcpu);
 
-	return ret;
+	return 0;
 }
 
 int64_t _set_vm_memmap(struct vm *vm, struct vm *target_vm,
@@ -597,26 +602,34 @@ int64_t hcall_gpa_to_hpa(struct vm *vm, uint64_t vmid, uint64_t param)
 
 int64_t hcall_assign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
 {
-	int64_t ret = 0;
+	int64_t ret;
 	uint16_t bdf;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (target_vm == NULL)
-		return -1;
+	if (target_vm == NULL) {
+		pr_err("%s, vm is null\n", __func__);
+		return -EINVAL;
+	}
 
 	if (copy_from_vm(vm, &bdf, param, sizeof(bdf))) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
+		pr_err("%s: Unable copy param from vm %d\n",
+			__func__, vm->attr.id);
+		return -EIO;
 	}
 
 	/* create a iommu domain for target VM if not created */
 	if (!target_vm->iommu_domain) {
-		ASSERT(target_vm->arch_vm.nworld_eptp, "EPT of VM not set!");
+		if (target_vm->arch_vm.nworld_eptp == 0) {
+			pr_err("%s, EPT of VM not set!\n",
+				__func__, target_vm->attr.id);
+			return -EPERM;
+		}
 		/* TODO: how to get vm's address width? */
 		target_vm->iommu_domain = create_iommu_domain(vmid,
 				target_vm->arch_vm.nworld_eptp, 48);
-		ASSERT(target_vm->iommu_domain,
-				"failed to created iommu domain!");
+		if (target_vm->iommu_domain == NULL)
+			return -ENODEV;
+
 	}
 	ret = assign_iommu_device(target_vm->iommu_domain,
 			(uint8_t)(bdf >> 8), (uint8_t)(bdf & 0xff));
