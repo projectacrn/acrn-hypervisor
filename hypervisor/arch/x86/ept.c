@@ -445,10 +445,10 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 	return status;
 
 out:
-	pr_fatal("Guest Linear Address: 0x%016llx",
+	pr_acrnlog("Guest Linear Address: 0x%016llx",
 			exec_vmread(VMX_GUEST_LINEAR_ADDR));
 
-	pr_fatal("Guest Physical Address address: 0x%016llx",
+	pr_acrnlog("Guest Physical Address address: 0x%016llx",
 			gpa);
 
 	return status;
