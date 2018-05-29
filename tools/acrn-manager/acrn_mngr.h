@@ -28,6 +28,209 @@ enum msgid {
 	MSG_MAX,
 };
 
+/* For test, generate a message who carry a string
+ * eg., VMM_MSG_STR(hello_msg, "Hello\n") will create hello_msg,
+ * then you can write(sock_fd, hello_msg, sizeof(hello_msg))
+ */
+#define MNGR_MSG_STR(var, str)   \
+struct mngr_msg_##var {          \
+struct mngr_msg msg;            \
+        char raw[sizeof(str)];          \
+} var = {                               \
+        .msg = {                       \
+                .magic = MNGR_MSG_MAGIC, \
+                .msgid = MSG_STR,       \
+                .len = sizeof(struct mngr_msg_##var),    \
+        },                                              \
+        .raw = str,                             \
+}
+
+/* DM handled message event types */
+enum dm_msgid {
+	DM_STOP = MSG_MAX + 1,	/* Stop this UOS */
+	DM_SUSPEND,		/* Suspend this UOS from running state */
+	DM_RESUME,		/* Resume this UOS from suspend state */
+	DM_PAUSE,		/* Freeze this virtual machine */
+	DM_CONTINUE,		/* Unfreeze this virtual machine */
+	DM_QUERY,		/* Ask power state of this UOS */
+	DM_MAX,
+};
+
+/* DM handled message req/ack pairs */
+
+struct req_dm_stop {
+	struct mngr_msg msg;	/* req DM_STOP */
+};
+
+struct ack_dm_stop {
+	struct mngr_msg msg;	/* ack DM_STOP */
+	int err;
+};
+
+struct req_dm_suspend {
+	struct mngr_msg msg;	/* req DM_SUSPEND */
+};
+
+struct ack_dm_suspend {
+	struct mngr_msg msg;	/* ack DM_SUSPEND */
+	int err;
+};
+
+struct req_dm_resume {
+	struct mngr_msg msg;	/* req DM_RESUME */
+	int reason;
+};
+
+struct ack_dm_resume {
+	struct mngr_msg msg;	/* ack DM_RESUME */
+	int err;
+};
+
+struct req_dm_pause {
+	struct mngr_msg msg;	/* req DM_PAUSE */
+};
+
+struct ack_dm_pause {
+	struct mngr_msg msg;	/* ack DM_PAUSE */
+	int err;
+};
+
+struct req_dm_continue {
+	struct mngr_msg msg;	/* req DM_CONTINUE */
+};
+
+struct ack_dm_continue {
+	struct mngr_msg msg;	/* ack DM_CONTINUE */
+	int err;
+};
+
+struct req_dm_query {
+	struct mngr_msg msg;	/* req DM_QUERY */
+};
+
+struct ack_dm_query {
+	struct mngr_msg msg;	/* ack DM_QUERY */
+	int state;
+};
+
+/* Acrnd handled message event types */
+enum acrnd_msgid {
+	/* DM -> Acrnd */
+	ACRND_TIMER = DM_MAX + 1,	/* DM request to setup a launch timer */
+	ACRND_REASON,		/* DM ask for updating wakeup reason */
+	DM_NOTIFY,		/* DM notify Acrnd that state is changed */
+
+	/* SOS-LCS ->Acrnd */
+	ACRND_STOP,		/* SOS-LCS request to Stop all UOS */
+	ACRND_RESUME,		/* SOS-LCS request to Resume UOS */
+	ACRND_SUSPEND,		/* SOS-LCS request to Suspend all UOS */
+
+	ACRND_MAX,
+};
+
+/* Acrnd handled message req/ack pairs */
+
+struct req_acrnd_timer {
+	struct mngr_msg msg;	/* req ACRND_TIMER */
+	char name[VMNAME_LEN];
+	time_t t;
+};
+
+struct ack_acrnd_timer {
+	struct mngr_msg msg;	/* ack ACRND_TIMER */
+	int err;
+};
+
+struct req_acrnd_reason {
+	struct mngr_msg msg;	/* req ACRND_REASON */
+};
+
+struct ack_acrnd_reason {
+	struct mngr_msg msg;	/* ack ACRND_REASON */
+	int reason;
+};
+
+struct req_dm_notify {
+	struct mngr_msg msg;	/* req DM_NOTIFY */
+	int state;
+};
+
+struct ack_dm_notify {
+	struct mngr_msg msg;	/* ack DM_NOTIFY */
+	int err;
+};
+
+struct req_acrnd_stop {
+	struct mngr_msg msg;	/* req ACRND_STOP */
+	int force;
+	unsigned timeout;
+};
+
+struct ack_acrnd_stop {
+	struct mngr_msg msg;	/* ack ACRND_STOP */
+	int err;
+};
+
+struct req_acrnd_suspend {
+	struct mngr_msg msg;	/* req ACRND_SUSPEND */
+	int force;
+	unsigned timeout;
+};
+
+struct ack_acrnd_suspend {
+	struct mngr_msg msg;	/* ack ACRND_SUSPEND */
+	int err;
+};
+
+struct req_acrnd_resume {
+	struct mngr_msg msg;	/* req ACRND_RESUME */
+};
+
+struct ack_acrnd_resume {
+	struct mngr_msg msg;	/* ack ACRND_RESUME */
+	int err;
+};
+
+/* SOS-LCS handled message event types */
+enum sos_lcs_msgid {
+	WAKEUP_REASON = ACRND_MAX + 1,	/* Acrnd/Acrnctl request wakeup reason */
+	RTC_TIMER,		/* Acrnd request to setup RTC timer */
+	SUSPEND,
+	SHUTDOWN,
+	REBOOT,
+};
+
+/* SOS-LCS handled message req/ack pairs */
+
+struct req_wakeup_reason {
+	struct mngr_msg msg;
+};
+
+struct ack_wakeup_reason {
+	struct mngr_msg msg;
+	int reason;
+};
+
+struct req_rtc_timer {
+	struct mngr_msg msg;
+	char vmname[VMNAME_LEN];
+	time_t t;
+};
+
+struct ack_rtc_timer {
+	struct mngr_msg msg;
+	int err;
+};
+
+struct req_power_state {
+	struct mngr_msg msg;
+};
+
+struct ack_power_state {
+	struct mngr_msg msg;
+	int err;
+};
+
 /* helper functions */
 #define MNGR_SERVER	1	/* create a server fd, which you can add handlers onto it */
 #define MNGR_CLIENT	0	/* create a client, just send req and read ack */
