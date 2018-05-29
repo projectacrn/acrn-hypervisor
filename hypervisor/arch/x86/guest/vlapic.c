@@ -227,28 +227,28 @@ vlapic_id_write_handler(struct vlapic *vlapic)
 static inline bool
 vlapic_lvtt_oneshot(struct vlapic *vlapic)
 {
-	return ((vlapic->apic_page->lvt_timer & APIC_LVTT_TM)
+	return ((vlapic->apic_page->lvt[APIC_LVT_TIMER].val & APIC_LVTT_TM)
 				== APIC_LVTT_TM_ONE_SHOT);
 }
 
 static inline bool
 vlapic_lvtt_period(struct vlapic *vlapic)
 {
-	return ((vlapic->apic_page->lvt_timer & APIC_LVTT_TM)
+	return ((vlapic->apic_page->lvt[APIC_LVT_TIMER].val & APIC_LVTT_TM)
 				==  APIC_LVTT_TM_PERIODIC);
 }
 
 static inline bool
 vlapic_lvtt_tsc_deadline(struct vlapic *vlapic)
 {
-	return ((vlapic->apic_page->lvt_timer & APIC_LVTT_TM)
+	return ((vlapic->apic_page->lvt[APIC_LVT_TIMER].val & APIC_LVTT_TM)
 				==  APIC_LVTT_TM_TSCDLT);
 }
 
 static inline bool
 vlapic_lvtt_masked(struct vlapic *vlapic)
 {
-	return !!(vlapic->apic_page->lvt_timer & APIC_LVTT_M);
+	return !!(vlapic->apic_page->lvt[APIC_LVT_TIMER].val & APIC_LVTT_M);
 }
 
 static void vlapic_create_timer(struct vlapic *vlapic)
@@ -416,28 +416,6 @@ vlapic_set_intr_ready(struct vlapic *vlapic, int vector, bool level)
 	return 1;
 }
 
-static inline uint32_t *
-vlapic_get_lvtptr(struct vlapic *vlapic, uint32_t offset)
-{
-	struct lapic *lapic = vlapic->apic_page;
-	int i;
-
-	switch (offset) {
-	case APIC_OFFSET_CMCI_LVT:
-		return &lapic->lvt_cmci;
-	case APIC_OFFSET_TIMER_LVT:
-	case APIC_OFFSET_THERM_LVT:
-	case APIC_OFFSET_PERF_LVT:
-	case APIC_OFFSET_LINT0_LVT:
-	case APIC_OFFSET_LINT1_LVT:
-	case APIC_OFFSET_ERROR_LVT:
-		i = (offset - APIC_OFFSET_TIMER_LVT) >> 2;
-		return (&lapic->lvt_timer) + i;
-	default:
-		panic("vlapic_get_lvt: invalid LVT\n");
-	}
-}
-
 static inline int
 lvt_off_to_idx(uint32_t offset)
 {
@@ -474,6 +452,28 @@ lvt_off_to_idx(uint32_t offset)
 		__func__, index, offset);
 
 	return index;
+}
+
+static inline uint32_t *
+vlapic_get_lvtptr(struct vlapic *vlapic, uint32_t offset)
+{
+	struct lapic *lapic = vlapic->apic_page;
+	int i;
+
+	switch (offset) {
+	case APIC_OFFSET_CMCI_LVT:
+		return &lapic->lvt_cmci;
+	case APIC_OFFSET_TIMER_LVT:
+	case APIC_OFFSET_THERM_LVT:
+	case APIC_OFFSET_PERF_LVT:
+	case APIC_OFFSET_LINT0_LVT:
+	case APIC_OFFSET_LINT1_LVT:
+	case APIC_OFFSET_ERROR_LVT:
+		i = lvt_off_to_idx(offset);
+		return &(lapic->lvt[i].val);
+	default:
+		panic("vlapic_get_lvt: invalid LVT\n");
+	}
 }
 
 static inline uint32_t
@@ -557,22 +557,22 @@ vlapic_mask_lvts(struct vlapic *vlapic)
 	lapic->lvt_cmci |= APIC_LVT_M;
 	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_CMCI_LVT);
 
-	lapic->lvt_timer |= APIC_LVT_M;
+	lapic->lvt[APIC_LVT_TIMER].val |= APIC_LVT_M;
 	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_TIMER_LVT);
 
-	lapic->lvt_thermal |= APIC_LVT_M;
+	lapic->lvt[APIC_LVT_THERMAL].val |= APIC_LVT_M;
 	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_THERM_LVT);
 
-	lapic->lvt_pcint |= APIC_LVT_M;
+	lapic->lvt[APIC_LVT_PMC].val |= APIC_LVT_M;
 	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_PERF_LVT);
 
-	lapic->lvt_lint0 |= APIC_LVT_M;
+	lapic->lvt[APIC_LVT_LINT0].val |= APIC_LVT_M;
 	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_LINT0_LVT);
 
-	lapic->lvt_lint1 |= APIC_LVT_M;
+	lapic->lvt[APIC_LVT_LINT1].val |= APIC_LVT_M;
 	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_LINT1_LVT);
 
-	lapic->lvt_error |= APIC_LVT_M;
+	lapic->lvt[APIC_LVT_ERROR].val |= APIC_LVT_M;
 	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_ERROR_LVT);
 }
 
@@ -1500,10 +1500,10 @@ void vlapic_restore(struct vlapic *vlapic, struct lapic_regs *regs)
 		lapic->tmr[i].val = regs->tmr[i];
 	lapic->svr = regs->svr;
 	vlapic_svr_write_handler(vlapic);
-	lapic->lvt_timer = regs->lvtt;
-	lapic->lvt_lint0 = regs->lvt0;
-	lapic->lvt_lint1 = regs->lvt1;
-	lapic->lvt_error = regs->lvterr;
+	lapic->lvt[APIC_LVT_TIMER].val = regs->lvtt;
+	lapic->lvt[APIC_LVT_LINT0].val = regs->lvt0;
+	lapic->lvt[APIC_LVT_LINT1].val = regs->lvt1;
+	lapic->lvt[APIC_LVT_ERROR].val = regs->lvterr;
 	lapic->icr_timer = regs->ticr;
 	lapic->ccr_timer = regs->tccr;
 	lapic->dcr_timer = regs->tdcr;
@@ -1788,7 +1788,7 @@ static int vlapic_timer_expired(void *data)
 
 	/* inject vcpu timer interrupt if not masked */
 	if (!vlapic_lvtt_masked(vlapic))
-		vlapic_intr_edge(vcpu, lapic->lvt_timer & APIC_LVTT_VECTOR);
+		vlapic_intr_edge(vcpu, lapic->lvt[APIC_LVT_TIMER].val & APIC_LVTT_VECTOR);
 
 	if (!vlapic_lvtt_period(vlapic))
 		vlapic->vlapic_timer.timer.fire_tsc = 0;

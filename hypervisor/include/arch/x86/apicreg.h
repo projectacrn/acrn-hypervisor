@@ -158,12 +158,7 @@ struct lapic {
 	uint32_t lvt_cmci;	PAD3;
 	uint32_t icr_lo;	PAD3;
 	uint32_t icr_hi;	PAD3;
-	uint32_t lvt_timer;	PAD3;
-	uint32_t lvt_thermal;	PAD3;
-	uint32_t lvt_pcint;	PAD3;
-	uint32_t lvt_lint0;	PAD3;
-	uint32_t lvt_lint1;	PAD3;
-	uint32_t lvt_error;	PAD3;
+	struct lapic_reg	lvt[6];
 	uint32_t icr_timer;	PAD3;
 	uint32_t ccr_timer;	PAD3;
 	/* reserved */		PAD4;
@@ -421,12 +416,12 @@ struct ioapic {
 #define	APIC_EXTF_IER_CAP	0x00000001
 
 /* LVT table indices */
-#define	APIC_LVT_LINT0		0
-#define	APIC_LVT_LINT1		1
-#define	APIC_LVT_TIMER		2
-#define	APIC_LVT_ERROR		3
-#define	APIC_LVT_PMC		4
-#define	APIC_LVT_THERMAL	5
+#define	APIC_LVT_TIMER		0
+#define	APIC_LVT_THERMAL	1
+#define	APIC_LVT_PMC		2
+#define	APIC_LVT_LINT0		3
+#define	APIC_LVT_LINT1		4
+#define	APIC_LVT_ERROR		5
 #define	APIC_LVT_CMCI		6
 #define	APIC_LVT_MAX		APIC_LVT_CMCI
 
