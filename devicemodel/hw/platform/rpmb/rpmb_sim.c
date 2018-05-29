@@ -162,7 +162,7 @@ static int rpmb_sim_open(const char *rpmb_devname)
 		rpmb_fd = fopen(rpmb_devname, "wb+");
 		DPRINTF(("rpmb device file(%s) does not exist, create a new file\n", rpmb_devname));
 		/* Write 0 to the last byte to enable 4MB length access */
-		if (file_write(rpmb_fd, &data, 1, TEEDATA_SIZE - 1) < 0) {
+		if (rpmb_fd == NULL || file_write(rpmb_fd, &data, 1, TEEDATA_SIZE - 1) < 0) {
 			DPRINTF(("Failed to initialize simulated rpmb to 0.\n"));
 			rpmb_fd = NULL;
 		}
