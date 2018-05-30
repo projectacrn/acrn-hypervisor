@@ -61,8 +61,6 @@ static void init_vm(struct vm_description *vm_desc,
 		vm_handle->hw.num_vcpus = vm_desc->vm_hw_num_cores;
 		vm_handle->hw.exp_num_vcpus = vm_desc->vm_hw_num_cores;
 	}
-	vm_handle->state_info.privilege = vm_desc->vm_state_info_privilege;
-	vm_handle->state_info.boot_count = 0;
 }
 
 /* return a pointer to the virtual machine structure associated with

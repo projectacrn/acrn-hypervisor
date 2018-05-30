@@ -108,14 +108,6 @@ enum vm_state {
 	VM_STATE_UNKNOWN
 };
 
-/* Structure for VM state information */
-struct vm_state_info {
-	enum vm_state state;	/* State of the VM */
-	unsigned int privilege;	/* Privilege level of the VM */
-	unsigned int boot_count;/* Number of times the VM has booted */
-
-};
-
 struct vm_arch {
 	uint64_t guest_init_pml4;/* Guest init pml4 */
 	/* EPT hierarchy for Normal World */
@@ -163,7 +155,6 @@ struct vm {
 	struct vm_sw_info sw;	/* Reference to SW associated with this VM */
 	struct vm_pm_info pm;	/* Reference to this VM's arch information */
 	struct vm_arch arch_vm;	/* Reference to this VM's arch information */
-	struct vm_state_info state_info;/* State info of this VM */
 	enum vm_state state;	/* VM state */
 	struct vcpu *current_vcpu;	/* VCPU that caused vm exit */
 	void *vuart;		/* Virtual UART */
