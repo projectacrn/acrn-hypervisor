@@ -25,6 +25,18 @@ bool is_hypercall_from_ring0(void);
  */
 
 /**
+ * @brief offline vcpu from SOS
+ *
+ * The function offline specific vcpu from SOS.
+ *
+ * @param vm Pointer to VM data structure
+ * @param lapicid lapic id of the vcpu which wants to offline
+ *
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_sos_offline_cpu(struct vm *vm, uint64_t lapicid);
+
+/**
  * @brief Get hypervisor api version
  *
  * The function only return api version information when VM is VM0.

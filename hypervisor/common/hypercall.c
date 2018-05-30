@@ -25,6 +25,30 @@ bool is_hypercall_from_ring0(void)
 	return false;
 }
 
+int32_t hcall_sos_offline_cpu(struct vm *vm, uint64_t lapicid)
+{
+	struct vcpu *vcpu;
+	int i;
+
+	if (!is_vm0(vm))
+		return -1;
+
+	pr_info("sos offline cpu with lapicid %lld", lapicid);
+
+	foreach_vcpu(i, vm, vcpu) {
+		if (vlapic_get_apicid(vcpu->arch_vcpu.vlapic) == lapicid) {
+			/* should not offline BSP */
+			if (vcpu->vcpu_id == 0)
+				return -1;
+			pause_vcpu(vcpu, VCPU_ZOMBIE);
+			reset_vcpu(vcpu);
+			destroy_vcpu(vcpu);
+		}
+	}
+
+	return 0;
+}
+
 int32_t hcall_get_api_version(struct vm *vm, uint64_t param)
 {
 	struct hc_api_version version;
