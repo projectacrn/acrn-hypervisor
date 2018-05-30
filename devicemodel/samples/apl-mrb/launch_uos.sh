@@ -209,6 +209,16 @@ echo "8086 5aca" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:1b.0" > /sys/bus/pci/devices/0000:00:1b.0/driver/unbind
 echo "0000:00:1b.0" > /sys/bus/pci/drivers/pci-stub/bind
 
+# WIFI is 4:0.0 on SBL, and 3:0.0 on ABL
+echo "11ab 2b38" > /sys/bus/pci/drivers/pci-stub/new_id
+echo "0000:04:00.0" > /sys/bus/pci/devices/0000:04:00.0/driver/unbind
+echo "0000:04:00.0" > /sys/bus/pci/drivers/pci-stub/bind
+
+# Bluetooth passthrough depends on WIFI
+echo "8086 5abc" > /sys/bus/pci/drivers/pci-stub/new_id
+echo "0000:00:18.0" > /sys/bus/pci/devices/0000:00:18.0/driver/unbind
+echo "0000:00:18.0" > /sys/bus/pci/drivers/pci-stub/bind
+
 #for memsize setting
 memsize=`cat /proc/meminfo|head -n 1|awk '{print $2}'`
 if [ $memsize -gt 4000000 ];then
@@ -278,9 +288,11 @@ fi
    -s 10,virtio-hyper_dmabuf \
    -s 11,wdt-i6300esb \
    -s 14,passthru,0/e/0 \
+   -s 23,passthru,0/17/0 \
    -s 15,passthru,0/f/0 \
-   -s 24,passthru,0/17/0 \
    -s 27,passthru,0/1b/0 \
+   -s 24,passthru,0/18/0 \
+   -s 18,passthru,4/0/0 \
    -M \
    $boot_image_option \
    --enable_trusty \
