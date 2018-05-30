@@ -44,6 +44,9 @@ static const char *const excp_names[] = {
 	[31] = "Intel Reserved"
 };
 
+/* Global variable for save registers on exception */
+struct intr_excp_ctx *crash_ctx;
+
 static void dump_guest_reg(struct vcpu *vcpu)
 {
 	struct run_context *cur_context =
@@ -283,4 +286,8 @@ void dump_exception(struct intr_excp_ctx *ctx, uint32_t cpu_id)
 	show_host_call_trace(ctx->rsp, ctx->rbp, cpu_id);
 	/* Dump guest context */
 	dump_guest_context(cpu_id);
+
+	/* Save registers*/
+	crash_ctx = ctx;
+	CACHE_FLUSH_INVALIDATE_ALL();
 }
