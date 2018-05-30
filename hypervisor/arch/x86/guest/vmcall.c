@@ -38,6 +38,9 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 
 	/* Dispatch the hypercall handler */
 	switch (hypcall_id) {
+	case HC_SOS_OFFLINE_CPU:
+		ret = hcall_sos_offline_cpu(vm, param1);
+		break;
 	case HC_GET_API_VERSION:
 #ifdef CONFIG_VM0_DESC
 		/* vm0 will call HC_GET_API_VERSION as first hypercall, fixup
