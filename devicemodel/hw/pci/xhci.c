@@ -456,10 +456,12 @@ static int pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 static inline int pci_xhci_is_valid_portnum(int n);
 static int pci_xhci_parse_tablet(struct pci_xhci_vdev *xdev, char *opts);
 static int pci_xhci_parse_log_level(struct pci_xhci_vdev *xdev, char *opts);
+static int pci_xhci_parse_extcap(struct pci_xhci_vdev *xdev, char *opts);
 
 static struct pci_xhci_option_elem xhci_option_table[] = {
 	{"tablet", pci_xhci_parse_tablet},
-	{"log", pci_xhci_parse_log_level}
+	{"log", pci_xhci_parse_log_level},
+	{"cap", pci_xhci_parse_extcap}
 };
 
 static int
@@ -3265,10 +3267,11 @@ static void
 pci_xhci_device_usage(char *opt)
 {
 	static const char *usage_str = "usage:\r\n"
-		" -s <n>,xhci,[bus1-port1,bus2-port2]:[tablet]:[log=x]\r\n"
+		" -s <n>,xhci,[bus1-port1,bus2-port2]:[tablet]:[log=x]:[cap=x]\r\n"
 		" eg: -s 8,xhci,1-2,2-2\r\n"
 		" eg: -s 7,xhci,tablet:log=D\r\n"
 		" eg: -s 7,xhci,1-2,2-2:tablet\r\n"
+		" eg: -s 7,xhci,1-2,2-2:tablet:log=D:cap=apl\r\n"
 		" Note: please follow the board hardware design, assign the "
 		" ports according to the receptacle connection\r\n";
 
@@ -3429,6 +3432,37 @@ errout:
 }
 
 static int
+pci_xhci_parse_extcap(struct pci_xhci_vdev *xdev, char *opts)
+{
+	char *cap;
+	char *s, *o;
+	int rc = 0;
+
+	assert(opts);
+
+	cap = o = s = strdup(opts);
+
+	s = strchr(opts, '=');
+	if (!s) {
+		rc = -1;
+		goto errout;
+	}
+
+	cap = s + 1;
+	if (!strncmp(cap, "apl", 3)) {
+		xdev->excap_write = pci_xhci_apl_drdregs_write;
+		xdev->excap_ptr = excap_group_apl;
+	} else
+		rc = -2;
+
+errout:
+	if (rc)
+		printf("USB: fail to set vendor capability, rc=%d\r\n", rc);
+	free(o);
+	return rc;
+}
+
+static int
 pci_xhci_parse_opts(struct pci_xhci_vdev *xdev, char *opts)
 {
 	char *s, *t, *n;
@@ -3541,8 +3575,7 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	xdev->usb2_port_start = (XHCI_MAX_DEVS/2) + 1;
 	xdev->usb3_port_start = 1;
 
-	xdev->excap_ptr = excap_group_apl;
-	xdev->excap_write = pci_xhci_apl_drdregs_write;
+	xdev->excap_ptr = excap_group_dft;
 
 	/* discover devices */
 	error = pci_xhci_parse_opts(xdev, opts);
