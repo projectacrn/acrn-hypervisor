@@ -107,6 +107,10 @@ int create_vcpu(int cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	/* Create per vcpu vlapic */
 	vlapic_create(vcpu);
 
+#ifdef CONFIG_MTRR_ENABLED
+	init_mtrr(vcpu);
+#endif
+
 	/* Populate the return handle */
 	*rtn_vcpu_handle = vcpu;
 
