@@ -175,7 +175,9 @@ void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec);
 int start_vm(struct vm *vm);
 int create_vm(struct vm_description *vm_desc, struct vm **vm);
 int prepare_vm0(void);
+#ifdef CONFIG_VM0_DESC
 void vm_fixup(struct vm *vm);
+#endif
 
 struct vm *get_vm_from_vmid(uint16_t vm_id);
 

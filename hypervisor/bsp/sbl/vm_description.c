@@ -6,6 +6,8 @@
 
 #include <hypervisor.h>
 
+#ifdef CONFIG_VM0_DESC
+
 /* Number of CPUs in VM0 */
 #define VM0_NUM_CPUS    1
 
@@ -16,3 +18,9 @@ struct vm_description vm0_desc = {
 	.vm_hw_num_cores = VM0_NUM_CPUS,
 	.vm_pcpu_ids = &VM0_CPUS[0],
 };
+
+#else
+
+struct vm_description vm0_desc;
+
+#endif // CONFIG_VM0_DESC
