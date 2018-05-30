@@ -201,6 +201,12 @@ void console_setup_timer(void)
 	static struct timer console_timer;
 	uint64_t period_in_cycle, fire_tsc;
 
+	if (serial_handle == SERIAL_INVALID_HANDLE) {
+		pr_err("%s: no uart, not need setup console timer",
+			__func__);
+		return;
+	}
+
 	period_in_cycle = CYCLES_PER_MS * CONSOLE_KICK_TIMER_TIMEOUT;
 	fire_tsc = rdtsc() + period_in_cycle;
 	initialize_timer(&console_timer,
