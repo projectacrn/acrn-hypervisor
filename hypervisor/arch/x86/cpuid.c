@@ -283,8 +283,10 @@ void guest_cpuid(struct vcpu *vcpu,
 		*ebx &= ~APIC_ID_MASK;
 		*ebx |= (apicid & APIC_ID_MASK);
 
+#ifndef CONFIG_MTRR_ENABLED
 		/* mask mtrr */
 		*edx &= ~CPUID_EDX_MTRR;
+#endif
 
 		/* Patching X2APIC, X2APIC mode is disabled by default. */
 		if (x2apic_enabled)
