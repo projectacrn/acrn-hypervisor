@@ -125,7 +125,7 @@ int64_t hcall_pause_vm(uint64_t vmid);
  *
  * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
- * @param param guest physical addressx. This gpa points to
+ * @param param guest physical address. This gpa points to
  *              struct acrn_create_vcpu
  *
  * @return 0 on success, non-zero on error.
@@ -235,7 +235,7 @@ int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t param);
 int64_t hcall_set_vm_memmap(struct vm *vm, uint64_t vmid, uint64_t param);
 
 /**
- * @brief setup ept memmory mapping for multi regions
+ * @brief setup ept memory mapping for multi regions
  *
  * @param vm Pointer to VM data structure
  * @param param guest physical address. This gpa points to
@@ -261,7 +261,7 @@ int64_t hcall_set_vm_memmaps(struct vm *vm, uint64_t param);
 int64_t hcall_remap_pci_msix(struct vm *vm, uint64_t vmid, uint64_t param);
 
 /**
- * @brief translate guest physical address ot host physical address
+ * @brief translate guest physical address to host physical address
  *
  * Translate guest physical address to host physical address for a VM.
  * The function will return -1 if the target VM does not exist.

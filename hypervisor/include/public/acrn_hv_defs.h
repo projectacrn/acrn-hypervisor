@@ -252,7 +252,7 @@ struct hc_ptdev_irq {
 } __aligned(8);
 
 /**
- * Hypervisor api version info, return it for HC_GET_API_VERSION hyercall
+ * Hypervisor api version info, return it for HC_GET_API_VERSION hypercall
  */
 struct hc_api_version {
 	/** hypervisor api major version */
