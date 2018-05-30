@@ -246,6 +246,9 @@ struct vcpu {
 	 */
 	uint64_t msr_tsc_aux_guest;
 	uint64_t *guest_msrs;
+#ifdef CONFIG_MTRR_ENABLED
+	struct mtrr_state mtrr;
+#endif
 };
 
 #define	is_vcpu_bsp(vcpu)	((vcpu)->vcpu_id == 0)
