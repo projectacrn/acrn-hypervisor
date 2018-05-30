@@ -81,6 +81,12 @@
 #define PCI_BDF(bus, dev, func)  (((bus & 0xFF)<<8) | ((dev & 0x1F)<<3)     \
 		| ((func & 0x7)))
 
+/* Some audio driver get topology data from ACPI NHLT table, thus need copy host
+ * NHLT to guest. Default audio driver doesn't require this, so make it off by
+ * default to avoid unexpected failure.
+ */
+#define AUDIO_NHLT_HACK 0
+
 static int iofd = -1;
 static int memfd = -1;
 
@@ -968,12 +974,14 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_set_cfgdata16(dev, PCIR_MINGNT,
 			  read_config(ptdev->phys_dev, PCIR_MINGNT, 2));
 
+#if AUDIO_NHLT_HACK
 	/* device specific handling:
 	 * audio: enable NHLT ACPI table
 	 */
 	if (read_config(ptdev->phys_dev, PCIR_VENDOR, 2) == 0x8086 &&
 		read_config(ptdev->phys_dev, PCIR_DEVICE, 2) == 0x5a98)
 		acpi_table_enable(NHLT_ENTRY_NO);
+#endif
 
 	/* initialize config space */
 	error = cfginit(ctx, ptdev, bus, slot, func);
