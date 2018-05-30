@@ -37,9 +37,6 @@
 int VM0_CPUS[VM0_NUM_CPUS] = {0};
 
 struct vm_description vm0_desc = {
-	.vm_attr_name = "vm_0",
 	.vm_hw_num_cores = VM0_NUM_CPUS,
 	.vm_hw_logical_core_ids = &VM0_CPUS[0],
-	.vm_state_info_privilege = VM_PRIVILEGE_LEVEL_HIGH,
-	.vm_created = false,
 };
