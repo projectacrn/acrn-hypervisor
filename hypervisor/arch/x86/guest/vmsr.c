@@ -157,11 +157,25 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 		v = rdtsc() + vcpu->arch_vcpu.contexts[cur_context].tsc_offset;
 		break;
 	}
-
 	case MSR_IA32_MTRR_CAP:
 	case MSR_IA32_MTRR_DEF_TYPE:
+	case MSR_IA32_MTRR_FIX64K_00000:
+	case MSR_IA32_MTRR_FIX16K_80000:
+	case MSR_IA32_MTRR_FIX16K_A0000:
+	case MSR_IA32_MTRR_FIX4K_C0000:
+	case MSR_IA32_MTRR_FIX4K_C8000:
+	case MSR_IA32_MTRR_FIX4K_D0000:
+	case MSR_IA32_MTRR_FIX4K_D8000:
+	case MSR_IA32_MTRR_FIX4K_E0000:
+	case MSR_IA32_MTRR_FIX4K_E8000:
+	case MSR_IA32_MTRR_FIX4K_F0000:
+	case MSR_IA32_MTRR_FIX4K_F8000:
 	{
+#ifdef CONFIG_MTRR_ENABLED
+		v = mtrr_rdmsr(vcpu, msr);
+#else
 		vcpu_inject_gp(vcpu, 0);
+#endif
 		break;
 	}
 	case MSR_IA32_BIOS_SIGN_ID:
@@ -206,8 +220,6 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 	{
 		if (!((msr >= MSR_IA32_MTRR_PHYSBASE_0 &&
 			msr <= MSR_IA32_MTRR_PHYSMASK_9) ||
-		      (msr >= MSR_IA32_MTRR_FIX64K_00000 &&
-			msr <= MSR_IA32_MTRR_FIX4K_F8000) ||
 		      (msr >= MSR_IA32_VMX_BASIC &&
 			msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS))) {
 			pr_warn("rdmsr: %lx should not come here!", msr);
@@ -257,8 +269,27 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 		break;
 	}
 
-	case MSR_IA32_MTRR_CAP:
 	case MSR_IA32_MTRR_DEF_TYPE:
+	case MSR_IA32_MTRR_FIX64K_00000:
+	case MSR_IA32_MTRR_FIX16K_80000:
+	case MSR_IA32_MTRR_FIX16K_A0000:
+	case MSR_IA32_MTRR_FIX4K_C0000:
+	case MSR_IA32_MTRR_FIX4K_C8000:
+	case MSR_IA32_MTRR_FIX4K_D0000:
+	case MSR_IA32_MTRR_FIX4K_D8000:
+	case MSR_IA32_MTRR_FIX4K_E0000:
+	case MSR_IA32_MTRR_FIX4K_E8000:
+	case MSR_IA32_MTRR_FIX4K_F0000:
+	case MSR_IA32_MTRR_FIX4K_F8000:
+	{
+#ifdef CONFIG_MTRR_ENABLED
+		mtrr_wrmsr(vcpu, msr, v);
+#else
+		vcpu_inject_gp(vcpu, 0);
+#endif
+		break;
+	}
+	case MSR_IA32_MTRR_CAP:
 	{
 		vcpu_inject_gp(vcpu, 0);
 		break;
@@ -318,8 +349,6 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	{
 		if (!((msr >= MSR_IA32_MTRR_PHYSBASE_0 &&
 			msr <= MSR_IA32_MTRR_PHYSMASK_9) ||
-		      (msr >= MSR_IA32_MTRR_FIX64K_00000 &&
-			msr <= MSR_IA32_MTRR_FIX4K_F8000) ||
 		      (msr >= MSR_IA32_VMX_BASIC &&
 			msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS))) {
 			pr_warn("rdmsr: %lx should not come here!", msr);
