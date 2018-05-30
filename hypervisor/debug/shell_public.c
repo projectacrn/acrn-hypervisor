@@ -125,6 +125,12 @@ static struct shell_cmd acrn_cmd[] = {
 		.help_str	= SHELL_CMD_REBOOT_HELP,
 		.fcn		= shell_reboot,
 	},
+		{
+			.str		= SHELL_CMD_TRIGGER_CRASH,
+			.cmd_param	= SHELL_CMD_TRIGGER_CRASH_PARAM,
+			.help_str	= SHELL_CMD_TRIGGER_CRASH_HELP,
+			.fcn		= shell_trigger_crash,
+		},
 };
 
 int shell_init(void)
