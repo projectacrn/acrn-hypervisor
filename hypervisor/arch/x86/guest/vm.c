@@ -29,6 +29,7 @@ static void init_vm(struct vm_description *vm_desc,
 		struct vm *vm_handle)
 {
 	/* Populate VM attributes from VM description */
+#ifdef CONFIG_VM0_DESC
 	if (is_vm0(vm_handle)) {
 		/* Allocate all cpus to vm0 at the beginning */
 		vm_handle->hw.num_vcpus = phys_cpu_num;
@@ -37,6 +38,9 @@ static void init_vm(struct vm_description *vm_desc,
 		vm_handle->hw.num_vcpus = vm_desc->vm_hw_num_cores;
 		vm_handle->hw.exp_num_vcpus = vm_desc->vm_hw_num_cores;
 	}
+#else
+	vm_handle->hw.num_vcpus = vm_desc->vm_hw_num_cores;
+#endif
 }
 
 /* return a pointer to the virtual machine structure associated with
@@ -339,6 +343,10 @@ int prepare_vm0(void)
 	struct vm *vm = NULL;
 	struct vm_description *vm_desc = &vm0_desc;
 
+#ifndef CONFIG_VM0_DESC
+	vm_desc->vm_hw_num_cores = phys_cpu_num;
+#endif
+
 	err = create_vm(vm_desc, &vm);
 	if (err != 0) {
 		return err;
@@ -360,6 +368,7 @@ int prepare_vm0(void)
 	return err;
 }
 
+#ifdef CONFIG_VM0_DESC
 static inline bool vcpu_in_vm_desc(struct vcpu *vcpu,
 		struct vm_description *vm_desc)
 {
@@ -404,3 +413,4 @@ void vm_fixup(struct vm *vm)
 		vm->hw.num_vcpus = vm->hw.exp_num_vcpus;
 	}
 }
+#endif

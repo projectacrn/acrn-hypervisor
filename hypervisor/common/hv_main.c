@@ -104,7 +104,11 @@ void vcpu_thread(struct vcpu *vcpu)
 
 static bool is_vm0_bsp(uint16_t pcpu_id)
 {
+#ifdef CONFIG_VM0_DESC
 	return pcpu_id == vm0_desc.vm_pcpu_ids[0];
+#else
+	return pcpu_id == BOOT_CPU_ID;
+#endif
 }
 
 int32_t hv_main(uint16_t pcpu_id)
