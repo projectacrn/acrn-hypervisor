@@ -23,6 +23,24 @@
 #define ACRNCTL_OPT_ROOT	"/opt/acrn/conf"
 #define MAX_NAME_LEN            (128)
 
+#define ACMD(CMD,FUNC,DESC, VALID_ARGS) \
+{.cmd = CMD, .func = FUNC, .desc = DESC, .valid_args = VALID_ARGS}
+
+/* vm life cycle cmd description */
+#define LIST_DESC      "List all the virtual machines added"
+#define START_DESC     "Start virtual machine VM_NAME"
+#define STOP_DESC      "Stop virtual machine VM_NAME"
+#define DEL_DESC       "Delete virtual machine VM_NAME"
+#define ADD_DESC       "Add one virtual machine with SCRIPTS and OPTIONS"
+
+struct acrnctl_cmd {
+	const char *cmd;
+	const char desc[128];	/* Description of the cmd */
+	int (*func) (int argc, char *argv[]);
+	/* Callback function to check whether args is valid */
+	int (*valid_args) (struct acrnctl_cmd * cmd, int argc, char *argv[]);
+};
+
 /* helper functions */
 static int shell_cmd(const char *cmd, char *outbuf, int len)
 {
@@ -51,7 +69,7 @@ static void process_msg(struct mngr_msg *msg)
 	if (msg->len < sizeof(*msg))
 		return;
 
-	switch(msg->msgid) {
+	switch (msg->msgid) {
 	case MSG_STR:
 		printf("%s\n", msg->payload);
 		break;
@@ -109,8 +127,8 @@ static struct vmm_struct *vmm_find(char *name)
 	struct vmm_struct *s;
 
 	LIST_FOREACH(s, &vmm_head, list)
-	    if (!strcmp(name, s->name))
-		return s;
+		if (!strcmp(name, s->name))
+			return s;
 	return NULL;
 }
 
@@ -168,23 +186,10 @@ static void vmm_update(void)
 
 /* There are acrnctl cmds */
 /* command: list */
-static void acrnctl_list_help(void)
-{
-	printf("acrnctl list\n"
-	       "\tlist all VMs, shown in %s or %s\n",
-	       ACRNCTL_OPT_ROOT, ACRN_DM_SOCK_ROOT);
-}
-
 static int acrnctl_do_list(int argc, char *argv[])
 {
 	struct vmm_struct *s;
 	int find = 0;
-
-	if (argc == 2)
-		if (!strcmp("help", argv[1])) {
-			acrnctl_list_help();
-			return 0;
-		}
 
 	vmm_update();
 	LIST_FOREACH(s, &vmm_head, list) {
@@ -196,13 +201,6 @@ static int acrnctl_do_list(int argc, char *argv[])
 		printf("There are no VMs\n");
 
 	return 0;
-}
-
-/* command: add */
-static void acrnctl_add_help(void)
-{
-	printf("acrnctl add [uos_bash_script]\n"
-	       "\trequires an uos script file\n");
 }
 
 static int check_name(const char *name)
@@ -299,16 +297,6 @@ static int acrnctl_do_add(int argc, char *argv[])
 	char vmname[128];
 	size_t len = sizeof(cmd_out);
 
-	if (argc < 2) {
-		acrnctl_add_help();
-		return -1;
-	}
-
-	if (!strcmp("help", argv[1])) {
-		acrnctl_add_help();
-		return 0;
-	}
-
 	if (strlen(argv[1]) >= FILE_NAME_LENGTH) {
 		printf("file name too long: %s\n", argv[1]);
 		return -1;
@@ -400,7 +388,8 @@ static int acrnctl_do_add(int argc, char *argv[])
 	if (ret < 0)
 		goto get_vmname;
 
-	snprintf(cmd, sizeof(cmd), "grep -a \"acrnctl: \" ./%s.result", argv[1]);
+	snprintf(cmd, sizeof(cmd), "grep -a \"acrnctl: \" ./%s.result",
+		 argv[1]);
 	ret = shell_cmd(cmd, cmd_out, sizeof(cmd_out));
 	if (ret < 0)
 		goto get_vmname;
@@ -474,12 +463,6 @@ static int acrnctl_do_add(int argc, char *argv[])
 }
 
 /* command: stop */
-static void acrnctl_stop_help(void)
-{
-	printf("acrnctl stop [vmname0] [vmname1] ...\n"
-	       "\t run \"acrnctl list\" to get running VMs\n");
-}
-
 static int send_stop_msg(char *vmname)
 {
 	int fd, ret;
@@ -533,7 +516,7 @@ static int send_stop_msg(char *vmname)
 		memset(buf, 0, sizeof(buf));
 		ret = read(fd, buf, sizeof(buf));
 		if (ret <= sizeof(buf))
-			process_msg((void*)&buf);
+			process_msg((void *)&buf);
 	}
 
  cant_write:
@@ -547,16 +530,6 @@ static int acrnctl_do_stop(int argc, char *argv[])
 {
 	struct vmm_struct *s;
 	int i;
-
-	if (argc < 2) {
-		acrnctl_stop_help();
-		return -1;
-	}
-
-	if (!strcmp("help", argv[1])) {
-		acrnctl_stop_help();
-		return 0;
-	}
 
 	vmm_update();
 	for (i = 1; i < argc; i++) {
@@ -577,28 +550,11 @@ static int acrnctl_do_stop(int argc, char *argv[])
 }
 
 /* command: delete */
-static void acrnctl_del_help(void)
-{
-	printf("acrnctl del [vmname0] [vmname1] ...\n"
-	       "\t run \"acrnctl list\" get VM names\n");
-}
-
 static int acrnctl_do_del(int argc, char *argv[])
 {
 	struct vmm_struct *s;
 	int i;
 	char cmd[128];
-
-	if (argc < 2) {
-		acrnctl_del_help();
-
-		return -1;
-	}
-
-	if (!strcmp("help", argv[1])) {
-		acrnctl_del_help();
-		return 0;
-	}
 
 	vmm_update();
 	for (i = 1; i < argc; i++) {
@@ -623,28 +579,10 @@ static int acrnctl_do_del(int argc, char *argv[])
 	return 0;
 }
 
-/* command: start */
-static void acrnctl_start_help(void)
-{
-	printf("acrnctl start [vmname]\n"
-	       "\t run \"acrnctl list\" get VM names\n"
-	       "\t each time user can only start one VM\n");
-}
-
 static int acrnctl_do_start(int argc, char *argv[])
 {
 	struct vmm_struct *s;
 	char cmd[128];
-
-	if (argc != 2) {
-		acrnctl_start_help();
-		return -1;
-	}
-
-	if (!strcmp("help", argv[1])) {
-		acrnctl_start_help();
-		return 0;
-	}
 
 	vmm_update();
 	s = vmm_find(argv[1]);
@@ -666,38 +604,79 @@ static int acrnctl_do_start(int argc, char *argv[])
 	return 0;
 }
 
-#define ACMD(CMD,FUNC)	\
-{.cmd = CMD, .func = FUNC,}
+/* Default args validation function */
+int df_valid_args(struct acrnctl_cmd *cmd, int argc, char *argv[])
+{
+	char df_opt[32] = "VM_NAME VM_NAME ...";
 
-struct acrnctl_cmd {
-	const char *cmd;
-	int (*func) (int argc, char *argv[]);
-} acmds[] = {
-	ACMD("list", acrnctl_do_list),
-	ACMD("start", acrnctl_do_start),
-	ACMD("stop", acrnctl_do_stop),
-	ACMD("del", acrnctl_do_del),
-	ACMD("add", acrnctl_do_add),
+	if (argc < 2 || !strcmp(argv[1], "help")) {
+		printf("acrnctl %s %s\n", cmd->cmd, df_opt);
+		return -1;
+	}
+
+	return 0;
+}
+
+static int valid_add_args(struct acrnctl_cmd *cmd, int argc, char *argv[])
+{
+	char df_opt[32] = "launch_scripts options";
+
+	if (argc < 2 || !strcmp(argv[1], "help")) {
+		printf("acrnctl %s %s\n", cmd->cmd, df_opt);
+		return -1;
+	}
+
+	return 0;
+}
+
+static int valid_start_args(struct acrnctl_cmd *cmd, int argc, char *argv[])
+{
+	char df_opt[16] = "VM_NAME";
+
+	if (argc != 2 || ((argv + 1) && !strcmp(argv[1], "help"))) {
+		printf("acrnctl %s %s\n", cmd->cmd, df_opt);
+		return -1;
+	}
+
+	return 0;
+}
+
+static int valid_list_args(struct acrnctl_cmd *cmd, int argc, char *argv[])
+{
+	if (argc != 1) {
+		printf("acrnctl %s\n", cmd->cmd);
+		return -1;
+	}
+
+	return 0;
+}
+
+struct acrnctl_cmd acmds[] = {
+	ACMD("list", acrnctl_do_list, LIST_DESC, valid_list_args),
+	ACMD("start", acrnctl_do_start, START_DESC, valid_start_args),
+	ACMD("stop", acrnctl_do_stop, STOP_DESC, df_valid_args),
+	ACMD("del", acrnctl_do_del, DEL_DESC, df_valid_args),
+	ACMD("add", acrnctl_do_add, ADD_DESC, valid_add_args),
 };
 
 #define NCMD	(sizeof(acmds)/sizeof(struct acrnctl_cmd))
 
-static void help_info(void)
+static void usage(void)
 {
 	int i;
 
-	printf("support:\n");
+	printf("\nUsage: acrnctl SUB-CMD "
+		"{ VM_NAME | SCRIPTS OPTIONS | help }\n\n");
 	for (i = 0; i < NCMD; i++)
-		printf("\t%s\n", acmds[i].cmd);
-	printf("Use acrnctl [cmd] help for details\n");
+		printf("\t%-12s%s\n", acmds[i].cmd, acmds[i].desc);
 }
 
 int main(int argc, char *argv[])
 {
 	int i;
 
-	if (argc == 1) {
-		help_info();
+	if (argc == 1 || !strcmp(argv[1], "help")) {
+		usage();
 		return 0;
 	}
 
@@ -710,12 +689,17 @@ int main(int argc, char *argv[])
 	}
 
 	for (i = 0; i < NCMD; i++)
-		if (!strcmp(argv[1], acmds[i].cmd))
-			return acmds[i].func(argc - 1, &argv[1]);
+		if (!strcmp(argv[1], acmds[i].cmd)) {
+			if (acmds[i].valid_args(&acmds[i], argc - 1, &argv[1])) {
+				return -1;
+			} else {
+				return acmds[i].func(argc - 1, &argv[1]);
+			}
+		}
 
 	/* Reach here means unsupported command */
 	printf("Unknown command: %s\n", argv[1]);
-	help_info();
+	usage();
 
 	return -1;
 }
