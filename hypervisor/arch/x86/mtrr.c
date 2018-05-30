@@ -131,11 +131,102 @@ void init_mtrr(struct vcpu *vcpu)
 	}
 }
 
+static uint32_t update_ept(struct vm *vm, uint64_t start,
+	uint64_t size, uint32_t type)
+{
+	uint32_t attr;
+
+	switch (type) {
+	case MTRR_MEM_TYPE_WC:
+		attr = MMU_MEM_ATTR_WC;
+		break;
+	case MTRR_MEM_TYPE_WT:
+		attr = MMU_MEM_ATTR_WT_CACHE;
+		break;
+	case MTRR_MEM_TYPE_WP:
+		attr = MMU_MEM_ATTR_WP;
+		break;
+	case MTRR_MEM_TYPE_WB:
+		attr = MMU_MEM_ATTR_WB_CACHE;
+		break;
+	case MTRR_MEM_TYPE_UC:
+	default:
+		attr = MMU_MEM_ATTR_UNCACHED;
+	}
+
+	ept_update_mt(vm, gpa2hpa(vm, start), start, size, attr);
+	return attr;
+}
+
+static void update_ept_mem_type(struct vcpu *vcpu)
+{
+	uint32_t type;
+	uint64_t start, size;
+	int i, j;
+
+	/*
+	 * Intel SDM, Vol 3, 11.11.2.1 Section "IA32_MTRR_DEF_TYPE MSR":
+	 * - when def_type.E is clear, UC memory type is applied
+	 * - when def_type.FE is clear, MTRRdefType.type is applied
+	 */
+	if (!is_mtrr_enabled(vcpu) || !is_fixed_range_mtrr_enabled(vcpu)) {
+		update_ept(vcpu->vm, 0, MAX_FIXED_RANGE_ADDR,
+			get_default_memory_type(vcpu));
+		return;
+	}
+
+	/* Deal with fixed-range MTRRs only */
+	for (i = 0; i < FIXED_RANGE_MTRR_NUM; i++) {
+		type = vcpu->mtrr.fixed_range[i].type[0];
+		start = get_subrange_start_of_fixed_mtrr(i, 0);
+		size = get_subrange_size_of_fixed_mtrr(i);
+
+		for (j = 1; j < MTRR_SUB_RANGE_NUM; j++) {
+			/* If it's same type, combine the subrange together */
+			if (type == vcpu->mtrr.fixed_range[i].type[j]) {
+				size += get_subrange_size_of_fixed_mtrr(i);
+			} else {
+				update_ept(vcpu->vm, start, size, type);
+				type = vcpu->mtrr.fixed_range[i].type[j];
+				start = get_subrange_start_of_fixed_mtrr(i, j);
+				size = get_subrange_size_of_fixed_mtrr(i);
+			}
+		}
+
+		update_ept(vcpu->vm, start, size, type);
+	}
+}
+
 void mtrr_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t value)
 {
 	if (msr == MSR_IA32_MTRR_DEF_TYPE) {
 		if (vcpu->mtrr.def_type.value != value) {
 			vcpu->mtrr.def_type.value = value;
+
+			/*
+			 * Guests follow this guide line to update MTRRs:
+			 * Intel SDM, Volume 3, 11.11.8 Section "MTRR
+			 * Considerations in MP Systems"
+			 * 1. Broadcast to all processors
+			 * 2. Disable Interrupts
+			 * 3. Wait for all procs to do so
+			 * 4. Enter no-fill cache mode (CR0.CD=1, CR0.NW=0)
+			 * 5. Flush caches
+			 * 6. Clear CR4.PGE bit
+			 * 7. Flush all TLBs
+			 * 8. Disable all range registers by MTRRdefType.E
+			 * 9. Update the MTRRs
+			 * 10. Enable all range registers by MTRRdeftype.E
+			 * 11. Flush all TLBs and caches again
+			 * 12. Enter normal cache mode to re-enable caching
+			 * 13. Set CR4.PGE
+			 * 14. Wait for all processors to reach this point
+			 * 15. Enable interrupts.
+			 *
+			 * we don't have to update EPT in step 9
+			 * but in step 8 and 10 only
+			 */
+			update_ept_mem_type(vcpu);
 		}
 	} else if (is_fixed_range_mtrr(msr))
 		vcpu->mtrr.fixed_range[get_index_of_fixed_mtrr(msr)].value = value;
