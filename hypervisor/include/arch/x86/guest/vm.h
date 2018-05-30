@@ -183,20 +183,12 @@ struct vm {
 };
 
 struct vm_description {
-	/* Virtual machine identifier, assigned by the system */
-	char                   *vm_attr_name;
 	/* The logical CPU IDs associated with this VM - The first CPU listed
 	 * will be the VM's BSP
 	 */
 	int                    *vm_hw_logical_core_ids;
 	unsigned char          GUID[16]; /* GUID of the vm will be created */
 	int                    vm_hw_num_cores;   /* Number of virtual cores */
-	/* Indicates to APs that the BSP has created a VM for this
-	 * description
-	 */
-	bool                   vm_created;
-	/* Index indicating VM's privilege level */
-	unsigned int           vm_state_info_privilege;
 	/* Whether secure world is enabled for current VM. */
 	bool                   sworld_enabled;
 };
