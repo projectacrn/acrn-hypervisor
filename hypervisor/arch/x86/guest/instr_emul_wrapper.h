@@ -27,6 +27,8 @@
  * $FreeBSD$
  */
 
+#ifndef INSTR_EMUL_WRAPPER_H
+#define INSTR_EMUL_WRAPPER_H
 #include <cpu.h>
 
 struct vie_op {
@@ -186,3 +188,4 @@ int vm_get_seg_desc(struct vcpu *vcpu, int reg,
 int vm_set_seg_desc(struct vcpu *vcpu, int reg,
 		struct seg_desc *desc);
 int vm_restart_instruction(struct vcpu *vcpu);
+#endif
