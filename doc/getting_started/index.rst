@@ -7,7 +7,7 @@ After reading the :ref:`introduction`, use this guide to get started
 using ACRN in a reference setup.  We'll show how to set up your
 development and target hardware, and then how to boot up the ACRN
 hypervisor and the `Clear Linux`_ Service OS and Guest OS on the Intel
-|reg| NUC.
+(EFI) platform.
 
 .. _Clear Linux: https://clearlinux.org
 
@@ -15,8 +15,11 @@ Hardware setup
 **************
 
 The Intel |reg| NUC (NUC6CAYH) is the supported reference target
-platform for ACRN work, as described in :ref:`hardware`, and is the only
-platform currently tested with these setup instructions.
+platform for ACRN work, as described in :ref:`hardware`, and is the main
+platform currently tested with these setup instructions. The
+`UP Squared board <http://www.up-board.org/upsquared/>`_ (UP2) is also
+known to work and the few specificities for it are described
+in :ref:`getting_started_up2`.
 
 The recommended NUC hardware configuration is:
 
@@ -26,9 +29,6 @@ The recommended NUC hardware configuration is:
 - Memory: 8G DDR3
 - SSD: 120G SATA
 
-Software setup
-**************
-
 Firmware update on the NUC
 ==========================
 
@@ -37,12 +37,15 @@ Follow these `BIOS Update Instructions
 <https://www.intel.com/content/www/us/en/support/articles/000005636.html>`__
 for downloading and flashing an updated BIOS for the NUC.
 
+Software setup
+**************
+
 Set up a Clear Linux Operating System
 =====================================
 
 Currently, an installable version of ARCN does not exist. Therefore, you
-need to setup a base Clear Linux OS to bootstrap ACRN on the NUC. You'll
-need a network connection for your NUC to complete this setup.
+need to setup a base Clear Linux OS to bootstrap ACRN on your platform. You'll
+need a network connection for your platform to complete this setup.
 
 .. note::
    ACRN requires Clear Linux version 22140 or newer. The instructions below
@@ -54,10 +57,10 @@ need a network connection for your NUC to complete this setup.
    https://download.clearlinux.org/releases/22140/clear/clear-22140-installer.img.xz
    and follow the `Clear Linux installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
-   as a starting point for installing Clear Linux onto your NUC.  Follow the recommended
-   options for choosing an **Automatic** installation type, and using the NUC's
+   as a starting point for installing Clear Linux onto your platform.  Follow the recommended
+   options for choosing an **Automatic** installation type, and using the platform's
    storage as the target device for installation (overwriting the existing data
-   and creating three partitions on the NUC's SSD drive).
+   and creating three partitions on the platform's storage drive).
 
 #. After installation is complete, boot into Clear Linux, login as
    **root**, and set a password.
@@ -97,7 +100,7 @@ need a network connection for your NUC to complete this setup.
 Add the ACRN hypervisor to the EFI Partition
 ============================================
 
-In order to boot the ACRN SOS on the NUC, you'll need to add it to the EFI
+In order to boot the ACRN SOS on the platform, you'll need to add it to the EFI
 partition. Follow these steps:
 
 #. Mount the EFI partition and verify you have the following files:
@@ -119,6 +122,13 @@ partition. Follow these steps:
       and ``*-standard``) listed on your system,
       as you will need them later.
 
+   .. note::
+      The EFI System Partition (ESP) may be different based on your hardware.
+      It will typically be something like ``/dev/mmcblk0p1`` on platforms
+      that have an on-board eMMC or ``/dev/nvme0n1p1`` if your system has
+      a non-volatile storage media attached via a PCI Express (PCIe) bus
+      (NVMe).
+
 #. Put the ``acrn.efi`` hypervisor application (included in the Clear
    Linux release) on the EFI partition with:
 
@@ -136,18 +146,37 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda1 -p 1 -L ACRN
-      # cd /mnt/EFI/org.clearlinux/
-      # cp bootloaderx64.efi bootloaderx64_origin.efi
+      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L ACRN
 
    .. note::
       Be aware that a Clearlinux update that includes a kernel upgrade will
-      reset the boot option changes you just made.. A Clearlinux update could
-      happen automatically (if you have
-      not disabled it as described above), if you later install a new
-      bundle to your system, or simply if you decide to trigger an update
-      manually. Whenever that happens, double-check the platform boot order
-      using ``efibootmgr -v`` and modify it if needed.
+      reset the boot option changes you just made. A Clearlinux update could
+      happen automatically (if you have not disabled it as described above),
+      if you later install a new bundle to your system, or simply if you
+      decide to trigger an update manually. Whenever that happens,
+      double-check the platform boot order using ``efibootmgr -v`` and
+      modify it if needed.
+
+   The ACRN hypervisor (``acrn.efi``) accepts two command-line parameters that
+   tweak its behaviour:
+
+   1. ``bootloader=``: this sets the EFI executable to be loaded once the hypervisor
+      is up and running. This is typically the bootloader of the Service OS and the
+      default value is to use the Clearlinux bootloader, i.e.: ``\EFI\org.clearlinux\bootloaderx64.efi``.
+   #. ``uart=``: this tells the hypervisor where the serial port (UART) is found or
+      whether it should be disabled. There are three forms for this parameter:
+      
+      #. ``uart=disabled``: this disables the serial port completely
+      #. ``uart=mmio@<MMIO address>``: this sets the serial port MMIO address
+      #. ``uart=port@<port address>``: this sets the serial port address
+
+   Here is a more complete example of how to configure the EFI firmware to load the ACRN
+   hypervisor and set these parameters.
+
+   .. code-block::
+
+      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN Hypervisor" \
+            -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=mmio@0x9141e000"
 
 #. Create a boot entry for the ACRN Service OS by copying a provided ``acrn.conf``
    and editing it to account for the kernel versions noted in a previous step.
@@ -172,7 +201,7 @@ partition. Follow these steps:
    .. literalinclude:: ../../hypervisor/bsp/uefi/clearlinux/acrn.conf
       :caption: hypervisor/bsp/uefi/clearlinux/acrn.conf
 
-   On the NUC, copy the ``acrn.conf`` file to the EFI partition we mounted earlier:
+   On the platform, copy the ``acrn.conf`` file to the EFI partition we mounted earlier:
 
    .. code-block:: none
 
@@ -183,6 +212,9 @@ partition. Follow these steps:
    (``root=PARTUUID=<><UUID of rootfs partition>``) in the ``options`` section.
 
    Use ``blkid`` to find out what your ``/dev/sda3`` ``PARTUUID`` value is.
+
+   .. note::
+      It is also possible to use the device name directly, e.g. ``root=/dev/sda3``
 
 #. Add a timeout period for Systemd-Boot to wait, otherwise it will not
    present the boot menu and will always boot the base Clear Linux
@@ -244,7 +276,7 @@ directory. Run it to create a network bridge:
 Set up Reference UOS
 ====================
 
-#. On your NUC, download the pre-built reference Clear Linux UOS image into your
+#. On your platform, download the pre-built reference Clear Linux UOS image into your
    (root) home directory:
 
    .. code-block:: none
@@ -274,7 +306,7 @@ Set up Reference UOS
       # umount /mnt
       # sync
 
-#. Edit and Run the launch_uos.sh script to launch the UOS.
+#. Edit and Run the ``launch_uos.sh`` script to launch the UOS.
 
    A sample `launch_uos.sh
    <https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/devicemodel/samples/nuc/launch_uos.sh>`__
@@ -374,7 +406,15 @@ each with their own way to install development tools:
           gnu-efi \
           libssl-dev \
           libpciaccess-dev \
-          uuid-dev
+          uuid-dev \
+          libsystemd-dev \
+          libevent-dev \
+          libxml2-dev \
+          libusb-1.0-0-dev
+
+  .. note::
+     Ubuntu 14.04 requires ``libsystemd-journal-dev`` instead of ``libsystemd-dev``
+     as indicated above.
 
 * On a Fedora/Redhat development system:
 
@@ -384,7 +424,12 @@ each with their own way to install development tools:
           gnu-efi-devel \
           libuuid-devel \
           openssl-devel \
-          libpciaccess-devel
+          libpciaccess-devel \
+          systemd-devel \
+          libxml2-devel \
+          libevent-devel \
+          libusbx-devel
+
 
 * On a CentOS development system:
 
@@ -394,17 +439,46 @@ each with their own way to install development tools:
              gnu-efi-devel \
              libuuid-devel \
              openssl-devel \
-             libpciaccess-devel
+             libpciaccess-devel \
+             systemd-devel \
+             libxml2-devel \
+             libevent-devel \
+             libusbx-devel
 
-Build the hypervisor and device model
-=====================================
 
-#. Download the ACRN hypervisor and build it.
+Build the hypervisor, device model and tools
+============================================
+
+The `acrn-hypervisor <https://github.com/projectacrn/acrn-hypervisor/>`_
+repository has three main components in it:
+
+1. The ACRN hypervisor code located in the ``hypervisor`` directory
+#. The ACRN devicemodel code located in the ``devicemodel`` directory
+#. The ACRN tools source code located in the ``tools`` directory
+
+You can build all these components in one go as follows:
+.. code-block:: console
+
+   $ git clone https://github.com/projectacrn/acrn-hypervisor
+   $ cd acrn-hypervisor
+   $ make
+
+The build results are found in the ``build`` directory.
+
+.. note::
+   if you wish to use a different target folder for the build
+   artefacts, set the ``O`` (that is capital letter 'O') to the
+   desired value. Example: ``make O=build-uefi PLATFORM=uefi``.
+
+You can also build these components individually. The following
+steps assume that you have already cloned the ``acrn-hypervisor`` repository
+and are using it as the current working directory.
+
+#. Build the ACRN hypervisor.
 
    .. code-block:: console
 
-      $ git clone https://github.com/projectacrn/acrn-hypervisor
-      $ cd acrn-hypervisor/hypervisor
+      $ cd hypervisor
       $ make PLATFORM=uefi
 
    The build results are found in the ``build`` directory.
@@ -417,6 +491,13 @@ Build the hypervisor and device model
       $ make
 
    The build results are found in the ``build`` directory.
+
+#. Build the ACRN tools (included in the acrn-hypervisor repo):
+
+   .. code-block:: console
+
+      $ cd ../tools
+      $ for d in */; do make -C "$d"; done
 
 Follow the same instructions to boot and test the images you created
 from your build.

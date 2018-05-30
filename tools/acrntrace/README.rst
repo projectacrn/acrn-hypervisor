@@ -1,31 +1,52 @@
-acrntrace
-#########
+``acrntrace``
+==============
 
 DESCRIPTION
 ###########
-acrntrace: is a tool running on SOS, to capture trace data.
+
+``acrntrace``: is a tool running on SOS, to capture trace data.
 scripts directory includes scripts to analyze the trace data.
 
 USAGE
 #####
+
 Capture trace data on SOS
 
- 1) Launch acrntrace
-   Capture buffered trace data:
+1) Launch ``acrntrace``
+
+Capture buffered trace data:
+
+ ::
+
    # acrntrace
-   or clear buffer before tracing start:
+
+or clear buffer before tracing start:
+
+ ::
+
    # acrntrace -c
-   Trace files are created under /tmp/acrntrace/, directory name with time
-   string eg: 20171115-101605
- 2) To stop acrntrace
+
+Trace files are created under ``/tmp/acrntrace/``, directory name with time string eg: ``20171115-101605``
+
+2) To stop acrntrace
+
+ ::
+
    # q <enter>
- 3) Copy the trace data to linux pc
-   # scp -r /tmp/acrntrace/20171115-101605/   xxx@10.239.142.239:/home/xxxx/t
-   race_data
 
-Analyze the trace data on Linux PC
+3) Copy the trace data to linux pc
 
- 1) Run the python script to analyze the vm_exits:
+ ::
+
+   # scp -r /tmp/acrntrace/20171115-101605/   xxx@10.239.142.239:/home/xxxx/trace_data
+
+
+**Analyze the trace data on Linux PC**
+
+1) Run the python script to analyze the ``vm_exits``:
+
+  ::
+
    # acrnalyze.py -i /home/xxxx/trace_data/20171115-101605/0 -o /home/xxxx/trac
      e_data/20171115-101605/cpu0 --vm_exit
    - "--vm_exit" specify the analysis to do, currently, only vm_exit analysis
@@ -42,8 +63,11 @@ Analyze the trace data on Linux PC
    -o, --ofile=[string]: output file
    --vm_exit: to generate vm_exit report
 
-   The scripts require bash and python2.
+The scripts require bash and python2.
 
 BUILD
 #####
+
+::
+
 # make
