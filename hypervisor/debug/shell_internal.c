@@ -1055,6 +1055,17 @@ int shell_cpuid(struct shell *p_shell, int argc, char **argv)
 	return 0;
 }
 
+int shell_trigger_crash(struct shell *p_shell, int argc, char **argv)
+{
+	char str[MAX_STR_SIZE] = {0};
+
+	snprintf(str, MAX_STR_SIZE, "trigger crash, divide by 0 ...\r\n");
+	shell_puts(p_shell, str);
+	snprintf(str, MAX_STR_SIZE, "%d\r", 1/0);
+
+	return 0;
+}
+
 int shell_terminate_serial(struct shell *p_shell)
 {
 	/* Shell shouldn't own the serial port handle anymore. */
