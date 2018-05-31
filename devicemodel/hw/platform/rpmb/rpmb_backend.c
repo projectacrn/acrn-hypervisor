@@ -42,13 +42,15 @@ static int virtio_rpmb_debug = 1;
 #define DPRINTF(params) do { if (virtio_rpmb_debug) printf params; } while (0)
 #define WPRINTF(params) (printf params)
 
+#define READ_STR_LEN 10
+#define WRITE_STR_LEN 11
 static uint32_t phy_counter = 0;
 static uint32_t virt_counter = 0;
 static uint8_t rpmb_key[RPMB_KEY_32_LEN] = {0};
 static uint8_t virt_rpmb_key[RPMB_KEY_32_LEN] = {0};
 static uint16_t g_rpmb_mode = RPMB_SIM_MODE;
-static const char READ_DATA_STR[] = "read data";
-static const char WRITE_DATA_STR[] = "write data";
+static const char READ_DATA_STR[READ_STR_LEN] = "read data";
+static const char WRITE_DATA_STR[WRITE_STR_LEN] = "write data";
 
 //TODO: will be read from config file.
 static uint16_t get_uos_count(void)
@@ -204,7 +206,7 @@ static int rpmb_check_frame(const char *cmd_str, int *err,
 	if (addr && !memcmp(cmd_str, WRITE_DATA_STR, sizeof(WRITE_DATA_STR))) {
 		if (*addr < get_common_blocks()) {
 			*err = RPMB_RES_WRITE_FAILURE;
-			DPRINTF(("%s: Common block is readed only\n", cmd_str));
+			DPRINTF(("%s: Common block is read only\n", cmd_str));
 			return -1;
 		}
 	}
@@ -296,8 +298,6 @@ static int rpmb_virt_write(uint32_t ioc_cmd, void* seq_data,
 	__u16 rpmb_result = 0;
 	int rc;
 
-	DPRINTF(("enter to %s\n", __func__));
-
 	if (in_cnt == 0 || in_frame == NULL || seq_data == NULL) {
 		DPRINTF(("%s: in_frame, in_cnt or seq_data is not available.\n", __func__));
 		return -1;
@@ -357,7 +357,6 @@ static int rpmb_virt_write(uint32_t ioc_cmd, void* seq_data,
 	if (out_frame->result == RPMB_RES_OK) {
 		phy_counter++;
 		virt_counter++;
-		DPRINTF(("%s: rpmb virt ioctl result is ok.\n", __func__));
 	}
 
 	rpmb_replace_frame(out_frame, out_cnt, virt_rpmb_key, NULL,
@@ -381,8 +380,6 @@ static int rpmb_virt_read(uint32_t ioc_cmd, void* seq_data,
 	uint16_t paddr;
 	uint16_t block_count;
 	uint8_t uos_id;
-
-	DPRINTF(("enter to %s\n", __func__));
 
 	if (in_cnt == 0 || in_frame == NULL) {
 		DPRINTF(("%s: in_frame, in_cnt or seq_data is not available\n", __func__));
@@ -432,8 +429,6 @@ static int rpmb_virt_get_counter(struct rpmb_frame* in_frame, uint32_t in_cnt,
 {
 	int err = RPMB_RES_OK;
 	int resp = RPMB_RESP_GET_COUNTER;
-
-	DPRINTF(("enter to %s\n", __func__));
 
 	if (in_cnt == 0 || in_frame == NULL) {
 		DPRINTF(("%s: in_frame or in_cnt is not available\n", __func__));

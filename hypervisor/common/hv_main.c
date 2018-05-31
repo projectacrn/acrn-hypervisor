@@ -63,8 +63,13 @@ void vcpu_thread(struct vcpu *vcpu)
 		exec_softirq();
 		CPU_IRQ_DISABLE();
 
-		/* Check and process interrupts */
-		acrn_do_intr_process(vcpu);
+		/* Check and process pending requests(including interrupt) */
+		ret = acrn_handle_pending_request(vcpu);
+		if (ret < 0) {
+			pr_fatal("vcpu handling pending request fail");
+			pause_vcpu(vcpu, VCPU_ZOMBIE);
+			continue;
+		}
 
 		if (need_rescheduled(vcpu->pcpu_id)) {
 			/*
@@ -112,7 +117,7 @@ void vcpu_thread(struct vcpu *vcpu)
 			pr_fatal("dispatch VM exit handler failed for reason"
 				" %d, ret = %d!",
 				vcpu->arch_vcpu.exit_reason & 0xFFFF, ret);
-			vcpu_inject_gp(vcpu);
+			vcpu_inject_gp(vcpu, 0);
 			continue;
 		}
 
@@ -125,36 +130,44 @@ void vcpu_thread(struct vcpu *vcpu)
 
 static bool is_vm0_bsp(int pcpu_id)
 {
-	struct vm_description *vm_desc = get_vm_desc(0);
-
-	ASSERT(vm_desc, "get vm desc failed");
-	return pcpu_id == vm_desc->vm_hw_logical_core_ids[0];
+	return pcpu_id == vm0_desc.vm_hw_logical_core_ids[0];
 }
 
 int hv_main(int cpu_id)
 {
-	int ret = 0;
+	int ret;
 
 	pr_info("%s, Starting common entry point for CPU %d",
 			__func__, cpu_id);
-	ASSERT(cpu_id < phy_cpu_num, "cpu_id out of range");
 
-	ASSERT((uint64_t) cpu_id == get_cpu_id(),
-			"cpu_id/tsc_aux mismatch");
+	if (cpu_id >= phy_cpu_num) {
+		pr_err("%s, cpu_id %d out of range %d\n",
+			__func__, cpu_id, phy_cpu_num);
+		return -EINVAL;
+	}
+
+	if ((uint32_t) cpu_id != get_cpu_id()) {
+		pr_err("%s, cpu_id %d mismatch\n", __func__, cpu_id);
+		return -EINVAL;
+	}
 
 	/* Enable virtualization extensions */
 	ret = exec_vmxon_instr();
-	ASSERT(ret == 0, "Unable to enable VMX!");
+	if (ret != 0)
+		return ret;
 
 	/* X2APIC mode is disabled by default. */
 	x2apic_enabled = false;
 
-	if (is_vm0_bsp(cpu_id))
-		prepare_vm0();
+	if (is_vm0_bsp(cpu_id)) {
+		ret = prepare_vm0();
+		if (ret != 0)
+			return ret;
+	}
 
 	default_idle();
 
-	return ret;
+	return 0;
 }
 
 int get_vmexit_profile(char *str, int str_max)

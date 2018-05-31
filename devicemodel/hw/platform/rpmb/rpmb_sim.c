@@ -108,32 +108,13 @@ err:
 	return hmac_ret ? 0 : -1;
 }
 
-static int rpmb_sim_open(const char *rpmb_devname)
-{
-	rpmb_fd = fopen(rpmb_devname, "rb+");
-
-	if (rpmb_fd == NULL) {
-		/*if the rpmb device file does not exist, create a new file*/
-		rpmb_fd = fopen(rpmb_devname, "wb+");
-		DPRINTF(("rpmb device file(%s) does not exist, create a new file\n", rpmb_devname));
-	}
-
-	if (rpmb_fd == NULL) {
-		DPRINTF(("%s: unable (%d) to open rpmb device '%s': %s\n",
-			__func__, errno, rpmb_devname, strerror(errno)));
-		return -1;
-	}
-
-	return 0;
-}
-
 static void rpmb_sim_close(void)
 {
 	fclose(rpmb_fd);
 	rpmb_fd = NULL;
 }
 
-static size_t file_write(FILE *fp, const void *buf, size_t size, off_t offset)
+static int file_write(FILE *fp, const void *buf, size_t size, off_t offset)
 {
 	size_t rc = 0;
 
@@ -147,15 +128,14 @@ static size_t file_write(FILE *fp, const void *buf, size_t size, off_t offset)
 		return -1;
 	}
 
-	rc = fflush(fp);
-	if (rc < 0) {
-	return -1;
-	} else {
-		return 0;
+	if (fflush(fp) < 0) {
+		return -1;
 	}
+
+	return rc;
 }
 
-static size_t file_read(FILE *fp, void *buf, size_t size, off_t offset)
+static int file_read(FILE *fp, void *buf, size_t size, off_t offset)
 {
 	size_t rc = 0;
 
@@ -170,6 +150,31 @@ static size_t file_read(FILE *fp, void *buf, size_t size, off_t offset)
 	} else {
 		return -1;
 	}
+}
+
+static int rpmb_sim_open(const char *rpmb_devname)
+{
+	uint8_t data = 0;
+	rpmb_fd = fopen(rpmb_devname, "rb+");
+
+	if (rpmb_fd == NULL) {
+		/*if the rpmb device file does not exist, create a new file*/
+		rpmb_fd = fopen(rpmb_devname, "wb+");
+		DPRINTF(("rpmb device file(%s) does not exist, create a new file\n", rpmb_devname));
+		/* Write 0 to the last byte to enable 4MB length access */
+		if (file_write(rpmb_fd, &data, 1, TEEDATA_SIZE - 1) < 0) {
+			DPRINTF(("Failed to initialize simulated rpmb to 0.\n"));
+			rpmb_fd = NULL;
+		}
+	}
+
+	if (rpmb_fd == NULL) {
+		DPRINTF(("%s: unable (%d) to open rpmb device '%s': %s\n",
+			__func__, errno, rpmb_devname, strerror(errno)));
+		return -1;
+	}
+
+	return 0;
 }
 
 static int get_counter(uint32_t *counter)

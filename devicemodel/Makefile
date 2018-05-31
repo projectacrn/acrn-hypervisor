@@ -3,7 +3,7 @@
 #
 MAJOR_VERSION=0
 MINOR_VERSION=1
-RC_VERSION=4
+RC_VERSION=5
 BASEDIR := $(shell pwd)
 DM_OBJDIR ?= $(CURDIR)/build
 
@@ -68,6 +68,8 @@ SRCS += hw/platform/ioc.c
 SRCS += hw/platform/ioc_cbc.c
 SRCS += hw/platform/acpi/acpi.c
 SRCS += hw/platform/acpi/acpi_pm.c
+SRCS += hw/platform/rpmb/rpmb_sim.c
+SRCS += hw/platform/rpmb/rpmb_backend.c
 SRCS += hw/pci/wdt_i6300esb.c
 SRCS += hw/pci/lpc.c
 SRCS += hw/pci/xhci.c
@@ -83,8 +85,6 @@ SRCS += hw/pci/virtio/virtio_rnd.c
 SRCS += hw/pci/virtio/virtio_hyper_dmabuf.c
 SRCS += hw/pci/virtio/virtio_heci.c
 SRCS += hw/pci/virtio/virtio_rpmb.c
-SRCS += hw/pci/virtio/rpmb_sim.c
-SRCS += hw/pci/virtio/rpmb_backend.c
 SRCS += hw/pci/irq.c
 SRCS += hw/pci/uart.c
 SRCS += hw/pci/gvt.c

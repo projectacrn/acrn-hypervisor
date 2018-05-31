@@ -29,7 +29,6 @@
  */
 
 #include <hypervisor.h>
-#include <bsp_extern.h>
 #include <schedule.h>
 #include <version.h>
 
@@ -240,7 +239,7 @@ static int hardware_detect_support(void)
 	if (ret)
 		return ret;
 
-	printf("hardware support HV\n");
+	pr_acrnlog("hardware support HV");
 	return 0;
 }
 
@@ -367,6 +366,7 @@ static void get_cpu_name(void)
 
 void bsp_boot_init(void)
 {
+	int ret;
 	uint64_t start_tsc = rdtsc();
 
 	/* Clear BSS */
@@ -484,20 +484,20 @@ void bsp_boot_init(void)
 		       LOG_DESTINATION);
 
 	if (HV_RC_VERSION)
-		printf("HV version %d.%d-rc%d-%s-%s %s build by %s, start time %lluus\r\n",
+		pr_acrnlog("HV version %d.%d-rc%d-%s-%s %s build by %s, start time %lluus",
 			HV_MAJOR_VERSION, HV_MINOR_VERSION, HV_RC_VERSION,
 			HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_TYPE,
 			HV_BUILD_USER, TICKS_TO_US(start_tsc));
 	else
-		printf("HV version %d.%d-%s-%s %s build by %s, start time %lluus\r\n",
+		pr_acrnlog("HV version %d.%d-%s-%s %s build by %s, start time %lluus",
 			HV_MAJOR_VERSION, HV_MINOR_VERSION,
 			HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_TYPE,
 			HV_BUILD_USER, TICKS_TO_US(start_tsc));
 
-	printf("API version %d.%d\r\n",
+	pr_acrnlog("API version %d.%d",
 			HV_API_MAJOR_VERSION, HV_API_MINOR_VERSION);
 
-	printf("Detect processor: %s\n", boot_cpu_data.model_name);
+	pr_acrnlog("Detect processor: %s", boot_cpu_data.model_name);
 
 	pr_dbg("Core %d is up", CPU_BOOT_ID);
 
@@ -541,7 +541,9 @@ void bsp_boot_init(void)
 	console_setup_timer();
 
 	/* Start initializing the VM for this CPU */
-	hv_main(CPU_BOOT_ID);
+	ret = hv_main(CPU_BOOT_ID);
+	if (ret != 0)
+		panic("failed to start VM for bsp\n");
 
 	/* Control should not come here */
 	cpu_dead(CPU_BOOT_ID);
@@ -549,6 +551,7 @@ void bsp_boot_init(void)
 
 void cpu_secondary_init(void)
 {
+	int ret;
 	/* NOTE: Use of local / stack variables in this function is problematic
 	 * since the stack is switched in the middle of the function.  For this
 	 * reason, the logical id is only temporarily stored in a static
@@ -605,7 +608,9 @@ void cpu_secondary_init(void)
 	/* Wait for boot processor to signal all secondary cores to continue */
 	pcpu_sync_sleep(&pcpu_sync, 0);
 
-	hv_main(get_cpu_id());
+	ret = hv_main(get_cpu_id());
+	if (ret != 0)
+		panic("hv_main ret = %d\n", ret);
 
 	/* Control will only come here for secondary CPUs not configured for
 	 * use or if an error occurs in hv_main
