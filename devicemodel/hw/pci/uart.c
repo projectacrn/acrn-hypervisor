@@ -26,11 +26,8 @@
  * $FreeBSD$
  */
 
-#include <sys/cdefs.h>
-#include <sys/types.h>
 #include <stdio.h>
 
-#include "dm.h"
 #include "pci_core.h"
 #include "uart_core.h"
 

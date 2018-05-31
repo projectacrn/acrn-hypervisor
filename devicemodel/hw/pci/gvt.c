@@ -5,22 +5,13 @@
  *
  */
 
-#include <sys/cdefs.h>
-#include <sys/param.h>
 #include <sys/stat.h>
-#include <sys/uio.h>
-#include <sys/ioctl.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <strings.h>
 #include <unistd.h>
 #include <assert.h>
-#include <pthread.h>
-#include <openssl/md5.h>
 
 #include "dm.h"
 #include "pci_core.h"

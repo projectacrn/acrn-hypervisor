@@ -25,8 +25,6 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-#include <sys/types.h>
 #include <assert.h>
 #include <errno.h>
 #include <pthread.h>
@@ -34,7 +32,6 @@
 #include <stdbool.h>
 
 #include "vmmapi.h"
-#include "vmm.h"
 #include "acpi.h"
 #include "inout.h"
 #include "mevent.h"

@@ -31,10 +31,6 @@
  * once it has been seeded at bootup.
  */
 
-#include <sys/cdefs.h>
-#include <sys/param.h>
-#include <sys/uio.h>
-#include <err.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,7 +38,6 @@
 #include <unistd.h>
 #include <assert.h>
 #include <pthread.h>
-#include <sysexits.h>
 
 #include "dm.h"
 #include "pci_core.h"

@@ -26,7 +26,6 @@
  * $FreeBSD$
  */
 
-#include <sys/cdefs.h>
 #include <sys/param.h>
 #include <sys/queue.h>
 #include <sys/stat.h>
@@ -41,11 +40,9 @@
 #include <string.h>
 #include <pthread.h>
 #include <signal.h>
-#include <sysexits.h>
 #include <unistd.h>
 
 #include "dm.h"
-#include "mevent.h"
 #include "block_if.h"
 #include "ahci.h"
 

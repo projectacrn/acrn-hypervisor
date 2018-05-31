@@ -34,13 +34,9 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <ctype.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <assert.h>
 
-#include "vmm.h"
-#include "vhm_ioctl_defs.h"
 #include "vmmapi.h"
 
 #define HUGETLB_LV1		0

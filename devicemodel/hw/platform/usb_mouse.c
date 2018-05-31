@@ -24,15 +24,12 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-#include <sys/time.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
-#include "types.h"
 #include "usb.h"
 #include "usbdi.h"
 #include "usb_core.h"

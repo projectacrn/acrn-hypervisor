@@ -26,16 +26,11 @@
  * $FreeBSD$
  */
 
-#include <sys/cdefs.h>
-#include <sys/types.h>
-#include <sys/select.h>
-#include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include <sysexits.h>
 
 #include "inout.h"
 #include "lpc.h"

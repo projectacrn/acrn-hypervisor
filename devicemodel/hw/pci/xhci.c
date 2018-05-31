@@ -76,15 +76,9 @@
  *                +--------+   +--------+
  */
 
-#include <sys/cdefs.h>
-#include <sys/param.h>
-#include <sys/uio.h>
 #include <sys/types.h>
-#include <sys/queue.h>
-#include <sys/fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -96,7 +90,6 @@
 #include "dm.h"
 #include "pci_core.h"
 #include "xhci.h"
-#include "usb_core.h"
 #include "usb_pmapper.h"
 
 #undef LOG_TAG

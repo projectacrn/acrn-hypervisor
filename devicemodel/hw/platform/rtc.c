@@ -24,9 +24,6 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-#include <sys/param.h>
-#include <sys/queue.h>
 #include <pthread.h>
 #include <string.h>
 #include <assert.h>
@@ -38,7 +35,6 @@
 #include <time.h>
 
 #include "vmmapi.h"
-#include "vmm.h"
 #include "inout.h"
 #include "mc146818rtc.h"
 #include "rtc.h"

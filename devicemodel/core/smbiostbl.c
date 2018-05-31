@@ -24,20 +24,15 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-#include <sys/param.h>
 #include <assert.h>
 #include <openssl/md5.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
-#include <uuid/uuid.h>
 
-#include "vmm.h"
 #include "vmmapi.h"
 #include "dm.h"
-#include "smbiostbl.h"
 
 #define SMBIOS_BASE		0xF1000
 

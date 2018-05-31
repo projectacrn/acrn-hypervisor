@@ -24,10 +24,8 @@
  * SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <sys/cdefs.h>
-#include <sys/types.h>
 
+#include <stdio.h>
 #include "gc.h"
 #include "console.h"
 

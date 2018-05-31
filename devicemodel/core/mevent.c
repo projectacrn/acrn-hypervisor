@@ -31,24 +31,17 @@
  * using EPOLL, and having events be persistent by default.
  */
 
-#include <sys/cdefs.h>
 #include <assert.h>
-#include <err.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <string.h>
-#include <sysexits.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/time.h>
 #include <sys/epoll.h>
 #include <sys/queue.h>
 #include <pthread.h>
 
 #include "mevent.h"
-#include "vmm.h"
 #include "vmmapi.h"
 
 #define	MEVENT_MAX	64

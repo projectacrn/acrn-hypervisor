@@ -8,8 +8,6 @@
  * HECI device virtualization.
  */
 
-#include <sys/cdefs.h>
-#include <sys/param.h>
 #include <sys/ioctl.h>
 #include <linux/mei.h>
 #include <errno.h>

@@ -26,9 +26,6 @@
  * $FreeBSD$
  */
 
-#include <sys/cdefs.h>
-#include <sys/param.h>
-#include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <sys/user.h>
@@ -38,22 +35,14 @@
 #include <string.h>
 #include <err.h>
 #include <errno.h>
-#include <fcntl.h>
-#include <sysexits.h>
-#include <unistd.h>
 #include <pthread.h>
 #include <pciaccess.h>
 
-#include "pcireg.h"
 #include "iodev.h"
-#include "vmm.h"
 #include "vmmapi.h"
-#include "vhm_ioctl_defs.h"
 #include "pciio.h"
 #include "pci_core.h"
-#include "mem.h"
 #include "acpi.h"
-#include "dm.h"
 
 #ifndef _PATH_DEVPCI
 #define	_PATH_DEVPCI	"/dev/pci"

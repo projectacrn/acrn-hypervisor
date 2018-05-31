@@ -25,19 +25,10 @@
  * SUCH DAMAGE.
  */
 
-#include <ctype.h>
 #include <errno.h>
-#include <stdbool.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
-#include <fcntl.h>
 #include <inttypes.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <stdint.h>
 #include <openssl/hmac.h>
 
 #include "rpmb.h"

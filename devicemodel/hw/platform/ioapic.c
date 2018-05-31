@@ -25,16 +25,10 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-#include <sys/types.h>
-#include <stdio.h>
-#include <stdbool.h>
 
+#include <stdio.h>
 #include "vmm.h"
-#include "vmmapi.h"
-#include "ioapic.h"
 #include "pci_core.h"
-#include "lpc.h"
 
 /* 16 IRQs reserved for kdb/mouse, COM1/2, RTC... */
 #define LEGACY_IRQ_NUM	16
