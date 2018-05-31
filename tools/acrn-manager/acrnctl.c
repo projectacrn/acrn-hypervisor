@@ -45,7 +45,6 @@ struct acrnctl_cmd {
 /* command: list */
 static int acrnctl_do_list(int argc, char *argv[])
 {
-	get_vm_list();
 	return list_vm();
 }
 
@@ -265,7 +264,6 @@ static int acrnctl_do_add(int argc, char *argv[])
 	snprintf(cmd, sizeof(cmd), "mkdir -p %s/add", ACRNCTL_OPT_ROOT);
 	system(cmd);
 
-	get_vm_list();
 	s = vmmngr_find(vmname);
 	if (s) {
 		printf("%s(%s) already exist, can't add %s%s\n",
@@ -313,7 +311,6 @@ static int acrnctl_do_stop(int argc, char *argv[])
 	struct vmmngr_struct *s;
 	int i;
 
-	get_vm_list();
 	for (i = 1; i < argc; i++) {
 		s = vmmngr_find(argv[i]);
 		if (!s) {
@@ -338,7 +335,6 @@ static int acrnctl_do_del(int argc, char *argv[])
 	int i;
 	char cmd[128];
 
-	get_vm_list();
 	for (i = 1; i < argc; i++) {
 		s = vmmngr_find(argv[i]);
 		if (!s) {
@@ -365,7 +361,6 @@ static int acrnctl_do_start(int argc, char *argv[])
 {
 	struct vmmngr_struct *s;
 
-	get_vm_list();
 	s = vmmngr_find(argv[1]);
 	if (!s) {
 		printf("can't find %s\n", argv[1]);
@@ -451,7 +446,7 @@ static void usage(void)
 
 int main(int argc, char *argv[])
 {
-	int i;
+	int i, err;
 
 	if (argc == 1 || !strcmp(argv[1], "help")) {
 		usage();
@@ -471,7 +466,11 @@ int main(int argc, char *argv[])
 			if (acmds[i].valid_args(&acmds[i], argc - 1, &argv[1])) {
 				return -1;
 			} else {
-				return acmds[i].func(argc - 1, &argv[1]);
+				get_vm_list();
+				err = acmds[i].func(argc - 1, &argv[1]);
+				put_vm_list();
+
+				return err;
 			}
 		}
 

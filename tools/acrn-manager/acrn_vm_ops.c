@@ -93,6 +93,17 @@ void get_vm_list(void)
 	}
 }
 
+void put_vm_list(void)
+{
+	struct vmmngr_struct *s;
+
+	while (!LIST_EMPTY(&vmmngr_head)) {
+		s = LIST_FIRST(&vmmngr_head);
+		LIST_REMOVE(s, list);
+		free(s);
+	}
+}
+
 /* helper functions */
 int shell_cmd(const char *cmd, char *outbuf, int len)
 {
