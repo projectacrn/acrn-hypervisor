@@ -9,8 +9,8 @@ $(OUT_DIR)/libacrn-mngr.a: acrn_mngr.c acrn_mngr.h
 	ar -cr $@ $(OUT_DIR)/acrn_mngr.o
 	cp ./acrn_mngr.h $(OUT_DIR)/
 
-$(OUT_DIR)/acrnctl: acrnctl.c
-	$(CC) -o $(OUT_DIR)/acrnctl acrnctl.c -I../../devicemodel/include -Wall -g
+$(OUT_DIR)/acrnctl: acrnctl.c acrn_mngr.h
+	$(CC) -o $(OUT_DIR)/acrnctl acrnctl.c acrn_vm_ops.c -I../../devicemodel/include -L$(TOOLS_OUT) -lacrn-mngr -lpthread -Wall -g
 
 .PHONY: clean
 clean:
