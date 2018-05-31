@@ -240,3 +240,23 @@ int continue_vm(char *vmname)
 
 	return ack.err;
 }
+
+int suspend_vm(char *vmname)
+{
+	struct req_dm_suspend req;
+	struct ack_dm_suspend ack;
+
+	req.msg.magic = MNGR_MSG_MAGIC;
+	req.msg.msgid = DM_SUSPEND;
+	req.msg.timestamp = time(NULL);
+	req.msg.len = sizeof(req);
+
+	send_msg(vmname, (struct mngr_msg *)&req,
+			(struct mngr_msg *)&ack, sizeof(ack));
+
+	if (ack.err) {
+		printf("Unable to suspend vm. errno(%d)\n", ack.err);
+	}
+
+	return ack.err;
+}
