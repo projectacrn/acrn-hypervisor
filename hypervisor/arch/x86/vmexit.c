@@ -191,19 +191,23 @@ int vmexit_handler(struct vcpu *vcpu)
 	pr_dbg("Exit Reason: 0x%016llx ", vcpu->arch_vcpu.exit_reason);
 
 	/* Ensure exit reason is within dispatch table */
-	if (basic_exit_reason < ARRAY_SIZE(dispatch_table)) {
-		/* Calculate dispatch table entry */
-		dispatch = (struct vm_exit_dispatch *)
-			(dispatch_table + basic_exit_reason);
+	if (basic_exit_reason >= ARRAY_SIZE(dispatch_table)) {
+		pr_err("Invalid Exit Reason: 0x%016llx ",
+				vcpu->arch_vcpu.exit_reason);
+		return -EINVAL;
+	}
 
-		/* See if an exit qualification is necessary for this exit
-		 * handler
-		 */
-		if (dispatch->need_exit_qualification) {
-			/* Get exit qualification */
-			vcpu->arch_vcpu.exit_qualification =
-			    exec_vmread(VMX_EXIT_QUALIFICATION);
-		}
+	/* Calculate dispatch table entry */
+	dispatch = (struct vm_exit_dispatch *)
+		(dispatch_table + basic_exit_reason);
+
+	/* See if an exit qualification is necessary for this exit
+	 * handler
+	 */
+	if (dispatch->need_exit_qualification) {
+		/* Get exit qualification */
+		vcpu->arch_vcpu.exit_qualification =
+		    exec_vmread(VMX_EXIT_QUALIFICATION);
 	}
 
 	/* Update current vcpu in VM that caused vm exit */
