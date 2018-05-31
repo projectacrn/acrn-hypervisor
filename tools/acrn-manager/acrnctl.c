@@ -86,7 +86,7 @@ static void process_msg(struct mngr_msg *msg)
 
 /* vm states data and helper functions */
 
-#define ACRN_DM_SOCK_ROOT	"/run/acrn"
+#define ACRN_DM_SOCK_ROOT	"/run/acrn/mngr"
 
 struct vmm_struct {
 	char name[MAX_NAME_LEN];
@@ -168,9 +168,9 @@ static void vmm_update(void)
 	pvmname = NULL;
 
 	snprintf(cmd, sizeof(cmd),
-		 "find %s/ -name \"*.socket\" | "
-		 "sed \"s/\\/run\\/acrn\\///g\" | "
-		 "sed \"s/-monitor.socket//g\"", ACRN_DM_SOCK_ROOT);
+			"find %s/ -name \"*monitor.*.socket\" | "
+			"sed \"s/\\/run\\/acrn\\/mngr\\///g\" | "
+			"awk -F. \'{ print $1 }\'", ACRN_DM_SOCK_ROOT);
 	shell_cmd(cmd, cmd_out, sizeof(cmd_out));
 
 	/* Properly null-terminate cmd_out */
