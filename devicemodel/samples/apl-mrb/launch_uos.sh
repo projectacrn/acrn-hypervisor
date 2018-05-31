@@ -123,6 +123,8 @@ acrn-dm -T -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s
   -s 12,passthru,0/3/0 \
   -s 22,passthru,0/16/0 \
   -s 27,passthru,0/1b/0 \
+  -i /run/acrn/ioc_$vm_name,0x20 \
+  -l com2,/run/acrn/ioc_$vm_name \
   -B "root=/dev/vda2 rw rootwait maxcpus=$2 nohpet console=hvc0 \
   console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
   consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=$4 i915.enable_guc_loading=0 \
