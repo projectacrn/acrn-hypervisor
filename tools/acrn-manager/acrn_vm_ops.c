@@ -201,3 +201,22 @@ int stop_vm(char *vmname)
 
 	return ack.err;
 }
+
+int pause_vm(char *vmname)
+{
+	struct req_dm_pause req;
+	struct ack_dm_pause ack;
+
+	req.msg.magic = MNGR_MSG_MAGIC;
+	req.msg.msgid = DM_PAUSE;
+	req.msg.timestamp = time(NULL);
+	req.msg.len = sizeof(req);
+
+	send_msg(vmname, (struct mngr_msg *)&req,
+			(struct mngr_msg *)&ack, sizeof(ack));
+	if (ack.err) {
+		printf("Unable to pause vm. errno(%d)\n", ack.err);
+	}
+
+	return ack.err;
+}
