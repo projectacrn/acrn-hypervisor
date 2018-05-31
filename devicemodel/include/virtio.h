@@ -904,7 +904,7 @@ int virtio_pci_modern_cfgread(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
  * @param dev Pointer to struct pci_vdev which emulates a PCI device.
  * @param coff Register offset in bytes within PCI configuration space.
  * @param bytes Access range in bytes.
- * @param value The value to write.
+ * @param val The value to write.
  *
  * @return 0 on handled and non-zero on non-handled.
  */
