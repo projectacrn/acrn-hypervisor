@@ -83,6 +83,8 @@ int create_vcpu(int cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	}
 #endif
 
+	vcpu->arch_vcpu.vpid = allocate_vpid();
+
 	/* Allocate VMCS region for this VCPU */
 	vcpu->arch_vcpu.vmcs = alloc_page();
 	ASSERT(vcpu->arch_vcpu.vmcs != NULL, "");
@@ -144,6 +146,15 @@ int start_vcpu(struct vcpu *vcpu)
 	if (!vcpu->launched) {
 		pr_info("VM %d Starting VCPU %d",
 				vcpu->vm->attr.id, vcpu->vcpu_id);
+
+		if (vcpu->arch_vcpu.vpid)
+			exec_vmwrite(VMX_VPID, vcpu->arch_vcpu.vpid);
+
+		/*
+		 * A power-up or a reset invalidates all linear mappings,
+		 * guest-physical mappings, and combined mappings
+		 */
+		flush_vpid_global();
 
 		/* Set vcpu launched */
 		vcpu->launched = true;

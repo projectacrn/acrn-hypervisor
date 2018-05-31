@@ -172,6 +172,7 @@ struct vcpu_arch {
 
 	/* A pointer to the VMCS for this CPU. */
 	void *vmcs;
+	int vpid;
 
 	/* Holds the information needed for IRQ/exception handling. */
 	struct {

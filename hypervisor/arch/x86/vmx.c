@@ -1085,6 +1085,11 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	value32 &= ~(VMX_PROCBASED_CTLS_CR3_LOAD |
 			VMX_PROCBASED_CTLS_CR3_STORE);
 
+	/*
+	 * Disable VM_EXIT for invlpg execution.
+	 */
+	value32 &= ~VMX_PROCBASED_CTLS_INVLPG;
+
 	if (is_vapic_supported()) {
 		value32 |= VMX_PROCBASED_CTLS_TPR_SHADOW;
 	} else {
@@ -1105,6 +1110,11 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	value32 |= (VMX_PROCBASED_CTLS2_EPT |
 			VMX_PROCBASED_CTLS2_RDTSCP |
 			VMX_PROCBASED_CTLS2_UNRESTRICT);
+
+	if (vcpu->arch_vcpu.vpid)
+		value32 |= VMX_PROCBASED_CTLS2_VPID;
+	else
+		value32 &= ~VMX_PROCBASED_CTLS2_VPID;
 
 	if (is_vapic_supported()) {
 		value32 |= VMX_PROCBASED_CTLS2_VAPIC;
