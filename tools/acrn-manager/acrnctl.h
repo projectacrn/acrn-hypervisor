@@ -35,6 +35,11 @@ static const char *state_str[] = {
 void get_vm_list(void);
 
 /**
+ * @brief free all vmmngr_struct allocated by get_vm_list
+ */
+void put_vm_list(void);
+
+/**
  * @brief search vm indentified by vm from vmmngr_head
  *
  * @return vmmngr_struct * if find, NULL not find
