@@ -382,52 +382,13 @@
 #define RFLAGS_C (1<<0)
 #define RFLAGS_Z (1<<6)
 
-/*
- * Handling of CR0:
- *
- *   - PE (0) Must always be 1. Attempt to write to it must lead to a VM exit.
- *   - MP (1) coprocessor related => no action needed
- *   - EM (2) coprocessor related => no action needed
- *   - TS (3) no action needed
- *   - ET (4) typically hardcoded to 1. => no action needed
- *   - NE (5) coprocessor related => no action needed
- *   - WP (16) inhibits supervisor level procedures to write into ro-pages
- *             => no action needed
- *   - AM (18) alignment mask => no action needed
- *   - NW (29) not write through => no action
- *   - CD (30) cache disable => no action
- *   - PG (31) paging => must always be 1. Attempt to write to it must lead to
- *             a VM exit.
- */
+/* CR0 bits hv want to trap to track status change */
+#define CR0_TRAP_MASK (CR0_PE | CR0_PG | CR0_WP)
+#define CR0_RESERVED_MASK ~(CR0_PG | CR0_CD | CR0_NW | CR0_AM | CR0_WP | \
+			   CR0_NE |  CR0_ET | CR0_TS | CR0_EM | CR0_MP | CR0_PE)
 
-/* we must guard protected mode and paging */
-#define CR0_GUEST_HOST_MASK (CR0_PE | CR0_PG | CR0_WP)
-/* initially, the guest runs in protected mode enabled, but with no paging */
-#define CR0_READ_SHADOW      CR0_PE
-
-/*
- * Handling of CR4:
- *
- *   - VME (0) must always be 0 => must lead to a VM exit
- *   - PVI (1) must always be 0 => must lead to a VM exit
- *   - TSD (2) don't care
- *   - DE  (3) don't care
- *   - PSE (4) must always be 1 => must lead to a VM exit
- *   - PAE (5) must always be 0 => must lead to a VM exit
- *   - MCE (6) don't care
- *   - PGE (7) => important for TLB flush
- *   - PCE (8) don't care
- *   - OSFXSR (9) don't care
- *   - OSXMMEXCPT (10) don't care
- *   - VMXE (13) must always be 1 => must lead to a VM exit
- *   - SMXE (14) must always be 0 => must lead to a VM exit
- *   - PCIDE (17) => important for TLB flush
- *   - OSXSAVE (18) don't care
- */
-
-#define CR4_GUEST_HOST_MASK (CR4_VME | CR4_PVI | CR4_PSE | CR4_PAE | \
-			CR4_VMXE | CR4_SMXE | CR4_PGE | CR4_PCIDE)
-#define CR4_READ_SHADOW (CR4_PGE | CR4_PSE)
+/* CR4 bits hv want to trap to track status change */
+#define CR4_TRAP_MASK (CR4_PSE | CR4_PAE)
 
 /* External Interfaces */
 int exec_vmxon_instr(void);

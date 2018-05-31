@@ -158,6 +158,9 @@ int start_vcpu(struct vcpu *vcpu)
 	/* Save guest CR3 register */
 	cur_context->cr3 = exec_vmread(VMX_GUEST_CR3);
 
+	/* Save guest IA32_EFER register */
+	cur_context->ia32_efer = exec_vmread64(VMX_GUEST_IA32_EFER_FULL);
+
 	/* Obtain current VCPU instruction pointer and length */
 	cur_context->rip = exec_vmread(VMX_GUEST_RIP);
 	vcpu->arch_vcpu.inst_len = exec_vmread(VMX_EXIT_INSTR_LEN);
