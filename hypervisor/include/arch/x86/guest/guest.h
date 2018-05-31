@@ -47,6 +47,7 @@ int get_req_info(char *str, int str_max);
 #define	ACRN_REQUEST_TMR_UPDATE 4
 #define	ACRN_REQUEST_EPT_FLUSH 5
 #define	ACRN_REQUEST_TRP_FAULT 6
+#define ACRN_REQUEST_VPID_FLUSH 7 /* flush vpid tlb */
 
 #define E820_MAX_ENTRIES    32
 

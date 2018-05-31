@@ -303,6 +303,9 @@ int unmap_mem(struct map_params *map_params, void *paddr, void *vaddr,
 int modify_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		       uint64_t size, uint32_t flags);
 int check_vmx_mmu_cap(void);
+int allocate_vpid(void);
+void flush_vpid_single(int vpid);
+void flush_vpid_global(void);
 void invept(struct vcpu *vcpu);
 bool check_continuous_hpa(struct vm *vm, uint64_t gpa, uint64_t size);
 int obtain_last_page_table_entry(struct map_params *map_params,

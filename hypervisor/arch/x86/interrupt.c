@@ -375,6 +375,9 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 	if (bitmap_test_and_clear(ACRN_REQUEST_EPT_FLUSH, pending_req_bits))
 		invept(vcpu);
 
+	if (bitmap_test_and_clear(ACRN_REQUEST_VPID_FLUSH, pending_req_bits))
+		flush_vpid_single(vcpu->arch_vcpu.vpid);
+
 	if (bitmap_test_and_clear(ACRN_REQUEST_TMR_UPDATE, pending_req_bits))
 		vioapic_update_tmr(vcpu);
 
