@@ -1281,8 +1281,14 @@ ioc_parse(const char *opts)
 	snprintf(virtual_uart_path, sizeof(virtual_uart_path), "%s", param);
 	if (tmp != NULL) {
 		tmp = strtok(NULL, ",");
-		if (tmp != NULL)
+		if (tmp != NULL) {
 			ioc_boot_reason = strtoul(tmp, 0, 0);
+
+			/*
+			 * Mask invalid bits of wakeup reason for IOC mediator
+			 */
+			ioc_boot_reason &= CBC_WK_RSN_ALL;
+		}
 	}
 	free(param);
 	return 0;
@@ -1302,9 +1308,12 @@ ioc_init(struct vmctx *ctx)
 	if (ioc_is_platform_supported() != 0)
 		goto ioc_err;
 
-	/* Check IOC boot reason */
+	/*
+	 * Set default boot wakeup reason as ignition button active if met
+	 * invalid parameter.
+	 */
 	if (ioc_boot_reason == 0)
-		goto ioc_err;
+		ioc_boot_reason = CBC_WK_RSN_BTN;
 	ioc = (struct ioc_dev *)calloc(1, sizeof(struct ioc_dev));
 	if (!ioc)
 		goto ioc_err;
