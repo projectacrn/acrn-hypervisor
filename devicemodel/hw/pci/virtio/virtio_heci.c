@@ -67,6 +67,13 @@
 
 #define HECI_NATIVE_DEVICE_NODE	"/dev/mei0"
 
+enum vheci_status {
+	VHECI_READY,
+	VHECI_PENDING_RESET,
+	VHECI_RESET,
+	VHECI_DEINIT
+};
+
 /*
  * Different type has differnt emulation
  *
@@ -122,9 +129,7 @@ struct virtio_heci {
 	struct virtio_vq_info		vqs[VIRTIO_HECI_VQNUM];
 	pthread_mutex_t			mutex;
 	struct mei_enumerate_me_clients	me_clients_map;
-	volatile bool			deiniting;
-	volatile bool			resetting;
-	volatile bool			pending_reset;
+	volatile enum vheci_status	status;
 
 	pthread_t			tx_thread;
 	pthread_mutex_t			tx_mutex;
@@ -262,6 +267,15 @@ virtio_heci_add_client(struct virtio_heci *vheci,
 		LIST_INSERT_AFTER(LIST_FIRST(&vheci->active_clients),
 				client, list);
 	pthread_mutex_unlock(&vheci->list_mutex);
+}
+
+static inline void
+virtio_heci_set_status(struct virtio_heci *vheci, enum vheci_status status)
+{
+	if (status == VHECI_DEINIT ||
+		status == VHECI_READY ||
+		status > vheci->status)
+		vheci->status = status;
 }
 
 static struct virtio_heci_client *
@@ -426,7 +440,7 @@ virtio_heci_destroy_client(struct virtio_heci *vheci,
 				client->client_id, client->client_fd,
 				client->client_addr));
 	virtio_heci_del_client(vheci, client);
-	if (client->type != TYPE_HBM && !vheci->deiniting)
+	if (client->type != TYPE_HBM)
 		mevent_delete_close(client->rx_mevp);
 	free(client->send_buf);
 	free(client->recv_buf);
@@ -454,7 +468,7 @@ native_heci_read(struct virtio_heci_client *client)
 	if (len < 0) {
 		WPRINTF(("vheci: read failed! read error[%d]\r\n", errno));
 		if (errno == ENODEV)
-			vheci->pending_reset = true;
+			virtio_heci_set_status(vheci, VHECI_PENDING_RESET);
 		return len;
 	}
 	DPRINTF(("vheci: RX: ME[%d]fd[%d] Append data(len[%d]) "
@@ -481,7 +495,7 @@ native_heci_write(struct virtio_heci_client *client)
 	if (len < 0) {
 		WPRINTF(("vheci: write failed! write error[%d]\r\n", errno));
 		if (errno == ENODEV)
-			vheci->pending_reset = true;
+			virtio_heci_set_status(vheci, VHECI_PENDING_RESET);
 	}
 	return len;
 }
@@ -499,7 +513,7 @@ virtio_heci_rx_callback(int fd, enum ev_type type, void *param)
 	}
 
 	pthread_mutex_lock(&vheci->rx_mutex);
-	if (client->recv_offset != 0 || vheci->resetting) {
+	if (client->recv_offset != 0 || vheci->status != VHECI_READY) {
 		/* still has data in recv_buf, wait guest reading */
 		goto out;
 	}
@@ -520,8 +534,7 @@ virtio_heci_rx_callback(int fd, enum ev_type type, void *param)
 out:
 	pthread_mutex_unlock(&vheci->rx_mutex);
 	virtio_heci_client_put(vheci, client);
-	if (vheci->pending_reset) {
-		vheci->pending_reset = false;
+	if (vheci->status == VHECI_PENDING_RESET) {
 		virtio_heci_virtual_fw_reset(vheci);
 		/* Let's wait 100ms for HBM enumeration done */
 		usleep(100000);
@@ -953,8 +966,7 @@ out:
 send_failed:
 	virtio_heci_client_put(vheci, client);
 failed:
-	if (vheci->pending_reset) {
-		vheci->pending_reset = false;
+	if (vheci->status == VHECI_PENDING_RESET) {
 		virtio_heci_virtual_fw_reset(vheci);
 		/* Let's wait 100ms for HBM enumeration done */
 		usleep(100000);
@@ -984,18 +996,19 @@ static void *virtio_heci_tx_thread(void *param)
 	error = pthread_cond_wait(&vheci->tx_cond, &vheci->tx_mutex);
 	assert(error == 0);
 
-	while (!vheci->deiniting) {
+	while (vheci->status != VHECI_DEINIT) {
 		/* note - tx mutex is locked here */
 		while (!vq_has_descs(vq)) {
 			vq->used->flags &= ~VRING_USED_F_NO_NOTIFY;
 			mb();
-			if (vq_has_descs(vq) && !vheci->resetting)
+			if (vq_has_descs(vq) &&
+				vheci->status != VHECI_RESET)
 				break;
 
 			error = pthread_cond_wait(&vheci->tx_cond,
 					&vheci->tx_mutex);
 			assert(error == 0);
-			if (vheci->deiniting)
+			if (vheci->status == VHECI_DEINIT)
 				goto out;
 		}
 		vq->used->flags |= VRING_USED_F_NO_NOTIFY;
@@ -1136,20 +1149,20 @@ static void *virtio_heci_rx_thread(void *param)
 	error = pthread_cond_wait(&vheci->rx_cond, &vheci->rx_mutex);
 	assert(error == 0);
 
-	while (!vheci->deiniting) {
+	while (vheci->status != VHECI_DEINIT) {
 		/* note - rx mutex is locked here */
 		while (vq_ring_ready(vq)) {
 			vq->used->flags &= ~VRING_USED_F_NO_NOTIFY;
 			mb();
 			if (vq_has_descs(vq) &&
 				vheci->rx_need_sched &&
-				!vheci->resetting)
+				vheci->status != VHECI_RESET)
 				break;
 
 			error = pthread_cond_wait(&vheci->rx_cond,
 					&vheci->rx_mutex);
 			assert(error == 0);
-			if (vheci->deiniting)
+			if (vheci->status == VHECI_DEINIT)
 				goto out;
 		}
 		vq->used->flags |= VRING_USED_F_NO_NOTIFY;
@@ -1212,6 +1225,7 @@ virtio_heci_start(struct virtio_heci *vheci)
 	if (!vheci->hbm_client)
 		return -1;
 	vheci->config->hw_ready = 1;
+	virtio_heci_set_status(vheci, VHECI_READY);
 
 	return 0;
 }
@@ -1219,7 +1233,7 @@ virtio_heci_start(struct virtio_heci *vheci)
 static int
 virtio_heci_stop(struct virtio_heci *vheci)
 {
-	vheci->deiniting = true;
+	virtio_heci_set_status(vheci, VHECI_DEINIT);
 	pthread_mutex_lock(&vheci->tx_mutex);
 	pthread_cond_signal(&vheci->tx_cond);
 	pthread_mutex_unlock(&vheci->tx_mutex);
@@ -1244,7 +1258,7 @@ virtio_heci_virtual_fw_reset(struct virtio_heci *vheci)
 {
 	struct virtio_heci_client *client = NULL, *pclient = NULL;
 
-	vheci->resetting = true;
+	virtio_heci_set_status(vheci, VHECI_RESET);
 	vheci->config->hw_ready = 0;
 
 	pthread_mutex_lock(&vheci->list_mutex);
@@ -1258,8 +1272,6 @@ virtio_heci_virtual_fw_reset(struct virtio_heci *vheci)
 	while (!LIST_EMPTY(&vheci->active_clients))
 		;
 	vheci->hbm_client = NULL;
-
-	vheci->resetting = false;
 }
 
 static int
