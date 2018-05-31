@@ -58,7 +58,7 @@ struct trusty_mem {
 
 	/* The left memory is for trusty's code/data/heap/stack
 	 */
-	uint8_t left_mem[0];
+	uint8_t left_mem[];
 };
 
 static struct key_info g_key_info = {
