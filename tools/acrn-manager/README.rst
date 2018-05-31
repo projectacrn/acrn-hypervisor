@@ -30,6 +30,7 @@ You can see the available ``acrnctl`` commands by running:
      pause
      continue
      suspend
+     resume
    Use acrnctl [cmd] help for details
 
 Here are some usage examples:
