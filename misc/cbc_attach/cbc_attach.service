@@ -1,0 +1,13 @@
+[Unit]
+Description=cbc attach
+DefaultDependencies=no
+After=sysinit.target local.target
+Before=basic.target
+
+[Service]
+ExecStart=/usr/bin/cbc_attach -f /dev/ttyS2
+Restart=always
+Type=notify
+
+[Install]
+WantedBy=basic.target
