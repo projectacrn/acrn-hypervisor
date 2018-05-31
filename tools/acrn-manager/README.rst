@@ -28,6 +28,7 @@ You can see the available ``acrnctl`` commands by running:
      del
      add
      pause
+     continue
    Use acrnctl [cmd] help for details
 
 Here are some usage examples:
