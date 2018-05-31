@@ -19,9 +19,9 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include "acrn_mngr.h"
+#include "acrnctl.h"
 
 #define ACRNCTL_OPT_ROOT	"/opt/acrn/conf"
-#define MAX_NAME_LEN            (128)
 
 #define ACMD(CMD,FUNC,DESC, VALID_ARGS) \
 {.cmd = CMD, .func = FUNC, .desc = DESC, .valid_args = VALID_ARGS}
@@ -41,166 +41,12 @@ struct acrnctl_cmd {
 	int (*valid_args) (struct acrnctl_cmd * cmd, int argc, char *argv[]);
 };
 
-/* helper functions */
-static int shell_cmd(const char *cmd, char *outbuf, int len)
-{
-	FILE *ptr;
-	char cmd_buf[256];
-	int ret;
-
-	if (!outbuf)
-		return system(cmd);
-
-	memset(cmd_buf, 0, sizeof(cmd_buf));
-	memset(outbuf, 0, len);
-	snprintf(cmd_buf, sizeof(cmd_buf), "%s 2>&1", cmd);
-	ptr = popen(cmd_buf, "re");
-	if (!ptr)
-		return -1;
-
-	ret = fread(outbuf, 1, len, ptr);
-	pclose(ptr);
-
-	return ret;
-}
-
-static void process_msg(struct mngr_msg *msg)
-{
-	if (msg->len < sizeof(*msg))
-		return;
-
-	switch (msg->msgid) {
-	case MSG_STR:
-		printf("%s\n", msg->payload);
-		break;
-	default:
-		printf("Unknown msgid(%d) received\n", msg->msgid);
-	}
-}
-
-/* vm states data and helper functions */
-
-#define ACRN_DM_SOCK_ROOT	"/run/acrn/mngr"
-
-struct vmm_struct {
-	char name[MAX_NAME_LEN];
-	unsigned long state;
-	LIST_ENTRY(vmm_struct) list;
-};
-
-enum vm_state {
-	VM_STATE_UNKNOWN = 0,
-	VM_CREATED,		/* VM created / awaiting start (boot) */
-	VM_STARTED,		/* VM started (booted) */
-	VM_PAUSED,		/* VM paused */
-	VM_UNTRACKED,		/* VM not created by acrnctl, or its launch script can change vm name */
-};
-
-static const char *state_str[] = {
-	[VM_STATE_UNKNOWN] = "unknown",
-	[VM_CREATED] = "stopped",
-	[VM_STARTED] = "started",
-	[VM_PAUSED] = "paused",
-	[VM_UNTRACKED] = "untracked",
-};
-
-static LIST_HEAD(vmm_list_struct, vmm_struct) vmm_head;
-
-static struct vmm_struct *vmm_list_add(char *name)
-{
-	struct vmm_struct *s;
-
-	s = calloc(1, sizeof(struct vmm_struct));
-	if (!s) {
-		perror("alloc vmm_struct");
-		return NULL;
-	}
-
-	strncpy(s->name, name, MAX_NAME_LEN - 1);
-	LIST_INSERT_HEAD(&vmm_head, s, list);
-
-	return s;
-}
-
-static struct vmm_struct *vmm_find(char *name)
-{
-	struct vmm_struct *s;
-
-	LIST_FOREACH(s, &vmm_head, list)
-		if (!strcmp(name, s->name))
-			return s;
-	return NULL;
-}
-
-static void vmm_update(void)
-{
-	char cmd[128] = { };
-	char cmd_out[256] = { };
-	char *vmname;
-	char *pvmname = NULL;
-	struct vmm_struct *s;
-	size_t len = sizeof(cmd_out);
-
-	snprintf(cmd, sizeof(cmd),
-		 "find %s/add/ -name \"*.sh\" | "
-		 "sed \"s/\\/opt\\/acrn\\/conf\\/add\\///g\" | "
-		 "sed \"s/.sh//g\"", ACRNCTL_OPT_ROOT);
-	shell_cmd(cmd, cmd_out, sizeof(cmd_out));
-
-	/* Properly null-terminate cmd_out */
-	cmd_out[len - 1] = '\0';
-
-	vmname = strtok_r(cmd_out, "\n", &pvmname);
-	while (vmname) {
-		s = vmm_list_add(vmname);
-		if (!s)
-			continue;
-		s->state = VM_CREATED;
-		vmname = strtok_r(NULL, "\n", &pvmname);
-	}
-
-	pvmname = NULL;
-
-	snprintf(cmd, sizeof(cmd),
-			"find %s/ -name \"*monitor.*.socket\" | "
-			"sed \"s/\\/run\\/acrn\\/mngr\\///g\" | "
-			"awk -F. \'{ print $1 }\'", ACRN_DM_SOCK_ROOT);
-	shell_cmd(cmd, cmd_out, sizeof(cmd_out));
-
-	/* Properly null-terminate cmd_out */
-	cmd_out[len - 1] = '\0';
-
-	vmname = strtok_r(cmd_out, "\n", &pvmname);
-	while (vmname) {
-		s = vmm_find(vmname);
-		if (s)
-			s->state = VM_STARTED;
-		else {
-			s = vmm_list_add(vmname);
-			if (s)
-				s->state = VM_UNTRACKED;
-		}
-		vmname = strtok_r(NULL, "\n", &pvmname);
-	}
-}
-
 /* There are acrnctl cmds */
 /* command: list */
 static int acrnctl_do_list(int argc, char *argv[])
 {
-	struct vmm_struct *s;
-	int find = 0;
-
-	vmm_update();
-	LIST_FOREACH(s, &vmm_head, list) {
-		printf("%s\t\t%s\n", s->name, state_str[s->state]);
-		find++;
-	}
-
-	if (!find)
-		printf("There are no VMs\n");
-
-	return 0;
+	get_vm_list();
+	return list_vm();
 }
 
 static int check_name(const char *name)
@@ -283,7 +129,7 @@ static int write_tmp_file(int fd, int n, char *word[])
 
 static int acrnctl_do_add(int argc, char *argv[])
 {
-	struct vmm_struct *s;
+	struct vmmngr_struct *s;
 	int fd, fd_tmp, ret = 0;
 	char *buf;
 	char *word[MAX_WORD], *line;
@@ -419,8 +265,8 @@ static int acrnctl_do_add(int argc, char *argv[])
 	snprintf(cmd, sizeof(cmd), "mkdir -p %s/add", ACRNCTL_OPT_ROOT);
 	system(cmd);
 
-	vmm_update();
-	s = vmm_find(vmname);
+	get_vm_list();
+	s = vmmngr_find(vmname);
 	if (s) {
 		printf("%s(%s) already exist, can't add %s%s\n",
 		       vmname, state_str[s->state], argv[1], args);
@@ -462,78 +308,14 @@ static int acrnctl_do_add(int argc, char *argv[])
 	return ret;
 }
 
-/* command: stop */
-static int send_stop_msg(char *vmname)
-{
-	int fd, ret;
-	struct sockaddr_un addr;
-	struct mngr_msg msg;
-	struct timeval timeout;
-	fd_set rfd, wfd;
-	char buf[128];
-
-	fd = socket(AF_UNIX, SOCK_STREAM, 0);
-	if (fd < 0) {
-		printf("%s %d\n", __FUNCTION__, __LINE__);
-		ret = -1;
-		goto sock_err;
-	}
-
-	addr.sun_family = AF_UNIX;
-	snprintf(addr.sun_path, sizeof(addr.sun_path), "%s/%s-monitor.socket",
-		 ACRN_DM_SOCK_ROOT, vmname);
-
-	ret = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
-	if (ret < 0) {
-		printf("%s %d\n", __FUNCTION__, __LINE__);
-		goto connect_err;
-	}
-
-	msg.magic = MNGR_MSG_MAGIC;
-	msg.msgid = DM_STOP;
-	msg.len = sizeof(msg);
-
-	timeout.tv_sec = 1;	/* wait 1 second for read/write socket */
-	timeout.tv_usec = 0;
-	FD_ZERO(&rfd);
-	FD_ZERO(&wfd);
-	FD_SET(fd, &rfd);
-	FD_SET(fd, &wfd);
-
-	select(fd + 1, NULL, &wfd, NULL, &timeout);
-
-	if (!FD_ISSET(fd, &wfd)) {
-		printf("%s %d\n", __FUNCTION__, __LINE__);
-		goto cant_write;
-	}
-
-	ret = write(fd, &msg, sizeof(msg));
-
-	/* wait response */
-	select(fd + 1, &rfd, NULL, NULL, &timeout);
-
-	if (FD_ISSET(fd, &rfd)) {
-		memset(buf, 0, sizeof(buf));
-		ret = read(fd, buf, sizeof(buf));
-		if (ret <= sizeof(buf))
-			process_msg((void *)&buf);
-	}
-
- cant_write:
- connect_err:
-	close(fd);
- sock_err:
-	return ret;
-}
-
 static int acrnctl_do_stop(int argc, char *argv[])
 {
-	struct vmm_struct *s;
+	struct vmmngr_struct *s;
 	int i;
 
-	vmm_update();
+	get_vm_list();
 	for (i = 1; i < argc; i++) {
-		s = vmm_find(argv[i]);
+		s = vmmngr_find(argv[i]);
 		if (!s) {
 			printf("can't find %s\n", argv[i]);
 			continue;
@@ -543,7 +325,7 @@ static int acrnctl_do_stop(int argc, char *argv[])
 			       state_str[s->state]);
 			continue;
 		}
-		send_stop_msg(argv[i]);
+		stop_vm(argv[i]);
 	}
 
 	return 0;
@@ -552,13 +334,13 @@ static int acrnctl_do_stop(int argc, char *argv[])
 /* command: delete */
 static int acrnctl_do_del(int argc, char *argv[])
 {
-	struct vmm_struct *s;
+	struct vmmngr_struct *s;
 	int i;
 	char cmd[128];
 
-	vmm_update();
+	get_vm_list();
 	for (i = 1; i < argc; i++) {
-		s = vmm_find(argv[i]);
+		s = vmmngr_find(argv[i]);
 		if (!s) {
 			printf("can't find %s\n", argv[i]);
 			continue;
@@ -581,11 +363,10 @@ static int acrnctl_do_del(int argc, char *argv[])
 
 static int acrnctl_do_start(int argc, char *argv[])
 {
-	struct vmm_struct *s;
-	char cmd[128];
+	struct vmmngr_struct *s;
 
-	vmm_update();
-	s = vmm_find(argv[1]);
+	get_vm_list();
+	s = vmmngr_find(argv[1]);
 	if (!s) {
 		printf("can't find %s\n", argv[1]);
 		return -1;
@@ -596,10 +377,7 @@ static int acrnctl_do_start(int argc, char *argv[])
 		return -1;
 	}
 
-	snprintf(cmd, sizeof(cmd), "bash %s/add/%s.sh $(cat %s/add/%s.args)",
-		 ACRNCTL_OPT_ROOT, argv[1], ACRNCTL_OPT_ROOT, argv[1]);
-
-	system(cmd);
+	start_vm(argv[1]);
 
 	return 0;
 }
