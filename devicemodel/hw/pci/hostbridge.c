@@ -26,8 +26,6 @@
  * $FreeBSD$
  */
 
-#include <sys/cdefs.h>
-#include <pthread.h>
 #include "pci_core.h"
 
 static int

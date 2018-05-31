@@ -75,14 +75,10 @@
  *   USB device: usb_mouse.c usb_pmapper.{h,c}
  */
 
-#include <sys/cdefs.h>
 #include <sys/types.h>
-#include <sys/queue.h>
 #include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include "usb_core.h"

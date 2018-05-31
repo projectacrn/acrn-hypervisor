@@ -12,7 +12,6 @@
 #include <string.h>
 #include "usb.h"
 #include "usbdi.h"
-#include "usb_core.h"
 #include "usb_pmapper.h"
 
 #undef LOG_TAG

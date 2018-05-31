@@ -26,8 +26,6 @@
  */
 
 
-#include <sys/cdefs.h>
-#include <sys/param.h>
 #include <assert.h>
 #include <pthread.h>
 #include <stdbool.h>
@@ -36,11 +34,8 @@
 
 #include "types.h"
 #include "acpi.h"
-#include "vmm.h"
 #include "vmmapi.h"
-#include "inout.h"
 #include "pci_core.h"
-#include "irq.h"
 #include "lpc.h"
 
 /*

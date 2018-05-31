@@ -18,7 +18,6 @@
 #include <assert.h>
 #include <stdbool.h>
 
-#include "vmm.h"
 #include "vmmapi.h"
 #include "mevent.h"
 #include "pci_core.h"

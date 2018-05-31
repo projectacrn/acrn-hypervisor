@@ -26,15 +26,9 @@
  * $FreeBSD$
  */
 
-#include <sys/cdefs.h>
 
-#include <sys/param.h>
-#include <sys/sysctl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <sys/uio.h>
-#include <sys/user.h>
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -43,15 +37,8 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <uuid/uuid.h>
 
-#include "types.h"
-#include "cpuset.h"
-#include "segments.h"
-#include "specialreg.h"
 
-#include "vmm.h"
-#include "vhm_ioctl_defs.h"
 
 #include "vmmapi.h"
 #include "mevent.h"

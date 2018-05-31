@@ -30,10 +30,8 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdbool.h>
-#include <stdint.h>
 
 #include "dm.h"
-#include "acrn_common.h"
 #include "vmmapi.h"
 #include "sw_load.h"
 #include "acpi.h"

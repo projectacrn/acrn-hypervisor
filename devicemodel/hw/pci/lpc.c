@@ -27,14 +27,11 @@
  * $FreeBSD$
  */
 
-#include <sys/cdefs.h>
-#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 
-#include "vmm.h"
 #include "vmmapi.h"
 #include "acpi.h"
 #include "inout.h"

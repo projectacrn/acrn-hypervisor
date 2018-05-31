@@ -26,35 +26,25 @@
  * $FreeBSD$
  */
 
-#include <sys/cdefs.h>
-#include <sys/param.h>
-#include <sys/select.h>
 #include <sys/uio.h>
-#include <sys/ioctl.h>
 #include <net/ethernet.h>
 #ifndef NETMAP_WITH_LIBS
 #define NETMAP_WITH_LIBS
 #endif
-#include <err.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include <unistd.h>
 #include <assert.h>
 #include <openssl/md5.h>
 #include <pthread.h>
-#include <sysexits.h>
 
-#include "types.h"
 #include "dm.h"
 #include "pci_core.h"
 #include "mevent.h"
 #include "virtio.h"
 #include "netmap_user.h"
-#include <net/if.h>
 #include <linux/if_tun.h>
 
 #define VIRTIO_NET_RINGSZ	1024

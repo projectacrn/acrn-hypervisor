@@ -25,17 +25,13 @@
  *
  */
 
-#include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#include <unistd.h>
-#include <openssl/rand.h>
 
 #include "types.h"
 #include "vrpmb.h"
-#include "acrn_common.h"
 
 struct key_material {
 	uint8_t key[RPMB_KEY_LEN];

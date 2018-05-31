@@ -9,9 +9,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "vmm.h"
 #include "vmmapi.h"
-#include "dm.h"
 #include "acpi.h"
 
 static inline int get_vcpu_pm_info(struct vmctx *ctx, int vcpu_id,

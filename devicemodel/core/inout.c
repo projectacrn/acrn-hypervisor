@@ -26,18 +26,10 @@
  * $FreeBSD$
  */
 
-#include <sys/cdefs.h>
-#include <sys/param.h>
-#include <sys/mman.h>
-#include <linux/uio.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include <string.h>
 #include <assert.h>
 
-#include "vmm.h"
-#include "vmmapi.h"
-#include "dm.h"
 #include "inout.h"
 
 SET_DECLARE(inout_port_set, struct inout_port);

@@ -35,11 +35,6 @@
  *
  */
 
-#include <sys/cdefs.h>
-#include <sys/param.h>
-#include <sys/uio.h>
-#include <err.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,7 +42,6 @@
 #include <unistd.h>
 #include <assert.h>
 #include <pthread.h>
-#include <sysexits.h>
 
 #include "dm.h"
 #include "pci_core.h"
@@ -55,7 +49,6 @@
 #include "vmmapi.h"
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include <linux/types.h>
 #include "rpmb.h"
 #include "rpmb_sim.h"
 #include "rpmb_backend.h"

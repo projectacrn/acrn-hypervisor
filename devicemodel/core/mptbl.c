@@ -26,8 +26,6 @@
  * $FreeBSD$
  */
 
-#include <sys/cdefs.h>
-#include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -35,7 +33,6 @@
 #include "mptable.h"
 #include "acpi.h"
 #include "dm.h"
-#include "mptbl.h"
 #include "pci_core.h"
 
 #define MPTABLE_BASE		0xF0000

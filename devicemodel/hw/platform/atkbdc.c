@@ -25,8 +25,6 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-#include <sys/types.h>
 #include <stdint.h>
 #include <assert.h>
 #include <errno.h>
@@ -34,18 +32,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <pthread.h>
 
 #include "acpi.h"
 #include "inout.h"
-#include "pci_core.h"
 #include "irq.h"
 #include "lpc.h"
 #include "atkbdc.h"
 #include "ps2kbd.h"
 #include "ps2mouse.h"
-#include "vmm.h"
 #include "vmmapi.h"
 
 static void

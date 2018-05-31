@@ -27,18 +27,15 @@
  * $FreeBSD$
  */
 
-#include <sys/cdefs.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <err.h>
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
 #include <pthread.h>
-#include <sysexits.h>
 
 #include "types.h"
 #include "mevent.h"

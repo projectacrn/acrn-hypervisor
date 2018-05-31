@@ -26,9 +26,6 @@
  * $FreeBSD$
  */
 
-#include <sys/cdefs.h>
-#include <sys/types.h>
-#include <stdbool.h>
 #include <assert.h>
 
 #include "inout.h"

@@ -50,7 +50,6 @@
  *         DSDT  ->   0xf2800 (variable - can go up to 0x100000)
  */
 
-#include <sys/cdefs.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -63,8 +62,6 @@
 #include <stdbool.h>
 #include <fcntl.h>
 
-#include "vmm.h"
-#include "vmmapi.h"
 #include "dm.h"
 #include "acpi.h"
 #include "pci_core.h"

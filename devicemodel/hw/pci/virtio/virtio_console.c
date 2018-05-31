@@ -28,13 +28,8 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-#include <sys/param.h>
 #include <sys/uio.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <err.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -44,8 +39,6 @@
 #include <unistd.h>
 #include <assert.h>
 #include <pthread.h>
-#include <libgen.h>
-#include <sysexits.h>
 #include <termios.h>
 
 #include "dm.h"

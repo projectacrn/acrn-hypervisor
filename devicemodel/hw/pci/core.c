@@ -26,9 +26,6 @@
  * $FreeBSD$
  */
 
-#include <sys/cdefs.h>
-#include <sys/param.h>
-#include <ctype.h>
 #include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -38,10 +35,8 @@
 #include <assert.h>
 #include <stdbool.h>
 
-#include "vmm.h"
 #include "vmmapi.h"
 #include "acpi.h"
-#include "dm.h"
 #include "inout.h"
 #include "ioapic.h"
 #include "mem.h"
