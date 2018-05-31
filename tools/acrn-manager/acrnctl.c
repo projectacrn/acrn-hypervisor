@@ -36,6 +36,7 @@
 #define CONTINUE_DESC  "Start virtual machine from pause state"
 #define SUSPEND_DESC   "Switch virtual machine to suspend state"
 #define RESUME_DESC    "Resume virtual machine from suspend state"
+#define RESET_DESC     "Stop and then start virtual machine VM_NAME"
 
 struct acrnctl_cmd {
 	const char *cmd;
@@ -491,6 +492,35 @@ static int acrnctl_do_resume(int argc, char *argv[])
 	return 0;
 }
 
+static int acrnctl_do_reset(int argc, char *argv[])
+{
+	struct vmmngr_struct *s;
+	int i;
+
+	for (i = 1; i < argc; i++) {
+		s = vmmngr_find(argv[i]);
+		if (!s) {
+			printf("Can't find vm %s\n", argv[i]);
+			continue;
+		}
+
+		switch(s->state) {
+			case VM_CREATED:
+				start_vm(argv[i]);
+				break;
+			case VM_STARTED:
+			case VM_PAUSED:
+				stop_vm(argv[i]);
+				start_vm(argv[i]);
+				break;
+			default:
+				printf("%s current state: %s, can't reset\n",
+					argv[i], state_str[s->state]);
+		}
+	}
+	return 0;
+}
+
 /* Default args validation function */
 int df_valid_args(struct acrnctl_cmd *cmd, int argc, char *argv[])
 {
@@ -548,6 +578,7 @@ struct acrnctl_cmd acmds[] = {
 	ACMD("continue", acrnctl_do_continue, CONTINUE_DESC, df_valid_args),
 	ACMD("suspend", acrnctl_do_suspend, SUSPEND_DESC, df_valid_args),
 	ACMD("resume", acrnctl_do_resume, RESUME_DESC, df_valid_args),
+	ACMD("reset", acrnctl_do_reset, RESET_DESC, df_valid_args),
 };
 
 #define NCMD	(sizeof(acmds)/sizeof(struct acrnctl_cmd))

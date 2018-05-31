@@ -31,6 +31,7 @@ You can see the available ``acrnctl`` commands by running:
      continue
      suspend
      resume
+     reset
    Use acrnctl [cmd] help for details
 
 Here are some usage examples:
