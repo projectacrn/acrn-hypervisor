@@ -33,6 +33,7 @@
 #define DEL_DESC       "Delete virtual machine VM_NAME"
 #define ADD_DESC       "Add one virtual machine with SCRIPTS and OPTIONS"
 #define PAUSE_DESC     "Block all vCPUs of virtual machine VM_NAME"
+#define CONTINUE_DESC  "Start virtual machine from pause state"
 
 struct acrnctl_cmd {
 	const char *cmd;
@@ -404,6 +405,35 @@ static int acrnctl_do_pause(int argc, char *argv[])
 	return 0;
 }
 
+static int acrnctl_do_continue(int argc, char *argv[])
+{
+	struct vmmngr_struct *s;
+	int i;
+
+	for (i = 1; i < argc; i++) {
+		s = vmmngr_find(argv[i]);
+		if (!s) {
+			printf("Can't find vm %s\n", argv[i]);
+			continue;
+		}
+
+		/* Per current implemention, we can't know if vm is in paused
+		   state. Send continue cmd to acrn-dm when VM_STARTED and will
+		   correct it later when we have a way to check if vm has been
+		   paused */
+		switch (s->state) {
+			case VM_STARTED:
+				continue_vm(argv[i]);
+				break;
+			default:
+				printf("%s current state %s, can't continue\n",
+					argv[i], state_str[s->state]);
+		}
+	}
+
+	return 0;
+}
+
 /* Default args validation function */
 int df_valid_args(struct acrnctl_cmd *cmd, int argc, char *argv[])
 {
@@ -458,6 +488,7 @@ struct acrnctl_cmd acmds[] = {
 	ACMD("del", acrnctl_do_del, DEL_DESC, df_valid_args),
 	ACMD("add", acrnctl_do_add, ADD_DESC, valid_add_args),
 	ACMD("pause", acrnctl_do_pause, PAUSE_DESC, df_valid_args),
+	ACMD("continue", acrnctl_do_continue, CONTINUE_DESC, df_valid_args),
 };
 
 #define NCMD	(sizeof(acmds)/sizeof(struct acrnctl_cmd))
