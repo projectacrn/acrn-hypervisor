@@ -34,6 +34,7 @@
 #define ADD_DESC       "Add one virtual machine with SCRIPTS and OPTIONS"
 #define PAUSE_DESC     "Block all vCPUs of virtual machine VM_NAME"
 #define CONTINUE_DESC  "Start virtual machine from pause state"
+#define SUSPEND_DESC   "Switch virtual machine to suspend state"
 
 struct acrnctl_cmd {
 	const char *cmd;
@@ -434,6 +435,32 @@ static int acrnctl_do_continue(int argc, char *argv[])
 	return 0;
 }
 
+static int acrnctl_do_suspend(int argc, char *argv[])
+{
+	struct vmmngr_struct *s;
+	int i;
+
+	for (i = 1; i < argc; i++) {
+		s = vmmngr_find(argv[1]);
+		if (!s) {
+			printf("Can't find vm %s\n", argv[i]);
+			continue;
+		}
+
+		/* Only send suspend cmd to acrn-dm now when VM_STARTED */
+		switch (s->state) {
+			case VM_STARTED:
+				suspend_vm(argv[i]);
+				break;
+			default:
+				printf("%s current state %s, can't suspend\n",
+					argv[i], state_str[s->state]);
+		}
+	}
+
+	return 0;
+}
+
 /* Default args validation function */
 int df_valid_args(struct acrnctl_cmd *cmd, int argc, char *argv[])
 {
@@ -489,6 +516,7 @@ struct acrnctl_cmd acmds[] = {
 	ACMD("add", acrnctl_do_add, ADD_DESC, valid_add_args),
 	ACMD("pause", acrnctl_do_pause, PAUSE_DESC, df_valid_args),
 	ACMD("continue", acrnctl_do_continue, CONTINUE_DESC, df_valid_args),
+	ACMD("suspend", acrnctl_do_suspend, SUSPEND_DESC, df_valid_args),
 };
 
 #define NCMD	(sizeof(acmds)/sizeof(struct acrnctl_cmd))

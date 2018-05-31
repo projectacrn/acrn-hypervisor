@@ -29,6 +29,7 @@ You can see the available ``acrnctl`` commands by running:
      add
      pause
      continue
+     suspend
    Use acrnctl [cmd] help for details
 
 Here are some usage examples:
