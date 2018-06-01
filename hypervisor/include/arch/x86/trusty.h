@@ -106,6 +106,15 @@ struct secure_world_control {
 	struct secure_world_memory sworld_memory;
 };
 
+struct trusty_startup_param {
+	uint32_t size_of_this_struct;
+	uint32_t mem_size;
+	uint64_t tsc_per_ms;
+	uint64_t trusty_mem_base;
+	uint32_t reserved;
+	uint8_t padding[4];
+};
+
 void switch_world(struct vcpu *vcpu, int next_world);
 bool initialize_trusty(struct vcpu *vcpu, uint64_t param);
 void destroy_secure_world(struct vm *vm);
