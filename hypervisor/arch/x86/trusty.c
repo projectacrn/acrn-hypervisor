@@ -351,6 +351,11 @@ static bool init_secure_world_env(struct vcpu *vcpu,
 		TRUSTY_EPT_REBASE_GPA + size;
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].tsc_offset = 0;
 
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].cr0 =
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr0;
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].cr4 =
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr4;
+
 	exec_vmwrite(VMX_GUEST_RSP,
 		TRUSTY_EPT_REBASE_GPA + size);
 	exec_vmwrite(VMX_TSC_OFFSET_FULL,
