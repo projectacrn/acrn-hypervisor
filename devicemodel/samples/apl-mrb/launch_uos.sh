@@ -335,6 +335,17 @@ mount /dev/mmcblk1p3 /data
 # make sure there is enough 2M hugepages in the pool
 echo 1024 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
 
+# offline SOS CPUs except BSP before launch UOS
+for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
+        online=`cat $i/online`
+        idx=`echo $i | tr -cd "[1-99]"`
+        echo cpu$idx online=$online
+        if [ "$online" = "1" ]; then
+                echo 0 > $i/online
+                echo $idx > /sys/class/vhm/acrn_vhm/offline_cpu
+        fi
+done
+
 case $launch_type in
 	1) echo "Launch clearlinux UOS"
 		launch_clearlinux 1 3 "64 448 8" 0x070F00 clearlinux $debug

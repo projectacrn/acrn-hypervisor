@@ -33,4 +33,15 @@ acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   i915.enable_guc_submission=0" $vm_name
 }
 
+# offline SOS CPUs except BSP before launch UOS
+for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
+        online=`cat $i/online`
+        idx=`echo $i | tr -cd "[1-99]"`
+        echo cpu$idx online=$online
+        if [ "$online" = "1" ]; then
+                echo 0 > $i/online
+                echo $idx > /sys/class/vhm/acrn_vhm/offline_cpu
+        fi
+done
+
 launch_clear 2 1 "64 448 8" 0x070F00 clear
