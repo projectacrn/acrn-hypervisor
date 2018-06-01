@@ -421,7 +421,7 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 	void *addr = NULL;
 	void *pml4_addr = GPA2HVA(vm, GUEST_INIT_PAGE_TABLE_START);
 
-	_Static_assert((GUEST_INIT_PAGE_TABLE_START + 7 * PAGE_SIZE_4K) <
+	ASSERT((GUEST_INIT_PAGE_TABLE_START + 7 * PAGE_SIZE_4K) <
 		RSDP_F_ADDR, "RSDP fix segment could be override");
 
 	if (GUEST_INIT_PAGE_TABLE_SKIP_SIZE <

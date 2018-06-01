@@ -7,18 +7,7 @@
 #include <hypervisor.h>
 #include <hkdf.h>
 
-_Static_assert(NR_WORLD == 2, "Only 2 Worlds supported!");
-
 #define TRUSTY_VERSION 1
-
-struct trusty_startup_param {
-	uint32_t size_of_this_struct;
-	uint32_t mem_size;
-	uint64_t tsc_per_ms;
-	uint64_t trusty_mem_base;
-	uint32_t reserved;
-	uint8_t padding[4];
-};
 
 struct trusty_mem {
 	/* The first page of trusty memory is reserved for key_info and
@@ -43,10 +32,6 @@ static struct key_info g_key_info = {
 	.platform = 3,
 	.num_seeds = 1
 };
-
-_Static_assert(sizeof(struct trusty_startup_param)
-			+ sizeof(struct key_info) < 0x1000,
-		"trusty_startup_param + key_info > 1Page size(4KB)!");
 
 #define save_segment(seg, SEG_NAME) \
 { \
