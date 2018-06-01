@@ -122,8 +122,10 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	zeropage = (struct zero_page *)
 			vm->sw.kernel_info.kernel_src_addr;
 	kernel_entry_offset = (zeropage->hdr.setup_sects + 1) * 512;
-	/* 64bit entry is the 512bytes after the start */
-	kernel_entry_offset += 512;
+	if (vcpu->arch_vcpu.cpu_mode == CPU_MODE_64BIT)
+		/* 64bit entry is the 512bytes after the start */
+		kernel_entry_offset += 512;
+
 	vm->sw.kernel_info.kernel_entry_addr =
 		(void *)((unsigned long)vm->sw.kernel_info.kernel_load_addr
 			+ kernel_entry_offset);

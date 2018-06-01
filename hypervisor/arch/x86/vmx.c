@@ -19,6 +19,19 @@ extern struct efi_ctx* efi_ctx;
 				((uint64_t)PAT_MEM_TYPE_UCM << 48) + \
 				((uint64_t)PAT_MEM_TYPE_UC << 56))
 
+#define REAL_MODE_BSP_INIT_CODE_SEL	(0xf000)
+#define REAL_MODE_DATA_SEG_AR		(0x0093)
+#define REAL_MODE_CODE_SEG_AR		(0x009f)
+#define PROTECTED_MODE_DATA_SEG_AR	(0xc093)
+#define PROTECTED_MODE_CODE_SEG_AR	(0xc09b)
+
+static uint32_t cr0_host_mask;
+static uint32_t cr0_always_on_mask;
+static uint32_t cr0_always_off_mask;
+static uint32_t cr4_host_mask;
+static uint32_t cr4_always_on_mask;
+static uint32_t cr4_always_off_mask;
+
 static inline int exec_vmxon(void *addr)
 {
 	uint64_t rflags;
@@ -216,85 +229,203 @@ uint32_t get_cs_access_rights(void)
 	return usable_ar;
 }
 
-int vmx_write_cr0(struct vcpu *vcpu, uint64_t value)
+static void init_cr0_cr4_host_mask(__unused struct vcpu *vcpu)
 {
-	uint32_t value32;
-	uint64_t value64;
+	static bool inited = false;
+	uint32_t fixed0, fixed1;
+	if (!inited) {
+		/* Read the CR0 fixed0 / fixed1 MSR registers */
+		fixed0 = msr_read(MSR_IA32_VMX_CR0_FIXED0);
+		fixed1 = msr_read(MSR_IA32_VMX_CR0_FIXED1);
 
-	pr_dbg("VMM: Guest trying to write 0x%08x to CR0", value);
+		cr0_host_mask = ~(fixed0 ^ fixed1);
+		/* Add the bit hv wants to trap */
+		cr0_host_mask |= CR0_TRAP_MASK;
+		/* CR0 clear PE/PG from always on bits due to "unrestructed
+		 * guest" feature */
+		cr0_always_on_mask = fixed0 & (~(CR0_PE | CR0_PG));
+		cr0_always_off_mask = ~fixed1;
 
-	/* Read host mask value */
-	value64 = exec_vmread(VMX_CR0_MASK);
 
-	/* Clear all bits being written by guest that are owned by host */
-	value &= ~value64;
+		/* Read the CR$ fixed0 / fixed1 MSR registers */
+		fixed0 = msr_read(MSR_IA32_VMX_CR4_FIXED0);
+		fixed1 = msr_read(MSR_IA32_VMX_CR4_FIXED1);
 
-	/* Update CR0 in guest state */
-	vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr0 |= value;
-	exec_vmwrite(VMX_GUEST_CR0,
-		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr0);
-	pr_dbg("VMM: Guest allowed to write 0x%08x to CR0",
-		  vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr0);
-
-	/* If guest is trying to transition vcpu from unpaged real mode to page
-	 * protected mode make necessary changes to VMCS structure to reflect
-	 * transition from real mode to paged-protected mode
-	 */
-	if (!is_vcpu_bsp(vcpu) &&
-	    (vcpu->arch_vcpu.cpu_mode == CPU_MODE_REAL) &&
-	    (value & CR0_PG) && (value & CR0_PE)) {
-		/* Enable protected mode */
-		value32 = exec_vmread(VMX_ENTRY_CONTROLS);
-		value32 |= (VMX_ENTRY_CTLS_IA32E_MODE |
-			    VMX_ENTRY_CTLS_LOAD_PAT |
-			    VMX_ENTRY_CTLS_LOAD_EFER);
-		exec_vmwrite(VMX_ENTRY_CONTROLS, value32);
-		pr_dbg("VMX_ENTRY_CONTROLS: 0x%x ", value32);
-
-		/* Set up EFER */
-		value64 = exec_vmread64(VMX_GUEST_IA32_EFER_FULL);
-		value64 |= (MSR_IA32_EFER_SCE_BIT |
-			    MSR_IA32_EFER_LME_BIT |
-			    MSR_IA32_EFER_LMA_BIT | MSR_IA32_EFER_NXE_BIT);
-		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, value64);
-		pr_dbg("VMX_GUEST_IA32_EFER: 0x%016llx ", value64);
+		cr4_host_mask = ~(fixed0 ^ fixed1);
+		/* Add the bit hv wants to trap */
+		cr4_host_mask |= CR4_TRAP_MASK;
+		cr4_always_on_mask = fixed0;
+		/* Record the bit fixed to 0 for CR4, including reserved bits */
+		cr4_always_off_mask = ~fixed1;
+		inited = true;
 	}
 
+	exec_vmwrite(VMX_CR0_MASK, cr0_host_mask);
+	/* Output CR0 mask value */
+	pr_dbg("CR0 mask value: 0x%x", cr0_host_mask);
+
+
+	exec_vmwrite(VMX_CR4_MASK, cr4_host_mask);
+	/* Output CR4 mask value */
+	pr_dbg("CR4 mask value: 0x%x", cr4_host_mask);
+
+}
+
+/*
+ * Handling of CR0:
+ * Assume "unrestricted guest" feature is supported by vmx.
+ * For mode switch, hv only needs to take care of enabling/disabling long mode,
+ * thanks to "unrestricted guest" feature.
+ *
+ *   - PE (0)  Trapped to track cpu mode.
+ *             Set the value according to the value from guest.
+ *   - MP (1)  Flexible to guest
+ *   - EM (2)  Flexible to guest
+ *   - TS (3)  Flexible to guest
+ *   - ET (4)  Flexible to guest
+ *   - NE (5)  must always be 1
+ *   - WP (16) Trapped to get if it inhibits supervisor level procedures to
+ *             write into ro-pages.
+ *   - AM (18) Flexible to guest
+ *   - NW (29) Flexible to guest
+ *   - CD (30) Flexible to guest
+ *   - PG (31) Trapped to track cpu/paging mode.
+ *             Set the value according to the value from guest.
+ */
+int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
+{
+	struct run_context *context =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+	uint64_t cr0_vmx;
+	uint32_t entry_ctrls;
+	bool paging_enabled = !!(context->cr0 & CR0_PG);
+
+	if (cr0 & (cr0_always_off_mask | CR0_RESERVED_MASK)) {
+		pr_err("Not allow to set always off / reserved bits for CR0");
+		vcpu_inject_gp(vcpu, 0);
+		return -EINVAL;
+	}
+
+	/* TODO: Check all invalid guest statuses according to the change of
+	 * CR0, and inject a #GP to guest */
+
+	if ((context->ia32_efer & MSR_IA32_EFER_LME_BIT) &&
+	    !paging_enabled && (cr0 & CR0_PG)) {
+		if (!(context->cr4 & CR4_PAE)) {
+			pr_err("Can't enable long mode when PAE disabled");
+			vcpu_inject_gp(vcpu, 0);
+			return -EINVAL;
+		}
+		/* Enable long mode */
+		pr_dbg("VMM: Enable long mode");
+		entry_ctrls = exec_vmread(VMX_ENTRY_CONTROLS);
+		entry_ctrls |= VMX_ENTRY_CTLS_IA32E_MODE;
+		exec_vmwrite(VMX_ENTRY_CONTROLS, entry_ctrls);
+
+		context->ia32_efer |= MSR_IA32_EFER_LMA_BIT;
+		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, context->ia32_efer);
+	} else if ((context->ia32_efer & MSR_IA32_EFER_LME_BIT) &&
+		   paging_enabled && !(cr0 & CR0_PG)){
+		/* Disable long mode */
+		pr_dbg("VMM: Disable long mode");
+		entry_ctrls = exec_vmread(VMX_ENTRY_CONTROLS);
+		entry_ctrls &= ~VMX_ENTRY_CTLS_IA32E_MODE;
+		exec_vmwrite(VMX_ENTRY_CONTROLS, entry_ctrls);
+
+		context->ia32_efer &= ~MSR_IA32_EFER_LMA_BIT;
+		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, context->ia32_efer);
+	}
+
+	/* CR0 has no always off bits, except the always on bits, and reserved
+	 * bits, allow to set according to guest.
+	 */
+	cr0_vmx = cr0_always_on_mask | cr0;
+	exec_vmwrite(VMX_GUEST_CR0, cr0_vmx & 0xFFFFFFFFUL);
+	exec_vmwrite(VMX_CR0_READ_SHADOW, cr0 & 0xFFFFFFFFUL);
+	context->cr0 = cr0;
+
+	pr_dbg("VMM: Try to write %08x, allow to write 0x%08x to CR0",
+		cr0, cr0_vmx);
+
 	return 0;
 }
 
-int vmx_write_cr3(struct vcpu *vcpu, uint64_t value)
+int vmx_write_cr3(struct vcpu *vcpu, uint64_t cr3)
 {
+	struct run_context *context =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	/* Write to guest's CR3 */
-	vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3 = value;
+	context->cr3 = cr3;
 
 	/* Commit new value to VMCS */
-	exec_vmwrite(VMX_GUEST_CR3,
-		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3);
+	exec_vmwrite(VMX_GUEST_CR3, cr3);
 
 	return 0;
 }
 
-int vmx_write_cr4(struct vcpu *vcpu, uint64_t value)
+/*
+ * Handling of CR4:
+ * Assume "unrestricted guest" feature is supported by vmx.
+ *
+ * For CR4, if some feature is not supported by hardware, the corresponding bit
+ * will be set in cr4_always_off_mask. If guest try to set these bits after
+ * vmexit, will inject a #GP.
+ * If a bit for a feature not supported by hardware, which is flexible to guest,
+ * and write to it do not lead to a VM exit, a #GP should be generated inside
+ * guest.
+ *
+ *   - VME (0) Flexible to guest
+ *   - PVI (1) Flexible to guest
+ *   - TSD (2) Flexible to guest
+ *   - DE  (3) Flexible to guest
+ *   - PSE (4) Trapped to track paging mode.
+ *             Set the value according to the value from guest.
+ *   - PAE (5) Trapped to track paging mode.
+ *             Set the value according to the value from guest.
+ *   - MCE (6) Flexible to guest
+ *   - PGE (7) Flexible to guest
+ *   - PCE (8) Flexible to guest
+ *   - OSFXSR (9) Flexible to guest
+ *   - OSXMMEXCPT (10) Flexible to guest
+ *   - VMXE (13) must always be 1 => must lead to a VM exit
+ *   - SMXE (14) must always be 0 => must lead to a VM exit
+ *   - PCIDE (17) Flexible to guest
+ *   - OSXSAVE (18) Flexible to guest
+ *   - SMEP (20) Flexible to guest
+ *   - SMAP (21) Flexible to guest
+ *   - PKE (22) Flexible to guest
+ */
+int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 {
-	uint64_t temp64;
+	struct run_context *context =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+	uint64_t cr4_vmx;
 
-	pr_dbg("VMM: Guest trying to write 0x%08x to CR4", value);
+	/* TODO: Check all invalid guest statuses according to the change of
+	 * CR4, and inject a #GP to guest */
 
-	/* Read host mask value */
-	temp64 = exec_vmread(VMX_CR4_MASK);
+	/* Check if guest try to set fixed to 0 bits or reserved bits */
+	if(cr4 & cr4_always_off_mask) {
+		pr_err("Not allow to set reserved/always off bits for CR4");
+		vcpu_inject_gp(vcpu, 0);
+		return -EINVAL;
+	}
 
-	/* Clear all bits being written by guest that are owned by host */
-	value &= ~temp64;
+	/* Do NOT support nested guest */
+	if (cr4 & CR4_VMXE) {
+		pr_err("Nested guest not supported");
+		vcpu_inject_gp(vcpu, 0);
+		return -EINVAL;
+	}
 
-	/* Write updated CR4 (bitwise OR of allowed guest bits and CR4 host
-	 * value)
-	 */
-	vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr4 |= value;
-	exec_vmwrite(VMX_GUEST_CR4,
-		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr4);
-	pr_dbg("VMM: Guest allowed to write 0x%08x to CR4",
-		  vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr4);
+	/* Aways off bits and reserved bits has been filtered above */
+	cr4_vmx = cr4_always_on_mask | cr4;
+	exec_vmwrite(VMX_GUEST_CR4, cr4_vmx & 0xFFFFFFFFUL);
+	exec_vmwrite(VMX_CR4_READ_SHADOW, cr4 & 0xFFFFFFFFUL);
+	context->cr4 = cr4;
+
+	pr_dbg("VMM: Try to write %08x, allow to write 0x%08x to CR4",
+		cr4, cr4_vmx);
 
 	return 0;
 }
@@ -313,45 +444,40 @@ static void init_guest_state(struct vcpu *vcpu)
 	struct vm *vm = vcpu->vm;
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+	enum vm_cpu_mode vcpu_mode = get_vcpu_mode(vcpu);
 
 	pr_dbg("*********************");
 	pr_dbg("Initialize guest state");
 	pr_dbg("*********************");
+
+
+	/* Will not init vcpu mode to compatibility mode */
+	ASSERT(vcpu_mode != CPU_MODE_COMPATIBILITY,
+		"don't support start vcpu from compatibility mode");
 
 	/*************************************************/
 	/* Set up CRx                                    */
 	/*************************************************/
 	pr_dbg("Natural-width********");
 
+	if (vcpu_mode == CPU_MODE_64BIT)
+		cur_context->ia32_efer = MSR_IA32_EFER_LME_BIT;
+
 	/* Setup guest control register values */
 	/* Set up guest CRO field */
-	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL) {
-		/*cur_context->cr0 = (CR0_CD | CR0_NW | CR0_ET | CR0_NE);*/
-		cur_context->cr0 = CR0_ET | CR0_NE;
-		cur_context->cr3 = 0;
-		cur_context->cr4 = CR4_VMXE;
-	} else if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
-		cur_context->cr0 = ((uint64_t)CR0_PG | CR0_PE | CR0_NE);
-		cur_context->cr4 = ((uint64_t)CR4_PSE | CR4_PAE | CR4_MCE | CR4_VMXE);
-		cur_context->cr3 = vm->arch_vm.guest_init_pml4 | CR3_PWT;
+	if (vcpu_mode == CPU_MODE_REAL) {
+		vmx_write_cr4(vcpu, 0);
+		vmx_write_cr0(vcpu, CR0_ET | CR0_NE);
+		vmx_write_cr3(vcpu, 0);
+	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
+		vmx_write_cr4(vcpu, 0);
+		vmx_write_cr0(vcpu, CR0_ET | CR0_NE | CR0_PE);
+		vmx_write_cr3(vcpu, 0);
+	} else if (vcpu_mode == CPU_MODE_64BIT) {
+		vmx_write_cr4(vcpu, CR4_PSE | CR4_PAE | CR4_MCE);
+		vmx_write_cr0(vcpu, CR0_PG | CR0_PE | CR0_NE);
+		vmx_write_cr3(vcpu, vm->arch_vm.guest_init_pml4 | CR3_PWT);
 	}
-
-	value = cur_context->cr0;
-	field = VMX_GUEST_CR0;
-	exec_vmwrite(field, value & 0xFFFFFFFF);
-	pr_dbg("VMX_GUEST_CR0: 0x%016llx ", value);
-
-	/* Set up guest CR3 field */
-	value = cur_context->cr3;
-	field = VMX_GUEST_CR3;
-	exec_vmwrite(field, value & 0xFFFFFFFF);
-	pr_dbg("VMX_GUEST_CR3: 0x%016llx ", value);
-
-	/* Set up guest CR4 field */
-	value = cur_context->cr4;
-	field = VMX_GUEST_CR4;
-	exec_vmwrite(field, value & 0xFFFFFFFF);
-	pr_dbg("VMX_GUEST_CR4: 0x%016llx ", value);
 
 	/***************************************************/
 	/* Set up Flags - the value of RFLAGS on VM entry */
@@ -359,19 +485,34 @@ static void init_guest_state(struct vcpu *vcpu)
 	field = VMX_GUEST_RFLAGS;
 	cur_context->rflags = 0x2; 	/* Bit 1 is a active high reserved bit */
 	exec_vmwrite(field, cur_context->rflags);
-	pr_dbg("VMX_GUEST_RFLAGS: 0x%016llx ", value);
+	pr_dbg("VMX_GUEST_RFLAGS: 0x%016llx ", cur_context->rflags);
 
 	/***************************************************/
 	/* Set Code Segment - CS */
 	/***************************************************/
-	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL) {
-		/* AP is initialized with real mode
-		 * and CS value is left shift 8 bits from sipi vector;
-		 */
-		sel = vcpu->arch_vcpu.sipi_vector << 8;
+	if (vcpu_mode == CPU_MODE_REAL) {
+		if (is_vcpu_bsp(vcpu)) {
+			ASSERT(!is_vm0(vcpu->vm),
+				"VM0 bsp should not be inited as realmode");
+			/* BP is initialized with real mode */
+			sel = REAL_MODE_BSP_INIT_CODE_SEL;
+			/* For unrestricted guest, it is able to set a
+			 * high base address */
+			base = (uint64_t)vcpu->entry_addr & 0xFFFF0000UL;
+		} else {
+			/* AP is initialized with real mode
+			 * and CS value is left shift 8 bits from sipi vector;
+			 */
+			sel = vcpu->arch_vcpu.sipi_vector << 8;
+			base = sel << 4;
+		}
 		limit = 0xffff;
-		access = 0x9F;
-		base = sel << 4;
+		access = REAL_MODE_CODE_SEG_AR;
+	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
+		limit = 0xffffffff;
+		base = 0;
+		access = PROTECTED_MODE_CODE_SEG_AR;
+		sel = 0x10;	/* Linear CS selector in guest init gdt */
 	} else {
 		HV_ARCH_VMX_GET_CS(sel);
 		access = get_cs_access_rights();
@@ -404,15 +545,18 @@ static void init_guest_state(struct vcpu *vcpu)
 	/***************************************************/
 	/* Set up guest instruction pointer */
 	field = VMX_GUEST_RIP;
-	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL)
-		value32 = 0;
+	if (vcpu_mode == CPU_MODE_REAL)
+		if (is_vcpu_bsp(vcpu))
+			value32 = 0x0000FFF0;
+		else
+			value32 = 0;
 	else
-		value32 = (uint32_t) ((uint64_t) vcpu->entry_addr & 0xFFFFFFFF);
+		value32 = (uint32_t)((uint64_t)vcpu->entry_addr);
 
 	pr_dbg("GUEST RIP on VMEntry %x ", value32);
 	exec_vmwrite(field, value32);
 
-	if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
+	if (vcpu_mode == CPU_MODE_64BIT) {
 		/* Set up guest stack pointer to 0 */
 		field = VMX_GUEST_RSP;
 		value32 = 0;
@@ -426,13 +570,15 @@ static void init_guest_state(struct vcpu *vcpu)
 	/***************************************************/
 
 	/* GDTR - Global Descriptor Table */
-	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL) {
+	if (vcpu_mode == CPU_MODE_REAL) {
 		/* Base */
 		base = 0;
 
 		/* Limit */
 		limit = 0xFFFF;
-	} else if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
+	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
+		base = create_guest_init_gdt(vcpu->vm, &limit);
+	} else if (vcpu_mode == CPU_MODE_64BIT) {
 		descriptor_table gdtb = {0, 0};
 
 		/* Base *//* TODO: Should guest GDTB point to host GDTB ? */
@@ -461,13 +607,14 @@ static void init_guest_state(struct vcpu *vcpu)
 	pr_dbg("VMX_GUEST_GDTR_LIMIT: 0x%x ", limit);
 
 	/* IDTR - Interrupt Descriptor Table */
-	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL) {
+	if ((vcpu_mode == CPU_MODE_REAL) ||
+	    (vcpu_mode == CPU_MODE_PROTECTED)) {
 		/* Base */
 		base = 0;
 
 		/* Limit */
 		limit = 0xFFFF;
-	} else if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
+	} else if (vcpu_mode == CPU_MODE_64BIT) {
 		descriptor_table idtb = {0, 0};
 
 		/* TODO: Should guest IDTR point to host IDTR ? */
@@ -505,11 +652,15 @@ static void init_guest_state(struct vcpu *vcpu)
 	/* ES, CS, SS, DS, FS, GS */
 	/***************************************************/
 	data32_idx = 0x10;
-	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL) {
+	if (vcpu_mode == CPU_MODE_REAL) {
 		es = ss = ds = fs = gs = data32_idx;
 		limit = 0xffff;
 
-	} else if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
+	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
+		/* Linear data segment in guest init gdt */
+		es = ss = ds = fs = gs = 0x18;
+		limit = 0xffffffff;
+	} else if (vcpu_mode == CPU_MODE_64BIT) {
 		asm volatile ("movw %%es, %%ax":"=a" (es));
 		asm volatile ("movw %%ss, %%ax":"=a" (ss));
 		asm volatile ("movw %%ds, %%ax":"=a" (ds));
@@ -557,10 +708,10 @@ static void init_guest_state(struct vcpu *vcpu)
 	pr_dbg("VMX_GUEST_GS_LIMIT: 0x%x ", limit);
 
 	/* Access */
-	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL)
-		value32 = 0x0093;
-	else if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT)
-		value32 = 0xc093;
+	if (vcpu_mode == CPU_MODE_REAL)
+		value32 = REAL_MODE_DATA_SEG_AR;
+	else	/* same value for protected mode and long mode */
+		value32 = PROTECTED_MODE_DATA_SEG_AR;
 
 	field = VMX_GUEST_ES_ATTR;
 	exec_vmwrite(field, value32);
@@ -668,19 +819,6 @@ static void init_guest_state(struct vcpu *vcpu)
 	value64 = PAT_POWER_ON_VALUE;
 	exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, value64);
 	pr_dbg("VMX_GUEST_IA32_PAT: 0x%016llx ",
-		  value64);
-
-	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL) {
-		/* Disable long mode (clear IA32_EFER.LME) in VMCS IA32_EFER
-		 * MSR
-		 */
-		value64 = msr_read(MSR_IA32_EFER);
-		value64 &= ~(MSR_IA32_EFER_LME_BIT | MSR_IA32_EFER_LMA_BIT);
-	} else {
-		value64 = msr_read(MSR_IA32_EFER);
-	}
-	exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, value64);
-	pr_dbg("VMX_GUEST_IA32_EFER: 0x%016llx ",
 		  value64);
 
 	value64 = 0;
@@ -904,7 +1042,7 @@ static void init_host_state(__unused struct vcpu *vcpu)
 
 static void init_exec_ctrl(struct vcpu *vcpu)
 {
-	uint32_t value32, fixed0, fixed1;
+	uint32_t value32;
 	uint64_t value64;
 	struct vm *vm = (struct vm *) vcpu->vm;
 
@@ -1081,89 +1219,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	/* Natural-width */
 	pr_dbg("Natural-width*********");
 
-	/* Read the CR0 fixed0 / fixed1 MSR registers */
-	fixed0 = msr_read(MSR_IA32_VMX_CR0_FIXED0);
-	fixed1 = msr_read(MSR_IA32_VMX_CR0_FIXED1);
-
-	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL) {
-		/* Check to see if unrestricted guest support is available */
-		if (msr_read(MSR_IA32_VMX_MISC) & (1 << 5)) {
-			/* Adjust fixed bits as they can/will reflect incorrect
-			 * settings that ARE valid in unrestricted guest mode.
-			 * Both PG and PE bits can bit changed in unrestricted
-			 * guest mode.
-			 */
-			fixed0 &= ~(CR0_PG | CR0_PE);
-			fixed1 |= (CR0_PG | CR0_PE);
-
-			/* Log success for unrestricted mode being present */
-			pr_dbg("Unrestricted support is available. ");
-		} else {
-			/* Log failure for unrestricted mode NOT being
-			 * present
-			 */
-			pr_err("Error: Unrestricted support is not available");
-			/* IA32_VMX_MISC bit 5 clear */
-		}
-
-	}
-
-	/* (get_vcpu_mode(vcpu) == CPU_MODE_REAL) */
-	/* Output fixed CR0 values */
-	pr_dbg("Fixed0 CR0 value: 0x%x", fixed0);
-	pr_dbg("Fixed1 CR0 value: 0x%x", fixed1);
-
-	/* Determine which bits are "flexible" in CR0 - allowed to be changed
-	 * as per arch manual in VMX operation.  Any bits that are different
-	 * between fixed0 and fixed1 are "flexible" and the guest can change.
-	 */
-	value32 = fixed0 ^ fixed1;
-
-	/* Set the CR0 mask to the inverse of the "flexible" bits */
-	value32 = ~value32;
-	exec_vmwrite(VMX_CR0_MASK, value32);
-
-	/* Output CR0 mask value */
-	pr_dbg("CR0 mask value: 0x%x", value32);
-
-	/* Calculate the CR0 shadow register value that will be used to enforce
-	 * the correct values for host owned bits
-	 */
-	value32 = (fixed0 | fixed1) & value32;
-	exec_vmwrite(VMX_CR0_READ_SHADOW, value32);
-
-	/* Output CR0 shadow value */
-	pr_dbg("CR0 shadow value: 0x%x", value32);
-
-	/* Read the CR4 fixed0 / fixed1 MSR registers */
-	fixed0 = msr_read(MSR_IA32_VMX_CR4_FIXED0);
-	fixed1 = msr_read(MSR_IA32_VMX_CR4_FIXED1);
-
-	/* Output fixed CR0 values */
-	pr_dbg("Fixed0 CR4 value: 0x%x", fixed0);
-	pr_dbg("Fixed1 CR4 value: 0x%x", fixed1);
-
-	/* Determine which bits are "flexible" in CR4 - allowed to be changed
-	 * as per arch manual in VMX operation.  Any bits that are different
-	 * between fixed0 and fixed1 are "flexible" and the guest can change.
-	 */
-	value32 = fixed0 ^ fixed1;
-
-	/* Set the CR4 mask to the inverse of the "flexible" bits */
-	value32 = ~value32;
-	exec_vmwrite(VMX_CR4_MASK, value32);
-
-	/* Output CR4 mask value */
-	pr_dbg("CR4 mask value: 0x%x", value32);
-
-	/* Calculate the CR4 shadow register value that will be used to enforce
-	 * the correct values for host owned bits
-	 */
-	value32 = (fixed0 | fixed1) & value32;
-	exec_vmwrite(VMX_CR4_READ_SHADOW, value32);
-
-	/* Output CR4 shadow value */
-	pr_dbg("CR4 shadow value: 0x%x", value32);
+	init_cr0_cr4_host_mask(vcpu);
 
 	/* The CR3 target registers work in concert with VMX_CR3_TARGET_COUNT
 	 * field. Using these registers guest CR3 access can be managed. i.e.,
@@ -1382,8 +1438,9 @@ int init_vmcs(struct vcpu *vcpu)
 
 	/* Initialize the Virtual Machine Control Structure (VMCS) */
 	init_host_state(vcpu);
-	init_guest_state(vcpu);
+	/* init exec_ctrl needs to run before init_guest_state */
 	init_exec_ctrl(vcpu);
+	init_guest_state(vcpu);
 	init_entry_ctrl(vcpu);
 	init_exit_ctrl(vcpu);
 

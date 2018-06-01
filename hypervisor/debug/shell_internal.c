@@ -648,6 +648,7 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 	uint64_t gpa, hpa, i;
 	uint64_t *tmp;
 	struct run_context *cur_context;
+	uint32_t err_code;
 
 	/* User input invalidation */
 	if (argc != 3) {
@@ -724,10 +725,8 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 	shell_puts(p_shell, temp_str);
 
 	/* dump sp */
-	gpa = gva2gpa(vm, cur_context->cr3,
-			cur_context->rsp);
-	if (gpa == 0) {
-		status = -EINVAL;
+	status = gva2gpa(vcpu, cur_context->rsp, &gpa, &err_code);
+	if (status) {
 		shell_puts(p_shell, "Cannot handle user gva yet!\r\n");
 	} else {
 		hpa = gpa2hpa(vm, gpa);
@@ -763,6 +762,7 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 	char temp_str[MAX_STR_SIZE];
 	struct vm *vm;
 	struct vcpu *vcpu;
+	uint32_t err_code;
 
 	/* User input invalidation */
 	if (argc != 4 && argc != 5) {
@@ -791,12 +791,8 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 
 	vcpu = vcpu_from_vid(vm, (long)vcpu_id);
 	if (vcpu) {
-		struct run_context *cur_context =
-			&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-
-		gpa = gva2gpa(vcpu->vm, cur_context->cr3, gva);
-		if (gpa == 0) {
-			status = -EINVAL;
+		status = gva2gpa(vcpu, gva, &gpa, &err_code);
+		if (status) {
 			shell_puts(p_shell,
 					"Cannot handle user gva yet!\r\n");
 		} else {

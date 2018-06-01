@@ -269,23 +269,6 @@ static int32_t get_vmcs_field(int ident)
 	}
 }
 
-static enum vm_cpu_mode get_vmx_cpu_mode(void)
-{
-	uint32_t csar;
-
-	if (exec_vmread(VMX_GUEST_IA32_EFER_FULL) & EFER_LMA) {
-		csar = exec_vmread(VMX_GUEST_CS_ATTR);
-		if (csar & 0x2000)
-			return CPU_MODE_64BIT;        /* CS.L = 1 */
-		else
-			return CPU_MODE_COMPATIBILITY;
-	} else if (exec_vmread(VMX_GUEST_CR0) & CR0_PE) {
-		return CPU_MODE_PROTECTED;
-	} else {
-		return CPU_MODE_REAL;
-	}
-}
-
 static void get_guest_paging_info(struct vcpu *vcpu, struct emul_cnx *emul_cnx)
 {
 	uint32_t cpl, csar;
@@ -297,8 +280,8 @@ static void get_guest_paging_info(struct vcpu *vcpu, struct emul_cnx *emul_cnx)
 	emul_cnx->paging.cr3 =
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3;
 	emul_cnx->paging.cpl = cpl;
-	emul_cnx->paging.cpu_mode = get_vmx_cpu_mode();
-	emul_cnx->paging.paging_mode = PAGING_MODE_FLAT;/*maybe change later*/
+	emul_cnx->paging.cpu_mode = get_vcpu_mode(vcpu);
+	emul_cnx->paging.paging_mode = get_vcpu_paging_mode(vcpu);
 }
 
 static int mmio_read(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t *rval,
@@ -321,15 +304,15 @@ static int mmio_write(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t wval,
 	return 0;
 }
 
-void vm_gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa)
+int vm_gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
+	uint32_t *err_code)
 {
 
 	ASSERT(gpa != NULL, "Error in input arguments");
 	ASSERT(vcpu != NULL,
 		"Invalid vcpu id when gva2gpa");
 
-	*gpa = gva2gpa(vcpu->vm,
-		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3, gva);
+	return gva2gpa(vcpu, gva, gpa, err_code);
 }
 
 uint8_t decode_instruction(struct vcpu *vcpu)
@@ -340,13 +323,19 @@ uint8_t decode_instruction(struct vcpu *vcpu)
 	uint32_t csar;
 	int retval = 0;
 	enum vm_cpu_mode cpu_mode;
+	int error;
+	uint32_t err_code;
 
 	guest_rip_gva =
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip;
 
-	guest_rip_gpa = gva2gpa(vcpu->vm,
-		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3,
-		guest_rip_gva);
+	err_code = PAGE_FAULT_ID_FLAG;
+	error = gva2gpa(vcpu, guest_rip_gva, &guest_rip_gpa, &err_code);
+	if (error) {
+		pr_err("gva2gpa failed for guest_rip_gva  0x%016llx:",
+			guest_rip_gva);
+		return 0;
+	}
 
 	guest_rip_hva = GPA2HVA(vcpu->vm, guest_rip_gpa);
 	emul_cnx = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
@@ -358,7 +347,7 @@ uint8_t decode_instruction(struct vcpu *vcpu)
 
 	get_guest_paging_info(vcpu, emul_cnx);
 	csar = exec_vmread(VMX_GUEST_CS_ATTR);
-	cpu_mode = get_vmx_cpu_mode();
+	cpu_mode = get_vcpu_mode(vcpu);
 
 	retval = __decode_instruction(vcpu, guest_rip_gva,
 			cpu_mode, SEG_DESC_DEF32(csar), &emul_cnx->vie);

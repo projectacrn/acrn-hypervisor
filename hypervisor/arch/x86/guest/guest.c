@@ -15,6 +15,19 @@ uint32_t e820_entries;
 struct e820_entry e820[E820_MAX_ENTRIES];
 struct e820_mem_params e820_mem;
 
+struct page_walk_info {
+	uint64_t top_entry;	/* Top level paging structure entry */
+	int level;
+	int width;
+	bool is_user_mode;
+	bool is_write_access;
+	bool is_inst_fetch;
+	bool pse;		/* CR4.PSE for 32bit paing,
+				 * true for PAE/4-level paing */
+	bool wp;		/* CR0.WP */
+	bool nxe;		/* MSR_IA32_EFER_NXE_BIT */
+};
+
 inline bool
 is_vm0(struct vm *vm)
 {
@@ -153,33 +166,198 @@ int copy_to_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
 	return 0;
 }
 
-uint64_t gva2gpa(struct vm *vm, uint64_t cr3, uint64_t gva)
+enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 {
-	int level, index, shift;
-	uint64_t *base, addr, entry, page_size;
-	uint64_t gpa = 0;
+	struct run_context *cur_context =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+	enum vm_cpu_mode cpu_mode;
 
-	addr = cr3;
+	cpu_mode = get_vcpu_mode(vcpu);
 
-	for (level = 3; level >= 0; level--) {
+	if (cpu_mode == CPU_MODE_REAL)
+		return PAGING_MODE_0_LEVEL;
+	else if (cpu_mode == CPU_MODE_PROTECTED) {
+		if (cur_context->cr4 & CR4_PAE)
+			return PAGING_MODE_3_LEVEL;
+		else if (cur_context->cr0 & CR0_PG)
+			return PAGING_MODE_2_LEVEL;
+		return PAGING_MODE_0_LEVEL;
+	} else	/* compatibility or 64bit mode */
+		return PAGING_MODE_4_LEVEL;
+}
+
+/* TODO: Add code to check for Revserved bits, SMAP and PKE when do translation
+ * during page walk */
+static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
+	uint64_t gva, uint64_t *gpa, uint32_t *err_code)
+{
+	int i, index, shift;
+	uint8_t *base;
+	uint64_t entry;
+	uint64_t addr, page_size;
+	int ret = 0;
+	int fault = 0;
+
+	if (pw_info->level < 1)
+		return -EINVAL;
+
+	addr = pw_info->top_entry;
+	for (i = pw_info->level - 1; i >= 0; i--) {
 		addr = addr & IA32E_REF_MASK;
-		base = GPA2HVA(vm, addr);
-		ASSERT(base != NULL, "invalid ptp base.");
-		shift = level * 9 + 12;
-		index = (gva >> shift) & 0x1FF;
+		base = GPA2HVA(vcpu->vm, addr);
+		if (base == NULL) {
+			ret = -EFAULT;
+			goto out;
+		}
+
+		shift = i * pw_info->width + 12;
+		index = (gva >> shift) & ((1UL << pw_info->width) - 1);
 		page_size = 1UL << shift;
 
-		entry = base[index];
-		if (level > 0 && (entry & MMU_32BIT_PDE_PS) != 0)
+		if (pw_info->width == 10)
+			/* 32bit entry */
+			entry = *((uint32_t *)(base + 4 * index));
+		else
+			entry = *((uint64_t *)(base + 8 * index));
+
+		/* check if the entry present */
+		if (!(entry & MMU_32BIT_PDE_P)) {
+			ret = -EFAULT;
+			goto out;
+		}
+		/* check for R/W */
+		if (pw_info->is_write_access && !(entry & MMU_32BIT_PDE_RW)) {
+			/* Case1: Supermode and wp is 1
+			 * Case2: Usermode */
+			if (!(!pw_info->is_user_mode && !pw_info->wp))
+				fault = 1;
+		}
+		/* check for nx, since for 32-bit paing, the XD bit is
+		 * reserved(0), use the same logic as PAE/4-level paging */
+		if (pw_info->is_inst_fetch && pw_info->nxe &&
+		    (entry & MMU_MEM_ATTR_BIT_EXECUTE_DISABLE))
+			fault = 1;
+
+		/* check for U/S */
+		if (!(entry & MMU_32BIT_PDE_US) && pw_info->is_user_mode)
+			fault = 1;
+
+		if (pw_info->pse && (i > 0 && (entry & MMU_32BIT_PDE_PS)))
 			break;
 		addr = entry;
 	}
 
-	entry >>= shift; entry <<= (shift + 12); entry >>= 12;
-	gpa = entry | (gva & (page_size - 1));
+	entry >>= shift;
+	/* shift left 12bit more and back to clear XD/Prot Key/Ignored bits */
+	entry <<= (shift + 12);
+	entry >>= 12;
+	*gpa = entry | (gva & (page_size - 1));
+out:
 
-	return gpa;
+	if (fault) {
+		ret = -EFAULT;
+		*err_code |= PAGE_FAULT_P_FLAG;
+	}
+	return ret;
 }
+
+static int _gva2gpa_pae(struct vcpu *vcpu, struct page_walk_info *pw_info,
+	uint64_t gva, uint64_t *gpa, uint32_t *err_code)
+{
+	int index;
+	uint64_t *base;
+	uint64_t entry;
+	uint64_t addr;
+	int ret;
+
+	addr = pw_info->top_entry & 0xFFFFFFF0UL;
+	base = GPA2HVA(vcpu->vm, addr);
+	if (base == NULL) {
+		ret = -EFAULT;
+		goto out;
+	}
+
+	index = (gva >> 30) & 0x3;
+	entry = base[index];
+
+	if (!(entry & MMU_32BIT_PDE_P)) {
+		ret = -EFAULT;
+		goto out;
+	}
+
+	pw_info->level = 2;
+	pw_info->top_entry = entry;
+	ret = _gva2gpa_common(vcpu, pw_info, gva, gpa, err_code);
+
+out:
+	return ret;
+
+}
+
+/* Refer to SDM Vol.3A 6-39 section 6.15 for the format of paging fault error
+ * code.
+ *
+ * Caller should set the contect of err_code properly according to the address
+ * usage when calling this function:
+ * - If it is an address for write, set PAGE_FAULT_WR_FLAG in err_code.
+ * - If it is an address for instruction featch, set PAGE_FAULT_ID_FLAG in
+ *   err_code.
+ * Caller should check the return value to confirm if the function success or
+ * not.
+ * If a protection volation detected during page walk, this function still will
+ * give the gpa translated, it is up to caller to decide if it need to inject a
+ * #PF or not.
+ * - Return 0 for success.
+ * - Return -EINVAL for invalid parameter.
+ * - Return -EFAULT for paging fault, and refer to err_code for paging fault
+ *   error code.
+ */
+int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
+	uint32_t *err_code)
+{
+	struct run_context *cur_context =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+	enum vm_paging_mode pm = get_vcpu_paging_mode(vcpu);
+	struct page_walk_info pw_info;
+	int ret = 0;
+
+	if (!gpa || !err_code)
+		return -EINVAL;
+	*gpa = 0;
+
+	pw_info.top_entry = cur_context->cr3;
+	pw_info.level = pm;
+	pw_info.is_write_access = !!(*err_code & PAGE_FAULT_WR_FLAG);
+	pw_info.is_inst_fetch = !!(*err_code & PAGE_FAULT_ID_FLAG);
+	pw_info.is_user_mode = ((exec_vmread(VMX_GUEST_CS_SEL) & 0x3) == 3);
+	pw_info.pse = true;
+	pw_info.nxe = cur_context->ia32_efer & MSR_IA32_EFER_NXE_BIT;
+	pw_info.wp = !!(cur_context->cr0 & CR0_WP);
+
+	*err_code &=  ~PAGE_FAULT_P_FLAG;
+
+	if (pm == PAGING_MODE_4_LEVEL) {
+		pw_info.width = 9;
+		ret = _gva2gpa_common(vcpu, &pw_info, gva, gpa, err_code);
+	} else if(pm == PAGING_MODE_3_LEVEL) {
+		pw_info.width = 9;
+		ret = _gva2gpa_pae(vcpu, &pw_info, gva, gpa, err_code);
+	} else if (pm == PAGING_MODE_2_LEVEL) {
+		pw_info.width = 10;
+		pw_info.pse = !!(cur_context->cr4 & CR4_PSE);
+		pw_info.nxe = false;
+		ret = _gva2gpa_common(vcpu, &pw_info, gva, gpa, err_code);
+	} else
+		*gpa = gva;
+
+	if (ret == -EFAULT) {
+		if (pw_info.is_user_mode)
+			*err_code |= PAGE_FAULT_US_FLAG;
+	}
+
+	return ret;
+}
+
 
 void init_e820(void)
 {
@@ -374,6 +552,7 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 	return 0;
 }
 
+#ifdef CONFIG_START_VM0_BSP_64BIT
 /*******************************************************************
  *         GUEST initial page table
  *
@@ -502,3 +681,37 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 
 	return GUEST_INIT_PAGE_TABLE_START;
 }
+#endif
+
+/*******************************************************************
+ *         GUEST initial GDT table
+ *
+ * If guest starts with protected mode, HV needs to prepare Guest GDT.
+ ******************************************************************/
+
+#define GUEST_INIT_GDT_SKIP_SIZE	0x8000UL
+#define GUEST_INIT_GDT_START	(CONFIG_LOW_RAM_START +	\
+					GUEST_INIT_GDT_SKIP_SIZE)
+
+/* The GDT defined below compatible with linux kernel */
+#define GUEST_INIT_GDT_DESC_0	(0x0)
+#define GUEST_INIT_GDT_DESC_1	(0x0)
+#define GUEST_INIT_GDT_DESC_2	(0x00CF9B000000FFFFULL) /* Linear Code */
+#define GUEST_INIT_GDT_DESC_3	(0x00CF93000000FFFFULL) /* Linear Data */
+
+static const uint64_t guest_init_gdt[] = {
+	GUEST_INIT_GDT_DESC_0,
+	GUEST_INIT_GDT_DESC_1,
+	GUEST_INIT_GDT_DESC_2,
+	GUEST_INIT_GDT_DESC_3,
+};
+
+uint32_t create_guest_init_gdt(struct vm *vm, uint32_t *limit)
+{
+	void *gtd_addr = GPA2HVA(vm, GUEST_INIT_GDT_START);
+
+	*limit = sizeof(guest_init_gdt) - 1;
+	memcpy_s(gtd_addr, 64, guest_init_gdt, sizeof(guest_init_gdt));
+
+	return GUEST_INIT_GDT_START;
+};

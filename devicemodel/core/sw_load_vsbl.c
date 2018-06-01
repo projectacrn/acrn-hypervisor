@@ -63,14 +63,31 @@
  * +--------------------------------------------------+
  */
 
+/*                 vsbl binary layout:
+ *
+ * +--------------------------------------------------+ <--vSBL Top
+ * |             |offset: Top - 0x10 (reset vector)   |
+ * + STAGEINIT   |------------------------------------+
+ * | (0x10000)   |other                               |
+ * +--------------------------------------------------+
+ * |                                                  |
+ * + PAYLOAD                                          +
+ * |(0x100000)                                        |
+ * +--------------------------------------------------+
+ * |                                                  |
+ * + vFastboot                                        +
+ * |(0x200000)                                        |
+ * +--------------------------------------------------+
+ */
+
 /* Check default e820 table in sw_load_common.c for info about ctx->lowmem */
 #define	CONFIGPAGE_OFF(ctx)	((ctx)->lowmem - 4*KB)
 #define	VSBL_ENTRY_OFF(ctx)	((ctx)->lowmem - 6*KB)
 #define	BOOTARGS_OFF(ctx)	((ctx)->lowmem - 8*KB)
 #define	E820_TABLE_OFF(ctx)	((ctx)->lowmem - 12*KB)
 #define	GUEST_PART_INFO_OFF(ctx)	((ctx)->lowmem - 16*KB)
-/* vsbl real entry is saved in the first 4 bytes of vsbl image */
-#define	VSBL_OFF(ctx)		(16*MB)
+/* vsbl real entry is reset vector, which is (VSBL_TOP - 16) */
+#define	VSBL_TOP(ctx)		(64*MB)
 
 struct vsbl_para {
 	uint64_t		e820_table_address;
@@ -149,7 +166,7 @@ acrn_prepare_guest_part_info(struct vmctx *ctx)
 	guest_part_info_size = len;
 
 	fseek(fp, 0, SEEK_SET);
-	read = fread(ctx->baseaddr + GUEST_PART_INFO_OFF(ctx), 
+	read = fread(ctx->baseaddr + GUEST_PART_INFO_OFF(ctx),
 		sizeof(char), len, fp);
 	if (read < len) {
 		fprintf(stderr,
@@ -199,7 +216,7 @@ acrn_prepare_vsbl(struct vmctx *ctx)
 
 	fseek(fp, 0, SEEK_END);
 	len = ftell(fp);
-	if ((len + VSBL_OFF(ctx)) > GUEST_PART_INFO_OFF(ctx)) {
+	if (len > (8*MB)) {
 		fprintf(stderr,
 			"SW_LOAD ERR: too large vsbl file\n");
 		fclose(fp);
@@ -209,7 +226,7 @@ acrn_prepare_vsbl(struct vmctx *ctx)
 	vsbl_size = len;
 
 	fseek(fp, 0, SEEK_SET);
-	read = fread(ctx->baseaddr + VSBL_OFF(ctx),
+	read = fread(ctx->baseaddr + VSBL_TOP(ctx) - vsbl_size,
 		sizeof(char), len, fp);
 	if (read < len) {
 		fprintf(stderr,
@@ -219,7 +236,7 @@ acrn_prepare_vsbl(struct vmctx *ctx)
 	}
 	fclose(fp);
 	printf("SW_LOAD: partition blob %s size %d copy to guest 0x%lx\n",
-		vsbl_path, vsbl_size, VSBL_OFF(ctx));
+		vsbl_path, vsbl_size, VSBL_TOP(ctx) - vsbl_size);
 
 	return 0;
 }
@@ -230,8 +247,6 @@ acrn_sw_load_vsbl(struct vmctx *ctx)
 	int ret;
 	struct e820_entry *e820;
 	struct vsbl_para *vsbl_para;
-	uint64_t vsbl_start_addr =
-		(uint64_t)ctx->baseaddr + VSBL_OFF(ctx);
 	uint64_t *vsbl_entry =
 		(uint64_t *)(ctx->baseaddr + VSBL_ENTRY_OFF(ctx));
 	uint64_t *cfg_offset =
@@ -275,13 +290,15 @@ acrn_sw_load_vsbl(struct vmctx *ctx)
 	if (ret)
 		return ret;
 
-	vsbl_para->vsbl_address = VSBL_OFF(ctx);
+	vsbl_para->vsbl_address = VSBL_TOP(ctx) - vsbl_size;
 	vsbl_para->vsbl_size = vsbl_size;
 
 	vsbl_para->e820_entries = add_e820_entry(e820, vsbl_para->e820_entries,
 		vsbl_para->vsbl_address, vsbl_size, E820_TYPE_RESERVED);
 
-	*vsbl_entry = *((uint32_t *) vsbl_start_addr);
+
+	*vsbl_entry = VSBL_TOP(ctx) - 16;	/* reset vector */
+	printf("SW_LOAD: vsbl_entry 0x%lx\n", *vsbl_entry);
 
 	vsbl_para->boot_device_address = boot_blk_bdf;
 	vsbl_para->trusty_enabled = trusty_enabled;
