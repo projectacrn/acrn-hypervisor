@@ -1,8 +1,8 @@
 
 OUT_DIR ?= .
 
-$(OUT_DIR)/cbc_lifecycle: cbc_lifecycle.c ../../tools/acrn-manager/acrn_mngr.h
-	gcc -o $@ cbc_lifecycle.c -pthread -L$(OUT_DIR)/../../build/tools -lacrn-mngr
+$(OUT_DIR)/cbc_lifecycle: cbc_lifecycle.c $(TOOLS_OUT)/libacrn-mngr.a
+	gcc -o $@ cbc_lifecycle.c -pthread -L$(TOOLS_OUT) -lacrn-mngr
 
 clean:
 	rm $(OUT_DIR)/cbc_lifecycle
