@@ -1,10 +1,13 @@
 MAJOR_VERSION=1
 MINOR_VERSION=0
 
-all: include/version.h check_obj usercrash_s usercrash_c debugger
+VERSION_H = $(BUILDDIR)/include/usercrash/version.h
 
-CURRDIR := $(shell pwd)
-INCLUDE += -I $(CURRDIR)/include/
+.PHONY: all check_obj
+all: $(VERSION_H) check_obj usercrash_s usercrash_c debugger
+
+INCLUDE += -I $(CURDIR)/include/
+INCLUDE += -I $(BUILDDIR)/include/usercrash
 
 LIBS = -levent -lpthread $(EXTRA_LIBS)
 
@@ -33,18 +36,21 @@ debugger: $(BUILDDIR)/usercrash/obj/debugger.o \
 $(BUILDDIR)/usercrash/obj/%.o:%.c
 	$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<
 
-include/version.h:
-	touch include/version.h
+$(VERSION_H):
+	@if [ ! -d $(BUILDDIR)/include/usercrash ]; then \
+		mkdir -p $(BUILDDIR)/include/usercrash ; \
+	fi
+	touch $(VERSION_H)
 	@COMMIT=`git log -1 --pretty=format:%h . 2>/dev/null`;\
-	DIRTY=`git diff --name-only $(CURRDIR)`;\
+	DIRTY=`git diff --name-only $(CURDIR)`;\
 	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
 	TIME=`date "+%Y-%m-%d %H:%M:%S"`;\
-	cat $(CURRDIR)/../license_header > include/version.h;\
-	echo "#define UC_MAJOR_VERSION $(MAJOR_VERSION)" >> include/version.h;\
-	echo "#define UC_MINOR_VERSION $(MINOR_VERSION)" >> include/version.h;\
-	echo "#define UC_BUILD_VERSION "\""$$PATCH"\""" >> include/version.h;\
-	echo "#define UC_BUILD_TIME "\""$$TIME"\""" >> include/version.h;\
-	echo "#define UC_BUILD_USER "\""$(USER)"\""" >> include/version.h
+	cat $(CURDIR)/../license_header > $(VERSION_H);\
+	echo "#define UC_MAJOR_VERSION $(MAJOR_VERSION)" >> $(VERSION_H);\
+	echo "#define UC_MINOR_VERSION $(MINOR_VERSION)" >> $(VERSION_H);\
+	echo "#define UC_BUILD_VERSION "\""$$PATCH"\""" >> $(VERSION_H);\
+	echo "#define UC_BUILD_TIME "\""$$TIME"\""" >> $(VERSION_H);\
+	echo "#define UC_BUILD_USER "\""$(USER)"\""" >> $(VERSION_H)
 
 check_obj:
 	@if [ ! -d $(BUILDDIR)/usercrash/bin ]; then \
@@ -54,11 +60,11 @@ check_obj:
 		mkdir -p $(BUILDDIR)/usercrash/obj ; \
 	fi
 
-.PHONY:clean
+.PHONY: clean
 clean:
 	@echo "Clean objects and binaries"
-	@if [ -e include/version.h ]; then \
-		$(RM) -f include/version.h; \
+	@if [ -e $(VERSION_H) ]; then \
+		$(RM) -f $(VERSION_H); \
 	fi
 	@if [ -d $(BUILDDIR)/usercrash/obj ]; then \
 		find $(BUILDDIR)/usercrash/obj -name "*.o" -exec $(RM) {} \; 2>&1 || exit 0; \

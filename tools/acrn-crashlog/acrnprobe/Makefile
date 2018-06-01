@@ -1,10 +1,11 @@
 MAJOR_VERSION=1
 MINOR_VERSION=0
 
-BASEDIR 	:= $(shell pwd)
+VERSION_H	= $(BUILDDIR)/include/acrnprobe/version.h
 
 LIBS		= -lpthread -lxml2 -lcrypto -lrt $(EXTRA_LIBS)
-INCLUDE		+= -I $(BASEDIR)/include -I /usr/include/libxml2
+INCLUDE		+= -I $(CURDIR)/include -I /usr/include/libxml2
+INCLUDE		+= -I $(BUILDDIR)/include/acrnprobe
 CFLAGS 		+= $(INCLUDE)
 CFLAGS 		+= -g -O0 -std=gnu11
 CFLAGS 		+= -ffunction-sections -fdata-sections
@@ -13,7 +14,8 @@ LDFLAGS 	+= $(LIBS) -Wl,--gc-sections
 
 TARGET		= $(BUILDDIR)/acrnprobe/bin/acrnprobe
 
-all: include/version.h check_dirs $(TARGET)
+.PHONY: all check_dirs
+all: $(VERSION_H) check_dirs $(TARGET)
 
 $(BUILDDIR)/acrnprobe/obj/%.o:%.c
 	$(CC) -c $(CFLAGS) $< -o $@
@@ -36,10 +38,11 @@ $(BUILDDIR)/acrnprobe/bin/acrnprobe: $(BUILDDIR)/acrnprobe/obj/main.o \
 	$(BUILDDIR)/acrnprobe/obj/android_events.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
+.PHONY: clean
 clean:
 	@echo "Clean objects and binaries"
-	@if [ -e include/version.h ]; then \
-		$(RM) -f include/version.h; \
+	@if [ -e $(VERSION_H) ]; then \
+		$(RM) -f $(VERSION_H); \
 	fi
 	@if [ -d $(BUILDDIR)/acrnprobe/obj ]; then \
 	    find $(BUILDDIR)/acrnprobe/obj -name "*.o" -exec $(RM) {} \; 2>&1 || exit 0; \
@@ -51,18 +54,21 @@ clean:
 		$(RM) -r $(BUILDDIR)/acrnprobe/obj ; \
 	fi
 
-include/version.h:
-	touch include/version.h
+$(VERSION_H):
+	@if [ ! -d $(BUILDDIR)/include/acrnprobe ]; then \
+		mkdir -p $(BUILDDIR)/include/acrnprobe ; \
+	fi
+	touch $(VERSION_H)
 	@COMMIT=`git log -1 --pretty=format:%h . 2>/dev/null`;\
-	DIRTY=`git diff --name-only $(BASEDIR)`;\
+	DIRTY=`git diff --name-only $(CURDIR)`;\
 	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
 	TIME=`date "+%Y-%m-%d %H:%M:%S"`;\
-	cat $(BASEDIR)/../license_header > include/version.h;\
-	echo "#define AP_MAJOR_VERSION $(MAJOR_VERSION)" >> include/version.h;\
-	echo "#define AP_MINOR_VERSION $(MINOR_VERSION)" >> include/version.h;\
-	echo "#define AP_BUILD_VERSION "\""$$PATCH"\""" >> include/version.h;\
-	echo "#define AP_BUILD_TIME "\""$$TIME"\""" >> include/version.h;\
-	echo "#define AP_BUILD_USER "\""$(USER)"\""" >> include/version.h
+	cat $(CURDIR)/../license_header > $(VERSION_H);\
+	echo "#define AP_MAJOR_VERSION $(MAJOR_VERSION)" >> $(VERSION_H);\
+	echo "#define AP_MINOR_VERSION $(MINOR_VERSION)" >> $(VERSION_H);\
+	echo "#define AP_BUILD_VERSION "\""$$PATCH"\""" >> $(VERSION_H);\
+	echo "#define AP_BUILD_TIME "\""$$TIME"\""" >> $(VERSION_H);\
+	echo "#define AP_BUILD_USER "\""$(USER)"\""" >> $(VERSION_H)
 
 check_dirs:
 	@if [ ! -d $(BUILDDIR)/acrnprobe/bin ]; then \
