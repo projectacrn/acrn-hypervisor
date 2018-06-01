@@ -60,6 +60,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <types.h>
+#include <libgen.h>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -553,6 +554,33 @@ ioc_open_native_ch(const char *dev_name)
 }
 
 /*
+ * Check and create the directory.
+ * To avoid symlink failure if the directory does not exist.
+ */
+static int
+check_dir(const char *file)
+{
+	char *tmp, *dir;
+
+	tmp = strdup(file);
+	if (!tmp) {
+		DPRINTF("ioc falied to dup file, error:%s\r\n",
+				strerror(errno));
+		return -1;
+	}
+
+	dir = dirname(tmp);
+	if (access(dir, F_OK) && mkdir(dir, 0666)) {
+		DPRINTF("ioc falied to create dir:%s, erorr:%s\r\n", dir,
+				strerror(errno));
+		free(tmp);
+		return -1;
+	}
+	free(tmp);
+	return 0;
+}
+
+/*
  * Open PTY master device for IOC mediator and the PTY slave device for virtual
  * UART. The pair(master/slave) can work as a communication channel between
  * IOC mediator and virtual UART.
@@ -575,6 +603,12 @@ ioc_open_virtual_uart(const char *dev_name)
 	if (!slave_name)
 		goto pty_err;
 	if ((unlink(dev_name) < 0) && errno != ENOENT)
+		goto pty_err;
+	/*
+	 * The check_dir restriction is that only create one directory
+	 * not support multi-level directroy.
+	 */
+	if (check_dir(dev_name) < 0)
 		goto pty_err;
 	if (symlink(slave_name, dev_name) < 0)
 		goto pty_err;
