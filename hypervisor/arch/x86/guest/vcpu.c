@@ -14,6 +14,11 @@ extern struct efi_ctx* efi_ctx;
 
 vm_sw_loader_t vm_sw_loader;
 
+struct vcpu *get_ever_run_vcpu(int pcpu_id)
+{
+	return per_cpu(ever_run_vcpu, pcpu_id);
+}
+
 /***********************************************************************
  *  vcpu_id/pcpu_id mapping table:
  *
@@ -41,6 +46,7 @@ int create_vcpu(int cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 
 	/* Initialize the physical CPU ID for this VCPU */
 	vcpu->pcpu_id = cpu_id;
+	per_cpu(ever_run_vcpu, cpu_id) = vcpu;
 
 	/* Initialize the parent VM reference */
 	vcpu->vm = vm;
@@ -241,6 +247,7 @@ int destroy_vcpu(struct vcpu *vcpu)
 	vlapic_free(vcpu);
 	free(vcpu->arch_vcpu.vmcs);
 	free(vcpu->guest_msrs);
+	per_cpu(ever_run_vcpu, vcpu->pcpu_id) = NULL;
 	free_pcpu(vcpu->pcpu_id);
 	free(vcpu);
 

@@ -253,6 +253,7 @@ struct vcpu {
 #define VCPU_RETAIN_RIP(vcpu)               ((vcpu)->arch_vcpu.inst_len = 0)
 
 /* External Interfaces */
+struct vcpu* get_ever_run_vcpu(int pcpu_id);
 int create_vcpu(int cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle);
 int start_vcpu(struct vcpu *vcpu);
 int shutdown_vcpu(struct vcpu *vcpu);

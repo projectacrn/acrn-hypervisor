@@ -21,6 +21,7 @@ struct per_cpu_region {
 	struct dev_handler_node *timer_node;
 	struct shared_buf *earlylog_sbuf;
 	void *vcpu;
+	void *ever_run_vcpu;
 #ifdef STACK_PROTECTOR
 	struct stack_canary stack_canary;
 #endif
