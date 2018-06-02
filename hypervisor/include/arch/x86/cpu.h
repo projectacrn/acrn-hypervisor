@@ -246,6 +246,7 @@ bool is_vapic_intr_delivery_supported(void);
 bool is_vapic_virt_reg_supported(void);
 bool cpu_has_cap(uint32_t bit);
 void load_cpu_state_data(void);
+void start_cpus();
 
 /* Read control register */
 #define CPU_CR_READ(cr, result_ptr)                         \

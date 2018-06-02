@@ -21,7 +21,7 @@ spinlock_t up_count_spinlock = {
 struct per_cpu_region *per_cpu_data_base_ptr;
 int phy_cpu_num = 0;
 unsigned long pcpu_sync = 0;
-uint32_t up_count = 0;
+volatile uint32_t up_count = 0;
 
 /* physical cpu active bitmap, support up to 64 cpus */
 uint64_t pcpu_active_bitmap = 0;
@@ -47,7 +47,6 @@ static void cpu_xsave_init(void);
 static void cpu_set_logical_id(uint32_t logical_id);
 static void print_hv_banner(void);
 int cpu_find_logical_id(uint32_t lapic_id);
-static void start_cpus(void);
 static void pcpu_sync_sleep(unsigned long *sync, int mask_bit);
 int ibrs_type;
 
@@ -281,6 +280,10 @@ static void cpu_set_current_state(uint32_t logical_id, int state)
 		/* Save this CPU's logical ID to the TSC AUX MSR */
 		cpu_set_logical_id(logical_id);
 	}
+
+	/* If cpu is dead, decrement CPU up count */
+	if (state == CPU_STATE_DEAD)
+		up_count--;
 
 	/* Set state for the specified CPU */
 	per_cpu(state, logical_id) = state;
@@ -606,7 +609,7 @@ int cpu_find_logical_id(uint32_t lapic_id)
 /*
  * Start all secondary CPUs.
  */
-static void start_cpus()
+void start_cpus()
 {
 	uint32_t timeout;
 	uint32_t expected_up;
@@ -649,6 +652,47 @@ static void start_cpus()
 	}
 }
 
+void stop_cpus()
+{
+	int i;
+	uint32_t timeout, expected_up;
+
+	timeout = CPU_UP_TIMEOUT * 1000;
+	for (i = 0; i < phy_cpu_num; i++) {
+		if (get_cpu_id() == i)	/* avoid offline itself */
+			continue;
+
+		make_pcpu_offline(i);
+	}
+
+	expected_up = 1;
+	while ((up_count != expected_up) && (timeout !=0)) {
+		/* Delay 10us */
+		udelay(10);
+
+		/* Decrement timeout value */
+		timeout -= 10;
+	}
+
+	if (up_count != expected_up) {
+		pr_fatal("Can't make all APs offline");
+
+		/* if partial APs is down, it's not easy to recover
+		 * per our current implementation (need make up dead
+		 * APs one by one), just print error mesage and dead
+		 * loop here.
+		 *
+		 * FIXME:
+		 * We need to refine here to handle the AP offline
+		 * failure for release/debug version. Ideally, we should
+		 * define how to handle general unrecoverable error and
+		 * follow it here.
+		 */
+		do {
+		} while (1);
+	}
+}
+
 void cpu_dead(uint32_t logical_id)
 {
 	/* For debug purposes, using a stack variable in the while loop enables
@@ -656,10 +700,18 @@ void cpu_dead(uint32_t logical_id)
 	 */
 	int halt = 1;
 
-	/* Set state to show CPU is halted */
-	cpu_set_current_state(logical_id, CPU_STATE_HALTED);
+	if (bitmap_test_and_clear(logical_id, &pcpu_active_bitmap) == false) {
+		pr_err("pcpu%d already dead", logical_id);
+		return;
+	}
 
-	__bitmap_clear(get_cpu_id(), &pcpu_active_bitmap);
+	/* Set state to show CPU is dead */
+	cpu_set_current_state(logical_id, CPU_STATE_DEAD);
+
+	/* clean up native stuff */
+	timer_cleanup();
+	vmx_off(logical_id);
+	CACHE_FLUSH_INVALIDATE_ALL();
 
 	/* Halt the CPU */
 	do {
