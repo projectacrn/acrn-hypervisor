@@ -125,7 +125,7 @@ int hv_main(int cpu_id)
 	}
 
 	/* Enable virtualization extensions */
-	ret = exec_vmxon_instr();
+	ret = exec_vmxon_instr(cpu_id);
 	if (ret != 0)
 		return ret;
 
