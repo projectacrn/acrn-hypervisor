@@ -82,16 +82,23 @@ static inline int exec_vmxon(void *addr)
 	return status;
 }
 
-int exec_vmxon_instr(void)
+/* Per cpu data to hold the vmxon_region_pa for each pcpu.
+ * It will be used again when we start a pcpu after the pcpu was down.
+ * S3 enter/exit will use it.
+ */
+int exec_vmxon_instr(uint32_t pcpu_id)
 {
-	uint64_t tmp64;
+	uint64_t tmp64, vmcs_pa;
 	uint32_t tmp32;
 	int ret = -ENOMEM;
 	void *vmxon_region_va;
-	uint64_t vmxon_region_pa;
+	struct vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
 
 	/* Allocate page aligned memory for VMXON region */
-	vmxon_region_va = alloc_page();
+	if (per_cpu(vmxon_region_pa, pcpu_id) == 0)
+		vmxon_region_va = alloc_page();
+	else
+		vmxon_region_va = HPA2HVA(per_cpu(vmxon_region_pa, pcpu_id));
 
 	if (vmxon_region_va != 0) {
 		/* Initialize vmxon page with revision id from IA32 VMX BASIC
@@ -107,13 +114,37 @@ int exec_vmxon_instr(void)
 		CPU_CR_WRITE(cr4, tmp64 | CR4_VMXE);
 
 		/* Turn ON VMX */
-		vmxon_region_pa = HVA2HPA(vmxon_region_va);
-		ret = exec_vmxon(&vmxon_region_pa);
+		per_cpu(vmxon_region_pa, pcpu_id) = HVA2HPA(vmxon_region_va);
+		ret = exec_vmxon(&per_cpu(vmxon_region_pa, pcpu_id));
+
+		if (vcpu) {
+			vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
+			ret = exec_vmptrld(&vmcs_pa);
+		}
 	} else
 		pr_err("%s, alloc memory for VMXON region failed\n",
 				__func__);
 
 	return ret;
+}
+
+int vmx_off(int pcpu_id)
+{
+	int ret = 0;
+
+	struct vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
+	uint64_t vmcs_pa;
+
+	if (vcpu) {
+		vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
+		ret = exec_vmclear((void *)&vmcs_pa);
+		if (ret)
+			return ret;
+	}
+
+	asm volatile ("vmxoff" : : : "memory");
+
+	return 0;
 }
 
 int exec_vmclear(void *addr)

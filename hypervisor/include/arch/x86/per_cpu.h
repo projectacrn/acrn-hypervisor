@@ -18,6 +18,7 @@ struct per_cpu_region {
 	uint64_t vmexit_time[64];
 	uint64_t softirq_pending;
 	uint64_t spurious;
+	uint64_t vmxon_region_pa;
 	struct dev_handler_node *timer_node;
 	struct shared_buf *earlylog_sbuf;
 	void *vcpu;
