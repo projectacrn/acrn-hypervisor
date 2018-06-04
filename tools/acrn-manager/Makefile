@@ -17,6 +17,7 @@ clean:
 	rm -f $(OUT_DIR)/acrnctl
 	rm -f $(OUT_DIR)/acrn_mngr.o
 	rm -f $(OUT_DIR)/libacrn-mngr.a
+	rm -f $(OUT_DIR)/acrn_mngr.h
 
 .PHONY: install
 install: $(OUT_DIR)/acrnctl
