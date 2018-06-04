@@ -149,7 +149,7 @@ usb_dev_prepare_xfer(struct usb_data_xfer *xfer, int *count, int *size)
 	found = 0;
 	first = -1;
 	c = s = 0;
-	if (!count || !size)
+	if (!count || !size || idx < 0 || idx >= USB_MAX_XFER_BLOCKS)
 		return -1;
 
 	for (i = 0; i < xfer->ndata; i++) {
@@ -452,6 +452,10 @@ usb_dev_prepare_ctrl_xfer(struct usb_data_xfer *xfer)
 	struct usb_data_xfer_block *blk = NULL;
 
 	idx = xfer->head;
+
+	if (idx < 0 || idx >= USB_MAX_XFER_BLOCKS)
+		return NULL;
+
 	for (i = 0; i < xfer->ndata; i++) {
 		/*
 		 * find out the data block and set every

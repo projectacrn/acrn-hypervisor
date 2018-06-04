@@ -748,7 +748,8 @@ pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de)
 				if (ue->ue_deinit)
 					ue->ue_deinit(ud);
 			}
-		}
+		} else
+			return;
 
 		if (ue->ue_devtype == USB_DEV_PORT_MAPPER)
 			free(ue);
@@ -3314,7 +3315,8 @@ pci_xhci_parse_bus_port(struct pci_xhci_vdev *xdev, char *opts)
 
 	/* 'bus-port' format */
 	cnt = sscanf(opts, "%u-%u", &bus, &port);
-	if (cnt == EOF || cnt < 2) {
+	if (cnt == EOF || cnt < 2 || bus >= USB_NATIVE_NUM_BUS ||
+			port >= USB_NATIVE_NUM_PORT) {
 		rc = -1;
 		goto errout;
 	}
@@ -3534,7 +3536,10 @@ errout:
 			xdev->portregs = NULL;
 		}
 		UPRINTF(LFTL, "fail to parse xHCI options, rc=%d\r\n", rc);
-		pci_xhci_device_usage(opts);
+
+		if (opts)
+			pci_xhci_device_usage(opts);
+
 		return rc;
 	}
 
