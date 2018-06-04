@@ -229,6 +229,12 @@ void enable_iommu(void);
 /* Disable translation of iommu*/
 void disable_iommu(void);
 
+/* suspend iomu */
+void suspend_iommu(void);
+
+/* resume iomu */
+void resume_iommu(void);
+
 /* iommu initialization */
 int init_iommu(void);
 #endif
