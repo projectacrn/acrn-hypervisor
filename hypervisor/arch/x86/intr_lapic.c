@@ -135,6 +135,8 @@ struct lapic_info {
 };
 
 static struct lapic_info lapic_info;
+static struct lapic_regs saved_lapic_regs;
+static union lapic_base_msr lapic_base_msr;
 
 static inline uint32_t read_lapic_reg32(uint32_t offset)
 {
@@ -180,8 +182,6 @@ static void map_lapic(void)
 
 int early_init_lapic(void)
 {
-	union lapic_base_msr lapic_base_msr;
-
 	/* Get local APIC base address */
 	lapic_base_msr.value = msr_read(MSR_IA32_APIC_BASE);
 
@@ -264,6 +264,56 @@ void save_lapic(struct lapic_regs *regs)
 	regs->ticr = read_lapic_reg32(LAPIC_INITIAL_COUNT_REGISTER);
 	regs->tccr = read_lapic_reg32(LAPIC_CURRENT_COUNT_REGISTER);
 	regs->tdcr = read_lapic_reg32(LAPIC_DIVIDE_CONFIGURATION_REGISTER);
+}
+
+static void restore_lapic(struct lapic_regs *regs)
+{
+	write_lapic_reg32(LAPIC_ID_REGISTER, regs->id);
+	write_lapic_reg32(LAPIC_TASK_PRIORITY_REGISTER, regs->tpr);
+	write_lapic_reg32(LAPIC_LOGICAL_DESTINATION_REGISTER, regs->ldr );
+	write_lapic_reg32(LAPIC_DESTINATION_FORMAT_REGISTER, regs->dfr );
+	write_lapic_reg32(LAPIC_SPURIOUS_VECTOR_REGISTER, regs->svr );
+	write_lapic_reg32(LAPIC_LVT_TIMER_REGISTER, regs->lvtt );
+
+	write_lapic_reg32(LAPIC_LVT_LINT0_REGISTER, regs->lvt0 );
+	write_lapic_reg32(LAPIC_LVT_LINT1_REGISTER, regs->lvt1 );
+
+	write_lapic_reg32(LAPIC_LVT_ERROR_REGISTER, regs->lvterr );
+	write_lapic_reg32(LAPIC_INITIAL_COUNT_REGISTER, regs->ticr );
+	write_lapic_reg32(LAPIC_DIVIDE_CONFIGURATION_REGISTER, regs->tdcr );
+
+
+	write_lapic_reg32(LAPIC_ARBITRATION_PRIORITY_REGISTER, regs->apr );
+	write_lapic_reg32(LAPIC_PROCESSOR_PRIORITY_REGISTER, regs->ppr );
+	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_0, regs->tmr[0] );
+	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_1, regs->tmr[1] );
+	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_2, regs->tmr[2] );
+	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_3, regs->tmr[3] );
+	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_4, regs->tmr[4] );
+	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_5, regs->tmr[5] );
+	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_6, regs->tmr[6] );
+	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_7, regs->tmr[7] );
+	write_lapic_reg32(LAPIC_CURRENT_COUNT_REGISTER, regs->tccr );
+}
+
+void suspend_lapic(void)
+{
+	uint32_t val = 0;
+
+	save_lapic(&saved_lapic_regs);
+
+	/* disable APIC with software flag */
+	val = read_lapic_reg32(LAPIC_SPURIOUS_VECTOR_REGISTER);
+	write_lapic_reg32(LAPIC_SPURIOUS_VECTOR_REGISTER,
+		(~LAPIC_SVR_APIC_ENABLE_MASK) & val);
+}
+
+void resume_lapic(void)
+{
+	msr_write(MSR_IA32_APIC_BASE, lapic_base_msr.value);
+
+	/* ACPI software flag will be restored also */
+	restore_lapic(&saved_lapic_regs);
 }
 
 int send_lapic_eoi(void)

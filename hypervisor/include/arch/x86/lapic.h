@@ -167,4 +167,7 @@ int send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 /* API to send an IPI to a single guest */
 void send_single_ipi(uint32_t pcpu_id, uint32_t vector);
 
+void suspend_lapic(void);
+void resume_lapic(void);
+
 #endif /* INTR_LAPIC_H */
