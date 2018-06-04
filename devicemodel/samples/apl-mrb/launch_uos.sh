@@ -38,15 +38,6 @@ if [[ "$result" != "" ]]; then
   exit
 fi
 
-# extract clearlinux bzImage from clearlinux virtual disk
-if [ $6 == 0 ];then
-mkdir -p /home/root/$5
-mkdir -p /mnt/loop
-mount -o loop,offset=1048576 /data/$5/$5.img /mnt/loop
-cp /mnt/loop/bzImage /home/root/$5/bzImage
-umount /mnt/loop
-fi
-
 #for VT-d device setting
 modprobe pci_stub
 echo "8086 5aa8" > /sys/bus/pci/drivers/pci-stub/new_id
@@ -98,16 +89,11 @@ if [ "$setup_mem" != "" ];then
     mem_size=$setup_mem
 fi
 
-boot_image_option="-k /home/root/$5/bzImage"
-boot_dev_flag=""
-
+boot_dev_flag=",b"
 if [ $6 == 1 ];then
-  boot_dev_flag=",b"
-  if [ $7 == 1 ];then
-    boot_image_option="--vsbl /usr/share/acrn/bios/VSBL_debug.bin"
-  else
-    boot_image_option="--vsbl /usr/share/acrn/bios/VSBL.bin"
-  fi
+  boot_image_option="--vsbl /usr/share/acrn/bios/VSBL_debug.bin"
+else
+  boot_image_option="--vsbl /usr/share/acrn/bios/VSBL.bin"
 fi
 
 
@@ -182,13 +168,6 @@ if [[ "$result" != "" ]]; then
   exit
 fi
 
-# extract kernel and ramdisk from android disk image
-if [ $6 == 0 ];then
-  mkdir -p /home/root/$5
-  dd if=/data/$5/$5.img of=/home/root/$5/boot.img skip=63488 bs=512 count=81920
-  split_bootimg.pl /home/root/$5/boot.img
-fi
-
 #for VT-d device setting
 modprobe pci_stub
 echo "8086 5aa8" > /sys/bus/pci/drivers/pci-stub/new_id
@@ -260,30 +239,18 @@ if [ "$setup_mem" != "" ];then
     mem_size=$setup_mem
 fi
 
-boot_image_option="-k /home/root/$5/boot.img-kernel -r /home/root/$5/boot.img-ramdisk.gz "
-boot_dev_flag=""
 kernel_cmdline_generic="maxcpus=$2 nohpet tsc=reliable intel_iommu=off \
    androidboot.serialno=$ser \
    i915.enable_rc6=1 i915.enable_fbc=1 i915.enable_guc_loading=0 i915.avail_planes_per_pipe=$4 \
    i915.enable_hangcheck=0 use_nuclear_flip=1 i915.enable_initial_modeset=1 "
 
+boot_dev_flag=",b"
 if [ $6 == 1 ];then
-  boot_dev_flag=",b"
-  if [ $7 == 1 ];then
-    boot_image_option="--vsbl /usr/share/acrn/bios/VSBL_debug.bin"
-  else
-    boot_image_option="--vsbl /usr/share/acrn/bios/VSBL.bin"
-  fi
-  kernel_cmdline="$kernel_cmdline_generic"
+  boot_image_option="--vsbl /usr/share/acrn/bios/VSBL_debug.bin"
 else
-  kernel_cmdline="$kernel_cmdline_generic"" initrd=0x48800000 root=/dev/ram0 rw rootwait \
-   console=ttyS0 no_timer_check log_buf_len=16M consoleblank=0 reboot_panic=p,w \
-   relative_sleep_states=1 vga=current \
-   androidboot.hardware=gordon_peak_acrn firmware_class.path=/vendor/firmware \
-   sys.init_log_level=7  drm.atomic=1 i915.nuclear_pageflip=1 \
-   i915.modeset=1 drm.vblankoffdelay=1 i915.fastboot=1 \
-   i915.hpd_sense_invert=0x7"
+  boot_image_option="--vsbl /usr/share/acrn/bios/VSBL.bin"
 fi
+kernel_cmdline="$kernel_cmdline_generic"
 
 : '
 select right virtual slots for acrn_dm:
@@ -333,12 +300,7 @@ fi
 
 function help()
 {
-echo "Use luanch_UOS.sh like that ./launch_UOS.sh -U/-V <#>"
-echo "The option -U means the UOSs group to be launched as below"
-echo "-U 1 means just launching 1 clearlinux UOS"
-echo "-U 2 means just launching 1 android UOS"
-echo "-U 3 means launching 1 clearlinux UOS + 1 android UOS"
-echo "-U 4 means launching 2 clearlinux UOSs"
+echo "Use luanch_uos.sh like that ./launch_uos.sh -V <#>"
 echo "The option -V means the UOSs group to be launched by vsbl as below"
 echo "-V 1 means just launching 1 clearlinux UOS"
 echo "-V 2 means just launching 1 android UOS"
@@ -349,12 +311,10 @@ echo "-V 4 means launching 2 clearlinux UOSs"
 launch_type=1
 debug=0
 
-while getopts "U:V:M:hd" opt
+while getopts "V:M:hd" opt
 do
 	case $opt in
-		U) launch_type=$OPTARG
-			;;
-		V) launch_type=$[$OPTARG+4]
+		V) launch_type=$[$OPTARG]
 			;;
 		M) setup_mem=$OPTARG
 			;;
@@ -377,36 +337,20 @@ echo 1024 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
 
 case $launch_type in
 	1) echo "Launch clearlinux UOS"
-		launch_clearlinux 1 3 "64 448 8" 0x070F00 clearlinux 0
+		launch_clearlinux 1 3 "64 448 8" 0x070F00 clearlinux $debug
 		;;
 	2) echo "Launch android UOS"
-		launch_android 1 3 "64 448 8" 0x070F00 android 0
+		launch_android 1 3 "64 448 8" 0x070F00 android $debug
 		;;
 	3) echo "Launch clearlinux UOS + android UOS"
-		launch_android 1 2 "64 448 4" 0x00000C android 0 &
+		launch_android 1 2 "64 448 4" 0x00000C android $debug &
 		sleep 5
-		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux 0
+		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux $debug
 		;;
 	4) echo "Launch two clearlinux UOSs"
-		launch_clearlinux 1 1 "64 448 4" 0x00000C clearlinux 0 &
+		launch_clearlinux 1 1 "64 448 4" 0x00000C clearlinux $debug &
 		sleep 5
-		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux_dup 0
-		;;
-	5) echo "Launch clearlinux UOS"
-		launch_clearlinux 1 3 "64 448 8" 0x070F00 clearlinux 1 $debug
-		;;
-	6) echo "Launch android UOS"
-		launch_android 1 3 "64 448 8" 0x070F00 android 1 $debug
-		;;
-	7) echo "Launch clearlinux UOS + android UOS"
-		launch_android 1 2 "64 448 4" 0x00000C android 1 $debug &
-		sleep 5
-		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux 1 $debug
-		;;
-	8) echo "Launch two clearlinux UOSs"
-		launch_clearlinux 1 1 "64 448 4" 0x00000C clearlinux 1 $debug &
-		sleep 5
-		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux_dup 1 $debug
+		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux_dup $debug
 		;;
 esac
 
