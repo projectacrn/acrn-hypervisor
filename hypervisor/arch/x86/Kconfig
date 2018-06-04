@@ -15,6 +15,10 @@ config NR_IOAPICS
 	int "Maximum number of IOAPICs supported"
 	default 1
 
+config MAX_IOMMU_NUM
+	int "Maximum number of iommu dev"
+	default 2
+
 config STACK_SIZE
 	hex "Capacity of each stack used in the hypervisor"
 	default 0x2000

@@ -1135,6 +1135,85 @@ void disable_iommu(void)
 	}
 }
 
+/* 4 iommu fault register state */
+#define	IOMMU_FAULT_REGISTER_STATE_NUM	4
+static uint32_t
+iommu_fault_state[CONFIG_MAX_IOMMU_NUM][IOMMU_FAULT_REGISTER_STATE_NUM];
+
+void suspend_iommu(void)
+{
+	struct dmar_drhd_rt *dmar_unit;
+	struct list_head *pos;
+	uint32_t i, iommu_idx = 0;
+
+	list_for_each(pos, &dmar_drhd_units) {
+		dmar_unit = list_entry(pos, struct dmar_drhd_rt, list);
+
+		if (dmar_unit->drhd->ignore)
+			continue;
+
+		/* flush */
+		dmar_write_buffer_flush(dmar_unit);
+		dmar_invalid_context_cache_global(dmar_unit);
+		dmar_invalid_iotlb_global(dmar_unit);
+
+		/* save IOMMU fault register state */
+		for (i = 0; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++)
+			iommu_fault_state[iommu_idx][i] =
+				iommu_read32(dmar_unit, DMAR_FECTL_REG +
+					i * IOMMU_FAULT_REGISTER_STATE_NUM);
+		/* disable translation */
+		dmar_disable_translation(dmar_unit);
+
+		/* If the number of real iommu devices is larger than we
+		 * defined in kconfig.
+		 */
+		if (iommu_idx++ > CONFIG_MAX_IOMMU_NUM) {
+			pr_err("iommu dev number is larger than pre-defined");
+			break;
+		}
+	}
+}
+
+void resume_iommu(void)
+{
+	struct dmar_drhd_rt *dmar_unit;
+	struct list_head *pos;
+	uint32_t i, iommu_idx = 0;
+
+	/* restore IOMMU fault register state */
+	list_for_each(pos, &dmar_drhd_units) {
+		dmar_unit = list_entry(pos, struct dmar_drhd_rt, list);
+
+		if (dmar_unit->drhd->ignore)
+			continue;
+
+		/* set root table */
+		dmar_set_root_table(dmar_unit);
+
+		/* flush */
+		dmar_write_buffer_flush(dmar_unit);
+		dmar_invalid_context_cache_global(dmar_unit);
+		dmar_invalid_iotlb_global(dmar_unit);
+
+		/* restore IOMMU fault register state */
+		for (i = 0; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++)
+			iommu_write32(dmar_unit, DMAR_FECTL_REG +
+				i * IOMMU_FAULT_REGISTER_STATE_NUM,
+				iommu_fault_state[iommu_idx][i]);
+		/* enable translation */
+		dmar_enable_translation(dmar_unit);
+
+		/* If the number of real iommu devices is larger than we
+		 * defined in kconfig.
+		 */
+		if (iommu_idx++ > CONFIG_MAX_IOMMU_NUM) {
+			pr_err("iommu dev number is larger than pre-defined");
+			break;
+		}
+	}
+}
+
 int init_iommu(void)
 {
 	uint16_t bus;
