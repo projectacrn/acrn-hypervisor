@@ -5,7 +5,7 @@ all:
 	$(CC) -o $(OUT_DIR)/acrntrace acrntrace.c sbuf.c -I. -lpthread
 
 clean:
-	rm $(OUT_DIR)/acrntrace
+	rm -f $(OUT_DIR)/acrntrace
 
 install: $(OUT_DIR)/acrntrace
 	install -d $(DESTDIR)/usr/bin

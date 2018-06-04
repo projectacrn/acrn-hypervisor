@@ -6,7 +6,8 @@ all:
 	cp acrnlog.service $(OUT_DIR)/acrnlog.service
 
 clean:
-	rm $(OUT_DIR)/acrnlog
+	rm -f $(OUT_DIR)/acrnlog
+	rm -f $(OUT_DIR)/acrnlog.service
 
 install: $(OUT_DIR)/acrnlog
 	install -d $(DESTDIR)/usr/bin

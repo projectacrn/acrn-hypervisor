@@ -30,10 +30,7 @@ devicemodel: tools
 
 tools:
 	mkdir -p $(TOOLS_OUT)
-	make -C $(T)/tools/acrnlog OUT_DIR=$(TOOLS_OUT)
-	make -C $(T)/tools/acrn-manager OUT_DIR=$(TOOLS_OUT)
-	make -C $(T)/tools/acrntrace OUT_DIR=$(TOOLS_OUT)
-	make -C $(T)/tools/acrn-crashlog OUT_DIR=$(TOOLS_OUT) RELEASE=$(RELEASE)
+	make -C $(T)/tools OUT_DIR=$(TOOLS_OUT) RELEASE=$(RELEASE)
 
 misc: tools
 	mkdir -p $(MISC_OUT)
@@ -41,6 +38,7 @@ misc: tools
 
 .PHONY: clean
 clean:
+	make -C $(T)/tools OUT_DIR=$(TOOLS_OUT) clean
 	rm -rf $(ROOT_OUT)
 
 .PHONY: install
@@ -56,10 +54,7 @@ devicemodel-install:
 	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) install
 
 tools-install:
-	make -C $(T)/tools/acrnlog OUT_DIR=$(TOOLS_OUT) install
-	make -C $(T)/tools/acrn-manager OUT_DIR=$(TOOLS_OUT) install
-	make -C $(T)/tools/acrntrace OUT_DIR=$(TOOLS_OUT) install
-	make -C $(T)/tools/acrn-crashlog OUT_DIR=$(TOOLS_OUT) install
+	make -C $(T)/tools OUT_DIR=$(TOOLS_OUT) install
 
 misc-install:
 	make -C $(T)/misc OUT_DIR=$(MISC_OUT) install
