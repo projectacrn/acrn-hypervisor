@@ -44,6 +44,9 @@ static const char *const excp_names[] = {
 	[31] = "Intel Reserved"
 };
 
+/* Global variable for save registers on exception */
+struct intr_excp_ctx crash_ctx;
+
 static void dump_guest_reg(struct vcpu *vcpu)
 {
 	struct run_context *cur_context =
@@ -319,6 +322,12 @@ void dump_intr_excp_frame(struct intr_excp_ctx *ctx)
 
 	printf("=====================================================");
 	printf("===========================\n");
+
+	crash_ctx = *ctx;
+	CACHE_FLUSH_INVALIDATE_ALL();
+	printf("=== warm reboot .... ====\n");
+	io_write_byte(0x00, 0xCF9);
+	io_write_byte(0x06, 0xCF9);
 }
 
 void dump_exception(struct intr_excp_ctx *ctx, uint32_t cpu_id)
