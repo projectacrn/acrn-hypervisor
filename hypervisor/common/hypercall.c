@@ -218,6 +218,12 @@ int64_t hcall_create_vcpu(struct vm *vm, uint64_t vmid, uint64_t param)
 		return -1;
 	}
 
+	if ((uint32_t)vm->hw.created_vcpus != cv.vcpu_id) {
+		pr_err("vcpu %d:%d is invalid(already assigned ?)\n",
+		        vm->hw.created_vcpus, cv.vcpu_id);
+		return -EINVAL;
+	}
+
 	pcpu_id = allocate_pcpu();
 	if (-1 == pcpu_id) {
 		pr_err("%s: No physical available\n", __func__);
