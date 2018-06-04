@@ -10,6 +10,7 @@
 static spinlock_t lock;
 
 static uint32_t serial_handle = SERIAL_INVALID_HANDLE;
+struct timer console_timer;
 
 #define CONSOLE_KICK_TIMER_TIMEOUT  40 /* timeout is 40ms*/
 
@@ -198,7 +199,6 @@ static int console_timer_callback(__unused void *data)
 
 void console_setup_timer(void)
 {
-	static struct timer console_timer;
 	uint64_t period_in_cycle, fire_tsc;
 
 	if (serial_handle == SERIAL_INVALID_HANDLE) {

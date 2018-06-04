@@ -8,6 +8,8 @@
 #define CONSOLE_H
 
 #ifdef HV_DEBUG
+extern struct timer console_timer;
+
 /** Initializes the console module.
  *
  *  @param cdev A pointer to the character device to use for the console.
@@ -62,6 +64,17 @@ void console_dump_bytes(const void *p, unsigned int len);
 void console_setup_timer(void);
 
 uint32_t get_serial_handle(void);
+
+static inline void suspend_console(void)
+{
+	del_timer(&console_timer);
+}
+
+static inline void resume_console_enable(void)
+{
+	console_setup_timer();
+}
+
 #else
 static inline int console_init(void)
 {
@@ -86,6 +99,9 @@ static inline void console_dump_bytes(__unused const void *p,
 }
 static inline void console_setup_timer(void) {}
 static inline uint32_t get_serial_handle(void) { return 0; }
+
+void suspend_console(void) {}
+void resume_console_enable(void) {}
 #endif
 
 #endif /* CONSOLE_H */
