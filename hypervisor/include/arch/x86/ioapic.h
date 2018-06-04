@@ -30,6 +30,10 @@ void irq_gsi_mask_unmask(uint32_t irq, bool mask);
 void ioapic_set_rte(uint32_t irq, uint64_t rte);
 void ioapic_get_rte(uint32_t irq, uint64_t *rte);
 
+
+void suspend_ioapic(void);
+void resume_ioapic(void);
+
 extern uint16_t legacy_irq_to_pin[];
 extern uint16_t pic_ioapic_pin_map[];
 #endif /* IOAPIC_H */

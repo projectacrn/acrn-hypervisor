@@ -10,6 +10,8 @@
 #define IOAPIC_REGSEL_OFFSET   0
 #define IOAPIC_WINSWL_OFFSET   0x10
 
+#define	IOAPIC_MAX_PIN		256
+
 /* IOAPIC Redirection Table (RTE) Entry structure */
 struct ioapic_rte {
 	uint32_t lo_32;
@@ -24,6 +26,8 @@ struct gsi_table {
 static struct gsi_table gsi_table[NR_MAX_GSI];
 static uint32_t nr_gsi;
 static spinlock_t ioapic_lock;
+
+static struct ioapic_rte saved_rte[CONFIG_NR_IOAPICS][IOAPIC_MAX_PIN];
 
 /*
  * the irq to ioapic pin mapping should extract from ACPI MADT table
@@ -369,6 +373,44 @@ void dump_ioapic(void)
 		ioapic_get_rte_entry(addr, pin, &rte);
 		dev_dbg(ACRN_DBG_IRQ, "DUMP: irq:%d pin:%d rte:%x",
 			irq, pin, rte.lo_32);
+	}
+}
+
+void suspend_ioapic(void)
+{
+	int ioapic_id, ioapic_pin;
+
+	for (ioapic_id = 0; ioapic_id < CONFIG_NR_IOAPICS; ioapic_id++) {
+		int max_pins;
+		int version;
+		void *addr;
+
+		addr = map_ioapic(get_ioapic_base(ioapic_id));
+		version = ioapic_read_reg32(addr, IOAPIC_VER);
+		max_pins = (version & IOAPIC_MAX_RTE_MASK) >> MAX_RTE_SHIFT;
+
+		for (ioapic_pin = 0; ioapic_pin < max_pins; ioapic_pin++)
+			ioapic_get_rte_entry(addr, ioapic_pin,
+				&saved_rte[ioapic_id][ioapic_pin]);
+	}
+}
+
+void resume_ioapic(void)
+{
+	int ioapic_id, ioapic_pin;
+
+	for (ioapic_id = 0; ioapic_id < CONFIG_NR_IOAPICS; ioapic_id++) {
+		int max_pins;
+		int version;
+		void *addr;
+
+		addr = map_ioapic(get_ioapic_base(ioapic_id));
+		version = ioapic_read_reg32(addr, IOAPIC_VER);
+		max_pins = (version & IOAPIC_MAX_RTE_MASK) >> MAX_RTE_SHIFT;
+
+		for (ioapic_pin = 0; ioapic_pin < max_pins; ioapic_pin++)
+			ioapic_set_rte_entry(addr, ioapic_pin,
+				&saved_rte[ioapic_id][ioapic_pin]);
 	}
 }
 
