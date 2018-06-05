@@ -126,6 +126,8 @@ PROGRAM := acrn-dm
 SAMPLES_NUC := $(wildcard samples/nuc/*)
 SAMPLES_MRB := $(wildcard samples/apl-mrb/*)
 
+BIOS_BIN := $(wildcard bios/*)
+
 all: include/version.h $(PROGRAM)
 	@echo -n ""
 
@@ -167,7 +169,7 @@ $(DM_OBJDIR)/%.o: %.c $(HEADERS)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(CFLAGS) -c $< -o $@
 
-install: $(DM_OBJDIR)/$(PROGRAM) install-samples-nuc install-samples-mrb
+install: $(DM_OBJDIR)/$(PROGRAM) install-samples-nuc install-samples-mrb install-bios
 	install -D --mode=0755 $(DM_OBJDIR)/$(PROGRAM) $(DESTDIR)/usr/bin/$(PROGRAM)
 
 install-samples-nuc: $(SAMPLES_NUC)
@@ -175,3 +177,7 @@ install-samples-nuc: $(SAMPLES_NUC)
 
 install-samples-mrb: $(SAMPLES_MRB)
 	install -D -t $(DESTDIR)/usr/share/acrn/samples/apl-mrb $^
+
+install-bios: $(BIOS_BIN)
+	install -d $(DESTDIR)/usr/share/acrn/bios
+	install -D --mode=0664 -t $(DESTDIR)/usr/share/acrn/bios $^
