@@ -57,8 +57,6 @@ struct shared_buf {
 
 #ifdef HV_DEBUG
 
-EXTERN_CPU_DATA(uint64_t * [ACRN_SBUF_ID_MAX], sbuf);
-
 static inline void sbuf_clear_flags(struct shared_buf *sbuf, uint64_t flags)
 {
 	sbuf->flags &= ~flags;

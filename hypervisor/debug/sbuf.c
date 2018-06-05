@@ -11,8 +11,6 @@
 
 #include <hypervisor.h>
 
-DEFINE_CPU_DATA(uint64_t * [ACRN_SBUF_ID_MAX], sbuf);
-
 static inline bool sbuf_is_empty(struct shared_buf *sbuf)
 {
 	return (sbuf->head == sbuf->tail);

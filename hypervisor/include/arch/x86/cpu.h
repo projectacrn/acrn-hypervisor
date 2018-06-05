@@ -161,67 +161,32 @@ extern uint8_t                _ld_cpu_secondary_reset_start[];
 extern const uint64_t         _ld_cpu_secondary_reset_size;
 extern uint8_t                _ld_bss_start[];
 extern uint8_t                _ld_bss_end[];
-extern uint8_t		      _ld_cpu_data_start[];
-extern uint8_t                _ld_cpu_data_end[];
 
 extern int ibrs_type;
 
 /*
- * To support per_cpu access, we use a special section ".cpu_data" to define
+ * To support per_cpu access, we use a special struct "per_cpu_region" to hold
  * the pattern of per CPU data. And we allocate memory for per CPU data
- * according to multiple this section size and pcpu number.
+ * according to multiple this struct size and pcpu number.
  *
- *   +------------------+------------------+---+------------------+
- *   | percpu for pcpu0 | percpu for pcpu1 |...| percpu for pcpuX |
- *   +------------------+------------------+---+------------------+
- *   ^                  ^
- *   |                  |
- *    --.cpu_data size--
+ *   +-------------------+------------------+---+------------------+
+ *   | percpu for pcpu0  | percpu for pcpu1 |...| percpu for pcpuX |
+ *   +-------------------+------------------+---+------------------+
+ *   ^                   ^
+ *   |                   |
+ *   <per_cpu_region size>
  *
  * To access per cpu data, we use:
- *   per_cpu_data_base_ptr + curr_pcpu_id * cpu_data_section_size +
- *        offset_of_symbol_in_cpu_data_section
+ *   per_cpu_base_ptr + sizeof(struct per_cpu_region) * curr_pcpu_id
+ *   + offset_of_member_per_cpu_region
  * to locate the per cpu data.
  */
-
-/* declare per cpu data */
-#define EXTERN_CPU_DATA(type, name)					\
-	extern __typeof__(type) cpu_data_##name
-
-EXTERN_CPU_DATA(uint8_t, lapic_id);
-EXTERN_CPU_DATA(void *, vcpu);
-EXTERN_CPU_DATA(uint8_t[STACK_SIZE], stack) __aligned(16);
-
-/* define per cpu data */
-#define DEFINE_CPU_DATA(type, name)					\
-	__typeof__(type) cpu_data_##name				\
-	__attribute__((__section__(".cpu_data")))
-
-extern void *per_cpu_data_base_ptr;
-extern int phy_cpu_num;
-extern uint64_t pcpu_active_bitmap;
 
 #define	PER_CPU_DATA_OFFSET(sym_addr)					\
 	((uint64_t)(sym_addr) - (uint64_t)(_ld_cpu_data_start))
 
 #define	PER_CPU_DATA_SIZE						\
 	((uint64_t)_ld_cpu_data_end - (uint64_t)(_ld_cpu_data_start))
-
-/*
- * get percpu data for pcpu_id.
- *
- * It returns:
- *   per_cpu_data_##name[pcpu_id];
- */
-#define per_cpu(name, pcpu_id)						\
-	(*({ uint64_t base = (uint64_t)per_cpu_data_base_ptr;		\
-		uint64_t off = PER_CPU_DATA_OFFSET(&cpu_data_##name);	\
-		((typeof(&cpu_data_##name))(base +			\
-		  (pcpu_id) * PER_CPU_DATA_SIZE + off));		\
-	}))
-
-/* get percpu data for current pcpu */
-#define get_cpu_var(name)	per_cpu(name, get_cpu_id())
 
 /* CPUID feature words */
 enum feature_word {
@@ -254,6 +219,13 @@ struct cpuinfo_x86 {
 	char model_name[64];
 	struct cpu_state_info state_info;
 };
+#ifdef STACK_PROTECTOR
+struct stack_canary {
+	/* Gcc generates extra code, using [fs:40] to access canary */
+	uint8_t reserved[40];
+	uint64_t canary;
+};
+#endif
 
 extern struct cpuinfo_x86 boot_cpu_data;
 

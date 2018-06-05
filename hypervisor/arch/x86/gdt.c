@@ -6,12 +6,6 @@
 
 #include <hypervisor.h>
 
-DEFINE_CPU_DATA(struct tss_64, tss);
-DEFINE_CPU_DATA(struct host_gdt, gdt);
-DEFINE_CPU_DATA(uint8_t[STACK_SIZE], mc_stack) __aligned(16);
-DEFINE_CPU_DATA(uint8_t[STACK_SIZE], df_stack) __aligned(16);
-DEFINE_CPU_DATA(uint8_t[STACK_SIZE], sf_stack) __aligned(16);
-
 static void set_tss_desc(union tss_64_descriptor *desc,
 		void *tss, int tss_limit, int type)
 {

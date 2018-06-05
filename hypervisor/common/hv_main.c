@@ -9,9 +9,6 @@
 
 bool x2apic_enabled;
 
-static DEFINE_CPU_DATA(uint64_t[64], vmexit_cnt);
-static DEFINE_CPU_DATA(uint64_t[64], vmexit_time);
-
 static void run_vcpu_pre_work(struct vcpu *vcpu)
 {
 	unsigned long *pending_pre_work = &vcpu->pending_pre_work;

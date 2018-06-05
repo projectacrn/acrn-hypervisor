@@ -37,9 +37,6 @@ struct irq_desc {
 static struct irq_desc *irq_desc_base;
 static int vector_to_irq[NR_MAX_VECTOR + 1];
 
-static DEFINE_CPU_DATA(uint64_t[NR_MAX_IRQS], irq_count);
-static DEFINE_CPU_DATA(uint64_t, spurious);
-
 spurious_handler_t spurious_handler;
 
 static void init_irq_desc(void)

@@ -14,6 +14,9 @@ enum tick_mode {
 	TICK_MODE_PERIODIC,
 };
 
+struct per_cpu_timers {
+	struct list_head timer_list;	/* it's for runtime active timer list */
+};
 
 struct timer {
 	struct list_head node;		/* link all timers */

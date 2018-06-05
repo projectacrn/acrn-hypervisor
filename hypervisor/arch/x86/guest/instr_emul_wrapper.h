@@ -133,6 +133,12 @@ struct vm_guest_paging {
 	enum vm_paging_mode paging_mode;
 };
 
+struct emul_cnx {
+	struct vie vie;
+	struct vm_guest_paging paging;
+	struct vcpu *vcpu;
+};
+
 /*
  * Identifiers for architecturally defined registers.
  */

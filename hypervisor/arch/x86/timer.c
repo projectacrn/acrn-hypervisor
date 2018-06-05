@@ -13,14 +13,6 @@
 
 uint64_t tsc_hz = 1000000000;
 
-struct per_cpu_timers {
-	struct list_head timer_list;	/* it's for runtime active timer list */
-};
-
-static DEFINE_CPU_DATA(struct per_cpu_timers, cpu_timers);
-static DEFINE_CPU_DATA(struct dev_handler_node *, timer_node);
-
-
 static void run_timer(struct timer *timer)
 {
 	/* deadline = 0 means stop timer, we should skip */

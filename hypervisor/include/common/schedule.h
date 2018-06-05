@@ -9,6 +9,14 @@
 
 #define	NEED_RESCHEDULED	(1)
 
+struct sched_context {
+	spinlock_t runqueue_lock;
+	struct list_head runqueue;
+	unsigned long need_scheduled;
+	struct vcpu *curr_vcpu;
+	spinlock_t scheduler_lock;
+};
+
 void init_scheduler(void);
 void get_schedule_lock(int pcpu_id);
 void release_schedule_lock(int pcpu_id);
