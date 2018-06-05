@@ -120,8 +120,8 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu);
 typedef int (*vm_sw_loader_t)(struct vm *, struct vcpu *);
 extern vm_sw_loader_t vm_sw_loader;
 
-int copy_from_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
-int copy_to_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
+int copy_from_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
+int copy_to_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
 int copy_from_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
 	uint32_t size, uint32_t *err_code);
 int copy_to_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
