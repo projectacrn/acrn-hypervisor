@@ -865,6 +865,31 @@ cfginit(struct vmctx *ctx, struct passthru_dev *ptdev, int bus,
 }
 
 /*
+ * convert the error code of pci_system_init in libpciaccess to DM standard
+ *
+ * pci_system_init in libpciaccess:
+ * return zero -> success
+ * return positive value -> failure
+ *
+ * DM standard:
+ * return zero -> success
+ * return negative value -> failure
+ */
+static int
+native_pci_system_init()
+{
+	int error;
+
+	error = pci_system_init();
+
+	/*
+	 * convert the returned error value to negative since DM only handles
+	 * the negative error code
+	 */
+	return -error;
+}
+
+/*
  * return zero on success or non-zero on failure
  */
 static int
@@ -875,8 +900,8 @@ pciaccess_init(void)
 	pthread_mutex_lock(&ref_cnt_mtx);
 
 	if (!pciaccess_ref_cnt) {
-		error = pci_system_init();
-		if (error) {
+		error = native_pci_system_init();
+		if (error < 0) {
 			warnx("libpciaccess couldn't access PCI system");
 			pthread_mutex_unlock(&ref_cnt_mtx);
 			return error;
@@ -909,12 +934,12 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	struct pci_device *phys_dev;
 
 	ptdev = NULL;
-	error = 1;
+	error = -EINVAL;
 
 	if (opts == NULL ||
 	    sscanf(opts, "%x/%x/%x", &bus, &slot, &func) != 3) {
 		warnx("invalid passthru options, %s", opts);
-		return error;
+		return -EINVAL;
 	}
 
 	if (vm_assign_ptdev(ctx, bus, slot, func) != 0) {
@@ -926,16 +951,16 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	ptdev = calloc(1, sizeof(struct passthru_dev));
 	if (ptdev == NULL) {
 		warnx("%s: calloc FAIL!", __func__);
-		return error;
+		return -ENOMEM;
 	}
 
 	ptdev->phys_bdf = PCI_BDF(bus, slot, func);
 
 	error = pciaccess_init();
-	if (error)
+	if (error < 0)
 		return error;
 
-	error = 1;
+	error = -ENODEV;
 	iter = pci_slot_match_iterator_create(NULL);
 	while ((phys_dev = pci_device_next(iter)) != NULL) {
 		if (phys_dev->bus == bus && phys_dev->dev == slot &&
@@ -946,9 +971,9 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		}
 	}
 
-	if (error) {
-		warnx("No PCI device %x:%x.%x", bus, slot, func);
-		return error;
+	if (error < 0) {
+		warnx("No physical PCI device %x:%x.%x!", bus, slot, func);
+		return -ENODEV;
 	}
 
 	pci_device_probe(ptdev->phys_dev);
