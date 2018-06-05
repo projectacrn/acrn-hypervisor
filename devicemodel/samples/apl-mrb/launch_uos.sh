@@ -295,6 +295,8 @@ fi
    -s 27,passthru,0/1b/0 \
    -s 24,passthru,0/18/0 \
    -s 18,passthru,4/0/0 \
+   -i /run/acrn/ioc_$vm_name,0x20 \
+   -l com2,/run/acrn/ioc_$vm_name \
    -M \
    $boot_image_option \
    --enable_trusty \
