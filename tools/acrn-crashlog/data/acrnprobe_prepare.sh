@@ -7,9 +7,10 @@
 # modify the core_pattern
 echo "|/usr/bin/usercrash_c %p %e %s" > /proc/sys/kernel/core_pattern
 
-conf="/usr/share/defaults/telemetrics/telemetrics.conf"
+default_conf="/usr/share/defaults/telemetrics/telemetrics.conf"
+user_conf="/etc/telemetrics/telemetrics.conf"
 
-grep -q "record_server_delivery_enabled=false" $conf
+grep -q "record_server_delivery_enabled=false" $user_conf
 if [ "$?" -eq "0" ];then
 	exit;
 fi
@@ -25,6 +26,9 @@ journal-probe.service
 bert-probe.service
 )
 
+mkdir -p $(dirname $user_conf)
+cp $default_conf $user_conf
+
 for ((i=0;i<${#telemd_services[*]};i++))
 do
 	if [ ! -L "/etc/systemd/system/${telemd_services[$i]}" ];then
@@ -34,8 +38,8 @@ done
 
 # modify the configure file
 
-sed -i "s/server_delivery_enabled=true/server_delivery_enabled=false/g" $conf
-sed -i "s/record_retention_enabled=false/record_retention_enabled=true/g" $conf
+sed -i "s/server_delivery_enabled=true/server_delivery_enabled=false/g" $user_conf
+sed -i "s/record_retention_enabled=false/record_retention_enabled=true/g" $user_conf
 
 # restart telemd
 sleep 3
