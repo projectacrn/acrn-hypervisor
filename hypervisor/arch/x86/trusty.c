@@ -419,3 +419,20 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 
 	return false;
 }
+
+void trusty_set_dseed(void *dseed, uint8_t dseed_num)
+{
+	/* Use fake seed if input param is invalid */
+	if ((dseed == NULL) || (dseed_num == 0) ||
+		(dseed_num > BOOTLOADER_SEED_MAX_ENTRIES)) {
+
+		g_key_info.num_seeds = 1;
+		memset(g_key_info.dseed_list[0].seed, 0xA5,
+			sizeof(g_key_info.dseed_list[0].seed));
+		return;
+	}
+
+	g_key_info.num_seeds = dseed_num;
+	memcpy_s(&g_key_info.dseed_list, sizeof(struct seed_info) * dseed_num,
+			dseed, sizeof(struct seed_info) * dseed_num);
+}

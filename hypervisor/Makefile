@@ -144,6 +144,7 @@ C_SRCS += bsp/$(PLATFORM)/cmdline.c
 else
 ifeq ($(PLATFORM), sbl)
 C_SRCS += boot/sbl/multiboot.c
+C_SRCS += boot/sbl/hob_parse.c
 endif
 endif
 
