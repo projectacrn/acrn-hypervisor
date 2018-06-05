@@ -388,12 +388,12 @@ static inline int copy_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
  * - some other gpa from hypercall parameters, VHM should make sure it's
  *   continuous
  */
-int copy_from_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
+int copy_from_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
 {
 	return copy_gpa(vm, h_ptr, gpa, size, 1);
 }
 
-int copy_to_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
+int copy_to_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
 {
 	return copy_gpa(vm, h_ptr, gpa, size, 0);
 }
