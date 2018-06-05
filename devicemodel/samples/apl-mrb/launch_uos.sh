@@ -377,36 +377,36 @@ echo 1024 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
 
 case $launch_type in
 	1) echo "Launch clearlinux UOS"
-		launch_clearlinux 1 3 "64 448 8" 0x000C00 clearlinux 0
+		launch_clearlinux 1 3 "64 448 8" 0x070F00 clearlinux 0
 		;;
 	2) echo "Launch android UOS"
-		launch_android 1 3 "64 448 8" 0x000C00 android 0
+		launch_android 1 3 "64 448 8" 0x070F00 android 0
 		;;
 	3) echo "Launch clearlinux UOS + android UOS"
 		launch_android 1 2 "64 448 4" 0x00000C android 0 &
 		sleep 5
-		launch_clearlinux 2 1 "64 448 4" 0x000C00 clearlinux 0
+		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux 0
 		;;
 	4) echo "Launch two clearlinux UOSs"
 		launch_clearlinux 1 1 "64 448 4" 0x00000C clearlinux 0 &
 		sleep 5
-		launch_clearlinux 2 1 "64 448 4" 0x000C00 clearlinux_dup 0
+		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux_dup 0
 		;;
 	5) echo "Launch clearlinux UOS"
-		launch_clearlinux 1 3 "64 448 8" 0x000C00 clearlinux 1 $debug
+		launch_clearlinux 1 3 "64 448 8" 0x070F00 clearlinux 1 $debug
 		;;
 	6) echo "Launch android UOS"
-		launch_android 1 3 "64 448 8" 0x000C00 android 1 $debug
+		launch_android 1 3 "64 448 8" 0x070F00 android 1 $debug
 		;;
 	7) echo "Launch clearlinux UOS + android UOS"
 		launch_android 1 2 "64 448 4" 0x00000C android 1 $debug &
 		sleep 5
-		launch_clearlinux 2 1 "64 448 4" 0x000C00 clearlinux 1 $debug
+		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux 1 $debug
 		;;
 	8) echo "Launch two clearlinux UOSs"
 		launch_clearlinux 1 1 "64 448 4" 0x00000C clearlinux 1 $debug &
 		sleep 5
-		launch_clearlinux 2 1 "64 448 4" 0x000C00 clearlinux_dup 1 $debug
+		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux_dup 1 $debug
 		;;
 esac
 
