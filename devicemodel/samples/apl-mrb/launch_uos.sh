@@ -62,15 +62,22 @@ echo "8086 5a9a" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:0f.0" > /sys/bus/pci/devices/0000:00:0f.0/driver/unbind
 echo "0000:00:0f.0" > /sys/bus/pci/drivers/pci-stub/bind
 
+boot_ipu_option=""
 # for ipu passthrough - ipu device 0:3.0
+if [ -d "/sys/bus/pci/devices/0000:00:03.0" ]; then
 echo "8086 5a88" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:03.0" > /sys/bus/pci/devices/0000:00:03.0/driver/unbind
 echo "0000:00:03.0" > /sys/bus/pci/drivers/pci-stub/bind
+boot_ipu_option="$boot_ipu_option"" -s 12,passthru,0/3/0 "
+fi
 
 # for ipu passthrough - ipu related i2c 0:16.0
+if [ -d "/sys/bus/pci/devices/0000:00:16.0" ]; then
 echo "8086 5aac" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:16.0" > /sys/bus/pci/devices/0000:00:16.0/driver/unbind
 echo "0000:00:16.0" > /sys/bus/pci/drivers/pci-stub/bind
+boot_ipu_option="$boot_ipu_option"" -s 22,passthru,0/16/0 "
+fi
 
 # for sd card passthrough - SDXC/MMC Host Controller 00:1b.0
 echo "8086 5aca" > /sys/bus/pci/drivers/pci-stub/new_id
@@ -120,9 +127,8 @@ acrn-dm -T -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s
   -s 4,virtio-net,$tap $boot_image_option \
   -s 7,passthru,0/15/0 \
   -s 15,passthru,0/f/0 \
-  -s 12,passthru,0/3/0 \
-  -s 22,passthru,0/16/0 \
   -s 27,passthru,0/1b/0 \
+  $boot_ipu_option      \
   -i /run/acrn/ioc_$vm_name,0x20 \
   -l com2,/run/acrn/ioc_$vm_name \
   -B "root=/dev/vda2 rw rootwait maxcpus=$2 nohpet console=hvc0 \
