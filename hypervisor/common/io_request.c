@@ -74,6 +74,13 @@ int acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 	memcpy_s(&req_buf->req_queue[cur], sizeof(struct vhm_request),
 		 req, sizeof(struct vhm_request));
 
+	/* pause vcpu, wait for VHM to handle the MMIO request.
+	 * TODO: when pause_vcpu changed to switch vcpu out directlly, we
+	 * should fix the race issue between req.valid = true and vcpu pause
+	 */
+	atomic_store(&vcpu->ioreq_pending, 1);
+	pause_vcpu(vcpu, VCPU_PAUSED);
+
 	/* Must clear the signal before we mark req valid
 	 * Once we mark to valid, VHM may process req and signal us
 	 * before we perform upcall.
@@ -85,10 +92,6 @@ int acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 
 	/* signal VHM */
 	fire_vhm_interrupt();
-
-	/* pause vcpu, wait for VHM to handle the MMIO request */
-	atomic_store(&vcpu->ioreq_pending, 1);
-	pause_vcpu(vcpu, VCPU_PAUSED);
 
 	return 0;
 }
