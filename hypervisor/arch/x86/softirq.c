@@ -6,8 +6,6 @@
 
 #include <hypervisor.h>
 
-static DEFINE_CPU_DATA(uint64_t, softirq_pending);
-
 void disable_softirq(int cpu_id)
 {
 	bitmap_clear(SOFTIRQ_ATOMIC, &per_cpu(softirq_pending, cpu_id));

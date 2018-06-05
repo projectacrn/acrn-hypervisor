@@ -279,12 +279,6 @@ extern struct host_gdt HOST_GDT;
 extern struct host_gdt_descriptor HOST_GDTR;
 void load_gdtr_and_tr(void);
 
-EXTERN_CPU_DATA(struct tss_64, tss);
-EXTERN_CPU_DATA(struct host_gdt, gdt);
-EXTERN_CPU_DATA(uint8_t[STACK_SIZE], mc_stack) __aligned(16);
-EXTERN_CPU_DATA(uint8_t[STACK_SIZE], df_stack) __aligned(16);
-EXTERN_CPU_DATA(uint8_t[STACK_SIZE], sf_stack) __aligned(16);
-
 #endif /* end #ifndef ASSEMBLER */
 
 #endif /* GDT_H */

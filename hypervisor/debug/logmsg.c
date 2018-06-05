@@ -5,22 +5,12 @@
  */
 
 #include <hypervisor.h>
-
-#define LOG_ENTRY_SIZE		80
-
-/* Size of buffer used to store a message being logged,
- * should align to LOG_ENTRY_SIZE.
- */
-#define LOG_MESSAGE_MAX_SIZE	(4 * LOG_ENTRY_SIZE)
-
+#include <per_cpu.h>
 /* buf size should be identical to the size in hvlog option, which is
  * transfered to SOS:
  * bsp/uefi/clearlinux/acrn.conf: hvlog=2M@0x1FE00000
  */
 #define HVLOG_BUF_SIZE		(2*1024*1024)
-
-DEFINE_CPU_DATA(char [LOG_MESSAGE_MAX_SIZE], logbuf);
-DEFINE_CPU_DATA(struct shared_buf *, earlylog_sbuf);
 
 struct logmsg {
 	uint32_t flags;

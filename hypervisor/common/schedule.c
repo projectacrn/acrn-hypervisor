@@ -7,15 +7,6 @@
 #include <hypervisor.h>
 #include <schedule.h>
 
-struct sched_context {
-	spinlock_t runqueue_lock;
-	struct list_head runqueue;
-	unsigned long need_scheduled;
-	struct vcpu *curr_vcpu;
-	spinlock_t scheduler_lock;
-};
-
-static DEFINE_CPU_DATA(struct sched_context, sched_ctx);
 static unsigned long pcpu_used_bitmap;
 
 void init_scheduler(void)

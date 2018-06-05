@@ -18,18 +18,13 @@ spinlock_t up_count_spinlock = {
 	.tail = 0
 };
 
-void *per_cpu_data_base_ptr;
+struct per_cpu_region *per_cpu_data_base_ptr;
 int phy_cpu_num = 0;
 unsigned long pcpu_sync = 0;
 uint32_t up_count = 0;
 
 /* physical cpu active bitmap, support up to 64 cpus */
 uint64_t pcpu_active_bitmap = 0;
-
-DEFINE_CPU_DATA(uint8_t[STACK_SIZE], stack) __aligned(16);
-DEFINE_CPU_DATA(uint8_t, lapic_id);
-DEFINE_CPU_DATA(void *, vcpu);
-DEFINE_CPU_DATA(int, state);
 
 /* TODO: add more capability per requirement */
 /*APICv features*/
@@ -228,7 +223,7 @@ static void alloc_phy_cpu_data(int pcpu_num)
 {
 	phy_cpu_num = pcpu_num;
 
-	per_cpu_data_base_ptr = calloc(1, PER_CPU_DATA_SIZE * pcpu_num);
+	per_cpu_data_base_ptr = calloc(pcpu_num, sizeof(struct per_cpu_region));
 	ASSERT(per_cpu_data_base_ptr != NULL, "");
 }
 
@@ -294,14 +289,6 @@ static void cpu_set_current_state(uint32_t logical_id, int state)
 }
 
 #ifdef STACK_PROTECTOR
-struct stack_canary {
-	/* Gcc generates extra code, using [fs:40] to access canary */
-	uint8_t reserved[40];
-	uint64_t canary;
-};
-
-static DEFINE_CPU_DATA(struct stack_canary, stack_canary);
-
 static uint64_t get_random_value(void)
 {
 	uint64_t random = 0;

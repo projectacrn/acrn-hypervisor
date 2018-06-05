@@ -19,6 +19,11 @@
 /* Logging flags */
 #define LOG_FLAG_STDOUT		0x00000001
 #define LOG_FLAG_MEMORY		0x00000002
+#define LOG_ENTRY_SIZE	80
+/* Size of buffer used to store a message being logged,
+ * should align to LOG_ENTRY_SIZE.
+ */
+#define LOG_MESSAGE_MAX_SIZE	(4 * LOG_ENTRY_SIZE)
 
 #if defined(HV_DEBUG)
 

@@ -9,14 +9,6 @@
 #include "instr_emul_wrapper.h"
 #include "instr_emul.h"
 
-struct emul_cnx {
-	struct vie vie;
-	struct vm_guest_paging paging;
-	struct vcpu *vcpu;
-};
-
-static DEFINE_CPU_DATA(struct emul_cnx, g_inst_ctxt);
-
 static int
 encode_vmcs_seg_desc(int seg, uint32_t *base, uint32_t *lim, uint32_t *acc);
 
