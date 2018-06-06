@@ -65,18 +65,20 @@ echo "0000:00:0f.0" > /sys/bus/pci/drivers/pci-stub/bind
 boot_ipu_option=""
 # for ipu passthrough - ipu device 0:3.0
 if [ -d "/sys/bus/pci/devices/0000:00:03.0" ]; then
-echo "8086 5a88" > /sys/bus/pci/drivers/pci-stub/new_id
-echo "0000:00:03.0" > /sys/bus/pci/devices/0000:00:03.0/driver/unbind
-echo "0000:00:03.0" > /sys/bus/pci/drivers/pci-stub/bind
-boot_ipu_option="$boot_ipu_option"" -s 12,passthru,0/3/0 "
+  echo "8086 5a88" > /sys/bus/pci/drivers/pci-stub/new_id
+  echo "0000:00:03.0" > /sys/bus/pci/devices/0000:00:03.0/driver/unbind
+  echo "0000:00:03.0" > /sys/bus/pci/drivers/pci-stub/bind
+  boot_ipu_option="$boot_ipu_option"" -s 12,passthru,0/3/0 "
 fi
 
 # for ipu passthrough - ipu related i2c 0:16.0
+# please use virtual slot 22 for i2c 0:16.0 to make sure that the i2c controller
+# could get the same virtaul BDF as physical BDF
 if [ -d "/sys/bus/pci/devices/0000:00:16.0" ]; then
-echo "8086 5aac" > /sys/bus/pci/drivers/pci-stub/new_id
-echo "0000:00:16.0" > /sys/bus/pci/devices/0000:00:16.0/driver/unbind
-echo "0000:00:16.0" > /sys/bus/pci/drivers/pci-stub/bind
-boot_ipu_option="$boot_ipu_option"" -s 22,passthru,0/16/0 "
+  echo "8086 5aac" > /sys/bus/pci/drivers/pci-stub/new_id
+  echo "0000:00:16.0" > /sys/bus/pci/devices/0000:00:16.0/driver/unbind
+  echo "0000:00:16.0" > /sys/bus/pci/drivers/pci-stub/bind
+  boot_ipu_option="$boot_ipu_option"" -s 22,passthru,0/16/0 "
 fi
 
 # for sd card passthrough - SDXC/MMC Host Controller 00:1b.0
@@ -227,6 +229,25 @@ echo "8086 5abc" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:18.0" > /sys/bus/pci/devices/0000:00:18.0/driver/unbind
 echo "0000:00:18.0" > /sys/bus/pci/drivers/pci-stub/bind
 
+boot_ipu_option=""
+# for ipu passthrough - ipu device 0:3.0
+if [ -d "/sys/bus/pci/devices/0000:00:03.0" ]; then
+  echo "8086 5a88" > /sys/bus/pci/drivers/pci-stub/new_id
+  echo "0000:00:03.0" > /sys/bus/pci/devices/0000:00:03.0/driver/unbind
+  echo "0000:00:03.0" > /sys/bus/pci/drivers/pci-stub/bind
+  boot_ipu_option="$boot_ipu_option"" -s 12,passthru,0/3/0 "
+fi
+
+# for ipu passthrough - ipu related i2c 0:16.0
+# please use virtual slot 22 for i2c 0:16.0 to make sure that the i2c controller
+# could get the same virtaul BDF as physical BDF
+if [ -d "/sys/bus/pci/devices/0000:00:16.0" ]; then
+  echo "8086 5aac" > /sys/bus/pci/drivers/pci-stub/new_id
+  echo "0000:00:16.0" > /sys/bus/pci/devices/0000:00:16.0/driver/unbind
+  echo "0000:00:16.0" > /sys/bus/pci/drivers/pci-stub/bind
+  boot_ipu_option="$boot_ipu_option"" -s 22,passthru,0/16/0 "
+fi
+
 #for memsize setting
 memsize=`cat /proc/meminfo|head -n 1|awk '{print $2}'`
 if [ $memsize -gt 4000000 ];then
@@ -301,6 +322,7 @@ fi
    -s 27,passthru,0/1b/0 \
    -s 24,passthru,0/18/0 \
    -s 18,passthru,4/0/0 \
+   $boot_ipu_option      \
    -i /run/acrn/ioc_$vm_name,0x20 \
    -l com2,/run/acrn/ioc_$vm_name \
    -M \
