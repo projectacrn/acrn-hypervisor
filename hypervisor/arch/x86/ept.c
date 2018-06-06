@@ -489,3 +489,24 @@ int ept_mmap(struct vm *vm, uint64_t hpa,
 
 	return 0;
 }
+
+int ept_update_mt(struct vm *vm, uint64_t hpa,
+	uint64_t gpa, uint64_t size, uint32_t prot)
+{
+	struct map_params map_params;
+	struct vcpu *vcpu;
+	int i;
+
+	/* Setup memory map parameters */
+	map_params.page_table_type = PTT_EPT;
+	map_params.pml4_base = HPA2HVA(vm->arch_vm.nworld_eptp);
+	map_params.pml4_inverted = HPA2HVA(vm->arch_vm.m2p);
+
+	modify_mem_mt(&map_params, (void *)hpa, (void *)gpa, size, prot);
+
+	foreach_vcpu(i, vm, vcpu) {
+		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
+	}
+
+	return 0;
+}
