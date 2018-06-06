@@ -375,14 +375,18 @@ Install build tools and dependencies
 ARCN development is supported on popular Linux distributions,
 each with their own way to install development tools:
 
+  .. note::
+     ACRN uses ``menuconfig``, a python3 text-based user interface (TUI) for
+     configuring hypervisor options and using python's ``kconfiglib`` library.
+
 * On a Clear Linux development system, install the ``os-clr-on-clr`` bundle to get
   the necessary tools:
 
   .. code-block:: console
 
      $ sudo swupd bundle-add os-clr-on-clr
-     $ sudo swupd bundle-add python-basic
-     $ sudo pip install kconfiglib
+     $ sudo swupd bundle-add python3-basic
+     $ sudo pip3 install kconfiglib
 
 * On a Ubuntu/Debian development system:
 
@@ -397,9 +401,9 @@ each with their own way to install development tools:
           libevent-dev \
           libxml2-dev \
           libusb-1.0-0-dev \
-          python \
-          python-pip
-     $ sudo pip install kconfiglib
+          python3 \
+          python3-pip
+     $ sudo pip3 install kconfiglib
 
   .. note::
      Ubuntu 14.04 requires ``libsystemd-journal-dev`` instead of ``libsystemd-dev``
@@ -418,9 +422,9 @@ each with their own way to install development tools:
           libxml2-devel \
           libevent-devel \
           libusbx-devel \
-          python \
-          python-pip
-     $ sudo pip install kconfiglib
+          python3 \
+          python3-pip
+     $ sudo pip3 install kconfiglib
 
 
 * On a CentOS development system:
@@ -436,9 +440,15 @@ each with their own way to install development tools:
              libxml2-devel \
              libevent-devel \
              libusbx-devel \
-             python \
-             python-pip
-     $ sudo pip install kconfiglib
+             python34 \
+             python34-pip
+     $ sudo pip3 install kconfiglib
+
+  .. note::
+     You may need to install `EPEL <https://fedoraproject.org/wiki/EPEL>`_ for
+     installing python3 via yum for CentOS 7. For CentOS 6 you need to install
+     pip manually. Please refer to https://pip.pypa.io/en/stable/installing for
+     details.
 
 
 Build the hypervisor, device model and tools
@@ -496,3 +506,76 @@ and are using it as the current working directory.
 
 Follow the same instructions to boot and test the images you created
 from your build.
+
+Generate the hypervisor configurations
+======================================
+
+The ACRN hypervisor leverages Kconfig to manage configurations, powered by
+Kconfiglib. A default configuration is generated based on the platform you have
+selected via the ``PLATFORM=`` command line parameter. You can make further
+changes to that default configuration to adjust to your specific
+requirements.
+
+To generate hypervisor configurations, you need to build the hypervisor
+individually. The following steps generate a default but complete configuration,
+based on the platform selected, assuming that you are under the top-level
+directory of acrn-hypervisor. The configuration file, named ``.config``, can be
+found under the target folder of your build.
+
+   .. code-block:: console
+
+      $ cd hypervisor
+      $ make defconfig PLATFORM=uefi
+
+The PLATFORM specified is used to select a defconfig under
+``arch/x86/configs/``. The other command-line based options (e.g. ``RELEASE``)
+take no effects when generating a defconfig.
+
+Modify the hypervisor configurations
+====================================
+
+To modify the hypervisor configurations, you can either edit ``.config``
+manually, or invoke a TUI-based menuconfig, powered by kconfiglib, by executing
+``make menuconfig``. As an example, the following commands, assuming that you
+are under the top-level directory of acrn-hypervisor, generate a default
+configuration file for UEFI, allow you to modify some configurations and build
+the hypervisor using the updated ``.config``.
+
+   .. code-block:: console
+
+      $ cd hypervisor
+      $ make defconfig PLATFORM=uefi
+      $ make menuconfig              # Modify the configurations per your needs
+      $ make                         # Build the hypervisor with the new .config
+
+   .. note::
+      Menuconfig is python3 only.
+
+Refer to the help on menuconfig for a detailed guide on the interface.
+
+   .. code-block:: console
+
+      $ pydoc3 menuconfig
+
+Create a new default configuration
+==================================
+
+Currently the ACRN hypervisor looks for default configurations under
+``hypervisor/arch/x86/configs/<PLATFORM>.config``, where ``<PLATFORM>`` is the
+specified platform. The following steps allow you to create a defconfig for
+another platform based on a current one.
+
+   .. code-block:: console
+
+      $ cd hypervisor
+      $ make defconfig PLATFORM=uefi
+      $ make menuconfig         # Modify the configurations
+      $ make savedefconfig      # The minimized config reside at build/defconfig
+      $ cp build/defconfig arch/x86/configs/xxx.config
+
+Then you can re-use that configuration by passing the name (``xxx`` in the
+example above) to 'PLATFORM=':
+
+   .. code-block:: console
+
+      $ make defconfig PLATFORM=xxx
