@@ -28,6 +28,7 @@
 #define     IA32E_EPT_WT                    (4<<3)
 #define     IA32E_EPT_WP                    (5<<3)
 #define     IA32E_EPT_WB                    (6<<3)
+#define     IA32E_EPT_MT_MASK               (7<<3)
 #define     IA32E_EPT_PAT_IGNORE            0x0000000000000040
 #define     IA32E_EPT_ACCESS_FLAG           0x0000000000000100
 #define     IA32E_EPT_DIRTY_FLAG            0x0000000000000200
@@ -216,6 +217,9 @@
 /* Selects PAT7 WP  */
 #define     MMU_MEM_ATTR_TYPE_WRITE_PROTECTED \
 		(IA32E_PDPTE_PAT_BIT | IA32E_COMM_PCD_BIT | IA32E_COMM_PWT_BIT)
+/* memory type bits mask */
+#define     MMU_MEM_ATTR_TYPE_MASK \
+		(IA32E_PDPTE_PAT_BIT | IA32E_COMM_PCD_BIT | IA32E_COMM_PWT_BIT)
 
 #define ROUND_PAGE_UP(addr)  (((addr) + CPU_PAGE_SIZE - 1) & CPU_PAGE_MASK)
 #define ROUND_PAGE_DOWN(addr) ((addr) & CPU_PAGE_MASK)
@@ -302,6 +306,8 @@ int unmap_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		      uint64_t size, uint32_t flags);
 int modify_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		       uint64_t size, uint32_t flags);
+int modify_mem_mt(struct map_params *map_params, void *paddr, void *vaddr,
+		       uint64_t size, uint32_t flags);
 int check_vmx_mmu_cap(void);
 int allocate_vpid(void);
 void flush_vpid_single(int vpid);
@@ -375,6 +381,8 @@ uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size);
 uint64_t  hpa2gpa(struct vm *vm, uint64_t hpa);
 int ept_mmap(struct vm *vm, uint64_t hpa,
 	uint64_t gpa, uint64_t size, uint32_t type, uint32_t prot);
+int ept_update_mt(struct vm *vm, uint64_t hpa,
+	uint64_t gpa, uint64_t size, uint32_t prot);
 
 int     ept_violation_vmexit_handler(struct vcpu *vcpu);
 int     ept_misconfig_vmexit_handler(struct vcpu *vcpu);
