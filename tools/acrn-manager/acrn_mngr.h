@@ -271,11 +271,11 @@ int mngr_add_handler(int desc, unsigned id,
  * @param desc: descripter created using mngr_open_un
  * @param req: pointer to message to send
  * @param ack: pointer to ack struct, NULL if no ack required
- * @param len: size in byte of the message to send
+ * @param ack_len: size in byte of the expected ack message
  * @param timeout: time to wait for ack, zero to blocking waiting
  * @return len of ack messsage (0 if ack is NULL) on succes, errno on error
  */
 int mngr_send_msg(int desc, struct mngr_msg *req, struct mngr_msg *ack,
-		  size_t len, unsigned timeout);
+		  size_t ack_len, unsigned timeout);
 
 #endif				/* ACRN_MANAGER_H */
