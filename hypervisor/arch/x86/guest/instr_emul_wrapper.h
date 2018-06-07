@@ -193,5 +193,4 @@ int vm_get_seg_desc(struct vcpu *vcpu, int reg,
 		struct seg_desc *ret_desc);
 int vm_set_seg_desc(struct vcpu *vcpu, int reg,
 		struct seg_desc *desc);
-int vm_restart_instruction(struct vcpu *vcpu);
 #endif

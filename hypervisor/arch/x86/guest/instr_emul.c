@@ -759,7 +759,7 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 		 * Repeat the instruction if the count register is not zero.
 		 */
 		if ((rcx & vie_size2mask(vie->addrsize)) != 0)
-			vm_restart_instruction(vcpu);
+			VCPU_RETAIN_RIP(vcpu);
 	}
 done:
 	ASSERT(error == 0, "%s: unexpected error %d", __func__, error);
@@ -823,7 +823,7 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		 * Repeat the instruction if the count register is not zero.
 		 */
 		if ((rcx & vie_size2mask(vie->addrsize)) != 0)
-			vm_restart_instruction(vcpu);
+			VCPU_RETAIN_RIP(vcpu);
 	}
 
 	return 0;

@@ -115,15 +115,6 @@ int vm_get_seg_desc(struct vcpu *vcpu, int seg, struct seg_desc *desc)
 	return 0;
 }
 
-int vm_restart_instruction(struct vcpu *vcpu)
-{
-	if (!vcpu)
-		return -EINVAL;
-
-	VCPU_RETAIN_RIP(vcpu);
-	return 0;
-}
-
 static bool is_descriptor_table(int reg)
 {
 	switch (reg) {
