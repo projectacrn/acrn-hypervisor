@@ -5,7 +5,7 @@ After=sysinit.target local.target
 Before=basic.target
 
 [Service]
-ExecStart=/usr/bin/cbc_attach -f /dev/ttyS2
+ExecStart=/usr/bin/cbc_attach /dev/ttyS2
 Restart=always
 Type=notify
 
