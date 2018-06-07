@@ -494,20 +494,22 @@ static void init_guest_state(struct vcpu *vcpu)
 	if (vcpu_mode == CPU_MODE_64BIT)
 		cur_context->ia32_efer = MSR_IA32_EFER_LME_BIT;
 
-	/* Setup guest control register values */
-	/* Set up guest CRO field */
+	/* Setup guest control register values
+	 * cr4 should be set before cr0, because when set cr0, cr4 value will be
+	 * checked.
+	 */
 	if (vcpu_mode == CPU_MODE_REAL) {
 		vmx_write_cr4(vcpu, 0);
-		vmx_write_cr0(vcpu, CR0_ET | CR0_NE);
 		vmx_write_cr3(vcpu, 0);
+		vmx_write_cr0(vcpu, CR0_ET | CR0_NE);
 	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
 		vmx_write_cr4(vcpu, 0);
-		vmx_write_cr0(vcpu, CR0_ET | CR0_NE | CR0_PE);
 		vmx_write_cr3(vcpu, 0);
+		vmx_write_cr0(vcpu, CR0_ET | CR0_NE | CR0_PE);
 	} else if (vcpu_mode == CPU_MODE_64BIT) {
 		vmx_write_cr4(vcpu, CR4_PSE | CR4_PAE | CR4_MCE);
-		vmx_write_cr0(vcpu, CR0_PG | CR0_PE | CR0_NE);
 		vmx_write_cr3(vcpu, vm->arch_vm.guest_init_pml4 | CR3_PWT);
+		vmx_write_cr0(vcpu, CR0_PG | CR0_PE | CR0_NE);
 	}
 
 	/***************************************************/
