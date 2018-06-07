@@ -573,10 +573,10 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
  * FIXME: here using hard code GUEST_INIT_PAGE_TABLE_START as guest init page
  * table gpa start, and it will occupy at most GUEST_INIT_PT_PAGE_NUM pages.
  * Some check here:
- * - guest page table space should not override cpu_secondary_reset code area
+ * - guest page table space should not override trampline code area
  *   (it's a little tricky here, as under current identical mapping, HV & SOS
  *   share same memory under 1M; under uefi boot mode, the defered AP startup
- *   need cpu_secondary_reset code area which reserved by uefi stub keep there
+ *   need trampline code area which reserved by uefi stub keep there
  *   no change even after SOS startup)
  * - guest page table space should not override possible RSDP fix segment
  *
@@ -604,8 +604,8 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 		RSDP_F_ADDR, "RSDP fix segment could be override");
 
 	if (GUEST_INIT_PAGE_TABLE_SKIP_SIZE <
-		(unsigned long)&_ld_cpu_secondary_reset_size) {
-		panic("guest init PTs override cpu_secondary_reset code");
+		(unsigned long)&_ld_trampline_size) {
+		panic("guest init PTs override trampline code");
 	}
 
 	/* Using continuous memory for guest page tables, the total 4K page

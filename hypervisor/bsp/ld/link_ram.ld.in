@@ -39,20 +39,20 @@ SECTIONS
 
     } > ram
 
-    _ld_cpu_secondary_reset_load = .;
+    _ld_trampline_load = .;
 
-    .cpu_secondary : AT (_ld_cpu_secondary_reset_load)
+    .trampline : AT (_ld_trampline_load)
     {
-        _ld_cpu_secondary_reset_start = .;
-        *(.cpu_secondary_reset);
+        _ld_trampline_start = .;
+        *(.trampline_reset);
         . = ALIGN(4);
-        _ld_cpu_secondary_reset_end = .;
+        _ld_trampline_end = .;
 
     } > lowram
 
-    _ld_cpu_secondary_reset_size = _ld_cpu_secondary_reset_end - _ld_cpu_secondary_reset_start;
+    _ld_trampline_size = _ld_trampline_end - _ld_trampline_start;
 
-    .data (_ld_cpu_secondary_reset_load + _ld_cpu_secondary_reset_size):
+    .data (_ld_trampline_load + _ld_trampline_size):
     {
         *(.data) ;
         *(.data*) ;
