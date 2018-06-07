@@ -331,8 +331,8 @@ int decode_instruction(struct vcpu *vcpu)
 	csar = exec_vmread(VMX_GUEST_CS_ATTR);
 	cpu_mode = get_vcpu_mode(vcpu);
 
-	retval = __decode_instruction(vcpu, guest_rip_gva,
-			cpu_mode, SEG_DESC_DEF32(csar), &emul_cnx->vie);
+	retval = __decode_instruction(cpu_mode, SEG_DESC_DEF32(csar),
+		&emul_cnx->vie);
 
 	if (retval != 0) {
 		pr_err("decode instruction failed @ 0x%016llx:",
