@@ -2,6 +2,16 @@
  * Copyright (C) 2018 Intel Corporation. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * This is entry for AP startup and BSP S3 wakeup
+ *
+ * When system jump to trampline_start16, the CPU is in x86 real
+ * mode with no stack setup. CS:IP points to trampline_start16.
+ *
+ * The CPU will be changed to long mode finally with temperay
+ * page table and gdt in this file. Then jump to different C main
+ * entry according to whether it's AP startup or BSP S3 resume.
+ * The real page table and gdt will be setup in C main entry.
  */
 
 #include        <spinlock.h>
@@ -24,8 +34,44 @@
 trampline_start16:
 
     /* Disable local interrupts */
-
     cli
+
+    /*
+     * There are two paths system could come here:
+     *   - AP startup
+     *     Silicon will set AP to real mode and setup CS:IP before
+     *     jmp to trampline_start16. And the IP is always 0 for sure.
+     *   - BSP wakeup from S3
+     *     Some bootloader (like ABL) doesn't guarante IP is set to
+     *     zero before jump to trampline_start16 after system resume
+     *     from S3.
+     *
+     * To make trampline code could work with all these cases, a far
+     * jump is issued here as fixup. It will update the CS:IP according
+     * to where the trampline code is located.
+     *
+     * Here, we issue a far jump with "JMP ptr16:16" format (please refer
+     * sdm vol2A - JMP instruction description). The jump target is set
+     * to trampline_fixup_target_addr. From trampline_fixup_target_addr,
+     * The CS has same value for both AP startup and BSP wakeup from S3.
+     *
+     * Because the limitation of real mode (can't access ip register
+     * directly. So can't setup the trampline_fixup_ip and
+     * trampline_fixup_cs), we have to update the trampline_fixup_ip
+     * and trampline_fixup_cs when we preparing the trampline code.
+     *
+     * Refer to preparing_trampline() for fixup CS:IP setup
+     */
+    .byte 0xea	/* Opcode of "JMP ptr16:16" */
+    .global trampline_fixup_ip
+trampline_fixup_ip:
+    .word   0	/* "EIP is intruction following JUMP instruction" */
+    .global trampline_fixup_cs
+trampline_fixup_cs:
+    .word   0	/* CS */
+
+    .global trampline_fixup_target
+trampline_fixup_target:
     mov %cs, %ax
     mov %ax, %ds
 
