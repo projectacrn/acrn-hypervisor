@@ -8,13 +8,13 @@ if [ ! -f "/data/$5/$5.img" ]; then
 fi
 
 #vm-name used to generate uos-mac address
-mac=$(cat /sys/class/net/ens4/address)
+mac=$(cat /sys/class/net/en*/address)
 vm_name=vm$1
 vm_name=${vm_name}-${mac:9:8}
 
 # create a unique tap device for each VM
 tap=tap_LaaG
-tap_exist=$(ifconfig | grep acrn_"$tap" | awk '{print $1}')
+tap_exist=$(ip a | grep acrn_"$tap" | awk '{print $1}')
 if [ "$tap_exist"x != "x" ]; then
   echo "tap device existed, reuse acrn_$tap"
 else
@@ -22,10 +22,10 @@ else
 fi
 
 # if acrn-br0 exists, add VM's unique tap device under it
-br_exist=$(ifconfig | grep acrn-br0 | awk '{print $1}')
+br_exist=$(ip a | grep acrn-br0 | awk '{print $1}')
 if [ "$br_exist"x != "x" -a "$tap_exist"x = "x" ]; then
   echo "acrn-br0 bridge aleady exists, adding new tap device to it..."
-  brctl addif acrn-br0 acrn_"$tap"
+  ip link set acrn_"$tap" master acrn-br0
   ip link set dev acrn_"$tap" down
   ip link set dev acrn_"$tap" up
 fi
@@ -133,13 +133,13 @@ if [ ! -f "/data/$5/$5.img" ]; then
 fi
 
 #vm-name used to generate uos-mac address
-mac=$(cat /sys/class/net/ens4/address)
+mac=$(cat /sys/class/net/en*/address)
 vm_name=vm$1
 vm_name=${vm_name}-${mac:9:8}
 
 # create a unique tap device for each VM
 tap=tap_AaaG
-tap_exist=$(ifconfig | grep acrn_"$tap" | awk '{print $1}')
+tap_exist=$(ip a | grep acrn_"$tap" | awk '{print $1}')
 if [ "$tap_exist"x != "x" ]; then
   echo "tap device existed, reuse acrn_$tap"
 else
@@ -147,10 +147,10 @@ else
 fi
 
 # if acrn-br0 exists, add VM's unique tap device under it
-br_exist=$(ifconfig | grep acrn-br0 | awk '{print $1}')
+br_exist=$(ip a | grep acrn-br0 | awk '{print $1}')
 if [ "$br_exist"x != "x" -a "$tap_exist"x = "x" ]; then
   echo "acrn-br0 bridge aleady exists, adding new tap device to it..."
-  brctl addif acrn-br0 acrn_"$tap"
+  ip link set acrn_"$tap" master acrn-br0
   ip link set dev acrn_"$tap" down
   ip link set dev acrn_"$tap" up
 fi
