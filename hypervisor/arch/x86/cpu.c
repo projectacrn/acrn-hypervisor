@@ -606,6 +606,32 @@ int cpu_find_logical_id(uint32_t lapic_id)
 	return -1;
 }
 
+extern uint16_t trampline_fixup_cs[];
+extern uint16_t trampline_fixup_ip[];
+extern uint32_t trampline_fixup_target;
+void prepare_trampline(void)
+{
+	uint64_t val;
+
+	/*Copy segment for AP initialization code below 1MB */
+	memcpy_s(_ld_trampline_start,
+		(unsigned long)&_ld_trampline_size,
+		_ld_trampline_load,
+		(unsigned long)&_ld_trampline_size);
+
+	/*
+	 * calculate the fixup CS:IP according to fixup target address
+	 * dynamically.
+	 *
+	 * FIXME:
+	 * the val should be set to runtime address of trampline code
+	 * after trampline relocation is enabled.
+	 */
+	val = (uint64_t) &trampline_fixup_target;
+	trampline_fixup_cs[0] = (uint16_t)(val >> 4) & 0xFFFF;
+	trampline_fixup_ip[0] = (uint16_t)(val & 0xf);
+}
+
 /*
  * Start all secondary CPUs.
  */
@@ -614,11 +640,7 @@ void start_cpus()
 	uint32_t timeout;
 	uint32_t expected_up;
 
-	/*Copy segment for AP initialization code below 1MB */
-	memcpy_s(_ld_trampline_start,
-		(unsigned long)&_ld_trampline_size,
-		_ld_trampline_load,
-		(unsigned long)&_ld_trampline_size);
+	prepare_trampline();
 
 	/* Set flag showing number of CPUs expected to be up to all
 	 * cpus
