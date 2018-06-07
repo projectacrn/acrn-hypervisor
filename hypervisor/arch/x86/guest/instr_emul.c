@@ -2135,8 +2135,7 @@ decode_moffset(struct vie *vie)
 }
 
 int
-__decode_instruction(__unused struct vcpu *vcpu, __unused uint64_t gla,
-		enum vm_cpu_mode cpu_mode, int cs_d, struct vie *vie)
+__decode_instruction(enum vm_cpu_mode cpu_mode, int cs_d, struct vie *vie)
 {
 	if (decode_prefixes(vie, cpu_mode, cs_d))
 		return -1;
