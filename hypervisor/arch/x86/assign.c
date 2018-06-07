@@ -422,7 +422,7 @@ add_intx_remapping(struct vm *vm, uint8_t virt_pin,
 }
 
 /* deactive & remove mapping entry of vpin for vm */
-void remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin)
+static void remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin)
 {
 	int phys_irq;
 	struct ptdev_remapping_info *entry;
