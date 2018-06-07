@@ -11,7 +11,7 @@ acrnlog:
 	make -C $(T)/acrnlog OUT_DIR=$(OUT_DIR)
 
 acrn-manager:
-	make -C $(T)/acrn-manager OUT_DIR=$(OUT_DIR)
+	make -C $(T)/acrn-manager OUT_DIR=$(OUT_DIR) RELEASE=$(RELEASE)
 
 acrntrace:
 	make -C $(T)/acrntrace OUT_DIR=$(OUT_DIR)
