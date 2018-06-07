@@ -383,8 +383,9 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 
 	/* handling cancelled event injection when vcpu is switched out */
 	if (vcpu->arch_vcpu.inject_event_pending) {
-		exec_vmwrite(VMX_ENTRY_EXCEPTION_ERROR_CODE,
-			vcpu->arch_vcpu.inject_info.error_code);
+		if (vcpu->arch_vcpu.inject_info.intr_info & (EXCEPTION_ERROR_CODE_VALID << 8))
+			exec_vmwrite(VMX_ENTRY_EXCEPTION_ERROR_CODE,
+				vcpu->arch_vcpu.inject_info.error_code);
 
 		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
 			vcpu->arch_vcpu.inject_info.intr_info);
