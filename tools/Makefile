@@ -33,7 +33,7 @@ acrn-crashlog-install:
 acrnlog-install:
 	make -C $(T)/acrnlog OUT_DIR=$(OUT_DIR) install
 
-arcn-manager-install:
+acrn-manager-install:
 	make -C $(T)/acrn-manager OUT_DIR=$(OUT_DIR) install
 
 acrntrace-install:
