@@ -1358,23 +1358,13 @@ static void override_uefi_vmcs(struct vcpu *vcpu)
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 
 	if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
-		/* Set up guest CR0 field */
-		field = VMX_GUEST_CR0;
-		cur_context->cr0 = efi_ctx->cr0 | CR0_PG | CR0_PE | CR0_NE;
-		exec_vmwrite(field, cur_context->cr0 & 0xFFFFFFFF);
-		pr_dbg("VMX_GUEST_CR0: 0x%016llx ", cur_context->cr0);
-
-		/* Set up guest CR3 field */
-		field = VMX_GUEST_CR3;
-		cur_context->cr3 = efi_ctx->cr3;
-		exec_vmwrite(field, cur_context->cr3 & 0xFFFFFFFF);
-		pr_dbg("VMX_GUEST_CR3: 0x%016llx ", cur_context->cr3);
-
-		/* Set up guest CR4 field */
-		field = VMX_GUEST_CR4;
-		cur_context->cr4 = efi_ctx->cr4 | CR4_VMXE;
-		exec_vmwrite(field, cur_context->cr4 & 0xFFFFFFFF);
-		pr_dbg("VMX_GUEST_CR4: 0x%016llx ", cur_context->cr4);
+		/* CR4 should be set before CR0, because when set CR0, CR4 value
+		 * will be checked. */
+		/* VMXE is always on bit when set CR4, and not allowed to be set
+		 * from input cr4 value */
+		vmx_write_cr4(vcpu, efi_ctx->cr4 & ~CR4_VMXE);
+		vmx_write_cr3(vcpu, efi_ctx->cr3);
+		vmx_write_cr0(vcpu, efi_ctx->cr0 | CR0_PG | CR0_PE | CR0_NE);
 
 		/* Selector */
 		field = VMX_GUEST_CS_SEL;
