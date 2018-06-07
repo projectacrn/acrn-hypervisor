@@ -156,9 +156,9 @@ int cpu_find_logical_id(uint32_t lapic_id);
 /**********************************/
 /* EXTERNAL VARIABLES             */
 /**********************************/
-extern const uint8_t          _ld_cpu_secondary_reset_load[];
-extern uint8_t                _ld_cpu_secondary_reset_start[];
-extern const uint64_t         _ld_cpu_secondary_reset_size;
+extern const uint8_t          _ld_trampline_load[];
+extern uint8_t                _ld_trampline_start[];
+extern const uint64_t         _ld_trampline_size;
 extern uint8_t                _ld_bss_start[];
 extern uint8_t                _ld_bss_end[];
 
@@ -239,7 +239,7 @@ extern struct cpuinfo_x86 boot_cpu_data;
 
 /* Function prototypes */
 void cpu_dead(uint32_t logical_id);
-void cpu_secondary_reset(void);
+void trampline_start16(void);
 int hv_main(int cpu_id);
 bool is_vapic_supported(void);
 bool is_vapic_intr_delivery_supported(void);

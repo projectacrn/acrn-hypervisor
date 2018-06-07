@@ -8,7 +8,7 @@
 #include <schedule.h>
 #include <version.h>
 
-spinlock_t cpu_secondary_spinlock = {
+spinlock_t trampline_spinlock = {
 	.head = 0,
 	.tail = 0
 };
@@ -574,7 +574,7 @@ void cpu_secondary_init(void)
 	/* Release secondary boot spin-lock to allow one of the next CPU(s) to
 	 * perform this common initialization
 	 */
-	spinlock_release(&cpu_secondary_spinlock);
+	spinlock_release(&trampline_spinlock);
 
 	/* Initialize secondary processor interrupts. */
 	interrupt_init(get_cpu_id());
@@ -615,10 +615,10 @@ void start_cpus()
 	uint32_t expected_up;
 
 	/*Copy segment for AP initialization code below 1MB */
-	memcpy_s(_ld_cpu_secondary_reset_start,
-		(unsigned long)&_ld_cpu_secondary_reset_size,
-		_ld_cpu_secondary_reset_load,
-		(unsigned long)&_ld_cpu_secondary_reset_size);
+	memcpy_s(_ld_trampline_start,
+		(unsigned long)&_ld_trampline_size,
+		_ld_trampline_load,
+		(unsigned long)&_ld_trampline_size);
 
 	/* Set flag showing number of CPUs expected to be up to all
 	 * cpus
@@ -627,7 +627,7 @@ void start_cpus()
 
 	/* Broadcast IPIs to all other CPUs */
 	send_startup_ipi(INTR_CPU_STARTUP_ALL_EX_SELF,
-		       -1U, ((uint64_t) cpu_secondary_reset));
+		       -1U, ((uint64_t) trampline_start16));
 
 	/* Wait until global count is equal to expected CPU up count or
 	 * configured time-out has expired
