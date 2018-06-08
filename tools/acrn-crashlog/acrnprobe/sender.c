@@ -185,7 +185,7 @@ static void get_log_rotation(struct log_t *log, char *desdir)
 	if (count > 2) {
 		for (i = 0; i < count; i++) {
 			name = strrchr(files[i], '/') + 1;
-			if (!strstr(name, prefix))
+			if (!name && !strstr(name, prefix))
 				continue;
 
 			number = atoi(strrchr(name, '.') + 1);
@@ -793,7 +793,7 @@ static void crashlog_send_crash(struct event_t *e)
 	char *data1;
 	char *data2;
 	int id;
-	int ret;
+	int ret = 0;
 	int quota;
 	struct crash_t *rcrash = (struct crash_t *)e->private;
 
@@ -931,8 +931,13 @@ static void crashlog_send_reboot(void)
 {
 	char reason[MAXLINESIZE];
 	char *key;
+	struct sender_t *crashlog;
 
-	if (swupdated(get_sender_by_name("crashlog"))) {
+	crashlog = get_sender_by_name("crashlog");
+	if (!crashlog)
+		return;
+
+	if (swupdated(crashlog)) {
 		key = generate_event_id("INFO", "SWUPDATE");
 		if (key == NULL) {
 			LOGE("generate event id failed, error (%s)\n",

@@ -111,54 +111,54 @@ struct conf_t {
 struct conf_t conf;
 
 #define for_each_sender(id, sender, conf) \
-		for (id = 0, sender = conf.sender[0]; \
-		     id < SENDER_MAX; \
-		     id++, sender = conf.sender[id])
+		for (id = 0; \
+		     id < SENDER_MAX && (sender = conf.sender[id]); \
+		     id++)
 
 #define for_each_trigger(id, trigger, conf) \
-		for (id = 0, trigger = conf.trigger[0]; \
-		     id < TRIGGER_MAX; \
-		     id++, trigger = conf.trigger[id])
+		for (id = 0; \
+		     id < TRIGGER_MAX && (trigger = conf.trigger[id]); \
+		     id++)
 
 #define for_each_vm(id, vm, conf) \
-		for (id = 0, vm = conf.vm[0]; \
-		     id < VM_MAX; \
-		     id++, vm = conf.vm[id])
+		for (id = 0; \
+		     id < VM_MAX && (vm = conf.vm[id]); \
+		     id++)
 
 #define for_each_syncevent_vm(id, event, vm) \
-		for (id = 0, event = vm->syncevent[0]; \
-		     id < VM_EVENT_TYPE_MAX; \
-		     id++, event = vm->syncevent[id])
+		for (id = 0; \
+		     id < VM_EVENT_TYPE_MAX && (event = vm->syncevent[id]); \
+		     id++)
 
 #define for_each_info(id, info, conf) \
-		for (id = 0, info = conf.info[0]; \
-		     id < INFO_MAX; \
-		     id++, info = conf.info[id])
+		for (id = 0; \
+		     id < INFO_MAX && (info = conf.info[id]); \
+		     id++)
 
 #define for_each_log(id, log, conf) \
-		for (id = 0, log = conf.log[0]; \
-		     id < LOG_MAX; \
-		     id++, log = conf.log[id])
+		for (id = 0; \
+		     id < LOG_MAX && (log = conf.log[id]); \
+		     id++)
 
 #define for_each_crash(id, crash, conf) \
-		for (id = 0, crash = conf.crash[0]; \
-		     id < CRASH_MAX; \
-		     id++, crash = conf.crash[id])
+		for (id = 0; \
+		     id < CRASH_MAX && (crash = conf.crash[id]); \
+		     id++)
 
 #define for_each_log_collect(id, log, type) \
-		for (id = 0, log = type->log[0]; \
-		     id < LOG_MAX; \
-		     id++, log = type->log[id])
+		for (id = 0; \
+		     id < LOG_MAX && (log = type->log[id]); \
+		     id++)
 
 #define for_each_content_crash(id, content, crash) \
-		for (id = 0, content = crash->content[0]; \
-		     id < CONTENT_MAX; \
-		     id++, content = crash->content[id])
+		for (id = 0; \
+		     id < CONTENT_MAX && (content = crash->content[id]); \
+		     id++)
 
 #define for_each_content_expression(id, content, exp) \
-		for (id = 0, content = exp[0]; \
-		     id < CONTENT_MAX; \
-		     id++, content = exp[id])
+		for (id = 0; \
+		     id < CONTENT_MAX && (content = exp[id]); \
+		     id++)
 
 #define exp_valid(exp) \
 (__extension__ \
@@ -175,9 +175,9 @@ struct conf_t conf;
 )
 
 #define for_each_expression_crash(id, exp, crash) \
-		for (id = 0, exp = crash->mightcontent[0]; \
-		     id < EXPRESSION_MAX; \
-		     id++, exp = crash->mightcontent[id])
+		for (id = 0; \
+		     id < EXPRESSION_MAX && (exp = crash->mightcontent[id]); \
+		     id++)
 
 #define for_crash_children(crash, tcrash) \
 			TAILQ_FOREACH(crash, &tcrash->children, entries)

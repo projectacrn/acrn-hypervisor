@@ -79,10 +79,10 @@ int get_current_time_long(char buf[32])
 
 	time(&t);
 	time_val = localtime((const time_t *)&t);
+	if (!time_val)
+		return -1;
 
-	strftime(buf, 32, "%Y-%m-%d/%H:%M:%S  ", time_val);
-
-	return 0;
+	return strftime(buf, 32, "%Y-%m-%d/%H:%M:%S  ", time_val);
 }
 
 /**
@@ -286,6 +286,9 @@ static int reserve_log_folder(enum e_dir_mode mode, char *dir,
 	unsigned int maxdirs;
 
 	crashlog = get_sender_by_name("crashlog");
+	if (!crashlog)
+		return -1;
+
 	outdir = crashlog->outdir;
 
 	switch (mode) {
@@ -352,7 +355,9 @@ void generate_crashfile(char *dir, char *event, char *hashkey,
 	const int fmtsize = 128;
 	int filesize;
 
-	get_current_time_long(datetime);
+	ret = get_current_time_long(datetime);
+	if (ret <= 0)
+		return;
 	get_uptime_string(uptime, &hours);
 
 	filesize = fmtsize + strlen(event) +
