@@ -1,8 +1,8 @@
 T := $(CURDIR)
 OUT_DIR ?= $(T)/build
 
-.PHONY: all acrn-crashlog acrnlog acrn-manager acrntrace
-all: acrn-crashlog acrnlog acrn-manager acrntrace
+.PHONY: all acrn-crashlog acrnlog acrn-manager acrntrace acrnbridge
+all: acrn-crashlog acrnlog acrn-manager acrntrace acrnbridge
 
 acrn-crashlog:
 	make -C $(T)/acrn-crashlog OUT_DIR=$(OUT_DIR) RELEASE=$(RELEASE)
@@ -15,6 +15,9 @@ acrn-manager:
 
 acrntrace:
 	make -C $(T)/acrntrace OUT_DIR=$(OUT_DIR)
+
+acrnbridge:
+	make -C $(T)/acrnbridge OUT_DIR=$(OUT_DIR)
 
 .PHONY: clean
 clean:
@@ -38,3 +41,6 @@ acrn-manager-install:
 
 acrntrace-install:
 	make -C $(T)/acrntrace OUT_DIR=$(OUT_DIR) install
+
+acrnbridge-install:
+	make -C $(T)/acrnbridge OUT_DIR=$(OUT_DIR) install
