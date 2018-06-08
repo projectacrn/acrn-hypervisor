@@ -112,3 +112,7 @@ config UEFI_OS_LOADER_NAME
 	string "UEFI OS loader name"
 	depends on PLATFORM_UEFI
 	default "\\EFI\\org.clearlinux\\bootloaderx64.efi"
+
+config MTRR_ENABLED
+	bool
+	default y
