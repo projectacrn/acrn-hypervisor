@@ -216,7 +216,7 @@ int register_mmio_emulation_handler(struct vm *vm,
 	}
 
 	/* Ensure both a read/write handler and range check function exist */
-	if ((read_write != HV_NULL) && (end > start)) {
+	if ((read_write != NULL) && (end > start)) {
 		/* Allocate memory for node */
 		mmio_node =
 		(struct mem_io_node *)calloc(1, sizeof(struct mem_io_node));
