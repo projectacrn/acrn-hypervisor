@@ -35,15 +35,20 @@ void usage(void)
 	printf("\t-V,  --version        Print the program version\n");
 }
 
-static void uptime(struct sender_t *sender)
+static void uptime(const struct sender_t *sender)
 {
 	int fd;
 	int frequency;
-	struct uptime_t *uptime;
+	const struct uptime_t *uptime;
 
 	uptime = sender->uptime;
+	if (!uptime)
+		return;
+
 	frequency = atoi(uptime->frequency);
-	sleep(frequency);
+	if (frequency > 0)
+		sleep(frequency);
+
 	fd = open(uptime->path, O_RDWR | O_CREAT, 0666);
 	if (fd < 0)
 		LOGE("open uptime_file with (%d, %s) failed, error (%s)\n",
@@ -59,7 +64,7 @@ int main(int argc, char *argv[])
 	int id;
 	int op;
 	struct sender_t *sender;
-	char cfg[PATH_MAX] = {0};
+	char cfg[PATH_MAX];
 	char *config_path[2] = {CONFIG_CUSTOMIZE,
 				CONFIG_INSTALL};
 	struct option opts[] = {
@@ -73,7 +78,7 @@ int main(int argc, char *argv[])
 				 NULL)) != -1) {
 		switch (op) {
 		case 'c':
-			strcpy(cfg, optarg);
+			strncpy(cfg, optarg, PATH_MAX);
 			break;
 		case 'h':
 			usage();
@@ -92,10 +97,11 @@ int main(int argc, char *argv[])
 
 	if (!cfg[0]) {
 		if (file_exists(config_path[0]))
-			strcpy(cfg, config_path[0]);
+			strncpy(cfg, config_path[0], PATH_MAX);
 		else
-			strcpy(cfg, config_path[1]);
+			strncpy(cfg, config_path[1], PATH_MAX);
 	}
+	cfg[PATH_MAX - 1] = 0;
 
 	ret = load_conf(cfg);
 	if (ret)
