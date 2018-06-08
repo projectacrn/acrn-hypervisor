@@ -119,17 +119,22 @@ static int refresh_key_synced_stage1(struct sender_t *sender, struct vm_t *vm,
 					char *key, enum refresh_type_t type)
 {
 	char log_new[64];
-	char *log_vmrecordid = sender->log_vmrecordid;
+	char *log_vmrecordid;
+	int sid;
 
 	if (!key || !sender || !vm)
 		return -1;
 
+	sid = sender_id(sender);
+	if (sid == -1)
+		return -1;
+	log_vmrecordid = sender->log_vmrecordid;
 	/* the length of key must be 20, and its value can not be
 	 * 00000000000000000000.
 	 */
 	if ((strlen(key) == 20) &&
 	    strcmp(key, "00000000000000000000")) {
-		sprintf(vm->last_synced_line_key[sender_id(sender)],
+		sprintf(vm->last_synced_line_key[sid],
 			"%s", key);
 		if (type == MM_ONLY)
 			return 0;
@@ -158,6 +163,9 @@ static int refresh_key_synced_stage2(struct mm_file_t *m_vm_records, char *key)
 	if (*key) {
 		begin = strstr(m_vm_records->begin, " <==");
 		end = strrstr(m_vm_records->begin, key);
+		if (!begin || !end)
+			return -1;
+
 		end = strchr(end, '\n');
 
 		for (p = begin; p < end; p++) {
@@ -183,6 +191,8 @@ static int get_vm_history(struct vm_t *vm, struct sender_t *sender,
 		return -1;
 
 	sid = sender_id(sender);
+	if (sid == -1)
+		return -1;
 
 	snprintf(vm_history, sizeof(vm_history), "/tmp/%s_%s",
 		 "vm_hist", vm->name);
@@ -221,6 +231,9 @@ static void sync_lines_stage1(struct sender_t *sender, void *data[])
 	char *vm_format = "%*[^ ]%*[ ]%[^ ]%*c";
 
 	sid = sender_id(sender);
+	if (sid == -1)
+		return;
+
 	for_each_vm(id, vm, conf) {
 		if (!vm)
 			continue;
@@ -287,6 +300,10 @@ static void sync_lines_stage2(struct sender_t *sender, void *data[],
 						       strerror(errno));
 		return;
 	}
+	if (!m_vm_records->size) {
+		LOGE("size(0b) of (%s)\n", sender->log_vmrecordid);
+		return;
+	}
 
 	cursor = strstr(m_vm_records->begin, " <==");
 	if (!cursor)
@@ -334,10 +351,18 @@ out:
 static void get_last_line_synced(struct sender_t *sender)
 {
 	int id;
+	int sid;
 	int ret;
 	struct vm_t *vm;
 	char vmkey[SHA_DIGEST_LENGTH + 10] = {0};
 	char word[256];
+
+	if (!sender)
+		return;
+
+	sid = sender_id(sender);
+	if (sid == -1)
+		return;
 
 	for_each_vm(id, vm, conf) {
 		if (!vm)
@@ -347,7 +372,7 @@ static void get_last_line_synced(struct sender_t *sender)
 			continue;
 
 		/* generally only exec for each vm once */
-		if (vm->last_synced_line_key[sender_id(sender)][0])
+		if (vm->last_synced_line_key[sid][0])
 			continue;
 
 		snprintf(word, sizeof(word), "%s ", vm->name);
@@ -406,6 +431,7 @@ static char *setup_loop_dev(void)
 	 * launch_UOS.sh, we need mount its data partition to loop device
 	 */
 	char *out;
+	char *end;
 	char loop_dev_tmp[32];
 	int i;
 
@@ -440,7 +466,9 @@ static char *setup_loop_dev(void)
 			}
 		}
 	}
-	*strchr(loop_dev, '\n') = 0;
+	end = strchr(loop_dev, '\n');
+	if (end)
+		*end = 0;
 
 	out = exec_out2mem("fdisk -lu %s", android_img);
 	if (!out) {

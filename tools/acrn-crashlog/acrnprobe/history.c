@@ -132,6 +132,9 @@ void hist_raise_event(char *event, char *type, char *log, char *lastuptime,
 
 	/* here means user have configured the crashlog sender */
 	crashlog = get_sender_by_name("crashlog");
+	if (!crashlog)
+		return;
+
 	maxlines = atoi(crashlog->maxlines);
 	if (++current_lines >= maxlines) {
 		LOGW("lines of (%s) meet quota %d, backup... Pls clean!\n",
@@ -139,9 +142,11 @@ void hist_raise_event(char *event, char *type, char *log, char *lastuptime,
 		backup_history();
 	}
 
-	get_current_time_long(eventtime);
-	entry.eventtime = eventtime;
+	ret = get_current_time_long(eventtime);
+	if (ret <= 0)
+		return;
 
+	entry.eventtime = eventtime;
 	entry_to_history_line(&entry, line);
 	ret = append_file(history_file, line);
 	if (ret < 0) {
@@ -165,6 +170,9 @@ void hist_raise_uptime(char *lastuptime)
 
 	/* user have configured the crashlog sender */
 	crashlog = get_sender_by_name("crashlog");
+	if (!crashlog)
+		return;
+
 	uptime = crashlog->uptime;
 	uptime_hours = atoi(uptime->eventhours);
 
