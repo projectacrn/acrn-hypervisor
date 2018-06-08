@@ -1118,7 +1118,7 @@ vlapic_intr_accepted(struct vlapic *vlapic, int vector)
 	int idx, stk_top;
 
 	if (vlapic->ops.apicv_intr_accepted) {
-		(*vlapic->ops.apicv_intr_accepted)(vlapic, vector);
+		vlapic->ops.apicv_intr_accepted(vlapic, vector);
 		return;
 	}
 
@@ -1609,14 +1609,14 @@ void
 vlapic_apicv_batch_set_tmr(struct vlapic *vlapic)
 {
 	if (vlapic->ops.apicv_batch_set_tmr != NULL)
-		(*vlapic->ops.apicv_batch_set_tmr)(vlapic);
+		vlapic->ops.apicv_batch_set_tmr(vlapic);
 }
 
 void
 vlapic_apicv_set_tmr(struct vlapic *vlapic, int vector, bool level)
 {
 	if (vlapic->ops.apicv_set_tmr != NULL)
-		(*vlapic->ops.apicv_set_tmr)(vlapic, vector, level);
+		vlapic->ops.apicv_set_tmr(vlapic, vector, level);
 }
 
 void

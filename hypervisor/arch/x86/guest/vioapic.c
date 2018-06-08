@@ -565,13 +565,11 @@ vioapic_pincount(struct vm *vm)
 }
 
 int vioapic_mmio_access_handler(struct vcpu *vcpu, struct mem_io *mmio,
-		void *handler_private_data)
+		__unused void *handler_private_data)
 {
 	struct vm *vm = vcpu->vm;
 	uint64_t gpa = mmio->paddr;
 	int ret = 0;
-
-	(void)handler_private_data;
 
 	/* Note all RW to IOAPIC are 32-Bit in size */
 	ASSERT(mmio->access_size == 4,
