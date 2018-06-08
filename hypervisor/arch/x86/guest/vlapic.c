@@ -224,6 +224,15 @@ vlapic_id_write_handler(struct vlapic *vlapic)
 	lapic->id = vlapic_get_id(vlapic);
 }
 
+static inline uint32_t
+vlapic_timer_divisor_shift(uint32_t dcr)
+{
+	uint32_t val;
+
+	val = ((dcr & 0x3) | ((dcr & 0x8) >> 1));
+	return ((val + 1) & 0x7);
+}
+
 static inline bool
 vlapic_lvtt_oneshot(struct vlapic *vlapic)
 {
@@ -280,6 +289,32 @@ static void vlapic_reset_timer(struct vlapic *vlapic)
 	timer->period_in_cycle = 0;
 }
 
+static bool
+set_expiration(struct vlapic *vlapic)
+{
+	uint64_t now = rdtsc();
+	uint64_t delta;
+	struct vlapic_timer *vlapic_timer;
+	struct timer *timer;
+	uint32_t tmicr, divisor_shift;
+
+	vlapic_timer = &vlapic->vlapic_timer;
+	tmicr = vlapic_timer->tmicr;
+	divisor_shift = vlapic_timer->divisor_shift;
+
+	if (!tmicr || divisor_shift > 8)
+		return false;
+
+	delta = tmicr << divisor_shift;
+	timer = &vlapic_timer->timer;
+
+	if (vlapic_lvtt_period(vlapic))
+		timer->period_in_cycle = delta;
+	timer->fire_tsc = now + delta;
+
+	return true;
+}
+
 static void vlapic_update_lvtt(struct vlapic *vlapic,
 			uint32_t val)
 {
@@ -303,19 +338,53 @@ static void vlapic_update_lvtt(struct vlapic *vlapic,
 	}
 }
 
-static uint32_t vlapic_get_ccr(__unused struct vlapic *vlapic)
+static uint32_t vlapic_get_ccr(struct vlapic *vlapic)
 {
-	return 0;
+	uint64_t now = rdtsc();
+	uint64_t remain_count = 0;
+	struct vlapic_timer *vlapic_timer;
+
+	vlapic_timer = &vlapic->vlapic_timer;
+
+	if (vlapic_timer->tmicr && !vlapic_lvtt_tsc_deadline(vlapic)) {
+		uint64_t fire_tsc = vlapic_timer->timer.fire_tsc;
+		uint32_t divisor_shift = vlapic_timer->divisor_shift;
+
+		if (now < fire_tsc)
+			remain_count = (fire_tsc - now) >> divisor_shift;
+	}
+
+	return remain_count;
 }
 
-static void vlapic_dcr_write_handler(__unused struct vlapic *vlapic)
+static void vlapic_dcr_write_handler(struct vlapic *vlapic)
 {
+	uint32_t divisor_shift;
+	struct vlapic_timer *vlapic_timer;
+	struct lapic *lapic = vlapic->apic_page;
+
+	vlapic_timer = &vlapic->vlapic_timer;
+	divisor_shift = vlapic_timer_divisor_shift(lapic->dcr_timer);
+
+	vlapic_timer->divisor_shift = divisor_shift;
 }
 
-static void vlapic_icrtmr_write_handler(__unused struct vlapic *vlapic)
+static void vlapic_icrtmr_write_handler(struct vlapic *vlapic)
 {
-}
+	struct lapic *lapic;
+	struct vlapic_timer *vlapic_timer;
 
+	if (vlapic_lvtt_tsc_deadline(vlapic))
+		return;
+
+	lapic = vlapic->apic_page;
+	vlapic_timer = &vlapic->vlapic_timer;
+	vlapic_timer->tmicr = lapic->icr_timer;
+
+	del_timer(&vlapic_timer->timer);
+	if (set_expiration(vlapic))
+		add_timer(&vlapic_timer->timer);
+}
 
 static uint64_t vlapic_get_tsc_deadline_msr(struct vlapic *vlapic)
 {
@@ -1165,10 +1234,12 @@ vlapic_svr_write_handler(struct vlapic *vlapic)
 	if ((changed & APIC_SVR_ENABLE) != 0) {
 		if ((new & APIC_SVR_ENABLE) == 0) {
 			/*
-			 * TODO: The apic is now disabled so stop the apic timer
+			 * The apic is now disabled so stop the apic timer
 			 * and mask all the LVT entries.
 			 */
 			dev_dbg(ACRN_DBG_LAPIC, "vlapic is software-disabled");
+			del_timer(&vlapic->vlapic_timer.timer);
+
 			vlapic_mask_lvts(vlapic);
 			/* the only one enabled LINT0-ExtINT vlapic disabled */
 			if (vlapic->vm->vpic_wire_mode == VPIC_WIRE_NULL) {
@@ -1183,7 +1254,8 @@ vlapic_svr_write_handler(struct vlapic *vlapic)
 			 */
 			dev_dbg(ACRN_DBG_LAPIC, "vlapic is software-enabled");
 			if (vlapic_lvtt_period(vlapic))
-				vlapic_icrtmr_write_handler(vlapic);
+				if (set_expiration(vlapic))
+					add_timer(&vlapic->vlapic_timer.timer);
 		}
 	}
 }
@@ -1302,10 +1374,9 @@ vlapic_read(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 		if (vlapic_lvtt_tsc_deadline(vlapic))
 			*data = 0;
 		else
-			*data = vlapic_get_ccr(vlapic);
+			*data = lapic->icr_timer;
 		break;
 	case APIC_OFFSET_TIMER_CCR:
-		/* TODO */
 		*data = vlapic_get_ccr(vlapic);
 		break;
 	case APIC_OFFSET_TIMER_DCR:
