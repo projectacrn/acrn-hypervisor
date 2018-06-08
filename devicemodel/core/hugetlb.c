@@ -53,6 +53,11 @@
 #define PATH_HUGETLB_LV2 "/run/hugepage/acrn/huge_lv2/"
 #define OPT_HUGETLB_LV2 "pagesize=1G"
 
+#define SYS_PATH_LV1  "/sys/kernel/mm/hugepages/hugepages-2048kB/"
+#define SYS_PATH_LV2  "/sys/kernel/mm/hugepages/hugepages-1048576kB/"
+#define SYS_NR_HUGEPAGES  "nr_hugepages"
+#define SYS_FREE_HUGEPAGES  "free_hugepages"
+
 /* hugetlb_info record private information for one specific hugetlbfs:
  * - mounted: is hugetlbfs mounted for below mount_path
  * - mount_path: hugetlbfs mount path
@@ -61,6 +66,10 @@
  * - pg_size: this hugetlbfs's page size
  * - lowmem: lowmem of this hugetlbfs need allocate
  * - highmem: highmem of this hugetlbfs need allocate
+ *.- pages_delta: its value equals needed pages - free pages,
+ *.---if > 0: it's the gap for needed page; if < 0, more free than needed.
+ * - nr_pages_path: sys path for total number of pages
+ *.- free_pages_path: sys path for number of free pages
  */
 struct hugetlb_info {
 	bool mounted;
@@ -72,6 +81,10 @@ struct hugetlb_info {
 	int pg_size;
 	size_t lowmem;
 	size_t highmem;
+
+	int pages_delta;
+	char *nr_pages_path;
+	char *free_pages_path;
 };
 
 static struct hugetlb_info hugetlb_priv[HUGETLB_LV_MAX] = {
@@ -83,6 +96,10 @@ static struct hugetlb_info hugetlb_priv[HUGETLB_LV_MAX] = {
 		.pg_size = 0,
 		.lowmem = 0,
 		.highmem = 0,
+
+		.pages_delta = 0,
+		.nr_pages_path = SYS_PATH_LV1 SYS_NR_HUGEPAGES,
+		.free_pages_path = SYS_PATH_LV1 SYS_FREE_HUGEPAGES,
 	},
 	{
 		.mounted = false,
@@ -92,6 +109,10 @@ static struct hugetlb_info hugetlb_priv[HUGETLB_LV_MAX] = {
 		.pg_size = 0,
 		.lowmem = 0,
 		.highmem = 0,
+
+		.pages_delta = 0,
+		.nr_pages_path = SYS_PATH_LV2 SYS_NR_HUGEPAGES,
+		.free_pages_path = SYS_PATH_LV2 SYS_FREE_HUGEPAGES,
 	},
 };
 
@@ -356,6 +377,184 @@ static void umount_hugetlbfs(int level)
 	}
 }
 
+static int read_sys_info(const char *sys_path)
+{
+	FILE *fp;
+	char tmp_buf[12];
+	int pages = 0;
+	int result;
+
+	fp = fopen(sys_path, "r");
+	if (fp == NULL) {
+		printf("can't open: %s, err: %s\n", sys_path, strerror(errno));
+		return 0;
+	}
+
+	memset(tmp_buf, 0, 12);
+	result = fread(&tmp_buf, sizeof(char), 8, fp);
+	if (result <= 0)
+		printf("read %s, error: %s, please check!\n",
+			sys_path, strerror(errno));
+	else
+		pages = strtol(tmp_buf, NULL, 10);
+
+	fclose(fp);
+	return pages;
+}
+
+/* check if enough free huge pages for the UOS */
+static bool hugetlb_check_memgap(void)
+{
+	int lvl, free_pages, need_pages;
+	bool has_gap = false;
+
+	for (lvl = HUGETLB_LV1; lvl < hugetlb_lv_max; lvl++) {
+		free_pages = read_sys_info(hugetlb_priv[lvl].free_pages_path);
+		need_pages = (hugetlb_priv[lvl].lowmem +
+			hugetlb_priv[lvl].highmem) / hugetlb_priv[lvl].pg_size;
+
+		hugetlb_priv[lvl].pages_delta = need_pages - free_pages;
+		/* if delta > 0, it's a gap for needed pages, to be handled */
+		if (hugetlb_priv[lvl].pages_delta > 0)
+			has_gap = true;
+
+		printf("level %d free/need pages:%d/%d page size:0x%x\n", lvl,
+			free_pages, need_pages, hugetlb_priv[lvl].pg_size);
+	}
+
+	return has_gap;
+}
+
+/* try to reserve more huge pages on the level */
+static void reserve_more_pages(int level)
+{
+	int total_pages, orig_pages, cur_pages;
+	char cmd_buf[MAX_PATH_LEN];
+	FILE *fp;
+
+	orig_pages = read_sys_info(hugetlb_priv[level].nr_pages_path);
+	total_pages = orig_pages + hugetlb_priv[level].pages_delta;
+	snprintf(cmd_buf, MAX_PATH_LEN, "echo %d > %s",
+		total_pages, hugetlb_priv[level].nr_pages_path);
+
+	/* system cmd to reserve needed huge pages */
+	fp = popen(cmd_buf, "r");
+	if (fp == NULL) {
+		printf("cmd: %s failed!\n", cmd_buf);
+		return;
+	}
+	pclose(fp);
+
+	printf("to reserve pages (+orig %d): %s\n", orig_pages, cmd_buf);
+	cur_pages = read_sys_info(hugetlb_priv[level].nr_pages_path);
+	hugetlb_priv[level].pages_delta = total_pages - cur_pages;
+}
+
+/* try to release larger free page */
+static bool release_larger_freepage(int level_limit)
+{
+	int level;
+	int total_pages, orig_pages, cur_pages;
+	char cmd_buf[MAX_PATH_LEN];
+	FILE *fp;
+
+	for (level = hugetlb_lv_max - 1; level >= level_limit; level--) {
+		if (hugetlb_priv[level].pages_delta >= 0)
+			continue;
+
+		/* free one unsed larger page */
+		orig_pages = read_sys_info(hugetlb_priv[level].nr_pages_path);
+		total_pages = orig_pages - 1;
+		snprintf(cmd_buf, MAX_PATH_LEN, "echo %d > %s",
+			total_pages, hugetlb_priv[level].nr_pages_path);
+
+		fp = popen(cmd_buf, "r");
+		if (fp == NULL) {
+			printf("cmd to free mem: %s failed!\n", cmd_buf);
+			return false;
+		}
+		pclose(fp);
+
+		cur_pages = read_sys_info(hugetlb_priv[level].nr_pages_path);
+
+		/* release page successfully */
+		if (cur_pages < orig_pages) {
+			hugetlb_priv[level].pages_delta++;
+			break;
+		}
+	}
+
+	if (level < level_limit)
+		return false;
+
+	return true;
+}
+
+/* reserve more free huge pages as different levels.
+ * it need handle following cases:
+ * A.no enough free memory to reserve gap pages, just fails.
+ * B enough free memory to reserve each level gap pages
+ *.C.enough free memory, but it can't reserve enough higher level gap pages,
+ *    so lower level need handle that, to reserve more free pages.
+ *.D.enough higher level free pages, but not enough free memory for
+ *    lower level gap pages, so release some higher level free pages for that.
+ * other info:
+ *.   even enough free memory, it is eaiser to reserve smaller pages than
+ * lager ones, for example:2MB easier than 1GB. One flow of current solution:
+ *.it could leave SOS very small free memory.
+ *.return value: true: success; false: failure
+ */
+static bool hugetlb_reserve_pages(void)
+{
+	int left_gap, pg_size;
+	int level;
+
+	printf("to reserve more free pages:\n");
+	for (level = hugetlb_lv_max - 1; level >= HUGETLB_LV1; level--) {
+		if (hugetlb_priv[level].pages_delta <= 0)
+			continue;
+
+		/* if gaps, try to reserve more pages */
+		reserve_more_pages(level);
+
+		/* check if reserved enough pages */
+		if (hugetlb_priv[level].pages_delta  == 0)
+			continue;
+
+		/* probably system allocates fewer pages than needed
+		 * especially for larger page like 1GB, even there is enough
+		 * free memory, it stil can fail to allocate 1GB huge page.
+		 * so if that,it needs the next level to handle it.
+		 */
+		if (level > HUGETLB_LV1) {
+			left_gap = hugetlb_priv[level].pages_delta;
+			pg_size = hugetlb_priv[level].pg_size;
+			hugetlb_priv[level - 1].pages_delta += (size_t)left_gap
+				* pg_size / hugetlb_priv[level - 1].pg_size;
+			continue;
+		}
+
+		/* now for level == HUGETLB_LV1 it still can't alloc enough
+		 * pages, go back to larger pages, to check if it can
+		 *.release some unused free pages, if release success,
+		 * let it go LV1 again
+		 */
+		if (release_larger_freepage(level + 1))
+			level++;
+		else
+			break;
+	}
+
+	if (level >= HUGETLB_LV1) {
+		printf("level %d pages gap: %d failed to reserve!\n",
+			level, left_gap);
+		return false;
+	}
+
+	printf("now enough free pages are reserved!\n");
+	return true;
+}
+
 bool check_hugetlb_support(void)
 {
 	int level;
@@ -386,6 +585,7 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 {
 	int level;
 	size_t lowmem, highmem;
+	bool has_gap;
 
 	/* for first time DM start UOS, hugetlbfs is already mounted by
 	 * check_hugetlb_support; but for reboot, here need re-mount
@@ -435,6 +635,13 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 			hugetlb_priv[level-1].highmem = highmem =
 				highmem - hugetlb_priv[level].highmem;
 		}
+	}
+
+	/* it will check each level memory need */
+	has_gap = hugetlb_check_memgap();
+	if (has_gap) {
+		if (!hugetlb_reserve_pages())
+			goto err;
 	}
 
 	/* align up total size with huge page size for vma alignment */
