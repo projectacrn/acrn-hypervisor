@@ -72,8 +72,8 @@ static int set_timeout(int sockfd)
  * usercrashd_connect is used to connect to server, and get the crash file fd
  * from server
  */
-bool usercrashd_connect(int pid, int *usercrashd_socket,
-		int *output_fd, char *name)
+static int usercrashd_connect(int pid, int *usercrashd_socket,
+		int *output_fd, const char *name)
 {
 	int sockfd;
 	int tmp_output_fd;
@@ -81,15 +81,20 @@ bool usercrashd_connect(int pid, int *usercrashd_socket,
 	int flags;
 	struct crash_packet packet = {0};
 
+	if (name == NULL) {
+		LOGE("crash process name is NULL\n");
+		return -1;
+	}
 	sockfd = socket_local_client(SOCKET_NAME, SOCK_SEQPACKET);
 	if (sockfd == -1) {
 		LOGE("failed to connect to usercrashd, error (%s)\n",
 			strerror(errno));
-		return false;
+		return -1;
 	}
 	packet.packet_type = kDumpRequest;
 	packet.pid = pid;
-	strncpy(packet.name, name, COMM_NAME_LEN - 1);
+	strncpy(packet.name, name, COMM_NAME_LEN);
+	packet.name[COMM_NAME_LEN - 1] = '\0';
 	if (set_timeout(sockfd)) {
 		close(sockfd);
 		return -1;
@@ -99,7 +104,7 @@ bool usercrashd_connect(int pid, int *usercrashd_socket,
 		LOGE("failed to write DumpRequest packet, error (%s)\n",
 			strerror(errno));
 		close(sockfd);
-		return false;
+		return -1;
 	}
 
 	rc = recv_fd(sockfd, &packet, sizeof(packet),
@@ -108,7 +113,7 @@ bool usercrashd_connect(int pid, int *usercrashd_socket,
 		LOGE("failed to read response to DumpRequest packet, ");
 		LOGE("error (%s)\n", strerror(errno));
 		close(sockfd);
-		return false;
+		return -1;
 	} else if (rc != sizeof(packet)) {
 		LOGE("received DumpRequest response packet of incorrect ");
 		LOGE("length (expected %lu, got %ld)\n", sizeof(packet), rc);
@@ -135,11 +140,11 @@ bool usercrashd_connect(int pid, int *usercrashd_socket,
 	*usercrashd_socket = sockfd;
 	*output_fd = tmp_output_fd;
 
-	return true;
+	return 0;
 fail:
 	close(sockfd);
 	close(tmp_output_fd);
-	return false;
+	return -1;
 
 }
 
@@ -149,7 +154,7 @@ fail:
  * dump, the server will pop another crash from the queue and execute the dump
  * process
  */
-bool usercrashd_notify_completion(int usercrashd_socket)
+static int usercrashd_notify_completion(int usercrashd_socket)
 {
 	struct crash_packet packet = {0};
 
@@ -160,14 +165,15 @@ bool usercrashd_notify_completion(int usercrashd_socket)
 	}
 	if (write(usercrashd_socket, &packet,
 				sizeof(packet)) != sizeof(packet)) {
-		return false;
+		return -1;
 	}
-	return true;
+	return 0;
 }
 
 static void print_usage(void)
 {
-	printf("It's the client role of usercrash.\n");
+	printf("usercrash - tool to dump crash info for the crashes in the ");
+	printf("userspace on sos. It's the client role of usercrash.\n");
 	printf("[Usage]\n");
 	printf("\t--coredump, usercrash_c <pid> <comm> <sig> ");
 	printf("(root role to run)\n");
@@ -209,14 +215,14 @@ int main(int argc, char *argv[])
 		pid = atoi(argv[1]);
 		sig = atoi(argv[3]);
 		ret = usercrashd_connect(pid, &sock, &out_fd, argv[2]);
-		if (!ret) {
+		if (ret) {
 			LOGE("usercrashd_connect failed, error (%s)\n",
 					strerror(errno));
 			exit(EXIT_FAILURE);
 		}
 		crash_dump(pid, sig, out_fd);
 		close(out_fd);
-		if (!usercrashd_notify_completion(sock)) {
+		if (usercrashd_notify_completion(sock)) {
 			LOGE("failed to notify usercrashd of completion");
 			close(sock);
 			exit(EXIT_FAILURE);

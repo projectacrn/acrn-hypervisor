@@ -79,43 +79,35 @@ static const char *get_signame(int sig)
  */
 static int save_coredump(const char *filename)
 {
-	size_t read;
+	size_t read_len;
+	size_t write_len;
 	char input_buffer[BUFFER_SIZE];
 	FILE *dump_file;
 
 	/* open dump file in write and binary mode */
 	dump_file = fopen(filename, "wb");
-	if (dump_file != NULL) {
-		/* Read from STDIN and write to dump file */
-		while (1) {
-			read = fread(input_buffer, 1, BUFFER_SIZE, stdin);
-			if (read > 0) {
-				if (fwrite(input_buffer, 1, read, dump_file) <=
-							0) {
-					LOGE("fwrite error\n");
-					goto fail;
-				}
-				continue;
-			} else if (read == 0) {
-				break;
-			}
-
-			LOGE("fread error\n");
-			goto fail;
+	if (dump_file == NULL) {
+		LOGE("fopen core file failed\n");
+		return -1;
+	}
+	/* Read from STDIN and write to dump file */
+	while (1) {
+		read_len = fread(input_buffer, 1, BUFFER_SIZE, stdin);
+		if (read_len == 0)
+			break;
+		write_len = fwrite(input_buffer, 1, read_len, dump_file);
+		if (write_len == 0) {
+			LOGE("fwrite error\n");
+			fclose(dump_file);
+			return -1;
 		}
-		fclose(dump_file);
-		return 0;
 	}
 
-	LOGE("fopen core file failed\n");
-	return -1;
-
-fail:
 	fclose(dump_file);
-	return -1;
+	return 0;
 }
 
-static int get_backtrace(int pid, int fd, int sig, char *comm)
+static int get_backtrace(int pid, int fd, int sig, const char *comm)
 {
 	char *membkt;
 	char format[512];
@@ -150,7 +142,7 @@ static int get_backtrace(int pid, int fd, int sig, char *comm)
  * @name: a string save to file
  * return 0 on success, or -1 on error
  */
-static int save_proc_info(int pid, int fd, char *path, char *name)
+static int save_proc_info(int pid, int fd, const char *path, const char *name)
 {
 	int ret;
 	char *data;
@@ -171,7 +163,7 @@ static int save_proc_info(int pid, int fd, char *path, char *name)
 
 }
 
-static int get_openfiles(int pid, int fd, char *path, char *name)
+static int get_openfiles(int pid, int fd, const char *path, const char *name)
 {
 	int ret;
 	int loop;
@@ -205,7 +197,7 @@ static int get_openfiles(int pid, int fd, char *path, char *name)
 	return 0;
 }
 
-static int save_usercrash_file(int pid, int tgid, char *comm,
+static int save_usercrash_file(int pid, int tgid, const char *comm,
 		int sig, int out_fd)
 {
 	int ret;
@@ -242,7 +234,8 @@ static int save_usercrash_file(int pid, int tgid, char *comm,
 	return 0;
 }
 
-static int get_key_value(int pid, char *path, char *key, char *value)
+static int get_key_value(int pid, const char *path, const char *key,
+		char *value, size_t value_len)
 {
 	int len;
 	int ret;
@@ -256,7 +249,7 @@ static int get_key_value(int pid, char *path, char *key, char *value)
 	memset(format, 0, sizeof(format));
 	snprintf(format, sizeof(format), path, pid);
 	ret = read_file(format, &size, (void *)&data);
-	if (ret) {
+	if (ret || !data) {
 		LOGE("read file failed\n");
 		return -1;
 	}
@@ -271,6 +264,10 @@ static int get_key_value(int pid, char *path, char *key, char *value)
 		end = data + size;
 	start = msg + strlen(key);
 	len = end - start;
+	if (len >= (int)value_len) {
+		free(data);
+		return -1;
+	}
 	memcpy(value, start, len);
 	*(value + len) = 0;
 	free(data);
@@ -301,7 +298,7 @@ void crash_dump(int pid, int sig, int out_fd)
 	}
 	comm[ret] = '\0';
 
-	ret = get_key_value(pid, GET_TID, "Tgid:", result);
+	ret = get_key_value(pid, GET_TID, "Tgid:", result, sizeof(result));
 	if (ret) {
 		LOGE("get Tgid error\n");
 		return;

@@ -19,10 +19,9 @@
  */
 static void print_usage(void)
 {
-	printf("debugger - tool to dump process info of a running process. ");
+	printf("debugger - tool to dump process info of a running process.\n");
 	printf("[Usage]\n");
 	printf("\t--shell cmd, debugger <pid>  (root role to run)\n");
-	printf("(root role to run)\n");
 	printf("[Option]\n");
 	printf("\t-h: print this usage message\n");
 	printf("\t-v: print debugger version\n");
@@ -48,7 +47,7 @@ int main(int argc, char *argv[])
 		print_usage();
 
 	if (getuid() != 0) {
-		LOGE("failed to execute debugger, root is required\n");
+		printf("failed to execute debugger, root is required\n");
 		exit(EXIT_FAILURE);
 	}
 
