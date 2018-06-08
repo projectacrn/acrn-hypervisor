@@ -143,7 +143,7 @@ static const char *get_flags(const char *s, int *flags)
 }
 
 static const char *get_length_modifier(const char *s,
-			int *flags, unsigned long long *mask)
+			int *flags, uint64_t *mask)
 {
 	/* check for h[h] (char/short) */
 	if (*s == 'h') {
@@ -258,7 +258,7 @@ static int format_number(struct print_param *param)
 }
 
 static int print_pow2(struct print_param *param,
-		unsigned long long v, uint32_t shift)
+		uint64_t v, uint32_t shift)
 {
 	/* max buffer required for octal representation of unsigned long long */
 	char digitbuff[22];
@@ -269,7 +269,7 @@ static int print_pow2(struct print_param *param,
 	/* pointer to the digits translation table */
 	const char *digits;
 	/* mask to extract next character */
-	unsigned long long mask;
+	uint64_t mask;
 	int ret;
 
 	/* calculate mask */
@@ -311,7 +311,7 @@ static int print_pow2(struct print_param *param,
 	return ret;
 }
 
-static int print_decimal(struct print_param *param, long long value)
+static int print_decimal(struct print_param *param, int64_t value)
 {
 	/* max. required buffer for unsigned long long in decimal format */
 	char digitbuff[20];
@@ -326,14 +326,14 @@ static int print_decimal(struct print_param *param, long long value)
 	int ret;
 
 	/* assume an unsigned 64 bit value */
-	v.qword = ((unsigned long long)value) & param->vars.mask;
+	v.qword = ((uint64_t)value) & param->vars.mask;
 
 	/*
 	 * assign sign and correct value if value is negative and
 	 * value must be interpreted as signed
 	 */
 	if (((param->vars.flags & PRINT_FLAG_UINT32) == 0) && (value < 0)) {
-		v.qword = (unsigned long long)-value;
+		v.qword = (uint64_t)-value;
 		param->vars.prefix = "-";
 		param->vars.prefixlen = 1;
 	}
@@ -561,7 +561,7 @@ int do_print(const char *fmt, struct print_param *param,
 				 * (uint32_t) __builtin_va_arg(args,
 				 * void *),4);
 				 */
-				res = print_pow2(param, (unsigned long long)
+				res = print_pow2(param, (uint64_t)
 					__builtin_va_arg(args, void *), 4);
 			}
 			/* single character argument */
