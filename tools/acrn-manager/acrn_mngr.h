@@ -10,18 +10,18 @@
 
 /* Basic message format */
 
-#define MNGR_MSG_MAGIC   0x67736d206d6d76	/* that is char[8] "vmm msg", on X86 */
+#define MNGR_MSG_MAGIC   0x67736d206d6d76	/* that is char[8] "mngr msg", on X86 */
 #define VMNAME_LEN	16
 
 struct mngr_msg {
-	unsigned long long magic;	/* Make sure you get a vmm_msg */
+	unsigned long long magic;	/* Make sure you get a mngr_msg */
 	unsigned int msgid;
 	unsigned long timestamp;
-	size_t len;		/* vmm_msg + payload size */
+	size_t len;		/* mngr_msg + payload size */
 	char payload[0];
 };
 
-/* vmm_msg event types */
+/* mngr_msg event types */
 enum msgid {
 	MSG_MIN = 0,
 	MSG_STR,		/* The message payload is a string, terminated with '\0' */
