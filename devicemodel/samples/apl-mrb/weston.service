@@ -1,0 +1,21 @@
+[Unit]
+Description=Weston
+Before=slices.target
+
+[Service]
+User=root
+Environment=HOME=/root
+WorkingDirectory=/tmp
+Environment=XDG_RUNTIME_DIR=/run/wayland
+ExecStartPre=-/bin/mkdir -p /run/wayland
+ExecStart=/usr/bin/weston --idle-time=0 --log=/var/log/weston.log
+ExecStop=/usr/bin/killall -s TERM weston
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+TTYPath=/dev/tty2
+SupplementaryGroups=input
+
+[Install]
+WantedBy=multi-user.target
+
