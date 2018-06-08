@@ -278,7 +278,7 @@ strtol(const char *nptr, char **endptr, register int base)
                 acc = neg ? LONG_MIN : LONG_MAX;
         else if (neg)
                 acc = -acc;
-        if (endptr != 0)
+        if (endptr != NULL)
                 *endptr = (char *) (any ? s - 1 : nptr);
         return acc;
 }
@@ -340,7 +340,7 @@ strtoul(const char *nptr, char **endptr, register int base)
                 acc = ULONG_MAX;
         else if (neg)
                 acc = -acc;
-        if (endptr != 0)
+        if (endptr != NULL)
                 *endptr = (char *) (any ? s - 1 : nptr);
         return acc;
 }

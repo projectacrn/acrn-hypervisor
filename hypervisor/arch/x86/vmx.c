@@ -100,7 +100,7 @@ int exec_vmxon_instr(uint32_t pcpu_id)
 	else
 		vmxon_region_va = HPA2HVA(per_cpu(vmxon_region_pa, pcpu_id));
 
-	if (vmxon_region_va != 0) {
+	if (vmxon_region_va != NULL) {
 		/* Initialize vmxon page with revision id from IA32 VMX BASIC
 		 * MSR
 		 */

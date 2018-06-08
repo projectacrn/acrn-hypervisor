@@ -257,7 +257,7 @@ int parse_madt(uint8_t *lapic_id_base)
 	ASSERT(global_rsdp != NULL, "fail to get rsdp");
 
 	madt = get_acpi_tbl(ACPI_SIG_MADT);
-	ASSERT(madt != 0, "fail to get madt");
+	ASSERT(madt != NULL, "fail to get madt");
 
 	return _parse_madt(madt, lapic_id_base);
 }

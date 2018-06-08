@@ -130,7 +130,7 @@ static const struct vm_exit_dispatch dispatch_table[] = {
 
 int vmexit_handler(struct vcpu *vcpu)
 {
-	struct vm_exit_dispatch *dispatch = HV_NULL;
+	struct vm_exit_dispatch *dispatch = NULL;
 	uint16_t basic_exit_reason;
 	int ret;
 

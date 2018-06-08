@@ -123,7 +123,7 @@ static const char *get_flags(const char *s, int *flags)
 		 * found
 		 */
 		pos = strchr(flagchars, *s);
-		if (pos == 0)
+		if (pos == NULL)
 			break;
 
 		/* apply matching flags and continue with the next character */
@@ -214,7 +214,7 @@ static int format_number(struct print_param *param)
 				return res;
 
 			/* invalidate prefix */
-			param->vars.prefix = 0;
+			param->vars.prefix = NULL;
 			param->vars.prefixlen = 0;
 		}
 
