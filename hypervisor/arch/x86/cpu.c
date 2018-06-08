@@ -8,6 +8,10 @@
 #include <schedule.h>
 #include <version.h>
 
+#ifdef CONFIG_EFI_STUB
+#include <acrn_efi.h>
+#endif
+
 spinlock_t trampline_spinlock = {
 	.head = 0,
 	.tail = 0
@@ -608,30 +612,66 @@ int cpu_find_logical_id(uint32_t lapic_id)
 	return -1;
 }
 
-extern uint16_t trampline_fixup_cs[];
-extern uint16_t trampline_fixup_ip[];
-extern uint32_t trampline_fixup_target;
-void prepare_trampline(void)
+static void update_trampline_code_refs(uint64_t dest_pa)
 {
+	void *ptr;
 	uint64_t val;
-
-	/*Copy segment for AP initialization code below 1MB */
-	memcpy_s(_ld_trampline_start,
-		(unsigned long)&_ld_trampline_size,
-		_ld_trampline_load,
-		(unsigned long)&_ld_trampline_size);
+	int i;
 
 	/*
 	 * calculate the fixup CS:IP according to fixup target address
 	 * dynamically.
 	 *
-	 * FIXME:
-	 * the val should be set to runtime address of trampline code
-	 * after trampline relocation is enabled.
+	 * trampline code starts in real mode,
+	 * so the target addres is HPA
 	 */
-	val = (uint64_t) &trampline_fixup_target;
-	trampline_fixup_cs[0] = (uint16_t)(val >> 4) & 0xFFFF;
-	trampline_fixup_ip[0] = (uint16_t)(val & 0xf);
+	val = dest_pa + (uint64_t)trampline_fixup_target;
+
+	ptr = HPA2HVA(dest_pa + (uint64_t)trampline_fixup_cs);
+	*(uint16_t *)(ptr) = (uint16_t)(val >> 4) & 0xFFFF;
+
+	ptr = HPA2HVA(dest_pa + (uint64_t)trampline_fixup_ip);
+	*(uint16_t *)(ptr) = (uint16_t)(val & 0xf);
+
+	/* Update temporary page tables */
+	ptr = HPA2HVA(dest_pa + (uint64_t)CPU_Boot_Page_Tables_ptr);
+	*(uint32_t *)(ptr) += dest_pa;
+
+	ptr = HPA2HVA(dest_pa + (uint64_t)CPU_Boot_Page_Tables_Start);
+	*(uint64_t *)(ptr) += dest_pa;
+
+	ptr = HPA2HVA(dest_pa + (uint64_t)trampline_pdpt_addr);
+	for (i = 0; i < 4; i++)
+		*(uint64_t *)(ptr + sizeof(uint64_t) * i) += dest_pa;
+
+	/* update the gdt base pointer with relocated offset */
+	ptr = HPA2HVA(dest_pa + (uint64_t)trampline_gdt_ptr);
+	*(uint64_t *)(ptr + 2) += dest_pa;
+
+	/* update trampline jump pointer with relocated offset */
+	ptr = HPA2HVA(dest_pa + (uint64_t)trampline_start64_fixup);
+	*(uint32_t *)ptr += dest_pa;
+}
+
+static uint64_t prepare_trampline(void)
+{
+	uint64_t size, dest_pa;
+
+	size = (uint64_t)_ld_trampline_end - (uint64_t)trampline_start16;
+#ifndef CONFIG_EFI_STUB
+	dest_pa = e820_alloc_low_memory(CONFIG_LOW_RAM_SIZE);
+#else
+	dest_pa = (uint64_t)get_ap_trampline_buf();
+#endif
+
+	pr_dbg("trampline code: %llx size %x", dest_pa, size);
+
+	/* Copy segment for AP initialization code below 1MB */
+	memcpy_s(HPA2HVA(dest_pa), size, _ld_trampline_load, size);
+	update_trampline_code_refs(dest_pa);
+	trampline_start16_paddr = dest_pa;
+
+	return dest_pa;
 }
 
 /*
@@ -641,8 +681,9 @@ void start_cpus()
 {
 	uint32_t timeout;
 	uint32_t expected_up;
+	uint64_t startup_paddr;
 
-	prepare_trampline();
+	startup_paddr = prepare_trampline();
 
 	/* Set flag showing number of CPUs expected to be up to all
 	 * cpus
@@ -651,7 +692,7 @@ void start_cpus()
 
 	/* Broadcast IPIs to all other CPUs */
 	send_startup_ipi(INTR_CPU_STARTUP_ALL_EX_SELF,
-		       -1U, ((uint64_t) trampline_start16));
+			-1U, startup_paddr);
 
 	/* Wait until global count is equal to expected CPU up count or
 	 * configured time-out has expired
