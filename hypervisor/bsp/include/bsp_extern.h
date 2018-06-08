@@ -23,6 +23,7 @@
 /* EXTERNAL VARIABLES             */
 /**********************************/
 extern struct vm_description vm0_desc;
+extern const struct acpi_info host_acpi_info;
 
 /* BSP Interfaces */
 void init_bsp(void);

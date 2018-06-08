@@ -103,3 +103,21 @@ void vm_setup_cpu_state(struct vm *vm)
 	vm_setup_cpu_cx(vm);
 	init_cx_port(vm);
 }
+
+/* This function is for power management Sx state implementation,
+ * VM need to load the Sx state data to implement S3/S5.
+ */
+int vm_load_pm_s_state(struct vm *vm)
+{
+	if ((boot_cpu_data.x86 == host_acpi_info.x86_family)
+		&& (boot_cpu_data.x86_model == host_acpi_info.x86_model)) {
+		vm->pm.sx_state_data = (struct pm_s_state_data *)
+						&host_acpi_info.pm_s_state;
+		pr_info("System S3/S5 is supported.");
+		return 0;
+	} else {
+		vm->pm.sx_state_data = NULL;
+		pr_err("System S3/S5 is NOT supported.");
+		return -1;
+	}
+}

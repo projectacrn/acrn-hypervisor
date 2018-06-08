@@ -141,10 +141,13 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 
 	vm_setup_cpu_state(vm);
 
-	/* Create virtual uart */
-	if (is_vm0(vm))
-		vm->vuart = vuart_init(vm);
+	if (is_vm0(vm)) {
+		/* Load pm S state data */
+		vm_load_pm_s_state(vm);
 
+		/* Create virtual uart */
+		vm->vuart = vuart_init(vm);
+	}
 	vm->vpic = vpic_init(vm);
 
 	/* vpic wire_mode default is INTR */
