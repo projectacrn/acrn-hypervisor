@@ -163,6 +163,9 @@ extern const uint64_t         _ld_trampline_size;
 extern uint8_t                _ld_bss_start[];
 extern uint8_t                _ld_bss_end[];
 
+extern uint8_t                trampline_fixup_cs[];
+extern uint8_t                trampline_fixup_ip[];
+extern uint8_t                trampline_fixup_target[];
 extern uint8_t                CPU_Boot_Page_Tables_Start[];
 extern uint8_t                CPU_Boot_Page_Tables_ptr[];
 extern uint8_t                trampline_pdpt_addr[];
