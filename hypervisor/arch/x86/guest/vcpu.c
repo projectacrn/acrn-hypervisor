@@ -99,7 +99,7 @@ int create_vcpu(int cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	memset(vcpu->arch_vcpu.vmcs, 0, CPU_PAGE_SIZE);
 
 	/* Initialize exception field in VCPU context */
-	vcpu->arch_vcpu.exception_info.exception = -1;
+	vcpu->arch_vcpu.exception_info.exception = VECTOR_INVALID;
 
 	/* Initialize cur context */
 	vcpu->arch_vcpu.cur_context = NORMAL_WORLD;

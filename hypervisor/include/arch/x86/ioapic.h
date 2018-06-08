@@ -22,13 +22,13 @@
 void setup_ioapic_irq(void);
 int get_ioapic_info(char *str, int str_max_len);
 
-bool irq_is_gsi(int irq);
-int irq_gsi_num(void);
-int irq_to_pin(int irq);
-int pin_to_irq(int pin);
-void irq_gsi_mask_unmask(int irq, bool mask);
-void ioapic_set_rte(int irq, uint64_t rte);
-void ioapic_get_rte(int irq, uint64_t *rte);
+bool irq_is_gsi(uint32_t irq);
+uint32_t irq_gsi_num(void);
+int irq_to_pin(uint32_t irq);
+uint32_t pin_to_irq(int pin);
+void irq_gsi_mask_unmask(uint32_t irq, bool mask);
+void ioapic_set_rte(uint32_t irq, uint64_t rte);
+void ioapic_get_rte(uint32_t irq, uint64_t *rte);
 
 extern uint16_t legacy_irq_to_pin[];
 extern uint16_t pic_ioapic_pin_map[];

@@ -76,7 +76,7 @@ static int is_guest_irq_enabled(struct vcpu *vcpu)
 static bool vcpu_pending_request(struct vcpu *vcpu)
 {
 	struct vlapic *vlapic;
-	int vector = 0;
+	uint32_t vector = 0;
 	int ret = 0;
 
 	/* Query vLapic to get vector to inject */
@@ -115,7 +115,7 @@ int vcpu_make_request(struct vcpu *vcpu, int eventid)
 static int vcpu_do_pending_event(struct vcpu *vcpu)
 {
 	struct vlapic *vlapic = vcpu->arch_vcpu.vlapic;
-	int vector = 0;
+	uint32_t vector = 0;
 	int ret = 0;
 
 	if (is_vapic_intr_delivery_supported()) {
@@ -152,7 +152,7 @@ static int vcpu_do_pending_extint(struct vcpu *vcpu)
 {
 	struct vm *vm;
 	struct vcpu *primary;
-	int vector;
+	uint32_t vector;
 
 	vm = vcpu->vm;
 
@@ -162,7 +162,7 @@ static int vcpu_do_pending_extint(struct vcpu *vcpu)
 	if (vm->vpic && vcpu == primary) {
 
 		vpic_pending_intr(vcpu->vm, &vector);
-		if (vector > 0) {
+		if (vector <= NR_MAX_VECTOR) {
 			dev_dbg(ACRN_DBG_INTR, "VPIC: to inject PIC vector %d\n",
 					vector & 0xFF);
 			exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
@@ -192,7 +192,7 @@ void dump_lapic(void)
 }
 
 /* SDM Vol3 -6.15, Table 6-4 - interrupt and exception classes */
-static int get_excep_class(int32_t vector)
+static int get_excep_class(uint32_t vector)
 {
 	if (vector == IDT_DE || vector == IDT_TS || vector == IDT_NP ||
 		vector == IDT_SS || vector == IDT_GP)
@@ -203,35 +203,34 @@ static int get_excep_class(int32_t vector)
 		return EXCEPTION_CLASS_BENIGN;
 }
 
-int vcpu_queue_exception(struct vcpu *vcpu, int32_t vector,
+int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector,
 	uint32_t err_code)
 {
+	/* VECTOR_INVALID is also greater than 32 */
 	if (vector >= 32) {
 		pr_err("invalid exception vector %d", vector);
 		return -EINVAL;
 	}
 
-	if (vcpu->arch_vcpu.exception_info.exception >= 0) {
-		int32_t prev_vector =
-			vcpu->arch_vcpu.exception_info.exception;
-		int32_t new_class, prev_class;
+	int32_t prev_vector =
+		vcpu->arch_vcpu.exception_info.exception;
+	int32_t new_class, prev_class;
 
-		/* SDM vol3 - 6.15, Table 6-5 - conditions for generating a
-		 * double fault */
-		prev_class = get_excep_class(prev_vector);
-		new_class = get_excep_class(vector);
-		if (prev_vector == IDT_DF &&
-			new_class != EXCEPTION_CLASS_BENIGN) {
-			/* triple fault happen - shutdwon mode */
-			return vcpu_make_request(vcpu, ACRN_REQUEST_TRP_FAULT);
-		} else if ((prev_class == EXCEPTION_CLASS_CONT &&
-				new_class == EXCEPTION_CLASS_CONT) ||
-				(prev_class == EXCEPTION_CLASS_PF &&
-				 new_class != EXCEPTION_CLASS_BENIGN)) {
-			/* generate double fault */
-			vector = IDT_DF;
-			err_code = 0;
-		}
+	/* SDM vol3 - 6.15, Table 6-5 - conditions for generating a
+	 * double fault */
+	prev_class = get_excep_class(prev_vector);
+	new_class = get_excep_class(vector);
+	if (prev_vector == IDT_DF &&
+		new_class != EXCEPTION_CLASS_BENIGN) {
+		/* triple fault happen - shutdwon mode */
+		return vcpu_make_request(vcpu, ACRN_REQUEST_TRP_FAULT);
+	} else if ((prev_class == EXCEPTION_CLASS_CONT &&
+			new_class == EXCEPTION_CLASS_CONT) ||
+			(prev_class == EXCEPTION_CLASS_PF &&
+			 new_class != EXCEPTION_CLASS_BENIGN)) {
+		/* generate double fault */
+		vector = IDT_DF;
+		err_code = 0;
 	}
 
 	vcpu->arch_vcpu.exception_info.exception = vector;
@@ -254,12 +253,12 @@ static void _vcpu_inject_exception(struct vcpu *vcpu, uint32_t vector)
 	exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
 			(exception_type[vector] << 8) | (vector & 0xFF));
 
-	vcpu->arch_vcpu.exception_info.exception = -1;
+	vcpu->arch_vcpu.exception_info.exception = VECTOR_INVALID;
 }
 
 static int vcpu_inject_hi_exception(struct vcpu *vcpu)
 {
-	int vector = vcpu->arch_vcpu.exception_info.exception;
+	uint32_t vector = vcpu->arch_vcpu.exception_info.exception;
 
 	if (vector == IDT_MC || vector == IDT_BP || vector == IDT_DB) {
 		_vcpu_inject_exception(vcpu, vector);
@@ -271,10 +270,10 @@ static int vcpu_inject_hi_exception(struct vcpu *vcpu)
 
 static int vcpu_inject_lo_exception(struct vcpu *vcpu)
 {
-	int vector = vcpu->arch_vcpu.exception_info.exception;
+	uint32_t vector = vcpu->arch_vcpu.exception_info.exception;
 
 	/* high priority exception already be injected */
-	if (vector >= 0) {
+	if (vector <= NR_MAX_VECTOR) {
 		_vcpu_inject_exception(vcpu, vector);
 		return 1;
 	}
@@ -486,7 +485,7 @@ void cancel_event_injection(struct vcpu *vcpu)
 int exception_vmexit_handler(struct vcpu *vcpu)
 {
 	uint32_t intinfo, int_err_code = 0;
-	int32_t exception_vector = -1;
+	uint32_t exception_vector = VECTOR_INVALID;
 	uint32_t cpl;
 	int status = 0;
 

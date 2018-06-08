@@ -58,7 +58,7 @@ struct pic {
 	bool		rotate;
 	bool		sfn;		/* special fully-nested mode */
 
-	int		irq_base;
+	uint32_t	irq_base;
 	uint8_t		request;	/* Interrupt Request Register (IIR) */
 	uint8_t		service;	/* Interrupt Service (ISR) */
 	uint8_t		mask;		/* Interrupt Mask Register (IMR) */
@@ -489,12 +489,12 @@ static void vpic_set_pinstate(struct vpic *vpic, int pin, bool newstate)
 	vpic_notify_intr(vpic);
 }
 
-static int vpic_set_irqstate(struct vm *vm, int irq, enum irqstate irqstate)
+static int vpic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate)
 {
 	struct vpic *vpic;
 	struct pic *pic;
 
-	if (irq < 0 || irq > 15)
+	if (irq > 15)
 		return -EINVAL;
 
 	vpic = vm_pic(vm);
@@ -524,26 +524,26 @@ static int vpic_set_irqstate(struct vm *vm, int irq, enum irqstate irqstate)
 }
 
 /* hypervisor interface: assert/deassert/pulse irq */
-int vpic_assert_irq(struct vm *vm, int irq)
+int vpic_assert_irq(struct vm *vm, uint32_t irq)
 {
 	return vpic_set_irqstate(vm, irq, IRQSTATE_ASSERT);
 }
 
-int vpic_deassert_irq(struct vm *vm, int irq)
+int vpic_deassert_irq(struct vm *vm, uint32_t irq)
 {
 	return vpic_set_irqstate(vm, irq, IRQSTATE_DEASSERT);
 }
 
-int vpic_pulse_irq(struct vm *vm, int irq)
+int vpic_pulse_irq(struct vm *vm, uint32_t irq)
 {
 	return vpic_set_irqstate(vm, irq, IRQSTATE_PULSE);
 }
 
-int vpic_set_irq_trigger(struct vm *vm, int irq, enum vpic_trigger trigger)
+int vpic_set_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger trigger)
 {
 	struct vpic *vpic;
 
-	if (irq < 0 || irq > 15)
+	if (irq > 15)
 		return -EINVAL;
 
 	/*
@@ -575,11 +575,11 @@ int vpic_set_irq_trigger(struct vm *vm, int irq, enum vpic_trigger trigger)
 	return 0;
 }
 
-int vpic_get_irq_trigger(struct vm *vm, int irq, enum vpic_trigger *trigger)
+int vpic_get_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger *trigger)
 {
 	struct vpic *vpic;
 
-	if (irq < 0 || irq > 15)
+	if (irq > 15)
 		return -EINVAL;
 
 	vpic = vm_pic(vm);
@@ -593,7 +593,7 @@ int vpic_get_irq_trigger(struct vm *vm, int irq, enum vpic_trigger *trigger)
 	return 0;
 }
 
-void vpic_pending_intr(struct vm *vm, int *vecptr)
+void vpic_pending_intr(struct vm *vm, uint32_t *vecptr)
 {
 	struct vpic *vpic;
 	struct pic *pic;
@@ -616,7 +616,7 @@ void vpic_pending_intr(struct vm *vm, int *vecptr)
 	 * interrupt vector instead.
 	 */
 	if (pin == -1) {
-		*vecptr = -1;
+		*vecptr = VECTOR_INVALID;
 		VPIC_UNLOCK(vpic);
 		return;
 	}
@@ -646,7 +646,7 @@ static void vpic_pin_accepted(struct pic *pic, int pin)
 	}
 }
 
-void vpic_intr_accepted(struct vm *vm, int vector)
+void vpic_intr_accepted(struct vm *vm, uint32_t vector)
 {
 	struct vpic *vpic;
 	int pin;

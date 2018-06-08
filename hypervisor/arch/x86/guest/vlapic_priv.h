@@ -99,11 +99,11 @@ struct pir_desc {
 
 struct vlapic_ops {
 	int (*apicv_set_intr_ready)
-		(struct vlapic *vlapic, int vector, bool level);
-	int (*apicv_pending_intr)(struct vlapic *vlapic, int *vecptr);
-	void (*apicv_intr_accepted)(struct vlapic *vlapic, int vector);
+		(struct vlapic *vlapic, uint32_t vector, bool level);
+	int (*apicv_pending_intr)(struct vlapic *vlapic, uint32_t *vecptr);
+	void (*apicv_intr_accepted)(struct vlapic *vlapic, uint32_t vector);
 	void (*apicv_post_intr)(struct vlapic *vlapic, int hostcpu);
-	void (*apicv_set_tmr)(struct vlapic *vlapic, int vector, bool level);
+	void (*apicv_set_tmr)(struct vlapic *vlapic, uint32_t vector, bool level);
 	void (*apicv_batch_set_tmr)(struct vlapic *vlapic);
 	void (*enable_x2apic_mode)(struct vlapic *vlapic);
 };

@@ -10,9 +10,9 @@ static spinlock_t exception_spinlock = { .head = 0, .tail = 0, };
 
 struct irq_request_info {
 	/* vector set to 0xE0 ~ 0xFF for pri_register_handler
-	 * and set to -1 for normal_register_handler
+	 * and set to VECTOR_INVALID for normal_register_handler
 	 */
-	int vector;
+	uint32_t vector;
 	dev_handler_t func;
 	void *dev_data;
 	bool share;
@@ -22,10 +22,10 @@ struct irq_request_info {
 
 /* any field change in below required irq_lock protection with irqsave */
 struct irq_desc {
-	int irq;		/* index to irq_desc_base */
+	uint32_t irq;		/* index to irq_desc_base */
 	enum irq_state used;	/* this irq have assigned to device */
 	enum irq_desc_state state; /* irq_desc status */
-	int vector;		/* assigned vector */
+	uint32_t vector;	/* assigned vector */
 	void *handler_data;	/* irq_handler private data */
 	int (*irq_handler)(struct irq_desc *irq_desc, void *handler_data);
 	struct dev_handler_node *dev_list;
@@ -35,7 +35,7 @@ struct irq_desc {
 };
 
 static struct irq_desc *irq_desc_base;
-static int vector_to_irq[NR_MAX_VECTOR + 1];
+static uint32_t vector_to_irq[NR_MAX_VECTOR + 1];
 
 spurious_handler_t spurious_handler;
 
@@ -67,9 +67,9 @@ static void init_irq_desc(void)
  *	lowpri:  0x20-0x7F
  *	highpri: 0x80-0xDF
  */
-static int find_available_vector(bool lowpri)
+static uint32_t find_available_vector(bool lowpri)
 {
-	int i, start, end;
+	uint32_t i, start, end;
 
 	if (lowpri) {
 		start = VECTOR_FOR_NOR_LOWPRI_START;
@@ -84,21 +84,21 @@ static int find_available_vector(bool lowpri)
 		if (vector_to_irq[i] == IRQ_INVALID)
 			return i;
 	}
-	return -1;
+	return VECTOR_INVALID;
 }
 
 /*
  * check and set irq to be assigned
- * return: -1 if irq already assigned otherwise return irq
+ * return: IRQ_INVALID if irq already assigned otherwise return irq
  */
-int irq_mark_used(int irq)
+uint32_t irq_mark_used(uint32_t irq)
 {
 	struct irq_desc *desc;
 
 	spinlock_rflags;
 
-	if (irq < 0)
-		return -1;
+	if (irq > NR_MAX_IRQS)
+		return IRQ_INVALID;
 
 	desc = irq_desc_base + irq;
 	spinlock_irqsave_obtain(&desc->irq_lock);
@@ -110,11 +110,11 @@ int irq_mark_used(int irq)
 
 /*
  * system find available irq and set assigned
- * return: irq, -1 not found
+ * return: irq, VECTOR_INVALID not found
  */
-static int alloc_irq(void)
+static uint32_t alloc_irq(void)
 {
-	int i;
+	uint32_t i;
 	struct irq_desc *desc;
 
 	spinlock_rflags;
@@ -129,11 +129,11 @@ static int alloc_irq(void)
 		}
 		spinlock_irqrestore_release(&desc->irq_lock);
 	}
-	return (i == NR_MAX_IRQS) ? -1:i;
+	return (i == NR_MAX_IRQS) ? IRQ_INVALID : i;
 }
 
 /* need irq_lock protection before use */
-static void _irq_desc_set_vector(int irq, int vr)
+static void _irq_desc_set_vector(uint32_t irq, uint32_t vr)
 {
 	struct irq_desc *desc;
 
@@ -143,7 +143,7 @@ static void _irq_desc_set_vector(int irq, int vr)
 }
 
 /* lock version of set vector */
-static void irq_desc_set_vector(int irq, int vr)
+static void irq_desc_set_vector(uint32_t irq, uint32_t vr)
 {
 	struct irq_desc *desc;
 
@@ -157,12 +157,12 @@ static void irq_desc_set_vector(int irq, int vr)
 }
 
 /* used with holding irq_lock outside */
-static void _irq_desc_free_vector(int irq)
+static void _irq_desc_free_vector(uint32_t irq)
 {
 	struct irq_desc *desc;
-	int vr;
+	uint32_t vr;
 
-	if (irq > NR_MAX_IRQS || irq < 0)
+	if (irq > NR_MAX_IRQS)
 		return;
 
 	desc = irq_desc_base + irq;
@@ -221,7 +221,7 @@ irq_desc_append_dev(struct irq_desc *desc, void *node, bool share)
 }
 
 static struct dev_handler_node*
-common_register_handler(int irq,
+common_register_handler(uint32_t irq,
 		struct irq_request_info *info)
 {
 	struct dev_handler_node *node = NULL;
@@ -230,7 +230,7 @@ common_register_handler(int irq,
 
 	/* ======================================================
 	 * This is low level ISR handler registering function
-	 * case: irq = -1
+	 * case: irq = IRQ_INVALID
 	 *	caller did not know which irq to use, and want system to
 	 *	allocate available irq for it. These irq are in range:
 	 *	nr_gsi ~ NR_MAX_IRQS
@@ -260,12 +260,12 @@ common_register_handler(int irq,
 	/* HV select a irq for device if irq < 0
 	 * this vector/irq match to APCI DSDT or PCI INTx/MSI
 	 */
-	if (irq < 0)
+	if (irq == IRQ_INVALID)
 		irq = alloc_irq();
 	else
 		irq = irq_mark_used(irq);
 
-	if (irq < 0) {
+	if (irq > NR_MAX_IRQS) {
 		pr_err("failed to assign IRQ");
 		goto OUT;
 	}
@@ -290,7 +290,7 @@ OUT:
 		if (info->vector >= VECTOR_FOR_PRI_START &&
 			info->vector <= VECTOR_FOR_PRI_END)
 			irq_desc_set_vector(irq, info->vector);
-		else if (info->vector < 0)
+		else if (info->vector > NR_MAX_VECTOR)
 			irq_desc_alloc_vector(irq, info->lowpri);
 		else {
 			pr_err("the input vector is not correct");
@@ -314,15 +314,15 @@ OUT:
 }
 
 /* it is safe to call irq_desc_alloc_vector multiple times*/
-int irq_desc_alloc_vector(int irq, bool lowpri)
+uint32_t irq_desc_alloc_vector(uint32_t irq, bool lowpri)
 {
-	int vr = -1;
+	uint32_t vr = VECTOR_INVALID;
 	struct irq_desc *desc;
 
 	spinlock_rflags;
 
 	/* irq should be always available at this time */
-	if (irq > NR_MAX_IRQS || irq < 0)
+	if (irq > NR_MAX_IRQS)
 		return false;
 
 	desc = irq_desc_base + irq;
@@ -334,7 +334,7 @@ int irq_desc_alloc_vector(int irq, bool lowpri)
 
 	/* FLAT mode, a irq connected to every cpu's same vector */
 	vr = find_available_vector(lowpri);
-	if (vr < 0) {
+	if (vr > NR_MAX_VECTOR) {
 		pr_err("no vector found for irq[%d]", irq);
 		goto OUT;
 	}
@@ -344,7 +344,7 @@ OUT:
 	return vr;
 }
 
-void irq_desc_try_free_vector(int irq)
+void irq_desc_try_free_vector(uint32_t irq)
 {
 	struct irq_desc *desc;
 
@@ -363,7 +363,7 @@ void irq_desc_try_free_vector(int irq)
 
 }
 
-int irq_to_vector(int irq)
+uint32_t irq_to_vector(uint32_t irq)
 {
 	if (irq < NR_MAX_IRQS)
 		return irq_desc_base[irq].vector;
@@ -371,12 +371,12 @@ int irq_to_vector(int irq)
 		return VECTOR_INVALID;
 }
 
-int dev_to_irq(struct dev_handler_node *node)
+uint32_t dev_to_irq(struct dev_handler_node *node)
 {
 	return node->desc->irq;
 }
 
-int dev_to_vector(struct dev_handler_node *node)
+uint32_t dev_to_vector(struct dev_handler_node *node)
 {
 	return node->desc->vector;
 }
@@ -413,7 +413,7 @@ void dispatch_exception(struct intr_excp_ctx *ctx)
 	cpu_dead(cpu_id);
 }
 
-void handle_spurious_interrupt(int vector)
+void handle_spurious_interrupt(uint32_t vector)
 {
 	send_lapic_eoi();
 
@@ -428,8 +428,8 @@ void handle_spurious_interrupt(int vector)
 /* do_IRQ() */
 void dispatch_interrupt(struct intr_excp_ctx *ctx)
 {
-	int vr = ctx->vector;
-	int irq = vector_to_irq[vr];
+	uint32_t vr = ctx->vector;
+	uint32_t irq = vector_to_irq[vr];
 	struct irq_desc *desc;
 
 	if (irq == IRQ_INVALID)
@@ -582,7 +582,7 @@ int quick_handler_nolock(struct irq_desc *desc, __unused void *handler_data)
 	return 0;
 }
 
-void update_irq_handler(int irq, irq_handler_t func)
+void update_irq_handler(uint32_t irq, irq_handler_t func)
 {
 	struct irq_desc *desc;
 
@@ -639,7 +639,7 @@ UNLOCK_EXIT:
  * Allocate IRQ with Vector from 0x20 ~ 0xDF
  */
 struct dev_handler_node*
-normal_register_handler(int irq,
+normal_register_handler(uint32_t irq,
 		dev_handler_t func,
 		void *dev_data,
 		bool share,
@@ -648,7 +648,7 @@ normal_register_handler(int irq,
 {
 	struct irq_request_info info;
 
-	info.vector = -1;
+	info.vector = VECTOR_INVALID;
 	info.lowpri = lowpri;
 	info.func = func;
 	info.dev_data = dev_data;
@@ -665,8 +665,8 @@ normal_register_handler(int irq,
  * times
  */
 struct dev_handler_node*
-pri_register_handler(int irq,
-		int vector,
+pri_register_handler(uint32_t irq,
+		uint32_t vector,
 		dev_handler_t func,
 		void *dev_data,
 		const char *name)
@@ -688,7 +688,8 @@ pri_register_handler(int irq,
 
 int get_cpu_interrupt_info(char *str, int str_max)
 {
-	int irq, vector, pcpu_id, len, size = str_max;
+	int pcpu_id;
+	uint32_t irq, vector, len, size = str_max;
 	struct irq_desc *desc;
 
 	len = snprintf(str, size, "\r\nIRQ\tVECTOR");

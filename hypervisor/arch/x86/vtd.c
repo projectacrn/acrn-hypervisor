@@ -791,14 +791,14 @@ static int dmar_fault_handler(__unused int irq, void *data)
 
 static int dmar_setup_interrupt(struct dmar_drhd_rt *dmar_uint)
 {
-	int vector;
+	uint32_t vector;
 
 	if (dmar_uint->dmar_irq_node) {
 		dev_dbg(ACRN_DBG_IOMMU, "%s: irq already setup", __func__);
 		return 0;
 	}
 
-	dmar_uint->dmar_irq_node = normal_register_handler(-1,
+	dmar_uint->dmar_irq_node = normal_register_handler(IRQ_INVALID,
 					dmar_fault_handler,
 					dmar_uint, true, false,
 					"dmar_fault_event");
