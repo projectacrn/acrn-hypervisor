@@ -200,7 +200,7 @@ struct conf_t conf;
 }) \
 )
 
-int load_conf(char *path);
+int load_conf(const char *path);
 struct trigger_t *get_trigger_by_name(char *name);
 struct log_t *get_log_by_name(char *name);
 int sender_id(struct sender_t *sender);
