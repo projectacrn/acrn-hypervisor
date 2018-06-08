@@ -308,7 +308,7 @@ ptdev_update_irq_handler(struct vm *vm, struct ptdev_remapping_info *entry)
 
 /* active intr with irq registering */
 static struct ptdev_remapping_info *
-ptdev_activate_entry(struct ptdev_remapping_info *entry, int phys_irq,
+ptdev_activate_entry(struct ptdev_remapping_info *entry, uint32_t phys_irq,
 		bool lowpri)
 {
 	struct dev_handler_node *node;
@@ -350,7 +350,7 @@ static bool ptdev_hv_owned_intx(struct vm *vm, struct ptdev_intx_info *info)
 }
 
 static void ptdev_build_physical_msi(struct vm *vm, struct ptdev_msi_info *info,
-		int vector)
+		uint32_t vector)
 {
 	uint64_t vdmask, pdmask;
 	uint32_t dest, delmode;
@@ -785,7 +785,7 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 
 	if (!is_entry_active(entry)) {
 		/* update msi source and active entry */
-		ptdev_activate_entry(entry, -1, lowpri);
+		ptdev_activate_entry(entry, IRQ_INVALID, lowpri);
 	}
 
 	/* build physical config MSI, update to info->pmsi_xxx */
@@ -854,7 +854,7 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 {
 	struct ptdev_remapping_info *entry;
 	uint64_t rte;
-	int phys_irq;
+	uint32_t phys_irq;
 	int phys_pin;
 	bool lowpri = !is_vm0(vm);
 	bool need_switch_vpin_src = false;
@@ -1088,7 +1088,7 @@ void ptdev_release_all_entries(struct vm *vm)
 }
 
 static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
-		int *irq, int *vector, uint64_t *dest, bool *lvl_tm,
+		uint32_t *irq, uint32_t *vector, uint64_t *dest, bool *lvl_tm,
 		int *pin, int *vpin, int *bdf, int *vbdf)
 {
 	if (is_entry_active(entry)) {
@@ -1101,7 +1101,7 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 				*lvl_tm = true;
 			else
 				*lvl_tm = false;
-			*pin = -1;
+			*pin = IRQ_INVALID;
 			*vpin = -1;
 			*bdf = entry->phys_bdf;
 			*vbdf = entry->virt_bdf;
@@ -1130,7 +1130,7 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 		*vector = dev_to_vector(entry->node);
 	} else {
 		strcpy_s(type, 16, "NONE");
-		*irq = -1;
+		*irq = IRQ_INVALID;
 		*vector = 0;
 		*dest = 0;
 		*lvl_tm = 0;
@@ -1144,7 +1144,8 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 int get_ptdev_info(char *str, int str_max)
 {
 	struct ptdev_remapping_info *entry;
-	int len, size = str_max, irq, vector;
+	int len, size = str_max;
+	uint32_t irq, vector;
 	char type[16];
 	uint64_t dest;
 	bool lvl_tm;

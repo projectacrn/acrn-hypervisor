@@ -83,13 +83,13 @@ do {									\
 static void *apicv_apic_access_addr;
 
 static int
-apicv_set_intr_ready(struct vlapic *vlapic, int vector, bool level);
+apicv_set_intr_ready(struct vlapic *vlapic, uint32_t vector, bool level);
 
 static int
-apicv_pending_intr(struct vlapic *vlapic, int *vecptr);
+apicv_pending_intr(struct vlapic *vlapic, uint32_t *vecptr);
 
 static void
-apicv_set_tmr(struct vlapic *vlapic, int vector, bool level);
+apicv_set_tmr(struct vlapic *vlapic, uint32_t vector, bool level);
 
 static void
 apicv_batch_set_tmr(struct vlapic *vlapic);
@@ -366,14 +366,14 @@ vlapic_esr_write_handler(struct vlapic *vlapic)
  * Returns 1 if the vcpu needs to be notified of the interrupt and 0 otherwise.
  */
 static int
-vlapic_set_intr_ready(struct vlapic *vlapic, int vector, bool level)
+vlapic_set_intr_ready(struct vlapic *vlapic, uint32_t vector, bool level)
 {
 	struct lapic *lapic;
 	struct lapic_reg *irrptr, *tmrptr;
 	uint32_t mask;
 	int idx;
 
-	ASSERT((vector >= 0) && (vector <= NR_MAX_VECTOR),
+	ASSERT(vector <= NR_MAX_VECTOR,
 		"invalid vector %d", vector);
 
 	lapic = vlapic->apic_page;
@@ -742,7 +742,7 @@ vlapic_set_error(struct vlapic *vlapic, uint32_t mask)
 }
 
 static int
-vlapic_trigger_lvt(struct vlapic *vlapic, int vector)
+vlapic_trigger_lvt(struct vlapic *vlapic, uint32_t vector)
 {
 	uint32_t lvt;
 
@@ -1081,7 +1081,7 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 }
 
 int
-vlapic_pending_intr(struct vlapic *vlapic, int *vecptr)
+vlapic_pending_intr(struct vlapic *vlapic, uint32_t *vecptr)
 {
 	struct lapic *lapic = vlapic->apic_page;
 	int i, bitpos;
@@ -1111,7 +1111,7 @@ vlapic_pending_intr(struct vlapic *vlapic, int *vecptr)
 }
 
 void
-vlapic_intr_accepted(struct vlapic *vlapic, int vector)
+vlapic_intr_accepted(struct vlapic *vlapic, uint32_t vector)
 {
 	struct lapic *lapic = vlapic->apic_page;
 	struct lapic_reg *irrptr, *isrptr;
@@ -1584,7 +1584,7 @@ vlapic_enabled(struct vlapic *vlapic)
 }
 
 void
-vlapic_set_tmr(struct vlapic *vlapic, int vector, bool level)
+vlapic_set_tmr(struct vlapic *vlapic, uint32_t vector, bool level)
 {
 	struct lapic *lapic;
 	struct lapic_reg *tmrptr;
@@ -1613,7 +1613,7 @@ vlapic_apicv_batch_set_tmr(struct vlapic *vlapic)
 }
 
 void
-vlapic_apicv_set_tmr(struct vlapic *vlapic, int vector, bool level)
+vlapic_apicv_set_tmr(struct vlapic *vlapic, uint32_t vector, bool level)
 {
 	if (vlapic->ops.apicv_set_tmr != NULL)
 		vlapic->ops.apicv_set_tmr(vlapic, vector, level);
@@ -1622,7 +1622,7 @@ vlapic_apicv_set_tmr(struct vlapic *vlapic, int vector, bool level)
 void
 vlapic_reset_tmr(struct vlapic *vlapic)
 {
-	int vector;
+	uint32_t vector;
 
 	dev_dbg(ACRN_DBG_LAPIC,
 			"vlapic resetting all vectors to edge-triggered");
@@ -1635,9 +1635,9 @@ vlapic_reset_tmr(struct vlapic *vlapic)
 
 void
 vlapic_set_tmr_one_vec(struct vlapic *vlapic, __unused int delmode,
-	int vector, bool level)
+	uint32_t vector, bool level)
 {
-	ASSERT((vector >= 0) && (vector <= NR_MAX_VECTOR),
+	ASSERT(vector <= NR_MAX_VECTOR,
 		"invalid vector %d", vector);
 
 	/*
@@ -1662,7 +1662,7 @@ vlapic_set_tmr_one_vec(struct vlapic *vlapic, __unused int delmode,
 }
 
 int
-vlapic_set_intr(struct vcpu *vcpu, int vector, bool level)
+vlapic_set_intr(struct vcpu *vcpu, uint32_t vector, bool level)
 {
 	struct vlapic *vlapic;
 	int ret = 0;
@@ -1687,7 +1687,7 @@ vlapic_set_intr(struct vcpu *vcpu, int vector, bool level)
 }
 
 int
-vlapic_set_local_intr(struct vm *vm, int cpu_id, int vector)
+vlapic_set_local_intr(struct vm *vm, int cpu_id, uint32_t vector)
 {
 	struct vlapic *vlapic;
 	uint64_t dmask = 0;
@@ -2013,7 +2013,7 @@ void vlapic_free(struct vcpu *vcpu)
  * APIC-v functions
  * **/
 static int
-apicv_set_intr_ready(struct vlapic *vlapic, int vector, __unused bool level)
+apicv_set_intr_ready(struct vlapic *vlapic, uint32_t vector, __unused bool level)
 {
 	struct pir_desc *pir_desc;
 	uint64_t mask;
@@ -2030,7 +2030,7 @@ apicv_set_intr_ready(struct vlapic *vlapic, int vector, __unused bool level)
 }
 
 static int
-apicv_pending_intr(struct vlapic *vlapic, __unused int *vecptr)
+apicv_pending_intr(struct vlapic *vlapic, __unused uint32_t *vecptr)
 {
 	struct pir_desc *pir_desc;
 	struct lapic *lapic;
@@ -2061,7 +2061,7 @@ apicv_pending_intr(struct vlapic *vlapic, __unused int *vecptr)
 }
 
 static void
-apicv_set_tmr(__unused struct vlapic *vlapic, int vector, bool level)
+apicv_set_tmr(__unused struct vlapic *vlapic, uint32_t vector, bool level)
 {
 	uint64_t mask, val;
 
@@ -2234,7 +2234,7 @@ int veoi_vmexit_handler(struct vcpu *vcpu)
 {
 	struct vlapic *vlapic = NULL;
 
-	int vector;
+	uint32_t vector;
 	struct lapic *lapic;
 	struct lapic_reg *tmrptr;
 	uint32_t idx, mask;

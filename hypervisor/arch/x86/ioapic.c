@@ -22,7 +22,7 @@ struct gsi_table {
 	void  *addr;
 };
 static struct gsi_table gsi_table[NR_MAX_GSI];
-static int nr_gsi;
+static uint32_t nr_gsi;
 static spinlock_t ioapic_lock;
 
 /*
@@ -144,7 +144,7 @@ ioapic_set_rte_entry(void *ioapic_addr,
 }
 
 static inline struct ioapic_rte
-create_rte_for_legacy_irq(int irq, int vr)
+create_rte_for_legacy_irq(uint32_t irq, uint32_t vr)
 {
 	struct ioapic_rte rte = {0, 0};
 
@@ -169,7 +169,7 @@ create_rte_for_legacy_irq(int irq, int vr)
 }
 
 static inline struct ioapic_rte
-create_rte_for_gsi_irq(int irq, int vr)
+create_rte_for_gsi_irq(uint32_t irq, uint32_t vr)
 {
 	struct ioapic_rte rte = {0, 0};
 
@@ -192,7 +192,7 @@ create_rte_for_gsi_irq(int irq, int vr)
 	return rte;
 }
 
-static void ioapic_set_routing(int gsi, int vr)
+static void ioapic_set_routing(uint32_t gsi, uint32_t vr)
 {
 	void *addr;
 	struct ioapic_rte rte;
@@ -211,7 +211,7 @@ static void ioapic_set_routing(int gsi, int vr)
 		rte.lo_32);
 }
 
-void ioapic_get_rte(int irq, uint64_t *rte)
+void ioapic_get_rte(uint32_t irq, uint64_t *rte)
 {
 	void *addr;
 	struct ioapic_rte _rte;
@@ -226,7 +226,7 @@ void ioapic_get_rte(int irq, uint64_t *rte)
 	*rte = *rte << 32 | _rte.lo_32;
 }
 
-void ioapic_set_rte(int irq, uint64_t raw_rte)
+void ioapic_set_rte(uint32_t irq, uint64_t raw_rte)
 {
 	void *addr;
 	struct ioapic_rte rte;
@@ -244,17 +244,17 @@ void ioapic_set_rte(int irq, uint64_t raw_rte)
 		rte.lo_32);
 }
 
-int irq_gsi_num(void)
+uint32_t irq_gsi_num(void)
 {
 	return nr_gsi;
 }
 
-bool irq_is_gsi(int irq)
+bool irq_is_gsi(uint32_t irq)
 {
 	return irq < nr_gsi;
 }
 
-int irq_to_pin(int irq)
+int irq_to_pin(uint32_t irq)
 {
 	if (irq_is_gsi(irq))
 		return gsi_table[irq].pin;
@@ -262,9 +262,9 @@ int irq_to_pin(int irq)
 		return -1;
 }
 
-int pin_to_irq(int pin)
+uint32_t pin_to_irq(int pin)
 {
-	int i;
+	uint32_t i;
 
 	if (pin < 0)
 		return IRQ_INVALID;
@@ -277,7 +277,7 @@ int pin_to_irq(int pin)
 }
 
 void
-irq_gsi_mask_unmask(int irq, bool mask)
+irq_gsi_mask_unmask(uint32_t irq, bool mask)
 {
 	void *addr = gsi_table[irq].addr;
 	int pin = gsi_table[irq].pin;
@@ -299,7 +299,7 @@ irq_gsi_mask_unmask(int irq, bool mask)
 void setup_ioapic_irq(void)
 {
 	int ioapic_id;
-	int gsi;
+	uint32_t gsi;
 	int vr;
 
 	spinlock_init(&ioapic_lock);
@@ -328,7 +328,7 @@ void setup_ioapic_irq(void)
 				gsi_table[gsi].pin = pin;
 
 			/* pinned irq before use it */
-			if (irq_mark_used(gsi) < 0) {
+			if (irq_mark_used(gsi) > NR_MAX_IRQS) {
 				pr_err("failed to alloc IRQ[%d]", gsi);
 				gsi++;
 				continue;
@@ -359,7 +359,7 @@ void setup_ioapic_irq(void)
 
 void dump_ioapic(void)
 {
-	int irq;
+	uint32_t irq;
 
 	for (irq = 0; irq < nr_gsi; irq++) {
 		void *addr = gsi_table[irq].addr;
@@ -386,7 +386,7 @@ void get_rte_info(struct ioapic_rte *rte, bool *mask, bool *irr,
 
 int get_ioapic_info(char *str, int str_max_len)
 {
-	int irq, len, size = str_max_len;
+	uint32_t irq, len, size = str_max_len;
 
 	len = snprintf(str, size,
 	"\r\nIRQ\tPIN\tRTE.HI32\tRTE.LO32\tVEC\tDST\tDM\tTM\tDELM\tIRR\tMASK");

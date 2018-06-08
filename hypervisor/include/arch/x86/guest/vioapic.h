@@ -37,9 +37,9 @@
 struct vioapic *vioapic_init(struct vm *vm);
 void	vioapic_cleanup(struct vioapic *vioapic);
 
-int	vioapic_assert_irq(struct vm *vm, int irq);
-int	vioapic_deassert_irq(struct vm *vm, int irq);
-int	vioapic_pulse_irq(struct vm *vm, int irq);
+int	vioapic_assert_irq(struct vm *vm, uint32_t irq);
+int	vioapic_deassert_irq(struct vm *vm, uint32_t irq);
+int	vioapic_pulse_irq(struct vm *vm, uint32_t irq);
 void	vioapic_update_tmr(struct vcpu *vcpu);
 
 int	vioapic_mmio_write(void *vm, uint64_t gpa,
@@ -48,7 +48,7 @@ int	vioapic_mmio_read(void *vm, uint64_t gpa,
 	    uint64_t *rval, int size);
 
 int	vioapic_pincount(struct vm *vm);
-void	vioapic_process_eoi(struct vm *vm, int vector);
+void	vioapic_process_eoi(struct vm *vm, uint32_t vector);
 bool	vioapic_get_rte(struct vm *vm, int pin, void *rte);
 int	vioapic_mmio_access_handler(struct vcpu *vcpu, struct mem_io *mmio,
 		void *handler_private_data);

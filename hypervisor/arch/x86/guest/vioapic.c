@@ -137,11 +137,11 @@ enum irqstate {
 };
 
 static int
-vioapic_set_irqstate(struct vm *vm, int irq, enum irqstate irqstate)
+vioapic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate)
 {
 	struct vioapic *vioapic;
 
-	if (irq < 0 || irq >= vioapic_pincount(vm))
+	if (irq >= (uint32_t)vioapic_pincount(vm))
 		return -EINVAL;
 
 	vioapic = vm_ioapic(vm);
@@ -167,19 +167,19 @@ vioapic_set_irqstate(struct vm *vm, int irq, enum irqstate irqstate)
 }
 
 int
-vioapic_assert_irq(struct vm *vm, int irq)
+vioapic_assert_irq(struct vm *vm, uint32_t irq)
 {
 	return vioapic_set_irqstate(vm, irq, IRQSTATE_ASSERT);
 }
 
 int
-vioapic_deassert_irq(struct vm *vm, int irq)
+vioapic_deassert_irq(struct vm *vm, uint32_t irq)
 {
 	return vioapic_set_irqstate(vm, irq, IRQSTATE_DEASSERT);
 }
 
 int
-vioapic_pulse_irq(struct vm *vm, int irq)
+vioapic_pulse_irq(struct vm *vm, uint32_t irq)
 {
 	return vioapic_set_irqstate(vm, irq, IRQSTATE_PULSE);
 }
@@ -258,7 +258,7 @@ vioapic_read(struct vioapic *vioapic, uint32_t addr)
  * register to clear related IRR.
  */
 static void
-vioapic_write_eoi(struct vioapic *vioapic, int32_t vector)
+vioapic_write_eoi(struct vioapic *vioapic, uint32_t vector)
 {
 	struct vm *vm = vioapic->vm;
 	int pin;
@@ -477,7 +477,7 @@ vioapic_mmio_write(void *vm, uint64_t gpa, uint64_t wval,
 }
 
 void
-vioapic_process_eoi(struct vm *vm, int vector)
+vioapic_process_eoi(struct vm *vm, uint32_t vector)
 {
 	struct vioapic *vioapic;
 	int pin;

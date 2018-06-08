@@ -20,7 +20,7 @@ static int kick_notification(__unused int irq, __unused void *data)
 static int request_notification_irq(dev_handler_t func, void *data,
 				const char *name)
 {
-	int irq = -1; /* system allocate */
+	uint32_t irq = IRQ_INVALID; /* system allocate */
 	struct dev_handler_node *node = NULL;
 
 	if (notification_node != NULL) {

@@ -26,9 +26,9 @@
 
 #define NR_MAX_VECTOR		0xFF
 #define VECTOR_INVALID		(NR_MAX_VECTOR + 1)
+#define NR_MAX_IRQS		(256+16)
 #define IRQ_INVALID		(NR_MAX_IRQS+1)
 
-#define NR_MAX_IRQS (256+16)
 #define DEFAULT_DEST_MODE	IOAPIC_RTE_DESTLOG
 #define DEFAULT_DELIVERY_MODE	IOAPIC_RTE_DELLOPRI
 #define ALL_CPUS_MASK		((1 << phy_cpu_num) - 1)
@@ -97,15 +97,15 @@ struct intr_excp_ctx {
 	uint64_t ss;
 };
 
-int irq_mark_used(int irq);
-int irq_alloc(void);
+uint32_t irq_mark_used(uint32_t irq);
+uint32_t irq_alloc(void);
 
-int irq_desc_alloc_vector(int irq, bool lowpri);
-void irq_desc_try_free_vector(int irq);
+uint32_t irq_desc_alloc_vector(uint32_t irq, bool lowpri);
+void irq_desc_try_free_vector(uint32_t irq);
 
-int irq_to_vector(int irq);
-int dev_to_irq(struct dev_handler_node *node);
-int dev_to_vector(struct dev_handler_node *node);
+uint32_t irq_to_vector(uint32_t irq);
+uint32_t dev_to_irq(struct dev_handler_node *node);
+uint32_t dev_to_vector(struct dev_handler_node *node);
 
 int handle_level_interrupt_common(struct irq_desc *desc, void *handler_data);
 int common_handler_edge(struct irq_desc *desc, void *handler_data);
@@ -113,21 +113,21 @@ int common_dev_handler_level(struct irq_desc *desc, void *handler_data);
 int quick_handler_nolock(struct irq_desc *desc, void *handler_data);
 
 typedef int (*irq_handler_t)(struct irq_desc*, void*);
-void update_irq_handler(int irq, irq_handler_t func);
+void update_irq_handler(uint32_t irq, irq_handler_t func);
 
 int init_default_irqs(unsigned int cpu);
 
 void dispatch_interrupt(struct intr_excp_ctx *ctx);
 
 struct dev_handler_node*
-pri_register_handler(int irq,
-		int vector,
+pri_register_handler(uint32_t irq,
+		uint32_t vector,
 		dev_handler_t func,
 		void *dev_data,
 		const char *name);
 
 struct dev_handler_node*
-normal_register_handler(int irq,
+normal_register_handler(uint32_t irq,
 		dev_handler_t func,
 		void *dev_data,
 		bool share,
@@ -139,7 +139,7 @@ int get_cpu_interrupt_info(char *str, int str_max);
 
 void setup_notification(void);
 
-typedef void (*spurious_handler_t)(int);
+typedef void (*spurious_handler_t)(uint32_t vector);
 extern spurious_handler_t spurious_handler;
 
 /*
@@ -162,7 +162,7 @@ int vcpu_inject_nmi(struct vcpu *vcpu);
 int vcpu_inject_gp(struct vcpu *vcpu, uint32_t err_code);
 int vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code);
 int vcpu_make_request(struct vcpu *vcpu, int eventid);
-int vcpu_queue_exception(struct vcpu *vcpu, int32_t vector, uint32_t err_code);
+int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector, uint32_t err_code);
 
 int exception_vmexit_handler(struct vcpu *vcpu);
 int interrupt_window_vmexit_handler(struct vcpu *vcpu);

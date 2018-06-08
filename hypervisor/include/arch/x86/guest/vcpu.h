@@ -177,7 +177,7 @@ struct vcpu_arch {
 	/* Holds the information needed for IRQ/exception handling. */
 	struct {
 		/* The number of the exception to raise. */
-		int exception;
+		uint32_t exception;
 
 		/* The error number for the exception. */
 		int error;

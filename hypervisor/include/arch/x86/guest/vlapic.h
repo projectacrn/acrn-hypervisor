@@ -46,7 +46,7 @@ uint64_t vlapic_get_cr8(struct vlapic *vlapic);
  * Note that the vector does not automatically transition to the ISR as a
  * result of calling this function.
  */
-int vlapic_pending_intr(struct vlapic *vlapic, int *vecptr);
+int vlapic_pending_intr(struct vlapic *vlapic, uint32_t *vecptr);
 
 /*
  * Transition 'vector' from IRR to ISR. This function is called with the
@@ -54,7 +54,7 @@ int vlapic_pending_intr(struct vlapic *vlapic, int *vecptr);
  * accept this interrupt (i.e. RFLAGS.IF = 1 and no conditions exist that
  * block interrupt delivery).
  */
-void vlapic_intr_accepted(struct vlapic *vlapic, int vector);
+void vlapic_intr_accepted(struct vlapic *vlapic, uint32_t vector);
 
 struct vlapic *vm_lapic_from_vcpuid(struct vm *vm, int vcpu_id);
 struct vlapic *vm_lapic_from_pcpuid(struct vm *vm, int pcpu_id);
@@ -69,18 +69,18 @@ int vlapic_mmio_write(struct vcpu *vcpu, uint64_t gpa, uint64_t wval, int size);
  * Signals to the LAPIC that an interrupt at 'vector' needs to be generated
  * to the 'cpu', the state is recorded in IRR.
  */
-int vlapic_set_intr(struct vcpu *vcpu, int vector, bool trig);
+int vlapic_set_intr(struct vcpu *vcpu, uint32_t vector, bool trig);
 
 #define	LAPIC_TRIG_LEVEL	true
 #define	LAPIC_TRIG_EDGE		false
 static inline int
-vlapic_intr_level(struct vcpu *vcpu, int vector)
+vlapic_intr_level(struct vcpu *vcpu, uint32_t vector)
 {
 	return vlapic_set_intr(vcpu, vector, LAPIC_TRIG_LEVEL);
 }
 
 static inline int
-vlapic_intr_edge(struct vcpu *vcpu, int vector)
+vlapic_intr_edge(struct vcpu *vcpu, uint32_t vector)
 {
 	return vlapic_set_intr(vcpu, vector, LAPIC_TRIG_EDGE);
 }
@@ -89,7 +89,7 @@ vlapic_intr_edge(struct vcpu *vcpu, int vector)
  * Triggers the LAPIC local interrupt (LVT) 'vector' on 'cpu'.  'cpu' can
  * be set to -1 to trigger the interrupt on all CPUs.
  */
-int vlapic_set_local_intr(struct vm *vm, int cpu, int vector);
+int vlapic_set_local_intr(struct vm *vm, int cpu, uint32_t vector);
 
 int vlapic_intr_msi(struct vm *vm, uint64_t addr, uint64_t msg);
 
@@ -105,7 +105,7 @@ void vlapic_reset_tmr(struct vlapic *vlapic);
  * this 'vlapic'.
  */
 void vlapic_set_tmr_one_vec(struct vlapic *vlapic, int delmode,
-		int vector, bool level);
+		uint32_t vector, bool level);
 
 void
 vlapic_apicv_batch_set_tmr(struct vlapic *vlapic);
