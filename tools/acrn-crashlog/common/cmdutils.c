@@ -47,7 +47,7 @@ int execv_out2file(char *argv[], char *outfile)
 
 	if (pid == 0) {
 		int res;
-		int fd;
+		int fd = -1;
 
 		if (outfile) {
 			fd = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 0664);
@@ -65,6 +65,8 @@ int execv_out2file(char *argv[], char *outfile)
 
 		res = execvp(argv[0], argv);
 		if (res == -1) {
+			if (fd > 0)
+				close(fd);
 			LOGE("execvp (%s) failed, error (%s)\n", argv[0],
 			     strerror(errno));
 			return -1;
@@ -211,8 +213,10 @@ char *exec_out2mem(char *fmt, ...)
 			memsize += 1024;
 			new = realloc(out, memsize);
 			if (!new) {
-				if (out)
+				if (out) {
 					free(out);
+					out = NULL;
+				}
 				goto end;
 			} else {
 				out = new;

@@ -10,7 +10,6 @@
 #define SOCKET_NAME "user_crash"
 
 #include <stdio.h>
-#include <stdbool.h>
 
 enum CrashPacketType {
 	/* Initial request from crash_dump */

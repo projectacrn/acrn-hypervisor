@@ -19,7 +19,7 @@ void do_log(const int level,
 	char log[MAX_LOG_LEN];
 	int n = 0;
 #ifdef DEBUG_ACRN_CRASHLOG
-	const char header_fmt[] = "<%-20s%d>: ";
+	const char header_fmt[] = "<%-20s%5d>: ";
 #endif
 
 	if (level > LOG_LEVEL)
@@ -37,7 +37,7 @@ void do_log(const int level,
 #ifdef DEBUG_ACRN_CRASHLOG
 	/* header */
 	n = snprintf(log, sizeof(log), header_fmt, func, line);
-	if (n < 0 || n >= sizeof(log))
+	if (n < 0 || (size_t)n >= sizeof(log))
 		n = 0;
 #endif
 	/* msg */
