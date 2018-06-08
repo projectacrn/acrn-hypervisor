@@ -30,7 +30,7 @@ struct print_param {
 		/* The parsed format precision. */
 		int precision;
 		/* The bitmask for unsigned values. */
-		unsigned long long mask;
+		uint64_t mask;
 		/* A pointer to the preformated value. */
 		const char *value;
 		/* The number of characters in the preformated value buffer. */
