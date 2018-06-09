@@ -21,14 +21,14 @@ $(HV_OBJDIR)/$(HV_CONFIG_MK): $(HV_OBJDIR)/$(HV_CONFIG)
 
 $(HV_OBJDIR)/$(HV_CONFIG_H): $(HV_OBJDIR)/$(HV_CONFIG)
 	@mkdir -p $(dir $@)
-	@python $(KCONFIG_DIR)/generate_header.py Kconfig $< $@
+	@python3 $(KCONFIG_DIR)/generate_header.py Kconfig $< $@
 
 # This target forcefully generate a .config based on a given default
 # one. Overwrite the current .config if it exists.
 .PHONY: defconfig
 defconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
-	@python $(KCONFIG_DIR)/defconfig.py Kconfig arch/x86/configs/$(PLATFORM).config $(HV_OBJDIR)/$(HV_CONFIG)
+	@python3 $(KCONFIG_DIR)/defconfig.py Kconfig arch/x86/configs/$(PLATFORM).config $(HV_OBJDIR)/$(HV_CONFIG)
 
 # Use silentoldconfig to forcefully update the current .config, or generate a
 # new one if no previous .config exists. This target can be used as a
@@ -37,13 +37,18 @@ defconfig: $(KCONFIG_DEPS)
 .PHONY: oldconfig
 oldconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
-	@python $(KCONFIG_DIR)/silentoldconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG) PLATFORM_$(shell echo $(PLATFORM) | tr a-z A-Z)=y
+	@python3 $(KCONFIG_DIR)/silentoldconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG) PLATFORM_$(shell echo $(PLATFORM) | tr a-z A-Z)=y
 
 # Minimize the current .config. This target can be used to generate a defconfig
 # for future use.
 .PHONY: minimalconfig
 minimalconfig: $(HV_OBJDIR)/$(HV_CONFIG)
-	@python $(KCONFIG_DIR)/minimalconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG) $(HV_OBJDIR)/$(HV_DEFCONFIG)
+	@python3 $(KCONFIG_DIR)/minimalconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG) $(HV_OBJDIR)/$(HV_DEFCONFIG)
+
+$(eval $(call check_dep_exec,menuconfig,MENUCONFIG_DEPS))
+export KCONFIG_CONFIG := $(HV_OBJDIR)/$(HV_CONFIG)
+menuconfig: $(MENUCONFIG_DEPS) $(HV_OBJDIR)/$(HV_CONFIG)
+	@python3 $(shell which menuconfig) Kconfig
 
 -include $(HV_OBJDIR)/$(HV_CONFIG_MK)
 
