@@ -5,9 +5,9 @@ HV_CONFIG_MK := include/config.mk
 
 KCONFIG_DIR := $(BASEDIR)/../scripts/kconfig
 
-$(eval $(call check_dep_exec,python))
-$(eval $(call check_dep_exec,pip))
-$(eval $(call check_dep_pylib,kconfiglib))
+$(eval $(call check_dep_exec,python3,KCONFIG_DEPS))
+$(eval $(call check_dep_exec,pip3,KCONFIG_DEPS))
+$(eval $(call check_dep_py3lib,kconfiglib,KCONFIG_DEPS))
 
 # This target invoke silentoldconfig to generate or update a .config. Useful as
 # a prerequisite of other targets depending on .config.
@@ -26,7 +26,7 @@ $(HV_OBJDIR)/$(HV_CONFIG_H): $(HV_OBJDIR)/$(HV_CONFIG)
 # This target forcefully generate a .config based on a given default
 # one. Overwrite the current .config if it exists.
 .PHONY: defconfig
-defconfig:
+defconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
 	@python $(KCONFIG_DIR)/defconfig.py Kconfig arch/x86/configs/$(PLATFORM).config $(HV_OBJDIR)/$(HV_CONFIG)
 
@@ -35,7 +35,7 @@ defconfig:
 # prerequisite of all the others to make sure that the .config is consistent
 # even it has been modified manually before.
 .PHONY: oldconfig
-oldconfig:
+oldconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
 	@python $(KCONFIG_DIR)/silentoldconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG) PLATFORM_$(shell echo $(PLATFORM) | tr a-z A-Z)=y
 
