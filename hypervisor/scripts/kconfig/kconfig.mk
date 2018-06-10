@@ -17,7 +17,7 @@ $(HV_OBJDIR)/$(HV_CONFIG): oldconfig
 # it'll trigger endless re-execution of make.
 $(HV_OBJDIR)/$(HV_CONFIG_MK): $(HV_OBJDIR)/$(HV_CONFIG)
 	@mkdir -p $(dir $@)
-	@cp $< $@
+	@sed 's/="\(.*\)"$$/=\1/g' $(HV_OBJDIR)/$(HV_CONFIG) > $@
 
 $(HV_OBJDIR)/$(HV_CONFIG_H): $(HV_OBJDIR)/$(HV_CONFIG)
 	@mkdir -p $(dir $@)
