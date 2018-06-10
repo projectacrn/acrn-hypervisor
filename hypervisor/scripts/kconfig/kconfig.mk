@@ -20,8 +20,18 @@ HV_CONFIG_MK := include/config.mk
 
 KCONFIG_DIR := $(BASEDIR)/../scripts/kconfig
 
+# Backward-compatibility for RELEASE=(0|1)
+ifdef RELEASE
+ifeq ($(RELEASE),1)
+override RELEASE := y
+else
+override RELEASE := n
+endif
+endif
+
 -include $(HV_OBJDIR)/$(HV_CONFIG_MK)
 $(eval $(call override_config,PLATFORM,sbl))
+$(eval $(call override_config,RELEASE,n))
 
 $(eval $(call check_dep_exec,python3,KCONFIG_DEPS))
 $(eval $(call check_dep_exec,pip3,KCONFIG_DEPS))
@@ -62,7 +72,8 @@ oldconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
 	@python3 $(KCONFIG_DIR)/silentoldconfig.py Kconfig \
 		$(HV_OBJDIR)/$(HV_CONFIG) \
-		PLATFORM_$(shell echo $(PLATFORM) | tr a-z A-Z)=y
+		PLATFORM_$(shell echo $(PLATFORM) | tr a-z A-Z)=y \
+		RELEASE=$(RELEASE)
 
 # Minimize the current .config. This target can be used to generate a defconfig
 # for future use.
