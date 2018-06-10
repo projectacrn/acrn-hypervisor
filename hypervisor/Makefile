@@ -18,7 +18,6 @@ GCC_MINOR=$(shell echo __GNUC_MINOR__ | $(CC) -E -x c - | tail -n 1)
 STACK_PROTECTOR := 1
 
 BASEDIR := $(shell pwd)
-PLATFORM ?= sbl
 HV_OBJDIR ?= $(CURDIR)/build
 HV_FILE := acrn
 
@@ -75,7 +74,7 @@ INCLUDE_PATH += include/debug
 INCLUDE_PATH += include/public
 INCLUDE_PATH += include/common
 INCLUDE_PATH += bsp/include
-INCLUDE_PATH += bsp/$(PLATFORM)/include/bsp
+INCLUDE_PATH += bsp/$(CONFIG_PLATFORM)/include/bsp
 INCLUDE_PATH += boot/include
 INCLUDE_PATH += $(HV_OBJDIR)/include
 
@@ -146,14 +145,14 @@ ifdef STACK_PROTECTOR
 C_SRCS += common/stack_protector.c
 endif
 
-C_SRCS += bsp/$(PLATFORM)/vm_description.c
-C_SRCS += bsp/$(PLATFORM)/$(PLATFORM).c
-C_SRCS += bsp/$(PLATFORM)/platform_acpi_info.c
+C_SRCS += bsp/$(CONFIG_PLATFORM)/vm_description.c
+C_SRCS += bsp/$(CONFIG_PLATFORM)/$(CONFIG_PLATFORM).c
+C_SRCS += bsp/$(CONFIG_PLATFORM)/platform_acpi_info.c
 
-ifeq ($(PLATFORM),uefi)
-C_SRCS += bsp/$(PLATFORM)/cmdline.c
+ifeq ($(CONFIG_PLATFORM),uefi)
+C_SRCS += bsp/$(CONFIG_PLATFORM)/cmdline.c
 else
-ifeq ($(PLATFORM), sbl)
+ifeq ($(CONFIG_PLATFORM), sbl)
 C_SRCS += boot/sbl/multiboot.c
 C_SRCS += boot/sbl/hob_parse.c
 endif
@@ -180,13 +179,13 @@ endif
 S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(S_SRCS))
 
 DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
-VERSION := bsp/$(PLATFORM)/include/bsp/version.h
+VERSION := bsp/$(CONFIG_PLATFORM)/include/bsp/version.h
 
 .PHONY: all
 all: $(VERSION) $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 	rm -f $(VERSION)
 
-ifeq ($(PLATFORM), uefi)
+ifeq ($(CONFIG_PLATFORM), uefi)
 all: efi
 .PHONY: efi
 efi: $(HV_OBJDIR)/$(HV_FILE).bin
@@ -197,7 +196,7 @@ install: efi
 	make -C bsp/uefi/efi HV_OBJDIR=$(HV_OBJDIR) RELEASE=$(RELEASE) install
 endif
 
-ifeq ($(PLATFORM), sbl)
+ifeq ($(CONFIG_PLATFORM), sbl)
 install: $(VERSION) $(HV_OBJDIR)/$(HV_FILE).32.out
 	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).sbl
 endif
