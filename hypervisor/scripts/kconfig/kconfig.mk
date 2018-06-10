@@ -9,12 +9,12 @@ $(eval $(call check_dep_exec,python))
 $(eval $(call check_dep_exec,pip))
 $(eval $(call check_dep_pylib,kconfiglib))
 
-# This target invoke silentoldconfig to generate a .config only if a .config
-# does not exist. Useful as a dependency for source compilation.
-$(HV_OBJDIR)/$(HV_CONFIG):
-	@mkdir -p $(HV_OBJDIR)
-	@python $(KCONFIG_DIR)/silentoldconfig.py Kconfig $(HV_OBJDIR)/$(HV_CONFIG) PLATFORM_$(shell echo $(PLATFORM) | tr a-z A-Z)=y
+# This target invoke silentoldconfig to generate or update a .config. Useful as
+# a prerequisite of other targets depending on .config.
+$(HV_OBJDIR)/$(HV_CONFIG): oldconfig
 
+# Note: This target must not depend on a phony target (e.g. oldconfig) because
+# it'll trigger endless re-execution of make.
 $(HV_OBJDIR)/$(HV_CONFIG_MK): $(HV_OBJDIR)/$(HV_CONFIG)
 	@mkdir -p $(dir $@)
 	@cp $< $@

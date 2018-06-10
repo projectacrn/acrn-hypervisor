@@ -182,7 +182,7 @@ DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 VERSION := bsp/$(PLATFORM)/include/bsp/version.h
 
 .PHONY: all
-all: $(BUILD_DEPS) $(VERSION) oldconfig $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
+all: $(BUILD_DEPS) $(VERSION) $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 	rm -f $(VERSION)
 
 ifeq ($(PLATFORM), uefi)
