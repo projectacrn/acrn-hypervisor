@@ -9,8 +9,6 @@ RC_VERSION=5
 API_MAJOR_VERSION=1
 API_MINOR_VERSION=0
 
-RELEASE ?= 0
-
 GCC_MAJOR=$(shell echo __GNUC__ | $(CC) -E -x c - | tail -n 1)
 GCC_MINOR=$(shell echo __GNUC_MINOR__ | $(CC) -E -x c - | tail -n 1)
 
@@ -171,7 +169,7 @@ endif
 endif
 
 C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(C_SRCS))
-ifeq ($(RELEASE),0)
+ifeq ($(CONFIG_RELEASE),n)
 C_OBJS += $(patsubst %.c,$(HV_OBJDIR)/%.o,$(D_SRCS))
 CFLAGS += -DHV_DEBUG
 endif
@@ -189,10 +187,10 @@ all: efi
 .PHONY: efi
 efi: $(HV_OBJDIR)/$(HV_FILE).bin
 	echo "building hypervisor as EFI executable..."
-	make -C bsp/uefi/efi HV_OBJDIR=$(HV_OBJDIR) RELEASE=$(RELEASE)
+	make -C bsp/uefi/efi HV_OBJDIR=$(HV_OBJDIR)
 
 install: efi
-	make -C bsp/uefi/efi HV_OBJDIR=$(HV_OBJDIR) RELEASE=$(RELEASE) install
+	make -C bsp/uefi/efi HV_OBJDIR=$(HV_OBJDIR) install
 endif
 
 ifeq ($(CONFIG_PLATFORM), sbl)
@@ -233,7 +231,7 @@ $(VERSION):
 	DIRTY=`git diff-index --name-only HEAD`;\
 	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
 	TIME=`date "+%F %T"`;\
-	if [ $(RELEASE) = 0 ];then BUILD_TYPE="DBG";else BUILD_TYPE="REL";fi;\
+	if [ $(CONFIG_RELEASE) = "n" ];then BUILD_TYPE="DBG";else BUILD_TYPE="REL";fi;\
 	echo "/*" > $(VERSION); \
 	sed 's/^/ * /' ../LICENSE >> $(VERSION); \
 	echo " */" >> $(VERSION); \

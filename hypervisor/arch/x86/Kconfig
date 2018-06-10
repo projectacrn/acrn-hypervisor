@@ -16,6 +16,10 @@ config PLATFORM
 	default "uefi" if PLATFORM_UEFI
 	default "sbl" if PLATFORM_SBL
 
+config RELEASE
+	bool "Release build"
+	default n
+
 config NR_IOAPICS
 	int "Maximum number of IOAPICs supported"
 	default 1

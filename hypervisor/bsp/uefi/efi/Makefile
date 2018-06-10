@@ -30,7 +30,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-RELEASE:=0
 HV_OBJDIR:=build
 HV_FILE:=acrn
 EFI_OBJDIR:=$(HV_OBJDIR)/bsp/uefi/efi
