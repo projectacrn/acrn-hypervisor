@@ -16,7 +16,10 @@ fi
 #for memsize setting
 mem_size=1000M
 
-acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
+# make sure there is enough 2M hugepages in the pool
+echo 1024 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+
+acrn-dm -T -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 5,virtio-console,@pty:pty_port \
   -s 6,virtio-hyper_dmabuf \
   -s 3,virtio-blk,/root/clear-21260-kvm.img \
