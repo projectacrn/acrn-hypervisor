@@ -1,6 +1,6 @@
 choice
 	prompt "Platform"
-	default PLATFORM_UEFI
+	default PLATFORM_SBL
 
 config PLATFORM_UEFI
 	bool "UEFI"
@@ -10,6 +10,11 @@ config PLATFORM_SBL
 	bool "SBL"
 
 endchoice
+
+config PLATFORM
+	string
+	default "uefi" if PLATFORM_UEFI
+	default "sbl" if PLATFORM_SBL
 
 config NR_IOAPICS
 	int "Maximum number of IOAPICs supported"
