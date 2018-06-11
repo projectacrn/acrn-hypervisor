@@ -97,9 +97,9 @@ void *get_rsdp_from_uefi(void)
 	return HPA2HVA(efi_ctx->rsdp);
 }
 
-void *get_ap_trampline_buf(void)
+void *get_ap_trampoline_buf(void)
 {
-	return efi_ctx->ap_trampline_buf;
+	return efi_ctx->ap_trampoline_buf;
 }
 
 static void efi_init(void)

@@ -156,23 +156,23 @@ int cpu_find_logical_id(uint32_t lapic_id);
 /**********************************/
 /* EXTERNAL VARIABLES             */
 /**********************************/
-extern const uint8_t          _ld_trampline_load[];
-extern uint8_t                _ld_trampline_start[];
-extern uint8_t                _ld_trampline_end[];
-extern const uint64_t         _ld_trampline_size;
+extern const uint8_t          _ld_trampoline_load[];
+extern uint8_t                _ld_trampoline_start[];
+extern uint8_t                _ld_trampoline_end[];
+extern const uint64_t         _ld_trampoline_size;
 extern uint8_t                _ld_bss_start[];
 extern uint8_t                _ld_bss_end[];
 
-extern uint8_t                trampline_fixup_cs[];
-extern uint8_t                trampline_fixup_ip[];
-extern uint8_t                trampline_fixup_target[];
+extern uint8_t                trampoline_fixup_cs[];
+extern uint8_t                trampoline_fixup_ip[];
+extern uint8_t                trampoline_fixup_target[];
 extern uint8_t                CPU_Boot_Page_Tables_Start[];
 extern uint8_t                CPU_Boot_Page_Tables_ptr[];
-extern uint8_t                trampline_pdpt_addr[];
-extern uint8_t                trampline_gdt_ptr[];
-extern uint8_t                trampline_start64_fixup[];
+extern uint8_t                trampoline_pdpt_addr[];
+extern uint8_t                trampoline_gdt_ptr[];
+extern uint8_t                trampoline_start64_fixup[];
 
-extern uint64_t trampline_start16_paddr;
+extern uint64_t trampoline_start16_paddr;
 extern int ibrs_type;
 
 /*
@@ -250,7 +250,7 @@ extern struct cpuinfo_x86 boot_cpu_data;
 
 /* Function prototypes */
 void cpu_dead(uint32_t logical_id);
-void trampline_start16(void);
+void trampoline_start16(void);
 int hv_main(int cpu_id);
 bool is_vapic_supported(void);
 bool is_vapic_intr_delivery_supported(void);

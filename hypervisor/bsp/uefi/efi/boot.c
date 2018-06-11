@@ -226,7 +226,7 @@ switch_to_guest_mode(EFI_HANDLE image)
 	if (err != EFI_SUCCESS)
 		goto out;
 
-	efi_ctx->ap_trampline_buf = (void *)addr;
+	efi_ctx->ap_trampoline_buf = (void *)addr;
 
 	config_table = sys_table->ConfigurationTable;
 

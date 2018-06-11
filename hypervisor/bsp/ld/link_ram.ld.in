@@ -39,20 +39,20 @@ SECTIONS
 
     } > ram
 
-    _ld_trampline_load = .;
+    _ld_trampoline_load = .;
 
-    .trampline : AT (_ld_trampline_load)
+    .trampoline : AT (_ld_trampoline_load)
     {
-        _ld_trampline_start = .;
-        *(.trampline_reset);
+        _ld_trampoline_start = .;
+        *(.trampoline_reset);
         . = ALIGN(4);
-        _ld_trampline_end = .;
+        _ld_trampoline_end = .;
 
     } > lowram
 
-    _ld_trampline_size = _ld_trampline_end - _ld_trampline_start;
+    _ld_trampoline_size = _ld_trampoline_end - _ld_trampoline_start;
 
-    .data (_ld_trampline_load + _ld_trampline_size):
+    .data (_ld_trampoline_load + _ld_trampoline_size):
     {
         *(.data) ;
         *(.data*) ;
