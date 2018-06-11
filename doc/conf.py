@@ -32,7 +32,11 @@ sys.path.insert(0, os.path.abspath('.'))
 # ones.
 extensions = ['breathe', 'sphinx.ext.graphviz']
 
-graphviz_output_format='svg'
+graphviz_output_format='png'
+graphviz_dot_args=[
+   '-Nfontname="verdana"',
+   '-Gfontname="verdana"',
+   '-Efontname="verdana"']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -174,7 +178,7 @@ html_context = {
 #
 # html_theme_options = {}
 
-html_logo = 'images/ACRN_Logo_300w.png'
+html_logo = 'images/ACRN_Logo_200w.png'
 html_favicon = 'images/ACRN-favicon-32x32.png'
 
 numfig = True
