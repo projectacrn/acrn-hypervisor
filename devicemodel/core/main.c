@@ -125,9 +125,10 @@ usage(int code)
 		"Usage: %s [-abehuwxACHPSTWY] [-c vcpus] [-g <gdb port>] [-l <lpc>]\n"
 		"       %*s [-m mem] [-p vcpu:hostcpu] [-s <pci>] [-U uuid] \n"
 		"       %*s [--vsbl vsbl_file_name] [--part_info part_info_name]\n"
-		"	%*s [--enable_trusty] <vm>\n"
+		"       %*s [--enable_trusty] <vm>\n"
 		"       -a: local apic is in xAPIC mode (deprecated)\n"
 		"       -A: create ACPI tables\n"
+		"       -b: enable bvmcons\n"
 		"       -c: # cpus (default 1)\n"
 		"       -C: include guest memory in core file\n"
 		"       -e: exit on unhandled I/O access\n"
@@ -156,8 +157,8 @@ usage(int code)
 		"       -i: ioc boot parameters\n"
 		"       --vsbl: vsbl file path\n"
 		"       --part_info: guest partition info file path\n"
-		"	--enable_trusty: enable trusty for guest\n"
-		"	--ptdev_no_reset: disable reset check for ptdev\n",
+		"       --enable_trusty: enable trusty for guest\n"
+		"       --ptdev_no_reset: disable reset check for ptdev\n",
 		progname, (int)strlen(progname), "", (int)strlen(progname), "",
 		(int)strlen(progname), "");
 
@@ -604,7 +605,7 @@ static struct option long_options[] = {
 	{"memflags_wired",	no_argument,		0, 'S' },
 	{"memsize",		required_argument,	0, 'm' },
 	{"ioapic",		no_argument,		0, 'I' },
-	{"vmexit_pause",	no_argument,		0, 'p' },
+	{"vmexit_pause",	no_argument,		0, 'P' },
 	{"strictio",		no_argument,		0, 'e' },
 	{"rtc_localtime",	no_argument,		0, 'u' },
 	{"uuid",		required_argument,	0, 'U' },
