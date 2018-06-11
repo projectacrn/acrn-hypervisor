@@ -140,11 +140,10 @@ Boot Sequence
 In :numref:`boot-flow` we show a verified Boot Sequence with UEFI
 on an Intel |reg| Architecture platform NUC (see :ref:`hardware`).
 
-.. figure:: images/boot-flow.png
-   :align: center
+.. graphviz:: images/boot-flow.dot
    :name: boot-flow
-
-   ACRN Hypervisor Boot Flow
+   :align: center
+   :caption: ACRN Hypervisor Boot Flow
 
 The Boot process proceeds as follows:
 
