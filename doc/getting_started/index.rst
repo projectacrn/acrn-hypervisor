@@ -249,30 +249,13 @@ partition. Follow these steps:
 #. From here you can login as root using the password you set previously when
    you installed Clear Linux.
 
-Create a Network Bridge
-=======================
+ACRN Network Bridge
+===================
 
-Without a network bridge, the SOS and UOS are not able to talk to each
-other.
-
-A sample `bridge.sh
-<https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/devicemodel/samples/nuc/bridge.sh>`__
-is included in the Clear Linux release, and
-is also available in the acrn-hypervisor/devicemodel GitHub repo (in the samples
-folder) as shown here:
-
-.. literalinclude:: ../../devicemodel/samples/nuc/bridge.sh
-   :caption: devicemodel/samples/nuc/bridge.sh
-   :language: bash
-
-By default, the script is located in the ``/usr/share/acrn/samples/nuc/``
-directory. Run it to create a network bridge:
-
-.. code-block:: none
-
-   # cd /usr/share/acrn/samples/nuc/
-   # ./bridge.sh
-   # cd
+ACRN bridge has been setup as a part of systemd services for device communication. The default
+bridge creates ``acrn_br0`` which is the bridge and ``acrn_tap0`` as an initial setup. The files can be
+found in ``/usr/lib/systemd/network``. No additional setup is needed since systemd-networkd is
+automatically enabled after a system restart.
 
 Set up Reference UOS
 ====================
