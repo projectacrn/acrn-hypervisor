@@ -95,7 +95,7 @@ struct e820_entry {
 struct efi_ctx {
 	uint64_t rip;
 	VOID *rsdp;
-	VOID *ap_trampline_buf;
+	VOID *ap_trampoline_buf;
 	dt_addr_t  gdt;
 	dt_addr_t  idt;
 	uint16_t   tr_sel;

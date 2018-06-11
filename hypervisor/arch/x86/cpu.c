@@ -12,7 +12,7 @@
 #include <acrn_efi.h>
 #endif
 
-spinlock_t trampline_spinlock = {
+spinlock_t trampoline_spinlock = {
 	.head = 0,
 	.tail = 0
 };
@@ -30,7 +30,7 @@ volatile uint32_t up_count = 0;
 /* physical cpu active bitmap, support up to 64 cpus */
 uint64_t pcpu_active_bitmap = 0;
 
-uint64_t trampline_start16_paddr;
+uint64_t trampoline_start16_paddr;
 
 /* TODO: add more capability per requirement */
 /*APICv features*/
@@ -580,7 +580,7 @@ void cpu_secondary_init(void)
 	/* Release secondary boot spin-lock to allow one of the next CPU(s) to
 	 * perform this common initialization
 	 */
-	spinlock_release(&trampline_spinlock);
+	spinlock_release(&trampoline_spinlock);
 
 	/* Initialize secondary processor interrupts. */
 	interrupt_init(get_cpu_id());
@@ -612,7 +612,7 @@ int cpu_find_logical_id(uint32_t lapic_id)
 	return -1;
 }
 
-static void update_trampline_code_refs(uint64_t dest_pa)
+static void update_trampoline_code_refs(uint64_t dest_pa)
 {
 	void *ptr;
 	uint64_t val;
@@ -622,15 +622,15 @@ static void update_trampline_code_refs(uint64_t dest_pa)
 	 * calculate the fixup CS:IP according to fixup target address
 	 * dynamically.
 	 *
-	 * trampline code starts in real mode,
+	 * trampoline code starts in real mode,
 	 * so the target addres is HPA
 	 */
-	val = dest_pa + (uint64_t)trampline_fixup_target;
+	val = dest_pa + (uint64_t)trampoline_fixup_target;
 
-	ptr = HPA2HVA(dest_pa + (uint64_t)trampline_fixup_cs);
+	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_fixup_cs);
 	*(uint16_t *)(ptr) = (uint16_t)(val >> 4) & 0xFFFF;
 
-	ptr = HPA2HVA(dest_pa + (uint64_t)trampline_fixup_ip);
+	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_fixup_ip);
 	*(uint16_t *)(ptr) = (uint16_t)(val & 0xf);
 
 	/* Update temporary page tables */
@@ -640,36 +640,36 @@ static void update_trampline_code_refs(uint64_t dest_pa)
 	ptr = HPA2HVA(dest_pa + (uint64_t)CPU_Boot_Page_Tables_Start);
 	*(uint64_t *)(ptr) += dest_pa;
 
-	ptr = HPA2HVA(dest_pa + (uint64_t)trampline_pdpt_addr);
+	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_pdpt_addr);
 	for (i = 0; i < 4; i++)
 		*(uint64_t *)(ptr + sizeof(uint64_t) * i) += dest_pa;
 
 	/* update the gdt base pointer with relocated offset */
-	ptr = HPA2HVA(dest_pa + (uint64_t)trampline_gdt_ptr);
+	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_gdt_ptr);
 	*(uint64_t *)(ptr + 2) += dest_pa;
 
-	/* update trampline jump pointer with relocated offset */
-	ptr = HPA2HVA(dest_pa + (uint64_t)trampline_start64_fixup);
+	/* update trampoline jump pointer with relocated offset */
+	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_start64_fixup);
 	*(uint32_t *)ptr += dest_pa;
 }
 
-static uint64_t prepare_trampline(void)
+static uint64_t prepare_trampoline(void)
 {
 	uint64_t size, dest_pa;
 
-	size = (uint64_t)_ld_trampline_end - (uint64_t)trampline_start16;
+	size = (uint64_t)_ld_trampoline_end - (uint64_t)trampoline_start16;
 #ifndef CONFIG_EFI_STUB
 	dest_pa = e820_alloc_low_memory(CONFIG_LOW_RAM_SIZE);
 #else
-	dest_pa = (uint64_t)get_ap_trampline_buf();
+	dest_pa = (uint64_t)get_ap_trampoline_buf();
 #endif
 
-	pr_dbg("trampline code: %llx size %x", dest_pa, size);
+	pr_dbg("trampoline code: %llx size %x", dest_pa, size);
 
 	/* Copy segment for AP initialization code below 1MB */
-	memcpy_s(HPA2HVA(dest_pa), size, _ld_trampline_load, size);
-	update_trampline_code_refs(dest_pa);
-	trampline_start16_paddr = dest_pa;
+	memcpy_s(HPA2HVA(dest_pa), size, _ld_trampoline_load, size);
+	update_trampoline_code_refs(dest_pa);
+	trampoline_start16_paddr = dest_pa;
 
 	return dest_pa;
 }
@@ -683,7 +683,7 @@ void start_cpus()
 	uint32_t expected_up;
 	uint64_t startup_paddr;
 
-	startup_paddr = prepare_trampline();
+	startup_paddr = prepare_trampoline();
 
 	/* Set flag showing number of CPUs expected to be up to all
 	 * cpus

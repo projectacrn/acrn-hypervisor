@@ -676,10 +676,10 @@ uint64_t e820_alloc_low_memory(uint32_t size)
  *
  * FIXME: here the guest init page table will occupy at most
  * GUEST_INIT_PT_PAGE_NUM pages. Some check here:
- * - guest page table space should not override trampline code area
+ * - guest page table space should not override trampoline code area
  *   (it's a little tricky here, as under current identical mapping, HV & SOS
  *   share same memory under 1M; under uefi boot mode, the defered AP startup
- *   need trampline code area which reserved by uefi stub keep there
+ *   need trampoline code area which reserved by uefi stub keep there
  *   no change even after SOS startup)
  * - guest page table space should not override possible RSDP fix segment
  *
@@ -687,7 +687,7 @@ uint64_t e820_alloc_low_memory(uint32_t size)
  * after guest realmode/32bit no paging mode got supported.
  ******************************************************************/
 #define GUEST_INIT_PAGE_TABLE_SKIP_SIZE	0x8000UL
-#define GUEST_INIT_PAGE_TABLE_START	(trampline_start16_paddr +	\
+#define GUEST_INIT_PAGE_TABLE_START	(trampoline_start16_paddr +	\
 					GUEST_INIT_PAGE_TABLE_SKIP_SIZE)
 #define GUEST_INIT_PT_PAGE_NUM		7
 #define RSDP_F_ADDR			0xE0000
@@ -707,8 +707,8 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 		RSDP_F_ADDR, "RSDP fix segment could be override");
 
 	if (GUEST_INIT_PAGE_TABLE_SKIP_SIZE <
-		(unsigned long)&_ld_trampline_size) {
-		panic("guest init PTs override trampline code");
+		(unsigned long)&_ld_trampoline_size) {
+		panic("guest init PTs override trampoline code");
 	}
 
 	/* Using continuous memory for guest page tables, the total 4K page
@@ -793,7 +793,7 @@ uint64_t create_guest_initial_paging(struct vm *vm)
  ******************************************************************/
 
 #define GUEST_INIT_GDT_SKIP_SIZE	0x8000UL
-#define GUEST_INIT_GDT_START	(trampline_start16_paddr +	\
+#define GUEST_INIT_GDT_START	(trampoline_start16_paddr +	\
 					GUEST_INIT_GDT_SKIP_SIZE)
 
 /* The GDT defined below compatible with linux kernel */
