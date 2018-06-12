@@ -1437,7 +1437,7 @@ vlapic_write(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 	return retval;
 }
 
-static void
+void
 vlapic_reset(struct vlapic *vlapic)
 {
 	struct lapic *lapic;
