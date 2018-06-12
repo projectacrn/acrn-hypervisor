@@ -1,0 +1,11 @@
+digraph gaspump {
+        rankdir=LR;
+        node [shape = circle;];
+        edge [color = grey; fontsize=10];
+        S0 -> S1 [ label = "Lift Nozzle" ]
+        S1 -> S0 [ label = "Replace Nozzle" ]
+        S1 -> S2 [ label = "Authorize Pump" ]
+        S2 -> S0 [ label = "Replace Nozzle" ]
+        S2 -> S3 [ label = "Pull Trigger" ]
+        S3 -> S2 [ label = "Release Trigger" ]
+}

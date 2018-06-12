@@ -1,0 +1,9 @@
+digraph {
+   bgcolor="transparent"; rankdir=LR;
+   { a [shape=circle height="1" style=filled color=AntiqueWhite
+        label="Circle\nLabel"]
+     b [shape=box height="1" width="1" style="rounded,filled"
+        color="#F080F0" label="Square\nLabel"]
+   }
+   a -> b
+}
