@@ -12,7 +12,7 @@ extern struct efi_ctx* efi_ctx;
 
 #define PAT_POWER_ON_VALUE	(PAT_MEM_TYPE_WB + \
 				((uint64_t)PAT_MEM_TYPE_WT << 8) + \
-				((uint64_t)PAT_MEM_TYPE_WC << 16) + \
+				((uint64_t)PAT_MEM_TYPE_UCM << 16) + \
 				((uint64_t)PAT_MEM_TYPE_UC << 24) + \
 				((uint64_t)PAT_MEM_TYPE_WB << 32) + \
 				((uint64_t)PAT_MEM_TYPE_WT << 40) + \
