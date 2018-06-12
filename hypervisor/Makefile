@@ -147,6 +147,7 @@ endif
 
 C_SRCS += bsp/$(PLATFORM)/vm_description.c
 C_SRCS += bsp/$(PLATFORM)/$(PLATFORM).c
+C_SRCS += bsp/$(PLATFORM)/platform_acpi_info.c
 
 ifeq ($(PLATFORM),uefi)
 C_SRCS += bsp/$(PLATFORM)/cmdline.c
