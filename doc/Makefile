@@ -12,7 +12,7 @@ SPHINXOPTS    ?= -q
 SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = "Project ACRN"
 SOURCEDIR     = .
-BUILDDIR      = _build
+BUILDDIR      ?= _build
 
 DOC_TAG      ?= development
 RELEASE      ?= latest
