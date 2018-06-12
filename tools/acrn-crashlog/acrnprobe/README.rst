@@ -173,4 +173,4 @@ Configuration files
 
   Custom configuration file that ``acrnprobe`` reads.
 
-.. _`telemetrics client`: https://github.com/clearlinux/telemetrics-client
+.. _`telemetrics-client`: https://github.com/clearlinux/telemetrics-client
