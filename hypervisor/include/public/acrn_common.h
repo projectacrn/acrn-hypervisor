@@ -305,6 +305,30 @@ struct cpu_px_data {
 	uint64_t status;		/* success indicator */
 } __attribute__((aligned(8)));
 
+struct acpi_sx_pkg {
+	uint8_t		val_pm1a;
+	uint8_t		val_pm1b;
+	uint16_t	reserved;
+} __attribute__((aligned(8)));
+
+struct pm_s_state_data {
+	struct acpi_generic_address pm1a_evt;
+	struct acpi_generic_address pm1b_evt;
+	struct acpi_generic_address pm1a_cnt;
+	struct acpi_generic_address pm1b_cnt;
+	struct acpi_sx_pkg s3_pkg;
+	struct acpi_sx_pkg s5_pkg;
+	uint32_t *wake_vector_32;
+	uint64_t *wake_vector_64;
+}__attribute__((aligned(8)));
+
+struct acpi_info {
+	int16_t			x86_family;
+	int16_t			x86_model;
+	struct pm_s_state_data	pm_s_state;
+	/* TODO: we can add more acpi info field here if needed. */
+};
+
 /**
  * @brief Info PM command from DM/VHM.
  *
