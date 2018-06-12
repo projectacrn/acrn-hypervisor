@@ -21,7 +21,6 @@
 #define	CONFIG_RAM_START	0x20000000
 #define	CONFIG_RAM_SIZE		0x02000000	/* 32M */
 #define	CONFIG_DMAR_PARSE_ENABLED	1
-#define	CONFIG_GPU_SBDF		0x00000010	/* 0000:00:02.0 */
 #define CONFIG_EFI_STUB       1
 #define CONFIG_UEFI_OS_LOADER_NAME  "\\EFI\\org.clearlinux\\bootloaderx64.efi"
 #define CONFIG_MTRR_ENABLED		1

@@ -152,6 +152,8 @@ struct iommu_domain {
 	uint64_t trans_table_ptr;
 };
 
+bool iommu_snoop = true; /* enable iommu snoop control */
+
 static struct list_head dmar_drhd_units;
 static uint32_t dmar_hdrh_unit_count;
 
@@ -419,9 +421,13 @@ static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
 	 * How to guarantee it when EPT is used as second-level
 	 * translation paging structures?
 	 */
-	if (iommu_ecap_sc(dmar_uint->ecap) == 0U)
+
+	/* enable snoop control only if it is supported by all the VT-d engines */
+	if (!iommu_ecap_sc(dmar_uint->ecap)) {
 		dev_dbg(ACRN_DBG_IOMMU,
 			"dmar uint doesn't support snoop control!");
+		iommu_snoop = false;
+	}
 
 	dmar_uint->max_domain_id = iommu_cap_ndoms(dmar_uint->cap) - 1;
 
@@ -1009,7 +1015,6 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 			ASSERT(false,
 				  "dmaru doesn't support trans passthrough");
 	} else {
-		/* TODO: add Device TLB support */
 		upper =
 			DMAR_SET_BITSLICE(upper, CTX_ENTRY_UPPER_AW,
 					  width_to_agaw(
