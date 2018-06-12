@@ -14,5 +14,3 @@ install:
 	install -p -D -m 0644 $(OUT_DIR)/acrn.network $(DESTDIR)/$(SYSTEMD_NETWORKDIR)/systemd/network
 	install -p -D -m 0644 $(OUT_DIR)/acrn_tap0.netdev $(DESTDIR)/$(SYSTEMD_NETWORKDIR)/systemd/network
 	install -p -D -m 0644 $(OUT_DIR)/eth.network $(DESTDIR)/$(SYSTEMD_NETWORKDIR)/systemd/network
-	ln -sf /dev/null $(DESTDIR)/$(SYSTEMD_NETWORKDIR)/systemd/network/80-dhcp.network
-	ln -sf /dev/null $(DESTDIR)/$(SYSTEMD_NETWORKDIR)/systemd/network/80-virtual.network
