@@ -281,7 +281,7 @@ void reset_vcpu(struct vcpu *vcpu)
 	vcpu->arch_vcpu.nr_sipi = 0;
 	vcpu->pending_pre_work = 0;
 	vlapic = vcpu->arch_vcpu.vlapic;
-	vlapic_init(vlapic);
+	vlapic_reset(vlapic);
 }
 
 void pause_vcpu(struct vcpu *vcpu, enum vcpu_state new_state)
