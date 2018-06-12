@@ -77,9 +77,9 @@ oldconfig: $(KCONFIG_DEPS)
 
 # Minimize the current .config. This target can be used to generate a defconfig
 # for future use.
-.PHONY: minimalconfig
-minimalconfig: $(HV_OBJDIR)/$(HV_CONFIG)
-	@python3 $(KCONFIG_DIR)/minimalconfig.py Kconfig \
+.PHONY: savedefconfig
+savedefconfig: $(HV_OBJDIR)/$(HV_CONFIG)
+	@python3 $(KCONFIG_DIR)/savedefconfig.py Kconfig \
 		$(HV_OBJDIR)/$(HV_CONFIG) \
 		$(HV_OBJDIR)/$(HV_DEFCONFIG)
 
