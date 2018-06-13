@@ -7,7 +7,7 @@
 #include <hypervisor.h>
 
 /* The table includes cpu px info of Intel A3960 SoC */
-struct cpu_px_data px_a3960[] = {
+static const struct cpu_px_data px_a3960[] = {
 	{0x960, 0, 0xA, 0xA, 0x1800, 0x1800}, /* P0 */
 	{0x8FC, 0, 0xA, 0xA, 0x1700, 0x1700}, /* P1 */
 	{0x898, 0, 0xA, 0xA, 0x1600, 0x1600}, /* P2 */
@@ -28,14 +28,14 @@ struct cpu_px_data px_a3960[] = {
 };
 
 /* The table includes cpu cx info of Intel A3960 SoC */
-struct cpu_cx_data cx_a3960[] = {
+static const struct cpu_cx_data cx_a3960[] = {
 	{{SPACE_FFixedHW,  0x0, 0, 0,     0}, 0x1, 0x1, 0x3E8}, /* C1 */
 	{{SPACE_SYSTEM_IO, 0x8, 0, 0, 0x415}, 0x2, 0x32, 0x0A}, /* C2 */
 	{{SPACE_SYSTEM_IO, 0x8, 0, 0, 0x419}, 0x3, 0x96, 0x0A}  /* C3 */
 };
 
 /* The table includes cpu px info of Intel A3950 SoC */
-struct cpu_px_data px_a3950[] = {
+static const struct cpu_px_data px_a3950[] = {
 	{0x7D0, 0, 0xA, 0xA, 0x1400, 0x1400}, /* P0 */
 	{0x76C, 0, 0xA, 0xA, 0x1300, 0x1300}, /* P1 */
 	{0x708, 0, 0xA, 0xA, 0x1200, 0x1200}, /* P2 */
@@ -52,7 +52,7 @@ struct cpu_px_data px_a3950[] = {
 };
 
 /* The table includes cpu px info of Intel J3455 SoC */
-struct cpu_px_data px_j3455[] = {
+static const struct cpu_px_data px_j3455[] = {
 	{0x5DD, 0, 0xA, 0xA, 0x1700, 0x1700}, /* P0 */
 	{0x5DC, 0, 0xA, 0xA, 0x0F00, 0x0F00}, /* P1 */
 	{0x578, 0, 0xA, 0xA, 0x0E00, 0x0E00}, /* P2 */
@@ -65,13 +65,13 @@ struct cpu_px_data px_j3455[] = {
 };
 
 /* The table includes cpu cx info of Intel J3455 SoC */
-struct cpu_cx_data cx_j3455[] = {
+static const struct cpu_cx_data cx_j3455[] = {
 	{{SPACE_FFixedHW, 0x1, 0x2, 0x1, 0x01}, 0x1, 0x1, 0x3E8}, /* C1 */
 	{{SPACE_FFixedHW, 0x1, 0x2, 0x1, 0x21}, 0x2, 0x32, 0x0A}, /* C2 */
 	{{SPACE_FFixedHW, 0x1, 0x2, 0x1, 0x60}, 0x3, 0x96, 0x0A}  /* C3 */
 };
 
-struct cpu_state_table {
+static const struct cpu_state_table {
 	char			model_name[64];
 	struct cpu_state_info	state_info;
 } cpu_state_tbl[] = {
@@ -111,7 +111,7 @@ static int get_state_tbl_idx(char *cpuname)
 void load_cpu_state_data(void)
 {
 	int tbl_idx;
-	struct cpu_state_info *state_info;
+	const struct cpu_state_info *state_info;
 
 	memset(&boot_cpu_data.state_info, 0,
 			sizeof(struct cpu_state_info));
