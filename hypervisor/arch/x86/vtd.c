@@ -733,7 +733,7 @@ static void fault_record_analysis(__unused uint64_t low, uint64_t high)
 #endif
 }
 
-static int dmar_fault_handler(__unused int irq, void *data)
+static int dmar_fault_handler(int irq, void *data)
 {
 	struct dmar_drhd_rt *dmar_uint = (struct dmar_drhd_rt *)data;
 	uint32_t fsr;
