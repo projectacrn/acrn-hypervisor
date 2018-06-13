@@ -32,9 +32,7 @@ void vcpu_thread(struct vcpu *vcpu)
 
 	do {
 		/* handling pending softirq */
-		CPU_IRQ_ENABLE();
 		exec_softirq();
-		CPU_IRQ_DISABLE();
 
 		/* Check and process pending requests(including interrupt) */
 		ret = acrn_handle_pending_request(vcpu);

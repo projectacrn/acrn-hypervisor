@@ -40,12 +40,14 @@ void raise_softirq(int softirq_id)
 void exec_softirq(void)
 {
 	int cpu_id = get_cpu_id();
-	uint64_t *bitmap = &per_cpu(softirq_pending, cpu_id);
+	volatile uint64_t *bitmap = &per_cpu(softirq_pending, cpu_id);
 
-	uint64_t rflag;
 	int softirq_id;
 
 	if (cpu_id >= phy_cpu_num)
+		return;
+
+	if (((*bitmap) & SOFTIRQ_MASK) == 0UL)
 		return;
 
 	/* Disable softirq
@@ -54,13 +56,8 @@ void exec_softirq(void)
 	if (!bitmap_test_and_clear(SOFTIRQ_ATOMIC, bitmap))
 		return;
 
-	if (((*bitmap) & SOFTIRQ_MASK) == 0UL)
-		goto ENABLE_AND_EXIT;
-
-	/* check if we are in interrupt context */
-	CPU_RFLAGS_SAVE(&rflag);
-	if (!(rflag & (1<<9)))
-		goto ENABLE_AND_EXIT;
+again:
+	CPU_IRQ_ENABLE();
 
 	while (1) {
 		softirq_id = ffs64(*bitmap);
@@ -82,7 +79,11 @@ void exec_softirq(void)
 		}
 	}
 
-ENABLE_AND_EXIT:
+	CPU_IRQ_DISABLE();
+
+	if (((*bitmap) & SOFTIRQ_MASK))
+		goto again;
+
 	enable_softirq(cpu_id);
 }
 
