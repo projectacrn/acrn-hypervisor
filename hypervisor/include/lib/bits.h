@@ -145,7 +145,7 @@ static inline int clz64(unsigned long value)
  * (*addr) |= (1UL<<nr);
  */
 #define build_bitmap_set(name, lock, nr, addr)		\
-static inline void name(int nr, unsigned long *addr)	\
+static inline void name(int nr, volatile unsigned long *addr)	\
 {							\
 	asm volatile(lock "orq %1,%0"			\
 			:  "+m" (*addr)			\
@@ -159,7 +159,7 @@ build_bitmap_set(bitmap_set, BUS_LOCK, nr, addr)
  * (*addr) &= ~(1UL<<nr);
  */
 #define build_bitmap_clear(name, lock, nr, addr)	\
-static inline void name(int nr, unsigned long *addr)	\
+static inline void name(int nr, volatile unsigned long *addr)	\
 {							\
 	asm volatile(lock "andq %1,%0"			\
 			:  "+m" (*addr)			\
@@ -172,7 +172,7 @@ build_bitmap_clear(bitmap_clear, BUS_LOCK, nr, addr)
 /*
  * return !!((*addr) & (1UL<<nr));
  */
-static inline bool bitmap_test(int nr, unsigned long *addr)
+static inline bool bitmap_test(int nr, volatile unsigned long *addr)
 {
 	int ret;
 
@@ -189,7 +189,7 @@ static inline bool bitmap_test(int nr, unsigned long *addr)
  * return ret;
  */
 #define build_bitmap_testandset(name, lock, nr, addr)	\
-static inline bool name(int nr, unsigned long *addr)	\
+static inline bool name(int nr, volatile unsigned long *addr)	\
 {							\
 	int ret;					\
 	asm volatile(lock "btsq %2,%1\n\tsbbl %0,%0"	\
@@ -207,7 +207,7 @@ build_bitmap_testandset(bitmap_test_and_set, BUS_LOCK, nr, addr)
  * return ret;
  */
 #define build_bitmap_testandclear(name, lock, nr, addr)	\
-static inline bool name(int nr, unsigned long *addr)	\
+static inline bool name(int nr, volatile unsigned long *addr)	\
 {							\
 	int ret;					\
 	asm volatile(lock "btrq %2,%1\n\tsbbl %0,%0"	\
