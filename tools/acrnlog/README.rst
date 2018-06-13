@@ -22,6 +22,22 @@ The ``acrnlog`` tool is launched as a service at boot, and limited to
 supporting four 1MB log files by default.  You can change this log file
 limitation temporarily or permanently.
 
+Options:
+
+    -h
+        display the help
+
+    -t:
+	specify a polling interval (ms). Once buffer is empty, acrnlog stops
+	and starts reading in specified interval.
+	If an incomplete log warning is reported, please try with a smaller
+	interval to get a complete log.
+
+    -s:
+	limit the size of each log file, in KB. 0 means no limitation.
+
+    -n:
+	specify the number of log files to keep, old files would be deleted.
 
 Temporary log file changes
 ==========================
