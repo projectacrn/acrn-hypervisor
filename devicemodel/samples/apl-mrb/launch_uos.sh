@@ -337,20 +337,20 @@ echo 1024 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
 
 case $launch_type in
 	1) echo "Launch clearlinux UOS"
-		launch_clearlinux 1 3 "64 448 8" 0x070F00 clearlinux $debug
+		launch_clearlinux 1 3 "64 448 8" 0x010100 clearlinux $debug
 		;;
 	2) echo "Launch android UOS"
-		launch_android 1 3 "64 448 8" 0x070F00 android $debug
+		launch_android 1 3 "64 448 8" 0x010100 android $debug
 		;;
 	3) echo "Launch clearlinux UOS + android UOS"
 		launch_android 1 2 "64 448 4" 0x00000C android $debug &
 		sleep 5
-		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux $debug
+		launch_clearlinux 2 1 "64 448 4" 0x010100 clearlinux $debug
 		;;
 	4) echo "Launch two clearlinux UOSs"
 		launch_clearlinux 1 1 "64 448 4" 0x00000C clearlinux $debug &
 		sleep 5
-		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux_dup $debug
+		launch_clearlinux 2 1 "64 448 4" 0x010100 clearlinux_dup $debug
 		;;
 esac
 
