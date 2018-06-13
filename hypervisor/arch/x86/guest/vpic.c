@@ -247,7 +247,7 @@ static void vpic_notify_intr(struct vpic *vpic)
 	}
 }
 
-static int vpic_icw1(__unused struct vpic *vpic, struct pic *pic, uint8_t val)
+static int vpic_icw1(struct vpic *vpic, struct pic *pic, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: pic icw1 0x%x\n",
 		vpic->vm, val);
@@ -277,7 +277,7 @@ static int vpic_icw1(__unused struct vpic *vpic, struct pic *pic, uint8_t val)
 	return 0;
 }
 
-static int vpic_icw2(__unused struct vpic *vpic, struct pic *pic, uint8_t val)
+static int vpic_icw2(struct vpic *vpic, struct pic *pic, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: pic icw2 0x%x\n",
 		vpic->vm, val);
@@ -289,8 +289,7 @@ static int vpic_icw2(__unused struct vpic *vpic, struct pic *pic, uint8_t val)
 	return 0;
 }
 
-static int vpic_icw3(__unused struct vpic *vpic, struct pic *pic,
-		__unused uint8_t val)
+static int vpic_icw3(struct vpic *vpic, struct pic *pic, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: pic icw3 0x%x\n",
 		vpic->vm, val);
@@ -424,7 +423,7 @@ static int vpic_ocw2(struct vpic *vpic, struct pic *pic, uint8_t val)
 	return 0;
 }
 
-static int vpic_ocw3(__unused struct vpic *vpic, struct pic *pic, uint8_t val)
+static int vpic_ocw3(struct vpic *vpic, struct pic *pic, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: pic ocw3 0x%x\n",
 		vpic->vm, val);

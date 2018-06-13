@@ -201,7 +201,7 @@ int vmexit_handler(struct vcpu *vcpu)
 	return ret;
 }
 
-static int unhandled_vmexit_handler(__unused struct vcpu *vcpu)
+static int unhandled_vmexit_handler(struct vcpu *vcpu)
 {
 	pr_fatal("Error: Unhandled VM exit condition from guest at 0x%016llx ",
 			exec_vmread(VMX_GUEST_RIP));
