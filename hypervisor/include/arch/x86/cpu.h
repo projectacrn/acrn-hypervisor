@@ -213,10 +213,10 @@ enum feature_word {
 };
 
 struct cpu_state_info {
-	uint8_t			px_cnt;		/* count of all Px states */
-	struct cpu_px_data	*px_data;
-	uint8_t 		cx_cnt;		/* count of all Cx entries */
-	struct cpu_cx_data	*cx_data;
+	uint8_t			 px_cnt;	/* count of all Px states */
+	const struct cpu_px_data *px_data;
+	uint8_t			 cx_cnt;	/* count of all Cx entries */
+	const struct cpu_cx_data *cx_data;
 };
 
 struct cpuinfo_x86 {
