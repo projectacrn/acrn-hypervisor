@@ -7,7 +7,7 @@ ifeq ($(RELEASE),0)
 CFLAGS += -g -DMNGR_DEBUG
 endif
 
-LDFLAGS := -L$(TOOLS_OUT)
+LDFLAGS := -L$(OUT_DIR)
 LDFLAGS += -lacrn-mngr
 LDFLAGS +=  -lpthread
 

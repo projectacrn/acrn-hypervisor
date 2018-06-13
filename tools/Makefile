@@ -1,5 +1,5 @@
 T := $(CURDIR)
-OUT_DIR ?= $(T)/build
+OUT_DIR ?= $(shell mkdir -p $(T)/build;cd $(T)/build;pwd)
 
 .PHONY: all acrn-crashlog acrnlog acrn-manager acrntrace acrnbridge
 all: acrn-crashlog acrnlog acrn-manager acrntrace acrnbridge
