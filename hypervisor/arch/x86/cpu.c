@@ -554,12 +554,8 @@ void cpu_secondary_init(void)
 	early_init_lapic();
 
 	/* Find the logical ID of this CPU given the LAPIC ID
-	 * temp_logical_id =
-	 * cpu_find_logical_id(get_cur_lapic_id());
+	 * and Set state for this CPU to initializing
 	 */
-	cpu_find_logical_id(get_cur_lapic_id());
-
-	/* Set state for this CPU to initializing */
 	cpu_set_current_state(cpu_find_logical_id
 			      (get_cur_lapic_id()),
 			      CPU_STATE_INITIALIZING);
