@@ -27,7 +27,7 @@ ifeq ($(strip $(LIB_EXIST)),libsystemd-journal.so)
 	EXTRA_LIBS = -lsystemd-journal
 endif
 LIB_EXIST = $(findstring libtelemetry.so, $(LDCNF))
-ifeq ($(strip $(LIB_EXIST)),libtelemetryxx.so)
+ifeq ($(strip $(LIB_EXIST)),libtelemetry.so)
 	CFLAGS	+= -DHAVE_TELEMETRICS_CLIENT
 	EXTRA_LIBS += -ltelemetry
 endif
