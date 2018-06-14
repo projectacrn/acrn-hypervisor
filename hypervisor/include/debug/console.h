@@ -70,7 +70,7 @@ static inline void suspend_console(void)
 	del_timer(&console_timer);
 }
 
-static inline void resume_console_enable(void)
+static inline void resume_console(void)
 {
 	console_setup_timer();
 }
@@ -101,7 +101,7 @@ static inline void console_setup_timer(void) {}
 static inline uint32_t get_serial_handle(void) { return 0; }
 
 static inline void suspend_console(void) {}
-static inline void resume_console_enable(void) {}
+static inline void resume_console(void) {}
 #endif
 
 #endif /* CONSOLE_H */
