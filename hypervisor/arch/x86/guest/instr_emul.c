@@ -615,18 +615,15 @@ get_gla(struct vcpu *vcpu, __unused struct vie *vie,
 	int error;
 
 	error = vie_read_register(vcpu, VM_REG_GUEST_CR0, &cr0);
-	ASSERT(error == 0, "%s: error %d getting cr0", __func__, error);
+	error |= vie_read_register(vcpu, VM_REG_GUEST_RFLAGS, &rflags);
+	error |= vm_get_seg_desc(vcpu, seg, &desc);
+	error |= vie_read_register(vcpu, gpr, &val);
 
-	error = vie_read_register(vcpu, VM_REG_GUEST_RFLAGS, &rflags);
-	ASSERT(error == 0, "%s: error %d getting rflags", __func__, error);
-
-	error = vm_get_seg_desc(vcpu, seg, &desc);
-	ASSERT(error == 0, "%s: error %d getting segment descriptor %d",
-	    __func__, error, seg);
-
-	error = vie_read_register(vcpu, gpr, &val);
-	ASSERT(error == 0, "%s: error %d getting register %d", __func__,
-	    error, gpr);
+	if (error) {
+		pr_err("%s: error(%d) happens when getting cr0/rflags/segment"
+			"desc/gpr", __func__, error);
+		return -1;
+	}
 
 	if (vie_calculate_gla(paging->cpu_mode, seg, &desc, val, opsize,
 	    addrsize, prot, gla)) {
