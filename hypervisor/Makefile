@@ -119,6 +119,7 @@ C_SRCS += arch/x86/trusty.c
 C_SRCS += arch/x86/cpu_state_tbl.c
 C_SRCS += arch/x86/mtrr.c
 C_SRCS += arch/x86/pm.c
+S_SRCS += arch/x86/wakeup.S
 C_SRCS += arch/x86/guest/vcpu.c
 C_SRCS += arch/x86/guest/vm.c
 C_SRCS += arch/x86/guest/instr_emul_wrapper.c
