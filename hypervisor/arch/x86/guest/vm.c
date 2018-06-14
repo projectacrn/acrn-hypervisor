@@ -285,6 +285,28 @@ void resume_vm(struct vm *vm)
 	vm->state = VM_STARTED;
 }
 
+/* Resume vm from S3 state
+ *
+ * To resume vm after guest enter S3 state:
+ * - reset BSP
+ * - BSP will be put to real mode with entry set as wakeup_vec
+ * - init_vmcs BSP. We could call init_vmcs here because we know current
+ *   pcpu is mapped to BSP of vm.
+ */
+void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec)
+{
+	struct vcpu *bsp = vcpu_from_vid(vm, 0);
+
+	vm->state = VM_STARTED;
+
+	reset_vcpu(bsp);
+	bsp->entry_addr = (void *)(uint64_t)wakeup_vec;
+	bsp->arch_vcpu.cpu_mode = CPU_MODE_REAL;
+	init_vmcs(bsp);
+
+	schedule_vcpu(bsp);
+}
+
 /* Create vm/vcpu for vm0 */
 int prepare_vm0(void)
 {
