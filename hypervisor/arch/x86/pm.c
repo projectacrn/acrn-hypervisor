@@ -72,6 +72,7 @@ int enter_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 {
 	uint32_t pcpu_id;
 	uint64_t pmain_entry_saved;
+	uint32_t guest_wakeup_vec32;
 	uint64_t *pmain_entry;
 
 	if (vm->pm.sx_state_data == NULL) {
@@ -82,6 +83,15 @@ int enter_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 	pause_vm(vm);	/* pause vm0 before suspend system */
 
 	pcpu_id = get_cpu_id();
+
+	/* Save the wakeup vec set by guest. Will return to guest
+	 * with this wakeup vec as entry.
+	 */
+	guest_wakeup_vec32 = *vm->pm.sx_state_data->wake_vector_32;
+
+	/* set ACRN wakeup vec instead */
+	*vm->pm.sx_state_data->wake_vector_32 =
+		(uint32_t) trampoline_start16_paddr;
 
 	/* offline all APs */
 	stop_cpus();
@@ -127,6 +137,9 @@ int enter_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 
 	/* online all APs again */
 	start_cpus();
+
+	/* jump back to vm */
+	resume_vm_from_s3(vm, guest_wakeup_vec32);
 
 	return 0;
 }

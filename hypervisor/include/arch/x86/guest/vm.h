@@ -172,6 +172,7 @@ struct vm_description {
 int shutdown_vm(struct vm *vm);
 void pause_vm(struct vm *vm);
 void resume_vm(struct vm *vm);
+void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec);
 int start_vm(struct vm *vm);
 int create_vm(struct vm_description *vm_desc, struct vm **vm);
 int prepare_vm0(void);
