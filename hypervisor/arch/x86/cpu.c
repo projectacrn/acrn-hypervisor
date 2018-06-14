@@ -495,6 +495,8 @@ void bsp_boot_init(void)
 		pr_fatal("Please apply the latest CPU uCode patch!");
 	}
 
+	enable_smep();
+
 	/* Initialize the shell */
 	shell_init();
 
@@ -546,6 +548,9 @@ void cpu_secondary_init(void)
 	 * primary/boot CPU
 	 */
 	enable_paging(get_paging_pml4());
+
+	enable_smep();
+
 	early_init_lapic();
 
 	/* Find the logical ID of this CPU given the LAPIC ID
