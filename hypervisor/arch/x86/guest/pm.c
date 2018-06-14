@@ -121,3 +121,98 @@ int vm_load_pm_s_state(struct vm *vm)
 		return -1;
 	}
 }
+
+static inline uint16_t s3_enabled(uint16_t pm1_cnt)
+{
+	return pm1_cnt & (1 << BIT_SLP_EN);
+}
+
+static inline uint8_t get_slp_typx(uint16_t pm1_cnt)
+{
+	return (pm1_cnt & 0x1fff) >> BIT_SLP_TYPx;
+}
+
+static uint32_t pm1ab_io_read(__unused struct vm_io_handler *hdlr,
+		__unused struct vm *vm, uint16_t addr, size_t width)
+{
+	uint32_t val = io_read(addr, width);
+
+	if (host_enter_s3_success == 0) {
+		/* If host S3 enter failes, we should set BIT_WAK_STS
+		 * bit for vm0 and let vm0 back from S3 failure path.
+		 */
+		if (addr == vm->pm.sx_state_data->pm1a_evt.address) {
+			val |= (1 << BIT_WAK_STS);
+		}
+	}
+	return val;
+}
+
+static void pm1ab_io_write(__unused struct vm_io_handler *hdlr,
+		__unused struct vm *vm, uint16_t addr, size_t width,
+		uint32_t v)
+{
+	static uint32_t pm1a_cnt_ready = 0;
+
+	if (width == 2) {
+		uint8_t val = get_slp_typx(v);
+
+		if ((addr == vm->pm.sx_state_data->pm1a_cnt.address)
+			&& (val == vm->pm.sx_state_data->s3_pkg.val_pm1a)
+			&& s3_enabled(v)) {
+
+			if (vm->pm.sx_state_data->pm1b_cnt.address) {
+				pm1a_cnt_ready = v;
+			} else {
+				enter_s3(vm, v, 0);
+			}
+			return;
+		}
+
+		if ((addr == vm->pm.sx_state_data->pm1b_cnt.address)
+			&& (val == vm->pm.sx_state_data->s3_pkg.val_pm1b)
+			&& s3_enabled(v)) {
+
+			if (pm1a_cnt_ready) {
+				enter_s3(vm, pm1a_cnt_ready, v);
+				pm1a_cnt_ready = 0;
+			} else {
+				/* the case broke ACPI spec */
+				pr_err("PM1B_CNT write error!");
+			}
+			return;
+		}
+	}
+
+	io_write(v, addr, width);
+}
+
+void register_gas_io_handler(struct vm *vm, struct acpi_generic_address *gas)
+{
+	uint8_t io_len[5] = {0, 1, 2, 4, 8};
+	struct vm_io_range gas_io;
+
+	if ((gas->address == 0)
+			|| (gas->space_id != SPACE_SYSTEM_IO)
+			|| (gas->access_size == 0)
+			|| (gas->access_size > 4))
+		return;
+
+	gas_io.flags = IO_ATTR_RW,
+	gas_io.base = gas->address,
+	gas_io.len = io_len[gas->access_size];
+
+	register_io_emulation_handler(vm, &gas_io,
+			&pm1ab_io_read, &pm1ab_io_write);
+
+	pr_dbg("Enable PM1A trap for VM %d, port 0x%x, size %d\n",
+			vm->attr.id, gas_io.base, gas_io.len);
+}
+
+void register_pm1ab_handler(struct vm *vm)
+{
+	register_gas_io_handler(vm, &vm->pm.sx_state_data->pm1a_evt);
+	register_gas_io_handler(vm, &vm->pm.sx_state_data->pm1b_evt);
+	register_gas_io_handler(vm, &vm->pm.sx_state_data->pm1a_cnt);
+	register_gas_io_handler(vm, &vm->pm.sx_state_data->pm1b_cnt);
+}
