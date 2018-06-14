@@ -252,7 +252,7 @@ start_thread(void *param)
 	return NULL;
 }
 
-static void
+static int
 add_cpu(struct vmctx *ctx, int guest_ncpus)
 {
 	int i;
@@ -260,8 +260,10 @@ add_cpu(struct vmctx *ctx, int guest_ncpus)
 
 	for (i = 0; i < guest_ncpus; i++) {
 		error = vm_create_vcpu(ctx, i);
-		if (error != 0)
-			err(EX_OSERR, "could not create CPU %d", i);
+		if (error != 0) {
+			fprintf(stderr, "ERROR: could not create VCPU %d\n", i);
+			return error;
+		}
 
 		CPU_SET_ATOMIC(i, &cpumask);
 
@@ -271,7 +273,8 @@ add_cpu(struct vmctx *ctx, int guest_ncpus)
 
 	error = pthread_create(&mt_vmm_info[0].mt_thr, NULL,
 	    start_thread, &mt_vmm_info[0]);
-	assert(error == 0);
+
+	return error;
 }
 
 static int
@@ -886,7 +889,9 @@ main(int argc, char *argv[])
 		/*
 		 * Add CPU 0
 		 */
-		add_cpu(ctx, guest_ncpus);
+		error = add_cpu(ctx, guest_ncpus);
+		if (error)
+			goto vm_fail;
 
 		/* Make a copy for ctx */
 		_ctx = ctx;
