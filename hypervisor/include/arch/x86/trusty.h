@@ -91,12 +91,16 @@ struct key_info {
 };
 
 struct secure_world_memory {
-	/* The secure world base address of GPA in SOS */
+	/* The secure world base address of GPA for secure world*/
 	uint64_t base_gpa;
 	/* The secure world base address of HPA */
 	uint64_t base_hpa;
 	/* Secure world runtime memory size */
 	uint64_t length;
+	/* The secure world base address of GPA in SOS */
+	uint64_t gpa_sos;
+	/* The secure world base address of GPA in UOS for normal world */
+	uint64_t gpa_uos;
 };
 
 struct secure_world_control {

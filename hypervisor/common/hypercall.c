@@ -310,7 +310,7 @@ int64_t hcall_set_ioreq_buffer(struct vm *vm, uint64_t vmid, uint64_t param)
 	dev_dbg(ACRN_DBG_HYCALL, "[%d] SET BUFFER=0x%p",
 			vmid, iobuf.req_buf);
 
-	hpa = gpa2hpa(vm, iobuf.req_buf);
+	hpa = gpa2hpa(vm, iobuf.req_buf, true);
 	if (hpa == 0) {
 		pr_err("%s: invalid GPA.\n", __func__);
 		target_vm->sw.io_shared_page = NULL;
@@ -401,7 +401,7 @@ int64_t _set_vm_memmap(struct vm *vm, struct vm *target_vm,
 		return -1;
 	}
 
-	hpa = gpa2hpa(vm, memmap->vm0_gpa);
+	hpa = gpa2hpa(vm, memmap->vm0_gpa, true);
 	dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x size=0x%x",
 		target_vm->attr.id, memmap->remote_gpa, hpa, memmap->length);
 
@@ -567,7 +567,7 @@ int64_t hcall_gpa_to_hpa(struct vm *vm, uint64_t vmid, uint64_t param)
 		pr_err("HCALL gpa2hpa: Unable copy param from vm\n");
 		return -1;
 	}
-	v_gpa2hpa.hpa = gpa2hpa(target_vm, v_gpa2hpa.gpa);
+	v_gpa2hpa.hpa = gpa2hpa(target_vm, v_gpa2hpa.gpa, true);
 	if (copy_to_vm(vm, &v_gpa2hpa, param, sizeof(v_gpa2hpa))) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
 		return -1;

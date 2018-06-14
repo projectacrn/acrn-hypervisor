@@ -115,7 +115,7 @@ int copy_from_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
 	void *g_ptr;
 
 	do {
-		hpa = _gpa2hpa(vm, gpa, &pg_size);
+		hpa = _gpa2hpa(vm, gpa, &pg_size, true);
 		if (pg_size == 0) {
 			ASSERT(0, "copy_from_vm: GPA2HPA not found");
 			return -EINVAL;
@@ -144,7 +144,7 @@ int copy_to_vm(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
 	void *g_ptr;
 
 	do {
-		hpa = _gpa2hpa(vm, gpa, &pg_size);
+		hpa = _gpa2hpa(vm, gpa, &pg_size, true);
 		if (pg_size == 0) {
 			ASSERT(0, "copy_to_vm: GPA2HPA not found");
 			return -EINVAL;
