@@ -143,7 +143,8 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 
 	if (is_vm0(vm)) {
 		/* Load pm S state data */
-		vm_load_pm_s_state(vm);
+		if (vm_load_pm_s_state(vm) == 0)
+			register_pm1ab_handler(vm);
 
 		/* Create virtual uart */
 		vm->vuart = vuart_init(vm);
