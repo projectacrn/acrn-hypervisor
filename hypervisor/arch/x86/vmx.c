@@ -525,13 +525,34 @@ static void init_guest_state(struct vcpu *vcpu)
 	/***************************************************/
 	if (vcpu_mode == CPU_MODE_REAL) {
 		if (is_vcpu_bsp(vcpu)) {
-			ASSERT(!is_vm0(vcpu->vm),
-				"VM0 bsp should not be inited as realmode");
-			/* BP is initialized with real mode */
-			sel = REAL_MODE_BSP_INIT_CODE_SEL;
-			/* For unrestricted guest, it is able to set a
-			 * high base address */
-			base = (uint64_t)vcpu->entry_addr & 0xFFFF0000UL;
+			/* There are two cases that we will start bsp in real
+			 * mode:
+			 * 1. UOS start
+			 * 2. SOS resume from S3
+			 *
+			 * For 1, DM will set correct entry_addr.
+			 * For 2, SOS resume caller will set entry_addr to
+			 *        SOS wakeup vec. According to ACPI FACS spec,
+			 *        wakeup vec should be < 1MB. So we use < 1MB
+			 *        to detect whether it's resume from S3 and we
+			 *        setup CS:IP to
+			 *        (wakeup_vec >> 4):(wakeup_vec & 0x000F)
+			 *        if it's resume from S3.
+			 *
+			 */
+			if ((uint64_t)vcpu->entry_addr < 0x100000) {
+				sel =((uint64_t)vcpu->entry_addr & 0xFFFF0)
+					>> 4;
+				base = sel << 4;
+			} else {
+				/* BSP is initialized with real mode */
+				sel = REAL_MODE_BSP_INIT_CODE_SEL;
+				/* For unrestricted guest, it is able
+				 * to set a high base address
+				 */
+				base = (uint64_t)vcpu->entry_addr &
+					0xFFFF0000UL;
+			}
 		} else {
 			/* AP is initialized with real mode
 			 * and CS value is left shift 8 bits from sipi vector;
@@ -578,12 +599,16 @@ static void init_guest_state(struct vcpu *vcpu)
 	/***************************************************/
 	/* Set up guest instruction pointer */
 	field = VMX_GUEST_RIP;
-	if (vcpu_mode == CPU_MODE_REAL)
-		if (is_vcpu_bsp(vcpu))
-			value32 = 0x0000FFF0;
-		else
-			value32 = 0;
-	else
+	value32 = 0;
+	if (vcpu_mode == CPU_MODE_REAL) {
+		/* RIP is set here */
+		if (is_vcpu_bsp(vcpu)) {
+			if ((uint64_t)vcpu->entry_addr < 0x100000)
+				value32 = (uint64_t)vcpu->entry_addr & 0x0F;
+			else
+				value32 = 0x0000FFF0;
+		}
+	} else
 		value32 = (uint32_t)((uint64_t)vcpu->entry_addr);
 
 	pr_dbg("GUEST RIP on VMEntry %x ", value32);
