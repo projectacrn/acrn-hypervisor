@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <vcpu.h>
+#include <spinlock.h>
 
    .text
    .align   8
@@ -10,6 +11,8 @@
    .extern    restore_msrs
    .extern    cpu_ctx
    .extern    load_gdtr_and_tr
+   .extern    do_acpi_s3
+   .extern    trampoline_spinlock
 
    .global    __enter_s3
 __enter_s3:
@@ -47,7 +50,18 @@ __enter_s3:
 
 	wbinvd
 
-	/* Will add the function call to enter Sx here*/
+	movq CPU_CONTEXT_OFFSET_RDX + cpu_ctx(%rip), %rdx  /* pm1b_cnt_val */
+	movq CPU_CONTEXT_OFFSET_RDI + cpu_ctx(%rip), %rdi  /* *vm */
+	movq CPU_CONTEXT_OFFSET_RSI + cpu_ctx(%rip), %rsi  /* pm1a_cnt_val */
+
+	call do_acpi_s3
+
+	/* if do_acpi_s3 returns, which means ACRN can't enter S3 state.
+	 * Then trampoline will not be executed and we need to acquire
+	 * trampoline_spinlock here to match release in enter_sleep
+	 */
+	mov $trampoline_spinlock, %rdi
+	spinlock_obtain(%rdi)
 
 
 /*
