@@ -278,6 +278,13 @@ void reset_vcpu(struct vcpu *vcpu)
 	vcpu->ioreq_pending = 0;
 	vcpu->arch_vcpu.nr_sipi = 0;
 	vcpu->pending_pre_work = 0;
+
+	vcpu->arch_vcpu.exception_info.exception = VECTOR_INVALID;
+	vcpu->arch_vcpu.cur_context = NORMAL_WORLD;
+	vcpu->arch_vcpu.irq_window_enabled = 0;
+	vcpu->arch_vcpu.inject_event_pending = false;
+	memset(vcpu->arch_vcpu.vmcs, 0, CPU_PAGE_SIZE);
+
 	vlapic = vcpu->arch_vcpu.vlapic;
 	vlapic_reset(vlapic);
 }

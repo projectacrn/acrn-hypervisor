@@ -274,7 +274,7 @@ void pause_vm(struct vm *vm)
 		pause_vcpu(vcpu, VCPU_ZOMBIE);
 }
 
-int vm_resume(struct vm *vm)
+void resume_vm(struct vm *vm)
 {
 	int i;
 	struct vcpu *vcpu = NULL;
@@ -283,8 +283,6 @@ int vm_resume(struct vm *vm)
 		resume_vcpu(vcpu);
 
 	vm->state = VM_STARTED;
-
-	return 0;
 }
 
 /* Create vm/vcpu for vm0 */
