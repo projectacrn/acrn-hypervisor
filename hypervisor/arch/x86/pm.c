@@ -6,6 +6,9 @@
 
 struct run_context cpu_ctx;
 
+/* whether the host enter s3 success */
+uint8_t host_enter_s3_success = 1;
+
 void restore_msrs(void)
 {
 #ifdef STACK_PROTECTOR
@@ -71,12 +74,16 @@ int enter_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 	uint32_t pm1b_cnt_val)
 {
 	uint32_t pcpu_id;
+	int ret;
 	uint64_t pmain_entry_saved;
 	uint32_t guest_wakeup_vec32;
 	uint64_t *pmain_entry;
 
+	/* We assume enter s3 success by default */
+	host_enter_s3_success = 1;
 	if (vm->pm.sx_state_data == NULL) {
 		pr_err("No Sx state info avaiable. No Sx support");
+		host_enter_s3_success = 0;
 		return -1;
 	}
 
