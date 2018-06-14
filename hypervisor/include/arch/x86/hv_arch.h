@@ -18,7 +18,7 @@
 #include <mtrr.h>
 #include <vcpu.h>
 #include <trusty.h>
-#include <pm.h>
+#include <guest_pm.h>
 #include <vm.h>
 #include <cpuid.h>
 #include <mmu.h>
