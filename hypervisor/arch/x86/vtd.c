@@ -81,7 +81,8 @@
 
 #define DMAR_WAIT_COMPLETION(offset, condition, status) \
 	do {                                                \
-		uint64_t start = rdtsc();                       \
+                /* variable start isn't used when built as release version */ \
+		__unused uint64_t start = rdtsc();             \
 		while (1) {                                     \
 			status = iommu_read32(dmar_uint, offset);   \
 			if (condition)                              \
