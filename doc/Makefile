@@ -14,9 +14,15 @@ SPHINXPROJ    = "Project ACRN"
 SOURCEDIR     = .
 BUILDDIR      ?= _build
 
+# document publication assumes the folder structure is setup
+# with the acrn-hypervisor and projectacrn.github.io repos as
+# sibling folders and make is run inside the acrn-hypervisor/docs
+# folder.
+
+ACRN_BASE     = "$(CURDIR)/../.."
 DOC_TAG      ?= development
 RELEASE      ?= latest
-PUBLISHDIR    = ../../projectacrn.github.io/$(RELEASE)
+PUBLISHDIR    = $(ACRN_BASE)/projectacrn.github.io/$(RELEASE)
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -38,7 +44,11 @@ doxy:
 content:
 	$(Q)scripts/extract_content.py
 
-html: doxy content
+kconfig:
+	$(Q)srctree=../hypervisor \
+	    python3 scripts/genrest.py ../hypervisor/Kconfig reference/kconfig/
+
+html: doxy content kconfig
 	-$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b html -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> doc.log 2>&1
 	$(Q)./scripts/filter-doc-log.sh doc.log
 
@@ -48,6 +58,7 @@ html: doxy content
 clean:
 	rm -fr $(BUILDDIR) doxygen
 	rm -fr tools
+	rm -fr reference/kconfig/*.rst
 
 # Copy material over to the GitHub pages staging repo
 # along with a README

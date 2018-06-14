@@ -6,8 +6,10 @@ devicemodel/include/version.h
 doc/doxygen
 doc/_build
 doc/tools
+doc/reference/kconfig/*.rst
 build
 *.bak
 *.sav
 *.log
 *.warnings
+*.pyc
