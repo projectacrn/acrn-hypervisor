@@ -35,7 +35,7 @@
 #define HPA2HVA(x) ((void *)(x))
 #define HVA2HPA(x) ((uint64_t)(x))
 /* gpa --> hpa -->hva */
-#define GPA2HVA(vm, x) HPA2HVA(gpa2hpa(vm, x))
+#define GPA2HVA(vm, x) HPA2HVA(gpa2hpa(vm, x, true))
 #endif	/* !ASSEMBLER */
 
 #endif /* HYPERVISOR_H */

@@ -154,7 +154,7 @@ static uint32_t update_ept(struct vm *vm, uint64_t start,
 		attr = MMU_MEM_ATTR_UNCACHED;
 	}
 
-	ept_update_mt(vm, gpa2hpa(vm, start), start, size, attr);
+	ept_update_mt(vm, gpa2hpa(vm, start, true), start, size, attr);
 	return attr;
 }
 

@@ -114,7 +114,7 @@ static void dump_guest_stack(struct vcpu *vcpu)
 			cur_context->rsp);
 		return;
 	}
-	hpa = gpa2hpa(vcpu->vm, gpa);
+	hpa = gpa2hpa(vcpu->vm, gpa, true);
 	printf("\r\nGuest Stack:\r\n");
 	printf("Dump stack for vcpu %d, from gva 0x%016llx ->"
 			"gpa 0x%016llx -> hpa 0x%016llx \r\n",
@@ -148,7 +148,7 @@ static void dump_guest_stack(struct vcpu *vcpu)
 			return;
 
 		}
-		hpa = gpa2hpa(vcpu->vm, gpa);
+		hpa = gpa2hpa(vcpu->vm, gpa, true);
 		printf("Dump stack for vcpu %d, from gva 0x%016llx ->"
 				"gpa 0x%016llx -> hpa 0x%016llx \r\n",
 				vcpu->vcpu_id, cur_context->rsp + page1_size,
@@ -199,7 +199,7 @@ static void show_guest_call_trace(struct vcpu *vcpu)
 			printf("gva2gpa failed for guest bp 0x%016llx\r\n", bp);
 			break;
 		}
-		hpa  = gpa2hpa(vcpu->vm, gpa);
+		hpa  = gpa2hpa(vcpu->vm, gpa, true);
 		hva = HPA2HVA(hpa);
 		printf("BP_GVA(0x%016llx)->BP_GPA(0x%016llx)"
 			"->BP_HPA(0x%016llx) RIP=0x%016llx\r\n", bp, gpa, hpa,

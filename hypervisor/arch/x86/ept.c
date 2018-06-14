@@ -107,7 +107,7 @@ void destroy_ept(struct vm *vm)
 		free_ept_mem(HPA2HVA(vm->arch_vm.sworld_eptp));
 }
 
-uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
+uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size, bool nworld)
 {
 	uint64_t hpa = 0;
 	uint32_t pg_size = 0;
@@ -115,7 +115,8 @@ uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 	struct map_params map_params;
 
 	map_params.page_table_type = PTT_EPT;
-	map_params.pml4_base = HPA2HVA(vm->arch_vm.nworld_eptp);
+	map_params.pml4_base = (nworld) ? HPA2HVA(vm->arch_vm.nworld_eptp)
+		: HPA2HVA(vm->arch_vm.sworld_eptp);
 	map_params.pml4_inverted = HPA2HVA(vm->arch_vm.m2p);
 	obtain_last_page_table_entry(&map_params, &entry, (void *)gpa, true);
 	if (entry.entry_present == PT_PRESENT) {
@@ -135,9 +136,9 @@ uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 }
 
 /* using return value 0 as failure, make sure guest will not use hpa 0 */
-uint64_t gpa2hpa(struct vm *vm, uint64_t gpa)
+uint64_t gpa2hpa(struct vm *vm, uint64_t gpa, bool nworld)
 {
-	return _gpa2hpa(vm, gpa, NULL);
+	return _gpa2hpa(vm, gpa, NULL, nworld);
 }
 
 uint64_t hpa2gpa(struct vm *vm, uint64_t hpa)

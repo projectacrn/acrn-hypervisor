@@ -729,7 +729,7 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 	if (status) {
 		shell_puts(p_shell, "Cannot handle user gva yet!\r\n");
 	} else {
-		hpa = gpa2hpa(vm, gpa);
+		hpa = gpa2hpa(vm, gpa, true);
 		snprintf(temp_str, MAX_STR_SIZE,
 				"\r\nDump RSP for vm %d, from "
 				"gva 0x%016llx -> gpa 0x%016llx"
@@ -796,7 +796,7 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 			shell_puts(p_shell,
 					"Cannot handle user gva yet!\r\n");
 		} else {
-			hpa = gpa2hpa(vcpu->vm, gpa);
+			hpa = gpa2hpa(vcpu->vm, gpa, true);
 			snprintf(temp_str, MAX_STR_SIZE,
 				"Dump memory for vcpu %d, from gva 0x%016llx ->"
 				"gpa 0x%016llx -> hpa 0x%016llx, length "
