@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef PM_H
-#define PM_H
+#ifndef GUEST_PM_H
+#define GUEST_PM_H
 
 void vm_setup_cpu_state(struct vm *vm);
 int vm_load_pm_s_state(struct vm *vm);
