@@ -41,5 +41,5 @@ void do_log(int level,
 	vsnprintf(log + strlen(log), sizeof(log) - strlen(log) - 1, fmt, args);
 	va_end(args);
 
-	sd_journal_print(level, log);
+	sd_journal_print(level, "%s", log);
 }
