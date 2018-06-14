@@ -32,6 +32,7 @@ Sections
    howtos/index.rst
    release_notes.rst
    contribute/index.rst
+   reference/kconfig/index.rst
    api/index.rst
    tools.rst
 
