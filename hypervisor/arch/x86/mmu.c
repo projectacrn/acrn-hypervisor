@@ -491,7 +491,8 @@ static int get_table_entry(void *addr, void *table_base,
 }
 
 static void *walk_paging_struct(void *addr, void *table_base,
-		uint32_t table_level, struct map_params *map_params)
+		uint32_t table_level, struct map_params *map_params,
+		uint64_t attr)
 {
 	uint32_t table_offset;
 	uint64_t table_entry;
@@ -523,7 +524,7 @@ static void *walk_paging_struct(void *addr, void *table_base,
 					 IA32E_EPT_X_BIT);
 		} else {
 			/* Set table preset bits to P bit or r/w bit */
-			entry_present = (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT);
+			entry_present = IA32E_COMM_P_BIT;
 		}
 
 		/* Determine if a valid entry exists */
@@ -544,6 +545,9 @@ static void *walk_paging_struct(void *addr, void *table_base,
 			/* Write entry to current table to reference the new
 			 * sub-table
 			 */
+			if (map_params->page_table_type == PTT_HOST)
+				entry_present |= attr;
+
 			MEM_WRITE64(table_base + table_offset,
 				    HVA2HPA(sub_table_addr) | entry_present);
 		} else {
@@ -573,6 +577,16 @@ void enable_paging(uint64_t pml4_base_addr)
 	CPU_CR_WRITE(cr3, pml4_base_addr);
 }
 
+void enable_smep(void)
+{
+	uint64_t val64 = 0;
+
+	/* Enable CR4.SMEP*/
+	CPU_CR_READ(cr4, &val64);
+	CPU_CR_WRITE(cr4, val64 | CR4_SMEP);
+}
+
+
 void init_paging(void)
 {
 	struct map_params map_params;
@@ -581,10 +595,12 @@ void init_paging(void)
 	int attr_wb = (MMU_MEM_ATTR_READ |
 			MMU_MEM_ATTR_WRITE   |
 			MMU_MEM_ATTR_EXECUTE |
+			MMU_MEM_ATTR_USER |
 			MMU_MEM_ATTR_WB_CACHE);
 	int attr_uc = (MMU_MEM_ATTR_READ |
 			MMU_MEM_ATTR_WRITE   |
 			MMU_MEM_ATTR_EXECUTE |
+			MMU_MEM_ATTR_USER |
 			MMU_MEM_ATTR_UNCACHED);
 
 	pr_dbg("HV MMU Initialization");
@@ -615,6 +631,13 @@ void init_paging(void)
 					entry->length, attr_wb);
 		}
 	}
+
+	/* set the paging-structure entries' U/S flag
+	 * to supervisor-mode for hypervisor owned memroy.
+	 */
+	modify_mem(&map_params, (void *)CONFIG_RAM_START,
+			(void *)CONFIG_RAM_START,
+			CONFIG_RAM_SIZE, attr_wb & (~MMU_MEM_ATTR_USER));
 
 	pr_dbg("Enabling MMU ");
 
@@ -688,6 +711,9 @@ uint64_t config_page_table_attr(struct map_params *map_params, uint32_t flags)
 		attr |= ((table_type == PTT_EPT)
 			? IA32E_EPT_X_BIT : 0);
 	}
+
+	if ((table_type == PTT_HOST) && (flags & MMU_MEM_ATTR_USER))
+		attr |= MMU_MEM_ATTR_BIT_USER_ACCESSIBLE;
 
 	/* EPT & VT-d share the same page tables, set SNP bit
 	 * to force snooping of PCIe devices if the page
@@ -857,7 +883,7 @@ static uint64_t update_page_table_entry(struct map_params *map_params,
 
 	/* Walk from the PML4 table to the PDPT table */
 	table_addr = walk_paging_struct(vaddr, table_addr, IA32E_PML4,
-			map_params);
+			map_params, attr);
 	if (table_addr == NULL)
 		return 0;
 
@@ -874,7 +900,7 @@ static uint64_t update_page_table_entry(struct map_params *map_params,
 			&& (MEM_ALIGNED_CHECK(paddr, MEM_2M))) {
 		/* Walk from the PDPT table to the PD table */
 		table_addr = walk_paging_struct(vaddr, table_addr,
-				IA32E_PDPT, map_params);
+				IA32E_PDPT, map_params, attr);
 		if (table_addr == NULL)
 			return 0;
 		/* Map this 2 MByte memory region */
@@ -884,12 +910,12 @@ static uint64_t update_page_table_entry(struct map_params *map_params,
 	} else {
 		/* Walk from the PDPT table to the PD table */
 		table_addr = walk_paging_struct(vaddr,
-				table_addr, IA32E_PDPT, map_params);
+				table_addr, IA32E_PDPT, map_params, attr);
 		if (table_addr == NULL)
 			return 0;
 		/* Walk from the PD table to the page table */
 		table_addr = walk_paging_struct(vaddr,
-				table_addr, IA32E_PD, map_params);
+				table_addr, IA32E_PD, map_params, attr);
 		if (table_addr == NULL)
 			return 0;
 		/* Map this 4 KByte memory region */
@@ -1166,4 +1192,3 @@ int modify_mem_mt(struct map_params *map_params, void *paddr, void *vaddr,
 	}
 	return ret;
 }
-

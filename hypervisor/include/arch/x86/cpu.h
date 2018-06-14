@@ -84,6 +84,8 @@
 #define CR4_SMXE                (1<<14)	/* SMX enable */
 #define CR4_PCIDE               (1<<17)	/* PCID enable */
 #define CR4_OSXSAVE             (1<<18)
+#define CR4_SMEP                (1<<20)
+#define CR4_SMAP                (1<<21)
 /* XSAVE and Processor Extended States enable bit */
 
 
