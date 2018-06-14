@@ -45,5 +45,5 @@ void do_log(const int level,
 	log[sizeof(log) - 1] = 0;
 	va_end(args);
 
-	sd_journal_print(level, log);
+	sd_journal_print(level, "%s", log);
 }
