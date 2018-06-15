@@ -69,8 +69,6 @@
 
 #define MSIX_TABLE_COUNT(ctrl) (((ctrl) & PCIM_MSIXCTRL_TABLE_SIZE) + 1)
 #define MSIX_CAPLEN 12
-#define PCI_BDF(bus, dev, func)  (((bus & 0xFF)<<8) | ((dev & 0x1F)<<3)     \
-		| ((func & 0x7)))
 
 #define	PCI_BDF_GPU		0x00000010	/* 00:02.0 */
 
@@ -890,7 +888,7 @@ native_pci_system_init()
 /*
  * return zero on success or non-zero on failure
  */
-static int
+int
 pciaccess_init(void)
 {
 	int error;
@@ -965,6 +963,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	ptdev->phys_bdf = PCI_BDF(bus, slot, func);
+	update_pt_info(ptdev->phys_bdf);
 
 	error = pciaccess_init();
 	if (error < 0)
@@ -1039,7 +1038,7 @@ done:
 	return error;
 }
 
-static void
+void
 pciaccess_cleanup(void)
 {
 	pthread_mutex_lock(&ref_cnt_mtx);
