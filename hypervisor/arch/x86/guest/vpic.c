@@ -62,7 +62,7 @@ struct pic {
 	uint8_t		smm;		/* special mask mode */
 
 	int		acnt[8];	/* sum of pin asserts and deasserts */
-	int		lowprio;	/* lowest priority irq */
+	uint8_t		lowprio;	/* lowest priority irq */
 
 	bool		intr_raised;
 	uint8_t		elc;
@@ -74,15 +74,19 @@ struct vpic {
 	struct pic	pic[2];
 };
 
+#define NR_VPIC_PINS_PER_CHIP	8U
+#define NR_VPIC_PINS_TOTAL	16U
+#define VPIC_INVALID_PIN	0xffU
+
 /*
  * Loop over all the pins in priority order from highest to lowest.
  */
 #define	PIC_PIN_FOREACH(pinvar, pic, tmpvar)			\
-	for (tmpvar = 0, pinvar = (pic->lowprio + 1) & 0x7U;	\
-	    tmpvar < 8;						\
-	    tmpvar++, pinvar = (pinvar + 1) & 0x7U)
+	for (tmpvar = 0U, pinvar = (pic->lowprio + 1U) & 0x7U;	\
+	    tmpvar < NR_VPIC_PINS_PER_CHIP;				\
+	    tmpvar++, pinvar = (pinvar + 1U) & 0x7U)
 
-static void vpic_set_pinstate(struct vpic *vpic, int pin, bool newstate);
+static void vpic_set_pinstate(struct vpic *vpic, uint8_t pin, bool newstate);
 
 static inline bool master_pic(struct vpic *vpic, struct pic *pic)
 {
@@ -93,10 +97,9 @@ static inline bool master_pic(struct vpic *vpic, struct pic *pic)
 		return false;
 }
 
-static inline int vpic_get_highest_isrpin(struct pic *pic)
+static inline uint8_t vpic_get_highest_isrpin(struct pic *pic)
 {
-	int bit, pin;
-	int i;
+	uint8_t bit, pin, i;
 
 	PIC_PIN_FOREACH(pin, pic, i) {
 		bit = (1U << pin);
@@ -113,13 +116,12 @@ static inline int vpic_get_highest_isrpin(struct pic *pic)
 		}
 	}
 
-	return -1;
+	return VPIC_INVALID_PIN;
 }
 
-static inline int vpic_get_highest_irrpin(struct pic *pic)
+static inline uint8_t vpic_get_highest_irrpin(struct pic *pic)
 {
-	int serviced;
-	int bit, pin, tmp;
+	uint8_t serviced, bit, pin, tmp;
 
 	/*
 	 * In 'Special Fully-Nested Mode' when an interrupt request from
@@ -157,22 +159,22 @@ static inline int vpic_get_highest_irrpin(struct pic *pic)
 			return pin;
 	}
 
-	return -1;
+	return VPIC_INVALID_PIN;
 }
 
 static void vpic_notify_intr(struct vpic *vpic)
 {
 	struct pic *pic;
-	int pin;
+	uint8_t pin;
 
 	/*
 	 * First check the slave.
 	 */
 	pic = &vpic->pic[1];
 	pin = vpic_get_highest_irrpin(pic);
-	if (!pic->intr_raised && pin != -1) {
+	if (!pic->intr_raised && pin < NR_VPIC_PINS_PER_CHIP) {
 		dev_dbg(ACRN_DBG_PIC,
-		"pic slave notify pin = %d (imr 0x%x irr 0x%x isr 0x%x)\n",
+		"pic slave notify pin = %hhu (imr 0x%x irr 0x%x isr 0x%x)\n",
 		pin, pic->mask, pic->request, pic->service);
 
 		/*
@@ -192,9 +194,9 @@ static void vpic_notify_intr(struct vpic *vpic)
 	 */
 	pic = &vpic->pic[0];
 	pin = vpic_get_highest_irrpin(pic);
-	if (!pic->intr_raised && pin != -1) {
+	if (!pic->intr_raised && pin < NR_VPIC_PINS_PER_CHIP) {
 		dev_dbg(ACRN_DBG_PIC,
-		"pic master notify pin = %d (imr 0x%x irr 0x%x isr 0x%x)\n",
+		"pic master notify pin = %hhu (imr 0x%x irr 0x%x isr 0x%x)\n",
 		pin, pic->mask, pic->request, pic->service);
 
 		/*
@@ -346,7 +348,7 @@ bool vpic_is_pin_mask(struct vpic *vpic, uint8_t virt_pin)
 
 static int vpic_ocw1(struct vpic *vpic, struct pic *pic, uint8_t val)
 {
-	int pin, i, bit;
+	uint8_t pin, i, bit;
 	uint8_t old = pic->mask;
 
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: pic ocw1 0x%x\n",
@@ -389,7 +391,7 @@ static int vpic_ocw2(struct vpic *vpic, struct pic *pic, uint8_t val)
 	pic->rotate = ((val & OCW2_R) != 0);
 
 	if ((val & OCW2_EOI) != 0) {
-		int isr_bit;
+		uint8_t isr_bit;
 
 		if ((val & OCW2_SL) != 0) {
 			/* specific EOI */
@@ -399,7 +401,7 @@ static int vpic_ocw2(struct vpic *vpic, struct pic *pic, uint8_t val)
 			isr_bit = vpic_get_highest_isrpin(pic);
 		}
 
-		if (isr_bit != -1) {
+		if (isr_bit < NR_VPIC_PINS_PER_CHIP) {
 			pic->service &= ~(1U << isr_bit);
 
 			if (pic->rotate)
@@ -443,13 +445,13 @@ static int vpic_ocw3(struct vpic *vpic, struct pic *pic, uint8_t val)
 	return 0;
 }
 
-static void vpic_set_pinstate(struct vpic *vpic, int pin, bool newstate)
+static void vpic_set_pinstate(struct vpic *vpic, uint8_t pin, bool newstate)
 {
 	struct pic *pic;
 	int oldcnt, newcnt;
 	bool level;
 
-	ASSERT(pin >= 0 && pin < 16,
+	ASSERT(pin < NR_VPIC_PINS_TOTAL,
 	    "vpic_set_pinstate: invalid pin number");
 
 	pic = &vpic->pic[pin >> 3];
@@ -462,23 +464,23 @@ static void vpic_set_pinstate(struct vpic *vpic, int pin, bool newstate)
 	newcnt = pic->acnt[pin & 0x7U];
 
 	if (newcnt < 0) {
-		pr_warn("pic pin%d: bad acnt %d\n", pin, newcnt);
+		pr_warn("pic pin%hhu: bad acnt %d\n", pin, newcnt);
 	}
 
 	level = ((vpic->pic[pin >> 3].elc & (1 << (pin & 0x7U))) != 0);
 
 	if ((oldcnt == 0 && newcnt == 1) || (newcnt > 0 && level == true)) {
 		/* rising edge or level */
-		dev_dbg(ACRN_DBG_PIC, "pic pin%d: asserted\n", pin);
+		dev_dbg(ACRN_DBG_PIC, "pic pin%hhu: asserted\n", pin);
 		pic->request |= (1 << (pin & 0x7U));
 	} else if (oldcnt == 1 && newcnt == 0) {
 		/* falling edge */
-		dev_dbg(ACRN_DBG_PIC, "pic pin%d: deasserted\n", pin);
+		dev_dbg(ACRN_DBG_PIC, "pic pin%hhu: deasserted\n", pin);
 		if (level)
 			pic->request &= ~(1 << (pin & 0x7U));
 	} else {
 		dev_dbg(ACRN_DBG_PIC,
-			"pic pin%d: %s, ignored, acnt %d\n",
+			"pic pin%hhu: %s, ignored, acnt %d\n",
 			pin, newstate ? "asserted" : "deasserted", newcnt);
 	}
 
@@ -490,7 +492,7 @@ static int vpic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate
 	struct vpic *vpic;
 	struct pic *pic;
 
-	if (irq > 15)
+	if (irq >= NR_VPIC_PINS_TOTAL)
 		return -EINVAL;
 
 	vpic = vm_pic(vm);
@@ -539,7 +541,7 @@ int vpic_set_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger trigger)
 {
 	struct vpic *vpic;
 
-	if (irq > 15)
+	if (irq >= NR_VPIC_PINS_TOTAL)
 		return -EINVAL;
 
 	/*
@@ -575,7 +577,7 @@ int vpic_get_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger *trigger
 {
 	struct vpic *vpic;
 
-	if (irq > 15)
+	if (irq >= NR_VPIC_PINS_TOTAL)
 		return -EINVAL;
 
 	vpic = vm_pic(vm);
@@ -593,7 +595,7 @@ void vpic_pending_intr(struct vm *vm, uint32_t *vecptr)
 {
 	struct vpic *vpic;
 	struct pic *pic;
-	int pin;
+	uint8_t pin;
 
 	vpic = vm_pic(vm);
 
@@ -611,13 +613,12 @@ void vpic_pending_intr(struct vm *vm, uint32_t *vecptr)
 	 * If there are no pins active at this moment then return the spurious
 	 * interrupt vector instead.
 	 */
-	if (pin == -1) {
+	if (pin >= NR_VPIC_PINS_PER_CHIP) {
 		*vecptr = VECTOR_INVALID;
 		VPIC_UNLOCK(vpic);
 		return;
 	}
 
-	ASSERT(pin >= 0 && pin <= 7, "invalid pin");
 	*vecptr = pic->irq_base + pin;
 
 	dev_dbg(ACRN_DBG_PIC, "Got pending vector 0x%x\n", *vecptr);
@@ -625,7 +626,7 @@ void vpic_pending_intr(struct vm *vm, uint32_t *vecptr)
 	VPIC_UNLOCK(vpic);
 }
 
-static void vpic_pin_accepted(struct pic *pic, int pin)
+static void vpic_pin_accepted(struct pic *pic, uint8_t pin)
 {
 	pic->intr_raised = false;
 
@@ -645,7 +646,7 @@ static void vpic_pin_accepted(struct pic *pic, int pin)
 void vpic_intr_accepted(struct vm *vm, uint32_t vector)
 {
 	struct vpic *vpic;
-	int pin;
+	uint8_t pin;
 
 	vpic = vm_pic(vm);
 
@@ -672,14 +673,14 @@ void vpic_intr_accepted(struct vm *vm, uint32_t vector)
 static int vpic_read(struct vpic *vpic, struct pic *pic,
 		uint16_t port, uint32_t *eax)
 {
-	int pin;
+	uint8_t pin;
 
 	VPIC_LOCK(vpic);
 
 	if (pic->poll) {
 		pic->poll = false;
 		pin = vpic_get_highest_irrpin(pic);
-		if (pin >= 0) {
+		if (pin < NR_VPIC_PINS_PER_CHIP) {
 			vpic_pin_accepted(pic, pin);
 			*eax = 0x80U | pin;
 		} else {
