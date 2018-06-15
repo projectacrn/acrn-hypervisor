@@ -8,17 +8,18 @@
 #include <systemd/sd-journal.h>
 #include "log_sys.h"
 
-void do_log(int level,
+void do_log(const int level,
 #ifdef DEBUG_ACRN_CRASHLOG
-			const char *func, int line,
+			const char *func, const int line,
 #endif
 			...)
 {
 	va_list args;
 	char *fmt;
-	char log[MAX_LOG_LEN] = {0};
+	char log[MAX_LOG_LEN];
+	int n = 0;
 #ifdef DEBUG_ACRN_CRASHLOG
-	char header_fmt[] = "<%-20s%d>: ";
+	const char header_fmt[] = "<%-20s%d>: ";
 #endif
 
 	if (level > LOG_LEVEL)
@@ -35,10 +36,13 @@ void do_log(int level,
 
 #ifdef DEBUG_ACRN_CRASHLOG
 	/* header */
-	snprintf(log, sizeof(log) - 1, header_fmt, func, line);
+	n = snprintf(log, sizeof(log), header_fmt, func, line);
+	if (n < 0 || n >= sizeof(log))
+		n = 0;
 #endif
 	/* msg */
-	vsnprintf(log + strlen(log), sizeof(log) - strlen(log) - 1, fmt, args);
+	vsnprintf(log + n, sizeof(log) - n, fmt, args);
+	log[sizeof(log) - 1] = 0;
 	va_end(args);
 
 	sd_journal_print(level, log);
