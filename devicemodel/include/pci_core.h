@@ -36,6 +36,7 @@
 #include "pcireg.h"
 
 #define	PCI_BARMAX	PCIR_MAX_BAR_0	/* BAR registers in a Type 0 header */
+#define	PCI_BDF(b, d, f) (((b & 0xFF) << 8) | ((d & 0x1F) << 3) | ((f & 0x7)))
 
 struct vmctx;
 struct pci_vdev;
@@ -161,6 +162,20 @@ struct pci_vdev {
 	struct pcibar bar[PCI_BARMAX + 1];
 };
 
+struct gsi_dev {
+	/*
+	 * For PCI devices, use a string "b:d.f" to stand for the device's BDF,
+	 *  such as "00:00.0".
+	 * For non-PCI devices, use the device's name to stand for the device,
+	 *  such as "timer".
+	 */
+	char *dev_name;
+	uint8_t gsi;
+};
+
+extern struct gsi_dev gsi_dev_mapping_tables[];
+extern int num_gsi_dev_mapping_tables;
+
 struct msicap {
 	uint8_t		capid;
 	uint8_t		nextptr;
@@ -260,6 +275,11 @@ uint64_t pci_ecfg_base(void);
 int	pci_bus_configured(int bus);
 int	emulate_pci_cfgrw(struct vmctx *ctx, int vcpu, int in, int bus,
 			  int slot, int func, int reg, int bytes, int *value);
+int	create_gsi_sharing_groups(void);
+void	update_pt_info(uint16_t phys_bdf);
+int	check_gsi_sharing_violation(void);
+int	pciaccess_init(void);
+void	pciaccess_cleanup(void);
 
 static inline void
 pci_set_cfgdata8(struct pci_vdev *pi, int offset, uint8_t val)

@@ -1155,6 +1155,8 @@ init_pci(struct vmctx *ctx)
 	pci_emul_membase32 = vm_get_lowmem_limit(ctx);
 	pci_emul_membase64 = PCI_EMUL_MEMBASE64;
 
+	create_gsi_sharing_groups();
+
 	for (bus = 0; bus < MAXBUSES; bus++) {
 		bi = pci_businfo[bus];
 		if (bi == NULL)
@@ -1201,6 +1203,10 @@ init_pci(struct vmctx *ctx)
 		    BUSMEM_ROUNDUP);
 		bi->memlimit64 = pci_emul_membase64;
 	}
+
+	error = check_gsi_sharing_violation();
+	if (error < 0)
+		return error;
 
 	/*
 	 * PCI backends are initialized before routing INTx interrupts
