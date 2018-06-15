@@ -89,6 +89,8 @@ static int uart16550_calc_baud_div(__unused struct tgt_uart *tgt_uart,
 {
 	uint32_t baud_multiplier = baud_rate < BAUD_460800 ? 16 : 13;
 
+	if (baud_rate == 0)
+		baud_rate = BAUD_115200;
 	*baud_div_ptr = ref_freq / (baud_multiplier * baud_rate);
 
 	return 0;
