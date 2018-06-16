@@ -220,6 +220,8 @@ static void save_world_ctx(struct run_context *context)
 	/* TSC_OFFSET, CR3, RIP, RSP, RFLAGS already saved on VMEXIT */
 	context->cr0 = exec_vmread(VMX_GUEST_CR0);
 	context->cr4 = exec_vmread(VMX_GUEST_CR4);
+	context->cr0_shadow = exec_vmread(VMX_CR0_READ_SHADOW);
+	context->cr4_shadow = exec_vmread(VMX_CR4_READ_SHADOW);
 	context->dr7 = exec_vmread(VMX_GUEST_DR7);
 	context->ia32_debugctl = exec_vmread64(VMX_GUEST_IA32_DEBUGCTL_FULL);
 	context->ia32_pat = exec_vmread64(VMX_GUEST_IA32_PAT_FULL);
@@ -261,6 +263,8 @@ static void load_world_ctx(struct run_context *context)
 	exec_vmwrite(VMX_GUEST_CR0, context->cr0);
 	exec_vmwrite(VMX_GUEST_CR3, context->cr3);
 	exec_vmwrite(VMX_GUEST_CR4, context->cr4);
+	exec_vmwrite(VMX_CR0_READ_SHADOW, context->cr0_shadow);
+	exec_vmwrite(VMX_CR4_READ_SHADOW, context->cr4_shadow);
 	exec_vmwrite(VMX_GUEST_RIP, context->rip);
 	exec_vmwrite(VMX_GUEST_RSP, context->rsp);
 	exec_vmwrite(VMX_GUEST_RFLAGS, context->rflags);
@@ -399,9 +403,17 @@ static bool init_secure_world_env(struct vcpu *vcpu,
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].tsc_offset = 0;
 
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].cr0 =
-		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr0;
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr0 =
+		exec_vmread(VMX_GUEST_CR0);
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].cr4 =
-		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr4;
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr4 =
+		exec_vmread(VMX_GUEST_CR4);
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].cr0_shadow =
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr0_shadow =
+		exec_vmread(VMX_CR0_READ_SHADOW);
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].cr4_shadow =
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr4_shadow =
+		exec_vmread(VMX_CR4_READ_SHADOW);
 
 	exec_vmwrite(VMX_GUEST_RSP,
 		TRUSTY_EPT_REBASE_GPA + size);
