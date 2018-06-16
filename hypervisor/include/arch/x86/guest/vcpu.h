@@ -138,6 +138,9 @@ struct run_context {
 	uint64_t ia32_sysenter_eip;
 	uint64_t ia32_debugctl;
 
+	uint64_t vmx_cr0;
+	uint64_t vmx_cr4;
+
 	/* segment registers */
 	struct segment cs;
 	struct segment ss;
