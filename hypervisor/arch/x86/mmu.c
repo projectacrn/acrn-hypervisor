@@ -180,11 +180,11 @@ void invept(struct vcpu *vcpu)
 	if (cpu_has_vmx_ept_cap(VMX_EPT_INVEPT_SINGLE_CONTEXT)) {
 		desc.eptp = vcpu->vm->arch_vm.nworld_eptp | (3 << 3) | 6;
 		_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
-		if (vcpu->vm->sworld_control.sworld_enabled) {
+		if (vcpu->vm->sworld_control.sworld_enabled &&
+			vcpu->vm->arch_vm.sworld_eptp) {
 			desc.eptp = vcpu->vm->arch_vm.sworld_eptp
 				| (3 << 3) | 6;
 			_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
-
 		}
 	} else if (cpu_has_vmx_ept_cap(VMX_EPT_INVEPT_GLOBAL_CONTEXT))
 		_invept(INVEPT_TYPE_ALL_CONTEXTS, desc);
