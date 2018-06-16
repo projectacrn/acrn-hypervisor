@@ -103,8 +103,10 @@ void destroy_ept(struct vm *vm)
 	 *  - trusty is enabled. But not initialized yet.
 	 *    Check vm->arch_vm.sworld_eptp.
 	 */
-	if (vm->sworld_control.sworld_enabled && vm->arch_vm.sworld_eptp)
+	if (vm->sworld_control.sworld_enabled && vm->arch_vm.sworld_eptp) {
 		free_ept_mem(HPA2HVA(vm->arch_vm.sworld_eptp));
+		vm->arch_vm.sworld_eptp = 0;
+	}
 }
 
 uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
