@@ -240,7 +240,7 @@ if [ "$setup_mem" != "" ];then
 fi
 
 kernel_cmdline_generic="maxcpus=$2 nohpet tsc=reliable intel_iommu=off \
-   androidboot.serialno=$ser androidboot.selinux=permissive \
+   androidboot.serialno=$ser \
    i915.enable_rc6=1 i915.enable_fbc=1 i915.enable_guc_loading=0 i915.avail_planes_per_pipe=$4 \
    i915.enable_hangcheck=0 use_nuclear_flip=1 i915.enable_initial_modeset=1 "
 
