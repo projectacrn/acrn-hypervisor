@@ -11,7 +11,7 @@ void udelay(int loop_count)
 	uint64_t dest_tsc, delta_tsc;
 
 	/* Calculate number of ticks to wait */
-	delta_tsc = CYCLES_PER_MS * loop_count;
+	delta_tsc = US_TO_TICKS(loop_count);
 	dest_tsc = rdtsc() + delta_tsc;
 
 	/* Loop until time expired */
