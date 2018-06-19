@@ -414,6 +414,9 @@ int vmx_restart(uint16_t pcpu_id);
 int exec_vmclear(void *addr);
 int exec_vmptrld(void *addr);
 
+uint64_t vmx_rdmsr_pat(struct vcpu *vcpu);
+int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value);
+
 int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0);
 int vmx_write_cr3(struct vcpu *vcpu, uint64_t cr3);
 int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4);
