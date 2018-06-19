@@ -81,11 +81,11 @@ config HEAP_SIZE
 
 config CONSOLE_LOGLEVEL_DEFAULT
 	int "Default loglevel on the serial console"
-	default 2
+	default 3
 
 config MEM_LOGLEVEL_DEFAULT
 	int "Default loglevel in memory"
-	default 4
+	default 5
 
 config LOW_RAM_SIZE
 	hex "Size of the low RAM region"

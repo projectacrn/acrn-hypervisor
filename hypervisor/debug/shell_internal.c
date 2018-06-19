@@ -28,14 +28,8 @@
 #define SHELL_INPUT_LINE_OTHER(v)	(((v) + 1) % 2)
 
 /* The initial log level*/
-uint32_t console_loglevel;
-uint32_t mem_loglevel;
-#ifdef CONFIG_CONSOLE_LOGLEVEL_DEFAULT
 uint32_t console_loglevel = CONFIG_CONSOLE_LOGLEVEL_DEFAULT;
-#endif
-#ifdef CONFIG_MEM_LOGLEVEL_DEFAULT
 uint32_t mem_loglevel = CONFIG_MEM_LOGLEVEL_DEFAULT;
-#endif
 
 static int string_to_argv(char *argv_str, void *p_argv_mem,
 		__unused uint32_t argv_mem_size, int *p_argc, char ***p_argv)
