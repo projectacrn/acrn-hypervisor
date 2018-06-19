@@ -6,7 +6,7 @@
 
 #include <hypervisor.h>
 
-#define EXCEPTION_ERROR_CODE_VALID  8
+#define EXCEPTION_ERROR_CODE_VALID  8U
 #define INTERRPUT_QUEUE_BUFF_SIZE   255
 
 #define ACRN_DBG_INTR	6
@@ -140,7 +140,7 @@ static int vcpu_do_pending_event(struct vcpu *vcpu)
 	}
 
 	exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
-		(vector & 0xFF));
+		(vector & 0xFFU));
 
 	vlapic_intr_accepted(vlapic, vector);
 	return 0;
@@ -162,10 +162,10 @@ static int vcpu_do_pending_extint(struct vcpu *vcpu)
 		vpic_pending_intr(vcpu->vm, &vector);
 		if (vector <= NR_MAX_VECTOR) {
 			dev_dbg(ACRN_DBG_INTR, "VPIC: to inject PIC vector %d\n",
-					vector & 0xFF);
+					vector & 0xFFU);
 			exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
 					VMX_INT_INFO_VALID |
-					(vector & 0xFF));
+					(vector & 0xFFU));
 			vpic_intr_accepted(vcpu->vm, vector);
 		}
 	}
@@ -250,7 +250,7 @@ static void _vcpu_inject_exception(struct vcpu *vcpu, uint32_t vector)
 	}
 
 	exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
-			(exception_type[vector] << 8) | (vector & 0xFF));
+			(exception_type[vector] << 8) | (vector & 0xFFU));
 
 	vcpu->arch_vcpu.exception_info.exception = VECTOR_INVALID;
 }
@@ -349,7 +349,7 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 		return -EINVAL;
 	}
 
-	ctx.vector = intr_info & 0xFF;
+	ctx.vector = intr_info & 0xFFU;
 
 	dispatch_interrupt(&ctx);
 
@@ -504,7 +504,7 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 	/* Obtain VM-Exit information field pg 2912 */
 	intinfo = exec_vmread(VMX_EXIT_INT_INFO);
 	if ((intinfo & VMX_INT_INFO_VALID) != 0U) {
-		exception_vector = intinfo & 0xFF;
+		exception_vector = intinfo & 0xFFU;
 		/* Check if exception caused by the guest is a HW exception.
 		 * If the exit occurred due to a HW exception obtain the
 		 * error code to be conveyed to get via the stack
@@ -514,12 +514,12 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 
 			/* get current privilege level and fault address */
 			cpl = exec_vmread(VMX_GUEST_CS_ATTR);
-			cpl = (cpl >> 5) & 3;
+			cpl = (cpl >> 5) & 3U;
 
 			if (cpl < 3)
-				int_err_code &= ~4;
+				int_err_code &= ~4U;
 			else
-				int_err_code |= 4;
+				int_err_code |= 4U;
 		}
 	}
 

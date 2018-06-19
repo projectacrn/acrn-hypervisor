@@ -40,7 +40,7 @@
 #define RSDP_CHECKSUM_LENGTH       20
 #define ACPI_NAME_SIZE             4
 #define ACPI_MADT_TYPE_LOCAL_APIC  0
-#define ACPI_MADT_ENABLED          1
+#define ACPI_MADT_ENABLED          1U
 #define ACPI_OEM_TABLE_ID_SIZE     8
 
 struct acpi_table_rsdp {

@@ -17,7 +17,7 @@ bool is_hypercall_from_ring0(void)
 
 	cs_sel = exec_vmread(VMX_GUEST_CS_SEL);
 	/* cs_selector[1:0] is CPL */
-	if ((cs_sel & 0x3) == 0)
+	if ((cs_sel & 0x3UL) == 0)
 		return true;
 
 	return false;
@@ -395,7 +395,7 @@ int64_t _set_vm_memmap(struct vm *vm, struct vm *target_vm,
 	uint64_t hpa;
 	uint32_t attr, prot;
 
-	if ((memmap->length & 0xFFF) != 0) {
+	if ((memmap->length & 0xFFFUL) != 0) {
 		pr_err("%s: ERROR! [vm%d] map size 0x%x is not page aligned",
 				__func__, target_vm->attr.id, memmap->length);
 		return -1;
@@ -608,7 +608,7 @@ int64_t hcall_assign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
 
 	}
 	ret = assign_iommu_device(target_vm->iommu_domain,
-			(uint8_t)(bdf >> 8), (uint8_t)(bdf & 0xff));
+			(uint8_t)(bdf >> 8), (uint8_t)(bdf & 0xffU));
 
 	return ret;
 }
@@ -627,7 +627,7 @@ int64_t hcall_deassign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
 		return -1;
 	}
 	ret = unassign_iommu_device(target_vm->iommu_domain,
-			(uint8_t)(bdf >> 8), (uint8_t)(bdf & 0xff));
+			(uint8_t)(bdf >> 8), (uint8_t)(bdf & 0xffU));
 
 	return ret;
 }

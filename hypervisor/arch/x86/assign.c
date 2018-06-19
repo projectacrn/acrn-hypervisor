@@ -202,7 +202,7 @@ static void ptdev_build_physical_msi(struct vm *vm, struct ptdev_msi_info *info,
 	bool phys;
 
 	/* get physical destination cpu mask */
-	dest = (info->vmsi_addr >> 12) & 0xff;
+	dest = (info->vmsi_addr >> 12) & 0xffU;
 	phys = ((info->vmsi_addr &
 			(MSI_ADDR_RH | MSI_ADDR_LOG)) !=
 			(MSI_ADDR_RH | MSI_ADDR_LOG));
@@ -216,12 +216,12 @@ static void ptdev_build_physical_msi(struct vm *vm, struct ptdev_msi_info *info,
 
 	/* update physical delivery mode & vector */
 	info->pmsi_data = info->vmsi_data;
-	info->pmsi_data &= ~0x7FF;
+	info->pmsi_data &= ~0x7FFU;
 	info->pmsi_data |= delmode | vector;
 
 	/* update physical dest mode & dest field */
 	info->pmsi_addr = info->vmsi_addr;
-	info->pmsi_addr &= ~0xFF00C;
+	info->pmsi_addr &= ~0xFF00CU;
 	info->pmsi_addr |= pdmask << 12 |
 				MSI_ADDR_RH | MSI_ADDR_LOG;
 
@@ -636,7 +636,7 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 	/* build physical config MSI, update to info->pmsi_xxx */
 	ptdev_build_physical_msi(vm, info, dev_to_vector(entry->node));
 	entry->ptdev_intr_info.msi = *info;
-	entry->ptdev_intr_info.msi.virt_vector = info->vmsi_data & 0xFF;
+	entry->ptdev_intr_info.msi.virt_vector = info->vmsi_data & 0xFFU;
 	entry->ptdev_intr_info.msi.phys_vector = dev_to_vector(entry->node);
 
 	/* update irq handler according to info in guest */
@@ -644,9 +644,9 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 
 	dev_dbg(ACRN_DBG_IRQ,
 		"PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
-		(entry->virt_bdf >> 8) & 0xFF,
-		(entry->virt_bdf >> 3) & 0x1F,
-		(entry->virt_bdf) & 0x7,
+		(entry->virt_bdf >> 8) & 0xFFU,
+		(entry->virt_bdf >> 3) & 0x1FU,
+		(entry->virt_bdf) & 0x7U,
 		entry->ptdev_intr_info.msi.msix_entry_index,
 		entry->ptdev_intr_info.msi.virt_vector,
 		entry->ptdev_intr_info.msi.phys_vector,
@@ -920,7 +920,7 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 	if (is_entry_active(entry)) {
 		if (entry->type == PTDEV_INTR_MSI) {
 			strcpy_s(type, 16, "MSI");
-			*dest = (entry->ptdev_intr_info.msi.pmsi_addr & 0xFF000)
+			*dest = (entry->ptdev_intr_info.msi.pmsi_addr & 0xFF000U)
 				>> 12;
 			if ((entry->ptdev_intr_info.msi.pmsi_data &
 				APIC_TRIGMOD_LEVEL) != 0U)
@@ -1003,10 +1003,10 @@ void get_ptdev_info(char *str, int str_max)
 					is_entry_active(entry) ?
 					(lvl_tm ? "level" : "edge") : "none",
 					pin, vpin,
-					(bdf & 0xff00) >> 8,
-					(bdf & 0xf8) >> 3, bdf & 0x7,
-					(vbdf & 0xff00) >> 8,
-					(vbdf & 0xf8) >> 3, vbdf & 0x7);
+					(bdf & 0xff00U) >> 8,
+					(bdf & 0xf8U) >> 3, bdf & 0x7U,
+					(vbdf & 0xff00U) >> 8,
+					(vbdf & 0xf8U) >> 3, vbdf & 0x7U);
 			size -= len;
 			str += len;
 		}

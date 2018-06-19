@@ -259,7 +259,7 @@ static void get_guest_paging_info(struct vcpu *vcpu, struct emul_cnx *emul_cnx)
 	ASSERT(emul_cnx != NULL && vcpu != NULL, "Error in input arguments");
 
 	csar = exec_vmread(VMX_GUEST_CS_ATTR);
-	cpl = (csar >> 5) & 3;
+	cpl = (csar >> 5) & 3U;
 	emul_cnx->paging.cr3 =
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3;
 	emul_cnx->paging.cpl = cpl;

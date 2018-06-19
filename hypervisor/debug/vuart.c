@@ -179,7 +179,7 @@ static void uart_write(__unused struct vm_io_handler *hdlr,
 		 * Apply mask so that bits 4-7 are 0
 		 * Also enables bits 0-3 only if they're 1
 		 */
-		vu->ier = value & 0x0F;
+		vu->ier = value & 0x0FU;
 		break;
 	case UART16550_FCR:
 		/*

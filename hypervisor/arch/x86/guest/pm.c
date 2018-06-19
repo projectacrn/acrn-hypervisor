@@ -23,7 +23,7 @@ int validate_pstate(struct vm *vm, uint64_t perf_ctl)
 	}
 
 	for (i = 0; i < px_cnt; i++) {
-		if ((px_data + i)->control == (perf_ctl & 0xffff)) {
+		if ((px_data + i)->control == (perf_ctl & 0xffffUL)) {
 			return 0;
 		}
 	}

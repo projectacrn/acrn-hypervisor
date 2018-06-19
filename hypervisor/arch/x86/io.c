@@ -165,10 +165,10 @@ void allow_guest_io_access(struct vm *vm, uint32_t address, uint32_t nbytes)
 
 	b = vm->arch_vm.iobitmap[0];
 	for (i = 0; i < nbytes; i++) {
-		if ((address & 0x8000) != 0U)
+		if ((address & 0x8000U) != 0U)
 			b = vm->arch_vm.iobitmap[1];
-		a = address & 0x7fff;
-		b[a >> 5] &= ~(1 << (a & 0x1f));
+		a = address & 0x7fffU;
+		b[a >> 5] &= ~(1 << (a & 0x1fU));
 		address++;
 	}
 }
@@ -181,10 +181,10 @@ static void deny_guest_io_access(struct vm *vm, uint32_t address, uint32_t nbyte
 
 	b = vm->arch_vm.iobitmap[0];
 	for (i = 0; i < nbytes; i++) {
-		if ((address & 0x8000) != 0U)
+		if ((address & 0x8000U) != 0U)
 			b = vm->arch_vm.iobitmap[1];
-		a = address & 0x7fff;
-		b[a >> 5] |= (1 << (a & 0x1f));
+		a = address & 0x7fffU;
+		b[a >> 5] |= (1 << (a & 0x1fU));
 		address++;
 	}
 }

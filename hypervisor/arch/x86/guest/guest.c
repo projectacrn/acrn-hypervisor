@@ -31,7 +31,7 @@ struct page_walk_info {
 inline bool
 is_vm0(struct vm *vm)
 {
-	return (vm->attr.boot_idx & 0x7F) == 0;
+	return (vm->attr.boot_idx & 0x7FU) == 0;
 }
 
 inline struct vcpu *vcpu_from_vid(struct vm *vm, int vcpu_id)
@@ -206,14 +206,14 @@ static int _gva2gpa_pae(struct vcpu *vcpu, struct page_walk_info *pw_info,
 	uint64_t addr;
 	int ret;
 
-	addr = pw_info->top_entry & 0xFFFFFFF0UL;
+	addr = pw_info->top_entry & 0xFFFFFFF0U;
 	base = GPA2HVA(vcpu->vm, addr);
 	if (base == NULL) {
 		ret = -EFAULT;
 		goto out;
 	}
 
-	index = (gva >> 30) & 0x3;
+	index = (gva >> 30) & 0x3UL;
 	entry = base[index];
 
 	if ((entry & MMU_32BIT_PDE_P) == 0U) {
@@ -264,7 +264,7 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	pw_info.level = pm;
 	pw_info.is_write_access = !!(*err_code & PAGE_FAULT_WR_FLAG);
 	pw_info.is_inst_fetch = !!(*err_code & PAGE_FAULT_ID_FLAG);
-	pw_info.is_user_mode = ((exec_vmread(VMX_GUEST_CS_SEL) & 0x3) == 3);
+	pw_info.is_user_mode = ((exec_vmread(VMX_GUEST_CS_SEL) & 0x3UL) == 3UL);
 	pw_info.pse = true;
 	pw_info.nxe = cur_context->ia32_efer & MSR_IA32_EFER_NXE_BIT;
 	pw_info.wp = !!(cur_context->cr0 & CR0_WP);
@@ -418,7 +418,7 @@ void init_e820(void)
 		struct multiboot_info *mbi =
 			(struct multiboot_info *)((uint64_t)boot_regs[1]);
 		pr_info("Multiboot info detected\n");
-		if ((mbi->mi_flags & 0x40) != 0U) {
+		if ((mbi->mi_flags & 0x40U) != 0U) {
 			struct multiboot_mmap *mmap =
 				(struct multiboot_mmap *)
 				((uint64_t)mbi->mi_mmap_addr);
