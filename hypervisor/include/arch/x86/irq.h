@@ -8,30 +8,30 @@
 #define IRQ_H
 
 /* vectors for normal, usually for devices */
-#define VECTOR_FOR_NOR_LOWPRI_START	0x20
-#define VECTOR_FOR_NOR_LOWPRI_END	0x7F
-#define VECTOR_FOR_NOR_HIGHPRI_START	0x80
-#define VECTOR_FOR_NOR_HIGHPRI_END	0xDF
+#define VECTOR_FOR_NOR_LOWPRI_START	0x20U
+#define VECTOR_FOR_NOR_LOWPRI_END	0x7FU
+#define VECTOR_FOR_NOR_HIGHPRI_START	0x80U
+#define VECTOR_FOR_NOR_HIGHPRI_END	0xDFU
 #define VECTOR_FOR_NOR_END		VECTOR_FOR_NOR_HIGHPRI_END
 
 #define VECTOR_FOR_INTR_START		VECTOR_FOR_NOR_LOWPRI_START
 
 /* vectors for priority, usually for HV service */
-#define VECTOR_FOR_PRI_START	0xE0
-#define VECTOR_FOR_PRI_END	0xFF
-#define VECTOR_TIMER		0xEF
-#define VECTOR_NOTIFY_VCPU	0xF0
-#define VECTOR_VIRT_IRQ_VHM	0xF7
-#define VECTOR_SPURIOUS		0xFF
+#define VECTOR_FOR_PRI_START	0xE0U
+#define VECTOR_FOR_PRI_END	0xFFU
+#define VECTOR_TIMER		0xEFU
+#define VECTOR_NOTIFY_VCPU	0xF0U
+#define VECTOR_VIRT_IRQ_VHM	0xF7U
+#define VECTOR_SPURIOUS		0xFFU
 
-#define NR_MAX_VECTOR		0xFF
-#define VECTOR_INVALID		(NR_MAX_VECTOR + 1)
-#define NR_MAX_IRQS		(256+16)
-#define IRQ_INVALID		(NR_MAX_IRQS+1)
+#define NR_MAX_VECTOR		0xFFU
+#define VECTOR_INVALID		(NR_MAX_VECTOR + 1U)
+#define NR_MAX_IRQS		(256U + 16U)
+#define IRQ_INVALID		(NR_MAX_IRQS + 1U)
 
 #define DEFAULT_DEST_MODE	IOAPIC_RTE_DESTLOG
 #define DEFAULT_DELIVERY_MODE	IOAPIC_RTE_DELLOPRI
-#define ALL_CPUS_MASK		((1 << phy_cpu_num) - 1)
+#define ALL_CPUS_MASK		((1U << phy_cpu_num) - 1U)
 
 struct irq_desc;
 
@@ -145,17 +145,17 @@ extern spurious_handler_t spurious_handler;
 /*
  * Some MSI message definitions
  */
-#define	MSI_ADDR_MASK	0xfff00000
-#define	MSI_ADDR_BASE	0xfee00000
-#define	MSI_ADDR_RH	0x00000008	/* Redirection Hint */
-#define	MSI_ADDR_LOG	0x00000004	/* Destination Mode */
+#define	MSI_ADDR_MASK	0xfff00000U
+#define	MSI_ADDR_BASE	0xfee00000U
+#define	MSI_ADDR_RH	0x00000008U	/* Redirection Hint */
+#define	MSI_ADDR_LOG	0x00000004U	/* Destination Mode */
 
 /* RFLAGS */
-#define HV_ARCH_VCPU_RFLAGS_IF              (1<<9)
+#define HV_ARCH_VCPU_RFLAGS_IF              (1U<<9)
 
 /* Interruptability State info */
-#define HV_ARCH_VCPU_BLOCKED_BY_MOVSS       (1<<1)
-#define HV_ARCH_VCPU_BLOCKED_BY_STI         (1<<0)
+#define HV_ARCH_VCPU_BLOCKED_BY_MOVSS       (1U<<1)
+#define HV_ARCH_VCPU_BLOCKED_BY_STI         (1U<<0)
 
 void vcpu_inject_extint(struct vcpu *vcpu);
 void vcpu_inject_nmi(struct vcpu *vcpu);

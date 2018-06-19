@@ -30,14 +30,14 @@
 #ifndef _VPIC_H_
 #define	_VPIC_H_
 
-#define	ICU_IMR_OFFSET	1
+#define	ICU_IMR_OFFSET	1U
 
 /* Initialization control word 1. Written to even address. */
-#define	ICW1_IC4	0x01		/* ICW4 present */
-#define	ICW1_SNGL	0x02		/* 1 = single, 0 = cascaded */
-#define	ICW1_ADI	0x04		/* 1 = 4, 0 = 8 byte vectors */
-#define	ICW1_LTIM	0x08		/* 1 = level trigger, 0 = edge */
-#define	ICW1_RESET	0x10		/* must be 1 */
+#define	ICW1_IC4	0x01U		/* ICW4 present */
+#define	ICW1_SNGL	0x02U		/* 1 = single, 0 = cascaded */
+#define	ICW1_ADI	0x04U		/* 1 = 4, 0 = 8 byte vectors */
+#define	ICW1_LTIM	0x08U		/* 1 = level trigger, 0 = edge */
+#define	ICW1_RESET	0x10U		/* must be 1 */
 /* 0x20 - 0x80 - in 8080/8085 mode only */
 
 /* Initialization control word 2. Written to the odd address. */
@@ -48,11 +48,11 @@
 /* For slave, lower 3 bits are the slave's ID binary id on master */
 
 /* Initialization control word 4. Written to the odd address. */
-#define	ICW4_8086	0x01		/* 1 = 8086, 0 = 8080 */
-#define	ICW4_AEOI	0x02		/* 1 = Auto EOI */
-#define	ICW4_MS		0x04		/* 1 = buffered master, 0 = slave */
-#define	ICW4_BUF	0x08		/* 1 = enable buffer mode */
-#define	ICW4_SFNM	0x10		/* 1 = special fully nested mode */
+#define	ICW4_8086	0x01U		/* 1 = 8086, 0 = 8080 */
+#define	ICW4_AEOI	0x02U		/* 1 = Auto EOI */
+#define	ICW4_MS		0x04U		/* 1 = buffered master, 0 = slave */
+#define	ICW4_BUF	0x08U		/* 1 = enable buffer mode */
+#define	ICW4_SFNM	0x10U		/* 1 = special fully nested mode */
 
 /* Operation control words.  Written after initialization. */
 
@@ -63,27 +63,27 @@
  */
 
 /* Operation control word type 2.  Bit 3 (0x08) must be zero. Even address. */
-#define	OCW2_L0		0x01		/* Level */
-#define	OCW2_L1		0x02
-#define	OCW2_L2		0x04
+#define	OCW2_L0		0x01U		/* Level */
+#define	OCW2_L1		0x02U
+#define	OCW2_L2		0x04U
 /* 0x08 must be 0 to select OCW2 vs OCW3 */
 /* 0x10 must be 0 to select OCW2 vs ICW1 */
-#define	OCW2_EOI	0x20		/* 1 = EOI */
-#define	OCW2_SL		0x40		/* EOI mode */
-#define	OCW2_R		0x80		/* EOI mode */
+#define	OCW2_EOI	0x20U		/* 1 = EOI */
+#define	OCW2_SL		0x40U		/* EOI mode */
+#define	OCW2_R		0x80U		/* EOI mode */
 
 /* Operation control word type 3.  Bit 3 (0x08) must be set. Even address. */
-#define	OCW3_RIS	0x01		/* 1 = read IS, 0 = read IR */
-#define	OCW3_RR		0x02		/* register read */
-#define	OCW3_P		0x04		/* poll mode command */
+#define	OCW3_RIS	0x01U		/* 1 = read IS, 0 = read IR */
+#define	OCW3_RR		0x02U		/* register read */
+#define	OCW3_P		0x04U		/* poll mode command */
 /* 0x08 must be 1 to select OCW3 vs OCW2 */
-#define	OCW3_SEL	0x08		/* must be 1 */
+#define	OCW3_SEL	0x08U		/* must be 1 */
 /* 0x10 must be 0 to select OCW3 vs ICW1 */
-#define	OCW3_SMM	0x20		/* special mode mask */
-#define	OCW3_ESMM	0x40		/* enable SMM */
+#define	OCW3_SMM	0x20U		/* special mode mask */
+#define	OCW3_ESMM	0x40U		/* enable SMM */
 
-#define	IO_ELCR1	0x4d0
-#define	IO_ELCR2	0x4d1
+#define	IO_ELCR1	0x4d0U
+#define	IO_ELCR2	0x4d1U
 
 enum vpic_trigger {
 	EDGE_TRIGGER,

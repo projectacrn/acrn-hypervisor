@@ -34,41 +34,41 @@ static struct ioapic_rte saved_rte[CONFIG_NR_IOAPICS][IOAPIC_MAX_PIN];
  * hardcoded here
  */
 uint16_t legacy_irq_to_pin[NR_LEGACY_IRQ] = {
-	2, /* IRQ0*/
-	1, /* IRQ1*/
-	0, /* IRQ2 connected to Pin0 (ExtInt source of PIC) if existing */
-	3, /* IRQ3*/
-	4, /* IRQ4*/
-	5, /* IRQ5*/
-	6, /* IRQ6*/
-	7, /* IRQ7*/
-	8, /* IRQ8*/
-	9 | IOAPIC_RTE_TRGRLVL, /* IRQ9*/
-	10, /* IRQ10*/
-	11, /* IRQ11*/
-	12, /* IRQ12*/
-	13, /* IRQ13*/
-	14, /* IRQ14*/
-	15, /* IRQ15*/
+	2U, /* IRQ0*/
+	1U, /* IRQ1*/
+	0U, /* IRQ2 connected to Pin0 (ExtInt source of PIC) if existing */
+	3U, /* IRQ3*/
+	4U, /* IRQ4*/
+	5U, /* IRQ5*/
+	6U, /* IRQ6*/
+	7U, /* IRQ7*/
+	8U, /* IRQ8*/
+	9U | IOAPIC_RTE_TRGRLVL, /* IRQ9*/
+	10U, /* IRQ10*/
+	11U, /* IRQ11*/
+	12U, /* IRQ12*/
+	13U, /* IRQ13*/
+	14U, /* IRQ14*/
+	15U, /* IRQ15*/
 };
 
 uint16_t pic_ioapic_pin_map[NR_LEGACY_PIN] = {
-	2, /* pin0*/
-	1, /* pin1*/
-	0, /* pin2*/
-	3, /* pin3*/
-	4, /* pin4*/
-	5, /* pin5*/
-	6, /* pin6*/
-	7, /* pin7*/
-	8, /* pin8*/
-	9, /* pin9*/
-	10, /* pin10*/
-	11, /* pin11*/
-	12, /* pin12*/
-	13, /* pin13*/
-	14, /* pin14*/
-	15, /* pin15*/
+	2U, /* pin0*/
+	1U, /* pin1*/
+	0U, /* pin2*/
+	3U, /* pin3*/
+	4U, /* pin4*/
+	5U, /* pin5*/
+	6U, /* pin6*/
+	7U, /* pin7*/
+	8U, /* pin8*/
+	9U, /* pin9*/
+	10U, /* pin10*/
+	11U, /* pin11*/
+	12U, /* pin12*/
+	13U, /* pin13*/
+	14U, /* pin14*/
+	15U, /* pin15*/
 };
 
 static void *map_ioapic(uint64_t ioapic_paddr)
@@ -167,7 +167,7 @@ create_rte_for_legacy_irq(uint32_t irq, uint32_t vr)
 	rte.lo_32 |= IOAPIC_RTE_INTALO;
 
 	/* Dest field: legacy irq fixed to CPU0 */
-	rte.hi_32 |= 1 << 24;
+	rte.hi_32 |= 1U << 24;
 
 	return rte;
 }
@@ -327,7 +327,7 @@ void setup_ioapic_irq(void)
 
 			if (gsi < NR_LEGACY_IRQ)
 				gsi_table[gsi].pin =
-					legacy_irq_to_pin[gsi] & 0xff;
+					legacy_irq_to_pin[gsi] & 0xffU;
 			else
 				gsi_table[gsi].pin = pin;
 
