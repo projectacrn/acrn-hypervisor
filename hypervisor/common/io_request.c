@@ -17,10 +17,10 @@ static void fire_vhm_interrupt(void)
 	struct vcpu *vcpu;
 
 	vm0 = get_vm_from_vmid(0);
-	ASSERT(vm0, "VM Pointer is NULL");
+	ASSERT(vm0 != NULL, "VM Pointer is NULL");
 
 	vcpu = vcpu_from_vid(vm0, 0);
-	ASSERT(vcpu, "vcpu_from_vid failed");
+	ASSERT(vcpu != NULL, "vcpu_from_vid failed");
 
 	vlapic_intr_edge(vcpu, VECTOR_VIRT_IRQ_VHM);
 }
@@ -64,7 +64,7 @@ int acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 			"vhm_request page broken!");
 
 
-	if (!vcpu || !req || vcpu->vm->sw.io_shared_page == NULL)
+	if (vcpu == NULL || req == NULL || vcpu->vm->sw.io_shared_page == NULL)
 		return -EINVAL;
 
 	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
@@ -165,10 +165,10 @@ void get_req_info(char *str, int str_max)
 	list_for_each(pos, &vm_list) {
 		vm = list_entry(pos, struct vm, list);
 		req_buf = (union vhm_request_buffer *)vm->sw.io_shared_page;
-		if (req_buf) {
+		if (req_buf != NULL) {
 			for (i = 0; i < VHM_REQUEST_MAX; i++) {
 				req = req_buf->req_queue + i;
-				if (req->valid) {
+				if (req->valid != 0) {
 					_get_req_info_(req, &client_id, type,
 						state, dir, &addr, &val);
 					len = snprintf(str, size,

@@ -8,5 +8,5 @@
 
 void __stack_chk_fail(void)
 {
-	ASSERT(0, "stack check fails in HV\n");
+	ASSERT(false, "stack check fails in HV\n");
 }
