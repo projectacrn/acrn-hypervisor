@@ -308,7 +308,7 @@ static int dm_emulate_mmio_pre(struct vcpu *vcpu, uint64_t exit_qual)
 			return status;
 		vcpu->req.reqs.mmio_request.value = vcpu->mmio.value;
 		/* XXX: write access while EPT perm RX -> WP */
-		if ((exit_qual & 0x38) == 0x28)
+		if ((exit_qual & 0x38UL) == 0x28UL)
 			vcpu->req.type = REQ_WP;
 	}
 
@@ -334,7 +334,7 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 	exit_qual = vcpu->arch_vcpu.exit_qualification;
 
 	/* Specify if read or write operation */
-	if ((exit_qual & 0x2) != 0U) {
+	if ((exit_qual & 0x2UL) != 0UL) {
 		/* Write operation */
 		mmio->read_write = HV_MEM_IO_WRITE;
 

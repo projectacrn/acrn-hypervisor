@@ -407,10 +407,10 @@ static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
 #endif
 
 	/* check capability */
-	if ((iommu_cap_super_page_val(dmar_uint->cap) & 0x1) == 0)
+	if ((iommu_cap_super_page_val(dmar_uint->cap) & 0x1UL) == 0)
 		dev_dbg(ACRN_DBG_IOMMU, "dmar uint doesn't support 2MB page!");
 
-	if ((iommu_cap_super_page_val(dmar_uint->cap) & 0x2) == 0)
+	if ((iommu_cap_super_page_val(dmar_uint->cap) & 0x2UL) == 0)
 		dev_dbg(ACRN_DBG_IOMMU, "dmar uint doesn't support 1GB page!");
 
 	/* when the hardware support snoop control,
@@ -675,7 +675,7 @@ static void dmar_fault_msi_write(struct dmar_drhd_rt *dmar_uint,
 	/* redirection hint: 0
 	 * destination mode: 0
 	 */
-	addr_low = 0xFEE00000 | ((lapic_id & 0xFF) << 12);
+	addr_low = 0xFEE00000U | ((lapic_id & 0xFFU) << 12);
 
 	IOMMU_LOCK(dmar_uint);
 	iommu_write32(dmar_uint, DMAR_FEDATA_REG, data);
@@ -722,8 +722,8 @@ static void fault_record_analysis(__unused uint64_t low, uint64_t high)
 		(DMA_FRCD_UP_T(high) != 0U) ? "Read/Atomic" : "Write",
 		DMA_FRCD_UP_FR(high),
 		DMA_FRCD_UP_SID(high) >> 8,
-		(DMA_FRCD_UP_SID(high) >> 3) & 0x1f,
-		DMA_FRCD_UP_SID(high) & 0x7,
+		(DMA_FRCD_UP_SID(high) >> 3) & 0x1fUL,
+		DMA_FRCD_UP_SID(high) & 0x7UL,
 		low);
 #if DBG_IOMMU
 	if (iommu_ecap_dt(dmar_uint->ecap))
@@ -919,13 +919,13 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 	dmar_uint = device_to_dmaru(segment, bus, devfun);
 	if (dmar_uint == NULL) {
 		pr_err("no dmar unit found for device:0x%x:%x.%x",
-			bus, devfun >> 3, devfun & 0x7);
+			bus, devfun >> 3, devfun & 0x7U);
 		return 1;
 	}
 
 	if (dmar_uint->drhd->ignore) {
 		dev_dbg(ACRN_DBG_IOMMU, "device is ignored :0x%x:%x.%x",
-			bus, devfun >> 3, devfun & 0x7);
+			bus, devfun >> 3, devfun & 0x7U);
 		return 0;
 	}
 
@@ -987,7 +987,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 		pr_err("%s: context entry@0x%llx (Lower:%x) ",
 				__func__, context_entry, context_entry->lower);
 		pr_err("already present for %x:%x.%x",
-				bus, devfun >> 3, devfun & 0x7);
+				bus, devfun >> 3, devfun & 0x7U);
 		return 1;
 	}
 

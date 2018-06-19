@@ -255,7 +255,7 @@ uint32_t get_cs_access_rights(void)
 	asm volatile ("movw %%cs, %%ax" : "=a" (sel_value));
 	asm volatile ("lar %%eax, %%eax" : "=a" (usable_ar) : "a"(sel_value));
 	usable_ar = usable_ar >> 8;
-	usable_ar &= 0xf0ff;	/* clear bits 11:8 */
+	usable_ar &= 0xf0ffU;	/* clear bits 11:8 */
 
 	return usable_ar;
 }
@@ -620,8 +620,8 @@ static void init_guest_state(struct vcpu *vcpu)
 
 		value32 = gdtb.limit;
 
-		if (((gdtb.base >> 47) & 0x1) != 0U)
-			gdtb.base |= 0xffff000000000000ull;
+		if (((gdtb.base >> 47) & 0x1UL) != 0UL)
+			gdtb.base |= 0xffff000000000000UL;
 
 		base = gdtb.base;
 
@@ -655,8 +655,8 @@ static void init_guest_state(struct vcpu *vcpu)
 		/* Limit */
 		limit = idtb.limit;
 
-		if (((idtb.base >> 47) & 0x1) != 0U)
-			idtb.base |= 0xffff000000000000ull;
+		if (((idtb.base >> 47) & 0x1UL) != 0UL)
+			idtb.base |= 0xffff000000000000UL;
 
 		/* Base */
 		base = idtb.base;
@@ -953,8 +953,8 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	asm volatile ("sgdt %0"::"m" (gdtb));
 	value32 = gdtb.limit;
 
-	if (((gdtb.base >> 47) & 0x1) != 0U)
-		gdtb.base |= 0xffff000000000000ull;
+	if (((gdtb.base >> 47) & 0x1UL) != 0UL)
+		gdtb.base |= 0xffff000000000000UL;
 
 	/* Set up the guest and host GDTB base fields with current GDTB base */
 	field = VMX_HOST_GDTR_BASE;
@@ -963,17 +963,17 @@ static void init_host_state(__unused struct vcpu *vcpu)
 
 	/* TODO: Should guest TR point to host TR ? */
 	trbase = gdtb.base + tr_sel;
-	if (((trbase >> 47) & 0x1) != 0U)
-		trbase |= 0xffff000000000000ull;
+	if (((trbase >> 47) & 0x1UL) != 0UL)
+		trbase |= 0xffff000000000000UL;
 
 	/* SS segment override */
 	asm volatile ("mov %0,%%rax\n"
 		      ".byte 0x36\n"
 		      "movq (%%rax),%%rax\n":"=a" (trbase_lo):"0"(trbase)
 	    );
-	realtrbase = ((trbase_lo >> 16) & (0x0ffff)) |
-	    (((trbase_lo >> 32) & 0x000000ff) << 16) |
-	    (((trbase_lo >> 56) & 0xff) << 24);
+	realtrbase = ((trbase_lo >> 16) & (0x0ffffUL)) |
+	    (((trbase_lo >> 32) & 0x000000ffUL) << 16) |
+	    (((trbase_lo >> 56) & 0xffUL) << 24);
 
 	/* SS segment override for upper32 bits of base in ia32e mode */
 	asm volatile ("mov %0,%%rax\n"
@@ -989,8 +989,8 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	/* Obtain the current interrupt descriptor table base */
 	asm volatile ("sidt %0"::"m" (idtb));
 	/* base */
-	if (((idtb.base >> 47) & 0x1) != 0U)
-		idtb.base |= 0xffff000000000000ull;
+	if (((idtb.base >> 47) & 0x1UL) != 0UL)
+		idtb.base |= 0xffff000000000000UL;
 
 	field = VMX_HOST_IDTR_BASE;
 	exec_vmwrite(field, idtb.base);
@@ -1210,7 +1210,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	 * TODO: introduce API to make this data driven based
 	 * on VMX_EPT_VPID_CAP
 	 */
-	value64 = vm->arch_vm.nworld_eptp | (3 << 3) | 6;
+	value64 = vm->arch_vm.nworld_eptp | (3UL << 3) | 6UL;
 	exec_vmwrite64(VMX_EPT_POINTER_FULL, value64);
 	pr_dbg("VMX_EPT_POINTER: 0x%016llx ", value64);
 
