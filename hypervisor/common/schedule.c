@@ -154,9 +154,9 @@ void default_idle(void)
 	int pcpu_id = get_cpu_id();
 
 	while (1) {
-		if (need_reschedule(pcpu_id))
+		if (need_reschedule(pcpu_id) != 0)
 			schedule();
-		else if (need_offline(pcpu_id))
+		else if (need_offline(pcpu_id) != 0)
 			cpu_dead(pcpu_id);
 		else
 			__asm __volatile("pause" ::: "memory");

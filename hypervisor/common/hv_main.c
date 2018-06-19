@@ -42,7 +42,7 @@ void vcpu_thread(struct vcpu *vcpu)
 			continue;
 		}
 
-		if (need_reschedule(vcpu->pcpu_id)) {
+		if (need_reschedule(vcpu->pcpu_id) != 0) {
 			/*
 			 * In extrem case, schedule() could return. Which
 			 * means the vcpu resume happens before schedule()

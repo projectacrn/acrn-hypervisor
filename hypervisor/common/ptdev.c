@@ -68,7 +68,7 @@ alloc_entry(struct vm *vm, enum ptdev_intr_type type)
 
 	/* allocate */
 	entry = calloc(1, sizeof(*entry));
-	ASSERT(entry, "alloc memory failed");
+	ASSERT(entry != NULL, "alloc memory failed");
 	entry->type = type;
 	entry->vm = vm;
 

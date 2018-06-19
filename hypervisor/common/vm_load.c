@@ -43,7 +43,7 @@ static uint64_t create_zero_page(struct vm *vm)
 				&(hva->hdr), sizeof(hva->hdr));
 
 	/* See if kernel has a RAM disk */
-	if (sw_linux->ramdisk_src_addr) {
+	if (sw_linux->ramdisk_src_addr != NULL) {
 		/* Copy ramdisk load_addr and size in zeropage header structure
 		 */
 		zeropage->hdr.ramdisk_addr =
@@ -197,7 +197,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 #endif
 
 		/* Check if a RAM disk is present with Linux guest */
-		if (vm->sw.linux_info.ramdisk_src_addr) {
+		if (vm->sw.linux_info.ramdisk_src_addr != NULL) {
 			/* Get host-physical address for guest RAM disk */
 			hva = GPA2HVA(vm,
 				(uint64_t)vm->sw.linux_info.ramdisk_load_addr);
