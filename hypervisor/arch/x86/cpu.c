@@ -34,12 +34,12 @@ uint64_t trampoline_start16_paddr;
 
 /* TODO: add more capability per requirement */
 /*APICv features*/
-#define VAPIC_FEATURE_VIRT_ACCESS		(1 << 0)
-#define VAPIC_FEATURE_VIRT_REG			(1 << 1)
-#define VAPIC_FEATURE_INTR_DELIVERY		(1 << 2)
-#define VAPIC_FEATURE_TPR_SHADOW		(1 << 3)
-#define VAPIC_FEATURE_POST_INTR		(1 << 4)
-#define VAPIC_FEATURE_VX2APIC_MODE		(1 << 5)
+#define VAPIC_FEATURE_VIRT_ACCESS		(1U << 0)
+#define VAPIC_FEATURE_VIRT_REG			(1U << 1)
+#define VAPIC_FEATURE_INTR_DELIVERY		(1U << 2)
+#define VAPIC_FEATURE_TPR_SHADOW		(1U << 3)
+#define VAPIC_FEATURE_POST_INTR		(1U << 4)
+#define VAPIC_FEATURE_VX2APIC_MODE		(1U << 5)
 
 struct cpu_capability {
 	uint8_t vapic_features;
@@ -59,7 +59,7 @@ int ibrs_type;
 inline bool cpu_has_cap(uint32_t bit)
 {
 	int feat_idx = bit >> 5;
-	int feat_bit = bit & 0x1f;
+	int feat_bit = bit & 0x1fU;
 
 	if (feat_idx >= FEATURE_WORDS)
 		return false;
@@ -83,7 +83,7 @@ static inline bool get_monitor_cap(void)
 
 static uint64_t get_address_mask(uint8_t limit)
 {
-	return ((1ULL << limit) - 1) & CPU_PAGE_MASK;
+	return ((1UL << limit) - 1UL) & CPU_PAGE_MASK;
 }
 
 static void get_cpu_capabilities(void)
@@ -98,14 +98,14 @@ static void get_cpu_capabilities(void)
 	cpuid(CPUID_FEATURES, &eax, &unused,
 		&boot_cpu_data.cpuid_leaves[FEAT_1_ECX],
 		&boot_cpu_data.cpuid_leaves[FEAT_1_EDX]);
-	family = (eax >> 8) & 0xff;
-	if (family == 0xF)
-		family += (eax >> 20) & 0xff;
+	family = (eax >> 8) & 0xffU;
+	if (family == 0xFU)
+		family += (eax >> 20) & 0xffU;
 	boot_cpu_data.x86 = family;
 
-	model = (eax >> 4) & 0xf;
-	if (family >= 0x06)
-		model += ((eax >> 16) & 0xf) << 4;
+	model = (eax >> 4) & 0xfU;
+	if (family >= 0x06U)
+		model += ((eax >> 16) & 0xfU) << 4;
 	boot_cpu_data.x86_model = model;
 
 
@@ -131,8 +131,8 @@ static void get_cpu_capabilities(void)
 			/* EAX bits 07-00: #Physical Address Bits
 			 *     bits 15-08: #Linear Address Bits
 			 */
-			boot_cpu_data.x86_virt_bits = (eax >> 8) & 0xff;
-			boot_cpu_data.x86_phys_bits = eax & 0xff;
+			boot_cpu_data.x86_virt_bits = (eax >> 8) & 0xffU;
+			boot_cpu_data.x86_phys_bits = eax & 0xffU;
 			boot_cpu_data.physical_address_mask =
 				get_address_mask(boot_cpu_data.x86_phys_bits);
 	}
@@ -629,10 +629,10 @@ static void update_trampoline_code_refs(uint64_t dest_pa)
 	val = dest_pa + (uint64_t)trampoline_fixup_target;
 
 	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_fixup_cs);
-	*(uint16_t *)(ptr) = (uint16_t)(val >> 4) & 0xFFFF;
+	*(uint16_t *)(ptr) = (uint16_t)(val >> 4) & 0xFFFFU;
 
 	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_fixup_ip);
-	*(uint16_t *)(ptr) = (uint16_t)(val & 0xf);
+	*(uint16_t *)(ptr) = (uint16_t)(val & 0xfU);
 
 	/* Update temporary page tables */
 	ptr = HPA2HVA(dest_pa + (uint64_t)CPU_Boot_Page_Tables_ptr);

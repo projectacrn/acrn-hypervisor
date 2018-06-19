@@ -182,7 +182,7 @@ int set_vcpuid_entries(struct vm *vm)
 			if (result != 0)
 				return result;
 
-			times = entry.eax & 0xff;
+			times = entry.eax & 0xffUL;
 			for (j = 1; j < times; j++) {
 				init_vcpuid_entry(vm, i, j,
 					CPUID_CHECK_SUBLEAF, &entry);

@@ -41,80 +41,80 @@
 /* Define page size */
 #define CPU_PAGE_SHIFT          12
 #define CPU_PAGE_SIZE           0x1000
-#define CPU_PAGE_MASK           0xFFFFFFFFFFFFF000
+#define CPU_PAGE_MASK           0xFFFFFFFFFFFFF000UL
 
 #define MMU_PTE_PAGE_SHIFT	CPU_PAGE_SHIFT
 #define MMU_PDE_PAGE_SHIFT	21
 
 /* Define CPU stack alignment */
-#define CPU_STACK_ALIGN         16
+#define CPU_STACK_ALIGN         16UL
 
 /* CR0 register definitions */
-#define CR0_PG                  (1<<31)	/* paging enable */
-#define CR0_CD                  (1<<30)	/* cache disable */
-#define CR0_NW                  (1<<29)	/* not write through */
-#define CR0_AM                  (1<<18)	/* alignment mask */
-#define CR0_WP                  (1<<16)	/* write protect */
-#define CR0_NE                  (1<<5)	/* numeric error */
-#define CR0_ET                  (1<<4)	/* extension type */
-#define CR0_TS                  (1<<3)	/* task switched */
-#define CR0_EM                  (1<<2)	/* emulation */
-#define CR0_MP                  (1<<1)	/* monitor coprocessor */
-#define CR0_PE                  (1<<0)	/* protected mode enabled */
+#define CR0_PG                  (1U<<31)	/* paging enable */
+#define CR0_CD                  (1U<<30)	/* cache disable */
+#define CR0_NW                  (1U<<29)	/* not write through */
+#define CR0_AM                  (1U<<18)	/* alignment mask */
+#define CR0_WP                  (1U<<16)	/* write protect */
+#define CR0_NE                  (1U<<5)	/* numeric error */
+#define CR0_ET                  (1U<<4)	/* extension type */
+#define CR0_TS                  (1U<<3)	/* task switched */
+#define CR0_EM                  (1U<<2)	/* emulation */
+#define CR0_MP                  (1U<<1)	/* monitor coprocessor */
+#define CR0_PE                  (1U<<0)	/* protected mode enabled */
 
 /* CR3 register definitions */
-#define CR3_PWT                 (1<<3)	/* page-level write through */
-#define CR3_PCD                 (1<<4)	/* page-level cache disable */
+#define CR3_PWT                 (1U<<3)	/* page-level write through */
+#define CR3_PCD                 (1U<<4)	/* page-level cache disable */
 
 /* CR4 register definitions */
-#define CR4_VME                 (1<<0)	/* virtual 8086 mode extensions */
-#define CR4_PVI                 (1<<1)	/* protected mode virtual interrupts */
-#define CR4_TSD                 (1<<2)	/* time stamp disable */
-#define CR4_DE                  (1<<3)	/* debugging extensions */
-#define CR4_PSE                 (1<<4)	/* page size extensions */
-#define CR4_PAE                 (1<<5)	/* physical address extensions */
-#define CR4_MCE                 (1<<6)	/* machine check enable */
-#define CR4_PGE                 (1<<7)	/* page global enable */
-#define CR4_PCE                 (1<<8)
+#define CR4_VME                 (1U<<0)	/* virtual 8086 mode extensions */
+#define CR4_PVI                 (1U<<1)	/* protected mode virtual interrupts */
+#define CR4_TSD                 (1U<<2)	/* time stamp disable */
+#define CR4_DE                  (1U<<3)	/* debugging extensions */
+#define CR4_PSE                 (1U<<4)	/* page size extensions */
+#define CR4_PAE                 (1U<<5)	/* physical address extensions */
+#define CR4_MCE                 (1U<<6)	/* machine check enable */
+#define CR4_PGE                 (1U<<7)	/* page global enable */
+#define CR4_PCE                 (1U<<8)
 /* performance monitoring counter enable */
-#define CR4_OSFXSR              (1<<9)	/* OS support for FXSAVE/FXRSTOR */
-#define CR4_OSXMMEXCPT          (1<<10)
+#define CR4_OSFXSR              (1U<<9)	/* OS support for FXSAVE/FXRSTOR */
+#define CR4_OSXMMEXCPT          (1U<<10)
 /* OS support for unmasked SIMD floating point exceptions */
-#define CR4_VMXE                (1<<13)	/* VMX enable */
-#define CR4_SMXE                (1<<14)	/* SMX enable */
-#define CR4_PCIDE               (1<<17)	/* PCID enable */
-#define CR4_OSXSAVE             (1<<18)
-#define CR4_SMEP                (1<<20)
-#define CR4_SMAP                (1<<21)
+#define CR4_VMXE                (1U<<13)	/* VMX enable */
+#define CR4_SMXE                (1U<<14)	/* SMX enable */
+#define CR4_PCIDE               (1U<<17)	/* PCID enable */
+#define CR4_OSXSAVE             (1U<<18)
+#define CR4_SMEP                (1U<<20)
+#define CR4_SMAP                (1U<<21)
 /* XSAVE and Processor Extended States enable bit */
 
 
 /*
  * Entries in the Interrupt Descriptor Table (IDT)
  */
-#define IDT_DE      0   /* #DE: Divide Error */
-#define IDT_DB      1   /* #DB: Debug */
-#define IDT_NMI     2   /* Nonmaskable External Interrupt */
-#define IDT_BP      3   /* #BP: Breakpoint */
-#define IDT_OF      4   /* #OF: Overflow */
-#define IDT_BR      5   /* #BR: Bound Range Exceeded */
-#define IDT_UD      6   /* #UD: Undefined/Invalid Opcode */
-#define IDT_NM      7   /* #NM: No Math Coprocessor */
-#define IDT_DF      8   /* #DF: Double Fault */
-#define IDT_FPUGP   9   /* Coprocessor Segment Overrun */
-#define IDT_TS      10  /* #TS: Invalid TSS */
-#define IDT_NP      11  /* #NP: Segment Not Present */
-#define IDT_SS      12  /* #SS: Stack Segment Fault */
-#define IDT_GP      13  /* #GP: General Protection Fault */
-#define IDT_PF      14  /* #PF: Page Fault */
-#define IDT_MF      16  /* #MF: FPU Floating-Point Error */
-#define IDT_AC      17  /* #AC: Alignment Check */
-#define IDT_MC      18  /* #MC: Machine Check */
-#define IDT_XF      19  /* #XF: SIMD Floating-Point Exception */
-#define IDT_VE      20  /* #VE: Virtualization Exception */
+#define IDT_DE      0U   /* #DE: Divide Error */
+#define IDT_DB      1U   /* #DB: Debug */
+#define IDT_NMI     2U   /* Nonmaskable External Interrupt */
+#define IDT_BP      3U   /* #BP: Breakpoint */
+#define IDT_OF      4U   /* #OF: Overflow */
+#define IDT_BR      5U   /* #BR: Bound Range Exceeded */
+#define IDT_UD      6U   /* #UD: Undefined/Invalid Opcode */
+#define IDT_NM      7U   /* #NM: No Math Coprocessor */
+#define IDT_DF      8U   /* #DF: Double Fault */
+#define IDT_FPUGP   9U   /* Coprocessor Segment Overrun */
+#define IDT_TS      10U  /* #TS: Invalid TSS */
+#define IDT_NP      11U  /* #NP: Segment Not Present */
+#define IDT_SS      12U  /* #SS: Stack Segment Fault */
+#define IDT_GP      13U  /* #GP: General Protection Fault */
+#define IDT_PF      14U  /* #PF: Page Fault */
+#define IDT_MF      16U  /* #MF: FPU Floating-Point Error */
+#define IDT_AC      17U  /* #AC: Alignment Check */
+#define IDT_MC      18U  /* #MC: Machine Check */
+#define IDT_XF      19U  /* #XF: SIMD Floating-Point Exception */
+#define IDT_VE      20U  /* #VE: Virtualization Exception */
 
 /*Bits in EFER special registers */
-#define EFER_LMA 0x000000400    /* Long mode active (R) */
+#define EFER_LMA 0x00000400U    /* Long mode active (R) */
 
 /* CPU clock frequencies (FSB) */
 #define CPU_FSB_83KHZ           83200
@@ -140,7 +140,7 @@
 #define CPU_STATE_DEAD          4
 
 /* hypervisor stack bottom magic('intl') */
-#define SP_BOTTOM_MAGIC    0x696e746c
+#define SP_BOTTOM_MAGIC    0x696e746cUL
 
 /* type of speculation control
  * 0 - no speculation control support
@@ -310,7 +310,7 @@ void start_cpus();
 /* This macro writes the stack pointer. */
 #define CPU_SP_WRITE(stack_ptr)                             \
 {                                                           \
-	uint64_t rsp = (uint64_t)stack_ptr & ~(CPU_STACK_ALIGN - 1);  \
+	uint64_t rsp = (uint64_t)stack_ptr & ~(CPU_STACK_ALIGN - 1UL);  \
 	asm volatile ("movq %0, %%rsp" : : "r"(rsp));             \
 }
 
