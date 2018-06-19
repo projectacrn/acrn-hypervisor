@@ -38,7 +38,7 @@ static inline void initialize_timer(struct timer *timer,
 				int mode,
 				uint64_t period_in_cycle)
 {
-	if (timer) {
+	if (timer != NULL) {
 		timer->func = func;
 		timer->priv_data = priv_data;
 		timer->fire_tsc = fire_tsc;
