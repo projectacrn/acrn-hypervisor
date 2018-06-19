@@ -41,9 +41,9 @@ static void enable_msr_interception(uint8_t *bitmap, uint32_t msr)
 		return;
 	}
 
-	msr &= 0x1FFF;
+	msr &= 0x1FFFU;
 	value = read_map[(msr>>3)];
-	value |= 1<<(msr%8);
+	value |= 1U<<(msr%8);
 	/* right now we trap for both r/w */
 	read_map[(msr>>3)] = value;
 	write_map[(msr>>3)] = value;
@@ -67,9 +67,9 @@ void disable_msr_interception(uint8_t *bitmap, uint32_t msr)
 		return;
 	}
 
-	msr &= 0x1FFF;
+	msr &= 0x1FFFU;
 	value = read_map[(msr>>3)];
-	value &= ~(1<<(msr%8));
+	value &= ~(1U<<(msr%8));
 	/* right now we trap for both r/w */
 	read_map[(msr>>3)] = value;
 	write_map[(msr>>3)] = value;
