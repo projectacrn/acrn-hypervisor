@@ -299,7 +299,40 @@ static void init_cr0_cr4_host_mask(__unused struct vcpu *vcpu)
 	exec_vmwrite(VMX_CR4_MASK, cr4_host_mask);
 	/* Output CR4 mask value */
 	pr_dbg("CR4 mask value: 0x%x", cr4_host_mask);
+}
 
+uint64_t vmx_rdmsr_pat(struct vcpu *vcpu)
+{
+	struct run_context *context =
+			&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+
+	/*
+	 * note: if context->cr0.CD is set, the actual value in guest's
+	 * IA32_PAT MSR is PAT_ALL_UC_VALUE, which may be different from
+	 * the saved value context->ia32_pat
+	 */
+	return context->ia32_pat;
+}
+
+int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value)
+{
+	uint32_t field, i;
+	struct run_context *context =
+			 &vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+
+	for (i = 0; i < 8; i++) {
+		field = (value >> (i * 8)) & 0xffU;
+		if ((PAT_MEM_TYPE_INVALID(field) ||
+				(PAT_FIELD_RSV_BITS & field) != 0U)) {
+			pr_err("invalid guest IA32_PAT: 0x%016llx", value);
+			vcpu_inject_gp(vcpu, 0);
+			return -EINVAL;
+		}
+	}
+
+	context->ia32_pat = value;
+	exec_vmwrite(VMX_GUEST_IA32_PAT_FULL, value);
+	return 0;
 }
 
 /*
@@ -875,6 +908,7 @@ static void init_guest_state(struct vcpu *vcpu)
 		  value32);
 
 	value64 = PAT_POWER_ON_VALUE;
+	cur_context->ia32_pat = value64;
 	exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, value64);
 	pr_dbg("VMX_GUEST_IA32_PAT: 0x%016llx ",
 		  value64);

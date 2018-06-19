@@ -13,6 +13,7 @@ static const uint32_t emulated_msrs[] = {
 	MSR_IA32_BIOS_UPDT_TRIG, /* Enable MSR_IA32_BIOS_UPDT_TRIG */
 	MSR_IA32_BIOS_SIGN_ID, /* Enable MSR_IA32_BIOS_SIGN_ID */
 	MSR_IA32_TIME_STAMP_COUNTER,
+	MSR_IA32_PAT,
 
 /* following MSR not emulated now */
 /*
@@ -205,6 +206,11 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 		v = exec_vmread(VMX_GUEST_IA32_SYSENTER_EIP);
 		break;
 	}
+	case MSR_IA32_PAT:
+	{
+		v = vmx_rdmsr_pat(vcpu);
+		break;
+	}
 	case MSR_IA32_TSC_AUX:
 	{
 		v = vcpu->arch_vcpu.msr_tsc_aux;
@@ -328,6 +334,11 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	case MSR_IA32_SYSENTER_EIP:
 	{
 		exec_vmwrite(VMX_GUEST_IA32_SYSENTER_EIP, v);
+		break;
+	}
+	case MSR_IA32_PAT:
+	{
+		vmx_wrmsr_pat(vcpu, v);
 		break;
 	}
 	case MSR_IA32_GS_BASE:
