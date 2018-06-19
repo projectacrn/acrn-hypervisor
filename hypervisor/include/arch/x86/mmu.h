@@ -11,126 +11,126 @@
 #define     IA32E_COMM_ENTRY_SIZE           8
 
 /* Definitions common for all IA-32e related paging entries */
-#define     IA32E_COMM_P_BIT                0x0000000000000001
-#define     IA32E_COMM_RW_BIT               0x0000000000000002
-#define     IA32E_COMM_US_BIT               0x0000000000000004
-#define     IA32E_COMM_PWT_BIT              0x0000000000000008
-#define     IA32E_COMM_PCD_BIT              0x0000000000000010
-#define     IA32E_COMM_A_BIT                0x0000000000000020
-#define     IA32E_COMM_XD_BIT               0x8000000000000000
+#define     IA32E_COMM_P_BIT                0x0000000000000001UL
+#define     IA32E_COMM_RW_BIT               0x0000000000000002UL
+#define     IA32E_COMM_US_BIT               0x0000000000000004UL
+#define     IA32E_COMM_PWT_BIT              0x0000000000000008UL
+#define     IA32E_COMM_PCD_BIT              0x0000000000000010UL
+#define     IA32E_COMM_A_BIT                0x0000000000000020UL
+#define     IA32E_COMM_XD_BIT               0x8000000000000000UL
 
 /* Defines for EPT paging entries */
-#define     IA32E_EPT_R_BIT                 0x0000000000000001
-#define     IA32E_EPT_W_BIT                 0x0000000000000002
-#define     IA32E_EPT_X_BIT                 0x0000000000000004
-#define     IA32E_EPT_UNCACHED              (0<<3)
-#define     IA32E_EPT_WC                    (1<<3)
-#define     IA32E_EPT_WT                    (4<<3)
-#define     IA32E_EPT_WP                    (5<<3)
-#define     IA32E_EPT_WB                    (6<<3)
-#define     IA32E_EPT_MT_MASK               (7<<3)
-#define     IA32E_EPT_PAT_IGNORE            0x0000000000000040
-#define     IA32E_EPT_ACCESS_FLAG           0x0000000000000100
-#define     IA32E_EPT_DIRTY_FLAG            0x0000000000000200
-#define     IA32E_EPT_SNOOP_CTRL            0x0000000000000800
-#define     IA32E_EPT_SUPPRESS_VE           0x8000000000000000
+#define     IA32E_EPT_R_BIT                 0x0000000000000001UL
+#define     IA32E_EPT_W_BIT                 0x0000000000000002UL
+#define     IA32E_EPT_X_BIT                 0x0000000000000004UL
+#define     IA32E_EPT_UNCACHED              (0UL<<3)
+#define     IA32E_EPT_WC                    (1UL<<3)
+#define     IA32E_EPT_WT                    (4UL<<3)
+#define     IA32E_EPT_WP                    (5UL<<3)
+#define     IA32E_EPT_WB                    (6UL<<3)
+#define     IA32E_EPT_MT_MASK               (7UL<<3)
+#define     IA32E_EPT_PAT_IGNORE            0x0000000000000040UL
+#define     IA32E_EPT_ACCESS_FLAG           0x0000000000000100UL
+#define     IA32E_EPT_DIRTY_FLAG            0x0000000000000200UL
+#define     IA32E_EPT_SNOOP_CTRL            0x0000000000000800UL
+#define     IA32E_EPT_SUPPRESS_VE           0x8000000000000000UL
 
 /* Definitions common or ignored for all IA-32e related paging entries */
-#define     IA32E_COMM_D_BIT                0x0000000000000040
-#define     IA32E_COMM_G_BIT                0x0000000000000100
+#define     IA32E_COMM_D_BIT                0x0000000000000040UL
+#define     IA32E_COMM_G_BIT                0x0000000000000100UL
 
 /* Definitions exclusive to a Page Map Level 4 Entry (PML4E) */
 #define     IA32E_PML4E_INDEX_MASK_START    39
-#define     IA32E_PML4E_ADDR_MASK           0x0000FF8000000000
+#define     IA32E_PML4E_ADDR_MASK           0x0000FF8000000000UL
 
 /* Definitions exclusive to a Page Directory Pointer Table Entry (PDPTE) */
-#define     IA32E_PDPTE_D_BIT               0x0000000000000040
-#define     IA32E_PDPTE_PS_BIT              0x0000000000000080
-#define     IA32E_PDPTE_PAT_BIT             0x0000000000001000
-#define     IA32E_PDPTE_ADDR_MASK           0x0000FFFFC0000000
+#define     IA32E_PDPTE_D_BIT               0x0000000000000040UL
+#define     IA32E_PDPTE_PS_BIT              0x0000000000000080UL
+#define     IA32E_PDPTE_PAT_BIT             0x0000000000001000UL
+#define     IA32E_PDPTE_ADDR_MASK           0x0000FFFFC0000000UL
 #define     IA32E_PDPTE_INDEX_MASK_START  \
 		(IA32E_PML4E_INDEX_MASK_START - IA32E_INDEX_MASK_BITS)
 
 /* Definitions exclusive to a Page Directory Entry (PDE) 1G or 2M */
-#define     IA32E_PDE_D_BIT                 0x0000000000000040
-#define     IA32E_PDE_PS_BIT                0x0000000000000080
-#define     IA32E_PDE_PAT_BIT               0x0000000000001000
-#define     IA32E_PDE_ADDR_MASK             0x0000FFFFFFE00000
+#define     IA32E_PDE_D_BIT                 0x0000000000000040UL
+#define     IA32E_PDE_PS_BIT                0x0000000000000080UL
+#define     IA32E_PDE_PAT_BIT               0x0000000000001000UL
+#define     IA32E_PDE_ADDR_MASK             0x0000FFFFFFE00000UL
 #define     IA32E_PDE_INDEX_MASK_START    \
 		(IA32E_PDPTE_INDEX_MASK_START - IA32E_INDEX_MASK_BITS)
 
 /* Definitions exclusive to Page Table Entries (PTE) */
-#define     IA32E_PTE_D_BIT                 0x0000000000000040
-#define     IA32E_PTE_PAT_BIT               0x0000000000000080
-#define     IA32E_PTE_G_BIT                 0x0000000000000100
-#define     IA32E_PTE_ADDR_MASK             0x0000FFFFFFFFF000
+#define     IA32E_PTE_D_BIT                 0x0000000000000040UL
+#define     IA32E_PTE_PAT_BIT               0x0000000000000080UL
+#define     IA32E_PTE_G_BIT                 0x0000000000000100UL
+#define     IA32E_PTE_ADDR_MASK             0x0000FFFFFFFFF000UL
 #define     IA32E_PTE_INDEX_MASK_START    \
 		(IA32E_PDE_INDEX_MASK_START - IA32E_INDEX_MASK_BITS)
 
 /** The 'Present' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_P       0x00000001
+#define MMU_32BIT_PDE_P       0x00000001U
 /** The 'Read/Write' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_RW      0x00000002
+#define MMU_32BIT_PDE_RW      0x00000002U
 /** The 'User/Supervisor' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_US      0x00000004
+#define MMU_32BIT_PDE_US      0x00000004U
 /** The 'Page Write Through' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_PWT     0x00000008
+#define MMU_32BIT_PDE_PWT     0x00000008U
 /** The 'Page Cache Disable' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_PCD     0x00000010
+#define MMU_32BIT_PDE_PCD     0x00000010U
 /** The 'Accessed' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_A       0x00000020
+#define MMU_32BIT_PDE_A       0x00000020U
 /** The 'Dirty' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_D       0x00000040
+#define MMU_32BIT_PDE_D       0x00000040U
 /** The 'Page Size' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_PS      0x00000080
+#define MMU_32BIT_PDE_PS      0x00000080U
 /** The 'Global' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_G       0x00000100
+#define MMU_32BIT_PDE_G       0x00000100U
 /** The 'PAT' bit in a page 32 bit paging directory entry */
-#define MMU_32BIT_PDE_PAT     0x00001000
+#define MMU_32BIT_PDE_PAT     0x00001000U
 /** The flag that indicates that the page fault was caused by a non present
  * page.
  */
-#define PAGE_FAULT_P_FLAG    0x00000001
+#define PAGE_FAULT_P_FLAG    0x00000001U
 /** The flag that indicates that the page fault was caused by a write access. */
-#define PAGE_FAULT_WR_FLAG   0x00000002
+#define PAGE_FAULT_WR_FLAG   0x00000002U
 /** The flag that indicates that the page fault was caused in user mode. */
-#define PAGE_FAULT_US_FLAG   0x00000004
+#define PAGE_FAULT_US_FLAG   0x00000004U
 /** The flag that indicates that the page fault was caused by a reserved bit
  * violation.
  */
-#define PAGE_FAULT_RSVD_FLAG 0x00000008
+#define PAGE_FAULT_RSVD_FLAG 0x00000008U
 /** The flag that indicates that the page fault was caused by an instruction
  * fetch.
  */
-#define PAGE_FAULT_ID_FLAG   0x00000010
+#define PAGE_FAULT_ID_FLAG   0x00000010U
 
 /* Defines used for common memory sizes */
-#define             MEM_1K                   1024UL
-#define             MEM_2K                  (MEM_1K * 2UL)
-#define             MEM_4K                  (MEM_1K * 4UL)
-#define             MEM_8K                  (MEM_1K * 8UL)
-#define             MEM_16K                 (MEM_1K * 16UL)
-#define             MEM_32K                 (MEM_1K * 32UL)
-#define             MEM_64K                 (MEM_1K * 64UL)
-#define             MEM_128K                (MEM_1K * 128UL)
-#define             MEM_256K                (MEM_1K * 256UL)
-#define             MEM_512K                (MEM_1K * 512UL)
-#define             MEM_1M                  (MEM_1K * 1024UL)
-#define             MEM_2M                  (MEM_1M * 2UL)
-#define             MEM_4M                  (MEM_1M * 4UL)
-#define             MEM_8M                  (MEM_1M * 8UL)
-#define             MEM_16M                 (MEM_1M * 16UL)
-#define             MEM_32M                 (MEM_1M * 32UL)
-#define             MEM_64M                 (MEM_1M * 64UL)
-#define             MEM_128M                (MEM_1M * 128UL)
-#define             MEM_256M                (MEM_1M * 256UL)
-#define             MEM_512M                (MEM_1M * 512UL)
-#define             MEM_1G                  (MEM_1M * 1024UL)
-#define             MEM_2G                  (MEM_1G * 2UL)
-#define             MEM_3G                  (MEM_1G * 3UL)
-#define             MEM_4G                  (MEM_1G * 4UL)
-#define             MEM_5G                  (MEM_1G * 5UL)
-#define             MEM_6G                  (MEM_1G * 6UL)
+#define             MEM_1K                   1024U
+#define             MEM_2K                  (MEM_1K * 2U)
+#define             MEM_4K                  (MEM_1K * 4U)
+#define             MEM_8K                  (MEM_1K * 8U)
+#define             MEM_16K                 (MEM_1K * 16U)
+#define             MEM_32K                 (MEM_1K * 32U)
+#define             MEM_64K                 (MEM_1K * 64U)
+#define             MEM_128K                (MEM_1K * 128U)
+#define             MEM_256K                (MEM_1K * 256U)
+#define             MEM_512K                (MEM_1K * 512U)
+#define             MEM_1M                  (MEM_1K * 1024U)
+#define             MEM_2M                  (MEM_1M * 2U)
+#define             MEM_4M                  (MEM_1M * 4U)
+#define             MEM_8M                  (MEM_1M * 8U)
+#define             MEM_16M                 (MEM_1M * 16U)
+#define             MEM_32M                 (MEM_1M * 32U)
+#define             MEM_64M                 (MEM_1M * 64U)
+#define             MEM_128M                (MEM_1M * 128U)
+#define             MEM_256M                (MEM_1M * 256U)
+#define             MEM_512M                (MEM_1M * 512U)
+#define             MEM_1G                  (MEM_1M * 1024U)
+#define             MEM_2G                  (MEM_1G * 2U)
+#define             MEM_3G                  (MEM_1G * 3U)
+#define             MEM_4G                  (MEM_1G * 4U)
+#define             MEM_5G                  (MEM_1G * 5U)
+#define             MEM_6G                  (MEM_1G * 6U)
 
 #ifndef ASSEMBLER
 
@@ -184,15 +184,15 @@
  */
 
 /* Generic memory attributes */
-#define     MMU_MEM_ATTR_READ                   0x00000001
-#define     MMU_MEM_ATTR_WRITE                  0x00000002
-#define     MMU_MEM_ATTR_EXECUTE                0x00000004
-#define     MMU_MEM_ATTR_USER                   0x00000008
-#define     MMU_MEM_ATTR_WB_CACHE               0x00000040
-#define     MMU_MEM_ATTR_WT_CACHE               0x00000080
-#define     MMU_MEM_ATTR_UNCACHED               0x00000100
-#define     MMU_MEM_ATTR_WC                     0x00000200
-#define     MMU_MEM_ATTR_WP                     0x00000400
+#define     MMU_MEM_ATTR_READ                   0x00000001U
+#define     MMU_MEM_ATTR_WRITE                  0x00000002U
+#define     MMU_MEM_ATTR_EXECUTE                0x00000004U
+#define     MMU_MEM_ATTR_USER                   0x00000008U
+#define     MMU_MEM_ATTR_WB_CACHE               0x00000040U
+#define     MMU_MEM_ATTR_WT_CACHE               0x00000080U
+#define     MMU_MEM_ATTR_UNCACHED               0x00000100U
+#define     MMU_MEM_ATTR_WC                     0x00000200U
+#define     MMU_MEM_ATTR_WP                     0x00000400U
 
 /* Definitions for memory types related to x64 */
 #define     MMU_MEM_ATTR_BIT_READ_WRITE         IA32E_COMM_RW_BIT
@@ -203,7 +203,7 @@
  * encoding. See also pat.h
  */
 /* Selects PAT0 WB  */
-#define     MMU_MEM_ATTR_TYPE_CACHED_WB       (0x0000000000000000)
+#define     MMU_MEM_ATTR_TYPE_CACHED_WB       (0x0000000000000000UL)
 /* Selects PAT1 WT  */
 #define     MMU_MEM_ATTR_TYPE_CACHED_WT       (IA32E_COMM_PWT_BIT)
 /* Selects PAT2 UCM */
