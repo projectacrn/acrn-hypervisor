@@ -96,7 +96,7 @@ int add_timer(struct timer *timer)
 void del_timer(struct timer *timer)
 {
 	if (timer && !list_empty(&timer->node))
-		list_del(&timer->node);
+		list_del_init(&timer->node);
 }
 
 static int request_timer_irq(int pcpu_id,
