@@ -10,15 +10,6 @@
 extern struct efi_ctx* efi_ctx;
 #endif
 
-#define PAT_POWER_ON_VALUE	(PAT_MEM_TYPE_WB + \
-				((uint64_t)PAT_MEM_TYPE_WT << 8) + \
-				((uint64_t)PAT_MEM_TYPE_UCM << 16) + \
-				((uint64_t)PAT_MEM_TYPE_UC << 24) + \
-				((uint64_t)PAT_MEM_TYPE_WB << 32) + \
-				((uint64_t)PAT_MEM_TYPE_WT << 40) + \
-				((uint64_t)PAT_MEM_TYPE_UCM << 48) + \
-				((uint64_t)PAT_MEM_TYPE_UC << 56))
-
 #define REAL_MODE_BSP_INIT_CODE_SEL	(0xf000)
 #define REAL_MODE_DATA_SEG_AR		(0x0093)
 #define REAL_MODE_CODE_SEG_AR		(0x009f)
@@ -331,7 +322,14 @@ int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value)
 	}
 
 	context->ia32_pat = value;
-	exec_vmwrite(VMX_GUEST_IA32_PAT_FULL, value);
+
+	/*
+	 * If context->cr0.CD is set, we defer any further requests to write
+	 * guest's IA32_PAT, until the time when guest's CR0.CD is being cleared
+	 */
+	if ((context->cr0 & CR0_CD) == 0U) {
+		exec_vmwrite(VMX_GUEST_IA32_PAT_FULL, value);
+	}
 	return 0;
 }
 
@@ -351,8 +349,8 @@ int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value)
  *   - WP (16) Trapped to get if it inhibits supervisor level procedures to
  *             write into ro-pages.
  *   - AM (18) Flexible to guest
- *   - NW (29) Flexible to guest
- *   - CD (30) Flexible to guest
+ *   - NW (29) Trapped to emulate cache disable situation
+ *   - CD (30) Trapped to emulate cache disable situation
  *   - PG (31) Trapped to track cpu/paging mode.
  *             Set the value according to the value from guest.
  */
@@ -400,10 +398,40 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, context->ia32_efer);
 	}
 
+	/* If CR0.CD or CR0.NW get changed */
+	if (((context->cr0 ^ cr0) & (CR0_CD | CR0_NW)) != 0U) {
+		if ((cr0 & CR0_CD) == 0U && ((cr0 & CR0_NW) != 0U)) {
+			pr_err("not allow to set CR0.NW while clearing CR0.CD");
+			vcpu_inject_gp(vcpu, 0);
+			return -EINVAL;
+		}
+
+		/* No action if only CR0.NW is changed */
+		if (((context->cr0 ^ cr0) & CR0_CD) != 0U) {
+			if ((cr0 & CR0_CD) != 0U) {
+				/*
+				 * When the guest requests to set CR0.CD, we don't allow
+				 * guest's CR0.CD to be actually set, instead, we write guest
+				 * IA32_PAT with all-UC entries to emulate the cache
+				 * disabled behavior
+				 */
+				exec_vmwrite(VMX_GUEST_IA32_PAT_FULL, PAT_ALL_UC_VALUE);
+				CACHE_FLUSH_INVALIDATE_ALL();
+			} else {
+				/* Restore IA32_PAT to enable cache again */
+				exec_vmwrite(VMX_GUEST_IA32_PAT_FULL, context->ia32_pat);
+			}
+			vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
+		}
+	}
+
 	/* CR0 has no always off bits, except the always on bits, and reserved
 	 * bits, allow to set according to guest.
 	 */
 	cr0_vmx = cr0_always_on_mask | cr0;
+
+	/* Don't set CD or NW bit to guest */
+	cr0_vmx &= ~(CR0_CD | CR0_NW);
 	exec_vmwrite(VMX_GUEST_CR0, cr0_vmx & 0xFFFFFFFFUL);
 	exec_vmwrite(VMX_CR0_READ_SHADOW, cr0 & 0xFFFFFFFFUL);
 	context->cr0 = cr0;
