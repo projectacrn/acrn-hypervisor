@@ -32,15 +32,15 @@ typedef signed long int64_t;
 typedef unsigned int size_t;
 typedef __builtin_va_list va_list;
 
-typedef uint8_t bool;
+typedef _Bool bool;
 
 #ifndef NULL
 #define         NULL                                ((void *) 0)
 #endif
 
 #ifndef true
-#define true		1
-#define false		0
+#define true		((_Bool) 1)
+#define false		((_Bool) 0)
 #endif
 
 #ifndef UINT64_MAX

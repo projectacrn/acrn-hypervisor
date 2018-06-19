@@ -121,10 +121,10 @@ struct seg_desc {
 
 #define	SEG_DESC_TYPE(access)		((access) & 0x001f)
 #define	SEG_DESC_DPL(access)		(((access) >> 5) & 0x3)
-#define	SEG_DESC_PRESENT(access)	(((access) & 0x0080) ? 1 : 0)
-#define	SEG_DESC_DEF32(access)		(((access) & 0x4000) ? 1 : 0)
-#define	SEG_DESC_GRANULARITY(access)	(((access) & 0x8000) ? 1 : 0)
-#define	SEG_DESC_UNUSABLE(access)	(((access) & 0x10000) ? 1 : 0)
+#define	SEG_DESC_PRESENT(access)	((((access) & 0x0080U) != 0U) ? 1 : 0)
+#define	SEG_DESC_DEF32(access)		((((access) & 0x4000U) != 0U) ? 1 : 0)
+#define	SEG_DESC_GRANULARITY(access)	((((access) & 0x8000U) != 0U) ? 1 : 0)
+#define	SEG_DESC_UNUSABLE(access)	((((access) & 0x10000U) != 0U) ? 1 : 0)
 
 struct vm_guest_paging {
 	uint64_t	cr3;

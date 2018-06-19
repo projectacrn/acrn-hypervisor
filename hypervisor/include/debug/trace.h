@@ -78,7 +78,7 @@ trace_check(int cpu_id, __unused int evid)
 	if (cpu_id >= phy_cpu_num)
 		return false;
 
-	if (!per_cpu(sbuf, cpu_id)[ACRN_TRACE])
+	if (per_cpu(sbuf, cpu_id)[ACRN_TRACE] == NULL)
 		return false;
 
 	return true;
