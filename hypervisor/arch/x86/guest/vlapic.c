@@ -41,10 +41,10 @@
 
 #define VLAPIC_VERSION		(16)
 
-#define	APICBASE_RESERVED	0x000002ff
-#define	APICBASE_BSP		0x00000100
-#define	APICBASE_X2APIC		0x00000400
-#define	APICBASE_ENABLED	0x00000800
+#define	APICBASE_RESERVED	0x000002ffU
+#define	APICBASE_BSP		0x00000100U
+#define	APICBASE_X2APIC		0x00000400U
+#define	APICBASE_ENABLED	0x00000800U
 
 #define ACRN_DBG_LAPIC	6
 
@@ -740,7 +740,7 @@ vlapic_update_ppr(struct vlapic *vlapic)
 		isrptr = &vlapic->apic_page->isr[0];
 		for (vector = 0; vector < 256; vector++) {
 			idx = vector / 32;
-			if ((isrptr[idx].val & (1 << (vector % 32))) != 0U) {
+			if ((isrptr[idx].val & (1U << (vector % 32))) != 0U) {
 				if ((i > vlapic->isrvec_stk_top) ||
 					((i < ISRVEC_STK_SIZE) &&
 					(vlapic->isrvec_stk[i] != vector))) {
@@ -755,7 +755,7 @@ vlapic_update_ppr(struct vlapic *vlapic)
 	if (PRIO(tpr) >= PRIO(isrvec))
 		ppr = tpr;
 	else
-		ppr = isrvec & 0xf0;
+		ppr = isrvec & 0xf0U;
 
 	vlapic->apic_page->ppr = ppr;
 	dev_dbg(ACRN_DBG_LAPIC, "%s 0x%02x", __func__, ppr);
@@ -901,14 +901,14 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 		 * In the "Flat Model" the MDA is interpreted as an 8-bit wide
 		 * bitmask. This model is only available in the xAPIC mode.
 		 */
-		mda_flat_ldest = dest & 0xff;
+		mda_flat_ldest = dest & 0xffU;
 
 		/*
 		 * In the "Cluster Model" the MDA is used to identify a
 		 * specific cluster and a set of APICs in that cluster.
 		 */
-		mda_cluster_id = (dest >> 4) & 0xf;
-		mda_cluster_ldest = dest & 0xf;
+		mda_cluster_id = (dest >> 4) & 0xfU;
+		mda_cluster_ldest = dest & 0xfU;
 
 		/*
 		 * Logical mode: match each APIC that has a bit set
@@ -931,7 +931,7 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 					APIC_DFR_MODEL_CLUSTER) {
 
 				cluster = ldr >> 28;
-				ldest = (ldr >> 24) & 0xf;
+				ldest = (ldr >> 24) & 0xfU;
 
 				if (cluster != mda_cluster_id)
 					continue;
@@ -998,7 +998,7 @@ vlapic_set_cr8(struct vlapic *vlapic, uint64_t val)
 {
 	uint8_t tpr;
 
-	if ((val & ~0xf) != 0U) {
+	if ((val & ~0xfUL) != 0U) {
 		vcpu_inject_gp(vlapic->vcpu, 0);
 		return;
 	}
@@ -1202,7 +1202,7 @@ vlapic_intr_accepted(struct vlapic *vlapic, uint32_t vector)
 	VLAPIC_CTR_IRR(vlapic, "vlapic_intr_accepted");
 
 	isrptr = &lapic->isr[0];
-	isrptr[idx].val |= 1 << (vector % 32);
+	isrptr[idx].val |= 1U << (vector % 32);
 	VLAPIC_CTR_ISR(vlapic, "vlapic_intr_accepted");
 
 	/*
@@ -1283,7 +1283,7 @@ vlapic_read(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 		goto done;
 	}
 
-	offset &= ~3;
+	offset &= ~0x3UL;
 	switch (offset) {
 	case APIC_OFFSET_ID:
 		*data = lapic->id;
@@ -1407,7 +1407,7 @@ vlapic_write(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 	uint32_t *regptr;
 	int retval;
 
-	ASSERT((offset & 0xf) == 0 && offset < CPU_PAGE_SIZE,
+	ASSERT((offset & 0xfUL) == 0 && offset < CPU_PAGE_SIZE,
 		"%s: invalid offset %#lx", __func__, offset);
 
 	dev_dbg(ACRN_DBG_LAPIC, "vlapic write offset %#lx, data %#lx",
@@ -1433,7 +1433,7 @@ vlapic_write(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 		vlapic_id_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_TPR:
-		vlapic_set_tpr(vlapic, data & 0xff);
+		vlapic_set_tpr(vlapic, data & 0xffUL);
 		break;
 	case APIC_OFFSET_EOI:
 		vlapic_process_eoi(vlapic);
@@ -1745,7 +1745,7 @@ vlapic_set_intr(struct vcpu *vcpu, uint32_t vector, bool level)
 	 * According to section "Maskable Hardware Interrupts" in Intel SDM
 	 * vectors 16 through 255 can be delivered through the local APIC.
 	 */
-	if (vector < 16 || vector > 255)
+	if (vector < 16U || vector > 255U)
 		return -EINVAL;
 
 	vlapic = vcpu->arch_vcpu.vlapic;
@@ -1808,11 +1808,11 @@ vlapic_intr_msi(struct vm *vm, uint64_t addr, uint64_t msg)
 	 * the Redirection Hint and Destination Mode are '1' and
 	 * physical otherwise.
 	 */
-	dest = (addr >> 12) & 0xff;
+	dest = (addr >> 12) & 0xffU;
 	phys = ((addr & (MSI_ADDR_RH | MSI_ADDR_LOG)) !=
 			(MSI_ADDR_RH | MSI_ADDR_LOG));
 	delmode = msg & APIC_DELMODE_MASK;
-	vec = msg & 0xff;
+	vec = msg & 0xffUL;
 
 	dev_dbg(ACRN_DBG_LAPIC, "lapic MSI %s dest %#x, vec %d",
 		phys ? "physical" : "logical", dest, vec);
@@ -1937,7 +1937,7 @@ vlapic_mmio_write(struct vcpu *vcpu, uint64_t gpa, uint64_t wval, int size)
 	 * Memory mapped local apic accesses must be 4 bytes wide and
 	 * aligned on a 16-byte boundary.
 	 */
-	if (size != 4 || (off & 0xf) != 0U)
+	if (size != 4 || (off & 0xfUL) != 0U)
 		return -EINVAL;
 
 	vlapic = vcpu->arch_vcpu.vlapic;
@@ -1960,8 +1960,8 @@ vlapic_mmio_read(struct vcpu *vcpu, uint64_t gpa, uint64_t *rval,
 	 * 16-byte boundary. They are also suggested to be 4 bytes
 	 * wide, alas not all OSes follow suggestions.
 	 */
-	off &= ~3;
-	if ((off & 0xf) != 0U)
+	off &= ~0x3UL;
+	if ((off & 0xfUL) != 0UL)
 		return -EINVAL;
 
 	vlapic = vcpu->arch_vcpu.vlapic;
@@ -2116,7 +2116,7 @@ apicv_pending_intr(struct vlapic *vlapic, __unused uint32_t *vecptr)
 		return 0;
 
 	lapic = vlapic->apic_page;
-	ppr = lapic->ppr & 0xF0;
+	ppr = lapic->ppr & 0xF0U;
 
 	if (ppr == 0)
 		return 1;
@@ -2124,7 +2124,7 @@ apicv_pending_intr(struct vlapic *vlapic, __unused uint32_t *vecptr)
 	for (i = 3; i >= 0; i--) {
 		pirval = pir_desc->pir[i];
 		if (pirval != 0) {
-			vpr = (i * 64 + fls64(pirval)) & 0xF0;
+			vpr = (i * 64 + fls64(pirval)) & 0xF0U;
 			return (vpr > ppr);
 		}
 	}
@@ -2257,10 +2257,10 @@ apicv_inject_pir(struct vlapic *vlapic)
 		rvi = pirbase + fls64(pirval);
 
 		intr_status_old = (uint16_t)
-				(0xFFFF &
+				(0xFFFFUL &
 				exec_vmread(VMX_GUEST_INTR_STATUS));
 
-		intr_status_new = (intr_status_old & 0xFF00) | rvi;
+		intr_status_new = (intr_status_old & 0xFF00U) | rvi;
 		if (intr_status_new > intr_status_old)
 			exec_vmwrite(VMX_GUEST_INTR_STATUS,
 					intr_status_new);
@@ -2314,7 +2314,7 @@ int veoi_vmexit_handler(struct vcpu *vcpu)
 
 	vlapic = vcpu->arch_vcpu.vlapic;
 	lapic = vlapic->apic_page;
-	vector = (vcpu->arch_vcpu.exit_qualification) & 0xFF;
+	vector = (vcpu->arch_vcpu.exit_qualification) & 0xFFUL;
 
 	tmrptr = &lapic->tmr[0];
 	idx = vector / 32;
@@ -2337,7 +2337,7 @@ int apic_write_vmexit_handler(struct vcpu *vcpu)
 	struct vlapic *vlapic = NULL;
 
 	qual = vcpu->arch_vcpu.exit_qualification;
-	offset = (qual & 0xFFF);
+	offset = (qual & 0xFFFUL);
 
 	handled = 1;
 	VCPU_RETAIN_RIP(vcpu);

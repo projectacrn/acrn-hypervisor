@@ -223,15 +223,16 @@ vioapic_update_tmr(struct vcpu *vcpu)
 static uint32_t
 vioapic_read(struct vioapic *vioapic, uint32_t addr)
 {
-	int regnum, pin, rshift;
+	uint32_t regnum;
+	int pin, rshift;
 
-	regnum = addr & 0xff;
+	regnum = addr & 0xffU;
 	switch (regnum) {
 	case IOAPIC_ID:
 		return vioapic->id;
 	case IOAPIC_VER:
-		return ((vioapic_pincount(vioapic->vm) - 1) << MAX_RTE_SHIFT)
-		       | 0x11;
+		return ((vioapic_pincount(vioapic->vm) - 1U) << MAX_RTE_SHIFT)
+		       | 0x11U;
 	case IOAPIC_ARB:
 		return vioapic->id;
 	default:
@@ -290,9 +291,10 @@ vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 {
 	uint64_t data64, mask64;
 	uint64_t last, new, changed;
-	int regnum, pin, lshift;
+	uint32_t regnum;
+	int pin, lshift;
 
-	regnum = addr & 0xff;
+	regnum = addr & 0xffUL;
 	switch (regnum) {
 	case IOAPIC_ID:
 		vioapic->id = data & APIC_ID_MASK;

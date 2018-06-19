@@ -41,10 +41,10 @@ spurious_handler_t spurious_handler;
 
 static void init_irq_desc(void)
 {
-	int i, page_num = 0;
-	int desc_size = NR_MAX_IRQS * sizeof(struct irq_desc);
+	uint32_t i, page_num = 0;
+	uint32_t desc_size = NR_MAX_IRQS * sizeof(struct irq_desc);
 
-	page_num = (desc_size + CPU_PAGE_SIZE-1) >> CPU_PAGE_SHIFT;
+	page_num = (desc_size + CPU_PAGE_SIZE - 1U) >> CPU_PAGE_SHIFT;
 
 	irq_desc_base = alloc_pages(page_num);
 
