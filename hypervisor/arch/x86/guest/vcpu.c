@@ -237,7 +237,7 @@ int shutdown_vcpu(__unused struct vcpu *vcpu)
 	return 0;
 }
 
-int destroy_vcpu(struct vcpu *vcpu)
+void destroy_vcpu(struct vcpu *vcpu)
 {
 	ASSERT(vcpu != NULL, "Incorrect arguments");
 
@@ -254,8 +254,6 @@ int destroy_vcpu(struct vcpu *vcpu)
 	per_cpu(ever_run_vcpu, vcpu->pcpu_id) = NULL;
 	free_pcpu(vcpu->pcpu_id);
 	free(vcpu);
-
-	return 0;
 }
 
 /* NOTE:

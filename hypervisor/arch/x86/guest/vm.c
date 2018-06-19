@@ -260,20 +260,18 @@ int start_vm(struct vm *vm)
  * DM only pause vm for shutdown/reboot. If we need to
  * extend the pause vm for DM, this API should be extended.
  */
-int pause_vm(struct vm *vm)
+void pause_vm(struct vm *vm)
 {
 	int i;
 	struct vcpu *vcpu = NULL;
 
 	if (vm->state == VM_PAUSED)
-		return 0;
+		return;
 
 	vm->state = VM_PAUSED;
 
 	foreach_vcpu(i, vm, vcpu)
 		pause_vcpu(vcpu, VCPU_ZOMBIE);
-
-	return 0;
 }
 
 int vm_resume(struct vm *vm)

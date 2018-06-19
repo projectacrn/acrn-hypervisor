@@ -141,7 +141,7 @@ int hv_main(int cpu_id)
 	return 0;
 }
 
-int get_vmexit_profile(char *str, int str_max)
+void get_vmexit_profile(char *str, int str_max)
 {
 	int cpu, i, len, size = str_max;
 
@@ -173,5 +173,4 @@ int get_vmexit_profile(char *str, int str_max)
 		}
 	}
 	snprintf(str, size, "\r\n");
-	return 0;
 }

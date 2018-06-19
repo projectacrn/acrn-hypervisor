@@ -170,7 +170,7 @@ struct vm_description {
 };
 
 int shutdown_vm(struct vm *vm);
-int pause_vm(struct vm *vm);
+void pause_vm(struct vm *vm);
 int start_vm(struct vm *vm);
 int create_vm(struct vm_description *vm_desc, struct vm **vm);
 int prepare_vm0(void);

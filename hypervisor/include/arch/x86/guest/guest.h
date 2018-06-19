@@ -35,7 +35,7 @@ enum {
 struct vhm_request;
 
 int acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req);
-int get_req_info(char *str, int str_max);
+void get_req_info(char *str, int str_max);
 
 /*
  * VCPU related APIs

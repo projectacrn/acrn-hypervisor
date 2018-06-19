@@ -606,7 +606,7 @@ bool vioapic_get_rte(struct vm *vm, int pin, void *rte)
 		return false;
 }
 
-int get_vioapic_info(char *str, int str_max, int vmid)
+void get_vioapic_info(char *str, int str_max, int vmid)
 {
 	int pin, len, size = str_max, vector, delmode;
 	uint64_t rte;
@@ -650,5 +650,4 @@ int get_vioapic_info(char *str, int str_max, int vmid)
 	}
 END:
 	snprintf(str, size, "\r\n");
-	return 0;
 }

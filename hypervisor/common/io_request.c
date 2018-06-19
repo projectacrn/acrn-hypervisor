@@ -146,7 +146,7 @@ static void _get_req_info_(struct vhm_request *req, int *id, char *type,
 	}
 }
 
-int get_req_info(char *str, int str_max)
+void get_req_info(char *str, int str_max)
 {
 	int i, len, size = str_max, client_id;
 	union vhm_request_buffer *req_buf;
@@ -189,5 +189,4 @@ int get_req_info(char *str, int str_max)
 	}
 	spinlock_release(&vm_list_lock);
 	snprintf(str, size, "\r\n");
-	return 0;
 }

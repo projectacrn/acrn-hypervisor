@@ -159,7 +159,7 @@ void write_lapic_reg32(uint32_t offset, uint32_t value);
 void save_lapic(struct lapic_regs *regs);
 int early_init_lapic(void);
 int init_lapic(uint32_t cpu_id);
-int send_lapic_eoi(void);
+void send_lapic_eoi(void);
 uint32_t get_cur_lapic_id(void);
 int send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 		uint32_t cpu_startup_dest,

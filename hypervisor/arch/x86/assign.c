@@ -967,7 +967,7 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 	}
 }
 
-int get_ptdev_info(char *str, int str_max)
+void get_ptdev_info(char *str, int str_max)
 {
 	struct ptdev_remapping_info *entry;
 	int len, size = str_max;
@@ -1014,5 +1014,4 @@ int get_ptdev_info(char *str, int str_max)
 	spinlock_release(&ptdev_lock);
 
 	snprintf(str, size, "\r\n");
-	return 0;
 }
