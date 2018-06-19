@@ -519,6 +519,24 @@
 /* 5 high-order bits in every field are reserved */
 #define PAT_FIELD_RSV_BITS                  (0xF8U)
 
+#define PAT_POWER_ON_VALUE     (PAT_MEM_TYPE_WB + \
+        ((uint64_t)PAT_MEM_TYPE_WT << 8) + \
+        ((uint64_t)PAT_MEM_TYPE_UCM << 16) + \
+        ((uint64_t)PAT_MEM_TYPE_UC << 24) + \
+        ((uint64_t)PAT_MEM_TYPE_WB << 32) + \
+        ((uint64_t)PAT_MEM_TYPE_WT << 40) + \
+        ((uint64_t)PAT_MEM_TYPE_UCM << 48) + \
+        ((uint64_t)PAT_MEM_TYPE_UC << 56))
+
+#define PAT_ALL_UC_VALUE (PAT_MEM_TYPE_UC + \
+        ((uint64_t)PAT_MEM_TYPE_UC << 8) + \
+        ((uint64_t)PAT_MEM_TYPE_UC << 16) + \
+        ((uint64_t)PAT_MEM_TYPE_UC << 24) + \
+        ((uint64_t)PAT_MEM_TYPE_UC << 32) + \
+        ((uint64_t)PAT_MEM_TYPE_UC << 40) + \
+        ((uint64_t)PAT_MEM_TYPE_UC << 48) + \
+        ((uint64_t)PAT_MEM_TYPE_UC << 56))
+
 /* MTRR memory type definitions */
 #define MTRR_MEM_TYPE_UC             0x00U	/* uncached */
 #define MTRR_MEM_TYPE_WC             0x01U	/* write combining */

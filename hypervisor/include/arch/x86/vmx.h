@@ -391,7 +391,7 @@
 #define RFLAGS_Z (1U<<6)
 
 /* CR0 bits hv want to trap to track status change */
-#define CR0_TRAP_MASK (CR0_PE | CR0_PG | CR0_WP)
+#define CR0_TRAP_MASK (CR0_PE | CR0_PG | CR0_WP | CR0_CD | CR0_NW )
 #define CR0_RESERVED_MASK ~(CR0_PG | CR0_CD | CR0_NW | CR0_AM | CR0_WP | \
 			   CR0_NE |  CR0_ET | CR0_TS | CR0_EM | CR0_MP | CR0_PE)
 
