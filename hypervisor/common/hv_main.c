@@ -87,12 +87,12 @@ void vcpu_thread(struct vcpu *vcpu)
 		if (ret < 0) {
 			pr_fatal("dispatch VM exit handler failed for reason"
 				" %d, ret = %d!",
-				vcpu->arch_vcpu.exit_reason & 0xFFFF, ret);
+				vcpu->arch_vcpu.exit_reason & 0xFFFFU, ret);
 			vcpu_inject_gp(vcpu, 0);
 			continue;
 		}
 
-		basic_exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFF;
+		basic_exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFFU;
 		per_cpu(vmexit_cnt, vcpu->pcpu_id)[basic_exit_reason]++;
 		TRACE_2L(TRACE_VM_EXIT, basic_exit_reason,
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip);

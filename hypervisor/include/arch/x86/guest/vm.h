@@ -112,7 +112,7 @@ struct vm_arch {
 	/* reference to virtual platform to come here (as needed) */
 };
 
-#define CPUID_CHECK_SUBLEAF	(1 << 0)
+#define CPUID_CHECK_SUBLEAF	(1U << 0)
 #define MAX_VM_VCPUID_ENTRIES	64
 struct vcpuid_entry {
 	uint32_t eax;

@@ -145,7 +145,7 @@ int vmexit_handler(struct vcpu *vcpu)
 	/* Filter out HW exception & NMI */
 	if ((vcpu->arch_vcpu.idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
 		uint32_t vector_info = vcpu->arch_vcpu.idt_vectoring_info;
-		uint32_t vector = vector_info & 0xff;
+		uint32_t vector = vector_info & 0xffU;
 		uint32_t type = (vector_info & VMX_INT_TYPE_MASK) >> 8;
 		uint32_t err_code = 0;
 
@@ -161,7 +161,7 @@ int vmexit_handler(struct vcpu *vcpu)
 	}
 
 	/* Calculate basic exit reason (low 16-bits) */
-	basic_exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFF;
+	basic_exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFFU;
 
 	/* Log details for exit */
 	pr_dbg("Exit Reason: 0x%016llx ", vcpu->arch_vcpu.exit_reason);
@@ -327,7 +327,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 			(ctx_ptr->guest_cpu_regs.regs.rdx << 32);
 
 	/*bit 0(x87 state) of XCR0 can't be cleared*/
-	if ((val64 & 0x01) == 0U) {
+	if ((val64 & 0x01UL) == 0U) {
 		vcpu_inject_gp(vcpu, 0);
 		return -1;
 	}
@@ -336,7 +336,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	 *set to 10b as it is necessary to set both bits
 	 *to use AVX instructions.
 	 **/
-	if (((val64 >> 1) & 0x3) == 0x2) {
+	if (((val64 >> 1) & 0x3UL) == 0x2UL) {
 		vcpu_inject_gp(vcpu, 0);
 		return -1;
 	}

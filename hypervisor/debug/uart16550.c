@@ -113,9 +113,9 @@ static int uart16550_set_baud_rate(struct tgt_uart *tgt_uart,
 
 		/* Write the appropriate divisor value */
 		uart16550_write_reg(tgt_uart->base_address,
-			((baud_div >> 8) & 0xFF), DLM_IDX);
+			((baud_div >> 8) & 0xFFU), DLM_IDX);
 		uart16550_write_reg(tgt_uart->base_address,
-			(baud_div & 0xFF), DLL_IDX);
+			(baud_div & 0xFFU), DLL_IDX);
 
 		/* Disable DLL and DLM registers */
 		temp_reg &= ~LCR_DLAB;

@@ -79,7 +79,7 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
                 for (bit_idx = ffz64(pool->bitmap[idx]);
                      bit_idx < BITMAP_WORD_SIZE; bit_idx++) {
                         /* Check if selected buffer is free */
-                        if ((pool->bitmap[idx] & (1 << bit_idx)) != 0U)
+                        if ((pool->bitmap[idx] & (1U << bit_idx)) != 0U)
                                 continue;
 
                         /* Declare temporary variables to be used locally in
@@ -105,7 +105,7 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
                                 }
 
                                 /* Break if selected buffer is not free */
-                                if ((pool->bitmap[tmp_idx] & (1 << tmp_bit_idx)) != 0U)
+                                if ((pool->bitmap[tmp_idx] & (1U << tmp_bit_idx)) != 0U)
                                         break;
                         }
 
@@ -128,7 +128,7 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
                                         /* Set allocation bit in bitmap for
                                          * this buffer
                                          */
-                                        pool->bitmap[idx] |= (1 << bit_idx);
+                                        pool->bitmap[idx] |= (1U << bit_idx);
 
                                         /* Set contiguity information for this
                                          * buffer in contiguity-bitmap
@@ -140,7 +140,7 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
                                                  * buffers array
                                                  */
                                                 pool->contiguity_bitmap[idx] |=
-                                                    (1 << bit_idx);
+                                                    (1U << bit_idx);
                                         } else {
                                                 /* Set contiguity bit to 0 if
                                                  * this buffer is not the last
@@ -148,7 +148,7 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
                                                  * buffers array
                                                  */
                                                 pool->contiguity_bitmap[idx] &=
-                                                    ~(1 << bit_idx);
+                                                    ~(1U << bit_idx);
                                         }
 
                                         /* Check if bit_idx is out-of-range */
@@ -201,14 +201,14 @@ static void deallocate_mem(struct mem_pool *pool, void *ptr)
                         contiguity_bitmask = &pool->contiguity_bitmap[bmp_idx];
 
                         /* Mark the buffer as free */
-                        if ((*bitmask & (1 << bit_idx)) != 0U)
-                                *bitmask ^= (1 << bit_idx);
+                        if ((*bitmask & (1U << bit_idx)) != 0U)
+                                *bitmask ^= (1U << bit_idx);
                         else
                                 break;
 
                         /* Reset the Contiguity bit of buffer */
-                        if ((*contiguity_bitmask & (1 << bit_idx)) != 0U)
-                                *contiguity_bitmask ^= (1 << bit_idx);
+                        if ((*contiguity_bitmask & (1U << bit_idx)) != 0U)
+                                *contiguity_bitmask ^= (1U << bit_idx);
                         else
                                 break;
 
@@ -372,7 +372,7 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
 
         /*make sure 8bytes-aligned for at least one addr.*/
         if ((!MEM_ALIGNED_CHECK(src8, 8)) && (!MEM_ALIGNED_CHECK(dest8, 8))) {
-                for (; slen != 0U && (((uint64_t)src8) & 7) != 0; slen--)
+                for (; slen != 0U && (((uint64_t)src8) & 7UL) != 0UL; slen--)
                         *dest8++ = *src8++;
         }
 
@@ -410,7 +410,7 @@ void *memset(void *base, uint8_t v, size_t n)
 
         /*do the few bytes to get uint64_t alignment*/
         count = n;
-        for (; count != 0U && ((uint64_t)dest_p & 7) != 0U; count--)
+        for (; count != 0U && ((uint64_t)dest_p & 7UL) != 0UL; count--)
                 *dest_p++ = v;
 
         /*64-bit mode*/

@@ -57,7 +57,7 @@ static uint64_t create_zero_page(struct vm *vm)
 
 	/* set constant arguments in zero page */
 	zeropage->hdr.loader_type = 0xff;
-	zeropage->hdr.load_flags |= (1 << 5);	/* quiet */
+	zeropage->hdr.load_flags |= (1U << 5);	/* quiet */
 
 	/* Create/add e820 table entries in zeropage */
 	zeropage->e820_nentries = create_e820_table(zeropage->e820);

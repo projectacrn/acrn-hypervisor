@@ -13,37 +13,37 @@
 #define PRINT_STRING_MAX_LEN 4096
 
 /** Use upper case letters for hexadecimal format. */
-#define PRINT_FLAG_UPPER		0x00000001
+#define PRINT_FLAG_UPPER		0x00000001U
 
 /** Use alternate form. */
-#define PRINT_FLAG_ALTERNATE_FORM 	0x00000002
+#define PRINT_FLAG_ALTERNATE_FORM 	0x00000002U
 
 /** Use '0' instead of ' ' for padding. */
-#define PRINT_FLAG_PAD_ZERO		0x00000004
+#define PRINT_FLAG_PAD_ZERO		0x00000004U
 
 /** Use left instead of right justification. */
-#define PRINT_FLAG_LEFT_JUSTIFY		0x00000008
+#define PRINT_FLAG_LEFT_JUSTIFY		0x00000008U
 
 /** Always use the sign as prefix. */
-#define PRINT_FLAG_SIGN			0x00000010
+#define PRINT_FLAG_SIGN			0x00000010U
 
 /** Use ' ' as prefix if no sign is used. */
-#define PRINT_FLAG_SPACE		0x00000020
+#define PRINT_FLAG_SPACE		0x00000020U
 
 /** The original value was a (unsigned) char. */
-#define PRINT_FLAG_CHAR			0x00000040
+#define PRINT_FLAG_CHAR			0x00000040U
 
 /** The original value was a (unsigned) short. */
-#define PRINT_FLAG_SHORT		0x00000080
+#define PRINT_FLAG_SHORT		0x00000080U
 
 /** The original value was a (unsigned) long. */
-#define PRINT_FLAG_LONG			0x00000100
+#define PRINT_FLAG_LONG			0x00000100U
 
 /** The original value was a (unsigned) long long. */
-#define PRINT_FLAG_LONG_LONG		0x00000200
+#define PRINT_FLAG_LONG_LONG		0x00000200U
 
 /** The value is interpreted as unsigned. */
-#define PRINT_FLAG_UINT32		0x00000400
+#define PRINT_FLAG_UINT32		0x00000400U
 
 /** Structure used to save (v)snprintf() specific values */
 struct snprint_param {

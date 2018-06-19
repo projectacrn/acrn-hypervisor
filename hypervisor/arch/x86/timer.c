@@ -243,7 +243,7 @@ static uint64_t pit_calibrate_tsc(uint16_t cal_ms)
 	 */
 
 	io_write_byte(0x30, 0x43);
-	io_write_byte(initial_pit & 0x00ff, 0x40);	/* Write LSB */
+	io_write_byte(initial_pit & 0x00ffU, 0x40);	/* Write LSB */
 	io_write_byte(initial_pit >> 8, 0x40);		/* Write MSB */
 
 	current_tsc = rdtsc();

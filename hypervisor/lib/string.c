@@ -102,7 +102,7 @@ const uint16_t _sch_istable[256] = {
         0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
 };
 
-#define _sch_test(c, bit) (_sch_istable[(c) & 0xff] & (uint16_t)(bit))
+#define _sch_test(c, bit) (_sch_istable[(c) & 0xffU] & (uint16_t)(bit))
 
 #define ISALPHA(c)  _sch_test(c, _sch_isalpha)
 #define ISALNUM(c)  _sch_test(c, _sch_isalnum)
@@ -185,11 +185,11 @@ const uint8_t _sch_toupper[256] = {
         248, 249, 250, 251, 252, 253, 254, 255,
 };
 
-#define TOUPPER(c) _sch_toupper[(c) & 0xff]
-#define TOLOWER(c) _sch_tolower[(c) & 0xff]
+#define TOUPPER(c) _sch_toupper[(c) & 0xffU]
+#define TOLOWER(c) _sch_tolower[(c) & 0xffU]
 
 #ifndef ULONG_MAX
-#define ULONG_MAX       ((uint64_t)(~0L))               /* 0xFFFFFFFF */
+#define ULONG_MAX       ((uint64_t)(~0UL))              /* 0xFFFFFFFF */
 #endif
 
 #ifndef LONG_MAX
@@ -558,7 +558,7 @@ char hexdigit(int decimal_val)
                 '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
         /* Return hex character */
-        return hexdigits[decimal_val & 0x0F];
+        return hexdigits[decimal_val & 0x0FU];
 }
 
 int strcmp(const char *s1, const char *s2)

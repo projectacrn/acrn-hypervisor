@@ -55,11 +55,11 @@ enum {
 };
 
 /* struct vie_op.op_flags */
-#define	VIE_OP_F_IMM		(1 << 0)  /* 16/32-bit immediate operand */
-#define	VIE_OP_F_IMM8		(1 << 1)  /* 8-bit immediate operand */
-#define	VIE_OP_F_MOFFSET	(1 << 2)  /* 16/32/64-bit immediate moffset */
-#define	VIE_OP_F_NO_MODRM	(1 << 3)
-#define	VIE_OP_F_NO_GLA_VERIFICATION (1 << 4)
+#define	VIE_OP_F_IMM		(1U << 0)  /* 16/32-bit immediate operand */
+#define	VIE_OP_F_IMM8		(1U << 1)  /* 8-bit immediate operand */
+#define	VIE_OP_F_MOFFSET	(1U << 2)  /* 16/32/64-bit immediate moffset */
+#define	VIE_OP_F_NO_MODRM	(1U << 3)
+#define	VIE_OP_F_NO_GLA_VERIFICATION (1U << 4)
 
 static const struct vie_op two_byte_opcodes[256] = {
 	[0xB6] = {
@@ -272,9 +272,9 @@ vie_calc_bytereg(struct vie *vie, enum vm_reg_name *reg, int *lhbr)
 	 * %ah, %ch, %dh and %bh respectively.
 	 */
 	if (vie->rex_present == 0U) {
-		if ((vie->reg & 0x4) != 0U) {
+		if ((vie->reg & 0x4U) != 0U) {
 			*lhbr = 1;
-			*reg = gpr_map[vie->reg & 0x3];
+			*reg = gpr_map[vie->reg & 0x3U];
 		}
 	}
 }
@@ -1343,7 +1343,7 @@ emulate_push(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 	 * PUSH is part of the group 5 extended opcodes and is identified
 	 * by ModRM:reg = b110.
 	 */
-	if ((vie->reg & 7) != 6)
+	if ((vie->reg & 7U) != 6)
 		return -EINVAL;
 
 	error = emulate_stack_op(vcpu, mmio_gpa, vie, paging, memread,
@@ -1364,7 +1364,7 @@ emulate_pop(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 	 * POP is part of the group 1A extended opcodes and is identified
 	 * by ModRM:reg = b000.
 	 */
-	if ((vie->reg & 7) != 0)
+	if ((vie->reg & 7U) != 0)
 		return -EINVAL;
 
 	error = emulate_stack_op(vcpu, mmio_gpa, vie, paging, memread,
@@ -1380,16 +1380,16 @@ emulate_group1(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 {
 	int error;
 
-	switch (vie->reg & 7) {
-	case 0x1:	/* OR */
+	switch (vie->reg & 7U) {
+	case 0x1U:	/* OR */
 		error = emulate_or(vcpu, gpa, vie,
 				memread, memwrite, memarg);
 		break;
-	case 0x4:	/* AND */
+	case 0x4U:	/* AND */
 		error = emulate_and(vcpu, gpa, vie,
 				memread, memwrite, memarg);
 		break;
-	case 0x7:	/* CMP */
+	case 0x7U:	/* CMP */
 		error = emulate_cmp(vcpu, gpa, vie,
 				memread, memwrite, memarg);
 		break;
@@ -1415,7 +1415,7 @@ emulate_bittest(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	 * Currently we only emulate the 'Bit Test' instruction which is
 	 * identified by a ModR/M:reg encoding of 100b.
 	 */
-	if ((vie->reg & 7) != 4)
+	if ((vie->reg & 7U) != 4)
 		return -EINVAL;
 
 	error = vie_read_register(vcpu, VM_REG_GUEST_RFLAGS, &rflags);
@@ -1607,7 +1607,7 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum vm_reg_name seg,
 
 		if ((prot & PROT_READ) != 0) {
 			/* #GP on a read access to a exec-only code segment */
-			if ((type & 0xA) == 0x8)
+			if ((type & 0xAU) == 0x8U)
 				return -1;
 		}
 
@@ -1616,10 +1616,10 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum vm_reg_name seg,
 			 * #GP on a write access to a code segment or a
 			 * read-only data segment.
 			 */
-			if ((type & 0x8) != 0)		/* code segment */
+			if ((type & 0x8U) != 0)		/* code segment */
 				return -1;
 
-			if ((type & 0xA) == 0)		/* read-only data seg */
+			if ((type & 0xAU) == 0)		/* read-only data seg */
 				return -1;
 		}
 
@@ -1627,7 +1627,7 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum vm_reg_name seg,
 		 * 'desc->limit' is fully expanded taking granularity into
 		 * account.
 		 */
-		if ((type & 0xC) == 0x4) {
+		if ((type & 0xCU) == 0x4U) {
 			/* expand-down data segment */
 			low_limit = desc->limit + 1;
 			high_limit = SEG_DESC_DEF32(desc->access) ?
@@ -1786,10 +1786,10 @@ decode_prefixes(struct vie *vie, enum vm_cpu_mode cpu_mode, int cs_d)
 	 */
 	if (cpu_mode == CPU_MODE_64BIT && x >= 0x40 && x <= 0x4F) {
 		vie->rex_present = 1;
-		vie->rex_w = (x & 0x8) != 0U ? 1 : 0;
-		vie->rex_r = (x & 0x4) != 0U ? 1 : 0;
-		vie->rex_x = (x & 0x2) != 0U ? 1 : 0;
-		vie->rex_b = (x & 0x1) != 0U ? 1 : 0;
+		vie->rex_w = (x & 0x8U) != 0U ? 1 : 0;
+		vie->rex_r = (x & 0x4U) != 0U ? 1 : 0;
+		vie->rex_x = (x & 0x2U) != 0U ? 1 : 0;
+		vie->rex_b = (x & 0x1U) != 0U ? 1 : 0;
 		vie_advance(vie);
 	}
 
@@ -1872,9 +1872,9 @@ decode_modrm(struct vie *vie, enum vm_cpu_mode cpu_mode)
 	if (vie_peek(vie, &x) != 0)
 		return -1;
 
-	vie->mod = (x >> 6) & 0x3;
-	vie->rm =  (x >> 0) & 0x7;
-	vie->reg = (x >> 3) & 0x7;
+	vie->mod = (x >> 6) & 0x3U;
+	vie->rm =  (x >> 0) & 0x7U;
+	vie->reg = (x >> 3) & 0x7U;
 
 	/*
 	 * A direct addressing mode makes no sense in the context of an EPT
@@ -1954,9 +1954,9 @@ decode_sib(struct vie *vie)
 		return -1;
 
 	/* De-construct the SIB byte */
-	vie->ss = (x >> 6) & 0x3;
-	vie->index = (x >> 3) & 0x7;
-	vie->base = (x >> 0) & 0x7;
+	vie->ss = (x >> 6) & 0x3U;
+	vie->index = (x >> 3) & 0x7U;
+	vie->base = (x >> 0) & 0x7U;
 
 	/* Apply the REX prefix modifiers */
 	vie->index |= vie->rex_x << 3;
