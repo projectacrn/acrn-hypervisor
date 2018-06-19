@@ -94,7 +94,7 @@ static bool vcpu_pending_request(struct vcpu *vcpu)
 	return vcpu->arch_vcpu.pending_req != 0;
 }
 
-int vcpu_make_request(struct vcpu *vcpu, int eventid)
+void vcpu_make_request(struct vcpu *vcpu, int eventid)
 {
 	bitmap_set(eventid, &vcpu->arch_vcpu.pending_req);
 	/*
@@ -108,8 +108,6 @@ int vcpu_make_request(struct vcpu *vcpu, int eventid)
 	 */
 	if ((int)get_cpu_id() != vcpu->pcpu_id)
 		send_single_ipi(vcpu->pcpu_id, VECTOR_NOTIFY_VCPU);
-
-	return 0;
 }
 
 static int vcpu_do_pending_event(struct vcpu *vcpu)
@@ -223,7 +221,8 @@ int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector,
 	if (prev_vector == IDT_DF &&
 		new_class != EXCEPTION_CLASS_BENIGN) {
 		/* triple fault happen - shutdwon mode */
-		return vcpu_make_request(vcpu, ACRN_REQUEST_TRP_FAULT);
+		vcpu_make_request(vcpu, ACRN_REQUEST_TRP_FAULT);
+		return 0;
 	} else if ((prev_class == EXCEPTION_CLASS_CONT &&
 			new_class == EXCEPTION_CLASS_CONT) ||
 			(prev_class == EXCEPTION_CLASS_PF &&
@@ -281,20 +280,21 @@ static int vcpu_inject_lo_exception(struct vcpu *vcpu)
 	return 0;
 }
 
-int vcpu_inject_extint(struct vcpu *vcpu)
+void vcpu_inject_extint(struct vcpu *vcpu)
 {
-	return vcpu_make_request(vcpu, ACRN_REQUEST_EXTINT);
+	vcpu_make_request(vcpu, ACRN_REQUEST_EXTINT);
 }
 
-int vcpu_inject_nmi(struct vcpu *vcpu)
+void vcpu_inject_nmi(struct vcpu *vcpu)
 {
-	return vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
+	vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
 }
 
 int vcpu_inject_gp(struct vcpu *vcpu, uint32_t err_code)
 {
 	vcpu_queue_exception(vcpu, IDT_GP, err_code);
-	return vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
+	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
+	return 0;
 }
 
 int vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code)
@@ -304,7 +304,8 @@ int vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code)
 
 	cur_context->cr2 = addr;
 	vcpu_queue_exception(vcpu, IDT_PF, err_code);
-	return vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
+	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
+	return 0;
 }
 
 int interrupt_window_vmexit_handler(struct vcpu *vcpu)

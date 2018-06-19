@@ -61,7 +61,7 @@ static void fifo_init(struct fifo *fifo, int sz)
 	fifo_reset(fifo);
 }
 
-static char fifo_putchar(struct fifo *fifo, char ch)
+static void fifo_putchar(struct fifo *fifo, char ch)
 {
 	fifo->buf[fifo->windex] = ch;
 	if (fifo->num < fifo->size) {
@@ -71,7 +71,6 @@ static char fifo_putchar(struct fifo *fifo, char ch)
 		fifo->rindex = (fifo->rindex + 1) % fifo->size;
 		fifo->windex = (fifo->windex + 1) % fifo->size;
 	}
-	return 0;
 }
 
 static char fifo_getchar(struct fifo *fifo)

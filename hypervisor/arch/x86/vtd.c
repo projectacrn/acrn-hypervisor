@@ -649,20 +649,18 @@ static void dmar_set_root_table(struct dmar_drhd_rt *dmar_uint)
 	IOMMU_UNLOCK(dmar_uint);
 }
 
-static int dmar_fault_event_mask(struct dmar_drhd_rt *dmar_uint)
+static void dmar_fault_event_mask(struct dmar_drhd_rt *dmar_uint)
 {
 	IOMMU_LOCK(dmar_uint);
 	iommu_write32(dmar_uint, DMAR_FECTL_REG, DMA_FECTL_IM);
 	IOMMU_UNLOCK(dmar_uint);
-	return 0;
 }
 
-static int dmar_fault_event_unmask(struct dmar_drhd_rt *dmar_uint)
+static void dmar_fault_event_unmask(struct dmar_drhd_rt *dmar_uint)
 {
 	IOMMU_LOCK(dmar_uint);
 	iommu_write32(dmar_uint, DMAR_FECTL_REG, 0);
 	IOMMU_UNLOCK(dmar_uint);
-	return 0;
 }
 
 static void dmar_fault_msi_write(struct dmar_drhd_rt *dmar_uint,

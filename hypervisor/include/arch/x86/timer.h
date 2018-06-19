@@ -54,7 +54,7 @@ static inline void initialize_timer(struct timer *timer,
 int add_timer(struct timer *timer);
 void del_timer(struct timer *timer);
 
-int timer_softirq(int pcpu_id);
+void timer_softirq(int pcpu_id);
 void timer_init(void);
 void timer_cleanup(void);
 void check_tsc(void);

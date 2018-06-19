@@ -135,7 +135,7 @@ normal_register_handler(uint32_t irq,
 		const char *name);
 void unregister_handler_common(struct dev_handler_node *node);
 
-int get_cpu_interrupt_info(char *str, int str_max);
+void get_cpu_interrupt_info(char *str, int str_max);
 
 void setup_notification(void);
 
@@ -157,11 +157,11 @@ extern spurious_handler_t spurious_handler;
 #define HV_ARCH_VCPU_BLOCKED_BY_MOVSS       (1<<1)
 #define HV_ARCH_VCPU_BLOCKED_BY_STI         (1<<0)
 
-int vcpu_inject_extint(struct vcpu *vcpu);
-int vcpu_inject_nmi(struct vcpu *vcpu);
+void vcpu_inject_extint(struct vcpu *vcpu);
+void vcpu_inject_nmi(struct vcpu *vcpu);
 int vcpu_inject_gp(struct vcpu *vcpu, uint32_t err_code);
 int vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code);
-int vcpu_make_request(struct vcpu *vcpu, int eventid);
+void vcpu_make_request(struct vcpu *vcpu, int eventid);
 int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector, uint32_t err_code);
 
 int exception_vmexit_handler(struct vcpu *vcpu);

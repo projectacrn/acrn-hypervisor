@@ -53,5 +53,5 @@ bool	vioapic_get_rte(struct vm *vm, int pin, void *rte);
 int	vioapic_mmio_access_handler(struct vcpu *vcpu, struct mem_io *mmio,
 		void *handler_private_data);
 
-int get_vioapic_info(char *str, int str_max, int vmid);
+void get_vioapic_info(char *str, int str_max, int vmid);
 #endif

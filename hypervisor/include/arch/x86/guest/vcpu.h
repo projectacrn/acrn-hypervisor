@@ -260,7 +260,7 @@ struct vcpu* get_ever_run_vcpu(int pcpu_id);
 int create_vcpu(int cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle);
 int start_vcpu(struct vcpu *vcpu);
 int shutdown_vcpu(struct vcpu *vcpu);
-int destroy_vcpu(struct vcpu *vcpu);
+void destroy_vcpu(struct vcpu *vcpu);
 
 void reset_vcpu(struct vcpu *vcpu);
 void pause_vcpu(struct vcpu *vcpu, enum vcpu_state new_state);

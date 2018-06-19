@@ -316,10 +316,9 @@ void resume_lapic(void)
 	restore_lapic(&saved_lapic_regs);
 }
 
-int send_lapic_eoi(void)
+void send_lapic_eoi(void)
 {
 	write_lapic_reg32(LAPIC_EOI_REGISTER, 0);
-	return 0;
 }
 
 static void wait_for_delivery(void)

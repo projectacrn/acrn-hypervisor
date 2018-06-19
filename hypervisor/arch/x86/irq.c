@@ -686,7 +686,7 @@ pri_register_handler(uint32_t irq,
 	return common_register_handler(irq, &info);
 }
 
-int get_cpu_interrupt_info(char *str, int str_max)
+void get_cpu_interrupt_info(char *str, int str_max)
 {
 	int pcpu_id;
 	uint32_t irq, vector, len, size = str_max;
@@ -727,5 +727,4 @@ int get_cpu_interrupt_info(char *str, int str_max)
 		}
 	}
 	snprintf(str, size, "\r\n");
-	return 0;
 }

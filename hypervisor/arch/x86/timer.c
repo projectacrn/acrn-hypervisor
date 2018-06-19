@@ -171,7 +171,7 @@ void timer_cleanup(void)
 	per_cpu(timer_node, pcpu_id) = NULL;
 }
 
-int timer_softirq(int pcpu_id)
+void timer_softirq(int pcpu_id)
 {
 	struct per_cpu_timers *cpu_timer;
 	struct timer *timer;
@@ -207,7 +207,6 @@ int timer_softirq(int pcpu_id)
 
 	/* update nearest timer */
 	update_physical_timer(cpu_timer);
-	return 0;
 }
 
 void check_tsc(void)
