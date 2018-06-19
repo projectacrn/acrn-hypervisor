@@ -821,7 +821,7 @@ static void
 pci_emul_deinit(struct vmctx *ctx, struct pci_vdev_ops *ops, int bus, int slot,
 		int func, struct funcinfo *fi)
 {
-	if (ops->vdev_deinit)
+	if (ops->vdev_deinit && fi->fi_devi)
 		(*ops->vdev_deinit)(ctx, fi->fi_devi, fi->fi_param);
 	if (fi->fi_param)
 		free(fi->fi_param);
