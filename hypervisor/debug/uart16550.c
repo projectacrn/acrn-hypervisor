@@ -63,7 +63,7 @@ enum UART_REG_IDX{
 
 static inline uint32_t uart16550_read_reg(uint64_t base, uint32_t reg_idx)
 {
-	if (serial_port_mapped) {
+	if (serial_port_mapped != 0) {
 		return io_read_byte((uint16_t)base + reg_idx);
 	} else {
 		return mmio_read_long((void*)((uint32_t*)HPA2HVA(base) + reg_idx));
@@ -73,7 +73,7 @@ static inline uint32_t uart16550_read_reg(uint64_t base, uint32_t reg_idx)
 static inline void uart16550_write_reg(uint64_t base,
 	uint32_t val, uint32_t reg_idx)
 {
-	if (serial_port_mapped) {
+	if (serial_port_mapped != 0) {
 		io_write_byte(val, (uint16_t)base + reg_idx);
 	} else {
 		mmio_write_long(val, (void*)((uint32_t*)HPA2HVA(base) + reg_idx));
@@ -129,7 +129,7 @@ static int uart16550_init(struct tgt_uart *tgt_uart)
 {
 	int status = 0;
 
-	if (!uart_enabled) {
+	if (uart_enabled == 0) {
 		/*uart will not be used */
 		status = -ENODEV;
 	} else {
@@ -219,15 +219,15 @@ static int uart16550_get_rx_err(uint32_t rx_data)
 	int rx_status = SD_RX_NO_ERROR;
 
 	/* Check for RX overrun error */
-	if ((rx_data & LSR_OE))
+	if ((rx_data & LSR_OE) != 0U)
 		rx_status |= SD_RX_OVERRUN_ERROR;
 
 	/* Check for RX parity error */
-	if ((rx_data & LSR_PE))
+	if ((rx_data & LSR_PE) != 0U)
 		rx_status |= SD_RX_PARITY_ERROR;
 
 	/* Check for RX frame error */
-	if ((rx_data & LSR_FE))
+	if ((rx_data & LSR_FE) != 0U)
 		rx_status |= SD_RX_FRAME_ERROR;
 
 	/* Return the rx status */
@@ -265,8 +265,8 @@ static void uart16550_write(struct tgt_uart *tgt_uart,
 {
 	/* Ensure there are no further Transmit buffer write requests */
 	do {
-	} while (!(uart16550_read_reg(tgt_uart->base_address,
-		ISR_IDX) & LSR_THRE));
+	} while ((uart16550_read_reg(tgt_uart->base_address,
+		ISR_IDX) & LSR_THRE) == 0U);
 
 	/* Transmit the character. */
 	uart16550_write_reg(tgt_uart->base_address,
