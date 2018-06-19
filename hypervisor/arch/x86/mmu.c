@@ -178,12 +178,12 @@ void invept(struct vcpu *vcpu)
 	struct invept_desc desc = {0};
 
 	if (cpu_has_vmx_ept_cap(VMX_EPT_INVEPT_SINGLE_CONTEXT)) {
-		desc.eptp = vcpu->vm->arch_vm.nworld_eptp | (3 << 3) | 6;
+		desc.eptp = vcpu->vm->arch_vm.nworld_eptp | (3UL << 3U) | 6UL;
 		_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
 		if (vcpu->vm->sworld_control.sworld_enabled &&
 			vcpu->vm->arch_vm.sworld_eptp) {
 			desc.eptp = vcpu->vm->arch_vm.sworld_eptp
-				| (3 << 3) | 6;
+				| (3UL << 3U) | 6UL;
 			_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
 		}
 	} else if (cpu_has_vmx_ept_cap(VMX_EPT_INVEPT_GLOBAL_CONTEXT))
@@ -990,10 +990,10 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 			/* Keep original attribute(here &0x3f)
 			 * bit 0(R) bit1(W) bit2(X) bit3~5 MT
 			 */
-			attr |= (entry.entry_val & 0x3f);
+			attr |= (entry.entry_val & 0x3fUL);
 		} else {
 			/* Keep original attribute(here &0x7f) */
-			attr |= (entry.entry_val & 0x7f);
+			attr |= (entry.entry_val & 0x7fUL);
 		}
 		/* write all entries and keep original attr*/
 		for (i = 0; i < IA32E_NUM_ENTRIES; i++) {
@@ -1007,7 +1007,7 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 			 * (here &0x07)
 			 */
 			MEM_WRITE64(entry.entry_base + entry.entry_off,
-					(entry.entry_val & 0x07) |
+					(entry.entry_val & 0x07UL) |
 					 HVA2HPA(sub_tab_addr));
 		} else {
 			/* Write the table entry to map this memory,
@@ -1016,7 +1016,7 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 			 * bit5(A) bit6(D or Ignore)
 			 */
 			MEM_WRITE64(entry.entry_base + entry.entry_off,
-					(entry.entry_val & 0x7f) |
+					(entry.entry_val & 0x7fUL) |
 					 HVA2HPA(sub_tab_addr));
 		}
 	}
@@ -1060,9 +1060,9 @@ static int modify_paging(struct map_params *map_params, void *paddr,
 	 * here attr & 0x7, rwx bit0:2
 	 */
 	ASSERT(!((map_params->page_table_type == PTT_EPT) &&
-		(((attr & 0x7) == IA32E_EPT_W_BIT) ||
-		((attr & 0x7) == (IA32E_EPT_W_BIT | IA32E_EPT_X_BIT)) ||
-		(((attr & 0x7) == IA32E_EPT_X_BIT) &&
+		(((attr & 0x7UL) == IA32E_EPT_W_BIT) ||
+		((attr & 0x7UL) == (IA32E_EPT_W_BIT | IA32E_EPT_X_BIT)) ||
+		(((attr & 0x7UL) == IA32E_EPT_X_BIT) &&
 		 !cpu_has_vmx_ept_cap(VMX_EPT_EXECUTE_ONLY)))),
 		"incorrect memory attribute set!\n");
 	/* Loop until the entire block of memory is appropriately
