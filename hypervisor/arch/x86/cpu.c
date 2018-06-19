@@ -376,55 +376,55 @@ void bsp_boot_init(void)
 
 	ASSERT(NR_WORLD == 2, "Only 2 Worlds supported!");
 	ASSERT(offsetof(struct cpu_regs, rax) ==
-		VMX_MACHINE_T_GUEST_RAX_OFFSET,
+		CPU_CONTEXT_OFFSET_RAX,
 		"cpu_regs rax offset not match");
 	ASSERT(offsetof(struct cpu_regs, rbx) ==
-		VMX_MACHINE_T_GUEST_RBX_OFFSET,
+		CPU_CONTEXT_OFFSET_RBX,
 		"cpu_regs rbx offset not match");
 	ASSERT(offsetof(struct cpu_regs, rcx) ==
-		VMX_MACHINE_T_GUEST_RCX_OFFSET,
+		CPU_CONTEXT_OFFSET_RCX,
 		"cpu_regs rcx offset not match");
 	ASSERT(offsetof(struct cpu_regs, rdx) ==
-		VMX_MACHINE_T_GUEST_RDX_OFFSET,
+		CPU_CONTEXT_OFFSET_RDX,
 		"cpu_regs rdx offset not match");
 	ASSERT(offsetof(struct cpu_regs, rbp) ==
-		VMX_MACHINE_T_GUEST_RBP_OFFSET,
+		CPU_CONTEXT_OFFSET_RBP,
 		"cpu_regs rbp offset not match");
 	ASSERT(offsetof(struct cpu_regs, rsi) ==
-		VMX_MACHINE_T_GUEST_RSI_OFFSET,
+		CPU_CONTEXT_OFFSET_RSI,
 		"cpu_regs rsi offset not match");
 	ASSERT(offsetof(struct cpu_regs, rdi) ==
-		VMX_MACHINE_T_GUEST_RDI_OFFSET,
+		CPU_CONTEXT_OFFSET_RDI,
 		"cpu_regs rdi offset not match");
 	ASSERT(offsetof(struct cpu_regs, r8) ==
-		VMX_MACHINE_T_GUEST_R8_OFFSET,
+		CPU_CONTEXT_OFFSET_R8,
 		"cpu_regs r8 offset not match");
 	ASSERT(offsetof(struct cpu_regs, r9) ==
-		VMX_MACHINE_T_GUEST_R9_OFFSET,
+		CPU_CONTEXT_OFFSET_R9,
 		"cpu_regs r9 offset not match");
 	ASSERT(offsetof(struct cpu_regs, r10) ==
-		VMX_MACHINE_T_GUEST_R10_OFFSET,
+		CPU_CONTEXT_OFFSET_R10,
 		"cpu_regs r10 offset not match");
 	ASSERT(offsetof(struct cpu_regs, r11) ==
-		VMX_MACHINE_T_GUEST_R11_OFFSET,
+		CPU_CONTEXT_OFFSET_R11,
 		"cpu_regs r11 offset not match");
 	ASSERT(offsetof(struct cpu_regs, r12) ==
-		VMX_MACHINE_T_GUEST_R12_OFFSET,
+		CPU_CONTEXT_OFFSET_R12,
 		"cpu_regs r12 offset not match");
 	ASSERT(offsetof(struct cpu_regs, r13) ==
-		VMX_MACHINE_T_GUEST_R13_OFFSET,
+		CPU_CONTEXT_OFFSET_R13,
 		"cpu_regs r13 offset not match");
 	ASSERT(offsetof(struct cpu_regs, r14) ==
-		VMX_MACHINE_T_GUEST_R14_OFFSET,
+		CPU_CONTEXT_OFFSET_R14,
 		"cpu_regs r14 offset not match");
 	ASSERT(offsetof(struct cpu_regs, r15) ==
-		VMX_MACHINE_T_GUEST_R15_OFFSET,
+		CPU_CONTEXT_OFFSET_R15,
 		"cpu_regs r15 offset not match");
 	ASSERT(offsetof(struct run_context, cr2) ==
-		VMX_MACHINE_T_GUEST_CR2_OFFSET,
+		CPU_CONTEXT_OFFSET_CR2,
 		"run_context cr2 offset not match");
 	ASSERT(offsetof(struct run_context, ia32_spec_ctrl) ==
-		VMX_MACHINE_T_GUEST_SPEC_CTRL_OFFSET,
+		CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL,
 		"run_context ia32_spec_ctrl offset not match");
 
 	__bitmap_set(CPU_BOOT_ID, &pcpu_active_bitmap);

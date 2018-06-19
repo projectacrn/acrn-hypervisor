@@ -240,22 +240,22 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	static const int reg_trans_tab[] = {
-		[0] = VMX_MACHINE_T_GUEST_RAX_INDEX,
-		[1] = VMX_MACHINE_T_GUEST_RCX_INDEX,
-		[2] = VMX_MACHINE_T_GUEST_RDX_INDEX,
-		[3] = VMX_MACHINE_T_GUEST_RBX_INDEX,
+		[0] = CPU_CONTEXT_INDEX_RAX,
+		[1] = CPU_CONTEXT_INDEX_RCX,
+		[2] = CPU_CONTEXT_INDEX_RDX,
+		[3] = CPU_CONTEXT_INDEX_RBX,
 		[4] = 0xFF, /* for sp reg, should not be used, just for init */
-		[5] = VMX_MACHINE_T_GUEST_RBP_INDEX,
-		[6] = VMX_MACHINE_T_GUEST_RSI_INDEX,
-		[7] = VMX_MACHINE_T_GUEST_RDI_INDEX,
-		[8] = VMX_MACHINE_T_GUEST_R8_INDEX,
-		[9] = VMX_MACHINE_T_GUEST_R9_INDEX,
-		[10] = VMX_MACHINE_T_GUEST_R10_INDEX,
-		[11] = VMX_MACHINE_T_GUEST_R11_INDEX,
-		[12] = VMX_MACHINE_T_GUEST_R12_INDEX,
-		[13] = VMX_MACHINE_T_GUEST_R13_INDEX,
-		[14] = VMX_MACHINE_T_GUEST_R14_INDEX,
-		[15] = VMX_MACHINE_T_GUEST_R15_INDEX
+		[5] = CPU_CONTEXT_INDEX_RBP,
+		[6] = CPU_CONTEXT_INDEX_RSI,
+		[7] = CPU_CONTEXT_INDEX_RDI,
+		[8] = CPU_CONTEXT_INDEX_R8,
+		[9] = CPU_CONTEXT_INDEX_R9,
+		[10] = CPU_CONTEXT_INDEX_R10,
+		[11] = CPU_CONTEXT_INDEX_R11,
+		[12] = CPU_CONTEXT_INDEX_R12,
+		[13] = CPU_CONTEXT_INDEX_R13,
+		[14] = CPU_CONTEXT_INDEX_R14,
+		[15] = CPU_CONTEXT_INDEX_R15,
 	};
 	int idx = VM_EXIT_CR_ACCESS_REG_IDX(vcpu->arch_vcpu.exit_qualification);
 
