@@ -61,13 +61,13 @@ int console_puts(const char *s)
 
 	if (serial_handle != SERIAL_INVALID_HANDLE) {
 		res = 0;
-		while (*s) {
+		while ((*s) != 0) {
 			/* start output at the beginning of the string search
 			 * for end of string or '\n'
 			 */
 			p = s;
 
-			while (*p && *p != '\n')
+			while ((*p != 0) && *p != '\n')
 				++p;
 
 			/* write all characters up to p */

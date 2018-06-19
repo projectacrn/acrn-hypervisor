@@ -171,7 +171,7 @@ static uint8_t shell_input_line(struct shell *p_shell)
 			} else {
 				/* prINTable character */
 				/* See if a "special" character handler is installed */
-				if (p_shell->session_io.io_special) {
+				if (p_shell->session_io.io_special != NULL) {
 					/* Call special character handler */
 					p_shell->session_io.io_special(p_shell, ch);
 				}
@@ -255,7 +255,7 @@ struct shell_cmd *shell_find_cmd(struct shell *p_shell, const char *cmd_str)
 
 void kick_shell(struct shell *p_shell)
 {
-	int status = p_shell ? 0 : EINVAL;
+	int status = (p_shell != NULL) ? 0 : EINVAL;
 	static uint8_t is_cmd_cmplt = 1;
 
 	if (status == 0) {
@@ -267,9 +267,10 @@ void kick_shell(struct shell *p_shell)
 		 * Show HV shell prompt ONLY when HV owns the
 		 * serial port.
 		 */
-		if (!vuart_console_active()) {
+		if (vuart_console_active() == NULL) {
 			/* Prompt the user for a selection. */
-			if (is_cmd_cmplt && p_shell->session_io.io_puts)
+			if ((is_cmd_cmplt != 0U) &&
+			    (p_shell->session_io.io_puts != NULL))
 				p_shell->session_io.io_puts(p_shell,
 							SHELL_PROMPT_STR);
 
@@ -279,7 +280,7 @@ void kick_shell(struct shell *p_shell)
 			/* If user has pressed the ENTER then process
 			 * the command
 			 */
-			if (is_cmd_cmplt)
+			if (is_cmd_cmplt != 0U)
 				/* Process current input line. */
 				status = shell_process(p_shell);
 		}
@@ -425,12 +426,12 @@ int shell_cmd_help(struct shell *p_shell,
 			space_buf[spaces] = ' ';
 
 			/* Display parameter info if applicable. */
-			if (p_cmd->cmd_param) {
+			if (p_cmd->cmd_param != NULL) {
 				shell_puts(p_shell, p_cmd->cmd_param);
 			}
 
 			/* Display help text if available. */
-			if (p_cmd->help_str) {
+			if (p_cmd->help_str != NULL) {
 				shell_puts(p_shell, " - ");
 				shell_puts(p_shell, p_cmd->help_str);
 			}
@@ -554,9 +555,9 @@ int shell_pause_vcpu(struct shell *p_shell,
 		vcpu_id = atoi(argv[2]);
 
 		vm = get_vm_from_vmid(vm_id);
-		if (vm) {
+		if (vm != NULL) {
 			vcpu = vcpu_from_vid(vm, vcpu_id);
-			if (vcpu) {
+			if (vcpu != NULL) {
 				if (vcpu->dbg_req_state != VCPU_PAUSED) {
 					vcpu->dbg_req_state = VCPU_PAUSED;
 					/* TODO: do we need file a IPI to kick
@@ -602,9 +603,9 @@ int shell_resume_vcpu(struct shell *p_shell,
 		vm_id = atoi(argv[1]);
 		vcpu_id = atoi(argv[2]);
 		vm = get_vm_from_vmid(vm_id);
-		if (vm) {
+		if (vm != NULL) {
 			vcpu = vcpu_from_vid(vm, vcpu_id);
-			if (vcpu) {
+			if (vcpu != NULL) {
 				if (vcpu->dbg_req_state == VCPU_PAUSED) {
 					vcpu->dbg_req_state = 0;
 					shell_puts(p_shell,
@@ -656,14 +657,14 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 	vcpu_id = atoi(argv[2]);
 
 	vm = get_vm_from_vmid(vm_id);
-	if (!vm) {
+	if (vm == NULL) {
 		shell_puts(p_shell, "No vm found in the input "
 				"<vm_id, vcpu_id>\r\n");
 		return -EINVAL;
 	}
 
 	vcpu = vcpu_from_vid(vm, vcpu_id);
-	if (!vcpu) {
+	if (vcpu == NULL) {
 		shell_puts(p_shell, "No vcpu found in the input "
 				"<vm_id, vcpu_id>\r\n");
 		return -EINVAL;
@@ -790,7 +791,7 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 	}
 
 	vcpu = vcpu_from_vid(vm, (long)vcpu_id);
-	if (vcpu) {
+	if (vcpu != NULL) {
 		status = copy_from_gva(vcpu, tmp, gva, length, &err_code);
 		if (status <  0) {
 			shell_puts(p_shell,
@@ -1106,7 +1107,7 @@ int shell_construct(struct shell **p_shell)
 	/* Allocate memory for shell session */
 	*p_shell = (struct shell *) calloc(1, sizeof(**p_shell));
 
-	if (!(*p_shell)) {
+	if ((*p_shell) == NULL) {
 		pr_err("Error: out of memory");
 		status = -ENOMEM;
 	}

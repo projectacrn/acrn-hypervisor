@@ -136,11 +136,11 @@ static void uart_toggle_intr(struct vuart *vu)
 	intr_reason = uart_intr_reason(vu);
 
 	if (intr_reason != IIR_NOPEND) {
-		if (vu->vm->vpic)
+		if (vu->vm->vpic != NULL)
 			vpic_assert_irq(vu->vm, COM1_IRQ);
 
 		vioapic_assert_irq(vu->vm, COM1_IRQ);
-		if (vu->vm->vpic)
+		if (vu->vm->vpic != NULL)
 			vpic_deassert_irq(vu->vm, COM1_IRQ);
 
 		vioapic_deassert_irq(vu->vm, COM1_IRQ);
@@ -256,7 +256,7 @@ static uint32_t uart_read(__unused struct vm_io_handler *hdlr,
 		reg = vu->ier;
 		break;
 	case UART16550_IIR:
-		iir = (vu->fcr & FCR_FIFOE) ? IIR_FIFO_MASK : 0;
+		iir = ((vu->fcr & FCR_FIFOE) != 0) ? IIR_FIFO_MASK : 0;
 		intr_reason = uart_intr_reason(vu);
 		/*
 		 * Deal with side effects of reading the IIR register
@@ -346,7 +346,7 @@ void vuart_console_rx_chars(uint32_t serial_handle)
 	vuart_lock(vu);
 	/* Get data from serial */
 	vbuf_len = serial_gets(serial_handle, buffer, 100);
-	if (vbuf_len) {
+	if (vbuf_len != 0U) {
 		while (buf_idx < vbuf_len) {
 			if (buffer[buf_idx] == GUEST_CONSOLE_TO_HV_SWITCH_KEY) {
 				/* Switch the console */
@@ -370,7 +370,7 @@ struct vuart *vuart_console_active(void)
 {
 	struct vm *vm = get_vm_from_vmid(0);
 
-	if (vm && vm->vuart) {
+	if ((vm != NULL) && (vm->vuart != NULL)) {
 		struct vuart *vu = vm->vuart;
 
 		if (vu->active)
