@@ -636,7 +636,7 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 	/* build physical config MSI, update to info->pmsi_xxx */
 	ptdev_build_physical_msi(vm, info, dev_to_vector(entry->node));
 	entry->ptdev_intr_info.msi = *info;
-	entry->ptdev_intr_info.msi.virt_vector = info->vmsi_data & 0xFF;
+	entry->ptdev_intr_info.msi.virt_vector = (int)(info->vmsi_data & 0xFF);
 	entry->ptdev_intr_info.msi.phys_vector = dev_to_vector(entry->node);
 
 	/* update irq handler according to info in guest */
