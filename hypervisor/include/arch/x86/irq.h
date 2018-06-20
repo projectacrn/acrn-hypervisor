@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef IRQ_H
-#define IRQ_H
+#ifndef ARCH_IRQ_H
+#define ARCH_IRQ_H
+
+#include <common/irq.h>
 
 /* vectors for normal, usually for devices */
 #define VECTOR_FOR_NOR_LOWPRI_START	0x20U
@@ -32,40 +34,6 @@
 #define DEFAULT_DEST_MODE	IOAPIC_RTE_DESTLOG
 #define DEFAULT_DELIVERY_MODE	IOAPIC_RTE_DELLOPRI
 #define ALL_CPUS_MASK		((1U << phys_cpu_num) - 1U)
-
-struct irq_desc;
-
-enum irq_mode {
-	IRQ_PULSE,
-	IRQ_ASSERT,
-	IRQ_DEASSERT,
-};
-
-enum irq_state {
-	IRQ_NOT_ASSIGNED = 0,
-	IRQ_ASSIGNED_SHARED,
-	IRQ_ASSIGNED_NOSHARE,
-};
-
-enum irq_desc_state {
-	IRQ_DESC_PENDING,
-	IRQ_DESC_IN_PROCESS,
-};
-
-typedef int (*dev_handler_t)(int irq, void*);
-struct dev_handler_node {
-	char name[32];
-	void *dev_data;
-	dev_handler_t dev_handler;
-	struct dev_handler_node *next;
-	struct irq_desc *desc;
-};
-
-struct irq_routing_entry {
-	unsigned short bdf;	/* BDF */
-	int irq;	/* PCI cfg offset 0x3C: IRQ pin */
-	int intx;	/* PCI cfg offset 0x3D: 0-3 = INTA,INTB,INTC,INTD*/
-};
 
 /*
  * Definition of the stack frame layout
@@ -97,43 +65,14 @@ struct intr_excp_ctx {
 	uint64_t ss;
 };
 
-uint32_t irq_mark_used(uint32_t irq);
-uint32_t irq_alloc(void);
-
-uint32_t irq_desc_alloc_vector(uint32_t irq, bool lowpri);
-void irq_desc_try_free_vector(uint32_t irq);
-
-uint32_t irq_to_vector(uint32_t irq);
-uint32_t dev_to_irq(struct dev_handler_node *node);
-uint32_t dev_to_vector(struct dev_handler_node *node);
-
 int handle_level_interrupt_common(struct irq_desc *desc, void *handler_data);
 int common_handler_edge(struct irq_desc *desc, void *handler_data);
 int common_dev_handler_level(struct irq_desc *desc, void *handler_data);
 int quick_handler_nolock(struct irq_desc *desc, void *handler_data);
 
-typedef int (*irq_handler_t)(struct irq_desc*, void*);
-void update_irq_handler(uint32_t irq, irq_handler_t func);
-
 int init_default_irqs(uint16_t cpu);
 
 void dispatch_interrupt(struct intr_excp_ctx *ctx);
-
-struct dev_handler_node*
-pri_register_handler(uint32_t irq,
-		uint32_t vector,
-		dev_handler_t func,
-		void *dev_data,
-		const char *name);
-
-struct dev_handler_node*
-normal_register_handler(uint32_t irq,
-		dev_handler_t func,
-		void *dev_data,
-		bool share,
-		bool lowpri,
-		const char *name);
-void unregister_handler_common(struct dev_handler_node *node);
 
 void get_cpu_interrupt_info(char *str, int str_max);
 
@@ -171,4 +110,4 @@ int acrn_handle_pending_request(struct vcpu *vcpu);
 int interrupt_init(uint32_t logical_id);
 
 void cancel_event_injection(struct vcpu *vcpu);
-#endif /* IRQ_H */
+#endif /* ARCH_IRQ_H */

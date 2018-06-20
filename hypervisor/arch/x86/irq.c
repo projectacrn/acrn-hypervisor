@@ -8,32 +8,6 @@
 
 static spinlock_t exception_spinlock = { .head = 0, .tail = 0, };
 
-struct irq_request_info {
-	/* vector set to 0xE0 ~ 0xFF for pri_register_handler
-	 * and set to VECTOR_INVALID for normal_register_handler
-	 */
-	uint32_t vector;
-	dev_handler_t func;
-	void *dev_data;
-	bool share;
-	bool lowpri;
-	char *name;
-};
-
-/* any field change in below required irq_lock protection with irqsave */
-struct irq_desc {
-	uint32_t irq;		/* index to irq_desc_base */
-	enum irq_state used;	/* this irq have assigned to device */
-	enum irq_desc_state state; /* irq_desc status */
-	uint32_t vector;	/* assigned vector */
-	void *handler_data;	/* irq_handler private data */
-	int (*irq_handler)(struct irq_desc *irq_desc, void *handler_data);
-	struct dev_handler_node *dev_list;
-	spinlock_t irq_lock;
-	uint64_t *irq_cnt; /* this irq cnt happened on CPUs */
-	uint64_t irq_lost_cnt;
-};
-
 static struct irq_desc *irq_desc_base;
 static uint32_t vector_to_irq[NR_MAX_VECTOR + 1];
 
