@@ -77,17 +77,19 @@
 #define CBC_WK_RSN_BTN	(1 << 5)	/* CBC wakeup reason field button */
 #define CBC_WK_RSN_RTC	(1 << 9)	/* CBC wakeup reason field rtc */
 #define CBC_WK_RSN_DOR	(1 << 11)	/* CBC wakeup reason field cardoor */
+#define CBC_WK_RSN_FS5	(1 << 22)	/* CBC wakeup reason field force S5 */
 #define CBC_WK_RSN_SOC	(1 << 23)	/* CBC wakeup reason field soc */
 
 /* CBC wakeup reason filed suspend or shutdown */
 #define CBC_WK_RSN_SHUTDOWN	(0)
 
 /*
- * IOC mediator permits button, rtc and cardoor wakeup reasons which comes from
- * IOC firmware, others will be masked.
+ * IOC mediator permits ignition button, cardoor, RTC, SOC and force S5 wakeup
+ * reasons which comes from IOC firmware, others will be masked.
  */
 #define CBC_WK_RSN_ALL \
-	(CBC_WK_RSN_BTN | CBC_WK_RSN_RTC | CBC_WK_RSN_DOR | CBC_WK_RSN_SOC)
+	(CBC_WK_RSN_BTN | CBC_WK_RSN_RTC | CBC_WK_RSN_DOR | CBC_WK_RSN_SOC | \
+	 CBC_WK_RSN_FS5)
 
 /*
  * CBC ring buffer is used to buffer bytes before build one complete CBC frame.
@@ -661,6 +663,16 @@ enum ioc_event_type {
 };
 
 /*
+ * VM request types.
+ */
+enum vm_request_type {
+	VM_REQ_NONE,
+	VM_REQ_STOP,
+	VM_REQ_SUSPEND,
+	VM_REQ_RESUME
+};
+
+/*
  * CBC packet is mainly structure for CBC protocol process.
  */
 struct cbc_pkt {
@@ -691,6 +703,7 @@ struct ioc_dev {
 	int epfd;			/* Epoll fd */
 	int32_t evt_fd;			/* Pipe write fd to trigger one event */
 	uint32_t boot_reason;		/* Boot or resume wakeup reason */
+	enum vm_request_type vm_req;	/* Request from VM Manager (acrnctl) */
 	enum ioc_state_type state;	/* IOC state type */
 	struct epoll_event *evts;	/* Epoll events table */
 	struct cbc_request *pool;	/* CBC requests pool */

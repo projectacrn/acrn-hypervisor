@@ -601,7 +601,7 @@ cbc_update_wakeup_reason(struct cbc_pkt *pkt, uint32_t reason)
 
 	/*
 	 * Mask the bits of wakeup reason that are not allowed by IOC mediator.
-	 * Only allow Ignition button, cardoor, RTC and SoC currently.
+	 * Only allow Ignition button, cardoor, RTC, SOC and force S5 currently.
 	 */
 	reason &= CBC_WK_RSN_ALL;
 
@@ -815,6 +815,45 @@ cbc_rx_handler(struct cbc_pkt *pkt)
 }
 
 /*
+ * Convert VM request to the wakeup reason.
+ */
+static bool
+send_wakeup_reason_of_vm_request(struct cbc_pkt *pkt)
+{
+	uint32_t reason;
+
+	switch (pkt->ioc->vm_req) {
+	case VM_REQ_STOP:
+		/*
+		 * Force S5 and SoC bits are set for emulating
+		 * shutdown wakeup reason that VM initiates stop
+		 */
+		reason = CBC_WK_RSN_FS5 | CBC_WK_RSN_SOC;
+		break;
+	case VM_REQ_SUSPEND:
+		/*
+		 * Only SoC bit is set for emulating suspend
+		 * wakeup reason that VM initiates suspend.
+		 */
+		reason = CBC_WK_RSN_SOC;
+		break;
+	default:
+		/*
+		 * There is no need to emulate wakeup reasons for VM_REQ_RESUME
+		 * and VM_REQ_NONE VM requests since VM manager just only asks
+		 * IOC mediator to emulate ignition off wakeup reason for
+		 * VM_REQ_STOP and VM_REQ_SUSPEND, otherwise call primary
+		 * periodic wakeup reason.
+		 */
+		return false;
+	}
+
+	cbc_update_wakeup_reason(pkt, reason);
+	cbc_send_pkt(pkt);
+	return true;
+}
+
+/*
  * Tx handler mainly processes tx direction data flow,
  * the tx direction is that native CBC cdevs -> virtual UART.
  */
@@ -824,7 +863,12 @@ cbc_tx_handler(struct cbc_pkt *pkt)
 	if (pkt->req->rtype == CBC_REQ_T_PROT && pkt->ioc->cbc_enable) {
 		switch (pkt->req->id) {
 		case IOC_NATIVE_LFCC:
-			cbc_process_wakeup_reason(pkt);
+			/* Check VM request firstly */
+			if (send_wakeup_reason_of_vm_request(pkt) == false) {
+
+				/* Primary periodic wakeup reason */
+				cbc_process_wakeup_reason(pkt);
+			}
 			break;
 		case IOC_NATIVE_SIGNAL:
 			cbc_process_signal(pkt);

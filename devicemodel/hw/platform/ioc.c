@@ -67,6 +67,7 @@
 
 #include "ioc.h"
 #include "vmmapi.h"
+#include "monitor.h"
 
 /* For debugging log to a file */
 static int ioc_debug;
@@ -125,6 +126,38 @@ static int dummy0_sfd = -1;
 static int dummy1_sfd = -1;
 static int dummy2_sfd = -1;
 #endif
+
+/*
+ * VM Manager interfaces description.
+ *
+ * +---------+                 +---------+                 +---------+
+ * |IOC      | VM stop         |VM       |                 |SOS      |
+ * |Mediator |<----------------+Manager  |                 |Lifecycle|
+ * |         |                 |         |                 |         |
+ * |         | VM suspend      |         |                 |         |
+ * |         |<----------------+         |                 |         |
+ * |         |                 |         |                 |         |
+ * |         | VM resume       |         |                 |         |
+ * |         |<----------------+         |                 |         |
+ * |         |get_wakeup_reason|         |get wakeup reason|         |
+ * |         |for resume flow  |         |via unix socket  |         |
+ * |         +---------------->|         +---------------->|         |
+ * +---------+                 +---------+                 +---------+
+ *
+ * Only support stop/resume/suspend in IOC mediator currently.
+ * For resume request, IOC mediator will get the wakeup reason from SOS
+ * lifecycle service, then pass to UOS once received HB INIT from UOS.
+ * For stop and suspend requests, they are implemented as wakeup reason of
+ * ignition button.
+ */
+static int vm_stop_handler(void *arg);
+static int vm_resume_handler(void *arg);
+static int vm_suspend_handler(void *arg);
+static struct monitor_vm_ops vm_ops = {
+	.stop = vm_stop_handler,
+	.resume = vm_resume_handler,
+	.suspend = vm_suspend_handler,
+};
 
 /*
  * IOC State Transfer
@@ -1302,6 +1335,72 @@ ioc_is_platform_supported(void)
 }
 
 /*
+ * The callback to handle with VM stop request.
+ * To emulate ignition off wakeup reason including set force S5 bit.
+ */
+static int
+vm_stop_handler(void *arg)
+{
+	struct ioc_dev *ioc = arg;
+
+	if (!ioc) {
+		DPRINTF("%s", "ioc vm stop gets NULL pointer\r\n");
+		return -1;
+	}
+	ioc->vm_req = VM_REQ_STOP;
+	return 0;
+}
+
+/*
+ * The callback to handle with VM suspend.
+ * To emulate ignition off wakeup reason.
+ */
+static int
+vm_suspend_handler(void *arg)
+{
+	struct ioc_dev *ioc = arg;
+
+	if (!ioc) {
+		DPRINTF("%s", "ioc vm suspend gets NULL pointer\r\n");
+		return -1;
+	}
+	ioc->vm_req = VM_REQ_SUSPEND;
+	return 0;
+}
+
+/*
+ * The callback to handle with VM resume.
+ * To get wakeup reason and trigger IOC_E_RESUME event.
+ */
+static int
+vm_resume_handler(void *arg)
+{
+	struct ioc_dev *ioc = arg;
+	uint32_t reason;
+
+	if (!ioc) {
+		DPRINTF("%s", "ioc vm resume gets NULL pointer\r\n");
+		return -1;
+	}
+
+	reason = get_wakeup_reason();
+	if (!reason) {
+		DPRINTF("%s", "ioc vm resume gets invalid wakeup reason \r\n");
+		return -1;
+	}
+
+	/*
+	 * Change VM request to resume for stopping the emulation of suspend
+	 * and shutdown wakeup reasons.
+	 */
+	ioc->vm_req = VM_REQ_RESUME;
+
+	ioc->boot_reason = reason;
+	ioc_update_event(ioc->evt_fd, IOC_E_RESUME);
+	return 0;
+}
+
+/*
  * To get IOC bootup reason and virtual UART path for communication
  * between IOC mediator and virtual UART.
  */
@@ -1366,6 +1465,14 @@ ioc_init(struct vmctx *ctx)
 	ioc->epfd = epoll_create1(0);
 	if (ioc->epfd < 0)
 		goto alloc_err;
+
+	/*
+	 * Register IOC mediator VM ops for stop/suspend/resume.
+	 */
+	if (monitor_register_vm_ops(&vm_ops, ioc, "ioc_dm") < 0) {
+		DPRINTF("%s", "ioc register to VM monitor failed\r\n");
+		goto alloc_err;
+	}
 
 	/*
 	 * Put all buffered CBC requests on the free queue, the free queue is
