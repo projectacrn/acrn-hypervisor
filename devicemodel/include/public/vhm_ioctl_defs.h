@@ -90,6 +90,7 @@
 
 /* Guest memory management */
 #define IC_ID_MEM_BASE                  0x40UL
+/* IC_ALLOC_MEMSEG not used */
 #define IC_ALLOC_MEMSEG                 _IC_ID(IC_ID, IC_ID_MEM_BASE + 0x00)
 #define IC_SET_MEMSEG                   _IC_ID(IC_ID, IC_ID_MEM_BASE + 0x01)
 
@@ -104,17 +105,6 @@
 /* Power management */
 #define IC_ID_PM_BASE                   0x60UL
 #define IC_PM_GET_CPU_STATE            _IC_ID(IC_ID, IC_ID_PM_BASE + 0x00)
-
-/**
- * struct vm_memseg - memory segment info for guest
- *
- * @len: length of memory segment
- * @gpa: guest physical start address of memory segment
- */
-struct vm_memseg {
-	uint64_t len;
-	uint64_t gpa;
-};
 
 #define VM_MEMMAP_SYSMEM       0
 #define VM_MMIO         1
