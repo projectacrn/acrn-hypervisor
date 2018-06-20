@@ -1758,23 +1758,23 @@ vlapic_set_intr(struct vcpu *vcpu, uint32_t vector, bool level)
 }
 
 int
-vlapic_set_local_intr(struct vm *vm, int cpu_id, uint32_t vector)
+vlapic_set_local_intr(struct vm *vm, int vcpu_id, uint32_t vector)
 {
 	struct vlapic *vlapic;
 	uint64_t dmask = 0;
 	int error;
 
-	if (cpu_id < -1 || cpu_id >= phy_cpu_num)
+	if (vcpu_id < -1 || vcpu_id >= phy_cpu_num)
 		return -EINVAL;
 
-	if (cpu_id == -1)
+	if (vcpu_id == -1)
 		dmask = vm_active_cpus(vm);
 	else
-		bitmap_set(cpu_id, &dmask);
+		bitmap_set(vcpu_id, &dmask);
 	error = 0;
-	while ((cpu_id = ffs64(dmask)) >= 0) {
-		bitmap_clear(cpu_id, &dmask);
-		vlapic = vm_lapic_from_vcpu_id(vm, cpu_id);
+	while ((vcpu_id = ffs64(dmask)) >= 0) {
+		bitmap_clear(vcpu_id, &dmask);
+		vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
 		error = vlapic_trigger_lvt(vlapic, vector);
 		if (error != 0)
 			break;
