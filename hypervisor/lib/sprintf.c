@@ -97,7 +97,7 @@ static const char *get_int(const char *s, int *x)
 		*x = *x * 10 + (*s++ - '0');
 
 	/* apply sign to result */
-	if (negative)
+	if (negative != 0)
 		*x = -*x;
 
 	return s;
@@ -118,7 +118,7 @@ static const char *get_flags(const char *s, int *flags)
 	const char *pos;
 
 	/* parse multiple flags */
-	while (*s) {
+	while ((*s) != 0) {
 		/* get index of flag. Terminate loop if no flag character was
 		 * found
 		 */
@@ -132,11 +132,11 @@ static const char *get_flags(const char *s, int *flags)
 	}
 
 	/* Spec says that '-' has a higher priority than '0' */
-	if (*flags & PRINT_FLAG_LEFT_JUSTIFY)
+	if ((*flags & PRINT_FLAG_LEFT_JUSTIFY) != 0)
 		*flags &= ~PRINT_FLAG_PAD_ZERO;
 
 	/* Spec says that '+' has a higher priority than ' ' */
-	if (*flags & PRINT_FLAG_SIGN)
+	if ((*flags & PRINT_FLAG_SIGN) != 0)
 		*flags &= ~PRINT_FLAG_SPACE;
 
 	return s;
@@ -203,14 +203,14 @@ static int format_number(struct print_param *param)
 		 * used for padding, the prefix is emitted after the padding.
 		 */
 
-		if (param->vars.flags & PRINT_FLAG_PAD_ZERO) {
+		if ((param->vars.flags & PRINT_FLAG_PAD_ZERO) != 0) {
 			/* use '0' for padding */
 			pad = '0';
 
 			/* emit prefix, return early if an error occurred */
 			res = param->emit(PRINT_CMD_COPY, param->vars.prefix,
 					param->vars.prefixlen, param->data);
-			if (param->vars.prefix && (res < 0))
+			if ((param->vars.prefix != NULL) && (res < 0))
 				return res;
 
 			/* invalidate prefix */
@@ -229,7 +229,7 @@ static int format_number(struct print_param *param)
 	/* emit prefix (if any), return early in case of an error */
 	res = param->emit(PRINT_CMD_COPY, param->vars.prefix,
 			param->vars.prefixlen, param->data);
-	if (param->vars.prefix && (res < 0))
+	if ((param->vars.prefix != NULL) && (res < 0))
 		return res;
 
 	/* insert additional 0's for precision, return early if an error
@@ -276,14 +276,14 @@ static int print_pow2(struct print_param *param,
 	mask = (1ULL << shift) - 1;
 
 	/* determine digit translation table */
-	digits = (param->vars.flags & PRINT_FLAG_UPPER) ?
+	digits = ((param->vars.flags & PRINT_FLAG_UPPER) != 0) ?
 			upper_hex_digits : lower_hex_digits;
 
 	/* apply mask for short/char */
 	v &= param->vars.mask;
 
 	/* determine prefix for alternate form */
-	if ((v == 0) && (param->vars.flags & PRINT_FLAG_ALTERNATE_FORM)) {
+	if ((v == 0) && ((param->vars.flags & PRINT_FLAG_ALTERNATE_FORM) != 0)) {
 		prefix[0] = '0';
 		param->vars.prefix = prefix;
 		param->vars.prefixlen = 1;
@@ -297,7 +297,7 @@ static int print_pow2(struct print_param *param,
 	/* determine digits from right to left */
 	do {
 		*--pos = digits[(v & mask)];
-	} while (v >>= shift);
+	} while ((v >>= shift) != 0);
 
 	/* assign parameter and apply width and precision */
 	param->vars.value = pos;
@@ -339,11 +339,11 @@ static int print_decimal(struct print_param *param, int64_t value)
 	}
 
 	/* determine sign if explicit requested in the format string */
-	if (!param->vars.prefix) {
-		if (param->vars.flags & PRINT_FLAG_SIGN) {
+	if (param->vars.prefix == NULL) {
+		if ((param->vars.flags & PRINT_FLAG_SIGN) != 0) {
 			param->vars.prefix = "+";
 			param->vars.prefixlen = 1;
-		} else if (param->vars.flags & PRINT_FLAG_SPACE) {
+		} else if ((param->vars.flags & PRINT_FLAG_SPACE) != 0) {
 			param->vars.prefix = " ";
 			param->vars.prefixlen = 1;
 		}
@@ -396,11 +396,11 @@ static int print_string(struct print_param *param, const char *s)
 	/* we need the length of the string if either width or precision is
 	 * given
 	 */
-	if (param->vars.precision || param->vars.width)
+	if ((param->vars.precision != 0)|| (param->vars.width != 0))
 		len = strnlen_s(s, PRINT_STRING_MAX_LEN);
 
 	/* precision gives the max. number of characters to emit. */
-	if (param->vars.precision && (len > param->vars.precision))
+	if ((param->vars.precision != 0) && (len > param->vars.precision))
 		len = param->vars.precision;
 
 	/* calculate the number of additional characters to get the required
@@ -426,7 +426,7 @@ static int print_string(struct print_param *param, const char *s)
 	/* emit additional characters on the right, return early if an error
 	 * occurred
 	 */
-	if (param->vars.flags & PRINT_FLAG_LEFT_JUSTIFY) {
+	if ((param->vars.flags & PRINT_FLAG_LEFT_JUSTIFY) != 0) {
 		res = param->emit(PRINT_CMD_FILL, " ", w, param->data);
 		if (res < 0)
 			return res;
@@ -446,11 +446,11 @@ int do_print(const char *fmt, struct print_param *param,
 	const char *start;
 
 	/* main loop: analyse until there are no more characters */
-	while (*fmt) {
+	while ((*fmt) != 0) {
 		/* mark the current position and search the next '%' */
 		start = fmt;
 
-		while (*fmt && (*fmt != '%'))
+		while (((*fmt) != 0) && (*fmt != '%'))
 			fmt++;
 
 		/*
@@ -500,8 +500,8 @@ int do_print(const char *fmt, struct print_param *param,
 			/* decimal number */
 			else if ((ch == 'd') || (ch == 'i')) {
 				res = print_decimal(param,
-						(param->vars.flags &
-						PRINT_FLAG_LONG_LONG) ?
+						((param->vars.flags &
+						PRINT_FLAG_LONG_LONG) != 0) ?
 						__builtin_va_arg(args,
 							long long)
 						: (long long)
@@ -512,8 +512,8 @@ int do_print(const char *fmt, struct print_param *param,
 			else if (ch == 'u') {
 				param->vars.flags |= PRINT_FLAG_UINT32;
 				res = print_decimal(param,
-						(param->vars.flags &
-						PRINT_FLAG_LONG_LONG) ?
+						((param->vars.flags &
+						PRINT_FLAG_LONG_LONG) != 0) ?
 						__builtin_va_arg(args,
 							unsigned long long)
 						: (unsigned long long)
@@ -523,8 +523,8 @@ int do_print(const char *fmt, struct print_param *param,
 			/* octal number */
 			else if (ch == 'o') {
 				res = print_pow2(param,
-						(param->vars.flags &
-						PRINT_FLAG_LONG_LONG) ?
+						((param->vars.flags &
+						PRINT_FLAG_LONG_LONG) != 0) ?
 						__builtin_va_arg(args,
 							unsigned long long)
 						: (unsigned long long)
@@ -537,8 +537,8 @@ int do_print(const char *fmt, struct print_param *param,
 				if (ch == 'X')
 					param->vars.flags |= PRINT_FLAG_UPPER;
 				res = print_pow2(param,
-						(param->vars.flags &
-						PRINT_FLAG_LONG_LONG) ?
+						((param->vars.flags &
+						PRINT_FLAG_LONG_LONG) != 0) ?
 						__builtin_va_arg(args,
 							unsigned long long)
 						: (unsigned long long)
@@ -599,7 +599,7 @@ static int charmem(int cmd, const char *s, int sz, void *hnd)
 	/* copy mode ? */
 	if (cmd == PRINT_CMD_COPY) {
 		if (sz < 0) {
-			while (*s) {
+			while ((*s) != 0) {
 				if (n < param->sz - param->wrtn)
 					*p = *s;
 				p++;
@@ -608,7 +608,7 @@ static int charmem(int cmd, const char *s, int sz, void *hnd)
 			}
 
 		} else if (sz > 0) {
-			while (*s && n < sz) {
+			while (((*s) != 0) && n < sz) {
 				if (n < param->sz - param->wrtn)
 					*p = *s;
 				p++;
@@ -636,7 +636,7 @@ int vsnprintf(char *dst, int sz, const char *fmt, va_list args)
 	/* the result of this function */
 	int res = 0;
 
-	if (sz <= 0 || !dst) {
+	if (sz <= 0 || (dst == NULL)) {
 		dst = c;
 		sz = 1;
 	}

@@ -164,7 +164,7 @@ static void clear_lapic_isr(void)
 	 * life, therefore we will ensure all the in-service bits are clear.
 	 */
 	do {
-		if (read_lapic_reg32(isr_reg)) {
+		if (read_lapic_reg32(isr_reg) != 0U) {
 			write_lapic_reg32(LAPIC_EOI_REGISTER, 0);
 			continue;
 		}
@@ -328,7 +328,7 @@ static void wait_for_delivery(void)
 	do {
 		tmp.value_32.lo_32 =
 			read_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_0);
-	} while (tmp.bits.delivery_status);
+	} while (tmp.bits.delivery_status != 0U);
 }
 
 uint32_t get_cur_lapic_id(void)

@@ -222,7 +222,7 @@ strtol(const char *nptr, char **endptr, register int base)
          */
         do {
                 c = *s++;
-        } while (ISSPACE(c));
+        } while (ISSPACE(c) != 0U);
         if (c == '-') {
                 neg = 1;
                 c = *s++;
@@ -254,14 +254,14 @@ strtol(const char *nptr, char **endptr, register int base)
          * Set any if any `digits' consumed; make it negative to indicate
          * overflow.
          */
-        cutoff = neg ? -(uint64_t)LONG_MIN : LONG_MAX;
+        cutoff = (neg != 0) ? -(uint64_t)LONG_MIN : LONG_MAX;
         cutlim = cutoff % (uint64_t)base;
         cutoff /= (uint64_t)base;
         for (acc = 0, any = 0;; c = *s++) {
-                if (ISDIGIT(c))
+                if (ISDIGIT(c) != 0U)
                         c -= '0';
-                else if (ISALPHA(c))
-                        c -= ISUPPER(c) ? 'A' - 10 : 'a' - 10;
+                else if (ISALPHA(c) != 0U)
+                        c -= (ISUPPER(c) != 0U) ? 'A' - 10 : 'a' - 10;
                 else
                         break;
                 if (c >= base)
@@ -275,11 +275,11 @@ strtol(const char *nptr, char **endptr, register int base)
                 }
         }
         if (any < 0)
-                acc = neg ? LONG_MIN : LONG_MAX;
-        else if (neg)
+                acc = (neg != 0) ? LONG_MIN : LONG_MAX;
+        else if (neg != 0)
                 acc = -acc;
         if (endptr != NULL)
-                *endptr = (char *) (any ? s - 1 : nptr);
+                *endptr = (char *) ((any != 0) ? s - 1 : nptr);
         return acc;
 }
 
@@ -303,7 +303,7 @@ strtoul(const char *nptr, char **endptr, register int base)
          */
         do {
                 c = *s++;
-        } while (ISSPACE(c));
+        } while (ISSPACE(c) != 0U);
         if (c == '-') {
                 neg = 1;
                 c = *s++;
@@ -320,10 +320,10 @@ strtoul(const char *nptr, char **endptr, register int base)
         cutoff = (uint64_t)ULONG_MAX / (uint64_t)base;
         cutlim = (uint64_t)ULONG_MAX % (uint64_t)base;
         for (acc = 0, any = 0;; c = *s++) {
-                if (ISDIGIT(c))
+                if (ISDIGIT(c) != 0U)
                         c -= '0';
-                else if (ISALPHA(c))
-                        c -= ISUPPER(c) ? 'A' - 10 : 'a' - 10;
+                else if (ISALPHA(c) != 0U)
+                        c -= (ISUPPER(c) != 0U) ? 'A' - 10 : 'a' - 10;
                 else
                         break;
                 if (c >= base)
@@ -338,10 +338,10 @@ strtoul(const char *nptr, char **endptr, register int base)
         }
         if (any < 0)
                 acc = ULONG_MAX;
-        else if (neg)
+        else if (neg != 0)
                 acc = -acc;
         if (endptr != NULL)
-                *endptr = (char *) (any ? s - 1 : nptr);
+                *endptr = (char *) ((any != 0) ? s - 1 : nptr);
         return acc;
 }
 
@@ -353,10 +353,10 @@ atoi(const char *str)
 
 char *strchr(const char *s, int ch)
 {
-        while (*s && (*s != ch))
+        while ((*s != 0) && (*s != ch))
                 ++s;
 
-        return (*s) ? ((char *)s) : 0;
+        return ((*s) != 0) ? ((char *)s) : 0;
 }
 
 /**
@@ -540,7 +540,7 @@ size_t strnlen_s(const char *str, size_t maxlen)
                 return 0;
 
         count = 0;
-        while (*str) {
+        while ((*str) != 0) {
                 if (maxlen == 0)
                         break;
 
@@ -563,7 +563,7 @@ char hexdigit(int decimal_val)
 
 int strcmp(const char *s1, const char *s2)
 {
-        while (*s1 && *s2 && *s1 == *s2) {
+        while (((*s1) != 0) && ((*s2) != 0) && ((*s1) == (*s2))) {
                 s1++;
                 s2++;
         }
@@ -573,7 +573,7 @@ int strcmp(const char *s1, const char *s2)
 
 int strncmp(const char *s1, const char *s2, size_t n)
 {
-        while (n - 1 && *s1 && *s2 && *s1 == *s2) {
+        while (((n - 1) != 0) && ((*s1) != 0) && ((*s2) != 0) && ((*s1) == (*s2))) {
                 s1++;
                 s2++;
                 n--;

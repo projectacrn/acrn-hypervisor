@@ -315,12 +315,12 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 	/* Derive dvseed from dseed for Trusty */
 	key_info = &mem->first_page.data.key_info;
 	for (i = 0; i < g_key_info.num_seeds; i++) {
-		if (!hkdf_sha256(key_info->dseed_list[i].seed,
+		if (hkdf_sha256(key_info->dseed_list[i].seed,
 				BUP_MKHI_BOOTLOADER_SEED_LEN,
 				g_key_info.dseed_list[i].seed,
 				BUP_MKHI_BOOTLOADER_SEED_LEN,
 				NULL, 0,
-				vcpu->vm->GUID, sizeof(vcpu->vm->GUID))) {
+				vcpu->vm->GUID, sizeof(vcpu->vm->GUID)) == 0) {
 			memset(key_info, 0, sizeof(struct key_info));
 			pr_err("%s: derive dvseed failed!", __func__);
 			return false;
@@ -402,12 +402,12 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 		return false;
 	}
 
-	if (!boot_param->entry_point) {
+	if (boot_param->entry_point == 0) {
 		pr_err("%s: Invalid entry point\n", __func__);
 		return false;
 	}
 
-	if (!boot_param->base_addr) {
+	if (boot_param->base_addr == 0) {
 		pr_err("%s: Invalid memory base address\n", __func__);
 		return false;
 	}

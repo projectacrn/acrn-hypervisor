@@ -16,7 +16,7 @@ uint64_t tsc_hz = 1000000000;
 static void run_timer(struct timer *timer)
 {
 	/* deadline = 0 means stop timer, we should skip */
-	if (timer->func && timer->fire_tsc != 0UL)
+	if ((timer->func != NULL) && timer->fire_tsc != 0UL)
 		timer->func(timer->priv_data);
 
 	TRACE_2L(TRACE_TIMER_ACTION_PCKUP, timer->fire_tsc, 0);
@@ -62,7 +62,7 @@ static void __add_timer(struct per_cpu_timers *cpu_timer,
 
 	list_add(&timer->node, prev);
 
-	if (need_update)
+	if (need_update != NULL)
 		/* update the physical timer if we're on the timer_list head */
 		*need_update = (prev == &cpu_timer->timer_list);
 }
@@ -95,7 +95,7 @@ int add_timer(struct timer *timer)
 
 void del_timer(struct timer *timer)
 {
-	if (timer && !list_empty(&timer->node))
+	if ((timer != NULL) && !list_empty(&timer->node))
 		list_del_init(&timer->node);
 }
 
@@ -108,7 +108,7 @@ static int request_timer_irq(int pcpu_id,
 	if (pcpu_id >= phy_cpu_num)
 		return -EINVAL;
 
-	if (per_cpu(timer_node, pcpu_id)) {
+	if (per_cpu(timer_node, pcpu_id) != NULL) {
 		pr_err("CPU%d timer isr already added", pcpu_id);
 		unregister_handler_common(per_cpu(timer_node, pcpu_id));
 	}
@@ -165,7 +165,7 @@ void timer_cleanup(void)
 {
 	int pcpu_id = get_cpu_id();
 
-	if (per_cpu(timer_node, pcpu_id))
+	if (per_cpu(timer_node, pcpu_id) != NULL)
 		unregister_handler_common(per_cpu(timer_node, pcpu_id));
 
 	per_cpu(timer_node, pcpu_id) = NULL;
@@ -286,7 +286,7 @@ static uint64_t native_calibrate_tsc(void)
 void calibrate_tsc(void)
 {
 	tsc_hz = native_calibrate_tsc();
-	if (!tsc_hz)
+	if (tsc_hz == 0U)
 		tsc_hz = pit_calibrate_tsc(CAL_MS);
 	printf("%s, tsc_hz=%lu\n", __func__, tsc_hz);
 }
