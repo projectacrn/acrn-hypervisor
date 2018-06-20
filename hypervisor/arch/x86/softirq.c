@@ -6,19 +6,19 @@
 
 #include <hypervisor.h>
 
-void disable_softirq(int cpu_id)
+void disable_softirq(uint16_t cpu_id)
 {
 	bitmap_clear(SOFTIRQ_ATOMIC, &per_cpu(softirq_pending, cpu_id));
 }
 
-void enable_softirq(int cpu_id)
+void enable_softirq(uint16_t cpu_id)
 {
 	bitmap_set(SOFTIRQ_ATOMIC, &per_cpu(softirq_pending, cpu_id));
 }
 
 void init_softirq(void)
 {
-	int cpu_id;
+	uint16_t cpu_id;
 
 	for (cpu_id = 0; cpu_id < phy_cpu_num; cpu_id++) {
 		per_cpu(softirq_pending, cpu_id) = 0;
@@ -28,7 +28,7 @@ void init_softirq(void)
 
 void raise_softirq(int softirq_id)
 {
-	int cpu_id = get_cpu_id();
+	uint16_t cpu_id = get_cpu_id();
 	uint64_t *bitmap = &per_cpu(softirq_pending, cpu_id);
 
 	if (cpu_id >= phy_cpu_num)
@@ -39,7 +39,7 @@ void raise_softirq(int softirq_id)
 
 void exec_softirq(void)
 {
-	int cpu_id = get_cpu_id();
+	uint16_t cpu_id = get_cpu_id();
 	volatile uint64_t *bitmap = &per_cpu(softirq_pending, cpu_id);
 
 	int softirq_id;

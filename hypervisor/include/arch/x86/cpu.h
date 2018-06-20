@@ -253,7 +253,7 @@ extern struct cpuinfo_x86 boot_cpu_data;
 /* Function prototypes */
 void cpu_dead(uint32_t logical_id);
 void trampoline_start16(void);
-int hv_main(int cpu_id);
+int hv_main(uint16_t cpu_id);
 bool is_vapic_supported(void);
 bool is_vapic_intr_delivery_supported(void);
 bool is_vapic_virt_reg_supported(void);
@@ -398,12 +398,12 @@ void start_cpus();
 }
 
 /* Macro to get CPU ID */
-static inline uint32_t get_cpu_id(void)
+static inline uint16_t get_cpu_id(void)
 {
 	uint32_t tsl, tsh, cpu_id;
 
 	asm volatile ("rdtscp":"=a" (tsl), "=d"(tsh), "=c"(cpu_id)::);
-	return cpu_id;
+	return (uint16_t)cpu_id;
 }
 
 static inline uint64_t cpu_rsp_get(void)

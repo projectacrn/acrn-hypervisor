@@ -205,7 +205,8 @@ int64_t hcall_pause_vm(uint64_t vmid)
 
 int64_t hcall_create_vcpu(struct vm *vm, uint64_t vmid, uint64_t param)
 {
-	int ret, pcpu_id;
+	int ret;
+	uint16_t pcpu_id;
 	struct acrn_create_vcpu cv;
 
 	struct vm *target_vm = get_vm_from_vmid(vmid);
@@ -219,7 +220,7 @@ int64_t hcall_create_vcpu(struct vm *vm, uint64_t vmid, uint64_t param)
 	}
 
 	pcpu_id = allocate_pcpu();
-	if (-1 == pcpu_id) {
+	if (INVALID_PCPU_ID == pcpu_id) {
 		pr_err("%s: No physical available\n", __func__);
 		return -1;
 	}

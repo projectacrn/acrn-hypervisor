@@ -67,7 +67,7 @@ extern spinlock_t ptdev_lock;
 extern struct ptdev_remapping_info invalid_entry;
 extern spinlock_t softirq_dev_lock;
 
-void ptdev_softirq(int cpu);
+void ptdev_softirq(__unused uint16_t cpu);
 void ptdev_init(void);
 void ptdev_release_all_entries(struct vm *vm);
 void get_ptdev_info(char *str, int str_max);

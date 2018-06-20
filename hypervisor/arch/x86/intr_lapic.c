@@ -211,11 +211,11 @@ int early_init_lapic(void)
 	return 0;
 }
 
-int init_lapic(uint32_t cpu_id)
+int init_lapic(uint16_t cpu_id)
 {
 	/* Set the Logical Destination Register */
 	write_lapic_reg32(LAPIC_LOGICAL_DESTINATION_REGISTER,
-		(1 << cpu_id) << 24);
+		((1U << cpu_id) << 24));
 
 	/* Set the Destination Format Register */
 	write_lapic_reg32(LAPIC_DESTINATION_FORMAT_REGISTER, 0xf << 28);
@@ -408,7 +408,7 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	return status;
 }
 
-void send_single_ipi(uint32_t pcpu_id, uint32_t vector)
+void send_single_ipi(uint16_t pcpu_id, uint32_t vector)
 {
 	uint32_t dest_lapic_id, hi_32, lo_32;
 

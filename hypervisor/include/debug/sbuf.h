@@ -76,7 +76,7 @@ struct shared_buf *sbuf_allocate(uint32_t ele_num, uint32_t ele_size);
 void sbuf_free(struct shared_buf *sbuf);
 int sbuf_get(struct shared_buf *sbuf, uint8_t *data);
 int sbuf_put(struct shared_buf *sbuf, uint8_t *data);
-int sbuf_share_setup(uint32_t pcpu_id, uint32_t sbuf_id, uint64_t *hva);
+int sbuf_share_setup(uint16_t pcpu_id, uint32_t sbuf_id, uint64_t *hva);
 
 #else /* HV_DEBUG */
 
@@ -125,7 +125,7 @@ static inline int sbuf_put(
 }
 
 static inline int sbuf_share_setup(
-		__unused uint32_t pcpu_id,
+		__unused uint16_t pcpu_id,
 		__unused uint32_t sbuf_id,
 		__unused uint64_t *hva)
 {

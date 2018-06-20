@@ -215,9 +215,9 @@ void *get_acpi_tbl(char *sig)
 	return HPA2HVA(addr);
 }
 
-static int _parse_madt(void *madt, uint8_t *lapic_id_base)
+static uint16_t _parse_madt(void *madt, uint8_t *lapic_id_base)
 {
-	int pcpu_id = 0;
+	uint16_t pcpu_id = 0;
 	struct acpi_madt_local_apic *processor;
 	struct acpi_table_madt *madt_ptr;
 	void *first;
@@ -249,7 +249,7 @@ static int _parse_madt(void *madt, uint8_t *lapic_id_base)
 }
 
 /* The lapic_id info gotten from madt will be returned in lapic_id_base */
-int parse_madt(uint8_t *lapic_id_base)
+uint16_t parse_madt(uint8_t *lapic_id_base)
 {
 	void *madt;
 

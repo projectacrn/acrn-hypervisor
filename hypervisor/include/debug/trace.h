@@ -73,7 +73,7 @@ struct trace_entry {
 } __attribute__((aligned(8)));
 
 static inline bool
-trace_check(int cpu_id, __unused int evid)
+trace_check(uint16_t cpu_id, __unused int evid)
 {
 	if (cpu_id >= phy_cpu_num)
 		return false;
@@ -85,7 +85,7 @@ trace_check(int cpu_id, __unused int evid)
 }
 
 static inline void
-_trace_put(int cpu_id, int evid, struct trace_entry *entry)
+_trace_put(uint16_t cpu_id, int evid, struct trace_entry *entry)
 {
 	struct shared_buf *sbuf = (struct shared_buf *)
 				per_cpu(sbuf, cpu_id)[ACRN_TRACE];
@@ -99,7 +99,7 @@ static inline void
 TRACE_2L(int evid, uint64_t e, uint64_t f)
 {
 	struct trace_entry entry;
-	int cpu_id = get_cpu_id();
+	uint16_t cpu_id = get_cpu_id();
 
 	if (!trace_check(cpu_id, evid))
 		return;
@@ -114,7 +114,7 @@ TRACE_4I(int evid, uint32_t a, uint32_t b, uint32_t c,
 		uint32_t d)
 {
 	struct trace_entry entry;
-	int cpu_id = get_cpu_id();
+	uint16_t cpu_id = get_cpu_id();
 
 	if (!trace_check(cpu_id, evid))
 		return;
@@ -131,7 +131,7 @@ TRACE_6C(int evid, uint8_t a1, uint8_t a2, uint8_t a3,
 		uint8_t a4, uint8_t b1, uint8_t b2)
 {
 	struct trace_entry entry;
-	int cpu_id = get_cpu_id();
+	uint16_t cpu_id = get_cpu_id();
 
 	if (!trace_check(cpu_id, evid))
 		return;
@@ -152,7 +152,7 @@ static inline void
 TRACE_16STR(int evid, const char name[])
 {
 	struct trace_entry entry;
-	int cpu_id = get_cpu_id();
+	uint16_t cpu_id = get_cpu_id();
 	int len;
 	int i;
 

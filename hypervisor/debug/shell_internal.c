@@ -978,11 +978,15 @@ int shell_show_vmexit_profile(struct shell *p_shell,
 int shell_dump_logbuf(__unused struct shell *p_shell,
 		int argc, char **argv)
 {
-	uint32_t pcpu_id;
+	uint16_t pcpu_id;
+	int val;
 	int status = -EINVAL;
 
 	if (argc == 2) {
-		pcpu_id = atoi(argv[1]);
+		val = atoi(argv[1]);
+		if (val < 0)
+			return status;
+		pcpu_id = (uint16_t)val;
 		print_logmsg_buffer(pcpu_id);
 		return 0;
 	}

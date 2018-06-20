@@ -23,7 +23,7 @@ spinlock_t up_count_spinlock = {
 };
 
 struct per_cpu_region *per_cpu_data_base_ptr;
-int phy_cpu_num = 0;
+uint16_t phy_cpu_num = 0U;
 unsigned long pcpu_sync = 0;
 volatile uint32_t up_count = 0;
 
@@ -224,7 +224,7 @@ static int hardware_detect_support(void)
 	return 0;
 }
 
-static void alloc_phy_cpu_data(int pcpu_num)
+static void alloc_phy_cpu_data(uint16_t pcpu_num)
 {
 	phy_cpu_num = pcpu_num;
 
@@ -245,7 +245,8 @@ int __attribute__((weak)) parse_madt(uint8_t *lapic_id_base)
 
 static int init_phy_cpu_storage(void)
 {
-	int i, pcpu_num = 0;
+	int i;
+	uint16_t pcpu_num=0U;
 	int bsp_cpu_id;
 	uint8_t bsp_lapic_id = 0;
 	uint8_t *lapic_id_base;
