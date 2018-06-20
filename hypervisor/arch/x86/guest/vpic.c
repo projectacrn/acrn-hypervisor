@@ -232,7 +232,7 @@ static void vpic_notify_intr(struct vpic *vpic)
 			ASSERT(vcpu != NULL, "vm%d, vcpu0", vpic->vm->attr.id);
 			vcpu_inject_extint(vcpu);
 		} else {
-			vlapic_set_local_intr(vpic->vm, -1, APIC_LVT_LINT0);
+			vlapic_set_local_intr(vpic->vm, BROADCAST_PCPU_ID, APIC_LVT_LINT0);
 			/* notify vioapic pin0 if existing
 			 * For vPIC + vIOAPIC mode, vpic master irq connected
 			 * to vioapic pin0 (irq2)

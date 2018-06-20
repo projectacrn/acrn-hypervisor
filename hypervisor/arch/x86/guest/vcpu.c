@@ -14,7 +14,7 @@ extern struct efi_ctx* efi_ctx;
 
 vm_sw_loader_t vm_sw_loader;
 
-struct vcpu *get_ever_run_vcpu(int pcpu_id)
+struct vcpu *get_ever_run_vcpu(uint16_t pcpu_id)
 {
 	return per_cpu(ever_run_vcpu, pcpu_id);
 }
@@ -31,7 +31,7 @@ struct vcpu *get_ever_run_vcpu(int pcpu_id)
  *     for physical CPU 1 : vcpu->pcpu_id = 1, vcpu->vcpu_id = 1, vmid = 1;
  *
  ***********************************************************************/
-int create_vcpu(int cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
+int create_vcpu(uint16_t cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 {
 	struct vcpu *vcpu;
 
@@ -284,7 +284,7 @@ void reset_vcpu(struct vcpu *vcpu)
 
 void pause_vcpu(struct vcpu *vcpu, enum vcpu_state new_state)
 {
-	int pcpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_cpu_id();
 
 	pr_dbg("vcpu%d paused, new state: %d",
 		vcpu->vcpu_id, new_state);
@@ -334,7 +334,7 @@ void schedule_vcpu(struct vcpu *vcpu)
 }
 
 /* help function for vcpu create */
-int prepare_vcpu(struct vm *vm, int pcpu_id)
+int prepare_vcpu(struct vm *vm, uint16_t pcpu_id)
 {
 	int ret = 0;
 	struct vcpu *vcpu = NULL;

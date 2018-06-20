@@ -401,15 +401,15 @@
 #define VMX_SUPPORT_UNRESTRICTED_GUEST (1U<<5)
 
 /* External Interfaces */
-int exec_vmxon_instr(uint32_t pcpu_id);
+int exec_vmxon_instr(uint16_t pcpu_id);
 uint64_t exec_vmread(uint32_t field);
 uint64_t exec_vmread64(uint32_t field_full);
 void exec_vmwrite(uint32_t field, uint64_t value);
 void exec_vmwrite64(uint32_t field_full, uint64_t value);
 int init_vmcs(struct vcpu *vcpu);
 
-int vmx_off(int pcpu_id);
-int vmx_restart(int pcpu_id);
+int vmx_off(uint16_t pcpu_id);
+int vmx_restart(uint16_t pcpu_id);
 
 int exec_vmclear(void *addr);
 int exec_vmptrld(void *addr);

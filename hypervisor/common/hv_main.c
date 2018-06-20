@@ -99,12 +99,12 @@ void vcpu_thread(struct vcpu *vcpu)
 	} while (1);
 }
 
-static bool is_vm0_bsp(int pcpu_id)
+static bool is_vm0_bsp(uint16_t pcpu_id)
 {
 	return pcpu_id == vm0_desc.vm_hw_logical_core_ids[0];
 }
 
-int hv_main(int cpu_id)
+int hv_main(uint16_t cpu_id)
 {
 	int ret;
 
@@ -117,7 +117,7 @@ int hv_main(int cpu_id)
 		return -EINVAL;
 	}
 
-	if ((uint32_t) cpu_id != get_cpu_id()) {
+	if (cpu_id != get_cpu_id()) {
 		pr_err("%s, cpu_id %d mismatch\n", __func__, cpu_id);
 		return -EINVAL;
 	}

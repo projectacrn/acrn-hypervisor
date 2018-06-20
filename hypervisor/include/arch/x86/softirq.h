@@ -15,8 +15,8 @@
 /* used for atomic value for prevent recursive */
 #define SOFTIRQ_ATOMIC		63
 
-void enable_softirq(int cpu_id);
-void disable_softirq(int cpu_id);
+void enable_softirq(uint16_t cpu_id);
+void disable_softirq(uint16_t cpu_id);
 void init_softirq(void);
 void raise_softirq(int softirq_id);
 void exec_softirq(void);

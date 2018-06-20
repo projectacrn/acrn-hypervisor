@@ -115,7 +115,7 @@ vm_lapic_from_vcpu_id(struct vm *vm, int vcpu_id)
 }
 
 struct vlapic *
-vm_lapic_from_pcpuid(struct vm *vm, int pcpu_id)
+vm_lapic_from_pcpuid(struct vm *vm, uint16_t pcpu_id)
 {
 	struct vcpu *vcpu;
 
@@ -125,7 +125,7 @@ vm_lapic_from_pcpuid(struct vm *vm, int pcpu_id)
 	return vcpu->arch_vcpu.vlapic;
 }
 
-static int vm_apicid2vcpu_id(struct vm *vm, uint8_t lapicid)
+static uint16_t vm_apicid2vcpu_id(struct vm *vm, uint8_t lapicid)
 {
 	int i;
 	struct vcpu *vcpu;

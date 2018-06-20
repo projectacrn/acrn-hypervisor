@@ -169,7 +169,7 @@ struct set_memmaps {
  */
 struct sbuf_setup_param {
 	/** sbuf physical cpu id */
-	uint32_t pcpu_id;
+	uint16_t pcpu_id;
 
 	/** sbuf id */
 	uint32_t sbuf_id;

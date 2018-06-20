@@ -47,7 +47,7 @@ inline struct vcpu *vcpu_from_vid(struct vm *vm, int vcpu_id)
 	return NULL;
 }
 
-inline struct vcpu *vcpu_from_pid(struct vm *vm, int pcpu_id)
+inline struct vcpu *vcpu_from_pid(struct vm *vm, uint16_t pcpu_id)
 {
 	int i;
 	struct vcpu *vcpu;

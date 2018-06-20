@@ -506,7 +506,7 @@ static void ptdev_intr_handle_irq(struct vm *vm,
 	}
 }
 
-void ptdev_softirq(__unused int cpu)
+void ptdev_softirq(__unused uint16_t cpu_id)
 {
 	while (1) {
 		struct ptdev_remapping_info *entry = ptdev_dequeue_softirq();

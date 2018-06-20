@@ -385,7 +385,7 @@ uint32_t dev_to_vector(struct dev_handler_node *node)
 	return node->desc->vector;
 }
 
-int init_default_irqs(unsigned int cpu_id)
+int init_default_irqs(uint16_t cpu_id)
 {
 	if (cpu_id > 0)
 		return 0;
@@ -692,7 +692,7 @@ pri_register_handler(uint32_t irq,
 
 void get_cpu_interrupt_info(char *str, int str_max)
 {
-	int pcpu_id;
+	uint16_t pcpu_id;
 	uint32_t irq, vector, len, size = str_max;
 	struct irq_desc *desc;
 

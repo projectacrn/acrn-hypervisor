@@ -86,7 +86,7 @@ static inline int exec_vmxon(void *addr)
  * It will be used again when we start a pcpu after the pcpu was down.
  * S3 enter/exit will use it.
  */
-int exec_vmxon_instr(uint32_t pcpu_id)
+int exec_vmxon_instr(uint16_t pcpu_id)
 {
 	uint64_t tmp64, vmcs_pa;
 	uint32_t tmp32;
@@ -128,7 +128,7 @@ int exec_vmxon_instr(uint32_t pcpu_id)
 	return ret;
 }
 
-int vmx_off(int pcpu_id)
+int vmx_off(uint16_t pcpu_id)
 {
 	int ret = 0;
 

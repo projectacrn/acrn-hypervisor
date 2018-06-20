@@ -115,7 +115,7 @@ int quick_handler_nolock(struct irq_desc *desc, void *handler_data);
 typedef int (*irq_handler_t)(struct irq_desc*, void*);
 void update_irq_handler(uint32_t irq, irq_handler_t func);
 
-int init_default_irqs(unsigned int cpu);
+int init_default_irqs(uint16_t cpu);
 
 void dispatch_interrupt(struct intr_excp_ctx *ctx);
 

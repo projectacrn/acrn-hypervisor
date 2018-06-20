@@ -70,7 +70,7 @@ static void __add_timer(struct per_cpu_timers *cpu_timer,
 int add_timer(struct timer *timer)
 {
 	struct per_cpu_timers *cpu_timer;
-	int pcpu_id;
+	uint16_t pcpu_id;
 	bool need_update;
 
 	if (timer == NULL || timer->func == NULL || timer->fire_tsc == 0)
@@ -99,7 +99,7 @@ void del_timer(struct timer *timer)
 		list_del_init(&timer->node);
 }
 
-static int request_timer_irq(int pcpu_id,
+static int request_timer_irq(uint16_t pcpu_id,
 			dev_handler_t func, void *data,
 			const char *name)
 {
@@ -125,7 +125,7 @@ static int request_timer_irq(int pcpu_id,
 	return 0;
 }
 
-static void init_percpu_timer(int pcpu_id)
+static void init_percpu_timer(uint16_t pcpu_id)
 {
 	struct per_cpu_timers *cpu_timer;
 
@@ -149,7 +149,7 @@ static void init_tsc_deadline_timer(void)
 void timer_init(void)
 {
 	char name[32] = {0};
-	int pcpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_cpu_id();
 
 	snprintf(name, 32, "timer_tick[%d]", pcpu_id);
 	if (request_timer_irq(pcpu_id, tsc_deadline_handler, NULL, name) < 0) {
@@ -163,7 +163,7 @@ void timer_init(void)
 
 void timer_cleanup(void)
 {
-	int pcpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_cpu_id();
 
 	if (per_cpu(timer_node, pcpu_id) != NULL)
 		unregister_handler_common(per_cpu(timer_node, pcpu_id));
@@ -171,7 +171,7 @@ void timer_cleanup(void)
 	per_cpu(timer_node, pcpu_id) = NULL;
 }
 
-void timer_softirq(int pcpu_id)
+void timer_softirq(uint16_t pcpu_id)
 {
 	struct per_cpu_timers *cpu_timer;
 	struct timer *timer;
