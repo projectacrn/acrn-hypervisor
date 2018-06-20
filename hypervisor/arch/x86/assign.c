@@ -188,7 +188,7 @@ ptdev_update_irq_handler(struct vm *vm, struct ptdev_remapping_info *entry)
 static bool ptdev_hv_owned_intx(struct vm *vm, struct ptdev_intx_info *info)
 {
 	/* vm0 pin 4 (uart) is owned by hypervisor under debug version */
-	if (is_vm0(vm) && vm->vuart && info->virt_pin == 4)
+	if (is_vm0(vm) && (vm->vuart != NULL) && info->virt_pin == 4)
 		return true;
 	else
 		return false;
@@ -307,8 +307,8 @@ add_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 	spinlock_obtain(&ptdev_lock);
 	entry = _lookup_entry_by_id(
 		entry_id_from_msix(phys_bdf, msix_entry_index));
-	if (!entry) {
-		if (_lookup_entry_by_vmsi(vm, virt_bdf, msix_entry_index)) {
+	if (entry == NULL) {
+		if (_lookup_entry_by_vmsi(vm, virt_bdf, msix_entry_index) != NULL) {
 			pr_err("MSIX re-add vbdf%x", virt_bdf);
 
 			spinlock_release(&ptdev_lock);
@@ -327,7 +327,7 @@ add_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 			entry->ptdev_intr_info.msi.msix_entry_index,
 			entry->vm->attr.id,
 			entry->virt_bdf, vm->attr.id, virt_bdf);
-		ASSERT(0, "msix entry pbdf%x idx%d already in vm%d",
+		ASSERT(false, "msix entry pbdf%x idx%d already in vm%d",
 			phys_bdf, msix_entry_index, entry->vm->attr.id);
 
 		spinlock_release(&ptdev_lock);
@@ -350,7 +350,7 @@ remove_msix_remapping(struct vm *vm, uint16_t virt_bdf, int msix_entry_index)
 
 	spinlock_obtain(&ptdev_lock);
 	entry = _lookup_entry_by_vmsi(vm, virt_bdf, msix_entry_index);
-	if (!entry)
+	if (entry == NULL)
 		goto END;
 
 	if (is_entry_active(entry))
@@ -384,8 +384,8 @@ add_intx_remapping(struct vm *vm, uint8_t virt_pin,
 
 	spinlock_obtain(&ptdev_lock);
 	entry = _lookup_entry_by_id(entry_id_from_intx(phys_pin));
-	if (!entry) {
-		if (_lookup_entry_by_vintx(vm, virt_pin, vpin_src)) {
+	if (entry == NULL) {
+		if (_lookup_entry_by_vintx(vm, virt_pin, vpin_src) != NULL) {
 			pr_err("INTX re-add vpin %d", virt_pin);
 			spinlock_release(&ptdev_lock);
 			return &invalid_entry;
@@ -405,7 +405,7 @@ add_intx_remapping(struct vm *vm, uint8_t virt_pin,
 			entry->vm->attr.id,
 			entry->ptdev_intr_info.intx.virt_pin,
 			vm->attr.id, virt_pin);
-		ASSERT(0, "intx entry pin%d already vm%d",
+		ASSERT(false, "intx entry pin%d already vm%d",
 			phys_pin, entry->vm->attr.id);
 
 		spinlock_release(&ptdev_lock);
@@ -431,7 +431,7 @@ static void remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin)
 
 	spinlock_obtain(&ptdev_lock);
 	entry = _lookup_entry_by_vintx(vm, virt_pin, vpin_src);
-	if (!entry)
+	if (entry == NULL)
 		goto END;
 
 	if (is_entry_active(entry)) {
@@ -512,7 +512,7 @@ void ptdev_softirq(__unused int cpu)
 		struct ptdev_remapping_info *entry = ptdev_dequeue_softirq();
 		struct vm *vm;
 
-		if (!entry)
+		if (entry == NULL)
 			break;
 
 		/* skip any inactive entry */
@@ -553,7 +553,7 @@ void ptdev_intx_ack(struct vm *vm, int virt_pin,
 	int phys_pin;
 
 	entry = lookup_entry_by_vintx(vm, virt_pin, vpin_src);
-	if (!entry)
+	if (entry == NULL)
 		return;
 
 	phys_pin = entry->ptdev_intr_info.intx.phys_pin;
@@ -602,7 +602,7 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 	 */
 
 	entry = lookup_entry_by_vmsi(vm, virt_bdf, info->msix_entry_index);
-	if (!entry) {
+	if (entry == NULL) {
 		/* VM0 we add mapping dynamically */
 		if (is_vm0(vm)) {
 			entry = add_msix_remapping(vm, virt_bdf, virt_bdf,
@@ -721,7 +721,7 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 
 	/* query if we have virt to phys mapping */
 	entry = lookup_entry_by_vintx(vm, info->virt_pin, info->vpin_src);
-	if (!entry) {
+	if (entry == NULL) {
 		if (is_vm0(vm)) {
 			bool pic_pin = (info->vpin_src == PTDEV_VPIN_PIC);
 
@@ -737,12 +737,12 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 					pic_ioapic_pin_map[info->virt_pin],
 					pic_pin ? PTDEV_VPIN_IOAPIC
 					: PTDEV_VPIN_PIC);
-				if (entry)
+				if (entry != NULL)
 					need_switch_vpin_src = true;
 			}
 
 			/* entry could be updated by above switch check */
-			if (!entry) {
+			if (entry == NULL) {
 				/* allocate entry during first unmask */
 				if (vpin_masked(vm, info->virt_pin,
 						info->vpin_src))
@@ -792,9 +792,9 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 			"IOAPIC pin=%d pirq=%d vpin=%d switch from %s to %s "
 			"vpin=%d for vm%d", phys_pin, phys_irq,
 			entry->ptdev_intr_info.intx.virt_pin,
-			entry->ptdev_intr_info.intx.vpin_src ?
+			(entry->ptdev_intr_info.intx.vpin_src != 0)?
 				"vPIC" : "vIOAPIC",
-			entry->ptdev_intr_info.intx.vpin_src ?
+			(entry->ptdev_intr_info.intx.vpin_src != 0)?
 				"vIOPIC" : "vPIC",
 			info->virt_pin,
 			entry->vm->attr.id);
@@ -922,8 +922,8 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 			strcpy_s(type, 16, "MSI");
 			*dest = (entry->ptdev_intr_info.msi.pmsi_addr & 0xFF000)
 				>> 12;
-			if (entry->ptdev_intr_info.msi.pmsi_data &
-				APIC_TRIGMOD_LEVEL)
+			if ((entry->ptdev_intr_info.msi.pmsi_data &
+				APIC_TRIGMOD_LEVEL) != 0U)
 				*lvl_tm = true;
 			else
 				*lvl_tm = false;
@@ -943,7 +943,7 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 				strcpy_s(type, 16, "PIC");
 			ioapic_get_rte(phys_irq, &rte);
 			*dest = ((rte >> 32) & IOAPIC_RTE_DEST) >> 24;
-			if (rte & IOAPIC_RTE_TRGRLVL)
+			if ((rte & IOAPIC_RTE_TRGRLVL) != 0U)
 				*lvl_tm = true;
 			else
 				*lvl_tm = false;

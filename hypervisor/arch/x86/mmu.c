@@ -222,7 +222,7 @@ static inline uint32_t check_page_table_present(int page_table_type,
 		table_entry &= (IA32E_COMM_P_BIT);
 	}
 
-	return (table_entry) ? PT_PRESENT : PT_NOT_PRESENT;
+	return (table_entry != 0U) ? PT_PRESENT : PT_NOT_PRESENT;
 }
 
 static uint32_t map_mem_region(void *vaddr, void *paddr,
@@ -280,7 +280,7 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 
 		/* If not a EPT entry, see if the PAT bit is set for PDPT entry
 		 */
-		if ((table_type == PTT_HOST) && (attr & IA32E_PDPTE_PAT_BIT)) {
+		if ((table_type == PTT_HOST) && (attr & IA32E_PDPTE_PAT_BIT) != 0U) {
 			/* The PAT bit is set; Clear it and set the page table
 			 * PAT bit instead
 			 */
@@ -315,7 +315,7 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 			break;
 		case PT_MISCFG_PRESENT:
 		default:
-			ASSERT(0, "entry misconfigurated present bits");
+			ASSERT(false, "entry misconfigurated present bits");
 			return 0;
 		}
 
@@ -399,7 +399,7 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 			break;
 		}
 		default:
-			ASSERT(0, "Bad memory map request type");
+			ASSERT(false, "Bad memory map request type");
 			return 0;
 		}
 
@@ -414,9 +414,9 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 			 * modified after AP start in the future.
 			 */
 			if ((phy_cpu_num != 0) &&
-				(pcpu_active_bitmap &
+				((pcpu_active_bitmap &
 				((1UL << phy_cpu_num) - 1))
-				!= (1UL << CPU_BOOT_ID)) {
+				!= (1UL << CPU_BOOT_ID))) {
 				panic("need shootdown for invlpg");
 			}
 			inv_tlb_one_page(vaddr);
@@ -478,7 +478,7 @@ static int get_table_entry(void *addr, void *table_base,
 	uint32_t table_offset;
 
 	if (table_base == NULL || table_level >= IA32E_UNKNOWN)	{
-		ASSERT(0, "Incorrect Arguments");
+		ASSERT(false, "Incorrect Arguments");
 		return -EINVAL;
 	}
 
@@ -504,7 +504,7 @@ static void *walk_paging_struct(void *addr, void *table_base,
 
 	if (table_base == NULL || table_level >= IA32E_UNKNOWN
 	    || map_params == NULL) {
-		ASSERT(0, "Incorrect Arguments");
+		ASSERT(false, "Incorrect Arguments");
 		return NULL;
 	}
 
@@ -536,7 +536,7 @@ static void *walk_paging_struct(void *addr, void *table_base,
 				/* Error: Unable to find table memory necessary
 				 * to map memory
 				 */
-				ASSERT(0, "Fail to alloc table memory "
+				ASSERT(false, "Fail to alloc table memory "
 					"for map memory");
 
 				return NULL;
@@ -652,7 +652,7 @@ void *alloc_paging_struct(void)
 	/* Allocate a page from Hypervisor heap */
 	ptr = alloc_page();
 
-	ASSERT(ptr, "page alloc failed!");
+	ASSERT(ptr != NULL, "page alloc failed!");
 	memset(ptr, 0, CPU_PAGE_SIZE);
 
 	return ptr;
@@ -660,7 +660,7 @@ void *alloc_paging_struct(void)
 
 void free_paging_struct(void *ptr)
 {
-	if (ptr) {
+	if (ptr != NULL) {
 		memset(ptr, 0, CPU_PAGE_SIZE);
 		free(ptr);
 	}
@@ -692,21 +692,21 @@ uint64_t config_page_table_attr(struct map_params *map_params, uint32_t flags)
 
 	/* Convert generic memory flags to architecture specific attributes */
 	/* Check if read access */
-	if (flags & MMU_MEM_ATTR_READ) {
+	if ((flags & MMU_MEM_ATTR_READ) != 0U) {
 		/* Configure for read access */
 		attr |= ((table_type == PTT_EPT)
 			? IA32E_EPT_R_BIT : 0);
 	}
 
 	/* Check for write access */
-	if (flags & MMU_MEM_ATTR_WRITE)	{
+	if ((flags & MMU_MEM_ATTR_WRITE) != 0U)	{
 		/* Configure for write access */
 		attr |= ((table_type == PTT_EPT)
 			? IA32E_EPT_W_BIT : MMU_MEM_ATTR_BIT_READ_WRITE);
 	}
 
 	/* Check for execute access */
-	if (flags & MMU_MEM_ATTR_EXECUTE) {
+	if ((flags & MMU_MEM_ATTR_EXECUTE) != 0U) {
 		/* Configure for execute (EPT only) */
 		attr |= ((table_type == PTT_EPT)
 			? IA32E_EPT_X_BIT : 0);
@@ -725,19 +725,19 @@ uint64_t config_page_table_attr(struct map_params *map_params, uint32_t flags)
 	}
 
 	/* Check for cache / memory types */
-	if (flags & MMU_MEM_ATTR_WB_CACHE) {
+	if ((flags & MMU_MEM_ATTR_WB_CACHE) != 0U) {
 		/* Configure for write back cache */
 		attr |= ((table_type == PTT_EPT)
 			? IA32E_EPT_WB : MMU_MEM_ATTR_TYPE_CACHED_WB);
-	} else if (flags & MMU_MEM_ATTR_WT_CACHE)	{
+	} else if ((flags & MMU_MEM_ATTR_WT_CACHE) != 0U)	{
 		/* Configure for write through cache */
 		attr |= ((table_type == PTT_EPT)
 			? IA32E_EPT_WT : MMU_MEM_ATTR_TYPE_CACHED_WT);
-	} else if (flags & MMU_MEM_ATTR_UNCACHED)	{
+	} else if ((flags & MMU_MEM_ATTR_UNCACHED) != 0U)	{
 		/* Configure for uncached */
 		attr |= ((table_type == PTT_EPT)
 			? IA32E_EPT_UNCACHED : MMU_MEM_ATTR_TYPE_UNCACHED);
-	} else if (flags & MMU_MEM_ATTR_WC) {
+	} else if ((flags & MMU_MEM_ATTR_WC) != 0U) {
 		/* Configure for write combining */
 		attr |= ((table_type == PTT_EPT)
 			? IA32E_EPT_WC : MMU_MEM_ATTR_TYPE_WRITE_COMBINED);
@@ -804,7 +804,7 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 		entry->entry_val =  table_entry;
 		return 0;
 	}
-	if (table_entry & IA32E_PDPTE_PS_BIT) {
+	if ((table_entry & IA32E_PDPTE_PS_BIT) != 0U) {
 		/* 1GB page size, return the base addr of the pg entry*/
 		entry->entry_level  = IA32E_PDPT;
 		entry->entry_base = table_addr;
@@ -837,7 +837,7 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 		entry->entry_val =  table_entry;
 		return 0;
 	}
-	if (table_entry & IA32E_PDE_PS_BIT) {
+	if ((table_entry & IA32E_PDE_PS_BIT) != 0U) {
 		/* 2MB page size, return the base addr of the pg entry*/
 		entry->entry_level  = IA32E_PD;
 		entry->entry_base = table_addr;
@@ -977,7 +977,7 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 			 * Unable to find table memory necessary to map memory
 			 */
 			pr_err("Fail to find table memory for map memory");
-			ASSERT(0, "fail to alloc table memory for map memory");
+			ASSERT(false, "fail to alloc table memory for map memory");
 			return 0;
 		}
 
@@ -1047,7 +1047,7 @@ static int modify_paging(struct map_params *map_params, void *paddr,
 			|| (map_params == NULL)) {
 		pr_err("%s: vaddr=0x%llx size=0x%llx req_type=0x%lx",
 			__func__, vaddr, size, request_type);
-		ASSERT(0, "Incorrect Arguments");
+		ASSERT(false, "Incorrect Arguments");
 		return -EINVAL;
 	}
 

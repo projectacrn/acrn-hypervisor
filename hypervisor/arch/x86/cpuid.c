@@ -24,7 +24,7 @@ static inline struct vcpuid_entry *find_vcpuid_entry(struct vcpu *vcpu,
 		if (tmp->leaf < leaf)
 			continue;
 		if (tmp->leaf == leaf) {
-			if ((tmp->flags & CPUID_CHECK_SUBLEAF) &&
+			if ((tmp->flags & CPUID_CHECK_SUBLEAF) != 0U &&
 				(tmp->subleaf != subleaf))
 				continue;
 			entry = tmp;
@@ -36,7 +36,7 @@ static inline struct vcpuid_entry *find_vcpuid_entry(struct vcpu *vcpu,
 	if (entry == NULL) {
 		uint32_t limit;
 
-		if (leaf & 0x80000000)
+		if ((leaf & 0x80000000) != 0U)
 			limit = vm->vcpuid_xlevel;
 		else
 			limit = vm->vcpuid_level;
@@ -86,7 +86,7 @@ static void init_vcpuid_entry(__unused struct vm *vm,
 
 	switch (leaf) {
 	case 0x07:
-		if (!subleaf) {
+		if (subleaf == 0U) {
 			cpuid(leaf,
 				&entry->eax, &entry->ebx,
 				&entry->ecx, &entry->edx);
@@ -162,7 +162,7 @@ int set_vcpuid_entries(struct vm *vm)
 
 	init_vcpuid_entry(vm, 0, 0, 0, &entry);
 	result = set_vcpuid_entry(vm, &entry);
-	if (result)
+	if (result != 0)
 		return result;
 	vm->vcpuid_level = limit = entry.eax;
 
@@ -179,7 +179,7 @@ int set_vcpuid_entries(struct vm *vm)
 			init_vcpuid_entry(vm, i, 0,
 				CPUID_CHECK_SUBLEAF, &entry);
 			result = set_vcpuid_entry(vm, &entry);
-			if (result)
+			if (result != 0)
 				return result;
 
 			times = entry.eax & 0xff;
@@ -187,7 +187,7 @@ int set_vcpuid_entries(struct vm *vm)
 				init_vcpuid_entry(vm, i, j,
 					CPUID_CHECK_SUBLEAF, &entry);
 				result = set_vcpuid_entry(vm, &entry);
-				if (result)
+				if (result != 0)
 					return result;
 			}
 			break;
@@ -206,7 +206,7 @@ int set_vcpuid_entries(struct vm *vm)
 				if (i == 0x0d && entry.eax == 0)
 					continue;
 				result = set_vcpuid_entry(vm, &entry);
-				if (result)
+				if (result != 0)
 					return result;
 			}
 			break;
@@ -214,7 +214,7 @@ int set_vcpuid_entries(struct vm *vm)
 		default:
 			init_vcpuid_entry(vm, i, 0, 0, &entry);
 			result = set_vcpuid_entry(vm, &entry);
-			if (result)
+			if (result != 0)
 				return result;
 			break;
 		}
@@ -222,24 +222,24 @@ int set_vcpuid_entries(struct vm *vm)
 
 	init_vcpuid_entry(vm, 0x40000000, 0, 0, &entry);
 	result = set_vcpuid_entry(vm, &entry);
-	if (result)
+	if (result != 0)
 		return result;
 
 	init_vcpuid_entry(vm, 0x40000010, 0, 0, &entry);
 	result = set_vcpuid_entry(vm, &entry);
-	if (result)
+	if (result != 0)
 		return result;
 
 	init_vcpuid_entry(vm, 0x80000000, 0, 0, &entry);
 	result = set_vcpuid_entry(vm, &entry);
-	if (result)
+	if (result != 0)
 		return result;
 
 	vm->vcpuid_xlevel = limit = entry.eax;
 	for (i = 0x80000001; i <= limit; i++) {
 		init_vcpuid_entry(vm, i, 0, 0, &entry);
 		result = set_vcpuid_entry(vm, &entry);
-		if (result)
+		if (result != 0)
 			return result;
 	}
 
@@ -258,7 +258,7 @@ void guest_cpuid(struct vcpu *vcpu,
 		struct vcpuid_entry *entry =
 			find_vcpuid_entry(vcpu, leaf, subleaf);
 
-		if (entry) {
+		if (entry != NULL) {
 			*eax = entry->eax;
 			*ebx = entry->ebx;
 			*ecx = entry->ecx;
@@ -301,15 +301,15 @@ void guest_cpuid(struct vcpu *vcpu,
 		*ecx &= ~CPUID_ECX_VMX;
 
 		/*no xsave support for guest if it is not enabled on host*/
-		if (!(*ecx & CPUID_ECX_OSXSAVE))
+		if ((*ecx & CPUID_ECX_OSXSAVE) == 0U)
 			*ecx &= ~CPUID_ECX_XSAVE;
 
 		*ecx &= ~CPUID_ECX_OSXSAVE;
-		if (*ecx & CPUID_ECX_XSAVE) {
+		if ((*ecx & CPUID_ECX_XSAVE) != 0U) {
 			uint64_t cr4;
 			/*read guest CR4*/
 			cr4 = exec_vmread(VMX_GUEST_CR4);
-			if (cr4 & CR4_OSXSAVE)
+			if ((cr4 & CR4_OSXSAVE) != 0U)
 				*ecx |= CPUID_ECX_OSXSAVE;
 		}
 		break;
