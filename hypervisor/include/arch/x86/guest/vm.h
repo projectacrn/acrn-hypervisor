@@ -30,21 +30,21 @@ struct vm_hw_info {
 };
 
 struct sw_linux {
-	void *ramdisk_src_addr;
-	void *ramdisk_load_addr;
+	void *ramdisk_src_addr;		/* HVA */
+	void *ramdisk_load_addr;	/* GPA */
 	uint32_t ramdisk_size;
-	void *bootargs_src_addr;
-	void *bootargs_load_addr;
+	void *bootargs_src_addr;	/* HVA */
+	void *bootargs_load_addr;	/* GPA */
 	uint32_t bootargs_size;
-	void *dtb_src_addr;
-	void *dtb_load_addr;
+	void *dtb_src_addr;		/* HVA */
+	void *dtb_load_addr;		/* GPA */
 	uint32_t dtb_size;
 };
 
 struct sw_kernel_info {
-	void *kernel_src_addr;
-	void *kernel_load_addr;
-	void *kernel_entry_addr;
+	void *kernel_src_addr;		/* HVA */
+	void *kernel_load_addr;		/* GPA */
+	void *kernel_entry_addr;	/* GPA */
 	uint32_t kernel_size;
 };
 

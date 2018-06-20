@@ -28,9 +28,9 @@ static void parse_other_modules(struct vm *vm,
 
 	for (i = 0; i < mods_count; i++) {
 		int type_len = 0;
-		const char *start = (const char *) (uint64_t)mods[i].mm_string;
+		const char *start = HPA2HVA((uint64_t)mods[i].mm_string);
 		const char *end;
-		void *mod_addr = (void *)(uint64_t)mods[i].mm_mod_start;
+		void *mod_addr = HPA2HVA((uint64_t)mods[i].mm_mod_start);
 		uint32_t mod_size = mods[i].mm_mod_end - mods[i].mm_mod_start;
 
 		dev_dbg(ACRN_DBG_BOOT, "other mod-%d start=0x%x, end=0x%x",
@@ -48,7 +48,8 @@ static void parse_other_modules(struct vm *vm,
 		type_len = end - start;
 		if (strncmp("FIRMWARE", start, type_len) == 0) {
 			char  dyn_bootargs[100] = {0};
-			void *load_addr = vm->sw.linux_info.bootargs_load_addr;
+			void *load_addr = GPA2HVA(vm,
+				(uint64_t)vm->sw.linux_info.bootargs_load_addr);
 			uint32_t args_size = vm->sw.linux_info.bootargs_size;
 			static int copy_once = 1;
 
@@ -72,7 +73,8 @@ static void parse_other_modules(struct vm *vm,
 
 		} else if (strncmp("RAMDISK", start, type_len) == 0) {
 			vm->sw.linux_info.ramdisk_src_addr = mod_addr;
-			vm->sw.linux_info.ramdisk_load_addr = mod_addr;
+			vm->sw.linux_info.ramdisk_load_addr =
+				mods[i].mm_mod_start;
 			vm->sw.linux_info.ramdisk_size = mod_size;
 		} else if (strncmp("SeedList", start, type_len) == 0) {
 			parse_seed_list(mod_addr);
@@ -116,7 +118,7 @@ int init_vm0_boot_info(struct vm *vm)
 		return -EINVAL;
 	}
 
-	mbi = (struct multiboot_info *)((uint64_t)boot_regs[1]);
+	mbi = HPA2HVA((uint64_t)boot_regs[1]);
 
 	dev_dbg(ACRN_DBG_BOOT, "Multiboot detected, flag=0x%x", mbi->mi_flags);
 	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
@@ -127,7 +129,7 @@ int init_vm0_boot_info(struct vm *vm)
 	dev_dbg(ACRN_DBG_BOOT, "mod counts=%d\n", mbi->mi_mods_count);
 
 	/* mod[0] is for kernel&cmdline, other mod for ramdisk/firmware info*/
-	mods = (struct multiboot_module *)(uint64_t)mbi->mi_mods_addr;
+	mods = (struct multiboot_module *)HPA2HVA((uint64_t)mbi->mi_mods_addr);
 
 	dev_dbg(ACRN_DBG_BOOT, "mod0 start=0x%x, end=0x%x",
 		mods[0].mm_mod_start, mods[0].mm_mod_end);
@@ -136,11 +138,11 @@ int init_vm0_boot_info(struct vm *vm)
 
 	vm->sw.kernel_type = VM_LINUX_GUEST;
 	vm->sw.kernel_info.kernel_src_addr =
-		(void *)(uint64_t)mods[0].mm_mod_start;
+		HPA2HVA((uint64_t)mods[0].mm_mod_start);
 	vm->sw.kernel_info.kernel_size =
 		mods[0].mm_mod_end - mods[0].mm_mod_start;
-	vm->sw.kernel_info.kernel_load_addr =
-		get_kernel_load_addr(vm->sw.kernel_info.kernel_src_addr);
+	vm->sw.kernel_info.kernel_load_addr = (void *)HVA2GPA(vm, 
+		get_kernel_load_addr(vm->sw.kernel_info.kernel_src_addr));
 
 
 	/*
@@ -153,7 +155,8 @@ int init_vm0_boot_info(struct vm *vm)
 
 		cmd_dst = kernel_cmdline;
 		cmd_src = HPA2HVA((uint64_t)mbi->mi_cmdline);
-		strncpy_s(cmd_dst, MEM_2K, cmd_src, strnlen_s(cmd_src, MEM_2K));
+		strncpy_s(cmd_dst, MEM_2K, cmd_src,
+			strnlen_s(cmd_src, MEM_2K));
 		off = strnlen_s(cmd_dst, MEM_2K);
 		cmd_dst[off] = ' ';	/* insert space */
 		off += 1;
@@ -168,9 +171,10 @@ int init_vm0_boot_info(struct vm *vm)
 			strnlen_s(kernel_cmdline, MEM_2K);
 	} else {
 		vm->sw.linux_info.bootargs_src_addr =
-			(void *)(uint64_t)mods[0].mm_string;
+			HPA2HVA((uint64_t)mods[0].mm_string);
 		vm->sw.linux_info.bootargs_size =
-			strnlen_s((char *)(uint64_t) mods[0].mm_string, MEM_2K);
+			strnlen_s(HPA2HVA((uint64_t)mods[0].mm_string),
+			MEM_2K);
 	}
 
 	vm->sw.linux_info.bootargs_load_addr = (void *)BOOT_ARGS_LOAD_ADDR;

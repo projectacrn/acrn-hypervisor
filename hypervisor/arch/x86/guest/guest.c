@@ -416,13 +416,14 @@ void init_e820(void)
 	unsigned int i;
 
 	if (boot_regs[0] == MULTIBOOT_INFO_MAGIC) {
-		struct multiboot_info *mbi =
-			(struct multiboot_info *)((uint64_t)boot_regs[1]);
+		struct multiboot_info *mbi = (struct multiboot_info *)
+			(HPA2HVA((uint64_t)boot_regs[1]));
+
 		pr_info("Multiboot info detected\n");
 		if ((mbi->mi_flags & 0x40U) != 0U) {
 			struct multiboot_mmap *mmap =
 				(struct multiboot_mmap *)
-				((uint64_t)mbi->mi_mmap_addr);
+				HPA2HVA((uint64_t)mbi->mi_mmap_addr);
 			e820_entries = mbi->mi_mmap_length/
 				sizeof(struct multiboot_mmap);
 			if (e820_entries > E820_MAX_ENTRIES) {
