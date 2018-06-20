@@ -37,8 +37,8 @@
 
 #define vm_pic(vm)	(vm->vpic)
 
-#define true                                          1
-#define false                                         0
+#define true                                          ((_Bool) 1)
+#define false                                         ((_Bool) 0)
 
 #define ACRN_DBG_PIC	6
 
@@ -104,12 +104,12 @@ static inline int vpic_get_highest_isrpin(struct pic *pic)
 	PIC_PIN_FOREACH(pin, pic, i) {
 		bit = (1 << pin);
 
-		if (pic->service & bit) {
+		if ((pic->service & bit) != 0U) {
 			/*
 			 * An IS bit that is masked by an IMR bit will not be
 			 * cleared by a non-specific EOI in Special Mask Mode.
 			 */
-			if (pic->smm && (pic->mask & bit) != 0)
+			if ((pic->smm != 0U) && (pic->mask & bit) != 0)
 				continue;
 			else
 				return pin;
@@ -139,7 +139,7 @@ static inline int vpic_get_highest_irrpin(struct pic *pic)
 	 * other levels that are not masked. In other words the ISR has no
 	 * bearing on the levels that can generate interrupts.
 	 */
-	if (pic->smm)
+	if (pic->smm != 0U)
 		serviced = 0;
 
 	PIC_PIN_FOREACH(pin, pic, tmp) {
@@ -341,7 +341,7 @@ bool vpic_is_pin_mask(struct vpic *vpic, uint8_t virt_pin)
 	} else
 		return true;
 
-	if (pic->mask & (1 << virt_pin))
+	if ((pic->mask & (1 << virt_pin)) != 0U)
 		return true;
 	else
 		return false;
@@ -364,7 +364,7 @@ static int vpic_ocw1(struct vpic *vpic, struct pic *pic, uint8_t val)
 		/* remap for active: interrupt mask -> unmask
 		 * remap for deactive: when vIOAPIC take it over
 		 */
-		if (((pic->mask & bit) == 0) && (old & bit)) {
+		if (((pic->mask & bit) == 0) && ((old & bit) != 0U)) {
 			struct ptdev_intx_info intx;
 
 			/* master pic pin2 connect with slave pic,
@@ -410,7 +410,7 @@ static int vpic_ocw2(struct vpic *vpic, struct pic *pic, uint8_t val)
 		}
 
 		/* if level ack PTDEV */
-		if (pic->elc & (1 << (isr_bit & 0x7))) {
+		if ((pic->elc & (1 << (isr_bit & 0x7))) != 0U) {
 			ptdev_intx_ack(vpic->vm,
 				master_pic(vpic, pic) ? isr_bit : isr_bit + 8,
 				PTDEV_VPIN_PIC);
@@ -428,14 +428,14 @@ static int vpic_ocw3(struct vpic *vpic, struct pic *pic, uint8_t val)
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: pic ocw3 0x%x\n",
 		vpic->vm, val);
 
-	if (val & OCW3_ESMM) {
-		pic->smm = val & OCW3_SMM ? 1 : 0;
+	if ((val & OCW3_ESMM) != 0U) {
+		pic->smm = ((val & OCW3_SMM) != 0U) ? 1 : 0;
 		dev_dbg(ACRN_DBG_PIC, "%s pic special mask mode %s\n",
 		    master_pic(vpic, pic) ? "master" : "slave",
-		    pic->smm ?  "enabled" : "disabled");
+		    (pic->smm != 0U) ?  "enabled" : "disabled");
 	}
 
-	if (val & OCW3_RR) {
+	if ((val & OCW3_RR) != 0U) {
 		/* read register command */
 		pic->rd_cmd_reg = val & OCW3_RIS;
 
@@ -515,7 +515,7 @@ static int vpic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate
 		vpic_set_pinstate(vpic, irq, false);
 		break;
 	default:
-		ASSERT(0, "vpic_set_irqstate: invalid irqstate");
+		ASSERT(false, "vpic_set_irqstate: invalid irqstate");
 	}
 	VPIC_UNLOCK(vpic);
 
@@ -582,10 +582,10 @@ int vpic_get_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger *trigger
 		return -EINVAL;
 
 	vpic = vm_pic(vm);
-	if (!vpic)
+	if (vpic == NULL)
 		return -EINVAL;
 
-	if (vpic->pic[irq>>3].elc & (1 << (irq & 0x7)))
+	if ((vpic->pic[irq>>3].elc & (1 << (irq & 0x7))) != 0U)
 		*trigger = LEVEL_TRIGGER;
 	else
 		*trigger = EDGE_TRIGGER;
@@ -689,7 +689,7 @@ static int vpic_read(struct vpic *vpic, struct pic *pic,
 			*eax = 0;
 		}
 	} else {
-		if (port & ICU_IMR_OFFSET) {
+		if ((port & ICU_IMR_OFFSET) != 0) {
 			/* read interrupt mask register */
 			*eax = pic->mask;
 		} else {
@@ -719,7 +719,7 @@ static int vpic_write(struct vpic *vpic, struct pic *pic,
 
 	VPIC_LOCK(vpic);
 
-	if (port & ICU_IMR_OFFSET) {
+	if ((port & ICU_IMR_OFFSET) != 0) {
 		switch (pic->icw_num) {
 		case 2:
 			error = vpic_icw2(vpic, pic, val);
@@ -735,11 +735,11 @@ static int vpic_write(struct vpic *vpic, struct pic *pic,
 			break;
 		}
 	} else {
-		if (val & (1 << 4))
+		if ((val & (1 << 4)) != 0U)
 			error = vpic_icw1(vpic, pic, val);
 
 		if (pic->ready) {
-			if (val & (1 << 3))
+			if ((val & (1 << 3)) != 0U)
 				error = vpic_ocw3(vpic, pic, val);
 			else
 				error = vpic_ocw2(vpic, pic, val);
@@ -938,7 +938,7 @@ void *vpic_init(struct vm *vm)
 
 void vpic_cleanup(struct vm *vm)
 {
-	if (vm->vpic) {
+	if (vm->vpic != NULL) {
 		free(vm->vpic);
 		vm->vpic = NULL;
 	}

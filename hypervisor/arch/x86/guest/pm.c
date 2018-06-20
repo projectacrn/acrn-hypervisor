@@ -18,7 +18,7 @@ int validate_pstate(struct vm *vm, uint64_t perf_ctl)
 	px_cnt = vm->pm.px_cnt;
 	px_data = vm->pm.px_data;
 
-	if (!px_cnt || !px_data) {
+	if (px_cnt == 0 || px_data == NULL) {
 		return -1;
 	}
 
@@ -38,8 +38,8 @@ static void vm_setup_cpu_px(struct vm *vm)
 	vm->pm.px_cnt = 0;
 	memset(vm->pm.px_data, 0, MAX_PSTATE * sizeof(struct cpu_px_data));
 
-	if ((!boot_cpu_data.state_info.px_cnt)
-		|| (!boot_cpu_data.state_info.px_data)) {
+	if ((boot_cpu_data.state_info.px_cnt == 0)
+		|| (boot_cpu_data.state_info.px_data == NULL)) {
 		return;
 	}
 
@@ -62,8 +62,8 @@ static void vm_setup_cpu_cx(struct vm *vm)
 	vm->pm.cx_cnt = 0;
 	memset(vm->pm.cx_data, 0, MAX_CSTATE * sizeof(struct cpu_cx_data));
 
-	if ((!boot_cpu_data.state_info.cx_cnt)
-		|| (!boot_cpu_data.state_info.cx_data)) {
+	if ((boot_cpu_data.state_info.cx_cnt == 0)
+		|| (boot_cpu_data.state_info.cx_data == NULL)) {
 		return;
 	}
 

@@ -86,7 +86,7 @@ vioapic_send_intr(struct vioapic *vioapic, int pin)
 
 	phys = ((low & IOAPIC_RTE_DESTMOD) == IOAPIC_RTE_DESTPHY);
 	delmode = low & IOAPIC_RTE_DELMOD;
-	level = low & IOAPIC_RTE_TRGRLVL ? true : false;
+	level = (low & IOAPIC_RTE_TRGRLVL) != 0U ? true : false;
 	if (level)
 		vioapic->rtbl[pin].reg |= IOAPIC_RTE_REM_IRR;
 
@@ -204,7 +204,7 @@ vioapic_update_tmr(struct vcpu *vcpu)
 	for (pin = 0; pin < vioapic_pincount(vioapic->vm); pin++) {
 		low = vioapic->rtbl[pin].reg;
 
-		level = low & IOAPIC_RTE_TRGRLVL ? true : false;
+		level = (low & IOAPIC_RTE_TRGRLVL) != 0U ? true : false;
 
 		/*
 		 * For a level-triggered 'pin' let the vlapic figure out if
@@ -240,9 +240,9 @@ vioapic_read(struct vioapic *vioapic, uint32_t addr)
 
 	/* redirection table entries */
 	if (regnum >= IOAPIC_REDTBL &&
-	    regnum < IOAPIC_REDTBL + vioapic_pincount(vioapic->vm) * 2) {
+	    (regnum < IOAPIC_REDTBL + vioapic_pincount(vioapic->vm) * 2) != 0) {
 		pin = (regnum - IOAPIC_REDTBL) / 2;
-		if ((regnum - IOAPIC_REDTBL) % 2)
+		if (((regnum - IOAPIC_REDTBL) % 2) != 0)
 			rshift = 32;
 		else
 			rshift = 0;
@@ -307,9 +307,9 @@ vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 
 	/* redirection table entries */
 	if (regnum >= IOAPIC_REDTBL &&
-	    regnum < IOAPIC_REDTBL + vioapic_pincount(vioapic->vm) * 2) {
+	    (regnum < IOAPIC_REDTBL + vioapic_pincount(vioapic->vm) * 2) != 0) {
 		pin = (regnum - IOAPIC_REDTBL) / 2;
-		if ((regnum - IOAPIC_REDTBL) % 2)
+		if (((regnum - IOAPIC_REDTBL) % 2) != 0)
 			lshift = 32;
 		else
 			lshift = 0;
@@ -323,9 +323,9 @@ vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 
 		changed = last ^ new;
 		/* pin0 from vpic mask/unmask */
-		if (pin == 0 && (changed & IOAPIC_RTE_INTMASK)) {
+		if (pin == 0 && (changed & IOAPIC_RTE_INTMASK) != 0U) {
 			/* mask -> umask */
-			if ((last & IOAPIC_RTE_INTMASK) &&
+			if ((last & IOAPIC_RTE_INTMASK) != 0U &&
 				((new & IOAPIC_RTE_INTMASK) == 0)) {
 				if ((vioapic->vm->vpic_wire_mode ==
 						VPIC_WIRE_NULL) ||
@@ -341,7 +341,7 @@ vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 				}
 			/* unmask -> mask */
 			} else if (((last & IOAPIC_RTE_INTMASK) == 0) &&
-				(new & IOAPIC_RTE_INTMASK)) {
+				(new & IOAPIC_RTE_INTMASK) != 0U) {
 				if (vioapic->vm->vpic_wire_mode ==
 						VPIC_WIRE_IOAPIC) {
 					vioapic->vm->vpic_wire_mode =
@@ -359,7 +359,7 @@ vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 		 * or polarity) have changed then rendezvous all the vcpus
 		 * to update their vlapic trigger-mode registers.
 		 */
-		if (changed & ~(IOAPIC_RTE_INTMASK | IOAPIC_RTE_INTPOL)) {
+		if ((changed & ~(IOAPIC_RTE_INTMASK | IOAPIC_RTE_INTPOL)) != 0U) {
 			int i;
 			struct vcpu *vcpu;
 
@@ -599,7 +599,7 @@ bool vioapic_get_rte(struct vm *vm, int pin, void *rte)
 	struct vioapic *vioapic;
 
 	vioapic = vm_ioapic(vm);
-	if (vioapic && rte) {
+	if ((vioapic != NULL) && (rte != NULL)) {
 		*(uint64_t *)rte = vioapic->rtbl[pin].reg;
 		return true;
 	} else
@@ -614,7 +614,7 @@ void get_vioapic_info(char *str, int str_max, int vmid)
 	bool level, phys, remote_irr, mask;
 	struct vm *vm = get_vm_from_vmid(vmid);
 
-	if (!vm) {
+	if (vm == NULL) {
 		len = snprintf(str, size,
 			"\r\nvm is not exist for vmid %d", vmid);
 		size -= len;
@@ -636,7 +636,7 @@ void get_vioapic_info(char *str, int str_max, int vmid)
 		remote_irr = ((low & IOAPIC_RTE_REM_IRR) == IOAPIC_RTE_REM_IRR);
 		phys = ((low & IOAPIC_RTE_DESTMOD) == IOAPIC_RTE_DESTPHY);
 		delmode = low & IOAPIC_RTE_DELMOD;
-		level = low & IOAPIC_RTE_TRGRLVL ? true : false;
+		level = ((low & IOAPIC_RTE_TRGRLVL) != 0U) ? true : false;
 		vector = low & IOAPIC_RTE_INTVEC;
 		dest = high >> APIC_ID_SHIFT;
 

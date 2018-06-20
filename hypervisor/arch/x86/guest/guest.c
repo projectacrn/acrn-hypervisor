@@ -82,7 +82,7 @@ inline uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask)
 	while ((vcpu_id = ffs64(vdmask)) >= 0) {
 		bitmap_clear(vcpu_id, &vdmask);
 		vcpu = vcpu_from_vid(vm, vcpu_id);
-		ASSERT(vcpu, "vcpu_from_vid failed");
+		ASSERT(vcpu != NULL, "vcpu_from_vid failed");
 		bitmap_set(vcpu->pcpu_id, &dmask);
 	}
 
@@ -113,9 +113,9 @@ enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 	if (cpu_mode == CPU_MODE_REAL)
 		return PAGING_MODE_0_LEVEL;
 	else if (cpu_mode == CPU_MODE_PROTECTED) {
-		if (cur_context->cr4 & CR4_PAE)
+		if ((cur_context->cr4 & CR4_PAE) != 0U)
 			return PAGING_MODE_3_LEVEL;
-		else if (cur_context->cr0 & CR0_PG)
+		else if ((cur_context->cr0 & CR0_PG) != 0U)
 			return PAGING_MODE_2_LEVEL;
 		return PAGING_MODE_0_LEVEL;
 	} else	/* compatibility or 64bit mode */
@@ -157,12 +157,12 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 			entry = *((uint64_t *)(base + 8 * index));
 
 		/* check if the entry present */
-		if (!(entry & MMU_32BIT_PDE_P)) {
+		if ((entry & MMU_32BIT_PDE_P) == 0U) {
 			ret = -EFAULT;
 			goto out;
 		}
 		/* check for R/W */
-		if (pw_info->is_write_access && !(entry & MMU_32BIT_PDE_RW)) {
+		if (pw_info->is_write_access && ((entry & MMU_32BIT_PDE_RW) == 0U)) {
 			/* Case1: Supermode and wp is 1
 			 * Case2: Usermode */
 			if (!(!pw_info->is_user_mode && !pw_info->wp))
@@ -171,14 +171,14 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 		/* check for nx, since for 32-bit paing, the XD bit is
 		 * reserved(0), use the same logic as PAE/4-level paging */
 		if (pw_info->is_inst_fetch && pw_info->nxe &&
-		    (entry & MMU_MEM_ATTR_BIT_EXECUTE_DISABLE))
+		    ((entry & MMU_MEM_ATTR_BIT_EXECUTE_DISABLE) != 0U))
 			fault = 1;
 
 		/* check for U/S */
-		if (!(entry & MMU_32BIT_PDE_US) && pw_info->is_user_mode)
+		if (((entry & MMU_32BIT_PDE_US) == 0U) && pw_info->is_user_mode)
 			fault = 1;
 
-		if (pw_info->pse && (i > 0 && (entry & MMU_32BIT_PDE_PS)))
+		if (pw_info->pse && (i > 0 && ((entry & MMU_32BIT_PDE_PS) != 0U)))
 			break;
 		addr = entry;
 	}
@@ -190,7 +190,7 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 	*gpa = entry | (gva & (page_size - 1));
 out:
 
-	if (fault) {
+	if (fault != 0) {
 		ret = -EFAULT;
 		*err_code |= PAGE_FAULT_P_FLAG;
 	}
@@ -216,7 +216,7 @@ static int _gva2gpa_pae(struct vcpu *vcpu, struct page_walk_info *pw_info,
 	index = (gva >> 30) & 0x3;
 	entry = base[index];
 
-	if (!(entry & MMU_32BIT_PDE_P)) {
+	if ((entry & MMU_32BIT_PDE_P) == 0U) {
 		ret = -EFAULT;
 		goto out;
 	}
@@ -256,7 +256,7 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	struct page_walk_info pw_info;
 	int ret = 0;
 
-	if (!gpa || !err_code)
+	if ((gpa == NULL) || (err_code == NULL))
 		return -EINVAL;
 	*gpa = 0;
 
@@ -306,7 +306,7 @@ static inline int32_t _copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 		return -EINVAL;
 	}
 
-	if (fix_pg_size)
+	if (fix_pg_size != 0)
 		pg_size = fix_pg_size;
 
 	off_in_pg = gpa & (pg_size - 1);
@@ -418,7 +418,7 @@ void init_e820(void)
 		struct multiboot_info *mbi =
 			(struct multiboot_info *)((uint64_t)boot_regs[1]);
 		pr_info("Multiboot info detected\n");
-		if (mbi->mi_flags & 0x40) {
+		if ((mbi->mi_flags & 0x40) != 0U) {
 			struct multiboot_mmap *mmap =
 				(struct multiboot_mmap *)
 				((uint64_t)mbi->mi_mmap_addr);
@@ -447,7 +447,7 @@ void init_e820(void)
 			}
 		}
 	} else
-		ASSERT(0, "no multiboot info found");
+		ASSERT(false, "no multiboot info found");
 }
 
 

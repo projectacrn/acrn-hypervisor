@@ -271,8 +271,8 @@ vie_calc_bytereg(struct vie *vie, enum vm_reg_name *reg, int *lhbr)
 	 * of the 'ModRM:reg' field address the legacy high-byte registers,
 	 * %ah, %ch, %dh and %bh respectively.
 	 */
-	if (!vie->rex_present) {
-		if (vie->reg & 0x4) {
+	if (vie->rex_present == 0U) {
+		if ((vie->reg & 0x4) != 0U) {
 			*lhbr = 1;
 			*reg = gpr_map[vie->reg & 0x3];
 		}
@@ -293,7 +293,7 @@ vie_read_bytereg(struct vcpu *vcpu, struct vie *vie, uint8_t *rval)
 	 * To obtain the value of a legacy high byte register shift the
 	 * base register right by 8 bits (%ah = %rax >> 8).
 	 */
-	if (lhbr)
+	if (lhbr != 0)
 		*rval = val >> 8;
 	else
 		*rval = val;
@@ -312,7 +312,7 @@ vie_write_bytereg(struct vcpu *vcpu, struct vie *vie, uint8_t byte)
 	if (error == 0) {
 		val = byte;
 		mask = 0xff;
-		if (lhbr) {
+		if (lhbr != 0) {
 			/*
 			 * Shift left by 8 to store 'byte' in a legacy high
 			 * byte register.
@@ -337,7 +337,7 @@ vie_update_register(struct vcpu *vcpu, enum vm_reg_name reg,
 	case 1:
 	case 2:
 		error = vie_read_register(vcpu, reg, &origval);
-		if (error)
+		if (error != 0)
 			return error;
 		val &= size2mask[size];
 		val |= origval & ~size2mask[size];
@@ -540,7 +540,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 
 		/* get the first operand */
 		error = memread(vcpu, gpa, &val, 1, arg);
-		if (error)
+		if (error != 0)
 			break;
 
 		/* get the second operand */
@@ -561,7 +561,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		 * REX.W + 0F B7/r	movzx r64, r/m16
 		 */
 		error = memread(vcpu, gpa, &val, 2, arg);
-		if (error)
+		if (error != 0)
 			return error;
 
 		reg = gpr_map[vie->reg];
@@ -583,7 +583,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 
 		/* get the first operand */
 		error = memread(vcpu, gpa, &val, 1, arg);
-		if (error)
+		if (error != 0)
 			break;
 
 		/* get the second operand */
@@ -626,7 +626,7 @@ get_gla(struct vcpu *vcpu, __unused struct vie *vie,
 	}
 
 	if (vie_calculate_gla(paging->cpu_mode, seg, &desc, val, opsize,
-	    addrsize, prot, gla)) {
+	    addrsize, prot, gla) != 0) {
 		if (seg == VM_REG_GUEST_SS)
 			/*vm_inject_ss(vcpu, 0);*/
 			pr_err("TODO: inject ss exception");
@@ -636,7 +636,7 @@ get_gla(struct vcpu *vcpu, __unused struct vie *vie,
 		goto guest_fault;
 	}
 
-	if (vie_canonical_check(paging->cpu_mode, *gla)) {
+	if (vie_canonical_check(paging->cpu_mode, *gla) != 0) {
 		if (seg == VM_REG_GUEST_SS)
 			/*vm_inject_ss(vcpu, 0);*/
 			pr_err("TODO: inject ss exception");
@@ -646,7 +646,7 @@ get_gla(struct vcpu *vcpu, __unused struct vie *vie,
 		goto guest_fault;
 	}
 
-	if (vie_alignment_check(paging->cpl, opsize, cr0, rflags, *gla)) {
+	if (vie_alignment_check(paging->cpl, opsize, cr0, rflags, *gla) != 0) {
 		/*vm_inject_ac(vcpu, 0);*/
 		pr_err("TODO: inject ac exception");
 		goto guest_fault;
@@ -683,9 +683,9 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 	 */
 	repeat = vie->repz_present | vie->repnz_present;
 
-	if (repeat) {
+	if (repeat != 0) {
 		error = vie_read_register(vcpu, VM_REG_GUEST_RCX, &rcx);
-		ASSERT(!error, "%s: error %d getting rcx", __func__, error);
+		ASSERT(error == 0, "%s: error %d getting rcx", __func__, error);
 
 		/*
 		 * The count register is %rcx, %ecx or %cx depending on the
@@ -697,16 +697,16 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 		}
 	}
 
-	seg = vie->segment_override ? vie->segment_register : VM_REG_GUEST_DS;
+	seg = (vie->segment_override != 0U) ? vie->segment_register : VM_REG_GUEST_DS;
 	error = get_gla(vcpu, vie, paging, opsize, vie->addrsize,
 	    PROT_READ, seg, VM_REG_GUEST_RSI, &srcaddr, &fault);
-	if (error || fault)
+	if ((error != 0) || (fault != 0))
 		goto done;
 
 	error = get_gla(vcpu, vie, paging, opsize, vie->addrsize,
 		PROT_WRITE, VM_REG_GUEST_ES, VM_REG_GUEST_RDI, &dstaddr,
 		&fault);
-	if (error || fault)
+	if ((error != 0) || (fault != 0))
 		goto done;
 
 	memcpy_s((char *)dstaddr, 16, (char *)srcaddr, opsize);
@@ -720,7 +720,7 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 	error = vie_read_register(vcpu, VM_REG_GUEST_RFLAGS, &rflags);
 	ASSERT(error == 0, "%s: error %d getting rflags", __func__, error);
 
-	if (rflags & PSL_D) {
+	if ((rflags & PSL_D) != 0U) {
 		rsi -= opsize;
 		rdi -= opsize;
 	} else {
@@ -736,11 +736,11 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 			vie->addrsize);
 	ASSERT(error == 0, "%s: error %d updating rdi", __func__, error);
 
-	if (repeat) {
+	if (repeat != 0) {
 		rcx = rcx - 1;
 		error = vie_update_register(vcpu, VM_REG_GUEST_RCX,
 				rcx, vie->addrsize);
-		ASSERT(!error, "%s: error %d updating rcx", __func__, error);
+		ASSERT(error == 0, "%s: error %d updating rcx", __func__, error);
 
 		/*
 		 * Repeat the instruction if the count register is not zero.
@@ -766,9 +766,9 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	opsize = (vie->op.op_byte == 0xAA) ? 1 : vie->opsize;
 	repeat = vie->repz_present | vie->repnz_present;
 
-	if (repeat) {
+	if (repeat != 0) {
 		error = vie_read_register(vcpu, VM_REG_GUEST_RCX, &rcx);
-		ASSERT(!error, "%s: error %d getting rcx", __func__, error);
+		ASSERT(error == 0, "%s: error %d getting rcx", __func__, error);
 
 		/*
 		 * The count register is %rcx, %ecx or %cx depending on the
@@ -779,10 +779,10 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	}
 
 	error = vie_read_register(vcpu, VM_REG_GUEST_RAX, &val);
-	ASSERT(!error, "%s: error %d getting rax", __func__, error);
+	ASSERT(error == 0, "%s: error %d getting rax", __func__, error);
 
 	error = memwrite(vcpu, gpa, val, opsize, arg);
-	if (error)
+	if (error != 0)
 		return error;
 
 	error = vie_read_register(vcpu, VM_REG_GUEST_RDI, &rdi);
@@ -791,7 +791,7 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	error = vie_read_register(vcpu, VM_REG_GUEST_RFLAGS, &rflags);
 	ASSERT(error == 0, "%s: error %d getting rflags", __func__, error);
 
-	if (rflags & PSL_D)
+	if ((rflags & PSL_D) != 0U)
 		rdi -= opsize;
 	else
 		rdi += opsize;
@@ -800,11 +800,11 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 			vie->addrsize);
 	ASSERT(error == 0, "%s: error %d updating rdi", __func__, error);
 
-	if (repeat) {
+	if (repeat != 0) {
 		rcx = rcx - 1;
 		error = vie_update_register(vcpu, VM_REG_GUEST_RCX,
 				rcx, vie->addrsize);
-		ASSERT(!error, "%s: error %d updating rcx", __func__, error);
+		ASSERT(error == 0, "%s: error %d updating rcx", __func__, error);
 
 		/*
 		 * Repeat the instruction if the count register is not zero.
@@ -849,12 +849,12 @@ emulate_test(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		/* get the first operand */
 		reg = gpr_map[vie->reg];
 		error = vie_read_register(vcpu, reg, &val1);
-		if (error)
+		if (error != 0)
 			break;
 
 		/* get the second operand */
 		error = memread(vcpu, gpa, &val2, size, arg);
-		if (error)
+		if (error != 0)
 			break;
 
 		/* perform the operation and write the result */
@@ -863,11 +863,11 @@ emulate_test(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	default:
 		break;
 	}
-	if (error)
+	if (error != 0)
 		return error;
 
 	error = vie_read_register(vcpu, VM_REG_GUEST_RFLAGS, &rflags);
-	if (error)
+	if (error != 0)
 		return error;
 
 	/*
@@ -910,12 +910,12 @@ emulate_and(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		/* get the first operand */
 		reg = gpr_map[vie->reg];
 		error = vie_read_register(vcpu, reg, &val1);
-		if (error)
+		if (error != 0)
 			break;
 
 		/* get the second operand */
 		error = memread(vcpu, gpa, &val2, size, arg);
-		if (error)
+		if (error != 0)
 			break;
 
 		/* perform the operation and write the result */
@@ -940,7 +940,7 @@ emulate_and(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 
 		/* get the first operand */
 		error = memread(vcpu, gpa, &val1, size, arg);
-		if (error)
+		if (error != 0)
 			break;
 
 		/*
@@ -953,11 +953,11 @@ emulate_and(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	default:
 		break;
 	}
-	if (error)
+	if (error != 0)
 		return error;
 
 	error = vie_read_register(vcpu, VM_REG_GUEST_RFLAGS, &rflags);
-	if (error)
+	if (error != 0)
 		return error;
 
 	/*
@@ -1008,7 +1008,7 @@ emulate_or(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 
 		/* get the first operand */
 		error = memread(vcpu, gpa, &val1, size, arg);
-		if (error)
+		if (error != 0)
 			break;
 
 		/*
@@ -1028,13 +1028,13 @@ emulate_or(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 
 		/* get the first operand */
 		error = memread(vcpu, gpa, &val1, size, arg);
-		if (error)
+		if (error != 0)
 			break;
 
 		/* get the second operand */
 		reg = gpr_map[vie->reg];
 		error = vie_read_register(vcpu, reg, &val2);
-		if (error)
+		if (error != 0)
 			break;
 
 		/* perform the operation and write the result */
@@ -1046,11 +1046,11 @@ emulate_or(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	default:
 		break;
 	}
-	if (error)
+	if (error != 0)
 		return error;
 
 	error = vie_read_register(vcpu, VM_REG_GUEST_RFLAGS, &rflags);
-	if (error)
+	if (error != 0)
 		return error;
 
 	/*
@@ -1098,12 +1098,12 @@ emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		/* Get the register operand */
 		reg = gpr_map[vie->reg];
 		error = vie_read_register(vcpu, reg, &regop);
-		if (error)
+		if (error != 0)
 			return error;
 
 		/* Get the memory operand */
 		error = memread(vcpu, gpa, &memop, size, arg);
-		if (error)
+		if (error != 0)
 			return error;
 
 		if (vie->op.op_byte == 0x3B) {
@@ -1146,7 +1146,7 @@ emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 
 		/* get the first operand */
 		error = memread(vcpu, gpa, &op1, size, arg);
-		if (error)
+		if (error != 0)
 			return error;
 
 		rflags2 = getcc(size, op1, vie->immediate);
@@ -1155,7 +1155,7 @@ emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		return -EINVAL;
 	}
 	error = vie_read_register(vcpu, VM_REG_GUEST_RFLAGS, &rflags);
-	if (error)
+	if (error != 0)
 		return error;
 	rflags &= ~RFLAGS_STATUS_BITS;
 	rflags |= rflags2 & RFLAGS_STATUS_BITS;
@@ -1189,12 +1189,12 @@ emulate_sub(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		/* get the first operand */
 		reg = gpr_map[vie->reg];
 		error = vie_read_register(vcpu, reg, &val1);
-		if (error)
+		if (error != 0)
 			break;
 
 		/* get the second operand */
 		error = memread(vcpu, gpa, &val2, size, arg);
-		if (error)
+		if (error != 0)
 			break;
 
 		/* perform the operation and write the result */
@@ -1206,11 +1206,11 @@ emulate_sub(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		break;
 	}
 
-	if (!error) {
+	if (error == 0) {
 		rflags2 = getcc(size, val1, val2);
 		error = vie_read_register(vcpu, VM_REG_GUEST_RFLAGS,
 				&rflags);
-		if (error)
+		if (error != 0)
 			return error;
 
 		rflags &= ~RFLAGS_STATUS_BITS;
@@ -1252,7 +1252,7 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 		 *   override prefix (66H).
 		 */
 		stackaddrsize = 8;
-		size = vie->opsize_override ? 2 : 8;
+		size = (vie->opsize_override != 0U) ? 2 : 8;
 	} else {
 		/*
 		 * In protected or compatibility mode the 'B' flag in the
@@ -1262,7 +1262,7 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 		error = vm_get_seg_desc(vcpu, VM_REG_GUEST_SS, &ss_desc);
 		ASSERT(error == 0, "%s: error %d getting SS descriptor",
 					__func__, error);
-		if (SEG_DESC_DEF32(ss_desc.access))
+		if ((_Bool)SEG_DESC_DEF32(ss_desc.access))
 			stackaddrsize = 4;
 		else
 			stackaddrsize = 2;
@@ -1276,22 +1276,22 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 
 	error = vie_read_register(vcpu, VM_REG_GUEST_RSP, &rsp);
 	ASSERT(error == 0, "%s: error %d getting rsp", __func__, error);
-	if (pushop)
+	if (pushop != 0)
 		rsp -= size;
 
 	if (vie_calculate_gla(paging->cpu_mode, VM_REG_GUEST_SS, &ss_desc,
-	    rsp, size, stackaddrsize, pushop ? PROT_WRITE : PROT_READ,
-	    &stack_gla)) {
+	    rsp, size, stackaddrsize, (pushop != 0)? PROT_WRITE : PROT_READ,
+	    &stack_gla) != 0) {
 		/*vm_inject_ss(vcpu, 0);*/
 		pr_err("TODO: inject ss exception");
 	}
 
-	if (vie_canonical_check(paging->cpu_mode, stack_gla)) {
+	if (vie_canonical_check(paging->cpu_mode, stack_gla) != 0) {
 		/*vm_inject_ss(vcpu, 0);*/
 		pr_err("TODO: inject ss exception");
 	}
 
-	if (vie_alignment_check(paging->cpl, size, cr0, rflags, stack_gla)) {
+	if (vie_alignment_check(paging->cpl, size, cr0, rflags, stack_gla) != 0) {
 		/*vm_inject_ac(vcpu, 0);*/
 		pr_err("TODO: inject ac exception");
 		return 0;
@@ -1302,7 +1302,7 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 	 * take care of data trans if stack_gpa be used for memwrite in
 	 * the future.
 	 */
-	if (pushop)
+	if (pushop != 0)
 		err_code |= PAGE_FAULT_WR_FLAG;
 	error = gva2gpa(vcpu, stack_gla, &stack_gpa, &err_code);
 	if (error == -EFAULT) {
@@ -1310,7 +1310,7 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 		return error;
 	} else if (error < 0)
 		return error;
-	if (pushop) {
+	if (pushop != 0) {
 		error = memread(vcpu, mmio_gpa, &val, size, arg);
 		if (error == 0)
 			error = memwrite(vcpu, stack_gpa, val, size, arg);
@@ -1422,7 +1422,7 @@ emulate_bittest(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	ASSERT(error == 0, "%s: error %d getting rflags", __func__, error);
 
 	error = memread(vcpu, gpa, &val, vie->opsize, memarg);
-	if (error)
+	if (error != 0)
 		return error;
 
 	/*
@@ -1433,7 +1433,7 @@ emulate_bittest(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	bitoff = vie->immediate & bitmask;
 
 	/* Copy the bit into the Carry flag in %rflags */
-	if (val & (1UL << bitoff))
+	if ((val & (1UL << bitoff)) != 0U)
 		rflags |= PSL_C;
 	else
 		rflags &= ~PSL_C;
@@ -1451,7 +1451,7 @@ vmm_emulate_instruction(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 {
 	int error;
 
-	if (!vie->decoded)
+	if (vie->decoded == 0U)
 		return -EINVAL;
 	switch (vie->op.op_type) {
 	case VIE_OP_TYPE_GROUP1:
@@ -1524,7 +1524,7 @@ vie_alignment_check(int cpl, int size, uint64_t cr0, uint64_t rf, uint64_t gla)
 	if (cpl != 3 || (cr0 & CR0_AM) == 0 || (rf & PSL_AC) == 0)
 		return 0;
 
-	return (gla & (size - 1)) ? 1 : 0;
+	return ((gla & (size - 1)) != 0U) ? 1 : 0;
 }
 
 int
@@ -1540,7 +1540,7 @@ vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla)
 	 * most significant 16 bits.
 	 */
 	mask = ~((1UL << 48) - 1);
-	if (gla & (1UL << 47))
+	if ((gla & (1UL << 47)) != 0U)
 		return (gla & mask) != mask;
 	else
 		return (gla & mask) != 0;
@@ -1585,7 +1585,7 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum vm_reg_name seg,
 		 * then the descriptor is unusable and attempting to use
 		 * it results in a #GP(0).
 		 */
-		if (SEG_DESC_UNUSABLE(desc->access))
+		if ((_Bool)SEG_DESC_UNUSABLE(desc->access))
 			return -1;
 
 		/*
@@ -1594,7 +1594,7 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum vm_reg_name seg,
 		 * descriptor that is not present. If this was the case then
 		 * it would have been checked before the VM-exit.
 		 */
-		ASSERT(SEG_DESC_PRESENT(desc->access),
+		ASSERT((_Bool)SEG_DESC_PRESENT(desc->access),
 		    "segment %d not present: %#x", seg, desc->access);
 
 		/*
@@ -1605,18 +1605,18 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum vm_reg_name seg,
 			"segment %d has invalid descriptor type %#x",
 			seg, type);
 
-		if (prot & PROT_READ) {
+		if ((prot & PROT_READ) != 0) {
 			/* #GP on a read access to a exec-only code segment */
 			if ((type & 0xA) == 0x8)
 				return -1;
 		}
 
-		if (prot & PROT_WRITE) {
+		if ((prot & PROT_WRITE) != 0) {
 			/*
 			 * #GP on a write access to a code segment or a
 			 * read-only data segment.
 			 */
-			if (type & 0x8)			/* code segment */
+			if ((type & 0x8) != 0)		/* code segment */
 				return -1;
 
 			if ((type & 0xA) == 0)		/* read-only data seg */
@@ -1684,7 +1684,7 @@ vie_init(struct vie *vie, struct vcpu *vcpu)
 	vie->index_register = VM_REG_LAST;
 	vie->segment_register = VM_REG_LAST;
 
-	if (inst_len) {
+	if (inst_len != 0U) {
 		int ret;
 		uint64_t guest_rip_gva =
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip;
@@ -1757,7 +1757,7 @@ decode_prefixes(struct vie *vie, enum vm_cpu_mode cpu_mode, int cs_d)
 	uint8_t x;
 
 	while (1) {
-		if (vie_peek(vie, &x))
+		if (vie_peek(vie, &x) != 0)
 			return -1;
 
 		if (x == 0x66)
@@ -1786,10 +1786,10 @@ decode_prefixes(struct vie *vie, enum vm_cpu_mode cpu_mode, int cs_d)
 	 */
 	if (cpu_mode == CPU_MODE_64BIT && x >= 0x40 && x <= 0x4F) {
 		vie->rex_present = 1;
-		vie->rex_w = x & 0x8 ? 1 : 0;
-		vie->rex_r = x & 0x4 ? 1 : 0;
-		vie->rex_x = x & 0x2 ? 1 : 0;
-		vie->rex_b = x & 0x1 ? 1 : 0;
+		vie->rex_w = (x & 0x8) != 0U ? 1 : 0;
+		vie->rex_r = (x & 0x4) != 0U ? 1 : 0;
+		vie->rex_x = (x & 0x2) != 0U ? 1 : 0;
+		vie->rex_b = (x & 0x1) != 0U ? 1 : 0;
 		vie_advance(vie);
 	}
 
@@ -1801,21 +1801,21 @@ decode_prefixes(struct vie *vie, enum vm_cpu_mode cpu_mode, int cs_d)
 		 * Default address size is 64-bits and default operand size
 		 * is 32-bits.
 		 */
-		vie->addrsize = vie->addrsize_override ? 4 : 8;
-		if (vie->rex_w)
+		vie->addrsize = (vie->addrsize_override != 0U)? 4 : 8;
+		if (vie->rex_w != 0U)
 			vie->opsize = 8;
-		else if (vie->opsize_override)
+		else if (vie->opsize_override != 0U)
 			vie->opsize = 2;
 		else
 			vie->opsize = 4;
-	} else if (cs_d) {
+	} else if (cs_d != 0) {
 		/* Default address and operand sizes are 32-bits */
-		vie->addrsize = vie->addrsize_override ? 2 : 4;
-		vie->opsize = vie->opsize_override ? 2 : 4;
+		vie->addrsize = vie->addrsize_override != 0U ? 2 : 4;
+		vie->opsize = vie->opsize_override != 0U ? 2 : 4;
 	} else {
 		/* Default address and operand sizes are 16-bits */
-		vie->addrsize = vie->addrsize_override ? 4 : 2;
-		vie->opsize = vie->opsize_override ? 4 : 2;
+		vie->addrsize = vie->addrsize_override != 0U ? 4 : 2;
+		vie->opsize = vie->opsize_override != 0U ? 4 : 2;
 	}
 	return 0;
 }
@@ -1825,7 +1825,7 @@ decode_two_byte_opcode(struct vie *vie)
 {
 	uint8_t x;
 
-	if (vie_peek(vie, &x))
+	if (vie_peek(vie, &x) != 0)
 		return -1;
 
 	vie->op = two_byte_opcodes[x];
@@ -1842,7 +1842,7 @@ decode_opcode(struct vie *vie)
 {
 	uint8_t x;
 
-	if (vie_peek(vie, &x))
+	if (vie_peek(vie, &x) != 0)
 		return -1;
 
 	vie->op = one_byte_opcodes[x];
@@ -1863,13 +1863,13 @@ decode_modrm(struct vie *vie, enum vm_cpu_mode cpu_mode)
 {
 	uint8_t x;
 
-	if (vie->op.op_flags & VIE_OP_F_NO_MODRM)
+	if ((vie->op.op_flags & VIE_OP_F_NO_MODRM) != 0U)
 		return 0;
 
 	if (cpu_mode == CPU_MODE_REAL)
 		return -1;
 
-	if (vie_peek(vie, &x))
+	if (vie_peek(vie, &x) != 0)
 		return -1;
 
 	vie->mod = (x >> 6) & 0x3;
@@ -1950,7 +1950,7 @@ decode_sib(struct vie *vie)
 	if (vie->mod == VIE_MOD_DIRECT || vie->rm != VIE_RM_SIB)
 		return 0;
 
-	if (vie_peek(vie, &x))
+	if (vie_peek(vie, &x) != 0)
 		return -1;
 
 	/* De-construct the SIB byte */
@@ -2025,7 +2025,7 @@ decode_displacement(struct vie *vie)
 		panic("decode_displacement: invalid disp_bytes %d", n);
 
 	for (i = 0; i < n; i++) {
-		if (vie_peek(vie, &x))
+		if (vie_peek(vie, &x) != 0)
 			return -1;
 
 		u.buf[i] = x;
@@ -2053,7 +2053,7 @@ decode_immediate(struct vie *vie)
 	} u;
 
 	/* Figure out immediate operand size (if any) */
-	if (vie->op.op_flags & VIE_OP_F_IMM) {
+	if ((vie->op.op_flags & VIE_OP_F_IMM) != 0U) {
 		/*
 		 * Section 2.2.1.5 "Immediates", Intel SDM:
 		 * In 64-bit mode the typical size of immediate operands
@@ -2065,7 +2065,7 @@ decode_immediate(struct vie *vie)
 			vie->imm_bytes = 4;
 		else
 			vie->imm_bytes = 2;
-	} else if (vie->op.op_flags & VIE_OP_F_IMM8) {
+	} else if ((vie->op.op_flags & VIE_OP_F_IMM8) != 0U) {
 		vie->imm_bytes = 1;
 	}
 
@@ -2077,7 +2077,7 @@ decode_immediate(struct vie *vie)
 		"%s: invalid number of immediate bytes: %d", __func__, n);
 
 	for (i = 0; i < n; i++) {
-		if (vie_peek(vie, &x))
+		if (vie_peek(vie, &x) != 0)
 			return -1;
 
 		u.buf[i] = x;
@@ -2117,7 +2117,7 @@ decode_moffset(struct vie *vie)
 
 	u.u64 = 0;
 	for (i = 0; i < n; i++) {
-		if (vie_peek(vie, &x))
+		if (vie_peek(vie, &x) != 0)
 			return -1;
 
 		u.buf[i] = x;
@@ -2130,25 +2130,25 @@ decode_moffset(struct vie *vie)
 int
 __decode_instruction(enum vm_cpu_mode cpu_mode, int cs_d, struct vie *vie)
 {
-	if (decode_prefixes(vie, cpu_mode, cs_d))
+	if (decode_prefixes(vie, cpu_mode, cs_d) != 0)
 		return -1;
 
-	if (decode_opcode(vie))
+	if (decode_opcode(vie) != 0)
 		return -1;
 
-	if (decode_modrm(vie, cpu_mode))
+	if (decode_modrm(vie, cpu_mode) != 0)
 		return -1;
 
-	if (decode_sib(vie))
+	if (decode_sib(vie) != 0)
 		return -1;
 
-	if (decode_displacement(vie))
+	if (decode_displacement(vie) != 0)
 		return -1;
 
-	if (decode_immediate(vie))
+	if (decode_immediate(vie) != 0)
 		return -1;
 
-	if (decode_moffset(vie))
+	if (decode_moffset(vie) != 0)
 		return -1;
 
 	vie->decoded = 1;	/* success */
