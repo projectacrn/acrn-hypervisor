@@ -42,7 +42,7 @@ static void parse_other_modules(struct vm *vm,
 			start++;
 
 		end = start;
-		while (*end != ' ' && *end)
+		while (*end != ' ' && (*end) != 0)
 			end++;
 
 		type_len = end - start;
@@ -58,7 +58,7 @@ static void parse_other_modules(struct vm *vm,
 			dev_dbg(ACRN_DBG_BOOT, "fw-%d: %s", i, dyn_bootargs);
 
 			/*copy boot args to load addr, set src=load addr*/
-			if (copy_once) {
+			if (copy_once != 0) {
 				copy_once = 0;
 				strcpy_s(load_addr, MEM_2K,
 					vm->sw.linux_info.bootargs_src_addr);
@@ -95,7 +95,7 @@ static void *get_kernel_load_addr(void *kernel_src_addr)
 	 * non-relocatable.
 	 */
 	zeropage = (struct zero_page *)kernel_src_addr;
-	if (zeropage->hdr.relocatable_kernel)
+	if (zeropage->hdr.relocatable_kernel != 0U)
 		return (void *)zeropage->hdr.pref_addr;
 
 	return kernel_src_addr;
@@ -112,15 +112,15 @@ int init_vm0_boot_info(struct vm *vm)
 	}
 
 	if (boot_regs[0] != MULTIBOOT_INFO_MAGIC) {
-		ASSERT(0, "no multiboot info found");
+		ASSERT(false, "no multiboot info found");
 		return -EINVAL;
 	}
 
 	mbi = (struct multiboot_info *)((uint64_t)boot_regs[1]);
 
 	dev_dbg(ACRN_DBG_BOOT, "Multiboot detected, flag=0x%x", mbi->mi_flags);
-	if (!(mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS)) {
-		ASSERT(0, "no sos kernel info found");
+	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
+		ASSERT(false, "no sos kernel info found");
 		return -EINVAL;
 	}
 
@@ -147,7 +147,7 @@ int init_vm0_boot_info(struct vm *vm)
 	 * If there is cmdline from mbi->mi_cmdline, merge it with
 	 * mods[0].mm_string
 	 */
-	if (mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) {
+	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
 		char *cmd_src, *cmd_dst;
 		int off = 0;
 

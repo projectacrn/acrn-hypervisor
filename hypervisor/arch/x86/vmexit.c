@@ -143,14 +143,14 @@ int vmexit_handler(struct vcpu *vcpu)
 	vcpu->arch_vcpu.idt_vectoring_info =
 	    exec_vmread(VMX_IDT_VEC_INFO_FIELD);
 	/* Filter out HW exception & NMI */
-	if (vcpu->arch_vcpu.idt_vectoring_info & VMX_INT_INFO_VALID) {
+	if ((vcpu->arch_vcpu.idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
 		uint32_t vector_info = vcpu->arch_vcpu.idt_vectoring_info;
 		uint32_t vector = vector_info & 0xff;
 		uint32_t type = (vector_info & VMX_INT_TYPE_MASK) >> 8;
 		uint32_t err_code = 0;
 
 		if (type == VMX_INT_TYPE_HW_EXP) {
-			if (vector_info & VMX_INT_INFO_ERR_CODE_VALID)
+			if ((vector_info & VMX_INT_INFO_ERR_CODE_VALID) != 0U)
 				err_code = exec_vmread(VMX_IDT_VEC_ERROR_CODE);
 			vcpu_queue_exception(vcpu, vector, err_code);
 			vcpu->arch_vcpu.idt_vectoring_info = 0;
@@ -180,7 +180,7 @@ int vmexit_handler(struct vcpu *vcpu)
 	/* See if an exit qualification is necessary for this exit
 	 * handler
 	 */
-	if (dispatch->need_exit_qualification) {
+	if (dispatch->need_exit_qualification != 0U) {
 		/* Get exit qualification */
 		vcpu->arch_vcpu.exit_qualification =
 		    exec_vmread(VMX_EXIT_QUALIFICATION);
@@ -306,7 +306,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	struct run_context *ctx_ptr;
 
 	val64 = exec_vmread(VMX_GUEST_CR4);
-	if (!(val64 & CR4_OSXSAVE)) {
+	if ((val64 & CR4_OSXSAVE) == 0U) {
 		vcpu_inject_gp(vcpu, 0);
 		return -1;
 	}
@@ -327,7 +327,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 			(ctx_ptr->guest_cpu_regs.regs.rdx << 32);
 
 	/*bit 0(x87 state) of XCR0 can't be cleared*/
-	if (!(val64 & 0x01)) {
+	if ((val64 & 0x01) == 0U) {
 		vcpu_inject_gp(vcpu, 0);
 		return -1;
 	}

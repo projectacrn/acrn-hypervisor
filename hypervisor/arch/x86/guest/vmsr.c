@@ -90,7 +90,7 @@ void init_msr_emulation(struct vcpu *vcpu)
 
 		/* Allocate and initialize memory for MSR bitmap region*/
 		vcpu->vm->arch_vm.msr_bitmap = alloc_page();
-		ASSERT(vcpu->vm->arch_vm.msr_bitmap, "");
+		ASSERT(vcpu->vm->arch_vm.msr_bitmap != NULL, "");
 		memset(vcpu->vm->arch_vm.msr_bitmap, 0x0, CPU_PAGE_SIZE);
 
 		msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
@@ -307,7 +307,7 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	}
 	case MSR_IA32_PERF_CTL:
 	{
-		if (validate_pstate(vcpu->vm, v)) {
+		if (validate_pstate(vcpu->vm, v) != 0) {
 			break;
 		}
 		msr_write(msr, v);

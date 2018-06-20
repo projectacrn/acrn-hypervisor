@@ -39,9 +39,9 @@ void efi_spurious_handler(int vector)
 		return;
 
 	vcpu = per_cpu(vcpu, 0);
-	if (vcpu && vcpu->arch_vcpu.vlapic) {
+	if ((vcpu != NULL) && vcpu->arch_vcpu.vlapic) {
 		ret = vlapic_set_intr(vcpu, vector, 0);
-		if (ret)
+		if (ret != 0)
 			pr_err("%s vlapic set intr fail, interrupt lost\n",
 				__func__);
 	} else

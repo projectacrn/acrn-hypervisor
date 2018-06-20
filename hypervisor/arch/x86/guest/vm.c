@@ -224,12 +224,12 @@ int shutdown_vm(struct vm *vm)
 	free_io_emulation_resource(vm);
 
 	/* Free iommu_domain */
-	if (vm->iommu_domain)
+	if (vm->iommu_domain != NULL)
 		destroy_iommu_domain(vm->iommu_domain);
 
 	bitmap_clear(vm->attr.id, &vmid_bitmap);
 
-	if (vm->vpic)
+	if (vm->vpic != NULL)
 		vpic_cleanup(vm);
 
 	free(vm->hw.vcpu_array);

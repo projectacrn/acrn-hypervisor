@@ -63,7 +63,7 @@ void setup_notification(void)
 
 void cleanup_notification(void)
 {
-	if (notification_node)
+	if (notification_node != NULL)
 		unregister_handler_common(notification_node);
 	notification_node = NULL;
 }

@@ -170,7 +170,7 @@ again:
 			continue;
 		}
 
-		if (j && mmap[j-1].mm_type == e820_type &&
+		if ((j != 0) && mmap[j-1].mm_type == e820_type &&
 			(mmap[j-1].mm_base_addr + mmap[j-1].mm_length)
 			== d->PhysicalStart) {
 			mmap[j-1].mm_length += d->NumberOfPages << EFI_PAGE_SHIFT;
@@ -247,7 +247,7 @@ switch_to_guest_mode(EFI_HANDLE image)
 		config_table++;
 	}
 
-	if (!rsdp) {
+	if (rsdp == NULL) {
 		Print(L"unable to find RSDP\n");
 		goto out;
 	}

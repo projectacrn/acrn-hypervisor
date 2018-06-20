@@ -47,9 +47,9 @@ static inline int exec_vmxon(void *addr)
 	tmp64 = msr_read(MSR_IA32_FEATURE_CONTROL);
 
 	/* Determine if feature control is locked */
-	if (tmp64 & MSR_IA32_FEATURE_CONTROL_LOCK) {
+	if ((tmp64 & MSR_IA32_FEATURE_CONTROL_LOCK) != 0U) {
 		/* See if VMX enabled */
-		if (!(tmp64 & MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX)) {
+		if ((tmp64 & MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX) == 0U) {
 			/* Return error - VMX can't be enabled */
 			pr_err("%s, VMX can't be enabled\n", __func__);
 			status = -EINVAL;
@@ -72,7 +72,7 @@ static inline int exec_vmxon(void *addr)
 			      : "%rax", "cc", "memory");
 
 		/* if carry and zero flags are clear operation success */
-		if (rflags & (RFLAGS_C | RFLAGS_Z)) {
+		if ((rflags & (RFLAGS_C | RFLAGS_Z)) != 0U) {
 			pr_err("%s, Turn VMX on failed\n", __func__);
 			status = -EINVAL;
 		}
@@ -117,7 +117,7 @@ int exec_vmxon_instr(uint32_t pcpu_id)
 		per_cpu(vmxon_region_pa, pcpu_id) = HVA2HPA(vmxon_region_va);
 		ret = exec_vmxon(&per_cpu(vmxon_region_pa, pcpu_id));
 
-		if (vcpu) {
+		if (vcpu != NULL) {
 			vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
 			ret = exec_vmptrld(&vmcs_pa);
 		}
@@ -135,10 +135,10 @@ int vmx_off(int pcpu_id)
 	struct vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
 	uint64_t vmcs_pa;
 
-	if (vcpu) {
+	if (vcpu != NULL) {
 		vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
 		ret = exec_vmclear((void *)&vmcs_pa);
-		if (ret)
+		if (ret != 0)
 			return ret;
 	}
 
@@ -165,7 +165,7 @@ int exec_vmclear(void *addr)
 		: "%rax", "cc", "memory");
 
 	/* if carry and zero flags are clear operation success */
-	if (rflags & (RFLAGS_C | RFLAGS_Z))
+	if ((rflags & (RFLAGS_C | RFLAGS_Z)) != 0U)
 		status = -EINVAL;
 
 	return status;
@@ -190,7 +190,7 @@ int exec_vmptrld(void *addr)
 		: "%rax", "cc");
 
 	/* if carry and zero flags are clear operation success */
-	if (rflags & (RFLAGS_C | RFLAGS_Z))
+	if ((rflags & (RFLAGS_C | RFLAGS_Z)) != 0U)
 		status = -EINVAL;
 
 	return status;
@@ -331,7 +331,7 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	uint32_t entry_ctrls;
 	bool paging_enabled = !!(context->cr0 & CR0_PG);
 
-	if (cr0 & (cr0_always_off_mask | CR0_RESERVED_MASK)) {
+	if ((cr0 & (cr0_always_off_mask | CR0_RESERVED_MASK)) != 0U) {
 		pr_err("Not allow to set always off / reserved bits for CR0");
 		vcpu_inject_gp(vcpu, 0);
 		return -EINVAL;
@@ -340,9 +340,9 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	/* TODO: Check all invalid guest statuses according to the change of
 	 * CR0, and inject a #GP to guest */
 
-	if ((context->ia32_efer & MSR_IA32_EFER_LME_BIT) &&
-	    !paging_enabled && (cr0 & CR0_PG)) {
-		if (!(context->cr4 & CR4_PAE)) {
+	if (((context->ia32_efer & MSR_IA32_EFER_LME_BIT) != 0U) &&
+	    !paging_enabled && ((cr0 & CR0_PG) != 0U)) {
+		if ((context->cr4 & CR4_PAE) == 0U) {
 			pr_err("Can't enable long mode when PAE disabled");
 			vcpu_inject_gp(vcpu, 0);
 			return -EINVAL;
@@ -355,8 +355,8 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 
 		context->ia32_efer |= MSR_IA32_EFER_LMA_BIT;
 		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, context->ia32_efer);
-	} else if ((context->ia32_efer & MSR_IA32_EFER_LME_BIT) &&
-		   paging_enabled && !(cr0 & CR0_PG)){
+	} else if (((context->ia32_efer & MSR_IA32_EFER_LME_BIT) != 0U) &&
+		   paging_enabled && ((cr0 & CR0_PG) == 0U)){
 		/* Disable long mode */
 		pr_dbg("VMM: Disable long mode");
 		entry_ctrls = exec_vmread(VMX_ENTRY_CONTROLS);
@@ -436,14 +436,14 @@ int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 	 * CR4, and inject a #GP to guest */
 
 	/* Check if guest try to set fixed to 0 bits or reserved bits */
-	if(cr4 & cr4_always_off_mask) {
+	if((cr4 & cr4_always_off_mask) != 0U) {
 		pr_err("Not allow to set reserved/always off bits for CR4");
 		vcpu_inject_gp(vcpu, 0);
 		return -EINVAL;
 	}
 
 	/* Do NOT support nested guest */
-	if (cr4 & CR4_VMXE) {
+	if ((cr4 & CR4_VMXE) != 0U) {
 		pr_err("Nested guest not supported");
 		vcpu_inject_gp(vcpu, 0);
 		return -EINVAL;
@@ -620,7 +620,7 @@ static void init_guest_state(struct vcpu *vcpu)
 
 		value32 = gdtb.limit;
 
-		if ((gdtb.base >> 47) & 0x1)
+		if (((gdtb.base >> 47) & 0x1) != 0U)
 			gdtb.base |= 0xffff000000000000ull;
 
 		base = gdtb.base;
@@ -655,7 +655,7 @@ static void init_guest_state(struct vcpu *vcpu)
 		/* Limit */
 		limit = idtb.limit;
 
-		if ((idtb.base >> 47) & 0x1)
+		if (((idtb.base >> 47) & 0x1) != 0U)
 			idtb.base |= 0xffff000000000000ull;
 
 		/* Base */
@@ -953,7 +953,7 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	asm volatile ("sgdt %0"::"m" (gdtb));
 	value32 = gdtb.limit;
 
-	if ((gdtb.base >> 47) & 0x1)
+	if (((gdtb.base >> 47) & 0x1) != 0U)
 		gdtb.base |= 0xffff000000000000ull;
 
 	/* Set up the guest and host GDTB base fields with current GDTB base */
@@ -963,7 +963,7 @@ static void init_host_state(__unused struct vcpu *vcpu)
 
 	/* TODO: Should guest TR point to host TR ? */
 	trbase = gdtb.base + tr_sel;
-	if ((trbase >> 47) & 0x1)
+	if (((trbase >> 47) & 0x1) != 0U)
 		trbase |= 0xffff000000000000ull;
 
 	/* SS segment override */
@@ -989,7 +989,7 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	/* Obtain the current interrupt descriptor table base */
 	asm volatile ("sidt %0"::"m" (idtb));
 	/* base */
-	if ((idtb.base >> 47) & 0x1)
+	if (((idtb.base >> 47) & 0x1) != 0U)
 		idtb.base |= 0xffff000000000000ull;
 
 	field = VMX_HOST_IDTR_BASE;
@@ -1144,7 +1144,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 			VMX_PROCBASED_CTLS2_RDTSCP |
 			VMX_PROCBASED_CTLS2_UNRESTRICT);
 
-	if (vcpu->arch_vcpu.vpid)
+	if (vcpu->arch_vcpu.vpid != 0)
 		value32 |= VMX_PROCBASED_CTLS2_VPID;
 	else
 		value32 &= ~VMX_PROCBASED_CTLS2_VPID;
@@ -1201,7 +1201,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	}
 
 	/* Check for EPT support */
-	if (is_ept_supported())
+	if (is_ept_supported() != 0)
 		pr_dbg("EPT is supported");
 	else
 		pr_err("Error: EPT is not supported");

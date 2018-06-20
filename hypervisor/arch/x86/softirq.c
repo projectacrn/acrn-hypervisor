@@ -81,7 +81,7 @@ again:
 
 	CPU_IRQ_DISABLE();
 
-	if (((*bitmap) & SOFTIRQ_MASK))
+	if (((*bitmap) & SOFTIRQ_MASK) != 0U)
 		goto again;
 
 	enable_softirq(cpu_id);
