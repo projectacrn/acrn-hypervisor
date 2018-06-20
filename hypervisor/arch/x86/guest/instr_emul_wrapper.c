@@ -25,7 +25,7 @@ int vm_get_register(struct vcpu *vcpu, int reg, uint64_t *retval)
 {
 	struct run_context *cur_context;
 
-	if (!vcpu)
+	if (vcpu == NULL)
 		return -EINVAL;
 	if ((reg >= VM_REG_LAST) || (reg < VM_REG_GUEST_RAX))
 		return -EINVAL;
@@ -50,7 +50,7 @@ int vm_set_register(struct vcpu *vcpu, int reg, uint64_t val)
 {
 	struct run_context *cur_context;
 
-	if (!vcpu)
+	if (vcpu == NULL)
 		return -EINVAL;
 	if ((reg >= VM_REG_LAST) || (reg < VM_REG_GUEST_RAX))
 		return -EINVAL;
@@ -76,7 +76,7 @@ int vm_set_seg_desc(struct vcpu *vcpu, int seg, struct seg_desc *ret_desc)
 	int error;
 	uint32_t base, limit, access;
 
-	if ((!vcpu) || (!ret_desc))
+	if ((vcpu == NULL) || (ret_desc == NULL))
 		return -EINVAL;
 
 	if (!is_segment_register(seg) && !is_descriptor_table(seg))
@@ -98,7 +98,7 @@ int vm_get_seg_desc(struct vcpu *vcpu, int seg, struct seg_desc *desc)
 	int error;
 	uint32_t base, limit, access;
 
-	if ((!vcpu) || (!desc))
+	if ((vcpu == NULL) || (desc == NULL))
 		return -EINVAL;
 
 	if (!is_segment_register(seg) && !is_descriptor_table(seg))
@@ -270,7 +270,7 @@ static void get_guest_paging_info(struct vcpu *vcpu, struct emul_cnx *emul_cnx)
 static int mmio_read(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t *rval,
 		__unused int size, __unused void *arg)
 {
-	if (!vcpu)
+	if (vcpu == NULL)
 		return -EINVAL;
 
 	*rval = vcpu->mmio.value;
@@ -280,7 +280,7 @@ static int mmio_read(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t *rval,
 static int mmio_write(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t wval,
 		__unused int size, __unused void *arg)
 {
-	if (!vcpu)
+	if (vcpu == NULL)
 		return -EINVAL;
 
 	vcpu->mmio.value = wval;
