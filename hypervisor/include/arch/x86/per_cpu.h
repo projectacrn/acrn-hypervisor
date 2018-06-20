@@ -4,7 +4,8 @@
 #include <bsp_extern.h>
 #include <schedule.h>
 #include <version.h>
-#include <irq.h>
+#include <common/irq.h>
+#include <arch/x86/irq.h>
 #include <sbuf.h>
 #include <gdt.h>
 #include <timer.h>
