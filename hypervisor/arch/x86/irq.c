@@ -161,6 +161,7 @@ static void _irq_desc_free_vector(uint32_t irq)
 {
 	struct irq_desc *desc;
 	uint32_t vr;
+	int pcpu_id;
 
 	if (irq > NR_MAX_IRQS)
 		return;
@@ -175,6 +176,9 @@ static void _irq_desc_free_vector(uint32_t irq)
 	vr &= NR_MAX_VECTOR;
 	if (vector_to_irq[vr] == irq)
 		vector_to_irq[vr] = IRQ_INVALID;
+
+	for (pcpu_id = 0; pcpu_id < phy_cpu_num; pcpu_id++)
+		per_cpu(irq_count, pcpu_id)[irq] = 0;
 }
 
 static void disable_pic_irq(void)
@@ -714,7 +718,7 @@ void get_cpu_interrupt_info(char *str, int str_max)
 			str += len;
 			for (pcpu_id = 0; pcpu_id < phy_cpu_num; pcpu_id++) {
 				len = snprintf(str, size, "\t%d",
-					per_cpu(irq_count, pcpu_id)[irq]++);
+					per_cpu(irq_count, pcpu_id)[irq]);
 				size -= len;
 				str += len;
 			}
