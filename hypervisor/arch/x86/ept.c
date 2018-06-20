@@ -234,7 +234,14 @@ int register_mmio_emulation_handler(struct vm *vm,
 
 			mmio_node->range_start = start;
 			mmio_node->range_end = end;
-			ept_mmap(vm, start, start, end - start,
+
+			/*
+			 * SOS would map all its memory at beginning, so we
+			 * should unmap it. But UOS will not, so we shouldn't
+			 * need to unmap it.
+			 */
+			if (is_vm0(vm))
+				ept_mmap(vm, start, start, end - start,
 					MAP_UNMAP, 0);
 
 			/* Return success */
