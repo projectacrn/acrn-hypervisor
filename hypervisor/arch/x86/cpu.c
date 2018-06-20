@@ -217,7 +217,7 @@ static int hardware_detect_support(void)
 	}
 
 	ret = check_vmx_mmu_cap();
-	if (ret)
+	if (ret != 0)
 		return ret;
 
 	pr_acrnlog("hardware support HV");
@@ -465,7 +465,7 @@ void bsp_boot_init(void)
 	init_logmsg(CONFIG_LOG_BUF_SIZE,
 		       CONFIG_LOG_DESTINATION);
 
-	if (HV_RC_VERSION)
+	if (HV_RC_VERSION != 0)
 		pr_acrnlog("HV version %d.%d-rc%d-%s-%s %s build by %s, start time %lluus",
 			HV_MAJOR_VERSION, HV_MINOR_VERSION, HV_RC_VERSION,
 			HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_TYPE,
@@ -782,7 +782,7 @@ void cpu_dead(uint32_t logical_id)
 	/* Halt the CPU */
 	do {
 		asm volatile ("hlt");
-	} while (halt);
+	} while (halt != 0);
 }
 
 static void cpu_set_logical_id(uint32_t logical_id)
@@ -908,7 +908,7 @@ static void cpu_xsave_init(void)
 			cpuid(CPUID_FEATURES, &unused, &unused, &ecx, &unused);
 
 			/* if set, update it */
-			if (ecx & CPUID_ECX_OSXSAVE)
+			if ((ecx & CPUID_ECX_OSXSAVE) != 0U)
 				boot_cpu_data.cpuid_leaves[FEAT_1_ECX] |=
 						CPUID_ECX_OSXSAVE;
 		}

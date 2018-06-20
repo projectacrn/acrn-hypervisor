@@ -205,7 +205,7 @@ static void ioapic_set_routing(uint32_t gsi, uint32_t vr)
 	rte = create_rte_for_gsi_irq(gsi, vr);
 	ioapic_set_rte_entry(addr, gsi_table[gsi].pin, &rte);
 
-	if (rte.lo_32 & IOAPIC_RTE_TRGRMOD)
+	if ((rte.lo_32 & IOAPIC_RTE_TRGRMOD) != 0U)
 		update_irq_handler(gsi, handle_level_interrupt_common);
 	else
 		update_irq_handler(gsi, common_handler_edge);
@@ -421,7 +421,7 @@ void get_rte_info(struct ioapic_rte *rte, bool *mask, bool *irr,
 	*irr = ((rte->lo_32 & IOAPIC_RTE_REM_IRR) == IOAPIC_RTE_REM_IRR);
 	*phys = ((rte->lo_32 & IOAPIC_RTE_DESTMOD) == IOAPIC_RTE_DESTPHY);
 	*delmode = rte->lo_32 & IOAPIC_RTE_DELMOD;
-	*level = rte->lo_32 & IOAPIC_RTE_TRGRLVL ? true : false;
+	*level = ((rte->lo_32 & IOAPIC_RTE_TRGRLVL) != 0U) ? true : false;
 	*vector = rte->lo_32 & IOAPIC_RTE_INTVEC;
 	*dest = rte->hi_32 >> APIC_ID_SHIFT;
 }

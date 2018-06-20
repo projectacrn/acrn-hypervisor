@@ -38,7 +38,7 @@ static void dm_emulate_pio_pre(struct vcpu *vcpu, uint64_t exit_qual,
 				uint32_t sz, uint64_t req_value)
 {
 	vcpu->req.type = REQ_PORTIO;
-	if (VM_EXIT_IO_INSTRUCTION_ACCESS_DIRECTION(exit_qual))
+	if (VM_EXIT_IO_INSTRUCTION_ACCESS_DIRECTION(exit_qual) != 0U)
 		vcpu->req.reqs.pio_request.direction = REQUEST_READ;
 	else
 		vcpu->req.reqs.pio_request.direction = REQUEST_WRITE;
@@ -120,7 +120,7 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 
 	if (status != 0) {
 		pr_fatal("Err:IO %s access to port 0x%04x, size=%u",
-				direction ? "read" : "write", port, sz);
+			 (direction != 0) ? "read" : "write", port, sz);
 
 	}
 
@@ -129,7 +129,7 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 
 static void register_io_handler(struct vm *vm, struct vm_io_handler *hdlr)
 {
-	if (vm->arch_vm.io_handler)
+	if (vm->arch_vm.io_handler != NULL)
 		hdlr->next = vm->arch_vm.io_handler;
 
 	vm->arch_vm.io_handler = hdlr;
@@ -140,7 +140,7 @@ static void empty_io_handler_list(struct vm *vm)
 	struct vm_io_handler *handler = vm->arch_vm.io_handler;
 	struct vm_io_handler *tmp;
 
-	while (handler) {
+	while (handler != NULL) {
 		tmp = handler;
 		handler = tmp->next;
 		free(tmp);
@@ -165,7 +165,7 @@ void allow_guest_io_access(struct vm *vm, uint32_t address, uint32_t nbytes)
 
 	b = vm->arch_vm.iobitmap[0];
 	for (i = 0; i < nbytes; i++) {
-		if (address & 0x8000)
+		if ((address & 0x8000) != 0U)
 			b = vm->arch_vm.iobitmap[1];
 		a = address & 0x7fff;
 		b[a >> 5] &= ~(1 << (a & 0x1f));
@@ -181,7 +181,7 @@ static void deny_guest_io_access(struct vm *vm, uint32_t address, uint32_t nbyte
 
 	b = vm->arch_vm.iobitmap[0];
 	for (i = 0; i < nbytes; i++) {
-		if (address & 0x8000)
+		if ((address & 0x8000) != 0U)
 			b = vm->arch_vm.iobitmap[1];
 		a = address & 0x7fff;
 		b[a >> 5] |= (1 << (a & 0x1f));
@@ -216,7 +216,8 @@ void setup_io_bitmap(struct vm *vm)
 	vm->arch_vm.iobitmap[0] = alloc_page();
 	vm->arch_vm.iobitmap[1] = alloc_page();
 
-	ASSERT(vm->arch_vm.iobitmap[0] && vm->arch_vm.iobitmap[1], "");
+	ASSERT((vm->arch_vm.iobitmap[0] != NULL) &&
+	       (vm->arch_vm.iobitmap[1] != NULL), "");
 
 	if (is_vm0(vm)) {
 		memset(vm->arch_vm.iobitmap[0], 0x00, CPU_PAGE_SIZE);

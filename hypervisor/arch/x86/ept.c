@@ -23,8 +23,8 @@ static uint64_t find_next_table(uint32_t table_offset, void *table_base)
 			+ (table_offset * IA32E_COMM_ENTRY_SIZE));
 
 	/* If bit 7 is set, entry is not a subtable. */
-	if ((table_entry & IA32E_PDPTE_PS_BIT)
-	    || (table_entry & IA32E_PDE_PS_BIT))
+	if ((table_entry & IA32E_PDPTE_PS_BIT) != 0U
+	    || (table_entry & IA32E_PDE_PS_BIT) != 0U)
 		return sub_table_addr;
 
 	/* Set table present bits to any of the read/write/execute bits */
@@ -79,11 +79,11 @@ void free_ept_mem(void *pml4_addr)
 						pde_addr));
 
 				/* Free page table entry table */
-				if (pte_addr)
+				if (pte_addr != NULL)
 					free_paging_struct(pte_addr);
 			}
 			/* Free page directory entry table */
-			if (pde_addr)
+			if (pde_addr != NULL)
 				free_paging_struct(pde_addr);
 		}
 		free_paging_struct(pdpt_addr);
@@ -103,7 +103,7 @@ void destroy_ept(struct vm *vm)
 	 *  - trusty is enabled. But not initialized yet.
 	 *    Check vm->arch_vm.sworld_eptp.
 	 */
-	if (vm->sworld_control.sworld_enabled && vm->arch_vm.sworld_eptp) {
+	if (vm->sworld_control.sworld_enabled && (vm->arch_vm.sworld_eptp != 0U)) {
 		free_ept_mem(HPA2HVA(vm->arch_vm.sworld_eptp));
 		vm->arch_vm.sworld_eptp = 0;
 	}
@@ -130,7 +130,7 @@ uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 				vm->attr.boot_idx, gpa);
 	}
 
-	if (size)
+	if (size != NULL)
 		*size = pg_size;
 
 	return hpa;
@@ -172,12 +172,12 @@ int is_ept_supported(void)
 	tmp64 = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
 
 	/* Check if secondary processor based VM control is available. */
-	if (tmp64 & MMU_MEM_ATTR_BIT_EXECUTE_DISABLE) {
+	if ((tmp64 & MMU_MEM_ATTR_BIT_EXECUTE_DISABLE) != 0U) {
 		/* Read primary processor based VM control. */
 		tmp64 = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
 
 		/* Check if EPT is supported. */
-		if (tmp64 & (((uint64_t)VMX_PROCBASED_CTLS2_EPT) << 32)) {
+		if ((tmp64 & (((uint64_t)VMX_PROCBASED_CTLS2_EPT) << 32)) != 0U) {
 			/* EPT is present. */
 			status = 1;
 		} else {
@@ -213,7 +213,7 @@ int register_mmio_emulation_handler(struct vm *vm,
 	struct mem_io_node *mmio_node;
 
 	if (vm->hw.created_vcpus > 0 && vm->hw.vcpu_array[0]->launched) {
-		ASSERT(0, "register mmio handler after vm launched");
+		ASSERT(false, "register mmio handler after vm launched");
 		return status;
 	}
 
@@ -224,7 +224,7 @@ int register_mmio_emulation_handler(struct vm *vm,
 		(struct mem_io_node *)calloc(1, sizeof(struct mem_io_node));
 
 		/* Ensure memory successfully allocated */
-		if (mmio_node) {
+		if (mmio_node != NULL) {
 			/* Fill in information for this node */
 			mmio_node->read_write = read_write;
 			mmio_node->handler_private_data = handler_private_data;
@@ -334,7 +334,7 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 	exit_qual = vcpu->arch_vcpu.exit_qualification;
 
 	/* Specify if read or write operation */
-	if (exit_qual & 0x2) {
+	if ((exit_qual & 0x2) != 0U) {
 		/* Write operation */
 		mmio->read_write = HV_MEM_IO_WRITE;
 
@@ -467,7 +467,7 @@ int ept_mmap(struct vm *vm, uint64_t hpa,
 
 	/* Setup memory map parameters */
 	map_params.page_table_type = PTT_EPT;
-	if (vm->arch_vm.nworld_eptp) {
+	if (vm->arch_vm.nworld_eptp != 0U) {
 		map_params.pml4_base = HPA2HVA(vm->arch_vm.nworld_eptp);
 		map_params.pml4_inverted = HPA2HVA(vm->arch_vm.m2p);
 	} else {
@@ -485,7 +485,7 @@ int ept_mmap(struct vm *vm, uint64_t hpa,
 		unmap_mem(&map_params, (void *)hpa, (void *)gpa,
 				size, prot);
 	} else
-		ASSERT(0, "unknown map type");
+		ASSERT(false, "unknown map type");
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);

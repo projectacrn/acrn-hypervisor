@@ -48,7 +48,7 @@ static void init_irq_desc(void)
 
 	irq_desc_base = alloc_pages(page_num);
 
-	ASSERT(irq_desc_base, "page alloc failed!");
+	ASSERT(irq_desc_base != NULL, "page alloc failed!");
 	memset(irq_desc_base, 0, page_num * CPU_PAGE_SIZE);
 
 	for (i = 0; i < NR_MAX_IRQS; i++) {
@@ -203,14 +203,14 @@ irq_desc_append_dev(struct irq_desc *desc, void *node, bool share)
 		 * ioapic setup.
 		 * caller can later update it with update_irq_handler()
 		 */
-		if (!desc->irq_handler)
+		if (desc->irq_handler == NULL)
 			desc->irq_handler = common_handler_edge;
 	} else if (!share || desc->used == IRQ_ASSIGNED_NOSHARE) {
 		/* dev node added failed */
 		added = false;
 	} else {
 		/* dev_list point to last valid node */
-		while (dev_list->next)
+		while (dev_list->next != NULL)
 			dev_list = dev_list->next;
 		/* add node */
 		dev_list->next = node;
@@ -421,7 +421,7 @@ void handle_spurious_interrupt(uint32_t vector)
 
 	pr_warn("Spurious vector: 0x%x.", vector);
 
-	if (spurious_handler)
+	if (spurious_handler != NULL)
 		spurious_handler(vector);
 }
 
@@ -441,7 +441,7 @@ void dispatch_interrupt(struct intr_excp_ctx *ctx)
 	if (vr != desc->vector)
 		goto ERR;
 
-	if (desc->used == IRQ_NOT_ASSIGNED || !desc->irq_handler) {
+	if (desc->used == IRQ_NOT_ASSIGNED || desc->irq_handler == NULL) {
 		/* mask irq if possible */
 		goto ERR;
 	}
@@ -479,8 +479,8 @@ int handle_level_interrupt_common(struct irq_desc *desc,
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
-	while (dev) {
-		if (dev->dev_handler)
+	while (dev != NULL) {
+		if (dev->dev_handler != NULL)
 			dev->dev_handler(desc->irq, dev->dev_data);
 		dev = dev->next;
 	}
@@ -515,8 +515,8 @@ int common_handler_edge(struct irq_desc *desc, __unused void *handler_data)
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
-	while (dev) {
-		if (dev->dev_handler)
+	while (dev != NULL) {
+		if (dev->dev_handler != NULL)
 			dev->dev_handler(desc->irq, dev->dev_data);
 		dev = dev->next;
 	}
@@ -552,8 +552,8 @@ int common_dev_handler_level(struct irq_desc *desc, __unused void *handler_data)
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
-	while (dev) {
-		if (dev->dev_handler)
+	while (dev != NULL) {
+		if (dev->dev_handler != NULL)
 			dev->dev_handler(desc->irq, dev->dev_data);
 		dev = dev->next;
 	}
@@ -573,8 +573,8 @@ int quick_handler_nolock(struct irq_desc *desc, __unused void *handler_data)
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
-	while (dev) {
-		if (dev->dev_handler)
+	while (dev != NULL) {
+		if (dev->dev_handler != NULL)
 			dev->dev_handler(desc->irq, dev->dev_data);
 		dev = dev->next;
 	}
@@ -621,7 +621,7 @@ void unregister_handler_common(struct dev_handler_node *node)
 		goto UNLOCK_EXIT;
 	}
 
-	while (head->next) {
+	while (head->next != NULL) {
 		if (head->next == node)
 			break;
 		head = head->next;
