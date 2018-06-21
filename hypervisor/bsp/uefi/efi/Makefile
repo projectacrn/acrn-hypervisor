@@ -43,27 +43,22 @@ HOST  = $(shell $(CC) -dumpmachine | sed "s/\(-\).*$$//")
 ARCH := $(shell $(CC) -dumpmachine | sed "s/\(-\).*$$//")
 
 ifeq ($(ARCH),x86_64)
-	LIBDIR := $(shell if [ -d /usr/lib64 ]; then echo /usr/lib64; \
-			else if [ -d /usr/lib ]; then echo /usr/lib; fi ; fi;)
 	FORMAT=efi-app-x86-64
 else
 	ARCH=ia32
-	LIBDIR=/usr/lib32
 	FORMAT=efi-app-ia32
 endif
 
+# Different Linux distributions have the 'gnu-efi' package install
+# its tools and libraries in different folders. The next couple of
+# variables will determine and set the right path for both the
+# tools $(GNUEFI_DIR) and libraries $(LIBDIR)
+GNUEFI_DIR := $(shell find /usr/lib* -name elf_$(ARCH)_efi.lds -type f | xargs dirname)
+LIBDIR := $(subst gnuefi,,$(GNUEFI_DIR))
+CRT0 := $(GNUEFI_DIR)/crt0-efi-$(ARCH).o
+LDSCRIPT := $(GNUEFI_DIR)/elf_$(ARCH)_efi.lds
+
 INCDIR := /usr/include
-
-# gnuefi sometimes installs these under a gnuefi/ directory, and sometimes not
-ifneq ("$(wildcard $(LIBDIR)/gnuefi/crt0-efi-$(ARCH).o)","")
-	CRT0 := $(LIBDIR)/gnuefi/crt0-efi-$(ARCH).o
-	LDSCRIPT := $(LIBDIR)/gnuefi/elf_$(ARCH)_efi.lds
-else
-	CRT0 := $(LIBDIR)/crt0-efi-$(ARCH).o
-	LDSCRIPT := $(LIBDIR)/elf_$(ARCH)_efi.lds
-endif
-
-
 
 CFLAGS=-I. -I.. -I$(INCDIR)/efi -I$(INCDIR)/efi/$(ARCH) \
 		-DEFI_FUNCTION_WRAPPER -fPIC -fshort-wchar -ffreestanding \
