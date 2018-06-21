@@ -100,8 +100,8 @@ static inline void console_dump_bytes(__unused const void *p,
 static inline void console_setup_timer(void) {}
 static inline uint32_t get_serial_handle(void) { return 0; }
 
-void suspend_console(void) {}
-void resume_console_enable(void) {}
+static inline void suspend_console(void) {}
+static inline void resume_console_enable(void) {}
 #endif
 
 #endif /* CONSOLE_H */
