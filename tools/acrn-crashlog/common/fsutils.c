@@ -94,6 +94,9 @@ int mm_count_lines(struct mm_file_t *mfile)
 	if (!mfile || mfile->size < 0)
 		return -EINVAL;
 
+	if (!mfile->size)
+		return 0;
+
 	return strcnt(mfile->begin, '\n');
 }
 
@@ -432,7 +435,7 @@ int replace_file_head(char *filename, char *text)
  *
  * @return 0 if successful, or a negative errno-style value if not.
  */
-int overwrite_file(char *filename, char *value)
+int overwrite_file(const char *filename, const char *value)
 {
 	FILE *fp;
 	int ret = 0;
@@ -833,11 +836,13 @@ close:
 	return -1;
 }
 
-static int _file_read_key_value(char *path, char op, char *key, char *value)
+static int _file_read_key_value(const char *path, const char op,
+				const char *key, const size_t limit,
+				char *value)
 {
 	int fd;
 	int size;
-	int len;
+	size_t len;
 	char *data;
 	char *msg = NULL;
 	char *end, *start;
@@ -855,6 +860,10 @@ static int _file_read_key_value(char *path, char op, char *key, char *value)
 	size = get_file_size(path);
 	if (size < 0)
 		return size;
+	if (!size) {
+		errno = ENOMSG;
+		return -errno;
+	}
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0)
@@ -872,12 +881,14 @@ static int _file_read_key_value(char *path, char op, char *key, char *value)
 		errno = ENOMSG;
 		goto unmap;
 	}
-	end = strchr(msg, '\n');
+
+	start = msg + strlen(key);
+	end = strchr(start, '\n');
 	if (end == NULL)
 		end = data + size;
 
-	start = msg + strlen(key);
 	len = end - start;
+	len = MIN(len, limit - 1);
 	memcpy(value, start, len);
 	*(value + len) = 0;
 
@@ -893,14 +904,16 @@ close:
 	return -errno;
 }
 
-int file_read_key_value(char *path, char *key, char *value)
+int file_read_key_value(const char *path, const char *key,
+			const size_t limit, char *value)
 {
-	return _file_read_key_value(path, 'l', key, value);
+	return _file_read_key_value(path, 'l', key, limit, value);
 }
 
-int file_read_key_value_r(char *path, char *key, char *value)
+int file_read_key_value_r(const char *path, const char *key,
+			const size_t limit, char *value)
 {
-	return _file_read_key_value(path, 'r', key, value);
+	return _file_read_key_value(path, 'r', key, limit, value);
 }
 
 int dir_contains(const char *dir, const char *filename, int exact,

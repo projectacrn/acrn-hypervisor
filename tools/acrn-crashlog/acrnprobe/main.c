@@ -65,15 +65,18 @@ int main(int argc, char *argv[])
 	int op;
 	struct sender_t *sender;
 	char cfg[PATH_MAX];
-	char *config_path[2] = {CONFIG_CUSTOMIZE,
-				CONFIG_INSTALL};
-	struct option opts[] = {
+	const char * const config_path[2] = {
+		CONFIG_CUSTOMIZE,
+		CONFIG_INSTALL
+	};
+	const struct option opts[] = {
 		{ "config", required_argument, NULL, 'c' },
 		{ "help", no_argument, NULL, 'h' },
 		{ "version", no_argument, NULL, 'V' },
 		{ NULL, 0, NULL, 0 }
 	};
 
+	cfg[0] = 0;
 	while ((op = getopt_long(argc, argv, "c:hV", opts,
 				 NULL)) != -1) {
 		switch (op) {

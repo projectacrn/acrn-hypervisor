@@ -276,7 +276,7 @@ static void get_log_cmd(struct log_t *log, char *desdir)
 }
 
 #ifdef HAVE_TELEMETRICS_CLIENT
-static bool telemd_send_data(char *payload, char *eventid, uint32_t severity,
+static int telemd_send_data(char *payload, char *eventid, uint32_t severity,
 				char *class)
 {
 	int res;
@@ -312,12 +312,12 @@ static bool telemd_send_data(char *payload, char *eventid, uint32_t severity,
 	}
 
 	tm_free_record(handle);
-	return true;
+	return 0;
 
 free:
 	tm_free_record(handle);
 fail:
-	return false;
+	return -1;
 }
 
 static void telemd_get_log(struct log_t *log, void *data)
@@ -638,14 +638,15 @@ static void telemd_send_reboot(void)
 	free(class);
 }
 
-static void telemd_new_vmevent(char *line_to_sync, struct vm_t *vm)
+static int telemd_new_vmevent(const char *line_to_sync,
+				const struct vm_t *vm)
 {
-	char event[96] = {0};
-	char longtime[96] = {0};
-	char type[96] = {0};
-	char rest[PATH_MAX] = {0};
-	char *vmlogpath[1] = {0};
-	char vmkey[SHA_DIGEST_LENGTH + 1] = {0};
+	char event[ANDROID_WORD_LEN];
+	char longtime[ANDROID_WORD_LEN];
+	char type[ANDROID_WORD_LEN];
+	char rest[PATH_MAX];
+	char *vmlogpath = NULL;
+	char vmkey[ANDROID_WORD_LEN];
 	char *log;
 	char *class;
 	char *eventid;
@@ -653,7 +654,8 @@ static void telemd_new_vmevent(char *line_to_sync, struct vm_t *vm)
 	int count;
 	int i;
 	uint32_t severity;
-	int ret;
+	int res;
+	int ret = VMEVT_HANDLED;
 
 	/* VM events in history_event look like this:
 	 *
@@ -662,13 +664,15 @@ static void telemd_new_vmevent(char *line_to_sync, struct vm_t *vm)
 	 * "REBOOT  xxxxxxxxxxxxxxxxxxxx  2011-11-11/11:20:51  POWER-ON
 	 * 0000:00:00"
 	 */
-	char *vm_format = "%[^ ]%*[ ]%[^ ]%*[ ]%[^ ]%*[ ]%[^ ]%*[ ]%[^\n]%*c";
+	const char * const vm_format =
+		ANDROID_ENEVT_FMT ANDROID_KEY_FMT ANDROID_LONGTIME_FMT
+		ANDROID_TYPE_FMT ANDROID_LINE_REST_FMT;
 
-	ret = sscanf(line_to_sync, vm_format, event, vmkey, longtime,
+	res = sscanf(line_to_sync, vm_format, event, vmkey, longtime,
 		     type, rest);
-	if (ret != 5) {
-		LOGE("get a invalied line from (%s), skip\n", vm->name);
-		return;
+	if (res != 5) {
+		LOGE("get an invalid line from (%s), skip\n", vm->name);
+		return VMEVT_HANDLED;
 	}
 
 	if (strcmp(event, "CRASH") == 0)
@@ -679,60 +683,77 @@ static void telemd_new_vmevent(char *line_to_sync, struct vm_t *vm)
 	/* if line contains log, fill vmlogpath */
 	log = strstr(rest, "/logs/");
 	if (log) {
-		struct sender_t *crashlog = get_sender_by_name("crashlog");
+		struct sender_t *crashlog;
 
-		ret = find_file(crashlog->outdir, log + strlen("/logs/"),
-				2, vmlogpath, 1);
-		if (ret < 0) {
+		crashlog = get_sender_by_name("crashlog");
+		if (!crashlog)
+			return VMEVT_HANDLED;
+
+		res = find_file(crashlog->outdir, log + strlen("/logs/"),
+				2, &vmlogpath, 1);
+		if (res < 0) {
 			LOGE("find (%s) in (%s) failed, strerror (%s)\n",
 			     log + strlen("/logs/"), crashlog->outdir,
-			     strerror(-ret));
-			return;
+			     strerror(-res));
+			return VMEVT_DEFER;
 		}
 	}
 
-	ret = asprintf(&class, "%s/%s/%s", vm->name, event, type);
-	if (ret < 0) {
+	res = asprintf(&class, "%s/%s/%s", vm->name, event, type);
+	if (res < 0) {
 		LOGE("compute string failed, out of memory\n");
+		ret = VMEVT_DEFER;
 		goto free_vmlogpath;
 	}
 
 	eventid = generate_eventid256(class);
 	if (eventid == NULL) {
 		LOGE("generate eventid failed, error (%s)\n", strerror(errno));
+		ret = VMEVT_DEFER;
 		goto free_class;
 	}
 
-	if (vmlogpath[0] == 0) {
-		telemd_send_data("no logs", eventid, severity, class);
+	if (!vmlogpath) {
+		res = telemd_send_data("no logs", eventid, severity, class);
+		if (res == -1)
+			ret = VMEVT_DEFER;
+
 		goto free;
 	}
 
 	/* send logs */
-	count = lsdir(vmlogpath[0], files, ARRAY_SIZE(files));
+	count = lsdir(vmlogpath, files, ARRAY_SIZE(files));
 	if (count > 2) {
 		for (i = 0; i < count; i++) {
 			if (!strstr(files[i], "/.") &&
-			    !strstr(files[i], "/.."))
-				telemd_send_data(files[i], eventid, severity,
-						 class);
+			    !strstr(files[i], "/..")) {
+				res = telemd_send_data(files[i], eventid,
+						       severity, class);
+				if (res == -1)
+					ret = VMEVT_DEFER;
+			}
 		}
 	} else if (count == 2) {
 		char *content;
 
-		ret = asprintf(&content, "no logs under (%s)", vmlogpath[0]);
-		if (ret < 0) {
+		res = asprintf(&content, "no logs under (%s)", vmlogpath);
+		if (res > 0) {
+			res = telemd_send_data(content, eventid, severity,
+					       class);
+			if (res == -1)
+				ret = VMEVT_DEFER;
+			free(content);
+		} else {
 			LOGE("compute string failed, out of memory\n");
-			goto free;
+			ret = VMEVT_DEFER;
 		}
-
-		telemd_send_data(content, eventid, severity, class);
-		free(content);
 	} else if (count < 0) {
-		LOGE("lsdir (%s) failed, error (%s)\n", vmlogpath[0],
+		LOGE("lsdir (%s) failed, error (%s)\n", vmlogpath,
 		     strerror(-count));
+		ret = VMEVT_DEFER;
 	} else {
-		LOGE("get (%d) files in (%s) ???\n", count, vmlogpath[0]);
+		LOGE("get (%d) files in (%s) ???\n", count, vmlogpath);
+		ret = VMEVT_DEFER;
 	}
 
 	while (count > 0)
@@ -743,8 +764,10 @@ free:
 free_class:
 	free(class);
 free_vmlogpath:
-	if (vmlogpath[0])
-		free(vmlogpath[0]);
+	if (vmlogpath)
+		free(vmlogpath);
+
+	return ret;
 }
 
 static void telemd_send(struct event_t *e)
@@ -961,19 +984,21 @@ static void crashlog_send_reboot(void)
 	free(key);
 }
 
-static void crashlog_new_vmevent(char *line_to_sync, struct vm_t *vm)
+static int crashlog_new_vmevent(const char *line_to_sync,
+					const struct vm_t *vm)
 {
 	struct sender_t *crashlog;
-	char event[96] = {0};
-	char longtime[96] = {0};
-	char type[96] = {0};
-	char rest[PATH_MAX] = {0};
-	char vmkey[SHA_DIGEST_LENGTH + 1] = {0};
+	char event[ANDROID_WORD_LEN];
+	char longtime[ANDROID_WORD_LEN];
+	char type[ANDROID_WORD_LEN];
+	char rest[PATH_MAX];
+	char vmkey[ANDROID_WORD_LEN];
 	char *vmlogpath = NULL;
 	char *key;
 	char *log;
 	char *cmd;
-	int ret;
+	int ret = VMEVT_HANDLED;
+	int res;
 	int quota;
 	char *dir;
 
@@ -984,35 +1009,38 @@ static void crashlog_new_vmevent(char *line_to_sync, struct vm_t *vm)
 	 * "REBOOT  xxxxxxxxxxxxxxxxxxxx  2011-11-11/11:20:51  POWER-ON
 	 * 0000:00:00"
 	 */
-	char *vm_format = "%[^ ]%*[ ]%[^ ]%*[ ]%[^ ]%*[ ]%[^ ]%*[ ]%[^\n]%*c";
+	const char * const vm_format =
+		ANDROID_ENEVT_FMT ANDROID_KEY_FMT ANDROID_LONGTIME_FMT
+		ANDROID_TYPE_FMT ANDROID_LINE_REST_FMT;
 
-	ret = sscanf(line_to_sync, vm_format, event, vmkey, longtime,
+	res = sscanf(line_to_sync, vm_format, event, vmkey, longtime,
 		     type, rest);
-	if (ret != 5) {
-		LOGE("get a invalied line from (%s), skip\n", vm->name);
-		return;
+	if (res != 5) {
+		LOGE("get an invalid line from (%s), skip\n", vm->name);
+		return ret;
 	}
 
 	crashlog = get_sender_by_name("crashlog");
 	if (!crashlog)
-		return;
+		return ret;
 
 	quota = atoi(crashlog->spacequota);
 	if (!space_available(crashlog->outdir, quota)) {
 		hist_raise_infoerror("SPACE_FULL");
-		return;
+		return ret;
 	}
 
 	key = generate_event_id("SOS", vmkey);
 	if (key == NULL) {
 		LOGE("generate event id failed, error (%s)\n",
 		     strerror(errno));
-		return;
+		return VMEVT_DEFER;
 	}
 
 	dir = generate_log_dir(MODE_VMEVENT, key);
 	if (dir == NULL) {
 		LOGE("generate crashlog dir failed\n");
+		ret = VMEVT_DEFER;
 		goto free_key;
 	}
 
@@ -1020,20 +1048,32 @@ static void crashlog_new_vmevent(char *line_to_sync, struct vm_t *vm)
 	 */
 	log = strstr(rest, "/logs/");
 	if (log) {
-		ret = asprintf(&vmlogpath, "%s", log + 1);
-		if (ret < 0) {
+		res = asprintf(&vmlogpath, "%s", log + 1);
+		if (res < 0) {
 			LOGE("compute string failed, out of memory\n");
+			remove(dir);
+			ret = VMEVT_DEFER;
 			goto free_dir;
 		}
 
-		ret = asprintf(&cmd, "rdump %s %s", vmlogpath, dir);
-		if (ret < 0) {
+		res = asprintf(&cmd, "rdump %s %s", vmlogpath, dir);
+		if (res < 0) {
 			LOGE("compute string failed, out of memory\n");
 			free(vmlogpath);
+			remove(dir);
+			ret = VMEVT_DEFER;
 			goto free_dir;
 		}
 
-		debugfs_cmd(loop_dev, cmd, NULL);
+		res = debugfs_cmd(loop_dev, cmd, NULL);
+		if (res) {
+			LOGE("debugfs cmd %s failed (%d)\n", cmd, res);
+			res = remove(dir);
+			if (res == -1 && errno != ENOENT)
+				LOGE("remove %s faield (%d)\n", dir, -errno);
+			ret = VMEVT_DEFER;
+			goto free_dir;
+		}
 
 		free(cmd);
 		free(vmlogpath);
@@ -1047,6 +1087,8 @@ free_dir:
 	free(dir);
 free_key:
 	free(key);
+
+	return ret;
 }
 
 static void crashlog_send(struct event_t *e)
@@ -1095,7 +1137,7 @@ int init_sender(void)
 		if (!sender)
 			continue;
 
-		ret = asprintf(&sender->log_vmrecordid, "%s/vmrecordid",
+		ret = asprintf(&sender->log_vmrecordid, "%s/VM_eventsID.log",
 			       sender->outdir);
 		if (ret < 0) {
 			LOGE("compute string failed, out of memory\n");

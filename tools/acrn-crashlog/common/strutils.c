@@ -37,16 +37,16 @@ int strlinelen(char *str)
  * @return a pointer to the beginning of the substring,
  *	   or NULL if the substring is not found.
  */
-char *strrstr(char *s, char *substr)
+char *strrstr(const char *s, const char *substr)
 {
-	char *found;
-	char *p = s;
+	const char *found;
+	const char *p = s;
 
 	while ((found = strstr(p, substr)))
 		p = found + 1;
 
 	if (p != s)
-		return p - 1;
+		return (char *)(p - 1);
 
 	return NULL;
 }
