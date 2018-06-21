@@ -419,23 +419,21 @@ int64_t _set_vm_memmap(struct vm *vm, struct vm *target_vm,
 	if (memmap->type != MAP_UNMAP) {
 		prot = (memmap->prot != 0) ? memmap->prot : memmap->prot_2;
 		if ((prot & MEM_ACCESS_READ) != 0U)
-			attr |= MMU_MEM_ATTR_READ;
+			attr |= IA32E_EPT_R_BIT;
 		if ((prot & MEM_ACCESS_WRITE) != 0U)
-			attr |= MMU_MEM_ATTR_WRITE;
+			attr |= IA32E_EPT_W_BIT;
 		if ((prot & MEM_ACCESS_EXEC) != 0U)
-			attr |= MMU_MEM_ATTR_EXECUTE;
+			attr |= IA32E_EPT_X_BIT;
 		if ((prot & MEM_TYPE_WB) != 0U)
-			attr |= MMU_MEM_ATTR_WB_CACHE;
+			attr |= IA32E_EPT_WB;
 		else if ((prot & MEM_TYPE_WT) != 0U)
-			attr |= MMU_MEM_ATTR_WT_CACHE;
-		else if ((prot & MEM_TYPE_UC) != 0U)
-			attr |= MMU_MEM_ATTR_UNCACHED;
+			attr |= IA32E_EPT_WT;
 		else if ((prot & MEM_TYPE_WC) != 0U)
-			attr |= MMU_MEM_ATTR_WC;
+			attr |= IA32E_EPT_WC;
 		else if ((prot & MEM_TYPE_WP) != 0U)
-			attr |= MMU_MEM_ATTR_WP;
+			attr |= IA32E_EPT_WP;
 		else
-			attr |= MMU_MEM_ATTR_UNCACHED;
+			attr |= IA32E_EPT_UNCACHED;
 	}
 
 	/* create gpa to hpa EPT mapping */

@@ -117,10 +117,10 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	map_params.pml4_base = pml4_base;
 	map_mem(&map_params, (void *)hpa,
 			(void *)gpa_rebased, size,
-			(MMU_MEM_ATTR_READ |
-			 MMU_MEM_ATTR_WRITE |
-			 MMU_MEM_ATTR_EXECUTE |
-			 MMU_MEM_ATTR_WB_CACHE));
+			(IA32E_EPT_R_BIT |
+			 IA32E_EPT_W_BIT |
+			 IA32E_EPT_X_BIT |
+			 IA32E_EPT_WB));
 
 	/* Unmap trusty memory space from sos ept mapping*/
 	map_params.pml4_base = HPA2HVA(vm0->arch_vm.nworld_eptp);
@@ -166,10 +166,10 @@ void  destroy_secure_world(struct vm *vm)
 	map_mem(&map_params, (void *)vm->sworld_control.sworld_memory.base_hpa,
 			(void *)vm->sworld_control.sworld_memory.base_gpa,
 			vm->sworld_control.sworld_memory.length,
-			(MMU_MEM_ATTR_READ |
-			 MMU_MEM_ATTR_WRITE |
-			 MMU_MEM_ATTR_EXECUTE |
-			 MMU_MEM_ATTR_WB_CACHE));
+			(IA32E_EPT_R_BIT |
+			 IA32E_EPT_W_BIT |
+			 IA32E_EPT_X_BIT |
+			 IA32E_EPT_WB));
 
 }
 

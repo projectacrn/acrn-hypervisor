@@ -2031,8 +2031,8 @@ int vlapic_create(struct vcpu *vcpu)
 			ept_mmap(vcpu->vm,
 				apicv_get_apic_access_addr(vcpu->vm),
 				DEFAULT_APIC_BASE, CPU_PAGE_SIZE, MAP_MMIO,
-				MMU_MEM_ATTR_WRITE | MMU_MEM_ATTR_READ |
-				MMU_MEM_ATTR_UNCACHED);
+				IA32E_EPT_W_BIT | IA32E_EPT_R_BIT |
+				IA32E_EPT_UNCACHED);
 		}
 	} else {
 		/*No APICv support*/

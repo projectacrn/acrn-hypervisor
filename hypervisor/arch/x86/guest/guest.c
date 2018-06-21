@@ -554,14 +554,14 @@ static void rebuild_vm0_e820(void)
 int prepare_vm0_memmap_and_e820(struct vm *vm)
 {
 	unsigned int i;
-	uint32_t attr_wb = (MMU_MEM_ATTR_READ |
-			MMU_MEM_ATTR_WRITE   |
-			MMU_MEM_ATTR_EXECUTE |
-			MMU_MEM_ATTR_WB_CACHE);
-	uint32_t attr_uc = (MMU_MEM_ATTR_READ |
-			MMU_MEM_ATTR_WRITE   |
-			MMU_MEM_ATTR_EXECUTE |
-			MMU_MEM_ATTR_UNCACHED);
+	uint32_t attr_wb = (IA32E_EPT_R_BIT |
+				IA32E_EPT_W_BIT |
+				IA32E_EPT_X_BIT |
+				IA32E_EPT_WB);
+	uint32_t attr_uc = (IA32E_EPT_R_BIT |
+				IA32E_EPT_W_BIT |
+				IA32E_EPT_X_BIT |
+				IA32E_EPT_UNCACHED);
 	struct e820_entry *entry;
 
 
