@@ -18,7 +18,7 @@ struct e820_mem_params e820_mem;
 struct page_walk_info {
 	uint64_t top_entry;	/* Top level paging structure entry */
 	int level;
-	int width;
+	uint32_t width;
 	bool is_user_mode;
 	bool is_write_access;
 	bool is_inst_fetch;
