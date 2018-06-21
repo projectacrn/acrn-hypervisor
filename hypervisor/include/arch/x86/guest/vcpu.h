@@ -148,6 +148,7 @@ struct run_context {
 	uint64_t ia32_kernel_gs_base;
 
 	uint64_t ia32_pat;
+	uint64_t vmx_ia32_pat;
 	uint64_t ia32_efer;
 	uint64_t ia32_sysenter_cs;
 	uint64_t ia32_sysenter_esp;

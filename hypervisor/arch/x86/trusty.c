@@ -183,7 +183,16 @@ static void save_world_ctx(struct run_context *context)
 	context->vmx_cr4 = exec_vmread(VMX_GUEST_CR4);
 	context->dr7 = exec_vmread(VMX_GUEST_DR7);
 	context->ia32_debugctl = exec_vmread64(VMX_GUEST_IA32_DEBUGCTL_FULL);
-	context->ia32_pat = exec_vmread64(VMX_GUEST_IA32_PAT_FULL);
+
+	/*
+	 * Similar to CR0 and CR4, the actual value of guest's IA32_PAT MSR
+	 * (represented by context->vmx_ia32_pat) could be different from the
+	 * value that guest reads (represented by context->ia32_pat).
+	 *
+	 * the wrmsr handler keeps track of 'ia32_pat', and we only
+	 * need to load 'vmx_ia32_pat' here.
+	 */
+	context->vmx_ia32_pat = exec_vmread(VMX_GUEST_IA32_PAT_FULL);
 	context->ia32_efer = exec_vmread64(VMX_GUEST_IA32_EFER_FULL);
 	context->ia32_sysenter_cs = exec_vmread(VMX_GUEST_IA32_SYSENTER_CS);
 	context->ia32_sysenter_esp = exec_vmread(VMX_GUEST_IA32_SYSENTER_ESP);
@@ -229,7 +238,7 @@ static void load_world_ctx(struct run_context *context)
 	exec_vmwrite(VMX_GUEST_RFLAGS, context->rflags);
 	exec_vmwrite(VMX_GUEST_DR7, context->dr7);
 	exec_vmwrite64(VMX_GUEST_IA32_DEBUGCTL_FULL, context->ia32_debugctl);
-	exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, context->ia32_pat);
+	exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, context->vmx_ia32_pat);
 	exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, context->ia32_efer);
 	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_CS, context->ia32_sysenter_cs);
 	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_ESP, context->ia32_sysenter_esp);
@@ -362,17 +371,18 @@ static bool init_secure_world_env(struct vcpu *vcpu,
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].tsc_offset = 0;
 
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].cr0 =
-		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr0 =
-		exec_vmread(VMX_CR0_READ_SHADOW);
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr0;
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].cr4 =
-		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr4 =
-		exec_vmread(VMX_CR4_READ_SHADOW);
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr4;
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].vmx_cr0 =
-		vcpu->arch_vcpu.contexts[NORMAL_WORLD].vmx_cr0 =
-		exec_vmread(VMX_GUEST_CR0);
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].vmx_cr0;
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].vmx_cr4 =
-		vcpu->arch_vcpu.contexts[NORMAL_WORLD].vmx_cr4 =
-		exec_vmread(VMX_GUEST_CR4);
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].vmx_cr4;
+
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].ia32_pat =
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].ia32_pat;
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].vmx_ia32_pat =
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].vmx_ia32_pat;
 
 	exec_vmwrite(VMX_GUEST_RSP,
 		TRUSTY_EPT_REBASE_GPA + size);
