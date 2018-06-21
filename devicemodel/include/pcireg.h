@@ -1065,4 +1065,7 @@
 #define	PCIM_OSC_CTL_PCIE_AER		0x08 /* PCIe Advanced Error Reporting */
 #define	PCIM_OSC_CTL_PCIE_CAP_STRUCT	0x10 /* Various Capability Structures */
 
+/* Graphics definitions */
+#define PCIR_GMCH_CTL			0x50 /*GMCH grpahics control register */
+#define PCIM_GMCH_CTL_GMS		0xFF00 /*GMS - stolen memory bits 15:8 */
 #endif

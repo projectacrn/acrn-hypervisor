@@ -70,6 +70,8 @@
 #define PCI_BDF(bus, dev, func)  (((bus & 0xFF)<<8) | ((dev & 0x1F)<<3)     \
 		| ((func & 0x7)))
 
+#define	PCI_BDF_GPU		0x00000010	/* 00:02.0 */
+
 /* Some audio driver get topology data from ACPI NHLT table, thus need copy host
  * NHLT to guest. Default audio driver doesn't require this, so make it off by
  * default to avoid unexpected failure.
@@ -1158,6 +1160,15 @@ passthru_cfgread(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 
 	/* Everything else just read from the device's config space */
 	*rv = read_config(ptdev->phys_dev, coff, bytes);
+
+	/*
+	 * return zero for graphics stolen memory since acrn does not have
+	 * support for RMRR
+	 */
+	if ((PCI_BDF(dev->bus, dev->slot, dev->func) == PCI_BDF_GPU)
+		&& (coff == PCIR_GMCH_CTL)) {
+		*rv &= ~PCIM_GMCH_CTL_GMS;
+	}
 
 	return 0;
 }
