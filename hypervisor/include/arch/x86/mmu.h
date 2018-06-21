@@ -183,17 +183,6 @@
  * and only one of the MMU_MEM_ATTR_TYPE_xxx definitions
  */
 
-/* Generic memory attributes */
-#define     MMU_MEM_ATTR_READ                   0x00000001U
-#define     MMU_MEM_ATTR_WRITE                  0x00000002U
-#define     MMU_MEM_ATTR_EXECUTE                0x00000004U
-#define     MMU_MEM_ATTR_USER                   0x00000008U
-#define     MMU_MEM_ATTR_WB_CACHE               0x00000040U
-#define     MMU_MEM_ATTR_WT_CACHE               0x00000080U
-#define     MMU_MEM_ATTR_UNCACHED               0x00000100U
-#define     MMU_MEM_ATTR_WC                     0x00000200U
-#define     MMU_MEM_ATTR_WP                     0x00000400U
-
 /* Definitions for memory types related to x64 */
 #define     MMU_MEM_ATTR_BIT_READ_WRITE         IA32E_COMM_RW_BIT
 #define     MMU_MEM_ATTR_BIT_USER_ACCESSIBLE    IA32E_COMM_US_BIT

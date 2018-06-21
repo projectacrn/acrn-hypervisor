@@ -592,16 +592,12 @@ void init_paging(void)
 	struct map_params map_params;
 	struct e820_entry *entry;
 	uint32_t i;
-	int attr_wb = (MMU_MEM_ATTR_READ |
-			MMU_MEM_ATTR_WRITE   |
-			MMU_MEM_ATTR_EXECUTE |
-			MMU_MEM_ATTR_USER |
-			MMU_MEM_ATTR_WB_CACHE);
-	int attr_uc = (MMU_MEM_ATTR_READ |
-			MMU_MEM_ATTR_WRITE   |
-			MMU_MEM_ATTR_EXECUTE |
-			MMU_MEM_ATTR_USER |
-			MMU_MEM_ATTR_UNCACHED);
+	int attr_wb = (MMU_MEM_ATTR_BIT_READ_WRITE |
+			MMU_MEM_ATTR_BIT_USER_ACCESSIBLE |
+			MMU_MEM_ATTR_TYPE_CACHED_WB);
+	int attr_uc = (MMU_MEM_ATTR_BIT_READ_WRITE |
+			MMU_MEM_ATTR_BIT_USER_ACCESSIBLE |
+			MMU_MEM_ATTR_TYPE_UNCACHED);
 
 	pr_dbg("HV MMU Initialization");
 
@@ -637,7 +633,7 @@ void init_paging(void)
 	 */
 	modify_mem(&map_params, (void *)CONFIG_RAM_START,
 			(void *)CONFIG_RAM_START,
-			CONFIG_RAM_SIZE, attr_wb & (~MMU_MEM_ATTR_USER));
+			CONFIG_RAM_SIZE, attr_wb & (~MMU_MEM_ATTR_BIT_USER_ACCESSIBLE));
 
 	pr_dbg("Enabling MMU ");
 
@@ -683,70 +679,6 @@ bool check_continuous_hpa(struct vm *vm, uint64_t gpa, uint64_t size)
 		size -= PAGE_SIZE_4K;
 	}
 	return true;
-
-}
-uint64_t config_page_table_attr(struct map_params *map_params, uint32_t flags)
-{
-	int  table_type = map_params->page_table_type;
-	uint64_t attr = 0;
-
-	/* Convert generic memory flags to architecture specific attributes */
-	/* Check if read access */
-	if ((flags & MMU_MEM_ATTR_READ) != 0U) {
-		/* Configure for read access */
-		attr |= ((table_type == PTT_EPT)
-			? IA32E_EPT_R_BIT : 0);
-	}
-
-	/* Check for write access */
-	if ((flags & MMU_MEM_ATTR_WRITE) != 0U)	{
-		/* Configure for write access */
-		attr |= ((table_type == PTT_EPT)
-			? IA32E_EPT_W_BIT : MMU_MEM_ATTR_BIT_READ_WRITE);
-	}
-
-	/* Check for execute access */
-	if ((flags & MMU_MEM_ATTR_EXECUTE) != 0U) {
-		/* Configure for execute (EPT only) */
-		attr |= ((table_type == PTT_EPT)
-			? IA32E_EPT_X_BIT : 0);
-	}
-
-	if ((table_type == PTT_HOST) && (flags & MMU_MEM_ATTR_USER))
-		attr |= MMU_MEM_ATTR_BIT_USER_ACCESSIBLE;
-
-	/* EPT & VT-d share the same page tables, set SNP bit
-	 * to force snooping of PCIe devices if the page
-	 * is cachable
-	 */
-	if ((flags & MMU_MEM_ATTR_UNCACHED) != MMU_MEM_ATTR_UNCACHED
-			&& table_type == PTT_EPT) {
-		attr |= IA32E_EPT_SNOOP_CTRL;
-	}
-
-	/* Check for cache / memory types */
-	if ((flags & MMU_MEM_ATTR_WB_CACHE) != 0U) {
-		/* Configure for write back cache */
-		attr |= ((table_type == PTT_EPT)
-			? IA32E_EPT_WB : MMU_MEM_ATTR_TYPE_CACHED_WB);
-	} else if ((flags & MMU_MEM_ATTR_WT_CACHE) != 0U)	{
-		/* Configure for write through cache */
-		attr |= ((table_type == PTT_EPT)
-			? IA32E_EPT_WT : MMU_MEM_ATTR_TYPE_CACHED_WT);
-	} else if ((flags & MMU_MEM_ATTR_UNCACHED) != 0U)	{
-		/* Configure for uncached */
-		attr |= ((table_type == PTT_EPT)
-			? IA32E_EPT_UNCACHED : MMU_MEM_ATTR_TYPE_UNCACHED);
-	} else if ((flags & MMU_MEM_ATTR_WC) != 0U) {
-		/* Configure for write combining */
-		attr |= ((table_type == PTT_EPT)
-			? IA32E_EPT_WC : MMU_MEM_ATTR_TYPE_WRITE_COMBINED);
-	} else {
-		/* Configure for write protected */
-		attr |= ((table_type == PTT_EPT)
-			? IA32E_EPT_WP : MMU_MEM_ATTR_TYPE_WRITE_PROTECTED);
-	}
-	return attr;
 
 }
 
@@ -1030,7 +962,7 @@ static int modify_paging(struct map_params *map_params, void *paddr,
 {
 	int64_t  remaining_size;
 	uint64_t adjust_size;
-	uint64_t attr;
+	uint64_t attr = flags;
 	struct entry_params entry;
 	uint64_t page_size;
 	uint64_t vaddr_end = ((uint64_t)vaddr) + size;
@@ -1051,7 +983,6 @@ static int modify_paging(struct map_params *map_params, void *paddr,
 		return -EINVAL;
 	}
 
-	attr = config_page_table_attr(map_params, flags);
 	/* Check ept misconfigurations,
 	 * rwx misconfiguration in the following conditions:
 	 * - write-only

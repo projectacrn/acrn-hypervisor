@@ -478,6 +478,12 @@ int ept_mmap(struct vm *vm, uint64_t hpa,
 	}
 
 	if (type == MAP_MEM || type == MAP_MMIO) {
+		/* EPT & VT-d share the same page tables, set SNP bit
+		 * to force snooping of PCIe devices if the page
+		 * is cachable
+		 */
+		if ((prot & IA32E_EPT_MT_MASK) != IA32E_EPT_UNCACHED)
+			prot |= IA32E_EPT_SNOOP_CTRL;
 		map_mem(&map_params, (void *)hpa,
 			(void *)gpa, size, prot);
 
