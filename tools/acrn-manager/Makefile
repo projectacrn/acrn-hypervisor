@@ -4,6 +4,8 @@ OUT_DIR ?= .
 CFLAGS := -Wall
 CFLAGS += -I../../devicemodel/include
 CFLAGS += -I../../devicemodel/include/public
+CFLAGS += -I../../hypervisor/include
+
 ifeq ($(RELEASE),0)
 CFLAGS += -g -DMNGR_DEBUG
 endif
@@ -13,7 +15,7 @@ LDFLAGS += -lacrn-mngr
 LDFLAGS +=  -lpthread
 
 .PHONY: all
-all: $(OUT_DIR)/libacrn-mngr.a $(OUT_DIR)/acrn_mngr.h $(OUT_DIR)/acrnctl
+all: $(OUT_DIR)/libacrn-mngr.a $(OUT_DIR)/acrn_mngr.h $(OUT_DIR)/acrnctl $(OUT_DIR)/acrnd
 
 $(OUT_DIR)/libacrn-mngr.a: acrn_mngr.c acrn_mngr.h
 	$(CC) $(CFLAGS) -c acrn_mngr.c -o $(OUT_DIR)/acrn_mngr.o
@@ -27,6 +29,12 @@ endif
 $(OUT_DIR)/acrnctl: acrnctl.c acrn_mngr.h $(OUT_DIR)/libacrn-mngr.a
 	$(CC) -o $(OUT_DIR)/acrnctl acrnctl.c acrn_vm_ops.c $(CFLAGS) $(LDFLAGS)
 
+$(OUT_DIR)/acrnd: acrnd.c $(OUT_DIR)/libacrn-mngr.a
+	$(CC) -o $(OUT_DIR)/acrnd acrnd.c acrn_vm_ops.c $(CFLAGS) $(LDFLAGS)
+ifneq ($(OUT_DIR),.)
+	cp ./acrnd.service $(OUT_DIR)/acrnd.service
+endif
+
 .PHONY: clean
 clean:
 	rm -f $(OUT_DIR)/acrnctl
@@ -34,9 +42,14 @@ clean:
 	rm -f $(OUT_DIR)/libacrn-mngr.a
 ifneq ($(OUT_DIR),.)
 	rm -f $(OUT_DIR)/acrn_mngr.h
+	rm -f $(OUT_DIR)/acrnd.service
 endif
+	rm -f $(OUT_DIR)/acrnd
 
 .PHONY: install
 install: $(OUT_DIR)/acrnctl
 	install -d $(DESTDIR)/usr/bin
+	install -d $(DESTDIR)/usr/lib/systemd/system
 	install -t $(DESTDIR)/usr/bin $(OUT_DIR)/acrnctl
+	install -t $(DESTDIR)/usr/bin $(OUT_DIR)/acrnd
+	install -p -D -m 0644 $(OUT_DIR)/acrnd.service $(DESTDIR)/usr/lib/systemd/system
