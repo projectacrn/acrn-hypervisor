@@ -260,7 +260,7 @@ enum event_type_t get_conf_by_wd(int wd, void **private)
 
 }
 
-int sender_id(struct sender_t *s)
+int sender_id(const struct sender_t *s)
 {
 	int id;
 	struct sender_t *sender;

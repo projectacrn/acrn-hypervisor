@@ -4,6 +4,7 @@
  */
 
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include <malloc.h>
 #include <openssl/sha.h>
@@ -20,25 +21,27 @@
 #define VM_WARNING_LINES 2000
 #define LOOP_DEV_MAX 8
 
-static char *android_img = "/data/android/android.img";
+#define ANDROID_EVT_KEY_LEN 20
+
+static const char *android_img = "/data/android/android.img";
 char *loop_dev;
 
 /* Find the head of str, caller must guarantee that 'str' is not in
  * the first line.
  */
-static char *line_head(char *str)
+static char *line_head(const char *str)
 {
 	while (*str != '\n')
 		str--;
 
-	return str + 1;
+	return (char *)(str + 1);
 }
 
 /* Find the next event that needs to be synced.
  * There is a history_event file in UOS side, it records UOS's events in
  * real-time. Generally, the cursor point to the first unsynchronized line.
  */
-static char *vm_next_event_to_sync(char *cursor, struct vm_t *vm)
+static char *vm_next_event_to_sync(const char *cursor, const struct vm_t *vm)
 {
 	char *line_to_sync = (char *)~(0);
 	char *syncevent;
@@ -88,22 +91,29 @@ static char *vm_next_event_to_sync(char *cursor, struct vm_t *vm)
 
 	if (line_to_sync == (char *)~(0))
 		return NULL;
-	else
-		return line_to_sync;
 
+	return line_to_sync;
 }
 
-static int generate_log_vmrecord(char *path)
+#define VMRECORD_HEAD_LINES 6
+#define VMRECORD_TAG_LEN 9
+#define VMRECORD_TAG_WAITING_SYNC	"      <=="
+#define VMRECORD_TAG_NOT_FOUND		"NOT_FOUND"
+#define VMRECORD_TAG_SUCCESS		"         "
+static int generate_log_vmrecord(const char *path)
 {
-	char *head = "/* This file records vm id synced/will-sync from VMs,\n"
-		     " * the tag \"<==\" indicates the events waiting to sync.\n"
-		     " */\n\n";
+	const char * const head =
+		"/* DONT EDIT!\n"
+		" * This file records VM id synced or about to be synched,\n"
+		" * the tag \"<==\" indicates event waiting to sync.\n"
+		" * the tag \"NOT_FOUND\" indicates event not found in UOS.\n"
+		" */\n\n";
 
-	LOGD("generate log_vmrecordid in (%s)\n", path);
+	LOGD("Generate (%s)\n", path);
 	return overwrite_file(path, head);
 }
 
-enum refresh_type_t {
+enum stage1_refresh_type_t {
 	MM_ONLY,
 	MM_FILE
 };
@@ -115,8 +125,10 @@ enum refresh_type_t {
  *
  * The design reason is to give UOS some time to log to storage.
  */
-static int refresh_key_synced_stage1(struct sender_t *sender, struct vm_t *vm,
-					char *key, enum refresh_type_t type)
+static int refresh_key_synced_stage1(const struct sender_t *sender,
+					struct vm_t *vm,
+					const char *key,
+					enum stage1_refresh_type_t type)
 {
 	char log_new[64];
 	char *log_vmrecordid;
@@ -132,7 +144,7 @@ static int refresh_key_synced_stage1(struct sender_t *sender, struct vm_t *vm,
 	/* the length of key must be 20, and its value can not be
 	 * 00000000000000000000.
 	 */
-	if ((strlen(key) == 20) &&
+	if ((strlen(key) == ANDROID_EVT_KEY_LEN) &&
 	    strcmp(key, "00000000000000000000")) {
 		sprintf(vm->last_synced_line_key[sid],
 			"%s", key);
@@ -145,41 +157,57 @@ static int refresh_key_synced_stage1(struct sender_t *sender, struct vm_t *vm,
 		if (!file_exists(log_vmrecordid))
 			generate_log_vmrecord(log_vmrecordid);
 
-		sprintf(log_new, "%s %s <==\n", vm->name, key);
+		sprintf(log_new, "%s %s %s\n", vm->name, key,
+			VMRECORD_TAG_WAITING_SYNC);
 		append_file(log_vmrecordid, log_new);
 		return 0;
 	}
 
-	LOGE("try to record a invalid key (%s) for (%s)\n",
+	LOGE("try to record an invalid key (%s) for (%s)\n",
 	     key, vm->name);
 	return -1;
 }
 
-static int refresh_key_synced_stage2(struct mm_file_t *m_vm_records, char *key)
+enum stage2_refresh_type_t {
+	SUCCESS,
+	NOT_FOUND
+};
+
+static int refresh_key_synced_stage2(const struct mm_file_t *m_vm_records,
+					const char *key,
+					enum stage2_refresh_type_t type)
 {
-	char *begin, *end;
-	char *p;
+	char *lhead, *ltail;
+	char *tag;
 
-	if (*key) {
-		begin = strstr(m_vm_records->begin, " <==");
-		end = strrstr(m_vm_records->begin, key);
-		if (!begin || !end)
-			return -1;
+	if (!key || strlen(key) != ANDROID_EVT_KEY_LEN || !m_vm_records ||
+	    m_vm_records->size <= 0)
+		return -1;
 
-		end = strchr(end, '\n');
+	lhead = strstr(m_vm_records->begin, key);
+	if (!lhead)
+		return -1;
 
-		for (p = begin; p < end; p++) {
-			if (*p == '<' || *p == '=')
-				*p = ' ';
-		}
+	ltail = strchr(lhead, '\n');
+	if (!ltail)
+		return -1;
 
-		return 0;
-	}
+	tag = strstr(lhead, VMRECORD_TAG_WAITING_SYNC);
+	if (!tag || tag >= ltail)
+		return -1;
 
-	return -1;
+	/* re-mark symbol "<==" for synced key */
+	if (type == SUCCESS)
+		memcpy(tag, VMRECORD_TAG_SUCCESS, VMRECORD_TAG_LEN);
+	else if (type == NOT_FOUND)
+		memcpy(tag, VMRECORD_TAG_NOT_FOUND, VMRECORD_TAG_LEN);
+	else
+		return -1;
+
+	return 0;
 }
 
-static int get_vm_history(struct vm_t *vm, struct sender_t *sender,
+static int get_vm_history(struct vm_t *vm, const struct sender_t *sender,
 			void **data)
 {
 	char vm_history[PATH_MAX];
@@ -206,6 +234,7 @@ static int get_vm_history(struct vm_t *vm, struct sender_t *sender,
 	if (ret) {
 		LOGE("read (%s) with error (%s)\n", vm_history,
 		     strerror(errno));
+		*data = NULL;
 		return ret;
 	}
 
@@ -220,15 +249,16 @@ static int get_vm_history(struct vm_t *vm, struct sender_t *sender,
 	return size;
 }
 
-static void sync_lines_stage1(struct sender_t *sender, void *data[])
+static void sync_lines_stage1(const struct sender_t *sender, const void *data[])
 {
 	int id, sid;
 	int ret;
 	struct vm_t *vm;
 	char *start;
 	char *line_to_sync;
-	char vmkey[SHA_DIGEST_LENGTH + 1] = {0};
-	char *vm_format = "%*[^ ]%*[ ]%[^ ]%*c";
+	char vmkey[ANDROID_WORD_LEN];
+	const char * const vm_format =
+		IGN_ONEWORD ANDROID_KEY_FMT IGN_RESTS;
 
 	sid = sender_id(sender);
 	if (sid == -1)
@@ -265,7 +295,7 @@ static void sync_lines_stage1(struct sender_t *sender, void *data[])
 			vmkey[0] = 0;
 			ret = sscanf(line_to_sync, vm_format, vmkey);
 			if (ret != 1) {
-				LOGE("get a invalid line from (%s), skip\n",
+				LOGE("get an invalid line from (%s), skip\n",
 				     vm->name);
 				start = next_line(line_to_sync);
 				continue;
@@ -281,15 +311,16 @@ static void sync_lines_stage1(struct sender_t *sender, void *data[])
 
 }
 
-static void sync_lines_stage2(struct sender_t *sender, void *data[],
-			void (*fn)(char*, struct vm_t *))
+static void sync_lines_stage2(const struct sender_t *sender, const void *data[],
+			int (*fn)(const char*, const struct vm_t *))
 {
 	struct mm_file_t *m_vm_records;
 	char *line;
 	char *cursor;
-	char *record_fmt = "%[^ ]%*[ ]%[^ ]%*c";
-	char vm_name[64];
-	char vmkey[SHA_DIGEST_LENGTH + 1] = {0};
+	const char * const record_fmt =
+		VM_NAME_FMT ANDROID_KEY_FMT IGN_RESTS;
+	char vm_name[32];
+	char vmkey[ANDROID_WORD_LEN];
 	int id;
 	struct vm_t *vm;
 	int ret;
@@ -300,18 +331,21 @@ static void sync_lines_stage2(struct sender_t *sender, void *data[],
 						       strerror(errno));
 		return;
 	}
-	if (!m_vm_records->size) {
-		LOGE("size(0b) of (%s)\n", sender->log_vmrecordid);
-		return;
+	if (!m_vm_records->size ||
+	    mm_count_lines(m_vm_records) < VMRECORD_HEAD_LINES) {
+		LOGE("(%s) invalid\n", sender->log_vmrecordid);
+		goto out;
 	}
 
-	cursor = strstr(m_vm_records->begin, " <==");
+	cursor = strstr(m_vm_records->begin, " " VMRECORD_TAG_WAITING_SYNC);
 	if (!cursor)
 		goto out;
 
 	line = line_head(cursor);
 	while (line) {
 		char *vm_hist_line;
+
+		vmkey[0] = 0;
 		/* VMNAME xxxxxxxxxxxxxxxxxxxx <== */
 		ret = sscanf(line, record_fmt, vm_name, vmkey);
 		if (ret != 2) {
@@ -331,31 +365,43 @@ static void sync_lines_stage2(struct sender_t *sender, void *data[],
 
 			vm_hist_line = strstr(data[id], vmkey);
 			if (!vm_hist_line) {
-				LOGE("not find (%s) in (%s),", vmkey, vm->name);
-				LOGE("history_event in UOS was deleted?\n");
+				LOGE("mark vmevent(%s) as unfound,", vmkey);
+				LOGE("history_event in UOS was recreated?\n");
+				refresh_key_synced_stage2(m_vm_records, vmkey,
+							  NOT_FOUND);
 				break;
 			}
 
-			fn(line_head(vm_hist_line), vm);
+			ret = fn(line_head(vm_hist_line), vm);
+			if (!ret)
+				refresh_key_synced_stage2(m_vm_records, vmkey,
+							  SUCCESS);
 		}
 
-		line = next_line(line);
+		cursor = next_line(line);
+		if (!cursor)
+			break;
+
+		line = strstr(cursor, VMRECORD_TAG_WAITING_SYNC);
+		if (!line)
+			break;
+
+		line = line_head(line);
 	}
 
 out:
-	refresh_key_synced_stage2(m_vm_records, vmkey);
 	unmap_file(m_vm_records);
 }
 
 /* This function only for initialization */
-static void get_last_line_synced(struct sender_t *sender)
+static void get_last_line_synced(const struct sender_t *sender)
 {
 	int id;
 	int sid;
 	int ret;
 	struct vm_t *vm;
-	char vmkey[SHA_DIGEST_LENGTH + 10] = {0};
-	char word[256];
+	char vmkey[ANDROID_WORD_LEN];
+	char vm_name[32];
 
 	if (!sender)
 		return;
@@ -375,11 +421,11 @@ static void get_last_line_synced(struct sender_t *sender)
 		if (vm->last_synced_line_key[sid][0])
 			continue;
 
-		snprintf(word, sizeof(word), "%s ", vm->name);
-		ret = file_read_key_value_r(sender->log_vmrecordid,
-					    word, vmkey);
+		snprintf(vm_name, sizeof(vm_name), "%s ", vm->name);
+		ret = file_read_key_value_r(sender->log_vmrecordid, vm_name,
+					    sizeof(vmkey), vmkey);
 		if (ret == -ENOENT) {
-			LOGD("no log_vmrecordid under (%s), will generete\n",
+			LOGD("no (%s), will generate\n",
 			     sender->log_vmrecordid);
 			generate_log_vmrecord(sender->log_vmrecordid);
 			continue;
@@ -393,7 +439,6 @@ static void get_last_line_synced(struct sender_t *sender)
 			continue;
 		}
 
-		vmkey[SHA_DIGEST_LENGTH] = 0;
 		ret = refresh_key_synced_stage1(sender, vm, vmkey, MM_ONLY);
 		if (ret < 0) {
 			LOGE("get a non-key vm event (%s) for (%s)\n",
@@ -478,30 +523,30 @@ static char *setup_loop_dev(void)
 	}
 
 	/* find data partition, sector unit = 512 bytes */
-	char patition_start[32] = {0};
-	char sectors[32] = {0};
+	char partition_start[32];
+	char sectors[32];
 	unsigned long pstart;
 	char *partition;
-	char *partition_fmt = "%*[^ ]%*[ ]%[^ ]%*[ ]%*[^ ]%*[ ]%[^ ]%*c";
+	const char * const partition_fmt =
+		IGN_ONEWORD "%31[^ ]" IGN_SPACES
+		IGN_ONEWORD "%31[^ ]" IGN_RESTS;
 	char *cursor = out;
 	int ret;
 
 	while (cursor &&
 	       (partition = strstr(cursor, android_img))) {
 		cursor = strchr(partition, '\n');
-		memset(patition_start, 0, sizeof(patition_start));
-		memset(sectors, 0, sizeof(sectors));
-
-		ret = sscanf(partition, partition_fmt, patition_start, sectors);
+		ret = sscanf(partition, partition_fmt,
+			     partition_start, sectors);
 		if (ret != 2)
 			continue;
 
-		LOGD("start (%s) sectors(%s)\n", patition_start, sectors);
+		LOGD("start (%s) sectors(%s)\n", partition_start, sectors);
 		/* size < 1G */
 		if (atoi(sectors) < 1 * 2 * 1024 * 1024)
 			continue;
 
-		pstart = atol(patition_start) * 512;
+		pstart = atol(partition_start) * 512;
 		if (pstart == 0)
 			continue;
 
@@ -522,6 +567,7 @@ static char *setup_loop_dev(void)
 			if (ret != 0)
 				LOGE("(losetup -d %s) failed, return %d\n",
 				     loop_dev, ret);
+			sleep(1);
 		}
 	}
 
@@ -539,12 +585,13 @@ success:
 static int ping_vm_fs(char *loop_dev)
 {
 	int id;
+	int res;
 	int count = 0;
 	struct vm_t *vm;
 	struct mm_file_t *vm_hist;
 	char vm_history[PATH_MAX];
 	char cmd[512];
-	char prefix[] = "#V1.0 CURRENTUPTIME";
+	const char prefix[] = "#V1.0 CURRENTUPTIME";
 
 	/* ensure history_event in uos available */
 	for_each_vm(id, vm, conf) {
@@ -556,7 +603,15 @@ static int ping_vm_fs(char *loop_dev)
 		snprintf(cmd, sizeof(cmd),
 			 "dump logs/history_event %s", vm_history);
 
-		debugfs_cmd(loop_dev, cmd, NULL);
+		res = remove(vm_history);
+		if (res == -1 && errno != ENOENT)
+			LOGE("remove %s failed\n", vm_history);
+
+		res = debugfs_cmd(loop_dev, cmd, NULL);
+		if (res) {
+			vm->online = 0;
+			continue;
+		}
 
 		vm_hist = mmap_file(vm_history);
 		if (vm_hist == NULL) {
@@ -579,8 +634,14 @@ static int ping_vm_fs(char *loop_dev)
 	return count;
 }
 
-void refresh_vm_history(struct sender_t *sender,
-		void (*fn)(char*, struct vm_t *))
+/* This function searches all android vms' new events and call the fn for
+ * each event.
+ *
+ * Note that: fn should return 0 to indicate event has been handled,
+ *	      or fn will be called in a time loop until it returns 0.
+ */
+void refresh_vm_history(const struct sender_t *sender,
+		int (*fn)(const char*, const struct vm_t *))
 {
 	int ret;
 	int id;
@@ -612,6 +673,6 @@ void refresh_vm_history(struct sender_t *sender,
 		get_vm_history(vm, sender, &data[id]);
 	}
 
-	sync_lines_stage2(sender, data, fn);
-	sync_lines_stage1(sender, data);
+	sync_lines_stage2(sender, (const void **)data, fn);
+	sync_lines_stage1(sender, (const void **)data);
 }

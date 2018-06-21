@@ -81,7 +81,7 @@ int append_file(char *filename, char *text);
 int mm_replace_str_line(struct mm_file_t *mfile, char *replace,
 			int line);
 int replace_file_head(char *filename, char *text);
-int overwrite_file(char *filename, char *value);
+int overwrite_file(const char *filename, const char *value);
 int readline(int fd, char buffer[MAXLINESIZE]);
 int file_read_string(const char *file, char *string, int size);
 void file_reset_init(const char *filename);
@@ -93,8 +93,10 @@ int space_available(char *path, int quota);
 int count_lines_in_file(const char *filename);
 int read_full_binary_file(const char *path, unsigned long *size,
 			void **data);
-int file_read_key_value(char *path, char *key, char *value);
-int file_read_key_value_r(char *path, char *key, char *value);
+int file_read_key_value(const char *path, const char *key,
+			const size_t limit, char *value);
+int file_read_key_value_r(const char *path, const char *key,
+			const size_t limit, char *value);
 int dir_contains(const char *dir, const char *filename, int exact,
 		char *fullname);
 int lsdir(const char *dir, char *fullname[], int limit);
