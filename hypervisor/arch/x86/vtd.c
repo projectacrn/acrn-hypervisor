@@ -472,9 +472,9 @@ static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus,
 	return NULL;
 }
 
-static int alloc_domain_id(void)
+static uint8_t alloc_domain_id(void)
 {
-	int i;
+	uint8_t i;
 	uint64_t mask;
 
 	spinlock_obtain(&domain_lock);
@@ -492,7 +492,7 @@ static int alloc_domain_id(void)
 	return i;
 }
 
-static void free_domain_id(int dom_id)
+static void free_domain_id(uint16_t dom_id)
 {
 	uint64_t mask = (1 << dom_id);
 
