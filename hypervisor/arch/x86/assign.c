@@ -68,17 +68,6 @@ _lookup_entry_by_id(uint32_t id)
 	return NULL;
 }
 
-static inline struct ptdev_remapping_info *
-lookp_entry_by_id(uint32_t id)
-{
-	struct ptdev_remapping_info *entry;
-
-	spinlock_obtain(&ptdev_lock);
-	entry = _lookup_entry_by_id(id);
-	spinlock_release(&ptdev_lock);
-	return entry;
-}
-
 /* require ptdev_lock protect */
 static inline struct ptdev_remapping_info *
 _lookup_entry_by_vmsi(struct vm *vm, uint16_t vbdf, int32_t index)
