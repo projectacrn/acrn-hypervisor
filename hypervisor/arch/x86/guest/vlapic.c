@@ -712,8 +712,9 @@ vlapic_update_ppr(struct vlapic *vlapic)
 
 	/* update ppr */
 	{
-		int i, lastprio, curprio, vector, idx;
+		int i, lastprio, curprio, idx;
 		struct lapic_reg *isrptr;
+		uint32_t vector;
 
 		if (vlapic->isrvec_stk_top == 0 && isrvec != 0)
 			panic("isrvec_stk is corrupted: %d", isrvec);
@@ -738,9 +739,9 @@ vlapic_update_ppr(struct vlapic *vlapic)
 		 */
 		i = 1;
 		isrptr = &vlapic->apic_page->isr[0];
-		for (vector = 0; vector < 256; vector++) {
-			idx = vector / 32;
-			if ((isrptr[idx].val & (1U << (vector % 32))) != 0U) {
+		for (vector = 0U; vector < 256U; vector++) {
+			idx = vector / 32U;
+			if ((isrptr[idx].val & (1U << (vector % 32U))) != 0U) {
 				if ((i > vlapic->isrvec_stk_top) ||
 					((i < ISRVEC_STK_SIZE) &&
 					(vlapic->isrvec_stk[i] != vector))) {

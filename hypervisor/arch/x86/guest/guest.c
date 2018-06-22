@@ -127,7 +127,8 @@ enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 	uint64_t gva, uint64_t *gpa, uint32_t *err_code)
 {
-	int i, index, shift;
+	int i, index;
+	uint32_t shift;
 	uint8_t *base;
 	uint64_t entry;
 	uint64_t addr, page_size;

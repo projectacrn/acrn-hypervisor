@@ -59,7 +59,7 @@ int ibrs_type;
 inline bool cpu_has_cap(uint32_t bit)
 {
 	int feat_idx = bit >> 5;
-	int feat_bit = bit & 0x1fU;
+	uint32_t feat_bit = bit & 0x1fU;
 
 	if (feat_idx >= FEATURE_WORDS)
 		return false;

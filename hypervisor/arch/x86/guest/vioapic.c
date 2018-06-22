@@ -223,8 +223,8 @@ vioapic_update_tmr(struct vcpu *vcpu)
 static uint32_t
 vioapic_read(struct vioapic *vioapic, uint32_t addr)
 {
-	uint32_t regnum;
-	int pin, rshift;
+	uint32_t regnum, rshift;
+	int pin;
 
 	regnum = addr & 0xffU;
 	switch (regnum) {
@@ -291,8 +291,8 @@ vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 {
 	uint64_t data64, mask64;
 	uint64_t last, new, changed;
-	uint32_t regnum;
-	int pin, lshift;
+	uint32_t regnum, lshift;
+	int pin;
 
 	regnum = addr & 0xffUL;
 	switch (regnum) {

@@ -66,7 +66,7 @@
 #define iommu_cap_plmr(c)     (((c) >> 5) & 1UL)
 #define iommu_cap_rwbf(c)     (((c) >> 4) & 1UL)
 #define iommu_cap_afl(c)      (((c) >> 3) & 1UL)
-#define iommu_cap_ndoms(c)        (((unsigned long)1) << (4 + 2 * ((c) & 0x7UL)))
+#define iommu_cap_ndoms(c)        ((1U) << (4U + 2U * ((c) & 0x7U)))
 
 /*
  * Decoding Extended Capability Register
