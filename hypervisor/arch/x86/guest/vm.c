@@ -31,7 +31,7 @@ static void init_vm(struct vm_description *vm_desc,
 	/* Populate VM attributes from VM description */
 	if (is_vm0(vm_handle)) {
 		/* Allocate all cpus to vm0 at the beginning */
-		vm_handle->hw.num_vcpus = phy_cpu_num;
+		vm_handle->hw.num_vcpus = phys_cpu_num;
 		vm_handle->hw.exp_num_vcpus = vm_desc->vm_hw_num_cores;
 	} else {
 		vm_handle->hw.num_vcpus = vm_desc->vm_hw_num_cores;
@@ -88,7 +88,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	INIT_LIST_HEAD(&vm->mmio_list);
 
 	if (vm->hw.num_vcpus == 0)
-		vm->hw.num_vcpus = phy_cpu_num;
+		vm->hw.num_vcpus = phys_cpu_num;
 
 	vm->hw.vcpu_array =
 		calloc(1, sizeof(struct vcpu *) * vm->hw.num_vcpus);
@@ -299,7 +299,7 @@ int prepare_vm0(void)
 		return ret;
 
 	/* Allocate all cpus to vm0 at the beginning */
-	for (i = 0; i < phy_cpu_num; i++)
+	for (i = 0; i < phys_cpu_num; i++)
 		prepare_vcpu(vm, i);
 
 	/* start vm0 BSP automatically */

@@ -111,9 +111,9 @@ int hv_main(uint16_t cpu_id)
 	pr_info("%s, Starting common entry point for CPU %d",
 			__func__, cpu_id);
 
-	if (cpu_id >= phy_cpu_num) {
+	if (cpu_id >= phys_cpu_num) {
 		pr_err("%s, cpu_id %d out of range %d\n",
-			__func__, cpu_id, phy_cpu_num);
+			__func__, cpu_id, phys_cpu_num);
 		return -EINVAL;
 	}
 
@@ -154,7 +154,7 @@ void get_vmexit_profile(char *str, int str_max)
 	size -= len;
 	str += len;
 
-	for (cpu = 0; cpu < phy_cpu_num; cpu++) {
+	for (cpu = 0; cpu < phys_cpu_num; cpu++) {
 		len = snprintf(str, size, "\t      CPU%d\t        US", cpu);
 		size -= len;
 		str += len;
@@ -164,7 +164,7 @@ void get_vmexit_profile(char *str, int str_max)
 		len = snprintf(str, size, "\r\n0x%x", i);
 		size -= len;
 		str += len;
-		for (cpu = 0; cpu < phy_cpu_num; cpu++) {
+		for (cpu = 0; cpu < phys_cpu_num; cpu++) {
 			len = snprintf(str, size, "\t%10lld\t%10lld",
 				per_cpu(vmexit_cnt, cpu)[i],
 				TICKS_TO_US(per_cpu(vmexit_time, cpu)[i]));

@@ -23,7 +23,7 @@ spinlock_t up_count_spinlock = {
 };
 
 struct per_cpu_region *per_cpu_data_base_ptr;
-uint16_t phy_cpu_num = 0U;
+uint16_t phys_cpu_num = 0U;
 unsigned long pcpu_sync = 0;
 volatile uint32_t up_count = 0;
 
@@ -226,7 +226,7 @@ static int hardware_detect_support(void)
 
 static void alloc_phy_cpu_data(uint16_t pcpu_num)
 {
-	phy_cpu_num = pcpu_num;
+	phys_cpu_num = pcpu_num;
 
 	per_cpu_data_base_ptr = calloc(pcpu_num, sizeof(struct per_cpu_region));
 	ASSERT(per_cpu_data_base_ptr != NULL, "");
@@ -606,7 +606,7 @@ int cpu_find_logical_id(uint32_t lapic_id)
 {
 	int i;
 
-	for (i = 0; i < phy_cpu_num; i++) {
+	for (i = 0; i < phys_cpu_num; i++) {
 		if (per_cpu(lapic_id, i) == lapic_id)
 			return i;
 	}
@@ -690,7 +690,7 @@ void start_cpus()
 	/* Set flag showing number of CPUs expected to be up to all
 	 * cpus
 	 */
-	expected_up = phy_cpu_num;
+	expected_up = phys_cpu_num;
 
 	/* Broadcast IPIs to all other CPUs */
 	send_startup_ipi(INTR_CPU_STARTUP_ALL_EX_SELF,
@@ -725,7 +725,7 @@ void stop_cpus()
 	uint32_t timeout, expected_up;
 
 	timeout = CONFIG_CPU_UP_TIMEOUT * 1000;
-	for (i = 0; i < phy_cpu_num; i++) {
+	for (i = 0; i < phys_cpu_num; i++) {
 		if (get_cpu_id() == i)	/* avoid offline itself */
 			continue;
 

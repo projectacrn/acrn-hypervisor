@@ -41,7 +41,7 @@ struct per_cpu_region {
 } __aligned(CPU_PAGE_SIZE); //per_cpu_region size aligned with CPU_PAGE_SIZE
 
 extern struct per_cpu_region *per_cpu_data_base_ptr;
-extern uint16_t phy_cpu_num;
+extern uint16_t phys_cpu_num;
 extern uint64_t pcpu_active_bitmap;
 /*
  * get percpu data for pcpu_id.
