@@ -11,6 +11,23 @@
 #include <cpu.h>
 #include <types.h>
 
+/* NOTE:
+ *
+ * MISRA C requires that all unsigned constants should have the suffix 'U'
+ * (e.g. 0xffU), but the assembler may not accept such C-style constants. For
+ * example, binutils 2.26 fails to compile assembly in that case. To work this
+ * around, all unsigned constants must be explicitly spells out in assembly
+ * with a comment tracking the original expression from which the magic
+ * number is calculated. As an example:
+ *
+ *    /* 0x00000668 =
+ *     *    (CR4_DE | CR4_PAE | CR4_MCE | CR4_OSFXSR | CR4_OSXMMEXCPT) *\/
+ *    movl    $0x00000668, %eax
+ *
+ * Make sure that these numbers are updated accordingly if the definition of
+ * the macros involved are changed.
+ */
+
     .text
 
 /*int vmx_vmrun(struct run_context *context, int launch, int ibrs_type) */
@@ -40,15 +57,19 @@ vmx_vmrun:
     cmp         $IBRS_NONE,%rdx
     je          next
 
-    movl        $MSR_IA32_SPEC_CTRL,%ecx
+    /* 0x00000048 = MSR_IA32_SPEC_CTRL */
+    movl        $0x00000048,%ecx
     mov         VMX_MACHINE_T_GUEST_SPEC_CTRL_OFFSET(%rdi),%rax
     movl        $0,%edx
     wrmsr
 
 next:
 
-    /* Load VMCS_HOST_RSP_FIELD field value */
-    mov         $VMX_HOST_RSP,%rdx
+    /* Load VMCS_HOST_RSP_FIELD field value
+     *
+     *     0x00006c14 = VMX_HOST_RSP
+     */
+    mov         $0x00006c14,%rdx
 
     /* Write the current stack pointer to the VMCS_HOST_RSP_FIELD */
     vmwrite     %rsp,%rdx
@@ -165,11 +186,15 @@ vm_eval_error:
     cmp         $IBRS_OPT,%rdx
     je          ibrs_opt
 
-    /* Save guest MSR SPEC_CTRL, low 32 bit is enough */
-    movl        $MSR_IA32_SPEC_CTRL,%ecx
+    /* Save guest MSR SPEC_CTRL, low 32 bit is enough
+     *
+     *     0x00000048 = MSR_IA32_SPEC_CTRL
+     */
+    movl        $0x00000048,%ecx
     rdmsr
     mov         %rax,VMX_MACHINE_T_GUEST_SPEC_CTRL_OFFSET(%rsi)
-    movl        $SPEC_ENABLE_IBRS,%eax
+    /* 0x1 = SPEC_ENABLE_IBRS */
+    movl        $0x1,%eax
     movl        $0,%edx
     wrmsr
 
@@ -177,16 +202,22 @@ vm_eval_error:
 
 ibrs_opt:
 
-    movl        $MSR_IA32_PRED_CMD,%ecx
-    movl        $PRED_SET_IBPB,%eax
+    /* 0x00000049 = MSR_IA32_PRED_CMD */
+    movl        $0x00000049,%ecx
+    /* 0x1 = PRED_SET_IBPB */
+    movl        $0x1,%eax
     movl        $0,%edx
     wrmsr
 
-    /* Save guest MSR SPEC_CTRL, low 32 bit is enough */
-    movl        $MSR_IA32_SPEC_CTRL,%ecx
+    /* Save guest MSR SPEC_CTRL, low 32 bit is enough
+     *
+     *     0x00000048 = MSR_IA32_SPEC_CTRL
+     */
+    movl        $0x00000048,%ecx
     rdmsr
     mov         %rax,VMX_MACHINE_T_GUEST_SPEC_CTRL_OFFSET(%rsi)
-    movl        $SPEC_ENABLE_STIBP,%eax
+    /* 0x2 = SPEC_ENABLE_STIBP */
+    movl        $0x2,%eax
     movl        $0,%edx
     wrmsr
 
@@ -221,4 +252,3 @@ stuff_rsb:
 vm_return:
     /* Return to caller */
     ret
-

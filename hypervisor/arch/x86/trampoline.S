@@ -20,6 +20,22 @@
 #include        <mmu.h>
 #include        <msr.h>
 
+/* NOTE:
+ *
+ * MISRA C requires that all unsigned constants should have the suffix 'U'
+ * (e.g. 0xffU), but the assembler may not accept such C-style constants. For
+ * example, binutils 2.26 fails to compile assembly in that case. To work this
+ * around, all unsigned constants must be explicitly spells out in assembly
+ * with a comment tracking the original expression from which the magic
+ * number is calculated. As an example:
+ *
+ *    /* 0x00000668 =
+ *     *    (CR4_DE | CR4_PAE | CR4_MCE | CR4_OSFXSR | CR4_OSXMMEXCPT) *\/
+ *    movl    $0x00000668, %eax
+ *
+ * Make sure that these numbers are updated accordingly if the definition of
+ * the macros involved are changed.
+ */
 
     .extern     cpu_secondary_init
     .extern     cpu_logical_id
@@ -78,7 +94,9 @@ trampoline_fixup_target:
 
     /* Set DE, PAE, MCE and OS support bits in CR4 */
 
-    movl    $(CR4_DE | CR4_PAE | CR4_MCE | CR4_OSFXSR | CR4_OSXMMEXCPT), %eax
+    /* 0x00000668 =
+     *    (CR4_DE | CR4_PAE | CR4_MCE | CR4_OSFXSR | CR4_OSXMMEXCPT) */
+    movl    $0x00000668, %eax
     mov     %eax, %cr4
 
     /* Set CR3 to PML4 table address */
@@ -89,16 +107,19 @@ trampoline_fixup_target:
 
     /* Set LME bit in EFER */
 
-    movl    $MSR_IA32_EFER, %ecx
+    /* 0xc0000080 = MSR_IA32_EFER */
+    movl    $0xc0000080, %ecx
     rdmsr
-    orl     $MSR_IA32_EFER_LME_BIT, %eax
+    /* 0x00000100 = MSR_IA32_EFER_LME_BIT */
+    orl     $0x00000100, %eax
     wrmsr
 
     /* Enable paging, protection, numeric error and co-processor
        monitoring in CR0 to enter long mode */
 
     mov     %cr0, %ebx
-    orl     $(CR0_PG | CR0_PE | CR0_MP | CR0_NE), %ebx
+    /* 0x80000023 = (CR0_PG | CR0_PE | CR0_MP | CR0_NE) */
+    orl     $0x80000023, %ebx
     mov     %ebx, %cr0
 
     /* Load temportary GDT pointer value */
@@ -142,8 +163,11 @@ trampoline_start64:
 
     lea     trampoline_pdpt_addr(%rip), %rsp
 
-    /* Push sp magic to top of stack for call trace */
-    pushq   $SP_BOTTOM_MAGIC
+    /* Push sp magic to top of stack for call trace
+     *
+     *     0x696e746c = SP_BOTTOM_MAGIC
+     */
+    pushq   $0x696e746c
 
     /* Jump to C entry */
     movq    main_entry(%rip), %rax
@@ -180,21 +204,23 @@ CPU_Boot_Page_Tables_ptr:
     .align  CPU_PAGE_SIZE
     .global CPU_Boot_Page_Tables_Start
 CPU_Boot_Page_Tables_Start:
-    .quad   trampoline_pdpt_addr + (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT)
+    /* 0x3 = (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT) */
+    .quad   trampoline_pdpt_addr + 0x3
     .align  CPU_PAGE_SIZE
     .global trampoline_pdpt_addr
 trampoline_pdpt_addr:
     address = 0
     .rept   4
-    .quad   trampoline_pdt_addr + address + \
-                                        (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT)
+    /* 0x3 = (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT) */
+    .quad   trampoline_pdt_addr + address + 0x3
     address = address + CPU_PAGE_SIZE
     .endr
     .align  CPU_PAGE_SIZE
 trampoline_pdt_addr:
     address = 0
     .rept  2048
-    .quad  address + (IA32E_PDPTE_PS_BIT | IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT)
+    /* 0x83 = (IA32E_PDPTE_PS_BIT | IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT) */
+    .quad  address + 0x83
     address = address + 0x200000
     .endr
 
