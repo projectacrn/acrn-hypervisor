@@ -93,6 +93,7 @@ OBJCOPY ?= objcopy
 D_SRCS += $(wildcard debug/*.c)
 C_SRCS += boot/acpi.c
 C_SRCS += boot/dmar_parse.c
+C_SRCS += boot/reloc.c
 C_SRCS += arch/x86/ioapic.c
 C_SRCS += arch/x86/lapic.c
 S_SRCS += arch/x86/trampoline.S
