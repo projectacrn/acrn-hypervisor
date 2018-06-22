@@ -20,7 +20,7 @@ void init_softirq(void)
 {
 	uint16_t cpu_id;
 
-	for (cpu_id = 0; cpu_id < phy_cpu_num; cpu_id++) {
+	for (cpu_id = 0; cpu_id < phys_cpu_num; cpu_id++) {
 		per_cpu(softirq_pending, cpu_id) = 0;
 		bitmap_set(SOFTIRQ_ATOMIC, &per_cpu(softirq_pending, cpu_id));
 	}
@@ -31,7 +31,7 @@ void raise_softirq(int softirq_id)
 	uint16_t cpu_id = get_cpu_id();
 	uint64_t *bitmap = &per_cpu(softirq_pending, cpu_id);
 
-	if (cpu_id >= phy_cpu_num)
+	if (cpu_id >= phys_cpu_num)
 		return;
 
 	bitmap_set(softirq_id, bitmap);
@@ -44,7 +44,7 @@ void exec_softirq(void)
 
 	int softirq_id;
 
-	if (cpu_id >= phy_cpu_num)
+	if (cpu_id >= phys_cpu_num)
 		return;
 
 	if (((*bitmap) & SOFTIRQ_MASK) == 0UL)

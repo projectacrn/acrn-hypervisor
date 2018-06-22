@@ -23,7 +23,7 @@ static struct logmsg logmsg;
 static inline void alloc_earlylog_sbuf(uint32_t cpu_id)
 {
 	uint32_t ele_size = LOG_ENTRY_SIZE;
-	uint32_t ele_num = ((HVLOG_BUF_SIZE >> 1) / phy_cpu_num
+	uint32_t ele_num = ((HVLOG_BUF_SIZE >> 1) / phys_cpu_num
 			   - SBUF_HEAD_SIZE) / ele_size;
 
 	per_cpu(earlylog_sbuf, cpu_id) = sbuf_allocate(ele_num, ele_size);
@@ -75,7 +75,7 @@ void init_logmsg(__unused uint32_t mem_size, uint32_t flags)
 	logmsg.seq = 0;
 
 	/* allocate sbuf for log before sos booting */
-	for (idx = 0; idx < phy_cpu_num; idx++)
+	for (idx = 0; idx < phys_cpu_num; idx++)
 		alloc_earlylog_sbuf(idx);
 }
 
@@ -168,7 +168,7 @@ void print_logmsg_buffer(uint32_t cpu_id)
 	struct shared_buf **sbuf;
 	int is_earlylog = 0;
 
-	if (cpu_id >= (uint32_t)phy_cpu_num)
+	if (cpu_id >= (uint32_t)phys_cpu_num)
 		return;
 
 	if (per_cpu(earlylog_sbuf, cpu_id) != NULL) {

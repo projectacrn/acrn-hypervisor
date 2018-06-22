@@ -105,7 +105,7 @@ static int request_timer_irq(uint16_t pcpu_id,
 {
 	struct dev_handler_node *node = NULL;
 
-	if (pcpu_id >= phy_cpu_num)
+	if (pcpu_id >= phys_cpu_num)
 		return -EINVAL;
 
 	if (per_cpu(timer_node, pcpu_id) != NULL) {

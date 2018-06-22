@@ -137,7 +137,7 @@ static uint16_t vm_apicid2vcpu_id(struct vm *vm, uint8_t lapicid)
 
 	pr_err("%s: bad lapicid %d", __func__, lapicid);
 
-	return phy_cpu_num;
+	return phys_cpu_num;
 }
 
 static uint64_t
@@ -895,7 +895,7 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 		 */
 		*dmask = 0;
 		vcpu_id = vm_apicid2vcpu_id(vm, dest);
-		if (vcpu_id < phy_cpu_num)
+		if (vcpu_id < phys_cpu_num)
 			bitmap_set(vcpu_id, dmask);
 	} else {
 		/*
@@ -1537,7 +1537,7 @@ vlapic_init(struct vlapic *vlapic)
 {
 	ASSERT(vlapic->vm != NULL, "%s: vm is not initialized", __func__);
 	ASSERT(vlapic->vcpu->vcpu_id >= 0 &&
-		vlapic->vcpu->vcpu_id < phy_cpu_num,
+		vlapic->vcpu->vcpu_id < phys_cpu_num,
 		"%s: vcpu_id is not initialized", __func__);
 	ASSERT(vlapic->apic_page != NULL,
 		"%s: apic_page is not initialized", __func__);
@@ -1765,7 +1765,7 @@ vlapic_set_local_intr(struct vm *vm, int vcpu_id, uint32_t vector)
 	uint64_t dmask = 0;
 	int error;
 
-	if (vcpu_id < -1 || vcpu_id >= phy_cpu_num)
+	if (vcpu_id < -1 || vcpu_id >= phys_cpu_num)
 		return -EINVAL;
 
 	if (vcpu_id == -1)

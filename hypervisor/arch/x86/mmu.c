@@ -413,9 +413,9 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 			 * TODO: add shootdown APs operation if MMU will be
 			 * modified after AP start in the future.
 			 */
-			if ((phy_cpu_num != 0) &&
+			if ((phys_cpu_num != 0) &&
 				((pcpu_active_bitmap &
-				((1UL << phy_cpu_num) - 1))
+				((1UL << phys_cpu_num) - 1))
 				!= (1UL << CPU_BOOT_ID))) {
 				panic("need shootdown for invlpg");
 			}

@@ -13,7 +13,7 @@ void init_scheduler(void)
 {
 	int i;
 
-	for (i = 0; i < phy_cpu_num; i++) {
+	for (i = 0; i < phys_cpu_num; i++) {
 		spinlock_init(&per_cpu(sched_ctx, i).runqueue_lock);
 		spinlock_init(&per_cpu(sched_ctx, i).scheduler_lock);
 		INIT_LIST_HEAD(&per_cpu(sched_ctx, i).runqueue);
@@ -36,7 +36,7 @@ int allocate_pcpu(void)
 {
 	int i;
 
-	for (i = 0; i < phy_cpu_num; i++) {
+	for (i = 0; i < phys_cpu_num; i++) {
 		if (bitmap_test_and_set(i, &pcpu_used_bitmap) == 0)
 			return i;
 	}

@@ -177,7 +177,7 @@ static void _irq_desc_free_vector(uint32_t irq)
 	if (vector_to_irq[vr] == irq)
 		vector_to_irq[vr] = IRQ_INVALID;
 
-	for (pcpu_id = 0; pcpu_id < phy_cpu_num; pcpu_id++)
+	for (pcpu_id = 0; pcpu_id < phys_cpu_num; pcpu_id++)
 		per_cpu(irq_count, pcpu_id)[irq] = 0;
 }
 
@@ -699,7 +699,7 @@ void get_cpu_interrupt_info(char *str, int str_max)
 	len = snprintf(str, size, "\r\nIRQ\tVECTOR");
 	size -= len;
 	str += len;
-	for (pcpu_id = 0; pcpu_id < phy_cpu_num; pcpu_id++) {
+	for (pcpu_id = 0; pcpu_id < phys_cpu_num; pcpu_id++) {
 		len = snprintf(str, size, "\tCPU%d", pcpu_id);
 		size -= len;
 		str += len;
@@ -716,7 +716,7 @@ void get_cpu_interrupt_info(char *str, int str_max)
 			len = snprintf(str, size, "\r\n%d\t0x%X", irq, vector);
 			size -= len;
 			str += len;
-			for (pcpu_id = 0; pcpu_id < phy_cpu_num; pcpu_id++) {
+			for (pcpu_id = 0; pcpu_id < phys_cpu_num; pcpu_id++) {
 				len = snprintf(str, size, "\t%d",
 					per_cpu(irq_count, pcpu_id)[irq]);
 				size -= len;
