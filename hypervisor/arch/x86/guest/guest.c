@@ -7,6 +7,7 @@
 #include <hypervisor.h>
 #include <bsp_extern.h>
 #include <multiboot.h>
+#include <reloc.h>
 
 #define ACRN_DBG_GUEST	6
 
@@ -496,7 +497,7 @@ static void rebuild_vm0_e820(void)
 	uint32_t i;
 	uint64_t entry_start;
 	uint64_t entry_end;
-	uint64_t hv_start = CONFIG_RAM_START;
+	uint64_t hv_start = get_hv_image_base();
 	uint64_t hv_end  = hv_start + CONFIG_RAM_SIZE;
 	struct e820_entry *entry, new_entry = {0};
 
@@ -577,6 +578,7 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 				IA32E_EPT_X_BIT |
 				IA32E_EPT_UNCACHED);
 	struct e820_entry *entry;
+	uint64_t hv_hpa;
 
 	rebuild_vm0_e820();
 	dev_dbg(ACRN_DBG_GUEST,
@@ -610,8 +612,8 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 	/* unmap hypervisor itself for safety
 	 * will cause EPT violation if sos accesses hv memory
 	 */
-	ept_mmap(vm, CONFIG_RAM_START, CONFIG_RAM_START,
-			CONFIG_RAM_SIZE, MAP_UNMAP, 0);
+	hv_hpa = get_hv_image_base();
+	ept_mmap(vm, hv_hpa, hv_hpa, CONFIG_RAM_SIZE, MAP_UNMAP, 0);
 	return 0;
 }
 

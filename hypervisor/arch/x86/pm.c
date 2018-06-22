@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <hypervisor.h>
+#include <reloc.h>
 
 struct run_context cpu_ctx;
 
@@ -78,7 +79,6 @@ int enter_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 	uint32_t pcpu_id;
 	uint64_t pmain_entry_saved;
 	uint32_t guest_wakeup_vec32;
-	uint64_t *pmain_entry;
 
 	/* We assume enter s3 success by default */
 	host_enter_s3_success = 1;
@@ -104,20 +104,14 @@ int enter_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 	/* offline all APs */
 	stop_cpus();
 
-	/* Trampoline code is relocatable now. We have to calculate
-	 * main_entry address with relocation base address
-	 */
-	pmain_entry =
-		(uint64_t *)(HPA2HVA(trampoline_start16_paddr) +
-		(uint64_t) main_entry);
-
 	/* Save default main entry and we will restore it after
 	 * back from S3. So the AP online could jmp to correct
 	 * main entry.
 	 */
-	pmain_entry_saved = *pmain_entry;
+	pmain_entry_saved = read_trampoline_sym(main_entry);
+
 	/* Set the main entry for resume from S3 state */
-	*pmain_entry = (uint64_t)restore_s3_context;
+	write_trampoline_sym(main_entry, (uint64_t)restore_s3_context);
 
 	CPU_IRQ_DISABLE();
 	vmx_off(pcpu_id);
@@ -141,7 +135,7 @@ int enter_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 	CPU_IRQ_ENABLE();
 
 	/* restore the default main entry */
-	*pmain_entry = pmain_entry_saved;
+	write_trampoline_sym(main_entry, pmain_entry_saved);
 
 	/* online all APs again */
 	start_cpus();

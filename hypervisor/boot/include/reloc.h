@@ -10,6 +10,8 @@ extern void _relocate(void);
 extern uint64_t get_hv_image_delta(void);
 extern uint64_t get_hv_image_base(void);
 extern uint64_t trampoline_relo_addr(void *addr);
+extern uint64_t read_trampoline_sym(void *sym);
+extern void write_trampoline_sym(void *sym, uint64_t val);
 
 /* external symbols that are helpful for relocation */
 extern uint8_t         _DYNAMIC[];

@@ -8,6 +8,7 @@
 #include <schedule.h>
 #include <hypercall.h>
 #include <version.h>
+#include <reloc.h>
 
 #define ACRN_DBG_HYCALL	6
 
@@ -393,7 +394,7 @@ int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
 int64_t _set_vm_memmap(struct vm *vm, struct vm *target_vm,
 	struct vm_set_memmap *memmap)
 {
-	uint64_t hpa;
+	uint64_t hpa, base_paddr;
 	uint32_t attr, prot;
 
 	if ((memmap->length & 0xFFFUL) != 0UL) {
@@ -406,10 +407,11 @@ int64_t _set_vm_memmap(struct vm *vm, struct vm *target_vm,
 	dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x size=0x%x",
 		target_vm->attr.id, memmap->remote_gpa, hpa, memmap->length);
 
-	if (((hpa <= CONFIG_RAM_START) &&
-		(hpa + memmap->length > CONFIG_RAM_START)) ||
-		((hpa >= CONFIG_RAM_START) &&
-		(hpa < CONFIG_RAM_START + CONFIG_RAM_SIZE))) {
+	base_paddr = get_hv_image_base();
+	if (((hpa <= base_paddr) &&
+		(hpa + memmap->length > base_paddr)) ||
+		((hpa >= base_paddr) &&
+		(hpa < base_paddr + CONFIG_RAM_SIZE))) {
 		pr_err("%s: ERROR! overlap the HV memory region.", __func__);
 		return -1;
 	}

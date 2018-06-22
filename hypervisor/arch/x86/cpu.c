@@ -7,6 +7,7 @@
 #include <hypervisor.h>
 #include <schedule.h>
 #include <version.h>
+#include <reloc.h>
 
 #ifdef CONFIG_EFI_STUB
 #include <acrn_efi.h>
@@ -662,39 +663,47 @@ static void update_trampoline_code_refs(uint64_t dest_pa)
 	 * trampoline code starts in real mode,
 	 * so the target addres is HPA
 	 */
-	val = dest_pa + (uint64_t)trampoline_fixup_target;
+	val = dest_pa + trampoline_relo_addr(trampoline_fixup_target);
 
-	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_fixup_cs);
+	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(trampoline_fixup_cs));
 	*(uint16_t *)(ptr) = (uint16_t)((val >> 4) & 0xFFFFU);
 
-	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_fixup_ip);
+	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(trampoline_fixup_ip));
 	*(uint16_t *)(ptr) = (uint16_t)(val & 0xfU);
 
 	/* Update temporary page tables */
-	ptr = HPA2HVA(dest_pa + (uint64_t)CPU_Boot_Page_Tables_ptr);
+	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(CPU_Boot_Page_Tables_ptr));
 	*(uint32_t *)(ptr) += dest_pa;
 
-	ptr = HPA2HVA(dest_pa + (uint64_t)CPU_Boot_Page_Tables_Start);
+	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(CPU_Boot_Page_Tables_Start));
 	*(uint64_t *)(ptr) += dest_pa;
 
-	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_pdpt_addr);
+	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(trampoline_pdpt_addr));
 	for (i = 0; i < 4; i++)
 		*(uint64_t *)(ptr + sizeof(uint64_t) * i) += dest_pa;
 
 	/* update the gdt base pointer with relocated offset */
-	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_gdt_ptr);
+	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(trampoline_gdt_ptr));
 	*(uint64_t *)(ptr + 2) += dest_pa;
 
 	/* update trampoline jump pointer with relocated offset */
-	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_start64_fixup);
+	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(trampoline_start64_fixup));
 	*(uint32_t *)ptr += (uint32_t)dest_pa;
+
+	/* update trampoline's main entry pointer */
+	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(main_entry));
+	*(uint64_t *)ptr += get_hv_image_delta();
+
+	/* update trampoline's spinlock pointer */
+	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(trampoline_spinlock_ptr));
+	*(uint64_t *)ptr += get_hv_image_delta();
 }
 
 static uint64_t prepare_trampoline(void)
 {
 	uint64_t size, dest_pa;
 
-	size = (uint64_t)_ld_trampoline_end - (uint64_t)trampoline_start16;
+	size = (uint64_t)_ld_trampoline_end - (uint64_t)_ld_trampoline_start;
 #ifndef CONFIG_EFI_STUB
 	dest_pa = e820_alloc_low_memory(CONFIG_LOW_RAM_SIZE);
 #else
