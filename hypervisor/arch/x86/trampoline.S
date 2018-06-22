@@ -163,12 +163,6 @@ trampoline_start64:
 
     lea     trampoline_pdpt_addr(%rip), %rsp
 
-    /* Push sp magic to top of stack for call trace
-     *
-     *     0x696e746c = SP_BOTTOM_MAGIC
-     */
-    pushq   $0x696e746c
-
     /* Jump to C entry */
     movq    main_entry(%rip), %rax
     jmp     %rax
