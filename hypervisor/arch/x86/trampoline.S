@@ -148,7 +148,7 @@ trampoline_start64:
     mov     %eax, %gs
 
     /* Obtain CPU spin-lock to serialize trampoline for different APs */
-    mov     $trampoline_spinlock, %rdi
+    movq    trampoline_spinlock_ptr(%rip), %rdi
     spinlock_obtain(%rdi)
 
     /* Initialize temporary stack pointer
@@ -172,6 +172,10 @@ trampoline_start64:
     .global main_entry
 main_entry:
     .quad   cpu_secondary_init /* default entry is AP start entry */
+
+    .global trampoline_spinlock_ptr
+trampoline_spinlock_ptr:
+    .quad   trampoline_spinlock
 
 /* GDT table */
     .align  4

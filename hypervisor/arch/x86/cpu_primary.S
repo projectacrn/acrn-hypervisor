@@ -119,15 +119,57 @@ cpu_primary_start_32:
     .global     cpu_primary_start_64
 cpu_primary_start_64:
     /* save the MULTBOOT magic number & MBI */
-    movl    %edi, (boot_regs)
-    movl    %esi, (boot_regs+4)
+    lea     boot_regs(%rip), %rax
+    movl    %edi, (%rax)
+    movl    %esi, 4(%rax)
 
 primary_start_long_mode:
 
-    /* Fix up the IDT desciptors */
-    movl    $HOST_IDT, %edx
-    movl    $HOST_IDT_ENTRIES, %ecx
-.LFixUpIDT_Entries:
+    /* Initialize temporary stack pointer */
+    lea     _ld_bss_end(%rip), %rsp
+    add     $CPU_PAGE_SIZE,%rsp
+    /* 16 = CPU_STACK_ALIGN */
+    and     $(~(16 - 1)),%rsp
+
+    /*
+     * Fix up the .rela sections
+     * Notes: this includes the fixup to IDT tables and temporary
+     *     page tables
+     */
+    /*call _relocate*/
+
+    /* Load temportary GDT pointer value */
+    lea     cpu_primary32_gdt_ptr(%rip), %rbx
+    lgdt    (%ebx)
+
+    /* Set the correct long jump address */
+    lea     jmpbuf(%rip), %rax
+    lea     after(%rip), %rbx
+    mov     %rbx, (%rax)
+    rex.w ljmp  *(%rax)
+.data
+jmpbuf: .quad 0
+        .word HOST_GDT_RING0_CODE_SEL
+.text
+after:
+    // load all selector registers with appropriate values
+    xor     %edx, %edx
+    lldt    %dx
+    movl    $HOST_GDT_RING0_DATA_SEL,%eax
+    mov     %eax,%ss  // Was 32bit POC Stack
+    mov     %eax,%ds  // Was 32bit POC Data
+    mov     %eax,%es  // Was 32bit POC Data
+    mov     %edx,%fs  // Was 32bit POC Data
+    mov     %edx,%gs  // Was 32bit POC CLS
+
+    /*
+     * Fix up the IDT desciptors
+     * The relocation delta in IDT tables has been fixed in _relocate()
+     */
+    leal   HOST_IDT(%rip), %edx
+    movl   $HOST_IDT_ENTRIES, %ecx
+
+.fixup_idt_entries:
     xorl    %eax, %eax
     xchgl   %eax, 12(%edx)              /* Set rsvd bits to 0; eax now has
                                            high 32 of entry point */
@@ -138,42 +180,11 @@ primary_start_long_mode:
     shr     $16, %eax
     movw    %ax,   6(%edx)              /* Set bits 16-31 of entry point */
     addl    $X64_IDT_DESC_SIZE,%edx
-    loop    .LFixUpIDT_Entries
+    loop    .fixup_idt_entries
 
     /* Load IDT */
-    mov     $HOST_IDTR, %rcx
-    lidtq   (%rcx)
-
-    /* Load temportary GDT pointer value */
-    mov     $cpu_primary32_gdt_ptr, %ebx
-    lgdt    (%ebx)
-
-    /* Replace CS with the correct value should we need it */
-    mov     $HOST_GDT_RING0_CODE_SEL, %bx
-    mov     %bx, jcs
-    movabsq $jmpbuf, %rax
-    rex.w ljmp  *(%rax)
-.data
-jmpbuf: .quad after
-jcs:    .word 0
-.text
-after:
-
-    /* Initialize temporary stack pointer */
-    movq    $_ld_bss_end, %rsp
-    add     $CPU_PAGE_SIZE,%rsp
-    /* 16 = CPU_STACK_ALIGN */
-    and     $(~(16 - 1)),%rsp
-
-    // load all selector registers with appropriate values
-    xor     %edx, %edx
-    lldt    %dx
-    movl    $HOST_GDT_RING0_DATA_SEL,%eax
-    mov     %eax,%ss  // Was 32bit POC Stack
-    mov     %eax,%ds  // Was 32bit POC Data
-    mov     %eax,%es  // Was 32bit POC Data
-    mov     %edx,%fs  // Was 32bit POC Data
-    mov     %edx,%gs  // Was 32bit POC CLS
+    lea    HOST_IDTR(%rip), %rbx
+    lidtq   (%rbx)
 
    /* continue with chipset level initialization */
    call     bsp_boot_init
