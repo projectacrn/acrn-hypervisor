@@ -9,27 +9,46 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
+#include <pthread.h>
+#include <dirent.h>
+#include <sys/stat.h>
 #include "acrnctl.h"
 #include "acrn_mngr.h"
+#include "mevent.h"
+#include "vmm.h"
 
-/* List head of all vm */
-static LIST_HEAD(vmmngr_list_struct, vmmngr_struct) vmmngr_head;
+const char *state_str[] = {
+	[VM_STATE_UNKNOWN] = "unknown",
+	[VM_CREATED] = "stopped",
+	[VM_STARTED] = "started",
+	[VM_PAUSED] = "paused",
+	[VM_UNTRACKED] = "untracked",
+};
 
-static struct vmmngr_struct *vmmngr_list_add(char *name)
+/* Check if @path is a directory, and create if not exist */
+static int check_dir(const char *path)
 {
-	struct vmmngr_struct *s;
+	struct stat st;
 
-	s = calloc(1, sizeof(struct vmmngr_struct));
-	if (!s) {
-		perror("alloc vmmngr_struct");
-		return NULL;
+	if (stat(path, &st)) {
+		if (mkdir(path, 0666)) {
+			perror(path);
+			return -1;
+		}
+		return 0;
 	}
 
-	strncpy(s->name, name, MAX_NAME_LEN - 1);
-	LIST_INSERT_HEAD(&vmmngr_head, s, list);
+	if (S_ISDIR(st.st_mode))
+		return 0;
 
-	return s;
+	fprintf(stderr, "%s exist, and not a directory!\n", path);
+	return -1;
 }
+
+/* List head of all vm */
+static pthread_mutex_t vmmngr_mutex = PTHREAD_MUTEX_INITIALIZER;
+struct vmmngr_list_struct vmmngr_head;
+static unsigned long update_count = 0;
 
 struct vmmngr_struct *vmmngr_find(char *name)
 {
@@ -41,67 +60,190 @@ struct vmmngr_struct *vmmngr_find(char *name)
 	return NULL;
 }
 
-void get_vm_list(void)
+static int send_msg(char *vmname, struct mngr_msg *req,
+                    struct mngr_msg *ack, size_t ack_len);
+
+static int query_state(const char *name)
 {
-	char cmd[128] = { };
-	char cmd_out[256] = { };
-	char *vmname;
-	char *pvmname = NULL;
-	struct vmmngr_struct *s;
-	size_t len = sizeof(cmd_out);
+	struct req_dm_query req;
+	struct ack_dm_query ack;
+	int ret;
 
-	snprintf(cmd, sizeof(cmd),
-		 "find %s/add/ -name \"*.sh\" | "
-		 "sed \"s/\\/opt\\/acrn\\/conf\\/add\\///g\" | "
-		 "sed \"s/.sh//g\"", ACRNCTL_OPT_ROOT);
-	shell_cmd(cmd, cmd_out, sizeof(cmd_out));
+	req.msg.magic = MNGR_MSG_MAGIC;
+	req.msg.msgid = DM_QUERY;
+	req.msg.timestamp = time(NULL);
+	req.msg.len = sizeof(req);
 
-	/* Properly null-terminate cmd_out */
-	cmd_out[len - 1] = '\0';
+	ret = send_msg(vmname, (struct mngr_msg *)&req,
+		(struct mngr_msg *)&ack, sizeof(ack));
+	if (ret)
+		return ret;
 
-	vmname = strtok_r(cmd_out, "\n", &pvmname);
-	while (vmname) {
-		s = vmmngr_list_add(vmname);
-		if (!s)
-			continue;
-		s->state = VM_CREATED;
-		vmname = strtok_r(NULL, "\n", &pvmname);
+	if (ack.state < 0)
+		pdebug();
+
+	return ack.state;
+}
+
+/* find all the running DM process, which has */
+/* /run/acrn/mngr/[vmname].monitor.[pid].socket */
+static void _scan_alive_vm(void)
+{
+	DIR *dir;
+	struct dirent *entry;
+	struct vmmngr_struct *vm;
+	char name[128];
+	int pid;
+	int ret;
+
+	ret = check_dir(ACRN_DM_SOCK_ROOT);
+	if (ret) {
+		pdebug();
+		return;
 	}
 
-	pvmname = NULL;
+	dir = opendir(ACRN_DM_SOCK_ROOT);
+	if (!dir) {
+		pdebug();
+		return;
+	}
 
-	snprintf(cmd, sizeof(cmd),
-			"find %s/ -name \"*monitor.*.socket\" | "
-			"sed \"s/\\/run\\/acrn\\/mngr\\///g\" | "
-			"awk -F. \'{ print $1 }\'", ACRN_DM_SOCK_ROOT);
-	shell_cmd(cmd, cmd_out, sizeof(cmd_out));
+	while ((entry = readdir(dir))) {
+		memset(name, 0, sizeof(name));
+		ret =
+		    sscanf(entry->d_name, "%[^.].monitor.%d.socket", name,
+			   &pid);
+		if (ret != 2)
+			continue;
 
-	/* Properly null-terminate cmd_out */
-	cmd_out[len - 1] = '\0';
-
-	vmname = strtok_r(cmd_out, "\n", &pvmname);
-	while (vmname) {
-		s = vmmngr_find(vmname);
-		if (s)
-			s->state = VM_STARTED;
-		else {
-			s = vmmngr_list_add(vmname);
-			if (s)
-				s->state = VM_UNTRACKED;
+		if (name[sizeof(name) - 1]) {
+			pdebug();
+			/* truncate name and go a head */
+			name[sizeof(name) - 1] = 0;
 		}
-		vmname = strtok_r(NULL, "\n", &pvmname);
+
+		vm = vmmngr_find(name);
+
+		if (!vm) {
+			vm = calloc(1, sizeof(*vm));
+			if (!vm) {
+				pdebug();
+				continue;
+			}
+			memcpy(vm->name, name, sizeof(vm->name) - 1);
+			LIST_INSERT_HEAD(&vmmngr_head, vm, list);
+		}
+
+		ret = query_state(name);
+
+		if (ret < 0)
+			/* unsupport query */
+			vm->state = VM_STARTED;
+		else
+			switch (ret) {
+			case VM_SUSPEND_NONE:
+				vm->state = VM_STARTED;
+				break;
+			case VM_SUSPEND_HALT:
+				vm->state = VM_PAUSED;
+				break;
+			default:
+				vm->state = VM_STATE_UNKNOWN;
+			}
+		vm->update = update_count;
+	}
+
+}
+
+static void _scan_added_vm(void)
+{
+	DIR *dir;
+	struct dirent *entry;
+	struct vmmngr_struct *vm;
+	char name[128];
+	char suffix[128];
+	int ret;
+
+	ret = check_dir(ACRNCTL_OPT_ROOT);
+	if (ret) {
+		pdebug();
+		return;
+	}
+
+	ret = check_dir("/opt/acrn/conf/add");
+	if (ret) {
+		pdebug();
+		return;
+	}
+
+	dir = opendir("/opt/acrn/conf/add");
+	if (!dir) {
+		pdebug();
+		return;
+	}
+
+	while ((entry = readdir(dir))) {
+		memset(name, 0, sizeof(name));
+		memset(suffix, 0, sizeof(suffix));
+
+		ret = strnlen(entry->d_name, sizeof(entry->d_name));
+		if (ret >= sizeof(name)) {
+			pdebug();
+			continue;
+		}
+
+		ret = sscanf(entry->d_name, "%[^.].%s", name, suffix);
+
+		if (ret != 2)
+			continue;
+
+		if (name[sizeof(name) - 1]) {
+			pdebug();
+			/* truncate name and go a head */
+			name[sizeof(name) - 1] = 0;
+		}
+
+		if (strncmp(suffix, "sh", sizeof("sh")))
+			continue;
+
+		vm = vmmngr_find(name);
+
+		if (!vm) {
+			vm = calloc(1, sizeof(*vm));
+			if (!vm) {
+				pdebug();
+				continue;
+			}
+			memcpy(vm->name, name, sizeof(vm->name) - 1);
+			LIST_INSERT_HEAD(&vmmngr_head, vm, list);
+		}
+
+		vm->state = VM_CREATED;
+		vm->update = update_count;
 	}
 }
 
-void put_vm_list(void)
+static void _remove_dead_vm(void)
 {
-	struct vmmngr_struct *s;
+	struct vmmngr_struct *vm, *tvm;
 
-	while (!LIST_EMPTY(&vmmngr_head)) {
-		s = LIST_FIRST(&vmmngr_head);
-		LIST_REMOVE(s, list);
-		free(s);
+	list_foreach_safe(vm, &vmmngr_head, list, tvm) {
+		if (vm->update == update_count)
+			continue;
+		LIST_REMOVE(vm, list);
+		pdebug();
+		free(vm);
 	}
+};
+
+void vmmngr_update(void)
+{
+	pthread_mutex_lock(&vmmngr_mutex);
+	update_count++;
+	_scan_added_vm();
+	_scan_alive_vm();
+	_remove_dead_vm();
+	pthread_mutex_unlock(&vmmngr_mutex);
 }
 
 /* helper functions */
@@ -193,10 +335,10 @@ int stop_vm(char *vmname)
 	req.msg.len = sizeof(req);
 
 	send_msg(vmname, (struct mngr_msg *)&req,
-		       (struct mngr_msg *)&ack, sizeof(ack));
+		 (struct mngr_msg *)&ack, sizeof(ack));
 	if (ack.err) {
 		printf("Error happens when try to stop vm. errno(%d)\n",
-			ack.err);
+		       ack.err);
 	}
 
 	return ack.err;
@@ -213,7 +355,7 @@ int pause_vm(char *vmname)
 	req.msg.len = sizeof(req);
 
 	send_msg(vmname, (struct mngr_msg *)&req,
-			(struct mngr_msg *)&ack, sizeof(ack));
+		 (struct mngr_msg *)&ack, sizeof(ack));
 	if (ack.err) {
 		printf("Unable to pause vm. errno(%d)\n", ack.err);
 	}
@@ -232,7 +374,7 @@ int continue_vm(char *vmname)
 	req.msg.len = sizeof(req);
 
 	send_msg(vmname, (struct mngr_msg *)&req,
-			(struct mngr_msg *)&ack, sizeof(ack));
+		 (struct mngr_msg *)&ack, sizeof(ack));
 
 	if (ack.err) {
 		printf("Unable to continue vm. errno(%d)\n", ack.err);
@@ -252,7 +394,7 @@ int suspend_vm(char *vmname)
 	req.msg.len = sizeof(req);
 
 	send_msg(vmname, (struct mngr_msg *)&req,
-			(struct mngr_msg *)&ack, sizeof(ack));
+		 (struct mngr_msg *)&ack, sizeof(ack));
 
 	if (ack.err) {
 		printf("Unable to suspend vm. errno(%d)\n", ack.err);
@@ -272,7 +414,7 @@ int resume_vm(char *vmname)
 	req.msg.len = sizeof(req);
 
 	send_msg(vmname, (struct mngr_msg *)&req,
-			(struct mngr_msg *)&ack, sizeof(ack));
+		 (struct mngr_msg *)&ack, sizeof(ack));
 
 	if (ack.err) {
 		printf("Unable to resume vm. errno(%d)\n", ack.err);

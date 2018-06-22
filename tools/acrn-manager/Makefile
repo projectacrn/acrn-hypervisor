@@ -3,6 +3,7 @@ OUT_DIR ?= .
 
 CFLAGS := -Wall
 CFLAGS += -I../../devicemodel/include
+CFLAGS += -I../../devicemodel/include/public
 ifeq ($(RELEASE),0)
 CFLAGS += -g -DMNGR_DEBUG
 endif
