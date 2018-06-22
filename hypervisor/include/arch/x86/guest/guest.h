@@ -18,7 +18,7 @@
 
 #define foreach_vcpu(idx, vm, vcpu)				\
 	for (idx = 0, vcpu = vm->hw.vcpu_array[idx];		\
-		(idx < vm->hw.num_vcpus) & (vcpu != NULL);	\
+		(idx < vm->hw.num_vcpus) && (vcpu != NULL);	\
 		idx++, vcpu = vm->hw.vcpu_array[idx])
 
 
