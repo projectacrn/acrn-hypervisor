@@ -1407,7 +1407,8 @@ emulate_bittest(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		void *memarg)
 {
 	uint64_t val, rflags;
-	int error, bitmask, bitoff;
+	int error, bitmask;
+	uint32_t  bitoff;
 
 	/*
 	 * 0F BA is a Group 8 extended opcode.

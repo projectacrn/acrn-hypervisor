@@ -191,7 +191,7 @@ create_rte_for_gsi_irq(uint32_t irq, uint32_t vr)
 	rte.lo_32 |= IOAPIC_RTE_INTALO;
 
 	/* Dest field */
-	rte.hi_32 |= ALL_CPUS_MASK << 24;
+	rte.hi_32 |= ALL_CPUS_MASK << 24U;
 
 	return rte;
 }
