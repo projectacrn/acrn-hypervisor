@@ -19,6 +19,15 @@ BASEDIR := $(shell pwd)
 HV_OBJDIR ?= $(CURDIR)/build
 HV_FILE := acrn
 
+# initialize the flags we used
+CFLAGS :=
+ASFLAGS :=
+LDFLAGS :=
+ARCH_CFLAGS :=
+ARCH_ASFLAGS :=
+ARCH_ARFLAGS :=
+ARCH_LDFLAGS :=
+
 .PHONY: default
 default: all
 
