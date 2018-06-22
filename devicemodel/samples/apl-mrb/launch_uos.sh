@@ -283,16 +283,15 @@ fi
    -s 13,virtio-rpmb \
    -s 10,virtio-hyper_dmabuf \
    -s 11,wdt-i6300esb \
-   -s 14,passthru,0/e/0 \
+   -s 14,passthru,0/e/0,keep_gsi \
    -s 23,passthru,0/17/0 \
    -s 15,passthru,0/f/0 \
    -s 27,passthru,0/1b/0 \
    -s 24,passthru,0/18/0 \
-   -s 18,passthru,4/0/0 \
+   -s 18,passthru,4/0/0,keep_gsi \
    $boot_ipu_option      \
    -i /run/acrn/ioc_$vm_name,0x20 \
    -l com2,/run/acrn/ioc_$vm_name \
-   -M \
    $boot_image_option \
    --enable_trusty \
    -B "$kernel_cmdline" $vm_name
