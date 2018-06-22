@@ -331,7 +331,7 @@ int interrupt_window_vmexit_handler(struct vcpu *vcpu)
 		exec_vmwrite(VMX_PROC_VM_EXEC_CONTROLS, value32);
 	}
 
-	VCPU_RETAIN_RIP(vcpu);
+	vcpu_retain_rip(vcpu);
 	return 0;
 }
 
@@ -345,7 +345,7 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 		(((intr_info & VMX_INT_TYPE_MASK) >> 8)
 		!= VMX_INT_TYPE_EXT_INT)) {
 		pr_err("Invalid VM exit interrupt info:%x", intr_info);
-		VCPU_RETAIN_RIP(vcpu);
+		vcpu_retain_rip(vcpu);
 		return -EINVAL;
 	}
 
@@ -353,7 +353,7 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 
 	dispatch_interrupt(&ctx);
 
-	VCPU_RETAIN_RIP(vcpu);
+	vcpu_retain_rip(vcpu);
 
 	TRACE_2L(TRACE_VMEXIT_EXTERNAL_INTERRUPT, ctx.vector, 0);
 
@@ -524,7 +524,7 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 	}
 
 	/* Handle all other exceptions */
-	VCPU_RETAIN_RIP(vcpu);
+	vcpu_retain_rip(vcpu);
 
 	vcpu_queue_exception(vcpu, exception_vector, int_err_code);
 

@@ -126,7 +126,7 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	 */
 	sub_table_addr = alloc_paging_struct();
 	sworld_pml4e = HVA2HPA(sub_table_addr) | table_present;
-	MEM_WRITE64(pml4_base, sworld_pml4e);
+	mem_write64(pml4_base, sworld_pml4e);
 
 
 	nworld_pml4e = MEM_READ64(HPA2HVA(vm->arch_vm.nworld_eptp));

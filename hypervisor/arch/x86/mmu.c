@@ -335,7 +335,7 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 			table_entry |= (uint64_t)paddr;
 
 			/* Write the table entry to map this memory */
-			MEM_WRITE64(table_base + table_offset, table_entry);
+			mem_write64(table_base + table_offset, table_entry);
 
 			/* Invalidate TLB and page-structure cache,
 			 * if it is the first mapping no need to invalidate TLB
@@ -350,7 +350,7 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 				/* Table is present.
 				 * Write the table entry to map this memory
 				 */
-				MEM_WRITE64(table_base + table_offset, 0);
+				mem_write64(table_base + table_offset, 0);
 
 				/* Unmap, need to invalidate TLB and
 				 * page-structure cache
@@ -369,7 +369,7 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 			table_entry |= (uint64_t) paddr;
 
 			/* Write the table entry to map this memory */
-			MEM_WRITE64(table_base + table_offset, table_entry);
+			mem_write64(table_base + table_offset, table_entry);
 
 			/* Modify, need to invalidate TLB and
 			 * page-structure cache
@@ -390,7 +390,7 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 				table_entry |= attr;
 
 				/* Write the table entry to map this memory */
-				MEM_WRITE64(table_base + table_offset, table_entry);
+				mem_write64(table_base + table_offset, table_entry);
 
 				/* Modify, need to invalidate TLB and
 				 * page-structure cache
@@ -550,7 +550,7 @@ static void *walk_paging_struct(void *addr, void *table_base,
 			if (map_params->page_table_type == PTT_HOST)
 				entry_present |= attr;
 
-			MEM_WRITE64(table_base + table_offset,
+			mem_write64(table_base + table_offset,
 				    HVA2HPA(sub_table_addr) | entry_present);
 		} else {
 			/* Get address of the sub-table */
@@ -930,7 +930,7 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 		}
 		/* write all entries and keep original attr*/
 		for (i = 0U; i < IA32E_NUM_ENTRIES; i++) {
-			MEM_WRITE64(sub_tab_addr + (i * IA32E_COMM_ENTRY_SIZE),
+			mem_write64(sub_tab_addr + (i * IA32E_COMM_ENTRY_SIZE),
 					(attr | (pa + (i * next_page_size))));
 		}
 		if (map_params->page_table_type == PTT_EPT) {
@@ -939,7 +939,7 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 			 * bit 0(R) bit1(W) bit2(X) bit3~5 MUST be reserved
 			 * (here &0x07)
 			 */
-			MEM_WRITE64(entry.entry_base + entry.entry_off,
+			mem_write64(entry.entry_base + entry.entry_off,
 					(entry.entry_val & 0x07UL) |
 					 HVA2HPA(sub_tab_addr));
 		} else {
@@ -948,7 +948,7 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 			 * bit0(P) bit1(RW) bit2(U/S) bit3(PWT) bit4(PCD)
 			 * bit5(A) bit6(D or Ignore)
 			 */
-			MEM_WRITE64(entry.entry_base + entry.entry_off,
+			mem_write64(entry.entry_base + entry.entry_off,
 					(entry.entry_val & 0x7fUL) |
 					 HVA2HPA(sub_tab_addr));
 		}

@@ -257,19 +257,32 @@ enum _page_table_present {
 #define PAGE_SIZE_2M	MEM_2M
 #define PAGE_SIZE_1G	MEM_1G
 
-/* Macros for reading/writing memory */
+/* Macros for reading memory */
 #define MEM_READ8(addr)        (*(volatile uint8_t *)(addr))
-#define MEM_WRITE8(addr, data)  \
-		(*(volatile uint8_t *)(addr) = (uint8_t)(data))
 #define MEM_READ16(addr)       (*(volatile uint16_t *)(addr))
-#define MEM_WRITE16(addr, data)  \
-		(*(volatile uint16_t *)(addr) = (uint16_t)(data))
 #define MEM_READ32(addr)       (*(volatile uint32_t *)(addr))
-#define MEM_WRITE32(addr, data)  \
-		(*(volatile uint32_t *)(addr) = (uint32_t)(data))
 #define MEM_READ64(addr)       (*(volatile uint64_t *)(addr))
-#define MEM_WRITE64(addr, data)  \
-		(*(volatile uint64_t *)(addr) = (uint64_t)(data))
+
+/* Inline functions for writing memory */
+static inline void mem_write8(void *addr, uint8_t data)
+{
+	*(volatile uint8_t *)(addr) = (uint8_t)(data);
+}
+
+static inline void mem_write16(void *addr, uint16_t data)
+{
+	*(volatile uint16_t *)(addr) = (uint16_t)(data);
+}
+
+static inline void mem_write32(void *addr, uint32_t data)
+{
+	*(volatile uint32_t *)(addr) = (uint32_t)(data);
+}
+
+static inline void mem_write64(void *addr, uint64_t data)
+{
+	*(volatile uint64_t *)(addr) = (uint64_t)(data);
+}
 
 /* Typedef for MMIO handler and range check routine */
 typedef int(*hv_mem_io_handler_t)(struct vcpu *, struct mem_io *, void *);

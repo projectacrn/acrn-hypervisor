@@ -733,7 +733,7 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 	/* PML4 used 1 page, skip it to fetch PDPT */
 	pdpt_base_paddr = GUEST_INIT_PAGE_TABLE_START + PAGE_SIZE_4K;
 	entry = pdpt_base_paddr | table_present;
-	MEM_WRITE64(pml4_addr, entry);
+	mem_write64(pml4_addr, entry);
 
 	/* Write PDPTE, PDPT used 1 page, skip it to fetch PD */
 	pd_base_paddr = pdpt_base_paddr + PAGE_SIZE_4K;
@@ -742,7 +742,7 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 	for (i = 0; i < 4; i++) {
 		entry = ((pd_base_paddr + (i * PAGE_SIZE_4K))
 				| table_present);
-		MEM_WRITE64(addr, entry);
+		mem_write64(addr, entry);
 		addr += IA32E_COMM_ENTRY_SIZE;
 	}
 
@@ -755,7 +755,7 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 	addr = pml4_addr + 2 * PAGE_SIZE_4K;
 	for (i = 0; i < entry_num; i++) {
 		entry = (i * (1 << MMU_PDE_PAGE_SHIFT)) | table_present;
-		MEM_WRITE64(addr, entry);
+		mem_write64(addr, entry);
 		addr += IA32E_COMM_ENTRY_SIZE;
 	}
 
@@ -776,7 +776,7 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 		addr = (pml4_addr + PAGE_SIZE_4K + table_offset);
 		table_present = (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT);
 		entry = (pd_base_paddr | table_present);
-		MEM_WRITE64(addr, entry);
+		mem_write64(addr, entry);
 
 		/* Write PDE for trusty with 2M page size */
 		entry_num = TRUSTY_MEMORY_SIZE / (1 << MMU_PDE_PAGE_SHIFT);
@@ -788,7 +788,7 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 			entry = (TRUSTY_EPT_REBASE_GPA +
 				(i * (1 << MMU_PDE_PAGE_SHIFT)))
 				| table_present;
-			MEM_WRITE64(addr, entry);
+			mem_write64(addr, entry);
 			addr += IA32E_COMM_ENTRY_SIZE;
 		}
 	}

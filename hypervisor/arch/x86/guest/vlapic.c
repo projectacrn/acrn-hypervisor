@@ -2296,7 +2296,7 @@ int veoi_vmexit_handler(struct vcpu *vcpu)
 	struct lapic_reg *tmrptr;
 	uint32_t idx, mask;
 
-	VCPU_RETAIN_RIP(vcpu);
+	vcpu_retain_rip(vcpu);
 
 	vlapic = vcpu->arch_vcpu.vlapic;
 	lapic = vlapic->apic_page;
@@ -2326,7 +2326,7 @@ int apic_write_vmexit_handler(struct vcpu *vcpu)
 	offset = (qual & 0xFFFUL);
 
 	handled = 1;
-	VCPU_RETAIN_RIP(vcpu);
+	vcpu_retain_rip(vcpu);
 	vlapic = vcpu->arch_vcpu.vlapic;
 
 	switch (offset) {
