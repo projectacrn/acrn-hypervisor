@@ -138,20 +138,20 @@ static uint32_t update_ept(struct vm *vm, uint64_t start,
 
 	switch (type) {
 	case MTRR_MEM_TYPE_WC:
-		attr = MMU_MEM_ATTR_WC;
+		attr = IA32E_EPT_WC;
 		break;
 	case MTRR_MEM_TYPE_WT:
-		attr = MMU_MEM_ATTR_WT_CACHE;
+		attr = IA32E_EPT_WT;
 		break;
 	case MTRR_MEM_TYPE_WP:
-		attr = MMU_MEM_ATTR_WP;
+		attr = IA32E_EPT_WP;
 		break;
 	case MTRR_MEM_TYPE_WB:
-		attr = MMU_MEM_ATTR_WB_CACHE;
+		attr = IA32E_EPT_WB;
 		break;
 	case MTRR_MEM_TYPE_UC:
 	default:
-		attr = MMU_MEM_ATTR_UNCACHED;
+		attr = IA32E_EPT_UNCACHED;
 	}
 
 	ept_update_mt(vm, gpa2hpa(vm, start), start, size, attr);

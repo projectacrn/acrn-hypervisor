@@ -234,7 +234,14 @@ int register_mmio_emulation_handler(struct vm *vm,
 
 			mmio_node->range_start = start;
 			mmio_node->range_end = end;
-			ept_mmap(vm, start, start, end - start,
+
+			/*
+			 * SOS would map all its memory at beginning, so we
+			 * should unmap it. But UOS will not, so we shouldn't
+			 * need to unmap it.
+			 */
+			if (is_vm0(vm))
+				ept_mmap(vm, start, start, end - start,
 					MAP_UNMAP, 0);
 
 			/* Return success */
@@ -478,6 +485,12 @@ int ept_mmap(struct vm *vm, uint64_t hpa,
 	}
 
 	if (type == MAP_MEM || type == MAP_MMIO) {
+		/* EPT & VT-d share the same page tables, set SNP bit
+		 * to force snooping of PCIe devices if the page
+		 * is cachable
+		 */
+		if ((prot & IA32E_EPT_MT_MASK) != IA32E_EPT_UNCACHED)
+			prot |= IA32E_EPT_SNOOP_CTRL;
 		map_mem(&map_params, (void *)hpa,
 			(void *)gpa, size, prot);
 
