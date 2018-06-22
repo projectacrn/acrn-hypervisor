@@ -392,7 +392,9 @@ each with their own way to install development tools:
 
   .. code-block:: console
 
-     $ sudo apt install git \
+     $ sudo apt install gcc \
+          git \
+          make \
           gnu-efi \
           libssl-dev \
           libpciaccess-dev \
@@ -414,6 +416,9 @@ each with their own way to install development tools:
   .. code-block:: console
 
      $ sudo dnf install gcc \
+          git \
+          make \
+          findutils \
           gnu-efi-devel \
           libuuid-devel \
           openssl-devel \
@@ -432,6 +437,8 @@ each with their own way to install development tools:
   .. code-block:: console
 
      $ sudo yum install gcc \
+             git \
+             make \
              gnu-efi-devel \
              libuuid-devel \
              openssl-devel \
