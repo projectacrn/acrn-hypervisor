@@ -18,7 +18,12 @@
 #define CONSOLE_LOGLEVEL_DEFAULT	3
 #define MEM_LOGLEVEL_DEFAULT		5
 #define	CONFIG_LOW_RAM_SIZE	0x00010000
-#define	CONFIG_RAM_START	0x20000000
+
+/*
+ *  By default build the hypervisor in low address
+ *  so that it can only relocate to higher address
+ */
+#define	CONFIG_RAM_START	0x00100000
 #define	CONFIG_RAM_SIZE		0x02000000	/* 32M */
 #define	CONFIG_DMAR_PARSE_ENABLED	1
 #define	CONFIG_GPU_SBDF		0x00000010	/* 0000:00:02.0 */

@@ -41,6 +41,7 @@ EFI_SYSTEM_TABLE *sys_table;
 EFI_BOOT_SERVICES *boot;
 char *cmdline = NULL;
 extern const uint64_t guest_entry;
+static UINT64 hv_hpa;
 
 static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
 			struct multiboot_info *mbi, struct efi_ctx *efi_ctx)
@@ -185,7 +186,7 @@ again:
 	/* switch hv memory region(0x20000000 ~ 0x22000000) to
 	 * available RAM in e820 table
 	 */
-	mmap[j].mm_base_addr = CONFIG_RAM_START;
+	mmap[j].mm_base_addr = hv_hpa;
 	mmap[j].mm_length = CONFIG_RAM_SIZE;
 	mmap[j].mm_type = E820_RAM;
 	j++;
@@ -307,7 +308,7 @@ switch_to_guest_mode(EFI_HANDLE image)
 	asm volatile ("movq %%r14, %0" : "=r"(efi_ctx->r14));
 	asm volatile ("movq %%r15, %0" : "=r"(efi_ctx->r15));
 
-	hv_jump(CONFIG_RAM_START, mbi, efi_ctx);
+	hv_jump(hv_hpa, mbi, efi_ctx);
 	asm volatile (".global guest_entry\n\t"
 				  "guest_entry:\n\t");
 
@@ -331,7 +332,6 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	WCHAR *error_buf;
 	EFI_STATUS err;
 	EFI_LOADED_IMAGE *info;
-	EFI_PHYSICAL_ADDRESS addr;
 	UINTN sec_addr;
 	UINTN sec_size;
 	char *section;
@@ -393,13 +393,12 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 		goto failed;
 	}
 
-	err = __emalloc(CONFIG_RAM_SIZE, CONFIG_RAM_START, &addr,
-		EfiReservedMemoryType);
+	err = __emalloc(CONFIG_RAM_SIZE, CONFIG_RAM_START, &hv_hpa,
+			EfiReservedMemoryType);
 	if (err != EFI_SUCCESS)
 		goto failed;
 
-	/* Copy ACRNHV binary to fixed phys addr. LoadImage and StartImage ?? */
-	memcpy((char*)addr, info->ImageBase + sec_addr, sec_size);
+	memcpy((char *)hv_hpa, info->ImageBase + sec_addr, sec_size);
 
 	/* load hypervisor and begin to run on it */
 	err = switch_to_guest_mode(image);
