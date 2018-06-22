@@ -131,3 +131,19 @@ void _relocate(void)
 		start = (struct Elf64_Rel *)((char *)start + size);
 	}
 }
+
+uint64_t read_trampoline_sym(void *sym)
+{
+	uint64_t *hva;
+
+	hva = HPA2HVA(trampoline_start16_paddr) + trampoline_relo_addr(sym);
+	return *hva;
+}
+
+void write_trampoline_sym(void *sym, uint64_t val)
+{
+	uint64_t *hva;
+
+	hva = HPA2HVA(trampoline_start16_paddr) + trampoline_relo_addr(sym);
+	*hva = val;
+}

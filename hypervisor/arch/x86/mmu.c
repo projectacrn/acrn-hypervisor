@@ -28,6 +28,7 @@
  */
 
 #include <hypervisor.h>
+#include <reloc.h>
 
 static void *mmu_pml4_addr;
 
@@ -593,6 +594,7 @@ void init_paging(void)
 {
 	struct map_params map_params;
 	struct e820_entry *entry;
+	uint64_t hv_hpa;
 	uint32_t i;
 	int attr_wb = (MMU_MEM_ATTR_BIT_READ_WRITE |
 			MMU_MEM_ATTR_BIT_USER_ACCESSIBLE |
@@ -632,8 +634,8 @@ void init_paging(void)
 	/* set the paging-structure entries' U/S flag
 	 * to supervisor-mode for hypervisor owned memroy.
 	 */
-	modify_mem(&map_params, (void *)CONFIG_RAM_START,
-			(void *)CONFIG_RAM_START,
+	hv_hpa = get_hv_image_base();
+	modify_mem(&map_params, (void *)hv_hpa, (void *)hv_hpa,
 			CONFIG_RAM_SIZE, attr_wb & (~MMU_MEM_ATTR_BIT_USER_ACCESSIBLE));
 
 	pr_dbg("Enabling MMU ");
