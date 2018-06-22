@@ -175,11 +175,6 @@ after:
     mov     %edx,%fs  // Was 32bit POC Data
     mov     %edx,%gs  // Was 32bit POC CLS
 
-   /* Push sp magic to top of stack for call trace
-    *
-    *     0x696e746c = SP_BOTTOM_MAGIC
-    */
-   pushq   $0x696e746c
    /* continue with chipset level initialization */
    call     bsp_boot_init
 

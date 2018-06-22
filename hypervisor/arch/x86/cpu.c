@@ -48,6 +48,8 @@ static struct cpu_capability cpu_caps;
 
 struct cpuinfo_x86 boot_cpu_data;
 
+static void bsp_boot_post(void);
+static void cpu_secondary_post(void);
 static void vapic_cap_detect(void);
 static void cpu_xsave_init(void);
 static void cpu_set_logical_id(uint32_t logical_id);
@@ -55,6 +57,17 @@ static void print_hv_banner(void);
 int cpu_find_logical_id(uint32_t lapic_id);
 static void pcpu_sync_sleep(unsigned long *sync, int mask_bit);
 int ibrs_type;
+static uint64_t __attribute__((__section__(".bss_noinit"))) start_tsc;
+
+/* Push sp magic to top of stack for call trace */
+#define SWITCH_TO(rsp, to)                                              \
+{                                                                       \
+	asm volatile ("movq %0, %%rsp\n"                                \
+			"pushq %1\n"                                    \
+			"call %2\n"                                     \
+			 :                                              \
+			 : "r"(rsp), "rm"(SP_BOTTOM_MAGIC), "a"(to));   \
+}
 
 inline bool cpu_has_cap(uint32_t bit)
 {
@@ -342,10 +355,14 @@ static void get_cpu_name(void)
 	boot_cpu_data.model_name[48] = '\0';
 }
 
+/* NOTE: this function is using temp stack, and after SWITCH_TO(runtime_sp, to)
+ * it will switch to runtime stack.
+ */
 void bsp_boot_init(void)
 {
-	int ret;
-	uint64_t start_tsc = rdtsc();
+	uint64_t rsp;
+
+	start_tsc = rdtsc();
 
 	/* Clear BSS */
 	memset(_ld_bss_start, 0, _ld_bss_end - _ld_bss_start);
@@ -431,8 +448,13 @@ void bsp_boot_init(void)
 	load_gdtr_and_tr();
 
 	/* Switch to run-time stack */
-	CPU_SP_WRITE(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
+	rsp = (uint64_t)(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
+	rsp &= ~(CPU_STACK_ALIGN - 1UL);
+	SWITCH_TO(rsp, bsp_boot_post);
+}
 
+static void bsp_boot_post(void)
+{
 #ifdef STACK_PROTECTOR
 	set_fs_base();
 #endif
@@ -526,24 +548,19 @@ void bsp_boot_init(void)
 	console_setup_timer();
 
 	/* Start initializing the VM for this CPU */
-	ret = hv_main(CPU_BOOT_ID);
-	if (ret != 0)
+	if (hv_main(CPU_BOOT_ID) != 0)
 		panic("failed to start VM for bsp\n");
 
 	/* Control should not come here */
 	cpu_dead(CPU_BOOT_ID);
 }
 
+/* NOTE: this function is using temp stack, and after SWITCH_TO(runtime_sp, to)
+ * it will switch to runtime stack.
+ */
 void cpu_secondary_init(void)
 {
-	int ret;
-	/* NOTE: Use of local / stack variables in this function is problematic
-	 * since the stack is switched in the middle of the function.  For this
-	 * reason, the logical id is only temporarily stored in a static
-	 * variable, but this will be over-written once subsequent CPUs
-	 * start-up.  Once the spin-lock is released, the cpu_logical_id_get()
-	 * API is used to obtain the logical ID
-	 */
+	uint64_t rsp;
 
 	/* Switch this CPU to use the same page tables set-up by the
 	 * primary/boot CPU
@@ -564,7 +581,19 @@ void cpu_secondary_init(void)
 	__bitmap_set(get_cpu_id(), &pcpu_active_bitmap);
 
 	/* Switch to run-time stack */
-	CPU_SP_WRITE(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
+	rsp = (uint64_t)(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
+	rsp &= ~(CPU_STACK_ALIGN - 1UL);
+	SWITCH_TO(rsp, cpu_secondary_post);
+}
+
+static void cpu_secondary_post(void)
+{
+	int ret;
+
+	/* Release secondary boot spin-lock to allow one of the next CPU(s) to
+	 * perform this common initialization
+	 */
+	spinlock_release(&trampoline_spinlock);
 
 #ifdef STACK_PROTECTOR
 	set_fs_base();
@@ -578,11 +607,6 @@ void cpu_secondary_init(void)
 	pr_dbg("Core %d is up", get_cpu_id());
 
 	cpu_xsave_init();
-
-	/* Release secondary boot spin-lock to allow one of the next CPU(s) to
-	 * perform this common initialization
-	 */
-	spinlock_release(&trampoline_spinlock);
 
 	/* Initialize secondary processor interrupts. */
 	interrupt_init(get_cpu_id());
