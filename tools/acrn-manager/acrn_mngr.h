@@ -6,6 +6,12 @@
 #ifndef ACRN_MANAGER_H
 #define ACRN_MANAGER_H
 
+#ifdef MNGR_DEBUG
+#define pdebug()        fprintf(stderr, "%s %d\n", __FUNCTION__, __LINE__)
+#else
+#define pdebug()        while(0){}
+#endif
+
 #include <stdlib.h>
 
 /* Basic message format */

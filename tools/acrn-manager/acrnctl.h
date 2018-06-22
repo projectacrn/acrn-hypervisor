@@ -21,23 +21,7 @@ enum vm_state {
 	VM_UNTRACKED,		/* VM not created by acrnctl, or its launch script can change vm name */
 };
 
-static const char *state_str[] = {
-	[VM_STATE_UNKNOWN] = "unknown",
-	[VM_CREATED] = "stopped",
-	[VM_STARTED] = "started",
-	[VM_PAUSED] = "paused",
-	[VM_UNTRACKED] = "untracked",
-};
-
-/**
- * @brief search all vm and store it in vmmngr_head
- */
-void get_vm_list(void);
-
-/**
- * @brief free all vmmngr_struct allocated by get_vm_list
- */
-void put_vm_list(void);
+extern const char *state_str[];
 
 /**
  * @brief search vm indentified by vm from vmmngr_head
@@ -50,10 +34,20 @@ struct vmmngr_struct *vmmngr_find(char *vmname);
 struct vmmngr_struct {
 	char name[MAX_NAME_LEN];
 	unsigned long state;
+	unsigned long update;   /* update count, remove a vm if no update for it */
 	LIST_ENTRY(vmmngr_struct) list;
 };
 
 int shell_cmd(const char *cmd, char *outbuf, int len);
+
+/* update names and states of VMs in SOS
+ * before you stop, start, pause, resume, suspend continue a VM
+ * use a name, it is better to run vmmngr_update() first
+ * and use vmngr_find() to check is this VM is still available
+ */
+void vmmngr_update(void);
+
+extern LIST_HEAD(vmmngr_list_struct, vmmngr_struct) vmmngr_head;
 
 /* vm life cycle ops */
 int list_vm(void);

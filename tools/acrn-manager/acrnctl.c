@@ -615,10 +615,8 @@ int main(int argc, char *argv[])
 			if (acmds[i].valid_args(&acmds[i], argc - 1, &argv[1])) {
 				return -1;
 			} else {
-				get_vm_list();
+				vmmngr_update();
 				err = acmds[i].func(argc - 1, &argv[1]);
-				put_vm_list();
-
 				return err;
 			}
 		}

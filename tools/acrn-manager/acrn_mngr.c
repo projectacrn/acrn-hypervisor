@@ -17,12 +17,6 @@
 #include "mevent.h"
 #include "acrn_mngr.h"
 
-#ifdef MNGR_DEBUG
-#define pdebug()	fprintf(stderr, "%s %d\n", __FUNCTION__, __LINE__)
-#else
-#define pdebug()	while(0){}
-#endif
-
 /* helpers */
 /* Check if @path is a directory, and create if not exist */
 static int check_dir(const char *path)
