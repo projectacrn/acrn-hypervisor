@@ -136,7 +136,7 @@ primary_start_long_mode:
      * Notes: this includes the fixup to IDT tables and temporary
      *     page tables
      */
-    /*call _relocate*/
+    call _relocate
 
     /* Load temportary GDT pointer value */
     lea     cpu_primary32_gdt_ptr(%rip), %rbx

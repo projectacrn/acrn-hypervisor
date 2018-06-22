@@ -42,6 +42,7 @@ CFLAGS += -mno-red-zone
 CFLAGS += -static -nostdinc -nostdlib -fno-common
 CFLAGS += -O2 -D_FORTIFY_SOURCE=2
 CFLAGS += -Wformat -Wformat-security
+CFLAGS += -fpie
 
 ifdef STACK_PROTECTOR
 ifeq (true, $(shell [ $(GCC_MAJOR) -gt 4 ] && echo true))
@@ -58,9 +59,16 @@ endif
 
 ASFLAGS += -m64 -nostdinc -nostdlib
 
-LDFLAGS += -Wl,--gc-sections -static -nostartfiles -nostdlib
+LDFLAGS += -Wl,--gc-sections -nostartfiles -nostdlib
 LDFLAGS += -Wl,-n,-z,max-page-size=0x1000
 LDFLAGS += -Wl,-z,noexecstack
+
+# on X86_64, when build with "-pie", GCC fails on linking R_X86_64_32
+# relocations with "recompile with fPIC" error, because it may cause
+# run-time relocation overflow if it runs at address above 4GB.
+# We know it's safe because Hypervisor runs under 4GB. "noreloc-overflow"
+# is used to avoid the compile error
+LDFLAGS += -pie -z noreloc-overflow
 
 ARCH_CFLAGS += -gdwarf-2
 ARCH_ASFLAGS += -gdwarf-2 -DASSEMBLER=1
