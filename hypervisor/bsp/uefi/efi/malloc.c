@@ -223,11 +223,7 @@ fail:
 	return err;
 }
 
-/* FIXME: This function cannot guarantee to return address under 4G,
- * and the hypervisor cannot handle params, which address is above 4G,
- * delivered from efi stub.
- */
-EFI_STATUS __emalloc(UINTN size, UINTN align, EFI_PHYSICAL_ADDRESS *addr,
+EFI_STATUS __emalloc(UINTN size, UINTN min_addr, EFI_PHYSICAL_ADDRESS *addr,
 	EFI_MEMORY_TYPE mem_type)
 {
 	UINTN map_size, map_key, desc_size;
@@ -244,48 +240,46 @@ EFI_STATUS __emalloc(UINTN size, UINTN align, EFI_PHYSICAL_ADDRESS *addr,
 
 	d = (UINTN)map_buf;
 	map_end = (UINTN)map_buf + map_size;
+	size = nr_pages << EFI_PAGE_SHIFT;
 
 	for (; d < map_end; d += desc_size) {
 		EFI_MEMORY_DESCRIPTOR *desc;
 		EFI_PHYSICAL_ADDRESS start, end, aligned;
 
 		desc = (EFI_MEMORY_DESCRIPTOR *)d;
-		if (desc->Type != EfiConventionalMemory)
-			continue;
-
-		if (desc->NumberOfPages < nr_pages)
-			continue;
-
 		start = desc->PhysicalStart;
 		end = start + (desc->NumberOfPages << EFI_PAGE_SHIFT);
 
-		/* Low-memory is super-precious! */
-		if (end <= 1 << 20)
-			continue;
-		if (start < 1 << 20) {
-			size -= (1 << 20) - start;
-			start = (1 << 20);
+		if ((min_addr > start) && (min_addr < end)) {
+			start = min_addr;
 		}
 
-		aligned = align;//(start + align -1) & ~(align -1);
+		start = (start + EFI_PAGE_SIZE - 1) & ~(EFI_PAGE_SIZE - 1);
 
+		/*
+		 * Low-memory is super-precious!
+		 * Also we don't allocate from address over 4G
+		 */
+		if ((desc->Type != EfiConventionalMemory) ||
+			(desc->NumberOfPages < nr_pages) ||
+			(start < (1ULL << 20)) ||
+			((start + size) > end) ||
+			((start + size) >= (1UL << 32))) {
+			continue;
+		}
 
-		if ((aligned + size) <= end) {
-	        //Print(L"trying to allocate memory at %0x!\n", aligned);
-			err = allocate_pages(AllocateAddress, mem_type,
-					     nr_pages, &aligned);
-			if (err == EFI_SUCCESS) {
-	            //Print(L"trying to allocate memory at %0x, success!\n", aligned);
-				*addr = aligned;
-				break;
-			} {
-	            //Print(L"trying to allocate memory at %0x, failure!\n", aligned);
-            }
+		aligned = start;
+		err = allocate_pages(AllocateAddress, mem_type,
+					 nr_pages, &aligned);
+		if (err == EFI_SUCCESS) {
+			*addr = aligned;
+			break;
 		}
 	}
 
-	if (d == map_end)
+	if (d == map_end) {
 		err = EFI_OUT_OF_RESOURCES;
+	}
 
 	free_pool(map_buf);
 fail:

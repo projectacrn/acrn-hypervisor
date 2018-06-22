@@ -94,7 +94,7 @@ config LOW_RAM_SIZE
 config RAM_START
 	hex "Address of the RAM region assigned to the hypervisor"
 	default 0x6e000000 if PLATFORM_SBL
-	default 0x20000000 if PLATFORM_UEFI
+	default 0x00100000 if PLATFORM_UEFI
 
 config RAM_SIZE
 	hex "Size of the RAM region assigned to the hypervisor"
