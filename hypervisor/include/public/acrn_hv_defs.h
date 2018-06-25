@@ -256,6 +256,12 @@ struct trusty_boot_param {
 
 	/** trusty runtime memory size */
 	uint32_t mem_size;
+
+	/** padding */
+	uint32_t padding;
+
+	/** rpmb key */
+	uint8_t rpmb_key[64];
 } __aligned(8);
 
 /**
