@@ -73,7 +73,7 @@ typedef struct {
 typedef struct {
 	uint32_t cpuid;
 	int exit_flag;
-	FILE *trace_filep;
+	int trace_fd;
 	shared_buf_t *sbuf;
 	pthread_mutex_t *sbuf_lock;
 } param_t;

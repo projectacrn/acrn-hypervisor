@@ -16,7 +16,6 @@
 #include <string.h>
 
 #include "acrntrace.h"
-#include "trace_event.h"
 
 /* for opt */
 static uint64_t period = 10000;
@@ -177,7 +176,7 @@ static void reader_fn(param_t * param)
 {
 	int ret;
 	uint32_t cpuid = param->cpuid;
-	FILE *fp = param->trace_filep;
+	int fd = param->trace_fd;
 	shared_buf_t *sbuf = param->sbuf;
 	trace_ev_t e;
 
@@ -191,25 +190,9 @@ static void reader_fn(param_t * param)
 	if (flags & FLAG_CLEAR_BUF)
 		sbuf_clear_buffered(sbuf);
 
-	/* write cpu freq to the first line of output file */
-	fprintf(fp, "CPU Freq: %f\n", get_cpu_freq());
-
 	while (1) {
 		do {
-			ret = sbuf_get(sbuf, (void *)&e);
-			if (ret == 0)
-				break;
-			else if (ret < 0) {
-				pr_err("sbuf[%u] read error: %d\n", cpuid, ret);
-				return;
-			}
-
-			fprintf(fp, "%u | %lu | ", cpuid, e.tsc);
-			switch (e.id) {
-				/* defined in trace_event.h     */
-				/* for each ev type             */
-				ALL_CASES;
-			}
+			ret = sbuf_write(fd, sbuf);
 		} while (ret > 0);
 
 		usleep(period);
@@ -245,8 +228,9 @@ static int create_reader(reader_struct * reader, uint32_t cpu)
 
 	snprintf(trace_file_name, TRACE_FILE_NAME_LEN, "%s/%d", trace_file_dir,
 		 cpu);
-	reader->param.trace_filep = fopen(trace_file_name, "w+");
-	if (!reader->param.trace_filep) {
+	reader->param.trace_fd = open(trace_file_name,
+					O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (!reader->param.trace_fd) {
 		pr_err("Failed to open %s, err %d\n", trace_file_name, errno);
 		return -3;
 	}
@@ -283,10 +267,8 @@ static void destory_reader(reader_struct * reader)
 		reader->dev_fd = 0;
 	}
 
-	if (reader->param.trace_filep) {
-		fflush(reader->param.trace_filep);
-		fclose(reader->param.trace_filep);
-		reader->param.trace_filep = NULL;
+	if (reader->param.trace_fd) {
+		close(reader->param.trace_fd);
 	}
 }
 
