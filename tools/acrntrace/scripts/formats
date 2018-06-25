@@ -1,0 +1,22 @@
+# For TRACE_2L
+0x00000001 CPU%(cpu)d 0x%(event)016x %(tsc)d timer added [fire_tsc = 0x%(1)08x]
+0x00000002 CPU%(cpu)d 0x%(event)016x %(tsc)d timer pickup [fire tsc = 0x%(1)08x]
+0x00000010 CPU%(cpu)d 0x%(event)016x %(tsc)d vmexit [exit reason = 0x%(1)08x, rIP = 0x%(2)08x]
+0x00000011 CPU%(cpu)d 0x%(event)016x %(tsc)d vmenter
+0x00010001 CPU%(cpu)d 0x%(event)016x %(tsc)d external intr [vector = 0x%(1)08x]
+0x00010002 CPU%(cpu)d 0x%(event)016x %(tsc)d intr window
+0x00010004 CPU%(cpu)d 0x%(event)016x %(tsc)d cpuid [vcpuid = %(1)d]
+0x00010012 CPU%(cpu)d 0x%(event)016x %(tsc)d hypercall [vmid = %(1)d, hypercall id = 0x%(2)08x]
+0x0001001C CPU%(cpu)d 0x%(event)016x %(tsc)d cr access [access type = 0x%(1)08x, cr num = %(2)d]
+0x0001001F CPU%(cpu)d 0x%(event)016x %(tsc)d read msr [msr = 0x%(1)08x, val = 0x%(2)016x]
+0x00010020 CPU%(cpu)d 0x%(event)016x %(tsc)d write msr [msr = 0x%(1)08x, val = 0x%(2)016x]
+0x00010030 CPU%(cpu)d 0x%(event)016x %(tsc)d ept violation [exit qual = 0x%(1)08x, gpa = 0x%(2)08x]
+0x00010031 CPU%(cpu)d 0x%(event)016x %(tsc)d ept misconfiguration
+0x00010038 CPU%(cpu)d 0x%(event)016x %(tsc)d apicv write [offset = 0x%(1)08x]
+0x00010039 CPU%(cpu)d 0x%(event)016x %(tsc)d apicv access [qual = 0x%(1)08x, vlapic = 0x%(2)08x]
+0x0001003A CPU%(cpu)d 0x%(event)016x %(tsc)d apicv virt EOI [vector = 0x%(1)08x]
+0x00020000 CPU%(cpu)d 0x%(event)016x %(tsc)d vmexit unhandled [exit reason = 0x%(1)08x]
+
+# For TRACE_4I
+0x0001001E CPU%(cpu)d 0x%(event)016x %(tsc)d IO instruction [port = %(1)d, direction = %(2)d, sz = %(3)d, cur_context_idx = %(4)d]
+0x00010000 CPU%(cpu)d 0x%(event)016x %(tsc)d exception or nmi [vector = 0x%(1)08x, err = %(2)d, d3 = %(1)d, d4 = %(2)d]
