@@ -6,36 +6,38 @@ This script defines the function to do the vm_exit analysis
 """
 
 import csv
+import struct
 from config import TSC_FREQ
 
 TSC_BEGIN = 0L
 TSC_END = 0L
 TOTAL_NR_EXITS = 0L
 
-LIST_EVENTS = [
-    'VMEXIT_EXCEPTION_OR_NMI',
-    'VMEXIT_EXTERNAL_INTERRUPT',
-    'VMEXIT_INTERRUPT_WINDOW',
-    'VMEXIT_CPUID',
-    'VMEXIT_RDTSC',
-    'VMEXIT_VMCALL',
-    'VMEXIT_CR_ACCESS',
-    'VMEXIT_IO_INSTRUCTION',
-    'VMEXIT_RDMSR',
-    'VMEXIT_WRMSR',
-    'VMEXIT_APICV_ACCESS',
-    'VMEXIT_APICV_VIRT_EOI',
-    'VMEXIT_EPT_VIOLATION',
-    'VMEXIT_EPT_VIOLATION_GVT',
-    'VMEXIT_EPT_MISCONFIGURATION',
-    'VMEXIT_RDTSCP',
-    'VMEXIT_APICV_WRITE',
-    'VMEXIT_UNHANDLED'
-]
+VM_EXIT = 0x10
+VM_ENTER = 0x11
+VMEXIT_ENTRY = 0x10000
+
+LIST_EVENTS = {
+    'VMEXIT_EXCEPTION_OR_NMI':     VMEXIT_ENTRY + 0x00000000,
+    'VMEXIT_EXTERNAL_INTERRUPT':   VMEXIT_ENTRY + 0x00000001,
+    'VMEXIT_INTERRUPT_WINDOW':     VMEXIT_ENTRY + 0x00000002,
+    'VMEXIT_CPUID':                VMEXIT_ENTRY + 0x00000004,
+    'VMEXIT_RDTSC':                VMEXIT_ENTRY + 0x00000010,
+    'VMEXIT_VMCALL':               VMEXIT_ENTRY + 0x00000012,
+    'VMEXIT_CR_ACCESS':            VMEXIT_ENTRY + 0x0000001C,
+    'VMEXIT_IO_INSTRUCTION':       VMEXIT_ENTRY + 0x0000001E,
+    'VMEXIT_RDMSR':                VMEXIT_ENTRY + 0x0000001F,
+    'VMEXIT_WRMSR':                VMEXIT_ENTRY + 0x00000020,
+    'VMEXIT_APICV_ACCESS':         VMEXIT_ENTRY + 0x00000030,
+    'VMEXIT_APICV_VIRT_EOI':       VMEXIT_ENTRY + 0x00000031,
+    'VMEXIT_EPT_VIOLATION':        VMEXIT_ENTRY + 0x00000033,
+    'VMEXIT_EPT_MISCONFIGURATION': VMEXIT_ENTRY + 0x00000038,
+    'VMEXIT_RDTSCP':               VMEXIT_ENTRY + 0x00000039,
+    'VMEXIT_APICV_WRITE':          VMEXIT_ENTRY + 0x0000003A,
+    'VMEXIT_UNHANDLED': 0x20000
+}
 
 NR_EXITS = {
-    'VM_EXIT': 0,
-    'VM_ENTER': 0,
     'VMEXIT_EXCEPTION_OR_NMI': 0,
     'VMEXIT_EXTERNAL_INTERRUPT': 0,
     'VMEXIT_INTERRUPT_WINDOW': 0,
@@ -49,7 +51,6 @@ NR_EXITS = {
     'VMEXIT_APICV_ACCESS': 0,
     'VMEXIT_APICV_VIRT_EOI': 0,
     'VMEXIT_EPT_VIOLATION': 0,
-    'VMEXIT_EPT_VIOLATION_GVT': 0,
     'VMEXIT_EPT_MISCONFIGURATION': 0,
     'VMEXIT_RDTSCP': 0,
     'VMEXIT_APICV_WRITE': 0,
@@ -57,8 +58,6 @@ NR_EXITS = {
 }
 
 TIME_IN_EXIT = {
-    'VM_EXIT': 0,
-    'VM_ENTER': 0,
     'VMEXIT_EXCEPTION_OR_NMI': 0,
     'VMEXIT_EXTERNAL_INTERRUPT': 0,
     'VMEXIT_INTERRUPT_WINDOW': 0,
@@ -72,21 +71,14 @@ TIME_IN_EXIT = {
     'VMEXIT_APICV_ACCESS': 0,
     'VMEXIT_APICV_VIRT_EOI': 0,
     'VMEXIT_EPT_VIOLATION': 0,
-    'VMEXIT_EPT_VIOLATION_GVT': 0,
     'VMEXIT_EPT_MISCONFIGURATION': 0,
     'VMEXIT_RDTSCP': 0,
     'VMEXIT_APICV_WRITE': 0,
     'VMEXIT_UNHANDLED': 0
 }
 
-IRQ_EXITS = {}
-
-def count_irq(info):
-    vec = info[5:15]
-    if IRQ_EXITS.has_key(vec):
-        IRQ_EXITS[vec] += 1
-    else:
-        IRQ_EXITS[vec] = 1
+# 4 * 64bit per trace entry
+TRCREC = "QQQQ"
 
 def parse_trace_data(ifile):
     """parse the trace data file
@@ -95,37 +87,25 @@ def parse_trace_data(ifile):
     Return:
         None
     """
+
     global TSC_BEGIN, TSC_END, TOTAL_NR_EXITS
+    last_ev_id = ''
     tsc_enter = 0L
     tsc_exit = 0L
     tsc_last_exit_period = 0L
 
-    ev_id = ''
-    last_ev_id = ''
+    fd = open(ifile)
 
-    try:
-        ifp = open(ifile)
-
-        line = ifp.readline()
-
-        # should preprocess to make sure first event is VM_ENTER
-        while 1:
-            line = ifp.readline()
-            if line == '':
-                ifp.close()
+    while True:
+        try:
+            line = fd.read(struct.calcsize(TRCREC))
+            if not line:
                 break
+            (tsc, event, d1, d2) = struct.unpack(TRCREC, line)
 
-            try:
-                (cpuid, tsc, payload) = line.split(" | ")
+            event = event & 0xffffffffffff
 
-                (ev_id, info) = payload.split(":")
-
-            except ValueError, execp:
-                print execp
-                print line
-                continue
-
-            if ev_id == 'VM_ENTER':
+            if event == VM_ENTER:
                 if TSC_BEGIN == 0:
                     TSC_BEGIN = long(tsc)
                     tsc_exit = long(tsc)
@@ -134,38 +114,33 @@ def parse_trace_data(ifile):
                 tsc_enter = long(tsc)
                 TSC_END = tsc_enter
                 tsc_last_exit_period = tsc_enter - tsc_exit
+
                 if tsc_last_exit_period != 0:
                     TIME_IN_EXIT[last_ev_id] += tsc_last_exit_period
-            elif ev_id == 'VM_EXIT':
+
+            elif event == VM_EXIT:
                 tsc_exit = long(tsc)
                 TSC_END = tsc_exit
                 TOTAL_NR_EXITS += 1
-            elif ev_id.startswith('VMEXIT_'):
-                if (ev_id == 'VMEXIT_EPT_VIOLATION'
-                        and (eval(info[6:24]) & 0x38) == 0x28):
-                    ev_id = 'VMEXIT_EPT_VIOLATION_GVT'
 
-                if ev_id.startswith('VMEXIT_EX'):
-                    count_irq(info)
-
-                NR_EXITS[ev_id] += 1
-                last_ev_id = ev_id
             else:
-                # skip the non-VMEXIT trace event
-                pass
+                for key in LIST_EVENTS.keys():
+                    if event == LIST_EVENTS.get(key):
+                        NR_EXITS[key] += 1
+                        last_ev_id = key
 
-    except IOError as err:
-        print "Input File Error: " + str(err)
+                    else:
+                        # Skip the non-VMEXIT trace event
+                        pass
 
-    finally:
-        if 'ifp' in locals():
-            ifp.close()
+        except IOError, struct.error:
+            sys.exit()
 
 def generate_report(ofile, freq):
     """ generate analysis report
     Args:
         ofile: output report
-        freq: CPU frequency of the device trace data from
+        freq: TSC frequency of the device trace data from
     Return:
         None
     """
@@ -173,7 +148,7 @@ def generate_report(ofile, freq):
 
     csv_name = ofile + '.csv'
     try:
-        with open(csv_name, 'w') as filep:
+        with open(csv_name, 'a') as filep:
             f_csv = csv.writer(filep)
 
             total_exit_time = 0L
@@ -188,7 +163,7 @@ def generate_report(ofile, freq):
                 total_exit_time += TIME_IN_EXIT[event]
 
             print "Total run time: %d (cycles)" % (rt_cycle)
-            print "CPU Freq: %f MHz)" % (freq)
+            print "TSC Freq: %f MHz)" % (freq)
             print "Total run time %d (Sec)" % (rt_sec)
 
             f_csv.writerow(['Run time(cycles)', 'Run time(Sec)', 'Freq(MHz)'])
@@ -220,16 +195,6 @@ def generate_report(ofile, freq):
             row = ["Total", TOTAL_NR_EXITS, '%.2f' % ev_freq, total_exit_time,
                    '%2.2f' % (pct)]
             f_csv.writerow(row)
-
-            # insert a empty row to separate two tables
-            f_csv.writerow([''])
-
-            print "\nVector \t\tCount \tNR_Exit/Sec"
-            f_csv.writerow(['Vector', 'NR_Exit', 'NR_Exit/Sec'])
-            for e in IRQ_EXITS.keys():
-                pct = float(IRQ_EXITS[e]) / rt_sec
-                print "%s \t %d \t%.2f" % (e,IRQ_EXITS[e], pct)
-                f_csv.writerow([e, IRQ_EXITS[e], '%.2f' % pct])
 
     except IOError as err:
         print "Output File Error: " + str(err)
