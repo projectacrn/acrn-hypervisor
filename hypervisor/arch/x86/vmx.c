@@ -1201,7 +1201,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	}
 
 	/* Check for EPT support */
-	if (is_ept_supported() != 0)
+	if (is_ept_supported())
 		pr_dbg("EPT is supported");
 	else
 		pr_err("Error: EPT is not supported");

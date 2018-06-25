@@ -77,7 +77,7 @@ inline bool cpu_has_cap(uint32_t bit)
 	if (feat_idx >= FEATURE_WORDS)
 		return false;
 
-	return !!(boot_cpu_data.cpuid_leaves[feat_idx] & (1 << feat_bit));
+	return ((boot_cpu_data.cpuid_leaves[feat_idx] & (1 << feat_bit)) != 0U);
 }
 
 static inline bool get_monitor_cap(void)
@@ -250,7 +250,7 @@ static void alloc_phy_cpu_data(uint16_t pcpu_num)
 	ASSERT(per_cpu_data_base_ptr != NULL, "");
 }
 
-int __attribute__((weak)) parse_madt(uint8_t *lapic_id_base)
+uint16_t __attribute__((weak)) parse_madt(uint8_t *lapic_id_base)
 {
 	static const uint32_t lapic_id[] = {0, 2, 4, 6};
 	uint32_t i;
