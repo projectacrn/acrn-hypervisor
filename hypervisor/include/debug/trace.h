@@ -53,7 +53,10 @@
 /* sizeof(trace_entry) == 4 x 64bit */
 struct trace_entry {
 	uint64_t tsc; /* TSC */
-	uint64_t id;
+	uint64_t id:48;
+	uint64_t n_data:8; /* nr of data in trace_entry */
+	uint64_t cpu:8; /* pcpu id of trace_entry */
+
 	union {
 		struct {
 			uint32_t a, b, c, d;
@@ -85,13 +88,15 @@ trace_check(uint16_t cpu_id, __unused int evid)
 }
 
 static inline void
-_trace_put(uint16_t cpu_id, int evid, struct trace_entry *entry)
+_trace_put(uint16_t cpu_id, int evid, int n_data, struct trace_entry *entry)
 {
 	struct shared_buf *sbuf = (struct shared_buf *)
 				per_cpu(sbuf, cpu_id)[ACRN_TRACE];
 
 	entry->tsc = rdtsc();
 	entry->id = evid;
+	entry->n_data = n_data;
+	entry->cpu = cpu_id;
 	sbuf_put(sbuf, (uint8_t *)entry);
 }
 
@@ -106,7 +111,7 @@ TRACE_2L(int evid, uint64_t e, uint64_t f)
 
 	entry.payload.fields_64.e = e;
 	entry.payload.fields_64.f = f;
-	_trace_put(cpu_id, evid, &entry);
+	_trace_put(cpu_id, evid, 2, &entry);
 }
 
 static inline void
@@ -123,7 +128,7 @@ TRACE_4I(int evid, uint32_t a, uint32_t b, uint32_t c,
 	entry.payload.fields_32.b = b;
 	entry.payload.fields_32.c = c;
 	entry.payload.fields_32.d = d;
-	_trace_put(cpu_id, evid, &entry);
+	_trace_put(cpu_id, evid, 4, &entry);
 }
 
 static inline void
@@ -142,7 +147,8 @@ TRACE_6C(int evid, uint8_t a1, uint8_t a2, uint8_t a3,
 	entry.payload.fields_8.a4 = a4;
 	entry.payload.fields_8.b1 = b1;
 	entry.payload.fields_8.b2 = b2;
-	_trace_put(cpu_id, evid, &entry);
+        /* payload.fields_8.b3/b4 not used, but is put in trace buf */
+	_trace_put(cpu_id, evid, 8, &entry);
 }
 
 #define TRACE_ENTER TRACE_16STR(TRACE_FUNC_ENTER, __func__)
@@ -168,7 +174,7 @@ TRACE_16STR(int evid, const char name[])
 		entry.payload.str[i] = name[i];
 
 	entry.payload.str[15] = 0;
-	_trace_put(cpu_id, evid, &entry);
+	_trace_put(cpu_id, evid, 16, &entry);
 }
 
 #else /* HV_DEBUG */
