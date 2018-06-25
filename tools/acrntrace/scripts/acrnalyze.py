@@ -11,6 +11,7 @@ This is the main script of arnalyzer, which:
 import sys
 import getopt
 import os
+import config
 from vmexit_analyze import analyze_vm_exit
 
 def usage():
@@ -26,6 +27,7 @@ def usage():
     -h: print this message
     -i, --ifile=[string]: input file
     -o, --ofile=[string]: output file
+    -f, --frequency=[unsigned int]: TSC frequency in MHz
     --vm_exit: to generate vm_exit report
     '''
 
@@ -71,8 +73,8 @@ def main(argv):
     """
     inputfile = ''
     outputfile = ''
-    opts_short = "hi:o:"
-    opts_long = ["ifile=", "ofile=", "vm_exit"]
+    opts_short = "hi:o:f:"
+    opts_long = ["ifile=", "ofile=", "frequency=", "vm_exit"]
 
     try:
         opts, args = getopt.getopt(argv, opts_short, opts_long)
@@ -88,6 +90,8 @@ def main(argv):
             inputfile = arg
         elif opt in ("-o", "--ofile"):
             outputfile = arg
+        elif opt in ("-f", "--frequency"):
+            TSC_FREQ = arg
         elif opt == "--vm_exit":
             analyzer = analyze_vm_exit
         else:
