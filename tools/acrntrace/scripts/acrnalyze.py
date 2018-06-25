@@ -4,7 +4,6 @@
 """
 This is the main script of arnalyzer, which:
 - parse the options
-- pre-process the trace data file
 - call a specific script to do analysis
 """
 
@@ -45,22 +44,6 @@ def do_analysis(ifile, ofile, analyzer):
     """
     for alyer in analyzer:
         alyer(ifile, ofile)
-
-# pre process to make sure the trace data start and end with VMENTER
-def pre_process(ifile, evstr):
-    """invoke sh script to preprocess the data file
-
-    Args:
-        ifile: input trace data file
-        evstr: event string, after the processing, the data file should
-                start and end with the string
-    Returns:
-        status of sh script execution
-    Raises:
-        NA
-    """
-    status = os.system('bash pre_process.sh %s %s' % (ifile, evstr))
-    return status
 
 def main(argv):
     """Main enterance function
@@ -103,11 +86,7 @@ def main(argv):
     assert outputfile != '', "output file is required"
     assert analyzer != '', 'MUST contain one of analyzer: ''vm_exit'
 
-    status = pre_process(inputfile, 'VM_ENTER')
-    if status == 0:
-        do_analysis(inputfile, outputfile, analyzer)
-    else:
-        print "Invalid trace data file %s" % (inputfile)
+    do_analysis(inputfile, outputfile, analyzer)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
