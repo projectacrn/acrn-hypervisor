@@ -58,8 +58,8 @@ unsigned get_wakeup_reason(void)
 int set_wakeup_timer(time_t t)
 {
 	int acrnd_fd;
-	struct req_acrnd_timer req;
-	struct ack_acrnd_timer ack;
+	struct mngr_msg req;
+	struct mngr_msg ack;
 	int ret;
 
 	acrnd_fd = mngr_open_un("acrnd", MNGR_CLIENT);
@@ -67,22 +67,22 @@ int set_wakeup_timer(time_t t)
 		return -1;
 	}
 
-	req.msg.magic = MNGR_MSG_MAGIC;
-	req.msg.msgid = ACRND_TIMER;
-	req.msg.timestamp = time(NULL);
-	req.msg.len = sizeof(req);
+	req.magic = MNGR_MSG_MAGIC;
+	req.msgid = ACRND_TIMER;
+	req.timestamp = time(NULL);
 
-	req.t = t;
-	strncpy(req.name, vmname, sizeof(req.name));
+	req.data.rtc_timer.t = t;
+	strncpy(req.data.rtc_timer.vmname, vmname,
+			sizeof(req.data.rtc_timer.vmname));
 
-	ret = mngr_send_msg(acrnd_fd, &req.msg, &ack.msg, sizeof(ack), 2);
+	ret = mngr_send_msg(acrnd_fd, &req, &ack, 2);
 	mngr_close(acrnd_fd);
 	if (ret != sizeof(ack)) {
 		fprintf(stderr, "%s %d\r\n", __FUNCTION__, __LINE__);
 		return -1;
 	}
 
-	return ack.err;
+	return ack.data.err;
 }
 
 static LIST_HEAD(vm_ops_list, vm_ops) vm_ops_head;
@@ -122,18 +122,18 @@ static int monitor_fd = -1;
 /* handlers */
 #define ACK_TIMEOUT	1
 
-#define DEFINE_HANDLER(name, type, func)				\
+#define DEFINE_HANDLER(name, func)				\
 static void name(struct mngr_msg *msg, int client_fd, void *param)	\
 {									\
-	struct req_##type *req = (void*)msg;			\
-	struct ack_##type ack;					\
+	struct mngr_msg ack;					\
 	struct vm_ops *ops;					\
 								\
 	int ret = 0;						\
 	int count = 0;						\
 								\
-        memcpy(&ack.msg, &req->msg, sizeof(req->msg));		\
-        ack.msg.len = sizeof(ack);				\
+	ack.magic = MNGR_MSG_MAGIC;				\
+	ack.msgid = msg->msgid;					\
+	ack.timestamp = msg->timestamp;				\
 								\
 	LIST_FOREACH(ops, &vm_ops_head, list) {			\
 		if (ops->ops->func) {				\
@@ -143,29 +143,29 @@ static void name(struct mngr_msg *msg, int client_fd, void *param)	\
 	}							\
 								\
 	if (!count) {						\
-		ack.err = -1;					\
-		fprintf(stderr, "No handler for id:%u\r\n", req->msg.msgid);	\
+		ack.data.err = -1;					\
+		fprintf(stderr, "No handler for id:%u\r\n", msg->msgid);	\
 	} else									\
-		ack.err = ret;							\
+		ack.data.err = ret;							\
 										\
-	mngr_send_msg(client_fd, &ack.msg, NULL, 0, ACK_TIMEOUT);		\
+	mngr_send_msg(client_fd, &ack, NULL, ACK_TIMEOUT);		\
 }
 
-DEFINE_HANDLER(handle_stop, dm_stop, stop);
-DEFINE_HANDLER(handle_suspend, dm_suspend, suspend);
-DEFINE_HANDLER(handle_pause, dm_pause, pause);
-DEFINE_HANDLER(handle_continue, dm_continue, unpause);
+DEFINE_HANDLER(handle_stop, stop);
+DEFINE_HANDLER(handle_suspend, suspend);
+DEFINE_HANDLER(handle_pause, pause);
+DEFINE_HANDLER(handle_continue, unpause);
 
 static void handle_resume(struct mngr_msg *msg, int client_fd, void *param)
 {
-	struct req_dm_resume *req = (void *)msg;
-	struct ack_dm_resume ack;
+	struct mngr_msg ack;
 	struct vm_ops *ops;
 	int ret = 0;
 	int count = 0;
 
-	memcpy(&ack.msg, &req->msg, sizeof(req->msg));
-	ack.msg.len = sizeof(ack);
+	ack.magic = MNGR_MSG_MAGIC;
+	ack.msgid = msg->msgid;
+	ack.timestamp = msg->timestamp;
 
 	LIST_FOREACH(ops, &vm_ops_head, list) {
 		if (ops->ops->resume) {
@@ -175,35 +175,34 @@ static void handle_resume(struct mngr_msg *msg, int client_fd, void *param)
 	}
 
 	if (!count) {
-		ack.err = -1;
-		fprintf(stderr, "No handler for id:%u\r\n", req->msg.msgid);
+		ack.data.err = -1;
+		fprintf(stderr, "No handler for id:%u\r\n", msg->msgid);
 	} else
-		ack.err = ret;
+		ack.data.err = ret;
 
-	wakeup_reason = req->reason;
+	wakeup_reason = msg->data.reason;
 
-	mngr_send_msg(client_fd, &ack.msg, NULL, 0, ACK_TIMEOUT);
+	mngr_send_msg(client_fd, &ack, NULL, ACK_TIMEOUT);
 }
 
 static void handle_query(struct mngr_msg *msg, int client_fd, void *param)
 {
-	struct req_dm_query *req = (void *)msg;
-	struct ack_dm_query ack;
+	struct mngr_msg ack;
 	struct vm_ops *ops;
 
-	memcpy(&ack.msg, &req->msg, sizeof(req->msg));
-	ack.msg.len = sizeof(ack);
-
-	ack.state = -1;
+	ack.magic = MNGR_MSG_MAGIC;
+	ack.msgid = msg->msgid;
+	ack.timestamp = msg->timestamp;
+	ack.data.state = -1;
 
 	LIST_FOREACH(ops, &vm_ops_head, list) {
 		if (ops->ops->query) {
-			ack.state = ops->ops->query(ops->arg);
+			ack.data.state = ops->ops->query(ops->arg);
 			break;
 		}
 	}
 
-	mngr_send_msg(client_fd, &ack.msg, NULL, 0, ACK_TIMEOUT);
+	mngr_send_msg(client_fd, &ack, NULL, ACK_TIMEOUT);
 }
 
 int monitor_init(struct vmctx *ctx)

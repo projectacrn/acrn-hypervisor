@@ -263,8 +263,8 @@ static int acrnd_fd = -1;
 unsigned get_sos_wakeup_reason(void)
 {
 	int client_fd, ret = 0;
-	struct req_wakeup_reason req;
-	struct ack_wakeup_reason ack;
+	struct mngr_msg req;
+	struct mngr_msg ack;
 
 	client_fd = mngr_open_un(SOS_LCS_SOCK, MNGR_CLIENT);
 	if (client_fd <= 0) {
@@ -273,16 +273,14 @@ unsigned get_sos_wakeup_reason(void)
 		goto EXIT;
 	}
 
-	req.msg.magic = MNGR_MSG_MAGIC;
-	req.msg.msgid = WAKEUP_REASON;
-	req.msg.timestamp = time(NULL);
-	req.msg.len = sizeof(struct req_wakeup_reason);
+	req.magic = MNGR_MSG_MAGIC;
+	req.msgid = WAKEUP_REASON;
+	req.timestamp = time(NULL);
 
-	if (mngr_send_msg(client_fd, (void *)&req, (void *)&ack, sizeof(ack),
-			  DEFAULT_TIMEOUT))
+	if (mngr_send_msg(client_fd, &req, &ack, DEFAULT_TIMEOUT))
 		fprintf(stderr, "Failed to get wakeup_reason from SOS, err(%d)\n", ret);
 	else
-		ret = ack.reason;
+		ret = ack.data.reason;
 
 	mngr_close(client_fd);
  EXIT:
@@ -291,42 +289,40 @@ unsigned get_sos_wakeup_reason(void)
 
 static void handle_timer_req(struct mngr_msg *msg, int client_fd, void *param)
 {
-	struct req_acrnd_timer *req = (void *)msg;
-	struct ack_acrnd_timer ack;
+	struct mngr_msg ack;
 	struct vmmngr_struct *vm;
 	struct work_arg arg = {};
 
-	ack.msg.msgid = req->msg.msgid;
-	ack.msg.len = sizeof(ack);
-	ack.msg.timestamp = req->msg.timestamp;
-	ack.err = -1;
+	ack.msgid = msg->msgid;
+	ack.timestamp = msg->timestamp;
+	ack.data.err = -1;
 
 	vmmngr_update();
-	vm = vmmngr_find(req->name);
+	vm = vmmngr_find(msg->data.acrnd_timer.name);
 	if (!vm) {
 		pdebug();
 		goto reply_ack;
 	}
 
-	strncpy(arg.name, req->name, sizeof(arg.name) - 1);
+	strncpy(arg.name, msg->data.acrnd_timer.name, sizeof(arg.name) - 1);
 
-	if (acrnd_add_work(acrnd_vm_timer_func, &arg, req->t)) {
+	if (acrnd_add_work(acrnd_vm_timer_func, &arg, msg->data.acrnd_timer.t)) {
 		pdebug();
 		goto reply_ack;
 	}
 
-	ack.err = 0;
+	ack.data.err = 0;
  reply_ack:
 	if (client_fd > 0)
-		mngr_send_msg(client_fd, (void *)&ack, NULL, 0, 0);
+		mngr_send_msg(client_fd, &ack, NULL, 0);
 }
 
 static int set_sos_timer(time_t due_time)
 {
 	int client_fd, ret;
 	int retry = 1;
-	struct req_rtc_timer req;
-	struct ack_rtc_timer ack;
+	struct mngr_msg req;
+	struct mngr_msg ack;
 
 	client_fd = mngr_open_un(SOS_LCS_SOCK, MNGR_CLIENT);
 	if (client_fd <= 0) {
@@ -335,16 +331,14 @@ static int set_sos_timer(time_t due_time)
 		goto EXIT;
 	}
 
-	req.msg.magic = MNGR_MSG_MAGIC;
-	req.msg.msgid = RTC_TIMER;
-	req.msg.timestamp = time(NULL);
-	req.msg.len = sizeof(struct req_rtc_timer);
-	req.t = due_time;
+	req.magic = MNGR_MSG_MAGIC;
+	req.msgid = RTC_TIMER;
+	req.timestamp = time(NULL);
+	req.data.rtc_timer.t = due_time;
 
  RETRY:
 	ret =
-	    mngr_send_msg(client_fd, (void *)&req, (void *)&ack, sizeof(ack),
-			  DEFAULT_TIMEOUT);
+	    mngr_send_msg(client_fd, &req, &ack, DEFAULT_TIMEOUT);
 	while (ret != 0 && retry < 5) {
 		printf("Fail to set sos wakeup timer(err:%d), retry %d...\n",
 		       ret, retry++);
@@ -437,37 +431,33 @@ static int _handle_acrnd_stop(unsigned int timeout)
 
 static void handle_acrnd_stop(struct mngr_msg *msg, int client_fd, void *param)
 {
-	struct req_acrnd_stop *req = (void *)msg;
-	struct ack_acrnd_stop ack;
+	struct mngr_msg ack;
 
-	ack.msg.msgid = req->msg.msgid;
-	ack.msg.len = sizeof(ack);
-	ack.msg.timestamp = req->msg.timestamp;
-	ack.err = _handle_acrnd_stop(req->timeout);
+	ack.msgid = msg->msgid;
+	ack.timestamp = msg->timestamp;
+	ack.data.err = _handle_acrnd_stop(msg->data.acrnd_stop.timeout);
 
 	store_timer_list();
 
 	if (client_fd > 0)
-		mngr_send_msg(client_fd, (void *)&ack, NULL, 0, 0);
+		mngr_send_msg(client_fd, &ack, NULL, 0);
 }
 
 void handle_acrnd_resume(struct mngr_msg *msg, int client_fd, void *param)
 {
-	struct req_acrnd_resume *req = (void *)msg;
-	struct ack_acrnd_resume ack;
+	struct mngr_msg ack;
 	struct stat st;
 	int wakeup_reason;
 
-	ack.msg.msgid = req->msg.msgid;
-	ack.msg.len = sizeof(ack);
-	ack.msg.timestamp = req->msg.timestamp;
-	ack.err = 0;
+	ack.msgid = msg->msgid;
+	ack.timestamp = msg->timestamp;
+	ack.data.err = 0;
 
 	/* Do we have a timer list file to load? */
 	if (!stat(TIMER_LIST_FILE, &st))
 		if (S_ISREG(st.st_mode)) {
-			ack.err = load_timer_list();
-			if (ack.err)
+			ack.data.err = load_timer_list();
+			if (ack.data.err)
 				pdebug();
 			goto reply_ack;
 		}
@@ -480,13 +470,13 @@ void handle_acrnd_resume(struct mngr_msg *msg, int client_fd, void *param)
 		goto reply_ack;
 	}
 
-	ack.err = active_all_vms();
+	ack.data.err = active_all_vms();
 
  reply_ack:
 	unlink(TIMER_LIST_FILE);
 
 	if (client_fd > 0)
-		mngr_send_msg(client_fd, (void *)&ack, NULL, 0, 0);
+		mngr_send_msg(client_fd, &ack, NULL, 0);
 }
 
 static void handle_on_exit(void)

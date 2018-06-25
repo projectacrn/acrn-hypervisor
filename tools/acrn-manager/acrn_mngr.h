@@ -14,8 +14,6 @@
 
 #include <stdlib.h>
 
-/* Basic message format */
-
 #define MNGR_MSG_MAGIC   0x67736d206d6d76	/* that is char[8] "mngr msg", on X86 */
 #define VMNAME_LEN	16
 
@@ -23,8 +21,48 @@ struct mngr_msg {
 	unsigned long long magic;	/* Make sure you get a mngr_msg */
 	unsigned int msgid;
 	unsigned long timestamp;
-	size_t len;		/* mngr_msg + payload size */
-	char payload[0];
+	union {
+		/* ack of DM_STOP, DM_SUSPEND, DM_RESUME, DM_PAUSE, DM_CONTINUE,
+		   ACRND_TIMER, ACRND_STOP, ACRND_RESUME, RTC_TIMER */
+		int err;
+
+		/* ack of WAKEUP_REASON */
+		int reason;
+
+		/* ack of DM_QUERY */
+		int state;
+
+		/* req of ACRND_TIMER */
+		struct req_acrnd_timer {
+			char name[VMNAME_LEN];
+			time_t t;
+		} acrnd_timer;
+
+		/* req of ACRND_STOP */
+		struct req_acrnd_stop {
+			int force;
+			unsigned timeout;
+		} acrnd_stop;
+
+		/* req of ACRND_SUSPEND */
+		struct req_acrnd_suspend {
+			int force;
+			unsigned timeout;
+		} acrnd_suspend;
+
+		/* req of ACRND_RESUME */
+		struct req_acrnd_resume {
+			int force;
+			unsigned timeout;
+		} acrnd_resume;
+
+		/* req of RTC_TIMER */
+		struct req_rtc_timer {
+			char vmname[VMNAME_LEN];
+			time_t t;
+		} rtc_timer;
+
+	} data;
 };
 
 /* mngr_msg event types */
@@ -47,61 +85,6 @@ enum dm_msgid {
 
 /* DM handled message req/ack pairs */
 
-struct req_dm_stop {
-	struct mngr_msg msg;	/* req DM_STOP */
-};
-
-struct ack_dm_stop {
-	struct mngr_msg msg;	/* ack DM_STOP */
-	int err;
-};
-
-struct req_dm_suspend {
-	struct mngr_msg msg;	/* req DM_SUSPEND */
-};
-
-struct ack_dm_suspend {
-	struct mngr_msg msg;	/* ack DM_SUSPEND */
-	int err;
-};
-
-struct req_dm_resume {
-	struct mngr_msg msg;	/* req DM_RESUME */
-	int reason;
-};
-
-struct ack_dm_resume {
-	struct mngr_msg msg;	/* ack DM_RESUME */
-	int err;
-};
-
-struct req_dm_pause {
-	struct mngr_msg msg;	/* req DM_PAUSE */
-};
-
-struct ack_dm_pause {
-	struct mngr_msg msg;	/* ack DM_PAUSE */
-	int err;
-};
-
-struct req_dm_continue {
-	struct mngr_msg msg;	/* req DM_CONTINUE */
-};
-
-struct ack_dm_continue {
-	struct mngr_msg msg;	/* ack DM_CONTINUE */
-	int err;
-};
-
-struct req_dm_query {
-	struct mngr_msg msg;	/* req DM_QUERY */
-};
-
-struct ack_dm_query {
-	struct mngr_msg msg;	/* ack DM_QUERY */
-	int state;
-};
-
 /* Acrnd handled message event types */
 enum acrnd_msgid {
 	/* DM -> Acrnd */
@@ -119,67 +102,6 @@ enum acrnd_msgid {
 
 /* Acrnd handled message req/ack pairs */
 
-struct req_acrnd_timer {
-	struct mngr_msg msg;	/* req ACRND_TIMER */
-	char name[VMNAME_LEN];
-	time_t t;
-};
-
-struct ack_acrnd_timer {
-	struct mngr_msg msg;	/* ack ACRND_TIMER */
-	int err;
-};
-
-struct req_acrnd_reason {
-	struct mngr_msg msg;	/* req ACRND_REASON */
-};
-
-struct ack_acrnd_reason {
-	struct mngr_msg msg;	/* ack ACRND_REASON */
-	int reason;
-};
-
-struct req_dm_notify {
-	struct mngr_msg msg;	/* req DM_NOTIFY */
-	int state;
-};
-
-struct ack_dm_notify {
-	struct mngr_msg msg;	/* ack DM_NOTIFY */
-	int err;
-};
-
-struct req_acrnd_stop {
-	struct mngr_msg msg;	/* req ACRND_STOP */
-	int force;
-	unsigned timeout;
-};
-
-struct ack_acrnd_stop {
-	struct mngr_msg msg;	/* ack ACRND_STOP */
-	int err;
-};
-
-struct req_acrnd_suspend {
-	struct mngr_msg msg;	/* req ACRND_SUSPEND */
-	int force;
-	unsigned timeout;
-};
-
-struct ack_acrnd_suspend {
-	struct mngr_msg msg;	/* ack ACRND_SUSPEND */
-	int err;
-};
-
-struct req_acrnd_resume {
-	struct mngr_msg msg;	/* req ACRND_RESUME */
-};
-
-struct ack_acrnd_resume {
-	struct mngr_msg msg;	/* ack ACRND_RESUME */
-	int err;
-};
-
 /* SOS-LCS handled message event types */
 enum sos_lcs_msgid {
 	WAKEUP_REASON = ACRND_MAX + 1,	/* Acrnd/Acrnctl request wakeup reason */
@@ -187,37 +109,6 @@ enum sos_lcs_msgid {
 	SUSPEND,
 	SHUTDOWN,
 	REBOOT,
-};
-
-/* SOS-LCS handled message req/ack pairs */
-
-struct req_wakeup_reason {
-	struct mngr_msg msg;
-};
-
-struct ack_wakeup_reason {
-	struct mngr_msg msg;
-	int reason;
-};
-
-struct req_rtc_timer {
-	struct mngr_msg msg;
-	char vmname[VMNAME_LEN];
-	time_t t;
-};
-
-struct ack_rtc_timer {
-	struct mngr_msg msg;
-	int err;
-};
-
-struct req_power_state {
-	struct mngr_msg msg;
-};
-
-struct ack_power_state {
-	struct mngr_msg msg;
-	int err;
 };
 
 /* helper functions */
@@ -260,11 +151,10 @@ int mngr_add_handler(int desc, unsigned id,
  * @param desc: descripter created using mngr_open_un
  * @param req: pointer to message to send
  * @param ack: pointer to ack struct, NULL if no ack required
- * @param ack_len: size in byte of the expected ack message
  * @param timeout: time to wait for ack, zero to blocking waiting
  * @return len of ack messsage (0 if ack is NULL) on succes, errno on error
  */
 int mngr_send_msg(int desc, struct mngr_msg *req, struct mngr_msg *ack,
-		  size_t ack_len, unsigned timeout);
+		  unsigned timeout);
 
 #endif				/* ACRN_MANAGER_H */

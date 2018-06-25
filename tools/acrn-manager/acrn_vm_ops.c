@@ -60,29 +60,26 @@ struct vmmngr_struct *vmmngr_find(char *name)
 	return NULL;
 }
 
-static int send_msg(char *vmname, struct mngr_msg *req,
-                    struct mngr_msg *ack, size_t ack_len);
+static int send_msg(char *vmname, struct mngr_msg *req, struct mngr_msg *ack);
 
 static int query_state(const char *name)
 {
-	struct req_dm_query req;
-	struct ack_dm_query ack;
+	struct mngr_msg req;
+	struct mngr_msg ack;
 	int ret;
 
-	req.msg.magic = MNGR_MSG_MAGIC;
-	req.msg.msgid = DM_QUERY;
-	req.msg.timestamp = time(NULL);
-	req.msg.len = sizeof(req);
+	req.magic = MNGR_MSG_MAGIC;
+	req.msgid = DM_QUERY;
+	req.timestamp = time(NULL);
 
-	ret = send_msg(vmname, (struct mngr_msg *)&req,
-		(struct mngr_msg *)&ack, sizeof(ack));
+	ret = send_msg(vmname, &req, &ack);
 	if (ret)
 		return ret;
 
-	if (ack.state < 0)
+	if (ack.data.state < 0)
 		pdebug();
 
-	return ack.state;
+	return ack.data.state;
 }
 
 /* find all the running DM process, which has */
@@ -270,7 +267,7 @@ int shell_cmd(const char *cmd, char *outbuf, int len)
 }
 
 static int send_msg(char *vmname, struct mngr_msg *req,
-		    struct mngr_msg *ack, size_t ack_len)
+		    struct mngr_msg *ack)
 {
 	int fd, ret;
 
@@ -286,7 +283,7 @@ static int send_msg(char *vmname, struct mngr_msg *req,
 		return -1;
 	}
 
-	ret = mngr_send_msg(fd, req, ack, ack_len, 1);
+	ret = mngr_send_msg(fd, req, ack, 1);
 	if (ret < 0) {
 		printf("%s: Unable to send msg\n", __FUNCTION__);
 		mngr_close(fd);
@@ -326,99 +323,89 @@ int start_vm(char *vmname)
 
 int stop_vm(char *vmname)
 {
-	struct req_dm_stop req;
-	struct ack_dm_stop ack;
+	struct mngr_msg req;
+	struct mngr_msg ack;
 
-	req.msg.magic = MNGR_MSG_MAGIC;
-	req.msg.msgid = DM_STOP;
-	req.msg.timestamp = time(NULL);
-	req.msg.len = sizeof(req);
+	req.magic = MNGR_MSG_MAGIC;
+	req.msgid = DM_STOP;
+	req.timestamp = time(NULL);
 
-	send_msg(vmname, (struct mngr_msg *)&req,
-		 (struct mngr_msg *)&ack, sizeof(ack));
-	if (ack.err) {
+	send_msg(vmname, &req, &ack);
+	if (ack.data.err) {
 		printf("Error happens when try to stop vm. errno(%d)\n",
-		       ack.err);
+			ack.data.err);
 	}
 
-	return ack.err;
+	return ack.data.err;
 }
 
 int pause_vm(char *vmname)
 {
-	struct req_dm_pause req;
-	struct ack_dm_pause ack;
+	struct mngr_msg req;
+	struct mngr_msg ack;
 
-	req.msg.magic = MNGR_MSG_MAGIC;
-	req.msg.msgid = DM_PAUSE;
-	req.msg.timestamp = time(NULL);
-	req.msg.len = sizeof(req);
+	req.magic = MNGR_MSG_MAGIC;
+	req.msgid = DM_PAUSE;
+	req.timestamp = time(NULL);
 
-	send_msg(vmname, (struct mngr_msg *)&req,
-		 (struct mngr_msg *)&ack, sizeof(ack));
-	if (ack.err) {
-		printf("Unable to pause vm. errno(%d)\n", ack.err);
+	send_msg(vmname, &req, &ack);
+	if (ack.data.err) {
+		printf("Unable to pause vm. errno(%d)\n", ack.data.err);
 	}
 
-	return ack.err;
+	return ack.data.err;
 }
 
 int continue_vm(char *vmname)
 {
-	struct req_dm_continue req;
-	struct ack_dm_continue ack;
+	struct mngr_msg req;
+	struct mngr_msg ack;
 
-	req.msg.magic = MNGR_MSG_MAGIC;
-	req.msg.msgid = DM_CONTINUE;
-	req.msg.timestamp = time(NULL);
-	req.msg.len = sizeof(req);
+	req.magic = MNGR_MSG_MAGIC;
+	req.msgid = DM_CONTINUE;
+	req.timestamp = time(NULL);
 
-	send_msg(vmname, (struct mngr_msg *)&req,
-		 (struct mngr_msg *)&ack, sizeof(ack));
+	send_msg(vmname, &req, &ack);
 
-	if (ack.err) {
-		printf("Unable to continue vm. errno(%d)\n", ack.err);
+	if (ack.data.err) {
+		printf("Unable to continue vm. errno(%d)\n", ack.data.err);
 	}
 
-	return ack.err;
+	return ack.data.err;
 }
 
 int suspend_vm(char *vmname)
 {
-	struct req_dm_suspend req;
-	struct ack_dm_suspend ack;
+	struct mngr_msg req;
+	struct mngr_msg ack;
 
-	req.msg.magic = MNGR_MSG_MAGIC;
-	req.msg.msgid = DM_SUSPEND;
-	req.msg.timestamp = time(NULL);
-	req.msg.len = sizeof(req);
+	req.magic = MNGR_MSG_MAGIC;
+	req.msgid = DM_SUSPEND;
+	req.timestamp = time(NULL);
 
-	send_msg(vmname, (struct mngr_msg *)&req,
-		 (struct mngr_msg *)&ack, sizeof(ack));
+	send_msg(vmname, &req, &ack);
 
-	if (ack.err) {
-		printf("Unable to suspend vm. errno(%d)\n", ack.err);
+	if (ack.data.err) {
+		printf("Unable to suspend vm. errno(%d)\n", ack.data.err);
 	}
 
-	return ack.err;
+	return ack.data.err;
 }
 
 int resume_vm(char *vmname)
 {
-	struct req_dm_resume req;
-	struct ack_dm_resume ack;
+	struct mngr_msg req;
+	struct mngr_msg ack;
 
-	req.msg.magic = MNGR_MSG_MAGIC;
-	req.msg.msgid = DM_RESUME;
-	req.msg.timestamp = time(NULL);
-	req.msg.len = sizeof(req);
+	req.magic = MNGR_MSG_MAGIC;
+	req.msgid = DM_RESUME;
+	req.timestamp = time(NULL);
 
-	send_msg(vmname, (struct mngr_msg *)&req,
-		 (struct mngr_msg *)&ack, sizeof(ack));
+	send_msg(vmname, &req, &ack);
 
-	if (ack.err) {
-		printf("Unable to resume vm. errno(%d)\n", ack.err);
+	if (ack.data.err) {
+		printf("Unable to resume vm. errno(%d)\n", ack.data.err);
 	}
 
-	return ack.err;
+	return ack.data.err;
 }
