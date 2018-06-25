@@ -338,93 +338,93 @@ static int cbcd_fd;
 
 static void handle_shutdown(struct mngr_msg *msg, int client_fd, void *param)
 {
-	struct req_power_state *req = (void *)msg;
-	struct ack_power_state ack;
+	struct mngr_msg ack;
 
-	memcpy(&ack.msg, &req->msg, sizeof(req->msg));
-	ack.msg.len = sizeof(ack);
-	ack.err = 0;
+	ack.magic = MNGR_MSG_MAGIC;
+	ack.msgid = msg->msgid;
+	ack.timestamp = msg->timestamp;
+	ack.data.err = 0;
 
 	fprintf(stderr, "acrnd agreed to shutdown\n");
 	state_transit(S_ACRND_SHUTDOWN);
-	mngr_send_msg(client_fd, &ack.msg, NULL, 0, 0);
+	mngr_send_msg(client_fd, &ack, NULL, 0);
 }
 
 static void handle_suspend(struct mngr_msg *msg, int client_fd, void *param)
 {
-	struct req_power_state *req = (void *)msg;
-	struct ack_power_state ack;
+	struct mngr_msg ack;
 
-	memcpy(&ack.msg, &req->msg, sizeof(req->msg));
-	ack.msg.len = sizeof(ack);
-	ack.err = 0;
+	ack.magic = MNGR_MSG_MAGIC;
+	ack.msgid = msg->msgid;
+	ack.timestamp = msg->timestamp;
+	ack.data.err = 0;
 
 	state_transit(S_ACRND_SUSPEND);
-	mngr_send_msg(client_fd, &ack.msg, NULL, 0, 0);
+	mngr_send_msg(client_fd, &ack, NULL, 0);
 }
 
 static void handle_reboot(struct mngr_msg *msg, int client_fd, void *param)
 {
-	struct req_power_state *req = (void *)msg;
-	struct ack_power_state ack;
+	struct mngr_msg ack;
 
-	memcpy(&ack.msg, &req->msg, sizeof(req->msg));
-	ack.msg.len = sizeof(ack);
-	ack.err = 0;
+	ack.magic = MNGR_MSG_MAGIC;
+	ack.msgid = msg->msgid;
+	ack.timestamp = msg->timestamp;
+
+	ack.data.err = 0;
 
 	state_transit(S_ACRND_REBOOT);
-	mngr_send_msg(client_fd, &ack.msg, NULL, 0, 0);
+	mngr_send_msg(client_fd, &ack, NULL, 0);
 }
 
 static void handle_wakeup_reason(struct mngr_msg *msg, int client_fd, void *param)
 {
-	struct req_wakeup_reason *req = (void *)msg;
-	struct ack_wakeup_reason ack;
+	struct mngr_msg ack;
 
-	memcpy(&ack.msg, &req->msg, sizeof(req->msg));
-	ack.msg.len = sizeof(ack);
-	ack.reason = wakeup_reason;
-	mngr_send_msg(client_fd, &ack.msg, NULL, 0, 0);
+	ack.magic = MNGR_MSG_MAGIC;
+	ack.msgid = msg->msgid;
+	ack.timestamp = msg->timestamp;
+
+	ack.data.reason = wakeup_reason;
+	mngr_send_msg(client_fd, &ack, NULL, 0);
 }
 
 static void handle_rtc(struct mngr_msg *msg, int client_fd, void *param)
 {
-	struct req_rtc_timer *req = (void *)msg;
-	struct ack_rtc_timer ack;
+	struct mngr_msg ack;
 
-	memcpy(&ack.msg, &req->msg, sizeof(req->msg));
-	ack.msg.len = sizeof(ack);
+	ack.magic = MNGR_MSG_MAGIC;
+	ack.msgid = msg->msgid;
+	ack.timestamp = msg->timestamp;
 
 	fprintf(stderr, "%s request rtc timer at %lu, result will be %d\n",
-			req->vmname, req->t, ack.err);
+			msg->data.rtc_timer.vmname, msg->data.rtc_timer.t,
+			ack.data.err);
 	/* Need wait IOC firmware to support RTC */
-	ack.err = -1;
+	ack.data.err = -1;
 
-	mngr_send_msg(client_fd, &ack.msg, NULL, 0, 0);
+	mngr_send_msg(client_fd, &ack, NULL, 0);
 }
 
 static int send_acrnd_start(void)
 {
 	int acrnd_fd;
 	int ret;
-	struct req_acrnd_resume req = {
-		.msg = {
-			.msgid = ACRND_RESUME,
-			.magic = MNGR_MSG_MAGIC,
-			.len = sizeof (req),
-		}
+	struct mngr_msg req = {
+		.msgid = ACRND_RESUME,
+		.magic = MNGR_MSG_MAGIC,
 	};
-	struct ack_acrnd_resume ack;
+	struct mngr_msg ack;
 
-	req.msg.timestamp = time(NULL);
+	req.timestamp = time(NULL);
 	acrnd_fd = mngr_open_un(acrnd_name, MNGR_CLIENT);
 	if (acrnd_fd < 0) {
 		fprintf(stderr, "cannot open %s socket\n", acrnd_name);
 		return -1;
 	}
-	ret = mngr_send_msg(acrnd_fd, &req.msg, &ack.msg, sizeof(ack), 2);
+	ret = mngr_send_msg(acrnd_fd, &req, &ack, 2);
 	if (ret > 0)
-		fprintf(stderr, "result %d\n", ack.err);
+		fprintf(stderr, "result %d\n", ack.data.err);
 	mngr_close(acrnd_fd);
 	return ret;
 }
@@ -433,26 +433,27 @@ static int send_acrnd_stop(void)
 {
 	int acrnd_fd;
 	int ret;
-	struct req_acrnd_stop req = {
-		.msg = {
-			.msgid = ACRND_STOP,
-			.magic = MNGR_MSG_MAGIC,
-			.len = sizeof (req),
-		},
-		.force = 0,
-		.timeout = 20,
+	struct mngr_msg req = {
+		.msgid = ACRND_STOP,
+		.magic = MNGR_MSG_MAGIC,
+		.data = {
+			.acrnd_stop = {
+				.force = 0,
+				.timeout = 20,
+				},
+			},
 	};
-	struct ack_acrnd_stop ack;
+	struct mngr_msg ack;
 
-	req.msg.timestamp = time(NULL);
+	req.timestamp = time(NULL);
 	acrnd_fd = mngr_open_un(acrnd_name, MNGR_CLIENT);
 	if (acrnd_fd < 0) {
 		fprintf(stderr, "cannot open %s socket\n", acrnd_name);
 		return -1;
 	}
-	ret = mngr_send_msg(acrnd_fd, &req.msg, &ack.msg, sizeof(ack), 2);
+	ret = mngr_send_msg(acrnd_fd, &req, &ack, 2);
 	if (ret > 0)
-		fprintf(stderr, "result %d\n", ack.err);
+		fprintf(stderr, "result %d\n", ack.data.err);
 	return ret;
 }
 

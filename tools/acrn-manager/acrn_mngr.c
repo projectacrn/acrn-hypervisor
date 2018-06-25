@@ -191,7 +191,7 @@ static int server_parse_buf(struct mngr_fd *mfd, struct mngr_client *client)
 		msg = client->buf + p;
 
 		/* do we out-of-boundary? */
-		if (p + msg->len > client->len) {
+		if (p + sizeof(struct mngr_msg) > client->len) {
 			pdebug();
 			break;
 		}
@@ -206,7 +206,7 @@ static int server_parse_buf(struct mngr_fd *mfd, struct mngr_client *client)
 			handled = 1;
 			break;
 		}
-		p += msg->len;
+		p += sizeof(struct mngr_msg);
 	} while (p < client->len);
 
 	if (!handled)
@@ -593,7 +593,7 @@ int mngr_add_handler(int server_fd, unsigned id,
 }
 
 int mngr_send_msg(int fd, struct mngr_msg *req, struct mngr_msg *ack,
-		  size_t ack_len, unsigned timeout)
+		  unsigned timeout)
 {
 	int socket_fd;
 	struct mngr_fd *mfd;
@@ -634,8 +634,8 @@ int mngr_send_msg(int fd, struct mngr_msg *req, struct mngr_msg *ack,
 		return -1;
 	}
 
-	ret = write(socket_fd, req, req->len);
-	if (ret != req->len) {
+	ret = write(socket_fd, req, sizeof(struct mngr_msg));
+	if (ret != sizeof(struct mngr_msg)) {
 		printf("%s %d\n", __FUNCTION__, __LINE__);
 		return -1;
 	}
@@ -651,7 +651,7 @@ int mngr_send_msg(int fd, struct mngr_msg *req, struct mngr_msg *ack,
 	if (!FD_ISSET(socket_fd, &rfd))
 		return 0;
 
-	ret = read(socket_fd, ack, ack_len);
+	ret = read(socket_fd, ack, sizeof(struct mngr_msg));
 
 	return ret;
 }
