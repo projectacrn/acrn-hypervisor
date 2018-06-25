@@ -43,7 +43,8 @@ def do_analysis(ifile, ofile, analyzer):
     Raises:
         NA
     """
-    analyzer(ifile, ofile)
+    for alyer in analyzer:
+        alyer(ifile, ofile)
 
 # pre process to make sure the trace data start and end with VMENTER
 def pre_process(ifile, evstr):
@@ -75,6 +76,7 @@ def main(argv):
     outputfile = ''
     opts_short = "hi:o:f:"
     opts_long = ["ifile=", "ofile=", "frequency=", "vm_exit"]
+    analyzer = []
 
     try:
         opts, args = getopt.getopt(argv, opts_short, opts_long)
@@ -93,7 +95,7 @@ def main(argv):
         elif opt in ("-f", "--frequency"):
             TSC_FREQ = arg
         elif opt == "--vm_exit":
-            analyzer = analyze_vm_exit
+            analyzer.append(analyze_vm_exit)
         else:
             assert False, "unhandled option"
 
