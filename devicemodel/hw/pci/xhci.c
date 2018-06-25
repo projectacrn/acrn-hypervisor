@@ -366,6 +366,8 @@ struct pci_xhci_vdev {
 	struct pci_xhci_dev_emu  **devices; /* XHCI[port] = device */
 	struct pci_xhci_dev_emu  **slots;   /* slots assigned from 1 */
 	int		ndevices;
+	uint16_t	pid;
+	uint16_t	vid;
 
 	void		*excap_ptr;
 	int (*excap_write)(struct pci_xhci_vdev *, uint64_t, uint64_t);
@@ -3447,6 +3449,8 @@ pci_xhci_parse_extcap(struct pci_xhci_vdev *xdev, char *opts)
 	if (!strncmp(cap, "apl", 3)) {
 		xdev->excap_write = pci_xhci_apl_drdregs_write;
 		xdev->excap_ptr = excap_group_apl;
+		xdev->vid = XHCI_PCI_VENDOR_ID_INTEL;
+		xdev->pid = XHCI_PCI_DEVICE_ID_INTEL_APL;
 	} else
 		rc = -2;
 
@@ -3575,6 +3579,9 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	xdev->excap_ptr = excap_group_dft;
 
+	xdev->vid = XHCI_PCI_DEVICE_ID_DFLT;
+	xdev->pid = XHCI_PCI_VENDOR_ID_DFLT;
+
 	/* discover devices */
 	error = pci_xhci_parse_opts(xdev, opts);
 	if (error < 0)
@@ -3639,8 +3646,8 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 */
 	xdev->hccparams1 |= XHCI_SET_HCCP1_XECP(XHCI_EXCAP_PTR);
 
-	pci_set_cfgdata16(dev, PCIR_DEVICE, 0x1E31);
-	pci_set_cfgdata16(dev, PCIR_VENDOR, 0x8086);
+	pci_set_cfgdata16(dev, PCIR_DEVICE, xdev->pid);
+	pci_set_cfgdata16(dev, PCIR_VENDOR, xdev->vid);
 	pci_set_cfgdata8(dev, PCIR_CLASS, PCIC_SERIALBUS);
 	pci_set_cfgdata8(dev, PCIR_SUBCLASS, PCIS_SERIALBUS_USB);
 	pci_set_cfgdata8(dev, PCIR_PROGIF, PCIP_SERIALBUS_USB_XHCI);

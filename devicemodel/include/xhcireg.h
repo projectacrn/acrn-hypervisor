@@ -240,6 +240,16 @@
 #define	EXCAP_GROUP_END		0xFFFF
 #define	EXCAP_GROUP_NULL	NULL
 
+/* xHCI PCI Vendor IDs */
+#define	XHCI_PCI_VENDOR_ID_INTEL	0x8086
+
+/* xHCI PCI Device IDs */
+#define	XHCI_PCI_DEVICE_ID_INTEL_APL	0x5aa8
+
+/* Default xHCI PCI VID/PID */
+#define	XHCI_PCI_VENDOR_ID_DFLT		XHCI_PCI_VENDOR_ID_INTEL
+#define	XHCI_PCI_DEVICE_ID_DFLT		0x1e31
+
 /* Intel APL xHCI DRD Configuration registers */
 #define	XHCI_DRD_MUX_CFG0		0x0000
 #define	XHCI_DRD_MUX_CFG1		0x0004
