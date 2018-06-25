@@ -327,7 +327,7 @@ uint32_t irq_desc_alloc_vector(uint32_t irq, bool lowpri)
 
 	/* irq should be always available at this time */
 	if (irq > NR_MAX_IRQS)
-		return false;
+		return VECTOR_INVALID;
 
 	desc = irq_desc_base + irq;
 	spinlock_irqsave_obtain(&desc->irq_lock);
