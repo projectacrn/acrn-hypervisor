@@ -6,6 +6,8 @@
 
 #include <asm/errno.h>
 #include <string.h>
+#include <unistd.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include "sbuf.h"
 
@@ -37,6 +39,31 @@ int sbuf_get(shared_buf_t *sbuf, uint8_t *data)
 	from = (void *)sbuf + SBUF_HEAD_SIZE + sbuf->head;
 
 	memcpy(data, from, sbuf->ele_size);
+
+	sbuf->head = sbuf_next_ptr(sbuf->head, sbuf->ele_size, sbuf->size);
+
+	return sbuf->ele_size;
+}
+
+int sbuf_write(int fd, shared_buf_t *sbuf)
+{
+	const void *start;
+	int written;
+
+	if (sbuf == NULL)
+		return -EINVAL;
+
+	if (sbuf_is_empty(sbuf)) {
+		return 0;
+	}
+
+	start = (void *)sbuf + SBUF_HEAD_SIZE + sbuf->head;
+        written = write(fd, start, sbuf->ele_size);
+	if ( written != sbuf->ele_size) {
+		printf("Failed to write. Expect written size %d, returned %d\n",
+				sbuf->ele_size, written);
+		return -1;
+	}
 
 	sbuf->head = sbuf_next_ptr(sbuf->head, sbuf->ele_size, sbuf->size);
 

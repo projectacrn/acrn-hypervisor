@@ -66,5 +66,6 @@ static inline void sbuf_add_flags(shared_buf_t *sbuf, uint64_t flags)
 }
 
 int sbuf_get(shared_buf_t *sbuf, uint8_t *data);
+int sbuf_write(int fd, shared_buf_t *sbuf);
 int sbuf_clear_buffered(shared_buf_t *sbuf);
 #endif /* SHARED_BUF_H */
