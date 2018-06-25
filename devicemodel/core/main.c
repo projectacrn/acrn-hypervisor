@@ -259,7 +259,7 @@ add_cpu(struct vmctx *ctx, int guest_ncpus)
 	int error;
 
 	for (i = 0; i < guest_ncpus; i++) {
-		error = vm_create_vcpu(ctx, i);
+		error = vm_create_vcpu(ctx, (uint16_t)i);
 		if (error != 0) {
 			fprintf(stderr, "ERROR: could not create VCPU %d\n", i);
 			return error;
