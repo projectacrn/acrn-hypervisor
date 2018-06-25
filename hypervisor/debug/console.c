@@ -19,14 +19,12 @@ uint32_t get_serial_handle(void)
 	return serial_handle;
 }
 
-static int print_char(char x)
+static void print_char(char x)
 {
 	serial_puts(serial_handle, &x, 1);
 
 	if (x == '\n')
 		serial_puts(serial_handle, "\r", 1);
-
-	return 0;
 }
 
 int console_init(void)
@@ -44,8 +42,10 @@ int console_putc(int ch)
 
 	spinlock_obtain(&lock);
 
-	if (serial_handle != SERIAL_INVALID_HANDLE)
-		res = print_char(ch);
+	if (serial_handle != SERIAL_INVALID_HANDLE) {
+		print_char(ch);
+		res = 0;
+	}
 
 	spinlock_release(&lock);
 
@@ -61,13 +61,13 @@ int console_puts(const char *s)
 
 	if (serial_handle != SERIAL_INVALID_HANDLE) {
 		res = 0;
-		while (*s) {
+		while ((*s) != 0) {
 			/* start output at the beginning of the string search
 			 * for end of string or '\n'
 			 */
 			p = s;
 
-			while (*p && *p != '\n')
+			while ((*p != 0) && *p != '\n')
 				++p;
 
 			/* write all characters up to p */

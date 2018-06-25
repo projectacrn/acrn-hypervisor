@@ -185,8 +185,8 @@ static int get_usercrash(struct crash_node *crash)
 	}
 	next_usercrash = (next_usercrash + 1) % usercrash_count;
 	crash->out_fd = result;
-	strncpy(crash->crash_path, file_name, FILE_PATH_LEN_MAX - 1);
-
+	strncpy(crash->crash_path, file_name, FILE_PATH_LEN_MAX);
+	crash->crash_path[FILE_PATH_LEN_MAX - 1] = '\0';
 	return 0;
 }
 
@@ -295,8 +295,8 @@ static void crash_request_cb(evutil_socket_t sockfd, short ev, void *arg)
 		goto fail;
 	}
 	crash->pid = request.pid;
-	strncpy(crash->name, request.name, COMM_NAME_LEN - 1);
-
+	strncpy(crash->name, request.name, COMM_NAME_LEN);
+	crash->name[COMM_NAME_LEN - 1] = '\0';
 	LOGI("received crash request from pid %d, name: %s\n",
 				crash->pid, crash->name);
 
@@ -452,7 +452,7 @@ int main(int argc, char *argv[])
 			RESERVED_SOCKET_PREFIX, SOCKET_NAME);
 	if (chmod(socket_path, 0622) == -1) {
 		LOGE("failed to change usercrashd_crash priority\n");
-		exit(EXIT_FAILURE);
+		goto fail;
 	}
 
 	evutil_make_socket_nonblocking(crash_socket);
@@ -460,7 +460,7 @@ int main(int argc, char *argv[])
 	base = event_base_new();
 	if (!base) {
 		LOGE("failed to create event_base\n");
-		exit(EXIT_FAILURE);
+		goto fail;
 	}
 
 	TAILQ_INIT(&queue_t);
@@ -468,7 +468,7 @@ int main(int argc, char *argv[])
 			LEV_OPT_CLOSE_ON_FREE, -1, crash_socket);
 	if (!listener) {
 		LOGE("failed to create evconnlistener: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
+		goto fail;
 	}
 
 	LOGI("usercrash_s successfully initialized\n");
@@ -477,5 +477,10 @@ int main(int argc, char *argv[])
 	evconnlistener_free(listener);
 	event_base_free(base);
 
+	close(crash_socket);
 	return 0;
+
+fail:
+	close(crash_socket);
+	exit(EXIT_FAILURE);
 }

@@ -112,7 +112,7 @@ struct vlapic_timer {
 	struct timer timer;
 	uint32_t mode;
 	uint32_t tmicr;
-	uint32_t divisor;
+	uint32_t divisor_shift;
 };
 
 struct vlapic {

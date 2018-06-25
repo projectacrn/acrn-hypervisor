@@ -18,9 +18,13 @@
 #define LOG_ELEMENT_SIZE        80
 #define LOG_MSG_SIZE		480
 #define PCPU_NUM		4
+#define DEFAULT_POLL_INTERVAL	100000
+#define LOG_INCOMPLETE_WARNING	"WARNING: logs missing here! "\
+				"Try reducing polling interval"
 
 /* num of physical cpu, not the cpu num seen on SOS */
 static unsigned int pcpu_num = PCPU_NUM;
+static unsigned long interval = DEFAULT_POLL_INTERVAL;
 
 struct hvlog_msg {
 	__u64 usec;		/* timestamp, from tsc reset in usec */
@@ -355,14 +359,27 @@ size_t write_log_file(struct hvlog_file * log, const char *buf, size_t len)
 static void *cur_read_func(void *arg)
 {
 	struct hvlog_msg *msg;
+	__u64 last_seq = 0;
+	char warn_msg[LOG_MSG_SIZE] = {0};
 
 	while (1) {
 		hvlog_dev_read_msg(cur, pcpu_num);
 		msg = get_min_seq_msg(cur, pcpu_num);
 		if (!msg) {
-			usleep(500000);
+			usleep(interval);
 			continue;
 		}
+
+		/* if msg->seq is not contineous, warn for logs missing */
+		if (last_seq + 1 < msg->seq) {
+			snprintf(warn_msg, LOG_MSG_SIZE,
+				 "\n\n\t%s[%lu ms]\n\n\n",
+				 LOG_INCOMPLETE_WARNING, interval);
+
+			write_log_file(&cur_log, warn_msg, strlen(warn_msg));
+		}
+
+		last_seq = msg->seq;
 
 		write_log_file(&cur_log, msg->raw, msg->len);
 	}
@@ -371,7 +388,7 @@ static void *cur_read_func(void *arg)
 }
 
 /* for user optinal args */
-static const char optString[] = "s:n:h";
+static const char optString[] = "s:n:t:h";
 
 static void display_usage(void)
 {
@@ -379,6 +396,7 @@ static void display_usage(void)
 	       "[Usage] acrnlog [-s] [size] [-n] [number]\n\n"
 	       "[Options]\n"
 	       "\t-h: print this message\n"
+	       "\t-t: polling interval to collect logs, in ms\n"
 	       "\t-s: size limitation for each log file, in MB.\n"
 	       "\t    0 means no limitation.\n"
 	       "\t-n: how many files you would like to keep on disk\n"
@@ -398,6 +416,15 @@ static int parse_opt(int argc, char *argv[])
 			ret = atoi(optarg);
 			if (ret > 3)
 				hvlog_log_num = ret;
+			break;
+		case 't':
+			ret = atoi(optarg);
+			if (ret <= 0 || ret >=1000) {
+				printf("'-t' require integer between [1-999]\n");
+				return -EINVAL;
+			}
+			interval = ret * 1000;
+			printf("Polling interval is %u ms\n", ret);
 			break;
 		case 'h':
 			display_usage();

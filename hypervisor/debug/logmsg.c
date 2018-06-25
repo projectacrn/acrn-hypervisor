@@ -23,17 +23,17 @@ static struct logmsg logmsg;
 static inline void alloc_earlylog_sbuf(uint32_t cpu_id)
 {
 	uint32_t ele_size = LOG_ENTRY_SIZE;
-	uint32_t ele_num = ((HVLOG_BUF_SIZE >> 1) / phy_cpu_num
+	uint32_t ele_num = ((HVLOG_BUF_SIZE >> 1) / phys_cpu_num
 			   - SBUF_HEAD_SIZE) / ele_size;
 
 	per_cpu(earlylog_sbuf, cpu_id) = sbuf_allocate(ele_num, ele_size);
-	if (!per_cpu(earlylog_sbuf,cpu_id))
+	if (per_cpu(earlylog_sbuf, cpu_id) == NULL)
 		printf("failed to allcate sbuf for hvlog - %d\n", cpu_id);
 }
 
 static inline void free_earlylog_sbuf(uint32_t cpu_id)
 {
-	if (!per_cpu(earlylog_sbuf, cpu_id))
+	if (per_cpu(earlylog_sbuf, cpu_id) == NULL)
 		return;
 
 	free(per_cpu(earlylog_sbuf, cpu_id));
@@ -47,8 +47,8 @@ static int do_copy_earlylog(struct shared_buf *dst_sbuf,
 	uint32_t cur_tail;
 	spinlock_rflags;
 
-	if (src_sbuf->ele_size != dst_sbuf->ele_size
-		&& src_sbuf->ele_num != dst_sbuf->ele_num) {
+	if ((src_sbuf->ele_size != dst_sbuf->ele_size)
+		&& (src_sbuf->ele_num != dst_sbuf->ele_num)) {
 		spinlock_irqsave_obtain(&(logmsg.lock));
 		printf("Error to copy early hvlog: size mismatch\n");
 		spinlock_irqrestore_release(&(logmsg.lock));
@@ -75,7 +75,7 @@ void init_logmsg(__unused uint32_t mem_size, uint32_t flags)
 	logmsg.seq = 0;
 
 	/* allocate sbuf for log before sos booting */
-	for (idx = 0; idx < phy_cpu_num; idx++)
+	for (idx = 0; idx < phys_cpu_num; idx++)
 		alloc_earlylog_sbuf(idx);
 }
 
@@ -89,9 +89,9 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 	char *buffer;
 	spinlock_rflags;
 
-	do_console_log = ((logmsg.flags & LOG_FLAG_STDOUT) &&
+	do_console_log = ((logmsg.flags & LOG_FLAG_STDOUT) != 0U &&
 					(severity <= console_loglevel));
-	do_mem_log = ((logmsg.flags & LOG_FLAG_MEMORY) &&
+	do_mem_log = ((logmsg.flags & LOG_FLAG_MEMORY) != 0U &&
 					(severity <= mem_loglevel));
 
 	if (!do_console_log && !do_mem_log)
@@ -138,8 +138,8 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 					per_cpu(sbuf, cpu_id)[ACRN_HVLOG];
 		struct shared_buf *early_sbuf = per_cpu(earlylog_sbuf, cpu_id);
 
-		if (early_sbuf) {
-			if (sbuf) {
+		if (early_sbuf != NULL) {
+			if (sbuf != NULL) {
 				/* switch to sbuf from sos */
 				do_copy_earlylog(sbuf, early_sbuf);
 				free_earlylog_sbuf(cpu_id);
@@ -168,10 +168,10 @@ void print_logmsg_buffer(uint32_t cpu_id)
 	struct shared_buf **sbuf;
 	int is_earlylog = 0;
 
-	if (cpu_id >= (uint32_t)phy_cpu_num)
+	if (cpu_id >= (uint32_t)phys_cpu_num)
 		return;
 
-	if (per_cpu(earlylog_sbuf, cpu_id)) {
+	if (per_cpu(earlylog_sbuf, cpu_id) != NULL) {
 		sbuf = &per_cpu(earlylog_sbuf, cpu_id);
 		is_earlylog = 1;
 	} else
@@ -179,10 +179,10 @@ void print_logmsg_buffer(uint32_t cpu_id)
 				&per_cpu(sbuf, cpu_id)[ACRN_HVLOG];
 
 	spinlock_irqsave_obtain(&(logmsg.lock));
-	if (*sbuf)
+	if ((*sbuf) != NULL)
 		printf("CPU%d: head: 0x%x, tail: 0x%x %s\n\r",
 			cpu_id, (*sbuf)->head, (*sbuf)->tail,
-			is_earlylog ? "[earlylog]" : "");
+			(is_earlylog != 0) ? "[earlylog]" : "");
 	spinlock_irqrestore_release(&(logmsg.lock));
 
 	do {

@@ -133,6 +133,9 @@ struct shell_cmd {
 #define SHELL_CMD_CPUID_PARAM		"<leaf> [subleaf]"
 #define SHELL_CMD_CPUID_HELP		"cpuid leaf [subleaf], in hexadecimal"
 
+#define SHELL_CMD_TRIGGER_CRASH			"crash"
+#define SHELL_CMD_TRIGGER_CRASH_PARAM	NULL
+#define SHELL_CMD_TRIGGER_CRASH_HELP	"trigger crash"
 
 /* Global function prototypes */
 int shell_show_req_info(struct shell *p_shell, int argc, char **argv);
@@ -169,5 +172,6 @@ void kick_shell(struct shell *p_shell);
 
 int shell_puts(struct shell *p_shell, char *str_ptr);
 int shell_set_name(struct shell *p_shell, char *name);
+int shell_trigger_crash(struct shell *p_shell, int argc, char **argv);
 
 #endif /* SHELL_INTER_H */

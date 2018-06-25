@@ -40,7 +40,7 @@
 #define RSDP_CHECKSUM_LENGTH       20
 #define ACPI_NAME_SIZE             4
 #define ACPI_MADT_TYPE_LOCAL_APIC  0
-#define ACPI_MADT_ENABLED          1
+#define ACPI_MADT_ENABLED          1U
 #define ACPI_OEM_TABLE_ID_SIZE     8
 
 struct acpi_table_rsdp {
@@ -114,8 +114,8 @@ biosacpi_search_rsdp(char *base, int length)
 		rsdp = (struct acpi_table_rsdp *)(base + ofs);
 
 		/* compare signature, validate checksum */
-		if (!strncmp(rsdp->signature, ACPI_SIG_RSDP,
-				strnlen_s(ACPI_SIG_RSDP, 8))) {
+		if (strncmp(rsdp->signature, ACPI_SIG_RSDP,
+				strnlen_s(ACPI_SIG_RSDP, 8)) == 0) {
 			cp = (uint8_t *)rsdp;
 			sum = 0;
 			for (idx = 0; idx < RSDP_CHECKSUM_LENGTH; idx++)
@@ -179,7 +179,7 @@ void *get_acpi_tbl(char *sig)
 
 	rsdp = (struct acpi_table_rsdp *)global_rsdp;
 
-	if (rsdp->revision >= 2 && rsdp->xsdt_physical_address) {
+	if (rsdp->revision >= 2 && (rsdp->xsdt_physical_address != 0U)) {
 		/*
 		 * AcpiOsGetRootPointer only verifies the checksum for
 		 * the version 1.0 portion of the RSDP.  Version 2.0 has
@@ -191,7 +191,7 @@ void *get_acpi_tbl(char *sig)
 		    sizeof(uint64_t);
 
 		for (i = 0; i < count; i++) {
-			if (probe_table(xsdt->table_offset_entry[i], sig)) {
+			if (probe_table(xsdt->table_offset_entry[i], sig) != 0) {
 				addr = xsdt->table_offset_entry[i];
 				break;
 			}
@@ -205,7 +205,7 @@ void *get_acpi_tbl(char *sig)
 			sizeof(uint32_t);
 
 		for (i = 0; i < count; i++) {
-			if (probe_table(rsdt->table_offset_entry[i], sig)) {
+			if (probe_table(rsdt->table_offset_entry[i], sig) != 0) {
 				addr = rsdt->table_offset_entry[i];
 				break;
 			}
@@ -215,9 +215,9 @@ void *get_acpi_tbl(char *sig)
 	return HPA2HVA(addr);
 }
 
-static int _parse_madt(void *madt, uint8_t *lapic_id_base)
+static uint16_t _parse_madt(void *madt, uint8_t *lapic_id_base)
 {
-	int pcpu_id = 0;
+	uint16_t pcpu_id = 0;
 	struct acpi_madt_local_apic *processor;
 	struct acpi_table_madt *madt_ptr;
 	void *first;
@@ -235,7 +235,7 @@ static int _parse_madt(void *madt, uint8_t *lapic_id_base)
 
 		if (entry->type == ACPI_MADT_TYPE_LOCAL_APIC) {
 			processor = (struct acpi_madt_local_apic *)entry;
-			if (processor->lapic_flags & ACPI_MADT_ENABLED) {
+			if ((processor->lapic_flags & ACPI_MADT_ENABLED) != 0U) {
 				*lapic_id_base++ = processor->id;
 				pcpu_id++;
 			}
@@ -249,7 +249,7 @@ static int _parse_madt(void *madt, uint8_t *lapic_id_base)
 }
 
 /* The lapic_id info gotten from madt will be returned in lapic_id_base */
-int parse_madt(uint8_t *lapic_id_base)
+uint16_t parse_madt(uint8_t *lapic_id_base)
 {
 	void *madt;
 

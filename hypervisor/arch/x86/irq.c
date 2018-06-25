@@ -41,14 +41,14 @@ spurious_handler_t spurious_handler;
 
 static void init_irq_desc(void)
 {
-	int i, page_num = 0;
-	int desc_size = NR_MAX_IRQS * sizeof(struct irq_desc);
+	uint32_t i, page_num = 0;
+	uint32_t desc_size = NR_MAX_IRQS * sizeof(struct irq_desc);
 
-	page_num = (desc_size + CPU_PAGE_SIZE-1) >> CPU_PAGE_SHIFT;
+	page_num = (desc_size + CPU_PAGE_SIZE - 1U) >> CPU_PAGE_SHIFT;
 
 	irq_desc_base = alloc_pages(page_num);
 
-	ASSERT(irq_desc_base, "page alloc failed!");
+	ASSERT(irq_desc_base != NULL, "page alloc failed!");
 	memset(irq_desc_base, 0, page_num * CPU_PAGE_SIZE);
 
 	for (i = 0; i < NR_MAX_IRQS; i++) {
@@ -161,6 +161,7 @@ static void _irq_desc_free_vector(uint32_t irq)
 {
 	struct irq_desc *desc;
 	uint32_t vr;
+	int pcpu_id;
 
 	if (irq > NR_MAX_IRQS)
 		return;
@@ -175,6 +176,9 @@ static void _irq_desc_free_vector(uint32_t irq)
 	vr &= NR_MAX_VECTOR;
 	if (vector_to_irq[vr] == irq)
 		vector_to_irq[vr] = IRQ_INVALID;
+
+	for (pcpu_id = 0; pcpu_id < phys_cpu_num; pcpu_id++)
+		per_cpu(irq_count, pcpu_id)[irq] = 0;
 }
 
 static void disable_pic_irq(void)
@@ -203,14 +207,14 @@ irq_desc_append_dev(struct irq_desc *desc, void *node, bool share)
 		 * ioapic setup.
 		 * caller can later update it with update_irq_handler()
 		 */
-		if (!desc->irq_handler)
+		if (desc->irq_handler == NULL)
 			desc->irq_handler = common_handler_edge;
 	} else if (!share || desc->used == IRQ_ASSIGNED_NOSHARE) {
 		/* dev node added failed */
 		added = false;
 	} else {
 		/* dev_list point to last valid node */
-		while (dev_list->next)
+		while (dev_list->next != NULL)
 			dev_list = dev_list->next;
 		/* add node */
 		dev_list->next = node;
@@ -381,7 +385,7 @@ uint32_t dev_to_vector(struct dev_handler_node *node)
 	return node->desc->vector;
 }
 
-int init_default_irqs(unsigned int cpu_id)
+int init_default_irqs(uint16_t cpu_id)
 {
 	if (cpu_id > 0)
 		return 0;
@@ -421,7 +425,7 @@ void handle_spurious_interrupt(uint32_t vector)
 
 	pr_warn("Spurious vector: 0x%x.", vector);
 
-	if (spurious_handler)
+	if (spurious_handler != NULL)
 		spurious_handler(vector);
 }
 
@@ -441,7 +445,7 @@ void dispatch_interrupt(struct intr_excp_ctx *ctx)
 	if (vr != desc->vector)
 		goto ERR;
 
-	if (desc->used == IRQ_NOT_ASSIGNED || !desc->irq_handler) {
+	if (desc->used == IRQ_NOT_ASSIGNED || desc->irq_handler == NULL) {
 		/* mask irq if possible */
 		goto ERR;
 	}
@@ -479,8 +483,8 @@ int handle_level_interrupt_common(struct irq_desc *desc,
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
-	while (dev) {
-		if (dev->dev_handler)
+	while (dev != NULL) {
+		if (dev->dev_handler != NULL)
 			dev->dev_handler(desc->irq, dev->dev_data);
 		dev = dev->next;
 	}
@@ -515,8 +519,8 @@ int common_handler_edge(struct irq_desc *desc, __unused void *handler_data)
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
-	while (dev) {
-		if (dev->dev_handler)
+	while (dev != NULL) {
+		if (dev->dev_handler != NULL)
 			dev->dev_handler(desc->irq, dev->dev_data);
 		dev = dev->next;
 	}
@@ -552,8 +556,8 @@ int common_dev_handler_level(struct irq_desc *desc, __unused void *handler_data)
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
-	while (dev) {
-		if (dev->dev_handler)
+	while (dev != NULL) {
+		if (dev->dev_handler != NULL)
 			dev->dev_handler(desc->irq, dev->dev_data);
 		dev = dev->next;
 	}
@@ -573,8 +577,8 @@ int quick_handler_nolock(struct irq_desc *desc, __unused void *handler_data)
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
-	while (dev) {
-		if (dev->dev_handler)
+	while (dev != NULL) {
+		if (dev->dev_handler != NULL)
 			dev->dev_handler(desc->irq, dev->dev_data);
 		dev = dev->next;
 	}
@@ -621,7 +625,7 @@ void unregister_handler_common(struct dev_handler_node *node)
 		goto UNLOCK_EXIT;
 	}
 
-	while (head->next) {
+	while (head->next != NULL) {
 		if (head->next == node)
 			break;
 		head = head->next;
@@ -686,16 +690,16 @@ pri_register_handler(uint32_t irq,
 	return common_register_handler(irq, &info);
 }
 
-int get_cpu_interrupt_info(char *str, int str_max)
+void get_cpu_interrupt_info(char *str, int str_max)
 {
-	int pcpu_id;
+	uint16_t pcpu_id;
 	uint32_t irq, vector, len, size = str_max;
 	struct irq_desc *desc;
 
 	len = snprintf(str, size, "\r\nIRQ\tVECTOR");
 	size -= len;
 	str += len;
-	for (pcpu_id = 0; pcpu_id < phy_cpu_num; pcpu_id++) {
+	for (pcpu_id = 0; pcpu_id < phys_cpu_num; pcpu_id++) {
 		len = snprintf(str, size, "\tCPU%d", pcpu_id);
 		size -= len;
 		str += len;
@@ -712,9 +716,9 @@ int get_cpu_interrupt_info(char *str, int str_max)
 			len = snprintf(str, size, "\r\n%d\t0x%X", irq, vector);
 			size -= len;
 			str += len;
-			for (pcpu_id = 0; pcpu_id < phy_cpu_num; pcpu_id++) {
+			for (pcpu_id = 0; pcpu_id < phys_cpu_num; pcpu_id++) {
 				len = snprintf(str, size, "\t%d",
-					per_cpu(irq_count, pcpu_id)[irq]++);
+					per_cpu(irq_count, pcpu_id)[irq]);
 				size -= len;
 				str += len;
 			}
@@ -727,5 +731,4 @@ int get_cpu_interrupt_info(char *str, int str_max)
 		}
 	}
 	snprintf(str, size, "\r\n");
-	return 0;
 }

@@ -74,11 +74,16 @@ static char *strtriml(char *str)
 
 static char *strtrimr(char *str)
 {
-	char *end = str + strlen(str) - 1;
+	size_t len;
+	char *end;
 
-	while (*end == ' ' && end >= str) {
-		*end = 0;
-		end--;
+	len = strlen(str);
+	if (len > 0) {
+		end = str + strlen(str) - 1;
+		while (*end == ' ' && end >= str) {
+			*end = 0;
+			end--;
+		}
 	}
 
 	return str;
@@ -86,8 +91,12 @@ static char *strtrimr(char *str)
 
 char *strtrim(char *str)
 {
-	strtrimr(str);
-	return strtriml(str);
+	if (str) {
+		strtrimr(str);
+		return strtriml(str);
+	}
+
+	return NULL;
 }
 
 int strcnt(char *str, char c)

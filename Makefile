@@ -10,9 +10,10 @@ HV_OUT := $(ROOT_OUT)/hypervisor
 DM_OUT := $(ROOT_OUT)/devicemodel
 TOOLS_OUT := $(ROOT_OUT)/tools
 MISC_OUT := $(ROOT_OUT)/misc
+DOC_OUT := $(ROOT_OUT)/doc
 export TOOLS_OUT
 
-.PHONY: all hypervisor devicemodel tools misc
+.PHONY: all hypervisor devicemodel tools misc doc
 all: hypervisor devicemodel tools misc
 
 hypervisor:
@@ -36,9 +37,13 @@ misc: tools
 	mkdir -p $(MISC_OUT)
 	make -C $(T)/misc OUT_DIR=$(MISC_OUT)
 
+doc:
+	make -C $(T)/doc html BUILDDIR=$(DOC_OUT)
+
 .PHONY: clean
 clean:
 	make -C $(T)/tools OUT_DIR=$(TOOLS_OUT) clean
+	make -C $(T)/doc BUILDDIR=$(DOC_OUT) clean
 	rm -rf $(ROOT_OUT)
 
 .PHONY: install

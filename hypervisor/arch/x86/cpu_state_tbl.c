@@ -94,13 +94,13 @@ static int get_state_tbl_idx(char *cpuname)
 	int i;
 	int count = ARRAY_SIZE(cpu_state_tbl);
 
-	if (!cpuname) {
+	if (cpuname == NULL) {
 		return -1;
 	}
 
 	for (i = 0; i < count; i++) {
-		if (!strcmp((cpu_state_tbl[i].model_name),
-				cpuname)) {
+		if (strcmp((cpu_state_tbl[i].model_name),
+				cpuname) == 0) {
 			return i;
 		}
 	}
@@ -124,7 +124,7 @@ void load_cpu_state_data(void)
 
 	state_info = &(cpu_state_tbl + tbl_idx)->state_info;
 
-	if (state_info->px_cnt && state_info->px_data) {
+	if ((state_info->px_cnt != 0U) && (state_info->px_data != NULL)) {
 		if (state_info->px_cnt > MAX_PSTATE) {
 			boot_cpu_data.state_info.px_cnt = MAX_PSTATE;
 		} else {
@@ -134,7 +134,7 @@ void load_cpu_state_data(void)
 		boot_cpu_data.state_info.px_data = state_info->px_data;
 	}
 
-	if (state_info->cx_cnt && state_info->cx_data) {
+	if ((state_info->cx_cnt != 0U) && (state_info->cx_data != NULL)) {
 		if (state_info->cx_cnt > MAX_CX_ENTRY) {
 			boot_cpu_data.state_info.cx_cnt = MAX_CX_ENTRY;
 		} else {

@@ -12,7 +12,7 @@ extern struct efi_ctx* efi_ctx;
 
 #define PAT_POWER_ON_VALUE	(PAT_MEM_TYPE_WB + \
 				((uint64_t)PAT_MEM_TYPE_WT << 8) + \
-				((uint64_t)PAT_MEM_TYPE_WC << 16) + \
+				((uint64_t)PAT_MEM_TYPE_UCM << 16) + \
 				((uint64_t)PAT_MEM_TYPE_UC << 24) + \
 				((uint64_t)PAT_MEM_TYPE_WB << 32) + \
 				((uint64_t)PAT_MEM_TYPE_WT << 40) + \
@@ -47,9 +47,9 @@ static inline int exec_vmxon(void *addr)
 	tmp64 = msr_read(MSR_IA32_FEATURE_CONTROL);
 
 	/* Determine if feature control is locked */
-	if (tmp64 & MSR_IA32_FEATURE_CONTROL_LOCK) {
+	if ((tmp64 & MSR_IA32_FEATURE_CONTROL_LOCK) != 0U) {
 		/* See if VMX enabled */
-		if (!(tmp64 & MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX)) {
+		if ((tmp64 & MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX) == 0U) {
 			/* Return error - VMX can't be enabled */
 			pr_err("%s, VMX can't be enabled\n", __func__);
 			status = -EINVAL;
@@ -72,7 +72,7 @@ static inline int exec_vmxon(void *addr)
 			      : "%rax", "cc", "memory");
 
 		/* if carry and zero flags are clear operation success */
-		if (rflags & (RFLAGS_C | RFLAGS_Z)) {
+		if ((rflags & (RFLAGS_C | RFLAGS_Z)) != 0U) {
 			pr_err("%s, Turn VMX on failed\n", __func__);
 			status = -EINVAL;
 		}
@@ -86,7 +86,7 @@ static inline int exec_vmxon(void *addr)
  * It will be used again when we start a pcpu after the pcpu was down.
  * S3 enter/exit will use it.
  */
-int exec_vmxon_instr(uint32_t pcpu_id)
+int exec_vmxon_instr(uint16_t pcpu_id)
 {
 	uint64_t tmp64, vmcs_pa;
 	uint32_t tmp32;
@@ -117,7 +117,7 @@ int exec_vmxon_instr(uint32_t pcpu_id)
 		per_cpu(vmxon_region_pa, pcpu_id) = HVA2HPA(vmxon_region_va);
 		ret = exec_vmxon(&per_cpu(vmxon_region_pa, pcpu_id));
 
-		if (vcpu) {
+		if (vcpu != NULL) {
 			vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
 			ret = exec_vmptrld(&vmcs_pa);
 		}
@@ -128,17 +128,17 @@ int exec_vmxon_instr(uint32_t pcpu_id)
 	return ret;
 }
 
-int vmx_off(int pcpu_id)
+int vmx_off(uint16_t pcpu_id)
 {
 	int ret = 0;
 
 	struct vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
 	uint64_t vmcs_pa;
 
-	if (vcpu) {
+	if (vcpu != NULL) {
 		vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
 		ret = exec_vmclear((void *)&vmcs_pa);
-		if (ret)
+		if (ret != 0)
 			return ret;
 	}
 
@@ -165,7 +165,7 @@ int exec_vmclear(void *addr)
 		: "%rax", "cc", "memory");
 
 	/* if carry and zero flags are clear operation success */
-	if (rflags & (RFLAGS_C | RFLAGS_Z))
+	if ((rflags & (RFLAGS_C | RFLAGS_Z)) != 0U)
 		status = -EINVAL;
 
 	return status;
@@ -190,7 +190,7 @@ int exec_vmptrld(void *addr)
 		: "%rax", "cc");
 
 	/* if carry and zero flags are clear operation success */
-	if (rflags & (RFLAGS_C | RFLAGS_Z))
+	if ((rflags & (RFLAGS_C | RFLAGS_Z)) != 0U)
 		status = -EINVAL;
 
 	return status;
@@ -255,7 +255,7 @@ uint32_t get_cs_access_rights(void)
 	asm volatile ("movw %%cs, %%ax" : "=a" (sel_value));
 	asm volatile ("lar %%eax, %%eax" : "=a" (usable_ar) : "a"(sel_value));
 	usable_ar = usable_ar >> 8;
-	usable_ar &= 0xf0ff;	/* clear bits 11:8 */
+	usable_ar &= 0xf0ffU;	/* clear bits 11:8 */
 
 	return usable_ar;
 }
@@ -331,7 +331,7 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	uint32_t entry_ctrls;
 	bool paging_enabled = !!(context->cr0 & CR0_PG);
 
-	if (cr0 & (cr0_always_off_mask | CR0_RESERVED_MASK)) {
+	if ((cr0 & (cr0_always_off_mask | CR0_RESERVED_MASK)) != 0U) {
 		pr_err("Not allow to set always off / reserved bits for CR0");
 		vcpu_inject_gp(vcpu, 0);
 		return -EINVAL;
@@ -340,9 +340,9 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	/* TODO: Check all invalid guest statuses according to the change of
 	 * CR0, and inject a #GP to guest */
 
-	if ((context->ia32_efer & MSR_IA32_EFER_LME_BIT) &&
-	    !paging_enabled && (cr0 & CR0_PG)) {
-		if (!(context->cr4 & CR4_PAE)) {
+	if (((context->ia32_efer & MSR_IA32_EFER_LME_BIT) != 0U) &&
+	    !paging_enabled && ((cr0 & CR0_PG) != 0U)) {
+		if ((context->cr4 & CR4_PAE) == 0U) {
 			pr_err("Can't enable long mode when PAE disabled");
 			vcpu_inject_gp(vcpu, 0);
 			return -EINVAL;
@@ -355,8 +355,8 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 
 		context->ia32_efer |= MSR_IA32_EFER_LMA_BIT;
 		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, context->ia32_efer);
-	} else if ((context->ia32_efer & MSR_IA32_EFER_LME_BIT) &&
-		   paging_enabled && !(cr0 & CR0_PG)){
+	} else if (((context->ia32_efer & MSR_IA32_EFER_LME_BIT) != 0U) &&
+		   paging_enabled && ((cr0 & CR0_PG) == 0U)){
 		/* Disable long mode */
 		pr_dbg("VMM: Disable long mode");
 		entry_ctrls = exec_vmread(VMX_ENTRY_CONTROLS);
@@ -436,14 +436,14 @@ int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 	 * CR4, and inject a #GP to guest */
 
 	/* Check if guest try to set fixed to 0 bits or reserved bits */
-	if(cr4 & cr4_always_off_mask) {
+	if((cr4 & cr4_always_off_mask) != 0U) {
 		pr_err("Not allow to set reserved/always off bits for CR4");
 		vcpu_inject_gp(vcpu, 0);
 		return -EINVAL;
 	}
 
 	/* Do NOT support nested guest */
-	if (cr4 & CR4_VMXE) {
+	if ((cr4 & CR4_VMXE) != 0U) {
 		pr_err("Nested guest not supported");
 		vcpu_inject_gp(vcpu, 0);
 		return -EINVAL;
@@ -620,8 +620,8 @@ static void init_guest_state(struct vcpu *vcpu)
 
 		value32 = gdtb.limit;
 
-		if ((gdtb.base >> 47) & 0x1)
-			gdtb.base |= 0xffff000000000000ull;
+		if (((gdtb.base >> 47) & 0x1UL) != 0UL)
+			gdtb.base |= 0xffff000000000000UL;
 
 		base = gdtb.base;
 
@@ -655,8 +655,8 @@ static void init_guest_state(struct vcpu *vcpu)
 		/* Limit */
 		limit = idtb.limit;
 
-		if ((idtb.base >> 47) & 0x1)
-			idtb.base |= 0xffff000000000000ull;
+		if (((idtb.base >> 47) & 0x1UL) != 0UL)
+			idtb.base |= 0xffff000000000000UL;
 
 		/* Base */
 		base = idtb.base;
@@ -953,8 +953,8 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	asm volatile ("sgdt %0"::"m" (gdtb));
 	value32 = gdtb.limit;
 
-	if ((gdtb.base >> 47) & 0x1)
-		gdtb.base |= 0xffff000000000000ull;
+	if (((gdtb.base >> 47) & 0x1UL) != 0UL)
+		gdtb.base |= 0xffff000000000000UL;
 
 	/* Set up the guest and host GDTB base fields with current GDTB base */
 	field = VMX_HOST_GDTR_BASE;
@@ -963,17 +963,17 @@ static void init_host_state(__unused struct vcpu *vcpu)
 
 	/* TODO: Should guest TR point to host TR ? */
 	trbase = gdtb.base + tr_sel;
-	if ((trbase >> 47) & 0x1)
-		trbase |= 0xffff000000000000ull;
+	if (((trbase >> 47) & 0x1UL) != 0UL)
+		trbase |= 0xffff000000000000UL;
 
 	/* SS segment override */
 	asm volatile ("mov %0,%%rax\n"
 		      ".byte 0x36\n"
 		      "movq (%%rax),%%rax\n":"=a" (trbase_lo):"0"(trbase)
 	    );
-	realtrbase = ((trbase_lo >> 16) & (0x0ffff)) |
-	    (((trbase_lo >> 32) & 0x000000ff) << 16) |
-	    (((trbase_lo >> 56) & 0xff) << 24);
+	realtrbase = ((trbase_lo >> 16) & (0x0ffffUL)) |
+	    (((trbase_lo >> 32) & 0x000000ffUL) << 16) |
+	    (((trbase_lo >> 56) & 0xffUL) << 24);
 
 	/* SS segment override for upper32 bits of base in ia32e mode */
 	asm volatile ("mov %0,%%rax\n"
@@ -989,8 +989,8 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	/* Obtain the current interrupt descriptor table base */
 	asm volatile ("sidt %0"::"m" (idtb));
 	/* base */
-	if ((idtb.base >> 47) & 0x1)
-		idtb.base |= 0xffff000000000000ull;
+	if (((idtb.base >> 47) & 0x1UL) != 0UL)
+		idtb.base |= 0xffff000000000000UL;
 
 	field = VMX_HOST_IDTR_BASE;
 	exec_vmwrite(field, idtb.base);
@@ -1144,7 +1144,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 			VMX_PROCBASED_CTLS2_RDTSCP |
 			VMX_PROCBASED_CTLS2_UNRESTRICT);
 
-	if (vcpu->arch_vcpu.vpid)
+	if (vcpu->arch_vcpu.vpid != 0)
 		value32 |= VMX_PROCBASED_CTLS2_VPID;
 	else
 		value32 &= ~VMX_PROCBASED_CTLS2_VPID;
@@ -1201,7 +1201,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	}
 
 	/* Check for EPT support */
-	if (is_ept_supported())
+	if (is_ept_supported() != 0)
 		pr_dbg("EPT is supported");
 	else
 		pr_err("Error: EPT is not supported");
@@ -1210,7 +1210,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	 * TODO: introduce API to make this data driven based
 	 * on VMX_EPT_VPID_CAP
 	 */
-	value64 = vm->arch_vm.nworld_eptp | (3 << 3) | 6;
+	value64 = vm->arch_vm.nworld_eptp | (3UL << 3) | 6UL;
 	exec_vmwrite64(VMX_EPT_POINTER_FULL, value64);
 	pr_dbg("VMX_EPT_POINTER: 0x%016llx ", value64);
 

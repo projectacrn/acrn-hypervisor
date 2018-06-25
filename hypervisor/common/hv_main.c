@@ -42,7 +42,7 @@ void vcpu_thread(struct vcpu *vcpu)
 			continue;
 		}
 
-		if (need_reschedule(vcpu->pcpu_id)) {
+		if (need_reschedule(vcpu->pcpu_id) != 0) {
 			/*
 			 * In extrem case, schedule() could return. Which
 			 * means the vcpu resume happens before schedule()
@@ -87,37 +87,37 @@ void vcpu_thread(struct vcpu *vcpu)
 		if (ret < 0) {
 			pr_fatal("dispatch VM exit handler failed for reason"
 				" %d, ret = %d!",
-				vcpu->arch_vcpu.exit_reason & 0xFFFF, ret);
+				vcpu->arch_vcpu.exit_reason & 0xFFFFU, ret);
 			vcpu_inject_gp(vcpu, 0);
 			continue;
 		}
 
-		basic_exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFF;
+		basic_exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFFU;
 		per_cpu(vmexit_cnt, vcpu->pcpu_id)[basic_exit_reason]++;
 		TRACE_2L(TRACE_VM_EXIT, basic_exit_reason,
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip);
 	} while (1);
 }
 
-static bool is_vm0_bsp(int pcpu_id)
+static bool is_vm0_bsp(uint16_t pcpu_id)
 {
 	return pcpu_id == vm0_desc.vm_hw_logical_core_ids[0];
 }
 
-int hv_main(int cpu_id)
+int hv_main(uint16_t cpu_id)
 {
 	int ret;
 
 	pr_info("%s, Starting common entry point for CPU %d",
 			__func__, cpu_id);
 
-	if (cpu_id >= phy_cpu_num) {
+	if (cpu_id >= phys_cpu_num) {
 		pr_err("%s, cpu_id %d out of range %d\n",
-			__func__, cpu_id, phy_cpu_num);
+			__func__, cpu_id, phys_cpu_num);
 		return -EINVAL;
 	}
 
-	if ((uint32_t) cpu_id != get_cpu_id()) {
+	if (cpu_id != get_cpu_id()) {
 		pr_err("%s, cpu_id %d mismatch\n", __func__, cpu_id);
 		return -EINVAL;
 	}
@@ -141,7 +141,7 @@ int hv_main(int cpu_id)
 	return 0;
 }
 
-int get_vmexit_profile(char *str, int str_max)
+void get_vmexit_profile(char *str, int str_max)
 {
 	int cpu, i, len, size = str_max;
 
@@ -154,7 +154,7 @@ int get_vmexit_profile(char *str, int str_max)
 	size -= len;
 	str += len;
 
-	for (cpu = 0; cpu < phy_cpu_num; cpu++) {
+	for (cpu = 0; cpu < phys_cpu_num; cpu++) {
 		len = snprintf(str, size, "\t      CPU%d\t        US", cpu);
 		size -= len;
 		str += len;
@@ -164,7 +164,7 @@ int get_vmexit_profile(char *str, int str_max)
 		len = snprintf(str, size, "\r\n0x%x", i);
 		size -= len;
 		str += len;
-		for (cpu = 0; cpu < phy_cpu_num; cpu++) {
+		for (cpu = 0; cpu < phys_cpu_num; cpu++) {
 			len = snprintf(str, size, "\t%10lld\t%10lld",
 				per_cpu(vmexit_cnt, cpu)[i],
 				TICKS_TO_US(per_cpu(vmexit_time, cpu)[i]));
@@ -173,5 +173,4 @@ int get_vmexit_profile(char *str, int str_max)
 		}
 	}
 	snprintf(str, size, "\r\n");
-	return 0;
 }

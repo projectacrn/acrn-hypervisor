@@ -42,7 +42,7 @@ static int request_notification_irq(dev_handler_t func, void *data,
 
 void setup_notification(void)
 {
-	int cpu;
+	uint16_t cpu;
 	char name[32] = {0};
 
 	cpu = get_cpu_id();
@@ -63,7 +63,7 @@ void setup_notification(void)
 
 void cleanup_notification(void)
 {
-	if (notification_node)
+	if (notification_node != NULL)
 		unregister_handler_common(notification_node);
 	notification_node = NULL;
 }

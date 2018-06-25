@@ -233,7 +233,7 @@ static struct crash_t *crash_reclassify_by_content(struct crash_t *rcrash,
 		return NULL;
 
 	if (trfile) {
-		ret = read_full_binary_file(trfile, &size, &file);
+		ret = read_file(trfile, &size, &file);
 		if (ret == -1) {
 			LOGE("read %s failed, error (%s)\n",
 			     trfile, strerror(errno));

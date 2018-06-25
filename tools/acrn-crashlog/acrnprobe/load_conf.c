@@ -122,42 +122,79 @@ static void print(void)
 	}
 }
 
-static int get_prop_int(xmlNodePtr cur, char *key)
+static int get_prop_int(xmlNodePtr cur, const char *key, const int max)
 {
 	xmlChar *prop;
-	int ret = 0;
+	int value;
 
 	prop = xmlGetProp(cur, (const xmlChar *)key);
-	if (prop) {
-		ret = atoi((char *)prop);
-		xmlFree(prop);
+	if (!prop) {
+		LOGE("get prop (%s) failed\n", key);
+		return -1;
 	}
-	return ret;
 
+	value = atoi((char *)prop);
+	xmlFree(prop);
+
+	if (value > max) {
+		LOGE("prop (%s) exceeds MAX (%d)\n", prop, max);
+		return -1;
+	}
+
+	return value;
 }
 
-static int get_id_index(xmlNodePtr cur)
+static int get_id_index(xmlNodePtr cur, const int max)
 {
-	return get_prop_int(cur, "id") - 1;
+	int value = get_prop_int(cur, "id", max);
+
+	if (value <= 0)
+		return -1;
+
+	/* array index = value - 1 */
+	return value - 1;
+}
+
+static int get_expid_index(xmlNodePtr cur, const int max)
+{
+	int value = get_prop_int(cur, "expression", max);
+
+	if (value <= 0)
+		return -1;
+
+	/* array index = value - 1 */
+	return value - 1;
 }
 
 #define load_cur_content(cur, type, mem) \
 (__extension__ \
 ({ \
 		xmlChar *load##mem; \
+		int _ret = -1; \
 		load##mem = xmlNodeGetContent(cur); \
-		if (load##mem) \
+		if (load##mem) { \
 			type->mem = (char *)load##mem; \
+			_ret = 0; \
+		} \
+		_ret; \
 }) \
 )
 
-#define load_cur_content_with_id(cur, type, mem) \
+#define load_cur_content_with_id(cur, type, mem, max) \
 (__extension__ \
 ({ \
 		xmlChar *load##mem; \
+		int index; \
+		int _ret = -1; \
 		load##mem = xmlNodeGetContent(cur); \
-		if (load##mem) \
-			type->mem[get_id_index(cur)] = (char *)load##mem; \
+		if (load##mem) { \
+			index = get_id_index(cur, max); \
+			if (index != -1) { \
+				type->mem[index] = (char *)load##mem; \
+				_ret = 0; \
+			} \
+		} \
+		_ret; \
 }) \
 )
 
@@ -315,94 +352,118 @@ static int is_enable(xmlNodePtr cur)
 	return ret;
 }
 
-static int get_inherit_index(xmlNodePtr cur)
-{
-	return get_prop_int(cur, "inherit") - 1;
-}
-
 #define name_is(cur, key) \
 		(xmlStrcmp(cur->name, (const xmlChar *)key) == 0)
 
-static void parse_info(xmlNodePtr cur, struct info_t *info)
+static int parse_info(xmlNodePtr cur, struct info_t *info)
 {
 	int id;
+	int res = 0;
 	xmlChar *content;
 
 	cur = cur->xmlChildrenNode;
 	while (cur) {
 		if (name_is(cur, "name"))
-			load_cur_content(cur, info, name);
+			res = load_cur_content(cur, info, name);
 		else if (name_is(cur, "trigger"))
 			load_trigger(cur, info);
 		else if (name_is(cur, "channel"))
-			load_cur_content(cur, info, channel);
+			res = load_cur_content(cur, info, channel);
 		else if (name_is(cur, "log")) {
-			id = get_id_index(cur);
+			id = get_id_index(cur, LOG_MAX);
+			if (id == -1)
+				return -1;
 			content = xmlNodeGetContent(cur);
 			info->log[id] = get_log_by_name((char *)content);
 			xmlFree(content);
 		}
 
+		if (res)
+			return -1;
+
 		cur = cur->next;
 	}
+
+	return 0;
 }
 
-static void parse_log(xmlNodePtr cur, struct log_t *log)
+static int parse_log(xmlNodePtr cur, struct log_t *log)
 {
+	int res = 0;
+
 	cur = cur->xmlChildrenNode;
 	while (cur) {
 		if (name_is(cur, "name"))
-			load_cur_content(cur, log, name);
+			res = load_cur_content(cur, log, name);
 		else if (name_is(cur, "type"))
-			load_cur_content(cur, log, type);
+			res = load_cur_content(cur, log, type);
 		else if (name_is(cur, "path"))
-			load_cur_content(cur, log, path);
+			res = load_cur_content(cur, log, path);
 		else if (name_is(cur, "lines"))
-			load_cur_content(cur, log, lines);
+			res = load_cur_content(cur, log, lines);
+
+		if (res)
+			return -1;
 
 		cur = cur->next;
 	}
+
+	return 0;
 }
 
-static void parse_crash(xmlNodePtr cur, struct crash_t *crash)
+static int parse_crash(xmlNodePtr cur, struct crash_t *crash)
 {
 
 	int id;
-	int expression;
+	int expid;
+	int res = 0;
 	xmlChar *content;
 
 	cur = cur->xmlChildrenNode;
 	while (cur) {
 		if (name_is(cur, "name"))
-			load_cur_content(cur, crash, name);
+			res = load_cur_content(cur, crash, name);
 		else if (name_is(cur, "trigger"))
 			load_trigger(cur, crash);
 		else if (name_is(cur, "channel"))
-			load_cur_content(cur, crash, channel);
+			res = load_cur_content(cur, crash, channel);
 		else if (name_is(cur, "content"))
-			load_cur_content_with_id(cur, crash, content);
+			res = load_cur_content_with_id(cur, crash,
+						       content, CONTENT_MAX);
 		else if (name_is(cur, "log")) {
-			id = get_id_index(cur);
+			id = get_id_index(cur, LOG_MAX);
+			if (id == -1)
+				return -1;
+
 			content = xmlNodeGetContent(cur);
 			crash->log[id] = get_log_by_name((char *)content);
 			xmlFree(content);
 		} else if (name_is(cur, "data"))
-			load_cur_content_with_id(cur, crash, data);
+			res = load_cur_content_with_id(cur, crash,
+						       data, DATA_MAX);
 		else if (name_is(cur, "mightcontent")) {
-			id = get_id_index(cur);
-			expression = get_prop_int(cur, "expression") - 1;
+			id = get_id_index(cur, CONTENT_MAX);
+			expid = get_expid_index(cur, EXPRESSION_MAX);
+			if (id == -1 || expid == -1)
+				return -1;
+
 			content = xmlNodeGetContent(cur);
-			crash->mightcontent[expression][id] = (char *)content;
+			crash->mightcontent[expid][id] = (char *)content;
 		}
+
+		if (res)
+			return -1;
+
 		cur = cur->next;
 	}
 
-
+	return 0;
 }
 
-static void parse_crashes(xmlNodePtr crashes)
+static int parse_crashes(xmlNodePtr crashes)
 {
 	int id;
+	int res;
 	xmlNodePtr cur;
 	struct crash_t *crash;
 
@@ -411,7 +472,14 @@ static void parse_crashes(xmlNodePtr crashes)
 	while (cur) {
 		if (is_enable(cur)) {
 			crash = malloc(sizeof(*crash));
-			id = get_inherit_index(cur);
+			if (!crash)
+				return -1;
+
+			res = get_prop_int(cur, "inherit", CRASH_MAX);
+			if (res < 0)
+				return -1;
+
+			id = res - 1;
 			if (id >= 0) {
 				memcpy(crash, conf.crash[id], sizeof(*crash));
 				crash->parents = conf.crash[id];
@@ -421,117 +489,177 @@ static void parse_crashes(xmlNodePtr crashes)
 			} else {
 				memset(crash, 0, sizeof(*crash));
 			}
+			id = get_id_index(cur, CRASH_MAX);
+			if (id == -1) {
+				free(crash);
+				return -1;
+			}
+			res = parse_crash(cur, crash);
+			if (res) {
+				free(crash);
+				return -1;
+			}
+
 			TAILQ_INIT(&crash->children);
-			id = get_id_index(cur);
 			conf.crash[id] = crash;
-			parse_crash(cur, crash);
 		}
 		cur = cur->next;
 	}
+
+	return 0;
 }
 
-static void parse_vm(xmlNodePtr cur, struct vm_t *vm)
+static int parse_vm(xmlNodePtr cur, struct vm_t *vm)
 {
+	int res = 0;
+
 	cur = cur->xmlChildrenNode;
 	while (cur) {
 		if (name_is(cur, "name"))
-			load_cur_content(cur, vm, name);
+			res = load_cur_content(cur, vm, name);
 		else if (name_is(cur, "channel"))
-			load_cur_content(cur, vm, channel);
+			res = load_cur_content(cur, vm, channel);
 		else if (name_is(cur, "interval"))
-			load_cur_content(cur, vm, interval);
+			res = load_cur_content(cur, vm, interval);
 		else if (name_is(cur, "syncevent"))
-			load_cur_content_with_id(cur, vm, syncevent);
+			res = load_cur_content_with_id(cur, vm,
+						       syncevent,
+						       VM_EVENT_TYPE_MAX);
+
+		if (res)
+			return -1;
 
 		cur = cur->next;
 	}
+
+	return 0;
 }
 
-static void parse_uptime(xmlNodePtr cur, struct sender_t *sender)
+static int parse_uptime(xmlNodePtr cur, struct sender_t *sender)
 {
 	struct uptime_t *uptime;
-	int ret;
+	int res = 0;
 
 	uptime = malloc(sizeof(*uptime));
+	if (!uptime)
+		return -1;
+
 	memset(uptime, 0, sizeof(*uptime));
 	cur = cur->xmlChildrenNode;
 	while (cur) {
 		if (name_is(cur, "name"))
-			load_cur_content(cur, uptime, name);
+			res = load_cur_content(cur, uptime, name);
 		else if (name_is(cur, "frequency"))
-			load_cur_content(cur, uptime, frequency);
+			res = load_cur_content(cur, uptime, frequency);
 		else if (name_is(cur, "eventhours"))
-			load_cur_content(cur, uptime, eventhours);
+			res = load_cur_content(cur, uptime, eventhours);
+
+		if (res)
+			return -1;
 
 		cur = cur->next;
 	}
-	ret = asprintf(&uptime->path, "%s/uptime", sender->outdir);
-	if (ret < 0) {
+	res = asprintf(&uptime->path, "%s/uptime", sender->outdir);
+	if (res < 0) {
 		LOGE("build string failed\n");
-		exit(EXIT_FAILURE);
+		return -1;
 	}
 	sender->uptime = uptime;
+
+	return 0;
 }
 
-static void parse_trigger(xmlNodePtr cur, struct trigger_t *trigger)
+static int parse_trigger(xmlNodePtr cur, struct trigger_t *trigger)
 {
+	int res = 0;
+
 	cur = cur->xmlChildrenNode;
 	while (cur) {
 		if (name_is(cur, "name"))
-			load_cur_content(cur, trigger, name);
+			res = load_cur_content(cur, trigger, name);
 		else if (name_is(cur, "type"))
-			load_cur_content(cur, trigger, type);
+			res = load_cur_content(cur, trigger, type);
 		else if (name_is(cur, "path"))
-			load_cur_content(cur, trigger, path);
+			res = load_cur_content(cur, trigger, path);
+
+		if (res)
+			return -1;
 
 		cur = cur->next;
 	}
+
+	return 0;
 }
 
-static void parse_sender(xmlNodePtr cur, struct sender_t *sender)
+static int parse_sender(xmlNodePtr cur, struct sender_t *sender)
 {
+	int res = 0;
+
 	cur = cur->xmlChildrenNode;
 	while (cur) {
 		if (name_is(cur, "name"))
-			load_cur_content(cur, sender, name);
+			res = load_cur_content(cur, sender, name);
 		else if (name_is(cur, "outdir"))
-			load_cur_content(cur, sender, outdir);
+			res = load_cur_content(cur, sender, outdir);
 		else if (name_is(cur, "maxcrashdirs"))
-			load_cur_content(cur, sender, maxcrashdirs);
+			res = load_cur_content(cur, sender, maxcrashdirs);
 		else if (name_is(cur, "maxlines"))
-			load_cur_content(cur, sender, maxlines);
+			res = load_cur_content(cur, sender, maxlines);
 		else if (name_is(cur, "spacequota"))
-			load_cur_content(cur, sender, spacequota);
+			res = load_cur_content(cur, sender, spacequota);
 		else if (name_is(cur, "uptime"))
-			parse_uptime(cur, sender);
+			res = parse_uptime(cur, sender);
+
+		if (res)
+			return -1;
 
 		cur = cur->next;
 	}
+
+	return 0;
 }
 
-#define common_parse(node, mem) \
+#define common_parse(node, mem, maxmem) \
 (__extension__ \
 ({ \
 	int id; \
+	int _ret = 0; \
+	int res; \
 	struct mem##_t *mem; \
 \
 	node = node->xmlChildrenNode; \
 \
 	while (node) { \
 		if (is_enable(node)) { \
+			id = get_id_index(node, maxmem); \
+			if (id < 0) { \
+				_ret = -1; \
+				break; \
+			} \
+\
 			mem = malloc(sizeof(*mem)); \
+			if (!mem) { \
+				_ret = -1; \
+				break; \
+			} \
 			memset(mem, 0, sizeof(*mem)); \
-			id = get_id_index(node); \
 			conf.mem[id] = mem; \
-			parse_##mem(node, mem); \
+			res = parse_##mem(node, mem); \
+			if (res) { \
+				free(mem); \
+				_ret = -1; \
+				break; \
+			} \
 		} \
 		node = node->next; \
 	} \
+	_ret; \
 }) \
 )
 
-int load_conf(char *path)
+int load_conf(const char *path)
 {
+	int res = 0;
 	xmlDocPtr doc;
 	xmlNodePtr cur, node;
 
@@ -550,17 +678,20 @@ int load_conf(char *path)
 	cur = cur->xmlChildrenNode;
 	while ((node = cur)) {
 		if (name_is(node, "senders"))
-			common_parse(node, sender);
+			res = common_parse(node, sender, SENDER_MAX);
 		else if (name_is(node, "triggers"))
-			common_parse(node, trigger);
+			res = common_parse(node, trigger, TRIGGER_MAX);
 		else if (name_is(node, "vms"))
-			common_parse(node, vm);
+			res = common_parse(node, vm, VM_MAX);
 		else if (name_is(node, "crashes"))
-			parse_crashes(node);
+			res = parse_crashes(node);
 		else if (name_is(node, "logs"))
-			common_parse(node, log);
+			res = common_parse(node, log, LOG_MAX);
 		else if (name_is(node, "infos"))
-			common_parse(node, info);
+			res = common_parse(node, info, INFO_MAX);
+
+		if (res)
+			goto free;
 
 		cur = cur->next;
 	}

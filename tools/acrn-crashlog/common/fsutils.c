@@ -114,11 +114,12 @@ char *mm_get_line(struct mm_file_t *mfile, int line)
 
 	if (line <= 0 || line > mm_count_lines(mfile))
 		return NULL;
-	else if (line == 1)
+
+	if (line == 1)
 		ret = begin;
 	else {
 		next = begin;
-		for (i = 2; i <= line; i++)
+		for (i = 2; i <= line && next; i++)
 			next = strchr(next, '\n') + 1;
 		ret = next;
 	}
@@ -820,7 +821,7 @@ int read_full_binary_file(const char *path, unsigned long *size, void **data)
 	close_file(path, f);
 
 	*data = buf;
-	*size = (unsigned int)_size;
+	*size = (unsigned long)_size;
 
 	return 0;
 
@@ -1112,7 +1113,7 @@ int read_file(const char *path, unsigned long *size, void **data)
 	int len = 0;
 	int fd = 0;
 	int memsize = 1; /* for '\0' */
-	size_t result = 0;
+	ssize_t result = 0;
 	char *out = NULL;
 	char *new;
 
@@ -1129,6 +1130,8 @@ int read_file(const char *path, unsigned long *size, void **data)
 		result = read(fd, (void *)tmp, 1024);
 		if (result == 0)
 			break;
+		else if (result == -1)
+			goto free;
 
 		memsize += result;
 		new = realloc(out, memsize);
@@ -1145,7 +1148,7 @@ int read_file(const char *path, unsigned long *size, void **data)
 	close(fd);
 
 	*data = out;
-	*size = (unsigned int)len;
+	*size = (unsigned long)len;
 
 	return 0;
 

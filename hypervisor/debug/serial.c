@@ -38,7 +38,7 @@ int serial_init(void)
 		/* Allocate memory for generic control block of enabled UART */
 		sio_ports[index] = calloc(1, sizeof(struct uart));
 
-		if (!sio_ports[index]) {
+		if (sio_ports[index] == NULL) {
 			status = -ENOMEM;
 			break;
 		}
@@ -88,7 +88,7 @@ uint32_t serial_open(char *uart_id)
 	uart = get_uart_by_id(uart_id, &index);
 
 	if (uart != NULL && index < SERIAL_MAX_DEVS &&
-			sio_initialized[index] &&
+			sio_initialized[index] != 0U &&
 			(uart->open_flag == false)) {
 		/* Reset the buffer lock */
 		spinlock_init(&uart->buffer_lock);
@@ -142,7 +142,7 @@ int serial_get_rx_data(uint32_t uart_handle)
 
 	/* Place all the data available in RX FIFO, in circular buffer */
 	while ((data_avail = uart->tgt_uart->rx_data_is_avail(
-				uart->tgt_uart, &lsr_reg))) {
+				uart->tgt_uart, &lsr_reg)) != 0) {
 
 		/* Read the byte */
 		uart->tgt_uart->read(uart->tgt_uart, (void *)&ch, &bytes_read);
@@ -284,7 +284,7 @@ static int serial_putc(uint32_t uart_handle, int c)
 	/* Wait for TX hardware to be ready */
 	do {
 		busy = uart->tgt_uart->tx_is_busy(uart->tgt_uart);
-	} while (busy);
+	} while (busy != 0);
 
 	/* Transmit character */
 	uart->tgt_uart->write(uart->tgt_uart, &(c), &bytes_written);

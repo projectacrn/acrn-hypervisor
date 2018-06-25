@@ -143,14 +143,14 @@ int vmexit_handler(struct vcpu *vcpu)
 	vcpu->arch_vcpu.idt_vectoring_info =
 	    exec_vmread(VMX_IDT_VEC_INFO_FIELD);
 	/* Filter out HW exception & NMI */
-	if (vcpu->arch_vcpu.idt_vectoring_info & VMX_INT_INFO_VALID) {
+	if ((vcpu->arch_vcpu.idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
 		uint32_t vector_info = vcpu->arch_vcpu.idt_vectoring_info;
-		uint32_t vector = vector_info & 0xff;
+		uint32_t vector = vector_info & 0xffU;
 		uint32_t type = (vector_info & VMX_INT_TYPE_MASK) >> 8;
 		uint32_t err_code = 0;
 
 		if (type == VMX_INT_TYPE_HW_EXP) {
-			if (vector_info & VMX_INT_INFO_ERR_CODE_VALID)
+			if ((vector_info & VMX_INT_INFO_ERR_CODE_VALID) != 0U)
 				err_code = exec_vmread(VMX_IDT_VEC_ERROR_CODE);
 			vcpu_queue_exception(vcpu, vector, err_code);
 			vcpu->arch_vcpu.idt_vectoring_info = 0;
@@ -161,7 +161,7 @@ int vmexit_handler(struct vcpu *vcpu)
 	}
 
 	/* Calculate basic exit reason (low 16-bits) */
-	basic_exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFF;
+	basic_exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFFU;
 
 	/* Log details for exit */
 	pr_dbg("Exit Reason: 0x%016llx ", vcpu->arch_vcpu.exit_reason);
@@ -180,7 +180,7 @@ int vmexit_handler(struct vcpu *vcpu)
 	/* See if an exit qualification is necessary for this exit
 	 * handler
 	 */
-	if (dispatch->need_exit_qualification) {
+	if (dispatch->need_exit_qualification != 0U) {
 		/* Get exit qualification */
 		vcpu->arch_vcpu.exit_qualification =
 		    exec_vmread(VMX_EXIT_QUALIFICATION);
@@ -240,22 +240,22 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	static const int reg_trans_tab[] = {
-		[0] = VMX_MACHINE_T_GUEST_RAX_INDEX,
-		[1] = VMX_MACHINE_T_GUEST_RCX_INDEX,
-		[2] = VMX_MACHINE_T_GUEST_RDX_INDEX,
-		[3] = VMX_MACHINE_T_GUEST_RBX_INDEX,
+		[0] = CPU_CONTEXT_INDEX_RAX,
+		[1] = CPU_CONTEXT_INDEX_RCX,
+		[2] = CPU_CONTEXT_INDEX_RDX,
+		[3] = CPU_CONTEXT_INDEX_RBX,
 		[4] = 0xFF, /* for sp reg, should not be used, just for init */
-		[5] = VMX_MACHINE_T_GUEST_RBP_INDEX,
-		[6] = VMX_MACHINE_T_GUEST_RSI_INDEX,
-		[7] = VMX_MACHINE_T_GUEST_RDI_INDEX,
-		[8] = VMX_MACHINE_T_GUEST_R8_INDEX,
-		[9] = VMX_MACHINE_T_GUEST_R9_INDEX,
-		[10] = VMX_MACHINE_T_GUEST_R10_INDEX,
-		[11] = VMX_MACHINE_T_GUEST_R11_INDEX,
-		[12] = VMX_MACHINE_T_GUEST_R12_INDEX,
-		[13] = VMX_MACHINE_T_GUEST_R13_INDEX,
-		[14] = VMX_MACHINE_T_GUEST_R14_INDEX,
-		[15] = VMX_MACHINE_T_GUEST_R15_INDEX
+		[5] = CPU_CONTEXT_INDEX_RBP,
+		[6] = CPU_CONTEXT_INDEX_RSI,
+		[7] = CPU_CONTEXT_INDEX_RDI,
+		[8] = CPU_CONTEXT_INDEX_R8,
+		[9] = CPU_CONTEXT_INDEX_R9,
+		[10] = CPU_CONTEXT_INDEX_R10,
+		[11] = CPU_CONTEXT_INDEX_R11,
+		[12] = CPU_CONTEXT_INDEX_R12,
+		[13] = CPU_CONTEXT_INDEX_R13,
+		[14] = CPU_CONTEXT_INDEX_R14,
+		[15] = CPU_CONTEXT_INDEX_R15,
 	};
 	int idx = VM_EXIT_CR_ACCESS_REG_IDX(vcpu->arch_vcpu.exit_qualification);
 
@@ -306,7 +306,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	struct run_context *ctx_ptr;
 
 	val64 = exec_vmread(VMX_GUEST_CR4);
-	if (!(val64 & CR4_OSXSAVE)) {
+	if ((val64 & CR4_OSXSAVE) == 0U) {
 		vcpu_inject_gp(vcpu, 0);
 		return -1;
 	}
@@ -327,7 +327,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 			(ctx_ptr->guest_cpu_regs.regs.rdx << 32);
 
 	/*bit 0(x87 state) of XCR0 can't be cleared*/
-	if (!(val64 & 0x01)) {
+	if ((val64 & 0x01UL) == 0U) {
 		vcpu_inject_gp(vcpu, 0);
 		return -1;
 	}
@@ -336,7 +336,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	 *set to 10b as it is necessary to set both bits
 	 *to use AVX instructions.
 	 **/
-	if (((val64 >> 1) & 0x3) == 0x2) {
+	if (((val64 >> 1) & 0x3UL) == 0x2UL) {
 		vcpu_inject_gp(vcpu, 0);
 		return -1;
 	}

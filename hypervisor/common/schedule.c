@@ -13,7 +13,7 @@ void init_scheduler(void)
 {
 	int i;
 
-	for (i = 0; i < phy_cpu_num; i++) {
+	for (i = 0; i < phys_cpu_num; i++) {
 		spinlock_init(&per_cpu(sched_ctx, i).runqueue_lock);
 		spinlock_init(&per_cpu(sched_ctx, i).scheduler_lock);
 		INIT_LIST_HEAD(&per_cpu(sched_ctx, i).runqueue);
@@ -22,12 +22,12 @@ void init_scheduler(void)
 	}
 }
 
-void get_schedule_lock(int pcpu_id)
+void get_schedule_lock(uint16_t pcpu_id)
 {
 	spinlock_obtain(&per_cpu(sched_ctx, pcpu_id).scheduler_lock);
 }
 
-void release_schedule_lock(int pcpu_id)
+void release_schedule_lock(uint16_t pcpu_id)
 {
 	spinlock_release(&per_cpu(sched_ctx, pcpu_id).scheduler_lock);
 }
@@ -36,20 +36,20 @@ int allocate_pcpu(void)
 {
 	int i;
 
-	for (i = 0; i < phy_cpu_num; i++) {
+	for (i = 0; i < phys_cpu_num; i++) {
 		if (bitmap_test_and_set(i, &pcpu_used_bitmap) == 0)
 			return i;
 	}
 
-	return -1;
+	return INVALID_PCPU_ID;
 }
 
-void set_pcpu_used(int pcpu_id)
+void set_pcpu_used(uint16_t pcpu_id)
 {
 	bitmap_set(pcpu_id, &pcpu_used_bitmap);
 }
 
-void free_pcpu(int pcpu_id)
+void free_pcpu(uint16_t pcpu_id)
 {
 	bitmap_clear(pcpu_id, &pcpu_used_bitmap);
 }
@@ -74,7 +74,7 @@ void remove_vcpu_from_runqueue(struct vcpu *vcpu)
 	spinlock_release(&per_cpu(sched_ctx, pcpu_id).runqueue_lock);
 }
 
-static struct vcpu *select_next_vcpu(int pcpu_id)
+static struct vcpu *select_next_vcpu(uint16_t pcpu_id)
 {
 	struct vcpu *vcpu = NULL;
 
@@ -95,7 +95,7 @@ void make_reschedule_request(struct vcpu *vcpu)
 	send_single_ipi(vcpu->pcpu_id, VECTOR_NOTIFY_VCPU);
 }
 
-int need_reschedule(int pcpu_id)
+int need_reschedule(uint16_t pcpu_id)
 {
 	return bitmap_test_and_clear(NEED_RESCHEDULE,
 		&per_cpu(sched_ctx, pcpu_id).flags);
@@ -136,14 +136,14 @@ static void context_switch_in(struct vcpu *vcpu)
 	 */
 }
 
-void make_pcpu_offline(int pcpu_id)
+void make_pcpu_offline(uint16_t pcpu_id)
 {
 	bitmap_set(NEED_OFFLINE,
 		&per_cpu(sched_ctx, pcpu_id).flags);
 	send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
 }
 
-int need_offline(int pcpu_id)
+int need_offline(uint16_t pcpu_id)
 {
 	return bitmap_test_and_clear(NEED_OFFLINE,
 		&per_cpu(sched_ctx, pcpu_id).flags);
@@ -151,12 +151,12 @@ int need_offline(int pcpu_id)
 
 void default_idle(void)
 {
-	int pcpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_cpu_id();
 
 	while (1) {
-		if (need_reschedule(pcpu_id))
+		if (need_reschedule(pcpu_id) != 0)
 			schedule();
-		else if (need_offline(pcpu_id))
+		else if (need_offline(pcpu_id) != 0)
 			cpu_dead(pcpu_id);
 		else
 			__asm __volatile("pause" ::: "memory");
@@ -202,7 +202,7 @@ static void switch_to(struct vcpu *curr)
 
 void schedule(void)
 {
-	int pcpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_cpu_id();
 	struct vcpu *next = NULL;
 	struct vcpu *prev = per_cpu(sched_ctx, pcpu_id).curr_vcpu;
 

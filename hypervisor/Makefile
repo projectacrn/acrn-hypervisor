@@ -9,8 +9,6 @@ RC_VERSION=5
 API_MAJOR_VERSION=1
 API_MINOR_VERSION=0
 
-RELEASE ?= 0
-
 GCC_MAJOR=$(shell echo __GNUC__ | $(CC) -E -x c - | tail -n 1)
 GCC_MINOR=$(shell echo __GNUC_MINOR__ | $(CC) -E -x c - | tail -n 1)
 
@@ -18,7 +16,6 @@ GCC_MINOR=$(shell echo __GNUC_MINOR__ | $(CC) -E -x c - | tail -n 1)
 STACK_PROTECTOR := 1
 
 BASEDIR := $(shell pwd)
-PLATFORM ?= sbl
 HV_OBJDIR ?= $(CURDIR)/build
 HV_FILE := acrn
 
@@ -75,7 +72,7 @@ INCLUDE_PATH += include/debug
 INCLUDE_PATH += include/public
 INCLUDE_PATH += include/common
 INCLUDE_PATH += bsp/include
-INCLUDE_PATH += bsp/$(PLATFORM)/include/bsp
+INCLUDE_PATH += bsp/$(CONFIG_PLATFORM)/include/bsp
 INCLUDE_PATH += boot/include
 INCLUDE_PATH += $(HV_OBJDIR)/include
 
@@ -141,19 +138,20 @@ C_SRCS += common/trusty_hypercall.c
 C_SRCS += common/schedule.c
 C_SRCS += common/vm_load.c
 C_SRCS += common/io_request.c
+C_SRCS += common/ptdev.c
 
 ifdef STACK_PROTECTOR
 C_SRCS += common/stack_protector.c
 endif
 
-C_SRCS += bsp/$(PLATFORM)/vm_description.c
-C_SRCS += bsp/$(PLATFORM)/$(PLATFORM).c
-C_SRCS += bsp/$(PLATFORM)/platform_acpi_info.c
+C_SRCS += bsp/$(CONFIG_PLATFORM)/vm_description.c
+C_SRCS += bsp/$(CONFIG_PLATFORM)/$(CONFIG_PLATFORM).c
+C_SRCS += bsp/$(CONFIG_PLATFORM)/platform_acpi_info.c
 
-ifeq ($(PLATFORM),uefi)
-C_SRCS += bsp/$(PLATFORM)/cmdline.c
+ifeq ($(CONFIG_PLATFORM),uefi)
+C_SRCS += bsp/$(CONFIG_PLATFORM)/cmdline.c
 else
-ifeq ($(PLATFORM), sbl)
+ifeq ($(CONFIG_PLATFORM), sbl)
 C_SRCS += boot/sbl/multiboot.c
 C_SRCS += boot/sbl/hob_parse.c
 endif
@@ -173,31 +171,31 @@ endif
 endif
 
 C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(C_SRCS))
-ifeq ($(RELEASE),0)
+ifeq ($(CONFIG_RELEASE),n)
 C_OBJS += $(patsubst %.c,$(HV_OBJDIR)/%.o,$(D_SRCS))
 CFLAGS += -DHV_DEBUG
 endif
 S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(S_SRCS))
 
 DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
-VERSION := bsp/$(PLATFORM)/include/bsp/version.h
+VERSION := bsp/$(CONFIG_PLATFORM)/include/bsp/version.h
 
 .PHONY: all
-all: $(BUILD_DEPS) $(VERSION) oldconfig $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
+all: $(VERSION) $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 	rm -f $(VERSION)
 
-ifeq ($(PLATFORM), uefi)
+ifeq ($(CONFIG_PLATFORM), uefi)
 all: efi
 .PHONY: efi
 efi: $(HV_OBJDIR)/$(HV_FILE).bin
 	echo "building hypervisor as EFI executable..."
-	make -C bsp/uefi/efi HV_OBJDIR=$(HV_OBJDIR) RELEASE=$(RELEASE)
+	make -C bsp/uefi/efi HV_OBJDIR=$(HV_OBJDIR)
 
 install: efi
-	make -C bsp/uefi/efi HV_OBJDIR=$(HV_OBJDIR) RELEASE=$(RELEASE) install
+	make -C bsp/uefi/efi HV_OBJDIR=$(HV_OBJDIR) install
 endif
 
-ifeq ($(PLATFORM), sbl)
+ifeq ($(CONFIG_PLATFORM), sbl)
 install: $(VERSION) $(HV_OBJDIR)/$(HV_FILE).32.out
 	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).sbl
 endif
@@ -235,7 +233,7 @@ $(VERSION):
 	DIRTY=`git diff-index --name-only HEAD`;\
 	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
 	TIME=`date "+%F %T"`;\
-	if [ $(RELEASE) = 0 ];then BUILD_TYPE="DBG";else BUILD_TYPE="REL";fi;\
+	if [ $(CONFIG_RELEASE) = "n" ];then BUILD_TYPE="DBG";else BUILD_TYPE="REL";fi;\
 	echo "/*" > $(VERSION); \
 	sed 's/^/ * /' ../LICENSE >> $(VERSION); \
 	echo " */" >> $(VERSION); \

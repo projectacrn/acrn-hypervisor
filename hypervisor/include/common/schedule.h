@@ -19,12 +19,12 @@ struct sched_context {
 };
 
 void init_scheduler(void);
-void get_schedule_lock(int pcpu_id);
-void release_schedule_lock(int pcpu_id);
+void get_schedule_lock(uint16_t pcpu_id);
+void release_schedule_lock(uint16_t pcpu_id);
 
-void set_pcpu_used(int pcpu_id);
+void set_pcpu_used(uint16_t pcpu_id);
 int allocate_pcpu(void);
-void free_pcpu(int pcpu_id);
+void free_pcpu(uint16_t pcpu_id);
 
 void add_vcpu_to_runqueue(struct vcpu *vcpu);
 void remove_vcpu_from_runqueue(struct vcpu *vcpu);
@@ -32,9 +32,9 @@ void remove_vcpu_from_runqueue(struct vcpu *vcpu);
 void default_idle(void);
 
 void make_reschedule_request(struct vcpu *vcpu);
-int need_reschedule(int pcpu_id);
-void make_pcpu_offline(int pcpu_id);
-int need_offline(int pcpu_id);
+int need_reschedule(uint16_t pcpu_id);
+void make_pcpu_offline(uint16_t pcpu_id);
+int need_offline(uint16_t pcpu_id);
 
 void schedule(void);
 

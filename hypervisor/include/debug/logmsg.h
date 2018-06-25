@@ -17,8 +17,8 @@
 #define LOG_DEBUG		6
 
 /* Logging flags */
-#define LOG_FLAG_STDOUT		0x00000001
-#define LOG_FLAG_MEMORY		0x00000002
+#define LOG_FLAG_STDOUT		0x00000001U
+#define LOG_FLAG_MEMORY		0x00000002U
 #define LOG_ENTRY_SIZE	80
 /* Size of buffer used to store a message being logged,
  * should align to LOG_ENTRY_SIZE.

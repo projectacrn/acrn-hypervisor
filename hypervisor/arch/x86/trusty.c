@@ -117,10 +117,10 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	map_params.pml4_base = pml4_base;
 	map_mem(&map_params, (void *)hpa,
 			(void *)gpa_rebased, size,
-			(MMU_MEM_ATTR_READ |
-			 MMU_MEM_ATTR_WRITE |
-			 MMU_MEM_ATTR_EXECUTE |
-			 MMU_MEM_ATTR_WB_CACHE));
+			(IA32E_EPT_R_BIT |
+			 IA32E_EPT_W_BIT |
+			 IA32E_EPT_X_BIT |
+			 IA32E_EPT_WB));
 
 	/* Unmap trusty memory space from sos ept mapping*/
 	map_params.pml4_base = HPA2HVA(vm0->arch_vm.nworld_eptp);
@@ -166,10 +166,10 @@ void  destroy_secure_world(struct vm *vm)
 	map_mem(&map_params, (void *)vm->sworld_control.sworld_memory.base_hpa,
 			(void *)vm->sworld_control.sworld_memory.base_gpa,
 			vm->sworld_control.sworld_memory.length,
-			(MMU_MEM_ATTR_READ |
-			 MMU_MEM_ATTR_WRITE |
-			 MMU_MEM_ATTR_EXECUTE |
-			 MMU_MEM_ATTR_WB_CACHE));
+			(IA32E_EPT_R_BIT |
+			 IA32E_EPT_W_BIT |
+			 IA32E_EPT_X_BIT |
+			 IA32E_EPT_WB));
 
 }
 
@@ -177,8 +177,10 @@ static void save_world_ctx(struct run_context *context)
 {
 	/* VMCS GUEST field */
 	/* TSC_OFFSET, CR3, RIP, RSP, RFLAGS already saved on VMEXIT */
-	context->cr0 = exec_vmread(VMX_GUEST_CR0);
-	context->cr4 = exec_vmread(VMX_GUEST_CR4);
+	context->cr0 = exec_vmread(VMX_CR0_READ_SHADOW);
+	context->cr4 = exec_vmread(VMX_CR4_READ_SHADOW);
+	context->vmx_cr0 = exec_vmread(VMX_GUEST_CR0);
+	context->vmx_cr4 = exec_vmread(VMX_GUEST_CR4);
 	context->dr7 = exec_vmread(VMX_GUEST_DR7);
 	context->ia32_debugctl = exec_vmread64(VMX_GUEST_IA32_DEBUGCTL_FULL);
 	context->ia32_pat = exec_vmread64(VMX_GUEST_IA32_PAT_FULL);
@@ -217,9 +219,11 @@ static void load_world_ctx(struct run_context *context)
 	exec_vmwrite64(VMX_TSC_OFFSET_FULL, context->tsc_offset);
 
 	/* VMCS GUEST field */
-	exec_vmwrite(VMX_GUEST_CR0, context->cr0);
+	exec_vmwrite(VMX_CR0_READ_SHADOW, context->cr0);
 	exec_vmwrite(VMX_GUEST_CR3, context->cr3);
-	exec_vmwrite(VMX_GUEST_CR4, context->cr4);
+	exec_vmwrite(VMX_CR4_READ_SHADOW, context->cr4);
+	exec_vmwrite(VMX_GUEST_CR0, context->vmx_cr0);
+	exec_vmwrite(VMX_GUEST_CR4, context->vmx_cr4);
 	exec_vmwrite(VMX_GUEST_RIP, context->rip);
 	exec_vmwrite(VMX_GUEST_RSP, context->rsp);
 	exec_vmwrite(VMX_GUEST_RFLAGS, context->rflags);
@@ -280,10 +284,10 @@ void switch_world(struct vcpu *vcpu, int next_world)
 	/* load EPTP for next world */
 	if (next_world == NORMAL_WORLD) {
 		exec_vmwrite64(VMX_EPT_POINTER_FULL,
-			vcpu->vm->arch_vm.nworld_eptp | (3<<3) | 6);
+			vcpu->vm->arch_vm.nworld_eptp | (3UL<<3) | 6UL);
 	} else {
 		exec_vmwrite64(VMX_EPT_POINTER_FULL,
-			vcpu->vm->arch_vm.sworld_eptp | (3<<3) | 6);
+			vcpu->vm->arch_vm.sworld_eptp | (3UL<<3) | 6UL);
 	}
 
 	/* Update world index */
@@ -311,12 +315,12 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 	/* Derive dvseed from dseed for Trusty */
 	key_info = &mem->first_page.data.key_info;
 	for (i = 0; i < g_key_info.num_seeds; i++) {
-		if (!hkdf_sha256(key_info->dseed_list[i].seed,
+		if (hkdf_sha256(key_info->dseed_list[i].seed,
 				BUP_MKHI_BOOTLOADER_SEED_LEN,
 				g_key_info.dseed_list[i].seed,
 				BUP_MKHI_BOOTLOADER_SEED_LEN,
 				NULL, 0,
-				vcpu->vm->GUID, sizeof(vcpu->vm->GUID))) {
+				vcpu->vm->GUID, sizeof(vcpu->vm->GUID)) == 0) {
 			memset(key_info, 0, sizeof(struct key_info));
 			pr_err("%s: derive dvseed failed!", __func__);
 			return false;
@@ -358,9 +362,17 @@ static bool init_secure_world_env(struct vcpu *vcpu,
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].tsc_offset = 0;
 
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].cr0 =
-		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr0;
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr0 =
+		exec_vmread(VMX_CR0_READ_SHADOW);
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].cr4 =
-		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr4;
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr4 =
+		exec_vmread(VMX_CR4_READ_SHADOW);
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].vmx_cr0 =
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].vmx_cr0 =
+		exec_vmread(VMX_GUEST_CR0);
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].vmx_cr4 =
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].vmx_cr4 =
+		exec_vmread(VMX_GUEST_CR4);
 
 	exec_vmwrite(VMX_GUEST_RSP,
 		TRUSTY_EPT_REBASE_GPA + size);
@@ -390,12 +402,12 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 		return false;
 	}
 
-	if (!boot_param->entry_point) {
+	if (boot_param->entry_point == 0) {
 		pr_err("%s: Invalid entry point\n", __func__);
 		return false;
 	}
 
-	if (!boot_param->base_addr) {
+	if (boot_param->base_addr == 0) {
 		pr_err("%s: Invalid memory base address\n", __func__);
 		return false;
 	}
@@ -408,7 +420,7 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 	trusty_base_hpa = vm->sworld_control.sworld_memory.base_hpa;
 
 	exec_vmwrite64(VMX_EPT_POINTER_FULL,
-			vm->arch_vm.sworld_eptp | (3<<3) | 6);
+			vm->arch_vm.sworld_eptp | (3UL<<3) | 6UL);
 
 	/* save Normal World context */
 	save_world_ctx(&vcpu->arch_vcpu.contexts[NORMAL_WORLD]);

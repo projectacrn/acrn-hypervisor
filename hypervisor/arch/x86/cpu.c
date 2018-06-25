@@ -23,7 +23,7 @@ spinlock_t up_count_spinlock = {
 };
 
 struct per_cpu_region *per_cpu_data_base_ptr;
-int phy_cpu_num = 0;
+uint16_t phys_cpu_num = 0U;
 unsigned long pcpu_sync = 0;
 volatile uint32_t up_count = 0;
 
@@ -34,12 +34,12 @@ uint64_t trampoline_start16_paddr;
 
 /* TODO: add more capability per requirement */
 /*APICv features*/
-#define VAPIC_FEATURE_VIRT_ACCESS		(1 << 0)
-#define VAPIC_FEATURE_VIRT_REG			(1 << 1)
-#define VAPIC_FEATURE_INTR_DELIVERY		(1 << 2)
-#define VAPIC_FEATURE_TPR_SHADOW		(1 << 3)
-#define VAPIC_FEATURE_POST_INTR		(1 << 4)
-#define VAPIC_FEATURE_VX2APIC_MODE		(1 << 5)
+#define VAPIC_FEATURE_VIRT_ACCESS		(1U << 0)
+#define VAPIC_FEATURE_VIRT_REG			(1U << 1)
+#define VAPIC_FEATURE_INTR_DELIVERY		(1U << 2)
+#define VAPIC_FEATURE_TPR_SHADOW		(1U << 3)
+#define VAPIC_FEATURE_POST_INTR		(1U << 4)
+#define VAPIC_FEATURE_VX2APIC_MODE		(1U << 5)
 
 struct cpu_capability {
 	uint8_t vapic_features;
@@ -48,6 +48,8 @@ static struct cpu_capability cpu_caps;
 
 struct cpuinfo_x86 boot_cpu_data;
 
+static void bsp_boot_post(void);
+static void cpu_secondary_post(void);
 static void vapic_cap_detect(void);
 static void cpu_xsave_init(void);
 static void cpu_set_logical_id(uint32_t logical_id);
@@ -55,11 +57,22 @@ static void print_hv_banner(void);
 int cpu_find_logical_id(uint32_t lapic_id);
 static void pcpu_sync_sleep(unsigned long *sync, int mask_bit);
 int ibrs_type;
+static uint64_t __attribute__((__section__(".bss_noinit"))) start_tsc;
+
+/* Push sp magic to top of stack for call trace */
+#define SWITCH_TO(rsp, to)                                              \
+{                                                                       \
+	asm volatile ("movq %0, %%rsp\n"                                \
+			"pushq %1\n"                                    \
+			"call %2\n"                                     \
+			 :                                              \
+			 : "r"(rsp), "rm"(SP_BOTTOM_MAGIC), "a"(to));   \
+}
 
 inline bool cpu_has_cap(uint32_t bit)
 {
 	int feat_idx = bit >> 5;
-	int feat_bit = bit & 0x1f;
+	uint32_t feat_bit = bit & 0x1fU;
 
 	if (feat_idx >= FEATURE_WORDS)
 		return false;
@@ -83,7 +96,7 @@ static inline bool get_monitor_cap(void)
 
 static uint64_t get_address_mask(uint8_t limit)
 {
-	return ((1ULL << limit) - 1) & CPU_PAGE_MASK;
+	return ((1UL << limit) - 1UL) & CPU_PAGE_MASK;
 }
 
 static void get_cpu_capabilities(void)
@@ -98,14 +111,14 @@ static void get_cpu_capabilities(void)
 	cpuid(CPUID_FEATURES, &eax, &unused,
 		&boot_cpu_data.cpuid_leaves[FEAT_1_ECX],
 		&boot_cpu_data.cpuid_leaves[FEAT_1_EDX]);
-	family = (eax >> 8) & 0xff;
-	if (family == 0xF)
-		family += (eax >> 20) & 0xff;
+	family = (eax >> 8) & 0xffU;
+	if (family == 0xFU)
+		family += (eax >> 20) & 0xffU;
 	boot_cpu_data.x86 = family;
 
-	model = (eax >> 4) & 0xf;
-	if (family >= 0x06)
-		model += ((eax >> 16) & 0xf) << 4;
+	model = (eax >> 4) & 0xfU;
+	if (family >= 0x06U)
+		model += ((eax >> 16) & 0xfU) << 4;
 	boot_cpu_data.x86_model = model;
 
 
@@ -131,8 +144,8 @@ static void get_cpu_capabilities(void)
 			/* EAX bits 07-00: #Physical Address Bits
 			 *     bits 15-08: #Linear Address Bits
 			 */
-			boot_cpu_data.x86_virt_bits = (eax >> 8) & 0xff;
-			boot_cpu_data.x86_phys_bits = eax & 0xff;
+			boot_cpu_data.x86_virt_bits = (eax >> 8) & 0xffU;
+			boot_cpu_data.x86_phys_bits = eax & 0xffU;
 			boot_cpu_data.physical_address_mask =
 				get_address_mask(boot_cpu_data.x86_phys_bits);
 	}
@@ -217,16 +230,16 @@ static int hardware_detect_support(void)
 	}
 
 	ret = check_vmx_mmu_cap();
-	if (ret)
+	if (ret != 0)
 		return ret;
 
 	pr_acrnlog("hardware support HV");
 	return 0;
 }
 
-static void alloc_phy_cpu_data(int pcpu_num)
+static void alloc_phy_cpu_data(uint16_t pcpu_num)
 {
-	phy_cpu_num = pcpu_num;
+	phys_cpu_num = pcpu_num;
 
 	per_cpu_data_base_ptr = calloc(pcpu_num, sizeof(struct per_cpu_region));
 	ASSERT(per_cpu_data_base_ptr != NULL, "");
@@ -245,7 +258,8 @@ int __attribute__((weak)) parse_madt(uint8_t *lapic_id_base)
 
 static int init_phy_cpu_storage(void)
 {
-	int i, pcpu_num = 0;
+	int i;
+	uint16_t pcpu_num=0U;
 	int bsp_cpu_id;
 	uint8_t bsp_lapic_id = 0;
 	uint8_t *lapic_id_base;
@@ -341,10 +355,14 @@ static void get_cpu_name(void)
 	boot_cpu_data.model_name[48] = '\0';
 }
 
+/* NOTE: this function is using temp stack, and after SWITCH_TO(runtime_sp, to)
+ * it will switch to runtime stack.
+ */
 void bsp_boot_init(void)
 {
-	int ret;
-	uint64_t start_tsc = rdtsc();
+	uint64_t rsp;
+
+	start_tsc = rdtsc();
 
 	/* Clear BSS */
 	memset(_ld_bss_start, 0, _ld_bss_end - _ld_bss_start);
@@ -358,55 +376,55 @@ void bsp_boot_init(void)
 
 	ASSERT(NR_WORLD == 2, "Only 2 Worlds supported!");
 	ASSERT(offsetof(struct cpu_regs, rax) ==
-		VMX_MACHINE_T_GUEST_RAX_OFFSET,
+		CPU_CONTEXT_OFFSET_RAX,
 		"cpu_regs rax offset not match");
 	ASSERT(offsetof(struct cpu_regs, rbx) ==
-		VMX_MACHINE_T_GUEST_RBX_OFFSET,
+		CPU_CONTEXT_OFFSET_RBX,
 		"cpu_regs rbx offset not match");
 	ASSERT(offsetof(struct cpu_regs, rcx) ==
-		VMX_MACHINE_T_GUEST_RCX_OFFSET,
+		CPU_CONTEXT_OFFSET_RCX,
 		"cpu_regs rcx offset not match");
 	ASSERT(offsetof(struct cpu_regs, rdx) ==
-		VMX_MACHINE_T_GUEST_RDX_OFFSET,
+		CPU_CONTEXT_OFFSET_RDX,
 		"cpu_regs rdx offset not match");
 	ASSERT(offsetof(struct cpu_regs, rbp) ==
-		VMX_MACHINE_T_GUEST_RBP_OFFSET,
+		CPU_CONTEXT_OFFSET_RBP,
 		"cpu_regs rbp offset not match");
 	ASSERT(offsetof(struct cpu_regs, rsi) ==
-		VMX_MACHINE_T_GUEST_RSI_OFFSET,
+		CPU_CONTEXT_OFFSET_RSI,
 		"cpu_regs rsi offset not match");
 	ASSERT(offsetof(struct cpu_regs, rdi) ==
-		VMX_MACHINE_T_GUEST_RDI_OFFSET,
+		CPU_CONTEXT_OFFSET_RDI,
 		"cpu_regs rdi offset not match");
 	ASSERT(offsetof(struct cpu_regs, r8) ==
-		VMX_MACHINE_T_GUEST_R8_OFFSET,
+		CPU_CONTEXT_OFFSET_R8,
 		"cpu_regs r8 offset not match");
 	ASSERT(offsetof(struct cpu_regs, r9) ==
-		VMX_MACHINE_T_GUEST_R9_OFFSET,
+		CPU_CONTEXT_OFFSET_R9,
 		"cpu_regs r9 offset not match");
 	ASSERT(offsetof(struct cpu_regs, r10) ==
-		VMX_MACHINE_T_GUEST_R10_OFFSET,
+		CPU_CONTEXT_OFFSET_R10,
 		"cpu_regs r10 offset not match");
 	ASSERT(offsetof(struct cpu_regs, r11) ==
-		VMX_MACHINE_T_GUEST_R11_OFFSET,
+		CPU_CONTEXT_OFFSET_R11,
 		"cpu_regs r11 offset not match");
 	ASSERT(offsetof(struct cpu_regs, r12) ==
-		VMX_MACHINE_T_GUEST_R12_OFFSET,
+		CPU_CONTEXT_OFFSET_R12,
 		"cpu_regs r12 offset not match");
 	ASSERT(offsetof(struct cpu_regs, r13) ==
-		VMX_MACHINE_T_GUEST_R13_OFFSET,
+		CPU_CONTEXT_OFFSET_R13,
 		"cpu_regs r13 offset not match");
 	ASSERT(offsetof(struct cpu_regs, r14) ==
-		VMX_MACHINE_T_GUEST_R14_OFFSET,
+		CPU_CONTEXT_OFFSET_R14,
 		"cpu_regs r14 offset not match");
 	ASSERT(offsetof(struct cpu_regs, r15) ==
-		VMX_MACHINE_T_GUEST_R15_OFFSET,
+		CPU_CONTEXT_OFFSET_R15,
 		"cpu_regs r15 offset not match");
 	ASSERT(offsetof(struct run_context, cr2) ==
-		VMX_MACHINE_T_GUEST_CR2_OFFSET,
+		CPU_CONTEXT_OFFSET_CR2,
 		"run_context cr2 offset not match");
 	ASSERT(offsetof(struct run_context, ia32_spec_ctrl) ==
-		VMX_MACHINE_T_GUEST_SPEC_CTRL_OFFSET,
+		CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL,
 		"run_context ia32_spec_ctrl offset not match");
 
 	__bitmap_set(CPU_BOOT_ID, &pcpu_active_bitmap);
@@ -430,8 +448,13 @@ void bsp_boot_init(void)
 	load_gdtr_and_tr();
 
 	/* Switch to run-time stack */
-	CPU_SP_WRITE(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
+	rsp = (uint64_t)(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
+	rsp &= ~(CPU_STACK_ALIGN - 1UL);
+	SWITCH_TO(rsp, bsp_boot_post);
+}
 
+static void bsp_boot_post(void)
+{
 #ifdef STACK_PROTECTOR
 	set_fs_base();
 #endif
@@ -465,7 +488,7 @@ void bsp_boot_init(void)
 	init_logmsg(CONFIG_LOG_BUF_SIZE,
 		       CONFIG_LOG_DESTINATION);
 
-	if (HV_RC_VERSION)
+	if (HV_RC_VERSION != 0)
 		pr_acrnlog("HV version %d.%d-rc%d-%s-%s %s build by %s, start time %lluus",
 			HV_MAJOR_VERSION, HV_MINOR_VERSION, HV_RC_VERSION,
 			HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_TYPE,
@@ -495,6 +518,8 @@ void bsp_boot_init(void)
 		pr_fatal("Please apply the latest CPU uCode patch!");
 	}
 
+	enable_smep();
+
 	/* Initialize the shell */
 	shell_init();
 
@@ -523,38 +548,32 @@ void bsp_boot_init(void)
 	console_setup_timer();
 
 	/* Start initializing the VM for this CPU */
-	ret = hv_main(CPU_BOOT_ID);
-	if (ret != 0)
+	if (hv_main(CPU_BOOT_ID) != 0)
 		panic("failed to start VM for bsp\n");
 
 	/* Control should not come here */
 	cpu_dead(CPU_BOOT_ID);
 }
 
+/* NOTE: this function is using temp stack, and after SWITCH_TO(runtime_sp, to)
+ * it will switch to runtime stack.
+ */
 void cpu_secondary_init(void)
 {
-	int ret;
-	/* NOTE: Use of local / stack variables in this function is problematic
-	 * since the stack is switched in the middle of the function.  For this
-	 * reason, the logical id is only temporarily stored in a static
-	 * variable, but this will be over-written once subsequent CPUs
-	 * start-up.  Once the spin-lock is released, the cpu_logical_id_get()
-	 * API is used to obtain the logical ID
-	 */
+	uint64_t rsp;
 
 	/* Switch this CPU to use the same page tables set-up by the
 	 * primary/boot CPU
 	 */
 	enable_paging(get_paging_pml4());
+
+	enable_smep();
+
 	early_init_lapic();
 
 	/* Find the logical ID of this CPU given the LAPIC ID
-	 * temp_logical_id =
-	 * cpu_find_logical_id(get_cur_lapic_id());
+	 * and Set state for this CPU to initializing
 	 */
-	cpu_find_logical_id(get_cur_lapic_id());
-
-	/* Set state for this CPU to initializing */
 	cpu_set_current_state(cpu_find_logical_id
 			      (get_cur_lapic_id()),
 			      CPU_STATE_INITIALIZING);
@@ -562,7 +581,19 @@ void cpu_secondary_init(void)
 	__bitmap_set(get_cpu_id(), &pcpu_active_bitmap);
 
 	/* Switch to run-time stack */
-	CPU_SP_WRITE(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
+	rsp = (uint64_t)(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
+	rsp &= ~(CPU_STACK_ALIGN - 1UL);
+	SWITCH_TO(rsp, cpu_secondary_post);
+}
+
+static void cpu_secondary_post(void)
+{
+	int ret;
+
+	/* Release secondary boot spin-lock to allow one of the next CPU(s) to
+	 * perform this common initialization
+	 */
+	spinlock_release(&trampoline_spinlock);
 
 #ifdef STACK_PROTECTOR
 	set_fs_base();
@@ -576,11 +607,6 @@ void cpu_secondary_init(void)
 	pr_dbg("Core %d is up", get_cpu_id());
 
 	cpu_xsave_init();
-
-	/* Release secondary boot spin-lock to allow one of the next CPU(s) to
-	 * perform this common initialization
-	 */
-	spinlock_release(&trampoline_spinlock);
 
 	/* Initialize secondary processor interrupts. */
 	interrupt_init(get_cpu_id());
@@ -604,7 +630,7 @@ int cpu_find_logical_id(uint32_t lapic_id)
 {
 	int i;
 
-	for (i = 0; i < phy_cpu_num; i++) {
+	for (i = 0; i < phys_cpu_num; i++) {
 		if (per_cpu(lapic_id, i) == lapic_id)
 			return i;
 	}
@@ -628,10 +654,10 @@ static void update_trampoline_code_refs(uint64_t dest_pa)
 	val = dest_pa + (uint64_t)trampoline_fixup_target;
 
 	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_fixup_cs);
-	*(uint16_t *)(ptr) = (uint16_t)(val >> 4) & 0xFFFF;
+	*(uint16_t *)(ptr) = (uint16_t)(val >> 4) & 0xFFFFU;
 
 	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_fixup_ip);
-	*(uint16_t *)(ptr) = (uint16_t)(val & 0xf);
+	*(uint16_t *)(ptr) = (uint16_t)(val & 0xfU);
 
 	/* Update temporary page tables */
 	ptr = HPA2HVA(dest_pa + (uint64_t)CPU_Boot_Page_Tables_ptr);
@@ -688,7 +714,7 @@ void start_cpus()
 	/* Set flag showing number of CPUs expected to be up to all
 	 * cpus
 	 */
-	expected_up = phy_cpu_num;
+	expected_up = phys_cpu_num;
 
 	/* Broadcast IPIs to all other CPUs */
 	send_startup_ipi(INTR_CPU_STARTUP_ALL_EX_SELF,
@@ -723,7 +749,7 @@ void stop_cpus()
 	uint32_t timeout, expected_up;
 
 	timeout = CONFIG_CPU_UP_TIMEOUT * 1000;
-	for (i = 0; i < phy_cpu_num; i++) {
+	for (i = 0; i < phys_cpu_num; i++) {
 		if (get_cpu_id() == i)	/* avoid offline itself */
 			continue;
 
@@ -781,7 +807,7 @@ void cpu_dead(uint32_t logical_id)
 	/* Halt the CPU */
 	do {
 		asm volatile ("hlt");
-	} while (halt);
+	} while (halt != 0);
 }
 
 static void cpu_set_logical_id(uint32_t logical_id)
@@ -907,7 +933,7 @@ static void cpu_xsave_init(void)
 			cpuid(CPUID_FEATURES, &unused, &unused, &ecx, &unused);
 
 			/* if set, update it */
-			if (ecx & CPUID_ECX_OSXSAVE)
+			if ((ecx & CPUID_ECX_OSXSAVE) != 0U)
 				boot_cpu_data.cpuid_leaves[FEAT_1_ECX] |=
 						CPUID_ECX_OSXSAVE;
 		}

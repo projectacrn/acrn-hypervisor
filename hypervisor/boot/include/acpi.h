@@ -28,7 +28,7 @@ struct acpi_table_header {
 	uint32_t                asl_compiler_revision;
 };
 
-int parse_madt(uint8_t *lapic_id_base);
+uint16_t parse_madt(uint8_t *lapic_id_base);
 
 void *get_dmar_table(void);
 #endif /* !ACPI_H */

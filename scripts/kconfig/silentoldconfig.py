@@ -44,7 +44,7 @@ def main():
         if sym_val.find("=") == -1:
             continue
         sym_name, val = sym_val.split("=")[:2]
-        if sym_name in kconfig.syms.keys():
+        if sym_name in kconfig.syms.keys() and val:
             cmdline_conf[sym_name] = val
 
     # Check if the old .config conflicts with those specified on cmdline

@@ -35,7 +35,7 @@ enum {
 struct vhm_request;
 
 int acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req);
-int get_req_info(char *str, int str_max);
+void get_req_info(char *str, int str_max);
 
 /*
  * VCPU related APIs
@@ -97,7 +97,7 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa, uint32_t *err_code);
 
 struct vcpu *get_primary_vcpu(struct vm *vm);
 struct vcpu *vcpu_from_vid(struct vm *vm, int vcpu_id);
-struct vcpu *vcpu_from_pid(struct vm *vm, int pcpu_id);
+struct vcpu *vcpu_from_pid(struct vm *vm, uint16_t pcpu_id);
 
 enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu);
 

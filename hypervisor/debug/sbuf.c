@@ -45,13 +45,13 @@ struct shared_buf *sbuf_allocate(uint32_t ele_num, uint32_t ele_size)
 	struct shared_buf *sbuf;
 	uint32_t sbuf_allocate_size;
 
-	if (!ele_num || !ele_size) {
+	if (ele_num == 0U || ele_size == 0U) {
 		pr_err("%s invalid parameter!", __func__);
 		return NULL;
 	}
 
 	sbuf_allocate_size = sbuf_calculate_allocate_size(ele_num, ele_size);
-	if (!sbuf_allocate_size)
+	if (sbuf_allocate_size == 0U)
 		return NULL;
 
 	sbuf = calloc(1, sbuf_allocate_size);
@@ -133,7 +133,7 @@ int sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 	if (next_tail == sbuf->head) {
 		/* accumulate overrun count if necessary */
 		sbuf->overrun_cnt += sbuf->flags & OVERRUN_CNT_EN;
-		if (!(sbuf->flags & OVERWRITE_EN)) {
+		if ((sbuf->flags & OVERWRITE_EN) == 0U) {
 			/* if not enable over write, return here. */
 			return 0;
 		}
@@ -153,9 +153,9 @@ int sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 	return sbuf->ele_size;
 }
 
-int sbuf_share_setup(uint32_t pcpu_id, uint32_t sbuf_id, uint64_t *hva)
+int sbuf_share_setup(uint16_t pcpu_id, uint32_t sbuf_id, uint64_t *hva)
 {
-	if (pcpu_id >= (uint32_t) phy_cpu_num ||
+	if (pcpu_id >= phys_cpu_num ||
 			sbuf_id >= ACRN_SBUF_ID_MAX)
 		return -EINVAL;
 

@@ -19,18 +19,16 @@ typedef struct _spinlock {
 } spinlock_t;
 
 /* Function prototypes */
-int spinlock_init(spinlock_t *lock);
-int spinlock_obtain(spinlock_t *lock);
+void spinlock_init(spinlock_t *lock);
+void spinlock_obtain(spinlock_t *lock);
 
-static inline int spinlock_release(spinlock_t *lock)
+static inline void spinlock_release(spinlock_t *lock)
 {
 	/* Increment tail of queue */
 	asm volatile ("   lock incl %[tail]\n"
 				:
 				: [tail] "m" (lock->tail)
 				: "cc", "memory");
-
-	return 0;
 }
 
 #else /* ASSEMBLER */

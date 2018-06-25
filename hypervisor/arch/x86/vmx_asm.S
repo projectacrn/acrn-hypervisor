@@ -11,6 +11,23 @@
 #include <cpu.h>
 #include <types.h>
 
+/* NOTE:
+ *
+ * MISRA C requires that all unsigned constants should have the suffix 'U'
+ * (e.g. 0xffU), but the assembler may not accept such C-style constants. For
+ * example, binutils 2.26 fails to compile assembly in that case. To work this
+ * around, all unsigned constants must be explicitly spells out in assembly
+ * with a comment tracking the original expression from which the magic
+ * number is calculated. As an example:
+ *
+ *    /* 0x00000668 =
+ *     *    (CR4_DE | CR4_PAE | CR4_MCE | CR4_OSFXSR | CR4_OSXMMEXCPT) *\/
+ *    movl    $0x00000668, %eax
+ *
+ * Make sure that these numbers are updated accordingly if the definition of
+ * the macros involved are changed.
+ */
+
     .text
 
 /*int vmx_vmrun(struct run_context *context, int launch, int ibrs_type) */
@@ -40,15 +57,19 @@ vmx_vmrun:
     cmp         $IBRS_NONE,%rdx
     je          next
 
-    movl        $MSR_IA32_SPEC_CTRL,%ecx
-    mov         VMX_MACHINE_T_GUEST_SPEC_CTRL_OFFSET(%rdi),%rax
+    /* 0x00000048 = MSR_IA32_SPEC_CTRL */
+    movl        $0x00000048,%ecx
+    mov         CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL(%rdi),%rax
     movl        $0,%edx
     wrmsr
 
 next:
 
-    /* Load VMCS_HOST_RSP_FIELD field value */
-    mov         $VMX_HOST_RSP,%rdx
+    /* Load VMCS_HOST_RSP_FIELD field value
+     *
+     *     0x00006c14 = VMX_HOST_RSP
+     */
+    mov         $0x00006c14,%rdx
 
     /* Write the current stack pointer to the VMCS_HOST_RSP_FIELD */
     vmwrite     %rsp,%rdx
@@ -59,25 +80,25 @@ next:
     /* Compare the launch flag to see if launching (1) or resuming (0) */
     cmp         $VM_LAUNCH, %rsi
 
-    mov         VMX_MACHINE_T_GUEST_CR2_OFFSET(%rdi),%rax
+    mov         CPU_CONTEXT_OFFSET_CR2(%rdi),%rax
     mov         %rax,%cr2
 
-    mov         VMX_MACHINE_T_GUEST_RAX_OFFSET(%rdi),%rax
-    mov         VMX_MACHINE_T_GUEST_RBX_OFFSET(%rdi),%rbx
-    mov         VMX_MACHINE_T_GUEST_RCX_OFFSET(%rdi),%rcx
-    mov         VMX_MACHINE_T_GUEST_RDX_OFFSET(%rdi),%rdx
-    mov         VMX_MACHINE_T_GUEST_RBP_OFFSET(%rdi),%rbp
-    mov         VMX_MACHINE_T_GUEST_RSI_OFFSET(%rdi),%rsi
-    mov         VMX_MACHINE_T_GUEST_R8_OFFSET(%rdi),%r8
-    mov         VMX_MACHINE_T_GUEST_R9_OFFSET(%rdi),%r9
-    mov         VMX_MACHINE_T_GUEST_R10_OFFSET(%rdi),%r10
-    mov         VMX_MACHINE_T_GUEST_R11_OFFSET(%rdi),%r11
-    mov         VMX_MACHINE_T_GUEST_R12_OFFSET(%rdi),%r12
-    mov         VMX_MACHINE_T_GUEST_R13_OFFSET(%rdi),%r13
-    mov         VMX_MACHINE_T_GUEST_R14_OFFSET(%rdi),%r14
-    mov         VMX_MACHINE_T_GUEST_R15_OFFSET(%rdi),%r15
+    mov         CPU_CONTEXT_OFFSET_RAX(%rdi),%rax
+    mov         CPU_CONTEXT_OFFSET_RBX(%rdi),%rbx
+    mov         CPU_CONTEXT_OFFSET_RCX(%rdi),%rcx
+    mov         CPU_CONTEXT_OFFSET_RDX(%rdi),%rdx
+    mov         CPU_CONTEXT_OFFSET_RBP(%rdi),%rbp
+    mov         CPU_CONTEXT_OFFSET_RSI(%rdi),%rsi
+    mov         CPU_CONTEXT_OFFSET_R8(%rdi),%r8
+    mov         CPU_CONTEXT_OFFSET_R9(%rdi),%r9
+    mov         CPU_CONTEXT_OFFSET_R10(%rdi),%r10
+    mov         CPU_CONTEXT_OFFSET_R11(%rdi),%r11
+    mov         CPU_CONTEXT_OFFSET_R12(%rdi),%r12
+    mov         CPU_CONTEXT_OFFSET_R13(%rdi),%r13
+    mov         CPU_CONTEXT_OFFSET_R14(%rdi),%r14
+    mov         CPU_CONTEXT_OFFSET_R15(%rdi),%r15
 
-    mov         VMX_MACHINE_T_GUEST_RDI_OFFSET(%rdi),%rdi
+    mov         CPU_CONTEXT_OFFSET_RDI(%rdi),%rdi
 
     /* Execute appropriate VMX instruction */
     je          vm_launch
@@ -101,30 +122,30 @@ vm_exit:
     xchg        0(%rsp),%rdi
 
     /* Save current GPRs to guest state area */
-    mov         %rax,VMX_MACHINE_T_GUEST_RAX_OFFSET(%rdi)
+    mov         %rax,CPU_CONTEXT_OFFSET_RAX(%rdi)
 
     mov         %cr2,%rax
-    mov         %rax,VMX_MACHINE_T_GUEST_CR2_OFFSET(%rdi)
+    mov         %rax,CPU_CONTEXT_OFFSET_CR2(%rdi)
 
-    mov         %rbx,VMX_MACHINE_T_GUEST_RBX_OFFSET(%rdi)
-    mov         %rcx,VMX_MACHINE_T_GUEST_RCX_OFFSET(%rdi)
-    mov         %rdx,VMX_MACHINE_T_GUEST_RDX_OFFSET(%rdi)
-    mov         %rbp,VMX_MACHINE_T_GUEST_RBP_OFFSET(%rdi)
-    mov         %rsi,VMX_MACHINE_T_GUEST_RSI_OFFSET(%rdi)
-    mov         %r8,VMX_MACHINE_T_GUEST_R8_OFFSET(%rdi)
-    mov         %r9,VMX_MACHINE_T_GUEST_R9_OFFSET(%rdi)
-    mov         %r10,VMX_MACHINE_T_GUEST_R10_OFFSET(%rdi)
-    mov         %r11,VMX_MACHINE_T_GUEST_R11_OFFSET(%rdi)
-    mov         %r12,VMX_MACHINE_T_GUEST_R12_OFFSET(%rdi)
-    mov         %r13,VMX_MACHINE_T_GUEST_R13_OFFSET(%rdi)
-    mov         %r14,VMX_MACHINE_T_GUEST_R14_OFFSET(%rdi)
-    mov         %r15,VMX_MACHINE_T_GUEST_R15_OFFSET(%rdi)
+    mov         %rbx,CPU_CONTEXT_OFFSET_RBX(%rdi)
+    mov         %rcx,CPU_CONTEXT_OFFSET_RCX(%rdi)
+    mov         %rdx,CPU_CONTEXT_OFFSET_RDX(%rdi)
+    mov         %rbp,CPU_CONTEXT_OFFSET_RBP(%rdi)
+    mov         %rsi,CPU_CONTEXT_OFFSET_RSI(%rdi)
+    mov         %r8,CPU_CONTEXT_OFFSET_R8(%rdi)
+    mov         %r9,CPU_CONTEXT_OFFSET_R9(%rdi)
+    mov         %r10,CPU_CONTEXT_OFFSET_R10(%rdi)
+    mov         %r11,CPU_CONTEXT_OFFSET_R11(%rdi)
+    mov         %r12,CPU_CONTEXT_OFFSET_R12(%rdi)
+    mov         %r13,CPU_CONTEXT_OFFSET_R13(%rdi)
+    mov         %r14,CPU_CONTEXT_OFFSET_R14(%rdi)
+    mov         %r15,CPU_CONTEXT_OFFSET_R15(%rdi)
 
     /* Load guest RDI off host stack and into RDX */
     mov         0(%rsp),%rdx
 
     /* Save guest RDI to guest state area */
-    mov         %rdx,VMX_MACHINE_T_GUEST_RDI_OFFSET(%rdi)
+    mov         %rdx,CPU_CONTEXT_OFFSET_RDI(%rdi)
 
     /* Save RDI to RSI for later SPEC_CTRL save*/
     mov         %rdi,%rsi
@@ -165,11 +186,15 @@ vm_eval_error:
     cmp         $IBRS_OPT,%rdx
     je          ibrs_opt
 
-    /* Save guest MSR SPEC_CTRL, low 32 bit is enough */
-    movl        $MSR_IA32_SPEC_CTRL,%ecx
+    /* Save guest MSR SPEC_CTRL, low 32 bit is enough
+     *
+     *     0x00000048 = MSR_IA32_SPEC_CTRL
+     */
+    movl        $0x00000048,%ecx
     rdmsr
-    mov         %rax,VMX_MACHINE_T_GUEST_SPEC_CTRL_OFFSET(%rsi)
-    movl        $SPEC_ENABLE_IBRS,%eax
+    mov         %rax,CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL(%rsi)
+    /* 0x1 = SPEC_ENABLE_IBRS */
+    movl        $0x1,%eax
     movl        $0,%edx
     wrmsr
 
@@ -177,16 +202,22 @@ vm_eval_error:
 
 ibrs_opt:
 
-    movl        $MSR_IA32_PRED_CMD,%ecx
-    movl        $PRED_SET_IBPB,%eax
+    /* 0x00000049 = MSR_IA32_PRED_CMD */
+    movl        $0x00000049,%ecx
+    /* 0x1 = PRED_SET_IBPB */
+    movl        $0x1,%eax
     movl        $0,%edx
     wrmsr
 
-    /* Save guest MSR SPEC_CTRL, low 32 bit is enough */
-    movl        $MSR_IA32_SPEC_CTRL,%ecx
+    /* Save guest MSR SPEC_CTRL, low 32 bit is enough
+     *
+     *     0x00000048 = MSR_IA32_SPEC_CTRL
+     */
+    movl        $0x00000048,%ecx
     rdmsr
-    mov         %rax,VMX_MACHINE_T_GUEST_SPEC_CTRL_OFFSET(%rsi)
-    movl        $SPEC_ENABLE_STIBP,%eax
+    mov         %rax,CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL(%rsi)
+    /* 0x2 = SPEC_ENABLE_STIBP */
+    movl        $0x2,%eax
     movl        $0,%edx
     wrmsr
 
@@ -221,4 +252,3 @@ stuff_rsb:
 vm_return:
     /* Return to caller */
     ret
-

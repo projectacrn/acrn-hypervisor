@@ -18,7 +18,7 @@ struct e820_mem_params e820_mem;
 struct page_walk_info {
 	uint64_t top_entry;	/* Top level paging structure entry */
 	int level;
-	int width;
+	uint32_t width;
 	bool is_user_mode;
 	bool is_write_access;
 	bool is_inst_fetch;
@@ -31,7 +31,7 @@ struct page_walk_info {
 inline bool
 is_vm0(struct vm *vm)
 {
-	return (vm->attr.boot_idx & 0x7F) == 0;
+	return (vm->attr.boot_idx & 0x7FU) == 0;
 }
 
 inline struct vcpu *vcpu_from_vid(struct vm *vm, int vcpu_id)
@@ -47,7 +47,7 @@ inline struct vcpu *vcpu_from_vid(struct vm *vm, int vcpu_id)
 	return NULL;
 }
 
-inline struct vcpu *vcpu_from_pid(struct vm *vm, int pcpu_id)
+inline struct vcpu *vcpu_from_pid(struct vm *vm, uint16_t pcpu_id)
 {
 	int i;
 	struct vcpu *vcpu;
@@ -82,7 +82,7 @@ inline uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask)
 	while ((vcpu_id = ffs64(vdmask)) >= 0) {
 		bitmap_clear(vcpu_id, &vdmask);
 		vcpu = vcpu_from_vid(vm, vcpu_id);
-		ASSERT(vcpu, "vcpu_from_vid failed");
+		ASSERT(vcpu != NULL, "vcpu_from_vid failed");
 		bitmap_set(vcpu->pcpu_id, &dmask);
 	}
 
@@ -113,9 +113,9 @@ enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 	if (cpu_mode == CPU_MODE_REAL)
 		return PAGING_MODE_0_LEVEL;
 	else if (cpu_mode == CPU_MODE_PROTECTED) {
-		if (cur_context->cr4 & CR4_PAE)
+		if ((cur_context->cr4 & CR4_PAE) != 0U)
 			return PAGING_MODE_3_LEVEL;
-		else if (cur_context->cr0 & CR0_PG)
+		else if ((cur_context->cr0 & CR0_PG) != 0U)
 			return PAGING_MODE_2_LEVEL;
 		return PAGING_MODE_0_LEVEL;
 	} else	/* compatibility or 64bit mode */
@@ -127,7 +127,8 @@ enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 	uint64_t gva, uint64_t *gpa, uint32_t *err_code)
 {
-	int i, index, shift;
+	int i, index;
+	uint32_t shift;
 	uint8_t *base;
 	uint64_t entry;
 	uint64_t addr, page_size;
@@ -157,12 +158,12 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 			entry = *((uint64_t *)(base + 8 * index));
 
 		/* check if the entry present */
-		if (!(entry & MMU_32BIT_PDE_P)) {
+		if ((entry & MMU_32BIT_PDE_P) == 0U) {
 			ret = -EFAULT;
 			goto out;
 		}
 		/* check for R/W */
-		if (pw_info->is_write_access && !(entry & MMU_32BIT_PDE_RW)) {
+		if (pw_info->is_write_access && ((entry & MMU_32BIT_PDE_RW) == 0U)) {
 			/* Case1: Supermode and wp is 1
 			 * Case2: Usermode */
 			if (!(!pw_info->is_user_mode && !pw_info->wp))
@@ -171,14 +172,14 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 		/* check for nx, since for 32-bit paing, the XD bit is
 		 * reserved(0), use the same logic as PAE/4-level paging */
 		if (pw_info->is_inst_fetch && pw_info->nxe &&
-		    (entry & MMU_MEM_ATTR_BIT_EXECUTE_DISABLE))
+		    ((entry & MMU_MEM_ATTR_BIT_EXECUTE_DISABLE) != 0U))
 			fault = 1;
 
 		/* check for U/S */
-		if (!(entry & MMU_32BIT_PDE_US) && pw_info->is_user_mode)
+		if (((entry & MMU_32BIT_PDE_US) == 0U) && pw_info->is_user_mode)
 			fault = 1;
 
-		if (pw_info->pse && (i > 0 && (entry & MMU_32BIT_PDE_PS)))
+		if (pw_info->pse && (i > 0 && ((entry & MMU_32BIT_PDE_PS) != 0U)))
 			break;
 		addr = entry;
 	}
@@ -190,7 +191,7 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 	*gpa = entry | (gva & (page_size - 1));
 out:
 
-	if (fault) {
+	if (fault != 0) {
 		ret = -EFAULT;
 		*err_code |= PAGE_FAULT_P_FLAG;
 	}
@@ -206,17 +207,17 @@ static int _gva2gpa_pae(struct vcpu *vcpu, struct page_walk_info *pw_info,
 	uint64_t addr;
 	int ret;
 
-	addr = pw_info->top_entry & 0xFFFFFFF0UL;
+	addr = pw_info->top_entry & 0xFFFFFFF0U;
 	base = GPA2HVA(vcpu->vm, addr);
 	if (base == NULL) {
 		ret = -EFAULT;
 		goto out;
 	}
 
-	index = (gva >> 30) & 0x3;
+	index = (gva >> 30) & 0x3UL;
 	entry = base[index];
 
-	if (!(entry & MMU_32BIT_PDE_P)) {
+	if ((entry & MMU_32BIT_PDE_P) == 0U) {
 		ret = -EFAULT;
 		goto out;
 	}
@@ -256,7 +257,7 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	struct page_walk_info pw_info;
 	int ret = 0;
 
-	if (!gpa || !err_code)
+	if ((gpa == NULL) || (err_code == NULL))
 		return -EINVAL;
 	*gpa = 0;
 
@@ -264,7 +265,7 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	pw_info.level = pm;
 	pw_info.is_write_access = !!(*err_code & PAGE_FAULT_WR_FLAG);
 	pw_info.is_inst_fetch = !!(*err_code & PAGE_FAULT_ID_FLAG);
-	pw_info.is_user_mode = ((exec_vmread(VMX_GUEST_CS_SEL) & 0x3) == 3);
+	pw_info.is_user_mode = ((exec_vmread(VMX_GUEST_CS_SEL) & 0x3UL) == 3UL);
 	pw_info.pse = true;
 	pw_info.nxe = cur_context->ia32_efer & MSR_IA32_EFER_NXE_BIT;
 	pw_info.wp = !!(cur_context->cr0 & CR0_WP);
@@ -306,7 +307,7 @@ static inline int32_t _copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 		return -EINVAL;
 	}
 
-	if (fix_pg_size)
+	if (fix_pg_size != 0)
 		pg_size = fix_pg_size;
 
 	off_in_pg = gpa & (pg_size - 1);
@@ -415,13 +416,14 @@ void init_e820(void)
 	unsigned int i;
 
 	if (boot_regs[0] == MULTIBOOT_INFO_MAGIC) {
-		struct multiboot_info *mbi =
-			(struct multiboot_info *)((uint64_t)boot_regs[1]);
+		struct multiboot_info *mbi = (struct multiboot_info *)
+			(HPA2HVA((uint64_t)boot_regs[1]));
+
 		pr_info("Multiboot info detected\n");
-		if (mbi->mi_flags & 0x40) {
+		if ((mbi->mi_flags & 0x40U) != 0U) {
 			struct multiboot_mmap *mmap =
 				(struct multiboot_mmap *)
-				((uint64_t)mbi->mi_mmap_addr);
+				HPA2HVA((uint64_t)mbi->mi_mmap_addr);
 			e820_entries = mbi->mi_mmap_length/
 				sizeof(struct multiboot_mmap);
 			if (e820_entries > E820_MAX_ENTRIES) {
@@ -447,7 +449,7 @@ void init_e820(void)
 			}
 		}
 	} else
-		ASSERT(0, "no multiboot info found");
+		ASSERT(false, "no multiboot info found");
 }
 
 
@@ -553,14 +555,14 @@ static void rebuild_vm0_e820(void)
 int prepare_vm0_memmap_and_e820(struct vm *vm)
 {
 	unsigned int i;
-	uint32_t attr_wb = (MMU_MEM_ATTR_READ |
-			MMU_MEM_ATTR_WRITE   |
-			MMU_MEM_ATTR_EXECUTE |
-			MMU_MEM_ATTR_WB_CACHE);
-	uint32_t attr_uc = (MMU_MEM_ATTR_READ |
-			MMU_MEM_ATTR_WRITE   |
-			MMU_MEM_ATTR_EXECUTE |
-			MMU_MEM_ATTR_UNCACHED);
+	uint32_t attr_wb = (IA32E_EPT_R_BIT |
+				IA32E_EPT_W_BIT |
+				IA32E_EPT_X_BIT |
+				IA32E_EPT_WB);
+	uint32_t attr_uc = (IA32E_EPT_R_BIT |
+				IA32E_EPT_W_BIT |
+				IA32E_EPT_X_BIT |
+				IA32E_EPT_UNCACHED);
 	struct e820_entry *entry;
 
 

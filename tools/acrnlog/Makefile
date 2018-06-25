@@ -7,7 +7,9 @@ all:
 
 clean:
 	rm -f $(OUT_DIR)/acrnlog
+ifneq ($(OUT_DIR),.)
 	rm -f $(OUT_DIR)/acrnlog.service
+endif
 
 install: $(OUT_DIR)/acrnlog
 	install -d $(DESTDIR)/usr/bin

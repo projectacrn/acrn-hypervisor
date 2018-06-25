@@ -4,13 +4,13 @@
 
 This folder contains a number of Dockerfile that include
 all the build tools and dependencies to build the ACRN Project
-components, i.e. the `acrn-hypervisor` and `acrn-devicemodel`
+components, i.e. the `hypervisor`, `devicemodel` and `tools`
 
 The workflow is pretty simple and can be summarized in these few steps:
 
 1. Build the *build containers* based on your preferred OS
-1. Clone the Project ACRN repositories
-1. Start the build container and give it the repositories
+1. Clone the Project ACRN repository
+1. Start the build container and give it the repository
 1. Build the Project ACRN components
 
 The pre-requisite is that you have Docker installed on your machine.
@@ -38,20 +38,19 @@ Follow these simple steps to clone the Project ACRN repositories
 $ mkdir ~/acrn
 $ cd ~/acrn
 $ git clone https://github.com/projectacrn/acrn-hypervisor
-$ git clone https://github.com/projectacrn/acrn-devicemodel
 ```
 
 ## Start the build container
 
-Use this `~/acrn` folder and pass it on to your build container:
+Use this `~/acrn/acrn-hypervisor` folder and pass it on to your build container:
 ```
-$ cd ~/acrn
+$ cd ~/acrn/acrn-hypervisor
 $ sudo docker run -ti -v $PWD:/root/acrn <container-name>
 ```
 
 Using CentOS 7 again as an example, that gives us:
 ```
-$ cd ~/acrn
+$ cd ~/acrn/acrn-hypervisor
 $ sudo docker run -ti -v $PWD:/root/acrn centos7
 ```
 
@@ -60,21 +59,29 @@ happens on a Fedora 27 host), try adding the `:z` parameter to the mount option.
 This will unlock the permission restriction (that comes from SElinux). Your
 command-line would then be:
 ```
-$ cd ~/acrn
+$ cd ~/acrn/acrn-hypervisor
 $ sudo docker run -ti -v $PWD:/root/acrn:z centos7
 ```
 
 ## Build the ACRN components
 
 The steps above place you inside the container and give you access to
-the Project ACRN repositories you cloned earlier. You can now build any
-of the components. Here is an example:
+the Project ACRN repository you cloned earlier. You can now build any
+of the components. Here are a few examples:
 ```
-# cd acrn-hypervisor
-# make PLATFORM=uefi RELEASE=1
+# make hypervisor PLATFORM=uefi
+# make devicemodel
+# make tools
 ```
 
-You can do this for all build combinations and also try to build the `acrn-devicemodel`.
+If you want to build it all, simply do:
+```
+# make PLATFORM=uefi
+```
+
+You can do this for all build combinations.
 All the build dependencies and tools are pre-installed in the container as well as a
 couple of useful tools (`git` and `vim`) so you can directly edit files to experiment
 from within the container.
+
+The tools to build the ACRN documentation is (still) missing from these containers.

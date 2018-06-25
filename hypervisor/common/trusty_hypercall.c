@@ -7,6 +7,9 @@
 #include <hypervisor.h>
 #include <hypercall.h>
 
+/* this hcall is only come from trusty enabled vcpu itself, and cannot be
+ * called from other vcpus
+ */
 int64_t hcall_world_switch(struct vcpu *vcpu)
 {
 	int next_world_id = !(vcpu->arch_vcpu.cur_context);
@@ -22,7 +25,7 @@ int64_t hcall_world_switch(struct vcpu *vcpu)
 		return -EPERM;
 	}
 
-	if (!vcpu->vm->arch_vm.sworld_eptp) {
+	if (vcpu->vm->arch_vm.sworld_eptp == 0U) {
 		pr_err("%s, Trusty is not initialized!\n", __func__);
 		return -EPERM;
 	}
@@ -31,6 +34,9 @@ int64_t hcall_world_switch(struct vcpu *vcpu)
 	return 0;
 }
 
+/* this hcall is only come from trusty enabled vcpu itself, and cannot be
+ * called from other vcpus
+ */
 int64_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param)
 {
 	if (!vcpu->vm->sworld_control.sworld_enabled) {
@@ -38,7 +44,7 @@ int64_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param)
 		return -EPERM;
 	}
 
-	if (vcpu->vm->arch_vm.sworld_eptp) {
+	if (vcpu->vm->arch_vm.sworld_eptp != 0U) {
 		pr_err("%s, Trusty already initialized!\n", __func__);
 		return -EPERM;
 	}

@@ -147,10 +147,10 @@ struct acrn_create_vm {
  */
 struct acrn_create_vcpu {
 	/** the virtual CPU ID for the VCPU created */
-	uint32_t vcpu_id;
+	uint16_t vcpu_id;
 
 	/** the physical CPU ID for the VCPU created */
-	uint32_t pcpu_id;
+	uint16_t pcpu_id;
 } __aligned(8);
 
 /**
@@ -337,10 +337,10 @@ struct acpi_info {
  * For Px, PMCMD_STATE_NUM means Px number from 0 to (MAX_PSTATE - 1),
  * For Cx, PMCMD_STATE_NUM means Cx entry index from 1 to MAX_CX_ENTRY.
  */
-#define PMCMD_VMID_MASK		0xff000000
-#define PMCMD_VCPUID_MASK	0x00ff0000
-#define PMCMD_STATE_NUM_MASK	0x0000ff00
-#define PMCMD_TYPE_MASK		0x000000ff
+#define PMCMD_VMID_MASK		0xff000000U
+#define PMCMD_VCPUID_MASK	0x00ff0000U
+#define PMCMD_STATE_NUM_MASK	0x0000ff00U
+#define PMCMD_TYPE_MASK		0x000000ffU
 
 #define PMCMD_VMID_SHIFT	24
 #define PMCMD_VCPUID_SHIFT	16

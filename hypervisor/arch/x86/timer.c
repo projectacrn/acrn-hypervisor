@@ -16,7 +16,7 @@ uint64_t tsc_hz = 1000000000;
 static void run_timer(struct timer *timer)
 {
 	/* deadline = 0 means stop timer, we should skip */
-	if (timer->func && timer->fire_tsc != 0UL)
+	if ((timer->func != NULL) && timer->fire_tsc != 0UL)
 		timer->func(timer->priv_data);
 
 	TRACE_2L(TRACE_TIMER_ACTION_PCKUP, timer->fire_tsc, 0);
@@ -62,7 +62,7 @@ static void __add_timer(struct per_cpu_timers *cpu_timer,
 
 	list_add(&timer->node, prev);
 
-	if (need_update)
+	if (need_update != NULL)
 		/* update the physical timer if we're on the timer_list head */
 		*need_update = (prev == &cpu_timer->timer_list);
 }
@@ -70,7 +70,7 @@ static void __add_timer(struct per_cpu_timers *cpu_timer,
 int add_timer(struct timer *timer)
 {
 	struct per_cpu_timers *cpu_timer;
-	int pcpu_id;
+	uint16_t pcpu_id;
 	bool need_update;
 
 	if (timer == NULL || timer->func == NULL || timer->fire_tsc == 0)
@@ -95,20 +95,20 @@ int add_timer(struct timer *timer)
 
 void del_timer(struct timer *timer)
 {
-	if (timer && !list_empty(&timer->node))
-		list_del(&timer->node);
+	if ((timer != NULL) && !list_empty(&timer->node))
+		list_del_init(&timer->node);
 }
 
-static int request_timer_irq(int pcpu_id,
+static int request_timer_irq(uint16_t pcpu_id,
 			dev_handler_t func, void *data,
 			const char *name)
 {
 	struct dev_handler_node *node = NULL;
 
-	if (pcpu_id >= phy_cpu_num)
+	if (pcpu_id >= phys_cpu_num)
 		return -EINVAL;
 
-	if (per_cpu(timer_node, pcpu_id)) {
+	if (per_cpu(timer_node, pcpu_id) != NULL) {
 		pr_err("CPU%d timer isr already added", pcpu_id);
 		unregister_handler_common(per_cpu(timer_node, pcpu_id));
 	}
@@ -125,7 +125,7 @@ static int request_timer_irq(int pcpu_id,
 	return 0;
 }
 
-static void init_percpu_timer(int pcpu_id)
+static void init_percpu_timer(uint16_t pcpu_id)
 {
 	struct per_cpu_timers *cpu_timer;
 
@@ -149,7 +149,7 @@ static void init_tsc_deadline_timer(void)
 void timer_init(void)
 {
 	char name[32] = {0};
-	int pcpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_cpu_id();
 
 	snprintf(name, 32, "timer_tick[%d]", pcpu_id);
 	if (request_timer_irq(pcpu_id, tsc_deadline_handler, NULL, name) < 0) {
@@ -163,15 +163,15 @@ void timer_init(void)
 
 void timer_cleanup(void)
 {
-	int pcpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_cpu_id();
 
-	if (per_cpu(timer_node, pcpu_id))
+	if (per_cpu(timer_node, pcpu_id) != NULL)
 		unregister_handler_common(per_cpu(timer_node, pcpu_id));
 
 	per_cpu(timer_node, pcpu_id) = NULL;
 }
 
-int timer_softirq(int pcpu_id)
+void timer_softirq(uint16_t pcpu_id)
 {
 	struct per_cpu_timers *cpu_timer;
 	struct timer *timer;
@@ -207,7 +207,6 @@ int timer_softirq(int pcpu_id)
 
 	/* update nearest timer */
 	update_physical_timer(cpu_timer);
-	return 0;
 }
 
 void check_tsc(void)
@@ -244,7 +243,7 @@ static uint64_t pit_calibrate_tsc(uint16_t cal_ms)
 	 */
 
 	io_write_byte(0x30, 0x43);
-	io_write_byte(initial_pit & 0x00ff, 0x40);	/* Write LSB */
+	io_write_byte(initial_pit & 0x00ffU, 0x40);	/* Write LSB */
 	io_write_byte(initial_pit >> 8, 0x40);		/* Write MSB */
 
 	current_tsc = rdtsc();
@@ -287,7 +286,7 @@ static uint64_t native_calibrate_tsc(void)
 void calibrate_tsc(void)
 {
 	tsc_hz = native_calibrate_tsc();
-	if (!tsc_hz)
+	if (tsc_hz == 0U)
 		tsc_hz = pit_calibrate_tsc(CAL_MS);
 	printf("%s, tsc_hz=%lu\n", __func__, tsc_hz);
 }

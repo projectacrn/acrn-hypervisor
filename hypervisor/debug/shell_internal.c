@@ -28,14 +28,8 @@
 #define SHELL_INPUT_LINE_OTHER(v)	(((v) + 1) % 2)
 
 /* The initial log level*/
-uint32_t console_loglevel;
-uint32_t mem_loglevel;
-#ifdef CONFIG_CONSOLE_LOGLEVEL_DEFAULT
 uint32_t console_loglevel = CONFIG_CONSOLE_LOGLEVEL_DEFAULT;
-#endif
-#ifdef CONFIG_MEM_LOGLEVEL_DEFAULT
 uint32_t mem_loglevel = CONFIG_MEM_LOGLEVEL_DEFAULT;
-#endif
 
 static int string_to_argv(char *argv_str, void *p_argv_mem,
 		__unused uint32_t argv_mem_size, int *p_argc, char ***p_argv)
@@ -177,7 +171,7 @@ static uint8_t shell_input_line(struct shell *p_shell)
 			} else {
 				/* prINTable character */
 				/* See if a "special" character handler is installed */
-				if (p_shell->session_io.io_special) {
+				if (p_shell->session_io.io_special != NULL) {
 					/* Call special character handler */
 					p_shell->session_io.io_special(p_shell, ch);
 				}
@@ -261,7 +255,7 @@ struct shell_cmd *shell_find_cmd(struct shell *p_shell, const char *cmd_str)
 
 void kick_shell(struct shell *p_shell)
 {
-	int status = p_shell ? 0 : EINVAL;
+	int status = (p_shell != NULL) ? 0 : EINVAL;
 	static uint8_t is_cmd_cmplt = 1;
 
 	if (status == 0) {
@@ -273,9 +267,10 @@ void kick_shell(struct shell *p_shell)
 		 * Show HV shell prompt ONLY when HV owns the
 		 * serial port.
 		 */
-		if (!vuart_console_active()) {
+		if (vuart_console_active() == NULL) {
 			/* Prompt the user for a selection. */
-			if (is_cmd_cmplt && p_shell->session_io.io_puts)
+			if ((is_cmd_cmplt != 0U) &&
+			    (p_shell->session_io.io_puts != NULL))
 				p_shell->session_io.io_puts(p_shell,
 							SHELL_PROMPT_STR);
 
@@ -285,7 +280,7 @@ void kick_shell(struct shell *p_shell)
 			/* If user has pressed the ENTER then process
 			 * the command
 			 */
-			if (is_cmd_cmplt)
+			if (is_cmd_cmplt != 0U)
 				/* Process current input line. */
 				status = shell_process(p_shell);
 		}
@@ -431,12 +426,12 @@ int shell_cmd_help(struct shell *p_shell,
 			space_buf[spaces] = ' ';
 
 			/* Display parameter info if applicable. */
-			if (p_cmd->cmd_param) {
+			if (p_cmd->cmd_param != NULL) {
 				shell_puts(p_shell, p_cmd->cmd_param);
 			}
 
 			/* Display help text if available. */
-			if (p_cmd->help_str) {
+			if (p_cmd->help_str != NULL) {
 				shell_puts(p_shell, " - ");
 				shell_puts(p_shell, p_cmd->help_str);
 			}
@@ -560,9 +555,9 @@ int shell_pause_vcpu(struct shell *p_shell,
 		vcpu_id = atoi(argv[2]);
 
 		vm = get_vm_from_vmid(vm_id);
-		if (vm) {
+		if (vm != NULL) {
 			vcpu = vcpu_from_vid(vm, vcpu_id);
-			if (vcpu) {
+			if (vcpu != NULL) {
 				if (vcpu->dbg_req_state != VCPU_PAUSED) {
 					vcpu->dbg_req_state = VCPU_PAUSED;
 					/* TODO: do we need file a IPI to kick
@@ -608,9 +603,9 @@ int shell_resume_vcpu(struct shell *p_shell,
 		vm_id = atoi(argv[1]);
 		vcpu_id = atoi(argv[2]);
 		vm = get_vm_from_vmid(vm_id);
-		if (vm) {
+		if (vm != NULL) {
 			vcpu = vcpu_from_vid(vm, vcpu_id);
-			if (vcpu) {
+			if (vcpu != NULL) {
 				if (vcpu->dbg_req_state == VCPU_PAUSED) {
 					vcpu->dbg_req_state = 0;
 					shell_puts(p_shell,
@@ -662,14 +657,14 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 	vcpu_id = atoi(argv[2]);
 
 	vm = get_vm_from_vmid(vm_id);
-	if (!vm) {
+	if (vm == NULL) {
 		shell_puts(p_shell, "No vm found in the input "
 				"<vm_id, vcpu_id>\r\n");
 		return -EINVAL;
 	}
 
 	vcpu = vcpu_from_vid(vm, vcpu_id);
-	if (!vcpu) {
+	if (vcpu == NULL) {
 		shell_puts(p_shell, "No vcpu found in the input "
 				"<vm_id, vcpu_id>\r\n");
 		return -EINVAL;
@@ -796,7 +791,7 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 	}
 
 	vcpu = vcpu_from_vid(vm, (long)vcpu_id);
-	if (vcpu) {
+	if (vcpu != NULL) {
 		status = copy_from_gva(vcpu, tmp, gva, length, &err_code);
 		if (status <  0) {
 			shell_puts(p_shell,
@@ -983,11 +978,15 @@ int shell_show_vmexit_profile(struct shell *p_shell,
 int shell_dump_logbuf(__unused struct shell *p_shell,
 		int argc, char **argv)
 {
-	uint32_t pcpu_id;
+	uint16_t pcpu_id;
+	int val;
 	int status = -EINVAL;
 
 	if (argc == 2) {
-		pcpu_id = atoi(argv[1]);
+		val = atoi(argv[1]);
+		if (val < 0)
+			return status;
+		pcpu_id = (uint16_t)val;
 		print_logmsg_buffer(pcpu_id);
 		return 0;
 	}
@@ -1055,6 +1054,17 @@ int shell_cpuid(struct shell *p_shell, int argc, char **argv)
 	return 0;
 }
 
+int shell_trigger_crash(struct shell *p_shell, int argc, char **argv)
+{
+	char str[MAX_STR_SIZE] = {0};
+
+	snprintf(str, MAX_STR_SIZE, "trigger crash, divide by 0 ...\r\n");
+	shell_puts(p_shell, str);
+	snprintf(str, MAX_STR_SIZE, "%d\r", 1/0);
+
+	return 0;
+}
+
 int shell_terminate_serial(struct shell *p_shell)
 {
 	/* Shell shouldn't own the serial port handle anymore. */
@@ -1101,7 +1111,7 @@ int shell_construct(struct shell **p_shell)
 	/* Allocate memory for shell session */
 	*p_shell = (struct shell *) calloc(1, sizeof(**p_shell));
 
-	if (!(*p_shell)) {
+	if ((*p_shell) == NULL) {
 		pr_err("Error: out of memory");
 		status = -ENOMEM;
 	}

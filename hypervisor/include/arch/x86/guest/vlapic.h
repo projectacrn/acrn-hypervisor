@@ -57,7 +57,7 @@ int vlapic_pending_intr(struct vlapic *vlapic, uint32_t *vecptr);
 void vlapic_intr_accepted(struct vlapic *vlapic, uint32_t vector);
 
 struct vlapic *vm_lapic_from_vcpuid(struct vm *vm, int vcpu_id);
-struct vlapic *vm_lapic_from_pcpuid(struct vm *vm, int pcpu_id);
+struct vlapic *vm_lapic_from_pcpuid(struct vm *vm, uint16_t pcpu_id);
 bool vlapic_msr(uint32_t num);
 int vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval);
 int vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval);
@@ -89,7 +89,7 @@ vlapic_intr_edge(struct vcpu *vcpu, uint32_t vector)
  * Triggers the LAPIC local interrupt (LVT) 'vector' on 'cpu'.  'cpu' can
  * be set to -1 to trigger the interrupt on all CPUs.
  */
-int vlapic_set_local_intr(struct vm *vm, int cpu, uint32_t vector);
+int vlapic_set_local_intr(struct vm *vm, int vcpu_id, uint32_t vector);
 
 int vlapic_intr_msi(struct vm *vm, uint64_t addr, uint64_t msg);
 

@@ -1,5 +1,5 @@
 T := $(CURDIR)
-OUT_DIR ?= $(T)/build
+OUT_DIR ?= $(shell mkdir -p $(T)/build;cd $(T)/build;pwd)
 
 .PHONY: all acrn-crashlog acrnlog acrn-manager acrntrace acrnbridge
 all: acrn-crashlog acrnlog acrn-manager acrntrace acrnbridge
@@ -28,7 +28,7 @@ clean:
 	rm -rf $(OUT_DIR)
 
 .PHONY: install
-install: acrn-crashlog-install acrnlog-install acrn-manager-install acrntrace-install
+install: acrn-crashlog-install acrnlog-install acrn-manager-install acrntrace-install acrnbridge-install
 
 acrn-crashlog-install:
 	make -C $(T)/acrn-crashlog OUT_DIR=$(OUT_DIR) install

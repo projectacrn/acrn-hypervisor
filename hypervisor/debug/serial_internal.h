@@ -30,21 +30,21 @@ struct shared_buf;
 #define SD_RX_INTERRUPT                   1
 
 /* RX error defines */
-#define SD_RX_NO_ERROR                    0
-#define SD_RX_OVERRUN_ERROR               1
-#define SD_RX_PARITY_ERROR                2
-#define SD_RX_FRAME_ERROR                 3
+#define SD_RX_NO_ERROR                    0U
+#define SD_RX_OVERRUN_ERROR               1U
+#define SD_RX_PARITY_ERROR                2U
+#define SD_RX_FRAME_ERROR                 3U
 
 /* Defines for encoding/decoding the unique UART handle of each port. */
 
-#define SERIAL_MAGIC_NUM               0x005500AA
+#define SERIAL_MAGIC_NUM               0x005500AAU
 #define SERIAL_VALIDATE_HANDLE(handle) \
 	((handle & 0xFFFF00FF) == (SERIAL_MAGIC_NUM))
 #define SERIAL_ENCODE_INDEX(index)	((SERIAL_MAGIC_NUM) | (index << 8))
-#define SERIAL_DECODE_INDEX(handle)	((handle & 0x0000FF00) >> 8)
+#define SERIAL_DECODE_INDEX(handle)	((handle & 0x0000FF00U) >> 8)
 
 #define         NO_SUSPEND                       0
-#define         SUSPEND                          0xFFFFFFFFUL
+#define         SUSPEND                          0xFFFFFFFFU
 
 /* Enumeration values to set UART Configuration */
 typedef enum _baudenum_ {

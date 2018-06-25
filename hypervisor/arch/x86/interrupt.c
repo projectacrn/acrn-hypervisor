@@ -6,7 +6,7 @@
 
 #include <hypervisor.h>
 
-#define EXCEPTION_ERROR_CODE_VALID  8
+#define EXCEPTION_ERROR_CODE_VALID  8U
 #define INTERRPUT_QUEUE_BUFF_SIZE   255
 
 #define ACRN_DBG_INTR	6
@@ -60,7 +60,7 @@ static int is_guest_irq_enabled(struct vcpu *vcpu)
 	/* Read the RFLAGS of the guest */
 	guest_rflags = cur_context->rflags;
 	/* Check the RFLAGS[IF] bit first */
-	if (guest_rflags & HV_ARCH_VCPU_RFLAGS_IF) {
+	if ((guest_rflags & HV_ARCH_VCPU_RFLAGS_IF) != 0U) {
 		/* Interrupts are allowed */
 		/* Check for temporarily disabled interrupts */
 		guest_state = exec_vmread(VMX_GUEST_INTERRUPTIBILITY_INFO);
@@ -94,7 +94,7 @@ static bool vcpu_pending_request(struct vcpu *vcpu)
 	return vcpu->arch_vcpu.pending_req != 0;
 }
 
-int vcpu_make_request(struct vcpu *vcpu, int eventid)
+void vcpu_make_request(struct vcpu *vcpu, int eventid)
 {
 	bitmap_set(eventid, &vcpu->arch_vcpu.pending_req);
 	/*
@@ -108,8 +108,6 @@ int vcpu_make_request(struct vcpu *vcpu, int eventid)
 	 */
 	if ((int)get_cpu_id() != vcpu->pcpu_id)
 		send_single_ipi(vcpu->pcpu_id, VECTOR_NOTIFY_VCPU);
-
-	return 0;
 }
 
 static int vcpu_do_pending_event(struct vcpu *vcpu)
@@ -142,7 +140,7 @@ static int vcpu_do_pending_event(struct vcpu *vcpu)
 	}
 
 	exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
-		(vector & 0xFF));
+		(vector & 0xFFU));
 
 	vlapic_intr_accepted(vlapic, vector);
 	return 0;
@@ -159,15 +157,15 @@ static int vcpu_do_pending_extint(struct vcpu *vcpu)
 	/* check if there is valid interrupt from vPIC, if yes just inject it */
 	/* PIC only connect with primary CPU */
 	primary = get_primary_vcpu(vm);
-	if (vm->vpic && vcpu == primary) {
+	if ((vm->vpic != NULL) && vcpu == primary) {
 
 		vpic_pending_intr(vcpu->vm, &vector);
 		if (vector <= NR_MAX_VECTOR) {
 			dev_dbg(ACRN_DBG_INTR, "VPIC: to inject PIC vector %d\n",
-					vector & 0xFF);
+					vector & 0xFFU);
 			exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
 					VMX_INT_INFO_VALID |
-					(vector & 0xFF));
+					(vector & 0xFFU));
 			vpic_intr_accepted(vcpu->vm, vector);
 		}
 	}
@@ -223,7 +221,8 @@ int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector,
 	if (prev_vector == IDT_DF &&
 		new_class != EXCEPTION_CLASS_BENIGN) {
 		/* triple fault happen - shutdwon mode */
-		return vcpu_make_request(vcpu, ACRN_REQUEST_TRP_FAULT);
+		vcpu_make_request(vcpu, ACRN_REQUEST_TRP_FAULT);
+		return 0;
 	} else if ((prev_class == EXCEPTION_CLASS_CONT &&
 			new_class == EXCEPTION_CLASS_CONT) ||
 			(prev_class == EXCEPTION_CLASS_PF &&
@@ -235,7 +234,7 @@ int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector,
 
 	vcpu->arch_vcpu.exception_info.exception = vector;
 
-	if (exception_type[vector] & EXCEPTION_ERROR_CODE_VALID)
+	if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U)
 		vcpu->arch_vcpu.exception_info.error = err_code;
 	else
 		vcpu->arch_vcpu.exception_info.error = 0;
@@ -245,13 +244,13 @@ int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector,
 
 static void _vcpu_inject_exception(struct vcpu *vcpu, uint32_t vector)
 {
-	if (exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) {
+	if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U) {
 		exec_vmwrite(VMX_ENTRY_EXCEPTION_ERROR_CODE,
 				vcpu->arch_vcpu.exception_info.error);
 	}
 
 	exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
-			(exception_type[vector] << 8) | (vector & 0xFF));
+			(exception_type[vector] << 8) | (vector & 0xFFU));
 
 	vcpu->arch_vcpu.exception_info.exception = VECTOR_INVALID;
 }
@@ -281,20 +280,21 @@ static int vcpu_inject_lo_exception(struct vcpu *vcpu)
 	return 0;
 }
 
-int vcpu_inject_extint(struct vcpu *vcpu)
+void vcpu_inject_extint(struct vcpu *vcpu)
 {
-	return vcpu_make_request(vcpu, ACRN_REQUEST_EXTINT);
+	vcpu_make_request(vcpu, ACRN_REQUEST_EXTINT);
 }
 
-int vcpu_inject_nmi(struct vcpu *vcpu)
+void vcpu_inject_nmi(struct vcpu *vcpu)
 {
-	return vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
+	vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
 }
 
 int vcpu_inject_gp(struct vcpu *vcpu, uint32_t err_code)
 {
 	vcpu_queue_exception(vcpu, IDT_GP, err_code);
-	return vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
+	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
+	return 0;
 }
 
 int vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code)
@@ -304,7 +304,8 @@ int vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code)
 
 	cur_context->cr2 = addr;
 	vcpu_queue_exception(vcpu, IDT_PF, err_code);
-	return vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
+	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
+	return 0;
 }
 
 int interrupt_window_vmexit_handler(struct vcpu *vcpu)
@@ -313,7 +314,7 @@ int interrupt_window_vmexit_handler(struct vcpu *vcpu)
 
 	TRACE_2L(TRC_VMEXIT_INTERRUPT_WINDOW, 0, 0);
 
-	if (!vcpu)
+	if (vcpu == NULL)
 		return -1;
 
 	if (vcpu_pending_request(vcpu)) {
@@ -340,7 +341,7 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 	struct intr_excp_ctx ctx;
 
 	intr_info = exec_vmread(VMX_EXIT_INT_INFO);
-	if ((!(intr_info & VMX_INT_INFO_VALID)) ||
+	if (((intr_info & VMX_INT_INFO_VALID) == 0U) ||
 		(((intr_info & VMX_INT_TYPE_MASK) >> 8)
 		!= VMX_INT_TYPE_EXT_INT)) {
 		pr_err("Invalid VM exit interrupt info:%x", intr_info);
@@ -348,7 +349,7 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 		return -EINVAL;
 	}
 
-	ctx.vector = intr_info & 0xFF;
+	ctx.vector = intr_info & 0xFFU;
 
 	dispatch_interrupt(&ctx);
 
@@ -382,7 +383,8 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 
 	/* handling cancelled event injection when vcpu is switched out */
 	if (vcpu->arch_vcpu.inject_event_pending) {
-		if (vcpu->arch_vcpu.inject_info.intr_info & (EXCEPTION_ERROR_CODE_VALID << 8))
+		if ((vcpu->arch_vcpu.inject_info.intr_info &
+			(EXCEPTION_ERROR_CODE_VALID << 8)) != 0U)
 			exec_vmwrite(VMX_ENTRY_EXCEPTION_ERROR_CODE,
 				vcpu->arch_vcpu.inject_info.error_code);
 
@@ -395,7 +397,7 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 
 	/* SDM Vol 3 - table 6-2, inject high priority exception before
 	 * maskable hardware interrupt */
-	if (vcpu_inject_hi_exception(vcpu))
+	if (vcpu_inject_hi_exception(vcpu) != 0)
 		goto INTR_WIN;
 
 	/* inject NMI before maskable hardware interrupt */
@@ -414,14 +416,14 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 	 * - external interrupt, if IF clear, will keep in IDT_VEC_INFO_FIELD
 	 *   at next vm exit?
 	 */
-	if (vcpu->arch_vcpu.idt_vectoring_info & VMX_INT_INFO_VALID) {
+	if ((vcpu->arch_vcpu.idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
 		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
 				vcpu->arch_vcpu.idt_vectoring_info);
 		goto INTR_WIN;
 	}
 
 	/* Guest interruptable or not */
-	if (is_guest_irq_enabled(vcpu)) {
+	if (is_guest_irq_enabled(vcpu) != 0) {
 		/* Inject external interrupt first */
 		if (bitmap_test_and_clear(ACRN_REQUEST_EXTINT,
 			pending_req_bits)) {
@@ -440,7 +442,7 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 	}
 
 	/* SDM Vol3 table 6-2, inject lowpri exception */
-	if (vcpu_inject_lo_exception(vcpu))
+	if (vcpu_inject_lo_exception(vcpu) != 0)
 		goto INTR_WIN;
 
 INTR_WIN:
@@ -470,10 +472,10 @@ void cancel_event_injection(struct vcpu *vcpu)
 	 * The event will be re-injected in next acrn_handle_pending_request
 	 * call.
 	 */
-	if (intinfo & VMX_INT_INFO_VALID) {
+	if ((intinfo & VMX_INT_INFO_VALID) != 0U) {
 		vcpu->arch_vcpu.inject_event_pending = true;
 
-		if (intinfo & (EXCEPTION_ERROR_CODE_VALID << 8))
+		if ((intinfo & (EXCEPTION_ERROR_CODE_VALID << 8)) != 0U)
 			vcpu->arch_vcpu.inject_info.error_code =
 				exec_vmread(VMX_ENTRY_EXCEPTION_ERROR_CODE);
 
@@ -501,23 +503,23 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 
 	/* Obtain VM-Exit information field pg 2912 */
 	intinfo = exec_vmread(VMX_EXIT_INT_INFO);
-	if (intinfo & VMX_INT_INFO_VALID) {
-		exception_vector = intinfo & 0xFF;
+	if ((intinfo & VMX_INT_INFO_VALID) != 0U) {
+		exception_vector = intinfo & 0xFFU;
 		/* Check if exception caused by the guest is a HW exception.
 		 * If the exit occurred due to a HW exception obtain the
 		 * error code to be conveyed to get via the stack
 		 */
-		if (intinfo & VMX_INT_INFO_ERR_CODE_VALID) {
+		if ((intinfo & VMX_INT_INFO_ERR_CODE_VALID) != 0U) {
 			int_err_code = exec_vmread(VMX_EXIT_INT_ERROR_CODE);
 
 			/* get current privilege level and fault address */
 			cpl = exec_vmread(VMX_GUEST_CS_ATTR);
-			cpl = (cpl >> 5) & 3;
+			cpl = (cpl >> 5) & 3U;
 
 			if (cpl < 3)
-				int_err_code &= ~4;
+				int_err_code &= ~4U;
 			else
-				int_err_code |= 4;
+				int_err_code |= 4U;
 		}
 	}
 

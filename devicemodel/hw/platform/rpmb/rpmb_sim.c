@@ -30,6 +30,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <openssl/hmac.h>
+#include <openssl/opensslv.h>
 
 #include "rpmb.h"
 #include "rpmb_sim.h"
@@ -59,13 +60,15 @@ static int virtio_rpmb_debug = 1;
 #define DPRINTF(params) do { if (virtio_rpmb_debug) printf params; } while (0)
 #define WPRINTF(params) (printf params)
 
+/* Make rpmb_mac compatible for different openssl versions */
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 int rpmb_mac(const uint8_t *key, const struct rpmb_frame *frames,
 			size_t frame_cnt, uint8_t *mac)
 {
 	int i;
 	int hmac_ret;
 	unsigned int md_len;
-	struct hmac_ctx_st hmac_ctx;
+	HMAC_CTX hmac_ctx;
 
 	HMAC_CTX_init(&hmac_ctx);
 	hmac_ret = HMAC_Init_ex(&hmac_ctx, key, 32, EVP_sha256(), NULL);
@@ -98,6 +101,52 @@ err:
 
 	return hmac_ret ? 0 : -1;
 }
+#else
+int rpmb_mac(const uint8_t *key, const struct rpmb_frame *frames,
+			size_t frame_cnt, uint8_t *mac)
+{
+	int i;
+	int hmac_ret;
+	unsigned int md_len;
+	HMAC_CTX *hmac_ctx;
+
+	hmac_ctx = HMAC_CTX_new();
+	if (hmac_ctx == NULL) {
+		DPRINTF(("get hmac_ctx failed\n"));
+		return -1;
+	}
+
+	hmac_ret = HMAC_Init_ex(hmac_ctx, key, 32, EVP_sha256(), NULL);
+	if (!hmac_ret) {
+		DPRINTF(("HMAC_Init_ex failed\n"));
+		goto err;
+	}
+
+	for (i = 0; i < frame_cnt; i++) {
+		hmac_ret = HMAC_Update(hmac_ctx, frames[i].data, 284);
+		if (!hmac_ret) {
+			DPRINTF(("HMAC_Update failed\n"));
+			goto err;
+		}
+	}
+
+	hmac_ret = HMAC_Final(hmac_ctx, mac, &md_len);
+	if (md_len != 32) {
+		DPRINTF(("bad md_len %d != 32.\n", md_len));
+		goto err;
+	}
+
+	if (!hmac_ret) {
+		DPRINTF(("HMAC_Final failed\n"));
+		goto err;
+	}
+
+err:
+	HMAC_CTX_free(hmac_ctx);
+
+	return hmac_ret ? 0 : -1;
+}
+#endif
 
 static void rpmb_sim_close(void)
 {

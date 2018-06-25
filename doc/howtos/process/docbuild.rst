@@ -111,10 +111,10 @@ Our documentation processing has been tested to run with:
 
 * Python 3.6.3
 * Doxygen version 1.8.13
-* Sphinx version 1.6.7
-* Breathe version 4.7.3
+* Sphinx version 1.7.5
+* Breathe version 4.9.1
 * docutils version 0.14
-* sphinx_rtd_theme version 0.2.4
+* sphinx_rtd_theme version 0.4.0
 
 Depending on your Linux version, install the needed tools:
 
@@ -122,13 +122,14 @@ Depending on your Linux version, install the needed tools:
 
   .. code-block:: bash
 
-     sudo apt-get install doxygen python3-pip python3-wheel make
+     sudo apt-get install doxygen python3-pip \
+       python3-wheel make graphviz
 
 * For Fedora use:
 
   .. code-block:: bash
 
-     sudo dnf install doxygen python3-pip python3-wheel make
+     sudo dnf install doxygen python3-pip python3-wheel make graphviz
 
 And for either Linux environment, install the remaining python-based
 tools:

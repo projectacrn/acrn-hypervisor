@@ -164,7 +164,7 @@ static void clear_lapic_isr(void)
 	 * life, therefore we will ensure all the in-service bits are clear.
 	 */
 	do {
-		if (read_lapic_reg32(isr_reg)) {
+		if (read_lapic_reg32(isr_reg) != 0U) {
 			write_lapic_reg32(LAPIC_EOI_REGISTER, 0);
 			continue;
 		}
@@ -211,11 +211,11 @@ int early_init_lapic(void)
 	return 0;
 }
 
-int init_lapic(uint32_t cpu_id)
+int init_lapic(uint16_t cpu_id)
 {
 	/* Set the Logical Destination Register */
 	write_lapic_reg32(LAPIC_LOGICAL_DESTINATION_REGISTER,
-		(1 << cpu_id) << 24);
+		((1U << cpu_id) << 24));
 
 	/* Set the Destination Format Register */
 	write_lapic_reg32(LAPIC_DESTINATION_FORMAT_REGISTER, 0xf << 28);
@@ -316,10 +316,9 @@ void resume_lapic(void)
 	restore_lapic(&saved_lapic_regs);
 }
 
-int send_lapic_eoi(void)
+void send_lapic_eoi(void)
 {
 	write_lapic_reg32(LAPIC_EOI_REGISTER, 0);
-	return 0;
 }
 
 static void wait_for_delivery(void)
@@ -329,7 +328,7 @@ static void wait_for_delivery(void)
 	do {
 		tmp.value_32.lo_32 =
 			read_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_0);
-	} while (tmp.bits.delivery_status);
+	} while (tmp.bits.delivery_status != 0U);
 }
 
 uint32_t get_cur_lapic_id(void)
@@ -409,7 +408,7 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	return status;
 }
 
-void send_single_ipi(uint32_t pcpu_id, uint32_t vector)
+void send_single_ipi(uint16_t pcpu_id, uint32_t vector)
 {
 	uint32_t dest_lapic_id, hi_32, lo_32;
 

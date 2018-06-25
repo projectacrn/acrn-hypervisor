@@ -1,7 +1,9 @@
 # Build container based on Clearlinux
 FROM clearlinux:base
 
-RUN swupd bundle-add os-clr-on-clr
+RUN swupd bundle-add -b os-clr-on-clr python3-basic
+
+RUN pip3 install kconfiglib
 
 RUN mkdir -p /usr/local/bin
 RUN git config --global http.sslVerify false

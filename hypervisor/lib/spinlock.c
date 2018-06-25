@@ -6,12 +6,11 @@
 
 #include <hv_lib.h>
 
-inline int spinlock_init(spinlock_t *lock)
+inline void spinlock_init(spinlock_t *lock)
 {
 	memset(lock, 0, sizeof(spinlock_t));
-	return 0;
 }
-int spinlock_obtain(spinlock_t *lock)
+void spinlock_obtain(spinlock_t *lock)
 {
 
 	/* The lock function atomically increments and exchanges the head
@@ -31,5 +30,4 @@ int spinlock_obtain(spinlock_t *lock)
 		      [head] "m"(lock->head),
 		      [tail] "m"(lock->tail)
 		      : "cc", "memory");
-	return 0;
 }

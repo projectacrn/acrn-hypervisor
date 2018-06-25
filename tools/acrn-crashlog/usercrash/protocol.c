@@ -27,23 +27,28 @@
 #include "protocol.h"
 #include "log_sys.h"
 
+#define SUN_PATH_MAX \
+	(sizeof(struct sockaddr_un) - offsetof(struct sockaddr_un, sun_path))
+
 /* Documented in header file. */
 static int socket_make_sockaddr_un(const char *name,
 		struct sockaddr_un *p_addr, socklen_t *alen)
 {
-	size_t namelen;
+	size_t name_len;
+	size_t socket_len;
 
-	memset(p_addr, 0, sizeof(struct sockaddr_un));
-	namelen = strlen(name) + strlen(RESERVED_SOCKET_PREFIX);
-	/* unix_path_max appears to be missing on linux */
-	if (namelen > sizeof(*p_addr)-
-			offsetof(struct sockaddr_un, sun_path) - 1) {
+	socket_len = strlen(RESERVED_SOCKET_PREFIX);
+	if (socket_len >= SUN_PATH_MAX)
 		return -1;
-	}
 	strcpy(p_addr->sun_path, RESERVED_SOCKET_PREFIX);
+	name_len = strlen(name);
+	if (name_len >= (SUN_PATH_MAX - socket_len))
+		return -1;
 	strcat(p_addr->sun_path, name);
+
 	p_addr->sun_family = AF_LOCAL;
-	*alen = namelen + offsetof(struct sockaddr_un, sun_path) + 1;
+	*alen = name_len + socket_len +
+		offsetof(struct sockaddr_un, sun_path) + 1;
 	return 0;
 }
 
@@ -100,8 +105,12 @@ static int socket_bind(int fd, const char *name)
 {
 	struct sockaddr_un addr;
 	socklen_t alen;
+	size_t name_len;
 
 	addr.sun_family = AF_UNIX;
+	name_len = strlen(name);
+	if (name_len >= SUN_PATH_MAX)
+		return -1;
 	strcpy(addr.sun_path, name);
 	unlink(addr.sun_path);
 	alen = strlen(addr.sun_path) + sizeof(addr.sun_family);
