@@ -417,36 +417,41 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 {
 	uint64_t trusty_entry_gpa, trusty_base_gpa, trusty_base_hpa;
 	struct vm *vm = vcpu->vm;
-	struct trusty_boot_param *boot_param =
-			(struct trusty_boot_param *)(gpa2hpa(vm, param));
+	struct trusty_boot_param boot_param;
+
+	memset(&boot_param, 0, sizeof(boot_param));
+	if (copy_from_gpa(vcpu->vm, &boot_param, param, sizeof(boot_param))) {
+		pr_err("%s: Unable to copy trusty_boot_param\n", __func__);
+		return false;
+	}
 
 	if (sizeof(struct trusty_boot_param) !=
-			boot_param->size_of_this_struct) {
+			boot_param.size_of_this_struct) {
 		pr_err("%s: sizeof(struct trusty_boot_param) mismatch!\n",
 			__func__);
 		return false;
 	}
 
-	if (boot_param->version != TRUSTY_VERSION) {
+	if (boot_param.version != TRUSTY_VERSION) {
 		pr_err("%s: version of(trusty_boot_param) mismatch!\n",
 			__func__);
 		return false;
 	}
 
-	if (boot_param->entry_point == 0U) {
+	if (boot_param.entry_point == 0U) {
 		pr_err("%s: Invalid entry point\n", __func__);
 		return false;
 	}
 
-	if (boot_param->base_addr == 0U) {
+	if (boot_param.base_addr == 0U) {
 		pr_err("%s: Invalid memory base address\n", __func__);
 		return false;
 	}
 
-	trusty_entry_gpa = (uint64_t)boot_param->entry_point;
-	trusty_base_gpa = (uint64_t)boot_param->base_addr;
+	trusty_entry_gpa = (uint64_t)boot_param.entry_point;
+	trusty_base_gpa = (uint64_t)boot_param.base_addr;
 
-	create_secure_world_ept(vm, trusty_base_gpa, boot_param->mem_size,
+	create_secure_world_ept(vm, trusty_base_gpa, boot_param.mem_size,
 						TRUSTY_EPT_REBASE_GPA);
 	trusty_base_hpa = vm->sworld_control.sworld_memory.base_hpa;
 
@@ -459,7 +464,7 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 	/* init secure world environment */
 	if (init_secure_world_env(vcpu,
 		trusty_entry_gpa - trusty_base_gpa + TRUSTY_EPT_REBASE_GPA,
-		trusty_base_hpa, boot_param->mem_size)) {
+		trusty_base_hpa, boot_param.mem_size)) {
 
 		/* switch to Secure World */
 		vcpu->arch_vcpu.cur_context = SECURE_WORLD;
