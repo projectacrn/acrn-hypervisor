@@ -304,7 +304,7 @@ void setup_ioapic_irq(void)
 {
 	int ioapic_id;
 	uint32_t gsi;
-	int vr;
+	uint32_t vr;
 
 	spinlock_init(&ioapic_lock);
 
@@ -343,7 +343,7 @@ void setup_ioapic_irq(void)
 			 */
 			if (gsi < NR_LEGACY_IRQ) {
 				vr = irq_desc_alloc_vector(gsi, false);
-				if (vr < 0) {
+				if (vr > NR_MAX_VECTOR) {
 					pr_err("failed to alloc VR");
 					gsi++;
 					continue;
