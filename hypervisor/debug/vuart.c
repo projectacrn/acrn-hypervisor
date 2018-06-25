@@ -98,7 +98,7 @@ static int fifo_numchars(struct fifo *fifo)
  *
  * Return an interrupt reason if one is available.
  */
-static int uart_intr_reason(struct vuart *vu)
+static uint8_t uart_intr_reason(struct vuart *vu)
 {
 	if ((vu->lsr & LSR_OE) != 0 && (vu->ier & IER_ELSI) != 0)
 		return IIR_RLS;
@@ -131,7 +131,7 @@ static void uart_init(struct vuart *vu)
  */
 static void uart_toggle_intr(struct vuart *vu)
 {
-	char intr_reason;
+	uint8_t intr_reason;
 
 	intr_reason = uart_intr_reason(vu);
 
@@ -229,7 +229,8 @@ static uint32_t uart_read(__unused struct vm_io_handler *hdlr,
 		struct vm *vm, uint16_t offset,
 		__unused size_t width)
 {
-	char iir, intr_reason, reg;
+	char iir, reg;
+	uint8_t intr_reason;
 	struct vuart *vu = vm_vuart(vm);
 	offset -= vu->base;
 	vuart_lock(vu);

@@ -109,12 +109,12 @@ static inline void inv_tlb_one_page(void *addr)
 
 static inline bool cpu_has_vmx_ept_cap(uint32_t bit_mask)
 {
-	return !!(vmx_caps.ept & bit_mask);
+	return ((vmx_caps.ept & bit_mask) != 0U);
 }
 
 static inline bool cpu_has_vmx_vpid_cap(uint32_t bit_mask)
 {
-	return !!(vmx_caps.vpid & bit_mask);
+	return ((vmx_caps.vpid & bit_mask) != 0U);
 }
 
 int check_vmx_mmu_cap(void)

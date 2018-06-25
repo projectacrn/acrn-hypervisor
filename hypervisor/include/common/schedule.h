@@ -23,7 +23,7 @@ void get_schedule_lock(uint16_t pcpu_id);
 void release_schedule_lock(uint16_t pcpu_id);
 
 void set_pcpu_used(uint16_t pcpu_id);
-int allocate_pcpu(void);
+uint16_t allocate_pcpu(void);
 void free_pcpu(uint16_t pcpu_id);
 
 void add_vcpu_to_runqueue(struct vcpu *vcpu);
