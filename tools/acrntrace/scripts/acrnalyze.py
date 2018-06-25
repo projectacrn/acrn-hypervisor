@@ -12,6 +12,7 @@ import getopt
 import os
 import config
 from vmexit_analyze import analyze_vm_exit
+from irq_analyze import analyze_irq
 
 def usage():
     """print the usage of the script
@@ -28,6 +29,7 @@ def usage():
     -o, --ofile=[string]: output file
     -f, --frequency=[unsigned int]: TSC frequency in MHz
     --vm_exit: to generate vm_exit report
+    --irq: to generate irq related report
     '''
 
 def do_analysis(ifile, ofile, analyzer):
@@ -58,7 +60,7 @@ def main(argv):
     inputfile = ''
     outputfile = ''
     opts_short = "hi:o:f:"
-    opts_long = ["ifile=", "ofile=", "frequency=", "vm_exit"]
+    opts_long = ["ifile=", "ofile=", "frequency=", "vm_exit", "irq"]
     analyzer = []
 
     try:
@@ -79,6 +81,8 @@ def main(argv):
             TSC_FREQ = arg
         elif opt == "--vm_exit":
             analyzer.append(analyze_vm_exit)
+        elif opt == "--irq":
+            analyzer.append(analyze_irq)
         else:
             assert False, "unhandled option"
 
