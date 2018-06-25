@@ -363,7 +363,7 @@ static inline void clflush(volatile void *p)
 extern uint8_t CPU_Boot_Page_Tables_Start_VM[];
 
 /* External Interfaces */
-int     is_ept_supported(void);
+bool is_ept_supported(void);
 uint64_t create_guest_initial_paging(struct vm *vm);
 void    destroy_ept(struct vm *vm);
 uint64_t  gpa2hpa(struct vm *vm, uint64_t gpa);

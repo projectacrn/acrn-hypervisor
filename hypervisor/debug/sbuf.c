@@ -37,7 +37,7 @@ static inline uint32_t sbuf_calculate_allocate_size(uint32_t ele_num,
 		return 0;
 	}
 
-	return sbuf_allocate_size;
+	return (uint32_t) sbuf_allocate_size;
 }
 
 struct shared_buf *sbuf_allocate(uint32_t ele_num, uint32_t ele_size)

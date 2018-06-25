@@ -32,9 +32,9 @@ void release_schedule_lock(uint16_t pcpu_id)
 	spinlock_release(&per_cpu(sched_ctx, pcpu_id).scheduler_lock);
 }
 
-int allocate_pcpu(void)
+uint16_t allocate_pcpu(void)
 {
-	int i;
+	uint16_t i;
 
 	for (i = 0; i < phys_cpu_num; i++) {
 		if (bitmap_test_and_set(i, &pcpu_used_bitmap) == 0)

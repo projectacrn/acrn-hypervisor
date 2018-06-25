@@ -425,7 +425,7 @@ static inline uint8_t get_vcpu_mode(struct vcpu *vcpu)
 
 static inline bool cpu_has_vmx_unrestricted_guest_cap(void)
 {
-       return !!(msr_read(MSR_IA32_VMX_MISC) & VMX_SUPPORT_UNRESTRICTED_GUEST);
+       return ((msr_read(MSR_IA32_VMX_MISC) & VMX_SUPPORT_UNRESTRICTED_GUEST) != 0UL);
 }
 
 typedef struct _descriptor_table_{
