@@ -6,6 +6,7 @@ This script defines the function to do the vm_exit analysis
 """
 
 import csv
+from config import TSC_FREQ
 
 TSC_BEGIN = 0L
 TSC_END = 0L
@@ -233,28 +234,6 @@ def generate_report(ofile, freq):
     except IOError as err:
         print "Output File Error: " + str(err)
 
-def get_freq(ifile):
-    """ get cpu freq from the first line of trace file
-    Args:
-        ifile: input trace data file
-    Return:
-        cpu frequency
-    """
-    try:
-        ifp = open(ifile)
-        line = ifp.readline()
-        freq = float(line[10:])
-
-    except IOError as err:
-        print "Failed to get cpu freq"
-        freq = 1920.00
-
-    finally:
-        if 'ifp' in locals():
-            ifp.close()
-
-    return freq
-
 def analyze_vm_exit(ifile, ofile):
     """do the vm exits analysis
     Args:
@@ -267,8 +246,6 @@ def analyze_vm_exit(ifile, ofile):
     print("VM exits analysis started... \n\tinput file: %s\n"
           "\toutput file: %s.csv" % (ifile, ofile))
 
-    freq = get_freq(ifile)
-
     parse_trace_data(ifile)
     # save report to the output file
-    generate_report(ofile, freq)
+    generate_report(ofile, TSC_FREQ)
