@@ -156,7 +156,7 @@ int	vm_set_ptdev_intx_info(struct vmctx *ctx, uint16_t virt_bdf,
 	uint16_t phys_bdf, int virt_pin, int phys_pin, bool pic_pin);
 int	vm_reset_ptdev_intx_info(struct vmctx *ctx, int virt_pin, bool pic_pin);
 
-int	vm_create_vcpu(struct vmctx *ctx, int vcpu_id);
+int	vm_create_vcpu(struct vmctx *ctx, uint16_t vcpu_id);
 
 int	vm_get_cpu_state(struct vmctx *ctx, void *state_buf);
 
