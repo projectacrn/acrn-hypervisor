@@ -50,8 +50,50 @@ static int store_timer_list(void)
 	return -1;
 }
 
+static int check_vms_status(unsigned int status)
+{
+	struct vmmngr_struct *s;
+
+	vmmngr_update();
+
+	LIST_FOREACH(s, &vmmngr_head, list)
+	    if (s->state != status && s->state != VM_CREATED)
+		return -1;
+
+	return 0;
+}
+
+static int _handle_acrnd_stop(unsigned int timeout)
+{
+	unsigned long t = timeout;
+
+	/*Let ospm stopping UOSs */
+
+	/* list and update the vm status */
+	do {
+		if (check_vms_status(VM_CREATED) == 0)
+			return 0;
+		sleep(1);
+	}
+	while (t--);
+
+	return -1;
+}
+
 static void handle_acrnd_stop(struct mngr_msg *msg, int client_fd, void *param)
 {
+	struct req_acrnd_stop *req = (void *)msg;
+	struct ack_acrnd_stop ack;
+
+	ack.msg.msgid = req->msg.msgid;
+	ack.msg.len = sizeof(ack);
+	ack.msg.timestamp = req->msg.timestamp;
+	ack.err = _handle_acrnd_stop(req->timeout);
+
+	store_timer_list();
+
+	if (client_fd > 0)
+		mngr_send_msg(client_fd, (void *)&ack, NULL, 0, 0);
 }
 
 void handle_acrnd_resume(struct mngr_msg *msg, int client_fd, void *param)
