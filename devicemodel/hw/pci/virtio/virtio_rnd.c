@@ -333,7 +333,7 @@ virtio_rnd_notify(void *base, struct virtio_vq_info *vq)
 static int
 virtio_rnd_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
-	struct virtio_rnd *rnd;
+	struct virtio_rnd *rnd = NULL;
 	int fd;
 	int len;
 	uint8_t v;
@@ -367,13 +367,13 @@ virtio_rnd_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	len = read(fd, &v, sizeof(v));
 	if (len <= 0) {
 		WPRINTF(("virtio_rnd: /dev/random not ready, read(): %d", len));
-		return -1;
+		goto fail;
 	}
 
 	rnd = calloc(1, sizeof(struct virtio_rnd));
 	if (!rnd) {
 		WPRINTF(("virtio_rnd: calloc returns NULL\n"));
-		return -1;
+		goto fail;
 	}
 
 	rnd->vbs_k.status = kstat;
@@ -431,14 +431,23 @@ virtio_rnd_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_set_cfgdata16(dev, PCIR_SUBVEND_0, VIRTIO_VENDOR);
 
 	if (virtio_interrupt_init(&rnd->base, virtio_uses_msix())) {
-		if (rnd)
-			free(rnd);
-		return -1;
+		goto fail;
 	}
 
 	virtio_set_io_bar(&rnd->base, 0);
 
 	return 0;
+
+fail:
+	close(fd);
+	if (rnd) {
+		if (rnd->vbs_k.status == VIRTIO_DEV_INIT_SUCCESS) {
+			/* VBS-K is in use */
+			close(rnd->vbs_k.fd);
+		}
+		free(rnd);
+	}
+	return -1;
 }
 
 static void
@@ -462,6 +471,8 @@ virtio_rnd_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		rnd->vbs_k.fd = -1;
 	}
 
+	assert(rnd->fd >= 0);
+	close(rnd->fd);
 	DPRINTF(("%s: free struct virtio_rnd!\n", __func__));
 	free(rnd);
 }
