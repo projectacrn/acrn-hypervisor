@@ -50,7 +50,7 @@
 #define TRACE_FUNC_EXIT			0xFE
 #define TRACE_STR			0xFF
 
-/* sizeof(trace_entry) == 3 x 64bit */
+/* sizeof(trace_entry) == 4 x 64bit */
 struct trace_entry {
 	uint64_t tsc; /* TSC */
 	uint64_t id;
