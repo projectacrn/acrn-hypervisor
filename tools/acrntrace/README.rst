@@ -12,6 +12,71 @@ A ``scripts`` directory includes scripts to analyze the trace data.
 Usage
 *****
 
+The ``acrntrace`` tool runs on the Service OS (SOS) to capture trace data and
+output to trace file under ``/tmp/acrntrace`` with raw (binary) data format.
+
+Options:
+
+-h			print this message
+-t period		specify polling interval in milliseconds [1-999]
+-c			clear the buffered old data
+
+The ``acrntrace_format.py`` is a offline tool for parsing trace data (as output
+by acrntrace) to human-readable formats based on given format.
+
+Here's an explanation of the tool's parameters:
+
+.. code-block:: none
+
+   acrntrace_format.py [options] [formats] [trace_data]
+
+Options:
+
+-h    print this message
+
+*formats* file specifies the rules to reformat the *trace_data* collected by
+``acrntrace`` into a human-readable text form. The rules in this file are of
+the form::
+
+   event_id  text_format_string
+
+The text_format_string may include format specifiers, such as
+``%(cpu)d``, ``%(tsc)d``, ``%(event)d``, ``%(1)d``, and ``%(2)d``.
+The 'd' format specifier outputs in decimal, alternatively 'x' will
+output in hexadecimal and 'o' will output in octal.
+
+These respectively correspond to the CPU number (cpu), timestamp
+counter (tsc), event ID (event) and the data logged in the trace file.
+There can be only one such rule for each type of event.
+
+An example *formats_file* is available in the acrn_hypervisor repo in
+``hypervisor/tools/acrntrace/scripts/formats``.
+
+The ``acrnalyze.py`` is a offline tool to analyze trace data (as output by
+acrntrace) based on given analyser, such as ``vm_exit`` or ``irq``.
+
+Options:
+
+-h                               print this message
+-i, --ifile=string               input file name
+-o, --ofile=string               output filename
+-f, --frequency=unsigned_int     TSC frequency in MHz
+--vm_exit                        generate a vm_exit report
+--irq                            generate an IRQ-related report
+
+.. note:: We depend on TSC frequency to do time-based analysis. Please configure
+   the right TSC frequency that acrn runs on. TSC frequency can be obtained
+   from the ACRN console log (calibrate_tsc, tsc_hz=xxx) when the hypervisor boots.
+
+   The tool does not take into account CPU frequency variation that can
+   occur during normal operation (aka CPU throttling) on the processor which
+   doesn't support for invariant TSC. The results may therefore not be
+   completely accurate in that regard.
+
+Here's a typical use of ``acrntrace`` to capture trace data from the SOS,
+converting the binary data to human-readable form, copying the processed trace
+data to your linux system, and running the analysis tool.
+
 1. On the SOS, clear buffers before starting a trace, with:
 
    .. code-block:: none
@@ -33,6 +98,15 @@ Usage
 
       q <enter>
 
+#. Convert trace data to human-readable format, with:
+
+   .. code-block:: none
+
+      # acrntrace_format.py formats trace_data
+
+   Trace data will be converted to human-readable format based on given format
+   and printed to stdout.
+
 #. Analysis of the collected data is done on a Linux PC, so you'll need
    to copy the collected trace data to your Linux system (using ``scp`` is
    recommended):
@@ -45,15 +119,13 @@ Usage
    Replace username and hostname with appropriate values.
 
 #. On the Linux system, run the provided Python3 script to analyze the
-   ``vm_exits`` (currently only vm_exit analysis is supported):
+   ``vm_exits``, ``irq``:
 
    .. code-block:: none
 
       # acrnalyze.py -i /home/xxxx/trace_data/20171115-101605/0 \
-           -o /home/xxxx/trace_data/20171115-101605/cpu0 --vm_exit
+           -o /home/xxxx/trace_data/20171115-101605/cpu0 --vm_exit --irq
 
-   - A preprocess makes some changes to the datafile for processing but
-     a copy of the original data file is saved with suffix ``.orig``.
    - Analysis report is written to stdout, or to a CSV file if
      a filename is specified using ``-o filename``.
    - The scripts require Python3.
