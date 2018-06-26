@@ -13,7 +13,7 @@
 #define BUP_MKHI_BOOTLOADER_SEED_LEN    64
 
 /* Trusty EPT rebase gpa: 511G */
-#define TRUSTY_EPT_REBASE_GPA (511ULL*1024ULL*1024ULL*1024ULL)
+#define TRUSTY_EPT_REBASE_GPA (511UL * 1024UL * 1024UL * 1024UL)
 #define TRUSTY_MEMORY_SIZE        0x01000000
 
 /* Structure of seed info */
@@ -122,4 +122,3 @@ void destroy_secure_world(struct vm *vm);
 void trusty_set_dseed(void *dseed, uint8_t seed_num);
 
 #endif /* TRUSTY_H_ */
-

@@ -273,7 +273,7 @@ static int print_pow2(struct print_param *param,
 	int ret;
 
 	/* calculate mask */
-	mask = (1ULL << shift) - 1;
+	mask = (1UL << shift) - 1;
 
 	/* determine digit translation table */
 	digits = ((param->vars.flags & PRINT_FLAG_UPPER) != 0) ?
@@ -469,7 +469,7 @@ int do_print(const char *fmt, struct print_param *param,
 
 			/* initialize the variables for the next argument */
 			memset(&(param->vars), 0, sizeof(param->vars));
-			param->vars.mask = 0xFFFFFFFFFFFFFFFFULL;
+			param->vars.mask = 0xFFFFFFFFFFFFFFFFUL;
 
 			/*
 			 * analyze the format specification:
