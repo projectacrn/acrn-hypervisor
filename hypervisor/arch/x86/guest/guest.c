@@ -801,8 +801,8 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 /* The GDT defined below compatible with linux kernel */
 #define GUEST_INIT_GDT_DESC_0	(0x0)
 #define GUEST_INIT_GDT_DESC_1	(0x0)
-#define GUEST_INIT_GDT_DESC_2	(0x00CF9B000000FFFFULL) /* Linear Code */
-#define GUEST_INIT_GDT_DESC_3	(0x00CF93000000FFFFULL) /* Linear Data */
+#define GUEST_INIT_GDT_DESC_2	(0x00CF9B000000FFFFUL) /* Linear Code */
+#define GUEST_INIT_GDT_DESC_3	(0x00CF93000000FFFFUL) /* Linear Data */
 
 static const uint64_t guest_init_gdt[] = {
 	GUEST_INIT_GDT_DESC_0,
