@@ -27,18 +27,84 @@ int load_timer_list(void)
 	return -1;
 }
 
+#define ACRND_LOG_FMT	"/opt/acrn/%s.log"
+
+static void acrnd_run_vm(char *name)
+{
+	char log_path[128] = {};
+
+	snprintf(log_path, sizeof(log_path) -1, ACRND_LOG_FMT, name);
+	unlink(log_path);
+	stdin = freopen(log_path, "w+", stdin);
+	stdout = freopen(log_path, "w+", stdout);
+	stderr = freopen(log_path, "w+", stderr);
+	fflush(stdin);
+	fflush(stdout);
+	fflush(stderr);
+
+	start_vm(name);
+	printf("%s exited!\n", name);
+	exit(0);
+}
+
 static int active_all_vms(void)
 {
-	return -1;
+	struct vmmngr_struct *vm;
+	int ret = 0;
+	pid_t pid;
+
+	vmmngr_update();
+
+	LIST_FOREACH(vm, &vmmngr_head, list) {
+		switch (vm->state) {
+		case VM_CREATED:
+			pid = fork();
+			if (!pid)
+				acrnd_run_vm(vm->name);
+			break;
+		case VM_PAUSED:
+			ret += resume_vm(vm->name);
+			break;
+		default:
+			pdebug();
+		}
+	}
+
+	return ret ? -1 : 0;
 }
 
 #define SOS_LCS_SOCK		"sos-lcs"
+#define DEFAULT_TIMEOUT	2U
 #define ACRND_NAME		"acrnd"
 static int acrnd_fd = -1;
 
 unsigned get_sos_wakeup_reason(void)
 {
-	return 0;
+	int client_fd, ret = 0;
+	struct req_wakeup_reason req;
+	struct ack_wakeup_reason ack;
+
+	client_fd = mngr_open_un(SOS_LCS_SOCK, MNGR_CLIENT);
+	if (client_fd <= 0) {
+		fprintf(stderr, "Failed to open the socket(%s) to query the "
+				"reason for the wake-up", SOS_LCS_SOCK);
+		goto EXIT;
+	}
+
+	req.msg.magic = MNGR_MSG_MAGIC;
+	req.msg.msgid = WAKEUP_REASON;
+	req.msg.timestamp = time(NULL);
+	req.msg.len = sizeof(struct req_wakeup_reason);
+
+	if (mngr_send_msg(client_fd, (void *)&req, (void *)&ack, sizeof(ack),
+			  DEFAULT_TIMEOUT))
+		fprintf(stderr, "Failed to get wakeup_reason from SOS, err(%d)\n", ret);
+	else
+		ret = ack.reason;
+
+	mngr_close(client_fd);
+ EXIT:
+	return ret;
 }
 
 static void handle_timer_req(struct mngr_msg *msg, int client_fd, void *param)
@@ -98,6 +164,40 @@ static void handle_acrnd_stop(struct mngr_msg *msg, int client_fd, void *param)
 
 void handle_acrnd_resume(struct mngr_msg *msg, int client_fd, void *param)
 {
+	struct req_acrnd_resume *req = (void *)msg;
+	struct ack_acrnd_resume ack;
+	struct stat st;
+	int wakeup_reason;
+
+	ack.msg.msgid = req->msg.msgid;
+	ack.msg.len = sizeof(ack);
+	ack.msg.timestamp = req->msg.timestamp;
+	ack.err = 0;
+
+	/* Do we have a timer list file to load? */
+	if (!stat(TIMER_LIST_FILE, &st))
+		if (S_ISREG(st.st_mode)) {
+			ack.err = load_timer_list();
+			if (ack.err)
+				pdebug();
+			goto reply_ack;
+		}
+
+	/* acrnd get wakeup_reason from sos lcs */
+	wakeup_reason = get_sos_wakeup_reason();
+
+	if (wakeup_reason & CBC_WK_RSN_RTC) {
+		/* do nothing, just wait the acrnd_work to expire */
+		goto reply_ack;
+	}
+
+	ack.err = active_all_vms();
+
+ reply_ack:
+	unlink(TIMER_LIST_FILE);
+
+	if (client_fd > 0)
+		mngr_send_msg(client_fd, (void *)&ack, NULL, 0, 0);
 }
 
 static void handle_on_exit(void)
