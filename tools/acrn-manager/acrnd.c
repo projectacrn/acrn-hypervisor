@@ -102,6 +102,37 @@ static void try_do_works(void)
 	}
 }
 
+static void acrnd_run_vm(char *name);
+
+/* Time to run/resume VM */
+void acrnd_vm_timer_func(struct work_arg *arg)
+{
+	struct vmmngr_struct *vm;
+
+	if (!arg) {
+		pdebug();
+		return;
+	}
+
+	vmmngr_update();
+	vm = vmmngr_find(arg->name);
+	if (!vm) {
+		pdebug();
+		return;
+	}
+
+	switch (vm->state) {
+	case VM_CREATED:
+		acrnd_run_vm(arg->name);
+		break;
+	case VM_PAUSED:
+		resume_vm(arg->name);
+		break;
+	default:
+		pdebug();
+	}
+}
+
 #define TIMER_LIST_FILE "/opt/acrn/conf/timer_list"
 
 /* load/store_timer_list to file to keep timers if SOS poweroff */
@@ -192,6 +223,34 @@ unsigned get_sos_wakeup_reason(void)
 
 static void handle_timer_req(struct mngr_msg *msg, int client_fd, void *param)
 {
+	struct req_acrnd_timer *req = (void *)msg;
+	struct ack_acrnd_timer ack;
+	struct vmmngr_struct *vm;
+	struct work_arg arg = {};
+
+	ack.msg.msgid = req->msg.msgid;
+	ack.msg.len = sizeof(ack);
+	ack.msg.timestamp = req->msg.timestamp;
+	ack.err = -1;
+
+	vmmngr_update();
+	vm = vmmngr_find(req->name);
+	if (!vm) {
+		pdebug();
+		goto reply_ack;
+	}
+
+	strncpy(arg.name, req->name, sizeof(arg.name) - 1);
+
+	if (acrnd_add_work(acrnd_vm_timer_func, &arg, req->t)) {
+		pdebug();
+		goto reply_ack;
+	}
+
+	ack.err = 0;
+ reply_ack:
+	if (client_fd > 0)
+		mngr_send_msg(client_fd, (void *)&ack, NULL, 0, 0);
 }
 
 static int store_timer_list(void)
