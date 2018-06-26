@@ -134,11 +134,78 @@ void acrnd_vm_timer_func(struct work_arg *arg)
 }
 
 #define TIMER_LIST_FILE "/opt/acrn/conf/timer_list"
+static pthread_mutex_t timer_file_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* load/store_timer_list to file to keep timers if SOS poweroff */
-int load_timer_list(void)
+static int load_timer_list(void)
 {
-	return -1;
+	FILE *fp;
+	struct work_arg arg = {};
+	time_t expire;
+	time_t record;
+	time_t current;
+	char l[256];
+	char s1[16], s2[64], s3[64];	/* vmname & expire */
+	int ret = 0;
+
+	pthread_mutex_lock(&timer_file_mutex);
+
+	fp = fopen(TIMER_LIST_FILE, "r");
+	if (!fp) {
+		perror("Open timer list file");
+		ret = -1;
+		goto open_file_err;
+	}
+
+	current = time(NULL);
+
+	while (!feof(fp)) {
+		memset(l, 0, 256);
+		fgets(l, 255, fp);
+
+		memset(s1, 0, 16);
+		memset(s2, 0, 64);
+		memset(s3, 0, 64);
+
+		sscanf(l, "%s\t%s\t%s", s1, s2, s3);
+
+		if (strlen(s1) == 0 || strlen(s1) > 16) {
+			perror("Invalid vmname from timer list file");
+			continue;
+		}
+
+		memset(arg.name, 0, sizeof(arg.name));
+		strncpy(arg.name, s1, sizeof(s1));
+
+		expire = strtoul(s2, NULL, 10);
+		if (expire == 0 || errno == ERANGE) {
+			perror("Invalid expire from timer list file");
+			continue;
+		}
+
+		record = strtoul(s3, NULL, 10);
+		if (record == 0 || errno == ERANGE) {
+			perror("Invalid record time from timer list file");
+			continue;
+		}
+
+		if (current == (time_t) -1)
+			current = record;
+
+		if (expire > current)
+			expire -= current;
+		else
+			expire = 1;
+
+		if (acrnd_add_work(acrnd_vm_timer_func, &arg, expire))
+			ret = -1;
+	}
+
+	fclose(fp);
+
+ open_file_err:
+	pthread_mutex_unlock(&timer_file_mutex);
+	return ret;
 }
 
 #define ACRND_LOG_FMT	"/opt/acrn/%s.log"
@@ -189,6 +256,7 @@ static int active_all_vms(void)
 
 #define SOS_LCS_SOCK		"sos-lcs"
 #define DEFAULT_TIMEOUT	2U
+#define SOS_ADVANCE_WKUP	10U	/* WKUP SOS 10 sec in advance */
 #define ACRND_NAME		"acrnd"
 static int acrnd_fd = -1;
 
@@ -253,9 +321,88 @@ static void handle_timer_req(struct mngr_msg *msg, int client_fd, void *param)
 		mngr_send_msg(client_fd, (void *)&ack, NULL, 0, 0);
 }
 
+static int set_sos_timer(time_t due_time)
+{
+	int client_fd, ret;
+	int retry = 1;
+	struct req_rtc_timer req;
+	struct ack_rtc_timer ack;
+
+	client_fd = mngr_open_un(SOS_LCS_SOCK, MNGR_CLIENT);
+	if (client_fd <= 0) {
+		perror("Failed to open sock for to req wkup_reason");
+		ret = client_fd;
+		goto EXIT;
+	}
+
+	req.msg.magic = MNGR_MSG_MAGIC;
+	req.msg.msgid = RTC_TIMER;
+	req.msg.timestamp = time(NULL);
+	req.msg.len = sizeof(struct req_rtc_timer);
+	req.t = due_time;
+
+ RETRY:
+	ret =
+	    mngr_send_msg(client_fd, (void *)&req, (void *)&ack, sizeof(ack),
+			  DEFAULT_TIMEOUT);
+	while (ret != 0 && retry < 5) {
+		printf("Fail to set sos wakeup timer(err:%d), retry %d...\n",
+		       ret, retry++);
+		goto RETRY;
+	}
+
+	mngr_close(client_fd);
+ EXIT:
+	return ret;
+}
+
 static int store_timer_list(void)
 {
-	return -1;
+	FILE *fp;
+	struct acrnd_work *w;
+	time_t sys_wakeup = 0;
+	time_t current;
+	int ret = 0;
+
+	current = time(NULL);
+	if (current == (time_t) - 1) {
+		pdebug();
+		return -1;
+	}
+
+	pthread_mutex_lock(&timer_file_mutex);
+	fp = fopen(TIMER_LIST_FILE, "w+");
+	if (!fp) {
+		perror("Open timer list file");
+		ret = -1;
+		goto open_file_err;
+	}
+	pthread_mutex_lock(&work_mutex);
+	LIST_FOREACH(w, &work_head, list) {
+		if (w->func != acrnd_vm_timer_func)
+			continue;
+		if (!sys_wakeup)
+			sys_wakeup = w->expire;
+		if (w->expire < sys_wakeup)
+			sys_wakeup = w->expire;
+		fprintf(fp, "%s\t%lu\t%lu\n", w->arg.name, w->expire, current);
+	}
+	pthread_mutex_unlock(&work_mutex);
+
+	/* If any timer is stored
+	 * system must be awake at sys_wakeup */
+	if (sys_wakeup) {
+		if (sys_wakeup > SOS_ADVANCE_WKUP)
+			sys_wakeup -= SOS_ADVANCE_WKUP;
+		set_sos_timer(sys_wakeup);
+	} else {
+		unlink(TIMER_LIST_FILE);
+	}
+
+	fclose(fp);
+ open_file_err:
+	pthread_mutex_unlock(&timer_file_mutex);
+	return ret;
 }
 
 static int check_vms_status(unsigned int status)
