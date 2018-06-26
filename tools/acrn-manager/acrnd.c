@@ -19,6 +19,89 @@
 #include "acrn_mngr.h"
 #include "ioc.h"
 
+/* acrnd worker timer */
+
+struct work_arg {
+	char name[VMNAME_LEN];
+};
+
+struct acrnd_work {
+	void (*func) (struct work_arg *arg);
+	time_t expire;		/* when execute this work */
+
+	struct work_arg arg;
+
+	LIST_ENTRY(acrnd_work) list;
+};
+
+static LIST_HEAD(acrnd_work_list, acrnd_work) work_head;
+static pthread_mutex_t work_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+/* acrnd_add_work(), add a worker function.
+ * @func, the worker function.
+ * @sec, when add a @func(), after @sec seconds @func() will be called.
+ * @arg, a cpoy of @arg will be pass to @func.
+ */
+int acrnd_add_work(void (*func) (struct work_arg *arg),
+			struct work_arg *arg, unsigned sec)
+{
+	struct acrnd_work *work;
+	time_t current;
+
+	if (!func) {
+		pdebug();
+		return -1;
+	}
+
+	work = calloc(1, sizeof(*work));
+	if (!work) {
+		perror("Alloc work struct fail:");
+		return -1;
+	}
+
+	current = time(NULL);
+	if (current == (time_t) - 1) {
+		perror("Get current time by timer() fail:");
+		free(work);
+		return -1;
+	}
+
+	work->func = func;
+	work->expire = sec + current;
+	if (arg)
+		memcpy(&work->arg, arg, sizeof(*arg));
+
+	pthread_mutex_lock(&work_mutex);
+	LIST_INSERT_HEAD(&work_head, work, list);
+	pthread_mutex_unlock(&work_mutex);
+	return 0;
+}
+
+/* check if the works in work_head is expired, if expired then run
+ * work func() once and delete it
+ */
+static void try_do_works(void)
+{
+	time_t current;
+	struct acrnd_work *work, *twork;
+
+	current = time(NULL);
+	if (current == (time_t) - 1) {
+		perror("Get current time by timer() fail:");
+		return;
+	}
+
+	list_foreach_safe(work, &work_head, list, twork) {
+		if (current > work->expire) {
+			pthread_mutex_lock(&work_mutex);
+			work->func(&work->arg);
+			LIST_REMOVE(work, list);
+			pthread_mutex_unlock(&work_mutex);
+			free(work);
+		}
+	}
+}
+
 #define TIMER_LIST_FILE "/opt/acrn/conf/timer_list"
 
 /* load/store_timer_list to file to keep timers if SOS poweroff */
@@ -251,6 +334,12 @@ int main(int argc, char *argv[])
 	mngr_add_handler(acrnd_fd, ACRND_TIMER, handle_timer_req, NULL);
 	mngr_add_handler(acrnd_fd, ACRND_STOP, handle_acrnd_stop, NULL);
 	mngr_add_handler(acrnd_fd, ACRND_RESUME, handle_acrnd_resume, NULL);
+
+	/* Last thing, run our timer works */
+	while (1) {
+		try_do_works();
+		sleep(1);
+	}
 
 	return 0;
 }
