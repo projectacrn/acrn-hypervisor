@@ -207,13 +207,13 @@ const uint8_t _sch_toupper[256] = {
  * alphabets and digits are each contiguous.
  */
 long
-strtol(const char *nptr, char **endptr, register int base)
+strtol(const char *nptr, char **endptr, int base)
 {
-        register const char *s = nptr;
-        register uint64_t acc;
-        register int c;
-        register uint64_t cutoff;
-        register int neg = 0, any, cutlim;
+	const char *s = nptr;
+	uint64_t acc;
+	int c;
+	uint64_t cutoff;
+	int neg = 0, any, cutlim;
 
         /*
          * Skip white space and pick up leading +/- sign if any.
@@ -290,13 +290,13 @@ strtol(const char *nptr, char **endptr, register int base)
  * alphabets and digits are each contiguous.
  */
 uint64_t
-strtoul(const char *nptr, char **endptr, register int base)
+strtoul(const char *nptr, char **endptr, int base)
 {
-        register const char *s = nptr;
-        register uint64_t acc;
-        register int c;
-        register uint64_t cutoff;
-        register int neg = 0, any, cutlim;
+	const char *s = nptr;
+	uint64_t acc;
+	int c;
+	uint64_t cutoff;
+	int neg = 0, any, cutlim;
 
         /*
          * See strtol for comments as to the logic used.
