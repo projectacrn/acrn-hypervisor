@@ -88,13 +88,12 @@ register_default_iohandler(int start, int size)
 }
 
 int
-emulate_inout(struct vmctx *ctx, int *pvcpu, struct pio_request *pio_request,
-	      int strict)
+emulate_inout(struct vmctx *ctx, int *pvcpu, struct pio_request *pio_request)
 {
 	int bytes, flags, in, port;
 	inout_func_t handler;
 	void *arg;
-	int i, retval;
+	int retval;
 
 	bytes = pio_request->size;
 	in = (pio_request->direction == REQUEST_READ);
@@ -104,17 +103,6 @@ emulate_inout(struct vmctx *ctx, int *pvcpu, struct pio_request *pio_request,
 	assert(bytes == 1 || bytes == 2 || bytes == 4);
 
 	handler = inout_handlers[port].handler;
-
-	if (strict) {
-		if (handler == default_inout)
-			return -1;
-
-		for (i = 1; i < bytes; i++) {
-			if (inout_handlers[port + i].handler != handler)
-				return -1;
-		}
-	}
-
 	flags = inout_handlers[port].flags;
 	arg = inout_handlers[port].arg;
 

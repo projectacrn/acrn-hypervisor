@@ -77,7 +77,6 @@ static int guest_vmexit_on_hlt, guest_vmexit_on_pause;
 static int virtio_msix = 1;
 static int x2apic_mode;	/* default is xAPIC */
 
-static int strictio;
 static int strictmsr = 1;
 
 static int acpi;
@@ -302,7 +301,7 @@ vmexit_inout(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 	bytes = vhm_req->reqs.pio_request.size;
 	in = (vhm_req->reqs.pio_request.direction == REQUEST_READ);
 
-	error = emulate_inout(ctx, pvcpu, &vhm_req->reqs.pio_request, strictio);
+	error = emulate_inout(ctx, pvcpu, &vhm_req->reqs.pio_request);
 	if (error) {
 		fprintf(stderr, "Unhandled %s%c 0x%04x\n",
 				in ? "in" : "out",
@@ -606,7 +605,6 @@ static struct option long_options[] = {
 	{"memsize",		required_argument,	0, 'm' },
 	{"ioapic",		no_argument,		0, 'I' },
 	{"vmexit_pause",	no_argument,		0, 'P' },
-	{"strictio",		no_argument,		0, 'e' },
 	{"rtc_localtime",	no_argument,		0, 'u' },
 	{"uuid",		required_argument,	0, 'U' },
 	{"strictmsr",		no_argument,		0, 'w' },
@@ -721,9 +719,6 @@ main(int argc, char *argv[])
 			break;
 		case 'P':
 			guest_vmexit_on_pause = 1;
-			break;
-		case 'e':
-			strictio = 1;
 			break;
 		case 'u':
 			vrtc_enable_localtime(0);
