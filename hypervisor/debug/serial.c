@@ -22,7 +22,8 @@ static struct uart *get_uart_by_id(const char *uart_id, uint32_t *index)
 			break;
 
 		/* No device is found if index reaches end of array. */
-		if (++(*index) == SERIAL_MAX_DEVS)
+		(*index)++;
+		if (*index == SERIAL_MAX_DEVS)
 			return NULL;
 
 	}

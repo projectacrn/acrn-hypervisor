@@ -95,11 +95,13 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
                          */
                         for (i = 1; i < requested_buffs; i++) {
                                 /* Check if tmp_bit_idx is out-of-range */
-                                if (++tmp_bit_idx == BITMAP_WORD_SIZE) {
+                                tmp_bit_idx++;
+                                if (tmp_bit_idx == BITMAP_WORD_SIZE) {
                                         /* Break the loop if tmp_idx is
                                          * out-of-range
                                          */
-                                        if (++tmp_idx == pool->bmp_size)
+                                        tmp_idx++;
+                                        if (tmp_idx == pool->bmp_size)
                                                 break;
                                         /* Reset tmp_bit_idx */
                                         tmp_bit_idx = 0U;
@@ -153,7 +155,8 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
                                         }
 
                                         /* Check if bit_idx is out-of-range */
-                                        if (++bit_idx == BITMAP_WORD_SIZE) {
+                                        bit_idx++;
+                                        if (bit_idx == BITMAP_WORD_SIZE) {
                                                 /* Increment idx */
                                                 idx++;
                                                 /* Reset bit_idx */
@@ -306,8 +309,9 @@ void *memchr(const void *void_s, int c, size_t n)
 
         while (ptr < end) {
 
-                if (*ptr++ == val)
-                        return ((void *)(ptr - 1));
+                if (*ptr == val)
+                        return ((void *)ptr);
+                ptr++;
         }
 
         return NULL;

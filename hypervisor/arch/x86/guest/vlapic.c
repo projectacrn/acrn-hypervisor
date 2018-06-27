@@ -1107,7 +1107,8 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 				"Sending SIPI from VCPU %d to %hu with vector %d",
 				vlapic->vcpu->vcpu_id, vcpu_id, vec);
 
-			if (--target_vcpu->arch_vcpu.nr_sipi > 0)
+			target_vcpu->arch_vcpu.nr_sipi--;
+			if (target_vcpu->arch_vcpu.nr_sipi > 0)
 				continue;
 
 			target_vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;

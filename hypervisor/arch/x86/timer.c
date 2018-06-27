@@ -191,7 +191,8 @@ void timer_softirq(uint16_t pcpu_id)
 	list_for_each_safe(pos, n, &cpu_timer->timer_list) {
 		timer = list_entry(pos, struct timer, node);
 		/* timer expried */
-		if (timer->fire_tsc <= current_tsc && --tries > 0) {
+		tries--;
+		if (timer->fire_tsc <= current_tsc && tries > 0) {
 			del_timer(timer);
 
 			run_timer(timer);
