@@ -37,8 +37,6 @@
 #include <errno.h>
 #include <pthread.h>
 #include <pciaccess.h>
-#include <fcntl.h>
-#include <unistd.h>
 
 #include "iodev.h"
 #include "vmmapi.h"
@@ -808,7 +806,7 @@ cfginit(struct vmctx *ctx, struct passthru_dev *ptdev, int bus,
 {
 	int irq_type = IRQ_MSI;
 	char reset_path[60];
-	int fd;
+	FILE *f;
 
 	bzero(&ptdev->sel, sizeof(struct pcisel));
 	ptdev->sel.bus = bus;
@@ -828,28 +826,25 @@ cfginit(struct vmctx *ctx, struct passthru_dev *ptdev, int bus,
 		irq_type = IRQ_INTX;
 	}
 
-	/* If SOS kernel provides 'reset' entry in sysfs, related dev has some
-	 * reset capability, e.g. FLR, or secondary bus reset. We do 2 things:
-	 * - reset each dev before passthrough to achieve valid dev state after
-	 *   UOS reboot
-	 * - refuse to passthrough PCIe dev without any reset capability
+	/* Check reset method for PCIe dev. If SOS kernel provides 'reset'
+	 * entry in sysfs, related dev has some reset capability, e.g. FLR, or
+	 * secondary bus reset. PCIe dev without any reset capability is
+	 * refused for passthrough.
 	 */
-	snprintf(reset_path, 40,
-		"/sys/bus/pci/devices/0000:%02x:%02x.%x/reset",
-		bus, slot, func);
+	if (ptdev->pcie_cap) {
+		snprintf(reset_path, 40,
+			"/sys/bus/pci/devices/0000:%02x:%02x.%x/reset",
+			bus, slot, func);
 
-	fd = open(reset_path, O_WRONLY);
-	if (fd >= 0) {
-		if (write(fd, "1", 1) < 0)
-			warnx("reset dev %x/%x/%x failed!\n",
-			      bus, slot, func);
-		close(fd);
-	} else if (errno == ENOENT && ptdev->pcie_cap) {
-		warnx("No reset capability for PCIe %x/%x/%x, "
-				"remove it from ptdev list!!\n",
-				bus, slot, func);
-		if (!no_reset)
-			return -1;
+		if ((f = fopen(reset_path, "r")))
+		       fclose(f);
+		else if (errno == ENOENT) {
+			warnx("No reset capability for PCIe %x/%x/%x, "
+					"remove it from ptdev list!!\n",
+					bus, slot, func);
+			if (!no_reset)
+				return -1;
+		}
 	}
 
 	if (cfginitbar(ctx, ptdev) != 0) {
