@@ -85,6 +85,9 @@ static int memfd = -1;
 static int pciaccess_ref_cnt;
 static pthread_mutex_t ref_cnt_mtx = PTHREAD_MUTEX_INITIALIZER;
 
+/* Prefer MSI over INTx for ptdev */
+static bool prefer_msi = true;
+
 /* Not check reset capability before assign ptdev.
  * Set false by default, that is, always check.
  */
@@ -108,6 +111,12 @@ struct passthru_dev {
 	uint16_t phys_bdf;
 	struct pci_device *phys_dev;
 };
+
+void
+ptdev_prefer_msi(bool enable)
+{
+	prefer_msi = enable;
+}
 
 void ptdev_no_reset(bool enable)
 {
@@ -925,26 +934,14 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	struct passthru_dev *ptdev;
 	struct pci_device_iterator *iter;
 	struct pci_device *phys_dev;
-	char *opt;
-	bool keep_gsi = false;
 
 	ptdev = NULL;
 	error = -EINVAL;
 
-	if (opts == NULL) {
-		warnx("Empty passthru options\n");
+	if (opts == NULL ||
+	    sscanf(opts, "%x/%x/%x", &bus, &slot, &func) != 3) {
+		warnx("invalid passthru options, %s", opts);
 		return -EINVAL;
-	}
-
-	opt = strsep(&opts, ",");
-	if (sscanf(opt, "%x/%x/%x", &bus, &slot, &func) != 3) {
-		warnx("Invalid passthru options, %s", opt);
-		return -EINVAL;
-	}
-
-	while ((opt = strsep(&opts, ",")) != NULL) {
-		if (!strncmp(opt, "keep_gsi", 8))
-			keep_gsi = true;
 	}
 
 	if (vm_assign_ptdev(ctx, bus, slot, func) != 0) {
@@ -1011,7 +1008,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 * Forge Guest to use MSI/MSIX in this case to mitigate IRQ sharing
 	 * issue
 	 */
-	if (error == IRQ_MSI && !keep_gsi)
+	if (error == IRQ_MSI && prefer_msi)
 		return 0;
 
 	/* Allocates the virq if ptdev only support INTx */
