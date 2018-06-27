@@ -107,6 +107,10 @@ struct passthru_dev {
 	int phys_pin;
 	uint16_t phys_bdf;
 	struct pci_device *phys_dev;
+	/* Options for passthrough device:
+	 *   need_reset - reset dev before passthrough
+	 */
+	bool need_reset;
 };
 
 void ptdev_no_reset(bool enable)
@@ -840,7 +844,7 @@ cfginit(struct vmctx *ctx, struct passthru_dev *ptdev, int bus,
 
 	fd = open(reset_path, O_WRONLY);
 	if (fd >= 0) {
-		if (write(fd, "1", 1) < 0)
+		if (ptdev->need_reset && write(fd, "1", 1) < 0)
 			warnx("reset dev %x/%x/%x failed!\n",
 			      bus, slot, func);
 		close(fd);
@@ -930,6 +934,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	struct pci_device *phys_dev;
 	char *opt;
 	bool keep_gsi = false;
+	bool need_reset = false;
 
 	ptdev = NULL;
 	error = -EINVAL;
@@ -941,13 +946,17 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	opt = strsep(&opts, ",");
 	if (sscanf(opt, "%x/%x/%x", &bus, &slot, &func) != 3) {
-		warnx("Invalid passthru options, %s", opt);
+		warnx("Invalid passthru BDF options:%s", opt);
 		return -EINVAL;
 	}
 
 	while ((opt = strsep(&opts, ",")) != NULL) {
 		if (!strncmp(opt, "keep_gsi", 8))
 			keep_gsi = true;
+		else if (!strncmp(opt, "reset", 5))
+			need_reset = true;
+		else
+			warnx("Invalid passthru options:%s", opt);
 	}
 
 	if (vm_assign_ptdev(ctx, bus, slot, func) != 0) {
@@ -963,6 +972,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	ptdev->phys_bdf = PCI_BDF(bus, slot, func);
+	ptdev->need_reset = need_reset;
 	update_pt_info(ptdev->phys_bdf);
 
 	error = pciaccess_init();
