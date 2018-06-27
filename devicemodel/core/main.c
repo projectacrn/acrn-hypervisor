@@ -137,6 +137,7 @@ usage(int code)
 		"       -H: vmexit from the guest on hlt\n"
 		"       -l: LPC device configuration\n"
 		"       -m: memory size in MB\n"
+		"       -M: do not hide INTx link for MSI&INTx capable ptdev\n"
 		"       -p: pin 'vcpu' to 'hostcpu'\n"
 		"       -P: vmexit from the guest on pause\n"
 		"       -s: <slot,driver,configinfo> PCI slot config\n"
@@ -618,6 +619,7 @@ static struct option long_options[] = {
 	{"kernel",		required_argument,	0, 'k' },
 	{"ramdisk",		required_argument,	0, 'r' },
 	{"bootargs",		required_argument,	0, 'B' },
+	{"ptdev_msi",		no_argument,		0, 'M' },
 	{"version",		no_argument,		0, 'v' },
 	{"gvtargs",		required_argument,	0, 'G' },
 	{"help",		no_argument,		0, 'h' },
@@ -656,7 +658,7 @@ main(int argc, char *argv[])
 	if (signal(SIGINT, sig_handler_term) == SIG_ERR)
 		fprintf(stderr, "cannot register handler for SIGINT\n");
 
-	optstr = "abehuwxACHIPSTWYvk:r:B:p:g:c:s:m:l:U:G:i:";
+	optstr = "abehuwxACHIMPSTWYvk:r:B:p:g:c:s:m:l:U:G:i:";
 	while ((c = getopt_long(argc, argv, optstr, long_options,
 			&option_idx)) != -1) {
 		switch (c) {
@@ -771,6 +773,9 @@ main(int argc, char *argv[])
 				errx(EX_USAGE, "invalid GVT param %s", optarg);
 				exit(1);
 			}
+			break;
+		case 'M':
+			ptdev_prefer_msi(false);
 			break;
 		case 'v':
 			print_version();
