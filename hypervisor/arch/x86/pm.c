@@ -4,8 +4,6 @@
  */
 #include <hypervisor.h>
 
-struct run_context cpu_ctx;
-
 void restore_msrs(void)
 {
 #ifdef STACK_PROTECTOR
