@@ -7,6 +7,20 @@ RC_VERSION=5
 BASEDIR := $(shell pwd)
 DM_OBJDIR ?= $(CURDIR)/build
 
+# With V=1 means verbose build. Will show full build commands
+#
+# Without V means silient build. Only show customed message. And we
+# could put more focous on warning.
+ifdef V
+  Q :=
+  vecho := @true
+  SUBOPT := "V=1"
+else
+  Q := @
+  vecho := @echo
+  SUBOPT:= "--no-print-directory"
+endif
+
 CC ?= gcc
 
 CFLAGS := -g -O0 -std=gnu11
@@ -136,24 +150,28 @@ all: include/version.h $(PROGRAM)
 	@echo -n ""
 
 $(PROGRAM): $(OBJS)
-	$(CC) -o $(DM_OBJDIR)/$@ $(CFLAGS) $(LDFLAGS) $^ $(LIBS)
+	$(vecho) "Generate $(PROGRAM)..."
+	$(Q)$(CC) -o $(DM_OBJDIR)/$@ $(CFLAGS) $(LDFLAGS) $^ $(LIBS)
 
 clean:
-	rm -f $(OBJS)
-	rm -f include/version.h
-	rm -f $(OBJS)
-	rm -rf $(DM_OBJDIR)
-	if test -f $(PROGRAM); then rm $(PROGRAM); fi
+	$(vecho) "Cleanup..."
+	$(Q)rm -f $(OBJS)
+	$(Q)rm -f include/version.h
+	$(Q)rm -f $(OBJS)
+	$(Q)rm -rf $(DM_OBJDIR)
+	$(Q)if test -f $(PROGRAM); then rm $(PROGRAM); fi
 
 distclean:
-	rm -f $(DISTCLEAN_OBJS)
-	rm -f include/version.h
-	rm -f $(OBJS)
-	rm -rf $(DM_OBJDIR)
-	rm -f tags TAGS cscope.files cscope.in.out cscope.out cscope.po.out GTAGS GPATH GRTAGS GSYMS
+	$(vecho) "Dist cleanup..."
+	$(Q)rm -f $(DISTCLEAN_OBJS)
+	$(Q)rm -f include/version.h
+	$(Q)rm -f $(OBJS)
+	$(Q)rm -rf $(DM_OBJDIR)
+	$(Q)rm -f tags TAGS cscope.files cscope.in.out cscope.out cscope.po.out GTAGS GPATH GRTAGS GSYMS
 
 include/version.h:
-	touch include/version.h
+	$(vecho) "Generate version.h..."
+	$(Q)touch include/version.h
 	@COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
 	DIRTY=`git diff-index --name-only HEAD`;\
 	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
@@ -171,18 +189,23 @@ include/version.h:
 	echo "#define DM_BUILD_USER "\""$$USER"\""" >> include/version.h
 
 $(DM_OBJDIR)/%.o: %.c $(HEADERS)
-	[ ! -e $@ ] && mkdir -p $(dir $@); \
+	$(vecho) "--> Build $<"
+	$(Q)[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(CFLAGS) -c $< -o $@
 
 install: $(DM_OBJDIR)/$(PROGRAM) install-samples-nuc install-samples-mrb install-bios
-	install -D --mode=0755 $(DM_OBJDIR)/$(PROGRAM) $(DESTDIR)/usr/bin/$(PROGRAM)
+	$(vecho) "Install $(PROGRAM)..."
+	$(Q)install -D --mode=0755 $(DM_OBJDIR)/$(PROGRAM) $(DESTDIR)/usr/bin/$(PROGRAM)
 
 install-samples-nuc: $(SAMPLES_NUC)
-	install -D -t $(DESTDIR)/usr/share/acrn/samples/nuc $^
+	$(vecho) "Install $(SAMPLES_NUC)..."
+	$(Q)install -D -t $(DESTDIR)/usr/share/acrn/samples/nuc $^
 
 install-samples-mrb: $(SAMPLES_MRB)
-	install -D -t $(DESTDIR)/usr/share/acrn/samples/apl-mrb $^
+	$(vecho) "Install $(SAMPLES_MRB)..."
+	$(Q)install -D -t $(DESTDIR)/usr/share/acrn/samples/apl-mrb $^
 
 install-bios: $(BIOS_BIN)
-	install -d $(DESTDIR)/usr/share/acrn/bios
-	install -D --mode=0664 -t $(DESTDIR)/usr/share/acrn/bios $^
+	$(vecho) "Install $(SAMPLES_MRB)..."
+	$(Q)install -d $(DESTDIR)/usr/share/acrn/bios
+	$(Q)install -D --mode=0664 -t $(DESTDIR)/usr/share/acrn/bios $^
