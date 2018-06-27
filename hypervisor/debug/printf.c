@@ -23,7 +23,8 @@ static int charout(int cmd, const char *s, int sz, void *hnd)
 		else
 			s += console_write(s, sz);
 
-		return (*nchars += (s - p));
+		*nchars += (s - p);
+		return *nchars;
 	}
 	/* fill mode */
 	else {
