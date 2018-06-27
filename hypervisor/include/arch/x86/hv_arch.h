@@ -19,7 +19,6 @@
 #include <vcpu.h>
 #include <trusty.h>
 #include <guest_pm.h>
-#include <host_pm.h>
 #include <vm.h>
 #include <cpuid.h>
 #include <mmu.h>
