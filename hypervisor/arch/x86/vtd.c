@@ -1167,10 +1167,11 @@ void suspend_iommu(void)
 		/* If the number of real iommu devices is larger than we
 		 * defined in kconfig.
 		 */
-		if (iommu_idx++ > CONFIG_MAX_IOMMU_NUM) {
+		if (iommu_idx > CONFIG_MAX_IOMMU_NUM) {
 			pr_err("iommu dev number is larger than pre-defined");
 			break;
 		}
+		iommu_idx++;
 	}
 }
 
@@ -1206,10 +1207,11 @@ void resume_iommu(void)
 		/* If the number of real iommu devices is larger than we
 		 * defined in kconfig.
 		 */
-		if (iommu_idx++ > CONFIG_MAX_IOMMU_NUM) {
+		if (iommu_idx > CONFIG_MAX_IOMMU_NUM) {
 			pr_err("iommu dev number is larger than pre-defined");
 			break;
 		}
+		iommu_idx++;
 	}
 }
 

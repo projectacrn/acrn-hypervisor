@@ -9,8 +9,9 @@
 void mdelay(uint32_t loop_count)
 {
 	/* Loop until done */
-	while (loop_count-- != 0) {
+	while (loop_count != 0) {
 		/* Delay for 1 ms */
 		udelay(1000);
+		loop_count--;
 	}
 }

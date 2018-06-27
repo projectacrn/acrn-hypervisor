@@ -27,7 +27,8 @@ static int do_udiv32(uint32_t dividend, uint32_t divisor,
 			res->q.dwords.low |= mask;
 		}
 		divisor >>= 1U;
-	} while (((mask >>= 1U) != 0U) && (dividend != 0U));
+		mask >>= 1U;
+	} while ((mask != 0U) && (dividend != 0U));
 	/* dividend now contains the reminder */
 	res->r.dwords.low = dividend;
 	return 0;

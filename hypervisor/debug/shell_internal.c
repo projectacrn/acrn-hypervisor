@@ -79,8 +79,9 @@ static int string_to_argv(char *argv_str, void *p_argv_mem,
 			 */
 			*p_ch = 0;
 			/* Remove all space in middile of cmdline */
-			while (*++p_ch == ' ')
-				;
+			p_ch++;
+			while (*p_ch == ' ')
+				p_ch++;
 		}
 	}
 

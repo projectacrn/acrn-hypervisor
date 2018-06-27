@@ -147,7 +147,8 @@ static const char *get_length_modifier(const char *s,
 {
 	/* check for h[h] (char/short) */
 	if (*s == 'h') {
-		if (*++s == 'h') {
+		s++;
+		if (*s == 'h') {
 			*flags |= PRINT_FLAG_CHAR;
 			*mask = 0x000000FF;
 			++s;
@@ -158,7 +159,8 @@ static const char *get_length_modifier(const char *s,
 	}
 	/* check for l[l] (long/long long) */
 	else if (*s == 'l') {
-		if (*++s == 'l') {
+		s++;
+		if (*s == 'l') {
 			*flags |= PRINT_FLAG_LONG_LONG;
 			++s;
 		} else
@@ -297,8 +299,10 @@ static int print_pow2(struct print_param *param,
 
 	/* determine digits from right to left */
 	do {
-		*--pos = digits[(v & mask)];
-	} while ((v >>= shift) != 0UL);
+		pos--;
+		*pos = digits[(v & mask)];
+		v >>= shift;
+	} while (v != 0UL);
 
 	/* assign parameter and apply width and precision */
 	param->vars.value = pos;
@@ -365,8 +369,10 @@ static int print_decimal(struct print_param *param, int64_t value)
 		 * 10.
 		 */
 		nv.dwords.low = v.dwords.low / 10;
-		*--pos = (v.dwords.low - (10 * nv.dwords.low)) + '0';
-	} while ((v.dwords.low = nv.dwords.low) != 0);
+		pos--;
+		*pos = (v.dwords.low - (10 * nv.dwords.low)) + '0';
+		v.dwords.low = nv.dwords.low;
+	} while (v.dwords.low != 0);
 
 	/* assign parameter and apply width and precision */
 	param->vars.value = pos;
