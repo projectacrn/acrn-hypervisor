@@ -523,6 +523,16 @@ vioapic_process_eoi(struct vm *vm, uint32_t vector)
 	VIOAPIC_UNLOCK(vioapic);
 }
 
+void
+vioapic_reset(struct vioapic *vioapic)
+{
+	int i;
+
+	/* Initialize all redirection entries to mask all interrupts */
+	for (i = 0; i < vioapic_pincount(vioapic->vm); i++)
+		vioapic->rtbl[i].reg = 0x0001000000010000UL;
+}
+
 struct vioapic *
 vioapic_init(struct vm *vm)
 {
@@ -535,9 +545,7 @@ vioapic_init(struct vm *vm)
 	vioapic->vm = vm;
 	spinlock_init(&vioapic->mtx);
 
-	/* Initialize all redirection entries to mask all interrupts */
-	for (i = 0; i < vioapic_pincount(vioapic->vm); i++)
-		vioapic->rtbl[i].reg = 0x0001000000010000UL;
+	vioapic_reset(vioapic);
 
 	register_mmio_emulation_handler(vm,
 			vioapic_mmio_access_handler,
