@@ -12,7 +12,7 @@
  */
 int64_t hcall_world_switch(struct vcpu *vcpu)
 {
-	int next_world_id = !(vcpu->arch_vcpu.cur_context);
+	int32_t next_world_id = !(vcpu->arch_vcpu.cur_context);
 
 	if (next_world_id >= NR_WORLD) {
 		pr_err("%s world_id %d exceed max number of Worlds\n",
