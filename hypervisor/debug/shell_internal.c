@@ -780,7 +780,7 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 		return status;
 	}
 
-	gva = strtoul(argv[3], NULL, 16);
+	gva = strtoul_hex(argv[3]);
 
 	if (argc == 5)
 		length = atoi(argv[4]);
@@ -1033,10 +1033,10 @@ int shell_cpuid(struct shell *p_shell, int argc, char **argv)
 	uint32_t eax, ebx, ecx, edx;
 
 	if (argc == 2) {
-		leaf = strtoul(argv[1], NULL, 16);
+		leaf = strtoul_hex(argv[1]);
 	} else if (argc == 3) {
-		leaf = strtoul(argv[1], NULL, 16);
-		subleaf = strtoul(argv[2], NULL, 16);
+		leaf = strtoul_hex(argv[1]);
+		subleaf = strtoul_hex(argv[2]);
 	} else {
 		shell_puts(p_shell,
 			"Please enter correct cmd with "
