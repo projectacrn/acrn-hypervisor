@@ -2298,7 +2298,7 @@ int apic_access_vmexit_handler(struct vcpu *vcpu)
 		emulate_instruction(vcpu);
 	}
 
-	TRACE_2L(TRC_VMEXIT_APICV_ACCESS, qual, (uint64_t)vlapic);
+	TRACE_2L(TRACE_VMEXIT_APICV_ACCESS, qual, (uint64_t)vlapic);
 	return 0;
 }
 
@@ -2326,7 +2326,7 @@ int veoi_vmexit_handler(struct vcpu *vcpu)
 		vioapic_process_eoi(vlapic->vm, vector);
 	}
 
-	TRACE_2L(TRC_VMEXIT_APICV_VIRT_EOI, vector, 0);
+	TRACE_2L(TRACE_VMEXIT_APICV_VIRT_EOI, vector, 0);
 
 	return 0;
 }
@@ -2389,7 +2389,7 @@ int apic_write_vmexit_handler(struct vcpu *vcpu)
 		break;
 	}
 
-	TRACE_2L(TRC_VMEXIT_APICV_WRITE, offset, 0);
+	TRACE_2L(TRACE_VMEXIT_APICV_WRITE, offset, 0);
 
 	return handled;
 }

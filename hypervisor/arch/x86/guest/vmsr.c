@@ -235,7 +235,7 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 					v & 0xffffffff;
 	vcpu->arch_vcpu.contexts[cur_context].guest_cpu_regs.regs.rdx = v >> 32;
 
-	TRACE_2L(TRC_VMEXIT_RDMSR, msr, v);
+	TRACE_2L(TRACE_VMEXIT_RDMSR, msr, v);
 
 	return 0;
 }
@@ -358,7 +358,7 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	}
 	}
 
-	TRACE_2L(TRC_VMEXIT_WRMSR, msr, v);
+	TRACE_2L(TRACE_VMEXIT_WRMSR, msr, v);
 
 	return 0;
 }

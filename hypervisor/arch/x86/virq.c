@@ -312,7 +312,7 @@ int interrupt_window_vmexit_handler(struct vcpu *vcpu)
 {
 	int value32;
 
-	TRACE_2L(TRC_VMEXIT_INTERRUPT_WINDOW, 0, 0);
+	TRACE_2L(TRACE_VMEXIT_INTERRUPT_WINDOW, 0, 0);
 
 	if (vcpu == NULL)
 		return -1;
@@ -355,7 +355,7 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 
 	VCPU_RETAIN_RIP(vcpu);
 
-	TRACE_2L(TRC_VMEXIT_EXTERNAL_INTERRUPT, ctx.vector, 0);
+	TRACE_2L(TRACE_VMEXIT_EXTERNAL_INTERRUPT, ctx.vector, 0);
 
 	return 0;
 }
@@ -492,7 +492,7 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 	int status = 0;
 
 	if (vcpu == NULL) {
-		TRACE_4I(TRC_VMEXIT_EXCEPTION_OR_NMI, 0, 0, 0, 0);
+		TRACE_4I(TRACE_VMEXIT_EXCEPTION_OR_NMI, 0, 0, 0, 0);
 		status = -EINVAL;
 	}
 
@@ -534,7 +534,7 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 		pr_fatal("Exception #MC got from guest!");
 	}
 
-	TRACE_4I(TRC_VMEXIT_EXCEPTION_OR_NMI,
+	TRACE_4I(TRACE_VMEXIT_EXCEPTION_OR_NMI,
 			exception_vector, int_err_code, 2, 0);
 
 	return status;
