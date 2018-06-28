@@ -1,33 +1,20 @@
-.. _getting_started:
+.. _getting-started-apl-nuc:
 
-Getting Started Guide
-#####################
+Getting started guide for Intel NUC
+###################################
 
-After reading the :ref:`introduction`, use this guide to get started
-using ACRN in a reference setup.  We'll show how to set up your
-development and target hardware, and then how to boot up the ACRN
-hypervisor and the `Clear Linux`_ Service OS and Guest OS on the Intel
-(EFI) platform.
+The Intel |reg| NUC (NUC6CAYH) is the primary tested
+platform for ACRN development, and its setup is described below.
 
-.. _Clear Linux: https://clearlinux.org
 
 Hardware setup
 **************
 
-The Intel |reg| NUC (NUC6CAYH) is the supported reference target
-platform for ACRN work, as described in :ref:`hardware`, and is the main
-platform currently tested with these setup instructions. The
-`UP Squared board <http://www.up-board.org/upsquared/>`_ (UP2) is also
-known to work and the few specificities for it are described
-in :ref:`getting_started_up2`.
+Two Apollo Lake Intel platforms, described in :ref:`hardware`, are currently
+supported for ACRN development:
 
-The recommended NUC hardware configuration is:
-
-- NUC: `NUC Kit
-  NUC6CAYH <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc6cayh.html>`__
-- `UEFI BIOS (version 0047) <https://downloadcenter.intel.com/product/95062/Intel-NUC-Kit-NUC6CAYH>`__.
-- Memory: 8G DDR3
-- SSD: 120G SATA
+- The `UP Squared board <http://www.up-board.org/upsquared/>`_ (UP2) is also
+  known to work and its setup is described in :ref:`getting-started-up2`.
 
 Firmware update on the NUC
 ==========================
@@ -44,8 +31,9 @@ Set up a Clear Linux Operating System
 =====================================
 
 Currently, an installable version of ARCN does not exist. Therefore, you
-need to setup a base Clear Linux OS to bootstrap ACRN on your platform. You'll
-need a network connection for your platform to complete this setup.
+need to setup a base Clear Linux OS and you'll build and bootstrap ACRN
+on your platform. You'll need a network connection for your platform to
+complete this setup.
 
 .. note::
    ACRN requires Clear Linux version 22140 or newer. The instructions below
@@ -163,7 +151,8 @@ partition. Follow these steps:
 
    1. ``bootloader=``: this sets the EFI executable to be loaded once the hypervisor
       is up and running. This is typically the bootloader of the Service OS and the
-      default value is to use the Clearlinux bootloader, i.e.: ``\EFI\org.clearlinux\bootloaderx64.efi``.
+      default value is to use the Clearlinux bootloader, i.e.:
+      ``\EFI\org.clearlinux\bootloaderx64.efi``.
    #. ``uart=``: this tells the hypervisor where the serial port (UART) is found or
       whether it should be disabled. There are three forms for this parameter:
 
