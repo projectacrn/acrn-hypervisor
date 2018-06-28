@@ -37,9 +37,6 @@
 
 #define vm_pic(vm)	(vm->vpic)
 
-#define true                                          ((_Bool) 1)
-#define false                                         ((_Bool) 0)
-
 #define ACRN_DBG_PIC	6
 
 enum irqstate {
@@ -259,7 +256,7 @@ static int vpic_icw1(struct vpic *vpic, struct pic *pic, uint8_t val)
 	pic->mask = 0;
 	pic->lowprio = 7;
 	pic->rd_cmd_reg = 0U;
-	pic->poll = 0;
+	pic->poll = false;
 	pic->smm = 0;
 
 	if ((val & ICW1_SNGL) != 0) {
@@ -680,7 +677,7 @@ static int vpic_read(struct vpic *vpic, struct pic *pic,
 	VPIC_LOCK(vpic);
 
 	if (pic->poll) {
-		pic->poll = 0;
+		pic->poll = false;
 		pin = vpic_get_highest_irrpin(pic);
 		if (pin >= 0) {
 			vpic_pin_accepted(pic, pin);
