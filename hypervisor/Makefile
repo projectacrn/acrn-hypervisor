@@ -242,6 +242,7 @@ $(VERSION):
 	DIRTY=`git diff-index --name-only HEAD`;\
 	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
 	TIME=`date "+%F %T"`;\
+	USER=`id -u -n`; \
 	if [ $(CONFIG_RELEASE) = "n" ];then BUILD_TYPE="DBG";else BUILD_TYPE="REL";fi;\
 	echo "/*" > $(VERSION); \
 	sed 's/^/ * /' ../LICENSE >> $(VERSION); \
@@ -255,7 +256,7 @@ $(VERSION):
 	echo "#define HV_BUILD_VERSION "\""$$PATCH"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_TYPE "\""$$BUILD_TYPE"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_TIME "\""$$TIME"\""" >> $(VERSION);\
-	echo "#define HV_BUILD_USER "\""$(USER)"\""" >> $(VERSION)
+	echo "#define HV_BUILD_USER "\""$$USER"\""" >> $(VERSION)
 
 $(HV_OBJDIR)/%.o: %.c $(HV_OBJDIR)/$(HV_CONFIG_H)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
