@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
+#include <unistd.h>
 #include <openssl/hmac.h>
 #include <openssl/opensslv.h>
 
@@ -168,7 +169,14 @@ static int file_write(FILE *fp, const void *buf, size_t size, off_t offset)
 		return -1;
 	}
 
+	/* The flow of file writing sync should be:
+	   C lib caches--->fflush--->disk caches--->fsync--->disk */
 	if (fflush(fp) < 0) {
+		return -1;
+	}
+
+	if (fsync(fileno(fp)) < 0) {
+		DPRINTF(("%s: fsync failed\n", __func__));
 		return -1;
 	}
 
