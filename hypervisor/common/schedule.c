@@ -11,7 +11,7 @@ static unsigned long pcpu_used_bitmap;
 
 void init_scheduler(void)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < phys_cpu_num; i++) {
 		spinlock_init(&per_cpu(sched_ctx, i).runqueue_lock);

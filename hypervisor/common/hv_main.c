@@ -11,7 +11,7 @@ bool x2apic_enabled;
 
 static void run_vcpu_pre_work(struct vcpu *vcpu)
 {
-	unsigned long *pending_pre_work = &vcpu->pending_pre_work;
+	uint64_t *pending_pre_work = &vcpu->pending_pre_work;
 
 	if (bitmap_test_and_clear(ACRN_VCPU_MMIO_COMPLETE, pending_pre_work))
 		dm_emulate_mmio_post(vcpu);
@@ -22,7 +22,7 @@ void vcpu_thread(struct vcpu *vcpu)
 	uint64_t vmexit_begin = 0, vmexit_end = 0;
 	uint16_t basic_exit_reason = 0;
 	uint64_t tsc_aux_hyp_cpu = vcpu->pcpu_id;
-	int ret = 0;
+	int32_t ret = 0;
 
 	/* If vcpu is not launched, we need to do init_vmcs first */
 	if (!vcpu->launched)
@@ -104,9 +104,9 @@ static bool is_vm0_bsp(uint16_t pcpu_id)
 	return pcpu_id == vm0_desc.vm_hw_logical_core_ids[0];
 }
 
-int hv_main(uint16_t cpu_id)
+int32_t hv_main(uint16_t cpu_id)
 {
-	int ret;
+	int32_t ret;
 
 	pr_info("%s, Starting common entry point for CPU %d",
 			__func__, cpu_id);
@@ -143,7 +143,8 @@ int hv_main(uint16_t cpu_id)
 
 void get_vmexit_profile(char *str, int str_max)
 {
-	int cpu, i, len, size = str_max;
+	uint16_t cpu, i;
+	int len, size = str_max;
 
 	len = snprintf(str, size, "\r\nNow(us) = %16lld\r\n",
 			TICKS_TO_US(rdtsc()));
@@ -155,7 +156,7 @@ void get_vmexit_profile(char *str, int str_max)
 	str += len;
 
 	for (cpu = 0; cpu < phys_cpu_num; cpu++) {
-		len = snprintf(str, size, "\t      CPU%d\t        US", cpu);
+		len = snprintf(str, size, "\t      CPU%hu\t        US", cpu);
 		size -= len;
 		str += len;
 	}
