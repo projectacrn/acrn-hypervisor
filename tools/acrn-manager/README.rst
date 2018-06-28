@@ -93,10 +93,36 @@ Use the ``stop`` command to stop one or more running VM:
 
    # acrnctl stop vm-yocto vm1-14:59:30 vm-android
 
+.. _acrnd:
+
+acrnd
+#######
+
+
+Description
+***********
+
+The ``acrnd`` is the daemon for acrn-manager.
+The ``acrnd`` daemon process provides a way for launching or resuming a UOS
+should the UOS shut down, either planned or unexpected. A UOS can ask ``acrnd``
+to set up a timer to make sure the UOS is running, even if the SOS is
+suspended or stopped.
+The ``acrnd`` daemon stores pending UOS work to ``/opt/acrn/conf/timer_list``
+and sets an RTC timer to wake up the SOS or bring the SOS back up again.
+When ``acrnd`` daemon is restarted, it restores the previously saved timer
+list and launches the UOSs at the right time.
+
+Usage
+*****
+
+A ``systemd`` service file (``acrnd.service``) is installed by default that will
+start the ``acrnd`` daemon when the Service OS comes up.
+You can restart/stop acrnd service using ``systemctl``
+
 Build and Install
 *****************
 
-Source code for ``acrnctl`` is in the ``tools/acrn-manager`` folder.
+Source code for ``acrnctl`` and ``acrnd`` is in the ``tools/acrn-manager`` folder.
 Change to that folder and run:
 
 .. code-block:: none
