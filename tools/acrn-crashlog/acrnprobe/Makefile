@@ -16,6 +16,7 @@ TARGET		= $(BUILDDIR)/acrnprobe/bin/acrnprobe
 
 .PHONY: all check_dirs
 all: $(VERSION_H) check_dirs $(TARGET)
+	rm -f $(VERSION_H)
 
 $(BUILDDIR)/acrnprobe/obj/%.o:%.c
 	$(CC) -c $(CFLAGS) $< -o $@
@@ -63,12 +64,13 @@ $(VERSION_H):
 	DIRTY=`git diff --name-only $(CURDIR)`;\
 	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
 	TIME=`date "+%Y-%m-%d %H:%M:%S"`;\
+	USER=`id -u -n`; \
 	cat $(CURDIR)/../license_header > $(VERSION_H);\
 	echo "#define AP_MAJOR_VERSION $(MAJOR_VERSION)" >> $(VERSION_H);\
 	echo "#define AP_MINOR_VERSION $(MINOR_VERSION)" >> $(VERSION_H);\
 	echo "#define AP_BUILD_VERSION "\""$$PATCH"\""" >> $(VERSION_H);\
 	echo "#define AP_BUILD_TIME "\""$$TIME"\""" >> $(VERSION_H);\
-	echo "#define AP_BUILD_USER "\""$(USER)"\""" >> $(VERSION_H)
+	echo "#define AP_BUILD_USER "\""$$USER"\""" >> $(VERSION_H)
 
 check_dirs:
 	@if [ ! -d $(BUILDDIR)/acrnprobe/bin ]; then \

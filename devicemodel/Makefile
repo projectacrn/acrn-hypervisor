@@ -158,6 +158,7 @@ include/version.h:
 	DIRTY=`git diff-index --name-only HEAD`;\
 	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
 	TIME=`date "+%Y-%m-%d %H:%M:%S"`;\
+	USER=`id -u -n`; \
 	echo "/*" > include/version.h; \
 	sed 's/^/ * /' ../LICENSE >> include/version.h; \
 	echo " */" >> include/version.h; \
@@ -167,7 +168,7 @@ include/version.h:
 	echo "#define DM_RC_VERSION $(RC_VERSION)" >> include/version.h;\
 	echo "#define DM_BUILD_VERSION "\""$$PATCH"\""" >> include/version.h;\
 	echo "#define DM_BUILD_TIME "\""$$TIME"\""" >> include/version.h;\
-	echo "#define DM_BUILD_USER "\""$(USER)"\""" >> include/version.h
+	echo "#define DM_BUILD_USER "\""$$USER"\""" >> include/version.h
 
 $(DM_OBJDIR)/%.o: %.c $(HEADERS)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \

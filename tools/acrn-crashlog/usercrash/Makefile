@@ -5,6 +5,7 @@ VERSION_H = $(BUILDDIR)/include/usercrash/version.h
 
 .PHONY: all check_obj
 all: $(VERSION_H) check_obj usercrash_s usercrash_c debugger
+	rm -f $(VERSION_H)
 
 INCLUDE += -I $(CURDIR)/include/
 INCLUDE += -I $(BUILDDIR)/include/usercrash
@@ -45,12 +46,13 @@ $(VERSION_H):
 	DIRTY=`git diff --name-only $(CURDIR)`;\
 	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
 	TIME=`date "+%Y-%m-%d %H:%M:%S"`;\
+	USER=`id -u -n`; \
 	cat $(CURDIR)/../license_header > $(VERSION_H);\
 	echo "#define UC_MAJOR_VERSION $(MAJOR_VERSION)" >> $(VERSION_H);\
 	echo "#define UC_MINOR_VERSION $(MINOR_VERSION)" >> $(VERSION_H);\
 	echo "#define UC_BUILD_VERSION "\""$$PATCH"\""" >> $(VERSION_H);\
 	echo "#define UC_BUILD_TIME "\""$$TIME"\""" >> $(VERSION_H);\
-	echo "#define UC_BUILD_USER "\""$(USER)"\""" >> $(VERSION_H)
+	echo "#define UC_BUILD_USER "\""$$USER"\""" >> $(VERSION_H)
 
 check_obj:
 	@if [ ! -d $(BUILDDIR)/usercrash/bin ]; then \
