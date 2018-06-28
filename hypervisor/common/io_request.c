@@ -55,10 +55,10 @@ static void acrn_print_request(int vcpu_id, struct vhm_request *req)
 	}
 }
 
-int acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
+int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 {
 	union vhm_request_buffer *req_buf = NULL;
-	long cur;
+	uint16_t cur;
 
 	ASSERT(sizeof(*req) == (4096/VHM_REQUEST_MAX),
 			"vhm_request page broken!");
@@ -148,11 +148,12 @@ static void _get_req_info_(struct vhm_request *req, int *id, char *type,
 
 void get_req_info(char *str, int str_max)
 {
-	int i, len, size = str_max, client_id;
+	uint32_t i;
+	int32_t len, size = str_max, client_id;
 	union vhm_request_buffer *req_buf;
 	struct vhm_request *req;
 	char type[16], state[16], dir[16];
-	long addr, val;
+	int64_t addr, val;
 	struct list_head *pos;
 	struct vm *vm;
 

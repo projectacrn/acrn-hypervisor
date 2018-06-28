@@ -43,7 +43,7 @@ int64_t hcall_get_api_version(struct vm *vm, uint64_t param)
 
 static int handle_vpic_irqline(struct vm *vm, int irq, enum irq_mode mode)
 {
-	int ret = -1;
+	int32_t ret = -1;
 
 	if (vm == NULL)
 		return ret;
@@ -67,7 +67,7 @@ static int handle_vpic_irqline(struct vm *vm, int irq, enum irq_mode mode)
 static int
 handle_vioapic_irqline(struct vm *vm, int irq, enum irq_mode mode)
 {
-	int ret = -1;
+	int32_t ret = -1;
 
 	if (vm == NULL)
 		return ret;
@@ -91,8 +91,8 @@ handle_vioapic_irqline(struct vm *vm, int irq, enum irq_mode mode)
 static int handle_virt_irqline(struct vm *vm, uint64_t target_vmid,
 		struct acrn_irqline *param, enum irq_mode mode)
 {
-	int ret = 0;
-	long intr_type;
+	int32_t ret = 0;
+	uint32_t intr_type;
 	struct vm *target_vm = get_vm_from_vmid(target_vmid);
 
 	if ((vm == NULL) || (param == NULL))
@@ -205,7 +205,7 @@ int64_t hcall_pause_vm(uint64_t vmid)
 
 int64_t hcall_create_vcpu(struct vm *vm, uint64_t vmid, uint64_t param)
 {
-	int ret;
+	int32_t ret;
 	uint16_t pcpu_id;
 	struct acrn_create_vcpu cv;
 
@@ -274,7 +274,7 @@ int64_t hcall_pulse_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
 
 int64_t hcall_inject_msi(struct vm *vm, uint64_t vmid, uint64_t param)
 {
-	int ret = 0;
+	int32_t ret = 0;
 	struct acrn_msi_entry msi;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
@@ -474,7 +474,7 @@ int64_t hcall_set_vm_memmaps(struct vm *vm, uint64_t param)
 	struct set_memmaps set_memmaps;
 	struct memory_map *regions;
 	struct vm *target_vm;
-	unsigned int idx;
+	uint32_t idx;
 
 	if (!is_vm0(vm)) {
 		pr_err("%s: ERROR! Not coming from service vm",
@@ -496,7 +496,7 @@ int64_t hcall_set_vm_memmaps(struct vm *vm, uint64_t param)
 		return -1;
 	}
 
-	idx = 0;
+	idx = 0U;
 	/*TODO: use copy_from_gpa for this buffer page */
 	regions = GPA2HVA(vm, set_memmaps.memmaps_gpa);
 	while (idx < set_memmaps.memmaps_num) {
@@ -711,7 +711,7 @@ int64_t hcall_setup_sbuf(struct vm *vm, uint64_t param)
 
 int64_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param)
 {
-	int target_vm_id;
+	int32_t target_vm_id;
 	struct vm *target_vm;
 
 	target_vm_id = (cmd & PMCMD_VMID_MASK) >> PMCMD_VMID_SHIFT;
@@ -736,7 +736,7 @@ int64_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param)
 		return 0;
 	}
 	case PMCMD_GET_PX_DATA: {
-		int pn;
+		int32_t pn;
 		struct cpu_px_data *px_data;
 
 		/* For now we put px data as per-vm,

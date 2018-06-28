@@ -71,7 +71,7 @@ static uint64_t create_zero_page(struct vm *vm)
 
 int load_guest(struct vm *vm, struct vcpu *vcpu)
 {
-	int ret = 0;
+	int32_t ret = 0;
 	void *hva;
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
@@ -102,7 +102,7 @@ int load_guest(struct vm *vm, struct vcpu *vcpu)
 
 int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 {
-	int ret = 0;
+	int32_t ret = 0;
 	void *hva;
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
@@ -127,7 +127,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 		kernel_entry_offset += 512;
 
 	vm->sw.kernel_info.kernel_entry_addr =
-		(void *)((unsigned long)vm->sw.kernel_info.kernel_load_addr
+		(void *)((uint64_t)vm->sw.kernel_info.kernel_load_addr
 			+ kernel_entry_offset);
 	if (is_vcpu_bsp(vcpu)) {
 		/* Set VCPU entry point to kernel entry */
@@ -176,7 +176,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 		 * remained 1G pages" for reserving.
 		 */
 		if (is_vm0(vm) && check_mmu_1gb_support(PTT_HOST)) {
-			int reserving_1g_pages;
+			int32_t reserving_1g_pages;
 
 #ifdef CONFIG_REMAIN_1G_PAGES
 			reserving_1g_pages = (e820_mem.total_mem_size >> 30) -
