@@ -364,7 +364,7 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 	/* Get the guest physical address */
 	gpa = exec_vmread64(VMX_GUEST_PHYSICAL_ADDR_FULL);
 
-	TRACE_2L(TRC_VMEXIT_EPT_VIOLATION, exit_qual, gpa);
+	TRACE_2L(TRACE_VMEXIT_EPT_VIOLATION, exit_qual, gpa);
 
 	/* Adjust IPA appropriately and OR page offset to get full IPA of abort
 	 */
@@ -460,7 +460,7 @@ int ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu)
 
 	ASSERT(status == 0, "EPT Misconfiguration is not handled.\n");
 
-	TRACE_2L(TRC_VMEXIT_EPT_MISCONFIGURATION, 0, 0);
+	TRACE_2L(TRACE_VMEXIT_EPT_MISCONFIGURATION, 0, 0);
 
 	return status;
 }
