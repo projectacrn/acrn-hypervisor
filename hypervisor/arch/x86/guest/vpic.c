@@ -50,8 +50,8 @@ enum irqstate {
 
 struct pic {
 	bool		ready;
-	int		icw_num;
-	int		rd_cmd_reg;
+	uint8_t		icw_num;
+	uint8_t		rd_cmd_reg;
 
 	bool		aeoi;
 	bool		poll;
@@ -254,11 +254,11 @@ static int vpic_icw1(struct vpic *vpic, struct pic *pic, uint8_t val)
 
 	pic->ready = false;
 
-	pic->icw_num = 1;
+	pic->icw_num = 1U;
 	pic->request = 0;
 	pic->mask = 0;
 	pic->lowprio = 7;
-	pic->rd_cmd_reg = 0;
+	pic->rd_cmd_reg = 0U;
 	pic->poll = 0;
 	pic->smm = 0;
 
@@ -323,7 +323,7 @@ static int vpic_icw4(struct vpic *vpic, struct pic *pic, uint8_t val)
 		}
 	}
 
-	pic->icw_num = 0;
+	pic->icw_num = 0U;
 	pic->ready = true;
 
 	return 0;
@@ -721,13 +721,13 @@ static int vpic_write(struct vpic *vpic, struct pic *pic,
 
 	if ((port & ICU_IMR_OFFSET) != 0) {
 		switch (pic->icw_num) {
-		case 2:
+		case 2U:
 			error = vpic_icw2(vpic, pic, val);
 			break;
-		case 3:
+		case 3U:
 			error = vpic_icw3(vpic, pic, val);
 			break;
-		case 4:
+		case 4U:
 			error = vpic_icw4(vpic, pic, val);
 			break;
 		default:
