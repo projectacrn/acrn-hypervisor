@@ -330,7 +330,7 @@ vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 		last = vioapic->rtbl[pin].reg;
 
 		data64 = (uint64_t)data << lshift;
-		mask64 = (uint64_t)0xffffffff << lshift;
+		mask64 = 0xffffffffUL << lshift;
 		new = last & (~mask64 | RTBL_RO_BITS);
 		new |= data64 & ~RTBL_RO_BITS;
 
