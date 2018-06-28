@@ -130,7 +130,9 @@ void init_msr_emulation(struct vcpu *vcpu)
 	exec_vmwrite64(VMX_MSR_BITMAP_FULL, value64);
 	pr_dbg("VMX_MSR_BITMAP: 0x%016llx ", value64);
 
-	vcpu->guest_msrs = (uint64_t *)calloc(msrs_count, sizeof(uint64_t));
+	if (!vcpu->guest_msrs)
+		vcpu->guest_msrs =
+			(uint64_t *)calloc(msrs_count, sizeof(uint64_t));
 
 	ASSERT(vcpu->guest_msrs != NULL, "");
 	memset(vcpu->guest_msrs, 0, msrs_count * sizeof(uint64_t));
