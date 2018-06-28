@@ -52,6 +52,7 @@ tools:
 	$(Q)make -C $(T)/tools $(SUBOPT) OUT_DIR=$(TOOLS_OUT) RELEASE=$(RELEASE)
 
 misc: tools
+	$(vecho) "Build misc"
 	$(Q)mkdir -p $(MISC_OUT)
 	$(Q)make -C $(T)/misc $(SUBOPT) OUT_DIR=$(MISC_OUT)
 
