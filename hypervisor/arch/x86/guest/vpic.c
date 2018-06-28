@@ -673,7 +673,7 @@ void vpic_intr_accepted(struct vm *vm, uint32_t vector)
 }
 
 static int vpic_read(struct vpic *vpic, struct pic *pic,
-		int port, uint32_t *eax)
+		uint16_t port, uint32_t *eax)
 {
 	int pin;
 
@@ -709,7 +709,7 @@ static int vpic_read(struct vpic *vpic, struct pic *pic,
 }
 
 static int vpic_write(struct vpic *vpic, struct pic *pic,
-		int port, uint32_t *eax)
+		uint16_t port, uint32_t *eax)
 {
 	int error;
 	uint8_t val;
@@ -754,8 +754,8 @@ static int vpic_write(struct vpic *vpic, struct pic *pic,
 	return error;
 }
 
-static int vpic_master_handler(struct vm *vm, bool in, int port, int bytes,
-		uint32_t *eax)
+static int vpic_master_handler(struct vm *vm, bool in, uint16_t port,
+		size_t bytes, uint32_t *eax)
 {
 	struct vpic *vpic;
 	struct pic *pic;
@@ -763,7 +763,7 @@ static int vpic_master_handler(struct vm *vm, bool in, int port, int bytes,
 	vpic = vm_pic(vm);
 	pic = &vpic->pic[0];
 
-	if (bytes != 1)
+	if (bytes != 1U)
 		return -1;
 
 	if (in)
@@ -777,7 +777,7 @@ static uint32_t vpic_master_io_read(__unused struct vm_io_handler *hdlr,
 {
 	uint32_t val = 0;
 
-	if (vpic_master_handler(vm, true, (int)addr, (int)width, &val) < 0)
+	if (vpic_master_handler(vm, true, addr, width, &val) < 0)
 		pr_err("pic master read port 0x%x width=%d failed\n",
 				addr, width);
 	return val;
@@ -788,13 +788,13 @@ static void vpic_master_io_write(__unused struct vm_io_handler *hdlr,
 {
 	uint32_t val = v;
 
-	if (vpic_master_handler(vm, false, (int)addr, (int)width, &val) < 0)
+	if (vpic_master_handler(vm, false, addr, width, &val) < 0)
 		pr_err("%s: write port 0x%x width=%d value 0x%x failed\n",
 				__func__, addr, width, val);
 }
 
-static int vpic_slave_handler(struct vm *vm, bool in, int port, int bytes,
-		uint32_t *eax)
+static int vpic_slave_handler(struct vm *vm, bool in, uint16_t port,
+		size_t bytes, uint32_t *eax)
 {
 	struct vpic *vpic;
 	struct pic *pic;
@@ -802,7 +802,7 @@ static int vpic_slave_handler(struct vm *vm, bool in, int port, int bytes,
 	vpic = vm_pic(vm);
 	pic = &vpic->pic[1];
 
-	if (bytes != 1)
+	if (bytes != 1U)
 		return -1;
 
 	if (in)
@@ -816,7 +816,7 @@ static uint32_t vpic_slave_io_read(__unused struct vm_io_handler *hdlr,
 {
 	uint32_t val = 0;
 
-	if (vpic_slave_handler(vm, true, (int)addr, (int)width, &val) < 0)
+	if (vpic_slave_handler(vm, true, addr, width, &val) < 0)
 		pr_err("pic slave read port 0x%x width=%d failed\n",
 				addr, width);
 	return val;
@@ -827,12 +827,12 @@ static void vpic_slave_io_write(__unused struct vm_io_handler *hdlr,
 {
 	uint32_t val = v;
 
-	if (vpic_slave_handler(vm, false, (int)addr, (int)width, &val) < 0)
+	if (vpic_slave_handler(vm, false, addr, width, &val) < 0)
 		pr_err("%s: write port 0x%x width=%d value 0x%x failed\n",
 				__func__, addr, width, val);
 }
 
-static int vpic_elc_handler(struct vm *vm, bool in, int port, int bytes,
+static int vpic_elc_handler(struct vm *vm, bool in, uint16_t port, size_t bytes,
 		uint32_t *eax)
 {
 	struct vpic *vpic;
@@ -841,7 +841,7 @@ static int vpic_elc_handler(struct vm *vm, bool in, int port, int bytes,
 	vpic = vm_pic(vm);
 	is_master = (port == IO_ELCR1);
 
-	if (bytes != 1)
+	if (bytes != 1U)
 		return -1;
 
 	VPIC_LOCK(vpic);
@@ -878,7 +878,7 @@ static uint32_t vpic_elc_io_read(__unused struct vm_io_handler *hdlr,
 {
 	uint32_t val = 0;
 
-	if (vpic_elc_handler(vm, true, (int)addr, (int)width, &val) < 0)
+	if (vpic_elc_handler(vm, true, addr, width, &val) < 0)
 		pr_err("pic elc read port 0x%x width=%d failed", addr, width);
 	return val;
 }
@@ -888,7 +888,7 @@ static void vpic_elc_io_write(__unused struct vm_io_handler *hdlr,
 {
 	uint32_t val = v;
 
-	if (vpic_elc_handler(vm, false, (int)addr, (int)width, &val) < 0)
+	if (vpic_elc_handler(vm, false, addr, width, &val) < 0)
 		pr_err("%s: write port 0x%x width=%d value 0x%x failed\n",
 				__func__, addr, width, val);
 }
