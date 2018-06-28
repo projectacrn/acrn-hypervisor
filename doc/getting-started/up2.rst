@@ -1,4 +1,4 @@
-.. _getting_started_up2:
+.. _getting-started-up2:
 
 Getting started guide for UP2 board
 ###################################
@@ -6,22 +6,40 @@ Getting started guide for UP2 board
 Hardware setup
 **************
 
-The `UP Squared board <http://www.up-board.org/upsquared/>`_ (UP2) is the x86 maker board based on Intel Apollo Lake platform. The UP boards have been used in IoT, industrial automation, digital signage and more. The UP2 features Intel `Celeron N3550 <https://ark.intel.com/products/95598/Intel-Celeron-Processor-N3350-2M-Cache-up-to-2_4-GHz>`_ and Intel `Pentium N4200 <https://ark.intel.com/products/95592/Intel-Pentium-Processor-N4200-2M-Cache-up-to-2_5-GHz>`_ SoCs. Both have been confirmed to work with ACRN.
+The `UP Squared board <http://www.up-board.org/upsquared/>`_ (UP2) is
+an x86 maker board based on the Intel Apollo Lake platform. The UP boards
+are used in IoT applications, industrial automation, digital signage, and more.
+
+The UP2 features Intel `Celeron N3550
+<https://ark.intel.com/products/95598/Intel-Celeron-Processor-N3350-2M-Cache-up-to-2_4-GHz>`_
+and Intel `Pentium N4200
+<https://ark.intel.com/products/95592/Intel-Pentium-Processor-N4200-2M-Cache-up-to-2_5-GHz>`_
+SoCs. Both have been confirmed to work with ACRN.
 
 Connecting to the serial port
 =============================
 
-The UP2 board has two serial ports. Please refer to the `UP2 specifications <http://www.up-board.org/upsquared/specifications-up2/>`_ for more information.  We'll access the serial port through the I/O pins in the 40-pin HAT connector using a `USB TTL serial cable <http://www.ftdichip.com/Products/USBTTLSerial.htm>`_. Connect pin 6 (``GND``), pin 8 (``TX``) and pin 10 (``RX``) of the HAT connector to respectively the ``GND``, ``RX`` and ``TX`` pins of your USB serial cable. Plug the USB TTL serial cable into your PC and use a console emulation tool such as ``minicom`` or ``putty`` to communicate with the UP2 board for debugging.
+The UP2 board has two serial ports. Please refer to the `UP2
+specifications <http://www.up-board.org/upsquared/specifications-up2/>`_
+for more information.  We'll access the serial port through the I/O pins
+in the 40-pin HAT connector using a `USB TTL serial cable
+<http://www.ftdichip.com/Products/USBTTLSerial.htm>`_. Connect pin 6
+(``GND``), pin 8 (``TX``) and pin 10 (``RX``) of the HAT connector to
+respectively the ``GND``, ``RX`` and ``TX`` pins of your USB serial
+cable. Plug the USB TTL serial cable into your PC and use a console
+emulation tool such as ``minicom`` or ``putty`` to communicate with the
+UP2 board for debugging.
 
 Software setup
 **************
 
 Setting up the ACRN hypervisor (and associated components) on the UP2
 board is no different than other hardware platforms so please follow
-the instructions provided in the :ref:`getting_started`.
+the instructions provided in the :ref:`getting-started-apl-nuc`, with
+the additional information below.
 
 There are a few parameters specific to the UP2 board that differ from
-what is referenced in the :ref:`getting_started` section:
+what is referenced in the :ref:`getting-started-apl-nuc` section:
 
 1. Serial Port settings
 #. Storage device name
@@ -36,16 +54,16 @@ You will need to keep these in mind in a few places:
      # mount /dev/mmcblk0p1 /mnt
 
 * When adjusting the ``acrn.conf`` file
-  
+
   * Change the ``options`` line and set ``pci_devices_ignore=(0:18:1)``
   * Set the ``root=`` parameter using the ``PARTUUID`` or device name directly
 
 * When configuring the EFI firmware to boot the ACRN hypervisor by default
 
-   .. code-block:: console
+  .. code-block:: console
 
-      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/mmcblk0 -p 1 -L "ACRN Hypervisor" \
-          -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=mmio@0x9141e000"
+     # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/mmcblk0 -p 1 -L "ACRN Hypervisor" \
+         -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=mmio@0x9141e000"
 
 UP2 serial port setting
 =======================
@@ -81,6 +99,5 @@ Running the hypervisor
 **********************
 
 Now that the hypervisor and Service OS have been installed on your UP2 board,
-you can proceed with the rest of the instructions in the :ref:`getting_started`
-and install the User OS (UOS).
-
+you can proceed with the rest of the instructions in the
+:ref:`getting-started-apl-nuc` and install the User OS (UOS).

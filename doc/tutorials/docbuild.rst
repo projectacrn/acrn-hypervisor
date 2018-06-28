@@ -75,7 +75,7 @@ repos (though https clones work too):
 #. Use your browser to visit https://github.com/projectacrn and do a
    fork of the **acrn-hypervisor** repo to your personal GitHub account.)
 
-   .. image:: acrn-doc-fork.png
+   .. image:: images/acrn-doc-fork.png
       :align: center
 
 #. At a command prompt, create the working folder and clone the acrn-hypervisor

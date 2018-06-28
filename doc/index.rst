@@ -25,16 +25,11 @@ Sections
    :maxdepth: 1
 
    introduction/index.rst
-   hardware.rst
-   getting_started/index.rst
-   getting_started/up2.rst
-   primer/index.rst
-   howtos/index.rst
+   getting-started/index.rst
+   user-guides/index.rst
+   developer-guides/index.rst
+   tutorials/index.rst
    release_notes.rst
-   contribute/index.rst
-   reference/kconfig/index.rst
-   api/index.rst
-   tools.rst
 
 Indices and Tables
 ******************
