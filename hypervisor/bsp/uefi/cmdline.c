@@ -46,7 +46,7 @@ static void handle_cmd(const char *cmd, int len)
 			/* set uart disabled*/
 			uart16550_set_property(0, 0, 0);
 		} else if ((i == IDX_PORT_UART) || (i == IDX_MMIO_UART)) {
-			uint64_t addr = strtoul(cmd + tmp, NULL, 16);
+			uint64_t addr = strtoul_hex(cmd + tmp);
 
 			dev_dbg(ACRN_DBG_PARSE, "uart addr=0x%llx", addr);
 
