@@ -109,7 +109,7 @@ static inline uint8_t vpic_get_highest_isrpin(struct pic *pic)
 			 * An IS bit that is masked by an IMR bit will not be
 			 * cleared by a non-specific EOI in Special Mask Mode.
 			 */
-			if ((pic->smm != 0U) && (pic->mask & bit) != 0)
+			if ((pic->smm != 0U) && (pic->mask & bit) != 0U)
 				continue;
 			else
 				return pin;
@@ -139,7 +139,7 @@ static inline uint8_t vpic_get_highest_irrpin(struct pic *pic)
 	 * bearing on the levels that can generate interrupts.
 	 */
 	if (pic->smm != 0U)
-		serviced = 0;
+		serviced = 0U;
 
 	PIC_PIN_FOREACH(pin, pic, tmp) {
 		bit = (uint8_t)(1U << pin);
@@ -237,7 +237,7 @@ static void vpic_notify_intr(struct vpic *vpic)
 			 * to vioapic pin0 (irq2)
 			 * From MPSpec session 5.1
 			 */
-			vioapic_pulse_irq(vpic->vm, 0);
+			vioapic_pulse_irq(vpic->vm, 0U);
 		}
 	} else {
 		dev_dbg(ACRN_DBG_PIC,
@@ -254,19 +254,19 @@ static int vpic_icw1(struct vpic *vpic, struct pic *pic, uint8_t val)
 	pic->ready = false;
 
 	pic->icw_num = 1U;
-	pic->request = 0;
-	pic->mask = 0;
-	pic->lowprio = 7;
+	pic->request = 0U;
+	pic->mask = 0U;
+	pic->lowprio = 7U;
 	pic->rd_cmd_reg = 0U;
 	pic->poll = false;
-	pic->smm = 0;
+	pic->smm = 0U;
 
 	if ((val & ICW1_SNGL) != 0) {
 		dev_dbg(ACRN_DBG_PIC, "vpic cascade mode required\n");
 		return -1;
 	}
 
-	if ((val & ICW1_IC4) == 0) {
+	if ((val & ICW1_IC4) == 0U) {
 		dev_dbg(ACRN_DBG_PIC, "vpic icw4 required\n");
 		return -1;
 	}
@@ -303,16 +303,16 @@ static int vpic_icw4(struct vpic *vpic, struct pic *pic, uint8_t val)
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: pic icw4 0x%x\n",
 		vpic->vm, val);
 
-	if ((val & ICW4_8086) == 0) {
+	if ((val & ICW4_8086) == 0U) {
 		dev_dbg(ACRN_DBG_PIC,
 			"vpic microprocessor mode required\n");
 		return -1;
 	}
 
-	if ((val & ICW4_AEOI) != 0)
+	if ((val & ICW4_AEOI) != 0U)
 		pic->aeoi = true;
 
-	if ((val & ICW4_SFNM) != 0) {
+	if ((val & ICW4_SFNM) != 0U) {
 		if (master_pic(vpic, pic)) {
 			pic->sfn = true;
 		} else {
@@ -332,15 +332,15 @@ bool vpic_is_pin_mask(struct vpic *vpic, uint8_t virt_pin)
 {
 	struct pic *pic;
 
-	if (virt_pin < 8)
+	if (virt_pin < 8U)
 		pic = &vpic->pic[0];
-	else if (virt_pin < 16) {
+	else if (virt_pin < 16U) {
 		pic = &vpic->pic[1];
-		virt_pin -= 8;
+		virt_pin -= 8U;
 	} else
 		return true;
 
-	if ((pic->mask & (1 << virt_pin)) != 0U)
+	if ((pic->mask & (1U << virt_pin)) != 0U)
 		return true;
 	else
 		return false;
@@ -363,19 +363,19 @@ static int vpic_ocw1(struct vpic *vpic, struct pic *pic, uint8_t val)
 		/* remap for active: interrupt mask -> unmask
 		 * remap for deactive: when vIOAPIC take it over
 		 */
-		if (((pic->mask & bit) == 0) && ((old & bit) != 0U)) {
+		if (((pic->mask & bit) == 0U) && ((old & bit) != 0U)) {
 			struct ptdev_intx_info intx;
 
 			/* master pic pin2 connect with slave pic,
 			 * not device, so not need pt remap
 			 */
-			if ((pin == 2) && master_pic(vpic, pic))
+			if ((pin == 2U) && master_pic(vpic, pic))
 				continue;
 
 			intx.virt_pin = pin;
 			intx.vpin_src = PTDEV_VPIN_PIC;
 			if (!master_pic(vpic, pic))
-				intx.virt_pin += 8;
+				intx.virt_pin += 8U;
 			ptdev_intx_pin_remap(vpic->vm, &intx);
 		}
 	}
@@ -388,12 +388,12 @@ static int vpic_ocw2(struct vpic *vpic, struct pic *pic, uint8_t val)
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: pic ocw2 0x%x\n",
 		vpic->vm, val);
 
-	pic->rotate = ((val & OCW2_R) != 0);
+	pic->rotate = ((val & OCW2_R) != 0U);
 
-	if ((val & OCW2_EOI) != 0) {
+	if ((val & OCW2_EOI) != 0U) {
 		uint8_t isr_bit;
 
-		if ((val & OCW2_SL) != 0) {
+		if ((val & OCW2_SL) != 0U) {
 			/* specific EOI */
 			isr_bit = val & 0x7U;
 		} else {
@@ -411,7 +411,7 @@ static int vpic_ocw2(struct vpic *vpic, struct pic *pic, uint8_t val)
 		/* if level ack PTDEV */
 		if ((pic->elc & (1U << (isr_bit & 0x7U))) != 0U) {
 			ptdev_intx_ack(vpic->vm,
-				master_pic(vpic, pic) ? isr_bit : isr_bit + 8,
+				master_pic(vpic, pic) ? isr_bit : isr_bit + 8U,
 				PTDEV_VPIN_PIC);
 		}
 	} else if ((val & OCW2_SL) != 0 && pic->rotate == true) {
@@ -428,7 +428,7 @@ static int vpic_ocw3(struct vpic *vpic, struct pic *pic, uint8_t val)
 		vpic->vm, val);
 
 	if ((val & OCW3_ESMM) != 0U) {
-		pic->smm = ((val & OCW3_SMM) != 0U) ? 1 : 0;
+		pic->smm = ((val & OCW3_SMM) != 0U) ? 1U : 0U;
 		dev_dbg(ACRN_DBG_PIC, "%s pic special mask mode %s\n",
 		    master_pic(vpic, pic) ? "master" : "slave",
 		    (pic->smm != 0U) ?  "enabled" : "disabled");
@@ -439,7 +439,7 @@ static int vpic_ocw3(struct vpic *vpic, struct pic *pic, uint8_t val)
 		pic->rd_cmd_reg = val & OCW3_RIS;
 
 		/* Polling mode */
-		pic->poll = ((val & OCW3_P) != 0);
+		pic->poll = ((val & OCW3_P) != 0U);
 	}
 
 	return 0;
@@ -454,7 +454,7 @@ static void vpic_set_pinstate(struct vpic *vpic, uint8_t pin, bool newstate)
 	ASSERT(pin < NR_VPIC_PINS_TOTAL,
 	    "vpic_set_pinstate: invalid pin number");
 
-	pic = &vpic->pic[pin >> 3];
+	pic = &vpic->pic[pin >> 3U];
 
 	oldcnt = pic->acnt[pin & 0x7U];
 	if (newstate)
@@ -467,7 +467,7 @@ static void vpic_set_pinstate(struct vpic *vpic, uint8_t pin, bool newstate)
 		pr_warn("pic pin%hhu: bad acnt %d\n", pin, newcnt);
 	}
 
-	level = ((vpic->pic[pin >> 3].elc & (1 << (pin & 0x7U))) != 0);
+	level = ((vpic->pic[pin >> 3U].elc & (1U << (pin & 0x7U))) != 0);
 
 	if ((oldcnt == 0 && newcnt == 1) || (newcnt > 0 && level == true)) {
 		/* rising edge or level */
@@ -497,7 +497,7 @@ static int vpic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate
 		return -EINVAL;
 
 	vpic = vm_pic(vm);
-	pic = &vpic->pic[irq >> 3];
+	pic = &vpic->pic[irq >> 3U];
 	pin = (uint8_t)irq;
 
 	if (pic->ready == false)
@@ -553,11 +553,11 @@ int vpic_set_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger trigger)
 	 */
 	if (trigger == LEVEL_TRIGGER) {
 		switch (irq) {
-		case 0:
-		case 1:
-		case 2:
-		case 8:
-		case 13:
+		case 0U:
+		case 1U:
+		case 2U:
+		case 8U:
+		case 13U:
 			return -EINVAL;
 		}
 	}
@@ -588,7 +588,7 @@ int vpic_get_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger *trigger
 	if (vpic == NULL)
 		return -EINVAL;
 
-	if ((vpic->pic[irq>>3].elc & (1U << (irq & 0x7U))) != 0U)
+	if ((vpic->pic[irq >> 3U].elc & (1U << (irq & 0x7U))) != 0U)
 		*trigger = LEVEL_TRIGGER;
 	else
 		*trigger = EDGE_TRIGGER;
@@ -608,7 +608,7 @@ void vpic_pending_intr(struct vm *vm, uint32_t *vecptr)
 	VPIC_LOCK(vpic);
 
 	pin = vpic_get_highest_irrpin(pic);
-	if (pin == 2) {
+	if (pin == 2U) {
 		pic = &vpic->pic[1];
 		pin = vpic_get_highest_irrpin(pic);
 	}
@@ -634,7 +634,7 @@ static void vpic_pin_accepted(struct pic *pic, uint8_t pin)
 {
 	pic->intr_raised = false;
 
-	if ((pic->elc & (1 << pin)) == 0) {
+	if ((pic->elc & (1U << pin)) == 0) {
 		/*only used edge trigger mode*/
 		pic->request &= ~(uint8_t)(1U << pin);
 	}
@@ -691,7 +691,7 @@ static int vpic_read(struct vpic *vpic, struct pic *pic,
 			*eax = 0U;
 		}
 	} else {
-		if ((port & ICU_IMR_OFFSET) != 0) {
+		if ((port & ICU_IMR_OFFSET) != 0U) {
 			/* read interrupt mask register */
 			*eax = pic->mask;
 		} else {
@@ -721,7 +721,7 @@ static int vpic_write(struct vpic *vpic, struct pic *pic,
 
 	VPIC_LOCK(vpic);
 
-	if ((port & ICU_IMR_OFFSET) != 0) {
+	if ((port & ICU_IMR_OFFSET) != 0U) {
 		switch (pic->icw_num) {
 		case 2U:
 			error = vpic_icw2(vpic, pic, val);
@@ -737,11 +737,11 @@ static int vpic_write(struct vpic *vpic, struct pic *pic,
 			break;
 		}
 	} else {
-		if ((val & (1 << 4)) != 0U)
+		if ((val & (1U << 4U)) != 0U)
 			error = vpic_icw1(vpic, pic, val);
 
 		if (pic->ready) {
-			if ((val & (1 << 3)) != 0U)
+			if ((val & (1U << 3U)) != 0U)
 				error = vpic_ocw3(vpic, pic, val);
 			else
 				error = vpic_ocw2(vpic, pic, val);
@@ -777,7 +777,7 @@ static int vpic_master_handler(struct vm *vm, bool in, uint16_t port,
 static uint32_t vpic_master_io_read(__unused struct vm_io_handler *hdlr,
 		struct vm *vm, uint16_t addr, size_t width)
 {
-	uint32_t val = 0;
+	uint32_t val = 0U;
 
 	if (vpic_master_handler(vm, true, addr, width, &val) < 0)
 		pr_err("pic master read port 0x%x width=%d failed\n",
@@ -816,7 +816,7 @@ static int vpic_slave_handler(struct vm *vm, bool in, uint16_t port,
 static uint32_t vpic_slave_io_read(__unused struct vm_io_handler *hdlr,
 		struct vm *vm, uint16_t addr, size_t width)
 {
-	uint32_t val = 0;
+	uint32_t val = 0U;
 
 	if (vpic_slave_handler(vm, true, addr, width, &val) < 0)
 		pr_err("pic slave read port 0x%x width=%d failed\n",
@@ -878,7 +878,7 @@ static int vpic_elc_handler(struct vm *vm, bool in, uint16_t port, size_t bytes,
 static uint32_t vpic_elc_io_read(__unused struct vm_io_handler *hdlr,
 		struct vm *vm, uint16_t addr, size_t width)
 {
-	uint32_t val = 0;
+	uint32_t val = 0U;
 
 	if (vpic_elc_handler(vm, true, addr, width, &val) < 0)
 		pr_err("pic elc read port 0x%x width=%d failed", addr, width);
@@ -899,18 +899,18 @@ void vpic_register_io_handler(struct vm *vm)
 {
 	struct vm_io_range master_range = {
 		.flags = IO_ATTR_RW,
-		.base = 0x20,
-		.len = 2
+		.base = 0x20U,
+		.len = 2U
 	};
 	struct vm_io_range slave_range = {
 		.flags = IO_ATTR_RW,
-		.base = 0xa0,
-		.len = 2
+		.base = 0xa0U,
+		.len = 2U
 	};
 	struct vm_io_range elcr_range = {
 		.flags = IO_ATTR_RW,
-		.base = 0x4d0,
-		.len = 2
+		.base = 0x4d0U,
+		.len = 2U
 	};
 
 	register_io_emulation_handler(vm, &master_range,
@@ -927,11 +927,11 @@ void *vpic_init(struct vm *vm)
 
 	vpic_register_io_handler(vm);
 
-	vpic = calloc(1, sizeof(struct vpic));
+	vpic = calloc(1U, sizeof(struct vpic));
 	ASSERT(vpic != NULL, "");
 	vpic->vm = vm;
-	vpic->pic[0].mask = 0xff;
-	vpic->pic[1].mask = 0xff;
+	vpic->pic[0].mask = 0xffU;
+	vpic->pic[1].mask = 0xffU;
 
 	VPIC_LOCK_INIT(vpic);
 
