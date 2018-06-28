@@ -1,18 +1,35 @@
 
 OUT_DIR ?= .
 
+# With V=1 means verbose build. Will show full build commands
+#
+# Without V means silient build. Only show customed message. And we
+# could put more focous on warning.
+ifdef V
+  Q :=
+  vecho := @true
+  SUBOPT := "V=1"
+else
+  Q := @
+  vecho := @echo
+  SUBOPT:= "--no-print-directory"
+endif
+
 all:
-	$(CC) -g acrnlog.c -o $(OUT_DIR)/acrnlog -lpthread
-	cp acrnlog.service $(OUT_DIR)/acrnlog.service
+	$(vecho) "--> Build arcnlog.c"
+	$(Q)$(CC) -g acrnlog.c -o $(OUT_DIR)/acrnlog -lpthread
+	$(Q)cp acrnlog.service $(OUT_DIR)/acrnlog.service
 
 clean:
-	rm -f $(OUT_DIR)/acrnlog
+	$(vecho) "Clean arcnlog"
+	$(Q)rm -f $(OUT_DIR)/acrnlog
 ifneq ($(OUT_DIR),.)
-	rm -f $(OUT_DIR)/acrnlog.service
+	$(Q)rm -f $(OUT_DIR)/acrnlog.service
 endif
 
 install: $(OUT_DIR)/acrnlog
-	install -d $(DESTDIR)/usr/bin
-	install -t $(DESTDIR)/usr/bin $(OUT_DIR)/acrnlog
-	install -d $(DESTDIR)/usr/lib/systemd/system
-	install -p -D -m 0644 $(OUT_DIR)/acrnlog.service $(DESTDIR)/usr/lib/systemd/system
+	$(vecho) "Instal arcnlog"
+	$(Q)install -d $(DESTDIR)/usr/bin
+	$(Q)install -t $(DESTDIR)/usr/bin $(OUT_DIR)/acrnlog
+	$(Q)install -d $(DESTDIR)/usr/lib/systemd/system
+	$(Q)install -p -D -m 0644 $(OUT_DIR)/acrnlog.service $(DESTDIR)/usr/lib/systemd/system
