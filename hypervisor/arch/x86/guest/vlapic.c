@@ -1491,10 +1491,15 @@ vlapic_write(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 void
 vlapic_reset(struct vlapic *vlapic)
 {
+	uint32_t i;
 	struct lapic_regs *lapic;
+	void *apic_page;
 
 	lapic = vlapic->apic_page;
-	memset(lapic, 0, sizeof(struct lapic_regs));
+	apic_page = (void *)vlapic->apic_page;
+	memset(apic_page, 0, CPU_PAGE_SIZE);
+	if (vlapic->pir_desc)
+		memset(vlapic->pir_desc, 0, sizeof(struct pir_desc));
 
 	lapic->id = vlapic_build_id(vlapic);
 	lapic->version = VLAPIC_VERSION;
@@ -1509,6 +1514,14 @@ vlapic_reset(struct vlapic *vlapic)
 	vlapic_reset_timer(vlapic);
 
 	vlapic->svr_last = lapic->svr;
+
+	for (i = 0; i < VLAPIC_MAXLVT_INDEX + 1; i++)
+		vlapic->lvt_last[i] = 0;
+
+	for (i = 0; i < ISRVEC_STK_SIZE; i++)
+		vlapic->isrvec_stk[i] = 0;
+
+	vlapic->isrvec_stk_top = 0;
 }
 
 void
