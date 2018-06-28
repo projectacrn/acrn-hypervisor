@@ -36,6 +36,7 @@
 
 struct vioapic *vioapic_init(struct vm *vm);
 void	vioapic_cleanup(struct vioapic *vioapic);
+void	vioapic_reset(struct vioapic *vioapic);
 
 int	vioapic_assert_irq(struct vm *vm, uint32_t irq);
 int	vioapic_deassert_irq(struct vm *vm, uint32_t irq);
