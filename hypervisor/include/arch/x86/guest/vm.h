@@ -16,7 +16,6 @@ enum vm_privilege_level {
 
 #define	MAX_VM_NAME_LEN		16
 struct vm_attr {
-	char name[MAX_VM_NAME_LEN];	/* Virtual machine name string */
 	int id;		/* Virtual machine identifier */
 	int boot_idx;	/* Index indicating the boot sequence for this VM */
 };

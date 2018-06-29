@@ -102,8 +102,6 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		if (bitmap_test_and_set(id, &vmid_bitmap) == 0)
 			break;
 	vm->attr.id = vm->attr.boot_idx = id;
-	snprintf(&vm->attr.name[0], MAX_VM_NAME_LEN, "vm_%d",
-		vm->attr.id);
 
 	atomic_store(&vm->hw.created_vcpus, 0);
 
