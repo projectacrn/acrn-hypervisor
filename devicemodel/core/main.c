@@ -72,7 +72,6 @@ char *guest_uuid_str;
 char *vsbl_file_name;
 uint8_t trusty_enabled;
 bool stdio_in_use;
-bool hugetlb;
 
 static int guest_vmexit_on_hlt, guest_vmexit_on_pause;
 static int virtio_msix = 1;
@@ -145,7 +144,6 @@ usage(int code)
 		"       -U: uuid\n"
 		"       -w: ignore unimplemented MSRs\n"
 		"       -W: force virtio to use single-vector MSI\n"
-		"       -T: use hugetlb for memory allocation\n"
 		"       -x: local apic is in x2APIC mode\n"
 		"       -Y: disable MPtable generation\n"
 		"       -k: kernel image path\n"
@@ -649,14 +647,13 @@ main(int argc, char *argv[])
 	mptgen = 1;
 	memflags = 0;
 	quit_vm_loop = 0;
-	hugetlb = 0;
 
 	if (signal(SIGHUP, sig_handler_term) == SIG_ERR)
 		fprintf(stderr, "cannot register handler for SIGHUP\n");
 	if (signal(SIGINT, sig_handler_term) == SIG_ERR)
 		fprintf(stderr, "cannot register handler for SIGINT\n");
 
-	optstr = "abehuwxACHIPSTWYvk:r:B:p:g:c:s:m:l:U:G:i:";
+	optstr = "abehuwxACHIPSWYvk:r:B:p:g:c:s:m:l:U:G:i:";
 	while ((c = getopt_long(argc, argv, optstr, long_options,
 			&option_idx)) != -1) {
 		switch (c) {
@@ -740,10 +737,6 @@ main(int argc, char *argv[])
 		case 'W':
 			virtio_msix = 0;
 			break;
-		case 'T':
-			if (check_hugetlb_support())
-				hugetlb = 1;
-			break;
 		case 'x':
 			x2apic_mode = 1;
 			break;
@@ -806,6 +799,11 @@ main(int argc, char *argv[])
 
 	if (argc != 1)
 		usage(1);
+
+	if (!check_hugetlb_support()) {
+		fprintf(stderr, "check_hugetlb_support failed\n");
+		exit(1);
+	}
 
 	vmname = argv[0];
 

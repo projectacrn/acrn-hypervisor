@@ -330,38 +330,26 @@ Set up Reference UOS
 Device Manager memory allocation mechanism
 ==========================================
 
-There are two Device Manager memory allocation mechanisms available:
+The ACRN Device Manager (DM) virtual memory allocation uses the HugeTLB mechanism.
+(You can read more about `HugeTLB in the linux kernel <https://linuxgazette.net/155/krishnakumar.html>`_
+for more information about how this mechanism works.)
 
-- Contiguous Memory Allocator (CMA), and 
-- Huge Page Tables (HugeTLB).  HugeTLB is the default.
+For hugeTLB to work, you'll need to reserve huge pages:
 
-To choose CMA, do the following:
+  - For a (large) 1GB huge page reservation, add ``hugepagesz=1G hugepages=reserved_pg_num``
+    (for example, ``hugepagesz=1G hugepages=4``) to the SOS cmdline in
+    ``acrn.conf`` (for EFI)
 
-1) Add ``cma=reserved_mem_size@recommend_memory_offset-0``, (for example
-   ``cma=2560M@0x100000000-0``) to the SOS cmdline in ``acrn.conf``
+  - For a (smaller) 2MB huge page reservation, after the SOS starts up, run the
+    command::
 
-2) Start ``acrn-dm`` *without* the ``-T`` option
+       echo reserved_pg_num > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
 
-To support HugeTLB, do the following:
-
-1) Do huge page reservation
-
-   - For 1G huge page reservation, add ``hugepagesz=1G hugepages=reserved_pg_num``
-     (for example, ``hugepagesz=1G hugepages=4``) to the SOS cmdline in
-     ``acrn.conf`` (for EFI)
-
-   - For 2M huge page reservation, after the SOS starts up, run the
-     command::
-
-        echo reserved_pg_num > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-
-   .. note::
-      You can use 2M reserving method to do reservation for 1G page size, but it
-      may fail.  For an EFI platform, you may skip 1G page reservation
-      by using a 2M page, but make sure your huge page reservation size is
-      large enough for your usage.
-
-2)  Start ``acrn-dm`` *with* the ``-T`` option.
+  .. note::
+     You can use 2M reserving method to do reservation for 1G page size, but it
+     may fail.  For an EFI platform, you may skip 1G page reservation
+     by using a 2M page, but make sure your huge page reservation size is
+     large enough for your usage.
 
 Build ACRN from Source
 **********************
