@@ -213,7 +213,7 @@ static int unhandled_vmexit_handler(struct vcpu *vcpu)
 
 	/* while(1); */
 
-	TRACE_2L(TRC_VMEXIT_UNHANDLED, vcpu->arch_vcpu.exit_reason, 0);
+	TRACE_2L(TRACE_VMEXIT_UNHANDLED, vcpu->arch_vcpu.exit_reason, 0);
 
 	return 0;
 }
@@ -229,7 +229,7 @@ int cpuid_vmexit_handler(struct vcpu *vcpu)
 		(uint32_t *)&cur_context->guest_cpu_regs.regs.rcx,
 		(uint32_t *)&cur_context->guest_cpu_regs.regs.rdx);
 
-	TRACE_2L(TRC_VMEXIT_CPUID, vcpu->vcpu_id, 0);
+	TRACE_2L(TRACE_VMEXIT_CPUID, vcpu->vcpu_id, 0);
 
 	return 0;
 }
@@ -286,7 +286,7 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
 		return -EINVAL;
 	}
 
-	TRACE_2L(TRC_VMEXIT_CR_ACCESS,
+	TRACE_2L(TRACE_VMEXIT_CR_ACCESS,
 		VM_EXIT_CR_ACCESS_ACCESS_TYPE
 			(vcpu->arch_vcpu.exit_qualification),
 		VM_EXIT_CR_ACCESS_CR_NUM

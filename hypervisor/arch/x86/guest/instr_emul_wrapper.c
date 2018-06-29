@@ -252,13 +252,13 @@ static int32_t get_vmcs_field(int ident)
 	}
 }
 
-static void get_guest_paging_info(struct vcpu *vcpu, struct emul_cnx *emul_cnx)
+static void get_guest_paging_info(struct vcpu *vcpu, struct emul_cnx *emul_cnx,
+						uint32_t csar)
 {
-	uint32_t cpl, csar;
+	uint32_t cpl;
 
 	ASSERT(emul_cnx != NULL && vcpu != NULL, "Error in input arguments");
 
-	csar = exec_vmread(VMX_GUEST_CS_ATTR);
 	cpl = (csar >> 5) & 3U;
 	emul_cnx->paging.cr3 =
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3;
@@ -307,8 +307,8 @@ int decode_instruction(struct vcpu *vcpu)
 		return retval;
 	}
 
-	get_guest_paging_info(vcpu, emul_cnx);
 	csar = exec_vmread(VMX_GUEST_CS_ATTR);
+	get_guest_paging_info(vcpu, emul_cnx, csar);
 	cpu_mode = get_vcpu_mode(vcpu);
 
 	retval = __decode_instruction(cpu_mode, SEG_DESC_DEF32(csar),

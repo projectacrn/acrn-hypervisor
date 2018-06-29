@@ -143,8 +143,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 
 	if (is_vm0(vm)) {
 		/* Load pm S state data */
-		if (vm_load_pm_s_state(vm) == 0)
-			register_pm1ab_handler(vm);
+		vm_load_pm_s_state(vm);
 
 		/* Create virtual uart */
 		vm->vuart = vuart_init(vm);
@@ -275,7 +274,7 @@ void pause_vm(struct vm *vm)
 		pause_vcpu(vcpu, VCPU_ZOMBIE);
 }
 
-void resume_vm(struct vm *vm)
+int vm_resume(struct vm *vm)
 {
 	int i;
 	struct vcpu *vcpu = NULL;
@@ -284,28 +283,8 @@ void resume_vm(struct vm *vm)
 		resume_vcpu(vcpu);
 
 	vm->state = VM_STARTED;
-}
 
-/* Resume vm from S3 state
- *
- * To resume vm after guest enter S3 state:
- * - reset BSP
- * - BSP will be put to real mode with entry set as wakeup_vec
- * - init_vmcs BSP. We could call init_vmcs here because we know current
- *   pcpu is mapped to BSP of vm.
- */
-void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec)
-{
-	struct vcpu *bsp = vcpu_from_vid(vm, 0);
-
-	vm->state = VM_STARTED;
-
-	reset_vcpu(bsp);
-	bsp->entry_addr = (void *)(uint64_t)wakeup_vec;
-	bsp->arch_vcpu.cpu_mode = CPU_MODE_REAL;
-	init_vmcs(bsp);
-
-	schedule_vcpu(bsp);
+	return 0;
 }
 
 /* Create vm/vcpu for vm0 */
