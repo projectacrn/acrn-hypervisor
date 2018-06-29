@@ -6,8 +6,8 @@ Before=basic.target
 
 [Service]
 ExecStart=/usr/bin/cbc_attach /dev/ttyS2
-Restart=always
-Type=notify
+Restart=no
+Type=simple
 
 [Install]
 WantedBy=basic.target

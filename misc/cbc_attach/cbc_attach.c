@@ -10,6 +10,7 @@
  */
 
 #include <getopt.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -23,7 +24,6 @@
 #include <unistd.h>
 
 #ifndef ANDROID_BUILD
-#include <systemd/sd-daemon.h>
 #define APP_INFO "v" VERSION_STRING
 #else
 #define APP_INFO ""
@@ -403,13 +403,6 @@ int main(int argc, char **argv)
 
 	} while (retry_time > 0);
 
-
-#ifndef ANDROID_BUILD
-	/* it is recommended by systemd to ignore the return value of
-	 * sd_notify()
-	 */
-	(void)sd_notify(0, "READY=1");
-#endif
 	if (success) {
 		pause();
 		cbc_attach_shutdown(&deviceFd);
