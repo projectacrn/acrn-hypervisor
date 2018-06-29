@@ -54,7 +54,7 @@ static void vapic_cap_detect(void);
 static void cpu_xsave_init(void);
 static void cpu_set_logical_id(uint32_t logical_id);
 static void print_hv_banner(void);
-int cpu_find_logical_id(uint32_t lapic_id);
+int cpu_find_logical_id(uint8_t lapic_id);
 static void pcpu_sync_sleep(unsigned long *sync, int mask_bit);
 int ibrs_type;
 static uint64_t __attribute__((__section__(".bss_noinit"))) start_tsc;
@@ -252,7 +252,7 @@ static void alloc_phy_cpu_data(uint16_t pcpu_num)
 
 uint16_t __attribute__((weak)) parse_madt(uint8_t *lapic_id_base)
 {
-	static const uint32_t lapic_id[] = {0, 2, 4, 6};
+	static const uint8_t lapic_id[] = {0U, 2U, 4U, 6U};
 	uint32_t i;
 
 	for (i = 0; i < ARRAY_SIZE(lapic_id); i++)
@@ -631,7 +631,7 @@ static void cpu_secondary_post(void)
 	cpu_dead(get_cpu_id());
 }
 
-int cpu_find_logical_id(uint32_t lapic_id)
+int cpu_find_logical_id(uint8_t lapic_id)
 {
 	int i;
 
