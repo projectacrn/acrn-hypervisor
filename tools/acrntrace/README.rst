@@ -44,7 +44,7 @@ Usage
 
    Replace username and hostname with appropriate values.
 
-#. On the Linux system, run the provided python2 script to analyze the
+#. On the Linux system, run the provided Python3 script to analyze the
    ``vm_exits`` (currently only vm_exit analysis is supported):
 
    .. code-block:: none
@@ -56,7 +56,7 @@ Usage
      a copy of the original data file is saved with suffix ``.orig``.
    - Analysis report is written to stdout, or to a CSV file if
      a filename is specified using ``-o filename``.
-   - The scripts require bash and python2.
+   - The scripts require Python3.
 
 Build and Install
 *****************

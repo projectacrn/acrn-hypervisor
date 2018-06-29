@@ -9,8 +9,8 @@ import csv
 import struct
 from config import TSC_FREQ
 
-TSC_BEGIN = 0L
-TSC_END = 0L
+TSC_BEGIN = 0
+TSC_END = 0
 
 VMEXIT_ENTRY = 0x10000
 
@@ -44,13 +44,13 @@ def parse_trace(ifile):
             event = event & 0xffffffffffff
 
             if TSC_BEGIN == 0:
-               TSC_BEGIN = long(tsc)
+               TSC_BEGIN = tsc
 
-            TSC_END = long(tsc)
+            TSC_END = tsc
 
             for key in LIST_EVENTS.keys():
                 if event == LIST_EVENTS.get(key):
-		    if IRQ_EXITS.has_key(vec):
+                    if vec in IRQ_EXITS.keys():
                         IRQ_EXITS[vec] += 1
                     else:
                         IRQ_EXITS[vec] = 1
