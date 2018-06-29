@@ -49,6 +49,27 @@ static struct key_info g_key_info = {
 	exec_vmwrite(VMX_GUEST_##SEG_NAME##_ATTR, seg.attr); \
 }
 
+/**
+ * @defgroup trusty_apis Trusty APIs
+ *
+ * This is a special group that includes all APIs
+ * related to Trusty
+ *
+ * @{
+ */
+
+/**
+ * @brief Create Secure World EPT hierarchy
+ *
+ * Create Secure World EPT hierarchy, construct new PML4/PDPT, reuse PD/PT parse from
+ * vm->arch_vm->ept
+ *
+ * @param vm pointer to a VM with 2 Worlds
+ * @param gpa_orig original gpa allocated from vSBL
+ * @param size LK size (16M by default)
+ * @param gpa_rebased gpa rebased to offset xxx (511G_OFFSET)
+ *
+ */
 static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 		uint64_t size, uint64_t gpa_rebased)
 {
@@ -464,3 +485,7 @@ void trusty_set_dseed(void *dseed, uint8_t dseed_num)
 	memcpy_s(&g_key_info.dseed_list, sizeof(struct seed_info) * dseed_num,
 			dseed, sizeof(struct seed_info) * dseed_num);
 }
+
+/**
+ * @}
+ */ // End of trusty_apis
