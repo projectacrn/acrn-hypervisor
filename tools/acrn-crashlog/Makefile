@@ -20,16 +20,27 @@ export BUILDDIR
 export CC
 export RM
 
-EXTRA_LIBS = -lsystemd
-LDCNF := $(shell ldconfig -p)
-LIB_EXIST = $(findstring libsystemd-journal.so, $(LDCNF))
-ifeq ($(strip $(LIB_EXIST)),libsystemd-journal.so)
-	EXTRA_LIBS = -lsystemd-journal
+PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):/usr/lib/pkgconfig
+PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):/usr/share/pkgconfig
+PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):/usr/local/lib/pkgconfig
+PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):/usr/local/share/pkgconfig
+PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):/usr/lib32/pkgconfig
+PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):/usr/lib64/pkgconfig
+
+EXTRA_LIBS = -lsystemd-journal
+PKG_CONFIG := $(shell export PKG_CONFIG_PATH=$(PKG_CONFIG_PATH); \
+	pkg-config --libs libsystemd)
+LIB_EXIST := $(findstring lsystemd, $(PKG_CONFIG))
+ifeq ($(strip $(LIB_EXIST)),lsystemd)
+	EXTRA_LIBS := -lsystemd
 endif
-LIB_EXIST = $(findstring libtelemetry.so, $(LDCNF))
-ifeq ($(strip $(LIB_EXIST)),libtelemetry.so)
-	CFLAGS	+= -DHAVE_TELEMETRICS_CLIENT
-	EXTRA_LIBS += -ltelemetry
+
+PKG_CONFIG := $(shell export PKG_CONFIG_PATH=$(PKG_CONFIG_PATH); \
+	pkg-config --libs libtelemetry)
+LIB_EXIST := $(findstring ltelemetry, $(PKG_CONFIG))
+ifeq ($(strip $(LIB_EXIST)),ltelemetry)
+        CFLAGS  += -DHAVE_TELEMETRICS_CLIENT
+        EXTRA_LIBS += -ltelemetry
 endif
 export CFLAGS
 export EXTRA_LIBS
