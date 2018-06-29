@@ -393,3 +393,42 @@ the first non-white space in the preceding line.  For example:
 Keep the line length for documentation less than 80 characters to make
 it easier for reviewing in GitHub. Long lines because of URL references
 are an allowed exception.
+
+Drawings
+********
+
+You can include a picture (.jpg, .png, .svg for example) by using the
+``.. image`` directive::
+
+   .. image:: ../images/ACRNlogo.png
+      :align: center
+
+This results in the image being placed in the document:
+
+.. image:: ../images/ACRNlogo.png
+   :align: center
+
+Alternatively, use the ``.. figure`` directive to include a picture with
+a caption and automatic figure numbering for
+your image, (so you can say see :numref:`acrn-logo-figure`, by using the
+notation ``:numref:`acrn-logo-figure``` and specifying the name of
+figure)::
+
+   .. figure:: ../images/ACRNlogo.png
+      :align: center
+      :name: acrn-logo-figure
+
+      Caption for the figure
+
+.. figure:: ../images/ACRNlogo.png
+   :align: center
+   :name: acrn-logo-figure
+
+   Caption for the figure
+
+
+We've also included the ``graphviz`` Sphinx extension to let you use a text
+description language to render drawings.  See :ref:`graphviz-examples` for more
+information.
+
+
