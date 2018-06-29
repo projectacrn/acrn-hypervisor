@@ -132,13 +132,6 @@
 /* Boot CPU ID */
 #define CPU_BOOT_ID             0U
 
-/* CPU states defined */
-#define CPU_STATE_RESET         0
-#define CPU_STATE_INITIALIZING  1
-#define CPU_STATE_RUNNING       2
-#define CPU_STATE_HALTED        3
-#define CPU_STATE_DEAD          4
-
 /* hypervisor stack bottom magic('intl') */
 #define SP_BOTTOM_MAGIC    0x696e746cUL
 
@@ -216,6 +209,15 @@ enum feature_word {
 	FEAT_8000_0001_EDX,     /* CPUID[8000_0001].EDX */
 	FEAT_8000_0008_EBX,     /* CPUID[8000_0008].EAX */
 	FEATURE_WORDS,
+};
+
+/* CPU states defined */
+enum cpu_state {
+	CPU_STATE_RESET = 0,
+	CPU_STATE_INITIALIZING,
+	CPU_STATE_RUNNING,
+	CPU_STATE_HALTED,
+	CPU_STATE_DEAD,
 };
 
 struct cpu_state_info {
