@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 
 """
@@ -20,7 +20,7 @@ def usage():
     Returns: None
     Raises: NA
     """
-    print '''
+    print ('''
     [Usage] acrnalyze.py [options] [value] ...
 
     [options]
@@ -30,7 +30,7 @@ def usage():
     -f, --frequency=[unsigned int]: TSC frequency in MHz
     --vm_exit: to generate vm_exit report
     --irq: to generate irq related report
-    '''
+    ''')
 
 def do_analysis(ifile, ofile, analyzer):
     """do the specific analysis

@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 
 """
@@ -9,9 +9,9 @@ import csv
 import struct
 from config import TSC_FREQ
 
-TSC_BEGIN = 0L
-TSC_END = 0L
-TOTAL_NR_EXITS = 0L
+TSC_BEGIN = 0
+TSC_END = 0
+TOTAL_NR_EXITS = 0
 
 VM_EXIT = 0x10
 VM_ENTER = 0x11
@@ -90,11 +90,11 @@ def parse_trace_data(ifile):
 
     global TSC_BEGIN, TSC_END, TOTAL_NR_EXITS
     last_ev_id = ''
-    tsc_enter = 0L
-    tsc_exit = 0L
-    tsc_last_exit_period = 0L
+    tsc_enter = 0
+    tsc_exit = 0
+    tsc_last_exit_period = 0
 
-    fd = open(ifile)
+    fd = open(ifile, 'rb')
 
     while True:
         try:
@@ -107,11 +107,11 @@ def parse_trace_data(ifile):
 
             if event == VM_ENTER:
                 if TSC_BEGIN == 0:
-                    TSC_BEGIN = long(tsc)
-                    tsc_exit = long(tsc)
+                    TSC_BEGIN = tsc
+                    tsc_exit = tsc
                     TOTAL_NR_EXITS = 0
 
-                tsc_enter = long(tsc)
+                tsc_enter = tsc
                 TSC_END = tsc_enter
                 tsc_last_exit_period = tsc_enter - tsc_exit
 
@@ -119,7 +119,7 @@ def parse_trace_data(ifile):
                     TIME_IN_EXIT[last_ev_id] += tsc_last_exit_period
 
             elif event == VM_EXIT:
-                tsc_exit = long(tsc)
+                tsc_exit = tsc
                 TSC_END = tsc_exit
                 TOTAL_NR_EXITS += 1
 
@@ -133,7 +133,7 @@ def parse_trace_data(ifile):
                         # Skip the non-VMEXIT trace event
                         pass
 
-        except IOError, struct.error:
+        except (IOError, struct.error) as e:
             sys.exit()
 
 def generate_report(ofile, freq):
@@ -151,7 +151,7 @@ def generate_report(ofile, freq):
         with open(csv_name, 'a') as filep:
             f_csv = csv.writer(filep)
 
-            total_exit_time = 0L
+            total_exit_time = 0
             rt_cycle = TSC_END - TSC_BEGIN
             assert rt_cycle != 0, "total_run_time in cycle is 0,\
                                 tsc_end %d, tsc_begin %d"\
@@ -162,16 +162,16 @@ def generate_report(ofile, freq):
             for event in LIST_EVENTS:
                 total_exit_time += TIME_IN_EXIT[event]
 
-            print "Total run time: %d (cycles)" % (rt_cycle)
-            print "TSC Freq: %f MHz)" % (freq)
-            print "Total run time %d (Sec)" % (rt_sec)
+            print ("Total run time: %d cycles" % (rt_cycle))
+            print ("TSC Freq: %f MHz" % (freq))
+            print ("Total run time: %d sec" % (rt_sec))
 
             f_csv.writerow(['Run time(cycles)', 'Run time(Sec)', 'Freq(MHz)'])
             f_csv.writerow(['%d' % (rt_cycle),
                             '%.3f' % (rt_sec),
                             '%d' % (freq)])
 
-            print "Event \tNR_Exit \tNR_Exit/Sec \tTime Consumed \tTime Percentage"
+            print ("Event \tNR_Exit \tNR_Exit/Sec \tTime Consumed \tTime Percentage")
             f_csv.writerow(['Exit_Reason',
                             'NR_Exit',
                             'NR_Exit/Sec',
@@ -197,7 +197,7 @@ def generate_report(ofile, freq):
             f_csv.writerow(row)
 
     except IOError as err:
-        print "Output File Error: " + str(err)
+        print ("Output File Error: " + str(err))
 
 def analyze_vm_exit(ifile, ofile):
     """do the vm exits analysis
