@@ -446,6 +446,7 @@ repository has three main components in it:
 #. The ACRN tools source code located in the ``tools`` directory
 
 You can build all these components in one go as follows:
+
 .. code-block:: console
 
    $ git clone https://github.com/projectacrn/acrn-hypervisor
