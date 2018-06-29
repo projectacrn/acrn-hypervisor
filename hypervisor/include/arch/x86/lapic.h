@@ -137,24 +137,6 @@ union lapic_id {
 	} x2apic;
 };
 
-struct lapic_regs {
-	uint32_t id;
-	uint32_t tpr;
-	uint32_t apr;
-	uint32_t ppr;
-	uint32_t ldr;
-	uint32_t dfr;
-	uint32_t tmr[8];
-	uint32_t svr;
-	uint32_t lvtt;
-	uint32_t lvt0;
-	uint32_t lvt1;
-	uint32_t lvterr;
-	uint32_t ticr;
-	uint32_t tccr;
-	uint32_t tdcr;
-};
-
 void write_lapic_reg32(uint32_t offset, uint32_t value);
 void save_lapic(struct lapic_regs *regs);
 int early_init_lapic(void);

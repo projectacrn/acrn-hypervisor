@@ -128,7 +128,7 @@ struct lapic_reg {
 	uint32_t val;		PAD3;
 };
 
-struct lapic {
+struct lapic_regs {
 	/* reserved */		PAD4;
 	/* reserved */		PAD4;
 	uint32_t id;		PAD3;
