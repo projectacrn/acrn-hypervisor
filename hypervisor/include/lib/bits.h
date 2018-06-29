@@ -143,13 +143,16 @@ static inline int clz64(unsigned long value)
 
 /*
  * (*addr) |= (1UL<<nr);
+ * Note:Input parameter nr shall be less than 64. 
+ * If nr>=64, it will be truncated.
  */
 #define build_bitmap_set(name, lock, nr, addr)		\
-static inline void name(int nr, volatile unsigned long *addr)	\
+static inline void name(uint16_t nr, volatile uint64_t *addr)	\
 {							\
-	asm volatile(lock "orq %1,%0"			\
+	nr = nr & 0x3fU;				\
+	asm volatile(lock "orq %q1,%0"			\
 			:  "+m" (*addr)			\
-			:  "r" (1UL<<nr)		\
+			:  "r" ((1UL<<(uint64_t)nr))	\
 			:  "cc", "memory");		\
 }
 build_bitmap_set(__bitmap_set, "", nr, addr)
@@ -157,13 +160,16 @@ build_bitmap_set(bitmap_set, BUS_LOCK, nr, addr)
 
 /*
  * (*addr) &= ~(1UL<<nr);
+ * Note:Input parameter nr shall be less than 64. 
+ * If nr>=64, it will be truncated.
  */
 #define build_bitmap_clear(name, lock, nr, addr)	\
-static inline void name(int nr, volatile unsigned long *addr)	\
+static inline void name(uint16_t nr, volatile uint64_t *addr)	\
 {							\
-	asm volatile(lock "andq %1,%0"			\
+	nr = nr & 0x3fU;				\
+	asm volatile(lock "andq %q1,%0"			\
 			:  "+m" (*addr)			\
-			:  "r" (~(1UL<<nr))		\
+			:  "r" ((~(1UL<<(uint64_t)nr)))	\
 			:  "cc", "memory");		\
 }
 build_bitmap_clear(__bitmap_clear, "", nr, addr)
@@ -171,14 +177,16 @@ build_bitmap_clear(bitmap_clear, BUS_LOCK, nr, addr)
 
 /*
  * return !!((*addr) & (1UL<<nr));
+ * Note:Input parameter nr shall be less than 64. If nr>=64, it will
+ * be truncated.
  */
-static inline bool bitmap_test(int nr, volatile unsigned long *addr)
+static inline bool bitmap_test(uint16_t nr, volatile uint64_t *addr)
 {
-	int32_t ret;
-
-	asm volatile("btq %2,%1\n\tsbbl %0, %0"
+	int32_t ret=0;
+	nr = nr & 0x3fU;
+	asm volatile("btq %q2,%1\n\tsbbl %0, %0"
 			: "=r" (ret), "=m" (*addr)
-			: "r" ((long)(nr & 0x3f))
+			: "r" ((uint64_t)nr)
 			: "cc", "memory");
 	return (ret != 0);
 }
@@ -187,14 +195,17 @@ static inline bool bitmap_test(int nr, volatile unsigned long *addr)
  * bool ret = (*addr) & (1UL<<nr);
  * (*addr) |= (1UL<<nr);
  * return ret;
+ * Note:Input parameter nr shall be less than 64. If nr>=64, it
+ * will be truncated.
  */
 #define build_bitmap_testandset(name, lock, nr, addr)	\
-static inline bool name(int nr, volatile unsigned long *addr)	\
+static inline bool name(uint16_t nr, volatile uint64_t *addr)	\
 {							\
-	int32_t ret;					\
-	asm volatile(lock "btsq %2,%1\n\tsbbl %0,%0"	\
+	int32_t ret=0;					\
+	nr = nr & 0x3fU;					\
+	asm volatile(lock "btsq %q2,%1\n\tsbbl %0,%0"	\
 			: "=r" (ret), "=m" (*addr)	\
-			: "r" ((long)(nr & 0x3f))	\
+			: "r" ((uint64_t)nr)	\
 			: "cc", "memory");		\
 	return (ret != 0);			        \
 }
@@ -205,14 +216,17 @@ build_bitmap_testandset(bitmap_test_and_set, BUS_LOCK, nr, addr)
  * bool ret = (*addr) & (1UL<<nr);
  * (*addr) &= ~(1UL<<nr);
  * return ret;
+ * Note:Input parameter nr shall be less than 64. If nr>=64,
+ * it will be truncated.
  */
 #define build_bitmap_testandclear(name, lock, nr, addr)	\
-static inline bool name(int nr, volatile unsigned long *addr)	\
+static inline bool name(uint16_t nr, volatile uint64_t *addr)	\
 {							\
-	int32_t ret;					\
-	asm volatile(lock "btrq %2,%1\n\tsbbl %0,%0"	\
+	int32_t ret=0;					\
+	nr = nr & 0x3fU;					\
+	asm volatile(lock "btrq %q2,%1\n\tsbbl %0,%0"	\
 			: "=r" (ret), "=m" (*addr)	\
-			: "r" ((long)(nr & 0x3f))	\
+			: "r" ((uint64_t)nr)	\
 			: "cc", "memory");		\
 	return (ret != 0);			        \
 }

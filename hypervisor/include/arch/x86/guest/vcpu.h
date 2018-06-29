@@ -287,7 +287,7 @@ void resume_vcpu(struct vcpu *vcpu);
 void schedule_vcpu(struct vcpu *vcpu);
 int prepare_vcpu(struct vm *vm, uint16_t pcpu_id);
 
-void request_vcpu_pre_work(struct vcpu *vcpu, int pre_work_id);
+void request_vcpu_pre_work(struct vcpu *vcpu, uint16_t pre_work_id);
 
 #endif
 

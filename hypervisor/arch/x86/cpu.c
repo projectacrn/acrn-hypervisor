@@ -541,7 +541,7 @@ static void bsp_boot_post(void)
 	start_cpus();
 
 	/* Trigger event to allow secondary CPUs to continue */
-	__bitmap_set(0, &pcpu_sync);
+	__bitmap_set(0U, &pcpu_sync);
 
 	ASSERT(get_cpu_id() == CPU_BOOT_ID, "");
 
