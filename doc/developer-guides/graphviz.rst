@@ -1,4 +1,4 @@
-.. graphviz-examples:
+.. _graphviz-examples:
 
 Drawings using graphviz
 #######################

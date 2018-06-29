@@ -23,3 +23,4 @@ project.
 
    contribute_guidelines.rst
    doc_guidelines.rst
+   graphviz.rst
