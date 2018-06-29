@@ -9,6 +9,7 @@ Developer Guides
    primer.rst
    ../api/index.rst
    ../reference/kconfig/index.rst
+   trusty.rst
 
 
 Contributing to the project
