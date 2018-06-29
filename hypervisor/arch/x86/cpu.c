@@ -293,7 +293,7 @@ static int init_phy_cpu_storage(void)
 	return bsp_cpu_id;
 }
 
-static void cpu_set_current_state(uint32_t logical_id, int state)
+static void cpu_set_current_state(uint32_t logical_id, enum cpu_state state)
 {
 	spinlock_obtain(&up_count_spinlock);
 
