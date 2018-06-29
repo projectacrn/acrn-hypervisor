@@ -10,19 +10,11 @@
 
 #include <hypervisor.h>
 
-#ifndef ULONG_MAX
 #define ULONG_MAX       ((uint64_t)(~0UL))              /* 0xFFFFFFFF */
-#endif
-
-#ifndef LONG_MAX
 #define LONG_MAX        ((long)(ULONG_MAX >> 1))        /* 0x7FFFFFFF */
-#endif
-
-#ifndef LONG_MIN
 #define LONG_MIN        ((long)(~LONG_MAX))             /* 0x80000000 */
-#endif
 
-#define ISSPACE(c) (((c) & 0xFFU == ' ') || ((c) & 0xFFU == '\t'))
+#define ISSPACE(c) ((((c) & 0xFFU) == ' ') || (((c) & 0xFFU) == '\t'))
 
 /*
  * Convert a string to a long integer - decimal support only.
