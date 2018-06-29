@@ -7,8 +7,8 @@
 #ifndef	_HV_CORE_SCHEDULE_
 #define	_HV_CORE_SCHEDULE_
 
-#define	NEED_RESCHEDULE		(1)
-#define	NEED_OFFLINE		(2)
+#define	NEED_RESCHEDULE		(1U)
+#define	NEED_OFFLINE		(2U)
 
 struct sched_context {
 	spinlock_t runqueue_lock;

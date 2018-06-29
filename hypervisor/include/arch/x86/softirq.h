@@ -13,7 +13,7 @@
 #define SOFTIRQ_MASK		((1UL<<SOFTIRQ_MAX)-1)
 
 /* used for atomic value for prevent recursive */
-#define SOFTIRQ_ATOMIC		63
+#define SOFTIRQ_ATOMIC		63U
 
 void enable_softirq(uint16_t cpu_id);
 void disable_softirq(uint16_t cpu_id);

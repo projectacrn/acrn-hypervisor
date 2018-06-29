@@ -130,7 +130,7 @@
 #define CPU_MHZ_TO_KHZ          1000
 
 /* Boot CPU ID */
-#define CPU_BOOT_ID             0
+#define CPU_BOOT_ID             0U
 
 /* CPU states defined */
 #define CPU_STATE_RESET         0

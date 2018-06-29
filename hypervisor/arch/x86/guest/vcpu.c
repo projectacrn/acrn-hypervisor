@@ -387,7 +387,7 @@ int prepare_vcpu(struct vm *vm, uint16_t pcpu_id)
 	return ret;
 }
 
-void request_vcpu_pre_work(struct vcpu *vcpu, int pre_work_id)
+void request_vcpu_pre_work(struct vcpu *vcpu, uint16_t pre_work_id)
 {
 	bitmap_set(pre_work_id, &vcpu->pending_pre_work);
 }
