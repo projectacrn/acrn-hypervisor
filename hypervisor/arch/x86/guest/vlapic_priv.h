@@ -118,7 +118,7 @@ struct vlapic_timer {
 struct vlapic {
 	struct vm		*vm;
 	struct vcpu		*vcpu;
-	struct lapic		*apic_page;
+	struct lapic_regs	*apic_page;
 	struct pir_desc		*pir_desc;
 	struct vlapic_ops	ops;
 
