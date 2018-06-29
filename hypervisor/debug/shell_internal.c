@@ -474,7 +474,7 @@ int shell_list_vm(struct shell *p_shell,
 		/* Create output string consisting of VM name and VM id
 		 */
 		snprintf(temp_str, MAX_STR_SIZE,
-				"%-24s %-16d %-8s\r\n", vm->attr.name,
+				"vm_%-24d %-16d %-8s\r\n", vm->attr.id,
 				vm->attr.id, state);
 
 		/* Output information for this task */
