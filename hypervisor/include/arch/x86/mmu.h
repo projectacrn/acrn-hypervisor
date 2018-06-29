@@ -213,9 +213,15 @@
 #define ROUND_PAGE_UP(addr)  (((addr) + CPU_PAGE_SIZE - 1) & CPU_PAGE_MASK)
 #define ROUND_PAGE_DOWN(addr) ((addr) & CPU_PAGE_MASK)
 
+enum _page_table_type {
+	PTT_HOST = 0,  /* Mapping for hypervisor */
+	PTT_EPT = 1,
+	PAGETABLE_TYPE_UNKNOWN,
+};
+
 struct map_params {
 	/* enum _page_table_type: HOST or EPT*/
-	int  page_table_type;
+	enum _page_table_type page_table_type;
 	/* used HVA->HPA for HOST, used GPA->HPA for EPT */
 	void *pml4_base;
 	/* used HPA->HVA for HOST, used HPA->GPA for EPT */
@@ -228,12 +234,6 @@ struct entry_params {
 	uint64_t entry_off;
 	uint64_t entry_val;
 	uint64_t page_size;
-};
-
-enum _page_table_type {
-	PTT_HOST = 0,  /* Mapping for hypervisor */
-	PTT_EPT = 1,
-	PAGETABLE_TYPE_UNKNOWN,
 };
 
 /* Represent the 4 levels of translation tables in IA-32e paging mode */
@@ -284,7 +284,7 @@ struct mem_io_node {
 };
 
 uint64_t get_paging_pml4(void);
-bool check_mmu_1gb_support(int page_table_type);
+bool check_mmu_1gb_support(enum _page_table_type page_table_type);
 void *alloc_paging_struct(void);
 void free_paging_struct(void *ptr);
 void enable_paging(uint64_t pml4_base_addr);

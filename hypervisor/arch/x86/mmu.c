@@ -190,7 +190,7 @@ void invept(struct vcpu *vcpu)
 		_invept(INVEPT_TYPE_ALL_CONTEXTS, desc);
 }
 
-bool check_mmu_1gb_support(int page_table_type)
+bool check_mmu_1gb_support(enum _page_table_type page_table_type)
 {
 	bool status = false;
 
@@ -201,7 +201,8 @@ bool check_mmu_1gb_support(int page_table_type)
 	return status;
 }
 
-static inline uint32_t check_page_table_present(int page_table_type,
+static inline uint32_t
+check_page_table_present(enum _page_table_type page_table_type,
 		uint64_t table_entry)
 {
 	if (page_table_type == PTT_EPT) {
@@ -227,7 +228,8 @@ static inline uint32_t check_page_table_present(int page_table_type,
 
 static uint32_t map_mem_region(void *vaddr, void *paddr,
 		void *table_base, uint64_t attr, uint32_t table_level,
-		int table_type, enum mem_map_request_type request_type)
+		enum _page_table_type table_type,
+		enum mem_map_request_type request_type)
 {
 	uint64_t table_entry;
 	uint32_t table_offset;
