@@ -318,59 +318,9 @@ vm_map_memseg_vma(struct vmctx *ctx, size_t len, vm_paddr_t gpa,
 	return ioctl(ctx->fd, IC_SET_MEMSEG, &memmap);
 }
 
-static int
-vm_alloc_set_memseg(struct vmctx *ctx, int segid, size_t len,
-		vm_paddr_t gpa, int prot, char *base, char **ptr)
-{
-	struct vm_memseg memseg;
-	struct vm_memmap memmap;
-	int error, flags;
-
-	if (segid == VM_MEMMAP_SYSMEM) {
-		bzero(&memseg, sizeof(struct vm_memseg));
-		memseg.len = len;
-		memseg.gpa = gpa;
-		error = ioctl(ctx->fd, IC_ALLOC_MEMSEG, &memseg);
-		if (error)
-			return error;
-
-		bzero(&memmap, sizeof(struct vm_memmap));
-		memmap.type = segid;
-		memmap.len = len;
-		memmap.gpa = gpa;
-		memmap.prot = PROT_ALL;
-		error = ioctl(ctx->fd, IC_SET_MEMSEG, &memmap);
-		if (error)
-			return error;
-
-		flags = MAP_SHARED | MAP_FIXED;
-		if ((ctx->memflags & VM_MEM_F_INCORE) == 0)
-			flags |= MAP_NOCORE;
-
-		/* mmap into the process address space on the host */
-		*ptr = mmap(base + gpa, len, PROT_RW, flags, ctx->fd, gpa);
-		if (*ptr == MAP_FAILED) {
-			*ptr = NULL;
-			error = -1;
-		}
-	} else
-		/* XXX: no VM_BOOTROM/VM_FRAMEBUFFER support*/
-		error = -1;
-
-	return error;
-}
-
 int
-vm_setup_memory(struct vmctx *ctx, size_t memsize, enum vm_mmap_style vms)
+vm_setup_memory(struct vmctx *ctx, size_t memsize)
 {
-	size_t objsize, len;
-	vm_paddr_t gpa;
-	int prot;
-	char *baseaddr, *ptr;
-	int error, flags;
-
-	assert(vms == VM_MMAP_ALL);
-
 	/*
 	 * If 'memsize' cannot fit entirely in the 'lowmem' segment then
 	 * create another 'highmem' segment above 4GB for the remainder.
@@ -378,66 +328,18 @@ vm_setup_memory(struct vmctx *ctx, size_t memsize, enum vm_mmap_style vms)
 	if (memsize > ctx->lowmem_limit) {
 		ctx->lowmem = ctx->lowmem_limit;
 		ctx->highmem = memsize - ctx->lowmem_limit;
-		objsize = 4*GB + ctx->highmem;
 	} else {
 		ctx->lowmem = memsize;
 		ctx->highmem = 0;
-		objsize = ctx->lowmem;
 	}
 
 	return hugetlb_setup_memory(ctx);
-
-	/*
-	 * Stake out a contiguous region covering the guest physical memory
-	 * and the adjoining guard regions.
-	 */
-	len = VM_MMAP_GUARD_SIZE + objsize + VM_MMAP_GUARD_SIZE;
-	flags = MAP_PRIVATE | MAP_ANON | MAP_NOCORE | MAP_ALIGNED_SUPER;
-	ptr = mmap(NULL, len, PROT_NONE, flags, -1, 0);
-	if (ptr == MAP_FAILED)
-		return -1;
-
-	baseaddr = ptr + VM_MMAP_GUARD_SIZE;
-
-	/* TODO: need add error handling */
-	/* alloc & map for lowmem */
-	if (ctx->lowmem > 0) {
-		gpa = 0;
-		len = ctx->lowmem;
-		prot = PROT_ALL;
-		error = vm_alloc_set_memseg(ctx, VM_MEMMAP_SYSMEM, len, gpa,
-				prot, baseaddr, &ctx->mmap_lowmem);
-		if (error)
-			return error;
-	}
-
-	/* alloc & map for highmem */
-	if (ctx->highmem > 0) {
-		gpa = 4*GB;
-		len = ctx->highmem;
-		prot = PROT_ALL;
-		error = vm_alloc_set_memseg(ctx, VM_MEMMAP_SYSMEM, len, gpa,
-				prot, baseaddr, &ctx->mmap_highmem);
-		if (error)
-			return error;
-	}
-
-	ctx->baseaddr = baseaddr;
-
-	return 0;
 }
 
 void
 vm_unsetup_memory(struct vmctx *ctx)
 {
 	hugetlb_unsetup_memory(ctx);
-	return;
-
-	if (ctx->lowmem > 0)
-		munmap(ctx->mmap_lowmem, ctx->lowmem);
-
-	if (ctx->highmem > 0)
-		munmap(ctx->mmap_highmem, ctx->highmem);
 }
 
 /*

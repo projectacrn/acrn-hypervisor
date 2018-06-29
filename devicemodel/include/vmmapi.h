@@ -53,8 +53,6 @@ struct vmctx {
 	int     memflags;
 	size_t  lowmem;
 	size_t  highmem;
-	char    *mmap_lowmem;
-	char    *mmap_highmem;
 	char    *baseaddr;
 	char    *name;
 	uuid_t	vm_uuid;
@@ -63,16 +61,6 @@ struct vmctx {
 	void *atkbdc_base;
 	void *vrtc;
 	void *ioc_dev;
-};
-
-/*
- * Different styles of mapping the memory assigned to a VM into the address
- * space of the controlling process.
- */
-enum vm_mmap_style {
-	VM_MMAP_NONE,		/* no mapping */
-	VM_MMAP_ALL,		/* fully and statically mapped */
-	VM_MMAP_SPARSE,		/* mappings created on-demand */
 };
 
 /*
@@ -122,7 +110,7 @@ void	vm_destroy(struct vmctx *ctx);
 int	vm_parse_memsize(const char *optarg, size_t *memsize);
 int	vm_map_memseg_vma(struct vmctx *ctx, size_t len, vm_paddr_t gpa,
 	uint64_t vma, int prot);
-int	vm_setup_memory(struct vmctx *ctx, size_t len, enum vm_mmap_style s);
+int	vm_setup_memory(struct vmctx *ctx, size_t len);
 void	vm_unsetup_memory(struct vmctx *ctx);
 bool	check_hugetlb_support(void);
 int	hugetlb_setup_memory(struct vmctx *ctx);
