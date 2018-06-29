@@ -675,13 +675,13 @@ static void dmar_fault_msi_write(struct dmar_drhd_rt *dmar_uint,
 {
 	uint32_t data;
 	uint32_t addr_low;
-	uint32_t lapic_id = get_cur_lapic_id();
+	uint8_t lapic_id = get_cur_lapic_id();
 
 	data = DMAR_MSI_DELIVERY_LOWPRI | vector;
 	/* redirection hint: 0
 	 * destination mode: 0
 	 */
-	addr_low = 0xFEE00000U | ((lapic_id & 0xFFU) << 12);
+	addr_low = 0xFEE00000U | ((uint32_t)(lapic_id) << 12U);
 
 	IOMMU_LOCK(dmar_uint);
 	iommu_write32(dmar_uint, DMAR_FEDATA_REG, data);

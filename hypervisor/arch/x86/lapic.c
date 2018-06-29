@@ -331,12 +331,13 @@ static void wait_for_delivery(void)
 	} while (tmp.bits.delivery_status != 0U);
 }
 
-uint32_t get_cur_lapic_id(void)
+uint8_t get_cur_lapic_id(void)
 {
-	uint32_t lapic_id;
+	uint32_t lapic_id_reg;
+	uint8_t lapic_id;
 
-	lapic_id = read_lapic_reg32(LAPIC_ID_REGISTER);
-	lapic_id = (lapic_id >> 24);
+	lapic_id_reg = read_lapic_reg32(LAPIC_ID_REGISTER);
+	lapic_id = (lapic_id_reg >> 24U);
 
 	return lapic_id;
 }
