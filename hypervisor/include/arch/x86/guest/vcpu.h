@@ -243,13 +243,13 @@ struct vcpu {
 	volatile enum vcpu_state state;	/* State of this VCPU */
 	/* State of debug request for this VCPU */
 	volatile enum vcpu_state dbg_req_state;
-	unsigned long sync;	/*hold the bit events*/
+	uint64_t sync;	/*hold the bit events*/
 	struct vlapic *vlapic;	/* per vCPU virtualized LAPIC */
 
 	struct list_head run_list; /* inserted to schedule runqueue */
-	unsigned long pending_pre_work; /* any pre work pending? */
+	uint64_t pending_pre_work; /* any pre work pending? */
 	bool launched; /* Whether the vcpu is launched on target pcpu */
-	unsigned int paused_cnt; /* how many times vcpu is paused */
+	uint32_t paused_cnt; /* how many times vcpu is paused */
 	int running; /* vcpu is picked up and run? */
 	int ioreq_pending; /* ioreq is ongoing or not? */
 

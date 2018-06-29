@@ -13,7 +13,7 @@
 struct sched_context {
 	spinlock_t runqueue_lock;
 	struct list_head runqueue;
-	unsigned long flags;
+	uint64_t flags;
 	struct vcpu *curr_vcpu;
 	spinlock_t scheduler_lock;
 };

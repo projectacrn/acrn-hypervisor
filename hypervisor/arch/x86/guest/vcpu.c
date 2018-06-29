@@ -115,11 +115,11 @@ int create_vcpu(uint16_t cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	*rtn_vcpu_handle = vcpu;
 
 	vcpu->launched = false;
-	vcpu->paused_cnt = 0;
+	vcpu->paused_cnt = 0U;
 	vcpu->running = 0;
 	vcpu->ioreq_pending = 0;
 	vcpu->arch_vcpu.nr_sipi = 0;
-	vcpu->pending_pre_work = 0;
+	vcpu->pending_pre_work = 0U;
 	vcpu->state = VCPU_INIT;
 
 	return 0;
@@ -273,11 +273,11 @@ void reset_vcpu(struct vcpu *vcpu)
 	vcpu->state = VCPU_INIT;
 
 	vcpu->launched = false;
-	vcpu->paused_cnt = 0;
+	vcpu->paused_cnt = 0U;
 	vcpu->running = 0;
 	vcpu->ioreq_pending = 0;
 	vcpu->arch_vcpu.nr_sipi = 0;
-	vcpu->pending_pre_work = 0;
+	vcpu->pending_pre_work = 0U;
 
 	vcpu->arch_vcpu.exception_info.exception = VECTOR_INVALID;
 	vcpu->arch_vcpu.cur_context = NORMAL_WORLD;
