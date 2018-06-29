@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <sys/statvfs.h>
 #include <time.h>
 #include <signal.h>
 #include <errno.h>
@@ -17,9 +18,13 @@
 
 #include "acrntrace.h"
 
+/* default minimal amount free space (in MB) left on the disk */
+static uint64_t disk_reserved = 512;
+static int exiting = 0;
+
 /* for opt */
 static uint64_t period = 10000;
-static const char optString[] = "t:hc";
+static const char optString[] = "t:hcr:";
 static const char dev_name[] = "/dev/acrn_trace";
 
 static uint32_t flags;
@@ -34,6 +39,8 @@ static void display_usage(void)
 	       "[Usage] acrntrace [-t] [period in msec] [-ch]\n\n"
 	       "[Options]\n"
 	       "\t-h: print this message\n"
+	       "\t-r: minimal amount (in MB) of free space kept on the disk\n"
+	       "\t    before acrntrace stops\n"
 	       "\t-t: period_in_ms: specify polling interval [1-999]\n"
 	       "\t-c: clear the buffered old data\n");
 }
@@ -52,6 +59,15 @@ static int parse_opt(int argc, char *argv[])
 			}
 			period = ret * 1000;
 			pr_dbg("Period is %lu\n", period);
+			break;
+		case 'r':
+			ret = atoi(optarg);
+			if (ret <=0) {
+				pr_err("'-r' require integer greater than 0\n");
+				return -EINVAL;
+			}
+			disk_reserved = ret;
+			pr_dbg("Keeping %dMB of space on the disk\n", ret);
 			break;
 		case 'c':
 			flags |= FLAG_CLEAR_BUF;
@@ -179,6 +195,8 @@ static void reader_fn(param_t * param)
 	int fd = param->trace_fd;
 	shared_buf_t *sbuf = param->sbuf;
 	trace_ev_t e;
+	struct statvfs stat;
+	uint64_t freespace;
 
 	pr_dbg("reader thread[%lu] created for FILE*[0x%p]\n",
 	       pthread_self(), fp);
@@ -192,6 +210,24 @@ static void reader_fn(param_t * param)
 
 	while (1) {
 		do {
+			/* Check that filesystem has enough space */
+			if (fstatvfs(fd, &stat)) {
+				printf("Fail to get vfs stat.\n");
+				exiting = 1;
+				exit(EXIT_FAILURE);
+			}
+
+			freespace = stat.f_frsize * (uint64_t)stat.f_bfree;
+			freespace >>= 20; /* Convert to MB */
+
+			if (freespace <= disk_reserved) {
+				printf("Disk space limit reached (free space:"
+					"%luMB, limit %luMB).\n",
+					freespace, disk_reserved);
+				exiting = 1;
+				exit(EXIT_FAILURE);
+			}
+
 			ret = sbuf_write(fd, sbuf);
 		} while (ret > 0);
 
@@ -328,7 +364,7 @@ int main(int argc, char *argv[])
 
 	/* wait for user input to stop */
 	printf("q <enter> to quit:\n");
-	while (getchar() != 'q')
+	while (!exiting && getchar() != 'q')
 		printf("q <enter> to quit:\n");
 
  out_free:
