@@ -67,7 +67,7 @@ struct host_idt {
  * Definition of the IDT descriptor.
  */
 struct host_idt_descriptor {
-	unsigned short len;
+	uint16_t len;
 	struct host_idt *idt;
 } __packed;
 

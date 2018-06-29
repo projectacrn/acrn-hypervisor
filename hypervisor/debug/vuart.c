@@ -307,7 +307,7 @@ void vuart_register_io_handler(struct vm *vm)
 	struct vm_io_range range = {
 		.flags = IO_ATTR_RW,
 		.base = 0x3f8,
-		.len = 8
+		.len = 8U
 	};
 
 	register_io_emulation_handler(vm, &range, uart_read, uart_write);

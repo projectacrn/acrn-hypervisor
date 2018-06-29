@@ -11,7 +11,7 @@
 struct vm_io_range {
 	uint16_t base;		/* IO port base */
 	uint16_t len;		/* IO port range */
-	int flags;		/* IO port attributes */
+	uint32_t flags;		/* IO port attributes */
 };
 
 /* Write 1 byte to specified I/O port */

@@ -271,7 +271,7 @@ struct tss_64 {
  * Definition of the GDT descriptor.
  */
 struct host_gdt_descriptor {
-	unsigned short len;
+	uint16_t len;
 	struct host_gdt *gdt;
 } __packed;
 
