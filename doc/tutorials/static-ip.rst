@@ -21,9 +21,19 @@ on the target device and can also be found under ``tools/acrnbridge`` in the sou
 Setting up the static IP address
 ********************************
 
-You can set up a static IP address by modifying the
-``/usr/lib/systemd/network/50-eth.network`` file, and more specifically the ``[Network]``
-section. This is the content of the file used in ACRN by default.
+You can set up a static IP address by copying the
+``/usr/lib/systemd/network/50-eth.network`` file to
+``/etc/systemd/network/`` directory. You can create this directory and
+copy the file with the following command:
+
+.. code-block:: console
+
+   mkdir -p /etc/systemd/network
+   cp /usr/lib/systemd/network/50-eth.network /etc/systemd/network
+
+Modify the ``[Network]`` section in the
+``/etc/systemd/network/50-eth.network`` file you just created.
+This is the content of the file used in ACRN by default.
 
 .. literalinclude:: ../../tools/acrnbridge/eth.network
    :caption: tools/acrnbridge/eth.network
