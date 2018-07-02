@@ -20,9 +20,9 @@
 
 #define foreach_vcpu(idx, vm, vcpu)				\
 	for (idx = 0U, vcpu = vm->hw.vcpu_array[idx];		\
-		(idx < vm->hw.num_vcpus) && (vcpu != NULL);	\
-		idx++, vcpu = vm->hw.vcpu_array[idx])
-
+		idx < vm->hw.num_vcpus;				\
+		idx++, vcpu = vm->hw.vcpu_array[idx])		\
+		if (vcpu)
 
 /* the index is matched with emulated msrs array*/
 #define IDX_TSC_DEADLINE		0U
