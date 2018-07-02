@@ -103,15 +103,19 @@ static void *get_kernel_load_addr(void *kernel_src_addr)
 	return kernel_src_addr;
 }
 
+/**
+ * @param[inout] vm pointer to a vm descriptor
+ *
+ * @return 0		- on success
+ * @return -EINVAL	- on invalid parameters
+ *
+ * @pre vm != NULL
+ * @pre is_vm0(vm) == true
+ */
 int init_vm0_boot_info(struct vm *vm)
 {
 	struct multiboot_module *mods = NULL;
 	struct multiboot_info *mbi = NULL;
-
-	if (!is_vm0(vm)) {
-		pr_err("just for vm0 to get info!");
-		return -EINVAL;
-	}
 
 	if (boot_regs[0] != MULTIBOOT_INFO_MAGIC) {
 		ASSERT(false, "no multiboot info found");

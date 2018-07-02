@@ -552,6 +552,14 @@ static void rebuild_vm0_e820(void)
 	e820_mem.total_mem_size -= CONFIG_RAM_SIZE;
 }
 
+/**
+ * @param[inout] vm pointer to a vm descriptor
+ *
+ * @return 0 - on success
+ *
+ * @pre vm != NULL
+ * @pre is_vm0(vm) == true
+ */
 int prepare_vm0_memmap_and_e820(struct vm *vm)
 {
 	unsigned int i;
@@ -564,9 +572,6 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 				IA32E_EPT_X_BIT |
 				IA32E_EPT_UNCACHED);
 	struct e820_entry *entry;
-
-
-	ASSERT(is_vm0(vm), "This func only for vm0");
 
 	rebuild_vm0_e820();
 	dev_dbg(ACRN_DBG_GUEST,
