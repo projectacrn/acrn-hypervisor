@@ -74,8 +74,6 @@ int init_default_irqs(uint16_t cpu);
 
 void dispatch_interrupt(struct intr_excp_ctx *ctx);
 
-void get_cpu_interrupt_info(char *str, int str_max);
-
 void setup_notification(void);
 
 typedef void (*spurious_handler_t)(uint32_t vector);
@@ -110,4 +108,9 @@ int acrn_handle_pending_request(struct vcpu *vcpu);
 int interrupt_init(uint32_t logical_id);
 
 void cancel_event_injection(struct vcpu *vcpu);
+
+#ifdef HV_DEBUG
+void get_cpu_interrupt_info(char *str, int str_max);
+#endif /* HV_DEBUG */
+
 #endif /* ARCH_IRQ_H */

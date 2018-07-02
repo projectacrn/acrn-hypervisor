@@ -96,6 +96,7 @@ int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 	return 0;
 }
 
+#ifdef HV_DEBUG
 static void _get_req_info_(struct vhm_request *req, int *id, char *type,
 	char *state, char *dir, long *addr, long *val)
 {
@@ -191,3 +192,4 @@ void get_req_info(char *str, int str_max)
 	spinlock_release(&vm_list_lock);
 	snprintf(str, size, "\r\n");
 }
+#endif /* HV_DEBUG */

@@ -141,6 +141,7 @@ int32_t hv_main(uint16_t cpu_id)
 	return 0;
 }
 
+#ifdef HV_DEBUG
 void get_vmexit_profile(char *str, int str_max)
 {
 	uint16_t cpu, i;
@@ -175,3 +176,4 @@ void get_vmexit_profile(char *str, int str_max)
 	}
 	snprintf(str, size, "\r\n");
 }
+#endif /* HV_DEBUG */

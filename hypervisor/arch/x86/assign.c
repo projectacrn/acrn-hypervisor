@@ -902,6 +902,7 @@ void ptdev_remove_msix_remapping(struct vm *vm, uint16_t virt_bdf,
 		remove_msix_remapping(vm, virt_bdf, i);
 }
 
+#ifdef HV_DEBUG
 static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 		uint32_t *irq, uint32_t *vector, uint64_t *dest, bool *lvl_tm,
 		int *pin, int *vpin, int *bdf, int *vbdf)
@@ -1004,3 +1005,4 @@ void get_ptdev_info(char *str, int str_max)
 
 	snprintf(str, size, "\r\n");
 }
+#endif /* HV_DEBUG */

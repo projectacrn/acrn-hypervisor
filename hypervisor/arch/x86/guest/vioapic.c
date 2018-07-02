@@ -608,6 +608,7 @@ bool vioapic_get_rte(struct vm *vm, int pin, void *rte)
 		return false;
 }
 
+#ifdef HV_DEBUG
 void get_vioapic_info(char *str, int str_max, int vmid)
 {
 	int pin, len, size = str_max, vector, delmode;
@@ -653,3 +654,4 @@ void get_vioapic_info(char *str, int str_max, int vmid)
 END:
 	snprintf(str, size, "\r\n");
 }
+#endif /* HV_DEBUG */

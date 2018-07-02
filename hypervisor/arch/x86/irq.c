@@ -664,6 +664,7 @@ pri_register_handler(uint32_t irq,
 	return common_register_handler(irq, &info);
 }
 
+#ifdef HV_DEBUG
 void get_cpu_interrupt_info(char *str, int str_max)
 {
 	uint16_t pcpu_id;
@@ -706,6 +707,7 @@ void get_cpu_interrupt_info(char *str, int str_max)
 	}
 	snprintf(str, size, "\r\n");
 }
+#endif /* HV_DEBUG */
 
 int interrupt_init(uint32_t cpu_id)
 {
