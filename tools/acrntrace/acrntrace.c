@@ -24,7 +24,7 @@ static int exiting = 0;
 
 /* for opt */
 static uint64_t period = 10000;
-static const char optString[] = "t:hcr:";
+static const char optString[] = "i:hcr:";
 static const char dev_name[] = "/dev/acrn_trace";
 
 static uint32_t flags;
@@ -36,12 +36,12 @@ static int pcpu_num = 0;
 static void display_usage(void)
 {
 	printf("acrntrace - tool to collect ACRN trace data\n"
-	       "[Usage] acrntrace [-t] [period in msec] [-ch]\n\n"
+	       "[Usage] acrntrace [-i] [period in msec] [-ch]\n\n"
 	       "[Options]\n"
 	       "\t-h: print this message\n"
 	       "\t-r: minimal amount (in MB) of free space kept on the disk\n"
 	       "\t    before acrntrace stops\n"
-	       "\t-t: period_in_ms: specify polling interval [1-999]\n"
+	       "\t-i: period_in_ms: specify polling interval [1-999]\n"
 	       "\t-c: clear the buffered old data\n");
 }
 
@@ -51,10 +51,10 @@ static int parse_opt(int argc, char *argv[])
 
 	while ((opt = getopt(argc, argv, optString)) != -1) {
 		switch (opt) {
-		case 't':
+		case 'i':
 			ret = atoi(optarg);
 			if (ret <= 0 || ret >=1000) {
-				pr_err("'-t' require integer between [1-999]\n");
+				pr_err("'-i' require integer between [1-999]\n");
 				return -EINVAL;
 			}
 			period = ret * 1000;
