@@ -336,7 +336,7 @@ int emulate_instruction(struct vcpu *vcpu)
 	paging = &emul_cnx->paging;
 
 	retval = vmm_emulate_instruction(vcpu, gpa,
-			&emul_cnx->vie, paging, mread, mwrite, &retval);
+			&emul_cnx->vie, paging, mread, mwrite, NULL);
 
 	return retval;
 }
