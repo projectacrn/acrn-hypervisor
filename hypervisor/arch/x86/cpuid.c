@@ -139,7 +139,7 @@ static void init_vcpuid_entry(__unused struct vm *vm,
 	 * EBX, ECX, EDX: RESERVED (reserved fields are set to zero).
 	 */
 	case 0x40000010:
-		entry->eax = (uint32_t)(tsc_hz / 1000);
+		entry->eax = tsc_khz;
 		entry->ebx = 0;
 		entry->ecx = 0;
 		entry->edx = 0;
