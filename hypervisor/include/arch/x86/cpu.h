@@ -211,6 +211,20 @@ enum feature_word {
 	FEATURE_WORDS,
 };
 
+/**
+ *The invalid cpu_id (INVALID_CPU_ID) is error
+ *code for error handling, this means that
+ *caller can't find a valid physical cpu
+ *or virtual cpu.
+ */
+#define INVALID_CPU_ID 0xffffU
+/**
+ *The broadcast id (BROADCAST_CPU_ID)
+ *used to notify all valid phyiscal cpu
+ *or virtual cpu.
+ */
+#define BROADCAST_CPU_ID 0xfffeU
+
 /* CPU states defined */
 enum cpu_state {
 	CPU_STATE_RESET = 0,

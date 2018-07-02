@@ -42,7 +42,7 @@ void exec_softirq(void)
 	uint16_t cpu_id = get_cpu_id();
 	volatile uint64_t *bitmap = &per_cpu(softirq_pending, cpu_id);
 
-	int softirq_id;
+	uint16_t softirq_id;
 
 	if (cpu_id >= phys_cpu_num)
 		return;
@@ -61,7 +61,7 @@ again:
 
 	while (1) {
 		softirq_id = ffs64(*bitmap);
-		if ((softirq_id < 0) || (softirq_id >= SOFTIRQ_MAX))
+		if ((softirq_id == INVALID_BIT_INDEX) || (softirq_id >= SOFTIRQ_MAX))
 			break;
 
 		bitmap_clear(softirq_id, bitmap);

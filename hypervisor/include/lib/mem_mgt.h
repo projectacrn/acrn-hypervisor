@@ -8,7 +8,7 @@
 #define __MEM_MGT_H__
 
 /* Macros */
-#define BITMAP_WORD_SIZE         32
+#define BITMAP_WORD_SIZE         32U
 
 struct mem_pool {
 	void *start_addr;	/* Start Address of Memory Pool */

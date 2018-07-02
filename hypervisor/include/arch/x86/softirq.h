@@ -7,9 +7,9 @@
 #ifndef SOFTIRQ_H
 #define SOFTIRQ_H
 
-#define SOFTIRQ_TIMER		0
-#define SOFTIRQ_DEV_ASSIGN	1
-#define SOFTIRQ_MAX		2
+#define SOFTIRQ_TIMER		0U
+#define SOFTIRQ_DEV_ASSIGN	1U
+#define SOFTIRQ_MAX		2U
 #define SOFTIRQ_MASK		((1UL<<SOFTIRQ_MAX)-1)
 
 /* used for atomic value for prevent recursive */

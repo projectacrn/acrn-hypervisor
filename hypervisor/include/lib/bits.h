@@ -91,10 +91,11 @@ static inline uint16_t fls64(uint64_t value)
  * and return the index of that bit.
  *
  *  Bits are numbered starting at 0,the least significant bit.
- *  A return value of -1 means that the argument was zero.
+ *  A return value of INVALID_BIT_INDEX means that the return value is the inalid
+ *  bit index when the input argument was zero.
  *
  *  Examples:
- *	ffs64 (0x0) = -1
+ *	ffs64 (0x0) = INVALID_BIT_INDEX
  *	ffs64 (0x01) = 0
  *	ffs64 (0xf0) = 4
  *	ffs64 (0xf00) = 8
@@ -104,20 +105,24 @@ static inline uint16_t fls64(uint64_t value)
  *
  * @param value: 'unsigned long' type value
  *
- * @return value: zero-based bit index, -1 means 'value' was zero.
+ * @return value: zero-based bit index, INVALID_BIT_INDEX means
+ * when 'value' was zero, bit operations function can't find bit
+ * set and return the invalid bit index directly.
  *
  * **/
-static inline int ffs64(unsigned long value)
+static inline uint16_t ffs64(uint64_t value)
 {
-	int ret;
-	asm volatile("bsfq %1,%q0"
+	uint64_t ret = 0UL;
+	if (value == 0UL)
+		return (INVALID_BIT_INDEX);
+	asm volatile("bsfq %1,%0"
 			: "=r" (ret)
-			: "rm" (value), "0" (-1));
-	return ret;
+			: "rm" (value));
+	return (uint16_t)ret;
 }
 
 /*bit scan forward for the least significant bit '0'*/
-static inline int ffz64(unsigned long value)
+static inline uint16_t ffz64(uint64_t value)
 {
 	return ffs64(~value);
 }
