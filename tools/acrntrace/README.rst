@@ -18,7 +18,7 @@ output to trace file under ``/tmp/acrntrace`` with raw (binary) data format.
 Options:
 
 -h			print this message
--t period		specify polling interval in milliseconds [1-999]
+-i period		specify polling interval in milliseconds [1-999]
 -c			clear the buffered old data
 -r			minimal amount (in MB) of free space kept on the disk
 			before acrntrace stops
