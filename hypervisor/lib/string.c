@@ -3,11 +3,6 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-/* FIXME: It'd be nice to configure around these, but the include files are too
- * painful.  These macros should at least be more portable than hardwired hex
- * constants.
- */
-
 #include <hypervisor.h>
 
 #define ULONG_MAX       ((uint64_t)(~0UL))              /* 0xFFFFFFFF */
@@ -18,12 +13,8 @@
 
 /*
  * Convert a string to a long integer - decimal support only.
- *
- * Ignores `locale' stuff.  Assumes that the upper and lower case
- * alphabets and digits are each contiguous.
  */
-long
-strtol_deci(const char *nptr)
+long strtol_deci(const char *nptr)
 {
 	const char *s = nptr;
 	uint64_t acc;
@@ -32,69 +23,63 @@ strtol_deci(const char *nptr)
 	int neg = 0, any, cutlim;
 	int base = 10;
 
-        /*
-         * Skip white space and pick up leading +/- sign if any.
-         * If base is 0, allow 0x for hex and 0 for octal, else
-         * assume decimal; if base is already 16, allow 0x.
-         */
-        do {
-                c = *s++;
+	/*
+	 * Skip white space and pick up leading +/- sign if any.
+	 */
+	do {
+		c = *s++;
 	} while (ISSPACE(c));
-        if (c == '-') {
-                neg = 1;
-                c = *s++;
-        } else if (c == '+')
-                c = *s++;
-        /*
-         * Compute the cutoff value between legal numbers and illegal
-         * numbers.  That is the largest legal value, divided by the
-         * base.  An input number that is greater than this value, if
-         * followed by a legal input character, is too big.  One that
-         * is equal to this value may be valid or not; the limit
-         * between valid and invalid numbers is then based on the last
-         * digit.  For instance, if the range for longs is
-         * [-2147483648..2147483647] and the input base is 10,
-         * cutoff will be set to 214748364 and cutlim to either
-         * 7 (neg==0) or 8 (neg==1), meaning that if we have accumulated
-         * a value > 214748364, or equal but the next digit is > 7 (or 8),
-         * the number is too big, and we will return a range error.
-         *
-         * Set any if any `digits' consumed; make it negative to indicate
-         * overflow.
-         */
-        cutoff = (neg != 0) ? -(uint64_t)LONG_MIN : LONG_MAX;
-        cutlim = cutoff % (uint64_t)base;
-        cutoff /= (uint64_t)base;
-        for (acc = 0, any = 0;; c = *s++) {
+	if (c == '-') {
+		neg = 1;
+		c = *s++;
+	} else if (c == '+')
+		c = *s++;
+	/*
+	 * Compute the cutoff value between legal numbers and illegal
+	 * numbers.  That is the largest legal value, divided by the
+	 * base.  An input number that is greater than this value, if
+	 * followed by a legal input character, is too big.  One that
+	 * is equal to this value may be valid or not; the limit
+	 * between valid and invalid numbers is then based on the last
+	 * digit.  For instance, if the range for longs is
+	 * [-2147483648..2147483647] and the input base is 10,
+	 * cutoff will be set to 214748364 and cutlim to either
+	 * 7 (neg==0) or 8 (neg==1), meaning that if we have accumulated
+	 * a value > 214748364, or equal but the next digit is > 7 (or 8),
+	 * the number is too big, and we will return a range error.
+	 *
+	 * Set any if any `digits' consumed; make it negative to indicate
+	 * overflow.
+	 */
+	cutoff = (neg != 0) ? -(uint64_t)LONG_MIN : LONG_MAX;
+	cutlim = cutoff % (uint64_t)base;
+	cutoff /= (uint64_t)base;
+	for (acc = 0, any = 0;; c = *s++) {
 		if (c >= '0' && c <= '9')
-                        c -= '0';
-                else
-                        break;
-                if (c >= base)
-                        break;
-                if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim))
-                        any = -1;
-                else {
-                        any = 1;
-                        acc *= base;
-                        acc += c;
-                }
-        }
+			c -= '0';
+		else
+			break;
+		if (c >= base)
+			break;
+		if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim))
+			any = -1;
+		else {
+			any = 1;
+			acc *= base;
+			acc += c;
+		}
+	}
 	if (any < 0)
-                acc = (neg != 0) ? LONG_MIN : LONG_MAX;
-        else if (neg != 0)
-                acc = -acc;
-        return acc;
+		acc = (neg != 0) ? LONG_MIN : LONG_MAX;
+	else if (neg != 0)
+		acc = -acc;
+	return acc;
 }
 
 /*
  * Convert a string to an uint64_t integer - hexadecimal support only.
- *
- * Ignores `locale' stuff.  Assumes that the upper and lower case
- * alphabets and digits are each contiguous.
  */
-uint64_t
-strtoul_hex(const char *nptr)
+uint64_t strtoul_hex(const char *nptr)
 {
 	const char *s = nptr;
 	uint64_t acc;
@@ -102,58 +87,57 @@ strtoul_hex(const char *nptr)
 	uint64_t cutoff;
 	int base = 16, any, cutlim;
 
-        /*
-         * See strtol for comments as to the logic used.
-         */
-        do {
-                c = *s++;
+	/*
+	 * See strtol for comments as to the logic used.
+	 */
+	do {
+		c = *s++;
 	} while (ISSPACE(c));
 
 	if (c == '0' && (*s == 'x' || *s == 'X')) {
-                c = s[1];
-                s += 2;
-        }
+		c = s[1];
+		s += 2;
+	}
 
-        cutoff = (uint64_t)ULONG_MAX / (uint64_t)base;
-        cutlim = (uint64_t)ULONG_MAX % (uint64_t)base;
-        for (acc = 0, any = 0;; c = *s++) {
+	cutoff = (uint64_t)ULONG_MAX / (uint64_t)base;
+	cutlim = (uint64_t)ULONG_MAX % (uint64_t)base;
+	for (acc = 0, any = 0;; c = *s++) {
 		if (c >= '0' && c <= '9')
 			c -= '0';
 		else if (c >= 'A' && c <= 'F')
 			c -= 'A' - 10;
 		else if (c >= 'a' && c <= 'f')
 			c -= 'a' - 10;
-                else
-                        break;
-                if (c >= base)
-                        break;
-                if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim))
-                        any = -1;
-                else {
-                        any = 1;
-                        acc *= base;
-                        acc += c;
-                }
-        }
+		else
+			break;
+		if (c >= base)
+			break;
+		if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim))
+			any = -1;
+		else {
+			any = 1;
+			acc *= base;
+			acc += c;
+		}
+	}
 
 	if (any <= 0)
-                acc = ULONG_MAX;
+		acc = ULONG_MAX;
 
-        return acc;
+	return acc;
 }
 
-int
-atoi(const char *str)
+int atoi(const char *str)
 {
 	return (int)strtol_deci(str);
 }
 
 char *strchr(const char *s, int ch)
 {
-        while ((*s != 0) && (*s != ch))
-                ++s;
+	while ((*s != 0) && (*s != ch))
+		++s;
 
-        return ((*s) != 0) ? ((char *)s) : 0;
+	return ((*s) != 0) ? ((char *)s) : 0;
 }
 
 /**
@@ -162,7 +146,6 @@ char *strchr(const char *s, int ch)
  * description:
  *    This function copies the string pointed to by s to a buffer
  *    pointed by d.
- *
  *
  * input:
  *    d        pointer to dest buffer.
@@ -182,48 +165,48 @@ char *strchr(const char *s, int ch)
 char *strcpy_s(char *d, size_t dmax, const char *s)
 {
 
-        char *dest_base;
-        size_t dest_avail;
-        uint64_t overlap_guard;
+	char *dest_base;
+	size_t dest_avail;
+	uint64_t overlap_guard;
 
-        if (s == NULL || d == NULL || dmax == 0) {
-                pr_err("%s: invalid src, dest buffer or length.", __func__);
-                return NULL;
-        }
+	if (s == NULL || d == NULL || dmax == 0) {
+		pr_err("%s: invalid src, dest buffer or length.", __func__);
+		return NULL;
+	}
 
-        if (s == d)
-                return d;
+	if (s == d)
+		return d;
 
-        overlap_guard = (uint64_t)((d > s) ? (d - s - 1) : (s - d - 1));
+	overlap_guard = (uint64_t)((d > s) ? (d - s - 1) : (s - d - 1));
 
-        dest_avail = dmax;
-        dest_base = d;
+	dest_avail = dmax;
+	dest_base = d;
 
-        while (dest_avail > 0) {
-                if (overlap_guard == 0) {
-                        pr_err("%s: overlap happened.", __func__);
-                        *(--d) = '\0';
-                        return NULL;
-                }
+	while (dest_avail > 0) {
+		if (overlap_guard == 0) {
+			pr_err("%s: overlap happened.", __func__);
+			*(--d) = '\0';
+			return NULL;
+		}
 
-                *d = *s;
-                if (*d == '\0')
-                        return dest_base;
+		*d = *s;
+		if (*d == '\0')
+			return dest_base;
 
-                d++;
-                s++;
-                dest_avail--;
-                overlap_guard--;
-        }
+		d++;
+		s++;
+		dest_avail--;
+		overlap_guard--;
+	}
 
-        pr_err("%s: dest buffer has no enough space.", __func__);
+	pr_err("%s: dest buffer has no enough space.", __func__);
 
-        /*
-         * to avoid a string that is not
-         * null-terminated in dest buffer
-         */
-        dest_base[dmax - 1] = '\0';
-        return NULL;
+	/*
+	 * to avoid a string that is not
+	 * null-terminated in dest buffer
+	 */
+	dest_base[dmax - 1] = '\0';
+	return NULL;
 }
 
 /*
@@ -255,59 +238,59 @@ char *strcpy_s(char *d, size_t dmax, const char *s)
  */
 char *strncpy_s(char *d, size_t dmax, const char *s, size_t slen)
 {
-        char *dest_base;
-        size_t dest_avail;
-        uint64_t overlap_guard;
+	char *dest_base;
+	size_t dest_avail;
+	uint64_t overlap_guard;
 
-        if (d == NULL || s == NULL) {
-                pr_err("%s: invlaid src or dest buffer", __func__);
-                return NULL;
-        }
+	if (d == NULL || s == NULL) {
+		pr_err("%s: invlaid src or dest buffer", __func__);
+		return NULL;
+	}
 
-        if (dmax == 0 || slen == 0) {
-                pr_err("%s: invlaid length of src or dest buffer", __func__);
-                return NULL;
-        }
+	if (dmax == 0 || slen == 0) {
+		pr_err("%s: invlaid length of src or dest buffer", __func__);
+		return NULL;
+	}
 
-        if (d == s)
-                return d;
+	if (d == s)
+		return d;
 
-        overlap_guard = (uint64_t)((d > s) ? (d - s - 1) : (s - d - 1));
+	overlap_guard = (uint64_t)((d > s) ? (d - s - 1) : (s - d - 1));
 
-        dest_base = d;
-        dest_avail = dmax;
+	dest_base = d;
+	dest_avail = dmax;
 
-        while (dest_avail > 0) {
-                if (overlap_guard == 0) {
-                        pr_err("%s: overlap happened.", __func__);
-                        *(--d) = '\0';
-                        return NULL;
-                }
+	while (dest_avail > 0) {
+		if (overlap_guard == 0) {
+			pr_err("%s: overlap happened.", __func__);
+			*(--d) = '\0';
+			return NULL;
+		}
 
-                if (slen == 0) {
-                        *d = '\0';
-                        return dest_base;
-                }
+		if (slen == 0) {
+			*d = '\0';
+			return dest_base;
+		}
 
-                *d = *s;
-                if (*d == '\0')
-                        return dest_base;
+		*d = *s;
+		if (*d == '\0')
+			return dest_base;
 
-                d++;
-                s++;
-                slen--;
-                dest_avail--;
-                overlap_guard--;
-        }
+		d++;
+		s++;
+		slen--;
+		dest_avail--;
+		overlap_guard--;
+	}
 
-        pr_err("%s: dest buffer has no enough space.", __func__);
+	pr_err("%s: dest buffer has no enough space.", __func__);
 
-        /*
-         * to avoid a string that is not
-         * null-terminated in dest buffer
-         */
-        dest_base[dmax - 1] = '\0';
-        return NULL;
+	/*
+	 * to avoid a string that is not
+	 * null-terminated in dest buffer
+	 */
+	dest_base[dmax - 1] = '\0';
+	return NULL;
 }
 
 /**
@@ -324,57 +307,57 @@ char *strncpy_s(char *d, size_t dmax, const char *s, size_t slen)
  *
  *    dmax      maximum number of characer to examine.
  *
- *
  * return value:
  *    string length, excluding the null character.
  *    will return 0 if str is null.
  */
 size_t strnlen_s(const char *str, size_t maxlen)
 {
-        size_t count;
+	size_t count;
 
-        if (str == NULL)
-                return 0;
+	if (str == NULL)
+		return 0;
 
-        count = 0;
-        while ((*str) != 0) {
-                if (maxlen == 0)
-                        break;
+	count = 0;
+	while ((*str) != 0) {
+		if (maxlen == 0)
+			break;
 
-                count++;
-                maxlen--;
-                str++;
-        }
+		count++;
+		maxlen--;
+		str++;
+	}
 
-        return count;
+	return count;
 }
 
 char hexdigit(int decimal_val)
 {
-        static const char hexdigits[] = { '0', '1', '2', '3', '4', '5', '6',
-                '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+	static const char hexdigits[] = { '0', '1', '2', '3', '4', '5', '6',
+		'7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
-        /* Return hex character */
-        return hexdigits[decimal_val & 0x0FU];
+	/* Return hex character */
+	return hexdigits[decimal_val & 0x0FU];
 }
 
 int strcmp(const char *s1, const char *s2)
 {
-        while (((*s1) != 0) && ((*s2) != 0) && ((*s1) == (*s2))) {
-                s1++;
-                s2++;
-        }
+	while (((*s1) != 0) && ((*s2) != 0) && ((*s1) == (*s2))) {
+		s1++;
+		s2++;
+	}
 
-        return *s1 - *s2;
+	return *s1 - *s2;
 }
 
 int strncmp(const char *s1, const char *s2, size_t n)
 {
-        while (((n - 1) != 0) && ((*s1) != 0) && ((*s2) != 0) && ((*s1) == (*s2))) {
-                s1++;
-                s2++;
-                n--;
-        }
+	while (((n - 1) != 0) && ((*s1) != 0) && ((*s2) != 0)
+		&& ((*s1) == (*s2))) {
+		s1++;
+		s2++;
+		n--;
+	}
 
-        return *s1 - *s2;
+	return *s1 - *s2;
 }
