@@ -1024,10 +1024,9 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 	bool phys;
 	uint64_t dmask = 0;
 	uint64_t icrval;
-	uint32_t dest, vec, mode;
+	uint32_t dest, vec, mode, shorthand;
 	struct lapic_regs *lapic;
 	struct vcpu *target_vcpu;
-	uint32_t target_vcpu_id;
 
 	lapic = vlapic->apic_page;
 	lapic->icr_lo &= ~APIC_DELSTAT_PEND;
@@ -1037,6 +1036,7 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 	vec = icrval & APIC_VECTOR_MASK;
 	mode = icrval & APIC_DELMODE_MASK;
 	phys = ((icrval & APIC_DESTMODE_LOG) == 0);
+	shorthand = icrval & APIC_DEST_MASK;
 
 	if (mode == APIC_DELMODE_FIXED && vec < 16) {
 		vlapic_set_error(vlapic, APIC_ESR_SEND_ILLEGAL_VECTOR);
@@ -1047,65 +1047,52 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 	dev_dbg(ACRN_DBG_LAPIC,
 		"icrlo 0x%016llx triggered ipi %d", icrval, vec);
 
-	if (mode == APIC_DELMODE_FIXED || mode == APIC_DELMODE_NMI) {
-		switch (icrval & APIC_DEST_MASK) {
-		case APIC_DEST_DESTFLD:
-			vlapic_calcdest(vlapic->vm, &dmask, dest, phys, false);
-			break;
-		case APIC_DEST_SELF:
-			bitmap_set(vlapic->vcpu->vcpu_id, &dmask);
-			break;
-		case APIC_DEST_ALLISELF:
-			dmask = vm_active_cpus(vlapic->vm);
-			break;
-		case APIC_DEST_ALLESELF:
-			dmask = vm_active_cpus(vlapic->vm);
-			bitmap_clear(vlapic->vcpu->vcpu_id, &dmask);
-			break;
-		default:
-			break;
-		}
-
-		while ((i = ffs64(dmask)) >= 0) {
-			bitmap_clear(i, &dmask);
-			target_vcpu = vcpu_from_vid(vlapic->vm, i);
-			if (target_vcpu == NULL)
-				return 0;
-
-			if (mode == APIC_DELMODE_FIXED) {
-				vlapic_set_intr(target_vcpu, vec,
-					LAPIC_TRIG_EDGE);
-				dev_dbg(ACRN_DBG_LAPIC,
-					"vlapic sending ipi %d to vcpu_id %d",
-					vec, i);
-			} else {
-				vcpu_inject_nmi(target_vcpu);
-				dev_dbg(ACRN_DBG_LAPIC,
-					"vlapic send ipi nmi to vcpu_id %d", i);
-			}
-		}
-
-		return 0;	/* handled completely in the kernel */
+	if ((shorthand == APIC_DEST_SELF || shorthand == APIC_DEST_ALLISELF)
+		&& (mode == APIC_DELMODE_NMI || mode == APIC_DELMODE_INIT
+		|| mode == APIC_DELMODE_STARTUP)) {
+		dev_dbg(ACRN_DBG_LAPIC, "Invalid ICR value");
+		return 0;
 	}
 
-	if (phys) {
-		/* INIT/SIPI is sent in Physical mode with LAPIC ID as its
-		 * destination, so the dest need to be changed to VCPU ID;
-		 */
-		target_vcpu_id = vm_apicid2vcpu_id(vlapic->vm, dest);
-		target_vcpu = vcpu_from_vid(vlapic->vm, target_vcpu_id);
-		if (target_vcpu == NULL) {
-			pr_err("Target VCPU not found");
-			return 0;
-		}
+	switch (shorthand) {
+	case APIC_DEST_DESTFLD:
+		vlapic_calcdest(vlapic->vm, &dmask, dest, phys, false);
+		break;
+	case APIC_DEST_SELF:
+		bitmap_set(vlapic->vcpu->vcpu_id, &dmask);
+		break;
+	case APIC_DEST_ALLISELF:
+		dmask = vm_active_cpus(vlapic->vm);
+		break;
+	case APIC_DEST_ALLESELF:
+		dmask = vm_active_cpus(vlapic->vm);
+		bitmap_clear(vlapic->vcpu->vcpu_id, &dmask);
+		break;
+	}
 
-		if (mode == APIC_DELMODE_INIT) {
+	while ((i = ffs64(dmask)) >= 0) {
+		bitmap_clear(i, &dmask);
+		target_vcpu = vcpu_from_vid(vlapic->vm, i);
+		if (target_vcpu == NULL)
+			continue;
+
+		if (mode == APIC_DELMODE_FIXED) {
+			vlapic_set_intr(target_vcpu, vec,
+				LAPIC_TRIG_EDGE);
+			dev_dbg(ACRN_DBG_LAPIC,
+				"vlapic sending ipi %d to vcpu_id %d",
+				vec, i);
+		} else if (mode == APIC_DELMODE_NMI){
+			vcpu_inject_nmi(target_vcpu);
+			dev_dbg(ACRN_DBG_LAPIC,
+				"vlapic send ipi nmi to vcpu_id %d", i);
+		} else if (mode == APIC_DELMODE_INIT) {
 			if ((icrval & APIC_LEVEL_MASK) == APIC_LEVEL_DEASSERT)
-				return 0;
+				continue;
 
 			dev_dbg(ACRN_DBG_LAPIC,
 				"Sending INIT from VCPU %d to %d",
-				vlapic->vcpu->vcpu_id, target_vcpu_id);
+				vlapic->vcpu->vcpu_id, i);
 
 			/* put target vcpu to INIT state and wait for SIPI */
 			pause_vcpu(target_vcpu, VCPU_PAUSED);
@@ -1115,23 +1102,18 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 			 * wait-for-SIPI state.
 			 */
 			target_vcpu->arch_vcpu.nr_sipi = 1;
-
-			return 0;
-		}
-
-		if (mode == APIC_DELMODE_STARTUP) {
-
+		} else if (mode == APIC_DELMODE_STARTUP) {
 			/* Ignore SIPIs in any state other than wait-for-SIPI */
 			if ((target_vcpu->state != VCPU_INIT) ||
 					(target_vcpu->arch_vcpu.nr_sipi == 0))
-				return 0;
+				continue;
 
 			dev_dbg(ACRN_DBG_LAPIC,
 				"Sending SIPI from VCPU %d to %d with vector %d",
-				vlapic->vcpu->vcpu_id, target_vcpu_id, vec);
+				vlapic->vcpu->vcpu_id, i, vec);
 
 			if (--target_vcpu->arch_vcpu.nr_sipi > 0)
-				return 0;
+				continue;
 
 			target_vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
 			target_vcpu->arch_vcpu.sipi_vector = vec;
@@ -1139,15 +1121,10 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 					target_vcpu->vcpu_id,
 					target_vcpu->vm->attr.id);
 			schedule_vcpu(target_vcpu);
-
-			return 0;
 		}
 	}
 
-	/*
-	 * This will cause a return to userland.
-	 */
-	return 1;
+	return 0;	/* handled completely in the kernel */
 }
 
 int
