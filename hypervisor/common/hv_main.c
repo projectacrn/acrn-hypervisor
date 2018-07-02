@@ -148,7 +148,7 @@ void get_vmexit_profile(char *str, int str_max)
 	int len, size = str_max;
 
 	len = snprintf(str, size, "\r\nNow(us) = %16lld\r\n",
-			TICKS_TO_US(rdtsc()));
+			ticks_to_us(rdtsc()));
 	size -= len;
 	str += len;
 
@@ -169,7 +169,7 @@ void get_vmexit_profile(char *str, int str_max)
 		for (cpu = 0; cpu < phys_cpu_num; cpu++) {
 			len = snprintf(str, size, "\t%10lld\t%10lld",
 				per_cpu(vmexit_cnt, cpu)[i],
-				TICKS_TO_US(per_cpu(vmexit_time, cpu)[i]));
+				ticks_to_us(per_cpu(vmexit_time, cpu)[i]));
 			size -= len;
 			str += len;
 		}

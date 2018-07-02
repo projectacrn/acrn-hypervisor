@@ -11,7 +11,7 @@
 #define CAL_MS			10
 #define MIN_TIMER_PERIOD_US	500
 
-uint64_t tsc_hz = 1000000000;
+uint32_t tsc_khz = 0U;
 
 static void run_timer(struct timer *timer)
 {
@@ -79,7 +79,7 @@ int add_timer(struct timer *timer)
 	/* limit minimal periodic timer cycle period */
 	if (timer->mode == TICK_MODE_PERIODIC)
 		timer->period_in_cycle = max(timer->period_in_cycle,
-				US_TO_TICKS(MIN_TIMER_PERIOD_US));
+				us_to_ticks(MIN_TIMER_PERIOD_US));
 
 	pcpu_id  = get_cpu_id();
 	cpu_timer = &per_cpu(cpu_timers, pcpu_id);
@@ -285,8 +285,10 @@ static uint64_t native_calibrate_tsc(void)
 
 void calibrate_tsc(void)
 {
+	uint64_t tsc_hz;
 	tsc_hz = native_calibrate_tsc();
 	if (tsc_hz == 0U)
 		tsc_hz = pit_calibrate_tsc(CAL_MS);
-	printf("%s, tsc_hz=%lu\n", __func__, tsc_hz);
+	tsc_khz = (uint32_t)(tsc_hz / 1000UL);
+	printf("%s, tsc_khz=%lu\n", __func__, tsc_khz);
 }
