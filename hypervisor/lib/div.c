@@ -94,7 +94,7 @@ int udiv64(uint64_t dividend, uint64_t divisor, struct udiv_result *res)
 	 */
 
 	/* align divisor and dividend. */
-	bits = clz64(divisor) - clz64(dividend);
+	bits = (uint64_t)(clz64(divisor) - clz64(dividend));
 	divisor <<= bits;
 	mask = 1UL << bits;
 	/* division loop */
