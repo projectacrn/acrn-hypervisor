@@ -41,7 +41,7 @@ uint16_t allocate_pcpu(void)
 			return i;
 	}
 
-	return INVALID_PCPU_ID;
+	return INVALID_CPU_ID;
 }
 
 void set_pcpu_used(uint16_t pcpu_id)

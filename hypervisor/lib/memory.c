@@ -58,9 +58,10 @@ struct mem_pool Paging_Memory_Pool = {
 static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
 {
 
-        void *memory = NULL;
-        uint32_t idx, bit_idx;
-        uint32_t requested_buffs;
+         void *memory = NULL;
+         uint32_t idx; 
+         uint16_t bit_idx;
+         uint32_t requested_buffs;
 
         /* Check if provided memory pool exists */
         if (pool == NULL)
@@ -85,9 +86,9 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
                         /* Declare temporary variables to be used locally in
                          * this block
                          */
-                        uint32_t i;
-                        uint32_t tmp_bit_idx = bit_idx;
-                        uint32_t tmp_idx = idx;
+			uint32_t i;
+			uint16_t tmp_bit_idx = bit_idx;
+			uint32_t tmp_idx = idx;
 
                         /* Check requested_buffs number of buffers availability
                          * in memory-pool right after selected buffer
@@ -101,7 +102,7 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
                                         if (++tmp_idx == pool->bmp_size)
                                                 break;
                                         /* Reset tmp_bit_idx */
-                                        tmp_bit_idx = 0;
+                                        tmp_bit_idx = 0U;
                                 }
 
                                 /* Break if selected buffer is not free */

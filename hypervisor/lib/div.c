@@ -105,7 +105,7 @@ int udiv64(uint64_t dividend, uint64_t divisor, struct udiv_result *res)
 		}
 		divisor >>= 1;
 		mask >>= 1;
-	} while ((bits-- != 0) && (dividend != 0));
+	} while ((bits-- != 0UL) && (dividend != 0));
 
 	res->r.qword = dividend;
 	return 0;

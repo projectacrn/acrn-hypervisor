@@ -880,7 +880,7 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 	uint32_t dfr, ldr, ldest, cluster;
 	uint32_t mda_flat_ldest, mda_cluster_ldest, mda_ldest, mda_cluster_id;
 	uint64_t amask;
-	int vcpu_id;
+	uint16_t vcpu_id;
 
 	if (dest == 0xff) {
 		/*
@@ -918,7 +918,7 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 		 */
 		*dmask = 0;
 		amask = vm_active_cpus(vm);
-		while ((vcpu_id = ffs64(amask)) >= 0) {
+		while ((vcpu_id = ffs64(amask)) != INVALID_BIT_INDEX) {
 			bitmap_clear(vcpu_id, &amask);
 
 			vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
@@ -1021,7 +1021,7 @@ vlapic_get_cr8(struct vlapic *vlapic)
 static int
 vlapic_icrlo_write_handler(struct vlapic *vlapic)
 {
-	int i;
+	uint16_t vcpu_id;
 	bool phys;
 	uint64_t dmask = 0;
 	uint64_t icrval;
@@ -1071,9 +1071,9 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 		break;
 	}
 
-	while ((i = ffs64(dmask)) >= 0) {
-		bitmap_clear(i, &dmask);
-		target_vcpu = vcpu_from_vid(vlapic->vm, i);
+	while ((vcpu_id = ffs64(dmask)) != INVALID_BIT_INDEX) {
+		bitmap_clear(vcpu_id, &dmask);
+		target_vcpu = vcpu_from_vid(vlapic->vm, vcpu_id);
 		if (target_vcpu == NULL)
 			continue;
 
@@ -1081,19 +1081,19 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 			vlapic_set_intr(target_vcpu, vec,
 				LAPIC_TRIG_EDGE);
 			dev_dbg(ACRN_DBG_LAPIC,
-				"vlapic sending ipi %d to vcpu_id %d",
-				vec, i);
+				"vlapic sending ipi %d to vcpu_id %hu",
+				vec, vcpu_id);
 		} else if (mode == APIC_DELMODE_NMI){
 			vcpu_inject_nmi(target_vcpu);
 			dev_dbg(ACRN_DBG_LAPIC,
-				"vlapic send ipi nmi to vcpu_id %d", i);
+				"vlapic send ipi nmi to vcpu_id %hu", vcpu_id);
 		} else if (mode == APIC_DELMODE_INIT) {
 			if ((icrval & APIC_LEVEL_MASK) == APIC_LEVEL_DEASSERT)
 				continue;
 
 			dev_dbg(ACRN_DBG_LAPIC,
-				"Sending INIT from VCPU %d to %d",
-				vlapic->vcpu->vcpu_id, i);
+				"Sending INIT from VCPU %d to %hu",
+				vlapic->vcpu->vcpu_id, vcpu_id);
 
 			/* put target vcpu to INIT state and wait for SIPI */
 			pause_vcpu(target_vcpu, VCPU_PAUSED);
@@ -1110,8 +1110,8 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 				continue;
 
 			dev_dbg(ACRN_DBG_LAPIC,
-				"Sending SIPI from VCPU %d to %d with vector %d",
-				vlapic->vcpu->vcpu_id, i, vec);
+				"Sending SIPI from VCPU %d to %hu with vector %d",
+				vlapic->vcpu->vcpu_id, vcpu_id, vec);
 
 			if (--target_vcpu->arch_vcpu.nr_sipi > 0)
 				continue;
@@ -1586,7 +1586,7 @@ vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest, bool phys,
 		int delmode, int vec)
 {
 	bool lowprio;
-	int vcpu_id;
+	uint16_t vcpu_id;
 	uint64_t dmask;
 	struct vcpu *target_vcpu;
 
@@ -1606,7 +1606,7 @@ vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest, bool phys,
 	 */
 	vlapic_calcdest(vm, &dmask, dest, phys, lowprio);
 
-	while ((vcpu_id = ffs64(dmask)) >= 0) {
+	while ((vcpu_id = ffs64(dmask)) != INVALID_BIT_INDEX) {
 		bitmap_clear(vcpu_id, &dmask);
 		target_vcpu = vcpu_from_vid(vm, vcpu_id);
 		if (target_vcpu == NULL)
@@ -1738,21 +1738,21 @@ vlapic_set_intr(struct vcpu *vcpu, uint32_t vector, bool level)
 }
 
 int
-vlapic_set_local_intr(struct vm *vm, int vcpu_id, uint32_t vector)
+vlapic_set_local_intr(struct vm *vm, uint16_t vcpu_id, uint32_t vector)
 {
 	struct vlapic *vlapic;
 	uint64_t dmask = 0;
 	int error;
 
-	if (vcpu_id < -1 || vcpu_id >= phys_cpu_num)
+	if ((vcpu_id != BROADCAST_CPU_ID) && (vcpu_id >= phys_cpu_num))
 		return -EINVAL;
 
-	if (vcpu_id == -1)
+	if (vcpu_id == BROADCAST_CPU_ID)
 		dmask = vm_active_cpus(vm);
 	else
 		bitmap_set(vcpu_id, &dmask);
 	error = 0;
-	while ((vcpu_id = ffs64(dmask)) >= 0) {
+	while ((vcpu_id = ffs64(dmask)) != INVALID_BIT_INDEX) {
 		bitmap_clear(vcpu_id, &dmask);
 		vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
 		error = vlapic_trigger_lvt(vlapic, vector);

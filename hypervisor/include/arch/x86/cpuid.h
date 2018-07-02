@@ -96,15 +96,6 @@
 #define CPUID_EXTEND_FUNCTION_4      0x80000004
 #define CPUID_EXTEND_ADDRESS_SIZE    0x80000008
 
-/**pcpu id type is uint16_t,
-*The broadcast id (BROADCAST_PCPU_ID) 
-* used to notify all valid pcpu, 
-*the invalid pcpu id (INVALID_PCPU_ID) is error
-*code for error handling.
-*/
-#define INVALID_PCPU_ID 0xffffU
-#define BROADCAST_PCPU_ID 0xfffeU
-
 
 static inline void __cpuid(uint32_t *eax, uint32_t *ebx,
 				uint32_t *ecx, uint32_t *edx)
