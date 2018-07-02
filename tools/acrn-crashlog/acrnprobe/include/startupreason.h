@@ -19,4 +19,6 @@
  * limitations under the License.
  */
 
-extern void read_startupreason(char *startupreason);
+#define REBOOT_REASON_SIZE 32
+
+extern void read_startupreason(char *startupreason, const size_t limit);

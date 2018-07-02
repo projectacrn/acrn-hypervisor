@@ -28,68 +28,85 @@
 #include "startupreason.h"
 #include "log_sys.h"
 
-#define MAX_KERNEL_COMMAND_LINE_SIZE 4096
 #define CURRENT_KERNEL_CMDLINE "/proc/cmdline"
 
-static int get_cmdline_bootreason(char *bootreason)
+static int get_cmdline_bootreason(char *bootreason, const size_t limit)
 {
-	int res, len = MAX_KERNEL_COMMAND_LINE_SIZE;
-	char *p, *p1, *p2;
-	char *cmdline;
-	const char key[] = "bootreason=";
+	int res;
+	unsigned long size;
+	char *start, *p1, *p2, *end;
+	void *cmdline;
+	const char key[] = "ABL.reset=";
 
-	cmdline = malloc(len);
-	if (!cmdline) {
-		LOGE("failed to allocate memory to read %s\n",
-		     CURRENT_KERNEL_CMDLINE);
-		return -1;
-	}
-	res = file_read_string(CURRENT_KERNEL_CMDLINE, cmdline, len);
-	if (res <= 0) {
+	res = read_file(CURRENT_KERNEL_CMDLINE, &size, &cmdline);
+	if (res < 0) {
 		LOGE("failed to read file %s - %s\n",
 		     CURRENT_KERNEL_CMDLINE, strerror(errno));
-		free(cmdline);
 		return -1;
 	}
 
-	p = strstr(cmdline, key);
-	if (!p) {
+	start = strstr(cmdline, key);
+	if (!start) {
+		LOGW("can't find reboot reason with key (%s) in cmdline\n",
+		     key);
 		free(cmdline);
 		return 0;
 	}
-	p += strlen(key);
-	p1 = strstr(p, " ");
-	p2 = strstr(p, "\n");
-	if (p2 && !p1)
-		*p2 = '\0';
-	else if (p2 && p2 < p1)
-		*p2 = '\0';
-	else if (p1)
-		*p1 = '\0';
 
-	strncpy(bootreason, p, strlen(p) + 1);
+	/* if the string contains ' ' or '\n', break it by '\0' */
+	start += strlen(key);
+	p1 = strchr(start, ' ');
+	p2 = strchr(start, '\n');
+	if (p2 && p1)
+		end = MIN(p1, p2);
+	else
+		end = MAX(p1, p2);
+
+	if (end)
+		*end = 0;
+
+	const size_t len = MIN(strlen(start), limit - 1);
+
+	if (len > 0)
+		memcpy(bootreason, start, len + 1);
+
 	free(cmdline);
-	return strlen(bootreason);
+	return len;
 }
 
-static void get_default_bootreason(char *bootreason)
+static int get_default_bootreason(char *bootreason, const size_t limit)
 {
-	int ret;
-	unsigned int i;
-	char bootreason_prop[MAX_KERNEL_COMMAND_LINE_SIZE];
+	int len;
+	int i;
 
-	ret = get_cmdline_bootreason(bootreason_prop);
-	if (ret <= 0)
-		return;
+	len = get_cmdline_bootreason(bootreason, limit);
+	if (len <= 0)
+		return len;
 
-	for (i = 0; i < strlen(bootreason_prop); i++)
-		bootreason[i] = toupper(bootreason_prop[i]);
-	bootreason[i] = '\0';
+	for (i = 0; i < len; i++)
+		bootreason[i] = toupper(bootreason[i]);
+
+	return len;
 
 }
 
-void read_startupreason(char *startupreason)
+void read_startupreason(char *startupreason, const size_t limit)
 {
-	strcpy(startupreason, "UNKNOWN");
-	get_default_bootreason(startupreason);
+	int res;
+	static char reboot_reason_cache[REBOOT_REASON_SIZE];
+
+	if (!reboot_reason_cache[0]) {
+		/* fill cache */
+		res = get_default_bootreason(reboot_reason_cache,
+					     sizeof(reboot_reason_cache));
+		if (res <= 0)
+			strncpy(reboot_reason_cache, "UNKNOWN",
+				sizeof(reboot_reason_cache));
+	}
+
+	const size_t len = MIN(strlen(reboot_reason_cache), limit - 1);
+
+	memcpy(startupreason, reboot_reason_cache, len);
+	*(startupreason + len) = 0;
+	return;
 }
