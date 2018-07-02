@@ -70,7 +70,6 @@ extern spinlock_t softirq_dev_lock;
 void ptdev_softirq(__unused uint16_t cpu);
 void ptdev_init(void);
 void ptdev_release_all_entries(struct vm *vm);
-void get_ptdev_info(char *str, int str_max);
 
 struct ptdev_remapping_info *ptdev_dequeue_softirq(void);
 struct ptdev_remapping_info *alloc_entry(struct vm *vm,
@@ -80,5 +79,9 @@ struct ptdev_remapping_info *ptdev_activate_entry(
 		struct ptdev_remapping_info *entry,
 		int phys_irq, bool lowpri);
 void ptdev_deactivate_entry(struct ptdev_remapping_info *entry);
+
+#ifdef HV_DEBUG
+void get_ptdev_info(char *str, int str_max);
+#endif /* HV_DEBUG */
 
 #endif /* PTDEV_H */

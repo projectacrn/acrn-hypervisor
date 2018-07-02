@@ -16,7 +16,6 @@ int vmexit_handler(struct vcpu *vcpu);
 int vmcall_vmexit_handler(struct vcpu *vcpu);
 int cpuid_vmexit_handler(struct vcpu *vcpu);
 int cr_access_vmexit_handler(struct vcpu *vcpu);
-void get_vmexit_profile(char *str, int str_max);
 
 #define VM_EXIT_QUALIFICATION_BIT_MASK(exit_qual, MSB, LSB)   \
 	(exit_qual & (((1UL << (MSB+1))-1) - ((1UL << (LSB))-1)))
@@ -47,5 +46,9 @@ void get_vmexit_profile(char *str, int str_max);
 	(VM_EXIT_QUALIFICATION_BIT_MASK(exit_qual, 6, 6) >> 6)
 #define VM_EXIT_IO_INSTRUCTION_PORT_NUMBER(exit_qual) \
 	(VM_EXIT_QUALIFICATION_BIT_MASK(exit_qual, 31, 16) >> 16)
+
+#ifdef HV_DEBUG
+void get_vmexit_profile(char *str, int str_max);
+#endif /* HV_DEBUG */
 
 #endif /* VMEXIT_H_ */

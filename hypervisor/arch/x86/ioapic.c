@@ -414,6 +414,7 @@ void resume_ioapic(void)
 	}
 }
 
+#ifdef HV_DEBUG
 void get_rte_info(struct ioapic_rte *rte, bool *mask, bool *irr,
 	bool *phys, int *delmode, bool *level, int *vector, uint32_t *dest)
 {
@@ -469,3 +470,4 @@ int get_ioapic_info(char *str, int str_max_len)
 	snprintf(str, size, "\r\n");
 	return 0;
 }
+#endif /* HV_DEBUG */

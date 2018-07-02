@@ -20,7 +20,6 @@
 #define GSI_SET_RTE(irq, rte) ioapic_set_rte((irq), (rte))
 
 void setup_ioapic_irq(void);
-int get_ioapic_info(char *str, int str_max_len);
 
 bool irq_is_gsi(uint32_t irq);
 uint32_t irq_gsi_num(void);
@@ -36,4 +35,9 @@ void resume_ioapic(void);
 
 extern uint16_t legacy_irq_to_pin[];
 extern uint16_t pic_ioapic_pin_map[];
+
+#ifdef HV_DEBUG
+int get_ioapic_info(char *str, int str_max_len);
+#endif /* HV_DEBUG */
+
 #endif /* IOAPIC_H */
