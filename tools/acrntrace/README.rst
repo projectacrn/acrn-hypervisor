@@ -19,6 +19,7 @@ Options:
 
 -h			print this message
 -i period		specify polling interval in milliseconds [1-999]
+-t			max time to capture trace data (in second)
 -c			clear the buffered old data
 -r			minimal amount (in MB) of free space kept on the disk
 			before acrntrace stops

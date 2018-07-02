@@ -15,16 +15,21 @@
 #include <errno.h>
 #include <pthread.h>
 #include <string.h>
+#include <signal.h>
 
 #include "acrntrace.h"
 
 /* default minimal amount free space (in MB) left on the disk */
 static uint64_t disk_reserved = 512;
+
+#define TIMER_ID	(128)
+static uint32_t timeout = 0;
+
 static int exiting = 0;
 
 /* for opt */
 static uint64_t period = 10000;
-static const char optString[] = "i:hcr:";
+static const char optString[] = "i:hcr:t:";
 static const char dev_name[] = "/dev/acrn_trace";
 
 static uint32_t flags;
@@ -42,7 +47,48 @@ static void display_usage(void)
 	       "\t-r: minimal amount (in MB) of free space kept on the disk\n"
 	       "\t    before acrntrace stops\n"
 	       "\t-i: period_in_ms: specify polling interval [1-999]\n"
+	       "\t-t: max time to capture trace data (in second)\n"
 	       "\t-c: clear the buffered old data\n");
+}
+
+static void timer_handler(union sigval sv)
+{
+	exiting = 1;
+	exit(0);
+}
+
+static int init_timer(int timeout)
+{
+	struct sigevent event;
+	struct itimerspec it;
+	timer_t tm_id;
+	int err;
+
+	memset(&event, 0, sizeof(struct sigevent));
+
+	event.sigev_value.sival_int = TIMER_ID;
+	event.sigev_notify = SIGEV_THREAD;
+	event.sigev_notify_function = timer_handler;
+
+	err = timer_create(CLOCK_MONOTONIC, &event, &tm_id);
+	if (err < 0) {
+		pr_err("Error to create timer, errno(%d)\n", err);
+		return err;
+	}
+
+	it.it_interval.tv_sec = timeout;
+	it.it_interval.tv_nsec = 0;
+	it.it_value.tv_sec = timeout;
+	it.it_value.tv_nsec = 0;
+
+	err = timer_settime(tm_id, 0, &it, NULL);
+	if (err < 0) {
+		pr_err("Error to set timer, errno(%d)\n", err);
+		return err;
+	}
+
+	pr_info("Capture trace data for about %ds and exit\n", timeout);
+	return 0;
 }
 
 static int parse_opt(int argc, char *argv[])
@@ -68,6 +114,15 @@ static int parse_opt(int argc, char *argv[])
 			}
 			disk_reserved = ret;
 			pr_dbg("Keeping %dMB of space on the disk\n", ret);
+			break;
+		case 't':
+			ret = atoi(optarg);
+			if (ret <= 0) {
+				pr_err("'-t' require integer greater than 0\n");
+				return -EINVAL;
+			}
+			timeout = ret;
+			pr_dbg("Capture trace data for at most %ds\n", ret);
 			break;
 		case 'c':
 			flags |= FLAG_CLEAR_BUF;
@@ -331,6 +386,7 @@ static void signal_exit_handler(int sig)
 int main(int argc, char *argv[])
 {
 	uint32_t cpu = 0;
+	int err;
 
 	/* parse options */
 	if (parse_opt(argc, argv))
@@ -348,6 +404,15 @@ int main(int argc, char *argv[])
 	if (create_trace_file_dir(trace_file_dir)) {
 		pr_err("Failed to create dir for trace files\n");
 		exit(EXIT_FAILURE);
+	}
+
+	/* Set timer if timeout configured */
+	if (timeout) {
+		err = init_timer(timeout);
+		if (err < 0) {
+			pr_err("Failed to set timer\n");
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	atexit(handle_on_exit);
