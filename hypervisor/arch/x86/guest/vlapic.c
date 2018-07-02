@@ -2104,7 +2104,7 @@ apicv_pending_intr(struct vlapic *vlapic, __unused uint32_t *vecptr)
 	for (i = 3; i >= 0; i--) {
 		pirval = pir_desc->pir[i];
 		if (pirval != 0) {
-			vpr = (i * 64 + fls64(pirval)) & 0xF0U;
+			vpr = (((uint32_t)(i * 64) + (uint32_t)fls64(pirval)) & 0xF0U);
 			return (vpr > ppr);
 		}
 	}
@@ -2188,7 +2188,7 @@ apicv_inject_pir(struct vlapic *vlapic)
 	struct pir_desc *pir_desc;
 	struct lapic_regs *lapic;
 	uint64_t val, pirval;
-	int rvi, pirbase = -1, i;
+	uint16_t rvi, pirbase = 0U, i;
 	uint16_t intr_status_old, intr_status_new;
 	struct lapic_reg *irr = NULL;
 
@@ -2197,17 +2197,16 @@ apicv_inject_pir(struct vlapic *vlapic)
 		return;
 
 	pirval = 0;
-	pirbase = -1;
 	lapic = vlapic->apic_page;
 	irr = &lapic->irr[0];
 
-	for (i = 0; i < 4; i++) {
+	for (i = 0U; i < 4U; i++) {
 		val = atomic_readandclear64((long *)&pir_desc->pir[i]);
 		if (val != 0) {
-			irr[i * 2].val |= val;
-			irr[(i * 2) + 1].val |= val >> 32;
+			irr[i * 2U].val |= val;
+			irr[(i * 2U) + 1U].val |= val >> 32;
 
-			pirbase = 64*i;
+			pirbase = 64U*i;
 			pirval = val;
 		}
 	}

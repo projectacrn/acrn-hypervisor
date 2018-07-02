@@ -74,14 +74,15 @@ static inline uint16_t fls(uint32_t value)
 	return (uint16_t)ret;
 }
 
-static inline int fls64(unsigned long value)
+static inline uint16_t fls64(uint64_t value)
 {
-	int ret;
-
-	asm volatile("bsrq %1,%q0"
+	uint64_t ret = 0UL;
+	if (value == 0UL)
+		return (INVALID_BIT_INDEX);
+	asm volatile("bsrq %1,%0"
 			: "=r" (ret)
-			: "rm" (value), "0" (-1));
-	return ret;
+			: "rm" (value));
+	return (uint16_t)ret;
 }
 
 /**
@@ -152,9 +153,13 @@ static inline uint16_t clz(uint32_t value)
  *
  * @return The number of leading zeros in 'value'.
  */
-static inline int clz64(unsigned long value)
+static inline uint16_t clz64(uint64_t value)
 {
-	return (63 - fls64(value));
+	if (value == 0UL)
+		return 64U;
+	else{
+		return (63U - fls64(value));
+	}
 }
 
 /*
