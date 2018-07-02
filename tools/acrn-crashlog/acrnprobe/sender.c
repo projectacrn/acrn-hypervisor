@@ -601,7 +601,7 @@ static void telemd_send_reboot(void)
 {
 	struct sender_t *telemd;
 	char *class;
-	char reason[MAXLINESIZE];
+	char reason[REBOOT_REASON_SIZE];
 	int ret;
 
 	telemd = get_sender_by_name("telemd");
@@ -627,7 +627,7 @@ static void telemd_send_reboot(void)
 		free(content);
 	}
 
-	read_startupreason(reason);
+	read_startupreason(reason, sizeof(reason));
 	ret = asprintf(&class, "clearlinux/reboot/%s", reason);
 	if (ret < 0) {
 		LOGE("compute string failed, out of memory\n");
@@ -952,7 +952,7 @@ static void crashlog_send_uptime(void)
 
 static void crashlog_send_reboot(void)
 {
-	char reason[MAXLINESIZE];
+	char reason[REBOOT_REASON_SIZE];
 	char *key;
 	struct sender_t *crashlog;
 
@@ -972,7 +972,7 @@ static void crashlog_send_reboot(void)
 		free(key);
 	}
 
-	read_startupreason(reason);
+	read_startupreason(reason, sizeof(reason));
 	key = generate_event_id("REBOOT", reason);
 	if (key == NULL) {
 		LOGE("generate event id failed, error (%s)\n",
