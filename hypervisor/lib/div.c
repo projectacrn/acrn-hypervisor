@@ -16,7 +16,7 @@ static int do_udiv32(uint32_t dividend, uint32_t divisor,
 	 * are valid * clz(dividend)<=clz(divisor)
 	 */
 
-	mask = clz(divisor) - clz(dividend);
+	mask = (uint32_t)(clz(divisor) - clz(dividend));
 	/* align divisor and dividend */
 	divisor <<= mask;
 	mask = 1U << mask;
@@ -26,8 +26,8 @@ static int do_udiv32(uint32_t dividend, uint32_t divisor,
 			dividend -= divisor;
 			res->q.dwords.low |= mask;
 		}
-		divisor >>= 1;
-	} while (((mask >>= 1) != 0) && (dividend != 0));
+		divisor >>= 1U;
+	} while (((mask >>= 1U) != 0U) && (dividend != 0U));
 	/* dividend now contains the reminder */
 	res->r.dwords.low = dividend;
 	return 0;
