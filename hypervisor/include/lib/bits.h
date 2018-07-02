@@ -31,6 +31,14 @@
 #define BITS_H
 
 #define	BUS_LOCK	"lock ; "
+/**
+ *
+ * INVALID_BIT_INDEX means when input paramter is zero,
+ * bit operations function can't find bit set and return
+ * the invalid bit index directly.
+ *
+ **/
+#define INVALID_BIT_INDEX  0xffffU
 
 /**
  *
@@ -38,28 +46,32 @@
  *       return the bit index of that bit.
  *
  *  Bits are numbered starting at 0,the least significant bit.
- *  A return value of -1 means that the argument was zero.
+ *  A return value of INVALID_BIT_INDEX means return value is
+ *  invalid bit index when the input argument was zero.
  *
  *  Examples:
- *	fls (0x0) = -1
+ *	fls (0x0) = INVALID_BIT_INDEX
  *	fls (0x01) = 0
- *	fls (0xf0) = 7
+ *	fls (0x80) = 7
  *	...
  *	fls (0x80000001) = 31
  *
- * @param value: 'unsigned int' type value
+ * @param value: 'uint32_t' type value
  *
- * @return value: zero-based bit index, -1 means 'value' was zero.
+ * @return value: zero-based bit index, INVALID_BIT_INDEX means
+ * when 'value' was zero, bit operations function can't find bit
+ * set and return the invalid bit index directly.
  *
  * **/
-static inline int fls(unsigned int value)
+static inline uint16_t fls(uint32_t value)
 {
-	int ret;
-
+	uint32_t ret = 0U;
+	if (value == 0U)
+		return (INVALID_BIT_INDEX);
 	asm volatile("bsrl %1,%0"
 			: "=r" (ret)
-			: "rm" (value), "0" (-1));
-	return ret;
+			: "rm" (value));
+	return (uint16_t)ret;
 }
 
 static inline int fls64(unsigned long value)
@@ -124,9 +136,13 @@ static inline int ffz64(unsigned long value)
  *
  * @return The number of leading zeros in 'value'.
  */
-static inline int clz(unsigned int value)
+static inline uint16_t clz(uint32_t value)
 {
-	return (31 - fls(value));
+	if (value == 0U)
+		return 32U;
+	else{
+		return (31U - fls(value));
+	}
 }
 
 /**

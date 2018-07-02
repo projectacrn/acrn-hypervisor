@@ -767,25 +767,26 @@ vlapic_process_eoi(struct vlapic *vlapic)
 {
 	struct lapic_regs *lapic = vlapic->apic_page;
 	struct lapic_reg *isrptr, *tmrptr;
-	int i, bitpos, vector;
+	int i, vector;
+	uint16_t bitpos;
 
 	isrptr = &lapic->isr[0];
 	tmrptr = &lapic->tmr[0];
 
 	for (i = 7; i >= 0; i--) {
 		bitpos = fls(isrptr[i].val);
-		if (bitpos >= 0) {
+		if (bitpos != INVALID_BIT_INDEX) {
 			if (vlapic->isrvec_stk_top <= 0) {
 				panic("invalid vlapic isrvec_stk_top %d",
 					vlapic->isrvec_stk_top);
 			}
-			isrptr[i].val &= ~(1 << bitpos);
-			vector = i * 32 + bitpos;
+			isrptr[i].val &= ~(1U << (uint32_t)bitpos);
+			vector = i * 32 + (int32_t)bitpos;
 			dev_dbg(ACRN_DBG_LAPIC, "EOI vector %d", vector);
 			VLAPIC_CTR_ISR(vlapic, "vlapic_process_eoi");
 			vlapic->isrvec_stk_top--;
 			vlapic_update_ppr(vlapic);
-			if ((tmrptr[i].val & (1 << bitpos)) != 0) {
+			if ((tmrptr[i].val & (1U << (uint32_t)bitpos)) != 0U) {
 				/* hook to vIOAPIC */
 				vioapic_process_eoi(vlapic->vm, vector);
 			}
@@ -1131,7 +1132,8 @@ int
 vlapic_pending_intr(struct vlapic *vlapic, uint32_t *vecptr)
 {
 	struct lapic_regs *lapic = vlapic->apic_page;
-	int i, bitpos;
+	int i;
+	uint16_t bitpos;
 	uint32_t vector;
 	uint32_t val;
 	struct lapic_reg *irrptr;
@@ -1144,8 +1146,8 @@ vlapic_pending_intr(struct vlapic *vlapic, uint32_t *vecptr)
 	for (i = 7; i >= 0; i--) {
 		val = atomic_load((int *)&irrptr[i].val);
 		bitpos = fls(val);
-		if (bitpos >= 0) {
-			vector = i * 32 + bitpos;
+		if (bitpos != INVALID_BIT_INDEX) {
+			vector = (uint32_t)(i * 32) + (uint32_t)bitpos;
 			if (PRIO(vector) > PRIO(lapic->ppr)) {
 				if (vecptr != NULL)
 					*vecptr = vector;
