@@ -38,57 +38,62 @@ struct telemd_data_t {
 };
 #endif
 
-/* get_log_file_* only used to copy regular file which can be mmaped */
-static void get_log_file_complete(struct log_t *log, char *desdir)
+static int cal_log_filepath(char **out, const struct log_t *log,
+				const char *srcname, const char *desdir)
 {
-	char *des;
-	char *name;
-	int ret;
+	const char *filename;
+	int need_timestamp = 0;
+	int hours;
+	char timebuf[UPTIME_SIZE];
 
-	name = log->name;
+	if (!out || !log || !desdir)
+		return -1;
 
-	ret = asprintf(&des, "%s/%s", desdir, name);
-	if (ret < 0) {
-		LOGE("compute string failed, out of memory\n");
-		return;
+	if (is_ac_filefmt(log->path))
+		filename = srcname;
+	else
+		filename = log->name;
+
+	if (!filename)
+		return -1;
+
+	if (!strcmp(log->type, "cmd") || log->lines)
+		need_timestamp = 1;
+
+	if (need_timestamp) {
+		timebuf[0] = 0;
+		get_uptime_string(timebuf, &hours);
+		return asprintf(out, "%s/%s_%s", desdir, filename, timebuf);
 	}
 
-	ret = do_copy_tail(log->path, des, 0);
-	if (ret < 0) {
-		LOGE("copy (%s) failed\n, error (%s)\n", log->path,
-		     strerror(errno));
-	}
-
-	free(des);
+	return asprintf(out, "%s/%s", desdir, filename);
 }
 
-static void get_log_file_tail(struct log_t *log, char *desdir)
+/* get_log_file_* only used to copy regular file which can be mmaped */
+static void get_log_file_complete(const char *despath, const char *srcpath)
 {
-	char *des;
-	char timebuf[24];
-	char *name;
+	const int ret = do_copy_tail(srcpath, despath, 0);
+
+	if (ret < 0) {
+		LOGE("copy (%s) failed, error (%s)\n", srcpath,
+		     strerror(errno));
+	}
+}
+
+static void get_log_file_tail(const char *despath, const char *srcpath,
+				const int lines)
+{
 	char *start;
-	int lines;
-	int hours;
 	int start_line;
 	int file_lines;
 	struct mm_file_t *mfile;
 	int ret;
 
-	lines = atoi(log->lines);
-	name = log->name;
-	get_uptime_string(timebuf, &hours);
-	ret = asprintf(&des, "%s/%s_%s", desdir, name, timebuf);
-	if (ret < 0) {
-		LOGE("compute string failed, out of memory\n");
-		return;
-	}
-
-	mfile = mmap_file(log->path);
+	mfile = mmap_file(srcpath);
 	if (!mfile) {
-		LOGE("mmap (%s) failed, error (%s)\n", log->path,
+		LOGE("mmap (%s) failed, error (%s)\n", srcpath,
 		     strerror(errno));
-		goto free;
+		return;
 	}
 	file_lines = mm_count_lines(mfile);
 	if (file_lines <= 0) {
@@ -97,184 +102,65 @@ static void get_log_file_tail(struct log_t *log, char *desdir)
 	}
 	start_line = MAX(file_lines - lines, 0) + 1;
 	start = mm_get_line(mfile, start_line);
-	ret = overwrite_file(des, start);
+	ret = overwrite_file(despath, start);
 	if (ret < 0) {
 		LOGE("create file with (%s, %p) failed, error (%s)\n",
-		     des, start, strerror(errno));
+		     despath, start, strerror(errno));
 		goto unmap;
 	}
 
 unmap:
 	unmap_file(mfile);
-free:
-	free(des);
 }
 
-static void get_log_file(struct log_t *log, char *desdir)
+static void get_log_file(const char *despath, const char *srcpath,
+			const char *tail_lines)
 {
 	int lines;
 
-	if (log->lines == NULL) {
-		get_log_file_complete(log, desdir);
+	if (!tail_lines) {
+		get_log_file_complete(despath, srcpath);
 		return;
 	}
 
-	lines = atoi(log->lines);
+	lines = atoi(tail_lines);
 	if (lines > 0)
-		get_log_file_tail(log, desdir);
+		get_log_file_tail(despath, srcpath, lines);
 	else
-		get_log_file_complete(log, desdir);
+		get_log_file_complete(despath, srcpath);
 }
 
-static void get_log_rotation(struct log_t *log, char *desdir)
+static void get_log_node(const char *despath, const char *nodepath)
 {
-	char *suffix;
-	char *prefix;
-	char *dir;
-	char *p;
-	int count;
-	char *files[512];
-	int number;
-	int target_num = -1;
-	char *target_file = NULL;
-	char *name;
-	int i;
+	const int res = do_copy_eof(nodepath, despath);
 
-	dir = strdup(log->path);
-	if (!dir) {
-		LOGE("compute string failed, out of memory\n");
-		return;
-	}
-
-	/* dir      prefix    suffix
-	 * |          |          |
-	 * /tmp/hvlog/hvlog_cur.[biggest]
-	 */
-	p = strrchr(dir, '/');
-	if (p == NULL) {
-		LOGE("invalid path (%s) in log (%s), ", dir, log->name);
-		LOGE("file_rotation only support absolute path\n");
-		goto free_dir;
-	} else {
-		prefix = p + 1;
-		*p = 0;
-	}
-
-	p = strstr(prefix, ".[");
-	if (p == NULL) {
-		LOGE("invalid path (%s) in log (%s)\n", log->path, log->name);
-		goto free_dir;
-	} else {
-		suffix = p + 2;
-		*p = 0;
-	}
-
-	p = suffix + strlen(suffix) - 1;
-	if (*p == ']') {
-		*p = 0;
-	} else {
-		LOGE("invalid path (%s) in log (%s)\n", log->path, log->name);
-		goto free_dir;
-	}
-
-
-	struct log_t toget;
-
-	memcpy(&toget, log, sizeof(toget));
-	count = lsdir(dir, files, ARRAY_SIZE(files));
-	if (count > 2) {
-		for (i = 0; i < count; i++) {
-			name = strrchr(files[i], '/') + 1;
-			if (!name && !strstr(name, prefix))
-				continue;
-
-			number = atoi(strrchr(name, '.') + 1);
-			if (!strncmp(suffix, "biggest", 7)) {
-				if (target_num == -1 ||
-				    number > target_num){
-					target_file = files[i];
-					target_num = number;
-				}
-			} else if (!strncmp(suffix, "smallest", 8)) {
-				if (target_num == -1 ||
-				    number < target_num) {
-					target_file = files[i];
-					target_num = number;
-				}
-			} else if (!strncmp(suffix, "all", 3)) {
-				toget.path = files[i];
-				toget.name = name;
-				get_log_file(&toget, desdir);
-			}
-		}
-	} else if (count < 0) {
-		LOGE("lsdir (%s) failed, error (%s)\n", dir,
-		     strerror(-count));
-		goto free;
-	}
-
-	if (!strncmp(suffix, "all", 3))
-		goto free;
-
-	if (target_file) {
-		toget.path = target_file;
-		get_log_file(&toget, desdir);
-	} else {
-		LOGW("no logs found for (%s)\n", log->name);
-		goto free;
-	}
-
-free:
-	while (count > 0)
-		free(files[--count]);
-free_dir:
-	free(dir);
-}
-
-static void get_log_node(struct log_t *log, char *desdir)
-{
-	char *des;
-	char *name;
-	int ret;
-
-	name = log->name;
-	ret = asprintf(&des, "%s/%s", desdir, name);
-	if (ret < 0) {
-		LOGE("compute string failed, out of memory\n");
-		return;
-	}
-
-	ret = do_copy_eof(log->path, des);
-	if (ret < 0) {
-		LOGE("copy (%s) failed, error (%s)\n", log->path,
+	if (res < 0) {
+		LOGE("copy (%s) failed, error (%s)\n", nodepath,
 		     strerror(errno));
-		goto free;
 	}
-
-free:
-	free(des);
 }
 
-static void out_via_fork(struct log_t *log, char *desdir)
+static void get_log_cmd(const char *despath, const char *cmd)
 {
-	char *des;
-	int ret;
+	const int res = exec_out2file(despath, cmd);
 
-	ret = asprintf(&des, "%s/%s", desdir, log->name);
-	if (ret < 0) {
-		LOGE("compute string failed, out of memory\n");
+	if (res)
+		LOGE("get_log_by_cmd exec %s returns (%d)\n", cmd, res);
+}
+
+static void get_log_by_type(const char *despath, const struct log_t *log,
+				const char *srcpath)
+{
+	if (!despath || !log || !srcpath)
 		return;
-	}
 
-	exec_out2file(des, log->path);
-	free(des);
+	if (!strcmp("file", log->type))
+		get_log_file(despath, srcpath, log->lines);
+	else if (!strcmp("node", log->type))
+		get_log_node(despath, log->path);
+	else if (!strcmp("cmd", log->type))
+		get_log_cmd(despath, log->path);
 }
-
-static void get_log_cmd(struct log_t *log, char *desdir)
-{
-	out_via_fork(log, desdir);
-}
-
 #ifdef HAVE_TELEMETRICS_CLIENT
 static int telemd_send_data(char *payload, char *eventid, uint32_t severity,
 				char *class)
@@ -322,70 +208,47 @@ fail:
 
 static void telemd_get_log(struct log_t *log, void *data)
 {
-	struct telemd_data_t *d = (struct telemd_data_t *)data;
-	char name[NAME_MAX];
-	char *path, *msg;
-	int ret;
+	const struct telemd_data_t *d = (struct telemd_data_t *)data;
+	char fpath[PATH_MAX];
+	char *msg;
+	int count;
+	int res;
+	int i;
+	struct dirent **filelist;
 
 	if (d->srcdir == NULL)
 		goto send_nologs;
 
-	ret = dir_contains(d->srcdir, log->name, 0, name);
-	if (ret == 1) {
-		ret = asprintf(&path, "%s/%s", d->srcdir, name);
-		if (ret < 0) {
-			LOGE("compute string failed, out of memory\n");
-			return;
-		}
-		telemd_send_data(path, d->eventid, d->severity, d->class);
-		free(path);
-	} else if (ret == 0) {
+	/* search file which use log->name as substring */
+	count = ac_scandir(d->srcdir, &filelist, filter_filename_substr,
+			 log->name, NULL);
+	if (count < 0) {
+		LOGE("search (%s) in dir (%s) failed, error (%s)\n", log->name,
+		     d->srcdir, strerror(count));
+		return;
+	}
+	if (!count) {
 		LOGE("dir (%s) does not contains (%s)\n", d->srcdir,
 		     log->name);
 		goto send_nologs;
-	} else if (ret > 1) {
-		/* got multiple files */
-		int i;
-		int count;
-		char *name;
-		char *files[512];
-
-		if (!strstr(log->path, ".[all]")) {
-			LOGE("dir (%s) contains (%d) files (%s)\n",
-			     d->srcdir, ret, log->name);
-			goto send_nologs;
-		}
-
-		count = lsdir(d->srcdir, files, ARRAY_SIZE(files));
-		if (count > 2) {
-			for (i = 0; i < count; i++) {
-				name = strrchr(files[i], '/') + 1;
-				if (!strstr(name, log->name))
-					continue;
-
-				telemd_send_data(files[i], d->eventid,
-						 d->severity, d->class);
-			}
-		} else if (count < 0) {
-			LOGE("lsdir (%s) failed, error (%s)\n", d->srcdir,
-			     strerror(-count));
-			goto send_nologs;
-		}
-
-		while (count > 0)
-			free(files[--count]);
-	} else {
-		LOGE("search (%s) in dir (%s) failed, error (%s)\n", log->name,
-		     d->srcdir, strerror(-ret));
-		goto send_nologs;
 	}
+
+	for (i = 0; i < count; i++) {
+		snprintf(fpath, sizeof(fpath), "%s/%s", d->srcdir,
+			 filelist[i]->d_name);
+		free(filelist[i]);
+		telemd_send_data(fpath, d->eventid,
+				 d->severity, d->class);
+	}
+
+	free(filelist);
 
 	return;
 
 send_nologs:
-	ret = asprintf(&msg, "no log generated on %s, check probe's log.",
+	res = asprintf(&msg, "no log generated on %s, check probe's log.",
 		       log->name);
-	if (ret < 0) {
+	if (res < 0) {
 		LOGE("compute string failed, out of memory\n");
 		return;
 	}
@@ -402,6 +265,8 @@ static void crashlog_get_log(struct log_t *log, void *data)
 	unsigned long long start, end;
 	int spent;
 	int quota;
+	int res;
+	char *des;
 	char *desdir = (char *)data;
 
 	crashlog = get_sender_by_name("crashlog");
@@ -415,14 +280,53 @@ static void crashlog_get_log(struct log_t *log, void *data)
 	}
 
 	start = get_uptime();
-	if (!strcmp("file", log->type))
-		get_log_file(log, desdir);
-	else if (!strcmp("node", log->type))
-		get_log_node(log, desdir);
-	else if (!strcmp("cmd", log->type))
-		get_log_cmd(log, desdir);
-	else if (!strcmp("file_rotation", log->type))
-		get_log_rotation(log, desdir);
+	if (is_ac_filefmt(log->path)) {
+		int i;
+		char **files;
+		char *name;
+
+		const int count = config_fmt_to_files(log->path, &files);
+
+		if (count < 0) {
+			LOGE("parse config format (%s) failed, error (%s)\n",
+			     log->path, strerror(count));
+			return;
+		}
+		if (!count) {
+			LOGW("no logs found for (%s)\n", log->name);
+			return;
+		}
+
+		for (i = 0; i < count; i++) {
+			name = strrchr(files[i], '/') + 1;
+			if (name == (char *)1) {
+				LOGE("invalid path (%s) in log (%s)", files[i],
+				     log->name);
+				continue;
+			}
+			res = cal_log_filepath(&des, log, name, desdir);
+			if (res == -1) {
+				LOGE("cal_log_filepath failed, error (%s)\n",
+				     strerror(errno));
+				continue;
+			}
+			get_log_by_type(des, log, files[i]);
+			free(des);
+		}
+
+		for (i = 0; i < count; i++)
+			free(files[i]);
+		free(files);
+	} else {
+		res = cal_log_filepath(&des, log, log->name, desdir);
+		if (res == -1) {
+			LOGE("cal_log_filepath failed, error (%s)\n",
+			     strerror(errno));
+			return;
+		}
+		get_log_by_type(des, log, log->path);
+		free(des);
+	}
 	end = get_uptime();
 
 	spent = (int)((end - start) / 1000000000LL);
@@ -560,7 +464,7 @@ static void telemd_send_uptime(void)
 	struct sender_t *telemd;
 	struct uptime_t *uptime;
 	char *class;
-	char boot_time[24];
+	char boot_time[UPTIME_SIZE];
 	int hours;
 	int ret;
 	static int uptime_hours;
@@ -812,22 +716,21 @@ static void crashlog_send_crash(struct event_t *e)
 	struct sender_t *crashlog;
 	char *key  = NULL;
 	char *trfile = NULL;
-	char *data0;
-	char *data1;
-	char *data2;
+	char *data0 = NULL;
+	char *data1 = NULL;
+	char *data2 = NULL;
 	int id;
 	int ret = 0;
 	int quota;
 	struct crash_t *rcrash = (struct crash_t *)e->private;
 
-	if (!strcmp(rcrash->trigger->type, "file"))
-		ret = asprintf(&trfile, "%s", rcrash->trigger->path);
-	else if (!strcmp(rcrash->trigger->type, "dir"))
+	if (!strcmp(rcrash->trigger->type, "dir")) {
 		ret = asprintf(&trfile, "%s/%s", rcrash->trigger->path,
 			       e->path);
-	if (ret < 0) {
-		LOGE("compute string failed, out of memory\n");
-		return;
+		if (ret < 0) {
+			LOGE("compute string failed, out of memory\n");
+			return;
+		}
 	}
 
 	crash = rcrash->reclassify(rcrash, trfile, &data0, &data1, &data2);

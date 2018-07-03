@@ -300,7 +300,7 @@ void unmap_file(struct mm_file_t *mfile)
  * @return The number of bytes written to new file if successful,
  *         or a negative errno-style value if not.
  */
-int do_copy_tail(char *src, char *dest, int limit)
+int do_copy_tail(const char *src, const char *dest, int limit)
 {
 	int rc = 0;
 	int fsrc = -1, fdest = -1;
@@ -916,41 +916,130 @@ int file_read_key_value_r(const char *path, const char *key,
 	return _file_read_key_value(path, 'r', key, limit, value);
 }
 
-int dir_contains(const char *dir, const char *filename, int exact,
-		char *fullname)
+/**
+ * Because scandir's filter can't receive caller's parameter, so
+ * rewrite an ac_scandir to satisfy our usage. This function is
+ * very like scandir, except it has an additional parameter farg for
+ * filter.
+ *
+ * @param dirp Dir to scan.
+ * @param namelist Andress to receive result array of struct dirent.
+ * @param filter Function pointer to filter. See also scandir.
+ * @param farg The second arg of filter.
+ * @param compar See scandir.
+ *
+ * @return the count of scanned files if successful, or a negative
+ *		errno-style value if not.
+ */
+int ac_scandir(const char *dirp, struct dirent ***namelist,
+		int (*filter)(const struct dirent *, const void *),
+		const void *farg,
+		int (*compar)(const struct dirent **,
+				const struct dirent **))
 {
-	int ret, count = 0;
+	int i;
+	int count = 0;
+	int index = 0;
+	struct dirent **_filelist;
+
+	if (!dirp || !namelist)
+		return -EINVAL;
+
+	const int res = scandir(dirp, &_filelist, NULL, compar);
+
+	if (!filter) {
+		*namelist = _filelist;
+		return res;
+	}
+	if (res == -1)
+		return -errno;
+
+	/* overwrite filter */
+	/* calculate the matched files, free unneeded files and mark them */
+	for (i = 0; i < res; i++) {
+		if (!filter(_filelist[i], farg)) {
+			count++;
+		} else {
+			free(_filelist[i]);
+			_filelist[i] = 0;
+		}
+	}
+
+	/* no matched result */
+	if (!count) {
+		free(_filelist);
+		return 0;
+	}
+
+	/* construct the out array */
+	*namelist = malloc(count * sizeof(struct dirent *));
+	if (!(*namelist))
+		goto e_free;
+
+	for (i = 0; i < res; i++) {
+		if (_filelist[i])
+			(*namelist)[index++] = _filelist[i];
+	}
+
+	free(_filelist);
+
+	return count;
+
+e_free:
+	for (i = 0; i < res; i++)
+		if (_filelist[i])
+			free(_filelist[i]);
+	free(_filelist);
+	return -errno;
+}
+
+/* filters return zero if the match is successful */
+int filter_filename_substr(const struct dirent *entry, const void *arg)
+{
+	const char *substr = (const char *)arg;
+
+	return !strstr(entry->d_name, substr);
+}
+
+int filter_filename_exactly(const struct dirent *entry, const void *arg)
+{
+	const char *fname = (const char *)arg;
+
+	return strcmp(entry->d_name, fname);
+}
+
+int filter_filename_startswith(const struct dirent *entry,
+				const void *arg)
+{
+	const char *str = (const char *)arg;
+
+	return memcmp(entry->d_name, str, strlen(str));
+}
+
+int dir_contains(const char *dir, const char *filename, const int exact)
+{
+	int ret;
+	int i;
 	struct dirent **filelist;
-	char *name;
 
 	if (!dir || !filename)
 		return -EINVAL;
 
-	/* pass parameters to scandir's filter is not convenience, so we use
-	 * this implementation.
-	 */
-	ret = scandir(dir, &filelist, 0, 0);
-	if (ret < 0)
-		return -errno;
+	if (exact)
+		ret = ac_scandir(dir, &filelist, filter_filename_exactly,
+			      (const void *)filename, 0);
+	else
+		ret = ac_scandir(dir, &filelist, filter_filename_substr,
+			      (const void *)filename, 0);
+	if (ret <= 0)
+		return ret;
 
-	while (ret--) {
-		name = filelist[ret]->d_name;
-		if (exact) {
-			if (!strcmp(name, filename))
-				count++;
-		} else {
-			if (strstr(name, filename)) {
-				count++;
-				if (fullname)
-					strcpy(fullname, name);
-			}
-		}
-		free(filelist[ret]);
-	}
+	for (i = 0; i < ret; i++)
+		free(filelist[i]);
 
 	free(filelist);
 
-	return count;
+	return ret;
 }
 
 int lsdir(const char *dir, char *fullname[], int limit)
@@ -1087,7 +1176,7 @@ int find_file(char *dir, char *target_file, int depth, char *path[], int limit)
 		if (count >= limit)
 			goto free;
 
-		ret = dir_contains(_dirs[i], target_file, 1, NULL);
+		ret = dir_contains(_dirs[i], target_file, 1);
 		if (ret == 1) {
 			ret = asprintf(&path[count++], "%s/%s",
 				       _dirs[i], target_file);
@@ -1096,9 +1185,6 @@ int find_file(char *dir, char *target_file, int depth, char *path[], int limit)
 				ret = -ENOMEM;
 				goto fail;
 			}
-		} else if (ret > 1) {
-			LOGE("found (%d) (%s) under (%s)??\n",
-			     ret, target_file, dir);
 		} else if (ret < 0) {
 			LOGE("dir_contains failed, error (%s)\n",
 			     strerror(-ret));
@@ -1170,4 +1256,141 @@ free:
 		free(out);
 	close(fd);
 	return -1;
+}
+
+int is_ac_filefmt(const char *file_fmt)
+{
+	/* Supported formats:
+	 * - /dir/.../file[*] --> all files with prefix "file."
+	 * - /dir/.../file[0] --> file with smallest subfix num.
+	 * - /dir/.../file[-1] --> file with biggest subfix num.
+	 */
+	if (!file_fmt)
+		return 0;
+
+	return (strstr(file_fmt, "[*]") ||
+		strstr(file_fmt, "[0]") ||
+		strstr(file_fmt, "[-1]"));
+}
+
+/**
+ * The config file of acrnprobe could use some format to indicate a file/files.
+ * This function is used to parse the format and returns found files paths.
+ *
+ * @param file_fmt A string pointer of a file format.
+ * @param out Files were found.
+ *
+ * @return the count of searched files if successful, or a negative
+ *	   errno-style value if not.
+ */
+int config_fmt_to_files(const char *file_fmt, char ***out)
+{
+	char type[3];
+	char *dir;
+	char *p;
+	char *subfix;
+	char *file_prefix;
+	int i;
+	int count;
+	int res;
+	int ret = 0;
+	struct dirent **filelist;
+	char **out_array;
+
+	if (!file_fmt || !out)
+		return -EINVAL;
+
+	dir = strdup(file_fmt);
+	if (!dir)
+		return -ENOMEM;
+
+	if (!is_ac_filefmt(file_fmt)) {
+		/* It's an regular file as default */
+		out_array = malloc(sizeof(char *));
+		if (!out_array) {
+			ret = -errno;
+			goto free_dir;
+		}
+
+		out_array[0] = dir;
+		*out = out_array;
+		return 1;
+	}
+
+	/* get dir and file prefix from format */
+	p = strrchr(dir, '/');
+	if (!p) {
+		ret = -EINVAL;
+		goto free_dir;
+	}
+	*p = '\0';
+	file_prefix = p + 1;
+	*strrchr(file_prefix, '[') = '\0';
+
+	if (!directory_exists(dir)) {
+		ret = 0;
+		goto free_dir;
+	}
+	/* get format type */
+	subfix = strrchr(file_fmt, '[');
+	res = sscanf(subfix, "[%2[01-*]]", type);
+	if (res != 1) {
+		ret = -EINVAL;
+		goto free_dir;
+	}
+
+	/* get all files which start with prefix */
+	count = ac_scandir(dir, &filelist, filter_filename_startswith,
+			   file_prefix, alphasort);
+	if (count <= 0) {
+		ret = count;
+		goto free_dir;
+	}
+
+	/* construct output */
+	out_array = (char **)malloc(count * sizeof(char *));
+	if (!out_array) {
+		ret = -errno;
+		goto free_filelist;
+	}
+
+	if (!strcmp(type, "*")) {
+		for (i = 0; i < count; i++) {
+			res = asprintf(&out_array[i], "%s/%s", dir,
+				       filelist[i]->d_name);
+			if (res == -1) {
+				/* free from 0 to i -1 */
+				while (i)
+					free(out_array[--i]);
+				break;
+			}
+		}
+		ret = count;
+	} else if (!strcmp(type, "0")) {
+		res = asprintf(&out_array[0], "%s/%s", dir,
+			       filelist[0]->d_name);
+		ret = 1;
+	} else if (!strcmp(type, "-1")) {
+		res = asprintf(&out_array[0], "%s/%s", dir,
+			       filelist[count - 1]->d_name);
+		ret = 1;
+	}
+
+	/* error happends while constructing output */
+	if (res == -1) {
+		ret = -errno;
+		free(out_array);
+		goto free_filelist;
+	}
+
+	*out = out_array;
+
+free_filelist:
+	for (i = 0; i < count; i++)
+		free(filelist[i]);
+	free(filelist);
+free_dir:
+	free(dir);
+
+	return ret;
 }

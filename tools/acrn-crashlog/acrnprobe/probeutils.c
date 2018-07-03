@@ -50,7 +50,7 @@ unsigned long long get_uptime(void)
 	return time_ns;
 }
 
-int get_uptime_string(char newuptime[24], int *hours)
+int get_uptime_string(char *newuptime, int *hours)
 {
 	long long tm;
 	int seconds, minutes;
@@ -68,11 +68,11 @@ int get_uptime_string(char newuptime[24], int *hours)
 	/* hours */
 	*hours /= 60;
 
-	return snprintf(newuptime, 24, "%04d:%02d:%02d", *hours,
+	return snprintf(newuptime, UPTIME_SIZE, "%04d:%02d:%02d", *hours,
 			minutes, seconds);
 }
 
-int get_current_time_long(char buf[32])
+int get_current_time_long(char *buf)
 {
 	time_t t;
 	struct tm *time_val;
@@ -82,7 +82,7 @@ int get_current_time_long(char buf[32])
 	if (!time_val)
 		return -1;
 
-	return strftime(buf, 32, "%Y-%m-%d/%H:%M:%S  ", time_val);
+	return strftime(buf, LONG_TIME_SIZE, "%Y-%m-%d/%H:%M:%S  ", time_val);
 }
 
 /**
@@ -348,16 +348,18 @@ void generate_crashfile(char *dir, char *event, char *hashkey,
 {
 	char *buf;
 	char *path;
-	char datetime[32];
-	char uptime[32];
+	char datetime[LONG_TIME_SIZE];
+	char uptime[UPTIME_SIZE];
 	int hours;
 	int ret;
 	const int fmtsize = 128;
 	int filesize;
 
+	datetime[0] = 0;
 	ret = get_current_time_long(datetime);
 	if (ret <= 0)
 		return;
+	uptime[0] = 0;
 	get_uptime_string(uptime, &hours);
 
 	filesize = fmtsize + strlen(event) +

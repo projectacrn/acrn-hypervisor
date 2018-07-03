@@ -22,6 +22,9 @@
 #ifndef __PROBEUTILS_H__
 #define __PROBEUTILS_H__
 
+#define UPTIME_SIZE 24
+#define LONG_TIME_SIZE 32
+
 enum e_dir_mode {
 	MODE_CRASH = 0,
 	MODE_STATS,
