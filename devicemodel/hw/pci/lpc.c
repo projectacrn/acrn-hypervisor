@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <sys/errno.h>
 
 #include "vmmapi.h"
 #include "acpi.h"
@@ -214,7 +215,12 @@ lpc_init(struct vmctx *ctx)
 			goto init_failed;
 		}
 
-		if (uart_set_backend(lpc_uart->uart, lpc_uart->opts) != 0) {
+		error = uart_set_backend(lpc_uart->uart, lpc_uart->opts);
+		/*
+		 * Continue to initialize LPC UART device if opts is invalid,
+		 * and the data will be dropped by uart_write in UART DM.
+		 */
+		if (error && error != -EINVAL) {
 			fprintf(stderr, "Unable to initialize backend '%s' "
 			    "for LPC device %s\n", lpc_uart->opts, name);
 			uart_deinit(lpc_uart->uart);

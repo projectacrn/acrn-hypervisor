@@ -27,6 +27,7 @@
  */
 
 #include <stdio.h>
+#include <sys/errno.h>
 
 #include "pci_core.h"
 #include "uart_core.h"
@@ -82,6 +83,7 @@ static int
 pci_uart_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	struct uart_vdev *uart;
+	int ret;
 
 	pci_emul_alloc_bar(dev, 0, PCIBAR_IO, UART_IO_BAR_SIZE);
 	pci_lintr_request(dev);
@@ -94,7 +96,8 @@ pci_uart_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	uart = uart_init(pci_uart_intr_assert, pci_uart_intr_deassert, dev);
 	dev->arg = uart;
 
-	if (uart_set_backend(uart, opts) != 0) {
+	ret = uart_set_backend(uart, opts);
+	if (ret && ret != -EINVAL) {
 		fprintf(stderr, "Unable to initialize backend '%s' for "
 		    "pci uart at %d:%d\n", opts, dev->slot, dev->func);
 		return -1;
