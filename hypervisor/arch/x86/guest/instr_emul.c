@@ -328,24 +328,24 @@ vie_write_bytereg(struct vcpu *vcpu, struct vie *vie, uint8_t byte)
 
 int
 vie_update_register(struct vcpu *vcpu, enum vm_reg_name reg,
-		uint64_t val, int size)
+		uint64_t val, uint8_t size)
 {
 	int error;
 	uint64_t origval;
 
 	switch (size) {
-	case 1:
-	case 2:
+	case 1U:
+	case 2U:
 		error = vie_read_register(vcpu, reg, &origval);
 		if (error != 0)
 			return error;
 		val &= size2mask[size];
 		val |= origval & ~size2mask[size];
 		break;
-	case 4:
+	case 4U:
 		val &= 0xffffffffUL;
 		break;
-	case 8:
+	case 8U:
 		break;
 	default:
 		return -EINVAL;
@@ -377,17 +377,17 @@ GETCC(32);
 GETCC(64);
 
 static uint64_t
-getcc(int opsize, uint64_t x, uint64_t y)
+getcc(uint8_t opsize, uint64_t x, uint64_t y)
 {
-	ASSERT(opsize == 1 || opsize == 2 || opsize == 4 || opsize == 8,
-			"getcc: invalid operand size %d", opsize);
+	ASSERT(opsize == 1U || opsize == 2U || opsize == 4U || opsize == 8U,
+			"getcc: invalid operand size %hhu", opsize);
 
-	if (opsize == 1)
-		return getcc8(x, y);
-	else if (opsize == 2)
-		return getcc16(x, y);
-	else if (opsize == 4)
-		return getcc32(x, y);
+	if (opsize == 1U)
+		return getcc8((uint8_t)x, (uint8_t)y);
+	else if (opsize == 2U)
+		return getcc16((uint16_t)x, (uint16_t)y);
+	else if (opsize == 4U)
+		return getcc32((uint32_t)x, (uint32_t)y);
 	else
 		return getcc64(x, y);
 }
@@ -397,7 +397,8 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		mem_region_read_t memread, mem_region_write_t memwrite,
 		void *arg)
 {
-	int error, size;
+	int error;
+	uint8_t size;
 	enum vm_reg_name reg;
 	uint8_t byte;
 	uint64_t val;
@@ -411,7 +412,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	* 88/r:	mov r/m8, r8
 	* REX + 88/r:	mov r/m8, r8 (%ah, %ch, %dh, %bh not available)
 	*/
-		size = 1;	/* override for byte operation */
+		size = 1U;	/* override for byte operation */
 		error = vie_read_bytereg(vcpu, vie, &byte);
 		if (error == 0)
 			error = memwrite(vcpu, gpa, byte, size,
@@ -439,7 +440,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		 * 8A/r:	mov r8, r/m8
 		 * REX + 8A/r:	mov r8, r/m8
 		 */
-		size = 1;	/* override for byte operation */
+		size = 1U;	/* override for byte operation */
 		error = memread(vcpu, gpa, &val, size, arg);
 		if (error == 0)
 			error = vie_write_bytereg(vcpu, vie, val);
@@ -493,7 +494,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		 * C6/0		mov r/m8, imm8
 		 * REX + C6/0	mov r/m8, imm8
 		 */
-		size = 1;	/* override for byte operation */
+		size = 1U;	/* override for byte operation */
 		error = memwrite(vcpu, gpa, vie->immediate, size,
 				arg);
 		break;
@@ -520,7 +521,8 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		mem_region_read_t memread, __unused mem_region_write_t memwrite,
 		void *arg)
 {
-	int error, size;
+	int error;
+	uint8_t size;
 	enum vm_reg_name reg;
 	uint64_t val;
 
@@ -539,7 +541,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		 */
 
 		/* get the first operand */
-		error = memread(vcpu, gpa, &val, 1, arg);
+		error = memread(vcpu, gpa, &val, 1U, arg);
 		if (error != 0)
 			break;
 
@@ -560,7 +562,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		 * 0F B7/r		movzx r32, r/m16
 		 * REX.W + 0F B7/r	movzx r64, r/m16
 		 */
-		error = memread(vcpu, gpa, &val, 2, arg);
+		error = memread(vcpu, gpa, &val, 2U, arg);
 		if (error != 0)
 			return error;
 
@@ -582,7 +584,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		 */
 
 		/* get the first operand */
-		error = memread(vcpu, gpa, &val, 1, arg);
+		error = memread(vcpu, gpa, &val, 1U, arg);
 		if (error != 0)
 			break;
 
@@ -607,7 +609,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 static int
 get_gla(struct vcpu *vcpu, __unused struct vie *vie,
 	struct vm_guest_paging *paging,
-	int opsize, int addrsize, int prot, enum vm_reg_name seg,
+	uint8_t opsize, uint8_t addrsize, int prot, enum vm_reg_name seg,
 	enum vm_reg_name gpr, uint64_t *gla, int *fault)
 {
 	struct seg_desc desc;
@@ -669,9 +671,10 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 {
 	uint64_t dstaddr, srcaddr;
 	uint64_t rcx, rdi, rsi, rflags;
-	int error, fault, opsize, seg, repeat;
+	int error, fault, seg, repeat;
+	uint8_t opsize;
 
-	opsize = (vie->op.op_byte == 0xA4U) ? 1 : vie->opsize;
+	opsize = (vie->op.op_byte == 0xA4U) ? 1U : vie->opsize;
 	error = 0;
 
 	/*
@@ -759,11 +762,12 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		__unused mem_region_read_t memread,
 		mem_region_write_t memwrite, void *arg)
 {
-	int error, opsize, repeat;
+	int error, repeat;
+	uint8_t opsize;
 	uint64_t val;
 	uint64_t rcx, rdi, rflags;
 
-	opsize = (vie->op.op_byte == 0xAAU) ? 1 : vie->opsize;
+	opsize = (vie->op.op_byte == 0xAAU) ? 1U : vie->opsize;
 	repeat = vie->repz_present | vie->repnz_present;
 
 	if (repeat != 0) {
@@ -821,7 +825,8 @@ emulate_test(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		mem_region_read_t memread, __unused mem_region_write_t memwrite,
 		void *arg)
 {
-	int error, size;
+	int error;
+	uint8_t size;
 	enum vm_reg_name reg;
 	uint64_t result, rflags, rflags2, val1, val2;
 
@@ -833,7 +838,7 @@ emulate_test(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		/*
 		 * 84/r		test r8, r/m8
 		 */
-		size = 1; /*override size for 8-bit operation*/
+		size = 1U; /*override size for 8-bit operation*/
 		/* fallthrough */
 	case 0x85U:
 		/*
@@ -889,7 +894,8 @@ emulate_and(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		mem_region_read_t memread, mem_region_write_t memwrite,
 		void *arg)
 {
-	int error, size;
+	int error;
+	uint8_t size;
 	enum vm_reg_name reg;
 	uint64_t result, rflags, rflags2, val1, val2;
 
@@ -979,7 +985,8 @@ emulate_or(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		mem_region_read_t memread, mem_region_write_t memwrite,
 		void *arg)
 {
-	int error, size;
+	int error;
+	uint8_t size;
 	enum vm_reg_name reg;
 	uint64_t val1, val2, result, rflags, rflags2;
 
@@ -1072,7 +1079,8 @@ emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		mem_region_read_t memread, __unused mem_region_write_t memwrite,
 		void *arg)
 {
-	int error, size;
+	int error;
+	uint8_t size;
 	uint64_t regop, memop, op1, op2, rflags, rflags2;
 	enum vm_reg_name reg;
 
@@ -1142,7 +1150,7 @@ emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		 *
 		 */
 		if (vie->op.op_byte == 0x80)
-			size = 1;
+			size = 1U;
 
 		/* get the first operand */
 		error = memread(vcpu, gpa, &op1, size, arg);
@@ -1169,7 +1177,8 @@ emulate_sub(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		mem_region_read_t memread, __unused mem_region_write_t memwrite,
 		void *arg)
 {
-	int error, size;
+	int error;
+	uint8_t size;
 	uint64_t nval, rflags, rflags2, val1, val2;
 	enum vm_reg_name reg;
 
@@ -1229,7 +1238,8 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 {
 	struct seg_desc ss_desc;
 	uint64_t cr0, rflags, rsp, stack_gla, stack_gpa, val;
-	int error, size, stackaddrsize, pushop;
+	int error, pushop;
+	uint8_t size, stackaddrsize;
 	uint32_t err_code = 0U;
 
 	memset(&ss_desc, 0, sizeof(ss_desc));
@@ -1242,7 +1252,7 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 	 * From "Address-Size Attributes for Stack Accesses", Intel SDL, Vol 1
 	 */
 	if (paging->cpu_mode == CPU_MODE_REAL) {
-		stackaddrsize = 2;
+		stackaddrsize = 2U;
 	} else if (paging->cpu_mode == CPU_MODE_64BIT) {
 		/*
 		 * "Stack Manipulation Instructions in 64-bit Mode", SDM, Vol 3
@@ -1251,8 +1261,8 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 		 * - 16-bit PUSH/POP is supported by using the operand size
 		 *   override prefix (66H).
 		 */
-		stackaddrsize = 8;
-		size = (vie->opsize_override != 0U) ? 2 : 8;
+		stackaddrsize = 8U;
+		size = (vie->opsize_override != 0U) ? 2U : 8U;
 	} else {
 		/*
 		 * In protected or compatibility mode the 'B' flag in the
@@ -1263,9 +1273,9 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 		ASSERT(error == 0, "%s: error %d getting SS descriptor",
 					__func__, error);
 		if ((_Bool)SEG_DESC_DEF32(ss_desc.access))
-			stackaddrsize = 4;
+			stackaddrsize = 4U;
 		else
-			stackaddrsize = 2;
+			stackaddrsize = 2U;
 	}
 
 	error = vie_read_register(vcpu, VM_REG_GUEST_CR0, &cr0);
@@ -1516,16 +1526,16 @@ vmm_emulate_instruction(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 }
 
 int
-vie_alignment_check(int cpl, int size, uint64_t cr0, uint64_t rf, uint64_t gla)
+vie_alignment_check(int cpl, uint8_t size, uint64_t cr0, uint64_t rf, uint64_t gla)
 {
-	ASSERT(size == 1 || size == 2 || size == 4 || size == 8,
-	    "%s: invalid size %d", __func__, size);
+	ASSERT(size == 1U || size == 2U || size == 4U || size == 8U,
+	    "%s: invalid size %hhu", __func__, size);
 	ASSERT(cpl >= 0 && cpl <= 3, "%s: invalid cpl %d", __func__, cpl);
 
 	if (cpl != 3 || (cr0 & CR0_AM) == 0 || (rf & PSL_AC) == 0)
 		return 0;
 
-	return ((gla & (size - 1)) != 0U) ? 1 : 0;
+	return ((gla & (size - 1U)) != 0UL) ? 1 : 0;
 }
 
 int
@@ -1548,39 +1558,40 @@ vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla)
 }
 
 uint64_t
-vie_size2mask(int size)
+vie_size2mask(uint8_t size)
 {
-	ASSERT(size == 1 || size == 2 || size == 4 || size == 8,
-			"vie_size2mask: invalid size %d", size);
+	ASSERT(size == 1U || size == 2U || size == 4U || size == 8U,
+			"vie_size2mask: invalid size %hhu", size);
 	return size2mask[size];
 }
 
 int
 vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum vm_reg_name seg,
-	struct seg_desc *desc, uint64_t offset, int length, int addrsize,
+	struct seg_desc *desc, uint64_t offset, uint8_t length, uint8_t addrsize,
 	int prot, uint64_t *gla)
 {
 	uint64_t firstoff, low_limit, high_limit, segbase;
-	int glasize, type;
+	uint8_t glasize;
+	int type;
 
 	ASSERT(seg >= VM_REG_GUEST_ES && seg <= VM_REG_GUEST_GS,
 	    "%s: invalid segment %d", __func__, seg);
-	ASSERT(length == 1 || length == 2 || length == 4 || length == 8,
-	    "%s: invalid operand size %d", __func__, length);
+	ASSERT(length == 1U || length == 2U || length == 4U || length == 8U,
+	    "%s: invalid operand size %hhu", __func__, length);
 	ASSERT((prot & ~(PROT_READ | PROT_WRITE)) == 0,
 	    "%s: invalid prot %#x", __func__, prot);
 
 	firstoff = offset;
 	if (cpu_mode == CPU_MODE_64BIT) {
-		ASSERT(addrsize == 4 || addrsize == 8,
+		ASSERT(addrsize == 4U || addrsize == 8U,
 			"%s: invalid address size %d for cpu_mode %d",
 			__func__, addrsize, cpu_mode);
-		glasize = 8;
+		glasize = 8U;
 	} else {
-		ASSERT(addrsize == 2 || addrsize == 4,
+		ASSERT(addrsize == 2U || addrsize == 4U,
 			"%s: invalid address size %d for cpu mode %d",
 			__func__, addrsize, cpu_mode);
-		glasize = 4;
+		glasize = 4U;
 		/*
 		 * If the segment selector is loaded with a NULL selector
 		 * then the descriptor is unusable and attempting to use
@@ -1802,21 +1813,21 @@ decode_prefixes(struct vie *vie, enum vm_cpu_mode cpu_mode, int cs_d)
 		 * Default address size is 64-bits and default operand size
 		 * is 32-bits.
 		 */
-		vie->addrsize = (vie->addrsize_override != 0U)? 4 : 8;
+		vie->addrsize = (vie->addrsize_override != 0U)? 4U : 8U;
 		if (vie->rex_w != 0U)
-			vie->opsize = 8;
+			vie->opsize = 8U;
 		else if (vie->opsize_override != 0U)
-			vie->opsize = 2;
+			vie->opsize = 2U;
 		else
-			vie->opsize = 4;
+			vie->opsize = 4U;
 	} else if (cs_d != 0) {
 		/* Default address and operand sizes are 32-bits */
-		vie->addrsize = vie->addrsize_override != 0U ? 2 : 4;
-		vie->opsize = vie->opsize_override != 0U ? 2 : 4;
+		vie->addrsize = vie->addrsize_override != 0U ? 2U : 4U;
+		vie->opsize = vie->opsize_override != 0U ? 2U : 4U;
 	} else {
 		/* Default address and operand sizes are 16-bits */
-		vie->addrsize = vie->addrsize_override != 0U ? 4 : 2;
-		vie->opsize = vie->opsize_override != 0U ? 4 : 2;
+		vie->addrsize = vie->addrsize_override != 0U ? 4U : 2U;
+		vie->opsize = vie->opsize_override != 0U ? 4U : 2U;
 	}
 	return 0;
 }
@@ -2062,7 +2073,7 @@ decode_immediate(struct vie *vie)
 		 * processor sign-extends all immediates to 64-bits prior
 		 * to their use.
 		 */
-		if (vie->opsize == 4 || vie->opsize == 8)
+		if (vie->opsize == 4U || vie->opsize == 8U)
 			vie->imm_bytes = 4;
 		else
 			vie->imm_bytes = 2;
@@ -2099,8 +2110,7 @@ decode_immediate(struct vie *vie)
 static int
 decode_moffset(struct vie *vie)
 {
-	int32_t i, n;
-	uint8_t x;
+	uint8_t i, n, x;
 	union {
 		char	buf[8];
 		uint64_t u64;
@@ -2114,10 +2124,10 @@ decode_moffset(struct vie *vie)
 	 * The memory offset size follows the address-size of the instruction.
 	 */
 	n = vie->addrsize;
-	ASSERT(n == 2 || n == 4 || n == 8, "invalid moffset bytes: %d", n);
+	ASSERT(n == 2U || n == 4U || n == 8U, "invalid moffset bytes: %hhu", n);
 
 	u.u64 = 0UL;
-	for (i = 0; i < n; i++) {
+	for (i = 0U; i < n; i++) {
 		if (vie_peek(vie, &x) != 0)
 			return -1;
 
