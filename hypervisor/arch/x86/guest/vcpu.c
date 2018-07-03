@@ -83,7 +83,7 @@ int create_vcpu(uint16_t cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	if (is_vcpu_bsp(vcpu) && is_vm0(vcpu->vm)) {
 		/* Set up temporary guest page tables */
 		vm->arch_vm.guest_init_pml4 = create_guest_initial_paging(vm);
-		pr_info("VM %d VCPU %d CR3: 0x%016llx ",
+		pr_info("VM %d VCPU %hu CR3: 0x%016llx ",
 			vm->attr.id, vcpu->vcpu_id,
 			vm->arch_vm.guest_init_pml4);
 	}
@@ -154,7 +154,7 @@ int start_vcpu(struct vcpu *vcpu)
 
 	/* If this VCPU is not already launched, launch it */
 	if (!vcpu->launched) {
-		pr_info("VM %d Starting VCPU %d",
+		pr_info("VM %d Starting VCPU %hu",
 				vcpu->vm->attr.id, vcpu->vcpu_id);
 
 		if (vcpu->arch_vcpu.vpid)
@@ -183,7 +183,7 @@ int start_vcpu(struct vcpu *vcpu)
 		/* See if VM launched successfully */
 		if (status == 0) {
 			if (is_vcpu_bsp(vcpu)) {
-				pr_info("VM %d VCPU %d successfully launched",
+				pr_info("VM %d VCPU %hu successfully launched",
 					vcpu->vm->attr.id, vcpu->vcpu_id);
 			}
 		}
@@ -263,7 +263,7 @@ void reset_vcpu(struct vcpu *vcpu)
 {
 	struct vlapic *vlapic;
 
-	pr_dbg("vcpu%d reset", vcpu->vcpu_id);
+	pr_dbg("vcpu%hu reset", vcpu->vcpu_id);
 	ASSERT(vcpu->state != VCPU_RUNNING,
 			"reset vcpu when it's running");
 
@@ -293,7 +293,7 @@ void pause_vcpu(struct vcpu *vcpu, enum vcpu_state new_state)
 {
 	uint16_t pcpu_id = get_cpu_id();
 
-	pr_dbg("vcpu%d paused, new state: %d",
+	pr_dbg("vcpu%hu paused, new state: %d",
 		vcpu->vcpu_id, new_state);
 
 	get_schedule_lock(vcpu->pcpu_id);
@@ -317,7 +317,7 @@ void pause_vcpu(struct vcpu *vcpu, enum vcpu_state new_state)
 
 void resume_vcpu(struct vcpu *vcpu)
 {
-	pr_dbg("vcpu%d resumed", vcpu->vcpu_id);
+	pr_dbg("vcpu%hu resumed", vcpu->vcpu_id);
 
 	get_schedule_lock(vcpu->pcpu_id);
 	vcpu->state = vcpu->prev_state;
@@ -332,7 +332,7 @@ void resume_vcpu(struct vcpu *vcpu)
 void schedule_vcpu(struct vcpu *vcpu)
 {
 	vcpu->state = VCPU_RUNNING;
-	pr_dbg("vcpu%d scheduled", vcpu->vcpu_id);
+	pr_dbg("vcpu%hu scheduled", vcpu->vcpu_id);
 
 	get_schedule_lock(vcpu->pcpu_id);
 	add_vcpu_to_runqueue(vcpu);

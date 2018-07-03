@@ -55,7 +55,7 @@ static void dump_guest_reg(struct vcpu *vcpu)
 	printf("\n\n================================================");
 	printf("================================\n\n");
 	printf("Guest Registers:\r\n");
-	printf("=	VM ID %d ==== vCPU ID %d ===  pCPU ID %d ===="
+	printf("=	VM ID %d ==== vCPU ID %hu ===  pCPU ID %d ===="
 			"world %d =============\r\n",
 			vcpu->vm->attr.id, vcpu->vcpu_id, vcpu->pcpu_id,
 			vcpu->arch_vcpu.cur_context);
@@ -112,7 +112,7 @@ static void dump_guest_stack(struct vcpu *vcpu)
 	}
 
 	printf("\r\nGuest Stack:\r\n");
-	printf("Dump stack for vcpu %d, from gva 0x%016llx\r\n",
+	printf("Dump stack for vcpu %hu, from gva 0x%016llx\r\n",
 			vcpu->vcpu_id, cur_context->rsp);
 	for (i = 0U; i < DUMP_STACK_SIZE/32U; i++) {
 		printf("guest_rsp(0x%llx):  0x%016llx  0x%016llx  "

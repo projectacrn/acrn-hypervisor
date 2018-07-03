@@ -104,12 +104,12 @@ static void vlapic_set_error(struct vlapic *vlapic, uint32_t mask);
 static int vlapic_timer_expired(void *data);
 
 static struct vlapic *
-vm_lapic_from_vcpu_id(struct vm *vm, int vcpu_id)
+vm_lapic_from_vcpu_id(struct vm *vm, uint16_t vcpu_id)
 {
 	struct vcpu *vcpu;
 
 	vcpu = vcpu_from_vid(vm, vcpu_id);
-	ASSERT(vcpu != NULL, "vm%d, vcpu%d", vm->attr.id, vcpu_id);
+	ASSERT(vcpu != NULL, "vm%d, vcpu%hu", vm->attr.id, vcpu_id);
 
 	return vcpu->arch_vcpu.vlapic;
 }
@@ -170,7 +170,7 @@ static inline uint32_t
 vlapic_build_id(struct vlapic *vlapic)
 {
 	struct vcpu *vcpu = vlapic->vcpu;
-	uint32_t id;
+	uint16_t id;
 
 	if (is_vm0(vcpu->vm)) {
 		/* Get APIC ID sequence format from cpu_storage */
@@ -1528,7 +1528,7 @@ void
 vlapic_init(struct vlapic *vlapic)
 {
 	ASSERT(vlapic->vm != NULL, "%s: vm is not initialized", __func__);
-	ASSERT(vlapic->vcpu->vcpu_id >= 0 &&
+	ASSERT(vlapic->vcpu->vcpu_id >= 0U &&
 		vlapic->vcpu->vcpu_id < phys_cpu_num,
 		"%s: vcpu_id is not initialized", __func__);
 	ASSERT(vlapic->apic_page != NULL,
@@ -1540,7 +1540,7 @@ vlapic_init(struct vlapic *vlapic)
 	 */
 	vlapic->msr_apicbase = DEFAULT_APIC_BASE | APICBASE_ENABLED;
 
-	if (vlapic->vcpu->vcpu_id == 0)
+	if (vlapic->vcpu->vcpu_id == 0U)
 		vlapic->msr_apicbase |= APICBASE_BSP;
 
 	vlapic_create_timer(vlapic);
@@ -1867,7 +1867,7 @@ vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval)
 	uint32_t offset;
 	struct vlapic *vlapic;
 
-	dev_dbg(ACRN_DBG_LAPIC, "cpu[%d] rdmsr: %x", vcpu->vcpu_id, msr);
+	dev_dbg(ACRN_DBG_LAPIC, "cpu[%hu] rdmsr: %x", vcpu->vcpu_id, msr);
 	vlapic = vcpu->arch_vcpu.vlapic;
 
 	switch (msr) {
@@ -1912,7 +1912,7 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val)
 		break;
 	}
 
-	dev_dbg(ACRN_DBG_LAPIC, "cpu[%d] wrmsr: %x val=%#x",
+	dev_dbg(ACRN_DBG_LAPIC, "cpu[%hu] wrmsr: %x val=%#x",
 		vcpu->vcpu_id, msr, val);
 	return error;
 }

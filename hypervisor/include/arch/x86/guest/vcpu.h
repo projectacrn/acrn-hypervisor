@@ -232,8 +232,8 @@ struct vcpu_arch {
 
 struct vm;
 struct vcpu {
-	int pcpu_id;	/* Physical CPU ID of this VCPU */
-	int vcpu_id;	/* virtual identifier for VCPU */
+	uint16_t pcpu_id;	/* Physical CPU ID of this VCPU */
+	uint16_t vcpu_id;	/* virtual identifier for VCPU */
 	struct vcpu_arch arch_vcpu;
 		/* Architecture specific definitions for this VCPU */
 	struct vm *vm;		/* Reference to the VM this VCPU belongs to */

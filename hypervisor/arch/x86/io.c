@@ -8,7 +8,7 @@
 
 int dm_emulate_pio_post(struct vcpu *vcpu)
 {
-	int cur = vcpu->vcpu_id;
+	uint16_t cur = vcpu->vcpu_id;
 	int cur_context = vcpu->arch_vcpu.cur_context;
 	union vhm_request_buffer *req_buf = NULL;
 	uint32_t mask =
