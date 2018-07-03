@@ -210,7 +210,7 @@
 #define     MMU_MEM_ATTR_TYPE_MASK \
 		(IA32E_PDPTE_PAT_BIT | IA32E_COMM_PCD_BIT | IA32E_COMM_PWT_BIT)
 
-#define ROUND_PAGE_UP(addr)  (((addr) + CPU_PAGE_SIZE - 1) & CPU_PAGE_MASK)
+#define ROUND_PAGE_UP(addr)  (((addr) + CPU_PAGE_SIZE - 1U) & CPU_PAGE_MASK)
 #define ROUND_PAGE_DOWN(addr) ((addr) & CPU_PAGE_MASK)
 
 enum _page_table_type {
@@ -329,12 +329,12 @@ struct e820_entry {
 #pragma pack()
 
 /* E820 memory types */
-#define E820_TYPE_RAM           1	/* EFI 1, 2, 3, 4, 5, 6, 7 */
-#define E820_TYPE_RESERVED      2
+#define E820_TYPE_RAM           1U	/* EFI 1, 2, 3, 4, 5, 6, 7 */
+#define E820_TYPE_RESERVED      2U
 /* EFI 0, 11, 12, 13 (everything not used elsewhere) */
-#define E820_TYPE_ACPI_RECLAIM  3	/* EFI 9 */
-#define E820_TYPE_ACPI_NVS      4	/* EFI 10 */
-#define E820_TYPE_UNUSABLE      5	/* EFI 8 */
+#define E820_TYPE_ACPI_RECLAIM  3U	/* EFI 9 */
+#define E820_TYPE_ACPI_NVS      4U	/* EFI 10 */
+#define E820_TYPE_UNUSABLE      5U	/* EFI 8 */
 
 /** Calculates the page table address for a given address.
  *

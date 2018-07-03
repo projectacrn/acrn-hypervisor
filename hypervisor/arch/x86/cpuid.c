@@ -9,12 +9,12 @@
 static inline struct vcpuid_entry *find_vcpuid_entry(struct vcpu *vcpu,
 					uint32_t leaf, uint32_t subleaf)
 {
-	int i = 0, nr, half;
+	uint32_t i = 0U, nr, half;
 	struct vcpuid_entry *entry = NULL;
 	struct vm *vm = vcpu->vm;
 
 	nr = vm->vcpuid_entry_nr;
-	half = nr / 2;
+	half = nr / 2U;
 	if (vm->vcpuid_entries[half].leaf < leaf)
 		i = half;
 
@@ -85,7 +85,7 @@ static void init_vcpuid_entry(__unused struct vm *vm,
 	entry->flags = flags;
 
 	switch (leaf) {
-	case 0x07:
+	case 0x07U:
 		if (subleaf == 0U) {
 			cpuid(leaf,
 				&entry->eax, &entry->ebx,
@@ -93,19 +93,19 @@ static void init_vcpuid_entry(__unused struct vm *vm,
 			/* mask invpcid */
 			entry->ebx &= ~CPUID_EBX_INVPCID;
 		} else {
-			entry->eax = 0;
-			entry->ebx = 0;
-			entry->ecx = 0;
-			entry->edx = 0;
+			entry->eax = 0U;
+			entry->ebx = 0U;
+			entry->ecx = 0U;
+			entry->edx = 0U;
 		}
 		break;
 
-	case 0x0a:
+	case 0x0aU:
 		/* not support pmu */
-		entry->eax = 0;
-		entry->ebx = 0;
-		entry->ecx = 0;
-		entry->edx = 0;
+		entry->eax = 0U;
+		entry->ebx = 0U;
+		entry->ecx = 0U;
+		entry->edx = 0U;
 		break;
 
 	/*
@@ -117,12 +117,12 @@ static void init_vcpuid_entry(__unused struct vm *vm,
 	 *	hypervisor.
 	 * EBX, ECX, EDX: Hypervisor vendor ID signature.
 	 */
-	case 0x40000000:
+	case 0x40000000U:
 	{
 		static const char sig[12] = "ACRNACRNACRN";
 		const uint32_t *sigptr = (const uint32_t *)sig;
 
-		entry->eax = 0x40000010;
+		entry->eax = 0x40000010U;
 		entry->ebx = sigptr[0];
 		entry->ecx = sigptr[1];
 		entry->edx = sigptr[2];
@@ -138,11 +138,11 @@ static void init_vcpuid_entry(__unused struct vm *vm,
 	 *      TSC frequency is calculated from PIT in ACRN
 	 * EBX, ECX, EDX: RESERVED (reserved fields are set to zero).
 	 */
-	case 0x40000010:
+	case 0x40000010U:
 		entry->eax = tsc_khz;
-		entry->ebx = 0;
-		entry->ecx = 0;
-		entry->edx = 0;
+		entry->ebx = 0U;
+		entry->ecx = 0U;
+		entry->edx = 0U;
 		break;
 
 	default:
@@ -166,13 +166,13 @@ int set_vcpuid_entries(struct vm *vm)
 		return result;
 	vm->vcpuid_level = limit = entry.eax;
 
-	for (i = 1; i <= limit; i++) {
+	for (i = 1U; i <= limit; i++) {
 		/* cpuid 1/0xb is percpu related */
-		if (i == 1 || i == 0xb)
+		if (i == 1U || i == 0xbU)
 			continue;
 
 		switch (i) {
-		case 0x02:
+		case 0x02U:
 		{
 			uint32_t times;
 
@@ -183,7 +183,7 @@ int set_vcpuid_entries(struct vm *vm)
 				return result;
 
 			times = entry.eax & 0xffUL;
-			for (j = 1; j < times; j++) {
+			for (j = 1U; j < times; j++) {
 				init_vcpuid_entry(vm, i, j,
 					CPUID_CHECK_SUBLEAF, &entry);
 				result = set_vcpuid_entry(vm, &entry);
@@ -193,17 +193,17 @@ int set_vcpuid_entries(struct vm *vm)
 			break;
 		}
 
-		case 0x04:
-		case 0x0d:
-			for (j = 0; ; j++) {
-				if (i == 0x0d && j == 64)
+		case 0x04U:
+		case 0x0dU:
+			for (j = 0U; ; j++) {
+				if (i == 0x0dU && j == 64U)
 					break;
 
 				init_vcpuid_entry(vm, i, j,
 					CPUID_CHECK_SUBLEAF, &entry);
-				if (i == 0x04 && entry.eax == 0)
+				if (i == 0x04U && entry.eax == 0U)
 					break;
-				if (i == 0x0d && entry.eax == 0)
+				if (i == 0x0dU && entry.eax == 0U)
 					continue;
 				result = set_vcpuid_entry(vm, &entry);
 				if (result != 0)
@@ -236,7 +236,7 @@ int set_vcpuid_entries(struct vm *vm)
 		return result;
 
 	vm->vcpuid_xlevel = limit = entry.eax;
-	for (i = 0x80000001; i <= limit; i++) {
+	for (i = 0x80000001U; i <= limit; i++) {
 		init_vcpuid_entry(vm, i, 0, 0, &entry);
 		result = set_vcpuid_entry(vm, &entry);
 		if (result != 0)
@@ -254,7 +254,7 @@ void guest_cpuid(struct vcpu *vcpu,
 	uint32_t subleaf = *ecx;
 
 	/* vm related */
-	if (leaf != 0x1 && leaf != 0xb && leaf != 0xd) {
+	if (leaf != 0x1U && leaf != 0xbU && leaf != 0xdU) {
 		struct vcpuid_entry *entry =
 			find_vcpuid_entry(vcpu, leaf, subleaf);
 
@@ -264,10 +264,10 @@ void guest_cpuid(struct vcpu *vcpu,
 			*ecx = entry->ecx;
 			*edx = entry->edx;
 		} else {
-			*eax = 0;
-			*ebx = 0;
-			*ecx = 0;
-			*edx = 0;
+			*eax = 0U;
+			*ebx = 0U;
+			*ecx = 0U;
+			*edx = 0U;
 		}
 
 		return;
@@ -275,7 +275,7 @@ void guest_cpuid(struct vcpu *vcpu,
 
 	/* percpu related */
 	switch (leaf) {
-	case 0x01:
+	case 0x01U:
 	{
 		cpuid(leaf, eax, ebx, ecx, edx);
 		uint32_t apicid = vlapic_get_id(vcpu->arch_vcpu.vlapic);
@@ -315,23 +315,23 @@ void guest_cpuid(struct vcpu *vcpu,
 		break;
 	}
 
-	case 0x0b:
+	case 0x0bU:
 		/* Patching X2APIC */
 		if (!x2apic_enabled) {
-			*eax = 0;
-			*ebx = 0;
-			*ecx = 0;
-			*edx = 0;
+			*eax = 0U;
+			*ebx = 0U;
+			*ecx = 0U;
+			*edx = 0U;
 		} else
 			cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
 		break;
 
-	case 0x0d:
+	case 0x0dU:
 		if (!cpu_has_cap(X86_FEATURE_OSXSAVE)) {
-			*eax = 0;
-			*ebx = 0;
-			*ecx = 0;
-			*edx = 0;
+			*eax = 0U;
+			*ebx = 0U;
+			*ecx = 0U;
+			*edx = 0U;
 		} else
 			cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
 		break;

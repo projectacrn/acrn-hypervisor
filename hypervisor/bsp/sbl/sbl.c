@@ -26,10 +26,10 @@ static struct dmar_dev_scope default_drhd_unit_dev_scope0[] = {
 
 static struct dmar_drhd drhd_info_array[] = {
 	{
-		.dev_cnt = 1,
-		.segment = 0,
-		.flags = 0,
-		.reg_base_addr = 0xFED64000,
+		.dev_cnt = 1U,
+		.segment = 0U,
+		.flags = 0U,
+		.reg_base_addr = 0xFED64000UL,
 		/* Ignore the iommu for intel graphic device since GVT-g needs
 		 * vtd disabled for gpu
 		 */
@@ -40,10 +40,10 @@ static struct dmar_drhd drhd_info_array[] = {
 		/* No need to specify devices since
 		 * DRHD_FLAG_INCLUDE_PCI_ALL_MASK set
 		 */
-		.dev_cnt = 0,
-		.segment = 0,
+		.dev_cnt = 0U,
+		.segment = 0U,
 		.flags = DRHD_FLAG_INCLUDE_PCI_ALL_MASK,
-		.reg_base_addr = 0xFED65000,
+		.reg_base_addr = 0xFED65000UL,
 		.ignore = false,
 		.devices = NULL,
 	},

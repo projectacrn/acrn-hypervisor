@@ -136,7 +136,7 @@ lookup_entry_by_vintx(struct vm *vm, uint8_t vpin,
 static void
 ptdev_update_irq_handler(struct vm *vm, struct ptdev_remapping_info *entry)
 {
-	int phys_irq = dev_to_irq(entry->node);
+	uint32_t phys_irq = dev_to_irq(entry->node);
 
 	if (entry->type == PTDEV_INTR_MSI) {
 		/* all other MSI and normal maskable */
@@ -177,7 +177,7 @@ ptdev_update_irq_handler(struct vm *vm, struct ptdev_remapping_info *entry)
 static bool ptdev_hv_owned_intx(struct vm *vm, struct ptdev_intx_info *info)
 {
 	/* vm0 pin 4 (uart) is owned by hypervisor under debug version */
-	if (is_vm0(vm) && (vm->vuart != NULL) && info->virt_pin == 4)
+	if (is_vm0(vm) && (vm->vuart != NULL) && info->virt_pin == 4U)
 		return true;
 	else
 		return false;
@@ -224,7 +224,7 @@ static uint64_t ptdev_build_physical_rte(struct vm *vm,
 {
 	uint64_t rte;
 	int phys_irq = dev_to_irq(entry->node);
-	int vector = dev_to_vector(entry->node);
+	uint32_t vector = dev_to_vector(entry->node);
 
 	if (entry->ptdev_intr_info.intx.vpin_src == PTDEV_VPIN_IOAPIC) {
 		uint64_t vdmask, pdmask;
@@ -413,7 +413,7 @@ add_intx_remapping(struct vm *vm, uint8_t virt_pin,
 /* deactive & remove mapping entry of vpin for vm */
 static void remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin)
 {
-	int phys_irq;
+	uint32_t phys_irq;
 	struct ptdev_remapping_info *entry;
 	enum ptdev_vpin_source vpin_src =
 		pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
@@ -537,7 +537,7 @@ void ptdev_softirq(__unused uint16_t cpu_id)
 void ptdev_intx_ack(struct vm *vm, int virt_pin,
 		enum ptdev_vpin_source vpin_src)
 {
-	int phys_irq;
+	uint32_t phys_irq;
 	struct ptdev_remapping_info *entry;
 	int phys_pin;
 
@@ -612,7 +612,7 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 
 	/* handle destroy case */
 	if (is_entry_active(entry) && info->vmsi_data == 0) {
-		info->pmsi_data = 0;
+		info->pmsi_data = 0U;
 		ptdev_deactivate_entry(entry);
 		goto END;
 	}
@@ -663,7 +663,7 @@ static void activate_physical_ioapic(struct vm *vm,
 		struct ptdev_remapping_info *entry)
 {
 	uint64_t rte;
-	int phys_irq = dev_to_irq(entry->node);
+	uint32_t phys_irq = dev_to_irq(entry->node);
 
 	/* disable interrupt */
 	GSI_MASK_IRQ(phys_irq);
