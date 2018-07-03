@@ -190,12 +190,12 @@ static int encode_vmcs_seg_desc(int seg, uint32_t *base, uint32_t *lim,
 	case VM_REG_GUEST_IDTR:
 		*base = VMX_GUEST_IDTR_BASE;
 		*lim = VMX_GUEST_IDTR_LIMIT;
-		*acc = 0xffffffff;
+		*acc = 0xffffffffU;
 		break;
 	case VM_REG_GUEST_GDTR:
 		*base = VMX_GUEST_GDTR_BASE;
 		*lim = VMX_GUEST_GDTR_LIMIT;
-		*acc = 0xffffffff;
+		*acc = 0xffffffffU;
 		break;
 	default:
 		return -EINVAL;

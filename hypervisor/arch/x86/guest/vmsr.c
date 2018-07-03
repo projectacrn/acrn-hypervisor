@@ -31,10 +31,10 @@ static void enable_msr_interception(uint8_t *bitmap, uint32_t msr)
 	uint8_t *write_map;
 	uint8_t value;
 	/* low MSR */
-	if (msr < 0x1FFF) {
+	if (msr < 0x1FFFU) {
 		read_map = bitmap;
 		write_map = bitmap + 2048;
-	} else if ((msr >= 0xc0000000) && (msr <= 0xc0001fff)) {
+	} else if ((msr >= 0xc0000000U) && (msr <= 0xc0001fffU)) {
 		read_map = bitmap + 1024;
 		write_map = bitmap + 3072;
 	} else {
@@ -96,7 +96,7 @@ void init_msr_emulation(struct vcpu *vcpu)
 
 		msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
 
-		for (i = 0; i < msrs_count; i++)
+		for (i = 0U; i < msrs_count; i++)
 			enable_msr_interception(msr_bitmap, emulated_msrs[i]);
 
 		enable_msr_interception(msr_bitmap, MSR_IA32_PERF_CTL);
@@ -141,7 +141,7 @@ void init_msr_emulation(struct vcpu *vcpu)
 int rdmsr_vmexit_handler(struct vcpu *vcpu)
 {
 	uint32_t msr;
-	uint64_t v = 0;
+	uint64_t v = 0UL;
 	int cur_context = vcpu->arch_vcpu.cur_context;
 
 	/* Read the msr value */
@@ -233,7 +233,7 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 			pr_warn("rdmsr: %lx should not come here!", msr);
 		}
 		vcpu_inject_gp(vcpu, 0);
-		v = 0;
+		v = 0UL;
 		break;
 	}
 	}

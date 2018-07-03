@@ -63,7 +63,7 @@ static inline int set_vcpuid_entry(struct vm *vm,
 	size_t entry_size = sizeof(struct vcpuid_entry);
 
 	if (vm->vcpuid_entry_nr == MAX_VM_VCPUID_ENTRIES) {
-		pr_err("%s, vcpuid entry over MAX_VM_VCPUID_ENTRIES(%d)\n",
+		pr_err("%s, vcpuid entry over MAX_VM_VCPUID_ENTRIES(%u)\n",
 				__func__, MAX_VM_VCPUID_ENTRIES);
 		return -ENOMEM;
 	}

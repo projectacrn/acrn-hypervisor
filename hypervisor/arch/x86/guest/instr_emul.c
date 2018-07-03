@@ -83,133 +83,133 @@ static const struct vie_op two_byte_opcodes[256] = {
 
 static const struct vie_op one_byte_opcodes[256] = {
 	[0x0F] = {
-		.op_byte = 0x0F,
+		.op_byte = 0x0FU,
 		.op_type = VIE_OP_TYPE_TWO_BYTE
 	},
 	[0x2B] = {
-		.op_byte = 0x2B,
+		.op_byte = 0x2BU,
 		.op_type = VIE_OP_TYPE_SUB,
 	},
 	[0x39] = {
-		.op_byte = 0x39,
+		.op_byte = 0x39U,
 		.op_type = VIE_OP_TYPE_CMP,
 	},
 	[0x3B] = {
-		.op_byte = 0x3B,
+		.op_byte = 0x3BU,
 		.op_type = VIE_OP_TYPE_CMP,
 	},
 	[0x88] = {
-		.op_byte = 0x88,
+		.op_byte = 0x88U,
 		.op_type = VIE_OP_TYPE_MOV,
 	},
 	[0x89] = {
-		.op_byte = 0x89,
+		.op_byte = 0x89U,
 		.op_type = VIE_OP_TYPE_MOV,
 	},
 	[0x8A] = {
-		.op_byte = 0x8A,
+		.op_byte = 0x8AU,
 		.op_type = VIE_OP_TYPE_MOV,
 	},
 	[0x8B] = {
-		.op_byte = 0x8B,
+		.op_byte = 0x8BU,
 		.op_type = VIE_OP_TYPE_MOV,
 	},
 	[0xA1] = {
-		.op_byte = 0xA1,
+		.op_byte = 0xA1U,
 		.op_type = VIE_OP_TYPE_MOV,
 		.op_flags = VIE_OP_F_MOFFSET | VIE_OP_F_NO_MODRM,
 	},
 	[0xA3] = {
-		.op_byte = 0xA3,
+		.op_byte = 0xA3U,
 		.op_type = VIE_OP_TYPE_MOV,
 		.op_flags = VIE_OP_F_MOFFSET | VIE_OP_F_NO_MODRM,
 	},
 	[0xA4] = {
-		.op_byte = 0xA4,
+		.op_byte = 0xA4U,
 		.op_type = VIE_OP_TYPE_MOVS,
 		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_NO_GLA_VERIFICATION
 	},
 	[0xA5] = {
-		.op_byte = 0xA5,
+		.op_byte = 0xA5U,
 		.op_type = VIE_OP_TYPE_MOVS,
 		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_NO_GLA_VERIFICATION
 	},
 	[0xAA] = {
-		.op_byte = 0xAA,
+		.op_byte = 0xAAU,
 		.op_type = VIE_OP_TYPE_STOS,
 		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_NO_GLA_VERIFICATION
 	},
 	[0xAB] = {
-		.op_byte = 0xAB,
+		.op_byte = 0xABU,
 		.op_type = VIE_OP_TYPE_STOS,
 		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_NO_GLA_VERIFICATION
 	},
 	[0xC6] = {
 		/* XXX Group 11 extended opcode - not just MOV */
-		.op_byte = 0xC6,
+		.op_byte = 0xC6U,
 		.op_type = VIE_OP_TYPE_MOV,
 		.op_flags = VIE_OP_F_IMM8,
 	},
 	[0xC7] = {
-		.op_byte = 0xC7,
+		.op_byte = 0xC7U,
 		.op_type = VIE_OP_TYPE_MOV,
 		.op_flags = VIE_OP_F_IMM,
 	},
 	[0x23] = {
-		.op_byte = 0x23,
+		.op_byte = 0x23U,
 		.op_type = VIE_OP_TYPE_AND,
 	},
 	[0x80] = {
 		/* Group 1 extended opcode */
-		.op_byte = 0x80,
+		.op_byte = 0x80U,
 		.op_type = VIE_OP_TYPE_GROUP1,
 		.op_flags = VIE_OP_F_IMM8,
 	},
 	[0x81] = {
 		/* Group 1 extended opcode */
-		.op_byte = 0x81,
+		.op_byte = 0x81U,
 		.op_type = VIE_OP_TYPE_GROUP1,
 		.op_flags = VIE_OP_F_IMM,
 	},
 	[0x83] = {
 		/* Group 1 extended opcode */
-		.op_byte = 0x83,
+		.op_byte = 0x83U,
 		.op_type = VIE_OP_TYPE_GROUP1,
 		.op_flags = VIE_OP_F_IMM8,
 	},
 	[0x84] = {
-		.op_byte = 0x84,
+		.op_byte = 0x84U,
 		.op_type = VIE_OP_TYPE_TEST,
 	},
 	[0x85] = {
-		.op_byte = 0x85,
+		.op_byte = 0x85U,
 		.op_type = VIE_OP_TYPE_TEST,
 	},
 	[0x08] = {
-		.op_byte = 0x08,
+		.op_byte = 0x08U,
 		.op_type = VIE_OP_TYPE_OR,
 	},
 	[0x09] = {
-		.op_byte = 0x09,
+		.op_byte = 0x09U,
 		.op_type = VIE_OP_TYPE_OR,
 	},
 	[0x8F] = {
 		/* XXX Group 1A extended opcode - not just POP */
-		.op_byte = 0x8F,
+		.op_byte = 0x8FU,
 		.op_type = VIE_OP_TYPE_POP,
 	},
 	[0xFF] = {
 		/* XXX Group 5 extended opcode - not just PUSH */
-		.op_byte = 0xFF,
+		.op_byte = 0xFFU,
 		.op_type = VIE_OP_TYPE_PUSH,
 	}
 };
 
 /* struct vie.mod */
-#define	VIE_MOD_INDIRECT		0
-#define	VIE_MOD_INDIRECT_DISP8		1
-#define	VIE_MOD_INDIRECT_DISP32		2
-#define	VIE_MOD_DIRECT			3
+#define	VIE_MOD_INDIRECT		0U
+#define	VIE_MOD_INDIRECT_DISP8		1U
+#define	VIE_MOD_INDIRECT_DISP32		2U
+#define	VIE_MOD_DIRECT			3U
 
 /* struct vie.rm */
 #define	VIE_RM_SIB			4
@@ -405,7 +405,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	size = vie->opsize;
 	error = -EINVAL;
 	switch (vie->op.op_byte) {
-	case 0x88:
+	case 0x88U:
 	/*
 	* MOV byte from reg (ModRM:reg) to mem (ModRM:r/m)
 	* 88/r:	mov r/m8, r8
@@ -417,7 +417,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 			error = memwrite(vcpu, gpa, byte, size,
 					arg);
 		break;
-	case 0x89:
+	case 0x89U:
 		/*
 		 * MOV from reg (ModRM:reg) to mem (ModRM:r/m)
 		 * 89/r:	mov r/m16, r16
@@ -433,7 +433,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 					arg);
 		}
 		break;
-	case 0x8A:
+	case 0x8AU:
 		/*
 		 * MOV byte from mem (ModRM:r/m) to reg (ModRM:reg)
 		 * 8A/r:	mov r8, r/m8
@@ -444,7 +444,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		if (error == 0)
 			error = vie_write_bytereg(vcpu, vie, val);
 		break;
-	case 0x8B:
+	case 0x8BU:
 		/*
 		 * MOV from mem (ModRM:r/m) to reg (ModRM:reg)
 		 * 8B/r:	mov r16, r/m16
@@ -458,7 +458,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 							val, size);
 		}
 		break;
-	case 0xA1:
+	case 0xA1U:
 		/*
 		 * MOV from seg:moffset to AX/EAX/RAX
 		 * A1:		mov AX, moffs16
@@ -472,7 +472,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 							val, size);
 		}
 		break;
-	case 0xA3:
+	case 0xA3U:
 		/*
 		 * MOV from AX/EAX/RAX to seg:moffset
 		 * A3:		mov moffs16, AX
@@ -487,7 +487,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 					arg);
 		}
 		break;
-	case 0xC6:
+	case 0xC6U:
 		/*
 		 * MOV from imm8 to mem (ModRM:r/m)
 		 * C6/0		mov r/m8, imm8
@@ -497,7 +497,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		error = memwrite(vcpu, gpa, vie->immediate, size,
 				arg);
 		break;
-	case 0xC7:
+	case 0xC7U:
 		/*
 		 * MOV from imm16/imm32 to mem (ModRM:r/m)
 		 * C7/0		mov r/m16, imm16
@@ -528,7 +528,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	error = -EINVAL;
 
 	switch (vie->op.op_byte) {
-	case 0xB6:
+	case 0xB6U:
 		/*
 		 * MOV and zero extend byte from mem (ModRM:r/m) to
 		 * reg (ModRM:reg).
@@ -552,7 +552,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		/* write the result */
 		error = vie_update_register(vcpu, reg, val, size);
 		break;
-	case 0xB7:
+	case 0xB7U:
 		/*
 		 * MOV and zero extend word from mem (ModRM:r/m) to
 		 * reg (ModRM:reg).
@@ -571,7 +571,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 
 		error = vie_update_register(vcpu, reg, val, size);
 		break;
-	case 0xBE:
+	case 0xBEU:
 		/*
 		 * MOV and sign extend byte from mem (ModRM:r/m) to
 		 * reg (ModRM:reg).
@@ -671,7 +671,7 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 	uint64_t rcx, rdi, rsi, rflags;
 	int error, fault, opsize, seg, repeat;
 
-	opsize = (vie->op.op_byte == 0xA4) ? 1 : vie->opsize;
+	opsize = (vie->op.op_byte == 0xA4U) ? 1 : vie->opsize;
 	error = 0;
 
 	/*
@@ -829,13 +829,13 @@ emulate_test(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	error = -EINVAL;
 
 	switch (vie->op.op_byte) {
-	case 0x84:
+	case 0x84U:
 		/*
 		 * 84/r		test r8, r/m8
 		 */
 		size = 1; /*override size for 8-bit operation*/
 		/* fallthrough */
-	case 0x85:
+	case 0x85U:
 		/*
 		 * AND reg (ModRM:reg) and mem (ModRM:r/m) and discard
 		 * the result.
@@ -897,7 +897,7 @@ emulate_and(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	error = -EINVAL;
 
 	switch (vie->op.op_byte) {
-	case 0x23:
+	case 0x23U:
 		/*
 		 * AND reg (ModRM:reg) and mem (ModRM:r/m) and store the
 		 * result in reg.
@@ -923,8 +923,8 @@ emulate_and(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		error = vie_update_register(vcpu, reg, result,
 						size);
 		break;
-	case 0x81:
-	case 0x83:
+	case 0x81U:
+	case 0x83U:
 		/*
 		 * AND mem (ModRM:r/m) with immediate and store the
 		 * result in mem.
@@ -987,8 +987,8 @@ emulate_or(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	error = -EINVAL;
 
 	switch (vie->op.op_byte) {
-	case 0x81:
-	case 0x83:
+	case 0x81U:
+	case 0x83U:
 		/*
 		 * OR mem (ModRM:r/m) with immediate and store the
 		 * result in mem.
@@ -1018,7 +1018,7 @@ emulate_or(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		result = val1 | vie->immediate;
 		error = memwrite(vcpu, gpa, result, size, arg);
 		break;
-	case 0x09:
+	case 0x09U:
 		/*
 		 * OR mem (ModRM:r/m) with reg (ModRM:reg) and store the
 		 * result in mem.
@@ -1078,8 +1078,8 @@ emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 
 	size = vie->opsize;
 	switch (vie->op.op_byte) {
-	case 0x39:
-	case 0x3B:
+	case 0x39U:
+	case 0x3BU:
 		/*
 		 * 39/r		CMP r/m16, r16
 		 * 39/r		CMP r/m32, r32
@@ -1115,9 +1115,9 @@ emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		}
 		rflags2 = getcc(size, op1, op2);
 		break;
-	case 0x80:
-	case 0x81:
-	case 0x83:
+	case 0x80U:
+	case 0x81U:
+	case 0x83U:
 		/*
 		 * 80 /7		cmp r/m8, imm8
 		 * REX + 80 /7		cmp r/m8, imm8
@@ -1177,7 +1177,7 @@ emulate_sub(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	error = -EINVAL;
 
 	switch (vie->op.op_byte) {
-	case 0x2B:
+	case 0x2BU:
 		/*
 		 * SUB r/m from r and store the result in r
 		 *
@@ -1230,11 +1230,11 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 	struct seg_desc ss_desc;
 	uint64_t cr0, rflags, rsp, stack_gla, stack_gpa, val;
 	int error, size, stackaddrsize, pushop;
-	uint32_t err_code = 0;
+	uint32_t err_code = 0U;
 
 	memset(&ss_desc, 0, sizeof(ss_desc));
 
-	val = 0;
+	val = 0UL;
 	size = vie->opsize;
 	pushop = (vie->op.op_type == VIE_OP_TYPE_PUSH) ? 1 : 0;
 
@@ -1654,7 +1654,7 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum vm_reg_name seg,
 	 */
 	if (cpu_mode == CPU_MODE_64BIT && seg != VM_REG_GUEST_FS &&
 	    seg != VM_REG_GUEST_GS) {
-		segbase = 0;
+		segbase = 0UL;
 	} else {
 		segbase = desc->base;
 	}
@@ -1728,22 +1728,22 @@ segment_override(uint8_t x, int *seg)
 {
 
 	switch (x) {
-	case 0x2E:
+	case 0x2EU:
 		*seg = VM_REG_GUEST_CS;
 		break;
-	case 0x36:
+	case 0x36U:
 		*seg = VM_REG_GUEST_SS;
 		break;
-	case 0x3E:
+	case 0x3EU:
 		*seg = VM_REG_GUEST_DS;
 		break;
-	case 0x26:
+	case 0x26U:
 		*seg = VM_REG_GUEST_ES;
 		break;
-	case 0x64:
+	case 0x64U:
 		*seg = VM_REG_GUEST_FS;
 		break;
-	case 0x65:
+	case 0x65U:
 		*seg = VM_REG_GUEST_GS;
 		break;
 	default:
@@ -1761,16 +1761,16 @@ decode_prefixes(struct vie *vie, enum vm_cpu_mode cpu_mode, int cs_d)
 		if (vie_peek(vie, &x) != 0)
 			return -1;
 
-		if (x == 0x66)
-			vie->opsize_override = 1;
-		else if (x == 0x67)
-			vie->addrsize_override = 1;
-		else if (x == 0xF3)
-			vie->repz_present = 1;
-		else if (x == 0xF2)
-			vie->repnz_present = 1;
+		if (x == 0x66U)
+			vie->opsize_override = 1U;
+		else if (x == 0x67U)
+			vie->addrsize_override = 1U;
+		else if (x == 0xF3U)
+			vie->repz_present = 1U;
+		else if (x == 0xF2U)
+			vie->repnz_present = 1U;
 		else if (segment_override(x, &vie->segment_register))
-			vie->segment_override = 1;
+			vie->segment_override = 1U;
 		else
 			break;
 
@@ -2099,7 +2099,7 @@ decode_immediate(struct vie *vie)
 static int
 decode_moffset(struct vie *vie)
 {
-	int i, n;
+	int32_t i, n;
 	uint8_t x;
 	union {
 		char	buf[8];
@@ -2116,7 +2116,7 @@ decode_moffset(struct vie *vie)
 	n = vie->addrsize;
 	ASSERT(n == 2 || n == 4 || n == 8, "invalid moffset bytes: %d", n);
 
-	u.u64 = 0;
+	u.u64 = 0UL;
 	for (i = 0; i < n; i++) {
 		if (vie_peek(vie, &x) != 0)
 			return -1;

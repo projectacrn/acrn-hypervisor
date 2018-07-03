@@ -18,8 +18,8 @@ struct list_head vm_list = {
 
 /* Lock for VMs list */
 spinlock_t vm_list_lock = {
-	.head = 0,
-	.tail = 0
+	.head = 0U,
+	.tail = 0U
 };
 
 /* used for vmid allocation. And this means the max vm number is 64 */
@@ -62,7 +62,7 @@ struct vm *get_vm_from_vmid(int vm_id)
 
 int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 {
-	unsigned int id;
+	uint32_t id;
 	struct vm *vm;
 	int status;
 
@@ -98,15 +98,15 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		goto err1;
 	}
 
-	for (id = 0; id < sizeof(long) * 8; id++)
-		if (bitmap_test_and_set(id, &vmid_bitmap) == 0)
+	for (id = 0U; id < (size_t)(sizeof(long) * 8U); id++)
+		if (!bitmap_test_and_set(id, &vmid_bitmap))
 			break;
 	vm->attr.id = vm->attr.boot_idx = id;
 
 	atomic_store(&vm->hw.created_vcpus, 0);
 
 	/* gpa_lowtop are used for system start up */
-	vm->hw.gpa_lowtop = 0;
+	vm->hw.gpa_lowtop = 0UL;
 	/* Only for SOS: Configure VM software information */
 	/* For UOS: This VM software information is configure in DM */
 	if (is_vm0(vm)) {
@@ -309,7 +309,8 @@ void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec)
 /* Create vm/vcpu for vm0 */
 int prepare_vm0(void)
 {
-	int i, ret;
+	int ret;
+	uint16_t i;
 	struct vm *vm = NULL;
 	struct vm_description *vm_desc = &vm0_desc;
 
@@ -318,7 +319,7 @@ int prepare_vm0(void)
 		return ret;
 
 	/* Allocate all cpus to vm0 at the beginning */
-	for (i = 0; i < phys_cpu_num; i++)
+	for (i = 0U; i < phys_cpu_num; i++)
 		prepare_vcpu(vm, i);
 
 	/* start vm0 BSP automatically */
