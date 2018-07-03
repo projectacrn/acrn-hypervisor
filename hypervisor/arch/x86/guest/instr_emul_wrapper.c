@@ -10,18 +10,19 @@
 #include "instr_emul.h"
 
 static int
-encode_vmcs_seg_desc(int seg, uint32_t *base, uint32_t *lim, uint32_t *acc);
+encode_vmcs_seg_desc(enum vm_reg_name seg,
+		uint32_t *base, uint32_t *lim, uint32_t *acc);
 
 static int32_t
-get_vmcs_field(int ident);
+get_vmcs_field(enum vm_reg_name ident);
 
 static bool
-is_segment_register(int reg);
+is_segment_register(enum vm_reg_name reg);
 
 static bool
-is_descriptor_table(int reg);
+is_descriptor_table(enum vm_reg_name reg);
 
-int vm_get_register(struct vcpu *vcpu, int reg, uint64_t *retval)
+int vm_get_register(struct vcpu *vcpu, enum vm_reg_name reg, uint64_t *retval)
 {
 	struct run_context *cur_context;
 
@@ -46,7 +47,7 @@ int vm_get_register(struct vcpu *vcpu, int reg, uint64_t *retval)
 	return 0;
 }
 
-int vm_set_register(struct vcpu *vcpu, int reg, uint64_t val)
+int vm_set_register(struct vcpu *vcpu, enum vm_reg_name reg, uint64_t val)
 {
 	struct run_context *cur_context;
 
@@ -71,7 +72,8 @@ int vm_set_register(struct vcpu *vcpu, int reg, uint64_t val)
 	return 0;
 }
 
-int vm_set_seg_desc(struct vcpu *vcpu, int seg, struct seg_desc *ret_desc)
+int vm_set_seg_desc(struct vcpu *vcpu, enum vm_reg_name seg,
+		struct seg_desc *ret_desc)
 {
 	int error;
 	uint32_t base, limit, access;
@@ -93,7 +95,8 @@ int vm_set_seg_desc(struct vcpu *vcpu, int seg, struct seg_desc *ret_desc)
 	return 0;
 }
 
-int vm_get_seg_desc(struct vcpu *vcpu, int seg, struct seg_desc *desc)
+int vm_get_seg_desc(struct vcpu *vcpu, enum vm_reg_name seg,
+		struct seg_desc *desc)
 {
 	int error;
 	uint32_t base, limit, access;
@@ -115,7 +118,7 @@ int vm_get_seg_desc(struct vcpu *vcpu, int seg, struct seg_desc *desc)
 	return 0;
 }
 
-static bool is_descriptor_table(int reg)
+static bool is_descriptor_table(enum vm_reg_name reg)
 {
 	switch (reg) {
 	case VM_REG_GUEST_IDTR:
@@ -126,7 +129,7 @@ static bool is_descriptor_table(int reg)
 	}
 }
 
-static bool is_segment_register(int reg)
+static bool is_segment_register(enum vm_reg_name reg)
 {
 	switch (reg) {
 	case VM_REG_GUEST_ES:
@@ -143,8 +146,9 @@ static bool is_segment_register(int reg)
 	}
 }
 
-static int encode_vmcs_seg_desc(int seg, uint32_t *base, uint32_t *lim,
-		uint32_t *acc)
+static int
+encode_vmcs_seg_desc(enum vm_reg_name seg,
+		uint32_t *base, uint32_t *lim, uint32_t *acc)
 {
 	switch (seg) {
 	case VM_REG_GUEST_ES:
@@ -204,7 +208,7 @@ static int encode_vmcs_seg_desc(int seg, uint32_t *base, uint32_t *lim,
 	return 0;
 }
 
-static int32_t get_vmcs_field(int ident)
+static int32_t get_vmcs_field(enum vm_reg_name ident)
 {
 	switch (ident) {
 	case VM_REG_GUEST_CR0:
