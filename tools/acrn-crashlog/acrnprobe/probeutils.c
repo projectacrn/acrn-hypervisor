@@ -38,14 +38,21 @@
 #define STATS_CURRENT_LOG       "currentstatslog"
 #define VM_CURRENT_LOG		"currentvmlog"
 
+#define BOOTID_NODE		"/proc/sys/kernel/random/boot_id"
+#define BOOTID_LOG		"currentbootid"
+
 unsigned long long get_uptime(void)
 {
-	 static long long time_ns = -1;
-	 struct timespec ts;
+	long long time_ns;
+	struct timespec ts;
+	int res;
 
-	 clock_gettime(CLOCK_BOOTTIME, &ts);
-	 time_ns = (long long)ts.tv_sec * 1000000000LL +
-		   (long long)ts.tv_nsec;
+	res = clock_gettime(CLOCK_BOOTTIME, &ts);
+	if (res == -1)
+		return res;
+
+	time_ns = (long long)ts.tv_sec * 1000000000LL +
+		  (long long)ts.tv_nsec;
 
 	return time_ns;
 }
@@ -56,6 +63,8 @@ int get_uptime_string(char *newuptime, int *hours)
 	int seconds, minutes;
 
 	tm = get_uptime();
+	if (tm == -1)
+		return -1;
 
 	/* seconds */
 	*hours = (int)(tm / 1000000000LL);
@@ -443,4 +452,42 @@ char *generate_log_dir(enum e_dir_mode mode, char *hashkey)
 	}
 
 	return strdup(path);
+}
+
+int is_boot_id_changed(void)
+{
+	void *boot_id;
+	void *logged_boot_id;
+	char logged_boot_id_path[PATH_MAX];
+	unsigned long size;
+	struct sender_t *crashlog;
+	int res;
+	int result = 1; /* returns changed by default */
+
+	crashlog = get_sender_by_name("crashlog");
+	if (!crashlog)
+		return result;
+
+	res = read_file(BOOTID_NODE, &size, &boot_id);
+	if (res == -1)
+		return result;
+
+	snprintf(logged_boot_id_path, sizeof(logged_boot_id_path), "%s/%s",
+		 crashlog->outdir, BOOTID_LOG);
+	if (file_exists(logged_boot_id_path)) {
+		res = read_file(logged_boot_id_path, &size, &logged_boot_id);
+		if (res == -1)
+			goto out;
+
+		if (!strcmp((char *)logged_boot_id, (char *)boot_id))
+			result = 0;
+
+		free(logged_boot_id);
+	}
+
+	if (result)
+		overwrite_file(logged_boot_id_path, boot_id);
+out:
+	free(boot_id);
+	return result;
 }

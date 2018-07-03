@@ -20,6 +20,8 @@
 #include "fsutils.h"
 #include "strutils.h"
 #include "channels.h"
+#include "startupreason.h"
+#include "probeutils.h"
 #include "log_sys.h"
 
 #define POLLING_TIMER_SIG 0xCEAC
@@ -105,10 +107,12 @@ static void channel_oneshot(struct channel_t *cnl)
 
 	LOGD("initializing channel %s ...\n", cname);
 
+	if (!is_boot_id_changed())
+		return;
+
 	e = create_event(REBOOT, cname, NULL, 0, NULL);
 	if (e)
 		event_enqueue(e);
-
 
 	for_each_crash(id, crash, conf) {
 		if (!crash || !is_root_crash(crash))
@@ -117,13 +121,26 @@ static void channel_oneshot(struct channel_t *cnl)
 		if (strcmp(crash->channel, cname))
 			continue;
 
-		if (crash->trigger &&
-		    !strcmp("file", crash->trigger->type) &&
-		    file_exists(crash->trigger->path)) {
-			e = create_event(CRASH, cname, (void *)crash,
-					 0, crash->trigger->path);
-			if (e)
-				event_enqueue(e);
+		if (!crash->trigger)
+			continue;
+
+		if (!strcmp("file", crash->trigger->type)) {
+			if (file_exists(crash->trigger->path)) {
+				e = create_event(CRASH, cname, (void *)crash,
+						 0, crash->trigger->path);
+				if (e)
+					event_enqueue(e);
+			}
+		} else if (!strcmp("rebootreason", crash->trigger->type)) {
+			char rreason[REBOOT_REASON_SIZE];
+
+			read_startupreason(rreason, sizeof(rreason));
+			if (!strcmp(rreason, crash->content[0])) {
+				e = create_event(CRASH, cname, (void *)crash,
+						 0, crash->trigger->path);
+				if (e)
+					event_enqueue(e);
+			}
 		}
 	}
 

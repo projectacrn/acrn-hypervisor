@@ -2,6 +2,7 @@
 Description=ACRN crashlog probe
 Requires=telemd.socket
 Requires=usercrash_s
+After=acrnlog.service
 After=usercrash.service
 After=prepare.service
 
