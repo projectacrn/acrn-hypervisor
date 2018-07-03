@@ -774,7 +774,7 @@ vlapic_process_eoi(struct vlapic *vlapic)
 	tmrptr = &lapic->tmr[0];
 
 	for (i = 7; i >= 0; i--) {
-		bitpos = fls(isrptr[i].val);
+		bitpos = fls32(isrptr[i].val);
 		if (bitpos != INVALID_BIT_INDEX) {
 			if (vlapic->isrvec_stk_top <= 0) {
 				panic("invalid vlapic isrvec_stk_top %d",
@@ -1145,7 +1145,7 @@ vlapic_pending_intr(struct vlapic *vlapic, uint32_t *vecptr)
 
 	for (i = 7; i >= 0; i--) {
 		val = atomic_load((int *)&irrptr[i].val);
-		bitpos = fls(val);
+		bitpos = fls32(val);
 		if (bitpos != INVALID_BIT_INDEX) {
 			vector = (uint32_t)(i * 32) + (uint32_t)bitpos;
 			if (PRIO(vector) > PRIO(lapic->ppr)) {
