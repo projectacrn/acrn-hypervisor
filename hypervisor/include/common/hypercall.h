@@ -334,11 +334,12 @@ int64_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param);
 /**
  * @brief Switch vCPU state between Normal/Secure World.
  *
- * * Hypervisor uses the Secure Monitor Code (SMC) instruction to do
- *   the world switch
- * * The hypervisor needs to save current world vCPU contexts, and load
- *   the next world vCPU contexts
- * * Updates ``rdi``, ``rsi``, ``rdx``, ``rbx`` to next world vCPU contexts
+ * * The hypervisor uses this hypercall to do the world switch
+ * * The hypervisor needs to:
+ *   * save current world vCPU contexts, and load the next world
+ *     vCPU contexts
+ *   * update ``rdi``, ``rsi``, ``rdx``, ``rbx`` to next world
+ *     vCPU contexts
  *
  * @param vcpu Pointer to VCPU data structure
  *
