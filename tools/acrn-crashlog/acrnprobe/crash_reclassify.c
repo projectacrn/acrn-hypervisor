@@ -27,7 +27,7 @@
  *
  * @return 1 if find the same string, or 0 if not.
  */
-static int has_content(char *file, char *content)
+static int has_content(const char *file, const char *content)
 {
 	if (content && strstr(file, content))
 		return 1;
@@ -44,12 +44,12 @@ static int has_content(char *file, char *content)
  *
  * @return 1 if all configured strings were found, or 0 if not.
  */
-static int crash_has_all_contents(struct crash_t *crash,
-				char *file)
+static int crash_has_all_contents(const struct crash_t *crash,
+				const char *file)
 {
 	int id;
 	int ret = 1;
-	char *content;
+	const char *content;
 
 	for_each_content_crash(id, content, crash) {
 		if (!content)
@@ -78,14 +78,14 @@ static int crash_has_all_contents(struct crash_t *crash,
  *
  * @return 1 if result is true, or 0 if false.
  */
-static int crash_has_mightcontents(struct crash_t *crash,
-				char *file)
+static int crash_has_mightcontents(const struct crash_t *crash,
+				const char *file)
 {
 	int ret = 1;
 	int ret_exp;
 	int expid, cntid;
-	char **exp;
-	char *content;
+	char * const *exp;
+	const char *content;
 
 	for_each_expression_crash(expid, exp, crash) {
 		if (!exp || !exp_valid(exp))
@@ -119,13 +119,14 @@ static int crash_has_mightcontents(struct crash_t *crash,
  *
  * @return 1 if file matches these strings configured in crash, or 0 if not.
  */
-static int crash_reclassify(struct crash_t *crash, char *file)
+static int crash_match_content(const struct crash_t *crash, const char *file)
 {
 	return crash_has_all_contents(crash, file) &&
 		crash_has_mightcontents(crash, file);
 }
 
-static int _get_data(char *file, struct crash_t *crash, char **data, int index)
+static int _get_data(const char *file, const struct crash_t *crash,
+			char **data, const int index)
 {
 	char *search_key;
 	char *value;
@@ -172,7 +173,7 @@ static int _get_data(char *file, struct crash_t *crash, char **data, int index)
  *
  * @return 0 if successful, or errno if not.
  */
-static int get_data(char *file, struct crash_t *crash,
+static int get_data(const char *file, const struct crash_t *crash,
 			char **data0, char **data1, char **data2)
 {
 	int res;
@@ -201,6 +202,62 @@ fail:
 	return res;
 }
 
+static struct crash_t *crash_find_matched_child(const struct crash_t *crash,
+						const char *rtrfmt)
+{
+	struct crash_t *child;
+	struct crash_t *matched_child = NULL;
+	int i;
+	int count;
+	int res;
+	const char *trfile_fmt;
+	char **trfiles;
+	void *content;
+	unsigned long size;
+
+	if (!crash)
+		return NULL;
+
+	for_crash_children(child, crash) {
+		if (!child->trigger)
+			continue;
+
+		if (!strcmp(child->trigger->type, "dir"))
+			trfile_fmt = rtrfmt;
+		else
+			trfile_fmt = child->trigger->path;
+
+		count = config_fmt_to_files(trfile_fmt, &trfiles);
+		if (count <= 0)
+			continue;
+
+		for (i = 0; i < count; i++) {
+			res = read_file(trfiles[i], &size, &content);
+			if (res == -1) {
+				LOGE("read %s failed, error (%s)\n",
+				     trfiles[i], strerror(errno));
+				continue;
+			}
+			if (crash_match_content(child, content)) {
+				free(content);
+				matched_child = child;
+				break;
+			}
+			free(content);
+		}
+
+		for (i = 0; i < count; i++)
+			free(trfiles[i]);
+		free(trfiles);
+
+		if (matched_child)
+			break;
+	}
+
+	/* It returns the first matched crash */
+	return matched_child;
+}
+
 /**
  * Judge the crash type. We only got a root crash from channel, sometimes,
  * we need to calculate a more specific type.
@@ -208,7 +265,7 @@ fail:
  * This function couldn't use for binary file.
  *
  * @param rcrash Root crash obtained from channel.
- * @param trfile Path of trigger file.
+ * @param rtrfile_fmt Path fmt of trigger file of root crash.
  * @param[out] data0 Searched result, according to 'data0' configuread in crash.
  * @param[out] data1 Searched result, according to 'data1' configuread in crash.
  * @param[out] data2 Searched result, according to 'data2' configuread in crash.
@@ -216,64 +273,64 @@ fail:
  * @return a pointer to the calculated crash structure if successful,
  *	   or NULL if not.
  */
-static struct crash_t *crash_reclassify_by_content(struct crash_t *rcrash,
-						char *trfile, char **data0,
-						char **data1, char **data2)
+static struct crash_t *crash_reclassify_by_content(const struct crash_t *rcrash,
+					const char *rtrfile_fmt, char **data0,
+					char **data1, char **data2)
 {
-	int depth;
-	int level;
-	int ret;
-	struct crash_t *crash;
-	struct crash_t *ret_crash = NULL;
-	void *file;
+	int count;
+	const struct crash_t *crash;
+	const struct crash_t *ret_crash = rcrash;
+	const char *trfile_fmt;
+	char **trfiles;
+	void *content;
 	unsigned long size;
-	int id;
+	int res;
+	int i;
 
 	if (!rcrash)
 		return NULL;
 
-	if (trfile) {
-		ret = read_file(trfile, &size, &file);
-		if (ret == -1) {
-			LOGE("read %s failed, error (%s)\n",
-			     trfile, strerror(errno));
-			return NULL;
-		}
-	} else
-		return rcrash;
+	crash = rcrash;
 
-	/* traverse every crash from leaf, return the first crash we find
-	 * consider that we have few CRASH TYPE, so just using this simple
-	 * implementation.
-	 */
-	depth = crash_depth(rcrash);
-	for (level = depth; level >= 0; level--) {
-		for_each_crash(id, crash, conf) {
-			if (!crash ||
-			    crash->trigger != rcrash->trigger ||
-			    crash->channel != rcrash->channel ||
-			    crash->level != level)
-				continue;
+	while (1) {
+		crash = crash_find_matched_child(crash, rtrfile_fmt);
+		if (!crash)
+			break;
 
-			if (crash_reclassify(crash, file)) {
-				ret = get_data(file, crash, data0, data1,
-					       data2);
-				if (ret < 0) {
-					LOGE("get data error, error (%s)\n",
-					     strerror(-ret));
-					goto fail_data;
-				} else {
-					ret_crash = crash;
-					goto fail_data;
-				}
-			}
-		}
+		ret_crash = crash;
 	}
 
-fail_data:
-	free(file);
+	if (!strcmp(ret_crash->trigger->type, "dir"))
+		trfile_fmt = rtrfile_fmt;
+	else
+		trfile_fmt = ret_crash->trigger->path;
 
-	return ret_crash;
+	count = config_fmt_to_files(trfile_fmt, &trfiles);
+	if (count <= 0)
+		return (struct crash_t *)ret_crash;
+
+	/* get data from last file */
+	res = read_file(trfiles[count - 1], &size, &content);
+	if (res == -1) {
+		LOGE("read %s failed, error (%s)\n",
+		     trfiles[count - 1], strerror(errno));
+		goto free_files;
+	}
+
+	res = get_data(content, ret_crash, data0, data1, data2);
+	if (res < 0) {
+		LOGE("get data error, error (%s)\n",
+		     strerror(res));
+	}
+
+	free(content);
+
+free_files:
+	for (i = 0; i < count; i++)
+		free(trfiles[i]);
+	free(trfiles);
+
+	return (struct crash_t *)ret_crash;
 }
 
 /**
@@ -286,7 +343,7 @@ void init_crash_reclassify(void)
 	struct crash_t *crash;
 
 	for_each_crash(id, crash, conf) {
-		if (!crash || !is_root_crash(crash))
+		if (!crash)
 			continue;
 
 		crash->reclassify = crash_reclassify_by_content;

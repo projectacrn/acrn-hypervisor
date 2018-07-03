@@ -118,7 +118,7 @@ void hist_raise_event(char *event, char *type, char *log, char *lastuptime,
 		char *key)
 {
 	char line[MAXLINESIZE];
-	char eventtime[32];
+	char eventtime[LONG_TIME_SIZE];
 	struct sender_t *crashlog;
 	int maxlines;
 	int ret;
@@ -158,7 +158,7 @@ void hist_raise_event(char *event, char *type, char *log, char *lastuptime,
 
 void hist_raise_uptime(char *lastuptime)
 {
-	char boot_time[24];
+	char boot_time[UPTIME_SIZE];
 	char firstline[MAXLINESIZE];
 	int hours;
 	int ret;

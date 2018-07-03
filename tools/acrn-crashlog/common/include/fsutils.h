@@ -75,7 +75,7 @@ int mkdir_p(char *path);
 int mm_count_lines(struct mm_file_t *mfile);
 struct mm_file_t *mmap_file(const char *path);
 void unmap_file(struct mm_file_t *mfile);
-int do_copy_tail(char *src, char *dest, int limit);
+int do_copy_tail(const char *src, const char *dest, int limit);
 int do_mv(char *src, char *dest);
 int append_file(char *filename, char *text);
 int mm_replace_str_line(struct mm_file_t *mfile, char *replace,
@@ -97,10 +97,20 @@ int file_read_key_value(const char *path, const char *key,
 			const size_t limit, char *value);
 int file_read_key_value_r(const char *path, const char *key,
 			const size_t limit, char *value);
-int dir_contains(const char *dir, const char *filename, int exact,
-		char *fullname);
+int ac_scandir(const char *dirp, struct dirent ***namelist,
+		int (*filter)(const struct dirent *, const void *),
+		const void *farg,
+		int (*compar)(const struct dirent **,
+				const struct dirent **));
+int filter_filename_substr(const struct dirent *entry, const void *arg);
+int filter_filename_exactly(const struct dirent *entry, const void *arg);
+int filter_filename_startswith(const struct dirent *entry,
+					const void *arg);
+int dir_contains(const char *dir, const char *filename, int exact);
 int lsdir(const char *dir, char *fullname[], int limit);
 int find_file(char *dir, char *target_file, int depth, char *path[], int limit);
 int read_file(const char *path, unsigned long *size, void **data);
+int is_ac_filefmt(const char *file_fmt);
+int config_fmt_to_files(const char *file_fmt, char ***out);
 
 #endif

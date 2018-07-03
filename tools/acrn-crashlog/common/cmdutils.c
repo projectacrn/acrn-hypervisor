@@ -35,7 +35,7 @@
  *	   If all system calls succeed, then the return value is the
  *	   termination status of the child process used to execute command.
  */
-int execv_out2file(char *argv[], char *outfile)
+int execv_out2file(char * const argv[], const char *outfile)
 {
 	pid_t pid;
 
@@ -103,13 +103,13 @@ int execv_out2file(char *argv[], char *outfile)
 	return -1;
 }
 
-int debugfs_cmd(char *loop_dev, char *cmd, char *outfile)
+int debugfs_cmd(const char *loop_dev, const char *cmd, const char *outfile)
 {
-	char *argv[5] = {"debugfs", "-R", NULL, NULL, 0};
+	const char *argv[5] = {"debugfs", "-R", NULL, NULL, 0};
 
 	argv[2] = cmd;
 	argv[3] = loop_dev;
-	return  execv_out2file(argv, outfile);
+	return  execv_out2file((char * const *)argv, outfile);
 }
 
 /**
@@ -128,7 +128,7 @@ int debugfs_cmd(char *loop_dev, char *cmd, char *outfile)
  *	   If all system calls succeed, then the return value is the
  *	   termination status of the child process used to execute command.
  */
-int exec_out2file(char *outfile, char *fmt, ...)
+int exec_out2file(const char *outfile, const char *fmt, ...)
 {
 	va_list args;
 	char *cmd;
@@ -184,7 +184,7 @@ int exec_out2file(char *outfile, char *fmt, ...)
  *
  * @return a pointer to command's output if successful, or NULL if not.
  */
-char *exec_out2mem(char *fmt, ...)
+char *exec_out2mem(const char *fmt, ...)
 {
 	va_list args;
 	char *cmd;

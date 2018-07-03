@@ -65,8 +65,8 @@ struct crash_t {
 
 	int wd;
 	int level;
-	struct crash_t *(*reclassify)(struct crash_t *, char*, char**, char**,
-				char**);
+	struct crash_t *(*reclassify)(const struct crash_t *, const char*,
+					char**, char**, char**);
 };
 
 struct info_t {

@@ -400,6 +400,7 @@ static void get_last_line_synced(const struct sender_t *sender)
 	int sid;
 	int ret;
 	struct vm_t *vm;
+	char *p;
 	char vmkey[ANDROID_WORD_LEN];
 	char vm_name[32];
 
@@ -438,6 +439,9 @@ static void get_last_line_synced(const struct sender_t *sender)
 			     strerror(errno));
 			continue;
 		}
+		p = strchr(vmkey, ' ');
+		if (p)
+			*p = 0;
 
 		ret = refresh_key_synced_stage1(sender, vm, vmkey, MM_ONLY);
 		if (ret < 0) {
