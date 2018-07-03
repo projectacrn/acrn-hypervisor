@@ -273,13 +273,13 @@ struct acrn_vm_pci_msix_remap {
  *
  */
 
-#define SPACE_SYSTEM_MEMORY     0
-#define SPACE_SYSTEM_IO         1
-#define SPACE_PCI_CONFIG        2
-#define SPACE_Embedded_Control  3
-#define SPACE_SMBUS             4
-#define SPACE_PLATFORM_COMM     10
-#define SPACE_FFixedHW          0x7F
+#define SPACE_SYSTEM_MEMORY     0U
+#define SPACE_SYSTEM_IO         1U
+#define SPACE_PCI_CONFIG        2U
+#define SPACE_Embedded_Control  3U
+#define SPACE_SMBUS             4U
+#define SPACE_PLATFORM_COMM     10U
+#define SPACE_FFixedHW          0x7FU
 
 struct acpi_generic_address {
 	uint8_t 	space_id;
