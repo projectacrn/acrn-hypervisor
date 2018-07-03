@@ -10,7 +10,7 @@
 struct shared_buf;
 
 /* Maximum serial devices supported by the platform. */
-#define SERIAL_MAX_DEVS                 1
+#define SERIAL_MAX_DEVS                 1U
 
 /* Maximum length of unique id of each UART port enabled in platform. */
 #define SERIAL_ID_MAX_LENGTH            8
@@ -144,7 +144,7 @@ struct tgt_uart {
 				const void *buffer, uint32_t *bytes_written);
 	bool (*tx_is_busy)(struct tgt_uart *tgt_uart);
 	bool (*rx_data_is_avail)(struct tgt_uart *tgt_uart, uint32_t *lsr_reg);
-	int (*get_rx_err)(uint32_t rx_data);
+	uint32_t (*get_rx_err)(uint32_t rx_data);
 };
 
 /* Control Block definition of light-weight serial driver */
@@ -179,6 +179,6 @@ uint32_t serial_open(char *uart_id);
 int serial_getc(uint32_t uart_handle);
 int serial_gets(uint32_t uart_handle, char *buffer, uint32_t length);
 int serial_puts(uint32_t uart_handle, const char *s, uint32_t length);
-int serial_get_rx_data(uint32_t uart_handle);
+uint32_t serial_get_rx_data(uint32_t uart_handle);
 
 #endif /* !SERIAL_INTER_H */

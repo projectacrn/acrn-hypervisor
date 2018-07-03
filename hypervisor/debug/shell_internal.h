@@ -22,7 +22,7 @@ struct shell_io {
 	bool io_echo_on;
 };
 
-#define SHELL_CMD_MAX_LEN		100
+#define SHELL_CMD_MAX_LEN		100U
 #define SHELL_NAME_MAX_LEN		50
 #define SHELL_PARA_MAX_LEN		64
 #define SHELL_HELP_MAX_LEN		256
@@ -32,7 +32,7 @@ struct shell_io {
 struct shell_cmd;
 struct shell {
 	struct shell_io session_io;	/* Session I/O information */
-	char input_line[2][SHELL_CMD_MAX_LEN + 1];	/* current & last */
+	char input_line[2][SHELL_CMD_MAX_LEN + 1U];	/* current & last */
 	char name[SHELL_NAME_MAX_LEN];	/* Session name */
 	uint32_t input_line_len;	/* Length of current input line */
 	uint32_t input_line_active;	/* Active input line index */

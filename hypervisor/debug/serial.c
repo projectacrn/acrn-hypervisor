@@ -13,7 +13,7 @@ static uint8_t sio_initialized[SERIAL_MAX_DEVS];
 static struct uart *get_uart_by_id(char *uart_id, uint32_t *index)
 {
 	/* Initialize the index to the start of array. */
-	*index = 0;
+	*index = 0U;
 
 	while (sio_ports[*index] != NULL) {
 		if (strncmp(sio_ports[*index]->tgt_uart->uart_id, uart_id,
@@ -120,25 +120,26 @@ uint32_t serial_open(char *uart_id)
 			SERIAL_INVALID_HANDLE;
 }
 
-int serial_get_rx_data(uint32_t uart_handle)
+uint32_t serial_get_rx_data(uint32_t uart_handle)
 {
 	uint32_t index;
 	struct uart *uart;
-	int data_avail, rx_byte_status;
+	int data_avail;
+	uint32_t rx_byte_status;
 	uint32_t lsr_reg, bytes_read;
 	uint8_t ch;
-	int total_bytes_read = 0;
+	uint32_t total_bytes_read = 0U;
 
 	if (!SERIAL_VALIDATE_HANDLE(uart_handle))
-		return 0;
+		return 0U;
 
 	index = SERIAL_DECODE_INDEX(uart_handle);
 	if (index >= SERIAL_MAX_DEVS)
-		return 0;
+		return 0U;
 
 	uart = sio_ports[index];
 	if (uart == NULL)
-		return 0;
+		return 0U;
 
 	/* Place all the data available in RX FIFO, in circular buffer */
 	while ((data_avail = uart->tgt_uart->rx_data_is_avail(
@@ -230,7 +231,7 @@ int serial_gets(uint32_t uart_handle, char *buffer, uint32_t length)
 	uint32_t index;
 	int status = 0;
 
-	if ((buffer == NULL) || (length == 0))
+	if ((buffer == NULL) || (length == 0U))
 		return 0;
 
 	if (!SERIAL_VALIDATE_HANDLE(uart_handle))
@@ -242,7 +243,7 @@ int serial_gets(uint32_t uart_handle, char *buffer, uint32_t length)
 
 	port = sio_ports[index];
 	if ((port != NULL) && (port->open_flag == true)) {
-		for (; length > 0; data_read++, length--) {
+		for (; length > 0U; length--) {
 			/* Disable interrupts for critical section */
 			spinlock_obtain(&port->buffer_lock);
 
@@ -256,6 +257,7 @@ int serial_gets(uint32_t uart_handle, char *buffer, uint32_t length)
 
 			/* Save character in buffer */
 			*data_read = (char) c;
+			data_read++;
 		}
 	}
 	/* Return actual number of bytes read */
@@ -264,7 +266,7 @@ int serial_gets(uint32_t uart_handle, char *buffer, uint32_t length)
 
 static int serial_putc(uint32_t uart_handle, int c)
 {
-	uint32_t index, bytes_written = 0;
+	uint32_t index, bytes_written = 0U;
 	struct uart *uart;
 	int busy;
 
@@ -290,7 +292,7 @@ static int serial_putc(uint32_t uart_handle, int c)
 	uart->tgt_uart->write(uart->tgt_uart, &(c), &bytes_written);
 
 	/* Return character written or EOF for error */
-	return ((bytes_written > 0) ? c : (SERIAL_EOF));
+	return ((bytes_written > 0U) ? c : (SERIAL_EOF));
 }
 
 int serial_puts(uint32_t uart_handle, const char *s, uint32_t length)
@@ -300,7 +302,7 @@ int serial_puts(uint32_t uart_handle, const char *s, uint32_t length)
 	struct uart *port;
 	int retval = 0;
 
-	if ((s == NULL) || (length == 0))
+	if ((s == NULL) || (length == 0U))
 		return 0;
 
 	if (!SERIAL_VALIDATE_HANDLE(uart_handle))
@@ -326,7 +328,7 @@ int serial_puts(uint32_t uart_handle, const char *s, uint32_t length)
 	 * Loop through the string until desired length of bytes have
 	 * been written or SERIAL_EOF is returned.
 	 */
-	for (; length > 0 && retval != SERIAL_EOF; s++, length--)
+	for (; length > 0U && retval != SERIAL_EOF; s++, length--)
 		retval = serial_putc(uart_handle, (int) *s);
 
 	/* Allow other threads to use this service. */

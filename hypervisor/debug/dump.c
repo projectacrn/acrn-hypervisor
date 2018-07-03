@@ -114,7 +114,7 @@ static void dump_guest_stack(struct vcpu *vcpu)
 	printf("\r\nGuest Stack:\r\n");
 	printf("Dump stack for vcpu %d, from gva 0x%016llx\r\n",
 			vcpu->vcpu_id, cur_context->rsp);
-	for (i = 0; i < DUMP_STACK_SIZE/32; i++) {
+	for (i = 0U; i < DUMP_STACK_SIZE/32U; i++) {
 		printf("guest_rsp(0x%llx):  0x%016llx  0x%016llx  "
 				"0x%016llx  0x%016llx\r\n",
 				(cur_context->rsp+i*32),
@@ -127,7 +127,7 @@ static void dump_guest_stack(struct vcpu *vcpu)
 static void show_guest_call_trace(struct vcpu *vcpu)
 {
 	uint64_t bp;
-	uint64_t count = 0;
+	uint64_t count = 0UL;
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	int err;
@@ -150,9 +150,9 @@ static void show_guest_call_trace(struct vcpu *vcpu)
 	 *  if the address is invalid, it will cause hv page fault
 	 *  then halt system */
 	while ((count++ < CALL_TRACE_HIERARCHY_MAX) && (bp != 0)) {
-		uint64_t parent_bp = 0;
+		uint64_t parent_bp = 0UL;
 
-		err_code = 0;
+		err_code = 0U;
 		err = copy_from_gva(vcpu, &parent_bp, bp, sizeof(parent_bp),
 			&err_code);
 		if (err < 0) {
@@ -181,15 +181,15 @@ static void dump_guest_context(uint32_t cpu_id)
 
 static void show_host_call_trace(uint64_t rsp, uint64_t rbp, uint32_t cpu_id)
 {
-	int i = 0;
-	int cb_hierarchy = 0;
+	uint32_t i = 0U;
+	uint32_t cb_hierarchy = 0U;
 	uint64_t *sp = (uint64_t *)rsp;
 
 	printf("\r\nHost Stack: CPU_ID = %d\r\n", cpu_id);
-	for (i = 0; i < DUMP_STACK_SIZE/32; i++) {
+	for (i = 0U; i < DUMP_STACK_SIZE/32U; i++) {
 		printf("addr(0x%llx)	0x%016llx  0x%016llx  0x%016llx  "
-				"0x%016llx\r\n", (rsp+i*32), sp[i*4], sp[i*4+1],
-				sp[i*4+2], sp[i*4+3]);
+			  "0x%016llx\r\n", (rsp+i*32U), sp[i*4U], sp[i*4U+1U],
+			  sp[i*4U+2U], sp[i*4U+3U]);
 	}
 	printf("\r\n");
 
@@ -249,7 +249,7 @@ void dump_intr_excp_frame(struct intr_excp_ctx *ctx)
 
 	printf("\n\n================================================");
 	printf("================================\n=\n");
-	if (ctx->vector < 0x20) {
+	if (ctx->vector < 0x20UL) {
 		name = excp_names[ctx->vector];
 		printf("= Unhandled exception: %d (%s)\n", ctx->vector, name);
 	}

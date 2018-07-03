@@ -214,9 +214,9 @@ static int uart16550_open(struct tgt_uart *tgt_uart,
 	return status;
 }
 
-static int uart16550_get_rx_err(uint32_t rx_data)
+static uint32_t uart16550_get_rx_err(uint32_t rx_data)
 {
-	int rx_status = SD_RX_NO_ERROR;
+	uint32_t rx_status = SD_RX_NO_ERROR;
 
 	/* Check for RX overrun error */
 	if ((rx_data & LSR_OE) != 0U)
