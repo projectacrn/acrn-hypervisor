@@ -671,8 +671,9 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 {
 	uint64_t dstaddr, srcaddr;
 	uint64_t rcx, rdi, rsi, rflags;
-	int error, fault, seg, repeat;
+	int error, fault, repeat;
 	uint8_t opsize;
+	enum vm_reg_name seg;
 
 	opsize = (vie->op.op_byte == 0xA4U) ? 1U : vie->opsize;
 	error = 0;
@@ -700,7 +701,7 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 		}
 	}
 
-	seg = (vie->segment_override != 0U) ? vie->segment_register : VM_REG_GUEST_DS;
+	seg = (vie->segment_override != 0U) ? (vie->segment_register) : VM_REG_GUEST_DS;
 	error = get_gla(vcpu, vie, paging, opsize, vie->addrsize,
 	    PROT_READ, seg, VM_REG_GUEST_RSI, &srcaddr, &fault);
 	if ((error != 0) || (fault != 0))
@@ -1735,7 +1736,7 @@ vie_advance(struct vie *vie)
 }
 
 static bool
-segment_override(uint8_t x, int *seg)
+segment_override(uint8_t x, enum vm_reg_name *seg)
 {
 
 	switch (x) {
