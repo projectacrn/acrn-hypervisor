@@ -185,8 +185,6 @@ enum vm_reg_name {
 	VM_REG_LAST
 };
 
-typedef unsigned long u_long;
-
 int vm_get_register(struct vcpu *vcpu, int reg, uint64_t *retval);
 int vm_set_register(struct vcpu *vcpu, int reg, uint64_t val);
 int vm_get_seg_desc(struct vcpu *vcpu, int reg,

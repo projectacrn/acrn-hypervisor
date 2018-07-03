@@ -361,10 +361,10 @@ vie_update_register(struct vcpu *vcpu, enum vm_reg_name reg,
  * Return the status flags that would result from doing (x - y).
  */
 #define	GETCC(sz)							\
-static u_long								\
+static uint64_t								\
 getcc##sz(uint##sz##_t x, uint##sz##_t y)				\
 {									\
-	u_long rflags;							\
+	uint64_t rflags;						\
 	\
 	__asm __volatile("sub %2,%1; pushfq; popq %0" :			\
 			"=r" (rflags), "+r" (x) : "m" (y));		\
@@ -376,7 +376,7 @@ GETCC(16);
 GETCC(32);
 GETCC(64);
 
-static u_long
+static uint64_t
 getcc(int opsize, uint64_t x, uint64_t y)
 {
 	ASSERT(opsize == 1 || opsize == 2 || opsize == 4 || opsize == 8,
