@@ -268,7 +268,7 @@ static void get_guest_paging_info(struct vcpu *vcpu, struct emul_cnx *emul_cnx,
 }
 
 static int mmio_read(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t *rval,
-		__unused int size, __unused void *arg)
+		__unused uint8_t size, __unused void *arg)
 {
 	if (vcpu == NULL)
 		return -EINVAL;
@@ -278,7 +278,7 @@ static int mmio_read(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t *rval,
 }
 
 static int mmio_write(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t wval,
-		__unused int size, __unused void *arg)
+		__unused uint8_t size, __unused void *arg)
 {
 	if (vcpu == NULL)
 		return -EINVAL;

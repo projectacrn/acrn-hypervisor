@@ -34,10 +34,10 @@
  * Callback functions to read and write memory regions.
  */
 typedef int (*mem_region_read_t)(struct vcpu *vcpu, uint64_t gpa,
-				 uint64_t *rval, int rsize, void *arg);
+				 uint64_t *rval, uint8_t rsize, void *arg);
 
 typedef int (*mem_region_write_t)(struct vcpu *vcpu, uint64_t gpa,
-				  uint64_t wval, int wsize, void *arg);
+				  uint64_t wval, uint8_t wsize, void *arg);
 
 /*
  * Emulate the decoded 'vie' instruction.
@@ -55,22 +55,22 @@ int vmm_emulate_instruction(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		mem_region_write_t mrw, void *mrarg);
 
 int vie_update_register(struct vcpu *vcpu, enum vm_reg_name reg,
-		uint64_t val, int size);
+		uint64_t val, uint8_t size);
 
 /*
  * Returns 1 if an alignment check exception should be injected and 0 otherwise.
  */
-int vie_alignment_check(int cpl, int operand_size, uint64_t cr0,
+int vie_alignment_check(int cpl, uint8_t operand_size, uint64_t cr0,
 	uint64_t rflags, uint64_t gla);
 
 /* Returns 1 if the 'gla' is not canonical and 0 otherwise. */
 int vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla);
 
-uint64_t vie_size2mask(int size);
+uint64_t vie_size2mask(uint8_t size);
 
 int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum vm_reg_name seg,
-	struct seg_desc *desc, uint64_t off, int length, int addrsize, int prot,
-	uint64_t *gla);
+	struct seg_desc *desc, uint64_t off, uint8_t length, uint8_t addrsize,
+	int prot, uint64_t *gla);
 
 int vie_init(struct vie *vie, struct vcpu *vcpu);
 
