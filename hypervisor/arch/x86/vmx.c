@@ -1112,21 +1112,21 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	value = (uint32_t) value;
 	field = VMX_HOST_CR0;
 	exec_vmwrite(field, value);
-	pr_dbg("VMX_GUEST_CR0: 0x%016llx ", value);
+	pr_dbg("VMX_HOST_CR0: 0x%016llx ", value);
 
 	/* Set up host CR3 field */
 	CPU_CR_READ(cr3, &value);
 	value = (uint32_t) value;
 	field = VMX_HOST_CR3;
 	exec_vmwrite(field, value);
-	pr_dbg("VMX_GUEST_CR3: 0x%016llx ", value);
+	pr_dbg("VMX_HOST_CR3: 0x%016llx ", value);
 
 	/* Set up host CR4 field */
 	CPU_CR_READ(cr4, &value);
 	value = (uint32_t) value;
 	field = VMX_HOST_CR4;
 	exec_vmwrite(field, value);
-	pr_dbg("VMX_GUEST_CR4: 0x%016llx ", value);
+	pr_dbg("VMX_HOST_CR4: 0x%016llx ", value);
 
 	/* Set up host and guest FS base address */
 	value = msr_read(MSR_IA32_FS_BASE);
