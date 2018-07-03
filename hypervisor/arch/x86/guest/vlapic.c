@@ -434,7 +434,7 @@ vlapic_set_intr_ready(struct vlapic *vlapic, uint32_t vector, bool level)
 	struct lapic_regs *lapic;
 	struct lapic_reg *irrptr, *tmrptr;
 	uint32_t mask;
-	int idx;
+	uint32_t idx;
 
 	ASSERT(vector <= NR_MAX_VECTOR,
 		"invalid vector %d", vector);
@@ -447,7 +447,7 @@ vlapic_set_intr_ready(struct vlapic *vlapic, uint32_t vector, bool level)
 		return 0;
 	}
 
-	if (vector < 16) {
+	if (vector < 16U) {
 		vlapic_set_error(vlapic, APIC_ESR_RECEIVE_ILLEGAL_VECTOR);
 		dev_dbg(ACRN_DBG_LAPIC,
 			"vlapic ignoring interrupt to vector %d", vector);
@@ -458,11 +458,12 @@ vlapic_set_intr_ready(struct vlapic *vlapic, uint32_t vector, bool level)
 		return (*vlapic->ops.apicv_set_intr_ready)
 			(vlapic, vector, level);
 
-	idx = vector / 32;
-	mask = 1 << (vector % 32);
+	idx = vector / 32U;
 
 	irrptr = &lapic->irr[0];
-	atomic_set_int(&irrptr[idx].val, mask);
+	/* If the interrupt is set, don't try to do it again */
+	if (bitmap32_test_and_set((vector % 32U), &irrptr[idx].val))
+		return 0;
 
 	/*
 	 * Verify that the trigger-mode of the interrupt matches with
