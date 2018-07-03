@@ -40,5 +40,6 @@ void generate_crashfile(char *dir, char *event, char *hashkey,
 			char *type, char *data0,
 			char *data1, char *data2);
 char *generate_log_dir(enum e_dir_mode mode, char *hashkey);
+int is_boot_id_changed(void);
 
 #endif

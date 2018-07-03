@@ -27,8 +27,8 @@
 	<triggers>
 		<trigger id="1" enable="true">
 			<name>t_pstore</name>
-			<type>file</type>
-			<path>/sys/fs/pstore/console-ramoops</path>
+			<type>node</type>
+			<path>/sys/fs/pstore/console-ramoops-0</path>
 		</trigger>
 		<trigger id="2" enable="true">
 			<name>t_boot</name>
@@ -39,6 +39,15 @@
 			<name>t_usercrash</name>
 			<type>dir</type>
 			<path>/var/log/usercrashes</path>
+		</trigger>
+		<trigger id="4" enable="true">
+			<name>t_rebootreason</name>
+			<type>rebootreason</type>
+		</trigger>
+		<trigger id="5" enable="true">
+			<name>t_acrnlog_last</name>
+			<type>file</type>
+			<path>/tmp/acrnlog/acrnlog_last.[*]</path>
 		</trigger>
 	</triggers>
 
@@ -57,8 +66,8 @@
 	<logs>
 		<log id="1" enable="true">
 			<name>pstore</name>
-			<type>file</type>
-			<path>/sys/fs/pstore/console-ramoops</path>
+			<type>node</type>
+			<path>/sys/fs/pstore/console-ramoops-0</path>
 		</log>
 		<log id='2' enable='true'>
 			<name>kmsg</name>
@@ -90,33 +99,65 @@
 
 	<crashes>
 		<crash id='1' inherit='0' enable='true'>
+			<name>UNKNOWN</name>
+			<trigger>t_rebootreason</trigger>
+			<channel>oneshot</channel>
+			<content id='1'>WARM</content>
+			<log id='1'>pstore</log>
+			<log id='2'>acrnlog_last</log>
+		</crash>
+		<crash id='2' inherit='0' enable='true'>
+			<name>SWWDT_UNHANDLE</name>
+			<trigger>t_rebootreason</trigger>
+			<channel>oneshot</channel>
+			<content id='1'>WATCHDOG</content>
+			<log id='1'>pstore</log>
+			<log id='2'>acrnlog_last</log>
+		</crash>
+		<crash id='3' inherit='0' enable='true'>
+			<name>HWWDT_UNHANDLE</name>
+			<trigger>t_rebootreason</trigger>
+			<channel>oneshot</channel>
+			<content id='1'>GLOBAL</content>
+			<log id='1'>pstore</log>
+			<log id='2'>acrnlog_last</log>
+		</crash>
+		<crash id='4' inherit='1' enable='true'>
+			<name>ACRNCRASH</name>
+			<trigger>t_acrnlog_last</trigger>
+			<content id='1'>= Unhandled exception:</content>
+		</crash>
+		<crash id='5' inherit='1' enable='true'>
 			<name>IPANIC</name>
 			<trigger>t_pstore</trigger>
-			<channel>oneshot</channel>
-			<log id='1'>pstore</log>
+			<content id='1'> </content>
+			<mightcontent expression='1' id='1'>Kernel panic - not syncing:</mightcontent>
+			<mightcontent expression='1' id='2'>BUG: unable to handle kernel</mightcontent>
 			<data id='1'>kernel BUG at</data>
 			<data id='2'>EIP is at</data>
 			<data id='3'>Comm:</data>
 		</crash>
-		<crash id='2' inherit='1' enable='true'>
-			<name>IPANIC_SWWDT</name>
-			<content id='1'>BUG: soft lockup - CPU#</content>
+		<crash id='6' inherit='2' enable='true'>
+			<name>ACRNCRASH</name>
+			<trigger>t_acrnlog_last</trigger>
+			<content id='1'>= Unhandled exception:</content>
 		</crash>
-		<crash id='3' inherit='2' enable='true'>
-			<name>IPANIC_SWWDT_FAKE</name>
-			<mightcontent expression='1' id='1'>EIP: panic_dbg_set</mightcontent>
-			<mightcontent expression='1' id='2'>RIP: panic_dbg_set</mightcontent>
+		<crash id='7' inherit='2' enable='true'>
+			<name>SWWDT_IPANIC</name>
+			<trigger>t_pstore</trigger>
+			<content id='1'> </content>
+			<mightcontent expression='1' id='1'>Kernel panic - not syncing:</mightcontent>
+			<mightcontent expression='1' id='2'>BUG: unable to handle kernel</mightcontent>
+			<data id='1'>kernel BUG at</data>
+			<data id='2'>EIP is at</data>
+			<data id='3'>Comm:</data>
 		</crash>
-		<crash id='4' inherit='0' enable='true'>
+		<crash id='8' inherit='0' enable='true'>
 			<name>USERCRASH</name>
 			<trigger>t_usercrash</trigger>
 			<channel>inotify</channel>
 			<log id='1'>kmsg</log>
 			<log id='2'>syslog</log>
-		</crash>
-		<crash id='5' inherit='1' enable='true'>
-			<name>IPANIC_HWWDT</name>
-			<content id='1'>Watchdog detected hard LOCKUP on cpu</content>
 		</crash>
 	</crashes>
 
@@ -131,7 +172,5 @@
 			<log id='4'>acrnlog_last</log>
 		</info>
 	</infos>
-
-
 
 </conf>
