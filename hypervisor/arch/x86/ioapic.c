@@ -114,19 +114,19 @@ ioapic_write_reg32(const void *ioapic_base,
 }
 
 static inline uint64_t
-get_ioapic_base(int apic_id)
+get_ioapic_base(uint8_t apic_id)
 {
-	uint64_t addr = -1UL;
+	uint64_t addr = 0xffffffffffffffffUL;
 
 	/* should extract next ioapic from ACPI MADT table */
-	if (apic_id == 0)
+	if (apic_id == 0U)
 		addr = DEFAULT_IO_APIC_BASE;
-	else if (apic_id == 1)
-		addr = 0xfec3f000;
-	else if (apic_id == 2)
-		addr = 0xfec7f000;
+	else if (apic_id == 1U)
+		addr = 0xfec3f000UL;
+	else if (apic_id == 2U)
+		addr = 0xfec7f000UL;
 	else
-		ASSERT(apic_id <= 2, "ACPI MADT table missing");
+		ASSERT(apic_id <= 2U, "ACPI MADT table missing");
 	return addr;
 }
 
@@ -273,7 +273,7 @@ uint32_t pin_to_irq(int pin)
 	if (pin < 0)
 		return IRQ_INVALID;
 
-	for (i = 0; i < nr_gsi; i++) {
+	for (i = 0U; i < nr_gsi; i++) {
 		if (gsi_table[i].pin == (uint8_t) pin)
 			return i;
 	}
@@ -302,13 +302,14 @@ irq_gsi_mask_unmask(uint32_t irq, bool mask)
 
 void setup_ioapic_irq(void)
 {
-	int ioapic_id;
-	uint32_t gsi;
+	uint8_t ioapic_id;
+	uint32_t gsi = 0U;
 	uint32_t vr;
 
 	spinlock_init(&ioapic_lock);
 
-	for (ioapic_id = 0, gsi = 0; ioapic_id < CONFIG_NR_IOAPICS; ioapic_id++) {
+	for (ioapic_id = 0U;
+	     ioapic_id < CONFIG_NR_IOAPICS; ioapic_id++) {
 		int pin;
 		int max_pins;
 		int version;
@@ -349,7 +350,7 @@ void setup_ioapic_irq(void)
 					continue;
 				}
 			} else
-				vr = 0; /* not to allocate VR right now */
+				vr = 0U; /* not to allocate VR right now */
 
 			ioapic_set_routing(gsi, vr);
 			gsi++;
@@ -365,7 +366,7 @@ void dump_ioapic(void)
 {
 	uint32_t irq;
 
-	for (irq = 0; irq < nr_gsi; irq++) {
+	for (irq = 0U; irq < nr_gsi; irq++) {
 		void *addr = gsi_table[irq].addr;
 		int pin = gsi_table[irq].pin;
 		struct ioapic_rte rte;
@@ -429,14 +430,15 @@ void get_rte_info(struct ioapic_rte *rte, bool *mask, bool *irr,
 
 int get_ioapic_info(char *str, int str_max_len)
 {
-	uint32_t irq, len, size = str_max_len;
+	uint32_t irq;
+	int len, size = str_max_len;
 
 	len = snprintf(str, size,
 	"\r\nIRQ\tPIN\tRTE.HI32\tRTE.LO32\tVEC\tDST\tDM\tTM\tDELM\tIRR\tMASK");
 	size -= len;
 	str += len;
 
-	for (irq = 0; irq < nr_gsi; irq++) {
+	for (irq = 0U; irq < nr_gsi; irq++) {
 		void *addr = gsi_table[irq].addr;
 		int pin = gsi_table[irq].pin;
 		struct ioapic_rte rte;

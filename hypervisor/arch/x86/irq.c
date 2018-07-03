@@ -6,7 +6,7 @@
 
 #include <hypervisor.h>
 
-static spinlock_t exception_spinlock = { .head = 0, .tail = 0, };
+static spinlock_t exception_spinlock = { .head = 0U, .tail = 0U, };
 
 static struct irq_desc *irq_desc_base;
 static uint32_t vector_to_irq[NR_MAX_VECTOR + 1];
@@ -25,13 +25,13 @@ static void init_irq_desc(void)
 	ASSERT(irq_desc_base != NULL, "page alloc failed!");
 	memset(irq_desc_base, 0, page_num * CPU_PAGE_SIZE);
 
-	for (i = 0; i < NR_MAX_IRQS; i++) {
+	for (i = 0U; i < NR_MAX_IRQS; i++) {
 		irq_desc_base[i].irq = i;
 		irq_desc_base[i].vector = VECTOR_INVALID;
 		spinlock_init(&irq_desc_base[i].irq_lock);
 	}
 
-	for (i = 0; i <= NR_MAX_VECTOR; i++)
+	for (i = 0U; i <= NR_MAX_VECTOR; i++)
 		vector_to_irq[i] = IRQ_INVALID;
 
 }
@@ -135,7 +135,7 @@ static void _irq_desc_free_vector(uint32_t irq)
 {
 	struct irq_desc *desc;
 	uint32_t vr;
-	int pcpu_id;
+	uint16_t pcpu_id;
 
 	if (irq > NR_MAX_IRQS)
 		return;
@@ -151,8 +151,8 @@ static void _irq_desc_free_vector(uint32_t irq)
 	if (vector_to_irq[vr] == irq)
 		vector_to_irq[vr] = IRQ_INVALID;
 
-	for (pcpu_id = 0; pcpu_id < phys_cpu_num; pcpu_id++)
-		per_cpu(irq_count, pcpu_id)[irq] = 0;
+	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++)
+		per_cpu(irq_count, pcpu_id)[irq] = 0UL;
 }
 
 static void disable_pic_irq(void)
@@ -361,7 +361,7 @@ uint32_t dev_to_vector(struct dev_handler_node *node)
 
 int init_default_irqs(uint16_t cpu_id)
 {
-	if (cpu_id > 0)
+	if (cpu_id != CPU_BOOT_ID)
 		return 0;
 
 	init_irq_desc();
@@ -668,13 +668,14 @@ pri_register_handler(uint32_t irq,
 void get_cpu_interrupt_info(char *str, int str_max)
 {
 	uint16_t pcpu_id;
-	uint32_t irq, vector, len, size = str_max;
+	uint32_t irq, vector;
+	int len, size = str_max;
 	struct irq_desc *desc;
 
 	len = snprintf(str, size, "\r\nIRQ\tVECTOR");
 	size -= len;
 	str += len;
-	for (pcpu_id = 0; pcpu_id < phys_cpu_num; pcpu_id++) {
+	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
 		len = snprintf(str, size, "\tCPU%d", pcpu_id);
 		size -= len;
 		str += len;
@@ -683,7 +684,7 @@ void get_cpu_interrupt_info(char *str, int str_max)
 	size -= len;
 	str += len;
 
-	for (irq = 0; irq < NR_MAX_IRQS; irq++) {
+	for (irq = 0U; irq < NR_MAX_IRQS; irq++) {
 		desc = irq_desc_base + irq;
 		vector = irq_to_vector(irq);
 		if (desc->used != IRQ_NOT_ASSIGNED &&
@@ -691,7 +692,7 @@ void get_cpu_interrupt_info(char *str, int str_max)
 			len = snprintf(str, size, "\r\n%d\t0x%X", irq, vector);
 			size -= len;
 			str += len;
-			for (pcpu_id = 0; pcpu_id < phys_cpu_num; pcpu_id++) {
+			for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
 				len = snprintf(str, size, "\t%d",
 					per_cpu(irq_count, pcpu_id)[irq]);
 				size -= len;
