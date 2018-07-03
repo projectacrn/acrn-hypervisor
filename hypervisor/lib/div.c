@@ -37,10 +37,11 @@ int udiv32(uint32_t dividend, uint32_t divisor, struct udiv_result *res)
 {
 
 	/* initialize the result */
-	res->q.dwords.low = res->r.dwords.low = 0;
+	res->q.dwords.low = 0U;
+	res->r.dwords.low = 0U;
 	/* test for "division by 0" condition */
-	if (divisor == 0) {
-		res->q.dwords.low = 0xffffffff;
+	if (divisor == 0U) {
+		res->q.dwords.low = 0xffffffffU;
 		return !0;
 	}
 	/* trivial case: divisor==dividend */
@@ -66,15 +67,16 @@ int udiv64(uint64_t dividend, uint64_t divisor, struct udiv_result *res)
 	uint64_t bits;
 
 	/* initialize the result */
-	res->q.qword = res->r.qword = 0;
+	res->q.qword = 0UL;
+	res->r.qword = 0UL;
 	/* test for "division by 0" condition */
-	if (divisor == 0) {
-		res->q.qword = 0xffffffffffffffffull;
+	if (divisor == 0UL) {
+		res->q.qword = 0xffffffffffffffffUL;
 		return -1;
 	}
 	/* trivial case: divisor==dividend */
 	if (divisor == dividend) {
-		res->q.qword = 1;
+		res->q.qword = 1UL;
 		return 0;
 	}
 	/* trivial case: divisor>dividend */
@@ -85,7 +87,7 @@ int udiv64(uint64_t dividend, uint64_t divisor, struct udiv_result *res)
 	/* simplified case: only 32 bit operands Note that the preconditions
 	 * for do_udiv32() are fulfilled, since the tests were made above.
 	 */
-	if (((divisor >> 32) == 0) && ((dividend >> 32) == 0))
+	if (((divisor >> 32UL) == 0UL) && ((dividend >> 32UL) == 0UL))
 		return do_udiv32((uint32_t) dividend, (uint32_t) divisor, res);
 
 	/* dividend is always greater than or equal to the divisor. Neither
@@ -103,9 +105,9 @@ int udiv64(uint64_t dividend, uint64_t divisor, struct udiv_result *res)
 			dividend -= divisor;
 			res->q.qword |= mask;
 		}
-		divisor >>= 1;
-		mask >>= 1;
-	} while ((bits-- != 0UL) && (dividend != 0));
+		divisor >>= 1UL;
+		mask >>= 1UL;
+	} while ((bits-- != 0UL) && (dividend != 0UL));
 
 	res->r.qword = dividend;
 	return 0;

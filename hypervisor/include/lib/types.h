@@ -44,7 +44,7 @@ typedef _Bool bool;
 #endif
 
 #ifndef UINT64_MAX
-#define UINT64_MAX	(-1UL)
+#define UINT64_MAX	(0xffffffffffffffffUL)
 #endif
 
 #endif /* ASSEMBLER */
