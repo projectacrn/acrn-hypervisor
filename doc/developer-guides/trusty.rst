@@ -25,26 +25,9 @@ there's a desire to keep things small and lightweight. LK has been chosen as the
 Trusty Architecture
 *******************
 
-Trusty Architectural diagram::
-
-                      +---------------------------+
-                      |VMn                        |
-                      |        ......             |
-    +------------+  +---------------------------+ |
-    |VM0         |  |VM1                        | |
-    |            |  | +--------+     +--------+ | |
-    |            |  | |        |     |        | | |
-    |    SOS     |  | | Normal |     | Secure | | |
-    |            |  | | World  |     | World  | |-+
-    |            |  | |        |     |        | |
-    |            |  | +--------+     +--------+ |
-    +------------+  +---------------------------+
-    +-------------------------------------------+
-    |             ACRN Hypervisor               |
-    +-------------------------------------------+
-    +-------------------------------------------+
-    |                   HW                      |
-    +-------------------------------------------+
+.. figure:: images/trusty-arch.png
+   :align: center
+   :name: Trusty Architectural diagram
 
 .. note::
    Trusty OS is running in Secure World in the architecture drawing above.
@@ -118,39 +101,9 @@ modify Normal World's EPT during runtime such as increasing memory, changing att
 etc. If such behavior happened, only PD and PT for Normal World need to
 be updated.
 
-::
-
-    ABSTRACT EPT hierarchy for 2 Worlds:
-    ====================================================================        ==================================================
-    : Normal World                                                     :        : Secure World                                   :
-    :           PML4                                                   :        :                                PML4            :
-    :        +--------+                                                :        :                             +--------+         :
-    :        |        |                                                :        :                             |        |         :
-    :        |        |                                                :        :     PD                      |        |         :
-    :        |        |                                                :        :  +-------+                  |        |         :
-    :        |        |                                                :        :  |       |                  |        |         :
-    :        | 0-512G |--+                                             :        :  |       |               +--| 0-512G |         :
-    :EPTP -->+--------+  |                                             :        :  |       |               |  +--------+<-- EPTP :
-    :                    |      PDPT                                   :        :  |       |      PDPT     |                     :
-    :                    |   +--------+                                :        :  |       |   +--------+  |                     :
-    :                    |   | >=511G |---> Not present                :        :  +-------+<--| >=511G |  |                     :
-    :                    |   |________|                                :        :              |________|  |                     :
-    :                    |   |        |                                :        :              |        |  |                     :
-    :                    |   | <511G  |->+<----------------------------:--------:--------------| <511G  |  |                     :
-    :                    |   |        |  |                             :        :              |        |  |                     :
-    :                    +-->+--------+  |        PD              PT   :        :              +--------+<-+                     :
-    :                                    |       ...             ...   :        ==================================================
-    :                                    |    +-------+      +-------+ :
-    :                                    |   +-------+|     +-------+| :
-    :                                    |   |       ||     |       || :
-    :                                    |   |       ||     |       || :
-    :                                    |   |  PDE  |--+   |       || :
-    :                                    |   |       || |   |       || :
-    :                                    |   |       |+ |   |       |+ :
-    :                                    +-->+-------+  +-->+-------+  :
-    :                                                                  :
-    ====================================================================
-
+.. figure:: images/ept-hierarchy.png
+   :align: center
+   :name: EPT hierarchy
 
 API
 ===
