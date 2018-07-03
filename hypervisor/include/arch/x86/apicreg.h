@@ -437,7 +437,7 @@ struct ioapic {
  */
 
 /* default physical locations of an IO APIC */
-#define DEFAULT_IO_APIC_BASE	0xfec00000U
+#define DEFAULT_IO_APIC_BASE	0xfec00000UL
 
 /* window register offset */
 #define IOAPIC_WINDOW		0x10U

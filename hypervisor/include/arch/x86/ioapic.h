@@ -11,7 +11,7 @@
  * The usable RTEs may be a subset of the total on a per IO APIC basis.
  */
 #define IOAPIC_MAX_LINES	120
-#define NR_LEGACY_IRQ		16
+#define NR_LEGACY_IRQ		16U
 #define NR_LEGACY_PIN	NR_LEGACY_IRQ
 #define NR_MAX_GSI	(CONFIG_NR_IOAPICS*IOAPIC_MAX_LINES)
 

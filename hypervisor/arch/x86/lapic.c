@@ -10,7 +10,7 @@
 #define APIC_TIMER_MAX      0xffffffff
 #define HYPE_PERIOD_MAX     1000
 #define APIC_DIVIDE_BY_ONE  0x0b
-#define PIT_TARGET          0x3FFF
+#define PIT_TARGET          0x3FFFU
 
 /* xAPIC/x2APIC Interrupt Command Register (ICR) structure */
 union apic_icr {
