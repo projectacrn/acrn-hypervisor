@@ -42,7 +42,7 @@
 
 /**
  *
- * fls - Find the Last (most significant) bit Set in value and
+ * fls32 - Find the Last (most significant) bit Set in value and
  *       return the bit index of that bit.
  *
  *  Bits are numbered starting at 0,the least significant bit.
@@ -50,11 +50,11 @@
  *  invalid bit index when the input argument was zero.
  *
  *  Examples:
- *	fls (0x0) = INVALID_BIT_INDEX
- *	fls (0x01) = 0
- *	fls (0x80) = 7
+ *	fls32 (0x0) = INVALID_BIT_INDEX
+ *	fls32 (0x01) = 0
+ *	fls32 (0x80) = 7
  *	...
- *	fls (0x80000001) = 31
+ *	fls32 (0x80000001) = 31
  *
  * @param value: 'uint32_t' type value
  *
@@ -63,7 +63,7 @@
  * set and return the invalid bit index directly.
  *
  * **/
-static inline uint16_t fls(uint32_t value)
+static inline uint16_t fls32(uint32_t value)
 {
 	uint32_t ret = 0U;
 	if (value == 0U)
@@ -147,7 +147,7 @@ static inline uint16_t clz(uint32_t value)
 	if (value == 0U)
 		return 32U;
 	else{
-		return (31U - fls(value));
+		return (31U - fls32(value));
 	}
 }
 
