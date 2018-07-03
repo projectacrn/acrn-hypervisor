@@ -25,11 +25,11 @@ static void fire_vhm_interrupt(void)
 	vlapic_intr_edge(vcpu, VECTOR_VIRT_IRQ_VHM);
 }
 
-static void acrn_print_request(int vcpu_id, struct vhm_request *req)
+static void acrn_print_request(uint16_t vcpu_id, struct vhm_request *req)
 {
 	switch (req->type) {
 	case REQ_MMIO:
-		dev_dbg(ACRN_DBG_IOREQUEST, "[vcpu_id=%d type=MMIO]", vcpu_id);
+		dev_dbg(ACRN_DBG_IOREQUEST, "[vcpu_id=%hu type=MMIO]", vcpu_id);
 		dev_dbg(ACRN_DBG_IOREQUEST,
 			"gpa=0x%lx, R/W=%d, size=%ld value=0x%lx processed=%lx",
 			req->reqs.mmio_request.address,
@@ -39,7 +39,7 @@ static void acrn_print_request(int vcpu_id, struct vhm_request *req)
 			req->processed);
 		break;
 	case REQ_PORTIO:
-		dev_dbg(ACRN_DBG_IOREQUEST, "[vcpu_id=%d type=PORTIO]", vcpu_id);
+		dev_dbg(ACRN_DBG_IOREQUEST, "[vcpu_id=%hu type=PORTIO]", vcpu_id);
 		dev_dbg(ACRN_DBG_IOREQUEST,
 			"IO=0x%lx, R/W=%d, size=%ld value=0x%lx processed=%lx",
 			req->reqs.pio_request.address,
@@ -49,7 +49,7 @@ static void acrn_print_request(int vcpu_id, struct vhm_request *req)
 			req->processed);
 		break;
 	default:
-		dev_dbg(ACRN_DBG_IOREQUEST, "[vcpu_id=%d type=%d] NOT support type",
+		dev_dbg(ACRN_DBG_IOREQUEST, "[vcpu_id=%hu type=%d] NOT support type",
 			vcpu_id, req->type);
 		break;
 	}

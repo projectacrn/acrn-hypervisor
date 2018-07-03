@@ -92,7 +92,7 @@ int load_guest(struct vm *vm, struct vcpu *vcpu)
 
 	pr_info("%s, Set config according to predefined offset:",
 			__func__);
-	pr_info("VCPU%d Entry: 0x%llx, RSI: 0x%016llx, cr3: 0x%016llx",
+	pr_info("VCPU%hu Entry: 0x%llx, RSI: 0x%016llx, cr3: 0x%016llx",
 			vcpu->vcpu_id, vcpu->entry_addr,
 			cur_context->guest_cpu_regs.regs.rsi,
 			vm->arch_vm.guest_init_pml4);
@@ -132,7 +132,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	if (is_vcpu_bsp(vcpu)) {
 		/* Set VCPU entry point to kernel entry */
 		vcpu->entry_addr = vm->sw.kernel_info.kernel_entry_addr;
-		pr_info("%s, VM *d VCPU %d Entry: 0x%016llx ",
+		pr_info("%s, VM *d VCPU %hu Entry: 0x%016llx ",
 			__func__, vm->attr.id, vcpu->vcpu_id, vcpu->entry_addr);
 	}
 

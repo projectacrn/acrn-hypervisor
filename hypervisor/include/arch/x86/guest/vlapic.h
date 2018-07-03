@@ -56,7 +56,7 @@ int vlapic_pending_intr(struct vlapic *vlapic, uint32_t *vecptr);
  */
 void vlapic_intr_accepted(struct vlapic *vlapic, uint32_t vector);
 
-struct vlapic *vm_lapic_from_vcpuid(struct vm *vm, int vcpu_id);
+struct vlapic *vm_lapic_from_vcpuid(struct vm *vm, uint16_t vcpu_id);
 struct vlapic *vm_lapic_from_pcpuid(struct vm *vm, uint16_t pcpu_id);
 bool vlapic_msr(uint32_t num);
 int vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval);

@@ -275,7 +275,7 @@ void unregister_mmio_emulation_handler(struct vm *vm, uint64_t start,
 int dm_emulate_mmio_post(struct vcpu *vcpu)
 {
 	int ret = 0;
-	int cur = vcpu->vcpu_id;
+	uint16_t cur = vcpu->vcpu_id;
 	union vhm_request_buffer *req_buf;
 
 	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);

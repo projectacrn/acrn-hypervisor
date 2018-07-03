@@ -522,7 +522,7 @@ int shell_list_vcpu(struct shell *p_shell,
 			 * and VM id
 			 */
 			snprintf(temp_str, MAX_STR_SIZE,
-					"  %-9d %-10d %-7d %-12s %-16s\r\n",
+					"  %-9d %-10d %-7hu %-12s %-16s\r\n",
 					vm->attr.id,
 					vcpu->pcpu_id,
 					vcpu->vcpu_id,
@@ -542,7 +542,8 @@ int shell_pause_vcpu(struct shell *p_shell,
 		int argc, char **argv)
 {
 	int status = 0;
-	uint32_t vm_id, vcpu_id;
+	uint32_t vm_id;
+	uint16_t vcpu_id;
 	struct vm *vm;
 	struct vcpu *vcpu;
 
@@ -553,8 +554,9 @@ int shell_pause_vcpu(struct shell *p_shell,
 			"Please enter correct cmd with <vm_id, vcpu_id>\r\n");
 	} else {
 		vm_id = atoi(argv[1]);
-		vcpu_id = atoi(argv[2]);
-
+		vcpu_id = (uint16_t)atoi(argv[2]);
+		if (vcpu_id >= phys_cpu_num)
+			return (-EINVAL);
 		vm = get_vm_from_vmid(vm_id);
 		if (vm != NULL) {
 			vcpu = vcpu_from_vid(vm, vcpu_id);
@@ -591,7 +593,8 @@ int shell_resume_vcpu(struct shell *p_shell,
 		int argc, char **argv)
 {
 	int status = 0;
-	uint32_t vm_id, vcpu_id;
+	uint32_t vm_id;
+	uint16_t vcpu_id;
 	struct vm *vm;
 	struct vcpu *vcpu;
 
@@ -602,7 +605,9 @@ int shell_resume_vcpu(struct shell *p_shell,
 			"Please enter correct cmd with <vm_id, vcpu_id>\r\n");
 	} else {
 		vm_id = atoi(argv[1]);
-		vcpu_id = atoi(argv[2]);
+		vcpu_id = (uint16_t)atoi(argv[2]);
+		if (vcpu_id >= phys_cpu_num)
+			return (-EINVAL);
 		vm = get_vm_from_vmid(vm_id);
 		if (vm != NULL) {
 			vcpu = vcpu_from_vid(vm, vcpu_id);
@@ -638,7 +643,8 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 		int argc, char **argv)
 {
 	int status = 0;
-	uint32_t vm_id, vcpu_id;
+	uint32_t vm_id;
+	uint16_t vcpu_id;
 	char temp_str[MAX_STR_SIZE];
 	struct vm *vm;
 	struct vcpu *vcpu;
@@ -655,8 +661,9 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 	}
 
 	vm_id = atoi(argv[1]);
-	vcpu_id = atoi(argv[2]);
-
+	vcpu_id = (uint16_t)atoi(argv[2]);
+	if (vcpu_id >= phys_cpu_num)
+		return (-EINVAL);
 	vm = get_vm_from_vmid(vm_id);
 	if (vm == NULL) {
 		shell_puts(p_shell, "No vm found in the input "
@@ -679,7 +686,7 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 	}
 
 	snprintf(temp_str, MAX_STR_SIZE,
-		"=  VM ID %d ==== CPU ID %d========================\r\n",
+		"=  VM ID %d ==== CPU ID %hu========================\r\n",
 		vm->attr.id, vcpu->vcpu_id);
 	shell_puts(p_shell, temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  RIP=0x%016llx  RSP=0x%016llx "
@@ -752,7 +759,8 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 		int argc, char **argv)
 {
 	int status = 0;
-	uint32_t vm_id, vcpu_id;
+	uint32_t vm_id;
+	uint16_t vcpu_id;
 	uint64_t gva;
 	uint64_t tmp[MAX_MEMDUMP_LEN/8];
 	uint32_t i, length = 32U;
@@ -771,8 +779,9 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 	}
 
 	vm_id = atoi(argv[1]);
-	vcpu_id = atoi(argv[2]);
-
+	vcpu_id = (uint16_t)atoi(argv[2]);
+	if (vcpu_id >= phys_cpu_num)
+		return (-EINVAL);
 	vm = get_vm_from_vmid(vm_id);
 	if (vm == NULL) {
 		status = -EINVAL;
@@ -799,7 +808,7 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 				"Cannot handle user gva yet!\r\n");
 		} else {
 			snprintf(temp_str, MAX_STR_SIZE,
-				"Dump memory for vcpu %d, from gva 0x%016llx, "
+				"Dump memory for vcpu %hu, from gva 0x%016llx, "
 				"length %d:\r\n", vcpu_id, gva, length);
 			shell_puts(p_shell, temp_str);
 

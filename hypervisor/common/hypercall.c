@@ -372,7 +372,7 @@ int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
 	dev_dbg(ACRN_DBG_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
 			vmid, vcpu_id);
 
-	vcpu = vcpu_from_vid(target_vm, vcpu_id);
+	vcpu = vcpu_from_vid(target_vm, (uint16_t)vcpu_id);
 	if (vcpu == NULL) {
 		pr_err("%s, failed to get VCPU %d context from VM %d\n",
 			__func__, vcpu_id, target_vm->attr.id);

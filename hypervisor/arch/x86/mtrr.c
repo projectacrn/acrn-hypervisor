@@ -124,7 +124,7 @@ void init_mtrr(struct vcpu *vcpu)
 			vcpu->mtrr.fixed_range[i].value = MTRR_FIXED_RANGE_ALL_WB;
 		}
 
-		pr_dbg("vm%d vcpu%d fixed-range MTRR[%d]: %16llx",
+		pr_dbg("vm%d vcpu%hu fixed-range MTRR[%d]: %16llx",
 			vcpu->vm->attr.id, vcpu->vcpu_id, i,
 			vcpu->mtrr.fixed_range[i].value);
 	}
