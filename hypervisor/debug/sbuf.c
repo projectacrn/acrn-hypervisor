@@ -76,7 +76,7 @@ void sbuf_free(struct shared_buf *sbuf)
 		return;
 	}
 
-	sbuf->magic = 0;
+	sbuf->magic = 0UL;
 	free(sbuf);
 }
 

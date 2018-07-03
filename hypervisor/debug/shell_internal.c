@@ -32,14 +32,15 @@ uint32_t console_loglevel = CONFIG_CONSOLE_LOGLEVEL_DEFAULT;
 uint32_t mem_loglevel = CONFIG_MEM_LOGLEVEL_DEFAULT;
 
 static int string_to_argv(char *argv_str, void *p_argv_mem,
-		__unused uint32_t argv_mem_size, int *p_argc, char ***p_argv)
+		__unused uint32_t argv_mem_size,
+		uint32_t *p_argc, char ***p_argv)
 {
 	uint32_t argc;
 	char **argv;
 	char *p_ch;
 
 	/* Setup initial argument values. */
-	argc = 0;
+	argc = 0U;
 	argv = NULL;
 
 	/* Ensure there are arguments to be processed. */
@@ -103,7 +104,7 @@ static uint8_t shell_input_line(struct shell *p_shell)
 	/* Backspace */
 	case '\b':
 		/* Ensure length is not 0 */
-		if (p_shell->input_line_len > 0) {
+		if (p_shell->input_line_len > 0U) {
 			/* Reduce the length of the string by one */
 			p_shell->input_line_len--;
 
@@ -140,7 +141,7 @@ static uint8_t shell_input_line(struct shell *p_shell)
 		done = true;
 
 		/* Reset command length for next command processing */
-		p_shell->input_line_len = 0;
+		p_shell->input_line_len = 0U;
 		break;
 
 	/* Line feed */
@@ -153,7 +154,7 @@ static uint8_t shell_input_line(struct shell *p_shell)
 		/* Ensure data doesn't exceed full terminal width */
 		if (p_shell->input_line_len < SHELL_CMD_MAX_LEN) {
 			/* See if a "standard" prINTable ASCII character received */
-			if ((ch >= 32) && (ch <= 126)) {
+			if ((ch >= 32U) && (ch <= 126U)) {
 				/* Add character to string */
 				p_shell->input_line[p_shell->input_line_active]
 						[p_shell->input_line_len] = ch;
@@ -187,7 +188,7 @@ static uint8_t shell_input_line(struct shell *p_shell)
 			done = true;
 
 			/* Reset command length for next command processing */
-			p_shell->input_line_len = 0;
+			p_shell->input_line_len = 0U;
 
 		}
 		break;
@@ -225,7 +226,7 @@ static int shell_process(struct shell *p_shell)
 
 	/* Now that the command is processed, zero fill the input buffer */
 	memset((void *) p_shell->input_line[p_shell->input_line_active], 0,
-		SHELL_CMD_MAX_LEN + 1);
+		SHELL_CMD_MAX_LEN + 1U);
 
 	/* Process command and return result to caller */
 	return status;
@@ -236,10 +237,10 @@ struct shell_cmd *shell_find_cmd(struct shell *p_shell, const char *cmd_str)
 	uint32_t i;
 	struct shell_cmd *p_cmd = NULL;
 
-	if (p_shell->cmd_count <= 0)
+	if (p_shell->cmd_count <= 0U)
 		return NULL;
 
-	for (i = 0; i < p_shell->cmd_count; i++) {
+	for (i = 0U; i < p_shell->cmd_count; i++) {
 		p_cmd = &p_shell->shell_cmd[i];
 		if (strcmp(p_cmd->str, cmd_str) == 0)
 			break;
@@ -297,8 +298,8 @@ int shell_process_cmd(struct shell *p_shell, char *p_input_line)
 	int status = 0;
 	struct shell_cmd *p_cmd;
 	shell_cmd_fn_t cmd_fcn;
-	char cmd_argv_str[SHELL_CMD_MAX_LEN + 1];
-	int cmd_argv_mem[sizeof(char *) * ((SHELL_CMD_MAX_LEN + 1) / 2)];
+	char cmd_argv_str[SHELL_CMD_MAX_LEN + 1U];
+	int cmd_argv_mem[sizeof(char *) * ((SHELL_CMD_MAX_LEN + 1U) / 2U)];
 	int cmd_argc;
 	char **cmd_argv;
 
@@ -360,7 +361,7 @@ int shell_init_serial(struct shell *p_shell)
 
 	/* Zero fill the input buffer */
 	memset((void *)p_shell->input_line[p_shell->input_line_active], 0,
-			SHELL_CMD_MAX_LEN + 1);
+			SHELL_CMD_MAX_LEN + 1U);
 
 	return status;
 }
@@ -383,14 +384,14 @@ int shell_cmd_help(struct shell *p_shell,
 
 	memset(space_buf, ' ', sizeof(space_buf));
 	/* Proceed based on the number of registered commands. */
-	if (p_shell->cmd_count == 0) {
+	if (p_shell->cmd_count == 0U) {
 		/* No registered commands */
 		shell_puts(p_shell, "NONE\r\n");
 	} else {
-		int i = 0;
+		int32_t i = 0;
 		uint32_t j;
 
-		for (j = 0; j < p_shell->cmd_count; j++) {
+		for (j = 0U; j < p_shell->cmd_count; j++) {
 			p_cmd = &p_shell->shell_cmd[j];
 
 			/* Check if we've filled the screen with info */
@@ -733,12 +734,12 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 				vm_id, cur_context->rsp);
 		shell_puts(p_shell, temp_str);
 
-		for (i = 0; i < 8; i++) {
+		for (i = 0UL; i < 8UL; i++) {
 			snprintf(temp_str, MAX_STR_SIZE,
 					"=  0x%016llx  0x%016llx  "
 					"0x%016llx  0x%016llx\r\n",
-					tmp[i*4], tmp[i*4+1],
-					tmp[i*4+2], tmp[i*4+3]);
+					tmp[i*4UL], tmp[i*4UL+1UL],
+					tmp[i*4UL+2UL], tmp[i*4UL+3UL]);
 			shell_puts(p_shell, temp_str);
 		}
 	}
@@ -746,7 +747,7 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 	return status;
 }
 
-#define MAX_MEMDUMP_LEN		(32*8)
+#define MAX_MEMDUMP_LEN		(32U*8U)
 int shell_vcpu_dumpmem(struct shell *p_shell,
 		int argc, char **argv)
 {
@@ -754,7 +755,7 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 	uint32_t vm_id, vcpu_id;
 	uint64_t gva;
 	uint64_t tmp[MAX_MEMDUMP_LEN/8];
-	uint32_t i, length = 32;
+	uint32_t i, length = 32U;
 	char temp_str[MAX_STR_SIZE];
 	struct vm *vm;
 	struct vcpu *vcpu;
@@ -802,14 +803,14 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 				"length %d:\r\n", vcpu_id, gva, length);
 			shell_puts(p_shell, temp_str);
 
-			for (i = 0; i < length/32; i++) {
+			for (i = 0U; i < length/32U; i++) {
 				snprintf(temp_str, MAX_STR_SIZE,
 					"=  0x%016llx  0x%016llx  0x%016llx  "
 					"0x%016llx\r\n", tmp[i*4], tmp[i*4+1],
 					tmp[i*4+2], tmp[i*4+3]);
 				shell_puts(p_shell, temp_str);
 			}
-			if (length > 32*(length/32)) {
+			if ((length % 32U) != 0) {
 				snprintf(temp_str, MAX_STR_SIZE,
 					"=  0x%016llx  0x%016llx  0x%016llx  "
 					"0x%016llx\r\n", tmp[i*4], tmp[i*4+1],
@@ -1095,7 +1096,7 @@ void shell_special_serial(struct shell *p_shell, uint8_t ch)
 {
 	switch (ch) {
 	/* Escape character */
-	case 0x1b:
+	case 0x1bU:
 		/* Consume the next 2 characters */
 		(void) p_shell->session_io.io_getc(p_shell);
 		(void) p_shell->session_io.io_getc(p_shell);

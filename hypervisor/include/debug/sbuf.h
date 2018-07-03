@@ -12,7 +12,7 @@
 #ifndef SHARED_BUFFER_H
 #define SHARED_BUFFER_H
 
-#define SBUF_MAGIC	0x5aa57aa71aa13aa3
+#define SBUF_MAGIC	0x5aa57aa71aa13aa3UL
 #define SBUF_MAX_SIZE	(1 << 22)
 #define SBUF_HEAD_SIZE	64
 

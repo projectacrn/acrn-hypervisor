@@ -10,8 +10,8 @@
 struct intr_excp_ctx;
 
 #ifdef HV_DEBUG
-#define CALL_TRACE_HIERARCHY_MAX    20
-#define DUMP_STACK_SIZE 0x200
+#define CALL_TRACE_HIERARCHY_MAX    20U
+#define DUMP_STACK_SIZE 0x200U
 
 void dump_intr_excp_frame(struct intr_excp_ctx *ctx);
 void dump_exception(struct intr_excp_ctx *ctx, uint32_t cpu_id);
