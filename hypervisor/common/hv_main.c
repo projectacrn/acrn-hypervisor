@@ -56,7 +56,7 @@ void vcpu_thread(struct vcpu *vcpu)
 		}
 
 		vmexit_end = rdtsc();
-		if (vmexit_begin > 0)
+		if (vmexit_begin != 0UL)
 			per_cpu(vmexit_time, vcpu->pcpu_id)[basic_exit_reason]
 				+= (vmexit_end - vmexit_begin);
 		TRACE_2L(TRACE_VM_ENTER, 0, 0);
@@ -156,17 +156,17 @@ void get_vmexit_profile(char *str, int str_max)
 	size -= len;
 	str += len;
 
-	for (cpu = 0; cpu < phys_cpu_num; cpu++) {
+	for (cpu = 0U; cpu < phys_cpu_num; cpu++) {
 		len = snprintf(str, size, "\t      CPU%hu\t        US", cpu);
 		size -= len;
 		str += len;
 	}
 
-	for (i = 0; i < 64; i++) {
+	for (i = 0U; i < 64U; i++) {
 		len = snprintf(str, size, "\r\n0x%x", i);
 		size -= len;
 		str += len;
-		for (cpu = 0; cpu < phys_cpu_num; cpu++) {
+		for (cpu = 0U; cpu < phys_cpu_num; cpu++) {
 			len = snprintf(str, size, "\t%10lld\t%10lld",
 				per_cpu(vmexit_cnt, cpu)[i],
 				ticks_to_us(per_cpu(vmexit_time, cpu)[i]));
