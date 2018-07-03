@@ -36,6 +36,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <pthread.h>
+#include <sys/errno.h>
 
 #include "types.h"
 #include "mevent.h"
@@ -679,7 +680,7 @@ uart_set_backend(struct uart_vdev *uart, const char *opts)
 	retval = -1;
 
 	if (opts == NULL)
-		return 0;
+		return -EINVAL;
 
 	if (strcmp("stdio", opts) == 0) {
 		if (!stdio_in_use) {
@@ -691,6 +692,9 @@ uart_set_backend(struct uart_vdev *uart, const char *opts)
 	} else if (uart_tty_backend(uart, opts) == 0) {
 		retval = 0;
 	}
+
+	if (retval)
+		return -EINVAL;
 
 	/* Make the backend file descriptor non-blocking */
 	if (retval == 0)
