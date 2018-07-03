@@ -262,13 +262,13 @@ struct stack_canary {
 
 extern struct cpuinfo_x86 boot_cpu_data;
 
-#define MAX_PSTATE	20	/* max num of supported Px count */
-#define MAX_CSTATE	8	/* max num of supported Cx count */
+#define MAX_PSTATE	20U	/* max num of supported Px count */
+#define MAX_CSTATE	8U	/* max num of supported Cx count */
 
 /* We support MAX_CSTATE num of Cx, means have (MAX_CSTATE - 1) Cx entries,
  * i.e. supported Cx entry index range from 1 to MAX_CX_ENTRY.
  */
-#define MAX_CX_ENTRY	(MAX_CSTATE - 1)
+#define MAX_CX_ENTRY	(MAX_CSTATE - 1U)
 
 /* Function prototypes */
 void cpu_dead(uint32_t logical_id);

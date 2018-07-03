@@ -7,7 +7,7 @@
 struct run_context cpu_ctx;
 
 /* whether the host enter s3 success */
-uint8_t host_enter_s3_success = 1;
+uint8_t host_enter_s3_success = 1U;
 
 void restore_msrs(void)
 {

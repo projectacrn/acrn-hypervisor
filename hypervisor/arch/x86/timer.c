@@ -73,7 +73,7 @@ int add_timer(struct timer *timer)
 	uint16_t pcpu_id;
 	bool need_update;
 
-	if (timer == NULL || timer->func == NULL || timer->fire_tsc == 0)
+	if (timer == NULL || timer->func == NULL || timer->fire_tsc == 0UL)
 		return -EINVAL;
 
 	/* limit minimal periodic timer cycle period */
@@ -222,7 +222,7 @@ static uint64_t pit_calibrate_tsc(uint16_t cal_ms)
 {
 #define PIT_TICK_RATE	1193182UL
 #define PIT_TARGET	0x3FFFU
-#define PIT_MAX_COUNT	0xFFFF
+#define PIT_MAX_COUNT	0xFFFFU
 
 	uint16_t initial_pit;
 	uint16_t current_pit;
@@ -269,13 +269,13 @@ static uint64_t pit_calibrate_tsc(uint16_t cal_ms)
  */
 static uint64_t native_calibrate_tsc(void)
 {
-	if (boot_cpu_data.cpuid_level >= 0x15) {
+	if (boot_cpu_data.cpuid_level >= 0x15U) {
 		uint32_t eax_denominator, ebx_numerator, ecx_hz, reserved;
 
 		cpuid(0x15, &eax_denominator, &ebx_numerator,
 			&ecx_hz, &reserved);
 
-		if (eax_denominator != 0 && ebx_numerator != 0)
+		if (eax_denominator != 0U && ebx_numerator != 0U)
 			return (uint64_t) ecx_hz *
 				ebx_numerator / eax_denominator;
 	}

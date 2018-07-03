@@ -153,10 +153,10 @@ int vmexit_handler(struct vcpu *vcpu)
 			if ((vector_info & VMX_INT_INFO_ERR_CODE_VALID) != 0U)
 				err_code = exec_vmread(VMX_IDT_VEC_ERROR_CODE);
 			vcpu_queue_exception(vcpu, vector, err_code);
-			vcpu->arch_vcpu.idt_vectoring_info = 0;
+			vcpu->arch_vcpu.idt_vectoring_info = 0U;
 		} else if (type == VMX_INT_TYPE_NMI) {
 			vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
-			vcpu->arch_vcpu.idt_vectoring_info = 0;
+			vcpu->arch_vcpu.idt_vectoring_info = 0U;
 		}
 	}
 
@@ -229,7 +229,7 @@ int cpuid_vmexit_handler(struct vcpu *vcpu)
 		(uint32_t *)&cur_context->guest_cpu_regs.regs.rcx,
 		(uint32_t *)&cur_context->guest_cpu_regs.regs.rdx);
 
-	TRACE_2L(TRACE_VMEXIT_CPUID, vcpu->vcpu_id, 0);
+	TRACE_2L(TRACE_VMEXIT_CPUID, vcpu->vcpu_id, 0UL);
 
 	return 0;
 }
@@ -265,19 +265,19 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
 	switch ((VM_EXIT_CR_ACCESS_ACCESS_TYPE
 		 (vcpu->arch_vcpu.exit_qualification) << 4) |
 		VM_EXIT_CR_ACCESS_CR_NUM(vcpu->arch_vcpu.exit_qualification)) {
-	case 0x00:
+	case 0x00U:
 		/* mov to cr0 */
 		vmx_write_cr0(vcpu, *regptr);
 		break;
-	case 0x04:
+	case 0x04U:
 		/* mov to cr4 */
 		vmx_write_cr4(vcpu, *regptr);
 		break;
-	case 0x08:
+	case 0x08U:
 		/* mov to cr8 */
 		vlapic_set_cr8(vcpu->arch_vcpu.vlapic, *regptr);
 		break;
-	case 0x18:
+	case 0x18U:
 		/* mov from cr8 */
 		*regptr = vlapic_get_cr8(vcpu->arch_vcpu.vlapic);
 		break;
@@ -318,17 +318,17 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	ctx_ptr = &(vcpu->arch_vcpu.contexts[idx]);
 
 	/*to access XCR0,'rcx' should be 0*/
-	if (ctx_ptr->guest_cpu_regs.regs.rcx != 0) {
-		vcpu_inject_gp(vcpu, 0);
+	if (ctx_ptr->guest_cpu_regs.regs.rcx != 0UL) {
+		vcpu_inject_gp(vcpu, 0U);
 		return -1;
 	}
 
-	val64 = ((ctx_ptr->guest_cpu_regs.regs.rax) & 0xffffffff) |
-			(ctx_ptr->guest_cpu_regs.regs.rdx << 32);
+	val64 = ((ctx_ptr->guest_cpu_regs.regs.rax) & 0xffffffffUL) |
+			(ctx_ptr->guest_cpu_regs.regs.rdx << 32UL);
 
 	/*bit 0(x87 state) of XCR0 can't be cleared*/
-	if ((val64 & 0x01UL) == 0U) {
-		vcpu_inject_gp(vcpu, 0);
+	if ((val64 & 0x01UL) == 0UL) {
+		vcpu_inject_gp(vcpu, 0U);
 		return -1;
 	}
 
@@ -336,8 +336,8 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	 *set to 10b as it is necessary to set both bits
 	 *to use AVX instructions.
 	 **/
-	if (((val64 >> 1) & 0x3UL) == 0x2UL) {
-		vcpu_inject_gp(vcpu, 0);
+	if (((val64 >> 1UL) & 0x3UL) == 0x2UL) {
+		vcpu_inject_gp(vcpu, 0U);
 		return -1;
 	}
 

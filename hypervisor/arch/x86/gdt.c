@@ -7,7 +7,7 @@
 #include <hypervisor.h>
 
 static void set_tss_desc(union tss_64_descriptor *desc,
-		void *tss, int tss_limit, int type)
+		void *tss, size_t tss_limit, int type)
 {
 	uint32_t u1, u2, u3;
 
