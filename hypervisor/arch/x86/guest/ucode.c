@@ -29,14 +29,15 @@ void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 {
 	uint64_t gva;
 	struct ucode_header uhdr;
-	int data_size, data_page_num;
+	int data_page_num;
+	size_t data_size;
 	uint8_t *ucode_ptr, *ptr;
 	int err;
 	uint32_t err_code;
 
 	gva = v - sizeof(struct ucode_header);
 
-	err_code = 0;
+	err_code = 0U;
 	err = copy_from_gva(vcpu, &uhdr, gva, sizeof(uhdr), &err_code);
 	if (err == -EFAULT) {
 		vcpu_inject_pf(vcpu, gva, err_code);
@@ -52,7 +53,7 @@ void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 	if (ptr == NULL)
 		return;
 
-	err_code = 0;
+	err_code = 0U;
 	err = copy_from_gva(vcpu, ucode_ptr, gva, data_size, &err_code);
 	if (err == -EFAULT) {
 		vcpu_inject_pf(vcpu, gva, err_code);

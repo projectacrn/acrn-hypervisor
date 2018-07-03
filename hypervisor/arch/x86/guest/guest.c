@@ -127,8 +127,8 @@ enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 	uint64_t gva, uint64_t *gpa, uint32_t *err_code)
 {
-	int i, index;
-	uint32_t shift;
+	int i;
+	uint32_t index, shift;
 	uint8_t *base;
 	uint64_t entry;
 	uint64_t addr, page_size;
@@ -147,15 +147,15 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 			goto out;
 		}
 
-		shift = i * pw_info->width + 12;
-		index = (gva >> shift) & ((1UL << pw_info->width) - 1);
+		shift = (uint32_t) i * pw_info->width + 12U;
+		index = (gva >> shift) & ((1UL << pw_info->width) - 1UL);
 		page_size = 1UL << shift;
 
-		if (pw_info->width == 10)
+		if (pw_info->width == 10U)
 			/* 32bit entry */
-			entry = *((uint32_t *)(base + 4 * index));
+			entry = *((uint32_t *)(base + 4U * index));
 		else
-			entry = *((uint64_t *)(base + 8 * index));
+			entry = *((uint64_t *)(base + 8U * index));
 
 		/* check if the entry present */
 		if ((entry & MMU_32BIT_PDE_P) == 0U) {
@@ -259,7 +259,7 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 
 	if ((gpa == NULL) || (err_code == NULL))
 		return -EINVAL;
-	*gpa = 0;
+	*gpa = 0UL;
 
 	pw_info.top_entry = cur_context->cr3;
 	pw_info.level = pm;
@@ -302,12 +302,12 @@ static inline int32_t _copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 	void *g_ptr;
 
 	hpa = _gpa2hpa(vm, gpa, &pg_size);
-	if (pg_size == 0) {
+	if (pg_size == 0U) {
 		pr_err("GPA2HPA not found");
 		return -EINVAL;
 	}
 
-	if (fix_pg_size != 0)
+	if (fix_pg_size != 0U)
 		pg_size = fix_pg_size;
 
 	off_in_pg = gpa & (pg_size - 1);
@@ -327,7 +327,8 @@ static inline int32_t _copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 static inline int copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 	uint32_t size, bool cp_from_vm)
 {
-	int32_t len;
+	int32_t ret;
+	uint32_t len;
 
 	if (vm == NULL) {
 		pr_err("guest phy addr copy need vm param");
@@ -335,14 +336,15 @@ static inline int copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 	}
 
 	do {
-		len = _copy_gpa(vm, h_ptr, gpa, size, 0, cp_from_vm);
-		if (len < 0)
-			return len;
+		ret = _copy_gpa(vm, h_ptr, gpa, size, 0, cp_from_vm);
+		if (ret < 0)
+			return ret;
 
+		len = (uint32_t) ret;
 		gpa += len;
 		h_ptr += len;
 		size -= len;
-	} while (size > 0);
+	} while (size > 0U);
 
 	return 0;
 }
@@ -351,7 +353,8 @@ static inline int copy_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
 	uint32_t size, uint32_t *err_code, bool cp_from_vm)
 {
 	uint64_t gpa = 0;
-	int32_t len, ret;
+	int32_t ret;
+	uint32_t len;
 
 	if (vcpu == NULL) {
 		pr_err("guest virt addr copy need vcpu param");
@@ -370,15 +373,16 @@ static inline int copy_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
 			return ret;
 		}
 
-		len = ret = _copy_gpa(vcpu->vm, h_ptr, gpa, size,
+		ret = _copy_gpa(vcpu->vm, h_ptr, gpa, size,
 			PAGE_SIZE_4K, cp_from_vm);
 		if (ret < 0)
 			return ret;
 
+		len = (uint32_t) ret;
 		gva += len;
 		h_ptr += len;
 		size -= len;
-	} while (size > 0);
+	} while (size > 0U);
 
 	return 0;
 }
@@ -413,7 +417,7 @@ int copy_to_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
 
 void init_e820(void)
 {
-	unsigned int i;
+	uint32_t i;
 
 	if (boot_regs[0] == MULTIBOOT_INFO_MAGIC) {
 		struct multiboot_info *mbi = (struct multiboot_info *)
@@ -435,7 +439,7 @@ void init_e820(void)
 				"mmap length 0x%x addr 0x%x entries %d\n",
 				mbi->mi_mmap_length, mbi->mi_mmap_addr,
 				e820_entries);
-			for (i = 0; i < e820_entries; i++) {
+			for (i = 0U; i < e820_entries; i++) {
 				e820[i].baseaddr = mmap[i].baseaddr;
 				e820[i].length = mmap[i].length;
 				e820[i].type = mmap[i].type;
@@ -455,16 +459,16 @@ void init_e820(void)
 
 void obtain_e820_mem_info(void)
 {
-	unsigned int i;
+	uint32_t i;
 	struct e820_entry *entry;
 
 	e820_mem.mem_bottom = UINT64_MAX;
-	e820_mem.mem_top = 0x00;
-	e820_mem.total_mem_size = 0;
-	e820_mem.max_ram_blk_base = 0;
-	e820_mem.max_ram_blk_size = 0;
+	e820_mem.mem_top = 0x0UL;
+	e820_mem.total_mem_size = 0UL;
+	e820_mem.max_ram_blk_base = 0UL;
+	e820_mem.max_ram_blk_size = 0UL;
 
-	for (i = 0; i < e820_entries; i++) {
+	for (i = 0U; i < e820_entries; i++) {
 		entry = &e820[i];
 		if (e820_mem.mem_bottom > entry->baseaddr)
 			e820_mem.mem_bottom = entry->baseaddr;
@@ -488,7 +492,7 @@ void obtain_e820_mem_info(void)
 
 static void rebuild_vm0_e820(void)
 {
-	unsigned int i;
+	uint32_t i;
 	uint64_t entry_start;
 	uint64_t entry_end;
 	uint64_t hv_start = CONFIG_RAM_START;
@@ -498,7 +502,7 @@ static void rebuild_vm0_e820(void)
 	/* hypervisor mem need be filter out from e820 table
 	 * it's hv itself + other hv reserved mem like vgt etc
 	 */
-	for (i = 0; i < e820_entries; i++) {
+	for (i = 0U; i < e820_entries; i++) {
 		entry = &e820[i];
 		entry_start = entry->baseaddr;
 		entry_end = entry->baseaddr + entry->length;
@@ -539,7 +543,7 @@ static void rebuild_vm0_e820(void)
 
 	}
 
-	if (new_entry.length > 0) {
+	if (new_entry.length > 0UL) {
 		e820_entries++;
 		ASSERT(e820_entries <= E820_MAX_ENTRIES,
 				"e820 entry overflow");
@@ -562,7 +566,7 @@ static void rebuild_vm0_e820(void)
  */
 int prepare_vm0_memmap_and_e820(struct vm *vm)
 {
-	unsigned int i;
+	uint32_t i;
 	uint32_t attr_wb = (IA32E_EPT_R_BIT |
 				IA32E_EPT_W_BIT |
 				IA32E_EPT_X_BIT |
@@ -584,7 +588,7 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 			MAP_MMIO, attr_uc);
 
 	/* update ram entries to WB attr */
-	for (i = 0; i < e820_entries; i++) {
+	for (i = 0U; i < e820_entries; i++) {
 		entry = &e820[i];
 		if (entry->type == E820_TYPE_RAM)
 			ept_mmap(vm, entry->baseaddr, entry->baseaddr,
@@ -593,7 +597,7 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 
 
 	dev_dbg(ACRN_DBG_GUEST, "VM0 e820 layout:\n");
-	for (i = 0; i < e820_entries; i++) {
+	for (i = 0U; i < e820_entries; i++) {
 		entry = &e820[i];
 		dev_dbg(ACRN_DBG_GUEST,
 			"e820 table: %d type: 0x%x", i, entry->type);
@@ -618,7 +622,7 @@ uint64_t e820_alloc_low_memory(uint32_t size)
 	/* We want memory in page boundary and integral multiple of pages */
 	size = ROUND_PAGE_UP(size);
 
-	for (i = 0; i < e820_entries; i++) {
+	for (i = 0U; i < e820_entries; i++) {
 		entry = &e820[i];
 		uint64_t start, end, length;
 

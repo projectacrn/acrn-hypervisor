@@ -35,10 +35,10 @@ static void vm_setup_cpu_px(struct vm *vm)
 {
 	uint32_t px_data_size;
 
-	vm->pm.px_cnt = 0;
+	vm->pm.px_cnt = 0U;
 	memset(vm->pm.px_data, 0, MAX_PSTATE * sizeof(struct cpu_px_data));
 
-	if ((boot_cpu_data.state_info.px_cnt == 0)
+	if ((boot_cpu_data.state_info.px_cnt == 0U)
 		|| (boot_cpu_data.state_info.px_data == NULL)) {
 		return;
 	}
@@ -59,10 +59,10 @@ static void vm_setup_cpu_cx(struct vm *vm)
 {
 	uint32_t cx_data_size;
 
-	vm->pm.cx_cnt = 0;
+	vm->pm.cx_cnt = 0U;
 	memset(vm->pm.cx_data, 0, MAX_CSTATE * sizeof(struct cpu_cx_data));
 
-	if ((boot_cpu_data.state_info.cx_cnt == 0)
+	if ((boot_cpu_data.state_info.cx_cnt == 0U)
 		|| (boot_cpu_data.state_info.cx_data == NULL)) {
 		return;
 	}
@@ -137,12 +137,12 @@ static uint32_t pm1ab_io_read(__unused struct vm_io_handler *hdlr,
 {
 	uint32_t val = io_read(addr, width);
 
-	if (host_enter_s3_success == 0) {
+	if (host_enter_s3_success == 0U) {
 		/* If host S3 enter failes, we should set BIT_WAK_STS
 		 * bit for vm0 and let vm0 back from S3 failure path.
 		 */
 		if (addr == vm->pm.sx_state_data->pm1a_evt.address) {
-			val |= (1 << BIT_WAK_STS);
+			val |= (1U << BIT_WAK_STS);
 		}
 	}
 	return val;
@@ -152,9 +152,9 @@ static void pm1ab_io_write(__unused struct vm_io_handler *hdlr,
 		__unused struct vm *vm, uint16_t addr, size_t width,
 		uint32_t v)
 {
-	static uint32_t pm1a_cnt_ready = 0;
+	static uint32_t pm1a_cnt_ready = 0U;
 
-	if (width == 2) {
+	if (width == 2U) {
 		uint8_t val = get_slp_typx(v);
 
 		if ((addr == vm->pm.sx_state_data->pm1a_cnt.address)
@@ -173,9 +173,9 @@ static void pm1ab_io_write(__unused struct vm_io_handler *hdlr,
 			&& (val == vm->pm.sx_state_data->s3_pkg.val_pm1b)
 			&& s3_enabled(v)) {
 
-			if (pm1a_cnt_ready) {
+			if (pm1a_cnt_ready != 0U) {
 				enter_s3(vm, pm1a_cnt_ready, v);
-				pm1a_cnt_ready = 0;
+				pm1a_cnt_ready = 0U;
 			} else {
 				/* the case broke ACPI spec */
 				pr_err("PM1B_CNT write error!");
@@ -192,10 +192,10 @@ void register_gas_io_handler(struct vm *vm, struct acpi_generic_address *gas)
 	uint8_t io_len[5] = {0, 1, 2, 4, 8};
 	struct vm_io_range gas_io;
 
-	if ((gas->address == 0)
+	if ((gas->address == 0UL)
 			|| (gas->space_id != SPACE_SYSTEM_IO)
-			|| (gas->access_size == 0)
-			|| (gas->access_size > 4))
+			|| (gas->access_size == 0U)
+			|| (gas->access_size > 4U))
 		return;
 
 	gas_io.flags = IO_ATTR_RW,

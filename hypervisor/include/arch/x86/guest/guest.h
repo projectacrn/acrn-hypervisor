@@ -49,7 +49,7 @@ int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req);
 #define	ACRN_REQUEST_TRP_FAULT 6
 #define ACRN_REQUEST_VPID_FLUSH 7 /* flush vpid tlb */
 
-#define E820_MAX_ENTRIES    32
+#define E820_MAX_ENTRIES    32U
 
 struct e820_mem_params {
 	uint64_t mem_bottom;

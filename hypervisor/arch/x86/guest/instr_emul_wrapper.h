@@ -37,7 +37,7 @@ struct vie_op {
 	uint16_t	op_flags;
 };
 
-#define	VIE_INST_SIZE	15
+#define	VIE_INST_SIZE	15U
 struct vie {
 	uint8_t		inst[VIE_INST_SIZE];	/* instruction bytes */
 	uint8_t		num_valid;		/* size of the instruction */
