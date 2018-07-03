@@ -8,13 +8,13 @@
 #define LOGMSG_H
 
 /* Logging severity levels */
-#define LOG_FATAL		1
+#define LOG_FATAL		1U
 /* For msg should be write to console and sbuf meanwhile but not fatal error */
-#define LOG_ACRN		2
-#define LOG_ERROR		3
-#define LOG_WARNING		4
-#define LOG_INFO		5
-#define LOG_DEBUG		6
+#define LOG_ACRN		2U
+#define LOG_ERROR		3U
+#define LOG_WARNING		4U
+#define LOG_INFO		5U
+#define LOG_DEBUG		6U
 
 /* Logging flags */
 #define LOG_FLAG_STDOUT		0x00000001U
