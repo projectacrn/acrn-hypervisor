@@ -1270,7 +1270,7 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 		error = vm_get_seg_desc(vcpu, CPU_REG_SS, &ss_desc);
 		ASSERT(error == 0, "%s: error %d getting SS descriptor",
 					__func__, error);
-		if ((_Bool)SEG_DESC_DEF32(ss_desc.access))
+		if (SEG_DESC_DEF32(ss_desc.access))
 			stackaddrsize = 4U;
 		else
 			stackaddrsize = 2U;
@@ -1595,7 +1595,7 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 		 * then the descriptor is unusable and attempting to use
 		 * it results in a #GP(0).
 		 */
-		if ((_Bool)SEG_DESC_UNUSABLE(desc->access))
+		if (SEG_DESC_UNUSABLE(desc->access))
 			return -1;
 
 		/*
@@ -1604,7 +1604,7 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 		 * descriptor that is not present. If this was the case then
 		 * it would have been checked before the VM-exit.
 		 */
-		ASSERT((_Bool)SEG_DESC_PRESENT(desc->access),
+		ASSERT(SEG_DESC_PRESENT(desc->access),
 		    "segment %d not present: %#x", seg, desc->access);
 
 		/*
@@ -1818,7 +1818,7 @@ decode_prefixes(struct vie *vie, enum vm_cpu_mode cpu_mode, int cs_d)
 			vie->opsize = 2U;
 		else
 			vie->opsize = 4U;
-	} else if (cs_d != 0) {
+	} else if (cs_d) {
 		/* Default address and operand sizes are 32-bits */
 		vie->addrsize = vie->addrsize_override != 0U ? 2U : 4U;
 		vie->opsize = vie->opsize_override != 0U ? 2U : 4U;
@@ -2137,7 +2137,7 @@ decode_moffset(struct vie *vie)
 }
 
 int
-__decode_instruction(enum vm_cpu_mode cpu_mode, int cs_d, struct vie *vie)
+__decode_instruction(enum vm_cpu_mode cpu_mode, bool cs_d, struct vie *vie)
 {
 	if (decode_prefixes(vie, cpu_mode, cs_d) != 0)
 		return -1;

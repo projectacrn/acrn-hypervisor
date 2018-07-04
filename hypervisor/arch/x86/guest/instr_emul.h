@@ -87,7 +87,7 @@ int vie_init(struct vie *vie, struct vcpu *vcpu);
  */
 #define	VIE_INVALID_GLA		(1UL << 63)	/* a non-canonical address */
 int
-__decode_instruction(enum vm_cpu_mode cpu_mode, int cs_d, struct vie *vie);
+__decode_instruction(enum vm_cpu_mode cpu_mode, bool cs_d, struct vie *vie);
 
 int emulate_instruction(struct vcpu *vcpu);
 int decode_instruction(struct vcpu *vcpu);
