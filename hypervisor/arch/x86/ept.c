@@ -19,7 +19,7 @@ static uint64_t find_next_table(uint32_t table_offset, void *table_base)
 	uint64_t sub_table_addr = 0;
 
 	/* Read the table entry */
-	table_entry = MEM_READ64(table_base
+	table_entry = mem_read64(table_base
 			+ (table_offset * IA32E_COMM_ENTRY_SIZE));
 
 	/* If bit 7 is set, entry is not a subtable. */
