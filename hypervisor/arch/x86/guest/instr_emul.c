@@ -34,25 +34,22 @@
 #include "instr_emul.h"
 
 /* struct vie_op.op_type */
-enum {
-	VIE_OP_TYPE_NONE = 0,
-	VIE_OP_TYPE_MOV,
-	VIE_OP_TYPE_MOVSX,
-	VIE_OP_TYPE_MOVZX,
-	VIE_OP_TYPE_AND,
-	VIE_OP_TYPE_OR,
-	VIE_OP_TYPE_SUB,
-	VIE_OP_TYPE_TWO_BYTE,
-	VIE_OP_TYPE_PUSH,
-	VIE_OP_TYPE_CMP,
-	VIE_OP_TYPE_POP,
-	VIE_OP_TYPE_MOVS,
-	VIE_OP_TYPE_GROUP1,
-	VIE_OP_TYPE_STOS,
-	VIE_OP_TYPE_BITTEST,
-	VIE_OP_TYPE_TEST,
-	VIE_OP_TYPE_LAST
-};
+#define VIE_OP_TYPE_NONE	0U
+#define VIE_OP_TYPE_MOV		1U
+#define VIE_OP_TYPE_MOVSX	2U
+#define VIE_OP_TYPE_MOVZX	3U
+#define VIE_OP_TYPE_AND		4U
+#define VIE_OP_TYPE_OR		5U
+#define VIE_OP_TYPE_SUB		6U
+#define VIE_OP_TYPE_TWO_BYTE	7U
+#define VIE_OP_TYPE_PUSH	8U
+#define VIE_OP_TYPE_CMP		9U
+#define VIE_OP_TYPE_POP		10U
+#define VIE_OP_TYPE_MOVS	11U
+#define VIE_OP_TYPE_GROUP1	12U
+#define VIE_OP_TYPE_STOS	13U
+#define VIE_OP_TYPE_BITTEST	14U
+#define VIE_OP_TYPE_TEST	15U
 
 /* struct vie_op.op_flags */
 #define	VIE_OP_F_IMM		(1U << 0)  /* 16/32-bit immediate operand */
