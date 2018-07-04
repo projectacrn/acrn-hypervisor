@@ -30,7 +30,17 @@ sys.path.insert(0, os.path.abspath('.'))
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['breathe', 'sphinx.ext.graphviz']
+
+sys.path.insert(0, os.path.join(os.path.abspath('.'), 'extensions'))
+extensions = ['breathe', 'sphinx.ext.graphviz', 'kerneldoc']
+
+# kernel-doc extension configuration for running Sphinx directly (e.g. by Read
+# the Docs). In a normal build, these are supplied from the Makefile via command
+# line arguments.
+
+kerneldoc_bin = 'scripts/kernel-doc'
+kerneldoc_srctree = '../../acrn-kernel'
+
 
 graphviz_output_format='png'
 graphviz_dot_args=[
