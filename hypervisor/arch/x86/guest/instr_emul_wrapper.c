@@ -261,11 +261,11 @@ static uint32_t get_vmcs_field(enum cpu_reg_name ident)
 static void get_guest_paging_info(struct vcpu *vcpu, struct emul_cnx *emul_cnx,
 						uint32_t csar)
 {
-	uint32_t cpl;
+	uint8_t cpl;
 
 	ASSERT(emul_cnx != NULL && vcpu != NULL, "Error in input arguments");
 
-	cpl = (csar >> 5) & 3U;
+	cpl = (uint8_t)((csar >> 5) & 3U);
 	emul_cnx->paging.cr3 =
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3;
 	emul_cnx->paging.cpl = cpl;

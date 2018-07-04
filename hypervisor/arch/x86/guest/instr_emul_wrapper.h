@@ -173,7 +173,7 @@ struct seg_desc {
 
 struct vm_guest_paging {
 	uint64_t	cr3;
-	int		cpl;
+	uint8_t		cpl;
 	enum vm_cpu_mode cpu_mode;
 	enum vm_paging_mode paging_mode;
 };

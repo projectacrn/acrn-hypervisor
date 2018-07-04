@@ -60,7 +60,7 @@ int vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
 /*
  * Returns 1 if an alignment check exception should be injected and 0 otherwise.
  */
-int vie_alignment_check(int cpl, uint8_t operand_size, uint64_t cr0,
+int vie_alignment_check(uint8_t cpl, uint8_t operand_size, uint64_t cr0,
 	uint64_t rflags, uint64_t gla);
 
 /* Returns 1 if the 'gla' is not canonical and 0 otherwise. */
