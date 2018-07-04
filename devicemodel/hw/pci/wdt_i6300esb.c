@@ -40,6 +40,7 @@
 
 #define ESB_WDT_REBOOT	(0x01 << 5)   /* Enable reboot on timeout */
 #define ESB_WDT_RELOAD	(0x01 << 8)   /* Ping/kick dog  */
+#define	ESB_WDT_TIMEOUT	(0x01 << 9)   /* WDT timeout happened? */
 #define TIMER_TO_SECONDS(val)	(val >> 9)
 
 /* Magic constants */
@@ -75,6 +76,11 @@ struct info_wdt {
 	int unlock_state;   /* unlock states 0 -> 1 -> 2  */
 };
 
+/* Whether watchdog is timeout. This info should cross reset. So
+ * we didn't add to struct info_wdt.
+ */
+static int wdt_timeout = 0;
+
 static struct info_wdt	wdt_state;
 
 static void start_wdt_timer(void);
@@ -95,6 +101,9 @@ wdt_expired_thread(union sigval v)
 		start_wdt_timer();
 	} else {
 		if (wdt_state.reboot_enabled) {
+			wdt_state.stage = 1;
+			wdt_timeout = 1;
+
 			/* watchdog timer out, set the uos to reboot */
 			vm_set_suspend_mode(VM_SUSPEND_RESET);
 			mevent_notify();
@@ -264,10 +273,18 @@ pci_wdt_bar_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		else if ((value == ESB_UNLOCK2)
 			&& (wdt_state.unlock_state == 1))
 			wdt_state.unlock_state = 2;
-		else if ((wdt_state.unlock_state == 2)
-			&& (value & ESB_WDT_RELOAD)) {
-			wdt_state.stage = 1;
-			start_wdt_timer();
+		else if (wdt_state.unlock_state == 2) {
+			if (value & ESB_WDT_RELOAD) {
+				wdt_state.stage = 1;
+				start_wdt_timer();
+			}
+
+			/* write ES_WDT_TIMEOUT bit clear wdt timeout */
+			if (value & ESB_WDT_TIMEOUT) {
+				DPRINTF("%s: timeout cleaned\n\r", __func__);
+				wdt_timeout = 0;
+			}
+
 			wdt_state.unlock_state = 0;
 		}
 	} else if (wdt_state.unlock_state == 2) {
@@ -284,10 +301,23 @@ uint64_t
 pci_wdt_bar_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		 int baridx, uint64_t offset, int size)
 {
-	assert(baridx == 0);
-	DPRINTF("%s: addr = 0x%x, size=%d\n", __func__, (int) offset, size);
+	uint64_t ret = 0;
 
-	return 0;
+	assert(baridx == 0);
+	DPRINTF("%s: addr = 0x%x, size=%d\n\r", __func__, (int) offset, size);
+
+	if (offset == ESB_RELOAD_REG) {
+		assert(size == 2);
+
+		DPRINTF("%s: timeout: %d\n\r", __func__, wdt_timeout);
+		if (wdt_timeout != 0)
+			ret |= ESB_WDT_TIMEOUT;
+
+		if (wdt_state.stage == 1)
+			ret |= ESB_WDT_RELOAD;
+	}
+
+	return ret;
 }
 
 static int
