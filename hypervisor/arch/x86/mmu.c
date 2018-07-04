@@ -304,7 +304,7 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 	/* Check to see if mapping should occur */
 	if (mapped_size != 0U) {
 		/* Get current table entry */
-		uint64_t entry = MEM_READ64(table_base + table_offset);
+		uint64_t entry = mem_read64(table_base + table_offset);
 		bool prev_entry_present = false;
 		bool mmu_need_invtlb = false;
 
@@ -487,7 +487,7 @@ static int get_table_entry(void *addr, void *table_base,
 	table_offset = fetch_page_table_offset(addr, table_level);
 
 	/* Read the table entry */
-	*table_entry = MEM_READ64(table_base + table_offset);
+	*table_entry = mem_read64(table_base + table_offset);
 
 	return 0;
 }
@@ -515,7 +515,7 @@ static void *walk_paging_struct(void *addr, void *table_base,
 	/* See if we can skip the rest */
 	if (sub_table_addr != table_base) {
 		/* Read the table entry */
-		table_entry = MEM_READ64(table_base + table_offset);
+		table_entry = mem_read64(table_base + table_offset);
 
 		/* Check if EPT entry being created */
 		if (map_params->page_table_type == PTT_EPT) {

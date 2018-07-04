@@ -257,13 +257,27 @@ enum _page_table_present {
 #define PAGE_SIZE_2M	MEM_2M
 #define PAGE_SIZE_1G	MEM_1G
 
-/* Macros for reading memory */
-#define MEM_READ8(addr)        (*(volatile uint8_t *)(addr))
-#define MEM_READ16(addr)       (*(volatile uint16_t *)(addr))
-#define MEM_READ32(addr)       (*(volatile uint32_t *)(addr))
-#define MEM_READ64(addr)       (*(volatile uint64_t *)(addr))
+/* Inline functions for reading/writing memory */
+static inline uint8_t mem_read8(void *addr)
+{
+	return *(volatile uint8_t *)(addr);
+}
 
-/* Inline functions for writing memory */
+static inline uint16_t mem_read16(void *addr)
+{
+	return *(volatile uint16_t *)(addr);
+}
+
+static inline uint32_t mem_read32(void *addr)
+{
+	return *(volatile uint32_t *)(addr);
+}
+
+static inline uint64_t mem_read64(void *addr)
+{
+	return *(volatile uint64_t *)(addr);
+}
+
 static inline void mem_write8(void *addr, uint8_t data)
 {
 	*(volatile uint8_t *)(addr) = (uint8_t)(data);
