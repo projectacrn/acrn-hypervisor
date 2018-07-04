@@ -14,7 +14,7 @@ struct intr_excp_ctx;
 #define DUMP_STACK_SIZE 0x200U
 
 void dump_intr_excp_frame(struct intr_excp_ctx *ctx);
-void dump_exception(struct intr_excp_ctx *ctx, uint32_t cpu_id);
+void dump_exception(struct intr_excp_ctx *ctx, uint16_t pcpu_id);
 
 #else
 static inline void dump_intr_excp_frame(__unused struct intr_excp_ctx *ctx)
@@ -22,7 +22,7 @@ static inline void dump_intr_excp_frame(__unused struct intr_excp_ctx *ctx)
 }
 
 static inline void dump_exception(__unused struct intr_excp_ctx *ctx,
-		__unused uint32_t cpu_id)
+		__unused uint16_t pcpu_id)
 {
 }
 

@@ -31,22 +31,22 @@ struct vcpu *get_ever_run_vcpu(uint16_t pcpu_id)
  *     for physical CPU 1 : vcpu->pcpu_id = 1, vcpu->vcpu_id = 1, vmid = 1;
  *
  ***********************************************************************/
-int create_vcpu(uint16_t cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
+int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 {
 	struct vcpu *vcpu;
 
 	ASSERT(vm != NULL, "");
 	ASSERT(rtn_vcpu_handle != NULL, "");
 
-	pr_info("Creating VCPU %d", cpu_id);
+	pr_info("Creating VCPU %hu", pcpu_id);
 
 	/* Allocate memory for VCPU */
 	vcpu = calloc(1, sizeof(struct vcpu));
 	ASSERT(vcpu != NULL, "");
 
 	/* Initialize the physical CPU ID for this VCPU */
-	vcpu->pcpu_id = cpu_id;
-	per_cpu(ever_run_vcpu, cpu_id) = vcpu;
+	vcpu->pcpu_id = pcpu_id;
+	per_cpu(ever_run_vcpu, pcpu_id) = vcpu;
 
 	/* Initialize the parent VM reference */
 	vcpu->vm = vm;
@@ -72,7 +72,7 @@ int create_vcpu(uint16_t cpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	ASSERT(vcpu->vcpu_id < vm->hw.num_vcpus,
 			"Allocated vcpu_id is out of range!");
 
-	per_cpu(vcpu, cpu_id) = vcpu;
+	per_cpu(vcpu, pcpu_id) = vcpu;
 
 	pr_info("PCPU%d is working as VM%d VCPU%d, Role: %s",
 			vcpu->pcpu_id, vcpu->vm->attr.id, vcpu->vcpu_id,

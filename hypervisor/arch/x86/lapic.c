@@ -211,11 +211,11 @@ int early_init_lapic(void)
 	return 0;
 }
 
-int init_lapic(uint16_t cpu_id)
+int init_lapic(uint16_t pcpu_id)
 {
 	/* Set the Logical Destination Register */
 	write_lapic_reg32(LAPIC_LOGICAL_DESTINATION_REGISTER,
-		((1U << cpu_id) << 24));
+		((1U << pcpu_id) << 24U));
 
 	/* Set the Destination Format Register */
 	write_lapic_reg32(LAPIC_DESTINATION_FORMAT_REGISTER, 0xf << 28);

@@ -104,33 +104,33 @@ static bool is_vm0_bsp(uint16_t pcpu_id)
 	return pcpu_id == vm0_desc.vm_hw_logical_core_ids[0];
 }
 
-int32_t hv_main(uint16_t cpu_id)
+int32_t hv_main(uint16_t pcpu_id)
 {
 	int32_t ret;
 
-	pr_info("%s, Starting common entry point for CPU %d",
-			__func__, cpu_id);
+	pr_info("%s, Starting common entry point for CPU %hu",
+			__func__, pcpu_id);
 
-	if (cpu_id >= phys_cpu_num) {
-		pr_err("%s, cpu_id %d out of range %d\n",
-			__func__, cpu_id, phys_cpu_num);
+	if (pcpu_id >= phys_cpu_num) {
+		pr_err("%s, cpu_id %hu out of range %d\n",
+			__func__, pcpu_id, phys_cpu_num);
 		return -EINVAL;
 	}
 
-	if (cpu_id != get_cpu_id()) {
-		pr_err("%s, cpu_id %d mismatch\n", __func__, cpu_id);
+	if (pcpu_id != get_cpu_id()) {
+		pr_err("%s, cpu_id %hu mismatch\n", __func__, pcpu_id);
 		return -EINVAL;
 	}
 
 	/* Enable virtualization extensions */
-	ret = exec_vmxon_instr(cpu_id);
+	ret = exec_vmxon_instr(pcpu_id);
 	if (ret != 0)
 		return ret;
 
 	/* X2APIC mode is disabled by default. */
 	x2apic_enabled = false;
 
-	if (is_vm0_bsp(cpu_id)) {
+	if (is_vm0_bsp(pcpu_id)) {
 		ret = prepare_vm0();
 		if (ret != 0)
 			return ret;
