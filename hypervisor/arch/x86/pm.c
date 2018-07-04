@@ -74,7 +74,6 @@ int enter_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 	uint32_t pm1b_cnt_val)
 {
 	uint32_t pcpu_id;
-	int ret;
 	uint64_t pmain_entry_saved;
 	uint32_t guest_wakeup_vec32;
 	uint64_t *pmain_entry;

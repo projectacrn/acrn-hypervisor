@@ -310,9 +310,9 @@ void setup_ioapic_irq(void)
 
 	for (ioapic_id = 0U;
 	     ioapic_id < CONFIG_NR_IOAPICS; ioapic_id++) {
-		int pin;
-		int max_pins;
-		int version;
+		uint32_t pin;
+		uint32_t max_pins;
+		uint32_t version;
 		void *addr;
 
 		addr = map_ioapic(get_ioapic_base(ioapic_id));

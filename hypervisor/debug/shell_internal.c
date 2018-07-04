@@ -317,7 +317,7 @@ int shell_process_cmd(struct shell *p_shell, char *p_input_line)
 
 	(void) string_to_argv(&cmd_argv_str[0],
 			(void *) &cmd_argv_mem[0],
-			sizeof(cmd_argv_mem), &cmd_argc, &cmd_argv);
+			sizeof(cmd_argv_mem), (void *)&cmd_argc, &cmd_argv);
 
 	/* Determine if there is a command to process. */
 	if (cmd_argc != 0) {
@@ -1068,6 +1068,8 @@ int shell_trigger_crash(struct shell *p_shell, int argc, char **argv)
 {
 	char str[MAX_STR_SIZE] = {0};
 
+	(void)argc;
+	(void)argv;
 	snprintf(str, MAX_STR_SIZE, "trigger crash, divide by 0 ...\r\n");
 	shell_puts(p_shell, str);
 	snprintf(str, MAX_STR_SIZE, "%d\r", 1/0);
