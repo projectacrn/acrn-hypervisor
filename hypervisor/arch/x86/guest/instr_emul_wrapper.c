@@ -114,8 +114,8 @@ int vm_get_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
 		return -EINVAL;
 
 	desc->base = exec_vmread(base);
-	desc->limit = exec_vmread(limit);
-	desc->access = exec_vmread(access);
+	desc->limit = (uint32_t)exec_vmread(limit);
+	desc->access = (uint32_t)exec_vmread(access);
 
 	return 0;
 }
@@ -313,7 +313,7 @@ int decode_instruction(struct vcpu *vcpu)
 		return retval;
 	}
 
-	csar = exec_vmread(VMX_GUEST_CS_ATTR);
+	csar = (uint32_t)exec_vmread(VMX_GUEST_CS_ATTR);
 	get_guest_paging_info(vcpu, emul_cnx, csar);
 	cpu_mode = get_vcpu_mode(vcpu);
 

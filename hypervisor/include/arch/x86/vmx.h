@@ -402,7 +402,18 @@
 
 /* External Interfaces */
 int exec_vmxon_instr(uint16_t pcpu_id);
+
+/**
+ * Read field from VMCS.
+ *
+ * Refer to Chapter 24, Vol. 3 in SDM for the width of VMCS fields.
+ *
+ * @return full contents in IA-32e mode for 64-bit fields.
+ * @return the lower 32-bit outside IA-32e mode for 64-bit fields.
+ * @return full contents for 32-bit fields, with higher 32-bit set to 0.
+ */
 uint64_t exec_vmread(uint32_t field);
+
 uint64_t exec_vmread64(uint32_t field_full);
 void exec_vmwrite(uint32_t field, uint64_t value);
 void exec_vmwrite64(uint32_t field_full, uint64_t value);
