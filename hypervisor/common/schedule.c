@@ -88,11 +88,25 @@ static struct vcpu *select_next_vcpu(int pcpu_id)
 	return vcpu;
 }
 
+/* here we assume there is no reschedule request will be made after
+ * acrn_handle_pending_request
+ */
+static bool reschedule_need_notify_vcpu(struct vcpu *vcpu)
+{
+	if (vcpu->in_rootmode)
+		return false;
+
+	if ((int)get_cpu_id() != vcpu->pcpu_id)
+		return true;
+	else
+		return false;
+}
 void make_reschedule_request(struct vcpu *vcpu)
 {
 	bitmap_set(NEED_RESCHEDULE,
 		&per_cpu(sched_ctx, vcpu->pcpu_id).flags);
-	send_single_ipi(vcpu->pcpu_id, VECTOR_NOTIFY_VCPU);
+	if (reschedule_need_notify_vcpu(vcpu))
+		send_single_ipi(vcpu->pcpu_id, VECTOR_NOTIFY_VCPU);
 }
 
 int need_reschedule(int pcpu_id)

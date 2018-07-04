@@ -177,8 +177,12 @@ int start_vcpu(struct vcpu *vcpu)
 		if (ibrs_type == IBRS_RAW)
 			msr_write(MSR_IA32_PRED_CMD, PRED_SET_IBPB);
 
+		vcpu->in_rootmode = false;
+
 		/* Launch the VM */
 		status = vmx_vmrun(cur_context, VM_LAUNCH, ibrs_type);
+
+		vcpu->in_rootmode = true;
 
 		/* See if VM launched successfully */
 		if (status == 0) {
@@ -196,8 +200,11 @@ int start_vcpu(struct vcpu *vcpu)
 		exec_vmwrite(VMX_GUEST_RIP, ((rip + instlen) &
 				0xFFFFFFFFFFFFFFFF));
 
+		vcpu->in_rootmode = false;
 		/* Resume the VM */
 		status = vmx_vmrun(cur_context, VM_RESUME, ibrs_type);
+
+		vcpu->in_rootmode = true;
 	}
 
 	/* Save guest CR3 register */

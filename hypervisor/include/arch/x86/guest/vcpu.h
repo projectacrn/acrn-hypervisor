@@ -233,6 +233,7 @@ struct vcpu {
 	struct list_head run_list; /* inserted to schedule runqueue */
 	unsigned long pending_pre_work; /* any pre work pending? */
 	bool launched; /* Whether the vcpu is launched on target pcpu */
+	bool in_rootmode; /* Whether the vcpu is vm exit and under root mode */
 	unsigned int paused_cnt; /* how many times vcpu is paused */
 	int running; /* vcpu is picked up and run? */
 	int ioreq_pending; /* ioreq is ongoing or not? */
