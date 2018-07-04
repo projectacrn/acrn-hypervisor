@@ -52,7 +52,7 @@ static void bsp_boot_post(void);
 static void cpu_secondary_post(void);
 static void vapic_cap_detect(void);
 static void cpu_xsave_init(void);
-static void cpu_set_logical_id(uint32_t logical_id);
+static void cpu_set_logical_id(uint16_t pcpu_id);
 static void print_hv_banner(void);
 int cpu_find_logical_id(uint8_t lapic_id);
 static void pcpu_sync_sleep(unsigned long *sync, int mask_bit);
@@ -293,7 +293,7 @@ static int init_phy_cpu_storage(void)
 	return bsp_cpu_id;
 }
 
-static void cpu_set_current_state(uint32_t logical_id, enum cpu_state state)
+static void cpu_set_current_state(uint16_t pcpu_id, enum cpu_state state)
 {
 	spinlock_obtain(&up_count_spinlock);
 
@@ -303,7 +303,7 @@ static void cpu_set_current_state(uint32_t logical_id, enum cpu_state state)
 		up_count++;
 
 		/* Save this CPU's logical ID to the TSC AUX MSR */
-		cpu_set_logical_id(logical_id);
+		cpu_set_logical_id(pcpu_id);
 	}
 
 	/* If cpu is dead, decrement CPU up count */
@@ -311,7 +311,7 @@ static void cpu_set_current_state(uint32_t logical_id, enum cpu_state state)
 		up_count--;
 
 	/* Set state for the specified CPU */
-	per_cpu(state, logical_id) = state;
+	per_cpu(state, pcpu_id) = state;
 
 	spinlock_release(&up_count_spinlock);
 }
@@ -789,24 +789,24 @@ void stop_cpus()
 	}
 }
 
-void cpu_dead(uint32_t logical_id)
+void cpu_dead(uint16_t pcpu_id)
 {
 	/* For debug purposes, using a stack variable in the while loop enables
 	 * us to modify the value using a JTAG probe and resume if needed.
 	 */
 	int halt = 1;
 
-	if (bitmap_test_and_clear(logical_id, &pcpu_active_bitmap) == false) {
-		pr_err("pcpu%d already dead", logical_id);
+	if (bitmap_test_and_clear(pcpu_id, &pcpu_active_bitmap) == false) {
+		pr_err("pcpu%hu already dead", pcpu_id);
 		return;
 	}
 
 	/* Set state to show CPU is dead */
-	cpu_set_current_state(logical_id, CPU_STATE_DEAD);
+	cpu_set_current_state(pcpu_id, CPU_STATE_DEAD);
 
 	/* clean up native stuff */
 	timer_cleanup();
-	vmx_off(logical_id);
+	vmx_off(pcpu_id);
 	CACHE_FLUSH_INVALIDATE_ALL();
 
 	/* Halt the CPU */
@@ -815,10 +815,10 @@ void cpu_dead(uint32_t logical_id)
 	} while (halt != 0);
 }
 
-static void cpu_set_logical_id(uint32_t logical_id)
+static void cpu_set_logical_id(uint16_t pcpu_id)
 {
 	/* Write TSC AUX register */
-	msr_write(MSR_IA32_TSC_AUX, (uint64_t) logical_id);
+	msr_write(MSR_IA32_TSC_AUX, (uint64_t) pcpu_id);
 }
 
 static void print_hv_banner(void)
