@@ -293,7 +293,6 @@ static struct hvlog_file last_log = {
 static int new_log_file(struct hvlog_file *log)
 {
 	char file_name[32] = { };
-	char cmd[64] = { };
 
 	if (log->fd >= 0) {
 		if (!hvlog_log_size)
@@ -304,8 +303,7 @@ static int new_log_file(struct hvlog_file *log)
 
 	snprintf(file_name, sizeof(file_name), "%s.%hu", log->path,
 		 log->index + 1);
-	snprintf(cmd, sizeof(cmd), "rm -f %s", file_name);
-	system(cmd);
+	remove(file_name);
 
 	log->fd = open(file_name, O_RDWR | O_CREAT | O_TRUNC, 0666);
 	if (log->fd < 0) {
@@ -315,9 +313,9 @@ static int new_log_file(struct hvlog_file *log)
 
 	log->left_space = hvlog_log_size;
 	log->index++;
-	snprintf(cmd, sizeof(cmd), "rm -f %s.%hu", log->path,
-		 log->index - hvlog_log_num);
-	system(cmd);
+	snprintf(file_name, sizeof(file_name), "%s.%hu", log->path,
+			log->index - hvlog_log_num);
+	remove(file_name);
 
 	return 0;
 }
@@ -365,6 +363,44 @@ static void *cur_read_func(void *arg)
 	}
 
 	return NULL;
+}
+
+/* If dir *path does't exist, create a new one.
+ * Otherwise, remove all the old acrnlog files in the dir.
+ */
+static int mk_dir(const char *path)
+{
+	char prefix[32] = "acrnlog_cur."; /* acrnlog file prefix */
+	char acrnlog_file[64] = { };
+	struct dirent *pdir;
+	struct stat st;
+	int index = 0;
+	char *find;
+	DIR *dir;
+
+	if (stat(path, &st)) {
+		if (mkdir(path, 0644))
+			return -1;
+	} else {
+		/* Remove all the old acrnlogs */
+		dir = opendir(path);
+		if (!dir) {
+			printf("Error opening directory %s. Error: %s\n",
+				path, strerror(errno));
+			return -1;
+		}
+		while (pdir = readdir(dir)) {
+			find = strstr(pdir->d_name, prefix);
+			if (!find)
+				continue;
+
+			snprintf(acrnlog_file, sizeof(acrnlog_file), "%s/%s%d",
+					path, prefix, index++);
+			remove(acrnlog_file);
+		}
+	}
+
+	return 0;
 }
 
 /* for user optinal args */
@@ -430,10 +466,10 @@ int main(int argc, char *argv[])
 	if (parse_opt(argc, argv))
 		return -1;
 
-	system("rm -rf /tmp/acrnlog");
-	ret = system("mkdir -p /tmp/acrnlog");
+	ret = mk_dir("/tmp/acrnlog");
 	if (ret) {
-		printf("can't create /tmp/acrnlog\n");
+		printf("Cannot create /tmp/acrnlog. Error: %s\n",
+			strerror(errno));
 		return ret;
 	}
 
