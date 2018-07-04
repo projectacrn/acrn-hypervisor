@@ -99,7 +99,7 @@ struct vsbl_para {
 	uint64_t		bootargs_address;
 	uint32_t		trusty_enabled;
 	uint32_t		key_info_lock;
-	uint32_t		watchdog_reset;
+	uint32_t		reserved;
 	uint32_t		boot_device_address;
 };
 
