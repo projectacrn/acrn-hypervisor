@@ -9,11 +9,13 @@
 #include "instr_emul_wrapper.h"
 #include "instr_emul.h"
 
+#define VMX_INVALID_VMCS_FIELD  0xffffffffU
+
 static int
 encode_vmcs_seg_desc(enum cpu_reg_name seg,
 		uint32_t *base, uint32_t *lim, uint32_t *acc);
 
-static int32_t
+static uint32_t
 get_vmcs_field(enum cpu_reg_name ident);
 
 static bool
@@ -36,9 +38,9 @@ int vm_get_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t *retval)
 			&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 		*retval = cur_context->guest_cpu_regs.longs[reg];
 	} else if ((reg > CPU_REG_RDI) && (reg < CPU_REG_LAST)) {
-		int32_t field = get_vmcs_field(reg);
+		uint32_t field = get_vmcs_field(reg);
 
-		if (field != -1)
+		if (field != VMX_INVALID_VMCS_FIELD)
 			*retval = exec_vmread(field);
 		else
 			return -EINVAL;
@@ -61,9 +63,9 @@ int vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t val)
 			&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 		cur_context->guest_cpu_regs.longs[reg] = val;
 	} else if ((reg > CPU_REG_RDI) && (reg < CPU_REG_LAST)) {
-		int32_t field = get_vmcs_field(reg);
+		uint32_t field = get_vmcs_field(reg);
 
-		if (field != -1)
+		if (field != VMX_INVALID_VMCS_FIELD)
 			exec_vmwrite(field, val);
 		else
 			return -EINVAL;
@@ -208,7 +210,7 @@ encode_vmcs_seg_desc(enum cpu_reg_name seg,
 	return 0;
 }
 
-static int32_t get_vmcs_field(enum cpu_reg_name ident)
+static uint32_t get_vmcs_field(enum cpu_reg_name ident)
 {
 	switch (ident) {
 	case CPU_REG_CR0:
@@ -252,7 +254,7 @@ static int32_t get_vmcs_field(enum cpu_reg_name ident)
 	case CPU_REG_PDPTE3:
 		return VMX_GUEST_PDPTE3_FULL;
 	default:
-		return -1;
+		return VMX_INVALID_VMCS_FIELD;
 	}
 }
 
