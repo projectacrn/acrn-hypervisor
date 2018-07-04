@@ -87,7 +87,7 @@ int vm_set_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
 		return -EINVAL;
 
 	error = encode_vmcs_seg_desc(seg, &base, &limit, &access);
-	if ((error != 0) || (access == 0xffffffff))
+	if ((error != 0) || (access == 0xffffffffU))
 		return -EINVAL;
 
 	exec_vmwrite(base, ret_desc->base);
@@ -110,7 +110,7 @@ int vm_get_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
 		return -EINVAL;
 
 	error = encode_vmcs_seg_desc(seg, &base, &limit, &access);
-	if ((error != 0) || (access == 0xffffffff))
+	if ((error != 0) || (access == 0xffffffffU))
 		return -EINVAL;
 
 	desc->base = exec_vmread(base);
