@@ -691,7 +691,7 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 		 * The count register is %rcx, %ecx or %cx depending on the
 		 * address size of the instruction.
 		 */
-		if ((rcx & vie_size2mask(vie->addrsize)) == 0) {
+		if ((rcx & vie_size2mask(vie->addrsize)) == 0UL) {
 			error = 0;
 			goto done;
 		}
@@ -745,7 +745,7 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 		/*
 		 * Repeat the instruction if the count register is not zero.
 		 */
-		if ((rcx & vie_size2mask(vie->addrsize)) != 0)
+		if ((rcx & vie_size2mask(vie->addrsize)) != 0UL)
 			VCPU_RETAIN_RIP(vcpu);
 	}
 done:
@@ -763,7 +763,7 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	uint64_t val;
 	uint64_t rcx, rdi, rflags;
 
-	opsize = (vie->op.op_byte == 0xAA) ? 1 : vie->opsize;
+	opsize = (vie->op.op_byte == 0xAAU) ? 1 : vie->opsize;
 	repeat = vie->repz_present | vie->repnz_present;
 
 	if (repeat != 0) {

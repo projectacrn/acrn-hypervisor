@@ -57,10 +57,10 @@ void disable_msr_interception(uint8_t *bitmap, uint32_t msr)
 	uint8_t *write_map;
 	uint8_t value;
 	/* low MSR */
-	if (msr < 0x1FFF) {
+	if (msr < 0x1FFFU) {
 		read_map = bitmap;
 		write_map = bitmap + 2048;
-	} else if ((msr >= 0xc0000000) && (msr <= 0xc0001fff)) {
+	} else if ((msr >= 0xc0000000U) && (msr <= 0xc0001fffU)) {
 		read_map = bitmap + 1024;
 		write_map = bitmap + 3072;
 	} else {
@@ -177,7 +177,7 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 #ifdef CONFIG_MTRR_ENABLED
 		v = mtrr_rdmsr(vcpu, msr);
 #else
-		vcpu_inject_gp(vcpu, 0);
+		vcpu_inject_gp(vcpu, 0U);
 #endif
 		break;
 	}
@@ -232,7 +232,7 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 			msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS))) {
 			pr_warn("rdmsr: %lx should not come here!", msr);
 		}
-		vcpu_inject_gp(vcpu, 0);
+		vcpu_inject_gp(vcpu, 0U);
 		v = 0UL;
 		break;
 	}
@@ -293,13 +293,13 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 #ifdef CONFIG_MTRR_ENABLED
 		mtrr_wrmsr(vcpu, msr, v);
 #else
-		vcpu_inject_gp(vcpu, 0);
+		vcpu_inject_gp(vcpu, 0U);
 #endif
 		break;
 	}
 	case MSR_IA32_MTRR_CAP:
 	{
-		vcpu_inject_gp(vcpu, 0);
+		vcpu_inject_gp(vcpu, 0U);
 		break;
 	}
 	case MSR_IA32_BIOS_SIGN_ID:
@@ -366,7 +366,7 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 			msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS))) {
 			pr_warn("rdmsr: %lx should not come here!", msr);
 		}
-		vcpu_inject_gp(vcpu, 0);
+		vcpu_inject_gp(vcpu, 0U);
 		break;
 	}
 	}

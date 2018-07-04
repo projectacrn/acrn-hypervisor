@@ -279,8 +279,8 @@ static void vlapic_reset_timer(struct vlapic *vlapic)
 	timer = &vlapic->vlapic_timer.timer;
 	del_timer(timer);
 	timer->mode = 0;
-	timer->fire_tsc = 0;
-	timer->period_in_cycle = 0;
+	timer->fire_tsc = 0UL;
+	timer->period_in_cycle = 0UL;
 }
 
 static bool
@@ -296,7 +296,7 @@ set_expiration(struct vlapic *vlapic)
 	tmicr = vlapic_timer->tmicr;
 	divisor_shift = vlapic_timer->divisor_shift;
 
-	if (!tmicr || divisor_shift > 8)
+	if (!tmicr || divisor_shift > 8U)
 		return false;
 
 	delta = tmicr << divisor_shift;
@@ -325,8 +325,8 @@ static void vlapic_update_lvtt(struct vlapic *vlapic,
 		del_timer(timer);
 		timer->mode = (timer_mode == APIC_LVTT_TM_PERIODIC) ?
 				TICK_MODE_PERIODIC: TICK_MODE_ONESHOT;
-		timer->fire_tsc = 0;
-		timer->period_in_cycle = 0;
+		timer->fire_tsc = 0UL;
+		timer->period_in_cycle = 0UL;
 
 		vlapic_timer->mode = timer_mode;
 	}
@@ -385,7 +385,7 @@ static uint64_t vlapic_get_tsc_deadline_msr(struct vlapic *vlapic)
 	if (!vlapic_lvtt_tsc_deadline(vlapic))
 		return 0;
 
-	return (vlapic->vlapic_timer.timer.fire_tsc == 0) ? 0 :
+	return (vlapic->vlapic_timer.timer.fire_tsc == 0UL) ? 0UL :
 			vlapic->vcpu->guest_msrs[IDX_TSC_DEADLINE];
 
 }
@@ -412,7 +412,7 @@ static void vlapic_set_tsc_deadline_msr(struct vlapic *vlapic,
 
 		add_timer(timer);
 	} else
-		timer->fire_tsc = 0;
+		timer->fire_tsc = 0UL;
 }
 
 static void
@@ -422,7 +422,7 @@ vlapic_esr_write_handler(struct vlapic *vlapic)
 
 	lapic = vlapic->apic_page;
 	lapic->esr = vlapic->esr_pending;
-	vlapic->esr_pending = 0;
+	vlapic->esr_pending = 0U;
 }
 
 /*
@@ -652,7 +652,7 @@ vlapic_fire_lvt(struct vlapic *vlapic, uint32_t lvt)
 
 	switch (mode) {
 	case APIC_LVT_DM_FIXED:
-		if (vec < 16) {
+		if (vec < 16U) {
 			vlapic_set_error(vlapic, APIC_ESR_SEND_ILLEGAL_VECTOR);
 			return 0;
 		}
@@ -876,7 +876,7 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 	uint64_t amask;
 	uint16_t vcpu_id;
 
-	if (dest == 0xff) {
+	if (dest == 0xffU) {
 		/*
 		 * Broadcast in both logical and physical modes.
 		 */
@@ -888,7 +888,7 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 		/*
 		 * Physical mode: destination is LAPIC ID.
 		 */
-		*dmask = 0;
+		*dmask = 0UL;
 		vcpu_id = vm_apicid2vcpu_id(vm, dest);
 		if (vcpu_id < phys_cpu_num)
 			bitmap_set(vcpu_id, dmask);
@@ -910,7 +910,7 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 		 * Logical mode: match each APIC that has a bit set
 		 * in its LDR that matches a bit in the ldest.
 		 */
-		*dmask = 0;
+		*dmask = 0UL;
 		amask = vm_active_cpus(vm);
 		while ((vcpu_id = ffs64(amask)) != INVALID_BIT_INDEX) {
 			bitmap_clear(vcpu_id, &amask);
@@ -995,7 +995,7 @@ vlapic_set_cr8(struct vlapic *vlapic, uint64_t val)
 	uint8_t tpr;
 
 	if ((val & ~0xfUL) != 0U) {
-		vcpu_inject_gp(vlapic->vcpu, 0);
+		vcpu_inject_gp(vlapic->vcpu, 0U);
 		return;
 	}
 
@@ -1030,10 +1030,10 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 	dest = icrval >> (32 + 24);
 	vec = icrval & APIC_VECTOR_MASK;
 	mode = icrval & APIC_DELMODE_MASK;
-	phys = ((icrval & APIC_DESTMODE_LOG) == 0);
+	phys = ((icrval & APIC_DESTMODE_LOG) == 0UL);
 	shorthand = icrval & APIC_DEST_MASK;
 
-	if (mode == APIC_DELMODE_FIXED && vec < 16) {
+	if (mode == APIC_DELMODE_FIXED && vec < 16U) {
 		vlapic_set_error(vlapic, APIC_ESR_SEND_ILLEGAL_VECTOR);
 		dev_dbg(ACRN_DBG_LAPIC, "Ignoring invalid IPI %d", vec);
 		return 0;
@@ -1248,12 +1248,12 @@ vlapic_read(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 		dev_dbg(ACRN_DBG_LAPIC,
 			"x2APIC MSR read from offset %#lx in xAPIC mode",
 			offset);
-		*data = 0;
+		*data = 0UL;
 		goto done;
 	}
 
 	if (offset > sizeof(*lapic)) {
-		*data = 0;
+		*data = 0UL;
 		goto done;
 	}
 
@@ -1346,7 +1346,7 @@ vlapic_read(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 	case APIC_OFFSET_TIMER_ICR:
 		/* if TSCDEADLINE mode always return 0*/
 		if (vlapic_lvtt_tsc_deadline(vlapic))
-			*data = 0;
+			*data = 0UL;
 		else
 			*data = lapic->icr_timer;
 		break;
@@ -1360,11 +1360,11 @@ vlapic_read(struct vlapic *vlapic, int mmio_access, uint64_t offset,
 		/*
 		 * XXX generate a GP fault if vlapic is in x2apic mode
 		 */
-		*data = 0;
+		*data = 0UL;
 		break;
 	case APIC_OFFSET_RRR:
 	default:
-		*data = 0;
+		*data = 0UL;
 		break;
 	}
 done:

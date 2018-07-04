@@ -244,9 +244,9 @@ vioapic_read(struct vioapic *vioapic, uint32_t addr)
 	    (regnum < IOAPIC_REDTBL + vioapic_pincount(vioapic->vm) * 2) != 0) {
 		pin = (regnum - IOAPIC_REDTBL) / 2;
 		if (((regnum - IOAPIC_REDTBL) % 2) != 0)
-			rshift = 32;
+			rshift = 32U;
 		else
-			rshift = 0;
+			rshift = 0U;
 
 		return vioapic->rtbl[pin].reg >> rshift;
 	}
@@ -427,7 +427,7 @@ vioapic_mmio_rw(struct vioapic *vioapic, uint64_t gpa,
 	if (size != 4 || (offset != IOREGSEL && offset != IOWIN &&
 			offset != IOEOI)) {
 		if (doread)
-			*data = 0;
+			*data = 0UL;
 		return 0;
 	}
 
@@ -581,7 +581,7 @@ int vioapic_mmio_access_handler(struct vcpu *vcpu, struct mem_io *mmio,
 	int ret = 0;
 
 	/* Note all RW to IOAPIC are 32-Bit in size */
-	ASSERT(mmio->access_size == 4,
+	ASSERT(mmio->access_size == 4U,
 			"All RW to LAPIC must be 32-bits in size");
 
 	if (mmio->read_write == HV_MEM_IO_READ) {
@@ -637,7 +637,7 @@ void get_vioapic_info(char *str, int str_max, int vmid)
 	size -= len;
 	str += len;
 
-	rte = 0;
+	rte = 0UL;
 	for (pin = 0 ; pin < vioapic_pincount(vm); pin++) {
 		vioapic_get_rte(vm, pin, (void *)&rte);
 		low = rte;
