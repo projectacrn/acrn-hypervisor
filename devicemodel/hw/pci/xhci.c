@@ -1035,7 +1035,9 @@ pci_xhci_apl_drdregs_write(struct pci_xhci_vdev *xdev, uint64_t offset,
 		uint64_t value)
 {
 	int rc = 0, fd;
-	uint32_t drdcfg0 = 0, drdcfg1 = 0;
+	char *mstr;
+	int msz = 0;
+	uint32_t drdcfg1 = 0;
 	struct pci_xhci_excap *excap;
 	struct pci_xhci_excap_drd_apl *excap_drd;
 
@@ -1054,45 +1056,51 @@ pci_xhci_apl_drdregs_write(struct pci_xhci_vdev *xdev, uint64_t offset,
 	excap_drd = excap->data;
 
 	offset -= XHCI_APL_DRDREGS_BASE;
-	if (offset == XHCI_DRD_MUX_CFG0) {
-		fd = open(XHCI_NATIVE_DRD_SWITCH_PATH, O_WRONLY);
-		if (fd == -1) {
-			UPRINTF(LWRN, "drd native interface open failed\r\n");
-			return -1;
-		}
+	if (offset != XHCI_DRD_MUX_CFG0) {
+		UPRINTF(LWRN, "drd configuration register access failed.\r\n");
+		return -1;
+	}
 
-		if (value & XHCI_DRD_CFG0_HOST_MODE)
-			rc = write(fd, XHCI_NATIVE_DRD_HOST_MODE,
-					XHCI_NATIVE_DRD_WRITE_SZ);
-		else if (value & XHCI_DRD_CFG0_DEV_MODE)
-			rc = write(fd, XHCI_NATIVE_DRD_DEV_MODE,
-					XHCI_NATIVE_DRD_WRITE_SZ);
+	if (excap_drd->drdcfg0 == value) {
+		UPRINTF(LDBG, "No mode switch action. Current drd: %s mode\r\n",
+			excap_drd->drdcfg1 & XHCI_DRD_CFG1_HOST_MODE ?
+			"host" : "device");
+		return 0;
+	}
 
-		if (rc == XHCI_NATIVE_DRD_WRITE_SZ) {
-			if (value & XHCI_DRD_CFG0_HOST_MODE) {
-				drdcfg1 |= XHCI_DRD_CFG1_HOST_MODE;
-				drdcfg0 &= ~XHCI_DRD_CFG0_IDPIN;
-				drdcfg0 &= ~XHCI_DRD_CFG0_VBUS_VALID;
-			} else if (value & XHCI_DRD_CFG0_DEV_MODE) {
-				drdcfg1 &= ~XHCI_DRD_CFG1_HOST_MODE;
-				drdcfg0 |= XHCI_DRD_CFG0_IDPIN;
-				drdcfg0 |= XHCI_DRD_CFG0_VBUS_VALID;
-			}
-			drdcfg0 |= XHCI_DRD_CFG0_IDPIN_EN;
-			excap_drd->drdcfg0 = drdcfg0;
-			excap_drd->drdcfg1 = drdcfg1;
+	excap_drd->drdcfg0 = value;
+
+	if (value & XHCI_DRD_CFG0_IDPIN_EN) {
+		if ((value & XHCI_DRD_CFG0_IDPIN) == 0) {
+			mstr = XHCI_NATIVE_DRD_HOST_MODE;
+			msz = strlen(XHCI_NATIVE_DRD_HOST_MODE);
+			drdcfg1 |= XHCI_DRD_CFG1_HOST_MODE;
 		} else {
-			UPRINTF(LWRN, "drd native inferface write failed, "
-					"returned %d.\r\n", rc);
-			close(fd);
-			return -1;
+			mstr = XHCI_NATIVE_DRD_DEV_MODE;
+			msz = strlen(XHCI_NATIVE_DRD_DEV_MODE);
+			drdcfg1 &= ~XHCI_DRD_CFG1_HOST_MODE;
 		}
-	} else if (offset == XHCI_DRD_MUX_CFG1) {
-		UPRINTF(LWRN, "write to RO register, offset 0x%lx\r\n", offset);
-		return -1;
 	} else
-		return -1;
+		return 0;
 
+	fd = open(XHCI_NATIVE_DRD_SWITCH_PATH, O_WRONLY);
+	if (fd < 0) {
+		UPRINTF(LWRN, "drd native interface open failed\r\n");
+		return -1;
+	}
+
+	rc = write(fd, mstr, msz);
+	close(fd);
+	if (rc == msz)
+		excap_drd->drdcfg1 = drdcfg1;
+	else {
+		UPRINTF(LWRN, "drd native interface write "
+			"%s mode failed, drdcfg0: 0x%x, "
+			"drdcfg1: 0x%x.\r\n",
+			value & XHCI_DRD_CFG0_IDPIN ? "device" : "host",
+			excap_drd->drdcfg0, excap_drd->drdcfg1);
+		return -1;
+	}
 	return 0;
 }
 
@@ -1107,11 +1115,11 @@ pci_xhci_excap_write(struct pci_xhci_vdev *xdev, uint64_t offset,
 	if (xdev->excap_ptr && xdev->excap_write)
 		rc = xdev->excap_write(xdev, offset, value);
 	else
-		rc = -1;
-
-	if (rc)
 		UPRINTF(LWRN, "write invalid offset 0x%lx\r\n", offset);
 
+	if (rc)
+		UPRINTF(LWRN, "something wrong for xhci excap offset "
+				"0x%lx write \r\n", offset);
 }
 
 struct xhci_dev_ctx *

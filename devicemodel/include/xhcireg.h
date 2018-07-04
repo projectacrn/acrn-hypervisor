@@ -253,12 +253,6 @@
 /* Intel APL xHCI DRD Configuration registers */
 #define	XHCI_DRD_MUX_CFG0		0x0000
 #define	XHCI_DRD_MUX_CFG1		0x0004
-#define	XCHI_DRD_CFG0_MODE_MASK		0x0003
-#define	XHCI_DRD_CFG0_DYN		0
-#define	XHCI_DRD_CFG0_HOST_MODE		1
-#define	XHCI_DRD_CFG0_DEV_MODE		2
-#define	XHCI_DRD_CFG0_SYNC		(1 << 2)
-#define	XHCI_DRD_CFG0_SWITCH_EN		(1 << 16)
 #define	XHCI_DRD_CFG0_IDPIN		(1 << 20)
 #define	XHCI_DRD_CFG0_IDPIN_EN		(1 << 21)
 #define	XHCI_DRD_CFG0_VBUS_VALID	(1 << 24)
@@ -269,15 +263,16 @@
 #define	XHCI_APL_DRDREGS_BASE		0x80D8
 
 /* setting drd for host mode */
-#define	XHCI_NATIVE_DRD_DEV_MODE	"D"
+#define	XHCI_NATIVE_DRD_DEV_MODE	"device"
 
 /* setting drd for device mode */
-#define	XHCI_NATIVE_DRD_HOST_MODE	"H"
+#define	XHCI_NATIVE_DRD_HOST_MODE	"host"
 #define	XHCI_NATIVE_DRD_SWITCH_PATH	\
-	"/sys/devices/platform/intel_usb_dr_phy.0/mux_state"
+	"/sys/class/usb_role/intel_xhci_usb_sw-role-switch/role"
 
 /* return value after setting drd device node */
-#define	XHCI_NATIVE_DRD_WRITE_SZ	2
+#define	XHCI_NATIVE_DRD_WRITE_DEV_SZ	(sizeof(XHCI_NATIVE_DRD_DEV_MODE) - 1)
+#define	XHCI_NATIVE_DRD_WRITE_HOST_SZ	(sizeof(XHCI_NATIVE_DRD_HOST_MODE) - 1)
 
 /* XHCI register R/W wrappers */
 #define	XREAD1(sc, what, a) \
