@@ -30,6 +30,8 @@
 #ifndef	_VMM_INSTRUCTION_EMUL_H_
 #define	_VMM_INSTRUCTION_EMUL_H_
 
+#include "instr_emul_wrapper.h"
+
 /*
  * Callback functions to read and write memory regions.
  */
@@ -70,7 +72,7 @@ uint64_t vie_size2mask(uint8_t size);
 
 int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	struct seg_desc *desc, uint64_t off, uint8_t length, uint8_t addrsize,
-	int prot, uint64_t *gla);
+	uint32_t prot, uint64_t *gla);
 
 int vie_init(struct vie *vie, struct vcpu *vcpu);
 
