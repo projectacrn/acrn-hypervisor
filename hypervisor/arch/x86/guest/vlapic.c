@@ -49,34 +49,28 @@
 #define ACRN_DBG_LAPIC	6
 
 #if VLAPIC_VERBOS
-#define	VLAPIC_CTR_IRR(vlapic, msg)					\
-do {									\
-	struct lapic_reg *irrptr = &(vlapic)->apic_page->irr[0];	\
-	dev_dbg(ACRN_DBG_LAPIC, msg " irr0 0x%08x", irrptr[0].val);	\
-	dev_dbg(ACRN_DBG_LAPIC, msg " irr1 0x%08x", irrptr[1].val);	\
-	dev_dbg(ACRN_DBG_LAPIC, msg " irr2 0x%08x", irrptr[2].val);	\
-	dev_dbg(ACRN_DBG_LAPIC, msg " irr3 0x%08x", irrptr[3].val);	\
-	dev_dbg(ACRN_DBG_LAPIC, msg " irr4 0x%08x", irrptr[4].val);	\
-	dev_dbg(ACRN_DBG_LAPIC, msg " irr5 0x%08x", irrptr[5].val);	\
-	dev_dbg(ACRN_DBG_LAPIC, msg " irr6 0x%08x", irrptr[6].val);	\
-	dev_dbg(ACRN_DBG_LAPIC, msg " irr7 0x%08x", irrptr[7].val);	\
-} while (0)
+static inline void vlapic_dump_irr(struct vlapic *vlapic, char *msg)
+{
+	int i;
+	struct lapic_reg *irrptr = &(vlapic)->apic_page->irr[0];
 
-#define	VLAPIC_CTR_ISR(vlapic, msg)					\
-do {									\
-	struct lapic_reg *isrptr = &(vlapic)->apic_page->isr[0];	\
-	dev_dbg(ACRN_DBG_LAPIC, msg " isr0 0x%08x", isrptr[0].val);	\
-	dev_dbg(ACRN_DBG_LAPIC, msg " isr1 0x%08x", isrptr[1].val);	\
-	dev_dbg(ACRN_DBG_LAPIC, msg " isr2 0x%08x", isrptr[2].val);	\
-	dev_dbg(ACRN_DBG_LAPIC, msg " isr3 0x%08x", isrptr[3].val);	\
-	dev_dbg(ACRN_DBG_LAPIC, msg " isr4 0x%08x", isrptr[4].val);	\
-	dev_dbg(ACRN_DBG_LAPIC, msg " isr5 0x%08x", isrptr[5].val);	\
-	dev_dbg(ACRN_DBG_LAPIC, msg " isr6 0x%08x", isrptr[6].val);	\
-	dev_dbg(ACRN_DBG_LAPIC, msg " isr7 0x%08x", isrptr[7].val);	\
-} while (0)
+	for (i = 0; i < 8; i++)
+		dev_dbg(ACRN_DBG_LAPIC, "%s irr%d 0x%08x",
+				msg, i, irrptr[i].val);
+}
+
+static inline void vlapic_dump_isr(struct vlapic *vlapic, char *msg)
+{
+	int i;
+	struct lapic_reg *isrptr = &(vlapic)->apic_page->isr[0];
+
+	for (i = 0; i < 8; i++)
+		dev_dbg(ACRN_DBG_LAPIC, "%s isr%d 0x%08x",
+				msg, i, isrptr[0].val);
+}
 #else
-#define	VLAPIC_CTR_IRR(vlapic, msg)
-#define	VLAPIC_CTR_ISR(vlapic, msg)
+#define vlapic_dump_irr(vlapic, msg)
+#define vlapic_dump_isr(vlapic, msg)
 #endif
 
 /*APIC-v APIC-access address */
@@ -481,14 +475,14 @@ vlapic_set_intr_ready(struct vlapic *vlapic, uint32_t vector, bool level)
 		idx, tmrptr[idx].val, level ? "level" : "edge");
 	}
 
-	VLAPIC_CTR_IRR(vlapic, "vlapic_set_intr_ready");
+	vlapic_dump_irr(vlapic, "vlapic_set_intr_ready");
 	return 1;
 }
 
 static inline int
 lvt_off_to_idx(uint32_t offset)
 {
-	int index;
+	uint32_t index = -1U;
 
 	switch (offset) {
 	case APIC_OFFSET_CMCI_LVT:
@@ -513,10 +507,9 @@ lvt_off_to_idx(uint32_t offset)
 		index = APIC_LVT_ERROR;
 		break;
 	default:
-		index = -1;
 		break;
 	}
-	ASSERT(index >= 0 && index <= VLAPIC_MAXLVT_INDEX,
+	ASSERT(index <= VLAPIC_MAXLVT_INDEX,
 		"%s: invalid lvt index %d for offset %#x",
 		__func__, index, offset);
 
@@ -783,7 +776,7 @@ vlapic_process_eoi(struct vlapic *vlapic)
 			isrptr[i].val &= ~(1U << (uint32_t)bitpos);
 			vector = i * 32 + (int32_t)bitpos;
 			dev_dbg(ACRN_DBG_LAPIC, "EOI vector %d", vector);
-			VLAPIC_CTR_ISR(vlapic, "vlapic_process_eoi");
+			vlapic_dump_isr(vlapic, "vlapic_process_eoi");
 			vlapic->isrvec_stk_top--;
 			vlapic_update_ppr(vlapic);
 			if ((tmrptr[i].val & (1U << (uint32_t)bitpos)) != 0U) {
@@ -1179,11 +1172,11 @@ vlapic_intr_accepted(struct vlapic *vlapic, uint32_t vector)
 
 	irrptr = &lapic->irr[0];
 	atomic_clear_int(&irrptr[idx].val, 1 << (vector % 32));
-	VLAPIC_CTR_IRR(vlapic, "vlapic_intr_accepted");
+	vlapic_dump_irr(vlapic, "vlapic_intr_accepted");
 
 	isrptr = &lapic->isr[0];
 	isrptr[idx].val |= 1U << (vector % 32);
-	VLAPIC_CTR_ISR(vlapic, "vlapic_intr_accepted");
+	vlapic_dump_isr(vlapic, "vlapic_intr_accepted");
 
 	/*
 	 * Update the PPR
@@ -1528,8 +1521,7 @@ void
 vlapic_init(struct vlapic *vlapic)
 {
 	ASSERT(vlapic->vm != NULL, "%s: vm is not initialized", __func__);
-	ASSERT(vlapic->vcpu->vcpu_id >= 0U &&
-		vlapic->vcpu->vcpu_id < phys_cpu_num,
+	ASSERT(vlapic->vcpu->vcpu_id < phys_cpu_num,
 		"%s: vcpu_id is not initialized", __func__);
 	ASSERT(vlapic->apic_page != NULL,
 		"%s: apic_page is not initialized", __func__);

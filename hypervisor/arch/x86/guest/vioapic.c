@@ -536,7 +536,6 @@ vioapic_reset(struct vioapic *vioapic)
 struct vioapic *
 vioapic_init(struct vm *vm)
 {
-	int i;
 	struct vioapic *vioapic;
 
 	vioapic = calloc(1, sizeof(struct vioapic));
