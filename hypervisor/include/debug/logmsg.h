@@ -30,7 +30,7 @@
 extern uint32_t console_loglevel;
 extern uint32_t mem_loglevel;
 void init_logmsg(uint32_t mem_size, uint32_t flags);
-void print_logmsg_buffer(uint32_t cpu_id);
+void print_logmsg_buffer(uint16_t pcpu_id);
 void do_logmsg(uint32_t severity, const char *fmt, ...);
 
 #else /* HV_DEBUG */
@@ -45,7 +45,7 @@ static inline void do_logmsg(__unused uint32_t severity,
 {
 }
 
-static inline void print_logmsg_buffer(__unused uint32_t cpu_id)
+static inline void print_logmsg_buffer(__unused uint16_t pcpu_id)
 {
 }
 

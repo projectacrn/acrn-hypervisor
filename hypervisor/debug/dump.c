@@ -167,11 +167,11 @@ static void show_guest_call_trace(struct vcpu *vcpu)
 	printf("\r\n");
 }
 
-static void dump_guest_context(uint32_t cpu_id)
+static void dump_guest_context(uint16_t pcpu_id)
 {
 	struct vcpu *vcpu;
 
-	vcpu = per_cpu(vcpu, cpu_id);
+	vcpu = per_cpu(vcpu, pcpu_id);
 	if (vcpu != NULL) {
 		dump_guest_reg(vcpu);
 		dump_guest_stack(vcpu);
@@ -179,13 +179,13 @@ static void dump_guest_context(uint32_t cpu_id)
 	}
 }
 
-static void show_host_call_trace(uint64_t rsp, uint64_t rbp, uint32_t cpu_id)
+static void show_host_call_trace(uint64_t rsp, uint64_t rbp, uint16_t pcpu_id)
 {
 	uint32_t i = 0U;
 	uint32_t cb_hierarchy = 0U;
 	uint64_t *sp = (uint64_t *)rsp;
 
-	printf("\r\nHost Stack: CPU_ID = %d\r\n", cpu_id);
+	printf("\r\nHost Stack: CPU_ID = %hu\r\n", pcpu_id);
 	for (i = 0U; i < DUMP_STACK_SIZE/32U; i++) {
 		printf("addr(0x%llx)	0x%016llx  0x%016llx  0x%016llx  "
 			  "0x%016llx\r\n", (rsp+i*32U), sp[i*4U], sp[i*4U+1U],
@@ -195,8 +195,8 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp, uint32_t cpu_id)
 
 	printf("Host Call Trace:\r\n");
 	if (rsp >
-	(uint64_t)&per_cpu(stack, cpu_id)[CONFIG_STACK_SIZE - 1]
-		|| rsp < (uint64_t)&per_cpu(stack, cpu_id)[0]) {
+	(uint64_t)&per_cpu(stack, pcpu_id)[CONFIG_STACK_SIZE - 1]
+		|| rsp < (uint64_t)&per_cpu(stack, pcpu_id)[0]) {
 		return;
 	}
 
@@ -214,8 +214,8 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp, uint32_t cpu_id)
 	 *  if the address is invalid, it will cause hv page fault
 	 *  then halt system */
 	while ((rbp <=
-	(uint64_t)&per_cpu(stack, cpu_id)[CONFIG_STACK_SIZE - 1])
-		&& (rbp >= (uint64_t)&per_cpu(stack, cpu_id)[0])
+	(uint64_t)&per_cpu(stack, pcpu_id)[CONFIG_STACK_SIZE - 1])
+		&& (rbp >= (uint64_t)&per_cpu(stack, pcpu_id)[0])
 		&& (cb_hierarchy++ < CALL_TRACE_HIERARCHY_MAX)) {
 		printf("----> 0x%016llx\r\n",
 				*(uint64_t *)(rbp + sizeof(uint64_t)));
@@ -230,14 +230,14 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp, uint32_t cpu_id)
 
 void __assert(uint32_t line, const char *file, char *txt)
 {
-	uint32_t cpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_cpu_id();
 	uint64_t rsp = cpu_rsp_get();
 	uint64_t rbp = cpu_rbp_get();
 
 	pr_fatal("Assertion failed in file %s,line %u : %s",
 			file, line, txt);
-	show_host_call_trace(rsp, rbp, cpu_id);
-	dump_guest_context(cpu_id);
+	show_host_call_trace(rsp, rbp, pcpu_id);
+	dump_guest_context(pcpu_id);
 	do {
 		asm volatile ("pause" ::: "memory");
 	} while (1);
@@ -278,14 +278,14 @@ void dump_intr_excp_frame(struct intr_excp_ctx *ctx)
 	printf("===========================\n");
 }
 
-void dump_exception(struct intr_excp_ctx *ctx, uint32_t cpu_id)
+void dump_exception(struct intr_excp_ctx *ctx, uint16_t pcpu_id)
 {
 	/* Dump host context */
 	dump_intr_excp_frame(ctx);
 	/* Show host stack */
-	show_host_call_trace(ctx->rsp, ctx->rbp, cpu_id);
+	show_host_call_trace(ctx->rsp, ctx->rbp, pcpu_id);
 	/* Dump guest context */
-	dump_guest_context(cpu_id);
+	dump_guest_context(pcpu_id);
 
 	/* Save registers*/
 	crash_ctx = ctx;

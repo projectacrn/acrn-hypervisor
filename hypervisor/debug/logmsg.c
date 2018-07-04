@@ -20,24 +20,24 @@ struct logmsg {
 
 static struct logmsg logmsg;
 
-static inline void alloc_earlylog_sbuf(uint32_t cpu_id)
+static inline void alloc_earlylog_sbuf(uint16_t pcpu_id)
 {
 	uint32_t ele_size = LOG_ENTRY_SIZE;
 	uint32_t ele_num = ((HVLOG_BUF_SIZE >> 1) / phys_cpu_num
 			   - SBUF_HEAD_SIZE) / ele_size;
 
-	per_cpu(earlylog_sbuf, cpu_id) = sbuf_allocate(ele_num, ele_size);
-	if (per_cpu(earlylog_sbuf, cpu_id) == NULL)
-		printf("failed to allcate sbuf for hvlog - %d\n", cpu_id);
+	per_cpu(earlylog_sbuf, pcpu_id) = sbuf_allocate(ele_num, ele_size);
+	if (per_cpu(earlylog_sbuf, pcpu_id) == NULL)
+		printf("failed to allcate sbuf for hvlog - %hu\n", pcpu_id);
 }
 
-static inline void free_earlylog_sbuf(uint32_t cpu_id)
+static inline void free_earlylog_sbuf(uint16_t pcpu_id)
 {
-	if (per_cpu(earlylog_sbuf, cpu_id) == NULL)
+	if (per_cpu(earlylog_sbuf, pcpu_id) == NULL)
 		return;
 
-	free(per_cpu(earlylog_sbuf, cpu_id));
-	per_cpu(earlylog_sbuf, cpu_id) = NULL;
+	free(per_cpu(earlylog_sbuf, pcpu_id));
+	per_cpu(earlylog_sbuf, pcpu_id) = NULL;
 }
 
 static int do_copy_earlylog(struct shared_buf *dst_sbuf,
@@ -69,21 +69,21 @@ static int do_copy_earlylog(struct shared_buf *dst_sbuf,
 
 void init_logmsg(__unused uint32_t mem_size, uint32_t flags)
 {
-	int32_t idx;
+	int16_t pcpu_id;
 
 	logmsg.flags = flags;
 	logmsg.seq = 0;
 
 	/* allocate sbuf for log before sos booting */
-	for (idx = 0; idx < phys_cpu_num; idx++)
-		alloc_earlylog_sbuf(idx);
+	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++)
+		alloc_earlylog_sbuf(pcpu_id);
 }
 
 void do_logmsg(uint32_t severity, const char *fmt, ...)
 {
 	va_list args;
 	uint64_t timestamp;
-	uint32_t cpu_id;
+	uint16_t pcpu_id;
 	bool do_console_log;
 	bool do_mem_log;
 	char *buffer;
@@ -104,14 +104,14 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 	timestamp = ticks_to_us(timestamp);
 
 	/* Get CPU ID */
-	cpu_id = get_cpu_id();
-	buffer = per_cpu(logbuf, cpu_id);
+	pcpu_id = get_cpu_id();
+	buffer = per_cpu(logbuf, pcpu_id);
 
 	memset(buffer, 0, LOG_MESSAGE_MAX_SIZE);
 	/* Put time-stamp, CPU ID and severity into buffer */
 	snprintf(buffer, LOG_MESSAGE_MAX_SIZE,
-			"[%lluus][cpu=%u][sev=%u][seq=%u]:",
-			timestamp, cpu_id, severity,
+			"[%lluus][cpu=%hu][sev=%u][seq=%u]:",
+			timestamp, pcpu_id, severity,
 			atomic_inc_return(&logmsg.seq));
 
 	/* Put message into remaining portion of local buffer */
@@ -135,14 +135,14 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 	if (do_mem_log) {
 		int i, msg_len;
 		struct shared_buf *sbuf = (struct shared_buf *)
-					per_cpu(sbuf, cpu_id)[ACRN_HVLOG];
-		struct shared_buf *early_sbuf = per_cpu(earlylog_sbuf, cpu_id);
+					per_cpu(sbuf, pcpu_id)[ACRN_HVLOG];
+		struct shared_buf *early_sbuf = per_cpu(earlylog_sbuf, pcpu_id);
 
 		if (early_sbuf != NULL) {
 			if (sbuf != NULL) {
 				/* switch to sbuf from sos */
 				do_copy_earlylog(sbuf, early_sbuf);
-				free_earlylog_sbuf(cpu_id);
+				free_earlylog_sbuf(pcpu_id);
 			} else
 				/* use earlylog sbuf if no sbuf from sos */
 				sbuf = early_sbuf;
@@ -160,7 +160,7 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 	}
 }
 
-void print_logmsg_buffer(uint32_t cpu_id)
+void print_logmsg_buffer(uint16_t pcpu_id)
 {
 	spinlock_rflags;
 	char buffer[LOG_ENTRY_SIZE + 1];
@@ -168,20 +168,20 @@ void print_logmsg_buffer(uint32_t cpu_id)
 	struct shared_buf **sbuf;
 	int is_earlylog = 0;
 
-	if (cpu_id >= (uint32_t)phys_cpu_num)
+	if (pcpu_id >= phys_cpu_num)
 		return;
 
-	if (per_cpu(earlylog_sbuf, cpu_id) != NULL) {
-		sbuf = &per_cpu(earlylog_sbuf, cpu_id);
+	if (per_cpu(earlylog_sbuf, pcpu_id) != NULL) {
+		sbuf = &per_cpu(earlylog_sbuf, pcpu_id);
 		is_earlylog = 1;
 	} else
 		sbuf = (struct shared_buf **)
-				&per_cpu(sbuf, cpu_id)[ACRN_HVLOG];
+				&per_cpu(sbuf, pcpu_id)[ACRN_HVLOG];
 
 	spinlock_irqsave_obtain(&(logmsg.lock));
 	if ((*sbuf) != NULL)
-		printf("CPU%d: head: 0x%x, tail: 0x%x %s\n\r",
-			cpu_id, (*sbuf)->head, (*sbuf)->tail,
+		printf("CPU%hu: head: 0x%x, tail: 0x%x %s\n\r",
+			pcpu_id, (*sbuf)->head, (*sbuf)->tail,
 			(is_earlylog != 0) ? "[earlylog]" : "");
 	spinlock_irqrestore_release(&(logmsg.lock));
 

@@ -105,7 +105,7 @@ int exception_vmexit_handler(struct vcpu *vcpu);
 int interrupt_window_vmexit_handler(struct vcpu *vcpu);
 int external_interrupt_vmexit_handler(struct vcpu *vcpu);
 int acrn_handle_pending_request(struct vcpu *vcpu);
-int interrupt_init(uint32_t logical_id);
+int interrupt_init(uint16_t pcpu_id);
 
 void cancel_event_injection(struct vcpu *vcpu);
 

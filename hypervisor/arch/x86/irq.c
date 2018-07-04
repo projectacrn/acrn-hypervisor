@@ -376,19 +376,19 @@ int init_default_irqs(uint16_t cpu_id)
 
 void dispatch_exception(struct intr_excp_ctx *ctx)
 {
-	unsigned int cpu_id = get_cpu_id();
+	uint16_t pcpu_id = get_cpu_id();
 
 	/* Obtain lock to ensure exception dump doesn't get corrupted */
 	spinlock_obtain(&exception_spinlock);
 
 	/* Dump exception context */
-	dump_exception(ctx, cpu_id);
+	dump_exception(ctx, pcpu_id);
 
 	/* Release lock to let other CPUs handle exception */
 	spinlock_release(&exception_spinlock);
 
 	/* Halt the CPU */
-	cpu_dead(cpu_id);
+	cpu_dead(pcpu_id);
 }
 
 void handle_spurious_interrupt(uint32_t vector)
@@ -710,19 +710,19 @@ void get_cpu_interrupt_info(char *str, int str_max)
 }
 #endif /* HV_DEBUG */
 
-int interrupt_init(uint32_t cpu_id)
+int interrupt_init(uint16_t pcpu_id)
 {
 	struct host_idt_descriptor *idtd = &HOST_IDTR;
 	int status;
 
 	set_idt(idtd);
 
-	status = init_lapic(cpu_id);
+	status = init_lapic(pcpu_id);
 	ASSERT(status == 0, "lapic init failed");
 	if (status != 0)
 		return -ENODEV;
 
-	status = init_default_irqs(cpu_id);
+	status = init_default_irqs(pcpu_id);
 	ASSERT(status == 0, "irqs init failed");
 	if (status != 0)
 		return -ENODEV;
