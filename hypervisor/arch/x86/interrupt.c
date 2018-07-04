@@ -88,7 +88,7 @@ static bool vcpu_pending_request(struct vcpu *vcpu)
 	 */
 	if (ret != 0) {
 		/* we have pending IRR */
-		vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
+		//vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 	}
 
 	return vcpu->arch_vcpu.pending_req != 0;
