@@ -58,12 +58,14 @@ void vlapic_intr_accepted(struct vlapic *vlapic, uint32_t vector);
 
 struct vlapic *vm_lapic_from_vcpuid(struct vm *vm, uint16_t vcpu_id);
 struct vlapic *vm_lapic_from_pcpuid(struct vm *vm, uint16_t pcpu_id);
-bool vlapic_msr(uint32_t num);
+bool is_vlapic_msr(uint32_t num);
 int vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval);
 int vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval);
 
-int vlapic_mmio_read(struct vcpu *vcpu, uint64_t gpa, uint64_t *rval, int size);
-int vlapic_mmio_write(struct vcpu *vcpu, uint64_t gpa, uint64_t wval, int size);
+int vlapic_read_mmio_reg(struct vcpu *vcpu, uint64_t gpa,
+		uint64_t *rval, int size);
+int vlapic_write_mmio_reg(struct vcpu *vcpu, uint64_t gpa,
+		uint64_t wval, int size);
 
 /*
  * Signals to the LAPIC that an interrupt at 'vector' needs to be generated
