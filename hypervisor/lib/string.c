@@ -262,7 +262,7 @@ char *strncpy_s(char *d, size_t dmax, const char *s, size_t slen)
 		return NULL;
 	}
 
-	if (dmax == 0 || slen == 0) {
+	if (dmax == 0U || slen == 0U) {
 		pr_err("%s: invlaid length of src or dest buffer", __func__);
 		return NULL;
 	}
@@ -282,7 +282,7 @@ char *strncpy_s(char *d, size_t dmax, const char *s, size_t slen)
 			return NULL;
 		}
 
-		if (slen == 0) {
+		if (slen == 0U) {
 			*d = '\0';
 			return dest_base;
 		}
@@ -333,9 +333,9 @@ size_t strnlen_s(const char *str, size_t maxlen)
 	if (str == NULL)
 		return 0;
 
-	count = 0;
+	count = 0U;
 	while ((*str) != 0) {
-		if (maxlen == 0)
+		if (maxlen == 0U)
 			break;
 
 		count++;

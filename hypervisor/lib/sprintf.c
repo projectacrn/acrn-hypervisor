@@ -180,7 +180,8 @@ static int format_number(struct print_param *param)
 	int res;
 
 	/* initialize variables */
-	p = w = 0;
+	p = 0U;
+	w = 0U;
 	res = 0;
 	width = param->vars.valuelen + param->vars.prefixlen;
 
@@ -215,7 +216,7 @@ static int format_number(struct print_param *param)
 
 			/* invalidate prefix */
 			param->vars.prefix = NULL;
-			param->vars.prefixlen = 0;
+			param->vars.prefixlen = 0U;
 		}
 
 		/* fill the width with the padding character, return early if
@@ -273,7 +274,7 @@ static int print_pow2(struct print_param *param,
 	int ret;
 
 	/* calculate mask */
-	mask = (1UL << shift) - 1;
+	mask = (1UL << shift) - 1UL;
 
 	/* determine digit translation table */
 	digits = ((param->vars.flags & PRINT_FLAG_UPPER) != 0) ?
@@ -283,13 +284,13 @@ static int print_pow2(struct print_param *param,
 	v &= param->vars.mask;
 
 	/* determine prefix for alternate form */
-	if ((v == 0) && ((param->vars.flags & PRINT_FLAG_ALTERNATE_FORM) != 0)) {
+	if ((v == 0UL) && ((param->vars.flags & PRINT_FLAG_ALTERNATE_FORM) != 0)) {
 		prefix[0] = '0';
 		param->vars.prefix = prefix;
-		param->vars.prefixlen = 1;
+		param->vars.prefixlen = 1U;
 
-		if (shift == 4) {
-			param->vars.prefixlen = 2;
+		if (shift == 4U) {
+			param->vars.prefixlen = 2U;
 			prefix[1] = digits[16];
 		}
 	}
@@ -297,7 +298,7 @@ static int print_pow2(struct print_param *param,
 	/* determine digits from right to left */
 	do {
 		*--pos = digits[(v & mask)];
-	} while ((v >>= shift) != 0);
+	} while ((v >>= shift) != 0UL);
 
 	/* assign parameter and apply width and precision */
 	param->vars.value = pos;
@@ -306,7 +307,7 @@ static int print_pow2(struct print_param *param,
 	ret = format_number(param);
 
 	param->vars.value = NULL;
-	param->vars.valuelen = 0;
+	param->vars.valuelen = 0U;
 
 	return ret;
 }
@@ -350,7 +351,7 @@ static int print_decimal(struct print_param *param, int64_t value)
 	}
 
 	/* process 64 bit value as long as needed */
-	while (v.dwords.high != 0) {
+	while (v.dwords.high != 0U) {
 		/* determine digits from right to left */
 		udiv64(v.qword, 10, &d);
 		*--pos = d.r.dwords.low + '0';
@@ -374,7 +375,7 @@ static int print_decimal(struct print_param *param, int64_t value)
 	ret = format_number(param);
 
 	param->vars.value = NULL;
-	param->vars.valuelen = 0;
+	param->vars.valuelen = 0U;
 
 	return ret;
 }
@@ -390,7 +391,7 @@ static int print_string(struct print_param *param, const char *s)
 	/* the last result of the emit function */
 	int res;
 
-	w = 0;
+	w = 0U;
 	len = -1;
 
 	/* we need the length of the string if either width or precision is

@@ -22,7 +22,7 @@ static uint32_t Malloc_Heap_Contiguity_Bitmap[MALLOC_HEAP_BITMAP_SIZE];
 
 struct mem_pool Memory_Pool = {
         .start_addr = Malloc_Heap,
-        .spinlock = {.head = 0, .tail = 0},
+        .spinlock = {.head = 0U, .tail = 0U},
         .size = CONFIG_HEAP_SIZE,
         .buff_size = MALLOC_HEAP_BUFF_SIZE,
         .total_buffs = MALLOC_HEAP_TOTAL_BUFF,
@@ -46,7 +46,7 @@ static uint32_t Paging_Heap_Contiguity_Bitmap[MALLOC_HEAP_BITMAP_SIZE];
 
 struct mem_pool Paging_Memory_Pool = {
         .start_addr = Paging_Heap,
-        .spinlock = {.head = 0, .tail = 0},
+        .spinlock = {.head = 0U, .tail = 0U},
         .size = CONFIG_NUM_ALLOC_PAGES * CPU_PAGE_SIZE,
         .buff_size = PAGING_HEAP_BUFF_SIZE,
         .total_buffs = PAGING_HEAP_TOTAL_BUFF,
@@ -73,7 +73,7 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
         /* Calculate number of buffers to be allocated from memory pool */
         requested_buffs = INT_DIV_ROUNDUP(num_bytes, pool->buff_size);
 
-        for (idx = 0; idx < pool->bmp_size; idx++) {
+        for (idx = 0U; idx < pool->bmp_size; idx++) {
                 /* Find the first occurrence of requested_buffs number of free
                  * buffers. The 0th bit in bitmap represents a free buffer.
                  */
@@ -125,7 +125,7 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
                                 /* Update allocation bitmaps information for
                                  * selected buffers
                                  */
-                                for (i = 0; i < requested_buffs; i++) {
+                                for (i = 0U; i < requested_buffs; i++) {
                                         /* Set allocation bit in bitmap for
                                          * this buffer
                                          */
@@ -157,7 +157,7 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
                                                 /* Increment idx */
                                                 idx++;
                                                 /* Reset bit_idx */
-                                                bit_idx = 0;
+                                                bit_idx = 0U;
                                         }
                                 }
 
@@ -343,7 +343,7 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
         uint8_t *dest8;
         uint8_t *src8;
 
-        if (slen == 0 || dmax == 0 || dmax < slen) {
+        if (slen == 0U || dmax == 0U || dmax < slen) {
                 pr_err("%s: invalid src, dest buffer or length.", __func__);
                 return NULL;
         }
@@ -362,7 +362,7 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
         src8 = (uint8_t *)s;
 
         /*small data block*/
-        if (slen < 8) {
+        if (slen < 8U) {
                 while (slen != 0U) {
                         *dest8++ = *src8++;
                         slen--;
@@ -378,7 +378,7 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
         }
 
         /*copy main data blocks, with rep prefix*/
-        if (slen > 8) {
+        if (slen > 8U) {
                 uint32_t ecx;
 
                 asm volatile ("cld; rep; movsq"
@@ -386,7 +386,7 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
                                 : "0" (slen / 8), "1" (dest8), "2" (src8)
                                 : "memory");
 
-                slen = slen % 8;
+                slen = slen % 8U;
         }
 
         /*tail bytes*/
@@ -406,7 +406,7 @@ void *memset(void *base, uint8_t v, size_t n)
 
         dest_p = (uint8_t *)base;
 
-        if ((dest_p == NULL) || (n == 0))
+        if ((dest_p == NULL) || (n == 0U))
                 return NULL;
 
         /*do the few bytes to get uint64_t alignment*/
@@ -415,11 +415,11 @@ void *memset(void *base, uint8_t v, size_t n)
                 *dest_p++ = v;
 
         /*64-bit mode*/
-        n_q = count >> 3;
+        n_q = count >> 3U;
         asm volatile("cld ; rep ; stosq ; movl %3,%%ecx ; rep ; stosb"
                                 : "+c"(n_q), "+D"(dest_p)
                                 : "a" (v * 0x0101010101010101U),
-                                        "r"((unsigned int)count  & 7));
+                                        "r"((unsigned int)count  & 7U));
 
         return (void *)dest_p;
 }
