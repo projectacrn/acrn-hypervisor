@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#include <dirent.h>
 #include <errno.h>
 #include <pthread.h>
 
@@ -49,53 +50,32 @@ struct hvlog_dev {
 	struct hvlog_msg latched_msg;	/* latch for parsed msg */
 };
 
-static int shell_cmd(const char *cmd, char *outbuf, int len)
-{
-	FILE *ptr;
-	char cmd_buf[256];
-	int ret;
-
-	if (!outbuf)
-		return system(cmd);
-
-	memset(cmd_buf, 0, sizeof(cmd_buf));
-	memset(outbuf, 0, len);
-	snprintf(cmd_buf, sizeof(cmd_buf), "%s 2>&1", cmd);
-	ptr = popen(cmd_buf, "re");
-	if (!ptr)
-		return -1;
-
-	ret = fread(outbuf, 1, len, ptr);
-	pclose(ptr);
-
-	return ret;
-}
-
 /*
  * get pcpu_num, which is equal to num of acrnlog dev
  */
 static int get_cpu_num(void)
 {
+	char prefix[32] = "acrn_hvlog_cur_"; /* acrnlog dev prefix */
+	struct dirent *pdir;
+	int cpu_num = 0;
+	char *ret;
+	DIR *dir;
 
-	char cmd[128];
-	char buf[16];
-	int ret;
-
-	snprintf(cmd, sizeof(cmd), "ls /dev/acrn_hvlog_cur_* | wc -l");
-
-	ret = shell_cmd(cmd, buf, sizeof(buf));
-	if (ret <= 0) {
-		printf("Faile to get cpu number, use default 4\n");
-		return PCPU_NUM;
+	dir = opendir("/dev");
+	if (!dir) {
+		printf("Error opening /dev: %s\n", strerror(errno));
+		return -1;
 	}
 
-	ret = atoi(buf);
-	if (ret <= 0) {
-		printf("Wrong cpu number, use default 4\n");
-		return PCPU_NUM;
+	while (pdir = readdir(dir)) {
+		ret = strstr(pdir->d_name, prefix);
+		if (ret)
+			cpu_num++;
 	}
 
-	return ret;
+	closedir(dir);
+
+	return cpu_num;
 }
 
 /*
