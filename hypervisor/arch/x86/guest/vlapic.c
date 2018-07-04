@@ -1807,7 +1807,7 @@ vlapic_intr_msi(struct vm *vm, uint64_t addr, uint64_t msg)
 }
 
 static bool
-x2apic_msr(uint32_t msr)
+is_x2apic_msr(uint32_t msr)
 {
 	if (msr >= 0x800 && msr <= 0xBFF)
 		return true;
@@ -1823,10 +1823,10 @@ x2apic_msr_to_regoff(uint32_t msr)
 }
 
 bool
-vlapic_msr(uint32_t msr)
+is_vlapic_msr(uint32_t msr)
 {
 
-	if (x2apic_msr(msr) || (msr == MSR_IA32_APIC_BASE))
+	if (is_x2apic_msr(msr) || (msr == MSR_IA32_APIC_BASE))
 		return true;
 	else
 		return false;
@@ -1910,7 +1910,7 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val)
 }
 
 int
-vlapic_mmio_write(struct vcpu *vcpu, uint64_t gpa, uint64_t wval, int size)
+vlapic_write_mmio_reg(struct vcpu *vcpu, uint64_t gpa, uint64_t wval, int size)
 {
 	int error;
 	uint64_t off;
@@ -1931,7 +1931,7 @@ vlapic_mmio_write(struct vcpu *vcpu, uint64_t gpa, uint64_t wval, int size)
 }
 
 int
-vlapic_mmio_read(struct vcpu *vcpu, uint64_t gpa, uint64_t *rval,
+vlapic_read_mmio_reg(struct vcpu *vcpu, uint64_t gpa, uint64_t *rval,
 			__unused int size)
 {
 	int error;
@@ -1965,14 +1965,14 @@ int vlapic_mmio_access_handler(struct vcpu *vcpu, struct mem_io *mmio,
 			"All RW to LAPIC must be 32-bits in size");
 
 	if (mmio->read_write == HV_MEM_IO_READ) {
-		ret = vlapic_mmio_read(vcpu,
+		ret = vlapic_read_mmio_reg(vcpu,
 				gpa,
 				&mmio->value,
 				mmio->access_size);
 		mmio->mmio_status = MMIO_TRANS_VALID;
 
 	} else if (mmio->read_write == HV_MEM_IO_WRITE) {
-		ret = vlapic_mmio_write(vcpu,
+		ret = vlapic_write_mmio_reg(vcpu,
 				gpa,
 				mmio->value,
 				mmio->access_size);
