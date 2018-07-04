@@ -291,9 +291,9 @@ vie_read_bytereg(struct vcpu *vcpu, struct vie *vie, uint8_t *rval)
 	 * base register right by 8 bits (%ah = %rax >> 8).
 	 */
 	if (lhbr != 0)
-		*rval = val >> 8;
+		*rval = (uint8_t)(val >> 8);
 	else
-		*rval = val;
+		*rval = (uint8_t)val;
 	return error;
 }
 
@@ -440,7 +440,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		size = 1U;	/* override for byte operation */
 		error = memread(vcpu, gpa, &val, size, arg);
 		if (error == 0)
-			error = vie_write_bytereg(vcpu, vie, val);
+			error = vie_write_bytereg(vcpu, vie, (uint8_t)val);
 		break;
 	case 0x8BU:
 		/*
@@ -503,7 +503,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		 * REX.W + C7/0	mov r/m64, imm32
 		 *		(sign-extended to 64-bits)
 		 */
-		val = vie->immediate & size2mask[size];
+		val = (uint64_t)vie->immediate & size2mask[size];
 		error = memwrite(vcpu, gpa, val, size, arg);
 		break;
 	default:
@@ -1020,7 +1020,7 @@ emulate_or(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		 * perform the operation with the pre-fetched immediate
 		 * operand and write the result
 		 */
-		result = val1 | vie->immediate;
+		result = val1 | (uint64_t)vie->immediate;
 		error = memwrite(vcpu, gpa, result, size, arg);
 		break;
 	case 0x09U:
@@ -1414,8 +1414,8 @@ emulate_bittest(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		mem_region_read_t memread, __unused mem_region_write_t memwrite,
 		void *memarg)
 {
-	uint64_t val, rflags;
-	int error, bitmask;
+	uint64_t val, rflags, bitmask;
+	int error;
 	uint32_t  bitoff;
 
 	/*
@@ -1438,8 +1438,8 @@ emulate_bittest(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	 * Intel SDM, Vol 2, Table 3-2:
 	 * "Range of Bit Positions Specified by Bit Offset Operands"
 	 */
-	bitmask = vie->opsize * 8 - 1;
-	bitoff = vie->immediate & bitmask;
+	bitmask = (uint64_t)vie->opsize * 8UL - 1UL;
+	bitoff = (uint64_t)vie->immediate & bitmask;
 
 	/* Copy the bit into the Carry flag in %rflags */
 	if ((val & (1UL << bitoff)) != 0U)
@@ -1708,7 +1708,7 @@ vie_init(struct vie *vie, struct vcpu *vcpu)
 			return ret;
 		} else if (ret < 0)
 			return ret;
-		vie->num_valid = inst_len;
+		vie->num_valid = (uint8_t)inst_len;
 	}
 
 	return 0;
@@ -2132,7 +2132,7 @@ decode_moffset(struct vie *vie)
 		u.buf[i] = x;
 		vie_advance(vie);
 	}
-	vie->displacement = u.u64;
+	vie->displacement = (int64_t)u.u64;
 	return 0;
 }
 
