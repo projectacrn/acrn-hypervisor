@@ -70,6 +70,8 @@ TSCREC = "Q"
 HDRREC = "Q"
 D2REC  = "QQ"
 D4REC = "IIII"
+D8REC = "BBBBBBBBBBBBBBBB"
+D16REC = "bbbbbbbbbbbbbbbb"
 
 def main_loop(formats, fd):
     global exit
@@ -97,6 +99,18 @@ def main_loop(formats, fd):
             d2 = 0
             d3 = 0
             d4 = 0
+            d5 = 0
+            d6 = 0
+            d7 = 0
+            d8 = 0
+            d9 = 0
+            d10 = 0
+            d11 = 0
+            d12 = 0
+            d13 = 0
+            d14 = 0
+            d15 = 0
+            d16 = 0
 
             if n_data == 2:
                 line = fd.read(struct.calcsize(D2REC))
@@ -110,13 +124,42 @@ def main_loop(formats, fd):
                     break
                 (d1, d2, d3, d4) = struct.unpack(D4REC, line)
 
+            if n_data == 8:
+                line = fd.read(struct.calcsize(D8REC))
+                if not line:
+                    break
+                # TRACE_6C using the first 6 data of fields_8. Actaully we have
+                # 16 data in every trace entry.
+                (d1, d2, d3, d4, d5, d6, d7, d8,
+                 d9, d10, d11, d12, d13, d14, d15, d16) = struct.unpack(D8REC, line)
+
+            if n_data == 16:
+                line = fd.read(struct.calcsize(D16REC))
+                if not line:
+                    break
+
+                (d1, d2, d3, d4, d5, d6, d7, d8,
+                 d9, d10, d11, d12, d13, d14, d15, d16) = struct.unpack(D16REC, line)
+
             args = {'cpu'   : cpu,
                     'tsc'   : tsc,
                     'event' : event,
                     '1'     : d1,
                     '2'     : d2,
                     '3'     : d3,
-                    '4'     : d4      }
+                    '4'     : d4,
+                    '5'     : d5,
+                    '6'     : d6,
+                    '7'     : d7,
+                    '8'     : d8,
+                    '9'     : d9,
+                    '10'    : d10,
+                    '11'    : d11,
+                    '12'    : d12,
+                    '13'    : d13,
+                    '14'    : d14,
+                    '15'    : d15,
+                    '16'    : d16      }
 
             try:
                 if str(event) in formats.keys():
