@@ -294,7 +294,7 @@ int64_t hcall_inject_msi(struct vm *vm, uint64_t vmid, uint64_t param)
 int64_t hcall_set_ioreq_buffer(struct vm *vm, uint64_t vmid, uint64_t param)
 {
 	int64_t ret = 0;
-	uint64_t hpa = 0;
+	uint64_t hpa = 0UL;
 	struct acrn_set_ioreq_buffer iobuf;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
@@ -312,7 +312,7 @@ int64_t hcall_set_ioreq_buffer(struct vm *vm, uint64_t vmid, uint64_t param)
 			vmid, iobuf.req_buf);
 
 	hpa = gpa2hpa(vm, iobuf.req_buf);
-	if (hpa == 0) {
+	if (hpa == 0UL) {
 		pr_err("%s: invalid GPA.\n", __func__);
 		target_vm->sw.io_shared_page = NULL;
 		return -EINVAL;
@@ -396,7 +396,7 @@ int64_t _set_vm_memmap(struct vm *vm, struct vm *target_vm,
 	uint64_t hpa;
 	uint32_t attr, prot;
 
-	if ((memmap->length & 0xFFFUL) != 0) {
+	if ((memmap->length & 0xFFFUL) != 0UL) {
 		pr_err("%s: ERROR! [vm%d] map size 0x%x is not page aligned",
 				__func__, target_vm->attr.id, memmap->length);
 		return -1;
@@ -415,9 +415,9 @@ int64_t _set_vm_memmap(struct vm *vm, struct vm *target_vm,
 	}
 
 	/* Check prot */
-	attr = 0;
+	attr = 0U;
 	if (memmap->type != MAP_UNMAP) {
-		prot = (memmap->prot != 0) ? memmap->prot : memmap->prot_2;
+		prot = (memmap->prot != 0U) ? memmap->prot : memmap->prot_2;
 		if ((prot & MEM_ACCESS_READ) != 0U)
 			attr |= IA32E_EPT_R_BIT;
 		if ((prot & MEM_ACCESS_WRITE) != 0U)
@@ -594,7 +594,7 @@ int64_t hcall_assign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
 
 	/* create a iommu domain for target VM if not created */
 	if (target_vm->iommu_domain == NULL) {
-		if (target_vm->arch_vm.nworld_eptp == 0) {
+		if (target_vm->arch_vm.nworld_eptp == 0UL) {
 			pr_err("%s, EPT of VM not set!\n",
 				__func__, target_vm->attr.id);
 			return -EPERM;
@@ -778,7 +778,7 @@ int64_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param)
 		uint8_t cx_idx;
 		struct cpu_cx_data *cx_data;
 
-		if (target_vm->pm.cx_cnt == 0) {
+		if (target_vm->pm.cx_cnt == 0U) {
 			return -1;
 		}
 

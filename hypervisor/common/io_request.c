@@ -168,7 +168,7 @@ void get_req_info(char *str, int str_max)
 		vm = list_entry(pos, struct vm, list);
 		req_buf = (union vhm_request_buffer *)vm->sw.io_shared_page;
 		if (req_buf != NULL) {
-			for (i = 0; i < VHM_REQUEST_MAX; i++) {
+			for (i = 0U; i < VHM_REQUEST_MAX; i++) {
 				req = req_buf->req_queue + i;
 				if (req->valid != 0) {
 					_get_req_info_(req, &client_id, type,
