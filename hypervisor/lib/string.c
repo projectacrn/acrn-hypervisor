@@ -27,13 +27,17 @@ long strtol_deci(const char *nptr)
 	 * Skip white space and pick up leading +/- sign if any.
 	 */
 	do {
-		c = *s++;
+		c = *s;
+		s++;
 	} while (ISSPACE(c));
 	if (c == '-') {
 		neg = 1;
-		c = *s++;
-	} else if (c == '+')
-		c = *s++;
+		c = *s;
+		s++;
+	} else if (c == '+') {
+		c = *s;
+		s++;
+	}
 	/*
 	 * Compute the cutoff value between legal numbers and illegal
 	 * numbers.  That is the largest legal value, divided by the
@@ -54,7 +58,9 @@ long strtol_deci(const char *nptr)
 	cutoff = (neg != 0) ? -(uint64_t)LONG_MIN : LONG_MAX;
 	cutlim = cutoff % (uint64_t)base;
 	cutoff /= (uint64_t)base;
-	for (acc = 0, any = 0;; c = *s++) {
+	acc = 0;
+	any = 0;
+	do {
 		if (c >= '0' && c <= '9')
 			c -= '0';
 		else
@@ -68,7 +74,11 @@ long strtol_deci(const char *nptr)
 			acc *= base;
 			acc += c;
 		}
-	}
+
+		c = *s;
+		s++;
+	} while (true);
+
 	if (any < 0)
 		acc = (neg != 0) ? LONG_MIN : LONG_MAX;
 	else if (neg != 0)
@@ -101,7 +111,9 @@ uint64_t strtoul_hex(const char *nptr)
 
 	cutoff = (uint64_t)ULONG_MAX / (uint64_t)base;
 	cutlim = (uint64_t)ULONG_MAX % (uint64_t)base;
-	for (acc = 0, any = 0;; c = *s++) {
+	acc = 0;
+	any = 0;
+	do {
 		if (c >= '0' && c <= '9')
 			c -= '0';
 		else if (c >= 'A' && c <= 'F')
@@ -119,7 +131,10 @@ uint64_t strtoul_hex(const char *nptr)
 			acc *= base;
 			acc += c;
 		}
-	}
+
+		c = *s;
+		s++;
+	} while (true);
 
 	if (any <= 0)
 		acc = ULONG_MAX;
