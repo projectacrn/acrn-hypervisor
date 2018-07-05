@@ -307,7 +307,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 
 	val64 = exec_vmread(VMX_GUEST_CR4);
 	if ((val64 & CR4_OSXSAVE) == 0U) {
-		vcpu_inject_gp(vcpu, 0);
+		vcpu_inject_gp(vcpu, 0U);
 		return -1;
 	}
 

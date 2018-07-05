@@ -12,7 +12,7 @@ int dm_emulate_pio_post(struct vcpu *vcpu)
 	int cur_context = vcpu->arch_vcpu.cur_context;
 	union vhm_request_buffer *req_buf = NULL;
 	uint32_t mask =
-		0xFFFFFFFFul >> (32 - 8 * vcpu->req.reqs.pio_request.size);
+		0xFFFFFFFFUL >> (32 - 8 * vcpu->req.reqs.pio_request.size);
 	uint64_t *rax;
 
 	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
@@ -164,7 +164,7 @@ void allow_guest_io_access(struct vm *vm, uint32_t address, uint32_t nbytes)
 	uint32_t a;
 
 	b = vm->arch_vm.iobitmap[0];
-	for (i = 0; i < nbytes; i++) {
+	for (i = 0U; i < nbytes; i++) {
 		if ((address & 0x8000U) != 0U)
 			b = vm->arch_vm.iobitmap[1];
 		a = address & 0x7fffU;
@@ -180,11 +180,11 @@ static void deny_guest_io_access(struct vm *vm, uint32_t address, uint32_t nbyte
 	uint32_t a;
 
 	b = vm->arch_vm.iobitmap[0];
-	for (i = 0; i < nbytes; i++) {
+	for (i = 0U; i < nbytes; i++) {
 		if ((address & 0x8000U) != 0U)
 			b = vm->arch_vm.iobitmap[1];
 		a = address & 0x7fffU;
-		b[a >> 5] |= (1 << (a & 0x1fU));
+		b[a >> 5U] |= (1U << (a & 0x1fU));
 		address++;
 	}
 }

@@ -28,9 +28,9 @@ struct trusty_mem {
 
 static struct key_info g_key_info = {
 	.size_of_this_struct = sizeof(g_key_info),
-	.version = 0,
-	.platform = 3,
-	.num_seeds = 1
+	.version = 0U,
+	.platform = 3U,
+	.num_seeds = 1U
 };
 
 #define save_segment(seg, SEG_NAME) \
@@ -71,7 +71,7 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	}
 
 	if (!vm->sworld_control.sworld_enabled
-			|| vm->arch_vm.sworld_eptp != 0) {
+			|| vm->arch_vm.sworld_eptp != 0UL) {
 		pr_err("Sworld is not enabled or Sworld eptp is not NULL");
 		return;
 	}
@@ -323,7 +323,7 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 			sizeof(mem->first_page.data.key_info.dseed_list));
 	/* Derive dvseed from dseed for Trusty */
 	key_info = &mem->first_page.data.key_info;
-	for (i = 0; i < g_key_info.num_seeds; i++) {
+	for (i = 0U; i < g_key_info.num_seeds; i++) {
 		if (hkdf_sha256(key_info->dseed_list[i].seed,
 				BUP_MKHI_BOOTLOADER_SEED_LEN,
 				g_key_info.dseed_list[i].seed,
@@ -364,11 +364,11 @@ static bool init_secure_world_env(struct vcpu *vcpu,
 				uint64_t base_hpa,
 				uint32_t size)
 {
-	vcpu->arch_vcpu.inst_len = 0;
+	vcpu->arch_vcpu.inst_len = 0U;
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].rip = entry_gpa;
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].rsp =
 		TRUSTY_EPT_REBASE_GPA + size;
-	vcpu->arch_vcpu.contexts[SECURE_WORLD].tsc_offset = 0;
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].tsc_offset = 0UL;
 
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].cr0 =
 		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr0;
@@ -412,12 +412,12 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 		return false;
 	}
 
-	if (boot_param->entry_point == 0) {
+	if (boot_param->entry_point == 0U) {
 		pr_err("%s: Invalid entry point\n", __func__);
 		return false;
 	}
 
-	if (boot_param->base_addr == 0) {
+	if (boot_param->base_addr == 0U) {
 		pr_err("%s: Invalid memory base address\n", __func__);
 		return false;
 	}
@@ -451,7 +451,7 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 void trusty_set_dseed(void *dseed, uint8_t dseed_num)
 {
 	/* Use fake seed if input param is invalid */
-	if ((dseed == NULL) || (dseed_num == 0) ||
+	if ((dseed == NULL) || (dseed_num == 0U) ||
 		(dseed_num > BOOTLOADER_SEED_MAX_ENTRIES)) {
 
 		g_key_info.num_seeds = 1;

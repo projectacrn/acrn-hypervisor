@@ -296,13 +296,13 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 	default:
 
 		/* Set mapping size to 0 - can't map memory in PML4 */
-		mapped_size = 0;
+		mapped_size = 0U;
 
 		break;
 	}
 
 	/* Check to see if mapping should occur */
-	if (mapped_size != 0) {
+	if (mapped_size != 0U) {
 		/* Get current table entry */
 		uint64_t entry = MEM_READ64(table_base + table_offset);
 		bool prev_entry_present = false;
@@ -415,7 +415,7 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 			 * TODO: add shootdown APs operation if MMU will be
 			 * modified after AP start in the future.
 			 */
-			if ((phys_cpu_num != 0) &&
+			if ((phys_cpu_num != 0U) &&
 				((pcpu_active_bitmap &
 				((1UL << phys_cpu_num) - 1))
 				!= (1UL << CPU_BOOT_ID))) {
@@ -620,7 +620,7 @@ void init_paging(void)
 			attr_uc);
 
 	/* Modify WB attribute for E820_TYPE_RAM */
-	for (i = 0, entry = &e820[0];
+	for (i = 0U, entry = &e820[0];
 			i < e820_entries;
 			i++, entry = &e820[i]) {
 		if (entry->type == E820_TYPE_RAM) {
@@ -864,10 +864,10 @@ static uint64_t update_page_table_entry(struct map_params *map_params,
 static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 		void *vaddr, uint64_t page_size, bool direct)
 {
-	uint32_t i = 0;
+	uint32_t i = 0U;
 	uint64_t pa;
-	uint64_t attr = 0x00;
-	uint64_t next_page_size = 0x00;
+	uint64_t attr = 0x0UL;
+	uint64_t next_page_size = 0x0UL;
 	void *sub_tab_addr = NULL;
 	struct entry_params entry;
 
@@ -930,7 +930,7 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 			attr |= (entry.entry_val & 0x7fUL);
 		}
 		/* write all entries and keep original attr*/
-		for (i = 0; i < IA32E_NUM_ENTRIES; i++) {
+		for (i = 0U; i < IA32E_NUM_ENTRIES; i++) {
 			MEM_WRITE64(sub_tab_addr + (i * IA32E_COMM_ENTRY_SIZE),
 					(attr | (pa + (i * next_page_size))));
 		}
@@ -1033,7 +1033,7 @@ static int modify_paging(struct map_params *map_params, void *paddr,
 				 */
 				page_size = break_page_table(map_params,
 					paddr, vaddr, page_size, direct);
-				if (page_size == 0)
+				if (page_size == 0UL)
 					return -EINVAL;
 			}
 		} else {
@@ -1043,7 +1043,7 @@ static int modify_paging(struct map_params *map_params, void *paddr,
 		/* The function return the memory size that one entry can map */
 		adjust_size = update_page_table_entry(map_params, paddr, vaddr,
 				page_size, attr, request_type, direct);
-		if (adjust_size == 0)
+		if (adjust_size == 0UL)
 			return -EINVAL;
 		vaddr += adjust_size;
 		paddr += adjust_size;

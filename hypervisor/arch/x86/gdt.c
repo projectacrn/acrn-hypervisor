@@ -37,13 +37,13 @@ void load_gdtr_and_tr(void)
 	tss->ist1 = (uint64_t)get_cpu_var(mc_stack) + CONFIG_STACK_SIZE;
 	tss->ist2 = (uint64_t)get_cpu_var(df_stack) + CONFIG_STACK_SIZE;
 	tss->ist3 = (uint64_t)get_cpu_var(sf_stack) + CONFIG_STACK_SIZE;
-	tss->ist4 = 0L;
+	tss->ist4 = 0UL;
 
 	/* tss descriptor */
 	set_tss_desc(&gdt->host_gdt_tss_descriptors,
 		(void *)tss, sizeof(struct tss_64), TSS_AVAIL);
 
-	gdtr.len = sizeof(struct host_gdt) - 1;
+	gdtr.len = sizeof(struct host_gdt) - 1U;
 	gdtr.gdt = gdt;
 
 	asm volatile ("lgdt %0" ::"m"(gdtr));

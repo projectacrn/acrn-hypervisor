@@ -21,7 +21,7 @@ void init_softirq(void)
 	uint16_t pcpu_id;
 
 	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
-		per_cpu(softirq_pending, pcpu_id) = 0;
+		per_cpu(softirq_pending, pcpu_id) = 0UL;
 		bitmap_set(SOFTIRQ_ATOMIC, &per_cpu(softirq_pending, pcpu_id));
 	}
 }
