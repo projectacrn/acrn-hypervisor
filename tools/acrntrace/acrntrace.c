@@ -11,6 +11,7 @@
 #include <sys/mman.h>
 #include <sys/statvfs.h>
 #include <time.h>
+#include <dirent.h>
 #include <signal.h>
 #include <errno.h>
 #include <pthread.h>
@@ -30,7 +31,7 @@ static int exiting = 0;
 /* for opt */
 static uint64_t period = 10000;
 static const char optString[] = "i:hcr:t:";
-static const char dev_name[] = "/dev/acrn_trace";
+static const char dev_prefix[] = "acrn_trace_";
 
 static uint32_t flags;
 static char trace_file_dir[TRACE_FILE_DIR_LEN];
@@ -139,50 +140,28 @@ static int parse_opt(int argc, char *argv[])
 	return 0;
 }
 
-static int shell_cmd(const char *cmd, char *outbuf, int len)
-{
-	FILE *ptr;
-	char cmd_buf[256];
-	int ret;
-
-	if (!outbuf)
-		return system(cmd);
-
-	memset(cmd_buf, 0, sizeof(cmd_buf));
-	memset(outbuf, 0, len);
-	snprintf(cmd_buf, sizeof(cmd_buf), "%s 2>&1", cmd);
-	ptr = popen(cmd_buf, "re");
-	if (!ptr)
-		return -1;
-
-	ret = fread(outbuf, 1, len, ptr);
-	pclose(ptr);
-
-	return ret;
-}
-
 static int get_cpu_num(void)
 {
+	struct dirent *pdir;
+	int cpu_num = 0;
+	char *ret;
+	DIR *dir;
 
-	char cmd[128];
-	char buf[16];
-	int ret;
-
-	snprintf(cmd, sizeof(cmd), "ls %s_* | wc -l", dev_name);
-
-	ret = shell_cmd(cmd, buf, sizeof(buf));
-	if (ret <= 0) {
-		pr_err("Faile to get cpu number, use default 4\n");
-		return PCPU_NUM;
+	dir = opendir("/dev");
+	if (!dir) {
+		printf("Error opening /dev: %s\n", strerror(errno));
+		return -1;
 	}
 
-	ret = atoi(buf);
-	if (ret <= 0) {
-		pr_err("Wrong cpu number, use default 4\n");
-		return PCPU_NUM;
+	while (pdir = readdir(dir)) {
+		ret = strstr(pdir->d_name, dev_prefix);
+		if (ret)
+			cpu_num++;
 	}
 
-	return ret;
+	closedir(dir);
+
+	return cpu_num;
 }
 
 static int create_trace_file_dir(char *dir)
@@ -270,7 +249,7 @@ static int create_reader(reader_struct * reader, uint32_t cpu)
 {
 	char trace_file_name[TRACE_FILE_NAME_LEN];
 
-	snprintf(reader->dev_name, DEV_PATH_LEN, "%s_%u", dev_name, cpu);
+	snprintf(reader->dev_name, DEV_PATH_LEN, "/dev/%s%u", dev_prefix, cpu);
 	reader->param.cpuid = cpu;
 
 	reader->dev_fd = open(reader->dev_name, O_RDWR);
