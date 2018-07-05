@@ -24,8 +24,8 @@ spinlock_t up_count_spinlock = {
 
 struct per_cpu_region *per_cpu_data_base_ptr;
 uint16_t phys_cpu_num = 0U;
-unsigned long pcpu_sync = 0;
-volatile uint32_t up_count = 0;
+uint64_t pcpu_sync = 0UL;
+volatile uint16_t up_count = 0U;
 
 /* physical cpu active bitmap, support up to 64 cpus */
 uint64_t pcpu_active_bitmap = 0;
@@ -54,8 +54,8 @@ static void vapic_cap_detect(void);
 static void cpu_xsave_init(void);
 static void set_current_cpu_id(uint16_t pcpu_id);
 static void print_hv_banner(void);
-static int get_cpu_id_from_lapic_id(uint8_t lapic_id);
-static void pcpu_sync_sleep(unsigned long *sync, int mask_bit);
+static uint16_t get_cpu_id_from_lapic_id(uint8_t lapic_id);
+static void pcpu_sync_sleep(uint64_t *sync, uint64_t mask_bit);
 int ibrs_type;
 static uint64_t __attribute__((__section__(".bss_noinit"))) start_tsc;
 
@@ -71,7 +71,7 @@ static uint64_t __attribute__((__section__(".bss_noinit"))) start_tsc;
 
 inline bool cpu_has_cap(uint32_t bit)
 {
-	int feat_idx = bit >> 5;
+	uint32_t feat_idx = bit >> 5U;
 	uint32_t feat_bit = bit & 0x1fU;
 
 	if (feat_idx >= FEATURE_WORDS)
@@ -258,15 +258,15 @@ uint16_t __attribute__((weak)) parse_madt(uint8_t *lapic_id_base)
 	for (i = 0U; i < ARRAY_SIZE(lapic_id); i++)
 		*lapic_id_base++ = lapic_id[i];
 
-	return ARRAY_SIZE(lapic_id);
+	return ((uint16_t)ARRAY_SIZE(lapic_id));
 }
 
 static void init_phy_cpu_storage(void)
 {
-	int i;
+	uint16_t i;
 	uint16_t pcpu_num=0U;
 	uint16_t bsp_cpu_id;
-	uint8_t bsp_lapic_id = 0;
+	uint8_t bsp_lapic_id = 0U;
 	uint8_t *lapic_id_base;
 
 	/*
@@ -279,11 +279,11 @@ static void init_phy_cpu_storage(void)
 	pcpu_num = parse_madt(lapic_id_base);
 	alloc_phy_cpu_data(pcpu_num);
 
-	for (i = 0; i < pcpu_num; i++)
+	for (i = 0U; i < pcpu_num; i++)
 		per_cpu(lapic_id, i) = *lapic_id_base++;
 
 	/* free memory after lapic_id are saved in per_cpu data */
-	free(lapic_id_base);
+	free((void *)lapic_id_base);
 
 	bsp_lapic_id = get_cur_lapic_id();
 
@@ -628,11 +628,11 @@ static void cpu_secondary_post(void)
 	cpu_dead(get_cpu_id());
 }
 
-static int get_cpu_id_from_lapic_id(uint8_t lapic_id)
+static uint16_t get_cpu_id_from_lapic_id(uint8_t lapic_id)
 {
 	uint16_t i;
 
-	for (i = 0; i < phys_cpu_num; i++) {
+	for (i = 0U; i < phys_cpu_num; i++) {
 		if (per_cpu(lapic_id, i) == lapic_id)
 			return i;
 	}
@@ -708,7 +708,7 @@ static uint64_t prepare_trampoline(void)
 void start_cpus()
 {
 	uint32_t timeout;
-	uint32_t expected_up;
+	uint16_t expected_up;
 	uint64_t startup_paddr;
 
 	startup_paddr = prepare_trampoline();
@@ -747,18 +747,18 @@ void start_cpus()
 
 void stop_cpus()
 {
-	int i;
-	uint32_t timeout, expected_up;
+	uint16_t pcpu_id, expected_up;
+	uint32_t timeout;
 
 	timeout = CONFIG_CPU_UP_TIMEOUT * 1000;
-	for (i = 0; i < phys_cpu_num; i++) {
-		if (get_cpu_id() == i)	/* avoid offline itself */
+	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
+		if (get_cpu_id() == pcpu_id)	/* avoid offline itself */
 			continue;
 
-		make_pcpu_offline(i);
+		make_pcpu_offline(pcpu_id);
 	}
 
-	expected_up = 1;
+	expected_up = 1U;
 	while ((up_count != expected_up) && (timeout != 0U)) {
 		/* Delay 10us */
 		udelay(10);
@@ -826,7 +826,7 @@ static void print_hv_banner(void)
 	printf(boot_msg);
 }
 
-static void pcpu_sync_sleep(unsigned long *sync, int mask_bit)
+static void pcpu_sync_sleep(uint64_t *sync, uint64_t mask_bit)
 {
 	uint64_t wake_sync = (1UL << mask_bit);
 
