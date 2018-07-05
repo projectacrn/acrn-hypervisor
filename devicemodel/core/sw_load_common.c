@@ -50,8 +50,8 @@ static char bootargs[STR_LEN];
  *   ctx->highmem = request_memory_size - ctx->lowmem_limit
  *
  *             Begin      End         Type         Length
- * 0:             0 -     0xF0000     RAM          0xF0000
- * 1	    0xf0000 -	  0x100000    (reserved)   0x10000
+ * 0:             0 -     0xef000     RAM          0xEF000
+ * 1	    0xef000 -	  0x100000    (reserved)   0x11000
  * 2       0x100000 -	  lowmem      RAM          lowmem - 0x100000
  * 3:        lowmem -     bff_fffff   (reserved)   0xc00_00000-lowmem
  * 4:   0xc00_00000 -     dff_fffff   PCI hole     512MB
@@ -61,13 +61,13 @@ static char bootargs[STR_LEN];
 const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 	{	/* 0 to mptable/smbios/acpi */
 		.baseaddr =  0x00000000,
-		.length   =  0xF0000,
+		.length   =  0xEF000,
 		.type     =  E820_TYPE_RAM
 	},
 
-	{	/* mptable/smbios/acpi to lowmem */
-		.baseaddr = 0xF0000,
-		.length	  = 0x10000,
+	{	/* guest_cfg_addr/mptable/smbios/acpi to lowmem */
+		.baseaddr = 0xEF000,
+		.length	  = 0x11000,
 		.type	  = E820_TYPE_RESERVED
 	},
 
