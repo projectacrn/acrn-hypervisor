@@ -45,7 +45,7 @@ void parse_seed_list(struct seed_list_hob *seed_hob)
 				goto fail;
 			}
 
-			memcpy_s(&dseed_list[dseed_index],
+			(void)memcpy_s(&dseed_list[dseed_index],
 					sizeof(struct seed_info),
 					entry->seed,
 					sizeof(struct seed_info));

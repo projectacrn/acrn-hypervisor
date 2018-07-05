@@ -96,7 +96,7 @@ int exec_vmxon_instr(uint16_t pcpu_id)
 		 * MSR
 		 */
 		tmp32 = msr_read(MSR_IA32_VMX_BASIC);
-		memcpy_s((uint32_t *) vmxon_region_va, 4, &tmp32, 4);
+		(void)memcpy_s((uint32_t *) vmxon_region_va, 4, &tmp32, 4);
 
 		/* Turn on CR0.NE and CR4.VMXE */
 		CPU_CR_READ(cr0, &tmp64);
@@ -1545,7 +1545,7 @@ int init_vmcs(struct vcpu *vcpu)
 
 	/* Obtain the VM Rev ID from HW and populate VMCS page with it */
 	vmx_rev_id = msr_read(MSR_IA32_VMX_BASIC);
-	memcpy_s((void *) vcpu->arch_vcpu.vmcs, 4, &vmx_rev_id, 4);
+	(void)memcpy_s((void *) vcpu->arch_vcpu.vmcs, 4, &vmx_rev_id, 4);
 
 	/* Execute VMCLEAR on current VMCS */
 	vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);

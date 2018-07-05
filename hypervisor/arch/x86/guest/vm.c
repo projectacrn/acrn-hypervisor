@@ -122,7 +122,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		/* populate UOS vm fields according to vm_desc */
 		vm->sworld_control.sworld_enabled =
 			vm_desc->sworld_enabled;
-		memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
+		(void)memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
 					&vm_desc->GUID[0],
 					sizeof(vm_desc->GUID));
 	}

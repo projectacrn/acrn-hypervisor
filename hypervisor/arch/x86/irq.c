@@ -283,7 +283,7 @@ OUT:
 		/* we are okay using strcpy_s here even with spinlock
 		 * since no #PG in HV right now
 		 */
-		strcpy_s(node->name, 32, info->name);
+		(void)strcpy_s(node->name, 32, info->name);
 		dev_dbg(ACRN_DBG_IRQ, "[%s] %s irq%d vr:0x%x",
 			__func__, node->name, irq, desc->vector);
 	}

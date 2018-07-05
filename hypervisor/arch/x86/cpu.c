@@ -695,7 +695,7 @@ static uint64_t prepare_trampoline(void)
 	pr_dbg("trampoline code: %llx size %x", dest_pa, size);
 
 	/* Copy segment for AP initialization code below 1MB */
-	memcpy_s(HPA2HVA(dest_pa), size, _ld_trampoline_load, size);
+	(void)memcpy_s(HPA2HVA(dest_pa), size, _ld_trampoline_load, size);
 	update_trampoline_code_refs(dest_pa);
 	trampoline_start16_paddr = dest_pa;
 

@@ -317,9 +317,9 @@ static inline int32_t _copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 	g_ptr = HPA2HVA(hpa);
 
 	if (cp_from_vm)
-		memcpy_s(h_ptr, len, g_ptr, len);
+		(void)memcpy_s(h_ptr, len, g_ptr, len);
 	else
-		memcpy_s(g_ptr, len, h_ptr, len);
+		(void)memcpy_s(g_ptr, len, h_ptr, len);
 
 	return len;
 }
@@ -825,7 +825,7 @@ uint32_t create_guest_init_gdt(struct vm *vm, uint32_t *limit)
 	void *gtd_addr = GPA2HVA(vm, GUEST_INIT_GDT_START);
 
 	*limit = sizeof(guest_init_gdt) - 1;
-	memcpy_s(gtd_addr, 64, guest_init_gdt, sizeof(guest_init_gdt));
+	(void)memcpy_s(gtd_addr, 64, guest_init_gdt, sizeof(guest_init_gdt));
 
 	return GUEST_INIT_GDT_START;
 };

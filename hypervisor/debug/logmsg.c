@@ -59,7 +59,8 @@ static int do_copy_earlylog(struct shared_buf *dst_sbuf,
 	buf_size = SBUF_HEAD_SIZE + dst_sbuf->size;
 	valid_size = SBUF_HEAD_SIZE + cur_tail;
 
-	memcpy_s((void *)dst_sbuf, buf_size, (void *)src_sbuf, valid_size);
+	(void)memcpy_s((void *)dst_sbuf, buf_size,
+			(void *)src_sbuf, valid_size);
 	if (dst_sbuf->tail != cur_tail)
 		/* there is chance to lose new log from certain pcpu */
 		dst_sbuf->tail = cur_tail;

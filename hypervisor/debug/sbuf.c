@@ -94,7 +94,7 @@ int sbuf_get(struct shared_buf *sbuf, uint8_t *data)
 
 	from = (void *)sbuf + SBUF_HEAD_SIZE + sbuf->head;
 
-	memcpy_s((void *)data, sbuf->ele_size, from, sbuf->ele_size);
+	(void)memcpy_s((void *)data, sbuf->ele_size, from, sbuf->ele_size);
 
 	sbuf->head = sbuf_next_ptr(sbuf->head, sbuf->ele_size, sbuf->size);
 
@@ -142,7 +142,7 @@ int sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 
 	to = (void *)sbuf + SBUF_HEAD_SIZE + sbuf->tail;
 
-	memcpy_s(to, sbuf->ele_size, data, sbuf->ele_size);
+	(void)memcpy_s(to, sbuf->ele_size, data, sbuf->ele_size);
 
 	if (trigger_overwrite) {
 		sbuf->head = sbuf_next_ptr(sbuf->head,

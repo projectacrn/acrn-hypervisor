@@ -129,7 +129,7 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 
 
 	nworld_pml4e = MEM_READ64(HPA2HVA(vm->arch_vm.nworld_eptp));
-	memcpy_s(HPA2HVA(sworld_pml4e & IA32E_REF_MASK), CPU_PAGE_SIZE,
+	(void)memcpy_s(HPA2HVA(sworld_pml4e & IA32E_REF_MASK), CPU_PAGE_SIZE,
 			HPA2HVA(nworld_pml4e & IA32E_REF_MASK), CPU_PAGE_SIZE);
 
 	/* Map gpa_rebased~gpa_rebased+size
@@ -337,7 +337,7 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 	mem = (struct trusty_mem *)(HPA2HVA(mem_base_hpa));
 
 	/* copy key_info to the first page of trusty memory */
-	memcpy_s(&mem->first_page.data.key_info, sizeof(g_key_info),
+	(void)memcpy_s(&mem->first_page.data.key_info, sizeof(g_key_info),
 			&g_key_info, sizeof(g_key_info));
 
 	(void)memset(mem->first_page.data.key_info.dseed_list, 0,
@@ -482,7 +482,8 @@ void trusty_set_dseed(void *dseed, uint8_t dseed_num)
 	}
 
 	g_key_info.num_seeds = dseed_num;
-	memcpy_s(&g_key_info.dseed_list, sizeof(struct seed_info) * dseed_num,
+	(void)memcpy_s(&g_key_info.dseed_list,
+			sizeof(struct seed_info) * dseed_num,
 			dseed, sizeof(struct seed_info) * dseed_num);
 }
 
