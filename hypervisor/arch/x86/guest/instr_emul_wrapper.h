@@ -34,47 +34,46 @@
 /*
  * Identifiers for architecturally defined registers.
  */
-enum vm_reg_name {
-	VM_REG_GUEST_RAX,
-	VM_REG_GUEST_RBX,
-	VM_REG_GUEST_RCX,
-	VM_REG_GUEST_RDX,
-	VM_REG_GUEST_RBP,
-	VM_REG_GUEST_RSI,
-	VM_REG_GUEST_R8,
-	VM_REG_GUEST_R9,
-	VM_REG_GUEST_R10,
-	VM_REG_GUEST_R11,
-	VM_REG_GUEST_R12,
-	VM_REG_GUEST_R13,
-	VM_REG_GUEST_R14,
-	VM_REG_GUEST_R15,
-	VM_REG_GUEST_RDI,
-	VM_REG_GUEST_CR0,
-	VM_REG_GUEST_CR3,
-	VM_REG_GUEST_CR4,
-	VM_REG_GUEST_DR7,
-	VM_REG_GUEST_RSP,
-	VM_REG_GUEST_RIP,
-	VM_REG_GUEST_RFLAGS,
-	VM_REG_GUEST_ES,
-	VM_REG_GUEST_CS,
-	VM_REG_GUEST_SS,
-	VM_REG_GUEST_DS,
-	VM_REG_GUEST_FS,
-	VM_REG_GUEST_GS,
-	VM_REG_GUEST_LDTR,
-	VM_REG_GUEST_TR,
-	VM_REG_GUEST_IDTR,
-	VM_REG_GUEST_GDTR,
-	VM_REG_GUEST_EFER,
-	VM_REG_GUEST_CR2,
-	VM_REG_GUEST_PDPTE0,
-	VM_REG_GUEST_PDPTE1,
-	VM_REG_GUEST_PDPTE2,
-	VM_REG_GUEST_PDPTE3,
-	VM_REG_GUEST_INTR_SHADOW,
-	VM_REG_LAST
+enum cpu_reg_name {
+	CPU_REG_RAX,
+	CPU_REG_RBX,
+	CPU_REG_RCX,
+	CPU_REG_RDX,
+	CPU_REG_RBP,
+	CPU_REG_RSI,
+	CPU_REG_R8,
+	CPU_REG_R9,
+	CPU_REG_R10,
+	CPU_REG_R11,
+	CPU_REG_R12,
+	CPU_REG_R13,
+	CPU_REG_R14,
+	CPU_REG_R15,
+	CPU_REG_RDI,
+	CPU_REG_CR0,
+	CPU_REG_CR3,
+	CPU_REG_CR4,
+	CPU_REG_DR7,
+	CPU_REG_RSP,
+	CPU_REG_RIP,
+	CPU_REG_RFLAGS,
+	CPU_REG_ES,
+	CPU_REG_CS,
+	CPU_REG_SS,
+	CPU_REG_DS,
+	CPU_REG_FS,
+	CPU_REG_GS,
+	CPU_REG_LDTR,
+	CPU_REG_TR,
+	CPU_REG_IDTR,
+	CPU_REG_GDTR,
+	CPU_REG_EFER,
+	CPU_REG_CR2,
+	CPU_REG_PDPTE0,
+	CPU_REG_PDPTE1,
+	CPU_REG_PDPTE2,
+	CPU_REG_PDPTE3,
+	CPU_REG_LAST
 };
 
 struct vie_op {
@@ -113,9 +112,9 @@ struct vie {
 	uint8_t		imm_bytes;
 
 	uint8_t		scale;
-	enum vm_reg_name base_register;		/* VM_REG_GUEST_xyz */
-	enum vm_reg_name index_register;	/* VM_REG_GUEST_xyz */
-	enum vm_reg_name segment_register;	/* VM_REG_GUEST_xyz */
+	enum cpu_reg_name base_register;		/* CPU_REG_xyz */
+	enum cpu_reg_name index_register;	/* CPU_REG_xyz */
+	enum cpu_reg_name segment_register;	/* CPU_REG_xyz */
 
 	int64_t		displacement;		/* optional addr displacement */
 	int64_t		immediate;		/* optional immediate operand */
@@ -185,10 +184,10 @@ struct emul_cnx {
 	struct vcpu *vcpu;
 };
 
-int vm_get_register(struct vcpu *vcpu, enum vm_reg_name reg, uint64_t *retval);
-int vm_set_register(struct vcpu *vcpu, enum vm_reg_name reg, uint64_t val);
-int vm_get_seg_desc(struct vcpu *vcpu, enum vm_reg_name reg,
+int vm_get_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t *retval);
+int vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t val);
+int vm_get_seg_desc(struct vcpu *vcpu, enum cpu_reg_name reg,
 		struct seg_desc *ret_desc);
-int vm_set_seg_desc(struct vcpu *vcpu, enum vm_reg_name reg,
+int vm_set_seg_desc(struct vcpu *vcpu, enum cpu_reg_name reg,
 		struct seg_desc *desc);
 #endif

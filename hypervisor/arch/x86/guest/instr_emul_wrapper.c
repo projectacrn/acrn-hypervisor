@@ -10,32 +10,32 @@
 #include "instr_emul.h"
 
 static int
-encode_vmcs_seg_desc(enum vm_reg_name seg,
+encode_vmcs_seg_desc(enum cpu_reg_name seg,
 		uint32_t *base, uint32_t *lim, uint32_t *acc);
 
 static int32_t
-get_vmcs_field(enum vm_reg_name ident);
+get_vmcs_field(enum cpu_reg_name ident);
 
 static bool
-is_segment_register(enum vm_reg_name reg);
+is_segment_register(enum cpu_reg_name reg);
 
 static bool
-is_descriptor_table(enum vm_reg_name reg);
+is_descriptor_table(enum cpu_reg_name reg);
 
-int vm_get_register(struct vcpu *vcpu, enum vm_reg_name reg, uint64_t *retval)
+int vm_get_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t *retval)
 {
 	struct run_context *cur_context;
 
 	if (vcpu == NULL)
 		return -EINVAL;
-	if ((reg >= VM_REG_LAST) || (reg < VM_REG_GUEST_RAX))
+	if ((reg >= CPU_REG_LAST) || (reg < CPU_REG_RAX))
 		return -EINVAL;
 
-	if ((reg >= VM_REG_GUEST_RAX) && (reg <= VM_REG_GUEST_RDI)) {
+	if ((reg >= CPU_REG_RAX) && (reg <= CPU_REG_RDI)) {
 		cur_context =
 			&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 		*retval = cur_context->guest_cpu_regs.longs[reg];
-	} else if ((reg > VM_REG_GUEST_RDI) && (reg < VM_REG_LAST)) {
+	} else if ((reg > CPU_REG_RDI) && (reg < CPU_REG_LAST)) {
 		int32_t field = get_vmcs_field(reg);
 
 		if (field != -1)
@@ -47,20 +47,20 @@ int vm_get_register(struct vcpu *vcpu, enum vm_reg_name reg, uint64_t *retval)
 	return 0;
 }
 
-int vm_set_register(struct vcpu *vcpu, enum vm_reg_name reg, uint64_t val)
+int vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t val)
 {
 	struct run_context *cur_context;
 
 	if (vcpu == NULL)
 		return -EINVAL;
-	if ((reg >= VM_REG_LAST) || (reg < VM_REG_GUEST_RAX))
+	if ((reg >= CPU_REG_LAST) || (reg < CPU_REG_RAX))
 		return -EINVAL;
 
-	if ((reg >= VM_REG_GUEST_RAX) && (reg <= VM_REG_GUEST_RDI)) {
+	if ((reg >= CPU_REG_RAX) && (reg <= CPU_REG_RDI)) {
 		cur_context =
 			&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 		cur_context->guest_cpu_regs.longs[reg] = val;
-	} else if ((reg > VM_REG_GUEST_RDI) && (reg < VM_REG_LAST)) {
+	} else if ((reg > CPU_REG_RDI) && (reg < CPU_REG_LAST)) {
 		int32_t field = get_vmcs_field(reg);
 
 		if (field != -1)
@@ -72,7 +72,7 @@ int vm_set_register(struct vcpu *vcpu, enum vm_reg_name reg, uint64_t val)
 	return 0;
 }
 
-int vm_set_seg_desc(struct vcpu *vcpu, enum vm_reg_name seg,
+int vm_set_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
 		struct seg_desc *ret_desc)
 {
 	int error;
@@ -95,7 +95,7 @@ int vm_set_seg_desc(struct vcpu *vcpu, enum vm_reg_name seg,
 	return 0;
 }
 
-int vm_get_seg_desc(struct vcpu *vcpu, enum vm_reg_name seg,
+int vm_get_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
 		struct seg_desc *desc)
 {
 	int error;
@@ -118,28 +118,28 @@ int vm_get_seg_desc(struct vcpu *vcpu, enum vm_reg_name seg,
 	return 0;
 }
 
-static bool is_descriptor_table(enum vm_reg_name reg)
+static bool is_descriptor_table(enum cpu_reg_name reg)
 {
 	switch (reg) {
-	case VM_REG_GUEST_IDTR:
-	case VM_REG_GUEST_GDTR:
+	case CPU_REG_IDTR:
+	case CPU_REG_GDTR:
 		return true;
 	default:
 		return false;
 	}
 }
 
-static bool is_segment_register(enum vm_reg_name reg)
+static bool is_segment_register(enum cpu_reg_name reg)
 {
 	switch (reg) {
-	case VM_REG_GUEST_ES:
-	case VM_REG_GUEST_CS:
-	case VM_REG_GUEST_SS:
-	case VM_REG_GUEST_DS:
-	case VM_REG_GUEST_FS:
-	case VM_REG_GUEST_GS:
-	case VM_REG_GUEST_TR:
-	case VM_REG_GUEST_LDTR:
+	case CPU_REG_ES:
+	case CPU_REG_CS:
+	case CPU_REG_SS:
+	case CPU_REG_DS:
+	case CPU_REG_FS:
+	case CPU_REG_GS:
+	case CPU_REG_TR:
+	case CPU_REG_LDTR:
 		return true;
 	default:
 		return false;
@@ -147,56 +147,56 @@ static bool is_segment_register(enum vm_reg_name reg)
 }
 
 static int
-encode_vmcs_seg_desc(enum vm_reg_name seg,
+encode_vmcs_seg_desc(enum cpu_reg_name seg,
 		uint32_t *base, uint32_t *lim, uint32_t *acc)
 {
 	switch (seg) {
-	case VM_REG_GUEST_ES:
+	case CPU_REG_ES:
 		*base = VMX_GUEST_ES_BASE;
 		*lim = VMX_GUEST_ES_LIMIT;
 		*acc = VMX_GUEST_ES_ATTR;
 		break;
-	case VM_REG_GUEST_CS:
+	case CPU_REG_CS:
 		*base = VMX_GUEST_CS_BASE;
 		*lim = VMX_GUEST_CS_LIMIT;
 		*acc = VMX_GUEST_CS_ATTR;
 		break;
-	case VM_REG_GUEST_SS:
+	case CPU_REG_SS:
 		*base = VMX_GUEST_SS_BASE;
 		*lim = VMX_GUEST_SS_LIMIT;
 		*acc = VMX_GUEST_SS_ATTR;
 		break;
-	case VM_REG_GUEST_DS:
+	case CPU_REG_DS:
 		*base = VMX_GUEST_DS_BASE;
 		*lim = VMX_GUEST_DS_LIMIT;
 		*acc = VMX_GUEST_DS_ATTR;
 		break;
-	case VM_REG_GUEST_FS:
+	case CPU_REG_FS:
 		*base = VMX_GUEST_FS_BASE;
 		*lim = VMX_GUEST_FS_LIMIT;
 		*acc = VMX_GUEST_FS_ATTR;
 		break;
-	case VM_REG_GUEST_GS:
+	case CPU_REG_GS:
 		*base = VMX_GUEST_GS_BASE;
 		*lim = VMX_GUEST_GS_LIMIT;
 		*acc = VMX_GUEST_GS_ATTR;
 		break;
-	case VM_REG_GUEST_TR:
+	case CPU_REG_TR:
 		*base = VMX_GUEST_TR_BASE;
 		*lim = VMX_GUEST_TR_LIMIT;
 		*acc = VMX_GUEST_TR_ATTR;
 		break;
-	case VM_REG_GUEST_LDTR:
+	case CPU_REG_LDTR:
 		*base = VMX_GUEST_LDTR_BASE;
 		*lim = VMX_GUEST_LDTR_LIMIT;
 		*acc = VMX_GUEST_LDTR_ATTR;
 		break;
-	case VM_REG_GUEST_IDTR:
+	case CPU_REG_IDTR:
 		*base = VMX_GUEST_IDTR_BASE;
 		*lim = VMX_GUEST_IDTR_LIMIT;
 		*acc = 0xffffffffU;
 		break;
-	case VM_REG_GUEST_GDTR:
+	case CPU_REG_GDTR:
 		*base = VMX_GUEST_GDTR_BASE;
 		*lim = VMX_GUEST_GDTR_LIMIT;
 		*acc = 0xffffffffU;
@@ -208,48 +208,48 @@ encode_vmcs_seg_desc(enum vm_reg_name seg,
 	return 0;
 }
 
-static int32_t get_vmcs_field(enum vm_reg_name ident)
+static int32_t get_vmcs_field(enum cpu_reg_name ident)
 {
 	switch (ident) {
-	case VM_REG_GUEST_CR0:
+	case CPU_REG_CR0:
 		return VMX_GUEST_CR0;
-	case VM_REG_GUEST_CR3:
+	case CPU_REG_CR3:
 		return VMX_GUEST_CR3;
-	case VM_REG_GUEST_CR4:
+	case CPU_REG_CR4:
 		return VMX_GUEST_CR4;
-	case VM_REG_GUEST_DR7:
+	case CPU_REG_DR7:
 		return VMX_GUEST_DR7;
-	case VM_REG_GUEST_RSP:
+	case CPU_REG_RSP:
 		return VMX_GUEST_RSP;
-	case VM_REG_GUEST_RIP:
+	case CPU_REG_RIP:
 		return VMX_GUEST_RIP;
-	case VM_REG_GUEST_RFLAGS:
+	case CPU_REG_RFLAGS:
 		return VMX_GUEST_RFLAGS;
-	case VM_REG_GUEST_ES:
+	case CPU_REG_ES:
 		return VMX_GUEST_ES_SEL;
-	case VM_REG_GUEST_CS:
+	case CPU_REG_CS:
 		return VMX_GUEST_CS_SEL;
-	case VM_REG_GUEST_SS:
+	case CPU_REG_SS:
 		return VMX_GUEST_SS_SEL;
-	case VM_REG_GUEST_DS:
+	case CPU_REG_DS:
 		return VMX_GUEST_DS_SEL;
-	case VM_REG_GUEST_FS:
+	case CPU_REG_FS:
 		return VMX_GUEST_FS_SEL;
-	case VM_REG_GUEST_GS:
+	case CPU_REG_GS:
 		return VMX_GUEST_GS_SEL;
-	case VM_REG_GUEST_TR:
+	case CPU_REG_TR:
 		return VMX_GUEST_TR_SEL;
-	case VM_REG_GUEST_LDTR:
+	case CPU_REG_LDTR:
 		return VMX_GUEST_LDTR_SEL;
-	case VM_REG_GUEST_EFER:
+	case CPU_REG_EFER:
 		return VMX_GUEST_IA32_EFER_FULL;
-	case VM_REG_GUEST_PDPTE0:
+	case CPU_REG_PDPTE0:
 		return VMX_GUEST_PDPTE0_FULL;
-	case VM_REG_GUEST_PDPTE1:
+	case CPU_REG_PDPTE1:
 		return VMX_GUEST_PDPTE1_FULL;
-	case VM_REG_GUEST_PDPTE2:
+	case CPU_REG_PDPTE2:
 		return VMX_GUEST_PDPTE2_FULL;
-	case VM_REG_GUEST_PDPTE3:
+	case CPU_REG_PDPTE3:
 		return VMX_GUEST_PDPTE3_FULL;
 	default:
 		return -1;
