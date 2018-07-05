@@ -114,6 +114,8 @@ struct basl_fio {
 #define EFPRINTF(...) fprintf(__VA_ARGS__)
 #define EFFLUSH(x) fflush(x)
 
+static bool acpi_table_is_valid(int num);
+
 static int
 basl_fwrite_rsdp(FILE *fp, struct vmctx *ctx)
 {
@@ -197,6 +199,10 @@ basl_fwrite_xsdt(FILE *fp, struct vmctx *ctx)
 	    basl_acpi_base + HPET_OFFSET);
 	EFPRINTF(fp, "[0004]\t\tACPI Table Address 3 : 00000000%08X\n",
 	    basl_acpi_base + MCFG_OFFSET);
+
+	if (acpi_table_is_valid(NHLT_ENTRY_NO))
+		EFPRINTF(fp, "[0004]\t\tACPI Table Address 4 : 00000000%08X\n",
+		    basl_acpi_base + NHLT_OFFSET);
 
 	EFFLUSH(fp);
 
@@ -976,6 +982,12 @@ acpi_table_enable(int num)
 	basl_ftables[num].valid = true;
 }
 
+static bool
+acpi_table_is_valid(int num)
+{
+	return basl_ftables[num].valid;
+}
+
 uint32_t
 get_acpi_base(void)
 {
@@ -1018,7 +1030,7 @@ acpi_build(struct vmctx *ctx, int ncpu)
 	 * copying them into guest memory
 	 */
 	while (!err && (i < ARRAY_SIZE(basl_ftables))) {
-		if (basl_ftables[i].valid)
+		if (acpi_table_is_valid(i))
 			err = basl_compile(ctx, basl_ftables[i].wsect,
 					basl_ftables[i].offset);
 		i++;
