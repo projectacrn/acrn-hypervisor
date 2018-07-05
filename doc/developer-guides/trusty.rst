@@ -9,7 +9,7 @@ Introduction
 `Trusty`_ is a set of software components supporting a Trusted Execution Environment (TEE).
 TEE is commonly known as an isolated processing environment in which applications can be
 securely executed irrespective of the rest of the system. For more information about TEE,
-please visit the `Trusted Execution Environment wikipage <https://en.wikipedia.org/wiki/Trusted_execution_environment>`_.
+please visit the `Trusted Execution Environment wiki page <https://en.wikipedia.org/wiki/Trusted_execution_environment>`_.
 Trusty consists of:
 
 1. An operating system (the Trusty OS) that runs on a processor intended to provide a TEE
@@ -27,6 +27,7 @@ Trusty Architecture
 
 .. figure:: images/trusty-arch.png
    :align: center
+   :width: 800px
    :name: Trusty Architectural diagram
 
 .. note::
@@ -44,9 +45,9 @@ There are a few :ref:`hypercall_apis` that are related to Trusty.
 Trusty Boot flow
 ****************
 
-By design, the User OS bootloader (``UOS_Loader``) will trigger the Trusty boot process. The complete bootflow is illustrated below.
+By design, the User OS bootloader (``UOS_Loader``) will trigger the Trusty boot process. The complete boot flow is illustrated below.
 
-.. graphviz:: trusty/boot-flow.dot
+.. graphviz:: images/trusty-boot-flow.dot
    :name: trusty-boot-flow
    :align: center
    :caption: Trusty Boot Flow
@@ -103,6 +104,7 @@ be updated.
 
 .. figure:: images/ept-hierarchy.png
    :align: center
+   :width: 800px
    :name: EPT hierarchy
 
 API
