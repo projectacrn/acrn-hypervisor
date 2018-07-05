@@ -282,11 +282,11 @@ struct acrn_vm_pci_msix_remap {
  * It's designed to support passing DM config data pointer, based on it,
  * hypervisor would parse then pass DM defined configuration to GUEST VCPU
  * when booting guest VM.
- * the address 0xd0000 here is designed by DM, as it arranged all memory
- * layout below 1M, DM should make sure there is no overlap for the address
- * 0xd0000 usage.
+ * the address 0xef000 here is designed by DM, as it arranged all memory
+ * layout below 1M, DM add this address to E280 reserved range to make sure
+ * there is no overlap for the address 0xef000 usage.
  */
-#define GUEST_CFG_OFFSET	0xd0000
+#define GUEST_CFG_OFFSET	0xef000
 
 /**
  * @brief Info The power state data of a VCPU.
