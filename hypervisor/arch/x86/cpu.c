@@ -52,9 +52,9 @@ static void bsp_boot_post(void);
 static void cpu_secondary_post(void);
 static void vapic_cap_detect(void);
 static void cpu_xsave_init(void);
-static void cpu_set_logical_id(uint16_t pcpu_id);
+static void set_current_cpu_id(uint16_t pcpu_id);
 static void print_hv_banner(void);
-int cpu_find_logical_id(uint8_t lapic_id);
+static int get_cpu_id_from_lapic_id(uint8_t lapic_id);
 static void pcpu_sync_sleep(unsigned long *sync, int mask_bit);
 int ibrs_type;
 static uint64_t __attribute__((__section__(".bss_noinit"))) start_tsc;
@@ -261,11 +261,11 @@ uint16_t __attribute__((weak)) parse_madt(uint8_t *lapic_id_base)
 	return ARRAY_SIZE(lapic_id);
 }
 
-static int init_phy_cpu_storage(void)
+static void init_phy_cpu_storage(void)
 {
 	int i;
 	uint16_t pcpu_num=0U;
-	int bsp_cpu_id;
+	uint16_t bsp_cpu_id;
 	uint8_t bsp_lapic_id = 0;
 	uint8_t *lapic_id_base;
 
@@ -287,10 +287,8 @@ static int init_phy_cpu_storage(void)
 
 	bsp_lapic_id = get_cur_lapic_id();
 
-	bsp_cpu_id = cpu_find_logical_id(bsp_lapic_id);
-	ASSERT(bsp_cpu_id >= 0, "fail to get phy cpu id");
-
-	return bsp_cpu_id;
+	bsp_cpu_id = get_cpu_id_from_lapic_id(bsp_lapic_id);
+	ASSERT(bsp_cpu_id != INVALID_CPU_ID, "fail to get phy cpu id");
 }
 
 static void cpu_set_current_state(uint16_t pcpu_id, enum cpu_state state)
@@ -303,7 +301,7 @@ static void cpu_set_current_state(uint16_t pcpu_id, enum cpu_state state)
 		up_count++;
 
 		/* Save this CPU's logical ID to the TSC AUX MSR */
-		cpu_set_logical_id(pcpu_id);
+		set_current_cpu_id(pcpu_id);
 	}
 
 	/* If cpu is dead, decrement CPU up count */
@@ -579,8 +577,7 @@ void cpu_secondary_init(void)
 	/* Find the logical ID of this CPU given the LAPIC ID
 	 * and Set state for this CPU to initializing
 	 */
-	cpu_set_current_state(cpu_find_logical_id
-			      (get_cur_lapic_id()),
+	cpu_set_current_state(get_cpu_id_from_lapic_id(get_cur_lapic_id()),
 			      CPU_STATE_INITIALIZING);
 
 	__bitmap_set(get_cpu_id(), &pcpu_active_bitmap);
@@ -631,16 +628,16 @@ static void cpu_secondary_post(void)
 	cpu_dead(get_cpu_id());
 }
 
-int cpu_find_logical_id(uint8_t lapic_id)
+static int get_cpu_id_from_lapic_id(uint8_t lapic_id)
 {
-	int i;
+	uint16_t i;
 
 	for (i = 0; i < phys_cpu_num; i++) {
 		if (per_cpu(lapic_id, i) == lapic_id)
 			return i;
 	}
 
-	return -1;
+	return INVALID_CPU_ID;
 }
 
 static void update_trampoline_code_refs(uint64_t dest_pa)
@@ -815,7 +812,7 @@ void cpu_dead(uint16_t pcpu_id)
 	} while (halt != 0);
 }
 
-static void cpu_set_logical_id(uint16_t pcpu_id)
+static void set_current_cpu_id(uint16_t pcpu_id)
 {
 	/* Write TSC AUX register */
 	msr_write(MSR_IA32_TSC_AUX, (uint64_t) pcpu_id);
