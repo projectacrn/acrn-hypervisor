@@ -113,7 +113,7 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 	if (status != 0) {
 		uint64_t *rax = &cur_context->guest_cpu_regs.regs.rax;
 
-		memset(&vcpu->req, 0, sizeof(struct vhm_request));
+		(void)memset(&vcpu->req, 0, sizeof(struct vhm_request));
 		dm_emulate_pio_pre(vcpu, exit_qual, sz, *rax);
 		status = acrn_insert_request_wait(vcpu, &vcpu->req);
 	}
@@ -220,12 +220,12 @@ void setup_io_bitmap(struct vm *vm)
 	       (vm->arch_vm.iobitmap[1] != NULL), "");
 
 	if (is_vm0(vm)) {
-		memset(vm->arch_vm.iobitmap[0], 0x00, CPU_PAGE_SIZE);
-		memset(vm->arch_vm.iobitmap[1], 0x00, CPU_PAGE_SIZE);
+		(void)memset(vm->arch_vm.iobitmap[0], 0x00, CPU_PAGE_SIZE);
+		(void)memset(vm->arch_vm.iobitmap[1], 0x00, CPU_PAGE_SIZE);
 	} else {
 		/* block all IO port access from Guest */
-		memset(vm->arch_vm.iobitmap[0], 0xFF, CPU_PAGE_SIZE);
-		memset(vm->arch_vm.iobitmap[1], 0xFF, CPU_PAGE_SIZE);
+		(void)memset(vm->arch_vm.iobitmap[0], 0xFF, CPU_PAGE_SIZE);
+		(void)memset(vm->arch_vm.iobitmap[1], 0xFF, CPU_PAGE_SIZE);
 	}
 }
 

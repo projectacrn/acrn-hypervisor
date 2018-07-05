@@ -155,7 +155,7 @@ void  destroy_secure_world(struct vm *vm)
 	}
 
 	/* clear trusty memory space */
-	memset(HPA2HVA(vm->sworld_control.sworld_memory.base_hpa),
+	(void)memset(HPA2HVA(vm->sworld_control.sworld_memory.base_hpa),
 			0, vm->sworld_control.sworld_memory.length);
 
 	/* restore memory to SOS ept mapping */
@@ -319,7 +319,7 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 	memcpy_s(&mem->first_page.data.key_info, sizeof(g_key_info),
 			&g_key_info, sizeof(g_key_info));
 
-	memset(mem->first_page.data.key_info.dseed_list, 0,
+	(void)memset(mem->first_page.data.key_info.dseed_list, 0,
 			sizeof(mem->first_page.data.key_info.dseed_list));
 	/* Derive dvseed from dseed for Trusty */
 	key_info = &mem->first_page.data.key_info;
@@ -330,7 +330,7 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 				BUP_MKHI_BOOTLOADER_SEED_LEN,
 				NULL, 0,
 				vcpu->vm->GUID, sizeof(vcpu->vm->GUID)) == 0) {
-			memset(key_info, 0, sizeof(struct key_info));
+			(void)memset(key_info, 0, sizeof(struct key_info));
 			pr_err("%s: derive dvseed failed!", __func__);
 			return false;
 		}
@@ -455,7 +455,7 @@ void trusty_set_dseed(void *dseed, uint8_t dseed_num)
 		(dseed_num > BOOTLOADER_SEED_MAX_ENTRIES)) {
 
 		g_key_info.num_seeds = 1;
-		memset(g_key_info.dseed_list[0].seed, 0xA5,
+		(void)memset(g_key_info.dseed_list[0].seed, 0xA5,
 			sizeof(g_key_info.dseed_list[0].seed));
 		return;
 	}

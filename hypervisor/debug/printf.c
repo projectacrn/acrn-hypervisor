@@ -45,7 +45,7 @@ int vprintf(const char *fmt, va_list args)
 	int nchars = 0;
 
 	/* initialize parameters */
-	memset(&param, 0, sizeof(param));
+	(void)memset(&param, 0, sizeof(param));
 	param.emit = charout;
 	param.data = &nchars;
 

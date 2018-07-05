@@ -35,7 +35,7 @@ static uint64_t create_zero_page(struct vm *vm)
 	zeropage = (struct zero_page *)((char *)hva + MEM_4K);
 
 	/* clear the zeropage */
-	memset(zeropage, 0, MEM_2K);
+	(void)memset(zeropage, 0, MEM_2K);
 
 	/* copy part of the header into the zero page */
 	hva = GPA2HVA(vm, (uint64_t)vm->sw.kernel_info.kernel_load_addr);
@@ -81,7 +81,7 @@ int load_guest(struct vm *vm, struct vcpu *vcpu)
 	lowmem_gpa_top = *(uint64_t *)hva;
 
 	/* hardcode vcpu entry addr(kernel entry) & rsi (zeropage)*/
-	memset(cur_context->guest_cpu_regs.longs,
+	(void)memset(cur_context->guest_cpu_regs.longs,
 			0, sizeof(uint64_t)*NUM_GPRS);
 
 	hva  = GPA2HVA(vm, lowmem_gpa_top -
@@ -149,7 +149,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 		/* Documentation states: ebx=0, edi=0, ebp=0, esi=ptr to
 		 * zeropage
 		 */
-		memset(cur_context->guest_cpu_regs.longs,
+		(void)memset(cur_context->guest_cpu_regs.longs,
 			0, sizeof(uint64_t) * NUM_GPRS);
 
 		/* Get host-physical address for guest bootargs */

@@ -225,8 +225,8 @@ static int shell_process(struct shell *p_shell)
 	status = shell_process_cmd(p_shell, p_input_line);
 
 	/* Now that the command is processed, zero fill the input buffer */
-	memset((void *) p_shell->input_line[p_shell->input_line_active], 0,
-		SHELL_CMD_MAX_LEN + 1U);
+	(void)memset((void *) p_shell->input_line[p_shell->input_line_active],
+			0, SHELL_CMD_MAX_LEN + 1U);
 
 	/* Process command and return result to caller */
 	return status;
@@ -360,7 +360,7 @@ int shell_init_serial(struct shell *p_shell)
 	}
 
 	/* Zero fill the input buffer */
-	memset((void *)p_shell->input_line[p_shell->input_line_active], 0,
+	(void)memset((void *)p_shell->input_line[p_shell->input_line_active], 0,
 			SHELL_CMD_MAX_LEN + 1U);
 
 	return status;
@@ -382,7 +382,7 @@ int shell_cmd_help(struct shell *p_shell,
 	pr_dbg("shell: Number of registered commands = %u in %s\n",
 		p_shell->cmd_count, __func__);
 
-	memset(space_buf, ' ', sizeof(space_buf));
+	(void)memset(space_buf, ' ', sizeof(space_buf));
 	/* Proceed based on the number of registered commands. */
 	if (p_shell->cmd_count == 0U) {
 		/* No registered commands */

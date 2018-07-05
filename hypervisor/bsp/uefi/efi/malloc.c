@@ -354,7 +354,7 @@ void *calloc(UINTN nmemb, UINTN size)
 
 	buffer = malloc(bytes);
 	if (buffer)
-		memset(buffer, 0, bytes);
+		(void)memset(buffer, 0, bytes);
 	return buffer;
 }
 

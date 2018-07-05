@@ -92,7 +92,7 @@ void init_msr_emulation(struct vcpu *vcpu)
 		/* Allocate and initialize memory for MSR bitmap region*/
 		vcpu->vm->arch_vm.msr_bitmap = alloc_page();
 		ASSERT(vcpu->vm->arch_vm.msr_bitmap != NULL, "");
-		memset(vcpu->vm->arch_vm.msr_bitmap, 0x0, CPU_PAGE_SIZE);
+		(void)memset(vcpu->vm->arch_vm.msr_bitmap, 0x0, CPU_PAGE_SIZE);
 
 		msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
 
@@ -135,7 +135,7 @@ void init_msr_emulation(struct vcpu *vcpu)
 			(uint64_t *)calloc(msrs_count, sizeof(uint64_t));
 
 	ASSERT(vcpu->guest_msrs != NULL, "");
-	memset(vcpu->guest_msrs, 0, msrs_count * sizeof(uint64_t));
+	(void)memset(vcpu->guest_msrs, 0, msrs_count * sizeof(uint64_t));
 }
 
 int rdmsr_vmexit_handler(struct vcpu *vcpu)

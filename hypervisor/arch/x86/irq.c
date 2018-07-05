@@ -23,7 +23,7 @@ static void init_irq_desc(void)
 	irq_desc_base = alloc_pages(page_num);
 
 	ASSERT(irq_desc_base != NULL, "page alloc failed!");
-	memset(irq_desc_base, 0, page_num * CPU_PAGE_SIZE);
+	(void)memset(irq_desc_base, 0, page_num * CPU_PAGE_SIZE);
 
 	for (i = 0U; i < NR_MAX_IRQS; i++) {
 		irq_desc_base[i].irq = i;

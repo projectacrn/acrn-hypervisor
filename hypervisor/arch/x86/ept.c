@@ -425,7 +425,7 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 		 * instruction emulation. For MMIO read, ask DM to run MMIO
 		 * emulation at first.
 		 */
-		memset(&vcpu->req, 0, sizeof(struct vhm_request));
+		(void)memset(&vcpu->req, 0, sizeof(struct vhm_request));
 
 		if (dm_emulate_mmio_pre(vcpu, exit_qual) != 0)
 			goto out;

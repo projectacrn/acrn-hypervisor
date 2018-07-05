@@ -36,7 +36,8 @@ static void vm_setup_cpu_px(struct vm *vm)
 	uint32_t px_data_size;
 
 	vm->pm.px_cnt = 0U;
-	memset(vm->pm.px_data, 0, MAX_PSTATE * sizeof(struct cpu_px_data));
+	(void)memset(vm->pm.px_data, 0,
+			MAX_PSTATE * sizeof(struct cpu_px_data));
 
 	if ((boot_cpu_data.state_info.px_cnt == 0U)
 		|| (boot_cpu_data.state_info.px_data == NULL)) {
@@ -60,7 +61,8 @@ static void vm_setup_cpu_cx(struct vm *vm)
 	uint32_t cx_data_size;
 
 	vm->pm.cx_cnt = 0U;
-	memset(vm->pm.cx_data, 0, MAX_CSTATE * sizeof(struct cpu_cx_data));
+	(void)memset(vm->pm.cx_data, 0,
+			MAX_CSTATE * sizeof(struct cpu_cx_data));
 
 	if ((boot_cpu_data.state_info.cx_cnt == 0U)
 		|| (boot_cpu_data.state_info.cx_data == NULL)) {

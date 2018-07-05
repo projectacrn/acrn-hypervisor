@@ -83,14 +83,14 @@ construct_mbi(struct multiboot_info **mbi_ret, struct efi_ctx *efi_ctx)
 		goto out;
 
 	mbi = (struct multiboot_info *)(UINTN)addr;
-	memset((void *)mbi, 0x0, sizeof(*mbi));
+	(void)memset((void *)mbi, 0x0, sizeof(*mbi));
 
 	/* allocate mmap[] */
 	err = emalloc(sizeof(struct multiboot_mmap)*128, 8, &addr);
 	if (err != EFI_SUCCESS)
 		goto out;
 	mmap = (struct multiboot_mmap *)(UINTN)addr;
-	memset((void *)mmap, 0x0, sizeof(*mmap)*128);
+	(void)memset((void *)mmap, 0x0, sizeof(*mmap)*128);
 
 	/* We're just interested in the map's size for now */
 	map_size = 0;
