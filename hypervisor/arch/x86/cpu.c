@@ -13,13 +13,13 @@
 #endif
 
 spinlock_t trampoline_spinlock = {
-	.head = 0,
-	.tail = 0
+	.head = 0U,
+	.tail = 0U
 };
 
 spinlock_t up_count_spinlock = {
-	.head = 0,
-	.tail = 0
+	.head = 0U,
+	.tail = 0U
 };
 
 struct per_cpu_region *per_cpu_data_base_ptr;
@@ -87,7 +87,7 @@ static inline bool get_monitor_cap(void)
 		 * in hypervisor, but still expose it to the guests and
 		 * let them handle it correctly
 		 */
-		if (boot_cpu_data.x86 != 0x6 || boot_cpu_data.x86_model != 0x5c)
+		if (boot_cpu_data.x86 != 0x6U || boot_cpu_data.x86_model != 0x5cU)
 			return true;
 	}
 
@@ -188,8 +188,8 @@ static int hardware_detect_support(void)
 		pr_fatal("%s, LM not supported\n", __func__);
 		return -ENODEV;
 	}
-	if ((boot_cpu_data.x86_phys_bits == 0) ||
-		(boot_cpu_data.x86_virt_bits == 0)) {
+	if ((boot_cpu_data.x86_phys_bits == 0U) ||
+		(boot_cpu_data.x86_virt_bits == 0U)) {
 		pr_fatal("%s, can't detect Linear/Physical Address size\n",
 			__func__);
 		return -ENODEV;
@@ -255,7 +255,7 @@ uint16_t __attribute__((weak)) parse_madt(uint8_t *lapic_id_base)
 	static const uint8_t lapic_id[] = {0U, 2U, 4U, 6U};
 	uint32_t i;
 
-	for (i = 0; i < ARRAY_SIZE(lapic_id); i++)
+	for (i = 0U; i < ARRAY_SIZE(lapic_id); i++)
 		*lapic_id_base++ = lapic_id[i];
 
 	return ARRAY_SIZE(lapic_id);
@@ -729,7 +729,7 @@ void start_cpus()
 	 * configured time-out has expired
 	 */
 	timeout = CONFIG_CPU_UP_TIMEOUT * 1000;
-	while ((up_count != expected_up) && (timeout != 0)) {
+	while ((up_count != expected_up) && (timeout != 0U)) {
 		/* Delay 10us */
 		udelay(10);
 
@@ -762,7 +762,7 @@ void stop_cpus()
 	}
 
 	expected_up = 1;
-	while ((up_count != expected_up) && (timeout !=0)) {
+	while ((up_count != expected_up) && (timeout != 0U)) {
 		/* Delay 10us */
 		udelay(10);
 
@@ -875,11 +875,11 @@ static void vapic_cap_detect(void)
 	uint8_t features;
 	uint64_t msr_val;
 
-	features = 0;
+	features = 0U;
 
 	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
 	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS_TPR_SHADOW)) {
-		cpu_caps.vapic_features = 0;
+		cpu_caps.vapic_features = 0U;
 		return;
 	}
 	features |= VAPIC_FEATURE_TPR_SHADOW;

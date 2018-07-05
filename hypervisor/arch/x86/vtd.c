@@ -180,7 +180,7 @@ static int register_hrhd_units(void)
 		return -1;
 	}
 
-	for (i = 0; i < info->drhd_count; i++) {
+	for (i = 0U; i < info->drhd_count; i++) {
 		drhd_rt = calloc(1, sizeof(struct dmar_drhd_rt));
 		ASSERT(drhd_rt != NULL, "");
 		drhd_rt->drhd = &info->drhd_units[i];
@@ -235,7 +235,7 @@ static void iommu_flush_cache(struct dmar_drhd_rt *dmar_uint,
 	if (iommu_ecap_c(dmar_uint->ecap) != 0U)
 		return;
 
-	for (i = 0; i < size; i += CACHE_LINE_SIZE)
+	for (i = 0U; i < size; i += CACHE_LINE_SIZE)
 		clflush((char *)p + i);
 }
 
@@ -339,7 +339,7 @@ dmar_unit_support_aw(struct dmar_drhd_rt *dmar_uint, uint32_t addr_width)
 
 	aw = (uint8_t)width_to_agaw(addr_width);
 
-	return ((1 << aw) & iommu_cap_sagaw(dmar_uint->cap)) != 0;
+	return ((1U << aw) & iommu_cap_sagaw(dmar_uint->cap)) != 0;
 }
 
 static void dmar_enable_translation(struct dmar_drhd_rt *dmar_uint)
@@ -425,8 +425,8 @@ static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
 
 	dmar_uint->max_domain_id = iommu_cap_ndoms(dmar_uint->cap) - 1;
 
-	if (dmar_uint->max_domain_id > 63)
-		dmar_uint->max_domain_id = 63;
+	if (dmar_uint->max_domain_id > 63U)
+		dmar_uint->max_domain_id = 63U;
 
 	if (max_domain_id > dmar_uint->max_domain_id)
 		max_domain_id = dmar_uint->max_domain_id;
@@ -456,7 +456,7 @@ static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus,
 		if (dmar_uint->drhd->segment != segment)
 			continue;
 
-		for (i = 0; i < dmar_uint->drhd->dev_cnt; i++) {
+		for (i = 0U; i < dmar_uint->drhd->dev_cnt; i++) {
 			if ((dmar_uint->drhd->devices[i].bus == bus) &&
 				(dmar_uint->drhd->devices[i].devfun == devfun))
 				return dmar_uint;
@@ -481,8 +481,8 @@ static uint8_t alloc_domain_id(void)
 	/* domain id 0 is reserved, when CM = 1.
 	 * so domain id allocation start from 1
 	 */
-	for (i = 1; i < 64; i++) {
-		mask = (1 << i);
+	for (i = 1U; i < 64U; i++) {
+		mask = (1UL << i);
 		if ((domain_bitmap & mask) == 0) {
 			domain_bitmap |= mask;
 			break;
@@ -509,8 +509,8 @@ static struct iommu_domain *create_host_domain(void)
 	domain->is_host = true;
 	domain->dom_id = alloc_domain_id();
 	/* dmar uint need to support translation passthrough */
-	domain->trans_table_ptr = 0;
-	domain->addr_width = 48;
+	domain->trans_table_ptr = 0UL;
+	domain->addr_width = 48U;
 
 	return domain;
 }
@@ -846,7 +846,7 @@ struct iommu_domain *create_iommu_domain(int vm_id, uint64_t translation_table,
 
 	/* TODO: check if a domain with the vm_id exists */
 
-	if (translation_table == 0) {
+	if (translation_table == 0UL) {
 		pr_err("translation table is NULL");
 		return NULL;
 	}
@@ -857,7 +857,7 @@ struct iommu_domain *create_iommu_domain(int vm_id, uint64_t translation_table,
 		return NULL;
 	}
 
-	domain = calloc(1, sizeof(struct iommu_domain));
+	domain = calloc(1U, sizeof(struct iommu_domain));
 
 	ASSERT(domain != NULL, "");
 	domain->is_host = false;
@@ -910,8 +910,8 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 	uint64_t *context_table;
 	struct dmar_root_entry *root_entry;
 	struct dmar_context_entry *context_entry;
-	uint64_t upper = 0;
-	uint64_t lower = 0;
+	uint64_t upper = 0UL;
+	uint64_t lower = 0UL;
 
 	if (domain == NULL)
 		return 1;
@@ -935,7 +935,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 		return 1;
 	}
 
-	if (dmar_uint->root_table_addr == 0) {
+	if (dmar_uint->root_table_addr == 0UL) {
 		void *root_table_vaddr = alloc_paging_struct();
 
 		if (root_table_vaddr != NULL) {
@@ -964,7 +964,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 			lower = DMAR_SET_BITSLICE(lower,
 					ROOT_ENTRY_LOWER_PRESENT, 1);
 
-			root_entry->upper = 0;
+			root_entry->upper = 0UL;
 			root_entry->lower = lower;
 			iommu_flush_cache(dmar_uint, root_entry,
 				sizeof(struct dmar_root_entry));
@@ -992,8 +992,8 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 	}
 
 	/* setup context entry for the devfun */
-	upper = 0;
-	lower = 0;
+	upper = 0UL;
+	lower = 0UL;
 	if (domain->is_host) {
 		if (iommu_ecap_pt(dmar_uint->ecap) != 0U) {
 			/* When the Translation-type (T) field indicates
@@ -1069,8 +1069,8 @@ remove_iommu_device(struct iommu_domain *domain, uint16_t segment,
 	}
 
 	/* clear the present bit first */
-	context_entry->lower = 0;
-	context_entry->upper = 0;
+	context_entry->lower = 0UL;
+	context_entry->upper = 0UL;
 	iommu_flush_cache(dmar_uint, context_entry,
 			sizeof(struct dmar_context_entry));
 
@@ -1143,7 +1143,7 @@ void suspend_iommu(void)
 {
 	struct dmar_drhd_rt *dmar_unit;
 	struct list_head *pos;
-	uint32_t i, iommu_idx = 0;
+	uint32_t i, iommu_idx = 0U;
 
 	list_for_each(pos, &dmar_drhd_units) {
 		dmar_unit = list_entry(pos, struct dmar_drhd_rt, list);
@@ -1157,7 +1157,7 @@ void suspend_iommu(void)
 		dmar_invalid_iotlb_global(dmar_unit);
 
 		/* save IOMMU fault register state */
-		for (i = 0; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++)
+		for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++)
 			iommu_fault_state[iommu_idx][i] =
 				iommu_read32(dmar_unit, DMAR_FECTL_REG +
 					i * IOMMU_FAULT_REGISTER_STATE_NUM);
@@ -1178,7 +1178,7 @@ void resume_iommu(void)
 {
 	struct dmar_drhd_rt *dmar_unit;
 	struct list_head *pos;
-	uint32_t i, iommu_idx = 0;
+	uint32_t i, iommu_idx = 0U;
 
 	/* restore IOMMU fault register state */
 	list_for_each(pos, &dmar_drhd_units) {
@@ -1196,7 +1196,7 @@ void resume_iommu(void)
 		dmar_invalid_iotlb_global(dmar_unit);
 
 		/* restore IOMMU fault register state */
-		for (i = 0; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++)
+		for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++)
 			iommu_write32(dmar_unit, DMAR_FECTL_REG +
 				i * IOMMU_FAULT_REGISTER_STATE_NUM,
 				iommu_fault_state[iommu_idx][i]);
@@ -1228,8 +1228,8 @@ int init_iommu(void)
 
 	host_domain = create_host_domain();
 
-	for (bus = 0; bus <= IOMMU_INIT_BUS_LIMIT; bus++) {
-		for (devfun = 0; devfun <= 255; devfun++) {
+	for (bus = 0U; bus <= IOMMU_INIT_BUS_LIMIT; bus++) {
+		for (devfun = 0U; devfun <= 255U; devfun++) {
 			add_iommu_device(host_domain, 0,
 					 (uint8_t)bus, (uint8_t)devfun);
 		}

@@ -46,7 +46,7 @@ void setup_notification(void)
 	char name[32] = {0};
 
 	cpu = get_cpu_id();
-	if (cpu > 0)
+	if (cpu > 0U)
 		return;
 
 	/* support IPI notification, VM0 will register all CPU */

@@ -254,9 +254,9 @@ static void uart16550_read(struct tgt_uart *tgt_uart, void *buffer,
 			uart16550_read_reg(tgt_uart->base_address, RBR_IDX);
 
 		/* Read 1 byte */
-		*bytes_read = 1;
+		*bytes_read = 1U;
 	} else {
-		*bytes_read = 0;
+		*bytes_read = 0U;
 	}
 }
 

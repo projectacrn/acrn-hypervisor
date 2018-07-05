@@ -311,12 +311,12 @@ int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value)
 	struct run_context *context =
 			 &vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 
-	for (i = 0; i < 8; i++) {
-		field = (value >> (i * 8)) & 0xffU;
+	for (i = 0U; i < 8U; i++) {
+		field = (value >> (i * 8U)) & 0xffU;
 		if ((PAT_MEM_TYPE_INVALID(field) ||
 				(PAT_FIELD_RSV_BITS & field) != 0U)) {
 			pr_err("invalid guest IA32_PAT: 0x%016llx", value);
-			vcpu_inject_gp(vcpu, 0);
+			vcpu_inject_gp(vcpu, 0U);
 			return -EINVAL;
 		}
 	}
@@ -364,7 +364,7 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 
 	if ((cr0 & (cr0_always_off_mask | CR0_RESERVED_MASK)) != 0U) {
 		pr_err("Not allow to set always off / reserved bits for CR0");
-		vcpu_inject_gp(vcpu, 0);
+		vcpu_inject_gp(vcpu, 0U);
 		return -EINVAL;
 	}
 
@@ -375,7 +375,7 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	    !paging_enabled && ((cr0 & CR0_PG) != 0U)) {
 		if ((context->cr4 & CR4_PAE) == 0U) {
 			pr_err("Can't enable long mode when PAE disabled");
-			vcpu_inject_gp(vcpu, 0);
+			vcpu_inject_gp(vcpu, 0U);
 			return -EINVAL;
 		}
 		/* Enable long mode */
@@ -402,7 +402,7 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	if (((context->cr0 ^ cr0) & (CR0_CD | CR0_NW)) != 0U) {
 		if ((cr0 & CR0_CD) == 0U && ((cr0 & CR0_NW) != 0U)) {
 			pr_err("not allow to set CR0.NW while clearing CR0.CD");
-			vcpu_inject_gp(vcpu, 0);
+			vcpu_inject_gp(vcpu, 0U);
 			return -EINVAL;
 		}
 
@@ -499,14 +499,14 @@ int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 	/* Check if guest try to set fixed to 0 bits or reserved bits */
 	if((cr4 & cr4_always_off_mask) != 0U) {
 		pr_err("Not allow to set reserved/always off bits for CR4");
-		vcpu_inject_gp(vcpu, 0);
+		vcpu_inject_gp(vcpu, 0U);
 		return -EINVAL;
 	}
 
 	/* Do NOT support nested guest */
 	if ((cr4 & CR4_VMXE) != 0U) {
 		pr_err("Nested guest not supported");
-		vcpu_inject_gp(vcpu, 0);
+		vcpu_inject_gp(vcpu, 0U);
 		return -EINVAL;
 	}
 
@@ -601,10 +601,10 @@ static void init_guest_state(struct vcpu *vcpu)
 			 *        if it's resume from S3.
 			 *
 			 */
-			if ((uint64_t)vcpu->entry_addr < 0x100000) {
-				sel =((uint64_t)vcpu->entry_addr & 0xFFFF0)
-					>> 4;
-				base = sel << 4;
+			if ((uint64_t)vcpu->entry_addr < 0x100000UL) {
+				sel =((uint64_t)vcpu->entry_addr & 0xFFFF0UL)
+					>> 4UL;
+				base = sel << 4U;
 			} else {
 				/* BSP is initialized with real mode */
 				sel = REAL_MODE_BSP_INIT_CODE_SEL;
@@ -618,21 +618,21 @@ static void init_guest_state(struct vcpu *vcpu)
 			/* AP is initialized with real mode
 			 * and CS value is left shift 8 bits from sipi vector;
 			 */
-			sel = vcpu->arch_vcpu.sipi_vector << 8;
-			base = sel << 4;
+			sel = vcpu->arch_vcpu.sipi_vector << 8U;
+			base = sel << 4U;
 		}
-		limit = 0xffff;
+		limit = 0xffffU;
 		access = REAL_MODE_CODE_SEG_AR;
 	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
-		limit = 0xffffffff;
-		base = 0;
+		limit = 0xffffffffU;
+		base = 0U;
 		access = PROTECTED_MODE_CODE_SEG_AR;
-		sel = 0x10;	/* Linear CS selector in guest init gdt */
+		sel = 0x10U;	/* Linear CS selector in guest init gdt */
 	} else {
 		HV_ARCH_VMX_GET_CS(sel);
 		access = get_cs_access_rights();
-		limit = 0xffffffff;
-		base = 0;
+		limit = 0xffffffffU;
+		base = 0U;
 	}
 
 	/* Selector */
@@ -660,14 +660,14 @@ static void init_guest_state(struct vcpu *vcpu)
 	/***************************************************/
 	/* Set up guest instruction pointer */
 	field = VMX_GUEST_RIP;
-	value32 = 0;
+	value32 = 0U;
 	if (vcpu_mode == CPU_MODE_REAL) {
 		/* RIP is set here */
 		if (is_vcpu_bsp(vcpu)) {
-			if ((uint64_t)vcpu->entry_addr < 0x100000)
-				value32 = (uint64_t)vcpu->entry_addr & 0x0F;
+			if ((uint64_t)vcpu->entry_addr < 0x100000UL)
+				value32 = (uint64_t)vcpu->entry_addr & 0x0FUL;
 			else
-				value32 = 0x0000FFF0;
+				value32 = 0x0000FFF0U;
 		}
 	} else
 		value32 = (uint32_t)((uint64_t)vcpu->entry_addr);
@@ -678,7 +678,7 @@ static void init_guest_state(struct vcpu *vcpu)
 	if (vcpu_mode == CPU_MODE_64BIT) {
 		/* Set up guest stack pointer to 0 */
 		field = VMX_GUEST_RSP;
-		value32 = 0;
+		value32 = 0U;
 		pr_dbg("GUEST RSP on VMEntry %x ",
 				value32);
 		exec_vmwrite(field, value32);
@@ -691,7 +691,7 @@ static void init_guest_state(struct vcpu *vcpu)
 	/* GDTR - Global Descriptor Table */
 	if (vcpu_mode == CPU_MODE_REAL) {
 		/* Base */
-		base = 0;
+		base = 0U;
 
 		/* Limit */
 		limit = 0xFFFF;
@@ -712,7 +712,7 @@ static void init_guest_state(struct vcpu *vcpu)
 		base = gdtb.base;
 
 		/* Limit */
-		limit = HOST_GDT_SIZE - 1;
+		limit = HOST_GDT_SIZE - 1U;
 	}
 
 	/* GDTR Base */
@@ -729,7 +729,7 @@ static void init_guest_state(struct vcpu *vcpu)
 	if ((vcpu_mode == CPU_MODE_REAL) ||
 	    (vcpu_mode == CPU_MODE_PROTECTED)) {
 		/* Base */
-		base = 0;
+		base = 0U;
 
 		/* Limit */
 		limit = 0xFFFF;
@@ -778,14 +778,14 @@ static void init_guest_state(struct vcpu *vcpu)
 	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
 		/* Linear data segment in guest init gdt */
 		es = ss = ds = fs = gs = 0x18;
-		limit = 0xffffffff;
+		limit = 0xffffffffU;
 	} else if (vcpu_mode == CPU_MODE_64BIT) {
 		asm volatile ("movw %%es, %%ax":"=a" (es));
 		asm volatile ("movw %%ss, %%ax":"=a" (ss));
 		asm volatile ("movw %%ds, %%ax":"=a" (ds));
 		asm volatile ("movw %%fs, %%ax":"=a" (fs));
 		asm volatile ("movw %%gs, %%ax":"=a" (gs));
-		limit = 0xffffffff;
+		limit = 0xffffffffU;
 	}
 
 	/* Selector */
@@ -849,7 +849,7 @@ static void init_guest_state(struct vcpu *vcpu)
 	pr_dbg("VMX_GUEST_GS_ATTR: 0x%x ", value32);
 
 	/* Base */
-	value = 0;
+	value = 0UL;
 	field = VMX_GUEST_ES_BASE;
 	exec_vmwrite(field, es << 4);
 	pr_dbg("VMX_GUEST_ES_BASE: 0x%016llx ", value);
@@ -875,17 +875,17 @@ static void init_guest_state(struct vcpu *vcpu)
 	pr_dbg("VMX_GUEST_LDTR_SEL: 0x%x ", value32);
 
 	field = VMX_GUEST_LDTR_LIMIT;
-	value32 = 0xffffffff;
+	value32 = 0xffffffffU;
 	exec_vmwrite(field, value32);
 	pr_dbg("VMX_GUEST_LDTR_LIMIT: 0x%x ", value32);
 
 	field = VMX_GUEST_LDTR_ATTR;
-	value32 = 0x10000;
+	value32 = 0x10000U;
 	exec_vmwrite(field, value32);
 	pr_dbg("VMX_GUEST_LDTR_ATTR: 0x%x ", value32);
 
 	field = VMX_GUEST_LDTR_BASE;
-	value32 = 0x00;
+	value32 = 0x00U;
 	exec_vmwrite(field, value32);
 	pr_dbg("VMX_GUEST_LDTR_BASE: 0x%x ", value32);
 
@@ -896,34 +896,34 @@ static void init_guest_state(struct vcpu *vcpu)
 	pr_dbg("VMX_GUEST_TR_SEL: 0x%x ", value32);
 
 	field = VMX_GUEST_TR_LIMIT;
-	value32 = 0xff;
+	value32 = 0xffU;
 	exec_vmwrite(field, value32);
 	pr_dbg("VMX_GUEST_TR_LIMIT: 0x%x ", value32);
 
 	field = VMX_GUEST_TR_ATTR;
-	value32 = 0x8b;
+	value32 = 0x8bU;
 	exec_vmwrite(field, value32);
 	pr_dbg("VMX_GUEST_TR_ATTR: 0x%x ", value32);
 
 	field = VMX_GUEST_TR_BASE;
-	value32 = 0x00;
+	value32 = 0x00U;
 	exec_vmwrite(field, value32);
 	pr_dbg("VMX_GUEST_TR_BASE: 0x%x ", value32);
 
 	field = VMX_GUEST_INTERRUPTIBILITY_INFO;
-	value32 = 0;
+	value32 = 0U;
 	exec_vmwrite(field, value32);
 	pr_dbg("VMX_GUEST_INTERRUPTIBILITY_INFO: 0x%x ",
 		  value32);
 
 	field = VMX_GUEST_ACTIVITY_STATE;
-	value32 = 0;
+	value32 = 0U;
 	exec_vmwrite(field, value32);
 	pr_dbg("VMX_GUEST_ACTIVITY_STATE: 0x%x ",
 		  value32);
 
 	field = VMX_GUEST_SMBASE;
-	value32 = 0;
+	value32 = 0U;
 	exec_vmwrite(field, value32);
 	pr_dbg("VMX_GUEST_SMBASE: 0x%x ", value32);
 
@@ -941,14 +941,14 @@ static void init_guest_state(struct vcpu *vcpu)
 	pr_dbg("VMX_GUEST_IA32_PAT: 0x%016llx ",
 		  value64);
 
-	value64 = 0;
+	value64 = 0UL;
 	exec_vmwrite64(VMX_GUEST_IA32_DEBUGCTL_FULL, value64);
 	pr_dbg("VMX_GUEST_IA32_DEBUGCTL: 0x%016llx ",
 		  value64);
 
 	/* Set up guest pending debug exception */
 	field = VMX_GUEST_PENDING_DEBUG_EXCEPT;
-	value = 0x0;
+	value = 0x0UL;
 	exec_vmwrite(field, value);
 	pr_dbg("VMX_GUEST_PENDING_DEBUG_EXCEPT: 0x%016llx ", value);
 
@@ -1305,7 +1305,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	 * on corresponding guest * exception - pg 2902 24.6.3
 	 * enable VM exit on MC only
 	 */
-	value32 = (1 << IDT_MC);
+	value32 = (1U << IDT_MC);
 	exec_vmwrite(VMX_EXCEPTION_BITMAP, value32);
 
 	/* Set up page fault error code mask - second paragraph * pg 2902

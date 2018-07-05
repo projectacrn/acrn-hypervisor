@@ -947,8 +947,8 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 	} else {
 		strcpy_s(type, 16, "NONE");
 		*irq = IRQ_INVALID;
-		*vector = 0;
-		*dest = 0;
+		*vector = 0U;
+		*dest = 0UL;
 		*lvl_tm = 0;
 		*pin = -1;
 		*vpin = -1;

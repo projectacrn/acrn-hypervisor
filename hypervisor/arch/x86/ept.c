@@ -57,13 +57,13 @@ void free_ept_mem(void *pml4_addr)
 		return;
 	}
 
-	for (pml4_index = 0; pml4_index < IA32E_NUM_ENTRIES; pml4_index++) {
+	for (pml4_index = 0U; pml4_index < IA32E_NUM_ENTRIES; pml4_index++) {
 		/* Walk from the PML4 table to the PDPT table */
 		pdpt_addr = HPA2HVA(find_next_table(pml4_index, pml4_addr));
 		if (pdpt_addr == NULL)
 			continue;
 
-		for (pdpt_index = 0; pdpt_index < IA32E_NUM_ENTRIES;
+		for (pdpt_index = 0U; pdpt_index < IA32E_NUM_ENTRIES;
 				pdpt_index++) {
 			/* Walk from the PDPT table to the PD table */
 			pde_addr = HPA2HVA(find_next_table(pdpt_index,
@@ -72,7 +72,7 @@ void free_ept_mem(void *pml4_addr)
 			if (pde_addr == NULL)
 				continue;
 
-			for (pde_index = 0; pde_index < IA32E_NUM_ENTRIES;
+			for (pde_index = 0U; pde_index < IA32E_NUM_ENTRIES;
 					pde_index++) {
 				/* Walk from the PD table to the page table */
 				pte_addr = HPA2HVA(find_next_table(pde_index,
@@ -105,7 +105,7 @@ void destroy_ept(struct vm *vm)
 	 */
 	if (vm->sworld_control.sworld_enabled && (vm->arch_vm.sworld_eptp != 0U)) {
 		free_ept_mem(HPA2HVA(vm->arch_vm.sworld_eptp));
-		vm->arch_vm.sworld_eptp = 0;
+		vm->arch_vm.sworld_eptp = 0UL;
 	}
 }
 
@@ -319,7 +319,7 @@ static int dm_emulate_mmio_pre(struct vcpu *vcpu, uint64_t exit_qual)
 			vcpu->req.type = REQ_WP;
 	}
 
-	if (vcpu->req.type == 0)
+	if (vcpu->req.type == 0U)
 		vcpu->req.type = REQ_MMIO;
 	vcpu->req.reqs.mmio_request.direction = vcpu->mmio.read_write;
 	vcpu->req.reqs.mmio_request.address = (long)vcpu->mmio.paddr;
@@ -349,7 +349,7 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 		/* TODO: Need to figure out how to determine value being
 		 * written
 		 */
-		mmio->value = 0;
+		mmio->value = 0UL;
 	} else {
 		/* Read operation */
 		mmio->read_write = HV_MEM_IO_READ;
@@ -358,7 +358,7 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 		/* TODO: Need to determine how sign extension is determined for
 		 * reads
 		 */
-		mmio->sign_extend_read = 0;
+		mmio->sign_extend_read = 0U;
 	}
 
 	/* Get the guest physical address */
