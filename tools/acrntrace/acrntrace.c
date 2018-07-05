@@ -185,30 +185,6 @@ static int get_cpu_num(void)
 	return ret;
 }
 
-static double get_cpu_freq(void)
-{
-	char cmd[] =
-	    "cat /proc/cpuinfo | grep -m 1 \"cpu MHz\" | awk '{print $4}'";
-	char buf[16];
-	int ret;
-	double freq = 0;
-
-	ret = shell_cmd(cmd, buf, sizeof(buf));
-
-	if (ret <= 0) {
-		pr_err("Faile to get cpu freq, use default 1920MHz\n");
-		return 1920.00;
-	}
-
-	freq = atof(buf);
-	if (freq <= 0) {
-		pr_err("Invalid cpu freq string, use default 1920MHz\n");
-		return 1920.00;
-	}
-
-	return freq;
-}
-
 static int create_trace_file_dir(char *dir)
 {
 	int status;
