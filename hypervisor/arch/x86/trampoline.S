@@ -38,7 +38,6 @@
  */
 
     .extern     cpu_secondary_init
-    .extern     cpu_logical_id
     .extern     _ld_bss_end
     .extern     HOST_GDTR
 
