@@ -33,7 +33,7 @@ static struct dmar_drhd drhd_info_array[] = {
 		/* Ignore the iommu for intel graphic device since GVT-g needs
 		 * vtd disabled for gpu
 		 */
-		.ignore = false,
+		.ignore = true,
 		.devices = default_drhd_unit_dev_scope0,
 	},
 	{
