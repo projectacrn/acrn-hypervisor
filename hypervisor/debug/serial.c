@@ -10,7 +10,7 @@
 static struct uart *sio_ports[SERIAL_MAX_DEVS];
 static uint8_t sio_initialized[SERIAL_MAX_DEVS];
 
-static struct uart *get_uart_by_id(char *uart_id, uint32_t *index)
+static struct uart *get_uart_by_id(const char *uart_id, uint32_t *index)
 {
 	/* Initialize the index to the start of array. */
 	*index = 0U;
@@ -78,7 +78,7 @@ int serial_init(void)
 	return status;
 }
 
-uint32_t serial_open(char *uart_id)
+uint32_t serial_open(const char *uart_id)
 {
 	int status = SERIAL_DEV_NOT_FOUND;
 	struct uart *uart;

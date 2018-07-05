@@ -159,7 +159,7 @@ int shell_init(void)
 	return status;
 }
 
-int shell_puts(struct shell *p_shell, char *str_ptr)
+int shell_puts(struct shell *p_shell, const char *str_ptr)
 {
 	int status;
 
@@ -178,7 +178,7 @@ int shell_puts(struct shell *p_shell, char *str_ptr)
 	return status;
 }
 
-int shell_set_name(struct shell *p_shell, char *name)
+int shell_set_name(struct shell *p_shell, const char *name)
 {
 	int status;
 

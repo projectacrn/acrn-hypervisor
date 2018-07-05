@@ -170,8 +170,8 @@ uint8_t shell_getc_serial(struct shell *p_shell);
 void shell_special_serial(struct shell *p_shell, uint8_t ch);
 void kick_shell(struct shell *p_shell);
 
-int shell_puts(struct shell *p_shell, char *str_ptr);
-int shell_set_name(struct shell *p_shell, char *name);
+int shell_puts(struct shell *p_shell, const char *str_ptr);
+int shell_set_name(struct shell *p_shell, const char *name);
 int shell_trigger_crash(struct shell *p_shell, int argc, char **argv);
 
 #endif /* SHELL_INTER_H */
