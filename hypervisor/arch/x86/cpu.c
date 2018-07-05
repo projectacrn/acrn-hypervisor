@@ -823,7 +823,7 @@ static void cpu_set_logical_id(uint16_t pcpu_id)
 
 static void print_hv_banner(void)
 {
-	char *boot_msg = "ACRN Hypervisor\n\r";
+	const char *boot_msg = "ACRN Hypervisor\n\r";
 
 	/* Print the boot message */
 	printf(boot_msg);

@@ -175,7 +175,7 @@ struct uart {
 /* Null terminated array of target specific UART control blocks */
 extern struct tgt_uart Tgt_Uarts[SERIAL_MAX_DEVS];
 
-uint32_t serial_open(char *uart_id);
+uint32_t serial_open(const char *uart_id);
 int serial_getc(uint32_t uart_handle);
 int serial_gets(uint32_t uart_handle, char *buffer, uint32_t length);
 int serial_puts(uint32_t uart_handle, const char *s, uint32_t length);

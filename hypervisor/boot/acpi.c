@@ -169,7 +169,7 @@ probe_table(uint64_t address, const char *sig)
 	return 1;
 }
 
-void *get_acpi_tbl(char *sig)
+void *get_acpi_tbl(const char *sig)
 {
 	struct acpi_table_rsdp *rsdp;
 	struct acpi_table_rsdt *rsdt;

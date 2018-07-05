@@ -8,7 +8,7 @@
 #define ASSERT_H
 
 #ifdef HV_DEBUG
-void __assert(uint32_t line, const char *file, char *txt);
+void __assert(uint32_t line, const char *file, const char *txt);
 
 #define ASSERT(x, ...) \
 	if (!(x)) {\
