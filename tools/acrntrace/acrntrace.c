@@ -10,6 +10,8 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/statvfs.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include <dirent.h>
 #include <signal.h>
@@ -166,11 +168,12 @@ static int get_cpu_num(void)
 
 static int create_trace_file_dir(char *dir)
 {
-	int status;
+	int err;
 	char cmd[CMD_MAX_LEN];
 	char time_str[TIME_STR_LEN];
 	time_t timep;
 	struct tm *p;
+	struct stat st;
 
 	time(&timep);
 	p = localtime(&timep);
@@ -183,18 +186,29 @@ static int create_trace_file_dir(char *dir)
 
 	pr_info("start tracing at %s\n", time_str);
 
+	/* Pre-condition: Make sure tmpfs is mounted on /tmp */
+	if (stat(TRACE_FILE_ROOT, &st)) {
+		err = mkdir(TRACE_FILE_ROOT, 0644);
+		if (err) {
+			pr_err("Fail to create dir %s, Error: %s\n",
+				TRACE_FILE_ROOT, strerror(errno));
+			return -1;
+		}
+	}
+
 	snprintf(dir, TRACE_FILE_DIR_LEN, "%s%s", TRACE_FILE_ROOT, time_str);
-
-	memset(cmd, 0, CMD_MAX_LEN);
-	snprintf(cmd, CMD_MAX_LEN, "%s %s", "mkdir -p ", dir);
-
-	status = system(cmd);
-	if (-1 == status)
-		return -1;	/* failed to execute sh */
+	if (stat(dir, &st)) {
+		err = mkdir(dir, 0644);
+		if (err) {
+			pr_err("Fail to create dir %s, Error: %s\n",
+				dir, strerror(errno));
+			return -1;
+		}
+	}
 
 	pr_dbg("dir %s creted\n", dir);
 
-	return WIFEXITED(status) ? WEXITSTATUS(status) : EXIT_FAILURE;
+	return WIFEXITED(err) ? WEXITSTATUS(err) : EXIT_FAILURE;
 }
 
 /* function executed in each consumer thread */
