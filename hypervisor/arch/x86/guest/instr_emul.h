@@ -54,7 +54,7 @@ int vmm_emulate_instruction(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		struct vm_guest_paging *paging, mem_region_read_t mrr,
 		mem_region_write_t mrw, void *mrarg);
 
-int vie_update_register(struct vcpu *vcpu, enum vm_reg_name reg,
+int vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
 		uint64_t val, uint8_t size);
 
 /*
@@ -68,7 +68,7 @@ int vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla);
 
 uint64_t vie_size2mask(uint8_t size);
 
-int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum vm_reg_name seg,
+int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	struct seg_desc *desc, uint64_t off, uint8_t length, uint8_t addrsize,
 	int prot, uint64_t *gla);
 
