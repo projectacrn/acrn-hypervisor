@@ -1241,7 +1241,7 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 	uint8_t size, stackaddrsize;
 	uint32_t err_code = 0U;
 
-	memset(&ss_desc, 0U, sizeof(ss_desc));
+	(void)memset(&ss_desc, 0U, sizeof(ss_desc));
 
 	val = 0UL;
 	size = vie->opsize;
@@ -1690,7 +1690,7 @@ vie_init(struct vie *vie, struct vcpu *vcpu)
 		return -EINVAL;
 	}
 
-	memset(vie, 0U, sizeof(struct vie));
+	(void)memset(vie, 0U, sizeof(struct vie));
 
 	vie->base_register = CPU_REG_LAST;
 	vie->index_register = CPU_REG_LAST;

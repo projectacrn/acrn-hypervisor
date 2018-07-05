@@ -272,7 +272,7 @@ void *calloc(unsigned int num_elements, unsigned int element_size)
         /* Determine if memory was allocated */
         if (memory != NULL) {
                 /* Zero all the memory */
-                memset(memory, 0, num_elements * element_size);
+		(void)memset(memory, 0, num_elements * element_size);
         }
 
         /* Return pointer to memory */

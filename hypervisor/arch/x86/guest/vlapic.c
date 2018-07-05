@@ -262,7 +262,7 @@ static void vlapic_create_timer(struct vlapic *vlapic)
 		return;
 
 	vlapic_timer = &vlapic->vlapic_timer;
-	memset(vlapic_timer, 0, sizeof(struct vlapic_timer));
+	(void)memset(vlapic_timer, 0, sizeof(struct vlapic_timer));
 
 	initialize_timer(&vlapic_timer->timer,
 			vlapic_timer_expired, vlapic->vcpu,
@@ -1491,9 +1491,9 @@ vlapic_reset(struct vlapic *vlapic)
 
 	lapic = vlapic->apic_page;
 	apic_page = (void *)vlapic->apic_page;
-	memset(apic_page, 0, CPU_PAGE_SIZE);
+	(void)memset(apic_page, 0, CPU_PAGE_SIZE);
 	if (vlapic->pir_desc)
-		memset(vlapic->pir_desc, 0, sizeof(struct pir_desc));
+		(void)memset(vlapic->pir_desc, 0, sizeof(struct pir_desc));
 
 	lapic->id = vlapic_build_id(vlapic);
 	lapic->version = VLAPIC_VERSION;
@@ -1992,7 +1992,7 @@ int vlapic_create(struct vcpu *vcpu)
 	ASSERT(vlapic != NULL, "vlapic allocate failed");
 	ASSERT(apic_page != NULL, "apic reg page allocate failed");
 
-	memset((void *)apic_page, 0, CPU_PAGE_SIZE);
+	(void)memset((void *)apic_page, 0, CPU_PAGE_SIZE);
 	vlapic->vm = vcpu->vm;
 	vlapic->vcpu = vcpu;
 	vlapic->apic_page = (struct lapic_regs *)apic_page;
@@ -2169,7 +2169,7 @@ apicv_get_apic_access_addr(__unused struct vm *vm)
 		ASSERT(apicv_apic_access_addr != NULL,
 					"apicv allocate failed.");
 
-		memset((void *)apicv_apic_access_addr, 0, CPU_PAGE_SIZE);
+		(void)memset((void *)apicv_apic_access_addr, 0, CPU_PAGE_SIZE);
 	}
 	return HVA2HPA(apicv_apic_access_addr);
 }

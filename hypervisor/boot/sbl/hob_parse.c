@@ -52,7 +52,7 @@ void parse_seed_list(struct seed_list_hob *seed_hob)
 			dseed_index++;
 
 			/* erase original seed in seed entry */
-			memset(entry->seed, 0, sizeof(struct seed_info));
+			(void)memset(entry->seed, 0, sizeof(struct seed_info));
 		}
 
 		entry = (struct seed_entry *)((uint8_t *)entry +
@@ -60,10 +60,10 @@ void parse_seed_list(struct seed_list_hob *seed_hob)
 	}
 
 	trusty_set_dseed(dseed_list, dseed_index);
-	memset(dseed_list, 0, sizeof(dseed_list));
+	(void)memset(dseed_list, 0, sizeof(dseed_list));
 	return;
 
 fail:
 	trusty_set_dseed(NULL, 0);
-	memset(dseed_list, 0, sizeof(dseed_list));
+	(void)memset(dseed_list, 0, sizeof(dseed_list));
 }

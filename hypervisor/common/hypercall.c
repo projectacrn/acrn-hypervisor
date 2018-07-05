@@ -135,13 +135,13 @@ int64_t hcall_create_vm(struct vm *vm, uint64_t param)
 	struct acrn_create_vm cv;
 	struct vm_description vm_desc;
 
-	memset((void *)&cv, 0, sizeof(cv));
+	(void)memset((void *)&cv, 0, sizeof(cv));
 	if (copy_from_gpa(vm, &cv, param, sizeof(cv)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
 		return -1;
 	}
 
-	memset(&vm_desc, 0, sizeof(vm_desc));
+	(void)memset(&vm_desc, 0, sizeof(vm_desc));
 	vm_desc.sworld_enabled =
 		(!!(cv.vm_flag & (SECURE_WORLD_ENABLED)));
 	memcpy_s(&vm_desc.GUID[0], 16, &cv.GUID[0], 16);
@@ -281,7 +281,7 @@ int64_t hcall_inject_msi(struct vm *vm, uint64_t vmid, uint64_t param)
 	if (target_vm == NULL)
 		return -1;
 
-	memset((void *)&msi, 0, sizeof(msi));
+	(void)memset((void *)&msi, 0, sizeof(msi));
 	if (copy_from_gpa(vm, &msi, param, sizeof(msi)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
 		return -1;
@@ -301,7 +301,7 @@ int64_t hcall_set_ioreq_buffer(struct vm *vm, uint64_t vmid, uint64_t param)
 	if (target_vm == NULL)
 		return -1;
 
-	memset((void *)&iobuf, 0, sizeof(iobuf));
+	(void)memset((void *)&iobuf, 0, sizeof(iobuf));
 
 	if (copy_from_gpa(vm, &iobuf, param, sizeof(iobuf)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
@@ -449,7 +449,7 @@ int64_t hcall_set_vm_memmap(struct vm *vm, uint64_t vmid, uint64_t param)
 	if ((vm == NULL) || (target_vm == NULL))
 		return -1;
 
-	memset((void *)&memmap, 0, sizeof(memmap));
+	(void)memset((void *)&memmap, 0, sizeof(memmap));
 
 	if (copy_from_gpa(vm, &memmap, param, sizeof(memmap)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
@@ -482,7 +482,7 @@ int64_t hcall_set_vm_memmaps(struct vm *vm, uint64_t param)
 		return -1;
 	}
 
-	memset((void *)&set_memmaps, 0, sizeof(set_memmaps));
+	(void)memset((void *)&set_memmaps, 0, sizeof(set_memmaps));
 
 	if (copy_from_gpa(vm, &set_memmaps, param, sizeof(set_memmaps)) != 0) {
 		pr_err("%s: Unable copy param from vm\n", __func__);
@@ -521,7 +521,7 @@ int64_t hcall_remap_pci_msix(struct vm *vm, uint64_t vmid, uint64_t param)
 	if (target_vm == NULL)
 		return -1;
 
-	memset((void *)&remap, 0, sizeof(remap));
+	(void)memset((void *)&remap, 0, sizeof(remap));
 
 	if (copy_from_gpa(vm, &remap, param, sizeof(remap)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
@@ -560,7 +560,7 @@ int64_t hcall_gpa_to_hpa(struct vm *vm, uint64_t vmid, uint64_t param)
 	if (target_vm == NULL)
 		return -1;
 
-	memset((void *)&v_gpa2hpa, 0, sizeof(v_gpa2hpa));
+	(void)memset((void *)&v_gpa2hpa, 0, sizeof(v_gpa2hpa));
 
 	if (copy_from_gpa(vm, &v_gpa2hpa, param, sizeof(v_gpa2hpa)) != 0) {
 		pr_err("HCALL gpa2hpa: Unable copy param from vm\n");
@@ -640,7 +640,7 @@ int64_t hcall_set_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
 	if (target_vm == NULL)
 		return -1;
 
-	memset((void *)&irq, 0, sizeof(irq));
+	(void)memset((void *)&irq, 0, sizeof(irq));
 
 	if (copy_from_gpa(vm, &irq, param, sizeof(irq)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
@@ -670,7 +670,7 @@ hcall_reset_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
 	if (target_vm == NULL)
 		return -1;
 
-	memset((void *)&irq, 0, sizeof(irq));
+	(void)memset((void *)&irq, 0, sizeof(irq));
 
 	if (copy_from_gpa(vm, &irq, param, sizeof(irq)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
@@ -694,7 +694,7 @@ int64_t hcall_setup_sbuf(struct vm *vm, uint64_t param)
 	struct sbuf_setup_param ssp;
 	uint64_t *hva;
 
-	memset((void *)&ssp, 0, sizeof(ssp));
+	(void)memset((void *)&ssp, 0, sizeof(ssp));
 
 	if (copy_from_gpa(vm, &ssp, param, sizeof(ssp)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);

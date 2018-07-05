@@ -469,7 +469,7 @@ int do_print(const char *fmt, struct print_param *param,
 			start = fmt++;
 
 			/* initialize the variables for the next argument */
-			memset(&(param->vars), 0, sizeof(param->vars));
+			(void)memset(&(param->vars), 0, sizeof(param->vars));
 			param->vars.mask = 0xFFFFFFFFFFFFFFFFUL;
 
 			/*
@@ -625,7 +625,7 @@ static int charmem(int cmd, const char *s, int sz, void *hnd)
 	else {
 		n = (sz < param->sz - param->wrtn) ? sz : 0;
 		param->wrtn += sz;
-		memset(p, *s, n);
+		(void)memset(p, *s, n);
 	}
 
 	return n;
@@ -649,10 +649,10 @@ int vsnprintf(char *dst, int sz, const char *fmt, va_list args)
 	struct snprint_param snparam;
 
 	/* initialize parameters */
-	memset(&snparam, 0, sizeof(snparam));
+	(void)memset(&snparam, 0, sizeof(snparam));
 	snparam.dst = dst;
 	snparam.sz = sz;
-	memset(&param, 0, sizeof(param));
+	(void)memset(&param, 0, sizeof(param));
 	param.emit = charmem;
 	param.data = &snparam;
 

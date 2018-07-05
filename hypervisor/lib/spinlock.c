@@ -8,7 +8,7 @@
 
 inline void spinlock_init(spinlock_t *lock)
 {
-	memset(lock, 0, sizeof(spinlock_t));
+	(void)memset(lock, 0, sizeof(spinlock_t));
 }
 void spinlock_obtain(spinlock_t *lock)
 {

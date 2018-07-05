@@ -368,7 +368,7 @@ void bsp_boot_init(void)
 	start_tsc = rdtsc();
 
 	/* Clear BSS */
-	memset(_ld_bss_start, 0, _ld_bss_end - _ld_bss_start);
+	(void)memset(_ld_bss_start, 0, _ld_bss_end - _ld_bss_start);
 
 	/* Build time sanity checks to make sure hard-coded offset
 	*  is matching the actual offset!

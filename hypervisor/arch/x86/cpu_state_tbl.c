@@ -113,7 +113,7 @@ void load_cpu_state_data(void)
 	int tbl_idx;
 	const struct cpu_state_info *state_info;
 
-	memset(&boot_cpu_data.state_info, 0,
+	(void)memset(&boot_cpu_data.state_info, 0,
 			sizeof(struct cpu_state_info));
 
 	tbl_idx = get_state_tbl_idx(boot_cpu_data.model_name);

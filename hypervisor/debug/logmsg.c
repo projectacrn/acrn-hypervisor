@@ -107,7 +107,7 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 	pcpu_id = get_cpu_id();
 	buffer = per_cpu(logbuf, pcpu_id);
 
-	memset(buffer, 0, LOG_MESSAGE_MAX_SIZE);
+	(void)memset(buffer, 0, LOG_MESSAGE_MAX_SIZE);
 	/* Put time-stamp, CPU ID and severity into buffer */
 	snprintf(buffer, LOG_MESSAGE_MAX_SIZE,
 			"[%lluus][cpu=%hu][sev=%u][seq=%u]:",
@@ -187,7 +187,7 @@ void print_logmsg_buffer(uint16_t pcpu_id)
 
 	do {
 		uint32_t idx;
-		memset(buffer, 0, LOG_ENTRY_SIZE + 1);
+		(void)memset(buffer, 0, LOG_ENTRY_SIZE + 1);
 
 		if (*sbuf == NULL)
 			return;
