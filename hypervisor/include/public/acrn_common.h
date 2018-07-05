@@ -40,7 +40,7 @@
 #define REQUEST_WRITE	1
 
 /* IOAPIC device model info */
-#define VIOAPIC_RTE_NUM	48  /* vioapic pins */
+#define VIOAPIC_RTE_NUM	48U  /* vioapic pins */
 
 #if VIOAPIC_RTE_NUM < 24
 #error "VIOAPIC_RTE_NUM must be larger than 23"
