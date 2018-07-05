@@ -69,7 +69,7 @@ static inline int set_vcpuid_entry(struct vm *vm,
 	}
 
 	tmp = &vm->vcpuid_entries[vm->vcpuid_entry_nr++];
-	memcpy_s(tmp, entry_size, entry, entry_size);
+	(void)memcpy_s(tmp, entry_size, entry, entry_size);
 	return 0;
 }
 

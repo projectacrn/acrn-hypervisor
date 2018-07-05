@@ -61,12 +61,12 @@ static void parse_other_modules(struct vm *vm,
 			/*copy boot args to load addr, set src=load addr*/
 			if (copy_once != 0) {
 				copy_once = 0;
-				strcpy_s(load_addr, MEM_2K,
+				(void)strcpy_s(load_addr, MEM_2K,
 					vm->sw.linux_info.bootargs_src_addr);
 				vm->sw.linux_info.bootargs_src_addr = load_addr;
 			}
 
-			strcpy_s(load_addr + args_size,
+			(void)strcpy_s(load_addr + args_size,
 				100, dyn_bootargs);
 			vm->sw.linux_info.bootargs_size =
 				strnlen_s(load_addr, MEM_2K);
@@ -159,7 +159,7 @@ int init_vm0_boot_info(struct vm *vm)
 
 		cmd_dst = kernel_cmdline;
 		cmd_src = HPA2HVA((uint64_t)mbi->mi_cmdline);
-		strncpy_s(cmd_dst, MEM_2K, cmd_src,
+		(void)strncpy_s(cmd_dst, MEM_2K, cmd_src,
 			strnlen_s(cmd_src, MEM_2K));
 		off = strnlen_s(cmd_dst, MEM_2K);
 		cmd_dst[off] = ' ';	/* insert space */
@@ -167,7 +167,7 @@ int init_vm0_boot_info(struct vm *vm)
 
 		cmd_dst += off;
 		cmd_src = HPA2HVA((uint64_t)mods[0].mm_string);
-		strncpy_s(cmd_dst, MEM_2K - off, cmd_src,
+		(void)strncpy_s(cmd_dst, MEM_2K - off, cmd_src,
 				strnlen_s(cmd_src, MEM_2K - off));
 
 		vm->sw.linux_info.bootargs_src_addr = kernel_cmdline;

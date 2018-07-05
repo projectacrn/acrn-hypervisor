@@ -183,7 +183,7 @@ int shell_set_name(struct shell *p_shell, const char *name)
 	int status;
 
 	if ((p_shell != NULL) && (name != NULL)) {
-		strncpy_s((void *) p_shell->name, SHELL_NAME_MAX_LEN,
+		(void)strncpy_s((void *) p_shell->name, SHELL_NAME_MAX_LEN,
 			(void *) name, SHELL_NAME_MAX_LEN - 1);
 
 		/* Ensure null terminated string */

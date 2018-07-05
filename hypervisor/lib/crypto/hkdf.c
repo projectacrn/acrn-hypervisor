@@ -17,7 +17,7 @@ int hkdf_sha256(uint8_t *out_key, size_t out_len,
 	 * to derive multiple seeds in order to support multiple
 	 * AaaG/Trusty instances.
 	 */
-	memcpy_s(out_key, out_len, secret, secret_len);
+	(void)memcpy_s(out_key, out_len, secret, secret_len);
 
 	return 1;
 }

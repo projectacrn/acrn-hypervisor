@@ -909,7 +909,7 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 {
 	if (is_entry_active(entry)) {
 		if (entry->type == PTDEV_INTR_MSI) {
-			strcpy_s(type, 16, "MSI");
+			(void)strcpy_s(type, 16, "MSI");
 			*dest = (entry->ptdev_intr_info.msi.pmsi_addr & 0xFF000U)
 				>> 12;
 			if ((entry->ptdev_intr_info.msi.pmsi_data &
@@ -928,9 +928,9 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 
 			if (entry->ptdev_intr_info.intx.vpin_src
 				== PTDEV_VPIN_IOAPIC)
-				strcpy_s(type, 16, "IOAPIC");
+				(void)strcpy_s(type, 16, "IOAPIC");
 			else
-				strcpy_s(type, 16, "PIC");
+				(void)strcpy_s(type, 16, "PIC");
 			ioapic_get_rte(phys_irq, &rte);
 			*dest = ((rte >> 32) & IOAPIC_RTE_DEST) >> 24;
 			if ((rte & IOAPIC_RTE_TRGRLVL) != 0U)
@@ -945,7 +945,7 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 		*irq = dev_to_irq(entry->node);
 		*vector = dev_to_vector(entry->node);
 	} else {
-		strcpy_s(type, 16, "NONE");
+		(void)strcpy_s(type, 16, "NONE");
 		*irq = IRQ_INVALID;
 		*vector = 0U;
 		*dest = 0UL;

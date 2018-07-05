@@ -710,7 +710,7 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 	if ((error != 0) || (fault != 0))
 		goto done;
 
-	memcpy_s((char *)dstaddr, 16U, (char *)srcaddr, opsize);
+	(void)memcpy_s((char *)dstaddr, 16U, (char *)srcaddr, opsize);
 
 	error = vie_read_register(vcpu, CPU_REG_RSI, &rsi);
 	ASSERT(error == 0, "%s: error %d getting rsi", __func__, error);

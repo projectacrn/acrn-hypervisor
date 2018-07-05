@@ -39,7 +39,7 @@ static uint64_t create_zero_page(struct vm *vm)
 
 	/* copy part of the header into the zero page */
 	hva = GPA2HVA(vm, (uint64_t)vm->sw.kernel_info.kernel_load_addr);
-	memcpy_s(&(zeropage->hdr), sizeof(zeropage->hdr),
+	(void)memcpy_s(&(zeropage->hdr), sizeof(zeropage->hdr),
 				&(hva->hdr), sizeof(hva->hdr));
 
 	/* See if kernel has a RAM disk */
@@ -140,7 +140,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	hva = GPA2HVA(vm, (uint64_t)vm->sw.kernel_info.kernel_load_addr);
 
 	/* Copy the guest kernel image to its run-time location */
-	memcpy_s((void *)hva, vm->sw.kernel_info.kernel_size,
+	(void)memcpy_s((void *)hva, vm->sw.kernel_info.kernel_size,
 				vm->sw.kernel_info.kernel_src_addr,
 				vm->sw.kernel_info.kernel_size);
 
@@ -157,7 +157,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 			(uint64_t)vm->sw.linux_info.bootargs_load_addr);
 
 		/* Copy Guest OS bootargs to its load location */
-		strcpy_s((char *)hva, MEM_2K,
+		(void)strcpy_s((char *)hva, MEM_2K,
 				vm->sw.linux_info.bootargs_src_addr);
 
 #ifdef CONFIG_CMA
@@ -166,7 +166,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 			snprintf(dyn_bootargs, 100, " cma=%dM@0x%llx",
 					(e820_mem.max_ram_blk_size >> 20),
 					e820_mem.max_ram_blk_base);
-			strcpy_s((char *)hva
+			(void)strcpy_s((char *)hva
 					+vm->sw.linux_info.bootargs_size,
 					100, dyn_bootargs);
 		}
@@ -189,7 +189,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 				snprintf(dyn_bootargs, 100,
 					" hugepagesz=1G hugepages=%d",
 					reserving_1g_pages);
-				strcpy_s((char *)hva
+				(void)strcpy_s((char *)hva
 					+vm->sw.linux_info.bootargs_size,
 					100, dyn_bootargs);
 			}
@@ -203,7 +203,8 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 				(uint64_t)vm->sw.linux_info.ramdisk_load_addr);
 
 			/* Copy RAM disk to its load location */
-			memcpy_s((void *)hva, vm->sw.linux_info.ramdisk_size,
+			(void)memcpy_s((void *)hva,
+					vm->sw.linux_info.ramdisk_size,
 					vm->sw.linux_info.ramdisk_src_addr,
 					vm->sw.linux_info.ramdisk_size);
 

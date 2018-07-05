@@ -71,7 +71,7 @@ int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 
 	/* ACRN insert request to VHM and inject upcall */
 	cur = vcpu->vcpu_id;
-	memcpy_s(&req_buf->req_queue[cur], sizeof(struct vhm_request),
+	(void)memcpy_s(&req_buf->req_queue[cur], sizeof(struct vhm_request),
 		 req, sizeof(struct vhm_request));
 
 	/* pause vcpu, wait for VHM to handle the MMIO request.
@@ -100,50 +100,50 @@ int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 static void _get_req_info_(struct vhm_request *req, int *id, char *type,
 	char *state, char *dir, long *addr, long *val)
 {
-	strcpy_s(dir, 16, "NONE");
+	(void)strcpy_s(dir, 16, "NONE");
 	*addr = *val = 0;
 	*id = req->client;
 
 	switch (req->type) {
 	case REQ_PORTIO:
-		strcpy_s(type, 16, "PORTIO");
+		(void)strcpy_s(type, 16, "PORTIO");
 		if (req->reqs.pio_request.direction == REQUEST_READ)
-			strcpy_s(dir, 16, "READ");
+			(void)strcpy_s(dir, 16, "READ");
 		else
-			strcpy_s(dir, 16, "WRITE");
+			(void)strcpy_s(dir, 16, "WRITE");
 		*addr = req->reqs.pio_request.address;
 		*val = req->reqs.pio_request.value;
 		break;
 	case REQ_MMIO:
 	case REQ_WP:
-		strcpy_s(type, 16, "MMIO/WP");
+		(void)strcpy_s(type, 16, "MMIO/WP");
 		if (req->reqs.mmio_request.direction == REQUEST_READ)
-			strcpy_s(dir, 16, "READ");
+			(void)strcpy_s(dir, 16, "READ");
 		else
-			strcpy_s(dir, 16, "WRITE");
+			(void)strcpy_s(dir, 16, "WRITE");
 		*addr = req->reqs.mmio_request.address;
 		*val = req->reqs.mmio_request.value;
 		break;
 		break;
 	default:
-		strcpy_s(type, 16, "UNKNOWN");
+		(void)strcpy_s(type, 16, "UNKNOWN");
 	}
 
 	switch (req->processed) {
 	case REQ_STATE_SUCCESS:
-		strcpy_s(state, 16, "SUCCESS");
+		(void)strcpy_s(state, 16, "SUCCESS");
 		break;
 	case REQ_STATE_PENDING:
-		strcpy_s(state, 16, "PENDING");
+		(void)strcpy_s(state, 16, "PENDING");
 		break;
 	case REQ_STATE_PROCESSING:
-		strcpy_s(state, 16, "PROCESS");
+		(void)strcpy_s(state, 16, "PROCESS");
 		break;
 	case REQ_STATE_FAILED:
-		strcpy_s(state, 16, "FAILED");
+		(void)strcpy_s(state, 16, "FAILED");
 		break;
 	default:
-		strcpy_s(state, 16,  "UNKNOWN");
+		(void)strcpy_s(state, 16,  "UNKNOWN");
 	}
 }
 

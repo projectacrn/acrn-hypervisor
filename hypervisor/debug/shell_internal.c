@@ -306,7 +306,7 @@ int shell_process_cmd(struct shell *p_shell, char *p_input_line)
 	/* Copy the input line INTo an argument string to become part of the
 	 * argument vector.
 	 */
-	(void) strcpy_s(&cmd_argv_str[0], SHELL_CMD_MAX_LEN, p_input_line);
+	(void)strcpy_s(&cmd_argv_str[0], SHELL_CMD_MAX_LEN, p_input_line);
 	cmd_argv_str[SHELL_CMD_MAX_LEN] = 0;
 
 	/* Build the argv vector from the string. The first argument in the
@@ -464,13 +464,13 @@ int shell_list_vm(struct shell *p_shell,
 		vm = list_entry(pos, struct vm, list);
 		switch (vm->state) {
 		case VM_CREATED:
-			strcpy_s(state, 32, "Created"); break;
+			(void)strcpy_s(state, 32, "Created"); break;
 		case VM_STARTED:
-			strcpy_s(state, 32, "Started"); break;
+			(void)strcpy_s(state, 32, "Started"); break;
 		case VM_PAUSED:
-			strcpy_s(state, 32, "Paused"); break;
+			(void)strcpy_s(state, 32, "Paused"); break;
 		default:
-			strcpy_s(state, 32, "Unknown"); break;
+			(void)strcpy_s(state, 32, "Unknown"); break;
 		}
 		/* Create output string consisting of VM name and VM id
 		 */
@@ -508,15 +508,15 @@ int shell_list_vcpu(struct shell *p_shell,
 		foreach_vcpu(i, vm, vcpu) {
 			switch (vcpu->state) {
 			case VCPU_INIT:
-				strcpy_s(state, 32, "Init"); break;
+				(void)strcpy_s(state, 32, "Init"); break;
 			case VCPU_PAUSED:
-				strcpy_s(state, 32, "Paused"); break;
+				(void)strcpy_s(state, 32, "Paused"); break;
 			case VCPU_RUNNING:
-				strcpy_s(state, 32, "Running"); break;
+				(void)strcpy_s(state, 32, "Running"); break;
 			case VCPU_ZOMBIE:
-				strcpy_s(state, 32, "Zombie"); break;
+				(void)strcpy_s(state, 32, "Zombie"); break;
 			default:
-				strcpy_s(state, 32, "Unknown");
+				(void)strcpy_s(state, 32, "Unknown");
 			}
 			/* Create output string consisting of VM name
 			 * and VM id

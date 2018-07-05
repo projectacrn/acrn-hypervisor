@@ -51,7 +51,7 @@ static void vm_setup_cpu_px(struct vm *vm)
 
 	px_data_size = vm->pm.px_cnt * sizeof(struct cpu_px_data);
 
-	memcpy_s(vm->pm.px_data, px_data_size,
+	(void)memcpy_s(vm->pm.px_data, px_data_size,
 			boot_cpu_data.state_info.px_data, px_data_size);
 
 }
@@ -79,7 +79,7 @@ static void vm_setup_cpu_cx(struct vm *vm)
 	/* please note pm.cx_data[0] is a empty space holder,
 	 * pm.cx_data[1...MAX_CX_ENTRY] would be used to store cx entry datas.
 	 */
-	memcpy_s(vm->pm.cx_data + 1, cx_data_size,
+	(void)memcpy_s(vm->pm.cx_data + 1, cx_data_size,
 			boot_cpu_data.state_info.cx_data, cx_data_size);
 
 }
