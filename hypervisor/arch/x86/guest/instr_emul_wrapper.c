@@ -258,19 +258,19 @@ static uint32_t get_vmcs_field(enum cpu_reg_name ident)
 	}
 }
 
-static void get_guest_paging_info(struct vcpu *vcpu, struct emul_cnx *emul_cnx,
+static void get_guest_paging_info(struct vcpu *vcpu, struct emul_ctxt *emul_ctxt,
 						uint32_t csar)
 {
 	uint8_t cpl;
 
-	ASSERT(emul_cnx != NULL && vcpu != NULL, "Error in input arguments");
+	ASSERT(emul_ctxt != NULL && vcpu != NULL, "Error in input arguments");
 
 	cpl = (uint8_t)((csar >> 5) & 3U);
-	emul_cnx->paging.cr3 =
+	emul_ctxt->paging.cr3 =
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3;
-	emul_cnx->paging.cpl = cpl;
-	emul_cnx->paging.cpu_mode = get_vcpu_mode(vcpu);
-	emul_cnx->paging.paging_mode = get_vcpu_paging_mode(vcpu);
+	emul_ctxt->paging.cpl = cpl;
+	emul_ctxt->paging.cpu_mode = get_vcpu_mode(vcpu);
+	emul_ctxt->paging.paging_mode = get_vcpu_paging_mode(vcpu);
 }
 
 static int mmio_read(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t *rval,
@@ -295,15 +295,15 @@ static int mmio_write(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t wval,
 
 int decode_instruction(struct vcpu *vcpu)
 {
-	struct emul_cnx *emul_cnx;
+	struct emul_ctxt *emul_ctxt;
 	uint32_t csar;
 	int retval = 0;
 	enum vm_cpu_mode cpu_mode;
 
-	emul_cnx = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
-	emul_cnx->vcpu = vcpu;
+	emul_ctxt = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
+	emul_ctxt->vcpu = vcpu;
 
-	retval = vie_init(&emul_cnx->vie, vcpu);
+	retval = vie_init(&emul_ctxt->vie, vcpu);
 	if (retval < 0) {
 		if (retval != -EFAULT) {
 			pr_err("decode instruction failed @ 0x%016llx:",
@@ -314,11 +314,11 @@ int decode_instruction(struct vcpu *vcpu)
 	}
 
 	csar = (uint32_t)exec_vmread(VMX_GUEST_CS_ATTR);
-	get_guest_paging_info(vcpu, emul_cnx, csar);
+	get_guest_paging_info(vcpu, emul_ctxt, csar);
 	cpu_mode = get_vcpu_mode(vcpu);
 
 	retval = __decode_instruction(cpu_mode, SEG_DESC_DEF32(csar),
-		&emul_cnx->vie);
+		&emul_ctxt->vie);
 
 	if (retval != 0) {
 		pr_err("decode instruction failed @ 0x%016llx:",
@@ -326,23 +326,23 @@ int decode_instruction(struct vcpu *vcpu)
 		return -EINVAL;
 	}
 
-	return  emul_cnx->vie.opsize;
+	return  emul_ctxt->vie.opsize;
 }
 
 int emulate_instruction(struct vcpu *vcpu)
 {
-	struct emul_cnx *emul_cnx;
+	struct emul_ctxt *emul_ctxt;
 	struct vm_guest_paging *paging;
 	int retval = 0;
 	uint64_t gpa = vcpu->mmio.paddr;
 	mem_region_read_t mread = mmio_read;
 	mem_region_write_t mwrite = mmio_write;
 
-	emul_cnx = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
-	paging = &emul_cnx->paging;
+	emul_ctxt = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
+	paging = &emul_ctxt->paging;
 
 	retval = vmm_emulate_instruction(vcpu, gpa,
-			&emul_cnx->vie, paging, mread, mwrite, NULL);
+			&emul_ctxt->vie, paging, mread, mwrite, NULL);
 
 	return retval;
 }

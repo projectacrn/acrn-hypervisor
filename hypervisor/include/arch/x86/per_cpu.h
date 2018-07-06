@@ -29,7 +29,7 @@ struct per_cpu_region {
 #endif
 	struct per_cpu_timers cpu_timers;
 	struct sched_context sched_ctx;
-	struct emul_cnx g_inst_ctxt;
+	struct emul_ctxt g_inst_ctxt;
 	struct host_gdt gdt;
 	struct tss_64 tss;
 	enum cpu_state state;

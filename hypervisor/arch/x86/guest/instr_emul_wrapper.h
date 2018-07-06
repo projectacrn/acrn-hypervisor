@@ -178,7 +178,7 @@ struct vm_guest_paging {
 	enum vm_paging_mode paging_mode;
 };
 
-struct emul_cnx {
+struct emul_ctxt {
 	struct vie vie;
 	struct vm_guest_paging paging;
 	struct vcpu *vcpu;
