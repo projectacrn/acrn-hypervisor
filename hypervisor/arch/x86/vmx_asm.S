@@ -59,7 +59,8 @@ vmx_vmrun:
 
     /* 0x00000048 = MSR_IA32_SPEC_CTRL */
     movl        $0x00000048,%ecx
-    mov         CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL(%rdi),%rax
+    /*0xc0=192=PU_CONTEXT_OFFSET_IA32_SPEC_CTRL*/
+    mov         0xc0(%rdi),%rax
     movl        $0,%edx
     wrmsr
 
@@ -80,25 +81,43 @@ next:
     /* Compare the launch flag to see if launching (1) or resuming (0) */
     cmp         $VM_LAUNCH, %rsi
 
-    mov         CPU_CONTEXT_OFFSET_CR2(%rdi),%rax
+    /*128U=0x80=PU_CONTEXT_OFFSET_CR2*/
+    mov         0x80(%rdi),%rax
     mov         %rax,%cr2
 
-    mov         CPU_CONTEXT_OFFSET_RAX(%rdi),%rax
-    mov         CPU_CONTEXT_OFFSET_RBX(%rdi),%rbx
-    mov         CPU_CONTEXT_OFFSET_RCX(%rdi),%rcx
-    mov         CPU_CONTEXT_OFFSET_RDX(%rdi),%rdx
-    mov         CPU_CONTEXT_OFFSET_RBP(%rdi),%rbp
-    mov         CPU_CONTEXT_OFFSET_RSI(%rdi),%rsi
-    mov         CPU_CONTEXT_OFFSET_R8(%rdi),%r8
-    mov         CPU_CONTEXT_OFFSET_R9(%rdi),%r9
-    mov         CPU_CONTEXT_OFFSET_R10(%rdi),%r10
-    mov         CPU_CONTEXT_OFFSET_R11(%rdi),%r11
-    mov         CPU_CONTEXT_OFFSET_R12(%rdi),%r12
-    mov         CPU_CONTEXT_OFFSET_R13(%rdi),%r13
-    mov         CPU_CONTEXT_OFFSET_R14(%rdi),%r14
-    mov         CPU_CONTEXT_OFFSET_R15(%rdi),%r15
+    /*
+     *	0U=0x0=CPU_CONTEXT_OFFSET_RAX
+     *	8U=0x8=CPU_CONTEXT_OFFSET_RBX
+     *	16U=0x10=CPU_CONTEXT_OFFSET_RCX
+     *	24U=0x18=CPU_CONTEXT_OFFSET_RDX
+     *	32U=0x20=CPU_CONTEXT_OFFSET_RBP
+     *	40U=0x28=CPU_CONTEXT_OFFSET_RSI
+     *	48U=0x30=CPU_CONTEXT_OFFSET_R8
+     *	56U=0x38=CPU_CONTEXT_OFFSET_R9
+     *	64U=0x40=CPU_CONTEXT_OFFSET_R10
+     *	72U=0x48=CPU_CONTEXT_OFFSET_R11
+     *	80U=0x50=CPU_CONTEXT_OFFSET_R12
+     *	88U=0x58=CPU_CONTEXT_OFFSET_R13
+     *	96U=0x60=CPU_CONTEXT_OFFSET_R14
+     *	104U=0x68=CPU_CONTEXT_OFFSET_R15
+     */
+    mov         0x0(%rdi),%rax
+    mov         0x8(%rdi),%rbx
+    mov         0x10(%rdi),%rcx
+    mov         0x18(%rdi),%rdx
+    mov         0x20(%rdi),%rbp
+    mov         0x28(%rdi),%rsi
+    mov         0x30(%rdi),%r8
+    mov         0x38(%rdi),%r9
+    mov         0x40(%rdi),%r10
+    mov         0x48(%rdi),%r11
+    mov         0x50(%rdi),%r12
+    mov         0x58(%rdi),%r13
+    mov         0x60(%rdi),%r14
+    mov         0x68(%rdi),%r15
 
-    mov         CPU_CONTEXT_OFFSET_RDI(%rdi),%rdi
+    /*112U=0x70=CPU_CONTEXT_OFFSET_RDI*/
+    mov         0x70(%rdi),%rdi
 
     /* Execute appropriate VMX instruction */
     je          vm_launch
@@ -121,31 +140,51 @@ vm_exit:
        save guest RDI in its place */
     xchg        0(%rsp),%rdi
 
-    /* Save current GPRs to guest state area */
-    mov         %rax,CPU_CONTEXT_OFFSET_RAX(%rdi)
+    /* Save current GPRs to guest state area;
+     * 0U=0x0=CPU_CONTEXT_OFFSET_RAX
+     */
+    mov         %rax,0x0(%rdi)
 
     mov         %cr2,%rax
-    mov         %rax,CPU_CONTEXT_OFFSET_CR2(%rdi)
+    /*128U=0x80=CPU_CONTEXT_OFFSET_CR2*/
+    mov         %rax,0x80(%rdi)
 
-    mov         %rbx,CPU_CONTEXT_OFFSET_RBX(%rdi)
-    mov         %rcx,CPU_CONTEXT_OFFSET_RCX(%rdi)
-    mov         %rdx,CPU_CONTEXT_OFFSET_RDX(%rdi)
-    mov         %rbp,CPU_CONTEXT_OFFSET_RBP(%rdi)
-    mov         %rsi,CPU_CONTEXT_OFFSET_RSI(%rdi)
-    mov         %r8,CPU_CONTEXT_OFFSET_R8(%rdi)
-    mov         %r9,CPU_CONTEXT_OFFSET_R9(%rdi)
-    mov         %r10,CPU_CONTEXT_OFFSET_R10(%rdi)
-    mov         %r11,CPU_CONTEXT_OFFSET_R11(%rdi)
-    mov         %r12,CPU_CONTEXT_OFFSET_R12(%rdi)
-    mov         %r13,CPU_CONTEXT_OFFSET_R13(%rdi)
-    mov         %r14,CPU_CONTEXT_OFFSET_R14(%rdi)
-    mov         %r15,CPU_CONTEXT_OFFSET_R15(%rdi)
+    /*
+     *	8U=0x8=CPU_CONTEXT_OFFSET_RBX
+     *	16U=0x10=CPU_CONTEXT_OFFSET_RCX
+     *	24U=0x18=CPU_CONTEXT_OFFSET_RDX
+     *	32U=0x20=CPU_CONTEXT_OFFSET_RBP
+     *	40U=0x28=CPU_CONTEXT_OFFSET_RSI
+     *	48U=0x30=CPU_CONTEXT_OFFSET_R8
+     *	56U=0x38=CPU_CONTEXT_OFFSET_R9
+     *	64U=0x40=CPU_CONTEXT_OFFSET_R10
+     *	72U=0x48=CPU_CONTEXT_OFFSET_R11
+     *	80U=0x50=CPU_CONTEXT_OFFSET_R12
+     *	88U=0x58=CPU_CONTEXT_OFFSET_R13
+     *	96U=0x60=CPU_CONTEXT_OFFSET_R14
+     *	104U=0x68=CPU_CONTEXT_OFFSET_R15
+     */
+    mov         %rbx,0x8(%rdi)
+    mov         %rcx,0x10(%rdi)
+    mov         %rdx,0x18(%rdi)
+    mov         %rbp,0x20(%rdi)
+    mov         %rsi,0x28(%rdi)
+    mov         %r8,0x30(%rdi)
+    mov         %r9,0x38(%rdi)
+    mov         %r10,0x40(%rdi)
+    mov         %r11,0x48(%rdi)
+    mov         %r12,0x50(%rdi)
+    mov         %r13,0x58(%rdi)
+    mov         %r14,0x60(%rdi)
+    mov         %r15,0x68(%rdi)
 
     /* Load guest RDI off host stack and into RDX */
     mov         0(%rsp),%rdx
 
-    /* Save guest RDI to guest state area */
-    mov         %rdx,CPU_CONTEXT_OFFSET_RDI(%rdi)
+    /* Save guest RDI to guest state area
+     *112U=0x70=CPU_CONTEXT_OFFSET_RDI
+     */
+    mov         %rdx,0x70(%rdi)
 
     /* Save RDI to RSI for later SPEC_CTRL save*/
     mov         %rdi,%rsi
@@ -192,7 +231,8 @@ vm_eval_error:
      */
     movl        $0x00000048,%ecx
     rdmsr
-    mov         %rax,CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL(%rsi)
+    /*192U=0xc0=CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL*/
+    mov         %rax,0xc0(%rsi)
     /* 0x1 = SPEC_ENABLE_IBRS */
     movl        $0x1,%eax
     movl        $0,%edx
@@ -215,7 +255,8 @@ ibrs_opt:
      */
     movl        $0x00000048,%ecx
     rdmsr
-    mov         %rax,CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL(%rsi)
+    /*192U=0xc0=CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL*/
+    mov         %rax,0xc0(%rsi)
     /* 0x2 = SPEC_ENABLE_STIBP */
     movl        $0x2,%eax
     movl        $0,%edx
