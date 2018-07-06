@@ -164,7 +164,8 @@ int set_vcpuid_entries(struct vm *vm)
 	result = set_vcpuid_entry(vm, &entry);
 	if (result != 0)
 		return result;
-	vm->vcpuid_level = limit = entry.eax;
+	limit = entry.eax;
+	vm->vcpuid_level = limit;
 
 	for (i = 1U; i <= limit; i++) {
 		/* cpuid 1/0xb is percpu related */
@@ -235,7 +236,8 @@ int set_vcpuid_entries(struct vm *vm)
 	if (result != 0)
 		return result;
 
-	vm->vcpuid_xlevel = limit = entry.eax;
+	limit = entry.eax;
+	vm->vcpuid_xlevel = limit;
 	for (i = 0x80000001U; i <= limit; i++) {
 		init_vcpuid_entry(vm, i, 0U, 0U, &entry);
 		result = set_vcpuid_entry(vm, &entry);

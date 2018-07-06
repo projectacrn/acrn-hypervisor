@@ -49,8 +49,8 @@ void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 	data_page_num =
 		(data_size + CPU_PAGE_SIZE - 1) >> CPU_PAGE_SHIFT;
 
-	ptr = ucode_ptr = alloc_pages(data_page_num);
-	if (ptr == NULL)
+	ucode_ptr = alloc_pages(data_page_num);
+	if (ucode_ptr == NULL)
 		return;
 
 	err_code = 0U;
@@ -62,7 +62,7 @@ void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 		return;
 
 	msr_write(MSR_IA32_BIOS_UPDT_TRIG,
-			(uint64_t)ptr + sizeof(struct ucode_header));
+			(uint64_t)ucode_ptr + sizeof(struct ucode_header));
 	get_microcode_version();
 
 	free(ucode_ptr);
