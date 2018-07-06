@@ -77,7 +77,7 @@
 
 #define ACRN_DOM0_VMID (0UL)
 #define ACRN_INVALID_VMID (-1)
-#define ACRN_INVALID_HPA (-1UL)
+#define ACRN_INVALID_HPA (~0UL)
 
 /* Generic memory attributes */
 #define	MEM_ACCESS_READ                 0x00000001U

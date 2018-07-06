@@ -1280,10 +1280,10 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 			 * that support the 1-setting of the "virtual-interrupt
 			 * delivery" VM-execution control
 			 */
-			exec_vmwrite64(VMX_EOI_EXIT0_FULL, -1UL);
-			exec_vmwrite64(VMX_EOI_EXIT1_FULL, -1UL);
-			exec_vmwrite64(VMX_EOI_EXIT2_FULL, -1UL);
-			exec_vmwrite64(VMX_EOI_EXIT3_FULL, -1UL);
+			exec_vmwrite64(VMX_EOI_EXIT0_FULL, ~0UL);
+			exec_vmwrite64(VMX_EOI_EXIT1_FULL, ~0UL);
+			exec_vmwrite64(VMX_EOI_EXIT2_FULL, ~0UL);
+			exec_vmwrite64(VMX_EOI_EXIT3_FULL, ~0UL);
 		}
 	}
 

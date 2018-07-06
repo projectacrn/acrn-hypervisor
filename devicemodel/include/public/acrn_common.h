@@ -206,7 +206,7 @@ struct acrn_irqline {
 	uint64_t pic_irq;
 
 	/** ioapic IRQ for IOAPIC & ISA TYPE,
-	 *  if -1 then this IRQ will not be injected
+	 *  if ~0UL then this IRQ will not be injected
 	 */
 	uint64_t ioapic_irq;
 } __aligned(8);
