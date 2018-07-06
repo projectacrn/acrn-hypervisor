@@ -28,7 +28,7 @@ uint64_t pcpu_sync = 0UL;
 volatile uint16_t up_count = 0U;
 
 /* physical cpu active bitmap, support up to 64 cpus */
-uint64_t pcpu_active_bitmap = 0;
+uint64_t pcpu_active_bitmap = 0UL;
 
 uint64_t trampoline_start16_paddr;
 
@@ -77,7 +77,7 @@ inline bool cpu_has_cap(uint32_t bit)
 	if (feat_idx >= FEATURE_WORDS)
 		return false;
 
-	return ((boot_cpu_data.cpuid_leaves[feat_idx] & (1 << feat_bit)) != 0U);
+	return ((boot_cpu_data.cpuid_leaves[feat_idx] & (1U << feat_bit)) != 0U);
 }
 
 static inline bool get_monitor_cap(void)
@@ -111,15 +111,15 @@ static void get_cpu_capabilities(void)
 	cpuid(CPUID_FEATURES, &eax, &unused,
 		&boot_cpu_data.cpuid_leaves[FEAT_1_ECX],
 		&boot_cpu_data.cpuid_leaves[FEAT_1_EDX]);
-	family = (eax >> 8) & 0xffU;
+	family = (eax >> 8U) & 0xffU;
 	if (family == 0xFU)
-		family += (eax >> 20) & 0xffU;
+		family += (eax >> 20U) & 0xffU;
 	boot_cpu_data.x86 = family;
 
-	model = (eax >> 4) & 0xfU;
+	model = (eax >> 4U) & 0xfU;
 	if (family >= 0x06U)
-		model += ((eax >> 16) & 0xfU) << 4;
-	boot_cpu_data.x86_model = model;
+		model += ((eax >> 16U) & 0xfU) << 4U;
+	boot_cpu_data.x86_model = (uint8_t)model;
 
 
 	cpuid(CPUID_EXTEND_FEATURE, &unused,
@@ -144,8 +144,8 @@ static void get_cpu_capabilities(void)
 			/* EAX bits 07-00: #Physical Address Bits
 			 *     bits 15-08: #Linear Address Bits
 			 */
-			boot_cpu_data.x86_virt_bits = (eax >> 8) & 0xffU;
-			boot_cpu_data.x86_phys_bits = eax & 0xffU;
+			boot_cpu_data.x86_virt_bits = (uint8_t)((eax >> 8U) & 0xffU);
+			boot_cpu_data.x86_phys_bits = (uint8_t)(eax & 0xffU);
 			boot_cpu_data.physical_address_mask =
 				get_address_mask(boot_cpu_data.x86_phys_bits);
 	}
@@ -317,7 +317,7 @@ static void cpu_set_current_state(uint16_t pcpu_id, enum cpu_state state)
 #ifdef STACK_PROTECTOR
 static uint64_t get_random_value(void)
 {
-	uint64_t random = 0;
+	uint64_t random = 0UL;
 
 	asm volatile ("1: rdrand %%rax\n"
 			"jnc 1b\n"
@@ -374,7 +374,7 @@ void bsp_boot_init(void)
 	*  is matching the actual offset!
 	*/
 	ASSERT(sizeof(struct trusty_startup_param)
-			+ sizeof(struct key_info) < 0x1000,
+			+ sizeof(struct key_info) < 0x1000U,
 		"trusty_startup_param + key_info > 1Page size(4KB)!");
 
 	ASSERT(NR_WORLD == 2, "Only 2 Worlds supported!");
@@ -507,7 +507,7 @@ static void bsp_boot_post(void)
 
 	pr_acrnlog("Detect processor: %s", boot_cpu_data.model_name);
 
-	pr_dbg("Core %d is up", CPU_BOOT_ID);
+	pr_dbg("Core %hu is up", CPU_BOOT_ID);
 
 	if (hardware_detect_support() != 0) {
 		pr_fatal("hardware not support!\n");
@@ -606,7 +606,7 @@ static void cpu_secondary_post(void)
 	/* Make sure rdtsc is enabled */
 	check_tsc();
 
-	pr_dbg("Core %d is up", get_cpu_id());
+	pr_dbg("Core %hu is up", get_cpu_id());
 
 	cpu_xsave_init();
 
@@ -616,7 +616,7 @@ static void cpu_secondary_post(void)
 	timer_init();
 
 	/* Wait for boot processor to signal all secondary cores to continue */
-	pcpu_sync_sleep(&pcpu_sync, 0);
+	pcpu_sync_sleep(&pcpu_sync, 0UL);
 
 	ret = hv_main(get_cpu_id());
 	if (ret != 0)
@@ -728,10 +728,10 @@ void start_cpus()
 	timeout = CONFIG_CPU_UP_TIMEOUT * 1000;
 	while ((up_count != expected_up) && (timeout != 0U)) {
 		/* Delay 10us */
-		udelay(10);
+		udelay(10U);
 
 		/* Decrement timeout value */
-		timeout -= 10;
+		timeout -= 10U;
 	}
 
 	/* Check to see if all expected CPUs are actually up */
@@ -761,10 +761,10 @@ void stop_cpus()
 	expected_up = 1U;
 	while ((up_count != expected_up) && (timeout != 0U)) {
 		/* Delay 10us */
-		udelay(10);
+		udelay(10U);
 
 		/* Decrement timeout value */
-		timeout -= 10;
+		timeout -= 10U;
 	}
 
 	if (up_count != expected_up) {
@@ -864,7 +864,7 @@ static bool is_ctrl_setting_allowed(uint64_t msr_val, uint32_t ctrl)
 	 * - bitX in ctrl can be set 1
 	 *   only if bit 32+X in msr_val is 1
 	 */
-	return ((((uint32_t)(msr_val >> 32)) & ctrl) == ctrl);
+	return ((((uint32_t)(msr_val >> 32UL)) & ctrl) == ctrl);
 }
 
 static void vapic_cap_detect(void)
@@ -908,17 +908,17 @@ static void vapic_cap_detect(void)
 
 bool is_vapic_supported(void)
 {
-	return ((cpu_caps.vapic_features & VAPIC_FEATURE_VIRT_ACCESS) != 0);
+	return ((cpu_caps.vapic_features & VAPIC_FEATURE_VIRT_ACCESS) != 0U);
 }
 
 bool is_vapic_intr_delivery_supported(void)
 {
-	return ((cpu_caps.vapic_features & VAPIC_FEATURE_INTR_DELIVERY) != 0);
+	return ((cpu_caps.vapic_features & VAPIC_FEATURE_INTR_DELIVERY) != 0U);
 }
 
 bool is_vapic_virt_reg_supported(void)
 {
-	return ((cpu_caps.vapic_features & VAPIC_FEATURE_VIRT_REG) != 0);
+	return ((cpu_caps.vapic_features & VAPIC_FEATURE_VIRT_REG) != 0U);
 }
 
 static void cpu_xsave_init(void)
