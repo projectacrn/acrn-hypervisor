@@ -105,8 +105,8 @@ static int handle_virt_irqline(struct vm *vm, uint64_t target_vmid,
 		/* Call vpic for pic injection */
 		ret = handle_vpic_irqline(target_vm, param->pic_irq, mode);
 
-		/* call vioapic for ioapic injection if ioapic_irq != -1*/
-		if (param->ioapic_irq != -1UL) {
+		/* call vioapic for ioapic injection if ioapic_irq != ~0UL*/
+		if (param->ioapic_irq != (~0UL)) {
 			/* handle IOAPIC irqline */
 			ret = handle_vioapic_irqline(target_vm,
 				param->ioapic_irq, mode);

@@ -352,7 +352,7 @@ uint8_t get_cur_lapic_id(void)
 
 int
 send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
-	uint32_t cpu_startup_dest, uint64_t cpu_startup_start_address)
+	uint16_t dest_pcpu_id, uint64_t cpu_startup_start_address)
 {
 	union apic_icr icr;
 	uint8_t shorthand;
@@ -368,7 +368,7 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 
 	if (cpu_startup_shorthand == INTR_CPU_STARTUP_USE_DEST) {
 		shorthand = INTR_LAPIC_ICR_USE_DEST_ARRAY;
-		icr.x_bits.dest_field = per_cpu(lapic_id, cpu_startup_dest);
+		icr.x_bits.dest_field = per_cpu(lapic_id, dest_pcpu_id);
 	} else {		/* Use destination shorthand */
 		shorthand = INTR_LAPIC_ICR_ALL_EX_SELF;
 		icr.value_32.hi_32 = 0;

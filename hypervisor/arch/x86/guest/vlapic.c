@@ -483,7 +483,7 @@ vlapic_set_intr_ready(struct vlapic *vlapic, uint32_t vector, bool level)
 static inline int
 lvt_off_to_idx(uint32_t offset)
 {
-	uint32_t index = -1U;
+	uint32_t index = ~0U;
 
 	switch (offset) {
 	case APIC_OFFSET_CMCI_LVT:

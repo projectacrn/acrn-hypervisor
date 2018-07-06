@@ -713,9 +713,12 @@ void start_cpus()
 	 */
 	expected_up = phys_cpu_num;
 
-	/* Broadcast IPIs to all other CPUs */
+	/* Broadcast IPIs to all other CPUs,
+	 * In this case, INTR_CPU_STARTUP_ALL_EX_SELF decides broadcasting
+	 * IPIs, INVALID_CPU_ID is parameter value to destination pcpu_id.
+	 */
 	send_startup_ipi(INTR_CPU_STARTUP_ALL_EX_SELF,
-			-1U, startup_paddr);
+			INVALID_CPU_ID, startup_paddr);
 
 	/* Wait until global count is equal to expected CPU up count or
 	 * configured time-out has expired
