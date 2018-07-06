@@ -262,8 +262,8 @@ void ioapic_set_rte(uint32_t irq, uint64_t raw_rte)
 		return;
 
 	addr = gsi_table[irq].addr;
-	rte.lo_32 = raw_rte;
-	rte.hi_32 = raw_rte >> 32;
+	rte.lo_32 = (uint32_t)raw_rte;
+	rte.hi_32 = (uint32_t)(raw_rte >> 32);
 	ioapic_set_rte_entry(addr, gsi_table[irq].pin, &rte);
 
 	dev_dbg(ACRN_DBG_IRQ, "GSI: irq:%d pin:%hhu rte:%x",
@@ -445,7 +445,7 @@ void resume_ioapic(void)
 
 #ifdef HV_DEBUG
 void get_rte_info(struct ioapic_rte *rte, bool *mask, bool *irr,
-	bool *phys, int *delmode, bool *level, int *vector, uint32_t *dest)
+	bool *phys, uint32_t *delmode, bool *level, uint32_t *vector, uint32_t *dest)
 {
 	*mask = ((rte->lo_32 & IOAPIC_RTE_INTMASK) == IOAPIC_RTE_INTMSET);
 	*irr = ((rte->lo_32 & IOAPIC_RTE_REM_IRR) == IOAPIC_RTE_REM_IRR);
@@ -472,8 +472,7 @@ int get_ioapic_info(char *str, int str_max_len)
 		struct ioapic_rte rte;
 
 		bool irr, phys, level, mask;
-		int delmode, vector;
-		uint32_t dest;
+		uint32_t delmode, vector, dest;
 
 		ioapic_get_rte_entry(addr, pin, &rte);
 
@@ -485,7 +484,7 @@ int get_ioapic_info(char *str, int str_max_len)
 		size -= len;
 		str += len;
 
-		len = snprintf(str, size, "0x%02X\t0x%02X\t%s\t%s\t%d\t%d\t%d",
+		len = snprintf(str, size, "0x%02X\t0x%02X\t%s\t%s\t%u\t%d\t%d",
 			vector, dest, phys ? "phys" : "logic",
 			level ? "level" : "edge", delmode >> 8, irr, mask);
 		size -= len;
