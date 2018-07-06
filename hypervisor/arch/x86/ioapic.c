@@ -300,6 +300,26 @@ irq_gsi_mask_unmask(uint32_t irq, bool mask)
 		irq, pin, rte.lo_32);
 }
 
+static uint32_t
+ioapic_nr_pins(void *ioapic_base)
+{
+	uint32_t version;
+	uint32_t nr_pins;
+
+	version = ioapic_read_reg32(ioapic_base, IOAPIC_VER);
+	dev_dbg(ACRN_DBG_IRQ, "IOAPIC version: %x", version);
+
+	/* The 23:16 bits in the version register is the highest entry in the
+	 * I/O redirection table, which is 1 smaller than the number of
+	 * interrupt input pins. */
+	nr_pins = (((version & IOAPIC_MAX_RTE_MASK) >> MAX_RTE_SHIFT) + 1U);
+
+	ASSERT(nr_pins > NR_LEGACY_IRQ, "Legacy IRQ num > total GSI");
+	ASSERT(nr_pins <= IOAPIC_MAX_PIN, "IOAPIC pins exceeding 240");
+
+	return nr_pins;
+}
+
 void setup_ioapic_irq(void)
 {
 	uint8_t ioapic_id;
@@ -310,19 +330,12 @@ void setup_ioapic_irq(void)
 
 	for (ioapic_id = 0U;
 	     ioapic_id < CONFIG_NR_IOAPICS; ioapic_id++) {
-		uint32_t pin;
-		uint32_t max_pins;
-		uint32_t version;
 		void *addr;
+		uint32_t pin, nr_pins;
 
 		addr = map_ioapic(get_ioapic_base(ioapic_id));
-		version = ioapic_read_reg32(addr, IOAPIC_VER);
-		max_pins = (version & IOAPIC_MAX_RTE_MASK) >> MAX_RTE_SHIFT;
-		dev_dbg(ACRN_DBG_IRQ, "IOAPIC version: %x", version);
-		ASSERT(max_pins > NR_LEGACY_IRQ,
-			"Legacy IRQ num > total GSI");
-
-		for (pin = 0; pin < max_pins; pin++) {
+		nr_pins = ioapic_nr_pins(addr);
+		for (pin = 0; pin < nr_pins; pin++) {
 			gsi_table[gsi].ioapic_id = ioapic_id;
 			gsi_table[gsi].addr = addr;
 
@@ -359,7 +372,7 @@ void setup_ioapic_irq(void)
 
 	/* system max gsi numbers */
 	nr_gsi = gsi;
-	ASSERT(nr_gsi < NR_MAX_GSI, "GSI table overflow");
+	ASSERT(nr_gsi <= NR_MAX_GSI, "GSI table overflow");
 }
 
 void dump_ioapic(void)
@@ -382,15 +395,12 @@ void suspend_ioapic(void)
 	int ioapic_id, ioapic_pin;
 
 	for (ioapic_id = 0; ioapic_id < CONFIG_NR_IOAPICS; ioapic_id++) {
-		int max_pins;
-		int version;
 		void *addr;
+		uint32_t nr_pins;
 
 		addr = map_ioapic(get_ioapic_base(ioapic_id));
-		version = ioapic_read_reg32(addr, IOAPIC_VER);
-		max_pins = (version & IOAPIC_MAX_RTE_MASK) >> MAX_RTE_SHIFT;
-
-		for (ioapic_pin = 0; ioapic_pin < max_pins; ioapic_pin++)
+		nr_pins = ioapic_nr_pins(addr);
+		for (ioapic_pin = 0; ioapic_pin < nr_pins; ioapic_pin++)
 			ioapic_get_rte_entry(addr, ioapic_pin,
 				&saved_rte[ioapic_id][ioapic_pin]);
 	}
@@ -401,15 +411,12 @@ void resume_ioapic(void)
 	int ioapic_id, ioapic_pin;
 
 	for (ioapic_id = 0; ioapic_id < CONFIG_NR_IOAPICS; ioapic_id++) {
-		int max_pins;
-		int version;
 		void *addr;
+		uint32_t nr_pins;
 
 		addr = map_ioapic(get_ioapic_base(ioapic_id));
-		version = ioapic_read_reg32(addr, IOAPIC_VER);
-		max_pins = (version & IOAPIC_MAX_RTE_MASK) >> MAX_RTE_SHIFT;
-
-		for (ioapic_pin = 0; ioapic_pin < max_pins; ioapic_pin++)
+		nr_pins = ioapic_nr_pins(addr);
+		for (ioapic_pin = 0; ioapic_pin < nr_pins; ioapic_pin++)
 			ioapic_set_rte_entry(addr, ioapic_pin,
 				&saved_rte[ioapic_id][ioapic_pin]);
 	}
