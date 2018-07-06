@@ -5,6 +5,22 @@
 #include <vcpu.h>
 #include <spinlock.h>
 
+/* NOTE:
+ *
+ * MISRA C requires that all unsigned constants should have the suffix 'U'
+ * (e.g. 0xffU), but the assembler may not accept such C-style constants. For
+ * example, binutils 2.26 fails to compile assembly in that case. To work this
+ * around, all unsigned constants must be explicitly spells out in assembly
+ * with a comment tracking the original expression from which the magic
+ * number is calculated. As an example:
+ *
+ *    /* 0x00000668 =
+ *     *    (CR4_DE | CR4_PAE | CR4_MCE | CR4_OSFXSR | CR4_OSXMMEXCPT) *\/
+ *    movl    $0x00000668, %eax
+ *
+ * Make sure that these numbers are updated accordingly if the definition of
+ * the macros involved are changed.
+ */
    .text
    .align   8
    .code64
@@ -16,43 +32,70 @@
 
    .global    __enter_s3
 __enter_s3:
-	movq %rax, CPU_CONTEXT_OFFSET_RAX + cpu_ctx(%rip)
-	movq %rbx, CPU_CONTEXT_OFFSET_RBX + cpu_ctx(%rip)
-	movq %rcx, CPU_CONTEXT_OFFSET_RCX + cpu_ctx(%rip)
-	movq %rdx, CPU_CONTEXT_OFFSET_RDX + cpu_ctx(%rip)
-	movq %rdi, CPU_CONTEXT_OFFSET_RDI + cpu_ctx(%rip)
-	movq %rsi, CPU_CONTEXT_OFFSET_RSI + cpu_ctx(%rip)
-	movq %rbp, CPU_CONTEXT_OFFSET_RBP + cpu_ctx(%rip)
-	movq %rsp, CPU_CONTEXT_OFFSET_RSP + cpu_ctx(%rip)
-	movq %r8,  CPU_CONTEXT_OFFSET_R8 + cpu_ctx(%rip)
-	movq %r9,  CPU_CONTEXT_OFFSET_R9 + cpu_ctx(%rip)
-	movq %r10, CPU_CONTEXT_OFFSET_R10 + cpu_ctx(%rip)
-	movq %r11, CPU_CONTEXT_OFFSET_R11 + cpu_ctx(%rip)
-	movq %r12, CPU_CONTEXT_OFFSET_R12 + cpu_ctx(%rip)
-	movq %r13, CPU_CONTEXT_OFFSET_R13 + cpu_ctx(%rip)
-	movq %r14, CPU_CONTEXT_OFFSET_R14 + cpu_ctx(%rip)
-	movq %r15, CPU_CONTEXT_OFFSET_R15 + cpu_ctx(%rip)
+    /*
+     *  0U=0x0=CPU_CONTEXT_OFFSET_RAX
+     *  8U=0x8=CPU_CONTEXT_OFFSET_RBX
+     *  16U=0x10=CPU_CONTEXT_OFFSET_RCX
+     *  24U=0x18=CPU_CONTEXT_OFFSET_RDX
+     *  112U=0x70=CPU_CONTEXT_OFFSET_RDI
+     *  40U=0x28=CPU_CONTEXT_OFFSET_RSI
+     *  32U=0x20=CPU_CONTEXT_OFFSET_RBP
+     *  160=0xa0=CPU_CONTEXT_OFFSET_RSP
+     *  48U=0x30=CPU_CONTEXT_OFFSET_R8
+     *  56U=0x38=CPU_CONTEXT_OFFSET_R9
+     *  64U=0x40=CPU_CONTEXT_OFFSET_R10
+     *  72U=0x48=CPU_CONTEXT_OFFSET_R11
+     *  80U=0x50=CPU_CONTEXT_OFFSET_R12
+     *  88U=0x58=CPU_CONTEXT_OFFSET_R13
+     *  96U=0x60=CPU_CONTEXT_OFFSET_R14
+     *  104U=0x68=CPU_CONTEXT_OFFSET_R15
+     */
+	movq %rax, 0x0 + cpu_ctx(%rip)
+	movq %rbx, 0x8 + cpu_ctx(%rip)
+	movq %rcx, 0x10 + cpu_ctx(%rip)
+	movq %rdx, 0x18 + cpu_ctx(%rip)
+	movq %rdi, 0x70 + cpu_ctx(%rip)
+	movq %rsi, 0x28 + cpu_ctx(%rip)
+	movq %rbp, 0x20 + cpu_ctx(%rip)
+	movq %rsp, 0xa0 + cpu_ctx(%rip)
+	movq %r8,  0x30 + cpu_ctx(%rip)
+	movq %r9,  0x38 + cpu_ctx(%rip)
+	movq %r10, 0x40 + cpu_ctx(%rip)
+	movq %r11, 0x48 + cpu_ctx(%rip)
+	movq %r12, 0x50 + cpu_ctx(%rip)
+	movq %r13, 0x58 + cpu_ctx(%rip)
+	movq %r14, 0x60 + cpu_ctx(%rip)
+	movq %r15, 0x68 + cpu_ctx(%rip)
 
 	pushfq
-	popq CPU_CONTEXT_OFFSET_RFLAGS + cpu_ctx(%rip)
+	/*168U=0xa8=CPU_CONTEXT_OFFSET_RFLAGS*/
+	popq 0xa8 + cpu_ctx(%rip)
 
-	sidt CPU_CONTEXT_OFFSET_IDTR + cpu_ctx(%rip)
-	sldt CPU_CONTEXT_OFFSET_LDTR + cpu_ctx(%rip)
+	/*504U=0x1f8=CPU_CONTEXT_OFFSET_IDTR*/
+	sidt 0x1f8 + cpu_ctx(%rip)
+	/*536U=0x218=CPU_CONTEXT_OFFSET_LDTR*/
+	sldt 0x218 + cpu_ctx(%rip)
 
 	mov %cr0, %rax
-	mov %rax, CPU_CONTEXT_OFFSET_CR0 + cpu_ctx(%rip)
+	/*120U=0x78=CPU_CONTEXT_OFFSET_CR0*/
+	mov %rax, 0x78 + cpu_ctx(%rip)
 
 	mov %cr3, %rax
-	mov %rax, CPU_CONTEXT_OFFSET_CR3 + cpu_ctx(%rip)
+	/*136U=0x88=CPU_CONTEXT_OFFSET_CR3*/
+	mov %rax, 0x88 + cpu_ctx(%rip)
 
 	mov %cr4, %rax
-	mov %rax, CPU_CONTEXT_OFFSET_CR4 + cpu_ctx(%rip)
+	/*144U=0x90=CPU_CONTEXT_OFFSET_CR4*/
+	mov %rax, 0x90 + cpu_ctx(%rip)
 
 	wbinvd
 
-	movq CPU_CONTEXT_OFFSET_RDX + cpu_ctx(%rip), %rdx  /* pm1b_cnt_val */
-	movq CPU_CONTEXT_OFFSET_RDI + cpu_ctx(%rip), %rdi  /* *vm */
-	movq CPU_CONTEXT_OFFSET_RSI + cpu_ctx(%rip), %rsi  /* pm1a_cnt_val */
+	/*24U=0x18=CPU_CONTEXT_OFFSET_RDX*/
+	movq 0x18 + cpu_ctx(%rip), %rdx  /* pm1b_cnt_val */
+	/*112U=0x70=CPU_CONTEXT_OFFSET_RDI*/
+	movq 0x70 + cpu_ctx(%rip), %rdi  /* *vm */
+	/*40U=0x28=CPU_CONTEXT_OFFSET_RSI*/
+	movq 0x28 + cpu_ctx(%rip), %rsi  /* pm1a_cnt_val */
 
 	call do_acpi_s3
 
@@ -70,41 +113,68 @@ __enter_s3:
  */
 .global restore_s3_context
 restore_s3_context:
-	mov CPU_CONTEXT_OFFSET_CR4 + cpu_ctx(%rip), %rax
+	/*144U=0x90=CPU_CONTEXT_OFFSET_CR4*/
+	mov 0x90 + cpu_ctx(%rip), %rax
 	mov %rax, %cr4
 
-	mov CPU_CONTEXT_OFFSET_CR3 + cpu_ctx(%rip), %rax
+	/*136U=0x88=CPU_CONTEXT_OFFSET_CR3*/
+	mov 0x88 + cpu_ctx(%rip), %rax
 	mov %rax, %cr3
 
-	mov CPU_CONTEXT_OFFSET_CR0 + cpu_ctx(%rip), %rax
+	/*144U=0x90=CPU_CONTEXT_OFFSET_CR4*/
+	mov 0x90 + cpu_ctx(%rip), %rax
 	mov %rax, %cr0
 
-	lidt CPU_CONTEXT_OFFSET_IDTR + cpu_ctx(%rip)
-	lldt CPU_CONTEXT_OFFSET_LDTR + cpu_ctx(%rip)
+	/*504U=0x1f8=CPU_CONTEXT_OFFSET_IDTR*/
+	lidt 0x1f8 + cpu_ctx(%rip)
+	/*536U=0x218=CPU_CONTEXT_OFFSET_LDTR*/
+	lldt 0x218 + cpu_ctx(%rip)
 
-	mov CPU_CONTEXT_OFFSET_SS + cpu_ctx(%rip), %ss
-	mov CPU_CONTEXT_OFFSET_RSP + cpu_ctx(%rip), %rsp
+	/*
+	 *312U=0x138=CPU_CONTEXT_OFFSET_SS
+         *160=0xa0=CPU_CONTEXT_OFFSET_RSP
+	 */
+	mov 0x138 + cpu_ctx(%rip), %ss
+	mov 0xa0 + cpu_ctx(%rip), %rsp
 
-	pushq CPU_CONTEXT_OFFSET_RFLAGS + cpu_ctx(%rip)
+	/*168U=0xa8=CPU_CONTEXT_OFFSET_RFLAGS*/
+	pushq 0xa8 + cpu_ctx(%rip)
 	popfq
 
 	call load_gdtr_and_tr
 	call restore_msrs
 
-	movq CPU_CONTEXT_OFFSET_RAX + cpu_ctx(%rip), %rax
-	movq CPU_CONTEXT_OFFSET_RBX + cpu_ctx(%rip), %rbx
-	movq CPU_CONTEXT_OFFSET_RCX + cpu_ctx(%rip), %rcx
-	movq CPU_CONTEXT_OFFSET_RDX + cpu_ctx(%rip), %rdx
-	movq CPU_CONTEXT_OFFSET_RDI + cpu_ctx(%rip), %rdi
-	movq CPU_CONTEXT_OFFSET_RSI + cpu_ctx(%rip), %rsi
-	movq CPU_CONTEXT_OFFSET_RBP + cpu_ctx(%rip), %rbp
-	movq CPU_CONTEXT_OFFSET_R8 + cpu_ctx(%rip), %r8
-	movq CPU_CONTEXT_OFFSET_R9 + cpu_ctx(%rip), %r9
-	movq CPU_CONTEXT_OFFSET_R10 + cpu_ctx(%rip), %r10
-	movq CPU_CONTEXT_OFFSET_R11 + cpu_ctx(%rip), %r11
-	movq CPU_CONTEXT_OFFSET_R12 + cpu_ctx(%rip), %r12
-	movq CPU_CONTEXT_OFFSET_R13 + cpu_ctx(%rip), %r13
-	movq CPU_CONTEXT_OFFSET_R14 + cpu_ctx(%rip), %r14
-	movq CPU_CONTEXT_OFFSET_R15 + cpu_ctx(%rip), %r15
+       /*
+        *  0U=0x0=CPU_CONTEXT_OFFSET_RAX
+        *  8U=0x8=CPU_CONTEXT_OFFSET_RBX
+        *  16U=0x10=CPU_CONTEXT_OFFSET_RCX
+        *  24U=0x18=CPU_CONTEXT_OFFSET_RDX
+        *  112U=0x70=CPU_CONTEXT_OFFSET_RDI
+        *  40U=0x28=CPU_CONTEXT_OFFSET_RSI
+        *  32U=0x20=CPU_CONTEXT_OFFSET_RBP
+        *  48U=0x30=CPU_CONTEXT_OFFSET_R8
+        *  56U=0x38=CPU_CONTEXT_OFFSET_R9
+        *  64U=0x40=CPU_CONTEXT_OFFSET_R10
+        *  72U=0x48=CPU_CONTEXT_OFFSET_R11
+        *  80U=0x50=CPU_CONTEXT_OFFSET_R12
+        *  88U=0x58=CPU_CONTEXT_OFFSET_R13
+        *  96U=0x60=CPU_CONTEXT_OFFSET_R14
+        *  104U=0x68=CPU_CONTEXT_OFFSET_R15
+        */
+	movq 0x0 + cpu_ctx(%rip), %rax
+	movq 0x8 + cpu_ctx(%rip), %rbx
+	movq 0x10 + cpu_ctx(%rip), %rcx
+	movq 0x18 + cpu_ctx(%rip), %rdx
+	movq 0x70 + cpu_ctx(%rip), %rdi
+	movq 0x28 + cpu_ctx(%rip), %rsi
+	movq 0x20 + cpu_ctx(%rip), %rbp
+	movq 0x30 + cpu_ctx(%rip), %r8
+	movq 0x38 + cpu_ctx(%rip), %r9
+	movq 0x40 + cpu_ctx(%rip), %r10
+	movq 0x48 + cpu_ctx(%rip), %r11
+	movq 0x50 + cpu_ctx(%rip), %r12
+	movq 0x58 + cpu_ctx(%rip), %r13
+	movq 0x60 + cpu_ctx(%rip), %r14
+	movq 0x68 + cpu_ctx(%rip), %r15
 
 	retq
