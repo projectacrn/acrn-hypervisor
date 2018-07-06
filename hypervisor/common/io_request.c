@@ -101,7 +101,8 @@ static void _get_req_info_(struct vhm_request *req, int *id, char *type,
 	char *state, char *dir, long *addr, long *val)
 {
 	(void)strcpy_s(dir, 16, "NONE");
-	*addr = *val = 0;
+	*addr = 0;
+	*val = 0;
 	*id = req->client;
 
 	switch (req->type) {

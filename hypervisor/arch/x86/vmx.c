@@ -772,12 +772,20 @@ static void init_guest_state(struct vcpu *vcpu)
 	/***************************************************/
 	data32_idx = 0x10;
 	if (vcpu_mode == CPU_MODE_REAL) {
-		es = ss = ds = fs = gs = data32_idx;
+		es = data32_idx;
+		ss = data32_idx;
+		ds = data32_idx;
+		fs = data32_idx;
+		gs = data32_idx;
 		limit = 0xffff;
 
 	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
 		/* Linear data segment in guest init gdt */
-		es = ss = ds = fs = gs = 0x18;
+		es = 0x18;
+		ss = 0x18;
+		ds = 0x18;
+		fs = 0x18;
+		gs = 0x18;
 		limit = 0xffffffffU;
 	} else if (vcpu_mode == CPU_MODE_64BIT) {
 		asm volatile ("movw %%es, %%ax":"=a" (es));
