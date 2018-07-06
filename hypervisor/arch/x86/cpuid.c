@@ -36,7 +36,7 @@ static inline struct vcpuid_entry *find_vcpuid_entry(struct vcpu *vcpu,
 	if (entry == NULL) {
 		uint32_t limit;
 
-		if ((leaf & 0x80000000) != 0U)
+		if ((leaf & 0x80000000U) != 0U)
 			limit = vm->vcpuid_xlevel;
 		else
 			limit = vm->vcpuid_level;
@@ -160,7 +160,7 @@ int set_vcpuid_entries(struct vm *vm)
 	uint32_t limit;
 	uint32_t i, j;
 
-	init_vcpuid_entry(vm, 0, 0, 0, &entry);
+	init_vcpuid_entry(vm, 0U, 0U, 0U, &entry);
 	result = set_vcpuid_entry(vm, &entry);
 	if (result != 0)
 		return result;
@@ -176,7 +176,7 @@ int set_vcpuid_entries(struct vm *vm)
 		{
 			uint32_t times;
 
-			init_vcpuid_entry(vm, i, 0,
+			init_vcpuid_entry(vm, i, 0U,
 				CPUID_CHECK_SUBLEAF, &entry);
 			result = set_vcpuid_entry(vm, &entry);
 			if (result != 0)
@@ -212,7 +212,7 @@ int set_vcpuid_entries(struct vm *vm)
 			break;
 
 		default:
-			init_vcpuid_entry(vm, i, 0, 0, &entry);
+			init_vcpuid_entry(vm, i, 0U, 0U, &entry);
 			result = set_vcpuid_entry(vm, &entry);
 			if (result != 0)
 				return result;
@@ -220,24 +220,24 @@ int set_vcpuid_entries(struct vm *vm)
 		}
 	}
 
-	init_vcpuid_entry(vm, 0x40000000, 0, 0, &entry);
+	init_vcpuid_entry(vm, 0x40000000U, 0U, 0U, &entry);
 	result = set_vcpuid_entry(vm, &entry);
 	if (result != 0)
 		return result;
 
-	init_vcpuid_entry(vm, 0x40000010, 0, 0, &entry);
+	init_vcpuid_entry(vm, 0x40000010U, 0U, 0U, &entry);
 	result = set_vcpuid_entry(vm, &entry);
 	if (result != 0)
 		return result;
 
-	init_vcpuid_entry(vm, 0x80000000, 0, 0, &entry);
+	init_vcpuid_entry(vm, 0x80000000U, 0U, 0U, &entry);
 	result = set_vcpuid_entry(vm, &entry);
 	if (result != 0)
 		return result;
 
 	vm->vcpuid_xlevel = limit = entry.eax;
 	for (i = 0x80000001U; i <= limit; i++) {
-		init_vcpuid_entry(vm, i, 0, 0, &entry);
+		init_vcpuid_entry(vm, i, 0U, 0U, &entry);
 		result = set_vcpuid_entry(vm, &entry);
 		if (result != 0)
 			return result;
@@ -309,7 +309,7 @@ void guest_cpuid(struct vcpu *vcpu,
 			uint64_t cr4;
 			/*read guest CR4*/
 			cr4 = exec_vmread(VMX_GUEST_CR4);
-			if ((cr4 & CR4_OSXSAVE) != 0U)
+			if ((cr4 & CR4_OSXSAVE) != 0UL)
 				*ecx |= CPUID_ECX_OSXSAVE;
 		}
 		break;

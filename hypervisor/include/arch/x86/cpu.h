@@ -67,25 +67,25 @@
 #define CR3_PCD                 (1U<<4)	/* page-level cache disable */
 
 /* CR4 register definitions */
-#define CR4_VME                 (1U<<0)	/* virtual 8086 mode extensions */
-#define CR4_PVI                 (1U<<1)	/* protected mode virtual interrupts */
-#define CR4_TSD                 (1U<<2)	/* time stamp disable */
-#define CR4_DE                  (1U<<3)	/* debugging extensions */
-#define CR4_PSE                 (1U<<4)	/* page size extensions */
-#define CR4_PAE                 (1U<<5)	/* physical address extensions */
-#define CR4_MCE                 (1U<<6)	/* machine check enable */
-#define CR4_PGE                 (1U<<7)	/* page global enable */
-#define CR4_PCE                 (1U<<8)
+#define CR4_VME                 (1UL<<0)	/* virtual 8086 mode extensions */
+#define CR4_PVI                 (1UL<<1)	/* protected mode virtual interrupts */
+#define CR4_TSD                 (1UL<<2)	/* time stamp disable */
+#define CR4_DE                  (1UL<<3)	/* debugging extensions */
+#define CR4_PSE                 (1UL<<4)	/* page size extensions */
+#define CR4_PAE                 (1UL<<5)	/* physical address extensions */
+#define CR4_MCE                 (1UL<<6)	/* machine check enable */
+#define CR4_PGE                 (1UL<<7)	/* page global enable */
+#define CR4_PCE                 (1UL<<8)
 /* performance monitoring counter enable */
-#define CR4_OSFXSR              (1U<<9)	/* OS support for FXSAVE/FXRSTOR */
-#define CR4_OSXMMEXCPT          (1U<<10)
+#define CR4_OSFXSR              (1UL<<9)	/* OS support for FXSAVE/FXRSTOR */
+#define CR4_OSXMMEXCPT          (1UL<<10)
 /* OS support for unmasked SIMD floating point exceptions */
-#define CR4_VMXE                (1U<<13)	/* VMX enable */
-#define CR4_SMXE                (1U<<14)	/* SMX enable */
-#define CR4_PCIDE               (1U<<17)	/* PCID enable */
-#define CR4_OSXSAVE             (1U<<18)
-#define CR4_SMEP                (1U<<20)
-#define CR4_SMAP                (1U<<21)
+#define CR4_VMXE                (1UL<<13)	/* VMX enable */
+#define CR4_SMXE                (1UL<<14)	/* SMX enable */
+#define CR4_PCIDE               (1UL<<17)	/* PCID enable */
+#define CR4_OSXSAVE             (1UL<<18)
+#define CR4_SMEP                (1UL<<20)
+#define CR4_SMAP                (1UL<<21)
 /* XSAVE and Processor Extended States enable bit */
 
 
@@ -197,18 +197,15 @@ extern spinlock_t trampoline_spinlock;
 	((uint64_t)_ld_cpu_data_end - (uint64_t)(_ld_cpu_data_start))
 
 /* CPUID feature words */
-enum feature_word {
-	FEAT_1_ECX = 0,         /* CPUID[1].ECX */
-	FEAT_1_EDX,             /* CPUID[1].EDX */
-	FEAT_7_0_EBX,           /* CPUID[EAX=7,ECX=0].EBX */
-	FEAT_7_0_ECX,           /* CPUID[EAX=7,ECX=0].ECX */
-	FEAT_7_0_EDX,           /* CPUID[EAX=7,ECX=0].EDX */
-	FEAT_8000_0001_ECX,     /* CPUID[8000_0001].ECX */
-	FEAT_8000_0001_EDX,     /* CPUID[8000_0001].EDX */
-	FEAT_8000_0008_EBX,     /* CPUID[8000_0008].EAX */
-	FEATURE_WORDS,
-};
-
+#define	FEAT_1_ECX		0U     /* CPUID[1].ECX */
+#define	FEAT_1_EDX		1U     /* CPUID[1].EDX */
+#define	FEAT_7_0_EBX		2U     /* CPUID[EAX=7,ECX=0].EBX */
+#define	FEAT_7_0_ECX		3U     /* CPUID[EAX=7,ECX=0].ECX */
+#define	FEAT_7_0_EDX		4U     /* CPUID[EAX=7,ECX=0].EDX */
+#define	FEAT_8000_0001_ECX	5U     /* CPUID[8000_0001].ECX */
+#define	FEAT_8000_0001_EDX	6U     /* CPUID[8000_0001].EDX */
+#define	FEAT_8000_0008_EBX	7U     /* CPUID[8000_0008].EAX */
+#define	FEATURE_WORDS		8U
 /**
  *The invalid cpu_id (INVALID_CPU_ID) is error
  *code for error handling, this means that

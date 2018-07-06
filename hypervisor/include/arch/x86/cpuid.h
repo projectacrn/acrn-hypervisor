@@ -89,12 +89,12 @@
 #define CPUID_TLB               2
 #define CPUID_SERIALNUM         3
 #define CPUID_EXTEND_FEATURE    7
-#define CPUID_MAX_EXTENDED_FUNCTION  0x80000000
-#define CPUID_EXTEND_FUNCTION_1      0x80000001
-#define CPUID_EXTEND_FUNCTION_2      0x80000002
-#define CPUID_EXTEND_FUNCTION_3      0x80000003
-#define CPUID_EXTEND_FUNCTION_4      0x80000004
-#define CPUID_EXTEND_ADDRESS_SIZE    0x80000008
+#define CPUID_MAX_EXTENDED_FUNCTION  0x80000000U
+#define CPUID_EXTEND_FUNCTION_1      0x80000001U
+#define CPUID_EXTEND_FUNCTION_2      0x80000002U
+#define CPUID_EXTEND_FUNCTION_3      0x80000003U
+#define CPUID_EXTEND_FUNCTION_4      0x80000004U
+#define CPUID_EXTEND_ADDRESS_SIZE    0x80000008U
 
 
 static inline void __cpuid(uint32_t *eax, uint32_t *ebx,
@@ -112,7 +112,7 @@ static inline void cpuid(uint32_t leaf,
 			uint32_t *ecx, uint32_t *edx)
 {
 	*eax = leaf;
-	*ecx = 0;
+	*ecx = 0U;
 
 	__cpuid(eax, ebx, ecx, edx);
 }

@@ -52,7 +52,7 @@
 
 #define MSR_IA32_PAT                        0x00000277  /* PAT */
 #define MSR_IA32_EFER                       0xC0000080
-#define MSR_IA32_FS_BASE                    0xC0000100
+#define MSR_IA32_FS_BASE                    0xC0000100U
 #define MSR_IA32_GS_BASE                    0xC0000101
 #define MSR_IA32_SYSENTER_ESP               0x00000175  /* ESP for sysenter */
 #define MSR_IA32_SYSENTER_EIP               0x00000176  /* EIP for sysenter */
