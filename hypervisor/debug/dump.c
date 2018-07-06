@@ -234,7 +234,7 @@ void __assert(uint32_t line, const char *file, const char *txt)
 	uint64_t rsp = cpu_rsp_get();
 	uint64_t rbp = cpu_rbp_get();
 
-	pr_fatal("Assertion failed in file %s,line %u : %s",
+	printf("Assertion failed in file %s,line %u : %s",
 			file, line, txt);
 	show_host_call_trace(rsp, rbp, pcpu_id);
 	dump_guest_context(pcpu_id);
