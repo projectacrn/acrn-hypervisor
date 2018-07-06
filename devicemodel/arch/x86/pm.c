@@ -33,6 +33,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 #include "vmmapi.h"
 #include "acpi.h"

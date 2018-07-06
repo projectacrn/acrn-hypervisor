@@ -104,6 +104,7 @@ SRCS += core/sw_load_vsbl.c
 SRCS += core/smbiostbl.c
 SRCS += core/mevent.c
 SRCS += core/gc.c
+SRCS += core/pm.c
 SRCS += core/console.c
 SRCS += core/inout.c
 SRCS += core/mem.c
