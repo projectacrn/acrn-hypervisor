@@ -44,7 +44,7 @@ static int socket_make_sockaddr_un(const char *name,
 	name_len = strlen(name);
 	if (name_len >= (SUN_PATH_MAX - socket_len))
 		return -1;
-	strcat(p_addr->sun_path, name);
+	strncat(p_addr->sun_path, name, SUN_PATH_MAX - socket_len);
 
 	p_addr->sun_family = AF_LOCAL;
 	*alen = name_len + socket_len +
@@ -111,7 +111,7 @@ static int socket_bind(int fd, const char *name)
 	name_len = strlen(name);
 	if (name_len >= SUN_PATH_MAX)
 		return -1;
-	strcpy(addr.sun_path, name);
+	strncpy(addr.sun_path, name, SUN_PATH_MAX);
 	unlink(addr.sun_path);
 	alen = strlen(addr.sun_path) + sizeof(addr.sun_family);
 
