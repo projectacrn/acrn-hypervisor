@@ -12,7 +12,6 @@ void __assert(uint32_t line, const char *file, const char *txt);
 
 #define ASSERT(x, ...) \
 	if (!(x)) {\
-		pr_fatal(__VA_ARGS__);\
 		__assert(__LINE__, __FILE__, "fatal error");\
 	}
 #else

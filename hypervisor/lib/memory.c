@@ -344,14 +344,12 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
         uint8_t *src8;
 
         if (slen == 0U || dmax == 0U || dmax < slen) {
-                pr_err("%s: invalid src, dest buffer or length.", __func__);
-                return NULL;
+                ASSERT(false);
         }
 
         if ((d > s && d <= s + slen - 1)
                 || (d < s && s <= d + dmax - 1)) {
-                pr_err("%s: overlap happened.", __func__);
-                return NULL;
+                ASSERT(false);
         }
 
         /*same memory block, no need to copy*/
