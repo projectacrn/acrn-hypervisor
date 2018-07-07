@@ -620,9 +620,8 @@ void init_paging(void)
 			attr_uc);
 
 	/* Modify WB attribute for E820_TYPE_RAM */
-	for (i = 0U, entry = &e820[0];
-			i < e820_entries;
-			i++, entry = &e820[i]) {
+	for (i = 0U; i < e820_entries; i++) {
+		entry = &e820[i];
 		if (entry->type == E820_TYPE_RAM) {
 			modify_mem(&map_params, (void *)entry->baseaddr,
 					(void *)entry->baseaddr,
