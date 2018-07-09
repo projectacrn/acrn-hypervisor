@@ -114,7 +114,7 @@ static void get_cpu_capabilities(void)
 	family = (eax >> 8U) & 0xffU;
 	if (family == 0xFU)
 		family += (eax >> 20U) & 0xffU;
-	boot_cpu_data.x86 = family;
+	boot_cpu_data.x86 = (uint8_t)family;
 
 	model = (eax >> 4U) & 0xfU;
 	if (family >= 0x06U)
@@ -651,7 +651,7 @@ static void update_trampoline_code_refs(uint64_t dest_pa)
 	val = dest_pa + (uint64_t)trampoline_fixup_target;
 
 	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_fixup_cs);
-	*(uint16_t *)(ptr) = (uint16_t)(val >> 4) & 0xFFFFU;
+	*(uint16_t *)(ptr) = (uint16_t)((val >> 4) & 0xFFFFU);
 
 	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_fixup_ip);
 	*(uint16_t *)(ptr) = (uint16_t)(val & 0xfU);
@@ -673,7 +673,7 @@ static void update_trampoline_code_refs(uint64_t dest_pa)
 
 	/* update trampoline jump pointer with relocated offset */
 	ptr = HPA2HVA(dest_pa + (uint64_t)trampoline_start64_fixup);
-	*(uint32_t *)ptr += dest_pa;
+	*(uint32_t *)ptr += (uint32_t)dest_pa;
 }
 
 static uint64_t prepare_trampoline(void)
@@ -690,7 +690,7 @@ static uint64_t prepare_trampoline(void)
 	pr_dbg("trampoline code: %llx size %x", dest_pa, size);
 
 	/* Copy segment for AP initialization code below 1MB */
-	(void)memcpy_s(HPA2HVA(dest_pa), size, _ld_trampoline_load, size);
+	(void)memcpy_s(HPA2HVA(dest_pa), (size_t)size, _ld_trampoline_load, (size_t)size);
 	update_trampoline_code_refs(dest_pa);
 	trampoline_start16_paddr = dest_pa;
 
