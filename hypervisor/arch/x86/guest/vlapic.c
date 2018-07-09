@@ -912,7 +912,8 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 		 */
 		*dmask = 0UL;
 		amask = vm_active_cpus(vm);
-		while ((vcpu_id = ffs64(amask)) != INVALID_BIT_INDEX) {
+		for (vcpu_id = ffs64(amask); vcpu_id != INVALID_BIT_INDEX;
+			vcpu_id = ffs64(amask)) {
 			bitmap_clear(vcpu_id, &amask);
 
 			vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
@@ -1613,7 +1614,8 @@ vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest, bool phys,
 	 */
 	vlapic_calcdest(vm, &dmask, dest, phys, lowprio);
 
-	while ((vcpu_id = ffs64(dmask)) != INVALID_BIT_INDEX) {
+	for (vcpu_id = ffs64(dmask); vcpu_id != INVALID_BIT_INDEX;
+		vcpu_id = ffs64(dmask)) {
 		bitmap_clear(vcpu_id, &dmask);
 		target_vcpu = vcpu_from_vid(vm, vcpu_id);
 		if (target_vcpu == NULL)
@@ -1759,7 +1761,8 @@ vlapic_set_local_intr(struct vm *vm, uint16_t vcpu_id, uint32_t vector)
 	else
 		bitmap_set(vcpu_id, &dmask);
 	error = 0;
-	while ((vcpu_id = ffs64(dmask)) != INVALID_BIT_INDEX) {
+	for (vcpu_id = ffs64(dmask); vcpu_id != INVALID_BIT_INDEX;
+		vcpu_id = ffs64(dmask)) {
 		bitmap_clear(vcpu_id, &dmask);
 		vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
 		error = vlapic_trigger_lvt(vlapic, vector);
