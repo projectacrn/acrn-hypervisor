@@ -418,7 +418,7 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 			if ((phys_cpu_num != 0U) &&
 				((pcpu_active_bitmap &
 				((1UL << phys_cpu_num) - 1))
-				!= (1UL << CPU_BOOT_ID))) {
+				!= (1UL << BOOT_CPU_ID))) {
 				panic("need shootdown for invlpg");
 			}
 			inv_tlb_one_page(vaddr);

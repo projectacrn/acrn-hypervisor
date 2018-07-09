@@ -361,7 +361,7 @@ uint32_t dev_to_vector(struct dev_handler_node *node)
 
 int init_default_irqs(uint16_t cpu_id)
 {
-	if (cpu_id != CPU_BOOT_ID)
+	if (cpu_id != BOOT_CPU_ID)
 		return 0;
 
 	init_irq_desc();

@@ -11,7 +11,7 @@ static void fire_vhm_interrupt(void)
 {
 	/*
 	 * use vLAPIC to inject vector to SOS vcpu 0 if vlapic is enabled
-	 * otherwise, send IPI hardcoded to CPU_BOOT_ID
+	 * otherwise, send IPI hardcoded to BOOT_CPU_ID
 	 */
 	struct vm *vm0;
 	struct vcpu *vcpu;
