@@ -723,7 +723,7 @@ void start_cpus()
 	/* Wait until global count is equal to expected CPU up count or
 	 * configured time-out has expired
 	 */
-	timeout = CONFIG_CPU_UP_TIMEOUT * 1000;
+	timeout = CONFIG_CPU_UP_TIMEOUT * 1000U;
 	while ((up_count != expected_up) && (timeout != 0U)) {
 		/* Delay 10us */
 		udelay(10U);
@@ -748,7 +748,7 @@ void stop_cpus()
 	uint16_t pcpu_id, expected_up;
 	uint32_t timeout;
 
-	timeout = CONFIG_CPU_UP_TIMEOUT * 1000;
+	timeout = CONFIG_CPU_UP_TIMEOUT * 1000U;
 	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
 		if (get_cpu_id() == pcpu_id)	/* avoid offline itself */
 			continue;
