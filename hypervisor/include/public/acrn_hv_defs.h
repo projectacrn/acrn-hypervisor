@@ -260,6 +260,12 @@ struct trusty_boot_param {
 	/** padding */
 	uint32_t padding;
 
+	/** trusty runtime memory base address (high 32bit) */
+	uint32_t base_addr_high;
+
+	/** trusty entry point (high 32bit) */
+	uint32_t entry_point_high;
+
 	/** rpmb key */
 	uint8_t rpmb_key[64];
 } __aligned(8);
