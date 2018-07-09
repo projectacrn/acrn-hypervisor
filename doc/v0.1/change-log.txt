@@ -1,0 +1,949 @@
+8d3847d doc: fix acrntrace parameter documentation
+0cb7b04 Documentation: update script higlights in Getting Started Guide
+d7f0712 tools: acrntrace: Add option -t for max capture time
+5042ba6 tools: acrntrace: Change option -t to -i
+b04e799 tools :acrntrace: Reserved configurable space on the disk
+8779e4f HV: uart16550: check the denominator before use
+b5b83ca HV:CPU:Clean up variable type for CPU module
+1bf511c doc: small tweaks to new trusty doc
+db62c23 HV: vioapic: use uint8_t for pins
+f7d7828 Documentation: add pictures to Trusty documentation
+d241795 Documentation: move Trusty documentation to doc/
+666430a hv:fix "missing for discarded return value" for memset
+91ef6ed HV: instr_emul: enforce unsignedness when possible
+62865d0 HV: instr_emul: make SEG_DESC_* macros having type bool
+ecce1e6 HV: instr_emul: make integer conversion explicit
+158242d HV: instr_emul: enforce unsignedness of VIE_OP constants
+479dacc HV: instr_emul: convert cpl to uint8_t
+ab156c9 HV: instr_emul: convert return value of get_vmcs_field to unsigned
+d457874 treewide: instr_emul: rename vm_reg to cpu_reg
+8454376 HV: instr_emul: keep using enum vm_reg_name for registers
+edc7931 HV: instr_emul: convert sizes to uint8_t
+bbb6920 HV: instr_emul: replace u_long with uint64_t
+3f9b0d5 HV: rename functions in cpu.c
+0621b24 DM: Add write sync in fwrite
+96372ed HV:misc:add suffix U to the numeric constant
+d3ad411 HV:lib:add suffix U to the numeric constant
+d3bd514 HV:common:add suffix U to the numeric constant
+98c49c7 HV:guest:add suffix U to the numeric constant
+b74358d HV:treewide:string assigned to const object
+6ca9971 Revert "hv: More changes to enable GPU passthru"
+cfb2828 hv: Avoid inject the same int to target vcpu multiple times
+fdd785d hv: Add 32bit bitmap bit ops API
+9d8893e hv:rename several APIs in vlapic.c
+cc71670 HV: cleanup coding style violation
+b0deb1b doc: add support for kerneldoc API tools
+85a5668 tools: acrntrace: Updata README.rst
+fa98b57 HV:CPU:Update logical_id type as uint_16 and rename logical_id
+b332410 HV: Fix coding style violation of MISRA in string.c
+b76c92b HV:treewide:Update cpu_id type as uint_16
+188210a HV:Treewide:Update the type of vcpu id as uint16_t
+b3fa2ef public:fix "signed/unsigned conversion without cast"
+ac7ba6c HV:lib:fix "signed/unsigned conversion without cast"
+2ffa69c HV:misc:fix "signed/unsigned conversion without cast"
+95736e6 HV:interrupt:fix "signed/unsigned conversion without cast"
+102d2f1 HV:common:fix "signed/unsigned conversion without cast"
+91fdffb HV:debug:fix "signed/unsigned conversion without cast"
+8b94957 HV:guest:fix "signed/unsigned conversion without cast"
+a27f33f HV: debug: make log severity constants unsigned
+4cd27a5 HV: Don't pass retval to vmm_emulate_instruction()
+05d2558 doc: move graphviz material to developer-guides
+5d94e9b Documentation: fix set up a static IP tutorial
+50f06ca HV:treewide: Rename bit operation function fls as fls32
+8afbe66 HV: Fix wrong log message in init_host_state
+31ebd98 tools: acrn-crashlog: replace ldconfig with pkg-config in Makefile
+4eae78c cbc: fix the install issue when do make misc-install only
+5907400 tools: acrntrace: Remove unused pre_process.sh
+ad89a22 tools: acrntrace: Make all python scripts python3 module
+e75cca6 HV: timer: keep TSC frequency in KHz
+ffc0b27 HV: lib: make the argument to udelay unsigned
+228f4df HV: coding style cleanup in string.c
+2a81936 hv: add ioapic reset function
+8b9fb37 hv: avoid memory leak in init_msr_emulation
+57c217b hv: extend the vlapic_reset
+21b9ba8 misc: disable cbc_lifecycle service always restart by systemd
+a97593e HV:treewide:Update return type of function ffs64 and ffz64
+db01efa HV:treewide:Update return type for function fls64 and clz64
+13d354e HV:treewide:Update return type for bit operations fls and clz
+4110f3a HV: Remove unnecessary vm0 check in vm0 specific func
+cfc3811 HV: treewide: drop debug-only helpers in release build
+8b1c5a7 HV: bug fix on emulating guest IPI
+61cd694 DM: Remove 'strictio' from UOS bootargs' options
+9f4404d hv: add context->vmx_ia32_pat to save and restore VMCS
+d0df39c hv: emulate CR0.CD and CR0.NW
+6801d82 hv: intercept IA32_PAT MSR
+873e90c HV: Fix compiler warnings in string.c
+b068959 HV:change the cpu state to enum type
+eaa5418 hv:merge struct lapic and lapic_regs to lapic_regs
+7a66c31 HV: Remove vm->attr.name
+31cdf8c HV:transfer page_table_type type
+b67836f HV: Minor refactor to get_guest_paging_info
+83587b7 HV: Make all trace event prefix consist with TRACE
+cc50165 HV:treewide:Cleanup the type for parameters of bitmap  operations
+25eae47 Documentation: add tutorial to set up a static IP address
+92d0f3c Documentation: fix minor rendering issue in GSG
+7791934 misc: fix cbc_attach blocks APL NUC boot for 20 seconds
+4de8696 HV:treewide:transfer the struct member types to non-basic types
+bbdb204 HV:- Refine strtol() & strtoul()
+41b39c5 tools: acrn-crashlog: Defer the vm events processing when failed
+ccc222d HV: vpic: add suffix 'U' to constants in unsigned contexts
+aadd819 HV: vpic: spell out conversions to narrower integers
+3e4317b HV: vpic: use uint8_t to represent pins
+3965593 doc: reorganize documentation
+5c75f29 modified the lapic_id type to uint8_t
+6f097b1 dm: remove set vm memory by cma
+652e37e dm: use hugetlb by default
+136d5c3 tools: acrntrace: Add irq related analyzer
+8a233ee tools: acrntrace: Refactor vmexit_analyzer based on new trace format
+2bdd811 tools: acrntrace: Using array for saving all analyzer
+2aa0d40 tools: acrntrace: Make TSC frequency configurable
+0d9b163 tools: acrntrace: Add new tool acrntrace_format
+a35a650 tools: acrntrace: output trace data as raw data
+bfe47a7 HV: trace: Add nr of data and cpuid to trace_entry
+1c605a4 build: Using id tool to get builder username
+1b97c6e HV: vpic: cleanup uses of boolean variables
+be90e42 HV: vpic: take unsigned port and width in i/o handlers
+255786b HV: vpic: convert icw_num and rd_cmd_reg to uint8_t
+81b113c DM: add 'reset' option for ptdev
+15f651e DM: change passthrough parameter
+b4aa981 DM: make removing vGSI capability option as local
+dafca17 DM: reset each ptdev before assignment
+b8384ea HV:common:transfer local variable type
+4ec690f DM/samples: remove clocksource assignment
+5b43521 hv: trap vm0 write/read pm1a/pm1b registers
+baacfdb hv: Make bsp could start from real mode
+0f9d964 hv: add function to return to VM0
+02d8191 hv: add enter_s3
+d34700a hv: prepare for Sx(S3/S5) support in ACRN.
+a06a2f2 hv: implement lowlevel S3 enter/wakeup
+4434910 hv: rename the pm.h to guest_pm.h
+a27bfce HV: Remove 'register' prefix for data type
+f74675c hv: pirq: add a header for common data struct and APIs
+d5912a4 hv: pirq: rename related source files
+fcbc564 DM: virtio_rnd: fix rnd->fd and vbs_k->fd leak
+789899d dm: deal with physical GSI sharing
+9600dfa fix "function return type inconsistent"
+1a607b6 HV: Fix wrong comment of trace_entry size
+6192773 DM: Update the vcpu id type as uint16_t for vm_create_vcpu
+3925423 HV: treewide: convert suffix ULL to UL
+9beb1b9 HV: add MTRR capability check when CPU boot
+f67951b enable audio mediator device model
+c825519 audio mediator device model
+359e5cf dm: Disable stolen memory for passthru graphics
+8d50d40 hv: More changes to enable GPU passthru
+9d4cc5c dm: Change the PCI_EMUL_MEMBASE64 to workable address.
+a69a369 guest.h: Condition operator fix of foreach_vcpu loop
+5b14df3 hv: irq: fix type for vector in ioapic setup
+bab8fad hv: Makefile flags initialization
+b2fa8c5 Dockerfiles: add Python3 and kconfiglib build dependency
+ad59375 hv: cpu_context is not only used by guest.
+1d66aaa init: separate init function based on different stack
+79fc246 HV: treewide: fix C-style unsigned constants in assembly
+6d46749 hv: fix android boot fail on 4GB memory board
+5892b98 Getting Started Guide: update build dependencies and tools
+4de9e1b HV Makefile: fix detection of gnu-efi tools location
+c585172 Rename phy_cpu_num as phys_cpu_num
+3892bd0 hv: refine the address used in sbl multiboot code
+437ed88 hv: uos needn't to ummap trap mmio memory
+2e53585 hv: remove config_page_table_attr
+c5c338a vtd:fix "negative shift"
+218a0a8 modified struct to fix "negative shift"
+58672cb fix "negative shift"
+de31cf4 HV: remove unused API lookp_entry_by_id()
+0e49f85 improve memory allocation for UOS by hugeTLB mmap
+f52a25d HV: ptdev: convert vectors in msi_info to unsigned integers
+3027bfa HV: treewide: enforce unsignedness of pcpu_id
+2922a65 hv: fix compile error
+aa505a2 HV: treewide: convert hexadecimals used in bitops to unsigned
+cdd38d0 HV: msr: convert hexadecimals used in bitops to unsigned
+d705970 HV: vmx: convert hexadecimals used in bitops to unsigned
+41a1035 HV: irq: convert hexadecimals used in bitops to unsigned
+f4bd079 HV: mmu: convert hexadecimals used in bitops to unsigned
+7b548e8 HV: cpu: convert hexadecimals used in bitops to unsigned
+5aca8b1 When guest frees vector, counts needs to be reset. "int" command from hv shell ends up incrementing per cpu irq_count.
+cb39bad tools: acrn-crashlog: fix potential issues under common and usercrash
+48067b1 IOC mediator: Implement VM monitor operations
+32fccb2 HV: 'vlapic_set_local_intr()' code cleanup
+3ee1f8d HV:x86:fix "expression is not Boolean"
+cb56086 HV:guest:fix "expression is not Boolean"
+be0f5e6 HV:treewide:fix "expression is not Boolean"
+f92931c HV:common:fix "expression is not Boolean"
+2392138 HV:debug:fix "expression is not Boolean"
+fe0314e HV:header:fix "expression is not Boolean"
+e3174bb script: add plane restriction parameters for NUC
+20b50ad HV: correct loglevel definitions and default values
+6137ccd tools: acrn-crashlog: fix format-security warning
+1f8f1a4 HV: fix unused warning at RELEASE version
+e84d4de trusty: init & switch world fix
+75c1573 ept: set trusty eptp to 0 after destroy and only invalidate it when exist
+fb723ef dm: check pci_vdev before using
+685d82c doc: fix formatting in acrnlog doc
+3e8e607 tools: acrn-crashlog: Fix potential issues under acrnprobe
+0c39b9c tools: acrn-crashlog: Fix potential issues for load_conf module of acrnprobe
+b3ca8f4 add acrnbridge-install to Makefile install target
+fa52290 tools: acrn-crashlog: Improve the efficiency of do_log
+c52afb1 hv: fix error use of list_del for delete timer
+ad2d855 hv: save registers on exception
+977c4b2 fix parted of "missing for discarded return value"
+b8bdf17 tools: acrnlog: improve for log incompleteness problem
+57d6a93 tools: correct several Makefile problems
+0f842cd DM samples: trigger warm reboot on panic
+5f5c16d hv: add shell command to trigger crash
+59f1f00 bugfix: make remove_intx_remapping static
+417d17e udelay waits for corresponding number of milliseconds passed to API. Changed the CYCLES_PER_MS to US_TO_TICKS
+18c355f DM: Fix build failure with Openssl 1.1+
+287fc4c doc: add hypervisor kconfig option reference
+37f33fd doc: update doc building tools versions
+5754d36 HV: remove redundant code in cpu_secondary_init
+a0b8da7 handle failure when add/create vcpu for a VM in DM
+098c2e6 HV: enable SMEP in hypervisor
+b2b49a6 Revert "VMX: change PAT register default value"
+8202ba0 HV: move common stuff from assign.c
+46f64b5 hv: vlapic_timer: add vlapic one-shot/periodic timer support
+47116e8 DM sample: force enabling HDMI1 and HDMI2 connectors
+3d0c6cb doc: add steps for modifying configs and generating defconfigs
+5251f42 HV: make: rename minimalconfig to savedefconfig
+8009ccc HV: make: manage debug/release build in kconfig
+c4493cc HV: make: skip duplicated PLATFORM= on command line
+6df3ac0 HV: make: add menuconfig
+216f4e7 HV: make: append dependency checking targets to a given variable
+063557a HV: make: drop double quotes in config.mk
+eecac5a HV: make: force updating .config and config.mk
+d28d79d Documentation build: eliminate warning from doxygen
+2425583 Build system: add target to build documentation
+0dd3f8d Documentation Makefile: rename $(O) into $(OPTS)
+a167f44 doc: add graphviz installation instructions
+2e3af9e tools: acrn-crashlog: fix typo in Makefile
+d8c8403 hv: replace vlapic_init by vlapic_reset in vcpu_reset
+359b93f HV: Remove misuesed __unused
+719e07f HV: fix a print typo in create_vcpu
+74dfa42 hv: Add initialize pm.c
+feed38f hv: add suspend/resume callback for console
+8eaf4d2 hv: Add suspend/resume callback for vtd
+d2ea454 hv: Add suspend/resume callback for ioapic
+ddd03d6 hv: add suspend/resume callback for lapic.
+a06f2d6 HV: bug fix in operating softirq
+8f3b36b HV: add volatile declaration to pointer parameter
+24ccdf2 Tools:acrn-manager: use RELEASE in Makefile
+4c58356 HV: make cpu state table static const
+5d6ce37 HV: add Px Cx support for A3950 SoC
+aead61f update documentation for acrnbridge
+9a56024 HV: load host pm S state data while create vm0
+88e1c49 HV: add bsp acpi info support
+35f06b8 Documentation: fix incorrect link in acrn-probe documentation
+467e65a doc: add some docs about graphviz for drawings
+4d62c56 nuc-samples: use huge page as default launch_uos cmdline
+5414d57 hv: Fix typo of trampline with trampoline
+7d13e5b tools: acrn-crashlog: add documents for acrn-crashlog
+756083f align usage info with command line
+8c4a598 irq: convert irq/vector numbers to unsigned
+5e2c83f hv:replace unsigned long long with uint64_t
+f757d49 Merge pull request #322 from dbkinder/api-spell
+44293a4 doc: use graphviz for intro boot-flow diagram
+64515cf Tools:acrn-manager Fix wrong descrition of mngr_send_msg()
+b7ad705 convert bridge creation to service
+48b0894 hv: relocate trampoline code to the dynamically allocated memory
+2a1a6ad hv: Other preparation for trampoline code relocation
+40c8c4d hv: Prepare trampline.S trampoline code relocation
+77580ed hv: add memory allocation functions for trampoline code relocation
+1f074a2 hv: add MTRR_ENABLED entry to Kconfig
+571fb33 rename copy_from/to_vm to copy_from/to_gpa
+8d35d87 instr_emul: remove vm_gva2gpa
+51528d4 ucode: refine acrn_update_ucode with copy_from_gva
+7aa3391 shell: refine shell function with copy_from_gva
+4176042 dump: refine dump.c with copy_from_gva
+48de7ef instr_emul: remove vm_restart_instruction and use VCPU_RETAIN_RIP
+0d6218f instr_emul: remove unnecessary params in __decode_instruction
+570aef6 instr_emul: refine decode_instruction with copy_from_gva
+88758df add copy_from_gva/copy_to_gva functions
+6be8283 fix MISRA C:"Statement with no side effect"
+8940c89 fix MISRA C"Literal zero used in pointer context"
+7710940 apicv: only write VMX_ENTRY_EXCEPTION_EC when error code valid
+2dfa5f6 fix spelling errors for acrn-manager
+c849bff HV: config: adapt to the generated config.h
+f9bb202 HV: make: introduce targets for generating configs
+10518de make: add functions for checking build prerequisites
+bce7ed1 HV: config: add Kconfig and defconfigs for sbl & uefi
+ce061d3 doc: add python and Kconfiglib as prerequisite development tools
+647aee6 scripts: introduce .config/config.h generators
+5e521e2 IOC mediator: Disable hardware flow control by default
+8379119 tools: acrnctl: Fix wrong descrition of mngr
+c34360b DM USB: Fix potential crash issues.
+e334675 hv: add fixup to trampline code
+f3831cd hv: don't combine the trampline code with AP start
+11df803 hv: rename cpu_secondary.S to trampline.S
+5b49529 cbc_lifecycle: fix a service typo
+a9b4e7e replace ifconfig & brctl with ip command
+4bb5e60 hv: enable MTRR virtualization
+a41267e hv: change rdmsr/wrmsr policy for MTRR registers
+eed7309 hv: update EPT when guests change MTRRs
+c228374 hv: basic MTRR virtualization
+5d2ab4d hv: add APIs to allow updating EPT mem type
+b435c74 dm: fix the error code issues in passthrough.c
+13dc961 hv: use vmx_write_cr<#> to init control register of uefi platform
+66c74c6 hv: adjust control register init order
+6b26766 dm: remove -U option in launch script.
+02f0ecd DM: implement emulated npk pci device
+f741b01 hv: prepare for down/up APs dynamically.
+7a71422 hv: handle cpu offline request in idle thread
+08139c3 hv: add vmx_off and update exec_vmxon_instr
+fbeafd5 hv: add API to get the vcpu mapped to specific pcpu.
+2dd4e8f tools: acrnctl: Add support for reseting vm
+7a0e8dd tools: acrnctl: Add support for resuming vm
+d6eb39d tools: acrnctl: Add support for suspending vm
+665c2ee tools: acrnctl: Add support for continuing vm
+1933d60 tools: acrnctl: Add support for pausing vm
+3000edc tools: acrnctl: Free vmmngr list after vm ops done
+2da5e7c tools: acrnctl: Use new IPC lib to connect acrn-dm
+143c49b tools: acrnctl: Refactor help info
+df4ab92 DM: cleanup for header inclusions
+a9ee6da vm: remove current_vcpu from vm structure
+8e255da trusty: invept should go through all vcpus
+c84766a Tools: add Makefile for all tools
+de4b596 tools: acrn-crashlog: change source of config file
+03f5cbd HV: Parse SeedList HOB
+d1e281f doc: add graphviz extension
+862c878 script: support two monitors in UOS
+24d2b92 dm: enable IPU passthrough for Android UOS
+8f9ef10 dm: install bios binary to sos_rootfs
+bb98846 dm: add vSBL binary in bios directory
+864f470 DM/samples: Check whether IPU devices exists before using IPU devices
+5de6bf3 fix a bug: UOS could hung after running some time.
+66d283d add lock for vcpu state access
+9f1faa6 IOC mediator: Enable IOC for android in launch_uos.sh
+e591315 HV:treewide:C99-friendly per_cpu implementation change the per_cpu method
+cbb692d add cbc_lifecycle service systemd support
+c4bd0db cbc_lifecycle: fix building using custom output directory
+7f2a7d4 Tools Makefiles: enhancement to keep source code tree clean
+84f4cf3 hv: vmx: add vpid support
+c34f72a hv: monir modify for flush ept tlb to compatible with vpid
+3c09933 license: more spdx license tag updates
+b55b808 hv: copy cr0/4 value when init secure world
+e5d7d2d dm: start vsbl from reset vector
+417cff5 hv: check vmx unrestricted guest capability
+37db817 dm: switch to 32bit kernel entry
+bed6f0b hv: set start mode of vcpu
+0d309e2 hv: add support to start a vcpu from protected mode
+881eaa6 hv: create gdt for guest to start from protected mode
+9e7179c hv: support gva2gpa in different paging modes
+dd14d8e hv: add API to get vcpu paging mode
+fb09f9d hv: update vcpu mode when vmexit
+5c7f120 hv: refine guest control register handling
+476f39e Tools:acrnlog: install acrnlog.service
+5a9e9b1 dm: enable ioc in launch_uos.sh
+a5760e0 IOC mediator: add check_dir function to avoid symbol link failure
+d904202 IOC mediator: Set default boot wakeup reason for IOC mediator
+14b2e1d fix "ISO C99 does not support '_Static_assert'"
+cd5d8c8 check UART valid or not when setup console timer
+04323a0 doc: fix doxygen comments in virtio.h
+c396c53 Update Travis CI files to account for new build dependencies
+f4122d9 license: Replace license text with SPDX tag
+e32a5ca tools: acrnctl: Fix regression of acrnctl list
+4a1f922 Revert "DM sample: update sos/uos boot arg to let UOS see two displays"
+c11a162 DM: virtio-heci: Add enum type status variable represent devices status
+2b69329 HV: fix potential NULL function pointer reference
+8e45c66 misc: integrate cbc_attach service
+d04b141 misc: Add Makefile for misc directory
+dcb8a75 DM: Turn on WIFI/BT passthrough for Android UOS
+11f4b01 Documentation: small addition to the 'acrnlog' tool documentation
+8838c94 DM: Fix a potential null-pointer dereference
+3d7aa34 DM: Disable audio NHLT table by default
+c6d8e7f ioc: add cbc_lifecycle service
+247c5ee IOC mediator: Send open channel command to activate CBC signal channel by default
+7491b83 HV: Remove dead code wrapped by #if 0
+39cce18 DM: Remove dead code wrapped by #if 0
+37e664d HV: Replace misused pr_fatal with pr_acrnlog
+b6c5e0e hv: move panic out of hypercall
+da662fa hv: vmcall_vmexit_handler should always return success
+c2ee561 hv: define errno more general
+987c7b7 remove unused parameters in vm_description
+0cf5142 remove unused vm_state_info
+7210446 DM USB: xHCI: support xHCI parameter option for extended capabilities.
+0679a81 DM USB: xHCI: Support APL extended capability for DRD.
+1687765 DM USB: xHCI: add write function for extended capability registers.
+c91590c DM USB: xHCI: refine xHCI extended capability related functions.
+ba1b034 fix MISRA-C 243S
+9af35ba DM:monitor: add monitor_register_vm_ops()
+eada59c DM: adapt dm-monitor and acrnctl to use the helpers
+53ecd93 Tools: acrn-manager: add definitions of message sturcts
+7d7cf30 Tools: acrn-manager: add lib with IPC helpers
+c001911 dm: virtio: support virtio 1.0 PCI configuration access capability
+b25a30f dm: add default handling in pci_emul_capwrite
+f0729cd dm: add pci_emul_find_capability
+f2b5243 version: v0.1-rc5
+69af3a9 doc: fix API documentation misspellings
+ba7b4c7 doc: adjust known issues pattern
+7f08d07 doc: update README technical community meeting
+50324e5 doc: fix tools docs formatting and clarity
+adcfe03 doc: tweak to GSG to fix code-block
+ebea5e5 hv: remove unused API init_cpu
+fb1248e hv: remove cr3 handling from cr_access_vmexit_handler
+2df7b96 hv: make control register handling functions to public
+80a79fe HV: Replace printf with pr_acrnlog after logmsg init
+9af38e1 HV: Add log info when setup hvlog share buf
+e0c329e hv: create vm failed don't panic system
+6c8fc0a hv: remove vm_description_array
+3fb7b75 hv: execute vmxon instruction fail don't panic system
+fe4484f hv: move panic out of hv_main
+574bdc3 hv: panic will print function name and line number
+1a5370a fix "warning:redefinition of typedef 'uint32_t'"
+2266e13 lapic: continuous LVT registers as an array
+9a604ed correct idt_vectoring_info handling
+7718338 exception: add vcpu_inject_pf support
+75a03bf exception: use func vcpu_queue_exception to inject exception
+ebc7ee2 exception: refine exception injection path
+277830a exception: add vcpu_queue_exception function
+44af269 add triple fault request support
+4607177 replace pending_intr with pending_req
+7003e50 DM: Refactor RPMB files
+113ece2 DM: Enable full 4MB access
+dc566ab DM: refine vRPMB logs
+c7d1460 DM: Fix potential overflow and return value issues
+c50db02 Getting Started Guide: update (and simplify) GSG
+4adea0c Getting Started Guide for the UP2 board
+81a2496 Getting Started Guide: add build instructions for the ACRN tools
+f4b9412 fix acrntrace README
+d57ced4 doc: add doc build infrastructure for tools
+5b1c536 DM sample: update sos/uos boot arg to let Android UOS see two displays
+16152fa HV: debug: stop using ## __VA_ARGS__
+26b0899 tools: acrnctl: Properly null-terminate cmd_out and buf
+11abe6e tools: acrnctl: fix possibility of buffer overflow
+004d2e2 HV: treewide: give names to unnamed structs/unions
+ef3cb5b treewide: remove unnecessary unnamed structs/unions
+b9660eb refomatted GET_DATA_SIZE macro
+4b4e1e1 DM: Add option of no check against ptdev reset
+b19d936 DM: refuse passthrough PCIe without reset support
+c3793e1 DM sample: update uos launch script for virtio rpmb
+9f56364 DM USB: xHCI: add log level switch
+be4406c DM USB: xHCI: modify option parsing function to enable USB virtualiztion
+6449950 DM USB: xHCI: add xHCI de-initialization support
+048b2c7 DM USB: xHCI: add port sharing feature
+8aef2cb DM USB: Add some APIs for check native related configurations.
+0181d19 DM USB: xHCI: support USB hot plug out.
+7687a3d DM USB: xHCI: support bulk and interrupt transfer for port mapper
+3b63927 DM USB: xHCI: DM USB: xHCI: Support port change event for hot connection
+caf4916 DM USB: xHCI: Support control transfer for USB port mapper.
+b12527f DM USB: add libusb error conversion function
+2d1fb7e DM USB: move the UREQ macro into common header
+17d4e9a DM USB: xHCI: implement connect callbacks for USB port mapper
+aa0480f DM USB: extend the API for struct usb_devemu
+1816d3e DM USB: introduce data structure and APIs for USB port mapper
+51f7633 DM USB: involve the libusb
+8f3f66b DM USB: enable log level feature for USB subsystem
+3b61601 hv: handle the case of empty hypervisor cmdline
+a28c75f doc: fix references from scripts
+784eb6f fix "warning:range expression in switch statements are not standard"
+71975d6 DM: using 'strncpy' coding style cleanup
+2f3953a fix "warning:ISO C forbids 'return' with expression,in function returning void"
+0b7af5b IOC mediator: Implement state transfer operations
+11208dd IOC mediator: Implement state transfer framework
+92da8f4 IOC mediator: Separate wakeup reason and heartbeat
+8f16faa HV: further cleanup of header inclusions
+d594878 HV: cleanup for header inclusions.
+8db85ec DM: RPMB virtualization
+e6d57f4 DM: Add simulated RPMB support
+76d2441 DM: Generate vRPMB key when creating UOS
+b6bec54 VRPMB-BE: add RPMB protocol
+6c4ebe3 VRPMB-BE: create virtio rpmb backend VBS-U
+91f7391 doc: move DM memory setup to GSG
+6e15824 doc: Getting Started Guide for UP2 board
+fc93c64 DM: validate port range explicitly in inout.c
+1b34870 guest: quick fix for copy_from/to_vm
+3444500 hv: add non-lock bitmap operation
+efb60e2 hv: refine bit scan API
+57d0bf3 hv: refine bitops
+95c289b DM: Change boot_args to assign one plane of pipe B and pipe C to SOS
+7811bdd Makefile: add a target to build sbl hypervisor
+364b242 hypervisor: install acrn.32.out to /usr/lib/acrn/acrn.sbl
+977d48d hypervisor: install acrn.efi to /usr/lib
+9563e24 samples: move samples to specifi platform diretory
+d3ef8ae fix "warning ISO C forbids omitting the middle term of a?:expression"
+64d2efc fix "obsolete use of designated initializer without '='"
+67dfec8 vmexit: refine vmexit loop
+2ff7bf8 page walk during copy_from_vm/copy_to_vm
+58c109e add platform related config and launch script
+ac8b875 acrn: allow to specify the build output folder
+3df0fbf DM: bugfix - use of freed memory in 'monitor_close()'
+744e09b hv: define 4 vcpu modes
+cb26228 HV: add NULL pointer check in 'vm_fixup()' function.
+6d63cb3 doc: fix error in custom CSS file
+d11729d doc: add doc contributing guide, plus cleanup
+05927b1 tools: acrn-crashlog: compile without telemetrics client
+a9e36bd tools: acrn-crashlog: add service/config files and scripts
+df6019a devops: update CODEOWNERS for tools/acrn-crashlog
+d4b4c03 tools: acrn-crashlog: version control patch for binaries
+047ffc3 tools: acrn-crashlog: configuration file of acrnprobe
+c1f2ba3 tools: acrn-crashlog: crash reclassify operations for acrnprobe
+168d3ea tools: acrn-crashlog: add sender telemd for acrnprobe
+f83bd81 tools: acrn-crashlog: sender module for acrnprobe
+f4b2c24 tools: acrn-crashlog: android events module for acrnprobe
+2cea612 tools: acrn-crashlog: interfaces to control history_event in acrnprobe
+384c195 tools: acrn-crashlog: event handler thread for acrnprobe
+9caa5d7 tools: acrn-crashlog: channel module for acrnprobe
+95d6a57 tools: acrn-crashlog: probe utils for acrnprobe
+50e62d9 tools: acrn-crashlog: system properties for acrnprobe
+f1a557a tools: acrn-crashlog: get startup reason of system for acrnprobe
+bc18f1d tools: acrn-crashlog: event queue operations for acrnprobe
+a35ef1a tools: acrn-crashlog: configuration module of acrnprobe
+e86da09 tools: acrn-crashlog: main thread of acrn-crashlog/acrnprobe
+6e656df tools: acrn-crashlog: implementation for the server of usercrash
+14cf505 tools: acrn-crashlog: implementation for debugger
+6627fdf tools: acrn-crashlog: implementation for the client of usercrash
+afe1a64 tools: acrn-crashlog: add APIs for client and debugger
+2ccb5e3 tools: acrn-crashlog: socket APIs for client/server
+543cdce tools: acrn-crashlog: add more functions to file system utils
+87b8968 tools: acrn-crashlog: file system utils for acrn-crashlog
+88ba420 tools: acrn-crashlog: command utils for acrn-crashlog
+780fefc tools: acrn-crashlog: string utils for acrn-crashlog
+6f9dfa4 tools: acrn-crashlog: framework of acrn-crashlog
+7c9cc6b hv:Merge dump_interrupt and dump_exception to a commond API
+d88b968 hv: Remove nested check when dump exception
+8384ed2 hv:rename data structure intr_ctx
+88b8ce8 hv: move structure(intr_ctx) to irq.h
+4c0181a DM/GVT: implement emulated graphics pci device
+fbaff2a HV:remove redundant field 'mmio' from 'struct emul_cnx'
+b2c2ca2 hv: not necessary to deal with '\n' of cmdline in ACRN.
+198f200 hv: pass kernel cmdline from SBL to vm0 kernel
+b22cc43 hv: move boot/multiboot.c to boot/sbl/multiboot.c
+04572a7 doc: add missing param documentation hypercall.h
+d04bce2 hv: don't use the EDK Shell API to get the cmdline
+6d3ceae hv: pass the cmdline to hypervisor
+160df84 DM: fix buffer overflow risk issues in hugetlb.c
+cd07c2c DM: initialize 'create_vm' before reference it in 'vm_open'
+eb943e7 DM:fix the possible buffer overflow issue using 'strncpy'
+4ed6d92 DM:fix suspicious dereference of pointer in 'pci_emul_deinit()
+03ae242 HV:initialize variables before reference in vmx.c
+ccc1c25 hv:Use exception vector MACRO instead of hardcode
+975484a Fix the logic that sets the top-level build directory
+aee1931 HV: refine 'decode_instruction() function
+fcd7932 doxygen: fix wrong description in hypercall.h
+f58fe33 DM: avoid NULL pointer dereferenced in 'ioc_parse()'
+7a09c81 doc: fix primer reST errors, update folder layout
+130f45e Revert "dm: free entries in pci_businfo[] when deinit"
+05f8fd7 hypercall: do not allow hypercall from UOS except trusty
+f505f33 hypercall: only allow hypercall from RING-0
+d219140 HV: Trace: Remove macro GEN_CASE
+c09b9aa exception: only trap #MC
+d8d6176 hv: fix general protection injection
+2175bca hv: replace _EC with _ERROR_CODE in VMCS field
+ba3192a Makefile: fix PLATFORM variable at install target
+6ef48fa hv: Add reboot shell command
+0e5f7cb hv: bugfix - MMIO access size was not properly initialized.
+99189b4 HV: cleanup for io request related functions
+fc2b6fb Makefile: keep using 'PLATFORM' variable for existing documentation
+76cc3dd tools: invoke compiler with $(CC) instead of gcc for consistency
+9e61acc DM: add spanning devices check for i/o access
+b55511a HV: remove tinycrypt
+e2b3ab5 doc: remove stray doc backup file
+03a3fb0 hv: cleanup the shell cmd code.
+edb26a7 hv: refine the left atomic operation
+1f3da93 hv: refine atomic_load/store_xxx name
+336a888 hv: remove atomic_add/subtract API
+fadaf14 hv: refine atomic_xadd
+bd3f3b0 hv: fix incorrect use of atomic_set_xxx
+0a83cf4 hv: remove support atomic operation for char/short
+5e427f3 hv: lib: split atomic operation to atomic.h
+b3126bd hv: Check ept rwx misconfigurations
+25219e2  HV: refine EPT violation VM-exit handler
+a678065 HV: operate schedule lock on correct vcpu
+71e1ae1 hypercall: add set_memmaps hypercall support
+e2b7f3c doc: link the Android guest to Celadon
+ab0ba5f Doc: add UEFI boot chapter in primer
+8fbb21f bsp: make hugetlb config enabled by default for SBL platform
+d79d641 Makefile: fix typos and style
+ace25dd Makefile: implement make install
+f7a93d8 Makefile: use -C parameter for recursive invocation
+a6ff3a9 vm: allocated all pcpus to vm0 at the beginning
+d2a7a9c uefi: remove warkaround for AP wakeup
+953f6b5 vlapic: kick AP for INIT-SIPI sequence
+2ea3b49 HV: refine copy_from_vm/copy_to_vm
+30549a5 DM: increase vioapic pin count
+e1bb372 HV: increase UOS VIOAPIC pin count
+3efef57 Remove duplicate license file
+93fda88 lib: Move mem operations functions to one src file
+497eadc lib: Move all str ops functions to one src file
+7aaff68 dm: free entries in pci_businfo[] when deinit
+69d9918 remove potential using default i/o handler
+656449d devops: Add CODEOWNERS for GitHub review
+a4c4d60 tools: acrntrace: fix NULL pointer issue in create_trace_file_dir()
+6f340f8 tools: acrnlog: fix issues founded in static analysis
+fb19b29 add a makefile under project root directory
+c597a0f I/O VM-exit handler cleanup
+9efbf12 HV: Enable the -O2 option for HV
+263fafe HV: Initialize one variable to fix the compiling warning
+3a9bf54 HV: Add gcc compiler option to disable FPU/SSE/MMX
+52a91ff HV: Use the CFLAGS to control the optimization option
+698b53a HV: Add one correct Descriptor_table struct to configure VMCS
+b2cadfe HV: Fix the incorrect operand-constraints for inline assembly
+9dd7d27 hv: vlapic_timer: refine vlapic tscdeadline timer
+ea54216 hv: vlapic_timer: add vlapic timer mode API
+8ec78f8 hv: vlapic: coding refine
+b9971c2 hv: vlapic_timer: remove vlapic one-shot/periodic timer implement
+5df2efa hv: timer: make the timer list be ordered
+6fc5116 Documentation: update the contributing guide to use new LICENSE file
+867e56d Move ACRN tools code directory one level higher
+b73f1fa doc: add project README
+ec0d7e0 doc: update doc building howto
+8ce423e Create LICENSE (#168)
+c874090 Fix typo in gitignore
+f886180 doc: post-merge changes to docs
+12fb4b0 doc: Adjust various scripts accordingly
+60c07fb add .gitignore
+6f97a14 HV: Enable CR0.WP
+c53a04f HV: rename acrn_register to acpi_generic_address
+3b6fe57 Revert "HV: Prepare cpu_secondary.S for AP trampoline code relocation"
+b3dd135 Revert "HV: added memory allocation functions for AP trampoline code relocation"
+f8fbdbe Revert "HV: Make AP trampoline code relocatable"
+0c5956b Revert "HV: adjust the base address of guest initial page tables"
+6de5b04 HV: adjust the base address of guest initial page tables
+fe6397d HV: Make AP trampoline code relocatable
+ceb3076 HV: added memory allocation functions for AP trampoline code relocation
+9323f81 HV: Prepare cpu_secondary.S for AP trampoline code relocation
+8c06b69 dm: Reorganize ACRN DM directory.
+eebf5fe HV: correct the handling of MU_MEM_ATTR_READ MMU flag
+4817134 DM: rename acrn_register to acpi_generic_address
+8a73718 doc: add use of GitHub issues
+260b37a HV: Fix the missing list_head initializaiton
+e386a81 DM: bug fix in handling signal
+2550d71 Subject: DM: virtio-heci: process all available client each time
+5ed3dbf Subject: DM: virtio-heci: Use atomic_xchange in client get/put
+df2d925 DM: move boot device option 'b' just after emul
+919aa3d dm: virtio-input: implement virtio_input_deinit
+181ff20 dm: virtio-input: implement virtio_input_get_config
+772a43a dm: virtio-input: implement input event tx/rx
+25fe563 dm: virtio-input: implement callbacks of virtio_input_ops
+9741e1a dm: virtio-input: implement virtio_input_init
+8123483 dm: virtio-input: add virtio-input data structures
+e8d5a49 refine external interrupt VM exit handler
+121d14a rename 'req_buf' field in 'struct vm_sw_info'
+bf0d79b Make the Service OS bootloader configurable
+7dd6476 doc: GSG formating fix, RTD theme tweak
+c3b1d0c Getting Started Guide: update to reflect the new boot flow
+85716e8 security: fix issues reported by Klocwork
+b61e6af hv: cpuid: don't reference the crossed array
+3fc5ebc DM Cx: build DSDT with cx data
+5e7e816 DM Cx: add function to write Cx data to DSDT
+a042538 DM Cx: add function to get cx cnt and cx data
+bdd90e6 DM Cx: code cleanup for getting cpu state cnt
+81cf3e1 DM: main loop cleanup
+edc5846 DM: ioc code cleanup
+4fcdebc DM: vrtc code cleanup
+ccc67ce hv: add build type and detail time to version string
+7073173 Use exit instead of assert when checking images
+55bced4 HV cleanup: assert on vm setup cpu px
+765805d HV cleanup: move iobitmap ini out of loop
+c2c1932 HV Cx: add cx data of bxt j3455 SOC
+8b29ce1 HV Cx: allow guest to access host idle port
+ebf184f HV Cx: add hypercall function to retrieve host cx
+1c3b7a6 HV Cx: load cx data while create VM
+373a828 HV Cx: load cx data to boot_cpu_data when boot
+d63b900 dm: code clean up
+d1a17a6 dm: rename fbsdrun_addcpu and fbsdrun_deletecpu
+c0d4b90 ptdev: change remapping entry from virtual to physical based
+a39509a HV: fixed the issue of AP initialization code can't be loaded to address high than 64K
+1cd06ba efi: clean RuntimeServices code
+e35874c doc: introduce howto area for technical notes
+e0a45e8 doc: fix doc build processing
+15e15c9 Bugfix: DM:tools:acrnctl launch script output is binary file
+ac253f8 hv: timer: add periodic timer setup support
+9bfa574 hv: timer: restruct add_timer/del_timer API
+be9f4ee hv: timer: pass timer callback function parameter by pointer
+dace32e hv: timer: add calibrate tsc hz by cpuid 0x15
+cfc8790 hv: cpuid: add cpuid_level
+ab97963 hv: lib: add max()/min() API
+7f4332f hv: timer: rename cpu/cpu_id to pcpu_id
+d129659 hv: timer: remove statistics for timer
+0287ac4 hv: Not to destroy ept of trusty memory if it's not initialized.
+f8a26a6 remove deadcode of vm1 config in vm_description
+d2945e7 DM: fix virtio_net tx_thread block issue
+529ccd7 UEFI: bug fix on redundant waking up APs
+1c57adc hv: bug fix on synchronizing with APs
+b37c049 HV: Use mmio_read/write_long for IOAPIC mmio-access
+ec13f4e HV:Remove the "immediate" constraint for inline assembly in bits operation
+cb41210 IOC mediator: update signal whitelist
+1b1f723 hv: add hardware_detect_support to detect which hardware we support
+10c3a98 IOC mediator: update signal whitelist
+c3374a5 HV: code cleanup for cpu state
+9dbcf7a remove deadcode of timer
+8a8b1a4 remove timer spinlock
+3648a0c VTd: bluetooth passthrough support
+a1c6c24 vm load: add SOS cmdline option for hugetlb
+71ee5ef mmu: refine function check_mmu_1gb_support
+4f6bdee DM: change VM_SYSMEM/VM_MMIO to VM_MEMMAP_SYSMEM/VM_MEMMAP_MMIO
+25ef14e hugetlb: add ept map memseg support
+4cad694 dm: add hugetlb memory management support
+ac5da17 enable rdtscp instruction for guest OS all vCPUs
+3c119e1 check validity of 'VM-exit Int-Info' before extracting vector
+fdfb71e delete watchdog timer when deinit is called
+6b4ad0b HV: Add the volatile to avoid optimization for mmio_read/write access
+2473970 HV: Remove the unused mmio_or/and/rmw operation
+a331624 dm: virtio-console: Fix the bug that ports cannot work
+51a76a9 hv: save early hv logmsg before sos booted
+c61559a hv: remove spinlock_irq_obtain/spinlock_irq_release
+db4e3f8 bootparam: bug fix on address convertion
+2a37a4d ACPI: bug fix on address convertion
+c5f860e MMU: bug fix on operating va <=> pa convertion
+d02f4d4 refine: change the address arguments type of mmio access api
+11d0e59 revise type of 'exit_reason' and 'inst_len' in vcpu_arch
+96085d9 DM: release mem range allocated in init_pci
+097aee7 DM: release mevent when doing virtual device deinit
+e65b98b DM: lpc_deinit doesn't release all resources allocated.
+1a2a074 DM: cleanup resource for uart.
+c8585a2 DM: add deinit function for bvmcons
+4116ddd hv: mmu: replace cpu feature/capability detect with cpu_has_cap
+80d194c hv: vmx_capability: add cpu_has_vmx_ept/vpid_cap API
+d7d2ef8 hv: xsave: remove is_xsave_supported
+6560ff3 hv: cpu: add cpu_has_cap() API
+bb011a4 rename vmexit handlers
+5b06d17 IOC mediator: boot IOC device from the main entry
+fd5472b IOC mediator: DEBUG: add dummy channels
+75b5e67 IOC mediator: DEBUG: support IOC log file
+746d437 IOC mediator: support IOC signal whitelist
+76e74b0 IOC mediator: support CBC signal services
+61db2c7 IOC mediator: support IOC lifecycle
+a1d7cae IOC mediator: IOC signal and group definitions
+4eff8d1 IOC mediator: implement CBC protocol stack
+c9d7643 IOC mediator: add IOC channel operations
+cfa6481 IOC mediator: initialize IOC mediator
+45758be IOC mediator: add IOC mediator definition
+66332ac doc: doxygen improvements and known issues hiding
+b997e59 doc: add support for publishing versioned docs
+6b1782b refine: remove redundant data type definition
+f3db18b version: v0.1-rc4
+c6bf675 DM: mevent_add/del refine for Linux
+db46df9 DM: add init/deinit function for mevent
+c8116fc spinlock: bug fix in spinlock code
+c5fabf5 sprintf: bug fix in sprintf implemented code
+9b37e14 add IO requrest 'req_buf' check before reference
+3a3aeac VMX: change PAT register default value
+52c020c VMX: bug fix on operating vmx
+7ed446e ptdev: bug fix on operating list
+72b2cb1 remove deadcode of rdtsc_handler/rdtscp_handler
+1e2c201 vtd: add page allocation check for root_table & context_table
+4ea7588 vtd: context_table_addr should be hpa
+403076e vtd: dmar_uint->root_table_addr should be hpa
+3847a4d hypercall: bug fix on the address convertion while hypercall
+ebba622 mmu: add mmu invlpg support
+2d6c754 mmu: refine the checking of entry present
+60425f9 mmu: add ept execution only capability check
+b7d57a9 cpu: change cpu_halt name to cpu_dead
+96f7ff3 cpu: add physical cpu active bitmap support
+d3a640d DM: add add_e820_entry to update e820 table.
+223efeb DM: Update the default e820 table to reserve 0xF0000~0x100000
+ee43f23 dm: release host memory after devices de-init
+cee499f DM: fix build issue with gcc 4.8.4 on ubuntu 14.04
+0a0ff19 hv: Remove hpet from acrn.conf
+d0c773f vtd: fix memory coherency issue of vtd table
+4c6f11f mmu: add cflush api
+a0b7fb8 Add range check for 'vm0_gpa' before creating EPT
+e86b01f Revert "Fix compilation on Ubuntu 14.04"
+c5b14c2 DM: use standard offsetof to avoid duplicate definition
+d9545ab virtio-heci: disconnect client when message buffer overflowed
+33e84ef virtio-heci: Add firmware reset handling
+37cae58 virtio-heci: Add HBM handler for backend service
+12b9299 virtio-heci: Introduce TX and RX threads for data transfer
+418c266 virtio-heci: Add ME client mapping in backend service
+23c3fbd virtio-heci: Backend service for HECI virtualization
+06bd73c remove 'noxsave' in acrn.conf
+6e15aee Fix warning about unused variable
+e479924 Add 'findutils' to Fedora-based Docker images
+473f222 Add 'findutils' to Fedora-based Docker images
+da1c860 Fix compilation on Ubuntu 14.04
+f98a7ca vlapic: apicv_get_apic_access_addr should get hpa
+241efb2 vlapic: apicv_get_apic_page_addr should get hpa
+ef0c5ec hv: cache tsc_offset
+5141453 hv:add suffix(UL)for MACRO(SECURE_WORLD_ENABLED)
+4f6c451 dm: sync common header file to DM
+2e2f02e replace malloc with calloc
+9aa9a77 mmu:create temporary page tables for guest at run time
+4d0f26d UEFI: update acrn.conf and Document
+7430074 trusty: initialize tsc_offset to zero
+bf36022 ept: change eptp to PA
+8682552 mmu: identify VA and PA in mmu.c
+e078ce7 DM: hotfix for loop initial declaration in acpi_pm
+24ea869 HV: add px data of bxt j3455 SOC
+7647517 HV: trap and validate px request
+1d0d4d3 HV: add hypercall interface of get vcpu state data
+0e2b9fc HV: setup px info when create vm
+a28fbd1 HV: load cpu px data in boot
+4cd2717 HV: add cpu model name
+878b5a0 mmu: refine functions for invept
+a68850e mmu: replace ASSERT with panic in fetch_page_table_offset
+c2f86f2 mmu: refine functions walk_paging_struct & update_page_table_entry
+bb82504 mmu: refine functions get_table_entry & obtain_last_page_table_entry
+cbcc7c0 mmu: refine function break_page_table
+6454c7b mmu: refine function map_mem_region
+fa3e424 mmu: refine functions modify_paging & map/unmap/modify mem
+a91118e DM: build UOS DSDT with vcpu px state data
+e96fe06 DM: add vmctx as write dsdt func ptr parameter
+b50fcc0 DM: add function to write Px objects to UOS DSDT
+ea662e6 DM: add function of get px count and data
+263bdf6 DM: add vmm interface to get px data
+ec1cbbb UEFI: get the guest entry address explicitly
+4e50293 DM:tools: add acrnctl tool
+498e8c0 monitor: an interface of acrn-dm
+1ef6bba Enable Travis CI testing
+c5c4b63 Travis CI: enable Ubuntu 16.04 and Fedora 26 testing
+1ac5a2a Enable Travis CI for all combinations
+eadc921 DM: refine cleanup functionality of virtual RTC
+80a9fe5 DM: add deinit function to virtual keyboard device
+f6db755 DM: add deinit function for ps2kbd and ps2mouse
+f0b7401 DM: release mmio data structure for pci bar
+3726a0f doc: fix hypercall API doxygen errors
+b11460f replace malloc and memset with calloc
+92d8638 hv:check continuous hpa when create secure world
+e5be957 hv:add destroy Secure world API
+ace23b5 hv: shell: add cpuid command
+c83bcde trusty: fix typo of comments
+46bb2db Add initial .travis.yml and Dockerfile (Clearlinux)
+2db1324 add vmx msr ops protection from guest OS
+86f3948 dm/VBS-U: increase generation when configuration changed
+0398498 dm/VBS-U: implement virtio_dev_error
+ce09826 dm/VBS-U: implement virtio_vq_enable
+76422fd dm/VBS-U: implement write callback of notify cfg
+cfa591a dm/VBS-U: implement read callback of isr cfg
+1fa2f27 dm/VBS-U: implement read/write callbacks of device-specific cfg
+a098c11 dm/VBS-U: implement read/write callbacks of modern common cfg
+2adac78 dm/VBS-U: implement generic PCI barread/barwrite
+5670f33 dm/VBS-U: implement virtio_set_modern_bar
+9c2378f dm/VBS-U: expand data structures to support virtio 1.0
+5e613ef dm/VBS-U: add virtio 1.0 data structures
+5e3dca4 hv: free ept memory enhancement
+cf7fe07 hv:bugfix for the API of creating secure world
+f347d15 hv: cpu: use the physical address limit from CPUID when available
+cc975f7 cpu: cache the maximum input value for CPUID extended function
+4542d37 hypercall: Fix compile error caused by missing memcpy function
+de4d793 Remove 'noxsave' bootarg in dm sample script
+3f03dee enable TSC-offset & add TSC MSR emulation
+316731c hv: pass-through xsave feature to guests
+70625f0 dm: export pci_emul_add_capability
+f1e801d DM: Add long option to enable trusty
+731c0d4 DM:tools: add README.rst for acrnlog tool
+a1c07bb DM:tools: add service file for acrnlog
+8c91847 DM:tools: add acrnlog tool
+c01a236 treewide: fix declarations of functions with empty parameter lists
+466eb13 DM:tools: add README.rst for acrntrace
+e09208b DM:tools: add scripts for VM exit analysis
+99c69c7 DM:tools: add acrntrace tool
+c730806 version: v0.1-rc3
+8c2dbe1 update home page information
+a9ba439 update home page information
+de5277f hv: Save secure world memory info into vm instead of vm0
+80a7dda Fix compile error caused by missing memcpy function
+7a18425 UEFI: update documentation
+e0128b1 UEFI: add FIXME comments to function emalloc() & __emalloc()
+88b79c9 UEFI: create new func named construct_mbi
+2bec3b3 UEFI: cleanup functions in boot.c file
+bf0d54d UEFI: header file cleanup
+fde0789 UEFI: change the efi_ctx passing method
+b240450 UEFI: change the acrn boot flow on uefi platform
+1f3acb3 UEFI: bug fix on delivering RSDP
+8d67f29 Rename TIME_MS_DELTA to CYCLES_PER_MS
+8502c8e io: remove pio emulation restriction
+922daae trusty: add key_info for trusty bring-up
+b124e0d trusty: implement hypercall to initialize trusty
+1fd07ba trusty: Simulate Secure Monitor Call(SMC) by Hypercall
+0d9d628 DM: add option to show which virtio-blk is boot device.
+53b89b9 DM: add long option to specify guest partition info file
+1e13533 DM: Enable vsbl boot path.
+860c2ca DM: export acpi table base address and length.
+446297f DM: sw_load: sw_load function name update
+01c8053 DM: fix build error with gcc-8.
+9422f3e Makefile cleanup
+edcd8f0 Makefile cleanup
+4f40b53 ptdev: fix ptdev_hv_owned_intx under release version
+c7dd6a5 Remove STATIC_ASSERT Macro and replace with standard _Static_assert
+5a47c26 hv: vlapic: simple vlapic_rd/wr input
+57152d0 hv: lapic: export write_lapic_reg32
+471082c ptdev: refine function input parameters
+a8b3771 ptdev: refine the functions name & code position
+70d4dba ptdev: change the ptdev_lock from per-vm to global
+9d02932 ptdev: change the ptdev_list from per-vm to global
+9519916 Fix compiler warnings when building for UEFI
+170c48a debug: make ASSERT empty under release version
+6ee72d7 DM: split sw_load.c to sw_load.c and sw_load_direct.c
+544ec38 Fix string may be truncated issue with using snprintf
+2205d5e virtio: config changed notify interface
+6c1122f cpuid restruct
+cb59bfa Update .travis.yml
+1e56137 Update .travis.yml
+cb43159 Create .travis.yml
+4073b37 hv: microcode: Enable microcode update from SOS.
+4110e25 Add cpuinfo_x86 to cache cpu capability/feature
+4839f78 ioreq: only clear vcpu->req when io request needed
+42fa9b2 Minor cleanup not to use uart for release on platform uefi
+ab2691d Don't build in debug directory for release
+936c254 Don't use HV_DEBUG outside debug directory
+3f83ea3 Remove redefine macro
+d6904b4 hv: rename VM exit handlers in vlapic
+23c12b7 makefile: adjust linker path in Makefile
+7d8803f hv:enable APICv features based on CPU capability
+f01a8ee Add APIC ACCESS VMexit handler
+9b269ae Add handle EOI case when APIC-write VM exit
+34ccbb5 getting_started: update dependency for Fedora 27
+3614804 Move s[n]printf to lib for release
+819845c dm: add ACPI info for ipu pass-through
+fcb95d0 uefi: init vlapic according to native lapic
+a87757d uefi: remove old interrupt injection method
+23efb5a DM: reboot: clear the data of 0xcf9 if cold reboot
+66ddb67 DM: acpi: Update the reset value of FADT to trigger cold reboot
+9e854ea .gitignore: add 2 entries to ignore version.h file if present
+d8b1fd2 doc: add doc building/publishing instructions
+eb31977 Makefile (uefi): add gnu-efi(-devel) build dependency for Fedora/doc/CentOS
+2deb4cb mmu: Rename several variables related to page table type
+124910b vm load: fix bug in loading kernel
+b6d73be Enable FORTIFY and FORMAT SECURITY compile flags
+155be81 ptdev: fix bug when update ptdev entry
+fe9dfc7 Jmp to vm_exit directly to avoid calling vmlaunch again if vm-entry fails in vmresume
+f4780c0 Remove unnecessary variable in map_mem
+119b038 to support firmware & ramdisk as multiboot mods
+35f5eef Add page mask MACRO
+2efcbe3 Makefile: fix a couple of wrong variable assignments
+3d3f264 getting_started: fix note formatting
+cd72305 getting_started: make instructions more specific
+a5e3273 doc: update getting started images
+ed78db4 update launch_uos.sh script
+83e78e1 align the coding style when access VMEXIT_QUAL
+337706b Update typo and add full name of UOSloader
+ede4e91 Fix typo
+3b86c97 doc: improvements for sphinx generation
+b55e6a8 add .gitignore
+429302c minor fix on get_ptdev_info
+c451f2e add create secure world ept API
+3775f29 vm: Pass uuid from DM commandline to vm as GUID.
+81c47e7 add .gitignore
+637a79d Getting Started Guide: add instructions for other OSs
+d92f640 security: data relocation and protection(RELRO)
+156d61e security: enable stack protector
+f86d91e dm: use getopt_long instead of getopt to parse dm cmdline
+74e2bfc Simple get_vmx_cap()
+7e4b4c2 Remove ASSERT in lib functions
+cc2256d Call monitor_cap_detect in bsp_boot_init
+cc1d532 add data structure in vm for enable trusty feature
+e91b6aa retpoline: replace indirect jmp in switch_to function
+d14a7db retpoline: add indirect thunk support
+c244e8b vpic: use calloc to init vpic instead of malloc
+eed8104 uefi: restore cr registers according to efi context
+189329e apicv: cancel event injection if vcpu is scheduled out
+c8d2cdc doc: update project documentation LICENSE
+4ecb849 Delete LICENSE
+265499c security: fortify source and format string check
+0dc93a5 doc: filter known issues
+b170e29 doc: general edit for typos
+44b0ec0 Ignore length of resource for PCI ROM request
+b84aa9f doc: fix doxy for hiding internal symbols
+c3bef4e doc: update GSG instructions
+8b4378e update to support latest image
+c48f757 doc: Update publish process in Makefile
+52f49c9 getting-started-guide: update Clear Linux version to min required
+af66e95 doc: remove "under construction" tagline
+da54bde doc: add Getting Started Guide
+c6218bd doc: fix misspellings
+fe28d36 doc: update release notes
+d118652 doc: fix error in contributing guidelines
+48df39c doc: add 0.1 release notes
+ff45e24 Update contribute.rst
+b9b20fa doc: add developer primer
+df5c261 doc: update display of RC version
+cf707cc version: v0.1-rc2
+
