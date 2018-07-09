@@ -366,7 +366,9 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
         /*small data block*/
         if (slen < 8U) {
                 while (slen != 0U) {
-                        *dest8++ = *src8++;
+                        *dest8 = *src8;
+                        dest8++;
+                        src8++;
                         slen--;
                 }
 
@@ -375,8 +377,11 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
 
         /*make sure 8bytes-aligned for at least one addr.*/
         if ((!MEM_ALIGNED_CHECK(src8, 8)) && (!MEM_ALIGNED_CHECK(dest8, 8))) {
-                for (; slen != 0U && (((uint64_t)src8) & 7UL) != 0UL; slen--)
-                        *dest8++ = *src8++;
+                for (; slen != 0U && (((uint64_t)src8) & 7UL) != 0UL; slen--) {
+                        *dest8 = *src8;
+                        dest8++;
+                        src8++;
+                }
         }
 
         /*copy main data blocks, with rep prefix*/
@@ -393,7 +398,9 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
 
         /*tail bytes*/
         while (slen != 0U) {
-                *dest8++ = *src8++;
+                *dest8 = *src8;
+                dest8++;
+                src8++;
                 slen--;
         }
 
@@ -413,8 +420,10 @@ void *memset(void *base, uint8_t v, size_t n)
 
         /*do the few bytes to get uint64_t alignment*/
         count = n;
-        for (; count != 0U && ((uint64_t)dest_p & 7UL) != 0UL; count--)
-                *dest_p++ = v;
+        for (; count != 0U && ((uint64_t)dest_p & 7UL) != 0UL; count--) {
+                *dest_p = v;
+                dest_p++;
+        }
 
         /*64-bit mode*/
         n_q = count >> 3U;

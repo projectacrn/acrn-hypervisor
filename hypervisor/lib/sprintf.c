@@ -93,8 +93,10 @@ static const char *get_int(const char *s, int *x)
 	}
 
 	/* parse uint32_teger */
-	while ((*s >= '0') && (*s <= '9'))
-		*x = *x * 10 + (*s++ - '0');
+	while ((*s >= '0') && (*s <= '9')) {
+		*x = *x * 10 + (*s - '0');
+		s++;
+	}
 
 	/* apply sign to result */
 	if (negative != 0)
@@ -358,7 +360,8 @@ static int print_decimal(struct print_param *param, int64_t value)
 	while (v.dwords.high != 0U) {
 		/* determine digits from right to left */
 		udiv64(v.qword, 10, &d);
-		*--pos = d.r.dwords.low + '0';
+		pos--;
+		*pos = d.r.dwords.low + '0';
 		v.qword = d.q.qword;
 	}
 
@@ -472,7 +475,8 @@ int do_print(const char *fmt, struct print_param *param,
 		/* continue only if the '%' character was found */
 		if (*fmt == '%') {
 			/* mark current position in the format string */
-			start = fmt++;
+			start = fmt;
+			fmt++;
 
 			/* initialize the variables for the next argument */
 			(void)memset(&(param->vars), 0, sizeof(param->vars));
@@ -497,7 +501,8 @@ int do_print(const char *fmt, struct print_param *param,
 
 			fmt = get_length_modifier(fmt, &(param->vars.flags),
 						&(param->vars.mask));
-			ch = *fmt++;
+			ch = *fmt;
+			fmt++;
 
 			/* a single '%'? => print out a single '%' */
 			if (ch == '%') {

@@ -255,8 +255,10 @@ uint16_t __attribute__((weak)) parse_madt(uint8_t *lapic_id_base)
 	static const uint8_t lapic_id[] = {0U, 2U, 4U, 6U};
 	uint32_t i;
 
-	for (i = 0U; i < ARRAY_SIZE(lapic_id); i++)
-		*lapic_id_base++ = lapic_id[i];
+	for (i = 0U; i < ARRAY_SIZE(lapic_id); i++) {
+		*lapic_id_base = lapic_id[i];
+		lapic_id_base++;
+	}
 
 	return ((uint16_t)ARRAY_SIZE(lapic_id));
 }
@@ -279,8 +281,10 @@ static void init_phy_cpu_storage(void)
 	pcpu_num = parse_madt(lapic_id_base);
 	alloc_phy_cpu_data(pcpu_num);
 
-	for (i = 0U; i < pcpu_num; i++)
-		per_cpu(lapic_id, i) = *lapic_id_base++;
+	for (i = 0U; i < pcpu_num; i++) {
+		per_cpu(lapic_id, i) = *lapic_id_base;
+		lapic_id_base++;
+	}
 
 	/* free memory after lapic_id are saved in per_cpu data */
 	free((void *)lapic_id_base);
