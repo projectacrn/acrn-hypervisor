@@ -84,11 +84,11 @@
 #define CPUID_ECX_PCID          (1U<<17)
 
 /* CPUID source operands */
-#define CPUID_VENDORSTRING      0
-#define CPUID_FEATURES          1
-#define CPUID_TLB               2
-#define CPUID_SERIALNUM         3
-#define CPUID_EXTEND_FEATURE    7
+#define CPUID_VENDORSTRING      0U
+#define CPUID_FEATURES          1U
+#define CPUID_TLB               2U
+#define CPUID_SERIALNUM         3U
+#define CPUID_EXTEND_FEATURE    7U
 #define CPUID_MAX_EXTENDED_FUNCTION  0x80000000U
 #define CPUID_EXTEND_FUNCTION_1      0x80000001U
 #define CPUID_EXTEND_FUNCTION_2      0x80000002U
