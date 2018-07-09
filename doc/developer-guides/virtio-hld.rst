@@ -610,7 +610,9 @@ To use the virtio-console device, use the following virtio command::
 
 .. note::
 
-   - '@' : marks the port as a console port, otherwise it is a normal
+   Here are some notes about the virtio-console device:
+
+   - ``@`` : marks the port as a console port, otherwise it is a normal
      virtio serial port
    - stdio/tty/pty: tty capable, which means :kbd:`TAB` and :kbd:`BACKSPACE`
      are supported as in regular terminals
