@@ -143,8 +143,9 @@ uint32_t serial_get_rx_data(uint32_t uart_handle)
 		return 0U;
 
 	/* Place all the data available in RX FIFO, in circular buffer */
-	while ((data_avail = uart->tgt_uart->rx_data_is_avail(
-				uart->tgt_uart, &lsr_reg)) != 0) {
+	data_avail = uart->tgt_uart->rx_data_is_avail(
+				uart->tgt_uart, &lsr_reg);
+	while (data_avail != 0) {
 
 		/* Read the byte */
 		uart->tgt_uart->read(uart->tgt_uart, (void *)&ch, &bytes_read);
@@ -178,6 +179,8 @@ uint32_t serial_get_rx_data(uint32_t uart_handle)
 		}
 		/* Update the total bytes read */
 		total_bytes_read += bytes_read;
+		data_avail = uart->tgt_uart->rx_data_is_avail(
+				uart->tgt_uart, &lsr_reg);
 	}
 	return total_bytes_read;
 }
