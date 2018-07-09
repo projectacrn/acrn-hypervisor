@@ -1682,9 +1682,13 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 int
 vie_init(struct vie *vie, struct vcpu *vcpu)
 {
+	uint64_t guest_rip_gva =
+		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip;
 	uint32_t inst_len = vcpu->arch_vcpu.inst_len;
+	uint32_t err_code;
+	int ret;
 
-	if (inst_len > VIE_INST_SIZE) {
+	if (inst_len > VIE_INST_SIZE || inst_len == 0U) {
 		pr_err("%s: invalid instruction length (%d)",
 			__func__, inst_len);
 		return -EINVAL;
@@ -1696,22 +1700,16 @@ vie_init(struct vie *vie, struct vcpu *vcpu)
 	vie->index_register = CPU_REG_LAST;
 	vie->segment_register = CPU_REG_LAST;
 
-	if (inst_len != 0U) {
-		int ret;
-		uint64_t guest_rip_gva =
-		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip;
-		uint32_t err_code;
+	err_code = PAGE_FAULT_ID_FLAG;
+	ret = copy_from_gva(vcpu, vie->inst, guest_rip_gva,
+				inst_len, &err_code);
+	if (ret == -EFAULT) {
+		vcpu_inject_pf(vcpu, guest_rip_gva, err_code);
+		return ret;
+	} else if (ret < 0)
+		return ret;
 
-		err_code = PAGE_FAULT_ID_FLAG;
-		ret = copy_from_gva(vcpu, vie->inst, guest_rip_gva,
-			inst_len, &err_code);
-		if (ret == -EFAULT) {
-			vcpu_inject_pf(vcpu, guest_rip_gva, err_code);
-			return ret;
-		} else if (ret < 0)
-			return ret;
-		vie->num_valid = (uint8_t)inst_len;
-	}
+	vie->num_valid = (uint8_t)inst_len;
 
 	return 0;
 }
