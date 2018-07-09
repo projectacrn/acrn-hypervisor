@@ -20,10 +20,12 @@ void restore_msrs(void)
 
 static void acpi_gas_write(struct acpi_generic_address *gas, uint32_t val)
 {
+	uint16_t val16 = (uint16_t)val;
+
 	if (gas->space_id == SPACE_SYSTEM_MEMORY)
-		mmio_write_word(val, (void *)HPA2HVA(gas->address));
+		mmio_write_word(val16, HPA2HVA(gas->address));
 	else
-		io_write_word(val, gas->address);
+		io_write_word(val16, gas->address);
 }
 
 static uint32_t acpi_gas_read(struct acpi_generic_address *gas)
@@ -31,7 +33,7 @@ static uint32_t acpi_gas_read(struct acpi_generic_address *gas)
 	uint32_t ret = 0;
 
 	if (gas->space_id == SPACE_SYSTEM_MEMORY)
-		ret = mmio_read_word((void *)HPA2HVA(gas->address));
+		ret = mmio_read_word(HPA2HVA(gas->address));
 	else
 		ret = io_read_word(gas->address);
 

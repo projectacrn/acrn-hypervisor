@@ -7,6 +7,8 @@
 #ifndef IO_H
 #define IO_H
 
+#include <types.h>
+
 /* Definition of a IO port range */
 struct vm_io_range {
 	uint16_t base;		/* IO port base */
@@ -61,19 +63,19 @@ static inline uint32_t io_read_long(uint16_t port)
 
 static inline void io_write(uint32_t v, uint16_t addr, size_t sz)
 {
-	if (sz == 1)
-		io_write_byte(v, addr);
-	else if (sz == 2)
-		io_write_word(v, addr);
+	if (sz == 1U)
+		io_write_byte((uint8_t)v, addr);
+	else if (sz == 2U)
+		io_write_word((uint16_t)v, addr);
 	else
 		io_write_long(v, addr);
 }
 
 static inline uint32_t io_read(uint16_t addr, size_t sz)
 {
-	if (sz == 1)
+	if (sz == 1U)
 		return io_read_byte(addr);
-	if (sz == 2)
+	if (sz == 2U)
 		return io_read_word(addr);
 	return io_read_long(addr);
 }
@@ -159,7 +161,8 @@ int dm_emulate_pio_post(struct vcpu *vcpu);
  */
 static inline void mmio_write_long(uint32_t value, void *addr)
 {
-	*((volatile int32_t *)addr) = value;
+	volatile uint32_t *addr32 = (volatile uint32_t *)addr;
+	*addr32 = value;
 }
 
 /** Writes a 16 bit value to a memory mapped IO device.
@@ -167,9 +170,10 @@ static inline void mmio_write_long(uint32_t value, void *addr)
  *  @param value The 16 bit value to write.
  *  @param addr The memory address to write to.
  */
-static inline void mmio_write_word(uint32_t value, void *addr)
+static inline void mmio_write_word(uint16_t value, void *addr)
 {
-	*((volatile uint16_t *)addr) = value;
+	volatile uint16_t *addr16 = (volatile uint16_t *)addr;
+	*addr16 = value;
 }
 
 /** Writes an 8 bit value to a memory mapped IO device.
@@ -177,9 +181,10 @@ static inline void mmio_write_word(uint32_t value, void *addr)
  *  @param value The 8 bit value to write.
  *  @param addr The memory address to write to.
  */
-static inline void mmio_write_byte(uint32_t value, void *addr)
+static inline void mmio_write_byte(uint8_t value, void *addr)
 {
-	*((volatile uint8_t *)addr) = value;
+	volatile uint8_t *addr8 = (volatile uint8_t *)addr;
+	*addr8 = value;
 }
 
 /** Reads a 32 bit value from a memory mapped IO device.
@@ -223,7 +228,8 @@ static inline uint8_t mmio_read_byte(void *addr)
  */
 static inline void __mmio_write_long(uint32_t value, void *addr)
 {
-	*((volatile uint32_t *)addr) = value;
+	volatile uint32_t *addr32 = (volatile uint32_t *)addr;
+	*addr32 = value;
 }
 
 /** Writes a 16 bit value to a memory mapped IO device (ROM code version).
@@ -231,9 +237,10 @@ static inline void __mmio_write_long(uint32_t value, void *addr)
  *  @param value The 16 bit value to write.
  *  @param addr The memory address to write to.
  */
-static inline void __mmio_write_word(uint32_t value, void *addr)
+static inline void __mmio_write_word(uint16_t value, void *addr)
 {
-	*((volatile uint16_t *)addr) = value;
+	volatile uint16_t *addr16 = (volatile uint16_t *)addr;
+	*addr16 = value;
 }
 
 /** Writes an 8 bit value to a memory mapped IO device (ROM code version).
@@ -241,9 +248,10 @@ static inline void __mmio_write_word(uint32_t value, void *addr)
  *  @param value The 8 bit value to write.
  *  @param addr The memory address to write to.
  */
-static inline void __mmio_write_byte(uint32_t value, void *addr)
+static inline void __mmio_write_byte(uint8_t value, void *addr)
 {
-	*((volatile uint8_t *)addr) = value;
+	volatile uint8_t *addr8 = (volatile uint8_t *)addr;
+	*addr8 = value;
 }
 
 /** Reads a 32 bit value from a memory mapped IO device (ROM code version).
@@ -299,7 +307,7 @@ static inline void setl(void *addr, uint32_t mask, uint32_t value)
  * @param mask    The mask to apply to the value read.
  * @param value   The 16 bit value to write.
  */
-static inline void setw(void *addr, uint32_t mask, uint32_t value)
+static inline void setw(void *addr, uint16_t mask, uint16_t value)
 {
 	mmio_write_word((mmio_read_word(addr) & ~mask) | value, addr);
 }
@@ -311,7 +319,7 @@ static inline void setw(void *addr, uint32_t mask, uint32_t value)
  * @param mask    The mask to apply to the value read.
  * @param value   The 8 bit value to write.
  */
-static inline void setb(void *addr, uint32_t mask, uint32_t value)
+static inline void setb(void *addr, uint8_t mask, uint8_t value)
 {
 	mmio_write_byte((mmio_read_byte(addr) & ~mask) | value, addr);
 }
