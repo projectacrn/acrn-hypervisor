@@ -435,6 +435,7 @@ static bool init_secure_world_env(struct vcpu *vcpu,
 bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 {
 	uint64_t trusty_entry_gpa, trusty_base_gpa, trusty_base_hpa;
+	uint32_t trusty_mem_size;
 	struct vm *vm = vcpu->vm;
 	struct trusty_boot_param boot_param;
 
@@ -444,39 +445,29 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 		return false;
 	}
 
-	/* FIXME: Temporarily comments out the size check since need to extend
-	 *        the interface, need to add back after the integration done.
-	 */
-	/*
-	if (sizeof(struct trusty_boot_param) !=
-			boot_param.size_of_this_struct) {
-		pr_err("%s: sizeof(struct trusty_boot_param) mismatch!\n",
-			__func__);
-		return false;
-	}
-	*/
-
-	if ((boot_param.version != TRUSTY_VERSION) &&
-		(boot_param.version != TRUSTY_VERSION_2)) {
-		pr_err("%s: version of(trusty_boot_param) mismatch!\n",
-			__func__);
-		return false;
-	}
-
-	if (boot_param.entry_point == 0U) {
-		pr_err("%s: Invalid entry point\n", __func__);
-		return false;
-	}
-
-	if (boot_param.base_addr == 0U) {
-		pr_err("%s: Invalid memory base address\n", __func__);
+	if (boot_param.version > TRUSTY_VERSION_2) {
+		pr_err("%s: Version(%u) not supported!\n",
+				__func__, boot_param.version);
 		return false;
 	}
 
 	trusty_entry_gpa = (uint64_t)boot_param.entry_point;
 	trusty_base_gpa = (uint64_t)boot_param.base_addr;
+	trusty_mem_size = boot_param.mem_size;
 
-	create_secure_world_ept(vm, trusty_base_gpa, boot_param.mem_size,
+	if (boot_param.version >= TRUSTY_VERSION_2) {
+		trusty_entry_gpa |=
+			(((uint64_t)boot_param.entry_point_high) << 32);
+		trusty_base_gpa |=
+			(((uint64_t)boot_param.base_addr_high) << 32);
+
+		/* copy rpmb_key from OSloader */
+		(void)memcpy_s(&g_key_info.rpmb_key[0][0], 64U,
+				&boot_param.rpmb_key[0], 64U);
+		(void)memset(&boot_param.rpmb_key[0], 0U, 64U);
+	}
+
+	create_secure_world_ept(vm, trusty_base_gpa, trusty_mem_size,
 						TRUSTY_EPT_REBASE_GPA);
 	trusty_base_hpa = vm->sworld_control.sworld_memory.base_hpa;
 
@@ -486,18 +477,10 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 	/* save Normal World context */
 	save_world_ctx(&vcpu->arch_vcpu.contexts[NORMAL_WORLD]);
 
-	if (boot_param.version == TRUSTY_VERSION_2) {
-		/* copy rpmb_key from OSloader */
-		memcpy_s(&g_key_info.rpmb_key[0][0], 64U,
-				&boot_param.rpmb_key[0], 64U);
-		memset(&boot_param.rpmb_key[0], 0U, 64U);
-		/* OSloader must clear the rpmb_key after switched back */
-	}
-
 	/* init secure world environment */
 	if (init_secure_world_env(vcpu,
 		trusty_entry_gpa - trusty_base_gpa + TRUSTY_EPT_REBASE_GPA,
-		trusty_base_hpa, boot_param.mem_size)) {
+		trusty_base_hpa, trusty_mem_size)) {
 
 		/* switch to Secure World */
 		vcpu->arch_vcpu.cur_context = SECURE_WORLD;
