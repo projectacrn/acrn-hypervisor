@@ -130,7 +130,7 @@
 #define CPU_MHZ_TO_KHZ          1000
 
 /* Boot CPU ID */
-#define CPU_BOOT_ID             0U
+#define BOOT_CPU_ID             0U
 
 /* hypervisor stack bottom magic('intl') */
 #define SP_BOTTOM_MAGIC    0x696e746cUL

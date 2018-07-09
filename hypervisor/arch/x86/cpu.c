@@ -430,7 +430,7 @@ void bsp_boot_init(void)
 		CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL,
 		"run_context ia32_spec_ctrl offset not match");
 
-	__bitmap_set(CPU_BOOT_ID, &pcpu_active_bitmap);
+	__bitmap_set(BOOT_CPU_ID, &pcpu_active_bitmap);
 
 	/* Get CPU capabilities thru CPUID, including the physical address bit
 	 * limit which is required for initializing paging.
@@ -467,7 +467,7 @@ static void bsp_boot_post(void)
 	cpu_xsave_init();
 
 	/* Set state for this CPU to initializing */
-	cpu_set_current_state(CPU_BOOT_ID, CPU_STATE_INITIALIZING);
+	cpu_set_current_state(BOOT_CPU_ID, CPU_STATE_INITIALIZING);
 
 	/* Perform any necessary BSP initialization */
 	init_bsp();
@@ -502,7 +502,7 @@ static void bsp_boot_post(void)
 
 	pr_acrnlog("Detect processor: %s", boot_cpu_data.model_name);
 
-	pr_dbg("Core %hu is up", CPU_BOOT_ID);
+	pr_dbg("Core %hu is up", BOOT_CPU_ID);
 
 	if (hardware_detect_support() != 0) {
 		pr_fatal("hardware not support!\n");
@@ -522,7 +522,7 @@ static void bsp_boot_post(void)
 	shell_init();
 
 	/* Initialize interrupts */
-	interrupt_init(CPU_BOOT_ID);
+	interrupt_init(BOOT_CPU_ID);
 
 	timer_init();
 	setup_notification();
@@ -536,7 +536,7 @@ static void bsp_boot_post(void)
 	/* Trigger event to allow secondary CPUs to continue */
 	__bitmap_set(0U, &pcpu_sync);
 
-	ASSERT(get_cpu_id() == CPU_BOOT_ID, "");
+	ASSERT(get_cpu_id() == BOOT_CPU_ID, "");
 
 	if (init_iommu() != 0) {
 		pr_fatal("%s, init iommu failed\n", __func__);
@@ -546,11 +546,11 @@ static void bsp_boot_post(void)
 	console_setup_timer();
 
 	/* Start initializing the VM for this CPU */
-	if (hv_main(CPU_BOOT_ID) != 0)
+	if (hv_main(BOOT_CPU_ID) != 0)
 		panic("failed to start VM for bsp\n");
 
 	/* Control should not come here */
-	cpu_dead(CPU_BOOT_ID);
+	cpu_dead(BOOT_CPU_ID);
 }
 
 /* NOTE: this function is using temp stack, and after SWITCH_TO(runtime_sp, to)
@@ -928,7 +928,7 @@ static void cpu_xsave_init(void)
 		val64 |= CR4_OSXSAVE;
 		CPU_CR_WRITE(cr4, val64);
 
-		if (get_cpu_id() == CPU_BOOT_ID) {
+		if (get_cpu_id() == BOOT_CPU_ID) {
 			uint32_t ecx, unused;
 			cpuid(CPUID_FEATURES, &unused, &unused, &ecx, &unused);
 
