@@ -7,6 +7,7 @@ Developer Guides
    :maxdepth: 1
 
    primer.rst
+   memmgt-hld.rst
    virtio-hld.rst
    ../api/index.rst
    ../reference/kconfig/index.rst
