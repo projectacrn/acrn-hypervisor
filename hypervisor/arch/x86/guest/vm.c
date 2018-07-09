@@ -311,25 +311,28 @@ void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec)
 /* Create vm/vcpu for vm0 */
 int prepare_vm0(void)
 {
-	int ret;
+	int err;
 	uint16_t i;
 	struct vm *vm = NULL;
 	struct vm_description *vm_desc = &vm0_desc;
 
-	ret = create_vm(vm_desc, &vm);
-	if (ret != 0)
-		return ret;
+	err = create_vm(vm_desc, &vm);
+	if (err != 0)
+		return err;
 
 	/* Allocate all cpus to vm0 at the beginning */
-	for (i = 0U; i < phys_cpu_num; i++)
-		prepare_vcpu(vm, i);
+	for (i = 0U; i < phys_cpu_num; i++) {
+		err = prepare_vcpu(vm, i);
+		if (err != 0)
+			return err;
+	}
 
 	/* start vm0 BSP automatically */
-	start_vm(vm);
+	err = start_vm(vm);
 
 	pr_acrnlog("Start VM0");
 
-	return 0;
+	return err;
 }
 
 static inline bool vcpu_in_vm_desc(struct vcpu *vcpu,
