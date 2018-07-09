@@ -462,8 +462,8 @@ write_xcr(int reg, uint64_t val)
 {
 	uint32_t low, high;
 
-	low = val;
-	high = val >> 32;
+	low = (uint32_t)val;
+	high = (uint32_t)(val >> 32);
 	asm volatile("xsetbv" : : "c" (reg), "a" (low), "d" (high));
 }
 #else /* ASSEMBLER defined */

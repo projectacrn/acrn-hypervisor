@@ -17,18 +17,6 @@
 
 #define offsetof(st, m) __builtin_offsetof(st, m)
 
-/** Round an integer (x) up to a multiple of y */
-#define INT_ROUNDUP(x, y)     (((x)+((y)-1))&-(y))
-
-/** Round an integer up to a multiple of 4 */
-#define INT_ROUNDUP4(x)      INT_ROUNDUP(x, 4)
-
-/** Round an integer up to a multiple of 8 */
-#define INT_ROUNDUP8(x)      INT_ROUNDUP(x, 8)
-
-/** Round an integer up to a multiple of 8 */
-#define INT_ROUNDUP16(x)     INT_ROUNDUP(x, 16)
-
 /** Roundup (x/y) to ( x/y + (x%y) ? 1 : 0) **/
 #define INT_DIV_ROUNDUP(x, y)	(((x)+(y)-1)/(y))
 
