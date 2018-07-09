@@ -1,9 +1,8 @@
 #
 # ACRN-DM
 #
-MAJOR_VERSION=0
-MINOR_VERSION=1
-RC_VERSION=5
+include ../VERSION
+FULL_VERSION=$(MAJOR_VERSION).$(MINOR_VERSION)$(EXTRA_VERSION)
 BASEDIR := $(shell pwd)
 DM_OBJDIR ?= $(CURDIR)/build
 
@@ -157,6 +156,7 @@ include/version.h:
 	@COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
 	DIRTY=`git diff-index --name-only HEAD`;\
 	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
+	DAILY_TAG=`git tag --merged HEAD|grep "acrn"|tail -n 1`;\
 	TIME=`date "+%Y-%m-%d %H:%M:%S"`;\
 	USER=`id -u -n`; \
 	echo "/*" > include/version.h; \
@@ -165,7 +165,9 @@ include/version.h:
 	echo "" >> include/version.h; \
 	echo "#define DM_MAJOR_VERSION $(MAJOR_VERSION)" >> include/version.h;\
 	echo "#define DM_MINOR_VERSION $(MINOR_VERSION)" >> include/version.h;\
-	echo "#define DM_RC_VERSION $(RC_VERSION)" >> include/version.h;\
+	echo "#define DM_EXTRA_VERSION "\"$(EXTRA_VERSION)\""" >> include/version.h;\
+	echo "#define DM_FULL_VERSION "\"$(FULL_VERSION)\""" >> include/version.h;\
+	echo "#define DM_DAILY_TAG "\""$$DAILY_TAG"\""" >> include/version.h;\
 	echo "#define DM_BUILD_VERSION "\""$$PATCH"\""" >> include/version.h;\
 	echo "#define DM_BUILD_TIME "\""$$TIME"\""" >> include/version.h;\
 	echo "#define DM_BUILD_USER "\""$$USER"\""" >> include/version.h
