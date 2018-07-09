@@ -373,7 +373,7 @@ struct e820_entry {
  */
 static inline void *mmu_pt_for_pde(uint32_t *pd, uint32_t vaddr)
 {
-	return pd + ((vaddr >> 22) + 1) * 1024;
+	return pd + ((vaddr >> 22U) + 1U) * 1024U;
 }
 
 #define CACHE_FLUSH_INVALIDATE_ALL()			\
