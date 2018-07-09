@@ -79,7 +79,7 @@ try:
     version_major = None
     version_minor = None
     version_rc = None
-    for line in open(os.path.normpath("../hypervisor/Makefile")) :
+    for line in open(os.path.normpath("../VERSION")) :
         # remove comments
         line = line.split('#', 1)[0]
         line = line.rstrip()
@@ -89,7 +89,7 @@ try:
               version_major = val
            if key == 'MINOR_VERSION':
               version_minor = val
-           if key == 'RC_VERSION':
+           if key == 'EXTRA_VERSION':
               version_rc = val
            if version_major and version_minor and version_rc :
               break
@@ -97,11 +97,9 @@ except:
     pass
 finally:
     if version_major and version_minor and version_rc :
-        version = release = "v " + version_major + '.' + version_minor
-        if int(version_rc) > 0 :
-           version = release = version + '-rc' + version_rc
+        version = release = "v " + version_major + '.' + version_minor + version_rc
     else:
-        sys.stderr.write('Warning: Could not extract hypervisor version from Makefile\n')
+        sys.stderr.write('Warning: Could not extract hypervisor version from VERSION file\n')
         version = release = "unknown"
 
 
