@@ -491,15 +491,10 @@ static void bsp_boot_post(void)
 	init_logmsg(CONFIG_LOG_BUF_SIZE,
 		       CONFIG_LOG_DESTINATION);
 
-	if (HV_RC_VERSION != 0)
-		pr_acrnlog("HV version %d.%d-rc%d-%s-%s %s build by %s, start time %lluus",
-			HV_MAJOR_VERSION, HV_MINOR_VERSION, HV_RC_VERSION,
+	pr_acrnlog("HV version %s-%s-%s %s (daily tag:%s) build by %s, start time %lluus",
+			HV_FULL_VERSION,
 			HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_TYPE,
-			HV_BUILD_USER, ticks_to_us(start_tsc));
-	else
-		pr_acrnlog("HV version %d.%d-%s-%s %s build by %s, start time %lluus",
-			HV_MAJOR_VERSION, HV_MINOR_VERSION,
-			HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_TYPE,
+			HV_DAILY_TAG,
 			HV_BUILD_USER, ticks_to_us(start_tsc));
 
 	pr_acrnlog("API version %d.%d",
