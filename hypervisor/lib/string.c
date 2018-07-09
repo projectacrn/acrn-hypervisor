@@ -101,7 +101,8 @@ uint64_t strtoul_hex(const char *nptr)
 	 * See strtol for comments as to the logic used.
 	 */
 	do {
-		c = *s++;
+		c = *s;
+		s++;
 	} while (ISSPACE(c));
 
 	if (c == '0' && (*s == 'x' || *s == 'X')) {

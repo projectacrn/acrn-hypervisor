@@ -236,7 +236,8 @@ static uint16_t _parse_madt(void *madt, uint8_t *lapic_id_base)
 		if (entry->type == ACPI_MADT_TYPE_LOCAL_APIC) {
 			processor = (struct acpi_madt_local_apic *)entry;
 			if ((processor->lapic_flags & ACPI_MADT_ENABLED) != 0U) {
-				*lapic_id_base++ = processor->id;
+				*lapic_id_base = processor->id;
+				lapic_id_base++;
 				pcpu_id++;
 			}
 		}

@@ -358,8 +358,10 @@ void vuart_console_rx_chars(uint32_t serial_handle)
 		}
 		if (vu->active != false) {
 			buf_idx = 0;
-			while (buf_idx < vbuf_len)
-				fifo_putchar(&vu->rxfifo, buffer[buf_idx++]);
+			while (buf_idx < vbuf_len) {
+				fifo_putchar(&vu->rxfifo, buffer[buf_idx]);
+				buf_idx++;
+			}
 
 			uart_toggle_intr(vu);
 		}
