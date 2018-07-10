@@ -386,7 +386,7 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	/* Give 10ms for INIT sequence to complete for old processors.
 	 * Modern processors (family == 6) don't need to wait here.
 	 */
-	if (boot_cpu_data.x86 != 6)
+	if (boot_cpu_data.family != 6)
 		mdelay(10);
 
 	/* De-assert INIT IPI */
@@ -404,7 +404,7 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_0, icr.value_32.lo_32);
 	wait_for_delivery();
 
-	if (boot_cpu_data.x86 == 6) /* 10us is enough for Modern processors */
+	if (boot_cpu_data.family == 6) /* 10us is enough for Modern processors */
 		udelay(10);
 	else /* 200us for old processors */
 		udelay(200);
