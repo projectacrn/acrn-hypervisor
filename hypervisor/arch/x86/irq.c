@@ -8,27 +8,19 @@
 
 static spinlock_t exception_spinlock = { .head = 0U, .tail = 0U, };
 
-static struct irq_desc *irq_desc_base;
+static struct irq_desc irq_desc_array[NR_MAX_IRQS];
 static uint32_t vector_to_irq[NR_MAX_VECTOR + 1];
 
 spurious_handler_t spurious_handler;
 
 static void init_irq_desc(void)
 {
-	uint32_t i, page_num = 0;
-	uint32_t desc_size = NR_MAX_IRQS * sizeof(struct irq_desc);
-
-	page_num = (desc_size + CPU_PAGE_SIZE - 1U) >> CPU_PAGE_SHIFT;
-
-	irq_desc_base = alloc_pages(page_num);
-
-	ASSERT(irq_desc_base != NULL, "page alloc failed!");
-	(void)memset(irq_desc_base, 0, page_num * CPU_PAGE_SIZE);
+	uint32_t i;
 
 	for (i = 0U; i < NR_MAX_IRQS; i++) {
-		irq_desc_base[i].irq = i;
-		irq_desc_base[i].vector = VECTOR_INVALID;
-		spinlock_init(&irq_desc_base[i].irq_lock);
+		irq_desc_array[i].irq = i;
+		irq_desc_array[i].vector = VECTOR_INVALID;
+		spinlock_init(&irq_desc_array[i].irq_lock);
 	}
 
 	for (i = 0U; i <= NR_MAX_VECTOR; i++) {
@@ -75,7 +67,7 @@ uint32_t irq_mark_used(uint32_t irq)
 	if (irq > NR_MAX_IRQS)
 		return IRQ_INVALID;
 
-	desc = irq_desc_base + irq;
+	desc = &irq_desc_array[irq];
 	spinlock_irqsave_obtain(&desc->irq_lock);
 	if (desc->used == IRQ_NOT_ASSIGNED)
 		desc->used = IRQ_ASSIGNED_NOSHARE;
@@ -95,7 +87,7 @@ static uint32_t alloc_irq(void)
 	spinlock_rflags;
 
 	for (i = irq_gsi_num(); i < NR_MAX_IRQS; i++) {
-		desc = irq_desc_base + i;
+		desc = &irq_desc_array[i];
 		spinlock_irqsave_obtain(&desc->irq_lock);
 		if (desc->used == IRQ_NOT_ASSIGNED) {
 			desc->used = IRQ_ASSIGNED_NOSHARE;
@@ -112,7 +104,7 @@ static void _irq_desc_set_vector(uint32_t irq, uint32_t vr)
 {
 	struct irq_desc *desc;
 
-	desc = irq_desc_base + irq;
+	desc = &irq_desc_array[irq];
 	vector_to_irq[vr] = irq;
 	desc->vector = vr;
 }
@@ -124,7 +116,7 @@ static void irq_desc_set_vector(uint32_t irq, uint32_t vr)
 
 	spinlock_rflags;
 
-	desc = irq_desc_base + irq;
+	desc = &irq_desc_array[irq];
 	spinlock_irqsave_obtain(&desc->irq_lock);
 	vector_to_irq[vr] = irq;
 	desc->vector = vr;
@@ -141,7 +133,7 @@ static void _irq_desc_free_vector(uint32_t irq)
 	if (irq > NR_MAX_IRQS)
 		return;
 
-	desc = irq_desc_base + irq;
+	desc = &irq_desc_array[irq];
 
 	vr = desc->vector;
 	desc->used = IRQ_NOT_ASSIGNED;
@@ -258,7 +250,7 @@ common_register_handler(uint32_t irq,
 		goto OUT;
 	}
 
-	desc = irq_desc_base + irq;
+	desc = &irq_desc_array[irq];
 	added = irq_desc_append_dev(desc, node, info->share);
 	if (!added) {
 		free(node);
@@ -306,7 +298,7 @@ uint32_t irq_desc_alloc_vector(uint32_t irq, bool lowpri)
 	if (irq > NR_MAX_IRQS)
 		return VECTOR_INVALID;
 
-	desc = irq_desc_base + irq;
+	desc = &irq_desc_array[irq];
 	spinlock_irqsave_obtain(&desc->irq_lock);
 	if (desc->vector != VECTOR_INVALID) {
 		/* already allocated a vector */
@@ -335,7 +327,7 @@ void irq_desc_try_free_vector(uint32_t irq)
 	if (irq > NR_MAX_IRQS || irq < NR_LEGACY_IRQ)
 		return;
 
-	desc = irq_desc_base + irq;
+	desc = &irq_desc_array[irq];
 	spinlock_irqsave_obtain(&desc->irq_lock);
 	if (desc->dev_list == NULL)
 		_irq_desc_free_vector(irq);
@@ -347,7 +339,7 @@ void irq_desc_try_free_vector(uint32_t irq)
 uint32_t irq_to_vector(uint32_t irq)
 {
 	if (irq < NR_MAX_IRQS)
-		return irq_desc_base[irq].vector;
+		return irq_desc_array[irq].vector;
 	else
 		return VECTOR_INVALID;
 }
@@ -416,7 +408,7 @@ void dispatch_interrupt(struct intr_excp_ctx *ctx)
 	if (irq == IRQ_INVALID)
 		goto ERR;
 
-	desc = irq_desc_base + irq;
+	desc = &irq_desc_array[irq];
 	per_cpu(irq_count, get_cpu_id())[irq]++;
 
 	if (vr != desc->vector)
@@ -572,7 +564,7 @@ void update_irq_handler(uint32_t irq, irq_handler_t func)
 	if (irq >= NR_MAX_IRQS)
 		return;
 
-	desc = irq_desc_base + irq;
+	desc = &irq_desc_array[irq];
 	spinlock_irqsave_obtain(&desc->irq_lock);
 	desc->irq_handler = func;
 	spinlock_irqrestore_release(&desc->irq_lock);
@@ -688,7 +680,7 @@ void get_cpu_interrupt_info(char *str, int str_max)
 	str += len;
 
 	for (irq = 0U; irq < NR_MAX_IRQS; irq++) {
-		desc = irq_desc_base + irq;
+		desc = &irq_desc_array[irq];
 		vector = irq_to_vector(irq);
 		if (desc->used != IRQ_NOT_ASSIGNED &&
 			vector != VECTOR_INVALID) {
