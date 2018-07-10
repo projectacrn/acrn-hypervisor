@@ -36,7 +36,7 @@ is_vm0(struct vm *vm)
 
 inline struct vcpu *vcpu_from_vid(struct vm *vm, uint16_t vcpu_id)
 {
-	int i;
+	uint16_t i;
 	struct vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
@@ -49,7 +49,7 @@ inline struct vcpu *vcpu_from_vid(struct vm *vm, uint16_t vcpu_id)
 
 inline struct vcpu *vcpu_from_pid(struct vm *vm, uint16_t pcpu_id)
 {
-	int i;
+	uint16_t i;
 	struct vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
@@ -62,7 +62,7 @@ inline struct vcpu *vcpu_from_pid(struct vm *vm, uint16_t pcpu_id)
 
 inline struct vcpu *get_primary_vcpu(struct vm *vm)
 {
-	int i;
+	uint16_t i;
 	struct vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
@@ -91,7 +91,7 @@ inline uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask)
 
 inline bool vm_lapic_disabled(struct vm *vm)
 {
-	int i;
+	uint16_t i;
 	struct vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {

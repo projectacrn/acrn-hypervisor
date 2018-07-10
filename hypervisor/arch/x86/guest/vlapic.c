@@ -121,7 +121,7 @@ vm_lapic_from_pcpuid(struct vm *vm, uint16_t pcpu_id)
 
 static uint16_t vm_apicid2vcpu_id(struct vm *vm, uint8_t lapicid)
 {
-	int i;
+	uint16_t i;
 	struct vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
@@ -138,7 +138,7 @@ static uint64_t
 vm_active_cpus(struct vm *vm)
 {
 	uint64_t dmask = 0;
-	int i;
+	uint16_t i;
 	struct vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {

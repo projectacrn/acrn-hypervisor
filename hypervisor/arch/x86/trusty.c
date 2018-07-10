@@ -84,7 +84,7 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 				IA32E_EPT_X_BIT);
 	void *sub_table_addr = NULL, *pml4_base = NULL;
 	struct vm *vm0 = get_vm_from_vmid(0);
-	int i;
+	uint16_t i;
 	struct vcpu *vcpu;
 
 	if (vm0 == NULL) {
