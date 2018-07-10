@@ -524,7 +524,7 @@ int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 
 static void init_guest_state(struct vcpu *vcpu)
 {
-	uint64_t field;
+	uint32_t field;
 	uint64_t value;
 	uint32_t value32;
 	uint64_t value64;
@@ -978,7 +978,7 @@ static void init_guest_state(struct vcpu *vcpu)
 
 static void init_host_state(__unused struct vcpu *vcpu)
 {
-	uint64_t field;
+	uint32_t field;
 	uint16_t value16;
 	uint32_t value32;
 	uint64_t value64;
@@ -1448,7 +1448,7 @@ static void init_exit_ctrl(__unused struct vcpu *vcpu)
 #ifdef CONFIG_EFI_STUB
 static void override_uefi_vmcs(struct vcpu *vcpu)
 {
-	uint64_t field;
+	uint32_t field;
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 
