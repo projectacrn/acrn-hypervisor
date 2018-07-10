@@ -111,8 +111,8 @@ void vm_setup_cpu_state(struct vm *vm)
  */
 int vm_load_pm_s_state(struct vm *vm)
 {
-	if ((boot_cpu_data.x86 == host_acpi_info.x86_family)
-		&& (boot_cpu_data.x86_model == host_acpi_info.x86_model)) {
+	if ((boot_cpu_data.family == host_acpi_info.x86_family)
+		&& (boot_cpu_data.model == host_acpi_info.x86_model)) {
 		vm->pm.sx_state_data = (struct pm_s_state_data *)
 						&host_acpi_info.pm_s_state;
 		pr_info("System S3/S5 is supported.");

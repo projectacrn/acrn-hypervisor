@@ -87,7 +87,7 @@ static inline bool get_monitor_cap(void)
 		 * in hypervisor, but still expose it to the guests and
 		 * let them handle it correctly
 		 */
-		if (boot_cpu_data.x86 != 0x6U || boot_cpu_data.x86_model != 0x5cU)
+		if (boot_cpu_data.family != 0x6U || boot_cpu_data.model != 0x5cU)
 			return true;
 	}
 
@@ -114,12 +114,12 @@ static void get_cpu_capabilities(void)
 	family = (eax >> 8U) & 0xffU;
 	if (family == 0xFU)
 		family += (eax >> 20U) & 0xffU;
-	boot_cpu_data.x86 = (uint8_t)family;
+	boot_cpu_data.family = (uint8_t)family;
 
 	model = (eax >> 4U) & 0xfU;
 	if (family >= 0x06U)
 		model += ((eax >> 16U) & 0xfU) << 4U;
-	boot_cpu_data.x86_model = (uint8_t)model;
+	boot_cpu_data.model = (uint8_t)model;
 
 
 	cpuid(CPUID_EXTEND_FEATURE, &unused,
@@ -144,10 +144,10 @@ static void get_cpu_capabilities(void)
 			/* EAX bits 07-00: #Physical Address Bits
 			 *     bits 15-08: #Linear Address Bits
 			 */
-			boot_cpu_data.x86_virt_bits = (uint8_t)((eax >> 8U) & 0xffU);
-			boot_cpu_data.x86_phys_bits = (uint8_t)(eax & 0xffU);
+			boot_cpu_data.virt_bits = (uint8_t)((eax >> 8U) & 0xffU);
+			boot_cpu_data.phys_bits = (uint8_t)(eax & 0xffU);
 			boot_cpu_data.physical_address_mask =
-				get_address_mask(boot_cpu_data.x86_phys_bits);
+				get_address_mask(boot_cpu_data.phys_bits);
 	}
 
 	/* For speculation defence.
@@ -188,8 +188,8 @@ static int hardware_detect_support(void)
 		pr_fatal("%s, LM not supported\n", __func__);
 		return -ENODEV;
 	}
-	if ((boot_cpu_data.x86_phys_bits == 0U) ||
-		(boot_cpu_data.x86_virt_bits == 0U)) {
+	if ((boot_cpu_data.phys_bits == 0U) ||
+		(boot_cpu_data.virt_bits == 0U)) {
 		pr_fatal("%s, can't detect Linear/Physical Address size\n",
 			__func__);
 		return -ENODEV;
