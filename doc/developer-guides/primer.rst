@@ -443,6 +443,8 @@ not mapped to trap all MMIO accesses from the UOS (and do emulating in
 the device model). To support pass through devices in the future, some
 MMIO range mapping may be added.
 
+.. _Graphic_mediation:
+
 Graphic mediation
 *****************
 
