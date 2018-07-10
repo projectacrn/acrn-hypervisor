@@ -10,6 +10,7 @@ Developer Guides
    memmgt-hld.rst
    virtio-hld.rst
    ACPI-virt-hld.rst
+   APL_GVT-g-hld.rst
    ../api/index.rst
    ../reference/kconfig/index.rst
    trusty.rst
