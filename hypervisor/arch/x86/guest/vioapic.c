@@ -373,7 +373,7 @@ vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 		 * to update their vlapic trigger-mode registers.
 		 */
 		if ((changed & ~(IOAPIC_RTE_INTMASK | IOAPIC_RTE_INTPOL)) != 0U) {
-			int i;
+			uint16_t i;
 			struct vcpu *vcpu;
 
 			dev_dbg(ACRN_DBG_IOAPIC,

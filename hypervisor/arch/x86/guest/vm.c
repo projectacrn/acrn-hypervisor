@@ -87,7 +87,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	/* Init mmio list */
 	INIT_LIST_HEAD(&vm->mmio_list);
 
-	if (vm->hw.num_vcpus == 0)
+	if (vm->hw.num_vcpus == 0U)
 		vm->hw.num_vcpus = phys_cpu_num;
 
 	vm->hw.vcpu_array =
@@ -185,7 +185,8 @@ err1:
 
 int shutdown_vm(struct vm *vm)
 {
-	int i, status = 0;
+	int status = 0;
+	uint16_t i;
 	struct vcpu *vcpu = NULL;
 
 	if (vm == NULL)
@@ -262,7 +263,7 @@ int start_vm(struct vm *vm)
  */
 void pause_vm(struct vm *vm)
 {
-	int i;
+	uint16_t i;
 	struct vcpu *vcpu = NULL;
 
 	if (vm->state == VM_PAUSED)
@@ -276,7 +277,7 @@ void pause_vm(struct vm *vm)
 
 void resume_vm(struct vm *vm)
 {
-	int i;
+	uint16_t i;
 	struct vcpu *vcpu = NULL;
 
 	foreach_vcpu(i, vm, vcpu)
@@ -361,7 +362,7 @@ void vm_fixup(struct vm *vm)
 	if (is_vm0(vm) && (vm->hw.exp_num_vcpus < vm->hw.num_vcpus)) {
 		struct vm_description *vm_desc = &vm0_desc;
 		struct vcpu *vcpu;
-		int i;
+		uint16_t i;
 
 		foreach_vcpu(i, vm, vcpu) {
 			if (!vcpu_in_vm_desc(vcpu, vm_desc)) {

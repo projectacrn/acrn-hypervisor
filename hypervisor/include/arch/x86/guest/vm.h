@@ -21,8 +21,8 @@ struct vm_attr {
 };
 
 struct vm_hw_info {
-	int num_vcpus;	/* Number of total virtual cores */
-	int exp_num_vcpus;	/* Number of real expected virtual cores */
+	uint16_t num_vcpus;	/* Number of total virtual cores */
+	uint16_t exp_num_vcpus;	/* Number of real expected virtual cores */
 	int created_vcpus;	/* Number of created vcpus */
 	struct vcpu **vcpu_array;	/* vcpu array of this VM */
 	uint64_t gpa_lowtop;    /* top lowmem gpa of this VM */
@@ -163,7 +163,7 @@ struct vm_description {
 	 */
 	int                    *vm_hw_logical_core_ids;
 	unsigned char          GUID[16]; /* GUID of the vm will be created */
-	int                    vm_hw_num_cores;   /* Number of virtual cores */
+	uint16_t               vm_hw_num_cores;   /* Number of virtual cores */
 	/* Whether secure world is enabled for current VM. */
 	bool                   sworld_enabled;
 };

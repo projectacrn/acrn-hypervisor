@@ -503,7 +503,7 @@ int shell_list_vcpu(struct shell *p_shell,
 	spinlock_obtain(&vm_list_lock);
 	list_for_each(pos, &vm_list) {
 		char state[32];
-		int i;
+		uint16_t i;
 
 		vm = list_entry(pos, struct vm, list);
 		foreach_vcpu(i, vm, vcpu) {

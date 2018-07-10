@@ -469,7 +469,7 @@ int ept_mmap(struct vm *vm, uint64_t hpa,
 	uint64_t gpa, uint64_t size, uint32_t type, uint32_t prot)
 {
 	struct map_params map_params;
-	int i;
+	uint16_t i;
 	struct vcpu *vcpu;
 
 	/* Setup memory map parameters */
@@ -516,7 +516,7 @@ int ept_update_mt(struct vm *vm, uint64_t hpa,
 {
 	struct map_params map_params;
 	struct vcpu *vcpu;
-	int i;
+	uint16_t i;
 
 	/* Setup memory map parameters */
 	map_params.page_table_type = PTT_EPT;
