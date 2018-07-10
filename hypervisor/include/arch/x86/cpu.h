@@ -40,7 +40,7 @@
 
 /* Define page size */
 #define CPU_PAGE_SHIFT          12
-#define CPU_PAGE_SIZE           0x1000
+#define CPU_PAGE_SIZE           0x1000U
 #define CPU_PAGE_MASK           0xFFFFFFFFFFFFF000UL
 
 #define MMU_PTE_PAGE_SHIFT	CPU_PAGE_SHIFT

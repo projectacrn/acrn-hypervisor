@@ -9,14 +9,14 @@
 #include "guest/instr_emul_wrapper.h"
 #include "guest/instr_emul.h"
 
-#define ACRN_DBG_EPT	6
+#define ACRN_DBG_EPT	6U
 
 
 static uint64_t find_next_table(uint32_t table_offset, void *table_base)
 {
 	uint64_t table_entry;
 	uint64_t table_present;
-	uint64_t sub_table_addr = 0;
+	uint64_t sub_table_addr = 0UL;
 
 	/* Read the table entry */
 	table_entry = mem_read64(table_base
@@ -31,7 +31,7 @@ static uint64_t find_next_table(uint32_t table_offset, void *table_base)
 	table_present = (IA32E_EPT_R_BIT | IA32E_EPT_W_BIT | IA32E_EPT_X_BIT);
 
 	/* Determine if a valid entry exists */
-	if ((table_entry & table_present) == 0) {
+	if ((table_entry & table_present) == 0UL) {
 		/* No entry present */
 		return sub_table_addr;
 	}
@@ -111,8 +111,8 @@ void destroy_ept(struct vm *vm)
 
 uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 {
-	uint64_t hpa = 0;
-	uint32_t pg_size = 0;
+	uint64_t hpa = 0UL;
+	uint32_t pg_size = 0U;
 	struct entry_params entry;
 	struct map_params map_params;
 
@@ -221,7 +221,7 @@ int register_mmio_emulation_handler(struct vm *vm,
 	if ((read_write != NULL) && (end > start)) {
 		/* Allocate memory for node */
 		mmio_node =
-		(struct mem_io_node *)calloc(1, sizeof(struct mem_io_node));
+		(struct mem_io_node *)calloc(1U, sizeof(struct mem_io_node));
 
 		/* Ensure memory successfully allocated */
 		if (mmio_node != NULL) {
@@ -460,7 +460,7 @@ int ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu)
 
 	ASSERT(status == 0, "EPT Misconfiguration is not handled.\n");
 
-	TRACE_2L(TRACE_VMEXIT_EPT_MISCONFIGURATION, 0, 0);
+	TRACE_2L(TRACE_VMEXIT_EPT_MISCONFIGURATION, 0UL, 0UL);
 
 	return status;
 }

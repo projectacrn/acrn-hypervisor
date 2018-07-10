@@ -331,8 +331,8 @@ enum mem_io_type {
 };
 
 /* MMIO emulation related structures */
-#define MMIO_TRANS_VALID        1
-#define MMIO_TRANS_INVALID      0
+#define MMIO_TRANS_VALID        1U
+#define MMIO_TRANS_INVALID      0U
 struct mem_io {
 	uint64_t paddr;      /* Physical address being accessed */
 	enum mem_io_type read_write;   /* 0 = read / 1 = write operation */

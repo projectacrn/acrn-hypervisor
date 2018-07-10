@@ -31,10 +31,10 @@
 #define REQ_STATE_PROCESSING	2
 #define REQ_STATE_FAILED	-1
 
-#define REQ_PORTIO	0
-#define REQ_MMIO	1
-#define REQ_PCICFG	2
-#define REQ_WP		3
+#define REQ_PORTIO	0U
+#define REQ_MMIO	1U
+#define REQ_PCICFG	2U
+#define REQ_WP		3U
 
 #define REQUEST_READ	0
 #define REQUEST_WRITE	1

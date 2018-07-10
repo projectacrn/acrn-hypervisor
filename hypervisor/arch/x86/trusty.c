@@ -74,10 +74,10 @@ static struct key_info g_key_info = {
 static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 		uint64_t size, uint64_t gpa_rebased)
 {
-	uint64_t nworld_pml4e = 0;
-	uint64_t sworld_pml4e = 0;
+	uint64_t nworld_pml4e = 0UL;
+	uint64_t sworld_pml4e = 0UL;
 	struct map_params map_params;
-	uint64_t gpa = 0;
+	uint64_t gpa = 0UL;
 	uint64_t hpa = gpa2hpa(vm, gpa_orig);
 	uint64_t table_present = (IA32E_EPT_R_BIT |
 				IA32E_EPT_W_BIT |
@@ -109,7 +109,7 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 
 	/* Unmap gpa_orig~gpa_orig+size from guest normal world ept mapping */
 	map_params.pml4_base = HPA2HVA(vm->arch_vm.nworld_eptp);
-	unmap_mem(&map_params, (void *)hpa, (void *)gpa_orig, size, 0);
+	unmap_mem(&map_params, (void *)hpa, (void *)gpa_orig, size, 0U);
 
 	/* Copy PDPT entries from Normal world to Secure world
 	 * Secure world can access Normal World's memory,
@@ -350,7 +350,7 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 				BUP_MKHI_BOOTLOADER_SEED_LEN,
 				g_key_info.dseed_list[i].seed,
 				BUP_MKHI_BOOTLOADER_SEED_LEN,
-				NULL, 0,
+				NULL, 0U,
 				vcpu->vm->GUID, sizeof(vcpu->vm->GUID)) == 0) {
 			(void)memset(key_info, 0, sizeof(struct key_info));
 			pr_err("%s: derive dvseed failed!", __func__);
@@ -495,7 +495,7 @@ void trusty_set_dseed(void *dseed, uint8_t dseed_num)
 	if ((dseed == NULL) || (dseed_num == 0U) ||
 		(dseed_num > BOOTLOADER_SEED_MAX_ENTRIES)) {
 
-		g_key_info.num_seeds = 1;
+		g_key_info.num_seeds = 1U;
 		(void)memset(g_key_info.dseed_list[0].seed, 0xA5,
 			sizeof(g_key_info.dseed_list[0].seed));
 		return;
