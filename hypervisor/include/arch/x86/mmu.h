@@ -8,7 +8,7 @@
 #define MMU_H
 
 /* Size of all page-table entries (in bytes) */
-#define     IA32E_COMM_ENTRY_SIZE           8
+#define     IA32E_COMM_ENTRY_SIZE           8U
 
 /* Definitions common for all IA-32e related paging entries */
 #define     IA32E_COMM_P_BIT                0x0000000000000001UL
@@ -144,8 +144,8 @@
 
 /* IA32E Paging constants */
 #define     IA32E_INDEX_MASK_BITS           9
-#define     IA32E_NUM_ENTRIES               512
-#define     IA32E_INDEX_MASK                (uint64_t)(IA32E_NUM_ENTRIES - 1)
+#define     IA32E_NUM_ENTRIES               512U
+#define     IA32E_INDEX_MASK                (uint64_t)(IA32E_NUM_ENTRIES - 1U)
 #define     IA32E_REF_MASK			\
 		(boot_cpu_data.physical_address_mask)
 #define     IA32E_FIRST_BLOCK_INDEX         1
@@ -210,7 +210,7 @@
 #define     MMU_MEM_ATTR_TYPE_MASK \
 		(IA32E_PDPTE_PAT_BIT | IA32E_COMM_PCD_BIT | IA32E_COMM_PWT_BIT)
 
-#define ROUND_PAGE_UP(addr)  (((addr) + CPU_PAGE_SIZE - 1U) & CPU_PAGE_MASK)
+#define ROUND_PAGE_UP(addr)  (((addr) + (uint64_t)CPU_PAGE_SIZE - 1UL) & CPU_PAGE_MASK)
 #define ROUND_PAGE_DOWN(addr) ((addr) & CPU_PAGE_MASK)
 
 enum _page_table_type {

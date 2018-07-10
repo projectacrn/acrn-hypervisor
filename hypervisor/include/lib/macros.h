@@ -38,7 +38,7 @@
  * NOTE:  The required alignment must be a power of 2 (2, 4, 8, 16, 32, etc)
  */
 #define MEM_ALIGNED_CHECK(value, req_align)                             \
-	(((uint64_t)(value) & ((uint64_t)(req_align) - (uint64_t)1)) == 0)
+	(((uint64_t)(value) & ((uint64_t)(req_align) - 1UL)) == 0UL)
 
 #if !defined(ASSEMBLER) && !defined(LINKER_SCRIPT)
 

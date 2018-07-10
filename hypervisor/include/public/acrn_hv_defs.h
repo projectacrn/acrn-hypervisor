@@ -106,9 +106,9 @@
  * the parameter for HC_VM_SET_MEMMAP hypercall
  */
 struct vm_set_memmap {
-#define MAP_MEM		0
-#define MAP_MMIO	1
-#define MAP_UNMAP	2
+#define MAP_MEM		0U
+#define MAP_MMIO	1U
+#define MAP_UNMAP	2U
 	/** map type: MAP_MEM, MAP_MMIO or MAP_UNMAP */
 	uint32_t type;
 

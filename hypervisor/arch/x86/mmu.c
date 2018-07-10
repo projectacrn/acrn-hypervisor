@@ -165,12 +165,12 @@ void flush_vpid_single(int vpid)
 	if (vpid == 0)
 		return;
 
-	_invvpid(VMX_VPID_TYPE_SINGLE_CONTEXT, vpid, 0);
+	_invvpid(VMX_VPID_TYPE_SINGLE_CONTEXT, vpid, 0UL);
 }
 
 void flush_vpid_global(void)
 {
-	_invvpid(VMX_VPID_TYPE_ALL_CONTEXT, 0, 0);
+	_invvpid(VMX_VPID_TYPE_ALL_CONTEXT, 0, 0UL);
 }
 
 void invept(struct vcpu *vcpu)
@@ -530,7 +530,7 @@ static void *walk_paging_struct(void *addr, void *table_base,
 		}
 
 		/* Determine if a valid entry exists */
-		if ((table_entry & entry_present) == 0) {
+		if ((table_entry & entry_present) == 0UL) {
 			/* No entry present - need to allocate a new table */
 			sub_table_addr = alloc_paging_struct();
 			/* Check to ensure memory available for this structure*/
@@ -570,7 +570,7 @@ uint64_t get_paging_pml4(void)
 
 void enable_paging(uint64_t pml4_base_addr)
 {
-	uint64_t tmp64 = 0;
+	uint64_t tmp64 = 0UL;
 
 	/* Enable Write Protect, inhibiting writing to read-only pages */
 	CPU_CR_READ(cr0, &tmp64);
@@ -581,7 +581,7 @@ void enable_paging(uint64_t pml4_base_addr)
 
 void enable_smep(void)
 {
-	uint64_t val64 = 0;
+	uint64_t val64 = 0UL;
 
 	/* Enable CR4.SMEP*/
 	CPU_CR_READ(cr4, &val64);
@@ -665,8 +665,8 @@ void free_paging_struct(void *ptr)
 
 bool check_continuous_hpa(struct vm *vm, uint64_t gpa, uint64_t size)
 {
-	uint64_t curr_hpa = 0;
-	uint64_t next_hpa = 0;
+	uint64_t curr_hpa = 0UL;
+	uint64_t next_hpa = 0UL;
 
 	/* if size <= PAGE_SIZE_4K, it is continuous,no need check
 	 * if size > PAGE_SIZE_4K, need to fetch next page
@@ -687,7 +687,7 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 		struct entry_params *entry, void *addr, bool direct)
 {
 	uint64_t table_entry;
-	uint32_t entry_present = 0;
+	uint32_t entry_present = 0U;
 	int ret = 0;
 	/* Obtain the PML4 address */
 	void *table_addr = direct ? (map_params->pml4_base)
