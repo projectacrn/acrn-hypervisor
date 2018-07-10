@@ -317,7 +317,7 @@ int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value)
 				(PAT_FIELD_RSV_BITS & field) != 0U)) {
 			pr_err("invalid guest IA32_PAT: 0x%016llx", value);
 			vcpu_inject_gp(vcpu, 0U);
-			return -EINVAL;
+			return 0;
 		}
 	}
 
@@ -365,7 +365,7 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	if ((cr0 & (cr0_always_off_mask | CR0_RESERVED_MASK)) != 0U) {
 		pr_err("Not allow to set always off / reserved bits for CR0");
 		vcpu_inject_gp(vcpu, 0U);
-		return -EINVAL;
+		return 0;
 	}
 
 	/* TODO: Check all invalid guest statuses according to the change of
@@ -376,7 +376,7 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 		if ((context->cr4 & CR4_PAE) == 0U) {
 			pr_err("Can't enable long mode when PAE disabled");
 			vcpu_inject_gp(vcpu, 0U);
-			return -EINVAL;
+			return 0;
 		}
 		/* Enable long mode */
 		pr_dbg("VMM: Enable long mode");
@@ -403,7 +403,7 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 		if ((cr0 & CR0_CD) == 0U && ((cr0 & CR0_NW) != 0U)) {
 			pr_err("not allow to set CR0.NW while clearing CR0.CD");
 			vcpu_inject_gp(vcpu, 0U);
-			return -EINVAL;
+			return 0;
 		}
 
 		/* No action if only CR0.NW is changed */
@@ -500,14 +500,14 @@ int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 	if((cr4 & cr4_always_off_mask) != 0U) {
 		pr_err("Not allow to set reserved/always off bits for CR4");
 		vcpu_inject_gp(vcpu, 0U);
-		return -EINVAL;
+		return 0;
 	}
 
 	/* Do NOT support nested guest */
 	if ((cr4 & CR4_VMXE) != 0U) {
 		pr_err("Nested guest not supported");
 		vcpu_inject_gp(vcpu, 0U);
-		return -EINVAL;
+		return 0;
 	}
 
 	/* Aways off bits and reserved bits has been filtered above */

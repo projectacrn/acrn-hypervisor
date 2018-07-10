@@ -308,7 +308,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	val64 = exec_vmread(VMX_GUEST_CR4);
 	if ((val64 & CR4_OSXSAVE) == 0U) {
 		vcpu_inject_gp(vcpu, 0U);
-		return -1;
+		return 0;
 	}
 
 	idx = vcpu->arch_vcpu.cur_context;
@@ -320,7 +320,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	/*to access XCR0,'rcx' should be 0*/
 	if (ctx_ptr->guest_cpu_regs.regs.rcx != 0UL) {
 		vcpu_inject_gp(vcpu, 0U);
-		return -1;
+		return 0;
 	}
 
 	val64 = ((ctx_ptr->guest_cpu_regs.regs.rax) & 0xffffffffUL) |
@@ -329,7 +329,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	/*bit 0(x87 state) of XCR0 can't be cleared*/
 	if ((val64 & 0x01UL) == 0UL) {
 		vcpu_inject_gp(vcpu, 0U);
-		return -1;
+		return 0;
 	}
 
 	/*XCR0[2:1] (SSE state & AVX state) can't not be
@@ -338,7 +338,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	 **/
 	if (((val64 >> 1UL) & 0x3UL) == 0x2UL) {
 		vcpu_inject_gp(vcpu, 0U);
-		return -1;
+		return 0;
 	}
 
 	write_xcr(0, val64);
