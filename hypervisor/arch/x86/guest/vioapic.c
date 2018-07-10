@@ -406,12 +406,13 @@ vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 
 		/* remap for active: interrupt mask -> unmask
 		 * remap for deactive: interrupt mask & vector set to 0
+		 * remap for trigger mode change
+		 * remap for polarity change
 		 */
-		data64 = vioapic->rtbl[pin].reg;
-		if ((((data64 & IOAPIC_RTE_INTMASK) == IOAPIC_RTE_INTMCLR)
-		  && ((last & IOAPIC_RTE_INTMASK) == IOAPIC_RTE_INTMSET))
-		  || (((data64 & IOAPIC_RTE_INTMASK) == IOAPIC_RTE_INTMSET)
-		  && ((vioapic->rtbl[pin].reg & IOAPIC_RTE_INTVEC) == 0))) {
+		if ( (changed & IOAPIC_RTE_INTMASK) != 0UL ||
+		     (changed & IOAPIC_RTE_TRGRMOD) != 0UL ||
+		     (changed & IOAPIC_RTE_INTPOL ) != 0UL ) {
+
 			/* VM enable intr */
 			struct ptdev_intx_info intx;
 
