@@ -290,11 +290,10 @@ void vcpu_inject_nmi(struct vcpu *vcpu)
 	vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
 }
 
-int vcpu_inject_gp(struct vcpu *vcpu, uint32_t err_code)
+void vcpu_inject_gp(struct vcpu *vcpu, uint32_t err_code)
 {
 	vcpu_queue_exception(vcpu, IDT_GP, err_code);
 	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
-	return 0;
 }
 
 int vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code)
