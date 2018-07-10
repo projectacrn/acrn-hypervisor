@@ -2258,7 +2258,7 @@ apicv_inject_pir(struct vlapic *vlapic)
 
 int apic_access_vmexit_handler(struct vcpu *vcpu)
 {
-	int access_type, offset = 0, ret;
+	int access_type, offset = 0, err = 0;
 	uint64_t qual;
 	struct vlapic *vlapic;
 
@@ -2271,23 +2271,25 @@ int apic_access_vmexit_handler(struct vcpu *vcpu)
 
 	vlapic = vcpu->arch_vcpu.vlapic;
 
-	ret = decode_instruction(vcpu);
+	err = decode_instruction(vcpu);
 	/* apic access should already fetched instruction, decode_instruction
 	 * will not trigger #PF, so if it failed, just return error_no
 	 */
-	if (ret < 0)
-		return ret;
+	if (err < 0)
+		return err;
 
 	if (access_type == 1) {
 		if (emulate_instruction(vcpu) == 0)
-			vlapic_write(vlapic, 1, offset, vcpu->mmio.value);
+			err = vlapic_write(vlapic, 1, offset, vcpu->mmio.value);
 	} else if (access_type == 0) {
-		vlapic_read(vlapic, 1, offset, &vcpu->mmio.value);
-		emulate_instruction(vcpu);
+		err = vlapic_read(vlapic, 1, offset, &vcpu->mmio.value);
+		if (err < 0)
+			return err;
+		err = emulate_instruction(vcpu);
 	}
 
 	TRACE_2L(TRACE_VMEXIT_APICV_ACCESS, qual, (uint64_t)vlapic);
-	return 0;
+	return err;
 }
 
 int veoi_vmexit_handler(struct vcpu *vcpu)
