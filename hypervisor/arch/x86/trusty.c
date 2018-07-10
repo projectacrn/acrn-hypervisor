@@ -82,6 +82,7 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	uint64_t table_present = (IA32E_EPT_R_BIT |
 				IA32E_EPT_W_BIT |
 				IA32E_EPT_X_BIT);
+	uint64_t pdpte = 0, *dest_pdpte_p = NULL, *src_pdpte_p = NULL;
 	void *sub_table_addr = NULL, *pml4_base = NULL;
 	struct vm *vm0 = get_vm_from_vmid(0);
 	uint16_t i;
@@ -130,8 +131,22 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 
 
 	nworld_pml4e = mem_read64(HPA2HVA(vm->arch_vm.nworld_eptp));
-	(void)memcpy_s(HPA2HVA(sworld_pml4e & IA32E_REF_MASK), CPU_PAGE_SIZE,
-			HPA2HVA(nworld_pml4e & IA32E_REF_MASK), CPU_PAGE_SIZE);
+
+	/*
+	 * copy PTPDEs from normal world EPT to secure world EPT,
+	 * and remove execute access attribute in these entries
+	 */
+	dest_pdpte_p = HPA2HVA(sworld_pml4e & IA32E_REF_MASK);
+	src_pdpte_p = HPA2HVA(nworld_pml4e & IA32E_REF_MASK);
+	for (i = 0U; i < IA32E_NUM_ENTRIES - 1; i++) {
+		pdpte = mem_read64(src_pdpte_p);
+		if ((pdpte & table_present) != 0UL) {
+			pdpte &= ~IA32E_EPT_X_BIT;
+			mem_write64(dest_pdpte_p, pdpte);
+		}
+		src_pdpte_p++;
+		dest_pdpte_p++;
+	}
 
 	/* Map gpa_rebased~gpa_rebased+size
 	 * to secure ept mapping
