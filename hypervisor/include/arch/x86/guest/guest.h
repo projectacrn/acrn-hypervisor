@@ -17,21 +17,18 @@
 #ifndef ASSEMBLER
 
 #define foreach_vcpu(idx, vm, vcpu)				\
-	for (idx = 0, vcpu = vm->hw.vcpu_array[idx];		\
+	for (idx = 0U, vcpu = vm->hw.vcpu_array[idx];		\
 		(idx < vm->hw.num_vcpus) && (vcpu != NULL);	\
 		idx++, vcpu = vm->hw.vcpu_array[idx])
 
 
 /* the index is matched with emulated msrs array*/
-enum {
-	IDX_TSC_DEADLINE,
-	IDX_BIOS_UPDT_TRIG,
-	IDX_BIOS_SIGN_ID,
-	IDX_TSC,
-	IDX_PAT,
-
-	IDX_MAX_MSR
-};
+#define IDX_TSC_DEADLINE		0U
+#define IDX_BIOS_UPDT_TRIG		(IDX_TSC_DEADLINE + 1U)
+#define IDX_BIOS_SIGN_ID		(IDX_BIOS_UPDT_TRIG + 1U)
+#define IDX_TSC		(IDX_BIOS_SIGN_ID + 1U)
+#define IDX_PAT		(IDX_TSC + 1U)
+#define IDX_MAX_MSR	(IDX_PAT + 1U)
 
 struct vhm_request;
 
@@ -128,7 +125,7 @@ int copy_from_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
 int copy_to_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
 	uint32_t size, uint32_t *err_code);
 
-uint32_t create_guest_init_gdt(struct vm *vm, uint32_t *limit);
+uint64_t create_guest_init_gdt(struct vm *vm, uint32_t *limit);
 
 #ifdef HV_DEBUG
 void get_req_info(char *str, int str_max);
