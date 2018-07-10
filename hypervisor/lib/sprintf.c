@@ -117,20 +117,29 @@ static const char *get_flags(const char *s, int *flags)
 		PRINT_FLAG_SIGN,	/* + */
 		PRINT_FLAG_SPACE	/* ' ' */
 	};
-	const char *pos;
+	uint32_t i;
+	bool found;
 
 	/* parse multiple flags */
 	while ((*s) != 0) {
-		/* get index of flag. Terminate loop if no flag character was
-		 * found
+		/*
+		 * Get index of flag.
+		 * Terminate loop if no flag character was found.
 		 */
-		pos = strchr(flagchars, *s);
-		if (pos == NULL)
+		found = false;
+		for (i = 0U; i < sizeof(flagchars); i++) {
+			if (*s == flagchars[i]) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
 			break;
+		}
 
 		/* apply matching flags and continue with the next character */
 		++s;
-		*flags |= fl[pos - flagchars];
+		*flags |= fl[i];
 	}
 
 	/* Spec says that '-' has a higher priority than '0' */
