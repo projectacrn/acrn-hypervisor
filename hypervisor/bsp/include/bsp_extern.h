@@ -18,7 +18,7 @@
 #ifndef BSP_EXTERN_H
 #define BSP_EXTERN_H
 
-#define UOS_DEFAULT_START_ADDR   (0x100000000)
+#define UOS_DEFAULT_START_ADDR   (0x100000000UL)
 /**********************************/
 /* EXTERNAL VARIABLES             */
 /**********************************/

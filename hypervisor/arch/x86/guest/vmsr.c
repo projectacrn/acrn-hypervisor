@@ -43,11 +43,11 @@ static void enable_msr_interception(uint8_t *bitmap, uint32_t msr)
 	}
 
 	msr &= 0x1FFFU;
-	value = read_map[(msr>>3)];
-	value |= 1U<<(msr%8);
+	value = read_map[(msr>>3U)];
+	value |= 1U<<(msr%8U);
 	/* right now we trap for both r/w */
-	read_map[(msr>>3)] = value;
-	write_map[(msr>>3)] = value;
+	read_map[(msr>>3U)] = value;
+	write_map[(msr>>3U)] = value;
 }
 
 /* not used now just leave it for some cases it may be used as API*/
@@ -69,16 +69,16 @@ void disable_msr_interception(uint8_t *bitmap, uint32_t msr)
 	}
 
 	msr &= 0x1FFFU;
-	value = read_map[(msr>>3)];
-	value &= ~(1U<<(msr%8));
+	value = read_map[(msr>>3U)];
+	value &= ~(1U<<(msr%8U));
 	/* right now we trap for both r/w */
-	read_map[(msr>>3)] = value;
-	write_map[(msr>>3)] = value;
+	read_map[(msr>>3U)] = value;
+	write_map[(msr>>3U)] = value;
 }
 
 void init_msr_emulation(struct vcpu *vcpu)
 {
-	uint32_t i = 0;
+	uint32_t i;
 	uint32_t msrs_count =  ARRAY_SIZE(emulated_msrs);
 	void *msr_bitmap;
 	uint64_t value64;
@@ -92,7 +92,7 @@ void init_msr_emulation(struct vcpu *vcpu)
 		/* Allocate and initialize memory for MSR bitmap region*/
 		vcpu->vm->arch_vm.msr_bitmap = alloc_page();
 		ASSERT(vcpu->vm->arch_vm.msr_bitmap != NULL, "");
-		(void)memset(vcpu->vm->arch_vm.msr_bitmap, 0x0, CPU_PAGE_SIZE);
+		(void)memset(vcpu->vm->arch_vm.msr_bitmap, 0x0U, CPU_PAGE_SIZE);
 
 		msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
 
@@ -136,7 +136,7 @@ void init_msr_emulation(struct vcpu *vcpu)
 			(uint64_t *)calloc(msrs_count, sizeof(uint64_t));
 
 	ASSERT(vcpu->guest_msrs != NULL, "");
-	(void)memset(vcpu->guest_msrs, 0, msrs_count * sizeof(uint64_t));
+	(void)memset(vcpu->guest_msrs, 0U, msrs_count * sizeof(uint64_t));
 }
 
 int rdmsr_vmexit_handler(struct vcpu *vcpu)
@@ -242,8 +242,9 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 
 	/* Store the MSR contents in RAX and RDX */
 	vcpu->arch_vcpu.contexts[cur_context].guest_cpu_regs.regs.rax =
-					v & 0xffffffff;
-	vcpu->arch_vcpu.contexts[cur_context].guest_cpu_regs.regs.rdx = v >> 32;
+					v & 0xffffffffU;
+	vcpu->arch_vcpu.contexts[cur_context].guest_cpu_regs.regs.rdx =
+					v >> 32U;
 
 	TRACE_2L(TRACE_VMEXIT_RDMSR, msr, v);
 
@@ -259,11 +260,11 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 
 	/* Read the MSR ID */
-	msr = cur_context->guest_cpu_regs.regs.rcx;
+	msr = (uint32_t)cur_context->guest_cpu_regs.regs.rcx;
 
 	/* Get the MSR contents */
-	v = (((uint64_t) cur_context->guest_cpu_regs.regs.rdx) << 32) |
-	    ((uint64_t) cur_context->guest_cpu_regs.regs.rax);
+	v = (cur_context->guest_cpu_regs.regs.rdx << 32U) |
+		cur_context->guest_cpu_regs.regs.rax;
 
 	/* Do the required processing for each msr case */
 	switch (msr) {

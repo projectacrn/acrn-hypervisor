@@ -271,11 +271,11 @@ struct vcpu {
 #endif
 };
 
-#define	is_vcpu_bsp(vcpu)	((vcpu)->vcpu_id == 0)
+#define	is_vcpu_bsp(vcpu)	((vcpu)->vcpu_id == 0U)
 /* do not update Guest RIP for next VM Enter */
 static inline void vcpu_retain_rip(struct vcpu *vcpu)
 {
-	(vcpu)->arch_vcpu.inst_len = 0;
+	(vcpu)->arch_vcpu.inst_len = 0U;
 }
 
 /* External Interfaces */

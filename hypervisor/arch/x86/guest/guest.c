@@ -9,7 +9,7 @@
 #include <multiboot.h>
 #include <reloc.h>
 
-#define ACRN_DBG_GUEST	6
+#define ACRN_DBG_GUEST	6U
 
 /* for VM0 e820 */
 uint32_t e820_entries;
@@ -18,7 +18,7 @@ struct e820_mem_params e820_mem;
 
 struct page_walk_info {
 	uint64_t top_entry;	/* Top level paging structure entry */
-	int level;
+	uint32_t level;
 	uint32_t width;
 	bool is_user_mode;
 	bool is_write_access;
@@ -32,7 +32,7 @@ struct page_walk_info {
 inline bool
 is_vm0(struct vm *vm)
 {
-	return (vm->attr.boot_idx & 0x7FU) == 0;
+	return (vm->attr.boot_idx & 0x7FU) == 0U;
 }
 
 inline struct vcpu *vcpu_from_vid(struct vm *vm, uint16_t vcpu_id)
@@ -77,7 +77,7 @@ inline struct vcpu *get_primary_vcpu(struct vm *vm)
 inline uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask)
 {
 	uint16_t vcpu_id;
-	uint64_t dmask = 0;
+	uint64_t dmask = 0UL;
 	struct vcpu *vcpu;
 
 	for (vcpu_id = ffs64(vdmask); vcpu_id != INVALID_BIT_INDEX;
@@ -129,8 +129,9 @@ enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 	uint64_t gva, uint64_t *gpa, uint32_t *err_code)
 {
-	int i;
-	uint32_t index, shift;
+	uint32_t i;
+	uint64_t index;
+	uint32_t shift;
 	uint8_t *base;
 	uint64_t entry;
 	uint64_t addr, page_size;
@@ -141,7 +142,10 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 		return -EINVAL;
 
 	addr = pw_info->top_entry;
-	for (i = pw_info->level - 1; i >= 0; i--) {
+	i = pw_info->level;
+	while (i != 0U) {
+		i--;
+
 		addr = addr & IA32E_REF_MASK;
 		base = GPA2HVA(vcpu->vm, addr);
 		if (base == NULL) {
@@ -149,7 +153,7 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 			goto out;
 		}
 
-		shift = (uint32_t) i * pw_info->width + 12U;
+		shift = i * pw_info->width + 12U;
 		index = (gva >> shift) & ((1UL << pw_info->width) - 1UL);
 		page_size = 1UL << shift;
 
@@ -188,9 +192,9 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 
 	entry >>= shift;
 	/* shift left 12bit more and back to clear XD/Prot Key/Ignored bits */
-	entry <<= (shift + 12);
-	entry >>= 12;
-	*gpa = entry | (gva & (page_size - 1));
+	entry <<= (shift + 12U);
+	entry >>= 12U;
+	*gpa = entry | (gva & (page_size - 1UL));
 out:
 
 	if (fault != 0) {
@@ -224,7 +228,7 @@ static int _gva2gpa_pae(struct vcpu *vcpu, struct page_walk_info *pw_info,
 		goto out;
 	}
 
-	pw_info->level = 2;
+	pw_info->level = 2U;
 	pw_info->top_entry = entry;
 	ret = _gva2gpa_common(vcpu, pw_info, gva, gpa, err_code);
 
@@ -265,24 +269,25 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 
 	pw_info.top_entry = cur_context->cr3;
 	pw_info.level = pm;
-	pw_info.is_write_access = !!(*err_code & PAGE_FAULT_WR_FLAG);
-	pw_info.is_inst_fetch = !!(*err_code & PAGE_FAULT_ID_FLAG);
+	pw_info.is_write_access = ((*err_code & PAGE_FAULT_WR_FLAG) != 0U);
+	pw_info.is_inst_fetch = ((*err_code & PAGE_FAULT_ID_FLAG) != 0U);
 	pw_info.is_user_mode = ((exec_vmread(VMX_GUEST_CS_SEL) & 0x3UL) == 3UL);
 	pw_info.pse = true;
-	pw_info.nxe = cur_context->ia32_efer & MSR_IA32_EFER_NXE_BIT;
-	pw_info.wp = !!(cur_context->cr0 & CR0_WP);
+	pw_info.nxe =
+		((cur_context->ia32_efer & MSR_IA32_EFER_NXE_BIT) != 0UL);
+	pw_info.wp = ((cur_context->cr0 & CR0_WP) != 0UL);
 
 	*err_code &=  ~PAGE_FAULT_P_FLAG;
 
 	if (pm == PAGING_MODE_4_LEVEL) {
-		pw_info.width = 9;
+		pw_info.width = 9U;
 		ret = _gva2gpa_common(vcpu, &pw_info, gva, gpa, err_code);
 	} else if(pm == PAGING_MODE_3_LEVEL) {
-		pw_info.width = 9;
+		pw_info.width = 9U;
 		ret = _gva2gpa_pae(vcpu, &pw_info, gva, gpa, err_code);
 	} else if (pm == PAGING_MODE_2_LEVEL) {
-		pw_info.width = 10;
-		pw_info.pse = !!(cur_context->cr4 & CR4_PSE);
+		pw_info.width = 10U;
+		pw_info.pse = ((cur_context->cr4 & CR4_PSE) != 0UL);
 		pw_info.nxe = false;
 		ret = _gva2gpa_common(vcpu, &pw_info, gva, gpa, err_code);
 	} else
@@ -296,25 +301,25 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	return ret;
 }
 
-static inline int32_t _copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
+static inline uint32_t _copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 	uint32_t size, uint32_t fix_pg_size, bool cp_from_vm)
 {
 	uint64_t hpa;
-	uint32_t off_in_pg, len, pg_size;
+	uint32_t offset_in_pg, len, pg_size;
 	void *g_ptr;
 
 	hpa = _gpa2hpa(vm, gpa, &pg_size);
 	if (pg_size == 0U) {
 		pr_err("GPA2HPA not found");
-		return -EINVAL;
+		return 0;
 	}
 
 	if (fix_pg_size != 0U)
 		pg_size = fix_pg_size;
 
-	off_in_pg = gpa & (pg_size - 1);
-	len = (size > pg_size - off_in_pg) ?
-		(pg_size - off_in_pg) : size;
+	offset_in_pg = (uint32_t)gpa & (pg_size - 1U);
+	len = (size > (pg_size - offset_in_pg)) ?
+		(pg_size - offset_in_pg) : size;
 
 	g_ptr = HPA2HVA(hpa);
 
@@ -329,7 +334,6 @@ static inline int32_t _copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 static inline int copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 	uint32_t size, bool cp_from_vm)
 {
-	int32_t ret;
 	uint32_t len;
 
 	if (vm == NULL) {
@@ -337,16 +341,15 @@ static inline int copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 		return -EINVAL;
 	}
 
-	do {
-		ret = _copy_gpa(vm, h_ptr, gpa, size, 0, cp_from_vm);
-		if (ret < 0)
-			return ret;
+	while (size > 0U) {
+		len = _copy_gpa(vm, h_ptr, gpa, size, 0U, cp_from_vm);
+		if (len == 0U)
+			return -EINVAL;
 
-		len = (uint32_t) ret;
 		gpa += len;
 		h_ptr += len;
 		size -= len;
-	} while (size > 0U);
+	}
 
 	return 0;
 }
@@ -354,7 +357,7 @@ static inline int copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 static inline int copy_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
 	uint32_t size, uint32_t *err_code, bool cp_from_vm)
 {
-	uint64_t gpa = 0;
+	uint64_t gpa = 0UL;
 	int32_t ret;
 	uint32_t len;
 
@@ -367,7 +370,7 @@ static inline int copy_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
 		return -EINVAL;
 	}
 
-	do {
+	while (size > 0U) {
 		ret = gva2gpa(vcpu, gva, &gpa, err_code);
 		if (ret < 0) {
 			pr_err("error[%d] in GVA2GPA, err_code=0x%x",
@@ -375,16 +378,15 @@ static inline int copy_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
 			return ret;
 		}
 
-		ret = _copy_gpa(vcpu->vm, h_ptr, gpa, size,
+		len = _copy_gpa(vcpu->vm, h_ptr, gpa, size,
 			PAGE_SIZE_4K, cp_from_vm);
-		if (ret < 0)
-			return ret;
+		if (len == 0U)
+			return -EINVAL;
 
-		len = (uint32_t) ret;
 		gva += len;
 		h_ptr += len;
 		size -= len;
-	} while (size > 0U);
+	}
 
 	return 0;
 }
@@ -569,11 +571,11 @@ static void rebuild_vm0_e820(void)
 int prepare_vm0_memmap_and_e820(struct vm *vm)
 {
 	uint32_t i;
-	uint32_t attr_wb = (IA32E_EPT_R_BIT |
+	uint64_t attr_wb = (IA32E_EPT_R_BIT |
 				IA32E_EPT_W_BIT |
 				IA32E_EPT_X_BIT |
 				IA32E_EPT_WB);
-	uint32_t attr_uc = (IA32E_EPT_R_BIT |
+	uint64_t attr_uc = (IA32E_EPT_R_BIT |
 				IA32E_EPT_W_BIT |
 				IA32E_EPT_X_BIT |
 				IA32E_EPT_UNCACHED);
@@ -598,7 +600,6 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 					entry->length, MAP_MEM, attr_wb);
 	}
 
-
 	dev_dbg(ACRN_DBG_GUEST, "VM0 e820 layout:\n");
 	for (i = 0U; i < e820_entries; i++) {
 		entry = &e820[i];
@@ -613,7 +614,7 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 	 * will cause EPT violation if sos accesses hv memory
 	 */
 	hv_hpa = get_hv_image_base();
-	ept_mmap(vm, hv_hpa, hv_hpa, CONFIG_RAM_SIZE, MAP_UNMAP, 0);
+	ept_mmap(vm, hv_hpa, hv_hpa, CONFIG_RAM_SIZE, MAP_UNMAP, 0U);
 	return 0;
 }
 
@@ -623,7 +624,8 @@ uint64_t e820_alloc_low_memory(uint32_t size)
 	struct e820_entry *entry, *new_entry;
 
 	/* We want memory in page boundary and integral multiple of pages */
-	size = ROUND_PAGE_UP(size);
+	size = ((size + CPU_PAGE_SIZE - 1U) >> CPU_PAGE_SHIFT)
+		<< CPU_PAGE_SHIFT;
 
 	for (i = 0U; i < e820_entries; i++) {
 		entry = &e820[i];
@@ -823,12 +825,12 @@ static const uint64_t guest_init_gdt[] = {
 	GUEST_INIT_GDT_DESC_3,
 };
 
-uint32_t create_guest_init_gdt(struct vm *vm, uint32_t *limit)
+uint64_t create_guest_init_gdt(struct vm *vm, uint32_t *limit)
 {
 	void *gtd_addr = GPA2HVA(vm, GUEST_INIT_GDT_START);
 
-	*limit = sizeof(guest_init_gdt) - 1;
-	(void)memcpy_s(gtd_addr, 64, guest_init_gdt, sizeof(guest_init_gdt));
+	*limit = sizeof(guest_init_gdt) - 1U;
+	(void)memcpy_s(gtd_addr, 64U, guest_init_gdt, sizeof(guest_init_gdt));
 
 	return GUEST_INIT_GDT_START;
 };
