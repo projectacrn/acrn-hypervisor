@@ -50,6 +50,8 @@ static struct key_info g_key_info = {
 	exec_vmwrite(VMX_GUEST_##SEG_NAME##_ATTR, seg.attr); \
 }
 
+#ifndef WORKAROUND_FOR_TRUSTY_4G_MEM
+
 /**
  * @defgroup trusty_apis Trusty APIs
  *
@@ -209,6 +211,7 @@ void  destroy_secure_world(struct vm *vm)
 			 IA32E_EPT_WB));
 
 }
+#endif
 
 static void save_world_ctx(struct run_context *context)
 {
