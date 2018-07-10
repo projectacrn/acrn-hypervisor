@@ -525,7 +525,7 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 	/* Handle all other exceptions */
 	vcpu_retain_rip(vcpu);
 
-	vcpu_queue_exception(vcpu, exception_vector, int_err_code);
+	status = vcpu_queue_exception(vcpu, exception_vector, int_err_code);
 
 	if (exception_vector == IDT_MC) {
 		/* just print error message for #MC, it then will be injected

@@ -140,6 +140,7 @@ void init_msr_emulation(struct vcpu *vcpu)
 
 int rdmsr_vmexit_handler(struct vcpu *vcpu)
 {
+	int err = 0;
 	uint32_t msr;
 	uint64_t v = 0UL;
 	int cur_context = vcpu->arch_vcpu.cur_context;
@@ -151,7 +152,7 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 	switch (msr) {
 	case MSR_IA32_TSC_DEADLINE:
 	{
-		vlapic_rdmsr(vcpu, msr, &v);
+		err = vlapic_rdmsr(vcpu, msr, &v);
 		break;
 	}
 	case MSR_IA32_TIME_STAMP_COUNTER:
@@ -221,7 +222,7 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 	case MSR_IA32_APIC_BASE:
 	{
 		/* Read APIC base */
-		vlapic_rdmsr(vcpu, msr, &v);
+		err = vlapic_rdmsr(vcpu, msr, &v);
 		break;
 	}
 	default:
@@ -245,11 +246,12 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 
 	TRACE_2L(TRACE_VMEXIT_RDMSR, msr, v);
 
-	return 0;
+	return err;
 }
 
 int wrmsr_vmexit_handler(struct vcpu *vcpu)
 {
+	int err = 0;
 	uint32_t msr;
 	uint64_t v;
 	struct run_context *cur_context =
@@ -266,7 +268,7 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	switch (msr) {
 	case MSR_IA32_TSC_DEADLINE:
 	{
-		vlapic_wrmsr(vcpu, msr, v);
+		err = vlapic_wrmsr(vcpu, msr, v);
 		break;
 	}
 	case MSR_IA32_TIME_STAMP_COUNTER:
@@ -340,7 +342,7 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	}
 	case MSR_IA32_PAT:
 	{
-		vmx_wrmsr_pat(vcpu, v);
+		err = vmx_wrmsr_pat(vcpu, v);
 		break;
 	}
 	case MSR_IA32_GS_BASE:
@@ -355,7 +357,7 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	}
 	case MSR_IA32_APIC_BASE:
 	{
-		vlapic_wrmsr(vcpu, msr, v);
+		err = vlapic_wrmsr(vcpu, msr, v);
 		break;
 	}
 	default:
@@ -373,5 +375,5 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 
 	TRACE_2L(TRACE_VMEXIT_WRMSR, msr, v);
 
-	return 0;
+	return err;
 }
