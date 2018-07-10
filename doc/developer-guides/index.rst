@@ -9,6 +9,7 @@ Developer Guides
    primer.rst
    memmgt-hld.rst
    virtio-hld.rst
+   ACPI-virt-hld.rst
    ../api/index.rst
    ../reference/kconfig/index.rst
    trusty.rst
