@@ -27,6 +27,7 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 	struct usb_data_xfer_block *block;
 	int len, do_intr = 0, short_data = 0;
 	int i, idx, buf_idx, done;
+	int bstart, bcount;
 
 	assert(libusb_xfer);
 	assert(libusb_xfer->user_data);
@@ -37,9 +38,15 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 
 	assert(xfer);
 	assert(xfer->dev);
-	UPRINTF(LDBG, "xfer_comp: ep %d with %d bytes. status %d,%d\n",
-			req->xfer->epid, len, libusb_xfer->status,
-			xfer->ndata);
+
+	bstart = req->blk_start;
+	bcount = req->blk_count;
+	UPRINTF(LDBG, "%s: actual_length %d ep%d-transfer (%d-%d %d) request-%d"
+			" (%d-%d %d) status %d\r\n", __func__, len, xfer->epid,
+			xfer->head, (xfer->tail - 1) % USB_MAX_XFER_BLOCKS,
+			xfer->ndata, req->seq, bstart, (bstart + bcount - 1) %
+			USB_MAX_XFER_BLOCKS, req->buf_length,
+			libusb_xfer->status);
 
 	/* lock for protecting the transfer */
 	USB_DATA_XFER_LOCK(xfer);
@@ -511,11 +518,6 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 	if (data_size <= 0)
 		goto done;
 
-	UPRINTF(LDBG, "%s: DIR=%s|EP=%x|*%s*, data %d %d-%d\n", __func__,
-			dir ? "IN" : "OUT", epid, type == USB_ENDPOINT_BULK ?
-			"BULK" : "INT", data_size,
-			blk_start, blk_start + blk_count - 1);
-
 	req = usb_dev_alloc_req(udev, xfer, dir, data_size);
 	if (!req) {
 		xfer->status = USB_ERR_IOERROR;
@@ -691,10 +693,10 @@ usb_dev_init(void *pdata, char *opt)
 	port  = libusb_get_port_number(ldev);
 	bus   = libusb_get_bus_number(ldev);
 	libusb_get_device_descriptor(ldev, &desc);
-	UPRINTF(LINF, "Found USB device: %d-%d\r\nPID(0x%X), VID(0x%X) "
-			"CLASS(0x%X) SUBCLASS(0x%x) BCD(0x%x)\r\n", bus, port,
-			desc.idProduct, desc.idVendor,
-			desc.bDeviceClass, desc.bDeviceSubClass, desc.bcdUSB);
+	UPRINTF(LINF, "Found USB device: %d-%d\r\nPID(0x%X), VID(0x%X) CLASS"
+			"(0x%X) SUBCLASS(0x%X) BCD(0x%X) SPEED(%d)\r\n", bus,
+			port, desc.idProduct, desc.idVendor, desc.bDeviceClass,
+			desc.bDeviceSubClass, desc.bcdUSB, speed);
 
 	/* allocate and populate udev */
 	udev = calloc(1, sizeof(struct usb_dev));
