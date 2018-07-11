@@ -18,6 +18,8 @@
 #define LOG_TAG "USBPM: "
 
 static struct usb_dev_sys_ctx_info g_ctx;
+static inline uint8_t usb_dev_get_ep_type(struct usb_dev *udev, int pid,
+		int epnum);
 
 static void
 usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
@@ -30,12 +32,15 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 	int bstart, bcount;
 
 	assert(libusb_xfer);
-	assert(libusb_xfer->user_data);
 
+	/* async request */
 	req = libusb_xfer->user_data;
 	len = libusb_xfer->actual_length;
-	xfer = req->xfer;
+	assert(req);
+	assert(req->udev);
 
+	/* async transfer */
+	xfer = req->xfer;
 	assert(xfer);
 	assert(xfer->dev);
 
@@ -52,13 +57,39 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 	USB_DATA_XFER_LOCK(xfer);
 	xfer->status = USB_ERR_NORMAL_COMPLETION;
 
+	switch (libusb_xfer->status) {
+	case LIBUSB_TRANSFER_STALL:
+		xfer->status = USB_ERR_STALLED;
+		goto out;
+	case LIBUSB_TRANSFER_NO_DEVICE:
+	case LIBUSB_TRANSFER_ERROR:
+	case LIBUSB_TRANSFER_TIMED_OUT:
+	case LIBUSB_TRANSFER_CANCELLED:
+	case LIBUSB_TRANSFER_OVERFLOW:
+		/* FIXME: should treat every failure properly */
+		UPRINTF(LWRN, "failure: %x\r\n", libusb_xfer->status);
+		break;
+	case LIBUSB_TRANSFER_COMPLETED:
+		break;
+	default:
+		UPRINTF(LWRN, "unknown failure: %x\r\n", libusb_xfer->status);
+		break;
+	}
+
 	/* in case the xfer is reset by the USB_DATA_XFER_RESET */
-	if (xfer->reset == 1 ||
-			libusb_xfer->status != LIBUSB_TRANSFER_COMPLETED) {
+	if (xfer->reset == 1) {
 		UPRINTF(LDBG, "ep%d reset detected\r\n", xfer->epid);
 		xfer->reset = 0;
-		USB_DATA_XFER_UNLOCK(xfer);
-		goto reset_out;
+		/* ONLY interrupt transfer needs this.
+		 * The transfer here is an old one before endpoint reset, so it
+		 * should be discarded. But for bulk transfer, the transfer here
+		 * is a new one after reset, so it should be kept.
+		 */
+		if (usb_dev_get_ep_type(req->udev, xfer->pid & 1,
+					xfer->epid / 2) == USB_ENDPOINT_INT) {
+			UPRINTF(LDBG, "goto reset out\r\n");
+			goto reset_out;
+		}
 	}
 
 	/* post process the usb transfer data */
@@ -84,10 +115,9 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 		idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 	}
 
-reset_out:
 	if (short_data)
 		xfer->status = USB_ERR_SHORT_XFER;
-
+out:
 	/* notify the USB core this transfer is over */
 	if (g_ctx.notify_cb)
 		do_intr = g_ctx.notify_cb(xfer->dev, xfer);
@@ -96,6 +126,7 @@ reset_out:
 	if (do_intr && g_ctx.intr_cb)
 		g_ctx.intr_cb(xfer->dev, NULL);
 
+reset_out:
 	/* unlock and release memory */
 	USB_DATA_XFER_UNLOCK(xfer);
 	libusb_free_transfer(libusb_xfer);
@@ -649,11 +680,19 @@ usb_dev_request(void *pdata, struct usb_data_xfer *xfer)
 		usb_dev_set_if(udev, index, value, xfer);
 		goto out;
 	case UREQ(UR_CLEAR_FEATURE, UT_WRITE_ENDPOINT):
-		if (value == 0) {
-			UPRINTF(LDBG, "UR_CLEAR_HALT\n");
-			libusb_clear_halt(udev->handle, index);
-			goto out;
+		if (value) {
+			/* according to usb spec (ch9), this is impossible */
+			UPRINTF(LWRN, "Clear Feature request with non-zero "
+					"value %d\r\n", value);
+			break;
 		}
+
+		UPRINTF(LDBG, "UR_CLEAR_HALT\n");
+		rc = libusb_clear_halt(udev->handle, index);
+		if (rc)
+			UPRINTF(LWRN, "fail to clear halted ep, rc %d\r\n", rc);
+		goto out;
+
 	}
 
 	/* send it to physical device */

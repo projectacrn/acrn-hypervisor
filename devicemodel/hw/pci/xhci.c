@@ -1748,14 +1748,18 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 		goto done;
 	}
 
+	dev_ctx = dev->dev_ctx;
+	assert(dev_ctx != NULL);
+	ep_ctx = &dev_ctx->ctx_ep[epid];
+
+	if ((ep_ctx->dwEpCtx0 & 0x7) != XHCI_ST_EPCTX_HALTED) {
+		cmderr = XHCI_TRB_ERROR_CONTEXT_STATE;
+		goto done;
+	}
+
 	devep = &dev->eps[epid];
 	if (devep->ep_xfer != NULL)
 		USB_DATA_XFER_RESET(devep->ep_xfer);
-
-	dev_ctx = dev->dev_ctx;
-	assert(dev_ctx != NULL);
-
-	ep_ctx = &dev_ctx->ctx_ep[epid];
 
 	ep_ctx->dwEpCtx0 = (ep_ctx->dwEpCtx0 & ~0x7) | XHCI_ST_EPCTX_STOPPED;
 
@@ -1765,13 +1769,6 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 	UPRINTF(LDBG, "reset ep[%u] %08x %08x %016lx %08x\r\n",
 		epid, ep_ctx->dwEpCtx0, ep_ctx->dwEpCtx1, ep_ctx->qwEpCtx2,
 		ep_ctx->dwEpCtx4);
-
-	if (type == XHCI_TRB_TYPE_RESET_EP &&
-	    (dev->dev_ue->ue_reset == NULL ||
-	    dev->dev_ue->ue_reset(dev->dev_instance) < 0)) {
-		cmderr = XHCI_TRB_ERROR_ENDP_NOT_ON;
-		goto done;
-	}
 
 done:
 	return cmderr;
@@ -2159,7 +2156,7 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 	uint32_t trbflags;
 	uint32_t edtla;
 	uint32_t i;
-	int  err;
+	int  err = XHCI_TRB_ERROR_SUCCESS;
 
 	dev = XHCI_SLOTDEV_PTR(xdev, slot);
 	devep = &dev->eps[epid];
@@ -2169,7 +2166,20 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 
 	ep_ctx = &dev_ctx->ctx_ep[epid];
 
-	err = XHCI_TRB_ERROR_SUCCESS;
+	/* err is used as completion code and sent to guest driver */
+	switch (xfer->status) {
+	case USB_ERR_STALLED:
+		ep_ctx->dwEpCtx0 = (ep_ctx->dwEpCtx0 & ~0x7) |
+			XHCI_ST_EPCTX_HALTED;
+		err = XHCI_TRB_ERROR_STALL;
+		break;
+	case USB_ERR_NORMAL_COMPLETION:
+		break;
+	default:
+		/* FIXME: should process other failures */
+		UPRINTF(LFTL, "unknown error %d\r\n", xfer->status);
+	}
+
 	*do_intr = 0;
 	edtla = 0;
 
@@ -2494,6 +2504,9 @@ retry:
 
 	UPRINTF(LDBG, "[%d]: xfer->ndata %u\r\n", __LINE__, xfer->ndata);
 
+	if (xfer->ndata <= 0)
+		goto errout;
+
 	if (epid == 1) {
 		err = USB_ERR_NOT_STARTED;
 		if (dev->dev_ue->ue_request != NULL)
@@ -2525,7 +2538,9 @@ errout:
 		pci_xhci_assert_interrupt(xdev);
 
 	if (do_retry) {
-		USB_DATA_XFER_RESET(xfer);
+		if (epid == 1)
+			USB_DATA_XFER_RESET(xfer);
+
 		UPRINTF(LDBG, "[%d]: retry:continuing with next TRBs\r\n",
 			 __LINE__);
 		goto retry;
