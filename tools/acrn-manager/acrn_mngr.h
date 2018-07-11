@@ -34,23 +34,6 @@ enum msgid {
 	MSG_MAX,
 };
 
-/* For test, generate a message who carry a string
- * eg., VMM_MSG_STR(hello_msg, "Hello\n") will create hello_msg,
- * then you can write(sock_fd, hello_msg, sizeof(hello_msg))
- */
-#define MNGR_MSG_STR(var, str)   \
-struct mngr_msg_##var {          \
-struct mngr_msg msg;            \
-        char raw[sizeof(str)];          \
-} var = {                               \
-        .msg = {                       \
-                .magic = MNGR_MSG_MAGIC, \
-                .msgid = MSG_STR,       \
-                .len = sizeof(struct mngr_msg_##var),    \
-        },                                              \
-        .raw = str,                             \
-}
-
 /* DM handled message event types */
 enum dm_msgid {
 	DM_STOP = MSG_MAX + 1,	/* Stop this UOS */
