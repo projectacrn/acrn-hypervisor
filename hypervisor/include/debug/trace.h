@@ -170,8 +170,9 @@ TRACE_16STR(uint32_t evid, const char name[])
 
 	len = strnlen_s(name, 20U);
 	len = (len > 16U) ? 16U : len;
-	for (i = 0U; i < len; i++)
+	for (i = 0U; i < len; i++) {
 		entry.payload.str[i] = name[i];
+	}
 
 	entry.payload.str[15] = 0;
 	_trace_put(cpu_id, evid, 16U, &entry);

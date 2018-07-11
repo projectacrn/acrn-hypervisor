@@ -66,8 +66,9 @@ static int string_to_argv(char *argv_str, void *p_argv_mem,
 		/* Move past the vector entry argument string (in the
 		 * argument string).
 		 */
-		while ((*p_ch != ' ') && (*p_ch != ',') && (*p_ch != 0))
+		while ((*p_ch != ' ') && (*p_ch != ',') && (*p_ch != 0)) {
 			p_ch++;
+		}
 
 		/* Count the argument just processed. */
 		argc++;
@@ -80,8 +81,9 @@ static int string_to_argv(char *argv_str, void *p_argv_mem,
 			*p_ch = 0;
 			/* Remove all space in middile of cmdline */
 			p_ch++;
-			while (*p_ch == ' ')
+			while (*p_ch == ' ') {
 				p_ch++;
+			}
 		}
 	}
 

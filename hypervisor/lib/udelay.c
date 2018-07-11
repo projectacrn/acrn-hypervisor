@@ -15,6 +15,6 @@ void udelay(uint32_t us)
 	dest_tsc = rdtsc() + delta_tsc;
 
 	/* Loop until time expired */
-	while
-		(rdtsc() < dest_tsc);
+	while (rdtsc() < dest_tsc) {
+	}
 }

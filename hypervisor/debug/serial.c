@@ -332,8 +332,9 @@ int serial_puts(uint32_t uart_handle, const char *s, uint32_t length)
 	 * Loop through the string until desired length of bytes have
 	 * been written or SERIAL_EOF is returned.
 	 */
-	for (; length > 0U && retval != SERIAL_EOF; s++, length--)
+	for (; length > 0U && retval != SERIAL_EOF; s++, length--) {
 		retval = serial_putc(uart_handle, (int) *s);
+	}
 
 	/* Allow other threads to use this service. */
 	spinlock_release(&port->tx_lock);

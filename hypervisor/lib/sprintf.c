@@ -469,8 +469,9 @@ int do_print(const char *fmt, struct print_param *param,
 		/* mark the current position and search the next '%' */
 		start = fmt;
 
-		while (((*fmt) != 0) && (*fmt != '%'))
+		while (((*fmt) != 0) && (*fmt != '%')) {
 			fmt++;
+		}
 
 		/*
 		 * pass all characters until the next '%' to the emit function.
