@@ -36,13 +36,13 @@ on your platform. You'll need a network connection for your platform to
 complete this setup.
 
 .. note::
-   ACRN requires Clear Linux version 22140 or newer. The instructions below
-   have been validated with version 22140 and need some adjustment to work
+   ACRN requires Clear Linux version 23510 or newer. The instructions below
+   have been validated with version 23510 and need some adjustment to work
    with newer versions. You will see a note when the instruction needs to be
    adjusted.
 
 #. Download the compressed Clear installer image from
-   https://download.clearlinux.org/releases/22140/clear/clear-22140-installer.img.xz
+   https://download.clearlinux.org/releases/23510/clear/clear-23510-installer.img.xz
    and follow the `Clear Linux installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
    as a starting point for installing Clear Linux onto your platform.  Follow the recommended
@@ -99,9 +99,9 @@ partition. Follow these steps:
 
       # ls -1 /mnt/EFI/org.clearlinux
       bootloaderx64.efi
-      kernel-org.clearlinux.native.4.16.6-563
-      kernel-org.clearlinux.pk414-sos.4.14.34-28
-      kernel-org.clearlinux.pk414-standard.4.14.34-28
+      kernel-org.clearlinux.native.4.17.4-589
+      kernel-org.clearlinux.pk414-sos.4.14.51-60
+      kernel-org.clearlinux.pk414-standard.4.14.51-60
       loaderx64.efi
 
    .. note::
@@ -185,7 +185,7 @@ partition. Follow these steps:
 
    A starter acrn.conf configuration file is included in the Clear Linux release and is
    also available in the acrn-hypervisor/hypervisor GitHub repo as `acrn.conf
-   <https://github.com/projectacrn/acrn-hypervisor/hypervisor/tree/master/bsp/uefi/clearlinux/acrn.conf>`__
+   <https://github.com/projectacrn/acrn-hypervisor/blob/v0.1/hypervisor/bsp/uefi/clearlinux/acrn.conf>`_
    as shown here:
 
    .. literalinclude:: ../../hypervisor/bsp/uefi/clearlinux/acrn.conf
@@ -255,7 +255,7 @@ Set up Reference UOS
    .. code-block:: none
 
       # cd ~
-      # curl -O https://download.clearlinux.org/releases/22140/clear/clear-22140-kvm.img.xz
+      # curl -O https://download.clearlinux.org/releases/23510/clear/clear-23510-kvm.img.xz
 
    .. note::
       In case you want to use or try out a newer version of Clear Linux as the UOS, you can
@@ -266,16 +266,16 @@ Set up Reference UOS
 
    .. code-block:: none
 
-      # unxz clear-22140-kvm.img.xz
+      # unxz clear-23510-kvm.img.xz
 
 #. Deploy the UOS kernel modules to UOS virtual disk image (note: you'll need to use
    the same **standard** image version number noted in step 1 above):
 
    .. code-block:: none
 
-      # losetup -f -P --show /root/clear-22140-kvm.img
+      # losetup -f -P --show /root/clear-23510-kvm.img
       # mount /dev/loop0p3 /mnt
-      # cp -r /usr/lib/modules/4.14.34-28.pk414-standard /mnt/lib/modules/
+      # cp -r /usr/lib/modules/4.14.51-60.pk414-standard /mnt/lib/modules/
       # umount /mnt
       # sync
 
@@ -294,7 +294,7 @@ Set up Reference UOS
 
    .. note::
       In case you have downloaded a different Clear Linux image than the one above
-      (``clear-22140-kvm.img.xz``), you will need to modify the Clear Linux file name
+      (``clear-23510-kvm.img.xz``), you will need to modify the Clear Linux file name
       and version number highlighted above (the ``-s 3,virtio-blk`` argument) to match
       what you have downloaded above. Likewise, you may need to adjust the kernel file
       name on the second line highlighted (check the exact name to be used using:

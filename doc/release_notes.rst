@@ -12,8 +12,8 @@ embedded development through an open source platform. Check out the
 :ref:`introduction` for more information.
 
 The project ACRN reference code can be found on GitHub in
-https://github.com/projectacrn.  It includes the ACRN hypervisor, the
-ACRN device model, and documentation.
+`https://github.com/projectacrn/acrn-hypervisor`_.  It includes the
+ACRN hypervisor, the ACRN device model, ACRN tools, and documentation.
 
 ACRN's key features include:
 
@@ -28,9 +28,15 @@ This version 0.1 release has the following software components:
 
 * The ACRN Hypervisor
 * The ACRN Device Model
+* The ACRN Graphics Sharing (GVT-g)
 * The ACRN Virtio framework
 * The ACRN Block, NIC, and console Virtio drivers
-* The ACRN Virtio Backend Service(VBS) and the Virtio and Hypervisor Service Module (VHM).
+* The ACRN Virtio Backend Service(VBS) and the Virtio and Hypervisor
+  Service Module (VHM)
+* The ACRN tools
+
+The Service OS and User OS are based on `Clear Linux <https://clearlinux.org/>`_
+version 23510.
 
 Version 0.1 features include:
 
@@ -50,21 +56,17 @@ Version 0.1 features include:
 - audio pass-thru
 - surface sharing
 - multi-plane, multi-pipe
-- HDMI
-- eDP
+- HDMI, eDP
 
 Known Issues
 ============
 
-* GPU - Preemption (Prioritized Rendering,
-* Batch Preemption, QoS Rendering)
+* GPU - Preemption (Prioritized Rendering, Batch Preemption, QoS Rendering)
 * Preemption feature works, but performance is not optimized yet.
 * Wifi not supported in guest OS
 * Audio pass-through to guest OS, but can only be validated on driver level
   using command line or alsa-player, and only supports limited formats
 * CSME pass-through to guest OS
 * GVT-g is available, need to perform features after configured properly
-* Camera works in Android guest. But camera app may crash after 5 mins
-* SD card works in Android guest, but does not support hot-plug.
 * Surface Sharing: Sometimes the window setup on Service OS takes up to 30 second
 * Sometimes system hangs, especially when workload is high (e.g. running benchmarks, playing videos)
