@@ -762,9 +762,9 @@ usb_dev_init(void *pdata, char *opt)
 	if (port == 0)
 		goto errout;
 
-	switch (desc.bcdUSB) {	/* TODO: implemnt USB3.0 */
+	switch (desc.bcdUSB) {
 	case 0x300:
-		ver = 2; break;
+		ver = 3; break;
 	case 0x200:
 	case 0x110:
 		ver = 2; break;

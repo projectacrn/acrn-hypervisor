@@ -500,15 +500,6 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	UPRINTF(LDBG, "%04x:%04x %d-%d connecting.\r\n",
 			native_vid, native_pid, native_bus, native_port);
 
-	/* FIXME: will support usb3 in future */
-	if (xdev->native_assign_ports[native_bus] &&
-			usb_native_is_ss_port(native_bus)) {
-		UPRINTF(LDBG, "%04x:%04x %d-%d be ignored due to superspeed"
-				" device hasn't support yet\r\n", native_vid,
-				native_pid, native_bus, native_port);
-		goto errout;
-	}
-
 	if (!xdev->native_assign_ports[native_bus] ||
 			!xdev->native_assign_ports[native_bus][native_port]) {
 		UPRINTF(LDBG, "%04x:%04x %d-%d doesn't belong to this vm, bye."
@@ -783,7 +774,6 @@ pci_xhci_port_chg(struct pci_xhci_vdev *xdev, int port, int conn)
 		return -1;
 	}
 
-	/* TODO: add USB 3.0 port state */
 	if (conn == 0) {
 		reg->portsc &= ~XHCI_PS_CCS;
 		reg->portsc |= (XHCI_PS_CSC |
