@@ -21,6 +21,31 @@ static struct usb_dev_sys_ctx_info g_ctx;
 static inline uint8_t usb_dev_get_ep_type(struct usb_dev *udev, int pid,
 		int epnum);
 
+static int
+libusb_speed_to_usb_speed(int libusb_speed)
+{
+	int speed = LIBUSB_SPEED_UNKNOWN;
+
+	switch (libusb_speed) {
+	case LIBUSB_SPEED_LOW:
+		speed = USB_SPEED_LOW;
+		break;
+	case LIBUSB_SPEED_FULL:
+		speed = USB_SPEED_FULL;
+		break;
+	case LIBUSB_SPEED_HIGH:
+		speed = USB_SPEED_HIGH;
+		break;
+	case LIBUSB_SPEED_SUPER:
+		speed = USB_SPEED_SUPER;
+		break;
+	default:
+		UPRINTF(LWRN, "%s unexpect speed %d\r\n", __func__,
+				libusb_speed);
+	}
+	return speed;
+}
+
 static void
 usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 {
@@ -852,6 +877,7 @@ usb_dev_info(void *pdata, int type, void *value, int size)
 		break;
 	case USB_INFO_SPEED:
 		sz = sizeof(udev->speed);
+		udev->speed = libusb_speed_to_usb_speed(udev->speed);
 		pv = &udev->speed;
 		break;
 	case USB_INFO_BUS:
