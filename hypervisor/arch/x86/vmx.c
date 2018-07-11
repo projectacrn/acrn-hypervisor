@@ -702,7 +702,7 @@ static void init_guest_state(struct vcpu *vcpu)
 
 		/* Base *//* TODO: Should guest GDTB point to host GDTB ? */
 		/* Obtain the current global descriptor table base */
-		asm volatile ("sgdt %0" : : "m" (gdtb));
+		asm volatile ("sgdt %0" : "=m"(gdtb)::"memory");
 
 		value32 = gdtb.limit;
 
@@ -737,7 +737,7 @@ static void init_guest_state(struct vcpu *vcpu)
 		descriptor_table idtb = {0, 0};
 
 		/* TODO: Should guest IDTR point to host IDTR ? */
-		asm volatile ("sidt %0"::"m" (idtb));
+		asm volatile ("sidt %0":"=m"(idtb)::"memory");
 		/* Limit */
 		limit = idtb.limit;
 
@@ -935,9 +935,7 @@ static void init_guest_state(struct vcpu *vcpu)
 	exec_vmwrite(field, value32);
 	pr_dbg("VMX_GUEST_SMBASE: 0x%x ", value32);
 
-	asm volatile ("mov $0x174, %rcx");
-	asm volatile ("rdmsr");
-	asm volatile ("mov %%rax, %0"::"m" (value32):"memory");
+	value32 = msr_read(MSR_IA32_SYSENTER_CS) & 0xFFFFFFFFU;
 	field = VMX_GUEST_IA32_SYSENTER_CS;
 	exec_vmwrite(field, value32);
 	pr_dbg("VMX_GUEST_IA32_SYSENTER_CS: 0x%x ",
@@ -1045,7 +1043,7 @@ static void init_host_state(__unused struct vcpu *vcpu)
 
 	/* TODO: Should guest GDTB point to host GDTB ? */
 	/* Obtain the current global descriptor table base */
-	asm volatile ("sgdt %0"::"m" (gdtb));
+	asm volatile ("sgdt %0":"=m"(gdtb)::"memory");
 	value32 = gdtb.limit;
 
 	if (((gdtb.base >> 47) & 0x1UL) != 0UL)
@@ -1082,7 +1080,7 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	pr_dbg("VMX_HOST_TR_BASE: 0x%x ", realtrbase);
 
 	/* Obtain the current interrupt descriptor table base */
-	asm volatile ("sidt %0"::"m" (idtb));
+	asm volatile ("sidt %0":"=m"(idtb)::"memory");
 	/* base */
 	if (((idtb.base >> 47) & 0x1UL) != 0UL)
 		idtb.base |= 0xffff000000000000UL;
@@ -1091,9 +1089,7 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	exec_vmwrite(field, idtb.base);
 	pr_dbg("VMX_HOST_IDTR_BASE: 0x%x ", idtb.base);
 
-	asm volatile ("mov $0x174, %rcx");
-	asm volatile ("rdmsr");
-	asm volatile ("mov %%rax, %0"::"m" (value32):"memory");
+	value32 = msr_read(MSR_IA32_SYSENTER_CS) & 0xFFFFFFFFU;
 	field = VMX_HOST_IA32_SYSENTER_CS;
 	exec_vmwrite(field, value32);
 	pr_dbg("VMX_HOST_IA32_SYSENTER_CS: 0x%x ",
