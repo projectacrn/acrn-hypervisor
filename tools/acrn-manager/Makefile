@@ -22,7 +22,7 @@ $(OUT_DIR)/libacrn-mngr.a: acrn_mngr.c acrn_mngr.h
 	ar -cr $@ $(OUT_DIR)/acrn_mngr.o
 
 ifneq ($(OUT_DIR),.)
-$(OUT_DIR)/acrn_mngr.h:
+$(OUT_DIR)/acrn_mngr.h: ./acrn_mngr.h
 	cp ./acrn_mngr.h $(OUT_DIR)/
 endif
 
