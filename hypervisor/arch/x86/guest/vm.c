@@ -104,7 +104,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	vm->attr.id = id;
 	vm->attr.boot_idx = id;
 
-	atomic_store(&vm->hw.created_vcpus, 0);
+	atomic_store16(&vm->hw.created_vcpus, 0U);
 
 	/* gpa_lowtop are used for system start up */
 	vm->hw.gpa_lowtop = 0UL;

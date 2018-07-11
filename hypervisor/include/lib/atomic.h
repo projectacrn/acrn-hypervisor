@@ -53,6 +53,7 @@ static inline void name(volatile type *ptr, type v)	\
 			: "r" (v)			\
 			: "cc", "memory");		\
 }
+build_atomic_store(atomic_store16, "w", uint16_t, p, v)
 build_atomic_store(atomic_store, "l", int, p, v)
 build_atomic_store(atomic_store64, "q", long, p, v)
 
@@ -73,6 +74,7 @@ static inline void name(type *ptr)			\
 			: "=m" (*ptr)			\
 			:  "m" (*ptr));			\
 }
+build_atomic_dec(atomic_dec16, "w", uint16_t, p)
 build_atomic_dec(atomic_dec, "l", int, p)
 build_atomic_dec(atomic_dec64, "q", long, p)
 
@@ -167,6 +169,7 @@ static inline type name(type *ptr, type v)			\
 			: "cc", "memory");			\
 	return v;						\
  }
+build_atomic_xadd(atomic_xadd16, "w", uint16_t, p, v)
 build_atomic_xadd(atomic_xadd, "l", int, p, v)
 build_atomic_xadd(atomic_xadd64, "q", long, p, v)
 

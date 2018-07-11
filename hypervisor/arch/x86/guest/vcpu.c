@@ -63,7 +63,7 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	 * vcpu->vcpu_id = vm->hw.created_vcpus;
 	 * vm->hw.created_vcpus++;
 	 */
-	vcpu->vcpu_id = atomic_xadd(&vm->hw.created_vcpus, 1);
+	vcpu->vcpu_id = atomic_xadd16(&vm->hw.created_vcpus, 1U);
 	/* vm->hw.vcpu_array[vcpu->vcpu_id] = vcpu; */
 	atomic_store64(
 		(long *)&vm->hw.vcpu_array[vcpu->vcpu_id],
@@ -246,7 +246,7 @@ void destroy_vcpu(struct vcpu *vcpu)
 		(long *)&vcpu->vm->hw.vcpu_array[vcpu->vcpu_id],
 		(long)NULL);
 
-	atomic_dec(&vcpu->vm->hw.created_vcpus);
+	atomic_dec16(&vcpu->vm->hw.created_vcpus);
 
 	vlapic_free(vcpu);
 	free(vcpu->arch_vcpu.vmcs);
