@@ -140,9 +140,9 @@ struct vm_io_handler {
 	struct vm_io_handler_desc desc;
 };
 
-#define IO_ATTR_R               0
-#define IO_ATTR_RW              1
-#define IO_ATTR_NO_ACCESS       2
+#define IO_ATTR_R               0U
+#define IO_ATTR_RW              1U
+#define IO_ATTR_NO_ACCESS       2U
 
 /* External Interfaces */
 int io_instr_vmexit_handler(struct vcpu *vcpu);
