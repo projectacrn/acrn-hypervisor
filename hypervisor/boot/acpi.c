@@ -118,8 +118,9 @@ biosacpi_search_rsdp(char *base, int length)
 				strnlen_s(ACPI_SIG_RSDP, 8)) == 0) {
 			cp = (uint8_t *)rsdp;
 			sum = NULL;
-			for (idx = 0; idx < RSDP_CHECKSUM_LENGTH; idx++)
+			for (idx = 0; idx < RSDP_CHECKSUM_LENGTH; idx++) {
 				sum += *(cp + idx);
+			}
 
 			if (sum != NULL)
 				continue;

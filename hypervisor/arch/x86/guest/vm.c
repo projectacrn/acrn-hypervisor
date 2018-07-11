@@ -98,9 +98,10 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		goto err1;
 	}
 
-	for (id = 0U; id < (size_t)(sizeof(long) * 8U); id++)
+	for (id = 0U; id < (size_t)(sizeof(long) * 8U); id++) {
 		if (!bitmap_test_and_set(id, &vmid_bitmap))
 			break;
+	}
 	vm->attr.id = id;
 	vm->attr.boot_idx = id;
 
@@ -271,8 +272,9 @@ void pause_vm(struct vm *vm)
 
 	vm->state = VM_PAUSED;
 
-	foreach_vcpu(i, vm, vcpu)
+	foreach_vcpu(i, vm, vcpu) {
 		pause_vcpu(vcpu, VCPU_ZOMBIE);
+	}
 }
 
 void resume_vm(struct vm *vm)
@@ -280,8 +282,9 @@ void resume_vm(struct vm *vm)
 	uint16_t i;
 	struct vcpu *vcpu = NULL;
 
-	foreach_vcpu(i, vm, vcpu)
+	foreach_vcpu(i, vm, vcpu) {
 		resume_vcpu(vcpu);
+	}
 
 	vm->state = VM_STARTED;
 }

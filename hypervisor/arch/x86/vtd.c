@@ -235,8 +235,9 @@ static void iommu_flush_cache(struct dmar_drhd_rt *dmar_uint,
 	if (iommu_ecap_c(dmar_uint->ecap) != 0U)
 		return;
 
-	for (i = 0U; i < size; i += CACHE_LINE_SIZE)
+	for (i = 0U; i < size; i += CACHE_LINE_SIZE) {
 		clflush((char *)p + i);
+	}
 }
 
 #if DBG_IOMMU
@@ -1157,10 +1158,11 @@ void suspend_iommu(void)
 		dmar_invalid_iotlb_global(dmar_unit);
 
 		/* save IOMMU fault register state */
-		for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++)
+		for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++) {
 			iommu_fault_state[iommu_idx][i] =
 				iommu_read32(dmar_unit, DMAR_FECTL_REG +
 					i * IOMMU_FAULT_REGISTER_STATE_NUM);
+		}
 		/* disable translation */
 		dmar_disable_translation(dmar_unit);
 
@@ -1197,10 +1199,11 @@ void resume_iommu(void)
 		dmar_invalid_iotlb_global(dmar_unit);
 
 		/* restore IOMMU fault register state */
-		for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++)
+		for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++) {
 			iommu_write32(dmar_unit, DMAR_FECTL_REG +
 				i * IOMMU_FAULT_REGISTER_STATE_NUM,
 				iommu_fault_state[iommu_idx][i]);
+		}
 		/* enable translation */
 		dmar_enable_translation(dmar_unit);
 

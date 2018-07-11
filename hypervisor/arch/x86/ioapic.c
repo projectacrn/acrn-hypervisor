@@ -421,9 +421,10 @@ void suspend_ioapic(void)
 
 		addr = map_ioapic(get_ioapic_base(ioapic_id));
 		nr_pins = ioapic_nr_pins(addr);
-		for (ioapic_pin = 0U; ioapic_pin < nr_pins; ioapic_pin++)
+		for (ioapic_pin = 0U; ioapic_pin < nr_pins; ioapic_pin++) {
 			ioapic_get_rte_entry(addr, ioapic_pin,
 				&saved_rte[ioapic_id][ioapic_pin]);
+		}
 	}
 }
 
@@ -437,9 +438,10 @@ void resume_ioapic(void)
 
 		addr = map_ioapic(get_ioapic_base(ioapic_id));
 		nr_pins = ioapic_nr_pins(addr);
-		for (ioapic_pin = 0U; ioapic_pin < nr_pins; ioapic_pin++)
+		for (ioapic_pin = 0U; ioapic_pin < nr_pins; ioapic_pin++) {
 			ioapic_set_rte_entry(addr, ioapic_pin,
 				&saved_rte[ioapic_id][ioapic_pin]);
+		}
 	}
 }
 

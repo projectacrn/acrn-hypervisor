@@ -542,8 +542,9 @@ vioapic_reset(struct vioapic *vioapic)
 
 	/* Initialize all redirection entries to mask all interrupts */
 	pincount = vioapic_pincount(vioapic->vm);
-	for (pin = 0U; pin < pincount; pin++)
+	for (pin = 0U; pin < pincount; pin++) {
 		vioapic->rtbl[pin].reg = MASK_ALL_INTERRUPTS;
+	}
 }
 
 struct vioapic *

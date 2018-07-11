@@ -96,8 +96,9 @@ void init_msr_emulation(struct vcpu *vcpu)
 
 		msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
 
-		for (i = 0U; i < msrs_count; i++)
+		for (i = 0U; i < msrs_count; i++) {
 			enable_msr_interception(msr_bitmap, emulated_msrs[i]);
+		}
 
 		enable_msr_interception(msr_bitmap, MSR_IA32_PERF_CTL);
 

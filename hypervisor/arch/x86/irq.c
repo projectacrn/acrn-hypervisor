@@ -31,8 +31,9 @@ static void init_irq_desc(void)
 		spinlock_init(&irq_desc_base[i].irq_lock);
 	}
 
-	for (i = 0U; i <= NR_MAX_VECTOR; i++)
+	for (i = 0U; i <= NR_MAX_VECTOR; i++) {
 		vector_to_irq[i] = IRQ_INVALID;
+	}
 
 }
 
@@ -151,8 +152,9 @@ static void _irq_desc_free_vector(uint32_t irq)
 	if (vector_to_irq[vr] == irq)
 		vector_to_irq[vr] = IRQ_INVALID;
 
-	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++)
+	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
 		per_cpu(irq_count, pcpu_id)[irq] = 0UL;
+	}
 }
 
 static void disable_pic_irq(void)
@@ -188,8 +190,9 @@ irq_desc_append_dev(struct irq_desc *desc, void *node, bool share)
 		added = false;
 	} else {
 		/* dev_list point to last valid node */
-		while (dev_list->next != NULL)
+		while (dev_list->next != NULL) {
 			dev_list = dev_list->next;
+		}
 		/* add node */
 		dev_list->next = node;
 	}
