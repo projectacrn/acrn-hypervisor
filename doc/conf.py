@@ -32,7 +32,13 @@ sys.path.insert(0, os.path.abspath('.'))
 # ones.
 
 sys.path.insert(0, os.path.join(os.path.abspath('.'), 'extensions'))
-extensions = ['breathe', 'sphinx.ext.graphviz', 'kerneldoc']
+extensions = ['breathe', 'sphinx.ext.graphviz', 'sphinx.ext.extlinks', 'kerneldoc']
+
+# extlinks provides a macro template
+
+extlinks = {'acrn-commit': ('https://github.com/projectacrn/acrn-hypervisor/commit/%s', ''),
+            'acrn-issue': ('https://github.com/projectacrn/acrn-hypervisor/issues/%s', '')
+           }
 
 # kernel-doc extension configuration for running Sphinx directly (e.g. by Read
 # the Docs). In a normal build, these are supplied from the Makefile via command
