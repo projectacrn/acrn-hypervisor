@@ -112,6 +112,17 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 		break;
 	}
 
+	if (libusb_xfer->type == LIBUSB_TRANSFER_TYPE_ISOCHRONOUS) {
+		for (i = 0; i < libusb_xfer->num_iso_packets; i++) {
+			struct libusb_iso_packet_descriptor *p =
+					&libusb_xfer->iso_packet_desc[i];
+
+			len += p->actual_length;
+			UPRINTF(LDBG, "packet%u length %u actual_length %u\n",
+					i, p->length, p->actual_length);
+		}
+	}
+
 	/* in case the xfer is reset by the USB_DATA_XFER_RESET */
 	if (xfer->reset == 1) {
 		UPRINTF(LDBG, "ep%d reset detected\r\n", xfer->epid);
@@ -141,7 +152,7 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 			continue;
 		}
 
-		if (len > buf_idx) {
+		if (len >= buf_idx) {
 			done = block->blen;
 			if (done > len - buf_idx) {
 				done = len - buf_idx;
@@ -157,6 +168,18 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 		block->blen -= done;
 		block->processed = USB_XFER_BLK_HANDLED;
 		idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
+
+		if (libusb_xfer->type == LIBUSB_TRANSFER_TYPE_ISOCHRONOUS) {
+			/* For isoc OUT transfer, the libusb_xfer->actual_length
+			 * always return zero, so here set block->blen = 0
+			 * forcely and native xhci driver will not complain
+			 * about short packet.
+			 */
+			if (!req->in) {
+				block->bdone = done;
+				block->blen = 0;
+			}
+		}
 	}
 
 stall_out:
@@ -191,12 +214,12 @@ reset_out:
 
 static struct usb_dev_req *
 usb_dev_alloc_req(struct usb_dev *udev, struct usb_data_xfer *xfer, int in,
-		size_t size)
+		size_t size, size_t count)
 {
 	struct usb_dev_req *req;
 	static int seq = 1;
 
-	if (!udev || !xfer)
+	if (!udev || !xfer || count < 0)
 		return NULL;
 
 	req = calloc(1, sizeof(*req));
@@ -207,7 +230,7 @@ usb_dev_alloc_req(struct usb_dev *udev, struct usb_data_xfer *xfer, int in,
 	req->in = in;
 	req->xfer = xfer;
 	req->seq = seq++;
-	req->libusb_xfer = libusb_alloc_transfer(0);
+	req->libusb_xfer = libusb_alloc_transfer(count);
 	if (!req->libusb_xfer)
 		goto errout;
 
@@ -610,6 +633,8 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 	int blk_start, data_size, blk_count;
 	int retries = 3, i, buf_idx;
 	struct usb_data_xfer_block *b;
+	static const char * const type_str[] = {"CTRL", "ISO", "BULK", "INT"};
+	static const char * const dir_str[] = {"OUT", "IN"};
 
 	udev = pdata;
 	assert(udev);
@@ -622,10 +647,29 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 	type = usb_dev_get_ep_type(udev, dir ? TOKEN_IN : TOKEN_OUT, epctx);
 	epid = dir ? (0x80 | epctx) : epctx;
 
+	if (!(dir == USB_XFER_IN || dir == USB_XFER_OUT) ||
+			type > USB_ENDPOINT_INT) {
+		xfer->status = USB_ERR_IOERROR;
+		goto done;
+	}
+
 	if (data_size <= 0)
 		goto done;
 
-	req = usb_dev_alloc_req(udev, xfer, dir, data_size);
+	/* TODO:
+	 * need to check performance effect of 'type == USB_ENDPOINT_ISOC'.
+	 * With this implementation, there should be some performance loss.
+	 *
+	 * In the native OS, the driver dose it this way:
+	 *     Chunk of Data -> 1 URB (with multi-TRBs) -> physical device
+	 * With the current design, it works according the following way:
+	 *     Chunk of Data (UOS) -> 1 URB (with multi-TRBs) (UOS) -> DM ->
+	 *     multi-URBs (SOS) -> physical device.
+	 * Currently, this design works fine for playback and record of USB
+	 * headset, need to do more analysis.
+	 */
+	req = usb_dev_alloc_req(udev, xfer, dir, data_size, type ==
+			USB_ENDPOINT_ISOC ? 1 : 0);
 	if (!req) {
 		xfer->status = USB_ERR_IOERROR;
 		goto done;
@@ -634,6 +678,12 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 	req->buf_length = data_size;
 	req->blk_start = blk_start;
 	req->blk_count = blk_count;
+	UPRINTF(LDBG, "%s: transfer_length %d ep%d-transfer (%d-%d %d) request"
+			"-%d (%d-%d %d) direction %s type %s\r\n", __func__,
+			data_size, epctx, xfer->head, (xfer->tail - 1) %
+			USB_MAX_XFER_BLOCKS, xfer->ndata, req->seq, blk_start,
+			(blk_start + blk_count - 1) % USB_MAX_XFER_BLOCKS,
+			data_size, dir_str[dir], type_str[type]);
 
 	if (!dir) {
 		for (i = 0, buf_idx = 0; i < blk_count; i++) {
@@ -679,9 +729,20 @@ usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx)
 				req,
 				0);
 		rc = libusb_submit_transfer(req->libusb_xfer);
+
+	} else if (type == USB_ENDPOINT_ISOC) {
+		/* TODO: Current design is to convert every UOS trb into SOS
+		 * urb. It works fine, but potential issues and performance
+		 * effect should be investigated in detail.
+		 */
+		libusb_fill_iso_transfer(req->libusb_xfer, udev->handle,
+				epid, req->buffer, data_size, 1,
+				usb_dev_comp_req, req, 0);
+		libusb_set_iso_packet_lengths(req->libusb_xfer, data_size);
+		rc = libusb_submit_transfer(req->libusb_xfer);
+
 	} else {
-		/* TODO isoch transfer is not implemented */
-		UPRINTF(LWRN, "ISOCH transfer still not supported.\n");
+		UPRINTF(LFTL, "%s: wrong endpoint type %d\r\n", __func__, type);
 		xfer->status = USB_ERR_INVAL;
 	}
 
