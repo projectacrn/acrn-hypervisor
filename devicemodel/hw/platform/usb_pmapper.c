@@ -356,13 +356,21 @@ usb_dev_native_toggle_if(struct usb_dev *udev, int claim)
 	for (i = 0; i < config->bNumInterfaces; i++) {
 		if (claim == 1)
 			r = libusb_claim_interface(udev->handle, i);
-		else
+		else {
 			r = libusb_release_interface(udev->handle, i);
-
+			/* according to libusb, if libusb_release_interface
+			 * return LIBUSB_ERROR_NOT_FOUND, it means that this
+			 * interface is not claimed before. This case should
+			 * not be considered as an error here.
+			 */
+			if (r == LIBUSB_ERROR_NOT_FOUND)
+				r = 0;
+		}
 		if (r) {
 			rc = -1;
-			UPRINTF(LWRN, "%d-%d:%d.%d can't %s if\r\n", b, p, c, i,
-					claim == 1 ? "claim" : "release");
+			UPRINTF(LWRN, "%d-%d:%d.%d can't %s if, r %d\r\n", b,
+					p, c, i, claim == 1 ? "claim" :
+					"release", r);
 		}
 	}
 	if (rc)
@@ -393,17 +401,23 @@ usb_dev_native_toggle_if_drivers(struct usb_dev *udev, int attach)
 		return -1;
 	}
 
+	UPRINTF(LDBG, "%s driver\r\n", attach == 1 ?  "attach" : "detach");
+
 	c = config->bConfigurationValue;
 	for (i = 0; i < config->bNumInterfaces; i++) {
 		if (attach == 1)
 			r = libusb_attach_kernel_driver(udev->handle, i);
-		else
-			r = libusb_detach_kernel_driver(udev->handle, i);
+		else {
+			if (libusb_kernel_driver_active(udev->handle, i) == 1)
+				r = libusb_detach_kernel_driver(udev->handle,
+						i);
+		}
 
 		if (r) {
 			rc = -1;
-			UPRINTF(LWRN, "%d-%d:%d.%d can't %stach if driver\r\n",
-					b, p, c, i, attach == 1 ? "at" : "de");
+			UPRINTF(LWRN, "%d-%d:%d.%d can't %stach if driver, r %d"
+					"\r\n", b, p, c, i, attach == 1 ? "at" :
+					"de", r);
 		}
 	}
 	if (rc)
