@@ -758,6 +758,31 @@ pci_xhci_is_valid_portnum(int n)
 }
 
 static int
+pci_xhci_convert_speed(int lspeed)
+{
+	/* according to xhci spec, zero means undefined speed */
+	int speed = 0;
+
+	switch (lspeed) {
+	case USB_SPEED_LOW:
+		speed = 0x2;
+		break;
+	case USB_SPEED_FULL:
+		speed = 0x1;
+		break;
+	case USB_SPEED_HIGH:
+		speed = 0x3;
+		break;
+	case USB_SPEED_SUPER:
+		speed = 0x4;
+		break;
+	default:
+		UPRINTF(LFTL, "unkown speed %08x\r\n", lspeed);
+	}
+	return speed;
+}
+
+static int
 pci_xhci_port_chg(struct pci_xhci_vdev *xdev, int port, int conn)
 {
 	int speed, error;
@@ -779,11 +804,10 @@ pci_xhci_port_chg(struct pci_xhci_vdev *xdev, int port, int conn)
 		reg->portsc |= (XHCI_PS_CSC |
 				XHCI_PS_PLS_SET(UPS_PORT_LS_RX_DET));
 	} else {
-		speed = dev->dev_ue->ue_usbspeed;
+		speed = pci_xhci_convert_speed(dev->dev_ue->ue_usbspeed);
 		reg->portsc = XHCI_PS_CCS | XHCI_PS_PP | XHCI_PS_CSC;
 		reg->portsc |= XHCI_PS_SPEED_SET(speed);
 	}
-
 
 	/* make an event for the guest OS */
 	pci_xhci_set_evtrb(&evtrb,
@@ -3150,7 +3174,7 @@ pci_xhci_reset_port(struct pci_xhci_vdev *xdev, int portn, int warm)
 	struct pci_xhci_portregs *port;
 	struct pci_xhci_dev_emu	*dev;
 	struct xhci_trb		evtrb;
-	int	error;
+	int speed, error;
 
 	assert(portn <= XHCI_MAX_DEVS);
 
@@ -3159,9 +3183,9 @@ pci_xhci_reset_port(struct pci_xhci_vdev *xdev, int portn, int warm)
 	port = XHCI_PORTREG_PTR(xdev, portn);
 	dev = XHCI_DEVINST_PTR(xdev, portn);
 	if (dev) {
+		speed = pci_xhci_convert_speed(dev->dev_ue->ue_usbspeed);
 		port->portsc &= ~(XHCI_PS_PLS_MASK | XHCI_PS_PR | XHCI_PS_PRC);
-		port->portsc |= XHCI_PS_PED |
-			XHCI_PS_SPEED_SET(dev->dev_ue->ue_usbspeed);
+		port->portsc |= XHCI_PS_PED | XHCI_PS_SPEED_SET(speed);
 
 		if (warm && dev->dev_ue->ue_usbver == 3)
 			port->portsc |= XHCI_PS_WRC;
