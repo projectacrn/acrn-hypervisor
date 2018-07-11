@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ipu_passthrough=0
+
 function launch_clearlinux()
 {
 if [ ! -f "/data/$5/$5.img" ]; then
@@ -54,22 +56,26 @@ echo "0000:00:0f.0" > /sys/bus/pci/devices/0000:00:0f.0/driver/unbind
 echo "0000:00:0f.0" > /sys/bus/pci/drivers/pci-stub/bind
 
 boot_ipu_option=""
-# for ipu passthrough - ipu device 0:3.0
-if [ -d "/sys/bus/pci/devices/0000:00:03.0" ]; then
-  echo "8086 5a88" > /sys/bus/pci/drivers/pci-stub/new_id
-  echo "0000:00:03.0" > /sys/bus/pci/devices/0000:00:03.0/driver/unbind
-  echo "0000:00:03.0" > /sys/bus/pci/drivers/pci-stub/bind
-  boot_ipu_option="$boot_ipu_option"" -s 12,passthru,0/3/0 "
-fi
+if [ $ipu_passthrough == 1 ];then
+    # for ipu passthrough - ipu device 0:3.0
+    if [ -d "/sys/bus/pci/devices/0000:00:03.0" ]; then
+        echo "8086 5a88" > /sys/bus/pci/drivers/pci-stub/new_id
+        echo "0000:00:03.0" > /sys/bus/pci/devices/0000:00:03.0/driver/unbind
+        echo "0000:00:03.0" > /sys/bus/pci/drivers/pci-stub/bind
+        boot_ipu_option="$boot_ipu_option"" -s 12,passthru,0/3/0 "
+    fi
 
-# for ipu passthrough - ipu related i2c 0:16.0
-# please use virtual slot 22 for i2c 0:16.0 to make sure that the i2c controller
-# could get the same virtaul BDF as physical BDF
-if [ -d "/sys/bus/pci/devices/0000:00:16.0" ]; then
-  echo "8086 5aac" > /sys/bus/pci/drivers/pci-stub/new_id
-  echo "0000:00:16.0" > /sys/bus/pci/devices/0000:00:16.0/driver/unbind
-  echo "0000:00:16.0" > /sys/bus/pci/drivers/pci-stub/bind
-  boot_ipu_option="$boot_ipu_option"" -s 22,passthru,0/16/0 "
+    # for ipu passthrough - ipu related i2c 0:16.0
+    # please use virtual slot 22 for i2c 0:16.0 to make sure that the i2c controller
+    # could get the same virtaul BDF as physical BDF
+    if [ -d "/sys/bus/pci/devices/0000:00:16.0" ]; then
+        echo "8086 5aac" > /sys/bus/pci/drivers/pci-stub/new_id
+        echo "0000:00:16.0" > /sys/bus/pci/devices/0000:00:16.0/driver/unbind
+        echo "0000:00:16.0" > /sys/bus/pci/drivers/pci-stub/bind
+        boot_ipu_option="$boot_ipu_option"" -s 22,passthru,0/16/0 "
+    fi
+else
+    boot_ipu_option="$boot_ipu_option"" -s 21,virtio-ipu "
 fi
 
 # for sd card passthrough - SDXC/MMC Host Controller 00:1b.0
@@ -211,22 +217,26 @@ echo "0000:00:18.0" > /sys/bus/pci/devices/0000:00:18.0/driver/unbind
 echo "0000:00:18.0" > /sys/bus/pci/drivers/pci-stub/bind
 
 boot_ipu_option=""
-# for ipu passthrough - ipu device 0:3.0
-if [ -d "/sys/bus/pci/devices/0000:00:03.0" ]; then
-  echo "8086 5a88" > /sys/bus/pci/drivers/pci-stub/new_id
-  echo "0000:00:03.0" > /sys/bus/pci/devices/0000:00:03.0/driver/unbind
-  echo "0000:00:03.0" > /sys/bus/pci/drivers/pci-stub/bind
-  boot_ipu_option="$boot_ipu_option"" -s 12,passthru,0/3/0 "
-fi
+if [ $ipu_passthrough == 1 ];then
+    # for ipu passthrough - ipu device 0:3.0
+    if [ -d "/sys/bus/pci/devices/0000:00:03.0" ]; then
+        echo "8086 5a88" > /sys/bus/pci/drivers/pci-stub/new_id
+        echo "0000:00:03.0" > /sys/bus/pci/devices/0000:00:03.0/driver/unbind
+        echo "0000:00:03.0" > /sys/bus/pci/drivers/pci-stub/bind
+        boot_ipu_option="$boot_ipu_option"" -s 12,passthru,0/3/0 "
+    fi
 
-# for ipu passthrough - ipu related i2c 0:16.0
-# please use virtual slot 22 for i2c 0:16.0 to make sure that the i2c controller
-# could get the same virtaul BDF as physical BDF
-if [ -d "/sys/bus/pci/devices/0000:00:16.0" ]; then
-  echo "8086 5aac" > /sys/bus/pci/drivers/pci-stub/new_id
-  echo "0000:00:16.0" > /sys/bus/pci/devices/0000:00:16.0/driver/unbind
-  echo "0000:00:16.0" > /sys/bus/pci/drivers/pci-stub/bind
-  boot_ipu_option="$boot_ipu_option"" -s 22,passthru,0/16/0 "
+    # for ipu passthrough - ipu related i2c 0:16.0
+    # please use virtual slot 22 for i2c 0:16.0 to make sure that the i2c controller
+    # could get the same virtaul BDF as physical BDF
+    if [ -d "/sys/bus/pci/devices/0000:00:16.0" ]; then
+        echo "8086 5aac" > /sys/bus/pci/drivers/pci-stub/new_id
+        echo "0000:00:16.0" > /sys/bus/pci/devices/0000:00:16.0/driver/unbind
+        echo "0000:00:16.0" > /sys/bus/pci/drivers/pci-stub/bind
+        boot_ipu_option="$boot_ipu_option"" -s 22,passthru,0/16/0 "
+    fi
+else
+    boot_ipu_option="$boot_ipu_option"" -s 21,virtio-ipu "
 fi
 
 #for memsize setting
