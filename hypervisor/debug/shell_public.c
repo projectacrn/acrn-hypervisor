@@ -159,23 +159,16 @@ int shell_init(void)
 	return status;
 }
 
-int shell_puts(struct shell *p_shell, const char *str_ptr)
+/**
+ * @pre p_shell != NULL
+ * @pre p_shell->session_io.io_puts != NULL
+ * @pre str_ptr != NULL
+ */
+void shell_puts(struct shell *p_shell, const char *str_ptr)
 {
-	int status;
+	/* Transmit data using this shell session's 'puts' function */
+	p_shell->session_io.io_puts(p_shell, str_ptr);
 
-	if ((p_shell != NULL) && (p_shell->session_io.io_puts != NULL) &&
-			(str_ptr != NULL)) {
-		/* Transmit data using this shell session's 'puts' function */
-		p_shell->session_io.io_puts(p_shell, str_ptr);
-
-		status = 0;
-	} else {
-		/* Error: Invalid request */
-		status = -EINVAL;
-
-	}
-
-	return status;
 }
 
 int shell_set_name(struct shell *p_shell, const char *name)
