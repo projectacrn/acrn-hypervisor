@@ -198,21 +198,25 @@ trampoline_gdt_ptr:
 CPU_Boot_Page_Tables_ptr:
     .long CPU_Boot_Page_Tables_Start
 
-    .align  CPU_PAGE_SIZE
+    /*0x1000 = CPU_PAGE_SIZE*/
+    .align  0x1000
     .global CPU_Boot_Page_Tables_Start
 CPU_Boot_Page_Tables_Start:
     /* 0x3 = (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT) */
     .quad   trampoline_pdpt_addr + 0x3
-    .align  CPU_PAGE_SIZE
+    /*0x1000 = CPU_PAGE_SIZE*/
+    .align  0x1000
     .global trampoline_pdpt_addr
 trampoline_pdpt_addr:
     address = 0
     .rept   4
     /* 0x3 = (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT) */
     .quad   trampoline_pdt_addr + address + 0x3
-    address = address + CPU_PAGE_SIZE
+    /*0x1000 = CPU_PAGE_SIZE*/
+    address = address + 0x1000
     .endr
-    .align  CPU_PAGE_SIZE
+    /*0x1000 = CPU_PAGE_SIZE*/
+    .align  0x1000
 trampoline_pdt_addr:
     address = 0
     .rept  2048

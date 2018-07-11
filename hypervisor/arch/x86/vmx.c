@@ -1239,7 +1239,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 			VMX_PROCBASED_CTLS2_RDTSCP |
 			VMX_PROCBASED_CTLS2_UNRESTRICT);
 
-	if (vcpu->arch_vcpu.vpid != 0)
+	if (vcpu->arch_vcpu.vpid != 0U)
 		value32 |= VMX_PROCBASED_CTLS2_VPID;
 	else
 		value32 &= ~VMX_PROCBASED_CTLS2_VPID;

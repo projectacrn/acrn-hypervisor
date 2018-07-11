@@ -52,7 +52,7 @@ static struct vmx_capability {
  * is the value of the VPID VM-execution control field in the VMCS.
  * (VM entry ensures that this value is never 0000H).
  */
-static int vmx_vpid_nr = VMX_MIN_NR_VPID;
+static uint16_t vmx_vpid_nr = VMX_MIN_NR_VPID;
 
 #define INVEPT_TYPE_SINGLE_CONTEXT      1UL
 #define INVEPT_TYPE_ALL_CONTEXTS        2UL
@@ -71,7 +71,7 @@ struct invept_desc {
 	uint64_t _res;
 };
 
-static inline void _invvpid(uint64_t type, int vpid, uint64_t gva)
+static inline void _invvpid(uint64_t type, uint16_t vpid, uint64_t gva)
 {
 	int error = 0;
 
@@ -142,28 +142,28 @@ int check_vmx_mmu_cap(void)
 	return 0;
 }
 
-int allocate_vpid(void)
+uint16_t allocate_vpid(void)
 {
-	int vpid = atomic_xadd(&vmx_vpid_nr, 1);
+	uint16_t vpid = atomic_xadd16(&vmx_vpid_nr, 1U);
 
 	/* TODO: vpid overflow */
 	if (vpid >= VMX_MAX_NR_VPID) {
 		pr_err("%s, vpid overflow\n", __func__);
 		/*
 		 * set vmx_vpid_nr to VMX_MAX_NR_VPID to disable vpid
-		 * since next atomic_xadd will always large than
+		 * since next atomic_xadd16 will always large than
 		 * VMX_MAX_NR_VPID.
 		 */
 		vmx_vpid_nr = VMX_MAX_NR_VPID;
-		vpid = 0;
+		vpid = 0U;
 	}
 
 	return vpid;
 }
 
-void flush_vpid_single(int vpid)
+void flush_vpid_single(uint16_t vpid)
 {
-	if (vpid == 0)
+	if (vpid == 0U)
 		return;
 
 	_invvpid(VMX_VPID_TYPE_SINGLE_CONTEXT, vpid, 0UL);
@@ -171,7 +171,7 @@ void flush_vpid_single(int vpid)
 
 void flush_vpid_global(void)
 {
-	_invvpid(VMX_VPID_TYPE_ALL_CONTEXT, 0, 0UL);
+	_invvpid(VMX_VPID_TYPE_ALL_CONTEXT, 0U, 0UL);
 }
 
 void invept(struct vcpu *vcpu)
