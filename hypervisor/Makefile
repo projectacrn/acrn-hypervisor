@@ -63,12 +63,14 @@ LDFLAGS += -Wl,--gc-sections -nostartfiles -nostdlib
 LDFLAGS += -Wl,-n,-z,max-page-size=0x1000
 LDFLAGS += -Wl,-z,noexecstack
 
+ifeq (y, $(CONFIG_RELOC))
 # on X86_64, when build with "-pie", GCC fails on linking R_X86_64_32
 # relocations with "recompile with fPIC" error, because it may cause
 # run-time relocation overflow if it runs at address above 4GB.
 # We know it's safe because Hypervisor runs under 4GB. "noreloc-overflow"
 # is used to avoid the compile error
 LDFLAGS += -pie -z noreloc-overflow
+endif
 
 ARCH_CFLAGS += -gdwarf-2
 ARCH_ASFLAGS += -gdwarf-2 -DASSEMBLER=1

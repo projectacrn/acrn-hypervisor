@@ -123,3 +123,7 @@ config UEFI_OS_LOADER_NAME
 config MTRR_ENABLED
 	bool
 	default y
+
+config RELOC
+	bool "Enable relocation"
+	default n
