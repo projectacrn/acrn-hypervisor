@@ -374,6 +374,7 @@ struct pci_xhci_vdev {
 	int		usb2_port_start;
 	int		usb3_port_start;
 	uint8_t		*native_assign_ports[USB_NATIVE_NUM_BUS];
+	struct timespec mf_prev_time;	/* previous time of accessing MFINDEX */
 };
 
 /* portregs and devices arrays are set up to start from idx=1 */
@@ -3055,13 +3056,22 @@ pci_xhci_dbregs_read(struct pci_xhci_vdev *xdev, uint64_t offset)
 static uint64_t
 pci_xhci_rtsregs_read(struct pci_xhci_vdev *xdev, uint64_t offset)
 {
-	uint32_t	value;
+	uint32_t value;
+	struct timespec t;
+	uint64_t time_diff;
 
 	offset -= xdev->rtsoff;
 	value = 0;
 
 	if (offset == XHCI_MFINDEX) {
-		value = xdev->rtsregs.mfindex;
+		clock_gettime(CLOCK_MONOTONIC, &t);
+		time_diff = (t.tv_sec - xdev->mf_prev_time.tv_sec) * 1000000
+			+ (t.tv_nsec - xdev->mf_prev_time.tv_nsec) / 1000;
+		xdev->mf_prev_time = t;
+		value = time_diff / 125;
+
+		if (value >= 1)
+			xdev->rtsregs.mfindex += value;
 	} else if (offset >= 0x20) {
 		int item;
 		uint32_t *p;
@@ -3621,6 +3631,9 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	xdev->vid = XHCI_PCI_DEVICE_ID_DFLT;
 	xdev->pid = XHCI_PCI_VENDOR_ID_DFLT;
+
+	xdev->rtsregs.mfindex = 0;
+	clock_gettime(CLOCK_MONOTONIC, &xdev->mf_prev_time);
 
 	/* discover devices */
 	error = pci_xhci_parse_opts(xdev, opts);
