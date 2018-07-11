@@ -39,10 +39,15 @@ CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -fshort-wchar -ffreestanding
 CFLAGS += -m64 -mno-mmx -mno-sse -mno-sse2 -mno-80387 -mno-fp-ret-in-387
 CFLAGS += -mno-red-zone
-CFLAGS += -static -nostdinc -nostdlib -fno-common
+CFLAGS += -nostdinc -nostdlib -fno-common
 CFLAGS += -O2 -D_FORTIFY_SOURCE=2
 CFLAGS += -Wformat -Wformat-security
+ifeq (y, $(CONFIG_RELOC))
 CFLAGS += -fpie
+else
+CFLAGS += -static
+endif
+
 
 ifdef STACK_PROTECTOR
 ifeq (true, $(shell [ $(GCC_MAJOR) -gt 4 ] && echo true))
@@ -70,6 +75,8 @@ ifeq (y, $(CONFIG_RELOC))
 # We know it's safe because Hypervisor runs under 4GB. "noreloc-overflow"
 # is used to avoid the compile error
 LDFLAGS += -pie -z noreloc-overflow
+else
+LDFLAGS += -static
 endif
 
 ARCH_CFLAGS += -gdwarf-2

@@ -268,7 +268,11 @@ EFI_STATUS __emalloc(UINTN size, UINTN min_addr, EFI_PHYSICAL_ADDRESS *addr,
 			continue;
 		}
 
+#ifndef CONFIG_RELOC
 		aligned = start;
+#else
+		aligned = min_addr;
+#endif
 		err = allocate_pages(AllocateAddress, mem_type,
 					 nr_pages, &aligned);
 		if (err == EFI_SUCCESS) {

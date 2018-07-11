@@ -68,9 +68,9 @@ static uint64_t trampoline_relo_addr(void *addr)
 	return (uint64_t)addr - get_hv_image_delta();
 }
 
-#ifdef CONFIG_RELOC
 void _relocate(void)
 {
+#ifdef CONFIG_RELOC
 	struct Elf64_Dyn *dyn;
 	struct Elf64_Rel *start = NULL, *end = NULL;
 	uint64_t delta, size = 0;
@@ -136,12 +136,8 @@ void _relocate(void)
 		}
 		start = (struct Elf64_Rel *)((char *)start + size);
 	}
-}
-#else
-void _relocate(void)
-{
-}
 #endif
+}
 
 uint64_t read_trampoline_sym(void *sym)
 {
