@@ -898,8 +898,9 @@ void ptdev_remove_msix_remapping(struct vm *vm, uint16_t virt_bdf,
 		return;
 	}
 
-	for (i = 0; i < vector_count; i++)
+	for (i = 0; i < vector_count; i++) {
 		remove_msix_remapping(vm, virt_bdf, i);
+	}
 }
 
 #ifdef HV_DEBUG

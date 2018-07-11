@@ -679,11 +679,13 @@ dump_isrvec_stk(struct vlapic *vlapic)
 	struct lapic_reg *isrptr;
 
 	isrptr = &vlapic->apic_page->isr[0];
-	for (i = 0; i < 8; i++)
+	for (i = 0; i < 8; i++) {
 		printf("ISR%d 0x%08x\n", i, isrptr[i].val);
+	}
 
-	for (i = 0; i <= vlapic->isrvec_stk_top; i++)
+	for (i = 0; i <= vlapic->isrvec_stk_top; i++) {
 		printf("isrvec_stk[%d] = %d\n", i, vlapic->isrvec_stk[i]);
+	}
 }
 
 /*
@@ -1511,11 +1513,13 @@ vlapic_reset(struct vlapic *vlapic)
 
 	vlapic->svr_last = lapic->svr;
 
-	for (i = 0; i < VLAPIC_MAXLVT_INDEX + 1; i++)
+	for (i = 0; i < VLAPIC_MAXLVT_INDEX + 1; i++) {
 		vlapic->lvt_last[i] = 0;
+	}
 
-	for (i = 0; i < ISRVEC_STK_SIZE; i++)
+	for (i = 0; i < ISRVEC_STK_SIZE; i++) {
 		vlapic->isrvec_stk[i] = 0;
+	}
 
 	vlapic->isrvec_stk_top = 0;
 }
@@ -1555,8 +1559,9 @@ void vlapic_restore(struct vlapic *vlapic, struct lapic_regs *regs)
 	lapic->ppr = regs->ppr;
 	lapic->ldr = regs->ldr;
 	lapic->dfr = regs->dfr;
-	for (i = 0; i < 8; i++)
+	for (i = 0; i < 8; i++) {
 		lapic->tmr[i].val = regs->tmr[i].val;
+	}
 	lapic->svr = regs->svr;
 	vlapic_svr_write_handler(vlapic);
 	lapic->lvt[APIC_LVT_TIMER].val = regs->lvt[APIC_LVT_TIMER].val;
@@ -1687,8 +1692,9 @@ vlapic_reset_tmr(struct vlapic *vlapic)
 	dev_dbg(ACRN_DBG_LAPIC,
 			"vlapic resetting all vectors to edge-triggered");
 
-	for (vector = 0; vector <= 255; vector++)
+	for (vector = 0; vector <= 255; vector++) {
 		vlapic_set_tmr(vlapic, vector, false);
+	}
 
 	vcpu_make_request(vlapic->vcpu, ACRN_REQUEST_TMR_UPDATE);
 }
