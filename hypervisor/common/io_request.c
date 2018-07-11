@@ -64,8 +64,9 @@ int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 			"vhm_request page broken!");
 
 
-	if (vcpu == NULL || req == NULL || vcpu->vm->sw.io_shared_page == NULL)
+	if (vcpu == NULL || req == NULL || vcpu->vm->sw.io_shared_page == NULL) {
 		return -EINVAL;
+	}
 
 	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
 
@@ -108,20 +109,22 @@ static void _get_req_info_(struct vhm_request *req, int *id, char *type,
 	switch (req->type) {
 	case REQ_PORTIO:
 		(void)strcpy_s(type, 16, "PORTIO");
-		if (req->reqs.pio_request.direction == REQUEST_READ)
+		if (req->reqs.pio_request.direction == REQUEST_READ) {
 			(void)strcpy_s(dir, 16, "READ");
-		else
+		} else {
 			(void)strcpy_s(dir, 16, "WRITE");
+		}
 		*addr = req->reqs.pio_request.address;
 		*val = req->reqs.pio_request.value;
 		break;
 	case REQ_MMIO:
 	case REQ_WP:
 		(void)strcpy_s(type, 16, "MMIO/WP");
-		if (req->reqs.mmio_request.direction == REQUEST_READ)
+		if (req->reqs.mmio_request.direction == REQUEST_READ) {
 			(void)strcpy_s(dir, 16, "READ");
-		else
+		} else {
 			(void)strcpy_s(dir, 16, "WRITE");
+		}
 		*addr = req->reqs.mmio_request.address;
 		*val = req->reqs.mmio_request.value;
 		break;

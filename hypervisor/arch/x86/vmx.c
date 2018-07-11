@@ -86,10 +86,12 @@ int exec_vmxon_instr(uint16_t pcpu_id)
 	struct vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
 
 	/* Allocate page aligned memory for VMXON region */
-	if (per_cpu(vmxon_region_pa, pcpu_id) == 0)
+	if (per_cpu(vmxon_region_pa, pcpu_id) == 0) {
 		vmxon_region_va = alloc_page();
-	else
+	}
+	else {
 		vmxon_region_va = HPA2HVA(per_cpu(vmxon_region_pa, pcpu_id));
+	}
 
 	if (vmxon_region_va != NULL) {
 		/* Initialize vmxon page with revision id from IA32 VMX BASIC
@@ -112,9 +114,10 @@ int exec_vmxon_instr(uint16_t pcpu_id)
 			vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
 			ret = exec_vmptrld(&vmcs_pa);
 		}
-	} else
+	} else {
 		pr_err("%s, alloc memory for VMXON region failed\n",
 				__func__);
+	}
 
 	return ret;
 }
@@ -129,8 +132,9 @@ int vmx_off(uint16_t pcpu_id)
 	if (vcpu != NULL) {
 		vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
 		ret = exec_vmclear((void *)&vmcs_pa);
-		if (ret != 0)
+		if (ret != 0) {
 			return ret;
+		}
 	}
 
 	asm volatile ("vmxoff" : : : "memory");
@@ -143,8 +147,9 @@ int exec_vmclear(void *addr)
 	uint64_t rflags;
 	int status = 0;
 
-	if (addr == NULL)
+	if (addr == NULL) {
 		status = -EINVAL;
+	}
 	ASSERT(status == 0, "Incorrect arguments");
 
 	asm volatile (
@@ -156,8 +161,9 @@ int exec_vmclear(void *addr)
 		: "%rax", "cc", "memory");
 
 	/* if carry and zero flags are clear operation success */
-	if ((rflags & (RFLAGS_C | RFLAGS_Z)) != 0U)
+	if ((rflags & (RFLAGS_C | RFLAGS_Z)) != 0U) {
 		status = -EINVAL;
+	}
 
 	return status;
 }
@@ -167,8 +173,9 @@ int exec_vmptrld(void *addr)
 	uint64_t rflags;
 	int status = 0;
 
-	if (addr == NULL)
+	if (addr == NULL) {
 		status = -EINVAL;
+	}
 	ASSERT(status == 0, "Incorrect arguments");
 
 	asm volatile (
@@ -181,8 +188,9 @@ int exec_vmptrld(void *addr)
 		: "%rax", "cc");
 
 	/* if carry and zero flags are clear operation success */
-	if ((rflags & (RFLAGS_C | RFLAGS_Z)) != 0U)
+	if ((rflags & (RFLAGS_C | RFLAGS_Z)) != 0U) {
 		status = -EINVAL;
+	}
 
 	return status;
 }
@@ -664,13 +672,16 @@ static void init_guest_state(struct vcpu *vcpu)
 	if (vcpu_mode == CPU_MODE_REAL) {
 		/* RIP is set here */
 		if (is_vcpu_bsp(vcpu)) {
-			if ((uint64_t)vcpu->entry_addr < 0x100000UL)
+			if ((uint64_t)vcpu->entry_addr < 0x100000UL) {
 				value32 = (uint64_t)vcpu->entry_addr & 0x0FUL;
-			else
+			}
+			else {
 				value32 = 0x0000FFF0U;
+			}
 		}
-	} else
+	} else {
 		value32 = (uint32_t)((uint64_t)vcpu->entry_addr);
+	}
 
 	pr_dbg("GUEST RIP on VMEntry %x ", value32);
 	exec_vmwrite(field, value32);
@@ -706,8 +717,9 @@ static void init_guest_state(struct vcpu *vcpu)
 
 		value32 = gdtb.limit;
 
-		if (((gdtb.base >> 47) & 0x1UL) != 0UL)
+		if (((gdtb.base >> 47) & 0x1UL) != 0UL) {
 			gdtb.base |= 0xffff000000000000UL;
+		}
 
 		base = gdtb.base;
 
@@ -741,8 +753,9 @@ static void init_guest_state(struct vcpu *vcpu)
 		/* Limit */
 		limit = idtb.limit;
 
-		if (((idtb.base >> 47) & 0x1UL) != 0UL)
+		if (((idtb.base >> 47) & 0x1UL) != 0UL) {
 			idtb.base |= 0xffff000000000000UL;
+		}
 
 		/* Base */
 		base = idtb.base;
@@ -835,10 +848,12 @@ static void init_guest_state(struct vcpu *vcpu)
 	pr_dbg("VMX_GUEST_GS_LIMIT: 0x%x ", limit);
 
 	/* Access */
-	if (vcpu_mode == CPU_MODE_REAL)
+	if (vcpu_mode == CPU_MODE_REAL) {
 		value32 = REAL_MODE_DATA_SEG_AR;
-	else	/* same value for protected mode and long mode */
+	}
+	else {	/* same value for protected mode and long mode */
 		value32 = PROTECTED_MODE_DATA_SEG_AR;
+	}
 
 	field = VMX_GUEST_ES_ATTR;
 	exec_vmwrite(field, value32);
@@ -1046,8 +1061,9 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	asm volatile ("sgdt %0":"=m"(gdtb)::"memory");
 	value32 = gdtb.limit;
 
-	if (((gdtb.base >> 47) & 0x1UL) != 0UL)
+	if (((gdtb.base >> 47) & 0x1UL) != 0UL) {
 		gdtb.base |= 0xffff000000000000UL;
+	}
 
 	/* Set up the guest and host GDTB base fields with current GDTB base */
 	field = VMX_HOST_GDTR_BASE;
@@ -1056,8 +1072,9 @@ static void init_host_state(__unused struct vcpu *vcpu)
 
 	/* TODO: Should guest TR point to host TR ? */
 	trbase = gdtb.base + tr_sel;
-	if (((trbase >> 47) & 0x1UL) != 0UL)
+	if (((trbase >> 47) & 0x1UL) != 0UL) {
 		trbase |= 0xffff000000000000UL;
+	}
 
 	/* SS segment override */
 	asm volatile ("mov %0,%%rax\n"
@@ -1082,8 +1099,9 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	/* Obtain the current interrupt descriptor table base */
 	asm volatile ("sidt %0":"=m"(idtb)::"memory");
 	/* base */
-	if (((idtb.base >> 47) & 0x1UL) != 0UL)
+	if (((idtb.base >> 47) & 0x1UL) != 0UL) {
 		idtb.base |= 0xffff000000000000UL;
+	}
 
 	field = VMX_HOST_IDTR_BASE;
 	exec_vmwrite(field, idtb.base);
@@ -1235,20 +1253,23 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 			VMX_PROCBASED_CTLS2_RDTSCP |
 			VMX_PROCBASED_CTLS2_UNRESTRICT);
 
-	if (vcpu->arch_vcpu.vpid != 0U)
+	if (vcpu->arch_vcpu.vpid != 0U) {
 		value32 |= VMX_PROCBASED_CTLS2_VPID;
-	else
+	} else {
 		value32 &= ~VMX_PROCBASED_CTLS2_VPID;
+	}
 
 	if (is_vapic_supported()) {
 		value32 |= VMX_PROCBASED_CTLS2_VAPIC;
 
-		if (is_vapic_virt_reg_supported())
+		if (is_vapic_virt_reg_supported()) {
 			value32 |= VMX_PROCBASED_CTLS2_VAPIC_REGS;
+		}
 
-		if (is_vapic_intr_delivery_supported())
+		if (is_vapic_intr_delivery_supported()) {
 			value32 |= VMX_PROCBASED_CTLS2_VIRQ;
-		else
+		}
+		else {
 			/*
 			 * This field exists only on processors that support
 			 * the 1-setting  of the "use TPR shadow"
@@ -1258,6 +1279,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 			 * - pg 2904 24.6.8
 			 */
 			exec_vmwrite(VMX_TPR_THRESHOLD, 0);
+		}
 	}
 
 	if (cpu_has_cap(X86_FEATURE_OSXSAVE)) {
@@ -1292,10 +1314,12 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	}
 
 	/* Check for EPT support */
-	if (is_ept_supported())
+	if (is_ept_supported()) {
 		pr_dbg("EPT is supported");
-	else
+	}
+	else {
 		pr_err("Error: EPT is not supported");
+	}
 
 	/* Load EPTP execution control
 	 * TODO: introduce API to make this data driven based
@@ -1380,8 +1404,9 @@ static void init_entry_ctrl(__unused struct vcpu *vcpu)
 	 * IA32_PAT and IA32_EFER
 	 */
 	value32 = msr_read(MSR_IA32_VMX_ENTRY_CTLS);
-	if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT)
+	if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
 		value32 |= (VMX_ENTRY_CTLS_IA32E_MODE);
+	}
 
 	value32 |= (VMX_ENTRY_CTLS_LOAD_EFER |
 		    VMX_ENTRY_CTLS_LOAD_PAT);
@@ -1540,8 +1565,9 @@ int init_vmcs(struct vcpu *vcpu)
 	int status = 0;
 	uint64_t vmcs_pa;
 
-	if (vcpu == NULL)
+	if (vcpu == NULL) {
 		status = -EINVAL;
+	}
 	ASSERT(status == 0, "Incorrect arguments");
 
 	/* Log message */
@@ -1569,8 +1595,9 @@ int init_vmcs(struct vcpu *vcpu)
 	init_exit_ctrl(vcpu);
 
 #ifdef CONFIG_EFI_STUB
-	if (is_vm0(vcpu->vm) && vcpu->pcpu_id == 0)
+	if (is_vm0(vcpu->vm) && vcpu->pcpu_id == 0) {
 		override_uefi_vmcs(vcpu);
+	}
 #endif
 	/* Return status to caller */
 	return status;

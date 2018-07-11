@@ -78,11 +78,13 @@ struct trace_entry {
 static inline bool
 trace_check(uint16_t cpu_id, __unused uint32_t evid)
 {
-	if (cpu_id >= phys_cpu_num)
+	if (cpu_id >= phys_cpu_num) {
 		return false;
+	}
 
-	if (per_cpu(sbuf, cpu_id)[ACRN_TRACE] == NULL)
+	if (per_cpu(sbuf, cpu_id)[ACRN_TRACE] == NULL) {
 		return false;
+	}
 
 	return true;
 }
@@ -107,8 +109,9 @@ TRACE_2L(uint32_t evid, uint64_t e, uint64_t f)
 	struct trace_entry entry;
 	uint16_t cpu_id = get_cpu_id();
 
-	if (!trace_check(cpu_id, evid))
+	if (!trace_check(cpu_id, evid)) {
 		return;
+	}
 
 	entry.payload.fields_64.e = e;
 	entry.payload.fields_64.f = f;
@@ -122,8 +125,9 @@ TRACE_4I(uint32_t evid, uint32_t a, uint32_t b, uint32_t c,
 	struct trace_entry entry;
 	uint16_t cpu_id = get_cpu_id();
 
-	if (!trace_check(cpu_id, evid))
+	if (!trace_check(cpu_id, evid)) {
 		return;
+	}
 
 	entry.payload.fields_32.a = a;
 	entry.payload.fields_32.b = b;
@@ -139,8 +143,9 @@ TRACE_6C(uint32_t evid, uint8_t a1, uint8_t a2, uint8_t a3,
 	struct trace_entry entry;
 	uint16_t cpu_id = get_cpu_id();
 
-	if (!trace_check(cpu_id, evid))
+	if (!trace_check(cpu_id, evid)) {
 		return;
+	}
 
 	entry.payload.fields_8.a1 = a1;
 	entry.payload.fields_8.a2 = a2;
@@ -162,8 +167,9 @@ TRACE_16STR(uint32_t evid, const char name[])
 	uint16_t cpu_id = get_cpu_id();
 	size_t len, i;
 
-	if (!trace_check(cpu_id, evid))
+	if (!trace_check(cpu_id, evid)) {
 		return;
+	}
 
 	entry.payload.fields_64.e = 0UL;
 	entry.payload.fields_64.f = 0UL;

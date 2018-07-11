@@ -13,8 +13,9 @@ static void run_vcpu_pre_work(struct vcpu *vcpu)
 {
 	uint64_t *pending_pre_work = &vcpu->pending_pre_work;
 
-	if (bitmap_test_and_clear(ACRN_VCPU_MMIO_COMPLETE, pending_pre_work))
+	if (bitmap_test_and_clear(ACRN_VCPU_MMIO_COMPLETE, pending_pre_work)) {
 		dm_emulate_mmio_post(vcpu);
+	}
 }
 
 void vcpu_thread(struct vcpu *vcpu)
@@ -25,8 +26,9 @@ void vcpu_thread(struct vcpu *vcpu)
 	int32_t ret = 0;
 
 	/* If vcpu is not launched, we need to do init_vmcs first */
-	if (!vcpu->launched)
+	if (!vcpu->launched) {
 		init_vmcs(vcpu);
+	}
 
 	run_vcpu_pre_work(vcpu);
 
@@ -56,9 +58,10 @@ void vcpu_thread(struct vcpu *vcpu)
 		}
 
 		vmexit_end = rdtsc();
-		if (vmexit_begin != 0UL)
+		if (vmexit_begin != 0UL) {
 			per_cpu(vmexit_time, vcpu->pcpu_id)[basic_exit_reason]
 				+= (vmexit_end - vmexit_begin);
+		}
 		TRACE_2L(TRACE_VM_ENTER, 0, 0);
 
 		/* Restore guest TSC_AUX */
@@ -124,16 +127,18 @@ int32_t hv_main(uint16_t pcpu_id)
 
 	/* Enable virtualization extensions */
 	ret = exec_vmxon_instr(pcpu_id);
-	if (ret != 0)
+	if (ret != 0) {
 		return ret;
+	}
 
 	/* X2APIC mode is disabled by default. */
 	x2apic_enabled = false;
 
 	if (is_vm0_bsp(pcpu_id)) {
 		ret = prepare_vm0();
-		if (ret != 0)
+		if (ret != 0) {
 			return ret;
+		}
 	}
 
 	default_idle();

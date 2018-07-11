@@ -240,13 +240,15 @@ struct shell_cmd *shell_find_cmd(struct shell *p_shell, const char *cmd_str)
 	uint32_t i;
 	struct shell_cmd *p_cmd = NULL;
 
-	if (p_shell->cmd_count <= 0U)
+	if (p_shell->cmd_count <= 0U) {
 		return NULL;
+	}
 
 	for (i = 0U; i < p_shell->cmd_count; i++) {
 		p_cmd = &p_shell->shell_cmd[i];
-		if (strcmp(p_cmd->str, cmd_str) == 0)
+		if (strcmp(p_cmd->str, cmd_str) == 0) {
 			break;
+		}
 	}
 
 	if (i == p_shell->cmd_count) {
@@ -274,9 +276,10 @@ void kick_shell(struct shell *p_shell)
 		if (vuart_console_active() == NULL) {
 			/* Prompt the user for a selection. */
 			if ((is_cmd_cmplt != 0U) &&
-			    (p_shell->session_io.io_puts != NULL))
+			    (p_shell->session_io.io_puts != NULL)) {
 				p_shell->session_io.io_puts(p_shell,
 							SHELL_PROMPT_STR);
+			}
 
 			/* Get user's input */
 			is_cmd_cmplt = shell_input_line(p_shell);
@@ -284,9 +287,10 @@ void kick_shell(struct shell *p_shell)
 			/* If user has pressed the ENTER then process
 			 * the command
 			 */
-			if (is_cmd_cmplt != 0U)
+			if (is_cmd_cmplt != 0U) {
 				/* Process current input line. */
 				status = shell_process(p_shell);
+			}
 		}
 	} else {
 		/* Serial port handle couldn't be obtained. Stop the shell
@@ -795,8 +799,9 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 
 	gva = strtoul_hex(argv[3]);
 
-	if (argc == 5)
+	if (argc == 5) {
 		length = atoi(argv[4]);
+	}
 
 	if (length > MAX_MEMDUMP_LEN) {
 		shell_puts(p_shell, "over max length, round back\r\n");
@@ -884,8 +889,9 @@ int shell_show_cpu_int(struct shell *p_shell,
 {
 	char *temp_str = alloc_page();
 
-	if (temp_str == NULL)
+	if (temp_str == NULL) {
 		return -ENOMEM;
+	}
 
 	get_cpu_interrupt_info(temp_str, CPU_PAGE_SIZE);
 	shell_puts(p_shell, temp_str);
@@ -900,8 +906,9 @@ int shell_show_ptdev_info(struct shell *p_shell,
 {
 	char *temp_str = alloc_page();
 
-	if (temp_str == NULL)
+	if (temp_str == NULL) {
 		return -ENOMEM;
+	}
 
 	get_ptdev_info(temp_str, CPU_PAGE_SIZE);
 	shell_puts(p_shell, temp_str);
@@ -922,8 +929,9 @@ int shell_show_req_info(struct shell *p_shell,
 {
 	char *temp_str = alloc_page();
 
-	if (temp_str == NULL)
+	if (temp_str == NULL) {
 		return -ENOMEM;
+	}
 
 	get_req_info(temp_str, CPU_PAGE_SIZE);
 	shell_puts(p_shell, temp_str);
@@ -938,15 +946,17 @@ int shell_show_vioapic_info(struct shell *p_shell, int argc, char **argv)
 	char *temp_str = alloc_page();
 	uint32_t vmid;
 
-	if (temp_str == NULL)
+	if (temp_str == NULL) {
 		return -ENOMEM;
+	}
 
 	/* User input invalidation */
 	if (argc != 2) {
 		snprintf(temp_str, CPU_PAGE_SIZE, "\r\nvmid param needed\r\n");
 		goto END;
-	} else
+	} else {
 		vmid = atoi(argv[1]);
+	}
 
 	get_vioapic_info(temp_str, CPU_PAGE_SIZE, vmid);
 END:
@@ -961,8 +971,9 @@ int shell_show_ioapic_info(struct shell *p_shell,
 {
 	char *temp_str = alloc_pages(2);
 
-	if (temp_str == NULL)
+	if (temp_str == NULL) {
 		return -ENOMEM;
+	}
 
 	get_ioapic_info(temp_str, 2 * CPU_PAGE_SIZE);
 	shell_puts(p_shell, temp_str);
@@ -977,8 +988,9 @@ int shell_show_vmexit_profile(struct shell *p_shell,
 {
 	char *temp_str = alloc_pages(2);
 
-	if (temp_str == NULL)
+	if (temp_str == NULL) {
 		return -ENOMEM;
+	}
 
 	get_vmexit_profile(temp_str, 2*CPU_PAGE_SIZE);
 	shell_puts(p_shell, temp_str);
@@ -997,8 +1009,9 @@ int shell_dump_logbuf(__unused struct shell *p_shell,
 
 	if (argc == 2) {
 		val = atoi(argv[1]);
-		if (val < 0)
+		if (val < 0) {
 			return status;
+		}
 		pcpu_id = (uint16_t)val;
 		print_logmsg_buffer(pcpu_id);
 		return 0;

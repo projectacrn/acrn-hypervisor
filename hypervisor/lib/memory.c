@@ -80,8 +80,9 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
 		for (bit_idx = ffz64(pool->bitmap[idx]);
 					bit_idx < BITMAP_WORD_SIZE; bit_idx++) {
 			/* Check if selected buffer is free */
-			if ((pool->bitmap[idx] & (1U << bit_idx)) != 0U)
+			if ((pool->bitmap[idx] & (1U << bit_idx)) != 0U) {
 				continue;
+			}
 
 			/* Declare temporary variables to be used locally in
 			 * this block
@@ -109,8 +110,9 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
 
 				/* Break if selected buffer is not free */
 				if ((pool->bitmap[tmp_idx]
-					& (1U << tmp_bit_idx)) != 0U)
+					& (1U << tmp_bit_idx)) != 0U) {
 					break;
+				}
 			}
 
 			/* Check if requested_buffs number of free contiguous
@@ -207,16 +209,18 @@ static void deallocate_mem(struct mem_pool *pool, void *ptr)
 			contiguity_bitmask = &pool->contiguity_bitmap[bmp_idx];
 
 			/* Mark the buffer as free */
-			if ((*bitmask & (1U << bit_idx)) != 0U)
+			if ((*bitmask & (1U << bit_idx)) != 0U) {
 				*bitmask ^= (1U << bit_idx);
-			else
+			} else {
 				break;
+			}
 
 			/* Reset the Contiguity bit of buffer */
-			if ((*contiguity_bitmask & (1U << bit_idx)) != 0U)
+			if ((*contiguity_bitmask & (1U << bit_idx)) != 0U) {
 				*contiguity_bitmask ^= (1U << bit_idx);
-			else
+			} else {
 				break;
+			}
 
 			/* Increment buff_idx */
 			buff_idx++;
@@ -245,8 +249,9 @@ void *malloc(unsigned int num_bytes)
 	}
 
 	/* Check if memory allocation is successful */
-	if (memory == NULL)
+	if (memory == NULL) {
 		pr_err("%s: failed to alloc 0x%x Bytes", __func__, num_bytes);
+	}
 
 	/* Return memory pointer to caller */
 	return memory;
@@ -260,8 +265,9 @@ void *alloc_pages(unsigned int page_num)
 	memory = allocate_mem(&Paging_Memory_Pool, page_num * CPU_PAGE_SIZE);
 
 	/* Check if memory allocation is successful */
-	if (memory == NULL)
+	if (memory == NULL) {
 		pr_err("%s: failed to alloc %d pages", __func__, page_num);
+	}
 
 	return memory;
 }
@@ -311,8 +317,9 @@ void *memchr(const void *void_s, int c, size_t n)
 	unsigned char *end = ptr + n;
 
 	while (ptr < end) {
-		if (*ptr == val)
+		if (*ptr == val) {
 			return ((void *)ptr);
+		}
 		ptr++;
 	}
 	return NULL;
@@ -348,16 +355,19 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
 	uint8_t *dest8;
 	uint8_t *src8;
 
-	if (slen == 0U || dmax == 0U || dmax < slen)
+	if (slen == 0U || dmax == 0U || dmax < slen) {
 		ASSERT(false);
+	}
 
 	if ((d > s && d <= s + slen - 1)
-			|| (d < s && s <= d + dmax - 1))
+			|| (d < s && s <= d + dmax - 1)) {
 		ASSERT(false);
+	}
 
 	/*same memory block, no need to copy*/
-	if (d == s)
+	if (d == s) {
 		return d;
+	}
 
 	dest8 = (uint8_t *)d;
 	src8 = (uint8_t *)s;

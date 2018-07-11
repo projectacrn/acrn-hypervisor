@@ -18,13 +18,15 @@ static struct uart *get_uart_by_id(const char *uart_id, uint32_t *index)
 	while (sio_ports[*index] != NULL) {
 		if (strncmp(sio_ports[*index]->tgt_uart->uart_id, uart_id,
 			strnlen_s(sio_ports[*index]->tgt_uart->uart_id,
-				SERIAL_ID_MAX_LENGTH)) == 0)
+				SERIAL_ID_MAX_LENGTH)) == 0) {
 			break;
+		}
 
 		/* No device is found if index reaches end of array. */
 		(*index)++;
-		if (*index == SERIAL_MAX_DEVS)
+		if (*index == SERIAL_MAX_DEVS) {
 			return NULL;
+		}
 
 	}
 	return sio_ports[*index];
@@ -66,8 +68,9 @@ int serial_init(void)
 			status = sio_ports[index]->tgt_uart->
 				init(sio_ports[index]->tgt_uart);
 
-			if (status == 0)
+			if (status == 0) {
 				sio_initialized[index] = true;
+			}
 		} else {
 			status = -ENOMEM;
 			break;
@@ -105,8 +108,9 @@ uint32_t serial_open(const char *uart_id)
 		/* Open the UART hardware with default configuration. */
 		status = uart->tgt_uart->open(uart->tgt_uart, &(uart->config));
 
-		if (status == 0)
+		if (status == 0) {
 			uart->open_flag = true;
+		}
 	}
 
 	/* Already open serial device */
@@ -135,12 +139,14 @@ uint32_t serial_get_rx_data(uint32_t uart_handle)
 		return 0U;
 
 	index = SERIAL_DECODE_INDEX(uart_handle);
-	if (index >= SERIAL_MAX_DEVS)
+	if (index >= SERIAL_MAX_DEVS) {
 		return 0U;
+	}
 
 	uart = sio_ports[index];
-	if (uart == NULL)
+	if (uart == NULL) {
 		return 0U;
+	}
 
 	/* Place all the data available in RX FIFO, in circular buffer */
 	data_avail = uart->tgt_uart->rx_data_is_avail(
@@ -192,18 +198,21 @@ int serial_getc(uint32_t uart_handle)
 	uint32_t index;
 	int status = SERIAL_DEV_NOT_FOUND;
 
-	if (!SERIAL_VALIDATE_HANDLE(uart_handle))
+	if (!SERIAL_VALIDATE_HANDLE(uart_handle)) {
 		goto exit;
+	}
 
 	index = SERIAL_DECODE_INDEX(uart_handle);
 
-	if (index >= SERIAL_MAX_DEVS)
+	if (index >= SERIAL_MAX_DEVS) {
 		goto exit;
+	}
 
 	port = sio_ports[index];
 
-	if (port == NULL)
+	if (port == NULL) {
 		goto exit;
+	}
 
 	/* First read a character from the circular buffer regardless of the
 	 * read mode of UART port. If status is not CBUFFER_EMPTY, character
@@ -235,15 +244,18 @@ int serial_gets(uint32_t uart_handle, char *buffer, uint32_t length)
 	uint32_t index;
 	int status = 0;
 
-	if ((buffer == NULL) || (length == 0U))
+	if ((buffer == NULL) || (length == 0U)) {
 		return 0;
+	}
 
-	if (!SERIAL_VALIDATE_HANDLE(uart_handle))
+	if (!SERIAL_VALIDATE_HANDLE(uart_handle)) {
 		return 0;
+	}
 
 	index = SERIAL_DECODE_INDEX(uart_handle);
-	if (index >= SERIAL_MAX_DEVS)
+	if (index >= SERIAL_MAX_DEVS) {
 		return 0;
+	}
 
 	port = sio_ports[index];
 	if ((port != NULL) && (port->open_flag == true)) {
@@ -256,8 +268,9 @@ int serial_gets(uint32_t uart_handle, char *buffer, uint32_t length)
 			/* Restore interrupts to original level. */
 			spinlock_release(&port->buffer_lock);
 
-			if (status <= 0)
+			if (status <= 0) {
 				break;
+			}
 
 			/* Save character in buffer */
 			*data_read = (char) c;
@@ -274,18 +287,21 @@ static int serial_putc(uint32_t uart_handle, int c)
 	struct uart *uart;
 	int busy;
 
-	if (!SERIAL_VALIDATE_HANDLE(uart_handle))
+	if (!SERIAL_VALIDATE_HANDLE(uart_handle)) {
 		return SERIAL_EOF;
+	}
 
 	index = SERIAL_DECODE_INDEX(uart_handle);
 
-	if (index >= SERIAL_MAX_DEVS)
+	if (index >= SERIAL_MAX_DEVS) {
 		return SERIAL_EOF;
+	}
 
 	uart = sio_ports[index];
 
-	if (uart == NULL)
+	if (uart == NULL) {
 		return SERIAL_EOF;
+	}
 
 	/* Wait for TX hardware to be ready */
 	do {
@@ -306,21 +322,25 @@ int serial_puts(uint32_t uart_handle, const char *s, uint32_t length)
 	struct uart *port;
 	int retval = 0;
 
-	if ((s == NULL) || (length == 0U))
+	if ((s == NULL) || (length == 0U)) {
 		return 0;
+	}
 
-	if (!SERIAL_VALIDATE_HANDLE(uart_handle))
+	if (!SERIAL_VALIDATE_HANDLE(uart_handle)) {
 		return 0;
+	}
 
 	index = SERIAL_DECODE_INDEX(uart_handle);
 
-	if (index >= SERIAL_MAX_DEVS)
+	if (index >= SERIAL_MAX_DEVS) {
 		return 0;
+	}
 
 	port = sio_ports[index];
 
-	if (port == NULL)
+	if (port == NULL) {
 		return 0;
+	}
 
 	/*
 	 * Grab the semaphore so that strings between threads do not

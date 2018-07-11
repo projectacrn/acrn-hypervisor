@@ -48,8 +48,9 @@ static uint32_t find_available_vector(bool lowpri)
 
 	/* TODO: vector lock required */
 	for (i = start; i < end; i++) {
-		if (vector_to_irq[i] == IRQ_INVALID)
+		if (vector_to_irq[i] == IRQ_INVALID) {
 			return i;
+		}
 	}
 	return VECTOR_INVALID;
 }
@@ -64,13 +65,15 @@ uint32_t irq_mark_used(uint32_t irq)
 
 	spinlock_rflags;
 
-	if (irq > NR_MAX_IRQS)
+	if (irq > NR_MAX_IRQS) {
 		return IRQ_INVALID;
+	}
 
 	desc = &irq_desc_array[irq];
 	spinlock_irqsave_obtain(&desc->irq_lock);
-	if (desc->used == IRQ_NOT_ASSIGNED)
+	if (desc->used == IRQ_NOT_ASSIGNED) {
 		desc->used = IRQ_ASSIGNED_NOSHARE;
+	}
 	spinlock_irqrestore_release(&desc->irq_lock);
 	return irq;
 }
@@ -130,8 +133,9 @@ static void _irq_desc_free_vector(uint32_t irq)
 	uint32_t vr;
 	uint16_t pcpu_id;
 
-	if (irq > NR_MAX_IRQS)
+	if (irq > NR_MAX_IRQS) {
 		return;
+	}
 
 	desc = &irq_desc_array[irq];
 
@@ -141,8 +145,9 @@ static void _irq_desc_free_vector(uint32_t irq)
 	desc->vector = VECTOR_INVALID;
 
 	vr &= NR_MAX_VECTOR;
-	if (vector_to_irq[vr] == irq)
+	if (vector_to_irq[vr] == irq) {
 		vector_to_irq[vr] = IRQ_INVALID;
+	}
 
 	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
 		per_cpu(irq_count, pcpu_id)[irq] = 0UL;
@@ -175,8 +180,9 @@ irq_desc_append_dev(struct irq_desc *desc, void *node, bool share)
 		 * ioapic setup.
 		 * caller can later update it with update_irq_handler()
 		 */
-		if (desc->irq_handler == NULL)
+		if (desc->irq_handler == NULL) {
 			desc->irq_handler = common_handler_edge;
+		}
 	} else if (!share || desc->used == IRQ_ASSIGNED_NOSHARE) {
 		/* dev node added failed */
 		added = false;
@@ -233,10 +239,11 @@ common_register_handler(uint32_t irq,
 	/* HV select a irq for device if irq < 0
 	 * this vector/irq match to APCI DSDT or PCI INTx/MSI
 	 */
-	if (irq == IRQ_INVALID)
+	if (irq == IRQ_INVALID) {
 		irq = alloc_irq();
-	else
+	} else {
 		irq = irq_mark_used(irq);
+	}
 
 	if (irq > NR_MAX_IRQS) {
 		pr_err("failed to assign IRQ");
@@ -261,11 +268,11 @@ OUT:
 	if (added) {
 		/* it is safe to call irq_desc_alloc_vector multiple times*/
 		if (info->vector >= VECTOR_FOR_PRI_START &&
-			info->vector <= VECTOR_FOR_PRI_END)
+			info->vector <= VECTOR_FOR_PRI_END) {
 			irq_desc_set_vector(irq, info->vector);
-		else if (info->vector > NR_MAX_VECTOR)
+		} else if (info->vector > NR_MAX_VECTOR) {
 			irq_desc_alloc_vector(irq, info->lowpri);
-		else {
+		} else {
 			pr_err("the input vector is not correct");
 			free(node);
 			return NULL;
@@ -295,8 +302,9 @@ uint32_t irq_desc_alloc_vector(uint32_t irq, bool lowpri)
 	spinlock_rflags;
 
 	/* irq should be always available at this time */
-	if (irq > NR_MAX_IRQS)
+	if (irq > NR_MAX_IRQS) {
 		return VECTOR_INVALID;
+	}
 
 	desc = &irq_desc_array[irq];
 	spinlock_irqsave_obtain(&desc->irq_lock);
@@ -324,13 +332,15 @@ void irq_desc_try_free_vector(uint32_t irq)
 	spinlock_rflags;
 
 	/* legacy irq's vector is reserved and should not be freed */
-	if (irq > NR_MAX_IRQS || irq < NR_LEGACY_IRQ)
+	if (irq > NR_MAX_IRQS || irq < NR_LEGACY_IRQ) {
 		return;
+	}
 
 	desc = &irq_desc_array[irq];
 	spinlock_irqsave_obtain(&desc->irq_lock);
-	if (desc->dev_list == NULL)
+	if (desc->dev_list == NULL) {
 		_irq_desc_free_vector(irq);
+	}
 
 	spinlock_irqrestore_release(&desc->irq_lock);
 
@@ -338,10 +348,11 @@ void irq_desc_try_free_vector(uint32_t irq)
 
 uint32_t irq_to_vector(uint32_t irq)
 {
-	if (irq < NR_MAX_IRQS)
+	if (irq < NR_MAX_IRQS) {
 		return irq_desc_array[irq].vector;
-	else
+	} else {
 		return VECTOR_INVALID;
+	}
 }
 
 uint32_t dev_to_irq(struct dev_handler_node *node)
@@ -356,8 +367,9 @@ uint32_t dev_to_vector(struct dev_handler_node *node)
 
 int init_default_irqs(uint16_t cpu_id)
 {
-	if (cpu_id != BOOT_CPU_ID)
+	if (cpu_id != BOOT_CPU_ID) {
 		return 0;
+	}
 
 	init_irq_desc();
 
@@ -394,8 +406,9 @@ void handle_spurious_interrupt(uint32_t vector)
 
 	pr_warn("Spurious vector: 0x%x.", vector);
 
-	if (spurious_handler != NULL)
+	if (spurious_handler != NULL) {
 		spurious_handler(vector);
+	}
 }
 
 /* do_IRQ() */
@@ -405,14 +418,16 @@ void dispatch_interrupt(struct intr_excp_ctx *ctx)
 	uint32_t irq = vector_to_irq[vr];
 	struct irq_desc *desc;
 
-	if (irq == IRQ_INVALID)
+	if (irq == IRQ_INVALID) {
 		goto ERR;
+	}
 
 	desc = &irq_desc_array[irq];
 	per_cpu(irq_count, get_cpu_id())[irq]++;
 
-	if (vr != desc->vector)
+	if (vr != desc->vector) {
 		goto ERR;
+	}
 
 	if (desc->used == IRQ_NOT_ASSIGNED || desc->irq_handler == NULL) {
 		/* mask irq if possible */
@@ -446,20 +461,23 @@ int handle_level_interrupt_common(struct irq_desc *desc,
 	desc->state = IRQ_DESC_IN_PROCESS;
 
 	/* mask iopaic pin */
-	if (irq_is_gsi(desc->irq))
+	if (irq_is_gsi(desc->irq)) {
 		GSI_MASK_IRQ(desc->irq);
+	}
 
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
 	while (dev != NULL) {
-		if (dev->dev_handler != NULL)
+		if (dev->dev_handler != NULL) {
 			dev->dev_handler(desc->irq, dev->dev_data);
+		}
 		dev = dev->next;
 	}
 
-	if (irq_is_gsi(desc->irq))
+	if (irq_is_gsi(desc->irq)) {
 		GSI_UNMASK_IRQ(desc->irq);
+	}
 
 	desc->state = IRQ_DESC_PENDING;
 	spinlock_irqrestore_release(&desc->irq_lock);
@@ -489,8 +507,9 @@ int common_handler_edge(struct irq_desc *desc, __unused void *handler_data)
 	send_lapic_eoi();
 
 	while (dev != NULL) {
-		if (dev->dev_handler != NULL)
+		if (dev->dev_handler != NULL) {
 			dev->dev_handler(desc->irq, dev->dev_data);
+		}
 		dev = dev->next;
 	}
 
@@ -519,15 +538,17 @@ int common_dev_handler_level(struct irq_desc *desc, __unused void *handler_data)
 	desc->state = IRQ_DESC_IN_PROCESS;
 
 	/* mask iopaic pin */
-	if (irq_is_gsi(desc->irq))
+	if (irq_is_gsi(desc->irq))  {
 		GSI_MASK_IRQ(desc->irq);
+	}
 
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
 	while (dev != NULL) {
-		if (dev->dev_handler != NULL)
+		if (dev->dev_handler != NULL) {
 			dev->dev_handler(desc->irq, dev->dev_data);
+		}
 		dev = dev->next;
 	}
 
@@ -547,8 +568,9 @@ int quick_handler_nolock(struct irq_desc *desc, __unused void *handler_data)
 	send_lapic_eoi();
 
 	while (dev != NULL) {
-		if (dev->dev_handler != NULL)
+		if (dev->dev_handler != NULL) {
 			dev->dev_handler(desc->irq, dev->dev_data);
+		}
 		dev = dev->next;
 	}
 
@@ -561,8 +583,9 @@ void update_irq_handler(uint32_t irq, irq_handler_t func)
 
 	spinlock_rflags;
 
-	if (irq >= NR_MAX_IRQS)
+	if (irq >= NR_MAX_IRQS) {
 		return;
+	}
 
 	desc = &irq_desc_array[irq];
 	spinlock_irqsave_obtain(&desc->irq_lock);
@@ -577,8 +600,9 @@ void unregister_handler_common(struct dev_handler_node *node)
 
 	spinlock_rflags;
 
-	if (node == NULL)
+	if (node == NULL) {
 		return;
+	}
 
 	dev_dbg(ACRN_DBG_IRQ, "[%s] %s irq%d vr:0x%x",
 		__func__, node->name,
@@ -646,8 +670,9 @@ pri_register_handler(uint32_t irq,
 {
 	struct irq_request_info info;
 
-	if (vector < VECTOR_FOR_PRI_START || vector > VECTOR_FOR_PRI_END)
+	if (vector < VECTOR_FOR_PRI_START || vector > VECTOR_FOR_PRI_END) {
 		return NULL;
+	}
 
 	info.vector = vector;
 	info.lowpri = false;
@@ -714,13 +739,15 @@ int interrupt_init(uint16_t pcpu_id)
 
 	status = init_lapic(pcpu_id);
 	ASSERT(status == 0, "lapic init failed");
-	if (status != 0)
+	if (status != 0) {
 		return -ENODEV;
+	}
 
 	status = init_default_irqs(pcpu_id);
 	ASSERT(status == 0, "irqs init failed");
-	if (status != 0)
+	if (status != 0) {
 		return -ENODEV;
+	}
 
 #ifndef CONFIG_EFI_STUB
 	CPU_IRQ_ENABLE();

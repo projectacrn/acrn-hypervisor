@@ -89,8 +89,9 @@ static int uart16550_calc_baud_div(__unused struct tgt_uart *tgt_uart,
 {
 	uint32_t baud_multiplier = baud_rate < BAUD_460800 ? 16 : 13;
 
-	if (baud_rate == 0)
+	if (baud_rate == 0) {
 		baud_rate = BAUD_115200;
+	}
 	*baud_div_ptr = ref_freq / (baud_multiplier * baud_rate);
 
 	return 0;
@@ -154,8 +155,9 @@ static int uart16550_open(struct tgt_uart *tgt_uart,
 	int status = 0;
 
 	if (strcmp(tgt_uart->uart_id, "STDIO") == 0) {
-		if (atomic_cmpxchg(&tgt_uart->open_count, 0, 1) != 0)
+		if (atomic_cmpxchg(&tgt_uart->open_count, 0, 1) != 0) {
 			return -EBUSY;
+		}
 
 		/* Call UART setup function */
 		/* Enable TX and RX FIFOs */
@@ -221,16 +223,19 @@ static uint32_t uart16550_get_rx_err(uint32_t rx_data)
 	uint32_t rx_status = SD_RX_NO_ERROR;
 
 	/* Check for RX overrun error */
-	if ((rx_data & LSR_OE) != 0U)
+	if ((rx_data & LSR_OE) != 0U) {
 		rx_status |= SD_RX_OVERRUN_ERROR;
+	}
 
 	/* Check for RX parity error */
-	if ((rx_data & LSR_PE) != 0U)
+	if ((rx_data & LSR_PE) != 0U) {
 		rx_status |= SD_RX_PARITY_ERROR;
+	}
 
 	/* Check for RX frame error */
-	if ((rx_data & LSR_FE) != 0U)
+	if ((rx_data & LSR_FE) != 0U) {
 		rx_status |= SD_RX_FRAME_ERROR;
+	}
 
 	/* Return the rx status */
 	return rx_status;
@@ -274,8 +279,9 @@ static void uart16550_write(struct tgt_uart *tgt_uart,
 	uart16550_write_reg(tgt_uart->base_address,
 		*(uint8_t *)buffer, THR_IDX);
 
-	if (bytes_written != NULL)
+	if (bytes_written != NULL) {
 		*bytes_written = 1;
+	}
 }
 
 static bool uart16550_tx_is_busy(struct tgt_uart *tgt_uart)

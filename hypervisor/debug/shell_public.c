@@ -138,8 +138,9 @@ int shell_init(void)
 	int status;
 
 	status = shell_construct(&serial_session);
-	if (status != 0)
+	if (status != 0) {
 		return status;
+	}
 
 	/* Set the function pointers for the shell i/p and o/p functions */
 	serial_session->session_io.io_init = shell_init_serial;
@@ -201,8 +202,9 @@ int shell_switch_console(void)
 	struct vuart *vuart;
 
 	vuart = vuart_console_active();
-	if (vuart == NULL)
+	if (vuart == NULL) {
 		return -EINVAL;
+	}
 
 	vuart->active = false;
 	/* Output that switching to ACRN shell */

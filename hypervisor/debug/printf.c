@@ -16,18 +16,16 @@ static int charout(int cmd, const char *s, int sz, void *hnd)
 	/* copy mode ? */
 	if (cmd == PRINT_CMD_COPY) {
 		/* copy all characters until NUL is found */
-		if (sz < 0)
+		if (sz < 0) {
 			s += console_puts(s);
-
-		/* copy 'sz' characters */
-		else
+		} else { /* copy 'sz' characters */
 			s += console_write(s, sz);
+		}
 
 		*nchars += (s - p);
 		return *nchars;
-	}
+	} else {
 	/* fill mode */
-	else {
 		*nchars += sz;
 		while (sz != 0) {
 			console_putc(*s);
