@@ -36,7 +36,7 @@ static void vm_setup_cpu_px(struct vm *vm)
 	uint32_t px_data_size;
 
 	vm->pm.px_cnt = 0U;
-	(void)memset(vm->pm.px_data, 0,
+	(void)memset(vm->pm.px_data, 0U,
 			MAX_PSTATE * sizeof(struct cpu_px_data));
 
 	if ((boot_cpu_data.state_info.px_cnt == 0U)
@@ -49,7 +49,7 @@ static void vm_setup_cpu_px(struct vm *vm)
 
 	vm->pm.px_cnt = boot_cpu_data.state_info.px_cnt;
 
-	px_data_size = vm->pm.px_cnt * sizeof(struct cpu_px_data);
+	px_data_size = ((uint32_t)vm->pm.px_cnt) * sizeof(struct cpu_px_data);
 
 	(void)memcpy_s(vm->pm.px_data, px_data_size,
 			boot_cpu_data.state_info.px_data, px_data_size);
@@ -61,7 +61,7 @@ static void vm_setup_cpu_cx(struct vm *vm)
 	uint32_t cx_data_size;
 
 	vm->pm.cx_cnt = 0U;
-	(void)memset(vm->pm.cx_data, 0,
+	(void)memset(vm->pm.cx_data, 0U,
 			MAX_CSTATE * sizeof(struct cpu_cx_data));
 
 	if ((boot_cpu_data.state_info.cx_cnt == 0U)
@@ -74,7 +74,7 @@ static void vm_setup_cpu_cx(struct vm *vm)
 
 	vm->pm.cx_cnt = boot_cpu_data.state_info.cx_cnt;
 
-	cx_data_size = vm->pm.cx_cnt * sizeof(struct cpu_cx_data);
+	cx_data_size = ((uint32_t)vm->pm.cx_cnt) * sizeof(struct cpu_cx_data);
 
 	/* please note pm.cx_data[0] is a empty space holder,
 	 * pm.cx_data[1...MAX_CX_ENTRY] would be used to store cx entry datas.
@@ -88,13 +88,13 @@ static inline void init_cx_port(struct vm *vm)
 {
 	uint8_t cx_idx;
 
-	for (cx_idx = 2; cx_idx <= vm->pm.cx_cnt; cx_idx++) {
+	for (cx_idx = 2U; cx_idx <= vm->pm.cx_cnt; cx_idx++) {
 		struct cpu_cx_data *cx_data = vm->pm.cx_data + cx_idx;
 
 		if (cx_data->cx_reg.space_id == SPACE_SYSTEM_IO) {
 			uint16_t port = (uint16_t)cx_data->cx_reg.address;
 
-			allow_guest_io_access(vm, port, 1);
+			allow_guest_io_access(vm, port, 1U);
 		}
 	}
 }
@@ -124,14 +124,14 @@ int vm_load_pm_s_state(struct vm *vm)
 	}
 }
 
-static inline uint16_t s3_enabled(uint16_t pm1_cnt)
+static inline uint32_t s3_enabled(uint32_t pm1_cnt)
 {
-	return pm1_cnt & (1 << BIT_SLP_EN);
+	return pm1_cnt & (1U << BIT_SLP_EN);
 }
 
-static inline uint8_t get_slp_typx(uint16_t pm1_cnt)
+static inline uint8_t get_slp_typx(uint32_t pm1_cnt)
 {
-	return (pm1_cnt & 0x1fff) >> BIT_SLP_TYPx;
+	return (uint8_t)((pm1_cnt & 0x1fffU) >> BIT_SLP_TYPx);
 }
 
 static uint32_t pm1ab_io_read(__unused struct vm_io_handler *hdlr,
@@ -166,7 +166,7 @@ static void pm1ab_io_write(__unused struct vm_io_handler *hdlr,
 			if (vm->pm.sx_state_data->pm1b_cnt.address) {
 				pm1a_cnt_ready = v;
 			} else {
-				enter_s3(vm, v, 0);
+				enter_s3(vm, v, 0U);
 			}
 			return;
 		}
@@ -201,7 +201,7 @@ void register_gas_io_handler(struct vm *vm, struct acpi_generic_address *gas)
 		return;
 
 	gas_io.flags = IO_ATTR_RW,
-	gas_io.base = gas->address,
+	gas_io.base = (uint16_t)gas->address,
 	gas_io.len = io_len[gas->access_size];
 
 	register_io_emulation_handler(vm, &gas_io,
@@ -213,8 +213,10 @@ void register_gas_io_handler(struct vm *vm, struct acpi_generic_address *gas)
 
 void register_pm1ab_handler(struct vm *vm)
 {
-	register_gas_io_handler(vm, &vm->pm.sx_state_data->pm1a_evt);
-	register_gas_io_handler(vm, &vm->pm.sx_state_data->pm1b_evt);
-	register_gas_io_handler(vm, &vm->pm.sx_state_data->pm1a_cnt);
-	register_gas_io_handler(vm, &vm->pm.sx_state_data->pm1b_cnt);
+	struct pm_s_state_data *sx_data = vm->pm.sx_state_data;
+
+	register_gas_io_handler(vm, &(sx_data->pm1a_evt));
+	register_gas_io_handler(vm, &(sx_data->pm1b_evt));
+	register_gas_io_handler(vm, &(sx_data->pm1a_cnt));
+	register_gas_io_handler(vm, &(sx_data->pm1b_cnt));
 }

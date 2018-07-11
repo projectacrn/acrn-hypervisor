@@ -26,17 +26,17 @@ static void acpi_gas_write(struct acpi_generic_address *gas, uint32_t val)
 	if (gas->space_id == SPACE_SYSTEM_MEMORY)
 		mmio_write_word(val16, HPA2HVA(gas->address));
 	else
-		io_write_word(val16, gas->address);
+		io_write_word(val16, (uint16_t)gas->address);
 }
 
 static uint32_t acpi_gas_read(struct acpi_generic_address *gas)
 {
-	uint32_t ret = 0;
+	uint32_t ret = 0U;
 
 	if (gas->space_id == SPACE_SYSTEM_MEMORY)
 		ret = mmio_read_word(HPA2HVA(gas->address));
 	else
-		ret = io_read_word(gas->address);
+		ret = io_read_word((uint16_t)gas->address);
 
 	return ret;
 }
@@ -45,22 +45,24 @@ void do_acpi_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 	uint32_t pm1b_cnt_val)
 {
 	uint32_t s1, s2;
+	struct pm_s_state_data *sx_data = vm->pm.sx_state_data;
 
-	acpi_gas_write(&vm->pm.sx_state_data->pm1a_cnt, pm1a_cnt_val);
+	acpi_gas_write(&(sx_data->pm1a_cnt), pm1a_cnt_val);
 
-	if (vm->pm.sx_state_data->pm1b_cnt.address != 0)
-		acpi_gas_write(&vm->pm.sx_state_data->pm1b_cnt, pm1b_cnt_val);
+	if (vm->pm.sx_state_data->pm1b_cnt.address != 0U)
+		acpi_gas_write(&(sx_data->pm1b_cnt), pm1b_cnt_val);
 
 	while (1) {
 		/* polling PM1 state register to detect wether
 		 * the Sx state enter is interrupted by wakeup event.
 		 */
-		s1 = s2 = 0;
+		s1 = 0U;
+		s2 = 0U;
 
-		s1 = acpi_gas_read(&vm->pm.sx_state_data->pm1a_evt);
+		s1 = acpi_gas_read(&(sx_data->pm1a_evt));
 
-		if (vm->pm.sx_state_data->pm1b_evt.address != 0) {
-			s2 = acpi_gas_read(&vm->pm.sx_state_data->pm1b_evt);
+		if (vm->pm.sx_state_data->pm1b_evt.address != 0U) {
+			s2 = acpi_gas_read(&(sx_data->pm1b_evt));
 			s1 |= s2;
 		}
 
@@ -68,7 +70,7 @@ void do_acpi_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 		 * WAK_STS(bit 15) is set if system will transition to working
 		 * state.
 		 */
-		if ((s1 & (1 << BIT_WAK_STS)) != 0)
+		if ((s1 & (1U << BIT_WAK_STS)) != 0U)
 			break;
 	}
 }
@@ -76,15 +78,15 @@ void do_acpi_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 int enter_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 	uint32_t pm1b_cnt_val)
 {
-	uint32_t pcpu_id;
 	uint64_t pmain_entry_saved;
 	uint32_t guest_wakeup_vec32;
+	uint16_t pcpu_id;
 
 	/* We assume enter s3 success by default */
-	host_enter_s3_success = 1;
+	host_enter_s3_success = 1U;
 	if (vm->pm.sx_state_data == NULL) {
 		pr_err("No Sx state info avaiable. No Sx support");
-		host_enter_s3_success = 0;
+		host_enter_s3_success = 0U;
 		return -1;
 	}
 
