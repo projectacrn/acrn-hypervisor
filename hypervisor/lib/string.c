@@ -150,8 +150,9 @@ int atoi(const char *str)
 
 char *strchr(const char *s, int ch)
 {
-	while ((*s != 0) && (*s != ch))
+	while ((*s != 0) && (*s != ch)) {
 		++s;
+	}
 
 	return ((*s) != 0) ? ((char *)s) : 0;
 }

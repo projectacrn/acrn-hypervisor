@@ -38,12 +38,14 @@ static void parse_other_modules(struct vm *vm,
 		dev_dbg(ACRN_DBG_BOOT, "cmd addr=0x%x, str=%s",
 			mods[i].mm_string, start);
 
-		while (*start == ' ')
+		while (*start == ' ') {
 			start++;
+		}
 
 		end = start;
-		while (*end != ' ' && (*end) != 0)
+		while (*end != ' ' && (*end) != 0) {
 			end++;
+		}
 
 		type_len = end - start;
 		if (strncmp("FIRMWARE", start, type_len) == 0) {

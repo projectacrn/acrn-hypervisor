@@ -322,8 +322,9 @@ void vuart_console_tx_chars(void)
 		return;
 
 	vuart_lock(vu);
-	while (fifo_numchars(&vu->txfifo) > 0)
+	while (fifo_numchars(&vu->txfifo) > 0) {
 		printf("%c", fifo_getchar(&vu->txfifo));
+	}
 	vuart_unlock(vu);
 }
 

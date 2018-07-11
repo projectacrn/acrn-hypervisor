@@ -67,8 +67,9 @@ int console_puts(const char *s)
 			 */
 			p = s;
 
-			while ((*p != 0) && *p != '\n')
+			while ((*p != 0) && *p != '\n') {
 				++p;
+			}
 
 			/* write all characters up to p */
 			serial_puts(serial_handle, s, p - s);
@@ -109,8 +110,9 @@ int console_write(const char *s, size_t len)
 			/* search for '\n' or the end of the string */
 			p = s;
 
-			while ((p != e) && (*p != '\n'))
+			while ((p != e) && (*p != '\n')) {
 				++p;
+			}
 
 			/* write all characters processed so far */
 			serial_puts(serial_handle, s, p - s);
@@ -146,8 +148,9 @@ void console_dump_bytes(const void *p, unsigned int len)
 		/* write the address of the first byte in the row */
 		printf("%08x: ", (uint64_t) x);
 		/* print one row (16 bytes) as hexadecimal values */
-		for (i = 0; i < 16; i++)
+		for (i = 0; i < 16; i++) {
 			printf("%02x ", x[i]);
+		}
 
 		/* print one row as ASCII characters (if possible) */
 		for (i = 0; i < 16; i++) {
