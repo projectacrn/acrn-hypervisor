@@ -634,15 +634,15 @@ usb_dev_request(void *pdata, struct usb_data_xfer *xfer)
 		goto out;
 
 	switch (UREQ(request, request_type)) {
-	case UREQ(UR_SET_ADDRESS, UT_READ_DEVICE):
+	case UREQ(UR_SET_ADDRESS, UT_WRITE_DEVICE):
 		UPRINTF(LDBG, "UR_SET_ADDRESS\n");
 		udev->addr = value;
 		goto out;
-	case UREQ(UR_SET_CONFIG, UT_READ_DEVICE):
+	case UREQ(UR_SET_CONFIG, UT_WRITE_DEVICE):
 		UPRINTF(LDBG, "UR_SET_CONFIG\n");
 		usb_dev_set_config(udev, xfer, value & 0xff);
 		goto out;
-	case UREQ(UR_SET_INTERFACE, UT_READ_INTERFACE):
+	case UREQ(UR_SET_INTERFACE, UT_WRITE_INTERFACE):
 		UPRINTF(LDBG, "UR_SET_INTERFACE\n");
 		usb_dev_set_if(udev, index, value, xfer);
 		goto out;
