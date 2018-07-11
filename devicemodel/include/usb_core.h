@@ -34,7 +34,15 @@
 #include <stdbool.h>
 #include "types.h"
 
-#define	USB_MAX_XFER_BLOCKS	256
+/* FIXME:
+ * There are some huge data requests which need more than 256 TRBs in a single
+ * transfer, so it is neccessary to expand it.
+ * But this is not final solution, this size should be dynamically changed
+ * according to the native xhci driver's adjust of trb segements.
+ * By default, the native xhci driver use two segments which contain 2 * 256
+ * trbs, so 1024 is enough currently.
+ */
+#define	USB_MAX_XFER_BLOCKS	1024
 
 #define	USB_XFER_OUT		0
 #define	USB_XFER_IN		1
