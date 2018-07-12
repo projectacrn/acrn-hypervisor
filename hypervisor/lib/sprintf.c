@@ -229,8 +229,9 @@ static int format_number(struct print_param *param)
 			/* emit prefix, return early if an error occurred */
 			res = param->emit(PRINT_CMD_COPY, param->vars.prefix,
 					param->vars.prefixlen, param->data);
-			if ((param->vars.prefix != NULL) && (res < 0))
+			if ((param->vars.prefix != NULL) && (res < 0)) {
 				return res;
+			}
 
 			/* invalidate prefix */
 			param->vars.prefix = NULL;
@@ -241,8 +242,9 @@ static int format_number(struct print_param *param)
 		 * an error occurred
 		 */
 		res = param->emit(PRINT_CMD_FILL, &pad, w, param->data);
-		if (res < 0)
+		if (res < 0) {
 			return res;
+		}
 	}
 
 	/* emit prefix (if any), return early in case of an error */
@@ -271,8 +273,9 @@ static int format_number(struct print_param *param)
 	if ((param->vars.flags & PRINT_FLAG_LEFT_JUSTIFY) != 0) {
 		/* emit trailing blanks, return early in case of an error */
 		res = param->emit(PRINT_CMD_FILL, " ", w, param->data);
-		if (res < 0)
+		if (res < 0) {
 			return res;
+		}
 	}
 
 	/* done, return the last result */
@@ -520,8 +523,9 @@ int do_print(const char *fmt, struct print_param *param,
 			if (*fmt == '.') {
 				fmt++;
 				fmt = get_int(fmt, &(param->vars.precision));
-				if (param->vars.precision < 0)
+				if (param->vars.precision < 0) {
 					param->vars.precision = 0;
+				}
 			}
 
 			fmt = get_length_modifier(fmt, &(param->vars.flags),

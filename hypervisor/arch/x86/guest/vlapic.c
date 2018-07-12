@@ -1681,8 +1681,9 @@ vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest, bool phys,
 		struct vlapic *vlapic;
 		bitmap_clear(vcpu_id, &dmask);
 		target_vcpu = vcpu_from_vid(vm, vcpu_id);
-		if (target_vcpu == NULL)
+		if (target_vcpu == NULL) {
 			return;
+		}
 
 		/* only make request when vlapic enabled */
 		vlapic = target_vcpu->arch_vcpu.vlapic;
@@ -2111,8 +2112,9 @@ int vlapic_create(struct vcpu *vcpu)
 				(uint64_t)DEFAULT_APIC_BASE,
 				(uint64_t)DEFAULT_APIC_BASE +
 				CPU_PAGE_SIZE,
-				(void *) 0) != 0)
+				(void *) 0) != 0) {
 			return -1;
+		}
 	}
 
 	vcpu->arch_vcpu.vlapic = vlapic;
@@ -2454,8 +2456,9 @@ int apic_write_vmexit_handler(struct vcpu *vcpu)
 		break;
 	case APIC_OFFSET_ICR_LOW:
 		error = vlapic_icrlo_write_handler(vlapic);
-		if (error != 0)
+		if (error != 0) {
 			handled = 0;
+		}
 		break;
 	case APIC_OFFSET_CMCI_LVT:
 	case APIC_OFFSET_TIMER_LVT:

@@ -560,8 +560,9 @@ static void init_guest_state(struct vcpu *vcpu)
 	/*************************************************/
 	pr_dbg("Natural-width********");
 
-	if (vcpu_mode == CPU_MODE_64BIT)
+	if (vcpu_mode == CPU_MODE_64BIT) {
 		cur_context->ia32_efer = MSR_IA32_EFER_LME_BIT;
+	}
 
 	/* Setup guest control register values
 	 * cr4 should be set before cr0, because when set cr0, cr4 value will be

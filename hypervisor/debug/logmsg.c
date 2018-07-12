@@ -149,9 +149,10 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 				/* switch to sbuf from sos */
 				do_copy_earlylog(sbuf, early_sbuf);
 				free_earlylog_sbuf(pcpu_id);
-			} else
+			} else {
 				/* use earlylog sbuf if no sbuf from sos */
 				sbuf = early_sbuf;
+			}
 		}
 
 		if (sbuf != NULL) {

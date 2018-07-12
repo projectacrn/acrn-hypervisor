@@ -489,8 +489,9 @@ static void vpic_set_pinstate(struct vpic *vpic, uint8_t pin, bool newstate)
 	} else if (oldcnt == 1 && newcnt == 0) {
 		/* falling edge */
 		dev_dbg(ACRN_DBG_PIC, "pic pin%hhu: deasserted\n", pin);
-		if (level)
+		if (level) {
 			pic->request &= ~(uint8_t)(1U << (pin & 0x7U));
+		}
 	} else {
 		dev_dbg(ACRN_DBG_PIC,
 			"pic pin%hhu: %s, ignored, acnt %d\n",
@@ -598,8 +599,9 @@ int vpic_get_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger *trigger
 {
 	struct vpic *vpic;
 
-	if (irq >= NR_VPIC_PINS_TOTAL)
+	if (irq >= NR_VPIC_PINS_TOTAL) {
 		return -EINVAL;
+	}
 
 	vpic = vm_pic(vm);
 	if (vpic == NULL) {
@@ -659,8 +661,9 @@ static void vpic_pin_accepted(struct pic *pic, uint8_t pin)
 	}
 
 	if (pic->aeoi == true) {
-		if (pic->rotate == true)
+		if (pic->rotate == true) {
 			pic->lowprio = pin;
+		}
 	} else {
 		pic->service |= (uint8_t)(1U << pin);
 	}
@@ -756,8 +759,9 @@ static int vpic_write(struct vpic *vpic, struct pic *pic,
 			break;
 		}
 	} else {
-		if ((val & (1U << 4U)) != 0U)
+		if ((val & (1U << 4U)) != 0U) {
 			error = vpic_icw1(vpic, pic, val);
+		}
 
 		if (pic->ready) {
 			if ((val & (1U << 3U)) != 0U) {

@@ -567,8 +567,9 @@ int shell_pause_vcpu(struct shell *p_shell,
 			vm_id = (uint16_t)status;
 		}
 		vcpu_id = (uint16_t)atoi(argv[2]);
-		if (vcpu_id >= phys_cpu_num)
+		if (vcpu_id >= phys_cpu_num) {
 			return (-EINVAL);
+		}
 		vm = get_vm_from_vmid(vm_id);
 		if (vm != NULL) {
 			vcpu = vcpu_from_vid(vm, vcpu_id);
@@ -622,8 +623,9 @@ int shell_resume_vcpu(struct shell *p_shell,
 		}
 		vm_id = (uint16_t)status;
 		vcpu_id = (uint16_t)atoi(argv[2]);
-		if (vcpu_id >= phys_cpu_num)
+		if (vcpu_id >= phys_cpu_num) {
 			return (-EINVAL);
+		}
 		vm = get_vm_from_vmid(vm_id);
 		if (vm != NULL) {
 			vcpu = vcpu_from_vid(vm, vcpu_id);
@@ -682,8 +684,9 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 	}
 	vm_id = (uint16_t)status;
 	vcpu_id = (uint16_t)atoi(argv[2]);
-	if (vcpu_id >= phys_cpu_num)
+	if (vcpu_id >= phys_cpu_num) {
 		return (-EINVAL);
+	}
 	vm = get_vm_from_vmid(vm_id);
 	if (vm == NULL) {
 		shell_puts(p_shell, "No vm found in the input "
@@ -804,8 +807,9 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 	}
 	vm_id = (uint16_t)status;
 	vcpu_id = (uint16_t)atoi(argv[2]);
-	if (vcpu_id >= phys_cpu_num)
+	if (vcpu_id >= phys_cpu_num) {
 		return (-EINVAL);
+	}
 	vm = get_vm_from_vmid(vm_id);
 	if (vm == NULL) {
 		status = -EINVAL;

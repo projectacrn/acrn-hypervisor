@@ -51,8 +51,9 @@ void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 		(data_size + CPU_PAGE_SIZE - 1) >> CPU_PAGE_SHIFT;
 
 	ucode_ptr = alloc_pages(data_page_num);
-	if (ucode_ptr == NULL)
+	if (ucode_ptr == NULL) {
 		return;
+	}
 
 	err_code = 0U;
 	err = copy_from_gva(vcpu, ucode_ptr, gva, data_size, &err_code);

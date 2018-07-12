@@ -619,8 +619,9 @@ void unregister_handler_common(struct dev_handler_node *node)
 	}
 
 	while (head->next != NULL) {
-		if (head->next == node)
+		if (head->next == node) {
 			break;
+		}
 		head = head->next;
 	}
 

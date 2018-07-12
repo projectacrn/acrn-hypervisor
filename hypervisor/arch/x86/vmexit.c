@@ -313,8 +313,9 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	}
 
 	idx = vcpu->arch_vcpu.cur_context;
-	if (idx >= NR_WORLD)
+	if (idx >= NR_WORLD) {
 		return -1;
+	}
 
 	ctx_ptr = &(vcpu->arch_vcpu.contexts[idx]);
 

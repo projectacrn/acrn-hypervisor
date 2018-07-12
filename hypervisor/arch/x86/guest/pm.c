@@ -197,8 +197,9 @@ void register_gas_io_handler(struct vm *vm, struct acpi_generic_address *gas)
 	if ((gas->address == 0UL)
 			|| (gas->space_id != SPACE_SYSTEM_IO)
 			|| (gas->access_size == 0U)
-			|| (gas->access_size > 4U))
+			|| (gas->access_size > 4U)) {
 		return;
+	}
 
 	gas_io.flags = IO_ATTR_RW,
 	gas_io.base = (uint16_t)gas->address,
