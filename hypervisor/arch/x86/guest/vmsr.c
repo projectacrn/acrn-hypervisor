@@ -131,9 +131,10 @@ void init_msr_emulation(struct vcpu *vcpu)
 	exec_vmwrite64(VMX_MSR_BITMAP_FULL, value64);
 	pr_dbg("VMX_MSR_BITMAP: 0x%016llx ", value64);
 
-	if (!vcpu->guest_msrs)
+	if (!vcpu->guest_msrs) {
 		vcpu->guest_msrs =
 			(uint64_t *)calloc(msrs_count, sizeof(uint64_t));
+	}
 
 	ASSERT(vcpu->guest_msrs != NULL, "");
 	(void)memset(vcpu->guest_msrs, 0U, msrs_count * sizeof(uint64_t));
@@ -313,8 +314,9 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	case MSR_IA32_BIOS_UPDT_TRIG:
 	{
 		/* We only allow SOS to do uCode update */
-		if (is_vm0(vcpu->vm))
+		if (is_vm0(vcpu->vm)) {
 			acrn_update_ucode(vcpu, v);
+		}
 		break;
 	}
 	case MSR_IA32_PERF_CTL:
