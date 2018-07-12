@@ -82,8 +82,9 @@ static char fifo_getchar(struct fifo *fifo)
 		fifo->rindex = (fifo->rindex + 1) % fifo->size;
 		fifo->num--;
 		return c;
-	} else
+	} else {
 		return -1;
+	}
 }
 
 static int fifo_numchars(struct fifo *fifo)
@@ -100,14 +101,15 @@ static int fifo_numchars(struct fifo *fifo)
  */
 static uint8_t uart_intr_reason(struct vuart *vu)
 {
-	if ((vu->lsr & LSR_OE) != 0 && (vu->ier & IER_ELSI) != 0)
+	if ((vu->lsr & LSR_OE) != 0 && (vu->ier & IER_ELSI) != 0) {
 		return IIR_RLS;
-	else if (fifo_numchars(&vu->rxfifo) > 0 && (vu->ier & IER_ERBFI) != 0)
+	} else if (fifo_numchars(&vu->rxfifo) > 0 && (vu->ier & IER_ERBFI) != 0) {
 		return IIR_RXTOUT;
-	else if (vu->thre_int_pending && (vu->ier & IER_ETBEI) != 0)
+	} else if (vu->thre_int_pending && (vu->ier & IER_ETBEI) != 0) {
 		return IIR_TXRDY;
-	else
+	} else {
 		return IIR_NOPEND;
+	}
 }
 
 static void uart_init(struct vuart *vu)
@@ -136,12 +138,14 @@ static void uart_toggle_intr(struct vuart *vu)
 	intr_reason = uart_intr_reason(vu);
 
 	if (intr_reason != IIR_NOPEND) {
-		if (vu->vm->vpic != NULL)
+		if (vu->vm->vpic != NULL) {
 			vpic_assert_irq(vu->vm, COM1_IRQ);
+		}
 
 		vioapic_assert_irq(vu->vm, COM1_IRQ);
-		if (vu->vm->vpic != NULL)
+		if (vu->vm->vpic != NULL) {
 			vpic_deassert_irq(vu->vm, COM1_IRQ);
+		}
 
 		vioapic_deassert_irq(vu->vm, COM1_IRQ);
 	}
@@ -189,8 +193,9 @@ static void uart_write(__unused struct vm_io_handler *hdlr,
 		if ((value & FCR_FIFOE) == 0) {
 			vu->fcr = 0;
 		} else {
-			if ((value & FCR_RFR) != 0)
+			if ((value & FCR_RFR) != 0) {
 				fifo_reset(&vu->rxfifo);
+			}
 
 			vu->fcr = value &
 				(FCR_FIFOE | FCR_DMA | FCR_RX_MASK);
@@ -262,8 +267,9 @@ static uint32_t uart_read(__unused struct vm_io_handler *hdlr,
 		/*
 		 * Deal with side effects of reading the IIR register
 		 */
-		if (intr_reason == IIR_TXRDY)
+		if (intr_reason == IIR_TXRDY) {
 			vu->thre_int_pending = false;
+		}
 		iir |= intr_reason;
 		reg = iir;
 		break;
@@ -277,10 +283,11 @@ static uint32_t uart_read(__unused struct vm_io_handler *hdlr,
 		/* Transmitter is always ready for more data */
 		vu->lsr |= LSR_TEMT | LSR_THRE;
 		/* Check for new receive data */
-		if (fifo_numchars(&vu->rxfifo) > 0)
+		if (fifo_numchars(&vu->rxfifo) > 0) {
 			vu->lsr |= LSR_DR;
-		else
+		} else {
 			vu->lsr &= ~LSR_DR;
+		}
 		reg = vu->lsr;
 		/* The LSR_OE bit is cleared on LSR read */
 		vu->lsr &= ~LSR_OE;
@@ -318,8 +325,9 @@ void vuart_console_tx_chars(void)
 	struct vuart *vu;
 
 	vu = vuart_console_active();
-	if (vu == NULL)
+	if (vu == NULL) {
 		return;
+	}
 
 	vuart_lock(vu);
 	while (fifo_numchars(&vu->txfifo) > 0) {
@@ -342,8 +350,9 @@ void vuart_console_rx_chars(uint32_t serial_handle)
 	}
 
 	vu = vuart_console_active();
-	if (vu == NULL)
+	if (vu == NULL) {
 		return;
+	}
 
 	vuart_lock(vu);
 	/* Get data from serial */
@@ -377,8 +386,9 @@ struct vuart *vuart_console_active(void)
 	if ((vm != NULL) && (vm->vuart != NULL)) {
 		struct vuart *vu = vm->vuart;
 
-		if (vu->active)
+		if (vu->active) {
 			return vm->vuart;
+		}
 	}
 	return NULL;
 }
