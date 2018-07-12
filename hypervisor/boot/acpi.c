@@ -122,8 +122,9 @@ biosacpi_search_rsdp(char *base, int length)
 				sum += *(cp + idx);
 			}
 
-			if (sum != NULL)
+			if (sum != NULL) {
 				continue;
+			}
 
 			return rsdp;
 		}
@@ -139,21 +140,24 @@ static void *get_rsdp(void)
 
 #ifdef CONFIG_EFI_STUB
 	rsdp = get_rsdp_from_uefi();
-	if (rsdp)
+	if (rsdp) {
 		return rsdp;
+	}
 #endif
 
 	/* EBDA is addressed by the 16 bit pointer at 0x40E */
 	addr = (uint16_t *)HPA2HVA(0x40E);
 
 	rsdp = biosacpi_search_rsdp((char *)HPA2HVA((uint64_t)(*addr << 4)), 0x400);
-	if (rsdp != NULL)
+	if (rsdp != NULL) {
 		return rsdp;
+	}
 
 	/* Check the upper memory BIOS space, 0xe0000 - 0xfffff. */
 	rsdp = biosacpi_search_rsdp((char *)HPA2HVA(0xe0000), 0x20000);
-	if (rsdp != NULL)
+	if (rsdp != NULL) {
 		return rsdp;
+	}
 
 	return rsdp;
 }
@@ -164,8 +168,9 @@ probe_table(uint64_t address, const char *sig)
 	void *va =  HPA2HVA(address);
 	struct acpi_table_header *table = (struct acpi_table_header *)va;
 
-	if (strncmp(table->signature, sig, ACPI_NAME_SIZE) != 0)
+	if (strncmp(table->signature, sig, ACPI_NAME_SIZE) != 0) {
 		return 0;
+	}
 
 	return 1;
 }
@@ -231,8 +236,9 @@ static uint16_t _parse_madt(void *madt, uint8_t *lapic_id_base)
 	end = (char *)madt_ptr + madt_ptr->header.length;
 
 	for (entry = first; (void *)entry < end; ) {
-		if (entry->length < sizeof(struct acpi_subtable_header))
+		if (entry->length < sizeof(struct acpi_subtable_header)) {
 			continue;
+		}
 
 		if (entry->type == ACPI_MADT_TYPE_LOCAL_APIC) {
 			processor = (struct acpi_madt_local_apic *)entry;

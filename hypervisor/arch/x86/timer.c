@@ -16,8 +16,9 @@ uint32_t tsc_khz = 0U;
 static void run_timer(struct timer *timer)
 {
 	/* deadline = 0 means stop timer, we should skip */
-	if ((timer->func != NULL) && timer->fire_tsc != 0UL)
+	if ((timer->func != NULL) && timer->fire_tsc != 0UL) {
 		timer->func(timer->priv_data);
+	}
 
 	TRACE_2L(TRACE_TIMER_ACTION_PCKUP, timer->fire_tsc, 0);
 }
@@ -54,17 +55,20 @@ static void __add_timer(struct per_cpu_timers *cpu_timer,
 	prev = &cpu_timer->timer_list;
 	list_for_each(pos, &cpu_timer->timer_list) {
 		tmp = list_entry(pos, struct timer, node);
-		if (tmp->fire_tsc < tsc)
+		if (tmp->fire_tsc < tsc) {
 			prev = &tmp->node;
-		else
+		}
+		else {
 			break;
+		}
 	}
 
 	list_add(&timer->node, prev);
 
-	if (need_update != NULL)
+	if (need_update != NULL) {
 		/* update the physical timer if we're on the timer_list head */
 		*need_update = (prev == &cpu_timer->timer_list);
+	}
 }
 
 int add_timer(struct timer *timer)
@@ -73,20 +77,23 @@ int add_timer(struct timer *timer)
 	uint16_t pcpu_id;
 	bool need_update;
 
-	if (timer == NULL || timer->func == NULL || timer->fire_tsc == 0UL)
+	if (timer == NULL || timer->func == NULL || timer->fire_tsc == 0UL) {
 		return -EINVAL;
+	}
 
 	/* limit minimal periodic timer cycle period */
-	if (timer->mode == TICK_MODE_PERIODIC)
+	if (timer->mode == TICK_MODE_PERIODIC) {
 		timer->period_in_cycle = max(timer->period_in_cycle,
 				us_to_ticks(MIN_TIMER_PERIOD_US));
+	}
 
 	pcpu_id  = get_cpu_id();
 	cpu_timer = &per_cpu(cpu_timers, pcpu_id);
 	__add_timer(cpu_timer, timer, &need_update);
 
-	if (need_update)
+	if (need_update) {
 		update_physical_timer(cpu_timer);
+	}
 
 	TRACE_2L(TRACE_TIMER_ACTION_ADDED, timer->fire_tsc, 0);
 	return 0;
@@ -95,8 +102,9 @@ int add_timer(struct timer *timer)
 
 void del_timer(struct timer *timer)
 {
-	if ((timer != NULL) && !list_empty(&timer->node))
+	if ((timer != NULL) && !list_empty(&timer->node)) {
 		list_del_init(&timer->node);
+	}
 }
 
 static int request_timer_irq(uint16_t pcpu_id,
@@ -105,8 +113,9 @@ static int request_timer_irq(uint16_t pcpu_id,
 {
 	struct dev_handler_node *node = NULL;
 
-	if (pcpu_id >= phys_cpu_num)
+	if (pcpu_id >= phys_cpu_num) {
 		return -EINVAL;
+	}
 
 	if (per_cpu(timer_node, pcpu_id) != NULL) {
 		pr_err("CPU%d timer isr already added", pcpu_id);
@@ -165,8 +174,9 @@ void timer_cleanup(void)
 {
 	uint16_t pcpu_id = get_cpu_id();
 
-	if (per_cpu(timer_node, pcpu_id) != NULL)
+	if (per_cpu(timer_node, pcpu_id) != NULL) {
 		unregister_handler_common(per_cpu(timer_node, pcpu_id));
+	}
 
 	per_cpu(timer_node, pcpu_id) = NULL;
 }
@@ -202,8 +212,9 @@ void timer_softirq(uint16_t pcpu_id)
 				timer->fire_tsc += timer->period_in_cycle;
 				__add_timer(cpu_timer, timer, NULL);
 			}
-		} else
+		} else {
 			break;
+		}
 	}
 
 	/* update nearest timer */
@@ -276,9 +287,10 @@ static uint64_t native_calibrate_tsc(void)
 		cpuid(0x15, &eax_denominator, &ebx_numerator,
 			&ecx_hz, &reserved);
 
-		if (eax_denominator != 0U && ebx_numerator != 0U)
+		if (eax_denominator != 0U && ebx_numerator != 0U) {
 			return (uint64_t) ecx_hz *
 				ebx_numerator / eax_denominator;
+		}
 	}
 
 	return 0;
@@ -288,8 +300,9 @@ void calibrate_tsc(void)
 {
 	uint64_t tsc_hz;
 	tsc_hz = native_calibrate_tsc();
-	if (tsc_hz == 0U)
+	if (tsc_hz == 0U) {
 		tsc_hz = pit_calibrate_tsc(CAL_MS);
+	}
 	tsc_khz = (uint32_t)(tsc_hz / 1000UL);
 	printf("%s, tsc_khz=%lu\n", __func__, tsc_khz);
 }
