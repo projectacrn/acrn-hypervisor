@@ -309,7 +309,7 @@ static void cpu_set_current_state(uint16_t pcpu_id, enum cpu_state state)
 	}
 
 	/* Set state for the specified CPU */
-	per_cpu(state, pcpu_id) = state;
+	per_cpu(cpu_state, pcpu_id) = state;
 
 	spinlock_release(&up_count_spinlock);
 }

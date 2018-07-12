@@ -26,7 +26,7 @@ void init_softirq(void)
 	}
 }
 
-void raise_softirq(int softirq_id)
+void raise_softirq(uint16_t softirq_id)
 {
 	uint16_t cpu_id = get_cpu_id();
 	uint64_t *bitmap = &per_cpu(softirq_pending, cpu_id);

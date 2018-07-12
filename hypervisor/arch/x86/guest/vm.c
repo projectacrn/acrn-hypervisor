@@ -23,7 +23,7 @@ spinlock_t vm_list_lock = {
 };
 
 /* used for vmid allocation. And this means the max vm number is 64 */
-static unsigned long vmid_bitmap;
+static uint64_t vmid_bitmap;
 
 static void init_vm(struct vm_description *vm_desc,
 		struct vm *vm_handle)
@@ -62,7 +62,7 @@ struct vm *get_vm_from_vmid(uint16_t vm_id)
 
 int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 {
-	uint32_t id;
+	uint16_t id;
 	struct vm *vm;
 	int status;
 
@@ -72,7 +72,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	}
 
 	/* Allocate memory for virtual machine */
-	vm = calloc(1, sizeof(struct vm));
+	vm = calloc(1U, sizeof(struct vm));
 	if (vm == NULL) {
 		pr_err("%s, vm allocation failed\n", __func__);
 		return -ENOMEM;
@@ -83,7 +83,6 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	 */
 	init_vm(vm_desc, vm);
 
-
 	/* Init mmio list */
 	INIT_LIST_HEAD(&vm->mmio_list);
 
@@ -92,7 +91,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	}
 
 	vm->hw.vcpu_array =
-		calloc(1, sizeof(struct vcpu *) * vm->hw.num_vcpus);
+		calloc(1U, sizeof(struct vcpu *) * vm->hw.num_vcpus);
 	if (vm->hw.vcpu_array == NULL) {
 		pr_err("%s, vcpu_array allocation failed\n", __func__);
 		status = -ENOMEM;
@@ -311,7 +310,7 @@ void resume_vm(struct vm *vm)
  */
 void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec)
 {
-	struct vcpu *bsp = vcpu_from_vid(vm, 0);
+	struct vcpu *bsp = vcpu_from_vid(vm, 0U);
 
 	vm->state = VM_STARTED;
 

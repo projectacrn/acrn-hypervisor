@@ -11,8 +11,8 @@
 #define VM_RESUME               0
 #define VM_LAUNCH               1
 
-#define ACRN_DBG_PTIRQ		6
-#define ACRN_DBG_IRQ		6
+#define ACRN_DBG_PTIRQ		6U
+#define ACRN_DBG_IRQ		6U
 
 #ifndef ASSEMBLER
 
@@ -39,14 +39,14 @@ int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req);
 /*
  * VCPU related APIs
  */
-#define ACRN_REQUEST_EXCP 0
-#define ACRN_REQUEST_EVENT 1
-#define ACRN_REQUEST_EXTINT 2
-#define ACRN_REQUEST_NMI 3
-#define	ACRN_REQUEST_TMR_UPDATE 4
-#define	ACRN_REQUEST_EPT_FLUSH 5
-#define	ACRN_REQUEST_TRP_FAULT 6
-#define ACRN_REQUEST_VPID_FLUSH 7 /* flush vpid tlb */
+#define ACRN_REQUEST_EXCP      0U
+#define ACRN_REQUEST_EVENT    1U
+#define ACRN_REQUEST_EXTINT   2U
+#define ACRN_REQUEST_NMI        3U
+#define ACRN_REQUEST_TMR_UPDATE  4U
+#define ACRN_REQUEST_EPT_FLUSH      5U
+#define ACRN_REQUEST_TRP_FAULT      6U
+#define ACRN_REQUEST_VPID_FLUSH    7U /* flush vpid tlb */
 
 #define E820_MAX_ENTRIES    32U
 
@@ -67,13 +67,6 @@ struct vm_lu_mem_map {
 	void *hpa;	/* Host physical start address of the map*/
 	void *gpa;	/* Guest physical start address of the map */
 	uint64_t size;	/* Size of map */
-};
-
-enum vm_cpu_mode {
-	CPU_MODE_REAL,
-	CPU_MODE_PROTECTED,
-	CPU_MODE_COMPATIBILITY,		/* IA-32E mode (CS.L = 0) */
-	CPU_MODE_64BIT,			/* IA-32E mode (CS.L = 1) */
 };
 
 /* Use # of paging level to identify paging mode */

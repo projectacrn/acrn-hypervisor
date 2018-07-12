@@ -9,36 +9,31 @@
 
 #define DEBUG_LAPIC 0
 
-enum intr_lapic_icr_delivery_mode {
-	INTR_LAPIC_ICR_FIXED = 0x0,
-	INTR_LAPIC_ICR_LP = 0x1,
-	INTR_LAPIC_ICR_SMI = 0x2,
-	INTR_LAPIC_ICR_NMI = 0x4,
-	INTR_LAPIC_ICR_INIT = 0x5,
-	INTR_LAPIC_ICR_STARTUP = 0x6,
-};
+/* intr_lapic_icr_delivery_mode */
+#define INTR_LAPIC_ICR_FIXED    0x0U
+#define INTR_LAPIC_ICR_LP          0x1U
+#define INTR_LAPIC_ICR_SMI        0x2U
+#define INTR_LAPIC_ICR_NMI       0x4U
+#define INTR_LAPIC_ICR_INIT       0x5U
+#define INTR_LAPIC_ICR_STARTUP  0x6U
 
-enum intr_lapic_icr_dest_mode {
-	INTR_LAPIC_ICR_PHYSICAL = 0x0,
-	INTR_LAPIC_ICR_LOGICAL = 0x1
-};
+/* intr_lapic_icr_dest_mode */
+#define INTR_LAPIC_ICR_PHYSICAL 0x0U
+#define INTR_LAPIC_ICR_LOGICAL  0x1U
 
-enum intr_lapic_icr_level {
-	INTR_LAPIC_ICR_DEASSERT = 0x0,
-	INTR_LAPIC_ICR_ASSERT = 0x1,
-};
+/* intr_lapic_icr_level */
+#define INTR_LAPIC_ICR_DEASSERT  0x0U
+#define INTR_LAPIC_ICR_ASSERT       0x1U
 
-enum intr_lapic_icr_trigger {
-	INTR_LAPIC_ICR_EDGE = 0x0,
-	INTR_LAPIC_ICR_LEVEL = 0x1,
-};
+/* intr_lapic_icr_trigger */
+#define INTR_LAPIC_ICR_EDGE         0x0U
+#define INTR_LAPIC_ICR_LEVEL        0x1U
 
-enum intr_lapic_icr_shorthand {
-	INTR_LAPIC_ICR_USE_DEST_ARRAY = 0x0,
-	INTR_LAPIC_ICR_SELF = 0x1,
-	INTR_LAPIC_ICR_ALL_INC_SELF = 0x2,
-	INTR_LAPIC_ICR_ALL_EX_SELF = 0x3,
-};
+/* intr_lapic_icr_shorthand */
+#define INTR_LAPIC_ICR_USE_DEST_ARRAY    0x0U
+#define INTR_LAPIC_ICR_SELF                          0x1U
+#define INTR_LAPIC_ICR_ALL_INC_SELF         0x2U
+#define INTR_LAPIC_ICR_ALL_EX_SELF            0x3U
 
 /* Default LAPIC base */
 #define LAPIC_BASE                              0xFEE00000U

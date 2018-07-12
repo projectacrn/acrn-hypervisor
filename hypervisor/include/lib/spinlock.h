@@ -68,12 +68,12 @@ static inline void spinlock_release(spinlock_t *lock)
 #define spinlock_irqsave_obtain(l)			\
 	do {						\
 		CPU_INT_ALL_DISABLE();			\
-		spinlock_obtain((l));			\
+		spinlock_obtain(l);			\
 	} while (0)
 
 #define spinlock_irqrestore_release(l)			\
 	do {						\
-		spinlock_release((l));			\
+		spinlock_release(l);			\
 		CPU_INT_ALL_RESTORE();			\
 	} while (0)
 

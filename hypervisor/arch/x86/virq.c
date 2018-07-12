@@ -9,7 +9,7 @@
 #define EXCEPTION_ERROR_CODE_VALID  8U
 #define INTERRPUT_QUEUE_BUFF_SIZE   255
 
-#define ACRN_DBG_INTR	6
+#define ACRN_DBG_INTR	6U
 
 #define EXCEPTION_CLASS_BENIGN	1
 #define EXCEPTION_CLASS_CONT	2
@@ -54,19 +54,19 @@ static int is_guest_irq_enabled(struct vcpu *vcpu)
 {
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-	uint32_t guest_rflags, guest_state;
+	uint64_t guest_rflags, guest_state;
 	int status = false;
 
 	/* Read the RFLAGS of the guest */
 	guest_rflags = cur_context->rflags;
 	/* Check the RFLAGS[IF] bit first */
-	if ((guest_rflags & HV_ARCH_VCPU_RFLAGS_IF) != 0U) {
+	if ((guest_rflags & HV_ARCH_VCPU_RFLAGS_IF) != 0UL) {
 		/* Interrupts are allowed */
 		/* Check for temporarily disabled interrupts */
 		guest_state = exec_vmread(VMX_GUEST_INTERRUPTIBILITY_INFO);
 
 		if ((guest_state & (HV_ARCH_VCPU_BLOCKED_BY_STI |
-				    HV_ARCH_VCPU_BLOCKED_BY_MOVSS)) == 0) {
+				    HV_ARCH_VCPU_BLOCKED_BY_MOVSS)) == 0UL) {
 			status = true;
 		}
 	}
@@ -76,7 +76,7 @@ static int is_guest_irq_enabled(struct vcpu *vcpu)
 static bool vcpu_pending_request(struct vcpu *vcpu)
 {
 	struct vlapic *vlapic;
-	uint32_t vector = 0;
+	uint32_t vector = 0U;
 	int ret = 0;
 
 	/* Query vLapic to get vector to inject */
@@ -91,10 +91,10 @@ static bool vcpu_pending_request(struct vcpu *vcpu)
 		vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 	}
 
-	return vcpu->arch_vcpu.pending_req != 0;
+	return vcpu->arch_vcpu.pending_req != 0UL;
 }
 
-void vcpu_make_request(struct vcpu *vcpu, int eventid)
+void vcpu_make_request(struct vcpu *vcpu, uint16_t eventid)
 {
 	bitmap_set(eventid, &vcpu->arch_vcpu.pending_req);
 	/*
@@ -113,7 +113,7 @@ void vcpu_make_request(struct vcpu *vcpu, int eventid)
 static int vcpu_do_pending_event(struct vcpu *vcpu)
 {
 	struct vlapic *vlapic = vcpu->arch_vcpu.vlapic;
-	uint32_t vector = 0;
+	uint32_t vector = 0U;
 	int ret = 0;
 
 	if (is_vapic_intr_delivery_supported()) {
@@ -133,7 +133,7 @@ static int vcpu_do_pending_event(struct vcpu *vcpu)
 	if (ret == 0)
 		return -1;
 
-	if (!(vector >= 16 && vector <= 255)) {
+	if (!(vector >= 16U && vector <= 255U)) {
 		dev_dbg(ACRN_DBG_INTR, "invalid vector %d from local APIC",
 				vector);
 		return -1;
@@ -205,12 +205,12 @@ int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector,
 	uint32_t err_code)
 {
 	/* VECTOR_INVALID is also greater than 32 */
-	if (vector >= 32) {
+	if (vector >= 32U) {
 		pr_err("invalid exception vector %d", vector);
 		return -EINVAL;
 	}
 
-	int32_t prev_vector =
+	uint32_t prev_vector =
 		vcpu->arch_vcpu.exception_info.exception;
 	int32_t new_class, prev_class;
 
@@ -229,7 +229,7 @@ int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector,
 			 new_class != EXCEPTION_CLASS_BENIGN)) {
 		/* generate double fault */
 		vector = IDT_DF;
-		err_code = 0;
+		err_code = 0U;
 	}
 
 	vcpu->arch_vcpu.exception_info.exception = vector;
@@ -308,7 +308,7 @@ void vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code)
 
 int interrupt_window_vmexit_handler(struct vcpu *vcpu)
 {
-	int value32;
+	uint32_t value32;
 
 	TRACE_2L(TRACE_VMEXIT_INTERRUPT_WINDOW, 0UL, 0UL);
 
@@ -323,7 +323,7 @@ int interrupt_window_vmexit_handler(struct vcpu *vcpu)
 		/* No interrupts to inject.
 		 * Disable the interrupt window exiting
 		 */
-		vcpu->arch_vcpu.irq_window_enabled = 0;
+		vcpu->arch_vcpu.irq_window_enabled = 0U;
 		value32 = exec_vmread(VMX_PROC_VM_EXEC_CONTROLS);
 		value32 &= ~(VMX_PROCBASED_CTLS_IRQ_WIN);
 		exec_vmwrite(VMX_PROC_VM_EXEC_CONTROLS, value32);
@@ -361,7 +361,7 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 int acrn_handle_pending_request(struct vcpu *vcpu)
 {
 	int ret = 0;
-	int tmp;
+	uint64_t tmp;
 	bool intr_pending = false;
 	uint64_t *pending_req_bits = &vcpu->arch_vcpu.pending_req;
 
@@ -448,8 +448,8 @@ INTR_WIN:
 	intr_pending = vcpu_pending_request(vcpu);
 
 	/* Enable interrupt window exiting if pending */
-	if (intr_pending && vcpu->arch_vcpu.irq_window_enabled == 0) {
-		vcpu->arch_vcpu.irq_window_enabled = 1;
+	if (intr_pending && vcpu->arch_vcpu.irq_window_enabled == 0U) {
+		vcpu->arch_vcpu.irq_window_enabled = 1U;
 		tmp = exec_vmread(VMX_PROC_VM_EXEC_CONTROLS);
 		tmp |= (VMX_PROCBASED_CTLS_IRQ_WIN);
 		exec_vmwrite(VMX_PROC_VM_EXEC_CONTROLS, tmp);
@@ -478,13 +478,13 @@ void cancel_event_injection(struct vcpu *vcpu)
 				exec_vmread(VMX_ENTRY_EXCEPTION_ERROR_CODE);
 
 		vcpu->arch_vcpu.inject_info.intr_info = intinfo;
-		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD, 0);
+		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD, 0UL);
 	}
 }
 
 int exception_vmexit_handler(struct vcpu *vcpu)
 {
-	uint32_t intinfo, int_err_code = 0;
+	uint32_t intinfo, int_err_code = 0U;
 	uint32_t exception_vector = VECTOR_INVALID;
 	uint32_t cpl;
 	int status = 0;
