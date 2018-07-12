@@ -929,7 +929,7 @@ static void vpic_elc_io_write(__unused struct vm_io_handler *hdlr,
 	}
 }
 
-void vpic_register_io_handler(struct vm *vm)
+static void vpic_register_io_handler(struct vm *vm)
 {
 	struct vm_io_range master_range = {
 		.flags = IO_ATTR_RW,

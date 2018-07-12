@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <hypervisor.h>
+#include <reboot.h>
 
 int warm_reboot(void)
 {

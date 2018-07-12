@@ -242,6 +242,7 @@ struct stack_canary {
 	uint8_t reserved[40];
 	uint64_t canary;
 };
+void __stack_chk_fail(void);
 #endif
 
 extern struct cpuinfo_x86 boot_cpu_data;
@@ -263,6 +264,8 @@ bool is_vapic_intr_delivery_supported(void);
 bool is_vapic_virt_reg_supported(void);
 bool cpu_has_cap(uint32_t bit);
 void load_cpu_state_data(void);
+void bsp_boot_init(void);
+void cpu_secondary_init(void);
 void start_cpus();
 void stop_cpus();
 

@@ -403,7 +403,7 @@ int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
 	return 0;
 }
 
-int64_t _set_vm_memmap(struct vm *vm, struct vm *target_vm,
+static int64_t _set_vm_memmap(struct vm *vm, struct vm *target_vm,
 	struct vm_set_memmap *memmap)
 {
 	uint64_t hpa, base_paddr;

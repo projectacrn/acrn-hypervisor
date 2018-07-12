@@ -5,6 +5,7 @@
  */
 
 #include <rtl.h>
+#include <hkdf.h>
 
 int hkdf_sha256(uint8_t *out_key, size_t out_len,
 		const uint8_t *secret, size_t secret_len,

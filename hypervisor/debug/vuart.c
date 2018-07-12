@@ -309,7 +309,7 @@ done:
 	return reg;
 }
 
-void vuart_register_io_handler(struct vm *vm)
+static void vuart_register_io_handler(struct vm *vm)
 {
 	struct vm_io_range range = {
 		.flags = IO_ATTR_RW,
