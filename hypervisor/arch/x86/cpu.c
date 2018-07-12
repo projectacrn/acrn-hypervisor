@@ -28,7 +28,7 @@ volatile uint16_t up_count = 0U;
 uint64_t pcpu_active_bitmap = 0UL;
 
 /* TODO: add more capability per requirement */
-/*APICv features*/
+/* APICv features */
 #define VAPIC_FEATURE_VIRT_ACCESS		(1U << 0)
 #define VAPIC_FEATURE_VIRT_REG			(1U << 1)
 #define VAPIC_FEATURE_INTR_DELIVERY		(1U << 2)
@@ -251,44 +251,38 @@ static void alloc_phy_cpu_data(uint16_t pcpu_num)
 	ASSERT(per_cpu_data_base_ptr != NULL, "");
 }
 
-uint16_t __attribute__((weak)) parse_madt(uint8_t *lapic_id_base)
+uint16_t __attribute__((weak)) parse_madt(uint8_t lapic_id_array[MAX_PCPU_NUM])
 {
 	static const uint8_t lapic_id[] = {0U, 2U, 4U, 6U};
 	uint32_t i;
 
 	for (i = 0U; i < ARRAY_SIZE(lapic_id); i++) {
-		*lapic_id_base = lapic_id[i];
-		lapic_id_base++;
+		lapic_id_array[i] = lapic_id[i];
 	}
 
 	return ((uint16_t)ARRAY_SIZE(lapic_id));
 }
 
-static void init_phy_cpu_storage(void)
+static void init_percpu_data_area(void)
 {
 	uint16_t i;
-	uint16_t pcpu_num=0U;
+	uint16_t pcpu_num = 0U;
 	uint16_t bsp_cpu_id;
 	uint8_t bsp_lapic_id = 0U;
-	uint8_t *lapic_id_base;
+	uint8_t lapic_id_array[MAX_PCPU_NUM];
 
-	/*
-	 * allocate memory to save all lapic_id detected in parse_mdt.
-	 * We allocate 4K size which could save 4K CPUs lapic_id info.
-	 */
-	lapic_id_base = alloc_page();
-	ASSERT(lapic_id_base != NULL, "fail to alloc page");
+	/* Save all lapic_id detected via parse_mdt in lapic_id_array */
+	pcpu_num = parse_madt(lapic_id_array);
+	if (pcpu_num == 0U) {
+		/* failed to get the physcial cpu number */
+		ASSERT(false);
+	}
 
-	pcpu_num = parse_madt(lapic_id_base);
 	alloc_phy_cpu_data(pcpu_num);
 
 	for (i = 0U; i < pcpu_num; i++) {
-		per_cpu(lapic_id, i) = *lapic_id_base;
-		lapic_id_base++;
+		per_cpu(lapic_id, i) = lapic_id_array[i];
 	}
-
-	/* free memory after lapic_id are saved in per_cpu data */
-	free((void *)lapic_id_base);
 
 	bsp_lapic_id = get_cur_lapic_id();
 
@@ -458,7 +452,7 @@ void bsp_boot_init(void)
 
 	early_init_lapic();
 
-	init_phy_cpu_storage();
+	init_percpu_data_area();
 
 	load_gdtr_and_tr();
 

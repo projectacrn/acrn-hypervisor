@@ -221,7 +221,7 @@ void *get_acpi_tbl(const char *sig)
 	return HPA2HVA(addr);
 }
 
-static uint16_t _parse_madt(void *madt, uint8_t *lapic_id_base)
+static uint16_t _parse_madt(void *madt, uint8_t lapic_id_array[MAX_PCPU_NUM])
 {
 	uint16_t pcpu_id = 0;
 	struct acpi_madt_local_apic *processor;
@@ -243,9 +243,16 @@ static uint16_t _parse_madt(void *madt, uint8_t *lapic_id_base)
 		if (entry->type == ACPI_MADT_TYPE_LOCAL_APIC) {
 			processor = (struct acpi_madt_local_apic *)entry;
 			if ((processor->lapic_flags & ACPI_MADT_ENABLED) != 0U) {
-				*lapic_id_base = processor->id;
-				lapic_id_base++;
+				lapic_id_array[pcpu_id] = processor->id;
 				pcpu_id++;
+				/*
+				 * set the pcpu_num as 0U to indicate the
+				 * potential overflow
+				 */
+				if (pcpu_id >= MAX_PCPU_NUM) {
+					pcpu_id = 0U;
+					break;
+				}
 			}
 		}
 
@@ -256,8 +263,8 @@ static uint16_t _parse_madt(void *madt, uint8_t *lapic_id_base)
 	return pcpu_id;
 }
 
-/* The lapic_id info gotten from madt will be returned in lapic_id_base */
-uint16_t parse_madt(uint8_t *lapic_id_base)
+/* The lapic_id info gotten from madt will be returned in lapic_id_array */
+uint16_t parse_madt(uint8_t lapic_id_array[MAX_PCPU_NUM])
 {
 	void *madt;
 
@@ -267,7 +274,7 @@ uint16_t parse_madt(uint8_t *lapic_id_base)
 	madt = get_acpi_tbl(ACPI_SIG_MADT);
 	ASSERT(madt != NULL, "fail to get madt");
 
-	return _parse_madt(madt, lapic_id_base);
+	return _parse_madt(madt, lapic_id_array);
 }
 
 void *get_dmar_table(void)
