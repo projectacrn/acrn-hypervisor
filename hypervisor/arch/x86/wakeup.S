@@ -121,8 +121,8 @@ restore_s3_context:
 	mov 0x88 + cpu_ctx(%rip), %rax
 	mov %rax, %cr3
 
-	/*144U=0x90=CPU_CONTEXT_OFFSET_CR4*/
-	mov 0x90 + cpu_ctx(%rip), %rax
+	/*120U=0x78=CPU_CONTEXT_OFFSET_CR0*/
+	mov 0x78 + cpu_ctx(%rip), %rax
 	mov %rax, %cr0
 
 	/*504U=0x1f8=CPU_CONTEXT_OFFSET_IDTR*/
