@@ -48,7 +48,7 @@ static struct vmx_capability {
 
 /*
  * If the logical processor is in VMX non-root operation and
- * the “enable VPID” VM-execution control is 1, the current VPID
+ * the "enable VPID" VM-execution control is 1, the current VPID
  * is the value of the VPID VM-execution control field in the VMCS.
  * (VM entry ensures that this value is never 0000H).
  */
@@ -163,8 +163,9 @@ uint16_t allocate_vpid(void)
 
 void flush_vpid_single(uint16_t vpid)
 {
-	if (vpid == 0U)
+	if (vpid == 0U) {
 		return;
+	}
 
 	_invvpid(VMX_VPID_TYPE_SINGLE_CONTEXT, vpid, 0UL);
 }
@@ -187,18 +188,20 @@ void invept(struct vcpu *vcpu)
 				| (3UL << 3U) | 6UL;
 			_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
 		}
-	} else if (cpu_has_vmx_ept_cap(VMX_EPT_INVEPT_GLOBAL_CONTEXT))
+	} else if (cpu_has_vmx_ept_cap(VMX_EPT_INVEPT_GLOBAL_CONTEXT)) {
 		_invept(INVEPT_TYPE_ALL_CONTEXTS, desc);
+	}
 }
 
 bool check_mmu_1gb_support(enum _page_table_type page_table_type)
 {
 	bool status = false;
 
-	if (page_table_type == PTT_EPT)
+	if (page_table_type == PTT_EPT) {
 		status = cpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE);
-	else
+	} else {
 		status = cpu_has_cap(X86_FEATURE_PAGE1GB);
+	}
 	return status;
 }
 
@@ -218,8 +221,9 @@ check_page_table_present(enum _page_table_type page_table_type,
 		if ((table_entry == IA32E_EPT_W_BIT) ||
 			(table_entry == (IA32E_EPT_W_BIT | IA32E_EPT_X_BIT)) ||
 			((table_entry == IA32E_EPT_X_BIT) &&
-			!cpu_has_vmx_ept_cap(VMX_EPT_EXECUTE_ONLY)))
+			!cpu_has_vmx_ept_cap(VMX_EPT_EXECUTE_ONLY))) {
 			return PT_MISCFG_PRESENT;
+		}
 	} else {
 		table_entry &= (IA32E_COMM_P_BIT);
 	}
@@ -383,10 +387,11 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 		{
 			if (prev_entry_present) {
 				/* modify the memory type related fields only */
-				if (table_type == PTT_EPT)
+				if (table_type == PTT_EPT) {
 					table_entry = entry & ~IA32E_EPT_MT_MASK;
-				else
+				} else {
 					table_entry = entry & ~MMU_MEM_ATTR_TYPE_MASK;
+				}
 
 				table_entry |= attr;
 
@@ -396,8 +401,9 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 				/* Modify, need to invalidate TLB and
 				 * page-structure cache
 				 */
-				if (table_type == PTT_HOST)
+				if (table_type == PTT_HOST) {
 					mmu_need_invtlb = true;
+				}
 			}
 			break;
 		}

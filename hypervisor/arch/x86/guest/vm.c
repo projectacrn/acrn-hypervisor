@@ -99,8 +99,9 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	}
 
 	for (id = 0U; id < (size_t)(sizeof(long) * 8U); id++) {
-		if (!bitmap_test_and_set(id, &vmid_bitmap))
+		if (!bitmap_test_and_set(id, &vmid_bitmap)) {
 			break;
+		}
 	}
 	vm->attr.id = id;
 	vm->attr.boot_idx = id;
@@ -113,12 +114,14 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	/* For UOS: This VM software information is configure in DM */
 	if (is_vm0(vm)) {
 		status = prepare_vm0_memmap_and_e820(vm);
-		if (status != 0)
+		if (status != 0) {
 			goto err2;
+		}
 #ifndef CONFIG_EFI_STUB
 		status = init_vm0_boot_info(vm);
-		if (status != 0)
+		if (status != 0) {
 			goto err2;
+		}
 #endif
 	} else {
 		/* populate UOS vm fields according to vm_desc */
@@ -143,8 +146,9 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 
 	if (is_vm0(vm)) {
 		/* Load pm S state data */
-		if (vm_load_pm_s_state(vm) == 0)
+		if (vm_load_pm_s_state(vm) == 0) {
 			register_pm1ab_handler(vm);
+		}
 
 		/* Create virtual uart */
 		vm->vuart = vuart_init(vm);
@@ -166,8 +170,9 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	vm->sw.io_shared_page = NULL;
 
 	status = set_vcpuid_entries(vm);
-	if (status != 0)
+	if (status != 0) {
 		goto err4;
+	}
 
 	vm->state = VM_CREATED;
 
@@ -190,14 +195,16 @@ int shutdown_vm(struct vm *vm)
 	uint16_t i;
 	struct vcpu *vcpu = NULL;
 
-	if (vm == NULL)
+	if (vm == NULL) {
 		return -EINVAL;
+	}
 
 	pause_vm(vm);
 
 	/* Only allow shutdown paused vm */
-	if (vm->state != VM_PAUSED)
+	if (vm->state != VM_PAUSED) {
 		return -EINVAL;
+	}
 
 	foreach_vcpu(i, vm, vcpu) {
 		reset_vcpu(vcpu);
@@ -226,13 +233,15 @@ int shutdown_vm(struct vm *vm)
 	free_io_emulation_resource(vm);
 
 	/* Free iommu_domain */
-	if (vm->iommu_domain != NULL)
+	if (vm->iommu_domain != NULL) {
 		destroy_iommu_domain(vm->iommu_domain);
+	}
 
 	bitmap_clear(vm->attr.id, &vmid_bitmap);
 
-	if (vm->vpic != NULL)
+	if (vm->vpic != NULL) {
 		vpic_cleanup(vm);
+	}
 
 	free(vm->hw.vcpu_array);
 
@@ -267,8 +276,9 @@ void pause_vm(struct vm *vm)
 	uint16_t i;
 	struct vcpu *vcpu = NULL;
 
-	if (vm->state == VM_PAUSED)
+	if (vm->state == VM_PAUSED) {
 		return;
+	}
 
 	vm->state = VM_PAUSED;
 
@@ -320,14 +330,16 @@ int prepare_vm0(void)
 	struct vm_description *vm_desc = &vm0_desc;
 
 	err = create_vm(vm_desc, &vm);
-	if (err != 0)
+	if (err != 0) {
 		return err;
+	}
 
 	/* Allocate all cpus to vm0 at the beginning */
 	for (i = 0U; i < phys_cpu_num; i++) {
 		err = prepare_vcpu(vm, i);
-		if (err != 0)
+		if (err != 0) {
 			return err;
+		}
 	}
 
 	/* start vm0 BSP automatically */
@@ -344,8 +356,9 @@ static inline bool vcpu_in_vm_desc(struct vcpu *vcpu,
 	int i;
 
 	for (i = 0; i < vm_desc->vm_hw_num_cores; i++) {
-		if (vcpu->pcpu_id == vm_desc->vm_hw_logical_core_ids[i])
+		if (vcpu->pcpu_id == vm_desc->vm_hw_logical_core_ids[i]) {
 			return true;
+		}
 	}
 
 	return false;
