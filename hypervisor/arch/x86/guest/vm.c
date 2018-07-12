@@ -87,8 +87,9 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	/* Init mmio list */
 	INIT_LIST_HEAD(&vm->mmio_list);
 
-	if (vm->hw.num_vcpus == 0U)
+	if (vm->hw.num_vcpus == 0U) {
 		vm->hw.num_vcpus = phys_cpu_num;
+	}
 
 	vm->hw.vcpu_array =
 		calloc(1, sizeof(struct vcpu *) * vm->hw.num_vcpus);
@@ -221,8 +222,9 @@ int shutdown_vm(struct vm *vm)
 	vioapic_cleanup(vm->arch_vm.virt_ioapic);
 
 	/* Destroy secure world */
-	if (vm->sworld_control.sworld_enabled)
+	if (vm->sworld_control.sworld_enabled) {
 		destroy_secure_world(vm);
+	}
 	/* Free EPT allocated resources assigned to VM */
 	destroy_ept(vm);
 

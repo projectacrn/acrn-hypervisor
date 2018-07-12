@@ -135,8 +135,9 @@ uint32_t serial_get_rx_data(uint32_t uart_handle)
 	uint8_t ch;
 	uint32_t total_bytes_read = 0U;
 
-	if (!SERIAL_VALIDATE_HANDLE(uart_handle))
+	if (!SERIAL_VALIDATE_HANDLE(uart_handle)) {
 		return 0U;
+	}
 
 	index = SERIAL_DECODE_INDEX(uart_handle);
 	if (index >= SERIAL_MAX_DEVS) {

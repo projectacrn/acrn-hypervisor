@@ -46,8 +46,9 @@ void setup_notification(void)
 	char name[32] = {0};
 
 	cpu = get_cpu_id();
-	if (cpu > 0U)
+	if (cpu > 0U) {
 		return;
+	}
 
 	/* support IPI notification, VM0 will register all CPU */
 	snprintf(name, 32, "NOTIFY_ISR%d", cpu);
@@ -63,7 +64,8 @@ void setup_notification(void)
 
 static void cleanup_notification(void)
 {
-	if (notification_node != NULL)
+	if (notification_node != NULL) {
 		unregister_handler_common(notification_node);
+	}
 	notification_node = NULL;
 }

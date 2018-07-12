@@ -31,8 +31,9 @@ void raise_softirq(int softirq_id)
 	uint16_t cpu_id = get_cpu_id();
 	uint64_t *bitmap = &per_cpu(softirq_pending, cpu_id);
 
-	if (cpu_id >= phys_cpu_num)
+	if (cpu_id >= phys_cpu_num) {
 		return;
+	}
 
 	bitmap_set(softirq_id, bitmap);
 }
@@ -44,8 +45,9 @@ void exec_softirq(void)
 
 	uint16_t softirq_id;
 
-	if (cpu_id >= phys_cpu_num)
+	if (cpu_id >= phys_cpu_num) {
 		return;
+	}
 
 	if (((*bitmap) & SOFTIRQ_MASK) == 0UL) {
 		return;
@@ -90,4 +92,3 @@ again:
 
 	enable_softirq(cpu_id);
 }
-

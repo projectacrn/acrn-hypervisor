@@ -64,8 +64,9 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
 	uint32_t requested_buffs;
 
 	/* Check if provided memory pool exists */
-	if (pool == NULL)
+	if (pool == NULL) {
 		return NULL;
+	}
 
 	/* Acquire the pool lock */
 	spinlock_obtain(&pool->spinlock);
@@ -102,8 +103,9 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
 					 * out-of-range
 					 */
 					tmp_idx++;
-					if (tmp_idx == pool->bmp_size)
+					if (tmp_idx == pool->bmp_size) {
 						break;
+					}
 					/* Reset tmp_bit_idx */
 					tmp_bit_idx = 0U;
 				}
@@ -424,8 +426,9 @@ void *memset(void *base, uint8_t v, size_t n)
 
 	dest_p = (uint8_t *)base;
 
-	if ((dest_p == NULL) || (n == 0U))
+	if ((dest_p == NULL) || (n == 0U)) {
 		return NULL;
+	}
 
         /*do the few bytes to get uint64_t alignment*/
         count = n;

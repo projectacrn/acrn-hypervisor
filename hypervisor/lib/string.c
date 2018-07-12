@@ -85,8 +85,7 @@ long strtol_deci(const char *nptr)
 
 	if (any < 0) {
 		acc = (neg != 0) ? LONG_MIN : LONG_MAX;
-	}
-	else if (neg != 0) {
+	} else if (neg != 0) {
 		acc = -acc;
 	}
 	return acc;
@@ -123,14 +122,11 @@ uint64_t strtoul_hex(const char *nptr)
 	do {
 		if (c >= '0' && c <= '9') {
 			c -= '0';
-		}
-		else if (c >= 'A' && c <= 'F') {
+		} else if (c >= 'A' && c <= 'F') {
 			c -= 'A' - 10;
-		}
-		else if (c >= 'a' && c <= 'f') {
+		} else if (c >= 'a' && c <= 'f') {
 			c -= 'a' - 10;
-		}
-		else {
+		} else {
 			break;
 		}
 		if (c >= base) {
@@ -138,8 +134,7 @@ uint64_t strtoul_hex(const char *nptr)
 		}
 		if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim)) {
 			any = -1;
-		}
-		else {
+		} else {
 			any = 1;
 			acc *= base;
 			acc += c;
@@ -220,8 +215,9 @@ char *strcpy_s(char *d, size_t dmax, const char *s)
 		}
 
 		*d = *s;
-		if (*d == '\0')
+		if (*d == '\0') {
 			return dest_base;
+		}
 
 		d++;
 		s++;
@@ -347,8 +343,9 @@ size_t strnlen_s(const char *str, size_t maxlen)
 {
 	size_t count;
 
-	if (str == NULL)
+	if (str == NULL) {
 		return 0;
+	}
 
 	count = 0U;
 	while ((*str) != 0) {

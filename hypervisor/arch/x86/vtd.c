@@ -410,11 +410,13 @@ static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
 #endif
 
 	/* check capability */
-	if ((iommu_cap_super_page_val(dmar_uint->cap) & 0x1UL) == 0)
+	if ((iommu_cap_super_page_val(dmar_uint->cap) & 0x1UL) == 0) {
 		dev_dbg(ACRN_DBG_IOMMU, "dmar uint doesn't support 2MB page!");
+	}
 
-	if ((iommu_cap_super_page_val(dmar_uint->cap) & 0x2UL) == 0)
+	if ((iommu_cap_super_page_val(dmar_uint->cap) & 0x2UL) == 0) {
 		dev_dbg(ACRN_DBG_IOMMU, "dmar uint doesn't support 1GB page!");
+	}
 
 	/* when the hardware support snoop control,
 	 * to make sure snoop control is always enabled,
@@ -610,8 +612,9 @@ static void dmar_invalid_iotlb(struct dmar_drhd_rt *dmar_uint,
 	case DMAR_IIRG_PAGE:
 		cmd |= DMA_IOTLB_PAGE_INVL | DMA_IOTLB_DID(did);
 		addr = address | DMA_IOTLB_INVL_ADDR_AM(am);
-		if (hint)
+		if (hint) {
 			addr |= DMA_IOTLB_INVL_ADDR_IH_UNMODIFIED;
+		}
 		break;
 	default:
 		pr_err("unknown IIRG type");
@@ -736,8 +739,9 @@ static void fault_status_analysis(uint32_t status)
 
 static void fault_record_analysis(__unused uint64_t low, uint64_t high)
 {
-	if (DMA_FRCD_UP_F(high) == 0U)
+	if (DMA_FRCD_UP_F(high) == 0U) {
 		return;
+	}
 
 	/* currently skip PASID related parsing */
 	pr_info("%s, Reason: 0x%x, SID: %x.%x.%x @0x%llx",
