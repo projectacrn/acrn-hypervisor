@@ -156,8 +156,8 @@ static void _irq_desc_free_vector(uint32_t irq)
 
 static void disable_pic_irq(void)
 {
-	io_write_byte(0xff, 0xA1);
-	io_write_byte(0xff, 0x21);
+	io_write_byte(0xffU, 0xA1U);
+	io_write_byte(0xffU, 0x21U);
 }
 
 static bool
@@ -250,7 +250,7 @@ common_register_handler(uint32_t irq,
 		goto OUT;
 	}
 
-	node = calloc(1, sizeof(struct dev_handler_node));
+	node = calloc(1U, sizeof(struct dev_handler_node));
 	if (node == NULL) {
 		pr_err("failed to alloc node");
 		irq_desc_try_free_vector(irq);
@@ -285,7 +285,7 @@ OUT:
 		/* we are okay using strcpy_s here even with spinlock
 		 * since no #PG in HV right now
 		 */
-		(void)strcpy_s(node->name, 32, info->name);
+		(void)strcpy_s(node->name, 32U, info->name);
 		dev_dbg(ACRN_DBG_IRQ, "[%s] %s irq%d vr:0x%x",
 			__func__, node->name, irq, desc->vector);
 	}

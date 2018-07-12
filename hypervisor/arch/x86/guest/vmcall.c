@@ -149,7 +149,7 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 	}
 
 out:
-	cur_context->guest_cpu_regs.regs.rax = ret;
+	cur_context->guest_cpu_regs.regs.rax = (uint64_t)ret;
 
 	TRACE_2L(TRACE_VMEXIT_VMCALL, vm->attr.id, hypcall_id);
 

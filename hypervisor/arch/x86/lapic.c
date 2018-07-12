@@ -127,7 +127,7 @@ union lapic_base_msr {
 };
 
 struct lapic_info {
-	int init_status;
+	bool init_done;
 	struct {
 		uint64_t paddr;
 		void *vaddr;
@@ -140,7 +140,7 @@ static union lapic_base_msr lapic_base_msr;
 
 static inline uint32_t read_lapic_reg32(uint32_t offset)
 {
-	if (offset < 0x20 || offset > 0x3ff)
+	if (offset < 0x20U || offset > 0x3ffU)
 		return 0;
 
 	return mmio_read_long(lapic_info.xapic.vaddr + offset);
@@ -148,7 +148,7 @@ static inline uint32_t read_lapic_reg32(uint32_t offset)
 
 inline void write_lapic_reg32(uint32_t offset, uint32_t value)
 {
-	if (offset < 0x20 || offset > 0x3ff)
+	if (offset < 0x20U || offset > 0x3ffU)
 		return;
 
 	mmio_write_long(value, lapic_info.xapic.vaddr + offset);
@@ -156,7 +156,7 @@ inline void write_lapic_reg32(uint32_t offset, uint32_t value)
 
 static void clear_lapic_isr(void)
 {
-	uint64_t isr_reg = LAPIC_IN_SERVICE_REGISTER_0;
+	uint32_t isr_reg = LAPIC_IN_SERVICE_REGISTER_0;
 
 	/* This is a Intel recommended procedure and assures that the processor
 	 * does not get hung up due to already set "in-service" interrupts left
@@ -165,10 +165,10 @@ static void clear_lapic_isr(void)
 	 */
 	do {
 		if (read_lapic_reg32(isr_reg) != 0U) {
-			write_lapic_reg32(LAPIC_EOI_REGISTER, 0);
+			write_lapic_reg32(LAPIC_EOI_REGISTER, 0U);
 			continue;
 		}
-		isr_reg += 0x10;
+		isr_reg += 0x10U;
 	} while (isr_reg <= LAPIC_IN_SERVICE_REGISTER_7);
 }
 
@@ -186,25 +186,25 @@ int early_init_lapic(void)
 	lapic_base_msr.value = msr_read(MSR_IA32_APIC_BASE);
 
 	/* Initialize globals only 1 time */
-	if (lapic_info.init_status == false) {
+	if (lapic_info.init_done == false) {
 		/* Get Local APIC physical address. */
 		lapic_info.xapic.paddr = LAPIC_BASE;
 
 		/* Map in the local xAPIC */
 		map_lapic();
 
-		lapic_info.init_status = true;
+		lapic_info.init_done = true;
 	}
 
 	/* Check if xAPIC mode enabled */
-	if (lapic_base_msr.fields.xAPIC_enable == 0) {
+	if (lapic_base_msr.fields.xAPIC_enable == 0U) {
 		/* Ensure in xAPIC mode */
-		lapic_base_msr.fields.xAPIC_enable = 1;
-		lapic_base_msr.fields.x2APIC_enable = 0;
+		lapic_base_msr.fields.xAPIC_enable = 1U;
+		lapic_base_msr.fields.x2APIC_enable = 0U;
 		msr_write(MSR_IA32_APIC_BASE, lapic_base_msr.value);
 	} else {
 		/* Check if x2apic is disabled */
-		ASSERT(lapic_base_msr.fields.x2APIC_enable == 0,
+		ASSERT(lapic_base_msr.fields.x2APIC_enable == 0U,
 			"Disable X2APIC in BIOS");
 	}
 
@@ -218,7 +218,7 @@ int init_lapic(uint16_t pcpu_id)
 		((1U << pcpu_id) << 24U));
 
 	/* Set the Destination Format Register */
-	write_lapic_reg32(LAPIC_DESTINATION_FORMAT_REGISTER, 0xf << 28);
+	write_lapic_reg32(LAPIC_DESTINATION_FORMAT_REGISTER, 0xfU << 28U);
 
 	/* Mask all LAPIC LVT entries before enabling the local APIC */
 	write_lapic_reg32(LAPIC_LVT_CMCI_REGISTER, LAPIC_LVT_MASK);
@@ -306,7 +306,7 @@ static void restore_lapic(struct lapic_regs *regs)
 
 void suspend_lapic(void)
 {
-	uint32_t val = 0;
+	uint32_t val;
 
 	save_lapic(&saved_lapic_regs);
 
@@ -326,7 +326,7 @@ void resume_lapic(void)
 
 void send_lapic_eoi(void)
 {
-	write_lapic_reg32(LAPIC_EOI_REGISTER, 0);
+	write_lapic_reg32(LAPIC_EOI_REGISTER, 0U);
 }
 
 static void wait_for_delivery(void)
@@ -345,7 +345,7 @@ uint8_t get_cur_lapic_id(void)
 	uint8_t lapic_id;
 
 	lapic_id_reg = read_lapic_reg32(LAPIC_ID_REGISTER);
-	lapic_id = (lapic_id_reg >> 24U);
+	lapic_id = (uint8_t)(lapic_id_reg >> 24U);
 
 	return lapic_id;
 }
@@ -363,7 +363,7 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 
 	ASSERT(status == 0, "Incorrect arguments");
 
-	icr.value = 0;
+	icr.value = 0U;
 	icr.bits.destination_mode = INTR_LAPIC_ICR_PHYSICAL;
 
 	if (cpu_startup_shorthand == INTR_CPU_STARTUP_USE_DEST) {
@@ -371,7 +371,7 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 		icr.x_bits.dest_field = per_cpu(lapic_id, dest_pcpu_id);
 	} else {		/* Use destination shorthand */
 		shorthand = INTR_LAPIC_ICR_ALL_EX_SELF;
-		icr.value_32.hi_32 = 0;
+		icr.value_32.hi_32 = 0U;
 	}
 
 	/* Assert INIT IPI */
@@ -386,8 +386,8 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	/* Give 10ms for INIT sequence to complete for old processors.
 	 * Modern processors (family == 6) don't need to wait here.
 	 */
-	if (boot_cpu_data.family != 6)
-		mdelay(10);
+	if (boot_cpu_data.family != 6U)
+		mdelay(10U);
 
 	/* De-assert INIT IPI */
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_1, icr.value_32.hi_32);
@@ -397,17 +397,17 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 
 	/* Send Start IPI with page number of secondary reset code */
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_1, icr.value_32.hi_32);
-	icr.value_32.lo_32 = 0;
+	icr.value_32.lo_32 = 0U;
 	icr.bits.shorthand = shorthand;
 	icr.bits.delivery_mode = INTR_LAPIC_ICR_STARTUP;
-	icr.bits.vector = ((uint64_t) cpu_startup_start_address) >> 12;
+	icr.bits.vector = cpu_startup_start_address >> 12U;
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_0, icr.value_32.lo_32);
 	wait_for_delivery();
 
-	if (boot_cpu_data.family == 6) /* 10us is enough for Modern processors */
-		udelay(10);
-	else /* 200us for old processors */
-		udelay(200);
+	if (boot_cpu_data.family == 6U)
+		udelay(10U); /* 10us is enough for Modern processors */
+	else
+		udelay(200U); /* 200us for old processors */
 
 	/* Send another start IPI as per the Intel Arch specification */
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_1, icr.value_32.hi_32);
@@ -440,8 +440,7 @@ void send_single_ipi(uint16_t pcpu_id, uint32_t vector)
 }
 
 int send_shorthand_ipi(uint8_t vector,
-		enum intr_lapic_icr_shorthand shorthand,
-		enum intr_lapic_icr_delivery_mode delivery_mode)
+	uint8_t shorthand, uint8_t delivery_mode)
 {
 	union apic_icr icr;
 	int status = 0;
@@ -453,7 +452,7 @@ int send_shorthand_ipi(uint8_t vector,
 
 	ASSERT(status == 0, "Incorrect arguments");
 
-	icr.value = 0;
+	icr.value = 0U;
 	icr.bits.shorthand = shorthand;
 	icr.bits.delivery_mode = delivery_mode;
 	icr.bits.vector = vector;

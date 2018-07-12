@@ -10,7 +10,7 @@
 #define IOAPIC_REGSEL_OFFSET   0
 #define IOAPIC_WINSWL_OFFSET   0x10
 
-#define	IOAPIC_MAX_PIN		240U
+#define IOAPIC_MAX_PIN             240U
 #define IOAPIC_INVALID_PIN      0xffU
 
 /* IOAPIC Redirection Table (RTE) Entry structure */
@@ -109,7 +109,7 @@ ioapic_read_reg32(const void *ioapic_base, const uint32_t offset)
 	spinlock_irqsave_obtain(&ioapic_lock);
 
 	/* Write IOREGSEL */
-	mmio_write_long(offset, (void *)ioapic_base);
+	mmio_write_long(offset, (void *)ioapic_base + IOAPIC_REGSEL_OFFSET);
 	/* Read  IOWIN */
 	v = mmio_read_long((void *)ioapic_base + IOAPIC_WINSWL_OFFSET);
 
@@ -126,7 +126,7 @@ ioapic_write_reg32(const void *ioapic_base,
 	spinlock_irqsave_obtain(&ioapic_lock);
 
 	/* Write IOREGSEL */
-	mmio_write_long(offset, (void *)ioapic_base);
+	mmio_write_long(offset, (void *)ioapic_base + IOAPIC_REGSEL_OFFSET);
 	/* Write IOWIN */
 	mmio_write_long(value, (void *)ioapic_base + IOAPIC_WINSWL_OFFSET);
 
@@ -173,7 +173,7 @@ ioapic_set_rte_entry(void *ioapic_addr,
 static inline struct ioapic_rte
 create_rte_for_legacy_irq(uint32_t irq, uint32_t vr)
 {
-	struct ioapic_rte rte = {0, 0};
+	struct ioapic_rte rte = {0U, 0U};
 
 	/* Legacy IRQ 0-15 setup, default masked
 	 * are actually defined in either MPTable or ACPI MADT table

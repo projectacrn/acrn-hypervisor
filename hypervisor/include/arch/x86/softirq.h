@@ -18,6 +18,6 @@
 void enable_softirq(uint16_t cpu_id);
 void disable_softirq(uint16_t cpu_id);
 void init_softirq(void);
-void raise_softirq(int softirq_id);
+void raise_softirq(uint16_t softirq_id);
 void exec_softirq(void);
 #endif /* SOFTIRQ_H */
