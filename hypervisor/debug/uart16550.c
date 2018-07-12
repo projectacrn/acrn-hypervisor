@@ -84,7 +84,7 @@ static void uart16550_enable(__unused struct tgt_uart *tgt_uart)
 {
 }
 
-static int uart16550_calc_baud_div(__unused struct tgt_uart *tgt_uart,
+static void uart16550_calc_baud_div(__unused struct tgt_uart *tgt_uart,
 		uint32_t ref_freq, uint32_t *baud_div_ptr, uint32_t baud_rate)
 {
 	uint32_t baud_multiplier = baud_rate < BAUD_460800 ? 16 : 13;
@@ -93,39 +93,32 @@ static int uart16550_calc_baud_div(__unused struct tgt_uart *tgt_uart,
 		baud_rate = BAUD_115200;
 	}
 	*baud_div_ptr = ref_freq / (baud_multiplier * baud_rate);
-
-	return 0;
 }
 
-static int uart16550_set_baud_rate(struct tgt_uart *tgt_uart,
+static void uart16550_set_baud_rate(struct tgt_uart *tgt_uart,
 			uint32_t baud_rate)
 {
-	int status;
 	uint32_t baud_div, duart_clock = CPU_OSC_CLOCK;
 	uart_reg_t temp_reg;
 
 	/* Calculate baud divisor */
-	status = uart16550_calc_baud_div(
+	uart16550_calc_baud_div(
 			tgt_uart, duart_clock, &baud_div, baud_rate);
 
-	if (status == 0) {
-		/* Enable DLL and DLM registers for setting the Divisor */
-		temp_reg = uart16550_read_reg(tgt_uart->base_address, LCR_IDX);
-		temp_reg |= LCR_DLAB;
-		uart16550_write_reg(tgt_uart->base_address, temp_reg, LCR_IDX);
+	/* Enable DLL and DLM registers for setting the Divisor */
+	temp_reg = uart16550_read_reg(tgt_uart->base_address, LCR_IDX);
+	temp_reg |= LCR_DLAB;
+	uart16550_write_reg(tgt_uart->base_address, temp_reg, LCR_IDX);
 
-		/* Write the appropriate divisor value */
-		uart16550_write_reg(tgt_uart->base_address,
+	/* Write the appropriate divisor value */
+	uart16550_write_reg(tgt_uart->base_address,
 			((baud_div >> 8) & 0xFFU), DLM_IDX);
-		uart16550_write_reg(tgt_uart->base_address,
+	uart16550_write_reg(tgt_uart->base_address,
 			(baud_div & 0xFFU), DLL_IDX);
 
-		/* Disable DLL and DLM registers */
-		temp_reg &= ~LCR_DLAB;
-		uart16550_write_reg(tgt_uart->base_address, temp_reg, LCR_IDX);
-	}
-
-	return status;
+	/* Disable DLL and DLM registers */
+	temp_reg &= ~LCR_DLAB;
+	uart16550_write_reg(tgt_uart->base_address, temp_reg, LCR_IDX);
 }
 
 static int uart16550_init(struct tgt_uart *tgt_uart)

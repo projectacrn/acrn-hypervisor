@@ -127,7 +127,7 @@ static int ptdev_interrupt_handler(__unused int irq, void *data)
 }
 
 /* active intr with irq registering */
-struct ptdev_remapping_info *
+void
 ptdev_activate_entry(struct ptdev_remapping_info *entry, int phys_irq,
 		bool lowpri)
 {
@@ -141,7 +141,6 @@ ptdev_activate_entry(struct ptdev_remapping_info *entry, int phys_irq,
 	entry->node = node;
 
 	atomic_set_int(&entry->active, ACTIVE_FLAG);
-	return entry;
 }
 
 void

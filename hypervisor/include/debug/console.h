@@ -12,12 +12,9 @@ extern struct timer console_timer;
 
 /** Initializes the console module.
  *
- *  @param cdev A pointer to the character device to use for the console.
- *
- *  @return '0' on success. Any other value indicates an error.
  */
 
-int console_init(void);
+void console_init(void);
 
 /** Writes a NUL terminated string to the console.
  *
@@ -76,9 +73,8 @@ static inline void resume_console(void)
 }
 
 #else
-static inline int console_init(void)
+static inline void console_init(void)
 {
-	return 0;
 }
 static inline int console_puts(__unused const char *str)
 {

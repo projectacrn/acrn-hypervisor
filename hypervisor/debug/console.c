@@ -21,20 +21,18 @@ uint32_t get_serial_handle(void)
 
 static void print_char(char x)
 {
-	serial_puts(serial_handle, &x, 1);
+	(void)serial_puts(serial_handle, &x, 1);
 
 	if (x == '\n') {
-		serial_puts(serial_handle, "\r", 1);
+		(void)serial_puts(serial_handle, "\r", 1);
 	}
 }
 
-int console_init(void)
+void console_init(void)
 {
 	spinlock_init(&lock);
 
 	serial_handle = serial_open("STDIO");
-
-	return 0;
 }
 
 int console_putc(int ch)
@@ -73,7 +71,7 @@ int console_puts(const char *s)
 			}
 
 			/* write all characters up to p */
-			serial_puts(serial_handle, s, p - s);
+			(void)serial_puts(serial_handle, s, p - s);
 
 			res += p - s;
 
@@ -116,7 +114,7 @@ int console_write(const char *s, size_t len)
 			}
 
 			/* write all characters processed so far */
-			serial_puts(serial_handle, s, p - s);
+			(void)serial_puts(serial_handle, s, p - s);
 
 			res += p - s;
 
@@ -156,14 +154,14 @@ void console_dump_bytes(const void *p, unsigned int len)
 		/* print one row as ASCII characters (if possible) */
 		for (i = 0; i < 16; i++) {
 			if ((x[i] < ' ') || (x[i] >= 127)) {
-				console_putc('.');
+				(void)console_putc('.');
 			}
 			else {
-				console_putc(x[i]);
+				(void)console_putc(x[i]);
 			}
 		}
 		/* continue with next row */
-		console_putc('\n');
+		(void)console_putc('\n');
 		/* set pointer one row ahead */
 		x += 16;
 	}
@@ -175,7 +173,7 @@ static void console_read(void)
 
 	if (serial_handle != SERIAL_INVALID_HANDLE) {
 		/* Get all the data available in the RX FIFO */
-		serial_get_rx_data(serial_handle);
+		(void)serial_get_rx_data(serial_handle);
 	}
 
 	spinlock_release(&lock);

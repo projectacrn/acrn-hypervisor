@@ -1107,7 +1107,7 @@ void shell_puts_serial(struct shell *p_shell, char *string_ptr)
 		(uint32_t)(uint64_t)p_shell->session_io.io_session_info;
 
 	/* Output the string */
-	serial_puts(serial_handle, string_ptr,
+	(void)serial_puts(serial_handle, string_ptr,
 				strnlen_s(string_ptr, SHELL_STRING_MAX_LEN));
 }
 
