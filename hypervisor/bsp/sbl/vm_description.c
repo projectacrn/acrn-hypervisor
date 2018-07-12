@@ -7,10 +7,10 @@
 #include <hypervisor.h>
 
 /* Number of CPUs in VM0 */
-#define VM0_NUM_CPUS    1
+#define VM0_NUM_CPUS    2
 
 /* Logical CPU IDs assigned to VM0 */
-int VM0_CPUS[VM0_NUM_CPUS] = {0};
+int VM0_CPUS[VM0_NUM_CPUS] = {0, 1};
 
 struct vm_description vm0_desc = {
 	.vm_hw_num_cores = VM0_NUM_CPUS,
