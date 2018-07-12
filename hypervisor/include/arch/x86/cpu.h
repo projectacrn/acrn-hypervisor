@@ -43,6 +43,9 @@
 #define CPU_PAGE_SIZE           0x1000U
 #define CPU_PAGE_MASK           0xFFFFFFFFFFFFF000UL
 
+/* Assume the max physcial cpu number is 128 */
+#define MAX_PCPU_NUM	128U
+
 #define MMU_PTE_PAGE_SHIFT	CPU_PAGE_SHIFT
 #define MMU_PDE_PAGE_SHIFT	21
 
