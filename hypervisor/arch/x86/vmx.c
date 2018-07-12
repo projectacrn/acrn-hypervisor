@@ -246,7 +246,7 @@ void exec_vmwrite64(unsigned int field_full, uint64_t value)
 	asm volatile ("movw %%cs, %%ax" : "=a"(sel));	\
 }
 
-uint32_t get_cs_access_rights(void)
+static uint32_t get_cs_access_rights(void)
 {
 	uint32_t usable_ar;
 	uint16_t sel_value;

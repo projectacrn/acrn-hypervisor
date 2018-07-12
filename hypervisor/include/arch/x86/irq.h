@@ -72,6 +72,7 @@ int quick_handler_nolock(struct irq_desc *desc, void *handler_data);
 
 int init_default_irqs(uint16_t cpu);
 
+void dispatch_exception(struct intr_excp_ctx *ctx);
 void dispatch_interrupt(struct intr_excp_ctx *ctx);
 
 void setup_notification(void);

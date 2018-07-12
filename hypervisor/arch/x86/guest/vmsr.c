@@ -51,7 +51,7 @@ static void enable_msr_interception(uint8_t *bitmap, uint32_t msr)
 }
 
 /* not used now just leave it for some cases it may be used as API*/
-void disable_msr_interception(uint8_t *bitmap, uint32_t msr)
+static void disable_msr_interception(uint8_t *bitmap, uint32_t msr)
 {
 	uint8_t *read_map;
 	uint8_t *write_map;

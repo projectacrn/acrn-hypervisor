@@ -44,7 +44,7 @@ static uint64_t find_next_table(uint32_t table_offset, void *table_base)
 	return sub_table_addr;
 }
 
-void free_ept_mem(void *pml4_addr)
+static void free_ept_mem(void *pml4_addr)
 {
 	void *pdpt_addr;
 	void *pde_addr;

@@ -61,7 +61,7 @@ void setup_notification(void)
 		dev_to_vector(notification_node));
 }
 
-void cleanup_notification(void)
+static void cleanup_notification(void)
 {
 	if (notification_node != NULL)
 		unregister_handler_common(notification_node);

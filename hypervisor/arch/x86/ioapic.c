@@ -407,7 +407,7 @@ void setup_ioapic_irq(void)
 	ASSERT(nr_gsi <= NR_MAX_GSI, "GSI table overflow");
 }
 
-void dump_ioapic(void)
+static void dump_ioapic(void)
 {
 	uint32_t irq;
 
@@ -457,7 +457,7 @@ void resume_ioapic(void)
 }
 
 #ifdef HV_DEBUG
-void get_rte_info(struct ioapic_rte *rte, bool *mask, bool *irr,
+static void get_rte_info(struct ioapic_rte *rte, bool *mask, bool *irr,
 	bool *phys, uint32_t *delmode, bool *level, uint32_t *vector, uint32_t *dest)
 {
 	*mask = ((rte->lo_32 & IOAPIC_RTE_INTMASK) == IOAPIC_RTE_INTMSET);

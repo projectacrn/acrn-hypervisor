@@ -35,6 +35,7 @@
 #include "instr_emul.h"
 
 #include "vlapic_priv.h"
+#include "vlapic.h"
 
 #define VLAPIC_VERBOS 0
 #define	PRIO(x)			((x) >> 4)
@@ -1709,7 +1710,7 @@ vlapic_enabled(struct vlapic *vlapic)
 	}
 }
 
-void
+static void
 vlapic_set_tmr(struct vlapic *vlapic, uint32_t vector, bool level)
 {
 	struct lapic_regs *lapic;
@@ -1739,7 +1740,7 @@ vlapic_apicv_batch_set_tmr(struct vlapic *vlapic)
 	}
 }
 
-void
+static void
 vlapic_apicv_set_tmr(struct vlapic *vlapic, uint32_t vector, bool level)
 {
 	if (vlapic->ops.apicv_set_tmr != NULL) {

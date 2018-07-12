@@ -398,7 +398,7 @@ void dispatch_exception(struct intr_excp_ctx *ctx)
 	cpu_dead(pcpu_id);
 }
 
-void handle_spurious_interrupt(uint32_t vector)
+static void handle_spurious_interrupt(uint32_t vector)
 {
 	send_lapic_eoi();
 

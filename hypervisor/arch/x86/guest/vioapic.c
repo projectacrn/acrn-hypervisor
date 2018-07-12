@@ -62,7 +62,7 @@ static inline const char *pinstate_str(bool asserted)
 	return (asserted) ? "asserted" : "deasserted";
 }
 
-struct vioapic *
+static struct vioapic *
 vm_ioapic(struct vm *vm)
 {
 	return (struct vioapic *)vm->arch_vm.virt_ioapic;
