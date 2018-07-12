@@ -506,7 +506,7 @@ static bool release_larger_freepage(int level_limit)
  */
 static bool hugetlb_reserve_pages(void)
 {
-	int left_gap, pg_size;
+	int left_gap = 0, pg_size;
 	int level;
 
 	printf("to reserve more free pages:\n");
