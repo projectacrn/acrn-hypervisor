@@ -63,20 +63,23 @@ static inline uint32_t io_read_long(uint16_t port)
 
 static inline void io_write(uint32_t v, uint16_t addr, size_t sz)
 {
-	if (sz == 1U)
+	if (sz == 1U) {
 		io_write_byte((uint8_t)v, addr);
-	else if (sz == 2U)
+	} else if (sz == 2U) {
 		io_write_word((uint16_t)v, addr);
-	else
+	} else {
 		io_write_long(v, addr);
+	}
 }
 
 static inline uint32_t io_read(uint16_t addr, size_t sz)
 {
-	if (sz == 1U)
+	if (sz == 1U) {
 		return io_read_byte(addr);
-	if (sz == 2U)
+	}
+	if (sz == 2U) {
 		return io_read_word(addr);
+	}
 	return io_read_long(addr);
 }
 

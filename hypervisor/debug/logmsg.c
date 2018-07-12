@@ -27,14 +27,16 @@ static inline void alloc_earlylog_sbuf(uint16_t pcpu_id)
 			   - SBUF_HEAD_SIZE) / ele_size;
 
 	per_cpu(earlylog_sbuf, pcpu_id) = sbuf_allocate(ele_num, ele_size);
-	if (per_cpu(earlylog_sbuf, pcpu_id) == NULL)
+	if (per_cpu(earlylog_sbuf, pcpu_id) == NULL) {
 		printf("failed to allcate sbuf for hvlog - %hu\n", pcpu_id);
+	}
 }
 
 static inline void free_earlylog_sbuf(uint16_t pcpu_id)
 {
-	if (per_cpu(earlylog_sbuf, pcpu_id) == NULL)
+	if (per_cpu(earlylog_sbuf, pcpu_id) == NULL) {
 		return;
+	}
 
 	free(per_cpu(earlylog_sbuf, pcpu_id));
 	per_cpu(earlylog_sbuf, pcpu_id) = NULL;
@@ -61,9 +63,10 @@ static int do_copy_earlylog(struct shared_buf *dst_sbuf,
 
 	(void)memcpy_s((void *)dst_sbuf, buf_size,
 			(void *)src_sbuf, valid_size);
-	if (dst_sbuf->tail != cur_tail)
+	if (dst_sbuf->tail != cur_tail) {
 		/* there is chance to lose new log from certain pcpu */
 		dst_sbuf->tail = cur_tail;
+	}
 
 	return 0;
 }
@@ -96,8 +99,9 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 	do_mem_log = ((logmsg.flags & LOG_FLAG_MEMORY) != 0U &&
 					(severity <= mem_loglevel));
 
-	if (!do_console_log && !do_mem_log)
+	if (!do_console_log && !do_mem_log) {
 		return;
+	}
 
 	/* Get time-stamp value */
 	timestamp = rdtsc();
@@ -170,34 +174,39 @@ void print_logmsg_buffer(uint16_t pcpu_id)
 	struct shared_buf **sbuf;
 	int is_earlylog = 0;
 
-	if (pcpu_id >= phys_cpu_num)
+	if (pcpu_id >= phys_cpu_num) {
 		return;
+	}
 
 	if (per_cpu(earlylog_sbuf, pcpu_id) != NULL) {
 		sbuf = &per_cpu(earlylog_sbuf, pcpu_id);
 		is_earlylog = 1;
-	} else
+	} else {
 		sbuf = (struct shared_buf **)
 				&per_cpu(sbuf, pcpu_id)[ACRN_HVLOG];
+	}
 
 	spinlock_irqsave_obtain(&(logmsg.lock));
-	if ((*sbuf) != NULL)
+	if ((*sbuf) != NULL) {
 		printf("CPU%hu: head: 0x%x, tail: 0x%x %s\n\r",
 			pcpu_id, (*sbuf)->head, (*sbuf)->tail,
 			(is_earlylog != 0) ? "[earlylog]" : "");
+	}
 	spinlock_irqrestore_release(&(logmsg.lock));
 
 	do {
 		uint32_t idx;
 		(void)memset(buffer, 0, LOG_ENTRY_SIZE + 1);
 
-		if (*sbuf == NULL)
+		if (*sbuf == NULL) {
 			return;
+		}
 
 		read_cnt = sbuf_get(*sbuf, (uint8_t *)buffer);
 
-		if (read_cnt <= 0)
+		if (read_cnt <= 0) {
 			return;
+		}
 
 		idx = (read_cnt < LOG_ENTRY_SIZE) ? read_cnt : LOG_ENTRY_SIZE;
 		buffer[idx] = '\0';

@@ -51,8 +51,9 @@ struct shared_buf *sbuf_allocate(uint32_t ele_num, uint32_t ele_size)
 	}
 
 	sbuf_allocate_size = sbuf_calculate_allocate_size(ele_num, ele_size);
-	if (sbuf_allocate_size == 0U)
+	if (sbuf_allocate_size == 0U) {
 		return NULL;
+	}
 
 	sbuf = calloc(1, sbuf_allocate_size);
 	if (sbuf == NULL) {
@@ -84,8 +85,9 @@ int sbuf_get(struct shared_buf *sbuf, uint8_t *data)
 {
 	const void *from;
 
-	if ((sbuf == NULL) || (data == NULL))
+	if ((sbuf == NULL) || (data == NULL)) {
 		return -EINVAL;
+	}
 
 	if (sbuf_is_empty(sbuf)) {
 		/* no data available */
@@ -125,8 +127,9 @@ int sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 	uint32_t next_tail;
 	bool trigger_overwrite = false;
 
-	if ((sbuf == NULL) || (data == NULL))
+	if ((sbuf == NULL) || (data == NULL)) {
 		return -EINVAL;
+	}
 
 	next_tail = sbuf_next_ptr(sbuf->tail, sbuf->ele_size, sbuf->size);
 	/* if this write would trigger overrun */
@@ -156,8 +159,9 @@ int sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 int sbuf_share_setup(uint16_t pcpu_id, uint32_t sbuf_id, uint64_t *hva)
 {
 	if (pcpu_id >= phys_cpu_num ||
-			sbuf_id >= ACRN_SBUF_ID_MAX)
+			sbuf_id >= ACRN_SBUF_ID_MAX) {
 		return -EINVAL;
+	}
 
 	per_cpu(sbuf, pcpu_id)[sbuf_id] = hva;
 	pr_info("%s share sbuf for pCPU[%u] with sbuf_id[%u] setup successfully",
