@@ -64,6 +64,7 @@ clean:
 # along with a README
 
 publish:
+	mkdir -p $(PUBLISHDIR)
 	rm -fr $(PUBLISHDIR)/*
 	cp -r $(BUILDDIR)/html/* $(PUBLISHDIR)
 	cp scripts/publish-README.md $(PUBLISHDIR)/../README.md
