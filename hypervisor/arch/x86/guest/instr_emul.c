@@ -246,6 +246,8 @@ vie_read_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t *rval)
 	int error;
 
 	error = vm_get_register(vcpu, reg, rval);
+	ASSERT(error == 0, "%s: error (%d) happens when getting reg",
+		__func__, error);
 
 	return error;
 }
@@ -351,6 +353,9 @@ vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
 	}
 
 	error = vm_set_register(vcpu, reg, val);
+	ASSERT(error == 0, "%s: Error (%d) happens when update reg",
+		__func__, error);
+
 	return error;
 }
 
@@ -696,7 +701,6 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 
 	if (repeat != 0) {
 		error = vie_read_register(vcpu, CPU_REG_RCX, &rcx);
-		ASSERT(error == 0, "%s: error %d getting rcx", __func__, error);
 
 		/*
 		 * The count register is %rcx, %ecx or %cx depending on the
@@ -725,13 +729,8 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 	(void)memcpy_s((char *)dstaddr, 16U, (char *)srcaddr, opsize);
 
 	error = vie_read_register(vcpu, CPU_REG_RSI, &rsi);
-	ASSERT(error == 0, "%s: error %d getting rsi", __func__, error);
-
 	error = vie_read_register(vcpu, CPU_REG_RDI, &rdi);
-	ASSERT(error == 0, "%s: error %d getting rdi", __func__, error);
-
 	error = vie_read_register(vcpu, CPU_REG_RFLAGS, &rflags);
-	ASSERT(error == 0, "%s: error %d getting rflags", __func__, error);
 
 	if ((rflags & PSL_D) != 0U) {
 		rsi -= opsize;
@@ -743,17 +742,14 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 
 	error = vie_update_register(vcpu, CPU_REG_RSI, rsi,
 			vie->addrsize);
-	ASSERT(error == 0, "%s: error %d updating rsi", __func__, error);
 
 	error = vie_update_register(vcpu, CPU_REG_RDI, rdi,
 			vie->addrsize);
-	ASSERT(error == 0, "%s: error %d updating rdi", __func__, error);
 
 	if (repeat != 0) {
 		rcx = rcx - 1;
 		error = vie_update_register(vcpu, CPU_REG_RCX,
 				rcx, vie->addrsize);
-		ASSERT(error == 0, "%s: error %d updating rcx", __func__, error);
 
 		/*
 		 * Repeat the instruction if the count register is not zero.
@@ -783,7 +779,6 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 
 	if (repeat != 0) {
 		error = vie_read_register(vcpu, CPU_REG_RCX, &rcx);
-		ASSERT(error == 0, "%s: error %d getting rcx", __func__, error);
 
 		/*
 		 * The count register is %rcx, %ecx or %cx depending on the
@@ -795,7 +790,6 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	}
 
 	error = vie_read_register(vcpu, CPU_REG_RAX, &val);
-	ASSERT(error == 0, "%s: error %d getting rax", __func__, error);
 
 	error = memwrite(vcpu, gpa, val, opsize, arg);
 	if (error != 0) {
@@ -803,10 +797,7 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	}
 
 	error = vie_read_register(vcpu, CPU_REG_RDI, &rdi);
-	ASSERT(error == 0, "%s: error %d getting rdi", __func__, error);
-
 	error = vie_read_register(vcpu, CPU_REG_RFLAGS, &rflags);
-	ASSERT(error == 0, "%s: error %d getting rflags", __func__, error);
 
 	if ((rflags & PSL_D) != 0U) {
 		rdi -= opsize;
@@ -816,13 +807,11 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 
 	error = vie_update_register(vcpu, CPU_REG_RDI, rdi,
 			vie->addrsize);
-	ASSERT(error == 0, "%s: error %d updating rdi", __func__, error);
 
 	if (repeat != 0) {
 		rcx = rcx - 1;
 		error = vie_update_register(vcpu, CPU_REG_RCX,
 				rcx, vie->addrsize);
-		ASSERT(error == 0, "%s: error %d updating rcx", __func__, error);
 
 		/*
 		 * Repeat the instruction if the count register is not zero.
@@ -1318,13 +1307,9 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 	}
 
 	error = vie_read_register(vcpu, CPU_REG_CR0, &cr0);
-	ASSERT(error == 0, "%s: error %d getting cr0", __func__, error);
-
 	error = vie_read_register(vcpu, CPU_REG_RFLAGS, &rflags);
-	ASSERT(error == 0, "%s: error %d getting rflags", __func__, error);
-
 	error = vie_read_register(vcpu, CPU_REG_RSP, &rsp);
-	ASSERT(error == 0, "%s: error %d getting rsp", __func__, error);
+
 	if (pushop != 0) {
 		rsp -= size;
 	}
@@ -1379,7 +1364,6 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 	if (error == 0) {
 		error = vie_update_register(vcpu, CPU_REG_RSP, rsp,
 				stackaddrsize);
-		ASSERT(error == 0, "error %d updating rsp", error);
 	}
 	return error;
 }
@@ -1478,7 +1462,6 @@ emulate_bittest(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	}
 
 	error = vie_read_register(vcpu, CPU_REG_RFLAGS, &rflags);
-	ASSERT(error == 0, "%s: error %d getting rflags", __func__, error);
 
 	error = memread(vcpu, gpa, &val, vie->opsize, memarg);
 	if (error != 0) {
@@ -1500,7 +1483,6 @@ emulate_bittest(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	}
 	size = 8U;
 	error = vie_update_register(vcpu, CPU_REG_RFLAGS, rflags, size);
-	ASSERT(error == 0, "%s: error %d updating rflags", __func__, error);
 
 	return 0;
 }
