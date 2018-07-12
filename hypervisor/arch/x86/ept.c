@@ -24,8 +24,9 @@ static uint64_t find_next_table(uint32_t table_offset, void *table_base)
 
 	/* If bit 7 is set, entry is not a subtable. */
 	if ((table_entry & IA32E_PDPTE_PS_BIT) != 0U
-	    || (table_entry & IA32E_PDE_PS_BIT) != 0U)
+	    || (table_entry & IA32E_PDE_PS_BIT) != 0U) {
 		return sub_table_addr;
+	}
 
 	/* Set table present bits to any of the read/write/execute bits */
 	table_present = (IA32E_EPT_R_BIT | IA32E_EPT_W_BIT | IA32E_EPT_X_BIT);
@@ -60,8 +61,9 @@ void free_ept_mem(void *pml4_addr)
 	for (pml4_index = 0U; pml4_index < IA32E_NUM_ENTRIES; pml4_index++) {
 		/* Walk from the PML4 table to the PDPT table */
 		pdpt_addr = HPA2HVA(find_next_table(pml4_index, pml4_addr));
-		if (pdpt_addr == NULL)
+		if (pdpt_addr == NULL) {
 			continue;
+		}
 
 		for (pdpt_index = 0U; pdpt_index < IA32E_NUM_ENTRIES;
 				pdpt_index++) {
@@ -69,8 +71,9 @@ void free_ept_mem(void *pml4_addr)
 			pde_addr = HPA2HVA(find_next_table(pdpt_index,
 						pdpt_addr));
 
-			if (pde_addr == NULL)
+			if (pde_addr == NULL) {
 				continue;
+			}
 
 			for (pde_index = 0U; pde_index < IA32E_NUM_ENTRIES;
 					pde_index++) {
@@ -79,12 +82,14 @@ void free_ept_mem(void *pml4_addr)
 						pde_addr));
 
 				/* Free page table entry table */
-				if (pte_addr != NULL)
+				if (pte_addr != NULL) {
 					free_paging_struct(pte_addr);
+				}
 			}
 			/* Free page directory entry table */
-			if (pde_addr != NULL)
+			if (pde_addr != NULL) {
 				free_paging_struct(pde_addr);
+			}
 		}
 		free_paging_struct(pdpt_addr);
 	}
@@ -130,8 +135,9 @@ uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 				vm->attr.boot_idx, gpa);
 	}
 
-	if (size != NULL)
+	if (size != NULL) {
 		*size = pg_size;
+	}
 
 	return hpa;
 }
@@ -240,9 +246,10 @@ int register_mmio_emulation_handler(struct vm *vm,
 			 * should unmap it. But UOS will not, so we shouldn't
 			 * need to unmap it.
 			 */
-			if (is_vm0(vm))
+			if (is_vm0(vm)) {
 				ept_mmap(vm, start, start, end - start,
 					MAP_UNMAP, 0);
+			}
 
 			/* Return success */
 			status = 0;
@@ -286,8 +293,9 @@ int dm_emulate_mmio_post(struct vcpu *vcpu)
 	/* VHM emulation data already copy to req, mark to free slot now */
 	req_buf->req_queue[cur].valid = false;
 
-	if (req_buf->req_queue[cur].processed == REQ_STATE_SUCCESS)
+	if (req_buf->req_queue[cur].processed == REQ_STATE_SUCCESS) {
 		vcpu->mmio.mmio_status = MMIO_TRANS_VALID;
+	}
 	else {
 		vcpu->mmio.mmio_status = MMIO_TRANS_INVALID;
 		goto out;
@@ -297,8 +305,9 @@ int dm_emulate_mmio_post(struct vcpu *vcpu)
 		vcpu->mmio.value = vcpu->req.reqs.mmio_request.value;
 		/* Emulate instruction and update vcpu register set */
 		ret = emulate_instruction(vcpu);
-		if (ret != 0)
+		if (ret != 0) {
 			goto out;
+		}
 	}
 
 out:
@@ -311,16 +320,19 @@ static int dm_emulate_mmio_pre(struct vcpu *vcpu, uint64_t exit_qual)
 
 	if (vcpu->mmio.read_write == HV_MEM_IO_WRITE) {
 		status = emulate_instruction(vcpu);
-		if (status != 0)
+		if (status != 0) {
 			return status;
+		}
 		vcpu->req.reqs.mmio_request.value = vcpu->mmio.value;
 		/* XXX: write access while EPT perm RX -> WP */
-		if ((exit_qual & 0x38UL) == 0x28UL)
+		if ((exit_qual & 0x38UL) == 0x28UL) {
 			vcpu->req.type = REQ_WP;
+		}
 	}
 
-	if (vcpu->req.type == 0U)
+	if (vcpu->req.type == 0U) {
 		vcpu->req.type = REQ_MMIO;
+	}
 	vcpu->req.reqs.mmio_request.direction = vcpu->mmio.read_write;
 	vcpu->req.reqs.mmio_request.address = (long)vcpu->mmio.paddr;
 	vcpu->req.reqs.mmio_request.size = vcpu->mmio.access_size;
@@ -371,22 +383,25 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 	mmio->paddr = gpa;
 
 	ret = decode_instruction(vcpu);
-	if (ret > 0)
+	if (ret > 0) {
 		mmio->access_size = ret;
+	}
 	else if (ret == -EFAULT) {
 		pr_info("page fault happen during decode_instruction");
 		status = 0;
 		goto out;
-	} else
+	}
+	else {
 		goto out;
+	}
 
 	list_for_each(pos, &vcpu->vm->mmio_list) {
 		mmio_handler = list_entry(pos, struct mem_io_node, list);
 		if ((mmio->paddr + mmio->access_size <=
 			mmio_handler->range_start) ||
-			(mmio->paddr >= mmio_handler->range_end))
+			(mmio->paddr >= mmio_handler->range_end)) {
 			continue;
-
+		}
 		else if (!((mmio->paddr >= mmio_handler->range_start) &&
 			(mmio->paddr + mmio->access_size <=
 			mmio_handler->range_end))) {
@@ -396,8 +411,9 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 		}
 
 		if (mmio->read_write == HV_MEM_IO_WRITE) {
-			if (emulate_instruction(vcpu) != 0)
+			if (emulate_instruction(vcpu) != 0) {
 				goto out;
+			}
 		}
 
 		/* Call generic memory emulation handler
@@ -408,8 +424,9 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 		hv_emulate_mmio(vcpu, mmio, mmio_handler);
 		if (mmio->read_write == HV_MEM_IO_READ) {
 			/* Emulate instruction and update vcpu register set */
-			if (emulate_instruction(vcpu) != 0)
+			if (emulate_instruction(vcpu) != 0) {
 				goto out;
+			}
 		}
 
 		status = 0;
@@ -427,8 +444,9 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 		 */
 		(void)memset(&vcpu->req, 0, sizeof(struct vhm_request));
 
-		if (dm_emulate_mmio_pre(vcpu, exit_qual) != 0)
+		if (dm_emulate_mmio_pre(vcpu, exit_qual) != 0) {
 			goto out;
+		}
 
 		status = acrn_insert_request_wait(vcpu, &vcpu->req);
 	}
@@ -489,16 +507,18 @@ int ept_mmap(struct vm *vm, uint64_t hpa,
 		 * to force snooping of PCIe devices if the page
 		 * is cachable
 		 */
-		if ((prot & IA32E_EPT_MT_MASK) != IA32E_EPT_UNCACHED)
+		if ((prot & IA32E_EPT_MT_MASK) != IA32E_EPT_UNCACHED) {
 			prot |= IA32E_EPT_SNOOP_CTRL;
+		}
 		map_mem(&map_params, (void *)hpa,
 			(void *)gpa, size, prot);
 
 	} else if (type == MAP_UNMAP) {
 		unmap_mem(&map_params, (void *)hpa, (void *)gpa,
 				size, prot);
-	} else
+	} else {
 		ASSERT(false, "unknown map type");
+	}
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
