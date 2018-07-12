@@ -76,8 +76,9 @@ vioapic_send_intr(struct vioapic *vioapic, uint8_t pin)
 	bool level, phys;
 	uint8_t pincount = vioapic_pincount(vioapic->vm);
 
-	if (pin >= pincount)
+	if (pin >= pincount) {
 		pr_err("vioapic_send_intr: invalid pin number %hhu", pin);
+	}
 
 	low = vioapic->rtbl[pin].reg;
 	high = vioapic->rtbl[pin].reg >> 32;
@@ -90,8 +91,9 @@ vioapic_send_intr(struct vioapic *vioapic, uint8_t pin)
 	phys = ((low & IOAPIC_RTE_DESTMOD) == IOAPIC_RTE_DESTPHY);
 	delmode = low & IOAPIC_RTE_DELMOD;
 	level = (low & IOAPIC_RTE_TRGRLVL) != 0U ? true : false;
-	if (level)
+	if (level) {
 		vioapic->rtbl[pin].reg |= IOAPIC_RTE_REM_IRR;
+	}
 
 	vector = low & IOAPIC_RTE_INTVEC;
 	dest = high >> APIC_ID_SHIFT;
@@ -105,14 +107,16 @@ vioapic_set_pinstate(struct vioapic *vioapic, uint8_t pin, bool newstate)
 	bool needintr;
 	uint8_t pincount = vioapic_pincount(vioapic->vm);
 
-	if (pin >= pincount)
+	if (pin >= pincount) {
 		pr_err("vioapic_set_pinstate: invalid pin number %hhu", pin);
+	}
 
 	oldcnt = vioapic->rtbl[pin].acnt;
-	if (newstate)
+	if (newstate) {
 		vioapic->rtbl[pin].acnt++;
-	else
+	} else {
 		vioapic->rtbl[pin].acnt--;
+	}
 	newcnt = vioapic->rtbl[pin].acnt;
 
 	if (newcnt < 0) {
@@ -130,8 +134,9 @@ vioapic_set_pinstate(struct vioapic *vioapic, uint8_t pin, bool newstate)
 		    pin, pinstate_str(newstate), newcnt);
 	}
 
-	if (needintr)
+	if (needintr) {
 		vioapic_send_intr(vioapic, pin);
+	}
 }
 
 enum irqstate {
@@ -146,8 +151,9 @@ vioapic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate)
 	struct vioapic *vioapic;
 	uint8_t pin = (uint8_t)irq;
 
-	if (pin >= vioapic_pincount(vm))
+	if (pin >= vioapic_pincount(vm)) {
 		return -EINVAL;
+	}
 
 	vioapic = vm_ioapic(vm);
 
@@ -251,10 +257,11 @@ vioapic_read(struct vioapic *vioapic, uint32_t addr)
 		uint32_t addr_offset = regnum - IOAPIC_REDTBL;
 		uint32_t rte_offset = addr_offset / 2U;
 		pin = (uint8_t)rte_offset;
-		if ((addr_offset % 2U) != 0U)
+		if ((addr_offset % 2U) != 0U) {
 			rshift = 32U;
-		else
+		} else {
 			rshift = 0U;
+		}
 
 		return vioapic->rtbl[pin].reg >> rshift;
 	}
@@ -272,17 +279,20 @@ vioapic_write_eoi(struct vioapic *vioapic, uint32_t vector)
 	struct vm *vm = vioapic->vm;
 	uint8_t pin, pincount;
 
-	if (vector < VECTOR_FOR_INTR_START || vector > NR_MAX_VECTOR)
+	if (vector < VECTOR_FOR_INTR_START || vector > NR_MAX_VECTOR) {
 		pr_err("vioapic_process_eoi: invalid vector %u", vector);
+	}
 
 	VIOAPIC_LOCK(vioapic);
 	pincount = vioapic_pincount(vm);
 	for (pin = 0U; pin < pincount; pin++) {
-		if ((vioapic->rtbl[pin].reg & IOAPIC_RTE_REM_IRR) == 0)
+		if ((vioapic->rtbl[pin].reg & IOAPIC_RTE_REM_IRR) == 0) {
 			continue;
+		}
 		if ((vioapic->rtbl[pin].reg & IOAPIC_RTE_INTVEC) !=
-				(uint64_t)vector)
+				(uint64_t)vector) {
 			continue;
+		}
 
 		vioapic->rtbl[pin].reg &= ~IOAPIC_RTE_REM_IRR;
 		if (vioapic->rtbl[pin].acnt > 0) {
@@ -322,10 +332,11 @@ vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 		uint32_t addr_offset = regnum - IOAPIC_REDTBL;
 		uint32_t rte_offset = addr_offset / 2U;
 		pin = (uint8_t)rte_offset;
-		if ((addr_offset % 2U) != 0U)
+		if ((addr_offset % 2U) != 0U) {
 			lshift = 32;
-		else
+		} else {
 			lshift = 0;
+		}
 
 		last = vioapic->rtbl[pin].reg;
 
@@ -438,21 +449,24 @@ vioapic_mmio_rw(struct vioapic *vioapic, uint64_t gpa,
 	 */
 	if (size != 4 || (offset != IOREGSEL && offset != IOWIN &&
 			offset != IOEOI)) {
-		if (doread)
+		if (doread) {
 			*data = 0UL;
+		}
 		return 0;
 	}
 
 	VIOAPIC_LOCK(vioapic);
 	if (offset == IOREGSEL) {
-		if (doread)
+		if (doread) {
 			*data = vioapic->ioregsel;
-		else
+		} else {
 			vioapic->ioregsel = *data;
+		}
 	} else if (offset == IOEOI) {
 		/* only need to handle write operation */
-		if (!doread)
+		if (!doread) {
 			vioapic_write_eoi(vioapic, *data);
+		}
 	} else {
 		if (doread) {
 			*data = vioapic_read(vioapic, vioapic->ioregsel);
@@ -496,19 +510,22 @@ vioapic_process_eoi(struct vm *vm, uint32_t vector)
 	struct vioapic *vioapic;
 	uint8_t pin, pincount = vioapic_pincount(vm);
 
-	if (vector < VECTOR_FOR_INTR_START || vector > NR_MAX_VECTOR)
+	if (vector < VECTOR_FOR_INTR_START || vector > NR_MAX_VECTOR) {
 		pr_err("vioapic_process_eoi: invalid vector %u", vector);
+	}
 
 	vioapic = vm_ioapic(vm);
 	dev_dbg(ACRN_DBG_IOAPIC, "ioapic processing eoi for vector %u", vector);
 
 	/* notify device to ack if assigned pin */
 	for (pin = 0U; pin < pincount; pin++) {
-		if ((vioapic->rtbl[pin].reg & IOAPIC_RTE_REM_IRR) == 0)
+		if ((vioapic->rtbl[pin].reg & IOAPIC_RTE_REM_IRR) == 0) {
 			continue;
+		}
 		if ((vioapic->rtbl[pin].reg & IOAPIC_RTE_INTVEC) !=
-				(uint64_t)vector)
+				(uint64_t)vector) {
 			continue;
+		}
 		ptdev_intx_ack(vm, pin, PTDEV_VPIN_IOAPIC);
 	}
 
@@ -518,11 +535,13 @@ vioapic_process_eoi(struct vm *vm, uint32_t vector)
 	 */
 	VIOAPIC_LOCK(vioapic);
 	for (pin = 0U; pin < pincount; pin++) {
-		if ((vioapic->rtbl[pin].reg & IOAPIC_RTE_REM_IRR) == 0)
+		if ((vioapic->rtbl[pin].reg & IOAPIC_RTE_REM_IRR) == 0) {
 			continue;
+		}
 		if ((vioapic->rtbl[pin].reg & IOAPIC_RTE_INTVEC) !=
-				(uint64_t)vector)
+				(uint64_t)vector) {
 			continue;
+		}
 
 		vioapic->rtbl[pin].reg &= ~IOAPIC_RTE_REM_IRR;
 		if (vioapic->rtbl[pin].acnt > 0) {
@@ -581,10 +600,11 @@ vioapic_cleanup(struct vioapic *vioapic)
 uint8_t
 vioapic_pincount(struct vm *vm)
 {
-	if (is_vm0(vm))
+	if (is_vm0(vm)) {
 		return REDIR_ENTRIES_HW;
-	else
+	} else {
 		return VIOAPIC_RTE_NUM;
+	}
 }
 
 int vioapic_mmio_access_handler(struct vcpu *vcpu, struct mem_io *mmio,
@@ -625,8 +645,9 @@ bool vioapic_get_rte(struct vm *vm, uint8_t pin, void *rte)
 	if ((vioapic != NULL) && (rte != NULL)) {
 		*(uint64_t *)rte = vioapic->rtbl[pin].reg;
 		return true;
-	} else
+	} else {
 		return false;
+	}
 }
 
 #ifdef HV_DEBUG

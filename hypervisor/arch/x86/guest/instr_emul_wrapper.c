@@ -28,10 +28,13 @@ int vm_get_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t *retval)
 {
 	struct run_context *cur_context;
 
-	if (vcpu == NULL)
+	if (vcpu == NULL) {
 		return -EINVAL;
-	if ((reg >= CPU_REG_LAST) || (reg < CPU_REG_RAX))
+	}
+
+	if ((reg >= CPU_REG_LAST) || (reg < CPU_REG_RAX)) {
 		return -EINVAL;
+	}
 
 	if ((reg >= CPU_REG_RAX) && (reg <= CPU_REG_RDI)) {
 		cur_context =
@@ -40,10 +43,11 @@ int vm_get_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t *retval)
 	} else if ((reg > CPU_REG_RDI) && (reg < CPU_REG_LAST)) {
 		uint32_t field = get_vmcs_field(reg);
 
-		if (field != VMX_INVALID_VMCS_FIELD)
+		if (field != VMX_INVALID_VMCS_FIELD) {
 			*retval = exec_vmread(field);
-		else
+		} else {
 			return -EINVAL;
+		}
 	}
 
 	return 0;
@@ -53,10 +57,13 @@ int vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t val)
 {
 	struct run_context *cur_context;
 
-	if (vcpu == NULL)
+	if (vcpu == NULL) {
 		return -EINVAL;
-	if ((reg >= CPU_REG_LAST) || (reg < CPU_REG_RAX))
+	}
+
+	if ((reg >= CPU_REG_LAST) || (reg < CPU_REG_RAX)) {
 		return -EINVAL;
+	}
 
 	if ((reg >= CPU_REG_RAX) && (reg <= CPU_REG_RDI)) {
 		cur_context =
@@ -65,10 +72,11 @@ int vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t val)
 	} else if ((reg > CPU_REG_RDI) && (reg < CPU_REG_LAST)) {
 		uint32_t field = get_vmcs_field(reg);
 
-		if (field != VMX_INVALID_VMCS_FIELD)
+		if (field != VMX_INVALID_VMCS_FIELD) {
 			exec_vmwrite(field, val);
-		else
+		} else {
 			return -EINVAL;
+		}
 	}
 
 	return 0;
@@ -80,15 +88,18 @@ int vm_set_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
 	int error;
 	uint32_t base, limit, access;
 
-	if ((vcpu == NULL) || (ret_desc == NULL))
+	if ((vcpu == NULL) || (ret_desc == NULL)) {
 		return -EINVAL;
+	}
 
-	if (!is_segment_register(seg) && !is_descriptor_table(seg))
+	if (!is_segment_register(seg) && !is_descriptor_table(seg)) {
 		return -EINVAL;
+	}
 
 	error = encode_vmcs_seg_desc(seg, &base, &limit, &access);
-	if ((error != 0) || (access == 0xffffffffU))
+	if ((error != 0) || (access == 0xffffffffU)) {
 		return -EINVAL;
+	}
 
 	exec_vmwrite(base, ret_desc->base);
 	exec_vmwrite(limit, ret_desc->limit);
@@ -103,15 +114,18 @@ int vm_get_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
 	int error;
 	uint32_t base, limit, access;
 
-	if ((vcpu == NULL) || (desc == NULL))
+	if ((vcpu == NULL) || (desc == NULL)) {
 		return -EINVAL;
+	}
 
-	if (!is_segment_register(seg) && !is_descriptor_table(seg))
+	if (!is_segment_register(seg) && !is_descriptor_table(seg)) {
 		return -EINVAL;
+	}
 
 	error = encode_vmcs_seg_desc(seg, &base, &limit, &access);
-	if ((error != 0) || (access == 0xffffffffU))
+	if ((error != 0) || (access == 0xffffffffU)) {
 		return -EINVAL;
+	}
 
 	desc->base = exec_vmread(base);
 	desc->limit = (uint32_t)exec_vmread(limit);
@@ -276,8 +290,9 @@ static void get_guest_paging_info(struct vcpu *vcpu, struct emul_ctxt *emul_ctxt
 static int mmio_read(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t *rval,
 		__unused uint8_t size, __unused void *arg)
 {
-	if (vcpu == NULL)
+	if (vcpu == NULL) {
 		return -EINVAL;
+	}
 
 	*rval = vcpu->mmio.value;
 	return 0;
@@ -286,8 +301,9 @@ static int mmio_read(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t *rval,
 static int mmio_write(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t wval,
 		__unused uint8_t size, __unused void *arg)
 {
-	if (vcpu == NULL)
+	if (vcpu == NULL) {
 		return -EINVAL;
+	}
 
 	vcpu->mmio.value = wval;
 	return 0;

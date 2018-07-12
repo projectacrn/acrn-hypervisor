@@ -42,8 +42,9 @@ void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 	if (err == -EFAULT) {
 		vcpu_inject_pf(vcpu, gva, err_code);
 		return;
-	} else if (err < 0)
+	} else if (err < 0) {
 		return;
+	}
 
 	data_size = UCODE_GET_DATA_SIZE(uhdr) + sizeof(struct ucode_header);
 	data_page_num =
@@ -58,8 +59,9 @@ void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 	if (err == -EFAULT) {
 		vcpu_inject_pf(vcpu, gva, err_code);
 		return;
-	} else if (err < 0)
+	} else if (err < 0) {
 		return;
+	}
 
 	msr_write(MSR_IA32_BIOS_UPDT_TRIG,
 			(uint64_t)ucode_ptr + sizeof(struct ucode_header));
