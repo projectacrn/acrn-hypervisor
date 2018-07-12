@@ -13,7 +13,6 @@ Developer Guides
    APL_GVT-g-hld.rst
    ../api/index.rst
    ../reference/kconfig/index.rst
-   trusty.rst
 
 
 Contributing to the project
