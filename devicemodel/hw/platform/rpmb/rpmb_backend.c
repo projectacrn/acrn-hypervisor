@@ -180,6 +180,7 @@ static int rpmb_check_frame(const char *cmd_str, int *err,
 {
 	uint32_t i;
 	uint8_t mac[32];
+	size_t len;
 
 	for (i = 0; i < frame_cnt; i++) {
 		if (write_counter && *write_counter != swap32(frames[i].write_counter)) {
@@ -203,7 +204,11 @@ static int rpmb_check_frame(const char *cmd_str, int *err,
 		return -1;
 	}
 
-	if (addr && !memcmp(cmd_str, WRITE_DATA_STR, sizeof(WRITE_DATA_STR))) {
+	len = strlen(cmd_str) + 1;
+	if (len > sizeof(WRITE_DATA_STR))
+		len = sizeof(WRITE_DATA_STR);
+
+	if (addr && !memcmp(cmd_str, WRITE_DATA_STR, len)) {
 		if (*addr < get_common_blocks()) {
 			*err = RPMB_RES_WRITE_FAILURE;
 			DPRINTF(("%s: Common block is read only\n", cmd_str));
