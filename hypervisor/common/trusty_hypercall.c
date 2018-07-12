@@ -55,8 +55,9 @@ int64_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param)
 		return -EPERM;
 	}
 
-	if (!initialize_trusty(vcpu, param))
+	if (!initialize_trusty(vcpu, param)) {
 		return -ENODEV;
+	}
 
 	return 0;
 }

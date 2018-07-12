@@ -41,8 +41,9 @@ inline struct vcpu *vcpu_from_vid(struct vm *vm, uint16_t vcpu_id)
 	struct vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
-		if (vcpu->vcpu_id == vcpu_id)
+		if (vcpu->vcpu_id == vcpu_id) {
 			return vcpu;
+		}
 	}
 
 	return NULL;
@@ -54,8 +55,9 @@ inline struct vcpu *vcpu_from_pid(struct vm *vm, uint16_t pcpu_id)
 	struct vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
-		if (vcpu->pcpu_id == pcpu_id)
+		if (vcpu->pcpu_id == pcpu_id) {
 			return vcpu;
+		}
 	}
 
 	return NULL;
@@ -67,8 +69,9 @@ inline struct vcpu *get_primary_vcpu(struct vm *vm)
 	struct vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
-		if (is_vcpu_bsp(vcpu))
+		if (is_vcpu_bsp(vcpu)) {
 			return vcpu;
+		}
 	}
 
 	return NULL;
@@ -97,8 +100,9 @@ inline bool vm_lapic_disabled(struct vm *vm)
 	struct vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
-		if (vlapic_enabled(vcpu->arch_vcpu.vlapic))
+		if (vlapic_enabled(vcpu->arch_vcpu.vlapic)) {
 			return false;
+		}
 	}
 
 	return true;
@@ -112,16 +116,20 @@ enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 
 	cpu_mode = get_vcpu_mode(vcpu);
 
-	if (cpu_mode == CPU_MODE_REAL)
+	if (cpu_mode == CPU_MODE_REAL) {
 		return PAGING_MODE_0_LEVEL;
+	}
 	else if (cpu_mode == CPU_MODE_PROTECTED) {
-		if ((cur_context->cr4 & CR4_PAE) != 0U)
+		if ((cur_context->cr4 & CR4_PAE) != 0U) {
 			return PAGING_MODE_3_LEVEL;
-		else if ((cur_context->cr0 & CR0_PG) != 0U)
+		}
+		else if ((cur_context->cr0 & CR0_PG) != 0U) {
 			return PAGING_MODE_2_LEVEL;
+		}
 		return PAGING_MODE_0_LEVEL;
-	} else	/* compatibility or 64bit mode */
+	} else {	/* compatibility or 64bit mode */
 		return PAGING_MODE_4_LEVEL;
+	}
 }
 
 /* TODO: Add code to check for Revserved bits, SMAP and PKE when do translation
@@ -138,8 +146,9 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 	int ret = 0;
 	int fault = 0;
 
-	if (pw_info->level < 1)
+	if (pw_info->level < 1) {
 		return -EINVAL;
+	}
 
 	addr = pw_info->top_entry;
 	i = pw_info->level;
@@ -157,11 +166,12 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 		index = (gva >> shift) & ((1UL << pw_info->width) - 1UL);
 		page_size = 1UL << shift;
 
-		if (pw_info->width == 10U)
+		if (pw_info->width == 10U) {
 			/* 32bit entry */
 			entry = *((uint32_t *)(base + 4U * index));
-		else
+		} else {
 			entry = *((uint64_t *)(base + 8U * index));
+		}
 
 		/* check if the entry present */
 		if ((entry & MMU_32BIT_PDE_P) == 0U) {
@@ -172,21 +182,25 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 		if (pw_info->is_write_access && ((entry & MMU_32BIT_PDE_RW) == 0U)) {
 			/* Case1: Supermode and wp is 1
 			 * Case2: Usermode */
-			if (!(!pw_info->is_user_mode && !pw_info->wp))
+			if (!(!pw_info->is_user_mode && !pw_info->wp)) {
 				fault = 1;
+			}
 		}
 		/* check for nx, since for 32-bit paing, the XD bit is
 		 * reserved(0), use the same logic as PAE/4-level paging */
 		if (pw_info->is_inst_fetch && pw_info->nxe &&
-		    ((entry & MMU_MEM_ATTR_BIT_EXECUTE_DISABLE) != 0U))
+		    ((entry & MMU_MEM_ATTR_BIT_EXECUTE_DISABLE) != 0U)) {
 			fault = 1;
+		}
 
 		/* check for U/S */
-		if (((entry & MMU_32BIT_PDE_US) == 0U) && pw_info->is_user_mode)
+		if (((entry & MMU_32BIT_PDE_US) == 0U) && pw_info->is_user_mode) {
 			fault = 1;
+		}
 
-		if (pw_info->pse && (i > 0 && ((entry & MMU_32BIT_PDE_PS) != 0U)))
+		if (pw_info->pse && (i > 0 && ((entry & MMU_32BIT_PDE_PS) != 0U))) {
 			break;
+		}
 		addr = entry;
 	}
 
@@ -263,8 +277,9 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	struct page_walk_info pw_info;
 	int ret = 0;
 
-	if ((gpa == NULL) || (err_code == NULL))
+	if ((gpa == NULL) || (err_code == NULL)) {
 		return -EINVAL;
+	}
 	*gpa = 0UL;
 
 	pw_info.top_entry = cur_context->cr3;
@@ -290,12 +305,14 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 		pw_info.pse = ((cur_context->cr4 & CR4_PSE) != 0UL);
 		pw_info.nxe = false;
 		ret = _gva2gpa_common(vcpu, &pw_info, gva, gpa, err_code);
-	} else
+	} else {
 		*gpa = gva;
+	}
 
 	if (ret == -EFAULT) {
-		if (pw_info.is_user_mode)
+		if (pw_info.is_user_mode) {
 			*err_code |= PAGE_FAULT_US_FLAG;
+		}
 	}
 
 	return ret;
@@ -314,8 +331,9 @@ static inline uint32_t _copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 		return 0;
 	}
 
-	if (fix_pg_size != 0U)
+	if (fix_pg_size != 0U) {
 		pg_size = fix_pg_size;
+	}
 
 	offset_in_pg = (uint32_t)gpa & (pg_size - 1U);
 	len = (size > (pg_size - offset_in_pg)) ?
@@ -323,10 +341,11 @@ static inline uint32_t _copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 
 	g_ptr = HPA2HVA(hpa);
 
-	if (cp_from_vm)
+	if (cp_from_vm) {
 		(void)memcpy_s(h_ptr, len, g_ptr, len);
-	else
+	} else {
 		(void)memcpy_s(g_ptr, len, h_ptr, len);
+	}
 
 	return len;
 }
@@ -343,8 +362,9 @@ static inline int copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 
 	while (size > 0U) {
 		len = _copy_gpa(vm, h_ptr, gpa, size, 0U, cp_from_vm);
-		if (len == 0U)
+		if (len == 0U) {
 			return -EINVAL;
+		}
 
 		gpa += len;
 		h_ptr += len;
@@ -380,8 +400,10 @@ static inline int copy_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
 
 		len = _copy_gpa(vcpu->vm, h_ptr, gpa, size,
 			PAGE_SIZE_4K, cp_from_vm);
-		if (len == 0U)
+
+		if (len == 0U) {
 			return -EINVAL;
+		}
 
 		gva += len;
 		h_ptr += len;
@@ -456,8 +478,9 @@ void init_e820(void)
 					mmap[i].baseaddr, mmap[i].length);
 			}
 		}
-	} else
+	} else {
 		ASSERT(false, "no multiboot info found");
+	}
 }
 
 
@@ -474,8 +497,9 @@ void obtain_e820_mem_info(void)
 
 	for (i = 0U; i < e820_entries; i++) {
 		entry = &e820[i];
-		if (e820_mem.mem_bottom > entry->baseaddr)
+		if (e820_mem.mem_bottom > entry->baseaddr) {
 			e820_mem.mem_bottom = entry->baseaddr;
+		}
 
 		if (entry->baseaddr + entry->length
 				> e820_mem.mem_top) {
@@ -595,9 +619,10 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 	/* update ram entries to WB attr */
 	for (i = 0U; i < e820_entries; i++) {
 		entry = &e820[i];
-		if (entry->type == E820_TYPE_RAM)
+		if (entry->type == E820_TYPE_RAM) {
 			ept_mmap(vm, entry->baseaddr, entry->baseaddr,
 					entry->length, MAP_MEM, attr_wb);
+		}
 	}
 
 	dev_dbg(ACRN_DBG_GUEST, "VM0 e820 layout:\n");

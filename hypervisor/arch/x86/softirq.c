@@ -47,22 +47,25 @@ void exec_softirq(void)
 	if (cpu_id >= phys_cpu_num)
 		return;
 
-	if (((*bitmap) & SOFTIRQ_MASK) == 0UL)
+	if (((*bitmap) & SOFTIRQ_MASK) == 0UL) {
 		return;
+	}
 
 	/* Disable softirq
 	 * SOFTIRQ_ATOMIC bit = 0 means softirq already in execution
 	 */
-	if (!bitmap_test_and_clear(SOFTIRQ_ATOMIC, bitmap))
+	if (!bitmap_test_and_clear(SOFTIRQ_ATOMIC, bitmap)) {
 		return;
+	}
 
 again:
 	CPU_IRQ_ENABLE();
 
 	while (1) {
 		softirq_id = ffs64(*bitmap);
-		if ((softirq_id == INVALID_BIT_INDEX) || (softirq_id >= SOFTIRQ_MAX))
+		if ((softirq_id == INVALID_BIT_INDEX) || (softirq_id >= SOFTIRQ_MAX)) {
 			break;
+		}
 
 		bitmap_clear(softirq_id, bitmap);
 
@@ -81,8 +84,9 @@ again:
 
 	CPU_IRQ_DISABLE();
 
-	if (((*bitmap) & SOFTIRQ_MASK) != 0U)
+	if (((*bitmap) & SOFTIRQ_MASK) != 0U) {
 		goto again;
+	}
 
 	enable_softirq(cpu_id);
 }

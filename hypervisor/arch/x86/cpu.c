@@ -69,8 +69,9 @@ inline bool cpu_has_cap(uint32_t bit)
 	uint32_t feat_idx = bit >> 5U;
 	uint32_t feat_bit = bit & 0x1fU;
 
-	if (feat_idx >= FEATURE_WORDS)
+	if (feat_idx >= FEATURE_WORDS) {
 		return false;
+	}
 
 	return ((boot_cpu_data.cpuid_leaves[feat_idx] & (1U << feat_bit)) != 0U);
 }
@@ -82,8 +83,9 @@ static inline bool get_monitor_cap(void)
 		 * in hypervisor, but still expose it to the guests and
 		 * let them handle it correctly
 		 */
-		if (boot_cpu_data.family != 0x6U || boot_cpu_data.model != 0x5cU)
+		if (boot_cpu_data.family != 0x6U || boot_cpu_data.model != 0x5cU) {
 			return true;
+		}
 	}
 
 	return false;
@@ -107,13 +109,15 @@ static void get_cpu_capabilities(void)
 		&boot_cpu_data.cpuid_leaves[FEAT_1_ECX],
 		&boot_cpu_data.cpuid_leaves[FEAT_1_EDX]);
 	family = (eax >> 8U) & 0xffU;
-	if (family == 0xFU)
+	if (family == 0xFU) {
 		family += (eax >> 20U) & 0xffU;
+	}
 	boot_cpu_data.family = (uint8_t)family;
 
 	model = (eax >> 4U) & 0xfU;
-	if (family >= 0x06U)
+	if (family >= 0x06U) {
 		model += ((eax >> 16U) & 0xfU) << 4U;
+	}
 	boot_cpu_data.model = (uint8_t)model;
 
 
@@ -126,10 +130,11 @@ static void get_cpu_capabilities(void)
 		&boot_cpu_data.extended_cpuid_level,
 		&unused, &unused, &unused);
 
-	if (boot_cpu_data.extended_cpuid_level >= CPUID_EXTEND_FUNCTION_1)
+	if (boot_cpu_data.extended_cpuid_level >= CPUID_EXTEND_FUNCTION_1) {
 		cpuid(CPUID_EXTEND_FUNCTION_1, &unused, &unused,
 			&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_ECX],
 			&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_EDX]);
+	}
 
 	if (boot_cpu_data.extended_cpuid_level >= CPUID_EXTEND_ADDRESS_SIZE) {
 		cpuid(CPUID_EXTEND_ADDRESS_SIZE, &eax,
@@ -230,8 +235,9 @@ static int hardware_detect_support(void)
 	}
 
 	ret = check_vmx_mmu_cap();
-	if (ret != 0)
+	if (ret != 0) {
 		return ret;
+	}
 
 	pr_acrnlog("hardware support HV");
 	return 0;
@@ -304,8 +310,9 @@ static void cpu_set_current_state(uint16_t pcpu_id, enum cpu_state state)
 	}
 
 	/* If cpu is dead, decrement CPU up count */
-	if (state == CPU_STATE_DEAD)
+	if (state == CPU_STATE_DEAD) {
 		up_count--;
+	}
 
 	/* Set state for the specified CPU */
 	per_cpu(state, pcpu_id) = state;
@@ -433,8 +440,9 @@ void bsp_boot_init(void)
 	__bitmap_set(BOOT_CPU_ID, &pcpu_active_bitmap);
 
 	misc_en = msr_read(MSR_IA32_MISC_ENABLE);
-	if ((misc_en & TURBO_MODE_DISABLE) == 0)
+	if ((misc_en & TURBO_MODE_DISABLE) == 0) {
 		msr_write(MSR_IA32_MISC_ENABLE, misc_en | TURBO_MODE_DISABLE);
+	}
 
 	/* Get CPU capabilities thru CPUID, including the physical address bit
 	 * limit which is required for initializing paging.
@@ -550,8 +558,9 @@ static void bsp_boot_post(void)
 	console_setup_timer();
 
 	/* Start initializing the VM for this CPU */
-	if (hv_main(BOOT_CPU_ID) != 0)
+	if (hv_main(BOOT_CPU_ID) != 0) {
 		panic("failed to start VM for bsp\n");
+	}
 
 	/* Control should not come here */
 	cpu_dead(BOOT_CPU_ID);
@@ -583,8 +592,9 @@ void cpu_secondary_init(void)
 	__bitmap_set(get_cpu_id(), &pcpu_active_bitmap);
 
 	misc_en = msr_read(MSR_IA32_MISC_ENABLE);
-	if ((misc_en & TURBO_MODE_DISABLE) == 0)
+	if ((misc_en & TURBO_MODE_DISABLE) == 0) {
 		msr_write(MSR_IA32_MISC_ENABLE, misc_en | TURBO_MODE_DISABLE);
+	}
 
 	/* Switch to run-time stack */
 	rsp = (uint64_t)(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
@@ -623,8 +633,9 @@ static void cpu_secondary_post(void)
 	pcpu_sync_sleep(&pcpu_sync, 0UL);
 
 	ret = hv_main(get_cpu_id());
-	if (ret != 0)
+	if (ret != 0) {
 		panic("hv_main ret = %d\n", ret);
+	}
 
 	/* Control will only come here for secondary CPUs not configured for
 	 * use or if an error occurs in hv_main
@@ -637,8 +648,9 @@ static uint16_t get_cpu_id_from_lapic_id(uint8_t lapic_id)
 	uint16_t i;
 
 	for (i = 0U; i < phys_cpu_num; i++) {
-		if (per_cpu(lapic_id, i) == lapic_id)
+		if (per_cpu(lapic_id, i) == lapic_id) {
 			return i;
+		}
 	}
 
 	return INVALID_CPU_ID;
@@ -697,8 +709,9 @@ void stop_cpus()
 
 	timeout = CONFIG_CPU_UP_TIMEOUT * 1000U;
 	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
-		if (get_cpu_id() == pcpu_id)	/* avoid offline itself */
+		if (get_cpu_id() == pcpu_id) {	/* avoid offline itself */
 			continue;
+		}
 
 		make_pcpu_offline(pcpu_id);
 	}
@@ -833,19 +846,22 @@ static void vapic_cap_detect(void)
 	}
 	features |= VAPIC_FEATURE_VIRT_ACCESS;
 
-	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC_REGS))
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC_REGS)) {
 		features |= VAPIC_FEATURE_VIRT_REG;
+	}
 
-	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VX2APIC))
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VX2APIC)) {
 		features |= VAPIC_FEATURE_VX2APIC_MODE;
+	}
 
 	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VIRQ)) {
 		features |= VAPIC_FEATURE_INTR_DELIVERY;
 
 		msr_val = msr_read(MSR_IA32_VMX_PINBASED_CTLS);
 		if (is_ctrl_setting_allowed(msr_val,
-						VMX_PINBASED_CTLS_POST_IRQ))
+						VMX_PINBASED_CTLS_POST_IRQ)) {
 			features |= VAPIC_FEATURE_POST_INTR;
+		}
 	}
 
 	cpu_caps.vapic_features = features;
@@ -880,9 +896,10 @@ static void cpu_xsave_init(void)
 			cpuid(CPUID_FEATURES, &unused, &unused, &ecx, &unused);
 
 			/* if set, update it */
-			if ((ecx & CPUID_ECX_OSXSAVE) != 0U)
+			if ((ecx & CPUID_ECX_OSXSAVE) != 0U) {
 				boot_cpu_data.cpuid_leaves[FEAT_1_ECX] |=
 						CPUID_ECX_OSXSAVE;
+			}
 		}
 	}
 }

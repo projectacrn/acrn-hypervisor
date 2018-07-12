@@ -37,8 +37,9 @@ uint16_t allocate_pcpu(void)
 	uint16_t i;
 
 	for (i = 0U; i < phys_cpu_num; i++) {
-		if (bitmap_test_and_set(i, &pcpu_used_bitmap) == 0)
+		if (bitmap_test_and_set(i, &pcpu_used_bitmap) == 0) {
 			return i;
+		}
 	}
 
 	return INVALID_CPU_ID;
@@ -59,9 +60,10 @@ void add_vcpu_to_runqueue(struct vcpu *vcpu)
 	int pcpu_id = vcpu->pcpu_id;
 
 	spinlock_obtain(&per_cpu(sched_ctx, pcpu_id).runqueue_lock);
-	if (list_empty(&vcpu->run_list))
+	if (list_empty(&vcpu->run_list)) {
 		list_add_tail(&vcpu->run_list,
 			&per_cpu(sched_ctx, pcpu_id).runqueue);
+	}
 	spinlock_release(&per_cpu(sched_ctx, pcpu_id).runqueue_lock);
 }
 
@@ -104,8 +106,9 @@ int need_reschedule(uint16_t pcpu_id)
 static void context_switch_out(struct vcpu *vcpu)
 {
 	/* if it's idle thread, no action for switch out */
-	if (vcpu == NULL)
+	if (vcpu == NULL) {
 		return;
+	}
 
 	/* cancel event(int, gp, nmi and exception) injection */
 	cancel_event_injection(vcpu);
@@ -124,8 +127,9 @@ static void context_switch_in(struct vcpu *vcpu)
 	get_cpu_var(sched_ctx).curr_vcpu = vcpu;
 
 	/* if it's idle thread, no action for switch out */
-	if (vcpu == NULL)
+	if (vcpu == NULL) {
 		return;
+	}
 
 	atomic_store(&vcpu->running, 1);
 	/* FIXME:
@@ -154,12 +158,13 @@ void default_idle(void)
 	uint16_t pcpu_id = get_cpu_id();
 
 	while (1) {
-		if (need_reschedule(pcpu_id) != 0)
+		if (need_reschedule(pcpu_id) != 0) {
 			schedule();
-		else if (need_offline(pcpu_id) != 0)
+		} else if (need_offline(pcpu_id) != 0) {
 			cpu_dead(pcpu_id);
-		else
+		} else {
 			__asm __volatile("pause" ::: "memory");
+		}
 	}
 }
 

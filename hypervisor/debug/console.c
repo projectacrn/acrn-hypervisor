@@ -23,8 +23,9 @@ static void print_char(char x)
 {
 	serial_puts(serial_handle, &x, 1);
 
-	if (x == '\n')
+	if (x == '\n') {
 		serial_puts(serial_handle, "\r", 1);
+	}
 }
 
 int console_init(void)
@@ -154,10 +155,12 @@ void console_dump_bytes(const void *p, unsigned int len)
 
 		/* print one row as ASCII characters (if possible) */
 		for (i = 0; i < 16; i++) {
-			if ((x[i] < ' ') || (x[i] >= 127))
+			if ((x[i] < ' ') || (x[i] >= 127)) {
 				console_putc('.');
-			else
+			}
+			else {
 				console_putc(x[i]);
+			}
 		}
 		/* continue with next row */
 		console_putc('\n');
@@ -217,6 +220,7 @@ void console_setup_timer(void)
 			fire_tsc, TICK_MODE_PERIODIC, period_in_cycle);
 
 	/* Start an periodic timer */
-	if (add_timer(&console_timer) != 0)
+	if (add_timer(&console_timer) != 0) {
 		pr_err("Failed to add console kick timer");
+	}
 }

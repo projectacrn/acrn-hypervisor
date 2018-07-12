@@ -24,12 +24,14 @@ int dm_emulate_pio_post(struct vcpu *vcpu)
 	/* VHM emulation data already copy to req, mark to free slot now */
 	req_buf->req_queue[cur].valid = false;
 
-	if (req_buf->req_queue[cur].processed != REQ_STATE_SUCCESS)
+	if (req_buf->req_queue[cur].processed != REQ_STATE_SUCCESS) {
 		return -1;
+	}
 
-	if (vcpu->req.reqs.pio_request.direction == REQUEST_READ)
+	if (vcpu->req.reqs.pio_request.direction == REQUEST_READ) {
 		*rax = ((*rax) & ~mask) |
 			(vcpu->req.reqs.pio_request.value & mask);
+	}
 
 	return 0;
 }
@@ -38,10 +40,11 @@ static void dm_emulate_pio_pre(struct vcpu *vcpu, uint64_t exit_qual,
 				uint32_t sz, uint64_t req_value)
 {
 	vcpu->req.type = REQ_PORTIO;
-	if (VM_EXIT_IO_INSTRUCTION_ACCESS_DIRECTION(exit_qual) != 0U)
+	if (VM_EXIT_IO_INSTRUCTION_ACCESS_DIRECTION(exit_qual) != 0U) {
 		vcpu->req.reqs.pio_request.direction = REQUEST_READ;
-	else
+	} else {
 		vcpu->req.reqs.pio_request.direction = REQUEST_WRITE;
+	}
 
 	vcpu->req.reqs.pio_request.address =
 		VM_EXIT_IO_INSTRUCTION_PORT_NUMBER(exit_qual);
@@ -77,9 +80,9 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 			handler; handler = handler->next) {
 
 		if ((port >= handler->desc.addr + handler->desc.len) ||
-				(port + sz <= handler->desc.addr))
+				(port + sz <= handler->desc.addr)) {
 			continue;
-		else if (!((port >= handler->desc.addr) && ((port + sz)
+		} else if (!((port >= handler->desc.addr) && ((port + sz)
 				<= (handler->desc.addr + handler->desc.len)))) {
 			pr_fatal("Err:IO, port 0x%04x, size=%u spans devices",
 					port, sz);
@@ -129,8 +132,9 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 
 static void register_io_handler(struct vm *vm, struct vm_io_handler *hdlr)
 {
-	if (vm->arch_vm.io_handler != NULL)
+	if (vm->arch_vm.io_handler != NULL) {
 		hdlr->next = vm->arch_vm.io_handler;
+	}
 
 	vm->arch_vm.io_handler = hdlr;
 }
@@ -165,8 +169,9 @@ void allow_guest_io_access(struct vm *vm, uint32_t address, uint32_t nbytes)
 
 	b = vm->arch_vm.iobitmap[0];
 	for (i = 0U; i < nbytes; i++) {
-		if ((address & 0x8000U) != 0U)
+		if ((address & 0x8000U) != 0U) {
 			b = vm->arch_vm.iobitmap[1];
+		}
 		a = address & 0x7fffU;
 		b[a >> 5] &= ~(1 << (a & 0x1fU));
 		address++;
@@ -181,8 +186,9 @@ static void deny_guest_io_access(struct vm *vm, uint32_t address, uint32_t nbyte
 
 	b = vm->arch_vm.iobitmap[0];
 	for (i = 0U; i < nbytes; i++) {
-		if ((address & 0x8000U) != 0U)
+		if ((address & 0x8000U) != 0U) {
 			b = vm->arch_vm.iobitmap[1];
+		}
 		a = address & 0x7fffU;
 		b[a >> 5U] |= (1U << (a & 0x1fU));
 		address++;
@@ -240,8 +246,9 @@ void register_io_emulation_handler(struct vm *vm, struct vm_io_range *range,
 		return;
 	}
 
-	if (is_vm0(vm))
+	if (is_vm0(vm)) {
 		deny_guest_io_access(vm, range->base, range->len);
+	}
 
 	handler = create_io_handler(range->base,
 			range->len, io_read_fn_ptr, io_write_fn_ptr);

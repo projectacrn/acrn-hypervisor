@@ -88,8 +88,9 @@ int udiv64(uint64_t dividend, uint64_t divisor, struct udiv_result *res)
 	/* simplified case: only 32 bit operands Note that the preconditions
 	 * for do_udiv32() are fulfilled, since the tests were made above.
 	 */
-	if (((divisor >> 32UL) == 0UL) && ((dividend >> 32UL) == 0UL))
+	if (((divisor >> 32UL) == 0UL) && ((dividend >> 32UL) == 0UL)) {
 		return do_udiv32((uint32_t) dividend, (uint32_t) divisor, res);
+	}
 
 	/* dividend is always greater than or equal to the divisor. Neither
 	 * divisor nor dividend are 0. Thus: * clz(dividend) and clz(divisor)

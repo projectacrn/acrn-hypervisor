@@ -15,31 +15,37 @@ static inline struct vcpuid_entry *find_vcpuid_entry(struct vcpu *vcpu,
 
 	nr = vm->vcpuid_entry_nr;
 	half = nr / 2U;
-	if (vm->vcpuid_entries[half].leaf < leaf)
+	if (vm->vcpuid_entries[half].leaf < leaf) {
 		i = half;
+	}
 
 	for (; i < nr; i++) {
 		struct vcpuid_entry *tmp = &vm->vcpuid_entries[i];
 
-		if (tmp->leaf < leaf)
+		if (tmp->leaf < leaf) {
 			continue;
+		}
 		if (tmp->leaf == leaf) {
 			if ((tmp->flags & CPUID_CHECK_SUBLEAF) != 0U &&
-				(tmp->subleaf != subleaf))
+				(tmp->subleaf != subleaf)) {
 				continue;
+			}
 			entry = tmp;
 			break;
-		} else if (tmp->leaf > leaf)
+		} else if (tmp->leaf > leaf) {
 			break;
+		}
 	}
 
 	if (entry == NULL) {
 		uint32_t limit;
 
-		if ((leaf & 0x80000000U) != 0U)
+		if ((leaf & 0x80000000U) != 0U) {
 			limit = vm->vcpuid_xlevel;
-		else
+		}
+		else {
 			limit = vm->vcpuid_level;
+		}
 
 		if (leaf > limit) {
 			/* Intel documentation states that invalid EAX input
@@ -163,15 +169,17 @@ int set_vcpuid_entries(struct vm *vm)
 
 	init_vcpuid_entry(vm, 0U, 0U, 0U, &entry);
 	result = set_vcpuid_entry(vm, &entry);
-	if (result != 0)
+	if (result != 0) {
 		return result;
+	}
 	limit = entry.eax;
 	vm->vcpuid_level = limit;
 
 	for (i = 1U; i <= limit; i++) {
 		/* cpuid 1/0xb is percpu related */
-		if (i == 1U || i == 0xbU)
+		if (i == 1U || i == 0xbU) {
 			continue;
+		}
 
 		switch (i) {
 		case 0x02U:
@@ -181,16 +189,18 @@ int set_vcpuid_entries(struct vm *vm)
 			init_vcpuid_entry(vm, i, 0U,
 				CPUID_CHECK_SUBLEAF, &entry);
 			result = set_vcpuid_entry(vm, &entry);
-			if (result != 0)
+			if (result != 0) {
 				return result;
+			}
 
 			times = entry.eax & 0xffUL;
 			for (j = 1U; j < times; j++) {
 				init_vcpuid_entry(vm, i, j,
 					CPUID_CHECK_SUBLEAF, &entry);
 				result = set_vcpuid_entry(vm, &entry);
-				if (result != 0)
+				if (result != 0) {
 					return result;
+				}
 			}
 			break;
 		}
@@ -198,52 +208,61 @@ int set_vcpuid_entries(struct vm *vm)
 		case 0x04U:
 		case 0x0dU:
 			for (j = 0U; ; j++) {
-				if (i == 0x0dU && j == 64U)
+				if (i == 0x0dU && j == 64U) {
 					break;
+				}
 
 				init_vcpuid_entry(vm, i, j,
 					CPUID_CHECK_SUBLEAF, &entry);
-				if (i == 0x04U && entry.eax == 0U)
+				if (i == 0x04U && entry.eax == 0U) {
 					break;
-				if (i == 0x0dU && entry.eax == 0U)
+				}
+				if (i == 0x0dU && entry.eax == 0U) {
 					continue;
+				}
 				result = set_vcpuid_entry(vm, &entry);
-				if (result != 0)
+				if (result != 0) {
 					return result;
+				}
 			}
 			break;
 
 		default:
 			init_vcpuid_entry(vm, i, 0U, 0U, &entry);
 			result = set_vcpuid_entry(vm, &entry);
-			if (result != 0)
+			if (result != 0) {
 				return result;
+			}
 			break;
 		}
 	}
 
 	init_vcpuid_entry(vm, 0x40000000U, 0U, 0U, &entry);
 	result = set_vcpuid_entry(vm, &entry);
-	if (result != 0)
+	if (result != 0) {
 		return result;
+	}
 
 	init_vcpuid_entry(vm, 0x40000010U, 0U, 0U, &entry);
 	result = set_vcpuid_entry(vm, &entry);
-	if (result != 0)
+	if (result != 0) {
 		return result;
+	}
 
 	init_vcpuid_entry(vm, 0x80000000U, 0U, 0U, &entry);
 	result = set_vcpuid_entry(vm, &entry);
-	if (result != 0)
+	if (result != 0) {
 		return result;
+	}
 
 	limit = entry.eax;
 	vm->vcpuid_xlevel = limit;
 	for (i = 0x80000001U; i <= limit; i++) {
 		init_vcpuid_entry(vm, i, 0U, 0U, &entry);
 		result = set_vcpuid_entry(vm, &entry);
-		if (result != 0)
+		if (result != 0) {
 			return result;
+		}
 	}
 
 	return 0;
@@ -292,10 +311,11 @@ void guest_cpuid(struct vcpu *vcpu,
 #endif
 
 		/* Patching X2APIC, X2APIC mode is disabled by default. */
-		if (x2apic_enabled)
+		if (x2apic_enabled) {
 			*ecx |= CPUID_ECX_x2APIC;
-		else
+		} else {
 			*ecx &= ~CPUID_ECX_x2APIC;
+		}
 
 		/* mask pcid */
 		*ecx &= ~CPUID_ECX_PCID;
@@ -304,16 +324,18 @@ void guest_cpuid(struct vcpu *vcpu,
 		*ecx &= ~CPUID_ECX_VMX;
 
 		/*no xsave support for guest if it is not enabled on host*/
-		if ((*ecx & CPUID_ECX_OSXSAVE) == 0U)
+		if ((*ecx & CPUID_ECX_OSXSAVE) == 0U) {
 			*ecx &= ~CPUID_ECX_XSAVE;
+		}
 
 		*ecx &= ~CPUID_ECX_OSXSAVE;
 		if ((*ecx & CPUID_ECX_XSAVE) != 0U) {
 			uint64_t cr4;
 			/*read guest CR4*/
 			cr4 = exec_vmread(VMX_GUEST_CR4);
-			if ((cr4 & CR4_OSXSAVE) != 0UL)
+			if ((cr4 & CR4_OSXSAVE) != 0UL) {
 				*ecx |= CPUID_ECX_OSXSAVE;
+			}
 		}
 		break;
 	}
@@ -325,8 +347,9 @@ void guest_cpuid(struct vcpu *vcpu,
 			*ebx = 0U;
 			*ecx = 0U;
 			*edx = 0U;
-		} else
+		} else {
 			cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
+		}
 		break;
 
 	case 0x0dU:
@@ -335,8 +358,9 @@ void guest_cpuid(struct vcpu *vcpu,
 			*ebx = 0U;
 			*ecx = 0U;
 			*edx = 0U;
-		} else
+		} else {
 			cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
+		}
 		break;
 
 	default:

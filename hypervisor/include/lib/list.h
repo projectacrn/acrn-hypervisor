@@ -94,8 +94,9 @@ static inline void __list_splice(struct list_head *list,
 
 static inline void list_splice(struct list_head *list, struct list_head *head)
 {
-	if (!list_empty(list))
+	if (!list_empty(list)) {
 		__list_splice(list, head);
+	}
 }
 
 static inline void list_splice_init(struct list_head *list,

@@ -66,8 +66,9 @@
 static inline uint16_t fls32(uint32_t value)
 {
 	uint32_t ret = 0U;
-	if (value == 0U)
+	if (value == 0U) {
 		return (INVALID_BIT_INDEX);
+	}
 	asm volatile("bsrl %1,%0"
 			: "=r" (ret)
 			: "rm" (value));
@@ -77,8 +78,9 @@ static inline uint16_t fls32(uint32_t value)
 static inline uint16_t fls64(uint64_t value)
 {
 	uint64_t ret = 0UL;
-	if (value == 0UL)
+	if (value == 0UL) {
 		return (INVALID_BIT_INDEX);
+	}
 	asm volatile("bsrq %1,%0"
 			: "=r" (ret)
 			: "rm" (value));
@@ -113,8 +115,9 @@ static inline uint16_t fls64(uint64_t value)
 static inline uint16_t ffs64(uint64_t value)
 {
 	uint64_t ret = 0UL;
-	if (value == 0UL)
+	if (value == 0UL) {
 		return (INVALID_BIT_INDEX);
+	}
 	asm volatile("bsfq %1,%0"
 			: "=r" (ret)
 			: "rm" (value));
@@ -144,9 +147,9 @@ static inline uint16_t ffz64(uint64_t value)
  */
 static inline uint16_t clz(uint32_t value)
 {
-	if (value == 0U)
+	if (value == 0U) {
 		return 32U;
-	else{
+	} else {
 		return (31U - fls32(value));
 	}
 }
@@ -160,9 +163,9 @@ static inline uint16_t clz(uint32_t value)
  */
 static inline uint16_t clz64(uint64_t value)
 {
-	if (value == 0UL)
+	if (value == 0UL) {
 		return 64U;
-	else{
+	} else {
 		return (63U - fls64(value));
 	}
 }

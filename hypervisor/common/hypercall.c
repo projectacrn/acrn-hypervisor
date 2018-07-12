@@ -18,8 +18,9 @@ bool is_hypercall_from_ring0(void)
 
 	cs_sel = exec_vmread(VMX_GUEST_CS_SEL);
 	/* cs_selector[1:0] is CPL */
-	if ((cs_sel & 0x3UL) == 0)
+	if ((cs_sel & 0x3UL) == 0) {
 		return true;
+	}
 
 	return false;
 }
@@ -28,8 +29,9 @@ int64_t hcall_get_api_version(struct vm *vm, uint64_t param)
 {
 	struct hc_api_version version;
 
-	if (!is_vm0(vm))
+	if (!is_vm0(vm)) {
 		return -1;
+	}
 
 	version.major_version = HV_API_MAJOR_VERSION;
 	version.minor_version = HV_API_MINOR_VERSION;
@@ -46,8 +48,9 @@ static int handle_vpic_irqline(struct vm *vm, int irq, enum irq_mode mode)
 {
 	int32_t ret = -1;
 
-	if (vm == NULL)
+	if (vm == NULL) {
 		return ret;
+	}
 
 	switch (mode) {
 	case IRQ_ASSERT:
@@ -70,8 +73,9 @@ handle_vioapic_irqline(struct vm *vm, int irq, enum irq_mode mode)
 {
 	int32_t ret = -1;
 
-	if (vm == NULL)
+	if (vm == NULL) {
 		return ret;
+	}
 
 	switch (mode) {
 	case IRQ_ASSERT:
@@ -96,8 +100,9 @@ static int handle_virt_irqline(struct vm *vm, uint64_t target_vmid,
 	uint32_t intr_type;
 	struct vm *target_vm = get_vm_from_vmid(target_vmid);
 
-	if ((vm == NULL) || (param == NULL))
+	if ((vm == NULL) || (param == NULL)) {
 		return -1;
+	}
 
 	intr_type = param->intr_type;
 
@@ -170,8 +175,9 @@ int64_t hcall_destroy_vm(uint64_t vmid)
 	int64_t ret = 0;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (target_vm == NULL)
+	if (target_vm == NULL) {
 		return -1;
+	}
 
 	ret = shutdown_vm(target_vm);
 	return ret;
@@ -182,12 +188,14 @@ int64_t hcall_resume_vm(uint64_t vmid)
 	int64_t ret = 0;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (target_vm == NULL)
+	if (target_vm == NULL) {
 		return -1;
-	if (target_vm->sw.io_shared_page == NULL)
+	}
+	if (target_vm->sw.io_shared_page == NULL) {
 		ret = -1;
-	else
+	} else {
 		ret = start_vm(target_vm);
+	}
 
 	return ret;
 }
@@ -196,8 +204,9 @@ int64_t hcall_pause_vm(uint64_t vmid)
 {
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (target_vm == NULL)
+	if (target_vm == NULL) {
 		return -1;
+	}
 
 	pause_vm(target_vm);
 
@@ -212,8 +221,9 @@ int64_t hcall_create_vcpu(struct vm *vm, uint64_t vmid, uint64_t param)
 
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
-	if ((target_vm == NULL) || (param == 0U))
+	if ((target_vm == NULL) || (param == 0U)) {
 		return -1;
+	}
 
 	if (copy_from_gpa(vm, &cv, param, sizeof(cv)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
@@ -279,8 +289,9 @@ int64_t hcall_inject_msi(struct vm *vm, uint64_t vmid, uint64_t param)
 	struct acrn_msi_entry msi;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (target_vm == NULL)
+	if (target_vm == NULL) {
 		return -1;
+	}
 
 	(void)memset((void *)&msi, 0, sizeof(msi));
 	if (copy_from_gpa(vm, &msi, param, sizeof(msi)) != 0) {
@@ -299,8 +310,9 @@ int64_t hcall_set_ioreq_buffer(struct vm *vm, uint64_t vmid, uint64_t param)
 	struct acrn_set_ioreq_buffer iobuf;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (target_vm == NULL)
+	if (target_vm == NULL) {
 		return -1;
+	}
 
 	(void)memset((void *)&iobuf, 0, sizeof(iobuf));
 
@@ -385,8 +397,9 @@ int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
 
 	if ((req->valid != 0) &&
 		((req->processed == REQ_STATE_SUCCESS) ||
-		 (req->processed == REQ_STATE_FAILED)))
+		 (req->processed == REQ_STATE_FAILED))) {
 		complete_request(vcpu);
+	}
 
 	return 0;
 }
@@ -420,22 +433,26 @@ int64_t _set_vm_memmap(struct vm *vm, struct vm *target_vm,
 	attr = 0U;
 	if (memmap->type != MAP_UNMAP) {
 		prot = (memmap->prot != 0U) ? memmap->prot : memmap->prot_2;
-		if ((prot & MEM_ACCESS_READ) != 0U)
+		if ((prot & MEM_ACCESS_READ) != 0U) {
 			attr |= IA32E_EPT_R_BIT;
-		if ((prot & MEM_ACCESS_WRITE) != 0U)
+		}
+		if ((prot & MEM_ACCESS_WRITE) != 0U) {
 			attr |= IA32E_EPT_W_BIT;
-		if ((prot & MEM_ACCESS_EXEC) != 0U)
+		}
+		if ((prot & MEM_ACCESS_EXEC) != 0U) {
 			attr |= IA32E_EPT_X_BIT;
-		if ((prot & MEM_TYPE_WB) != 0U)
+		}
+		if ((prot & MEM_TYPE_WB) != 0U) {
 			attr |= IA32E_EPT_WB;
-		else if ((prot & MEM_TYPE_WT) != 0U)
+		} else if ((prot & MEM_TYPE_WT) != 0U) {
 			attr |= IA32E_EPT_WT;
-		else if ((prot & MEM_TYPE_WC) != 0U)
+		} else if ((prot & MEM_TYPE_WC) != 0U) {
 			attr |= IA32E_EPT_WC;
-		else if ((prot & MEM_TYPE_WP) != 0U)
+		} else if ((prot & MEM_TYPE_WP) != 0U) {
 			attr |= IA32E_EPT_WP;
-		else
+		} else {
 			attr |= IA32E_EPT_UNCACHED;
+		}
 	}
 
 	/* create gpa to hpa EPT mapping */
@@ -448,8 +465,9 @@ int64_t hcall_set_vm_memmap(struct vm *vm, uint64_t vmid, uint64_t param)
 	struct vm_set_memmap memmap;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
-	if ((vm == NULL) || (target_vm == NULL))
+	if ((vm == NULL) || (target_vm == NULL)) {
 		return -1;
+	}
 
 	(void)memset((void *)&memmap, 0, sizeof(memmap));
 
@@ -506,8 +524,9 @@ int64_t hcall_set_vm_memmaps(struct vm *vm, uint64_t param)
 		 * to struct vm_set_memmap, it will be removed in the future
 		 */
 		if (_set_vm_memmap(vm, target_vm,
-			(struct vm_set_memmap *)&regions[idx]) < 0)
+			(struct vm_set_memmap *)&regions[idx]) < 0) {
 			return -1;
+		}
 		idx++;
 	}
 	return 0;
@@ -520,8 +539,9 @@ int64_t hcall_remap_pci_msix(struct vm *vm, uint64_t vmid, uint64_t param)
 	struct ptdev_msi_info info;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (target_vm == NULL)
+	if (target_vm == NULL) {
 		return -1;
+	}
 
 	(void)memset((void *)&remap, 0, sizeof(remap));
 
@@ -530,9 +550,9 @@ int64_t hcall_remap_pci_msix(struct vm *vm, uint64_t vmid, uint64_t param)
 		return -1;
 	}
 
-	if (!is_vm0(vm))
+	if (!is_vm0(vm)) {
 		ret = -1;
-	else {
+	} else {
 		info.msix = remap.msix;
 		info.msix_entry_index = remap.msix_entry_index;
 		info.vmsi_ctl = remap.msi_ctl;
@@ -559,8 +579,9 @@ int64_t hcall_gpa_to_hpa(struct vm *vm, uint64_t vmid, uint64_t param)
 	struct vm_gpa2hpa v_gpa2hpa;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (target_vm == NULL)
+	if (target_vm == NULL) {
 		return -1;
+	}
 
 	(void)memset((void *)&v_gpa2hpa, 0, sizeof(v_gpa2hpa));
 
@@ -604,8 +625,9 @@ int64_t hcall_assign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
 		/* TODO: how to get vm's address width? */
 		target_vm->iommu_domain = create_iommu_domain(vmid,
 				target_vm->arch_vm.nworld_eptp, 48);
-		if (target_vm->iommu_domain == NULL)
+		if (target_vm->iommu_domain == NULL) {
 			return -ENODEV;
+		}
 
 	}
 	ret = assign_iommu_device(target_vm->iommu_domain,
@@ -620,8 +642,9 @@ int64_t hcall_deassign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
 	uint16_t bdf;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (target_vm == NULL)
+	if (target_vm == NULL) {
 		return -1;
+	}
 
 	if (copy_from_gpa(vm, &bdf, param, sizeof(bdf)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
@@ -639,8 +662,9 @@ int64_t hcall_set_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
 	struct hc_ptdev_irq irq;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (target_vm == NULL)
+	if (target_vm == NULL) {
 		return -1;
+	}
 
 	(void)memset((void *)&irq, 0, sizeof(irq));
 
@@ -649,15 +673,16 @@ int64_t hcall_set_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
 		return -1;
 	}
 
-	if (irq.type == IRQ_INTX)
+	if (irq.type == IRQ_INTX) {
 		ret = ptdev_add_intx_remapping(target_vm,
 				irq.virt_bdf, irq.phys_bdf,
 				irq.is.intx.virt_pin, irq.is.intx.phys_pin,
 				irq.is.intx.pic_pin);
-	else if (irq.type == IRQ_MSI || irq.type == IRQ_MSIX)
+	} else if (irq.type == IRQ_MSI || irq.type == IRQ_MSIX) {
 		ret = ptdev_add_msix_remapping(target_vm,
 				irq.virt_bdf, irq.phys_bdf,
 				irq.is.msix.vector_cnt);
+	}
 
 	return ret;
 }
@@ -669,8 +694,9 @@ hcall_reset_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
 	struct hc_ptdev_irq irq;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (target_vm == NULL)
+	if (target_vm == NULL) {
 		return -1;
+	}
 
 	(void)memset((void *)&irq, 0, sizeof(irq));
 
@@ -679,14 +705,15 @@ hcall_reset_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
 		return -1;
 	}
 
-	if (irq.type == IRQ_INTX)
+	if (irq.type == IRQ_INTX) {
 		ptdev_remove_intx_remapping(target_vm,
 				irq.is.intx.virt_pin,
 				irq.is.intx.pic_pin);
-	else if (irq.type == IRQ_MSI || irq.type == IRQ_MSIX)
+	} else if (irq.type == IRQ_MSI || irq.type == IRQ_MSIX) {
 		ptdev_remove_msix_remapping(target_vm,
 				irq.virt_bdf,
 				irq.is.msix.vector_cnt);
+	}
 
 	return ret;
 }
@@ -703,10 +730,11 @@ int64_t hcall_setup_sbuf(struct vm *vm, uint64_t param)
 		return -1;
 	}
 
-	if (ssp.gpa != 0U)
+	if (ssp.gpa != 0U) {
 		hva = (uint64_t *)GPA2HVA(vm, ssp.gpa);
-	else
+	} else {
 		hva = (uint64_t *)NULL;
+	}
 
 	return sbuf_share_setup(ssp.pcpu_id, ssp.sbuf_id, hva);
 }
