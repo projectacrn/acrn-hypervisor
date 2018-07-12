@@ -152,12 +152,11 @@ struct virtio_net {
 			     int iovcnt, int len);
 };
 
-static void virtio_net_reset(void *);
-static void virtio_net_tx_stop(struct virtio_net *);
-/* static void virtio_net_notify(void *, struct virtio_vq_info *); */
-static int virtio_net_cfgread(void *, int, int, uint32_t *);
-static int virtio_net_cfgwrite(void *, int, int, uint32_t);
-static void virtio_net_neg_features(void *, uint64_t);
+static void virtio_net_reset(void *vdev);
+static void virtio_net_tx_stop(struct virtio_net *net);
+static int virtio_net_cfgread(void *vdev, int offset, int size, uint32_t *retval);
+static int virtio_net_cfgwrite(void *vdev, int offset, int size, uint32_t value);
+static void virtio_net_neg_features(void *vdev, uint64_t negotiated_features);
 
 static struct virtio_ops virtio_net_ops = {
 	"vtnet",			/* our name */
