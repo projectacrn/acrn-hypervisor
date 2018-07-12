@@ -178,7 +178,7 @@ uint32_t serial_get_rx_data(uint32_t uart_handle)
 			spinlock_obtain(&uart->buffer_lock);
 
 			/* Put the item on circular buffer */
-			sbuf_put(uart->rx_sio_queue, &ch);
+			(void)sbuf_put(uart->rx_sio_queue, &ch);
 
 			/* Exit Critical Section */
 			spinlock_release(&uart->buffer_lock);

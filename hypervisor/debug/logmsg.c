@@ -159,7 +159,7 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 
 			for (i = 0; i < (msg_len - 1) / LOG_ENTRY_SIZE + 1;
 					i++) {
-				sbuf_put(sbuf, (uint8_t *)buffer +
+				(void)sbuf_put(sbuf, (uint8_t *)buffer +
 							i * LOG_ENTRY_SIZE);
 			}
 		}

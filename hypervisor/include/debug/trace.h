@@ -100,7 +100,7 @@ _trace_put(uint16_t cpu_id, uint32_t evid,
 	entry->id = evid;
 	entry->n_data = (uint8_t)n_data;
 	entry->cpu = (uint8_t)cpu_id;
-	sbuf_put(sbuf, (uint8_t *)entry);
+	(void)sbuf_put(sbuf, (uint8_t *)entry);
 }
 
 static inline void

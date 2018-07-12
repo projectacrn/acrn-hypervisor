@@ -28,7 +28,7 @@ static int charout(int cmd, const char *s, int sz, void *hnd)
 	/* fill mode */
 		*nchars += sz;
 		while (sz != 0) {
-			console_putc(*s);
+			(void)console_putc(*s);
 			sz--;
 		}
 	}

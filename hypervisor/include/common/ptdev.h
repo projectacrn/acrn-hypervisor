@@ -75,7 +75,7 @@ struct ptdev_remapping_info *ptdev_dequeue_softirq(void);
 struct ptdev_remapping_info *alloc_entry(struct vm *vm,
 		enum ptdev_intr_type type);
 void release_entry(struct ptdev_remapping_info *entry);
-struct ptdev_remapping_info *ptdev_activate_entry(
+void ptdev_activate_entry(
 		struct ptdev_remapping_info *entry,
 		int phys_irq, bool lowpri);
 void ptdev_deactivate_entry(struct ptdev_remapping_info *entry);
