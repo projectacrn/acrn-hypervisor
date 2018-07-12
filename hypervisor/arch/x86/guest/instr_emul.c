@@ -1969,41 +1969,6 @@ decode_modrm(struct vie *vie, enum vm_cpu_mode cpu_mode)
 
 	vie->reg |= (vie->rex_r << 3);
 
-	/* SIB */
-	if (vie->mod != VIE_MOD_DIRECT && vie->rm == VIE_RM_SIB) {
-		goto done;
-	}
-
-	vie->base_register = gpr_map[vie->rm];
-
-	switch (vie->mod) {
-	case VIE_MOD_INDIRECT_DISP8:
-		vie->disp_bytes = 1U;
-		break;
-	case VIE_MOD_INDIRECT_DISP32:
-		vie->disp_bytes = 4U;
-		break;
-	case VIE_MOD_INDIRECT:
-		if (vie->rm == VIE_RM_DISP32) {
-			vie->disp_bytes = 4U;
-		/*
-		 * Table 2-7. RIP-Relative Addressing
-		 *
-		 * In 64-bit mode mod=00 r/m=101 implies [rip] + disp32
-		 * whereas in compatibility mode it just implies disp32.
-		 */
-
-			if (cpu_mode == CPU_MODE_64BIT) {
-				vie->base_register = CPU_REG_RIP;
-			}
-			else {
-				vie->base_register = CPU_REG_LAST;
-			}
-		}
-		break;
-	}
-
-done:
 	vie_advance(vie);
 
 	return 0;
