@@ -102,8 +102,10 @@ try:
 except:
     pass
 finally:
-    if version_major and version_minor and version_rc :
-        version = release = "v " + version_major + '.' + version_minor + version_rc
+    if version_major and version_minor :
+        version = release = "v " + version_major + '.' + version_minor
+        if version_rc :
+          version = release = version + version_rc
     else:
         sys.stderr.write('Warning: Could not extract hypervisor version from VERSION file\n')
         version = release = "unknown"
@@ -181,7 +183,7 @@ else:
 html_context = {
    'current_version': current_version,
    'versions': ( ("latest", "/latest/"),
-#                 ("0.1-rc4", "/0.1-rc4/"),
+                 ("0.1", "/0.1/"),
                )
     }
 
