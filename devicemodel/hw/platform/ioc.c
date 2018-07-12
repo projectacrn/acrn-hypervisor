@@ -973,6 +973,10 @@ ioc_process_events(struct ioc_dev *ioc, enum ioc_ch_id id)
 		return;
 	}
 
+	/* IOC_E_KNOCK event is only used to wakeup core thread */
+	if (evt == IOC_E_KNOCK)
+		return;
+
 	for (i = 0; i < ARRAY_SIZE(ioc_state_tbl); i++) {
 		if (evt == ioc_state_tbl[i].evt &&
 				ioc->state == ioc_state_tbl[i].cur_stat) {
@@ -1154,7 +1158,7 @@ ioc_core_thread(void *arg)
 	}
 
 	/* Start to epoll wait loop */
-	for (;;) {
+	while (!ioc->closing) {
 		n = epoll_wait(ioc->epfd, eventlist, IOC_MAX_EVENTS, -1);
 		if (n < 0 && errno != EINTR) {
 			DPRINTF("ioc epoll wait error:%s, exit ioc core\r\n",
@@ -1284,6 +1288,7 @@ ioc_kill_workers(struct ioc_dev *ioc)
 	ioc->closing = 1;
 
 	/* Stop IOC core thread */
+	ioc_update_event(ioc->evt_fd, IOC_E_KNOCK);
 	close(ioc->epfd);
 	ioc->epfd = IOC_INIT_FD;
 	pthread_join(ioc->tid, NULL);

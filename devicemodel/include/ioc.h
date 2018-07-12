@@ -659,7 +659,8 @@ enum ioc_event_type {
 	IOC_E_RAM_REFRESH,
 	IOC_E_HB_INACTIVE,
 	IOC_E_SHUTDOWN,
-	IOC_E_RESUME
+	IOC_E_RESUME,
+	IOC_E_KNOCK,
 };
 
 /*
