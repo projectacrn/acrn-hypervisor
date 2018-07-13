@@ -217,7 +217,7 @@ int unassign_iommu_device(struct iommu_domain *domain,
 	uint8_t bus, uint8_t devfun);
 
 /* Create a iommu domain for a VM specified by vm_id */
-struct iommu_domain *create_iommu_domain(int vm_id,
+struct iommu_domain *create_iommu_domain(uint16_t vm_id,
 	uint64_t translation_table, int addr_width);
 
 /* Destroy the iommu domain */

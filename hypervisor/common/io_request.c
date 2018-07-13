@@ -16,7 +16,7 @@ static void fire_vhm_interrupt(void)
 	struct vm *vm0;
 	struct vcpu *vcpu;
 
-	vm0 = get_vm_from_vmid(0);
+	vm0 = get_vm_from_vmid(0U);
 	ASSERT(vm0 != NULL, "VM Pointer is NULL");
 
 	vcpu = vcpu_from_vid(vm0, 0);

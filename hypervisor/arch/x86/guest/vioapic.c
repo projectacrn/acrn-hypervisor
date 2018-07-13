@@ -651,7 +651,7 @@ bool vioapic_get_rte(struct vm *vm, uint8_t pin, void *rte)
 }
 
 #ifdef HV_DEBUG
-void get_vioapic_info(char *str, int str_max, int vmid)
+void get_vioapic_info(char *str, int str_max, uint16_t vmid)
 {
 	int len, size = str_max, delmode;
 	uint64_t rte;
@@ -662,7 +662,7 @@ void get_vioapic_info(char *str, int str_max, int vmid)
 
 	if (vm == NULL) {
 		len = snprintf(str, size,
-			"\r\nvm is not exist for vmid %d", vmid);
+			"\r\nvm is not exist for vmid %hu", vmid);
 		size -= len;
 		str += len;
 		goto END;

@@ -93,7 +93,7 @@ handle_vioapic_irqline(struct vm *vm, int irq, enum irq_mode mode)
 	return ret;
 }
 
-static int handle_virt_irqline(struct vm *vm, uint64_t target_vmid,
+static int handle_virt_irqline(struct vm *vm, uint16_t target_vmid,
 		struct acrn_irqline *param, enum irq_mode mode)
 {
 	int32_t ret = 0;
@@ -218,7 +218,6 @@ int64_t hcall_create_vcpu(struct vm *vm, uint64_t vmid, uint64_t param)
 	int32_t ret;
 	uint16_t pcpu_id;
 	struct acrn_create_vcpu cv;
-
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
 	if ((target_vm == NULL) || (param == 0U)) {
@@ -250,7 +249,7 @@ int64_t hcall_assert_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
 		pr_err("%s: Unable copy param to vm\n", __func__);
 		return -1;
 	}
-	ret = handle_virt_irqline(vm, vmid, &irqline, IRQ_ASSERT);
+	ret = handle_virt_irqline(vm, (uint16_t)vmid, &irqline, IRQ_ASSERT);
 
 	return ret;
 }
@@ -264,7 +263,7 @@ int64_t hcall_deassert_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
 		pr_err("%s: Unable copy param to vm\n", __func__);
 		return -1;
 	}
-	ret = handle_virt_irqline(vm, vmid, &irqline, IRQ_DEASSERT);
+	ret = handle_virt_irqline(vm, (uint16_t)vmid, &irqline, IRQ_DEASSERT);
 
 	return ret;
 }
@@ -278,7 +277,7 @@ int64_t hcall_pulse_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
 		pr_err("%s: Unable copy param to vm\n", __func__);
 		return -1;
 	}
-	ret = handle_virt_irqline(vm, vmid, &irqline, IRQ_PULSE);
+	ret = handle_virt_irqline(vm, (uint16_t)vmid, &irqline, IRQ_PULSE);
 
 	return ret;
 }
@@ -741,7 +740,7 @@ int64_t hcall_setup_sbuf(struct vm *vm, uint64_t param)
 
 int64_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param)
 {
-	int32_t target_vm_id;
+	uint16_t target_vm_id;
 	struct vm *target_vm;
 
 	target_vm_id = (cmd & PMCMD_VMID_MASK) >> PMCMD_VMID_SHIFT;

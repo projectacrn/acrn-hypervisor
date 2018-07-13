@@ -549,7 +549,7 @@ int shell_pause_vcpu(struct shell *p_shell,
 		int argc, char **argv)
 {
 	int status = 0;
-	uint32_t vm_id;
+	uint16_t vm_id;
 	uint16_t vcpu_id;
 	struct vm *vm;
 	struct vcpu *vcpu;
@@ -560,7 +560,12 @@ int shell_pause_vcpu(struct shell *p_shell,
 		shell_puts(p_shell,
 			"Please enter correct cmd with <vm_id, vcpu_id>\r\n");
 	} else {
-		vm_id = atoi(argv[1]);
+		status = atoi(argv[1]);
+		if (status < 0) {
+			return -EINVAL;
+		} else {
+			vm_id = (uint16_t)status;
+		}
 		vcpu_id = (uint16_t)atoi(argv[2]);
 		if (vcpu_id >= phys_cpu_num)
 			return (-EINVAL);
@@ -600,7 +605,7 @@ int shell_resume_vcpu(struct shell *p_shell,
 		int argc, char **argv)
 {
 	int status = 0;
-	uint32_t vm_id;
+	uint16_t vm_id;
 	uint16_t vcpu_id;
 	struct vm *vm;
 	struct vcpu *vcpu;
@@ -611,7 +616,11 @@ int shell_resume_vcpu(struct shell *p_shell,
 		shell_puts(p_shell,
 			"Please enter correct cmd with <vm_id, vcpu_id>\r\n");
 	} else {
-		vm_id = atoi(argv[1]);
+		status = atoi(argv[1]);
+		if (status < 0) {
+			return -EINVAL;
+		}
+		vm_id = (uint16_t)status;
 		vcpu_id = (uint16_t)atoi(argv[2]);
 		if (vcpu_id >= phys_cpu_num)
 			return (-EINVAL);
@@ -650,7 +659,7 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 		int argc, char **argv)
 {
 	int status = 0;
-	uint32_t vm_id;
+	uint16_t vm_id;
 	uint16_t vcpu_id;
 	char temp_str[MAX_STR_SIZE];
 	struct vm *vm;
@@ -667,7 +676,11 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 		return -EINVAL;
 	}
 
-	vm_id = atoi(argv[1]);
+	status = atoi(argv[1]);
+	if (status < 0) {
+		return -EINVAL;
+	}
+	vm_id = (uint16_t)status;
 	vcpu_id = (uint16_t)atoi(argv[2]);
 	if (vcpu_id >= phys_cpu_num)
 		return (-EINVAL);
@@ -743,7 +756,7 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 		shell_puts(p_shell, "Cannot handle user gva yet!\r\n");
 	} else {
 		snprintf(temp_str, MAX_STR_SIZE,
-				"\r\nDump RSP for vm %d, from "
+				"\r\nDump RSP for vm %hu, from "
 				"gva 0x%016llx\r\n",
 				vm_id, cur_context->rsp);
 		shell_puts(p_shell, temp_str);
@@ -766,7 +779,7 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 		int argc, char **argv)
 {
 	int status = 0;
-	uint32_t vm_id;
+	uint16_t vm_id;
 	uint16_t vcpu_id;
 	uint64_t gva;
 	uint64_t tmp[MAX_MEMDUMP_LEN/8];
@@ -785,7 +798,11 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 		return status;
 	}
 
-	vm_id = atoi(argv[1]);
+	status = atoi(argv[1]);
+	if (status < 0) {
+		return -EINVAL;
+	}
+	vm_id = (uint16_t)status;
 	vcpu_id = (uint16_t)atoi(argv[2]);
 	if (vcpu_id >= phys_cpu_num)
 		return (-EINVAL);
@@ -848,7 +865,7 @@ int shell_to_sos_console(struct shell *p_shell,
 		__unused int argc, __unused char **argv)
 {
 	char temp_str[TEMP_STR_SIZE];
-	int guest_no = 0;
+	uint16_t guest_no = 0U;
 
 	struct vm *vm;
 	struct vuart *vuart;
@@ -944,7 +961,8 @@ int shell_show_req_info(struct shell *p_shell,
 int shell_show_vioapic_info(struct shell *p_shell, int argc, char **argv)
 {
 	char *temp_str = alloc_page();
-	uint32_t vmid;
+	uint16_t vmid;
+	int32_t ret;
 
 	if (temp_str == NULL) {
 		return -ENOMEM;
@@ -955,7 +973,12 @@ int shell_show_vioapic_info(struct shell *p_shell, int argc, char **argv)
 		snprintf(temp_str, CPU_PAGE_SIZE, "\r\nvmid param needed\r\n");
 		goto END;
 	} else {
-		vmid = atoi(argv[1]);
+		ret = atoi(argv[1]);
+		if (ret >= 0) {
+			vmid = (uint16_t) ret;
+		} else {
+			return -EINVAL;
+		}
 	}
 
 	get_vioapic_info(temp_str, CPU_PAGE_SIZE, vmid);

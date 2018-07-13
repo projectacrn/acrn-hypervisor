@@ -381,7 +381,7 @@ void vuart_console_rx_chars(uint32_t serial_handle)
 
 struct vuart *vuart_console_active(void)
 {
-	struct vm *vm = get_vm_from_vmid(0);
+	struct vm *vm = get_vm_from_vmid(0U);
 
 	if ((vm != NULL) && (vm->vuart != NULL)) {
 		struct vuart *vu = vm->vuart;

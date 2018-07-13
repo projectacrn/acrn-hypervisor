@@ -147,7 +147,7 @@ struct iommu_domain {
 	bool is_host;
 	bool is_tt_ept;     /* if reuse EPT of the domain */
 	uint16_t dom_id;
-	int vm_id;
+	uint16_t vm_id;
 	uint32_t addr_width;   /* address width of the domain */
 	uint64_t trans_table_ptr;
 };
@@ -862,7 +862,7 @@ static void dmar_disable(struct dmar_drhd_rt *dmar_uint)
 	dmar_fault_event_mask(dmar_uint);
 }
 
-struct iommu_domain *create_iommu_domain(int vm_id, uint64_t translation_table,
+struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_table,
 		int addr_width)
 {
 	struct iommu_domain *domain;
@@ -896,7 +896,7 @@ struct iommu_domain *create_iommu_domain(int vm_id, uint64_t translation_table,
 	list_add(&domain->list, &iommu_domains);
 	spinlock_release(&domain_lock);
 
-	dev_dbg(ACRN_DBG_IOMMU, "create domain [%d]: vm_id = %d, ept@0x%x",
+	dev_dbg(ACRN_DBG_IOMMU, "create domain [%d]: vm_id = %hu, ept@0x%x",
 		domain->dom_id,
 		domain->vm_id,
 		domain->trans_table_ptr);

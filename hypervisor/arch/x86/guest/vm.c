@@ -42,7 +42,7 @@ static void init_vm(struct vm_description *vm_desc,
 /* return a pointer to the virtual machine structure associated with
  * this VM ID
  */
-struct vm *get_vm_from_vmid(int vm_id)
+struct vm *get_vm_from_vmid(uint16_t vm_id)
 {
 	struct vm *vm = NULL;
 	struct list_head *pos;

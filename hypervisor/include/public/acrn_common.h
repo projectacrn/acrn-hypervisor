@@ -123,7 +123,7 @@ union vhm_request_buffer {
  */
 struct acrn_create_vm {
 	/** created vmid return to VHM. Keep it first field */
-	int32_t vmid;
+	int16_t vmid;
 
 	/** VCPU numbers this VM want to create */
 	uint32_t vcpu_num;
