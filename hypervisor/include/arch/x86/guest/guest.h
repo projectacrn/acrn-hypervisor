@@ -16,6 +16,8 @@
 
 #ifndef ASSEMBLER
 
+#include <mmu.h>
+
 #define foreach_vcpu(idx, vm, vcpu)				\
 	for (idx = 0U, vcpu = vm->hw.vcpu_array[idx];		\
 		(idx < vm->hw.num_vcpus) && (vcpu != NULL);	\
@@ -110,6 +112,7 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu);
 void init_msr_emulation(struct vcpu *vcpu);
 
 extern const char vm_exit[];
+struct run_context;
 int vmx_vmrun(struct run_context *context, int ops, int ibrs);
 
 int load_guest(struct vm *vm, struct vcpu *vcpu);

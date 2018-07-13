@@ -63,9 +63,9 @@ int vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval);
 int vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval);
 
 int vlapic_read_mmio_reg(struct vcpu *vcpu, uint64_t gpa,
-		uint64_t *rval, int size);
+		uint64_t *rval, uint8_t size);
 int vlapic_write_mmio_reg(struct vcpu *vcpu, uint64_t gpa,
-		uint64_t wval, int size);
+		uint64_t wval, uint8_t size);
 
 /*
  * Signals to the LAPIC that an interrupt at 'vector' needs to be generated
@@ -96,7 +96,7 @@ int vlapic_set_local_intr(struct vm *vm, uint16_t vcpu_id, uint32_t vector);
 int vlapic_intr_msi(struct vm *vm, uint64_t addr, uint64_t msg);
 
 void vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest,
-		bool phys, int delmode, int vec);
+		bool phys, uint32_t delmode, uint32_t vec);
 
 /* Reset the trigger-mode bits for all vectors to be edge-triggered */
 void vlapic_reset_tmr(struct vlapic *vlapic);
@@ -106,7 +106,7 @@ void vlapic_reset_tmr(struct vlapic *vlapic);
  * the (dest,phys,delmode) tuple resolves to an interrupt being delivered to
  * this 'vlapic'.
  */
-void vlapic_set_tmr_one_vec(struct vlapic *vlapic, int delmode,
+void vlapic_set_tmr_one_vec(struct vlapic *vlapic, uint32_t delmode,
 		uint32_t vector, bool level);
 
 void
