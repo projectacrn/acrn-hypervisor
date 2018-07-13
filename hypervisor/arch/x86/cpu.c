@@ -750,13 +750,13 @@ void cpu_dead(uint16_t pcpu_id)
 		return;
 	}
 
-	/* Set state to show CPU is dead */
-	cpu_set_current_state(pcpu_id, CPU_STATE_DEAD);
-
 	/* clean up native stuff */
 	timer_cleanup();
 	vmx_off(pcpu_id);
 	CACHE_FLUSH_INVALIDATE_ALL();
+
+	/* Set state to show CPU is dead */
+	cpu_set_current_state(pcpu_id, CPU_STATE_DEAD);
 
 	/* Halt the CPU */
 	do {
