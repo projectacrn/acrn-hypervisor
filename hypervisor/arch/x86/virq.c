@@ -310,7 +310,7 @@ int interrupt_window_vmexit_handler(struct vcpu *vcpu)
 {
 	int value32;
 
-	TRACE_2L(TRACE_VMEXIT_INTERRUPT_WINDOW, 0, 0);
+	TRACE_2L(TRACE_VMEXIT_INTERRUPT_WINDOW, 0UL, 0UL);
 
 	if (vcpu == NULL)
 		return -1;
@@ -353,7 +353,7 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 
 	vcpu_retain_rip(vcpu);
 
-	TRACE_2L(TRACE_VMEXIT_EXTERNAL_INTERRUPT, ctx.vector, 0);
+	TRACE_2L(TRACE_VMEXIT_EXTERNAL_INTERRUPT, ctx.vector, 0UL);
 
 	return 0;
 }
@@ -490,7 +490,7 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 	int status = 0;
 
 	if (vcpu == NULL) {
-		TRACE_4I(TRACE_VMEXIT_EXCEPTION_OR_NMI, 0, 0, 0, 0);
+		TRACE_4I(TRACE_VMEXIT_EXCEPTION_OR_NMI, 0U, 0U, 0U, 0U);
 		status = -EINVAL;
 	}
 
@@ -533,7 +533,7 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 	}
 
 	TRACE_4I(TRACE_VMEXIT_EXCEPTION_OR_NMI,
-			exception_vector, int_err_code, 2, 0);
+			exception_vector, int_err_code, 2U, 0U);
 
 	return status;
 }

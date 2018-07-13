@@ -62,7 +62,7 @@ void vcpu_thread(struct vcpu *vcpu)
 			per_cpu(vmexit_time, vcpu->pcpu_id)[basic_exit_reason]
 				+= (vmexit_end - vmexit_begin);
 		}
-		TRACE_2L(TRACE_VM_ENTER, 0, 0);
+		TRACE_2L(TRACE_VM_ENTER, 0UL, 0UL);
 
 		/* Restore guest TSC_AUX */
 		if (vcpu->launched) {
