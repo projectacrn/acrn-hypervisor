@@ -356,7 +356,7 @@ static inline bool vcpu_in_vm_desc(struct vcpu *vcpu,
 	int i;
 
 	for (i = 0; i < vm_desc->vm_hw_num_cores; i++) {
-		if (vcpu->pcpu_id == vm_desc->vm_hw_logical_core_ids[i]) {
+		if (vcpu->pcpu_id == vm_desc->vm_pcpu_ids[i]) {
 			return true;
 		}
 	}

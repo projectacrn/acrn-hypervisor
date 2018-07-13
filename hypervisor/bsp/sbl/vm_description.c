@@ -10,9 +10,9 @@
 #define VM0_NUM_CPUS    1
 
 /* Logical CPU IDs assigned to VM0 */
-int VM0_CPUS[VM0_NUM_CPUS] = {0};
+uint16_t VM0_CPUS[VM0_NUM_CPUS] = {0U};
 
 struct vm_description vm0_desc = {
 	.vm_hw_num_cores = VM0_NUM_CPUS,
-	.vm_hw_logical_core_ids = &VM0_CPUS[0],
+	.vm_pcpu_ids = &VM0_CPUS[0],
 };

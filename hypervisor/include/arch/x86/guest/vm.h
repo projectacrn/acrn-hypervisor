@@ -158,10 +158,10 @@ struct vm {
 };
 
 struct vm_description {
-	/* The logical CPU IDs associated with this VM - The first CPU listed
+	/* The physical CPU IDs associated with this VM - The first CPU listed
 	 * will be the VM's BSP
 	 */
-	int                    *vm_hw_logical_core_ids;
+	uint16_t               *vm_pcpu_ids;
 	unsigned char          GUID[16]; /* GUID of the vm will be created */
 	uint16_t               vm_hw_num_cores;   /* Number of virtual cores */
 	/* Whether secure world is enabled for current VM. */
