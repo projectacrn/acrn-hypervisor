@@ -272,7 +272,7 @@ struct ioapic {
 
 /* constants relating to APIC ID registers */
 #define APIC_ID_MASK		0xff000000U
-#define	APIC_ID_SHIFT		24
+#define	APIC_ID_SHIFT		24U
 #define	APIC_ID_CLUSTER		0xf0U
 #define	APIC_ID_CLUSTER_ID	0x0fU
 #define	APIC_MAX_CLUSTER	0xeU
@@ -282,7 +282,7 @@ struct ioapic {
 /* fields in VER */
 #define APIC_VER_VERSION	0x000000ffU
 #define APIC_VER_MAXLVT		0x00ff0000U
-#define MAXLVTSHIFT		16
+#define MAXLVTSHIFT		16U
 #define APIC_VER_EOI_SUPPRESSION 0x01000000U
 #define APIC_VER_AMD_EXT_SPACE	0x80000000U
 
