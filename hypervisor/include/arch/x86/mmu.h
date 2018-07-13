@@ -280,22 +280,26 @@ static inline uint64_t mem_read64(void *addr)
 
 static inline void mem_write8(void *addr, uint8_t data)
 {
-	*(volatile uint8_t *)(addr) = (uint8_t)(data);
+	volatile uint8_t *addr8 = (volatile uint8_t *)addr;
+	*addr8 = data;
 }
 
 static inline void mem_write16(void *addr, uint16_t data)
 {
-	*(volatile uint16_t *)(addr) = (uint16_t)(data);
+	volatile uint16_t *addr16 = (volatile uint16_t *)addr;
+	*addr16 = data;
 }
 
 static inline void mem_write32(void *addr, uint32_t data)
 {
-	*(volatile uint32_t *)(addr) = (uint32_t)(data);
+	volatile uint32_t *addr32 = (volatile uint32_t *)addr;
+	*addr32 = data;
 }
 
 static inline void mem_write64(void *addr, uint64_t data)
 {
-	*(volatile uint64_t *)(addr) = (uint64_t)(data);
+	volatile uint64_t *addr64 = (volatile uint64_t *)addr;
+	*addr64 = data;
 }
 
 /* Typedef for MMIO handler and range check routine */
