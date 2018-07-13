@@ -872,21 +872,26 @@ static void init_guest_state(struct vcpu *vcpu)
 	pr_dbg("VMX_GUEST_GS_ATTR: 0x%x ", value32);
 
 	/* Base */
-	value = 0UL;
+	if (vcpu_mode == CPU_MODE_REAL) {
+		value = es << 4;
+	} else {
+		value = 0UL;
+	}
+
 	field = VMX_GUEST_ES_BASE;
-	exec_vmwrite(field, es << 4);
+	exec_vmwrite(field, value);
 	pr_dbg("VMX_GUEST_ES_BASE: 0x%016llx ", value);
 	field = VMX_GUEST_SS_BASE;
-	exec_vmwrite(field, ss << 4);
+	exec_vmwrite(field, value);
 	pr_dbg("VMX_GUEST_SS_BASE: 0x%016llx ", value);
 	field = VMX_GUEST_DS_BASE;
-	exec_vmwrite(field, ds << 4);
+	exec_vmwrite(field, value);
 	pr_dbg("VMX_GUEST_DS_BASE: 0x%016llx ", value);
 	field = VMX_GUEST_FS_BASE;
-	exec_vmwrite(field, fs << 4);
+	exec_vmwrite(field, value);
 	pr_dbg("VMX_GUEST_FS_BASE: 0x%016llx ", value);
 	field = VMX_GUEST_GS_BASE;
-	exec_vmwrite(field, gs << 4);
+	exec_vmwrite(field, value);
 	pr_dbg("VMX_GUEST_GS_BASE: 0x%016llx ", value);
 
 	/***************************************************/
