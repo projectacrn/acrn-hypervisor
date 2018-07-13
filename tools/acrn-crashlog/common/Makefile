@@ -1,3 +1,18 @@
+
+# With V=1 means verbose build. Will show full build commands
+#
+# Without V means silient build. Only show customed message. And we
+# could put more focous on warning.
+ifdef V
+  Q :=
+  vecho := @true
+  SUBOPT := "V=1"
+else
+  Q := @
+  vecho := @echo
+  SUBOPT:= "--no-print-directory"
+endif
+
 objects = log_sys.o \
 	  strutils.o \
 	  cmdutils.o \
@@ -10,14 +25,16 @@ check_obj:
 	fi
 
 $(objects):%.o:%.c
-	$(CC) -c $(CFLAGS) $(INCLUDE) $< -o $(BUILDDIR)/common/obj/$@
+	$(vecho) "--> Build $<"
+	$(Q)$(CC) -c $(CFLAGS) $(INCLUDE) $< -o $(BUILDDIR)/common/obj/$@
 
 .PHONY:clean
 clean:
-	@echo "Clean objects and binaries"
-	@if [ -d $(BUILDDIR)/common/obj ]; then \
+	$(vecho) "Clean acrn-crashlog-common"
+	$(Q)echo "Clean objects and binaries"
+	$(Q)if [ -d $(BUILDDIR)/common/obj ]; then \
 		find $(BUILDDIR)/common/obj -name "*.o" -exec $(RM) {} \; 2>&1 || exit 0; \
 	fi
-	@if [ -d $(BUILDDIR)/common/obj ]; then \
+	$(Q)if [ -d $(BUILDDIR)/common/obj ]; then \
 		$(RM) -r $(BUILDDIR)/common/obj ; \
 	fi

@@ -13,53 +13,79 @@ MISC_OUT := $(ROOT_OUT)/misc
 DOC_OUT := $(ROOT_OUT)/doc
 export TOOLS_OUT
 
+# With V=1 means verbose build. Will show full build commands
+#
+# Without V means silient build. Only show customed message. And we
+# could put more focous on warning.
+ifdef V
+  Q :=
+  vecho := @true
+  SUBOPT := "V=1"
+else
+  Q := @
+  vecho := @echo
+  SUBOPT:= "--no-print-directory"
+endif
+
 .PHONY: all hypervisor devicemodel tools misc doc
 all: hypervisor devicemodel tools misc
 
 hypervisor:
-	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLATFORM) RELEASE=$(RELEASE) clean
-	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLATFORM) RELEASE=$(RELEASE)
+	$(vecho) "Build hypervisor"
+	$(Q)make -C $(T)/hypervisor $(SUBOPT) HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLATFORM) RELEASE=$(RELEASE) clean
+	$(Q)make -C $(T)/hypervisor $(SUBOPT) HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLATFORM) RELEASE=$(RELEASE)
 
 sbl-hypervisor:
+	$(vecho) "Build sbl-hypervisor"
 	@mkdir -p $(HV_OUT)-sbl
-	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl PLATFORM=sbl RELEASE=$(RELEASE) clean
-	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl PLATFORM=sbl RELEASE=$(RELEASE)
+	$(Q)make -C $(T)/hypervisor $(SUBOPT) HV_OBJDIR=$(HV_OUT)-sbl PLATFORM=sbl RELEASE=$(RELEASE) clean
+	$(Q)make -C $(T)/hypervisor $(SUBOPT) HV_OBJDIR=$(HV_OUT)-sbl PLATFORM=sbl RELEASE=$(RELEASE)
 
 devicemodel: tools
-	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) clean
-	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT)
+	$(vecho) "Build devicemodel"
+	$(Q)make -C $(T)/devicemodel $(SUBOPT) DM_OBJDIR=$(DM_OUT) clean
+	$(Q)make -C $(T)/devicemodel $(SUBOPT) DM_OBJDIR=$(DM_OUT)
 
 tools:
-	mkdir -p $(TOOLS_OUT)
-	make -C $(T)/tools OUT_DIR=$(TOOLS_OUT) RELEASE=$(RELEASE)
+	$(vecho) "Build tools"
+	$(Q)mkdir -p $(TOOLS_OUT)
+	$(Q)make -C $(T)/tools $(SUBOPT) OUT_DIR=$(TOOLS_OUT) RELEASE=$(RELEASE)
 
 misc: tools
-	mkdir -p $(MISC_OUT)
-	make -C $(T)/misc OUT_DIR=$(MISC_OUT)
+	$(vecho) "Build misc"
+	$(Q)mkdir -p $(MISC_OUT)
+	$(Q)make -C $(T)/misc $(SUBOPT) OUT_DIR=$(MISC_OUT)
 
 doc:
-	make -C $(T)/doc html BUILDDIR=$(DOC_OUT)
+	$(vecho) "Build Documents"
+	$(Q)make -C $(T)/doc $(SUBOPT) html BUILDDIR=$(DOC_OUT)
 
 .PHONY: clean
 clean:
-	make -C $(T)/tools OUT_DIR=$(TOOLS_OUT) clean
-	make -C $(T)/doc BUILDDIR=$(DOC_OUT) clean
-	rm -rf $(ROOT_OUT)
+	$(vecho) "Cleanup"
+	$(Q)make -C $(T)/tools $(SUBOPT) OUT_DIR=$(TOOLS_OUT) clean
+	$(Q)make -C $(T)/doc $(SUBOPT) BUILDDIR=$(DOC_OUT) clean
+	$(Q)rm -rf $(ROOT_OUT)
 
 .PHONY: install
 install: hypervisor-install devicemodel-install tools-install misc-install
 
 hypervisor-install:
-	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLATFORM) RELEASE=$(RELEASE) install
+	$(vecho) "Install hypervisor"
+	$(Q)make -C $(T)/hypervisor $(SUBOPT) HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLATFORM) RELEASE=$(RELEASE) install
 
 sbl-hypervisor-install:
-	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl PLATFORM=sbl RELEASE=$(RELEASE) install
+	$(vecho) "Install sbl-hypervisor"
+	$(Q)make -C $(T)/hypervisor $(SUBOPT) HV_OBJDIR=$(HV_OUT)-sbl PLATFORM=sbl RELEASE=$(RELEASE) install
 
 devicemodel-install:
-	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) install
+	$(vecho) "Install devicemodel"
+	$(Q)make -C $(T)/devicemodel $(SUBOPT) DM_OBJDIR=$(DM_OUT) install
 
 tools-install:
-	make -C $(T)/tools OUT_DIR=$(TOOLS_OUT) install
+	$(vecho) "Install tools"
+	$(Q)make -C $(T)/tools $(SUBOPT) OUT_DIR=$(TOOLS_OUT) install
 
 misc-install:
-	make -C $(T)/misc OUT_DIR=$(MISC_OUT) install
+	$(vecho) "Install misc"
+	$(Q)make -C $(T)/misc $(SUBOPT) OUT_DIR=$(MISC_OUT) install

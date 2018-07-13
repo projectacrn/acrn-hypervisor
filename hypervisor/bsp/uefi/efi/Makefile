@@ -30,6 +30,16 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+ifdef V
+  Q :=
+  vecho := @true
+  SUBOPT := "V=1"
+else
+  Q := @
+  vecho := @echo
+  SUBOPT:=
+endif
+
 HV_OBJDIR:=build
 HV_FILE:=acrn
 EFI_OBJDIR:=$(HV_OBJDIR)/bsp/uefi/efi
@@ -84,32 +94,40 @@ BOOT=$(EFI_OBJDIR)/boot.efi
 CONF_FILE=$(CURDIR)/../clearlinux/acrn.conf
 
 all: $(EFIBIN)
-	$(OBJCOPY)  --add-section .hv="$(HV_OBJDIR)/$(HV_FILE).bin"  --change-section-vma .hv=0x6e000 --set-section-flags .hv=alloc,data,contents,load  --section-alignment 0x1000 $(EFI_OBJDIR)/boot.efi  $(EFIBIN)
+	$(vecho) "Generate `basename $<`..."
+	$(Q)$(OBJCOPY)  --add-section .hv="$(HV_OBJDIR)/$(HV_FILE).bin"  --change-section-vma .hv=0x6e000 --set-section-flags .hv=alloc,data,contents,load  --section-alignment 0x1000 $(EFI_OBJDIR)/boot.efi  $(EFIBIN)
 
 install: $(EFIBIN) install-conf
-	install -D $(EFIBIN) $(DESTDIR)/usr/lib/acrn/$(HV_FILE).efi
+	$(vecho) "Install $(EFIBIN)..."
+	$(Q)install -D $(EFIBIN) $(DESTDIR)/usr/lib/acrn/$(HV_FILE).efi
 
 $(EFIBIN): $(BOOT)
 
 $(EFI_OBJDIR)/boot.efi: $(EFI_OBJDIR)/boot.so
 
 $(EFI_OBJDIR)/boot.so: $(ACRN_OBJS) $(FS)
-	$(LD) $(LDFLAGS) -o $@ $^  -lgnuefi -lefi $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+	$(vecho) "Generate `basename $@`..."
+	$(Q)$(LD) $(LDFLAGS) -o $@ $^  -lgnuefi -lefi $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 install-conf: $(CONF_FILE)
-	install -D --mode=0644 $^ $(DESTDIR)/usr/share/acrn/samples/nuc/acrn.conf
+	$(vecho) "Install $@..."
+	$(Q)install -D --mode=0644 $^ $(DESTDIR)/usr/share/acrn/samples/nuc/acrn.conf
 
 clean:
-	rm -f $(BOOT) $(HV_OBJDIR)/$(HV_FILE).efi $(EFI_OBJDIR)/boot.so $(ACRN_OBJS) $(FS)
+	$(vecho) "cleanup..."
+	$(Q)rm -f $(BOOT) $(HV_OBJDIR)/$(HV_FILE).efi $(EFI_OBJDIR)/boot.so $(ACRN_OBJS) $(FS)
 
 $(EFI_OBJDIR)/%.o:%.S $(HV_OBJDIR)/$(HV_CONFIG_H)
-	[ ! -e $@ ] && mkdir -p $(dir $@); \
+	$(vecho) "--> BUild $<"
+	$(Q)[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(CFLAGS)   -c -o $@ $<
 
 $(EFI_OBJDIR)/%.o: %.c $(HV_OBJDIR)/$(HV_CONFIG_H)
-	[ ! -e $@ ] && mkdir -p $(dir $@); \
+	$(vecho) "--> BUild $<"
+	$(Q)[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. -c $(CFLAGS) $(ARCH_CFLAGS) $< -o $@
 
 %.efi: %.so
-	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel \
+	$(vecho) "Generate `basename $@`..."
+	$(Q)$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel \
 		-j .rela -j .reloc --target=$(FORMAT) $*.so $@

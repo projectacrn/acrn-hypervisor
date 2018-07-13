@@ -20,6 +20,20 @@ export BUILDDIR
 export CC
 export RM
 
+# With V=1 means verbose build. Will show full build commands
+#
+# Without V means silient build. Only show customed message. And we
+# could put more focous on warning.
+ifdef V
+  Q :=
+  vecho := @true
+  SUBOPT := "V=1"
+else
+  Q := @
+  vecho := @echo
+  SUBOPT:= "--no-print-directory"
+endif
+
 PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):/usr/lib/pkgconfig
 PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):/usr/share/pkgconfig
 PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):/usr/local/lib/pkgconfig
@@ -47,65 +61,68 @@ export EXTRA_LIBS
 
 .PHONY:all
 all:
-	$(MAKE) -C common
-	$(MAKE) -C acrnprobe
-	$(MAKE) -C usercrash
+	$(vecho) "Build acrn-crashlog"
+	$(Q)$(MAKE) -C common $(SUBOPT)
+	$(Q)$(MAKE) -C acrnprobe $(SUBOPT)
+	$(Q)$(MAKE) -C usercrash $(SUBOPT)
 
 .PHONY:clean
 clean:
-	$(MAKE) -C common clean
-	$(MAKE) -C acrnprobe clean
-	$(MAKE) -C usercrash clean
-	@if [ -d "$(BUILDDIR)" ]; then \
+	$(vecho) "Clean acrn-crashlog"
+	$(Q)$(MAKE) -C common clean
+	$(Q)$(MAKE) -C acrnprobe clean
+	$(Q)$(MAKE) -C usercrash clean
+	$(Q)if [ -d "$(BUILDDIR)" ]; then \
 		$(RM) -rf $(BUILDDIR); \
 	fi
 
 .PHONY:install
 install:
-	@install -d $(DESTDIR)/usr/bin/
-	@install -p -D -m 0755 $(BUILDDIR)/acrnprobe/bin/acrnprobe $(DESTDIR)/usr/bin/
-	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/debugger $(DESTDIR)/usr/bin/
-	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/usercrash_c $(DESTDIR)/usr/bin/
-	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/usercrash_s $(DESTDIR)/usr/bin/
-	@install -p -D -m 0755 data/acrnprobe_prepare.sh $(DESTDIR)/usr/bin/
-	@install -d $(DESTDIR)/usr/lib/systemd/system.conf.d/
-	@install -p -D -m 0644 data/40-watchdog.conf $(DESTDIR)/usr/lib/systemd/system.conf.d/
-	@install -d $(DESTDIR)/usr/share/defaults/telemetrics/
-	@install -p -D -m 0644 data/acrnprobe.xml $(DESTDIR)/usr/share/defaults/telemetrics/
-	@install -d $(DESTDIR)/usr/lib/systemd/system/
-	@install -p -D -m 0644 data/acrnprobe.service $(DESTDIR)/usr/lib/systemd/system/
-	@install -p -D -m 0644 data/prepare.service $(DESTDIR)/usr/lib/systemd/system/
-	@install -p -D -m 0644 data/usercrash.service $(DESTDIR)/usr/lib/systemd/system/
+	$(vecho) "Install acrn-crashlog"
+	$(Q)install -d $(DESTDIR)/usr/bin/
+	$(Q)install -p -D -m 0755 $(BUILDDIR)/acrnprobe/bin/acrnprobe $(DESTDIR)/usr/bin/
+	$(Q)install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/debugger $(DESTDIR)/usr/bin/
+	$(Q)install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/usercrash_c $(DESTDIR)/usr/bin/
+	$(Q)install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/usercrash_s $(DESTDIR)/usr/bin/
+	$(Q)install -p -D -m 0755 data/acrnprobe_prepare.sh $(DESTDIR)/usr/bin/
+	$(Q)install -d $(DESTDIR)/usr/lib/systemd/system.conf.d/
+	$(Q)install -p -D -m 0644 data/40-watchdog.conf $(DESTDIR)/usr/lib/systemd/system.conf.d/
+	$(Q)install -d $(DESTDIR)/usr/share/defaults/telemetrics/
+	$(Q)install -p -D -m 0644 data/acrnprobe.xml $(DESTDIR)/usr/share/defaults/telemetrics/
+	$(Q)install -d $(DESTDIR)/usr/lib/systemd/system/
+	$(Q)install -p -D -m 0644 data/acrnprobe.service $(DESTDIR)/usr/lib/systemd/system/
+	$(Q)install -p -D -m 0644 data/prepare.service $(DESTDIR)/usr/lib/systemd/system/
+	$(Q)install -p -D -m 0644 data/usercrash.service $(DESTDIR)/usr/lib/systemd/system/
 
 .PHONY:uninstall
 uninstall:
-	@if [ -e "$(DESTDIR)/usr/bin/acrnprobe" ];then \
+	$(Q)if [ -e "$(DESTDIR)/usr/bin/acrnprobe" ];then \
 		$(RM) $(DESTDIR)/usr/bin/acrnprobe; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/bin/acrnprobe_prepare.sh" ];then \
+	$(Q)if [ -e "$(DESTDIR)/usr/bin/acrnprobe_prepare.sh" ];then \
 		$(RM) $(DESTDIR)/usr/bin/acrnprobe_prepare.sh; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/bin/debugger" ];then \
+	$(Q)if [ -e "$(DESTDIR)/usr/bin/debugger" ];then \
 		$(RM) $(DESTDIR)/usr/bin/debugger; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/bin/usercrash_c" ];then \
+	$(Q)if [ -e "$(DESTDIR)/usr/bin/usercrash_c" ];then \
 		$(RM) $(DESTDIR)/usr/bin/usercrash_c; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/bin/usercrash_s" ];then \
+	$(Q)if [ -e "$(DESTDIR)/usr/bin/usercrash_s" ];then \
 		$(RM) $(DESTDIR)/usr/bin/usercrash_s; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/lib/systemd/system.conf.d/40-watchdog.conf" ];then \
+	$(Q)if [ -e "$(DESTDIR)/usr/lib/systemd/system.conf.d/40-watchdog.conf" ];then \
 		$(RM) $(DESTDIR)/usr/lib/systemd/system.conf.d/40-watchdog.conf; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/share/defaults/telemetrics/acrnprobe.xml" ];then \
+	$(Q)if [ -e "$(DESTDIR)/usr/share/defaults/telemetrics/acrnprobe.xml" ];then \
 		$(RM) $(DESTDIR)/usr/share/defaults/telemetrics/acrnprobe.xml; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/lib/systemd/system/acrnprobe.service" ];then \
+	$(Q)if [ -e "$(DESTDIR)/usr/lib/systemd/system/acrnprobe.service" ];then \
 		$(RM) $(DESTDIR)/usr/lib/systemd/system/acrnprobe.service; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/lib/systemd/system/prepare.service" ];then \
+	$(Q)if [ -e "$(DESTDIR)/usr/lib/systemd/system/prepare.service" ];then \
 		$(RM) $(DESTDIR)/usr/lib/systemd/system/prepare.service; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/lib/systemd/system/usercrash.service" ];then \
+	$(Q)if [ -e "$(DESTDIR)/usr/lib/systemd/system/usercrash.service" ];then \
 		$(RM) $(DESTDIR)/usr/lib/systemd/system/usercrash.service; \
 	fi
