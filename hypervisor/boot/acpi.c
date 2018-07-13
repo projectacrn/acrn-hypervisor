@@ -237,7 +237,7 @@ static uint16_t _parse_madt(void *madt, uint8_t lapic_id_array[MAX_PCPU_NUM])
 
 	for (entry = first; (void *)entry < end; ) {
 		if (entry->length < sizeof(struct acpi_subtable_header)) {
-			continue;
+			break;
 		}
 
 		if (entry->type == ACPI_MADT_TYPE_LOCAL_APIC) {
