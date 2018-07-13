@@ -85,7 +85,7 @@
 /*
  * 16 priority levels with at most one vector injected per level.
  */
-#define	ISRVEC_STK_SIZE		(16 + 1)
+#define	ISRVEC_STK_SIZE		(16U + 1U)
 
 #define VLAPIC_MAXLVT_INDEX	APIC_LVT_CMCI
 
@@ -132,9 +132,17 @@ struct vlapic {
 	 * A vector is popped from the stack when the processor does an EOI.
 	 * The vector on the top of the stack is used to compute the
 	 * Processor Priority in conjunction with the TPR.
+	 *
+	 * Note: isrvec_stk_top is unsigned and always equal to the number of
+	 * vectors in the stack.
+	 *
+	 * Operations:
+	 *     init: isrvec_stk_top = 0;
+	 *     push: isrvec_stk_top++; isrvec_stk[isrvec_stk_top] = x;
+	 *     pop : isrvec_stk_top--;
 	 */
 	uint8_t		isrvec_stk[ISRVEC_STK_SIZE];
-	int		isrvec_stk_top;
+	uint32_t	isrvec_stk_top;
 
 	uint64_t	msr_apicbase;
 
