@@ -36,13 +36,13 @@ on your platform. You'll need a network connection for your platform to
 complete this setup.
 
 .. note::
-   ACRN requires Clear Linux version 22140 or newer. The instructions below
-   have been validated with version 22140 and need some adjustment to work
+   ACRN v.01 or latest requires Clear Linux version 23690 or newer. The instructions below
+   have been validated with version 23690 and need some adjustment to work
    with newer versions. You will see a note when the instruction needs to be
    adjusted.
 
 #. Download the compressed Clear installer image from
-   https://download.clearlinux.org/releases/22140/clear/clear-22140-installer.img.xz
+   https://download.clearlinux.org/releases/23690/clear/clear-23690-installer.img.xz
    and follow the `Clear Linux installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
    as a starting point for installing Clear Linux onto your platform.  Follow the recommended
@@ -61,11 +61,20 @@ complete this setup.
 
       # swupd autoupdate --disable
 
+#. if an old Clear Linux version installed already on your Hardware. We recommend that you upgrade Clear Linux to 23690 
+   or newer to use ACRN v0.1 or latest, Use this command
+   to upgrade your Clear Linux version to 23690 or <latest version>:
+
+   .. code-block:: none
+
+      # swupd update -m 23690 or <latest version>
+
+
 #. Use the ``swupd bundle-add`` command and add these Clear Linux bundles:
 
    .. code-block:: none
 
-      # swupd bundle-add vim network-basic service-os kernel-pk
+      # swupd bundle-add vim network-basic service-os kernel-pk desktop openssh-server
 
    .. table:: Clear Linux bundles
       :widths: auto
@@ -84,6 +93,10 @@ complete this setup.
       | kernel-pk          | Run the Intel "PK" kernel(product kernel source)  |
       |                    | and enterprise-style kernel with backports        |
       +--------------------+---------------------------------------------------+
+      | desktop            | desktop application, Weston included              |
+      +--------------------+---------------------------------------------------+
+      | openssh-server     | include openssh                                   |
+      +--------------------+---------------------------------------------------+
 
 Add the ACRN hypervisor to the EFI Partition
 ============================================
@@ -99,9 +112,9 @@ partition. Follow these steps:
 
       # ls -1 /mnt/EFI/org.clearlinux
       bootloaderx64.efi
-      kernel-org.clearlinux.native.4.16.6-563
-      kernel-org.clearlinux.pk414-sos.4.14.34-28
-      kernel-org.clearlinux.pk414-standard.4.14.34-28
+      kernel-org.clearlinux.native.4.17.6-590
+      kernel-org.clearlinux.pk414-sos.4.14.52-63
+      kernel-org.clearlinux.pk414-standard.4.14.52-63
       loaderx64.efi
 
    .. note::
@@ -249,13 +262,13 @@ automatically enabled after a system restart.
 Set up Reference UOS
 ====================
 
-#. On your platform, download the pre-built reference Clear Linux UOS image into your
+#. On your platform, download the pre-built reference Clear Linux UOS image 23690 or newer into your
    (root) home directory:
 
    .. code-block:: none
 
       # cd ~
-      # curl -O https://download.clearlinux.org/releases/22140/clear/clear-22140-kvm.img.xz
+      # curl -O https://download.clearlinux.org/releases/23690/clear/clear-23690-kvm.img.xz
 
    .. note::
       In case you want to use or try out a newer version of Clear Linux as the UOS, you can
@@ -266,16 +279,16 @@ Set up Reference UOS
 
    .. code-block:: none
 
-      # unxz clear-22140-kvm.img.xz
+      # unxz clear-23690-kvm.img.xz
 
 #. Deploy the UOS kernel modules to UOS virtual disk image (note: you'll need to use
    the same **standard** image version number noted in step 1 above):
 
    .. code-block:: none
 
-      # losetup -f -P --show /root/clear-22140-kvm.img
+      # losetup -f -P --show /root/clear-23690-kvm.img
       # mount /dev/loop0p3 /mnt
-      # cp -r /usr/lib/modules/4.14.34-28.pk414-standard /mnt/lib/modules/
+      # cp -r /usr/lib/modules/4.14.52-63.pk414-standard /mnt/lib/modules/
       # umount /mnt
       # sync
 
