@@ -24,13 +24,15 @@ HOST_IDTR:
  * We'll rearrange and fix up the descriptors at runtime
  */
 .macro interrupt_descriptor entry, dpl=0 ist=0
-	.long	HOST_GDT_RING0_CODE_SEL << 16
+	/* 0x0008 = HOST_GDT_RING0_CODE_SEL */
+	.long	0x0008 << 16
 	.long	0x00008e00 + (dpl << 13) + ist
 	.quad	entry
 .endm
 
 .macro	trap_descriptor entry, dpl=0, ist=0
-	.long	HOST_GDT_RING0_CODE_SEL << 16
+        /* 0x0008 = HOST_GDT_RING0_CODE_SEL */
+	.long	0x0008 << 16
 	.long	0x00008f00 + (dpl <<13) + ist
 	.quad	entry
 .endm
