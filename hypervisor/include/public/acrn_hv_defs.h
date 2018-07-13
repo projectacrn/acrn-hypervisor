@@ -76,7 +76,7 @@
 #define HC_PM_GET_CPU_STATE         _HC_ID(HC_ID, HC_ID_PM_BASE + 0x00UL)
 
 #define ACRN_DOM0_VMID (0UL)
-#define ACRN_INVALID_VMID (-1)
+#define ACRN_INVALID_VMID (0xffffU)
 #define ACRN_INVALID_HPA (~0UL)
 
 /* Generic memory attributes */

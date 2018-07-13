@@ -16,8 +16,8 @@ enum vm_privilege_level {
 
 #define	MAX_VM_NAME_LEN		16
 struct vm_attr {
-	int id;		/* Virtual machine identifier */
-	int boot_idx;	/* Index indicating the boot sequence for this VM */
+	uint16_t id;		/* Virtual machine identifier */
+	uint16_t boot_idx;	/* Index indicating the boot sequence for this VM */
 };
 
 struct vm_hw_info {
@@ -177,7 +177,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **vm);
 int prepare_vm0(void);
 void vm_fixup(struct vm *vm);
 
-struct vm *get_vm_from_vmid(int vm_id);
+struct vm *get_vm_from_vmid(uint16_t vm_id);
 
 extern struct list_head vm_list;
 extern spinlock_t vm_list_lock;
