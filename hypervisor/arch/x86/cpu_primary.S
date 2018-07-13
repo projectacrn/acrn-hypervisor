@@ -112,7 +112,8 @@ cpu_primary_start_32:
     lgdt    (%ebx)
 
     /* Perform a long jump based to start executing in 64-bit mode */
-    ljmp    $HOST_GDT_RING0_CODE_SEL, $primary_start_long_mode
+    /* 0x0008 = HOST_GDT_RING0_CODE_SEL */
+    ljmp    $0x0008, $primary_start_long_mode
 
     .code64
     .org 0x200
@@ -150,13 +151,15 @@ primary_start_long_mode:
     rex.w ljmp  *(%rax)
 .data
 jmpbuf: .quad 0
-        .word HOST_GDT_RING0_CODE_SEL
+	/* 0x0008 = HOST_GDT_RING0_CODE_SEL */
+        .word 0x0008
 .text
 after:
     // load all selector registers with appropriate values
     xor     %edx, %edx
     lldt    %dx
-    movl    $HOST_GDT_RING0_DATA_SEL,%eax
+    /* 0x10 = HOST_GDT_RING0_DATA_SEL*/
+    movl    $0x10,%eax
     mov     %eax,%ss  // Was 32bit POC Stack
     mov     %eax,%ds  // Was 32bit POC Data
     mov     %eax,%es  // Was 32bit POC Data

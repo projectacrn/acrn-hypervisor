@@ -133,14 +133,15 @@ trampoline_fixup_target:
     .global trampoline_start64_fixup
 trampoline_start64_fixup:
     .long   trampoline_start64
-    .word   HOST_GDT_RING0_CODE_SEL
+    /* 0x0008 = HOST_GDT_RING0_CODE_SEL */
+    .word   0x0008
 
     .code64
 trampoline_start64:
 
     /* Set up all other data segment registers */
-
-    movl    $HOST_GDT_RING0_DATA_SEL, %eax
+    /* 0x0010 = HOST_GDT_RING0_DATA_SEL */
+    movl    $0x0010, %eax
     mov     %eax, %ss
     mov     %eax, %ds
     mov     %eax, %es
