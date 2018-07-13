@@ -43,7 +43,6 @@ what is referenced in the :ref:`getting-started-apl-nuc` section:
 
 1. Serial Port settings
 #. Storage device name
-#. ``pci_devices_ignore`` parameter
 
 You will need to keep these in mind in a few places:
 
@@ -55,7 +54,6 @@ You will need to keep these in mind in a few places:
 
 * When adjusting the ``acrn.conf`` file
 
-  * Change the ``options`` line and set ``pci_devices_ignore=(0:18:1)``
   * Set the ``root=`` parameter using the ``PARTUUID`` or device name directly
 
 * When configuring the EFI firmware to boot the ACRN hypervisor by default
