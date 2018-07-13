@@ -2173,10 +2173,19 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 			XHCI_ST_EPCTX_HALTED;
 		err = XHCI_TRB_ERROR_STALL;
 		break;
+	case USB_ERR_SHORT_XFER:
+		err = XHCI_TRB_ERROR_SHORT_PKT;
+		break;
+	case USB_ERR_TIMEOUT:
+	case USB_ERR_IOERROR:
+		err = XHCI_TRB_ERROR_XACT;
+		break;
+	case USB_ERR_BAD_BUFSIZE:
+		err = XHCI_TRB_ERROR_BABBLE;
+		break;
 	case USB_ERR_NORMAL_COMPLETION:
 		break;
 	default:
-		/* FIXME: should process other failures */
 		UPRINTF(LFTL, "unknown error %d\r\n", xfer->status);
 	}
 
