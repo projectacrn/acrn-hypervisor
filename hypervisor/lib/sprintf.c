@@ -10,7 +10,9 @@
 #define NULL ((void *) 0)
 #endif
 
-#define PRINT_STRING_MAX_LEN 4096
+#define PRINT_STRING_MAX_LEN		4096U
+
+#define HEX_DIGITS_LEN			17U
 
 /** Use upper case letters for hexadecimal format. */
 #define PRINT_FLAG_UPPER		0x00000001U
@@ -292,7 +294,7 @@ static int print_pow2(struct print_param *param,
 	/* buffer for the 0/0x/0X prefix */
 	char prefix[2];
 	/* pointer to the digits translation table */
-	const char *digits;
+	const char (*digits)[HEX_DIGITS_LEN];
 	/* mask to extract next character */
 	uint64_t mask;
 	int ret;
@@ -302,7 +304,7 @@ static int print_pow2(struct print_param *param,
 
 	/* determine digit translation table */
 	digits = ((param->vars.flags & PRINT_FLAG_UPPER) != 0) ?
-			upper_hex_digits : lower_hex_digits;
+			&upper_hex_digits : &lower_hex_digits;
 
 	/* apply mask for short/char */
 	v &= param->vars.mask;
@@ -315,14 +317,14 @@ static int print_pow2(struct print_param *param,
 
 		if (shift == 4U) {
 			param->vars.prefixlen = 2U;
-			prefix[1] = digits[16];
+			prefix[1] = (*digits)[16];
 		}
 	}
 
 	/* determine digits from right to left */
 	do {
 		pos--;
-		*pos = digits[(v & mask)];
+		*pos = (*digits)[(v & mask)];
 		v >>= shift;
 	} while (v != 0UL);
 
