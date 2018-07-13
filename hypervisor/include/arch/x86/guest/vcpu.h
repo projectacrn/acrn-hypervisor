@@ -77,6 +77,8 @@
 
 #ifndef ASSEMBLER
 
+#include <guest.h>
+
 enum vcpu_state {
 	VCPU_INIT,
 	VCPU_RUNNING,
@@ -217,7 +219,7 @@ struct vcpu_arch {
 	uint32_t inst_len;
 
 	/* Information related to secondary / AP VCPU start-up */
-	uint8_t cpu_mode;
+	enum vm_cpu_mode cpu_mode;
 	uint8_t nr_sipi;
 	uint32_t sipi_vector;
 

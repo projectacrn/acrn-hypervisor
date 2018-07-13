@@ -432,7 +432,7 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0);
 int vmx_write_cr3(struct vcpu *vcpu, uint64_t cr3);
 int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4);
 
-static inline uint8_t get_vcpu_mode(struct vcpu *vcpu)
+static inline enum vm_cpu_mode get_vcpu_mode(struct vcpu *vcpu)
 {
 	return vcpu->arch_vcpu.cpu_mode;
 }
