@@ -657,3 +657,15 @@ vm_intr_monitor(struct vmctx *ctx, void *intr_buf)
 {
 	return ioctl(ctx->fd, IC_VM_INTR_MONITOR, intr_buf);
 }
+
+int
+vm_ioeventfd(struct vmctx *ctx, struct acrn_ioeventfd *args)
+{
+	return ioctl(ctx->fd, IC_EVENT_IOEVENTFD, args);
+}
+
+int
+vm_irqfd(struct vmctx *ctx, struct acrn_irqfd *args)
+{
+	return ioctl(ctx->fd, IC_EVENT_IRQFD, args);
+}
