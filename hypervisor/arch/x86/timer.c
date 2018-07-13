@@ -20,7 +20,7 @@ static void run_timer(struct timer *timer)
 		timer->func(timer->priv_data);
 	}
 
-	TRACE_2L(TRACE_TIMER_ACTION_PCKUP, timer->fire_tsc, 0);
+	TRACE_2L(TRACE_TIMER_ACTION_PCKUP, timer->fire_tsc, 0UL);
 }
 
 /* run in interrupt context */
@@ -95,7 +95,7 @@ int add_timer(struct timer *timer)
 		update_physical_timer(cpu_timer);
 	}
 
-	TRACE_2L(TRACE_TIMER_ACTION_ADDED, timer->fire_tsc, 0);
+	TRACE_2L(TRACE_TIMER_ACTION_ADDED, timer->fire_tsc, 0UL);
 	return 0;
 
 }

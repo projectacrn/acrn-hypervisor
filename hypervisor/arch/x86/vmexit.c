@@ -213,7 +213,7 @@ static int unhandled_vmexit_handler(struct vcpu *vcpu)
 
 	/* while(1); */
 
-	TRACE_2L(TRACE_VMEXIT_UNHANDLED, vcpu->arch_vcpu.exit_reason, 0);
+	TRACE_2L(TRACE_VMEXIT_UNHANDLED, vcpu->arch_vcpu.exit_reason, 0UL);
 
 	return 0;
 }

@@ -73,8 +73,8 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 	direction = VM_EXIT_IO_INSTRUCTION_ACCESS_DIRECTION(exit_qual);
 	mask = 0xfffffffful >> (32 - 8 * sz);
 
-	TRACE_4I(TRACE_VMEXIT_IO_INSTRUCTION, port, direction, sz,
-		cur_context_idx);
+	TRACE_4I(TRACE_VMEXIT_IO_INSTRUCTION, port, (uint32_t)direction, sz,
+		(uint32_t)cur_context_idx);
 
 	for (handler = vm->arch_vm.io_handler;
 			handler; handler = handler->next) {
