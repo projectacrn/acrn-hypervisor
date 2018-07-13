@@ -104,7 +104,7 @@ void vcpu_thread(struct vcpu *vcpu)
 
 static bool is_vm0_bsp(uint16_t pcpu_id)
 {
-	return pcpu_id == vm0_desc.vm_hw_logical_core_ids[0];
+	return pcpu_id == vm0_desc.vm_pcpu_ids[0];
 }
 
 int32_t hv_main(uint16_t pcpu_id)
