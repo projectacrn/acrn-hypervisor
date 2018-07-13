@@ -106,6 +106,13 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 	for (i = 0; i < req->blk_count; i++) {
 		done = 0;
 		block = &xfer->data[idx % USB_MAX_XFER_BLOCKS];
+
+		/* Link TRB need to be skipped */
+		if (!block->buf || !block->blen) {
+			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
+			continue;
+		}
+
 		if (len > buf_idx) {
 			done = block->blen;
 			if (done > len - buf_idx) {
@@ -203,6 +210,7 @@ usb_dev_prepare_xfer(struct usb_data_xfer *xfer, int *count, int *size)
 
 		if (block->processed) {
 			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
+			c++;
 			continue;
 		}
 		if (block->buf && block->blen > 0) {
