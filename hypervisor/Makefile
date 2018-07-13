@@ -198,7 +198,7 @@ endif
 S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(S_SRCS))
 
 DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
-VERSION := bsp/$(CONFIG_PLATFORM)/include/bsp/version.h
+VERSION := $(HV_OBJDIR)/include/version.h
 
 .PHONY: all
 all: $(VERSION) $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
