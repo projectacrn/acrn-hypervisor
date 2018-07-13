@@ -62,13 +62,21 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 		xfer->status = USB_ERR_STALLED;
 		goto out;
 	case LIBUSB_TRANSFER_NO_DEVICE:
+		/* avoid short packet warnings when devices are plugged out. */
+		xfer->status = USB_ERR_SHORT_XFER;
+		goto out;
 	case LIBUSB_TRANSFER_ERROR:
-	case LIBUSB_TRANSFER_TIMED_OUT:
+		xfer->status = USB_ERR_STALLED;
+		goto out;
 	case LIBUSB_TRANSFER_CANCELLED:
+		xfer->status = USB_ERR_IOERROR;
+		goto out;
+	case LIBUSB_TRANSFER_TIMED_OUT:
+		xfer->status = USB_ERR_TIMEOUT;
+		goto out;
 	case LIBUSB_TRANSFER_OVERFLOW:
-		/* FIXME: should treat every failure properly */
-		UPRINTF(LWRN, "failure: %x\r\n", libusb_xfer->status);
-		break;
+		xfer->status = USB_ERR_BAD_BUFSIZE;
+		goto out;
 	case LIBUSB_TRANSFER_COMPLETED:
 		break;
 	default:
