@@ -126,7 +126,8 @@ static uint16_t vm_apicid2vcpu_id(struct vm *vm, uint8_t lapicid)
 	struct vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
-		if (vlapic_get_apicid(vcpu->arch_vcpu.vlapic) == lapicid) {
+		struct vlapic *vlapic = vcpu->arch_vcpu.vlapic;
+		if (vlapic_get_apicid(vlapic) == lapicid) {
 			return vcpu->vcpu_id;
 		}
 	}
@@ -153,13 +154,15 @@ vm_active_cpus(struct vm *vm)
 uint32_t
 vlapic_get_id(struct vlapic *vlapic)
 {
-	return vlapic->apic_page->id;
+	uint32_t id = vlapic->apic_page->id;
+	return id;
 }
 
 uint8_t
 vlapic_get_apicid(struct vlapic *vlapic)
 {
-	return vlapic->apic_page->id >> APIC_ID_SHIFT;
+	uint32_t apicid = vlapic->apic_page->id >> APIC_ID_SHIFT;
+	return (uint8_t)apicid;
 }
 
 static inline uint32_t
@@ -350,10 +353,12 @@ static uint32_t vlapic_get_ccr(struct vlapic *vlapic)
 
 	if (vlapic_timer->tmicr && !vlapic_lvtt_tsc_deadline(vlapic)) {
 		uint64_t fire_tsc = vlapic_timer->timer.fire_tsc;
-		uint32_t divisor_shift = vlapic_timer->divisor_shift;
 
 		if (now < fire_tsc) {
-			remain_count = (fire_tsc - now) >> divisor_shift;
+			uint32_t divisor_shift = vlapic_timer->divisor_shift;
+			uint64_t shifted_delta =
+				(fire_tsc - now) >> divisor_shift;
+			remain_count = (uint32_t)shifted_delta;
 		}
 	}
 
@@ -660,6 +665,7 @@ static int
 vlapic_fire_lvt(struct vlapic *vlapic, uint32_t lvt)
 {
 	uint32_t vec, mode;
+	struct vcpu *vcpu = vlapic->vcpu;
 
 	if ((lvt & APIC_LVT_M) != 0U) {
 		return 0;
@@ -675,14 +681,14 @@ vlapic_fire_lvt(struct vlapic *vlapic, uint32_t lvt)
 			return 0;
 		}
 		if (vlapic_set_intr_ready(vlapic, vec, false) != 0) {
-			vcpu_make_request(vlapic->vcpu, ACRN_REQUEST_EVENT);
+			vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 		}
 		break;
 	case APIC_LVT_DM_NMI:
-		vcpu_inject_nmi(vlapic->vcpu);
+		vcpu_inject_nmi(vcpu);
 		break;
 	case APIC_LVT_DM_EXTINT:
-		vcpu_inject_extint(vlapic->vcpu);
+		vcpu_inject_extint(vcpu);
 		break;
 	default:
 		/* Other modes ignored */
@@ -839,6 +845,7 @@ static int
 vlapic_trigger_lvt(struct vlapic *vlapic, uint32_t vector)
 {
 	uint32_t lvt;
+	struct vcpu *vcpu = vlapic->vcpu;
 
 	if (vlapic_enabled(vlapic) == false) {
 		/*
@@ -848,10 +855,10 @@ vlapic_trigger_lvt(struct vlapic *vlapic, uint32_t vector)
 		 */
 		switch (vector) {
 		case APIC_LVT_LINT0:
-			vcpu_inject_extint(vlapic->vcpu);
+			vcpu_inject_extint(vcpu);
 			break;
 		case APIC_LVT_LINT1:
-			vcpu_inject_nmi(vlapic->vcpu);
+			vcpu_inject_nmi(vcpu);
 			break;
 		default:
 			break;
@@ -1027,7 +1034,8 @@ vlapic_set_cr8(struct vlapic *vlapic, uint64_t val)
 	uint8_t tpr;
 
 	if ((val & ~0xfUL) != 0U) {
-		vcpu_inject_gp(vlapic->vcpu, 0U);
+		struct vcpu *vcpu = vlapic->vcpu;
+		vcpu_inject_gp(vcpu, 0U);
 		return;
 	}
 
@@ -1662,13 +1670,15 @@ vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest, bool phys,
 
 	for (vcpu_id = ffs64(dmask); vcpu_id != INVALID_BIT_INDEX;
 		vcpu_id = ffs64(dmask)) {
+		struct vlapic *vlapic;
 		bitmap_clear(vcpu_id, &dmask);
 		target_vcpu = vcpu_from_vid(vm, vcpu_id);
 		if (target_vcpu == NULL)
 			return;
 
 		/* only make request when vlapic enabled */
-		if (vlapic_enabled(target_vcpu->arch_vcpu.vlapic)) {
+		vlapic = target_vcpu->arch_vcpu.vlapic;
+		if (vlapic_enabled(vlapic)) {
 			if (delmode == IOAPIC_RTE_DELEXINT) {
 				vcpu_inject_extint(target_vcpu);
 			} else {
@@ -1733,6 +1743,7 @@ vlapic_apicv_set_tmr(struct vlapic *vlapic, uint32_t vector, bool level)
 void
 vlapic_reset_tmr(struct vlapic *vlapic)
 {
+	struct vcpu *vcpu = vlapic->vcpu;
 	uint32_t vector;
 
 	dev_dbg(ACRN_DBG_LAPIC,
@@ -1742,7 +1753,7 @@ vlapic_reset_tmr(struct vlapic *vlapic)
 		vlapic_set_tmr(vlapic, vector, false);
 	}
 
-	vcpu_make_request(vlapic->vcpu, ACRN_REQUEST_TMR_UPDATE);
+	vcpu_make_request(vcpu, ACRN_REQUEST_TMR_UPDATE);
 }
 
 void
@@ -2193,17 +2204,19 @@ static void
 apicv_set_tmr(__unused struct vlapic *vlapic, uint32_t vector, bool level)
 {
 	uint64_t mask, val;
+	uint32_t field;
 
 	mask = 1UL << (vector % 64U);
+	field = VMX_EOI_EXIT(vector);
 
-	val = exec_vmread(VMX_EOI_EXIT(vector));
+	val = exec_vmread(field);
 	if (level) {
 		val |= mask;
 	} else {
 		val &= ~mask;
 	}
 
-	exec_vmwrite(VMX_EOI_EXIT(vector), val);
+	exec_vmwrite(field, val);
 }
 
 /* Update the VMX_EOI_EXIT according to related tmr */
