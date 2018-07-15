@@ -1,9 +1,15 @@
+/*
+ * Copyright (C) 2018 Intel Corporation. All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #ifndef PER_CPU_H
 #define PER_CPU_H
+
 #include <hypervisor.h>
 #include <bsp_extern.h>
 #include <schedule.h>
-#include <version.h>
 #include <common/irq.h>
 #include <arch/x86/irq.h>
 #include <sbuf.h>
@@ -52,4 +58,5 @@ extern uint64_t pcpu_active_bitmap;
 
 /* get percpu data for current pcpu */
 #define get_cpu_var(name)	per_cpu(name, get_cpu_id())
+
 #endif
