@@ -14,11 +14,11 @@
 
 bool is_hypercall_from_ring0(void)
 {
-	uint64_t cs_sel;
+	uint16_t cs_sel;
 
-	cs_sel = exec_vmread(VMX_GUEST_CS_SEL);
+	cs_sel = exec_vmread16(VMX_GUEST_CS_SEL);
 	/* cs_selector[1:0] is CPL */
-	if ((cs_sel & 0x3UL) == 0) {
+	if ((cs_sel & 0x3U) == 0U) {
 		return true;
 	}
 

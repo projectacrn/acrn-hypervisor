@@ -414,8 +414,10 @@ int exec_vmxon_instr(uint16_t pcpu_id);
  */
 uint64_t exec_vmread(uint32_t field);
 
+uint16_t exec_vmread16(uint32_t field);
 uint64_t exec_vmread64(uint32_t field_full);
 void exec_vmwrite(uint32_t field, uint64_t value);
+void exec_vmwrite16(uint32_t field, uint16_t value);
 void exec_vmwrite64(uint32_t field_full, uint64_t value);
 int init_vmcs(struct vcpu *vcpu);
 

@@ -286,7 +286,7 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	pw_info.level = pm;
 	pw_info.is_write_access = ((*err_code & PAGE_FAULT_WR_FLAG) != 0U);
 	pw_info.is_inst_fetch = ((*err_code & PAGE_FAULT_ID_FLAG) != 0U);
-	pw_info.is_user_mode = ((exec_vmread(VMX_GUEST_CS_SEL) & 0x3UL) == 3UL);
+	pw_info.is_user_mode = ((exec_vmread16(VMX_GUEST_CS_SEL) & 0x3U) == 3U);
 	pw_info.pse = true;
 	pw_info.nxe =
 		((cur_context->ia32_efer & MSR_IA32_EFER_NXE_BIT) != 0UL);
