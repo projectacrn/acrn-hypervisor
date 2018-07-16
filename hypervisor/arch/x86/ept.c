@@ -470,10 +470,10 @@ int ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu)
 	status = -EINVAL;
 
 	/* TODO - EPT Violation handler */
-	pr_info("%s, Guest linear address: 0x%016llx ",
+	pr_fatal("%s, Guest linear address: 0x%016llx ",
 			__func__, exec_vmread(VMX_GUEST_LINEAR_ADDR));
 
-	pr_info("%s, Guest physical address: 0x%016llx ",
+	pr_fatal("%s, Guest physical address: 0x%016llx ",
 			__func__, exec_vmread64(VMX_GUEST_PHYSICAL_ADDR_FULL));
 
 	ASSERT(status == 0, "EPT Misconfiguration is not handled.\n");
@@ -531,23 +531,19 @@ int ept_mmap(struct vm *vm, uint64_t hpa,
 	return 0;
 }
 
-int ept_update_mt(struct vm *vm, uint64_t hpa,
-	uint64_t gpa, uint64_t size, uint32_t prot)
+int ept_mr_modify(struct vm *vm, uint64_t gpa, uint64_t size,
+		uint64_t attr_set, uint64_t attr_clr)
 {
-	struct map_params map_params;
 	struct vcpu *vcpu;
 	uint16_t i;
+	int ret;
 
-	/* Setup memory map parameters */
-	map_params.page_table_type = PTT_EPT;
-	map_params.pml4_base = HPA2HVA(vm->arch_vm.nworld_eptp);
-	map_params.pml4_inverted = HPA2HVA(vm->arch_vm.m2p);
-
-	modify_mem_mt(&map_params, (void *)hpa, (void *)gpa, size, prot);
+	ret = mmu_modify((uint64_t *)HPA2HVA(vm->arch_vm.nworld_eptp),
+			gpa, size, attr_set, attr_clr, PTT_EPT);
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 	}
 
-	return 0;
+	return ret;
 }

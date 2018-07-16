@@ -36,7 +36,6 @@ enum mem_map_request_type {
 	PAGING_REQUEST_TYPE_MAP = 0,	/* Creates a new mapping. */
 	PAGING_REQUEST_TYPE_UNMAP = 1,	/* Removes a pre-existing entry */
 	PAGING_REQUEST_TYPE_MODIFY = 2,
-	PAGING_REQUEST_TYPE_MODIFY_MT = 3, /* Update the memory type fields */
 	/* Modifies a pre-existing entries attributes. */
 	PAGING_REQUEST_TYPE_UNKNOWN,
 };
@@ -383,30 +382,6 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 			 */
 			if (table_type == PTT_HOST) {
 				mmu_need_invtlb = true;
-			}
-			break;
-		}
-		case PAGING_REQUEST_TYPE_MODIFY_MT:
-		{
-			if (prev_entry_present) {
-				/* modify the memory type related fields only */
-				if (table_type == PTT_EPT) {
-					table_entry = entry & ~IA32E_EPT_MT_MASK;
-				} else {
-					table_entry = entry & ~MMU_MEM_ATTR_TYPE_MASK;
-				}
-
-				table_entry |= attr;
-
-				/* Write the table entry to map this memory */
-				mem_write64(table_base + table_offset, table_entry);
-
-				/* Modify, need to invalidate TLB and
-				 * page-structure cache
-				 */
-				if (table_type == PTT_HOST) {
-					mmu_need_invtlb = true;
-				}
 			}
 			break;
 		}
@@ -1129,26 +1104,6 @@ int modify_mem(struct map_params *map_params, void *paddr, void *vaddr,
 	if (map_params->page_table_type == PTT_EPT) {
 		ret = modify_paging(map_params, vaddr, paddr, size, flags,
 				PAGING_REQUEST_TYPE_MODIFY, false);
-	}
-	return ret;
-}
-
-int modify_mem_mt(struct map_params *map_params, void *paddr, void *vaddr,
-		    uint64_t size, uint32_t flags)
-{
-	int ret = 0;
-
-	/* used for MMU and EPT*/
-	ret = modify_paging(map_params, paddr, vaddr, size, flags,
-			PAGING_REQUEST_TYPE_MODIFY_MT, true);
-	if (ret < 0) {
-		return ret;
-	}
-
-	/* only for EPT */
-	if (map_params->page_table_type == PTT_EPT) {
-		ret = modify_paging(map_params, vaddr, paddr, size, flags,
-				PAGING_REQUEST_TYPE_MODIFY_MT, false);
 	}
 	return ret;
 }

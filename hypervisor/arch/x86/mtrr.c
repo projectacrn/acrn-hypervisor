@@ -133,7 +133,7 @@ void init_mtrr(struct vcpu *vcpu)
 static uint32_t update_ept(struct vm *vm, uint64_t start,
 	uint64_t size, uint32_t type)
 {
-	uint32_t attr;
+	uint64_t attr;
 
 	switch (type) {
 	case MTRR_MEM_TYPE_WC:
@@ -153,7 +153,7 @@ static uint32_t update_ept(struct vm *vm, uint64_t start,
 		attr = IA32E_EPT_UNCACHED;
 	}
 
-	ept_update_mt(vm, gpa2hpa(vm, start), start, size, attr);
+	ept_mr_modify(vm, start, size, attr, IA32E_EPT_MT_MASK);
 	return attr;
 }
 
