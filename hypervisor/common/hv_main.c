@@ -20,9 +20,9 @@ static void run_vcpu_pre_work(struct vcpu *vcpu)
 
 void vcpu_thread(struct vcpu *vcpu)
 {
-	uint64_t vmexit_begin = 0, vmexit_end = 0;
-	uint16_t basic_exit_reason = 0;
-	uint64_t tsc_aux_hyp_cpu = vcpu->pcpu_id;
+	uint64_t vmexit_begin = 0UL, vmexit_end = 0UL;
+	uint16_t basic_exit_reason = 0U;
+	uint64_t tsc_aux_hyp_cpu = (uint64_t) vcpu->pcpu_id;
 	int32_t ret = 0;
 
 	/* If vcpu is not launched, we need to do init_vmcs first */

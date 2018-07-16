@@ -623,7 +623,7 @@ int64_t hcall_assign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
 		}
 		/* TODO: how to get vm's address width? */
 		target_vm->iommu_domain = create_iommu_domain(vmid,
-				target_vm->arch_vm.nworld_eptp, 48);
+				target_vm->arch_vm.nworld_eptp, 48U);
 		if (target_vm->iommu_domain == NULL) {
 			return -ENODEV;
 		}

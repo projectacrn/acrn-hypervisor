@@ -77,7 +77,7 @@ struct ptdev_remapping_info *alloc_entry(struct vm *vm,
 void release_entry(struct ptdev_remapping_info *entry);
 void ptdev_activate_entry(
 		struct ptdev_remapping_info *entry,
-		int phys_irq, bool lowpri);
+		uint32_t phys_irq, bool lowpri);
 void ptdev_deactivate_entry(struct ptdev_remapping_info *entry);
 
 #ifdef HV_DEBUG

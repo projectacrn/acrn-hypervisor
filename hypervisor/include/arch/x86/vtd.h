@@ -41,31 +41,31 @@
 /*
  * Decoding Capability Register
  */
-#define iommu_cap_pi(c)			(((c) >> 59) & 1UL)
-#define iommu_cap_read_drain(c)   (((c) >> 55) & 1UL)
-#define iommu_cap_write_drain(c)  (((c) >> 54) & 1UL)
-#define iommu_cap_max_amask_val(c)    (((c) >> 48) & 0x3fUL)
-#define iommu_cap_num_fault_regs(c)   ((((c) >> 40) & 0xffUL) + 1)
-#define iommu_cap_pgsel_inv(c)    (((c) >> 39) & 1UL)
+#define iommu_cap_pi(c)			(((c) >> 59U) & 1UL)
+#define iommu_cap_read_drain(c)   (((c) >> 55U) & 1UL)
+#define iommu_cap_write_drain(c)  (((c) >> 54U) & 1UL)
+#define iommu_cap_max_amask_val(c)    (((c) >> 48U) & 0x3fUL)
+#define iommu_cap_num_fault_regs(c)   ((((c) >> 40U) & 0xffUL) + 1UL)
+#define iommu_cap_pgsel_inv(c)    (((c) >> 39U) & 1UL)
 
-#define iommu_cap_super_page_val(c)   (((c) >> 34) & 0xfUL)
+#define iommu_cap_super_page_val(c)   (((c) >> 34U) & 0xfUL)
 #define iommu_cap_super_offset(c) \
 	(((find_first_bit(&iommu_cap_super_page_val(c), 4)) \
 	* OFFSET_STRIDE) + 21)
 
-#define iommu_cap_fault_reg_offset(c) ((((c) >> 24) & 0x3ffUL) * 16)
+#define iommu_cap_fault_reg_offset(c) ((((c) >> 24U) & 0x3ffUL) * 16UL)
 #define iommu_cap_max_fault_reg_offset(c) \
-	(iommu_cap_fault_reg_offset(c) + iommu_cap_num_fault_regs(c) * 16)
+	(iommu_cap_fault_reg_offset(c) + iommu_cap_num_fault_regs(c) * 16UL)
 
-#define iommu_cap_zlr(c)      (((c) >> 22) & 1UL)
-#define iommu_cap_isoch(c)        (((c) >> 23) & 1UL)
-#define iommu_cap_mgaw(c)     ((((c) >> 16) & 0x3f) + 1UL)
-#define iommu_cap_sagaw(c)        (((c) >> 8) & 0x1fUL)
-#define iommu_cap_caching_mode(c) (((c) >> 7) & 1UL)
-#define iommu_cap_phmr(c)     (((c) >> 6) & 1UL)
-#define iommu_cap_plmr(c)     (((c) >> 5) & 1UL)
-#define iommu_cap_rwbf(c)     (((c) >> 4) & 1UL)
-#define iommu_cap_afl(c)      (((c) >> 3) & 1UL)
+#define iommu_cap_zlr(c)      (((c) >> 22U) & 1UL)
+#define iommu_cap_isoch(c)        (((c) >> 23U) & 1UL)
+#define iommu_cap_mgaw(c)     ((((c) >> 16U) & 0x3f) + 1UL)
+#define iommu_cap_sagaw(c)        (((c) >> 8U) & 0x1fUL)
+#define iommu_cap_caching_mode(c) (((c) >> 7U) & 1UL)
+#define iommu_cap_phmr(c)     (((c) >> 6U) & 1UL)
+#define iommu_cap_plmr(c)     (((c) >> 5U) & 1UL)
+#define iommu_cap_rwbf(c)     (((c) >> 4U) & 1UL)
+#define iommu_cap_afl(c)      (((c) >> 3U) & 1UL)
 #define iommu_cap_ndoms(c)        ((1U) << (4U + 2U * ((c) & 0x7U)))
 
 /*
@@ -218,7 +218,7 @@ int unassign_iommu_device(struct iommu_domain *domain,
 
 /* Create a iommu domain for a VM specified by vm_id */
 struct iommu_domain *create_iommu_domain(uint16_t vm_id,
-	uint64_t translation_table, int addr_width);
+	uint64_t translation_table, uint32_t addr_width);
 
 /* Destroy the iommu domain */
 int destroy_iommu_domain(struct iommu_domain *domain);

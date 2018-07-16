@@ -128,7 +128,7 @@ static int ptdev_interrupt_handler(__unused int irq, void *data)
 
 /* active intr with irq registering */
 void
-ptdev_activate_entry(struct ptdev_remapping_info *entry, int phys_irq,
+ptdev_activate_entry(struct ptdev_remapping_info *entry, uint32_t phys_irq,
 		bool lowpri)
 {
 	struct dev_handler_node *node;
