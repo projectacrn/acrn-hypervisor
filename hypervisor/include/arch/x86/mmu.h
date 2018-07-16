@@ -327,8 +327,6 @@ int unmap_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		      uint64_t size, uint32_t flags);
 int modify_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		       uint64_t size, uint32_t flags);
-int modify_mem_mt(struct map_params *map_params, void *paddr, void *vaddr,
-		       uint64_t size, uint32_t flags);
 int mmu_modify(uint64_t *pml4_page,
 		uint64_t vaddr_base, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr,
@@ -406,8 +404,8 @@ uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size);
 uint64_t  hpa2gpa(struct vm *vm, uint64_t hpa);
 int ept_mmap(struct vm *vm, uint64_t hpa,
 	uint64_t gpa, uint64_t size, uint32_t type, uint32_t prot);
-int ept_update_mt(struct vm *vm, uint64_t hpa,
-	uint64_t gpa, uint64_t size, uint32_t prot);
+int ept_mr_modify(struct vm *vm, uint64_t gpa, uint64_t size,
+	uint64_t attr_set, uint64_t attr_clr);
 
 int     ept_violation_vmexit_handler(struct vcpu *vcpu);
 int     ept_misconfig_vmexit_handler(struct vcpu *vcpu);
