@@ -1,7 +1,7 @@
 .. _APL_GVT-G-hld:
 
-Apollo Lake Intel® GVT-G high-level design
-##########################################
+GVT-G high-level design
+#######################
 
 Introduction
 ************

@@ -1,3 +1,5 @@
+:orphan:
+
 .. _trusty_tee:
 
 Trusty TEE on ACRN

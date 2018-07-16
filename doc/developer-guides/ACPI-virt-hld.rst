@@ -1,6 +1,6 @@
 .. _ACPI-virt-HLD:
 
-ACPI Virtualization High Level Design
+ACPI Virtualization high-level design
 #####################################
 
 ACPI introduction
