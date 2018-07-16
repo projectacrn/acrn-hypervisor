@@ -36,13 +36,14 @@ on your platform. You'll need a network connection for your platform to
 complete this setup.
 
 .. note::
-   ACRN requires Clear Linux version 22140 or newer. The instructions below
-   have been validated with version 22140 and need some adjustment to work
-   with newer versions. You will see a note when the instruction needs to be
-   adjusted.
+
+   ACRN v0.1 (and the current master branch) requires Clear Linux
+   version 23690 or newer.  If you use a newer version of Clear Linux,
+   you'll need to adjust the instructions below to reference the version
+   number of Clear Linux you are using.
 
 #. Download the compressed Clear installer image from
-   https://download.clearlinux.org/releases/22140/clear/clear-22140-installer.img.xz
+   https://download.clearlinux.org/releases/23690/clear/clear-23690-installer.img.xz
    and follow the `Clear Linux installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
    as a starting point for installing Clear Linux onto your platform.  Follow the recommended
@@ -61,11 +62,20 @@ complete this setup.
 
       # swupd autoupdate --disable
 
+#. If you have an older version of Clear Linux already installed
+   on your hardware, use this command to upgrade Clear Linux
+   to version 23690 (or newer):
+
+   .. code-block:: none
+
+      # swupd update -m 23690     # or newer version
+
 #. Use the ``swupd bundle-add`` command and add these Clear Linux bundles:
 
    .. code-block:: none
 
-      # swupd bundle-add vim network-basic service-os kernel-pk
+      # swupd bundle-add vim network-basic service-os kernel-pk \
+        desktop openssh-server
 
    .. table:: Clear Linux bundles
       :widths: auto
@@ -84,6 +94,12 @@ complete this setup.
       | kernel-pk          | Run the Intel "PK" kernel(product kernel source)  |
       |                    | and enterprise-style kernel with backports        |
       +--------------------+---------------------------------------------------+
+      | desktop            | Graphical desktop application, with Weston        |
+      |                    | compositing window manager included               |
+      +--------------------+---------------------------------------------------+
+      | openssh-server     | Server-side support for secure connectivity and   |
+      |                    | remote login using the SSH protocol               |
+      +--------------------+---------------------------------------------------+
 
 Add the ACRN hypervisor to the EFI Partition
 ============================================
@@ -99,9 +115,9 @@ partition. Follow these steps:
 
       # ls -1 /mnt/EFI/org.clearlinux
       bootloaderx64.efi
-      kernel-org.clearlinux.native.4.16.6-563
-      kernel-org.clearlinux.pk414-sos.4.14.34-28
-      kernel-org.clearlinux.pk414-standard.4.14.34-28
+      kernel-org.clearlinux.native.4.17.6-590
+      kernel-org.clearlinux.pk414-sos.4.14.52-63
+      kernel-org.clearlinux.pk414-standard.4.14.52-63
       loaderx64.efi
 
    .. note::
@@ -214,24 +230,31 @@ partition. Follow these steps:
       # clr-boot-manager set-timeout 20
       # clr-boot-manager update
 
-#. Reboot and select "The ACRN Service OS" to boot, as shown in
-   :numref:`gsg-bootmenu`:
+#. Reboot and select "The ACRN Service OS" to boot, as shown below:
 
-   .. figure:: images/gsg-bootmenu.png
-      :align: center
-      :width: 650px
-      :name: gsg-bootmenu
 
-      ACRN Service OS Boot menu
+   .. code-block:: console
+      :emphasize-lines: 1
+      :caption: ACRN Service OS Boot Menu
+
+      => The ACRN Service OS
+      Clear Linux OS for Intel Architecture (Clear-linux-native-4.17.6.590)
+      Clear Linux OS for Intel Architecture (Clear-linux-pk414-sos-4.14.52.63)
+      Clear Linux OS for Intel Architecture (Clear-linux-pk414-standard-4.14.52.63)
+      EFI Default Loader
+      Reboot Into Firmware Interface
 
 #. After booting up the ACRN hypervisor, the Service OS will be launched
-   automatically by default, as shown in :numref:`gsg-sos-console`:
+   automatically by default, as shown here:
 
-   .. figure:: images/gsg-sos-console.png
-      :align: center
-      :name: gsg-sos-console
+   .. code-block:: console
+      :caption: Service OS Console
 
-      Service OS Console
+      clr-7259a7c5bbdd4bcaa9a59d5841b4ace login: root
+      You are required to change your password immediately (administrator enforced)
+      New password:
+      Retype new password:
+      root@clr-7259a7c5bbdd4bcaa9a59d5841b4ace ~ # _
 
    ..  note:: You may need to hit ``Enter`` to get a clean login prompt
 
@@ -249,13 +272,13 @@ automatically enabled after a system restart.
 Set up Reference UOS
 ====================
 
-#. On your platform, download the pre-built reference Clear Linux UOS image into your
-   (root) home directory:
+#. On your platform, download the pre-built reference Clear Linux UOS
+   image version 23690 (or newer) into your (root) home directory:
 
    .. code-block:: none
 
       # cd ~
-      # curl -O https://download.clearlinux.org/releases/22140/clear/clear-22140-kvm.img.xz
+      # curl -O https://download.clearlinux.org/releases/23690/clear/clear-23690-kvm.img.xz
 
    .. note::
       In case you want to use or try out a newer version of Clear Linux as the UOS, you can
@@ -266,16 +289,16 @@ Set up Reference UOS
 
    .. code-block:: none
 
-      # unxz clear-22140-kvm.img.xz
+      # unxz clear-23690-kvm.img.xz
 
 #. Deploy the UOS kernel modules to UOS virtual disk image (note: you'll need to use
    the same **standard** image version number noted in step 1 above):
 
    .. code-block:: none
 
-      # losetup -f -P --show /root/clear-22140-kvm.img
+      # losetup -f -P --show /root/clear-23690-kvm.img
       # mount /dev/loop0p3 /mnt
-      # cp -r /usr/lib/modules/4.14.34-28.pk414-standard /mnt/lib/modules/
+      # cp -r /usr/lib/modules/4.14.52-63.pk414-standard /mnt/lib/modules/
       # umount /mnt
       # sync
 
@@ -294,7 +317,7 @@ Set up Reference UOS
 
    .. note::
       In case you have downloaded a different Clear Linux image than the one above
-      (``clear-22140-kvm.img.xz``), you will need to modify the Clear Linux file name
+      (``clear-23690-kvm.img.xz``), you will need to modify the Clear Linux file name
       and version number highlighted above (the ``-s 3,virtio-blk`` argument) to match
       what you have downloaded above. Likewise, you may need to adjust the kernel file
       name on the second line highlighted (check the exact name to be used using:
@@ -359,7 +382,7 @@ each with their own way to install development tools:
 * On a Clear Linux development system, install the ``os-clr-on-clr`` bundle to get
   the necessary tools:
 
-  .. code-block:: console
+  .. code-block:: none
 
      $ sudo swupd bundle-add os-clr-on-clr
      $ sudo swupd bundle-add python3-basic
@@ -367,7 +390,7 @@ each with their own way to install development tools:
 
 * On a Ubuntu/Debian development system:
 
-  .. code-block:: console
+  .. code-block:: none
 
      $ sudo apt install gcc \
           git \
@@ -390,7 +413,7 @@ each with their own way to install development tools:
 
 * On a Fedora/Redhat development system:
 
-  .. code-block:: console
+  .. code-block:: none
 
      $ sudo dnf install gcc \
           git \
@@ -411,7 +434,7 @@ each with their own way to install development tools:
 
 * On a CentOS development system:
 
-  .. code-block:: console
+  .. code-block:: none
 
      $ sudo yum install gcc \
              git \
@@ -447,7 +470,7 @@ repository has three main components in it:
 
 You can build all these components in one go as follows:
 
-.. code-block:: console
+.. code-block:: none
 
    $ git clone https://github.com/projectacrn/acrn-hypervisor
    $ cd acrn-hypervisor
@@ -466,7 +489,7 @@ and are using it as the current working directory.
 
 #. Build the ACRN hypervisor.
 
-   .. code-block:: console
+   .. code-block:: none
 
       $ cd hypervisor
       $ make PLATFORM=uefi
@@ -475,7 +498,7 @@ and are using it as the current working directory.
 
 #. Build the ACRN device model (included in the acrn-hypervisor repo):
 
-   .. code-block:: console
+   .. code-block:: none
 
       $ cd ../devicemodel
       $ make
@@ -484,7 +507,7 @@ and are using it as the current working directory.
 
 #. Build the ACRN tools (included in the acrn-hypervisor repo):
 
-   .. code-block:: console
+   .. code-block:: none
 
       $ cd ../tools
       $ for d in */; do make -C "$d"; done
@@ -507,7 +530,7 @@ based on the platform selected, assuming that you are under the top-level
 directory of acrn-hypervisor. The configuration file, named ``.config``, can be
 found under the target folder of your build.
 
-   .. code-block:: console
+   .. code-block:: none
 
       $ cd hypervisor
       $ make defconfig PLATFORM=uefi
@@ -526,7 +549,7 @@ are under the top-level directory of acrn-hypervisor, generate a default
 configuration file for UEFI, allow you to modify some configurations and build
 the hypervisor using the updated ``.config``.
 
-   .. code-block:: console
+   .. code-block:: none
 
       $ cd hypervisor
       $ make defconfig PLATFORM=uefi
@@ -538,7 +561,7 @@ the hypervisor using the updated ``.config``.
 
 Refer to the help on menuconfig for a detailed guide on the interface.
 
-   .. code-block:: console
+   .. code-block:: none
 
       $ pydoc3 menuconfig
 
@@ -550,7 +573,7 @@ Currently the ACRN hypervisor looks for default configurations under
 specified platform. The following steps allow you to create a defconfig for
 another platform based on a current one.
 
-   .. code-block:: console
+   .. code-block:: none
 
       $ cd hypervisor
       $ make defconfig PLATFORM=uefi
@@ -561,6 +584,6 @@ another platform based on a current one.
 Then you can re-use that configuration by passing the name (``xxx`` in the
 example above) to 'PLATFORM=':
 
-   .. code-block:: console
+   .. code-block:: none
 
       $ make defconfig PLATFORM=xxx

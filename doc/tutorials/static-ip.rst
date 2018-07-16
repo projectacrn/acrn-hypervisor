@@ -26,7 +26,7 @@ You can set up a static IP address by copying the
 ``/etc/systemd/network/`` directory. You can create this directory and
 copy the file with the following command:
 
-.. code-block:: console
+.. code-block:: none
 
    mkdir -p /etc/systemd/network
    cp /usr/lib/systemd/network/50-eth.network /etc/systemd/network
@@ -61,7 +61,7 @@ Activate the new configuration
 You do not need to reboot the machine after making the changes to the system, the
 following steps that restart the ``systemd-networkd`` service will suffice (run as ``root``):
 
-.. code-block:: console
+.. code-block:: none
 
    systemctl daemon-reload
    systemctl restart systemd-networkd
