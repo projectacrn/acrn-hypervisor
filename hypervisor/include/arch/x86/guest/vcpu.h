@@ -13,7 +13,7 @@
 #define REG_SIZE                            8
 
 /* Number of GPRs saved / restored for guest in VCPU structure */
-#define NUM_GPRS                            15
+#define NUM_GPRS                            15U
 #define GUEST_STATE_AREA_SIZE               512
 
 #define	CPU_CONTEXT_INDEX_RAX			0

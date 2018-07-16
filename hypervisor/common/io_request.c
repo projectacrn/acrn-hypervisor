@@ -60,7 +60,7 @@ int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 	union vhm_request_buffer *req_buf = NULL;
 	uint16_t cur;
 
-	ASSERT(sizeof(*req) == (4096/VHM_REQUEST_MAX),
+	ASSERT(sizeof(*req) == (4096U/VHM_REQUEST_MAX),
 			"vhm_request page broken!");
 
 
@@ -99,7 +99,7 @@ int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 
 #ifdef HV_DEBUG
 static void _get_req_info_(struct vhm_request *req, int *id, char *type,
-	char *state, char *dir, long *addr, long *val)
+	char *state, char *dir, int64_t *addr, long *val)
 {
 	(void)strcpy_s(dir, 16, "NONE");
 	*addr = 0;

@@ -56,8 +56,8 @@ static uint64_t create_zero_page(struct vm *vm)
 		(uint32_t)(uint64_t)sw_linux->bootargs_load_addr;
 
 	/* set constant arguments in zero page */
-	zeropage->hdr.loader_type = 0xff;
-	zeropage->hdr.load_flags |= (1U << 5);	/* quiet */
+	zeropage->hdr.loader_type = 0xffU;
+	zeropage->hdr.load_flags |= (1U << 5U);	/* quiet */
 
 	/* Create/add e820 table entries in zeropage */
 	zeropage->e820_nentries = create_e820_table(zeropage->e820);
@@ -82,7 +82,7 @@ int load_guest(struct vm *vm, struct vcpu *vcpu)
 
 	/* hardcode vcpu entry addr(kernel entry) & rsi (zeropage)*/
 	(void)memset(cur_context->guest_cpu_regs.longs,
-			0, sizeof(uint64_t)*NUM_GPRS);
+			0U, sizeof(uint64_t)*NUM_GPRS);
 
 	hva  = GPA2HVA(vm, lowmem_gpa_top -
 			MEM_4K - MEM_2K);
@@ -122,10 +122,10 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	/* calculate the kernel entry point */
 	zeropage = (struct zero_page *)
 			vm->sw.kernel_info.kernel_src_addr;
-	kernel_entry_offset = (zeropage->hdr.setup_sects + 1) * 512;
+	kernel_entry_offset = (zeropage->hdr.setup_sects + 1U) * 512U;
 	if (vcpu->arch_vcpu.cpu_mode == CPU_MODE_64BIT) {
 		/* 64bit entry is the 512bytes after the start */
-		kernel_entry_offset += 512;
+		kernel_entry_offset += 512U;
 	}
 
 	vm->sw.kernel_info.kernel_entry_addr =
@@ -152,7 +152,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 		 * zeropage
 		 */
 		(void)memset(cur_context->guest_cpu_regs.longs,
-			0, sizeof(uint64_t) * NUM_GPRS);
+			0U, sizeof(uint64_t) * NUM_GPRS);
 
 		/* Get host-physical address for guest bootargs */
 		hva = GPA2HVA(vm,

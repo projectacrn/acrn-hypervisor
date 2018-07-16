@@ -9,9 +9,9 @@
 static inline uint32_t
 entry_id_from_msix(uint16_t bdf, int8_t index)
 {
-	uint32_t id = index;
+	uint32_t id = (uint8_t)index;
 
-	id = bdf | (id << 16) | (PTDEV_INTR_MSI << 24);
+	id = bdf | (id << 16U) | (PTDEV_INTR_MSI << 24);
 	return id;
 }
 
@@ -232,7 +232,7 @@ static uint64_t ptdev_build_physical_rte(struct vm *vm,
 		struct ptdev_remapping_info *entry)
 {
 	uint64_t rte;
-	int phys_irq = dev_to_irq(entry->node);
+	uint32_t phys_irq = dev_to_irq(entry->node);
 	uint32_t vector = dev_to_vector(entry->node);
 
 	if (entry->ptdev_intr_info.intx.vpin_src == PTDEV_VPIN_IOAPIC) {
@@ -553,12 +553,12 @@ void ptdev_softirq(__unused uint16_t cpu_id)
 	}
 }
 
-void ptdev_intx_ack(struct vm *vm, int virt_pin,
+void ptdev_intx_ack(struct vm *vm, uint8_t virt_pin,
 		enum ptdev_vpin_source vpin_src)
 {
 	uint32_t phys_irq;
 	struct ptdev_remapping_info *entry;
-	int phys_pin;
+	uint8_t phys_pin;
 
 	entry = lookup_entry_by_vintx(vm, virt_pin, vpin_src);
 	if (entry == NULL) {
@@ -632,7 +632,7 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 	}
 
 	/* handle destroy case */
-	if (is_entry_active(entry) && info->vmsi_data == 0) {
+	if (is_entry_active(entry) && info->vmsi_data == 0U) {
 		info->pmsi_data = 0U;
 		ptdev_deactivate_entry(entry);
 		goto END;
@@ -712,7 +712,7 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 	struct ptdev_remapping_info *entry;
 	uint64_t rte;
 	uint32_t phys_irq;
-	int phys_pin;
+	uint8_t phys_pin;
 	bool lowpri = !is_vm0(vm);
 	bool need_switch_vpin_src = false;
 
@@ -807,7 +807,7 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 			ptdev_deactivate_entry(entry);
 		}
 		dev_dbg(ACRN_DBG_IRQ,
-			"IOAPIC pin=%d pirq=%d vpin=%d switch from %s to %s "
+			"IOAPIC pin=%hhu pirq=%u vpin=%d switch from %s to %s "
 			"vpin=%d for vm%d", phys_pin, phys_irq,
 			entry->ptdev_intr_info.intx.virt_pin,
 			(entry->ptdev_intr_info.intx.vpin_src != 0)?
@@ -829,7 +829,7 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 			GSI_MASK_IRQ(phys_irq);
 			ptdev_deactivate_entry(entry);
 			dev_dbg(ACRN_DBG_IRQ,
-				"IOAPIC pin=%d pirq=%d deassigned ",
+				"IOAPIC pin=%hhu pirq=%u deassigned ",
 				phys_pin, phys_irq);
 			dev_dbg(ACRN_DBG_IRQ, "from vm%d vIOAPIC vpin=%d",
 				entry->vm->attr.id,
@@ -852,7 +852,7 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 		activate_physical_ioapic(vm, entry);
 
 		dev_dbg(ACRN_DBG_IRQ,
-			"IOAPIC pin=%d pirq=%d assigned to vm%d %s vpin=%d",
+			"IOAPIC pin=%hhu pirq=%u assigned to vm%d %s vpin=%d",
 			phys_pin, phys_irq, entry->vm->attr.id,
 			entry->ptdev_intr_info.intx.vpin_src == PTDEV_VPIN_PIC ?
 			"vPIC" : "vIOAPIC",
@@ -937,7 +937,7 @@ void ptdev_remove_msix_remapping(struct vm *vm, uint16_t virt_bdf,
 #ifdef HV_DEBUG
 static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 		uint32_t *irq, uint32_t *vector, uint64_t *dest, bool *lvl_tm,
-		int *pin, int *vpin, int *bdf, int *vbdf)
+		int *pin, int *vpin, uint32_t *bdf, uint32_t *vbdf)
 {
 	if (is_entry_active(entry)) {
 		if (entry->type == PTDEV_INTR_MSI) {
@@ -955,7 +955,7 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 			*bdf = entry->phys_bdf;
 			*vbdf = entry->virt_bdf;
 		} else {
-			int phys_irq = pin_to_irq(
+			uint32_t phys_irq = pin_to_irq(
 				entry->ptdev_intr_info.intx.phys_pin);
 			uint64_t rte = 0;
 
@@ -974,8 +974,8 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 			}
 			*pin = entry->ptdev_intr_info.intx.phys_pin;
 			*vpin = entry->ptdev_intr_info.intx.virt_pin;
-			*bdf = 0;
-			*vbdf = 0;
+			*bdf = 0U;
+			*vbdf = 0U;
 		}
 		*irq = dev_to_irq(entry->node);
 		*vector = dev_to_vector(entry->node);
@@ -987,8 +987,8 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 		*lvl_tm = 0;
 		*pin = -1;
 		*vpin = -1;
-		*bdf = 0;
-		*vbdf = 0;
+		*bdf = 0U;
+		*vbdf = 0U;
 	}
 }
 
@@ -1000,7 +1000,8 @@ void get_ptdev_info(char *str, int str_max)
 	char type[16];
 	uint64_t dest;
 	bool lvl_tm;
-	int pin, vpin, bdf, vbdf;
+	int32_t pin, vpin;
+	uint32_t bdf, vbdf;
 	struct list_head *pos;
 
 	len = snprintf(str, size,

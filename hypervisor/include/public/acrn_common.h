@@ -24,7 +24,7 @@
 /*
  * IO request
  */
-#define VHM_REQUEST_MAX 16
+#define VHM_REQUEST_MAX 16U
 
 #define REQ_STATE_PENDING	0
 #define REQ_STATE_SUCCESS	1
@@ -36,8 +36,8 @@
 #define REQ_PCICFG	2U
 #define REQ_WP		3U
 
-#define REQUEST_READ	0
-#define REQUEST_WRITE	1
+#define REQUEST_READ	0U
+#define REQUEST_WRITE	1U
 
 /* IOAPIC device model info */
 #define VIOAPIC_RTE_NUM	48U  /* vioapic pins */

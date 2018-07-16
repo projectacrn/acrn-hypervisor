@@ -23,31 +23,31 @@
 #define IOMMU_INIT_BUS_LIMIT        (0xf)
 
 #define PAGE_MASK                   (0xFFFUL)
-#define LEVEL_WIDTH 9
+#define LEVEL_WIDTH 9U
 
-#define ROOT_ENTRY_LOWER_PRESENT_POS        (0)
-#define ROOT_ENTRY_LOWER_PRESENT_MASK       ((uint64_t)1)
-#define ROOT_ENTRY_LOWER_CTP_POS            (12)
-#define ROOT_ENTRY_LOWER_CTP_MASK           ((uint64_t)0xFFFFFFFFFFFFF)
+#define ROOT_ENTRY_LOWER_PRESENT_POS        (0U)
+#define ROOT_ENTRY_LOWER_PRESENT_MASK       (1UL)
+#define ROOT_ENTRY_LOWER_CTP_POS            (12U)
+#define ROOT_ENTRY_LOWER_CTP_MASK           (0xFFFFFFFFFFFFFUL)
 
-#define CTX_ENTRY_UPPER_AW_POS          (0)
+#define CTX_ENTRY_UPPER_AW_POS          (0U)
 #define CTX_ENTRY_UPPER_AW_MASK         \
-		((uint64_t)0x7 << CTX_ENTRY_UPPER_AW_POS)
-#define CTX_ENTRY_UPPER_DID_POS         (8)
+		(0x7UL << CTX_ENTRY_UPPER_AW_POS)
+#define CTX_ENTRY_UPPER_DID_POS         (8U)
 #define CTX_ENTRY_UPPER_DID_MASK        \
-		((uint64_t)0x3F << CTX_ENTRY_UPPER_DID_POS)
-#define CTX_ENTRY_LOWER_P_POS           (0)
+		(0x3FUL << CTX_ENTRY_UPPER_DID_POS)
+#define CTX_ENTRY_LOWER_P_POS           (0U)
 #define CTX_ENTRY_LOWER_P_MASK          \
-		((uint64_t)0x1 << CTX_ENTRY_LOWER_P_POS)
-#define CTX_ENTRY_LOWER_FPD_POS         (1)
+		(0x1UL << CTX_ENTRY_LOWER_P_POS)
+#define CTX_ENTRY_LOWER_FPD_POS         (1U)
 #define CTX_ENTRY_LOWER_FPD_MASK        \
-		((uint64_t)0x1 << CTX_ENTRY_LOWER_FPD_POS)
-#define CTX_ENTRY_LOWER_TT_POS          (2)
+		(0x1UL << CTX_ENTRY_LOWER_FPD_POS)
+#define CTX_ENTRY_LOWER_TT_POS          (2U)
 #define CTX_ENTRY_LOWER_TT_MASK         \
-		((uint64_t)0x3 << CTX_ENTRY_LOWER_TT_POS)
-#define CTX_ENTRY_LOWER_SLPTPTR_POS     (12)
+		(0x3UL << CTX_ENTRY_LOWER_TT_POS)
+#define CTX_ENTRY_LOWER_SLPTPTR_POS     (12U)
 #define CTX_ENTRY_LOWER_SLPTPTR_MASK    \
-		((uint64_t)0xFFFFFFFFFFFFF <<  CTX_ENTRY_LOWER_SLPTPTR_POS)
+		(0xFFFFFFFFFFFFFUL <<  CTX_ENTRY_LOWER_SLPTPTR_POS)
 
 #define DMAR_GET_BITSLICE(var, bitname) \
 	((var & bitname ## _MASK) >> bitname ## _POS)
@@ -57,14 +57,14 @@
 	  ~bitname ## _MASK) | ((val << bitname ## _POS) & bitname ## _MASK))
 
 /* translation type */
-#define DMAR_CTX_TT_UNTRANSLATED    0x0
-#define DMAR_CTX_TT_ALL             0x1
-#define DMAR_CTX_TT_PASSTHROUGH     0x2
+#define DMAR_CTX_TT_UNTRANSLATED    0x0UL
+#define DMAR_CTX_TT_ALL             0x1UL
+#define DMAR_CTX_TT_PASSTHROUGH     0x2UL
 
 /* Fault event MSI data register */
-#define DMAR_MSI_DELIVERY_MODE_SHIFT     (8)
-#define DMAR_MSI_DELIVERY_FIXED          (0 << DMAR_MSI_DELIVERY_MODE_SHIFT)
-#define DMAR_MSI_DELIVERY_LOWPRI         (1 << DMAR_MSI_DELIVERY_MODE_SHIFT)
+#define DMAR_MSI_DELIVERY_MODE_SHIFT     (8U)
+#define DMAR_MSI_DELIVERY_FIXED          (0U << DMAR_MSI_DELIVERY_MODE_SHIFT)
+#define DMAR_MSI_DELIVERY_LOWPRI         (1U << DMAR_MSI_DELIVERY_MODE_SHIFT)
 
 /* Fault event MSI address register */
 #define DMAR_MSI_DEST_MODE_SHIFT         (2)
@@ -312,27 +312,28 @@ static void dmar_uint_show_capability(struct dmar_drhd_rt *dmar_uint)
 }
 #endif
 
-static inline uint8_t width_to_level(int width)
+static inline uint8_t width_to_level(uint32_t width)
 {
-	return ((width - 12) + (LEVEL_WIDTH)-1) / (LEVEL_WIDTH);
+	return ((width - 12U) + (LEVEL_WIDTH)-1U) / (LEVEL_WIDTH);
 }
 
-static inline uint8_t width_to_agaw(int width)
+static inline uint8_t width_to_agaw(uint32_t width)
 {
-	return width_to_level(width) - 2;
+	return width_to_level(width) - 2U;
 }
 
 static uint8_t dmar_uint_get_msagw(struct dmar_drhd_rt *dmar_uint)
 {
-	int i;
+	uint8_t i;
 	uint8_t sgaw = iommu_cap_sagaw(dmar_uint->cap);
 
-	for (i = 4; i >= 0; i--) {
-		if (((1 << i) & sgaw) != 0) {
+	for (i = 5U; i > 0U;) {
+		i--;
+		if (((1U << i) & sgaw) != 0U) {
 			break;
 		}
 	}
-	return (uint8_t)i;
+	return i;
 }
 
 static bool
@@ -340,9 +341,9 @@ dmar_unit_support_aw(struct dmar_drhd_rt *dmar_uint, uint32_t addr_width)
 {
 	uint8_t aw;
 
-	aw = (uint8_t)width_to_agaw(addr_width);
+	aw = width_to_agaw(addr_width);
 
-	return ((1U << aw) & iommu_cap_sagaw(dmar_uint->cap)) != 0;
+	return (((1U << aw) & iommu_cap_sagaw(dmar_uint->cap)) != 0U);
 }
 
 static void dmar_enable_translation(struct dmar_drhd_rt *dmar_uint)
@@ -390,6 +391,7 @@ static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
 	dmar_uint->gcmd = iommu_read64(dmar_uint, DMAR_GCMD_REG);
 
 	dmar_uint->cap_msagaw = dmar_uint_get_msagw(dmar_uint);
+
 	dmar_uint->cap_num_fault_regs =
 		iommu_cap_num_fault_regs(dmar_uint->cap);
 	dmar_uint->cap_fault_reg_offset =
@@ -508,7 +510,7 @@ static uint8_t alloc_domain_id(void)
 
 static void free_domain_id(uint16_t dom_id)
 {
-	uint64_t mask = (1 << dom_id);
+	uint64_t mask = (1UL << dom_id);
 
 	spinlock_obtain(&domain_lock);
 	domain_bitmap &= ~mask;
@@ -577,7 +579,7 @@ static void dmar_invalid_context_cache(struct dmar_drhd_rt *dmar_uint,
 	IOMMU_LOCK(dmar_uint);
 	iommu_write64(dmar_uint, DMAR_CCMD_REG, cmd);
 	/* read upper 32bits to check */
-	DMAR_WAIT_COMPLETION(DMAR_CCMD_REG + 4, (status & DMA_CCMD_ICC_32) == 0U,
+	DMAR_WAIT_COMPLETION(DMAR_CCMD_REG + 4U, (status & DMA_CCMD_ICC_32) == 0U,
 				 status);
 
 	IOMMU_UNLOCK(dmar_uint);
@@ -867,7 +869,7 @@ static void dmar_disable(struct dmar_drhd_rt *dmar_uint)
 }
 
 struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_table,
-		int addr_width)
+		uint32_t addr_width)
 {
 	struct iommu_domain *domain;
 	uint16_t domain_id;
@@ -1172,7 +1174,7 @@ void disable_iommu(void)
 }
 
 /* 4 iommu fault register state */
-#define	IOMMU_FAULT_REGISTER_STATE_NUM	4
+#define	IOMMU_FAULT_REGISTER_STATE_NUM	4U
 static uint32_t
 iommu_fault_state[CONFIG_MAX_IOMMU_NUM][IOMMU_FAULT_REGISTER_STATE_NUM];
 

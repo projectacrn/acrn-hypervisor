@@ -9,7 +9,7 @@
 
 #include <ptdev.h>
 
-void ptdev_intx_ack(struct vm *vm, int virt_pin,
+void ptdev_intx_ack(struct vm *vm, uint8_t virt_pin,
 		enum ptdev_vpin_source vpin_src);
 int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 		struct ptdev_msi_info *info);
