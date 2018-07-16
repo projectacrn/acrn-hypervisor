@@ -29,9 +29,6 @@
 #include <hv_debug.h>
 
 #ifndef ASSEMBLER
-/* hpa <--> hva, now it is 1:1 mapping */
-#define HPA2HVA(x) ((void *)(x))
-#define HVA2HPA(x) ((uint64_t)(x))
 /* gpa --> hpa -->hva */
 #define GPA2HVA(vm, x) HPA2HVA(gpa2hpa(vm, x))
 #define HVA2GPA(vm, x) hpa2gpa(vm, HVA2HPA(x))

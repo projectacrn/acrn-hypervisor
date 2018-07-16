@@ -329,6 +329,10 @@ int modify_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		       uint64_t size, uint32_t flags);
 int modify_mem_mt(struct map_params *map_params, void *paddr, void *vaddr,
 		       uint64_t size, uint32_t flags);
+int mmu_modify(uint64_t *pml4_page,
+		uint64_t vaddr_base, uint64_t size,
+		uint64_t prot_set, uint64_t prot_clr,
+		enum _page_table_type ptt);
 int check_vmx_mmu_cap(void);
 uint16_t allocate_vpid(void);
 void flush_vpid_single(uint16_t vpid);
