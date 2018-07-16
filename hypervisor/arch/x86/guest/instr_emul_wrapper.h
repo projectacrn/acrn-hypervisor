@@ -31,8 +31,27 @@
 #define INSTR_EMUL_WRAPPER_H
 #include <cpu.h>
 
-/*
+/**
+ *
  * Identifiers for architecturally defined registers.
+ *
+ * These register names is used in condition statement.
+ * Within the following groups,register name need to be 
+ * kept in order:
+ * General register names group (CPU_REG_RAX~CPU_REG_RDI);
+ * Non general register names group (CPU_REG_CR0~CPU_REG_LAST);
+ * Segement register names group (CPU_REG_ES~CPU_REG_GS).
+ *
+ * CPU_REG_NATURAL_LAST indicates in the non general register names
+ * group the register name (less than CPU_REG_NATURAL_last) is 
+ * corresponds to the natural width field in VMCS;
+ *
+ * CPU_REG_64BIT_LAST indicates in the non general register names
+ * group the register name (less than CPU_REG_64BIT_LAST and more than
+ * CPU_REG_NATURAL_last) corresponds to the 64-bit field in VMCS.
+ *
+ * CPU_REG_LAST indicates the last register name.
+ *
  */
 enum cpu_reg_name {
 	CPU_REG_RAX,
@@ -51,12 +70,20 @@ enum cpu_reg_name {
 	CPU_REG_R15,
 	CPU_REG_RDI,
 	CPU_REG_CR0,
+	CPU_REG_CR2,
 	CPU_REG_CR3,
 	CPU_REG_CR4,
 	CPU_REG_DR7,
 	CPU_REG_RSP,
 	CPU_REG_RIP,
 	CPU_REG_RFLAGS,
+	CPU_REG_NATURAL_LAST,
+	CPU_REG_EFER,
+	CPU_REG_PDPTE0,
+	CPU_REG_PDPTE1,
+	CPU_REG_PDPTE2,
+	CPU_REG_PDPTE3,
+	CPU_REG_64BIT_LAST,
 	CPU_REG_ES,
 	CPU_REG_CS,
 	CPU_REG_SS,
@@ -67,12 +94,6 @@ enum cpu_reg_name {
 	CPU_REG_TR,
 	CPU_REG_IDTR,
 	CPU_REG_GDTR,
-	CPU_REG_EFER,
-	CPU_REG_CR2,
-	CPU_REG_PDPTE0,
-	CPU_REG_PDPTE1,
-	CPU_REG_PDPTE2,
-	CPU_REG_PDPTE3,
 	CPU_REG_LAST
 };
 
