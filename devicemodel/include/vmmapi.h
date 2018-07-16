@@ -99,6 +99,7 @@ int	vm_get_device_fd(struct vmctx *ctx);
 struct	vmctx *vm_open(const char *name);
 void	vm_close(struct vmctx *ctx);
 void	vm_pause(struct vmctx *ctx);
+void	vm_reset(struct vmctx *ctx);
 int	vm_set_shared_io_page(struct vmctx *ctx, uint64_t page_vma);
 int	vm_create_ioreq_client(struct vmctx *ctx);
 int	vm_destroy_ioreq_client(struct vmctx *ctx);
