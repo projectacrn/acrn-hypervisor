@@ -510,6 +510,73 @@ vm_deinit_vdevs(struct vmctx *ctx)
 }
 
 static void
+vm_reset_vdevs(struct vmctx *ctx)
+{
+	/*
+	 * The current virtual devices doesn't define virtual
+	 * device reset function. So we call vdev deinit/init
+	 * pairing to emulate the device reset operation.
+	 *
+	 * pci/ioapic deinit/init is needed because of dependency
+	 * of pci irq allocation/free.
+	 *
+	 * acpi build is necessary because irq for each vdev
+	 * could be assigned with different number after reset.
+	 */
+	atkbdc_deinit(ctx);
+	vrtc_deinit(ctx);
+
+	deinit_pci(ctx);
+	pci_irq_deinit(ctx);
+	ioapic_deinit();
+
+	atkbdc_init(ctx);
+	vrtc_init(ctx);
+
+	ioapic_init(ctx);
+	pci_irq_init(ctx);
+	init_pci(ctx);
+
+	if (acpi) {
+		acpi_build(ctx, guest_ncpus);
+	}
+}
+
+static void
+vm_system_reset(struct vmctx *ctx)
+{
+	int vcpu_id = 0;
+
+	/*
+	 * If we get system reset request, we don't want to exit the
+	 * vcpu_loop/vm_loop/mevent_loop. So we do:
+	 *   1. pause VM
+	 *   2. notify request done to reset ioreq state in vhm
+	 *   3. reset virtual devices
+	 *   4. load software for UOS
+	 *   5. hypercall reset vm
+	 *   6. reset suspend mode to VM_SUSPEND_NONE
+	 */
+
+	vm_pause(ctx);
+	for (vcpu_id = 0; vcpu_id < 4; vcpu_id++) {
+		struct vhm_request *vhm_req;
+
+		vhm_req = &vhm_req_buf[vcpu_id];
+		if (vhm_req->valid &&
+			(vhm_req->processed == REQ_STATE_PROCESSING) &&
+			(vhm_req->client == ctx->ioreq_client))
+			vm_notify_request_done(ctx, vcpu_id);
+	}
+
+	vm_reset_vdevs(ctx);
+
+	acrn_sw_load(ctx);
+	vm_reset(ctx);
+	vm_set_suspend_mode(VM_SUSPEND_NONE);
+}
+
+static void
 vm_loop(struct vmctx *ctx)
 {
 	int error;
@@ -521,19 +588,23 @@ vm_loop(struct vmctx *ctx)
 	assert(error == 0);
 
 	while (1) {
-		int vcpu;
+		int vcpu_id;
 		struct vhm_request *vhm_req;
 
 		error = vm_attach_ioreq_client(ctx);
 		if (error)
 			break;
 
-		for (vcpu = 0; vcpu < 4; vcpu++) {
-			vhm_req = &vhm_req_buf[vcpu];
+		for (vcpu_id = 0; vcpu_id < 4; vcpu_id++) {
+			vhm_req = &vhm_req_buf[vcpu_id];
 			if (vhm_req->valid
 				&& (vhm_req->processed == REQ_STATE_PROCESSING)
 				&& (vhm_req->client == ctx->ioreq_client))
-				handle_vmexit(ctx, vhm_req, vcpu);
+				handle_vmexit(ctx, vhm_req, vcpu_id);
+		}
+
+		if (VM_SUSPEND_SYSTEM_RESET == vm_get_suspend_mode()) {
+			vm_system_reset(ctx);
 		}
 	}
 	quit_vm_loop = 0;

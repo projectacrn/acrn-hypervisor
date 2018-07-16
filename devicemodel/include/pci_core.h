@@ -257,6 +257,7 @@ void	pci_generate_msix(struct pci_vdev *pi, int msgnum);
 void	pci_lintr_assert(struct pci_vdev *pi);
 void	pci_lintr_deassert(struct pci_vdev *pi);
 void	pci_lintr_request(struct pci_vdev *pi);
+void	pci_lintr_release(struct pci_vdev *pi);
 int	pci_msi_enabled(struct pci_vdev *pi);
 int	pci_msix_enabled(struct pci_vdev *pi);
 int	pci_msix_table_bar(struct pci_vdev *pi);
