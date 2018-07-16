@@ -220,6 +220,15 @@ uint64_t exec_vmread64(uint32_t field_full)
 	return low;
 }
 
+uint32_t exec_vmread32(uint32_t field)
+{
+	uint64_t value;
+
+	value = exec_vmread64(field);
+
+	return (uint32_t)value;
+}
+
 uint16_t exec_vmread16(uint32_t field)
 {
         uint64_t value;
@@ -248,6 +257,11 @@ void exec_vmwrite64(unsigned int field_full, uint64_t value)
 #else
 	exec_vmwrite(field_full, value);
 #endif
+}
+
+void exec_vmwrite32(uint32_t field, uint32_t value)
+{
+	exec_vmwrite64(field, (uint64_t)value);
 }
 
 void exec_vmwrite16(uint32_t field, uint16_t value)
@@ -402,9 +416,9 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 		}
 		/* Enable long mode */
 		pr_dbg("VMM: Enable long mode");
-		entry_ctrls = exec_vmread(VMX_ENTRY_CONTROLS);
+		entry_ctrls = exec_vmread32(VMX_ENTRY_CONTROLS);
 		entry_ctrls |= VMX_ENTRY_CTLS_IA32E_MODE;
-		exec_vmwrite(VMX_ENTRY_CONTROLS, entry_ctrls);
+		exec_vmwrite32(VMX_ENTRY_CONTROLS, entry_ctrls);
 
 		context->ia32_efer |= MSR_IA32_EFER_LMA_BIT;
 		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, context->ia32_efer);
@@ -412,9 +426,9 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 		   paging_enabled && ((cr0 & CR0_PG) == 0U)){
 		/* Disable long mode */
 		pr_dbg("VMM: Disable long mode");
-		entry_ctrls = exec_vmread(VMX_ENTRY_CONTROLS);
+		entry_ctrls = exec_vmread32(VMX_ENTRY_CONTROLS);
 		entry_ctrls &= ~VMX_ENTRY_CTLS_IA32E_MODE;
-		exec_vmwrite(VMX_ENTRY_CONTROLS, entry_ctrls);
+		exec_vmwrite32(VMX_ENTRY_CONTROLS, entry_ctrls);
 
 		context->ia32_efer &= ~MSR_IA32_EFER_LMA_BIT;
 		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, context->ia32_efer);
@@ -666,12 +680,12 @@ static void init_guest_state(struct vcpu *vcpu)
 
 	/* Limit */
 	field = VMX_GUEST_CS_LIMIT;
-	exec_vmwrite(field, limit);
+	exec_vmwrite32(field, limit);
 	pr_dbg("VMX_GUEST_CS_LIMIT: 0x%x ", limit);
 
 	/* Access */
 	field = VMX_GUEST_CS_ATTR;
-	exec_vmwrite(field, access);
+	exec_vmwrite32(field, access);
 	pr_dbg("VMX_GUEST_CS_ATTR: 0x%x ", access);
 
 	/* Base */
@@ -750,7 +764,7 @@ static void init_guest_state(struct vcpu *vcpu)
 
 	/* GDTR Limit */
 	field = VMX_GUEST_GDTR_LIMIT;
-	exec_vmwrite(field, limit);
+	exec_vmwrite32(field, limit);
 	pr_dbg("VMX_GUEST_GDTR_LIMIT: 0x%x ", limit);
 
 	/* IDTR - Interrupt Descriptor Table */
@@ -784,7 +798,7 @@ static void init_guest_state(struct vcpu *vcpu)
 
 	/* IDTR Limit */
 	field = VMX_GUEST_IDTR_LIMIT;
-	exec_vmwrite(field, limit);
+	exec_vmwrite32(field, limit);
 	pr_dbg("VMX_GUEST_IDTR_LIMIT: 0x%x ", limit);
 
 	/***************************************************/
@@ -848,19 +862,19 @@ static void init_guest_state(struct vcpu *vcpu)
 
 	/* Limit */
 	field = VMX_GUEST_ES_LIMIT;
-	exec_vmwrite(field, limit);
+	exec_vmwrite32(field, limit);
 	pr_dbg("VMX_GUEST_ES_LIMIT: 0x%x ", limit);
 	field = VMX_GUEST_SS_LIMIT;
-	exec_vmwrite(field, limit);
+	exec_vmwrite32(field, limit);
 	pr_dbg("VMX_GUEST_SS_LIMIT: 0x%x ", limit);
 	field = VMX_GUEST_DS_LIMIT;
-	exec_vmwrite(field, limit);
+	exec_vmwrite32(field, limit);
 	pr_dbg("VMX_GUEST_DS_LIMIT: 0x%x ", limit);
 	field = VMX_GUEST_FS_LIMIT;
-	exec_vmwrite(field, limit);
+	exec_vmwrite32(field, limit);
 	pr_dbg("VMX_GUEST_FS_LIMIT: 0x%x ", limit);
 	field = VMX_GUEST_GS_LIMIT;
-	exec_vmwrite(field, limit);
+	exec_vmwrite32(field, limit);
 	pr_dbg("VMX_GUEST_GS_LIMIT: 0x%x ", limit);
 
 	/* Access */
@@ -872,19 +886,19 @@ static void init_guest_state(struct vcpu *vcpu)
 	}
 
 	field = VMX_GUEST_ES_ATTR;
-	exec_vmwrite(field, value32);
+	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_GUEST_ES_ATTR: 0x%x ", value32);
 	field = VMX_GUEST_SS_ATTR;
-	exec_vmwrite(field, value32);
+	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_GUEST_SS_ATTR: 0x%x ", value32);
 	field = VMX_GUEST_DS_ATTR;
-	exec_vmwrite(field, value32);
+	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_GUEST_DS_ATTR: 0x%x ", value32);
 	field = VMX_GUEST_FS_ATTR;
-	exec_vmwrite(field, value32);
+	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_GUEST_FS_ATTR: 0x%x ", value32);
 	field = VMX_GUEST_GS_ATTR;
-	exec_vmwrite(field, value32);
+	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_GUEST_GS_ATTR: 0x%x ", value32);
 
 	/* Base */
@@ -920,12 +934,12 @@ static void init_guest_state(struct vcpu *vcpu)
 
 	field = VMX_GUEST_LDTR_LIMIT;
 	value32 = 0xffffffffU;
-	exec_vmwrite(field, value32);
+	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_GUEST_LDTR_LIMIT: 0x%x ", value32);
 
 	field = VMX_GUEST_LDTR_ATTR;
 	value32 = 0x10000U;
-	exec_vmwrite(field, value32);
+	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_GUEST_LDTR_ATTR: 0x%x ", value32);
 
 	field = VMX_GUEST_LDTR_BASE;
@@ -941,12 +955,12 @@ static void init_guest_state(struct vcpu *vcpu)
 
 	field = VMX_GUEST_TR_LIMIT;
 	value32 = 0xffU;
-	exec_vmwrite(field, value32);
+	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_GUEST_TR_LIMIT: 0x%x ", value32);
 
 	field = VMX_GUEST_TR_ATTR;
 	value32 = 0x8bU;
-	exec_vmwrite(field, value32);
+	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_GUEST_TR_ATTR: 0x%x ", value32);
 
 	field = VMX_GUEST_TR_BASE;
@@ -956,24 +970,24 @@ static void init_guest_state(struct vcpu *vcpu)
 
 	field = VMX_GUEST_INTERRUPTIBILITY_INFO;
 	value32 = 0U;
-	exec_vmwrite(field, value32);
+	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_GUEST_INTERRUPTIBILITY_INFO: 0x%x ",
 		  value32);
 
 	field = VMX_GUEST_ACTIVITY_STATE;
 	value32 = 0U;
-	exec_vmwrite(field, value32);
+	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_GUEST_ACTIVITY_STATE: 0x%x ",
 		  value32);
 
 	field = VMX_GUEST_SMBASE;
 	value32 = 0U;
-	exec_vmwrite(field, value32);
+	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_GUEST_SMBASE: 0x%x ", value32);
 
 	value32 = msr_read(MSR_IA32_SYSENTER_CS) & 0xFFFFFFFFU;
 	field = VMX_GUEST_IA32_SYSENTER_CS;
-	exec_vmwrite(field, value32);
+	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_GUEST_IA32_SYSENTER_CS: 0x%x ",
 		  value32);
 
@@ -1130,7 +1144,7 @@ static void init_host_state(__unused struct vcpu *vcpu)
 
 	value32 = msr_read(MSR_IA32_SYSENTER_CS) & 0xFFFFFFFFU;
 	field = VMX_HOST_IA32_SYSENTER_CS;
-	exec_vmwrite(field, value32);
+	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_HOST_IA32_SYSENTER_CS: 0x%x ",
 			value32);
 
@@ -1223,7 +1237,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	/* enable external interrupt VM Exit */
 	value32 |= VMX_PINBASED_CTLS_IRQ_EXIT;
 
-	exec_vmwrite(VMX_PIN_VM_EXEC_CONTROLS, value32);
+	exec_vmwrite32(VMX_PIN_VM_EXEC_CONTROLS, value32);
 	pr_dbg("VMX_PIN_VM_EXEC_CONTROLS: 0x%x ", value32);
 
 	/* Set up primary processor based VM execution controls - pg 2900
@@ -1262,7 +1276,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 			VMX_PROCBASED_CTLS_CR8_STORE);
 	}
 
-	exec_vmwrite(VMX_PROC_VM_EXEC_CONTROLS, value32);
+	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
 	pr_dbg("VMX_PROC_VM_EXEC_CONTROLS: 0x%x ", value32);
 
 	/* Set up secondary processor based VM execution controls - pg 2901
@@ -1299,7 +1313,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 			 * Set up TPR threshold for virtual interrupt delivery
 			 * - pg 2904 24.6.8
 			 */
-			exec_vmwrite(VMX_TPR_THRESHOLD, 0);
+			exec_vmwrite32(VMX_TPR_THRESHOLD, 0U);
 		}
 	}
 
@@ -1308,7 +1322,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 		value32 |= VMX_PROCBASED_CTLS2_XSVE_XRSTR;
 	}
 
-	exec_vmwrite(VMX_PROC_VM_EXEC_CONTROLS2, value32);
+	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS2, value32);
 	pr_dbg("VMX_PROC_VM_EXEC_CONTROLS2: 0x%x ", value32);
 
 	if (is_vapic_supported()) {
@@ -1355,26 +1369,26 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	 * enable VM exit on MC only
 	 */
 	value32 = (1U << IDT_MC);
-	exec_vmwrite(VMX_EXCEPTION_BITMAP, value32);
+	exec_vmwrite32(VMX_EXCEPTION_BITMAP, value32);
 
 	/* Set up page fault error code mask - second paragraph * pg 2902
 	 * 24.6.3 - guest page fault exception causing * vmexit is governed by
 	 * both VMX_EXCEPTION_BITMAP and * VMX_PF_ERROR_CODE_MASK
 	 */
-	exec_vmwrite(VMX_PF_ERROR_CODE_MASK, 0);
+	exec_vmwrite32(VMX_PF_ERROR_CODE_MASK, 0U);
 
 	/* Set up page fault error code match - second paragraph * pg 2902
 	 * 24.6.3 - guest page fault exception causing * vmexit is governed by
 	 * both VMX_EXCEPTION_BITMAP and * VMX_PF_ERROR_CODE_MATCH
 	 */
-	exec_vmwrite(VMX_PF_ERROR_CODE_MATCH, 0);
+	exec_vmwrite32(VMX_PF_ERROR_CODE_MATCH, 0U);
 
 	/* Set up CR3 target count - An execution of mov to CR3 * by guest
 	 * causes HW to evaluate operand match with * one of N CR3-Target Value
 	 * registers. The CR3 target * count values tells the number of
 	 * target-value regs to evaluate
 	 */
-	exec_vmwrite(VMX_CR3_TARGET_COUNT, 0);
+	exec_vmwrite32(VMX_CR3_TARGET_COUNT, 0U);
 
 	/* Set up IO bitmap register A and B - pg 2902 24.6.4 */
 	value64 = HVA2HPA(vm->arch_vm.iobitmap[0]);
@@ -1432,23 +1446,23 @@ static void init_entry_ctrl(__unused struct vcpu *vcpu)
 	value32 |= (VMX_ENTRY_CTLS_LOAD_EFER |
 		    VMX_ENTRY_CTLS_LOAD_PAT);
 
-	exec_vmwrite(VMX_ENTRY_CONTROLS, value32);
+	exec_vmwrite32(VMX_ENTRY_CONTROLS, value32);
 	pr_dbg("VMX_ENTRY_CONTROLS: 0x%x ", value32);
 
 	/* Set up VMX entry MSR load count - pg 2908 24.8.2 Tells the number of
 	 * MSRs on load from memory on VM entry from mem address provided by
 	 * VM-entry MSR load address field
 	 */
-	exec_vmwrite(VMX_ENTRY_MSR_LOAD_COUNT, 0);
+	exec_vmwrite32(VMX_ENTRY_MSR_LOAD_COUNT, 0U);
 
 	/* Set up VM entry interrupt information field pg 2909 24.8.3 */
-	exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD, 0);
+	exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, 0U);
 
 	/* Set up VM entry exception error code - pg 2910 24.8.3 */
-	exec_vmwrite(VMX_ENTRY_EXCEPTION_ERROR_CODE, 0);
+	exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE, 0U);
 
 	/* Set up VM entry instruction length - pg 2910 24.8.3 */
-	exec_vmwrite(VMX_ENTRY_INSTR_LENGTH, 0);
+	exec_vmwrite32(VMX_ENTRY_INSTR_LENGTH, 0U);
 }
 
 static void init_exit_ctrl(__unused struct vcpu *vcpu)
@@ -1475,7 +1489,7 @@ static void init_exit_ctrl(__unused struct vcpu *vcpu)
 		    VMX_EXIT_CTLS_SAVE_EFER |
 		    VMX_EXIT_CTLS_HOST_ADDR64);
 
-	exec_vmwrite(VMX_EXIT_CONTROLS, value32);
+	exec_vmwrite32(VMX_EXIT_CONTROLS, value32);
 	pr_dbg("VMX_EXIT_CONTROL: 0x%x ", value32);
 
 	/* Set up VM exit MSR store and load counts pg 2908 24.7.2 - tells the
@@ -1483,8 +1497,8 @@ static void init_exit_ctrl(__unused struct vcpu *vcpu)
 	 * The 64 bit VM-exit MSR store and load address fields provide the
 	 * corresponding addresses
 	 */
-	exec_vmwrite(VMX_EXIT_MSR_STORE_COUNT, 0);
-	exec_vmwrite(VMX_EXIT_MSR_LOAD_COUNT, 0);
+	exec_vmwrite32(VMX_EXIT_MSR_STORE_COUNT, 0U);
+	exec_vmwrite32(VMX_EXIT_MSR_LOAD_COUNT, 0U);
 }
 
 #ifdef CONFIG_EFI_STUB
@@ -1510,7 +1524,7 @@ static void override_uefi_vmcs(struct vcpu *vcpu)
 
 		/* Access */
 		field = VMX_GUEST_CS_ATTR;
-		exec_vmwrite(field, efi_ctx->cs_ar);
+		exec_vmwrite32(field, efi_ctx->cs_ar);
 		pr_dbg("VMX_GUEST_CS_ATTR: 0x%x ", efi_ctx->cs_ar);
 
 		field = VMX_GUEST_ES_SEL;
@@ -1557,7 +1571,7 @@ static void override_uefi_vmcs(struct vcpu *vcpu)
 
 		/* GDTR Limit */
 		field = VMX_GUEST_GDTR_LIMIT;
-		exec_vmwrite(field, efi_ctx->gdt.limit);
+		exec_vmwrite32(field, efi_ctx->gdt.limit);
 		pr_dbg("VMX_GUEST_GDTR_LIMIT: 0x%x ", efi_ctx->gdt.limit);
 
 		/* IDTR Base */
@@ -1567,7 +1581,7 @@ static void override_uefi_vmcs(struct vcpu *vcpu)
 
 		/* IDTR Limit */
 		field = VMX_GUEST_IDTR_LIMIT;
-		exec_vmwrite(field, efi_ctx->idt.limit);
+		exec_vmwrite32(field, efi_ctx->idt.limit);
 		pr_dbg("VMX_GUEST_IDTR_LIMIT: 0x%x ", efi_ctx->idt.limit);
 	}
 

@@ -198,7 +198,7 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 	/* following MSR not emulated now just left for future */
 	case MSR_IA32_SYSENTER_CS:
 	{
-		v = exec_vmread(VMX_GUEST_IA32_SYSENTER_CS);
+		v = (uint64_t)exec_vmread32(VMX_GUEST_IA32_SYSENTER_CS);
 		break;
 	}
 	case MSR_IA32_SYSENTER_ESP:
@@ -331,7 +331,7 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	/* following MSR not emulated now just left for future */
 	case MSR_IA32_SYSENTER_CS:
 	{
-		exec_vmwrite(VMX_GUEST_IA32_SYSENTER_CS, v);
+		exec_vmwrite32(VMX_GUEST_IA32_SYSENTER_CS, (uint32_t)v);
 		break;
 	}
 	case MSR_IA32_SYSENTER_ESP:

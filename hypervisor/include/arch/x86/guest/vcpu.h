@@ -113,10 +113,10 @@ struct cpu_regs {
 };
 
 struct segment {
-	uint64_t selector;
+	uint16_t selector;
 	uint64_t base;
-	uint64_t limit;
-	uint64_t attr;
+	uint32_t limit;
+	uint32_t attr;
 };
 
 struct run_context {
@@ -159,7 +159,7 @@ struct run_context {
 	uint64_t ia32_pat;
 	uint64_t vmx_ia32_pat;
 	uint64_t ia32_efer;
-	uint64_t ia32_sysenter_cs;
+	uint32_t ia32_sysenter_cs;
 	uint64_t ia32_sysenter_esp;
 	uint64_t ia32_sysenter_eip;
 	uint64_t ia32_debugctl;

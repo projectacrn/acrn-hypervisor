@@ -205,24 +205,24 @@ int start_vcpu(struct vcpu *vcpu)
 
 	/* Save guest IA32_EFER register */
 	cur_context->ia32_efer = exec_vmread64(VMX_GUEST_IA32_EFER_FULL);
-	set_vcpu_mode(vcpu, exec_vmread(VMX_GUEST_CS_ATTR));
+	set_vcpu_mode(vcpu, exec_vmread32(VMX_GUEST_CS_ATTR));
 
 	/* Obtain current VCPU instruction pointer and length */
 	cur_context->rip = exec_vmread(VMX_GUEST_RIP);
-	vcpu->arch_vcpu.inst_len = exec_vmread(VMX_EXIT_INSTR_LEN);
+	vcpu->arch_vcpu.inst_len = exec_vmread32(VMX_EXIT_INSTR_LEN);
 
 	cur_context->rsp = exec_vmread(VMX_GUEST_RSP);
 	cur_context->rflags = exec_vmread(VMX_GUEST_RFLAGS);
 
 	/* Obtain VM exit reason */
-	vcpu->arch_vcpu.exit_reason = exec_vmread(VMX_EXIT_REASON);
+	vcpu->arch_vcpu.exit_reason = exec_vmread32(VMX_EXIT_REASON);
 
 	if (status != 0) {
 		/* refer to 64-ia32 spec section 24.9.1 volume#3 */
 		if (vcpu->arch_vcpu.exit_reason & VMX_VMENTRY_FAIL)
 			pr_fatal("vmentry fail reason=%lx", vcpu->arch_vcpu.exit_reason);
 		else
-			pr_fatal("vmexit fail err_inst=%lx", exec_vmread(VMX_INSTR_ERROR));
+			pr_fatal("vmexit fail err_inst=%x", exec_vmread32(VMX_INSTR_ERROR));
 
 		ASSERT(status == 0, "vm fail");
 	}

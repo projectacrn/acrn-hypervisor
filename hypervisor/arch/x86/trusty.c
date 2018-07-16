@@ -38,16 +38,16 @@ static struct key_info g_key_info = {
 { \
 	seg.selector = exec_vmread16(VMX_GUEST_##SEG_NAME##_SEL); \
 	seg.base = exec_vmread(VMX_GUEST_##SEG_NAME##_BASE); \
-	seg.limit = exec_vmread(VMX_GUEST_##SEG_NAME##_LIMIT); \
-	seg.attr = exec_vmread(VMX_GUEST_##SEG_NAME##_ATTR); \
+	seg.limit = exec_vmread32(VMX_GUEST_##SEG_NAME##_LIMIT); \
+	seg.attr = exec_vmread32(VMX_GUEST_##SEG_NAME##_ATTR); \
 }
 
 #define load_segment(seg, SEG_NAME) \
 { \
 	exec_vmwrite16(VMX_GUEST_##SEG_NAME##_SEL, seg.selector); \
 	exec_vmwrite(VMX_GUEST_##SEG_NAME##_BASE, seg.base); \
-	exec_vmwrite(VMX_GUEST_##SEG_NAME##_LIMIT, seg.limit); \
-	exec_vmwrite(VMX_GUEST_##SEG_NAME##_ATTR, seg.attr); \
+	exec_vmwrite32(VMX_GUEST_##SEG_NAME##_LIMIT, seg.limit); \
+	exec_vmwrite32(VMX_GUEST_##SEG_NAME##_ATTR, seg.attr); \
 }
 
 #ifndef WORKAROUND_FOR_TRUSTY_4G_MEM
@@ -234,9 +234,9 @@ static void save_world_ctx(struct run_context *context)
 	 */
 	context->vmx_ia32_pat = exec_vmread(VMX_GUEST_IA32_PAT_FULL);
 	context->ia32_efer = exec_vmread64(VMX_GUEST_IA32_EFER_FULL);
-	context->ia32_sysenter_cs = exec_vmread(VMX_GUEST_IA32_SYSENTER_CS);
 	context->ia32_sysenter_esp = exec_vmread(VMX_GUEST_IA32_SYSENTER_ESP);
 	context->ia32_sysenter_eip = exec_vmread(VMX_GUEST_IA32_SYSENTER_EIP);
+	context->ia32_sysenter_cs = exec_vmread32(VMX_GUEST_IA32_SYSENTER_CS);
 	save_segment(context->cs, CS);
 	save_segment(context->ss, SS);
 	save_segment(context->ds, DS);
@@ -247,9 +247,9 @@ static void save_world_ctx(struct run_context *context)
 	save_segment(context->ldtr, LDTR);
 	/* Only base and limit for IDTR and GDTR */
 	context->idtr.base = exec_vmread(VMX_GUEST_IDTR_BASE);
-	context->idtr.limit = exec_vmread(VMX_GUEST_IDTR_LIMIT);
 	context->gdtr.base = exec_vmread(VMX_GUEST_GDTR_BASE);
-	context->gdtr.limit = exec_vmread(VMX_GUEST_GDTR_LIMIT);
+	context->idtr.limit = exec_vmread32(VMX_GUEST_IDTR_LIMIT);
+	context->gdtr.limit = exec_vmread32(VMX_GUEST_GDTR_LIMIT);
 
 	/* MSRs which not in the VMCS */
 	context->ia32_star = msr_read(MSR_IA32_STAR);
@@ -280,7 +280,7 @@ static void load_world_ctx(struct run_context *context)
 	exec_vmwrite64(VMX_GUEST_IA32_DEBUGCTL_FULL, context->ia32_debugctl);
 	exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, context->vmx_ia32_pat);
 	exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, context->ia32_efer);
-	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_CS, context->ia32_sysenter_cs);
+	exec_vmwrite32(VMX_GUEST_IA32_SYSENTER_CS, context->ia32_sysenter_cs);
 	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_ESP, context->ia32_sysenter_esp);
 	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_EIP, context->ia32_sysenter_eip);
 	load_segment(context->cs, CS);
@@ -293,9 +293,9 @@ static void load_world_ctx(struct run_context *context)
 	load_segment(context->ldtr, LDTR);
 	/* Only base and limit for IDTR and GDTR */
 	exec_vmwrite(VMX_GUEST_IDTR_BASE, context->idtr.base);
-	exec_vmwrite(VMX_GUEST_IDTR_LIMIT, context->idtr.limit);
 	exec_vmwrite(VMX_GUEST_GDTR_BASE, context->gdtr.base);
-	exec_vmwrite(VMX_GUEST_GDTR_LIMIT, context->gdtr.limit);
+	exec_vmwrite32(VMX_GUEST_IDTR_LIMIT, context->idtr.limit);
+	exec_vmwrite32(VMX_GUEST_GDTR_LIMIT, context->gdtr.limit);
 
 	/* MSRs which not in the VMCS */
 	msr_write(MSR_IA32_STAR, context->ia32_star);
