@@ -7,7 +7,7 @@
 #include <hypervisor.h>
 
 #define MAX_TIMER_ACTIONS	32
-#define TIMER_IRQ		(NR_MAX_IRQS - 1)
+#define TIMER_IRQ		(NR_IRQS - 1)
 #define CAL_MS			10
 #define MIN_TIMER_PERIOD_US	500
 
