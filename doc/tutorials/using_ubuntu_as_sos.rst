@@ -29,7 +29,7 @@ Ubuntu 16.04.4 LTS was used throughout this document, other versions such as
   mechanism for accessing the Service OS remotely or when running one or more
   User OS (UOS). Follow these steps to enable it on the Ubuntu SOS:
 
-  .. code-block:: console
+  .. code-block:: none
 
      sudo apt-get install openssh-server
      sudo service ssh status
@@ -49,7 +49,7 @@ the source code, build it, and install it on your device.
 #. Clone the `Project ACRN <https://github.com/projectacrn/acrn-hypervisor>`_
    code repository
 
-   .. code-block:: console
+   .. code-block:: none
 
       cd ~
       git clone https://github.com/projectacrn/acrn-hypervisor
@@ -64,7 +64,7 @@ the source code, build it, and install it on your device.
 
    Here is the short version of how to build and install ACRN from source.
 
-   .. code-block:: console
+   .. code-block:: none
 
       cd ~/acrn-hypervisor
       make PLATFORM=uefi
@@ -83,7 +83,7 @@ the source code, build it, and install it on your device.
    #. Mount the EFI System Partition (ESP) and add the ACRN hypervisor and
       Service OS kernel to it (as ``root``)
 
-      .. code-block:: console
+      .. code-block:: none
 
          sudo umount /boot/efi
          sudo lsblk
@@ -98,14 +98,14 @@ the source code, build it, and install it on your device.
 
    #. Install the hypervisor (``acrn.efi``)
 
-      .. code-block:: console
+      .. code-block:: none
 
          sudo mkdir /mnt/EFI/acrn/
          sudo cp ~/acrn-hypervisor/build/hypervisor/acrn.efi /mnt/EFI/acrn
 
    #. Configure the EFI firmware to boot the ACRN hypervisor by default
 
-      .. code-block:: console
+      .. code-block:: none
 
          sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 \
                 -L "ACRN Hypervisor" -u "bootloader=\EFI\ubuntu\grubx64.efi"
@@ -131,7 +131,7 @@ few steps.
 
 a. Download and extract the Service OS kernel
 
-   .. code-block:: console
+   .. code-block:: none
 
       mkdir ~/kernel-build
       cd ~/kernel-build
@@ -141,7 +141,7 @@ a. Download and extract the Service OS kernel
 
 #. Install the SOS kernel and its drivers (modules)
 
-   .. code-block:: console
+   .. code-block:: none
 
       sudo cp -r ~/kernel-build/usr/lib/modules/4.14.41-39.pk414-sos/ /lib/modules/
       sudo cp ~/kernel-build/usr/lib/kernel/org.clearlinux.pk414-sos.4.14.41-39 /boot/acrn/
@@ -176,7 +176,7 @@ a. Download and extract the Service OS kernel
 
    * Update Grub on your system
 
-     .. code-block:: console
+     .. code-block:: none
 
         sudo update-grub
 
@@ -211,7 +211,7 @@ We are using a User OS based on `Clear Linux`_.
 
 * Download the Clear Linux image from `<https://download.clearlinux.org>`_
 
-  .. code-block:: console
+  .. code-block:: none
 
      cd ~
      wget https://download.clearlinux.org/releases/22780/clear/clear-22780-kvm.img.xz
@@ -219,14 +219,14 @@ We are using a User OS based on `Clear Linux`_.
 
 * Download the Production Kenrel (PK) kernel
 
-  .. code-block:: console
+  .. code-block:: none
 
      wget https://download.clearlinux.org/releases/22780/clear/x86_64/os/Packages/linux-pk414-standard-4.14.47-44.x86_64.rpm
      rpm2cpio linux-pk414-standard-4.14.47-44.x86_64.rpm | cpio -idmv
 
 * Update the UOS kernel modules
 
-  .. code-block:: console
+  .. code-block:: none
 
      sudo losetup -f -P --show /root/clear-22789-kvm.img
      sudo mount /dev/loop0p3 /mnt
@@ -237,13 +237,13 @@ We are using a User OS based on `Clear Linux`_.
 
   If you encounter a permission issue, follow these steps:
 
-  .. code-block:: console
+  .. code-block:: none
 
      sudo chmod 777 /dev/acrn_vhm
 
 * One additional package is needed
 
-  .. code-block:: console
+  .. code-block:: none
 
      sudo apt-get instal iasl
      sudo cp /usr/bin/iasl /usr/sbin/iasl
@@ -263,7 +263,7 @@ Start the User OS (UOS)
 
 You are now all set to start the User OS (UOS)
 
-.. code-block:: console
+.. code-block:: none
 
    sudo /usr/share/acrn/samples/nuc/launch_uos.sh
 

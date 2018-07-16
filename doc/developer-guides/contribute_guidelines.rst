@@ -171,7 +171,7 @@ The name in the commit message ``Signed-off-by:`` line and your email must
 match the change authorship information. Make sure your :file:`.gitconfig`
 is set up correctly by using:
 
-.. code-block:: console
+.. code-block:: none
 
    git config --global user.name "David Developer"
    git config --global user.email "david.developer@company.com"

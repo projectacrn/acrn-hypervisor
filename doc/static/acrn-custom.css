@@ -14,6 +14,22 @@
 }
 */
 
+/* pygments tweak for white-on-black console */
+
+.highlight-console .highlight {
+   background-color: black;
+}
+.highlight-console .highlight .go, .highlight-console .highlight .gp {
+   color: white;
+}
+.highlight-console .highlight .hll {
+   background-color: white;
+}
+.highlight-console .highlight .hll .go, .highlight-console .highlight .hll .gp {
+   color: black;
+   font-weight: bold;
+}
+
 /* tweak doc version selection
 .rst-versions {
    position: static;

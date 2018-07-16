@@ -48,7 +48,7 @@ You will need to keep these in mind in a few places:
 
 * When mounting the EFI System Partition (ESP)
 
-  .. code-block:: console
+  .. code-block:: none
 
      # mount /dev/mmcblk0p1 /mnt
 
@@ -58,7 +58,7 @@ You will need to keep these in mind in a few places:
 
 * When configuring the EFI firmware to boot the ACRN hypervisor by default
 
-  .. code-block:: console
+  .. code-block:: none
 
      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/mmcblk0 -p 1 -L "ACRN Hypervisor" \
          -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=mmio@0x9141e000"
@@ -69,7 +69,7 @@ UP2 serial port setting
 The serial port in the 40-pin HAT connector is located at ``MMIO 0x0x9141e000``.
 You can check this from the ``dmesg`` output from the initial Clearlinux installation.
 
-.. code-block:: console
+.. code-block:: none
 
    # dmesg | grep dw-apb-uart
    [2.150689] dw-apb-uart.8: ttyS1 at MMIO 0x91420000 (irq = 4, base_baud = 115200) is a 16550A
@@ -86,7 +86,7 @@ throughout the :ref:`getting_started` therefore is ``/dev/mmcblk0``
 
 The UUID of the partition ``/dev/mmcblk0p3`` can be found by
 
-.. code-block:: console
+.. code-block:: none
 
    # blkid /dev/mmcblk
 
