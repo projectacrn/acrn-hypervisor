@@ -823,10 +823,21 @@ usb_dev_init(void *pdata, char *opt)
 		goto errout;
 
 	switch (desc.bcdUSB) {
+	case 0x310:
 	case 0x300:
 		ver = 3; break;
 	case 0x200:
+	case 0x201:
+	case 0x210:
 	case 0x110:
+		/* 0x110 is a special case.
+		 * xHCI spec v1.0 was released in 2010 and USB spec v1.1 was
+		 * released in 1998, anything about USB 1.x could hardly be
+		 * found in xHCI spec. So here use USB 2.x to do the emulation
+		 * for USB 1.x device.
+		 * And one more thing, it is almost impossible to find an USB
+		 * 1.x device today.
+		 */
 		ver = 2; break;
 	default:
 		goto errout;
