@@ -63,7 +63,7 @@ static int is_guest_irq_enabled(struct vcpu *vcpu)
 	if ((guest_rflags & HV_ARCH_VCPU_RFLAGS_IF) != 0UL) {
 		/* Interrupts are allowed */
 		/* Check for temporarily disabled interrupts */
-		guest_state = exec_vmread(VMX_GUEST_INTERRUPTIBILITY_INFO);
+		guest_state = exec_vmread32(VMX_GUEST_INTERRUPTIBILITY_INFO);
 
 		if ((guest_state & (HV_ARCH_VCPU_BLOCKED_BY_STI |
 				    HV_ARCH_VCPU_BLOCKED_BY_MOVSS)) == 0UL) {
@@ -139,7 +139,7 @@ static int vcpu_do_pending_event(struct vcpu *vcpu)
 		return -1;
 	}
 
-	exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
+	exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
 		(vector & 0xFFU));
 
 	vlapic_intr_accepted(vlapic, vector);
@@ -163,7 +163,7 @@ static int vcpu_do_pending_extint(struct vcpu *vcpu)
 		if (vector <= NR_MAX_VECTOR) {
 			dev_dbg(ACRN_DBG_INTR, "VPIC: to inject PIC vector %d\n",
 					vector & 0xFFU);
-			exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
+			exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
 					VMX_INT_INFO_VALID |
 					(vector & 0xFFU));
 			vpic_intr_accepted(vcpu->vm, vector);
@@ -245,12 +245,12 @@ int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector,
 static void _vcpu_inject_exception(struct vcpu *vcpu, uint32_t vector)
 {
 	if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U) {
-		exec_vmwrite(VMX_ENTRY_EXCEPTION_ERROR_CODE,
+		exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE,
 				vcpu->arch_vcpu.exception_info.error);
 	}
 
-	exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
-			(exception_type[vector] << 8) | (vector & 0xFFU));
+	exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
+			(exception_type[vector] << 8U) | (vector & 0xFFU));
 
 	vcpu->arch_vcpu.exception_info.exception = VECTOR_INVALID;
 }
@@ -324,9 +324,9 @@ int interrupt_window_vmexit_handler(struct vcpu *vcpu)
 		 * Disable the interrupt window exiting
 		 */
 		vcpu->arch_vcpu.irq_window_enabled = 0U;
-		value32 = exec_vmread(VMX_PROC_VM_EXEC_CONTROLS);
+		value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
 		value32 &= ~(VMX_PROCBASED_CTLS_IRQ_WIN);
-		exec_vmwrite(VMX_PROC_VM_EXEC_CONTROLS, value32);
+		exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
 	}
 
 	vcpu_retain_rip(vcpu);
@@ -338,7 +338,7 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 	uint32_t intr_info;
 	struct intr_excp_ctx ctx;
 
-	intr_info = exec_vmread(VMX_EXIT_INT_INFO);
+	intr_info = exec_vmread32(VMX_EXIT_INT_INFO);
 	if (((intr_info & VMX_INT_INFO_VALID) == 0U) ||
 		(((intr_info & VMX_INT_TYPE_MASK) >> 8)
 		!= VMX_INT_TYPE_EXT_INT)) {
@@ -383,10 +383,10 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 	if (vcpu->arch_vcpu.inject_event_pending) {
 		if ((vcpu->arch_vcpu.inject_info.intr_info &
 			(EXCEPTION_ERROR_CODE_VALID << 8)) != 0U)
-			exec_vmwrite(VMX_ENTRY_EXCEPTION_ERROR_CODE,
+			exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE,
 				vcpu->arch_vcpu.inject_info.error_code);
 
-		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
+		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
 			vcpu->arch_vcpu.inject_info.intr_info);
 
 		vcpu->arch_vcpu.inject_event_pending = false;
@@ -401,8 +401,8 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 	/* inject NMI before maskable hardware interrupt */
 	if (bitmap_test_and_clear(ACRN_REQUEST_NMI, pending_req_bits)) {
 		/* Inject NMI vector = 2 */
-		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
-			VMX_INT_INFO_VALID | (VMX_INT_TYPE_NMI << 8) | IDT_NMI);
+		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
+			VMX_INT_INFO_VALID | (VMX_INT_TYPE_NMI << 8U) | IDT_NMI);
 
 		goto INTR_WIN;
 	}
@@ -415,7 +415,7 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 	 *   at next vm exit?
 	 */
 	if ((vcpu->arch_vcpu.idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
-		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD,
+		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
 				vcpu->arch_vcpu.idt_vectoring_info);
 		goto INTR_WIN;
 	}
@@ -450,9 +450,9 @@ INTR_WIN:
 	/* Enable interrupt window exiting if pending */
 	if (intr_pending && vcpu->arch_vcpu.irq_window_enabled == 0U) {
 		vcpu->arch_vcpu.irq_window_enabled = 1U;
-		tmp = exec_vmread(VMX_PROC_VM_EXEC_CONTROLS);
+		tmp = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
 		tmp |= (VMX_PROCBASED_CTLS_IRQ_WIN);
-		exec_vmwrite(VMX_PROC_VM_EXEC_CONTROLS, tmp);
+		exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, tmp);
 	}
 
 	return ret;
@@ -462,7 +462,7 @@ void cancel_event_injection(struct vcpu *vcpu)
 {
 	uint32_t intinfo;
 
-	intinfo = exec_vmread(VMX_ENTRY_INT_INFO_FIELD);
+	intinfo = exec_vmread32(VMX_ENTRY_INT_INFO_FIELD);
 
 	/*
 	 * If event is injected, we clear VMX_ENTRY_INT_INFO_FIELD,
@@ -475,10 +475,10 @@ void cancel_event_injection(struct vcpu *vcpu)
 
 		if ((intinfo & (EXCEPTION_ERROR_CODE_VALID << 8)) != 0U)
 			vcpu->arch_vcpu.inject_info.error_code =
-				exec_vmread(VMX_ENTRY_EXCEPTION_ERROR_CODE);
+				exec_vmread32(VMX_ENTRY_EXCEPTION_ERROR_CODE);
 
 		vcpu->arch_vcpu.inject_info.intr_info = intinfo;
-		exec_vmwrite(VMX_ENTRY_INT_INFO_FIELD, 0UL);
+		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, 0UL);
 	}
 }
 
@@ -500,7 +500,7 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 	pr_dbg(" Handling guest exception");
 
 	/* Obtain VM-Exit information field pg 2912 */
-	intinfo = exec_vmread(VMX_EXIT_INT_INFO);
+	intinfo = exec_vmread32(VMX_EXIT_INT_INFO);
 	if ((intinfo & VMX_INT_INFO_VALID) != 0U) {
 		exception_vector = intinfo & 0xFFU;
 		/* Check if exception caused by the guest is a HW exception.
@@ -508,13 +508,13 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 		 * error code to be conveyed to get via the stack
 		 */
 		if ((intinfo & VMX_INT_INFO_ERR_CODE_VALID) != 0U) {
-			int_err_code = exec_vmread(VMX_EXIT_INT_ERROR_CODE);
+			int_err_code = exec_vmread32(VMX_EXIT_INT_ERROR_CODE);
 
 			/* get current privilege level and fault address */
-			cpl = exec_vmread(VMX_GUEST_CS_ATTR);
-			cpl = (cpl >> 5) & 3U;
+			cpl = exec_vmread32(VMX_GUEST_CS_ATTR);
+			cpl = (cpl >> 5U) & 3U;
 
-			if (cpl < 3)
+			if (cpl < 3U)
 				int_err_code &= ~4U;
 			else
 				int_err_code |= 4U;

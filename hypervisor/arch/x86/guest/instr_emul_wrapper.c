@@ -110,8 +110,8 @@ int vm_set_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
 	}
 
 	exec_vmwrite(base, ret_desc->base);
-	exec_vmwrite(limit, ret_desc->limit);
-	exec_vmwrite(access, ret_desc->access);
+	exec_vmwrite32(limit, ret_desc->limit);
+	exec_vmwrite32(access, ret_desc->access);
 
 	return 0;
 }
@@ -136,8 +136,8 @@ int vm_get_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
 	}
 
 	desc->base = exec_vmread(base);
-	desc->limit = (uint32_t)exec_vmread(limit);
-	desc->access = (uint32_t)exec_vmread(access);
+	desc->limit = exec_vmread32(limit);
+	desc->access = exec_vmread32(access);
 
 	return 0;
 }
@@ -351,7 +351,7 @@ int decode_instruction(struct vcpu *vcpu)
 		return retval;
 	}
 
-	csar = (uint32_t)exec_vmread(VMX_GUEST_CS_ATTR);
+	csar = exec_vmread32(VMX_GUEST_CS_ATTR);
 	get_guest_paging_info(vcpu, emul_ctxt, csar);
 	cpu_mode = get_vcpu_mode(vcpu);
 
