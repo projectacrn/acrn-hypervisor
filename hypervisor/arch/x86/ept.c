@@ -471,7 +471,7 @@ int ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu)
 
 	/* TODO - EPT Violation handler */
 	pr_info("%s, Guest linear address: 0x%016llx ",
-			__func__, exec_vmread64(VMX_GUEST_LINEAR_ADDR));
+			__func__, exec_vmread(VMX_GUEST_LINEAR_ADDR));
 
 	pr_info("%s, Guest physical address: 0x%016llx ",
 			__func__, exec_vmread64(VMX_GUEST_PHYSICAL_ADDR_FULL));

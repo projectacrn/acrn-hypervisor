@@ -193,8 +193,8 @@ int start_vcpu(struct vcpu *vcpu)
 		 */
 		instlen = vcpu->arch_vcpu.inst_len;
 		rip = cur_context->rip;
-		exec_vmwrite(VMX_GUEST_RIP, ((rip + instlen) &
-				0xFFFFFFFFFFFFFFFF));
+		exec_vmwrite(VMX_GUEST_RIP, ((rip +(uint64_t)instlen) &
+				0xFFFFFFFFFFFFFFFFUL));
 
 		/* Resume the VM */
 		status = vmx_vmrun(cur_context, VM_RESUME, ibrs_type);

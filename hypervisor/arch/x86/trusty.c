@@ -232,7 +232,7 @@ static void save_world_ctx(struct run_context *context)
 	 * the wrmsr handler keeps track of 'ia32_pat', and we only
 	 * need to load 'vmx_ia32_pat' here.
 	 */
-	context->vmx_ia32_pat = exec_vmread(VMX_GUEST_IA32_PAT_FULL);
+	context->vmx_ia32_pat = exec_vmread64(VMX_GUEST_IA32_PAT_FULL);
 	context->ia32_efer = exec_vmread64(VMX_GUEST_IA32_EFER_FULL);
 	context->ia32_sysenter_esp = exec_vmread(VMX_GUEST_IA32_SYSENTER_ESP);
 	context->ia32_sysenter_eip = exec_vmread(VMX_GUEST_IA32_SYSENTER_EIP);
@@ -426,7 +426,7 @@ static bool init_secure_world_env(struct vcpu *vcpu,
 
 	exec_vmwrite(VMX_GUEST_RSP,
 		TRUSTY_EPT_REBASE_GPA + size);
-	exec_vmwrite(VMX_TSC_OFFSET_FULL,
+	exec_vmwrite64(VMX_TSC_OFFSET_FULL,
 		vcpu->arch_vcpu.contexts[SECURE_WORLD].tsc_offset);
 
 	return setup_trusty_info(vcpu, size, base_hpa);
