@@ -1,6 +1,6 @@
 .. _memmgt-hld:
 
-Memory Management High-Level Design
+Memory Management high-level design
 ###################################
 
 This document describes memory management for the ACRN hypervisor.

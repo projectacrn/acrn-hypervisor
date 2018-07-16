@@ -1,6 +1,6 @@
 .. _virtio-hld:
 
-Virtio High Level Design
+Virtio high-level design
 ########################
 
 The ACRN Hypervisor follows the `Virtual I/O Device (virtio)

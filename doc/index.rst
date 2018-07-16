@@ -26,6 +26,7 @@ Sections
 
    introduction/index.rst
    getting-started/index.rst
+   hardware.rst
    user-guides/index.rst
    developer-guides/index.rst
    tutorials/index.rst

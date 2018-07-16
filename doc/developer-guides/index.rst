@@ -7,14 +7,22 @@ Developer Guides
    :maxdepth: 1
 
    primer.rst
+   ../api/index.rst
+   ../reference/kconfig/index.rst
+
+High-Level Design Guides
+************************
+
+These documents describe the high-level design, background, and motivation for
+specific areas within the ACRN hypervisor system.
+
+.. toctree::
+   :maxdepth: 1
+
    memmgt-hld.rst
    virtio-hld.rst
    ACPI-virt-hld.rst
    APL_GVT-g-hld.rst
-   ../api/index.rst
-   ../reference/kconfig/index.rst
-   trusty.rst
-
 
 Contributing to the project
 ***************************
