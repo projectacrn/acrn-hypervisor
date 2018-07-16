@@ -44,7 +44,11 @@ int vm_get_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t *retval)
 		uint32_t field = get_vmcs_field(reg);
 
 		if (field != VMX_INVALID_VMCS_FIELD) {
-			*retval = exec_vmread(field);
+			if (reg < CPU_REG_64BIT_LAST) {
+				*retval = exec_vmread(field);
+			} else {
+				*retval = (uint64_t)exec_vmread16(field);
+			}
 		} else {
 			return -EINVAL;
 		}
@@ -73,7 +77,11 @@ int vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t val)
 		uint32_t field = get_vmcs_field(reg);
 
 		if (field != VMX_INVALID_VMCS_FIELD) {
-			exec_vmwrite(field, val);
+			if (reg < CPU_REG_64BIT_LAST) {
+				exec_vmwrite(field, val);
+			} else {
+				exec_vmwrite16(field, (uint16_t)val);
+			}
 		} else {
 			return -EINVAL;
 		}
@@ -223,7 +231,21 @@ encode_vmcs_seg_desc(enum cpu_reg_name seg,
 
 	return 0;
 }
-
+/**
+ *
+ *Description:
+ *This local function is to covert register names into
+ *the corresponding field index MACROs in VMCS.
+ *
+ *Post Condition:
+ *In the non-general register names group (CPU_REG_CR0~CPU_REG_LAST),
+ *for register names CPU_REG_CR2, CPU_REG_IDTR, CPU_REG_GDTR,
+ *CPU_REG_NATURAL_LAST, CPU_REG_64BIT_LAST and CPU_REG_LAST, 
+ *this function returns VMX_INVALID_VMCS_FIELD;
+ *for other register names, it returns correspoding field index MACROs
+ *in VMCS.
+ *
+ **/
 static uint32_t get_vmcs_field(enum cpu_reg_name ident)
 {
 	switch (ident) {

@@ -158,7 +158,7 @@ int start_vcpu(struct vcpu *vcpu)
 				vcpu->vm->attr.id, vcpu->vcpu_id);
 
 		if (vcpu->arch_vcpu.vpid)
-			exec_vmwrite(VMX_VPID, vcpu->arch_vcpu.vpid);
+			exec_vmwrite16(VMX_VPID, vcpu->arch_vcpu.vpid);
 
 		/*
 		 * A power-up or a reset invalidates all linear mappings,

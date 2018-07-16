@@ -36,7 +36,7 @@ static struct key_info g_key_info = {
 
 #define save_segment(seg, SEG_NAME) \
 { \
-	seg.selector = exec_vmread(VMX_GUEST_##SEG_NAME##_SEL); \
+	seg.selector = exec_vmread16(VMX_GUEST_##SEG_NAME##_SEL); \
 	seg.base = exec_vmread(VMX_GUEST_##SEG_NAME##_BASE); \
 	seg.limit = exec_vmread(VMX_GUEST_##SEG_NAME##_LIMIT); \
 	seg.attr = exec_vmread(VMX_GUEST_##SEG_NAME##_ATTR); \
@@ -44,7 +44,7 @@ static struct key_info g_key_info = {
 
 #define load_segment(seg, SEG_NAME) \
 { \
-	exec_vmwrite(VMX_GUEST_##SEG_NAME##_SEL, seg.selector); \
+	exec_vmwrite16(VMX_GUEST_##SEG_NAME##_SEL, seg.selector); \
 	exec_vmwrite(VMX_GUEST_##SEG_NAME##_BASE, seg.base); \
 	exec_vmwrite(VMX_GUEST_##SEG_NAME##_LIMIT, seg.limit); \
 	exec_vmwrite(VMX_GUEST_##SEG_NAME##_ATTR, seg.attr); \

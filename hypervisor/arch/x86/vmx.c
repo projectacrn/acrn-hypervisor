@@ -220,6 +220,15 @@ uint64_t exec_vmread64(uint32_t field_full)
 	return low;
 }
 
+uint16_t exec_vmread16(uint32_t field)
+{
+        uint64_t value;
+
+        value = exec_vmread64(field);
+
+        return (uint16_t)value;
+}
+
 void exec_vmwrite(uint32_t field, uint64_t value)
 {
 	asm volatile (
@@ -239,6 +248,11 @@ void exec_vmwrite64(unsigned int field_full, uint64_t value)
 #else
 	exec_vmwrite(field_full, value);
 #endif
+}
+
+void exec_vmwrite16(uint32_t field, uint16_t value)
+{
+	exec_vmwrite64(field, (uint64_t)value);
 }
 
 #define HV_ARCH_VMX_GET_CS(SEL)				\
@@ -534,6 +548,7 @@ static void init_guest_state(struct vcpu *vcpu)
 {
 	uint32_t field;
 	uint64_t value;
+	uint16_t value16;
 	uint32_t value32;
 	uint64_t value64;
 	uint16_t sel;
@@ -646,7 +661,7 @@ static void init_guest_state(struct vcpu *vcpu)
 
 	/* Selector */
 	field = VMX_GUEST_CS_SEL;
-	exec_vmwrite(field, sel);
+	exec_vmwrite16(field, sel);
 	pr_dbg("VMX_GUEST_CS_SEL: 0x%x ", sel);
 
 	/* Limit */
@@ -812,23 +827,23 @@ static void init_guest_state(struct vcpu *vcpu)
 
 	/* Selector */
 	field = VMX_GUEST_ES_SEL;
-	exec_vmwrite(field, es);
+	exec_vmwrite16(field, es);
 	pr_dbg("VMX_GUEST_ES_SEL: 0x%x ", es);
 
 	field = VMX_GUEST_SS_SEL;
-	exec_vmwrite(field, ss);
+	exec_vmwrite16(field, ss);
 	pr_dbg("VMX_GUEST_SS_SEL: 0x%x ", ss);
 
 	field = VMX_GUEST_DS_SEL;
-	exec_vmwrite(field, ds);
+	exec_vmwrite16(field, ds);
 	pr_dbg("VMX_GUEST_DS_SEL: 0x%x ", ds);
 
 	field = VMX_GUEST_FS_SEL;
-	exec_vmwrite(field, fs);
+	exec_vmwrite16(field, fs);
 	pr_dbg("VMX_GUEST_FS_SEL: 0x%x ", fs);
 
 	field = VMX_GUEST_GS_SEL;
-	exec_vmwrite(field, gs);
+	exec_vmwrite16(field, gs);
 	pr_dbg("VMX_GUEST_GS_SEL: 0x%x ", gs);
 
 	/* Limit */
@@ -899,9 +914,9 @@ static void init_guest_state(struct vcpu *vcpu)
 	/* LDT and TR (dummy) */
 	/***************************************************/
 	field = VMX_GUEST_LDTR_SEL;
-	value32 = ldt_idx;
-	exec_vmwrite(field, value32);
-	pr_dbg("VMX_GUEST_LDTR_SEL: 0x%x ", value32);
+	value16 = ldt_idx;
+	exec_vmwrite16(field, value16);
+	pr_dbg("VMX_GUEST_LDTR_SEL: 0x%hu ", value16);
 
 	field = VMX_GUEST_LDTR_LIMIT;
 	value32 = 0xffffffffU;
@@ -920,9 +935,9 @@ static void init_guest_state(struct vcpu *vcpu)
 
 	/* Task Register */
 	field = VMX_GUEST_TR_SEL;
-	value32 = lssd32_idx;
-	exec_vmwrite(field, value32);
-	pr_dbg("VMX_GUEST_TR_SEL: 0x%x ", value32);
+	value16 = lssd32_idx;
+	exec_vmwrite16(field, value16);
+	pr_dbg("VMX_GUEST_TR_SEL: 0x%hu ", value16);
 
 	field = VMX_GUEST_TR_LIMIT;
 	value32 = 0xffU;
@@ -1023,37 +1038,37 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	 ***************************************************/
 	field = VMX_HOST_ES_SEL;
 	asm volatile ("movw %%es, %%ax":"=a" (value16));
-	exec_vmwrite(field, value16);
-	pr_dbg("VMX_HOST_ES_SEL: 0x%x ", value16);
+	exec_vmwrite16(field, value16);
+	pr_dbg("VMX_HOST_ES_SEL: 0x%hu ", value16);
 
 	field = VMX_HOST_CS_SEL;
 	asm volatile ("movw %%cs, %%ax":"=a" (value16));
-	exec_vmwrite(field, value16);
-	pr_dbg("VMX_HOST_CS_SEL: 0x%x ", value16);
+	exec_vmwrite16(field, value16);
+	pr_dbg("VMX_HOST_CS_SEL: 0x%hu ", value16);
 
 	field = VMX_HOST_SS_SEL;
 	asm volatile ("movw %%ss, %%ax":"=a" (value16));
-	exec_vmwrite(field, value16);
-	pr_dbg("VMX_HOST_SS_SEL: 0x%x ", value16);
+	exec_vmwrite16(field, value16);
+	pr_dbg("VMX_HOST_SS_SEL: 0x%hu ", value16);
 
 	field = VMX_HOST_DS_SEL;
 	asm volatile ("movw %%ds, %%ax":"=a" (value16));
-	exec_vmwrite(field, value16);
-	pr_dbg("VMX_HOST_DS_SEL: 0x%x ", value16);
+	exec_vmwrite16(field, value16);
+	pr_dbg("VMX_HOST_DS_SEL: 0x%hu ", value16);
 
 	field = VMX_HOST_FS_SEL;
 	asm volatile ("movw %%fs, %%ax":"=a" (value16));
-	exec_vmwrite(field, value16);
-	pr_dbg("VMX_HOST_FS_SEL: 0x%x ", value16);
+	exec_vmwrite16(field, value16);
+	pr_dbg("VMX_HOST_FS_SEL: 0x%hu ", value16);
 
 	field = VMX_HOST_GS_SEL;
 	asm volatile ("movw %%gs, %%ax":"=a" (value16));
-	exec_vmwrite(field, value16);
-	pr_dbg("VMX_HOST_GS_SEL: 0x%x ", value16);
+	exec_vmwrite16(field, value16);
+	pr_dbg("VMX_HOST_GS_SEL: 0x%hu ", value16);
 
 	field = VMX_HOST_TR_SEL;
 	asm volatile ("str %%ax":"=a" (tr_sel));
-	exec_vmwrite(field, tr_sel);
+	exec_vmwrite16(field, tr_sel);
 	pr_dbg("VMX_HOST_TR_SEL: 0x%x ", tr_sel);
 
 	/******************************************************
@@ -1490,7 +1505,7 @@ static void override_uefi_vmcs(struct vcpu *vcpu)
 
 		/* Selector */
 		field = VMX_GUEST_CS_SEL;
-		exec_vmwrite(field, efi_ctx->cs_sel);
+		exec_vmwrite16(field, efi_ctx->cs_sel);
 		pr_dbg("VMX_GUEST_CS_SEL: 0x%x ", efi_ctx->cs_sel);
 
 		/* Access */
@@ -1499,23 +1514,23 @@ static void override_uefi_vmcs(struct vcpu *vcpu)
 		pr_dbg("VMX_GUEST_CS_ATTR: 0x%x ", efi_ctx->cs_ar);
 
 		field = VMX_GUEST_ES_SEL;
-		exec_vmwrite(field, efi_ctx->es_sel);
+		exec_vmwrite16(field, efi_ctx->es_sel);
 		pr_dbg("VMX_GUEST_ES_SEL: 0x%x ", efi_ctx->es_sel);
 
 		field = VMX_GUEST_SS_SEL;
-		exec_vmwrite(field, efi_ctx->ss_sel);
+		exec_vmwrite16(field, efi_ctx->ss_sel);
 		pr_dbg("VMX_GUEST_SS_SEL: 0x%x ", efi_ctx->ss_sel);
 
 		field = VMX_GUEST_DS_SEL;
-		exec_vmwrite(field, efi_ctx->ds_sel);
+		exec_vmwrite16(field, efi_ctx->ds_sel);
 		pr_dbg("VMX_GUEST_DS_SEL: 0x%x ", efi_ctx->ds_sel);
 
 		field = VMX_GUEST_FS_SEL;
-		exec_vmwrite(field, efi_ctx->fs_sel);
+		exec_vmwrite16(field, efi_ctx->fs_sel);
 		pr_dbg("VMX_GUEST_FS_SEL: 0x%x ", efi_ctx->fs_sel);
 
 		field = VMX_GUEST_GS_SEL;
-		exec_vmwrite(field, efi_ctx->gs_sel);
+		exec_vmwrite16(field, efi_ctx->gs_sel);
 		pr_dbg("VMX_GUEST_GS_SEL: 0x%x ", efi_ctx->gs_sel);
 
 		/* Base */

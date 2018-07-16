@@ -2340,13 +2340,12 @@ apicv_inject_pir(struct vlapic *vlapic)
 	if (pirval != 0UL) {
 		rvi = pirbase + fls64(pirval);
 
-		intr_status_old = (uint16_t)
-				(0xFFFFUL &
-				exec_vmread(VMX_GUEST_INTR_STATUS));
+		intr_status_old = 0xFFFFU & 
+				exec_vmread16(VMX_GUEST_INTR_STATUS);
 
 		intr_status_new = (intr_status_old & 0xFF00U) | rvi;
 		if (intr_status_new > intr_status_old) {
-			exec_vmwrite(VMX_GUEST_INTR_STATUS,
+			exec_vmwrite16(VMX_GUEST_INTR_STATUS,
 					intr_status_new);
 		}
 	}
