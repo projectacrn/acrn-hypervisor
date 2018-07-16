@@ -89,6 +89,7 @@ SRCS += hw/pci/passthrough.c
 SRCS += hw/pci/virtio/virtio_audio.c
 SRCS += hw/pci/virtio/virtio_net.c
 SRCS += hw/pci/virtio/virtio_rnd.c
+SRCS += hw/pci/virtio/virtio_ipu.c
 SRCS += hw/pci/virtio/virtio_hyper_dmabuf.c
 SRCS += hw/pci/virtio/virtio_heci.c
 SRCS += hw/pci/virtio/virtio_rpmb.c
