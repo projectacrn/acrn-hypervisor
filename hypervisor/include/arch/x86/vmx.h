@@ -412,15 +412,16 @@ int exec_vmxon_instr(uint16_t pcpu_id);
  * @return the lower 32-bit outside IA-32e mode for 64-bit fields.
  * @return full contents for 32-bit fields, with higher 32-bit set to 0.
  */
-uint64_t exec_vmread(uint32_t field);
-
 uint16_t exec_vmread16(uint32_t field);
 uint32_t exec_vmread32(uint32_t field);
 uint64_t exec_vmread64(uint32_t field_full);
-void exec_vmwrite(uint32_t field, uint64_t value);
+#define exec_vmread exec_vmread64
+
 void exec_vmwrite16(uint32_t field, uint16_t value);
 void exec_vmwrite32(uint32_t field, uint32_t value);
 void exec_vmwrite64(uint32_t field_full, uint64_t value);
+#define exec_vmwrite exec_vmwrite64
+
 int init_vmcs(struct vcpu *vcpu);
 
 int vmx_off(uint16_t pcpu_id);

@@ -2221,14 +2221,14 @@ apicv_set_tmr(__unused struct vlapic *vlapic, uint32_t vector, bool level)
 	mask = 1UL << (vector % 64U);
 	field = VMX_EOI_EXIT(vector);
 
-	val = exec_vmread(field);
+	val = exec_vmread64(field);
 	if (level) {
 		val |= mask;
 	} else {
 		val &= ~mask;
 	}
 
-	exec_vmwrite(field, val);
+	exec_vmwrite64(field, val);
 }
 
 /* Update the VMX_EOI_EXIT according to related tmr */

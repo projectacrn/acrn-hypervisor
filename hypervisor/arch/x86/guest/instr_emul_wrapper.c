@@ -44,8 +44,10 @@ int vm_get_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t *retval)
 		uint32_t field = get_vmcs_field(reg);
 
 		if (field != VMX_INVALID_VMCS_FIELD) {
-			if (reg < CPU_REG_64BIT_LAST) {
+			if (reg < CPU_REG_NATURAL_LAST) {
 				*retval = exec_vmread(field);
+			} else if (reg < CPU_REG_64BIT_LAST) {
+				*retval = exec_vmread64(field);
 			} else {
 				*retval = (uint64_t)exec_vmread16(field);
 			}
@@ -77,8 +79,10 @@ int vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t val)
 		uint32_t field = get_vmcs_field(reg);
 
 		if (field != VMX_INVALID_VMCS_FIELD) {
-			if (reg < CPU_REG_64BIT_LAST) {
+			if (reg < CPU_REG_NATURAL_LAST) {
 				exec_vmwrite(field, val);
+			} else if (reg <= CPU_REG_64BIT_LAST) {
+				exec_vmwrite64(field, val);
 			} else {
 				exec_vmwrite16(field, (uint16_t)val);
 			}
