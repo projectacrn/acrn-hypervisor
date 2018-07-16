@@ -20,7 +20,7 @@
 
 struct per_cpu_region {
 	uint64_t *sbuf[ACRN_SBUF_ID_MAX];
-	uint64_t irq_count[NR_MAX_IRQS];
+	uint64_t irq_count[NR_IRQS];
 	uint64_t vmexit_cnt[64];
 	uint64_t vmexit_time[64];
 	uint64_t softirq_pending;

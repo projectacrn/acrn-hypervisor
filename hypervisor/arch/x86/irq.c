@@ -8,7 +8,7 @@
 
 static spinlock_t exception_spinlock = { .head = 0U, .tail = 0U, };
 
-static struct irq_desc irq_desc_array[NR_MAX_IRQS];
+static struct irq_desc irq_desc_array[NR_IRQS];
 static uint32_t vector_to_irq[NR_MAX_VECTOR + 1];
 
 spurious_handler_t spurious_handler;
@@ -17,7 +17,7 @@ static void init_irq_desc(void)
 {
 	uint32_t i;
 
-	for (i = 0U; i < NR_MAX_IRQS; i++) {
+	for (i = 0U; i < NR_IRQS; i++) {
 		irq_desc_array[i].irq = i;
 		irq_desc_array[i].vector = VECTOR_INVALID;
 		spinlock_init(&irq_desc_array[i].irq_lock);
@@ -65,7 +65,7 @@ uint32_t irq_mark_used(uint32_t irq)
 
 	spinlock_rflags;
 
-	if (irq > NR_MAX_IRQS) {
+	if (irq >= NR_IRQS) {
 		return IRQ_INVALID;
 	}
 
@@ -89,7 +89,7 @@ static uint32_t alloc_irq(void)
 
 	spinlock_rflags;
 
-	for (i = irq_gsi_num(); i < NR_MAX_IRQS; i++) {
+	for (i = irq_gsi_num(); i < NR_IRQS; i++) {
 		desc = &irq_desc_array[i];
 		spinlock_irqsave_obtain(&desc->irq_lock);
 		if (desc->used == IRQ_NOT_ASSIGNED) {
@@ -99,7 +99,7 @@ static uint32_t alloc_irq(void)
 		}
 		spinlock_irqrestore_release(&desc->irq_lock);
 	}
-	return (i == NR_MAX_IRQS) ? IRQ_INVALID : i;
+	return (i == NR_IRQS) ? IRQ_INVALID : i;
 }
 
 /* need irq_lock protection before use */
@@ -133,7 +133,7 @@ static void _irq_desc_free_vector(uint32_t irq)
 	uint32_t vr;
 	uint16_t pcpu_id;
 
-	if (irq > NR_MAX_IRQS) {
+	if (irq >= NR_IRQS) {
 		return;
 	}
 
@@ -212,7 +212,7 @@ common_register_handler(uint32_t irq,
 	 * case: irq = IRQ_INVALID
 	 *	caller did not know which irq to use, and want system to
 	 *	allocate available irq for it. These irq are in range:
-	 *	nr_gsi ~ NR_MAX_IRQS
+	 *	nr_gsi ~ NR_IRQS
 	 *	a irq will be allocated and the vector will be assigned to this
 	 *	irq automatically.
 	 *
@@ -245,7 +245,7 @@ common_register_handler(uint32_t irq,
 		irq = irq_mark_used(irq);
 	}
 
-	if (irq > NR_MAX_IRQS) {
+	if (irq >= NR_IRQS) {
 		pr_err("failed to assign IRQ");
 		goto OUT;
 	}
@@ -302,7 +302,7 @@ uint32_t irq_desc_alloc_vector(uint32_t irq, bool lowpri)
 	spinlock_rflags;
 
 	/* irq should be always available at this time */
-	if (irq > NR_MAX_IRQS) {
+	if (irq >= NR_IRQS) {
 		return VECTOR_INVALID;
 	}
 
@@ -332,7 +332,7 @@ void irq_desc_try_free_vector(uint32_t irq)
 	spinlock_rflags;
 
 	/* legacy irq's vector is reserved and should not be freed */
-	if (irq > NR_MAX_IRQS || irq < NR_LEGACY_IRQ) {
+	if (irq >= NR_IRQS || irq < NR_LEGACY_IRQ) {
 		return;
 	}
 
@@ -348,7 +348,7 @@ void irq_desc_try_free_vector(uint32_t irq)
 
 uint32_t irq_to_vector(uint32_t irq)
 {
-	if (irq < NR_MAX_IRQS) {
+	if (irq < NR_IRQS) {
 		return irq_desc_array[irq].vector;
 	} else {
 		return VECTOR_INVALID;
@@ -581,7 +581,7 @@ void update_irq_handler(uint32_t irq, irq_handler_t func)
 
 	spinlock_rflags;
 
-	if (irq >= NR_MAX_IRQS) {
+	if (irq >= NR_IRQS) {
 		return;
 	}
 
@@ -703,7 +703,7 @@ void get_cpu_interrupt_info(char *str, int str_max)
 	size -= len;
 	str += len;
 
-	for (irq = 0U; irq < NR_MAX_IRQS; irq++) {
+	for (irq = 0U; irq < NR_IRQS; irq++) {
 		desc = &irq_desc_array[irq];
 		vector = irq_to_vector(irq);
 		if (desc->used != IRQ_NOT_ASSIGNED &&
