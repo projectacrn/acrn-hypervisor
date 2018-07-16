@@ -405,6 +405,12 @@ vm_pause(struct vmctx *ctx)
 	ioctl(ctx->fd, IC_PAUSE_VM, &ctx->vmid);
 }
 
+void
+vm_reset(struct vmctx *ctx)
+{
+	ioctl(ctx->fd, IC_RESET_VM, &ctx->vmid);
+}
+
 static int suspend_mode = VM_SUSPEND_NONE;
 
 void
