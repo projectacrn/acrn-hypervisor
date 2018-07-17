@@ -2046,7 +2046,9 @@ decode_displacement(struct vie *vie)
 	}
 
 	if (n != 1 && n != 4) {
-		panic("decode_displacement: invalid disp_bytes %d", n);
+		pr_err("%s: decode_displacement: invalid disp_bytes %d",
+			__func__, n);
+		return -EINVAL;
 	}
 
 	for (i = 0; i < n; i++) {
@@ -2103,8 +2105,11 @@ decode_immediate(struct vie *vie)
 		return 0;
 	}
 
-	ASSERT(n == 1 || n == 2 || n == 4,
-		"%s: invalid number of immediate bytes: %d", __func__, n);
+	if ( n != 1 && n != 2 && n != 4) {
+		pr_err("%s: invalid number of immediate bytes: %d",
+			__func__, n);
+		return -EINVAL;
+	}
 
 	for (i = 0; i < n; i++) {
 		if (vie_peek(vie, &x) != 0) {
@@ -2145,7 +2150,10 @@ decode_moffset(struct vie *vie)
 	 * The memory offset size follows the address-size of the instruction.
 	 */
 	n = vie->addrsize;
-	ASSERT(n == 2U || n == 4U || n == 8U, "invalid moffset bytes: %hhu", n);
+	if ( n != 2U && n != 4U && n != 8U) {
+		pr_err("%s: invalid moffset bytes: %hhu", __func__, n);
+		return -EINVAL;
+	}
 
 	u.u64 = 0UL;
 	for (i = 0U; i < n; i++) {
