@@ -635,7 +635,7 @@ static void init_guest_state(struct vcpu *vcpu)
 			}
 		} else {
 			/* AP is initialized with real mode
-			 * and CS value is left shift 8 bits from sipi vector;
+			 * and CS value is left shift 8 bits from sipi vector.
 			 */
 			sel = vcpu->arch_vcpu.sipi_vector << 8U;
 			base = sel << 4U;

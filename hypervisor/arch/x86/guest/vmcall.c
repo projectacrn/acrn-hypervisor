@@ -24,10 +24,6 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 	uint64_t param1 = cur_context->guest_cpu_regs.regs.rdi;
 	/* hypercall param2 from guest*/
 	uint64_t param2 = cur_context->guest_cpu_regs.regs.rsi;
-	/* hypercall param3 from guest, reserved*/
-	/* uint64_t param3 = cur_context->guest_cpu_regs.regs.rdx; */
-	/* hypercall param4 from guest, reserved*/
-	/* uint64_t param4 = cur_context->guest_cpu_regs.regs.rcx; */
 
 	if (!is_hypercall_from_ring0()) {
 		pr_err("hypercall is only allowed from RING-0!\n");

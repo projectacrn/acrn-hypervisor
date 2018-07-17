@@ -608,10 +608,6 @@ int do_print(const char *fmt, struct print_param *param,
 			/* pointer argument */
 			else if (ch == 'p') {
 				param->vars.flags |= PRINT_FLAG_ALTERNATE_FORM;
-				/* XXXCRG res=print_pow2(param,
-				 * (uint32_t) __builtin_va_arg(args,
-				 * void *),4);
-				 */
 				res = print_pow2(param, (uint64_t)
 					__builtin_va_arg(args, void *), 4U);
 			}
