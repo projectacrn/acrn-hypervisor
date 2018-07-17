@@ -35,7 +35,7 @@ static uint64_t create_zero_page(struct vm *vm)
 	zeropage = (struct zero_page *)((char *)hva + MEM_4K);
 
 	/* clear the zeropage */
-	(void)memset(zeropage, 0, MEM_2K);
+	(void)memset(zeropage, 0U, MEM_2K);
 
 	/* copy part of the header into the zero page */
 	hva = GPA2HVA(vm, (uint64_t)vm->sw.kernel_info.kernel_load_addr);
@@ -122,7 +122,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	/* calculate the kernel entry point */
 	zeropage = (struct zero_page *)
 			vm->sw.kernel_info.kernel_src_addr;
-	kernel_entry_offset = (zeropage->hdr.setup_sects + 1U) * 512U;
+	kernel_entry_offset = (uint32_t)(zeropage->hdr.setup_sects + 1U) * 512U;
 	if (vcpu->arch_vcpu.cpu_mode == CPU_MODE_64BIT) {
 		/* 64bit entry is the 512bytes after the start */
 		kernel_entry_offset += 512U;
@@ -193,7 +193,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 					reserving_1g_pages);
 				(void)strcpy_s((char *)hva
 					+vm->sw.linux_info.bootargs_size,
-					100, dyn_bootargs);
+					100U, dyn_bootargs);
 			}
 		}
 #endif

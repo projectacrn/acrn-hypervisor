@@ -902,7 +902,7 @@ void ptdev_remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin)
  *   one entry vs. one phys_bdf:msi_idx
  */
 int ptdev_add_msix_remapping(struct vm *vm, uint16_t virt_bdf,
-		uint16_t phys_bdf, int vector_count)
+		uint16_t phys_bdf, uint32_t vector_count)
 {
 	struct ptdev_remapping_info *entry;
 	int i;
@@ -918,7 +918,7 @@ int ptdev_add_msix_remapping(struct vm *vm, uint16_t virt_bdf,
 }
 
 void ptdev_remove_msix_remapping(struct vm *vm, uint16_t virt_bdf,
-		int vector_count)
+		uint32_t vector_count)
 {
 	int i;
 

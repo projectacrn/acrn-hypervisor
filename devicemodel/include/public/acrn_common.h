@@ -43,7 +43,7 @@
 /*
  * IO request
  */
-#define VHM_REQUEST_MAX 16
+#define VHM_REQUEST_MAX 16U
 
 #define REQ_STATE_PENDING	0
 #define REQ_STATE_SUCCESS	1
@@ -55,8 +55,8 @@
 #define REQ_PCICFG	2
 #define REQ_WP		3
 
-#define REQUEST_READ	0
-#define REQUEST_WRITE	1
+#define REQUEST_READ	0U
+#define REQUEST_WRITE	1U
 
 /* IOAPIC device model info */
 #define VIOAPIC_RTE_NUM	48  /* vioapic pins */
@@ -143,7 +143,7 @@ union vhm_request_buffer {
  */
 struct acrn_create_vm {
 	/** created vmid return to VHM. Keep it first field */
-	int32_t vmid;
+	int16_t vmid;
 
 	/** VCPU numbers this VM want to create */
 	uint32_t vcpu_num;
@@ -184,10 +184,10 @@ struct acrn_set_ioreq_buffer {
 } __aligned(8);
 
 /** Interrupt type for acrn_irqline: inject interrupt to IOAPIC */
-#define	ACRN_INTR_TYPE_ISA	0
+#define	ACRN_INTR_TYPE_ISA	0U
 
 /** Interrupt type for acrn_irqline: inject interrupt to both PIC and IOAPIC */
-#define	ACRN_INTR_TYPE_IOAPIC	1
+#define	ACRN_INTR_TYPE_IOAPIC	1U
 
 /**
  * @brief Info to assert/deassert/pulse a virtual IRQ line for a VM
@@ -286,7 +286,7 @@ struct acrn_vm_pci_msix_remap {
  * layout below 1M, DM add this address to E280 reserved range to make sure
  * there is no overlap for the address 0xef000 usage.
  */
-#define GUEST_CFG_OFFSET	0xef000
+#define GUEST_CFG_OFFSET	0xef000UL
 
 /**
  * @brief Info The power state data of a VCPU.
@@ -333,10 +333,10 @@ struct cpu_px_data {
  * For Px, PMCMD_STATE_NUM means Px number from 0 to (MAX_PSTATE - 1),
  * For Cx, PMCMD_STATE_NUM means Cx entry index from 1 to MAX_CX_ENTRY.
  */
-#define PMCMD_VMID_MASK		0xff000000
-#define PMCMD_VCPUID_MASK	0x00ff0000
-#define PMCMD_STATE_NUM_MASK	0x0000ff00
-#define PMCMD_TYPE_MASK		0x000000ff
+#define PMCMD_VMID_MASK		0xff000000U
+#define PMCMD_VCPUID_MASK	0x00ff0000U
+#define PMCMD_STATE_NUM_MASK	0x0000ff00U
+#define PMCMD_TYPE_MASK		0x000000ffU
 
 #define PMCMD_VMID_SHIFT	24
 #define PMCMD_VCPUID_SHIFT	16

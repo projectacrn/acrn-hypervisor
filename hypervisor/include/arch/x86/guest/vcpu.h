@@ -7,7 +7,7 @@
 #ifndef _VCPU_H_
 #define	_VCPU_H_
 
-#define	ACRN_VCPU_MMIO_COMPLETE		(0)
+#define	ACRN_VCPU_MMIO_COMPLETE		(0U)
 
 /* Size of various elements within the VCPU structure */
 #define REG_SIZE                            8
