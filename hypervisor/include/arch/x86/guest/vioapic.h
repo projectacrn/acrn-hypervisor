@@ -31,6 +31,9 @@
 #ifndef _VIOAPIC_H_
 #define	_VIOAPIC_H_
 
+#include <apicreg.h>
+#include <vm.h>
+
 #define	VIOAPIC_BASE	0xFEC00000UL
 #define	VIOAPIC_SIZE	4096UL
 
@@ -50,7 +53,7 @@ int	vioapic_mmio_read(void *vm, uint64_t gpa,
 
 uint8_t	vioapic_pincount(struct vm *vm);
 void	vioapic_process_eoi(struct vm *vm, uint32_t vector);
-bool	vioapic_get_rte(struct vm *vm, uint8_t pin, void *rte);
+bool	vioapic_get_rte(struct vm *vm, uint8_t pin, union ioapic_rte *rte);
 int	vioapic_mmio_access_handler(struct vcpu *vcpu, struct mem_io *mmio,
 		void *handler_private_data);
 

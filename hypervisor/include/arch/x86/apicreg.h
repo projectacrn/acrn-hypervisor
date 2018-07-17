@@ -253,6 +253,15 @@ struct ioapic {
 	uint32_t iowin;	PAD3;
 };
 
+/* IOAPIC Redirection Table (RTE) Entry structure */
+union ioapic_rte {
+	uint64_t full;
+	struct {
+		uint32_t lo_32;
+		uint32_t hi_32;
+	} u;
+};
+
 #undef PAD4
 #undef PAD3
 
@@ -480,7 +489,9 @@ struct ioapic {
 /*
  * fields in the IO APIC's redirection table entries
  */
-#define IOAPIC_RTE_DEST	APIC_ID_MASK	/* broadcast addr: all APICs */
+#define IOAPIC_RTE_DEST_SHIFT  	56U
+/* broadcast addr: all APICs */
+#define IOAPIC_RTE_DEST_MASK	0xff00000000000000UL
 
 #define IOAPIC_RTE_RESV	0x00fe0000UL	/* reserved */
 
