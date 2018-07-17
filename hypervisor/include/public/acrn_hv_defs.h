@@ -194,9 +194,9 @@ struct vm_gpa2hpa {
  * hypercall
  */
 struct hc_ptdev_irq {
-#define IRQ_INTX 0
-#define IRQ_MSI 1
-#define IRQ_MSIX 2
+#define IRQ_INTX 0U
+#define IRQ_MSI 1U
+#define IRQ_MSIX 2U
 	/** irq mapping type: INTX or MSI */
 	uint32_t type;
 

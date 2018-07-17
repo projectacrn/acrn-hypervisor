@@ -5,7 +5,7 @@
 
 #include <hypervisor.h>
 
-#define ACRN_DBG_IOREQUEST	6
+#define ACRN_DBG_IOREQUEST	6U
 
 static void fire_vhm_interrupt(void)
 {
@@ -19,7 +19,7 @@ static void fire_vhm_interrupt(void)
 	vm0 = get_vm_from_vmid(0U);
 	ASSERT(vm0 != NULL, "VM Pointer is NULL");
 
-	vcpu = vcpu_from_vid(vm0, 0);
+	vcpu = vcpu_from_vid(vm0, 0U);
 	ASSERT(vcpu != NULL, "vcpu_from_vid failed");
 
 	vlapic_intr_edge(vcpu, VECTOR_VIRT_IRQ_VHM);
@@ -101,53 +101,53 @@ int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 static void _get_req_info_(struct vhm_request *req, int *id, char *type,
 	char *state, char *dir, int64_t *addr, long *val)
 {
-	(void)strcpy_s(dir, 16, "NONE");
+	(void)strcpy_s(dir, 16U, "NONE");
 	*addr = 0;
 	*val = 0;
 	*id = req->client;
 
 	switch (req->type) {
 	case REQ_PORTIO:
-		(void)strcpy_s(type, 16, "PORTIO");
+		(void)strcpy_s(type, 16U, "PORTIO");
 		if (req->reqs.pio_request.direction == REQUEST_READ) {
-			(void)strcpy_s(dir, 16, "READ");
+			(void)strcpy_s(dir, 16U, "READ");
 		} else {
-			(void)strcpy_s(dir, 16, "WRITE");
+			(void)strcpy_s(dir, 16U, "WRITE");
 		}
 		*addr = req->reqs.pio_request.address;
 		*val = req->reqs.pio_request.value;
 		break;
 	case REQ_MMIO:
 	case REQ_WP:
-		(void)strcpy_s(type, 16, "MMIO/WP");
+		(void)strcpy_s(type, 16U, "MMIO/WP");
 		if (req->reqs.mmio_request.direction == REQUEST_READ) {
-			(void)strcpy_s(dir, 16, "READ");
+			(void)strcpy_s(dir, 16U, "READ");
 		} else {
-			(void)strcpy_s(dir, 16, "WRITE");
+			(void)strcpy_s(dir, 16U, "WRITE");
 		}
 		*addr = req->reqs.mmio_request.address;
 		*val = req->reqs.mmio_request.value;
 		break;
 		break;
 	default:
-		(void)strcpy_s(type, 16, "UNKNOWN");
+		(void)strcpy_s(type, 16U, "UNKNOWN");
 	}
 
 	switch (req->processed) {
 	case REQ_STATE_SUCCESS:
-		(void)strcpy_s(state, 16, "SUCCESS");
+		(void)strcpy_s(state, 16U, "SUCCESS");
 		break;
 	case REQ_STATE_PENDING:
-		(void)strcpy_s(state, 16, "PENDING");
+		(void)strcpy_s(state, 16U, "PENDING");
 		break;
 	case REQ_STATE_PROCESSING:
-		(void)strcpy_s(state, 16, "PROCESS");
+		(void)strcpy_s(state, 16U, "PROCESS");
 		break;
 	case REQ_STATE_FAILED:
-		(void)strcpy_s(state, 16, "FAILED");
+		(void)strcpy_s(state, 16U, "FAILED");
 		break;
 	default:
-		(void)strcpy_s(state, 16,  "UNKNOWN");
+		(void)strcpy_s(state, 16U,  "UNKNOWN");
 	}
 }
 

@@ -164,10 +164,10 @@ struct acrn_set_ioreq_buffer {
 } __aligned(8);
 
 /** Interrupt type for acrn_irqline: inject interrupt to IOAPIC */
-#define	ACRN_INTR_TYPE_ISA	0
+#define	ACRN_INTR_TYPE_ISA	0U
 
 /** Interrupt type for acrn_irqline: inject interrupt to both PIC and IOAPIC */
-#define	ACRN_INTR_TYPE_IOAPIC	1
+#define	ACRN_INTR_TYPE_IOAPIC	1U
 
 /**
  * @brief Info to assert/deassert/pulse a virtual IRQ line for a VM
@@ -266,7 +266,7 @@ struct acrn_vm_pci_msix_remap {
  * layout below 1M, DM add this address to E280 reserved range to make sure
  * there is no overlap for the address 0xef000 usage.
  */
-#define GUEST_CFG_OFFSET	0xef000
+#define GUEST_CFG_OFFSET	0xef000UL
 
 /**
  * @brief Info The power state data of a VCPU.

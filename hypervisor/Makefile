@@ -271,8 +271,8 @@ $(VERSION):
 	echo "#define HV_MINOR_VERSION $(MINOR_VERSION)" >> $(VERSION);\
 	echo "#define HV_EXTRA_VERSION "\"$(EXTRA_VERSION)\""" >> $(VERSION);\
 	echo "#define HV_FULL_VERSION "\"$(FULL_VERSION)\""" >> $(VERSION);\
-	echo "#define HV_API_MAJOR_VERSION $(API_MAJOR_VERSION)" >> $(VERSION);\
-	echo "#define HV_API_MINOR_VERSION $(API_MINOR_VERSION)" >> $(VERSION);\
+	echo "#define HV_API_MAJOR_VERSION $(API_MAJOR_VERSION)U" >> $(VERSION);\
+	echo "#define HV_API_MINOR_VERSION $(API_MINOR_VERSION)U" >> $(VERSION);\
 	echo "#define HV_DAILY_TAG "\""$$DAILY_TAG"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_VERSION "\""$$PATCH"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_TYPE "\""$$BUILD_TYPE"\""" >> $(VERSION);\

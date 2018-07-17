@@ -503,7 +503,7 @@ static void bsp_boot_post(void)
 			HV_DAILY_TAG,
 			HV_BUILD_USER, ticks_to_us(start_tsc));
 
-	pr_acrnlog("API version %d.%d",
+	pr_acrnlog("API version %u.%u",
 			HV_API_MAJOR_VERSION, HV_API_MINOR_VERSION);
 
 	pr_acrnlog("Detect processor: %s", boot_cpu_data.model_name);
