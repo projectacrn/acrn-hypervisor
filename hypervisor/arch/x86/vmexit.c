@@ -236,8 +236,6 @@ static int unhandled_vmexit_handler(struct vcpu *vcpu)
 	pr_err("Exit qualification: 0x%016llx ",
 			exec_vmread(VMX_EXIT_QUALIFICATION));
 
-	/* while(1); */
-
 	TRACE_2L(TRACE_VMEXIT_UNHANDLED, vcpu->arch_vcpu.exit_reason, 0UL);
 
 	return 0;
