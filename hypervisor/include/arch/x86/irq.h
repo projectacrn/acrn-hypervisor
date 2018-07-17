@@ -70,7 +70,7 @@ int common_handler_edge(struct irq_desc *desc, void *handler_data);
 int common_dev_handler_level(struct irq_desc *desc, void *handler_data);
 int quick_handler_nolock(struct irq_desc *desc, void *handler_data);
 
-int init_default_irqs(uint16_t cpu);
+void init_default_irqs(uint16_t cpu);
 
 void dispatch_exception(struct intr_excp_ctx *ctx);
 void dispatch_interrupt(struct intr_excp_ctx *ctx);
@@ -106,7 +106,7 @@ int exception_vmexit_handler(struct vcpu *vcpu);
 int interrupt_window_vmexit_handler(struct vcpu *vcpu);
 int external_interrupt_vmexit_handler(struct vcpu *vcpu);
 int acrn_handle_pending_request(struct vcpu *vcpu);
-int interrupt_init(uint16_t pcpu_id);
+void interrupt_init(uint16_t pcpu_id);
 
 void cancel_event_injection(struct vcpu *vcpu);
 

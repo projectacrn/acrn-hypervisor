@@ -365,10 +365,10 @@ uint32_t dev_to_vector(struct dev_handler_node *node)
 	return node->desc->vector;
 }
 
-int init_default_irqs(uint16_t cpu_id)
+void init_default_irqs(uint16_t cpu_id)
 {
 	if (cpu_id != BOOT_CPU_ID) {
-		return 0;
+		return;
 	}
 
 	init_irq_desc();
@@ -377,8 +377,6 @@ int init_default_irqs(uint16_t cpu_id)
 	disable_pic_irq();
 	setup_ioapic_irq();
 	init_softirq();
-
-	return 0;
 }
 
 void dispatch_exception(struct intr_excp_ctx *ctx)
@@ -731,28 +729,14 @@ void get_cpu_interrupt_info(char *str, int str_max)
 }
 #endif /* HV_DEBUG */
 
-int interrupt_init(uint16_t pcpu_id)
+void interrupt_init(uint16_t pcpu_id)
 {
 	struct host_idt_descriptor *idtd = &HOST_IDTR;
-	int status;
 
 	set_idt(idtd);
-
-	status = init_lapic(pcpu_id);
-	ASSERT(status == 0, "lapic init failed");
-	if (status != 0) {
-		return -ENODEV;
-	}
-
-	status = init_default_irqs(pcpu_id);
-	ASSERT(status == 0, "irqs init failed");
-	if (status != 0) {
-		return -ENODEV;
-	}
-
+	init_lapic(pcpu_id);
+	init_default_irqs(pcpu_id);
 #ifndef CONFIG_EFI_STUB
 	CPU_IRQ_ENABLE();
 #endif
-
-	return status;
 }

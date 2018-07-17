@@ -169,16 +169,11 @@ static struct list_head iommu_domains;
 static void dmar_register_hrhd(struct dmar_drhd_rt *drhd_rt);
 static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus,
 					   uint8_t devfun);
-static int register_hrhd_units(void)
+static void register_hrhd_units(void)
 {
 	struct dmar_info *info = get_dmar_info();
 	struct dmar_drhd_rt *drhd_rt;
 	uint32_t i;
-
-	if (info == NULL) {
-		pr_warn("vtd: no dmar units found");
-		return -1;
-	}
 
 	for (i = 0U; i < info->drhd_count; i++) {
 		drhd_rt = calloc(1, sizeof(struct dmar_drhd_rt));
@@ -186,8 +181,6 @@ static int register_hrhd_units(void)
 		drhd_rt->drhd = &info->drhd_units[i];
 		dmar_register_hrhd(drhd_rt);
 	}
-
-	return 0;
 }
 
 static uint32_t iommu_read32(struct dmar_drhd_rt *dmar_uint, uint32_t offset)
@@ -910,12 +903,11 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_ta
 	return domain;
 }
 
-int destroy_iommu_domain(struct iommu_domain *domain)
+/**
+ * @pre domain != NULL
+ */
+void destroy_iommu_domain(struct iommu_domain *domain)
 {
-	if (domain == NULL) {
-		return 1;
-	}
-
 	/* currently only support ept */
 	if (!domain->is_tt_ept) {
 		ASSERT(false, "translation_table is not EPT!");
@@ -929,8 +921,6 @@ int destroy_iommu_domain(struct iommu_domain *domain)
 
 	free_domain_id(domain->dom_id);
 	free(domain);
-
-	return 0;
 }
 
 static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
@@ -1258,7 +1248,7 @@ void resume_iommu(void)
 	}
 }
 
-int init_iommu(void)
+void init_iommu(void)
 {
 	uint16_t bus;
 	uint16_t devfun;
@@ -1268,9 +1258,7 @@ int init_iommu(void)
 
 	spinlock_init(&domain_lock);
 
-	if (register_hrhd_units() != 0) {
-		return -1;
-	}
+	register_hrhd_units();
 
 	host_domain = create_host_domain();
 
@@ -1282,6 +1270,4 @@ int init_iommu(void)
 	}
 
 	enable_iommu();
-
-	return 0;
 }
