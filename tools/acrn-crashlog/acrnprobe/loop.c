@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#define _LARGEFILE64_SOURCE
 #include <stdio.h>
 #include <fcntl.h>
 #include <linux/loop.h>
@@ -12,11 +13,19 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <utime.h>
+#include <string.h>
 #include <blkid/blkid.h>
 #include <ext2fs/ext2fs.h>
+#include "fsutils.h"
 #include "log_sys.h"
 
 #define DEV_LOOP_CTL "/dev/loop-control"
+
+struct walking_inode_data {
+	const char *current_out_native_dirpath;
+	int dumped_count;
+};
 
 static int get_par_startaddr_from_img(const char *img,
 					const char *target_parname,
@@ -229,4 +238,408 @@ int loopdev_check_parname(const char *loopdev, const char *parname)
 
 	close(fd);
 	return 0;
+}
+
+/**
+ * Align the file's perms, only print WARNING if errors occurred in this
+ * function.
+ *
+ * Note: Drop user and group.
+ */
+static void align_props(int fd, const char *name,
+			const struct ext2_inode *inode)
+{
+	int res;
+	struct utimbuf ut;
+
+	if (!inode || !name)
+		return;
+
+	if (fd >= 0)
+		res = fchmod(fd, inode->i_mode);
+	else
+		res = chmod(name, inode->i_mode);
+
+	if (res == -1)
+		LOGW("failed to exec (xchmod), error (%s)\n", strerror(errno));
+
+	ut.actime = inode->i_atime;
+	ut.modtime = inode->i_mtime;
+	res = utime(name, &ut);
+	if (res == -1)
+		LOGW("failed to exec (utime), error (%s)\n", strerror(errno));
+}
+
+static int e2fs_get_inodenum_by_fpath(ext2_filsys fs, const char *fpath,
+					ext2_ino_t *out_ino)
+{
+	ext2_ino_t root;
+	ext2_ino_t cwd;
+	errcode_t res;
+
+	if (!fs || !fpath || !out_ino)
+		return -1;
+
+	root = EXT2_ROOT_INO;
+	cwd = EXT2_ROOT_INO;
+
+	res = ext2fs_namei(fs, root, cwd, fpath, out_ino);
+	if (res) {
+		LOGE("ext2fs failed to get ino, path (%s), error (%s)\n",
+		       fpath, error_message(res));
+		return -1;
+	}
+
+	return 0;
+}
+
+static int e2fs_read_inode_by_inodenum(ext2_filsys fs, ext2_ino_t ino,
+					struct ext2_inode *inode)
+{
+	errcode_t res;
+
+	if (!fs || !ino || !inode)
+		return -1;
+
+	res = ext2fs_read_inode(fs, ino, inode);
+	if (res) {
+		LOGE("ext2fs failed to get inode, ino (%d), error (%s)\n",
+		     ino, error_message(res));
+		return -1;
+	}
+
+	return 0;
+}
+
+static int e2fs_dump_file_by_inodenum(ext2_filsys fs, ext2_ino_t ino,
+					const char *out_fp)
+{
+	errcode_t res;
+	int ret = 0;
+	int fd;
+	unsigned int got;
+	struct ext2_inode inode;
+	ext2_file_t e2_file;
+	char *buf;
+	ssize_t write_b;
+
+	if (!fs || !ino || !out_fp)
+		return -1;
+
+	res = e2fs_read_inode_by_inodenum(fs, ino, &inode);
+	if (res) {
+		LOGE("ext2fs failed to read inode, error (%s)\n",
+		     error_message(res));
+		return -1;
+	}
+
+	fd = open(out_fp, O_CREAT | O_WRONLY | O_TRUNC | O_LARGEFILE, 0666);
+	if (fd == -1) {
+		LOGE("open (%s) failed, error (%s)\n", out_fp, strerror(errno));
+		return -1;
+	}
+
+	/* open with read only */
+	res = ext2fs_file_open2(fs, ino, &inode, 0, &e2_file);
+	if (res) {
+		LOGE("ext2fs failed to open file, ino (%d), error (%s)\n",
+		       ino, error_message(res));
+		close(fd);
+		return -1;
+	}
+
+	res = ext2fs_get_mem(fs->blocksize, &buf);
+	if (res) {
+		LOGE("ext2fs failed to get mem, error (%s)\n",
+		     error_message(res));
+		close(fd);
+		ext2fs_file_close(e2_file);
+		return -1;
+	}
+
+	while (1) {
+		res = ext2fs_file_read(e2_file, buf, fs->blocksize, &got);
+		/* got equals zero in failed case */
+		if (res) {
+			LOGE("ext2fs failed to read (%u), error (%s)\n",
+			     ino, error_message(res));
+			ret = -1;
+		}
+		if (!got)
+			break;
+
+		write_b = write(fd, buf, got);
+		if ((unsigned int)write_b != got) {
+			LOGE("failed to write file (%s), error (%s)\n",
+			     out_fp, strerror(errno));
+			ret = -1;
+			break;
+		}
+	}
+	align_props(fd, out_fp, &inode);
+	if (buf)
+		ext2fs_free_mem(&buf);
+	/* ext2fs_file_close only failed in flush process */
+	ext2fs_file_close(e2_file);
+	close(fd);
+
+	return ret;
+}
+
+int e2fs_dump_file_by_fpath(ext2_filsys fs, const char *in_fp,
+			const char *out_fp)
+{
+	int res;
+	ext2_ino_t ino;
+
+	if (!fs || !in_fp || !out_fp)
+		return -1;
+
+	res = e2fs_get_inodenum_by_fpath(fs, in_fp, &ino);
+	if (res)
+		return res;
+
+	return e2fs_dump_file_by_inodenum(fs, ino, out_fp);
+}
+
+static int e2fs_read_file_by_inodenum(ext2_filsys fs, ext2_ino_t ino,
+					void **out_data, unsigned long *size)
+{
+	errcode_t res;
+	unsigned int got;
+	struct ext2_inode inode;
+	ext2_file_t e2_file;
+	__u64 _size;
+	char *buf;
+
+	if (!fs || !ino || !out_data || !size)
+		return -1;
+
+	res = e2fs_read_inode_by_inodenum(fs, ino, &inode);
+	if (res) {
+		LOGE("ext2fs failed to read inode, error (%s)\n",
+		     error_message(res));
+		return -1;
+	}
+
+	_size = EXT2_I_SIZE(&inode);
+	if (!_size) {
+		LOGW("try to read a empty file\n");
+		*size = 0;
+		*out_data = 0;
+		return 0;
+	}
+
+	/* open with read only */
+	res = ext2fs_file_open2(fs, ino, &inode, 0, &e2_file);
+	if (res) {
+		LOGE("ext2fs failed to open file, ino (%d), error (%s)\n",
+		       ino, error_message(res));
+		return -1;
+	}
+
+	res = ext2fs_get_mem(_size + 1, &buf);
+	if (res) {
+		LOGE("ext2fs failed to get mem, error (%s)\n",
+		     error_message(res));
+		ext2fs_file_close(e2_file);
+		return -1;
+	}
+
+	res = ext2fs_file_read(e2_file, buf, _size, &got);
+	/* got equals zero in failed case */
+	if (res) {
+		LOGE("ext2fs failed to read (%u), error (%s)\n",
+		     ino, error_message(res));
+		goto err;
+	}
+
+	/* ext2fs_file_close only failed in flush process */
+	ext2fs_file_close(e2_file);
+
+	*size = _size;
+	buf[_size] = 0;
+	*out_data = buf;
+
+	return 0;
+err:
+	free(buf);
+	ext2fs_file_close(e2_file);
+	return -1;
+}
+
+int e2fs_read_file_by_fpath(ext2_filsys fs, const char *in_fp,
+			 void **out_data, unsigned long *size)
+{
+	int res;
+	ext2_ino_t ino;
+
+	if (!fs || !in_fp || !out_data || !size)
+		return -1;
+
+	res = e2fs_get_inodenum_by_fpath(fs, in_fp, &ino);
+	if (res)
+		return res;
+
+	return e2fs_read_file_by_inodenum(fs, ino, out_data, size);
+}
+
+static int dump_inode_recursively_by_inodenum(ext2_filsys fs, ext2_ino_t ino,
+						struct walking_inode_data *data,
+						const char *fname);
+static int callback_for_subentries(struct ext2_dir_entry *dirent,
+				int offset EXT2FS_ATTR((unused)),
+				int blocksize EXT2FS_ATTR((unused)),
+				char *buf EXT2FS_ATTR((unused)),
+				void *private)
+{
+	char fname[EXT2_NAME_LEN + 1];
+	struct walking_inode_data *data = private;
+	int len;
+
+	len = dirent->name_len & 0xFF; /* EXT2_NAME_LEN = 255 */
+	strncpy(fname, dirent->name, len);
+	fname[len] = 0;
+
+	return dump_inode_recursively_by_inodenum(NULL, dirent->inode,
+						  data, fname);
+}
+
+static int dump_inode_recursively_by_inodenum(ext2_filsys fs, ext2_ino_t ino,
+						struct walking_inode_data *data,
+						const char *fname)
+{
+	int res;
+	char *out_fpath;
+	errcode_t err;
+	static ext2_filsys fs_for_dump;
+	struct ext2_inode inode;
+
+	if (!ino || !data || !data->current_out_native_dirpath || !fname)
+		goto abort;
+
+	/* caller is not callback_for_subentries */
+	if (fs)
+		fs_for_dump = fs;
+
+	if (!strcmp(fname, ".") || !strcmp(fname, ".."))
+		return 0;
+
+	res = asprintf(&out_fpath, "%s/%s", data->current_out_native_dirpath,
+		       fname);
+	if (res == -1) {
+		LOGE("failed to construct target file name, ");
+		goto abort;
+	}
+
+	res = e2fs_read_inode_by_inodenum(fs_for_dump, ino, &inode);
+	if (res) {
+		LOGE("ext2fs failed to read inode, ");
+		goto abort_free;
+	}
+
+	if (LINUX_S_ISREG(inode.i_mode)) {
+		/* do dump for file */
+		res = e2fs_dump_file_by_inodenum(fs_for_dump, ino, out_fpath);
+		if (res) {
+			LOGE("ext2fs failed to dump file, ");
+			goto abort_free;
+		}
+		data->dumped_count++;
+	} else if (LINUX_S_ISDIR(inode.i_mode)) {
+		/* mkdir for directory and dump the subentry */
+		res = mkdir(out_fpath, 0700);
+		if (res == -1 && errno != EEXIST) {
+			LOGE("failed to mkdir (%s), error (%s), ", out_fpath,
+			     strerror(errno));
+			goto abort_free;
+		}
+		data->dumped_count++;
+
+		data->current_out_native_dirpath = out_fpath;
+		err = ext2fs_dir_iterate(fs_for_dump, ino, 0, 0,
+					 callback_for_subentries,
+					 (void *)data);
+		if (err) {
+			LOGE("ext2fs failed to iterate dir, errno (%s), ",
+			     error_message(err));
+			goto abort_free;
+		}
+		align_props(-1, out_fpath, &inode);
+	}
+	/* else ignore the rest types, such as link, socket, fifo, ... */
+
+	free(out_fpath);
+	return 0;
+
+abort_free:
+	free(out_fpath);
+abort:
+	LOGE("dump dir aborted...\n");
+	return DIRENT_ABORT;
+}
+
+int e2fs_dump_dir_by_dpath(ext2_filsys fs, const char *in_dp,
+			const char *out_dp, int *count)
+{
+	ext2_ino_t ino;
+	struct walking_inode_data dump_needed;
+	const char *dname;
+	int res;
+
+	if (!fs || !in_dp || !count)
+		return -1;
+
+	*count = 0;
+	if (!directory_exists(out_dp)) {
+		LOGE("dir need dump into an existed dir\n");
+		return -1;
+	}
+
+	res = e2fs_get_inodenum_by_fpath(fs, in_dp, &ino);
+	if (res == -1)
+		return -1;
+
+	dname = strrchr(in_dp, '/');
+	if (dname)
+		dname++;
+	else
+		dname = in_dp;
+
+	dump_needed.dumped_count = 0;
+	dump_needed.current_out_native_dirpath = out_dp;
+	res = dump_inode_recursively_by_inodenum(fs, ino, &dump_needed, dname);
+	*count = dump_needed.dumped_count;
+	if (res) {
+		LOGE("ext2fs failed to dump dir\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+int e2fs_open(const char *dev, ext2_filsys *outfs)
+{
+	errcode_t res;
+
+	if (!dev || !outfs)
+		return -1;
+
+	add_error_table(&et_ext2_error_table);
+	res = ext2fs_open(dev, EXT2_FLAG_64BITS, 0, 0,
+			  unix_io_manager, outfs);
+	if (res) {
+		LOGE("ext2fs fail to open (%s), error (%s)\n", dev,
+		     error_message(res));
+		return -1;
+	}
+
+	return 0;
+}
+
+void e2fs_close(ext2_filsys fs)
+{
+	if (fs)
+		ext2fs_close(fs);
+	remove_error_table(&et_ext2_error_table);
 }
