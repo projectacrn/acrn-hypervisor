@@ -98,10 +98,10 @@ static void free_ept_mem(void *pml4_addr)
 
 void destroy_ept(struct vm *vm)
 {
-	if (vm->arch_vm.nworld_eptp != 0U)
-		free_ept_mem(HPA2HVA(vm->arch_vm.nworld_eptp));
-	if (vm->arch_vm.m2p != 0U)
-		free_ept_mem(HPA2HVA(vm->arch_vm.m2p));
+	if (vm->arch_vm.nworld_eptp != NULL)
+		free_ept_mem(vm->arch_vm.nworld_eptp);
+	if (vm->arch_vm.m2p != NULL)
+		free_ept_mem(vm->arch_vm.m2p);
 
 	/*
 	 * If secure world is initialized, destroy Secure world ept.
@@ -110,9 +110,10 @@ void destroy_ept(struct vm *vm)
 	 *  - trusty is enabled. But not initialized yet.
 	 *    Check vm->arch_vm.sworld_eptp.
 	 */
-	if (vm->sworld_control.sworld_enabled && (vm->arch_vm.sworld_eptp != 0U)) {
-		free_ept_mem(HPA2HVA(vm->arch_vm.sworld_eptp));
-		vm->arch_vm.sworld_eptp = 0UL;
+	if (vm->sworld_control.sworld_enabled &&
+			(vm->arch_vm.sworld_eptp != NULL)) {
+		free_ept_mem(vm->arch_vm.sworld_eptp);
+		vm->arch_vm.sworld_eptp = NULL;
 	}
 }
 
@@ -124,8 +125,8 @@ uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 	struct map_params map_params;
 
 	map_params.page_table_type = PTT_EPT;
-	map_params.pml4_base = HPA2HVA(vm->arch_vm.nworld_eptp);
-	map_params.pml4_inverted = HPA2HVA(vm->arch_vm.m2p);
+	map_params.pml4_base = vm->arch_vm.nworld_eptp;
+	map_params.pml4_inverted = vm->arch_vm.m2p;
 	obtain_last_page_table_entry(&map_params, &entry, (void *)gpa, true);
 	if (entry.entry_present == PT_PRESENT) {
 		hpa = ((entry.entry_val & (~(entry.page_size - 1)))
@@ -156,8 +157,8 @@ uint64_t hpa2gpa(struct vm *vm, uint64_t hpa)
 	struct map_params map_params;
 
 	map_params.page_table_type = PTT_EPT;
-	map_params.pml4_base = HPA2HVA(vm->arch_vm.nworld_eptp);
-	map_params.pml4_inverted = HPA2HVA(vm->arch_vm.m2p);
+	map_params.pml4_base = vm->arch_vm.nworld_eptp;
+	map_params.pml4_inverted = vm->arch_vm.m2p;
 
 	obtain_last_page_table_entry(&map_params, &entry,
 			(void *)hpa, false);
@@ -494,15 +495,12 @@ int ept_mmap(struct vm *vm, uint64_t hpa,
 
 	/* Setup memory map parameters */
 	map_params.page_table_type = PTT_EPT;
-	if (vm->arch_vm.nworld_eptp != 0U) {
-		map_params.pml4_base = HPA2HVA(vm->arch_vm.nworld_eptp);
-		map_params.pml4_inverted = HPA2HVA(vm->arch_vm.m2p);
-	} else {
-		map_params.pml4_base = alloc_paging_struct();
-		vm->arch_vm.nworld_eptp = HVA2HPA(map_params.pml4_base);
-		map_params.pml4_inverted = alloc_paging_struct();
-		vm->arch_vm.m2p = HVA2HPA(map_params.pml4_inverted);
+	if (vm->arch_vm.nworld_eptp == NULL) {
+		vm->arch_vm.nworld_eptp = alloc_paging_struct();
+		vm->arch_vm.m2p = alloc_paging_struct();
 	}
+	map_params.pml4_base = vm->arch_vm.nworld_eptp;
+	map_params.pml4_inverted = vm->arch_vm.m2p;
 
 	if (type == MAP_MEM || type == MAP_MMIO) {
 		/* EPT & VT-d share the same page tables, set SNP bit
@@ -540,7 +538,7 @@ int ept_mr_modify(struct vm *vm, uint64_t gpa, uint64_t size,
 	uint16_t i;
 	int ret;
 
-	ret = mmu_modify((uint64_t *)HPA2HVA(vm->arch_vm.nworld_eptp),
+	ret = mmu_modify((uint64_t *)vm->arch_vm.nworld_eptp,
 			gpa, size, attr_set, attr_clr, PTT_EPT);
 
 	foreach_vcpu(i, vm, vcpu) {

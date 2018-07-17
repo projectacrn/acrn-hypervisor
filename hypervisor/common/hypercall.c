@@ -616,14 +616,14 @@ int64_t hcall_assign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
 
 	/* create a iommu domain for target VM if not created */
 	if (target_vm->iommu_domain == NULL) {
-		if (target_vm->arch_vm.nworld_eptp == 0UL) {
+		if (target_vm->arch_vm.nworld_eptp == NULL) {
 			pr_err("%s, EPT of VM not set!\n",
 				__func__, target_vm->attr.id);
 			return -EPERM;
 		}
 		/* TODO: how to get vm's address width? */
 		target_vm->iommu_domain = create_iommu_domain(vmid,
-				target_vm->arch_vm.nworld_eptp, 48U);
+				HVA2HPA(target_vm->arch_vm.nworld_eptp), 48U);
 		if (target_vm->iommu_domain == NULL) {
 			return -ENODEV;
 		}

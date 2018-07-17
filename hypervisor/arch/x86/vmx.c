@@ -1344,7 +1344,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	 * TODO: introduce API to make this data driven based
 	 * on VMX_EPT_VPID_CAP
 	 */
-	value64 = vm->arch_vm.nworld_eptp | (3UL << 3U) | 6UL;
+	value64 = HVA2HPA(vm->arch_vm.nworld_eptp) | (3UL << 3U) | 6UL;
 	exec_vmwrite64(VMX_EPT_POINTER_FULL, value64);
 	pr_dbg("VMX_EPT_POINTER: 0x%016llx ", value64);
 

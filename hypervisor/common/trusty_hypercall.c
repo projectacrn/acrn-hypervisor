@@ -25,7 +25,7 @@ int64_t hcall_world_switch(struct vcpu *vcpu)
 		return -EPERM;
 	}
 
-	if (vcpu->vm->arch_vm.sworld_eptp == 0U) {
+	if (vcpu->vm->arch_vm.sworld_eptp == NULL) {
 		pr_err("%s, Trusty is not initialized!\n", __func__);
 		return -EPERM;
 	}
@@ -44,7 +44,7 @@ int64_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param)
 		return -EPERM;
 	}
 
-	if (vcpu->vm->arch_vm.sworld_eptp != 0U) {
+	if (vcpu->vm->arch_vm.sworld_eptp != NULL) {
 		pr_err("%s, Trusty already initialized!\n", __func__);
 		return -EPERM;
 	}
