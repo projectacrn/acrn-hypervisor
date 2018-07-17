@@ -98,8 +98,10 @@ static void free_ept_mem(void *pml4_addr)
 
 void destroy_ept(struct vm *vm)
 {
-	free_ept_mem(HPA2HVA(vm->arch_vm.nworld_eptp));
-	free_ept_mem(HPA2HVA(vm->arch_vm.m2p));
+	if (vm->arch_vm.nworld_eptp != 0U)
+		free_ept_mem(HPA2HVA(vm->arch_vm.nworld_eptp));
+	if (vm->arch_vm.m2p != 0U)
+		free_ept_mem(HPA2HVA(vm->arch_vm.m2p));
 
 	/*
 	 * If secure world is initialized, destroy Secure world ept.
