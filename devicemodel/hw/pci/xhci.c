@@ -2161,8 +2161,6 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 		       uint32_t epid,
 		       int *do_intr)
 {
-	struct pci_xhci_dev_emu *dev;
-	struct pci_xhci_dev_ep	*devep;
 	struct xhci_dev_ctx	*dev_ctx;
 	struct xhci_endp_ctx	*ep_ctx;
 	struct xhci_trb		*trb;
@@ -2172,8 +2170,6 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 	uint32_t i;
 	int  err = XHCI_TRB_ERROR_SUCCESS;
 
-	dev = XHCI_SLOTDEV_PTR(xdev, slot);
-	devep = &dev->eps[epid];
 	dev_ctx = pci_xhci_get_dev_ctx(xdev, slot);
 
 	assert(dev_ctx != NULL);
@@ -2219,21 +2215,17 @@ pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
 			 trbflags, err,
 			 trb->dwTrb3 & XHCI_TRB_3_IOC_BIT ? 1 : 0);
 
-		if (!xfer->data[i].processed) {
+		if (xfer->data[i].processed < USB_XFER_BLK_HANDLED) {
 			xfer->head = (int)i;
 			break;
 		}
 
+		xfer->data[i].processed = USB_XFER_BLK_FREE;
 		xfer->ndata--;
 		xfer->head = (xfer->head + 1) % USB_MAX_XFER_BLOCKS;
 		edtla += xfer->data[i].bdone;
 
 		trb->dwTrb3 = (trb->dwTrb3 & ~0x1) | (xfer->data[i].ccs);
-
-		pci_xhci_update_ep_ring(xdev, dev, devep, ep_ctx,
-					xfer->data[i].streamid,
-					xfer->data[i].trbnext,
-					xfer->data[i].ccs);
 
 		/* Only interrupt if IOC or short packet */
 		if (!(trb->dwTrb3 & XHCI_TRB_3_IOC_BIT) &&
@@ -2415,7 +2407,7 @@ retry:
 				err = XHCI_TRB_ERROR_STALL;
 				goto errout;
 			}
-			xfer_block->processed = 1;
+			xfer_block->processed = USB_XFER_BLK_FREE;
 			break;
 
 		case XHCI_TRB_TYPE_SETUP_STAGE:
@@ -2446,7 +2438,7 @@ retry:
 				err = XHCI_TRB_ERROR_STALL;
 				goto errout;
 			}
-			xfer_block->processed = 1;
+			xfer_block->processed = USB_XFER_BLK_HANDLED;
 			break;
 
 		case XHCI_TRB_TYPE_NORMAL:
@@ -2480,7 +2472,7 @@ retry:
 				err = XHCI_TRB_ERROR_STALL;
 				goto errout;
 			}
-			xfer_block->processed = 1;
+			xfer_block->processed = USB_XFER_BLK_HANDLED;
 			break;
 
 		case XHCI_TRB_TYPE_EVENT_DATA:
@@ -2491,7 +2483,7 @@ retry:
 				goto errout;
 			}
 			if ((epid > 1) && (trbflags & XHCI_TRB_3_IOC_BIT))
-				xfer_block->processed = 1;
+				xfer_block->processed = USB_XFER_BLK_HANDLED;
 			break;
 
 		default:
@@ -2509,18 +2501,20 @@ retry:
 		if (xfer_block) {
 			xfer_block->trbnext = addr;
 			xfer_block->streamid = streamid;
-		}
-
-		if (!setup_trb && !(trbflags & XHCI_TRB_3_CHAIN_BIT) &&
-		    XHCI_TRB_3_TYPE_GET(trbflags) != XHCI_TRB_TYPE_LINK) {
-			break;
+			/* FIXME:
+			 * should add some code to process the scenario in
+			 * which endpoint stop command is comming in the
+			 * middle of many data transfers.
+			 */
+			pci_xhci_update_ep_ring(xdev, dev, devep, ep_ctx,
+					xfer_block->streamid,
+					xfer_block->trbnext, xfer_block->ccs);
 		}
 
 		/* handle current batch that requires interrupt on complete */
 		if (trbflags & XHCI_TRB_3_IOC_BIT) {
 			UPRINTF(LDBG, "trb IOC bit set\r\n");
-			if (epid == 1)
-				do_retry = 1;
+			do_retry = 1;
 			break;
 		}
 	}

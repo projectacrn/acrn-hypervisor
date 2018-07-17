@@ -125,7 +125,7 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 		}
 	}
 
-	/* post process the usb transfer data */
+	/* handle the blocks belong to this request */
 	buf_idx = 0;
 	idx = req->blk_start;
 	for (i = 0; i < req->blk_count; i++) {
@@ -152,11 +152,13 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 		buf_idx += done;
 		block->bdone = done;
 		block->blen -= done;
+		block->processed = USB_XFER_BLK_HANDLED;
 		idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 	}
 
 	if (short_data)
 		xfer->status = USB_ERR_SHORT_XFER;
+
 out:
 	/* notify the USB core this transfer is over */
 	if (g_ctx.notify_cb)
@@ -233,9 +235,9 @@ usb_dev_prepare_xfer(struct usb_data_xfer *xfer, int *count, int *size)
 	for (i = 0; i < xfer->ndata; i++) {
 		block = &xfer->data[idx];
 
-		if (block->processed) {
+		if (block->processed == USB_XFER_BLK_HANDLED ||
+				block->processed == USB_XFER_BLK_HANDLING) {
 			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
-			c++;
 			continue;
 		}
 		if (block->buf && block->blen > 0) {
@@ -245,12 +247,20 @@ usb_dev_prepare_xfer(struct usb_data_xfer *xfer, int *count, int *size)
 			}
 			c++;
 			s += block->blen;
-
+		} else if (!block->buf || !block->blen) {
+			/* there are two cases:
+			 * 1. LINK trb is in the middle of trbs.
+			 * 2. LINK trb is a single trb.
+			 */
+			c++;
+			block->processed = USB_XFER_BLK_HANDLED;
+			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
+			continue;
 		} else if (found) {
 			UPRINTF(LWRN, "find a NULL data. %d total %d\n",
 				i, xfer->ndata);
 		}
-		block->processed = 1;
+		block->processed = USB_XFER_BLK_HANDLING;
 		idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 	}
 
@@ -558,7 +568,7 @@ usb_dev_prepare_ctrl_xfer(struct usb_data_xfer *xfer)
 		if (blk->blen > 0 && !ret)
 			ret = blk;
 
-		blk->processed = 1;
+		blk->processed = USB_XFER_BLK_HANDLED;
 		idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 	}
 	return ret;

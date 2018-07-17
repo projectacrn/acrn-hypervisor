@@ -78,6 +78,12 @@ enum usb_dev_type {
 	USB_DEV_PORT_MAPPER
 };
 
+enum usb_xfer_blk_stat {
+	USB_XFER_BLK_FREE = 0,
+	USB_XFER_BLK_HANDLING,
+	USB_XFER_BLK_HANDLED
+};
+
 struct usb_hci;
 struct usb_device_request;
 struct usb_data_xfer;
@@ -133,14 +139,14 @@ struct usb_hci {
  * of the buffer, i.e. len(buf) - len(consumed).
  */
 struct usb_data_xfer_block {
-	void	*buf;			/* IN or OUT pointer */
-	int	blen;			/* in:len(buf), out:len(remaining) */
-	int	bdone;			/* bytes transferred */
-	uint32_t processed;		/* device processed this + errcode */
-	void	*hci_data;		/* HCI private reference */
-	int	ccs;
-	uint32_t streamid;
-	uint64_t trbnext;		/* next TRB guest address */
+	void			*buf;	   /* IN or OUT pointer */
+	int			blen;	   /* in:len(buf), out:len(remaining) */
+	int			bdone;	   /* bytes transferred */
+	enum usb_xfer_blk_stat	processed; /* processed status */
+	void			*hci_data; /* HCI private reference */
+	int			ccs;
+	uint32_t		streamid;
+	uint64_t		trbnext;   /* next TRB guest address */
 };
 
 struct usb_data_xfer {
