@@ -46,10 +46,8 @@ int	vioapic_deassert_irq(struct vm *vm, uint32_t irq);
 int	vioapic_pulse_irq(struct vm *vm, uint32_t irq);
 void	vioapic_update_tmr(struct vcpu *vcpu);
 
-int	vioapic_mmio_write(void *vm, uint64_t gpa,
-	    uint64_t wval, int size);
-int	vioapic_mmio_read(void *vm, uint64_t gpa,
-	    uint64_t *rval, int size);
+void	vioapic_mmio_write(struct vm *vm, uint64_t gpa, uint32_t wval);
+void	vioapic_mmio_read(struct vm *vm, uint64_t gpa, uint32_t *rval);
 
 uint8_t	vioapic_pincount(struct vm *vm);
 void	vioapic_process_eoi(struct vm *vm, uint32_t vector);
