@@ -754,7 +754,7 @@ static void fault_record_analysis(__unused uint64_t low, uint64_t high)
 		DMA_FRCD_UP_SID(high) & 0x7UL,
 		low);
 #if DBG_IOMMU
-	if (iommu_ecap_dt(dmar_uint->ecap)) {
+	if (iommu_ecap_dt(dmar_uint->ecap)i != 0U) {
 		pr_info("Address Type: 0x%x",
 				DMA_FRCD_UP_AT(high));
 	}
