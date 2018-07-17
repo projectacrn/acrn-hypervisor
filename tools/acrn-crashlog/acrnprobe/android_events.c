@@ -17,10 +17,11 @@
 #include "log_sys.h"
 #include "fsutils.h"
 #include "history.h"
+#include "loop.h"
 
 #define VM_WARNING_LINES 2000
-#define LOOP_DEV_MAX 8
 
+#define ANDROID_DATA_PAR_NAME "data"
 #define ANDROID_EVT_KEY_LEN 20
 
 static const char *android_img = "/data/android/android.img";
@@ -452,137 +453,51 @@ static void get_last_line_synced(const struct sender_t *sender)
 	}
 }
 
-static int is_data_partition(char *loop_dev)
-{
-	int ret = 0;
-	char *out = exec_out2mem("debugfs -R \"ls\" %s", loop_dev);
-
-	if (!out) {
-		LOGE("debugfs -R ls %s failed, error (%s)\n", loop_dev,
-		     strerror(errno));
-		return 0;
-	}
-
-	if (strstr(out, "app-lib") &&
-	    strstr(out, "tombstones") &&
-	    strstr(out, "dalvik-cache")) {
-		ret = 1;
-	}
-
-	free(out);
-	return ret;
-}
-
 static char *setup_loop_dev(void)
 {
 
 	/* Currently UOS image(/data/android/android.img) mounted by
 	 * launch_UOS.sh, we need mount its data partition to loop device
 	 */
-	char *out;
-	char *end;
 	char loop_dev_tmp[32];
 	int i;
+	int res;
+	int devnr;
 
 	if (!file_exists(android_img)) {
 		LOGW("img(%s) is not available\n", android_img);
 		return NULL;
 	}
 
-	loop_dev = exec_out2mem("losetup -f");
-	if (!loop_dev) {
-		/* get cmd out fail */
-		LOGE("losetup -f failed, error (%s)\n",
-		     strerror(errno));
-		return NULL;
-	} else if (strncmp(loop_dev, "/dev/loop", strlen("/dev/loop"))) {
-		/* it's not a loop dev */
-		LOGE("get error loop dev (%s)\n", loop_dev);
-		goto free_loop_dev;
-	} else if (strncmp(loop_dev, "/dev/loop0", strlen("/dev/loop0"))) {
-		/* it's not loop0, was img mounted? */
-		for (i = 0; i < LOOP_DEV_MAX; i++) {
-			snprintf(loop_dev_tmp, ARRAY_SIZE(loop_dev_tmp),
-				 "/dev/loop%d", i);
-			if (is_data_partition(loop_dev_tmp)) {
-				free(loop_dev);
-				loop_dev = strdup(loop_dev_tmp);
-				if (!loop_dev) {
-					LOGE("out of memory\n");
-					return NULL;
-				}
-				return loop_dev;
+	devnr = loopdev_num_get_free();
+	for (i = 0; i < devnr; i++) {
+		snprintf(loop_dev_tmp, ARRAY_SIZE(loop_dev_tmp),
+			 "/dev/loop%d", i);
+		if (loopdev_check_parname(loop_dev_tmp,
+					  ANDROID_DATA_PAR_NAME)) {
+			loop_dev = strdup(loop_dev_tmp);
+			if (!loop_dev) {
+				LOGE("out of memory\n");
+				return NULL;
 			}
-		}
-	}
-	end = strchr(loop_dev, '\n');
-	if (end)
-		*end = 0;
-
-	out = exec_out2mem("fdisk -lu %s", android_img);
-	if (!out) {
-		LOGE("fdisk -lu %s failed, error (%s)\n", android_img,
-		     strerror(errno));
-		goto free_loop_dev;
-	}
-
-	/* find data partition, sector unit = 512 bytes */
-	char partition_start[32];
-	char sectors[32];
-	unsigned long pstart;
-	char *partition;
-	const char * const partition_fmt =
-		IGN_ONEWORD "%31[^ ]" IGN_SPACES
-		IGN_ONEWORD "%31[^ ]" IGN_RESTS;
-	char *cursor = out;
-	int ret;
-
-	while (cursor &&
-	       (partition = strstr(cursor, android_img))) {
-		cursor = strchr(partition, '\n');
-		ret = sscanf(partition, partition_fmt,
-			     partition_start, sectors);
-		if (ret != 2)
-			continue;
-
-		LOGD("start (%s) sectors(%s)\n", partition_start, sectors);
-		/* size < 1G */
-		if (atoi(sectors) < 1 * 2 * 1024 * 1024)
-			continue;
-
-		pstart = atol(partition_start) * 512;
-		if (pstart == 0)
-			continue;
-
-		ret = exec_out2file(NULL, "losetup -o %lu %s %s",
-				   pstart, loop_dev, android_img);
-		/* if error occurs, is_data_partition will return false,
-		 * only print error message here.
-		 */
-		if (ret != 0)
-			LOGE("(losetup -o %lu %s %s) failed, return %d\n",
-			     pstart, loop_dev, android_img, ret);
-
-		if (is_data_partition(loop_dev)) {
-			goto success;
-		} else {
-			ret = exec_out2file(NULL, "losetup -d %s", loop_dev);
-			/* may lose a loop dev */
-			if (ret != 0)
-				LOGE("(losetup -d %s) failed, return %d\n",
-				     loop_dev, ret);
-			sleep(1);
+			return loop_dev;
 		}
 	}
 
-	free(out);
-free_loop_dev:
-	free(loop_dev);
+	res = asprintf(&loop_dev, "/dev/loop%d", devnr);
+	if (res == -1) {
+		LOGE("out of memory\n");
+		return NULL;
+	}
 
-	return NULL;
+	res = loopdev_set_img_par(loop_dev, android_img, ANDROID_DATA_PAR_NAME);
+	if (res == -1) {
+		LOGE("failed to setup loopdev.\n");
+		free(loop_dev);
+		loop_dev = NULL;
+		return NULL;
+	}
 
-success:
-	free(out);
 	return loop_dev;
 }
 
