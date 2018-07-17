@@ -337,7 +337,7 @@ umouse_request(void *scarg, struct usb_data_xfer *xfer)
 			udata = data->buf;
 		}
 
-		xfer->data[idx].processed = 1;
+		xfer->data[idx].processed = USB_XFER_BLK_HANDLED;
 		idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 	}
 
@@ -718,7 +718,7 @@ umouse_data_handler(void *scarg, struct usb_data_xfer *xfer, int dir,
 		if (data->buf != NULL && data->blen != 0)
 			break;
 
-		data->processed = 1;
+		data->processed = USB_XFER_BLK_HANDLED;
 		data = NULL;
 		idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 	}
@@ -758,7 +758,7 @@ umouse_data_handler(void *scarg, struct usb_data_xfer *xfer, int dir,
 		if (len > 0) {
 			dev->newdata = 0;
 
-			data->processed = 1;
+			data->processed = USB_XFER_BLK_HANDLED;
 			data->bdone += 6;
 			memcpy(udata, &dev->um_report, 6);
 			data->blen = len - 6;
