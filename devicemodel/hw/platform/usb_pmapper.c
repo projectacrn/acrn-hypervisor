@@ -55,6 +55,7 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 	int len, do_intr = 0, short_data = 0;
 	int i, idx, buf_idx, done;
 	int bstart, bcount;
+	int is_stalled = 0;
 
 	assert(libusb_xfer);
 
@@ -85,14 +86,16 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 	switch (libusb_xfer->status) {
 	case LIBUSB_TRANSFER_STALL:
 		xfer->status = USB_ERR_STALLED;
-		goto out;
+		is_stalled = 1;
+		goto stall_out;
 	case LIBUSB_TRANSFER_NO_DEVICE:
 		/* avoid short packet warnings when devices are plugged out. */
 		xfer->status = USB_ERR_SHORT_XFER;
 		goto out;
 	case LIBUSB_TRANSFER_ERROR:
+		is_stalled = 1;
 		xfer->status = USB_ERR_STALLED;
-		goto out;
+		goto stall_out;
 	case LIBUSB_TRANSFER_CANCELLED:
 		xfer->status = USB_ERR_IOERROR;
 		goto out;
@@ -154,6 +157,14 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 		block->blen -= done;
 		block->processed = USB_XFER_BLK_HANDLED;
 		idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
+	}
+
+stall_out:
+	if (is_stalled) {
+		for (i = 0, idx = req->blk_start; i < req->blk_count; ++i) {
+			block = &xfer->data[idx % USB_MAX_XFER_BLOCKS];
+			block->processed = USB_XFER_BLK_HANDLED;
+		}
 	}
 
 	if (short_data)
