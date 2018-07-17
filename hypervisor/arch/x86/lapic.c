@@ -180,7 +180,7 @@ static void map_lapic(void)
 	lapic_info.xapic.vaddr = HPA2HVA(lapic_info.xapic.paddr);
 }
 
-int early_init_lapic(void)
+void early_init_lapic(void)
 {
 	/* Get local APIC base address */
 	lapic_base_msr.value = msr_read(MSR_IA32_APIC_BASE);
@@ -207,11 +207,9 @@ int early_init_lapic(void)
 		ASSERT(lapic_base_msr.fields.x2APIC_enable == 0U,
 			"Disable X2APIC in BIOS");
 	}
-
-	return 0;
 }
 
-int init_lapic(uint16_t pcpu_id)
+void init_lapic(uint16_t pcpu_id)
 {
 	/* Set the Logical Destination Register */
 	write_lapic_reg32(LAPIC_LOGICAL_DESTINATION_REGISTER,
@@ -236,8 +234,6 @@ int init_lapic(uint16_t pcpu_id)
 
 	/* Ensure there are no ISR bits set. */
 	clear_lapic_isr();
-
-	return 0;
 }
 
 void save_lapic(struct lapic_regs *regs)

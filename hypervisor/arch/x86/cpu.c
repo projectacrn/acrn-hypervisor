@@ -544,10 +544,7 @@ static void bsp_boot_post(void)
 
 	ASSERT(get_cpu_id() == BOOT_CPU_ID, "");
 
-	if (init_iommu() != 0) {
-		pr_fatal("%s, init iommu failed\n", __func__);
-		return;
-	}
+	init_iommu();
 
 	console_setup_timer();
 

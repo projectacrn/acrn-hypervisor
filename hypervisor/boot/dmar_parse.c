@@ -322,6 +322,9 @@ int parse_dmar_table(void)
 	return 0;
 }
 
+/**
+ * @post return != NULL
+ */
 struct dmar_info *get_dmar_info(void)
 {
 	parse_dmar_table();
