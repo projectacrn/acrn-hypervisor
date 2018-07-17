@@ -50,7 +50,7 @@ static inline int file_exists(const char *filename)
 	return (stat(filename, &info) == 0);
 }
 
-static inline int directory_exists(char *path)
+static inline int directory_exists(const char *path)
 {
 	struct stat info;
 
