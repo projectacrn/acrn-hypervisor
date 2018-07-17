@@ -41,58 +41,214 @@
 /*
  * Decoding Capability Register
  */
-#define iommu_cap_pi(c)			(((c) >> 59U) & 1UL)
-#define iommu_cap_read_drain(c)   (((c) >> 55U) & 1UL)
-#define iommu_cap_write_drain(c)  (((c) >> 54U) & 1UL)
-#define iommu_cap_max_amask_val(c)    (((c) >> 48U) & 0x3fUL)
-#define iommu_cap_num_fault_regs(c)   ((((c) >> 40U) & 0xffUL) + 1UL)
-#define iommu_cap_pgsel_inv(c)    (((c) >> 39U) & 1UL)
+static inline uint8_t iommu_cap_pi(uint64_t cap)
+{
+	return ((cap >> 59U) & 1UL);
+}
 
-#define iommu_cap_super_page_val(c)   (((c) >> 34U) & 0xfUL)
-#define iommu_cap_super_offset(c) \
-	(((find_first_bit(&iommu_cap_super_page_val(c), 4)) \
-	* OFFSET_STRIDE) + 21)
+static inline uint8_t iommu_cap_read_drain(uint64_t cap)
+{
+	return ((cap >> 55U) & 1UL);
+}
 
-#define iommu_cap_fault_reg_offset(c) ((((c) >> 24U) & 0x3ffUL) * 16UL)
-#define iommu_cap_max_fault_reg_offset(c) \
-	(iommu_cap_fault_reg_offset(c) + iommu_cap_num_fault_regs(c) * 16UL)
+static inline uint8_t iommu_cap_write_drain(uint64_t cap)
+{
+	return ((cap >> 54U) & 1UL);
+}
 
-#define iommu_cap_zlr(c)      (((c) >> 22U) & 1UL)
-#define iommu_cap_isoch(c)        (((c) >> 23U) & 1UL)
-#define iommu_cap_mgaw(c)     ((((c) >> 16U) & 0x3f) + 1UL)
-#define iommu_cap_sagaw(c)        (((c) >> 8U) & 0x1fUL)
-#define iommu_cap_caching_mode(c) (((c) >> 7U) & 1UL)
-#define iommu_cap_phmr(c)     (((c) >> 6U) & 1UL)
-#define iommu_cap_plmr(c)     (((c) >> 5U) & 1UL)
-#define iommu_cap_rwbf(c)     (((c) >> 4U) & 1UL)
-#define iommu_cap_afl(c)      (((c) >> 3U) & 1UL)
-#define iommu_cap_ndoms(c)        ((1U) << (4U + 2U * ((c) & 0x7U)))
+static inline uint8_t iommu_cap_max_amask_val(uint64_t cap)
+{
+	return ((cap >> 48U) & 0x3fUL);
+}
+
+static inline uint16_t iommu_cap_num_fault_regs(uint64_t cap)
+{
+	return (((cap >> 40U) & 0xffUL) + 1UL);
+}
+
+static inline uint8_t iommu_cap_pgsel_inv(uint64_t cap)
+{
+	return ((cap >> 39U) & 1UL);
+}
+
+static inline uint8_t iommu_cap_super_page_val(uint64_t cap)
+{
+	return ((cap >> 34U) & 0xfUL);
+}
+
+static inline uint16_t iommu_cap_fault_reg_offset(uint64_t cap)
+{
+	return (((cap >> 24U) & 0x3ffUL) * 16U);
+}
+
+static inline uint16_t iommu_cap_max_fault_reg_offset(uint64_t cap)
+{
+	return (iommu_cap_fault_reg_offset(cap) +
+		iommu_cap_num_fault_regs(cap) * 16U);
+}
+
+static inline uint8_t iommu_cap_zlr(uint64_t cap)
+{
+	return ((cap >> 22U) & 1UL);
+}
+
+static inline uint8_t iommu_cap_isoch(uint64_t cap)
+{
+	return ((cap >> 23U) & 1UL);
+}
+
+static inline uint8_t iommu_cap_mgaw(uint64_t cap)
+{
+	return (((cap >> 16U) & 0x3fUL) + 1UL);
+}
+
+static inline uint8_t iommu_cap_sagaw(uint64_t cap)
+{
+	return ((cap >> 8U) & 0x1fUL);
+}
+
+static inline uint8_t iommu_cap_caching_mode(uint64_t cap)
+{
+	return ((cap >> 7U) & 1UL);
+}
+
+static inline uint8_t iommu_cap_phmr(uint64_t cap)
+{
+	return ((cap >> 6U) & 1UL);
+}
+
+static inline uint8_t iommu_cap_plmr(uint64_t cap)
+{
+	return ((cap >> 5U) & 1UL);
+}
+
+static inline uint8_t iommu_cap_rwbf(uint64_t cap)
+{
+	return ((cap >> 4U) & 1UL);
+}
+
+static inline uint8_t iommu_cap_afl(uint64_t cap)
+{
+	return ((cap >> 3U) & 1UL);
+}
+
+static inline uint32_t iommu_cap_ndoms(uint64_t cap)
+{
+	return ((1U) << (4UL + 2UL * (cap & 0x7UL)));
+}
 
 /*
  * Decoding Extended Capability Register
  */
-#define iommu_ecap_c(c)		(((c) >> 0) & 1UL)
-#define iommu_ecap_qi(c)		(((c) >> 1) & 1UL)
-#define iommu_ecap_dt(c)		(((c) >> 2) & 1UL)
-#define iommu_ecap_ir(c)		(((c) >> 3) & 1UL)
-#define iommu_ecap_eim(c)		(((c) >> 4) & 1UL)
-#define iommu_ecap_pt(c)		(((c) >> 6) & 1UL)
-#define iommu_ecap_sc(c)		(((c) >> 7) & 1UL)
-#define iommu_ecap_iro(c)		(((c) >> 8) & 0x3ffUL)
-#define iommu_ecap_mhmv(c)	(((c) >> 20) & 0xfUL)
-#define iommu_ecap_ecs(c)		(((c) >> 24) & 1UL)
-#define iommu_ecap_mts(c)		(((c) >> 25) & 1UL)
-#define iommu_ecap_nest(c)	(((c) >> 26) & 1UL)
-#define iommu_ecap_dis(c)		(((c) >> 27) & 1UL)
-#define iommu_ecap_prs(c)		(((c) >> 29) & 1UL)
-#define iommu_ecap_ers(c)		(((c) >> 30) & 1UL)
-#define iommu_ecap_srs(c)		(((c) >> 31) & 1UL)
-#define iommu_ecap_nwfs(c)	(((c) >> 33) & 1UL)
-#define iommu_ecap_eafs(c)	(((c) >> 34) & 1UL)
-#define iommu_ecap_pss(c)		(((c) >> 35) & 0x1fUL)
-#define iommu_ecap_pasid(c)	(((c) >> 40) & 1UL)
-#define iommu_ecap_dit(c)		(((c) >> 41) & 1UL)
-#define iommu_ecap_pds(c)		(((c) >> 42) & 1UL)
+static inline uint8_t iommu_ecap_c(uint64_t ecap)
+{
+	return ((ecap >> 0U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_qi(uint64_t ecap)
+{
+	return ((ecap >> 1U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_dt(uint64_t ecap)
+{
+	return ((ecap >> 2U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_ir(uint64_t ecap)
+{
+	return ((ecap >> 3U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_eim(uint64_t ecap)
+{
+	return ((ecap >> 4U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_pt(uint64_t ecap)
+{
+	return ((ecap >> 6U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_sc(uint64_t ecap)
+{
+	return ((ecap >> 7U) & 1UL);
+}
+
+static inline uint16_t iommu_ecap_iro(uint64_t ecap)
+{
+	return ((ecap >> 8U) & 0x3ffUL);
+}
+
+static inline uint8_t iommu_ecap_mhmv(uint64_t ecap)
+{
+	return ((ecap >> 20U) & 0xfUL);
+}
+
+static inline uint8_t iommu_ecap_ecs(uint64_t ecap)
+{
+	return ((ecap >> 24U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_mts(uint64_t ecap)
+{
+	return ((ecap >> 25U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_nest(uint64_t ecap)
+{
+	return ((ecap >> 26U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_dis(uint64_t ecap)
+{
+	return ((ecap >> 27U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_prs(uint64_t ecap)
+{
+	return ((ecap >> 29U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_ers(uint64_t ecap)
+{
+	return ((ecap >> 30U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_srs(uint64_t ecap)
+{
+	return ((ecap >> 31U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_nwfs(uint64_t ecap)
+{
+	return ((ecap >> 33U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_eafs(uint64_t ecap)
+{
+	return ((ecap >> 34U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_pss(uint64_t ecap)
+{
+	return ((ecap >> 35U) & 0x1fUL);
+}
+
+static inline uint8_t iommu_ecap_pasid(uint64_t ecap)
+{
+	return ((ecap >> 40U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_dit(uint64_t ecap)
+{
+	return ((ecap >> 41U) & 1UL);
+}
+
+static inline uint8_t iommu_ecap_pds(uint64_t ecap)
+{
+	return ((ecap >> 42U) & 1UL);
+}
 
 /* PMEN_REG */
 #define DMA_PMEN_EPM (((uint32_t)1)<<31)
