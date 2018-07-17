@@ -32,15 +32,11 @@
 
 #include <hypervisor.h>
 
-#define	IOREGSEL	0x00
-#define	IOWIN		0x10
-#define	IOEOI		0x40
-
 #define REDIR_ENTRIES_HW	120U /* SOS align with native ioapic */
 #define	RTBL_RO_BITS	(uint32_t)(IOAPIC_RTE_REM_IRR | IOAPIC_RTE_DELIVS)
 #define NEED_TMR_UPDATE (~(IOAPIC_RTE_INTMASK | IOAPIC_RTE_INTPOL))
 
-#define ACRN_DBG_IOAPIC	6
+#define ACRN_DBG_IOAPIC	6U
 
 struct vioapic {
 	struct vm	*vm;
@@ -432,34 +428,34 @@ vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 	}
 }
 
-static int
+static void
 vioapic_mmio_rw(struct vioapic *vioapic, uint64_t gpa,
-		uint64_t *data, int size, bool doread)
+		uint32_t *data, bool doread)
 {
-	uint64_t offset;
+	uint32_t offset;
 
-	offset = gpa - VIOAPIC_BASE;
+	offset = (uint32_t)(gpa - VIOAPIC_BASE);
 
 	/*
 	 * The IOAPIC specification allows 32-bit wide accesses to the
-	 * IOREGSEL (offset 0) and IOWIN (offset 16) registers.
+	 * IOAPIC_REGSEL (offset 0) and IOAPIC_WINDOW (offset 16) registers.
 	 */
-	if (size != 4 || (offset != IOREGSEL && offset != IOWIN &&
-			offset != IOEOI)) {
+	if (offset != IOAPIC_REGSEL &&
+		offset != IOAPIC_WINDOW &&
+		offset != IOAPIC_EOIR) {
 		if (doread) {
-			*data = 0UL;
+			*data = 0U;
 		}
-		return 0;
 	}
 
 	VIOAPIC_LOCK(vioapic);
-	if (offset == IOREGSEL) {
+	if (offset == IOAPIC_REGSEL) {
 		if (doread) {
 			*data = vioapic->ioregsel;
 		} else {
 			vioapic->ioregsel = *data;
 		}
-	} else if (offset == IOEOI) {
+	} else if (offset == IOAPIC_EOIR) {
 		/* only need to handle write operation */
 		if (!doread) {
 			vioapic_write_eoi(vioapic, *data);
@@ -473,32 +469,24 @@ vioapic_mmio_rw(struct vioapic *vioapic, uint64_t gpa,
 		}
 	}
 	VIOAPIC_UNLOCK(vioapic);
-
-	return 0;
 }
 
-int
-vioapic_mmio_read(void *vm, uint64_t gpa, uint64_t *rval,
-		int size)
+void
+vioapic_mmio_read(struct vm *vm, uint64_t gpa, uint32_t *rval)
 {
-	int error;
 	struct vioapic *vioapic;
 
 	vioapic = vm_ioapic(vm);
-	error = vioapic_mmio_rw(vioapic, gpa, rval, size, true);
-	return error;
+	vioapic_mmio_rw(vioapic, gpa, rval, true);
 }
 
-int
-vioapic_mmio_write(void *vm, uint64_t gpa, uint64_t wval,
-		int size)
+void
+vioapic_mmio_write(struct vm *vm, uint64_t gpa, uint32_t wval)
 {
-	int error;
 	struct vioapic *vioapic;
 
 	vioapic = vm_ioapic(vm);
-	error = vioapic_mmio_rw(vioapic, gpa, &wval, size, false);
-	return error;
+	vioapic_mmio_rw(vioapic, gpa, &wval, false);
 }
 
 void
@@ -569,7 +557,7 @@ vioapic_init(struct vm *vm)
 {
 	struct vioapic *vioapic;
 
-	vioapic = calloc(1, sizeof(struct vioapic));
+	vioapic = calloc(1U, sizeof(struct vioapic));
 	ASSERT(vioapic != NULL, "");
 
 	vioapic->vm = vm;
@@ -581,7 +569,7 @@ vioapic_init(struct vm *vm)
 			vioapic_mmio_access_handler,
 			(uint64_t)VIOAPIC_BASE,
 			(uint64_t)VIOAPIC_BASE + VIOAPIC_SIZE,
-			(void *) 0);
+			NULL);
 
 	return vioapic;
 }
@@ -613,23 +601,26 @@ int vioapic_mmio_access_handler(struct vcpu *vcpu, struct mem_io *mmio,
 	int ret = 0;
 
 	/* Note all RW to IOAPIC are 32-Bit in size */
-	ASSERT(mmio->access_size == 4U,
-			"All RW to LAPIC must be 32-bits in size");
+	if (mmio->access_size == 4U) {
+		uint32_t data = mmio->value;
 
-	if (mmio->read_write == HV_MEM_IO_READ) {
-		ret = vioapic_mmio_read(vm,
-				gpa,
-				&mmio->value,
-				mmio->access_size);
-		mmio->mmio_status = MMIO_TRANS_VALID;
+		if (mmio->read_write == HV_MEM_IO_READ) {
+			vioapic_mmio_read(vm,
+					gpa,
+					&data);
+			mmio->value = (uint64_t)data;
+			mmio->mmio_status = MMIO_TRANS_VALID;
 
-	} else if (mmio->read_write == HV_MEM_IO_WRITE) {
-		ret = vioapic_mmio_write(vm,
-				gpa,
-				mmio->value,
-				mmio->access_size);
+		} else if (mmio->read_write == HV_MEM_IO_WRITE) {
+			vioapic_mmio_write(vm,
+					gpa,
+					data);
 
-		mmio->mmio_status = MMIO_TRANS_VALID;
+			mmio->mmio_status = MMIO_TRANS_VALID;
+		}
+	} else {
+		pr_err("All RW to IOAPIC must be 32-bits in size");
+		ret = -EINVAL;
 	}
 
 	return ret;

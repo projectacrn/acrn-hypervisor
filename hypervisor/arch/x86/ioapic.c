@@ -6,11 +6,7 @@
 
 #include <hypervisor.h>
 
-/* Register offsets */
-#define IOAPIC_REGSEL_OFFSET   0
-#define IOAPIC_WINSWL_OFFSET   0x10
-
-#define IOAPIC_MAX_PIN          240U
+#define	IOAPIC_MAX_PIN		240U
 #define IOAPIC_INVALID_PIN      0xffU
 
 struct gsi_table {
@@ -103,9 +99,9 @@ ioapic_read_reg32(const void *ioapic_base, const uint32_t offset)
 	spinlock_irqsave_obtain(&ioapic_lock);
 
 	/* Write IOREGSEL */
-	mmio_write_long(offset, (void *)ioapic_base + IOAPIC_REGSEL_OFFSET);
+	mmio_write_long(offset, (void *)ioapic_base + IOAPIC_REGSEL);
 	/* Read  IOWIN */
-	v = mmio_read_long((void *)ioapic_base + IOAPIC_WINSWL_OFFSET);
+	v = mmio_read_long((void *)ioapic_base + IOAPIC_WINDOW);
 
 	spinlock_irqrestore_release(&ioapic_lock);
 	return v;
@@ -120,9 +116,9 @@ ioapic_write_reg32(const void *ioapic_base,
 	spinlock_irqsave_obtain(&ioapic_lock);
 
 	/* Write IOREGSEL */
-	mmio_write_long(offset, (void *)ioapic_base + IOAPIC_REGSEL_OFFSET);
+	mmio_write_long(offset, (void *)ioapic_base + IOAPIC_REGSEL);
 	/* Write IOWIN */
-	mmio_write_long(value, (void *)ioapic_base + IOAPIC_WINSWL_OFFSET);
+	mmio_write_long(value, (void *)ioapic_base + IOAPIC_WINDOW);
 
 	spinlock_irqrestore_release(&ioapic_lock);
 }
