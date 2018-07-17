@@ -110,6 +110,15 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 
 	/* gpa_lowtop are used for system start up */
 	vm->hw.gpa_lowtop = 0UL;
+
+	vm->arch_vm.nworld_eptp = alloc_paging_struct();
+	vm->arch_vm.m2p = alloc_paging_struct();
+	if ((vm->arch_vm.nworld_eptp == NULL) ||
+			(vm->arch_vm.m2p == NULL)) {
+		pr_fatal("%s, alloc memory for EPTP failed\n", __func__);
+		return -ENOMEM;
+	}
+
 	/* Only for SOS: Configure VM software information */
 	/* For UOS: This VM software information is configure in DM */
 	if (is_vm0(vm)) {
