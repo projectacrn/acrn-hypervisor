@@ -495,10 +495,6 @@ int ept_mmap(struct vm *vm, uint64_t hpa,
 
 	/* Setup memory map parameters */
 	map_params.page_table_type = PTT_EPT;
-	if (vm->arch_vm.nworld_eptp == NULL) {
-		vm->arch_vm.nworld_eptp = alloc_paging_struct();
-		vm->arch_vm.m2p = alloc_paging_struct();
-	}
 	map_params.pml4_base = vm->arch_vm.nworld_eptp;
 	map_params.pml4_inverted = vm->arch_vm.m2p;
 
