@@ -565,11 +565,11 @@ static void dmar_invalid_context_cache(struct dmar_drhd_rt *dmar_uint,
 		cmd |= DMA_CCMD_GLOBAL_INVL;
 		break;
 	case DMAR_CIRG_DOMAIN:
-		cmd |= DMA_CCMD_DOMAIN_INVL | DMA_CCMD_DID(did);
+		cmd |= DMA_CCMD_DOMAIN_INVL | dma_ccmd_did(did);
 		break;
 	case DMAR_CIRG_DEVICE:
-		cmd |= DMA_CCMD_DEVICE_INVL | DMA_CCMD_DID(did) |
-			   DMA_CCMD_SID(sid) | DMA_CCMD_FM(fm);
+		cmd |= DMA_CCMD_DEVICE_INVL | dma_ccmd_did(did) |
+			   dma_ccmd_sid(sid) | dma_ccmd_fm(fm);
 		break;
 	default:
 		pr_err("unknown CIRG type");
@@ -585,7 +585,7 @@ static void dmar_invalid_context_cache(struct dmar_drhd_rt *dmar_uint,
 	IOMMU_UNLOCK(dmar_uint);
 
 	dev_dbg(ACRN_DBG_IOMMU, "cc invalidation granularity %d",
-		DMA_CCMD_GET_CAIG_32(status));
+		dma_ccmd_get_caig_32(status));
 }
 
 static void dmar_invalid_context_cache_global(struct dmar_drhd_rt *dmar_uint)
@@ -609,11 +609,11 @@ static void dmar_invalid_iotlb(struct dmar_drhd_rt *dmar_uint,
 		cmd |= DMA_IOTLB_GLOBAL_INVL;
 		break;
 	case DMAR_IIRG_DOMAIN:
-		cmd |= DMA_IOTLB_DOMAIN_INVL | DMA_IOTLB_DID(did);
+		cmd |= DMA_IOTLB_DOMAIN_INVL | dma_iotlb_did(did);
 		break;
 	case DMAR_IIRG_PAGE:
-		cmd |= DMA_IOTLB_PAGE_INVL | DMA_IOTLB_DID(did);
-		addr = address | DMA_IOTLB_INVL_ADDR_AM(am);
+		cmd |= DMA_IOTLB_PAGE_INVL | dma_iotlb_did(did);
+		addr = address | dma_iotlb_invl_addr_am(am);
 		if (hint) {
 			addr |= DMA_IOTLB_INVL_ADDR_IH_UNMODIFIED;
 		}
@@ -633,7 +633,7 @@ static void dmar_invalid_iotlb(struct dmar_drhd_rt *dmar_uint,
 				 (status & DMA_IOTLB_IVT_32) == 0U, status);
 	IOMMU_UNLOCK(dmar_uint);
 
-	if (DMA_IOTLB_GET_IAIG_32(status) == 0U) {
+	if (dma_iotlb_get_iaig_32(status) == 0U) {
 		pr_err("fail to invalidate IOTLB!, 0x%x, 0x%x",
 			status, iommu_read32(dmar_uint, DMAR_FSTS_REG));
 	}
@@ -705,35 +705,35 @@ static void dmar_fault_msi_write(struct dmar_drhd_rt *dmar_uint,
 #if DBG_IOMMU
 static void fault_status_analysis(uint32_t status)
 {
-	if (DMA_FSTS_PFO(status)) {
+	if (dma_fsts_pfo(status)) {
 		pr_info("Primary Fault Overflow");
 	}
 
-	if (DMA_FSTS_PPF(status)) {
+	if (dma_fsts_ppf(status)) {
 		pr_info("Primary Pending Fault");
 	}
 
-	if (DMA_FSTS_AFO(status)) {
+	if (dma_fsts_afo(status)) {
 		pr_info("Advanced Fault Overflow");
 	}
 
-	if (DMA_FSTS_APF(status)) {
+	if (dma_fsts_apf(status)) {
 		pr_info("Advanced Pending Fault");
 	}
 
-	if (DMA_FSTS_IQE(status)) {
+	if (dma_fsts_iqe(status)) {
 		pr_info("Invalidation Queue Error");
 	}
 
-	if (DMA_FSTS_ICE(status)) {
+	if (dma_fsts_ice(status)) {
 		pr_info("Invalidation Completion Error");
 	}
 
-	if (DMA_FSTS_ITE(status)) {
+	if (dma_fsts_ite(status)) {
 		pr_info("Invalidation Time-out Error");
 	}
 
-	if (DMA_FSTS_PRO(status)) {
+	if (dma_fsts_pro(status)) {
 		pr_info("Page Request Overflow");
 	}
 }
@@ -741,22 +741,22 @@ static void fault_status_analysis(uint32_t status)
 
 static void fault_record_analysis(__unused uint64_t low, uint64_t high)
 {
-	if (DMA_FRCD_UP_F(high) == 0U) {
+	if (dma_frcd_up_f(high)) {
 		return;
 	}
 
 	/* currently skip PASID related parsing */
 	pr_info("%s, Reason: 0x%x, SID: %x.%x.%x @0x%llx",
-		(DMA_FRCD_UP_T(high) != 0U) ? "Read/Atomic" : "Write",
-		DMA_FRCD_UP_FR(high),
-		DMA_FRCD_UP_SID(high) >> 8,
-		(DMA_FRCD_UP_SID(high) >> 3) & 0x1fUL,
-		DMA_FRCD_UP_SID(high) & 0x7UL,
+		dma_frcd_up_t(high) ? "Read/Atomic" : "Write",
+		dma_frcd_up_fr(high),
+		dma_frcd_up_sid(high) >> 8,
+		(dma_frcd_up_sid(high) >> 3) & 0x1fUL,
+		dma_frcd_up_sid(high) & 0x7UL,
 		low);
 #if DBG_IOMMU
 	if (iommu_ecap_dt(dmar_uint->ecap)i != 0U) {
 		pr_info("Address Type: 0x%x",
-				DMA_FRCD_UP_AT(high));
+				dma_frcd_up_at(high));
 	}
 #endif
 }
@@ -778,9 +778,9 @@ static int dmar_fault_handler(int irq, void *data)
 	fault_status_analysis(fsr);
 #endif
 
-	while (DMA_FSTS_PPF(fsr) != 0U) {
+	while (dma_fsts_ppf(fsr)) {
 		loop++;
-		index = DMA_FSTS_FRI(fsr);
+		index = dma_fsts_fri(fsr);
 		record_reg_offset = dmar_uint->cap_fault_reg_offset
 				+ index * 16;
 		if (index >= dmar_uint->cap_num_fault_regs) {

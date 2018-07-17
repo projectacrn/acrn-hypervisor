@@ -35,8 +35,15 @@
 #define DMAR_ICS_REG    0x9cU    /* Invalidation complete status register */
 #define DMAR_IRTA_REG   0xb8U    /* Interrupt remapping table addr register */
 
-#define DMAR_VER_MAJOR(v)       (((v) & 0xf0U) >> 4)
-#define DMAR_VER_MINOR(v)       ((v) & 0x0fU)
+static inline uint8_t dmar_ver_major(uint64_t version)
+{
+	return ((version & 0xf0UL) >> 4U);
+}
+
+static inline uint8_t dmar_ver_minor(uint64_t version)
+{
+	return (version & 0x0fUL);
+}
 
 /*
  * Decoding Capability Register
@@ -282,14 +289,30 @@ static inline uint8_t iommu_ecap_pds(uint64_t ecap)
 #define DMA_CCMD_GLOBAL_INVL (((uint64_t)1UL) << 61)
 #define DMA_CCMD_DOMAIN_INVL (((uint64_t)2UL) << 61)
 #define DMA_CCMD_DEVICE_INVL (((uint64_t)3UL) << 61)
-#define DMA_CCMD_FM(m) (((uint64_t)((m) & 0x3UL)) << 32)
+static inline uint64_t dma_ccmd_fm(uint8_t fm)
+{
+	return (((uint64_t)(fm & 0x3U)) << 32U);
+}
+
 #define DMA_CCMD_MASK_NOBIT 0UL
 #define DMA_CCMD_MASK_1BIT 1UL
 #define DMA_CCMD_MASK_2BIT 2UL
 #define DMA_CCMD_MASK_3BIT 3UL
-#define DMA_CCMD_SID(s) (((uint64_t)((s) & 0xffffUL)) << 16)
-#define DMA_CCMD_DID(d) ((uint64_t)((d) & 0xffffUL))
-#define DMA_CCMD_GET_CAIG_32(v) (((uint32_t)(v) >> 27) & 0x3U)
+static inline uint64_t dma_ccmd_sid(uint16_t sid)
+{
+	return (((uint64_t)(sid & 0xffffU)) << 16U);
+}
+
+static inline uint16_t dma_ccmd_did(uint16_t did)
+{
+	return (did & 0xffffU);
+}
+
+static inline uint8_t dma_ccmd_get_caig_32(uint32_t gaig)
+{
+	return ((gaig >> 27U) & 0x3U);
+}
+
 
 /* IOTLB_REG */
 #define DMA_IOTLB_IVT				(((uint64_t)1UL) << 63)
@@ -299,38 +322,118 @@ static inline uint8_t iommu_ecap_pds(uint64_t ecap)
 #define DMA_IOTLB_PAGE_INVL			(((uint64_t)3UL) << 60)
 #define DMA_IOTLB_DR				(((uint64_t)1UL) << 49)
 #define DMA_IOTLB_DW				(((uint64_t)1UL) << 48)
-#define DMA_IOTLB_DID(d)			 \
-	(((uint64_t)((d) & 0xffffUL)) << 32)
-#define DMA_IOTLB_GET_IAIG_32(v)	(((uint32_t)(v) >> 25) & 0x3U)
+static inline uint64_t dma_iotlb_did(uint16_t did)
+{
+	return (((uint64_t)(did & 0xffffU)) << 32U);
+}
+
+static inline uint8_t dma_iotlb_get_iaig_32(uint32_t iai)
+{
+	return ((iai >> 25U) & 0x3U);
+}
 
 /* INVALIDATE_ADDRESS_REG */
-#define DMA_IOTLB_INVL_ADDR_AM(m)			((uint64_t)((m) & 0x3fUL))
+static inline uint8_t dma_iotlb_invl_addr_am(uint8_t am)
+{
+	return (am & 0x3fU);
+}
+
 #define DMA_IOTLB_INVL_ADDR_IH_UNMODIFIED	(((uint64_t)1UL) << 6)
 
 /* FECTL_REG */
 #define DMA_FECTL_IM				(((uint32_t)1U) << 31)
 
 /* FSTS_REG */
-#define DMA_FSTS_PFO(s)				(((s) >> 0) & 1U)
-#define DMA_FSTS_PPF(s)				(((s) >> 1) & 1U)
-#define DMA_FSTS_AFO(s)				(((s) >> 2) & 1U)
-#define DMA_FSTS_APF(s)				(((s) >> 3) & 1U)
-#define DMA_FSTS_IQE(s)				(((s) >> 4) & 1U)
-#define DMA_FSTS_ICE(s)				(((s) >> 5) & 1U)
-#define DMA_FSTS_ITE(s)				(((s) >> 6) & 1U)
-#define DMA_FSTS_PRO(s)				(((s) >> 7) & 1U)
-#define DMA_FSTS_FRI(s)				(((s) >> 8) & 0xFFU)
+static inline bool dma_fsts_pfo(uint32_t PFO)
+{
+	return ((PFO >> 0U) & 1U) == 1U;
+}
+
+static inline bool dma_fsts_ppf(uint32_t PPF)
+{
+	return ((PPF >> 1U) & 1U) == 1U;
+}
+
+static inline bool dma_fsts_afo(uint32_t AFO)
+{
+	return ((AFO >> 2U) & 1U) == 1U;
+}
+
+static inline bool dma_fsts_apf(uint32_t APF)
+{
+	return ((APF >> 3U) & 1U) == 1U;
+}
+
+static inline bool dma_fsts_iqe(uint32_t IQE)
+{
+	return ((IQE >> 4U) & 1U) == 1U;
+}
+
+static inline bool dma_fsts_ice(uint32_t ICE)
+{
+	return ((ICE >> 5U) & 1U) == 1U;
+}
+
+static inline bool dma_fsts_ite(uint32_t ITE)
+{
+	return ((ITE >> 6U) & 1U) == 1U;
+}
+
+static inline bool dma_fsts_pro(uint32_t PRO)
+{
+	return ((PRO >> 7U) & 1U) == 1U;
+}
+
+static inline uint8_t dma_fsts_fri(uint32_t FRI)
+{
+	return ((FRI >> 8U) & 0xFFU);
+}
 
 /* FRCD_REGs: upper 64 bits*/
-#define DMA_FRCD_UP_F(r)				(((r) >> 63) & 1UL)
-#define DMA_FRCD_UP_T(r)				(((r) >> 62) & 1UL)
-#define DMA_FRCD_UP_AT(r)				(((r) >> 60) & 3UL)
-#define DMA_FRCD_UP_PASID(r)			(((r) >> 40) & 0xfffffUL)
-#define DMA_FRCD_UP_FR(r)				(((r) >> 32) & 0xffUL)
-#define DMA_FRCD_UP_PP(r)				(((r) >> 31) & 1UL)
-#define DMA_FRCD_UP_EXE(r)				(((r) >> 30) & 1UL)
-#define DMA_FRCD_UP_PRIV(r)				(((r) >> 29) & 1UL)
-#define DMA_FRCD_UP_SID(r)				(((r) >> 0) & 0xffffUL)
+static inline bool dma_frcd_up_f(uint64_t UP_F)
+{
+	return ((UP_F >> 63U) & 1UL) == 1UL;
+}
+
+static inline uint8_t dma_frcd_up_t(uint64_t UP_T)
+{
+	return ((UP_T >> 62U) & 1UL);
+}
+
+static inline uint8_t dma_frcd_up_at(uint64_t UP_AT)
+{
+	return ((UP_AT >> 60U) & 3UL);
+}
+
+static inline uint32_t dma_frcd_up_pasid(uint64_t UP_PASID)
+{
+	return ((UP_PASID >> 40U) & 0xfffffUL);
+}
+
+static inline uint8_t dma_frcd_up_fr(uint64_t UP_FR)
+{
+	return ((UP_FR >> 32U) & 0xffUL);
+}
+
+static inline bool dma_frcd_up_pp(uint64_t UP_PP)
+{
+	return ((UP_PP >> 31U) & 1UL) == 1UL;
+}
+
+static inline bool dma_frcd_up_exe(uint64_t UP_EXE)
+{
+	return ((UP_EXE >> 30U) & 1UL) == 1UL;
+}
+
+static inline bool dma_frcd_up_priv(uint64_t UP_PRIV)
+{
+	return ((UP_PRIV >> 29U) & 1UL) == 1UL;
+}
+
+static inline uint32_t dma_frcd_up_sid(uint64_t UP_SID)
+{
+	return ((UP_SID >> 0U) & 0xffffUL);
+}
 
 #define DMAR_CONTEXT_TRANSLATION_TYPE_TRANSLATED 0x00U
 #define DMAR_CONTEXT_TRANSLATION_TYPE_RESERVED 0x01U
