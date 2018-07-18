@@ -24,7 +24,12 @@
 #define ANDROID_DATA_PAR_NAME "data"
 #define ANDROID_EVT_KEY_LEN 20
 
+/* TODO: hardcoding the img path here means that only one Android Guest OS
+ * is supoorted at this moment. To support multiple Android Guest OS, this
+ * path should be moved to structure vm_t and configurable.
+ */
 static const char *android_img = "/data/android/android.img";
+static const char *android_histpath = "logs/history_event";
 char *loop_dev;
 
 /* Find the head of str, caller must guarantee that 'str' is not in
@@ -211,43 +216,41 @@ static int refresh_key_synced_stage2(const struct mm_file_t *m_vm_records,
 static int get_vm_history(struct vm_t *vm, const struct sender_t *sender,
 			void **data)
 {
-	char vm_history[PATH_MAX];
 	unsigned long size;
 	int ret;
 	int sid;
 
-	if (!vm || !sender)
+	if (!vm || !sender || !data)
 		return -1;
 
 	sid = sender_id(sender);
 	if (sid == -1)
 		return -1;
 
-	snprintf(vm_history, sizeof(vm_history), "/tmp/%s_%s",
-		 "vm_hist", vm->name);
+	ret = e2fs_read_file_by_fpath(vm->datafs, android_histpath,
+				      data, &size);
+	if (ret == -1) {
+		LOGE("failed to get vm_history from (%s).\n", vm->name);
+		*data = NULL;
+		return -1;
+	}
+	if (!size) {
+		LOGE("empty vm_history from (%s).\n", vm->name);
+		*data = NULL;
+		return -1;
+	}
 
-	if (get_file_size(vm_history) == (int)vm->history_size[sid])
+	if (size == vm->history_size[sid])
 		return 0;
 
-	if (*data)
-		free(*data);
-	ret = read_full_binary_file(vm_history, &size, data);
-	if (ret) {
-		LOGE("read (%s) with error (%s)\n", vm_history,
-		     strerror(errno));
-		*data = NULL;
-		return ret;
-	}
-
 	ret = strcnt(*data, '\n');
-	if (ret > VM_WARNING_LINES) {
-		LOGW("File too large, (%d) lines in (%s)\n",
-		     ret, vm_history);
-	}
+	if (ret > VM_WARNING_LINES)
+		LOGW("File too large, (%d) lines in (%s) of (%s)\n",
+		     ret, android_histpath, vm->name);
 
 	vm->history_size[sid] = size;
 
-	return size;
+	return 0;
 }
 
 static void sync_lines_stage1(const struct sender_t *sender, const void *data[])
@@ -267,9 +270,6 @@ static void sync_lines_stage1(const struct sender_t *sender, const void *data[])
 
 	for_each_vm(id, vm, conf) {
 		if (!vm)
-			continue;
-
-		if (!vm->online)
 			continue;
 
 		if (vm->last_synced_line_key[sid][0]) {
@@ -358,9 +358,6 @@ static void sync_lines_stage2(const struct sender_t *sender, const void *data[],
 			if (!vm)
 				continue;
 
-			if (!vm->online)
-				continue;
-
 			if (strcmp(vm->name, vm_name))
 				continue;
 
@@ -414,9 +411,6 @@ static void get_last_line_synced(const struct sender_t *sender)
 
 	for_each_vm(id, vm, conf) {
 		if (!vm)
-			continue;
-
-		if (!vm->online)
 			continue;
 
 		/* generally only exec for each vm once */
@@ -501,58 +495,6 @@ static char *setup_loop_dev(void)
 	return loop_dev;
 }
 
-static int ping_vm_fs(char *loop_dev)
-{
-	int id;
-	int res;
-	int count = 0;
-	struct vm_t *vm;
-	struct mm_file_t *vm_hist;
-	char vm_history[PATH_MAX];
-	char cmd[512];
-	const char prefix[] = "#V1.0 CURRENTUPTIME";
-
-	/* ensure history_event in uos available */
-	for_each_vm(id, vm, conf) {
-		if (!vm)
-			continue;
-
-		snprintf(vm_history, sizeof(vm_history), "/tmp/%s_%s",
-			 "vm_hist", vm->name);
-		snprintf(cmd, sizeof(cmd),
-			 "dump logs/history_event %s", vm_history);
-
-		res = remove(vm_history);
-		if (res == -1 && errno != ENOENT)
-			LOGE("remove %s failed\n", vm_history);
-
-		res = debugfs_cmd(loop_dev, cmd, NULL);
-		if (res) {
-			vm->online = 0;
-			continue;
-		}
-
-		vm_hist = mmap_file(vm_history);
-		if (vm_hist == NULL) {
-			vm->online = 0;
-			LOGE("%s(%s) unavailable\n", vm->name, vm_history);
-			continue;
-		}
-
-		if (vm_hist->size &&
-		    !strncmp(vm_hist->begin, prefix, strlen(prefix))) {
-			vm->online = 1;
-			count++;
-		} else {
-			vm->online = 0;
-			LOGE("%s(%s) unavailable\n", vm->name, vm_history);
-		}
-
-		unmap_file(vm_hist);
-	}
-	return count;
-}
-
 /* This function searches all android vms' new events and call the fn for
  * each event.
  *
@@ -562,10 +504,10 @@ static int ping_vm_fs(char *loop_dev)
 void refresh_vm_history(const struct sender_t *sender,
 		int (*fn)(const char*, const struct vm_t *))
 {
-	int ret;
+	int res;
 	int id;
 	struct vm_t *vm;
-	static void *data[VM_MAX];
+	void *data[VM_MAX];
 
 	if (!loop_dev) {
 		loop_dev = setup_loop_dev();
@@ -574,24 +516,31 @@ void refresh_vm_history(const struct sender_t *sender,
 		LOGI("setup loop dev successful\n");
 	}
 
-	if (sender_id(sender) == 0) {
-		ret = ping_vm_fs(loop_dev);
-		if (!ret)
-			return;
-	}
-
 	get_last_line_synced(sender);
 
 	for_each_vm(id, vm, conf) {
 		if (!vm)
 			continue;
 
-		if (!vm->online)
+		data[id] = 0;
+		res = e2fs_open(loop_dev, &vm->datafs);
+		if (res == -1)
 			continue;
 
-		get_vm_history(vm, sender, &data[id]);
+		get_vm_history(vm, sender, (void *)&vm->history_data);
+		data[id] = vm->history_data;
 	}
 
 	sync_lines_stage2(sender, (const void **)data, fn);
 	sync_lines_stage1(sender, (const void **)data);
+	for_each_vm(id, vm, conf) {
+		if (!vm)
+			continue;
+
+		e2fs_close(vm->datafs);
+
+		if (data[id])
+			free(data[id]);
+	}
+
 }

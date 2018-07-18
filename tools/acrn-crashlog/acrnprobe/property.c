@@ -86,6 +86,7 @@ static int get_buildversion(struct sender_t *sender)
 
 	ret = file_read_string(logbuildid, lastbuild, VERSION_SIZE);
 	if (ret == -ENOENT ||
+	    !ret ||
 	    (ret > 0 && strcmp(currentbuild, lastbuild))) {
 		/* build changed or file not found, overwrite it */
 		ret = overwrite_file(logbuildid, gbuildversion);
@@ -97,7 +98,7 @@ static int get_buildversion(struct sender_t *sender)
 
 		sender->sw_updated = 1;
 		ret = 0;
-	} else if (ret <= 0) {
+	} else if (ret < 0) {
 		LOGE("Cannot read %s, error (%s)\n",
 		     logbuildid, strerror(errno));
 	} else {
