@@ -49,12 +49,18 @@
 #define CTX_ENTRY_LOWER_SLPTPTR_MASK    \
 		(0xFFFFFFFFFFFFFUL <<  CTX_ENTRY_LOWER_SLPTPTR_POS)
 
-#define DMAR_GET_BITSLICE(var, bitname) \
-	((var & bitname ## _MASK) >> bitname ## _POS)
+static inline uint64_t
+dmar_get_bitslice(uint64_t var, uint64_t mask, uint32_t pos)
+{
+	return ((var & mask) >> pos);
+}
 
-#define DMAR_SET_BITSLICE(var, bitname, val) \
-	((var &	\
-	  ~bitname ## _MASK) | ((val << bitname ## _POS) & bitname ## _MASK))
+static inline uint64_t
+dmar_set_bitslice(uint64_t var, uint64_t mask,
+		  uint32_t pos, uint64_t val)
+{
+	return ((var & ~mask) | ((val << pos) & mask));
+}
 
 /* translation type */
 #define DMAR_CTX_TT_UNTRANSLATED    0x0UL
@@ -973,7 +979,9 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 
 	root_entry = (struct dmar_root_entry *)&root_table[bus * 2];
 
-	if (DMAR_GET_BITSLICE(root_entry->lower, ROOT_ENTRY_LOWER_PRESENT) == 0U) {
+	if (dmar_get_bitslice(root_entry->lower,
+	        ROOT_ENTRY_LOWER_PRESENT_MASK,
+		ROOT_ENTRY_LOWER_PRESENT_POS) == 0UL) {
 		void *vaddr = alloc_paging_struct();
 
 		if (vaddr != NULL) {
@@ -982,10 +990,13 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 
 			context_table_addr = context_table_addr >> 12;
 
-			lower = DMAR_SET_BITSLICE(lower, ROOT_ENTRY_LOWER_CTP,
-					context_table_addr);
-			lower = DMAR_SET_BITSLICE(lower,
-					ROOT_ENTRY_LOWER_PRESENT, 1);
+			lower = dmar_set_bitslice(lower,
+				 ROOT_ENTRY_LOWER_CTP_MASK,
+			         ROOT_ENTRY_LOWER_CTP_POS,
+				 context_table_addr);
+			lower = dmar_set_bitslice(lower,
+				 ROOT_ENTRY_LOWER_PRESENT_MASK,
+				 ROOT_ENTRY_LOWER_PRESENT_POS, 1UL);
 
 			root_entry->upper = 0UL;
 			root_entry->lower = lower;
@@ -996,8 +1007,9 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 			return 1;
 		}
 	} else {
-		context_table_addr = DMAR_GET_BITSLICE(root_entry->lower,
-				ROOT_ENTRY_LOWER_CTP);
+		context_table_addr = dmar_get_bitslice(root_entry->lower,
+				ROOT_ENTRY_LOWER_CTP_MASK,
+			        ROOT_ENTRY_LOWER_CTP_POS);
 	}
 
 	context_table_addr = context_table_addr << 12;
@@ -1006,7 +1018,9 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 	context_entry = (struct dmar_context_entry *)&context_table[devfun * 2];
 
 	/* the context entry should not be present */
-	if (DMAR_GET_BITSLICE(context_entry->lower, CTX_ENTRY_LOWER_P) != 0U) {
+	if (dmar_get_bitslice(context_entry->lower,
+	        CTX_ENTRY_LOWER_P_MASK,
+		CTX_ENTRY_LOWER_P_POS) != 0UL) {
 		pr_err("%s: context entry@0x%llx (Lower:%x) ",
 				__func__, context_entry, context_entry->lower);
 		pr_err("already present for %x:%x.%x",
@@ -1024,28 +1038,42 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 			 * programmed to indicate the largest AGAW value
 			 * supported by hardware.
 			 */
-			upper = DMAR_SET_BITSLICE(upper, CTX_ENTRY_UPPER_AW,
-						  dmar_uint->cap_msagaw);
-			lower = DMAR_SET_BITSLICE(lower, CTX_ENTRY_LOWER_TT,
-						  DMAR_CTX_TT_PASSTHROUGH);
+			upper = dmar_set_bitslice(upper,
+				  CTX_ENTRY_UPPER_AW_MASK,
+				  CTX_ENTRY_UPPER_AW_POS,
+				  dmar_uint->cap_msagaw);
+			lower = dmar_set_bitslice(lower,
+				  CTX_ENTRY_LOWER_TT_MASK,
+				  CTX_ENTRY_LOWER_TT_POS,
+			          DMAR_CTX_TT_PASSTHROUGH);
 		} else {
 			ASSERT(false,
 				  "dmaru doesn't support trans passthrough");
 		}
 	} else {
 		/* TODO: add Device TLB support */
-		upper =
-			DMAR_SET_BITSLICE(upper, CTX_ENTRY_UPPER_AW,
-					  width_to_agaw(
-						  domain->addr_width));
-		lower = DMAR_SET_BITSLICE(lower, CTX_ENTRY_LOWER_TT,
-					  DMAR_CTX_TT_UNTRANSLATED);
+		upper = dmar_set_bitslice(upper,
+		          CTX_ENTRY_UPPER_AW_MASK,
+		          CTX_ENTRY_UPPER_AW_POS,
+			  (uint64_t)width_to_agaw(domain->addr_width));
+		lower = dmar_set_bitslice(lower,
+		          CTX_ENTRY_LOWER_TT_MASK,
+			  CTX_ENTRY_LOWER_TT_POS,
+			  DMAR_CTX_TT_UNTRANSLATED);
 	}
 
-	upper = DMAR_SET_BITSLICE(upper, CTX_ENTRY_UPPER_DID, domain->dom_id);
-	lower = DMAR_SET_BITSLICE(lower, CTX_ENTRY_LOWER_SLPTPTR,
-				  domain->trans_table_ptr >> 12);
-	lower = DMAR_SET_BITSLICE(lower, CTX_ENTRY_LOWER_P, 1);
+	upper = dmar_set_bitslice(upper,
+	          CTX_ENTRY_UPPER_DID_MASK,
+		  CTX_ENTRY_UPPER_DID_POS,
+		  domain->dom_id);
+	lower = dmar_set_bitslice(lower,
+		  CTX_ENTRY_LOWER_SLPTPTR_MASK,
+		  CTX_ENTRY_LOWER_SLPTPTR_POS,
+		  domain->trans_table_ptr >> 12U);
+	lower = dmar_set_bitslice(lower,
+		  CTX_ENTRY_LOWER_P_MASK,
+		  CTX_ENTRY_LOWER_P_POS,
+		  1UL);
 
 	context_entry->upper = upper;
 	context_entry->lower = lower;
@@ -1065,6 +1093,7 @@ remove_iommu_device(struct iommu_domain *domain, uint16_t segment,
 	uint64_t *context_table;
 	struct dmar_root_entry *root_entry;
 	struct dmar_context_entry *context_entry;
+	uint16_t dom_id;
 
 	if (domain == NULL) {
 		return 1;
@@ -1080,15 +1109,17 @@ remove_iommu_device(struct iommu_domain *domain, uint16_t segment,
 	root_table = (uint64_t *)HPA2HVA(dmar_uint->root_table_addr);
 	root_entry = (struct dmar_root_entry *)&root_table[bus * 2];
 
-	context_table_addr = DMAR_GET_BITSLICE(root_entry->lower,
-						   ROOT_ENTRY_LOWER_CTP);
+	context_table_addr = dmar_get_bitslice(root_entry->lower,
+					       ROOT_ENTRY_LOWER_CTP_MASK,
+					       ROOT_ENTRY_LOWER_CTP_POS);
 	context_table_addr = context_table_addr << 12;
 	context_table = (uint64_t *)HPA2HVA(context_table_addr);
 
 	context_entry = (struct dmar_context_entry *)&context_table[devfun * 2];
 
-	if (DMAR_GET_BITSLICE(context_entry->upper,
-				  CTX_ENTRY_UPPER_DID) != domain->dom_id) {
+	dom_id = (uint16_t)dmar_get_bitslice(context_entry->upper,
+		        CTX_ENTRY_UPPER_DID_MASK, CTX_ENTRY_UPPER_DID_POS);
+	if (dom_id != domain->dom_id) {
 		pr_err("%s: domain id mismatch", __func__);
 		return 1;
 	}
