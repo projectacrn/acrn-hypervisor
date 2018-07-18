@@ -359,7 +359,7 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 	(void)memcpy_s(&mem->first_page.data.key_info, sizeof(g_key_info),
 			&g_key_info, sizeof(g_key_info));
 
-	(void)memset(mem->first_page.data.key_info.dseed_list, 0,
+	(void)memset(mem->first_page.data.key_info.dseed_list, 0U,
 			sizeof(mem->first_page.data.key_info.dseed_list));
 	/* Derive dvseed from dseed for Trusty */
 	key_info = &mem->first_page.data.key_info;
@@ -370,7 +370,7 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 				BUP_MKHI_BOOTLOADER_SEED_LEN,
 				NULL, 0U,
 				vcpu->vm->GUID, sizeof(vcpu->vm->GUID)) == 0) {
-			(void)memset(key_info, 0, sizeof(struct key_info));
+			(void)memset(key_info, 0U, sizeof(struct key_info));
 			pr_err("%s: derive dvseed failed!", __func__);
 			return false;
 		}
@@ -439,7 +439,7 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 	struct vm *vm = vcpu->vm;
 	struct trusty_boot_param boot_param;
 
-	memset(&boot_param, 0, sizeof(boot_param));
+	memset(&boot_param, 0U, sizeof(boot_param));
 	if (copy_from_gpa(vcpu->vm, &boot_param, param, sizeof(boot_param))) {
 		pr_err("%s: Unable to copy trusty_boot_param\n", __func__);
 		return false;
@@ -497,7 +497,7 @@ void trusty_set_dseed(void *dseed, uint8_t dseed_num)
 		(dseed_num > BOOTLOADER_SEED_MAX_ENTRIES)) {
 
 		g_key_info.num_seeds = 1U;
-		(void)memset(g_key_info.dseed_list[0].seed, 0xA5,
+		(void)memset(g_key_info.dseed_list[0].seed, 0xA5U,
 			sizeof(g_key_info.dseed_list[0].seed));
 		return;
 	}

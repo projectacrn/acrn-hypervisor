@@ -7,11 +7,11 @@
 #ifndef HOB_PARSE_H_
 #define HOB_PARSE_H_
 
-#define SEED_ENTRY_TYPE_SVNSEED         0x1
-#define SEED_ENTRY_TYPE_RPMBSEED        0x2
+#define SEED_ENTRY_TYPE_SVNSEED         0x1U
+#define SEED_ENTRY_TYPE_RPMBSEED        0x2U
 
-#define SEED_ENTRY_USAGE_USEED          0x1
-#define SEED_ENTRY_USAGE_DSEED          0x2
+#define SEED_ENTRY_USAGE_USEED          0x1U
+#define SEED_ENTRY_USAGE_DSEED          0x2U
 
 struct seed_list_hob {
 	uint8_t revision;

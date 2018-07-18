@@ -108,12 +108,12 @@ static const char *get_int(const char *s, int *x)
 	return s;
 }
 
-static const char *get_flags(const char *s, int *flags)
+static const char *get_flags(const char *s, uint32_t *flags)
 {
 	/* contains the flag characters */
 	static const char flagchars[] = "#0- +";
 	/* contains the numeric flags for the characters above */
-	static const int fl[sizeof(flagchars)] = {
+	static const uint32_t fl[sizeof(flagchars)] = {
 		PRINT_FLAG_ALTERNATE_FORM,	/* # */
 		PRINT_FLAG_PAD_ZERO,	/* 0 */
 		PRINT_FLAG_LEFT_JUSTIFY,	/* - */
@@ -124,7 +124,7 @@ static const char *get_flags(const char *s, int *flags)
 	bool found;
 
 	/* parse multiple flags */
-	while ((*s) != 0) {
+	while ((*s) != '\0') {
 		/*
 		 * Get index of flag.
 		 * Terminate loop if no flag character was found.
@@ -146,12 +146,12 @@ static const char *get_flags(const char *s, int *flags)
 	}
 
 	/* Spec says that '-' has a higher priority than '0' */
-	if ((*flags & PRINT_FLAG_LEFT_JUSTIFY) != 0) {
+	if ((*flags & PRINT_FLAG_LEFT_JUSTIFY) != 0U) {
 		*flags &= ~PRINT_FLAG_PAD_ZERO;
 	}
 
 	/* Spec says that '+' has a higher priority than ' ' */
-	if ((*flags & PRINT_FLAG_SIGN) != 0) {
+	if ((*flags & PRINT_FLAG_SIGN) != 0U) {
 		*flags &= ~PRINT_FLAG_SPACE;
 	}
 
@@ -159,18 +159,18 @@ static const char *get_flags(const char *s, int *flags)
 }
 
 static const char *get_length_modifier(const char *s,
-			int *flags, uint64_t *mask)
+			uint32_t *flags, uint64_t *mask)
 {
 	if (*s == 'h') {
 		/* check for h[h] (char/short) */
 		s++;
 		if (*s == 'h') {
 			*flags |= PRINT_FLAG_CHAR;
-			*mask = 0x000000FF;
+			*mask = 0x000000FFU;
 			++s;
 		} else {
 			*flags |= PRINT_FLAG_SHORT;
-			*mask = 0x0000FFFF;
+			*mask = 0x0000FFFFU;
 		}
 	} else if (*s == 'l') {
 		/* check for l[l] (long/long long) */
@@ -206,17 +206,19 @@ static int format_number(struct print_param *param)
 	width = param->vars.valuelen + param->vars.prefixlen;
 
 	/* calculate additional characters for precision */
-	if ((uint32_t)(param->vars.precision) > width) {
-		p = param->vars.precision - width;
+	p = (uint32_t)(param->vars.precision);
+	if (p > width) {
+		p = p - width;
 	}
 
 	/* calculate additional characters for width */
-	if ((uint32_t)(param->vars.width) > (width + p)) {
-		w = param->vars.width - (width + p);
+	w = (uint32_t)(param->vars.width);
+	if (w > (width + p)) {
+		w = w - (width + p);
 	}
 
 	/* handle case of right justification */
-	if ((param->vars.flags & PRINT_FLAG_LEFT_JUSTIFY) == 0) {
+	if ((param->vars.flags & PRINT_FLAG_LEFT_JUSTIFY) == 0U) {
 		/* assume ' ' as padding character */
 		pad = ' ';
 
@@ -226,7 +228,7 @@ static int format_number(struct print_param *param)
 		 * used for padding, the prefix is emitted after the padding.
 		 */
 
-		if ((param->vars.flags & PRINT_FLAG_PAD_ZERO) != 0) {
+		if ((param->vars.flags & PRINT_FLAG_PAD_ZERO) != 0U) {
 			/* use '0' for padding */
 			pad = '0';
 
@@ -274,7 +276,7 @@ static int format_number(struct print_param *param)
 	}
 
 	/* handle left justification */
-	if ((param->vars.flags & PRINT_FLAG_LEFT_JUSTIFY) != 0) {
+	if ((param->vars.flags & PRINT_FLAG_LEFT_JUSTIFY) != 0U) {
 		/* emit trailing blanks, return early in case of an error */
 		res = param->emit(PRINT_CMD_FILL, " ", w, param->data);
 		if (res < 0) {
@@ -305,14 +307,15 @@ static int print_pow2(struct print_param *param,
 	mask = (1UL << shift) - 1UL;
 
 	/* determine digit translation table */
-	digits = ((param->vars.flags & PRINT_FLAG_UPPER) != 0) ?
+	digits = ((param->vars.flags & PRINT_FLAG_UPPER) != 0U) ?
 			&upper_hex_digits : &lower_hex_digits;
 
 	/* apply mask for short/char */
 	v &= param->vars.mask;
 
 	/* determine prefix for alternate form */
-	if ((v == 0UL) && ((param->vars.flags & PRINT_FLAG_ALTERNATE_FORM) != 0)) {
+	if ((v == 0UL) &&
+		((param->vars.flags & PRINT_FLAG_ALTERNATE_FORM) != 0U)) {
 		prefix[0] = '0';
 		param->vars.prefix = prefix;
 		param->vars.prefixlen = 1U;
@@ -363,20 +366,20 @@ static int print_decimal(struct print_param *param, int64_t value)
 	 * assign sign and correct value if value is negative and
 	 * value must be interpreted as signed
 	 */
-	if (((param->vars.flags & PRINT_FLAG_UINT32) == 0) && (value < 0)) {
+	if (((param->vars.flags & PRINT_FLAG_UINT32) == 0U) && (value < 0)) {
 		v.qword = (uint64_t)-value;
 		param->vars.prefix = "-";
-		param->vars.prefixlen = 1;
+		param->vars.prefixlen = 1U;
 	}
 
 	/* determine sign if explicit requested in the format string */
 	if (param->vars.prefix == NULL) {
-		if ((param->vars.flags & PRINT_FLAG_SIGN) != 0) {
+		if ((param->vars.flags & PRINT_FLAG_SIGN) != 0U) {
 			param->vars.prefix = "+";
-			param->vars.prefixlen = 1;
-		} else if ((param->vars.flags & PRINT_FLAG_SPACE) != 0) {
+			param->vars.prefixlen = 1U;
+		} else if ((param->vars.flags & PRINT_FLAG_SPACE) != 0U) {
 			param->vars.prefix = " ";
-			param->vars.prefixlen = 1;
+			param->vars.prefixlen = 1U;
 		} else {
 			/* No prefix specified. */
 		}
@@ -385,7 +388,7 @@ static int print_decimal(struct print_param *param, int64_t value)
 	/* process 64 bit value as long as needed */
 	while (v.dwords.high != 0U) {
 		/* determine digits from right to left */
-		udiv64(v.qword, 10, &d);
+		udiv64(v.qword, 10U, &d);
 		pos--;
 		*pos = d.r.dwords.low + '0';
 		v.qword = d.q.qword;
@@ -397,11 +400,11 @@ static int print_decimal(struct print_param *param, int64_t value)
 		 * able to handle a division and multiplication by the constant
 		 * 10.
 		 */
-		nv.dwords.low = v.dwords.low / 10;
+		nv.dwords.low = v.dwords.low / 10U;
 		pos--;
-		*pos = (v.dwords.low - (10 * nv.dwords.low)) + '0';
+		*pos = (v.dwords.low - (10U * nv.dwords.low)) + '0';
 		v.dwords.low = nv.dwords.low;
-	} while (v.dwords.low != 0);
+	} while (v.dwords.low != 0U);
 
 	/* assign parameter and apply width and precision */
 	param->vars.value = pos;
@@ -451,7 +454,7 @@ static int print_string(struct print_param *param, const char *s)
 	/* emit additional characters for width, return early if an error
 	 * occurred
 	 */
-	if ((param->vars.flags & PRINT_FLAG_LEFT_JUSTIFY) == 0) {
+	if ((param->vars.flags & PRINT_FLAG_LEFT_JUSTIFY) == 0U) {
 		res = param->emit(PRINT_CMD_FILL, " ", w, param->data);
 		if (res < 0) {
 			return res;
@@ -467,7 +470,7 @@ static int print_string(struct print_param *param, const char *s)
 	/* emit additional characters on the right, return early if an error
 	 * occurred
 	 */
-	if ((param->vars.flags & PRINT_FLAG_LEFT_JUSTIFY) != 0) {
+	if ((param->vars.flags & PRINT_FLAG_LEFT_JUSTIFY) != 0U) {
 		res = param->emit(PRINT_CMD_FILL, " ", w, param->data);
 		if (res < 0) {
 			return res;
@@ -488,11 +491,11 @@ int do_print(const char *fmt, struct print_param *param,
 	const char *start;
 
 	/* main loop: analyse until there are no more characters */
-	while ((*fmt) != 0) {
+	while ((*fmt) != '\0') {
 		/* mark the current position and search the next '%' */
 		start = fmt;
 
-		while (((*fmt) != 0) && (*fmt != '%')) {
+		while (((*fmt) != '\0') && (*fmt != '%')) {
 			fmt++;
 		}
 
@@ -513,7 +516,7 @@ int do_print(const char *fmt, struct print_param *param,
 			fmt++;
 
 			/* initialize the variables for the next argument */
-			(void)memset(&(param->vars), 0, sizeof(param->vars));
+			(void)memset(&(param->vars), 0U, sizeof(param->vars));
 			param->vars.mask = 0xFFFFFFFFFFFFFFFFUL;
 
 			/*
@@ -547,7 +550,7 @@ int do_print(const char *fmt, struct print_param *param,
 			/* decimal number */
 				res = print_decimal(param,
 						((param->vars.flags &
-						PRINT_FLAG_LONG_LONG) != 0) ?
+						PRINT_FLAG_LONG_LONG) != 0U) ?
 						__builtin_va_arg(args,
 							long long)
 						: (long long)
@@ -559,7 +562,7 @@ int do_print(const char *fmt, struct print_param *param,
 				param->vars.flags |= PRINT_FLAG_UINT32;
 				res = print_decimal(param,
 						((param->vars.flags &
-						PRINT_FLAG_LONG_LONG) != 0) ?
+						PRINT_FLAG_LONG_LONG) != 0U) ?
 						__builtin_va_arg(args,
 							unsigned long long)
 						: (unsigned long long)
@@ -570,13 +573,13 @@ int do_print(const char *fmt, struct print_param *param,
 			else if (ch == 'o') {
 				res = print_pow2(param,
 						((param->vars.flags &
-						PRINT_FLAG_LONG_LONG) != 0) ?
+						PRINT_FLAG_LONG_LONG) != 0U) ?
 						__builtin_va_arg(args,
 							unsigned long long)
 						: (unsigned long long)
 						__builtin_va_arg(args,
 							uint32_t),
-						3);
+						3U);
 			}
 			/* hexadecimal number */
 			else if ((ch == 'X') || (ch == 'x')) {
@@ -585,13 +588,13 @@ int do_print(const char *fmt, struct print_param *param,
 				}
 				res = print_pow2(param,
 						((param->vars.flags &
-						PRINT_FLAG_LONG_LONG) != 0) ?
+						PRINT_FLAG_LONG_LONG) != 0U) ?
 						__builtin_va_arg(args,
 							unsigned long long)
 						: (unsigned long long)
 						__builtin_va_arg(args,
 							uint32_t),
-						4);
+						4U);
 			}
 			/* string argument */
 			else if (ch == 's') {
@@ -610,7 +613,7 @@ int do_print(const char *fmt, struct print_param *param,
 				 * void *),4);
 				 */
 				res = print_pow2(param, (uint64_t)
-					__builtin_va_arg(args, void *), 4);
+					__builtin_va_arg(args, void *), 4U);
 			}
 			/* single character argument */
 			else if (ch == 'c') {
@@ -648,7 +651,7 @@ static int charmem(int cmd, const char *s, int sz, void *hnd)
 	/* copy mode ? */
 	if (cmd == PRINT_CMD_COPY) {
 		if (sz < 0) {
-			while ((*s) != 0) {
+			while ((*s) != '\0') {
 				if (n < param->sz - param->wrtn) {
 					*p = *s;
 				}
@@ -658,7 +661,7 @@ static int charmem(int cmd, const char *s, int sz, void *hnd)
 			}
 
 		} else if (sz > 0) {
-			while (((*s) != 0) && n < sz) {
+			while (((*s) != '\0') && n < sz) {
 				if (n < param->sz - param->wrtn) {
 					*p = *s;
 				}
@@ -701,10 +704,10 @@ int vsnprintf(char *dst, int sz, const char *fmt, va_list args)
 	struct snprint_param snparam;
 
 	/* initialize parameters */
-	(void)memset(&snparam, 0, sizeof(snparam));
+	(void)memset(&snparam, 0U, sizeof(snparam));
 	snparam.dst = dst;
 	snparam.sz = sz;
-	(void)memset(&param, 0, sizeof(param));
+	(void)memset(&param, 0U, sizeof(param));
 	param.emit = charmem;
 	param.data = &snparam;
 

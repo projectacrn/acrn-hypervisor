@@ -53,7 +53,7 @@ uint64_t gpa2hpa_for_trusty(struct vm *vm, uint64_t gpa)
  *
  */
 void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
-		int64_t size, uint64_t gpa_rebased)
+		uint64_t size, uint64_t gpa_rebased)
 {
 	uint64_t nworld_pml4e = 0UL;
 	uint64_t sworld_pml4e = 0UL;

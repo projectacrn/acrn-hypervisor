@@ -24,7 +24,7 @@ struct print_param {
 	/* Contains variables which are recalculated for each argument. */
 	struct {
 		/* A bitfield with the parsed format flags. */
-		int flags;
+		uint32_t flags;
 		/* The parsed format width. */
 		int width;
 		/* The parsed format precision. */

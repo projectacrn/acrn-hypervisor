@@ -95,7 +95,7 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
 			/* Check requested_buffs number of buffers availability
 			 * in memory-pool right after selected buffer
 			 */
-			for (i = 1; i < requested_buffs; i++) {
+			for (i = 1U; i < requested_buffs; i++) {
 				/* Check if tmp_bit_idx is out-of-range */
 				tmp_bit_idx++;
 				if (tmp_bit_idx == BITMAP_WORD_SIZE) {
@@ -244,8 +244,8 @@ void *malloc(unsigned int num_bytes)
 		 */
 		memory = allocate_mem(&Memory_Pool, num_bytes);
 	} else {
-		int page_num =
-			(num_bytes + CPU_PAGE_SIZE - 1) >> CPU_PAGE_SHIFT;
+		uint32_t page_num =
+			(num_bytes + CPU_PAGE_SIZE - 1U) >> CPU_PAGE_SHIFT;
 		/* Request memory allocation through alloc_page */
 		memory = alloc_pages(page_num);
 	}
@@ -276,7 +276,7 @@ void *alloc_pages(unsigned int page_num)
 
 void *alloc_page(void)
 {
-	return alloc_pages(1);
+	return alloc_pages(1U);
 }
 
 void *calloc(unsigned int num_elements, unsigned int element_size)
@@ -286,7 +286,7 @@ void *calloc(unsigned int num_elements, unsigned int element_size)
 	/* Determine if memory was allocated */
 	if (memory != NULL) {
 		/* Zero all the memory */
-		(void)memset(memory, 0, num_elements * element_size);
+		(void)memset(memory, 0U, num_elements * element_size);
 	}
 
 	/* Return pointer to memory */

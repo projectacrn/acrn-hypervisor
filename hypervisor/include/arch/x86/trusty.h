@@ -14,7 +14,7 @@
 
 #define RPMB_MAX_PARTITION_NUMBER       6
 #define MMC_PROD_NAME_WITH_PSN_LEN      15
-#define BUP_MKHI_BOOTLOADER_SEED_LEN    64
+#define BUP_MKHI_BOOTLOADER_SEED_LEN    64U
 
 /* Trusty EPT rebase gpa: 511G */
 #define TRUSTY_EPT_REBASE_GPA (511UL * 1024UL * 1024UL * 1024UL)
@@ -96,7 +96,7 @@ struct key_info {
 
 #ifdef WORKAROUND_FOR_TRUSTY_4G_MEM
 void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
-		int64_t size, uint64_t gpa_rebased);
+		uint64_t size, uint64_t gpa_rebased);
 struct secure_world_memory {
 	/* The secure world base address of GPA for secure world*/
 	uint64_t base_gpa;
