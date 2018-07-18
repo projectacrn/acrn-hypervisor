@@ -93,7 +93,7 @@ dmar_set_bitslice(uint64_t var, uint64_t mask,
 			status = iommu_read32(dmar_uint, offset);   \
 			if (condition)                              \
 				break;                                  \
-			ASSERT((rdtsc() - start < CYCLES_PER_MS),        \
+			ASSERT(((rdtsc() - start) < CYCLES_PER_MS),        \
 				"DMAR OP Timeout!");   \
 			asm volatile ("pause" ::: "memory");        \
 		}                                               \
@@ -781,7 +781,7 @@ static int dmar_fault_handler(int irq, void *data)
 		loop++;
 		index = dma_fsts_fri(fsr);
 		record_reg_offset = (uint32_t)dmar_uint->cap_fault_reg_offset
-				+ index * 16U;
+				+ (index * 16U);
 		if (index >= dmar_uint->cap_num_fault_regs) {
 			dev_dbg(ACRN_DBG_IOMMU, "%s: invalid FR Index",
 					__func__);
@@ -1221,7 +1221,7 @@ void suspend_iommu(void)
 		for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++) {
 			iommu_fault_state[iommu_idx][i] =
 				iommu_read32(dmar_unit, DMAR_FECTL_REG +
-					i * IOMMU_FAULT_REGISTER_STATE_NUM);
+					(i * IOMMU_FAULT_REGISTER_STATE_NUM));
 		}
 		/* disable translation */
 		dmar_disable_translation(dmar_unit);
@@ -1262,7 +1262,7 @@ void resume_iommu(void)
 		/* restore IOMMU fault register state */
 		for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++) {
 			iommu_write32(dmar_unit, DMAR_FECTL_REG +
-				i * IOMMU_FAULT_REGISTER_STATE_NUM,
+				(i * IOMMU_FAULT_REGISTER_STATE_NUM),
 				iommu_fault_state[iommu_idx][i]);
 		}
 		/* enable translation */

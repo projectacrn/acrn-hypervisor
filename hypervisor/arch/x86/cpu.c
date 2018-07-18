@@ -374,8 +374,8 @@ void bsp_boot_init(void)
 	/* Build time sanity checks to make sure hard-coded offset
 	*  is matching the actual offset!
 	*/
-	ASSERT(sizeof(struct trusty_startup_param)
-			+ sizeof(struct key_info) < 0x1000U,
+	ASSERT((sizeof(struct trusty_startup_param)
+			+ sizeof(struct key_info)) < 0x1000U,
 		"trusty_startup_param + key_info > 1Page size(4KB)!");
 
 	ASSERT(NR_WORLD == 2, "Only 2 Worlds supported!");

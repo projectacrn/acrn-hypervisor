@@ -424,9 +424,9 @@ _set_vm_memmap(struct vm *vm, struct vm *target_vm,
 
 	base_paddr = get_hv_image_base();
 	if (((hpa <= base_paddr) &&
-		(hpa + memmap->length > base_paddr)) ||
+		((hpa + memmap->length) > base_paddr)) ||
 		((hpa >= base_paddr) &&
-		(hpa < base_paddr + CONFIG_RAM_SIZE))) {
+		(hpa < (base_paddr + CONFIG_RAM_SIZE)))) {
 		pr_err("%s: ERROR! overlap the HV memory region.", __func__);
 		return -1;
 	}

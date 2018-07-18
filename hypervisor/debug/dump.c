@@ -114,12 +114,12 @@ static void dump_guest_stack(struct vcpu *vcpu)
 	printf("\r\nGuest Stack:\r\n");
 	printf("Dump stack for vcpu %hu, from gva 0x%016llx\r\n",
 			vcpu->vcpu_id, cur_context->rsp);
-	for (i = 0U; i < DUMP_STACK_SIZE/32U; i++) {
+	for (i = 0U; i < (DUMP_STACK_SIZE/32U); i++) {
 		printf("guest_rsp(0x%llx):  0x%016llx  0x%016llx  "
 				"0x%016llx  0x%016llx\r\n",
-				(cur_context->rsp+i*32),
-				tmp[i*4], tmp[i*4+1],
-				tmp[i*4+2], tmp[i*4+3]);
+				(cur_context->rsp+(i*32)),
+				tmp[i*4], tmp[(i*4)+1],
+				tmp[(i*4)+2], tmp[(i*4)+3]);
 	}
 	printf("\r\n");
 }
@@ -149,7 +149,7 @@ static void show_guest_call_trace(struct vcpu *vcpu)
 	 *  try to print out call trace,here can not check if the rbp is valid
 	 *  if the address is invalid, it will cause hv page fault
 	 *  then halt system */
-	while ((count++ < CALL_TRACE_HIERARCHY_MAX) && (bp != 0)) {
+	while ((count < CALL_TRACE_HIERARCHY_MAX) && (bp != 0)) {
 		uint64_t parent_bp = 0UL;
 
 		err_code = 0U;
@@ -163,6 +163,7 @@ static void show_guest_call_trace(struct vcpu *vcpu)
 		printf("BP_GVA(0x%016llx) RIP=0x%016llx\r\n", bp, parent_bp);
 		/* Get previous rbp*/
 		bp = parent_bp;
+		count++;
 	}
 	printf("\r\n");
 }
@@ -186,10 +187,10 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp, uint16_t pcpu_id)
 	uint64_t *sp = (uint64_t *)rsp;
 
 	printf("\r\nHost Stack: CPU_ID = %hu\r\n", pcpu_id);
-	for (i = 0U; i < DUMP_STACK_SIZE/32U; i++) {
+	for (i = 0U; i < (DUMP_STACK_SIZE/32U); i++) {
 		printf("addr(0x%llx)	0x%016llx  0x%016llx  0x%016llx  "
-			  "0x%016llx\r\n", (rsp+i*32U), sp[i*4U], sp[i*4U+1U],
-			  sp[i*4U+2U], sp[i*4U+3U]);
+			  "0x%016llx\r\n", (rsp+(i*32U)), sp[i*4U], sp[(i*4U)+1U],
+			  sp[(i*4U)+2U], sp[(i*4U)+3U]);
 	}
 	printf("\r\n");
 
@@ -216,14 +217,15 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp, uint16_t pcpu_id)
 	while ((rbp <=
 	(uint64_t)&per_cpu(stack, pcpu_id)[CONFIG_STACK_SIZE - 1])
 		&& (rbp >= (uint64_t)&per_cpu(stack, pcpu_id)[0])
-		&& (cb_hierarchy++ < CALL_TRACE_HIERARCHY_MAX)) {
+		&& (cb_hierarchy < CALL_TRACE_HIERARCHY_MAX)) {
 		printf("----> 0x%016llx\r\n",
 				*(uint64_t *)(rbp + sizeof(uint64_t)));
-		if (*(uint64_t *)(rbp + 2*sizeof(uint64_t))
+		if (*(uint64_t *)(rbp + (2*sizeof(uint64_t)))
 				== SP_BOTTOM_MAGIC) {
 			break;
 		}
 		rbp = *(uint64_t *)rbp;
+		cb_hierarchy++;
 	}
 	printf("\r\n");
 }

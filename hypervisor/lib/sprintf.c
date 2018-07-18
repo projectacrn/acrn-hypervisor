@@ -96,7 +96,7 @@ static const char *get_int(const char *s, int *x)
 
 	/* parse uint32_teger */
 	while ((*s >= '0') && (*s <= '9')) {
-		*x = *x * 10 + (*s - '0');
+		*x = (*x * 10) + (*s - '0');
 		s++;
 	}
 
@@ -648,7 +648,7 @@ static int charmem(int cmd, const char *s, int sz, void *hnd)
 	if (cmd == PRINT_CMD_COPY) {
 		if (sz < 0) {
 			while ((*s) != '\0') {
-				if (n < param->sz - param->wrtn) {
+				if (n < (param->sz - param->wrtn)) {
 					*p = *s;
 				}
 				p++;
@@ -658,7 +658,7 @@ static int charmem(int cmd, const char *s, int sz, void *hnd)
 
 		} else if (sz > 0) {
 			while (((*s) != '\0') && n < sz) {
-				if (n < param->sz - param->wrtn) {
+				if (n < (param->sz - param->wrtn)) {
 					*p = *s;
 				}
 				p++;
@@ -674,7 +674,7 @@ static int charmem(int cmd, const char *s, int sz, void *hnd)
 	}
 	/* fill mode */
 	else {
-		n = (sz < param->sz - param->wrtn) ? sz : 0;
+		n = (sz < (param->sz - param->wrtn)) ? sz : 0;
 		param->wrtn += sz;
 		(void)memset(p, *s, n);
 	}

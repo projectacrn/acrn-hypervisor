@@ -162,15 +162,15 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 			goto out;
 		}
 
-		shift = i * pw_info->width + 12U;
+		shift = (i * pw_info->width) + 12U;
 		index = (gva >> shift) & ((1UL << pw_info->width) - 1UL);
 		page_size = 1UL << shift;
 
 		if (pw_info->width == 10U) {
 			/* 32bit entry */
-			entry = *((uint32_t *)(base + 4U * index));
+			entry = *((uint32_t *)(base + (4U * index)));
 		} else {
-			entry = *((uint64_t *)(base + 8U * index));
+			entry = *((uint64_t *)(base + (8U * index)));
 		}
 
 		/* check if the entry present */
@@ -501,7 +501,7 @@ void obtain_e820_mem_info(void)
 			e820_mem.mem_bottom = entry->baseaddr;
 		}
 
-		if (entry->baseaddr + entry->length
+		if ((entry->baseaddr + entry->length)
 				> e820_mem.mem_top) {
 			e820_mem.mem_top = entry->baseaddr
 				+ entry->length;
@@ -664,7 +664,7 @@ uint64_t e820_alloc_low_memory(uint32_t size)
 		/* Search for available low memory */
 		if ((entry->type != E820_TYPE_RAM)
 			|| (length < size)
-			|| (start + size > MEM_1M)) {
+			|| ((start + size) > MEM_1M)) {
 			continue;
 		}
 

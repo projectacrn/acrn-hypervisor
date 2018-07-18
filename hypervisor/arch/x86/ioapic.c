@@ -146,7 +146,7 @@ static inline void
 ioapic_get_rte_entry(void *ioapic_addr,
 		uint8_t pin, union ioapic_rte *rte)
 {
-	uint32_t rte_addr = (uint32_t)pin * 2U + 0x10U;
+	uint32_t rte_addr = ((uint32_t)pin * 2U) + 0x10U;
 	rte->u.lo_32 = ioapic_read_reg32(ioapic_addr, rte_addr);
 	rte->u.hi_32 = ioapic_read_reg32(ioapic_addr, rte_addr + 1U);
 }
@@ -155,7 +155,7 @@ static inline void
 ioapic_set_rte_entry(void *ioapic_addr,
 		uint8_t pin, union ioapic_rte rte)
 {
-	uint32_t rte_addr = (uint32_t)pin * 2U + 0x10U;
+	uint32_t rte_addr = ((uint32_t)pin * 2U) + 0x10U;
 	ioapic_write_reg32(ioapic_addr, rte_addr, rte.u.lo_32);
 	ioapic_write_reg32(ioapic_addr, rte_addr + 1U, rte.u.hi_32);
 }

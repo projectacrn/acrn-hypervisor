@@ -400,13 +400,13 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 
 	list_for_each(pos, &vcpu->vm->mmio_list) {
 		mmio_handler = list_entry(pos, struct mem_io_node, list);
-		if ((mmio->paddr + mmio->access_size <=
+		if (((mmio->paddr + mmio->access_size) <=
 			mmio_handler->range_start) ||
 			(mmio->paddr >= mmio_handler->range_end)) {
 			continue;
 		}
 		else if (!((mmio->paddr >= mmio_handler->range_start) &&
-			(mmio->paddr + mmio->access_size <=
+			((mmio->paddr + mmio->access_size) <=
 			mmio_handler->range_end))) {
 			pr_fatal("Err MMIO, addr:0x%llx, size:%x",
 					mmio->paddr, mmio->access_size);

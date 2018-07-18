@@ -1459,7 +1459,7 @@ emulate_bittest(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	 * Intel SDM, Vol 2, Table 3-2:
 	 * "Range of Bit Positions Specified by Bit Offset Operands"
 	 */
-	bitmask = (uint64_t)vie->opsize * 8UL - 1UL;
+	bitmask = ((uint64_t)vie->opsize * 8UL) - 1UL;
 	bitoff = (uint64_t)vie->immediate & bitmask;
 
 	/* Copy the bit into the Carry flag in %rflags */
