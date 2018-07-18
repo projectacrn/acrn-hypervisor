@@ -37,21 +37,17 @@ static struct fixed_range_mtrr_maps fixed_mtrr_map[FIXED_RANGE_MTRR_NUM] = {
 	{ MSR_IA32_MTRR_FIX4K_F8000, 0xF8000, 0x1000 },
 };
 
-int is_fixed_range_mtrr(uint32_t msr)
-{
-	return (msr >= fixed_mtrr_map[0].msr)
-		&& (msr <= fixed_mtrr_map[FIXED_RANGE_MTRR_NUM - 1].msr);
-}
-
-static int get_index_of_fixed_mtrr(uint32_t msr)
+static bool get_index_of_fixed_mtrr(uint32_t msr, int *index)
 {
 	int i;
 
-	for (i = 0; i < FIXED_RANGE_MTRR_NUM; i++) {
-		if (fixed_mtrr_map[i].msr == msr)
-			break;
+	for (i = 0U; i < FIXED_RANGE_MTRR_NUM; i++) {
+		if (fixed_mtrr_map[i].msr == msr) {
+			*index = i;
+			return true;
+		}
 	}
-	return i;
+	return false;
 }
 
 int get_subrange_size_of_fixed_mtrr(int subrange_id)
@@ -198,6 +194,8 @@ static void update_ept_mem_type(struct vcpu *vcpu)
 
 void mtrr_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t value)
 {
+	int index;
+
 	if (msr == MSR_IA32_MTRR_DEF_TYPE) {
 		if (vcpu->mtrr.def_type.value != value) {
 			vcpu->mtrr.def_type.value = value;
@@ -227,25 +225,28 @@ void mtrr_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t value)
 			 */
 			update_ept_mem_type(vcpu);
 		}
-	} else if (is_fixed_range_mtrr(msr))
-		vcpu->mtrr.fixed_range[get_index_of_fixed_mtrr(msr)].value = value;
-	else
+	} else if (get_index_of_fixed_mtrr(msr, &index)) {
+		vcpu->mtrr.fixed_range[index].value = value;
+	} else {
 		pr_err("Write to unexpected MSR: 0x%x", msr);
+	}
 }
 
 uint64_t mtrr_rdmsr(struct vcpu *vcpu, uint32_t msr)
 {
 	struct mtrr_state *mtrr = &vcpu->mtrr;
 	uint64_t ret = 0;
+	int index;
 
-	if (msr == MSR_IA32_MTRR_CAP)
+	if (msr == MSR_IA32_MTRR_CAP) {
 		ret = mtrr->cap.value;
-	else if (msr == MSR_IA32_MTRR_DEF_TYPE)
+	} else if (msr == MSR_IA32_MTRR_DEF_TYPE) {
 		ret = mtrr->def_type.value;
-	else if (is_fixed_range_mtrr(msr))
-		ret = mtrr->fixed_range[get_index_of_fixed_mtrr(msr)].value;
-	else
+	} else if (get_index_of_fixed_mtrr(msr, &index)) {
+		ret = mtrr->fixed_range[index].value;
+	} else {
 		pr_err("read unexpected MSR: 0x%x", msr);
+	}
 
 	return ret;
 }
