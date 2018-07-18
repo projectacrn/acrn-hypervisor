@@ -10,18 +10,18 @@
 extern struct efi_ctx* efi_ctx;
 #endif
 
-#define REAL_MODE_BSP_INIT_CODE_SEL	(0xf000)
-#define REAL_MODE_DATA_SEG_AR		(0x0093)
-#define REAL_MODE_CODE_SEG_AR		(0x009f)
-#define PROTECTED_MODE_DATA_SEG_AR	(0xc093)
-#define PROTECTED_MODE_CODE_SEG_AR	(0xc09b)
+#define REAL_MODE_BSP_INIT_CODE_SEL	(0xf000U)
+#define REAL_MODE_DATA_SEG_AR		(0x0093U)
+#define REAL_MODE_CODE_SEG_AR		(0x009fU)
+#define PROTECTED_MODE_DATA_SEG_AR	(0xc093U)
+#define PROTECTED_MODE_CODE_SEG_AR	(0xc09bU)
 
-static uint32_t cr0_host_mask;
-static uint32_t cr0_always_on_mask;
-static uint32_t cr0_always_off_mask;
-static uint32_t cr4_host_mask;
-static uint32_t cr4_always_on_mask;
-static uint32_t cr4_always_off_mask;
+static uint64_t cr0_host_mask;
+static uint64_t cr0_always_on_mask;
+static uint64_t cr0_always_off_mask;
+static uint64_t cr4_host_mask;
+static uint64_t cr4_always_on_mask;
+static uint64_t cr4_always_off_mask;
 
 static inline int exec_vmxon(void *addr)
 {
@@ -86,7 +86,7 @@ int exec_vmxon_instr(uint16_t pcpu_id)
 	struct vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
 
 	/* Allocate page aligned memory for VMXON region */
-	if (per_cpu(vmxon_region_pa, pcpu_id) == 0) {
+	if (per_cpu(vmxon_region_pa, pcpu_id) == 0UL) {
 		vmxon_region_va = alloc_page();
 	}
 	else {
@@ -97,8 +97,8 @@ int exec_vmxon_instr(uint16_t pcpu_id)
 		/* Initialize vmxon page with revision id from IA32 VMX BASIC
 		 * MSR
 		 */
-		tmp32 = msr_read(MSR_IA32_VMX_BASIC);
-		(void)memcpy_s((uint32_t *) vmxon_region_va, 4, &tmp32, 4);
+		tmp32 = (uint32_t)msr_read(MSR_IA32_VMX_BASIC);
+		(void)memcpy_s((uint32_t *) vmxon_region_va, 4U, (void *)&tmp32, 4U);
 
 		/* Turn on CR0.NE and CR4.VMXE */
 		CPU_CR_READ(cr0, &tmp64);
@@ -256,7 +256,7 @@ static uint32_t get_cs_access_rights(void)
 
 	asm volatile ("movw %%cs, %%ax" : "=a" (sel_value));
 	asm volatile ("lar %%eax, %%eax" : "=a" (usable_ar) : "a"(sel_value));
-	usable_ar = usable_ar >> 8;
+	usable_ar = usable_ar >> 8U;
 	usable_ar &= 0xf0ffU;	/* clear bits 11:8 */
 
 	return usable_ar;
@@ -265,7 +265,7 @@ static uint32_t get_cs_access_rights(void)
 static void init_cr0_cr4_host_mask(__unused struct vcpu *vcpu)
 {
 	static bool inited = false;
-	uint32_t fixed0, fixed1;
+	uint64_t fixed0, fixed1;
 	if (!inited) {
 		/* Read the CR0 fixed0 / fixed1 MSR registers */
 		fixed0 = msr_read(MSR_IA32_VMX_CR0_FIXED0);
@@ -295,12 +295,12 @@ static void init_cr0_cr4_host_mask(__unused struct vcpu *vcpu)
 
 	exec_vmwrite(VMX_CR0_MASK, cr0_host_mask);
 	/* Output CR0 mask value */
-	pr_dbg("CR0 mask value: 0x%x", cr0_host_mask);
+	pr_dbg("CR0 mask value: 0x%016llx", cr0_host_mask);
 
 
 	exec_vmwrite(VMX_CR4_MASK, cr4_host_mask);
 	/* Output CR4 mask value */
-	pr_dbg("CR4 mask value: 0x%x", cr4_host_mask);
+	pr_dbg("CR4 mask value: 0x%016llx", cr4_host_mask);
 }
 
 uint64_t vmx_rdmsr_pat(struct vcpu *vcpu)
@@ -318,14 +318,15 @@ uint64_t vmx_rdmsr_pat(struct vcpu *vcpu)
 
 int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value)
 {
-	uint32_t field, i;
+	uint32_t i;
+	uint64_t field;
 	struct run_context *context =
 			 &vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 
 	for (i = 0U; i < 8U; i++) {
-		field = (value >> (i * 8U)) & 0xffU;
+		field = (value >> (i * 8U)) & 0xffUL;
 		if ((PAT_MEM_TYPE_INVALID(field) ||
-				(PAT_FIELD_RSV_BITS & field) != 0U)) {
+				(PAT_FIELD_RSV_BITS & field) != 0UL)) {
 			pr_err("invalid guest IA32_PAT: 0x%016llx", value);
 			vcpu_inject_gp(vcpu, 0U);
 			return 0;
@@ -373,7 +374,7 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	uint32_t entry_ctrls;
 	bool paging_enabled = !!(context->cr0 & CR0_PG);
 
-	if ((cr0 & (cr0_always_off_mask | CR0_RESERVED_MASK)) != 0U) {
+	if ((cr0 & (cr0_always_off_mask | CR0_RESERVED_MASK)) != 0UL) {
 		pr_err("Not allow to set always off / reserved bits for CR0");
 		vcpu_inject_gp(vcpu, 0U);
 		return 0;
@@ -382,9 +383,9 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	/* TODO: Check all invalid guest statuses according to the change of
 	 * CR0, and inject a #GP to guest */
 
-	if (((context->ia32_efer & MSR_IA32_EFER_LME_BIT) != 0U) &&
-	    !paging_enabled && ((cr0 & CR0_PG) != 0U)) {
-		if ((context->cr4 & CR4_PAE) == 0U) {
+	if (((context->ia32_efer & MSR_IA32_EFER_LME_BIT) != 0UL) &&
+	    !paging_enabled && ((cr0 & CR0_PG) != 0UL)) {
+		if ((context->cr4 & CR4_PAE) == 0UL) {
 			pr_err("Can't enable long mode when PAE disabled");
 			vcpu_inject_gp(vcpu, 0U);
 			return 0;
@@ -397,8 +398,8 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 
 		context->ia32_efer |= MSR_IA32_EFER_LMA_BIT;
 		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, context->ia32_efer);
-	} else if (((context->ia32_efer & MSR_IA32_EFER_LME_BIT) != 0U) &&
-		   paging_enabled && ((cr0 & CR0_PG) == 0U)){
+	} else if (((context->ia32_efer & MSR_IA32_EFER_LME_BIT) != 0UL) &&
+		   paging_enabled && ((cr0 & CR0_PG) == 0UL)){
 		/* Disable long mode */
 		pr_dbg("VMM: Disable long mode");
 		entry_ctrls = exec_vmread32(VMX_ENTRY_CONTROLS);
@@ -410,16 +411,16 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	}
 
 	/* If CR0.CD or CR0.NW get changed */
-	if (((context->cr0 ^ cr0) & (CR0_CD | CR0_NW)) != 0U) {
-		if ((cr0 & CR0_CD) == 0U && ((cr0 & CR0_NW) != 0U)) {
+	if (((context->cr0 ^ cr0) & (CR0_CD | CR0_NW)) != 0UL) {
+		if ((cr0 & CR0_CD) == 0UL && ((cr0 & CR0_NW) != 0UL)) {
 			pr_err("not allow to set CR0.NW while clearing CR0.CD");
 			vcpu_inject_gp(vcpu, 0U);
 			return 0;
 		}
 
 		/* No action if only CR0.NW is changed */
-		if (((context->cr0 ^ cr0) & CR0_CD) != 0U) {
-			if ((cr0 & CR0_CD) != 0U) {
+		if (((context->cr0 ^ cr0) & CR0_CD) != 0UL) {
+			if ((cr0 & CR0_CD) != 0UL) {
 				/*
 				 * When the guest requests to set CR0.CD, we don't allow
 				 * guest's CR0.CD to be actually set, instead, we write guest
@@ -447,7 +448,7 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	exec_vmwrite(VMX_CR0_READ_SHADOW, cr0 & 0xFFFFFFFFUL);
 	context->cr0 = cr0;
 
-	pr_dbg("VMM: Try to write %08x, allow to write 0x%08x to CR0",
+	pr_dbg("VMM: Try to write %016llx, allow to write 0x%016llx to CR0",
 		cr0, cr0_vmx);
 
 	return 0;
@@ -515,7 +516,7 @@ int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 	}
 
 	/* Do NOT support nested guest */
-	if ((cr4 & CR4_VMXE) != 0U) {
+	if ((cr4 & CR4_VMXE) != 0UL) {
 		pr_err("Nested guest not supported");
 		vcpu_inject_gp(vcpu, 0U);
 		return 0;
@@ -527,7 +528,7 @@ int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 	exec_vmwrite(VMX_CR4_READ_SHADOW, cr4 & 0xFFFFFFFFUL);
 	context->cr4 = cr4;
 
-	pr_dbg("VMM: Try to write %08x, allow to write 0x%08x to CR4",
+	pr_dbg("VMM: Try to write %016llx, allow to write 0x%016llx to CR4",
 		cr4, cr4_vmx);
 
 	return 0;
@@ -574,12 +575,12 @@ static void init_guest_state(struct vcpu *vcpu)
 	 * checked.
 	 */
 	if (vcpu_mode == CPU_MODE_REAL) {
-		vmx_write_cr4(vcpu, 0);
-		vmx_write_cr3(vcpu, 0);
+		vmx_write_cr4(vcpu, 0UL);
+		vmx_write_cr3(vcpu, 0UL);
 		vmx_write_cr0(vcpu, CR0_ET | CR0_NE);
 	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
-		vmx_write_cr4(vcpu, 0);
-		vmx_write_cr3(vcpu, 0);
+		vmx_write_cr4(vcpu, 0UL);
+		vmx_write_cr3(vcpu, 0UL);
 		vmx_write_cr0(vcpu, CR0_ET | CR0_NE | CR0_PE);
 	} else if (vcpu_mode == CPU_MODE_64BIT) {
 		vmx_write_cr4(vcpu, CR4_PSE | CR4_PAE | CR4_MCE);
@@ -616,9 +617,9 @@ static void init_guest_state(struct vcpu *vcpu)
 			 *
 			 */
 			if ((uint64_t)vcpu->entry_addr < 0x100000UL) {
-				sel =((uint64_t)vcpu->entry_addr & 0xFFFF0UL)
-					>> 4UL;
-				base = sel << 4U;
+				sel = (uint16_t)(((uint64_t)vcpu->entry_addr & 0xFFFF0UL)
+					>> 4U);
+				base = (uint64_t)sel << 4U;
 			} else {
 				/* BSP is initialized with real mode */
 				sel = REAL_MODE_BSP_INIT_CODE_SEL;
@@ -639,20 +640,20 @@ static void init_guest_state(struct vcpu *vcpu)
 		access = REAL_MODE_CODE_SEG_AR;
 	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
 		limit = 0xffffffffU;
-		base = 0U;
+		base = 0UL;
 		access = PROTECTED_MODE_CODE_SEG_AR;
 		sel = 0x10U;	/* Linear CS selector in guest init gdt */
 	} else {
 		HV_ARCH_VMX_GET_CS(sel);
 		access = get_cs_access_rights();
 		limit = 0xffffffffU;
-		base = 0U;
+		base = 0UL;
 	}
 
 	/* Selector */
 	field = VMX_GUEST_CS_SEL;
 	exec_vmwrite16(field, sel);
-	pr_dbg("VMX_GUEST_CS_SEL: 0x%x ", sel);
+	pr_dbg("VMX_GUEST_CS_SEL: 0x%hx ", sel);
 
 	/* Limit */
 	field = VMX_GUEST_CS_LIMIT;
@@ -708,14 +709,14 @@ static void init_guest_state(struct vcpu *vcpu)
 	/* GDTR - Global Descriptor Table */
 	if (vcpu_mode == CPU_MODE_REAL) {
 		/* Base */
-		base = 0U;
+		base = 0UL;
 
 		/* Limit */
-		limit = 0xFFFF;
+		limit = 0xFFFFU;
 	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
 		base = create_guest_init_gdt(vcpu->vm, &limit);
 	} else if (vcpu_mode == CPU_MODE_64BIT) {
-		descriptor_table gdtb = {0, 0};
+		descriptor_table gdtb = {0U, 0UL};
 
 		/* Base *//* TODO: Should guest GDTB point to host GDTB ? */
 		/* Obtain the current global descriptor table base */
@@ -723,7 +724,7 @@ static void init_guest_state(struct vcpu *vcpu)
 
 		value32 = gdtb.limit;
 
-		if (((gdtb.base >> 47) & 0x1UL) != 0UL) {
+		if (((gdtb.base >> 47U) & 0x1UL) != 0UL) {
 			gdtb.base |= 0xffff000000000000UL;
 		}
 
@@ -736,7 +737,7 @@ static void init_guest_state(struct vcpu *vcpu)
 	/* GDTR Base */
 	field = VMX_GUEST_GDTR_BASE;
 	exec_vmwrite(field, base);
-	pr_dbg("VMX_GUEST_GDTR_BASE: 0x%x ", base);
+	pr_dbg("VMX_GUEST_GDTR_BASE: 0x%016llx ", base);
 
 	/* GDTR Limit */
 	field = VMX_GUEST_GDTR_LIMIT;
@@ -747,19 +748,19 @@ static void init_guest_state(struct vcpu *vcpu)
 	if ((vcpu_mode == CPU_MODE_REAL) ||
 	    (vcpu_mode == CPU_MODE_PROTECTED)) {
 		/* Base */
-		base = 0U;
+		base = 0UL;
 
 		/* Limit */
-		limit = 0xFFFF;
+		limit = 0xFFFFU;
 	} else if (vcpu_mode == CPU_MODE_64BIT) {
-		descriptor_table idtb = {0, 0};
+		descriptor_table idtb = {0U, 0UL};
 
 		/* TODO: Should guest IDTR point to host IDTR ? */
 		asm volatile ("sidt %0":"=m"(idtb)::"memory");
 		/* Limit */
 		limit = idtb.limit;
 
-		if (((idtb.base >> 47) & 0x1UL) != 0UL) {
+		if (((idtb.base >> 47U) & 0x1UL) != 0UL) {
 			idtb.base |= 0xffff000000000000UL;
 		}
 
@@ -770,7 +771,7 @@ static void init_guest_state(struct vcpu *vcpu)
 	/* IDTR Base */
 	field = VMX_GUEST_IDTR_BASE;
 	exec_vmwrite(field, base);
-	pr_dbg("VMX_GUEST_IDTR_BASE: 0x%x ", base);
+	pr_dbg("VMX_GUEST_IDTR_BASE: 0x%016llx ", base);
 
 	/* IDTR Limit */
 	field = VMX_GUEST_IDTR_LIMIT;
@@ -789,22 +790,22 @@ static void init_guest_state(struct vcpu *vcpu)
 	/***************************************************/
 	/* ES, CS, SS, DS, FS, GS */
 	/***************************************************/
-	data32_idx = 0x10;
+	data32_idx = 0x10U;
 	if (vcpu_mode == CPU_MODE_REAL) {
 		es = data32_idx;
 		ss = data32_idx;
 		ds = data32_idx;
 		fs = data32_idx;
 		gs = data32_idx;
-		limit = 0xffff;
+		limit = 0xffffU;
 
 	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
 		/* Linear data segment in guest init gdt */
-		es = 0x18;
-		ss = 0x18;
-		ds = 0x18;
-		fs = 0x18;
-		gs = 0x18;
+		es = 0x18U;
+		ss = 0x18U;
+		ds = 0x18U;
+		fs = 0x18U;
+		gs = 0x18U;
 		limit = 0xffffffffU;
 	} else if (vcpu_mode == CPU_MODE_64BIT) {
 		asm volatile ("movw %%es, %%ax":"=a" (es));
@@ -818,23 +819,23 @@ static void init_guest_state(struct vcpu *vcpu)
 	/* Selector */
 	field = VMX_GUEST_ES_SEL;
 	exec_vmwrite16(field, es);
-	pr_dbg("VMX_GUEST_ES_SEL: 0x%x ", es);
+	pr_dbg("VMX_GUEST_ES_SEL: 0x%hx ", es);
 
 	field = VMX_GUEST_SS_SEL;
 	exec_vmwrite16(field, ss);
-	pr_dbg("VMX_GUEST_SS_SEL: 0x%x ", ss);
+	pr_dbg("VMX_GUEST_SS_SEL: 0x%hx ", ss);
 
 	field = VMX_GUEST_DS_SEL;
 	exec_vmwrite16(field, ds);
-	pr_dbg("VMX_GUEST_DS_SEL: 0x%x ", ds);
+	pr_dbg("VMX_GUEST_DS_SEL: 0x%hx ", ds);
 
 	field = VMX_GUEST_FS_SEL;
 	exec_vmwrite16(field, fs);
-	pr_dbg("VMX_GUEST_FS_SEL: 0x%x ", fs);
+	pr_dbg("VMX_GUEST_FS_SEL: 0x%hx ", fs);
 
 	field = VMX_GUEST_GS_SEL;
 	exec_vmwrite16(field, gs);
-	pr_dbg("VMX_GUEST_GS_SEL: 0x%x ", gs);
+	pr_dbg("VMX_GUEST_GS_SEL: 0x%hx ", gs);
 
 	/* Limit */
 	field = VMX_GUEST_ES_LIMIT;
@@ -1011,8 +1012,8 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	uint64_t trbase_lo;
 	uint64_t trbase_hi;
 	uint64_t realtrbase;
-	descriptor_table gdtb = {0, 0};
-	descriptor_table idtb = {0, 0};
+	descriptor_table gdtb = {0U, 0UL};
+	descriptor_table idtb = {0U, 0UL};
 	uint16_t tr_sel;
 
 	pr_dbg("*********************");
@@ -1059,7 +1060,7 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	field = VMX_HOST_TR_SEL;
 	asm volatile ("str %%ax":"=a" (tr_sel));
 	exec_vmwrite16(field, tr_sel);
-	pr_dbg("VMX_HOST_TR_SEL: 0x%x ", tr_sel);
+	pr_dbg("VMX_HOST_TR_SEL: 0x%hx ", tr_sel);
 
 	/******************************************************
 	 * 32-bit fields
@@ -1072,7 +1073,7 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	asm volatile ("sgdt %0":"=m"(gdtb)::"memory");
 	value32 = gdtb.limit;
 
-	if (((gdtb.base >> 47) & 0x1UL) != 0UL) {
+	if (((gdtb.base >> 47U) & 0x1UL) != 0UL) {
 		gdtb.base |= 0xffff000000000000UL;
 	}
 
@@ -1083,7 +1084,7 @@ static void init_host_state(__unused struct vcpu *vcpu)
 
 	/* TODO: Should guest TR point to host TR ? */
 	trbase = gdtb.base + tr_sel;
-	if (((trbase >> 47) & 0x1UL) != 0UL) {
+	if (((trbase >> 47U) & 0x1UL) != 0UL) {
 		trbase |= 0xffff000000000000UL;
 	}
 
@@ -1092,25 +1093,25 @@ static void init_host_state(__unused struct vcpu *vcpu)
 		      ".byte 0x36\n"
 		      "movq (%%rax),%%rax\n":"=a" (trbase_lo):"0"(trbase)
 	    );
-	realtrbase = ((trbase_lo >> 16) & (0x0ffffUL)) |
-	    (((trbase_lo >> 32) & 0x000000ffUL) << 16) |
-	    (((trbase_lo >> 56) & 0xffUL) << 24);
+	realtrbase = ((trbase_lo >> 16U) & (0x0ffffUL)) |
+	    (((trbase_lo >> 32U) & 0x000000ffUL) << 16U) |
+	    (((trbase_lo >> 56U) & 0xffUL) << 24U);
 
 	/* SS segment override for upper32 bits of base in ia32e mode */
 	asm volatile ("mov %0,%%rax\n"
 		      ".byte 0x36\n"
 		      "movq 8(%%rax),%%rax\n":"=a" (trbase_hi):"0"(trbase));
-	realtrbase = realtrbase | (trbase_hi << 32);
+	realtrbase = realtrbase | (trbase_hi << 32U);
 
 	/* Set up host and guest TR base fields */
 	field = VMX_HOST_TR_BASE;
 	exec_vmwrite(field, realtrbase);
-	pr_dbg("VMX_HOST_TR_BASE: 0x%x ", realtrbase);
+	pr_dbg("VMX_HOST_TR_BASE: 0x%016llx ", realtrbase);
 
 	/* Obtain the current interrupt descriptor table base */
 	asm volatile ("sidt %0":"=m"(idtb)::"memory");
 	/* base */
-	if (((idtb.base >> 47) & 0x1UL) != 0UL) {
+	if (((idtb.base >> 47U) & 0x1UL) != 0UL) {
 		idtb.base |= 0xffff000000000000UL;
 	}
 
@@ -1142,21 +1143,18 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	pr_dbg("Natural-width********");
 	/* Set up host CR0 field */
 	CPU_CR_READ(cr0, &value);
-	value = (uint32_t) value;
 	field = VMX_HOST_CR0;
 	exec_vmwrite(field, value);
 	pr_dbg("VMX_HOST_CR0: 0x%016llx ", value);
 
 	/* Set up host CR3 field */
 	CPU_CR_READ(cr3, &value);
-	value = (uint32_t) value;
 	field = VMX_HOST_CR3;
 	exec_vmwrite(field, value);
 	pr_dbg("VMX_HOST_CR3: 0x%016llx ", value);
 
 	/* Set up host CR4 field */
 	CPU_CR_READ(cr4, &value);
-	value = (uint32_t) value;
 	field = VMX_HOST_CR4;
 	exec_vmwrite(field, value);
 	pr_dbg("VMX_HOST_CR4: 0x%016llx ", value);
@@ -1414,7 +1412,7 @@ static void init_entry_ctrl(__unused struct vcpu *vcpu)
 	 * on VM entry processor is in IA32e 64 bitmode * Start guest with host
 	 * IA32_PAT and IA32_EFER
 	 */
-	value32 = msr_read(MSR_IA32_VMX_ENTRY_CTLS);
+	value32 = (uint32_t)msr_read(MSR_IA32_VMX_ENTRY_CTLS);
 	if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
 		value32 |= (VMX_ENTRY_CTLS_IA32E_MODE);
 	}
@@ -1496,7 +1494,7 @@ static void override_uefi_vmcs(struct vcpu *vcpu)
 		/* Selector */
 		field = VMX_GUEST_CS_SEL;
 		exec_vmwrite16(field, efi_ctx->cs_sel);
-		pr_dbg("VMX_GUEST_CS_SEL: 0x%x ", efi_ctx->cs_sel);
+		pr_dbg("VMX_GUEST_CS_SEL: 0x%hx ", efi_ctx->cs_sel);
 
 		/* Access */
 		field = VMX_GUEST_CS_ATTR;
@@ -1505,23 +1503,23 @@ static void override_uefi_vmcs(struct vcpu *vcpu)
 
 		field = VMX_GUEST_ES_SEL;
 		exec_vmwrite16(field, efi_ctx->es_sel);
-		pr_dbg("VMX_GUEST_ES_SEL: 0x%x ", efi_ctx->es_sel);
+		pr_dbg("VMX_GUEST_ES_SEL: 0x%hx ", efi_ctx->es_sel);
 
 		field = VMX_GUEST_SS_SEL;
 		exec_vmwrite16(field, efi_ctx->ss_sel);
-		pr_dbg("VMX_GUEST_SS_SEL: 0x%x ", efi_ctx->ss_sel);
+		pr_dbg("VMX_GUEST_SS_SEL: 0x%hx ", efi_ctx->ss_sel);
 
 		field = VMX_GUEST_DS_SEL;
 		exec_vmwrite16(field, efi_ctx->ds_sel);
-		pr_dbg("VMX_GUEST_DS_SEL: 0x%x ", efi_ctx->ds_sel);
+		pr_dbg("VMX_GUEST_DS_SEL: 0x%hx ", efi_ctx->ds_sel);
 
 		field = VMX_GUEST_FS_SEL;
 		exec_vmwrite16(field, efi_ctx->fs_sel);
-		pr_dbg("VMX_GUEST_FS_SEL: 0x%x ", efi_ctx->fs_sel);
+		pr_dbg("VMX_GUEST_FS_SEL: 0x%hx ", efi_ctx->fs_sel);
 
 		field = VMX_GUEST_GS_SEL;
 		exec_vmwrite16(field, efi_ctx->gs_sel);
-		pr_dbg("VMX_GUEST_GS_SEL: 0x%x ", efi_ctx->gs_sel);
+		pr_dbg("VMX_GUEST_GS_SEL: 0x%hx ", efi_ctx->gs_sel);
 
 		/* Base */
 		field = VMX_GUEST_ES_BASE;
@@ -1572,7 +1570,7 @@ static void override_uefi_vmcs(struct vcpu *vcpu)
 
 int init_vmcs(struct vcpu *vcpu)
 {
-	uint32_t vmx_rev_id;
+	uint64_t vmx_rev_id;
 	int status = 0;
 	uint64_t vmcs_pa;
 
@@ -1586,7 +1584,7 @@ int init_vmcs(struct vcpu *vcpu)
 
 	/* Obtain the VM Rev ID from HW and populate VMCS page with it */
 	vmx_rev_id = msr_read(MSR_IA32_VMX_BASIC);
-	(void)memcpy_s((void *) vcpu->arch_vcpu.vmcs, 4, &vmx_rev_id, 4);
+	(void)memcpy_s(vcpu->arch_vcpu.vmcs, 4U, (void *)&vmx_rev_id, 4U);
 
 	/* Execute VMCLEAR on current VMCS */
 	vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
@@ -1606,7 +1604,7 @@ int init_vmcs(struct vcpu *vcpu)
 	init_exit_ctrl(vcpu);
 
 #ifdef CONFIG_EFI_STUB
-	if (is_vm0(vcpu->vm) && vcpu->pcpu_id == 0) {
+	if (is_vm0(vcpu->vm) && vcpu->pcpu_id == 0U) {
 		override_uefi_vmcs(vcpu);
 	}
 #endif

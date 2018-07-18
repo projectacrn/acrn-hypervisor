@@ -492,10 +492,10 @@
 #define MSR_LNC_BIOS_CACHE_AS_RAM           0x000002E0U    /* Configure CAR */
 
 /* EFER bits */
-#define MSR_IA32_EFER_SCE_BIT                   (1U<<0)
-#define MSR_IA32_EFER_LME_BIT                   (1U<<8)    /* IA32e mode enable */
-#define MSR_IA32_EFER_LMA_BIT                   (1U<<10)   /* IA32e mode active */
-#define MSR_IA32_EFER_NXE_BIT                   (1U<<11)
+#define MSR_IA32_EFER_SCE_BIT                   (1UL<<0U)
+#define MSR_IA32_EFER_LME_BIT                   (1UL<<8U)    /* IA32e mode enable */
+#define MSR_IA32_EFER_LMA_BIT                   (1UL<<10U)   /* IA32e mode active */
+#define MSR_IA32_EFER_NXE_BIT                   (1UL<<11U)
 
 /* FEATURE CONTROL bits */
 #define MSR_IA32_FEATURE_CONTROL_LOCK           (1U<<0)
@@ -503,12 +503,12 @@
 #define MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX     (1U<<2)
 
 /* PAT memory type definitions */
-#define PAT_MEM_TYPE_UC                     0x00U	/* uncached */
-#define PAT_MEM_TYPE_WC                     0x01U	/* write combining */
-#define PAT_MEM_TYPE_WT                     0x04U	/* write through */
-#define PAT_MEM_TYPE_WP                     0x05U	/* write protected */
-#define PAT_MEM_TYPE_WB                     0x06U	/* writeback */
-#define PAT_MEM_TYPE_UCM                    0x07U	/* uncached minus */
+#define PAT_MEM_TYPE_UC                     0x00UL	/* uncached */
+#define PAT_MEM_TYPE_WC                     0x01UL	/* write combining */
+#define PAT_MEM_TYPE_WT                     0x04UL	/* write through */
+#define PAT_MEM_TYPE_WP                     0x05UL	/* write protected */
+#define PAT_MEM_TYPE_WB                     0x06UL	/* writeback */
+#define PAT_MEM_TYPE_UCM                    0x07UL	/* uncached minus */
 #define PAT_MEM_TYPE_INVALID(x)             (((x) != PAT_MEM_TYPE_UC) && \
                                             ((x) != PAT_MEM_TYPE_WC) && \
                                             ((x) != PAT_MEM_TYPE_WT) && \
@@ -520,29 +520,29 @@
 #define PAT_FIELD_RSV_BITS                  (0xF8U)
 
 #define PAT_POWER_ON_VALUE     (PAT_MEM_TYPE_WB + \
-        ((uint64_t)PAT_MEM_TYPE_WT << 8) + \
-        ((uint64_t)PAT_MEM_TYPE_UCM << 16) + \
-        ((uint64_t)PAT_MEM_TYPE_UC << 24) + \
-        ((uint64_t)PAT_MEM_TYPE_WB << 32) + \
-        ((uint64_t)PAT_MEM_TYPE_WT << 40) + \
-        ((uint64_t)PAT_MEM_TYPE_UCM << 48) + \
-        ((uint64_t)PAT_MEM_TYPE_UC << 56))
+        (PAT_MEM_TYPE_WT << 8U) + \
+        (PAT_MEM_TYPE_UCM << 16U) + \
+        (PAT_MEM_TYPE_UC << 24U) + \
+        (PAT_MEM_TYPE_WB << 32U) + \
+        (PAT_MEM_TYPE_WT << 40U) + \
+        (PAT_MEM_TYPE_UCM << 48U) + \
+        (PAT_MEM_TYPE_UC << 56U))
 
 #define PAT_ALL_UC_VALUE (PAT_MEM_TYPE_UC + \
-        ((uint64_t)PAT_MEM_TYPE_UC << 8) + \
-        ((uint64_t)PAT_MEM_TYPE_UC << 16) + \
-        ((uint64_t)PAT_MEM_TYPE_UC << 24) + \
-        ((uint64_t)PAT_MEM_TYPE_UC << 32) + \
-        ((uint64_t)PAT_MEM_TYPE_UC << 40) + \
-        ((uint64_t)PAT_MEM_TYPE_UC << 48) + \
-        ((uint64_t)PAT_MEM_TYPE_UC << 56))
+        (PAT_MEM_TYPE_UC << 8U) + \
+        (PAT_MEM_TYPE_UC << 16U) + \
+        (PAT_MEM_TYPE_UC << 24U) + \
+        (PAT_MEM_TYPE_UC << 32U) + \
+        (PAT_MEM_TYPE_UC << 40U) + \
+        (PAT_MEM_TYPE_UC << 48U) + \
+        (PAT_MEM_TYPE_UC << 56U))
 
 /* MTRR memory type definitions */
-#define MTRR_MEM_TYPE_UC             0x00U	/* uncached */
-#define MTRR_MEM_TYPE_WC             0x01U	/* write combining */
-#define MTRR_MEM_TYPE_WT             0x04U	/* write through */
-#define MTRR_MEM_TYPE_WP             0x05U	/* write protected */
-#define MTRR_MEM_TYPE_WB             0x06U	/* writeback */
+#define MTRR_MEM_TYPE_UC             0x00UL	/* uncached */
+#define MTRR_MEM_TYPE_WC             0x01UL	/* write combining */
+#define MTRR_MEM_TYPE_WT             0x04UL	/* write through */
+#define MTRR_MEM_TYPE_WP             0x05UL	/* write protected */
+#define MTRR_MEM_TYPE_WB             0x06UL	/* writeback */
 
 /* misc. MTRR flag definitions */
 #define MTRR_ENABLE                  0x800U	/* MTRR enable */

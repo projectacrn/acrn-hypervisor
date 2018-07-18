@@ -7,14 +7,14 @@
 
 #ifdef CONFIG_MTRR_ENABLED
 
-#define MTRR_FIXED_RANGE_ALL_WB ((uint64_t)MTRR_MEM_TYPE_WB \
-					| (((uint64_t)MTRR_MEM_TYPE_WB) << 8) \
-					| (((uint64_t)MTRR_MEM_TYPE_WB) << 16) \
-					| (((uint64_t)MTRR_MEM_TYPE_WB) << 24) \
-					| (((uint64_t)MTRR_MEM_TYPE_WB) << 32) \
-					| (((uint64_t)MTRR_MEM_TYPE_WB) << 40) \
-					| (((uint64_t)MTRR_MEM_TYPE_WB) << 48) \
-					| (((uint64_t)MTRR_MEM_TYPE_WB) << 56))
+#define MTRR_FIXED_RANGE_ALL_WB (MTRR_MEM_TYPE_WB \
+					| (MTRR_MEM_TYPE_WB << 8U) \
+					| (MTRR_MEM_TYPE_WB << 16U) \
+					| (MTRR_MEM_TYPE_WB << 24U) \
+					| (MTRR_MEM_TYPE_WB << 32U) \
+					| (MTRR_MEM_TYPE_WB << 40U) \
+					| (MTRR_MEM_TYPE_WB << 48U) \
+					| (MTRR_MEM_TYPE_WB << 56U))
 
 struct fixed_range_mtrr_maps {
 	uint32_t msr;
@@ -22,53 +22,56 @@ struct fixed_range_mtrr_maps {
 	uint32_t sub_range_size;
 };
 
-#define MAX_FIXED_RANGE_ADDR	0x100000
+#define MAX_FIXED_RANGE_ADDR	0x100000UL
 static struct fixed_range_mtrr_maps fixed_mtrr_map[FIXED_RANGE_MTRR_NUM] = {
-	{ MSR_IA32_MTRR_FIX64K_00000, 0x0, 0x10000 },
-	{ MSR_IA32_MTRR_FIX16K_80000, 0x80000, 0x4000 },
-	{ MSR_IA32_MTRR_FIX16K_A0000, 0xA0000, 0x4000 },
-	{ MSR_IA32_MTRR_FIX4K_C0000, 0xC0000, 0x1000 },
-	{ MSR_IA32_MTRR_FIX4K_C8000, 0xC8000, 0x1000 },
-	{ MSR_IA32_MTRR_FIX4K_D0000, 0xD0000, 0x1000 },
-	{ MSR_IA32_MTRR_FIX4K_D8000, 0xD8000, 0x1000 },
-	{ MSR_IA32_MTRR_FIX4K_E0000, 0xE0000, 0x1000 },
-	{ MSR_IA32_MTRR_FIX4K_E8000, 0xE8000, 0x1000 },
-	{ MSR_IA32_MTRR_FIX4K_F0000, 0xF0000, 0x1000 },
-	{ MSR_IA32_MTRR_FIX4K_F8000, 0xF8000, 0x1000 },
+	{ MSR_IA32_MTRR_FIX64K_00000, 0x0U, 0x10000U },
+	{ MSR_IA32_MTRR_FIX16K_80000, 0x80000U, 0x4000U },
+	{ MSR_IA32_MTRR_FIX16K_A0000, 0xA0000U, 0x4000U },
+	{ MSR_IA32_MTRR_FIX4K_C0000, 0xC0000U, 0x1000U },
+	{ MSR_IA32_MTRR_FIX4K_C8000, 0xC8000U, 0x1000U },
+	{ MSR_IA32_MTRR_FIX4K_D0000, 0xD0000U, 0x1000U },
+	{ MSR_IA32_MTRR_FIX4K_D8000, 0xD8000U, 0x1000U },
+	{ MSR_IA32_MTRR_FIX4K_E0000, 0xE0000U, 0x1000U },
+	{ MSR_IA32_MTRR_FIX4K_E8000, 0xE8000U, 0x1000U },
+	{ MSR_IA32_MTRR_FIX4K_F0000, 0xF0000U, 0x1000U },
+	{ MSR_IA32_MTRR_FIX4K_F8000, 0xF8000U, 0x1000U },
 };
 
-int is_fixed_range_mtrr(uint32_t msr)
+static bool is_fixed_range_mtrr(uint32_t msr)
 {
 	return (msr >= fixed_mtrr_map[0].msr)
-		&& (msr <= fixed_mtrr_map[FIXED_RANGE_MTRR_NUM - 1].msr);
+		&& (msr <= fixed_mtrr_map[FIXED_RANGE_MTRR_NUM - 1U].msr);
 }
 
-static int get_index_of_fixed_mtrr(uint32_t msr)
+static uint32_t get_index_of_fixed_mtrr(uint32_t msr)
 {
-	int i;
+	uint32_t i;
 
-	for (i = 0; i < FIXED_RANGE_MTRR_NUM; i++) {
+	for (i = 0U; i < FIXED_RANGE_MTRR_NUM; i++) {
 		if (fixed_mtrr_map[i].msr == msr)
 			break;
 	}
 	return i;
 }
 
-int get_subrange_size_of_fixed_mtrr(int subrange_id)
+static uint32_t
+get_subrange_size_of_fixed_mtrr(uint32_t subrange_id)
 {
 	return fixed_mtrr_map[subrange_id].sub_range_size;
 }
 
-int get_subrange_start_of_fixed_mtrr(int index, int subrange_id)
+static uint32_t
+get_subrange_start_of_fixed_mtrr(uint32_t index, uint32_t subrange_id)
 {
 	return (fixed_mtrr_map[index].start + subrange_id *
 		get_subrange_size_of_fixed_mtrr(index));
 }
 
-int get_subrange_end_of_fixed_mtrr(int index, int subrange_id)
+static uint32_t
+get_subrange_end_of_fixed_mtrr(uint32_t index, uint32_t subrange_id)
 {
 	return (get_subrange_start_of_fixed_mtrr(index, subrange_id) +
-		get_subrange_size_of_fixed_mtrr(index) - 1);
+		get_subrange_size_of_fixed_mtrr(index) - 1U);
 }
 
 static inline bool is_mtrr_enabled(struct vcpu *vcpu)
@@ -90,23 +93,23 @@ static inline uint8_t get_default_memory_type(struct vcpu *vcpu)
 void init_mtrr(struct vcpu *vcpu)
 {
 	union mtrr_cap_reg cap = {0};
-	int i;
+	uint32_t i;
 
 	/*
 	 * We emulate fixed range MTRRs only
 	 * And expecting the guests won't write variable MTRRs
 	 * since MTRRCap.vcnt is 0
 	 */
-	vcpu->mtrr.cap.bits.vcnt = 0;
-	vcpu->mtrr.cap.bits.fix = 1;
-	vcpu->mtrr.def_type.bits.enable = 1;
-	vcpu->mtrr.def_type.bits.fixed_enable = 1;
+	vcpu->mtrr.cap.bits.vcnt = 0U;
+	vcpu->mtrr.cap.bits.fix = 1U;
+	vcpu->mtrr.def_type.bits.enable = 1U;
+	vcpu->mtrr.def_type.bits.fixed_enable = 1U;
 	vcpu->mtrr.def_type.bits.type = MTRR_MEM_TYPE_UC;
 
 	if (is_vm0(vcpu->vm))
 		cap.value = msr_read(MSR_IA32_MTRR_CAP);
 
-	for (i = 0; i < FIXED_RANGE_MTRR_NUM; i++) {
+	for (i = 0U; i < FIXED_RANGE_MTRR_NUM; i++) {
 		if (cap.bits.fix) {
 			/*
 			 * The system firmware runs in VMX non-root mode on VM0.
@@ -124,18 +127,18 @@ void init_mtrr(struct vcpu *vcpu)
 			vcpu->mtrr.fixed_range[i].value = MTRR_FIXED_RANGE_ALL_WB;
 		}
 
-		pr_dbg("vm%d vcpu%hu fixed-range MTRR[%d]: %16llx",
+		pr_dbg("vm%d vcpu%hu fixed-range MTRR[%u]: %16llx",
 			vcpu->vm->attr.id, vcpu->vcpu_id, i,
 			vcpu->mtrr.fixed_range[i].value);
 	}
 }
 
 static uint32_t update_ept(struct vm *vm, uint64_t start,
-	uint64_t size, uint32_t type)
+	uint64_t size, uint8_t type)
 {
 	uint64_t attr;
 
-	switch (type) {
+	switch ((uint64_t)type) {
 	case MTRR_MEM_TYPE_WC:
 		attr = IA32E_EPT_WC;
 		break;
@@ -159,9 +162,9 @@ static uint32_t update_ept(struct vm *vm, uint64_t start,
 
 static void update_ept_mem_type(struct vcpu *vcpu)
 {
-	uint32_t type;
+	uint8_t type;
 	uint64_t start, size;
-	int i, j;
+	uint32_t i, j;
 
 	/*
 	 * Intel SDM, Vol 3, 11.11.2.1 Section "IA32_MTRR_DEF_TYPE MSR":
@@ -169,18 +172,18 @@ static void update_ept_mem_type(struct vcpu *vcpu)
 	 * - when def_type.FE is clear, MTRRdefType.type is applied
 	 */
 	if (!is_mtrr_enabled(vcpu) || !is_fixed_range_mtrr_enabled(vcpu)) {
-		update_ept(vcpu->vm, 0, MAX_FIXED_RANGE_ADDR,
+		update_ept(vcpu->vm, 0U, MAX_FIXED_RANGE_ADDR,
 			get_default_memory_type(vcpu));
 		return;
 	}
 
 	/* Deal with fixed-range MTRRs only */
-	for (i = 0; i < FIXED_RANGE_MTRR_NUM; i++) {
+	for (i = 0U; i < FIXED_RANGE_MTRR_NUM; i++) {
 		type = vcpu->mtrr.fixed_range[i].type[0];
-		start = get_subrange_start_of_fixed_mtrr(i, 0);
+		start = get_subrange_start_of_fixed_mtrr(i, 0U);
 		size = get_subrange_size_of_fixed_mtrr(i);
 
-		for (j = 1; j < MTRR_SUB_RANGE_NUM; j++) {
+		for (j = 1U; j < MTRR_SUB_RANGE_NUM; j++) {
 			/* If it's same type, combine the subrange together */
 			if (type == vcpu->mtrr.fixed_range[i].type[j]) {
 				size += get_subrange_size_of_fixed_mtrr(i);
@@ -236,7 +239,7 @@ void mtrr_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t value)
 uint64_t mtrr_rdmsr(struct vcpu *vcpu, uint32_t msr)
 {
 	struct mtrr_state *mtrr = &vcpu->mtrr;
-	uint64_t ret = 0;
+	uint64_t ret = 0UL;
 
 	if (msr == MSR_IA32_MTRR_CAP)
 		ret = mtrr->cap.value;

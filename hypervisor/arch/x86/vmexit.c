@@ -146,8 +146,8 @@ int vmexit_handler(struct vcpu *vcpu)
 	if ((vcpu->arch_vcpu.idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
 		uint32_t vector_info = vcpu->arch_vcpu.idt_vectoring_info;
 		uint32_t vector = vector_info & 0xffU;
-		uint32_t type = (vector_info & VMX_INT_TYPE_MASK) >> 8;
-		uint32_t err_code = 0;
+		uint32_t type = (vector_info & VMX_INT_TYPE_MASK) >> 8U;
+		uint32_t err_code = 0U;
 
 		if (type == VMX_INT_TYPE_HW_EXP) {
 			if ((vector_info & VMX_INT_INFO_ERR_CODE_VALID) != 0U)
@@ -229,7 +229,7 @@ int cpuid_vmexit_handler(struct vcpu *vcpu)
 		(uint32_t *)&cur_context->guest_cpu_regs.regs.rcx,
 		(uint32_t *)&cur_context->guest_cpu_regs.regs.rdx);
 
-	TRACE_2L(TRACE_VMEXIT_CPUID, vcpu->vcpu_id, 0UL);
+	TRACE_2L(TRACE_VMEXIT_CPUID, (uint64_t)vcpu->vcpu_id, 0UL);
 
 	return 0;
 }
@@ -307,7 +307,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	struct run_context *ctx_ptr;
 
 	val64 = exec_vmread(VMX_GUEST_CR4);
-	if ((val64 & CR4_OSXSAVE) == 0U) {
+	if ((val64 & CR4_OSXSAVE) == 0UL) {
 		vcpu_inject_gp(vcpu, 0U);
 		return 0;
 	}
@@ -326,7 +326,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	}
 
 	val64 = ((ctx_ptr->guest_cpu_regs.regs.rax) & 0xffffffffUL) |
-			(ctx_ptr->guest_cpu_regs.regs.rdx << 32UL);
+			(ctx_ptr->guest_cpu_regs.regs.rdx << 32U);
 
 	/*bit 0(x87 state) of XCR0 can't be cleared*/
 	if ((val64 & 0x01UL) == 0UL) {
@@ -338,7 +338,7 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	 *set to 10b as it is necessary to set both bits
 	 *to use AVX instructions.
 	 **/
-	if (((val64 >> 1UL) & 0x3UL) == 0x2UL) {
+	if (((val64 >> 1U) & 0x3UL) == 0x2UL) {
 		vcpu_inject_gp(vcpu, 0U);
 		return 0;
 	}

@@ -6,8 +6,8 @@
 #ifndef MTRR_H
 #define MTRR_H
 
-#define FIXED_RANGE_MTRR_NUM	11
-#define MTRR_SUB_RANGE_NUM		8
+#define FIXED_RANGE_MTRR_NUM	11U
+#define MTRR_SUB_RANGE_NUM		8U
 
 union mtrr_cap_reg {
 	uint64_t value;
