@@ -27,9 +27,9 @@
  * bytes.
  * Task State Segment (TSS) selectors are 16 bytes on x86-64 instead of 8 bytes.
  */
-#define X64_SEG_DESC_SIZE (0x8)	/* In long mode SEG Descriptors are 8 bytes */
-#define X64_LDT_DESC_SIZE (0x10)/* In long mode LDT Descriptors are 16 bytes */
-#define X64_TSS_DESC_SIZE (0x10)/* In long mode TSS Descriptors are 16 bytes */
+#define X64_SEG_DESC_SIZE (0x8U)	/* In long mode SEG Descriptors are 8 bytes */
+#define X64_LDT_DESC_SIZE (0x10U)/* In long mode LDT Descriptors are 16 bytes */
+#define X64_TSS_DESC_SIZE (0x10U)/* In long mode TSS Descriptors are 16 bytes */
 
 /*****************************************************************************
  *
@@ -41,13 +41,13 @@
  *
  *****************************************************************************/
 /* Number of global 8 byte segments descriptor(s) */
-#define    HOST_GDT_RING0_SEG_SELECTORS   (0x3)	/* rsvd, code, data */
+#define    HOST_GDT_RING0_SEG_SELECTORS   (0x3U)	/* rsvd, code, data */
 /* Offsets of global 8 byte segment descriptors */
-#define    HOST_GDT_RING0_RSVD_SEL        (0x0000)
-#define    HOST_GDT_RING0_CODE_SEL        (0x0008)
-#define    HOST_GDT_RING0_DATA_SEL        (0x0010)
+#define    HOST_GDT_RING0_RSVD_SEL        (0x0000U)
+#define    HOST_GDT_RING0_CODE_SEL        (0x0008U)
+#define    HOST_GDT_RING0_DATA_SEL        (0x0010U)
 /* Number of global 16 byte LDT descriptor(s) */
-#define    HOST_GDT_RING0_TSS_SELECTORS   (0x1)
+#define    HOST_GDT_RING0_TSS_SELECTORS   (0x1U)
 /* One for each CPU in the hypervisor. */
 
 /*****************************************************************************

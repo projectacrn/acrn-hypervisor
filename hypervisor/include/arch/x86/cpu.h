@@ -53,21 +53,21 @@
 #define CPU_STACK_ALIGN         16UL
 
 /* CR0 register definitions */
-#define CR0_PG                  (1U<<31)	/* paging enable */
-#define CR0_CD                  (1U<<30)	/* cache disable */
-#define CR0_NW                  (1U<<29)	/* not write through */
-#define CR0_AM                  (1U<<18)	/* alignment mask */
-#define CR0_WP                  (1U<<16)	/* write protect */
-#define CR0_NE                  (1U<<5)	/* numeric error */
-#define CR0_ET                  (1U<<4)	/* extension type */
-#define CR0_TS                  (1U<<3)	/* task switched */
-#define CR0_EM                  (1U<<2)	/* emulation */
-#define CR0_MP                  (1U<<1)	/* monitor coprocessor */
-#define CR0_PE                  (1U<<0)	/* protected mode enabled */
+#define CR0_PG                  (1UL<<31U)	/* paging enable */
+#define CR0_CD                  (1UL<<30U)	/* cache disable */
+#define CR0_NW                  (1UL<<29U)	/* not write through */
+#define CR0_AM                  (1UL<<18U)	/* alignment mask */
+#define CR0_WP                  (1UL<<16U)	/* write protect */
+#define CR0_NE                  (1UL<<5U)	/* numeric error */
+#define CR0_ET                  (1UL<<4U)	/* extension type */
+#define CR0_TS                  (1UL<<3U)	/* task switched */
+#define CR0_EM                  (1UL<<2U)	/* emulation */
+#define CR0_MP                  (1UL<<1U)	/* monitor coprocessor */
+#define CR0_PE                  (1UL<<0U)	/* protected mode enabled */
 
 /* CR3 register definitions */
-#define CR3_PWT                 (1U<<3)	/* page-level write through */
-#define CR3_PCD                 (1U<<4)	/* page-level cache disable */
+#define CR3_PWT                 (1UL<<3U)	/* page-level write through */
+#define CR3_PCD                 (1UL<<4U)	/* page-level cache disable */
 
 /* CR4 register definitions */
 #define CR4_VME                 (1UL<<0)	/* virtual 8086 mode extensions */

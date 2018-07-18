@@ -6,10 +6,10 @@
 
 #include <hypervisor.h>
 
-#define MAX_TIMER_ACTIONS	32
-#define TIMER_IRQ		(NR_IRQS - 1)
-#define CAL_MS			10
-#define MIN_TIMER_PERIOD_US	500
+#define MAX_TIMER_ACTIONS	32U
+#define TIMER_IRQ		(NR_IRQS - 1U)
+#define CAL_MS			10U
+#define MIN_TIMER_PERIOD_US	500U
 
 uint32_t tsc_khz = 0U;
 
@@ -160,7 +160,7 @@ void timer_init(void)
 	char name[32] = {0};
 	uint16_t pcpu_id = get_cpu_id();
 
-	snprintf(name, 32, "timer_tick[%d]", pcpu_id);
+	snprintf(name, 32, "timer_tick[%hu]", pcpu_id);
 	if (request_timer_irq(pcpu_id, tsc_deadline_handler, NULL, name) < 0) {
 		pr_err("Timer setup failed");
 		return;
@@ -232,7 +232,7 @@ void check_tsc(void)
 
 static uint64_t pit_calibrate_tsc(uint16_t cal_ms)
 {
-#define PIT_TICK_RATE	1193182UL
+#define PIT_TICK_RATE	1193182U
 #define PIT_TARGET	0x3FFFU
 #define PIT_MAX_COUNT	0xFFFFU
 
@@ -254,9 +254,9 @@ static uint64_t pit_calibrate_tsc(uint16_t cal_ms)
 	 * Read/Write least significant byte first, mode 0, 16 bits.
 	 */
 
-	io_write_byte(0x30, 0x43);
-	io_write_byte(initial_pit & 0x00ffU, 0x40);	/* Write LSB */
-	io_write_byte(initial_pit >> 8, 0x40);		/* Write MSB */
+	io_write_byte(0x30U, 0x43U);
+	io_write_byte(initial_pit & 0x00ffU, 0x40U);	/* Write LSB */
+	io_write_byte(initial_pit >> 8U, 0x40U);		/* Write MSB */
 
 	current_tsc = rdtsc();
 
@@ -264,10 +264,10 @@ static uint64_t pit_calibrate_tsc(uint16_t cal_ms)
 		/* Port 0x43 ==> Control word write; 0x00 ==> Select
 		 * Counter 0, Counter Latch Command, Mode 0; 16 bits
 		 */
-		io_write_byte(0x00, 0x43);
+		io_write_byte(0x00U, 0x43U);
 
-		current_pit = io_read_byte(0x40);	/* Read LSB */
-		current_pit |= io_read_byte(0x40) << 8;	/* Read MSB */
+		current_pit = io_read_byte(0x40U);	/* Read LSB */
+		current_pit |= io_read_byte(0x40U) << 8U;	/* Read MSB */
 		/* Let the counter count down to PIT_TARGET */
 	} while (current_pit > PIT_TARGET);
 
@@ -284,7 +284,7 @@ static uint64_t native_calibrate_tsc(void)
 	if (boot_cpu_data.cpuid_level >= 0x15U) {
 		uint32_t eax_denominator, ebx_numerator, ecx_hz, reserved;
 
-		cpuid(0x15, &eax_denominator, &ebx_numerator,
+		cpuid(0x15U, &eax_denominator, &ebx_numerator,
 			&ecx_hz, &reserved);
 
 		if (eax_denominator != 0U && ebx_numerator != 0U) {
