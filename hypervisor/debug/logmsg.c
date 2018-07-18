@@ -23,7 +23,7 @@ static struct logmsg logmsg;
 static inline void alloc_earlylog_sbuf(uint16_t pcpu_id)
 {
 	uint32_t ele_size = LOG_ENTRY_SIZE;
-	uint32_t ele_num = ((HVLOG_BUF_SIZE >> 1) / phys_cpu_num
+	uint32_t ele_num = (((HVLOG_BUF_SIZE >> 1U) / phys_cpu_num)
 			   - SBUF_HEAD_SIZE) / ele_size;
 
 	per_cpu(earlylog_sbuf, pcpu_id) = sbuf_allocate(ele_num, ele_size);
@@ -158,10 +158,10 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 		if (sbuf != NULL) {
 			msg_len = strnlen_s(buffer, LOG_MESSAGE_MAX_SIZE);
 
-			for (i = 0; i < (msg_len - 1) / LOG_ENTRY_SIZE + 1;
+			for (i = 0; i < (((msg_len - 1) / LOG_ENTRY_SIZE) + 1);
 					i++) {
 				(void)sbuf_put(sbuf, (uint8_t *)buffer +
-							i * LOG_ENTRY_SIZE);
+							(i * LOG_ENTRY_SIZE));
 			}
 		}
 	}

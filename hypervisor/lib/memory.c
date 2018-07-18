@@ -126,9 +126,9 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
 				 * memory pool
 				 */
 				memory = (char *)pool->start_addr +
-					pool->buff_size *
-					(idx * BITMAP_WORD_SIZE +
-							bit_idx);
+					(pool->buff_size *
+					((idx * BITMAP_WORD_SIZE) +
+							bit_idx));
 
 				/* Update allocation bitmaps information for
 				 * selected buffers
@@ -361,8 +361,8 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
 		ASSERT(false);
 	}
 
-	if ((d > s && d <= s + slen - 1)
-			|| (d < s && s <= d + dmax - 1)) {
+	if (((d > s) && (d <= (s + slen - 1U)))
+			|| ((d < s) && (s <= (d + dmax - 1U)))) {
 		ASSERT(false);
 	}
 

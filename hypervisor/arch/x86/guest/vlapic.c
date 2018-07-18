@@ -814,7 +814,7 @@ vlapic_process_eoi(struct vlapic *vlapic)
 					vlapic->isrvec_stk_top);
 			}
 			isrptr[i].val &= ~(1U << bitpos);
-			vector = i * 32U + bitpos;
+			vector = (i * 32U) + bitpos;
 			dev_dbg(ACRN_DBG_LAPIC, "EOI vector %u", vector);
 			vlapic_dump_isr(vlapic, "vlapic_process_eoi");
 			vlapic->isrvec_stk_top--;
@@ -1201,7 +1201,7 @@ vlapic_pending_intr(struct vlapic *vlapic, uint32_t *vecptr)
 		val = atomic_load32(&irrptr[i].val);
 		bitpos = (uint32_t)fls32(val);
 		if (bitpos != INVALID_BIT_INDEX) {
-			vector = i * 32U + bitpos;
+			vector = (i * 32U) + bitpos;
 			if (PRIO(vector) > PRIO(lapic->ppr)) {
 				if (vecptr != NULL) {
 					*vecptr = vector;
@@ -1578,7 +1578,7 @@ vlapic_reset(struct vlapic *vlapic)
 
 	vlapic->svr_last = lapic->svr;
 
-	for (i = 0U; i < VLAPIC_MAXLVT_INDEX + 1U; i++) {
+	for (i = 0U; i < (VLAPIC_MAXLVT_INDEX + 1U); i++) {
 		vlapic->lvt_last[i] = 0U;
 	}
 
@@ -2258,7 +2258,7 @@ apicv_batch_set_tmr(struct vlapic *vlapic)
 	e = 256U;
 
 	while (s < e) {
-		val = ptr[s/TMR_STEP_LEN + 1].val;
+		val = ptr[(s/TMR_STEP_LEN) + 1].val;
 		val <<= TMR_STEP_LEN;
 		val |= ptr[s/TMR_STEP_LEN].val;
 		exec_vmwrite64(VMX_EOI_EXIT(s), val);

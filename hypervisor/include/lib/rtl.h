@@ -51,7 +51,7 @@ extern uint32_t tsc_khz;
 
 static inline uint64_t us_to_ticks(uint32_t us)
 {
-	return ((uint64_t)us * (uint64_t)tsc_khz / 1000UL);
+	return (((uint64_t)us * (uint64_t)tsc_khz) / 1000UL);
 }
 
 #define CYCLES_PER_MS	us_to_ticks(1000U)

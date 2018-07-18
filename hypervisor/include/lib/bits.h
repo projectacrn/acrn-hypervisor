@@ -178,7 +178,7 @@ static inline uint16_t clz64(uint64_t value)
 #define build_bitmap_set(name, op_len, op_type, lock, nr, addr)	\
 static inline void name(uint16_t nr, volatile op_type *addr)	\
 {								\
-	nr = nr & (8U * sizeof(op_type) - 1U);			\
+	nr = nr & ((8U * sizeof(op_type)) - 1U);		\
 	asm volatile(lock "or" op_len " %1,%0"			\
 			:  "+m" (*addr)				\
 			:  "r" ((op_type)(1UL<<nr))		\
@@ -197,7 +197,7 @@ build_bitmap_set(bitmap32_set, "l", uint32_t, BUS_LOCK, nr, addr)
 #define build_bitmap_clear(name, op_len, op_type, lock, nr, addr)	\
 static inline void name(uint16_t nr, volatile op_type *addr) 		\
 {									\
-	nr = nr & (8U * sizeof(op_type) - 1U);				\
+	nr = nr & ((8U * sizeof(op_type)) - 1U);			\
 	asm volatile(lock "and" op_len " %1,%0"				\
 			:  "+m" (*addr)					\
 			:  "r" ((op_type)(~(1UL<<(nr))))		\
@@ -246,7 +246,7 @@ static inline bool bitmap32_test(uint16_t nr, volatile uint32_t *addr)
 static inline bool name(uint16_t nr, volatile op_type *addr)		\
 {									\
 	int32_t ret=0;							\
-	nr = nr & (8U * sizeof(op_type) - 1U);				\
+	nr = nr & ((8U * sizeof(op_type)) - 1U);			\
 	asm volatile(lock "bts" op_len " %2,%1\n\tsbbl %0,%0"		\
 			: "=r" (ret), "=m" (*addr)			\
 			: "r" ((op_type)nr)				\
@@ -269,7 +269,7 @@ build_bitmap_testandset(bitmap32_test_and_set, "l", uint32_t, BUS_LOCK, nr, addr
 static inline bool name(uint16_t nr, volatile op_type *addr)		\
 {									\
 	int32_t ret=0;							\
-	nr = nr & (8U * sizeof(op_type) - 1U);				\
+	nr = nr & ((8U * sizeof(op_type)) - 1U);			\
 	asm volatile(lock "btr" op_len " %2,%1\n\tsbbl %0,%0"		\
 			: "=r" (ret), "=m" (*addr)			\
 			: "r" ((op_type)nr)				\

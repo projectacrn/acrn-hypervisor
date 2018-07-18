@@ -768,8 +768,8 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 			snprintf(temp_str, MAX_STR_SIZE,
 					"=  0x%016llx  0x%016llx  "
 					"0x%016llx  0x%016llx\r\n",
-					tmp[i*4UL], tmp[i*4UL+1UL],
-					tmp[i*4UL+2UL], tmp[i*4UL+3UL]);
+					tmp[i*4UL], tmp[(i*4UL)+1UL],
+					tmp[(i*4UL)+2UL], tmp[(i*4UL)+3UL]);
 			shell_puts(p_shell, temp_str);
 		}
 	}
@@ -841,18 +841,18 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 				"length %d:\r\n", vcpu_id, gva, length);
 			shell_puts(p_shell, temp_str);
 
-			for (i = 0U; i < length/32U; i++) {
+			for (i = 0U; i < (length/32U); i++) {
 				snprintf(temp_str, MAX_STR_SIZE,
 					"=  0x%016llx  0x%016llx  0x%016llx  "
-					"0x%016llx\r\n", tmp[i*4], tmp[i*4+1],
-					tmp[i*4+2], tmp[i*4+3]);
+					"0x%016llx\r\n", tmp[i*4], tmp[(i*4)+1],
+					tmp[(i*4)+2], tmp[(i*4)+3]);
 				shell_puts(p_shell, temp_str);
 			}
 			if ((length % 32U) != 0) {
 				snprintf(temp_str, MAX_STR_SIZE,
 					"=  0x%016llx  0x%016llx  0x%016llx  "
-					"0x%016llx\r\n", tmp[i*4], tmp[i*4+1],
-					tmp[i*4+2], tmp[i*4+3]);
+					"0x%016llx\r\n", tmp[i*4], tmp[(i*4)+1],
+					tmp[(i*4)+2], tmp[(i*4)+3]);
 				shell_puts(p_shell, temp_str);
 			}
 		}

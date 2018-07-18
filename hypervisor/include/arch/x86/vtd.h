@@ -91,7 +91,7 @@ static inline uint16_t iommu_cap_fault_reg_offset(uint64_t cap)
 static inline uint16_t iommu_cap_max_fault_reg_offset(uint64_t cap)
 {
 	return (iommu_cap_fault_reg_offset(cap) +
-		iommu_cap_num_fault_regs(cap) * 16U);
+		(iommu_cap_num_fault_regs(cap) * 16U));
 }
 
 static inline uint8_t iommu_cap_zlr(uint64_t cap)
@@ -141,7 +141,7 @@ static inline uint8_t iommu_cap_afl(uint64_t cap)
 
 static inline uint32_t iommu_cap_ndoms(uint64_t cap)
 {
-	return ((1U) << (4U + 2U * ((uint8_t)cap & 0x7U)));
+	return ((1U) << (4U + (2U * ((uint8_t)cap & 0x7U))));
 }
 
 /*

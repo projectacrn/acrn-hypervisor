@@ -241,13 +241,13 @@ static uint64_t pit_calibrate_tsc(uint16_t cal_ms)
 	uint16_t max_cal_ms;
 	uint64_t current_tsc;
 
-	max_cal_ms = (PIT_MAX_COUNT - PIT_TARGET) * 1000U / PIT_TICK_RATE;
+	max_cal_ms = ((PIT_MAX_COUNT - PIT_TARGET) * 1000U) / PIT_TICK_RATE;
 	cal_ms = min(cal_ms, max_cal_ms);
 
 	/* Assume the 8254 delivers 18.2 ticks per second when 16 bits fully
 	 * wrap.  This is about 1.193MHz or a clock period of 0.8384uSec
 	 */
-	initial_pit = (uint16_t)(cal_ms * PIT_TICK_RATE / 1000U);
+	initial_pit = (uint16_t)((cal_ms * PIT_TICK_RATE) / 1000U);
 	initial_pit += PIT_TARGET;
 
 	/* Port 0x43 ==> Control word write; Data 0x30 ==> Select Counter 0,
@@ -273,7 +273,7 @@ static uint64_t pit_calibrate_tsc(uint16_t cal_ms)
 
 	current_tsc = rdtsc() - current_tsc;
 
-	return current_tsc / cal_ms * 1000U;
+	return (current_tsc / cal_ms) * 1000U;
 }
 
 /*
@@ -288,8 +288,8 @@ static uint64_t native_calibrate_tsc(void)
 			&ecx_hz, &reserved);
 
 		if (eax_denominator != 0U && ebx_numerator != 0U) {
-			return (uint64_t) ecx_hz *
-				ebx_numerator / eax_denominator;
+			return ((uint64_t) ecx_hz *
+				ebx_numerator) / eax_denominator;
 		}
 	}
 

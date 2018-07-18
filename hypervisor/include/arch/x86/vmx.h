@@ -58,7 +58,7 @@
 #define	VMX_EOI_EXIT2_HIGH			0x00002021U
 #define	VMX_EOI_EXIT3_FULL			0x00002022U
 #define	VMX_EOI_EXIT3_HIGH			0x00002023U
-#define	VMX_EOI_EXIT(vector)	(VMX_EOI_EXIT0_FULL + ((vector) / 64U) * 2U)
+#define	VMX_EOI_EXIT(vector)	(VMX_EOI_EXIT0_FULL + (((vector) / 64U) * 2U))
 #define VMX_XSS_EXITING_BITMAP_FULL		0x0000202CU
 #define VMX_XSS_EXITING_BITMAP_HIGH		0x0000202DU
 /* 64-bit read-only data fields */

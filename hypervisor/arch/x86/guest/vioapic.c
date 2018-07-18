@@ -248,8 +248,8 @@ vioapic_read(struct vioapic *vioapic, uint32_t addr)
 	}
 
 	/* redirection table entries */
-	if (regnum >= IOAPIC_REDTBL &&
-	    (regnum < IOAPIC_REDTBL + (uint32_t)pincount * 2U) != 0) {
+	if ((regnum >= IOAPIC_REDTBL) &&
+	    (regnum < (IOAPIC_REDTBL + ((uint32_t)pincount * 2U)))) {
 		uint32_t addr_offset = regnum - IOAPIC_REDTBL;
 		uint32_t rte_offset = addr_offset / 2U;
 		pin = (uint8_t)rte_offset;
@@ -323,8 +323,8 @@ vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 	}
 
 	/* redirection table entries */
-	if (regnum >= IOAPIC_REDTBL &&
-	    (regnum < IOAPIC_REDTBL + (uint32_t)pincount * 2U) != 0U) {
+	if ((regnum >= IOAPIC_REDTBL) &&
+	    (regnum < (IOAPIC_REDTBL + ((uint32_t)pincount * 2U)))) {
 		uint32_t addr_offset = regnum - IOAPIC_REDTBL;
 		uint32_t rte_offset = addr_offset / 2U;
 		pin = (uint8_t)rte_offset;

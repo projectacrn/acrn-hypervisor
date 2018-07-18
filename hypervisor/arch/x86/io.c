@@ -12,7 +12,7 @@ int dm_emulate_pio_post(struct vcpu *vcpu)
 	int cur_context = vcpu->arch_vcpu.cur_context;
 	union vhm_request_buffer *req_buf = NULL;
 	uint32_t mask =
-		0xFFFFFFFFUL >> (32 - 8 * vcpu->req.reqs.pio_request.size);
+		0xFFFFFFFFUL >> (32U - (8U * vcpu->req.reqs.pio_request.size));
 	uint64_t *rax;
 
 	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
@@ -71,7 +71,7 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 	sz = VM_EXIT_IO_INSTRUCTION_SIZE(exit_qual) + 1;
 	port = VM_EXIT_IO_INSTRUCTION_PORT_NUMBER(exit_qual);
 	direction = VM_EXIT_IO_INSTRUCTION_ACCESS_DIRECTION(exit_qual);
-	mask = 0xfffffffful >> (32 - 8 * sz);
+	mask = 0xfffffffful >> (32U - (8U * sz));
 
 	TRACE_4I(TRACE_VMEXIT_IO_INSTRUCTION, port, (uint32_t)direction, sz,
 		(uint32_t)cur_context_idx);
@@ -87,8 +87,8 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 	for (handler = vm->arch_vm.io_handler;
 			handler; handler = handler->next) {
 
-		if ((port >= handler->desc.addr + handler->desc.len) ||
-				(port + sz <= handler->desc.addr)) {
+		if ((port >= (handler->desc.addr + handler->desc.len)) ||
+				((port + sz) <= handler->desc.addr)) {
 			continue;
 		} else if (!((port >= handler->desc.addr) && ((port + sz)
 				<= (handler->desc.addr + handler->desc.len)))) {
