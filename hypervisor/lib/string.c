@@ -37,7 +37,10 @@ long strtol_deci(const char *nptr)
 	} else if (c == '+') {
 		c = *s;
 		s++;
+	} else {
+		/* No sign character. */
 	}
+
 	/*
 	 * Compute the cutoff value between legal numbers and illegal
 	 * numbers.  That is the largest legal value, divided by the
@@ -63,8 +66,7 @@ long strtol_deci(const char *nptr)
 	do {
 		if (c >= '0' && c <= '9') {
 			c -= '0';
-		}
-		else {
+		} else {
 			break;
 		}
 		if (c >= base) {
@@ -72,8 +74,7 @@ long strtol_deci(const char *nptr)
 		}
 		if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim)) {
 			any = -1;
-		}
-		else {
+		} else {
 			any = 1;
 			acc *= base;
 			acc += c;
@@ -87,6 +88,9 @@ long strtol_deci(const char *nptr)
 		acc = (neg != 0) ? LONG_MIN : LONG_MAX;
 	} else if (neg != 0) {
 		acc = -acc;
+	} else {
+		/* There is no overflow and no leading '-' exists. In such case
+		 * acc already holds the right number. No action required. */
 	}
 	return acc;
 }

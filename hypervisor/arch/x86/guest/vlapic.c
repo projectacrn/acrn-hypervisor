@@ -626,9 +626,13 @@ vlapic_lvt_write_handler(struct vlapic *vlapic, uint32_t offset)
 				dev_dbg(ACRN_DBG_LAPIC,
 						"vpic wire mode -> NULL");
 			}
+		} else {
+			/* APIC_LVT_M unchanged. No action required. */
 		}
 	} else if (offset == APIC_OFFSET_TIMER_LVT) {
 		vlapic_update_lvtt(vlapic, val);
+	} else {
+		/* No action required. */
 	}
 
 	*lvtptr = val;
@@ -992,6 +996,8 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 					} else if (target->apic_page->ppr >
 						vlapic->apic_page->ppr) {
 						target = vlapic;
+					} else {
+						/* target is the dest */
 					}
 				} else {
 					bitmap_set(vcpu_id, dmask);
@@ -1168,6 +1174,8 @@ vlapic_icrlo_write_handler(struct vlapic *vlapic)
 					target_vcpu->vcpu_id,
 					target_vcpu->vm->attr.id);
 			schedule_vcpu(target_vcpu);
+		} else {
+			pr_err("Unhandled icrlo write with mode %u\n", mode);
 		}
 	}
 
@@ -2067,6 +2075,8 @@ int vlapic_mmio_access_handler(struct vcpu *vcpu, struct mem_io *mmio,
 				mmio->access_size);
 
 		mmio->mmio_status = MMIO_TRANS_VALID;
+	} else {
+		/* Can never happen due to the range of mmio->read_write. */
 	}
 
 	return ret;
@@ -2387,6 +2397,9 @@ int apic_access_vmexit_handler(struct vcpu *vcpu)
 			return err;
 		}
 		err = emulate_instruction(vcpu);
+	} else {
+		pr_err("Unhandled APIC access type: %lu\n", access_type);
+		err = -EINVAL;
 	}
 
 	TRACE_2L(TRACE_VMEXIT_APICV_ACCESS, qual, (uint64_t)vlapic);

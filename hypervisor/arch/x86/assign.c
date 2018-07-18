@@ -316,20 +316,26 @@ add_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 		entry->virt_bdf = virt_bdf;
 		entry->phys_bdf = phys_bdf;
 		entry->ptdev_intr_info.msi.msix_entry_index = msix_entry_index;
-	} else if ((entry->vm != vm) && is_vm0(entry->vm)) {
-		entry->vm = vm;
-		entry->virt_bdf = virt_bdf;
-	} else if ((entry->vm != vm) && !is_vm0(entry->vm)) {
-		pr_err("MSIX pbdf%x idx=%d already in vm%d with vbdf%x, not "
-			"able to add into vm%d with vbdf%x", entry->phys_bdf,
-			entry->ptdev_intr_info.msi.msix_entry_index,
-			entry->vm->attr.id,
-			entry->virt_bdf, vm->attr.id, virt_bdf);
-		ASSERT(false, "msix entry pbdf%x idx%d already in vm%d",
-			phys_bdf, msix_entry_index, entry->vm->attr.id);
+	} else if (entry->vm != vm) {
+		if (is_vm0(entry->vm)) {
+			entry->vm = vm;
+			entry->virt_bdf = virt_bdf;
+		} else {
+			pr_err("MSIX pbdf%x idx=%d already in vm%d with vbdf%x,"
+				" not able to add into vm%d with vbdf%x",
+				entry->phys_bdf,
+				entry->ptdev_intr_info.msi.msix_entry_index,
+				entry->vm->attr.id,
+				entry->virt_bdf, vm->attr.id, virt_bdf);
+			ASSERT(false, "msix entry pbdf%x idx%d already in vm%d",
+			       phys_bdf, msix_entry_index, entry->vm->attr.id);
 
-		spinlock_release(&ptdev_lock);
-		return &invalid_entry;
+			spinlock_release(&ptdev_lock);
+			return &invalid_entry;
+		}
+	} else {
+		/* The mapping has already been added to the VM. No action
+		 * required. */
 	}
 	spinlock_release(&ptdev_lock);
 
@@ -394,22 +400,27 @@ add_intx_remapping(struct vm *vm, uint8_t virt_pin,
 		entry->ptdev_intr_info.intx.phys_pin = phys_pin;
 		entry->ptdev_intr_info.intx.virt_pin = virt_pin;
 		entry->ptdev_intr_info.intx.vpin_src = vpin_src;
-	} else if ((entry->vm != vm) && is_vm0(entry->vm)) {
-		entry->vm = vm;
-		entry->ptdev_intr_info.intx.virt_pin = virt_pin;
-		entry->ptdev_intr_info.intx.vpin_src = vpin_src;
-	} else if ((entry->vm != vm) && !is_vm0(entry->vm)) {
-		pr_err("INTX pin%d already in vm%d with vpin%d, not able to "
-			"add into vm%d with vpin%d",
-			entry->ptdev_intr_info.intx.phys_pin,
-			entry->vm->attr.id,
-			entry->ptdev_intr_info.intx.virt_pin,
-			vm->attr.id, virt_pin);
-		ASSERT(false, "intx entry pin%d already vm%d",
-			phys_pin, entry->vm->attr.id);
+	} else if (entry->vm != vm) {
+		if (is_vm0(entry->vm)) {
+			entry->vm = vm;
+			entry->ptdev_intr_info.intx.virt_pin = virt_pin;
+			entry->ptdev_intr_info.intx.vpin_src = vpin_src;
+		} else {
+			pr_err("INTX pin%d already in vm%d with vpin%d,"
+			       " not able to add into vm%d with vpin%d",
+			       entry->ptdev_intr_info.intx.phys_pin,
+			       entry->vm->attr.id,
+			       entry->ptdev_intr_info.intx.virt_pin,
+			       vm->attr.id, virt_pin);
+			ASSERT(false, "intx entry pin%d already vm%d",
+			       phys_pin, entry->vm->attr.id);
 
-		spinlock_release(&ptdev_lock);
-		return &invalid_entry;
+			spinlock_release(&ptdev_lock);
+			return &invalid_entry;
+		}
+	} else {
+		/* The mapping has already been added to the VM. No action
+		 * required. */
 	}
 
 	spinlock_release(&ptdev_lock);
@@ -600,7 +611,7 @@ void ptdev_intx_ack(struct vm *vm, uint8_t virt_pin,
 int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 		struct ptdev_msi_info *info)
 {
-	struct ptdev_remapping_info *entry = NULL;
+	struct ptdev_remapping_info *entry;
 	bool lowpri = !is_vm0(vm);
 
 	/*

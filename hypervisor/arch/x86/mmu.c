@@ -188,6 +188,8 @@ void invept(struct vcpu *vcpu)
 		}
 	} else if (cpu_has_vmx_ept_cap(VMX_EPT_INVEPT_GLOBAL_CONTEXT)) {
 		_invept(INVEPT_TYPE_ALL_CONTEXTS, desc);
+	} else {
+		/* Neither type of INVEPT is supported. Skip. */
 	}
 }
 

@@ -76,6 +76,14 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 	TRACE_4I(TRACE_VMEXIT_IO_INSTRUCTION, port, (uint32_t)direction, sz,
 		(uint32_t)cur_context_idx);
 
+	/*
+	 * Post-conditions of the loop:
+	 *
+	 *     status == 0       : The access has been handled properly.
+	 *     status == -EIO    : The access spans multiple devices and cannot
+	 *                         be handled.
+	 *     status == -EINVAL : No valid handler found for this access.
+	 */
 	for (handler = vm->arch_vm.io_handler;
 			handler; handler = handler->next) {
 
@@ -86,45 +94,45 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 				<= (handler->desc.addr + handler->desc.len)))) {
 			pr_fatal("Err:IO, port 0x%04x, size=%u spans devices",
 					port, sz);
-			return -EIO;
-		}
-
-		if (direction == 0) {
-			handler->desc.io_write(handler, vm, port, sz,
-				cur_context->guest_cpu_regs.regs.rax);
-
-			pr_dbg("IO write on port %04x, data %08x", port,
-				cur_context->guest_cpu_regs.regs.rax & mask);
-
-			status = 0;
+			status = -EIO;
 			break;
 		} else {
-			uint32_t data = handler->desc.io_read(handler, vm,
-							 port, sz);
+			struct cpu_regs *regs =
+					&cur_context->guest_cpu_regs.regs;
 
-			cur_context->guest_cpu_regs.regs.rax &= ~mask;
-			cur_context->guest_cpu_regs.regs.rax |= data & mask;
+			if (direction == 0) {
+				handler->desc.io_write(handler, vm, port, sz,
+					regs->rax);
 
-			pr_dbg("IO read on port %04x, data %08x", port, data);
+				pr_dbg("IO write on port %04x, data %08x", port,
+					regs->rax & mask);
+			} else {
+				uint32_t data = handler->desc.io_read(handler,
+						vm, port, sz);
 
+				regs->rax &= ~mask;
+				regs->rax |= data & mask;
+
+				pr_dbg("IO read on port %04x, data %08x",
+					port, data);
+			}
 			status = 0;
 			break;
 		}
 	}
 
 	/* Go for VHM */
-	if (status != 0) {
+	if (status == -EINVAL) {
 		uint64_t *rax = &cur_context->guest_cpu_regs.regs.rax;
 
 		(void)memset(&vcpu->req, 0, sizeof(struct vhm_request));
 		dm_emulate_pio_pre(vcpu, exit_qual, sz, *rax);
 		status = acrn_insert_request_wait(vcpu, &vcpu->req);
-	}
 
-	if (status != 0) {
-		pr_fatal("Err:IO %s access to port 0x%04x, size=%u",
-			 (direction != 0) ? "read" : "write", port, sz);
-
+		if (status != 0) {
+			pr_fatal("Err:IO %s access to port 0x%04x, size=%u",
+				 (direction != 0) ? "read" : "write", port, sz);
+		}
 	}
 
 	return status;

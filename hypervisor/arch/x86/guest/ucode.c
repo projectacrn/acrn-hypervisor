@@ -39,10 +39,10 @@ void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 
 	err_code = 0U;
 	err = copy_from_gva(vcpu, &uhdr, gva, sizeof(uhdr), &err_code);
-	if (err == -EFAULT) {
-		vcpu_inject_pf(vcpu, gva, err_code);
-		return;
-	} else if (err < 0) {
+	if (err < 0) {
+		if (err == -EFAULT) {
+			vcpu_inject_pf(vcpu, gva, err_code);
+		}
 		return;
 	}
 
@@ -57,10 +57,10 @@ void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 
 	err_code = 0U;
 	err = copy_from_gva(vcpu, ucode_ptr, gva, data_size, &err_code);
-	if (err == -EFAULT) {
-		vcpu_inject_pf(vcpu, gva, err_code);
-		return;
-	} else if (err < 0) {
+	if (err < 0) {
+		if (err == -EFAULT) {
+			vcpu_inject_pf(vcpu, gva, err_code);
+		}
 		return;
 	}
 

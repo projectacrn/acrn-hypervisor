@@ -366,6 +366,9 @@ vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 					dev_dbg(ACRN_DBG_IOAPIC,
 						"vpic wire mode -> INTR");
 				}
+			} else {
+				/* Can never happen since IOAPIC_RTE_INTMASK
+				 * is changed. */
 			}
 		}
 		vioapic->rtbl[pin] = new;
@@ -617,6 +620,8 @@ int vioapic_mmio_access_handler(struct vcpu *vcpu, struct mem_io *mmio,
 					data);
 
 			mmio->mmio_status = MMIO_TRANS_VALID;
+		} else {
+			/* Can never happen due to the range of read_write. */
 		}
 	} else {
 		pr_err("All RW to IOAPIC must be 32-bits in size");

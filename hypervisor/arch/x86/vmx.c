@@ -408,6 +408,8 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 
 		context->ia32_efer &= ~MSR_IA32_EFER_LMA_BIT;
 		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, context->ia32_efer);
+	} else {
+		/* CR0.PG unchanged. */
 	}
 
 	/* If CR0.CD or CR0.NW get changed */
@@ -586,6 +588,8 @@ static void init_guest_state(struct vcpu *vcpu)
 		vmx_write_cr4(vcpu, CR4_PSE | CR4_PAE | CR4_MCE);
 		vmx_write_cr3(vcpu, vm->arch_vm.guest_init_pml4 | CR3_PWT);
 		vmx_write_cr0(vcpu, CR0_PG | CR0_PE | CR0_NE);
+	} else {
+		/* vcpu_mode will never be CPU_MODE_COMPATIBILITY */
 	}
 
 	/***************************************************/
@@ -732,6 +736,8 @@ static void init_guest_state(struct vcpu *vcpu)
 
 		/* Limit */
 		limit = HOST_GDT_SIZE - 1U;
+	} else {
+		/* vcpu_mode will never be CPU_MODE_COMPATIBILITY */
 	}
 
 	/* GDTR Base */
@@ -766,6 +772,8 @@ static void init_guest_state(struct vcpu *vcpu)
 
 		/* Base */
 		base = idtb.base;
+	} else {
+		/* vcpu_mode will never be CPU_MODE_COMPATIBILITY */
 	}
 
 	/* IDTR Base */
@@ -814,6 +822,8 @@ static void init_guest_state(struct vcpu *vcpu)
 		asm volatile ("movw %%fs, %%ax":"=a" (fs));
 		asm volatile ("movw %%gs, %%ax":"=a" (gs));
 		limit = 0xffffffffU;
+	} else {
+		/* vcpu_mode will never be CPU_MODE_COMPATIBILITY */
 	}
 
 	/* Selector */

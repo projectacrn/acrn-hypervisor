@@ -1328,10 +1328,10 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 		err_code |= PAGE_FAULT_WR_FLAG;
 	}
 	error = gva2gpa(vcpu, stack_gla, &stack_gpa, &err_code);
-	if (error == -EFAULT) {
-		vcpu_inject_pf(vcpu, stack_gla, err_code);
-		return error;
-	} else if (error < 0) {
+	if (error < 0) {
+		if (error == -EFAULT) {
+			vcpu_inject_pf(vcpu, stack_gla, err_code);
+		}
 		return error;
 	}
 	if (pushop != 0) {
@@ -1728,10 +1728,10 @@ vie_init(struct vie *vie, struct vcpu *vcpu)
 	err_code = PAGE_FAULT_ID_FLAG;
 	ret = copy_from_gva(vcpu, vie->inst, guest_rip_gva,
 				inst_len, &err_code);
-	if (ret == -EFAULT) {
-		vcpu_inject_pf(vcpu, guest_rip_gva, err_code);
-		return ret;
-	} else if (ret < 0) {
+	if (ret < 0) {
+		if (ret == -EFAULT) {
+			vcpu_inject_pf(vcpu, guest_rip_gva, err_code);
+		}
 		return ret;
 	}
 
@@ -2096,6 +2096,8 @@ decode_immediate(struct vie *vie)
 		}
 	} else if ((vie->op.op_flags & VIE_OP_F_IMM8) != 0U) {
 		vie->imm_bytes = 1U;
+	} else {
+		/* No op_flag on immediate operand size */
 	}
 
 	n = vie->imm_bytes;
