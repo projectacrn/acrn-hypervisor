@@ -568,7 +568,7 @@ vlapic_get_lvt(struct vlapic *vlapic, uint32_t offset)
 	uint32_t idx, val;
 
 	idx = lvt_off_to_idx(offset);
-	val = atomic_load((int *)&vlapic->lvt_last[idx]);
+	val = atomic_load32(&vlapic->lvt_last[idx]);
 	return val;
 }
 
@@ -636,7 +636,7 @@ vlapic_lvt_write_handler(struct vlapic *vlapic, uint32_t offset)
 	}
 
 	*lvtptr = val;
-	atomic_store((int *)&vlapic->lvt_last[idx], val);
+	atomic_store32(&vlapic->lvt_last[idx], val);
 }
 
 static void
@@ -1198,7 +1198,7 @@ vlapic_pending_intr(struct vlapic *vlapic, uint32_t *vecptr)
 	/* i ranges effectively from 7 to 0 */
 	for (i = 8U; i > 0U; ) {
 		i--;
-		val = atomic_load((int *)&irrptr[i].val);
+		val = atomic_load32(&irrptr[i].val);
 		bitpos = (uint32_t)fls32(val);
 		if (bitpos != INVALID_BIT_INDEX) {
 			vector = i * 32U + bitpos;
@@ -1233,7 +1233,7 @@ vlapic_intr_accepted(struct vlapic *vlapic, uint32_t vector)
 	idx = vector / 32U;
 
 	irrptr = &lapic->irr[0];
-	atomic_clear_int(&irrptr[idx].val, 1U << (vector % 32U));
+	atomic_clear32(&irrptr[idx].val, 1U << (vector % 32U));
 	vlapic_dump_irr(vlapic, "vlapic_intr_accepted");
 
 	isrptr = &lapic->isr[0];
@@ -2183,8 +2183,8 @@ apicv_set_intr_ready(struct vlapic *vlapic, uint32_t vector, __unused bool level
 	idx = vector / 64U;
 	mask = 1UL << (vector % 64U);
 
-	atomic_set_long(&pir_desc->pir[idx], mask);
-	notify = (atomic_cmpxchg64((long *)&pir_desc->pending, 0, 1) == 0) ? 1 : 0;
+	atomic_set64(&pir_desc->pir[idx], mask);
+	notify = (atomic_cmpxchg64(&pir_desc->pending, 0UL, 1UL) == 0UL) ? 1 : 0;
 	return notify;
 }
 
@@ -2198,7 +2198,7 @@ apicv_pending_intr(struct vlapic *vlapic, __unused uint32_t *vecptr)
 
 	pir_desc = vlapic->pir_desc;
 
-	pending = atomic_load64((long *)&pir_desc->pending);
+	pending = atomic_load64(&pir_desc->pending);
 	if (pending == 0U) {
 		return 0;
 	}
@@ -2308,7 +2308,7 @@ apicv_inject_pir(struct vlapic *vlapic)
 	struct lapic_reg *irr = NULL;
 
 	pir_desc = vlapic->pir_desc;
-	if (atomic_cmpxchg64((long *)(&pir_desc->pending), 1, 0) != 1) {
+	if (atomic_cmpxchg64(&pir_desc->pending, 1UL, 0UL) != 1UL) {
 		return;
 	}
 
@@ -2317,7 +2317,7 @@ apicv_inject_pir(struct vlapic *vlapic)
 	irr = &lapic->irr[0];
 
 	for (i = 0U; i < 4U; i++) {
-		val = atomic_readandclear64((long *)&pir_desc->pir[i]);
+		val = atomic_readandclear64(&pir_desc->pir[i]);
 		if (val != 0UL) {
 			irr[i * 2U].val |= (uint32_t)val;
 			irr[(i * 2U) + 1U].val |= (uint32_t)(val >> 32);

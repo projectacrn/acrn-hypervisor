@@ -75,7 +75,7 @@ alloc_entry(struct vm *vm, enum ptdev_intr_type type)
 	INIT_LIST_HEAD(&entry->softirq_node);
 	INIT_LIST_HEAD(&entry->entry_node);
 
-	atomic_clear_int(&entry->active, ACTIVE_FLAG);
+	atomic_clear32(&entry->active, ACTIVE_FLAG);
 	list_add(&entry->entry_node, &ptdev_list);
 
 	return entry;
@@ -140,7 +140,7 @@ ptdev_activate_entry(struct ptdev_remapping_info *entry, uint32_t phys_irq,
 	ASSERT(node != NULL, "dev register failed");
 	entry->node = node;
 
-	atomic_set_int(&entry->active, ACTIVE_FLAG);
+	atomic_set32(&entry->active, ACTIVE_FLAG);
 }
 
 void
@@ -148,7 +148,7 @@ ptdev_deactivate_entry(struct ptdev_remapping_info *entry)
 {
 	spinlock_rflags;
 
-	atomic_clear_int(&entry->active, ACTIVE_FLAG);
+	atomic_clear32(&entry->active, ACTIVE_FLAG);
 
 	unregister_handler_common(entry->node);
 	entry->node = NULL;

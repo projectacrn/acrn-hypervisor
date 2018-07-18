@@ -79,7 +79,7 @@ int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 	 * TODO: when pause_vcpu changed to switch vcpu out directlly, we
 	 * should fix the race issue between req.valid = true and vcpu pause
 	 */
-	atomic_store(&vcpu->ioreq_pending, 1);
+	atomic_store32(&vcpu->ioreq_pending, 1U);
 	pause_vcpu(vcpu, VCPU_PAUSED);
 
 	/* Must clear the signal before we mark req valid

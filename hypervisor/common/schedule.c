@@ -113,7 +113,7 @@ static void context_switch_out(struct vcpu *vcpu)
 	/* cancel event(int, gp, nmi and exception) injection */
 	cancel_event_injection(vcpu);
 
-	atomic_store(&vcpu->running, 0);
+	atomic_store32(&vcpu->running, 0U);
 	/* do prev vcpu context switch out */
 	/* For now, we don't need to invalid ept.
 	 * But if we have more than one vcpu on one pcpu,
@@ -131,7 +131,7 @@ static void context_switch_in(struct vcpu *vcpu)
 		return;
 	}
 
-	atomic_store(&vcpu->running, 1);
+	atomic_store32(&vcpu->running, 1U);
 	/* FIXME:
 	 * Now, we don't need to load new vcpu VMCS because
 	 * we only do switch between vcpu loop and idle loop.
