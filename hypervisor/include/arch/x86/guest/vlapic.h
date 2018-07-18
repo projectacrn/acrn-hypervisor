@@ -96,7 +96,7 @@ int vlapic_set_local_intr(struct vm *vm, uint16_t vcpu_id, uint32_t vector);
 int vlapic_intr_msi(struct vm *vm, uint64_t addr, uint64_t msg);
 
 void vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest,
-		bool phys, uint32_t delmode, uint32_t vec);
+		bool phys, uint32_t delmode, uint32_t vec, bool rh);
 
 /* Reset the trigger-mode bits for all vectors to be edge-triggered */
 void vlapic_reset_tmr(struct vlapic *vlapic);

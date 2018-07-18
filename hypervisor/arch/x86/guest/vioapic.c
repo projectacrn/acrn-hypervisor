@@ -93,7 +93,7 @@ vioapic_send_intr(struct vioapic *vioapic, uint8_t pin)
 
 	vector = rte.u.lo_32 & IOAPIC_RTE_LOW_INTVEC;
 	dest = (uint32_t)(rte.full >> IOAPIC_RTE_DEST_SHIFT);
-	vlapic_deliver_intr(vioapic->vm, level, dest, phys, delmode, vector);
+	vlapic_deliver_intr(vioapic->vm, level, dest, phys, delmode, vector, false);
 }
 
 static void

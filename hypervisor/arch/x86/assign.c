@@ -200,9 +200,8 @@ static void ptdev_build_physical_msi(struct vm *vm, struct ptdev_msi_info *info,
 
 	/* get physical destination cpu mask */
 	dest = (info->vmsi_addr >> 12) & 0xffU;
-	phys = ((info->vmsi_addr &
-			(MSI_ADDR_RH | MSI_ADDR_LOG)) !=
-			(MSI_ADDR_RH | MSI_ADDR_LOG));
+	phys = ((info->vmsi_addr & MSI_ADDR_LOG) != MSI_ADDR_LOG);
+
 	calcvdest(vm, &vdmask, dest, phys);
 	pdmask = vcpumask2pcpumask(vm, vdmask);
 

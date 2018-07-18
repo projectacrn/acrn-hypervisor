@@ -1654,7 +1654,7 @@ vlapic_set_apicbase(struct vlapic *vlapic, uint64_t new)
 
 void
 vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest, bool phys,
-		uint32_t delmode, uint32_t vec)
+		uint32_t delmode, uint32_t vec, bool rh)
 {
 	bool lowprio;
 	uint16_t vcpu_id;
@@ -1668,7 +1668,7 @@ vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest, bool phys,
 			"vlapic intr invalid delmode %#x", delmode);
 		return;
 	}
-	lowprio = (delmode == IOAPIC_RTE_DELLOPRI);
+	lowprio = (delmode == IOAPIC_RTE_DELLOPRI) || rh;
 
 	/*
 	 * We don't provide any virtual interrupt redirection hardware so
@@ -1856,7 +1856,7 @@ vlapic_intr_msi(struct vm *vm, uint64_t addr, uint64_t msg)
 {
 	uint32_t delmode, vec;
 	uint32_t dest;
-	bool phys;
+	bool phys, rh;
 
 	dev_dbg(ACRN_DBG_LAPIC, "lapic MSI addr: %#lx msg: %#lx", addr, msg);
 
@@ -1877,15 +1877,16 @@ vlapic_intr_msi(struct vm *vm, uint64_t addr, uint64_t msg)
 	 * physical otherwise.
 	 */
 	dest = (uint32_t)(addr >> 12U) & 0xffU;
-	phys = ((addr & (MSI_ADDR_RH | MSI_ADDR_LOG)) !=
-			(MSI_ADDR_RH | MSI_ADDR_LOG));
+	phys = ((addr & MSI_ADDR_LOG) != MSI_ADDR_LOG);
+	rh = ((addr & MSI_ADDR_RH) == MSI_ADDR_RH);
+
 	delmode = (uint32_t)msg & APIC_DELMODE_MASK;
 	vec = (uint32_t)msg & 0xffU;
 
 	dev_dbg(ACRN_DBG_LAPIC, "lapic MSI %s dest %#x, vec %u",
 		phys ? "physical" : "logical", dest, vec);
 
-	vlapic_deliver_intr(vm, LAPIC_TRIG_EDGE, dest, phys, delmode, vec);
+	vlapic_deliver_intr(vm, LAPIC_TRIG_EDGE, dest, phys, delmode, vec, rh);
 	return 0;
 }
 
