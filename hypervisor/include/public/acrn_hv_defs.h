@@ -152,7 +152,13 @@ struct memory_map {
  */
 struct set_memmaps {
 	/** vmid for this hypercall */
-	uint64_t vmid;
+	uint16_t vmid;
+
+	/** Reserved */
+	uint16_t reserved0;
+
+	/** Reserved */
+	uint32_t reserved1;
 
 	/**  multi memmaps numbers */
 	uint32_t memmaps_num;
@@ -170,6 +176,9 @@ struct set_memmaps {
 struct sbuf_setup_param {
 	/** sbuf physical cpu id */
 	uint16_t pcpu_id;
+
+	/** Reserved */
+	uint16_t reserved;
 
 	/** sbuf id */
 	uint32_t sbuf_id;
@@ -210,13 +219,22 @@ struct hc_ptdev_irq {
 		/** INTX remapping info */
 		struct {
 			/** virtual IOAPIC/PIC pin */
-			uint32_t virt_pin;
+			uint8_t virt_pin;
+
+			/** Reserved */
+			uint32_t reserved0:24;
 
 			/** physical IOAPIC pin */
-			uint32_t phys_pin;
+			uint8_t phys_pin;
+
+			/** Reserved */
+			uint32_t reserved1:24;
 
 			/** is virtual pin from PIC */
-			uint32_t pic_pin;
+			bool pic_pin;
+
+			/** Reserved */
+			uint32_t reserved2:24;
 		} intx;
 
 		/** MSIx remapping info */
