@@ -233,7 +233,7 @@ static enum cpu_reg_name gpr_map[16] = {
 	CPU_REG_R15
 };
 
-static uint64_t size2mask[] = {
+static uint64_t size2mask[9] = {
 	[1] = 0xffUL,
 	[2] = 0xffffUL,
 	[4] = 0xffffffffUL,
@@ -433,10 +433,10 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 	switch (vie->op.op_byte) {
 	case 0x88U:
 	/*
-	* MOV byte from reg (ModRM:reg) to mem (ModRM:r/m)
-	* 88/r:	mov r/m8, r8
-	* REX + 88/r:	mov r/m8, r8 (%ah, %ch, %dh, %bh not available)
-	*/
+	 * MOV byte from reg (ModRM:reg) to mem (ModRM:r/m)
+	 * 88/r:	mov r/m8, r8
+	 * REX + 88/r:	mov r/m8, r8 (%ah, %ch, %dh, %bh not available)
+	 */
 		size = 1U;	/* override for byte operation */
 		error = vie_read_bytereg(vcpu, vie, &byte);
 		if (error == 0) {
@@ -1312,7 +1312,8 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 		pr_err("TODO: inject ss exception");
 	}
 
-	if (vie_alignment_check(paging->cpl, size, cr0, rflags, stack_gla) != 0) {
+	if (vie_alignment_check(paging->cpl, size, cr0, rflags, stack_gla)
+		!= 0) {
 		/*vm_inject_ac(vcpu, 0);*/
 		pr_err("TODO: inject ac exception");
 		return 0;
@@ -1545,7 +1546,8 @@ vmm_emulate_instruction(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 }
 
 int
-vie_alignment_check(uint8_t cpl, uint8_t size, uint64_t cr0, uint64_t rf, uint64_t gla)
+vie_alignment_check(uint8_t cpl, uint8_t size, uint64_t cr0, uint64_t rf,
+	uint64_t gla)
 {
 	ASSERT(size == 1U || size == 2U || size == 4U || size == 8U,
 	    "%s: invalid size %hhu", __func__, size);
@@ -1589,8 +1591,8 @@ vie_size2mask(uint8_t size)
 
 int
 vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
-	struct seg_desc *desc, uint64_t offset, uint8_t length, uint8_t addrsize,
-	uint32_t prot, uint64_t *gla)
+	struct seg_desc *desc, uint64_t offset, uint8_t length,
+	uint8_t addrsize, uint32_t prot, uint64_t *gla)
 {
 	uint64_t firstoff, low_limit, high_limit, segbase;
 	uint8_t glasize;
@@ -1652,11 +1654,11 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 			 * #GP on a write access to a code segment or a
 			 * read-only data segment.
 			 */
-			if ((type & 0x8U) != 0U) {		/* code segment */
+			if ((type & 0x8U) != 0U) {	/* code segment */
 				return -1;
 			}
 
-			if ((type & 0xAU) == 0U) {		/* read-only data seg */
+			if ((type & 0xAU) == 0U) {	/* read-only data seg */
 				return -1;
 			}
 		}
