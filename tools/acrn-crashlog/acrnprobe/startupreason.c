@@ -44,6 +44,10 @@ static int get_cmdline_bootreason(char *bootreason, const size_t limit)
 		     CURRENT_KERNEL_CMDLINE, strerror(errno));
 		return -1;
 	}
+	if (!size) {
+		LOGW("empty file (%s)\n", CURRENT_KERNEL_CMDLINE);
+		return 0;
+	}
 
 	start = strstr(cmdline, key);
 	if (!start) {

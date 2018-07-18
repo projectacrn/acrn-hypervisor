@@ -103,15 +103,6 @@ int execv_out2file(char * const argv[], const char *outfile)
 	return -1;
 }
 
-int debugfs_cmd(const char *loop_dev, const char *cmd, const char *outfile)
-{
-	const char *argv[5] = {"debugfs", "-R", NULL, NULL, 0};
-
-	argv[2] = cmd;
-	argv[3] = loop_dev;
-	return  execv_out2file((char * const *)argv, outfile);
-}
-
 /**
  * Execute a command described in format string, and redirect the output
  * to specified file. The file will be created/truncated if it

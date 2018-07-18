@@ -469,14 +469,14 @@ int is_boot_id_changed(void)
 		return result;
 
 	res = read_file(BOOTID_NODE, &size, &boot_id);
-	if (res == -1)
+	if (res == -1 || !size)
 		return result;
 
 	snprintf(logged_boot_id_path, sizeof(logged_boot_id_path), "%s/%s",
 		 crashlog->outdir, BOOTID_LOG);
 	if (file_exists(logged_boot_id_path)) {
 		res = read_file(logged_boot_id_path, &size, &logged_boot_id);
-		if (res == -1)
+		if (res == -1 || !size)
 			goto out;
 
 		if (!strcmp((char *)logged_boot_id, (char *)boot_id))
