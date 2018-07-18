@@ -1,6 +1,6 @@
 .. _acrnprobe_doc:
 
-Acrnprobe
+acrnprobe
 #########
 
 Description
