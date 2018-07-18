@@ -35,14 +35,14 @@ Build
 
 To build the ``ACRN-Crashlog``, run below command under ``acrn-crashlog/``:
 
-.. code-block:: console
+.. code-block:: none
 
    $ make
 
 To remove all generated files and return the folder to its clean state, use
 below command under ``acrn-crashlog/``:
 
-.. code-block:: console
+.. code-block:: none
 
    $ make clean
 
@@ -51,7 +51,7 @@ Installing
 
 To install the build
 
-.. code-block:: console
+.. code-block:: none
 
    $ sudo make install
 
@@ -81,7 +81,7 @@ telemetrics-client on the system:
 
 Crashlog can be retrieved with ``telem_journal`` command:
 
-.. code-block:: console
+.. code-block:: none
 
    $ telem_journal -i
 
@@ -93,7 +93,7 @@ Crashlog can be retrieved with ``telem_journal`` command:
 ``ACRN-Crashlog`` also provides a tool ``debugger`` to dump the specific
 process information:
 
-.. code-block:: console
+.. code-block:: none
 
    $ debugger <pid>
 
@@ -106,7 +106,7 @@ Source Code
 
 The source code structure:
 
-.. code-block:: console
+.. code-block:: none
 
    acrn-crashlog/
    ├── acrnprobe

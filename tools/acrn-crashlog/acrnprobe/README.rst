@@ -26,13 +26,13 @@ Specify a configuration file for ``acrnprobe``. If this option is unused,
 ``acrnprobe`` will use the configuration file located in CUSTOM CONFIGURATION
 PATH or INSTALLATION PATH (see `CONFIGURATION FILES`_).
 
-.. code-block:: console
+.. code-block:: none
 
    $ acrnprobe -c [configuration_path]
 
 To see the version of ``acrnprobe``.
 
-.. code-block:: console
+.. code-block:: none
 
    $ acrnprobe -V
 

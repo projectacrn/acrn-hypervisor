@@ -56,7 +56,7 @@ Usage
   ``core_pattern``. The content of ``core_pattern`` is configured as
   ``usercrash_c`` while booting up:
 
-.. code-block:: console
+.. code-block:: none
 
    $ echo "|/usr/bin/usercrash_c %p %e %s" > /proc/sys/kernel/core_pattern
 
@@ -67,7 +67,7 @@ event will be sent to server from client.
   specific process, including backtrace, stack, opened files, registers value,
   memory content around registers, and etc.
 
-.. code-block:: console
+.. code-block:: none
 
    $ debugger <pid>
 
