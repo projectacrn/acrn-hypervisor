@@ -157,6 +157,8 @@ int vmexit_handler(struct vcpu *vcpu)
 		} else if (type == VMX_INT_TYPE_NMI) {
 			vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
 			vcpu->arch_vcpu.idt_vectoring_info = 0U;
+		} else {
+			/* No action on EXT_INT or SW exception. */
 		}
 	}
 

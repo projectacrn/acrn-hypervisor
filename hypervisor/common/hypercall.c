@@ -681,6 +681,9 @@ int64_t hcall_set_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
 		ret = ptdev_add_msix_remapping(target_vm,
 				irq.virt_bdf, irq.phys_bdf,
 				irq.is.msix.vector_cnt);
+	} else {
+		pr_err("%s: Invalid irq type: %u\n", __func__, irq.type);
+		ret = -1;
 	}
 
 	return ret;
@@ -712,6 +715,9 @@ hcall_reset_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
 		ptdev_remove_msix_remapping(target_vm,
 				irq.virt_bdf,
 				irq.is.msix.vector_cnt);
+	} else {
+		pr_err("%s: Invalid irq type: %u\n", __func__, irq.type);
+		ret = -1;
 	}
 
 	return ret;

@@ -230,6 +230,9 @@ int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector,
 		/* generate double fault */
 		vector = IDT_DF;
 		err_code = 0U;
+	} else {
+		/* Trigger the given exception instead of override it with
+		 * double/triple fault. */
 	}
 
 	vcpu->arch_vcpu.exception_info.exception = vector;

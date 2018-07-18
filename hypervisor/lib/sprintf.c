@@ -161,8 +161,8 @@ static const char *get_flags(const char *s, int *flags)
 static const char *get_length_modifier(const char *s,
 			int *flags, uint64_t *mask)
 {
-	/* check for h[h] (char/short) */
 	if (*s == 'h') {
+		/* check for h[h] (char/short) */
 		s++;
 		if (*s == 'h') {
 			*flags |= PRINT_FLAG_CHAR;
@@ -173,7 +173,7 @@ static const char *get_length_modifier(const char *s,
 			*mask = 0x0000FFFF;
 		}
 	} else if (*s == 'l') {
-	/* check for l[l] (long/long long) */
+		/* check for l[l] (long/long long) */
 		s++;
 		if (*s == 'l') {
 			*flags |= PRINT_FLAG_LONG_LONG;
@@ -181,6 +181,8 @@ static const char *get_length_modifier(const char *s,
 		} else {
 			*flags |= PRINT_FLAG_LONG;
 		}
+	} else {
+		/* No length modifiers found. */
 	}
 
 	return s;
@@ -375,6 +377,8 @@ static int print_decimal(struct print_param *param, int64_t value)
 		} else if ((param->vars.flags & PRINT_FLAG_SPACE) != 0) {
 			param->vars.prefix = " ";
 			param->vars.prefixlen = 1;
+		} else {
+			/* No prefix specified. */
 		}
 	}
 
@@ -662,6 +666,8 @@ static int charmem(int cmd, const char *s, int sz, void *hnd)
 				s++;
 				n++;
 			}
+		} else {
+			/* sz == 0, no copy needed. */
 		}
 
 		param->wrtn += n;

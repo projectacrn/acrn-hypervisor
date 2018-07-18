@@ -426,9 +426,11 @@ static int vpic_ocw2(struct vpic *vpic, struct pic *pic, uint8_t val)
 				master_pic(vpic, pic) ? isr_bit : isr_bit + 8U,
 				PTDEV_VPIN_PIC);
 		}
-	} else if ((val & OCW2_SL) != 0 && pic->rotate == true) {
+	} else if ((val & OCW2_SL) != 0U && pic->rotate) {
 		/* specific priority */
 		pic->lowprio = val & 0x7U;
+	} else {
+		/* TODO: Any action required in this case? */
 	}
 
 	return 0;

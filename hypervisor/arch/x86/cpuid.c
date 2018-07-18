@@ -24,15 +24,15 @@ static inline struct vcpuid_entry *find_vcpuid_entry(struct vcpu *vcpu,
 
 		if (tmp->leaf < leaf) {
 			continue;
-		}
-		if (tmp->leaf == leaf) {
+		} else if (tmp->leaf == leaf) {
 			if ((tmp->flags & CPUID_CHECK_SUBLEAF) != 0U &&
 				(tmp->subleaf != subleaf)) {
 				continue;
 			}
 			entry = tmp;
 			break;
-		} else if (tmp->leaf > leaf) {
+		} else {
+			/* tmp->leaf > leaf */
 			break;
 		}
 	}
