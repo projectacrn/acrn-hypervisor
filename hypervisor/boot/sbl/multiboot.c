@@ -11,7 +11,7 @@
 
 #define BOOT_ARGS_LOAD_ADDR				0x24EFC000
 
-#define ACRN_DBG_BOOT	6
+#define ACRN_DBG_BOOT	6U
 
 /* There are two sources for vm0 kernel cmdline:
  * - cmdline from sbl. mbi->cmdline
@@ -22,12 +22,12 @@ static char kernel_cmdline[MEM_2K];
 
 /* now modules support: FIRMWARE & RAMDISK & SeedList */
 static void parse_other_modules(struct vm *vm,
-	struct multiboot_module *mods, int mods_count)
+	struct multiboot_module *mods, uint32_t mods_count)
 {
-	int i = 0;
+	uint32_t i;
 
-	for (i = 0; i < mods_count; i++) {
-		int type_len = 0;
+	for (i = 0U; i < mods_count; i++) {
+		uint32_t type_len;
 		const char *start = HPA2HVA((uint64_t)mods[i].mm_string);
 		const char *end;
 		void *mod_addr = HPA2HVA((uint64_t)mods[i].mm_mod_start);
@@ -43,13 +43,13 @@ static void parse_other_modules(struct vm *vm,
 		}
 
 		end = start;
-		while (*end != ' ' && (*end) != 0) {
+		while (*end != ' ' && (*end) != '\0') {
 			end++;
 		}
 
 		type_len = end - start;
 		if (strncmp("FIRMWARE", start, type_len) == 0) {
-			char  dyn_bootargs[100] = {0};
+			char  dyn_bootargs[100] = {'\0'};
 			void *load_addr = GPA2HVA(vm,
 				(uint64_t)vm->sw.linux_info.bootargs_load_addr);
 			uint32_t args_size = vm->sw.linux_info.bootargs_size;
@@ -63,23 +63,23 @@ static void parse_other_modules(struct vm *vm,
 			/*copy boot args to load addr, set src=load addr*/
 			if (copy_once != 0) {
 				copy_once = 0;
-				(void)strcpy_s(load_addr, MEM_2K,
-					vm->sw.linux_info.bootargs_src_addr);
+				(void)strcpy_s(load_addr, MEM_2K, (const
+				char *)vm->sw.linux_info.bootargs_src_addr);
 				vm->sw.linux_info.bootargs_src_addr = load_addr;
 			}
 
 			(void)strcpy_s(load_addr + args_size,
-				100, dyn_bootargs);
+				100U, dyn_bootargs);
 			vm->sw.linux_info.bootargs_size =
 				strnlen_s(load_addr, MEM_2K);
 
 		} else if (strncmp("RAMDISK", start, type_len) == 0) {
 			vm->sw.linux_info.ramdisk_src_addr = mod_addr;
 			vm->sw.linux_info.ramdisk_load_addr =
-				mods[i].mm_mod_start;
+				(void *)(uint64_t)mods[i].mm_mod_start;
 			vm->sw.linux_info.ramdisk_size = mod_size;
 		} else if (strncmp("SeedList", start, type_len) == 0) {
-			parse_seed_list(mod_addr);
+			parse_seed_list((struct seed_list_hob *)mod_addr);
 		} else {
 			pr_warn("not support mod, cmd: %s", start);
 		}
@@ -151,14 +151,13 @@ int init_vm0_boot_info(struct vm *vm)
 	vm->sw.kernel_info.kernel_load_addr = (void *)HVA2GPA(vm, 
 		get_kernel_load_addr(vm->sw.kernel_info.kernel_src_addr));
 
-
 	/*
 	 * If there is cmdline from mbi->mi_cmdline, merge it with
 	 * mods[0].mm_string
 	 */
 	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
 		char *cmd_src, *cmd_dst;
-		int off = 0;
+		uint32_t off;
 
 		cmd_dst = kernel_cmdline;
 		cmd_src = HPA2HVA((uint64_t)mbi->mi_cmdline);
@@ -166,7 +165,7 @@ int init_vm0_boot_info(struct vm *vm)
 			strnlen_s(cmd_src, MEM_2K));
 		off = strnlen_s(cmd_dst, MEM_2K);
 		cmd_dst[off] = ' ';	/* insert space */
-		off += 1;
+		off += 1U;
 
 		cmd_dst += off;
 		cmd_src = HPA2HVA((uint64_t)mods[0].mm_string);
@@ -186,7 +185,7 @@ int init_vm0_boot_info(struct vm *vm)
 
 	vm->sw.linux_info.bootargs_load_addr = (void *)BOOT_ARGS_LOAD_ADDR;
 
-	if (mbi->mi_mods_count > 1) {
+	if (mbi->mi_mods_count > 1U) {
 		/*parse other modules, like firmware /ramdisk */
 		parse_other_modules(vm, mods + 1, mbi->mi_mods_count - 1);
 	}

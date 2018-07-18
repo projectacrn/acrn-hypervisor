@@ -43,11 +43,11 @@ int udiv32(uint32_t dividend, uint32_t divisor, struct udiv_result *res)
 	/* test for "division by 0" condition */
 	if (divisor == 0U) {
 		res->q.dwords.low = 0xffffffffU;
-		return !0;
+		return 1;
 	}
 	/* trivial case: divisor==dividend */
 	if (divisor == dividend) {
-		res->q.dwords.low = 1;
+		res->q.dwords.low = 1U;
 		return 0;
 	}
 	/* trivial case: divisor>dividend */

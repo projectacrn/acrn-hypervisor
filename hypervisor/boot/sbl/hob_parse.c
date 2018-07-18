@@ -10,7 +10,7 @@
 void parse_seed_list(struct seed_list_hob *seed_hob)
 {
 	uint8_t i;
-	uint8_t dseed_index = 0;
+	uint8_t dseed_index = 0U;
 	struct seed_entry *entry;
 	struct seed_info dseed_list[BOOTLOADER_SEED_MAX_ENTRIES];
 
@@ -19,7 +19,7 @@ void parse_seed_list(struct seed_list_hob *seed_hob)
 		goto fail;
 	}
 
-	if (seed_hob->total_seed_count == 0) {
+	if (seed_hob->total_seed_count == 0U) {
 		pr_warn("Total seed count is 0. Use fake seed!");
 		goto fail;
 	}
@@ -27,7 +27,7 @@ void parse_seed_list(struct seed_list_hob *seed_hob)
 	entry = (struct seed_entry *)((uint8_t *)seed_hob +
 					sizeof(struct seed_list_hob));
 
-	for (i = 0; i < seed_hob->total_seed_count; i++) {
+	for (i = 0U; i < seed_hob->total_seed_count; i++) {
 		/* retrieve dseed */
 		if ((SEED_ENTRY_TYPE_SVNSEED == entry->type) &&
 			(SEED_ENTRY_USAGE_DSEED == entry->usage)) {
@@ -52,7 +52,7 @@ void parse_seed_list(struct seed_list_hob *seed_hob)
 			dseed_index++;
 
 			/* erase original seed in seed entry */
-			(void)memset(entry->seed, 0, sizeof(struct seed_info));
+			(void)memset(entry->seed, 0U, sizeof(struct seed_info));
 		}
 
 		entry = (struct seed_entry *)((uint8_t *)entry +
@@ -60,10 +60,10 @@ void parse_seed_list(struct seed_list_hob *seed_hob)
 	}
 
 	trusty_set_dseed(dseed_list, dseed_index);
-	(void)memset(dseed_list, 0, sizeof(dseed_list));
+	(void)memset(dseed_list, 0U, sizeof(dseed_list));
 	return;
 
 fail:
-	trusty_set_dseed(NULL, 0);
-	(void)memset(dseed_list, 0, sizeof(dseed_list));
+	trusty_set_dseed(NULL, 0U);
+	(void)memset(dseed_list, 0U, sizeof(dseed_list));
 }

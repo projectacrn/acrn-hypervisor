@@ -9,7 +9,7 @@
 #define LONG_MAX        ((long)(ULONG_MAX >> 1))        /* 0x7FFFFFFF */
 #define LONG_MIN        ((long)(~LONG_MAX))             /* 0x80000000 */
 
-#define ISSPACE(c) ((((c) & 0xFFU) == ' ') || (((c) & 0xFFU) == '\t'))
+#define ISSPACE(c) ((c == ' ') || (c == '\t'))
 
 /*
  * Convert a string to a long integer - decimal support only.
@@ -18,7 +18,7 @@ long strtol_deci(const char *nptr)
 {
 	const char *s = nptr;
 	uint64_t acc;
-	int c;
+	char c;
 	uint64_t cutoff;
 	int neg = 0, any, cutlim;
 	int base = 10;
@@ -61,7 +61,7 @@ long strtol_deci(const char *nptr)
 	cutoff = (neg != 0) ? -(uint64_t)LONG_MIN : LONG_MAX;
 	cutlim = cutoff % (uint64_t)base;
 	cutoff /= (uint64_t)base;
-	acc = 0;
+	acc = 0U;
 	any = 0;
 	do {
 		if (c >= '0' && c <= '9') {
@@ -102,7 +102,7 @@ uint64_t strtoul_hex(const char *nptr)
 {
 	const char *s = nptr;
 	uint64_t acc;
-	int c;
+	char c;
 	uint64_t cutoff;
 	int base = 16, any, cutlim;
 
@@ -121,7 +121,7 @@ uint64_t strtoul_hex(const char *nptr)
 
 	cutoff = (uint64_t)ULONG_MAX / (uint64_t)base;
 	cutlim = (uint64_t)ULONG_MAX % (uint64_t)base;
-	acc = 0;
+	acc = 0U;
 	any = 0;
 	do {
 		if (c >= '0' && c <= '9') {
@@ -161,11 +161,11 @@ int atoi(const char *str)
 
 char *strchr(const char *s, int ch)
 {
-	while ((*s != 0) && (*s != ch)) {
+	while ((*s != '\0') && (*s != ch)) {
 		++s;
 	}
 
-	return ((*s) != 0) ? ((char *)s) : 0;
+	return ((*s) != '\0') ? ((char *)s) : NULL;
 }
 
 /**
@@ -197,7 +197,7 @@ char *strcpy_s(char *d, size_t dmax, const char *s)
 	size_t dest_avail;
 	uint64_t overlap_guard;
 
-	if (s == NULL || d == NULL || dmax == 0) {
+	if (s == NULL || d == NULL || dmax == 0U) {
 		pr_err("%s: invalid src, dest buffer or length.", __func__);
 		return NULL;
 	}
@@ -211,8 +211,8 @@ char *strcpy_s(char *d, size_t dmax, const char *s)
 	dest_avail = dmax;
 	dest_base = d;
 
-	while (dest_avail > 0) {
-		if (overlap_guard == 0) {
+	while (dest_avail > 0U) {
+		if (overlap_guard == 0U) {
 			pr_err("%s: overlap happened.", __func__);
 			*(--d) = '\0';
 			return NULL;
@@ -291,8 +291,8 @@ char *strncpy_s(char *d, size_t dmax, const char *s, size_t slen)
 	dest_base = d;
 	dest_avail = dmax;
 
-	while (dest_avail > 0) {
-		if (overlap_guard == 0) {
+	while (dest_avail > 0U) {
+		if (overlap_guard == 0U) {
 			pr_err("%s: overlap happened.", __func__);
 			*(--d) = '\0';
 			return NULL;
@@ -352,7 +352,7 @@ size_t strnlen_s(const char *str, size_t maxlen)
 	}
 
 	count = 0U;
-	while ((*str) != 0) {
+	while ((*str) != '\0') {
 		if (maxlen == 0U) {
 			break;
 		}
@@ -365,7 +365,7 @@ size_t strnlen_s(const char *str, size_t maxlen)
 	return count;
 }
 
-static char hexdigit(int decimal_val)
+static char hexdigit(uint8_t decimal_val)
 {
 	static const char hexdigits[] = { '0', '1', '2', '3', '4', '5', '6',
 		'7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
@@ -376,7 +376,7 @@ static char hexdigit(int decimal_val)
 
 int strcmp(const char *s1, const char *s2)
 {
-	while (((*s1) != 0) && ((*s2) != 0) && ((*s1) == (*s2))) {
+	while (((*s1) != '\0') && ((*s2) != '\0') && ((*s1) == (*s2))) {
 		s1++;
 		s2++;
 	}
@@ -386,7 +386,7 @@ int strcmp(const char *s1, const char *s2)
 
 int strncmp(const char *s1, const char *s2, size_t n)
 {
-	while (((n - 1) != 0) && ((*s1) != 0) && ((*s2) != 0)
+	while (((n - 1) != 0U) && ((*s1) != '\0') && ((*s2) != '\0')
 		&& ((*s1) == (*s2))) {
 		s1++;
 		s2++;
