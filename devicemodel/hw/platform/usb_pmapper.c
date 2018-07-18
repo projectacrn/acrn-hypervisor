@@ -772,9 +772,13 @@ usb_dev_request(void *pdata, struct usb_data_xfer *xfer)
 	}
 
 	/* send it to physical device */
-	/* TODO: should this be async operation? */
+	/* FIXME: In the process of implementation of USB isochronouse transfer,
+	 * the timeout time is not enough for Plantronics headset. So this
+	 * issue should be investigated detailly, and at worst situation, the
+	 * control transfer should be also changed to async operation.
+	 */
 	rc = libusb_control_transfer(udev->handle, request_type, request,
-			value, index, data, len, 100);
+			value, index, data, len, 300);
 
 	if (rc >= 0 && blk) {
 		blk->blen = len - rc;
