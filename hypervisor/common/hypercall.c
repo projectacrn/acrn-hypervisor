@@ -347,7 +347,7 @@ static void complete_request(struct vcpu *vcpu)
 		req_buf = (union vhm_request_buffer *)
 				vcpu->vm->sw.io_shared_page;
 		req_buf->req_queue[vcpu->vcpu_id].valid = false;
-		atomic_store(&vcpu->ioreq_pending, 0);
+		atomic_store32(&vcpu->ioreq_pending, 0U);
 
 		return;
 	}

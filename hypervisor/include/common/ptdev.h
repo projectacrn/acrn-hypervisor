@@ -7,7 +7,7 @@
 #ifndef PTDEV_H
 #define PTDEV_H
 
-#define ACTIVE_FLAG 0x1 /* any non zero should be okay */
+#define ACTIVE_FLAG 0x1U /* any non zero should be okay */
 
 enum ptdev_intr_type {
 	PTDEV_INTR_MSI,

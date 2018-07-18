@@ -260,8 +260,8 @@ struct vcpu {
 	uint64_t pending_pre_work; /* any pre work pending? */
 	bool launched; /* Whether the vcpu is launched on target pcpu */
 	uint32_t paused_cnt; /* how many times vcpu is paused */
-	int running; /* vcpu is picked up and run? */
-	int ioreq_pending; /* ioreq is ongoing or not? */
+	uint32_t running; /* vcpu is picked up and run? */
+	uint32_t ioreq_pending; /* ioreq is ongoing or not? */
 
 	struct vhm_request req; /* used by io/ept emulation */
 	struct mem_io mmio; /* used by io/ept emulation */

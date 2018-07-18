@@ -132,7 +132,7 @@ struct tgt_uart {
 	uint64_t base_address;
 	uint32_t clock_frequency;
 	uint32_t buffer_size;
-	int open_count;
+	uint32_t open_count;
 
 	/* Target specific function pointers. */
 	int (*init)(struct tgt_uart *tgt_uart);
