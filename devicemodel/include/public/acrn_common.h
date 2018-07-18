@@ -50,16 +50,16 @@
 #define REQ_STATE_PROCESSING	2
 #define REQ_STATE_FAILED	-1
 
-#define REQ_PORTIO	0
-#define REQ_MMIO	1
-#define REQ_PCICFG	2
-#define REQ_WP		3
+#define REQ_PORTIO	0U
+#define REQ_MMIO	1U
+#define REQ_PCICFG	2U
+#define REQ_WP		3U
 
 #define REQUEST_READ	0U
 #define REQUEST_WRITE	1U
 
 /* IOAPIC device model info */
-#define VIOAPIC_RTE_NUM	48  /* vioapic pins */
+#define VIOAPIC_RTE_NUM	48U  /* vioapic pins */
 
 #if VIOAPIC_RTE_NUM < 24
 #error "VIOAPIC_RTE_NUM must be larger than 23"
@@ -78,17 +78,17 @@
 struct mmio_request {
 	uint32_t direction;
 	uint32_t reserved;
-	int64_t address;
-	int64_t size;
-	int64_t value;
+	uint64_t address;
+	uint64_t size;
+	uint64_t value;
 } __aligned(8);
 
 struct pio_request {
 	uint32_t direction;
 	uint32_t reserved;
-	int64_t address;
-	int64_t size;
-	int32_t value;
+	uint64_t address;
+	uint64_t size;
+	uint32_t value;
 } __aligned(8);
 
 struct pci_request {
@@ -105,10 +105,9 @@ struct pci_request {
 /* vhm_request are 256Bytes aligned */
 struct vhm_request {
 	/* offset: 0bytes - 63bytes */
-	union {
-		uint32_t type;
-		int32_t reserved0[16];
-	};
+	uint32_t type;
+	int32_t reserved0[15];
+
 	/* offset: 64bytes-127bytes */
 	union {
 		struct pio_request pio_request;
@@ -143,10 +142,16 @@ union vhm_request_buffer {
  */
 struct acrn_create_vm {
 	/** created vmid return to VHM. Keep it first field */
-	int16_t vmid;
+	uint16_t vmid;
+
+	/** Reserved */
+	uint16_t reserved0;
 
 	/** VCPU numbers this VM want to create */
-	uint32_t vcpu_num;
+	uint16_t vcpu_num;
+
+	/** Reserved */
+	uint16_t reserved1;
 
 	/** the GUID of this VM */
 	uint8_t	 GUID[16];
@@ -157,7 +162,7 @@ struct acrn_create_vm {
 	uint64_t vm_flag;
 
 	/** Reserved for future use*/
-	uint8_t  reserved[24];
+	uint8_t  reserved2[24];
 } __aligned(8);
 
 /**
@@ -203,12 +208,18 @@ struct acrn_irqline {
 	uint32_t reserved;
 
 	/** pic IRQ for ISA type */
-	uint64_t pic_irq;
+	uint32_t pic_irq;
+
+	/** Reserved */
+	uint32_t reserved0;
 
 	/** ioapic IRQ for IOAPIC & ISA TYPE,
-	 *  if ~0UL then this IRQ will not be injected
+	 *  if ~0U then this IRQ will not be injected
 	 */
-	uint64_t ioapic_irq;
+	uint32_t ioapic_irq;
+
+	/** Reserved */
+	uint32_t reserved1;
 } __aligned(8);
 
 /**
@@ -229,7 +240,13 @@ struct acrn_msi_entry {
  */
 struct acrn_nmi_entry {
 	/** virtual CPU ID to inject */
-	int64_t vcpu_id;
+	uint16_t vcpu_id;
+
+	/** Reserved */
+	uint16_t reserved0;
+
+	/** Reserved */
+	uint32_t reserved1;
 } __aligned(8);
 
 /**
