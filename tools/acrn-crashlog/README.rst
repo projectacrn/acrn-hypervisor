@@ -4,12 +4,13 @@ ACRN-Crashlog
 Introduction
 ************
 
-The ``ACRN-Crashlog`` is a joint name for the tools (``acrnprobe``,
-``usercrash_s``, ``usercrash_c``, ``debugger`` and etc.), which collect logs
-and information after each crash or event on ACRN platform, including the
-hypervisor, Service OS (SOS), and Android as a Guest (AaaG). The
-``ACRN-Crashlog`` provides a flexible way to configure which events are of
-interest, by using an XML configuration file.
+``ACRN-Crashlog`` is a joint name for the tools (``acrnprobe``,
+``usercrash_s``, ``usercrash_c``, ``debugger``, and more). Together
+these tools collect logs and information after each crash or event on an
+ACRN platform, including the hypervisor, Service OS (SOS), and Android
+as a Guest (AaaG). ``ACRN-Crashlog`` provides a flexible way to
+configure which events are of interest, by using an XML configuration
+file.
 
 Building
 ********
@@ -33,32 +34,35 @@ build environment, and follow the instructions below to build and configure the
 Build
 =====
 
-To build the ``ACRN-Crashlog``, run below command under ``acrn-crashlog/``:
+To build the ``ACRN-Crashlog``, run:
 
 .. code-block:: none
 
+   $ cd acrn-crashlog
    $ make
 
-To remove all generated files and return the folder to its clean state, use
-below command under ``acrn-crashlog/``:
+To remove all generated files and return the folder to its clean state,
+use:
 
 .. code-block:: none
 
+   $ cd acrn-crashlog
    $ make clean
 
 Installing
 **********
 
-To install the build
+To install the build:
 
 .. code-block:: none
 
+   $ cd acrn-crashlog
    $ sudo make install
 
 Usage
 *****
 
-The ``acrnprobe`` can work in two ways according to the existence of
+The ``acrnprobe`` tool can work in two ways according to the existence of
 telemetrics-client on the system:
 
 1. If telemetrics-client doesn't exist on the system, ``acrnprobe`` provides
@@ -70,14 +74,23 @@ telemetrics-client on the system:
    of the telemetrics-client: it runs as a daemon autostarted when the system
    boots, and sends the crashlog path to the telemetrics-client that records
    events of interest and reports them to the backend using ``telemd`` the
-   telemetrics daemon. The work flow of ``acrnprobe`` and telemetrics-client is:
+   telemetrics daemon. The work flow of ``acrnprobe`` and
+   telemetrics-client is shown in :numref:`crashlog-workflow`:
 
-::
+.. graphviz::
+   :name: crashlog-workflow
+   :align: center
+   :caption: acrnprobe and telemetrics-client workflow
 
-   +------------------------------------------------------------------+
-   |            crashlog path                   log content           |
-   |   acrnprobe------------->telemetrics-client----------->backend   |
-   +------------------------------------------------------------------+
+    digraph {
+       bgcolor=transparent; rankdir=LR;
+       node [shape="rectangle" style="filled" color="lightblue"]
+       edge [fontsize="12" fontcolor="blue"]
+
+       "acrnprobe" -> "telemetrics-client" [label="crashlog\npath"]
+       "telemetrics-client" -> "backend"   [label="log\ncontent"]
+    }
+
 
 Crashlog can be retrieved with ``telem_journal`` command:
 

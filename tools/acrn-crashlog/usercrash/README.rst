@@ -1,26 +1,27 @@
 .. _usercrash_doc:
 
-Usercrash
+usercrash
 #########
 
 Description
 ***********
 
-The ``usercrash`` is to get the crash info for the crashing process in
+The ``usercrash`` tool gets the crash info for the crashing process in
 userpace. The collected information is saved as usercrash_xx under
 ``/var/log/usercrashes/``.
 
 Design
 ******
 
-The ``usercrash`` is designed as Client/Server model. The server is autostarted
-at boot, and the client is configured in ``core_pattern``, which will be
-triggered once crash occurs in userspace. Then client sends the crash event to
-server. The server will check the files under ``/var/log/usercrashes/`` and
-create a new file usercrash_xx(xx means the index of the crash files), then
-it will send the fd to client. The client will be responsible for collecting
-crash information and saving it in the crashlog file. After saving work is done,
-client will notify server. Then the server will clean up.
+``usercrash`` is designed using a  Client/Server model. The server is
+autostarted at boot. The client is configured in ``core_pattern``, which
+will be triggered when a crash occurs in userspace. The client then
+sends the crash event to the server. The server checks the files under
+``/var/log/usercrashes/`` and creates a new file usercrash_xx (xx means
+the index of the crash file).  Then it sends the file descriptor (fd) to
+the client. The client is responsible for collecting crash information
+and saving it in the crashlog file. After the saving work is done, the
+client notifies server and the server will clean up.
 
 The work flow diagram:
 

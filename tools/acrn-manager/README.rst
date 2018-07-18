@@ -1,7 +1,7 @@
 .. _acrnctl:
 
-acrnctl
-#######
+acrnctl and acrnd
+#################
 
 
 Description
@@ -9,7 +9,7 @@ Description
 
 The ``acrnctl`` tool helps users create, delete, launch, and stop a User
 OS (UOS).  The tool runs under the Service OS, and UOSs should be based
-on ``acrn-dm``.
+on ``acrn-dm``. The daemon for acrn-manager is `acrnd`_.
 
 
 
@@ -96,13 +96,8 @@ Use the ``stop`` command to stop one or more running VM:
 .. _acrnd:
 
 acrnd
-#######
+*****
 
-
-Description
-***********
-
-The ``acrnd`` is the daemon for acrn-manager.
 The ``acrnd`` daemon process provides a way for launching or resuming a UOS
 should the UOS shut down, either planned or unexpected. A UOS can ask ``acrnd``
 to set up a timer to make sure the UOS is running, even if the SOS is
@@ -112,9 +107,6 @@ and sets an RTC timer to wake up the SOS or bring the SOS back up again.
 When ``acrnd`` daemon is restarted, it restores the previously saved timer
 list and launches the UOSs at the right time.
 
-Usage
-*****
-
 A ``systemd`` service file (``acrnd.service``) is installed by default that will
 start the ``acrnd`` daemon when the Service OS comes up.
 You can restart/stop acrnd service using ``systemctl``
@@ -122,7 +114,7 @@ You can restart/stop acrnd service using ``systemctl``
 Build and Install
 *****************
 
-Source code for ``acrnctl`` and ``acrnd`` is in the ``tools/acrn-manager`` folder.
+Source code for both ``acrnctl`` and ``acrnd`` is in the ``tools/acrn-manager`` folder.
 Change to that folder and run:
 
 .. code-block:: none
