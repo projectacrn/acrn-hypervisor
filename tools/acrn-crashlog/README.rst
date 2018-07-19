@@ -26,6 +26,8 @@ The ``ACRN-Crashlog`` tool depends on the following libraries
 - libxml2
 - systemd
 - telemetrics-client-dev (optional, detected at build time)
+- libblkid
+- e2fsprogs
 
 Refer to the :ref:`getting_started` for instructions on how to set-up your
 build environment, and follow the instructions below to build and configure the

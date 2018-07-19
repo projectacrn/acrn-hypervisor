@@ -405,7 +405,9 @@ each with their own way to install development tools:
           libxml2-dev \
           libusb-1.0-0-dev \
           python3 \
-          python3-pip
+          python3-pip \
+          libblkid-dev \
+          e2fslibs-dev
      $ sudo pip3 install kconfiglib
 
   .. note::
@@ -429,7 +431,9 @@ each with their own way to install development tools:
           libevent-devel \
           libusbx-devel \
           python3 \
-          python3-pip
+          python3-pip \
+          libblkid-devel \
+          e2fsprogs-devel
      $ sudo pip3 install kconfiglib
 
 
@@ -449,7 +453,9 @@ each with their own way to install development tools:
              libevent-devel \
              libusbx-devel \
              python34 \
-             python34-pip
+             python34-pip \
+             libblkid-devel \
+             e2fsprogs-devel
      $ sudo pip3 install kconfiglib
 
   .. note::
