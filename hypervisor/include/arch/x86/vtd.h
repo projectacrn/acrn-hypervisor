@@ -37,12 +37,12 @@
 
 static inline uint8_t dmar_ver_major(uint64_t version)
 {
-	return ((version & 0xf0UL) >> 4U);
+	return (((uint8_t)version & 0xf0U) >> 4U);
 }
 
 static inline uint8_t dmar_ver_minor(uint64_t version)
 {
-	return (version & 0x0fUL);
+	return ((uint8_t)version & 0x0fU);
 }
 
 /*
@@ -50,42 +50,42 @@ static inline uint8_t dmar_ver_minor(uint64_t version)
  */
 static inline uint8_t iommu_cap_pi(uint64_t cap)
 {
-	return ((cap >> 59U) & 1UL);
+	return ((uint8_t)(cap >> 59U) & 1U);
 }
 
 static inline uint8_t iommu_cap_read_drain(uint64_t cap)
 {
-	return ((cap >> 55U) & 1UL);
+	return ((uint8_t)(cap >> 55U) & 1U);
 }
 
 static inline uint8_t iommu_cap_write_drain(uint64_t cap)
 {
-	return ((cap >> 54U) & 1UL);
+	return ((uint8_t)(cap >> 54U) & 1U);
 }
 
 static inline uint8_t iommu_cap_max_amask_val(uint64_t cap)
 {
-	return ((cap >> 48U) & 0x3fUL);
+	return ((uint8_t)(cap >> 48U) & 0x3fU);
 }
 
 static inline uint16_t iommu_cap_num_fault_regs(uint64_t cap)
 {
-	return (((cap >> 40U) & 0xffUL) + 1UL);
+	return (((uint16_t)(cap >> 40U) & 0xffU) + 1U);
 }
 
 static inline uint8_t iommu_cap_pgsel_inv(uint64_t cap)
 {
-	return ((cap >> 39U) & 1UL);
+	return ((uint8_t)(cap >> 39U) & 1U);
 }
 
 static inline uint8_t iommu_cap_super_page_val(uint64_t cap)
 {
-	return ((cap >> 34U) & 0xfUL);
+	return ((uint8_t)(cap >> 34U) & 0xfU);
 }
 
 static inline uint16_t iommu_cap_fault_reg_offset(uint64_t cap)
 {
-	return (((cap >> 24U) & 0x3ffUL) * 16U);
+	return (((uint16_t)(cap >> 24U) & 0x3ffU) * 16U);
 }
 
 static inline uint16_t iommu_cap_max_fault_reg_offset(uint64_t cap)
@@ -96,52 +96,52 @@ static inline uint16_t iommu_cap_max_fault_reg_offset(uint64_t cap)
 
 static inline uint8_t iommu_cap_zlr(uint64_t cap)
 {
-	return ((cap >> 22U) & 1UL);
+	return ((uint8_t)(cap >> 22U) & 1U);
 }
 
 static inline uint8_t iommu_cap_isoch(uint64_t cap)
 {
-	return ((cap >> 23U) & 1UL);
+	return ((uint8_t)(cap >> 23U) & 1U);
 }
 
 static inline uint8_t iommu_cap_mgaw(uint64_t cap)
 {
-	return (((cap >> 16U) & 0x3fUL) + 1UL);
+	return (((uint8_t)(cap >> 16U) & 0x3fU) + 1U);
 }
 
 static inline uint8_t iommu_cap_sagaw(uint64_t cap)
 {
-	return ((cap >> 8U) & 0x1fUL);
+	return ((uint8_t)(cap >> 8U) & 0x1fU);
 }
 
 static inline uint8_t iommu_cap_caching_mode(uint64_t cap)
 {
-	return ((cap >> 7U) & 1UL);
+	return ((uint8_t)(cap >> 7U) & 1U);
 }
 
 static inline uint8_t iommu_cap_phmr(uint64_t cap)
 {
-	return ((cap >> 6U) & 1UL);
+	return ((uint8_t)(cap >> 6U) & 1U);
 }
 
 static inline uint8_t iommu_cap_plmr(uint64_t cap)
 {
-	return ((cap >> 5U) & 1UL);
+	return ((uint8_t)(cap >> 5U) & 1U);
 }
 
 static inline uint8_t iommu_cap_rwbf(uint64_t cap)
 {
-	return ((cap >> 4U) & 1UL);
+	return ((uint8_t)(cap >> 4U) & 1U);
 }
 
 static inline uint8_t iommu_cap_afl(uint64_t cap)
 {
-	return ((cap >> 3U) & 1UL);
+	return ((uint8_t)(cap >> 3U) & 1U);
 }
 
 static inline uint32_t iommu_cap_ndoms(uint64_t cap)
 {
-	return ((1U) << (4UL + 2UL * (cap & 0x7UL)));
+	return ((1U) << (4U + 2U * ((uint8_t)cap & 0x7U)));
 }
 
 /*
@@ -149,146 +149,146 @@ static inline uint32_t iommu_cap_ndoms(uint64_t cap)
  */
 static inline uint8_t iommu_ecap_c(uint64_t ecap)
 {
-	return ((ecap >> 0U) & 1UL);
+	return ((uint8_t)(ecap >> 0U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_qi(uint64_t ecap)
 {
-	return ((ecap >> 1U) & 1UL);
+	return ((uint8_t)(ecap >> 1U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_dt(uint64_t ecap)
 {
-	return ((ecap >> 2U) & 1UL);
+	return ((uint8_t)(ecap >> 2U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_ir(uint64_t ecap)
 {
-	return ((ecap >> 3U) & 1UL);
+	return ((uint8_t)(ecap >> 3U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_eim(uint64_t ecap)
 {
-	return ((ecap >> 4U) & 1UL);
+	return ((uint8_t)(ecap >> 4U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_pt(uint64_t ecap)
 {
-	return ((ecap >> 6U) & 1UL);
+	return ((uint8_t)(ecap >> 6U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_sc(uint64_t ecap)
 {
-	return ((ecap >> 7U) & 1UL);
+	return ((uint8_t)(ecap >> 7U) & 1U);
 }
 
 static inline uint16_t iommu_ecap_iro(uint64_t ecap)
 {
-	return ((ecap >> 8U) & 0x3ffUL);
+	return ((uint16_t)(ecap >> 8U) & 0x3ffU);
 }
 
 static inline uint8_t iommu_ecap_mhmv(uint64_t ecap)
 {
-	return ((ecap >> 20U) & 0xfUL);
+	return ((uint8_t)(ecap >> 20U) & 0xfU);
 }
 
 static inline uint8_t iommu_ecap_ecs(uint64_t ecap)
 {
-	return ((ecap >> 24U) & 1UL);
+	return ((uint8_t)(ecap >> 24U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_mts(uint64_t ecap)
 {
-	return ((ecap >> 25U) & 1UL);
+	return ((uint8_t)(ecap >> 25U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_nest(uint64_t ecap)
 {
-	return ((ecap >> 26U) & 1UL);
+	return ((uint8_t)(ecap >> 26U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_dis(uint64_t ecap)
 {
-	return ((ecap >> 27U) & 1UL);
+	return ((uint8_t)(ecap >> 27U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_prs(uint64_t ecap)
 {
-	return ((ecap >> 29U) & 1UL);
+	return ((uint8_t)(ecap >> 29U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_ers(uint64_t ecap)
 {
-	return ((ecap >> 30U) & 1UL);
+	return ((uint8_t)(ecap >> 30U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_srs(uint64_t ecap)
 {
-	return ((ecap >> 31U) & 1UL);
+	return ((uint8_t)(ecap >> 31U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_nwfs(uint64_t ecap)
 {
-	return ((ecap >> 33U) & 1UL);
+	return ((uint8_t)(ecap >> 33U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_eafs(uint64_t ecap)
 {
-	return ((ecap >> 34U) & 1UL);
+	return ((uint8_t)(ecap >> 34U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_pss(uint64_t ecap)
 {
-	return ((ecap >> 35U) & 0x1fUL);
+	return ((uint8_t)(ecap >> 35U) & 0x1fU);
 }
 
 static inline uint8_t iommu_ecap_pasid(uint64_t ecap)
 {
-	return ((ecap >> 40U) & 1UL);
+	return ((uint8_t)(ecap >> 40U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_dit(uint64_t ecap)
 {
-	return ((ecap >> 41U) & 1UL);
+	return ((uint8_t)(ecap >> 41U) & 1U);
 }
 
 static inline uint8_t iommu_ecap_pds(uint64_t ecap)
 {
-	return ((ecap >> 42U) & 1UL);
+	return ((uint8_t)(ecap >> 42U) & 1U);
 }
 
 /* PMEN_REG */
-#define DMA_PMEN_EPM (((uint32_t)1)<<31)
-#define DMA_PMEN_PRS (((uint32_t)1)<<0)
+#define DMA_PMEN_EPM (1U << 31U)
+#define DMA_PMEN_PRS (1U << 0U)
 
 /* GCMD_REG */
-#define DMA_GCMD_TE (((uint32_t)1) << 31)
-#define DMA_GCMD_SRTP (((uint32_t)1) << 30)
-#define DMA_GCMD_SFL (((uint32_t)1) << 29)
-#define DMA_GCMD_EAFL (((uint32_t)1) << 28)
-#define DMA_GCMD_WBF (((uint32_t)1) << 27)
-#define DMA_GCMD_QIE (((uint32_t)1) << 26)
-#define DMA_GCMD_SIRTP (((uint32_t)1) << 24)
-#define DMA_GCMD_IRE (((uint32_t) 1) << 25)
-#define DMA_GCMD_CFI (((uint32_t) 1) << 23)
+#define DMA_GCMD_TE (1U << 31U)
+#define DMA_GCMD_SRTP (1U << 30U)
+#define DMA_GCMD_SFL (1U << 29U)
+#define DMA_GCMD_EAFL (1U << 28U)
+#define DMA_GCMD_WBF (1U << 27U)
+#define DMA_GCMD_QIE (1U << 26U)
+#define DMA_GCMD_SIRTP (1U << 24U)
+#define DMA_GCMD_IRE (1U << 25U)
+#define DMA_GCMD_CFI (1U << 23U)
 
 /* GSTS_REG */
-#define DMA_GSTS_TES (((uint32_t)1) << 31)
-#define DMA_GSTS_RTPS (((uint32_t)1) << 30)
-#define DMA_GSTS_FLS (((uint32_t)1) << 29)
-#define DMA_GSTS_AFLS (((uint32_t)1) << 28)
-#define DMA_GSTS_WBFS (((uint32_t)1) << 27)
-#define DMA_GSTS_QIES (((uint32_t)1) << 26)
-#define DMA_GSTS_IRTPS (((uint32_t)1) << 24)
-#define DMA_GSTS_IRES (((uint32_t)1) << 25)
-#define DMA_GSTS_CFIS (((uint32_t)1) << 23)
+#define DMA_GSTS_TES (1U << 31U)
+#define DMA_GSTS_RTPS (1U << 30U)
+#define DMA_GSTS_FLS (1U << 29U)
+#define DMA_GSTS_AFLS (1U << 28U)
+#define DMA_GSTS_WBFS (1U << 27U)
+#define DMA_GSTS_QIES (1U << 26U)
+#define DMA_GSTS_IRTPS (1U << 24U)
+#define DMA_GSTS_IRES (1U << 25U)
+#define DMA_GSTS_CFIS (1U << 23U)
 
 /* CCMD_REG */
-#define DMA_CCMD_ICC (((uint64_t)1UL) << 63)
-#define DMA_CCMD_ICC_32 (((uint32_t)1UL) << 31)
-#define DMA_CCMD_GLOBAL_INVL (((uint64_t)1UL) << 61)
-#define DMA_CCMD_DOMAIN_INVL (((uint64_t)2UL) << 61)
-#define DMA_CCMD_DEVICE_INVL (((uint64_t)3UL) << 61)
+#define DMA_CCMD_ICC (1UL << 63U)
+#define DMA_CCMD_ICC_32 (1U << 31U)
+#define DMA_CCMD_GLOBAL_INVL (1UL << 61U)
+#define DMA_CCMD_DOMAIN_INVL (2UL << 61U)
+#define DMA_CCMD_DEVICE_INVL (3UL << 61U)
 static inline uint64_t dma_ccmd_fm(uint8_t fm)
 {
 	return (((uint64_t)(fm & 0x3U)) << 32U);
@@ -310,7 +310,7 @@ static inline uint16_t dma_ccmd_did(uint16_t did)
 
 static inline uint8_t dma_ccmd_get_caig_32(uint32_t gaig)
 {
-	return ((gaig >> 27U) & 0x3U);
+	return ((uint8_t)(gaig >> 27U) & 0x3U);
 }
 
 
@@ -329,7 +329,7 @@ static inline uint64_t dma_iotlb_did(uint16_t did)
 
 static inline uint8_t dma_iotlb_get_iaig_32(uint32_t iai)
 {
-	return ((iai >> 25U) & 0x3U);
+	return ((uint8_t)(iai >> 25U) & 0x3U);
 }
 
 /* INVALIDATE_ADDRESS_REG */
@@ -344,95 +344,95 @@ static inline uint8_t dma_iotlb_invl_addr_am(uint8_t am)
 #define DMA_FECTL_IM				(((uint32_t)1U) << 31)
 
 /* FSTS_REG */
-static inline bool dma_fsts_pfo(uint32_t PFO)
+static inline bool dma_fsts_pfo(uint32_t pfo)
 {
-	return ((PFO >> 0U) & 1U) == 1U;
+	return (((pfo >> 0U) & 1U) == 1U);
 }
 
-static inline bool dma_fsts_ppf(uint32_t PPF)
+static inline bool dma_fsts_ppf(uint32_t ppf)
 {
-	return ((PPF >> 1U) & 1U) == 1U;
+	return (((ppf >> 1U) & 1U) == 1U);
 }
 
-static inline bool dma_fsts_afo(uint32_t AFO)
+static inline bool dma_fsts_afo(uint32_t afo)
 {
-	return ((AFO >> 2U) & 1U) == 1U;
+	return (((afo >> 2U) & 1U) == 1U);
 }
 
-static inline bool dma_fsts_apf(uint32_t APF)
+static inline bool dma_fsts_apf(uint32_t apf)
 {
-	return ((APF >> 3U) & 1U) == 1U;
+	return (((apf >> 3U) & 1U) == 1U);
 }
 
-static inline bool dma_fsts_iqe(uint32_t IQE)
+static inline bool dma_fsts_iqe(uint32_t iqe)
 {
-	return ((IQE >> 4U) & 1U) == 1U;
+	return (((iqe >> 4U) & 1U) == 1U);
 }
 
-static inline bool dma_fsts_ice(uint32_t ICE)
+static inline bool dma_fsts_ice(uint32_t ice)
 {
-	return ((ICE >> 5U) & 1U) == 1U;
+	return (((ice >> 5U) & 1U) == 1U);
 }
 
-static inline bool dma_fsts_ite(uint32_t ITE)
+static inline bool dma_fsts_ite(uint32_t ite)
 {
-	return ((ITE >> 6U) & 1U) == 1U;
+	return (((ite >> 6U) & 1U) == 1U);
 }
 
-static inline bool dma_fsts_pro(uint32_t PRO)
+static inline bool dma_fsts_pro(uint32_t pro)
 {
-	return ((PRO >> 7U) & 1U) == 1U;
+	return (((pro >> 7U) & 1U) == 1U);
 }
 
-static inline uint8_t dma_fsts_fri(uint32_t FRI)
+static inline uint8_t dma_fsts_fri(uint32_t fri)
 {
-	return ((FRI >> 8U) & 0xFFU);
+	return ((uint8_t)(fri >> 8U) & 0xFFU);
 }
 
 /* FRCD_REGs: upper 64 bits*/
-static inline bool dma_frcd_up_f(uint64_t UP_F)
+static inline bool dma_frcd_up_f(uint64_t up_f)
 {
-	return ((UP_F >> 63U) & 1UL) == 1UL;
+	return (((up_f >> 63U) & 1UL) == 1UL);
 }
 
-static inline uint8_t dma_frcd_up_t(uint64_t UP_T)
+static inline uint8_t dma_frcd_up_t(uint64_t up_t)
 {
-	return ((UP_T >> 62U) & 1UL);
+	return ((uint8_t)(up_t >> 62U) & 1U);
 }
 
-static inline uint8_t dma_frcd_up_at(uint64_t UP_AT)
+static inline uint8_t dma_frcd_up_at(uint64_t up_at)
 {
-	return ((UP_AT >> 60U) & 3UL);
+	return ((uint8_t)(up_at >> 60U) & 3U);
 }
 
-static inline uint32_t dma_frcd_up_pasid(uint64_t UP_PASID)
+static inline uint32_t dma_frcd_up_pasid(uint64_t up_pasid)
 {
-	return ((UP_PASID >> 40U) & 0xfffffUL);
+	return ((uint32_t)(up_pasid >> 40U) & 0xfffffU);
 }
 
-static inline uint8_t dma_frcd_up_fr(uint64_t UP_FR)
+static inline uint8_t dma_frcd_up_fr(uint64_t up_fr)
 {
-	return ((UP_FR >> 32U) & 0xffUL);
+	return ((uint8_t)(up_fr >> 32U) & 0xffU);
 }
 
-static inline bool dma_frcd_up_pp(uint64_t UP_PP)
+static inline bool dma_frcd_up_pp(uint64_t up_pp)
 {
-	return ((UP_PP >> 31U) & 1UL) == 1UL;
+	return (((up_pp >> 31U) & 1UL) == 1UL);
 }
 
-static inline bool dma_frcd_up_exe(uint64_t UP_EXE)
+static inline bool dma_frcd_up_exe(uint64_t up_exe)
 {
-	return ((UP_EXE >> 30U) & 1UL) == 1UL;
+	return (((up_exe >> 30U) & 1UL) == 1UL);
 }
 
-static inline bool dma_frcd_up_priv(uint64_t UP_PRIV)
+static inline bool dma_frcd_up_priv(uint64_t up_priv)
 {
-	return ((UP_PRIV >> 29U) & 1UL) == 1UL;
+	return (((up_priv >> 29U) & 1UL) == 1UL);
 }
 
-static inline uint32_t dma_frcd_up_sid(uint64_t UP_SID)
+static inline uint32_t dma_frcd_up_sid(uint64_t up_sid)
 {
-	return ((UP_SID >> 0U) & 0xffffUL);
+	return ((uint32_t)up_sid & 0xffffU);
 }
 
 #define DMAR_CONTEXT_TRANSLATION_TYPE_TRANSLATED 0x00U
