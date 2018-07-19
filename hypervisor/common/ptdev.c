@@ -177,5 +177,3 @@ void ptdev_release_all_entries(struct vm *vm)
 	release_all_entries(vm);
 	spinlock_release(&ptdev_lock);
 }
-
-

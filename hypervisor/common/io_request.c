@@ -87,9 +87,9 @@ int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 	 * before we perform upcall.
 	 * because VHM can work in pulling mode without wait for upcall
 	 */
-	req_buf->req_queue[cur].valid = true;
+	req_buf->req_queue[cur].valid = 1;
 
-	acrn_print_request(vcpu->vcpu_id, req_buf->req_queue + cur);
+	acrn_print_request(vcpu->vcpu_id, &req_buf->req_queue[cur]);
 
 	/* signal VHM */
 	fire_vhm_interrupt();
@@ -99,11 +99,11 @@ int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 
 #ifdef HV_DEBUG
 static void _get_req_info_(struct vhm_request *req, int *id, char *type,
-	char *state, char *dir, int64_t *addr, long *val)
+	char *state, char *dir, uint64_t *addr, uint64_t *val)
 {
 	(void)strcpy_s(dir, 16U, "NONE");
-	*addr = 0;
-	*val = 0;
+	*addr = 0UL;
+	*val = 0UL;
 	*id = req->client;
 
 	switch (req->type) {
@@ -158,7 +158,7 @@ void get_req_info(char *str, int str_max)
 	union vhm_request_buffer *req_buf;
 	struct vhm_request *req;
 	char type[16], state[16], dir[16];
-	int64_t addr, val;
+	uint64_t addr, val;
 	struct list_head *pos;
 	struct vm *vm;
 

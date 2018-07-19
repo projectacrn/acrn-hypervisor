@@ -55,47 +55,60 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 		break;
 
 	case HC_DESTROY_VM:
-		ret = hcall_destroy_vm(param1);
+		/* param1: vmid */
+		ret = hcall_destroy_vm((uint16_t)param1);
 		break;
 
 	case HC_START_VM:
-		ret = hcall_resume_vm(param1);
+		/* param1: vmid */
+		ret = hcall_resume_vm((uint16_t)param1);
 		break;
 
 	case HC_PAUSE_VM:
-		ret = hcall_pause_vm(param1);
+		/* param1: vmid */
+		ret = hcall_pause_vm((uint16_t)param1);
 		break;
 
 	case HC_CREATE_VCPU:
-		ret = hcall_create_vcpu(vm, param1, param2);
+		/* param1: vmid */
+		ret = hcall_create_vcpu(vm, (uint16_t)param1, param2);
 		break;
 
 	case HC_ASSERT_IRQLINE:
-		ret = hcall_assert_irqline(vm, param1, param2);
+		/* param1: vmid */
+		ret = hcall_assert_irqline(vm, (uint16_t)param1, param2);
 		break;
 
 	case HC_DEASSERT_IRQLINE:
-		ret = hcall_deassert_irqline(vm, param1, param2);
+		/* param1: vmid */
+		ret = hcall_deassert_irqline(vm, (uint16_t)param1, param2);
 		break;
 
 	case HC_PULSE_IRQLINE:
-		ret = hcall_pulse_irqline(vm, param1, param2);
+		/* param1: vmid */
+		ret = hcall_pulse_irqline(vm, (uint16_t)param1, param2);
 		break;
 
 	case HC_INJECT_MSI:
-		ret = hcall_inject_msi(vm, param1, param2);
+		/* param1: vmid */
+		ret = hcall_inject_msi(vm, (uint16_t)param1, param2);
 		break;
 
 	case HC_SET_IOREQ_BUFFER:
-		ret = hcall_set_ioreq_buffer(vm, param1, param2);
+		/* param1: vmid */
+		ret = hcall_set_ioreq_buffer(vm, (uint16_t)param1, param2);
 		break;
 
 	case HC_NOTIFY_REQUEST_FINISH:
-		ret = hcall_notify_req_finish(param1, param2);
+		/* param1: vmid
+		 * param2: vcpu_id */
+		ret = hcall_notify_req_finish((uint16_t)param1,
+			(uint16_t)param2);
 		break;
 
 	case HC_VM_SET_MEMMAP:
-		ret = hcall_set_vm_memmap(vm, param1, param2);
+		/* param1: vmid */
+		ret = hcall_set_vm_memmap(vm, (uint16_t)param1, param2);
 		break;
 
 	case HC_VM_SET_MEMMAPS:
@@ -103,27 +116,33 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 		break;
 
 	case HC_VM_PCI_MSIX_REMAP:
-		ret = hcall_remap_pci_msix(vm, param1, param2);
+		/* param1: vmid */
+		ret = hcall_remap_pci_msix(vm, (uint16_t)param1, param2);
 		break;
 
 	case HC_VM_GPA2HPA:
-		ret = hcall_gpa_to_hpa(vm, param1, param2);
+		/* param1: vmid */
+		ret = hcall_gpa_to_hpa(vm, (uint16_t)param1, param2);
 		break;
 
 	case HC_ASSIGN_PTDEV:
-		ret = hcall_assign_ptdev(vm, param1, param2);
+		/* param1: vmid */
+		ret = hcall_assign_ptdev(vm, (uint16_t)param1, param2);
 		break;
 
 	case HC_DEASSIGN_PTDEV:
-		ret = hcall_deassign_ptdev(vm, param1, param2);
+		/* param1: vmid */
+		ret = hcall_deassign_ptdev(vm, (uint16_t)param1, param2);
 		break;
 
 	case HC_SET_PTDEV_INTR_INFO:
-		ret = hcall_set_ptdev_intr_info(vm, param1, param2);
+		/* param1: vmid */
+		ret = hcall_set_ptdev_intr_info(vm, (uint16_t)param1, param2);
 		break;
 
 	case HC_RESET_PTDEV_INTR_INFO:
-		ret = hcall_reset_ptdev_intr_info(vm, param1, param2);
+		/* param1: vmid */
+		ret = hcall_reset_ptdev_intr_info(vm, (uint16_t)param1, param2);
 		break;
 
 	case HC_SETUP_SBUF:

@@ -62,7 +62,7 @@ int32_t hcall_create_vm(struct vm *vm, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_destroy_vm(uint64_t vmid);
+int32_t hcall_destroy_vm(uint16_t vmid);
 
 /**
  * @brief resume virtual machine
@@ -75,7 +75,7 @@ int32_t hcall_destroy_vm(uint64_t vmid);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_resume_vm(uint64_t vmid);
+int32_t hcall_resume_vm(uint16_t vmid);
 
 /**
  * @brief pause virtual machine
@@ -88,7 +88,7 @@ int32_t hcall_resume_vm(uint64_t vmid);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_pause_vm(uint64_t vmid);
+int32_t hcall_pause_vm(uint16_t vmid);
 
 /**
  * @brief create vcpu
@@ -104,7 +104,7 @@ int32_t hcall_pause_vm(uint64_t vmid);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_create_vcpu(struct vm *vm, uint64_t vmid, uint64_t param);
+int32_t hcall_create_vcpu(struct vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief assert IRQ line
@@ -119,7 +119,7 @@ int32_t hcall_create_vcpu(struct vm *vm, uint64_t vmid, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_assert_irqline(struct vm *vm, uint64_t vmid, uint64_t param);
+int32_t hcall_assert_irqline(struct vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief deassert IRQ line
@@ -134,7 +134,7 @@ int32_t hcall_assert_irqline(struct vm *vm, uint64_t vmid, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_deassert_irqline(struct vm *vm, uint64_t vmid, uint64_t param);
+int32_t hcall_deassert_irqline(struct vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief trigger a pulse on IRQ line
@@ -149,7 +149,7 @@ int32_t hcall_deassert_irqline(struct vm *vm, uint64_t vmid, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_pulse_irqline(struct vm *vm, uint64_t vmid, uint64_t param);
+int32_t hcall_pulse_irqline(struct vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief inject MSI interrupt
@@ -163,7 +163,7 @@ int32_t hcall_pulse_irqline(struct vm *vm, uint64_t vmid, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_inject_msi(struct vm *vm, uint64_t vmid, uint64_t param);
+int32_t hcall_inject_msi(struct vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief set ioreq shared buffer
@@ -178,7 +178,7 @@ int32_t hcall_inject_msi(struct vm *vm, uint64_t vmid, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_ioreq_buffer(struct vm *vm, uint64_t vmid, uint64_t param);
+int32_t hcall_set_ioreq_buffer(struct vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief notify request done
@@ -187,11 +187,11 @@ int32_t hcall_set_ioreq_buffer(struct vm *vm, uint64_t vmid, uint64_t param);
  * The function will return -1 if the target VM does not exist.
  *
  * @param vmid ID of the VM
- * @param param vcpu ID of the requestor
+ * @param vcpu_id vcpu ID of the requestor
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_notify_req_finish(uint64_t vmid, uint64_t param);
+int32_t hcall_notify_req_finish(uint16_t vmid, uint16_t vcpu_id);
 
 /**
  * @brief setup ept memory mapping
@@ -206,7 +206,7 @@ int32_t hcall_notify_req_finish(uint64_t vmid, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_vm_memmap(struct vm *vm, uint64_t vmid, uint64_t param);
+int32_t hcall_set_vm_memmap(struct vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief setup ept memory mapping for multi regions
@@ -232,7 +232,7 @@ int32_t hcall_set_vm_memmaps(struct vm *vm, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_remap_pci_msix(struct vm *vm, uint64_t vmid, uint64_t param);
+int32_t hcall_remap_pci_msix(struct vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief translate guest physical address to host physical address
@@ -246,7 +246,7 @@ int32_t hcall_remap_pci_msix(struct vm *vm, uint64_t vmid, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_gpa_to_hpa(struct vm *vm, uint64_t vmid, uint64_t param);
+int32_t hcall_gpa_to_hpa(struct vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief Assign one passthrough dev to VM.
@@ -258,7 +258,7 @@ int32_t hcall_gpa_to_hpa(struct vm *vm, uint64_t vmid, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_assign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param);
+int32_t hcall_assign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief Deassign one passthrough dev from VM.
@@ -270,7 +270,7 @@ int32_t hcall_assign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_deassign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param);
+int32_t hcall_deassign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief Set interrupt mapping info of ptdev.
@@ -282,7 +282,7 @@ int32_t hcall_deassign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param);
+int32_t hcall_set_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief Clear interrupt mapping info of ptdev.
@@ -294,7 +294,7 @@ int32_t hcall_set_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_reset_ptdev_intr_info(struct vm *vm, uint64_t vmid,
+int32_t hcall_reset_ptdev_intr_info(struct vm *vm, uint16_t vmid,
 	uint64_t param);
 
 /**
