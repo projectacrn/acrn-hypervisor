@@ -28,7 +28,6 @@ struct udiv_result {
 /* Function prototypes */
 void udelay(uint32_t us);
 void *memchr(const void *void_s, int c, size_t n);
-void *memmove(void *s1, const void *s2, size_t n);
 int strcmp(const char *s1, const char *s2);
 int strncmp(const char *s1, const char *s2, size_t n);
 char *strcpy_s(char *d, size_t dmax, const char *s);

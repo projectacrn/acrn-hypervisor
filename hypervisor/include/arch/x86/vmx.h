@@ -425,7 +425,6 @@ void exec_vmwrite64(uint32_t field_full, uint64_t value);
 int init_vmcs(struct vcpu *vcpu);
 
 int vmx_off(uint16_t pcpu_id);
-int vmx_restart(uint16_t pcpu_id);
 
 int exec_vmclear(void *addr);
 int exec_vmptrld(void *addr);
@@ -444,7 +443,8 @@ static inline enum vm_cpu_mode get_vcpu_mode(struct vcpu *vcpu)
 
 static inline bool cpu_has_vmx_unrestricted_guest_cap(void)
 {
-       return ((msr_read(MSR_IA32_VMX_MISC) & VMX_SUPPORT_UNRESTRICTED_GUEST) != 0UL);
+	return ((msr_read(MSR_IA32_VMX_MISC) & VMX_SUPPORT_UNRESTRICTED_GUEST)
+									!= 0UL);
 }
 
 typedef struct _descriptor_table_{

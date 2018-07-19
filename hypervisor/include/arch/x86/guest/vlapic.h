@@ -56,7 +56,6 @@ int vlapic_pending_intr(struct vlapic *vlapic, uint32_t *vecptr);
  */
 void vlapic_intr_accepted(struct vlapic *vlapic, uint32_t vector);
 
-struct vlapic *vm_lapic_from_vcpuid(struct vm *vm, uint16_t vcpu_id);
 struct vlapic *vm_lapic_from_pcpuid(struct vm *vm, uint16_t pcpu_id);
 bool is_vlapic_msr(uint32_t num);
 int vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval);
@@ -126,7 +125,6 @@ void vlapic_restore(struct vlapic *vlapic, struct lapic_regs *regs);
 bool vlapic_enabled(struct vlapic *vlapic);
 uint64_t apicv_get_apic_access_addr(struct vm *vm);
 uint64_t apicv_get_apic_page_addr(struct vlapic *vlapic);
-bool vlapic_apicv_enabled(struct vcpu *vcpu);
 void apicv_inject_pir(struct vlapic *vlapic);
 int apic_access_vmexit_handler(struct vcpu *vcpu);
 int apic_write_vmexit_handler(struct vcpu *vcpu);
