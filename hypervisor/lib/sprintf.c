@@ -335,7 +335,7 @@ static int print_pow2(struct print_param *param,
 
 	/* assign parameter and apply width and precision */
 	param->vars.value = pos;
-	param->vars.valuelen = digitbuff + sizeof(digitbuff) - pos;
+	param->vars.valuelen = (digitbuff + sizeof(digitbuff)) - pos;
 
 	ret = format_number(param);
 
@@ -408,7 +408,7 @@ static int print_decimal(struct print_param *param, int64_t value)
 
 	/* assign parameter and apply width and precision */
 	param->vars.value = pos;
-	param->vars.valuelen = digitbuff + sizeof(digitbuff) - pos;
+	param->vars.valuelen = (digitbuff + sizeof(digitbuff)) - pos;
 
 	ret = format_number(param);
 
