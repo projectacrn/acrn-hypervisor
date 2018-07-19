@@ -14,7 +14,7 @@
  */
 int vmcall_vmexit_handler(struct vcpu *vcpu)
 {
-	int64_t ret = -EACCES;
+	int32_t ret = -EACCES;
 	struct vm *vm = vcpu->vm;
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];

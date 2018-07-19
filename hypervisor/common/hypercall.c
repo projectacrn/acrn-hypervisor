@@ -25,7 +25,7 @@ bool is_hypercall_from_ring0(void)
 	return false;
 }
 
-int64_t hcall_get_api_version(struct vm *vm, uint64_t param)
+int32_t hcall_get_api_version(struct vm *vm, uint64_t param)
 {
 	struct hc_api_version version;
 
@@ -44,7 +44,8 @@ int64_t hcall_get_api_version(struct vm *vm, uint64_t param)
 	return 0;
 }
 
-static int handle_vpic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
+static int32_t
+handle_vpic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
 {
 	int32_t ret = -1;
 
@@ -68,7 +69,7 @@ static int handle_vpic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
 	return ret;
 }
 
-static int
+static int32_t
 handle_vioapic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
 {
 	int32_t ret = -1;
@@ -93,7 +94,8 @@ handle_vioapic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
 	return ret;
 }
 
-static int handle_virt_irqline(struct vm *vm, uint16_t target_vmid,
+static int32_t
+handle_virt_irqline(struct vm *vm, uint16_t target_vmid,
 		struct acrn_irqline *param, enum irq_mode mode)
 {
 	int32_t ret = 0;
@@ -131,9 +133,9 @@ static int handle_virt_irqline(struct vm *vm, uint16_t target_vmid,
 	return ret;
 }
 
-int64_t hcall_create_vm(struct vm *vm, uint64_t param)
+int32_t hcall_create_vm(struct vm *vm, uint64_t param)
 {
-	int64_t ret = 0;
+	int32_t ret = 0;
 	struct vm *target_vm = NULL;
 	/* VM are created from hv_main() directly
 	 * Here we just return the vmid for DM
@@ -170,9 +172,9 @@ int64_t hcall_create_vm(struct vm *vm, uint64_t param)
 	return ret;
 }
 
-int64_t hcall_destroy_vm(uint64_t vmid)
+int32_t hcall_destroy_vm(uint64_t vmid)
 {
-	int64_t ret = 0;
+	int32_t ret = 0;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
 	if (target_vm == NULL) {
@@ -183,9 +185,9 @@ int64_t hcall_destroy_vm(uint64_t vmid)
 	return ret;
 }
 
-int64_t hcall_resume_vm(uint64_t vmid)
+int32_t hcall_resume_vm(uint64_t vmid)
 {
-	int64_t ret = 0;
+	int32_t ret = 0;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
 	if (target_vm == NULL) {
@@ -200,7 +202,7 @@ int64_t hcall_resume_vm(uint64_t vmid)
 	return ret;
 }
 
-int64_t hcall_pause_vm(uint64_t vmid)
+int32_t hcall_pause_vm(uint64_t vmid)
 {
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
@@ -213,7 +215,7 @@ int64_t hcall_pause_vm(uint64_t vmid)
 	return 0;
 }
 
-int64_t hcall_create_vcpu(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_create_vcpu(struct vm *vm, uint64_t vmid, uint64_t param)
 {
 	int32_t ret;
 	uint16_t pcpu_id;
@@ -240,9 +242,9 @@ int64_t hcall_create_vcpu(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int64_t hcall_assert_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_assert_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
 {
-	int64_t ret = 0;
+	int32_t ret = 0;
 	struct acrn_irqline irqline;
 
 	if (copy_from_gpa(vm, &irqline, param, sizeof(irqline)) != 0) {
@@ -254,9 +256,9 @@ int64_t hcall_assert_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int64_t hcall_deassert_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_deassert_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
 {
-	int64_t ret = 0;
+	int32_t ret = 0;
 	struct acrn_irqline irqline;
 
 	if (copy_from_gpa(vm, &irqline, param, sizeof(irqline)) != 0) {
@@ -268,9 +270,9 @@ int64_t hcall_deassert_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int64_t hcall_pulse_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_pulse_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
 {
-	int64_t ret = 0;
+	int32_t ret = 0;
 	struct acrn_irqline irqline;
 
 	if (copy_from_gpa(vm, &irqline, param, sizeof(irqline)) != 0) {
@@ -282,7 +284,7 @@ int64_t hcall_pulse_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int64_t hcall_inject_msi(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_inject_msi(struct vm *vm, uint64_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
 	struct acrn_msi_entry msi;
@@ -302,9 +304,9 @@ int64_t hcall_inject_msi(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int64_t hcall_set_ioreq_buffer(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_set_ioreq_buffer(struct vm *vm, uint64_t vmid, uint64_t param)
 {
-	int64_t ret = 0;
+	int32_t ret = 0;
 	uint64_t hpa = 0UL;
 	struct acrn_set_ioreq_buffer iobuf;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
@@ -368,7 +370,7 @@ static void complete_request(struct vcpu *vcpu)
 	resume_vcpu(vcpu);
 }
 
-int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
+int32_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
 {
 	union vhm_request_buffer *req_buf;
 	struct vhm_request *req;
@@ -403,7 +405,8 @@ int64_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
 	return 0;
 }
 
-static int64_t _set_vm_memmap(struct vm *vm, struct vm *target_vm,
+static int32_t
+_set_vm_memmap(struct vm *vm, struct vm *target_vm,
 	struct vm_set_memmap *memmap)
 {
 	uint64_t hpa, base_paddr;
@@ -459,7 +462,7 @@ static int64_t _set_vm_memmap(struct vm *vm, struct vm *target_vm,
 		memmap->remote_gpa, memmap->length, memmap->type, attr);
 }
 
-int64_t hcall_set_vm_memmap(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_set_vm_memmap(struct vm *vm, uint64_t vmid, uint64_t param)
 {
 	struct vm_set_memmap memmap;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
@@ -488,7 +491,7 @@ int64_t hcall_set_vm_memmap(struct vm *vm, uint64_t vmid, uint64_t param)
 	return _set_vm_memmap(vm, target_vm, &memmap);
 }
 
-int64_t hcall_set_vm_memmaps(struct vm *vm, uint64_t param)
+int32_t hcall_set_vm_memmaps(struct vm *vm, uint64_t param)
 {
 	struct set_memmaps set_memmaps;
 	struct memory_map *regions;
@@ -531,9 +534,9 @@ int64_t hcall_set_vm_memmaps(struct vm *vm, uint64_t param)
 	return 0;
 }
 
-int64_t hcall_remap_pci_msix(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_remap_pci_msix(struct vm *vm, uint64_t vmid, uint64_t param)
 {
-	int64_t ret = 0;
+	int32_t ret = 0;
 	struct acrn_vm_pci_msix_remap remap;
 	struct ptdev_msi_info info;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
@@ -572,9 +575,9 @@ int64_t hcall_remap_pci_msix(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int64_t hcall_gpa_to_hpa(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_gpa_to_hpa(struct vm *vm, uint64_t vmid, uint64_t param)
 {
-	int64_t ret = 0;
+	int32_t ret = 0;
 	struct vm_gpa2hpa v_gpa2hpa;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
@@ -597,9 +600,9 @@ int64_t hcall_gpa_to_hpa(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int64_t hcall_assign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_assign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
 {
-	int64_t ret;
+	int32_t ret;
 	uint16_t bdf;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
@@ -635,9 +638,9 @@ int64_t hcall_assign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int64_t hcall_deassign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_deassign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
 {
-	int64_t ret = 0;
+	int32_t ret = 0;
 	uint16_t bdf;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
@@ -655,9 +658,9 @@ int64_t hcall_deassign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int64_t hcall_set_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_set_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
 {
-	int64_t ret = 0;
+	int32_t ret = 0;
 	struct hc_ptdev_irq irq;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
@@ -689,10 +692,10 @@ int64_t hcall_set_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int64_t
+int32_t
 hcall_reset_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
 {
-	int64_t ret = 0;
+	int32_t ret = 0;
 	struct hc_ptdev_irq irq;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
@@ -723,7 +726,7 @@ hcall_reset_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int64_t hcall_setup_sbuf(struct vm *vm, uint64_t param)
+int32_t hcall_setup_sbuf(struct vm *vm, uint64_t param)
 {
 	struct sbuf_setup_param ssp;
 	uint64_t *hva;
@@ -744,7 +747,7 @@ int64_t hcall_setup_sbuf(struct vm *vm, uint64_t param)
 	return sbuf_share_setup(ssp.pcpu_id, ssp.sbuf_id, hva);
 }
 
-int64_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param)
+int32_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param)
 {
 	uint16_t target_vm_id;
 	struct vm *target_vm;
