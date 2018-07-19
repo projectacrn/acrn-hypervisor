@@ -17,8 +17,6 @@ struct vhm_request;
 
 bool is_hypercall_from_ring0(void);
 
-int acrn_vpic_inject_irq(struct vm *vm, int irq, enum irq_mode mode);
-
 /**
  * @brief Hypercall
  *

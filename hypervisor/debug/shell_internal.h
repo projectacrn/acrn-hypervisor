@@ -141,15 +141,12 @@ struct shell_cmd {
 int shell_show_req_info(struct shell *p_shell, int argc, char **argv);
 int shell_construct(struct shell **p_shell);
 int shell_cmd_help(struct shell *p_shell, int argc, char **argv);
-int shell_reset_cmd(struct shell *p_shell, int argc, char **argv);
 int shell_list_vm(struct shell *p_shell, int argc, char **argv);
 int shell_list_vcpu(struct shell *p_shell, int argc, char **argv);
 int shell_pause_vcpu(struct shell *p_shell, int argc, char **argv);
 int shell_resume_vcpu(struct shell *p_shell, int argc, char **argv);
 int shell_vcpu_dumpreg(struct shell *p_shell, int argc, char **argv);
 int shell_vcpu_dumpmem(struct shell *p_shell, int argc, char **argv);
-int shell_boot_vm(struct shell *p_shell, int argc, char **argv);
-int shell_trace_cmd(struct shell *p_shell, int argc, char **argv);
 int shell_to_sos_console(struct shell *p_shell, int argc, char **argv);
 int shell_show_cpu_int(struct shell *p_shell, int argc, char **argv);
 int shell_show_ptdev_info(struct shell *p_shell, int argc, char **argv);

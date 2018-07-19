@@ -99,11 +99,10 @@ int vpic_pulse_irq(struct vm *vm, uint32_t irq);
 
 void vpic_pending_intr(struct vm *vm, uint32_t *vecptr);
 void vpic_intr_accepted(struct vm *vm, uint32_t vector);
-int vpic_set_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger trigger);
-int vpic_get_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger *trigger);
-
-struct vm_io_handler *vpic_create_io_handler(int flags, uint32_t port,
-	uint32_t len);
+int vpic_set_irq_trigger(struct vm *vm, uint32_t irq,
+	enum vpic_trigger trigger);
+int vpic_get_irq_trigger(struct vm *vm, uint32_t irq,
+	enum vpic_trigger *trigger);
 
 bool vpic_is_pin_mask(struct vpic *vpic, uint8_t virt_pin);
 
