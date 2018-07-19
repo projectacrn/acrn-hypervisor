@@ -210,7 +210,8 @@
 #define     MMU_MEM_ATTR_TYPE_MASK \
 		(IA32E_PDPTE_PAT_BIT | IA32E_COMM_PCD_BIT | IA32E_COMM_PWT_BIT)
 
-#define ROUND_PAGE_UP(addr)  (((addr) + (uint64_t)CPU_PAGE_SIZE - 1UL) & CPU_PAGE_MASK)
+#define ROUND_PAGE_UP(addr)  \
+		((((addr) + (uint64_t)CPU_PAGE_SIZE) - 1UL) & CPU_PAGE_MASK)
 #define ROUND_PAGE_DOWN(addr) ((addr) & CPU_PAGE_MASK)
 
 enum _page_table_type {

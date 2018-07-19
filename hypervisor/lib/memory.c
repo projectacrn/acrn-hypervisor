@@ -245,7 +245,7 @@ void *malloc(unsigned int num_bytes)
 		memory = allocate_mem(&Memory_Pool, num_bytes);
 	} else {
 		uint32_t page_num =
-			(num_bytes + CPU_PAGE_SIZE - 1U) >> CPU_PAGE_SHIFT;
+			((num_bytes + CPU_PAGE_SIZE) - 1U) >> CPU_PAGE_SHIFT;
 		/* Request memory allocation through alloc_page */
 		memory = alloc_pages(page_num);
 	}
@@ -361,8 +361,8 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
 		ASSERT(false);
 	}
 
-	if (((d > s) && (d <= (s + slen - 1U)))
-			|| ((d < s) && (s <= (d + dmax - 1U)))) {
+	if (((d > s) && (d <= ((s + slen) - 1U)))
+			|| ((d < s) && (s <= ((d + dmax) - 1U)))) {
 		ASSERT(false);
 	}
 

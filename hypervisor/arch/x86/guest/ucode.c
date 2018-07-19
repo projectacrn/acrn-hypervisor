@@ -48,7 +48,7 @@ void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 
 	data_size = UCODE_GET_DATA_SIZE(uhdr) + sizeof(struct ucode_header);
 	data_page_num =
-		(data_size + CPU_PAGE_SIZE - 1U) >> CPU_PAGE_SHIFT;
+		((data_size + CPU_PAGE_SIZE) - 1U) >> CPU_PAGE_SHIFT;
 
 	ucode_ptr = alloc_pages(data_page_num);
 	if (ucode_ptr == NULL) {

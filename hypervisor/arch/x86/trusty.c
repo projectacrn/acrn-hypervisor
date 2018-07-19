@@ -481,7 +481,7 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 
 	/* init secure world environment */
 	if (init_secure_world_env(vcpu,
-		trusty_entry_gpa - trusty_base_gpa + TRUSTY_EPT_REBASE_GPA,
+		(trusty_entry_gpa - trusty_base_gpa) + TRUSTY_EPT_REBASE_GPA,
 		trusty_base_hpa, trusty_mem_size)) {
 
 		/* switch to Secure World */
