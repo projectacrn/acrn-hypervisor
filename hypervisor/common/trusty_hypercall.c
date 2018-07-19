@@ -10,7 +10,7 @@
 /* this hcall is only come from trusty enabled vcpu itself, and cannot be
  * called from other vcpus
  */
-int64_t hcall_world_switch(struct vcpu *vcpu)
+int32_t hcall_world_switch(struct vcpu *vcpu)
 {
 	int32_t next_world_id = !(vcpu->arch_vcpu.cur_context);
 
@@ -37,7 +37,7 @@ int64_t hcall_world_switch(struct vcpu *vcpu)
 /* this hcall is only come from trusty enabled vcpu itself, and cannot be
  * called from other vcpus
  */
-int64_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param)
+int32_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param)
 {
 	if (!vcpu->vm->sworld_control.sworld_enabled) {
 		pr_err("%s, Secure World is not enabled!\n", __func__);
