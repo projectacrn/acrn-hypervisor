@@ -36,6 +36,7 @@
 #include "efilinux.h"
 #include "stdlib.h"
 #include "boot.h"
+#include "acrn_efi.h"
 
 EFI_SYSTEM_TABLE *sys_table;
 EFI_BOOT_SERVICES *boot;
