@@ -39,19 +39,8 @@
  * Within the following groups,register name need to be 
  * kept in order:
  * General register names group (CPU_REG_RAX~CPU_REG_RDI);
- * Non general register names group (CPU_REG_CR0~CPU_REG_LAST);
+ * Non general register names group (CPU_REG_CR0~CPU_REG_GDTR);
  * Segement register names group (CPU_REG_ES~CPU_REG_GS).
- *
- * CPU_REG_NATURAL_LAST indicates in the non general register names
- * group the register name (less than CPU_REG_NATURAL_last) is 
- * corresponds to the natural width field in VMCS;
- *
- * CPU_REG_64BIT_LAST indicates in the non general register names
- * group the register name (less than CPU_REG_64BIT_LAST and more than
- * CPU_REG_NATURAL_last) corresponds to the 64-bit field in VMCS.
- *
- * CPU_REG_LAST indicates the last register name.
- *
  */
 enum cpu_reg_name {
 	CPU_REG_RAX,
@@ -77,13 +66,13 @@ enum cpu_reg_name {
 	CPU_REG_RSP,
 	CPU_REG_RIP,
 	CPU_REG_RFLAGS,
-	CPU_REG_NATURAL_LAST,
+	/*CPU_REG_NATURAL_LAST*/
 	CPU_REG_EFER,
 	CPU_REG_PDPTE0,
 	CPU_REG_PDPTE1,
 	CPU_REG_PDPTE2,
 	CPU_REG_PDPTE3,
-	CPU_REG_64BIT_LAST,
+	/*CPU_REG_64BIT_LAST,*/
 	CPU_REG_ES,
 	CPU_REG_CS,
 	CPU_REG_SS,
@@ -93,9 +82,60 @@ enum cpu_reg_name {
 	CPU_REG_LDTR,
 	CPU_REG_TR,
 	CPU_REG_IDTR,
-	CPU_REG_GDTR,
-	CPU_REG_LAST
+	CPU_REG_GDTR
+	/*CPU_REG_LAST*/
 };
+
+/**
+ * Define the following MACRO to make range checking clear.
+ *
+ * CPU_REG_FIRST indicates the first register name, its value
+ * is the same as CPU_REG_RAX;
+ * CPU_REG_LAST indicates the last register name, its value is 
+ * the same as CPU_REG_GDTR;
+ *
+ * CPU_REG_GENERAL_FIRST indicates the first general register name,
+ * its value is the same as CPU_REG_RAX;
+ * CPU_REG_GENERAL_LAST indicates the last general register name,
+ * its value is the same as CPU_REG_RDI;
+ *
+ * CPU_REG_NONGENERAL_FIRST indicates the first non general register
+ * name, its value is the same as CPU_REG_CR0;
+ * CPU_REG_NONGENERAL_LAST indicates the last non general register
+ * name, its value is the same as CPU_REG_GDTR;
+ *
+ * CPU_REG_NATURAL_FIRST indicates the first register name that 
+ * is corresponds to the natural width field in VMCS, its value
+ * is the same as CPU_REG_CR0;
+ * CPU_REG_NATURAL_LAST indicates the last register name that
+ * is corresponds to the natural width field in VMCS, its value
+ * is the same as CPU_REG_RFLAGS;
+ *
+ * CPU_REG_64BIT_FIRST indicates the first register name that
+ * is corresponds to the 64 bit field in VMCS, its value
+ * is the same as CPU_REG_EFER;
+ * CPU_REG_64BIT_LAST indicates the last register name that
+ * is corresponds to the 64 bit field in VMCS, its value
+ * is the same as CPU_REG_PDPTE3;
+ *
+ * CPU_REG_SEG_FIRST indicates the first segement register name,
+ * its value is the same as CPU_REG_ES;
+ * CPU_REG_SEG_FIRST indicates the last segement register name,
+ * its value is the same as CPU_REG_GS
+ * 
+ */
+#define CPU_REG_FIRST			CPU_REG_RAX
+#define CPU_REG_LAST            	CPU_REG_GDTR
+#define CPU_REG_GENERAL_FIRST   	CPU_REG_RAX
+#define CPU_REG_GENERAL_LAST		CPU_REG_RDI
+#define CPU_REG_NONGENERAL_FIRST   	CPU_REG_CR0
+#define CPU_REG_NONGENERAL_LAST   	CPU_REG_GDTR
+#define CPU_REG_NATURAL_FIRST		CPU_REG_CR0
+#define CPU_REG_NATURAL_LAST		CPU_REG_RFLAGS
+#define CPU_REG_64BIT_FIRST		CPU_REG_EFER
+#define CPU_REG_64BIT_LAST 		CPU_REG_PDPTE3
+#define CPU_REG_SEG_FIRST		CPU_REG_ES
+#define CPU_REG_SEG_LAST		CPU_REG_GS
 
 struct vie_op {
 	uint8_t		op_byte;	/* actual opcode byte */

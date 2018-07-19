@@ -32,21 +32,21 @@ int vm_get_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t *retval)
 		return -EINVAL;
 	}
 
-	if ((reg >= CPU_REG_LAST) || (reg < CPU_REG_RAX)) {
+	if ((reg > CPU_REG_LAST) || (reg < CPU_REG_FIRST)) {
 		return -EINVAL;
 	}
 
-	if ((reg >= CPU_REG_RAX) && (reg <= CPU_REG_RDI)) {
+	if ((reg >= CPU_REG_GENERAL_FIRST) && (reg <= CPU_REG_GENERAL_LAST)) {
 		cur_context =
 			&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 		*retval = cur_context->guest_cpu_regs.longs[reg];
-	} else if ((reg > CPU_REG_RDI) && (reg < CPU_REG_LAST)) {
+	} else if ((reg >= CPU_REG_NONGENERAL_FIRST) && (reg <= CPU_REG_NONGENERAL_LAST)) {
 		uint32_t field = get_vmcs_field(reg);
 
 		if (field != VMX_INVALID_VMCS_FIELD) {
-			if (reg < CPU_REG_NATURAL_LAST) {
+			if (reg <= CPU_REG_NATURAL_LAST) {
 				*retval = exec_vmread(field);
-			} else if (reg < CPU_REG_64BIT_LAST) {
+			} else if (reg <= CPU_REG_64BIT_LAST) {
 				*retval = exec_vmread64(field);
 			} else {
 				*retval = (uint64_t)exec_vmread16(field);
@@ -67,19 +67,19 @@ int vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t val)
 		return -EINVAL;
 	}
 
-	if ((reg >= CPU_REG_LAST) || (reg < CPU_REG_RAX)) {
+	if ((reg > CPU_REG_LAST) || (reg < CPU_REG_FIRST)) {
 		return -EINVAL;
 	}
 
-	if ((reg >= CPU_REG_RAX) && (reg <= CPU_REG_RDI)) {
+	if ((reg >= CPU_REG_GENERAL_FIRST) && (reg <= CPU_REG_GENERAL_LAST)) {
 		cur_context =
 			&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 		cur_context->guest_cpu_regs.longs[reg] = val;
-	} else if ((reg > CPU_REG_RDI) && (reg < CPU_REG_LAST)) {
+	} else if ((reg >= CPU_REG_NONGENERAL_FIRST) && (reg <= CPU_REG_NONGENERAL_LAST)) {
 		uint32_t field = get_vmcs_field(reg);
 
 		if (field != VMX_INVALID_VMCS_FIELD) {
-			if (reg < CPU_REG_NATURAL_LAST) {
+			if (reg <= CPU_REG_NATURAL_LAST) {
 				exec_vmwrite(field, val);
 			} else if (reg <= CPU_REG_64BIT_LAST) {
 				exec_vmwrite64(field, val);
@@ -242,9 +242,8 @@ encode_vmcs_seg_desc(enum cpu_reg_name seg,
  *the corresponding field index MACROs in VMCS.
  *
  *Post Condition:
- *In the non-general register names group (CPU_REG_CR0~CPU_REG_LAST),
- *for register names CPU_REG_CR2, CPU_REG_IDTR, CPU_REG_GDTR,
- *CPU_REG_NATURAL_LAST, CPU_REG_64BIT_LAST and CPU_REG_LAST, 
+ *In the non-general register names group (CPU_REG_CR0~CPU_REG_GDTR),
+ *for register names CPU_REG_CR2, CPU_REG_IDTR and CPU_REG_GDTR, 
  *this function returns VMX_INVALID_VMCS_FIELD;
  *for other register names, it returns correspoding field index MACROs
  *in VMCS.
