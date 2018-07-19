@@ -98,7 +98,9 @@ static void init_vcpuid_entry(__unused struct vm *vm,
 				&entry->eax, &entry->ebx,
 				&entry->ecx, &entry->edx);
 			/* mask invpcid */
-			entry->ebx &= ~CPUID_EBX_INVPCID;
+			entry->ebx &= ~(CPUID_EBX_INVPCID |
+					CPUID_EBX_PQM |
+					CPUID_EBX_PQE);
 		} else {
 			entry->eax = 0U;
 			entry->ebx = 0U;
