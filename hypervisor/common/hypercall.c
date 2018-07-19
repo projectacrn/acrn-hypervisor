@@ -113,8 +113,8 @@ handle_virt_irqline(struct vm *vm, uint16_t target_vmid,
 		/* Call vpic for pic injection */
 		ret = handle_vpic_irqline(target_vm, param->pic_irq, mode);
 
-		/* call vioapic for ioapic injection if ioapic_irq != ~0UL*/
-		if (param->ioapic_irq != (~0UL)) {
+		/* call vioapic for ioapic injection if ioapic_irq != ~0U*/
+		if (param->ioapic_irq != (~0U)) {
 			/* handle IOAPIC irqline */
 			ret = handle_vioapic_irqline(target_vm,
 				param->ioapic_irq, mode);
@@ -172,7 +172,7 @@ int32_t hcall_create_vm(struct vm *vm, uint64_t param)
 	return ret;
 }
 
-int32_t hcall_destroy_vm(uint64_t vmid)
+int32_t hcall_destroy_vm(uint16_t vmid)
 {
 	int32_t ret = 0;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
@@ -185,7 +185,7 @@ int32_t hcall_destroy_vm(uint64_t vmid)
 	return ret;
 }
 
-int32_t hcall_resume_vm(uint64_t vmid)
+int32_t hcall_resume_vm(uint16_t vmid)
 {
 	int32_t ret = 0;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
@@ -202,7 +202,7 @@ int32_t hcall_resume_vm(uint64_t vmid)
 	return ret;
 }
 
-int32_t hcall_pause_vm(uint64_t vmid)
+int32_t hcall_pause_vm(uint16_t vmid)
 {
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
@@ -215,7 +215,7 @@ int32_t hcall_pause_vm(uint64_t vmid)
 	return 0;
 }
 
-int32_t hcall_create_vcpu(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_create_vcpu(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret;
 	uint16_t pcpu_id;
@@ -242,7 +242,7 @@ int32_t hcall_create_vcpu(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int32_t hcall_assert_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_assert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
 	struct acrn_irqline irqline;
@@ -251,12 +251,12 @@ int32_t hcall_assert_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
 		pr_err("%s: Unable copy param to vm\n", __func__);
 		return -1;
 	}
-	ret = handle_virt_irqline(vm, (uint16_t)vmid, &irqline, IRQ_ASSERT);
+	ret = handle_virt_irqline(vm, vmid, &irqline, IRQ_ASSERT);
 
 	return ret;
 }
 
-int32_t hcall_deassert_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_deassert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
 	struct acrn_irqline irqline;
@@ -265,12 +265,12 @@ int32_t hcall_deassert_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
 		pr_err("%s: Unable copy param to vm\n", __func__);
 		return -1;
 	}
-	ret = handle_virt_irqline(vm, (uint16_t)vmid, &irqline, IRQ_DEASSERT);
+	ret = handle_virt_irqline(vm, vmid, &irqline, IRQ_DEASSERT);
 
 	return ret;
 }
 
-int32_t hcall_pulse_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_pulse_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
 	struct acrn_irqline irqline;
@@ -279,12 +279,12 @@ int32_t hcall_pulse_irqline(struct vm *vm, uint64_t vmid, uint64_t param)
 		pr_err("%s: Unable copy param to vm\n", __func__);
 		return -1;
 	}
-	ret = handle_virt_irqline(vm, (uint16_t)vmid, &irqline, IRQ_PULSE);
+	ret = handle_virt_irqline(vm, vmid, &irqline, IRQ_PULSE);
 
 	return ret;
 }
 
-int32_t hcall_inject_msi(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_inject_msi(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
 	struct acrn_msi_entry msi;
@@ -304,7 +304,7 @@ int32_t hcall_inject_msi(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int32_t hcall_set_ioreq_buffer(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_set_ioreq_buffer(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
 	uint64_t hpa = 0UL;
@@ -370,7 +370,7 @@ static void complete_request(struct vcpu *vcpu)
 	resume_vcpu(vcpu);
 }
 
-int32_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
+int32_t hcall_notify_req_finish(uint16_t vmid, uint16_t vcpu_id)
 {
 	union vhm_request_buffer *req_buf;
 	struct vhm_request *req;
@@ -386,7 +386,7 @@ int32_t hcall_notify_req_finish(uint64_t vmid, uint64_t vcpu_id)
 	dev_dbg(ACRN_DBG_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
 			vmid, vcpu_id);
 
-	vcpu = vcpu_from_vid(target_vm, (uint16_t)vcpu_id);
+	vcpu = vcpu_from_vid(target_vm, vcpu_id);
 	if (vcpu == NULL) {
 		pr_err("%s, failed to get VCPU %d context from VM %d\n",
 			__func__, vcpu_id, target_vm->attr.id);
@@ -410,7 +410,7 @@ _set_vm_memmap(struct vm *vm, struct vm *target_vm,
 	struct vm_set_memmap *memmap)
 {
 	uint64_t hpa, base_paddr;
-	uint32_t attr, prot;
+	uint64_t attr, prot;
 
 	if ((memmap->length & 0xFFFUL) != 0UL) {
 		pr_err("%s: ERROR! [vm%d] map size 0x%x is not page aligned",
@@ -462,7 +462,7 @@ _set_vm_memmap(struct vm *vm, struct vm *target_vm,
 		memmap->remote_gpa, memmap->length, memmap->type, attr);
 }
 
-int32_t hcall_set_vm_memmap(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_set_vm_memmap(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	struct vm_set_memmap memmap;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
@@ -534,7 +534,7 @@ int32_t hcall_set_vm_memmaps(struct vm *vm, uint64_t param)
 	return 0;
 }
 
-int32_t hcall_remap_pci_msix(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_remap_pci_msix(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
 	struct acrn_vm_pci_msix_remap remap;
@@ -575,7 +575,7 @@ int32_t hcall_remap_pci_msix(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int32_t hcall_gpa_to_hpa(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_gpa_to_hpa(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
 	struct vm_gpa2hpa v_gpa2hpa;
@@ -600,7 +600,7 @@ int32_t hcall_gpa_to_hpa(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int32_t hcall_assign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_assign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret;
 	uint16_t bdf;
@@ -638,7 +638,7 @@ int32_t hcall_assign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int32_t hcall_deassign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_deassign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
 	uint16_t bdf;
@@ -658,7 +658,7 @@ int32_t hcall_deassign_ptdev(struct vm *vm, uint64_t vmid, uint64_t param)
 	return ret;
 }
 
-int32_t hcall_set_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
+int32_t hcall_set_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
 	struct hc_ptdev_irq irq;
@@ -693,7 +693,7 @@ int32_t hcall_set_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
 }
 
 int32_t
-hcall_reset_ptdev_intr_info(struct vm *vm, uint64_t vmid, uint64_t param)
+hcall_reset_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
 	struct hc_ptdev_irq irq;
@@ -752,7 +752,7 @@ int32_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param)
 	uint16_t target_vm_id;
 	struct vm *target_vm;
 
-	target_vm_id = (cmd & PMCMD_VMID_MASK) >> PMCMD_VMID_SHIFT;
+	target_vm_id = (uint16_t)((cmd & PMCMD_VMID_MASK) >> PMCMD_VMID_SHIFT);
 	target_vm = get_vm_from_vmid(target_vm_id);
 
 	if (target_vm == NULL) {
@@ -820,7 +820,8 @@ int32_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param)
 			return -1;
 		}
 
-		cx_idx = (cmd & PMCMD_STATE_NUM_MASK) >> PMCMD_STATE_NUM_SHIFT;
+		cx_idx = (uint8_t)
+			((cmd & PMCMD_STATE_NUM_MASK) >> PMCMD_STATE_NUM_SHIFT);
 		if ((cx_idx == 0U) || (cx_idx > target_vm->pm.cx_cnt)) {
 			return -1;
 		}

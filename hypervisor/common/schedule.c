@@ -11,25 +11,30 @@ static unsigned long pcpu_used_bitmap;
 
 void init_scheduler(void)
 {
+	struct sched_context *ctx;
 	uint32_t i;
 
 	for (i = 0U; i < phys_cpu_num; i++) {
-		spinlock_init(&per_cpu(sched_ctx, i).runqueue_lock);
-		spinlock_init(&per_cpu(sched_ctx, i).scheduler_lock);
-		INIT_LIST_HEAD(&per_cpu(sched_ctx, i).runqueue);
-		per_cpu(sched_ctx, i).flags = 0UL;
-		per_cpu(sched_ctx, i).curr_vcpu = NULL;
+		ctx = &per_cpu(sched_ctx, i);
+
+		spinlock_init(&ctx->runqueue_lock);
+		spinlock_init(&ctx->scheduler_lock);
+		INIT_LIST_HEAD(&ctx->runqueue);
+		ctx->flags = 0UL;
+		ctx->curr_vcpu = NULL;
 	}
 }
 
 void get_schedule_lock(uint16_t pcpu_id)
 {
-	spinlock_obtain(&per_cpu(sched_ctx, pcpu_id).scheduler_lock);
+	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
+	spinlock_obtain(&ctx->scheduler_lock);
 }
 
 void release_schedule_lock(uint16_t pcpu_id)
 {
-	spinlock_release(&per_cpu(sched_ctx, pcpu_id).scheduler_lock);
+	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
+	spinlock_release(&ctx->scheduler_lock);
 }
 
 uint16_t allocate_pcpu(void)
@@ -57,50 +62,53 @@ void free_pcpu(uint16_t pcpu_id)
 
 void add_vcpu_to_runqueue(struct vcpu *vcpu)
 {
-	int pcpu_id = vcpu->pcpu_id;
+	uint16_t pcpu_id = vcpu->pcpu_id;
+	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 
-	spinlock_obtain(&per_cpu(sched_ctx, pcpu_id).runqueue_lock);
+	spinlock_obtain(&ctx->runqueue_lock);
 	if (list_empty(&vcpu->run_list)) {
-		list_add_tail(&vcpu->run_list,
-			&per_cpu(sched_ctx, pcpu_id).runqueue);
+		list_add_tail(&vcpu->run_list, &ctx->runqueue);
 	}
-	spinlock_release(&per_cpu(sched_ctx, pcpu_id).runqueue_lock);
+	spinlock_release(&ctx->runqueue_lock);
 }
 
 void remove_vcpu_from_runqueue(struct vcpu *vcpu)
 {
-	int pcpu_id = vcpu->pcpu_id;
+	uint16_t pcpu_id = vcpu->pcpu_id;
+	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 
-	spinlock_obtain(&per_cpu(sched_ctx, pcpu_id).runqueue_lock);
+	spinlock_obtain(&ctx->runqueue_lock);
 	list_del_init(&vcpu->run_list);
-	spinlock_release(&per_cpu(sched_ctx, pcpu_id).runqueue_lock);
+	spinlock_release(&ctx->runqueue_lock);
 }
 
 static struct vcpu *select_next_vcpu(uint16_t pcpu_id)
 {
+	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 	struct vcpu *vcpu = NULL;
 
-	spinlock_obtain(&per_cpu(sched_ctx, pcpu_id).runqueue_lock);
-	if (!list_empty(&per_cpu(sched_ctx, pcpu_id).runqueue)) {
-		vcpu = get_first_item(&per_cpu(sched_ctx, pcpu_id).runqueue,
-				struct vcpu, run_list);
+	spinlock_obtain(&ctx->runqueue_lock);
+	if (!list_empty(&ctx->runqueue)) {
+		vcpu = get_first_item(&ctx->runqueue, struct vcpu, run_list);
 	}
-	spinlock_release(&per_cpu(sched_ctx, pcpu_id).runqueue_lock);
+	spinlock_release(&ctx->runqueue_lock);
 
 	return vcpu;
 }
 
 void make_reschedule_request(struct vcpu *vcpu)
 {
-	bitmap_set(NEED_RESCHEDULE,
-		&per_cpu(sched_ctx, vcpu->pcpu_id).flags);
+	struct sched_context *ctx = &per_cpu(sched_ctx, vcpu->pcpu_id);
+
+	bitmap_set(NEED_RESCHEDULE, &ctx->flags);
 	send_single_ipi(vcpu->pcpu_id, VECTOR_NOTIFY_VCPU);
 }
 
 int need_reschedule(uint16_t pcpu_id)
 {
-	return bitmap_test_and_clear(NEED_RESCHEDULE,
-		&per_cpu(sched_ctx, pcpu_id).flags);
+	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
+
+	return bitmap_test_and_clear(NEED_RESCHEDULE, &ctx->flags);
 }
 
 static void context_switch_out(struct vcpu *vcpu)
@@ -142,15 +150,17 @@ static void context_switch_in(struct vcpu *vcpu)
 
 void make_pcpu_offline(uint16_t pcpu_id)
 {
-	bitmap_set(NEED_OFFLINE,
-		&per_cpu(sched_ctx, pcpu_id).flags);
+	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
+
+	bitmap_set(NEED_OFFLINE, &ctx->flags);
 	send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
 }
 
 int need_offline(uint16_t pcpu_id)
 {
-	return bitmap_test_and_clear(NEED_OFFLINE,
-		&per_cpu(sched_ctx, pcpu_id).flags);
+	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
+
+	return bitmap_test_and_clear(NEED_OFFLINE, &ctx->flags);
 }
 
 void default_idle(void)
