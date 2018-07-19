@@ -137,7 +137,7 @@
 #include <cpu.h>
 
 /* Define cache line size (in bytes) */
-#define     CACHE_LINE_SIZE                 64
+#define     CACHE_LINE_SIZE                 64U
 
 /* Size of all page structures for IA-32e */
 #define     IA32E_STRUCT_SIZE               MEM_4K
