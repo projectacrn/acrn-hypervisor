@@ -1598,7 +1598,7 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	uint8_t glasize;
 	uint32_t type;
 
-	ASSERT(seg >= CPU_REG_ES && seg <= CPU_REG_GS,
+	ASSERT((seg >= CPU_REG_SEG_FIRST) && (seg <= CPU_REG_SEG_LAST),
 	    "%s: invalid segment %d", __func__, seg);
 	ASSERT(length == 1U || length == 2U || length == 4U || length == 8U,
 	    "%s: invalid operand size %hhu", __func__, length);
@@ -1724,10 +1724,6 @@ vie_init(struct vie *vie, struct vcpu *vcpu)
 	}
 
 	(void)memset(vie, 0U, sizeof(struct vie));
-
-	vie->base_register = CPU_REG_LAST;
-	vie->index_register = CPU_REG_LAST;
-	vie->segment_register = CPU_REG_LAST;
 
 	err_code = PAGE_FAULT_ID_FLAG;
 	ret = copy_from_gva(vcpu, vie->inst, guest_rip_gva,
@@ -2021,7 +2017,7 @@ decode_sib(struct vie *vie)
 	}
 
 	/* 'scale' makes sense only in the context of an index register */
-	if (vie->index_register < CPU_REG_LAST) {
+	if (vie->index_register <= CPU_REG_LAST) {
 		vie->scale = 1U << vie->ss;
 	}
 
