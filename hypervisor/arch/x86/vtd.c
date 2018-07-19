@@ -14,13 +14,13 @@
 #define ACRN_DBG_IOMMU LOG_INFO
 #define DMAR_FAULT_LOOP_MAX 10
 #else
-#define ACRN_DBG_IOMMU 6
+#define ACRN_DBG_IOMMU 6U
 #endif
 
 /* set an appropriate bus limitation when iommu init,
  * to reduce memory & time cost
  */
-#define IOMMU_INIT_BUS_LIMIT        (0xf)
+#define IOMMU_INIT_BUS_LIMIT        (0xfU)
 
 #define PAGE_MASK                   (0xFFFUL)
 #define LEVEL_WIDTH 9U
@@ -124,7 +124,7 @@ struct dmar_drhd_rt {
 
 	uint64_t cap;
 	uint64_t ecap;
-	uint64_t gcmd;  /* sw cache value of global cmd register */
+	uint32_t gcmd;  /* sw cache value of global cmd register */
 
 	uint32_t irq;
 	struct dev_handler_node *dmar_irq_node;
@@ -166,7 +166,7 @@ static uint32_t dmar_hdrh_unit_count;
  * domain id 0 is reserved,
  * bit0 --> domain id 0, ..., bit63 --> domain id 63
  */
-static uint32_t max_domain_id = 63;
+static uint32_t max_domain_id = 63U;
 static uint64_t domain_bitmap;
 static spinlock_t domain_lock;
 static struct iommu_domain *host_domain;
@@ -182,7 +182,7 @@ static void register_hrhd_units(void)
 	uint32_t i;
 
 	for (i = 0U; i < info->drhd_count; i++) {
-		drhd_rt = calloc(1, sizeof(struct dmar_drhd_rt));
+		drhd_rt = calloc(1U, sizeof(struct dmar_drhd_rt));
 		ASSERT(drhd_rt != NULL, "");
 		drhd_rt->drhd = &info->drhd_units[i];
 		dmar_register_hrhd(drhd_rt);
@@ -198,8 +198,8 @@ static uint64_t iommu_read64(struct dmar_drhd_rt *dmar_uint, uint32_t offset)
 {
 	uint64_t value;
 
-	value = mmio_read_long(HPA2HVA(dmar_uint->drhd->reg_base_addr + offset + 4));
-	value = value << 32;
+	value = mmio_read_long(HPA2HVA(dmar_uint->drhd->reg_base_addr + offset + 4U));
+	value = value << 32U;
 	value = value | mmio_read_long(HPA2HVA(dmar_uint->drhd->reg_base_addr +
 					offset));
 
@@ -217,11 +217,11 @@ static void iommu_write64(struct dmar_drhd_rt *dmar_uint, uint32_t offset,
 {
 	uint32_t temp;
 
-	temp = value;
+	temp = (uint32_t)value;
 	mmio_write_long(temp, HPA2HVA(dmar_uint->drhd->reg_base_addr + offset));
 
-	temp = value >> 32;
-	mmio_write_long(temp, HPA2HVA(dmar_uint->drhd->reg_base_addr + offset + 4));
+	temp = (uint32_t)(value >> 32U);
+	mmio_write_long(temp, HPA2HVA(dmar_uint->drhd->reg_base_addr + offset + 4U));
 }
 
 /* flush cache when root table, context table updated */
@@ -313,7 +313,7 @@ static void dmar_uint_show_capability(struct dmar_drhd_rt *dmar_uint)
 
 static inline uint8_t width_to_level(uint32_t width)
 {
-	return ((width - 12U) + (LEVEL_WIDTH)-1U) / (LEVEL_WIDTH);
+	return (uint8_t)(((width - 12U) + (LEVEL_WIDTH)-1U) / (LEVEL_WIDTH));
 }
 
 static inline uint8_t width_to_agaw(uint32_t width)
@@ -387,7 +387,7 @@ static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
 
 	dmar_uint->cap = iommu_read64(dmar_uint, DMAR_CAP_REG);
 	dmar_uint->ecap = iommu_read64(dmar_uint, DMAR_ECAP_REG);
-	dmar_uint->gcmd = iommu_read64(dmar_uint, DMAR_GCMD_REG);
+	dmar_uint->gcmd = iommu_read32(dmar_uint, DMAR_GCMD_REG);
 
 	dmar_uint->cap_msagaw = dmar_uint_get_msagw(dmar_uint);
 
@@ -395,7 +395,7 @@ static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
 		iommu_cap_num_fault_regs(dmar_uint->cap);
 	dmar_uint->cap_fault_reg_offset =
 		iommu_cap_fault_reg_offset(dmar_uint->cap);
-	dmar_uint->ecap_iotlb_offset = iommu_ecap_iro(dmar_uint->ecap) * 16;
+	dmar_uint->ecap_iotlb_offset = iommu_ecap_iro(dmar_uint->ecap) * 16U;
 
 #if DBG_IOMMU
 	pr_info("version:0x%x, cap:0x%llx, ecap:0x%llx",
@@ -411,11 +411,11 @@ static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
 #endif
 
 	/* check capability */
-	if ((iommu_cap_super_page_val(dmar_uint->cap) & 0x1UL) == 0) {
+	if ((iommu_cap_super_page_val(dmar_uint->cap) & 0x1U) == 0U) {
 		dev_dbg(ACRN_DBG_IOMMU, "dmar uint doesn't support 2MB page!");
 	}
 
-	if ((iommu_cap_super_page_val(dmar_uint->cap) & 0x2UL) == 0) {
+	if ((iommu_cap_super_page_val(dmar_uint->cap) & 0x2U) == 0U) {
 		dev_dbg(ACRN_DBG_IOMMU, "dmar uint doesn't support 1GB page!");
 	}
 
@@ -450,7 +450,7 @@ static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
 
 	dmar_hdrh_unit_count++;
 
-	if ((dmar_uint->gcmd & DMA_GCMD_TE) != 0) {
+	if ((dmar_uint->gcmd & DMA_GCMD_TE) != 0U) {
 		dmar_disable_translation(dmar_uint);
 	}
 }
@@ -498,7 +498,7 @@ static uint8_t alloc_domain_id(void)
 	 */
 	for (i = 1U; i < 64U; i++) {
 		mask = (1UL << i);
-		if ((domain_bitmap & mask) == 0) {
+		if ((domain_bitmap & mask) == 0UL) {
 			domain_bitmap |= mask;
 			break;
 		}
@@ -518,7 +518,7 @@ static void free_domain_id(uint16_t dom_id)
 
 static struct iommu_domain *create_host_domain(void)
 {
-	struct iommu_domain *domain = calloc(1, sizeof(struct iommu_domain));
+	struct iommu_domain *domain = calloc(1U, sizeof(struct iommu_domain));
 
 	ASSERT(domain != NULL, "");
 	domain->is_host = true;
@@ -539,7 +539,7 @@ static void dmar_write_buffer_flush(struct dmar_drhd_rt *dmar_uint)
 	}
 
 	IOMMU_LOCK(dmar_uint);
-	iommu_write64(dmar_uint, DMAR_GCMD_REG,
+	iommu_write32(dmar_uint, DMAR_GCMD_REG,
 			  dmar_uint->gcmd | DMA_GCMD_WBF);
 
 	/* read lower 32 bits to check */
@@ -589,7 +589,7 @@ static void dmar_invalid_context_cache(struct dmar_drhd_rt *dmar_uint,
 
 static void dmar_invalid_context_cache_global(struct dmar_drhd_rt *dmar_uint)
 {
-	dmar_invalid_context_cache(dmar_uint, 0, 0, 0, DMAR_CIRG_GLOBAL);
+	dmar_invalid_context_cache(dmar_uint, 0U, 0U, 0U, DMAR_CIRG_GLOBAL);
 }
 
 static void dmar_invalid_iotlb(struct dmar_drhd_rt *dmar_uint,
@@ -600,7 +600,7 @@ static void dmar_invalid_iotlb(struct dmar_drhd_rt *dmar_uint,
 	 * if hardware doesn't support it, will be ignored by hardware
 	 */
 	uint64_t cmd = DMA_IOTLB_IVT | DMA_IOTLB_DR | DMA_IOTLB_DW;
-	uint64_t addr = 0;
+	uint64_t addr = 0UL;
 	uint32_t status;
 
 	switch (iirg) {
@@ -626,9 +626,9 @@ static void dmar_invalid_iotlb(struct dmar_drhd_rt *dmar_uint,
 		iommu_write64(dmar_uint, dmar_uint->ecap_iotlb_offset, addr);
 	}
 
-	iommu_write64(dmar_uint, dmar_uint->ecap_iotlb_offset + 8, cmd);
+	iommu_write64(dmar_uint, dmar_uint->ecap_iotlb_offset + 8U, cmd);
 	/* read upper 32bits to check */
-	DMAR_WAIT_COMPLETION(dmar_uint->ecap_iotlb_offset + 12,
+	DMAR_WAIT_COMPLETION(dmar_uint->ecap_iotlb_offset + 12U,
 				 (status & DMA_IOTLB_IVT_32) == 0U, status);
 	IOMMU_UNLOCK(dmar_uint);
 
@@ -645,7 +645,7 @@ static void dmar_invalid_iotlb(struct dmar_drhd_rt *dmar_uint,
  */
 static void dmar_invalid_iotlb_global(struct dmar_drhd_rt *dmar_uint)
 {
-	dmar_invalid_iotlb(dmar_uint, 0, 0, 0, 0, DMAR_IIRG_GLOBAL);
+	dmar_invalid_iotlb(dmar_uint, 0U, 0UL, 0U, false, DMAR_IIRG_GLOBAL);
 }
 
 static void dmar_set_root_table(struct dmar_drhd_rt *dmar_uint)
@@ -678,12 +678,12 @@ static void dmar_fault_event_mask(struct dmar_drhd_rt *dmar_uint)
 static void dmar_fault_event_unmask(struct dmar_drhd_rt *dmar_uint)
 {
 	IOMMU_LOCK(dmar_uint);
-	iommu_write32(dmar_uint, DMAR_FECTL_REG, 0);
+	iommu_write32(dmar_uint, DMAR_FECTL_REG, 0U);
 	IOMMU_UNLOCK(dmar_uint);
 }
 
 static void dmar_fault_msi_write(struct dmar_drhd_rt *dmar_uint,
-			uint8_t vector)
+			uint32_t vector)
 {
 	uint32_t data;
 	uint32_t addr_low;
@@ -780,8 +780,8 @@ static int dmar_fault_handler(int irq, void *data)
 	while (dma_fsts_ppf(fsr)) {
 		loop++;
 		index = dma_fsts_fri(fsr);
-		record_reg_offset = dmar_uint->cap_fault_reg_offset
-				+ index * 16;
+		record_reg_offset = (uint32_t)dmar_uint->cap_fault_reg_offset
+				+ index * 16U;
 		if (index >= dmar_uint->cap_num_fault_regs) {
 			dev_dbg(ACRN_DBG_IOMMU, "%s: invalid FR Index",
 					__func__);
@@ -790,7 +790,7 @@ static int dmar_fault_handler(int irq, void *data)
 
 		/* read 128-bit fault recording register */
 		record[0] = iommu_read64(dmar_uint, record_reg_offset);
-		record[1] = iommu_read64(dmar_uint, record_reg_offset + 8);
+		record[1] = iommu_read64(dmar_uint, record_reg_offset + 8U);
 
 		dev_dbg(ACRN_DBG_IOMMU, "%s: record[%d] @0x%x:  0x%llx, 0x%llx",
 			__func__, index, record_reg_offset,
@@ -800,7 +800,7 @@ static int dmar_fault_handler(int irq, void *data)
 
 		/* write to clear */
 		iommu_write64(dmar_uint, record_reg_offset, record[0]);
-		iommu_write64(dmar_uint, record_reg_offset + 8, record[1]);
+		iommu_write64(dmar_uint, record_reg_offset + 8U, record[1]);
 
 #ifdef DMAR_FAULT_LOOP_MAX
 		if (loop > DMAR_FAULT_LOOP_MAX) {
@@ -1147,8 +1147,8 @@ int assign_iommu_device(struct iommu_domain *domain, uint8_t bus,
 
 	/* TODO: check if the device assigned */
 
-	remove_iommu_device(host_domain, 0, bus, devfun);
-	add_iommu_device(domain, 0, bus, devfun);
+	remove_iommu_device(host_domain, 0U, bus, devfun);
+	add_iommu_device(domain, 0U, bus, devfun);
 	return 0;
 }
 
@@ -1161,8 +1161,8 @@ int unassign_iommu_device(struct iommu_domain *domain, uint8_t bus,
 
 	/* TODO: check if the device assigned */
 
-	remove_iommu_device(domain, 0, bus, devfun);
-	add_iommu_device(host_domain, 0, bus, devfun);
+	remove_iommu_device(domain, 0U, bus, devfun);
+	add_iommu_device(host_domain, 0U, bus, devfun);
 	return 0;
 }
 
@@ -1295,7 +1295,7 @@ void init_iommu(void)
 
 	for (bus = 0U; bus <= IOMMU_INIT_BUS_LIMIT; bus++) {
 		for (devfun = 0U; devfun <= 255U; devfun++) {
-			add_iommu_device(host_domain, 0,
+			add_iommu_device(host_domain, 0U,
 					 (uint8_t)bus, (uint8_t)devfun);
 		}
 	}
