@@ -135,7 +135,7 @@ restore_s3_context:
          *160=0xa0=CPU_CONTEXT_OFFSET_RSP
 	 */
 	mov 0x138 + cpu_ctx(%rip), %ss
-	mov 0xa0 + cpu_ctx(%rip), %rsp
+	movq 0xa0 + cpu_ctx(%rip), %rsp
 
 	/*168U=0xa8=CPU_CONTEXT_OFFSET_RFLAGS*/
 	pushq 0xa8 + cpu_ctx(%rip)
