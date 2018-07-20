@@ -23,6 +23,7 @@ struct fixed_range_mtrr_maps {
 };
 
 #define MAX_FIXED_RANGE_ADDR	0x100000UL
+#define FIXED_MTRR_INVALID_INDEX	-1U
 static struct fixed_range_mtrr_maps fixed_mtrr_map[FIXED_RANGE_MTRR_NUM] = {
 	{ MSR_IA32_MTRR_FIX64K_00000, 0x0U, 0x10000U },
 	{ MSR_IA32_MTRR_FIX16K_80000, 0x80000U, 0x4000U },
@@ -37,21 +38,16 @@ static struct fixed_range_mtrr_maps fixed_mtrr_map[FIXED_RANGE_MTRR_NUM] = {
 	{ MSR_IA32_MTRR_FIX4K_F8000, 0xF8000U, 0x1000U },
 };
 
-static bool is_fixed_range_mtrr(uint32_t msr)
-{
-	return (msr >= fixed_mtrr_map[0].msr)
-		&& (msr <= fixed_mtrr_map[FIXED_RANGE_MTRR_NUM - 1U].msr);
-}
-
 static uint32_t get_index_of_fixed_mtrr(uint32_t msr)
 {
 	uint32_t i;
 
 	for (i = 0U; i < FIXED_RANGE_MTRR_NUM; i++) {
-		if (fixed_mtrr_map[i].msr == msr)
-			break;
+		if (fixed_mtrr_map[i].msr == msr) {
+			return i;
+		}
 	}
-	return i;
+	return FIXED_MTRR_INVALID_INDEX;
 }
 
 static uint32_t
@@ -65,13 +61,6 @@ get_subrange_start_of_fixed_mtrr(uint32_t index, uint32_t subrange_id)
 {
 	return (fixed_mtrr_map[index].start + subrange_id *
 		get_subrange_size_of_fixed_mtrr(index));
-}
-
-static uint32_t
-get_subrange_end_of_fixed_mtrr(uint32_t index, uint32_t subrange_id)
-{
-	return (get_subrange_start_of_fixed_mtrr(index, subrange_id) +
-		get_subrange_size_of_fixed_mtrr(index) - 1U);
 }
 
 static inline bool is_mtrr_enabled(struct vcpu *vcpu)
@@ -201,6 +190,8 @@ static void update_ept_mem_type(struct vcpu *vcpu)
 
 void mtrr_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t value)
 {
+	uint32_t index;
+
 	if (msr == MSR_IA32_MTRR_DEF_TYPE) {
 		if (vcpu->mtrr.def_type.value != value) {
 			vcpu->mtrr.def_type.value = value;
@@ -230,25 +221,34 @@ void mtrr_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t value)
 			 */
 			update_ept_mem_type(vcpu);
 		}
-	} else if (is_fixed_range_mtrr(msr))
-		vcpu->mtrr.fixed_range[get_index_of_fixed_mtrr(msr)].value = value;
-	else
-		pr_err("Write to unexpected MSR: 0x%x", msr);
+	} else {
+		index = get_index_of_fixed_mtrr(msr);
+		if (index != FIXED_MTRR_INVALID_INDEX) {
+			vcpu->mtrr.fixed_range[index].value = value;
+		} else {
+			pr_err("Write to unexpected MSR: 0x%x", msr);
+		}
+	}
 }
 
 uint64_t mtrr_rdmsr(struct vcpu *vcpu, uint32_t msr)
 {
 	struct mtrr_state *mtrr = &vcpu->mtrr;
 	uint64_t ret = 0UL;
+	uint32_t index;
 
-	if (msr == MSR_IA32_MTRR_CAP)
+	if (msr == MSR_IA32_MTRR_CAP) {
 		ret = mtrr->cap.value;
-	else if (msr == MSR_IA32_MTRR_DEF_TYPE)
+	} else if (msr == MSR_IA32_MTRR_DEF_TYPE) {
 		ret = mtrr->def_type.value;
-	else if (is_fixed_range_mtrr(msr))
-		ret = mtrr->fixed_range[get_index_of_fixed_mtrr(msr)].value;
-	else
-		pr_err("read unexpected MSR: 0x%x", msr);
+	} else {
+		index = get_index_of_fixed_mtrr(msr);
+		if (index != FIXED_MTRR_INVALID_INDEX) {
+			ret = mtrr->fixed_range[index].value;
+		} else {
+			pr_err("read unexpected MSR: 0x%x", msr);
+		}
+	}
 
 	return ret;
 }
