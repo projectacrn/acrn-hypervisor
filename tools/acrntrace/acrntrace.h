@@ -17,9 +17,9 @@
 #define MMAP_SIZE 		((TRACE_ELEMENT_SIZE * TRACE_ELEMENT_NUM \
 				+ PAGE_SIZE - 1) & PAGE_MASK)
 */
-#define TRACE_FILE_NAME_LEN	36
-#define TRACE_FILE_DIR_LEN	(TRACE_FILE_NAME_LEN - 2)
-#define TRACE_FILE_ROOT		"/tmp/acrntrace/"
+#define TRACE_FILE_NAME_LEN	32
+#define TRACE_FILE_DIR_LEN	(TRACE_FILE_NAME_LEN - 3)
+#define TRACE_FILE_ROOT		"acrntrace/"
 #define DEV_PATH_LEN		18
 #define TIME_STR_LEN		16
 #define CMD_MAX_LEN		48

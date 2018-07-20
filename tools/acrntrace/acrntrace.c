@@ -22,9 +22,6 @@
 
 #include "acrntrace.h"
 
-/* default minimal amount free space (in MB) left on the disk */
-static uint64_t disk_reserved = 512;
-
 #define TIMER_ID	(128)
 static uint32_t timeout = 0;
 
@@ -47,8 +44,6 @@ static void display_usage(void)
 	       "[Usage] acrntrace [-i] [period in msec] [-ch]\n\n"
 	       "[Options]\n"
 	       "\t-h: print this message\n"
-	       "\t-r: minimal amount (in MB) of free space kept on the disk\n"
-	       "\t    before acrntrace stops\n"
 	       "\t-i: period_in_ms: specify polling interval [1-999]\n"
 	       "\t-t: max time to capture trace data (in second)\n"
 	       "\t-c: clear the buffered old data\n");
@@ -108,15 +103,6 @@ static int parse_opt(int argc, char *argv[])
 			}
 			period = ret * 1000;
 			pr_dbg("Period is %lu\n", period);
-			break;
-		case 'r':
-			ret = atoi(optarg);
-			if (ret <=0) {
-				pr_err("'-r' require integer greater than 0\n");
-				return -EINVAL;
-			}
-			disk_reserved = ret;
-			pr_dbg("Keeping %dMB of space on the disk\n", ret);
 			break;
 		case 't':
 			ret = atoi(optarg);
@@ -186,7 +172,6 @@ static int create_trace_file_dir(char *dir)
 
 	pr_info("start tracing at %s\n", time_str);
 
-	/* Pre-condition: Make sure tmpfs is mounted on /tmp */
 	if (stat(TRACE_FILE_ROOT, &st)) {
 		err = mkdir(TRACE_FILE_ROOT, 0644);
 		if (err) {
@@ -234,24 +219,6 @@ static void reader_fn(param_t * param)
 
 	while (1) {
 		do {
-			/* Check that filesystem has enough space */
-			if (fstatvfs(fd, &stat)) {
-				printf("Fail to get vfs stat.\n");
-				exiting = 1;
-				exit(EXIT_FAILURE);
-			}
-
-			freespace = stat.f_frsize * (uint64_t)stat.f_bfree;
-			freespace >>= 20; /* Convert to MB */
-
-			if (freespace <= disk_reserved) {
-				printf("Disk space limit reached (free space:"
-					"%luMB, limit %luMB).\n",
-					freespace, disk_reserved);
-				exiting = 1;
-				exit(EXIT_FAILURE);
-			}
-
 			ret = sbuf_write(fd, sbuf);
 		} while (ret > 0);
 
