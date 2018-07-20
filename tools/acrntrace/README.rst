@@ -13,7 +13,7 @@ Usage
 *****
 
 The ``acrntrace`` tool runs on the Service OS (SOS) to capture trace data and
-output to trace file under ``/tmp/acrntrace`` with raw (binary) data format.
+output to trace file under ``./acrntrace`` with raw (binary) data format.
 
 Options:
 
@@ -96,7 +96,7 @@ data to your linux system, and running the analysis tool.
    will exit automatically when the free storage space on the disk is less than
    reserved space. Reserved space on the disk is configurable through '-r'.
 
-   Trace files are created under ``/tmp/acrntrace/``, with a
+   Trace files are created under ``./acrntrace/``, with a
    date-time-based directory name such as ``20171115-101605``
 
 #. When done, stop a running ``acrntrace``, with:
@@ -120,7 +120,7 @@ data to your linux system, and running the analysis tool.
 
    .. code-block:: none
 
-      # scp -r /tmp/acrntrace/20171115-101605/ \
+      # scp -r ./acrntrace/20171115-101605/ \
           username@hostname:/home/username/trace_data
 
    Replace username and hostname with appropriate values.

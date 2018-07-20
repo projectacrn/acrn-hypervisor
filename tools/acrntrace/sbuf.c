@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "sbuf.h"
+#include <errno.h>
 
 static inline bool sbuf_is_empty(shared_buf_t *sbuf)
 {
@@ -59,9 +60,9 @@ int sbuf_write(int fd, shared_buf_t *sbuf)
 
 	start = (void *)sbuf + SBUF_HEAD_SIZE + sbuf->head;
         written = write(fd, start, sbuf->ele_size);
-	if ( written != sbuf->ele_size) {
-		printf("Failed to write. Expect written size %d, returned %d\n",
-				sbuf->ele_size, written);
+	if (written != sbuf->ele_size) {
+		printf("Failed to write: ret %d (ele_size %d), errno %d\n",
+			written, sbuf->ele_size, (written == -1) ? errno : 0);
 		return -1;
 	}
 
