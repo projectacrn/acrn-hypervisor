@@ -12,24 +12,24 @@
 union mtrr_cap_reg {
 	uint64_t value;
 	struct {
-		uint64_t vcnt:8;
-		uint64_t fix:1;
-		uint64_t res0:1;
-		uint64_t wc:1;
-		uint64_t res1:21;
-		uint64_t res2:32;
+		uint32_t vcnt:8;
+		uint32_t fix:1;
+		uint32_t res0:1;
+		uint32_t wc:1;
+		uint32_t res1:21;
+		uint32_t res2:32;
 	} bits;
 };
 
 union mtrr_def_type_reg {
 	uint64_t value;
 	struct {
-		uint64_t type:8;
-		uint64_t res0:2;
-		uint64_t fixed_enable:1;
-		uint64_t enable:1;
-		uint64_t res1:20;
-		uint64_t res2:32;
+		uint32_t type:8;
+		uint32_t res0:2;
+		uint32_t fixed_enable:1;
+		uint32_t enable:1;
+		uint32_t res1:20;
+		uint32_t res2:32;
 	} bits;
 };
 
