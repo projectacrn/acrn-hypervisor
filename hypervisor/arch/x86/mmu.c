@@ -74,10 +74,11 @@ static inline void _invvpid(uint64_t type, uint16_t vpid, uint64_t gva)
 	int error = 0;
 
 	struct {
-		uint64_t vpid : 16;
-		uint64_t rsvd : 48;
+		uint32_t vpid : 16;
+		uint32_t rsvd1 : 16;
+		uint32_t rsvd2 : 32;
 		uint64_t gva;
-	} operand = { vpid, 0, gva };
+	} operand = { vpid, 0U, 0U, gva };
 
 	asm volatile ("invvpid %1, %2\n"
 			VMFAIL_INVALID_EPT_VPID

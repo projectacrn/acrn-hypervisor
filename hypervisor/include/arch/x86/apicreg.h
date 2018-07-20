@@ -121,8 +121,8 @@
 
 #ifndef LOCORE
 
-#define PAD3	int: 32; int: 32; int: 32
-#define PAD4	int: 32; int: 32; int: 32; int: 32
+#define PAD3	uint32_t: 32; uint32_t: 32; uint32_t: 32
+#define PAD4	uint32_t: 32; uint32_t: 32; uint32_t: 32; uint32_t: 32
 
 struct lapic_reg {
 	uint32_t val;		PAD3;
