@@ -746,7 +746,7 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
 		goto done;
 	}
 
-	(void)memcpy_s((char *)dstaddr, 16U, (char *)srcaddr, opsize);
+	(void)memcpy_s((void *)dstaddr, 16U, (void *)srcaddr, opsize);
 
 	error = vie_read_register(vcpu, CPU_REG_RSI, &rsi);
 	error = vie_read_register(vcpu, CPU_REG_RDI, &rdi);

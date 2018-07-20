@@ -140,7 +140,7 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 	uint32_t i;
 	uint64_t index;
 	uint32_t shift;
-	uint8_t *base;
+	void *base;
 	uint64_t entry;
 	uint64_t addr, page_size;
 	int ret = 0;
@@ -167,10 +167,12 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 		page_size = 1UL << shift;
 
 		if (pw_info->width == 10U) {
+			uint32_t *base32 = (uint32_t *)base;
 			/* 32bit entry */
-			entry = *((uint32_t *)(base + (4U * index)));
+			entry = (uint64_t)(*(base32 + index));
 		} else {
-			entry = *((uint64_t *)(base + (8U * index)));
+			uint64_t *base64 = (uint64_t *)base;
+			entry = *(base64 + index);
 		}
 
 		/* check if the entry present */

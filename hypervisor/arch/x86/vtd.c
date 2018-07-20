@@ -933,9 +933,9 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 		uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_uint;
-	uint64_t *root_table;
+	struct dmar_root_entry *root_table;
 	uint64_t context_table_addr;
-	uint64_t *context_table;
+	struct dmar_context_entry *context_table;
 	struct dmar_root_entry *root_entry;
 	struct dmar_context_entry *context_entry;
 	uint64_t upper = 0UL;
@@ -975,9 +975,9 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 		}
 	}
 
-	root_table = (uint64_t *)HPA2HVA(dmar_uint->root_table_addr);
+	root_table = (struct dmar_root_entry *)HPA2HVA(dmar_uint->root_table_addr);
 
-	root_entry = (struct dmar_root_entry *)&root_table[bus * 2];
+	root_entry = root_table + bus;
 
 	if (dmar_get_bitslice(root_entry->lower,
 	        ROOT_ENTRY_LOWER_PRESENT_MASK,
@@ -1014,8 +1014,8 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 
 	context_table_addr = context_table_addr << 12;
 
-	context_table = (uint64_t *)HPA2HVA(context_table_addr);
-	context_entry = (struct dmar_context_entry *)&context_table[devfun * 2];
+	context_table = (struct dmar_context_entry *)HPA2HVA(context_table_addr);
+	context_entry = context_table + devfun;
 
 	/* the context entry should not be present */
 	if (dmar_get_bitslice(context_entry->lower,
@@ -1088,9 +1088,9 @@ remove_iommu_device(struct iommu_domain *domain, uint16_t segment,
 		uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_uint;
-	uint64_t *root_table;
+	struct dmar_root_entry *root_table;
 	uint64_t context_table_addr;
-	uint64_t *context_table;
+	struct dmar_context_entry *context_table;
 	struct dmar_root_entry *root_entry;
 	struct dmar_context_entry *context_entry;
 	uint16_t dom_id;
@@ -1106,16 +1106,16 @@ remove_iommu_device(struct iommu_domain *domain, uint16_t segment,
 		return 1;
 	}
 
-	root_table = (uint64_t *)HPA2HVA(dmar_uint->root_table_addr);
-	root_entry = (struct dmar_root_entry *)&root_table[bus * 2];
+	root_table = (struct dmar_root_entry *)HPA2HVA(dmar_uint->root_table_addr);
+	root_entry = root_table + bus;
 
 	context_table_addr = dmar_get_bitslice(root_entry->lower,
 					       ROOT_ENTRY_LOWER_CTP_MASK,
 					       ROOT_ENTRY_LOWER_CTP_POS);
 	context_table_addr = context_table_addr << 12;
-	context_table = (uint64_t *)HPA2HVA(context_table_addr);
+	context_table = (struct dmar_context_entry *)HPA2HVA(context_table_addr);
 
-	context_entry = (struct dmar_context_entry *)&context_table[devfun * 2];
+	context_entry = context_table + devfun;
 
 	dom_id = (uint16_t)dmar_get_bitslice(context_entry->upper,
 		        CTX_ENTRY_UPPER_DID_MASK, CTX_ENTRY_UPPER_DID_POS);

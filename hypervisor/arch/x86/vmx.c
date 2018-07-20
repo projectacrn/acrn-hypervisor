@@ -1205,7 +1205,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 {
 	uint32_t value32;
 	uint64_t value64;
-	struct vm *vm = (struct vm *) vcpu->vm;
+	struct vm *vm = vcpu->vm;
 
 	/* Log messages to show initializing VMX execution controls */
 	pr_dbg("*****************************");
