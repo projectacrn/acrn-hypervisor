@@ -285,7 +285,7 @@ struct acrn_vm_pci_msix_remap {
 	/** if the pass-through PCI device is MSI-X, this field contains
 	 *  the MSI-X entry table index
 	 */
-	int32_t msix_entry_index;
+	uint32_t msix_entry_index;
 
 	/** if the pass-through PCI device is MSI-X, this field contains
 	 *  Vector Control for MSI-X Entry, field defined in MSI-X spec
