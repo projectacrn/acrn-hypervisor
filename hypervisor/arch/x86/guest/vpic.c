@@ -37,7 +37,7 @@
 
 #define vm_pic(vm)	(vm->vpic)
 
-#define ACRN_DBG_PIC	6
+#define ACRN_DBG_PIC	6U
 
 enum irqstate {
 	IRQSTATE_ASSERT,
@@ -232,7 +232,7 @@ static void vpic_notify_intr(struct vpic *vpic)
 		 */
 		pic->intr_raised = true;
 		if (vpic->vm->vpic_wire_mode == VPIC_WIRE_INTR) {
-			struct vcpu *vcpu = vcpu_from_vid(vpic->vm, 0);
+			struct vcpu *vcpu = vcpu_from_vid(vpic->vm, 0U);
 
 			ASSERT(vcpu != NULL, "vm%d, vcpu0", vpic->vm->attr.id);
 			vcpu_inject_extint(vcpu);
@@ -423,7 +423,7 @@ static int vpic_ocw2(struct vpic *vpic, struct pic *pic, uint8_t val)
 		/* if level ack PTDEV */
 		if ((pic->elc & (1U << (isr_bit & 0x7U))) != 0U) {
 			ptdev_intx_ack(vpic->vm,
-				master_pic(vpic, pic) ? isr_bit : isr_bit + 8U,
+				(master_pic(vpic, pic) ? isr_bit : isr_bit + 8U),
 				PTDEV_VPIN_PIC);
 		}
 	} else if ((val & OCW2_SL) != 0U && pic->rotate) {
