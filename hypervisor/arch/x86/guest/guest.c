@@ -146,7 +146,7 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 	int ret = 0;
 	int fault = 0;
 
-	if (pw_info->level < 1) {
+	if (pw_info->level < 1U) {
 		return -EINVAL;
 	}
 
@@ -198,7 +198,7 @@ static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 			fault = 1;
 		}
 
-		if (pw_info->pse && (i > 0 && ((entry & MMU_32BIT_PDE_PS) != 0U))) {
+		if (pw_info->pse && (i > 0U && ((entry & MMU_32BIT_PDE_PS) != 0U))) {
 			break;
 		}
 		addr = entry;

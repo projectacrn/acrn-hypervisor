@@ -270,7 +270,7 @@ int start_vm(struct vm *vm)
 	vm->state = VM_STARTED;
 
 	/* Only start BSP (vid = 0) and let BSP start other APs */
-	vcpu = vcpu_from_vid(vm, 0);
+	vcpu = vcpu_from_vid(vm, 0U);
 	ASSERT(vcpu != NULL, "vm%d, vcpu0", vm->attr.id);
 	schedule_vcpu(vcpu);
 

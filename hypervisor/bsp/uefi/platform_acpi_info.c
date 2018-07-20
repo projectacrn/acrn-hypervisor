@@ -11,8 +11,8 @@
 #include <hypervisor.h>
 
 const struct acpi_info host_acpi_info = {
-	-1,				/* x86 family */
-	-1,				/* x86 model */
+	0,				/* x86 family */
+	0,				/* x86 model */
 	{
 		{SPACE_SYSTEM_IO, 0, 0, 0, 0},	/* PM1a EVT */
 		{SPACE_SYSTEM_IO, 0, 0, 0, 0},	/* PM1b EVT */

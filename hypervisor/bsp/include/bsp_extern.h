@@ -19,6 +19,14 @@
 #define BSP_EXTERN_H
 
 #define UOS_DEFAULT_START_ADDR   (0x100000000UL)
+
+struct acpi_info {
+	uint8_t			x86_family;
+	uint8_t			x86_model;
+	struct pm_s_state_data	pm_s_state;
+	/* TODO: we can add more acpi info field here if needed. */
+};
+
 /**********************************/
 /* EXTERNAL VARIABLES             */
 /**********************************/

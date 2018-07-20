@@ -1435,7 +1435,7 @@ emulate_bittest(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 {
 	uint64_t val, rflags, bitmask;
 	int error;
-	uint32_t  bitoff;
+	uint64_t bitoff;
 	uint8_t size;
 
 	/*
@@ -1602,7 +1602,7 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	    "%s: invalid segment %d", __func__, seg);
 	ASSERT(length == 1U || length == 2U || length == 4U || length == 8U,
 	    "%s: invalid operand size %hhu", __func__, length);
-	ASSERT((prot & ~(PROT_READ | PROT_WRITE)) == 0,
+	ASSERT((prot & ~(PROT_READ | PROT_WRITE)) == 0U,
 	    "%s: invalid prot %#x", __func__, prot);
 
 	firstoff = offset;

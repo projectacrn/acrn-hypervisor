@@ -340,13 +340,6 @@ struct pm_s_state_data {
 	uint64_t *wake_vector_64;
 }__attribute__((aligned(8)));
 
-struct acpi_info {
-	int16_t			x86_family;
-	int16_t			x86_model;
-	struct pm_s_state_data	pm_s_state;
-	/* TODO: we can add more acpi info field here if needed. */
-};
-
 /**
  * @brief Info PM command from DM/VHM.
  *
