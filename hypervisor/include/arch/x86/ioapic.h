@@ -7,13 +7,14 @@
 #ifndef IOAPIC_H
 #define IOAPIC_H
 
-/* IOAPIC_MAX_LINES is architecturally defined.
+/*
+ * IOAPIC_MAX_LINES is architecturally defined.
  * The usable RTEs may be a subset of the total on a per IO APIC basis.
  */
 #define IOAPIC_MAX_LINES	120U
 #define NR_LEGACY_IRQ		16U
-#define NR_LEGACY_PIN	NR_LEGACY_IRQ
-#define NR_MAX_GSI	(CONFIG_NR_IOAPICS*IOAPIC_MAX_LINES)
+#define NR_LEGACY_PIN		NR_LEGACY_IRQ
+#define NR_MAX_GSI		(CONFIG_NR_IOAPICS * IOAPIC_MAX_LINES)
 
 #define GSI_MASK_IRQ(irq) irq_gsi_mask_unmask((irq), true)
 #define GSI_UNMASK_IRQ(irq) irq_gsi_mask_unmask((irq), false)
@@ -28,12 +29,11 @@ void irq_gsi_mask_unmask(uint32_t irq, bool mask);
 void ioapic_set_rte(uint32_t irq, union ioapic_rte rte);
 void ioapic_get_rte(uint32_t irq, union ioapic_rte *rte);
 
-
 void suspend_ioapic(void);
 void resume_ioapic(void);
 
-extern uint8_t legacy_irq_to_pin[];
-extern uint8_t pic_ioapic_pin_map[];
+extern uint8_t legacy_irq_to_pin[NR_LEGACY_IRQ];
+extern uint8_t pic_ioapic_pin_map[NR_LEGACY_PIN];
 
 #ifdef HV_DEBUG
 int get_ioapic_info(char *str, int str_max_len);

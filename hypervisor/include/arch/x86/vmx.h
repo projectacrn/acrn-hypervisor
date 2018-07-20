@@ -252,6 +252,14 @@
 #define VMX_EXIT_REASON_WBINVD                                       0x00000036U
 #define VMX_EXIT_REASON_XSETBV                                       0x00000037U
 #define VMX_EXIT_REASON_APIC_WRITE                                   0x00000038U
+#define VMX_EXIT_REASON_RDRAND                                       0x00000039U
+#define VMX_EXIT_REASON_INVPCID                                      0x0000003AU
+#define VMX_EXIT_REASON_VMFUNC                                       0x0000003BU
+#define VMX_EXIT_REASON_ENCLS                                        0x0000003CU
+#define VMX_EXIT_REASON_RDSEED                                       0x0000003DU
+#define VMX_EXIT_REASON_PAGE_MODIFICATION_LOG_FULL                   0x0000003EU
+#define VMX_EXIT_REASON_XSAVES                                       0x0000003FU
+#define VMX_EXIT_REASON_XRSTORS                                      0x00000040U
 
 /* VMX execution control bits (pin based) */
 #define VMX_PINBASED_CTLS_IRQ_EXIT     (1U<<0)

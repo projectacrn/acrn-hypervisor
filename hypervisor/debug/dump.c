@@ -9,7 +9,7 @@
 /*
  * readable exception descriptors.
  */
-static const char *const excp_names[] = {
+static const char *const excp_names[32] = {
 	[0] = "Divide Error",
 	[1] = "RESERVED",
 	[2] = "NMI",

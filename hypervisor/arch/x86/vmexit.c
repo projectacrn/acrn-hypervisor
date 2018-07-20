@@ -6,10 +6,17 @@
 
 #include <hypervisor.h>
 
+/*
+ * According to "SDM APPENDIX C VMX BASIC EXIT REASONS",
+ * there are 65 Basic Exit Reasons.
+ */
+#define NR_VMX_EXIT_REASONS	65U
+
 static int unhandled_vmexit_handler(struct vcpu *vcpu);
 static int xsetbv_vmexit_handler(struct vcpu *vcpu);
+
 /* VM Dispatch table for Exit condition handling */
-static const struct vm_exit_dispatch dispatch_table[] = {
+static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_EXCEPTION_OR_NMI] = {
 		.handler = exception_vmexit_handler},
 	[VMX_EXIT_REASON_EXTERNAL_INTERRUPT] = {
@@ -125,7 +132,23 @@ static const struct vm_exit_dispatch dispatch_table[] = {
 		.handler = xsetbv_vmexit_handler},
 	[VMX_EXIT_REASON_APIC_WRITE] = {
 		.handler = apic_write_vmexit_handler,
-		.need_exit_qualification = 1}
+		.need_exit_qualification = 1},
+	[VMX_EXIT_REASON_RDRAND] = {
+		.handler = unhandled_vmexit_handler},
+	[VMX_EXIT_REASON_INVPCID] = {
+		.handler = unhandled_vmexit_handler},
+	[VMX_EXIT_REASON_VMFUNC] = {
+		.handler = unhandled_vmexit_handler},
+	[VMX_EXIT_REASON_ENCLS] = {
+		.handler = unhandled_vmexit_handler},
+	[VMX_EXIT_REASON_RDSEED] = {
+		.handler = unhandled_vmexit_handler},
+	[VMX_EXIT_REASON_PAGE_MODIFICATION_LOG_FULL] = {
+		.handler = unhandled_vmexit_handler},
+	[VMX_EXIT_REASON_XSAVES] = {
+		.handler = unhandled_vmexit_handler},
+	[VMX_EXIT_REASON_XRSTORS] = {
+		.handler = unhandled_vmexit_handler}
 };
 
 int vmexit_handler(struct vcpu *vcpu)
@@ -242,7 +265,7 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
 	uint64_t *regptr;
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-	static const int reg_trans_tab[] = {
+	static const int reg_trans_tab[16] = {
 		[0] = CPU_CONTEXT_INDEX_RAX,
 		[1] = CPU_CONTEXT_INDEX_RCX,
 		[2] = CPU_CONTEXT_INDEX_RDX,

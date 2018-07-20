@@ -15,7 +15,7 @@
 #define EXCEPTION_CLASS_CONT	2
 #define EXCEPTION_CLASS_PF	3
 
-static const uint16_t exception_type[] = {
+static const uint16_t exception_type[32] = {
 	[0] = VMX_INT_TYPE_HW_EXP,
 	[1] = VMX_INT_TYPE_HW_EXP,
 	[2] = VMX_INT_TYPE_HW_EXP,

@@ -390,9 +390,6 @@ static inline void clflush(volatile void *p)
 	asm volatile ("clflush (%0)" :: "r"(p));
 }
 
-/* External variable declarations */
-extern uint8_t CPU_Boot_Page_Tables_Start_VM[];
-
 /* External Interfaces */
 bool is_ept_supported(void);
 uint64_t create_guest_initial_paging(struct vm *vm);
