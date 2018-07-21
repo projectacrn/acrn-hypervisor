@@ -55,12 +55,12 @@ static inline int exec_vmxon(void *addr)
 	/* Ensure previous operations successful */
 	if (status == 0) {
 		/* Turn VMX on */
-		asm volatile ("mov %1, %%rax\n"
+		asm volatile (
 			      "vmxon (%%rax)\n"
 			      "pushfq\n"
 			      "pop %0\n":"=r" (rflags)
-			      : "r"(addr)
-			      : "%rax", "cc", "memory");
+			      : "a"(addr)
+			      : "cc", "memory");
 
 		/* if carry and zero flags are clear operation success */
 		if ((rflags & (RFLAGS_C | RFLAGS_Z)) != 0U) {
@@ -153,12 +153,12 @@ int exec_vmclear(void *addr)
 	ASSERT(status == 0, "Incorrect arguments");
 
 	asm volatile (
-		"mov %1, %%rax\n"
 		"vmclear (%%rax)\n"
 		"pushfq\n"
-		"pop %0\n":"=r" (rflags)
-		: "r"(addr)
-		: "%rax", "cc", "memory");
+		"pop %0\n"
+		:"=r" (rflags)
+		: "a"(addr)
+		: "cc", "memory");
 
 	/* if carry and zero flags are clear operation success */
 	if ((rflags & (RFLAGS_C | RFLAGS_Z)) != 0U) {
@@ -179,13 +179,12 @@ int exec_vmptrld(void *addr)
 	ASSERT(status == 0, "Incorrect arguments");
 
 	asm volatile (
-		"mov %1, %%rax\n"
 		"vmptrld (%%rax)\n"
 		"pushfq\n"
 		"pop %0\n"
 		: "=r" (rflags)
-		: "r"(addr)
-		: "%rax", "cc");
+		: "a"(addr)
+		: "cc", "memory");
 
 	/* if carry and zero flags are clear operation success */
 	if ((rflags & (RFLAGS_C | RFLAGS_Z)) != 0U) {
@@ -1153,7 +1152,7 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	    (((trbase_lo >> 56U) & 0xffUL) << 24U);
 
 	/* SS segment override for upper32 bits of base in ia32e mode */
-	asm volatile ("mov %0,%%rax\n"
+	asm volatile (
 		      ".byte 0x36\n"
 		      "movq 8(%%rax),%%rax\n":"=a" (trbase_hi):"0"(trbase));
 	realtrbase = realtrbase | (trbase_hi << 32U);
