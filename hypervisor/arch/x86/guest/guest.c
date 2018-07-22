@@ -639,7 +639,8 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 	 * will cause EPT violation if sos accesses hv memory
 	 */
 	hv_hpa = get_hv_image_base();
-	ept_mr_del(vm, hv_hpa, hv_hpa, CONFIG_RAM_SIZE);
+	ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+			hv_hpa, CONFIG_RAM_SIZE);
 	return 0;
 }
 

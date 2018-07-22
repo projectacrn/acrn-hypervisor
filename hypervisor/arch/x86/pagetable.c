@@ -56,23 +56,30 @@ static int split_large_page(uint64_t *pte,
 	return 0;
 }
 
-static inline void __modify_pte(uint64_t *pte,
-		uint64_t prot_set, uint64_t prot_clr)
+static inline void __modify_or_del_pte(uint64_t *pte,
+		uint64_t prot_set, uint64_t prot_clr, uint32_t type)
 {
-	uint64_t new_pte = *pte;
-	new_pte &= ~prot_clr;
-	new_pte |= prot_set;
-	set_pte(pte, new_pte);
+	if (type == MR_MODIFY) {
+		uint64_t new_pte = *pte;
+		new_pte &= ~prot_clr;
+		new_pte |= prot_set;
+		set_pte(pte, new_pte);
+	} else {
+		set_pte(pte, 0);
+	}
 }
 
 /*
  * In PT level,
+ * type: MR_MODIFY
  * modify [vaddr_start, vaddr_end) memory type or page access right.
+ * type: MR_DEL
+ * delete [vaddr_start, vaddr_end) MT PT mapping
  */
-static int modify_pte(uint64_t *pde,
+static int modify_or_del_pte(uint64_t *pde,
 		uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot_set, uint64_t prot_clr,
-		enum _page_table_type ptt)
+		enum _page_table_type ptt, uint32_t type)
 {
 	uint64_t *pt_page = pde_page_vaddr(*pde);
 	uint64_t vaddr = vaddr_start;
@@ -88,7 +95,7 @@ static int modify_pte(uint64_t *pde,
 			return -EFAULT;
 		}
 
-		__modify_pte(pte, prot_set, prot_clr);
+		__modify_or_del_pte(pte, prot_set, prot_clr, type);
 		vaddr += PTE_SIZE;
 		if (vaddr >= vaddr_end) {
 			break;
@@ -100,12 +107,15 @@ static int modify_pte(uint64_t *pde,
 
 /*
  * In PD level,
+ * type: MR_MODIFY
  * modify [vaddr_start, vaddr_end) memory type or page access right.
+ * type: MR_DEL
+ * delete [vaddr_start, vaddr_end) MT PT mapping
  */
-static int modify_pde(uint64_t *pdpte,
+static int modify_or_del_pde(uint64_t *pdpte,
 		uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot_set, uint64_t prot_clr,
-		enum _page_table_type ptt)
+		enum _page_table_type ptt, uint32_t type)
 {
 	int ret = 0;
 	uint64_t *pd_page = pdpte_page_vaddr(*pdpte);
@@ -130,7 +140,8 @@ static int modify_pde(uint64_t *pdpte,
 					return ret;
 				}
 			} else {
-				__modify_pte(pde, prot_set, prot_clr);
+				__modify_or_del_pte(pde,
+					prot_set, prot_clr, type);
 				if (vaddr_next < vaddr_end) {
 					vaddr = vaddr_next;
 					continue;
@@ -138,8 +149,8 @@ static int modify_pde(uint64_t *pdpte,
 				return 0;
 			}
 		}
-		ret = modify_pte(pde, vaddr, vaddr_end,
-				prot_set, prot_clr, ptt);
+		ret = modify_or_del_pte(pde, vaddr, vaddr_end,
+				prot_set, prot_clr, ptt, type);
 		if (ret != 0 || (vaddr_next >= vaddr_end)) {
 			return ret;
 		}
@@ -151,12 +162,15 @@ static int modify_pde(uint64_t *pdpte,
 
 /*
  * In PDPT level,
+ * type: MR_MODIFY
  * modify [vaddr_start, vaddr_end) memory type or page access right.
+ * type: MR_DEL
+ * delete [vaddr_start, vaddr_end) MT PT mapping
  */
-static int modify_pdpte(uint64_t *pml4e,
+static int modify_or_del_pdpte(uint64_t *pml4e,
 		uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot_set, uint64_t prot_clr,
-		enum _page_table_type ptt)
+		enum _page_table_type ptt, uint32_t type)
 {
 	int ret = 0;
 	uint64_t *pdpt_page = pml4e_page_vaddr(*pml4e);
@@ -181,7 +195,8 @@ static int modify_pdpte(uint64_t *pml4e,
 					return ret;
 				}
 			} else {
-				__modify_pte(pdpte, prot_set, prot_clr);
+				__modify_or_del_pte(pdpte,
+					prot_set, prot_clr, type);
 				if (vaddr_next < vaddr_end) {
 					vaddr = vaddr_next;
 					continue;
@@ -189,8 +204,8 @@ static int modify_pdpte(uint64_t *pml4e,
 				return 0;
 			}
 		}
-		ret = modify_pde(pdpte, vaddr, vaddr_end,
-				prot_set, prot_clr, ptt);
+		ret = modify_or_del_pde(pdpte, vaddr, vaddr_end,
+				prot_set, prot_clr, ptt, type);
 		if (ret != 0 || (vaddr_next >= vaddr_end)) {
 			return ret;
 		}
@@ -201,6 +216,7 @@ static int modify_pdpte(uint64_t *pml4e,
 }
 
 /*
+ * type: MR_MODIFY
  * modify [vaddr, vaddr + size ) memory type or page access right.
  * prot_clr - memory type or page access right want to be clear
  * prot_set - memory type or page access right want to be set
@@ -209,11 +225,13 @@ static int modify_pdpte(uint64_t *pml4e,
  * to what you want to set, prot_clr to what you want to clear. But if you
  * want to modify the MT, you should set the prot_set to what MT you want
  * to set, prot_clr to the MT mask.
+ * type: MR_DEL
+ * delete [vaddr_base, vaddr_base + size ) memory region page table mapping.
  */
-int mmu_modify(uint64_t *pml4_page,
+int mmu_modify_or_del(uint64_t *pml4_page,
 		uint64_t vaddr_base, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr,
-		enum _page_table_type ptt)
+		enum _page_table_type ptt, uint32_t type)
 {
 	uint64_t vaddr = vaddr_base;
 	uint64_t vaddr_next, vaddr_end;
@@ -221,7 +239,8 @@ int mmu_modify(uint64_t *pml4_page,
 	int ret;
 
 	if (!MEM_ALIGNED_CHECK(vaddr, PAGE_SIZE_4K) ||
-		!MEM_ALIGNED_CHECK(size, PAGE_SIZE_4K)) {
+		!MEM_ALIGNED_CHECK(size, PAGE_SIZE_4K) ||
+		(type != MR_MODIFY && type != MR_DEL)) {
 		pr_err("%s, invalid parameters!\n", __func__);
 		return -EINVAL;
 	}
@@ -236,8 +255,8 @@ int mmu_modify(uint64_t *pml4_page,
 			pr_err("%s, invalid op, pml4e not present\n", __func__);
 			return -EFAULT;
 		}
-		ret = modify_pdpte(pml4e, vaddr, vaddr_end,
-					prot_set, prot_clr, ptt);
+		ret = modify_or_del_pdpte(pml4e, vaddr, vaddr_end,
+					prot_set, prot_clr, ptt, type);
 		if (ret != 0) {
 			return ret;
 		}
