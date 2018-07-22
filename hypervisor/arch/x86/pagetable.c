@@ -56,45 +56,51 @@ static int split_large_page(uint64_t *pte,
 	return 0;
 }
 
+static inline void __modify_pte(uint64_t *pte,
+		uint64_t prot_set, uint64_t prot_clr)
+{
+	uint64_t new_pte = *pte;
+	new_pte &= ~prot_clr;
+	new_pte |= prot_set;
+	set_pte(pte, new_pte);
+}
+
 /*
- * In PT level, modify [vaddr_start, vaddr_end) MR PTA.
+ * In PT level,
+ * modify [vaddr_start, vaddr_end) memory type or page access right.
  */
 static int modify_pte(uint64_t *pde,
 		uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot_set, uint64_t prot_clr,
 		enum _page_table_type ptt)
 {
-	uint64_t *pd_page = pde_page_vaddr(*pde);
+	uint64_t *pt_page = pde_page_vaddr(*pde);
 	uint64_t vaddr = vaddr_start;
 	uint64_t index = pte_index(vaddr);
 
 	dev_dbg(ACRN_DBG_MMU, "%s, vaddr: [0x%llx - 0x%llx]\n",
 		__func__, vaddr, vaddr_end);
 	for (; index < PTRS_PER_PTE; index++) {
-		uint64_t new_pte, *pte = pd_page + index;
-		uint64_t vaddr_next = (vaddr & PTE_MASK) + PTE_SIZE;
+		uint64_t *pte = pt_page + index;
 
 		if (pgentry_present(ptt, *pte) == 0UL) {
 			pr_err("%s, invalid op, pte not present\n", __func__);
 			return -EFAULT;
 		}
 
-		new_pte = *pte;
-		new_pte &= ~prot_clr;
-		new_pte |= prot_set;
-		set_pte(pte, new_pte);
-
-		if (vaddr_next >= vaddr_end) {
+		__modify_pte(pte, prot_set, prot_clr);
+		vaddr += PTE_SIZE;
+		if (vaddr >= vaddr_end) {
 			break;
 		}
-		vaddr = vaddr_next;
 	}
 
 	return 0;
 }
 
 /*
- * In PD level, modify [vaddr_start, vaddr_end) MR PTA.
+ * In PD level,
+ * modify [vaddr_start, vaddr_end) memory type or page access right.
  */
 static int modify_pde(uint64_t *pdpte,
 		uint64_t vaddr_start, uint64_t vaddr_end,
@@ -102,14 +108,14 @@ static int modify_pde(uint64_t *pdpte,
 		enum _page_table_type ptt)
 {
 	int ret = 0;
-	uint64_t *pdpt_page = pdpte_page_vaddr(*pdpte);
+	uint64_t *pd_page = pdpte_page_vaddr(*pdpte);
 	uint64_t vaddr = vaddr_start;
 	uint64_t index = pde_index(vaddr);
 
 	dev_dbg(ACRN_DBG_MMU, "%s, vaddr: [0x%llx - 0x%llx]\n",
 		__func__, vaddr, vaddr_end);
 	for (; index < PTRS_PER_PDE; index++) {
-		uint64_t *pde = pdpt_page + index;
+		uint64_t *pde = pd_page + index;
 		uint64_t vaddr_next = (vaddr & PDE_MASK) + PDE_SIZE;
 
 		if (pgentry_present(ptt, *pde) == 0UL) {
@@ -123,10 +129,7 @@ static int modify_pde(uint64_t *pdpte,
 					return ret;
 				}
 			} else {
-				uint64_t new_pde = *pde;
-				new_pde &= ~prot_clr;
-				new_pde |= prot_set;
-				set_pte(pde, new_pde);
+				__modify_pte(pde, prot_set, prot_clr);
 				if (vaddr_next < vaddr_end) {
 					vaddr = vaddr_next;
 					continue;
@@ -146,7 +149,8 @@ static int modify_pde(uint64_t *pdpte,
 }
 
 /*
- * In PDPT level, modify [vaddr, vaddr_end) MR PTA.
+ * In PDPT level,
+ * modify [vaddr_start, vaddr_end) memory type or page access right.
  */
 static int modify_pdpte(uint64_t *pml4e,
 		uint64_t vaddr_start, uint64_t vaddr_end,
@@ -154,14 +158,14 @@ static int modify_pdpte(uint64_t *pml4e,
 		enum _page_table_type ptt)
 {
 	int ret = 0;
-	uint64_t *pml4_page = pml4e_page_vaddr(*pml4e);
+	uint64_t *pdpt_page = pml4e_page_vaddr(*pml4e);
 	uint64_t vaddr = vaddr_start;
 	uint64_t index = pdpte_index(vaddr);
 
 	dev_dbg(ACRN_DBG_MMU, "%s, vaddr: [0x%llx - 0x%llx]\n",
 		__func__, vaddr, vaddr_end);
 	for (; index < PTRS_PER_PDPTE; index++) {
-		uint64_t *pdpte = pml4_page + index;
+		uint64_t *pdpte = pdpt_page + index;
 		uint64_t vaddr_next = (vaddr & PDPTE_MASK) + PDPTE_SIZE;
 
 		if (pgentry_present(ptt, *pdpte) == 0UL) {
@@ -175,10 +179,7 @@ static int modify_pdpte(uint64_t *pml4e,
 					return ret;
 				}
 			} else {
-				uint64_t new_pdpte = *pdpte;
-				new_pdpte &= ~prot_clr;
-				new_pdpte |= prot_set;
-				set_pte(pdpte, new_pdpte);
+				__modify_pte(pdpte, prot_set, prot_clr);
 				if (vaddr_next < vaddr_end) {
 					vaddr = vaddr_next;
 					continue;
@@ -198,9 +199,9 @@ static int modify_pdpte(uint64_t *pml4e,
 }
 
 /*
- * modify [vaddr, vaddr + size ) memory region page table attributes.
- * prot_clr - attributes want to be clear
- * prot_set - attributes want to be set
+ * modify [vaddr, vaddr + size ) memory type or page access right.
+ * prot_clr - memory type or page access right want to be clear
+ * prot_set - memory type or page access right want to be set
  * @pre: the prot_set and prot_clr should set before call this function.
  * If you just want to modify access rights, you can just set the prot_clr
  * to what you want to set, prot_clr to what you want to clear. But if you

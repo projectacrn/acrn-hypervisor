@@ -400,8 +400,9 @@ uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size);
 uint64_t  hpa2gpa(struct vm *vm, uint64_t hpa);
 int ept_mr_add(struct vm *vm, uint64_t hpa,
 	uint64_t gpa, uint64_t size, uint32_t prot);
-int ept_mr_modify(struct vm *vm, uint64_t gpa, uint64_t size,
-	uint64_t attr_set, uint64_t attr_clr);
+int ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
+	uint64_t gpa, uint64_t size,
+	uint64_t prot_set, uint64_t prot_clr);
 int ept_mr_del(struct vm *vm, uint64_t hpa,
 	uint64_t gpa, uint64_t size);
 

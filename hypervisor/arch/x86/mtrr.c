@@ -145,7 +145,8 @@ static uint32_t update_ept(struct vm *vm, uint64_t start,
 		attr = IA32E_EPT_UNCACHED;
 	}
 
-	ept_mr_modify(vm, start, size, attr, IA32E_EPT_MT_MASK);
+	ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+			start, size, attr, IA32E_EPT_MT_MASK);
 	return attr;
 }
 
