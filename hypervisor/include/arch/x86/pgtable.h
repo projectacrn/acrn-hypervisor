@@ -68,12 +68,18 @@ static inline uint64_t *pte_offset(uint64_t *pde, uint64_t addr)
 	return pde_page_vaddr(*pde) + pte_index(addr);
 }
 
-static inline uint64_t get_pte(uint64_t *pte)
+/*
+ * pgentry may means pml4e/pdpte/pde/pte
+ */
+static inline uint64_t get_pgentry(uint64_t *pte)
 {
 	return *pte;
 }
 
-static inline void set_pte(uint64_t *ptep, uint64_t pte)
+/*
+ * pgentry may means pml4e/pdpte/pde/pte
+ */
+static inline void set_pgentry(uint64_t *ptep, uint64_t pte)
 {
 	*ptep = pte;
 }

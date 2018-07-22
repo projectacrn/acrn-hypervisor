@@ -509,6 +509,9 @@ int ept_mr_add(struct vm *vm, uint64_t hpa_arg,
 	if ((prot & IA32E_EPT_MT_MASK) != IA32E_EPT_UNCACHED) {
 		prot |= IA32E_EPT_SNOOP_CTRL;
 	}
+	/* TODO: replace map_mem with mmu_add once SOS has add
+	 * HC_VM_WRITE_PROTECT_PAGE support.
+	 */
 	map_mem(&map_params, (void *)hpa,
 			(void *)gpa, size, prot);
 

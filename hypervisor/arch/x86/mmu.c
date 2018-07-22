@@ -523,13 +523,10 @@ void enable_smep(void)
 
 void init_paging(void)
 {
-	struct map_params map_params;
 	struct e820_entry *entry;
 	uint64_t hv_hpa;
 	uint32_t i;
-	int attr_uc = (MMU_MEM_ATTR_BIT_READ_WRITE |
-			MMU_MEM_ATTR_BIT_USER_ACCESSIBLE |
-			MMU_MEM_ATTR_TYPE_UNCACHED);
+	uint64_t attr_uc = (PAGE_TABLE | PAGE_CACHE_UC);
 
 	pr_dbg("HV MMU Initialization");
 
@@ -539,15 +536,10 @@ void init_paging(void)
 	init_e820();
 	obtain_e820_mem_info();
 
-	/* Loop through all memory regions in the e820 table */
-	map_params.page_table_type = PTT_HOST;
-	map_params.pml4_base = mmu_pml4_addr;
-
 	/* Map all memory regions to UC attribute */
-	map_mem(&map_params, (void *)e820_mem.mem_bottom,
-			(void *)e820_mem.mem_bottom,
-			(e820_mem.mem_top - e820_mem.mem_bottom),
-			attr_uc);
+	mmu_add((uint64_t *)mmu_pml4_addr, e820_mem.mem_bottom,
+		e820_mem.mem_bottom, e820_mem.mem_top - e820_mem.mem_bottom,
+		attr_uc, PTT_HOST);
 
 	/* Modify WB attribute for E820_TYPE_RAM */
 	for (i = 0U; i < e820_entries; i++) {
