@@ -593,10 +593,10 @@ void init_paging(void)
 	for (i = 0U; i < e820_entries; i++) {
 		entry = &e820[i];
 		if (entry->type == E820_TYPE_RAM) {
-			mmu_modify((uint64_t *)mmu_pml4_addr,
+			mmu_modify_or_del((uint64_t *)mmu_pml4_addr,
 					entry->baseaddr, entry->length,
 					PAGE_CACHE_WB, PAGE_CACHE_MASK,
-					PTT_HOST);
+					PTT_HOST, MR_MODIFY);
 		}
 	}
 
@@ -604,8 +604,9 @@ void init_paging(void)
 	 * to supervisor-mode for hypervisor owned memroy.
 	 */
 	hv_hpa = get_hv_image_base();
-	mmu_modify((uint64_t *)mmu_pml4_addr, hv_hpa, CONFIG_RAM_SIZE,
-			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER, PTT_HOST);
+	mmu_modify_or_del((uint64_t *)mmu_pml4_addr, hv_hpa, CONFIG_RAM_SIZE,
+			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER,
+			PTT_HOST, MR_MODIFY);
 
 	/* Enable paging */
 	enable_paging(HVA2HPA(mmu_pml4_addr));

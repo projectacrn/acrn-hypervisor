@@ -250,7 +250,9 @@ int register_mmio_emulation_handler(struct vm *vm,
 			 * need to unmap it.
 			 */
 			if (is_vm0(vm)) {
-				ept_mr_del(vm, start, start, end - start);
+				ept_mr_del(vm,
+					(uint64_t *)vm->arch_vm.nworld_eptp,
+					start, end - start);
 			}
 
 			/* Return success */
@@ -529,8 +531,8 @@ int ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
 	uint16_t i;
 	int ret;
 
-	ret = mmu_modify(pml4_page, gpa, size,
-			prot_set, prot_clr, PTT_EPT);
+	ret = mmu_modify_or_del(pml4_page, gpa, size,
+			prot_set, prot_clr, PTT_EPT, MR_MODIFY);
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
@@ -539,28 +541,31 @@ int ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
 	return ret;
 }
 
-int ept_mr_del(struct vm *vm, uint64_t hpa_arg,
-		uint64_t gpa_arg, uint64_t size)
+int ept_mr_del(struct vm *vm, uint64_t *pml4_page,
+		uint64_t gpa, uint64_t size)
 {
-	struct map_params map_params;
-	uint16_t i;
 	struct vcpu *vcpu;
-	uint64_t hpa = hpa_arg;
-	uint64_t gpa = gpa_arg;
+	uint16_t i;
+	int ret;
+	uint64_t hpa = gpa2hpa(vm, gpa);
 
-	/* Setup memory map parameters */
-	map_params.page_table_type = PTT_EPT;
-	map_params.pml4_base = vm->arch_vm.nworld_eptp;
-	map_params.pml4_inverted = vm->arch_vm.m2p;
+	ret = mmu_modify_or_del(pml4_page, gpa, size,
+			0UL, 0UL, PTT_EPT, MR_DEL);
+	if (ret < 0) {
+		return ret;
+	}
 
-	unmap_mem(&map_params, (void *)hpa, (void *)gpa, size, 0U);
+	if (hpa != 0UL) {
+		ret = mmu_modify_or_del((uint64_t *)vm->arch_vm.m2p,
+			hpa, size, 0UL, 0UL, PTT_EPT, MR_DEL);
+	}
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 	}
 
-	dev_dbg(ACRN_DBG_EPT, "%s, hpa 0x%llx gpa 0x%llx size 0x%llx\n",
-			__func__, hpa, gpa, size);
+	dev_dbg(ACRN_DBG_EPT, "%s, gpa 0x%llx size 0x%llx\n",
+			__func__, gpa, size);
 
 	return 0;
 }

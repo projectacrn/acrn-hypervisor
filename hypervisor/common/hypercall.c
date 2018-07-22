@@ -482,7 +482,8 @@ static int32_t _set_vm_memory_region(struct vm *vm,
 		return ept_mr_add(target_vm, hpa,
 				region->gpa, region->size, prot);
 	} else {
-		return ept_mr_del(target_vm, hpa,
+		return ept_mr_del(target_vm,
+				(uint64_t *)target_vm->arch_vm.nworld_eptp,
 				region->gpa, region->size);
 	}
 

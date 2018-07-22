@@ -326,10 +326,10 @@ int map_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		    uint64_t size, uint32_t flags);
 int unmap_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		      uint64_t size, uint32_t flags);
-int mmu_modify(uint64_t *pml4_page,
+int mmu_modify_or_del(uint64_t *pml4_page,
 		uint64_t vaddr_base, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr,
-		enum _page_table_type ptt);
+		enum _page_table_type ptt, uint32_t type);
 int check_vmx_mmu_cap(void);
 uint16_t allocate_vpid(void);
 void flush_vpid_single(uint16_t vpid);
@@ -403,8 +403,8 @@ int ept_mr_add(struct vm *vm, uint64_t hpa_arg,
 int ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
 	uint64_t gpa, uint64_t size,
 	uint64_t prot_set, uint64_t prot_clr);
-int ept_mr_del(struct vm *vm, uint64_t hpa_arg,
-	uint64_t gpa_arg, uint64_t size);
+int ept_mr_del(struct vm *vm, uint64_t *pml4_page,
+	uint64_t gpa, uint64_t size);
 
 int     ept_violation_vmexit_handler(struct vcpu *vcpu);
 int     ept_misconfig_vmexit_handler(struct vcpu *vcpu);
