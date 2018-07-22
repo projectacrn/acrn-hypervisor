@@ -102,13 +102,13 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 			(uint16_t)param2);
 		break;
 
-	case HC_VM_SET_MEMMAP:
+	case HC_VM_SET_MEMORY_REGION:
 		/* param1: vmid */
-		ret = hcall_set_vm_memmap(vm, (uint16_t)param1, param2);
+		ret = hcall_set_vm_memory_region(vm, (uint16_t)param1, param2);
 		break;
 
-	case HC_VM_SET_MEMMAPS:
-		ret = hcall_set_vm_memmaps(vm, param1);
+	case HC_VM_SET_MEMORY_REGIONS:
+		ret = hcall_set_vm_memory_regions(vm, param1);
 		break;
 
 	case HC_VM_PCI_MSIX_REMAP:

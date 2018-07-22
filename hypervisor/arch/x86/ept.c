@@ -250,8 +250,7 @@ int register_mmio_emulation_handler(struct vm *vm,
 			 * need to unmap it.
 			 */
 			if (is_vm0(vm)) {
-				ept_mmap(vm, start, start, end - start,
-					MAP_UNMAP, 0);
+				ept_mr_del(vm, start, start, end - start);
 			}
 
 			/* Return success */
@@ -486,8 +485,8 @@ int ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu)
 	return status;
 }
 
-int ept_mmap(struct vm *vm, uint64_t hpa,
-	uint64_t gpa, uint64_t size, uint32_t type, uint32_t prot)
+int ept_mr_add(struct vm *vm, uint64_t hpa,
+	uint64_t gpa, uint64_t size, uint32_t prot)
 {
 	struct map_params map_params;
 	uint16_t i;
@@ -498,30 +497,22 @@ int ept_mmap(struct vm *vm, uint64_t hpa,
 	map_params.pml4_base = vm->arch_vm.nworld_eptp;
 	map_params.pml4_inverted = vm->arch_vm.m2p;
 
-	if (type == MAP_MEM || type == MAP_MMIO) {
-		/* EPT & VT-d share the same page tables, set SNP bit
-		 * to force snooping of PCIe devices if the page
-		 * is cachable
-		 */
-		if ((prot & IA32E_EPT_MT_MASK) != IA32E_EPT_UNCACHED) {
-			prot |= IA32E_EPT_SNOOP_CTRL;
-		}
-		map_mem(&map_params, (void *)hpa,
-			(void *)gpa, size, prot);
-
-	} else if (type == MAP_UNMAP) {
-		unmap_mem(&map_params, (void *)hpa, (void *)gpa,
-				size, prot);
-	} else {
-		ASSERT(false, "unknown map type");
+	/* EPT & VT-d share the same page tables, set SNP bit
+	 * to force snooping of PCIe devices if the page
+	 * is cachable
+	 */
+	if ((prot & IA32E_EPT_MT_MASK) != IA32E_EPT_UNCACHED) {
+		prot |= IA32E_EPT_SNOOP_CTRL;
 	}
+	map_mem(&map_params, (void *)hpa,
+			(void *)gpa, size, prot);
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 	}
 
-	dev_dbg(ACRN_DBG_EPT, "ept map: %s hpa: 0x%016llx gpa: 0x%016llx ",
-			type == MAP_UNMAP ? "unmap" : "map", hpa, gpa);
+	dev_dbg(ACRN_DBG_EPT, "%s, hpa: 0x%016llx gpa: 0x%016llx ",
+			__func__, hpa, gpa);
 	dev_dbg(ACRN_DBG_EPT, "size: 0x%016llx prot: 0x%x\n", size, prot);
 
 	return 0;
@@ -542,4 +533,28 @@ int ept_mr_modify(struct vm *vm, uint64_t gpa, uint64_t size,
 	}
 
 	return ret;
+}
+
+int ept_mr_del(struct vm *vm, uint64_t hpa,
+		uint64_t gpa, uint64_t size)
+{
+	struct map_params map_params;
+	uint16_t i;
+	struct vcpu *vcpu;
+
+	/* Setup memory map parameters */
+	map_params.page_table_type = PTT_EPT;
+	map_params.pml4_base = vm->arch_vm.nworld_eptp;
+	map_params.pml4_inverted = vm->arch_vm.m2p;
+
+	unmap_mem(&map_params, (void *)hpa, (void *)gpa, size, 0U);
+
+	foreach_vcpu(i, vm, vcpu) {
+		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
+	}
+
+	dev_dbg(ACRN_DBG_EPT, "%s, hpa 0x%llx gpa 0x%llx size 0x%llx\n",
+			__func__, hpa, gpa, size);
+
+	return 0;
 }

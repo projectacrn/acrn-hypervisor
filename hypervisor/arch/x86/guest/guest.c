@@ -614,16 +614,16 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 		e820_mem.mem_bottom, e820_mem.mem_top);
 
 	/* create real ept map for all ranges with UC */
-	ept_mmap(vm, e820_mem.mem_bottom, e820_mem.mem_bottom,
+	ept_mr_add(vm, e820_mem.mem_bottom, e820_mem.mem_bottom,
 			(e820_mem.mem_top - e820_mem.mem_bottom),
-			MAP_MMIO, attr_uc);
+			attr_uc);
 
 	/* update ram entries to WB attr */
 	for (i = 0U; i < e820_entries; i++) {
 		entry = &e820[i];
 		if (entry->type == E820_TYPE_RAM) {
-			ept_mmap(vm, entry->baseaddr, entry->baseaddr,
-					entry->length, MAP_MEM, attr_wb);
+			ept_mr_add(vm, entry->baseaddr, entry->baseaddr,
+					entry->length, attr_wb);
 		}
 	}
 
@@ -641,7 +641,7 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 	 * will cause EPT violation if sos accesses hv memory
 	 */
 	hv_hpa = get_hv_image_base();
-	ept_mmap(vm, hv_hpa, hv_hpa, CONFIG_RAM_SIZE, MAP_UNMAP, 0U);
+	ept_mr_del(vm, hv_hpa, hv_hpa, CONFIG_RAM_SIZE);
 	return 0;
 }
 

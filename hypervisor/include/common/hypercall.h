@@ -196,9 +196,6 @@ int32_t hcall_notify_req_finish(uint16_t vmid, uint16_t vcpu_id);
 /**
  * @brief setup ept memory mapping
  *
- * Set the ept memory mapping for a VM.
- * The function will return -1 if the target VM does not exist.
- *
  * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to
@@ -206,7 +203,7 @@ int32_t hcall_notify_req_finish(uint16_t vmid, uint16_t vcpu_id);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_vm_memmap(struct vm *vm, uint16_t vmid, uint64_t param);
+int32_t hcall_set_vm_memory_region(struct vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief setup ept memory mapping for multi regions
@@ -217,7 +214,7 @@ int32_t hcall_set_vm_memmap(struct vm *vm, uint16_t vmid, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_vm_memmaps(struct vm *vm, uint64_t param);
+int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param);
 
 /**
  * @brief remap PCI MSI interrupt
