@@ -2111,9 +2111,9 @@ int vlapic_create(struct vcpu *vcpu)
 		}
 
 		if (is_vcpu_bsp(vcpu)) {
-			ept_mmap(vcpu->vm,
+			ept_mr_add(vcpu->vm,
 				apicv_get_apic_access_addr(vcpu->vm),
-				DEFAULT_APIC_BASE, CPU_PAGE_SIZE, MAP_MMIO,
+				DEFAULT_APIC_BASE, CPU_PAGE_SIZE,
 				IA32E_EPT_W_BIT | IA32E_EPT_R_BIT |
 				IA32E_EPT_UNCACHED);
 		}

@@ -405,129 +405,129 @@ int32_t hcall_notify_req_finish(uint16_t vmid, uint16_t vcpu_id)
 	return 0;
 }
 
-static int32_t
-_set_vm_memmap(struct vm *vm, struct vm *target_vm,
-	struct vm_set_memmap *memmap)
+static int32_t _set_vm_memory_region(struct vm *vm,
+	struct vm *target_vm, struct vm_memory_region *region)
 {
 	uint64_t hpa, base_paddr;
-	uint64_t attr, prot;
+	uint64_t prot;
 
-	if ((memmap->length & 0xFFFUL) != 0UL) {
-		pr_err("%s: ERROR! [vm%d] map size 0x%x is not page aligned",
-				__func__, target_vm->attr.id, memmap->length);
-		return -1;
+	if ((region->size & (CPU_PAGE_SIZE - 1UL)) != 0UL) {
+		pr_err("%s: [vm%d] map size 0x%x is not page aligned",
+			__func__, target_vm->attr.id, region->size);
+		return -EINVAL;
 	}
 
-	hpa = gpa2hpa(vm, memmap->vm0_gpa);
+	hpa = gpa2hpa(vm, region->vm0_gpa);
 	dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x size=0x%x",
-		target_vm->attr.id, memmap->remote_gpa, hpa, memmap->length);
+		target_vm->attr.id, region->gpa, hpa, region->size);
 
 	base_paddr = get_hv_image_base();
 	if (((hpa <= base_paddr) &&
-		((hpa + memmap->length) > base_paddr)) ||
+		((hpa + region->size) > base_paddr)) ||
 		((hpa >= base_paddr) &&
 		(hpa < (base_paddr + CONFIG_RAM_SIZE)))) {
-		pr_err("%s: ERROR! overlap the HV memory region.", __func__);
-		return -1;
+		pr_err("%s: overlap the HV memory region.", __func__);
+		return -EFAULT;
 	}
 
-	/* Check prot */
-	attr = 0U;
-	if (memmap->type != MAP_UNMAP) {
-		prot = (memmap->prot != 0U) ? memmap->prot : memmap->prot_2;
-		if ((prot & MEM_ACCESS_READ) != 0U) {
-			attr |= IA32E_EPT_R_BIT;
+	if (region->type != MR_DEL) {
+		prot = 0UL;
+		/* access right */
+		if ((region->prot & MEM_ACCESS_READ) != 0U) {
+			prot |= EPT_RD;
 		}
-		if ((prot & MEM_ACCESS_WRITE) != 0U) {
-			attr |= IA32E_EPT_W_BIT;
+		if ((region->prot & MEM_ACCESS_WRITE) != 0U) {
+			prot |= EPT_WR;
 		}
-		if ((prot & MEM_ACCESS_EXEC) != 0U) {
-			attr |= IA32E_EPT_X_BIT;
+		if ((region->prot & MEM_ACCESS_EXEC) != 0U) {
+			prot |= EPT_EXE;
 		}
-		if ((prot & MEM_TYPE_WB) != 0U) {
-			attr |= IA32E_EPT_WB;
-		} else if ((prot & MEM_TYPE_WT) != 0U) {
-			attr |= IA32E_EPT_WT;
-		} else if ((prot & MEM_TYPE_WC) != 0U) {
-			attr |= IA32E_EPT_WC;
-		} else if ((prot & MEM_TYPE_WP) != 0U) {
-			attr |= IA32E_EPT_WP;
+		/* memory type */
+		if ((region->prot & MEM_TYPE_WB) != 0U) {
+			prot |= EPT_WB;
+		} else if ((region->prot & MEM_TYPE_WT) != 0U) {
+			prot |= EPT_WT;
+		} else if ((region->prot & MEM_TYPE_WC) != 0U) {
+			prot |= EPT_WC;
+		} else if ((region->prot & MEM_TYPE_WP) != 0U) {
+			prot |= EPT_WP;
 		} else {
-			attr |= IA32E_EPT_UNCACHED;
+			prot |= EPT_UNCACHED;
 		}
+		/* create gpa to hpa EPT mapping */
+		return ept_mr_add(target_vm, hpa,
+				region->gpa, region->size, prot);
+	} else {
+		return ept_mr_del(target_vm, hpa,
+				region->gpa, region->size);
 	}
 
-	/* create gpa to hpa EPT mapping */
-	return ept_mmap(target_vm, hpa,
-		memmap->remote_gpa, memmap->length, memmap->type, attr);
 }
 
-int32_t hcall_set_vm_memmap(struct vm *vm, uint16_t vmid, uint64_t param)
+int32_t hcall_set_vm_memory_region(struct vm *vm, uint16_t vmid, uint64_t param)
 {
-	struct vm_set_memmap memmap;
+	struct vm_memory_region region;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
 	if ((vm == NULL) || (target_vm == NULL)) {
-		return -1;
+		return -EINVAL;
 	}
 
-	(void)memset((void *)&memmap, 0U, sizeof(memmap));
+	(void)memset((void *)&region, 0U, sizeof(region));
 
-	if (copy_from_gpa(vm, &memmap, param, sizeof(memmap)) != 0) {
+	if (copy_from_gpa(vm, &region, param, sizeof(region)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
+		return -EFAULT;
 	}
 
 	if (!is_vm0(vm)) {
-		pr_err("%s: ERROR! Not coming from service vm", __func__);
-		return -1;
+		pr_err("%s: Not coming from service vm", __func__);
+		return -EPERM;
 	}
 
 	if (is_vm0(target_vm)) {
-		pr_err("%s: ERROR! Targeting to service vm", __func__);
-		return -1;
+		pr_err("%s: Targeting to service vm", __func__);
+		return -EPERM;
 	}
 
-	return _set_vm_memmap(vm, target_vm, &memmap);
+	return _set_vm_memory_region(vm, target_vm, &region);
 }
 
-int32_t hcall_set_vm_memmaps(struct vm *vm, uint64_t param)
+int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param)
 {
-	struct set_memmaps set_memmaps;
-	struct memory_map *regions;
+	struct set_regions set_regions;
+	struct vm_memory_region *regions;
 	struct vm *target_vm;
 	uint32_t idx;
 
 	if (!is_vm0(vm)) {
-		pr_err("%s: ERROR! Not coming from service vm",
-				__func__);
-		return -1;
+		pr_err("%s: Not coming from service vm", __func__);
+		return -EPERM;
 	}
 
-	(void)memset((void *)&set_memmaps, 0U, sizeof(set_memmaps));
+	(void)memset((void *)&set_regions, 0U, sizeof(set_regions));
 
-	if (copy_from_gpa(vm, &set_memmaps, param, sizeof(set_memmaps)) != 0) {
+	if (copy_from_gpa(vm, &set_regions, param, sizeof(set_regions)) != 0) {
 		pr_err("%s: Unable copy param from vm\n", __func__);
-		return -1;
+		return -EFAULT;
 	}
 
-	target_vm = get_vm_from_vmid(set_memmaps.vmid);
+	target_vm = get_vm_from_vmid(set_regions.vmid);
 	if (is_vm0(target_vm)) {
-		pr_err("%s: ERROR! Targeting to service vm",
-				__func__);
-		return -1;
+		pr_err("%s: Targeting to service vm", __func__);
+		return -EFAULT;
 	}
 
 	idx = 0U;
 	/*TODO: use copy_from_gpa for this buffer page */
-	regions = GPA2HVA(vm, set_memmaps.memmaps_gpa);
-	while (idx < set_memmaps.memmaps_num) {
+	regions = GPA2HVA(vm, set_regions.regions_gpa);
+	while (idx < set_regions.mr_num) {
 		/* the force pointer change below is for back compatible
-		 * to struct vm_set_memmap, it will be removed in the future
+		 * to struct vm_memory_region, it will be removed in the future
 		 */
-		if (_set_vm_memmap(vm, target_vm,
-			(struct vm_set_memmap *)&regions[idx]) < 0) {
-			return -1;
+		int ret = _set_vm_memory_region(vm, target_vm, &regions[idx]);
+		if (ret < 0) {
+			return ret;
 		}
 		idx++;
 	}
