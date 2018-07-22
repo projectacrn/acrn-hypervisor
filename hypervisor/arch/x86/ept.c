@@ -518,15 +518,16 @@ int ept_mr_add(struct vm *vm, uint64_t hpa,
 	return 0;
 }
 
-int ept_mr_modify(struct vm *vm, uint64_t gpa, uint64_t size,
-		uint64_t attr_set, uint64_t attr_clr)
+int ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
+		uint64_t gpa, uint64_t size,
+		uint64_t prot_set, uint64_t prot_clr)
 {
 	struct vcpu *vcpu;
 	uint16_t i;
 	int ret;
 
-	ret = mmu_modify((uint64_t *)vm->arch_vm.nworld_eptp,
-			gpa, size, attr_set, attr_clr, PTT_EPT);
+	ret = mmu_modify(pml4_page, gpa, size,
+			prot_set, prot_clr, PTT_EPT);
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
