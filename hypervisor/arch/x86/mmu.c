@@ -32,13 +32,6 @@
 
 static void *mmu_pml4_addr;
 
-enum mem_map_request_type {
-	PAGING_REQUEST_TYPE_MAP = 0,	/* Creates a new mapping. */
-	PAGING_REQUEST_TYPE_UNMAP = 1,	/* Removes a pre-existing entry */
-	/* Modifies a pre-existing entries attributes. */
-	PAGING_REQUEST_TYPE_UNKNOWN,
-};
-
 static struct vmx_capability {
 	uint32_t ept;
 	uint32_t vpid;
@@ -236,16 +229,14 @@ check_page_table_present(enum _page_table_type page_table_type,
 
 static uint32_t map_mem_region(void *vaddr, void *paddr,
 		void *table_base, uint64_t attr_arg, uint32_t table_level,
-		enum _page_table_type table_type,
-		enum mem_map_request_type request_type)
+		enum _page_table_type table_type)
 {
 	uint64_t table_entry;
 	uint64_t attr = attr_arg;
 	uint32_t table_offset;
 	uint32_t mapped_size;
 
-	if (table_base == NULL || table_level >= IA32E_UNKNOWN
-	    || request_type >= PAGING_REQUEST_TYPE_UNKNOWN) {
+	if (table_base == NULL || table_level >= IA32E_UNKNOWN) {
 		/* Shouldn't go here */
 		ASSERT(false, "Incorrect Arguments. Failed to map region");
 		return 0;
@@ -315,7 +306,6 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 		/* Get current table entry */
 		uint64_t entry = mem_read64(table_base + table_offset);
 		bool prev_entry_present = false;
-		bool mmu_need_invtlb = false;
 
 		switch(check_page_table_present(table_type, entry)) {
 		case PT_PRESENT:
@@ -330,53 +320,23 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 			return 0;
 		}
 
-		switch (request_type) {
-		case PAGING_REQUEST_TYPE_MAP:
-		{
-			/* No need to confirm current table entry
-			 * isn't already present
-			 * support map-->remap
-			 */
-			table_entry = ((table_type == PTT_EPT)
-					? attr
-					: (attr | IA32E_COMM_P_BIT));
+		/* No need to confirm current table entry
+		 * isn't already present
+		 * support map-->remap
+		 */
+		table_entry = ((table_type == PTT_EPT)
+				? attr
+				: (attr | IA32E_COMM_P_BIT));
 
-			table_entry |= (uint64_t)paddr;
+		table_entry |= (uint64_t)paddr;
 
-			/* Write the table entry to map this memory */
-			mem_write64(table_base + table_offset, table_entry);
+		/* Write the table entry to map this memory */
+		mem_write64(table_base + table_offset, table_entry);
 
-			/* Invalidate TLB and page-structure cache,
-			 * if it is the first mapping no need to invalidate TLB
-			 */
-			if ((table_type == PTT_HOST) && prev_entry_present) {
-				mmu_need_invtlb = true;
-			}
-			break;
-		}
-		case PAGING_REQUEST_TYPE_UNMAP:
-		{
-			if (prev_entry_present) {
-				/* Table is present.
-				 * Write the table entry to map this memory
-				 */
-				mem_write64(table_base + table_offset, 0);
-
-				/* Unmap, need to invalidate TLB and
-				 * page-structure cache
-				 */
-				if (table_type == PTT_HOST) {
-					mmu_need_invtlb = true;
-				}
-			}
-			break;
-		}
-		default:
-			ASSERT(false, "Bad memory map request type");
-			return 0;
-		}
-
-		if (mmu_need_invtlb) {
+		/* Invalidate TLB and page-structure cache,
+		 * if it is the first mapping no need to invalidate TLB
+		 */
+		if ((table_type == PTT_HOST) && prev_entry_present) {
 			/* currently, all native mmu update is done at BSP,
 			 * the assumption is that after AP start, there
 			 * is no mmu update - so we can avoid shootdown issue
@@ -782,7 +742,7 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 
 static uint64_t update_page_table_entry(struct map_params *map_params,
 		void *paddr, void *vaddr, uint64_t size, uint64_t attr,
-		enum mem_map_request_type request_type, bool direct)
+		bool direct)
 {
 	uint64_t remaining_size = size;
 	uint32_t adjustment_size;
@@ -805,7 +765,7 @@ static uint64_t update_page_table_entry(struct map_params *map_params,
 		/* Map this 1 GByte memory region */
 		adjustment_size = map_mem_region(vaddr, paddr,
 				table_addr, attr, IA32E_PDPT,
-				table_type, request_type);
+				table_type);
 	} else if ((remaining_size >= MEM_2M)
 			&& (MEM_ALIGNED_CHECK(vaddr, MEM_2M))
 			&& (MEM_ALIGNED_CHECK(paddr, MEM_2M))) {
@@ -817,8 +777,7 @@ static uint64_t update_page_table_entry(struct map_params *map_params,
 		}
 		/* Map this 2 MByte memory region */
 		adjustment_size = map_mem_region(vaddr, paddr,
-				table_addr, attr, IA32E_PD, table_type,
-				request_type);
+				table_addr, attr, IA32E_PD, table_type);
 	} else {
 		/* Walk from the PDPT table to the PD table */
 		table_addr = walk_paging_struct(vaddr,
@@ -835,7 +794,7 @@ static uint64_t update_page_table_entry(struct map_params *map_params,
 		/* Map this 4 KByte memory region */
 		adjustment_size = map_mem_region(vaddr, paddr,
 				table_addr, attr, IA32E_PT,
-				table_type, request_type);
+				table_type);
 	}
 
 	return adjustment_size;
@@ -939,8 +898,7 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 }
 
 static int modify_paging(struct map_params *map_params, void *paddr,
-		void *vaddr, uint64_t size, uint32_t flags,
-		enum mem_map_request_type request_type, bool direct)
+		void *vaddr, uint64_t size, uint32_t flags, bool direct)
 {
 	int64_t  remaining_size;
 	uint64_t adjust_size;
@@ -957,10 +915,9 @@ static int modify_paging(struct map_params *map_params, void *paddr,
 	vaddr_end = ROUND_PAGE_DOWN(vaddr_end);
 	remaining_size = vaddr_end - (uint64_t)vaddr;
 
-	if ((request_type >= PAGING_REQUEST_TYPE_UNKNOWN)
-			|| (map_params == NULL)) {
-		pr_err("%s: vaddr=0x%llx size=0x%llx req_type=0x%lx",
-			__func__, vaddr, size, request_type);
+	if (map_params == NULL) {
+		pr_err("%s: vaddr=0x%llx size=0x%llx",
+			__func__, vaddr, size);
 		ASSERT(false, "Incorrect Arguments");
 		return -EINVAL;
 	}
@@ -986,17 +943,8 @@ static int modify_paging(struct map_params *map_params, void *paddr,
 			direct) < 0) {
 			return -EINVAL;
 		}
-		/* filter the unmap request, no action in this case*/
+
 		page_size =  entry.page_size;
-		if ((request_type == PAGING_REQUEST_TYPE_UNMAP)
-				&& (entry.entry_present == PT_NOT_PRESENT)) {
-			adjust_size =
-				page_size - ((uint64_t)(vaddr) % page_size);
-			vaddr += adjust_size;
-			paddr += adjust_size;
-			remaining_size -= adjust_size;
-			continue;
-		}
 
 		/* if the address is NOT aligned of current page size,
 		 * or required memory size < page size
@@ -1024,7 +972,7 @@ static int modify_paging(struct map_params *map_params, void *paddr,
 		}
 		/* The function return the memory size that one entry can map */
 		adjust_size = update_page_table_entry(map_params, paddr, vaddr,
-				page_size, attr, request_type, direct);
+				page_size, attr, direct);
 		if (adjust_size == 0UL) {
 			return -EINVAL;
 		}
@@ -1042,34 +990,14 @@ int map_mem(struct map_params *map_params, void *paddr, void *vaddr,
 	int ret = 0;
 
 	/* used for MMU and EPT*/
-	ret = modify_paging(map_params, paddr, vaddr, size, flags,
-			PAGING_REQUEST_TYPE_MAP, true);
+	ret = modify_paging(map_params, paddr, vaddr, size, flags, true);
 	if (ret < 0) {
 		return ret;
 	}
 	/* only for EPT */
 	if (map_params->page_table_type == PTT_EPT) {
 		ret = modify_paging(map_params, vaddr, paddr, size, flags,
-				PAGING_REQUEST_TYPE_MAP, false);
-	}
-	return ret;
-}
-
-int unmap_mem(struct map_params *map_params, void *paddr, void *vaddr,
-		      uint64_t size, uint32_t flags)
-{
-	int ret = 0;
-
-	/* used for MMU and EPT */
-	ret = modify_paging(map_params, paddr, vaddr, size, flags,
-			PAGING_REQUEST_TYPE_UNMAP, true);
-	if (ret < 0) {
-		return ret;
-	}
-	/* only for EPT */
-	if (map_params->page_table_type == PTT_EPT) {
-		ret = modify_paging(map_params, vaddr, paddr, size, flags,
-				PAGING_REQUEST_TYPE_UNMAP, false);
+				false);
 	}
 	return ret;
 }

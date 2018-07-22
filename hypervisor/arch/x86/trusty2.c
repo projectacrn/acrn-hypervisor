@@ -127,8 +127,8 @@ void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 		hpa = gpa2hpa(vm, gpa_uos);
 
 		/* Unmap from normal world */
-		unmap_mem(&map_params, (void *)hpa,
-			(void *)gpa_uos, adjust_size, 0U);
+		ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+				gpa_uos, adjust_size);
 
 		/* Map to secure world */
 		map_params.pml4_base = vm->arch_vm.sworld_eptp;
@@ -139,24 +139,18 @@ void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 			 IA32E_EPT_X_BIT |
 			 IA32E_EPT_WB));
 
-		/* Unmap trusty memory space from sos ept mapping*/
-		map_params.pml4_base = vm0->arch_vm.nworld_eptp;
-		map_params.pml4_inverted = vm0->arch_vm.m2p;
 		/* Get the gpa address in SOS */
 		gpa_sos = hpa2gpa(vm0, hpa);
 
-		unmap_mem(&map_params, (void *)hpa,
-				(void *)gpa_sos, adjust_size, 0U);
+		/* Unmap trusty memory space from sos ept mapping*/
+		ept_mr_del(vm0, (uint64_t *)vm0->arch_vm.nworld_eptp,
+				gpa_sos, adjust_size);
 		gpa_uos += adjust_size;
 		size -= adjust_size;
 		gpa_rebased += adjust_size;
 	}
 
 	foreach_vcpu(i, vm, vcpu) {
-		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
-	}
-
-	foreach_vcpu(i, vm0, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 	}
 }
