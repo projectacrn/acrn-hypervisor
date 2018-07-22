@@ -324,6 +324,9 @@ void enable_smep(void);
 void init_paging(void);
 int map_mem(struct map_params *map_params, void *paddr, void *vaddr,
 		    uint64_t size, uint32_t flags);
+int mmu_add(uint64_t *pml4_page, uint64_t paddr_base,
+		uint64_t vaddr_base, uint64_t size,
+		uint64_t prot, enum _page_table_type ptt);
 int mmu_modify_or_del(uint64_t *pml4_page,
 		uint64_t vaddr_base, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr,
