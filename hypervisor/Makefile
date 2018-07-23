@@ -199,7 +199,7 @@ endif
 endif
 
 C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(C_SRCS))
-ifeq ($(CONFIG_RELEASE),n)
+ifneq ($(CONFIG_RELEASE),y)
 C_OBJS += $(patsubst %.c,$(HV_OBJDIR)/%.o,$(D_SRCS))
 CFLAGS += -DHV_DEBUG
 endif
@@ -263,7 +263,7 @@ $(VERSION):
 	DAILY_TAG=`git tag --merged HEAD|grep "acrn"|tail -n 1`;\
 	TIME=`date "+%F %T"`;\
 	USER=`id -u -n`; \
-	if [ $(CONFIG_RELEASE) = "n" ];then BUILD_TYPE="DBG";else BUILD_TYPE="REL";fi;\
+	if [ x$(CONFIG_RELEASE) = "xy" ];then BUILD_TYPE="REL";else BUILD_TYPE="DBG";fi;\
 	echo "/*" > $(VERSION); \
 	sed 's/^/ * /' ../LICENSE >> $(VERSION); \
 	echo " */" >> $(VERSION); \
