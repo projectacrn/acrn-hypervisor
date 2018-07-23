@@ -90,8 +90,6 @@ static void parse_other_modules(struct vm *vm,
 			vm->sw.linux_info.ramdisk_load_addr =
 				(void *)(uint64_t)mods[i].mm_mod_start;
 			vm->sw.linux_info.ramdisk_size = mod_size;
-		} else if (strncmp("SeedList", start, type_len) == 0) {
-			parse_seed_list((struct seed_list_hob *)mod_addr);
 		} else {
 			pr_warn("not support mod, cmd: %s", start);
 		}
