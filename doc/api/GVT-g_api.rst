@@ -83,6 +83,7 @@ responses to user space modules, notified by vIRQ injections.
 .. kernel-doc:: include/linux/vhm/acrn_vhm_mm.h
    :functions: update_memmap_attr
 
+.. _MPT_interface:
 
 ACRN-GT mediated pass-through (MPT) interface
 **************************************************
@@ -143,6 +144,7 @@ This section describes the wrap functions:
                intel_gvt_hypervisor_unpause_domain
                intel_gvt_hypervisor_dom0_ready
 
+.. _intel_gvt_ops_interface:
 
 GVT-g intel_gvt_ops interface
 *****************************
@@ -182,6 +184,8 @@ in the `ACRN kernel GitHub repo`_
                intel_gvt_reset_vgpu
                intel_gvt_activate_vgpu
                intel_gvt_deactivate_vgpu
+
+.. _sysfs_interface:
 
 ACRN-GT sysfs interface
 ***********************

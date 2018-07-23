@@ -20,7 +20,7 @@ Glossary of Terms
       A user mode device model application running in Service OS to provide
       device emulations in ACRN hypervisor.
 
-   aperture
+   aperture, Low GM
       CPU-visible graphics memory
 
    API
@@ -35,6 +35,9 @@ Glossary of Terms
 
    BIOS
       Basic Input/Output System.
+
+   Dom0 i915
+      The Intel Graphics driver running in Domain 0
 
    ELSP
       GPU's ExecList submission port
@@ -70,6 +73,9 @@ Glossary of Terms
 
    GVT-s
       Virtual shared graphics acceleration (multiple VMs to one physical GPU)
+
+   Hidden GM, High GM
+      Hidden or High graphics memory, not visible to the CPU.
 
    I2C
       Inter-Integrated Circuit
