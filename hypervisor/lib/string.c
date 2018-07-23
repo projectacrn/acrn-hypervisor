@@ -393,3 +393,70 @@ int strncmp(const char *s1, const char *s2, size_t n_arg)
 
 	return *s1 - *s2;
 }
+
+/*
+ * strstr_s
+ *
+ * description:
+ *    Search str2 in str1
+ *
+ * input:
+ *    str1      pointer to string to be searched for the substring.
+ *
+ *    maxlen1   maximum length of str1.
+ *
+ *    str2      pointer to the sub-string.
+ *
+ *    maxlen2   maximum length of str2.
+ *
+ * return value:
+ *     Pointer to the first occurrence of str2 in str1,
+ *     or return null if not found.
+ */
+char *strstr_s (const char *str1, size_t maxlen1,
+			const char *str2, size_t maxlen2)
+{
+	size_t len1, len2;
+	size_t i;
+
+	if ((str1 == NULL) || (str2 == NULL)) {
+		return NULL;
+	}
+
+	if ((maxlen1 == 0U) || (maxlen2 == 0U)) {
+		return NULL;
+	}
+
+	len1 = strnlen_s(str1, maxlen1);
+	len2 = strnlen_s(str2, maxlen2);
+
+	if (len1 == 0U) {
+		return NULL;
+	}
+
+	/*
+	 * str2 points to a string with zero length, or
+	 * str2 equals str1, return str1
+	 */
+	if (len2 == 0U || str1 == str2) {
+		return (char *)str1;
+	}
+
+	while (len1 >= len2) {
+		for (i=0U; i<len2; i++) {
+			if (str1[i] != str2[i]) {
+				break;
+			}
+		}
+		if (i == len2) {
+			return (char *)str1;
+		}
+		str1++;
+		len1--;
+	}
+
+	/*
+	 * substring was not found, return NULL
+	 */
+	return NULL;
+}
