@@ -24,6 +24,7 @@ specific areas within the ACRN hypervisor system.
    ACPI-virt-hld.rst
    APL_GVT-g-hld.rst
    uart-virtualization.rst
+   GVT-G-porting.rst
 
 Contributing to the project
 ***************************
