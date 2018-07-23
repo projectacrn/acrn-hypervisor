@@ -135,38 +135,6 @@ int console_write(const char *s, size_t len)
 	return res;
 }
 
-void console_dump_bytes(const void *p, unsigned int len)
-{
-
-	const unsigned char *x = p;
-	const unsigned char *e = x + len;
-	int i;
-
-	/* dump all bytes */
-	while (x < e) {
-		/* write the address of the first byte in the row */
-		printf("%08x: ", (uint64_t) x);
-		/* print one row (16 bytes) as hexadecimal values */
-		for (i = 0; i < 16; i++) {
-			printf("%02x ", x[i]);
-		}
-
-		/* print one row as ASCII characters (if possible) */
-		for (i = 0; i < 16; i++) {
-			if ((x[i] < ' ') || (x[i] >= 127)) {
-				(void)console_putc('.');
-			}
-			else {
-				(void)console_putc(x[i]);
-			}
-		}
-		/* continue with next row */
-		(void)console_putc('\n');
-		/* set pointer one row ahead */
-		x += 16;
-	}
-}
-
 static void console_read(void)
 {
 	spinlock_obtain(&lock);

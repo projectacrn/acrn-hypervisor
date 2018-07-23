@@ -47,17 +47,6 @@ int console_write(const char *str, size_t len);
 
 int console_putc(int ch);
 
-/** Dumps an array to the console.
- *
- *  This function dumps an array of bytes to the console
- *  in a hexadecimal format.
- *
- *  @param p A pointer to the byte array to dump.
- *  @param len The number of bytes to dump.
- */
-
-void console_dump_bytes(const void *p, unsigned int len);
-
 void console_setup_timer(void);
 
 uint32_t get_serial_handle(void);
@@ -89,10 +78,7 @@ static inline int console_putc(__unused int ch)
 {
 	return 0;
 }
-static inline void console_dump_bytes(__unused const void *p,
-			__unused unsigned int len)
-{
-}
+
 static inline void console_setup_timer(void) {}
 static inline uint32_t get_serial_handle(void) { return 0; }
 
