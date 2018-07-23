@@ -150,7 +150,7 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L ACRN
+      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN"
 
    .. note::
 
@@ -181,8 +181,8 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN Hypervisor" \
-            -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=mmio@0x9141e000"
+      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN NUC Hypervisor" \
+            -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=disabled"
 
 #. Create a boot entry for the ACRN Service OS by copying a provided ``acrn.conf``
    and editing it to account for the kernel versions noted in a previous step.
@@ -213,9 +213,10 @@ partition. Follow these steps:
 
       # cp /usr/share/acrn/samples/nuc/acrn.conf /mnt/loader/entries/
 
-   You will need to edit this file to adjust the kernel version (``linux`` section)
-   and also insert the ``PARTUUID`` of your ``/dev/sda3`` partition
-   (``root=PARTUUID=<><UUID of rootfs partition>``) in the ``options`` section.
+   You will need to edit this file to adjust the kernel version (``linux`` section),
+   insert the ``PARTUUID`` of your ``/dev/sda3`` partition
+   (``root=PARTUUID=<><UUID of rootfs partition>``) in the ``options`` section, and
+   add the ``hugepagesz=1G hugepages=2`` at end of the ``options`` section.
 
    Use ``blkid`` to find out what your ``/dev/sda3`` ``PARTUUID`` value is.
 
