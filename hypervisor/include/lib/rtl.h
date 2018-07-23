@@ -42,6 +42,8 @@ int udiv32(uint32_t dividend, uint32_t divisor, struct udiv_result *res);
 int atoi(const char *str);
 long strtol_deci(const char *nptr);
 uint64_t strtoul_hex(const char *nptr);
+char *strstr_s(const char *str1, size_t maxlen1,
+			const char *str2, size_t maxlen2);
 
 /**
  * Frequency of TSC in KHz (where 1KHz = 1000Hz). Only valid after
