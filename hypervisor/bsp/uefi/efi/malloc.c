@@ -268,7 +268,7 @@ EFI_STATUS __emalloc(UINTN size, UINTN min_addr, EFI_PHYSICAL_ADDRESS *addr,
 			continue;
 		}
 
-#ifndef CONFIG_RELOC
+#ifdef CONFIG_RELOC
 		aligned = start;
 #else
 		aligned = min_addr;
