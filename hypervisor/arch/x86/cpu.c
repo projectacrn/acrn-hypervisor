@@ -543,7 +543,9 @@ static void bsp_boot_post(void)
 
 	init_iommu();
 
+#ifndef CONFIG_PARTITION_HV
 	console_setup_timer();
+#endif
 
 	/* Start initializing the VM for this CPU */
 	if (hv_main(BOOT_CPU_ID) != 0) {

@@ -41,6 +41,8 @@ int console_gets(char *buffer, uint32_t length);
 
 void console_setup_timer(void);
 
+void console_handler(void);
+
 uint32_t get_serial_handle(void);
 
 static inline void suspend_console(void)
