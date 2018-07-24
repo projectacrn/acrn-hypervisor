@@ -108,7 +108,7 @@ struct mem_io_node {
 };
 
 /* External Interfaces */
-int io_instr_vmexit_handler(struct vcpu *vcpu);
+int32_t pio_instr_vmexit_handler(struct vcpu *vcpu);
 void   setup_io_bitmap(struct vm *vm);
 void   free_io_emulation_resource(struct vm *vm);
 void   allow_guest_io_access(struct vm *vm, uint32_t address_arg, uint32_t nbytes);
