@@ -6,140 +6,195 @@
 
 #include <hypervisor.h>
 
-int dm_emulate_pio_post(struct vcpu *vcpu)
+/**
+ * @pre io_req->type == REQ_PORTIO
+ */
+static int32_t
+emulate_pio_post(struct vcpu *vcpu, struct io_request *io_req)
+{
+	int32_t status;
+	struct pio_request *pio_req = &io_req->reqs.pio;
+	uint64_t mask = 0xFFFFFFFFUL >> (32UL - 8UL * pio_req->size);
+
+	if (io_req->processed == REQ_STATE_SUCCESS) {
+		if (pio_req->direction == REQUEST_READ) {
+			uint64_t value = (uint64_t)pio_req->value;
+			int32_t context_idx = vcpu->arch_vcpu.cur_context;
+			struct run_context *cur_context;
+			uint64_t *rax;
+
+			cur_context = &vcpu->arch_vcpu.contexts[context_idx];
+			rax = &cur_context->guest_cpu_regs.regs.rax;
+
+			*rax = ((*rax) & ~mask) | (value & mask);
+		}
+		status = 0;
+	} else {
+		status = -1;
+	}
+
+	return status;
+}
+
+/**
+ * @pre vcpu->req.type == REQ_PORTIO
+ */
+int32_t dm_emulate_pio_post(struct vcpu *vcpu)
 {
 	uint16_t cur = vcpu->vcpu_id;
-	int cur_context = vcpu->arch_vcpu.cur_context;
 	union vhm_request_buffer *req_buf = NULL;
 	struct io_request *io_req = &vcpu->req;
 	struct pio_request *pio_req = &io_req->reqs.pio;
-	uint64_t mask = 0xFFFFFFFFUL >> (32UL - 8UL * pio_req->size);
-	uint64_t *rax;
 	struct vhm_request *vhm_req;
 
 	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
 	vhm_req = &req_buf->req_queue[cur];
 
-	rax = &vcpu->arch_vcpu.contexts[cur_context].guest_cpu_regs.regs.rax;
 	io_req->processed = vhm_req->processed;
 	pio_req->value = vhm_req->reqs.pio.value;
 
 	/* VHM emulation data already copy to req, mark to free slot now */
 	vhm_req->valid = 0;
 
-	if (io_req->processed != REQ_STATE_SUCCESS) {
-		return -1;
-	}
-
-	if (pio_req->direction == REQUEST_READ) {
-		uint64_t value = (uint64_t)pio_req->value;
-		*rax = ((*rax) & ~mask) | (value & mask);
-	}
-
-	return 0;
+	return emulate_pio_post(vcpu, io_req);
 }
 
-static void
-dm_emulate_pio_pre(struct vcpu *vcpu, uint64_t exit_qual, uint64_t req_value)
+/**
+ * Try handling the given request by any port I/O handler registered in the
+ * hypervisor.
+ *
+ * @pre io_req->type == REQ_PORTIO
+ *
+ * @return 0       - Successfully emulated by registered handlers.
+ * @return -ENODEV - No proper handler found.
+ * @return -EIO    - The request spans multiple devices and cannot be emulated.
+ */
+int32_t
+hv_emulate_pio(struct vcpu *vcpu, struct io_request *io_req)
 {
-	struct pio_request *pio_req = &vcpu->req.reqs.pio;
-
-	pio_req->value = req_value;
-}
-
-int io_instr_vmexit_handler(struct vcpu *vcpu)
-{
-	uint64_t exit_qual;
-	uint64_t mask;
+	int32_t status = -ENODEV;
 	uint16_t port, size;
-	struct vm_io_handler *handler;
+	uint32_t mask;
 	struct vm *vm = vcpu->vm;
-	struct io_request *io_req = &vcpu->req;
 	struct pio_request *pio_req = &io_req->reqs.pio;
-	int cur_context_idx = vcpu->arch_vcpu.cur_context;
-	struct run_context *cur_context;
-	int status = -EINVAL;
+	struct vm_io_handler *handler;
 
-	io_req->type = REQ_PORTIO;
-	io_req->processed = REQ_STATE_PENDING;
-
-	cur_context = &vcpu->arch_vcpu.contexts[cur_context_idx];
-	exit_qual = vcpu->arch_vcpu.exit_qualification;
-
-	pio_req->size = VM_EXIT_IO_INSTRUCTION_SIZE(exit_qual) + 1UL;
-	pio_req->address = VM_EXIT_IO_INSTRUCTION_PORT_NUMBER(exit_qual);
-	if (VM_EXIT_IO_INSTRUCTION_ACCESS_DIRECTION(exit_qual) == 0UL) {
-		pio_req->direction = REQUEST_WRITE;
-	} else {
-		pio_req->direction = REQUEST_READ;
-	}
-
-	size = (uint16_t)pio_req->size;
 	port = (uint16_t)pio_req->address;
-	mask = 0xffffffffUL >> (32U - 8U * size);
+	size = (uint16_t)pio_req->size;
+	mask = 0xFFFFFFFFU >> (32U - 8U * size);
 
-	TRACE_4I(TRACE_VMEXIT_IO_INSTRUCTION,
-		(uint32_t)port,
-		(uint32_t)pio_req->direction,
-		(uint32_t)size,
-		(uint32_t)cur_context_idx);
-
-	/*
-	 * Post-conditions of the loop:
-	 *
-	 *     status == 0       : The access has been handled properly.
-	 *     status == -EIO    : The access spans multiple devices and cannot
-	 *                         be handled.
-	 *     status == -EINVAL : No valid handler found for this access.
-	 */
 	for (handler = vm->arch_vm.io_handler;
-			handler; handler = handler->next) {
+		handler != NULL; handler = handler->next) {
+		uint16_t base = handler->desc.addr;
+		uint16_t end = base + (uint16_t)handler->desc.len;
 
-		if ((port >= (handler->desc.addr + handler->desc.len)) ||
-				(port + size <= handler->desc.addr)) {
+		if ((port >= end) || (port + size <= base)) {
 			continue;
-		} else if (!((port >= handler->desc.addr) && ((port + size)
-				<= (handler->desc.addr + handler->desc.len)))) {
+		} else if (!((port >= base) && ((port + size) <= end))) {
 			pr_fatal("Err:IO, port 0x%04x, size=%hu spans devices",
 					port, size);
 			status = -EIO;
 			break;
 		} else {
-			struct cpu_gp_regs *regs =
-					&cur_context->guest_cpu_regs.regs;
-
 			if (pio_req->direction == REQUEST_WRITE) {
 				handler->desc.io_write(handler, vm, port, size,
-					regs->rax);
+					pio_req->value & mask);
 
 				pr_dbg("IO write on port %04x, data %08x", port,
-					regs->rax & mask);
+					pio_req->value & mask);
 			} else {
-				uint32_t data = handler->desc.io_read(handler,
+				pio_req->value = handler->desc.io_read(handler,
 						vm, port, size);
 
-				regs->rax &= ~mask;
-				regs->rax |= data & mask;
-
 				pr_dbg("IO read on port %04x, data %08x",
-					port, data);
+					port, pio_req->value);
 			}
+			/* TODO: failures in the handlers should be reflected
+			 * here. */
+			io_req->processed = REQ_STATE_SUCCESS;
 			status = 0;
 			break;
 		}
 	}
 
-	/* Go for VHM */
-	if (status == -EINVAL) {
-		uint64_t rax = cur_context->guest_cpu_regs.regs.rax;
+	return status;
+}
 
-		dm_emulate_pio_pre(vcpu, exit_qual, rax);
+/**
+ * Handle an I/O request by either invoking a hypervisor-internal handler or
+ * deliver to VHM.
+ *
+ * @pre io_req->type == REQ_PORTIO
+ *
+ * @return 0       - Successfully emulated by registered handlers.
+ * @return -EIO    - The request spans multiple devices and cannot be emulated.
+ * @return Negative on other errors during emulation.
+ */
+int32_t
+emulate_io(struct vcpu *vcpu, struct io_request *io_req)
+{
+	int32_t status;
+
+	status = hv_emulate_pio(vcpu, io_req);
+
+	if (status == -ENODEV) {
+		/*
+		 * No handler from HV side, search from VHM in Dom0
+		 *
+		 * ACRN insert request to VHM and inject upcall.
+		 */
 		status = acrn_insert_request_wait(vcpu, io_req);
 
 		if (status != 0) {
-			pr_fatal("Err:IO %s access to port 0x%04x, size=%u",
+			struct pio_request *pio_req = &io_req->reqs.pio;
+			pr_fatal("Err:IO %s access to port 0x%04lx, size=%lu",
 				(pio_req->direction != REQUEST_READ) ? "read" : "write",
-				port, size);
+				pio_req->address, pio_req->size);
+		}
+	}
+
+	return status;
+}
+
+int32_t pio_instr_vmexit_handler(struct vcpu *vcpu)
+{
+	int32_t status;
+	uint64_t exit_qual;
+	int32_t cur_context_idx = vcpu->arch_vcpu.cur_context;
+	struct run_context *cur_context;
+	struct cpu_gp_regs *regs;
+	struct io_request *io_req = &vcpu->req;
+	struct pio_request *pio_req = &io_req->reqs.pio;
+
+	exit_qual = vcpu->arch_vcpu.exit_qualification;
+	cur_context = &vcpu->arch_vcpu.contexts[cur_context_idx];
+	regs = &cur_context->guest_cpu_regs.regs;
+
+	io_req->type = REQ_PORTIO;
+	io_req->processed = REQ_STATE_PENDING;
+	pio_req->size = VM_EXIT_IO_INSTRUCTION_SIZE(exit_qual) + 1UL;
+	pio_req->address = VM_EXIT_IO_INSTRUCTION_PORT_NUMBER(exit_qual);
+	if (VM_EXIT_IO_INSTRUCTION_ACCESS_DIRECTION(exit_qual) == 0UL) {
+		pio_req->direction = REQUEST_WRITE;
+		pio_req->value = (uint32_t)regs->rax;
+	} else {
+		pio_req->direction = REQUEST_READ;
+	}
+
+	TRACE_4I(TRACE_VMEXIT_IO_INSTRUCTION,
+		(uint32_t)pio_req->address,
+		(uint32_t)pio_req->direction,
+		(uint32_t)pio_req->size,
+		(uint32_t)cur_context_idx);
+
+	status = emulate_io(vcpu, io_req);
+
+	/* io_req is hypervisor-private. For requests sent to VHM,
+	 * io_req->processed will be PENDING till dm_emulate_pio_post() is
+	 * called on vcpu resume. */
+	if (status == 0) {
+		if (io_req->processed != REQ_STATE_PENDING) {
+			status = emulate_pio_post(vcpu, io_req);
 		}
 	}
 
