@@ -48,6 +48,10 @@ kconfig:
 	$(Q)srctree=../hypervisor \
 	    python3 scripts/genrest.py ../hypervisor/Kconfig reference/kconfig/
 
+pullsource:
+	$(Q)scripts/pullsource.sh
+
+
 html: doxy content kconfig
 	-$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b html -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> doc.log 2>&1
 	$(Q)./scripts/filter-doc-log.sh doc.log
