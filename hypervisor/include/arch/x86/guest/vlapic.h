@@ -111,7 +111,7 @@ void vlapic_set_tmr_one_vec(struct vlapic *vlapic, uint32_t delmode,
 void
 vlapic_apicv_batch_set_tmr(struct vlapic *vlapic);
 
-int vlapic_mmio_access_handler(struct vcpu *vcpu, struct mem_io *mmio,
+int vlapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
 		void *handler_private_data);
 
 uint32_t vlapic_get_id(struct vlapic *vlapic);

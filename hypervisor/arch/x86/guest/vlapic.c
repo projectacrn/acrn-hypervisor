@@ -2054,32 +2054,30 @@ vlapic_read_mmio_reg(struct vcpu *vcpu, uint64_t gpa, uint64_t *rval,
 	return error;
 }
 
-int vlapic_mmio_access_handler(struct vcpu *vcpu, struct mem_io *mmio,
+int vlapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
 		__unused void *handler_private_data)
 {
-	uint64_t gpa = mmio->paddr;
+	struct mmio_request *mmio_req = &io_req->reqs.mmio;
+	uint64_t gpa = mmio_req->address;
 	int ret = 0;
 
 	/* Note all RW to LAPIC are 32-Bit in size */
-	ASSERT(mmio->access_size == 4U,
-			"All RW to LAPIC must be 32-bits in size");
+	ASSERT(mmio_req->size == 4UL, "All RW to LAPIC must be 32-bits in size");
 
-	if (mmio->read_write == HV_MEM_IO_READ) {
+	if (mmio_req->direction == REQUEST_READ) {
 		ret = vlapic_read_mmio_reg(vcpu,
 				gpa,
-				&mmio->value,
-				mmio->access_size);
-		mmio->mmio_status = MMIO_TRANS_VALID;
-
-	} else if (mmio->read_write == HV_MEM_IO_WRITE) {
+				&mmio_req->value,
+				mmio_req->size);
+		io_req->processed = REQ_STATE_SUCCESS;
+	} else if (mmio_req->direction == REQUEST_WRITE) {
 		ret = vlapic_write_mmio_reg(vcpu,
 				gpa,
-				mmio->value,
-				mmio->access_size);
-
-		mmio->mmio_status = MMIO_TRANS_VALID;
+				mmio_req->value,
+				mmio_req->size);
+		io_req->processed = REQ_STATE_SUCCESS;
 	} else {
-		/* Can never happen due to the range of mmio->read_write. */
+		/* Can never happen due to the range of mmio_req->direction. */
 	}
 
 	return ret;
@@ -2354,7 +2352,7 @@ apicv_inject_pir(struct vlapic *vlapic)
 	if (pirval != 0UL) {
 		rvi = pirbase + fls64(pirval);
 
-		intr_status_old = 0xFFFFU & 
+		intr_status_old = 0xFFFFU &
 				exec_vmread16(VMX_GUEST_INTR_STATUS);
 
 		intr_status_new = (intr_status_old & 0xFF00U) | rvi;
@@ -2371,6 +2369,7 @@ int apic_access_vmexit_handler(struct vcpu *vcpu)
 	uint32_t offset = 0U;
 	uint64_t qual, access_type;
 	struct vlapic *vlapic;
+	struct mmio_request *mmio = &vcpu->req.reqs.mmio;
 
 	qual = vcpu->arch_vcpu.exit_qualification;
 	access_type = APIC_ACCESS_TYPE(qual);
@@ -2392,10 +2391,10 @@ int apic_access_vmexit_handler(struct vcpu *vcpu)
 
 	if (access_type == 1UL) {
 		if (emulate_instruction(vcpu) == 0) {
-			err = vlapic_write(vlapic, 1, offset, vcpu->mmio.value);
+			err = vlapic_write(vlapic, 1, offset, mmio->value);
 		}
 	} else if (access_type == 0UL) {
-		err = vlapic_read(vlapic, 1, offset, &vcpu->mmio.value);
+		err = vlapic_read(vlapic, 1, offset, &mmio->value);
 		if (err < 0) {
 			return err;
 		}

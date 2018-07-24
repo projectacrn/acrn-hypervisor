@@ -32,20 +32,20 @@ static void acrn_print_request(uint16_t vcpu_id, struct vhm_request *req)
 		dev_dbg(ACRN_DBG_IOREQUEST, "[vcpu_id=%hu type=MMIO]", vcpu_id);
 		dev_dbg(ACRN_DBG_IOREQUEST,
 			"gpa=0x%lx, R/W=%d, size=%ld value=0x%lx processed=%lx",
-			req->reqs.mmio_request.address,
-			req->reqs.mmio_request.direction,
-			req->reqs.mmio_request.size,
-			req->reqs.mmio_request.value,
+			req->reqs.mmio.address,
+			req->reqs.mmio.direction,
+			req->reqs.mmio.size,
+			req->reqs.mmio.value,
 			req->processed);
 		break;
 	case REQ_PORTIO:
 		dev_dbg(ACRN_DBG_IOREQUEST, "[vcpu_id=%hu type=PORTIO]", vcpu_id);
 		dev_dbg(ACRN_DBG_IOREQUEST,
 			"IO=0x%lx, R/W=%d, size=%ld value=0x%lx processed=%lx",
-			req->reqs.pio_request.address,
-			req->reqs.pio_request.direction,
-			req->reqs.pio_request.size,
-			req->reqs.pio_request.value,
+			req->reqs.pio.address,
+			req->reqs.pio.direction,
+			req->reqs.pio.size,
+			req->reqs.pio.value,
 			req->processed);
 		break;
 	default:
@@ -55,16 +55,19 @@ static void acrn_print_request(uint16_t vcpu_id, struct vhm_request *req)
 	}
 }
 
-int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
+int32_t
+acrn_insert_request_wait(struct vcpu *vcpu, struct io_request *io_req)
 {
 	union vhm_request_buffer *req_buf = NULL;
+	struct vhm_request *vhm_req;
 	uint16_t cur;
 
-	ASSERT(sizeof(*req) == (4096U/VHM_REQUEST_MAX),
+	ASSERT(sizeof(struct vhm_request) == (4096U/VHM_REQUEST_MAX),
 			"vhm_request page broken!");
 
 
-	if (vcpu == NULL || req == NULL || vcpu->vm->sw.io_shared_page == NULL) {
+	if (vcpu == NULL || io_req == NULL ||
+		vcpu->vm->sw.io_shared_page == NULL) {
 		return -EINVAL;
 	}
 
@@ -72,8 +75,11 @@ int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 
 	/* ACRN insert request to VHM and inject upcall */
 	cur = vcpu->vcpu_id;
-	(void)memcpy_s(&req_buf->req_queue[cur], sizeof(struct vhm_request),
-		 req, sizeof(struct vhm_request));
+	vhm_req = &req_buf->req_queue[cur];
+	vhm_req->type = io_req->type;
+	vhm_req->processed = io_req->processed;
+	(void)memcpy_s(&vhm_req->reqs, sizeof(union vhm_io_request),
+		&io_req->reqs, sizeof(union vhm_io_request));
 
 	/* pause vcpu, wait for VHM to handle the MMIO request.
 	 * TODO: when pause_vcpu changed to switch vcpu out directlly, we
@@ -87,9 +93,9 @@ int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req)
 	 * before we perform upcall.
 	 * because VHM can work in pulling mode without wait for upcall
 	 */
-	req_buf->req_queue[cur].valid = 1;
+	vhm_req->valid = 1;
 
-	acrn_print_request(vcpu->vcpu_id, &req_buf->req_queue[cur]);
+	acrn_print_request(vcpu->vcpu_id, vhm_req);
 
 	/* signal VHM */
 	fire_vhm_interrupt();
@@ -109,24 +115,24 @@ static void _get_req_info_(struct vhm_request *req, int *id, char *type,
 	switch (req->type) {
 	case REQ_PORTIO:
 		(void)strcpy_s(type, 16U, "PORTIO");
-		if (req->reqs.pio_request.direction == REQUEST_READ) {
+		if (req->reqs.pio.direction == REQUEST_READ) {
 			(void)strcpy_s(dir, 16U, "READ");
 		} else {
 			(void)strcpy_s(dir, 16U, "WRITE");
 		}
-		*addr = req->reqs.pio_request.address;
-		*val = req->reqs.pio_request.value;
+		*addr = req->reqs.pio.address;
+		*val = req->reqs.pio.value;
 		break;
 	case REQ_MMIO:
 	case REQ_WP:
 		(void)strcpy_s(type, 16U, "MMIO/WP");
-		if (req->reqs.mmio_request.direction == REQUEST_READ) {
+		if (req->reqs.mmio.direction == REQUEST_READ) {
 			(void)strcpy_s(dir, 16U, "READ");
 		} else {
 			(void)strcpy_s(dir, 16U, "WRITE");
 		}
-		*addr = req->reqs.mmio_request.address;
-		*val = req->reqs.mmio_request.value;
+		*addr = req->reqs.mmio.address;
+		*val = req->reqs.mmio.value;
 		break;
 		break;
 	default:

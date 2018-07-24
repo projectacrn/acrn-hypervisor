@@ -122,6 +122,8 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	vcpu->pending_pre_work = 0U;
 	vcpu->state = VCPU_INIT;
 
+	(void)memset(&vcpu->req, 0U, sizeof(struct io_request));
+
 	return 0;
 }
 
