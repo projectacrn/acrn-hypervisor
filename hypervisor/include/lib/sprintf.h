@@ -16,7 +16,7 @@
 /* Structure used to parse parameters and variables to subroutines. */
 struct print_param {
 	/* A pointer to the function that is used to emit characters. */
-	int (*emit)(int, const char *, int, void *);
+	int (*emit)(int, const char *, uint32_t, void *);
 	/* An opaque pointer that is passed as third argument to the emit
 	 * function.
 	 */
@@ -26,9 +26,9 @@ struct print_param {
 		/* A bitfield with the parsed format flags. */
 		uint32_t flags;
 		/* The parsed format width. */
-		int width;
+		uint32_t width;
 		/* The parsed format precision. */
-		int precision;
+		uint32_t precision;
 		/* The bitmask for unsigned values. */
 		uint64_t mask;
 		/* A pointer to the preformated value. */
@@ -56,8 +56,7 @@ int do_print(const char *fmt, struct print_param *param,
  * @return The number of bytes which would be written, even if the destination
  *         is smaller. On error a negative number is returned.
  */
-
-int vsnprintf(char *dst, int32_t sz_arg, const char *fmt, va_list args);
+int vsnprintf(char *dst, size_t sz, const char *fmt, va_list args);
 
 /** The well known snprintf() function.
  *
