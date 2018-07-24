@@ -66,9 +66,14 @@ generation:
          devicemodel/
          doc/
          hypervisor/
+      acrn-kernel
 
 The parent projectacrn folder is there because we'll also be creating a
-publishing area later in these steps.  It's best if the acrn-hypervisor
+publishing area later in these steps.  For API doc generation, we'll also
+need the acrn-kernel repo contents in a sibling folder to the
+acrn-hypervisor repo contents. 
+
+It's best if the acrn-hypervisor
 folder is an ssh clone of your personal fork of the upstream project
 repos (though https clones work too):
 
@@ -95,6 +100,19 @@ repos (though https clones work too):
 
       cd acrn-hypervisor
       git remote add upstream git@github.com:projectacrn/acrn-hypervisor.git
+
+#. For API doc generation we'll also need the acrn-kernel repo available
+   locally:
+
+   .. code-block:: bash
+
+      cd ..
+      git clone git@github.com:projectacrn/acrn-kernel.git
+
+   .. note:: We assume for doc generation that ``origin`` is pointed to
+      the upstream repo.  If you're a developer and have the acrn-kernel
+      repo allready set up as a sibling folder to the acrn-hypervisor,
+      you can skip this clone step.
 
 #. If you haven't do so already, be sure to configure git with your name
    and email address for the signed-off-by line in your commit messages:
