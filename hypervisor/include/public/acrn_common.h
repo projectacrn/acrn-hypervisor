@@ -83,6 +83,13 @@ struct pci_request {
 	int32_t reg;
 } __aligned(8);
 
+union vhm_io_request {
+	struct pio_request pio;
+	struct pci_request pci;
+	struct mmio_request mmio;
+	int64_t reserved1[8];
+};
+
 /* vhm_request are 256Bytes aligned */
 struct vhm_request {
 	/* offset: 0bytes - 63bytes */
@@ -90,12 +97,7 @@ struct vhm_request {
 	int32_t reserved0[15];
 
 	/* offset: 64bytes-127bytes */
-	union {
-		struct pio_request pio_request;
-		struct pci_request pci_request;
-		struct mmio_request mmio_request;
-		int64_t reserved1[8];
-	} reqs;
+	union vhm_io_request reqs;
 
 	/* True: valid req which need VHM to process.
 	 * ACRN write, VHM read only

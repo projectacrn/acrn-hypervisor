@@ -190,16 +190,19 @@ bool is_ept_supported(void)
 	return status;
 }
 
-static int hv_emulate_mmio(struct vcpu *vcpu, struct mem_io *mmio,
-				struct mem_io_node *mmio_handler)
+static int
+hv_emulate_mmio(struct vcpu *vcpu, struct io_request *io_req,
+		struct mem_io_node *mmio_handler)
 {
-	if ((mmio->paddr % mmio->access_size) != 0) {
+	struct mmio_request *mmio_req = &io_req->reqs.mmio;
+
+	if ((mmio_req->address % mmio_req->size) != 0UL) {
 		pr_err("access size not align with paddr");
 		return -EINVAL;
 	}
 
 	/* Handle this MMIO operation */
-	return mmio_handler->read_write(vcpu, mmio,
+	return mmio_handler->read_write(vcpu, io_req,
 			mmio_handler->handler_private_data);
 }
 
@@ -276,26 +279,25 @@ int dm_emulate_mmio_post(struct vcpu *vcpu)
 {
 	int ret = 0;
 	uint16_t cur = vcpu->vcpu_id;
+	struct io_request *io_req = &vcpu->req;
+	struct mmio_request *mmio_req = &io_req->reqs.mmio;
 	union vhm_request_buffer *req_buf;
+	struct vhm_request *vhm_req;
 
 	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
+	vhm_req = &req_buf->req_queue[cur];
 
-	vcpu->req.reqs.mmio_request.value =
-		req_buf->req_queue[cur].reqs.mmio_request.value;
+	mmio_req->value = vhm_req->reqs.mmio.value;
+	io_req->processed = vhm_req->processed;
 
 	/* VHM emulation data already copy to req, mark to free slot now */
-	req_buf->req_queue[cur].valid = false;
+	vhm_req->valid = 0;
 
-	if (req_buf->req_queue[cur].processed == REQ_STATE_SUCCESS) {
-		vcpu->mmio.mmio_status = MMIO_TRANS_VALID;
-	}
-	else {
-		vcpu->mmio.mmio_status = MMIO_TRANS_INVALID;
+	if (io_req->processed != REQ_STATE_SUCCESS) {
 		goto out;
 	}
 
-	if (vcpu->mmio.read_write == HV_MEM_IO_READ) {
-		vcpu->mmio.value = vcpu->req.reqs.mmio_request.value;
+	if (mmio_req->direction == REQUEST_READ) {
 		/* Emulate instruction and update vcpu register set */
 		ret = emulate_instruction(vcpu);
 		if (ret != 0) {
@@ -307,28 +309,23 @@ out:
 	return ret;
 }
 
-static int dm_emulate_mmio_pre(struct vcpu *vcpu, uint64_t exit_qual)
+static int
+dm_emulate_mmio_pre(struct vcpu *vcpu, uint64_t exit_qual __unused)
 {
 	int status;
+	struct io_request *io_req = &vcpu->req;
+	struct mmio_request *mmio_req = &io_req->reqs.mmio;
 
-	if (vcpu->mmio.read_write == HV_MEM_IO_WRITE) {
+	if (mmio_req->direction == REQUEST_WRITE) {
 		status = emulate_instruction(vcpu);
 		if (status != 0) {
 			return status;
 		}
-		vcpu->req.reqs.mmio_request.value = vcpu->mmio.value;
 		/* XXX: write access while EPT perm RX -> WP */
 		if ((exit_qual & 0x38UL) == 0x28UL) {
-			vcpu->req.type = REQ_WP;
+			io_req->type = REQ_WP;
 		}
 	}
-
-	if (vcpu->req.type == 0U) {
-		vcpu->req.type = REQ_MMIO;
-	}
-	vcpu->req.reqs.mmio_request.direction = vcpu->mmio.read_write;
-	vcpu->req.reqs.mmio_request.address = (long)vcpu->mmio.paddr;
-	vcpu->req.reqs.mmio_request.size = vcpu->mmio.access_size;
 
 	return 0;
 }
@@ -339,8 +336,12 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 	uint64_t exit_qual;
 	uint64_t gpa;
 	struct list_head *pos;
-	struct mem_io *mmio = &vcpu->mmio;
+	struct io_request *io_req = &vcpu->req;
+	struct mmio_request *mmio_req = &io_req->reqs.mmio;
 	struct mem_io_node *mmio_handler = NULL;
+
+	io_req->type = REQ_MMIO;
+	io_req->processed = REQ_STATE_PENDING;
 
 	/* Handle page fault from guest */
 	exit_qual = vcpu->arch_vcpu.exit_qualification;
@@ -348,22 +349,15 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 	/* Specify if read or write operation */
 	if ((exit_qual & 0x2UL) != 0UL) {
 		/* Write operation */
-		mmio->read_write = HV_MEM_IO_WRITE;
-
-		/* Get write value from appropriate register in context */
-		/* TODO: Need to figure out how to determine value being
-		 * written
-		 */
-		mmio->value = 0UL;
+		mmio_req->direction = REQUEST_WRITE;
+		mmio_req->value = 0UL;
 	} else {
 		/* Read operation */
-		mmio->read_write = HV_MEM_IO_READ;
+		mmio_req->direction = REQUEST_READ;
 
-		/* Get sign extension requirements for read */
 		/* TODO: Need to determine how sign extension is determined for
 		 * reads
 		 */
-		mmio->sign_extend_read = 0U;
 	}
 
 	/* Get the guest physical address */
@@ -373,37 +367,35 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 
 	/* Adjust IPA appropriately and OR page offset to get full IPA of abort
 	 */
-	mmio->paddr = gpa;
+	mmio_req->address = gpa;
 
 	ret = decode_instruction(vcpu);
 	if (ret > 0) {
-		mmio->access_size = ret;
-	}
-	else if (ret == -EFAULT) {
+		mmio_req->size = (uint64_t)ret;
+	} else if (ret == -EFAULT) {
 		pr_info("page fault happen during decode_instruction");
 		status = 0;
 		goto out;
-	}
-	else {
+	} else {
 		goto out;
 	}
 
 	list_for_each(pos, &vcpu->vm->mmio_list) {
 		mmio_handler = list_entry(pos, struct mem_io_node, list);
-		if (((mmio->paddr + mmio->access_size) <=
+		if (((mmio_req->address + mmio_req->size) <=
 			mmio_handler->range_start) ||
-			(mmio->paddr >= mmio_handler->range_end)) {
+			(mmio_req->address >= mmio_handler->range_end)) {
 			continue;
 		}
-		else if (!((mmio->paddr >= mmio_handler->range_start) &&
-			((mmio->paddr + mmio->access_size) <=
+		else if (!((mmio_req->address >= mmio_handler->range_start) &&
+			((mmio_req->address + mmio_req->size) <=
 			mmio_handler->range_end))) {
 			pr_fatal("Err MMIO, addr:0x%llx, size:%x",
-					mmio->paddr, mmio->access_size);
+					mmio_req->address, mmio_req->size);
 			return -EIO;
 		}
 
-		if (mmio->read_write == HV_MEM_IO_WRITE) {
+		if (mmio_req->direction == REQUEST_WRITE) {
 			if (emulate_instruction(vcpu) != 0) {
 				goto out;
 			}
@@ -414,8 +406,8 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 		 * instruction emulation. For MMIO read,
 		 * call hv_emulate_mmio at first.
 		 */
-		hv_emulate_mmio(vcpu, mmio, mmio_handler);
-		if (mmio->read_write == HV_MEM_IO_READ) {
+		hv_emulate_mmio(vcpu, io_req, mmio_handler);
+		if (mmio_req->direction == REQUEST_READ) {
 			/* Emulate instruction and update vcpu register set */
 			if (emulate_instruction(vcpu) != 0) {
 				goto out;
@@ -435,8 +427,6 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 		 * instruction emulation. For MMIO read, ask DM to run MMIO
 		 * emulation at first.
 		 */
-		(void)memset(&vcpu->req, 0, sizeof(struct vhm_request));
-
 		if (dm_emulate_mmio_pre(vcpu, exit_qual) != 0) {
 			goto out;
 		}

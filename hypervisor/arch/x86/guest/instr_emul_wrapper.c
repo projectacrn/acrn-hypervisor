@@ -243,7 +243,7 @@ encode_vmcs_seg_desc(enum cpu_reg_name seg,
  *
  *Post Condition:
  *In the non-general register names group (CPU_REG_CR0~CPU_REG_GDTR),
- *for register names CPU_REG_CR2, CPU_REG_IDTR and CPU_REG_GDTR, 
+ *for register names CPU_REG_CR2, CPU_REG_IDTR and CPU_REG_GDTR,
  *this function returns VMX_INVALID_VMCS_FIELD;
  *for other register names, it returns correspoding field index MACROs
  *in VMCS.
@@ -319,7 +319,7 @@ static int mmio_read(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t *rval,
 		return -EINVAL;
 	}
 
-	*rval = vcpu->mmio.value;
+	*rval = vcpu->req.reqs.mmio.value;
 	return 0;
 }
 
@@ -330,7 +330,7 @@ static int mmio_write(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t wval,
 		return -EINVAL;
 	}
 
-	vcpu->mmio.value = wval;
+	vcpu->req.reqs.mmio.value = wval;
 	return 0;
 }
 
@@ -375,7 +375,7 @@ int emulate_instruction(struct vcpu *vcpu)
 	struct emul_ctxt *emul_ctxt;
 	struct vm_guest_paging *paging;
 	int retval = 0;
-	uint64_t gpa = vcpu->mmio.paddr;
+	uint64_t gpa = vcpu->req.reqs.mmio.address;
 	mem_region_read_t mread = mmio_read;
 	mem_region_write_t mwrite = mmio_write;
 

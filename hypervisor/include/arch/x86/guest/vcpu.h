@@ -250,8 +250,7 @@ struct vcpu {
 	uint32_t running; /* vcpu is picked up and run? */
 	uint32_t ioreq_pending; /* ioreq is ongoing or not? */
 
-	struct vhm_request req; /* used by io/ept emulation */
-	struct mem_io mmio; /* used by io/ept emulation */
+	struct io_request req; /* used by io/ept emulation */
 
 	/* save guest msr tsc aux register.
 	 * Before VMENTRY, save guest MSR_TSC_AUX to this fields.

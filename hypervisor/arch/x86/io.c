@@ -11,69 +11,77 @@ int dm_emulate_pio_post(struct vcpu *vcpu)
 	uint16_t cur = vcpu->vcpu_id;
 	int cur_context = vcpu->arch_vcpu.cur_context;
 	union vhm_request_buffer *req_buf = NULL;
-	uint32_t mask =
-		0xFFFFFFFFUL >> (32U - (8U * vcpu->req.reqs.pio_request.size));
+	struct io_request *io_req = &vcpu->req;
+	struct pio_request *pio_req = &io_req->reqs.pio;
+	uint64_t mask = 0xFFFFFFFFUL >> (32UL - 8UL * pio_req->size);
 	uint64_t *rax;
+	struct vhm_request *vhm_req;
 
 	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
+	vhm_req = &req_buf->req_queue[cur];
 
 	rax = &vcpu->arch_vcpu.contexts[cur_context].guest_cpu_regs.regs.rax;
-	vcpu->req.reqs.pio_request.value =
-		req_buf->req_queue[cur].reqs.pio_request.value;
+	io_req->processed = vhm_req->processed;
+	pio_req->value = vhm_req->reqs.pio.value;
 
 	/* VHM emulation data already copy to req, mark to free slot now */
-	req_buf->req_queue[cur].valid = false;
+	vhm_req->valid = 0;
 
-	if (req_buf->req_queue[cur].processed != REQ_STATE_SUCCESS) {
+	if (io_req->processed != REQ_STATE_SUCCESS) {
 		return -1;
 	}
 
-	if (vcpu->req.reqs.pio_request.direction == REQUEST_READ) {
-		*rax = ((*rax) & ~mask) |
-			(vcpu->req.reqs.pio_request.value & mask);
+	if (pio_req->direction == REQUEST_READ) {
+		uint64_t value = (uint64_t)pio_req->value;
+		*rax = ((*rax) & ~mask) | (value & mask);
 	}
 
 	return 0;
 }
 
-static void dm_emulate_pio_pre(struct vcpu *vcpu, uint64_t exit_qual,
-				uint32_t sz, uint64_t req_value)
+static void
+dm_emulate_pio_pre(struct vcpu *vcpu, uint64_t exit_qual, uint64_t req_value)
 {
-	vcpu->req.type = REQ_PORTIO;
-	if (VM_EXIT_IO_INSTRUCTION_ACCESS_DIRECTION(exit_qual) != 0U) {
-		vcpu->req.reqs.pio_request.direction = REQUEST_READ;
-	} else {
-		vcpu->req.reqs.pio_request.direction = REQUEST_WRITE;
-	}
+	struct pio_request *pio_req = &vcpu->req.reqs.pio;
 
-	vcpu->req.reqs.pio_request.address =
-		VM_EXIT_IO_INSTRUCTION_PORT_NUMBER(exit_qual);
-	vcpu->req.reqs.pio_request.size = sz;
-	vcpu->req.reqs.pio_request.value = req_value;
+	pio_req->value = req_value;
 }
 
 int io_instr_vmexit_handler(struct vcpu *vcpu)
 {
-	uint32_t sz;
-	uint32_t mask;
-	uint32_t port;
-	int8_t direction;
-	struct vm_io_handler *handler;
 	uint64_t exit_qual;
+	uint64_t mask;
+	uint16_t port, size;
+	struct vm_io_handler *handler;
 	struct vm *vm = vcpu->vm;
+	struct io_request *io_req = &vcpu->req;
+	struct pio_request *pio_req = &io_req->reqs.pio;
 	int cur_context_idx = vcpu->arch_vcpu.cur_context;
 	struct run_context *cur_context;
 	int status = -EINVAL;
 
+	io_req->type = REQ_PORTIO;
+	io_req->processed = REQ_STATE_PENDING;
+
 	cur_context = &vcpu->arch_vcpu.contexts[cur_context_idx];
 	exit_qual = vcpu->arch_vcpu.exit_qualification;
 
-	sz = VM_EXIT_IO_INSTRUCTION_SIZE(exit_qual) + 1;
-	port = VM_EXIT_IO_INSTRUCTION_PORT_NUMBER(exit_qual);
-	direction = VM_EXIT_IO_INSTRUCTION_ACCESS_DIRECTION(exit_qual);
-	mask = 0xfffffffful >> (32U - (8U * sz));
+	pio_req->size = VM_EXIT_IO_INSTRUCTION_SIZE(exit_qual) + 1UL;
+	pio_req->address = VM_EXIT_IO_INSTRUCTION_PORT_NUMBER(exit_qual);
+	if (VM_EXIT_IO_INSTRUCTION_ACCESS_DIRECTION(exit_qual) == 0UL) {
+		pio_req->direction = REQUEST_WRITE;
+	} else {
+		pio_req->direction = REQUEST_READ;
+	}
 
-	TRACE_4I(TRACE_VMEXIT_IO_INSTRUCTION, port, (uint32_t)direction, sz,
+	size = (uint16_t)pio_req->size;
+	port = (uint16_t)pio_req->address;
+	mask = 0xffffffffUL >> (32U - 8U * size);
+
+	TRACE_4I(TRACE_VMEXIT_IO_INSTRUCTION,
+		(uint32_t)port,
+		(uint32_t)pio_req->direction,
+		(uint32_t)size,
 		(uint32_t)cur_context_idx);
 
 	/*
@@ -88,27 +96,27 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 			handler; handler = handler->next) {
 
 		if ((port >= (handler->desc.addr + handler->desc.len)) ||
-				((port + sz) <= handler->desc.addr)) {
+				(port + size <= handler->desc.addr)) {
 			continue;
-		} else if (!((port >= handler->desc.addr) && ((port + sz)
+		} else if (!((port >= handler->desc.addr) && ((port + size)
 				<= (handler->desc.addr + handler->desc.len)))) {
-			pr_fatal("Err:IO, port 0x%04x, size=%u spans devices",
-					port, sz);
+			pr_fatal("Err:IO, port 0x%04x, size=%hu spans devices",
+					port, size);
 			status = -EIO;
 			break;
 		} else {
 			struct cpu_gp_regs *regs =
 					&cur_context->guest_cpu_regs.regs;
 
-			if (direction == 0) {
-				handler->desc.io_write(handler, vm, port, sz,
+			if (pio_req->direction == REQUEST_WRITE) {
+				handler->desc.io_write(handler, vm, port, size,
 					regs->rax);
 
 				pr_dbg("IO write on port %04x, data %08x", port,
 					regs->rax & mask);
 			} else {
 				uint32_t data = handler->desc.io_read(handler,
-						vm, port, sz);
+						vm, port, size);
 
 				regs->rax &= ~mask;
 				regs->rax |= data & mask;
@@ -123,15 +131,15 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 
 	/* Go for VHM */
 	if (status == -EINVAL) {
-		uint64_t *rax = &cur_context->guest_cpu_regs.regs.rax;
+		uint64_t rax = cur_context->guest_cpu_regs.regs.rax;
 
-		(void)memset(&vcpu->req, 0, sizeof(struct vhm_request));
-		dm_emulate_pio_pre(vcpu, exit_qual, sz, *rax);
-		status = acrn_insert_request_wait(vcpu, &vcpu->req);
+		dm_emulate_pio_pre(vcpu, exit_qual, rax);
+		status = acrn_insert_request_wait(vcpu, io_req);
 
 		if (status != 0) {
 			pr_fatal("Err:IO %s access to port 0x%04x, size=%u",
-				 (direction != 0) ? "read" : "write", port, sz);
+				(pio_req->direction != REQUEST_READ) ? "read" : "write",
+				port, size);
 		}
 	}
 

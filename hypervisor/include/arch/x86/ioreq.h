@@ -8,6 +8,20 @@
 #define IOREQ_H
 
 #include <types.h>
+#include <acrn_common.h>
+
+/* Internal representation of a I/O request. */
+struct io_request {
+	/** Type of the request (PIO, MMIO, etc). Refer to vhm_request. */
+	uint32_t type;
+
+	/** Status of request handling. Written by request handlers and read by
+	 * the I/O emulation framework. Refer to vhm_request. */
+	int32_t processed;
+
+	/** Details of this request in the same format as vhm_request. */
+	union vhm_io_request reqs;
+};
 
 /* Definition of a IO port range */
 struct vm_io_range {
@@ -80,29 +94,9 @@ struct vm_io_handler {
 #define IO_ATTR_RW              1U
 #define IO_ATTR_NO_ACCESS       2U
 
-/* MMIO memory access types */
-enum mem_io_type {
-    HV_MEM_IO_READ = 0,
-    HV_MEM_IO_WRITE,
-};
-
-/* MMIO emulation related structures */
-#define MMIO_TRANS_VALID        1U
-#define MMIO_TRANS_INVALID      0U
-struct mem_io {
-    uint64_t paddr;      /* Physical address being accessed */
-    enum mem_io_type read_write;   /* 0 = read / 1 = write operation */
-    uint8_t access_size; /* Access size being emulated */
-    uint8_t sign_extend_read; /* 1 if sign extension required for read */
-    uint64_t value;      /* Value read or value to write */
-    uint8_t mmio_status; /* Indicates if this MMIO transaction is valid */
-    /* Used to store emulation context for this mmio transaction */
-    void *private_data;
-};
-
 /* Typedef for MMIO handler and range check routine */
 struct mmio_request;
-typedef int (*hv_mem_io_handler_t)(struct vcpu *, struct mem_io *, void *);
+typedef int (*hv_mem_io_handler_t)(struct vcpu *, struct io_request *, void *);
 
 /* Structure for MMIO handler node */
 struct mem_io_node {
@@ -130,6 +124,6 @@ void unregister_mmio_emulation_handler(struct vm *vm, uint64_t start,
         uint64_t end);
 int dm_emulate_mmio_post(struct vcpu *vcpu);
 
-int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req);
+int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct io_request *req);
 
 #endif /* IOREQ_H */
