@@ -6,6 +6,9 @@
 
 #include <hypervisor.h>
 
+#include "guest/instr_emul_wrapper.h"
+#include "guest/instr_emul.h"
+
 /**
  * @pre io_req->type == REQ_PORTIO
  */
@@ -60,6 +63,51 @@ int32_t dm_emulate_pio_post(struct vcpu *vcpu)
 }
 
 /**
+ * @pre vcpu->req.type == REQ_MMIO
+ */
+int32_t emulate_mmio_post(struct vcpu *vcpu, struct io_request *io_req)
+{
+	int32_t ret;
+	struct mmio_request *mmio_req = &io_req->reqs.mmio;
+
+	if (io_req->processed == REQ_STATE_SUCCESS) {
+		if (mmio_req->direction == REQUEST_READ) {
+			/* Emulate instruction and update vcpu register set */
+			ret = emulate_instruction(vcpu);
+		} else {
+			ret = 0;
+		}
+	} else {
+		ret = 0;
+	}
+
+	return ret;
+}
+
+/**
+ * @pre vcpu->req.type == REQ_MMIO
+ */
+int32_t dm_emulate_mmio_post(struct vcpu *vcpu)
+{
+	uint16_t cur = vcpu->vcpu_id;
+	struct io_request *io_req = &vcpu->req;
+	struct mmio_request *mmio_req = &io_req->reqs.mmio;
+	union vhm_request_buffer *req_buf;
+	struct vhm_request *vhm_req;
+
+	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
+	vhm_req = &req_buf->req_queue[cur];
+
+	mmio_req->value = vhm_req->reqs.mmio.value;
+	io_req->processed = vhm_req->processed;
+
+	/* VHM emulation data already copy to req, mark to free slot now */
+	vhm_req->valid = 0;
+
+	return emulate_mmio_post(vcpu, io_req);
+}
+
+/**
  * Try handling the given request by any port I/O handler registered in the
  * hypervisor.
  *
@@ -94,6 +142,7 @@ hv_emulate_pio(struct vcpu *vcpu, struct io_request *io_req)
 			pr_fatal("Err:IO, port 0x%04x, size=%hu spans devices",
 					port, size);
 			status = -EIO;
+			io_req->processed = REQ_STATE_FAILED;
 			break;
 		} else {
 			if (pio_req->direction == REQUEST_WRITE) {
@@ -121,10 +170,55 @@ hv_emulate_pio(struct vcpu *vcpu, struct io_request *io_req)
 }
 
 /**
+ * Use registered MMIO handlers on the given request if it falls in the range of
+ * any of them.
+ *
+ * @pre io_req->type == REQ_MMIO
+ *
+ * @return 0       - Successfully emulated by registered handlers.
+ * @return -ENODEV - No proper handler found.
+ * @return -EIO    - The request spans multiple devices and cannot be emulated.
+ */
+static int32_t
+hv_emulate_mmio(struct vcpu *vcpu, struct io_request *io_req)
+{
+	int status = -ENODEV;
+	uint64_t address, size;
+	struct list_head *pos;
+	struct mmio_request *mmio_req = &io_req->reqs.mmio;
+	struct mem_io_node *mmio_handler = NULL;
+
+	address = mmio_req->address;
+	size = mmio_req->size;
+
+	list_for_each(pos, &vcpu->vm->mmio_list) {
+		uint64_t base, end;
+
+		mmio_handler = list_entry(pos, struct mem_io_node, list);
+		base = mmio_handler->range_start;
+		end = mmio_handler->range_end;
+
+		if ((address + size <= base) || (address >= end)) {
+			continue;
+		} else if (!((address >= base) && (address + size <= end))) {
+			pr_fatal("Err MMIO, address:0x%llx, size:%x",
+				 address, size);
+			io_req->processed = REQ_STATE_FAILED;
+			return -EIO;
+		} else {
+			/* Handle this MMIO operation */
+			status = mmio_handler->read_write(vcpu, io_req,
+					mmio_handler->handler_private_data);
+			break;
+		}
+	}
+
+	return status;
+}
+
+/**
  * Handle an I/O request by either invoking a hypervisor-internal handler or
  * deliver to VHM.
- *
- * @pre io_req->type == REQ_PORTIO
  *
  * @return 0       - Successfully emulated by registered handlers.
  * @return -EIO    - The request spans multiple devices and cannot be emulated.
@@ -135,7 +229,20 @@ emulate_io(struct vcpu *vcpu, struct io_request *io_req)
 {
 	int32_t status;
 
-	status = hv_emulate_pio(vcpu, io_req);
+	switch (io_req->type) {
+	case REQ_PORTIO:
+		status = hv_emulate_pio(vcpu, io_req);
+		break;
+	case REQ_MMIO:
+	case REQ_WP:
+		status = hv_emulate_mmio(vcpu, io_req);
+		break;
+	default:
+		/* Unknown I/O request type */
+		status = -EINVAL;
+		io_req->processed = REQ_STATE_FAILED;
+		break;
+	}
 
 	if (status == -ENODEV) {
 		/*
