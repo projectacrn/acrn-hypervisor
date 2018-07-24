@@ -1159,17 +1159,3 @@ void shell_special_serial(struct shell *p_shell, uint8_t ch)
 		break;
 	}
 }
-
-int shell_construct(struct shell **p_shell)
-{
-	int status = 0;
-	/* Allocate memory for shell session */
-	*p_shell = (struct shell *) calloc(1, sizeof(**p_shell));
-
-	if ((*p_shell) == NULL) {
-		pr_err("Error: out of memory");
-		status = -ENOMEM;
-	}
-
-	return status;
-}

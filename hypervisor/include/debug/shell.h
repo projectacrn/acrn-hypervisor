@@ -11,11 +11,11 @@
 #define GUEST_CONSOLE_TO_HV_SWITCH_KEY      0       /* CTRL + SPACE */
 
 #ifdef HV_DEBUG
-int shell_init(void);
+void shell_init(void);
 void shell_kick_session(void);
 int shell_switch_console(void);
 #else
-static inline int shell_init(void) { return 0; }
+static inline void shell_init(void) {}
 static inline void shell_kick_session(void) {}
 static inline int shell_switch_console(void) { return 0; }
 #endif
