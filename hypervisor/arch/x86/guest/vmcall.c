@@ -116,6 +116,11 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 		ret = hcall_set_vm_memory_regions(vm, param1);
 		break;
 
+	case HC_VM_WRITE_PROTECT_PAGE:
+		ret = hcall_write_protect_page(vm, (uint16_t)param1, param2);
+		break;
+
+
 	case HC_VM_PCI_MSIX_REMAP:
 		/* param1: vmid */
 		ret = hcall_remap_pci_msix(vm, (uint16_t)param1, param2);

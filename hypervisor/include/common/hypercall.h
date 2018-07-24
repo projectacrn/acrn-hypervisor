@@ -229,6 +229,18 @@ int32_t hcall_set_vm_memory_region(struct vm *vm, uint16_t vmid, uint64_t param)
 int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param);
 
 /**
+ * @brief change guest memory page write permission
+ *
+ * @param vm Pointer to VM data structure
+ * @param vmid ID of the VM
+ * @param param guest physical address. This gpa points to
+ *              struct wp_data
+ *
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_write_protect_page(struct vm *vm, uint16_t vmid, uint64_t param);
+
+/**
  * @brief remap PCI MSI interrupt
  *
  * Remap a PCI MSI interrupt from a VM's virtual vector to native vector.
