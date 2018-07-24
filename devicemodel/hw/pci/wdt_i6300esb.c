@@ -49,6 +49,7 @@
 
 #define WDT_TIMER_SIG			0x55AA
 #define DEFAULT_MAX_TIMER_VAL		0x000FFFFF
+#define	DEFAULT_RESET_TIMER_VAL		60
 
 /* for debug */
 /* #define WDT_DEBUG */
@@ -363,6 +364,31 @@ pci_wdt_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	delete_wdt_timer();
 	memset(&wdt_state, 0, sizeof(wdt_state));
+}
+
+/* stop/reset watchdog will be invoked during guest enter/exit S3.
+ * We stop watchdog timer when guest enter S3 to avoid watchdog trigger
+ * guest reset when guest is in S3 state.
+ *
+ * We reset watchdog with a long peroid (2 * 60s) during guest exit
+ * from S3 to handle system hang before watchdog in guest kernel start to
+ * work.
+ */
+void
+vm_stop_watchdog(struct vmctx *ctx)
+{
+	stop_wdt_timer();
+}
+
+void
+vm_reset_watchdog(struct vmctx *ctx)
+{
+	wdt_state.stage = 1;
+	wdt_state.timer1_val = DEFAULT_RESET_TIMER_VAL;
+	wdt_state.timer2_val = DEFAULT_RESET_TIMER_VAL;
+	wdt_state.unlock_state = 0;
+
+	start_wdt_timer();
 }
 
 struct pci_vdev_ops pci_ops_wdt = {
