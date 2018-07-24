@@ -122,7 +122,10 @@ int register_mmio_emulation_handler(struct vm *vm,
 	uint64_t end, void *handler_private_data);
 void unregister_mmio_emulation_handler(struct vm *vm, uint64_t start,
         uint64_t end);
-int dm_emulate_mmio_post(struct vcpu *vcpu);
+int32_t emulate_mmio_post(struct vcpu *vcpu, struct io_request *io_req);
+int32_t dm_emulate_mmio_post(struct vcpu *vcpu);
+
+int32_t emulate_io(struct vcpu *vcpu, struct io_request *io_req);
 
 int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct io_request *req);
 
