@@ -6,29 +6,24 @@
 
 #include <hypervisor.h>
 
-static int charout(int cmd, const char *s, int32_t sz_arg, void *hnd)
+static int charout(int cmd, const char *s, uint32_t sz, void *hnd)
 {
 	/* pointer to an integer to store the number of characters */
 	int *nchars = (int *)hnd;
 	/* working pointer */
 	const char *p = s;
-	int32_t sz = sz_arg;
 
 	/* copy mode ? */
 	if (cmd == PRINT_CMD_COPY) {
-		/* copy all characters until NUL is found */
-		if (sz < 0) {
-			s += console_puts(s);
-		} else { /* copy 'sz' characters */
+		if (sz > 0U) { /* copy 'sz' characters */
 			s += console_write(s, sz);
 		}
 
 		*nchars += (s - p);
-		return *nchars;
 	} else {
 	/* fill mode */
 		*nchars += sz;
-		while (sz != 0) {
+		while (sz != 0U) {
 			(void)console_putc(*s);
 			sz--;
 		}
