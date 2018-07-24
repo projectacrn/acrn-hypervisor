@@ -139,7 +139,6 @@ struct shell_cmd {
 
 /* Global function prototypes */
 int shell_show_req_info(struct shell *p_shell, int argc, char **argv);
-int shell_construct(struct shell **p_shell);
 int shell_cmd_help(struct shell *p_shell, int argc, char **argv);
 int shell_list_vm(struct shell *p_shell, int argc, char **argv);
 int shell_list_vcpu(struct shell *p_shell, int argc, char **argv);

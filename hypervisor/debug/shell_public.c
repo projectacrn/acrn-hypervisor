@@ -8,7 +8,7 @@
 #include "shell_internal.h"
 
 /* Shell that uses serial I/O */
-static struct shell *serial_session;
+static struct shell serial_session;
 
 static struct shell_cmd acrn_cmd[] = {
 	{
@@ -133,31 +133,22 @@ static struct shell_cmd acrn_cmd[] = {
 		},
 };
 
-int shell_init(void)
+void shell_init(void)
 {
-	int status;
-
-	status = shell_construct(&serial_session);
-	if (status != 0) {
-		return status;
-	}
-
 	/* Set the function pointers for the shell i/p and o/p functions */
-	serial_session->session_io.io_init = shell_init_serial;
-	serial_session->session_io.io_deinit = shell_terminate_serial;
-	serial_session->session_io.io_puts = shell_puts_serial;
-	serial_session->session_io.io_getc = shell_getc_serial;
-	serial_session->session_io.io_special = shell_special_serial;
-	serial_session->session_io.io_echo_on = (bool)true;
+	serial_session.session_io.io_init = shell_init_serial;
+	serial_session.session_io.io_deinit = shell_terminate_serial;
+	serial_session.session_io.io_puts = shell_puts_serial;
+	serial_session.session_io.io_getc = shell_getc_serial;
+	serial_session.session_io.io_special = shell_special_serial;
+	serial_session.session_io.io_echo_on = (bool)true;
 
-	serial_session->shell_cmd = acrn_cmd;
-	serial_session->cmd_count = ARRAY_SIZE(acrn_cmd);
+	serial_session.shell_cmd = acrn_cmd;
+	serial_session.cmd_count = ARRAY_SIZE(acrn_cmd);
 	/* Initialize the handler for the serial port that will be used
 	 * for shell i/p and o/p
 	 */
-	status = serial_session->session_io.io_init(serial_session);
-
-	return status;
+	serial_session.session_io.io_init(&serial_session);
 }
 
 /**
@@ -194,7 +185,7 @@ int shell_set_name(struct shell *p_shell, const char *name)
 void shell_kick_session(void)
 {
 	/* Kick the shell */
-	kick_shell(serial_session);
+	kick_shell(&serial_session);
 }
 
 int shell_switch_console(void)
@@ -208,7 +199,7 @@ int shell_switch_console(void)
 
 	vuart->active = false;
 	/* Output that switching to ACRN shell */
-	shell_puts(serial_session,
+	shell_puts(&serial_session,
 		"\r\n\r\n----- Entering ACRN Shell -----\r\n");
 	return 0;
 }
