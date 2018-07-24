@@ -53,6 +53,7 @@
 #define HC_VM_SET_MEMORY_REGION     _HC_ID(HC_ID, HC_ID_MEM_BASE + 0x00UL)
 #define HC_VM_GPA2HPA               _HC_ID(HC_ID, HC_ID_MEM_BASE + 0x01UL)
 #define HC_VM_SET_MEMORY_REGIONS    _HC_ID(HC_ID, HC_ID_MEM_BASE + 0x02UL)
+#define HC_VM_WRITE_PROTECT_PAGE    _HC_ID(HC_ID, HC_ID_MEM_BASE + 0x03UL)
 
 /* PCI assignment*/
 #define HC_ID_PCI_BASE              0x50UL
@@ -109,6 +110,7 @@
 struct vm_memory_region {
 #define MR_ADD		0U
 #define MR_DEL		2U
+#define MR_MODIFY	3U
 	/** set memory region type: MR_ADD or MAP_DEL */
 	uint32_t type;
 
@@ -147,6 +149,24 @@ struct set_regions {
 	 */
 	uint64_t regions_gpa;
 } __attribute__((aligned(8)));
+
+/**
+ * @brief Info to change guest one page write protect permission
+ *
+ * the parameter for HC_VM_WRITE_PROTECT_PAGE hypercall
+ */
+struct wp_data {
+	/** set page write protect permission.
+	 *  ture: set the wp; flase: clear the wp
+	 */
+	uint8_t set;
+
+	/** Reserved */
+	uint64_t pad:56;
+
+	/** the guest physical address of the page to change */
+	uint64_t gpa;
+} __aligned(8);
 
 /**
  * Setup parameter for share buffer, used for HC_SETUP_SBUF hypercall

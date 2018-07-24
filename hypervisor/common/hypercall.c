@@ -558,6 +558,60 @@ int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param)
 	return 0;
 }
 
+static int32_t write_protect_page(struct vm *vm, struct wp_data *wp)
+{
+	uint64_t hpa, base_paddr;
+	uint64_t prot_set;
+	uint64_t prot_clr;
+
+	hpa = gpa2hpa(vm, wp->gpa);
+	dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x",
+			vm->attr.id, wp->gpa, hpa);
+
+	base_paddr = get_hv_image_base();
+	if (((hpa <= base_paddr) && (hpa + CPU_PAGE_SIZE > base_paddr)) ||
+			((hpa >= base_paddr) &&
+			(hpa < base_paddr + CONFIG_RAM_SIZE))) {
+		pr_err("%s: overlap the HV memory region.", __func__);
+		return -EINVAL;
+	}
+
+	prot_set = (wp->set != 0U) ? 0UL : EPT_WR;
+	prot_clr = (wp->set != 0U) ? EPT_WR : 0UL;
+
+	return ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+		wp->gpa, CPU_PAGE_SIZE, prot_set, prot_clr);
+}
+
+int32_t hcall_write_protect_page(struct vm *vm, uint16_t vmid, uint64_t wp_gpa)
+{
+	struct wp_data wp;
+	struct vm *target_vm = get_vm_from_vmid(vmid);
+
+	if ((vm == NULL) || (target_vm == NULL)) {
+		return -EINVAL;
+	}
+
+	if (!is_vm0(vm)) {
+		pr_err("%s: Not coming from service vm", __func__);
+		return -EPERM;
+	}
+
+	if (is_vm0(target_vm)) {
+		pr_err("%s: Targeting to service vm", __func__);
+		return -EINVAL;
+	}
+
+	(void)memset((void *)&wp, 0U, sizeof(wp));
+
+	if (copy_from_gpa(vm, &wp, wp_gpa, sizeof(wp)) != 0) {
+		pr_err("%s: Unable copy param to vm\n", __func__);
+		return -EFAULT;
+	}
+
+	return write_protect_page(target_vm, &wp);
+}
+
 int32_t hcall_remap_pci_msix(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
