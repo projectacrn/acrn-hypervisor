@@ -32,10 +32,6 @@
 #define IDX_PAT		(IDX_TSC + 1U)
 #define IDX_MAX_MSR	(IDX_PAT + 1U)
 
-struct vhm_request;
-
-int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req);
-
 /*
  * VCPU related APIs
  */

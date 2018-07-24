@@ -303,18 +303,6 @@ static inline void mem_write64(void *addr, uint64_t data)
 	*addr64 = data;
 }
 
-/* Typedef for MMIO handler and range check routine */
-typedef int(*hv_mem_io_handler_t)(struct vcpu *, struct mem_io *, void *);
-
-/* Structure for MMIO handler node */
-struct mem_io_node {
-	hv_mem_io_handler_t read_write;
-	void *handler_private_data;
-	struct list_head list;
-	uint64_t range_start;
-	uint64_t range_end;
-};
-
 uint64_t get_paging_pml4(void);
 bool check_mmu_1gb_support(enum _page_table_type page_table_type);
 void *alloc_paging_struct(void);
@@ -341,13 +329,6 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 		struct entry_params *entry, void *addr, bool direct);
 uint64_t *lookup_address(uint64_t *pml4_page, uint64_t addr,
 		uint64_t *pg_size, enum _page_table_type ptt);
-
-int register_mmio_emulation_handler(struct vm *vm,
-	hv_mem_io_handler_t read_write, uint64_t start,
-	uint64_t end, void *handler_private_data);
-
-void unregister_mmio_emulation_handler(struct vm *vm, uint64_t start,
-        uint64_t end);
 
 #pragma pack(1)
 
@@ -411,7 +392,6 @@ int ept_mr_del(struct vm *vm, uint64_t *pml4_page,
 
 int     ept_violation_vmexit_handler(struct vcpu *vcpu);
 int     ept_misconfig_vmexit_handler(struct vcpu *vcpu);
-int     dm_emulate_mmio_post(struct vcpu *vcpu);
 
 #endif /* ASSEMBLER not defined */
 
