@@ -236,10 +236,11 @@ static uint64_t pit_calibrate_tsc(uint16_t cal_ms)
 #define PIT_TARGET	0x3FFFU
 #define PIT_MAX_COUNT	0xFFFFU
 
-	uint16_t initial_pit;
+	uint32_t initial_pit;
 	uint16_t current_pit;
 	uint16_t max_cal_ms;
 	uint64_t current_tsc;
+	uint8_t initial_pit_high, initial_pit_low;
 
 	max_cal_ms = ((PIT_MAX_COUNT - PIT_TARGET) * 1000U) / PIT_TICK_RATE;
 	cal_ms = min(cal_ms, max_cal_ms);
@@ -247,16 +248,18 @@ static uint64_t pit_calibrate_tsc(uint16_t cal_ms)
 	/* Assume the 8254 delivers 18.2 ticks per second when 16 bits fully
 	 * wrap.  This is about 1.193MHz or a clock period of 0.8384uSec
 	 */
-	initial_pit = (uint16_t)((cal_ms * PIT_TICK_RATE) / 1000U);
+	initial_pit = ((uint32_t)cal_ms * PIT_TICK_RATE) / 1000U;
 	initial_pit += PIT_TARGET;
+	initial_pit_high = (uint8_t)(initial_pit >> 8U);
+	initial_pit_low = (uint8_t)initial_pit;
 
 	/* Port 0x43 ==> Control word write; Data 0x30 ==> Select Counter 0,
 	 * Read/Write least significant byte first, mode 0, 16 bits.
 	 */
 
 	io_write_byte(0x30U, 0x43U);
-	io_write_byte(initial_pit & 0x00ffU, 0x40U);	/* Write LSB */
-	io_write_byte(initial_pit >> 8U, 0x40U);		/* Write MSB */
+	io_write_byte(initial_pit_low, 0x40U);	/* Write LSB */
+	io_write_byte(initial_pit_high, 0x40U);		/* Write MSB */
 
 	current_tsc = rdtsc();
 

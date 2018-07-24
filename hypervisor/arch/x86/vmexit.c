@@ -186,7 +186,7 @@ int vmexit_handler(struct vcpu *vcpu)
 	}
 
 	/* Calculate basic exit reason (low 16-bits) */
-	basic_exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFFU;
+	basic_exit_reason = (uint16_t)(vcpu->arch_vcpu.exit_reason & 0xFFFFU);
 
 	/* Log details for exit */
 	pr_dbg("Exit Reason: 0x%016llx ", vcpu->arch_vcpu.exit_reason);

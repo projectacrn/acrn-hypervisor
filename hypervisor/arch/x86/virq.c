@@ -50,12 +50,12 @@ static const uint16_t exception_type[32] = {
 	[31] = VMX_INT_TYPE_HW_EXP
 };
 
-static int is_guest_irq_enabled(struct vcpu *vcpu)
+static bool is_guest_irq_enabled(struct vcpu *vcpu)
 {
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	uint64_t guest_rflags, guest_state;
-	int status = false;
+	bool status = false;
 
 	/* Read the RFLAGS of the guest */
 	guest_rflags = cur_context->rflags;
@@ -204,6 +204,7 @@ static int get_excep_class(uint32_t vector)
 int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector,
 	uint32_t err_code)
 {
+	struct vcpu_arch *arch_vcpu = &vcpu->arch_vcpu;
 	/* VECTOR_INVALID is also greater than 32 */
 	if (vector >= 32U) {
 		pr_err("invalid exception vector %d", vector);
@@ -211,7 +212,7 @@ int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector,
 	}
 
 	uint32_t prev_vector =
-		vcpu->arch_vcpu.exception_info.exception;
+		arch_vcpu->exception_info.exception;
 	int32_t new_class, prev_class;
 
 	/* SDM vol3 - 6.15, Table 6-5 - conditions for generating a
@@ -235,12 +236,12 @@ int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector,
 		 * double/triple fault. */
 	}
 
-	vcpu->arch_vcpu.exception_info.exception = vector;
+	arch_vcpu->exception_info.exception = vector;
 
 	if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U)
-		vcpu->arch_vcpu.exception_info.error = err_code;
+		arch_vcpu->exception_info.error = err_code;
 	else
-		vcpu->arch_vcpu.exception_info.error = 0;
+		arch_vcpu->exception_info.error = 0U;
 
 	return 0;
 }
@@ -364,9 +365,12 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 int acrn_handle_pending_request(struct vcpu *vcpu)
 {
 	int ret = 0;
-	uint64_t tmp;
+	uint32_t tmp;
 	bool intr_pending = false;
-	uint64_t *pending_req_bits = &vcpu->arch_vcpu.pending_req;
+	uint32_t intr_info;
+	uint32_t error_code;
+	struct vcpu_arch * arch_vcpu = &vcpu->arch_vcpu;
+	uint64_t *pending_req_bits = &arch_vcpu->pending_req;
 
 	if (bitmap_test_and_clear(ACRN_REQUEST_TRP_FAULT, pending_req_bits)) {
 		pr_fatal("Triple fault happen -> shutdown!");
@@ -377,22 +381,24 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 		invept(vcpu);
 
 	if (bitmap_test_and_clear(ACRN_REQUEST_VPID_FLUSH, pending_req_bits))
-		flush_vpid_single(vcpu->arch_vcpu.vpid);
+		flush_vpid_single(arch_vcpu->vpid);
 
 	if (bitmap_test_and_clear(ACRN_REQUEST_TMR_UPDATE, pending_req_bits))
 		vioapic_update_tmr(vcpu);
 
 	/* handling cancelled event injection when vcpu is switched out */
-	if (vcpu->arch_vcpu.inject_event_pending) {
-		if ((vcpu->arch_vcpu.inject_info.intr_info &
-			(EXCEPTION_ERROR_CODE_VALID << 8)) != 0U)
+	if (arch_vcpu->inject_event_pending) {
+		if ((arch_vcpu->inject_info.intr_info &
+		     (EXCEPTION_ERROR_CODE_VALID << 8U)) != 0U) {
+			error_code = arch_vcpu->inject_info.error_code;
 			exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE,
-				vcpu->arch_vcpu.inject_info.error_code);
+			        error_code);
+		}
 
-		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
-			vcpu->arch_vcpu.inject_info.intr_info);
+		intr_info = arch_vcpu->inject_info.intr_info;
+		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, intr_info);
 
-		vcpu->arch_vcpu.inject_event_pending = false;
+		arch_vcpu->inject_event_pending = false;
 		goto INTR_WIN;
 	}
 
@@ -417,14 +423,14 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 	 * - external interrupt, if IF clear, will keep in IDT_VEC_INFO_FIELD
 	 *   at next vm exit?
 	 */
-	if ((vcpu->arch_vcpu.idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
+	if ((arch_vcpu->idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
 		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
-				vcpu->arch_vcpu.idt_vectoring_info);
+				arch_vcpu->idt_vectoring_info);
 		goto INTR_WIN;
 	}
 
 	/* Guest interruptable or not */
-	if (is_guest_irq_enabled(vcpu) != 0) {
+	if (is_guest_irq_enabled(vcpu)) {
 		/* Inject external interrupt first */
 		if (bitmap_test_and_clear(ACRN_REQUEST_EXTINT,
 			pending_req_bits)) {
@@ -451,10 +457,10 @@ INTR_WIN:
 	intr_pending = vcpu_pending_request(vcpu);
 
 	/* Enable interrupt window exiting if pending */
-	if (intr_pending && vcpu->arch_vcpu.irq_window_enabled == 0U) {
-		vcpu->arch_vcpu.irq_window_enabled = 1U;
+	if (intr_pending && arch_vcpu->irq_window_enabled == 0U) {
+		arch_vcpu->irq_window_enabled = 1U;
 		tmp = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
-		tmp |= (VMX_PROCBASED_CTLS_IRQ_WIN);
+		tmp |= VMX_PROCBASED_CTLS_IRQ_WIN;
 		exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, tmp);
 	}
 
@@ -481,7 +487,7 @@ void cancel_event_injection(struct vcpu *vcpu)
 				exec_vmread32(VMX_ENTRY_EXCEPTION_ERROR_CODE);
 
 		vcpu->arch_vcpu.inject_info.intr_info = intinfo;
-		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, 0UL);
+		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, 0U);
 	}
 }
 

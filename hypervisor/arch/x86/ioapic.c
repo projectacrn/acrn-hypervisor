@@ -448,9 +448,9 @@ static void get_rte_info(union ioapic_rte rte, bool *mask, bool *irr,
 	*mask = ((rte.full & IOAPIC_RTE_INTMASK) == IOAPIC_RTE_INTMSET);
 	*irr = ((rte.full & IOAPIC_RTE_REM_IRR) == IOAPIC_RTE_REM_IRR);
 	*phys = ((rte.full & IOAPIC_RTE_DESTMOD) == IOAPIC_RTE_DESTPHY);
-	*delmode = rte.full & IOAPIC_RTE_DELMOD;
+	*delmode = (uint32_t)(rte.full & IOAPIC_RTE_DELMOD);
 	*level = ((rte.full & IOAPIC_RTE_TRGRLVL) != 0UL);
-	*vector = rte.full & IOAPIC_RTE_INTVEC;
+	*vector = (uint32_t)(rte.full & IOAPIC_RTE_INTVEC);
 	*dest = (uint32_t)(rte.full >> APIC_ID_SHIFT);
 }
 
