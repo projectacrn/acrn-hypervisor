@@ -52,7 +52,7 @@ static void print_hv_banner(void);
 static uint16_t get_cpu_id_from_lapic_id(uint8_t lapic_id);
 static void pcpu_sync_sleep(uint64_t *sync, uint64_t mask_bit);
 int ibrs_type;
-static uint64_t __attribute__((__section__(".bss_noinit"))) start_tsc;
+static uint64_t start_tsc __attribute__((__section__(".bss_noinit")));
 
 /* Push sp magic to top of stack for call trace */
 #define SWITCH_TO(rsp, to)                                              \
@@ -341,19 +341,19 @@ static void get_cpu_name(void)
 {
 	cpuid(CPUID_EXTEND_FUNCTION_2,
 		(uint32_t *)(boot_cpu_data.model_name),
-		(uint32_t *)(boot_cpu_data.model_name + 4),
-		(uint32_t *)(boot_cpu_data.model_name + 8),
-		(uint32_t *)(boot_cpu_data.model_name + 12));
+		(uint32_t *)(&boot_cpu_data.model_name[4]),
+		(uint32_t *)(&boot_cpu_data.model_name[8]),
+		(uint32_t *)(&boot_cpu_data.model_name[12]));
 	cpuid(CPUID_EXTEND_FUNCTION_3,
-		(uint32_t *)(boot_cpu_data.model_name + 16),
-		(uint32_t *)(boot_cpu_data.model_name + 20),
-		(uint32_t *)(boot_cpu_data.model_name + 24),
-		(uint32_t *)(boot_cpu_data.model_name + 28));
+		(uint32_t *)(&boot_cpu_data.model_name[16]),
+		(uint32_t *)(&boot_cpu_data.model_name[20]),
+		(uint32_t *)(&boot_cpu_data.model_name[24]),
+		(uint32_t *)(&boot_cpu_data.model_name[28]));
 	cpuid(CPUID_EXTEND_FUNCTION_4,
-		(uint32_t *)(boot_cpu_data.model_name + 32),
-		(uint32_t *)(boot_cpu_data.model_name + 36),
-		(uint32_t *)(boot_cpu_data.model_name + 40),
-		(uint32_t *)(boot_cpu_data.model_name + 44));
+		(uint32_t *)(&boot_cpu_data.model_name[32]),
+		(uint32_t *)(&boot_cpu_data.model_name[36]),
+		(uint32_t *)(&boot_cpu_data.model_name[40]),
+		(uint32_t *)(&boot_cpu_data.model_name[44]));
 
 	boot_cpu_data.model_name[48] = '\0';
 }
@@ -369,7 +369,7 @@ void bsp_boot_init(void)
 	start_tsc = rdtsc();
 
 	/* Clear BSS */
-	(void)memset(_ld_bss_start, 0, _ld_bss_end - _ld_bss_start);
+	(void)memset(_ld_bss_start, 0U, (size_t)(_ld_bss_end - _ld_bss_start));
 
 	/* Build time sanity checks to make sure hard-coded offset
 	*  is matching the actual offset!
@@ -434,7 +434,7 @@ void bsp_boot_init(void)
 	__bitmap_set(BOOT_CPU_ID, &pcpu_active_bitmap);
 
 	misc_en = msr_read(MSR_IA32_MISC_ENABLE);
-	if ((misc_en & TURBO_MODE_DISABLE) == 0) {
+	if ((misc_en & TURBO_MODE_DISABLE) == 0UL) {
 		msr_write(MSR_IA32_MISC_ENABLE, misc_en | TURBO_MODE_DISABLE);
 	}
 
@@ -583,7 +583,7 @@ void cpu_secondary_init(void)
 	__bitmap_set(get_cpu_id(), &pcpu_active_bitmap);
 
 	misc_en = msr_read(MSR_IA32_MISC_ENABLE);
-	if ((misc_en & TURBO_MODE_DISABLE) == 0) {
+	if ((misc_en & TURBO_MODE_DISABLE) == 0UL) {
 		msr_write(MSR_IA32_MISC_ENABLE, misc_en | TURBO_MODE_DISABLE);
 	}
 

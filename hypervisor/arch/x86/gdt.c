@@ -7,17 +7,17 @@
 #include <hypervisor.h>
 
 static void set_tss_desc(union tss_64_descriptor *desc,
-		void *tss, size_t tss_limit, int type)
+		uint64_t tss, size_t tss_limit, int type)
 {
 	uint32_t u1, u2, u3;
 
-	u1 = (uint32_t)(((uint64_t)tss << 16U) & 0xFFFFFFFFU);
-	u2 = (uint32_t)((uint64_t)tss & 0xFF000000U);
-	u3 = (uint32_t)(((uint64_t)tss & 0x00FF0000U) >> 16U);
+	u1 = (uint32_t)((tss << 16U) & 0xFFFFFFFFUL);
+	u2 = (uint32_t)(tss & 0xFF000000UL);
+	u3 = (uint32_t)((tss & 0x00FF0000UL) >> 16U);
 
 
 	desc->fields.low32.value = u1 | (tss_limit & 0xFFFFU);
-	desc->fields.base_addr_63_32 = (uint32_t)((uint64_t)tss >> 32U);
+	desc->fields.base_addr_63_32 = (uint32_t)(tss >> 32U);
 	desc->fields.high32.value = (u2 | ((uint32_t)type << 8U) | 0x8000U | u3);
 }
 
@@ -41,7 +41,7 @@ void load_gdtr_and_tr(void)
 
 	/* tss descriptor */
 	set_tss_desc(&gdt->host_gdt_tss_descriptors,
-		(void *)tss, sizeof(struct tss_64), TSS_AVAIL);
+		(uint64_t)tss, sizeof(struct tss_64), TSS_AVAIL);
 
 	gdtr.len = sizeof(struct host_gdt) - 1U;
 	gdtr.gdt = gdt;

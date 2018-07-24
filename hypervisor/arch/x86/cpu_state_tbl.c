@@ -76,16 +76,16 @@ static const struct cpu_state_table {
 	struct cpu_state_info	state_info;
 } cpu_state_tbl[] = {
 	{"Intel(R) Atom(TM) Processor A3960 @ 1.90GHz",
-		{ARRAY_SIZE(px_a3960), px_a3960,
-		 ARRAY_SIZE(cx_a3960), cx_a3960}
+		{(uint8_t)ARRAY_SIZE(px_a3960), px_a3960,
+		 (uint8_t)ARRAY_SIZE(cx_a3960), cx_a3960}
 	},
 	{"Intel(R) Atom(TM) Processor A3950 @ 1.60GHz",
-		{ARRAY_SIZE(px_a3950), px_a3950,
-		 ARRAY_SIZE(cx_a3960), cx_a3960} /* Cx is same as A3960 */
+		{(uint8_t)ARRAY_SIZE(px_a3950), px_a3950,
+		 (uint8_t)ARRAY_SIZE(cx_a3960), cx_a3960} /* Cx is same as A3960 */
 	},
 	{"Intel(R) Celeron(R) CPU J3455 @ 1.50GHz",
-		{ARRAY_SIZE(px_j3455), px_j3455,
-		 ARRAY_SIZE(cx_j3455), cx_j3455}
+		{(uint8_t)ARRAY_SIZE(px_j3455), px_j3455,
+		 (uint8_t)ARRAY_SIZE(cx_j3455), cx_j3455}
 	}
 };
 

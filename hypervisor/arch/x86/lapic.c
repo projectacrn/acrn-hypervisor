@@ -7,7 +7,7 @@
 #include <hypervisor.h>
 
 /* Rate range 1 to 1000 or 1uSec to 1mSec */
-#define APIC_TIMER_MAX      0xffffffff
+#define APIC_TIMER_MAX      0xffffffffU
 #define HYPE_PERIOD_MAX     1000
 #define APIC_DIVIDE_BY_ONE  0x0b
 #define PIT_TARGET          0x3FFFU
@@ -308,8 +308,8 @@ void suspend_lapic(void)
 
 	/* disable APIC with software flag */
 	val = read_lapic_reg32(LAPIC_SPURIOUS_VECTOR_REGISTER);
-	write_lapic_reg32(LAPIC_SPURIOUS_VECTOR_REGISTER,
-		(~LAPIC_SVR_APIC_ENABLE_MASK) & val);
+	val = (~LAPIC_SVR_APIC_ENABLE_MASK) & val;
+	write_lapic_reg32(LAPIC_SPURIOUS_VECTOR_REGISTER, val);
 }
 
 void resume_lapic(void)
@@ -396,7 +396,7 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	icr.value_32.lo_32 = 0U;
 	icr.bits.shorthand = shorthand;
 	icr.bits.delivery_mode = INTR_LAPIC_ICR_STARTUP;
-	icr.bits.vector = cpu_startup_start_address >> 12U;
+	icr.bits.vector = (uint8_t)(cpu_startup_start_address >> 12U);
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_0, icr.value_32.lo_32);
 	wait_for_delivery();
 

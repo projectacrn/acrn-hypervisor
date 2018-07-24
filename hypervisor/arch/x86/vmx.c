@@ -637,8 +637,8 @@ static void init_guest_state(struct vcpu *vcpu)
 			/* AP is initialized with real mode
 			 * and CS value is left shift 8 bits from sipi vector.
 			 */
-			sel = vcpu->arch_vcpu.sipi_vector << 8U;
-			base = sel << 4U;
+			sel = (uint16_t)(vcpu->arch_vcpu.sipi_vector << 8U);
+			base = (uint64_t)sel << 4U;
 		}
 		limit = 0xffffU;
 		access = REAL_MODE_CODE_SEG_AR;
@@ -972,7 +972,7 @@ static void init_guest_state(struct vcpu *vcpu)
 	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_GUEST_SMBASE: 0x%x ", value32);
 
-	value32 = msr_read(MSR_IA32_SYSENTER_CS) & 0xFFFFFFFFU;
+	value32 = ((uint32_t)msr_read(MSR_IA32_SYSENTER_CS) & 0xFFFFFFFFU);
 	field = VMX_GUEST_IA32_SYSENTER_CS;
 	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_GUEST_IA32_SYSENTER_CS: 0x%x ",
@@ -1129,7 +1129,7 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	exec_vmwrite(field, idtb.base);
 	pr_dbg("VMX_HOST_IDTR_BASE: 0x%x ", idtb.base);
 
-	value32 = msr_read(MSR_IA32_SYSENTER_CS) & 0xFFFFFFFFU;
+	value32 = (uint32_t)(msr_read(MSR_IA32_SYSENTER_CS) & 0xFFFFFFFFUL);
 	field = VMX_HOST_IA32_SYSENTER_CS;
 	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_HOST_IA32_SYSENTER_CS: 0x%x ",
@@ -1235,7 +1235,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	/* These are bits 1,4-6,8,13-16, and 26, the corresponding bits of
 	 * the IA32_VMX_PROCBASED_CTRLS MSR are always read as 1 --- A.3.2
 	 */
-	value32 = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
+	value32 = (uint32_t)msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
 	value32 |= (VMX_PROCBASED_CTLS_TSC_OFF |
 		    /* VMX_PROCBASED_CTLS_RDTSC | */
 		    VMX_PROCBASED_CTLS_IO_BITMAP |
@@ -1267,7 +1267,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	 * 24.6.2. Set up for: * Enable EPT * Enable RDTSCP * Unrestricted
 	 * guest (optional)
 	 */
-	value32 = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
+	value32 = (uint32_t)msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
 	value32 |= (VMX_PROCBASED_CTLS2_EPT |
 			VMX_PROCBASED_CTLS2_RDTSCP |
 			VMX_PROCBASED_CTLS2_UNRESTRICT);
@@ -1465,7 +1465,7 @@ static void init_exit_ctrl(__unused struct vcpu *vcpu)
 	 * Enable saving and loading of IA32_PAT and IA32_EFER on VMEXIT Enable
 	 * saving of pre-emption timer on VMEXIT
 	 */
-	value32 = msr_read(MSR_IA32_VMX_EXIT_CTLS);
+	value32 = (uint32_t)msr_read(MSR_IA32_VMX_EXIT_CTLS);
 	value32 |= (VMX_EXIT_CTLS_ACK_IRQ |
 		    VMX_EXIT_CTLS_SAVE_PAT |
 		    VMX_EXIT_CTLS_LOAD_PAT |
