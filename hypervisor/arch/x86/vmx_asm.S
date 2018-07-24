@@ -81,43 +81,43 @@ next:
     /* Compare the launch flag to see if launching (1) or resuming (0) */
     cmp         $VM_LAUNCH, %rsi
 
-    /*128U=0x80=PU_CONTEXT_OFFSET_CR2*/
-    mov         0x80(%rdi),%rax
+    /*136U=0x88=CPU_CONTEXT_OFFSET_CR2*/
+    mov         0x88(%rdi),%rax
     mov         %rax,%cr2
 
     /*
-     *	0U=0x0=CPU_CONTEXT_OFFSET_RAX
-     *	8U=0x8=CPU_CONTEXT_OFFSET_RBX
-     *	16U=0x10=CPU_CONTEXT_OFFSET_RCX
-     *	24U=0x18=CPU_CONTEXT_OFFSET_RDX
-     *	32U=0x20=CPU_CONTEXT_OFFSET_RBP
-     *	40U=0x28=CPU_CONTEXT_OFFSET_RSI
-     *	48U=0x30=CPU_CONTEXT_OFFSET_R8
-     *	56U=0x38=CPU_CONTEXT_OFFSET_R9
-     *	64U=0x40=CPU_CONTEXT_OFFSET_R10
-     *	72U=0x48=CPU_CONTEXT_OFFSET_R11
-     *	80U=0x50=CPU_CONTEXT_OFFSET_R12
-     *	88U=0x58=CPU_CONTEXT_OFFSET_R13
-     *	96U=0x60=CPU_CONTEXT_OFFSET_R14
-     *	104U=0x68=CPU_CONTEXT_OFFSET_R15
+     * 0U=0x0=CPU_CONTEXT_OFFSET_RAX
+     * 8U=0x8=CPU_CONTEXT_OFFSET_RCX
+     * 16U=0x10=CPU_CONTEXT_OFFSET_RDX
+     * 24U=0x18=CPU_CONTEXT_OFFSET_RBX
+     * 40U=0x28=CPU_CONTEXT_OFFSET_RBP
+     * 48U=0x30=CPU_CONTEXT_OFFSET_RSI
+     * 64U=0x40=CPU_CONTEXT_OFFSET_R8
+     * 72U=0x48=CPU_CONTEXT_OFFSET_R9
+     * 80U=0x50=CPU_CONTEXT_OFFSET_R10
+     * 88U=0x58=CPU_CONTEXT_OFFSET_R11
+     * 6U=0x60=CPU_CONTEXT_OFFSET_R12
+     * 104U=0x68=CPU_CONTEXT_OFFSET_R13
+     * 112U=0x70=CPU_CONTEXT_OFFSET_R14
+     * 120U=0x78=CPU_CONTEXT_OFFSET_R15
      */
     mov         0x0(%rdi),%rax
-    mov         0x8(%rdi),%rbx
-    mov         0x10(%rdi),%rcx
-    mov         0x18(%rdi),%rdx
-    mov         0x20(%rdi),%rbp
-    mov         0x28(%rdi),%rsi
-    mov         0x30(%rdi),%r8
-    mov         0x38(%rdi),%r9
-    mov         0x40(%rdi),%r10
-    mov         0x48(%rdi),%r11
-    mov         0x50(%rdi),%r12
-    mov         0x58(%rdi),%r13
-    mov         0x60(%rdi),%r14
-    mov         0x68(%rdi),%r15
+    mov         0x8(%rdi),%rcx
+    mov         0x10(%rdi),%rdx
+    mov         0x18(%rdi),%rbx
+    mov         0x28(%rdi),%rbp
+    mov         0x30(%rdi),%rsi
+    mov         0x40(%rdi),%r8
+    mov         0x48(%rdi),%r9
+    mov         0x50(%rdi),%r10
+    mov         0x58(%rdi),%r11
+    mov         0x60(%rdi),%r12
+    mov         0x68(%rdi),%r13
+    mov         0x70(%rdi),%r14
+    mov         0x78(%rdi),%r15
 
-    /*112U=0x70=CPU_CONTEXT_OFFSET_RDI*/
-    mov         0x70(%rdi),%rdi
+    /*56U=0x38=CPU_CONTEXT_OFFSET_RDI*/
+    mov         0x38(%rdi),%rdi
 
     /* Execute appropriate VMX instruction */
     je          vm_launch
@@ -146,45 +146,45 @@ vm_exit:
     mov         %rax,0x0(%rdi)
 
     mov         %cr2,%rax
-    /*128U=0x80=CPU_CONTEXT_OFFSET_CR2*/
-    mov         %rax,0x80(%rdi)
+    /*136U=0x88=CPU_CONTEXT_OFFSET_CR2*/
+    mov         %rax,0x88(%rdi)
+
 
     /*
-     *	8U=0x8=CPU_CONTEXT_OFFSET_RBX
-     *	16U=0x10=CPU_CONTEXT_OFFSET_RCX
-     *	24U=0x18=CPU_CONTEXT_OFFSET_RDX
-     *	32U=0x20=CPU_CONTEXT_OFFSET_RBP
-     *	40U=0x28=CPU_CONTEXT_OFFSET_RSI
-     *	48U=0x30=CPU_CONTEXT_OFFSET_R8
-     *	56U=0x38=CPU_CONTEXT_OFFSET_R9
-     *	64U=0x40=CPU_CONTEXT_OFFSET_R10
-     *	72U=0x48=CPU_CONTEXT_OFFSET_R11
-     *	80U=0x50=CPU_CONTEXT_OFFSET_R12
-     *	88U=0x58=CPU_CONTEXT_OFFSET_R13
-     *	96U=0x60=CPU_CONTEXT_OFFSET_R14
-     *	104U=0x68=CPU_CONTEXT_OFFSET_R15
+     * 8U=0x8=CPU_CONTEXT_OFFSET_RCX
+     * 16U=0x10=CPU_CONTEXT_OFFSET_RDX
+     * 24U=0x18=CPU_CONTEXT_OFFSET_RBX
+     * 40U=0x28=CPU_CONTEXT_OFFSET_RBP
+     * 48U=0x30=CPU_CONTEXT_OFFSET_RSI
+     * 64U=0x40=CPU_CONTEXT_OFFSET_R8
+     * 72U=0x48=CPU_CONTEXT_OFFSET_R9
+     * 80U=0x50=CPU_CONTEXT_OFFSET_R10
+     * 88U=0x58=CPU_CONTEXT_OFFSET_R11
+     * 96U=0x60=CPU_CONTEXT_OFFSET_R12
+     * 104U=0x68=CPU_CONTEXT_OFFSET_R13
+     * 112U=0x70=CPU_CONTEXT_OFFSET_R14
+     * 120U=0x78=CPU_CONTEXT_OFFSET_R15
      */
-    mov         %rbx,0x8(%rdi)
-    mov         %rcx,0x10(%rdi)
-    mov         %rdx,0x18(%rdi)
-    mov         %rbp,0x20(%rdi)
-    mov         %rsi,0x28(%rdi)
-    mov         %r8,0x30(%rdi)
-    mov         %r9,0x38(%rdi)
-    mov         %r10,0x40(%rdi)
-    mov         %r11,0x48(%rdi)
-    mov         %r12,0x50(%rdi)
-    mov         %r13,0x58(%rdi)
-    mov         %r14,0x60(%rdi)
-    mov         %r15,0x68(%rdi)
+    mov         %rcx,0x8(%rdi)
+    mov         %rdx,0x10(%rdi)
+    mov         %rbx,0x18(%rdi)
+    mov         %rbp,0x28(%rdi)
+    mov         %rsi,0x30(%rdi)
+    mov         %r8,0x40(%rdi)
+    mov         %r9,0x48(%rdi)
+    mov         %r10,0x50(%rdi)
+    mov         %r11,0x58(%rdi)
+    mov         %r12,0x60(%rdi)
+    mov         %r13,0x68(%rdi)
+    mov         %r14,0x70(%rdi)
+    mov         %r15,0x78(%rdi)
 
     /* Load guest RDI off host stack and into RDX */
     mov         0(%rsp),%rdx
 
     /* Save guest RDI to guest state area
-     *112U=0x70=CPU_CONTEXT_OFFSET_RDI
-     */
-    mov         %rdx,0x70(%rdi)
+    /*56U=0x38=CPU_CONTEXT_OFFSET_RDI*/
+    mov         %rdx,0x38(%rdi)
 
     /* Save RDI to RSI for later SPEC_CTRL save*/
     mov         %rdi,%rsi

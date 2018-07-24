@@ -13,46 +13,30 @@
 #define REG_SIZE                            8
 
 /* Number of GPRs saved / restored for guest in VCPU structure */
-#define NUM_GPRS                            15U
+#define NUM_GPRS                            16U
 #define GUEST_STATE_AREA_SIZE               512
 
-#define	CPU_CONTEXT_INDEX_RAX			0
-#define	CPU_CONTEXT_INDEX_RBX			1
-#define	CPU_CONTEXT_INDEX_RCX			2
-#define	CPU_CONTEXT_INDEX_RDX			3
-#define	CPU_CONTEXT_INDEX_RBP			4
-#define	CPU_CONTEXT_INDEX_RSI			5
-#define	CPU_CONTEXT_INDEX_R8			6
-#define	CPU_CONTEXT_INDEX_R9			7
-#define	CPU_CONTEXT_INDEX_R10			8
-#define	CPU_CONTEXT_INDEX_R11			9
-#define	CPU_CONTEXT_INDEX_R12			10
-#define	CPU_CONTEXT_INDEX_R13			11
-#define	CPU_CONTEXT_INDEX_R14			12
-#define	CPU_CONTEXT_INDEX_R15			13
-#define	CPU_CONTEXT_INDEX_RDI			14
-
 #define	CPU_CONTEXT_OFFSET_RAX			0U
-#define	CPU_CONTEXT_OFFSET_RBX			8U
-#define	CPU_CONTEXT_OFFSET_RCX			16U
-#define	CPU_CONTEXT_OFFSET_RDX			24U
-#define	CPU_CONTEXT_OFFSET_RBP			32U
-#define	CPU_CONTEXT_OFFSET_RSI			40U
-#define	CPU_CONTEXT_OFFSET_R8			48U
-#define	CPU_CONTEXT_OFFSET_R9			56U
-#define	CPU_CONTEXT_OFFSET_R10			64U
-#define	CPU_CONTEXT_OFFSET_R11			72U
-#define	CPU_CONTEXT_OFFSET_R12			80U
-#define	CPU_CONTEXT_OFFSET_R13			88U
-#define	CPU_CONTEXT_OFFSET_R14			96U
-#define	CPU_CONTEXT_OFFSET_R15			104U
-#define	CPU_CONTEXT_OFFSET_RDI			112U
-#define	CPU_CONTEXT_OFFSET_CR0			120U
-#define	CPU_CONTEXT_OFFSET_CR2			128U
-#define	CPU_CONTEXT_OFFSET_CR3			136U
-#define	CPU_CONTEXT_OFFSET_CR4			144U
-#define	CPU_CONTEXT_OFFSET_RIP			152U
-#define	CPU_CONTEXT_OFFSET_RSP			160U
+#define	CPU_CONTEXT_OFFSET_RCX			8U
+#define	CPU_CONTEXT_OFFSET_RDX			16U
+#define	CPU_CONTEXT_OFFSET_RBX			24U
+#define	CPU_CONTEXT_OFFSET_RSP			32U
+#define	CPU_CONTEXT_OFFSET_RBP			40U
+#define	CPU_CONTEXT_OFFSET_RSI			48U
+#define	CPU_CONTEXT_OFFSET_RDI			56U
+#define	CPU_CONTEXT_OFFSET_R8			64U
+#define	CPU_CONTEXT_OFFSET_R9			72U
+#define	CPU_CONTEXT_OFFSET_R10			80U
+#define	CPU_CONTEXT_OFFSET_R11			88U
+#define	CPU_CONTEXT_OFFSET_R12			96U
+#define	CPU_CONTEXT_OFFSET_R13			104U
+#define	CPU_CONTEXT_OFFSET_R14			112U
+#define	CPU_CONTEXT_OFFSET_R15			120U
+#define	CPU_CONTEXT_OFFSET_CR0			128U
+#define	CPU_CONTEXT_OFFSET_CR2			136U
+#define	CPU_CONTEXT_OFFSET_CR3			144U
+#define	CPU_CONTEXT_OFFSET_CR4			152U
+#define	CPU_CONTEXT_OFFSET_RIP			160U
 #define	CPU_CONTEXT_OFFSET_RFLAGS		168U
 #define	CPU_CONTEXT_OFFSET_TSC_OFFSET		184U
 #define	CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL	192U
@@ -94,13 +78,18 @@ enum vm_cpu_mode {
 	CPU_MODE_64BIT,			/* IA-32E mode (CS.L = 1) */
 };
 
-struct cpu_regs {
+/* General-purpose register layout aligned with the general-purpose register idx
+ * when vmexit, such as vmexit due to CR access, refer to SMD Vol.3C 27-6.
+ */
+struct cpu_gp_regs {
 	uint64_t rax;
-	uint64_t rbx;
 	uint64_t rcx;
 	uint64_t rdx;
+	uint64_t rbx;
+	uint64_t rsp;
 	uint64_t rbp;
 	uint64_t rsi;
+	uint64_t rdi;
 	uint64_t r8;
 	uint64_t r9;
 	uint64_t r10;
@@ -109,7 +98,6 @@ struct cpu_regs {
 	uint64_t r13;
 	uint64_t r14;
 	uint64_t r15;
-	uint64_t rdi;
 };
 
 struct segment {
@@ -125,7 +113,7 @@ struct run_context {
  * in vmx_asm.S match
  */
 	union {
-		struct cpu_regs regs;
+		struct cpu_gp_regs regs;
 		uint64_t longs[NUM_GPRS];
 	} guest_cpu_regs;
 
@@ -140,7 +128,6 @@ struct run_context {
 	uint64_t cr4;
 
 	uint64_t rip;
-	uint64_t rsp;
 	uint64_t rflags;
 
 	uint64_t dr7;

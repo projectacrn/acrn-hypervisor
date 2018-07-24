@@ -62,7 +62,7 @@ static void dump_guest_reg(struct vcpu *vcpu)
 	printf("=	RIP=0x%016llx  RSP=0x%016llx "
 			"RFLAGS=0x%016llx\r\n",
 			cur_context->rip,
-			cur_context->rsp,
+			cur_context->guest_cpu_regs.regs.rsp,
 			cur_context->rflags);
 	printf("=	CR0=0x%016llx  CR2=0x%016llx "
 			" CR3=0x%016llx\r\n",
@@ -105,19 +105,19 @@ static void dump_guest_stack(struct vcpu *vcpu)
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	uint32_t err_code = 0;
 
-	if (copy_from_gva(vcpu, tmp, cur_context->rsp, DUMP_STACK_SIZE,
-		&err_code) < 0) {
+	if (copy_from_gva(vcpu, tmp, cur_context->guest_cpu_regs.regs.rsp,
+		DUMP_STACK_SIZE, &err_code) < 0) {
 		printf("\r\nUnabled to Copy Guest Stack:\r\n");
 		return;
 	}
 
 	printf("\r\nGuest Stack:\r\n");
 	printf("Dump stack for vcpu %hu, from gva 0x%016llx\r\n",
-			vcpu->vcpu_id, cur_context->rsp);
+			vcpu->vcpu_id, cur_context->guest_cpu_regs.regs.rsp);
 	for (i = 0U; i < (DUMP_STACK_SIZE/32U); i++) {
 		printf("guest_rsp(0x%llx):  0x%016llx  0x%016llx  "
 				"0x%016llx  0x%016llx\r\n",
-				(cur_context->rsp+(i*32)),
+				(cur_context->guest_cpu_regs.regs.rsp+(i*32)),
 				tmp[i*4], tmp[(i*4)+1],
 				tmp[(i*4)+2], tmp[(i*4)+3]);
 	}

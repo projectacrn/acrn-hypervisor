@@ -97,7 +97,7 @@ int io_instr_vmexit_handler(struct vcpu *vcpu)
 			status = -EIO;
 			break;
 		} else {
-			struct cpu_regs *regs =
+			struct cpu_gp_regs *regs =
 					&cur_context->guest_cpu_regs.regs;
 
 			if (direction == 0) {

@@ -263,28 +263,10 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
 	uint64_t *regptr;
 	struct run_context *cur_context =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-	static const int reg_trans_tab[16] = {
-		[0] = CPU_CONTEXT_INDEX_RAX,
-		[1] = CPU_CONTEXT_INDEX_RCX,
-		[2] = CPU_CONTEXT_INDEX_RDX,
-		[3] = CPU_CONTEXT_INDEX_RBX,
-		[4] = 0xFF, /* for sp reg, should not be used, just for init */
-		[5] = CPU_CONTEXT_INDEX_RBP,
-		[6] = CPU_CONTEXT_INDEX_RSI,
-		[7] = CPU_CONTEXT_INDEX_RDI,
-		[8] = CPU_CONTEXT_INDEX_R8,
-		[9] = CPU_CONTEXT_INDEX_R9,
-		[10] = CPU_CONTEXT_INDEX_R10,
-		[11] = CPU_CONTEXT_INDEX_R11,
-		[12] = CPU_CONTEXT_INDEX_R12,
-		[13] = CPU_CONTEXT_INDEX_R13,
-		[14] = CPU_CONTEXT_INDEX_R14,
-		[15] = CPU_CONTEXT_INDEX_R15,
-	};
 	int idx = VM_EXIT_CR_ACCESS_REG_IDX(vcpu->arch_vcpu.exit_qualification);
 
-	ASSERT(idx != 4, "index should not be 4 (target SP)");
-	regptr = cur_context->guest_cpu_regs.longs + reg_trans_tab[idx];
+	ASSERT(idx>=0 && idx<=15, "index out of range")
+	regptr = cur_context->guest_cpu_regs.longs + idx;
 
 	switch ((VM_EXIT_CR_ACCESS_ACCESS_TYPE
 		 (vcpu->arch_vcpu.exit_qualification) << 4) |
