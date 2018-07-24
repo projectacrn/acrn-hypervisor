@@ -214,25 +214,6 @@ static const struct vie_op one_byte_opcodes[256] = {
 
 #define	GB				(1024 * 1024 * 1024)
 
-static enum cpu_reg_name gpr_map[16] = {
-	CPU_REG_RAX,
-	CPU_REG_RCX,
-	CPU_REG_RDX,
-	CPU_REG_RBX,
-	CPU_REG_RSP,
-	CPU_REG_RBP,
-	CPU_REG_RSI,
-	CPU_REG_RDI,
-	CPU_REG_R8,
-	CPU_REG_R9,
-	CPU_REG_R10,
-	CPU_REG_R11,
-	CPU_REG_R12,
-	CPU_REG_R13,
-	CPU_REG_R14,
-	CPU_REG_R15
-};
-
 static uint64_t size2mask[9] = {
 	[1] = 0xffUL,
 	[2] = 0xffffUL,
@@ -256,7 +237,7 @@ static void
 vie_calc_bytereg(struct vie *vie, enum cpu_reg_name *reg, int *lhbr)
 {
 	*lhbr = 0;
-	*reg = gpr_map[vie->reg];
+	*reg = vie->reg;
 
 	/*
 	 * 64-bit mode imposes limitations on accessing legacy high byte
@@ -273,7 +254,7 @@ vie_calc_bytereg(struct vie *vie, enum cpu_reg_name *reg, int *lhbr)
 	if (vie->rex_present == 0U) {
 		if ((vie->reg & 0x4U) != 0U) {
 			*lhbr = 1;
-			*reg = gpr_map[vie->reg & 0x3U];
+			*reg = vie->reg & 0x3U;
 		}
 	}
 }
@@ -452,7 +433,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		 * REX.W + 89/r	mov r/m64, r64
 		 */
 
-		reg = gpr_map[vie->reg];
+		reg = vie->reg;
 		error = vie_read_register(vcpu, reg, &val);
 		if (error == 0) {
 			val &= size2mask[size];
@@ -481,7 +462,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		 */
 		error = memread(vcpu, gpa, &val, size, arg);
 		if (error == 0) {
-			reg = gpr_map[vie->reg];
+			reg = vie->reg;
 			error = vie_update_register(vcpu, reg,
 							val, size);
 		}
@@ -574,7 +555,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		}
 
 		/* get the second operand */
-		reg = gpr_map[vie->reg];
+		reg = vie->reg;
 
 		/* zero-extend byte */
 		val = (uint8_t)val;
@@ -595,7 +576,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 			return error;
 		}
 
-		reg = gpr_map[vie->reg];
+		reg = vie->reg;
 
 		/* zero-extend word */
 		val = (uint16_t)val;
@@ -619,7 +600,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		}
 
 		/* get the second operand */
-		reg = gpr_map[vie->reg];
+		reg = vie->reg;
 
 		/* sign extend byte */
 		val = (int8_t)val;
@@ -876,7 +857,7 @@ emulate_test(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		 */
 
 		/* get the first operand */
-		reg = gpr_map[vie->reg];
+		reg = vie->reg;
 		error = vie_read_register(vcpu, reg, &val1);
 		if (error != 0) {
 			break;
@@ -935,7 +916,7 @@ emulate_and(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		 */
 
 		/* get the first operand */
-		reg = gpr_map[vie->reg];
+		reg = vie->reg;
 		error = vie_read_register(vcpu, reg, &val1);
 		if (error != 0) {
 			break;
@@ -1060,7 +1041,7 @@ emulate_or(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		}
 
 		/* get the second operand */
-		reg = gpr_map[vie->reg];
+		reg = vie->reg;
 		error = vie_read_register(vcpu, reg, &val2);
 		if (error != 0) {
 			break;
@@ -1121,7 +1102,7 @@ emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		 */
 
 		/* Get the register operand */
-		reg = gpr_map[vie->reg];
+		reg = vie->reg;
 		error = vie_read_register(vcpu, reg, &regop);
 		if (error != 0) {
 			return error;
@@ -1213,7 +1194,7 @@ emulate_sub(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 		 */
 
 		/* get the first operand */
-		reg = gpr_map[vie->reg];
+		reg = vie->reg;
 		error = vie_read_register(vcpu, reg, &val1);
 		if (error != 0) {
 			break;
@@ -2002,7 +1983,7 @@ decode_sib(struct vie *vie)
 		 */
 		vie->disp_bytes = 4U;
 	} else {
-		vie->base_register = gpr_map[vie->base];
+		vie->base_register = vie->base;
 	}
 
 	/*
@@ -2013,7 +1994,7 @@ decode_sib(struct vie *vie)
 	 * Table 2-5: Special Cases of REX Encodings
 	 */
 	if (vie->index != 4U) {
-		vie->index_register = gpr_map[vie->index];
+		vie->index_register = vie->index;
 	}
 
 	/* 'scale' makes sense only in the context of an index register */
