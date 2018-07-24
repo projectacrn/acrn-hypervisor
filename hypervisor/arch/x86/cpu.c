@@ -379,51 +379,51 @@ void bsp_boot_init(void)
 		"trusty_startup_param + key_info > 1Page size(4KB)!");
 
 	ASSERT(NR_WORLD == 2, "Only 2 Worlds supported!");
-	ASSERT(offsetof(struct cpu_regs, rax) ==
+	ASSERT(offsetof(struct cpu_gp_regs, rax) ==
 		CPU_CONTEXT_OFFSET_RAX,
-		"cpu_regs rax offset not match");
-	ASSERT(offsetof(struct cpu_regs, rbx) ==
+		"cpu_gp_regs rax offset not match");
+	ASSERT(offsetof(struct cpu_gp_regs, rbx) ==
 		CPU_CONTEXT_OFFSET_RBX,
-		"cpu_regs rbx offset not match");
-	ASSERT(offsetof(struct cpu_regs, rcx) ==
+		"cpu_gp_regs rbx offset not match");
+	ASSERT(offsetof(struct cpu_gp_regs, rcx) ==
 		CPU_CONTEXT_OFFSET_RCX,
-		"cpu_regs rcx offset not match");
-	ASSERT(offsetof(struct cpu_regs, rdx) ==
+		"cpu_gp_regs rcx offset not match");
+	ASSERT(offsetof(struct cpu_gp_regs, rdx) ==
 		CPU_CONTEXT_OFFSET_RDX,
-		"cpu_regs rdx offset not match");
-	ASSERT(offsetof(struct cpu_regs, rbp) ==
+		"cpu_gp_regs rdx offset not match");
+	ASSERT(offsetof(struct cpu_gp_regs, rbp) ==
 		CPU_CONTEXT_OFFSET_RBP,
-		"cpu_regs rbp offset not match");
-	ASSERT(offsetof(struct cpu_regs, rsi) ==
+		"cpu_gp_regs rbp offset not match");
+	ASSERT(offsetof(struct cpu_gp_regs, rsi) ==
 		CPU_CONTEXT_OFFSET_RSI,
-		"cpu_regs rsi offset not match");
-	ASSERT(offsetof(struct cpu_regs, rdi) ==
+		"cpu_gp_regs rsi offset not match");
+	ASSERT(offsetof(struct cpu_gp_regs, rdi) ==
 		CPU_CONTEXT_OFFSET_RDI,
-		"cpu_regs rdi offset not match");
-	ASSERT(offsetof(struct cpu_regs, r8) ==
+		"cpu_gp_regs rdi offset not match");
+	ASSERT(offsetof(struct cpu_gp_regs, r8) ==
 		CPU_CONTEXT_OFFSET_R8,
-		"cpu_regs r8 offset not match");
-	ASSERT(offsetof(struct cpu_regs, r9) ==
+		"cpu_gp_regs r8 offset not match");
+	ASSERT(offsetof(struct cpu_gp_regs, r9) ==
 		CPU_CONTEXT_OFFSET_R9,
-		"cpu_regs r9 offset not match");
-	ASSERT(offsetof(struct cpu_regs, r10) ==
+		"cpu_gp_regs r9 offset not match");
+	ASSERT(offsetof(struct cpu_gp_regs, r10) ==
 		CPU_CONTEXT_OFFSET_R10,
-		"cpu_regs r10 offset not match");
-	ASSERT(offsetof(struct cpu_regs, r11) ==
+		"cpu_gp_regs r10 offset not match");
+	ASSERT(offsetof(struct cpu_gp_regs, r11) ==
 		CPU_CONTEXT_OFFSET_R11,
-		"cpu_regs r11 offset not match");
-	ASSERT(offsetof(struct cpu_regs, r12) ==
+		"cpu_gp_regs r11 offset not match");
+	ASSERT(offsetof(struct cpu_gp_regs, r12) ==
 		CPU_CONTEXT_OFFSET_R12,
-		"cpu_regs r12 offset not match");
-	ASSERT(offsetof(struct cpu_regs, r13) ==
+		"cpu_gp_regs r12 offset not match");
+	ASSERT(offsetof(struct cpu_gp_regs, r13) ==
 		CPU_CONTEXT_OFFSET_R13,
-		"cpu_regs r13 offset not match");
-	ASSERT(offsetof(struct cpu_regs, r14) ==
+		"cpu_gp_regs r13 offset not match");
+	ASSERT(offsetof(struct cpu_gp_regs, r14) ==
 		CPU_CONTEXT_OFFSET_R14,
-		"cpu_regs r14 offset not match");
-	ASSERT(offsetof(struct cpu_regs, r15) ==
+		"cpu_gp_regs r14 offset not match");
+	ASSERT(offsetof(struct cpu_gp_regs, r15) ==
 		CPU_CONTEXT_OFFSET_R15,
-		"cpu_regs r15 offset not match");
+		"cpu_gp_regs r15 offset not match");
 	ASSERT(offsetof(struct run_context, cr2) ==
 		CPU_CONTEXT_OFFSET_CR2,
 		"run_context cr2 offset not match");

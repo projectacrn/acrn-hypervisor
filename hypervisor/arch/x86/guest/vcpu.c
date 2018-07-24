@@ -211,7 +211,7 @@ int start_vcpu(struct vcpu *vcpu)
 	cur_context->rip = exec_vmread(VMX_GUEST_RIP);
 	vcpu->arch_vcpu.inst_len = exec_vmread32(VMX_EXIT_INSTR_LEN);
 
-	cur_context->rsp = exec_vmread(VMX_GUEST_RSP);
+	cur_context->guest_cpu_regs.regs.rsp = exec_vmread(VMX_GUEST_RSP);
 	cur_context->rflags = exec_vmread(VMX_GUEST_RFLAGS);
 
 	/* Obtain VM exit reason */

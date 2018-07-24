@@ -274,7 +274,7 @@ static void load_world_ctx(struct run_context *context)
 	exec_vmwrite(VMX_GUEST_CR0, context->vmx_cr0);
 	exec_vmwrite(VMX_GUEST_CR4, context->vmx_cr4);
 	exec_vmwrite(VMX_GUEST_RIP, context->rip);
-	exec_vmwrite(VMX_GUEST_RSP, context->rsp);
+	exec_vmwrite(VMX_GUEST_RSP, context->guest_cpu_regs.regs.rsp);
 	exec_vmwrite(VMX_GUEST_RFLAGS, context->rflags);
 	exec_vmwrite(VMX_GUEST_DR7, context->dr7);
 	exec_vmwrite64(VMX_GUEST_IA32_DEBUGCTL_FULL, context->ia32_debugctl);
@@ -408,7 +408,7 @@ static bool init_secure_world_env(struct vcpu *vcpu,
 {
 	vcpu->arch_vcpu.inst_len = 0U;
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].rip = entry_gpa;
-	vcpu->arch_vcpu.contexts[SECURE_WORLD].rsp =
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].guest_cpu_regs.regs.rsp =
 		TRUSTY_EPT_REBASE_GPA + size;
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].tsc_offset = 0UL;
 

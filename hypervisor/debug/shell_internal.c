@@ -714,7 +714,7 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 	shell_puts(p_shell, temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  RIP=0x%016llx  RSP=0x%016llx "
 			"RFLAGS=0x%016llx\r\n", cur_context->rip,
-			cur_context->rsp, cur_context->rflags);
+			cur_context->guest_cpu_regs.regs.rsp, cur_context->rflags);
 	shell_puts(p_shell, temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  CR0=0x%016llx  CR2=0x%016llx "
 			" CR3=0x%016llx\r\n", cur_context->cr0,
@@ -752,7 +752,7 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 	shell_puts(p_shell, temp_str);
 
 	/* dump sp */
-	status = copy_from_gva(vcpu, tmp, cur_context->rsp,
+	status = copy_from_gva(vcpu, tmp, cur_context->guest_cpu_regs.regs.rsp,
 			DUMPREG_SP_SIZE*sizeof(uint64_t), &err_code);
 	if (status < 0) {
 		/* copy_from_gva fail */
@@ -761,7 +761,7 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 		snprintf(temp_str, MAX_STR_SIZE,
 				"\r\nDump RSP for vm %hu, from "
 				"gva 0x%016llx\r\n",
-				vm_id, cur_context->rsp);
+				vm_id, cur_context->guest_cpu_regs.regs.rsp);
 		shell_puts(p_shell, temp_str);
 
 		for (i = 0UL; i < 8UL; i++) {

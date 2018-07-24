@@ -36,19 +36,24 @@
  * Identifiers for architecturally defined registers.
  *
  * These register names is used in condition statement.
- * Within the following groups,register name need to be 
+ * Within the following groups,register name need to be
  * kept in order:
- * General register names group (CPU_REG_RAX~CPU_REG_RDI);
+ * General register names group (CPU_REG_RAX~CPU_REG_R15);
  * Non general register names group (CPU_REG_CR0~CPU_REG_GDTR);
  * Segement register names group (CPU_REG_ES~CPU_REG_GS).
  */
 enum cpu_reg_name {
+	/* General purpose register layout should align with
+	 * struct cpu_gp_regs
+	 */
 	CPU_REG_RAX,
-	CPU_REG_RBX,
 	CPU_REG_RCX,
 	CPU_REG_RDX,
+	CPU_REG_RBX,
+	CPU_REG_RSP,
 	CPU_REG_RBP,
 	CPU_REG_RSI,
+	CPU_REG_RDI,
 	CPU_REG_R8,
 	CPU_REG_R9,
 	CPU_REG_R10,
@@ -57,13 +62,12 @@ enum cpu_reg_name {
 	CPU_REG_R13,
 	CPU_REG_R14,
 	CPU_REG_R15,
-	CPU_REG_RDI,
+
 	CPU_REG_CR0,
 	CPU_REG_CR2,
 	CPU_REG_CR3,
 	CPU_REG_CR4,
 	CPU_REG_DR7,
-	CPU_REG_RSP,
 	CPU_REG_RIP,
 	CPU_REG_RFLAGS,
 	/*CPU_REG_NATURAL_LAST*/
@@ -91,7 +95,7 @@ enum cpu_reg_name {
  *
  * CPU_REG_FIRST indicates the first register name, its value
  * is the same as CPU_REG_RAX;
- * CPU_REG_LAST indicates the last register name, its value is 
+ * CPU_REG_LAST indicates the last register name, its value is
  * the same as CPU_REG_GDTR;
  *
  * CPU_REG_GENERAL_FIRST indicates the first general register name,
@@ -104,7 +108,7 @@ enum cpu_reg_name {
  * CPU_REG_NONGENERAL_LAST indicates the last non general register
  * name, its value is the same as CPU_REG_GDTR;
  *
- * CPU_REG_NATURAL_FIRST indicates the first register name that 
+ * CPU_REG_NATURAL_FIRST indicates the first register name that
  * is corresponds to the natural width field in VMCS, its value
  * is the same as CPU_REG_CR0;
  * CPU_REG_NATURAL_LAST indicates the last register name that
@@ -122,12 +126,12 @@ enum cpu_reg_name {
  * its value is the same as CPU_REG_ES;
  * CPU_REG_SEG_FIRST indicates the last segement register name,
  * its value is the same as CPU_REG_GS
- * 
+ *
  */
 #define CPU_REG_FIRST			CPU_REG_RAX
 #define CPU_REG_LAST            	CPU_REG_GDTR
 #define CPU_REG_GENERAL_FIRST   	CPU_REG_RAX
-#define CPU_REG_GENERAL_LAST		CPU_REG_RDI
+#define CPU_REG_GENERAL_LAST		CPU_REG_R15
 #define CPU_REG_NONGENERAL_FIRST   	CPU_REG_CR0
 #define CPU_REG_NONGENERAL_LAST   	CPU_REG_GDTR
 #define CPU_REG_NATURAL_FIRST		CPU_REG_CR0
