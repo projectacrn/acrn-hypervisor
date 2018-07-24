@@ -261,17 +261,17 @@ void dump_intr_excp_frame(struct intr_excp_ctx *ctx)
 	printf("=  Vector=0x%016llX  RIP=0x%016llX\n",
 			ctx->vector, ctx->rip);
 	printf("=     RAX=0x%016llX  RBX=0x%016llX  RCX=0x%016llX\n",
-			ctx->rax, ctx->rbx, ctx->rcx);
+			ctx->gp_regs.rax, ctx->gp_regs.rbx, ctx->gp_regs.rcx);
 	printf("=     RDX=0x%016llX  RDI=0x%016llX  RSI=0x%016llX\n",
-			ctx->rdx, ctx->rdi, ctx->rsi);
+			ctx->gp_regs.rdx, ctx->gp_regs.rdi, ctx->gp_regs.rsi);
 	printf("=     RSP=0x%016llX  RBP=0x%016llX  RBX=0x%016llX\n",
-			ctx->rsp, ctx->rbp, ctx->rbx);
+			ctx->gp_regs.rsp, ctx->gp_regs.rbp, ctx->gp_regs.rbx);
 	printf("=      R8=0x%016llX   R9=0x%016llX  R10=0x%016llX\n",
-			ctx->r8, ctx->r9, ctx->r10);
+			ctx->gp_regs.r8, ctx->gp_regs.r9, ctx->gp_regs.r10);
 	printf("=     R11=0x%016llX  R12=0x%016llX  R13=0x%016llX\n",
-			ctx->r11, ctx->r12, ctx->r13);
+			ctx->gp_regs.r11, ctx->gp_regs.r12, ctx->gp_regs.r13);
 	printf("=  RFLAGS=0x%016llX  R14=0x%016llX  R15=0x%016llX\n",
-			ctx->rflags, ctx->r14, ctx->r15);
+			ctx->rflags, ctx->gp_regs.r14, ctx->gp_regs.r15);
 	printf("= ERRCODE=0x%016llX   CS=0x%016llX   SS=0x%016llX\n",
 			ctx->error_code, ctx->cs, ctx->ss);
 	printf("\r\n");
@@ -285,7 +285,7 @@ void dump_exception(struct intr_excp_ctx *ctx, uint16_t pcpu_id)
 	/* Dump host context */
 	dump_intr_excp_frame(ctx);
 	/* Show host stack */
-	show_host_call_trace(ctx->rsp, ctx->rbp, pcpu_id);
+	show_host_call_trace(ctx->gp_regs.rsp, ctx->gp_regs.rbp, pcpu_id);
 	/* Dump guest context */
 	dump_guest_context(pcpu_id);
 
