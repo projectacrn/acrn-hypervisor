@@ -224,16 +224,35 @@ enum cbc_sus_stat_action {
  * CBC rx signal identity definition.
  */
 enum cbc_rx_signal_id {
-	CBC_SIG_ID_STFR	= 20000,	/* SetTunerFrequency */
-	CBC_SIG_ID_EGYO	= 20001,	/* EnableGyro */
-	CBC_SIG_ID_WACS	= 20002,	/* WriteAmplifierConfigurationSequence*/
-	CBC_SIG_ID_RIFC	= 20003,	/* RequestIocFblChecksum */
-	CBC_SIG_ID_RIWC	= 20004,	/* RequestIocWfChecksum */
-	CBC_SIG_ID_RIAC	= 20005,	/* RequestIocAppChecksum */
-	CBC_SIG_ID_RIVS	= 20006,	/* RequestIocVersion */
-	CBC_SIG_ID_RRMS	= 20007,	/* RequestRuntimeMeasurement */
-	CBC_SIG_ID_MTAM	= 20008,	/* MuteAmplifier */
-	CBC_SIG_ID_VICL	= 651,		/* VideoInCtrl */
+	CBC_SIG_ID_STFR		= 20000,	/* SetTunerFrequency */
+	CBC_SIG_ID_EGYO		= 20001,	/* EnableGyro */
+	CBC_SIG_ID_WACS		= 20002,	/* WriteAmplifierConfigurationSequence*/
+	CBC_SIG_ID_RIFC		= 20003,	/* RequestIocFblChecksum */
+	CBC_SIG_ID_RIWC		= 20004,	/* RequestIocWfChecksum */
+	CBC_SIG_ID_RIAC		= 20005,	/* RequestIocAppChecksum */
+	CBC_SIG_ID_RIVS		= 20006,	/* RequestIocVersion */
+	CBC_SIG_ID_RRMS		= 20007,	/* RequestRuntimeMeasurement */
+	CBC_SIG_ID_MTAM		= 20008,	/* MuteAmplifier */
+	CBC_SIG_ID_PBST		= 20009,	/* ParkingBrakeSetting */
+	CBC_SIG_ID_PBAT		= 20010,	/* ParkingBrakeAutomaticSetting */
+	CBC_SIG_ID_HFSS		= 20011,	/* HvacFanSpeedSetting */
+	CBC_SIG_ID_HFDST	= 20012,	/* HvacFanDirectionSetting */
+	CBC_SIG_ID_HVAST	= 20013,	/* HvacAcSetting */
+	CBC_SIG_ID_HAMS		= 20014,	/* HvacAcMaxSetting */
+	CBC_SIG_ID_HATST	= 20015,	/* HvacAutoSetting */
+	CBC_SIG_ID_HDEFST 	= 20016,	/* HvacDefrostSetting */
+	CBC_SIG_ID_HDMXST	= 20017,	/* HvacDefrostMaxSetting */
+	CBC_SIG_ID_HDST		= 20018,	/* HvacDualSetting */
+	CBC_SIG_ID_HHSMS	= 20019,	/* HvacHeatingSideMirrorSetting */
+	CBC_SIG_ID_HHSWS	= 20020,	/* HvacHeatingSteeringWheelSetting */
+	CBC_SIG_ID_HPWST	= 20021,	/* HvacPowerSetting */
+	CBC_SIG_ID_HRCST	= 20022,	/* HvacRecirculationSetting */
+	CBC_SIG_ID_HTCST	= 20023,	/* HvacTemperatureCabinSetting */
+	CBC_SIG_ID_HTSST	= 20024,	/* HvacTemperatureSeatSetting */
+	CBC_SIG_ID_HTUST	= 20025,	/* HvacTemperatureUnitsSetting */
+	CBC_SIG_ID_HVSST	= 20026,	/* HvacVentilationSeatSetting */
+	CBC_SIG_ID_HRAST	= 20027,	/* HvacRecirculationAutomaticSetting */
+	CBC_SIG_ID_VICL		= 651,		/* VideoInCtrl */
 };
 
 /*
@@ -459,6 +478,44 @@ enum cbc_tx_signal_id {
 	CBC_SIG_ID_GYROZ	= 929,	/* GyroZ */
 	CBC_SIG_ID_IAVMN	= 930,	/* IocAppVersionMinor */
 	CBC_SIG_ID_RTST		= 931,	/* RuntimeSamplesTaken */
+	CBC_SIG_ID_PKBK		= 933,	/* ParkingBrake */
+	CBC_SIG_ID_PKBKST	= 934,	/* ParkingBrakeSetting */
+	CBC_SIG_ID_PKBKAT	= 935,	/* ParkingBrakeAutomatic */
+	CBC_SIG_ID_PKBKAS	= 936,	/* ParkingBrakeAutomaticSetting */
+	CBC_SIG_ID_HFSPD	= 937,	/* HvacFanSpeed */
+	CBC_SIG_ID_HFSST	= 938,	/* HvacFanSpeedSetting */
+	CBC_SIG_ID_HFDIR	= 939,	/* HvacFanDirection */
+	CBC_SIG_ID_HFDSTT	= 940,	/* HvacFanDirectionSetting */
+	CBC_SIG_ID_HVACA	= 941,	/* HvacAc */
+	CBC_SIG_ID_HVASTT	= 942,	/* HvacAcSetting */
+	CBC_SIG_ID_HAMAX	= 943,	/* HvacAcMax */
+	CBC_SIG_ID_HVMST	= 944,	/* HvacAcMaxSetting */
+	CBC_SIG_ID_HAUTO	= 945,	/* HvacAuto */
+	CBC_SIG_ID_HATSTT	= 946,	/* HvacAutoSetting */
+	CBC_SIG_ID_HVDEF	= 947,	/* HvacDefrost */
+	CBC_SIG_ID_HDEFSTT	= 948,	/* HvacDefrostSetting */
+	CBC_SIG_ID_HDFMAX	= 949,	/* HvacDefrostMax */
+	CBC_SIG_ID_HDMXSTT	= 950,	/* HvacDefrostMaxSetting */
+	CBC_SIG_ID_HDUAL	= 951,	/* HvacDual */
+	CBC_SIG_ID_HDSTT	= 952,	/* HvacDualSetting */
+	CBC_SIG_ID_HHSMR	= 953,	/* HvacHeatingSideMirror */
+	CBC_SIG_ID_HHSMST	= 954,	/* HvacHeatingSideMirrorSetting */
+	CBC_SIG_ID_HHSWL	= 955,	/* HvacHeatingSteeringWheel */
+	CBC_SIG_ID_HHSWST	= 956,	/* HvacHeatingSteeringWheelSetting */
+	CBC_SIG_ID_HPOWR	= 957,	/* HvacPower */
+	CBC_SIG_ID_HPWSTT	= 958,	/* HvacPowerSetting */
+	CBC_SIG_ID_HRECC	= 959,	/* HvacRecirculation */
+	CBC_SIG_ID_HRECST	= 960,	/* HvacRecirculationSetting */
+	CBC_SIG_ID_HTEMCB	= 961,	/* HvacTemperatureCabin */
+	CBC_SIG_ID_HTCSTT	= 962,	/* HvacTemperatureCabinSetting */
+	CBC_SIG_ID_HTMPST	= 963,	/* HvacTemperatureSeat */
+	CBC_SIG_ID_HTSSTT	= 964,	/* HvacTemperatureSeatSetting */
+	CBC_SIG_ID_HTMPU	= 965,	/* HvacTemperatureUnits */
+	CBC_SIG_ID_HTUSTT	= 966,	/* HvacTemperatureUnitsSetting */
+	CBC_SIG_ID_HVTST	= 967,	/* HvacVentilationSeat */
+	CBC_SIG_ID_HVSSTT	= 968,	/* HvacVentilationSeatSetting */
+	CBC_SIG_ID_HRCAT	= 969,	/* HvacRecirculationAutomatic */
+	CBC_SIG_ID_HRASTT	= 970,	/* HvacRecirculationAutomaticSetting */
 };
 
 /*
