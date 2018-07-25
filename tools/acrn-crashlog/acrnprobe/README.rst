@@ -39,8 +39,8 @@ To see the version of ``acrnprobe``.
 Architecture
 ************
 
-Syntax
-======
+Terms
+=====
 
 - channel :
   Channel represents a way of detecting the system's events. There are 3
@@ -49,6 +49,19 @@ Syntax
   + oneshot: detect once while ``acrnprobe`` startup.
   + polling: run a detecting job with fixed time interval.
   + inotify: monitor the change of file or dir.
+
+- trigger :
+  Essentially, trigger represents one section of content. It could be
+  a file's content, a directory's content, or a memory's content which can be
+  obtained. By monitoring it ``acrnprobe`` could detect certain events which
+  happened in the system.
+
+- crash :
+  A subtype of event. It often corresponds to a crash of programs, system, or
+  hypervisor. ``acrnprobe`` detects it and reports it as ``CRASH``.
+
+- info :
+  A subtype of event. ``acrnprobe`` detects it and reports it as ``INFO``.
 
 - event queue :
   There is a global queue to receive all events detected.
@@ -136,15 +149,15 @@ Source files
 - main.c
   Entry of ``acrnprobe``.
 - channel.c
-  The implementation of *channel* (see `Syntax`_).
+  The implementation of *channel* (see `Terms`_).
 - crash_reclassify.c
   Analyzing the detailed types for crash event.
 - probeutils.c
   Provide some utils ``acrnprobe`` needs.
 - event_queue.c
-  The implementation of *event queue* (see `Syntax`_).
+  The implementation of *event queue* (see `Terms`_).
 - event_handler.c
-  The implementation of *event handler* (see `Syntax`_).
+  The implementation of *event handler* (see `Terms`_).
 - history.c
   There is a history_event file to manage all logs that ``acrnprobe`` archived.
   "history.c" provides the interfaces to modify the file in fixed format.
@@ -154,7 +167,7 @@ Source files
   The ``acrnprobe`` needs to know some HW/SW properties, such as board version,
   build version. These properties are managed centrally in this file.
 - sender.c
-  The implementation of *sender* (see `Syntax`_).
+  The implementation of *sender* (see `Terms`_).
 - startupreason.c
   This file provides the function to get system reboot reason from kernel
   command line.
@@ -174,5 +187,7 @@ Configuration files
 * ``/etc/acrnprobe.xml``
 
   Custom configuration file that ``acrnprobe`` reads.
+
+For details about configuration file, please refer to :ref:`acrnprobe-conf`.
 
 .. _`telemetrics-client`: https://github.com/clearlinux/telemetrics-client
