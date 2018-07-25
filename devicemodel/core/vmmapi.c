@@ -298,6 +298,20 @@ vm_setup_memory(struct vmctx *ctx, size_t memsize)
 void
 vm_unsetup_memory(struct vmctx *ctx)
 {
+	/*
+	 * For security reason, clean the VM's memory region
+	 * to avoid secret information leaking in below case:
+	 * After a UOS is destroyed, the memory will be reclaimed,
+	 * then if the new UOS starts, that memory region may be
+	 * allocated the new UOS, the previous UOS sensitive data
+	 * may be leaked to the new UOS if the memory is not cleared.
+	 *
+	 */
+	bzero((void *)ctx->baseaddr, ctx->lowmem);
+	if (ctx->highmem > 0) {
+		bzero((void *)(ctx->baseaddr + 4 * GB), ctx->highmem);
+	}
+
 	hugetlb_unsetup_memory(ctx);
 }
 
