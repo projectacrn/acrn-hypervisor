@@ -266,6 +266,8 @@ vioapic_read(struct vioapic *vioapic, uint32_t addr)
 /*
  * version 0x20+ ioapic has EOI register. And cpu could write vector to this
  * register to clear related IRR.
+ * Due to the race between vcpus, ensure to do VIOAPIC_LOCK(vioapic) &
+ * VIOAPIC_UNLOCK(vioapic) by caller.
  */
 static void
 vioapic_write_eoi(struct vioapic *vioapic, uint32_t vector)
@@ -278,7 +280,6 @@ vioapic_write_eoi(struct vioapic *vioapic, uint32_t vector)
 		pr_err("vioapic_process_eoi: invalid vector %u", vector);
 	}
 
-	VIOAPIC_LOCK(vioapic);
 	pincount = vioapic_pincount(vm);
 	for (pin = 0U; pin < pincount; pin++) {
 		rte = vioapic->rtbl[pin];
@@ -298,9 +299,11 @@ vioapic_write_eoi(struct vioapic *vioapic, uint32_t vector)
 			vioapic_send_intr(vioapic, pin);
 		}
 	}
-	VIOAPIC_UNLOCK(vioapic);
 }
 
+/* Due to the race between vcpus, ensure to do VIOAPIC_LOCK(vioapic) &
+ * VIOAPIC_UNLOCK(vioapic) by caller.
+ */
 static void
 vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 {
@@ -387,12 +390,9 @@ vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 			"ioapic pin%hhu: recalculate vlapic trigger-mode reg",
 			pin);
 
-			VIOAPIC_UNLOCK(vioapic);
-
 			foreach_vcpu(i, vioapic->vm, vcpu) {
 				vcpu_make_request(vcpu, ACRN_REQUEST_TMR_UPDATE);
 			}
-			VIOAPIC_LOCK(vioapic);
 		}
 
 		/*
