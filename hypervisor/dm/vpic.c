@@ -110,7 +110,7 @@ static inline uint8_t vpic_get_highest_isrpin(struct i8259_reg_state *i8259)
 			 * An IS bit that is masked by an IMR bit will not be
 			 * cleared by a non-specific EOI in Special Mask Mode.
 			 */
-			if ((i8259->smm != 0U) && (i8259->mask & bit) != 0U) {
+			if ((i8259->smm != 0U) && ((i8259->mask & bit) != 0U)) {
 				continue;
 			} else {
 				return pin;
@@ -160,7 +160,7 @@ static inline uint8_t vpic_get_highest_irrpin(struct i8259_reg_state *i8259)
 		 * If an interrupt is asserted and not masked then return
 		 * the corresponding 'pin' to the caller.
 		 */
-		if ((i8259->request & bit) != 0 && (i8259->mask & bit) == 0) {
+		if (((i8259->request & bit) != 0) && ((i8259->mask & bit) == 0)) {
 			return pin;
 		}
 	}
@@ -178,7 +178,7 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 	 */
 	i8259 = &vpic->i8259[1];
 	pin = vpic_get_highest_irrpin(i8259);
-	if (!i8259->intr_raised && pin < NR_VPIC_PINS_PER_CHIP) {
+	if (!i8259->intr_raised && (pin < NR_VPIC_PINS_PER_CHIP)) {
 		dev_dbg(ACRN_DBG_PIC,
 		"pic slave notify pin = %hhu (imr 0x%x irr 0x%x isr 0x%x)\n",
 		pin, i8259->mask, i8259->request, i8259->service);
@@ -200,7 +200,7 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 	 */
 	i8259 = &vpic->i8259[0];
 	pin = vpic_get_highest_irrpin(i8259);
-	if (!i8259->intr_raised && pin < NR_VPIC_PINS_PER_CHIP) {
+	if (!i8259->intr_raised && (pin < NR_VPIC_PINS_PER_CHIP)) {
 		dev_dbg(ACRN_DBG_PIC,
 		"pic master notify pin = %hhu (imr 0x%x irr 0x%x isr 0x%x)\n",
 		pin, i8259->mask, i8259->request, i8259->service);
@@ -427,7 +427,7 @@ static int vpic_ocw2(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint
 				(master_pic(vpic, i8259) ? isr_bit : isr_bit + 8U),
 				PTDEV_VPIN_PIC);
 		}
-	} else if ((val & OCW2_SL) != 0U && i8259->rotate) {
+	} else if (((val & OCW2_SL) != 0U) && i8259->rotate) {
 		/* specific priority */
 		i8259->lowprio = val & 0x7U;
 	} else {
@@ -485,11 +485,11 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin, bool newstate
 
 	level = ((vpic->i8259[pin >> 3U].elc & (1U << (pin & 0x7U))) != 0);
 
-	if ((oldcnt == 0 && newcnt == 1) || (newcnt > 0 && level == true)) {
+	if (((oldcnt == 0) && (newcnt == 1)) || ((newcnt > 0) && (level == true))) {
 		/* rising edge or level */
 		dev_dbg(ACRN_DBG_PIC, "pic pin%hhu: asserted\n", pin);
 		i8259->request |= (uint8_t)(1U << (pin & 0x7U));
-	} else if (oldcnt == 1 && newcnt == 0) {
+	} else if ((oldcnt == 1) && (newcnt == 0)) {
 		/* falling edge */
 		dev_dbg(ACRN_DBG_PIC, "pic pin%hhu: deasserted\n", pin);
 		if (level) {

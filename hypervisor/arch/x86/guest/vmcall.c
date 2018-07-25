@@ -28,9 +28,9 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 		goto out;
 	}
 
-	if (!is_vm0(vm) && hypcall_id != HC_WORLD_SWITCH &&
-		hypcall_id != HC_INITIALIZE_TRUSTY &&
-		hypcall_id != HC_SAVE_RESTORE_SWORLD_CTX) {
+	if (!is_vm0(vm) && (hypcall_id != HC_WORLD_SWITCH) &&
+		(hypcall_id != HC_INITIALIZE_TRUSTY) &&
+		(hypcall_id != HC_SAVE_RESTORE_SWORLD_CTX)) {
 		pr_err("hypercall %d is only allowed from VM0!\n", hypcall_id);
 		goto out;
 	}

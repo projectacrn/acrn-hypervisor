@@ -305,7 +305,7 @@ set_expiration(struct acrn_vlapic *vlapic)
 	tmicr = vtimer->tmicr;
 	divisor_shift = vtimer->divisor_shift;
 
-	if (!tmicr || divisor_shift > 8U) {
+	if (!tmicr || (divisor_shift > 8U)) {
 		return false;
 	}
 
@@ -610,14 +610,14 @@ vlapic_lvt_write_handler(struct acrn_vlapic *vlapic, uint32_t offset)
 	val &= mask;
 
 	/* vlapic mask/unmask LINT0 for ExtINT? */
-	if (offset == APIC_OFFSET_LINT0_LVT &&
+	if ((offset == APIC_OFFSET_LINT0_LVT) &&
 		((val & APIC_LVT_DM) == APIC_LVT_DM_EXTINT)) {
 		uint32_t last = vlapic_get_lvt(vlapic, offset);
 
 		/* mask -> unmask: may from every vlapic in the vm */
 		if (((last & APIC_LVT_M) != 0U) && ((val & APIC_LVT_M) == 0U)) {
-			if (vlapic->vm->wire_mode == VPIC_WIRE_INTR ||
-				vlapic->vm->wire_mode == VPIC_WIRE_NULL) {
+			if ((vlapic->vm->wire_mode == VPIC_WIRE_INTR) ||
+				(vlapic->vm->wire_mode == VPIC_WIRE_NULL)) {
 				vlapic->vm->wire_mode = VPIC_WIRE_LAPIC;
 				dev_dbg(ACRN_DBG_LAPIC,
 					"vpic wire mode -> LAPIC");
@@ -750,7 +750,7 @@ vlapic_update_ppr(struct acrn_vlapic *vlapic)
 		uint32_t i, idx, vector;
 		uint32_t isrvec;
 
-		if (vlapic->isrvec_stk_top == 0U && top_isrvec != 0U) {
+		if ((vlapic->isrvec_stk_top == 0U) && (top_isrvec != 0U)) {
 			panic("isrvec_stk is corrupted: %u", top_isrvec);
 		}
 
@@ -1096,7 +1096,7 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 	phys = ((icr_low & APIC_DESTMODE_LOG) == 0UL);
 	shorthand = icr_low & APIC_DEST_MASK;
 
-	if (mode == APIC_DELMODE_FIXED && vec < 16U) {
+	if ((mode == APIC_DELMODE_FIXED) && (vec < 16U)) {
 		vlapic_set_error(vlapic, APIC_ESR_SEND_ILLEGAL_VECTOR);
 		dev_dbg(ACRN_DBG_LAPIC, "Ignoring invalid IPI %u", vec);
 		return 0;
@@ -1106,9 +1106,9 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 		"icrlo 0x%08x icrhi 0x%08x triggered ipi %u",
 			icr_low, icr_high, vec);
 
-	if ((shorthand == APIC_DEST_SELF || shorthand == APIC_DEST_ALLISELF)
-		&& (mode == APIC_DELMODE_NMI || mode == APIC_DELMODE_INIT
-		|| mode == APIC_DELMODE_STARTUP)) {
+	if (((shorthand == APIC_DEST_SELF) || (shorthand == APIC_DEST_ALLISELF))
+		&& ((mode == APIC_DELMODE_NMI) || (mode == APIC_DELMODE_INIT)
+		|| (mode == APIC_DELMODE_STARTUP))) {
 		dev_dbg(ACRN_DBG_LAPIC, "Invalid ICR value");
 		return 0;
 	}
@@ -1465,7 +1465,7 @@ vlapic_write(struct acrn_vlapic *vlapic, int mmio_access, uint32_t offset,
 	uint32_t data32 = (uint32_t)data;
 	int retval;
 
-	ASSERT((offset & 0xfU) == 0U && offset < CPU_PAGE_SIZE,
+	ASSERT(((offset & 0xfU) == 0U) && (offset < CPU_PAGE_SIZE),
 		"%s: invalid offset %#x", __func__, offset);
 
 	dev_dbg(ACRN_DBG_LAPIC, "vlapic write offset %#x, data %#lx",
@@ -1687,9 +1687,9 @@ vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest, bool phys,
 	uint64_t dmask;
 	struct vcpu *target_vcpu;
 
-	if (delmode != IOAPIC_RTE_DELFIXED &&
-			delmode != IOAPIC_RTE_DELLOPRI &&
-			delmode != IOAPIC_RTE_DELEXINT) {
+	if ((delmode != IOAPIC_RTE_DELFIXED) &&
+			(delmode != IOAPIC_RTE_DELLOPRI) &&
+			(delmode != IOAPIC_RTE_DELEXINT)) {
 		dev_dbg(ACRN_DBG_LAPIC,
 			"vlapic intr invalid delmode %#x", delmode);
 		return;
@@ -1801,7 +1801,7 @@ vlapic_set_tmr_one_vec(struct acrn_vlapic *vlapic, uint32_t delmode,
 	/*
 	 * A level trigger is valid only for fixed and lowprio delivery modes.
 	 */
-	if (delmode != APIC_DELMODE_FIXED && delmode != APIC_DELMODE_LOWPRIO) {
+	if ((delmode != APIC_DELMODE_FIXED) && (delmode != APIC_DELMODE_LOWPRIO)) {
 		dev_dbg(ACRN_DBG_LAPIC,
 			"Ignoring level trigger-mode for delivery-mode %u",
 			delmode);
@@ -1833,7 +1833,7 @@ vlapic_set_intr(struct vcpu *vcpu, uint32_t vector, bool level)
 	 * According to section "Maskable Hardware Interrupts" in Intel SDM
 	 * vectors 16 through 255 can be delivered through the local APIC.
 	 */
-	if (vector < 16U || vector > 255U) {
+	if ((vector < 16U) || (vector > 255U)) {
 		return -EINVAL;
 	}
 
@@ -1920,7 +1920,7 @@ vlapic_intr_msi(struct vm *vm, uint64_t addr, uint64_t msg)
 static bool
 is_x2apic_msr(uint32_t msr)
 {
-	if (msr >= 0x800U && msr <= 0xBFFU) {
+	if ((msr >= 0x800U) && (msr <= 0xBFFU)) {
 		return true;
 	} else {
 		return false;
@@ -2036,7 +2036,7 @@ vlapic_write_mmio_reg(struct vcpu *vcpu, uint64_t gpa, uint64_t wval,
 	 * Memory mapped local apic accesses must be 4 bytes wide and
 	 * aligned on a 16-byte boundary.
 	 */
-	if (size != 4U || (off & 0xfU) != 0U) {
+	if ((size != 4U) || ((off & 0xfU) != 0U)) {
 		return -EINVAL;
 	}
 

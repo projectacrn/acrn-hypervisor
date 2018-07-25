@@ -230,10 +230,10 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 	}
 	default:
 	{
-		if (!((msr >= MSR_IA32_MTRR_PHYSBASE_0 &&
-			msr <= MSR_IA32_MTRR_PHYSMASK_9) ||
-		      (msr >= MSR_IA32_VMX_BASIC &&
-			msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS))) {
+		if (!(((msr >= MSR_IA32_MTRR_PHYSBASE_0) &&
+			(msr <= MSR_IA32_MTRR_PHYSMASK_9)) ||
+		      ((msr >= MSR_IA32_VMX_BASIC) &&
+			(msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS)))) {
 			pr_warn("rdmsr: %lx should not come here!", msr);
 		}
 		vcpu_inject_gp(vcpu, 0U);
@@ -362,10 +362,10 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	}
 	default:
 	{
-		if (!((msr >= MSR_IA32_MTRR_PHYSBASE_0 &&
-			msr <= MSR_IA32_MTRR_PHYSMASK_9) ||
-		      (msr >= MSR_IA32_VMX_BASIC &&
-			msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS))) {
+		if (!(((msr >= MSR_IA32_MTRR_PHYSBASE_0) &&
+			(msr <= MSR_IA32_MTRR_PHYSMASK_9)) ||
+		      ((msr >= MSR_IA32_VMX_BASIC) &&
+			(msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS)))) {
 			pr_warn("rdmsr: %lx should not come here!", msr);
 		}
 		vcpu_inject_gp(vcpu, 0U);
