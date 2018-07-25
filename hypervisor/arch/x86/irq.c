@@ -174,7 +174,7 @@ irq_desc_append_dev(struct irq_desc *desc, void *node, bool share)
 		if (desc->irq_handler == NULL) {
 			desc->irq_handler = common_handler_edge;
 		}
-	} else if (!share || desc->used == IRQ_ASSIGNED_NOSHARE) {
+	} else if (!share || (desc->used == IRQ_ASSIGNED_NOSHARE)) {
 		/* dev node added failed */
 		added = false;
 	} else {
@@ -259,8 +259,8 @@ common_register_handler(uint32_t irq_arg,
 OUT:
 	if (added) {
 		/* it is safe to call irq_desc_alloc_vector multiple times*/
-		if (info->vector >= VECTOR_FIXED_START &&
-			info->vector <= VECTOR_FIXED_END) {
+		if ((info->vector >= VECTOR_FIXED_START) &&
+			(info->vector <= VECTOR_FIXED_END)) {
 			irq_desc_set_vector(irq, info->vector);
 		} else if (info->vector > NR_MAX_VECTOR) {
 			irq_desc_alloc_vector(irq);
@@ -324,7 +324,7 @@ void irq_desc_try_free_vector(uint32_t irq)
 	spinlock_rflags;
 
 	/* legacy irq's vector is reserved and should not be freed */
-	if (irq >= NR_IRQS || irq < NR_LEGACY_IRQ) {
+	if ((irq >= NR_IRQS) || (irq < NR_LEGACY_IRQ)) {
 		return;
 	}
 
@@ -419,7 +419,7 @@ void dispatch_interrupt(struct intr_excp_ctx *ctx)
 		goto ERR;
 	}
 
-	if (desc->used == IRQ_NOT_ASSIGNED || desc->irq_handler == NULL) {
+	if ((desc->used == IRQ_NOT_ASSIGNED) || (desc->irq_handler == NULL)) {
 		/* mask irq if possible */
 		goto ERR;
 	}
@@ -681,7 +681,7 @@ pri_register_handler(uint32_t irq,
 {
 	struct irq_request_info info;
 
-	if (vector < VECTOR_FIXED_START || vector > VECTOR_FIXED_END) {
+	if ((vector < VECTOR_FIXED_START) || (vector > VECTOR_FIXED_END)) {
 		return NULL;
 	}
 
@@ -718,8 +718,8 @@ void get_cpu_interrupt_info(char *str_arg, int str_max)
 	for (irq = 0U; irq < NR_IRQS; irq++) {
 		desc = &irq_desc_array[irq];
 		vector = irq_to_vector(irq);
-		if (desc->used != IRQ_NOT_ASSIGNED &&
-			vector != VECTOR_INVALID) {
+		if ((desc->used != IRQ_NOT_ASSIGNED) &&
+			(vector != VECTOR_INVALID)) {
 			len = snprintf(str, size, "\r\n%d\t0x%X", irq, vector);
 			size -= len;
 			str += len;

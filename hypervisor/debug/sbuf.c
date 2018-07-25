@@ -46,7 +46,7 @@ struct shared_buf *sbuf_allocate(uint32_t ele_num, uint32_t ele_size)
 	struct shared_buf *sbuf;
 	uint32_t sbuf_allocate_size;
 
-	if (ele_num == 0U || ele_size == 0U) {
+	if ((ele_num == 0U) || (ele_size == 0U)) {
 		pr_err("%s invalid parameter!", __func__);
 		return NULL;
 	}
@@ -73,7 +73,7 @@ struct shared_buf *sbuf_allocate(uint32_t ele_num, uint32_t ele_size)
 
 void sbuf_free(struct shared_buf *sbuf)
 {
-	if ((sbuf == NULL) || sbuf->magic != SBUF_MAGIC) {
+	if ((sbuf == NULL) || (sbuf->magic != SBUF_MAGIC)) {
 		pr_err("%s invalid parameter!", __func__);
 		return;
 	}
@@ -159,8 +159,8 @@ int sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 
 int sbuf_share_setup(uint16_t pcpu_id, uint32_t sbuf_id, uint64_t *hva)
 {
-	if (pcpu_id >= phys_cpu_num ||
-			sbuf_id >= ACRN_SBUF_ID_MAX) {
+	if ((pcpu_id >= phys_cpu_num) ||
+			(sbuf_id >= ACRN_SBUF_ID_MAX)) {
 		return -EINVAL;
 	}
 

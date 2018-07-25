@@ -710,7 +710,7 @@ int shell_dumpmem(int argc, char **argv)
 	char temp_str[MAX_STR_SIZE];
 
 	/* User input invalidation */
-	if (argc != 2 && argc != 3) {
+	if ((argc != 2) && (argc != 3)) {
 		return -EINVAL;
 	}
 

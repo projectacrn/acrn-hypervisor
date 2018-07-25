@@ -432,7 +432,7 @@ static int print_string(struct print_param *param, const char *s)
 	/* calculate the number of additional characters to get the required
 	 * width
 	 */
-	if (param->vars.width > 0U && param->vars.width > len) {
+	if ((param->vars.width > 0U) && (param->vars.width > len)) {
 		w = param->vars.width - len;
 	}
 
@@ -634,7 +634,7 @@ static int charmem(int cmd, const char *s_arg, uint32_t sz, void *hnd)
 	/* copy mode ? */
 	if (cmd == PRINT_CMD_COPY) {
 		if (sz > 0U) {
-			while (((*s) != '\0') && n < sz) {
+			while (((*s) != '\0') && (n < sz)) {
 				if (n < (param->sz - param->wrtn)) {
 					*p = *s;
 				}
@@ -662,7 +662,7 @@ int vsnprintf(char *dst_arg, size_t sz_arg, const char *fmt, va_list args)
 	int32_t sz = sz_arg;
 	int res = 0;
 
-	if (sz == 0U || (dst == NULL)) {
+	if ((sz == 0U) || (dst == NULL)) {
 		return -1;
 	}
 

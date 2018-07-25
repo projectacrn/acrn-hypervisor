@@ -87,7 +87,7 @@ static inline bool get_monitor_cap(void)
 		 * in hypervisor, but still expose it to the guests and
 		 * let them handle it correctly
 		 */
-		if (boot_cpu_data.family != 0x6U || boot_cpu_data.model != 0x5cU) {
+		if ((boot_cpu_data.family != 0x6U) || (boot_cpu_data.model != 0x5cU)) {
 			return true;
 		}
 	}

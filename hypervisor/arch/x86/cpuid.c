@@ -28,7 +28,7 @@ static inline struct vcpuid_entry *find_vcpuid_entry(struct vcpu *vcpu,
 		if (tmp->leaf < leaf) {
 			continue;
 		} else if (tmp->leaf == leaf) {
-			if ((tmp->flags & CPUID_CHECK_SUBLEAF) != 0U &&
+			if (((tmp->flags & CPUID_CHECK_SUBLEAF) != 0U) &&
 				(tmp->subleaf != subleaf)) {
 				continue;
 			}
@@ -182,7 +182,7 @@ int set_vcpuid_entries(struct vm *vm)
 
 	for (i = 1U; i <= limit; i++) {
 		/* cpuid 1/0xb is percpu related */
-		if (i == 1U || i == 0xbU) {
+		if ((i == 1U) || (i == 0xbU)) {
 			continue;
 		}
 
@@ -213,16 +213,16 @@ int set_vcpuid_entries(struct vm *vm)
 		case 0x04U:
 		case 0x0dU:
 			for (j = 0U; ; j++) {
-				if (i == 0x0dU && j == 64U) {
+				if ((i == 0x0dU) && (j == 64U)) {
 					break;
 				}
 
 				init_vcpuid_entry(vm, i, j,
 					CPUID_CHECK_SUBLEAF, &entry);
-				if (i == 0x04U && entry.eax == 0U) {
+				if ((i == 0x04U) && (entry.eax == 0U)) {
 					break;
 				}
-				if (i == 0x0dU && entry.eax == 0U) {
+				if ((i == 0x0dU) && (entry.eax == 0U)) {
 					continue;
 				}
 				result = set_vcpuid_entry(vm, &entry);
@@ -281,7 +281,7 @@ void guest_cpuid(struct vcpu *vcpu,
 	uint32_t subleaf = *ecx;
 
 	/* vm related */
-	if (leaf != 0x1U && leaf != 0xbU && leaf != 0xdU) {
+	if ((leaf != 0x1U) && (leaf != 0xbU) && (leaf != 0xdU)) {
 		struct vcpuid_entry *entry =
 			find_vcpuid_entry(vcpu, leaf, subleaf);
 

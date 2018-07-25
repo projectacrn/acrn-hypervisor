@@ -490,7 +490,7 @@ void register_io_emulation_handler(struct vm *vm, struct vm_io_range *range,
 {
 	struct vm_io_handler *handler = NULL;
 
-	if (io_read_fn_ptr == NULL || io_write_fn_ptr == NULL) {
+	if ((io_read_fn_ptr == NULL) || (io_write_fn_ptr == NULL)) {
 		pr_err("Invalid IO handler.");
 		return;
 	}
@@ -512,7 +512,7 @@ int register_mmio_emulation_handler(struct vm *vm,
 	int status = -EINVAL;
 	struct mem_io_node *mmio_node;
 
-	if (vm->hw.created_vcpus > 0U && vm->hw.vcpu_array[0]->launched) {
+	if ((vm->hw.created_vcpus > 0U) && vm->hw.vcpu_array[0]->launched) {
 		ASSERT(false, "register mmio handler after vm launched");
 		return status;
 	}

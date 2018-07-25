@@ -17,7 +17,7 @@ static struct dev_handler_node *timer_node;
 static void run_timer(struct hv_timer *timer)
 {
 	/* deadline = 0 means stop timer, we should skip */
-	if ((timer->func != NULL) && timer->fire_tsc != 0UL) {
+	if ((timer->func != NULL) && (timer->fire_tsc != 0UL)) {
 		timer->func(timer->priv_data);
 	}
 
@@ -78,7 +78,7 @@ int add_timer(struct hv_timer *timer)
 	uint16_t pcpu_id;
 	bool need_update;
 
-	if (timer == NULL || timer->func == NULL || timer->fire_tsc == 0UL) {
+	if ((timer == NULL) || (timer->func == NULL) || (timer->fire_tsc == 0UL)) {
 		return -EINVAL;
 	}
 
@@ -169,7 +169,7 @@ static void timer_softirq(uint16_t pcpu_id)
 		timer = list_entry(pos, struct hv_timer, node);
 		/* timer expried */
 		tries--;
-		if (timer->fire_tsc <= current_tsc && tries > 0) {
+		if ((timer->fire_tsc <= current_tsc) && (tries > 0)) {
 			del_timer(timer);
 
 			run_timer(timer);
@@ -212,7 +212,7 @@ void timer_cleanup(void)
 {
 	uint16_t pcpu_id = get_cpu_id();
 
-	if (pcpu_id == BOOT_CPU_ID && timer_node != NULL) {
+	if ((pcpu_id == BOOT_CPU_ID) && (timer_node != NULL)) {
 		unregister_handler_common(timer_node);
 		timer_node = NULL;
 	}
@@ -288,7 +288,7 @@ static uint64_t native_calibrate_tsc(void)
 		cpuid(0x15U, &eax_denominator, &ebx_numerator,
 			&ecx_hz, &reserved);
 
-		if (eax_denominator != 0U && ebx_numerator != 0U) {
+		if ((eax_denominator != 0U) && (ebx_numerator != 0U)) {
 			return ((uint64_t) ecx_hz *
 				ebx_numerator) / eax_denominator;
 		}

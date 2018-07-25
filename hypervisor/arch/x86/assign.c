@@ -187,7 +187,7 @@ ptdev_update_irq_handler(struct vm *vm, struct ptdev_remapping_info *entry)
 static bool ptdev_hv_owned_intx(struct vm *vm, struct ptdev_intx_info *info)
 {
 	/* vm0 pin 4 (uart) is owned by hypervisor under debug version */
-	if (is_vm0(vm) && (vm->vuart != NULL) && info->virt_pin == 4U) {
+	if (is_vm0(vm) && (vm->vuart != NULL) && (info->virt_pin == 4U)) {
 		return true;
 	} else {
 		return false;
@@ -210,7 +210,7 @@ static void ptdev_build_physical_msi(struct vm *vm, struct ptdev_msi_info *info,
 
 	/* get physical delivery mode */
 	delmode = info->vmsi_data & APIC_DELMODE_MASK;
-	if (delmode != APIC_DELMODE_FIXED && delmode != APIC_DELMODE_LOWPRIO) {
+	if ((delmode != APIC_DELMODE_FIXED) && (delmode != APIC_DELMODE_LOWPRIO)) {
 		delmode = APIC_DELMODE_LOWPRIO;
 	}
 
@@ -659,7 +659,7 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 	}
 
 	/* handle destroy case */
-	if (is_entry_active(entry) && info->vmsi_data == 0U) {
+	if (is_entry_active(entry) && (info->vmsi_data == 0U)) {
 		info->pmsi_data = 0U;
 		ptdev_deactivate_entry(entry);
 		goto END;

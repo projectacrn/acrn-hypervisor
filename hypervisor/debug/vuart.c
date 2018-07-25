@@ -98,11 +98,11 @@ static int fifo_numchars(struct fifo *fifo)
  */
 static uint8_t vuart_intr_reason(struct vuart *vu)
 {
-	if ((vu->lsr & LSR_OE) != 0 && (vu->ier & IER_ELSI) != 0) {
+	if (((vu->lsr & LSR_OE) != 0) && ((vu->ier & IER_ELSI) != 0)) {
 		return IIR_RLS;
-	} else if (fifo_numchars(&vu->rxfifo) > 0 && (vu->ier & IER_ERBFI) != 0) {
+	} else if ((fifo_numchars(&vu->rxfifo) > 0) && ((vu->ier & IER_ERBFI) != 0)) {
 		return IIR_RXTOUT;
-	} else if (vu->thre_int_pending && (vu->ier & IER_ETBEI) != 0) {
+	} else if (vu->thre_int_pending && ((vu->ier & IER_ETBEI) != 0)) {
 		return IIR_TXRDY;
 	} else {
 		return IIR_NOPEND;

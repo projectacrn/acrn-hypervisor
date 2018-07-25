@@ -66,8 +66,8 @@ acrn_insert_request_wait(struct vcpu *vcpu, struct io_request *io_req)
 			"vhm_request page broken!");
 
 
-	if (vcpu == NULL || io_req == NULL ||
-		vcpu->vm->sw.io_shared_page == NULL) {
+	if ((vcpu == NULL) || (io_req == NULL) ||
+		(vcpu->vm->sw.io_shared_page == NULL)) {
 		return -EINVAL;
 	}
 
