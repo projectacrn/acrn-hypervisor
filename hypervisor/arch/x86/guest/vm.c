@@ -99,14 +99,21 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	if (vm->hw.vcpu_array == NULL) {
 		pr_err("%s, vcpu_array allocation failed\n", __func__);
 		status = -ENOMEM;
-		goto err1;
+		goto err;
 	}
 
-	for (id = 0U; id < (size_t)(sizeof(long) * 8U); id++) {
+	for (id = 0U; id < (size_t)(sizeof(vmid_bitmap) * 8U); id++) {
 		if (!bitmap_test_and_set(id, &vmid_bitmap)) {
 			break;
 		}
 	}
+
+	if (id >= (size_t)(sizeof(vmid_bitmap) * 8U)) {
+		pr_err("%s, no more VMs can be supported\n", __func__);
+		status = -EINVAL;
+		goto err;
+	}
+
 	vm->attr.id = id;
 	vm->attr.boot_idx = id;
 
@@ -120,7 +127,8 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	if ((vm->arch_vm.nworld_eptp == NULL) ||
 			(vm->arch_vm.m2p == NULL)) {
 		pr_fatal("%s, alloc memory for EPTP failed\n", __func__);
-		return -ENOMEM;
+		status = -ENOMEM;
+		goto err;
 	}
 
 	/* Only for SOS: Configure VM software information */
@@ -128,12 +136,12 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	if (is_vm0(vm)) {
 		status = prepare_vm0_memmap_and_e820(vm);
 		if (status != 0) {
-			goto err2;
+			goto err;
 		}
 #ifndef CONFIG_EFI_STUB
 		status = init_vm0_boot_info(vm);
 		if (status != 0) {
-			goto err2;
+			goto err;
 		}
 #endif
 	} else {
@@ -175,7 +183,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	vm->arch_vm.virt_ioapic = vioapic_init(vm);
 	if (vm->arch_vm.virt_ioapic == NULL) {
 		status = -ENODEV;
-		goto err3;
+		goto err;
 	}
 
 	/* Populate return VM handle */
@@ -184,20 +192,34 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 
 	status = set_vcpuid_entries(vm);
 	if (status != 0) {
-		goto err4;
+		goto err;
 	}
 
 	vm->state = VM_CREATED;
 
 	return 0;
 
-err4:
-	vioapic_cleanup(vm->arch_vm.virt_ioapic);
-err3:
-	vpic_cleanup(vm);
-err2:
-	free(vm->hw.vcpu_array);
-err1:
+err:
+	if (vm->arch_vm.virt_ioapic != NULL) {
+		vioapic_cleanup(vm->arch_vm.virt_ioapic);
+	}
+
+	if (vm->vpic != NULL) {
+		vpic_cleanup(vm);
+	}
+
+	if (vm->arch_vm.m2p != NULL) {
+		free(vm->arch_vm.m2p);
+	}
+
+	if (vm->arch_vm.nworld_eptp != NULL) {
+		free(vm->arch_vm.nworld_eptp);
+	}
+
+	if (vm->hw.vcpu_array != NULL) {
+		free(vm->hw.vcpu_array);
+	}
+
 	free(vm);
 	return status;
 }
