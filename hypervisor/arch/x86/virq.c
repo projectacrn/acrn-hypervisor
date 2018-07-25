@@ -96,7 +96,7 @@ static bool vcpu_pending_request(struct vcpu *vcpu)
 
 void vcpu_make_request(struct vcpu *vcpu, uint16_t eventid)
 {
-	bitmap_set(eventid, &vcpu->arch_vcpu.pending_req);
+	bitmap_set_lock(eventid, &vcpu->arch_vcpu.pending_req);
 	/*
 	 * if current hostcpu is not the target vcpu's hostcpu, we need
 	 * to invoke IPI to wake up target vcpu
@@ -372,18 +372,18 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 	struct vcpu_arch * arch_vcpu = &vcpu->arch_vcpu;
 	uint64_t *pending_req_bits = &arch_vcpu->pending_req;
 
-	if (bitmap_test_and_clear(ACRN_REQUEST_TRP_FAULT, pending_req_bits)) {
+	if (bitmap_test_and_clear_lock(ACRN_REQUEST_TRP_FAULT, pending_req_bits)) {
 		pr_fatal("Triple fault happen -> shutdown!");
 		return -EFAULT;
 	}
 
-	if (bitmap_test_and_clear(ACRN_REQUEST_EPT_FLUSH, pending_req_bits))
+	if (bitmap_test_and_clear_lock(ACRN_REQUEST_EPT_FLUSH, pending_req_bits))
 		invept(vcpu);
 
-	if (bitmap_test_and_clear(ACRN_REQUEST_VPID_FLUSH, pending_req_bits))
+	if (bitmap_test_and_clear_lock(ACRN_REQUEST_VPID_FLUSH, pending_req_bits))
 		flush_vpid_single(arch_vcpu->vpid);
 
-	if (bitmap_test_and_clear(ACRN_REQUEST_TMR_UPDATE, pending_req_bits))
+	if (bitmap_test_and_clear_lock(ACRN_REQUEST_TMR_UPDATE, pending_req_bits))
 		vioapic_update_tmr(vcpu);
 
 	/* handling cancelled event injection when vcpu is switched out */
@@ -408,7 +408,7 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 		goto INTR_WIN;
 
 	/* inject NMI before maskable hardware interrupt */
-	if (bitmap_test_and_clear(ACRN_REQUEST_NMI, pending_req_bits)) {
+	if (bitmap_test_and_clear_lock(ACRN_REQUEST_NMI, pending_req_bits)) {
 		/* Inject NMI vector = 2 */
 		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
 			VMX_INT_INFO_VALID | (VMX_INT_TYPE_NMI << 8U) | IDT_NMI);
@@ -432,7 +432,7 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 	/* Guest interruptable or not */
 	if (is_guest_irq_enabled(vcpu)) {
 		/* Inject external interrupt first */
-		if (bitmap_test_and_clear(ACRN_REQUEST_EXTINT,
+		if (bitmap_test_and_clear_lock(ACRN_REQUEST_EXTINT,
 			pending_req_bits)) {
 			/* has pending external interrupts */
 			ret = vcpu_do_pending_extint(vcpu);
@@ -440,7 +440,7 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 		}
 
 		/* Inject vLAPIC vectors */
-		if (bitmap_test_and_clear(ACRN_REQUEST_EVENT,
+		if (bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT,
 			pending_req_bits)) {
 			/* has pending vLAPIC interrupts */
 			ret = vcpu_do_pending_event(vcpu);

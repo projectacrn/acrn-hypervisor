@@ -42,7 +42,7 @@ uint16_t allocate_pcpu(void)
 	uint16_t i;
 
 	for (i = 0U; i < phys_cpu_num; i++) {
-		if (bitmap_test_and_set(i, &pcpu_used_bitmap) == 0) {
+		if (bitmap_test_and_set_lock(i, &pcpu_used_bitmap) == 0) {
 			return i;
 		}
 	}
@@ -52,12 +52,12 @@ uint16_t allocate_pcpu(void)
 
 void set_pcpu_used(uint16_t pcpu_id)
 {
-	bitmap_set(pcpu_id, &pcpu_used_bitmap);
+	bitmap_set_lock(pcpu_id, &pcpu_used_bitmap);
 }
 
 void free_pcpu(uint16_t pcpu_id)
 {
-	bitmap_clear(pcpu_id, &pcpu_used_bitmap);
+	bitmap_clear_lock(pcpu_id, &pcpu_used_bitmap);
 }
 
 void add_vcpu_to_runqueue(struct vcpu *vcpu)
@@ -100,7 +100,7 @@ void make_reschedule_request(struct vcpu *vcpu)
 {
 	struct sched_context *ctx = &per_cpu(sched_ctx, vcpu->pcpu_id);
 
-	bitmap_set(NEED_RESCHEDULE, &ctx->flags);
+	bitmap_set_lock(NEED_RESCHEDULE, &ctx->flags);
 	send_single_ipi(vcpu->pcpu_id, VECTOR_NOTIFY_VCPU);
 }
 
@@ -108,7 +108,7 @@ int need_reschedule(uint16_t pcpu_id)
 {
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 
-	return bitmap_test_and_clear(NEED_RESCHEDULE, &ctx->flags);
+	return bitmap_test_and_clear_lock(NEED_RESCHEDULE, &ctx->flags);
 }
 
 static void context_switch_out(struct vcpu *vcpu)
@@ -152,7 +152,7 @@ void make_pcpu_offline(uint16_t pcpu_id)
 {
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 
-	bitmap_set(NEED_OFFLINE, &ctx->flags);
+	bitmap_set_lock(NEED_OFFLINE, &ctx->flags);
 	send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
 }
 
@@ -160,7 +160,7 @@ int need_offline(uint16_t pcpu_id)
 {
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 
-	return bitmap_test_and_clear(NEED_OFFLINE, &ctx->flags);
+	return bitmap_test_and_clear_lock(NEED_OFFLINE, &ctx->flags);
 }
 
 void default_idle(void)

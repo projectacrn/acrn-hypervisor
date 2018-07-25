@@ -103,7 +103,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	}
 
 	for (id = 0U; id < (size_t)(sizeof(vmid_bitmap) * 8U); id++) {
-		if (!bitmap_test_and_set(id, &vmid_bitmap)) {
+		if (!bitmap_test_and_set_lock(id, &vmid_bitmap)) {
 			break;
 		}
 	}
@@ -273,7 +273,7 @@ int shutdown_vm(struct vm *vm)
 		destroy_iommu_domain(vm->iommu_domain);
 	}
 
-	bitmap_clear(vm->attr.id, &vmid_bitmap);
+	bitmap_clear_lock(vm->attr.id, &vmid_bitmap);
 
 	if (vm->vpic != NULL) {
 		vpic_cleanup(vm);

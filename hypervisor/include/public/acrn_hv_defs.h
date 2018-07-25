@@ -19,63 +19,66 @@
  * Common structures for HV/VHM
  */
 
-#define _HC_ID(x, y) (((x)<<24)|(y))
+#define BASE_HC_ID(x, y) (((x)<<24)|(y))
 
 #define HC_ID 0x80UL
 
 /* general */
 #define HC_ID_GEN_BASE               0x0UL
-#define HC_GET_API_VERSION          _HC_ID(HC_ID, HC_ID_GEN_BASE + 0x00UL)
-#define HC_SOS_OFFLINE_CPU          _HC_ID(HC_ID, HC_ID_GEN_BASE + 0x01UL)
+#define HC_GET_API_VERSION          BASE_HC_ID(HC_ID, HC_ID_GEN_BASE + 0x00UL)
+#define HC_SOS_OFFLINE_CPU          BASE_HC_ID(HC_ID, HC_ID_GEN_BASE + 0x01UL)
 
 /* VM management */
 #define HC_ID_VM_BASE               0x10UL
-#define HC_CREATE_VM                _HC_ID(HC_ID, HC_ID_VM_BASE + 0x00UL)
-#define HC_DESTROY_VM               _HC_ID(HC_ID, HC_ID_VM_BASE + 0x01UL)
-#define HC_START_VM                 _HC_ID(HC_ID, HC_ID_VM_BASE + 0x02UL)
-#define HC_PAUSE_VM                 _HC_ID(HC_ID, HC_ID_VM_BASE + 0x03UL)
-#define HC_CREATE_VCPU              _HC_ID(HC_ID, HC_ID_VM_BASE + 0x04UL)
+#define HC_CREATE_VM                BASE_HC_ID(HC_ID, HC_ID_VM_BASE + 0x00UL)
+#define HC_DESTROY_VM               BASE_HC_ID(HC_ID, HC_ID_VM_BASE + 0x01UL)
+#define HC_START_VM                 BASE_HC_ID(HC_ID, HC_ID_VM_BASE + 0x02UL)
+#define HC_PAUSE_VM                 BASE_HC_ID(HC_ID, HC_ID_VM_BASE + 0x03UL)
+#define HC_CREATE_VCPU              BASE_HC_ID(HC_ID, HC_ID_VM_BASE + 0x04UL)
 
 /* IRQ and Interrupts */
 #define HC_ID_IRQ_BASE              0x20UL
-#define HC_ASSERT_IRQLINE           _HC_ID(HC_ID, HC_ID_IRQ_BASE + 0x00UL)
-#define HC_DEASSERT_IRQLINE         _HC_ID(HC_ID, HC_ID_IRQ_BASE + 0x01UL)
-#define HC_PULSE_IRQLINE            _HC_ID(HC_ID, HC_ID_IRQ_BASE + 0x02UL)
-#define HC_INJECT_MSI               _HC_ID(HC_ID, HC_ID_IRQ_BASE + 0x03UL)
+#define HC_ASSERT_IRQLINE           BASE_HC_ID(HC_ID, HC_ID_IRQ_BASE + 0x00UL)
+#define HC_DEASSERT_IRQLINE         BASE_HC_ID(HC_ID, HC_ID_IRQ_BASE + 0x01UL)
+#define HC_PULSE_IRQLINE            BASE_HC_ID(HC_ID, HC_ID_IRQ_BASE + 0x02UL)
+#define HC_INJECT_MSI               BASE_HC_ID(HC_ID, HC_ID_IRQ_BASE + 0x03UL)
 
 /* DM ioreq management */
 #define HC_ID_IOREQ_BASE            0x30UL
-#define HC_SET_IOREQ_BUFFER         _HC_ID(HC_ID, HC_ID_IOREQ_BASE + 0x00UL)
-#define HC_NOTIFY_REQUEST_FINISH    _HC_ID(HC_ID, HC_ID_IOREQ_BASE + 0x01UL)
+#define HC_SET_IOREQ_BUFFER         BASE_HC_ID(HC_ID, HC_ID_IOREQ_BASE + 0x00UL)
+#define HC_NOTIFY_REQUEST_FINISH    BASE_HC_ID(HC_ID, HC_ID_IOREQ_BASE + 0x01UL)
 
 /* Guest memory management */
 #define HC_ID_MEM_BASE              0x40UL
-#define HC_VM_SET_MEMORY_REGION     _HC_ID(HC_ID, HC_ID_MEM_BASE + 0x00UL)
-#define HC_VM_GPA2HPA               _HC_ID(HC_ID, HC_ID_MEM_BASE + 0x01UL)
-#define HC_VM_SET_MEMORY_REGIONS    _HC_ID(HC_ID, HC_ID_MEM_BASE + 0x02UL)
-#define HC_VM_WRITE_PROTECT_PAGE    _HC_ID(HC_ID, HC_ID_MEM_BASE + 0x03UL)
+#define HC_VM_SET_MEMORY_REGION     BASE_HC_ID(HC_ID, HC_ID_MEM_BASE + 0x00UL)
+#define HC_VM_GPA2HPA               BASE_HC_ID(HC_ID, HC_ID_MEM_BASE + 0x01UL)
+#define HC_VM_SET_MEMORY_REGIONS    BASE_HC_ID(HC_ID, HC_ID_MEM_BASE + 0x02UL)
+#define HC_VM_WRITE_PROTECT_PAGE    BASE_HC_ID(HC_ID, HC_ID_MEM_BASE + 0x03UL)
+#define HC_VM_SET_MEMORY_REGION     BASE_HC_ID(HC_ID, HC_ID_MEM_BASE + 0x00UL)
+#define HC_VM_GPA2HPA               BASE_HC_ID(HC_ID, HC_ID_MEM_BASE + 0x01UL)
+#define HC_VM_SET_MEMORY_REGIONS    BASE_HC_ID(HC_ID, HC_ID_MEM_BASE + 0x02UL)
 
 /* PCI assignment*/
 #define HC_ID_PCI_BASE              0x50UL
-#define HC_ASSIGN_PTDEV             _HC_ID(HC_ID, HC_ID_PCI_BASE + 0x00UL)
-#define HC_DEASSIGN_PTDEV           _HC_ID(HC_ID, HC_ID_PCI_BASE + 0x01UL)
-#define HC_VM_PCI_MSIX_REMAP        _HC_ID(HC_ID, HC_ID_PCI_BASE + 0x02UL)
-#define HC_SET_PTDEV_INTR_INFO      _HC_ID(HC_ID, HC_ID_PCI_BASE + 0x03UL)
-#define HC_RESET_PTDEV_INTR_INFO    _HC_ID(HC_ID, HC_ID_PCI_BASE + 0x04UL)
+#define HC_ASSIGN_PTDEV             BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x00UL)
+#define HC_DEASSIGN_PTDEV           BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x01UL)
+#define HC_VM_PCI_MSIX_REMAP        BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x02UL)
+#define HC_SET_PTDEV_INTR_INFO      BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x03UL)
+#define HC_RESET_PTDEV_INTR_INFO    BASE_HC_ID(HC_ID, HC_ID_PCI_BASE + 0x04UL)
 
 /* DEBUG */
 #define HC_ID_DBG_BASE              0x60UL
-#define HC_SETUP_SBUF               _HC_ID(HC_ID, HC_ID_DBG_BASE + 0x00UL)
+#define HC_SETUP_SBUF               BASE_HC_ID(HC_ID, HC_ID_DBG_BASE + 0x00UL)
 
 /* Trusty */
 #define HC_ID_TRUSTY_BASE           0x70UL
-#define HC_INITIALIZE_TRUSTY        _HC_ID(HC_ID, HC_ID_TRUSTY_BASE + 0x00UL)
-#define HC_WORLD_SWITCH             _HC_ID(HC_ID, HC_ID_TRUSTY_BASE + 0x01UL)
-#define HC_GET_SEC_INFO             _HC_ID(HC_ID, HC_ID_TRUSTY_BASE + 0x02UL)
+#define HC_INITIALIZE_TRUSTY        BASE_HC_ID(HC_ID, HC_ID_TRUSTY_BASE + 0x00UL)
+#define HC_WORLD_SWITCH             BASE_HC_ID(HC_ID, HC_ID_TRUSTY_BASE + 0x01UL)
+#define HC_GET_SEC_INFO             BASE_HC_ID(HC_ID, HC_ID_TRUSTY_BASE + 0x02UL)
 
 /* Power management */
 #define HC_ID_PM_BASE               0x80UL
-#define HC_PM_GET_CPU_STATE         _HC_ID(HC_ID, HC_ID_PM_BASE + 0x00UL)
+#define HC_PM_GET_CPU_STATE         BASE_HC_ID(HC_ID, HC_ID_PM_BASE + 0x00UL)
 
 #define ACRN_DOM0_VMID (0UL)
 #define ACRN_INVALID_VMID (0xffffU)

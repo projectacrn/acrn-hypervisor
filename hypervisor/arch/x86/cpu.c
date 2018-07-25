@@ -431,7 +431,7 @@ void bsp_boot_init(void)
 		CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL,
 		"run_context ia32_spec_ctrl offset not match");
 
-	__bitmap_set(BOOT_CPU_ID, &pcpu_active_bitmap);
+	bitmap_set_nolock(BOOT_CPU_ID, &pcpu_active_bitmap);
 
 	misc_en = msr_read(MSR_IA32_MISC_ENABLE);
 	if ((misc_en & TURBO_MODE_DISABLE) == 0UL) {
@@ -540,7 +540,7 @@ static void bsp_boot_post(void)
 	start_cpus();
 
 	/* Trigger event to allow secondary CPUs to continue */
-	__bitmap_set(0U, &pcpu_sync);
+	bitmap_set_nolock(0U, &pcpu_sync);
 
 	ASSERT(get_cpu_id() == BOOT_CPU_ID, "");
 
@@ -580,7 +580,7 @@ void cpu_secondary_init(void)
 	cpu_set_current_state(get_cpu_id_from_lapic_id(get_cur_lapic_id()),
 			      CPU_STATE_INITIALIZING);
 
-	__bitmap_set(get_cpu_id(), &pcpu_active_bitmap);
+	bitmap_set_nolock(get_cpu_id(), &pcpu_active_bitmap);
 
 	misc_en = msr_read(MSR_IA32_MISC_ENABLE);
 	if ((misc_en & TURBO_MODE_DISABLE) == 0UL) {
@@ -742,7 +742,7 @@ void cpu_dead(uint16_t pcpu_id)
 	 */
 	int halt = 1;
 
-	if (bitmap_test_and_clear(pcpu_id, &pcpu_active_bitmap) == false) {
+	if (bitmap_test_and_clear_lock(pcpu_id, &pcpu_active_bitmap) == false) {
 		pr_err("pcpu%hu already dead", pcpu_id);
 		return;
 	}
