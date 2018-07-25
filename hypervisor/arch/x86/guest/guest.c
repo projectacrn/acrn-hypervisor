@@ -85,10 +85,10 @@ inline uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask)
 
 	for (vcpu_id = ffs64(vdmask); vcpu_id != INVALID_BIT_INDEX;
 		vcpu_id = ffs64(vdmask)) {
-		bitmap_clear(vcpu_id, &vdmask);
+		bitmap_clear_lock(vcpu_id, &vdmask);
 		vcpu = vcpu_from_vid(vm, vcpu_id);
 		ASSERT(vcpu != NULL, "vcpu_from_vid failed");
-		bitmap_set(vcpu->pcpu_id, &dmask);
+		bitmap_set_lock(vcpu->pcpu_id, &dmask);
 	}
 
 	return dmask;

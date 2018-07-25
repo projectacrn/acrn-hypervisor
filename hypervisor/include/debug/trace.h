@@ -90,7 +90,7 @@ trace_check(uint16_t cpu_id, __unused uint32_t evid)
 }
 
 static inline void
-_trace_put(uint16_t cpu_id, uint32_t evid,
+trace_put(uint16_t cpu_id, uint32_t evid,
 		uint32_t n_data, struct trace_entry *entry)
 {
 	struct shared_buf *sbuf = (struct shared_buf *)
@@ -115,7 +115,7 @@ TRACE_2L(uint32_t evid, uint64_t e, uint64_t f)
 
 	entry.payload.fields_64.e = e;
 	entry.payload.fields_64.f = f;
-	_trace_put(cpu_id, evid, 2U, &entry);
+	trace_put(cpu_id, evid, 2U, &entry);
 }
 
 static inline void
@@ -133,7 +133,7 @@ TRACE_4I(uint32_t evid, uint32_t a, uint32_t b, uint32_t c,
 	entry.payload.fields_32.b = b;
 	entry.payload.fields_32.c = c;
 	entry.payload.fields_32.d = d;
-	_trace_put(cpu_id, evid, 4U, &entry);
+	trace_put(cpu_id, evid, 4U, &entry);
 }
 
 static inline void
@@ -154,7 +154,7 @@ TRACE_6C(uint32_t evid, uint8_t a1, uint8_t a2, uint8_t a3,
 	entry.payload.fields_8.b1 = b1;
 	entry.payload.fields_8.b2 = b2;
         /* payload.fields_8.b3/b4 not used, but is put in trace buf */
-	_trace_put(cpu_id, evid, 8U, &entry);
+	trace_put(cpu_id, evid, 8U, &entry);
 }
 
 #define TRACE_ENTER TRACE_16STR(TRACE_FUNC_ENTER, __func__)
@@ -181,7 +181,7 @@ TRACE_16STR(uint32_t evid, const char name[])
 	}
 
 	entry.payload.str[15] = 0;
-	_trace_put(cpu_id, evid, 16U, &entry);
+	trace_put(cpu_id, evid, 16U, &entry);
 }
 
 #else /* HV_DEBUG */

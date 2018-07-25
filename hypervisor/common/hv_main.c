@@ -13,7 +13,7 @@ static void run_vcpu_pre_work(struct vcpu *vcpu)
 {
 	uint64_t *pending_pre_work = &vcpu->pending_pre_work;
 
-	if (bitmap_test_and_clear(ACRN_VCPU_MMIO_COMPLETE, pending_pre_work)) {
+	if (bitmap_test_and_clear_lock(ACRN_VCPU_MMIO_COMPLETE, pending_pre_work)) {
 		dm_emulate_mmio_post(vcpu);
 	}
 }

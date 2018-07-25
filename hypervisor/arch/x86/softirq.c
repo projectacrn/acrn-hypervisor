@@ -8,12 +8,12 @@
 
 void disable_softirq(uint16_t cpu_id)
 {
-	bitmap_clear(SOFTIRQ_ATOMIC, &per_cpu(softirq_pending, cpu_id));
+	bitmap_clear_lock(SOFTIRQ_ATOMIC, &per_cpu(softirq_pending, cpu_id));
 }
 
 void enable_softirq(uint16_t cpu_id)
 {
-	bitmap_set(SOFTIRQ_ATOMIC, &per_cpu(softirq_pending, cpu_id));
+	bitmap_set_lock(SOFTIRQ_ATOMIC, &per_cpu(softirq_pending, cpu_id));
 }
 
 void init_softirq(void)
@@ -22,7 +22,7 @@ void init_softirq(void)
 
 	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
 		per_cpu(softirq_pending, pcpu_id) = 0UL;
-		bitmap_set(SOFTIRQ_ATOMIC, &per_cpu(softirq_pending, pcpu_id));
+		bitmap_set_lock(SOFTIRQ_ATOMIC, &per_cpu(softirq_pending, pcpu_id));
 	}
 }
 
@@ -35,7 +35,7 @@ void raise_softirq(uint16_t softirq_id)
 		return;
 	}
 
-	bitmap_set(softirq_id, bitmap);
+	bitmap_set_lock(softirq_id, bitmap);
 }
 
 void exec_softirq(void)
@@ -56,7 +56,7 @@ void exec_softirq(void)
 	/* Disable softirq
 	 * SOFTIRQ_ATOMIC bit = 0 means softirq already in execution
 	 */
-	if (!bitmap_test_and_clear(SOFTIRQ_ATOMIC, bitmap)) {
+	if (!bitmap_test_and_clear_lock(SOFTIRQ_ATOMIC, bitmap)) {
 		return;
 	}
 
@@ -69,7 +69,7 @@ again:
 			break;
 		}
 
-		bitmap_clear(softirq_id, bitmap);
+		bitmap_clear_lock(softirq_id, bitmap);
 
 		switch (softirq_id) {
 		case SOFTIRQ_TIMER:
