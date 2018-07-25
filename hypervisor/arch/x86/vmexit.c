@@ -265,7 +265,7 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	int idx = VM_EXIT_CR_ACCESS_REG_IDX(vcpu->arch_vcpu.exit_qualification);
 
-	ASSERT(idx>=0 && idx<=15, "index out of range")
+	ASSERT(idx>=0 && idx<=15, "index out of range");
 	regptr = cur_context->guest_cpu_regs.longs + idx;
 
 	switch ((VM_EXIT_CR_ACCESS_ACCESS_TYPE
