@@ -335,9 +335,10 @@ static int vpic_icw4(struct vpic *vpic, struct pic *pic, uint8_t val)
 	return 0;
 }
 
-bool vpic_is_pin_mask(struct vpic *vpic, uint8_t virt_pin)
+bool vpic_is_pin_mask(struct vpic *vpic, uint8_t virt_pin_arg)
 {
 	struct pic *pic;
+	uint8_t virt_pin = virt_pin_arg;
 
 	if (virt_pin < 8U) {
 		pic = &vpic->pic[0];

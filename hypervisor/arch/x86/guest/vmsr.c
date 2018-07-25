@@ -25,11 +25,12 @@ static const uint32_t emulated_msrs[] = {
  */
 };
 
-static void enable_msr_interception(uint8_t *bitmap, uint32_t msr)
+static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg)
 {
 	uint8_t *read_map;
 	uint8_t *write_map;
 	uint8_t value;
+	uint32_t msr = msr_arg;
 	/* low MSR */
 	if (msr < 0x1FFFU) {
 		read_map = bitmap;
@@ -51,11 +52,12 @@ static void enable_msr_interception(uint8_t *bitmap, uint32_t msr)
 }
 
 /* not used now just leave it for some cases it may be used as API*/
-static void disable_msr_interception(uint8_t *bitmap, uint32_t msr)
+static void disable_msr_interception(uint8_t *bitmap, uint32_t msr_arg)
 {
 	uint8_t *read_map;
 	uint8_t *write_map;
 	uint8_t value;
+	uint32_t msr = msr_arg;
 	/* low MSR */
 	if (msr < 0x1FFFU) {
 		read_map = bitmap;

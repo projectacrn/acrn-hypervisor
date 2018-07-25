@@ -309,10 +309,11 @@ vie_write_bytereg(struct vcpu *vcpu, struct vie *vie, uint8_t byte)
 
 int
 vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
-		uint64_t val, uint8_t size)
+		uint64_t val_arg, uint8_t size)
 {
 	int error;
 	uint64_t origval;
+	uint64_t val = val_arg;
 
 	switch (size) {
 	case 1U:
@@ -1572,10 +1573,12 @@ vie_size2mask(uint8_t size)
 
 int
 vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
-	struct seg_desc *desc, uint64_t offset, uint8_t length,
+	struct seg_desc *desc, uint64_t offset_arg, uint8_t length_arg,
 	uint8_t addrsize, uint32_t prot, uint64_t *gla)
 {
 	uint64_t firstoff, low_limit, high_limit, segbase;
+	uint64_t offset = offset_arg;
+	uint8_t length = length_arg;
 	uint8_t glasize;
 	uint32_t type;
 

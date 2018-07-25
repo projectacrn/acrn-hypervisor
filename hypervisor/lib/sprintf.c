@@ -682,10 +682,11 @@ static int charmem(int cmd, const char *s, int sz, void *hnd)
 	return n;
 }
 
-int vsnprintf(char *dst, int sz, const char *fmt, va_list args)
+int vsnprintf(char *dst, int32_t sz_arg, const char *fmt, va_list args)
 {
 	char c[1];
 	/* the result of this function */
+	int32_t sz = sz_arg;
 	int res = 0;
 
 	if (sz <= 0 || (dst == NULL)) {

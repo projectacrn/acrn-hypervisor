@@ -351,11 +351,11 @@ void *memchr(const void *void_s, int c, size_t n)
  *                          or else return null.
  *
  ***********************************************************************/
-void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
+void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen_arg)
 {
-
 	uint8_t *dest8;
 	uint8_t *src8;
+	size_t slen = slen_arg;
 
 	if (slen == 0U || dmax == 0U || dmax < slen) {
 		ASSERT(false);

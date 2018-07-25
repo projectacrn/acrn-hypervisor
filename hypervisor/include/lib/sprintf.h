@@ -57,7 +57,7 @@ int do_print(const char *fmt, struct print_param *param,
  *         is smaller. On error a negative number is returned.
  */
 
-int vsnprintf(char *dst, int sz, const char *fmt, va_list args);
+int vsnprintf(char *dst, int32_t sz_arg, const char *fmt, va_list args);
 
 /** The well known snprintf() function.
  *

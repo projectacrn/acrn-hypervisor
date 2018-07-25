@@ -409,9 +409,10 @@ static uint64_t vlapic_get_tsc_deadline_msr(struct vlapic *vlapic)
 }
 
 static void vlapic_set_tsc_deadline_msr(struct vlapic *vlapic,
-			uint64_t val)
+			uint64_t val_arg)
 {
 	struct timer *timer;
+	uint64_t val = val_arg;
 
 	if (!vlapic_lvtt_tsc_deadline(vlapic)) {
 		return;
@@ -1299,11 +1300,12 @@ vlapic_svr_write_handler(struct vlapic *vlapic)
 }
 
 static int
-vlapic_read(struct vlapic *vlapic, int mmio_access, uint32_t offset,
+vlapic_read(struct vlapic *vlapic, int mmio_access, uint32_t offset_arg,
 		uint64_t *data)
 {
 	struct lapic_regs *lapic = vlapic->apic_page;
 	uint32_t i;
+	uint32_t offset = offset_arg;
 
 	if (mmio_access == 0) {
 		/*
@@ -1830,11 +1832,12 @@ vlapic_set_intr(struct vcpu *vcpu, uint32_t vector, bool level)
 }
 
 int
-vlapic_set_local_intr(struct vm *vm, uint16_t vcpu_id, uint32_t vector)
+vlapic_set_local_intr(struct vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
 {
 	struct vlapic *vlapic;
 	uint64_t dmask = 0UL;
 	int error;
+	uint16_t vcpu_id = vcpu_id_arg;
 
 	if ((vcpu_id != BROADCAST_CPU_ID) && (vcpu_id >= phys_cpu_num)) {
 		return -EINVAL;

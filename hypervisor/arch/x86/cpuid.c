@@ -7,11 +7,12 @@
 #include <hypervisor.h>
 
 static inline struct vcpuid_entry *find_vcpuid_entry(struct vcpu *vcpu,
-					uint32_t leaf, uint32_t subleaf)
+					uint32_t leaf_arg, uint32_t subleaf)
 {
 	uint32_t i = 0U, nr, half;
 	struct vcpuid_entry *entry = NULL;
 	struct vm *vm = vcpu->vm;
+	uint32_t leaf = leaf_arg;
 
 	nr = vm->vcpuid_entry_nr;
 	half = nr / 2U;

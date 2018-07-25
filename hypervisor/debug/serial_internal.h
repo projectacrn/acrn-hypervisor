@@ -177,8 +177,8 @@ extern struct tgt_uart Tgt_Uarts[SERIAL_MAX_DEVS];
 
 uint32_t serial_open(const char *uart_id);
 int serial_getc(uint32_t uart_handle);
-int serial_gets(uint32_t uart_handle, char *buffer, uint32_t length);
-int serial_puts(uint32_t uart_handle, const char *s, uint32_t length);
+int serial_gets(uint32_t uart_handle, char *buffer, uint32_t length_arg);
+int serial_puts(uint32_t uart_handle, const char *s, uint32_t length_arg);
 uint32_t serial_get_rx_data(uint32_t uart_handle);
 
 #endif /* !SERIAL_INTER_H */
