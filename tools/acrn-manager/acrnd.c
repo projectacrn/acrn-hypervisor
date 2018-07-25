@@ -37,6 +37,8 @@ struct acrnd_work {
 static LIST_HEAD(acrnd_work_list, acrnd_work) work_head;
 static pthread_mutex_t work_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+static pthread_mutex_t acrnd_stop_mutex = PTHREAD_MUTEX_INITIALIZER;
+static unsigned int acrnd_stop_timeout;
 /* acrnd_add_work(), add a worker function.
  * @func, the worker function.
  * @sec, when add a @func(), after @sec seconds @func() will be called.
@@ -412,7 +414,7 @@ static int check_vms_status(unsigned int status)
 	return 0;
 }
 
-static int _handle_acrnd_stop(unsigned int timeout)
+static int wait_for_stop(unsigned int timeout)
 {
 	unsigned long t = timeout;
 
@@ -421,12 +423,94 @@ static int _handle_acrnd_stop(unsigned int timeout)
 	/* list and update the vm status */
 	do {
 		if (check_vms_status(VM_CREATED) == 0)
-			return 0;
+			return SHUTDOWN;
+
+		if (check_vms_status(VM_PAUSED) == 0)
+			return SUSPEND;
+
 		sleep(1);
 	}
 	while (t--);
 
 	return -1;
+}
+
+static void* notify_stop_state(void *arg)
+{
+	int lcs_fd;
+	int rc;
+	struct mngr_msg req;
+
+	req.magic = MNGR_MSG_MAGIC;
+
+	rc = wait_for_stop(acrnd_stop_timeout);
+	if (rc < 0) {
+		fprintf(stderr, "cannot get VMs stop state\n");
+		req.msgid = SUSPEND;
+		req.data.err = -1;
+	} else {
+		req.msgid = rc;
+		req.data.err = 0;
+	}
+
+	store_timer_list();
+
+	lcs_fd = mngr_open_un(SOS_LCS_SOCK, MNGR_CLIENT);
+	if (lcs_fd < 0) {
+		fprintf(stderr, "cannot open sos-lcs.socket\n");
+		goto exit;
+	}
+
+	mngr_send_msg(lcs_fd, &req, NULL, 0);
+	mngr_close(lcs_fd);
+exit:
+	pthread_mutex_unlock(&acrnd_stop_mutex);
+	return NULL;
+}
+
+static void _handle_acrnd_stop(unsigned int timeout)
+{
+	int rc;
+	pthread_t tid;
+	pthread_attr_t attr;
+
+	/*
+	 * Only one acrnd stop thread at a time
+	 * if failed to lock the acrnd_stop_mutex, then return directly
+	 * if creating thread success, then unlock in the thread exit
+	 * if failed to create thread, then unlock immediately.
+	 */
+	if (pthread_mutex_trylock(&acrnd_stop_mutex) == 0) {
+
+		acrnd_stop_timeout = timeout;
+
+		/*
+		 * Due to acrnd only has one main thread, and acrnd stop flow
+		 * probably blocks main thread, so a detached thread is created
+		 * to avoid this.
+		 */
+		rc = pthread_attr_init(&attr);
+		if (rc < 0)
+			goto fail_init;
+		rc = pthread_attr_setdetachstate(&attr,
+				PTHREAD_CREATE_DETACHED);
+		if (rc < 0)
+			goto fail;
+		rc = pthread_create(&tid, &attr, notify_stop_state, NULL);
+		if (rc < 0)
+			goto fail;
+
+		pthread_attr_destroy(&attr);
+	}
+
+	return;
+
+fail:
+	pthread_attr_destroy(&attr);
+
+fail_init:
+	pthread_mutex_unlock(&acrnd_stop_mutex);
+	fprintf(stderr, "Failed to invoke handle_acrnd_stop \n");
 }
 
 static void handle_acrnd_stop(struct mngr_msg *msg, int client_fd, void *param)
@@ -435,12 +519,11 @@ static void handle_acrnd_stop(struct mngr_msg *msg, int client_fd, void *param)
 
 	ack.msgid = msg->msgid;
 	ack.timestamp = msg->timestamp;
-	ack.data.err = _handle_acrnd_stop(msg->data.acrnd_stop.timeout);
-
-	store_timer_list();
-
+	ack.data.err = 0;
 	if (client_fd > 0)
 		mngr_send_msg(client_fd, &ack, NULL, 0);
+
+	_handle_acrnd_stop(msg->data.acrnd_stop.timeout);
 }
 
 void handle_acrnd_resume(struct mngr_msg *msg, int client_fd, void *param)
