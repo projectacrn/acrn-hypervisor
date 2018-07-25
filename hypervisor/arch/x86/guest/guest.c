@@ -352,10 +352,12 @@ static inline uint32_t _copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 	return len;
 }
 
-static inline int copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
-	uint32_t size, bool cp_from_vm)
+static inline int copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa_arg,
+	uint32_t size_arg, bool cp_from_vm)
 {
 	uint32_t len;
+	uint64_t gpa = gpa_arg;
+	uint32_t size = size_arg;
 
 	if (vm == NULL) {
 		pr_err("guest phy addr copy need vm param");
@@ -376,12 +378,14 @@ static inline int copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 	return 0;
 }
 
-static inline int copy_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
-	uint32_t size, uint32_t *err_code, bool cp_from_vm)
+static inline int copy_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva_arg,
+	uint32_t size_arg, uint32_t *err_code, bool cp_from_vm)
 {
 	uint64_t gpa = 0UL;
 	int32_t ret;
 	uint32_t len;
+	uint64_t gva = gva_arg;
+	uint32_t size = size_arg;
 
 	if (vcpu == NULL) {
 		pr_err("guest virt addr copy need vcpu param");
@@ -639,9 +643,10 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 	return 0;
 }
 
-uint64_t e820_alloc_low_memory(uint32_t size)
+uint64_t e820_alloc_low_memory(uint32_t size_arg)
 {
 	uint32_t i;
+	uint32_t size = size_arg;
 	struct e820_entry *entry, *new_entry;
 
 	/* We want memory in page boundary and integral multiple of pages */

@@ -485,12 +485,15 @@ int ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu)
 	return status;
 }
 
-int ept_mr_add(struct vm *vm, uint64_t hpa,
-	uint64_t gpa, uint64_t size, uint32_t prot)
+int ept_mr_add(struct vm *vm, uint64_t hpa_arg,
+	uint64_t gpa_arg, uint64_t size, uint32_t prot_arg)
 {
 	struct map_params map_params;
 	uint16_t i;
 	struct vcpu *vcpu;
+	uint64_t hpa = hpa_arg;
+	uint64_t gpa = gpa_arg;
+	uint32_t prot = prot_arg;
 
 	/* Setup memory map parameters */
 	map_params.page_table_type = PTT_EPT;
@@ -536,12 +539,14 @@ int ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
 	return ret;
 }
 
-int ept_mr_del(struct vm *vm, uint64_t hpa,
-		uint64_t gpa, uint64_t size)
+int ept_mr_del(struct vm *vm, uint64_t hpa_arg,
+		uint64_t gpa_arg, uint64_t size)
 {
 	struct map_params map_params;
 	uint16_t i;
 	struct vcpu *vcpu;
+	uint64_t hpa = hpa_arg;
+	uint64_t gpa = gpa_arg;
 
 	/* Setup memory map parameters */
 	map_params.page_table_type = PTT_EPT;

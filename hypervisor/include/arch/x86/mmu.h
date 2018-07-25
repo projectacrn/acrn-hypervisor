@@ -335,7 +335,7 @@ uint16_t allocate_vpid(void);
 void flush_vpid_single(uint16_t vpid);
 void flush_vpid_global(void);
 void invept(struct vcpu *vcpu);
-bool check_continuous_hpa(struct vm *vm, uint64_t gpa, uint64_t size);
+bool check_continuous_hpa(struct vm *vm, uint64_t gpa_arg, uint64_t size_arg);
 int obtain_last_page_table_entry(struct map_params *map_params,
 		struct entry_params *entry, void *addr, bool direct);
 
@@ -398,13 +398,13 @@ void    destroy_ept(struct vm *vm);
 uint64_t  gpa2hpa(struct vm *vm, uint64_t gpa);
 uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size);
 uint64_t  hpa2gpa(struct vm *vm, uint64_t hpa);
-int ept_mr_add(struct vm *vm, uint64_t hpa,
-	uint64_t gpa, uint64_t size, uint32_t prot);
+int ept_mr_add(struct vm *vm, uint64_t hpa_arg,
+	uint64_t gpa_arg, uint64_t size, uint32_t prot_arg);
 int ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
 	uint64_t gpa, uint64_t size,
 	uint64_t prot_set, uint64_t prot_clr);
-int ept_mr_del(struct vm *vm, uint64_t hpa,
-	uint64_t gpa, uint64_t size);
+int ept_mr_del(struct vm *vm, uint64_t hpa_arg,
+	uint64_t gpa_arg, uint64_t size);
 
 int     ept_violation_vmexit_handler(struct vcpu *vcpu);
 int     ept_misconfig_vmexit_handler(struct vcpu *vcpu);

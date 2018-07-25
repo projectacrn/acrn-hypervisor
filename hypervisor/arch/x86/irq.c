@@ -200,12 +200,13 @@ irq_desc_append_dev(struct irq_desc *desc, void *node, bool share)
 }
 
 static struct dev_handler_node*
-common_register_handler(uint32_t irq,
+common_register_handler(uint32_t irq_arg,
 		struct irq_request_info *info)
 {
 	struct dev_handler_node *node = NULL;
 	struct irq_desc *desc;
 	bool added = false;
+	uint32_t irq = irq_arg;
 
 	/* ======================================================
 	 * This is low level ISR handler registering function

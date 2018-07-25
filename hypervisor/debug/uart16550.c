@@ -85,8 +85,9 @@ static void uart16550_enable(__unused struct tgt_uart *tgt_uart)
 }
 
 static void uart16550_calc_baud_div(__unused struct tgt_uart *tgt_uart,
-		uint32_t ref_freq, uint32_t *baud_div_ptr, uint32_t baud_rate)
+		uint32_t ref_freq, uint32_t *baud_div_ptr, uint32_t baud_rate_arg)
 {
+	uint32_t baud_rate = baud_rate_arg;
 	uint32_t baud_multiplier = baud_rate < BAUD_460800 ? 16 : 13;
 
 	if (baud_rate == 0) {

@@ -237,13 +237,14 @@ exit:
 	return ((status > 0) ? (int)(ch) : SERIAL_EOF);
 }
 
-int serial_gets(uint32_t uart_handle, char *buffer, uint32_t length)
+int serial_gets(uint32_t uart_handle, char *buffer, uint32_t length_arg)
 {
 	char *data_read = buffer;
 	int c;
 	struct uart *port;
 	uint32_t index;
 	int status = 0;
+	uint32_t length = length_arg;
 
 	if ((buffer == NULL) || (length == 0U)) {
 		return 0;
@@ -316,12 +317,13 @@ static int serial_putc(uint32_t uart_handle, int c)
 	return ((bytes_written > 0U) ? c : (SERIAL_EOF));
 }
 
-int serial_puts(uint32_t uart_handle, const char *s, uint32_t length)
+int serial_puts(uint32_t uart_handle, const char *s, uint32_t length_arg)
 {
 	const char *old_data = s;
 	uint32_t index;
 	struct uart *port;
 	int retval = 0;
+	uint32_t length = length_arg;
 
 	if ((s == NULL) || (length == 0U)) {
 		return 0;

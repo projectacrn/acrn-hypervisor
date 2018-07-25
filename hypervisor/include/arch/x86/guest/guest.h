@@ -59,7 +59,7 @@ struct e820_mem_params {
 };
 
 int prepare_vm0_memmap_and_e820(struct vm *vm);
-uint64_t e820_alloc_low_memory(uint32_t size);
+uint64_t e820_alloc_low_memory(uint32_t size_arg);
 
 /* Definition for a mem map lookup */
 struct vm_lu_mem_map {

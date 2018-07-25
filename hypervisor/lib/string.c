@@ -190,12 +190,13 @@ char *strchr(const char *s, int ch)
  *    1) both d and s shall not be null pointers.
  *    2) dmax shall not 0.
  */
-char *strcpy_s(char *d, size_t dmax, const char *s)
+char *strcpy_s(char *d, size_t dmax, const char *s_arg)
 {
 
 	char *dest_base;
 	size_t dest_avail;
 	uint64_t overlap_guard;
+	const char *s = s_arg;
 
 	if (s == NULL || d == NULL || dmax == 0U) {
 		pr_err("%s: invalid src, dest buffer or length.", __func__);
@@ -266,11 +267,12 @@ char *strcpy_s(char *d, size_t dmax, const char *s)
  *    3) will assert() if overlap happens or dest buffer has no
  *       enough space.
  */
-char *strncpy_s(char *d, size_t dmax, const char *s, size_t slen)
+char *strncpy_s(char *d, size_t dmax, const char *s, size_t slen_arg)
 {
 	char *dest_base;
 	size_t dest_avail;
 	uint64_t overlap_guard;
+	size_t slen = slen_arg;
 
 	if (d == NULL || s == NULL) {
 		pr_err("%s: invlaid src or dest buffer", __func__);
@@ -343,9 +345,10 @@ char *strncpy_s(char *d, size_t dmax, const char *s, size_t slen)
  *    string length, excluding the null character.
  *    will return 0 if str is null.
  */
-size_t strnlen_s(const char *str, size_t maxlen)
+size_t strnlen_s(const char *str, size_t maxlen_arg)
 {
 	size_t count;
+	size_t maxlen = maxlen_arg;
 
 	if (str == NULL) {
 		return 0;
@@ -384,8 +387,9 @@ int strcmp(const char *s1, const char *s2)
 	return *s1 - *s2;
 }
 
-int strncmp(const char *s1, const char *s2, size_t n)
+int strncmp(const char *s1, const char *s2, size_t n_arg)
 {
+	size_t n = n_arg;
 	while (((n - 1) != 0U) && ((*s1) != '\0') && ((*s2) != '\0')
 		&& ((*s1) == (*s2))) {
 		s1++;

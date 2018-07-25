@@ -209,8 +209,9 @@ bool check_mmu_1gb_support(enum _page_table_type page_table_type)
 
 static inline uint32_t
 check_page_table_present(enum _page_table_type page_table_type,
-		uint64_t table_entry)
+		uint64_t table_entry_arg)
 {
+	uint64_t table_entry = table_entry_arg;
 	if (page_table_type == PTT_EPT) {
 		table_entry &= (IA32E_EPT_R_BIT | IA32E_EPT_W_BIT |
 				IA32E_EPT_X_BIT);
@@ -234,11 +235,12 @@ check_page_table_present(enum _page_table_type page_table_type,
 }
 
 static uint32_t map_mem_region(void *vaddr, void *paddr,
-		void *table_base, uint64_t attr, uint32_t table_level,
+		void *table_base, uint64_t attr_arg, uint32_t table_level,
 		enum _page_table_type table_type,
 		enum mem_map_request_type request_type)
 {
 	uint64_t table_entry;
+	uint64_t attr = attr_arg;
 	uint32_t table_offset;
 	uint32_t mapped_size;
 
@@ -630,10 +632,12 @@ void free_paging_struct(void *ptr)
 	}
 }
 
-bool check_continuous_hpa(struct vm *vm, uint64_t gpa, uint64_t size)
+bool check_continuous_hpa(struct vm *vm, uint64_t gpa_arg, uint64_t size_arg)
 {
 	uint64_t curr_hpa = 0UL;
 	uint64_t next_hpa = 0UL;
+	uint64_t gpa = gpa_arg;
+	uint64_t size = size_arg;
 
 	/* if size <= PAGE_SIZE_4K, it is continuous,no need check
 	 * if size > PAGE_SIZE_4K, need to fetch next page
