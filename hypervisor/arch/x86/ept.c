@@ -21,8 +21,8 @@ static uint64_t find_next_table(uint32_t table_offset, void *table_base)
 			+ (table_offset * IA32E_COMM_ENTRY_SIZE));
 
 	/* If bit 7 is set, entry is not a subtable. */
-	if ((table_entry & IA32E_PDPTE_PS_BIT) != 0U
-	    || (table_entry & IA32E_PDE_PS_BIT) != 0U) {
+	if (((table_entry & IA32E_PDPTE_PS_BIT) != 0U)
+	    || ((table_entry & IA32E_PDE_PS_BIT) != 0U)) {
 		return sub_table_addr;
 	}
 

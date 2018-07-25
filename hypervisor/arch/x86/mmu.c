@@ -235,7 +235,7 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 	uint32_t table_offset;
 	uint32_t mapped_size;
 
-	if (table_base == NULL || table_level >= IA32E_UNKNOWN) {
+	if ((table_base == NULL) || (table_level >= IA32E_UNKNOWN)) {
 		/* Shouldn't go here */
 		ASSERT(false, "Incorrect Arguments. Failed to map region");
 		return 0;
@@ -281,7 +281,7 @@ static uint32_t map_mem_region(void *vaddr, void *paddr,
 
 		/* If not a EPT entry, see if the PAT bit is set for PDPT entry
 		 */
-		if ((table_type == PTT_HOST) && (attr & IA32E_PDPTE_PAT_BIT) != 0U) {
+		if ((table_type == PTT_HOST) && ((attr & IA32E_PDPTE_PAT_BIT) != 0U)) {
 			/* The PAT bit is set; Clear it and set the page table
 			 * PAT bit instead
 			 */
@@ -409,7 +409,7 @@ static int get_table_entry(void *addr, void *table_base,
 {
 	uint32_t table_offset;
 
-	if (table_base == NULL || table_level >= IA32E_UNKNOWN)	{
+	if ((table_base == NULL) || (table_level >= IA32E_UNKNOWN))	{
 		ASSERT(false, "Incorrect Arguments");
 		return -EINVAL;
 	}
@@ -434,8 +434,8 @@ static void *walk_paging_struct(void *addr, void *table_base,
 	 */
 	void *sub_table_addr = (table_level == IA32E_PT) ? table_base : NULL;
 
-	if (table_base == NULL || table_level >= IA32E_UNKNOWN
-	    || map_params == NULL) {
+	if ((table_base == NULL) || (table_level >= IA32E_UNKNOWN)
+	    || (map_params == NULL)) {
 		ASSERT(false, "Incorrect Arguments");
 		return NULL;
 	}
@@ -947,7 +947,7 @@ static int modify_paging(struct mem_map_params *map_params, void *paddr_arg,
 			/* Maybe need to recursive breaking in this case
 			 * e.g. 1GB->2MB->4KB
 			 */
-			while ((uint64_t)remaining_size < page_size
+			while (((uint64_t)remaining_size < page_size)
 				|| (!MEM_ALIGNED_CHECK(vaddr, page_size))
 				|| (!MEM_ALIGNED_CHECK(paddr, page_size))) {
 				/* The breaking function return the page size

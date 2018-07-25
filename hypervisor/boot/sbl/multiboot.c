@@ -55,7 +55,7 @@ static void parse_other_modules(struct vm *vm,
 		}
 
 		end = start;
-		while (*end != ' ' && (*end) != '\0') {
+		while (((*end) != ' ') && ((*end) != '\0')) {
 			end++;
 		}
 

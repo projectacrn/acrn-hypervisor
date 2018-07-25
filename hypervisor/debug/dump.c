@@ -189,9 +189,9 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp_arg, uint16_t pcpu_i
 	printf("\r\n");
 
 	printf("Host Call Trace:\r\n");
-	if (rsp >
-	(uint64_t)&per_cpu(stack, pcpu_id)[CONFIG_STACK_SIZE - 1]
-		|| rsp < (uint64_t)&per_cpu(stack, pcpu_id)[0]) {
+	if ((rsp >
+	(uint64_t)&per_cpu(stack, pcpu_id)[CONFIG_STACK_SIZE - 1])
+		|| (rsp < (uint64_t)&per_cpu(stack, pcpu_id)[0])) {
 		return;
 	}
 

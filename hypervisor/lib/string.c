@@ -64,10 +64,10 @@ long strtol_deci(const char *nptr)
 	acc = 0UL;
 	any = 0;
 
-	while (c >= '0' && c <= '9') {
+	while ((c >= '0') && (c <= '9')) {
 		c -= '0';
 		if ((acc > cutoff) ||
-			(acc == cutoff && (uint64_t)c > cutlim)) {
+			((acc == cutoff) && ((uint64_t)c > cutlim))) {
 			any = -1;
 			break;
 		} else {
@@ -109,7 +109,7 @@ uint64_t strtoul_hex(const char *nptr)
 		s++;
 	} while (ISSPACE(c));
 
-	if (c == '0' && (*s == 'x' || *s == 'X')) {
+	if ((c == '0') && ((*s == 'x') || (*s == 'X'))) {
 		c = s[1];
 		s += 2;
 	}
@@ -119,18 +119,18 @@ uint64_t strtoul_hex(const char *nptr)
 	acc = 0UL;
 	any = 0;
 	do {
-		if (c >= '0' && c <= '9') {
+		if ((c >= '0') && (c <= '9')) {
 			c -= '0';
-		} else if (c >= 'A' && c <= 'F') {
+		} else if ((c >= 'A') && (c <= 'F')) {
 			c -= 'A' - 10;
-		} else if (c >= 'a' && c <= 'f') {
+		} else if ((c >= 'a') && (c <= 'f')) {
 			c -= 'a' - 10;
 		} else {
 			break;
 		}
 
 		if ((acc > cutoff) ||
-			(acc == cutoff && (uint64_t)c > cutlim)) {
+			((acc == cutoff) && ((uint64_t)c > cutlim))) {
 			any = -1;
 			break;
 		} else {
@@ -193,7 +193,7 @@ char *strcpy_s(char *d_arg, size_t dmax, const char *s_arg)
 	size_t dest_avail;
 	uint64_t overlap_guard;
 
-	if (s == NULL || d == NULL || dmax == 0U) {
+	if ((s == NULL) || (d == NULL) || (dmax == 0U)) {
 		pr_err("%s: invalid src, dest buffer or length.", __func__);
 		return NULL;
 	}
@@ -271,12 +271,12 @@ char *strncpy_s(char *d_arg, size_t dmax, const char *s_arg, size_t slen_arg)
 	uint64_t overlap_guard;
 	size_t slen = slen_arg;
 
-	if (d == NULL || s == NULL) {
+	if ((d == NULL) || (s == NULL)) {
 		pr_err("%s: invlaid src or dest buffer", __func__);
 		return NULL;
 	}
 
-	if (dmax == 0U || slen == 0U) {
+	if ((dmax == 0U) || (slen == 0U)) {
 		pr_err("%s: invlaid length of src or dest buffer", __func__);
 		return NULL;
 	}

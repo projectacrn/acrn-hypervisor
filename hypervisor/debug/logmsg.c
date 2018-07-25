@@ -94,9 +94,9 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 	char *buffer;
 	spinlock_rflags;
 
-	do_console_log = ((logmsg.flags & LOG_FLAG_STDOUT) != 0U &&
+	do_console_log = (((logmsg.flags & LOG_FLAG_STDOUT) != 0U) &&
 					(severity <= console_loglevel));
-	do_mem_log = ((logmsg.flags & LOG_FLAG_MEMORY) != 0U &&
+	do_mem_log = (((logmsg.flags & LOG_FLAG_MEMORY) != 0U) &&
 					(severity <= mem_loglevel));
 
 	if (!do_console_log && !do_mem_log) {

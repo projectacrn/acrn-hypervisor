@@ -392,7 +392,7 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
 	/* make sure we have set req_buf */
-	if ((target_vm == NULL) || target_vm->sw.io_shared_page == NULL) {
+	if ((target_vm == NULL) || (target_vm->sw.io_shared_page == NULL)) {
 		pr_err("%s, invalid parameter\n", __func__);
 		return -EINVAL;
 	}
@@ -742,7 +742,7 @@ int32_t hcall_set_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param)
 				irq.virt_bdf, irq.phys_bdf,
 				irq.is.intx.virt_pin, irq.is.intx.phys_pin,
 				irq.is.intx.pic_pin);
-	} else if (irq.type == IRQ_MSI || irq.type == IRQ_MSIX) {
+	} else if ((irq.type == IRQ_MSI) || (irq.type == IRQ_MSIX)) {
 		ret = ptdev_add_msix_remapping(target_vm,
 				irq.virt_bdf, irq.phys_bdf,
 				irq.is.msix.vector_cnt);
@@ -776,7 +776,7 @@ hcall_reset_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param)
 		ptdev_remove_intx_remapping(target_vm,
 				irq.is.intx.virt_pin,
 				irq.is.intx.pic_pin);
-	} else if (irq.type == IRQ_MSI || irq.type == IRQ_MSIX) {
+	} else if ((irq.type == IRQ_MSI) || (irq.type == IRQ_MSIX)) {
 		ptdev_remove_msix_remapping(target_vm,
 				irq.virt_bdf,
 				irq.is.msix.vector_cnt);

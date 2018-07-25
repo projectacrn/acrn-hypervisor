@@ -357,7 +357,7 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen_arg)
 	uint8_t *src8;
 	size_t slen = slen_arg;
 
-	if (slen == 0U || dmax == 0U || dmax < slen) {
+	if ((slen == 0U) || (dmax == 0U) || (dmax < slen)) {
 		ASSERT(false);
 	}
 
@@ -388,7 +388,7 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen_arg)
 
         /*make sure 8bytes-aligned for at least one addr.*/
         if ((!MEM_ALIGNED_CHECK(src8, 8)) && (!MEM_ALIGNED_CHECK(dest8, 8))) {
-                for (; slen != 0U && (((uint64_t)src8) & 7UL) != 0UL; slen--) {
+                for (; (slen != 0U) && ((((uint64_t)src8) & 7UL) != 0UL); slen--) {
                         *dest8 = *src8;
                         dest8++;
                         src8++;
@@ -432,7 +432,7 @@ void *memset(void *base, uint8_t v, size_t n)
 
         /*do the few bytes to get uint64_t alignment*/
         count = n;
-        for (; count != 0U && ((uint64_t)dest_p & 7UL) != 0UL; count--) {
+        for (; (count != 0U) && (((uint64_t)dest_p & 7UL) != 0UL); count--) {
                 *dest_p = v;
                 dest_p++;
         }

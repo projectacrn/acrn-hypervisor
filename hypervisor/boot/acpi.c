@@ -183,7 +183,7 @@ static void *get_acpi_tbl(const char *sig)
 
 	rsdp = (struct acpi_table_rsdp *)global_rsdp;
 
-	if (rsdp->revision >= 2 && (rsdp->xsdt_physical_address != 0U)) {
+	if ((rsdp->revision >= 2) && (rsdp->xsdt_physical_address != 0U)) {
 		/*
 		 * AcpiOsGetRootPointer only verifies the checksum for
 		 * the version 1.0 portion of the RSDP.  Version 2.0 has
