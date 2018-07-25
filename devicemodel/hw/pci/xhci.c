@@ -3504,6 +3504,16 @@ pci_xhci_parse_extcap(struct pci_xhci_vdev *xdev, char *opts)
 	} else
 		rc = -2;
 
+	if (((struct pci_xhci_excap *)(xdev->excap_ptr))->start
+			== EXCAP_GROUP_END) {
+		xdev->excap_write = NULL;
+		xdev->excap_ptr = excap_group_dft;
+		xdev->vid = XHCI_PCI_VENDOR_ID_DFLT;
+		xdev->pid = XHCI_PCI_DEVICE_ID_DFLT;
+		UPRINTF(LWRN, "Invalid xhci excap, force set "
+				"default excap\r\n");
+	}
+
 errout:
 	if (rc)
 		printf("USB: fail to set vendor capability, rc=%d\r\n", rc);
@@ -3685,13 +3695,22 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	pci_xhci_reset(xdev);
 
+	/* xdev->excap_ptr should be assigned to global array in which
+	 * it need include two items at least and field start must be
+	 * ended by EXCAP_GROUP_END at last item.
+	 */
 	excap = xdev->excap_ptr;
 	xdev->excapoff = excap->start;
 
-	while (excap && excap->start != EXCAP_GROUP_END)
-		excap++;
+	if (!excap) {
+		UPRINTF(LWRN, "Failed to set xHCI extended capability\r\n");
+		return -1;
+	}
 
-	xdev->regsend = (excap - 1)->end;
+	do {
+		xdev->regsend = excap->end;
+		excap++;
+	} while (excap && excap->start != EXCAP_GROUP_END);
 
 	/*
 	 * Set extended capabilities pointer to be after regsend;
