@@ -18,7 +18,7 @@ int validate_pstate(struct vm *vm, uint64_t perf_ctl)
 	px_cnt = vm->pm.px_cnt;
 	px_data = vm->pm.px_data;
 
-	if (px_cnt == 0 || px_data == NULL) {
+	if ((px_cnt == 0) || (px_data == NULL)) {
 		return -1;
 	}
 

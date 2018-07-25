@@ -134,7 +134,7 @@ static int local_gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_inf
 		if (pw_info->is_write_access && ((entry & MMU_32BIT_PDE_RW) == 0U)) {
 			/* Case1: Supermode and wp is 1
 			 * Case2: Usermode */
-			if (!(!pw_info->is_user_mode && !pw_info->wp)) {
+			if (pw_info->is_user_mode || pw_info->wp) {
 				fault = 1;
 			}
 		}
@@ -150,7 +150,7 @@ static int local_gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_inf
 			fault = 1;
 		}
 
-		if (pw_info->pse && (i > 0U && ((entry & MMU_32BIT_PDE_PS) != 0U))) {
+		if (pw_info->pse && ((i > 0U) && ((entry & MMU_32BIT_PDE_PS) != 0U))) {
 			break;
 		}
 		addr = entry;
@@ -502,18 +502,18 @@ static void rebuild_vm0_e820(void)
 		entry_end = entry->baseaddr + entry->length;
 
 		/* No need handle in these cases*/
-		if (entry->type != E820_TYPE_RAM || entry_end <= hv_start
-				|| entry_start >= hv_end) {
+		if ((entry->type != E820_TYPE_RAM) || (entry_end <= hv_start)
+				|| (entry_start >= hv_end)) {
 			continue;
 		}
 
 		/* filter out hv mem and adjust length of this entry*/
-		if (entry_start < hv_start && entry_end <= hv_end) {
+		if ((entry_start < hv_start) && (entry_end <= hv_end)) {
 			entry->length = hv_start - entry_start;
 			continue;
 		}
 		/* filter out hv mem and need to create a new entry*/
-		if (entry_start < hv_start && entry_end > hv_end) {
+		if ((entry_start < hv_start) && (entry_end > hv_end)) {
 			entry->length = hv_start - entry_start;
 			new_entry.baseaddr = hv_end;
 			new_entry.length = entry_end - hv_end;
@@ -523,13 +523,13 @@ static void rebuild_vm0_e820(void)
 		/* This entry is within the range of hv mem
 		 * change to E820_TYPE_RESERVED
 		 */
-		if (entry_start >= hv_start && entry_end <= hv_end) {
+		if ((entry_start >= hv_start) && (entry_end <= hv_end)) {
 			entry->type = E820_TYPE_RESERVED;
 			continue;
 		}
 
-		if (entry_start >= hv_start && entry_start < hv_end
-				&& entry_end > hv_end) {
+		if ((entry_start >= hv_start) && (entry_start < hv_end)
+				&& (entry_end > hv_end)) {
 			entry->baseaddr = hv_end;
 			entry->length = entry_end - hv_end;
 			continue;

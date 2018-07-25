@@ -1628,7 +1628,7 @@ static int vie_init(struct instr_emul_vie *vie, struct vcpu *vcpu)
 	uint64_t fault_addr;
 	int ret;
 
-	if (inst_len > VIE_INST_SIZE || inst_len == 0U) {
+	if ((inst_len > VIE_INST_SIZE) || (inst_len == 0U)) {
 		pr_err("%s: invalid instruction length (%d)",
 			__func__, inst_len);
 		return -EINVAL;
@@ -1731,7 +1731,7 @@ static int decode_prefixes(struct instr_emul_vie *vie,
 	 * - If an instruction has a mandatory prefix (0x66, 0xF2 or 0xF3)
 	 *   the mandatory prefix must come before the REX prefix.
 	 */
-	if (cpu_mode == CPU_MODE_64BIT && x >= 0x40U && x <= 0x4FU) {
+	if ((cpu_mode == CPU_MODE_64BIT) && (x >= 0x40U) && (x <= 0x4FU)) {
 		vie->rex_present = 1U;
 		vie->rex_w = (x & 0x8U) != 0U ? 1U : 0U;
 		vie->rex_r = (x & 0x4U) != 0U ? 1U : 0U;
@@ -1839,8 +1839,8 @@ static int decode_modrm(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode)
 		return -1;
 	}
 
-	if ((vie->mod == VIE_MOD_INDIRECT && vie->rm == VIE_RM_DISP32) ||
-			(vie->mod != VIE_MOD_DIRECT && vie->rm == VIE_RM_SIB)) {
+	if (((vie->mod == VIE_MOD_INDIRECT) && (vie->rm == VIE_RM_DISP32)) ||
+			((vie->mod != VIE_MOD_DIRECT) && (vie->rm == VIE_RM_SIB))) {
 		/*
 		 * Table 2-5: Special Cases of REX Encodings
 		 *
@@ -1869,7 +1869,7 @@ static int decode_sib(struct instr_emul_vie *vie)
 	uint8_t x;
 
 	/* Proceed only if SIB byte is present */
-	if (vie->mod == VIE_MOD_DIRECT || vie->rm != VIE_RM_SIB) {
+	if ((vie->mod == VIE_MOD_DIRECT) || (vie->rm != VIE_RM_SIB)) {
 		return 0;
 	}
 
@@ -1908,8 +1908,8 @@ static int decode_sib(struct instr_emul_vie *vie)
 		break;
 	}
 
-	if (vie->mod == VIE_MOD_INDIRECT &&
-			(vie->base == 5U || vie->base == 13U)) {
+	if ((vie->mod == VIE_MOD_INDIRECT) &&
+			((vie->base == 5U) || (vie->base == 13U))) {
 		/*
 		 * Special case when base register is unused if mod = 0
 		 * and base = %rbp or %r13.
@@ -1960,7 +1960,7 @@ static int decode_displacement(struct instr_emul_vie *vie)
 		return 0;
 	}
 
-	if (n != 1 && n != 4) {
+	if ((n != 1) && (n != 4)) {
 		pr_err("%s: decode_displacement: invalid disp_bytes %d",
 			__func__, n);
 		return -EINVAL;
@@ -2004,7 +2004,7 @@ static int decode_immediate(struct instr_emul_vie *vie)
 		 * processor sign-extends all immediates to 64-bits prior
 		 * to their use.
 		 */
-		if (vie->opsize == 4U || vie->opsize == 8U) {
+		if ((vie->opsize == 4U) || (vie->opsize == 8U)) {
 			vie->imm_bytes = 4U;
 		}
 		else {
@@ -2021,7 +2021,7 @@ static int decode_immediate(struct instr_emul_vie *vie)
 		return 0;
 	}
 
-	if ( n != 1 && n != 2 && n != 4) {
+	if ((n != 1) && (n != 2) && (n != 4)) {
 		pr_err("%s: invalid number of immediate bytes: %d",
 			__func__, n);
 		return -EINVAL;
@@ -2065,7 +2065,7 @@ static int decode_moffset(struct instr_emul_vie *vie)
 	 * The memory offset size follows the address-size of the instruction.
 	 */
 	n = vie->addrsize;
-	if ( n != 2U && n != 4U && n != 8U) {
+	if ((n != 2U) && (n != 4U) && (n != 8U)) {
 		pr_err("%s: invalid moffset bytes: %hhu", __func__, n);
 		return -EINVAL;
 	}

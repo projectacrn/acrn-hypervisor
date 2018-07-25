@@ -129,10 +129,10 @@ vioapic_set_pinstate(struct vioapic *vioapic, uint32_t pin, bool newstate)
 	}
 
 	needintr = false;
-	if (oldcnt == 0 && newcnt == 1) {
+	if ((oldcnt == 0) && (newcnt == 1)) {
 		needintr = true;
 		dev_dbg(ACRN_DBG_IOAPIC, "ioapic pin%hhu: asserted", pin);
-	} else if (oldcnt == 1 && newcnt == 0) {
+	} else if ((oldcnt == 1) && (newcnt == 0)) {
 		dev_dbg(ACRN_DBG_IOAPIC, "ioapic pin%hhu: deasserted", pin);
 	} else {
 		dev_dbg(ACRN_DBG_IOAPIC, "ioapic pin%hhu: %s, ignored, acnt %d",
@@ -337,9 +337,9 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 
 		changed = last.full ^ new.full;
 		/* pin0 from vpic mask/unmask */
-		if (pin == 0U && (changed & IOAPIC_RTE_INTMASK) != 0UL) {
+		if ((pin == 0U) && ((changed & IOAPIC_RTE_INTMASK) != 0UL)) {
 			/* mask -> umask */
-			if ((last.full & IOAPIC_RTE_INTMASK) != 0UL &&
+			if (((last.full & IOAPIC_RTE_INTMASK) != 0UL) &&
 				((new.full & IOAPIC_RTE_INTMASK) == 0UL)) {
 				if ((vioapic->vm->wire_mode ==
 						VPIC_WIRE_NULL) ||
@@ -355,7 +355,7 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 				}
 			/* unmask -> mask */
 			} else if (((last.full & IOAPIC_RTE_INTMASK) == 0UL) &&
-				(new.full & IOAPIC_RTE_INTMASK) != 0UL) {
+				((new.full & IOAPIC_RTE_INTMASK) != 0UL)) {
 				if (vioapic->vm->wire_mode ==
 						VPIC_WIRE_IOAPIC) {
 					vioapic->vm->wire_mode =
@@ -395,9 +395,9 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 		 * - previous interrupt has been EOIed
 		 * - pin level is asserted
 		 */
-		if ((vioapic->rtbl[pin].full & IOAPIC_RTE_INTMASK) ==
-			IOAPIC_RTE_INTMCLR &&
-			(vioapic->rtbl[pin].full & IOAPIC_RTE_REM_IRR) == 0UL &&
+		if (((vioapic->rtbl[pin].full & IOAPIC_RTE_INTMASK) ==
+			IOAPIC_RTE_INTMCLR) &&
+			((vioapic->rtbl[pin].full & IOAPIC_RTE_REM_IRR) == 0UL) &&
 			(vioapic->acnt[pin] > 0)) {
 			dev_dbg(ACRN_DBG_IOAPIC,
 				"ioapic pin%hhu: asserted at rtbl write, acnt %d",
@@ -410,9 +410,9 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 		 * remap for trigger mode change
 		 * remap for polarity change
 		 */
-		if ( (changed & IOAPIC_RTE_INTMASK) != 0UL ||
-		     (changed & IOAPIC_RTE_TRGRMOD) != 0UL ||
-		     (changed & IOAPIC_RTE_INTPOL ) != 0UL ) {
+		if ( ((changed & IOAPIC_RTE_INTMASK) != 0UL) ||
+		     ((changed & IOAPIC_RTE_TRGRMOD) != 0UL) ||
+		     ((changed & IOAPIC_RTE_INTPOL ) != 0UL) ) {
 
 			/* VM enable intr */
 			struct ptdev_intx_info intx;
@@ -472,7 +472,7 @@ vioapic_process_eoi(struct vm *vm, uint32_t vector)
 	uint32_t pin, pincount = vioapic_pincount(vm);
 	union ioapic_rte rte;
 
-	if (vector < VECTOR_DYNAMIC_START || vector > NR_MAX_VECTOR) {
+	if ((vector < VECTOR_DYNAMIC_START) || (vector > NR_MAX_VECTOR)) {
 		pr_err("vioapic_process_eoi: invalid vector %u", vector);
 	}
 
