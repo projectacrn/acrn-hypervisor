@@ -185,10 +185,10 @@ static inline void name(uint16_t nr_arg, volatile op_type *addr)	\
 			:  "r" ((op_type)(1UL<<nr))		\
 			:  "cc", "memory");			\
 }
-build_bitmap_set(__bitmap_set, "q", uint64_t, "", nr, addr)
-build_bitmap_set(bitmap_set, "q", uint64_t, BUS_LOCK, nr, addr)
-build_bitmap_set(__bitmap32_set, "l", uint32_t, "", nr, addr)
-build_bitmap_set(bitmap32_set, "l", uint32_t, BUS_LOCK, nr, addr)
+build_bitmap_set(bitmap_set_nolock, "q", uint64_t, "", nr, addr)
+build_bitmap_set(bitmap_set_lock, "q", uint64_t, BUS_LOCK, nr, addr)
+build_bitmap_set(bitmap32_set_nolock, "l", uint32_t, "", nr, addr)
+build_bitmap_set(bitmap32_set_lock, "l", uint32_t, BUS_LOCK, nr, addr)
 
 /*
  * (*addr) &= ~(1UL<<nr);
@@ -205,10 +205,10 @@ static inline void name(uint16_t nr_arg, volatile op_type *addr)        \
 			:  "r" ((op_type)(~(1UL<<(nr))))		\
 			:  "cc", "memory");				\
 }
-build_bitmap_clear(__bitmap_clear, "q", uint64_t, "", nr, addr)
-build_bitmap_clear(bitmap_clear, "q", uint64_t, BUS_LOCK, nr, addr)
-build_bitmap_clear(__bitmap32_clear, "l", uint32_t, "", nr, addr)
-build_bitmap_clear(bitmap32_clear, "l", uint32_t, BUS_LOCK, nr, addr)
+build_bitmap_clear(bitmap_clear_nolock, "q", uint64_t, "", nr, addr)
+build_bitmap_clear(bitmap_clear_lock, "q", uint64_t, BUS_LOCK, nr, addr)
+build_bitmap_clear(bitmap32_clear_nolock, "l", uint32_t, "", nr, addr)
+build_bitmap_clear(bitmap32_clear_lock, "l", uint32_t, BUS_LOCK, nr, addr)
 
 /*
  * return !!((*addr) & (1UL<<nr));
@@ -258,10 +258,10 @@ static inline bool name(uint16_t nr_arg, volatile op_type *addr)        \
 			: "cc", "memory");				\
 	return (ret != 0);			        		\
 }
-build_bitmap_testandset(__bitmap_test_and_set, "q", uint64_t, "", nr, addr)
-build_bitmap_testandset(bitmap_test_and_set, "q", uint64_t, BUS_LOCK, nr, addr)
-build_bitmap_testandset(__bitmap32_test_and_set, "l", uint32_t, "", nr, addr)
-build_bitmap_testandset(bitmap32_test_and_set, "l", uint32_t, BUS_LOCK, nr, addr)
+build_bitmap_testandset(bitmap_test_and_set_nolock, "q", uint64_t, "", nr, addr)
+build_bitmap_testandset(bitmap_test_and_set_lock, "q", uint64_t, BUS_LOCK, nr, addr)
+build_bitmap_testandset(bitmap32_test_and_set_nolock, "l", uint32_t, "", nr, addr)
+build_bitmap_testandset(bitmap32_test_and_set_lock, "l", uint32_t, BUS_LOCK, nr, addr)
 
 /*
  * bool ret = (*addr) & (1UL<<nr);
@@ -282,12 +282,12 @@ static inline bool name(uint16_t nr_arg, volatile op_type *addr)        \
 			: "cc", "memory");				\
 	return (ret != 0);			        		\
 }
-build_bitmap_testandclear(__bitmap_test_and_clear, "q", uint64_t, "", nr, addr)
-build_bitmap_testandclear(bitmap_test_and_clear, "q",
+build_bitmap_testandclear(bitmap_test_and_clear_nolock, "q", uint64_t, "", nr, addr)
+build_bitmap_testandclear(bitmap_test_and_clear_lock, "q",
 				uint64_t, BUS_LOCK, nr, addr)
-build_bitmap_testandclear(__bitmap32_test_and_clear, "l",
+build_bitmap_testandclear(bitmap32_test_and_clear_nolock, "l",
 				uint32_t, "", nr, addr)
-build_bitmap_testandclear(bitmap32_test_and_clear, "l",
+build_bitmap_testandclear(bitmap32_test_and_clear_lock, "l",
 				uint32_t, BUS_LOCK, nr, addr)
 
 #endif /* BITS_H*/

@@ -231,7 +231,7 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp_arg, uint16_t pcpu_i
 	printf("\r\n");
 }
 
-void __assert(int32_t line, const char *file, const char *txt)
+void asm_assert(int32_t line, const char *file, const char *txt)
 {
 	uint16_t pcpu_id = get_cpu_id();
 	uint64_t rsp = cpu_rsp_get();
