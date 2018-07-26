@@ -51,8 +51,9 @@ int console_putc(int ch)
 	return res;
 }
 
-int console_puts(const char *s)
+int console_puts(const char *s_arg)
 {
+	const char *s = s_arg;
 	int res = -1;
 	const char *p;
 
@@ -91,8 +92,9 @@ int console_puts(const char *s)
 	return res;
 }
 
-int console_write(const char *s, size_t len)
+int console_write(const char *s_arg, size_t len)
 {
+	const char *s = s_arg;
 	int res = -1;
 	const char *e;
 	const char *p;

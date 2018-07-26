@@ -42,7 +42,7 @@ struct print_param {
 	} vars;
 };
 
-int do_print(const char *fmt, struct print_param *param,
+int do_print(const char *fmt_arg, struct print_param *param,
 		__builtin_va_list args);
 
 /**  The well known vsnprintf() function.
@@ -56,7 +56,7 @@ int do_print(const char *fmt, struct print_param *param,
  * @return The number of bytes which would be written, even if the destination
  *         is smaller. On error a negative number is returned.
  */
-int vsnprintf(char *dst, size_t sz, const char *fmt, va_list args);
+int vsnprintf(char *dst_arg, size_t sz_arg, const char *fmt, va_list args);
 
 /** The well known snprintf() function.
  *

@@ -153,8 +153,9 @@ int atoi(const char *str)
 	return (int)strtol_deci(str);
 }
 
-char *strchr(const char *s, int ch)
+char *strchr(const char *s_arg, int ch)
 {
+	const char *s = s_arg;
 	while ((*s != '\0') && (*s != ch)) {
 		++s;
 	}
@@ -184,13 +185,13 @@ char *strchr(const char *s, int ch)
  *    1) both d and s shall not be null pointers.
  *    2) dmax shall not 0.
  */
-char *strcpy_s(char *d, size_t dmax, const char *s_arg)
+char *strcpy_s(char *d_arg, size_t dmax, const char *s_arg)
 {
-
+	char *d = d_arg;
+	const char *s = s_arg;
 	char *dest_base;
 	size_t dest_avail;
 	uint64_t overlap_guard;
-	const char *s = s_arg;
 
 	if (s == NULL || d == NULL || dmax == 0U) {
 		pr_err("%s: invalid src, dest buffer or length.", __func__);
@@ -261,8 +262,10 @@ char *strcpy_s(char *d, size_t dmax, const char *s_arg)
  *    3) will assert() if overlap happens or dest buffer has no
  *       enough space.
  */
-char *strncpy_s(char *d, size_t dmax, const char *s, size_t slen_arg)
+char *strncpy_s(char *d_arg, size_t dmax, const char *s_arg, size_t slen_arg)
 {
+	const char *s = s_arg;
+	char *d = d_arg;
 	char *dest_base;
 	size_t dest_avail;
 	uint64_t overlap_guard;
@@ -339,10 +342,11 @@ char *strncpy_s(char *d, size_t dmax, const char *s, size_t slen_arg)
  *    string length, excluding the null character.
  *    will return 0 if str is null.
  */
-size_t strnlen_s(const char *str, size_t maxlen_arg)
+size_t strnlen_s(const char *str_arg, size_t maxlen_arg)
 {
-	size_t count;
+	const char *str = str_arg;
 	size_t maxlen = maxlen_arg;
+	size_t count;
 
 	if (str == NULL) {
 		return 0;
@@ -371,8 +375,10 @@ static char hexdigit(uint8_t decimal_val)
 	return hexdigits[decimal_val & 0x0FU];
 }
 
-int strcmp(const char *s1, const char *s2)
+int strcmp(const char *s1_arg, const char *s2_arg)
 {
+	const char *s1 = s1_arg;
+	const char *s2 = s2_arg;
 	while (((*s1) != '\0') && ((*s2) != '\0') && ((*s1) == (*s2))) {
 		s1++;
 		s2++;
@@ -381,8 +387,10 @@ int strcmp(const char *s1, const char *s2)
 	return *s1 - *s2;
 }
 
-int strncmp(const char *s1, const char *s2, size_t n_arg)
+int strncmp(const char *s1_arg, const char *s2_arg, size_t n_arg)
 {
+	const char *s1 = s1_arg;
+	const char *s2 = s2_arg;
 	size_t n = n_arg;
 	while (((n - 1) != 0U) && ((*s1) != '\0') && ((*s2) != '\0')
 		&& ((*s1) == (*s2))) {

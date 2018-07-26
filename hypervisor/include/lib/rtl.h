@@ -28,13 +28,13 @@ struct udiv_result {
 /* Function prototypes */
 void udelay(uint32_t us);
 void *memchr(const void *void_s, int c, size_t n);
-int strcmp(const char *s1, const char *s2);
-int strncmp(const char *s1, const char *s2, size_t n);
-char *strcpy_s(char *d, size_t dmax, const char *s_arg);
-char *strncpy_s(char *d, size_t dmax, const char *s, size_t slen_arg);
-char *strchr(const char *s, int ch);
+int strcmp(const char *s1_arg, const char *s2_arg);
+int strncmp(const char *s1_arg, const char *s2_arg, size_t n_arg);
+char *strcpy_s(char *d_arg, size_t dmax, const char *s_arg);
+char *strncpy_s(char *d_arg, size_t dmax, const char *s, size_t slen_arg);
+char *strchr(const char *s_arg, int ch);
 void mdelay(uint32_t loop_count_arg);
-size_t strnlen_s(const char *str, size_t maxlen_arg);
+size_t strnlen_s(const char *str_arg, size_t maxlen_arg);
 void *memset(void *base, uint8_t v, size_t n);
 void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen_arg);
 int udiv64(uint64_t dividend_arg, uint64_t divisor_arg, struct udiv_result *res);

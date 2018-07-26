@@ -157,8 +157,9 @@ static void _get_req_info_(struct vhm_request *req, int *id, char *type,
 	}
 }
 
-void get_req_info(char *str, int str_max)
+void get_req_info(char *str_arg, int str_max)
 {
+	char *str = str_arg;
 	uint32_t i;
 	int32_t len, size = str_max, client_id;
 	union vhm_request_buffer *req_buf;

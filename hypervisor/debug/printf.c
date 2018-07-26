@@ -6,8 +6,10 @@
 
 #include <hypervisor.h>
 
-static int charout(int cmd, const char *s, uint32_t sz, void *hnd)
+static int charout(int cmd, const char *s_arg, uint32_t sz_arg, void *hnd)
 {
+	const char *s = s_arg;
+	uint32_t sz = sz_arg;
 	/* pointer to an integer to store the number of characters */
 	int *nchars = (int *)hnd;
 	/* working pointer */

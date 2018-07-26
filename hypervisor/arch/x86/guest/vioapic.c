@@ -644,8 +644,9 @@ bool vioapic_get_rte(struct vm *vm, uint8_t pin, union ioapic_rte *rte)
 }
 
 #ifdef HV_DEBUG
-void get_vioapic_info(char *str, int str_max, uint16_t vmid)
+void get_vioapic_info(char *str_arg, int str_max, uint16_t vmid)
 {
+	char *str = str_arg;
 	int len, size = str_max;
 	union ioapic_rte rte;
 	uint32_t delmode, vector, dest;

@@ -94,7 +94,7 @@ void interrupt_init(uint16_t pcpu_id);
 void cancel_event_injection(struct vcpu *vcpu);
 
 #ifdef HV_DEBUG
-void get_cpu_interrupt_info(char *str, int str_max);
+void get_cpu_interrupt_info(char *str_arg, int str_max);
 #endif /* HV_DEBUG */
 
 #endif /* ARCH_IRQ_H */
