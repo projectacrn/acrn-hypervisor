@@ -68,7 +68,7 @@ struct pic {
 	uint8_t		elc;
 };
 
-struct vpic {
+struct acrn_vpic {
 	struct vm		*vm;
 	spinlock_t	lock;
 	struct pic	pic[2];
@@ -86,9 +86,9 @@ struct vpic {
 	    tmpvar < NR_VPIC_PINS_PER_CHIP;				\
 	    tmpvar++, pinvar = (pinvar + 1U) & 0x7U)
 
-static void vpic_set_pinstate(struct vpic *vpic, uint8_t pin, bool newstate);
+static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin, bool newstate);
 
-static inline bool master_pic(struct vpic *vpic, struct pic *pic)
+static inline bool master_pic(struct acrn_vpic *vpic, struct pic *pic)
 {
 
 	if (pic == &vpic->pic[0]) {
@@ -168,7 +168,7 @@ static inline uint8_t vpic_get_highest_irrpin(struct pic *pic)
 	return VPIC_INVALID_PIN;
 }
 
-static void vpic_notify_intr(struct vpic *vpic)
+static void vpic_notify_intr(struct acrn_vpic *vpic)
 {
 	struct pic *pic;
 	uint8_t pin;
@@ -252,7 +252,7 @@ static void vpic_notify_intr(struct vpic *vpic)
 	}
 }
 
-static int vpic_icw1(struct vpic *vpic, struct pic *pic, uint8_t val)
+static int vpic_icw1(struct acrn_vpic *vpic, struct pic *pic, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: pic icw1 0x%x\n",
 		vpic->vm, val);
@@ -282,7 +282,7 @@ static int vpic_icw1(struct vpic *vpic, struct pic *pic, uint8_t val)
 	return 0;
 }
 
-static int vpic_icw2(struct vpic *vpic, struct pic *pic, uint8_t val)
+static int vpic_icw2(struct acrn_vpic *vpic, struct pic *pic, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: pic icw2 0x%x\n",
 		vpic->vm, val);
@@ -294,7 +294,7 @@ static int vpic_icw2(struct vpic *vpic, struct pic *pic, uint8_t val)
 	return 0;
 }
 
-static int vpic_icw3(struct vpic *vpic, struct pic *pic, uint8_t val)
+static int vpic_icw3(struct acrn_vpic *vpic, struct pic *pic, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: pic icw3 0x%x\n",
 		vpic->vm, val);
@@ -304,7 +304,7 @@ static int vpic_icw3(struct vpic *vpic, struct pic *pic, uint8_t val)
 	return 0;
 }
 
-static int vpic_icw4(struct vpic *vpic, struct pic *pic, uint8_t val)
+static int vpic_icw4(struct acrn_vpic *vpic, struct pic *pic, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: pic icw4 0x%x\n",
 		vpic->vm, val);
@@ -335,7 +335,7 @@ static int vpic_icw4(struct vpic *vpic, struct pic *pic, uint8_t val)
 	return 0;
 }
 
-bool vpic_is_pin_mask(struct vpic *vpic, uint8_t virt_pin_arg)
+bool vpic_is_pin_mask(struct acrn_vpic *vpic, uint8_t virt_pin_arg)
 {
 	struct pic *pic;
 	uint8_t virt_pin = virt_pin_arg;
@@ -356,7 +356,7 @@ bool vpic_is_pin_mask(struct vpic *vpic, uint8_t virt_pin_arg)
 	}
 }
 
-static int vpic_ocw1(struct vpic *vpic, struct pic *pic, uint8_t val)
+static int vpic_ocw1(struct acrn_vpic *vpic, struct pic *pic, uint8_t val)
 {
 	uint8_t pin, i, bit;
 	uint8_t old = pic->mask;
@@ -395,7 +395,7 @@ static int vpic_ocw1(struct vpic *vpic, struct pic *pic, uint8_t val)
 	return 0;
 }
 
-static int vpic_ocw2(struct vpic *vpic, struct pic *pic, uint8_t val)
+static int vpic_ocw2(struct acrn_vpic *vpic, struct pic *pic, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: pic ocw2 0x%x\n",
 		vpic->vm, val);
@@ -437,7 +437,7 @@ static int vpic_ocw2(struct vpic *vpic, struct pic *pic, uint8_t val)
 	return 0;
 }
 
-static int vpic_ocw3(struct vpic *vpic, struct pic *pic, uint8_t val)
+static int vpic_ocw3(struct acrn_vpic *vpic, struct pic *pic, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: pic ocw3 0x%x\n",
 		vpic->vm, val);
@@ -460,7 +460,7 @@ static int vpic_ocw3(struct vpic *vpic, struct pic *pic, uint8_t val)
 	return 0;
 }
 
-static void vpic_set_pinstate(struct vpic *vpic, uint8_t pin, bool newstate)
+static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin, bool newstate)
 {
 	struct pic *pic;
 	int oldcnt, newcnt;
@@ -506,7 +506,7 @@ static void vpic_set_pinstate(struct vpic *vpic, uint8_t pin, bool newstate)
 
 static int vpic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate)
 {
-	struct vpic *vpic;
+	struct acrn_vpic *vpic;
 	struct pic *pic;
 	uint8_t pin;
 
@@ -560,7 +560,7 @@ int vpic_pulse_irq(struct vm *vm, uint32_t irq)
 
 int vpic_set_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger trigger)
 {
-	struct vpic *vpic;
+	struct acrn_vpic *vpic;
 	uint8_t pin_mask;
 
 	if (irq >= NR_VPIC_PINS_TOTAL) {
@@ -600,7 +600,7 @@ int vpic_set_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger trigger)
 
 int vpic_get_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger *trigger)
 {
-	struct vpic *vpic;
+	struct acrn_vpic *vpic;
 
 	if (irq >= NR_VPIC_PINS_TOTAL) {
 		return -EINVAL;
@@ -621,7 +621,7 @@ int vpic_get_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger *trigger
 
 void vpic_pending_intr(struct vm *vm, uint32_t *vecptr)
 {
-	struct vpic *vpic;
+	struct acrn_vpic *vpic;
 	struct pic *pic;
 	uint8_t pin;
 
@@ -674,7 +674,7 @@ static void vpic_pin_accepted(struct pic *pic, uint8_t pin)
 
 void vpic_intr_accepted(struct vm *vm, uint32_t vector)
 {
-	struct vpic *vpic;
+	struct acrn_vpic *vpic;
 	uint8_t pin;
 
 	vpic = vm_pic(vm);
@@ -699,7 +699,7 @@ void vpic_intr_accepted(struct vm *vm, uint32_t vector)
 	VPIC_UNLOCK(vpic);
 }
 
-static int vpic_read(struct vpic *vpic, struct pic *pic,
+static int vpic_read(struct acrn_vpic *vpic, struct pic *pic,
 		uint16_t port, uint32_t *eax)
 {
 	uint8_t pin;
@@ -735,7 +735,7 @@ static int vpic_read(struct vpic *vpic, struct pic *pic,
 	return 0;
 }
 
-static int vpic_write(struct vpic *vpic, struct pic *pic,
+static int vpic_write(struct acrn_vpic *vpic, struct pic *pic,
 		uint16_t port, uint32_t *eax)
 {
 	int error;
@@ -787,7 +787,7 @@ static int vpic_write(struct vpic *vpic, struct pic *pic,
 static int vpic_master_handler(struct vm *vm, bool in, uint16_t port,
 		size_t bytes, uint32_t *eax)
 {
-	struct vpic *vpic;
+	struct acrn_vpic *vpic;
 	struct pic *pic;
 
 	vpic = vm_pic(vm);
@@ -830,7 +830,7 @@ static void vpic_master_io_write(__unused struct vm_io_handler *hdlr,
 static int vpic_slave_handler(struct vm *vm, bool in, uint16_t port,
 		size_t bytes, uint32_t *eax)
 {
-	struct vpic *vpic;
+	struct acrn_vpic *vpic;
 	struct pic *pic;
 
 	vpic = vm_pic(vm);
@@ -873,7 +873,7 @@ static void vpic_slave_io_write(__unused struct vm_io_handler *hdlr,
 static int vpic_elc_handler(struct vm *vm, bool in, uint16_t port, size_t bytes,
 		uint32_t *eax)
 {
-	struct vpic *vpic;
+	struct acrn_vpic *vpic;
 	bool is_master;
 
 	vpic = vm_pic(vm);
@@ -964,11 +964,11 @@ static void vpic_register_io_handler(struct vm *vm)
 
 void *vpic_init(struct vm *vm)
 {
-	struct vpic *vpic;
+	struct acrn_vpic *vpic;
 
 	vpic_register_io_handler(vm);
 
-	vpic = calloc(1U, sizeof(struct vpic));
+	vpic = calloc(1U, sizeof(struct acrn_vpic));
 	ASSERT(vpic != NULL, "");
 	vpic->vm = vm;
 	vpic->pic[0].mask = 0xffU;
