@@ -184,6 +184,7 @@ install-samples-nuc: $(SAMPLES_NUC)
 
 install-samples-mrb: $(SAMPLES_MRB)
 	install -D -t $(DESTDIR)/usr/share/acrn/samples/apl-mrb $^
+	install -p -D -m 0644 ./samples/apl-mrb/acrn_guest.service $(DESTDIR)/usr/lib/systemd/system
 
 install-bios: $(BIOS_BIN)
 	install -d $(DESTDIR)/usr/share/acrn/bios
