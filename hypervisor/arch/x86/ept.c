@@ -120,18 +120,13 @@ void destroy_ept(struct vm *vm)
 uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 {
 	uint64_t hpa = 0UL;
-	uint32_t pg_size = 0U;
-	struct entry_params entry;
-	struct map_params map_params;
+	uint64_t *pgentry, pg_size = 0UL;
 
-	map_params.page_table_type = PTT_EPT;
-	map_params.pml4_base = vm->arch_vm.nworld_eptp;
-	map_params.pml4_inverted = vm->arch_vm.m2p;
-	obtain_last_page_table_entry(&map_params, &entry, (void *)gpa, true);
-	if (entry.entry_present == PT_PRESENT) {
-		hpa = ((entry.entry_val & (~(entry.page_size - 1)))
-				| (gpa & (entry.page_size - 1)));
-		pg_size = entry.page_size;
+	pgentry = lookup_address((uint64_t *)vm->arch_vm.nworld_eptp,
+			gpa, &pg_size, PTT_EPT);
+	if (pgentry != NULL) {
+		hpa = ((*pgentry & (~(pg_size - 1UL)))
+				| (gpa & (pg_size - 1UL)));
 		pr_dbg("GPA2HPA: 0x%llx->0x%llx", gpa, hpa);
 	} else {
 		pr_err("VM %d GPA2HPA: failed for gpa 0x%llx",
@@ -139,7 +134,7 @@ uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 	}
 
 	if (size != NULL) {
-		*size = pg_size;
+		*size = (uint32_t)pg_size;
 	}
 
 	return hpa;
@@ -153,23 +148,17 @@ uint64_t gpa2hpa(struct vm *vm, uint64_t gpa)
 
 uint64_t hpa2gpa(struct vm *vm, uint64_t hpa)
 {
-	struct entry_params entry;
-	struct map_params map_params;
+	uint64_t *pgentry, pg_size = 0UL;
 
-	map_params.page_table_type = PTT_EPT;
-	map_params.pml4_base = vm->arch_vm.nworld_eptp;
-	map_params.pml4_inverted = vm->arch_vm.m2p;
-
-	obtain_last_page_table_entry(&map_params, &entry,
-			(void *)hpa, false);
-
-	if (entry.entry_present == PT_NOT_PRESENT) {
+	pgentry = lookup_address((uint64_t *)vm->arch_vm.m2p,
+			hpa, &pg_size, PTT_EPT);
+	if (pgentry == NULL) {
 		pr_err("VM %d hpa2gpa: failed for hpa 0x%llx",
 				vm->attr.boot_idx, hpa);
 		ASSERT(false, "hpa2gpa not found");
 	}
-	return ((entry.entry_val & (~(entry.page_size - 1)))
-			| (hpa & (entry.page_size - 1)));
+	return ((*pgentry & (~(pg_size - 1UL)))
+			| (hpa & (pg_size - 1UL)));
 }
 
 bool is_ept_supported(void)
