@@ -199,7 +199,7 @@ void
 vioapic_update_tmr(struct vcpu *vcpu)
 {
 	struct vioapic *vioapic;
-	struct vlapic *vlapic;
+	struct acrn_vlapic *vlapic;
 	union ioapic_rte rte;
 	uint32_t vector, delmode;
 	bool level;
