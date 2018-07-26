@@ -123,7 +123,8 @@ static int modify_pde(uint64_t *pdpte,
 			return -EFAULT;
 		}
 		if (pde_large(*pde) != 0UL) {
-			if (vaddr_next > vaddr_end) {
+			if (vaddr_next > vaddr_end ||
+					!MEM_ALIGNED_CHECK(vaddr, PDE_SIZE)) {
 				ret = split_large_page(pde, IA32E_PD, ptt);
 				if (ret != 0) {
 					return ret;
@@ -173,7 +174,8 @@ static int modify_pdpte(uint64_t *pml4e,
 			return -EFAULT;
 		}
 		if (pdpte_large(*pdpte) != 0UL) {
-			if (vaddr_next > vaddr_end) {
+			if (vaddr_next > vaddr_end ||
+					!MEM_ALIGNED_CHECK(vaddr, PDPTE_SIZE)) {
 				ret = split_large_page(pdpte, IA32E_PDPT, ptt);
 				if (ret != 0) {
 					return ret;
