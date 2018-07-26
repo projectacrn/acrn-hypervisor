@@ -220,23 +220,6 @@ enum _page_table_type {
 	PAGETABLE_TYPE_UNKNOWN,
 };
 
-struct mem_map_params {
-	/* enum _page_table_type: HOST or EPT*/
-	enum _page_table_type page_table_type;
-	/* used HVA->HPA for HOST, used GPA->HPA for EPT */
-	void *pml4_base;
-	/* used HPA->HVA for HOST, used HPA->GPA for EPT */
-	void *pml4_inverted;
-};
-struct entry_params {
-	uint32_t entry_level;
-	uint32_t entry_present;
-	void *entry_base;
-	uint64_t entry_off;
-	uint64_t entry_val;
-	uint64_t page_size;
-};
-
 /* Represent the 4 levels of translation tables in IA-32e paging mode */
 enum _page_table_level {
 	IA32E_PML4 = 0,
@@ -310,8 +293,6 @@ void free_paging_struct(void *ptr);
 void enable_paging(uint64_t pml4_base_addr);
 void enable_smep(void);
 void init_paging(void);
-int map_mem(struct mem_map_params *map_params, void *paddr, void *vaddr,
-		    uint64_t size, uint32_t flags);
 int mmu_add(uint64_t *pml4_page, uint64_t paddr_base,
 		uint64_t vaddr_base, uint64_t size,
 		uint64_t prot, enum _page_table_type ptt);
@@ -325,8 +306,6 @@ void flush_vpid_single(uint16_t vpid);
 void flush_vpid_global(void);
 void invept(struct vcpu *vcpu);
 bool check_continuous_hpa(struct vm *vm, uint64_t gpa_arg, uint64_t size_arg);
-int obtain_last_page_table_entry(struct mem_map_params *map_params,
-		struct entry_params *entry, void *addr, bool direct);
 uint64_t *lookup_address(uint64_t *pml4_page, uint64_t addr,
 		uint64_t *pg_size, enum _page_table_type ptt);
 
