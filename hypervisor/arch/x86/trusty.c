@@ -62,17 +62,13 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 {
 	uint64_t nworld_pml4e = 0UL;
 	uint64_t sworld_pml4e = 0UL;
-	struct mem_map_params map_params;
 	uint64_t gpa = 0UL;
 	uint64_t hpa = gpa2hpa(vm, gpa_orig);
-	uint64_t table_present = (IA32E_EPT_R_BIT |
-				IA32E_EPT_W_BIT |
-				IA32E_EPT_X_BIT);
+	uint64_t table_present = EPT_RWX;
 	uint64_t pdpte = 0, *dest_pdpte_p = NULL, *src_pdpte_p = NULL;
 	void *sub_table_addr = NULL, *pml4_base = NULL;
 	struct vm *vm0 = get_vm_from_vmid(0U);
 	uint16_t i;
-	struct vcpu *vcpu;
 
 	if (vm0 == NULL) {
 		pr_err("Parse vm0 context failed.");
@@ -112,7 +108,6 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	sworld_pml4e = HVA2HPA(sub_table_addr) | table_present;
 	mem_write64(pml4_base, sworld_pml4e);
 
-
 	nworld_pml4e = mem_read64(vm->arch_vm.nworld_eptp);
 
 	/*
@@ -131,18 +126,11 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 		dest_pdpte_p++;
 	}
 
-	/* Map gpa_rebased~gpa_rebased+size to secure ept mapping
+	/* Map [gpa_rebased, gpa_rebased + size) to secure ept mapping
 	 * TODO: not create inverted page tables for trusty memory
 	 */
-	map_params.page_table_type = PTT_EPT;
-	map_params.pml4_inverted = vm->arch_vm.m2p;
-	map_params.pml4_base = pml4_base;
-	map_mem(&map_params, (void *)hpa,
-			(void *)gpa_rebased, size,
-			(IA32E_EPT_R_BIT |
-			 IA32E_EPT_W_BIT |
-			 IA32E_EPT_X_BIT |
-			 IA32E_EPT_WB));
+	ept_mr_add(vm, (uint64_t *)vm->arch_vm.sworld_eptp,
+			hpa, gpa_rebased, size, EPT_RWX | EPT_WB);
 
 	/* Get the gpa address in SOS */
 	gpa = hpa2gpa(vm0, hpa);
@@ -156,10 +144,6 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	vm->sworld_control.sworld_memory.base_gpa_in_uos = gpa_orig;
 	vm->sworld_control.sworld_memory.base_hpa = hpa;
 	vm->sworld_control.sworld_memory.length = size;
-
-	foreach_vcpu(i, vm, vcpu) {
-		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
-	}
 }
 
 void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
