@@ -152,6 +152,65 @@
 
 #ifndef ASSEMBLER
 
+/**
+ *
+ * Identifiers for architecturally defined registers.
+ *
+ * These register names is used in condition statement.
+ * Within the following groups,register name need to be
+ * kept in order:
+ * General register names group (CPU_REG_RAX~CPU_REG_R15);
+ * Non general register names group (CPU_REG_CR0~CPU_REG_GDTR);
+ * Segement register names group (CPU_REG_ES~CPU_REG_GS).
+ */
+enum cpu_reg_name {
+	/* General purpose register layout should align with
+	 * struct cpu_gp_regs
+	 */
+	CPU_REG_RAX,
+	CPU_REG_RCX,
+	CPU_REG_RDX,
+	CPU_REG_RBX,
+	CPU_REG_RSP,
+	CPU_REG_RBP,
+	CPU_REG_RSI,
+	CPU_REG_RDI,
+	CPU_REG_R8,
+	CPU_REG_R9,
+	CPU_REG_R10,
+	CPU_REG_R11,
+	CPU_REG_R12,
+	CPU_REG_R13,
+	CPU_REG_R14,
+	CPU_REG_R15,
+
+	CPU_REG_CR0,
+	CPU_REG_CR2,
+	CPU_REG_CR3,
+	CPU_REG_CR4,
+	CPU_REG_DR7,
+	CPU_REG_RIP,
+	CPU_REG_RFLAGS,
+	/*CPU_REG_NATURAL_LAST*/
+	CPU_REG_EFER,
+	CPU_REG_PDPTE0,
+	CPU_REG_PDPTE1,
+	CPU_REG_PDPTE2,
+	CPU_REG_PDPTE3,
+	/*CPU_REG_64BIT_LAST,*/
+	CPU_REG_ES,
+	CPU_REG_CS,
+	CPU_REG_SS,
+	CPU_REG_DS,
+	CPU_REG_FS,
+	CPU_REG_GS,
+	CPU_REG_LDTR,
+	CPU_REG_TR,
+	CPU_REG_IDTR,
+	CPU_REG_GDTR
+	/*CPU_REG_LAST*/
+};
+
 /**********************************/
 /* EXTERNAL VARIABLES             */
 /**********************************/

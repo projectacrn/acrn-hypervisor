@@ -263,6 +263,8 @@ struct vcpu {
 #ifdef CONFIG_MTRR_ENABLED
 	struct mtrr_state mtrr;
 #endif
+	uint64_t reg_cached;
+	uint64_t reg_updated;
 };
 
 #define	is_vcpu_bsp(vcpu)	((vcpu)->vcpu_id == BOOT_CPU_ID)
@@ -273,6 +275,25 @@ static inline void vcpu_retain_rip(struct vcpu *vcpu)
 }
 
 /* External Interfaces */
+uint64_t vcpu_get_gpreg(struct vcpu *vcpu, uint32_t reg);
+void vcpu_set_gpreg(struct vcpu *vcpu, uint32_t reg, uint64_t val);
+uint64_t vcpu_get_rip(struct vcpu *vcpu);
+void vcpu_set_rip(struct vcpu *vcpu, uint64_t val);
+uint64_t vcpu_get_rsp(struct vcpu *vcpu);
+void vcpu_set_rsp(struct vcpu *vcpu, uint64_t val);
+uint64_t vcpu_get_efer(struct vcpu *vcpu);
+void vcpu_set_efer(struct vcpu *vcpu, uint64_t val);
+uint64_t vcpu_get_rflags(struct vcpu *vcpu);
+void vcpu_set_rflags(struct vcpu *vcpu, uint64_t val);
+uint64_t vcpu_get_cr0(struct vcpu *vcpu);
+int vcpu_set_cr0(struct vcpu *vcpu, uint64_t val);
+uint64_t vcpu_get_cr2(struct vcpu *vcpu);
+void vcpu_set_cr2(struct vcpu *vcpu, uint64_t val);
+uint64_t vcpu_get_cr4(struct vcpu *vcpu);
+int vcpu_set_cr4(struct vcpu *vcpu, uint64_t val);
+uint64_t vcpu_get_pat_ext(struct vcpu *vcpu);
+void vcpu_set_pat_ext(struct vcpu *vcpu, uint64_t val);
+
 struct vcpu* get_ever_run_vcpu(uint16_t pcpu_id);
 int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle);
 int start_vcpu(struct vcpu *vcpu);

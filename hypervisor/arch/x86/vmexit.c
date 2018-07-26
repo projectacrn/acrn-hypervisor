@@ -243,14 +243,18 @@ static int unhandled_vmexit_handler(struct vcpu *vcpu)
 
 int cpuid_vmexit_handler(struct vcpu *vcpu)
 {
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+	uint64_t rax, rbx, rcx, rdx;
 
-	guest_cpuid(vcpu,
-		(uint32_t *)&cur_context->guest_cpu_regs.regs.rax,
-		(uint32_t *)&cur_context->guest_cpu_regs.regs.rbx,
-		(uint32_t *)&cur_context->guest_cpu_regs.regs.rcx,
-		(uint32_t *)&cur_context->guest_cpu_regs.regs.rdx);
+	rax = vcpu_get_gpreg(vcpu, CPU_REG_RAX);
+	rbx = vcpu_get_gpreg(vcpu, CPU_REG_RBX);
+	rcx = vcpu_get_gpreg(vcpu, CPU_REG_RCX);
+	rdx = vcpu_get_gpreg(vcpu, CPU_REG_RDX);
+	guest_cpuid(vcpu, (uint32_t *)&rax, (uint32_t *)&rbx,
+		(uint32_t *)&rcx, (uint32_t *)&rdx);
+	vcpu_set_gpreg(vcpu, CPU_REG_RAX, rax);
+	vcpu_set_gpreg(vcpu, CPU_REG_RBX, rbx);
+	vcpu_set_gpreg(vcpu, CPU_REG_RCX, rcx);
+	vcpu_set_gpreg(vcpu, CPU_REG_RDX, rdx);
 
 	TRACE_2L(TRACE_VMEXIT_CPUID, (uint64_t)vcpu->vcpu_id, 0UL);
 
@@ -260,24 +264,22 @@ int cpuid_vmexit_handler(struct vcpu *vcpu)
 int cr_access_vmexit_handler(struct vcpu *vcpu)
 {
 	int err = 0;
-	uint64_t *regptr;
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+	uint64_t reg;
 	int idx = VM_EXIT_CR_ACCESS_REG_IDX(vcpu->arch_vcpu.exit_qualification);
 
 	ASSERT(idx>=0 && idx<=15, "index out of range");
-	regptr = cur_context->guest_cpu_regs.longs + idx;
+	reg = vcpu_get_gpreg(vcpu, idx);
 
 	switch ((VM_EXIT_CR_ACCESS_ACCESS_TYPE
 		 (vcpu->arch_vcpu.exit_qualification) << 4) |
 		VM_EXIT_CR_ACCESS_CR_NUM(vcpu->arch_vcpu.exit_qualification)) {
 	case 0x00U:
 		/* mov to cr0 */
-		err = vmx_write_cr0(vcpu, *regptr);
+		err = vcpu_set_cr0(vcpu, reg);
 		break;
 	case 0x04U:
 		/* mov to cr4 */
-		err = vmx_write_cr4(vcpu, *regptr);
+		err = vcpu_set_cr4(vcpu, reg);
 		break;
 	case 0x08U:
 		/* mov to cr8 */
@@ -285,16 +287,17 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
 		 *
 		 * set reserved bit in CR8 causes GP to guest
 		 */
-		if (*regptr & ~0xFUL) {
+		if (reg & ~0xFUL) {
 			pr_dbg("Invalid cr8 write operation from guest");
 			vcpu_inject_gp(vcpu, 0U);
 			break;
 		}
-		vlapic_set_cr8(vcpu->arch_vcpu.vlapic, *regptr);
+		vlapic_set_cr8(vcpu->arch_vcpu.vlapic, reg);
 		break;
 	case 0x18U:
 		/* mov from cr8 */
-		*regptr = vlapic_get_cr8(vcpu->arch_vcpu.vlapic);
+		reg = vlapic_get_cr8(vcpu->arch_vcpu.vlapic);
+		vcpu_set_gpreg(vcpu, idx, reg);
 		break;
 	default:
 		panic("Unhandled CR access");
@@ -318,7 +321,6 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 {
 	int idx;
 	uint64_t val64;
-	struct run_context *ctx_ptr;
 
 	val64 = exec_vmread(VMX_GUEST_CR4);
 	if ((val64 & CR4_OSXSAVE) == 0UL) {
@@ -331,16 +333,14 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 		return -1;
 	}
 
-	ctx_ptr = &(vcpu->arch_vcpu.contexts[idx]);
-
 	/*to access XCR0,'rcx' should be 0*/
-	if (ctx_ptr->guest_cpu_regs.regs.rcx != 0UL) {
+	if (vcpu_get_gpreg(vcpu, CPU_REG_RCX) != 0UL) {
 		vcpu_inject_gp(vcpu, 0U);
 		return 0;
 	}
 
-	val64 = ((ctx_ptr->guest_cpu_regs.regs.rax) & 0xffffffffUL) |
-			(ctx_ptr->guest_cpu_regs.regs.rdx << 32U);
+	val64 = (vcpu_get_gpreg(vcpu, CPU_REG_RAX) & 0xffffffffUL) |
+			(vcpu_get_gpreg(vcpu, CPU_REG_RDX) << 32U);
 
 	/*bit 0(x87 state) of XCR0 can't be cleared*/
 	if ((val64 & 0x01UL) == 0UL) {

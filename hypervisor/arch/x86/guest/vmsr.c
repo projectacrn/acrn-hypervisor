@@ -147,10 +147,9 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 	int err = 0;
 	uint32_t msr;
 	uint64_t v = 0UL;
-	int cur_context = vcpu->arch_vcpu.cur_context;
 
 	/* Read the msr value */
-	msr = vcpu->arch_vcpu.contexts[cur_context].guest_cpu_regs.regs.rcx;
+	msr = vcpu_get_gpreg(vcpu, CPU_REG_RCX);
 
 	/* Do the required processing for each msr case */
 	switch (msr) {
@@ -162,7 +161,7 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 	case MSR_IA32_TIME_STAMP_COUNTER:
 	{
 		/* Add the TSC_offset to host TSC to get guest TSC */
-		v = rdtsc() + vcpu->arch_vcpu.contexts[cur_context].tsc_offset;
+		v = rdtsc() + exec_vmread64(VMX_TSC_OFFSET_FULL);
 		break;
 	}
 	case MSR_IA32_MTRR_CAP:
@@ -244,10 +243,8 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 	}
 
 	/* Store the MSR contents in RAX and RDX */
-	vcpu->arch_vcpu.contexts[cur_context].guest_cpu_regs.regs.rax =
-					v & 0xffffffffU;
-	vcpu->arch_vcpu.contexts[cur_context].guest_cpu_regs.regs.rdx =
-					v >> 32U;
+	vcpu_set_gpreg(vcpu, CPU_REG_RAX, v & 0xffffffffU);
+	vcpu_set_gpreg(vcpu, CPU_REG_RDX, v >> 32U);
 
 	TRACE_2L(TRACE_VMEXIT_RDMSR, msr, v);
 
@@ -259,15 +256,13 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	int err = 0;
 	uint32_t msr;
 	uint64_t v;
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 
 	/* Read the MSR ID */
-	msr = (uint32_t)cur_context->guest_cpu_regs.regs.rcx;
+	msr = (uint32_t)vcpu_get_gpreg(vcpu, CPU_REG_RCX);
 
 	/* Get the MSR contents */
-	v = (cur_context->guest_cpu_regs.regs.rdx << 32U) |
-		cur_context->guest_cpu_regs.regs.rax;
+	v = (vcpu_get_gpreg(vcpu, CPU_REG_RDX) << 32U) |
+		vcpu_get_gpreg(vcpu, CPU_REG_RAX);
 
 	/* Do the required processing for each msr case */
 	switch (msr) {
@@ -279,8 +274,7 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	case MSR_IA32_TIME_STAMP_COUNTER:
 	{
 		/*Caculate TSC offset from changed TSC MSR value*/
-		cur_context->tsc_offset = v - rdtsc();
-		exec_vmwrite64(VMX_TSC_OFFSET_FULL, cur_context->tsc_offset);
+		exec_vmwrite64(VMX_TSC_OFFSET_FULL, v - rdtsc());
 		break;
 	}
 

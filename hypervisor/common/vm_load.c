@@ -73,29 +73,27 @@ static uint64_t create_zero_page(struct vm *vm)
 int load_guest(struct vm *vm, struct vcpu *vcpu)
 {
 	int32_t ret = 0;
+	uint32_t i;
 	void *hva;
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	uint64_t  lowmem_gpa_top;
 
 	hva  = GPA2HVA(vm, GUEST_CFG_OFFSET);
 	lowmem_gpa_top = *(uint64_t *)hva;
 
 	/* hardcode vcpu entry addr(kernel entry) & rsi (zeropage)*/
-	(void)memset((void*)cur_context->guest_cpu_regs.longs,
-			0U, sizeof(uint64_t)*NUM_GPRS);
+	for (i = 0; i < NUM_GPRS; i++)
+		vcpu_set_gpreg(vcpu, i, 0UL);
 
 	hva  = GPA2HVA(vm, lowmem_gpa_top -
 			MEM_4K - MEM_2K);
 	vcpu->entry_addr = (void *)(*((uint64_t *)hva));
-	cur_context->guest_cpu_regs.regs.rsi =
-		lowmem_gpa_top - MEM_4K;
+	vcpu_set_gpreg(vcpu, CPU_REG_RSI, lowmem_gpa_top - MEM_4K);
 
 	pr_info("%s, Set config according to predefined offset:",
 			__func__);
 	pr_info("VCPU%hu Entry: 0x%llx, RSI: 0x%016llx, cr3: 0x%016llx",
 			vcpu->vcpu_id, vcpu->entry_addr,
-			cur_context->guest_cpu_regs.regs.rsi,
+			vcpu_get_gpreg(vcpu, CPU_REG_RSI),
 			vm->arch_vm.guest_init_pml4);
 
 	return ret;
@@ -105,8 +103,6 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 {
 	int32_t ret = 0;
 	void *hva;
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	char  dyn_bootargs[100] = {0};
 	uint32_t kernel_entry_offset;
 	struct zero_page *zeropage;
@@ -150,11 +146,13 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 
 	/* See if guest is a Linux guest */
 	if (vm->sw.kernel_type == VM_LINUX_GUEST) {
+		uint32_t i;
+
 		/* Documentation states: ebx=0, edi=0, ebp=0, esi=ptr to
 		 * zeropage
 		 */
-		(void)memset(cur_context->guest_cpu_regs.longs,
-			0U, sizeof(uint64_t) * NUM_GPRS);
+		for (i = 0; i < NUM_GPRS; i++)
+			vcpu_set_gpreg(vcpu, i, 0UL);
 
 		/* Get host-physical address for guest bootargs */
 		hva = GPA2HVA(vm,
@@ -217,11 +215,11 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 		/* Create Zeropage and copy Physical Base Address of Zeropage
 		 * in RSI
 		 */
-		cur_context->guest_cpu_regs.regs.rsi = create_zero_page(vm);
+		vcpu_set_gpreg(vcpu, CPU_REG_RSI, create_zero_page(vm));
 
 		pr_info("%s, RSI pointing to zero page for VM %d at GPA %X",
 				__func__, vm->vm_id,
-				cur_context->guest_cpu_regs.regs.rsi);
+				vcpu_get_gpreg(vcpu, CPU_REG_RSI));
 
 	} else {
 		pr_err("%s, Loading VM SW failed", __func__);

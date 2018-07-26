@@ -110,8 +110,6 @@ inline bool vm_lapic_disabled(struct vm *vm)
 
 enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 {
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	enum vm_cpu_mode cpu_mode;
 
 	cpu_mode = get_vcpu_mode(vcpu);
@@ -120,10 +118,10 @@ enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 		return PAGING_MODE_0_LEVEL;
 	}
 	else if (cpu_mode == CPU_MODE_PROTECTED) {
-		if ((cur_context->cr4 & CR4_PAE) != 0U) {
+		if ((vcpu_get_cr4(vcpu) & CR4_PAE) != 0U) {
 			return PAGING_MODE_3_LEVEL;
 		}
-		else if ((cur_context->cr0 & CR0_PG) != 0U) {
+		else if ((vcpu_get_cr0(vcpu) & CR0_PG) != 0U) {
 			return PAGING_MODE_2_LEVEL;
 		}
 		return PAGING_MODE_0_LEVEL;
@@ -273,8 +271,6 @@ out:
 int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	uint32_t *err_code)
 {
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	enum vm_paging_mode pm = get_vcpu_paging_mode(vcpu);
 	struct page_walk_info pw_info;
 	int ret = 0;
@@ -284,15 +280,14 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	}
 	*gpa = 0UL;
 
-	pw_info.top_entry = cur_context->cr3;
+	pw_info.top_entry = exec_vmread(VMX_GUEST_CR3);
 	pw_info.level = pm;
 	pw_info.is_write_access = ((*err_code & PAGE_FAULT_WR_FLAG) != 0U);
 	pw_info.is_inst_fetch = ((*err_code & PAGE_FAULT_ID_FLAG) != 0U);
 	pw_info.is_user_mode = ((exec_vmread16(VMX_GUEST_CS_SEL) & 0x3U) == 3U);
 	pw_info.pse = true;
-	pw_info.nxe =
-		((cur_context->ia32_efer & MSR_IA32_EFER_NXE_BIT) != 0UL);
-	pw_info.wp = ((cur_context->cr0 & CR0_WP) != 0UL);
+	pw_info.nxe = ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_NXE_BIT) != 0UL);
+	pw_info.wp = ((vcpu_get_cr0(vcpu) & CR0_WP) != 0UL);
 
 	*err_code &=  ~PAGE_FAULT_P_FLAG;
 
@@ -304,7 +299,7 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 		ret = local_gva2gpa_pae(vcpu, &pw_info, gva, gpa, err_code);
 	} else if (pm == PAGING_MODE_2_LEVEL) {
 		pw_info.width = 10U;
-		pw_info.pse = ((cur_context->cr4 & CR4_PSE) != 0UL);
+		pw_info.pse = ((vcpu_get_cr4(vcpu) & CR4_PSE) != 0UL);
 		pw_info.nxe = false;
 		ret = local_gva2gpa_common(vcpu, &pw_info, gva, gpa, err_code);
 	} else {

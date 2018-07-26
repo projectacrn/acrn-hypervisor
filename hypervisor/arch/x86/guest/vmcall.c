@@ -16,14 +16,12 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 {
 	int32_t ret = -EACCES;
 	struct vm *vm = vcpu->vm;
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	/* hypercall ID from guest*/
-	uint64_t hypcall_id = cur_context->guest_cpu_regs.regs.r8;
+	uint64_t hypcall_id = vcpu_get_gpreg(vcpu, CPU_REG_R8);
 	/* hypercall param1 from guest*/
-	uint64_t param1 = cur_context->guest_cpu_regs.regs.rdi;
+	uint64_t param1 = vcpu_get_gpreg(vcpu, CPU_REG_RDI);
 	/* hypercall param2 from guest*/
-	uint64_t param2 = cur_context->guest_cpu_regs.regs.rsi;
+	uint64_t param2 = vcpu_get_gpreg(vcpu, CPU_REG_RSI);
 
 	if (!is_hypercall_from_ring0()) {
 		pr_err("hypercall is only allowed from RING-0!\n");
@@ -179,7 +177,7 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 	}
 
 out:
-	cur_context->guest_cpu_regs.regs.rax = (uint64_t)ret;
+	vcpu_set_gpreg(vcpu, CPU_REG_RAX, (uint64_t)ret);
 
 	TRACE_2L(TRACE_VMEXIT_VMCALL, vm->vm_id, hypcall_id);
 

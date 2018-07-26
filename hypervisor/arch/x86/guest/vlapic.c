@@ -427,7 +427,7 @@ static void vlapic_set_tsc_deadline_msr(struct acrn_vlapic *vlapic,
 		struct vcpu_arch *arch = &vlapic->vcpu->arch_vcpu;
 
 		/* transfer guest tsc to host tsc */
-		val -= arch->contexts[arch->cur_context].tsc_offset;
+		val -= exec_vmread64(VMX_TSC_OFFSET_FULL);
 		timer->fire_tsc = val;
 
 		add_timer(timer);
