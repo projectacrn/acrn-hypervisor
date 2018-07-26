@@ -452,3 +452,42 @@ int mmu_add(uint64_t *pml4_page, uint64_t paddr_base,
 
 	return 0;
 }
+
+uint64_t *lookup_address(uint64_t *pml4_page,
+		uint64_t addr, uint64_t *pg_size, enum _page_table_type ptt)
+{
+	uint64_t *pml4e, *pdpte, *pde, *pte;
+
+	if ((pml4_page == NULL) || (pg_size == NULL)) {
+		return NULL;
+	}
+
+	pml4e = pml4e_offset(pml4_page, addr);
+	if (pgentry_present(ptt, *pml4e) == 0UL) {
+		return NULL;
+	}
+
+	pdpte = pdpte_offset(pml4e, addr);
+	if (pgentry_present(ptt, *pdpte) == 0UL) {
+		return NULL;
+	} else if (pdpte_large(*pdpte) != 0UL) {
+		*pg_size = PDPTE_SIZE;
+		return pdpte;
+	}
+
+	pde = pde_offset(pdpte, addr);
+	if (pgentry_present(ptt, *pde) == 0UL) {
+		return NULL;
+	} else if (pde_large(*pde) != 0UL) {
+		*pg_size = PDE_SIZE;
+		return pde;
+	}
+
+	pte = pte_offset(pde, addr);
+	if (pgentry_present(ptt, *pte) == 0UL) {
+		return NULL;
+	} else {
+		*pg_size = PTE_SIZE;
+		return pte;
+	}
+}

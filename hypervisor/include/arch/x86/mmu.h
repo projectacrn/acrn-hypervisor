@@ -339,6 +339,8 @@ void invept(struct vcpu *vcpu);
 bool check_continuous_hpa(struct vm *vm, uint64_t gpa_arg, uint64_t size_arg);
 int obtain_last_page_table_entry(struct map_params *map_params,
 		struct entry_params *entry, void *addr, bool direct);
+uint64_t *lookup_address(uint64_t *pml4_page, uint64_t addr,
+		uint64_t *pg_size, enum _page_table_type ptt);
 
 int register_mmio_emulation_handler(struct vm *vm,
 	hv_mem_io_handler_t read_write, uint64_t start,
