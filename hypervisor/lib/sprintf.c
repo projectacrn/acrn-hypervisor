@@ -83,8 +83,9 @@ static const char lower_hex_digits[] = {
 	'a', 'b', 'c', 'd', 'e', 'f', 'x'
 };
 
-static const char *get_param(const char *s, uint32_t *x)
+static const char *get_param(const char *s_arg, uint32_t *x)
 {
+	const char *s = s_arg;
 	*x = 0U;
 
 	/* ignore '-' for negative numbers, it will be handled in flags*/
@@ -102,8 +103,9 @@ static const char *get_param(const char *s, uint32_t *x)
 	return s;
 }
 
-static const char *get_flags(const char *s, uint32_t *flags)
+static const char *get_flags(const char *s_arg, uint32_t *flags)
 {
+	const char *s = s_arg;
 	/* contains the flag characters */
 	static const char flagchars[] = "#0- +";
 	/* contains the numeric flags for the characters above */
@@ -152,9 +154,10 @@ static const char *get_flags(const char *s, uint32_t *flags)
 	return s;
 }
 
-static const char *get_length_modifier(const char *s,
+static const char *get_length_modifier(const char *s_arg,
 			uint32_t *flags, uint64_t *mask)
 {
+	const char *s = s_arg;
 	if (*s == 'h') {
 		/* check for h[h] (char/short) */
 		s++;
@@ -460,9 +463,10 @@ static int print_string(struct print_param *param, const char *s)
 	return res;
 }
 
-int do_print(const char *fmt, struct print_param *param,
+int do_print(const char *fmt_arg, struct print_param *param,
 		__builtin_va_list args)
 {
+	const char *fmt = fmt_arg;
 	/* the result of this function */
 	int res = 0;
 	/* temp. storage for the next character */
@@ -616,8 +620,9 @@ int do_print(const char *fmt, struct print_param *param,
 	return res;
 }
 
-static int charmem(int cmd, const char *s, uint32_t sz, void *hnd)
+static int charmem(int cmd, const char *s_arg, uint32_t sz, void *hnd)
 {
+	const char *s = s_arg;
 	/* pointer to the snprint parameter list */
 	struct snprint_param *param = (struct snprint_param *) hnd;
 	/* pointer to the destination */
@@ -650,8 +655,10 @@ static int charmem(int cmd, const char *s, uint32_t sz, void *hnd)
 	return (int)n;
 }
 
-int vsnprintf(char *dst, size_t sz, const char *fmt, va_list args)
+int vsnprintf(char *dst_arg, size_t sz_arg, const char *fmt, va_list args)
 {
+	char *dst = dst_arg;
+	int32_t sz = sz_arg;
 	int res = 0;
 
 	if (sz == 0U || (dst == NULL)) {

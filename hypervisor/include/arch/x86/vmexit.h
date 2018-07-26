@@ -48,7 +48,7 @@ int cr_access_vmexit_handler(struct vcpu *vcpu);
 	(VM_EXIT_QUALIFICATION_BIT_MASK(exit_qual, 31U, 16U) >> 16U)
 
 #ifdef HV_DEBUG
-void get_vmexit_profile(char *str, int str_max);
+void get_vmexit_profile(char *str_arg, int str_max);
 #endif /* HV_DEBUG */
 
 #endif /* VMEXIT_H_ */

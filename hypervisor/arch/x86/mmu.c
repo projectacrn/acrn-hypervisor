@@ -889,9 +889,11 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 	return next_page_size;
 }
 
-static int modify_paging(struct map_params *map_params, void *paddr,
-		void *vaddr, uint64_t size, uint32_t flags, bool direct)
+static int modify_paging(struct map_params *map_params, void *paddr_arg,
+		void *vaddr_arg, uint64_t size, uint32_t flags, bool direct)
 {
+	void *vaddr = vaddr_arg;
+	void *paddr = paddr_arg;
 	int64_t  remaining_size;
 	uint64_t adjust_size;
 	uint64_t attr = flags;
