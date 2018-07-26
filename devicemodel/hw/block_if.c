@@ -118,6 +118,9 @@ struct blockif_ctxt {
 	TAILQ_HEAD(, blockif_elem) pendq;
 	TAILQ_HEAD(, blockif_elem) busyq;
 	struct blockif_elem	reqs[BLOCKIF_MAXREQ];
+
+	/* write cache enable */
+	uint8_t			wce;
 };
 
 static pthread_once_t blockif_once = PTHREAD_ONCE_INIT;
@@ -130,6 +133,20 @@ struct blockif_sig_elem {
 };
 
 static struct blockif_sig_elem *blockif_bse_head;
+
+static int
+blockif_flush_cache(struct blockif_ctxt *bc)
+{
+	int err;
+
+	err = 0;
+	assert(bc != NULL);
+	if (!bc->wce) {
+		if (fsync(bc->fd))
+			err = errno;
+	}
+	return err;
+}
 
 static int
 blockif_enqueue(struct blockif_ctxt *bc, struct blockif_req *breq,
@@ -275,8 +292,10 @@ blockif_proc(struct blockif_ctxt *bc, struct blockif_elem *be, uint8_t *buf)
 				      br->offset + bc->sub_file_start_lba);
 			if (len < 0)
 				err = errno;
-			else
+			else {
 				br->resid -= len;
+				err = blockif_flush_cache(bc);
+			}
 			break;
 		}
 		i = 0;
@@ -305,6 +324,8 @@ blockif_proc(struct blockif_ctxt *bc, struct blockif_elem *be, uint8_t *buf)
 			off += len;
 			br->resid -= len;
 		}
+		err = blockif_flush_cache(bc);
+
 		break;
 	case BOP_FLUSH:
 		if (fsync(bc->fd))
@@ -464,8 +485,8 @@ blockif_open(const char *optstr, const char *ident)
 	struct stat sbuf;
 	/* struct diocgattr_arg arg; */
 	off_t size, psectsz, psectoff;
-	int extra, fd, i, sectsz;
-	int nocache, sync, ro, candelete, geom, ssopt, pssopt;
+	int fd, i, sectsz;
+	int writeback, ro, candelete, geom, ssopt, pssopt;
 	long sz;
 	long long b;
 	int err_code = -1;
@@ -476,10 +497,11 @@ blockif_open(const char *optstr, const char *ident)
 
 	fd = -1;
 	ssopt = 0;
-	nocache = 0;
-	sync = 0;
 	ro = 0;
 	sub_file_assign = 0;
+
+	/* writethru is on by default */
+	writeback = 0;
 
 	/*
 	 * The first element in the optstring is always a pathname.
@@ -494,10 +516,10 @@ blockif_open(const char *optstr, const char *ident)
 		cp = strsep(&xopts, ",");
 		if (cp == nopt)		/* file or device pathname */
 			continue;
-		else if (!strcmp(cp, "nocache"))
-			nocache = 1;
-		else if (!strcmp(cp, "sync") || !strcmp(cp, "direct"))
-			sync = 1;
+		else if (!strcmp(cp, "writeback"))
+			writeback = 1;
+		else if (!strcmp(cp, "writethru"))
+			writeback = 0;
 		else if (!strcmp(cp, "ro"))
 			ro = 1;
 		else if (sscanf(cp, "sectorsize=%d/%d", &ssopt, &pssopt) == 2)
@@ -513,20 +535,17 @@ blockif_open(const char *optstr, const char *ident)
 		}
 	}
 
-	/* enforce a write-through policy by default */
-	nocache = 1;
-	sync = 1;
+	/*
+	 * To support "writeback" and "writethru" mode switch during runtime,
+	 * O_SYNC is not used directly, as O_SYNC flag cannot dynamic change
+	 * after file is opened. Instead, we call fsync() after each write
+	 * operation to emulate it.
+	 */
 
-	extra = 0;
-	if (nocache)
-		extra |= O_DIRECT;
-	if (sync)
-		extra |= O_SYNC;
-
-	fd = open(nopt, (ro ? O_RDONLY : O_RDWR) | extra);
+	fd = open(nopt, ro ? O_RDONLY : O_RDWR);
 	if (fd < 0 && !ro) {
 		/* Attempt a r/w fail with a r/o open */
-		fd = open(nopt, O_RDONLY | extra);
+		fd = open(nopt, O_RDONLY);
 		ro = 1;
 	}
 
@@ -648,6 +667,7 @@ blockif_open(const char *optstr, const char *ident)
 	bc->sectsz = sectsz;
 	bc->psectsz = psectsz;
 	bc->psectoff = psectoff;
+	bc->wce = writeback;
 	pthread_mutex_init(&bc->mtx, NULL);
 	pthread_cond_init(&bc->cond, NULL);
 	TAILQ_INIT(&bc->freeq);
