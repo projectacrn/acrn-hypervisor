@@ -54,8 +54,6 @@ void efi_spurious_handler(int vector)
 int uefi_sw_loader(struct vm *vm, struct vcpu *vcpu)
 {
 	int ret = 0;
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 
 	ASSERT(vm != NULL, "Incorrect argument");
 
@@ -67,21 +65,21 @@ int uefi_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	vlapic_restore(vcpu->arch_vcpu.vlapic, &uefi_lapic_regs);
 
 	vcpu->entry_addr = (void *)efi_ctx->rip;
-	cur_context->guest_cpu_regs.regs.rax = efi_ctx->rax;
-	cur_context->guest_cpu_regs.regs.rbx = efi_ctx->rbx;
-	cur_context->guest_cpu_regs.regs.rdx = efi_ctx->rcx;
-	cur_context->guest_cpu_regs.regs.rcx = efi_ctx->rdx;
-	cur_context->guest_cpu_regs.regs.rdi = efi_ctx->rdi;
-	cur_context->guest_cpu_regs.regs.rsi = efi_ctx->rsi;
-	cur_context->guest_cpu_regs.regs.rbp = efi_ctx->rbp;
-	cur_context->guest_cpu_regs.regs.r8 = efi_ctx->r8;
-	cur_context->guest_cpu_regs.regs.r9 = efi_ctx->r9;
-	cur_context->guest_cpu_regs.regs.r10 = efi_ctx->r10;
-	cur_context->guest_cpu_regs.regs.r11 = efi_ctx->r11;
-	cur_context->guest_cpu_regs.regs.r12 = efi_ctx->r12;
-	cur_context->guest_cpu_regs.regs.r13 = efi_ctx->r13;
-	cur_context->guest_cpu_regs.regs.r14 = efi_ctx->r14;
-	cur_context->guest_cpu_regs.regs.r15 = efi_ctx->r15;
+	vcpu_set_gpreg(vcpu, CPU_REG_RAX, efi_ctx->rax);
+	vcpu_set_gpreg(vcpu, CPU_REG_RBX, efi_ctx->rbx);
+	vcpu_set_gpreg(vcpu, CPU_REG_RCX, efi_ctx->rcx);
+	vcpu_set_gpreg(vcpu, CPU_REG_RDX, efi_ctx->rdx);
+	vcpu_set_gpreg(vcpu, CPU_REG_RDI, efi_ctx->rdi);
+	vcpu_set_gpreg(vcpu, CPU_REG_RSI, efi_ctx->rsi);
+	vcpu_set_gpreg(vcpu, CPU_REG_RBP, efi_ctx->rbp);
+	vcpu_set_gpreg(vcpu, CPU_REG_R8, efi_ctx->r8);
+	vcpu_set_gpreg(vcpu, CPU_REG_R9, efi_ctx->r9);
+	vcpu_set_gpreg(vcpu, CPU_REG_R10, efi_ctx->r10);
+	vcpu_set_gpreg(vcpu, CPU_REG_R11, efi_ctx->r11);
+	vcpu_set_gpreg(vcpu, CPU_REG_R12, efi_ctx->r12);
+	vcpu_set_gpreg(vcpu, CPU_REG_R13, efi_ctx->r13);
+	vcpu_set_gpreg(vcpu, CPU_REG_R14, efi_ctx->r14);
+	vcpu_set_gpreg(vcpu, CPU_REG_R15, efi_ctx->r15);
 
 	/* defer irq enabling till vlapic is ready */
 	CPU_IRQ_ENABLE();

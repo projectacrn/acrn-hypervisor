@@ -29,13 +29,10 @@ emulate_pio_post(struct vcpu *vcpu, struct io_request *io_req)
 		if (pio_req->direction == REQUEST_READ) {
 			uint64_t value = (uint64_t)pio_req->value;
 			int32_t context_idx = vcpu->arch_vcpu.cur_context;
-			struct run_context *cur_context;
-			uint64_t *rax;
+			uint64_t rax = vcpu_get_gpreg(vcpu, CPU_REG_RAX);
 
-			cur_context = &vcpu->arch_vcpu.contexts[context_idx];
-			rax = &cur_context->guest_cpu_regs.regs.rax;
-
-			*rax = ((*rax) & ~mask) | (value & mask);
+			rax = ((rax) & ~mask) | (value & mask);
+			vcpu_set_gpreg(vcpu, CPU_REG_RAX, rax);
 		}
 		status = 0;
 	} else {
@@ -323,14 +320,10 @@ int32_t pio_instr_vmexit_handler(struct vcpu *vcpu)
 	int32_t status;
 	uint64_t exit_qual;
 	int32_t cur_context_idx = vcpu->arch_vcpu.cur_context;
-	struct run_context *cur_context;
-	struct cpu_gp_regs *regs;
 	struct io_request *io_req = &vcpu->req;
 	struct pio_request *pio_req = &io_req->reqs.pio;
 
 	exit_qual = vcpu->arch_vcpu.exit_qualification;
-	cur_context = &vcpu->arch_vcpu.contexts[cur_context_idx];
-	regs = &cur_context->guest_cpu_regs.regs;
 
 	io_req->type = REQ_PORTIO;
 	io_req->processed = REQ_STATE_PENDING;
@@ -338,7 +331,7 @@ int32_t pio_instr_vmexit_handler(struct vcpu *vcpu)
 	pio_req->address = VM_EXIT_IO_INSTRUCTION_PORT_NUMBER(exit_qual);
 	if (VM_EXIT_IO_INSTRUCTION_ACCESS_DIRECTION(exit_qual) == 0UL) {
 		pio_req->direction = REQUEST_WRITE;
-		pio_req->value = (uint32_t)regs->rax;
+		pio_req->value = (uint32_t)vcpu_get_gpreg(vcpu, CPU_REG_RAX);
 	} else {
 		pio_req->direction = REQUEST_READ;
 	}

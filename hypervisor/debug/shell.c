@@ -588,7 +588,6 @@ int shell_vcpu_dumpreg(int argc, char **argv)
 	struct vcpu *vcpu;
 	uint64_t i;
 	uint64_t tmp[DUMPREG_SP_SIZE];
-	struct run_context *cur_context;
 	uint32_t err_code = 0;
 
 	/* User input invalidation */
@@ -618,8 +617,6 @@ int shell_vcpu_dumpreg(int argc, char **argv)
 		return -EINVAL;
 	}
 
-	cur_context = &vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-
 	if (vcpu->state != VCPU_PAUSED) {
 		shell_puts("NOTE: VCPU unPAUSEed, regdump "
 				"may not be accurate\r\n");
@@ -630,48 +627,49 @@ int shell_vcpu_dumpreg(int argc, char **argv)
 		vm->vm_id, vcpu->vcpu_id);
 	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  RIP=0x%016llx  RSP=0x%016llx "
-			"RFLAGS=0x%016llx\r\n", cur_context->rip,
-			cur_context->guest_cpu_regs.regs.rsp, cur_context->rflags);
+			"RFLAGS=0x%016llx\r\n", vcpu_get_rip(vcpu),
+			vcpu_get_gpreg(vcpu, CPU_REG_RSP),
+			vcpu_get_rflags(vcpu));
 	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  CR0=0x%016llx  CR2=0x%016llx\r\n",
-			cur_context->cr0, cur_context->cr2);
+			vcpu_get_cr0(vcpu), vcpu_get_cr2(vcpu));
 	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  CR3=0x%016llx  CR4=0x%016llx\r\n",
-			cur_context->cr3, cur_context->cr4);
+			exec_vmread(VMX_GUEST_CR3), vcpu_get_cr4(vcpu));
 	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  RAX=0x%016llx  RBX=0x%016llx  "
 			"RCX=0x%016llx\r\n",
-			cur_context->guest_cpu_regs.regs.rax,
-			cur_context->guest_cpu_regs.regs.rbx,
-			cur_context->guest_cpu_regs.regs.rcx);
+			vcpu_get_gpreg(vcpu, CPU_REG_RAX),
+			vcpu_get_gpreg(vcpu, CPU_REG_RBX),
+			vcpu_get_gpreg(vcpu, CPU_REG_RCX));
 	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  RDX=0x%016llx  RDI=0x%016llx  "
 			"RSI=0x%016llx\r\n",
-			cur_context->guest_cpu_regs.regs.rdx,
-			cur_context->guest_cpu_regs.regs.rdi,
-			cur_context->guest_cpu_regs.regs.rsi);
+			vcpu_get_gpreg(vcpu, CPU_REG_RDX),
+			vcpu_get_gpreg(vcpu, CPU_REG_RDI),
+			vcpu_get_gpreg(vcpu, CPU_REG_RSI));
 	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  RBP=0x%016llx  R8=0x%016llx  "
 			"R9=0x%016llx\r\n",
-			cur_context->guest_cpu_regs.regs.rbp,
-			cur_context->guest_cpu_regs.regs.r8,
-			cur_context->guest_cpu_regs.regs.r9);
+			vcpu_get_gpreg(vcpu, CPU_REG_RBP),
+			vcpu_get_gpreg(vcpu, CPU_REG_R8),
+			vcpu_get_gpreg(vcpu, CPU_REG_R9));
 	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  R10=0x%016llx  R11=0x%016llx  "
 			"R12=0x%016llx\r\n",
-			cur_context->guest_cpu_regs.regs.r10,
-			cur_context->guest_cpu_regs.regs.r11,
-			cur_context->guest_cpu_regs.regs.r12);
+			vcpu_get_gpreg(vcpu, CPU_REG_R10),
+			vcpu_get_gpreg(vcpu, CPU_REG_R11),
+			vcpu_get_gpreg(vcpu, CPU_REG_R12));
 	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE,
 			"=  R13=0x%016llx  R14=0x%016llx  R15=0x%016llx\r\n",
-			cur_context->guest_cpu_regs.regs.r13,
-			cur_context->guest_cpu_regs.regs.r14,
-			cur_context->guest_cpu_regs.regs.r15);
+			vcpu_get_gpreg(vcpu, CPU_REG_R13),
+			vcpu_get_gpreg(vcpu, CPU_REG_R14),
+			vcpu_get_gpreg(vcpu, CPU_REG_R15));
 	shell_puts(temp_str);
 
 	/* dump sp */
-	status = copy_from_gva(vcpu, tmp, cur_context->guest_cpu_regs.regs.rsp,
+	status = copy_from_gva(vcpu, tmp, vcpu_get_gpreg(vcpu, CPU_REG_RSP),
 			DUMPREG_SP_SIZE*sizeof(uint64_t), &err_code);
 	if (status < 0) {
 		/* copy_from_gva fail */
@@ -680,7 +678,7 @@ int shell_vcpu_dumpreg(int argc, char **argv)
 		snprintf(temp_str, MAX_STR_SIZE,
 				"\r\nDump RSP for vm %hu, from "
 				"gva 0x%016llx\r\n",
-				vm_id, cur_context->guest_cpu_regs.regs.rsp);
+				vm_id, vcpu_get_gpreg(vcpu, CPU_REG_RSP));
 		shell_puts(temp_str);
 
 		for (i = 0UL; i < 8UL; i++) {

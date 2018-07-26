@@ -49,9 +49,6 @@ struct intr_excp_ctx *crash_ctx;
 
 static void dump_guest_reg(struct vcpu *vcpu)
 {
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-
 	printf("\n\n================================================");
 	printf("================================\n\n");
 	printf("Guest Registers:\r\n");
@@ -61,39 +58,39 @@ static void dump_guest_reg(struct vcpu *vcpu)
 			vcpu->arch_vcpu.cur_context);
 	printf("=	RIP=0x%016llx  RSP=0x%016llx "
 			"RFLAGS=0x%016llx\r\n",
-			cur_context->rip,
-			cur_context->guest_cpu_regs.regs.rsp,
-			cur_context->rflags);
+			vcpu_get_rip(vcpu),
+			vcpu_get_gpreg(vcpu, CPU_REG_RSP),
+			vcpu_get_rflags(vcpu));
 	printf("=	CR0=0x%016llx  CR2=0x%016llx "
 			" CR3=0x%016llx\r\n",
-			cur_context->cr0,
-			cur_context->cr2,
-			cur_context->cr3);
+			vcpu_get_cr0(vcpu),
+			vcpu_get_cr2(vcpu),
+			exec_vmread(VMX_GUEST_CR3));
 	printf("=	RAX=0x%016llx  RBX=0x%016llx  "
 			"RCX=0x%016llx\r\n",
-			cur_context->guest_cpu_regs.regs.rax,
-			cur_context->guest_cpu_regs.regs.rbx,
-			cur_context->guest_cpu_regs.regs.rcx);
+			vcpu_get_gpreg(vcpu, CPU_REG_RAX),
+			vcpu_get_gpreg(vcpu, CPU_REG_RBX),
+			vcpu_get_gpreg(vcpu, CPU_REG_RCX));
 	printf("=	RDX=0x%016llx  RDI=0x%016llx  "
 			"RSI=0x%016llx\r\n",
-			cur_context->guest_cpu_regs.regs.rdx,
-			cur_context->guest_cpu_regs.regs.rdi,
-			cur_context->guest_cpu_regs.regs.rsi);
+			vcpu_get_gpreg(vcpu, CPU_REG_RDX),
+			vcpu_get_gpreg(vcpu, CPU_REG_RDI),
+			vcpu_get_gpreg(vcpu, CPU_REG_RSI));
 	printf("=	RBP=0x%016llx  R8=0x%016llx  "
 			"R9=0x%016llx\r\n",
-			cur_context->guest_cpu_regs.regs.rbp,
-			cur_context->guest_cpu_regs.regs.r8,
-			cur_context->guest_cpu_regs.regs.r9);
+			vcpu_get_gpreg(vcpu, CPU_REG_RBP),
+			vcpu_get_gpreg(vcpu, CPU_REG_R8),
+			vcpu_get_gpreg(vcpu, CPU_REG_R9));
 	printf("=	R10=0x%016llx  R11=0x%016llx  "
 			"R12=0x%016llx\r\n",
-			cur_context->guest_cpu_regs.regs.r10,
-			cur_context->guest_cpu_regs.regs.r11,
-			cur_context->guest_cpu_regs.regs.r12);
+			vcpu_get_gpreg(vcpu, CPU_REG_R10),
+			vcpu_get_gpreg(vcpu, CPU_REG_R11),
+			vcpu_get_gpreg(vcpu, CPU_REG_R12));
 	printf("=	R13=0x%016llx  R14=0x%016llx  "
 			"R15=0x%016llx\r\n",
-			cur_context->guest_cpu_regs.regs.r13,
-			cur_context->guest_cpu_regs.regs.r14,
-			cur_context->guest_cpu_regs.regs.r15);
+			vcpu_get_gpreg(vcpu, CPU_REG_R13),
+			vcpu_get_gpreg(vcpu, CPU_REG_R14),
+			vcpu_get_gpreg(vcpu, CPU_REG_R15));
 	printf("\r\n");
 }
 
@@ -101,11 +98,9 @@ static void dump_guest_stack(struct vcpu *vcpu)
 {
 	uint32_t i;
 	uint64_t tmp[DUMP_STACK_SIZE];
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	uint32_t err_code = 0;
 
-	if (copy_from_gva(vcpu, tmp, cur_context->guest_cpu_regs.regs.rsp,
+	if (copy_from_gva(vcpu, tmp, vcpu_get_gpreg(vcpu, CPU_REG_RSP),
 		DUMP_STACK_SIZE, &err_code) < 0) {
 		printf("\r\nUnabled to Copy Guest Stack:\r\n");
 		return;
@@ -113,11 +108,11 @@ static void dump_guest_stack(struct vcpu *vcpu)
 
 	printf("\r\nGuest Stack:\r\n");
 	printf("Dump stack for vcpu %hu, from gva 0x%016llx\r\n",
-			vcpu->vcpu_id, cur_context->guest_cpu_regs.regs.rsp);
+			vcpu->vcpu_id, vcpu_get_gpreg(vcpu, CPU_REG_RSP));
 	for (i = 0U; i < (DUMP_STACK_SIZE/32U); i++) {
 		printf("guest_rsp(0x%llx):  0x%016llx  0x%016llx  "
 				"0x%016llx  0x%016llx\r\n",
-				(cur_context->guest_cpu_regs.regs.rsp+(i*32)),
+				(vcpu_get_gpreg(vcpu, CPU_REG_RSP)+(i*32)),
 				tmp[i*4], tmp[(i*4)+1],
 				tmp[(i*4)+2], tmp[(i*4)+3]);
 	}
@@ -128,12 +123,10 @@ static void show_guest_call_trace(struct vcpu *vcpu)
 {
 	uint64_t bp;
 	uint64_t count = 0UL;
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	int err;
 	uint32_t err_code;
 
-	bp =  cur_context->guest_cpu_regs.regs.rbp;
+	bp = vcpu_get_gpreg(vcpu, CPU_REG_RBP);
 	printf("Guest Call Trace: **************************************\r\n");
 	printf("Maybe the call trace is not accurate, pls check stack!!\r\n");
 	/* if enable compiler option(no-omit-frame-pointer)  the stack layout

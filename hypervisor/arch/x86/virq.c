@@ -52,13 +52,11 @@ static const uint16_t exception_type[32] = {
 
 static bool is_guest_irq_enabled(struct vcpu *vcpu)
 {
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	uint64_t guest_rflags, guest_state;
 	bool status = false;
 
 	/* Read the RFLAGS of the guest */
-	guest_rflags = cur_context->rflags;
+	guest_rflags = vcpu_get_rflags(vcpu);
 	/* Check the RFLAGS[IF] bit first */
 	if ((guest_rflags & HV_ARCH_VCPU_RFLAGS_IF) != 0UL) {
 		/* Interrupts are allowed */
@@ -302,10 +300,7 @@ void vcpu_inject_gp(struct vcpu *vcpu, uint32_t err_code)
 
 void vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code)
 {
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-
-	cur_context->cr2 = addr;
+	vcpu_set_cr2(vcpu, addr);
 	vcpu_queue_exception(vcpu, IDT_PF, err_code);
 	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
 }

@@ -314,23 +314,18 @@ static void init_cr0_cr4_host_mask(__unused struct vcpu *vcpu)
 
 uint64_t vmx_rdmsr_pat(struct vcpu *vcpu)
 {
-	struct run_context *context =
-			&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-
 	/*
 	 * note: if context->cr0.CD is set, the actual value in guest's
 	 * IA32_PAT MSR is PAT_ALL_UC_VALUE, which may be different from
 	 * the saved value context->ia32_pat
 	 */
-	return context->ia32_pat;
+	return vcpu_get_pat_ext(vcpu);
 }
 
 int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value)
 {
 	uint32_t i;
 	uint64_t field;
-	struct run_context *context =
-			 &vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 
 	for (i = 0U; i < 8U; i++) {
 		field = (value >> (i * 8U)) & 0xffUL;
@@ -342,23 +337,21 @@ int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value)
 		}
 	}
 
-	context->ia32_pat = value;
+	vcpu_set_pat_ext(vcpu, value);
 
 	/*
 	 * If context->cr0.CD is set, we defer any further requests to write
 	 * guest's IA32_PAT, until the time when guest's CR0.CD is being cleared
 	 */
-	if ((context->cr0 & CR0_CD) == 0UL) {
+	if ((vcpu_get_cr0(vcpu) & CR0_CD) == 0UL) {
 		exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, value);
 	}
+
 	return 0;
 }
 
 static bool is_cr0_write_valid(struct vcpu *vcpu, uint64_t cr0)
 {
-	struct run_context *context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-
 	/* Shouldn't set always off bit */
 	if ((cr0 & cr0_always_off_mask) != 0UL)
 		return false;
@@ -370,8 +363,8 @@ static bool is_cr0_write_valid(struct vcpu *vcpu, uint64_t cr0)
 	 * CR0.PG = 1, CR4.PAE = 0 and IA32_EFER.LME = 1 is invalid.
 	 * CR0.PE = 0 and CR0.PG = 1 is invalid.
 	 */
-	if (((cr0 & CR0_PG) != 0UL) && ((context->cr4 & CR4_PAE) == 0UL) &&
-			((context->ia32_efer & MSR_IA32_EFER_LME_BIT) != 0UL))
+	if (((cr0 & CR0_PG) != 0UL) && ((vcpu_get_cr4(vcpu) & CR4_PAE) == 0UL)
+		&& ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL))
 		return false;
 
 	if (((cr0 & CR0_PE) == 0UL) && ((cr0 & CR0_PG) != 0UL))
@@ -411,11 +404,9 @@ static bool is_cr0_write_valid(struct vcpu *vcpu, uint64_t cr0)
  */
 int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 {
-	struct run_context *context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	uint64_t cr0_vmx;
 	uint32_t entry_ctrls;
-	bool paging_enabled = !!(context->cr0 & CR0_PG);
+	bool paging_enabled = !!(vcpu_get_cr0(vcpu) & CR0_PG);
 
 	if (!is_cr0_write_valid(vcpu, cr0)) {
 		pr_dbg("Invalid cr0 write operation from guest");
@@ -427,9 +418,10 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	 * When loading a control register, reserved bit should always set
 	 * to the value previously read.
 	 */
-	cr0 = (cr0 & ~CR0_RESERVED_MASK) | (context->cr0 & CR0_RESERVED_MASK);
+	cr0 = (cr0 & ~CR0_RESERVED_MASK) |
+		(vcpu_get_cr0(vcpu) & CR0_RESERVED_MASK);
 
-	if (((context->ia32_efer & MSR_IA32_EFER_LME_BIT) != 0UL) &&
+	if (((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL) &&
 	    !paging_enabled && ((cr0 & CR0_PG) != 0UL)) {
 		/* Enable long mode */
 		pr_dbg("VMM: Enable long mode");
@@ -437,9 +429,9 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 		entry_ctrls |= VMX_ENTRY_CTLS_IA32E_MODE;
 		exec_vmwrite32(VMX_ENTRY_CONTROLS, entry_ctrls);
 
-		context->ia32_efer |= MSR_IA32_EFER_LMA_BIT;
-		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, context->ia32_efer);
-	} else if (((context->ia32_efer & MSR_IA32_EFER_LME_BIT) != 0UL) &&
+		vcpu_set_efer(vcpu,
+			vcpu_get_efer(vcpu) | MSR_IA32_EFER_LMA_BIT);
+	} else if (((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL) &&
 		   paging_enabled && ((cr0 & CR0_PG) == 0UL)){
 		/* Disable long mode */
 		pr_dbg("VMM: Disable long mode");
@@ -447,16 +439,16 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 		entry_ctrls &= ~VMX_ENTRY_CTLS_IA32E_MODE;
 		exec_vmwrite32(VMX_ENTRY_CONTROLS, entry_ctrls);
 
-		context->ia32_efer &= ~MSR_IA32_EFER_LMA_BIT;
-		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, context->ia32_efer);
+		vcpu_set_efer(vcpu,
+			vcpu_get_efer(vcpu) & ~MSR_IA32_EFER_LMA_BIT);
 	} else {
 		/* CR0.PG unchanged. */
 	}
 
 	/* If CR0.CD or CR0.NW get changed */
-	if (((context->cr0 ^ cr0) & (CR0_CD | CR0_NW)) != 0UL) {
+	if (((vcpu_get_cr0(vcpu) ^ cr0) & (CR0_CD | CR0_NW)) != 0UL) {
 		/* No action if only CR0.NW is changed */
-		if (((context->cr0 ^ cr0) & CR0_CD) != 0UL) {
+		if (((vcpu_get_cr0(vcpu) ^ cr0) & CR0_CD) != 0UL) {
 			if ((cr0 & CR0_CD) != 0UL) {
 				/*
 				 * When the guest requests to set CR0.CD, we don't allow
@@ -468,7 +460,8 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 				CACHE_FLUSH_INVALIDATE_ALL();
 			} else {
 				/* Restore IA32_PAT to enable cache again */
-				exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, context->ia32_pat);
+				exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL,
+					vcpu_get_pat_ext(vcpu));
 			}
 			vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 		}
@@ -483,23 +476,12 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	cr0_vmx &= ~(CR0_CD | CR0_NW);
 	exec_vmwrite(VMX_GUEST_CR0, cr0_vmx & 0xFFFFFFFFUL);
 	exec_vmwrite(VMX_CR0_READ_SHADOW, cr0 & 0xFFFFFFFFUL);
-	context->cr0 = cr0;
+
+	/* clear read cache, next time read should from VMCS */
+	bitmap_clear_lock(CPU_REG_CR0, &vcpu->reg_cached);
 
 	pr_dbg("VMM: Try to write %016llx, allow to write 0x%016llx to CR0",
 		cr0, cr0_vmx);
-
-	return 0;
-}
-
-int vmx_write_cr3(struct vcpu *vcpu, uint64_t cr3)
-{
-	struct run_context *context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-	/* Write to guest's CR3 */
-	context->cr3 = cr3;
-
-	/* Commit new value to VMCS */
-	exec_vmwrite(VMX_GUEST_CR3, cr3);
 
 	return 0;
 }
@@ -558,8 +540,6 @@ static bool is_cr4_write_valid(struct vcpu *vcpu, uint64_t cr4)
  */
 int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 {
-	struct run_context *context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	uint64_t cr4_vmx;
 
 	if (!is_cr4_write_valid(vcpu, cr4)) {
@@ -572,7 +552,9 @@ int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 	cr4_vmx = cr4_always_on_mask | cr4;
 	exec_vmwrite(VMX_GUEST_CR4, cr4_vmx & 0xFFFFFFFFUL);
 	exec_vmwrite(VMX_CR4_READ_SHADOW, cr4 & 0xFFFFFFFFUL);
-	context->cr4 = cr4;
+
+	/* clear read cache, next time read should from VMCS */
+	bitmap_clear_lock(CPU_REG_CR4, &vcpu->reg_cached);
 
 	pr_dbg("VMM: Try to write %016llx, allow to write 0x%016llx to CR4",
 		cr4, cr4_vmx);
@@ -583,7 +565,6 @@ int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 static void init_guest_state(struct vcpu *vcpu)
 {
 	uint32_t field;
-	uint64_t value;
 	uint16_t value16;
 	uint32_t value32;
 	uint64_t value64;
@@ -594,8 +575,6 @@ static void init_guest_state(struct vcpu *vcpu)
 	uint16_t es = 0U, ss = 0U, ds = 0U, fs = 0U, gs = 0U, data32_idx;
 	uint16_t tr_sel = 0x70U;
 	struct vm *vm = vcpu->vm;
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	enum vm_cpu_mode vcpu_mode = get_vcpu_mode(vcpu);
 
 	pr_dbg("*********************");
@@ -613,7 +592,7 @@ static void init_guest_state(struct vcpu *vcpu)
 	pr_dbg("Natural-width********");
 
 	if (vcpu_mode == CPU_MODE_64BIT) {
-		cur_context->ia32_efer = MSR_IA32_EFER_LME_BIT;
+		vcpu_set_efer(vcpu, MSR_IA32_EFER_LME_BIT);
 	}
 
 	/* Setup guest control register values
@@ -621,17 +600,18 @@ static void init_guest_state(struct vcpu *vcpu)
 	 * checked.
 	 */
 	if (vcpu_mode == CPU_MODE_REAL) {
-		vmx_write_cr4(vcpu, 0UL);
-		vmx_write_cr3(vcpu, 0UL);
-		vmx_write_cr0(vcpu, CR0_ET | CR0_NE);
+		vcpu_set_cr4(vcpu, 0UL);
+		exec_vmwrite(VMX_GUEST_CR3, 0UL);
+		vcpu_set_cr0(vcpu, CR0_ET | CR0_NE);
 	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
-		vmx_write_cr4(vcpu, 0UL);
-		vmx_write_cr3(vcpu, 0UL);
-		vmx_write_cr0(vcpu, CR0_ET | CR0_NE | CR0_PE);
+		vcpu_set_cr4(vcpu, 0UL);
+		exec_vmwrite(VMX_GUEST_CR3, 0UL);
+		vcpu_set_cr0(vcpu, CR0_ET | CR0_NE | CR0_PE);
 	} else if (vcpu_mode == CPU_MODE_64BIT) {
-		vmx_write_cr4(vcpu, CR4_PSE | CR4_PAE | CR4_MCE);
-		vmx_write_cr3(vcpu, vm->arch_vm.guest_init_pml4 | CR3_PWT);
-		vmx_write_cr0(vcpu, CR0_PG | CR0_PE | CR0_NE);
+		vcpu_set_cr4(vcpu, CR4_PSE | CR4_PAE | CR4_MCE);
+		exec_vmwrite(VMX_GUEST_CR3,
+				vm->arch_vm.guest_init_pml4 | CR3_PWT);
+		vcpu_set_cr0(vcpu, CR0_PG | CR0_PE | CR0_NE);
 	} else {
 		/* vcpu_mode will never be CPU_MODE_COMPATIBILITY */
 	}
@@ -639,10 +619,8 @@ static void init_guest_state(struct vcpu *vcpu)
 	/***************************************************/
 	/* Set up Flags - the value of RFLAGS on VM entry */
 	/***************************************************/
-	field = VMX_GUEST_RFLAGS;
-	cur_context->rflags = 0x2UL; 	/* Bit 1 is a active high reserved bit */
-	exec_vmwrite(field, cur_context->rflags);
-	pr_dbg("VMX_GUEST_RFLAGS: 0x%016llx ", cur_context->rflags);
+	vcpu_set_rflags(vcpu, 0x2UL); /* Bit 1 is a active high reserved bit */
+	pr_dbg("VMX_GUEST_RFLAGS: 0x%016llx ", vcpu_get_rflags(vcpu));
 
 	/***************************************************/
 	/* Set Code Segment - CS */
@@ -1023,10 +1001,9 @@ static void init_guest_state(struct vcpu *vcpu)
 		  value32);
 
 	value64 = PAT_POWER_ON_VALUE;
-	cur_context->ia32_pat = value64;
 	exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, value64);
-	pr_dbg("VMX_GUEST_IA32_PAT: 0x%016llx ",
-		  value64);
+	pr_dbg("VMX_GUEST_IA32_PAT: 0x%016llx ", value64);
+	vcpu_set_pat_ext(vcpu, value64);
 
 	value64 = 0UL;
 	exec_vmwrite64(VMX_GUEST_IA32_DEBUGCTL_FULL, value64);
@@ -1561,17 +1538,15 @@ static void init_exit_ctrl(__unused struct vcpu *vcpu)
 static void override_uefi_vmcs(struct vcpu *vcpu)
 {
 	uint32_t field;
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 
 	if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
 		/* CR4 should be set before CR0, because when set CR0, CR4 value
 		 * will be checked. */
 		/* VMXE is always on bit when set CR4, and not allowed to be set
 		 * from input cr4 value */
-		vmx_write_cr4(vcpu, efi_ctx->cr4 & ~CR4_VMXE);
-		vmx_write_cr3(vcpu, efi_ctx->cr3);
-		vmx_write_cr0(vcpu, efi_ctx->cr0 | CR0_PG | CR0_PE | CR0_NE);
+		vcpu_set_cr4(vcpu, efi_ctx->cr4 & ~CR4_VMXE);
+		exec_vmwrite(VMX_GUEST_CR3, efi_ctx->cr3);
+		vcpu_set_cr0(vcpu, efi_ctx->cr0 | CR0_PG | CR0_PE | CR0_NE);
 
 		/* Selector */
 		field = VMX_GUEST_CS_SEL;
@@ -1642,11 +1617,9 @@ static void override_uefi_vmcs(struct vcpu *vcpu)
 	}
 
 	/* Interrupt */
-	field = VMX_GUEST_RFLAGS;
 	/* clear flags for CF/PF/AF/ZF/SF/OF */
-	cur_context->rflags = efi_ctx->rflags & ~(0x8d5UL);
-	exec_vmwrite(field, cur_context->rflags);
-	pr_dbg("VMX_GUEST_RFLAGS: 0x%016llx ", cur_context->rflags);
+	vcpu_set_rflags(vcpu, efi_ctx->rflags & ~(0x8d5UL));
+	pr_dbg("VMX_GUEST_RFLAGS: 0x%016llx ", vcpu_get_rflags(vcpu));
 }
 #endif
 

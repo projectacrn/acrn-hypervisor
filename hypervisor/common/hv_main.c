@@ -102,8 +102,7 @@ void vcpu_thread(struct vcpu *vcpu)
 
 		basic_exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFFU;
 		per_cpu(vmexit_cnt, vcpu->pcpu_id)[basic_exit_reason]++;
-		TRACE_2L(TRACE_VM_EXIT, basic_exit_reason,
-		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip);
+		TRACE_2L(TRACE_VM_EXIT, basic_exit_reason, vcpu_get_rip(vcpu));
 	} while (1);
 }
 

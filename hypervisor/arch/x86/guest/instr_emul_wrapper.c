@@ -26,8 +26,6 @@ is_descriptor_table(enum cpu_reg_name reg);
 
 int vm_get_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t *retval)
 {
-	struct run_context *cur_context;
-
 	if (vcpu == NULL) {
 		return -EINVAL;
 	}
@@ -37,10 +35,9 @@ int vm_get_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t *retval)
 	}
 
 	if ((reg >= CPU_REG_GENERAL_FIRST) && (reg <= CPU_REG_GENERAL_LAST)) {
-		cur_context =
-			&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-		*retval = cur_context->guest_cpu_regs.longs[reg];
-	} else if ((reg >= CPU_REG_NONGENERAL_FIRST) && (reg <= CPU_REG_NONGENERAL_LAST)) {
+		*retval = vcpu_get_gpreg(vcpu, reg);
+	} else if ((reg >= CPU_REG_NONGENERAL_FIRST) &&
+		(reg <= CPU_REG_NONGENERAL_LAST)) {
 		uint32_t field = get_vmcs_field(reg);
 
 		if (field != VMX_INVALID_VMCS_FIELD) {
@@ -61,8 +58,6 @@ int vm_get_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t *retval)
 
 int vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t val)
 {
-	struct run_context *cur_context;
-
 	if (vcpu == NULL) {
 		return -EINVAL;
 	}
@@ -72,10 +67,9 @@ int vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t val)
 	}
 
 	if ((reg >= CPU_REG_GENERAL_FIRST) && (reg <= CPU_REG_GENERAL_LAST)) {
-		cur_context =
-			&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-		cur_context->guest_cpu_regs.longs[reg] = val;
-	} else if ((reg >= CPU_REG_NONGENERAL_FIRST) && (reg <= CPU_REG_NONGENERAL_LAST)) {
+		vcpu_set_gpreg(vcpu, reg, val);
+	} else if ((reg >= CPU_REG_NONGENERAL_FIRST) &&
+		(reg <= CPU_REG_NONGENERAL_LAST)) {
 		uint32_t field = get_vmcs_field(reg);
 
 		if (field != VMX_INVALID_VMCS_FIELD) {
@@ -305,8 +299,7 @@ static void get_guest_paging_info(struct vcpu *vcpu, struct instr_emul_ctxt *emu
 	ASSERT(emul_ctxt != NULL && vcpu != NULL, "Error in input arguments");
 
 	cpl = (uint8_t)((csar >> 5) & 3U);
-	emul_ctxt->paging.cr3 =
-		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr3;
+	emul_ctxt->paging.cr3 = exec_vmread(VMX_GUEST_CR3);
 	emul_ctxt->paging.cpl = cpl;
 	emul_ctxt->paging.cpu_mode = get_vcpu_mode(vcpu);
 	emul_ctxt->paging.paging_mode = get_vcpu_paging_mode(vcpu);
@@ -348,8 +341,7 @@ int decode_instruction(struct vcpu *vcpu)
 	if (retval < 0) {
 		if (retval != -EFAULT) {
 			pr_err("decode instruction failed @ 0x%016llx:",
-				vcpu->arch_vcpu.
-				contexts[vcpu->arch_vcpu.cur_context].rip);
+				vcpu_get_rip(vcpu));
 		}
 		return retval;
 	}
@@ -363,7 +355,7 @@ int decode_instruction(struct vcpu *vcpu)
 
 	if (retval != 0) {
 		pr_err("decode instruction failed @ 0x%016llx:",
-		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip);
+			vcpu_get_rip(vcpu));
 		return -EINVAL;
 	}
 

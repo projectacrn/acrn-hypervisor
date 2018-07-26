@@ -14,6 +14,141 @@ extern struct efi_ctx* efi_ctx;
 
 vm_sw_loader_t vm_sw_loader;
 
+inline uint64_t vcpu_get_gpreg(struct vcpu *vcpu, uint32_t reg)
+{
+	struct run_context *cur_context =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+
+	return cur_context->guest_cpu_regs.longs[reg];
+}
+
+inline void vcpu_set_gpreg(struct vcpu *vcpu, uint32_t reg, uint64_t val)
+{
+	struct run_context *cur_context =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+
+	cur_context->guest_cpu_regs.longs[reg] = val;
+}
+
+inline uint64_t vcpu_get_rip(struct vcpu *vcpu)
+{
+	if (bitmap_test(CPU_REG_RIP, &vcpu->reg_updated) == 0 &&
+		bitmap_test_and_set_lock(CPU_REG_RIP, &vcpu->reg_cached) == 0)
+		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip =
+			exec_vmread(VMX_GUEST_RIP);
+	return vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip;
+}
+
+inline void vcpu_set_rip(struct vcpu *vcpu, uint64_t val)
+{
+	vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip = val;
+	bitmap_set_lock(CPU_REG_RIP, &vcpu->reg_updated);
+}
+
+inline uint64_t vcpu_get_rsp(struct vcpu *vcpu)
+{
+	struct run_context *cur_context =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+
+	return cur_context->guest_cpu_regs.regs.rsp;
+}
+
+inline void vcpu_set_rsp(struct vcpu *vcpu, uint64_t val)
+{
+	struct run_context *cur_context =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+
+	cur_context->guest_cpu_regs.regs.rsp = val;
+	bitmap_set_lock(CPU_REG_RSP, &vcpu->reg_updated);
+}
+
+inline uint64_t vcpu_get_efer(struct vcpu *vcpu)
+{
+	if (bitmap_test(CPU_REG_EFER, &vcpu->reg_updated) == 0 &&
+		bitmap_test_and_set_lock(CPU_REG_EFER, &vcpu->reg_cached) == 0)
+		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ia32_efer
+			= exec_vmread64(VMX_GUEST_IA32_EFER_FULL);
+	return vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ia32_efer;
+}
+
+inline void vcpu_set_efer(struct vcpu *vcpu, uint64_t val)
+{
+	vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ia32_efer = val;
+	bitmap_set_lock(CPU_REG_EFER, &vcpu->reg_updated);
+}
+
+inline uint64_t vcpu_get_rflags(struct vcpu *vcpu)
+{
+	if (bitmap_test(CPU_REG_RFLAGS, &vcpu->reg_updated) == 0 &&
+		bitmap_test_and_set_lock(CPU_REG_RFLAGS,
+			&vcpu->reg_cached) == 0 && vcpu->launched)
+		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rflags =
+			exec_vmread(VMX_GUEST_RFLAGS);
+	return vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rflags;
+}
+
+inline void vcpu_set_rflags(struct vcpu *vcpu, uint64_t val)
+{
+	vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rflags = val;
+	bitmap_set_lock(CPU_REG_RFLAGS, &vcpu->reg_updated);
+}
+
+inline uint64_t vcpu_get_cr0(struct vcpu *vcpu)
+{
+	uint64_t mask;
+
+	if (bitmap_test_and_set_lock(CPU_REG_CR0, &vcpu->reg_cached) == 0) {
+		mask = exec_vmread(VMX_CR0_MASK);
+		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr0 =
+			(exec_vmread(VMX_CR0_READ_SHADOW) & mask) |
+			(exec_vmread(VMX_GUEST_CR0) & (~mask));
+	}
+	return vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr0;
+}
+
+inline int vcpu_set_cr0(struct vcpu *vcpu, uint64_t val)
+{
+	return vmx_write_cr0(vcpu, val);
+}
+
+inline uint64_t vcpu_get_cr2(struct vcpu *vcpu)
+{
+	return vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr2;
+}
+
+inline void vcpu_set_cr2(struct vcpu *vcpu, uint64_t val)
+{
+	vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr2 = val;
+}
+
+inline uint64_t vcpu_get_cr4(struct vcpu *vcpu)
+{
+	uint64_t mask;
+
+	if (bitmap_test_and_set_lock(CPU_REG_CR4, &vcpu->reg_cached) == 0) {
+		mask = exec_vmread(VMX_CR4_MASK);
+		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr4 =
+			(exec_vmread(VMX_CR4_READ_SHADOW) & mask) |
+			(exec_vmread(VMX_GUEST_CR4) & (~mask));
+	}
+	return vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].cr4;
+}
+
+inline int vcpu_set_cr4(struct vcpu *vcpu, uint64_t val)
+{
+	return vmx_write_cr4(vcpu, val);
+}
+
+inline uint64_t vcpu_get_pat_ext(struct vcpu *vcpu)
+{
+	return vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ia32_pat;
+}
+
+inline void vcpu_set_pat_ext(struct vcpu *vcpu, uint64_t val)
+{
+	vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ia32_pat = val;
+}
+
 struct vcpu *get_ever_run_vcpu(uint16_t pcpu_id)
 {
 	return per_cpu(ever_run_vcpu, pcpu_id);
@@ -128,15 +263,12 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 
 static void set_vcpu_mode(struct vcpu *vcpu, uint32_t cs_attr)
 {
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-
-	if (cur_context->ia32_efer & MSR_IA32_EFER_LMA_BIT) {
+	if (vcpu_get_efer(vcpu) & MSR_IA32_EFER_LMA_BIT) {
 		if (cs_attr & 0x2000)		/* CS.L = 1 */
 			vcpu->arch_vcpu.cpu_mode = CPU_MODE_64BIT;
 		else
 			vcpu->arch_vcpu.cpu_mode = CPU_MODE_COMPATIBILITY;
-	} else if (cur_context->cr0 & CR0_PE) {
+	} else if (vcpu_get_cr0(vcpu) & CR0_PE) {
 		vcpu->arch_vcpu.cpu_mode = CPU_MODE_PROTECTED;
 	} else {
 		vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
@@ -152,6 +284,17 @@ int start_vcpu(struct vcpu *vcpu)
 	int64_t status = 0;
 
 	ASSERT(vcpu != NULL, "Incorrect arguments");
+
+	if (bitmap_test_and_clear_lock(CPU_REG_RIP, &vcpu->reg_updated))
+		exec_vmwrite(VMX_GUEST_RIP, cur_context->rip);
+	if (bitmap_test_and_clear_lock(CPU_REG_RSP, &vcpu->reg_updated))
+		exec_vmwrite(VMX_GUEST_RSP,
+				cur_context->guest_cpu_regs.regs.rsp);
+	if (bitmap_test_and_clear_lock(CPU_REG_EFER, &vcpu->reg_updated))
+		exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL,
+				cur_context->ia32_efer);
+	if (bitmap_test_and_clear_lock(CPU_REG_RFLAGS, &vcpu->reg_updated))
+		exec_vmwrite(VMX_GUEST_RFLAGS, cur_context->rflags);
 
 	/* If this VCPU is not already launched, launch it */
 	if (!vcpu->launched) {
@@ -193,27 +336,22 @@ int start_vcpu(struct vcpu *vcpu)
 		 * instruction needs to be repeated and resume VCPU accordingly
 		 */
 		instlen = vcpu->arch_vcpu.inst_len;
-		rip = cur_context->rip;
-		exec_vmwrite(VMX_GUEST_RIP, ((rip +(uint64_t)instlen) &
+		rip = vcpu_get_rip(vcpu);
+		exec_vmwrite(VMX_GUEST_RIP, ((rip+(uint64_t)instlen) &
 				0xFFFFFFFFFFFFFFFFUL));
 
 		/* Resume the VM */
 		status = vmx_vmrun(cur_context, VM_RESUME, ibrs_type);
 	}
 
-	/* Save guest CR3 register */
-	cur_context->cr3 = exec_vmread(VMX_GUEST_CR3);
+	vcpu->reg_cached = 0UL;
 
-	/* Save guest IA32_EFER register */
-	cur_context->ia32_efer = exec_vmread64(VMX_GUEST_IA32_EFER_FULL);
 	set_vcpu_mode(vcpu, exec_vmread32(VMX_GUEST_CS_ATTR));
 
-	/* Obtain current VCPU instruction pointer and length */
-	cur_context->rip = exec_vmread(VMX_GUEST_RIP);
+	/* Obtain current VCPU instruction length */
 	vcpu->arch_vcpu.inst_len = exec_vmread32(VMX_EXIT_INSTR_LEN);
 
 	cur_context->guest_cpu_regs.regs.rsp = exec_vmread(VMX_GUEST_RSP);
-	cur_context->rflags = exec_vmread(VMX_GUEST_RFLAGS);
 
 	/* Obtain VM exit reason */
 	vcpu->arch_vcpu.exit_reason = exec_vmread32(VMX_EXIT_REASON);

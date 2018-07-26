@@ -1643,8 +1643,7 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 int
 vie_init(struct instr_emul_vie *vie, struct vcpu *vcpu)
 {
-	uint64_t guest_rip_gva =
-		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip;
+	uint64_t guest_rip_gva = vcpu_get_rip(vcpu);
 	uint32_t inst_len = vcpu->arch_vcpu.inst_len;
 	uint32_t err_code;
 	int ret;
