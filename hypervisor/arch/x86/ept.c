@@ -258,20 +258,17 @@ int ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu)
 	return status;
 }
 
-int ept_mr_add(const struct vm *vm, uint64_t hpa_arg,
-	uint64_t gpa_arg, uint64_t size, uint32_t prot_arg)
+int ept_mr_add(const struct vm *vm, uint64_t *pml4_page,
+	uint64_t hpa, uint64_t gpa, uint64_t size, uint64_t prot_orig)
 {
-	struct mem_map_params map_params;
 	uint16_t i;
 	struct vcpu *vcpu;
-	uint64_t hpa = hpa_arg;
-	uint64_t gpa = gpa_arg;
-	uint32_t prot = prot_arg;
+	int ret;
+	uint64_t prot = prot_orig;
 
-	/* Setup memory map parameters */
-	map_params.page_table_type = PTT_EPT;
-	map_params.pml4_base = vm->arch_vm.nworld_eptp;
-	map_params.pml4_inverted = vm->arch_vm.m2p;
+	dev_dbg(ACRN_DBG_EPT, "%s, vm[%d] hpa: 0x%016llx gpa: 0x%016llx ",
+			__func__, vm->vm_id, hpa, gpa);
+	dev_dbg(ACRN_DBG_EPT, "size: 0x%016llx prot: 0x%016x\n", size, prot);
 
 	/* EPT & VT-d share the same page tables, set SNP bit
 	 * to force snooping of PCIe devices if the page
@@ -280,21 +277,18 @@ int ept_mr_add(const struct vm *vm, uint64_t hpa_arg,
 	if ((prot & IA32E_EPT_MT_MASK) != IA32E_EPT_UNCACHED) {
 		prot |= IA32E_EPT_SNOOP_CTRL;
 	}
-	/* TODO: replace map_mem with mmu_add once SOS has add
-	 * HC_VM_WRITE_PROTECT_PAGE support.
-	 */
-	map_mem(&map_params, (void *)hpa,
-			(void *)gpa, size, prot);
+
+	ret = mmu_add(pml4_page, hpa, gpa, size, prot, PTT_EPT);
+	if (ret == 0) {
+		ret = mmu_add((uint64_t *)vm->arch_vm.m2p,
+			gpa, hpa, size, prot, PTT_EPT);
+	}
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 	}
 
-	dev_dbg(ACRN_DBG_EPT, "%s, hpa: 0x%016llx gpa: 0x%016llx ",
-			__func__, hpa, gpa);
-	dev_dbg(ACRN_DBG_EPT, "size: 0x%016llx prot: 0x%x\n", size, prot);
-
-	return 0;
+	return ret;
 }
 
 int ept_mr_modify(const struct vm *vm, uint64_t *pml4_page,
@@ -323,23 +317,19 @@ int ept_mr_del(const struct vm *vm, uint64_t *pml4_page,
 	int ret;
 	uint64_t hpa = gpa2hpa(vm, gpa);
 
+	dev_dbg(ACRN_DBG_EPT, "%s,vm[%d] gpa 0x%llx size 0x%llx\n",
+			__func__, vm->vm_id, gpa, size);
+
 	ret = mmu_modify_or_del(pml4_page, gpa, size,
 			0UL, 0UL, PTT_EPT, MR_DEL);
-	if (ret < 0) {
-		return ret;
-	}
-
-	if (hpa != 0UL) {
+	if ((ret == 0) && (hpa != 0UL)) {
 		ret = mmu_modify_or_del((uint64_t *)vm->arch_vm.m2p,
-			hpa, size, 0UL, 0UL, PTT_EPT, MR_DEL);
+				hpa, size, 0UL, 0UL, PTT_EPT, MR_DEL);
 	}
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 	}
 
-	dev_dbg(ACRN_DBG_EPT, "%s, gpa 0x%llx size 0x%llx\n",
-			__func__, gpa, size);
-
-	return 0;
+	return ret;
 }

@@ -564,6 +564,7 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 	uint64_t attr_uc = (EPT_RWX | EPT_UNCACHED);
 	struct e820_entry *entry;
 	uint64_t hv_hpa;
+	uint64_t *pml4_page = (uint64_t *)vm->arch_vm.nworld_eptp;
 
 	rebuild_vm0_e820();
 	dev_dbg(ACRN_DBG_GUEST,
@@ -571,7 +572,8 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 		e820_mem.mem_bottom, e820_mem.mem_top);
 
 	/* create real ept map for all ranges with UC */
-	ept_mr_add(vm, e820_mem.mem_bottom, e820_mem.mem_bottom,
+	ept_mr_add(vm, pml4_page,
+			e820_mem.mem_bottom, e820_mem.mem_bottom,
 			(e820_mem.mem_top - e820_mem.mem_bottom),
 			attr_uc);
 
@@ -579,7 +581,7 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 	for (i = 0U; i < e820_entries; i++) {
 		entry = &e820[i];
 		if (entry->type == E820_TYPE_RAM) {
-			ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+			ept_mr_modify(vm, pml4_page,
 					entry->baseaddr, entry->length,
 					EPT_WB, EPT_MT_MASK);
 		}
@@ -599,8 +601,7 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 	 * will cause EPT violation if sos accesses hv memory
 	 */
 	hv_hpa = get_hv_image_base();
-	ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-			hv_hpa, CONFIG_RAM_SIZE);
+	ept_mr_del(vm, pml4_page, hv_hpa, CONFIG_RAM_SIZE);
 	return 0;
 }
 

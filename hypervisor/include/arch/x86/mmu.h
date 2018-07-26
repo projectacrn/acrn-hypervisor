@@ -380,8 +380,8 @@ void    destroy_ept(struct vm *vm);
 uint64_t  gpa2hpa(const struct vm *vm, uint64_t gpa);
 uint64_t  local_gpa2hpa(const struct vm *vm, uint64_t gpa, uint32_t *size);
 uint64_t  hpa2gpa(const struct vm *vm, uint64_t hpa);
-int ept_mr_add(const struct vm *vm, uint64_t hpa_arg,
-	uint64_t gpa_arg, uint64_t size, uint32_t prot_arg);
+int ept_mr_add(const struct vm *vm, uint64_t *pml4_page, uint64_t hpa,
+	uint64_t gpa, uint64_t size, uint64_t prot_orig);
 int ept_mr_modify(const struct vm *vm, uint64_t *pml4_page,
 	uint64_t gpa, uint64_t size,
 	uint64_t prot_set, uint64_t prot_clr);
