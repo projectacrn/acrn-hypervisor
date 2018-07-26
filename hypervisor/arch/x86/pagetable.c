@@ -344,6 +344,7 @@ static int add_pde(uint64_t *pdpte, uint64_t paddr_start,
 					vaddr = vaddr_next;
 					continue;
 				}
+				return 0;
 			} else {
 				ret = construct_pgentry(ptt, pde);
 				if (ret != 0) {

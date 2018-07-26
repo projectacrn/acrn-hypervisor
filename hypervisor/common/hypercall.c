@@ -422,6 +422,7 @@ static int32_t local_set_vm_memory_region(struct vm *vm,
 {
 	uint64_t hpa, base_paddr;
 	uint64_t prot;
+	uint64_t *pml4_page;
 
 	if ((region->size & (CPU_PAGE_SIZE - 1UL)) != 0UL) {
 		pr_err("%s: [vm%d] map size 0x%x is not page aligned",
@@ -442,6 +443,7 @@ static int32_t local_set_vm_memory_region(struct vm *vm,
 		return -EFAULT;
 	}
 
+	pml4_page = (uint64_t *)target_vm->arch_vm.nworld_eptp;
 	if (region->type != MR_DEL) {
 		prot = 0UL;
 		/* access right */
@@ -467,11 +469,10 @@ static int32_t local_set_vm_memory_region(struct vm *vm,
 			prot |= EPT_UNCACHED;
 		}
 		/* create gpa to hpa EPT mapping */
-		return ept_mr_add(target_vm, hpa,
+		return ept_mr_add(target_vm, pml4_page, hpa,
 				region->gpa, region->size, prot);
 	} else {
-		return ept_mr_del(target_vm,
-				(uint64_t *)target_vm->arch_vm.nworld_eptp,
+		return ept_mr_del(target_vm, pml4_page,
 				region->gpa, region->size);
 	}
 

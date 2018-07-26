@@ -166,6 +166,9 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 {
 	void *pdpt_addr;
 	struct vm *vm0 = get_vm_from_vmid(0U);
+	uint64_t hpa = vm->sworld_control.sworld_memory.base_hpa;
+	uint64_t gpa = vm->sworld_control.sworld_memory.base_gpa_in_sos;
+	uint64_t size = vm->sworld_control.sworld_memory.length;
 
 	if (vm0 == NULL) {
 		pr_err("Parse vm0 context failed.");
@@ -173,23 +176,18 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 	}
 	if (need_clr_mem) {
 		/* clear trusty memory space */
-		(void)memset(HPA2HVA(vm->sworld_control.sworld_memory.base_hpa),
-				0U, vm->sworld_control.sworld_memory.length);
+		(void)memset(HPA2HVA(hpa), 0U, size);
 	}
 
 	/* restore memory to SOS ept mapping */
-	if (ept_mr_add(vm0, vm->sworld_control.sworld_memory.base_hpa,
-			vm->sworld_control.sworld_memory.base_gpa_in_sos,
-			vm->sworld_control.sworld_memory.length,
-			EPT_RWX | EPT_WB) != 0) {
+	if (ept_mr_add(vm0, vm0->arch_vm.nworld_eptp,
+			hpa, gpa, size, EPT_RWX | EPT_WB) != 0) {
 		pr_warn("Restore trusty mem to SOS failed");
 	}
 
 	/* Restore memory to guest normal world */
-	if (ept_mr_add(vm, vm->sworld_control.sworld_memory.base_hpa,
-			vm->sworld_control.sworld_memory.base_gpa_in_uos,
-			vm->sworld_control.sworld_memory.length,
-			EPT_RWX | EPT_WB) != 0)	{
+	if (ept_mr_add(vm, vm->arch_vm.nworld_eptp,
+			hpa, gpa, size, EPT_RWX | EPT_WB) != 0)	{
 		pr_warn("Restore trusty mem to nworld failed");
 	}
 
