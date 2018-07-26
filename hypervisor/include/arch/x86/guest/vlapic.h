@@ -30,11 +30,11 @@
 #ifndef _VLAPIC_H_
 #define	_VLAPIC_H_
 
-struct vlapic;
+struct acrn_vlapic;
 
 /* APIC write handlers */
-void vlapic_set_cr8(struct vlapic *vlapic, uint64_t val);
-uint64_t vlapic_get_cr8(struct vlapic *vlapic);
+void vlapic_set_cr8(struct acrn_vlapic *vlapic, uint64_t val);
+uint64_t vlapic_get_cr8(struct acrn_vlapic *vlapic);
 
 /*
  * Returns 0 if there is no eligible vector that can be delivered to the
@@ -46,7 +46,7 @@ uint64_t vlapic_get_cr8(struct vlapic *vlapic);
  * Note that the vector does not automatically transition to the ISR as a
  * result of calling this function.
  */
-int vlapic_pending_intr(struct vlapic *vlapic, uint32_t *vecptr);
+int vlapic_pending_intr(struct acrn_vlapic *vlapic, uint32_t *vecptr);
 
 /*
  * Transition 'vector' from IRR to ISR. This function is called with the
@@ -54,9 +54,9 @@ int vlapic_pending_intr(struct vlapic *vlapic, uint32_t *vecptr);
  * accept this interrupt (i.e. RFLAGS.IF = 1 and no conditions exist that
  * block interrupt delivery).
  */
-void vlapic_intr_accepted(struct vlapic *vlapic, uint32_t vector);
+void vlapic_intr_accepted(struct acrn_vlapic *vlapic, uint32_t vector);
 
-struct vlapic *vm_lapic_from_pcpuid(struct vm *vm, uint16_t pcpu_id);
+struct acrn_vlapic *vm_lapic_from_pcpuid(struct vm *vm, uint16_t pcpu_id);
 bool is_vlapic_msr(uint32_t num);
 int vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval);
 int vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval);
@@ -98,34 +98,34 @@ void vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest,
 		bool phys, uint32_t delmode, uint32_t vec, bool rh);
 
 /* Reset the trigger-mode bits for all vectors to be edge-triggered */
-void vlapic_reset_tmr(struct vlapic *vlapic);
+void vlapic_reset_tmr(struct acrn_vlapic *vlapic);
 
 /*
  * Set the trigger-mode bit associated with 'vector' to level-triggered if
  * the (dest,phys,delmode) tuple resolves to an interrupt being delivered to
  * this 'vlapic'.
  */
-void vlapic_set_tmr_one_vec(struct vlapic *vlapic, uint32_t delmode,
+void vlapic_set_tmr_one_vec(struct acrn_vlapic *vlapic, uint32_t delmode,
 		uint32_t vector, bool level);
 
 void
-vlapic_apicv_batch_set_tmr(struct vlapic *vlapic);
+vlapic_apicv_batch_set_tmr(struct acrn_vlapic *vlapic);
 
 int vlapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
 		void *handler_private_data);
 
-uint32_t vlapic_get_id(struct vlapic *vlapic);
-uint8_t vlapic_get_apicid(struct vlapic *vlapic);
+uint32_t vlapic_get_id(struct acrn_vlapic *vlapic);
+uint8_t vlapic_get_apicid(struct acrn_vlapic *vlapic);
 
 int vlapic_create(struct vcpu *vcpu);
 void vlapic_free(struct vcpu *vcpu);
-void vlapic_init(struct vlapic *vlapic);
-void vlapic_reset(struct vlapic *vlapic);
-void vlapic_restore(struct vlapic *vlapic, struct lapic_regs *regs);
-bool vlapic_enabled(struct vlapic *vlapic);
+void vlapic_init(struct acrn_vlapic *vlapic);
+void vlapic_reset(struct acrn_vlapic *vlapic);
+void vlapic_restore(struct acrn_vlapic *vlapic, struct lapic_regs *regs);
+bool vlapic_enabled(struct acrn_vlapic *vlapic);
 uint64_t apicv_get_apic_access_addr(struct vm *vm);
-uint64_t apicv_get_apic_page_addr(struct vlapic *vlapic);
-void apicv_inject_pir(struct vlapic *vlapic);
+uint64_t apicv_get_apic_page_addr(struct acrn_vlapic *vlapic);
+void apicv_inject_pir(struct acrn_vlapic *vlapic);
 int apic_access_vmexit_handler(struct vcpu *vcpu);
 int apic_write_vmexit_handler(struct vcpu *vcpu);
 int veoi_vmexit_handler(struct vcpu *vcpu);

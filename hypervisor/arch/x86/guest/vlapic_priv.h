@@ -89,7 +89,7 @@
 
 #define VLAPIC_MAXLVT_INDEX	APIC_LVT_CMCI
 
-struct vlapic;
+struct acrn_vlapic;
 
 struct pir_desc {
 	uint64_t pir[4];
@@ -99,13 +99,13 @@ struct pir_desc {
 
 struct vlapic_ops {
 	int (*apicv_set_intr_ready)
-		(struct vlapic *vlapic, uint32_t vector, bool level);
-	int (*apicv_pending_intr)(struct vlapic *vlapic, uint32_t *vecptr);
-	void (*apicv_intr_accepted)(struct vlapic *vlapic, uint32_t vector);
-	void (*apicv_post_intr)(struct vlapic *vlapic, int hostcpu);
-	void (*apicv_set_tmr)(struct vlapic *vlapic, uint32_t vector, bool level);
-	void (*apicv_batch_set_tmr)(struct vlapic *vlapic);
-	void (*enable_x2apic_mode)(struct vlapic *vlapic);
+		(struct acrn_vlapic *vlapic, uint32_t vector, bool level);
+	int (*apicv_pending_intr)(struct acrn_vlapic *vlapic, uint32_t *vecptr);
+	void (*apicv_intr_accepted)(struct acrn_vlapic *vlapic, uint32_t vector);
+	void (*apicv_post_intr)(struct acrn_vlapic *vlapic, int hostcpu);
+	void (*apicv_set_tmr)(struct acrn_vlapic *vlapic, uint32_t vector, bool level);
+	void (*apicv_batch_set_tmr)(struct acrn_vlapic *vlapic);
+	void (*enable_x2apic_mode)(struct acrn_vlapic *vlapic);
 };
 
 struct vlapic_timer {
@@ -115,7 +115,7 @@ struct vlapic_timer {
 	uint32_t divisor_shift;
 };
 
-struct vlapic {
+struct acrn_vlapic {
 	struct vm		*vm;
 	struct vcpu		*vcpu;
 	struct lapic_regs	*apic_page;

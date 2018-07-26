@@ -263,7 +263,7 @@ void destroy_vcpu(struct vcpu *vcpu)
  */
 void reset_vcpu(struct vcpu *vcpu)
 {
-	struct vlapic *vlapic;
+	struct acrn_vlapic *vlapic;
 
 	pr_dbg("vcpu%hu reset", vcpu->vcpu_id);
 	ASSERT(vcpu->state != VCPU_RUNNING,
