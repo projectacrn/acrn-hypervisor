@@ -281,6 +281,15 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
 		break;
 	case 0x08U:
 		/* mov to cr8 */
+		/* According to SDM 6.15 "Exception and interrupt Reference":
+		 *
+		 * set reserved bit in CR8 causes GP to guest
+		 */
+		if (*regptr & ~0xFUL) {
+			pr_dbg("Invalid cr8 write operation from guest");
+			vcpu_inject_gp(vcpu, 0U);
+			break;
+		}
 		vlapic_set_cr8(vcpu->arch_vcpu.vlapic, *regptr);
 		break;
 	case 0x18U:
