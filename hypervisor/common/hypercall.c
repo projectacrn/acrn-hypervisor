@@ -361,60 +361,8 @@ int32_t hcall_set_ioreq_buffer(struct vm *vm, uint16_t vmid, uint64_t param)
 	return ret;
 }
 
-static void complete_ioreq(struct vcpu *vcpu)
-{
-	union vhm_request_buffer *req_buf;
-	struct vhm_request *vhm_req;
-
-	req_buf = (union vhm_request_buffer *)
-		vcpu->vm->sw.io_shared_page;
-	vhm_req = &req_buf->req_queue[vcpu->vcpu_id];
-
-	vhm_req->valid = 0;
-	atomic_store32(&vcpu->ioreq_pending, 0U);
-}
-
-static void emulate_io_post(struct vcpu *vcpu)
-{
-	/*
-	 * If vcpu is in Zombie state and will be destroyed soon. Just
-	 * mark ioreq done and don't resume vcpu.
-	 */
-	if (vcpu->state == VCPU_ZOMBIE) {
-		complete_ioreq(vcpu);
-		return;
-	}
-
-	switch (vcpu->req.type) {
-	case REQ_MMIO:
-		request_vcpu_pre_work(vcpu, ACRN_VCPU_MMIO_COMPLETE);
-		break;
-
-	case REQ_PORTIO:
-	case REQ_PCICFG:
-		/* REQ_PORTIO on 0xcf8 & 0xcfc may switch to REQ_PCICFG in some
-		 * cases. It works to apply the post-work for REQ_PORTIO on
-		 * REQ_PCICFG because the format of the first 28 bytes of
-		 * REQ_PORTIO & REQ_PCICFG requests are exactly the same and
-		 * post-work is mainly interested in the read value.
-		 */
-		dm_emulate_pio_post(vcpu);
-		break;
-
-	default:
-		/* REQ_WP can only be triggered on writes which do not need
-		 * post-work. Just mark the ioreq done. */
-		complete_ioreq(vcpu);
-		break;
-	}
-
-	resume_vcpu(vcpu);
-}
-
 int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 {
-	union vhm_request_buffer *req_buf;
-	struct vhm_request *req;
 	struct vcpu *vcpu;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
@@ -434,14 +382,7 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 		return -EINVAL;
 	}
 
-	req_buf = (union vhm_request_buffer *)target_vm->sw.io_shared_page;
-	req = req_buf->req_queue + vcpu_id;
-
-	if ((req->valid != 0) &&
-		((req->processed == REQ_STATE_SUCCESS) ||
-		 (req->processed == REQ_STATE_FAILED))) {
-		emulate_io_post(vcpu);
-	}
+	emulate_io_post(vcpu);
 
 	return 0;
 }

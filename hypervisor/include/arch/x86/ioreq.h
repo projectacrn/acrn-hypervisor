@@ -115,7 +115,6 @@ void   allow_guest_io_access(struct vm *vm, uint32_t address_arg, uint32_t nbyte
 void   register_io_emulation_handler(struct vm *vm, struct vm_io_range *range,
 		io_read_fn_t io_read_fn_ptr,
 		io_write_fn_t io_write_fn_ptr);
-int dm_emulate_pio_post(struct vcpu *vcpu);
 
 int register_mmio_emulation_handler(struct vm *vm,
 	hv_mem_io_handler_t read_write, uint64_t start,
@@ -126,6 +125,7 @@ int32_t emulate_mmio_post(struct vcpu *vcpu, struct io_request *io_req);
 int32_t dm_emulate_mmio_post(struct vcpu *vcpu);
 
 int32_t emulate_io(struct vcpu *vcpu, struct io_request *io_req);
+void emulate_io_post(struct vcpu *vcpu);
 
 int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct io_request *req);
 
