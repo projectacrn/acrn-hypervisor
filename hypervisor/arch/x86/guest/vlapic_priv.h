@@ -109,7 +109,7 @@ struct vlapic_ops {
 };
 
 struct vlapic_timer {
-	struct timer timer;
+	struct hv_timer timer;
 	uint32_t mode;
 	uint32_t tmicr;
 	uint32_t divisor_shift;

@@ -10,7 +10,7 @@
 static spinlock_t lock;
 
 static uint32_t serial_handle = SERIAL_INVALID_HANDLE;
-struct timer console_timer;
+struct hv_timer console_timer;
 
 #define CONSOLE_KICK_TIMER_TIMEOUT  40 /* timeout is 40ms*/
 

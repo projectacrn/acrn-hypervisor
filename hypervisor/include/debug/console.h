@@ -8,7 +8,7 @@
 #define CONSOLE_H
 
 #ifdef HV_DEBUG
-extern struct timer console_timer;
+extern struct hv_timer console_timer;
 
 /** Initializes the console module.
  *

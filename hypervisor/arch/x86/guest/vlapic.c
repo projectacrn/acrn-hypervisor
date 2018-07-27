@@ -280,7 +280,7 @@ static void vlapic_create_timer(struct acrn_vlapic *vlapic)
 
 static void vlapic_reset_timer(struct acrn_vlapic *vlapic)
 {
-	struct timer *timer;
+	struct hv_timer *timer;
 
 	if (vlapic == NULL) {
 		return;
@@ -299,7 +299,7 @@ set_expiration(struct acrn_vlapic *vlapic)
 	uint64_t now = rdtsc();
 	uint64_t delta;
 	struct vlapic_timer *vtimer;
-	struct timer *timer;
+	struct hv_timer *timer;
 	uint32_t tmicr, divisor_shift;
 
 	vtimer = &vlapic->vtimer;
@@ -328,7 +328,7 @@ static void vlapic_update_lvtt(struct acrn_vlapic *vlapic,
 	struct vlapic_timer *vtimer = &vlapic->vtimer;
 
 	if (vtimer->mode != timer_mode) {
-		struct timer *timer = &vtimer->timer;
+		struct hv_timer *timer = &vtimer->timer;
 
 		/*
 		 * A write to the LVT Timer Register that changes
@@ -411,7 +411,7 @@ static uint64_t vlapic_get_tsc_deadline_msr(struct acrn_vlapic *vlapic)
 static void vlapic_set_tsc_deadline_msr(struct acrn_vlapic *vlapic,
 			uint64_t val_arg)
 {
-	struct timer *timer;
+	struct hv_timer *timer;
 	uint64_t val = val_arg;
 
 	if (!vlapic_lvtt_tsc_deadline(vlapic)) {

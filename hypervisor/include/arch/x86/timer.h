@@ -18,7 +18,7 @@ struct per_cpu_timers {
 	struct list_head timer_list;	/* it's for runtime active timer list */
 };
 
-struct timer {
+struct hv_timer {
 	struct list_head node;		/* link all timers */
 	int mode;			/* timer mode: one-shot or periodic */
 	uint64_t fire_tsc;		/* tsc deadline to interrupt */
@@ -31,7 +31,7 @@ struct timer {
  * Don't initialize a timer twice if it has been add to the timer list
  * after call add_timer. If u want, delete the timer from the list first.
  */
-static inline void initialize_timer(struct timer *timer,
+static inline void initialize_timer(struct hv_timer *timer,
 				timer_handle_t func,
 				void *priv_data,
 				uint64_t fire_tsc,
@@ -51,8 +51,8 @@ static inline void initialize_timer(struct timer *timer,
 /*
  * Don't call add_timer/del_timer in the timer callback function.
  */
-int add_timer(struct timer *timer);
-void del_timer(struct timer *timer);
+int add_timer(struct hv_timer *timer);
+void del_timer(struct hv_timer *timer);
 
 void timer_softirq(uint16_t pcpu_id);
 void timer_init(void);
