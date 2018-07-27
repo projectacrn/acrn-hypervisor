@@ -334,6 +334,8 @@ int32_t hcall_set_ioreq_buffer(struct vm *vm, uint16_t vmid, uint64_t param)
 	uint64_t hpa = 0UL;
 	struct acrn_set_ioreq_buffer iobuf;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
+	union vhm_request_buffer *req_buf;
+	uint16_t i;
 
 	if (target_vm == NULL) {
 		return -1;
@@ -357,6 +359,11 @@ int32_t hcall_set_ioreq_buffer(struct vm *vm, uint16_t vmid, uint64_t param)
 	}
 
 	target_vm->sw.io_shared_page = HPA2HVA(hpa);
+
+	req_buf = target_vm->sw.io_shared_page;
+	for (i = 0U; i < VHM_REQUEST_MAX; i++) {
+		atomic_store32(&req_buf->req_queue[i].processed, REQ_STATE_FREE);
+	}
 
 	return ret;
 }

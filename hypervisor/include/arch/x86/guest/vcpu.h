@@ -248,7 +248,6 @@ struct vcpu {
 	bool launched; /* Whether the vcpu is launched on target pcpu */
 	uint32_t paused_cnt; /* how many times vcpu is paused */
 	uint32_t running; /* vcpu is picked up and run? */
-	uint32_t ioreq_pending; /* ioreq is ongoing or not? */
 
 	struct io_request req; /* used by io/ept emulation */
 

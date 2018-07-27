@@ -117,7 +117,6 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	vcpu->launched = false;
 	vcpu->paused_cnt = 0U;
 	vcpu->running = 0;
-	vcpu->ioreq_pending = 0;
 	vcpu->arch_vcpu.nr_sipi = 0;
 	vcpu->pending_pre_work = 0U;
 	vcpu->state = VCPU_INIT;
@@ -277,7 +276,6 @@ void reset_vcpu(struct vcpu *vcpu)
 	vcpu->launched = false;
 	vcpu->paused_cnt = 0U;
 	vcpu->running = 0;
-	vcpu->ioreq_pending = 0;
 	vcpu->arch_vcpu.nr_sipi = 0;
 	vcpu->pending_pre_work = 0U;
 

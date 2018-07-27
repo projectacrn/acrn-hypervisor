@@ -26,8 +26,9 @@
  */
 #define VHM_REQUEST_MAX 16U
 
+#define REQ_STATE_FREE          3
 #define REQ_STATE_PENDING	0
-#define REQ_STATE_SUCCESS	1
+#define REQ_STATE_COMPLETE	1
 #define REQ_STATE_PROCESSING	2
 #define REQ_STATE_FAILED	-1
 
@@ -90,27 +91,122 @@ union vhm_io_request {
 	int64_t reserved1[8];
 };
 
-/* vhm_request are 256Bytes aligned */
+/**
+ * @brief 256-byte VHM requests
+ *
+ * The state transitions of a VHM request are:
+ *
+ *    FREE -> PENDING -> PROCESSING -> COMPLETE -> FREE -> ...
+ *                                \              /
+ *                                 +--> FAILED -+
+ *
+ * When a request is in COMPLETE or FREE state, the request is owned by the
+ * hypervisor. SOS (VHM or DM) shall not read or write the internals of the
+ * request except the state.
+ *
+ * When a request is in PENDING or PROCESSING state, the request is owned by
+ * SOS. The hypervisor shall not read or write the request other than the state.
+ *
+ * Based on the rules above, a typical VHM request lifecycle should looks like
+ * the following.
+ *
+ *                     (assume the initial state is FREE)
+ *
+ *       SOS vCPU 0                SOS vCPU x                    UOS vCPU y
+ *
+ *                                                 hypervisor:
+ *                                                     fill in type, addr, etc.
+ *                                                     pause UOS vcpu y
+ *                                                     set state to PENDING (a)
+ *                                                     fire upcall to SOS vCPU 0
+ *
+ *  VHM:
+ *      scan for pending requests
+ *      set state to PROCESSING (b)
+ *      assign requests to clients (c)
+ *
+ *                            client:
+ *                                scan for assigned requests
+ *                                handle the requests (d)
+ *                                set state to COMPLETE
+ *                                notify the hypervisor
+ *
+ *                            hypervisor:
+ *                                resume UOS vcpu y (e)
+ *
+ *                                                 hypervisor:
+ *                                                     post-work (f)
+ *                                                     set state to FREE
+ *
+ * Note that the following shall hold.
+ *
+ *   1. (a) happens before (b)
+ *   2. (c) happens before (d)
+ *   3. (e) happens before (f)
+ *   4. One vCPU cannot trigger another I/O request before the previous one has
+ *      completed (i.e. the state switched to FREE)
+ *
+ * Accesses to the state of a vhm_request shall be atomic and proper barriers
+ * are needed to ensure that:
+ *
+ *   1. Setting state to PENDING is the last operation when issuing a request in
+ *      the hypervisor, as the hypervisor shall not access the request any more.
+ *
+ *   2. Due to similar reasons, setting state to COMPLETE is the last operation
+ *      of request handling in VHM or clients in SOS.
+ *
+ * The state FAILED is an obsolete state to indicate that the I/O request cannot
+ * be handled. In such cases the mediators and DM should switch the state to
+ * COMPLETE with the value set to all 1s for read, and skip the request for
+ * writes. This state WILL BE REMOVED after the mediators and DM are updated to
+ * follow this rule.
+ */
 struct vhm_request {
-	/* offset: 0bytes - 63bytes */
+	/**
+	 * Type of this request.
+	 *
+	 * Byte offset: 0.
+	 */
 	uint32_t type;
-	int32_t reserved0[15];
 
-	/* offset: 64bytes-127bytes */
+	/**
+	 * Reserved.
+	 *
+	 * Byte offset: 4.
+	 */
+	uint32_t reserved0[15];
+
+	/**
+	 * Details about this request. For REQ_PORTIO, this has type
+	 * pio_request. For REQ_MMIO and REQ_WP, this has type mmio_request. For
+	 * REQ_PCICFG, this has type pci_request.
+	 *
+	 * Byte offset: 64.
+	 */
 	union vhm_io_request reqs;
 
-	/* True: valid req which need VHM to process.
-	 * ACRN write, VHM read only
-	 **/
+	/**
+	 * Whether this request is valid for processing. ACRN write, VHM read
+	 * only.
+	 *
+	 * Warning; this field is obsolete and will be removed soon.
+	 *
+	 * Byte offset: 128.
+	 */
 	int32_t valid;
 
-	/* the client which is distributed to handle this request */
+	/**
+	 * The client which is distributed to handle this request. Accessed by
+	 * VHM only.
+	 *
+	 * Byte offset: 132.
+	 */
 	int32_t client;
 
-	/* 1: VHM had processed and success
-	 *  0: VHM had not yet processed
-	 * -1: VHM failed to process. Invalid request
-	 * VHM write, ACRN read only
+	/**
+	 * The status of this request, taking REQ_STATE_xxx as values.
+	 *
+	 * Byte offset: 136.
 	 */
 	int32_t processed;
 } __aligned(256);

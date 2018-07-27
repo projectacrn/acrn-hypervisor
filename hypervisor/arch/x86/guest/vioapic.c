@@ -613,12 +613,10 @@ int vioapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
 					gpa,
 					&data);
 			mmio->value = (uint64_t)data;
-			io_req->processed = REQ_STATE_SUCCESS;
 		} else if (mmio->direction == REQUEST_WRITE) {
 			vioapic_mmio_write(vm,
 					gpa,
 					data);
-			io_req->processed = REQ_STATE_SUCCESS;
 		} else {
 			/* Can never happen due to the range of direction. */
 		}
@@ -627,6 +625,7 @@ int vioapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
 		ret = -EINVAL;
 	}
 
+	io_req->processed = REQ_STATE_COMPLETE;
 	return ret;
 }
 

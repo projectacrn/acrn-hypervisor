@@ -2069,17 +2069,16 @@ int vlapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
 				gpa,
 				&mmio_req->value,
 				mmio_req->size);
-		io_req->processed = REQ_STATE_SUCCESS;
 	} else if (mmio_req->direction == REQUEST_WRITE) {
 		ret = vlapic_write_mmio_reg(vcpu,
 				gpa,
 				mmio_req->value,
 				mmio_req->size);
-		io_req->processed = REQ_STATE_SUCCESS;
 	} else {
 		/* Can never happen due to the range of mmio_req->direction. */
 	}
 
+	io_req->processed = REQ_STATE_COMPLETE;
 	return ret;
 }
 
