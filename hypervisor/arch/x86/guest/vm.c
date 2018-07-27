@@ -357,6 +357,15 @@ void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec)
 	schedule_vcpu(bsp);
 }
 
+static bool is_vm0_bsp(uint16_t pcpu_id)
+{
+#ifdef CONFIG_VM0_DESC
+	return pcpu_id == vm0_desc.vm_pcpu_ids[0];
+#else
+	return pcpu_id == BOOT_CPU_ID;
+#endif
+}
+
 /* Create vm/vcpu for vm0 */
 int prepare_vm0(void)
 {
@@ -386,6 +395,20 @@ int prepare_vm0(void)
 	err = start_vm(vm);
 
 	pr_acrnlog("Start VM0");
+
+	return err;
+}
+
+int prepare_vm(uint16_t pcpu_id)
+{
+	int err = 0;
+
+	if (is_vm0_bsp(pcpu_id)) {
+		err  = prepare_vm0();
+		if (err != 0) {
+			return err;
+		}
+	}
 
 	return err;
 }
