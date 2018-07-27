@@ -13,11 +13,10 @@ struct shell;
 
 /* Structure to hold the details about shell input and output */
 struct shell_io {
-	void *io_session_info;
-	int (*io_init)(struct shell *);
-	int (*io_deinit)(struct shell *);
-	void (*io_puts)(struct shell *, char *);
-	uint8_t (*io_getc)(struct shell *);
+	void (*io_init)(struct shell *);
+	void (*io_deinit)(struct shell *);
+	void (*io_puts)(struct shell *, const char *);
+	char (*io_getc)(struct shell *);
 	void (*io_special)(struct shell *, uint8_t);
 	bool io_echo_on;
 };
@@ -159,15 +158,15 @@ int shell_set_loglevel(struct shell *p_shell, int argc, char **argv);
 int shell_cpuid(struct shell *p_shell, int argc, char **argv);
 struct shell_cmd *shell_find_cmd(struct shell *p_shell, const char *cmd);
 int shell_process_cmd(struct shell *p_shell, char *p_input_line);
-int shell_terminate_serial(struct shell *p_shell);
-int shell_init_serial(struct shell *p_shell);
-void shell_puts_serial(struct shell *p_shell, char *string_ptr);
-uint8_t shell_getc_serial(struct shell *p_shell);
+void shell_terminate_serial(struct shell *p_shell);
+void shell_init_serial(struct shell *p_shell);
+void shell_puts_serial(struct shell *p_shell, const char *string_ptr);
+char shell_getc_serial(struct shell *p_shell);
 void shell_special_serial(struct shell *p_shell, uint8_t ch);
 void kick_shell(struct shell *p_shell);
 
 void shell_puts(struct shell *p_shell, const char *str_ptr);
-int shell_set_name(struct shell *p_shell, const char *name);
+void shell_set_name(struct shell *p_shell, const char *name);
 int shell_trigger_crash(struct shell *p_shell, int argc, char **argv);
 
 #endif /* SHELL_INTER_H */

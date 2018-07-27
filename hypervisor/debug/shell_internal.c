@@ -7,7 +7,6 @@
 #include <hypervisor.h>
 #include <reboot.h>
 #include "shell_internal.h"
-#include "serial_internal.h"
 
 #define TEMP_STR_SIZE		60
 #define MAX_STR_SIZE		256
@@ -350,27 +349,13 @@ int shell_process_cmd(struct shell *p_shell, char *p_input_line)
 	return status;
 }
 
-int shell_init_serial(struct shell *p_shell)
+void shell_init_serial(struct shell *p_shell)
 {
-	int status = 0;
-
-	uint32_t serial_handle = get_serial_handle();
-
-	if (serial_handle != SERIAL_INVALID_HANDLE) {
-		p_shell->session_io.io_session_info =
-				(void *)(uint64_t)serial_handle;
-
-		status = shell_set_name(p_shell, "Serial");
-	} else {
-		status = NO_SERIAL_SHELL;
-		pr_err("Error: Unable to get a valid serial port handle");
-	}
+	shell_set_name(p_shell, "Serial");
 
 	/* Zero fill the input buffer */
 	(void)memset((void *)p_shell->input_line[p_shell->input_line_active], 0,
 			SHELL_CMD_MAX_LEN + 1U);
-
-	return status;
 }
 
 #define SHELL_ROWS	10
@@ -1122,30 +1107,20 @@ int shell_trigger_crash(struct shell *p_shell, int argc, char **argv)
 	return 0;
 }
 
-int shell_terminate_serial(struct shell *p_shell)
+void shell_terminate_serial(__unused struct shell *p_shell)
 {
-	/* Shell shouldn't own the serial port handle anymore. */
-	p_shell->session_io.io_session_info = NULL;
-
-	return 0;
 }
 
-void shell_puts_serial(struct shell *p_shell, char *string_ptr)
+void shell_puts_serial(__unused struct shell *p_shell, const char *string_ptr)
 {
-	uint32_t serial_handle =
-		(uint32_t)(uint64_t)p_shell->session_io.io_session_info;
-
 	/* Output the string */
-	(void)serial_puts(serial_handle, string_ptr,
-				strnlen_s(string_ptr, SHELL_STRING_MAX_LEN));
+	(void)console_write(string_ptr, strnlen_s(string_ptr,
+				SHELL_STRING_MAX_LEN));
 }
 
-uint8_t shell_getc_serial(struct shell *p_shell)
+char shell_getc_serial(__unused struct shell *p_shell)
 {
-	uint32_t serial_handle =
-		(uint32_t)(uint64_t)p_shell->session_io.io_session_info;
-
-	return serial_getc(serial_handle);
+	return console_getc();
 }
 
 void shell_special_serial(struct shell *p_shell, uint8_t ch)

@@ -478,9 +478,6 @@ static void bsp_boot_post(void)
 	/* Perform any necessary BSP initialization */
 	init_bsp();
 
-	/* Initialize Serial */
-	serial_init();
-
 	/* Initialize console */
 	console_init();
 

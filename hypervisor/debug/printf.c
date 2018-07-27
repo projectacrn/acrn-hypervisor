@@ -23,10 +23,10 @@ static int charout(int cmd, const char *s_arg, uint32_t sz_arg, void *hnd)
 
 		*nchars += (s - p);
 	} else {
-	/* fill mode */
+		/* fill mode */
 		*nchars += sz;
 		while (sz != 0U) {
-			(void)console_putc(*s);
+			console_putc(s);
 			sz--;
 		}
 	}
