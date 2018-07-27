@@ -13,7 +13,7 @@
 
 uint32_t tsc_khz = 0U;
 
-static void run_timer(struct timer *timer)
+static void run_timer(struct hv_timer *timer)
 {
 	/* deadline = 0 means stop timer, we should skip */
 	if ((timer->func != NULL) && timer->fire_tsc != 0UL) {
@@ -32,12 +32,12 @@ static int tsc_deadline_handler(__unused int irq, __unused void *data)
 
 static inline void update_physical_timer(struct per_cpu_timers *cpu_timer)
 {
-	struct timer *timer = NULL;
+	struct hv_timer *timer = NULL;
 
 	/* find the next event timer */
 	if (!list_empty(&cpu_timer->timer_list)) {
 		timer = list_entry((&cpu_timer->timer_list)->next,
-			struct timer, node);
+			struct hv_timer, node);
 
 		/* it is okay to program a expired time */
 		msr_write(MSR_IA32_TSC_DEADLINE, timer->fire_tsc);
@@ -45,16 +45,16 @@ static inline void update_physical_timer(struct per_cpu_timers *cpu_timer)
 }
 
 static void __add_timer(struct per_cpu_timers *cpu_timer,
-			struct timer *timer,
+			struct hv_timer *timer,
 			bool *need_update)
 {
 	struct list_head *pos, *prev;
-	struct timer *tmp;
+	struct hv_timer *tmp;
 	uint64_t tsc = timer->fire_tsc;
 
 	prev = &cpu_timer->timer_list;
 	list_for_each(pos, &cpu_timer->timer_list) {
-		tmp = list_entry(pos, struct timer, node);
+		tmp = list_entry(pos, struct hv_timer, node);
 		if (tmp->fire_tsc < tsc) {
 			prev = &tmp->node;
 		}
@@ -71,7 +71,7 @@ static void __add_timer(struct per_cpu_timers *cpu_timer,
 	}
 }
 
-int add_timer(struct timer *timer)
+int add_timer(struct hv_timer *timer)
 {
 	struct per_cpu_timers *cpu_timer;
 	uint16_t pcpu_id;
@@ -100,7 +100,7 @@ int add_timer(struct timer *timer)
 
 }
 
-void del_timer(struct timer *timer)
+void del_timer(struct hv_timer *timer)
 {
 	if ((timer != NULL) && !list_empty(&timer->node)) {
 		list_del_init(&timer->node);
@@ -184,7 +184,7 @@ void timer_cleanup(void)
 void timer_softirq(uint16_t pcpu_id)
 {
 	struct per_cpu_timers *cpu_timer;
-	struct timer *timer;
+	struct hv_timer *timer;
 	struct list_head *pos, *n;
 	int tries = MAX_TIMER_ACTIONS;
 	uint64_t current_tsc = rdtsc();
@@ -199,7 +199,7 @@ void timer_softirq(uint16_t pcpu_id)
 	 * already passed due to previously func()'s delay.
 	 */
 	list_for_each_safe(pos, n, &cpu_timer->timer_list) {
-		timer = list_entry(pos, struct timer, node);
+		timer = list_entry(pos, struct hv_timer, node);
 		/* timer expried */
 		tries--;
 		if (timer->fire_tsc <= current_tsc && tries > 0) {
