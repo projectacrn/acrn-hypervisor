@@ -112,7 +112,7 @@ enum intr_cpu_startup_shorthand {
 	INTR_CPU_STARTUP_UNKNOWN,
 };
 
-union lapic_id {
+union lapic_id_reg {
 	uint32_t value;
 	struct {
 		uint8_t xapic_id;
