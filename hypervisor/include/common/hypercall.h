@@ -203,7 +203,7 @@ int32_t hcall_set_ioreq_buffer(struct vm *vm, uint16_t vmid, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_notify_req_finish(uint16_t vmid, uint16_t vcpu_id);
+int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id);
 
 /**
  * @brief setup ept memory mapping
