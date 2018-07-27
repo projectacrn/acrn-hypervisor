@@ -278,9 +278,13 @@ static void init_cr0_cr4_host_mask(__unused struct vcpu *vcpu)
 		 * guest" feature */
 		cr0_always_on_mask = fixed0 & (~(CR0_PE | CR0_PG));
 		cr0_always_off_mask = ~fixed1;
+		/* SDM 2.5
+		 * bit 63:32 of CR0 and CR4 ar reserved and must be written
+		 * zero. We could merge it with always off mask.
+		 */
+		cr0_always_off_mask |= 0xFFFFFFFF00000000UL;
 
-
-		/* Read the CR$ fixed0 / fixed1 MSR registers */
+		/* Read the CR4 fixed0 / fixed1 MSR registers */
 		fixed0 = msr_read(MSR_IA32_VMX_CR4_FIXED0);
 		fixed1 = msr_read(MSR_IA32_VMX_CR4_FIXED1);
 
@@ -290,6 +294,12 @@ static void init_cr0_cr4_host_mask(__unused struct vcpu *vcpu)
 		cr4_always_on_mask = fixed0;
 		/* Record the bit fixed to 0 for CR4, including reserved bits */
 		cr4_always_off_mask = ~fixed1;
+		/* SDM 2.5
+		 * bit 63:32 of CR0 and CR4 ar reserved and must be written
+		 * zero. We could merge it with always off mask.
+		 */
+		cr4_always_off_mask |= 0xFFFFFFFF00000000UL;
+		cr4_always_off_mask |= CR4_RESERVED_MASK;
 		inited = true;
 	}
 

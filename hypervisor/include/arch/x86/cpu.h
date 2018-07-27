@@ -70,26 +70,29 @@
 #define CR3_PCD                 (1UL<<4U)	/* page-level cache disable */
 
 /* CR4 register definitions */
-#define CR4_VME                 (1UL<<0)	/* virtual 8086 mode extensions */
-#define CR4_PVI                 (1UL<<1)	/* protected mode virtual interrupts */
-#define CR4_TSD                 (1UL<<2)	/* time stamp disable */
-#define CR4_DE                  (1UL<<3)	/* debugging extensions */
-#define CR4_PSE                 (1UL<<4)	/* page size extensions */
-#define CR4_PAE                 (1UL<<5)	/* physical address extensions */
-#define CR4_MCE                 (1UL<<6)	/* machine check enable */
-#define CR4_PGE                 (1UL<<7)	/* page global enable */
-#define CR4_PCE                 (1UL<<8)
+#define CR4_VME                 (1UL<<0U)	/* virtual 8086 mode extensions */
+#define CR4_PVI                 (1UL<<1U)	/* protected mode virtual interrupts */
+#define CR4_TSD                 (1UL<<2U)	/* time stamp disable */
+#define CR4_DE                  (1UL<<3U)	/* debugging extensions */
+#define CR4_PSE                 (1UL<<4U)	/* page size extensions */
+#define CR4_PAE                 (1UL<<5U)	/* physical address extensions */
+#define CR4_MCE                 (1UL<<6U)	/* machine check enable */
+#define CR4_PGE                 (1UL<<7U)	/* page global enable */
+#define CR4_PCE                 (1UL<<8U)
 /* performance monitoring counter enable */
-#define CR4_OSFXSR              (1UL<<9)	/* OS support for FXSAVE/FXRSTOR */
-#define CR4_OSXMMEXCPT          (1UL<<10)
+#define CR4_OSFXSR              (1UL<<9U)	/* OS support for FXSAVE/FXRSTOR */
+#define CR4_OSXMMEXCPT          (1UL<<10U)
 /* OS support for unmasked SIMD floating point exceptions */
-#define CR4_VMXE                (1UL<<13)	/* VMX enable */
-#define CR4_SMXE                (1UL<<14)	/* SMX enable */
-#define CR4_PCIDE               (1UL<<17)	/* PCID enable */
-#define CR4_OSXSAVE             (1UL<<18)
-#define CR4_SMEP                (1UL<<20)
-#define CR4_SMAP                (1UL<<21)
+#define CR4_UMIP                (1UL<<11U)	/* User-Mode Inst prevention */
+#define CR4_VMXE                (1UL<<13U)	/* VMX enable */
+#define CR4_SMXE                (1UL<<14U)	/* SMX enable */
+#define CR4_FSGSBASE            (1UL<<16U)	/* RD(FS|GS|FS)BASE inst */
+#define CR4_PCIDE               (1UL<<17U)	/* PCID enable */
+#define CR4_OSXSAVE             (1UL<<18U)
 /* XSAVE and Processor Extended States enable bit */
+#define CR4_SMEP                (1UL<<20U)
+#define CR4_SMAP                (1UL<<21U)
+#define CR4_PKE                 (1UL<<22U)	/* Protect-key-enable */
 
 
 /*

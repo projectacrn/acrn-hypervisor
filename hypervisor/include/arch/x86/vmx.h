@@ -405,6 +405,12 @@
 
 /* CR4 bits hv want to trap to track status change */
 #define CR4_TRAP_MASK (CR4_PSE | CR4_PAE)
+#define	CR4_RESERVED_MASK ~(CR4_VME | CR4_PVI | CR4_TSD | CR4_DE | CR4_PSE | \
+				CR4_PAE | CR4_MCE | CR4_PGE | CR4_PCE |	     \
+				CR4_OSFXSR | CR4_PCIDE | CR4_OSXSAVE |       \
+				CR4_SMEP | CR4_FSGSBASE | CR4_VMXE |         \
+				CR4_OSXMMEXCPT | CR4_SMAP | CR4_PKE |        \
+				CR4_SMXE | CR4_UMIP )
 
 #define VMX_SUPPORT_UNRESTRICTED_GUEST (1U<<5)
 
