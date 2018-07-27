@@ -107,6 +107,68 @@ int32_t dm_emulate_mmio_post(struct vcpu *vcpu)
 	return emulate_mmio_post(vcpu, io_req);
 }
 
+static void complete_ioreq(struct vcpu *vcpu)
+{
+	union vhm_request_buffer *req_buf;
+	struct vhm_request *vhm_req;
+
+	req_buf = (union vhm_request_buffer *)
+		vcpu->vm->sw.io_shared_page;
+	vhm_req = &req_buf->req_queue[vcpu->vcpu_id];
+
+	vhm_req->valid = 0;
+	atomic_store32(&vcpu->ioreq_pending, 0U);
+}
+
+void emulate_io_post(struct vcpu *vcpu)
+{
+	union vhm_request_buffer *req_buf;
+	struct vhm_request *vhm_req;
+
+	req_buf = (union vhm_request_buffer *)vcpu->vm->sw.io_shared_page;
+	vhm_req = &req_buf->req_queue[vcpu->vcpu_id];
+
+	if ((vhm_req->valid == 0) ||
+		((vhm_req->processed != REQ_STATE_SUCCESS) &&
+		 (vhm_req->processed != REQ_STATE_FAILED))) {
+		return;
+	}
+
+	/*
+	 * If vcpu is in Zombie state and will be destroyed soon. Just
+	 * mark ioreq done and don't resume vcpu.
+	 */
+	if (vcpu->state == VCPU_ZOMBIE) {
+		complete_ioreq(vcpu);
+		return;
+	}
+
+	switch (vcpu->req.type) {
+	case REQ_MMIO:
+		request_vcpu_pre_work(vcpu, ACRN_VCPU_MMIO_COMPLETE);
+		break;
+
+	case REQ_PORTIO:
+	case REQ_PCICFG:
+		/* REQ_PORTIO on 0xcf8 & 0xcfc may switch to REQ_PCICFG in some
+		 * cases. It works to apply the post-work for REQ_PORTIO on
+		 * REQ_PCICFG because the format of the first 28 bytes of
+		 * REQ_PORTIO & REQ_PCICFG requests are exactly the same and
+		 * post-work is mainly interested in the read value.
+		 */
+		dm_emulate_pio_post(vcpu);
+		break;
+
+	default:
+		/* REQ_WP can only be triggered on writes which do not need
+		 * post-work. Just mark the ioreq done. */
+		complete_ioreq(vcpu);
+		break;
+	}
+
+	resume_vcpu(vcpu);
+}
+
 /**
  * Try handling the given request by any port I/O handler registered in the
  * hypervisor.
