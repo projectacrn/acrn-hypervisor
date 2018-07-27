@@ -716,9 +716,11 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 			"RFLAGS=0x%016llx\r\n", cur_context->rip,
 			cur_context->guest_cpu_regs.regs.rsp, cur_context->rflags);
 	shell_puts(p_shell, temp_str);
-	snprintf(temp_str, MAX_STR_SIZE, "=  CR0=0x%016llx  CR2=0x%016llx "
-			" CR3=0x%016llx\r\n", cur_context->cr0,
-			cur_context->cr2, cur_context->cr3);
+	snprintf(temp_str, MAX_STR_SIZE, "=  CR0=0x%016llx  CR2=0x%016llx\r\n",
+			cur_context->cr0, cur_context->cr2);
+	shell_puts(p_shell, temp_str);
+	snprintf(temp_str, MAX_STR_SIZE, "=  CR3=0x%016llx  CR4=0x%016llx\r\n",
+			cur_context->cr3, cur_context->cr4);
 	shell_puts(p_shell, temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  RAX=0x%016llx  RBX=0x%016llx  "
 			"RCX=0x%016llx\r\n",
