@@ -100,7 +100,7 @@ struct cpu_gp_regs {
 	uint64_t r15;
 };
 
-struct segment {
+struct segment_sel {
 	uint16_t selector;
 	uint64_t base;
 	uint32_t limit;
@@ -155,16 +155,16 @@ struct run_context {
 	uint64_t vmx_cr4;
 
 	/* segment registers */
-	struct segment cs;
-	struct segment ss;
-	struct segment ds;
-	struct segment es;
-	struct segment fs;
-	struct segment gs;
-	struct segment tr;
-	struct segment idtr;
-	struct segment ldtr;
-	struct segment gdtr;
+	struct segment_sel cs;
+	struct segment_sel ss;
+	struct segment_sel ds;
+	struct segment_sel es;
+	struct segment_sel fs;
+	struct segment_sel gs;
+	struct segment_sel tr;
+	struct segment_sel idtr;
+	struct segment_sel ldtr;
+	struct segment_sel gdtr;
 
 	/* The 512 bytes area to save the FPU/MMX/SSE states for the guest */
 	uint64_t
