@@ -125,7 +125,7 @@ struct acrn_vlapic {
 	uint32_t		esr_pending;
 	int			esr_firing;
 
-	struct vlapic_timer	vlapic_timer;
+	struct vlapic_timer	vtimer;
 
 	/*
 	 * The 'isrvec_stk' is a stack of vectors injected by the local apic.
