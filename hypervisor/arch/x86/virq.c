@@ -75,7 +75,7 @@ static bool is_guest_irq_enabled(struct vcpu *vcpu)
 
 static bool vcpu_pending_request(struct vcpu *vcpu)
 {
-	struct vlapic *vlapic;
+	struct acrn_vlapic *vlapic;
 	uint32_t vector = 0U;
 	int ret = 0;
 
@@ -112,7 +112,7 @@ void vcpu_make_request(struct vcpu *vcpu, uint16_t eventid)
 
 static int vcpu_do_pending_event(struct vcpu *vcpu)
 {
-	struct vlapic *vlapic = vcpu->arch_vcpu.vlapic;
+	struct acrn_vlapic *vlapic = vcpu->arch_vcpu.vlapic;
 	uint32_t vector = 0U;
 	int ret = 0;
 

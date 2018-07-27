@@ -160,6 +160,8 @@ Source files
   command line.
 - android_events.c
   Sync events detected by android crashlog.
+- loop.c
+  This file provides interfaces to read from image.
 
 Configuration files
 *******************

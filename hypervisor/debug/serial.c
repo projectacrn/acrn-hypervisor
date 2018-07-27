@@ -317,8 +317,9 @@ static int serial_putc(uint32_t uart_handle, int c)
 	return ((bytes_written > 0U) ? c : (SERIAL_EOF));
 }
 
-int serial_puts(uint32_t uart_handle, const char *s, uint32_t length_arg)
+int serial_puts(uint32_t uart_handle, const char *s_arg, uint32_t length_arg)
 {
+	const char *s = s_arg;
 	const char *old_data = s;
 	uint32_t index;
 	struct uart *port;

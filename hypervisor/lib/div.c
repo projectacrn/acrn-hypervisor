@@ -6,10 +6,11 @@
 
 #include <hv_lib.h>
 
-static int do_udiv32(uint32_t dividend_arg, uint32_t divisor,
+static int do_udiv32(uint32_t dividend_arg, uint32_t divisor_arg,
 	struct udiv_result *res)
 {
 	uint32_t dividend = dividend_arg;
+	uint32_t divisor = divisor_arg;
 	uint32_t mask;
 	/* dividend is always greater than or equal to the divisor. Neither
 	 * divisor nor dividend are 0. Thus: * clz(dividend) and clz(divisor)

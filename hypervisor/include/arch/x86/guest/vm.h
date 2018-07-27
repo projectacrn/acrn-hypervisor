@@ -124,7 +124,7 @@ struct vcpuid_entry {
 	uint32_t padding;
 };
 
-struct vpic;
+struct acrn_vpic;
 struct vm {
 	struct vm_attr attr;	/* Reference to this VM's attributes */
 	struct vm_hw_info hw;	/* Reference to this VM's HW information */
@@ -133,7 +133,7 @@ struct vm {
 	struct vm_arch arch_vm;	/* Reference to this VM's arch information */
 	enum vm_state state;	/* VM state */
 	void *vuart;		/* Virtual UART */
-	struct vpic *vpic;      /* Virtual PIC */
+	struct acrn_vpic *vpic;      /* Virtual PIC */
 	enum vpic_wire_mode vpic_wire_mode;
 	struct iommu_domain *iommu_domain;	/* iommu domain of this VM */
 	struct list_head list; /* list of VM */

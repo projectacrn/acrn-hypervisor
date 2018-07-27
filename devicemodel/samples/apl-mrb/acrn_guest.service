@@ -1,0 +1,13 @@
+[Unit]
+Description=Start ACRN UOS
+After=systemd-networkd.service
+
+ConditionPathExists=/sys/kernel/gvt
+
+[Service]
+Type=simple
+RemainAfterExit=false
+ExecStart=/bin/sh /usr/share/acrn/samples/apl-mrb/launch_uos.sh -V 5
+
+[Install]
+WantedBy=multi-user.target

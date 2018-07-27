@@ -306,6 +306,7 @@ echo "-V 1 means just launching 1 clearlinux UOS"
 echo "-V 2 means just launching 1 android UOS"
 echo "-V 3 means launching 1 clearlinux UOS + 1 android UOS"
 echo "-V 4 means launching 2 clearlinux UOSs"
+echo "-V 5 means auto check android/linux UOS; if exist, launch it"
 }
 
 launch_type=1
@@ -331,6 +332,14 @@ done
 
 mkdir -p /data
 mount /dev/mmcblk1p3 /data
+
+if [ $launch_type == 5 ]; then
+	if [ -f "/data/android/android.img" ]; then
+	  launch_type=2;
+	else
+	  launch_type=1;  
+	fi
+fi
 
 # make sure there is enough 2M hugepages in the pool
 echo 1024 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages

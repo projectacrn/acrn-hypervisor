@@ -199,7 +199,7 @@ void
 vioapic_update_tmr(struct vcpu *vcpu)
 {
 	struct vioapic *vioapic;
-	struct vlapic *vlapic;
+	struct acrn_vlapic *vlapic;
 	union ioapic_rte rte;
 	uint32_t vector, delmode;
 	bool level;
@@ -596,32 +596,31 @@ vioapic_pincount(struct vm *vm)
 	}
 }
 
-int vioapic_mmio_access_handler(struct vcpu *vcpu, struct mem_io *mmio,
+int vioapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
 		__unused void *handler_private_data)
 {
 	struct vm *vm = vcpu->vm;
-	uint64_t gpa = mmio->paddr;
+	struct mmio_request *mmio = &io_req->reqs.mmio;
+	uint64_t gpa = mmio->address;
 	int ret = 0;
 
 	/* Note all RW to IOAPIC are 32-Bit in size */
-	if (mmio->access_size == 4U) {
-		uint32_t data = mmio->value;
+	if (mmio->size == 4UL) {
+		uint32_t data = (uint32_t)mmio->value;
 
-		if (mmio->read_write == HV_MEM_IO_READ) {
+		if (mmio->direction == REQUEST_READ) {
 			vioapic_mmio_read(vm,
 					gpa,
 					&data);
 			mmio->value = (uint64_t)data;
-			mmio->mmio_status = MMIO_TRANS_VALID;
-
-		} else if (mmio->read_write == HV_MEM_IO_WRITE) {
+			io_req->processed = REQ_STATE_SUCCESS;
+		} else if (mmio->direction == REQUEST_WRITE) {
 			vioapic_mmio_write(vm,
 					gpa,
 					data);
-
-			mmio->mmio_status = MMIO_TRANS_VALID;
+			io_req->processed = REQ_STATE_SUCCESS;
 		} else {
-			/* Can never happen due to the range of read_write. */
+			/* Can never happen due to the range of direction. */
 		}
 	} else {
 		pr_err("All RW to IOAPIC must be 32-bits in size");
@@ -645,8 +644,9 @@ bool vioapic_get_rte(struct vm *vm, uint8_t pin, union ioapic_rte *rte)
 }
 
 #ifdef HV_DEBUG
-void get_vioapic_info(char *str, int str_max, uint16_t vmid)
+void get_vioapic_info(char *str_arg, int str_max, uint16_t vmid)
 {
+	char *str = str_arg;
 	int len, size = str_max;
 	union ioapic_rte rte;
 	uint32_t delmode, vector, dest;

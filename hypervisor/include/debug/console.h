@@ -24,7 +24,7 @@ void console_init(void);
  *          and no character was written.
  */
 
-int console_puts(const char *str);
+int console_puts(const char *s_arg);
 
 /** Writes a given number of characters to the console.
  *
@@ -35,7 +35,7 @@ int console_puts(const char *str);
  *          and no character was written.
  */
 
-int console_write(const char *str, size_t len);
+int console_write(const char *s_arg, size_t len);
 
 /** Writes a single character to the console.
  *

@@ -104,6 +104,6 @@ int vpic_set_irq_trigger(struct vm *vm, uint32_t irq,
 int vpic_get_irq_trigger(struct vm *vm, uint32_t irq,
 	enum vpic_trigger *trigger);
 
-bool vpic_is_pin_mask(struct vpic *vpic, uint8_t virt_pin_arg);
+bool vpic_is_pin_mask(struct acrn_vpic *vpic, uint8_t virt_pin_arg);
 
 #endif	/* _VPIC_H_ */

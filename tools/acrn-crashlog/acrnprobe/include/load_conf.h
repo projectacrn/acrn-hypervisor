@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <sys/queue.h>
 #include <openssl/sha.h>
+#include <ext2fs/ext2fs.h>
 #include "event_queue.h"
 
 #define CONTENT_MAX 10
@@ -34,8 +35,9 @@ struct vm_t {
 	char *interval;
 	char *syncevent[VM_EVENT_TYPE_MAX];
 
-	int online;
+	ext2_filsys datafs;
 	unsigned long history_size[SENDER_MAX];
+	char *history_data;
 	char last_synced_line_key[SENDER_MAX][SHA_DIGEST_LENGTH + 1];
 };
 

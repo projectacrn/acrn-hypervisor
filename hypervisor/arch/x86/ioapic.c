@@ -454,8 +454,9 @@ static void get_rte_info(union ioapic_rte rte, bool *mask, bool *irr,
 	*dest = (uint32_t)(rte.full >> APIC_ID_SHIFT);
 }
 
-int get_ioapic_info(char *str, int str_max_len)
+int get_ioapic_info(char *str_arg, int str_max_len)
 {
+	char *str = str_arg;
 	uint32_t irq;
 	int len, size = str_max_len;
 

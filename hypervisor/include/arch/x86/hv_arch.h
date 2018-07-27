@@ -15,6 +15,7 @@
 #include <lapic.h>
 #include <msr.h>
 #include <io.h>
+#include <ioreq.h>
 #include <mtrr.h>
 #include <vcpu.h>
 #include <trusty.h>

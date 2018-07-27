@@ -352,9 +352,10 @@ static inline uint32_t _copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 	return len;
 }
 
-static inline int copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa_arg,
+static inline int copy_gpa(struct vm *vm, void *h_ptr_arg, uint64_t gpa_arg,
 	uint32_t size_arg, bool cp_from_vm)
 {
+	void *h_ptr = h_ptr_arg;
 	uint32_t len;
 	uint64_t gpa = gpa_arg;
 	uint32_t size = size_arg;
@@ -378,9 +379,10 @@ static inline int copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa_arg,
 	return 0;
 }
 
-static inline int copy_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva_arg,
+static inline int copy_gva(struct vcpu *vcpu, void *h_ptr_arg, uint64_t gva_arg,
 	uint32_t size_arg, uint32_t *err_code, bool cp_from_vm)
 {
+	void *h_ptr = h_ptr_arg;
 	uint64_t gpa = 0UL;
 	int32_t ret;
 	uint32_t len;

@@ -685,8 +685,9 @@ pri_register_handler(uint32_t irq,
 }
 
 #ifdef HV_DEBUG
-void get_cpu_interrupt_info(char *str, int str_max)
+void get_cpu_interrupt_info(char *str_arg, int str_max)
 {
+	char *str = str_arg;
 	uint16_t pcpu_id;
 	uint32_t irq, vector;
 	int len, size = str_max;

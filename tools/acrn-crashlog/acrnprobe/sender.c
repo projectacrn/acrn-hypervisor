@@ -23,6 +23,7 @@
 #include "property.h"
 #include "startupreason.h"
 #include "log_sys.h"
+#include "loop.h"
 
 #ifdef HAVE_TELEMETRICS_CLIENT
 #include "telemetry.h"
@@ -899,10 +900,10 @@ static int crashlog_new_vmevent(const char *line_to_sync,
 	char *vmlogpath = NULL;
 	char *key;
 	char *log;
-	char *cmd;
 	int ret = VMEVT_HANDLED;
 	int res;
 	int quota;
+	int cnt;
 	char *dir;
 
 	/* VM events in history_event like this:
@@ -951,35 +952,23 @@ static int crashlog_new_vmevent(const char *line_to_sync,
 	 */
 	log = strstr(rest, "/logs/");
 	if (log) {
-		res = asprintf(&vmlogpath, "%s", log + 1);
-		if (res < 0) {
-			LOGE("compute string failed, out of memory\n");
-			remove(dir);
-			ret = VMEVT_DEFER;
-			goto free_dir;
-		}
-
-		res = asprintf(&cmd, "rdump %s %s", vmlogpath, dir);
-		if (res < 0) {
-			LOGE("compute string failed, out of memory\n");
-			free(vmlogpath);
-			remove(dir);
-			ret = VMEVT_DEFER;
-			goto free_dir;
-		}
-
-		res = debugfs_cmd(loop_dev, cmd, NULL);
-		if (res) {
-			LOGE("debugfs cmd %s failed (%d)\n", cmd, res);
+		vmlogpath = log + 1;
+		res = e2fs_dump_dir_by_dpath(vm->datafs, vmlogpath, dir, &cnt);
+		if (res == -1) {
+			if (cnt) {
+				LOGE("dump (%s) abort at (%d)\n", vmlogpath,
+				     cnt);
+				ret = VMEVT_DEFER;
+			} else {
+				LOGW("(%s) is missing\n", vmlogpath);
+				ret = VMEVT_HANDLED; /* missing logdir */
+			}
 			res = remove(dir);
 			if (res == -1 && errno != ENOENT)
 				LOGE("remove %s faield (%d)\n", dir, -errno);
-			ret = VMEVT_DEFER;
+
 			goto free_dir;
 		}
-
-		free(cmd);
-		free(vmlogpath);
 	}
 
 	generate_crashfile(dir, event, key, type, vm->name,

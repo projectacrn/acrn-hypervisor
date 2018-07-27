@@ -238,6 +238,8 @@ static struct crash_t *crash_find_matched_child(const struct crash_t *crash,
 				     trfiles[i], strerror(errno));
 				continue;
 			}
+			if (!size)
+				continue;
 			if (crash_match_content(child, content)) {
 				free(content);
 				matched_child = child;
@@ -316,6 +318,8 @@ static struct crash_t *crash_reclassify_by_content(const struct crash_t *rcrash,
 		     trfiles[count - 1], strerror(errno));
 		goto free_files;
 	}
+	if (!size)
+		goto free_files;
 
 	res = get_data(content, ret_crash, data0, data1, data2);
 	if (res < 0) {

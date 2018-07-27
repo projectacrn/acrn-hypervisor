@@ -52,9 +52,9 @@ struct snprint_param {
 	/** The destination buffer. */
 	char *dst;
 	/** The size of the destination buffer. */
-	int sz;
+	uint32_t sz;
 	/** Counter for written chars. */
-	int wrtn;
+	uint32_t wrtn;
 };
 
 /** The characters to use for upper case hexadecimal conversion.
@@ -83,33 +83,29 @@ static const char lower_hex_digits[] = {
 	'a', 'b', 'c', 'd', 'e', 'f', 'x'
 };
 
-static const char *get_int(const char *s, int *x)
+static const char *get_param(const char *s_arg, uint32_t *x)
 {
-	int negative = 0;
-	*x = 0;
+	const char *s = s_arg;
+	*x = 0U;
 
-	/* evaluate leading '-' for negative numbers */
+	/* ignore '-' for negative numbers, it will be handled in flags*/
 	if (*s == '-') {
-		negative = 1;
 		++s;
 	}
 
 	/* parse uint32_teger */
 	while ((*s >= '0') && (*s <= '9')) {
-		*x = (*x * 10) + (*s - '0');
+		char delta = *s - '0';
+		*x = *x * 10U + (uint32_t)delta;
 		s++;
-	}
-
-	/* apply sign to result */
-	if (negative != 0) {
-		*x = -*x;
 	}
 
 	return s;
 }
 
-static const char *get_flags(const char *s, uint32_t *flags)
+static const char *get_flags(const char *s_arg, uint32_t *flags)
 {
+	const char *s = s_arg;
 	/* contains the flag characters */
 	static const char flagchars[] = "#0- +";
 	/* contains the numeric flags for the characters above */
@@ -158,9 +154,10 @@ static const char *get_flags(const char *s, uint32_t *flags)
 	return s;
 }
 
-static const char *get_length_modifier(const char *s,
+static const char *get_length_modifier(const char *s_arg,
 			uint32_t *flags, uint64_t *mask)
 {
+	const char *s = s_arg;
 	if (*s == 'h') {
 		/* check for h[h] (char/short) */
 		s++;
@@ -195,26 +192,21 @@ static int format_number(struct print_param *param)
 	/* effective width of the result */
 	uint32_t width;
 	/* number of characters to insert for width (w) and precision (p) */
-	uint32_t p, w;
+	uint32_t p = 0U, w = 0U;
 	/* the result */
-	int res;
+	int res = 0;
 
 	/* initialize variables */
-	p = 0U;
-	w = 0U;
-	res = 0;
 	width = param->vars.valuelen + param->vars.prefixlen;
 
 	/* calculate additional characters for precision */
-	p = (uint32_t)(param->vars.precision);
-	if (p > width) {
-		p = p - width;
+	if (param->vars.precision > width) {
+		p = param->vars.precision - width;
 	}
 
 	/* calculate additional characters for width */
-	w = (uint32_t)(param->vars.width);
-	if (w > (width + p)) {
-		w = w - (width + p);
+	if (param->vars.width > (width + p)) {
+		w = param->vars.width - (width + p);
 	}
 
 	/* handle case of right justification */
@@ -289,8 +281,9 @@ static int format_number(struct print_param *param)
 }
 
 static int print_pow2(struct print_param *param,
-		uint64_t v, uint32_t shift)
+		uint64_t v_arg, uint32_t shift)
 {
+	uint64_t v = v_arg;
 	/* max buffer required for octal representation of unsigned long long */
 	char digitbuff[22];
 	/* Insert position for the next character+1 */
@@ -421,33 +414,25 @@ static int print_decimal(struct print_param *param, int64_t value)
 static int print_string(struct print_param *param, const char *s)
 {
 	/* the length of the string (-1) if unknown */
-	int len;
+	uint32_t len;
 	/* the number of additional characters to insert to reach the required
 	 * width
 	 */
-	uint32_t w;
+	uint32_t w = 0U;
 	/* the last result of the emit function */
 	int res;
 
-	w = 0U;
-	len = -1;
-
-	/* we need the length of the string if either width or precision is
-	 * given
-	 */
-	if ((param->vars.precision != 0)|| (param->vars.width != 0)) {
-		len = strnlen_s(s, PRINT_STRING_MAX_LEN);
-	}
+	len = strnlen_s(s, PRINT_STRING_MAX_LEN);
 
 	/* precision gives the max. number of characters to emit. */
-	if ((param->vars.precision != 0) && (len > param->vars.precision)) {
+	if ((param->vars.precision != 0U) && (len > param->vars.precision)) {
 		len = param->vars.precision;
 	}
 
 	/* calculate the number of additional characters to get the required
 	 * width
 	 */
-	if (param->vars.width > 0 && param->vars.width > len) {
+	if (param->vars.width > 0U && param->vars.width > len) {
 		w = param->vars.width - len;
 	}
 
@@ -461,7 +446,6 @@ static int print_string(struct print_param *param, const char *s)
 		}
 	}
 
-	/* emit the string, return early if an error occurred */
 	res = param->emit(PRINT_CMD_COPY, s, len, param->data);
 	if (res < 0) {
 		return res;
@@ -480,9 +464,10 @@ static int print_string(struct print_param *param, const char *s)
 	return res;
 }
 
-int do_print(const char *fmt, struct print_param *param,
+int do_print(const char *fmt_arg, struct print_param *param,
 		__builtin_va_list args)
 {
+	const char *fmt = fmt_arg;
 	/* the result of this function */
 	int res = 0;
 	/* temp. storage for the next character */
@@ -527,14 +512,11 @@ int do_print(const char *fmt, struct print_param *param,
 			 *   - get the length modifier
 			 */
 			fmt = get_flags(fmt, &(param->vars.flags));
-			fmt = get_int(fmt, &(param->vars.width));
+			fmt = get_param(fmt, &(param->vars.width));
 
 			if (*fmt == '.') {
 				fmt++;
-				fmt = get_int(fmt, &(param->vars.precision));
-				if (param->vars.precision < 0) {
-					param->vars.precision = 0;
-				}
+				fmt = get_param(fmt, &(param->vars.precision));
 			}
 
 			fmt = get_length_modifier(fmt, &(param->vars.flags),
@@ -544,57 +526,61 @@ int do_print(const char *fmt, struct print_param *param,
 
 			/* a single '%'? => print out a single '%' */
 			if (ch == '%') {
-				res = param->emit(PRINT_CMD_COPY, &ch, 1,
+				res = param->emit(PRINT_CMD_COPY, &ch, 1U,
 						param->data);
 			} else if ((ch == 'd') || (ch == 'i')) {
 			/* decimal number */
-				res = print_decimal(param,
-						((param->vars.flags &
-						PRINT_FLAG_LONG_LONG) != 0U) ?
-						__builtin_va_arg(args,
-							long long)
-						: (long long)
-						__builtin_va_arg(args,
-							int));
+				if ((param->vars.flags &
+					PRINT_FLAG_LONG_LONG) != 0U) {
+					res = print_decimal(param,
+						__builtin_va_arg(args, long));
+				} else {
+					res = print_decimal(param,
+						__builtin_va_arg(args, int));
+				}
 			}
 			/* unsigned decimal number */
 			else if (ch == 'u') {
 				param->vars.flags |= PRINT_FLAG_UINT32;
-				res = print_decimal(param,
-						((param->vars.flags &
-						PRINT_FLAG_LONG_LONG) != 0U) ?
-						__builtin_va_arg(args,
-							unsigned long long)
-						: (unsigned long long)
-						__builtin_va_arg(args,
-							unsigned int));
+				if ((param->vars.flags &
+					PRINT_FLAG_LONG_LONG) != 0U) {
+					res = print_decimal(param,
+						(int64_t)__builtin_va_arg(args,
+						uint64_t));
+				} else {
+					res = print_decimal(param,
+						(int64_t)__builtin_va_arg(args,
+						uint32_t));
+				}
 			}
 			/* octal number */
 			else if (ch == 'o') {
-				res = print_pow2(param,
-						((param->vars.flags &
-						PRINT_FLAG_LONG_LONG) != 0U) ?
+				if ((param->vars.flags &
+					PRINT_FLAG_LONG_LONG) != 0U) {
+					res = print_pow2(param,
 						__builtin_va_arg(args,
-							unsigned long long)
-						: (unsigned long long)
+						uint64_t), 3U);
+				} else {
+					res = print_pow2(param,
 						__builtin_va_arg(args,
-							uint32_t),
-						3U);
+						uint32_t), 3U);
+				}
 			}
 			/* hexadecimal number */
 			else if ((ch == 'X') || (ch == 'x')) {
 				if (ch == 'X') {
 					param->vars.flags |= PRINT_FLAG_UPPER;
 				}
-				res = print_pow2(param,
-						((param->vars.flags &
-						PRINT_FLAG_LONG_LONG) != 0U) ?
+				if ((param->vars.flags &
+					PRINT_FLAG_LONG_LONG) != 0U) {
+					res = print_pow2(param,
 						__builtin_va_arg(args,
-							unsigned long long)
-						: (unsigned long long)
+						uint64_t), 4U);
+				} else {
+					res = print_pow2(param,
 						__builtin_va_arg(args,
-							uint32_t),
-						4U);
+						uint32_t), 4U);
+				}
 			}
 			/* string argument */
 			else if (ch == 's') {
@@ -635,28 +621,19 @@ int do_print(const char *fmt, struct print_param *param,
 	return res;
 }
 
-static int charmem(int cmd, const char *s, int sz, void *hnd)
+static int charmem(int cmd, const char *s_arg, uint32_t sz, void *hnd)
 {
+	const char *s = s_arg;
 	/* pointer to the snprint parameter list */
 	struct snprint_param *param = (struct snprint_param *) hnd;
 	/* pointer to the destination */
 	char *p = param->dst + param->wrtn;
 	/* characters actually written */
-	int n = 0;
+	uint32_t n = 0U;
 
 	/* copy mode ? */
 	if (cmd == PRINT_CMD_COPY) {
-		if (sz < 0) {
-			while ((*s) != '\0') {
-				if (n < (param->sz - param->wrtn)) {
-					*p = *s;
-				}
-				p++;
-				s++;
-				n++;
-			}
-
-		} else if (sz > 0) {
+		if (sz > 0U) {
 			while (((*s) != '\0') && n < sz) {
 				if (n < (param->sz - param->wrtn)) {
 					*p = *s;
@@ -665,33 +642,28 @@ static int charmem(int cmd, const char *s, int sz, void *hnd)
 				s++;
 				n++;
 			}
-		} else {
-			/* sz == 0, no copy needed. */
 		}
 
 		param->wrtn += n;
-		return n;
 	}
 	/* fill mode */
 	else {
-		n = (sz < (param->sz - param->wrtn)) ? sz : 0;
+		n = (sz < param->sz - param->wrtn) ? sz : 0U;
 		param->wrtn += sz;
-		(void)memset(p, *s, n);
+		(void)memset(p, (uint8_t)*s, n);
 	}
 
-	return n;
+	return (int)n;
 }
 
-int vsnprintf(char *dst, int32_t sz_arg, const char *fmt, va_list args)
+int vsnprintf(char *dst_arg, size_t sz_arg, const char *fmt, va_list args)
 {
-	char c[1];
-	/* the result of this function */
+	char *dst = dst_arg;
 	int32_t sz = sz_arg;
 	int res = 0;
 
-	if (sz <= 0 || (dst == NULL)) {
-		dst = c;
-		sz = 1;
+	if (sz == 0U || (dst == NULL)) {
+		return -1;
 	}
 
 	/* struct to store all necessary parameters */
@@ -722,7 +694,7 @@ int vsnprintf(char *dst, int32_t sz_arg, const char *fmt, va_list args)
 	}
 
 	/* return the number of chars which would be written */
-	res = snparam.wrtn;
+	res = (int)snparam.wrtn;
 
 	/* done */
 	return res;
@@ -738,7 +710,7 @@ int snprintf(char *dest, int sz, const char *fmt, ...)
 	va_start(args, fmt);
 
 	/* execute the printf() */
-	res = vsnprintf(dest, sz, fmt, args);
+	res = vsnprintf(dest, (size_t)sz, fmt, args);
 
 	/* destroy parameter list */
 	va_end(args);

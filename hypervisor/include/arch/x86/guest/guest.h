@@ -32,10 +32,6 @@
 #define IDX_PAT		(IDX_TSC + 1U)
 #define IDX_MAX_MSR	(IDX_PAT + 1U)
 
-struct vhm_request;
-
-int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct vhm_request *req);
-
 /*
  * VCPU related APIs
  */
@@ -124,7 +120,7 @@ int copy_to_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
 uint64_t create_guest_init_gdt(struct vm *vm, uint32_t *limit);
 
 #ifdef HV_DEBUG
-void get_req_info(char *str, int str_max);
+void get_req_info(char *str_arg, int str_max);
 #endif /* HV_DEBUG */
 
 #endif	/* !ASSEMBLER */

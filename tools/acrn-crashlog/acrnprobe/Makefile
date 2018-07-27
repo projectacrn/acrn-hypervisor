@@ -3,7 +3,8 @@ MINOR_VERSION=0
 
 VERSION_H	= $(BUILDDIR)/include/acrnprobe/version.h
 
-LIBS		= -lpthread -lxml2 -lcrypto -lrt $(EXTRA_LIBS)
+LIBS		= -lpthread -lxml2 -lcrypto -lrt -lblkid -lext2fs -lcom_err \
+		  $(EXTRA_LIBS)
 INCLUDE		+= -I $(CURDIR)/include -I /usr/include/libxml2
 INCLUDE		+= -I $(BUILDDIR)/include/acrnprobe
 CFLAGS 		+= $(INCLUDE)
@@ -36,7 +37,8 @@ $(BUILDDIR)/acrnprobe/bin/acrnprobe: $(BUILDDIR)/acrnprobe/obj/main.o \
 	$(BUILDDIR)/acrnprobe/obj/property.o \
 	$(BUILDDIR)/acrnprobe/obj/probeutils.o \
 	$(BUILDDIR)/acrnprobe/obj/history.o \
-	$(BUILDDIR)/acrnprobe/obj/android_events.o
+	$(BUILDDIR)/acrnprobe/obj/android_events.o \
+	$(BUILDDIR)/acrnprobe/obj/loop.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 .PHONY: clean
