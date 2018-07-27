@@ -505,6 +505,23 @@ int vmx_write_cr3(struct vcpu *vcpu, uint64_t cr3)
 	return 0;
 }
 
+static bool is_cr4_write_valid(struct vcpu *vcpu, uint64_t cr4)
+{
+	/* Check if guest try to set fixed to 0 bits or reserved bits */
+	if ((cr4 & cr4_always_off_mask) != 0U)
+		return false;
+
+	/* Do NOT support nested guest */
+	if ((cr4 & CR4_VMXE) != 0UL)
+		return false;
+
+	/* Do NOT support PCID in guest */
+	if ((cr4 & CR4_PCIDE) != 0UL)
+		return false;
+
+	return true;
+}
+
 /*
  * Handling of CR4:
  * Assume "unrestricted guest" feature is supported by vmx.
@@ -529,10 +546,13 @@ int vmx_write_cr3(struct vcpu *vcpu, uint64_t cr3)
  *   - PCE (8) Flexible to guest
  *   - OSFXSR (9) Flexible to guest
  *   - OSXMMEXCPT (10) Flexible to guest
- *   - VMXE (13) must always be 1 => must lead to a VM exit
+ *   - VMXE (13) Trapped to hide from guest
  *   - SMXE (14) must always be 0 => must lead to a VM exit
- *   - PCIDE (17) Flexible to guest
+ *   - PCIDE (17) Trapped to hide from guest
  *   - OSXSAVE (18) Flexible to guest
+ *   - XSAVE (19) Flexible to guest
+ *   		We always keep align with physical cpu. So it's flexible to
+ *   		guest
  *   - SMEP (20) Flexible to guest
  *   - SMAP (21) Flexible to guest
  *   - PKE (22) Flexible to guest
@@ -543,19 +563,8 @@ int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 	uint64_t cr4_vmx;
 
-	/* TODO: Check all invalid guest statuses according to the change of
-	 * CR4, and inject a #GP to guest */
-
-	/* Check if guest try to set fixed to 0 bits or reserved bits */
-	if((cr4 & cr4_always_off_mask) != 0U) {
-		pr_err("Not allow to set reserved/always off bits for CR4");
-		vcpu_inject_gp(vcpu, 0U);
-		return 0;
-	}
-
-	/* Do NOT support nested guest */
-	if ((cr4 & CR4_VMXE) != 0UL) {
-		pr_err("Nested guest not supported");
+	if (!is_cr4_write_valid(vcpu, cr4)) {
+		pr_dbg("Invalid cr4 write operation from guest");
 		vcpu_inject_gp(vcpu, 0U);
 		return 0;
 	}
