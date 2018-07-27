@@ -152,9 +152,10 @@ static void uart_toggle_intr(struct vuart *vu)
 }
 
 static void uart_write(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, uint16_t offset,
+		struct vm *vm, uint16_t offset_arg,
 		__unused size_t width, uint32_t value)
 {
+	uint16_t offset = offset_arg;
 	struct vuart *vu = vm_vuart(vm);
 	offset -= vu->base;
 	vuart_lock(vu);
@@ -231,9 +232,10 @@ done:
 }
 
 static uint32_t uart_read(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, uint16_t offset,
+		struct vm *vm, uint16_t offset_arg,
 		__unused size_t width)
 {
+	uint16_t offset = offset_arg;
 	char iir, reg;
 	uint8_t intr_reason;
 	struct vuart *vu = vm_vuart(vm);

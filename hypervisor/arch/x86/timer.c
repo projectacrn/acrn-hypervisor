@@ -230,12 +230,13 @@ void check_tsc(void)
 	CPU_CR_WRITE(cr4, (temp64 & ~CR4_TSD));
 }
 
-static uint64_t pit_calibrate_tsc(uint16_t cal_ms)
+static uint64_t pit_calibrate_tsc(uint16_t cal_ms_arg)
 {
 #define PIT_TICK_RATE	1193182U
 #define PIT_TARGET	0x3FFFU
 #define PIT_MAX_COUNT	0xFFFFU
 
+	uint16_t cal_ms = cal_ms_arg;
 	uint32_t initial_pit;
 	uint16_t current_pit;
 	uint16_t max_cal_ms;
