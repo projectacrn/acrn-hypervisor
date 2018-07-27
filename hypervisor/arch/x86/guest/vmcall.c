@@ -103,7 +103,7 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 	case HC_NOTIFY_REQUEST_FINISH:
 		/* param1: vmid
 		 * param2: vcpu_id */
-		ret = hcall_notify_req_finish((uint16_t)param1,
+		ret = hcall_notify_ioreq_finish((uint16_t)param1,
 			(uint16_t)param2);
 		break;
 
