@@ -72,12 +72,14 @@ acrn_insert_request_wait(struct vcpu *vcpu, struct io_request *io_req)
 	}
 
 	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
-
-	/* ACRN insert request to VHM and inject upcall */
 	cur = vcpu->vcpu_id;
 	vhm_req = &req_buf->req_queue[cur];
+
+	ASSERT(atomic_load32(&vhm_req->processed) == REQ_STATE_FREE,
+		"VHM request buffer is busy");
+
+	/* ACRN insert request to VHM and inject upcall */
 	vhm_req->type = io_req->type;
-	vhm_req->processed = io_req->processed;
 	(void)memcpy_s(&vhm_req->reqs, sizeof(union vhm_io_request),
 		&io_req->reqs, sizeof(union vhm_io_request));
 
@@ -85,15 +87,15 @@ acrn_insert_request_wait(struct vcpu *vcpu, struct io_request *io_req)
 	 * TODO: when pause_vcpu changed to switch vcpu out directlly, we
 	 * should fix the race issue between req.valid = true and vcpu pause
 	 */
-	atomic_store32(&vcpu->ioreq_pending, 1U);
 	pause_vcpu(vcpu, VCPU_PAUSED);
 
-	/* Must clear the signal before we mark req valid
-	 * Once we mark to valid, VHM may process req and signal us
+	/* Must clear the signal before we mark req as pending
+	 * Once we mark it pending, VHM may process req and signal us
 	 * before we perform upcall.
 	 * because VHM can work in pulling mode without wait for upcall
 	 */
 	vhm_req->valid = 1;
+	atomic_store32(&vhm_req->processed, REQ_STATE_PENDING);
 
 	acrn_print_request(vcpu->vcpu_id, vhm_req);
 
@@ -140,7 +142,7 @@ static void _get_req_info_(struct vhm_request *req, int *id, char *type,
 	}
 
 	switch (req->processed) {
-	case REQ_STATE_SUCCESS:
+	case REQ_STATE_COMPLETE:
 		(void)strcpy_s(state, 16U, "SUCCESS");
 		break;
 	case REQ_STATE_PENDING:
