@@ -141,14 +141,14 @@ enum cpu_reg_name {
 #define CPU_REG_SEG_FIRST		CPU_REG_ES
 #define CPU_REG_SEG_LAST		CPU_REG_GS
 
-struct vie_op {
+struct instr_emul_vie_op {
 	uint8_t		op_byte;	/* actual opcode byte */
 	uint8_t		op_type;	/* type of operation (e.g. MOV) */
 	uint16_t	op_flags;
 };
 
 #define	VIE_INST_SIZE	15U
-struct vie {
+struct instr_emul_vie {
 	uint8_t		inst[VIE_INST_SIZE];	/* instruction bytes */
 	uint8_t		num_valid;		/* size of the instruction */
 	uint8_t		num_processed;
@@ -186,7 +186,7 @@ struct vie {
 
 	uint8_t		decoded;	/* set to 1 if successfully decoded */
 
-	struct vie_op	op;			/* opcode description */
+	struct instr_emul_vie_op	op;			/* opcode description */
 };
 
 #define	PSL_C		0x00000001U	/* carry bit */
@@ -243,8 +243,8 @@ struct vm_guest_paging {
 	enum vm_paging_mode paging_mode;
 };
 
-struct emul_ctxt {
-	struct vie vie;
+struct instr_emul_ctxt {
+	struct instr_emul_vie vie;
 	struct vm_guest_paging paging;
 	struct vcpu *vcpu;
 };
