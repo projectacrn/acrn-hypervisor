@@ -101,7 +101,7 @@
 #define CPUID_EXTEND_ADDRESS_SIZE    0x80000008U
 
 
-static inline void __cpuid(uint32_t *eax, uint32_t *ebx,
+static inline void asm_cpuid(uint32_t *eax, uint32_t *ebx,
 				uint32_t *ecx, uint32_t *edx)
 {
 	/* Execute CPUID instruction and save results */
@@ -118,7 +118,7 @@ static inline void cpuid(uint32_t leaf,
 	*eax = leaf;
 	*ecx = 0U;
 
-	__cpuid(eax, ebx, ecx, edx);
+	asm_cpuid(eax, ebx, ecx, edx);
 }
 
 static inline void cpuid_subleaf(uint32_t leaf, uint32_t subleaf,
@@ -128,7 +128,7 @@ static inline void cpuid_subleaf(uint32_t leaf, uint32_t subleaf,
 	*eax = leaf;
 	*ecx = subleaf;
 
-	__cpuid(eax, ebx, ecx, edx);
+	asm_cpuid(eax, ebx, ecx, edx);
 }
 
 int set_vcpuid_entries(struct vm *vm);

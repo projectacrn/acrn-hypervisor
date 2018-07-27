@@ -8,11 +8,11 @@
 #define ASSERT_H
 
 #ifdef HV_DEBUG
-void __assert(int32_t line, const char *file, const char *txt);
+void asm_assert(int32_t line, const char *file, const char *txt);
 
 #define ASSERT(x, ...) \
 	if (!(x)) {\
-		__assert(__LINE__, __FILE__, "fatal error");\
+		asm_assert(__LINE__, __FILE__, "fatal error");\
 	}
 #else
 #define ASSERT(x, ...)	do { } while(0)

@@ -146,7 +146,7 @@ vm_active_cpus(struct vm *vm)
 	struct vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
-		bitmap_set(vcpu->vcpu_id, &dmask);
+		bitmap_set_lock(vcpu->vcpu_id, &dmask);
 	}
 
 	return dmask;
@@ -485,7 +485,7 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 
 	irrptr = &lapic->irr[0];
 	/* If the interrupt is set, don't try to do it again */
-	if (bitmap32_test_and_set((uint16_t)(vector % 32U), &irrptr[idx].val)) {
+	if (bitmap32_test_and_set_lock((uint16_t)(vector % 32U), &irrptr[idx].val)) {
 		return 0;
 	}
 
@@ -934,7 +934,7 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 		*dmask = 0UL;
 		vcpu_id = vm_apicid2vcpu_id(vm, (uint8_t)dest);
 		if (vcpu_id < phys_cpu_num) {
-			bitmap_set(vcpu_id, dmask);
+			bitmap_set_lock(vcpu_id, dmask);
 		}
 	} else {
 		/*
@@ -958,7 +958,7 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 		amask = vm_active_cpus(vm);
 		for (vcpu_id = ffs64(amask); vcpu_id != INVALID_BIT_INDEX;
 			vcpu_id = ffs64(amask)) {
-			bitmap_clear(vcpu_id, &amask);
+			bitmap_clear_lock(vcpu_id, &amask);
 
 			vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
 			dfr = vlapic->apic_page->dfr;
@@ -1001,13 +1001,13 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 						/* target is the dest */
 					}
 				} else {
-					bitmap_set(vcpu_id, dmask);
+					bitmap_set_lock(vcpu_id, dmask);
 				}
 			}
 		}
 
 		if (lowprio && (target != NULL)) {
-			bitmap_set(target->vcpu->vcpu_id, dmask);
+			bitmap_set_lock(target->vcpu->vcpu_id, dmask);
 		}
 	}
 }
@@ -1108,19 +1108,19 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 		vlapic_calcdest(vlapic->vm, &dmask, dest, phys, false);
 		break;
 	case APIC_DEST_SELF:
-		bitmap_set(vlapic->vcpu->vcpu_id, &dmask);
+		bitmap_set_lock(vlapic->vcpu->vcpu_id, &dmask);
 		break;
 	case APIC_DEST_ALLISELF:
 		dmask = vm_active_cpus(vlapic->vm);
 		break;
 	case APIC_DEST_ALLESELF:
 		dmask = vm_active_cpus(vlapic->vm);
-		bitmap_clear(vlapic->vcpu->vcpu_id, &dmask);
+		bitmap_clear_lock(vlapic->vcpu->vcpu_id, &dmask);
 		break;
 	}
 
 	while ((vcpu_id = ffs64(dmask)) != INVALID_BIT_INDEX) {
-		bitmap_clear(vcpu_id, &dmask);
+		bitmap_clear_lock(vcpu_id, &dmask);
 		target_vcpu = vcpu_from_vid(vlapic->vm, vcpu_id);
 		if (target_vcpu == NULL) {
 			continue;
@@ -1690,7 +1690,7 @@ vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest, bool phys,
 	for (vcpu_id = ffs64(dmask); vcpu_id != INVALID_BIT_INDEX;
 		vcpu_id = ffs64(dmask)) {
 		struct acrn_vlapic *vlapic;
-		bitmap_clear(vcpu_id, &dmask);
+		bitmap_clear_lock(vcpu_id, &dmask);
 		target_vcpu = vcpu_from_vid(vm, vcpu_id);
 		if (target_vcpu == NULL) {
 			return;
@@ -1846,12 +1846,12 @@ vlapic_set_local_intr(struct vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
 	if (vcpu_id == BROADCAST_CPU_ID) {
 		dmask = vm_active_cpus(vm);
 	} else {
-		bitmap_set(vcpu_id, &dmask);
+		bitmap_set_lock(vcpu_id, &dmask);
 	}
 	error = 0;
 	for (vcpu_id = ffs64(dmask); vcpu_id != INVALID_BIT_INDEX;
 		vcpu_id = ffs64(dmask)) {
-		bitmap_clear(vcpu_id, &dmask);
+		bitmap_clear_lock(vcpu_id, &dmask);
 		vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
 		error = vlapic_trigger_lvt(vlapic, vector);
 		if (error != 0) {
