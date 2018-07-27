@@ -151,7 +151,6 @@ static struct virtio_ops virtio_heci_ops = {
 	virtio_heci_cfgwrite,	/* write virtio config */
 	NULL,			/* apply negotiated features */
 	NULL,                   /* called on guest set status */
-	0,			/* our capabilities */
 };
 
 static void

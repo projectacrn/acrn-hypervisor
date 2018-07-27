@@ -381,7 +381,7 @@ vq_getchain(struct virtio_vq_info *vq, uint16_t *pidx,
 		if ((vdir->flags & VRING_DESC_F_INDIRECT) == 0) {
 			_vq_record(i, vdir, ctx, iov, n_iov, flags);
 			i++;
-		} else if ((base->vops->hv_caps &
+		} else if ((base->device_caps &
 		    VIRTIO_RING_F_INDIRECT_DESC) == 0) {
 			fprintf(stderr,
 			    "%s: descriptor has forbidden INDIRECT flag, "
@@ -696,7 +696,7 @@ bad:
 
 	switch (offset) {
 	case VIRTIO_CR_HOSTCAP:
-		value = vops->hv_caps;
+		value = base->device_caps;
 		break;
 	case VIRTIO_CR_GUESTCAP:
 		value = base->negotiated_caps;
@@ -813,7 +813,7 @@ bad:
 
 	switch (offset) {
 	case VIRTIO_CR_GUESTCAP:
-		base->negotiated_caps = value & vops->hv_caps;
+		base->negotiated_caps = value & base->device_caps;
 		if (vops->apply_features)
 			(*vops->apply_features)(DEV_STRUCT(base),
 			    base->negotiated_caps);
@@ -1020,7 +1020,7 @@ virtio_set_modern_bar(struct virtio_base *base, bool use_notify_pio)
 
 	vops = base->vops;
 
-	if (!vops || (vops->hv_caps & VIRTIO_F_VERSION_1) == 0)
+	if (!vops || (base->device_caps & VIRTIO_F_VERSION_1) == 0)
 		return -1;
 
 	if (use_notify_pio)
@@ -1111,9 +1111,9 @@ virtio_common_cfg_read(struct pci_vdev *dev, uint64_t offset, int size)
 		break;
 	case VIRTIO_COMMON_DF:
 		if (base->device_feature_select == 0)
-			value = vops->hv_caps & 0xffffffff;
+			value = base->device_caps & 0xffffffff;
 		else if (base->device_feature_select == 1)
-			value = (vops->hv_caps >> 32) & 0xffffffff;
+			value = (base->device_caps >> 32) & 0xffffffff;
 		else /* present 0, see 4.1.4.3.1 */
 			value = 0;
 		break;
@@ -1240,7 +1240,7 @@ virtio_common_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
 			value &= 0xffffffff;
 			base->negotiated_caps =
 				(value << (base->driver_feature_select * 32))
-				& vops->hv_caps;
+				& base->device_caps;
 			if (vops->apply_features)
 				(*vops->apply_features)(DEV_STRUCT(base),
 					base->negotiated_caps);

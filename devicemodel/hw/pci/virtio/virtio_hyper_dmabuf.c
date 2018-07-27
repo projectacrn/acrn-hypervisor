@@ -84,7 +84,6 @@ static struct virtio_ops virtio_hyper_dmabuf_ops_k = {
 	NULL,				/* write virtio config */
 	NULL,				/* apply negotiated features */
 	virtio_hyper_dmabuf_set_status,	/* called on guest set status */
-	0,				/* our capabilities */
 };
 
 static int

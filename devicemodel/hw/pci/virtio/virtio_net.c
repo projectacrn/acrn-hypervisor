@@ -168,7 +168,6 @@ static struct virtio_ops virtio_net_ops = {
 	virtio_net_cfgwrite,		/* write PCI config */
 	virtio_net_neg_features,	/* apply negotiated features */
 	NULL,				/* called on guest set status */
-	VIRTIO_NET_S_HOSTCAPS,		/* our capabilities */
 };
 
 static struct ether_addr *
@@ -914,6 +913,7 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	virtio_linkup(&net->base, &virtio_net_ops, net, dev, net->queues);
 	net->base.mtx = &net->mtx;
+	net->base.device_caps = VIRTIO_NET_S_HOSTCAPS;
 
 	net->queues[VIRTIO_NET_RXQ].qsize = VIRTIO_NET_RINGSZ;
 	net->queues[VIRTIO_NET_RXQ].notify = virtio_net_ping_rxq;

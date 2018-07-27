@@ -88,7 +88,6 @@ static struct virtio_ops virtio_audio_ops_k = {
 	NULL,				/* write virtio config */
 	NULL,				/* apply negotiated features */
 	virtio_audio_k_set_status,/* called on guest set status */
-	0,					/* our capabilities */
 };
 
 static int
