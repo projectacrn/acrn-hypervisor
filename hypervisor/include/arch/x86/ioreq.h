@@ -111,7 +111,7 @@ struct mem_io_node {
 int io_instr_vmexit_handler(struct vcpu *vcpu);
 void   setup_io_bitmap(struct vm *vm);
 void   free_io_emulation_resource(struct vm *vm);
-void   allow_guest_io_access(struct vm *vm, uint32_t address, uint32_t nbytes);
+void   allow_guest_io_access(struct vm *vm, uint32_t address_arg, uint32_t nbytes);
 void   register_io_emulation_handler(struct vm *vm, struct vm_io_range *range,
 		io_read_fn_t io_read_fn_ptr,
 		io_write_fn_t io_write_fn_ptr);

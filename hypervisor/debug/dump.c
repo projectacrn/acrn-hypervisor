@@ -180,8 +180,9 @@ static void dump_guest_context(uint16_t pcpu_id)
 	}
 }
 
-static void show_host_call_trace(uint64_t rsp, uint64_t rbp, uint16_t pcpu_id)
+static void show_host_call_trace(uint64_t rsp, uint64_t rbp_arg, uint16_t pcpu_id)
 {
+	uint64_t rbp = rbp_arg;
 	uint32_t i = 0U;
 	uint32_t cb_hierarchy = 0U;
 	uint64_t *sp = (uint64_t *)rsp;

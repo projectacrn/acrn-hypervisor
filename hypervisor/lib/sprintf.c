@@ -281,8 +281,9 @@ static int format_number(struct print_param *param)
 }
 
 static int print_pow2(struct print_param *param,
-		uint64_t v, uint32_t shift)
+		uint64_t v_arg, uint32_t shift)
 {
+	uint64_t v = v_arg;
 	/* max buffer required for octal representation of unsigned long long */
 	char digitbuff[22];
 	/* Insert position for the next character+1 */

@@ -177,8 +177,9 @@ void free_io_emulation_resource(struct vm *vm)
 	free(vm->arch_vm.iobitmap[1]);
 }
 
-void allow_guest_io_access(struct vm *vm, uint32_t address, uint32_t nbytes)
+void allow_guest_io_access(struct vm *vm, uint32_t address_arg, uint32_t nbytes)
 {
+	uint32_t address = address_arg;
 	uint32_t *b;
 	uint32_t i;
 	uint32_t a;
@@ -194,8 +195,9 @@ void allow_guest_io_access(struct vm *vm, uint32_t address, uint32_t nbytes)
 	}
 }
 
-static void deny_guest_io_access(struct vm *vm, uint32_t address, uint32_t nbytes)
+static void deny_guest_io_access(struct vm *vm, uint32_t address_arg, uint32_t nbytes)
 {
+	uint32_t address = address_arg;
 	uint32_t *b;
 	uint32_t i;
 	uint32_t a;
