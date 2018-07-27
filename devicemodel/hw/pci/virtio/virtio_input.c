@@ -143,7 +143,6 @@ static struct virtio_ops virtio_input_ops = {
 	virtio_input_cfgwrite,		/* write virtio config */
 	virtio_input_neg_features,	/* apply negotiated features */
 	virtio_input_set_status,	/* called on guest set status */
-	VIRTIO_INPUT_S_HOSTCAPS,	/* our capabilities */
 };
 
 static void
@@ -606,6 +605,7 @@ virtio_input_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	virtio_linkup(&vi->base, &virtio_input_ops, vi, dev, vi->queues);
 	vi->base.mtx = &vi->mtx;
+	vi->base.device_caps = VIRTIO_INPUT_S_HOSTCAPS;
 
 	vi->queues[VIRTIO_INPUT_EVENT_QUEUE].qsize = VIRTIO_INPUT_RINGSZ;
 	vi->queues[VIRTIO_INPUT_EVENT_QUEUE].notify =

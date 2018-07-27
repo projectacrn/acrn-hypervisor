@@ -600,7 +600,6 @@ static struct virtio_ops virtio_rpmb_ops = {
 	NULL,			/* write virtio config */
 	NULL,			/* apply negotiated features */
 	NULL,			/* called on guest set status */
-	0,			/* our capabilities */
 };
 
 static int

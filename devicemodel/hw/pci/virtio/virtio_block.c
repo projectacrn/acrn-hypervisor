@@ -143,7 +143,6 @@ static struct virtio_ops virtio_blk_ops = {
 	virtio_blk_cfgwrite,	/* write PCI config */
 	NULL,			/* apply negotiated features */
 	NULL,			/* called on guest set status */
-	VIRTIO_BLK_S_HOSTCAPS,	/* our capabilities */
 };
 
 static void
@@ -339,6 +338,7 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	/* init virtio struct and virtqueues */
 	virtio_linkup(&blk->base, &virtio_blk_ops, blk, dev, &blk->vq);
 	blk->base.mtx = &blk->mtx;
+	blk->base.device_caps = VIRTIO_BLK_S_HOSTCAPS;
 
 	blk->vq.qsize = VIRTIO_BLK_RINGSZ;
 	/* blk->vq.vq_notify = we have no per-queue notify */

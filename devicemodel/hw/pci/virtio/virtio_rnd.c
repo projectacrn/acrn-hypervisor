@@ -97,7 +97,6 @@ static struct virtio_ops virtio_rnd_ops = {
 	NULL,			/* write virtio config */
 	NULL,			/* apply negotiated features */
 	NULL,			/* called on guest set status */
-	0,			/* our capabilities */
 };
 
 /* VBS-K virtio_ops */
@@ -113,7 +112,6 @@ static struct virtio_ops virtio_rnd_ops_k = {
 	NULL,			/* write virtio config */
 	NULL,			/* apply negotiated features */
 	virtio_rnd_k_set_status,/* called on guest set status */
-	0,			/* our capabilities */
 };
 
 /* VBS-K interface function implementations */

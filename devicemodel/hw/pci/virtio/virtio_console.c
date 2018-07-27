@@ -164,7 +164,6 @@ static struct virtio_ops virtio_console_ops = {
 	virtio_console_cfgwrite,	/* write virtio config */
 	virtio_console_neg_features,	/* apply negotiated features */
 	NULL,				/* called on guest set status */
-	VIRTIO_CONSOLE_S_HOSTCAPS,	/* our capabilities */
 };
 
 static const char *virtio_console_be_table[VIRTIO_CONSOLE_BE_MAX] = {
@@ -837,6 +836,7 @@ virtio_console_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	virtio_linkup(&console->base, &virtio_console_ops, console, dev,
 		console->queues);
 	console->base.mtx = &console->mtx;
+	console->base.device_caps = VIRTIO_CONSOLE_S_HOSTCAPS;
 
 	for (i = 0; i < VIRTIO_CONSOLE_MAXQ; i++) {
 		console->queues[i].qsize = VIRTIO_CONSOLE_RINGSZ;

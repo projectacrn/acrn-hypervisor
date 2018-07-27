@@ -507,6 +507,7 @@ struct virtio_base {
 	pthread_mutex_t *mtx;		/**< POSIX mutex, if any */
 	struct pci_vdev *dev;		/**< PCI device instance */
 	uint64_t negotiated_caps;	/**< negotiated capabilities */
+	uint64_t device_caps;		/**< device capabilities */
 	struct virtio_vq_info *queues;	/**< one per nvq */
 	int	curq;			/**< current queue */
 	uint8_t	status;			/**< value from last status write */
@@ -552,7 +553,6 @@ struct virtio_ops {
 				/**< to apply negotiated features */
 	void    (*set_status)(void *, uint64_t);
 				/**< called to set device status */
-	uint64_t hv_caps;	/**< hypervisor-provided capabilities */
 };
 
 #define	VQ_ALLOC	0x01	/* set once we have a pfn */
