@@ -345,6 +345,40 @@ int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value)
 	return 0;
 }
 
+static bool is_cr0_write_valid(struct vcpu *vcpu, uint64_t cr0)
+{
+	struct run_context *context =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+
+	/* Shouldn't set always off bit */
+	if ((cr0 & cr0_always_off_mask) != 0UL)
+		return false;
+
+	/* SDM 25.3 "Changes to instruction behavior in VMX non-root"
+	 *
+	 * We always require "unrestricted guest" control enabled. So
+	 *
+	 * CR0.PG = 1, CR4.PAE = 0 and IA32_EFER.LME = 1 is invalid.
+	 * CR0.PE = 0 and CR0.PG = 1 is invalid.
+	 */
+	if (((cr0 & CR0_PG) != 0UL) && ((context->cr4 & CR4_PAE) == 0UL) &&
+			((context->ia32_efer & MSR_IA32_EFER_LME_BIT) != 0UL))
+		return false;
+
+	if (((cr0 & CR0_PE) == 0UL) && ((cr0 & CR0_PG) != 0UL))
+		return false;
+
+	/* SDM 6.15 "Exception and Interrupt Refrerence" GP Exception
+	 *
+	 * Loading CR0 regsiter with a set NW flag and a clear CD flag
+	 * is invalid
+	 */
+	if (((cr0 & CR0_CD) == 0UL) && ((cr0 & CR0_NW) != 0UL))
+		return false;
+
+	return true;
+}
+
 /*
  * Handling of CR0:
  * Assume "unrestricted guest" feature is supported by vmx.
@@ -374,22 +408,20 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	uint32_t entry_ctrls;
 	bool paging_enabled = !!(context->cr0 & CR0_PG);
 
-	if ((cr0 & (cr0_always_off_mask | CR0_RESERVED_MASK)) != 0UL) {
-		pr_err("Not allow to set always off / reserved bits for CR0");
+	if (!is_cr0_write_valid(vcpu, cr0)) {
+		pr_dbg("Invalid cr0 write operation from guest");
 		vcpu_inject_gp(vcpu, 0U);
 		return 0;
 	}
 
-	/* TODO: Check all invalid guest statuses according to the change of
-	 * CR0, and inject a #GP to guest */
+	/* SDM 2.5
+	 * When loading a control register, reserved bit should always set
+	 * to the value previously read.
+	 */
+	cr0 = (cr0 & ~CR0_RESERVED_MASK) | (context->cr0 & CR0_RESERVED_MASK);
 
 	if (((context->ia32_efer & MSR_IA32_EFER_LME_BIT) != 0UL) &&
 	    !paging_enabled && ((cr0 & CR0_PG) != 0UL)) {
-		if ((context->cr4 & CR4_PAE) == 0UL) {
-			pr_err("Can't enable long mode when PAE disabled");
-			vcpu_inject_gp(vcpu, 0U);
-			return 0;
-		}
 		/* Enable long mode */
 		pr_dbg("VMM: Enable long mode");
 		entry_ctrls = exec_vmread32(VMX_ENTRY_CONTROLS);
@@ -414,12 +446,6 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 
 	/* If CR0.CD or CR0.NW get changed */
 	if (((context->cr0 ^ cr0) & (CR0_CD | CR0_NW)) != 0UL) {
-		if ((cr0 & CR0_CD) == 0UL && ((cr0 & CR0_NW) != 0UL)) {
-			pr_err("not allow to set CR0.NW while clearing CR0.CD");
-			vcpu_inject_gp(vcpu, 0U);
-			return 0;
-		}
-
 		/* No action if only CR0.NW is changed */
 		if (((context->cr0 ^ cr0) & CR0_CD) != 0UL) {
 			if ((cr0 & CR0_CD) != 0UL) {
