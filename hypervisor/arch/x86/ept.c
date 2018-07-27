@@ -469,7 +469,7 @@ int ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu)
 int ept_mr_add(struct vm *vm, uint64_t hpa_arg,
 	uint64_t gpa_arg, uint64_t size, uint32_t prot_arg)
 {
-	struct map_params map_params;
+	struct mem_map_params map_params;
 	uint16_t i;
 	struct vcpu *vcpu;
 	uint64_t hpa = hpa_arg;

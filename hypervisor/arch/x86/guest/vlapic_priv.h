@@ -91,7 +91,7 @@
 
 struct acrn_vlapic;
 
-struct pir_desc {
+struct vlapic_pir_desc {
 	uint64_t pir[4];
 	uint64_t pending;
 	uint64_t unused[3];
@@ -119,7 +119,7 @@ struct acrn_vlapic {
 	struct vm		*vm;
 	struct vcpu		*vcpu;
 	struct lapic_regs	*apic_page;
-	struct pir_desc		*pir_desc;
+	struct vlapic_pir_desc		*pir_desc;
 	struct vlapic_ops	ops;
 
 	uint32_t		esr_pending;
@@ -154,7 +154,7 @@ struct acrn_vlapic {
 	 */
 	uint32_t	svr_last;
 	uint32_t	lvt_last[VLAPIC_MAXLVT_INDEX + 1];
-	struct pir_desc	pir;
+	struct vlapic_pir_desc	pir;
 };
 
 #endif	/* _VLAPIC_PRIV_H_ */

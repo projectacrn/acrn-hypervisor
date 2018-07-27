@@ -424,7 +424,7 @@ static int get_table_entry(void *addr, void *table_base,
 }
 
 static void *walk_paging_struct(void *addr, void *table_base,
-		uint32_t table_level, struct map_params *map_params,
+		uint32_t table_level, struct mem_map_params *map_params,
 		uint64_t attr)
 {
 	uint32_t table_offset;
@@ -608,7 +608,7 @@ bool check_continuous_hpa(struct vm *vm, uint64_t gpa_arg, uint64_t size_arg)
 
 }
 
-int obtain_last_page_table_entry(struct map_params *map_params,
+int obtain_last_page_table_entry(struct mem_map_params *map_params,
 		struct entry_params *entry, void *addr, bool direct)
 {
 	uint64_t table_entry;
@@ -732,7 +732,7 @@ int obtain_last_page_table_entry(struct map_params *map_params,
 	return 0;
 }
 
-static uint64_t update_page_table_entry(struct map_params *map_params,
+static uint64_t update_page_table_entry(struct mem_map_params *map_params,
 		void *paddr, void *vaddr, uint64_t size, uint64_t attr,
 		bool direct)
 {
@@ -792,7 +792,7 @@ static uint64_t update_page_table_entry(struct map_params *map_params,
 	return adjustment_size;
 }
 
-static uint64_t break_page_table(struct map_params *map_params, void *paddr,
+static uint64_t break_page_table(struct mem_map_params *map_params, void *paddr,
 		void *vaddr, uint64_t page_size, bool direct)
 {
 	uint32_t i = 0U;
@@ -889,7 +889,7 @@ static uint64_t break_page_table(struct map_params *map_params, void *paddr,
 	return next_page_size;
 }
 
-static int modify_paging(struct map_params *map_params, void *paddr_arg,
+static int modify_paging(struct mem_map_params *map_params, void *paddr_arg,
 		void *vaddr_arg, uint64_t size, uint32_t flags, bool direct)
 {
 	void *vaddr = vaddr_arg;
@@ -978,7 +978,7 @@ static int modify_paging(struct map_params *map_params, void *paddr_arg,
 	return 0;
 }
 
-int map_mem(struct map_params *map_params, void *paddr, void *vaddr,
+int map_mem(struct mem_map_params *map_params, void *paddr, void *vaddr,
 		    uint64_t size, uint32_t flags)
 {
 	int ret = 0;

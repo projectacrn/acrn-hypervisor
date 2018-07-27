@@ -1563,7 +1563,7 @@ vlapic_reset(struct acrn_vlapic *vlapic)
 	apic_page = (void *)vlapic->apic_page;
 	(void)memset(apic_page, 0U, CPU_PAGE_SIZE);
 	if (vlapic->pir_desc) {
-		(void)memset(vlapic->pir_desc, 0U, sizeof(struct pir_desc));
+		(void)memset(vlapic->pir_desc, 0U, sizeof(struct vlapic_pir_desc));
 	}
 
 	lapic->id = vlapic_build_id(vlapic);
@@ -2108,7 +2108,7 @@ int vlapic_create(struct vcpu *vcpu)
 			vlapic->ops.apicv_batch_set_tmr =
 					apicv_batch_set_tmr;
 
-			vlapic->pir_desc = (struct pir_desc *)(&(vlapic->pir));
+			vlapic->pir_desc = (struct vlapic_pir_desc *)(&(vlapic->pir));
 		}
 
 		if (is_vcpu_bsp(vcpu)) {
@@ -2174,7 +2174,7 @@ void vlapic_free(struct vcpu *vcpu)
 static int
 apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, __unused bool level)
 {
-	struct pir_desc *pir_desc;
+	struct vlapic_pir_desc *pir_desc;
 	uint64_t mask;
 	uint32_t idx;
 	int32_t notify;
@@ -2192,7 +2192,7 @@ apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, __unused bool 
 static int
 apicv_pending_intr(struct acrn_vlapic *vlapic, __unused uint32_t *vecptr)
 {
-	struct pir_desc *pir_desc;
+	struct vlapic_pir_desc *pir_desc;
 	struct lapic_regs *lapic;
 	uint64_t pending, pirval;
 	uint32_t i, ppr, vpr;
@@ -2301,7 +2301,7 @@ apicv_get_apic_page_addr(struct acrn_vlapic *vlapic)
 void
 apicv_inject_pir(struct acrn_vlapic *vlapic)
 {
-	struct pir_desc *pir_desc;
+	struct vlapic_pir_desc *pir_desc;
 	struct lapic_regs *lapic;
 	uint64_t val, pirval;
 	uint16_t rvi, pirbase = 0U, i;

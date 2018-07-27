@@ -29,7 +29,7 @@ struct seed_info {
 };
 
 /* Structure of key info */
-struct key_info {
+struct trusty_key_info {
 	uint32_t size_of_this_struct;
 
 	/* version info:
