@@ -16,7 +16,7 @@ struct trusty_mem {
 	 */
 	union {
 		struct {
-			struct key_info key_info;
+			struct trusty_key_info key_info;
 			struct trusty_startup_param startup_param;
 		} data;
 		uint8_t page[CPU_PAGE_SIZE];
@@ -27,7 +27,7 @@ struct trusty_mem {
 	uint8_t left_mem[0];
 };
 
-static struct key_info g_key_info = {
+static struct trusty_key_info g_key_info = {
 	.size_of_this_struct = sizeof(g_key_info),
 	.version = 0U,
 	.platform = 3U,
@@ -78,7 +78,7 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 {
 	uint64_t nworld_pml4e = 0UL;
 	uint64_t sworld_pml4e = 0UL;
-	struct map_params map_params;
+	struct mem_map_params map_params;
 	uint64_t gpa = 0UL;
 	uint64_t hpa = gpa2hpa(vm, gpa_orig);
 	uint64_t table_present = (IA32E_EPT_R_BIT |
@@ -179,7 +179,7 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 
 void  destroy_secure_world(struct vm *vm)
 {
-	struct map_params  map_params;
+	struct mem_map_params  map_params;
 	struct vm *vm0 = get_vm_from_vmid(0U);
 
 	if (vm0 == NULL) {
@@ -347,7 +347,7 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 {
 	uint32_t i;
 	struct trusty_mem *mem;
-	struct key_info *key_info;
+	struct trusty_key_info *key_info;
 
 	mem = (struct trusty_mem *)(HPA2HVA(mem_base_hpa));
 
@@ -366,7 +366,7 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 				BUP_MKHI_BOOTLOADER_SEED_LEN,
 				NULL, 0U,
 				vcpu->vm->GUID, sizeof(vcpu->vm->GUID)) == 0) {
-			(void)memset(key_info, 0U, sizeof(struct key_info));
+			(void)memset(key_info, 0U, sizeof(struct trusty_key_info));
 			pr_err("%s: derive dvseed failed!", __func__);
 			return false;
 		}
@@ -385,7 +385,7 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 	 * is put in the first page of trusty memory just followed by key_info.
 	 */
 	vcpu->arch_vcpu.contexts[SECURE_WORLD].guest_cpu_regs.regs.rdi
-		= (uint64_t)TRUSTY_EPT_REBASE_GPA + sizeof(struct key_info);
+		= (uint64_t)TRUSTY_EPT_REBASE_GPA + sizeof(struct trusty_key_info);
 
 	return true;
 }

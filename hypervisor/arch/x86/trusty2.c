@@ -13,7 +13,7 @@ uint64_t gpa2hpa_for_trusty(struct vm *vm, uint64_t gpa)
 {
 	uint64_t hpa = 0UL;
 	struct entry_params entry;
-	struct map_params map_params;
+	struct mem_map_params map_params;
 
 	map_params.page_table_type = PTT_EPT;
 	map_params.pml4_base = vm->arch_vm.sworld_eptp;
@@ -58,7 +58,7 @@ void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	uint64_t nworld_pml4e = 0UL;
 	uint64_t sworld_pml4e = 0UL;
 	struct entry_params entry;
-	struct map_params map_params;
+	struct mem_map_params map_params;
 	uint64_t gpa_uos = gpa_orig;
 	uint64_t gpa_sos;
 	uint64_t adjust_size;
@@ -158,7 +158,7 @@ void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 void  destroy_secure_world(struct vm *vm)
 {
 
-	struct map_params  map_params;
+	struct mem_map_params  map_params;
 	struct entry_params entry;
 	struct vm *vm0 = get_vm_from_vmid(0);
 	uint64_t hpa;
