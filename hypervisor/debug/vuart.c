@@ -31,14 +31,11 @@
 #include <hypervisor.h>
 
 #include "uart16550.h"
-#include "serial_internal.h"
 
 #define COM1_BASE	0x3F8
 #define COM1_IRQ	4
-#define DEFAULT_RCLK	1843200
-#define DEFAULT_BAUD	9600
-#define RX_SIZE		256
-#define TX_SIZE		65536
+#define RX_FIFO_SIZE		256
+#define TX_FIFO_SIZE		65536
 
 #define vuart_lock_init(vu)	spinlock_init(&((vu)->lock))
 #define vuart_lock(vu)		spinlock_obtain(&((vu)->lock))
@@ -99,7 +96,7 @@ static int fifo_numchars(struct fifo *fifo)
  *
  * Return an interrupt reason if one is available.
  */
-static uint8_t uart_intr_reason(struct vuart *vu)
+static uint8_t vuart_intr_reason(struct vuart *vu)
 {
 	if ((vu->lsr & LSR_OE) != 0 && (vu->ier & IER_ELSI) != 0) {
 		return IIR_RLS;
@@ -112,30 +109,15 @@ static uint8_t uart_intr_reason(struct vuart *vu)
 	}
 }
 
-static void uart_init(struct vuart *vu)
-{
-	uint16_t divisor;
-
-	divisor = DEFAULT_RCLK / DEFAULT_BAUD / 16;
-	vu->dll = divisor;
-	vu->dlh = divisor >> 16;
-
-	vu->active = false;
-	vu->base = COM1_BASE;
-	fifo_init(&vu->rxfifo, RX_SIZE);
-	fifo_init(&vu->txfifo, TX_SIZE);
-	vuart_lock_init(vu);
-}
-
 /*
  * Toggle the COM port's intr pin depending on whether or not we have an
  * interrupt condition to report to the processor.
  */
-static void uart_toggle_intr(struct vuart *vu)
+static void vuart_toggle_intr(struct vuart *vu)
 {
 	uint8_t intr_reason;
 
-	intr_reason = uart_intr_reason(vu);
+	intr_reason = vuart_intr_reason(vu);
 
 	if (intr_reason != IIR_NOPEND) {
 		if (vu->vm->vpic != NULL) {
@@ -151,7 +133,7 @@ static void uart_toggle_intr(struct vuart *vu)
 	}
 }
 
-static void uart_write(__unused struct vm_io_handler *hdlr,
+static void vuart_write(__unused struct vm_io_handler *hdlr,
 		struct vm *vm, uint16_t offset_arg,
 		__unused size_t width, uint32_t value)
 {
@@ -227,11 +209,11 @@ static void uart_write(__unused struct vm_io_handler *hdlr,
 	}
 
 done:
-	uart_toggle_intr(vu);
+	vuart_toggle_intr(vu);
 	vuart_unlock(vu);
 }
 
-static uint32_t uart_read(__unused struct vm_io_handler *hdlr,
+static uint32_t vuart_read(__unused struct vm_io_handler *hdlr,
 		struct vm *vm, uint16_t offset_arg,
 		__unused size_t width)
 {
@@ -265,7 +247,7 @@ static uint32_t uart_read(__unused struct vm_io_handler *hdlr,
 		break;
 	case UART16550_IIR:
 		iir = ((vu->fcr & FCR_FIFOE) != 0) ? IIR_FIFO_MASK : 0;
-		intr_reason = uart_intr_reason(vu);
+		intr_reason = vuart_intr_reason(vu);
 		/*
 		 * Deal with side effects of reading the IIR register
 		 */
@@ -306,7 +288,7 @@ static uint32_t uart_read(__unused struct vm_io_handler *hdlr,
 		break;
 	}
 done:
-	uart_toggle_intr(vu);
+	vuart_toggle_intr(vu);
 	vuart_unlock(vu);
 	return reg;
 }
@@ -315,22 +297,18 @@ static void vuart_register_io_handler(struct vm *vm)
 {
 	struct vm_io_range range = {
 		.flags = IO_ATTR_RW,
-		.base = 0x3f8,
+		.base = COM1_BASE,
 		.len = 8U
 	};
 
-	register_io_emulation_handler(vm, &range, uart_read, uart_write);
+	register_io_emulation_handler(vm, &range, vuart_read, vuart_write);
 }
 
-void vuart_console_tx_chars(void)
+/**
+ * @pre vu != NULL
+ */
+void vuart_console_tx_chars(struct vuart *vu)
 {
-	struct vuart *vu;
-
-	vu = vuart_console_active();
-	if (vu == NULL) {
-		return;
-	}
-
 	vuart_lock(vu);
 	while (fifo_numchars(&vu->txfifo) > 0) {
 		printf("%c", fifo_getchar(&vu->txfifo));
@@ -338,46 +316,27 @@ void vuart_console_tx_chars(void)
 	vuart_unlock(vu);
 }
 
-void vuart_console_rx_chars(uint32_t serial_handle)
+/**
+ * @pre vu != NULL
+ * @pre vu->active == true
+ */
+void vuart_console_rx_chars(struct vuart *vu)
 {
-	struct vuart *vu;
-	uint32_t vbuf_len;
-	char buffer[100];
-	uint32_t buf_idx = 0;
-
-	if (serial_handle == SERIAL_INVALID_HANDLE) {
-		pr_err("%s: invalid serial handle 0x%llx\n",
-				__func__, serial_handle);
-		return;
-	}
-
-	vu = vuart_console_active();
-	if (vu == NULL) {
-		return;
-	}
+	char ch = -1;
 
 	vuart_lock(vu);
-	/* Get data from serial */
-	vbuf_len = serial_gets(serial_handle, buffer, 100);
-	if (vbuf_len != 0U) {
-		while (buf_idx < vbuf_len) {
-			if (buffer[buf_idx] == GUEST_CONSOLE_TO_HV_SWITCH_KEY) {
-				/* Switch the console */
-				shell_switch_console();
-				break;
-			}
-			buf_idx++;
-		}
-		if (vu->active != false) {
-			buf_idx = 0;
-			while (buf_idx < vbuf_len) {
-				fifo_putchar(&vu->rxfifo, buffer[buf_idx]);
-				buf_idx++;
-			}
+	/* Get data from physical uart */
+	ch = uart16550_getc();
 
-			uart_toggle_intr(vu);
-		}
+	if (ch == GUEST_CONSOLE_TO_HV_SWITCH_KEY) {
+		/* Switch the console */
+		shell_switch_console();
 	}
+	if (ch != -1) {
+		fifo_putchar(&vu->rxfifo, ch);
+		vuart_toggle_intr(vu);
+	}
+
 	vuart_unlock(vu);
 }
 
@@ -398,11 +357,22 @@ struct vuart *vuart_console_active(void)
 void *vuart_init(struct vm *vm)
 {
 	struct vuart *vu;
+	uint16_t divisor;
 
 	vu = calloc(1, sizeof(struct vuart));
 	ASSERT(vu != NULL, "");
-	uart_init(vu);
+
+	/* Set baud rate*/
+	divisor = UART_CLOCK_RATE / BAUD_9600 / 16;
+	vu->dll = divisor;
+	vu->dlh = divisor >> 16;
+
+	vu->active = false;
+	vu->base = COM1_BASE;
 	vu->vm = vm;
+	fifo_init(&vu->rxfifo, RX_FIFO_SIZE);
+	fifo_init(&vu->txfifo, TX_FIFO_SIZE);
+	vuart_lock_init(vu);
 	vuart_register_io_handler(vm);
 
 	return vu;

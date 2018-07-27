@@ -160,26 +160,18 @@ void shell_puts(struct shell *p_shell, const char *str_ptr)
 {
 	/* Transmit data using this shell session's 'puts' function */
 	p_shell->session_io.io_puts(p_shell, str_ptr);
-
 }
 
-int shell_set_name(struct shell *p_shell, const char *name)
+/**
+ * @pre p_shell != NULL
+ * @pre name != NULL
+ */
+void shell_set_name(struct shell *p_shell, const char *name)
 {
-	int status;
-
-	if ((p_shell != NULL) && (name != NULL)) {
-		(void)strncpy_s((void *) p_shell->name, SHELL_NAME_MAX_LEN,
-			(void *) name, SHELL_NAME_MAX_LEN - 1);
-
-		/* Ensure null terminated string */
-		p_shell->name[SHELL_NAME_MAX_LEN - 1] = 0;
-
-		status = 0;
-	} else {
-		status = -EINVAL;
-	}
-
-	return status;
+	(void)strncpy_s((void *) p_shell->name, SHELL_NAME_MAX_LEN,
+		(void *) name, SHELL_NAME_MAX_LEN - 1);
+	/* Ensure null terminated string */
+	p_shell->name[SHELL_NAME_MAX_LEN - 1] = 0;
 }
 
 void shell_kick_session(void)

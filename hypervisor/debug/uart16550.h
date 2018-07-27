@@ -8,34 +8,30 @@
 #define UART16550_H
 
 /* Register / bit definitions for 16c550 uart */
-#define UART16550_RBR           0x00U
 /*receive buffer register            | base+00h, dlab=0b r*/
-#define UART16550_THR           0x00U
+#define UART16550_RBR           0x00U
 /*transmit holding register          | base+00h, dlab=0b w*/
-#define UART16550_DLL           0x00U
+#define UART16550_THR           0x00U
 /*divisor least significant byte     | base+00h, dlab=1b rw*/
-#define UART16550_IER           0x01U
+#define UART16550_DLL           0x00U
 /*interrupt enable register          | base+01h, dlab=0b rw*/
-#define UART16550_DLM           0x01U
+#define UART16550_IER           0x01U
 /*divisor most significant byte      | base+01h, dlab=1b rw*/
-#define UART16550_IIR           0x02U
+#define UART16550_DLM           0x01U
 /*interrupt identification register  | base+02h, dlab=0b r*/
-#define UART16550_FCR           0x02U
+#define UART16550_IIR           0x02U
 /*fifo control register              | base+02h, dlab=0b w*/
-#define UART16550_LCR           0x03U
+#define UART16550_FCR           0x02U
 /*line control register              | base+03h, dlab=xb rw*/
-#define UART16550_MCR           0x04U
+#define UART16550_LCR           0x03U
 /*modem control register, only uart0 | base+04h, dlab=xb rw*/
-#define UART16550_LSR           0x05U
+#define UART16550_MCR           0x04U
 /*line status register               | base+05h, dlab=xb r*/
-#define UART16550_MSR           0x06U
+#define UART16550_LSR           0x05U
 /*modem status register, only uart0  | base+06h, dlab=xb r*/
-#define UART16550_SCR           0x07U
+#define UART16550_MSR           0x06U
 /*scratch pad register               | base+07h, dlab=xb rw*/
-#define UART16550_MDR1          0x08U
-#define UARTML7213_BRCSR        0x0eU
-/*baud rate reference clock select register dlab xb*/
-#define UARTML7213_SRST         0x0fU /*Soft Reset Register dlab xb*/
+#define UART16550_SCR           0x07U
 
 /* value definitions for IIR */
 #define IIR_FIFO_MASK		0xc0U /* set if FIFOs are enabled */
@@ -102,5 +98,18 @@
 #define FCR_FIFOE	(1U << 0) /* Fifo Enable */
 
 #define UART_IER_DISABLE_ALL	0x00000000U
+
+#define BAUD_9600      9600
+#define BAUD_115200    115200
+#define BAUD_460800    460800
+
+/* CPU oscillator clock */
+#define CPU_OSC_CLOCK	1843200	/* 1.8432 MHz */
+/* UART hardware definitions */
+#define UART_CLOCK_RATE		CPU_OSC_CLOCK
+
+void uart16550_init(void);
+char uart16550_getc(void);
+int uart16550_puts(const char *buf, uint32_t len);
 
 #endif /* !UART16550_H */
