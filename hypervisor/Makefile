@@ -187,6 +187,7 @@ endif
 
 ifeq ($(CONFIG_PARTITION_MODE), y)
 C_SRCS += arch/x86/guest/mptable.c
+C_SRCS += $(wildcard arch/x86/vrtc/*.c)
 endif
 
 # retpoline support
