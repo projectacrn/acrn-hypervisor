@@ -52,7 +52,7 @@ typedef int (*mem_region_write_t)(struct vcpu *vcpu, uint64_t gpa,
  * 'struct vmctx *' when called from user context.
  * s
  */
-int vmm_emulate_instruction(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
+int vmm_emulate_instruction(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		struct vm_guest_paging *paging, mem_region_read_t mrr,
 		mem_region_write_t mrw, void *mrarg);
 
@@ -74,7 +74,7 @@ int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	struct seg_desc *desc, uint64_t offset_arg, uint8_t length_arg,
 	uint8_t addrsize, uint32_t prot, uint64_t *gla);
 
-int vie_init(struct vie *vie, struct vcpu *vcpu);
+int vie_init(struct instr_emul_vie *vie, struct vcpu *vcpu);
 
 /*
  * Decode the instruction fetched into 'vie' so it can be emulated.
@@ -89,7 +89,7 @@ int vie_init(struct vie *vie, struct vcpu *vcpu);
  */
 #define	VIE_INVALID_GLA		(1UL << 63)	/* a non-canonical address */
 int
-__decode_instruction(enum vm_cpu_mode cpu_mode, bool cs_d, struct vie *vie);
+__decode_instruction(enum vm_cpu_mode cpu_mode, bool cs_d, struct instr_emul_vie *vie);
 
 int emulate_instruction(struct vcpu *vcpu);
 int decode_instruction(struct vcpu *vcpu);

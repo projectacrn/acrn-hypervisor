@@ -58,7 +58,7 @@
 #define	VIE_OP_F_NO_MODRM	(1U << 3)
 #define	VIE_OP_F_NO_GLA_VERIFICATION (1U << 4)
 
-static const struct vie_op two_byte_opcodes[256] = {
+static const struct instr_emul_vie_op two_byte_opcodes[256] = {
 	[0xB6] = {
 		.op_byte = 0xB6,
 		.op_type = VIE_OP_TYPE_MOVZX,
@@ -78,7 +78,7 @@ static const struct vie_op two_byte_opcodes[256] = {
 	},
 };
 
-static const struct vie_op one_byte_opcodes[256] = {
+static const struct instr_emul_vie_op one_byte_opcodes[256] = {
 	[0x0F] = {
 		.op_byte = 0x0FU,
 		.op_type = VIE_OP_TYPE_TWO_BYTE
@@ -234,7 +234,7 @@ vie_read_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t *rval)
 }
 
 static void
-vie_calc_bytereg(struct vie *vie, enum cpu_reg_name *reg, int *lhbr)
+vie_calc_bytereg(struct instr_emul_vie *vie, enum cpu_reg_name *reg, int *lhbr)
 {
 	*lhbr = 0;
 	*reg = vie->reg;
@@ -260,7 +260,7 @@ vie_calc_bytereg(struct vie *vie, enum cpu_reg_name *reg, int *lhbr)
 }
 
 static int
-vie_read_bytereg(struct vcpu *vcpu, struct vie *vie, uint8_t *rval)
+vie_read_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie, uint8_t *rval)
 {
 	uint64_t val;
 	int error, lhbr;
@@ -282,7 +282,7 @@ vie_read_bytereg(struct vcpu *vcpu, struct vie *vie, uint8_t *rval)
 }
 
 static int
-vie_write_bytereg(struct vcpu *vcpu, struct vie *vie, uint8_t byte)
+vie_write_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie, uint8_t byte)
 {
 	uint64_t origval, val, mask;
 	int error, lhbr;
@@ -400,7 +400,7 @@ getcc(uint8_t opsize, uint64_t x, uint64_t y)
 }
 
 static int
-emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
+emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		mem_region_read_t memread, mem_region_write_t memwrite,
 		void *arg)
 {
@@ -526,7 +526,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 }
 
 static int
-emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
+emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		mem_region_read_t memread, __unused mem_region_write_t memwrite,
 		void *arg)
 {
@@ -619,7 +619,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
  * Helper function to calculate and validate a linear address.
  */
 static int
-get_gla(struct vcpu *vcpu, __unused struct vie *vie,
+get_gla(struct vcpu *vcpu, __unused struct instr_emul_vie *vie,
 	struct vm_guest_paging *paging,
 	uint8_t opsize, uint8_t addrsize, uint32_t prot, enum cpu_reg_name seg,
 	enum cpu_reg_name gpr, uint64_t *gla, int *fault)
@@ -677,7 +677,7 @@ guest_fault:
 }
 
 static int
-emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct vie *vie,
+emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct instr_emul_vie *vie,
 		struct vm_guest_paging *paging,
 		__unused mem_region_read_t memread,
 		__unused mem_region_write_t memwrite,
@@ -766,7 +766,7 @@ done:
 }
 
 static int
-emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
+emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		__unused struct vm_guest_paging *paging,
 		__unused mem_region_read_t memread,
 		mem_region_write_t memwrite, void *arg)
@@ -827,7 +827,7 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 }
 
 static int
-emulate_test(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
+emulate_test(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		mem_region_read_t memread, __unused mem_region_write_t memwrite,
 		void *arg)
 {
@@ -893,7 +893,7 @@ emulate_test(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 }
 
 static int
-emulate_and(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
+emulate_and(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		mem_region_read_t memread, mem_region_write_t memwrite,
 		void *arg)
 {
@@ -982,7 +982,7 @@ emulate_and(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 }
 
 static int
-emulate_or(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
+emulate_or(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		mem_region_read_t memread, mem_region_write_t memwrite,
 		void *arg)
 {
@@ -1074,7 +1074,7 @@ emulate_or(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 }
 
 static int
-emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
+emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		mem_region_read_t memread, __unused mem_region_write_t memwrite,
 		void *arg)
 {
@@ -1172,7 +1172,7 @@ emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 }
 
 static int
-emulate_sub(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
+emulate_sub(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		mem_region_read_t memread, __unused mem_region_write_t memwrite,
 		void *arg)
 {
@@ -1227,7 +1227,7 @@ emulate_sub(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 }
 
 static int
-emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
+emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct instr_emul_vie *vie,
 		struct vm_guest_paging *paging, mem_region_read_t memread,
 		mem_region_write_t memwrite, void *arg)
 {
@@ -1338,7 +1338,7 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 }
 
 static int
-emulate_push(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
+emulate_push(struct vcpu *vcpu, uint64_t mmio_gpa, struct instr_emul_vie *vie,
 		struct vm_guest_paging *paging, mem_region_read_t memread,
 		mem_region_write_t memwrite, void *arg)
 {
@@ -1360,7 +1360,7 @@ emulate_push(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 }
 
 static int
-emulate_pop(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
+emulate_pop(struct vcpu *vcpu, uint64_t mmio_gpa, struct instr_emul_vie *vie,
 		struct vm_guest_paging *paging, mem_region_read_t memread,
 		mem_region_write_t memwrite, void *arg)
 {
@@ -1382,7 +1382,7 @@ emulate_pop(struct vcpu *vcpu, uint64_t mmio_gpa, struct vie *vie,
 }
 
 static int
-emulate_group1(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
+emulate_group1(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		__unused struct vm_guest_paging *paging,
 		mem_region_read_t memread,
 		mem_region_write_t memwrite, void *memarg)
@@ -1411,7 +1411,7 @@ emulate_group1(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 }
 
 static int
-emulate_bittest(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
+emulate_bittest(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		mem_region_read_t memread, __unused mem_region_write_t memwrite,
 		void *memarg)
 {
@@ -1457,7 +1457,7 @@ emulate_bittest(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
 }
 
 int
-vmm_emulate_instruction(struct vcpu *vcpu, uint64_t gpa, struct vie *vie,
+vmm_emulate_instruction(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		struct vm_guest_paging *paging, mem_region_read_t memread,
 		mem_region_write_t memwrite, void *memarg)
 {
@@ -1693,7 +1693,7 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 }
 
 int
-vie_init(struct vie *vie, struct vcpu *vcpu)
+vie_init(struct instr_emul_vie *vie, struct vcpu *vcpu)
 {
 	uint64_t guest_rip_gva =
 		vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].rip;
@@ -1707,7 +1707,7 @@ vie_init(struct vie *vie, struct vcpu *vcpu)
 		return -EINVAL;
 	}
 
-	(void)memset(vie, 0U, sizeof(struct vie));
+	(void)memset(vie, 0U, sizeof(struct instr_emul_vie));
 
 	err_code = PAGE_FAULT_ID_FLAG;
 	ret = copy_from_gva(vcpu, vie->inst, guest_rip_gva,
@@ -1725,7 +1725,7 @@ vie_init(struct vie *vie, struct vcpu *vcpu)
 }
 
 static int
-vie_peek(struct vie *vie, uint8_t *x)
+vie_peek(struct instr_emul_vie *vie, uint8_t *x)
 {
 
 	if (vie->num_processed < vie->num_valid) {
@@ -1737,7 +1737,7 @@ vie_peek(struct vie *vie, uint8_t *x)
 }
 
 static void
-vie_advance(struct vie *vie)
+vie_advance(struct instr_emul_vie *vie)
 {
 
 	vie->num_processed++;
@@ -1773,7 +1773,7 @@ segment_override(uint8_t x, enum cpu_reg_name *seg)
 }
 
 static int
-decode_prefixes(struct vie *vie, enum vm_cpu_mode cpu_mode, bool cs_d)
+decode_prefixes(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode, bool cs_d)
 {
 	uint8_t x;
 
@@ -1845,7 +1845,7 @@ decode_prefixes(struct vie *vie, enum vm_cpu_mode cpu_mode, bool cs_d)
 }
 
 static int
-decode_two_byte_opcode(struct vie *vie)
+decode_two_byte_opcode(struct instr_emul_vie *vie)
 {
 	uint8_t x;
 
@@ -1864,7 +1864,7 @@ decode_two_byte_opcode(struct vie *vie)
 }
 
 static int
-decode_opcode(struct vie *vie)
+decode_opcode(struct instr_emul_vie *vie)
 {
 	uint8_t x;
 
@@ -1888,7 +1888,7 @@ decode_opcode(struct vie *vie)
 }
 
 static int
-decode_modrm(struct vie *vie, enum vm_cpu_mode cpu_mode)
+decode_modrm(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode)
 {
 	uint8_t x;
 
@@ -1943,7 +1943,7 @@ decode_modrm(struct vie *vie, enum vm_cpu_mode cpu_mode)
 }
 
 static int
-decode_sib(struct vie *vie)
+decode_sib(struct instr_emul_vie *vie)
 {
 	uint8_t x;
 
@@ -2011,7 +2011,7 @@ decode_sib(struct vie *vie)
 }
 
 static int
-decode_displacement(struct vie *vie)
+decode_displacement(struct instr_emul_vie *vie)
 {
 	int n, i;
 	uint8_t x;
@@ -2052,7 +2052,7 @@ decode_displacement(struct vie *vie)
 }
 
 static int
-decode_immediate(struct vie *vie)
+decode_immediate(struct instr_emul_vie *vie)
 {
 	int i, n;
 	uint8_t x;
@@ -2117,7 +2117,7 @@ decode_immediate(struct vie *vie)
 }
 
 static int
-decode_moffset(struct vie *vie)
+decode_moffset(struct instr_emul_vie *vie)
 {
 	uint8_t i, n, x;
 	union {
@@ -2153,7 +2153,7 @@ decode_moffset(struct vie *vie)
 }
 
 int
-__decode_instruction(enum vm_cpu_mode cpu_mode, bool cs_d, struct vie *vie)
+__decode_instruction(enum vm_cpu_mode cpu_mode, bool cs_d, struct instr_emul_vie *vie)
 {
 	if (decode_prefixes(vie, cpu_mode, cs_d) != 0) {
 		return -1;

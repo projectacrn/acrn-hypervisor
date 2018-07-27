@@ -297,7 +297,7 @@ static uint32_t get_vmcs_field(enum cpu_reg_name ident)
 	}
 }
 
-static void get_guest_paging_info(struct vcpu *vcpu, struct emul_ctxt *emul_ctxt,
+static void get_guest_paging_info(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt,
 						uint32_t csar)
 {
 	uint8_t cpl;
@@ -336,7 +336,7 @@ static int mmio_write(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t wval,
 
 int decode_instruction(struct vcpu *vcpu)
 {
-	struct emul_ctxt *emul_ctxt;
+	struct instr_emul_ctxt *emul_ctxt;
 	uint32_t csar;
 	int retval = 0;
 	enum vm_cpu_mode cpu_mode;
@@ -372,7 +372,7 @@ int decode_instruction(struct vcpu *vcpu)
 
 int emulate_instruction(struct vcpu *vcpu)
 {
-	struct emul_ctxt *emul_ctxt;
+	struct instr_emul_ctxt *emul_ctxt;
 	struct vm_guest_paging *paging;
 	int retval = 0;
 	uint64_t gpa = vcpu->req.reqs.mmio.address;
