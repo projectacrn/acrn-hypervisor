@@ -7,7 +7,7 @@
 #include <hypervisor.h>
 #include <multiboot.h>
 #ifdef CONFIG_EFI_STUB
-#include <acrn_efi.h>
+#include <vm0_boot.h>
 #endif
 
 /* IOAPIC id */
