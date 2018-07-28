@@ -5,9 +5,9 @@
  */
 
 #include <hypervisor.h>
-#ifdef CONFIG_EFI_STUB
 #include <vm0_boot.h>
-extern struct efi_ctx* efi_ctx;
+#ifdef CONFIG_EFI_STUB
+extern struct boot_ctx* efi_ctx;
 #endif
 
 #define REAL_MODE_BSP_INIT_CODE_SEL	(0xf000U)
@@ -15,6 +15,9 @@ extern struct efi_ctx* efi_ctx;
 #define REAL_MODE_CODE_SEG_AR		(0x009fU)
 #define PROTECTED_MODE_DATA_SEG_AR	(0xc093U)
 #define PROTECTED_MODE_CODE_SEG_AR	(0xc09bU)
+#define DR7_INIT_VALUE			(0x400UL)
+#define LDTR_AR				(0x0082U) /* LDT, type must be 2, refer to SDM Vol3 26.3.1.2 */
+#define TR_AR				(0x008bU) /* TSS (busy), refer to SDM Vol3 26.3.1.2 */
 
 static uint64_t cr0_host_mask;
 static uint64_t cr0_always_on_mask;
@@ -241,24 +244,6 @@ void exec_vmwrite32(uint32_t field, uint32_t value)
 void exec_vmwrite16(uint32_t field, uint16_t value)
 {
 	exec_vmwrite64(field, (uint64_t)value);
-}
-
-#define HV_ARCH_VMX_GET_CS(SEL)				\
-{							\
-	asm volatile ("movw %%cs, %%ax" : "=a"(sel));	\
-}
-
-static uint32_t get_cs_access_rights(void)
-{
-	uint32_t usable_ar;
-	uint16_t sel_value;
-
-	asm volatile ("movw %%cs, %%ax" : "=a" (sel_value));
-	asm volatile ("lar %%eax, %%eax" : "=a" (usable_ar) : "a"(sel_value));
-	usable_ar = usable_ar >> 8U;
-	usable_ar &= 0xf0ffU;	/* clear bits 11:8 */
-
-	return usable_ar;
 }
 
 static void init_cr0_cr4_host_mask(__unused struct vcpu *vcpu)
@@ -562,427 +547,195 @@ int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 	return 0;
 }
 
+static void init_guest_context_real(struct vcpu *vcpu)
+{
+	struct ext_context *ectx =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ext_ctx;
+
+	/* cs, ss, ds, es, fs, gs; cs will be override later. */
+	for(struct segment_sel *seg = &ectx->cs; seg <= &ectx->gs; seg++) {
+		seg->selector = 0U;
+		seg->base = 0UL;
+		seg->limit = 0xFFFFU;
+		seg->attr = REAL_MODE_DATA_SEG_AR;
+	}
+
+	if (is_vcpu_bsp(vcpu)) {
+		/* There are two cases that we will start bsp in real
+		 * mode:
+		 * 1. UOS start
+		 * 2. SOS resume from S3
+		 *
+		 * For 1, DM will set correct entry_addr.
+		 * For 2, SOS resume caller will set entry_addr to
+		 *        SOS wakeup vec. According to ACPI FACS spec,
+		 *        wakeup vec should be < 1MB. So we use < 1MB
+		 *        to detect whether it's resume from S3 and we
+		 *        setup CS:IP to
+		 *        (wakeup_vec >> 4):(wakeup_vec & 0x000F)
+		 *        if it's resume from S3.
+		 *
+		 */
+		if ((uint64_t)vcpu->entry_addr < 0x100000UL) {
+			ectx->cs.selector = (uint16_t)
+				(((uint64_t)vcpu->entry_addr & 0xFFFF0UL) >> 4U);
+			ectx->cs.base = (uint64_t)ectx->cs.selector << 4U;
+			vcpu_set_rip(vcpu, (uint64_t)vcpu->entry_addr & 0x0FUL);
+		} else {
+			/* BSP is initialized with real mode */
+			ectx->cs.selector = REAL_MODE_BSP_INIT_CODE_SEL;
+			/* For unrestricted guest, it is able
+			 * to set a high base address
+			 */
+			ectx->cs.base = (uint64_t)vcpu->entry_addr & 0xFFFF0000UL;
+			vcpu_set_rip(vcpu, 0x0000FFF0UL);
+		}
+	} else {
+		/* AP is initialized with real mode
+		 * and CS value is left shift 8 bits from sipi vector.
+		 */
+		ectx->cs.selector = (uint16_t)(vcpu->arch_vcpu.sipi_vector << 8U);
+		ectx->cs.base = (uint64_t)ectx->cs.selector << 4U;
+	}
+	ectx->cs.attr = REAL_MODE_CODE_SEG_AR;
+
+	ectx->gdtr.base = 0UL;
+	ectx->gdtr.limit = 0xFFFFU;
+	ectx->idtr.base = 0UL;
+	ectx->idtr.limit = 0xFFFFU;
+}
+
+static void init_guest_context_vm0_bsp(struct vcpu *vcpu)
+{
+	struct ext_context *ectx =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ext_ctx;
+	struct boot_ctx * init_ctx = (struct boot_ctx *)vm0_boot_context;
+	uint16_t *sel;
+	struct segment_sel *seg;
+
+	for(seg = &ectx->cs, sel = &init_ctx->cs_sel;
+	    seg <= &ectx->gs; seg ++, sel++) {
+		seg->base     = 0UL;
+		seg->limit    = 0xFFFFFFFFU;
+		seg->attr     = PROTECTED_MODE_DATA_SEG_AR;
+		seg->selector = *sel;
+	}
+	ectx->cs.attr         = init_ctx->cs_ar;	/* override cs attr */
+
+	vcpu_set_rip(vcpu, (uint64_t)vcpu->entry_addr);
+	vcpu_set_efer(vcpu, init_ctx->ia32_efer);
+
+	ectx->gdtr.base      = init_ctx->gdt.base;
+	ectx->gdtr.limit     = init_ctx->gdt.limit;
+
+	ectx->idtr.base      = init_ctx->idt.base;
+	ectx->idtr.limit     = init_ctx->idt.limit;
+
+	ectx->ldtr.selector  = init_ctx->ldt_sel;
+	ectx->tr.selector    = init_ctx->tr_sel;
+#ifdef CONFIG_EFI_STUB
+	vcpu_set_rsp(vcpu, efi_ctx->gprs.rsp);
+	/* clear flags for CF/PF/AF/ZF/SF/OF */
+	vcpu_set_rflags(vcpu, efi_ctx->rflags & ~(0x8d5UL));
+#endif
+}
+
+/* only be called for UOS when bsp start from protected mode */
+static void init_guest_context_protect(struct vcpu *vcpu)
+{
+	struct ext_context *ectx =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ext_ctx;
+	struct segment_sel *seg;
+
+	ectx->gdtr.base = create_guest_init_gdt(vcpu->vm, &ectx->gdtr.limit);
+	for(seg = &ectx->cs; seg <= &ectx->gs; seg ++) {
+		seg->base = 0UL;
+		seg->limit = 0xFFFFFFFFU;
+		seg->attr = PROTECTED_MODE_DATA_SEG_AR;
+		seg->selector = 0x18U;
+	}
+	ectx->cs.attr = PROTECTED_MODE_CODE_SEG_AR;
+	ectx->cs.selector = 0x10U; /* Linear code segment */
+	vcpu_set_rip(vcpu, (uint64_t)vcpu->entry_addr);
+}
+
+/* rip, rsp, ia32_efer and rflags are written to VMCS in start_vcpu */
+static void init_guest_vmx(struct vcpu *vcpu, uint64_t cr0, uint64_t cr3,
+	uint64_t cr4)
+{
+	struct cpu_context *ctx =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+	struct ext_context *ectx = &ctx->ext_ctx;
+
+	vcpu_set_cr4(vcpu, cr4);
+	vcpu_set_cr0(vcpu, cr0);
+	exec_vmwrite(VMX_GUEST_CR3, cr3);
+
+	exec_vmwrite(VMX_GUEST_GDTR_BASE, ectx->gdtr.base);
+	pr_dbg("VMX_GUEST_GDTR_BASE: 0x%016llx", ectx->gdtr.base);
+	exec_vmwrite32(VMX_GUEST_GDTR_LIMIT, ectx->gdtr.limit);
+	pr_dbg("VMX_GUEST_GDTR_LIMIT: 0x%016llx", ectx->gdtr.limit);
+
+	exec_vmwrite(VMX_GUEST_IDTR_BASE, ectx->idtr.base);
+	pr_dbg("VMX_GUEST_IDTR_BASE: 0x%016llx", ectx->idtr.base);
+	exec_vmwrite32(VMX_GUEST_IDTR_LIMIT, ectx->idtr.limit);
+	pr_dbg("VMX_GUEST_IDTR_LIMIT: 0x%016llx", ectx->idtr.limit);
+
+	/* init segment selectors: es, cs, ss, ds, fs, gs, ldtr, tr */
+	load_segment(ectx->cs, VMX_GUEST_CS);
+	load_segment(ectx->ss, VMX_GUEST_SS);
+	load_segment(ectx->ds, VMX_GUEST_DS);
+	load_segment(ectx->es, VMX_GUEST_ES);
+	load_segment(ectx->fs, VMX_GUEST_FS);
+	load_segment(ectx->gs, VMX_GUEST_GS);
+	load_segment(ectx->tr, VMX_GUEST_TR);
+	load_segment(ectx->ldtr, VMX_GUEST_LDTR);
+
+	/* fixed values */
+	exec_vmwrite32(VMX_GUEST_IA32_SYSENTER_CS, 0U);
+	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_ESP, 0UL);
+	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_EIP, 0UL);
+	exec_vmwrite(VMX_GUEST_PENDING_DEBUG_EXCEPT, 0UL);
+	exec_vmwrite(VMX_GUEST_IA32_DEBUGCTL_FULL, 0UL);
+	exec_vmwrite32(VMX_GUEST_INTERRUPTIBILITY_INFO, 0U);
+	exec_vmwrite32(VMX_GUEST_ACTIVITY_STATE, 0U);
+	exec_vmwrite32(VMX_GUEST_SMBASE, 0U);
+	vcpu_set_pat_ext(vcpu, PAT_POWER_ON_VALUE);
+	exec_vmwrite(VMX_GUEST_IA32_PAT_FULL, PAT_POWER_ON_VALUE);
+	exec_vmwrite(VMX_GUEST_DR7, DR7_INIT_VALUE);
+}
+
 static void init_guest_state(struct vcpu *vcpu)
 {
-	uint16_t value16;
-	uint32_t value32;
-	uint64_t value64;
-	uint16_t sel;
-	uint32_t limit, access;
-	uint64_t base;
-	uint16_t ldt_idx = 0x38U;
-	uint16_t es = 0U, ss = 0U, ds = 0U, fs = 0U, gs = 0U, data32_idx;
-	uint16_t tr_sel = 0x70U;
-	struct vm *vm = vcpu->vm;
+	struct cpu_context *ctx =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+	struct boot_ctx * init_ctx = (struct boot_ctx *)vm0_boot_context;
 	enum vm_cpu_mode vcpu_mode = get_vcpu_mode(vcpu);
 
-	pr_dbg("*********************");
-	pr_dbg("Initialize guest state");
-	pr_dbg("*********************");
-
-
-	/* Will not init vcpu mode to compatibility mode */
-	ASSERT(vcpu_mode != CPU_MODE_COMPATIBILITY,
-		"don't support start vcpu from compatibility mode");
-
-	/*************************************************/
-	/* Set up CRx                                    */
-	/*************************************************/
-	pr_dbg("Natural-width********");
-
-	if (vcpu_mode == CPU_MODE_64BIT) {
-		vcpu_set_efer(vcpu, MSR_IA32_EFER_LME_BIT);
-	}
-
-	/* Setup guest control register values
-	 * cr4 should be set before cr0, because when set cr0, cr4 value will be
-	 * checked.
-	 */
-	if (vcpu_mode == CPU_MODE_REAL) {
-		vcpu_set_cr4(vcpu, 0UL);
-		exec_vmwrite(VMX_GUEST_CR3, 0UL);
-		vcpu_set_cr0(vcpu, CR0_ET | CR0_NE);
-	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
-		vcpu_set_cr4(vcpu, 0UL);
-		exec_vmwrite(VMX_GUEST_CR3, 0UL);
-		vcpu_set_cr0(vcpu, CR0_ET | CR0_NE | CR0_PE);
-	} else if (vcpu_mode == CPU_MODE_64BIT) {
-		vcpu_set_cr4(vcpu, CR4_PSE | CR4_PAE | CR4_MCE);
-		exec_vmwrite(VMX_GUEST_CR3,
-				vm->arch_vm.guest_init_pml4 | CR3_PWT);
-		vcpu_set_cr0(vcpu, CR0_PG | CR0_PE | CR0_NE);
-	} else {
-		/* vcpu_mode will never be CPU_MODE_COMPATIBILITY */
-	}
-
-	/***************************************************/
-	/* Set up Flags - the value of RFLAGS on VM entry */
-	/***************************************************/
 	vcpu_set_rflags(vcpu, 0x2UL); /* Bit 1 is a active high reserved bit */
-	pr_dbg("VMX_GUEST_RFLAGS: 0x%016llx ", vcpu_get_rflags(vcpu));
 
-	/***************************************************/
-	/* Set Code Segment - CS */
-	/***************************************************/
-	if (vcpu_mode == CPU_MODE_REAL) {
-		if (is_vcpu_bsp(vcpu)) {
-			/* There are two cases that we will start bsp in real
-			 * mode:
-			 * 1. UOS start
-			 * 2. SOS resume from S3
-			 *
-			 * For 1, DM will set correct entry_addr.
-			 * For 2, SOS resume caller will set entry_addr to
-			 *        SOS wakeup vec. According to ACPI FACS spec,
-			 *        wakeup vec should be < 1MB. So we use < 1MB
-			 *        to detect whether it's resume from S3 and we
-			 *        setup CS:IP to
-			 *        (wakeup_vec >> 4):(wakeup_vec & 0x000F)
-			 *        if it's resume from S3.
-			 *
-			 */
-			if ((uint64_t)vcpu->entry_addr < 0x100000UL) {
-				sel = (uint16_t)(((uint64_t)vcpu->entry_addr & 0xFFFF0UL)
-					>> 4U);
-				base = (uint64_t)sel << 4U;
-			} else {
-				/* BSP is initialized with real mode */
-				sel = REAL_MODE_BSP_INIT_CODE_SEL;
-				/* For unrestricted guest, it is able
-				 * to set a high base address
-				 */
-				base = (uint64_t)vcpu->entry_addr &
-					0xFFFF0000UL;
-			}
-		} else {
-			/* AP is initialized with real mode
-			 * and CS value is left shift 8 bits from sipi vector.
-			 */
-			sel = (uint16_t)(vcpu->arch_vcpu.sipi_vector << 8U);
-			base = (uint64_t)sel << 4U;
-		}
-		limit = 0xffffU;
-		access = REAL_MODE_CODE_SEG_AR;
-	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
-		limit = 0xffffffffU;
-		base = 0UL;
-		access = PROTECTED_MODE_CODE_SEG_AR;
-		sel = 0x10U;	/* Linear CS selector in guest init gdt */
+	/* ldtr */
+	ctx->ext_ctx.ldtr.selector = 0U;
+	ctx->ext_ctx.ldtr.base = 0UL;
+	ctx->ext_ctx.ldtr.limit = 0xFFFFU;
+	ctx->ext_ctx.ldtr.attr = LDTR_AR;
+	/* tr */
+	ctx->ext_ctx.tr.selector = 0U;
+	ctx->ext_ctx.tr.base = 0UL;
+	ctx->ext_ctx.tr.limit = 0xFFFFU;
+	ctx->ext_ctx.tr.attr = TR_AR;
+
+	if(vcpu_mode == CPU_MODE_REAL) {
+		init_guest_context_real(vcpu);
+		init_guest_vmx(vcpu, CR0_ET | CR0_NE, 0, 0);
+	} else if (is_vm0(vcpu->vm) && is_vcpu_bsp(vcpu)) {
+		init_guest_context_vm0_bsp(vcpu);
+		init_guest_vmx(vcpu, init_ctx->cr0, init_ctx->cr3,
+			       init_ctx->cr4 & ~CR4_VMXE);
 	} else {
-		HV_ARCH_VMX_GET_CS(sel);
-		access = get_cs_access_rights();
-		limit = 0xffffffffU;
-		base = 0UL;
+		init_guest_context_protect(vcpu);
+		init_guest_vmx(vcpu, CR0_ET | CR0_NE | CR0_PE, 0, 0);
 	}
-
-	/* Selector */
-	exec_vmwrite16(VMX_GUEST_CS_SEL, sel);
-	pr_dbg("VMX_GUEST_CS_SEL: 0x%hx ", sel);
-
-	/* Limit */
-	exec_vmwrite32(VMX_GUEST_CS_LIMIT, limit);
-	pr_dbg("VMX_GUEST_CS_LIMIT: 0x%x ", limit);
-
-	/* Access */
-	exec_vmwrite32(VMX_GUEST_CS_ATTR, access);
-	pr_dbg("VMX_GUEST_CS_ATTR: 0x%x ", access);
-
-	/* Base */
-	exec_vmwrite(VMX_GUEST_CS_BASE, base);
-	pr_dbg("VMX_GUEST_CS_BASE: 0x%016llx ", base);
-
-	/***************************************************/
-	/* Set up instruction pointer and stack pointer */
-	/***************************************************/
-	/* Set up guest instruction pointer */
-	value64 = 0UL;
-	if (vcpu_mode == CPU_MODE_REAL) {
-		/* RIP is set here */
-		if (is_vcpu_bsp(vcpu)) {
-			if ((uint64_t)vcpu->entry_addr < 0x100000UL) {
-				value64 = (uint64_t)vcpu->entry_addr & 0x0FUL;
-			}
-			else {
-				value64 = 0x0000FFF0UL;
-			}
-		}
-	} else {
-		value64 = (uint64_t)vcpu->entry_addr;
-	}
-
-	pr_dbg("GUEST RIP on VMEntry %016llx ", value64);
-	exec_vmwrite(VMX_GUEST_RIP, value64);
-
-	if (vcpu_mode == CPU_MODE_64BIT) {
-		/* Set up guest stack pointer to 0 */
-		value64 = 0UL;
-		pr_dbg("GUEST RSP on VMEntry %016llx ",
-				value64);
-		exec_vmwrite(VMX_GUEST_RSP, value64);
-	}
-
-	/***************************************************/
-	/* Set up GDTR, IDTR and LDTR */
-	/***************************************************/
-
-	/* GDTR - Global Descriptor Table */
-	if (vcpu_mode == CPU_MODE_REAL) {
-		/* Base */
-		base = 0UL;
-
-		/* Limit */
-		limit = 0xFFFFU;
-	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
-		base = create_guest_init_gdt(vcpu->vm, &limit);
-	} else if (vcpu_mode == CPU_MODE_64BIT) {
-		descriptor_table gdtb = {0U, 0UL};
-
-		/* Base *//* TODO: Should guest GDTB point to host GDTB ? */
-		/* Obtain the current global descriptor table base */
-		asm volatile ("sgdt %0" : "=m"(gdtb)::"memory");
-
-		value32 = gdtb.limit;
-
-		if (((gdtb.base >> 47U) & 0x1UL) != 0UL) {
-			gdtb.base |= 0xffff000000000000UL;
-		}
-
-		base = gdtb.base;
-
-		/* Limit */
-		limit = HOST_GDT_SIZE - 1U;
-	} else {
-		/* vcpu_mode will never be CPU_MODE_COMPATIBILITY */
-	}
-
-	/* GDTR Base */
-	exec_vmwrite(VMX_GUEST_GDTR_BASE, base);
-	pr_dbg("VMX_GUEST_GDTR_BASE: 0x%016llx ", base);
-
-	/* GDTR Limit */
-	exec_vmwrite32(VMX_GUEST_GDTR_LIMIT, limit);
-	pr_dbg("VMX_GUEST_GDTR_LIMIT: 0x%x ", limit);
-
-	/* IDTR - Interrupt Descriptor Table */
-	if ((vcpu_mode == CPU_MODE_REAL) ||
-	    (vcpu_mode == CPU_MODE_PROTECTED)) {
-		/* Base */
-		base = 0UL;
-
-		/* Limit */
-		limit = 0xFFFFU;
-	} else if (vcpu_mode == CPU_MODE_64BIT) {
-		descriptor_table idtb = {0U, 0UL};
-
-		/* TODO: Should guest IDTR point to host IDTR ? */
-		asm volatile ("sidt %0":"=m"(idtb)::"memory");
-		/* Limit */
-		limit = idtb.limit;
-
-		if (((idtb.base >> 47U) & 0x1UL) != 0UL) {
-			idtb.base |= 0xffff000000000000UL;
-		}
-
-		/* Base */
-		base = idtb.base;
-	} else {
-		/* vcpu_mode will never be CPU_MODE_COMPATIBILITY */
-	}
-
-	/* IDTR Base */
-	exec_vmwrite(VMX_GUEST_IDTR_BASE, base);
-	pr_dbg("VMX_GUEST_IDTR_BASE: 0x%016llx ", base);
-
-	/* IDTR Limit */
-	exec_vmwrite32(VMX_GUEST_IDTR_LIMIT, limit);
-	pr_dbg("VMX_GUEST_IDTR_LIMIT: 0x%x ", limit);
-
-	/***************************************************/
-	/* Debug register */
-	/***************************************************/
-	/* Set up guest Debug register */
-	value64 = 0x400UL;
-	exec_vmwrite(VMX_GUEST_DR7, value64);
-	pr_dbg("VMX_GUEST_DR7: 0x%016llx ", value64);
-
-	/***************************************************/
-	/* ES, CS, SS, DS, FS, GS */
-	/***************************************************/
-	data32_idx = 0x10U;
-	if (vcpu_mode == CPU_MODE_REAL) {
-		es = data32_idx;
-		ss = data32_idx;
-		ds = data32_idx;
-		fs = data32_idx;
-		gs = data32_idx;
-		limit = 0xffffU;
-
-	} else if (vcpu_mode == CPU_MODE_PROTECTED) {
-		/* Linear data segment in guest init gdt */
-		es = 0x18U;
-		ss = 0x18U;
-		ds = 0x18U;
-		fs = 0x18U;
-		gs = 0x18U;
-		limit = 0xffffffffU;
-	} else if (vcpu_mode == CPU_MODE_64BIT) {
-		asm volatile ("movw %%es, %%ax":"=a" (es));
-		asm volatile ("movw %%ss, %%ax":"=a" (ss));
-		asm volatile ("movw %%ds, %%ax":"=a" (ds));
-		asm volatile ("movw %%fs, %%ax":"=a" (fs));
-		asm volatile ("movw %%gs, %%ax":"=a" (gs));
-		limit = 0xffffffffU;
-	} else {
-		/* vcpu_mode will never be CPU_MODE_COMPATIBILITY */
-	}
-
-	/* Selector */
-	exec_vmwrite16(VMX_GUEST_ES_SEL, es);
-	pr_dbg("VMX_GUEST_ES_SEL: 0x%hx ", es);
-
-	exec_vmwrite16(VMX_GUEST_SS_SEL, ss);
-	pr_dbg("VMX_GUEST_SS_SEL: 0x%hx ", ss);
-
-	exec_vmwrite16(VMX_GUEST_DS_SEL, ds);
-	pr_dbg("VMX_GUEST_DS_SEL: 0x%hx ", ds);
-
-	exec_vmwrite16(VMX_GUEST_FS_SEL, fs);
-	pr_dbg("VMX_GUEST_FS_SEL: 0x%hx ", fs);
-
-	exec_vmwrite16(VMX_GUEST_GS_SEL, gs);
-	pr_dbg("VMX_GUEST_GS_SEL: 0x%hx ", gs);
-
-	/* Limit */
-	exec_vmwrite32(VMX_GUEST_ES_LIMIT, limit);
-	pr_dbg("VMX_GUEST_ES_LIMIT: 0x%x ", limit);
-	exec_vmwrite32(VMX_GUEST_SS_LIMIT, limit);
-	pr_dbg("VMX_GUEST_SS_LIMIT: 0x%x ", limit);
-	exec_vmwrite32(VMX_GUEST_DS_LIMIT, limit);
-	pr_dbg("VMX_GUEST_DS_LIMIT: 0x%x ", limit);
-	exec_vmwrite32(VMX_GUEST_FS_LIMIT, limit);
-	pr_dbg("VMX_GUEST_FS_LIMIT: 0x%x ", limit);
-	exec_vmwrite32(VMX_GUEST_GS_LIMIT, limit);
-	pr_dbg("VMX_GUEST_GS_LIMIT: 0x%x ", limit);
-
-	/* Access */
-	if (vcpu_mode == CPU_MODE_REAL) {
-		value32 = REAL_MODE_DATA_SEG_AR;
-	}
-	else {	/* same value for protected mode and long mode */
-		value32 = PROTECTED_MODE_DATA_SEG_AR;
-	}
-
-	exec_vmwrite32(VMX_GUEST_ES_ATTR, value32);
-	pr_dbg("VMX_GUEST_ES_ATTR: 0x%x ", value32);
-	exec_vmwrite32(VMX_GUEST_SS_ATTR, value32);
-	pr_dbg("VMX_GUEST_SS_ATTR: 0x%x ", value32);
-	exec_vmwrite32(VMX_GUEST_DS_ATTR, value32);
-	pr_dbg("VMX_GUEST_DS_ATTR: 0x%x ", value32);
-	exec_vmwrite32(VMX_GUEST_FS_ATTR, value32);
-	pr_dbg("VMX_GUEST_FS_ATTR: 0x%x ", value32);
-	exec_vmwrite32(VMX_GUEST_GS_ATTR, value32);
-	pr_dbg("VMX_GUEST_GS_ATTR: 0x%x ", value32);
-
-	/* Base */
-	if (vcpu_mode == CPU_MODE_REAL) {
-		value64 = (uint64_t)es << 4U;
-	} else {
-		value64 = 0UL;
-	}
-
-	exec_vmwrite(VMX_GUEST_ES_BASE, value64);
-	pr_dbg("VMX_GUEST_ES_BASE: 0x%016llx ", value64);
-	exec_vmwrite(VMX_GUEST_SS_BASE, value64);
-	pr_dbg("VMX_GUEST_SS_BASE: 0x%016llx ", value64);
-	exec_vmwrite(VMX_GUEST_DS_BASE, value64);
-	pr_dbg("VMX_GUEST_DS_BASE: 0x%016llx ", value64);
-	exec_vmwrite(VMX_GUEST_FS_BASE, value64);
-	pr_dbg("VMX_GUEST_FS_BASE: 0x%016llx ", value64);
-	exec_vmwrite(VMX_GUEST_GS_BASE, value64);
-	pr_dbg("VMX_GUEST_GS_BASE: 0x%016llx ", value64);
-
-	/***************************************************/
-	/* LDT and TR (dummy) */
-	/***************************************************/
-	value16 = ldt_idx;
-	exec_vmwrite16(VMX_GUEST_LDTR_SEL, value16);
-	pr_dbg("VMX_GUEST_LDTR_SEL: 0x%hu ", value16);
-
-	value32 = 0xffffffffU;
-	exec_vmwrite32(VMX_GUEST_LDTR_LIMIT, value32);
-	pr_dbg("VMX_GUEST_LDTR_LIMIT: 0x%x ", value32);
-
-	value32 = 0x10000U;
-	exec_vmwrite32(VMX_GUEST_LDTR_ATTR, value32);
-	pr_dbg("VMX_GUEST_LDTR_ATTR: 0x%x ", value32);
-
-	value64 = 0x00UL;
-	exec_vmwrite(VMX_GUEST_LDTR_BASE, value64);
-	pr_dbg("VMX_GUEST_LDTR_BASE: 0x%016llx ", value64);
-
-	/* Task Register */
-	value16 = tr_sel;
-	exec_vmwrite16(VMX_GUEST_TR_SEL, value16);
-	pr_dbg("VMX_GUEST_TR_SEL: 0x%hu ", value16);
-
-	value32 = 0xffU;
-	exec_vmwrite32(VMX_GUEST_TR_LIMIT, value32);
-	pr_dbg("VMX_GUEST_TR_LIMIT: 0x%x ", value32);
-
-	value32 = 0x8bU;
-	exec_vmwrite32(VMX_GUEST_TR_ATTR, value32);
-	pr_dbg("VMX_GUEST_TR_ATTR: 0x%x ", value32);
-
-	value64 = 0x00UL;
-	exec_vmwrite(VMX_GUEST_TR_BASE, value64);
-	pr_dbg("VMX_GUEST_TR_BASE: 0x%016llx ", value64);
-
-	value32 = 0U;
-	exec_vmwrite32(VMX_GUEST_INTERRUPTIBILITY_INFO, value32);
-	pr_dbg("VMX_GUEST_INTERRUPTIBILITY_INFO: 0x%x ",
-		  value32);
-
-	value32 = 0U;
-	exec_vmwrite32(VMX_GUEST_ACTIVITY_STATE, value32);
-	pr_dbg("VMX_GUEST_ACTIVITY_STATE: 0x%x ",
-		  value32);
-
-	value32 = 0U;
-	exec_vmwrite32(VMX_GUEST_SMBASE, value32);
-	pr_dbg("VMX_GUEST_SMBASE: 0x%x ", value32);
-
-	value32 = ((uint32_t)msr_read(MSR_IA32_SYSENTER_CS) & 0xFFFFFFFFU);
-	exec_vmwrite32(VMX_GUEST_IA32_SYSENTER_CS, value32);
-	pr_dbg("VMX_GUEST_IA32_SYSENTER_CS: 0x%x ",
-		  value32);
-
-	value64 = PAT_POWER_ON_VALUE;
-	exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, value64);
-	pr_dbg("VMX_GUEST_IA32_PAT: 0x%016llx ", value64);
-	vcpu_set_pat_ext(vcpu, value64);
-
-	value64 = 0UL;
-	exec_vmwrite64(VMX_GUEST_IA32_DEBUGCTL_FULL, value64);
-	pr_dbg("VMX_GUEST_IA32_DEBUGCTL: 0x%016llx ",
-		  value64);
-
-	/* Set up guest pending debug exception */
-	value64 = 0x0UL;
-	exec_vmwrite(VMX_GUEST_PENDING_DEBUG_EXCEPT, value64);
-	pr_dbg("VMX_GUEST_PENDING_DEBUG_EXCEPT: 0x%016llx ", value64);
-
-	/* These fields manage host and guest system calls * pg 3069 31.10.4.2
-	 * - set up these fields with * contents of current SYSENTER ESP and
-	 * EIP MSR values
-	 */
-	value64 = msr_read(MSR_IA32_SYSENTER_ESP);
-	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_ESP, value64);
-	pr_dbg("VMX_GUEST_IA32_SYSENTER_ESP: 0x%016llx ",
-		  value64);
-	value64 = msr_read(MSR_IA32_SYSENTER_EIP);
-	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_EIP, value64);
-	pr_dbg("VMX_GUEST_IA32_SYSENTER_EIP: 0x%016llx ",
-		  value64);
 }
 
 static void init_host_state(__unused struct vcpu *vcpu)
@@ -1092,11 +845,6 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	exec_vmwrite(VMX_HOST_IDTR_BASE, idtb.base);
 	pr_dbg("VMX_HOST_IDTR_BASE: 0x%x ", idtb.base);
 
-	value32 = (uint32_t)msr_read(MSR_IA32_SYSENTER_CS);
-	exec_vmwrite32(VMX_HOST_IA32_SYSENTER_CS, value32);
-	pr_dbg("VMX_HOST_IA32_SYSENTER_CS: 0x%x ",
-			value32);
-
 	/**************************************************/
 	/* 64-bit fields */
 	pr_dbg("64-bit********");
@@ -1142,17 +890,10 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	exec_vmwrite(VMX_HOST_RIP, value64);
 	pr_dbg("vm exit return address = %016llx ", value64);
 
-	/* These fields manage host and guest system calls * pg 3069 31.10.4.2
-	 * - set up these fields with * contents of current SYSENTER ESP and
-	 * EIP MSR values
-	 */
-	value = msr_read(MSR_IA32_SYSENTER_ESP);
-	exec_vmwrite(VMX_HOST_IA32_SYSENTER_ESP, value);
-	pr_dbg("VMX_HOST_IA32_SYSENTER_ESP: 0x%016llx ",
-		  value);
-	value = msr_read(MSR_IA32_SYSENTER_EIP);
-	exec_vmwrite(VMX_HOST_IA32_SYSENTER_EIP, value);
-	pr_dbg("VMX_HOST_IA32_SYSENTER_EIP: 0x%016llx ", value);
+	/* As a type I hypervisor, just init sysenter fields to 0 */
+	exec_vmwrite32(VMX_HOST_IA32_SYSENTER_CS, 0U);
+	exec_vmwrite(VMX_HOST_IA32_SYSENTER_ESP, 0UL);
+	exec_vmwrite(VMX_HOST_IA32_SYSENTER_EIP, 0UL);
 }
 
 static uint32_t check_vmx_ctrl(uint32_t msr, uint32_t ctrl_req)
@@ -1467,77 +1208,6 @@ static void init_exit_ctrl(__unused struct vcpu *vcpu)
 	exec_vmwrite32(VMX_EXIT_MSR_LOAD_COUNT, 0U);
 }
 
-#ifdef CONFIG_EFI_STUB
-static void override_uefi_vmcs(struct vcpu *vcpu)
-{
-
-	if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
-		/* CR4 should be set before CR0, because when set CR0, CR4 value
-		 * will be checked. */
-		/* VMXE is always on bit when set CR4, and not allowed to be set
-		 * from input cr4 value */
-		vcpu_set_cr4(vcpu, efi_ctx->cr4 & ~CR4_VMXE);
-		exec_vmwrite(VMX_GUEST_CR3, efi_ctx->cr3);
-		vcpu_set_cr0(vcpu, efi_ctx->cr0 | CR0_PG | CR0_PE | CR0_NE);
-
-		/* Selector */
-		exec_vmwrite16(VMX_GUEST_CS_SEL, efi_ctx->cs_sel);
-		pr_dbg("VMX_GUEST_CS_SEL: 0x%hx ", efi_ctx->cs_sel);
-
-		/* Access */
-		exec_vmwrite32(VMX_GUEST_CS_ATTR, efi_ctx->cs_ar);
-		pr_dbg("VMX_GUEST_CS_ATTR: 0x%x ", efi_ctx->cs_ar);
-
-		exec_vmwrite16(VMX_GUEST_ES_SEL, efi_ctx->es_sel);
-		pr_dbg("VMX_GUEST_ES_SEL: 0x%hx ", efi_ctx->es_sel);
-
-		exec_vmwrite16(VMX_GUEST_SS_SEL, efi_ctx->ss_sel);
-		pr_dbg("VMX_GUEST_SS_SEL: 0x%hx ", efi_ctx->ss_sel);
-
-		exec_vmwrite16(VMX_GUEST_DS_SEL, efi_ctx->ds_sel);
-		pr_dbg("VMX_GUEST_DS_SEL: 0x%hx ", efi_ctx->ds_sel);
-
-		exec_vmwrite16(VMX_GUEST_FS_SEL, efi_ctx->fs_sel);
-		pr_dbg("VMX_GUEST_FS_SEL: 0x%hx ", efi_ctx->fs_sel);
-
-		exec_vmwrite16(VMX_GUEST_GS_SEL, efi_ctx->gs_sel);
-		pr_dbg("VMX_GUEST_GS_SEL: 0x%hx ", efi_ctx->gs_sel);
-
-		/* Base */
-		exec_vmwrite(VMX_GUEST_ES_BASE, efi_ctx->es_sel << 4U);
-		exec_vmwrite(VMX_GUEST_SS_BASE, efi_ctx->ss_sel << 4U);
-		exec_vmwrite(VMX_GUEST_DS_BASE, efi_ctx->ds_sel << 4U);
-		exec_vmwrite(VMX_GUEST_FS_BASE, efi_ctx->fs_sel << 4U);
-		exec_vmwrite(VMX_GUEST_GS_BASE, efi_ctx->gs_sel << 4U);
-
-		/* RSP */
-		exec_vmwrite(VMX_GUEST_RSP, efi_ctx->rsp);
-		pr_dbg("GUEST RSP on VMEntry %x ", efi_ctx->rsp);
-
-		/* GDTR Base */
-		exec_vmwrite(VMX_GUEST_GDTR_BASE, efi_ctx->gdt.base);
-		pr_dbg("VMX_GUEST_GDTR_BASE: 0x%016llx ", efi_ctx->gdt.base);
-
-		/* GDTR Limit */
-		exec_vmwrite32(VMX_GUEST_GDTR_LIMIT, efi_ctx->gdt.limit);
-		pr_dbg("VMX_GUEST_GDTR_LIMIT: 0x%x ", efi_ctx->gdt.limit);
-
-		/* IDTR Base */
-		exec_vmwrite(VMX_GUEST_IDTR_BASE, efi_ctx->idt.base);
-		pr_dbg("VMX_GUEST_IDTR_BASE: 0x%016llx ", efi_ctx->idt.base);
-
-		/* IDTR Limit */
-		exec_vmwrite32(VMX_GUEST_IDTR_LIMIT, efi_ctx->idt.limit);
-		pr_dbg("VMX_GUEST_IDTR_LIMIT: 0x%x ", efi_ctx->idt.limit);
-	}
-
-	/* Interrupt */
-	/* clear flags for CF/PF/AF/ZF/SF/OF */
-	vcpu_set_rflags(vcpu, efi_ctx->rflags & ~(0x8d5UL));
-	pr_dbg("VMX_GUEST_RFLAGS: 0x%016llx ", vcpu_get_rflags(vcpu));
-}
-#endif
-
 int init_vmcs(struct vcpu *vcpu)
 {
 	uint64_t vmx_rev_id;
@@ -1573,11 +1243,6 @@ int init_vmcs(struct vcpu *vcpu)
 	init_entry_ctrl(vcpu);
 	init_exit_ctrl(vcpu);
 
-#ifdef CONFIG_EFI_STUB
-	if (is_vm0(vcpu->vm) && vcpu->pcpu_id == BOOT_CPU_ID) {
-		override_uefi_vmcs(vcpu);
-	}
-#endif
 	/* Return status to caller */
 	return status;
 }

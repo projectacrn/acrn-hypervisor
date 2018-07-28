@@ -29,9 +29,7 @@
 
 #include <hypervisor.h>
 #include "acpi.h"
-#ifdef CONFIG_EFI_STUB
 #include <vm0_boot.h>
-#endif
 
 #define ACPI_SIG_RSDP             "RSD PTR " /* Root System Description Ptr */
 #define ACPI_OEM_ID_SIZE           6
