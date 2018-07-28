@@ -31,6 +31,8 @@
 #define MULTIBOOT_HEADER_MAGIC 0x1badb002
 #define MULTIBOOT_HEADER_FLAGS 0x00000002 /*flags bit 1 : enable mem_*, mmap_**/
 
+    .extern cpu_primary_save32
+    .extern cpu_primary_save64
     .section    multiboot_header, "a"
 
     .align     4
@@ -49,15 +51,18 @@
 
     .global     cpu_primary_start_32
 cpu_primary_start_32:
+    /* save the MULTBOOT magic number & MBI */
+    movl    %eax, (boot_regs)
+    movl    %ebx, (boot_regs+4)
+
+    /* Save boot context from 32bit mode */
+    call cpu_primary_save_32
+
     /* Disable interrupts */
     cli
 
     /* Clear direction flag */
     cld
-
-    /* save eax and ebx */
-    movl    %eax, %esp
-    movl    %ebx, %ebp
 
     /* detect whether it is in long mode
      *
@@ -70,10 +75,6 @@ cpu_primary_start_32:
 
     /* jump to 64bit entry if it is already in long mode */
     jne      cpu_primary_start_64
-
-    /* save the MULTBOOT magic number & MBI */
-    movl    %esp, (boot_regs)
-    movl    %ebp, (boot_regs+4)
 
     /* Disable paging */
     mov     %cr0, %ebx
@@ -123,6 +124,9 @@ cpu_primary_start_64:
     lea     boot_regs(%rip), %rax
     movl    %edi, (%rax)
     movl    %esi, 4(%rax)
+
+    /* Save boot context from 64bit mode */
+    call cpu_primary_save_64
 
 primary_start_long_mode:
 
