@@ -45,7 +45,7 @@ extern const uint64_t guest_entry;
 static UINT64 hv_hpa;
 
 static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
-			struct multiboot_info *mbi, struct efi_ctx *efi_ctx)
+			struct multiboot_info *mbi, struct boot_ctx *efi_ctx)
 {
 	hv_func hf;
 
@@ -67,7 +67,7 @@ static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
 }
 
 EFI_STATUS
-construct_mbi(struct multiboot_info **mbi_ret, struct efi_ctx *efi_ctx)
+construct_mbi(struct multiboot_info **mbi_ret, struct boot_ctx *efi_ctx)
 {
 	UINTN map_size, _map_size, map_key;
 	UINT32 desc_version;
@@ -212,16 +212,16 @@ switch_to_guest_mode(EFI_HANDLE image)
 	EFI_PHYSICAL_ADDRESS addr;
 	EFI_STATUS err;
 	struct multiboot_info *mbi = NULL;
-	struct efi_ctx *efi_ctx;
+	struct boot_ctx *efi_ctx;
 	struct acpi_table_rsdp *rsdp = NULL;
 	int i;
 	EFI_CONFIGURATION_TABLE *config_table;
 
-	err = emalloc(sizeof(struct efi_ctx), 8, &addr);
+	err = emalloc(sizeof(struct boot_ctx), 8, &addr);
 	if (err != EFI_SUCCESS)
 		goto out;
 
-	efi_ctx = (struct efi_ctx *)(UINTN)addr;
+	efi_ctx = (struct boot_ctx *)(UINTN)addr;
 
 	/* reserve secondary memory region for hv */
 	err = emalloc_for_low_mem(&addr, CONFIG_LOW_RAM_SIZE);
@@ -261,53 +261,26 @@ switch_to_guest_mode(EFI_HANDLE image)
 	if (err != EFI_SUCCESS)
 		goto out;
 
-	asm volatile ("mov %%cr0, %0" : "=r"(efi_ctx->cr0));
-	asm volatile ("mov %%cr3, %0" : "=r"(efi_ctx->cr3));
-	asm volatile ("mov %%cr4, %0" : "=r"(efi_ctx->cr4));
-	asm volatile ("sidt %0" :: "m" (efi_ctx->idt));
-	asm volatile ("sgdt %0" :: "m" (efi_ctx->gdt));
-	asm volatile ("str %0" :: "m" (efi_ctx->tr_sel));
-	asm volatile ("sldt %0" :: "m" (efi_ctx->ldt_sel));
-
-	asm volatile ("mov %%cs, %%ax" : "=a"(efi_ctx->cs_sel));
-	asm volatile ("lar %%eax, %%eax"
-					: "=a"(efi_ctx->cs_ar)
-					: "a"(efi_ctx->cs_sel)
-					);
-	efi_ctx->cs_ar = (efi_ctx->cs_ar >> 8) & 0xf0ff; /* clear bits 11:8 */
-
-	asm volatile ("mov %%es, %%ax" : "=a"(efi_ctx->es_sel));
-	asm volatile ("mov %%ss, %%ax" : "=a"(efi_ctx->ss_sel));
-	asm volatile ("mov %%ds, %%ax" : "=a"(efi_ctx->ds_sel));
-	asm volatile ("mov %%fs, %%ax" : "=a"(efi_ctx->fs_sel));
-	asm volatile ("mov %%gs, %%ax" : "=a"(efi_ctx->gs_sel));
-
-	uint32_t idx = 0xC0000080; /* MSR_IA32_EFER */
-	uint32_t msrl, msrh;
-	asm volatile ("rdmsr" : "=a"(msrl), "=d"(msrh) : "c"(idx));
-	efi_ctx->efer = ((uint64_t)msrh<<32) | msrl;
-
 	asm volatile ("pushf\n\t"
-					"pop %0\n\t"
-					: "=r"(efi_ctx->rflags)
-					: );
-
-	asm volatile ("movq %%rax, %0" : "=r"(efi_ctx->rax));
-	asm volatile ("movq %%rbx, %0" : "=r"(efi_ctx->rbx));
-	asm volatile ("movq %%rcx, %0" : "=r"(efi_ctx->rcx));
-	asm volatile ("movq %%rdx, %0" : "=r"(efi_ctx->rdx));
-	asm volatile ("movq %%rdi, %0" : "=r"(efi_ctx->rdi));
-	asm volatile ("movq %%rsi, %0" : "=r"(efi_ctx->rsi));
-	asm volatile ("movq %%rsp, %0" : "=r"(efi_ctx->rsp));
-	asm volatile ("movq %%rbp, %0" : "=r"(efi_ctx->rbp));
-	asm volatile ("movq %%r8, %0" : "=r"(efi_ctx->r8));
-	asm volatile ("movq %%r9, %0" : "=r"(efi_ctx->r9));
-	asm volatile ("movq %%r10, %0" : "=r"(efi_ctx->r10));
-	asm volatile ("movq %%r11, %0" : "=r"(efi_ctx->r11));
-	asm volatile ("movq %%r12, %0" : "=r"(efi_ctx->r12));
-	asm volatile ("movq %%r13, %0" : "=r"(efi_ctx->r13));
-	asm volatile ("movq %%r14, %0" : "=r"(efi_ctx->r14));
-	asm volatile ("movq %%r15, %0" : "=r"(efi_ctx->r15));
+		      "pop %0\n\t"
+		      : "=r"(efi_ctx->rflags)
+		      : );
+	asm volatile ("movq %%rax, %0" : "=r"(efi_ctx->gprs.rax));
+	asm volatile ("movq %%rbx, %0" : "=r"(efi_ctx->gprs.rbx));
+	asm volatile ("movq %%rcx, %0" : "=r"(efi_ctx->gprs.rcx));
+	asm volatile ("movq %%rdx, %0" : "=r"(efi_ctx->gprs.rdx));
+	asm volatile ("movq %%rdi, %0" : "=r"(efi_ctx->gprs.rdi));
+	asm volatile ("movq %%rsi, %0" : "=r"(efi_ctx->gprs.rsi));
+	asm volatile ("movq %%rsp, %0" : "=r"(efi_ctx->gprs.rsp));
+	asm volatile ("movq %%rbp, %0" : "=r"(efi_ctx->gprs.rbp));
+	asm volatile ("movq %%r8,  %0" : "=r"(efi_ctx->gprs.r8));
+	asm volatile ("movq %%r9,  %0" : "=r"(efi_ctx->gprs.r9));
+	asm volatile ("movq %%r10, %0" : "=r"(efi_ctx->gprs.r10));
+	asm volatile ("movq %%r11, %0" : "=r"(efi_ctx->gprs.r11));
+	asm volatile ("movq %%r12, %0" : "=r"(efi_ctx->gprs.r12));
+	asm volatile ("movq %%r13, %0" : "=r"(efi_ctx->gprs.r13));
+	asm volatile ("movq %%r14, %0" : "=r"(efi_ctx->gprs.r14));
+	asm volatile ("movq %%r15, %0" : "=r"(efi_ctx->gprs.r15));
 
 	hv_jump(hv_hpa, mbi, efi_ctx);
 	asm volatile (".global guest_entry\n\t"

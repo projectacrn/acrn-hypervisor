@@ -6,9 +6,7 @@
 
 #include <hypervisor.h>
 #include <multiboot.h>
-#ifdef CONFIG_EFI_STUB
 #include <vm0_boot.h>
-#endif
 
 /* IOAPIC id */
 #define UEFI_IOAPIC_ID   8
@@ -26,7 +24,7 @@
 #ifdef CONFIG_EFI_STUB
 static void efi_init(void);
 
-struct efi_ctx* efi_ctx = NULL;
+struct boot_ctx* efi_ctx = NULL;
 struct lapic_regs uefi_lapic_regs;
 static int efi_initialized;
 
@@ -54,6 +52,8 @@ void efi_spurious_handler(int vector)
 int uefi_sw_loader(struct vm *vm, struct vcpu *vcpu)
 {
 	int ret = 0;
+	struct run_context *cur_context =
+		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx;
 
 	ASSERT(vm != NULL, "Incorrect argument");
 
@@ -65,21 +65,8 @@ int uefi_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	vlapic_restore(vcpu->arch_vcpu.vlapic, &uefi_lapic_regs);
 
 	vcpu->entry_addr = (void *)efi_ctx->rip;
-	vcpu_set_gpreg(vcpu, CPU_REG_RAX, efi_ctx->rax);
-	vcpu_set_gpreg(vcpu, CPU_REG_RBX, efi_ctx->rbx);
-	vcpu_set_gpreg(vcpu, CPU_REG_RCX, efi_ctx->rcx);
-	vcpu_set_gpreg(vcpu, CPU_REG_RDX, efi_ctx->rdx);
-	vcpu_set_gpreg(vcpu, CPU_REG_RDI, efi_ctx->rdi);
-	vcpu_set_gpreg(vcpu, CPU_REG_RSI, efi_ctx->rsi);
-	vcpu_set_gpreg(vcpu, CPU_REG_RBP, efi_ctx->rbp);
-	vcpu_set_gpreg(vcpu, CPU_REG_R8, efi_ctx->r8);
-	vcpu_set_gpreg(vcpu, CPU_REG_R9, efi_ctx->r9);
-	vcpu_set_gpreg(vcpu, CPU_REG_R10, efi_ctx->r10);
-	vcpu_set_gpreg(vcpu, CPU_REG_R11, efi_ctx->r11);
-	vcpu_set_gpreg(vcpu, CPU_REG_R12, efi_ctx->r12);
-	vcpu_set_gpreg(vcpu, CPU_REG_R13, efi_ctx->r13);
-	vcpu_set_gpreg(vcpu, CPU_REG_R14, efi_ctx->r14);
-	vcpu_set_gpreg(vcpu, CPU_REG_R15, efi_ctx->r15);
+	memcpy_s(&cur_context->guest_cpu_regs, sizeof(struct cpu_gp_regs),
+		 &efi_ctx->gprs, sizeof(struct cpu_gp_regs));
 
 	/* defer irq enabling till vlapic is ready */
 	CPU_IRQ_ENABLE();
@@ -112,7 +99,7 @@ static void efi_init(void)
 	if (!(mbi->mi_flags & MULTIBOOT_INFO_HAS_DRIVES))
 		ASSERT(0, "no multiboot drivers for uefi found");
 
-	efi_ctx = (struct efi_ctx *)HPA2HVA((uint64_t)mbi->mi_drives_addr);
+	efi_ctx = (struct boot_ctx *)HPA2HVA((uint64_t)mbi->mi_drives_addr);
 	ASSERT(efi_ctx != NULL, "no uefi context found");
 
 	vm_sw_loader = uefi_sw_loader;

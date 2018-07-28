@@ -6,9 +6,7 @@
 
 #include <hypervisor.h>
 #include <reloc.h>
-#ifdef CONFIG_EFI_STUB
 #include <vm0_boot.h>
-#endif
 
 struct Elf64_Dyn {
 	uint64_t d_tag;

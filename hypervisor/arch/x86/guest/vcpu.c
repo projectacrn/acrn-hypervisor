@@ -6,11 +6,7 @@
 
 #include <hypervisor.h>
 #include <schedule.h>
-
-#ifdef CONFIG_EFI_STUB
 #include <vm0_boot.h>
-extern struct efi_ctx* efi_ctx;
-#endif
 
 vm_sw_loader_t vm_sw_loader;
 
@@ -503,14 +499,18 @@ int prepare_vcpu(struct vm *vm, uint16_t pcpu_id)
 		if (!vm_sw_loader)
 			vm_sw_loader = general_sw_loader;
 		if (is_vm0(vcpu->vm)) {
-			vcpu->arch_vcpu.cpu_mode = CPU_MODE_PROTECTED;
-#ifdef CONFIG_EFI_STUB
-			if ((efi_ctx->efer & MSR_IA32_EFER_LMA_BIT) &&
-			    (efi_ctx->cs_ar & 0x2000))
+			struct boot_ctx *vm0_init_ctx =
+				(struct boot_ctx *)vm0_boot_context;
+			/* VM0 bsp start mode is decided by the boot context
+			 * setup by bootloader / bios */
+			if ((vm0_init_ctx->ia32_efer & MSR_IA32_EFER_LMA_BIT) &&
+			    (vm0_init_ctx->cs_ar & 0x2000)) {
 				vcpu->arch_vcpu.cpu_mode = CPU_MODE_64BIT;
-#elif CONFIG_START_VM0_BSP_64BIT
-			vcpu->arch_vcpu.cpu_mode = CPU_MODE_64BIT;
-#endif
+			} else if (vm0_init_ctx->cr0 & CR0_PE) {
+				vcpu->arch_vcpu.cpu_mode = CPU_MODE_PROTECTED;
+			} else {
+				return -EINVAL;
+			}
 		} else {
 #ifdef CONFIG_EFI_STUB
 			/* currently non-vm0 will boot kernel directly */
