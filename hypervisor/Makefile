@@ -122,6 +122,7 @@ C_SRCS += arch/x86/notify.c
 C_SRCS += arch/x86/vtd.c
 C_SRCS += arch/x86/gdt.c
 S_SRCS += arch/x86/cpu_primary.S
+S_SRCS += arch/x86/cpu_save_boot_ctx.S
 S_SRCS += arch/x86/idt.S
 C_SRCS += arch/x86/irq.c
 C_SRCS += arch/x86/timer.c
