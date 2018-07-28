@@ -6,7 +6,7 @@
 
 #include <hypervisor.h>
 #ifdef CONFIG_EFI_STUB
-#include <acrn_efi.h>
+#include <vm0_boot.h>
 extern struct efi_ctx* efi_ctx;
 #endif
 
