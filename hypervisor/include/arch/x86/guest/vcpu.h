@@ -34,27 +34,15 @@
 #define	CPU_CONTEXT_OFFSET_R15			120U
 #define	CPU_CONTEXT_OFFSET_CR0			128U
 #define	CPU_CONTEXT_OFFSET_CR2			136U
-#define	CPU_CONTEXT_OFFSET_CR3			144U
-#define	CPU_CONTEXT_OFFSET_CR4			152U
-#define	CPU_CONTEXT_OFFSET_RIP			160U
-#define	CPU_CONTEXT_OFFSET_RFLAGS		168U
-#define	CPU_CONTEXT_OFFSET_TSC_OFFSET		184U
-#define	CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL	192U
-#define	CPU_CONTEXT_OFFSET_IA32_STAR		200U
-#define	CPU_CONTEXT_OFFSET_IA32_LSTAR		208U
-#define	CPU_CONTEXT_OFFSET_IA32_FMASK		216U
-#define	CPU_CONTEXT_OFFSET_IA32_KERNEL_GS_BASE	224U
-#define	CPU_CONTEXT_OFFSET_CS			280U
-#define	CPU_CONTEXT_OFFSET_SS			312U
-#define	CPU_CONTEXT_OFFSET_DS			344U
-#define	CPU_CONTEXT_OFFSET_ES			376U
-#define	CPU_CONTEXT_OFFSET_FS			408U
-#define	CPU_CONTEXT_OFFSET_GS			440U
-#define	CPU_CONTEXT_OFFSET_TR			472U
-#define	CPU_CONTEXT_OFFSET_IDTR			504U
-#define	CPU_CONTEXT_OFFSET_LDTR			536U
-#define	CPU_CONTEXT_OFFSET_GDTR			568U
-#define	CPU_CONTEXT_OFFSET_FXSTORE_GUEST_AREA	608U
+#define	CPU_CONTEXT_OFFSET_CR4			144U
+#define	CPU_CONTEXT_OFFSET_RIP			152U
+#define	CPU_CONTEXT_OFFSET_RFLAGS		160U
+#define	CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL	168U
+#define	CPU_CONTEXT_OFFSET_IA32_EFER		176U
+#define	CPU_CONTEXT_OFFSET_EXTCTX_START		184U
+#define	CPU_CONTEXT_OFFSET_CR3			184U
+#define	CPU_CONTEXT_OFFSET_IDTR			192U
+#define	CPU_CONTEXT_OFFSET_LDTR			216U
 
 /*sizes of various registers within the VCPU data structure */
 #define VMX_CPU_S_FXSAVE_GUEST_AREA_SIZE    GUEST_STATE_AREA_SIZE
@@ -120,24 +108,41 @@ struct run_context {
 	/** The guests CR registers 0, 2, 3 and 4. */
 	uint64_t cr0;
 
-	/* VMX_MACHINE_T_GUEST_CR2_OFFSET =
-	*  offsetof(struct run_context, cr2) = 128
+	/* CPU_CONTEXT_OFFSET_CR2 =
+	*  offsetof(struct run_context, cr2) = 136
 	*/
 	uint64_t cr2;
-	uint64_t cr3;
 	uint64_t cr4;
 
 	uint64_t rip;
 	uint64_t rflags;
 
-	uint64_t dr7;
-	uint64_t tsc_offset;
-
-	/* MSRs */
-	/* VMX_MACHINE_T_GUEST_SPEC_CTRL_OFFSET =
-	*  offsetof(struct run_context, ia32_spec_ctrl) = 192
+	/* CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL =
+	*  offsetof(struct run_context, ia32_spec_ctrl) = 168
 	*/
 	uint64_t ia32_spec_ctrl;
+	uint64_t ia32_efer;
+};
+
+/*
+ * extended context does not save/restore during vm exity/entry, it's mainly
+ * used in trusty world switch
+ */
+struct ext_context {
+	uint64_t cr3;
+
+	/* segment registers */
+	struct segment_sel idtr;
+	struct segment_sel ldtr;
+	struct segment_sel gdtr;
+	struct segment_sel tr;
+	struct segment_sel cs;
+	struct segment_sel ss;
+	struct segment_sel ds;
+	struct segment_sel es;
+	struct segment_sel fs;
+	struct segment_sel gs;
+
 	uint64_t ia32_star;
 	uint64_t ia32_lstar;
 	uint64_t ia32_fmask;
@@ -145,26 +150,18 @@ struct run_context {
 
 	uint64_t ia32_pat;
 	uint64_t vmx_ia32_pat;
-	uint64_t ia32_efer;
 	uint32_t ia32_sysenter_cs;
 	uint64_t ia32_sysenter_esp;
 	uint64_t ia32_sysenter_eip;
 	uint64_t ia32_debugctl;
 
+	uint64_t dr7;
+	uint64_t tsc_offset;
+
 	uint64_t vmx_cr0;
 	uint64_t vmx_cr4;
-
-	/* segment registers */
-	struct segment_sel cs;
-	struct segment_sel ss;
-	struct segment_sel ds;
-	struct segment_sel es;
-	struct segment_sel fs;
-	struct segment_sel gs;
-	struct segment_sel tr;
-	struct segment_sel idtr;
-	struct segment_sel ldtr;
-	struct segment_sel gdtr;
+	uint64_t vmx_cr0_read_shadow;
+	uint64_t vmx_cr4_read_shadow;
 
 	/* The 512 bytes area to save the FPU/MMX/SSE states for the guest */
 	uint64_t
@@ -182,9 +179,14 @@ struct event_injection_info {
 	uint32_t error_code;
 };
 
+struct cpu_context {
+	struct run_context run_ctx;
+	struct ext_context ext_ctx;
+};
+
 struct vcpu_arch {
 	int cur_context;
-	struct run_context contexts[NR_WORLD];
+	struct cpu_context contexts[NR_WORLD];
 
 	/* A pointer to the VMCS for this CPU. */
 	void *vmcs;
