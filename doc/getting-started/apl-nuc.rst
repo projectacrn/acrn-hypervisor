@@ -364,6 +364,46 @@ For hugeTLB to work, you'll need to reserve huge pages:
      by using a 2M page, but make sure your huge page reservation size is
      large enough for your usage.
 
+USB Device Sharing
+==========================================
+
+The ACRN hypervisor is able to support USB device sharing
+supposing you have 2 sets of USB keyboard and mouse, 1 set is for SOS, another for UOS
+
+For SOS, boot up SOS and plug 2 sets USB keyboard and USB mouse into USB ports of device:
+
+  - run "dmesg" to check the kernel log
+
+  - record keyboard and mouse device info: 
+    
+    for example: 
+                 keyboard 1#: USB/1-3/1-3
+    
+                 mouse 1#: USB/1-4/1-4
+
+                 keyboard 2#: USB/1-2/1-2
+                 
+                 mouse #2: USB/1-1/1-1
+  
+  now let's assign keyboard 1# and mouse 1# to SOS, keyboard 2# and mouse 2# to UOS by modifying 
+  launch_uos.sh
+  
+  
+   .. code-block:: none
+
+      # cd /usr/share/acrn/samples/nuc/
+      # vim lauch_uos.sh
+      # add below line into the file
+      # -s 9, xhci, 1-1:1-2 \
+      # sync
+  
+  .. note::
+     you can check and assign USB keyboard and USB mouse to UOS with modifying -s 9, xhci 1-x:1-y \
+     according to your USB device info
+     
+     there is an known issue to use USB keyboard and mouse in UOS, you have to unplug and plug back 
+     keyboard and mouse for UOS after lauch UOS.  
+
 Build ACRN from Source
 **********************
 
