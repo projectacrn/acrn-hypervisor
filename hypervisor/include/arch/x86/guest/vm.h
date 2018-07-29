@@ -190,6 +190,5 @@ struct vm *get_vm_from_vmid(uint16_t vm_id);
 
 extern struct list_head vm_list;
 extern spinlock_t vm_list_lock;
-extern bool x2apic_enabled;
 
 #endif /* VM_H_ */
