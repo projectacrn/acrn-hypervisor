@@ -6,6 +6,8 @@
 
 #include <hypervisor.h>
 
+extern bool x2apic_enabled;
+
 static inline struct vcpuid_entry *find_vcpuid_entry(struct vcpu *vcpu,
 					uint32_t leaf_arg, uint32_t subleaf)
 {

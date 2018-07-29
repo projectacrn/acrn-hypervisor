@@ -8,8 +8,6 @@
 #include <schedule.h>
 #include <softirq.h>
 
-bool x2apic_enabled;
-
 static void run_vcpu_pre_work(struct vcpu *vcpu)
 {
 	uint64_t *pending_pre_work = &vcpu->pending_pre_work;

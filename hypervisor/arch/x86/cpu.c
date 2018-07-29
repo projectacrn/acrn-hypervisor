@@ -27,6 +27,9 @@ volatile uint16_t up_count = 0U;
 /* physical cpu active bitmap, support up to 64 cpus */
 uint64_t pcpu_active_bitmap = 0UL;
 
+/* X2APIC mode is disabled by default. */
+bool x2apic_enabled = false;
+
 /* TODO: add more capability per requirement */
 /* APICv features */
 #define VAPIC_FEATURE_VIRT_ACCESS		(1U << 0)
