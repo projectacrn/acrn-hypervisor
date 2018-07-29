@@ -206,98 +206,105 @@ void  destroy_secure_world(struct vm *vm)
 }
 #endif
 
-static void save_world_ctx(struct run_context *context)
+static void save_world_ctx(struct vcpu *vcpu, struct ext_context *ext_ctx)
 {
+	/* cache on-demand run_context for efer/rflags/rsp/rip */
+	vcpu_get_efer(vcpu);
+	vcpu_get_rflags(vcpu);
+	vcpu_get_rsp(vcpu);
+	vcpu_get_rip(vcpu);
+
 	/* VMCS GUEST field */
-	/* TSC_OFFSET, CR3, RIP, RSP, RFLAGS already saved on VMEXIT */
-	context->cr0 = exec_vmread(VMX_CR0_READ_SHADOW);
-	context->cr4 = exec_vmread(VMX_CR4_READ_SHADOW);
-	context->vmx_cr0 = exec_vmread(VMX_GUEST_CR0);
-	context->vmx_cr4 = exec_vmread(VMX_GUEST_CR4);
-	context->dr7 = exec_vmread(VMX_GUEST_DR7);
-	context->ia32_debugctl = exec_vmread64(VMX_GUEST_IA32_DEBUGCTL_FULL);
+	ext_ctx->vmx_cr0 = exec_vmread(VMX_GUEST_CR0);
+	ext_ctx->vmx_cr4 = exec_vmread(VMX_GUEST_CR4);
+	ext_ctx->vmx_cr0_read_shadow = exec_vmread(VMX_CR0_READ_SHADOW);
+	ext_ctx->vmx_cr4_read_shadow = exec_vmread(VMX_CR4_READ_SHADOW);
+	ext_ctx->cr3 = exec_vmread(VMX_GUEST_CR3);
+	ext_ctx->dr7 = exec_vmread(VMX_GUEST_DR7);
+	ext_ctx->ia32_debugctl = exec_vmread64(VMX_GUEST_IA32_DEBUGCTL_FULL);
 
 	/*
 	 * Similar to CR0 and CR4, the actual value of guest's IA32_PAT MSR
-	 * (represented by context->vmx_ia32_pat) could be different from the
-	 * value that guest reads (represented by context->ia32_pat).
+	 * (represented by ext_ctx->vmx_ia32_pat) could be different from the
+	 * value that guest reads (represented by ext_ctx->ia32_pat).
 	 *
 	 * the wrmsr handler keeps track of 'ia32_pat', and we only
 	 * need to load 'vmx_ia32_pat' here.
 	 */
-	context->vmx_ia32_pat = exec_vmread64(VMX_GUEST_IA32_PAT_FULL);
-	context->ia32_efer = exec_vmread64(VMX_GUEST_IA32_EFER_FULL);
-	context->ia32_sysenter_esp = exec_vmread(VMX_GUEST_IA32_SYSENTER_ESP);
-	context->ia32_sysenter_eip = exec_vmread(VMX_GUEST_IA32_SYSENTER_EIP);
-	context->ia32_sysenter_cs = exec_vmread32(VMX_GUEST_IA32_SYSENTER_CS);
-	save_segment(context->cs, VMX_GUEST_CS);
-	save_segment(context->ss, VMX_GUEST_SS);
-	save_segment(context->ds, VMX_GUEST_DS);
-	save_segment(context->es, VMX_GUEST_ES);
-	save_segment(context->fs, VMX_GUEST_FS);
-	save_segment(context->gs, VMX_GUEST_GS);
-	save_segment(context->tr, VMX_GUEST_TR);
-	save_segment(context->ldtr, VMX_GUEST_LDTR);
+	ext_ctx->vmx_ia32_pat = exec_vmread64(VMX_GUEST_IA32_PAT_FULL);
+	ext_ctx->ia32_sysenter_esp = exec_vmread(VMX_GUEST_IA32_SYSENTER_ESP);
+	ext_ctx->ia32_sysenter_eip = exec_vmread(VMX_GUEST_IA32_SYSENTER_EIP);
+	ext_ctx->ia32_sysenter_cs = exec_vmread32(VMX_GUEST_IA32_SYSENTER_CS);
+	save_segment(ext_ctx->cs, VMX_GUEST_CS);
+	save_segment(ext_ctx->ss, VMX_GUEST_SS);
+	save_segment(ext_ctx->ds, VMX_GUEST_DS);
+	save_segment(ext_ctx->es, VMX_GUEST_ES);
+	save_segment(ext_ctx->fs, VMX_GUEST_FS);
+	save_segment(ext_ctx->gs, VMX_GUEST_GS);
+	save_segment(ext_ctx->tr, VMX_GUEST_TR);
+	save_segment(ext_ctx->ldtr, VMX_GUEST_LDTR);
 	/* Only base and limit for IDTR and GDTR */
-	context->idtr.base = exec_vmread(VMX_GUEST_IDTR_BASE);
-	context->gdtr.base = exec_vmread(VMX_GUEST_GDTR_BASE);
-	context->idtr.limit = exec_vmread32(VMX_GUEST_IDTR_LIMIT);
-	context->gdtr.limit = exec_vmread32(VMX_GUEST_GDTR_LIMIT);
+	ext_ctx->idtr.base = exec_vmread(VMX_GUEST_IDTR_BASE);
+	ext_ctx->gdtr.base = exec_vmread(VMX_GUEST_GDTR_BASE);
+	ext_ctx->idtr.limit = exec_vmread32(VMX_GUEST_IDTR_LIMIT);
+	ext_ctx->gdtr.limit = exec_vmread32(VMX_GUEST_GDTR_LIMIT);
 
 	/* MSRs which not in the VMCS */
-	context->ia32_star = msr_read(MSR_IA32_STAR);
-	context->ia32_lstar = msr_read(MSR_IA32_LSTAR);
-	context->ia32_fmask = msr_read(MSR_IA32_FMASK);
-	context->ia32_kernel_gs_base = msr_read(MSR_IA32_KERNEL_GS_BASE);
+	ext_ctx->ia32_star = msr_read(MSR_IA32_STAR);
+	ext_ctx->ia32_lstar = msr_read(MSR_IA32_LSTAR);
+	ext_ctx->ia32_fmask = msr_read(MSR_IA32_FMASK);
+	ext_ctx->ia32_kernel_gs_base = msr_read(MSR_IA32_KERNEL_GS_BASE);
 
 	/* FX area */
 	asm volatile("fxsave (%0)"
-			: : "r" (context->fxstore_guest_area) : "memory");
+			: : "r" (ext_ctx->fxstore_guest_area) : "memory");
 }
 
-static void load_world_ctx(struct run_context *context)
+static void load_world_ctx(struct vcpu *vcpu, struct ext_context *ext_ctx)
 {
+	/* mark to update on-demand run_context for efer/rflags/rsp */
+	bitmap_set_lock(CPU_REG_EFER, &vcpu->reg_updated);
+	bitmap_set_lock(CPU_REG_RFLAGS, &vcpu->reg_updated);
+	bitmap_set_lock(CPU_REG_RSP, &vcpu->reg_updated);
+	bitmap_set_lock(CPU_REG_RIP, &vcpu->reg_updated);
+
 	/* VMCS Execution field */
-	exec_vmwrite64(VMX_TSC_OFFSET_FULL, context->tsc_offset);
+	exec_vmwrite64(VMX_TSC_OFFSET_FULL, ext_ctx->tsc_offset);
 
 	/* VMCS GUEST field */
-	exec_vmwrite(VMX_CR0_READ_SHADOW, context->cr0);
-	exec_vmwrite(VMX_GUEST_CR3, context->cr3);
-	exec_vmwrite(VMX_CR4_READ_SHADOW, context->cr4);
-	exec_vmwrite(VMX_GUEST_CR0, context->vmx_cr0);
-	exec_vmwrite(VMX_GUEST_CR4, context->vmx_cr4);
-	exec_vmwrite(VMX_GUEST_RIP, context->rip);
-	exec_vmwrite(VMX_GUEST_RSP, context->guest_cpu_regs.regs.rsp);
-	exec_vmwrite(VMX_GUEST_RFLAGS, context->rflags);
-	exec_vmwrite(VMX_GUEST_DR7, context->dr7);
-	exec_vmwrite64(VMX_GUEST_IA32_DEBUGCTL_FULL, context->ia32_debugctl);
-	exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, context->vmx_ia32_pat);
-	exec_vmwrite64(VMX_GUEST_IA32_EFER_FULL, context->ia32_efer);
-	exec_vmwrite32(VMX_GUEST_IA32_SYSENTER_CS, context->ia32_sysenter_cs);
-	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_ESP, context->ia32_sysenter_esp);
-	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_EIP, context->ia32_sysenter_eip);
-	load_segment(context->cs, VMX_GUEST_CS);
-	load_segment(context->ss, VMX_GUEST_SS);
-	load_segment(context->ds, VMX_GUEST_DS);
-	load_segment(context->es, VMX_GUEST_ES);
-	load_segment(context->fs, VMX_GUEST_FS);
-	load_segment(context->gs, VMX_GUEST_GS);
-	load_segment(context->tr, VMX_GUEST_TR);
-	load_segment(context->ldtr, VMX_GUEST_LDTR);
+	exec_vmwrite(VMX_GUEST_CR0, ext_ctx->vmx_cr0);
+	exec_vmwrite(VMX_GUEST_CR4, ext_ctx->vmx_cr4);
+	exec_vmwrite(VMX_CR0_READ_SHADOW, ext_ctx->vmx_cr0_read_shadow);
+	exec_vmwrite(VMX_CR4_READ_SHADOW, ext_ctx->vmx_cr4_read_shadow);
+	exec_vmwrite(VMX_GUEST_CR3, ext_ctx->cr3);
+	exec_vmwrite(VMX_GUEST_DR7, ext_ctx->dr7);
+	exec_vmwrite64(VMX_GUEST_IA32_DEBUGCTL_FULL, ext_ctx->ia32_debugctl);
+	exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, ext_ctx->vmx_ia32_pat);
+	exec_vmwrite32(VMX_GUEST_IA32_SYSENTER_CS, ext_ctx->ia32_sysenter_cs);
+	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_ESP, ext_ctx->ia32_sysenter_esp);
+	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_EIP, ext_ctx->ia32_sysenter_eip);
+	load_segment(ext_ctx->cs, VMX_GUEST_CS);
+	load_segment(ext_ctx->ss, VMX_GUEST_SS);
+	load_segment(ext_ctx->ds, VMX_GUEST_DS);
+	load_segment(ext_ctx->es, VMX_GUEST_ES);
+	load_segment(ext_ctx->fs, VMX_GUEST_FS);
+	load_segment(ext_ctx->gs, VMX_GUEST_GS);
+	load_segment(ext_ctx->tr, VMX_GUEST_TR);
+	load_segment(ext_ctx->ldtr, VMX_GUEST_LDTR);
 	/* Only base and limit for IDTR and GDTR */
-	exec_vmwrite(VMX_GUEST_IDTR_BASE, context->idtr.base);
-	exec_vmwrite(VMX_GUEST_GDTR_BASE, context->gdtr.base);
-	exec_vmwrite32(VMX_GUEST_IDTR_LIMIT, context->idtr.limit);
-	exec_vmwrite32(VMX_GUEST_GDTR_LIMIT, context->gdtr.limit);
+	exec_vmwrite(VMX_GUEST_IDTR_BASE, ext_ctx->idtr.base);
+	exec_vmwrite(VMX_GUEST_GDTR_BASE, ext_ctx->gdtr.base);
+	exec_vmwrite32(VMX_GUEST_IDTR_LIMIT, ext_ctx->idtr.limit);
+	exec_vmwrite32(VMX_GUEST_GDTR_LIMIT, ext_ctx->gdtr.limit);
 
 	/* MSRs which not in the VMCS */
-	msr_write(MSR_IA32_STAR, context->ia32_star);
-	msr_write(MSR_IA32_LSTAR, context->ia32_lstar);
-	msr_write(MSR_IA32_FMASK, context->ia32_fmask);
-	msr_write(MSR_IA32_KERNEL_GS_BASE, context->ia32_kernel_gs_base);
+	msr_write(MSR_IA32_STAR, ext_ctx->ia32_star);
+	msr_write(MSR_IA32_LSTAR, ext_ctx->ia32_lstar);
+	msr_write(MSR_IA32_FMASK, ext_ctx->ia32_fmask);
+	msr_write(MSR_IA32_KERNEL_GS_BASE, ext_ctx->ia32_kernel_gs_base);
 
 	/* FX area */
-	asm volatile("fxrstor (%0)" : : "r" (context->fxstore_guest_area));
+	asm volatile("fxrstor (%0)" : : "r" (ext_ctx->fxstore_guest_area));
 }
 
 static void copy_smc_param(struct run_context *prev_ctx,
@@ -314,14 +321,14 @@ void switch_world(struct vcpu *vcpu, int next_world)
 	struct vcpu_arch *arch_vcpu = &vcpu->arch_vcpu;
 
 	/* save previous world context */
-	save_world_ctx(&arch_vcpu->contexts[!next_world]);
+	save_world_ctx(vcpu, &arch_vcpu->contexts[!next_world].ext_ctx);
 
 	/* load next world context */
-	load_world_ctx(&arch_vcpu->contexts[next_world]);
+	load_world_ctx(vcpu, &arch_vcpu->contexts[next_world].ext_ctx);
 
 	/* Copy SMC parameters: RDI, RSI, RDX, RBX */
-	copy_smc_param(&arch_vcpu->contexts[!next_world],
-			&arch_vcpu->contexts[next_world]);
+	copy_smc_param(&arch_vcpu->contexts[!next_world].run_ctx,
+			&arch_vcpu->contexts[next_world].run_ctx);
 
 	/* load EPTP for next world */
 	if (next_world == NORMAL_WORLD) {
@@ -383,7 +390,7 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 	 * address(GPA) of startup_param on boot. Currently, the startup_param
 	 * is put in the first page of trusty memory just followed by key_info.
 	 */
-	vcpu->arch_vcpu.contexts[SECURE_WORLD].guest_cpu_regs.regs.rdi
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].run_ctx.guest_cpu_regs.regs.rdi
 		= (uint64_t)TRUSTY_EPT_REBASE_GPA + sizeof(struct trusty_key_info);
 
 	return true;
@@ -400,29 +407,13 @@ static bool init_secure_world_env(struct vcpu *vcpu,
 				uint32_t size)
 {
 	vcpu->arch_vcpu.inst_len = 0U;
-	vcpu->arch_vcpu.contexts[SECURE_WORLD].rip = entry_gpa;
-	vcpu->arch_vcpu.contexts[SECURE_WORLD].guest_cpu_regs.regs.rsp =
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].run_ctx.rip = entry_gpa;
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].run_ctx.guest_cpu_regs.regs.rsp =
 		TRUSTY_EPT_REBASE_GPA + size;
-	vcpu->arch_vcpu.contexts[SECURE_WORLD].tsc_offset = 0UL;
 
-	vcpu->arch_vcpu.contexts[SECURE_WORLD].cr0 =
-		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr0;
-	vcpu->arch_vcpu.contexts[SECURE_WORLD].cr4 =
-		vcpu->arch_vcpu.contexts[NORMAL_WORLD].cr4;
-	vcpu->arch_vcpu.contexts[SECURE_WORLD].vmx_cr0 =
-		vcpu->arch_vcpu.contexts[NORMAL_WORLD].vmx_cr0;
-	vcpu->arch_vcpu.contexts[SECURE_WORLD].vmx_cr4 =
-		vcpu->arch_vcpu.contexts[NORMAL_WORLD].vmx_cr4;
-
-	vcpu->arch_vcpu.contexts[SECURE_WORLD].ia32_pat =
-		vcpu->arch_vcpu.contexts[NORMAL_WORLD].ia32_pat;
-	vcpu->arch_vcpu.contexts[SECURE_WORLD].vmx_ia32_pat =
-		vcpu->arch_vcpu.contexts[NORMAL_WORLD].vmx_ia32_pat;
-
-	exec_vmwrite(VMX_GUEST_RSP,
-		TRUSTY_EPT_REBASE_GPA + size);
-	exec_vmwrite64(VMX_TSC_OFFSET_FULL,
-		vcpu->arch_vcpu.contexts[SECURE_WORLD].tsc_offset);
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].ext_ctx.tsc_offset = 0UL;
+	vcpu->arch_vcpu.contexts[SECURE_WORLD].ext_ctx.ia32_pat =
+		vcpu->arch_vcpu.contexts[NORMAL_WORLD].ext_ctx.ia32_pat;
 
 	return setup_trusty_info(vcpu, size, base_hpa);
 }
@@ -470,7 +461,7 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 			HVA2HPA(vm->arch_vm.sworld_eptp) | (3UL<<3) | 6UL);
 
 	/* save Normal World context */
-	save_world_ctx(&vcpu->arch_vcpu.contexts[NORMAL_WORLD]);
+	save_world_ctx(vcpu, &vcpu->arch_vcpu.contexts[NORMAL_WORLD].ext_ctx);
 
 	/* init secure world environment */
 	if (init_secure_world_env(vcpu,

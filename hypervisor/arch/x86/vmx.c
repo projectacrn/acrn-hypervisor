@@ -317,7 +317,7 @@ uint64_t vmx_rdmsr_pat(struct vcpu *vcpu)
 	/*
 	 * note: if context->cr0.CD is set, the actual value in guest's
 	 * IA32_PAT MSR is PAT_ALL_UC_VALUE, which may be different from
-	 * the saved value context->ia32_pat
+	 * the saved value saved_context->ia32_pat
 	 */
 	return vcpu_get_pat_ext(vcpu);
 }

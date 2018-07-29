@@ -431,6 +431,18 @@ void bsp_boot_init(void)
 	ASSERT(offsetof(struct run_context, ia32_spec_ctrl) ==
 		CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL,
 		"run_context ia32_spec_ctrl offset not match");
+	ASSERT(offsetof(struct run_context, rflags) ==
+		CPU_CONTEXT_OFFSET_RFLAGS,
+		"run_context rflags offset not match");
+	ASSERT(offsetof(struct ext_context, cr3) ==
+		CPU_CONTEXT_OFFSET_CR3 - CPU_CONTEXT_OFFSET_EXTCTX_START,
+		"ext_context cr3 offset not match");
+	ASSERT(offsetof(struct ext_context, idtr) ==
+		CPU_CONTEXT_OFFSET_IDTR - CPU_CONTEXT_OFFSET_EXTCTX_START,
+		"ext_context idtr offset not match");
+	ASSERT(offsetof(struct ext_context, ldtr) ==
+		CPU_CONTEXT_OFFSET_LDTR - CPU_CONTEXT_OFFSET_EXTCTX_START,
+		"ext_context ldtr offset not match");
 
 	bitmap_set_nolock(BOOT_CPU_ID, &pcpu_active_bitmap);
 

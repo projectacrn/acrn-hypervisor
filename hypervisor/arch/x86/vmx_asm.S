@@ -59,8 +59,8 @@ vmx_vmrun:
 
     /* 0x00000048 = MSR_IA32_SPEC_CTRL */
     movl        $0x00000048,%ecx
-    /*0xc0=192=PU_CONTEXT_OFFSET_IA32_SPEC_CTRL*/
-    mov         0xc0(%rdi),%rax
+    /*0xa0=168U=CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL*/
+    mov         0xa0(%rdi),%rax
     movl        $0,%edx
     wrmsr
 
@@ -231,8 +231,8 @@ vm_eval_error:
      */
     movl        $0x00000048,%ecx
     rdmsr
-    /*192U=0xc0=CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL*/
-    mov         %rax,0xc0(%rsi)
+    /*168U=0xa0=CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL*/
+    mov         %rax,0xa0(%rsi)
     /* 0x1 = SPEC_ENABLE_IBRS */
     movl        $0x1,%eax
     movl        $0,%edx
@@ -255,8 +255,8 @@ ibrs_opt:
      */
     movl        $0x00000048,%ecx
     rdmsr
-    /*192U=0xc0=CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL*/
-    mov         %rax,0xc0(%rsi)
+    /*168U=0xa0=CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL*/
+    mov         %rax,0xa0(%rsi)
     /* 0x2 = SPEC_ENABLE_STIBP */
     movl        $0x2,%eax
     movl        $0,%edx
