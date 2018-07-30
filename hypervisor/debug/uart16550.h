@@ -99,14 +99,12 @@
 
 #define UART_IER_DISABLE_ALL	0x00000000U
 
-#define BAUD_9600      9600
-#define BAUD_115200    115200
-#define BAUD_460800    460800
+#define BAUD_9600      9600U
+#define BAUD_115200    115200U
+#define BAUD_460800    460800U
 
-/* CPU oscillator clock */
-#define CPU_OSC_CLOCK	1843200	/* 1.8432 MHz */
-/* UART hardware definitions */
-#define UART_CLOCK_RATE		CPU_OSC_CLOCK
+/* UART oscillator clock */
+#define UART_CLOCK_RATE	1843200U	/* 1.8432 MHz */
 
 void uart16550_init(void);
 char uart16550_getc(void);

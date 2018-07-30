@@ -8,18 +8,18 @@
 #include "uart16550.h"
 
 #if defined(CONFIG_SERIAL_PIO_BASE)
-static int serial_port_mapped = 1;
-static int uart_enabled = 1;
+static bool serial_port_mapped = true;
+static bool uart_enabled = true;
 #define UART_BASE_ADDRESS		CONFIG_SERIAL_PIO_BASE
 #elif defined(CONFIG_SERIAL_MMIO_BASE)
-static int serial_port_mapped;
-static int uart_enabled = 1;
+static bool serial_port_mapped;
+static bool uart_enabled = true;
 #define UART_BASE_ADDRESS		CONFIG_SERIAL_MMIO_BASE
 #else
 #warning  "no uart base configure, please check!"
-static int serial_port_mapped;
-static int uart_enabled;
-#define UART_BASE_ADDRESS		0
+static bool serial_port_mapped;
+static bool uart_enabled;
+#define UART_BASE_ADDRESS		0UL
 #endif
 
 typedef uint32_t uart_reg_t;
@@ -29,20 +29,26 @@ static uint64_t uart_base_address;
 static spinlock_t uart_rx_lock;
 static spinlock_t uart_tx_lock;
 
-static inline uint32_t uart16550_read_reg(uint64_t base, uint32_t reg_idx)
+/**
+ * @pre uart_enabled == true
+ */
+static inline uint32_t uart16550_read_reg(uint64_t base, uint16_t reg_idx)
 {
-	if (serial_port_mapped != 0) {
+	if (serial_port_mapped) {
 		return io_read_byte((uint16_t)base + reg_idx);
 	} else {
 		return mmio_read_long((void*)((uint32_t*)HPA2HVA(base) + reg_idx));
 	}
 }
 
+/**
+ * @pre uart_enabled == true
+ */
 static inline void uart16550_write_reg(uint64_t base,
-	uint32_t val, uint32_t reg_idx)
+	uint32_t val, uint16_t reg_idx)
 {
-	if (serial_port_mapped != 0) {
-		io_write_byte(val, (uint16_t)base + reg_idx);
+	if (serial_port_mapped) {
+		io_write_byte((uint8_t)val, (uint16_t)base + reg_idx);
 	} else {
 		mmio_write_long(val, (void*)((uint32_t*)HPA2HVA(base) + reg_idx));
 	}
@@ -52,14 +58,17 @@ static void uart16550_calc_baud_div(uint32_t ref_freq,
 				uint32_t *baud_div_ptr, uint32_t baud_rate_arg)
 {
 	uint32_t baud_rate = baud_rate_arg;
-	uint32_t baud_multiplier = baud_rate < BAUD_460800 ? 16 : 13;
+	uint32_t baud_multiplier = baud_rate < BAUD_460800 ? 16U : 13U;
 
-	if (baud_rate == 0) {
+	if (baud_rate == 0U) {
 		baud_rate = BAUD_115200;
 	}
 	*baud_div_ptr = ref_freq / (baud_multiplier * baud_rate);
 }
 
+/**
+ * @pre uart_enabled == true
+ */
 static void uart16550_set_baud_rate(uint32_t baud_rate)
 {
 	uint32_t baud_div, duart_clock = UART_CLOCK_RATE;
@@ -75,7 +84,7 @@ static void uart16550_set_baud_rate(uint32_t baud_rate)
 
 	/* Write the appropriate divisor value */
 	uart16550_write_reg(uart_base_address,
-			((baud_div >> 8) & 0xFFU), UART16550_DLM);
+			((baud_div >> 8U) & 0xFFU), UART16550_DLM);
 	uart16550_write_reg(uart_base_address,
 			(baud_div & 0xFFU), UART16550_DLL);
 
@@ -86,7 +95,10 @@ static void uart16550_set_baud_rate(uint32_t baud_rate)
 
 void uart16550_init(void)
 {
-	if (uart_base_address == 0) {
+	if (!uart_enabled) {
+		return;
+	}
+	if (uart_base_address == 0UL) {
 		uart_base_address = UART_BASE_ADDRESS;
 	}
 	spinlock_init(&uart_rx_lock);
@@ -116,6 +128,10 @@ char uart16550_getc(void)
 {
 	char ret = -1;
 
+	if (!uart_enabled) {
+		return ret;
+	}
+
 	spinlock_obtain(&uart_rx_lock);
 
 	/* If a character has been received, read it */
@@ -129,7 +145,10 @@ char uart16550_getc(void)
 	return ret;
 }
 
-static void uart16550_putc(const char *buf)
+/**
+ * @pre uart_enabled == true
+ */
+static void uart16550_putc(const char c)
 {
 	uint32_t reg;
 	/* Ensure there are no further Transmit buffer write requests */
@@ -138,20 +157,22 @@ static void uart16550_putc(const char *buf)
 	} while ((reg & LSR_THRE) == 0U || (reg & LSR_TEMT) == 0U);
 
 	/* Transmit the character. */
-	uart16550_write_reg(uart_base_address, *buf, UART16550_THR);
+	uart16550_write_reg(uart_base_address, c, UART16550_THR);
 }
 
 int uart16550_puts(const char *buf, uint32_t len)
 {
 	uint32_t i;
-
+	if (!uart_enabled) {
+		return (int)len;
+	}
 	spinlock_obtain(&uart_tx_lock);
 	for (i = 0U; i < len; i++) {
 		/* Transmit character */
-		uart16550_putc(buf);
+		uart16550_putc(*buf);
 		if (*buf == '\n') {
 			/* Append '\r', no need change the len */
-			uart16550_putc("\r");
+			uart16550_putc('\r');
 		}
 		buf++;
 	}
@@ -159,7 +180,7 @@ int uart16550_puts(const char *buf, uint32_t len)
 	return (int)len;
 }
 
-void uart16550_set_property(int enabled, int port_mapped, uint64_t base_addr)
+void uart16550_set_property(bool enabled, bool port_mapped, uint64_t base_addr)
 {
 	uart_enabled = enabled;
 	serial_port_mapped = port_mapped;
