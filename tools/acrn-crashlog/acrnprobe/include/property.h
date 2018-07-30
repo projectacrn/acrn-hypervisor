@@ -23,10 +23,14 @@
 #define __PROPERTY_H__
 #include "load_conf.h"
 
-#define VERSION_SIZE       256
+#define VERSION_SIZE		256
+/* UUID_SIZE contains the UUID number, dashes and some buffer*/
+#define UUID_SIZE		48
+/* General BUILD_VERSION like 23690 */
+#define BUILD_VERSION_SIZE	16
 
-char guuid[VERSION_SIZE];
-char gbuildversion[VERSION_SIZE];
+char guuid[UUID_SIZE];
+char gbuildversion[BUILD_VERSION_SIZE];
 
 int init_properties(struct sender_t *sender);
 int swupdated(struct sender_t *sender);

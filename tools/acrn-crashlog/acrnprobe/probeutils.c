@@ -106,7 +106,7 @@ int get_current_time_long(char *buf)
 static int compute_key(char *key, char *seed1, char *seed2)
 {
 	static SHA_CTX *sha;
-	char buf[256] = {'\0',};
+	char buf[VERSION_SIZE] = {'\0',};
 	long long time_ns = 0;
 	char *tmp_key = key;
 	unsigned char results[SHA_DIGEST_LENGTH];
@@ -134,7 +134,7 @@ static int compute_key(char *key, char *seed1, char *seed2)
 		return -1;
 
 	time_ns = get_uptime();
-	snprintf(buf, 256, "%s%s%s%s%lld", gbuildversion, guuid, seed1,
+	snprintf(buf, VERSION_SIZE, "%s%s%s%s%lld", gbuildversion, guuid, seed1,
 		 seed2, time_ns);
 
 	ret = SHA1_Update(sha, (unsigned char *)buf, strlen(buf));
@@ -171,7 +171,7 @@ static int compute_key(char *key, char *seed1, char *seed2)
 static int compute_key256(char *key, char *seed)
 {
 	static SHA256_CTX *sha;
-	char buf[256] = {'\0',};
+	char buf[VERSION_SIZE] = {'\0',};
 	long long time_ns = 0;
 	char *tmp_key = key;
 	unsigned char results[SHA256_DIGEST_LENGTH];
@@ -199,7 +199,7 @@ static int compute_key256(char *key, char *seed)
 		return -1;
 
 	time_ns = get_uptime();
-	snprintf(buf, 256, "%s%s%s%lld", gbuildversion, guuid, seed,
+	snprintf(buf, VERSION_SIZE, "%s%s%s%lld", gbuildversion, guuid, seed,
 		 time_ns);
 
 	ret = SHA256_Update(sha, (unsigned char *)buf, strlen(buf));
@@ -430,7 +430,7 @@ void generate_crashfile(char *dir, char *event, char *hashkey,
  */
 char *generate_log_dir(enum e_dir_mode mode, char *hashkey)
 {
-	char path[PATH_MAX];
+	char *path;
 	char dir[PATH_MAX];
 	unsigned int current;
 	int ret;
@@ -439,19 +439,22 @@ char *generate_log_dir(enum e_dir_mode mode, char *hashkey)
 	if (ret)
 		return NULL;
 
-	snprintf(path, sizeof(path), "%s%d_", dir, current);
-	strncat(path, hashkey,
-		(strlen(path) + strlen(hashkey) >= sizeof(path)) ?
-		(sizeof(path) - strlen(path)) : strlen(hashkey));
+	ret = asprintf(&path, "%s%d_%s", dir, current, hashkey);
+	if (ret == -1) {
+		LOGE("construct log path failed, out of memory\n");
+		hist_raise_infoerror("DIR CREATE");
+		return NULL;
+	}
 
 	ret = mkdir(path, 0777);
 	if (ret == -1) {
 		LOGE("Cannot create dir %s\n", path);
 		hist_raise_infoerror("DIR CREATE");
+		free(path);
 		return NULL;
 	}
 
-	return strdup(path);
+	return path;
 }
 
 int is_boot_id_changed(void)

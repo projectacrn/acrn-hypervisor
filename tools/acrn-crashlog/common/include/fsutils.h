@@ -32,7 +32,7 @@
 
 #define KB                      (1024)
 #define MB                      (KB * KB)
-#define MAXLINESIZE             (4 * KB)
+#define MAXLINESIZE             (PATH_MAX + 128)
 #define CPBUFFERSIZE            (4 * KB)
 #define PAGE_SIZE               (4 * KB)
 

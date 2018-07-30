@@ -24,6 +24,8 @@
 #define DUMP_FILE "/tmp/core"
 #define BUFFER_SIZE 8196
 #define LINK_LEN 512
+/* 128 means the length of the DUMP_FILE */
+#define FORMAT_LENGTH (LINK_LEN + 128)
 
 static void loginfo(int fd, const char *fmt, ...)
 {
@@ -110,7 +112,7 @@ static int save_coredump(const char *filename)
 static int get_backtrace(int pid, int fd, int sig, const char *comm)
 {
 	char *membkt;
-	char format[512];
+	char format[FORMAT_LENGTH];
 
 	loginfo(fd, "\nBackTrace:\n\n");
 	memset(format, 0, sizeof(format));
