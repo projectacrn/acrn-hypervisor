@@ -7,89 +7,42 @@
 #include <hypervisor.h>
 #include <softirq.h>
 
-void disable_softirq(uint16_t cpu_id)
-{
-	bitmap_clear_lock(SOFTIRQ_ATOMIC, &per_cpu(softirq_pending, cpu_id));
-}
 
-void enable_softirq(uint16_t cpu_id)
-{
-	bitmap_set_lock(SOFTIRQ_ATOMIC, &per_cpu(softirq_pending, cpu_id));
-}
+static softirq_handler softirq_handlers[NR_SOFTIRQS];
 
 void init_softirq(void)
 {
-	uint16_t pcpu_id;
-
-	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
-		per_cpu(softirq_pending, pcpu_id) = 0UL;
-		bitmap_set_lock(SOFTIRQ_ATOMIC, &per_cpu(softirq_pending, pcpu_id));
-	}
 }
 
-void raise_softirq(uint16_t softirq_id)
+/*
+ * @pre: nr will not equal or large than NR_SOFTIRQS
+ */
+void register_softirq(uint16_t nr, softirq_handler handler)
 {
-	uint16_t cpu_id = get_cpu_id();
-	uint64_t *bitmap = &per_cpu(softirq_pending, cpu_id);
-
-	if (cpu_id >= phys_cpu_num) {
-		return;
-	}
-
-	bitmap_set_lock(softirq_id, bitmap);
+	softirq_handlers[nr] = handler;
 }
 
-void exec_softirq(void)
+/*
+ * @pre: nr will not equal or large than NR_SOFTIRQS
+ */
+void fire_softirq(uint16_t nr)
 {
+	bitmap_set_lock(nr, &per_cpu(softirq_pending, get_cpu_id()));
+}
+
+void do_softirq(void)
+{
+	uint16_t nr;
 	uint16_t cpu_id = get_cpu_id();
-	volatile uint64_t *bitmap = &per_cpu(softirq_pending, cpu_id);
+	volatile uint64_t *softirq_pending_bitmap =
+			&per_cpu(softirq_pending, cpu_id);
 
-	uint16_t softirq_id;
-
-	if (cpu_id >= phys_cpu_num) {
-		return;
-	}
-
-	if (((*bitmap) & SOFTIRQ_MASK) == 0UL) {
-		return;
-	}
-
-	/* Disable softirq
-	 * SOFTIRQ_ATOMIC bit = 0 means softirq already in execution
-	 */
-	if (!bitmap_test_and_clear_lock(SOFTIRQ_ATOMIC, bitmap)) {
-		return;
-	}
-
-again:
-	CPU_IRQ_ENABLE();
-
-	while (1) {
-		softirq_id = ffs64(*bitmap);
-		if ((softirq_id == INVALID_BIT_INDEX) || (softirq_id >= SOFTIRQ_MAX)) {
-			break;
-		}
-
-		bitmap_clear_lock(softirq_id, bitmap);
-
-		switch (softirq_id) {
-		case SOFTIRQ_TIMER:
-			timer_softirq(cpu_id);
-			break;
-		case SOFTIRQ_DEV_ASSIGN:
-			ptdev_softirq(cpu_id);
-			break;
-		default:
+	while (true) {
+		nr = ffs64(*softirq_pending_bitmap);
+		if (nr >= NR_SOFTIRQS)
 			break;
 
-		}
+		bitmap_clear_lock(nr, softirq_pending_bitmap);
+		(*softirq_handlers[nr])(cpu_id);
 	}
-
-	CPU_IRQ_DISABLE();
-
-	if (((*bitmap) & SOFTIRQ_MASK) != 0U) {
-		goto again;
-	}
-
-	enable_softirq(cpu_id);
 }

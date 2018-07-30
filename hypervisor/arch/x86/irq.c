@@ -5,6 +5,7 @@
  */
 
 #include <hypervisor.h>
+#include <softirq.h>
 
 static spinlock_t exception_spinlock = { .head = 0U, .tail = 0U, };
 

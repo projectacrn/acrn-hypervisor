@@ -216,11 +216,11 @@ int vmexit_handler(struct vcpu *vcpu)
 		/* Handling external_interrupt
 		 * should disable intr
 		 */
-		ret = dispatch->handler(vcpu);
-	} else {
-		CPU_IRQ_ENABLE();
-		ret = dispatch->handler(vcpu);
 		CPU_IRQ_DISABLE();
+		ret = dispatch->handler(vcpu);
+		CPU_IRQ_ENABLE();
+	} else {
+		ret = dispatch->handler(vcpu);
 	}
 
 	return ret;

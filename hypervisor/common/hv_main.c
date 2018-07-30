@@ -6,6 +6,7 @@
 
 #include <hypervisor.h>
 #include <schedule.h>
+#include <softirq.h>
 
 bool x2apic_enabled;
 
@@ -33,8 +34,11 @@ void vcpu_thread(struct vcpu *vcpu)
 	run_vcpu_pre_work(vcpu);
 
 	do {
-		/* handling pending softirq */
-		exec_softirq();
+		/* handle pending softirq when irq enable*/
+		do_softirq();
+		CPU_IRQ_DISABLE();
+		/* handle risk softirq when disabling irq*/
+		do_softirq();
 
 		/* Check and process pending requests(including interrupt) */
 		ret = acrn_handle_pending_request(vcpu);
@@ -85,6 +89,7 @@ void vcpu_thread(struct vcpu *vcpu)
 		/* Restore native TSC_AUX */
 		CPU_MSR_WRITE(MSR_IA32_TSC_AUX, tsc_aux_hyp_cpu);
 
+		CPU_IRQ_ENABLE();
 		/* Dispatch handler */
 		ret = vmexit_handler(vcpu);
 		if (ret < 0) {

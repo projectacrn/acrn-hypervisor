@@ -8,7 +8,7 @@
 #include <softirq.h>
 #include <ptdev.h>
 
-/* SOFTIRQ_DEV_ASSIGN list for all CPUs */
+/* SOFTIRQ_PTDEV list for all CPUs */
 struct list_head softirq_dev_entry_list;
 /* passthrough device link */
 struct list_head ptdev_list;
@@ -31,7 +31,7 @@ spinlock_t softirq_dev_lock;
 static void ptdev_enqueue_softirq(struct ptdev_remapping_info *entry)
 {
 	spinlock_rflags;
-	/* enqueue request in order, SOFTIRQ_DEV_ASSIGN will pickup */
+	/* enqueue request in order, SOFTIRQ_PTDEV will pickup */
 	spinlock_irqsave_obtain(&softirq_dev_lock);
 
 	/* avoid adding recursively */
@@ -40,7 +40,7 @@ static void ptdev_enqueue_softirq(struct ptdev_remapping_info *entry)
 	list_add_tail(&entry->softirq_node,
 			&softirq_dev_entry_list);
 	spinlock_irqrestore_release(&softirq_dev_lock);
-	raise_softirq(SOFTIRQ_DEV_ASSIGN);
+	fire_softirq(SOFTIRQ_PTDEV);
 }
 
 struct ptdev_remapping_info*
@@ -169,6 +169,8 @@ void ptdev_init(void)
 	spinlock_init(&ptdev_lock);
 	INIT_LIST_HEAD(&softirq_dev_entry_list);
 	spinlock_init(&softirq_dev_lock);
+
+	register_softirq(SOFTIRQ_PTDEV, ptdev_softirq);
 }
 
 void ptdev_release_all_entries(struct vm *vm)

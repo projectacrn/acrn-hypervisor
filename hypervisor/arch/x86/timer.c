@@ -27,7 +27,7 @@ static void run_timer(struct hv_timer *timer)
 /* run in interrupt context */
 static int tsc_deadline_handler(__unused int irq, __unused void *data)
 {
-	raise_softirq(SOFTIRQ_TIMER);
+	fire_softirq(SOFTIRQ_TIMER);
 	return 0;
 }
 
@@ -156,33 +156,7 @@ static void init_tsc_deadline_timer(void)
 	msr_write(MSR_IA32_TSC_DEADLINE, 0UL);
 }
 
-void timer_init(void)
-{
-	char name[32] = {0};
-	uint16_t pcpu_id = get_cpu_id();
-
-	snprintf(name, 32, "timer_tick[%hu]", pcpu_id);
-	if (request_timer_irq(pcpu_id, tsc_deadline_handler, NULL, name) < 0) {
-		pr_err("Timer setup failed");
-		return;
-	}
-
-	init_tsc_deadline_timer();
-	init_percpu_timer(pcpu_id);
-}
-
-void timer_cleanup(void)
-{
-	uint16_t pcpu_id = get_cpu_id();
-
-	if (per_cpu(timer_node, pcpu_id) != NULL) {
-		unregister_handler_common(per_cpu(timer_node, pcpu_id));
-	}
-
-	per_cpu(timer_node, pcpu_id) = NULL;
-}
-
-void timer_softirq(uint16_t pcpu_id)
+static void timer_softirq(uint16_t pcpu_id)
 {
 	struct per_cpu_timers *cpu_timer;
 	struct hv_timer *timer;
@@ -220,6 +194,34 @@ void timer_softirq(uint16_t pcpu_id)
 
 	/* update nearest timer */
 	update_physical_timer(cpu_timer);
+}
+
+void timer_init(void)
+{
+	char name[32] = {0};
+	uint16_t pcpu_id = get_cpu_id();
+
+	init_percpu_timer(pcpu_id);
+	register_softirq(SOFTIRQ_TIMER, timer_softirq);
+
+	snprintf(name, 32, "timer_tick[%hu]", pcpu_id);
+	if (request_timer_irq(pcpu_id, tsc_deadline_handler, NULL, name) < 0) {
+		pr_err("Timer setup failed");
+		return;
+	}
+
+	init_tsc_deadline_timer();
+}
+
+void timer_cleanup(void)
+{
+	uint16_t pcpu_id = get_cpu_id();
+
+	if (per_cpu(timer_node, pcpu_id) != NULL) {
+		unregister_handler_common(per_cpu(timer_node, pcpu_id));
+	}
+
+	per_cpu(timer_node, pcpu_id) = NULL;
 }
 
 void check_tsc(void)
