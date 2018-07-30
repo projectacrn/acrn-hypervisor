@@ -135,7 +135,7 @@ struct vm {
 	void *vuart;		/* Virtual UART */
 	struct acrn_vpic *vpic;      /* Virtual PIC */
 	enum vpic_wire_mode vpic_wire_mode;
-	struct iommu_domain *iommu_domain;	/* iommu domain of this VM */
+	struct iommu_domain *iommu;	/* iommu domain of this VM */
 	struct list_head list; /* list of VM */
 	spinlock_t spinlock;	/* Spin-lock used to protect VM modifications */
 
