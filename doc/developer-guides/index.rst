@@ -21,9 +21,10 @@ specific areas within the ACRN hypervisor system.
 
    memmgt-hld.rst
    virtio-hld.rst
+   virtio-console.rst
+   uart-virtualization.rst
    ACPI-virt-hld.rst
    APL_GVT-g-hld.rst
-   uart-virtualization.rst
    GVT-G-porting.rst
 
 Contributing to the project
