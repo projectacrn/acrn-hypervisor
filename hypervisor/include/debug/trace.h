@@ -78,10 +78,6 @@ struct trace_entry {
 static inline bool
 trace_check(uint16_t cpu_id, __unused uint32_t evid)
 {
-	if (cpu_id >= phys_cpu_num) {
-		return false;
-	}
-
 	if (per_cpu(sbuf, cpu_id)[ACRN_TRACE] == NULL) {
 		return false;
 	}

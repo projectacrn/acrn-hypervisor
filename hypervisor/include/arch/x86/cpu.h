@@ -408,7 +408,10 @@ void stop_cpus();
 	CPU_RFLAGS_RESTORE(cpu_int_value);          \
 }
 
-/* Macro to get CPU ID */
+/*
+ * Macro to get CPU ID
+ * @pre: the return CPU ID would never equal or large than phys_cpu_num.
+ */
 static inline uint16_t get_cpu_id(void)
 {
 	uint32_t tsl, tsh, cpu_id;

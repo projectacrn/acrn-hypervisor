@@ -123,12 +123,6 @@ int32_t hv_main(uint16_t pcpu_id)
 	pr_info("%s, Starting common entry point for CPU %hu",
 			__func__, pcpu_id);
 
-	if (pcpu_id >= phys_cpu_num) {
-		pr_err("%s, cpu_id %hu out of range %d\n",
-			__func__, pcpu_id, phys_cpu_num);
-		return -EINVAL;
-	}
-
 	if (pcpu_id != get_cpu_id()) {
 		pr_err("%s, cpu_id %hu mismatch\n", __func__, pcpu_id);
 		return -EINVAL;
