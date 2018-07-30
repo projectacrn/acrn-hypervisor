@@ -199,10 +199,10 @@ echo "8086 5aca" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:1b.0" > /sys/bus/pci/devices/0000:00:1b.0/driver/unbind
 echo "0000:00:1b.0" > /sys/bus/pci/drivers/pci-stub/bind
 
-# WIFI is 4:0.0 on SBL, and 3:0.0 on ABL
+# WIFI
 echo "11ab 2b38" > /sys/bus/pci/drivers/pci-stub/new_id
-echo "0000:04:00.0" > /sys/bus/pci/devices/0000:04:00.0/driver/unbind
-echo "0000:04:00.0" > /sys/bus/pci/drivers/pci-stub/bind
+echo "0000:03:00.0" > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+echo "0000:03:00.0" > /sys/bus/pci/drivers/pci-stub/bind
 
 # Bluetooth passthrough depends on WIFI
 echo "8086 5abc" > /sys/bus/pci/drivers/pci-stub/new_id
@@ -289,7 +289,7 @@ fi
    -s 15,passthru,0/f/0 \
    -s 27,passthru,0/1b/0 \
    -s 24,passthru,0/18/0 \
-   -s 18,passthru,4/0/0,keep_gsi \
+   -s 18,passthru,3/0/0,keep_gsi \
    $boot_ipu_option      \
    -i /run/acrn/ioc_$vm_name,0x20 \
    -l com2,/run/acrn/ioc_$vm_name \
