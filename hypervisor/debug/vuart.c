@@ -33,7 +33,7 @@
 #include "uart16550.h"
 
 #define COM1_BASE	0x3F8
-#define COM1_IRQ	4
+#define COM1_IRQ	4U
 #define RX_FIFO_SIZE		256
 #define TX_FIFO_SIZE		65536
 
@@ -173,10 +173,10 @@ static void vuart_write(__unused struct vm_io_handler *hdlr,
 		 * The FCR_ENABLE bit must be '1' for the programming
 		 * of other FCR bits to be effective.
 		 */
-		if ((value & FCR_FIFOE) == 0) {
+		if ((value & FCR_FIFOE) == 0U) {
 			vu->fcr = 0;
 		} else {
-			if ((value & FCR_RFR) != 0) {
+			if ((value & FCR_RFR) != 0U) {
 				fifo_reset(&vu->rxfifo);
 			}
 
@@ -364,9 +364,9 @@ void *vuart_init(struct vm *vm)
 	ASSERT(vu != NULL, "");
 
 	/* Set baud rate*/
-	divisor = UART_CLOCK_RATE / BAUD_9600 / 16;
+	divisor = UART_CLOCK_RATE / BAUD_9600 / 16U;
 	vu->dll = divisor;
-	vu->dlh = divisor >> 16;
+	vu->dlh = divisor >> 16U;
 
 	vu->active = false;
 	vu->base = COM1_BASE;

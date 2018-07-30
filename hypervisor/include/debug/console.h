@@ -41,8 +41,6 @@ int console_gets(char *buffer, uint32_t length);
 
 void console_setup_timer(void);
 
-uint32_t get_serial_handle(void);
-
 static inline void suspend_console(void)
 {
 	del_timer(&console_timer);
@@ -52,6 +50,7 @@ static inline void resume_console(void)
 {
 	console_setup_timer();
 }
+void uart16550_set_property(bool enabled, bool port_mapped, uint64_t base_addr);
 
 #else
 static inline void console_init(void)
@@ -65,13 +64,12 @@ static inline int console_write(__unused const char *str,
 }
 static inline void console_putc(__unused const char *ch) { }
 static inline int console_getc(void) { return 0; }
-
-static inline int console_gets(char *buffer, uint32_t length) {	 return 0; }
+static inline int console_gets(char *buffer, uint32_t length) { return 0; }
 static inline void console_setup_timer(void) {}
-static inline uint32_t get_serial_handle(void) { return 0; }
-
 static inline void suspend_console(void) {}
 static inline void resume_console(void) {}
+static inline void uart16550_set_property(__unused bool enabled,
+		__unused bool port_mapped, __unused uint64_t base_addr) {}
 #endif
 
 #endif /* CONSOLE_H */

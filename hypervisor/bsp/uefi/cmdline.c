@@ -44,7 +44,7 @@ static void handle_cmd(const char *cmd, int len)
 
 		if (i == IDX_DISABLE_UART) {
 			/* set uart disabled*/
-			uart16550_set_property(0, 0, 0);
+			uart16550_set_property(false, false, 0UL);
 		} else if ((i == IDX_PORT_UART) || (i == IDX_MMIO_UART)) {
 			uint64_t addr = strtoul_hex(cmd + tmp);
 
@@ -54,9 +54,9 @@ static void handle_cmd(const char *cmd, int len)
 				if (addr > MAX_PORT)
 					addr = DEFAULT_UART_PORT;
 
-				uart16550_set_property(1, 1, addr);
+				uart16550_set_property(true, true, addr);
 			} else {
-				uart16550_set_property(1, 0, addr);
+				uart16550_set_property(true, false, addr);
 			}
 		}
 	}

@@ -9,7 +9,7 @@
 
 struct hv_timer console_timer;
 
-#define CONSOLE_KICK_TIMER_TIMEOUT  40 /* timeout is 40ms*/
+#define CONSOLE_KICK_TIMER_TIMEOUT  40UL /* timeout is 40ms*/
 
 void console_init(void)
 {
@@ -18,7 +18,7 @@ void console_init(void)
 
 void console_putc(const char *ch)
 {
-	(void)uart16550_puts(ch, 1);
+	(void)uart16550_puts(ch, 1U);
 }
 
 
@@ -32,10 +32,11 @@ char console_getc(void)
 	return uart16550_getc();
 }
 
-static void console_handler(void)
+static int console_timer_callback(__unused void *data)
 {
 	struct vuart *vu;
 
+	/* Kick HV-Shell and Uart-Console tasks */
 	vu = vuart_console_active();
 	if (vu != NULL) {
 		/* serial Console Rx operation */
@@ -45,12 +46,6 @@ static void console_handler(void)
 	} else {
 		shell_kick();
 	}
-}
-
-static int console_timer_callback(__unused void *data)
-{
-	/* Kick HV-Shell and Uart-Console tasks */
-	console_handler();
 	return 0;
 }
 
