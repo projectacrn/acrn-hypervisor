@@ -475,8 +475,8 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 		return 1;
 	}
 
-	if (vlapic->ops.apicv_set_intr_ready != NULL) {
-		return (*vlapic->ops.apicv_set_intr_ready)
+	if (vlapic->ops.apicv_set_intr_ready_fn != NULL) {
+		return vlapic->ops.apicv_set_intr_ready_fn
 			(vlapic, vector, level);
 	}
 
@@ -1190,8 +1190,8 @@ vlapic_pending_intr(struct acrn_vlapic *vlapic, uint32_t *vecptr)
 	uint32_t i, vector, val, bitpos;
 	struct lapic_reg *irrptr;
 
-	if (vlapic->ops.apicv_pending_intr != NULL) {
-		return (*vlapic->ops.apicv_pending_intr)(vlapic, vecptr);
+	if (vlapic->ops.apicv_pending_intr_fn != NULL) {
+		return vlapic->ops.apicv_pending_intr_fn(vlapic, vecptr);
 	}
 
 	irrptr = &lapic->irr[0];
@@ -1222,8 +1222,8 @@ vlapic_intr_accepted(struct acrn_vlapic *vlapic, uint32_t vector)
 	struct lapic_reg *irrptr, *isrptr;
 	uint32_t idx, stk_top;
 
-	if (vlapic->ops.apicv_intr_accepted != NULL) {
-		vlapic->ops.apicv_intr_accepted(vlapic, vector);
+	if (vlapic->ops.apicv_intr_accepted_fn != NULL) {
+		vlapic->ops.apicv_intr_accepted_fn(vlapic, vector);
 		return;
 	}
 
@@ -1746,16 +1746,16 @@ vlapic_set_tmr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 void
 vlapic_apicv_batch_set_tmr(struct acrn_vlapic *vlapic)
 {
-	if (vlapic->ops.apicv_batch_set_tmr != NULL) {
-		vlapic->ops.apicv_batch_set_tmr(vlapic);
+	if (vlapic->ops.apicv_batch_set_tmr_fn != NULL) {
+		vlapic->ops.apicv_batch_set_tmr_fn(vlapic);
 	}
 }
 
 static void
 vlapic_apicv_set_tmr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 {
-	if (vlapic->ops.apicv_set_tmr != NULL) {
-		vlapic->ops.apicv_set_tmr(vlapic, vector, level);
+	if (vlapic->ops.apicv_set_tmr_fn != NULL) {
+		vlapic->ops.apicv_set_tmr_fn(vlapic, vector, level);
 	}
 }
 
@@ -2097,14 +2097,14 @@ int vlapic_create(struct vcpu *vcpu)
 
 	if (is_vapic_supported()) {
 		if (is_vapic_intr_delivery_supported()) {
-			vlapic->ops.apicv_set_intr_ready =
+			vlapic->ops.apicv_set_intr_ready_fn =
 					apicv_set_intr_ready;
 
-			vlapic->ops.apicv_pending_intr =
+			vlapic->ops.apicv_pending_intr_fn =
 					apicv_pending_intr;
 
-			vlapic->ops.apicv_set_tmr = apicv_set_tmr;
-			vlapic->ops.apicv_batch_set_tmr =
+			vlapic->ops.apicv_set_tmr_fn = apicv_set_tmr;
+			vlapic->ops.apicv_batch_set_tmr_fn =
 					apicv_batch_set_tmr;
 
 			vlapic->pir_desc = (struct vlapic_pir_desc *)(&(vlapic->pir));
