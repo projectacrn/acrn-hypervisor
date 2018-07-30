@@ -28,7 +28,6 @@
 #include <pgtable.h>
 #include <irq.h>
 #include <timer.h>
-#include <softirq.h>
 #include <vmx.h>
 #include <assign.h>
 #include <vtd.h>

@@ -5,6 +5,7 @@
  */
 
 #include <hypervisor.h>
+#include <softirq.h>
 #include <ptdev.h>
 
 /* SOFTIRQ_DEV_ASSIGN list for all CPUs */

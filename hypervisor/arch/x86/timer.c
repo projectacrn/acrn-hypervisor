@@ -5,6 +5,7 @@
  */
 
 #include <hypervisor.h>
+#include <softirq.h>
 
 #define MAX_TIMER_ACTIONS	32U
 #define TIMER_IRQ		(NR_IRQS - 1U)
