@@ -112,6 +112,7 @@ static int socket_bind(int fd, const char *name)
 	if (name_len >= SUN_PATH_MAX)
 		return -1;
 	strncpy(addr.sun_path, name, SUN_PATH_MAX);
+	addr.sun_path[SUN_PATH_MAX - 1] = '\0';
 	unlink(addr.sun_path);
 	alen = strlen(addr.sun_path) + sizeof(addr.sun_family);
 

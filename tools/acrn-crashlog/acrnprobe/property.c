@@ -47,7 +47,7 @@ static void get_device_id(struct sender_t *sender)
 		return;
 	}
 
-	ret = file_read_string(MACHINE_ID, guuid, VERSION_SIZE);
+	ret = file_read_string(MACHINE_ID, guuid, BUILD_VERSION_SIZE);
 	if (ret <= 0)
 		LOGE("Could not get mmc id: %d (%s)\n",
 		     ret, strerror(-ret));
@@ -56,7 +56,8 @@ static void get_device_id(struct sender_t *sender)
 
 	LOGE("Could not find DeviceId, set it to '%s'\n",
 	     DEVICE_ID_UNKNOWN);
-	strncpy(guuid, DEVICE_ID_UNKNOWN, strlen(DEVICE_ID_UNKNOWN));
+	strncpy(guuid, DEVICE_ID_UNKNOWN, UUID_SIZE);
+	guuid[UUID_SIZE - 1] = '\0';
 
 write:
 	overwrite_file(loguuid, guuid);
@@ -66,7 +67,7 @@ write:
 static int get_buildversion(struct sender_t *sender)
 {
 	int ret;
-	char lastbuild[VERSION_SIZE];
+	char lastbuild[BUILD_VERSION_SIZE];
 	char *logbuildid;
 	char *currentbuild = gbuildversion;
 
@@ -84,7 +85,7 @@ static int get_buildversion(struct sender_t *sender)
 		return ret;
 	}
 
-	ret = file_read_string(logbuildid, lastbuild, VERSION_SIZE);
+	ret = file_read_string(logbuildid, lastbuild, BUILD_VERSION_SIZE);
 	if (ret == -ENOENT ||
 	    !ret ||
 	    (ret > 0 && strcmp(currentbuild, lastbuild))) {

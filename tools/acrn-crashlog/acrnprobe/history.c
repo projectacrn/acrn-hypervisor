@@ -56,10 +56,10 @@ static void entry_to_history_line(struct history_entry *entry,
 	newline[0] = 0;
 	if (entry->log != NULL) {
 		char *ptr;
-		char tmp[MAXLINESIZE];
+		char tmp[PATH_MAX];
 
-		strncpy(tmp, entry->log, MAXLINESIZE);
-		tmp[MAXLINESIZE-1] = 0;
+		strncpy(tmp, entry->log, PATH_MAX);
+		tmp[PATH_MAX - 1] = 0;
 		ptr = strrchr(tmp, '/');
 		if (ptr && ptr[1] == 0)
 			ptr[0] = 0;
