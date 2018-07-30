@@ -1,0 +1,5 @@
+vSBL Version 0.8
+- New feature:
+	Add watchdog reset status report.
+	Update vFastboot to v0.8
+
