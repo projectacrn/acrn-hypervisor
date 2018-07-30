@@ -77,11 +77,9 @@ responses to user space modules, notified by vIRQ injections.
    :functions: acrn_hpa2gpa
                map_guest_phys
                unmap_guest_phys
-               set_mmio_map
-               unset_mmio_map
-
-.. kernel-doc:: include/linux/vhm/acrn_vhm_mm.h
-   :functions: update_memmap_attr
+               add_memory_region
+               del_memory_region
+               write_protect_page
 
 .. _MPT_interface:
 
