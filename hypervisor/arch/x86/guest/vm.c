@@ -268,9 +268,9 @@ int shutdown_vm(struct vm *vm)
 	/* TODO: De-initialize I/O Emulation */
 	free_io_emulation_resource(vm);
 
-	/* Free iommu_domain */
-	if (vm->iommu_domain != NULL) {
-		destroy_iommu_domain(vm->iommu_domain);
+	/* Free iommu */
+	if (vm->iommu != NULL) {
+		destroy_iommu_domain(vm->iommu);
 	}
 
 	bitmap_clear_lock(vm->attr.id, &vmid_bitmap);
