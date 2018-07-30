@@ -163,7 +163,7 @@ struct instr_emul_vie {
 			repnz_present:1,	/* REPNE/REPNZ prefix */
 			opsize_override:1,	/* Operand size override */
 			addrsize_override:1,	/* Address size override */
-			segment_override:1;	/* Segment override */
+			seg_override:1;	/* Segment override */
 
 	uint8_t		mod:2,			/* ModRM byte */
 			reg:4,

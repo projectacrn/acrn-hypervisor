@@ -611,9 +611,9 @@ vlapic_lvt_write_handler(struct acrn_vlapic *vlapic, uint32_t offset)
 
 		/* mask -> unmask: may from every vlapic in the vm */
 		if (((last & APIC_LVT_M) != 0U) && ((val & APIC_LVT_M) == 0U)) {
-			if (vlapic->vm->vpic_wire_mode == VPIC_WIRE_INTR ||
-				vlapic->vm->vpic_wire_mode == VPIC_WIRE_NULL) {
-				vlapic->vm->vpic_wire_mode = VPIC_WIRE_LAPIC;
+			if (vlapic->vm->wire_mode == VPIC_WIRE_INTR ||
+				vlapic->vm->wire_mode == VPIC_WIRE_NULL) {
+				vlapic->vm->wire_mode = VPIC_WIRE_LAPIC;
 				dev_dbg(ACRN_DBG_LAPIC,
 					"vpic wire mode -> LAPIC");
 			} else {
@@ -622,8 +622,8 @@ vlapic_lvt_write_handler(struct acrn_vlapic *vlapic, uint32_t offset)
 			}
 		/* unmask -> mask: only from the vlapic LINT0-ExtINT enabled */
 		} else if (((last & APIC_LVT_M) == 0U) && ((val & APIC_LVT_M) != 0U)) {
-			if (vlapic->vm->vpic_wire_mode == VPIC_WIRE_LAPIC) {
-				vlapic->vm->vpic_wire_mode = VPIC_WIRE_NULL;
+			if (vlapic->vm->wire_mode == VPIC_WIRE_LAPIC) {
+				vlapic->vm->wire_mode = VPIC_WIRE_NULL;
 				dev_dbg(ACRN_DBG_LAPIC,
 						"vpic wire mode -> NULL");
 			}
@@ -1279,8 +1279,8 @@ vlapic_svr_write_handler(struct acrn_vlapic *vlapic)
 
 			vlapic_mask_lvts(vlapic);
 			/* the only one enabled LINT0-ExtINT vlapic disabled */
-			if (vlapic->vm->vpic_wire_mode == VPIC_WIRE_NULL) {
-				vlapic->vm->vpic_wire_mode = VPIC_WIRE_INTR;
+			if (vlapic->vm->wire_mode == VPIC_WIRE_NULL) {
+				vlapic->vm->wire_mode = VPIC_WIRE_INTR;
 				dev_dbg(ACRN_DBG_LAPIC,
 					"vpic wire mode -> INTR");
 			}

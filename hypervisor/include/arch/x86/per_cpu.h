@@ -31,7 +31,7 @@ struct per_cpu_region {
 	void *vcpu;
 	void *ever_run_vcpu;
 #ifdef STACK_PROTECTOR
-	struct stack_canary stack_canary;
+	struct stack_canary stk_canary;
 #endif
 	struct per_cpu_timers cpu_timers;
 	struct sched_context sched_ctx;

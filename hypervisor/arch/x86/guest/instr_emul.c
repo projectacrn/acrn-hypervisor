@@ -714,7 +714,7 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct instr_emul_vie *vi
 		}
 	}
 
-	seg = (vie->segment_override != 0U) ? (vie->segment_register) : CPU_REG_DS;
+	seg = (vie->seg_override != 0U) ? (vie->segment_register) : CPU_REG_DS;
 	error = get_gla(vcpu, vie, paging, opsize, vie->addrsize,
 	    PROT_READ, seg, CPU_REG_RSI, &srcaddr, &fault);
 	if ((error != 0) || (fault != 0)) {
@@ -1791,7 +1791,7 @@ decode_prefixes(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode, bool cs_d
 		} else if (x == 0xF2U) {
 			vie->repnz_present = 1U;
 		} else if (segment_override(x, &vie->segment_register)) {
-			vie->segment_override = 1U;
+			vie->seg_override = 1U;
 		} else {
 			break;
 		}
