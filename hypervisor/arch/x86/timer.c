@@ -114,10 +114,6 @@ static int request_timer_irq(uint16_t pcpu_id,
 {
 	struct dev_handler_node *node = NULL;
 
-	if (pcpu_id >= phys_cpu_num) {
-		return -EINVAL;
-	}
-
 	if (per_cpu(timer_node, pcpu_id) != NULL) {
 		pr_err("CPU%d timer isr already added", pcpu_id);
 		unregister_handler_common(per_cpu(timer_node, pcpu_id));
