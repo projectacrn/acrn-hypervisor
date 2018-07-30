@@ -5,6 +5,7 @@
  */
 
 #include <hypervisor.h>
+#include <softirq.h>
 
 void disable_softirq(uint16_t cpu_id)
 {
