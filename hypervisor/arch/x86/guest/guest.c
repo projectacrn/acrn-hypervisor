@@ -458,7 +458,7 @@ void init_e820(void)
 			(HPA2HVA((uint64_t)boot_regs[1]));
 
 		pr_info("Multiboot info detected\n");
-		if ((mbi->mi_flags & 0x40U) != 0U) {
+		if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MMAP) != 0U) {
 			struct multiboot_mmap *mmap =
 				(struct multiboot_mmap *)
 				HPA2HVA((uint64_t)mbi->mi_mmap_addr);
