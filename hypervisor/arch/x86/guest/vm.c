@@ -177,7 +177,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	vm->vpic = vpic_init(vm);
 
 	/* vpic wire_mode default is INTR */
-	vm->vpic_wire_mode = VPIC_WIRE_INTR;
+	vm->wire_mode = VPIC_WIRE_INTR;
 
 	/* Allocate full emulated vIOAPIC instance */
 	vm->arch_vm.virt_ioapic = vioapic_init(vm);

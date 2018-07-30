@@ -330,7 +330,7 @@ static uint64_t get_random_value(void)
 
 static void set_fs_base(void)
 {
-	struct stack_canary *psc = &get_cpu_var(stack_canary);
+	struct stack_canary *psc = &get_cpu_var(stk_canary);
 
 	psc->canary = get_random_value();
 	msr_write(MSR_IA32_FS_BASE, (uint64_t)psc);

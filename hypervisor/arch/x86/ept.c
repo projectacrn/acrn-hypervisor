@@ -50,7 +50,7 @@ static void free_ept_mem(void *pml4_addr)
 	void *pte_addr;
 	uint32_t pml4_index;
 	uint32_t pdpt_index;
-	uint32_t pde_index;
+	uint32_t pde_idx;
 
 	if (pml4_addr == NULL) {
 		ASSERT(false, "EPTP is NULL");
@@ -74,10 +74,10 @@ static void free_ept_mem(void *pml4_addr)
 				continue;
 			}
 
-			for (pde_index = 0U; pde_index < IA32E_NUM_ENTRIES;
-					pde_index++) {
+			for (pde_idx = 0U; pde_idx < IA32E_NUM_ENTRIES;
+					pde_idx++) {
 				/* Walk from the PD table to the page table */
-				pte_addr = HPA2HVA(find_next_table(pde_index,
+				pte_addr = HPA2HVA(find_next_table(pde_idx,
 						pde_addr));
 
 				/* Free page table entry table */
