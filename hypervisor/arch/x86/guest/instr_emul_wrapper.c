@@ -305,28 +305,6 @@ static void get_guest_paging_info(struct vcpu *vcpu, struct instr_emul_ctxt *emu
 	emul_ctxt->paging.paging_mode = get_vcpu_paging_mode(vcpu);
 }
 
-static int mmio_read(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t *rval,
-		__unused uint8_t size, __unused void *arg)
-{
-	if (vcpu == NULL) {
-		return -EINVAL;
-	}
-
-	*rval = vcpu->req.reqs.mmio.value;
-	return 0;
-}
-
-static int mmio_write(struct vcpu *vcpu, __unused uint64_t gpa, uint64_t wval,
-		__unused uint8_t size, __unused void *arg)
-{
-	if (vcpu == NULL) {
-		return -EINVAL;
-	}
-
-	vcpu->req.reqs.mmio.value = wval;
-	return 0;
-}
-
 int decode_instruction(struct vcpu *vcpu)
 {
 	struct instr_emul_ctxt *emul_ctxt;
@@ -364,18 +342,12 @@ int decode_instruction(struct vcpu *vcpu)
 
 int emulate_instruction(struct vcpu *vcpu)
 {
-	struct instr_emul_ctxt *emul_ctxt;
-	struct vm_guest_paging *paging;
-	int retval = 0;
-	uint64_t gpa = vcpu->req.reqs.mmio.address;
-	mem_region_read_t mread = mmio_read;
-	mem_region_write_t mwrite = mmio_write;
+	struct instr_emul_ctxt *ctxt = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
 
-	emul_ctxt = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
-	paging = &emul_ctxt->paging;
+	if (ctxt == NULL) {
+		pr_err("%s: Failed to get instr_emul_ctxt", __func__);
+		return -1;
+	}
 
-	retval = vmm_emulate_instruction(vcpu, gpa,
-			&emul_ctxt->vie, paging, mread, mwrite, NULL);
-
-	return retval;
+	return vmm_emulate_instruction(ctxt);
 }

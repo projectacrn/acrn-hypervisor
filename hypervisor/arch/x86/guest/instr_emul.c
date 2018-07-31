@@ -191,6 +191,26 @@ static uint64_t size2mask[9] = {
 	[8] = ~0UL,
 };
 
+static int mmio_read(struct vcpu *vcpu, uint64_t *rval)
+{
+	if (vcpu == NULL) {
+		return -EINVAL;
+	}
+
+	*rval = vcpu->req.reqs.mmio.value;
+	return 0;
+}
+
+static int mmio_write(struct vcpu *vcpu, uint64_t wval)
+{
+	if (vcpu == NULL) {
+		return -EINVAL;
+	}
+
+	vcpu->req.reqs.mmio.value = wval;
+	return 0;
+}
+
 static void
 vie_calc_bytereg(struct instr_emul_vie *vie, enum cpu_reg_name *reg, int *lhbr)
 {
@@ -355,10 +375,7 @@ getcc(uint8_t opsize, uint64_t x, uint64_t y)
 	}
 }
 
-static int
-emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
-		mem_region_read_t memread, mem_region_write_t memwrite,
-		void *arg)
+static int emulate_mov(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -378,8 +395,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		size = 1U;	/* override for byte operation */
 		error = vie_read_bytereg(vcpu, vie, &byte);
 		if (error == 0) {
-			error = memwrite(vcpu, gpa, byte, size,
-					arg);
+			error = mmio_write(vcpu, byte);
 		}
 		break;
 	case 0x89U:
@@ -394,8 +410,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		error = vm_get_register(vcpu, reg, &val);
 		if (error == 0) {
 			val &= size2mask[size];
-			error = memwrite(vcpu, gpa, val, size,
-					arg);
+			error = mmio_write(vcpu, val);
 		}
 		break;
 	case 0x8AU:
@@ -405,7 +420,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		 * REX + 8A/r:	mov r8, r/m8
 		 */
 		size = 1U;	/* override for byte operation */
-		error = memread(vcpu, gpa, &val, size, arg);
+		error = mmio_read(vcpu, &val);
 		if (error == 0) {
 			error = vie_write_bytereg(vcpu, vie, (uint8_t)val);
 		}
@@ -417,7 +432,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		 * 8B/r:	mov r32, r/m32
 		 * REX.W 8B/r:	mov r64, r/m64
 		 */
-		error = memread(vcpu, gpa, &val, size, arg);
+		error = mmio_read(vcpu, &val);
 		if (error == 0) {
 			reg = vie->reg;
 			error = vie_update_register(vcpu, reg,
@@ -431,7 +446,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		 * A1:		mov EAX, moffs32
 		 * REX.W + A1:	mov RAX, moffs64
 		 */
-		error = memread(vcpu, gpa, &val, size, arg);
+		error = mmio_read(vcpu, &val);
 		if (error == 0) {
 			reg = CPU_REG_RAX;
 			error = vie_update_register(vcpu, reg,
@@ -449,8 +464,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 					&val);
 		if (error == 0) {
 			val &= size2mask[size];
-			error = memwrite(vcpu, gpa, val, size,
-					arg);
+			error = mmio_write(vcpu, val);
 		}
 		break;
 	case 0xC6U:
@@ -460,8 +474,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		 * REX + C6/0	mov r/m8, imm8
 		 */
 		size = 1U;	/* override for byte operation */
-		error = memwrite(vcpu, gpa, vie->immediate, size,
-				arg);
+		error = mmio_write(vcpu, vie->immediate);
 		break;
 	case 0xC7U:
 		/*
@@ -472,7 +485,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		 *		(sign-extended to 64-bits)
 		 */
 		val = (uint64_t)vie->immediate & size2mask[size];
-		error = memwrite(vcpu, gpa, val, size, arg);
+		error = mmio_write(vcpu, val);
 		break;
 	default:
 		break;
@@ -481,10 +494,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 	return error;
 }
 
-static int
-emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
-		mem_region_read_t memread, __unused mem_region_write_t memwrite,
-		void *arg)
+static int emulate_movx(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -506,7 +516,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		 */
 
 		/* get the first operand */
-		error = memread(vcpu, gpa, &val, 1U, arg);
+		error = mmio_read(vcpu, &val);
 		if (error != 0) {
 			break;
 		}
@@ -528,7 +538,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		 * 0F B7/r		movzx r32, r/m16
 		 * REX.W + 0F B7/r	movzx r64, r/m16
 		 */
-		error = memread(vcpu, gpa, &val, 2U, arg);
+		error = mmio_read(vcpu, &val);
 		if (error != 0) {
 			return error;
 		}
@@ -551,7 +561,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		 */
 
 		/* get the first operand */
-		error = memread(vcpu, gpa, &val, 1U, arg);
+		error = mmio_read(vcpu, &val);
 		if (error != 0) {
 			break;
 		}
@@ -632,12 +642,8 @@ guest_fault:
 	return 0;
 }
 
-static int
-emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct instr_emul_vie *vie,
-		struct vm_guest_paging *paging,
-		__unused mem_region_read_t memread,
-		__unused mem_region_write_t memwrite,
-		__unused void *arg)
+static int emulate_movs(struct vcpu *vcpu, struct instr_emul_vie *vie,
+				struct vm_guest_paging *paging)
 {
 	uint64_t dstaddr, srcaddr;
 	uint64_t rcx, rdi, rsi, rflags;
@@ -721,11 +727,7 @@ done:
 	return error;
 }
 
-static int
-emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
-		__unused struct vm_guest_paging *paging,
-		__unused mem_region_read_t memread,
-		mem_region_write_t memwrite, void *arg)
+static int emulate_stos(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
 	int error, repeat;
 	uint8_t opsize;
@@ -749,7 +751,7 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 
 	error = vm_get_register(vcpu, CPU_REG_RAX, &val);
 
-	error = memwrite(vcpu, gpa, val, opsize, arg);
+	error = mmio_write(vcpu, val);
 	if (error != 0) {
 		return error;
 	}
@@ -782,10 +784,7 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 	return 0;
 }
 
-static int
-emulate_test(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
-		mem_region_read_t memread, __unused mem_region_write_t memwrite,
-		void *arg)
+static int emulate_test(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -821,7 +820,7 @@ emulate_test(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		}
 
 		/* get the second operand */
-		error = memread(vcpu, gpa, &val2, size, arg);
+		error = mmio_read(vcpu, &val2);
 		if (error != 0) {
 			break;
 		}
@@ -848,10 +847,7 @@ emulate_test(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 	return error;
 }
 
-static int
-emulate_and(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
-		mem_region_read_t memread, mem_region_write_t memwrite,
-		void *arg)
+static int emulate_and(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -880,7 +876,7 @@ emulate_and(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		}
 
 		/* get the second operand */
-		error = memread(vcpu, gpa, &val2, size, arg);
+		error = mmio_read(vcpu, &val2);
 		if (error != 0) {
 			break;
 		}
@@ -906,7 +902,7 @@ emulate_and(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		 */
 
 		/* get the first operand */
-		error = memread(vcpu, gpa, &val1, size, arg);
+		error = mmio_read(vcpu, &val1);
 		if (error != 0) {
 			break;
 		}
@@ -916,7 +912,7 @@ emulate_and(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		 * operand and write the result
 		 */
 		result = val1 & vie->immediate;
-		error = memwrite(vcpu, gpa, result, size, arg);
+		error = mmio_write(vcpu, result);
 		break;
 	default:
 		break;
@@ -937,10 +933,7 @@ emulate_and(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 	return error;
 }
 
-static int
-emulate_or(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
-		mem_region_read_t memread, mem_region_write_t memwrite,
-		void *arg)
+static int emulate_or(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -971,7 +964,7 @@ emulate_or(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		 */
 
 		/* get the first operand */
-		error = memread(vcpu, gpa, &val1, size, arg);
+		error = mmio_read(vcpu, &val1);
 		if (error != 0) {
 			break;
 		}
@@ -981,7 +974,7 @@ emulate_or(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		 * operand and write the result
 		 */
 		result = val1 | (uint64_t)vie->immediate;
-		error = memwrite(vcpu, gpa, result, size, arg);
+		error = mmio_write(vcpu, result);
 		break;
 	case 0x09U:
 		/*
@@ -992,7 +985,7 @@ emulate_or(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		 */
 
 		/* get the first operand */
-		error = memread(vcpu, gpa, &val1, size, arg);
+		error = mmio_read(vcpu, &val1);
 		if (error != 0) {
 			break;
 		}
@@ -1008,7 +1001,7 @@ emulate_or(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		result = val1 | val2;
 		result &= size2mask[size];
 
-		error = memwrite(vcpu, gpa, result, size, arg);
+		error = mmio_write(vcpu, result);
 		break;
 	default:
 		break;
@@ -1029,10 +1022,7 @@ emulate_or(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 	return error;
 }
 
-static int
-emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
-		mem_region_read_t memread, __unused mem_region_write_t memwrite,
-		void *arg)
+static int emulate_cmp(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -1066,7 +1056,7 @@ emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		}
 
 		/* Get the memory operand */
-		error = memread(vcpu, gpa, &memop, size, arg);
+		error = mmio_read(vcpu, &memop);
 		if (error != 0) {
 			return error;
 		}
@@ -1111,7 +1101,7 @@ emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		}
 
 		/* get the first operand */
-		error = memread(vcpu, gpa, &op1, size, arg);
+		error = mmio_read(vcpu, &op1);
 		if (error != 0) {
 			return error;
 		}
@@ -1127,10 +1117,7 @@ emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 	return error;
 }
 
-static int
-emulate_sub(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
-		mem_region_read_t memread, __unused mem_region_write_t memwrite,
-		void *arg)
+static int emulate_sub(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -1158,7 +1145,7 @@ emulate_sub(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		}
 
 		/* get the second operand */
-		error = memread(vcpu, gpa, &val2, size, arg);
+		error = mmio_read(vcpu, &val2);
 		if (error != 0) {
 			break;
 		}
@@ -1182,10 +1169,8 @@ emulate_sub(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 	return error;
 }
 
-static int
-emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct instr_emul_vie *vie,
-		struct vm_guest_paging *paging, mem_region_read_t memread,
-		mem_region_write_t memwrite, void *arg)
+static int emulate_stack_op(struct vcpu *vcpu, struct instr_emul_vie *vie,
+				struct vm_guest_paging *paging)
 {
 	struct seg_desc ss_desc;
 	uint64_t cr0, rflags, rsp, stack_gla, stack_gpa, val;
@@ -1257,11 +1242,6 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct instr_emul_vie *vi
 		return 0;
 	}
 
-	/* TODO: currently emulate_instruction is only for mmio, so here
-	 * stack_gpa actually is unused for mmio_write & mmio_read, need
-	 * take care of data trans if stack_gpa be used for memwrite in
-	 * the future.
-	 */
 	if (pushop != 0) {
 		err_code |= PAGE_FAULT_WR_FLAG;
 	}
@@ -1273,14 +1253,14 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct instr_emul_vie *vi
 		return error;
 	}
 	if (pushop != 0) {
-		error = memread(vcpu, mmio_gpa, &val, size, arg);
+		error = mmio_read(vcpu, &val);
 		if (error == 0) {
-			error = memwrite(vcpu, stack_gpa, val, size, arg);
+			error = mmio_write(vcpu, val);
 		}
 	} else {
-		error = memread(vcpu, stack_gpa, &val, size, arg);
+		error = mmio_read(vcpu, &val);
 		if (error == 0) {
-			error = memwrite(vcpu, mmio_gpa, val, size, arg);
+			error = mmio_write(vcpu, val);
 		}
 		rsp += size;
 	}
@@ -1293,13 +1273,9 @@ emulate_stack_op(struct vcpu *vcpu, uint64_t mmio_gpa, struct instr_emul_vie *vi
 	return error;
 }
 
-static int
-emulate_push(struct vcpu *vcpu, uint64_t mmio_gpa, struct instr_emul_vie *vie,
-		struct vm_guest_paging *paging, mem_region_read_t memread,
-		mem_region_write_t memwrite, void *arg)
+static int emulate_push(struct vcpu *vcpu, struct instr_emul_vie *vie,
+				struct vm_guest_paging *paging)
 {
-	int error;
-
 	/*
 	 * Table A-6, "Opcode Extensions", Intel SDM, Vol 2.
 	 *
@@ -1310,18 +1286,12 @@ emulate_push(struct vcpu *vcpu, uint64_t mmio_gpa, struct instr_emul_vie *vie,
 		return -EINVAL;
 	}
 
-	error = emulate_stack_op(vcpu, mmio_gpa, vie, paging, memread,
-			memwrite, arg);
-	return error;
+	return emulate_stack_op(vcpu, vie, paging);
 }
 
-static int
-emulate_pop(struct vcpu *vcpu, uint64_t mmio_gpa, struct instr_emul_vie *vie,
-		struct vm_guest_paging *paging, mem_region_read_t memread,
-		mem_region_write_t memwrite, void *arg)
+static int emulate_pop(struct vcpu *vcpu, struct instr_emul_vie *vie,
+				struct vm_guest_paging *paging)
 {
-	int error;
-
 	/*
 	 * Table A-6, "Opcode Extensions", Intel SDM, Vol 2.
 	 *
@@ -1332,31 +1302,22 @@ emulate_pop(struct vcpu *vcpu, uint64_t mmio_gpa, struct instr_emul_vie *vie,
 		return -EINVAL;
 	}
 
-	error = emulate_stack_op(vcpu, mmio_gpa, vie, paging, memread,
-			memwrite, arg);
-	return error;
+	return emulate_stack_op(vcpu, vie, paging);
 }
 
-static int
-emulate_group1(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
-		__unused struct vm_guest_paging *paging,
-		mem_region_read_t memread,
-		mem_region_write_t memwrite, void *memarg)
+static int emulate_group1(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
 	int error;
 
 	switch (vie->reg & 7U) {
 	case 0x1U:	/* OR */
-		error = emulate_or(vcpu, gpa, vie,
-				memread, memwrite, memarg);
+		error = emulate_or(vcpu, vie);
 		break;
 	case 0x4U:	/* AND */
-		error = emulate_and(vcpu, gpa, vie,
-				memread, memwrite, memarg);
+		error = emulate_and(vcpu, vie);
 		break;
 	case 0x7U:	/* CMP */
-		error = emulate_cmp(vcpu, gpa, vie,
-				memread, memwrite, memarg);
+		error = emulate_cmp(vcpu, vie);
 		break;
 	default:
 		error = EINVAL;
@@ -1366,10 +1327,7 @@ emulate_group1(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 	return error;
 }
 
-static int
-emulate_bittest(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
-		mem_region_read_t memread, __unused mem_region_write_t memwrite,
-		void *memarg)
+static int emulate_bittest(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
 	uint64_t val, rflags, bitmask;
 	int error;
@@ -1388,7 +1346,7 @@ emulate_bittest(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 
 	error = vm_get_register(vcpu, CPU_REG_RFLAGS, &rflags);
 
-	error = memread(vcpu, gpa, &val, vie->opsize, memarg);
+	error = mmio_read(vcpu, &val);
 	if (error != 0) {
 		return error;
 	}
@@ -1412,11 +1370,11 @@ emulate_bittest(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 	return 0;
 }
 
-int
-vmm_emulate_instruction(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
-		struct vm_guest_paging *paging, mem_region_read_t memread,
-		mem_region_write_t memwrite, void *memarg)
+int vmm_emulate_instruction(struct instr_emul_ctxt *ctxt)
 {
+	struct vm_guest_paging *paging = &ctxt->paging;
+	struct instr_emul_vie *vie = &ctxt->vie;
+	struct vcpu *vcpu = ctxt->vcpu;
 	int error;
 
 	if (vie->decoded == 0U) {
@@ -1424,57 +1382,44 @@ vmm_emulate_instruction(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *
 	}
 	switch (vie->op.op_type) {
 	case VIE_OP_TYPE_GROUP1:
-		error = emulate_group1(vcpu, gpa, vie, paging,
-					memread, memwrite, memarg);
+		error = emulate_group1(vcpu, vie);
 		break;
 	case VIE_OP_TYPE_POP:
-		error = emulate_pop(vcpu, gpa, vie, paging,
-					memread, memwrite, memarg);
+		error = emulate_pop(vcpu, vie, paging);
 		break;
 	case VIE_OP_TYPE_PUSH:
-		error = emulate_push(vcpu, gpa, vie, paging,
-					memread, memwrite, memarg);
+		error = emulate_push(vcpu, vie, paging);
 		break;
 	case VIE_OP_TYPE_CMP:
-		error = emulate_cmp(vcpu, gpa, vie,
-					memread, memwrite, memarg);
+		error = emulate_cmp(vcpu, vie);
 		break;
 	case VIE_OP_TYPE_MOV:
-		error = emulate_mov(vcpu, gpa, vie,
-				memread, memwrite, memarg);
+		error = emulate_mov(vcpu, vie);
 		break;
 	case VIE_OP_TYPE_MOVSX:
 	case VIE_OP_TYPE_MOVZX:
-		error = emulate_movx(vcpu, gpa, vie,
-				memread, memwrite, memarg);
+		error = emulate_movx(vcpu, vie);
 		break;
 	case VIE_OP_TYPE_MOVS:
-		error = emulate_movs(vcpu, gpa, vie, paging,
-					memread, memwrite, memarg);
+		error = emulate_movs(vcpu, vie, paging);
 		break;
 	case VIE_OP_TYPE_STOS:
-		error = emulate_stos(vcpu, gpa, vie, paging,
-					memread, memwrite, memarg);
+		error = emulate_stos(vcpu, vie);
 		break;
 	case VIE_OP_TYPE_AND:
-		error = emulate_and(vcpu, gpa, vie,
-				memread, memwrite, memarg);
+		error = emulate_and(vcpu, vie);
 		break;
 	case VIE_OP_TYPE_TEST:
-		error = emulate_test(vcpu, gpa, vie,
-				memread, memwrite, memarg);
+		error = emulate_test(vcpu, vie);
 		break;
 	case VIE_OP_TYPE_OR:
-		error = emulate_or(vcpu, gpa, vie,
-				memread, memwrite, memarg);
+		error = emulate_or(vcpu, vie);
 		break;
 	case VIE_OP_TYPE_SUB:
-		error = emulate_sub(vcpu, gpa, vie,
-				memread, memwrite, memarg);
+		error = emulate_sub(vcpu, vie);
 		break;
 	case VIE_OP_TYPE_BITTEST:
-		error = emulate_bittest(vcpu, gpa, vie,
-				memread, memwrite, memarg);
+		error = emulate_bittest(vcpu, vie);
 		break;
 	default:
 		error = -EINVAL;
