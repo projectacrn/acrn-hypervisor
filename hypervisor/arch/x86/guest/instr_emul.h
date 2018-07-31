@@ -32,29 +32,8 @@
 
 #include "instr_emul_wrapper.h"
 
-/*
- * Callback functions to read and write memory regions.
- */
-typedef int (*mem_region_read_t)(struct vcpu *vcpu, uint64_t gpa,
-				 uint64_t *rval, uint8_t rsize, void *arg);
-
-typedef int (*mem_region_write_t)(struct vcpu *vcpu, uint64_t gpa,
-				  uint64_t wval, uint8_t wsize, void *arg);
-
-/*
- * Emulate the decoded 'vie' instruction.
- *
- * The callbacks 'mrr' and 'mrw' emulate reads and writes to the memory region
- * containing 'gpa'. 'memarg' is an opaque argument that is passed into the
- * callback functions.
- *
- * 'void *vm' should be 'struct vm *' when called from kernel context and
- * 'struct vmctx *' when called from user context.
- * s
- */
-int vmm_emulate_instruction(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
-		struct vm_guest_paging *paging, mem_region_read_t mrr,
-		mem_region_write_t mrw, void *memarg);
+/* Emulate the decoded 'ctxt->vie' instruction. */
+int vmm_emulate_instruction(struct instr_emul_ctxt *ctxt);
 
 int vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
 		uint64_t val_arg, uint8_t size);
