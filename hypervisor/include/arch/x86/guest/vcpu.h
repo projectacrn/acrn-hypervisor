@@ -78,6 +78,14 @@ enum vm_cpu_mode {
 	CPU_MODE_64BIT,			/* IA-32E mode (CS.L = 1) */
 };
 
+#ifdef CONFIG_PARTITION_HV
+enum vcpu_role {
+	VCPU_PRIMARY = 0,
+	VCPU_SECONDARY,
+	VCPU_ROLE_UNKNOWN
+};
+#endif
+
 /* General-purpose register layout aligned with the general-purpose register idx
  * when vmexit, such as vmexit due to CR access, refer to SMD Vol.3C 27-6.
  */

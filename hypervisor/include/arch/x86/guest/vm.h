@@ -169,6 +169,9 @@ struct vm_description {
 	uint16_t               vm_hw_num_cores;   /* Number of virtual cores */
 	/* Whether secure world is enabled for current VM. */
 	bool                   sworld_enabled;
+#ifdef CONFIG_PARTITION_HV
+	const char		*bootargs;
+#endif
 };
 
 int shutdown_vm(struct vm *vm);
@@ -188,4 +191,11 @@ extern struct list_head vm_list;
 extern spinlock_t vm_list_lock;
 extern bool x2apic_enabled;
 
+#ifdef CONFIG_PARTITION_HV
+struct vm_description_array {
+	int                     num_vm_desc;
+	struct vm_description   vm_desc_array[];
+};
+const struct vm_description_array *get_vm_desc_base(void);
+#endif
 #endif /* VM_H_ */

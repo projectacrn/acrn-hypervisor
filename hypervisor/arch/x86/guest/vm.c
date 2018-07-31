@@ -357,6 +357,114 @@ void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec)
 	schedule_vcpu(bsp);
 }
 
+
+#ifdef CONFIG_PARTITION_HV
+static int get_vm_desc_and_cpu_role(int cpu_id, struct vm_description **vm_desc,
+				enum vcpu_role *role, int *vm_idx)
+{
+	struct vm_description_array *vm_desc_array;
+	struct vm_description *vm_descriptions;
+	int i, j;
+	int status = 0;
+
+	if (vm_desc == NULL || role == NULL)
+		status = -EINVAL;
+
+	if (status != 0)
+		return status;
+
+	/* Obtain base of user defined VM description array data
+	 * structure
+	 */
+	vm_desc_array = (struct vm_description_array *)get_vm_desc_base();
+	/* Obtain VM description array base */
+	vm_descriptions = &vm_desc_array->vm_desc_array[0];
+
+	status = -EINVAL;
+	/* Iterate virtual machine descriptions to find matching CPU */
+	for (i = 0; i < vm_desc_array->num_vm_desc; i++) {
+		/* Loop through each core allocated to the VM */
+		/* TODO: Need a spin-lock around this loop for SMP VMs */
+		for (j = 0; j < vm_descriptions[i].vm_hw_num_cores; j++) {
+			/* Check to see if the currently running CPU ID
+			 * matches the VM CPU ID
+			 */
+			if (cpu_id !=
+			    vm_descriptions[i].vm_pcpu_ids[j])
+				continue;
+
+			/* See if first CPU for this VM */
+			if (j == 0) {
+				/* Assign role of first CPU as primary VCPU */
+				*role = VCPU_PRIMARY;
+			} else {
+				/* Assign role of secondary CPU */
+				*role = VCPU_SECONDARY;
+			}
+
+			/* Return a pointer to the VM description */
+			*vm_desc = &vm_descriptions[i];
+			*vm_idx = i;
+			/* Set success return status and break from loop */
+			status = 0;
+			break;
+		}
+	}
+
+	/* Return status to caller */
+	return status;
+}
+
+static struct vm_description *get_vm_desc(int idx)
+{
+	struct vm_description_array *vm_desc_array;
+
+	/* Obtain base of user defined VM description array data
+	 * structure
+	 */
+	vm_desc_array = (struct vm_description_array *)get_vm_desc_base();
+	/* Obtain VM description array base */
+	if (idx >= vm_desc_array->num_vm_desc)
+		return NULL;
+	else
+		return &vm_desc_array->vm_desc_array[idx];
+}
+
+/* Create vm/vcpu for vm */
+int prepare_vm(uint16_t pcpu_id)
+{
+	int i, ret;
+	struct vm *vm = NULL;
+	struct vm_description *vm_desc = NULL;
+	int vm_id;
+	enum vcpu_role cpu_role = VCPU_ROLE_UNKNOWN;
+
+	ret = get_vm_desc_and_cpu_role(pcpu_id, &vm_desc, &cpu_role,
+					&vm_id);
+	if (!ret && (cpu_role == VCPU_PRIMARY)) {
+		vm_desc = get_vm_desc(vm_id);
+		ASSERT(vm_desc, "get vm desc failed");
+
+		ret = create_vm(vm_desc, &vm);
+		ASSERT(ret == 0, "VM creation failed!");
+
+		prepare_vcpu(vm, vm_desc->vm_pcpu_ids[0]);
+
+		/* Prepare the AP for vm */
+		for (i = 1; i < vm_desc->vm_hw_num_cores; i++)
+			prepare_vcpu(vm, vm_desc->vm_pcpu_ids[i]);
+
+		/* start vm BSP automatically */
+		start_vm(vm);
+
+		pr_acrnlog("Start VM%x", vm_id);
+	}
+
+	return ret;
+}
+
+#else
+
 static bool is_vm0_bsp(uint16_t pcpu_id)
 {
 #ifdef CONFIG_VM0_DESC
@@ -412,6 +520,7 @@ int prepare_vm(uint16_t pcpu_id)
 
 	return err;
 }
+#endif
 
 #ifdef CONFIG_VM0_DESC
 static inline bool vcpu_in_vm_desc(struct vcpu *vcpu,
