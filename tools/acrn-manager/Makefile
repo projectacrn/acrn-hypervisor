@@ -47,9 +47,13 @@ endif
 	rm -f $(OUT_DIR)/acrnd
 
 .PHONY: install
-install: $(OUT_DIR)/acrnctl
+install: $(OUT_DIR)/acrnctl $(OUT_DIR)/acrn_mngr.h $(OUT_DIR)/libacrn-mngr.a
 	install -d $(DESTDIR)/usr/bin
 	install -d $(DESTDIR)/usr/lib/systemd/system
+	install -d $(DESTDIR)/usr/lib64/
+	install -d $(DESTDIR)/usr/include/acrn
 	install -t $(DESTDIR)/usr/bin $(OUT_DIR)/acrnctl
 	install -t $(DESTDIR)/usr/bin $(OUT_DIR)/acrnd
+	install -t $(DESTDIR)/usr/lib64/ $(OUT_DIR)/libacrn-mngr.a
+	install -t $(DESTDIR)/usr/include/acrn $(OUT_DIR)/acrn_mngr.h
 	install -p -D -m 0644 $(OUT_DIR)/acrnd.service $(DESTDIR)/usr/lib/systemd/system
