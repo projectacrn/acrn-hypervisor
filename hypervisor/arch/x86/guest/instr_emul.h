@@ -68,8 +68,6 @@ int vie_alignment_check(uint8_t cpl, uint8_t operand_size, uint64_t cr0,
 /* Returns 1 if the 'gla' is not canonical and 0 otherwise. */
 int vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla);
 
-uint64_t vie_size2mask(uint8_t size);
-
 int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	struct seg_desc *desc, uint64_t offset_arg, uint8_t length_arg,
 	uint8_t addrsize, uint32_t prot, uint64_t *gla);
