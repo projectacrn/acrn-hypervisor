@@ -141,7 +141,7 @@ static void _scan_alive_vm(void)
 			case VM_SUSPEND_NONE:
 				vm->state = VM_STARTED;
 				break;
-			case VM_SUSPEND_HALT:
+			case VM_SUSPEND_SUSPEND:
 				vm->state = VM_PAUSED;
 				break;
 			default:
