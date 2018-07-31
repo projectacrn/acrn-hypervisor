@@ -313,8 +313,6 @@ vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
 	}
 
 	error = vm_set_register(vcpu, reg, val);
-	ASSERT(error == 0, "%s: Error (%d) happens when update reg",
-		__func__, error);
 
 	return error;
 }
@@ -358,21 +356,21 @@ build_getcc(getcc16, uint16_t, x, y)
 build_getcc(getcc32, uint32_t, x, y)
 build_getcc(getcc64, uint64_t, x, y)
 
-static uint64_t
-getcc(uint8_t opsize, uint64_t x, uint64_t y)
+/**
+ * @pre opsize = 1, 2, 4 or 8
+ */
+static uint64_t getcc(uint8_t opsize, uint64_t x, uint64_t y)
 {
-	ASSERT(opsize == 1U || opsize == 2U || opsize == 4U || opsize == 8U,
-			"getcc: invalid operand size %hhu", opsize);
-
-	if (opsize == 1U) {
-		return getcc8((uint8_t)x, (uint8_t)y);
-	} else if (opsize == 2U) {
-		return getcc16((uint16_t)x, (uint16_t)y);
-	} else if (opsize == 4U) {
-		return getcc32((uint32_t)x, (uint32_t)y);
-	} else {
-		return getcc64(x, y);
-	}
+	switch (opsize) {
+		case 1:
+			return getcc8((uint8_t) x, (uint8_t) y);
+		case 2:
+			return getcc16((uint16_t) x, (uint16_t) y);
+		case 4:
+			return getcc32((uint32_t) x, (uint32_t) y);
+		default:	/* opsize == 8 */
+			return getcc64(x, y);
+		}
 }
 
 static int emulate_mov(struct vcpu *vcpu, struct instr_emul_vie *vie)
@@ -723,7 +721,6 @@ static int emulate_movs(struct vcpu *vcpu, struct instr_emul_vie *vie,
 		}
 	}
 done:
-	ASSERT(error == 0, "%s: unexpected error %d", __func__, error);
 	return error;
 }
 
@@ -1206,8 +1203,6 @@ static int emulate_stack_op(struct vcpu *vcpu, struct instr_emul_vie *vie,
 		 * stack pointer.
 		 */
 		error = vm_get_seg_desc(vcpu, CPU_REG_SS, &ss_desc);
-		ASSERT(error == 0, "%s: error %d getting SS descriptor",
-					__func__, error);
 		if (SEG_DESC_DEF32(ss_desc.access)) {
 			stackaddrsize = 4U;
 		} else {
@@ -1428,15 +1423,12 @@ int vmm_emulate_instruction(struct instr_emul_ctxt *ctxt)
 	return error;
 }
 
-int
-vie_alignment_check(uint8_t cpl, uint8_t size, uint64_t cr0, uint64_t rflags,
-	uint64_t gla)
+int vie_alignment_check(uint8_t cpl, uint8_t size, uint64_t cr0,
+					uint64_t rflags, uint64_t gla)
 {
-	ASSERT(size == 1U || size == 2U || size == 4U || size == 8U,
-	    "%s: invalid size %hhu", __func__, size);
-	ASSERT(cpl <= 3U, "%s: invalid cpl %d", __func__, cpl);
+	pr_dbg("Checking alignment with cpl: %hhu, addrsize: %hhu", cpl, size);
 
-	if (cpl != 3U || (cr0 & CR0_AM) == 0UL || (rflags & PSL_AC) == 0UL) {
+	if (cpl < 3U || (cr0 & CR0_AM) == 0UL || (rflags & PSL_AC) == 0UL) {
 		return 0;
 	}
 
@@ -1464,8 +1456,15 @@ vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla)
 	}
 }
 
-int
-vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
+/*
+ *@pre seg must be segment register index
+ *@pre length_arg must be 1, 2, 4 or 8
+ *@pre prot must be PROT_READ or PROT_WRITE
+ *
+ *return 0 - on success
+ *return -1 - on failure
+ */
+int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	struct seg_desc *desc, uint64_t offset_arg, uint8_t length_arg,
 	uint8_t addrsize, uint32_t prot, uint64_t *gla)
 {
@@ -1475,23 +1474,20 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	uint8_t glasize;
 	uint32_t type;
 
-	ASSERT((seg >= CPU_REG_SEG_FIRST) && (seg <= CPU_REG_SEG_LAST),
-	    "%s: invalid segment %d", __func__, seg);
-	ASSERT(length == 1U || length == 2U || length == 4U || length == 8U,
-	    "%s: invalid operand size %hhu", __func__, length);
-	ASSERT((prot & ~(PROT_READ | PROT_WRITE)) == 0U,
-	    "%s: invalid prot %#x", __func__, prot);
-
 	firstoff = offset;
 	if (cpu_mode == CPU_MODE_64BIT) {
-		ASSERT(addrsize == 4U || addrsize == 8U,
-			"%s: invalid address size %d for cpu_mode %d",
-			__func__, addrsize, cpu_mode);
+		if (addrsize != 4U && addrsize != 8U) {
+			pr_dbg("%s: invalid addr size %d for cpu mode %d",
+					__func__, addrsize, cpu_mode);
+			return -1;
+		}
 		glasize = 8U;
 	} else {
-		ASSERT(addrsize == 2U || addrsize == 4U,
-			"%s: invalid address size %d for cpu mode %d",
-			__func__, addrsize, cpu_mode);
+		if (addrsize != 2U && addrsize != 4U) {
+			pr_dbg("%s: invalid addr size %d for cpu mode %d",
+					__func__, addrsize, cpu_mode);
+			return -1;
+		}
 		glasize = 4U;
 		/*
 		 * If the segment selector is loaded with a NULL selector
@@ -1508,16 +1504,17 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 		 * descriptor that is not present. If this was the case then
 		 * it would have been checked before the VM-exit.
 		 */
-		ASSERT(SEG_DESC_PRESENT(desc->access),
-		    "segment %d not present: %#x", seg, desc->access);
+		if (SEG_DESC_PRESENT(desc->access) != 0) {
+			/* TODO: Inject #NP */
+			return -1;
+		}
 
-		/*
-		 * The descriptor type must indicate a code/data segment.
-		 */
+		/* The descriptor type must indicate a code/data segment. */
 		type = SEG_DESC_TYPE(desc->access);
-		ASSERT(type >= 16U && type <= 31U,
-			"segment %d has invalid descriptor type %#x",
-			seg, type);
+		if (type < 16 || type > 31) {
+			/*TODO: Inject #GP */
+			return -1;
+		}
 
 		if ((prot & PROT_READ) != 0U) {
 			/* #GP on a read access to a exec-only code segment */

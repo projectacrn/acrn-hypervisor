@@ -296,8 +296,6 @@ static void get_guest_paging_info(struct vcpu *vcpu, struct instr_emul_ctxt *emu
 {
 	uint8_t cpl;
 
-	ASSERT(emul_ctxt != NULL && vcpu != NULL, "Error in input arguments");
-
 	cpl = (uint8_t)((csar >> 5) & 3U);
 	emul_ctxt->paging.cr3 = exec_vmread(VMX_GUEST_CR3);
 	emul_ctxt->paging.cpl = cpl;
@@ -313,6 +311,10 @@ int decode_instruction(struct vcpu *vcpu)
 	enum vm_cpu_mode cpu_mode;
 
 	emul_ctxt = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
+	if (emul_ctxt == NULL) {
+		pr_err("%s: Failed to get emul_ctxt", __func__);
+		return -1;
+	}
 	emul_ctxt->vcpu = vcpu;
 
 	retval = vie_init(&emul_ctxt->vie, vcpu);
