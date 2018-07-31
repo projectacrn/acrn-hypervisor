@@ -93,14 +93,14 @@ void init_e820(void);
 void obtain_e820_mem_info(void);
 extern uint32_t e820_entries;
 extern struct e820_entry e820[E820_MAX_ENTRIES];
-extern uint32_t boot_regs[];
+extern uint32_t boot_regs[2];
 extern struct e820_mem_params e820_mem;
 
 int rdmsr_vmexit_handler(struct vcpu *vcpu);
 int wrmsr_vmexit_handler(struct vcpu *vcpu);
 void init_msr_emulation(struct vcpu *vcpu);
 
-extern const char vm_exit[];
+extern const char vm_exit;
 struct run_context;
 int vmx_vmrun(struct run_context *context, int ops, int ibrs);
 
