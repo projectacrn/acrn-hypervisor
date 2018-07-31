@@ -156,7 +156,8 @@ struct vm {
 	uint32_t vcpuid_entry_nr, vcpuid_level, vcpuid_xlevel;
 	struct vcpuid_entry vcpuid_entries[MAX_VM_VCPUID_ENTRIES];
 #ifdef CONFIG_PARTITION_HV
-	void *vrtc;	
+	void *vrtc;
+	struct vm_description   *vm_desc;
 #endif
 };
 

@@ -41,6 +41,9 @@ static void init_vm(struct vm_description *vm_desc,
 #else
 	vm_handle->hw.num_vcpus = vm_desc->vm_hw_num_cores;
 #endif
+#ifdef CONFIG_PARTITION_HV
+	vm_handle->vm_desc = vm_desc;
+#endif
 }
 
 /* return a pointer to the virtual machine structure associated with
@@ -161,6 +164,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 #ifdef CONFIG_PARTITION_HV
 		ept_mr_add(vm, vm_desc->start_hpa,
 					0, vm_desc->mem_size, 0x47);
+		init_vm_boot_info(vm);
 #endif
 	}
 
