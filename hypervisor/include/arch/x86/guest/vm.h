@@ -170,6 +170,8 @@ struct vm_description {
 	/* Whether secure world is enabled for current VM. */
 	bool                   sworld_enabled;
 #ifdef CONFIG_PARTITION_HV
+	uint64_t		start_hpa;
+	uint64_t		mem_size; /* UOS memory size in hex */
 	const char		*bootargs;
 #endif
 };

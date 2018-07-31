@@ -151,6 +151,10 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		(void)memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
 					&vm_desc->GUID[0],
 					sizeof(vm_desc->GUID));
+#ifdef CONFIG_PARTITION_HV
+		ept_mr_add(vm, vm_desc->start_hpa,
+					0, vm_desc->mem_size, 0x47);
+#endif
 	}
 
 	INIT_LIST_HEAD(&vm->list);
