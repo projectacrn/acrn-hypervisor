@@ -65,6 +65,7 @@ const struct vm_description_array vm_desc_mrb = {
 
 			{
 				/* Internal variable, MUSTBE init to -1 */
+				.vm_id = 1,
 				.vm_hw_num_cores = VM1_NUM_CPUS,
 				.vm_pcpu_ids = &VM1_CPUS[0],
 				.start_hpa = 0x100000000,
@@ -76,6 +77,7 @@ const struct vm_description_array vm_desc_mrb = {
 
 			{
 				/* Internal variable, MUSTBE init to -1 */
+				.vm_id = 2,
 				.vm_hw_num_cores = VM2_NUM_CPUS,
 				.vm_pcpu_ids = &VM2_CPUS[0],
 				.start_hpa = 0x180000000,

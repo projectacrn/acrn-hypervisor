@@ -102,12 +102,19 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		goto err;
 	}
 
+#ifdef CONFIG_PARTITION_HV
+	vm->attr.id = vm_desc->vm_id;
+	vm->attr.boot_idx = vm_desc->vm_id;
+	if (bitmap_test_and_set(vm->attr.id, &vmid_bitmap)) {
+		pr_fatal("vm id %d already taken\n", vm->attr.id);
+	}
+#else
 	for (id = 0U; id < (size_t)(sizeof(vmid_bitmap) * 8U); id++) {
 		if (!bitmap_test_and_set_lock(id, &vmid_bitmap)) {
 			break;
 		}
 	}
-
+#endif
 	if (id >= (size_t)(sizeof(vmid_bitmap) * 8U)) {
 		pr_err("%s, no more VMs can be supported\n", __func__);
 		status = -EINVAL;
