@@ -475,12 +475,8 @@ static int acrnctl_do_resume(int argc, char *argv[])
 			continue;
 		}
 
-		/* Per current implemention, we can't know if vm is in suspended
-		   state. Send reume cmd to acrn-dm when VM_STARTED and will
-		   correct it later when we have a way to check if vm has been
-		   suspended */
 		switch (s->state) {
-			case VM_STARTED:
+			case VM_PAUSED:
 				resume_vm(argv[i]);
 				break;
 			default:
