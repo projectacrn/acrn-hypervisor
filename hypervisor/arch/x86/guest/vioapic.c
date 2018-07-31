@@ -629,17 +629,16 @@ int vioapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
 	return ret;
 }
 
-bool vioapic_get_rte(struct vm *vm, uint8_t pin, union ioapic_rte *rte)
+/**
+ * @pre vm->arch_vm.virt_ioapic != NULL
+ * @pre rte != NULL
+ */
+void vioapic_get_rte(struct vm *vm, uint8_t pin, union ioapic_rte *rte)
 {
 	struct vioapic *vioapic;
 
 	vioapic = vm_ioapic(vm);
-	if ((vioapic != NULL) && (rte != NULL)) {
-		*rte = vioapic->rtbl[pin];
-		return true;
-	} else {
-		return false;
-	}
+	*rte = vioapic->rtbl[pin];
 }
 
 #ifdef HV_DEBUG
