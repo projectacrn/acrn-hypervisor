@@ -215,10 +215,10 @@ static const struct instr_emul_vie_op one_byte_opcodes[256] = {
 #define	GB				(1024 * 1024 * 1024)
 
 static uint64_t size2mask[9] = {
-	[1] = 0xffUL,
-	[2] = 0xffffUL,
-	[4] = 0xffffffffUL,
-	[8] = 0xffffffffffffffffUL,
+	[1] = (1UL << 8U) - 1UL,
+	[2] = (1UL << 16U) - 1UL,
+	[4] = (1UL << 32U) - 1UL,
+	[8] = ~0UL,
 };
 
 static void
@@ -694,7 +694,7 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct instr_emul_vie *vi
 		 * The count register is %rcx, %ecx or %cx depending on the
 		 * address size of the instruction.
 		 */
-		if ((rcx & vie_size2mask(vie->addrsize)) == 0UL) {
+		if ((rcx & size2mask[vie->addrsize]) == 0UL) {
 			error = 0;
 			goto done;
 		}
@@ -742,7 +742,7 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct instr_emul_vie *vi
 		/*
 		 * Repeat the instruction if the count register is not zero.
 		 */
-		if ((rcx & vie_size2mask(vie->addrsize)) != 0UL) {
+		if ((rcx & size2mask[vie->addrsize]) != 0UL) {
 			vcpu_retain_rip(vcpu);
 		}
 	}
@@ -772,7 +772,7 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		 * The count register is %rcx, %ecx or %cx depending on the
 		 * address size of the instruction.
 		 */
-		if ((rcx & vie_size2mask(vie->addrsize)) == 0UL) {
+		if ((rcx & size2mask[vie->addrsize]) == 0UL) {
 			return 0;
 		}
 	}
@@ -804,7 +804,7 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		/*
 		 * Repeat the instruction if the count register is not zero.
 		 */
-		if ((rcx & vie_size2mask(vie->addrsize)) != 0UL) {
+		if ((rcx & size2mask[vie->addrsize]) != 0UL) {
 			vcpu_retain_rip(vcpu);
 		}
 	}
@@ -1549,14 +1549,6 @@ vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla)
 	}
 }
 
-uint64_t
-vie_size2mask(uint8_t size)
-{
-	ASSERT(size == 1U || size == 2U || size == 4U || size == 8U,
-			"vie_size2mask: invalid size %hhu", size);
-	return size2mask[size];
-}
-
 int
 vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	struct seg_desc *desc, uint64_t offset_arg, uint8_t length_arg,
@@ -1649,7 +1641,7 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 		}
 
 		while (length > 0U) {
-			offset &= vie_size2mask(addrsize);
+			offset &= size2mask[addrsize];
 			if (offset < low_limit || offset > high_limit) {
 				return -1;
 			}
@@ -1673,8 +1665,8 @@ vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	 * Truncate 'firstoff' to the effective address size before adding
 	 * it to the segment base.
 	 */
-	firstoff &= vie_size2mask(addrsize);
-	*gla = (segbase + firstoff) & vie_size2mask(glasize);
+	firstoff &= size2mask[addrsize];
+	*gla = (segbase + firstoff) & size2mask[glasize];
 	return 0;
 }
 
