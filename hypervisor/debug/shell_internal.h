@@ -54,25 +54,17 @@ struct shell_cmd {
 #define SHELL_CMD_VCPU_LIST_PARAM	NULL
 #define SHELL_CMD_VCPU_LIST_HELP	"Lists all VCPU in all VMs"
 
-#define SHELL_CMD_VCPU_PAUSE		"vcpu_pause"
-#define SHELL_CMD_VCPU_PAUSE_PARAM	"<vm id, vcpu id>"
-#define SHELL_CMD_VCPU_PAUSE_HELP	"Pause a specific vcpu"
-
-#define SHELL_CMD_VCPU_RESUME		"vcpu_resume"
-#define SHELL_CMD_VCPU_RESUME_PARAM	"<vm id, vcpu id>"
-#define SHELL_CMD_VCPU_RESUME_HELP	"Resume a specific vcpu"
-
 #define SHELL_CMD_VCPU_DUMPREG		"vcpu_dumpreg"
 #define SHELL_CMD_VCPU_DUMPREG_PARAM	"<vm id, vcpu id>"
 #define SHELL_CMD_VCPU_DUMPREG_HELP	"Dump registers for a specific vcpu"
 
-#define SHELL_CMD_VCPU_DUMPMEM		"vcpu_dumpmem"
-#define SHELL_CMD_VCPU_DUMPMEM_PARAM	"<vm_id, vcpu id, gva, length>"
-#define SHELL_CMD_VCPU_DUMPMEM_HELP	"Dump memory for a specific vcpu"
+#define SHELL_CMD_DUMPMEM		"dumpmem"
+#define SHELL_CMD_DUMPMEM_PARAM		"<addr, length>"
+#define SHELL_CMD_DUMPMEM_HELP		"Dump physical memory"
 
-#define SHELL_CMD_VM_CONSOLE		"vm_console"
-#define SHELL_CMD_VM_CONSOLE_PARAM	NULL
-#define SHELL_CMD_VM_CONSOLE_HELP	"Switch to SOS's console"
+#define SHELL_CMD_SOS_CONSOLE		"sos_console"
+#define SHELL_CMD_SOS_CONSOLE_PARAM	NULL
+#define SHELL_CMD_SOS_CONSOLE_HELP	"Switch to SOS's console"
 
 #define SHELL_CMD_INTERRUPT		"int"
 #define SHELL_CMD_INTERRUPT_PARAM	NULL
@@ -84,11 +76,7 @@ struct shell_cmd {
 
 #define SHELL_CMD_REBOOT		"reboot"
 #define SHELL_CMD_REBOOT_PARAM		NULL
-#define SHELL_CMD_REBOOT_HELP		"trigger system warm reboot"
-
-#define SHELL_CMD_REQ			"lsreq"
-#define SHELL_CMD_REQ_PARAM		NULL
-#define SHELL_CMD_REQ_HELP		"show ioreq info"
+#define SHELL_CMD_REBOOT_HELP		"trigger system reboot"
 
 #define SHELL_CMD_IOAPIC		"dump_ioapic"
 #define SHELL_CMD_IOAPIC_PARAM		NULL
@@ -106,35 +94,21 @@ struct shell_cmd {
 #define SHELL_CMD_LOGDUMP_PARAM		"<pcpu id>"
 #define SHELL_CMD_LOGDUMP_HELP		"log buffer dump"
 
-#define SHELL_CMD_trace			"trace"
-#define SHELL_CMD_trace_PARAM		"<cpumask> <ms>"
-#define SHELL_CMD_trace_HELP		"Dump cpus recent events within <ms> millisecond"
-
-#define SHELL_CMD_GET_LOG_LVL		"get_loglevel"
-#define SHELL_CMD_GET_LOG_LVL_PARAM	NULL
-#define SHELL_CMD_GET_LOG_LVL_HELP	"Get the loglevel"
-
-#define SHELL_CMD_SET_LOG_LVL		"set_loglevel"
-#define SHELL_CMD_SET_LOG_LVL_PARAM	"<console_loglevel> [mem_loglevel]"
-#define SHELL_CMD_SET_LOG_LVL_HELP	"Set loglevel [0-6]"
+#define SHELL_CMD_LOG_LVL		"loglevel"
+#define SHELL_CMD_LOG_LVL_PARAM		"[console_loglevel] [mem_loglevel]"
+#define SHELL_CMD_LOG_LVL_HELP		"get(para is NULL), or set loglevel [0-6]"
 
 #define SHELL_CMD_CPUID			"cpuid"
 #define SHELL_CMD_CPUID_PARAM		"<leaf> [subleaf]"
 #define SHELL_CMD_CPUID_HELP		"cpuid leaf [subleaf], in hexadecimal"
-
-#define SHELL_CMD_TRIGGER_CRASH			"crash"
-#define SHELL_CMD_TRIGGER_CRASH_PARAM	NULL
-#define SHELL_CMD_TRIGGER_CRASH_HELP	"trigger crash"
 
 /* Global function prototypes */
 int shell_show_req_info(__unused int argc, __unused char **argv);
 int shell_cmd_help(__unused int argc, __unused char **argv);
 int shell_list_vm(__unused int argc, __unused char **argv);
 int shell_list_vcpu(__unused int argc, __unused char **argv);
-int shell_pause_vcpu(int argc, char **argv);
-int shell_resume_vcpu(int argc, char **argv);
 int shell_vcpu_dumpreg(int argc, char **argv);
-int shell_vcpu_dumpmem(int argc, char **argv);
+int shell_dumpmem(int argc, char **argv);
 int shell_to_sos_console(int argc, char **argv);
 int shell_show_cpu_int(__unused int argc, __unused char **argv);
 int shell_show_ptdev_info(__unused int argc, __unused char **argv);
@@ -143,8 +117,7 @@ int shell_show_vioapic_info(int argc, char **argv);
 int shell_show_ioapic_info(__unused int argc, __unused char **argv);
 int shell_show_vmexit_profile(__unused int argc, __unused char **argv);
 int shell_dump_logbuf(int argc, char **argv);
-int shell_get_loglevel(__unused int argc, __unused char **argv);
-int shell_set_loglevel(int argc, char **argv);
+int shell_loglevel(int argc, char **argv);
 int shell_cpuid(int argc, char **argv);
 struct shell_cmd *shell_find_cmd(const char *cmd);
 int shell_process_cmd(char *p_input_line);
