@@ -330,7 +330,8 @@ void vuart_console_rx_chars(struct vuart *vu)
 
 	if (ch == GUEST_CONSOLE_TO_HV_SWITCH_KEY) {
 		/* Switch the console */
-		shell_switch_console();
+		vu->active = false;
+		printf("\r\n\r\n ---Entering ACRN SHELL---\r\n");
 	}
 	if (ch != -1) {
 		fifo_putchar(&vu->rxfifo, ch);

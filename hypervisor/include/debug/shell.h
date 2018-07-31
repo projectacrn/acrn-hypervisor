@@ -12,12 +12,10 @@
 
 #ifdef HV_DEBUG
 void shell_init(void);
-void shell_kick_session(void);
-int shell_switch_console(void);
+void shell_kick(void);
 #else
 static inline void shell_init(void) {}
-static inline void shell_kick_session(void) {}
-static inline int shell_switch_console(void) { return 0; }
+static inline void shell_kick(void) {}
 #endif
 
 #endif	/* SHELL_H */

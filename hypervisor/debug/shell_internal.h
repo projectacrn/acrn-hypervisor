@@ -11,15 +11,6 @@
 
 struct shell;
 
-/* Structure to hold the details about shell input and output */
-struct shell_io {
-	void (*io_init)(struct shell *);
-	void (*io_deinit)(struct shell *);
-	void (*io_puts)(struct shell *, const char *);
-	char (*io_getc)(struct shell *);
-	void (*io_special)(struct shell *, uint8_t);
-	bool io_echo_on;
-};
 
 #define SHELL_CMD_MAX_LEN		100U
 #define SHELL_NAME_MAX_LEN		50
@@ -30,7 +21,6 @@ struct shell_io {
 /* Shell Control Block */
 struct shell_cmd;
 struct shell {
-	struct shell_io session_io;	/* Session I/O information */
 	char input_line[2][SHELL_CMD_MAX_LEN + 1U];	/* current & last */
 	char name[SHELL_NAME_MAX_LEN];	/* Session name */
 	uint32_t input_line_len;	/* Length of current input line */
@@ -40,7 +30,7 @@ struct shell {
 };
 
 /* Shell Command Function */
-typedef int (*shell_cmd_fn_t)(struct shell *, int, char **);
+typedef int (*shell_cmd_fn_t)(int, char **);
 
 /* Shell Command */
 struct shell_cmd {
@@ -137,36 +127,28 @@ struct shell_cmd {
 #define SHELL_CMD_TRIGGER_CRASH_HELP	"trigger crash"
 
 /* Global function prototypes */
-int shell_show_req_info(struct shell *p_shell, int argc, char **argv);
-int shell_cmd_help(struct shell *p_shell, int argc, char **argv);
-int shell_list_vm(struct shell *p_shell, int argc, char **argv);
-int shell_list_vcpu(struct shell *p_shell, int argc, char **argv);
-int shell_pause_vcpu(struct shell *p_shell, int argc, char **argv);
-int shell_resume_vcpu(struct shell *p_shell, int argc, char **argv);
-int shell_vcpu_dumpreg(struct shell *p_shell, int argc, char **argv);
-int shell_vcpu_dumpmem(struct shell *p_shell, int argc, char **argv);
-int shell_to_sos_console(struct shell *p_shell, int argc, char **argv);
-int shell_show_cpu_int(struct shell *p_shell, int argc, char **argv);
-int shell_show_ptdev_info(struct shell *p_shell, int argc, char **argv);
-int shell_reboot(struct shell *p_shell, int argc, char **argv);
-int shell_show_vioapic_info(struct shell *p_shell, int argc, char **argv);
-int shell_show_ioapic_info(struct shell *p_shell, int argc, char **argv);
-int shell_show_vmexit_profile(struct shell *p_shell, int argc, char **argv);
-int shell_dump_logbuf(struct shell *p_shell, int argc, char **argv);
-int shell_get_loglevel(struct shell *p_shell, int argc, char **argv);
-int shell_set_loglevel(struct shell *p_shell, int argc, char **argv);
-int shell_cpuid(struct shell *p_shell, int argc, char **argv);
-struct shell_cmd *shell_find_cmd(struct shell *p_shell, const char *cmd);
-int shell_process_cmd(struct shell *p_shell, char *p_input_line);
-void shell_terminate_serial(struct shell *p_shell);
-void shell_init_serial(struct shell *p_shell);
-void shell_puts_serial(struct shell *p_shell, const char *string_ptr);
-char shell_getc_serial(struct shell *p_shell);
-void shell_special_serial(struct shell *p_shell, uint8_t ch);
-void kick_shell(struct shell *p_shell);
-
-void shell_puts(struct shell *p_shell, const char *str_ptr);
-void shell_set_name(struct shell *p_shell, const char *name);
-int shell_trigger_crash(struct shell *p_shell, int argc, char **argv);
+int shell_show_req_info(int argc, char **argv);
+int shell_cmd_help(int argc, char **argv);
+int shell_list_vm(int argc, char **argv);
+int shell_list_vcpu(int argc, char **argv);
+int shell_pause_vcpu(int argc, char **argv);
+int shell_resume_vcpu(int argc, char **argv);
+int shell_vcpu_dumpreg(int argc, char **argv);
+int shell_vcpu_dumpmem(int argc, char **argv);
+int shell_to_sos_console(int argc, char **argv);
+int shell_show_cpu_int(int argc, char **argv);
+int shell_show_ptdev_info(int argc, char **argv);
+int shell_reboot(int argc, char **argv);
+int shell_show_vioapic_info(int argc, char **argv);
+int shell_show_ioapic_info(int argc, char **argv);
+int shell_show_vmexit_profile(int argc, char **argv);
+int shell_dump_logbuf(int argc, char **argv);
+int shell_get_loglevel(int argc, char **argv);
+int shell_set_loglevel(int argc, char **argv);
+int shell_cpuid(int argc, char **argv);
+struct shell_cmd *shell_find_cmd(const char *cmd);
+int shell_process_cmd(char *p_input_line);
+void shell_puts(const char *str_ptr);
+int shell_trigger_crash(int argc, char **argv);
 
 #endif /* SHELL_INTER_H */
