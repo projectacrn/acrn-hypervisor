@@ -142,7 +142,6 @@ enum cpu_reg_name {
 #define CPU_REG_SEG_LAST		CPU_REG_GS
 
 struct instr_emul_vie_op {
-	uint8_t		op_byte;	/* actual opcode byte */
 	uint8_t		op_type;	/* type of operation (e.g. MOV) */
 	uint16_t	op_flags;
 };
@@ -186,6 +185,7 @@ struct instr_emul_vie {
 
 	uint8_t		decoded;	/* set to 1 if successfully decoded */
 
+	uint8_t		opcode;
 	struct instr_emul_vie_op	op;			/* opcode description */
 };
 
