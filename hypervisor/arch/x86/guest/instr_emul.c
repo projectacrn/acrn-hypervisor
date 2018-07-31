@@ -60,144 +60,114 @@
 
 static const struct instr_emul_vie_op two_byte_opcodes[256] = {
 	[0xB6] = {
-		.op_byte = 0xB6,
 		.op_type = VIE_OP_TYPE_MOVZX,
 	},
 	[0xB7] = {
-		.op_byte = 0xB7,
 		.op_type = VIE_OP_TYPE_MOVZX,
 	},
 	[0xBA] = {
-		.op_byte = 0xBA,
 		.op_type = VIE_OP_TYPE_BITTEST,
 		.op_flags = VIE_OP_F_IMM8,
 	},
 	[0xBE] = {
-		.op_byte = 0xBE,
 		.op_type = VIE_OP_TYPE_MOVSX,
 	},
 };
 
 static const struct instr_emul_vie_op one_byte_opcodes[256] = {
 	[0x0F] = {
-		.op_byte = 0x0FU,
 		.op_type = VIE_OP_TYPE_TWO_BYTE
 	},
 	[0x2B] = {
-		.op_byte = 0x2BU,
 		.op_type = VIE_OP_TYPE_SUB,
 	},
 	[0x39] = {
-		.op_byte = 0x39U,
 		.op_type = VIE_OP_TYPE_CMP,
 	},
 	[0x3B] = {
-		.op_byte = 0x3BU,
 		.op_type = VIE_OP_TYPE_CMP,
 	},
 	[0x88] = {
-		.op_byte = 0x88U,
 		.op_type = VIE_OP_TYPE_MOV,
 	},
 	[0x89] = {
-		.op_byte = 0x89U,
 		.op_type = VIE_OP_TYPE_MOV,
 	},
 	[0x8A] = {
-		.op_byte = 0x8AU,
 		.op_type = VIE_OP_TYPE_MOV,
 	},
 	[0x8B] = {
-		.op_byte = 0x8BU,
 		.op_type = VIE_OP_TYPE_MOV,
 	},
 	[0xA1] = {
-		.op_byte = 0xA1U,
 		.op_type = VIE_OP_TYPE_MOV,
 		.op_flags = VIE_OP_F_MOFFSET | VIE_OP_F_NO_MODRM,
 	},
 	[0xA3] = {
-		.op_byte = 0xA3U,
 		.op_type = VIE_OP_TYPE_MOV,
 		.op_flags = VIE_OP_F_MOFFSET | VIE_OP_F_NO_MODRM,
 	},
 	[0xA4] = {
-		.op_byte = 0xA4U,
 		.op_type = VIE_OP_TYPE_MOVS,
 		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_NO_GLA_VERIFICATION
 	},
 	[0xA5] = {
-		.op_byte = 0xA5U,
 		.op_type = VIE_OP_TYPE_MOVS,
 		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_NO_GLA_VERIFICATION
 	},
 	[0xAA] = {
-		.op_byte = 0xAAU,
 		.op_type = VIE_OP_TYPE_STOS,
 		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_NO_GLA_VERIFICATION
 	},
 	[0xAB] = {
-		.op_byte = 0xABU,
 		.op_type = VIE_OP_TYPE_STOS,
 		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_NO_GLA_VERIFICATION
 	},
 	[0xC6] = {
 		/* XXX Group 11 extended opcode - not just MOV */
-		.op_byte = 0xC6U,
 		.op_type = VIE_OP_TYPE_MOV,
 		.op_flags = VIE_OP_F_IMM8,
 	},
 	[0xC7] = {
-		.op_byte = 0xC7U,
 		.op_type = VIE_OP_TYPE_MOV,
 		.op_flags = VIE_OP_F_IMM,
 	},
 	[0x23] = {
-		.op_byte = 0x23U,
 		.op_type = VIE_OP_TYPE_AND,
 	},
 	[0x80] = {
 		/* Group 1 extended opcode */
-		.op_byte = 0x80U,
 		.op_type = VIE_OP_TYPE_GROUP1,
 		.op_flags = VIE_OP_F_IMM8,
 	},
 	[0x81] = {
 		/* Group 1 extended opcode */
-		.op_byte = 0x81U,
 		.op_type = VIE_OP_TYPE_GROUP1,
 		.op_flags = VIE_OP_F_IMM,
 	},
 	[0x83] = {
 		/* Group 1 extended opcode */
-		.op_byte = 0x83U,
 		.op_type = VIE_OP_TYPE_GROUP1,
 		.op_flags = VIE_OP_F_IMM8,
 	},
 	[0x84] = {
-		.op_byte = 0x84U,
 		.op_type = VIE_OP_TYPE_TEST,
 	},
 	[0x85] = {
-		.op_byte = 0x85U,
 		.op_type = VIE_OP_TYPE_TEST,
 	},
 	[0x08] = {
-		.op_byte = 0x08U,
 		.op_type = VIE_OP_TYPE_OR,
 	},
 	[0x09] = {
-		.op_byte = 0x09U,
 		.op_type = VIE_OP_TYPE_OR,
 	},
 	[0x8F] = {
 		/* XXX Group 1A extended opcode - not just POP */
-		.op_byte = 0x8FU,
 		.op_type = VIE_OP_TYPE_POP,
 	},
 	[0xFF] = {
 		/* XXX Group 5 extended opcode - not just PUSH */
-		.op_byte = 0xFFU,
 		.op_type = VIE_OP_TYPE_PUSH,
 	}
 };
@@ -398,7 +368,7 @@ emulate_mov(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 
 	size = vie->opsize;
 	error = -EINVAL;
-	switch (vie->op.op_byte) {
+	switch (vie->opcode) {
 	case 0x88U:
 	/*
 	 * MOV byte from reg (ModRM:reg) to mem (ModRM:r/m)
@@ -524,7 +494,7 @@ emulate_movx(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 	size = vie->opsize;
 	error = -EINVAL;
 
-	switch (vie->op.op_byte) {
+	switch (vie->opcode) {
 	case 0xB6U:
 		/*
 		 * MOV and zero extend byte from mem (ModRM:r/m) to
@@ -675,7 +645,7 @@ emulate_movs(struct vcpu *vcpu, __unused uint64_t gpa, struct instr_emul_vie *vi
 	uint8_t opsize;
 	enum cpu_reg_name seg;
 
-	opsize = (vie->op.op_byte == 0xA4U) ? 1U : vie->opsize;
+	opsize = (vie->opcode == 0xA4U) ? 1U : vie->opsize;
 	error = 0;
 
 	/*
@@ -762,7 +732,7 @@ emulate_stos(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 	uint64_t val;
 	uint64_t rcx, rdi, rflags;
 
-	opsize = (vie->op.op_byte == 0xAAU) ? 1U : vie->opsize;
+	opsize = (vie->opcode == 0xAAU) ? 1U : vie->opsize;
 	repeat = vie->repz_present | vie->repnz_present;
 
 	if (repeat != 0) {
@@ -825,7 +795,7 @@ emulate_test(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 	size = vie->opsize;
 	error = -EINVAL;
 
-	switch (vie->op.op_byte) {
+	switch (vie->opcode) {
 	case 0x84U:
 		/*
 		 * 84/r		test r8, r/m8
@@ -891,7 +861,7 @@ emulate_and(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 	size = vie->opsize;
 	error = -EINVAL;
 
-	switch (vie->op.op_byte) {
+	switch (vie->opcode) {
 	case 0x23U:
 		/*
 		 * AND reg (ModRM:reg) and mem (ModRM:r/m) and store the
@@ -980,7 +950,7 @@ emulate_or(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 	size = vie->opsize;
 	error = -EINVAL;
 
-	switch (vie->op.op_byte) {
+	switch (vie->opcode) {
 	case 0x81U:
 	case 0x83U:
 		/*
@@ -1070,7 +1040,7 @@ emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 	enum cpu_reg_name reg;
 
 	size = vie->opsize;
-	switch (vie->op.op_byte) {
+	switch (vie->opcode) {
 	case 0x39U:
 	case 0x3BU:
 		/*
@@ -1101,7 +1071,7 @@ emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 			return error;
 		}
 
-		if (vie->op.op_byte == 0x3BU) {
+		if (vie->opcode == 0x3BU) {
 			op1 = regop;
 			op2 = memop;
 		} else {
@@ -1136,7 +1106,7 @@ emulate_cmp(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		 * the status flags.
 		 *
 		 */
-		if (vie->op.op_byte == 0x80U) {
+		if (vie->opcode == 0x80U) {
 			size = 1U;
 		}
 
@@ -1170,7 +1140,7 @@ emulate_sub(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 	size = vie->opsize;
 	error = -EINVAL;
 
-	switch (vie->op.op_byte) {
+	switch (vie->opcode) {
 	case 0x2BU:
 		/*
 		 * SUB r/m from r and store the result in r
@@ -1850,6 +1820,7 @@ decode_opcode(struct instr_emul_vie *vie)
 		return -1;
 	}
 
+	vie->opcode = x;
 	vie->op = one_byte_opcodes[x];
 
 	if (vie->op.op_type == VIE_OP_TYPE_NONE) {
