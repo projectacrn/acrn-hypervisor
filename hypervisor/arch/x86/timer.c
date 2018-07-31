@@ -13,7 +13,7 @@
 #define MIN_TIMER_PERIOD_US	500U
 
 uint32_t tsc_khz = 0U;
-
+static struct dev_handler_node *timer_node;
 static void run_timer(struct hv_timer *timer)
 {
 	/* deadline = 0 means stop timer, we should skip */
@@ -108,20 +108,16 @@ void del_timer(struct hv_timer *timer)
 	}
 }
 
-static int request_timer_irq(uint16_t pcpu_id,
-			dev_handler_t func, void *data,
-			const char *name)
+static int request_timer_irq(dev_handler_t func, const char *name)
 {
-	struct dev_handler_node *node = NULL;
-
-	if (per_cpu(timer_node, pcpu_id) != NULL) {
-		pr_err("CPU%d timer isr already added", pcpu_id);
-		unregister_handler_common(per_cpu(timer_node, pcpu_id));
+	if (timer_node != NULL) {
+		pr_err("Timer isr already added");
+		unregister_handler_common(timer_node);
 	}
 
-	node = pri_register_handler(TIMER_IRQ, VECTOR_TIMER, func, data, name);
-	if (node != NULL) {
-		per_cpu(timer_node, pcpu_id) = node;
+	timer_node = pri_register_handler(TIMER_IRQ, VECTOR_TIMER,
+					  func, NULL, name);
+	if (timer_node != NULL) {
 		update_irq_handler(TIMER_IRQ, quick_handler_nolock);
 	} else {
 		pr_err("Failed to add timer isr");
@@ -198,12 +194,15 @@ void timer_init(void)
 	uint16_t pcpu_id = get_cpu_id();
 
 	init_percpu_timer(pcpu_id);
-	register_softirq(SOFTIRQ_TIMER, timer_softirq);
 
 	snprintf(name, 32, "timer_tick[%hu]", pcpu_id);
-	if (request_timer_irq(pcpu_id, tsc_deadline_handler, NULL, name) < 0) {
-		pr_err("Timer setup failed");
-		return;
+	if (pcpu_id == BOOT_CPU_ID) {
+		register_softirq(SOFTIRQ_TIMER, timer_softirq);
+
+		if (request_timer_irq(tsc_deadline_handler, name) < 0) {
+			pr_err("Timer setup failed");
+			return;
+		}
 	}
 
 	init_tsc_deadline_timer();
@@ -213,11 +212,10 @@ void timer_cleanup(void)
 {
 	uint16_t pcpu_id = get_cpu_id();
 
-	if (per_cpu(timer_node, pcpu_id) != NULL) {
-		unregister_handler_common(per_cpu(timer_node, pcpu_id));
+	if (pcpu_id == BOOT_CPU_ID && timer_node != NULL) {
+		unregister_handler_common(timer_node);
+		timer_node = NULL;
 	}
-
-	per_cpu(timer_node, pcpu_id) = NULL;
 }
 
 void check_tsc(void)
