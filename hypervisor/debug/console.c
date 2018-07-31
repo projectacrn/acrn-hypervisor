@@ -43,7 +43,7 @@ static void console_handler(void)
 		/* serial Console Tx operation */
 		vuart_console_tx_chars(vu);
 	} else {
-		shell_kick_session();
+		shell_kick();
 	}
 }
 

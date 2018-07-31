@@ -26,9 +26,135 @@
  */
 #define SHELL_INPUT_LINE_OTHER(v)	(((v) + 1) % 2)
 
+static struct shell_cmd shell_cmds[] = {
+	{
+		.str		= SHELL_CMD_HELP,
+		.cmd_param	= SHELL_CMD_HELP_PARAM,
+		.help_str	= SHELL_CMD_HELP_HELP,
+		.fcn		= shell_cmd_help,
+	},
+	{
+		.str		= SHELL_CMD_VM_LIST,
+		.cmd_param	= SHELL_CMD_VM_LIST_PARAM,
+		.help_str	= SHELL_CMD_VM_LIST_HELP,
+		.fcn		= shell_list_vm,
+	},
+	{
+		.str		= SHELL_CMD_VCPU_LIST,
+		.cmd_param	= SHELL_CMD_VCPU_LIST_PARAM,
+		.help_str	= SHELL_CMD_VCPU_LIST_HELP,
+		.fcn		= shell_list_vcpu,
+	},
+	{
+		.str		= SHELL_CMD_VCPU_PAUSE,
+		.cmd_param	= SHELL_CMD_VCPU_PAUSE_PARAM,
+		.help_str	= SHELL_CMD_VCPU_PAUSE_HELP,
+		.fcn		= shell_pause_vcpu,
+	},
+	{
+		.str		= SHELL_CMD_VCPU_RESUME,
+		.cmd_param	= SHELL_CMD_VCPU_RESUME_PARAM,
+		.help_str	= SHELL_CMD_VCPU_RESUME_HELP,
+		.fcn		= shell_resume_vcpu,
+	},
+	{
+		.str		= SHELL_CMD_VCPU_DUMPREG,
+		.cmd_param	= SHELL_CMD_VCPU_DUMPREG_PARAM,
+		.help_str	= SHELL_CMD_VCPU_DUMPREG_HELP,
+		.fcn		= shell_vcpu_dumpreg,
+	},
+	{
+		.str		= SHELL_CMD_VCPU_DUMPMEM,
+		.cmd_param	= SHELL_CMD_VCPU_DUMPMEM_PARAM,
+		.help_str	= SHELL_CMD_VCPU_DUMPMEM_HELP,
+		.fcn		= shell_vcpu_dumpmem,
+	},
+	{
+		.str		= SHELL_CMD_VM_CONSOLE,
+		.cmd_param	= SHELL_CMD_VM_CONSOLE_PARAM,
+		.help_str	= SHELL_CMD_VM_CONSOLE_HELP,
+		.fcn		= shell_to_sos_console,
+	},
+	{
+		.str		= SHELL_CMD_INTERRUPT,
+		.cmd_param	= SHELL_CMD_INTERRUPT_PARAM,
+		.help_str	= SHELL_CMD_INTERRUPT_HELP,
+		.fcn		= shell_show_cpu_int,
+	},
+	{
+		.str		= SHELL_CMD_PTDEV,
+		.cmd_param	= SHELL_CMD_PTDEV_PARAM,
+		.help_str	= SHELL_CMD_PTDEV_HELP,
+		.fcn		= shell_show_ptdev_info,
+	},
+	{
+		.str		= SHELL_CMD_REQ,
+		.cmd_param	= SHELL_CMD_REQ_PARAM,
+		.help_str	= SHELL_CMD_REQ_HELP,
+		.fcn		= shell_show_req_info,
+	},
+	{
+		.str		= SHELL_CMD_VIOAPIC,
+		.cmd_param	= SHELL_CMD_VIOAPIC_PARAM,
+		.help_str	= SHELL_CMD_VIOAPIC_HELP,
+		.fcn		= shell_show_vioapic_info,
+	},
+	{
+		.str		= SHELL_CMD_IOAPIC,
+		.cmd_param	= SHELL_CMD_IOAPIC_PARAM,
+		.help_str	= SHELL_CMD_IOAPIC_HELP,
+		.fcn		= shell_show_ioapic_info,
+	},
+	{
+		.str		= SHELL_CMD_VMEXIT,
+		.cmd_param	= SHELL_CMD_VMEXIT_PARAM,
+		.help_str	= SHELL_CMD_VMEXIT_HELP,
+		.fcn		= shell_show_vmexit_profile,
+	},
+	{
+		.str		= SHELL_CMD_LOGDUMP,
+		.cmd_param	= SHELL_CMD_LOGDUMP_PARAM,
+		.help_str	= SHELL_CMD_LOGDUMP_HELP,
+		.fcn		= shell_dump_logbuf,
+	},
+	{
+		.str		= SHELL_CMD_GET_LOG_LVL,
+		.cmd_param	= SHELL_CMD_GET_LOG_LVL_PARAM,
+		.help_str	= SHELL_CMD_GET_LOG_LVL_HELP,
+		.fcn		= shell_get_loglevel,
+	},
+	{
+		.str		= SHELL_CMD_SET_LOG_LVL,
+		.cmd_param	= SHELL_CMD_SET_LOG_LVL_PARAM,
+		.help_str	= SHELL_CMD_SET_LOG_LVL_HELP,
+		.fcn		= shell_set_loglevel,
+	},
+	{
+		.str		= SHELL_CMD_CPUID,
+		.cmd_param	= SHELL_CMD_CPUID_PARAM,
+		.help_str	= SHELL_CMD_CPUID_HELP,
+		.fcn		= shell_cpuid,
+	},
+	{
+		.str		= SHELL_CMD_REBOOT,
+		.cmd_param	= SHELL_CMD_REBOOT_PARAM,
+		.help_str	= SHELL_CMD_REBOOT_HELP,
+		.fcn		= shell_reboot,
+	},
+		{
+			.str		= SHELL_CMD_TRIGGER_CRASH,
+			.cmd_param	= SHELL_CMD_TRIGGER_CRASH_PARAM,
+			.help_str	= SHELL_CMD_TRIGGER_CRASH_HELP,
+			.fcn		= shell_trigger_crash,
+		},
+};
+
 /* The initial log level*/
 uint32_t console_loglevel = CONFIG_CONSOLE_LOGLEVEL_DEFAULT;
 uint32_t mem_loglevel = CONFIG_MEM_LOGLEVEL_DEFAULT;
+
+static struct shell hv_shell;
+static struct shell *p_shell = &hv_shell;
 
 static int string_to_argv(char *argv_str, void *p_argv_mem,
 		__unused uint32_t argv_mem_size,
@@ -93,13 +219,31 @@ static int string_to_argv(char *argv_str, void *p_argv_mem,
 	return 0;
 }
 
-static uint8_t shell_input_line(struct shell *p_shell)
+static char shell_getc(void)
+{
+	return console_getc();
+}
+
+static void shell_handle_special_char(uint8_t ch)
+{
+	switch (ch) {
+	/* Escape character */
+	case 0x1bU:
+		/* Consume the next 2 characters */
+		(void) shell_getc();
+		(void) shell_getc();
+		break;
+	default:
+		break;
+	}
+}
+
+static uint8_t shell_input_line(void)
 {
 	bool done = false;
 	uint8_t ch;
 
-	/* Get a character from the user. */
-	ch = p_shell->session_io.io_getc(p_shell);
+	ch = shell_getc();
 
 	/* Check character */
 	switch (ch) {
@@ -114,30 +258,20 @@ static uint8_t shell_input_line(struct shell *p_shell)
 			p_shell->input_line[p_shell->input_line_active]
 					[p_shell->input_line_len] = 0;
 
-			if (p_shell->session_io.io_echo_on == true) {
-				/* Echo backspace */
-				p_shell->session_io.io_puts(p_shell, "\b");
-			}
+			/* Echo backspace */
+			shell_puts("\b");
 
 			/* Send a space + backspace sequence to delete
 			 * character
 			 */
-			p_shell->session_io.io_puts(p_shell, " \b");
-		} else if (p_shell->session_io.io_echo_on == false) {
-			/* Put last character of prompt to prevent backspace
-			 * in terminal
-			 */
-			p_shell->session_io.io_puts(p_shell, ">");
+			shell_puts(" \b");
 		}
 		break;
 
 	/* Carriage-return */
 	case '\r':
-		/* See if echo is on */
-		if (p_shell->session_io.io_echo_on == true) {
-			/* Echo carriage return / line feed */
-			p_shell->session_io.io_puts(p_shell, "\r\n");
-		}
+		/* Echo carriage return / line feed */
+		shell_puts("\r\n");
 
 		/* Set flag showing line input done */
 		done = true;
@@ -160,31 +294,20 @@ static uint8_t shell_input_line(struct shell *p_shell)
 				/* Add character to string */
 				p_shell->input_line[p_shell->input_line_active]
 						[p_shell->input_line_len] = ch;
-				/* See if echo is on */
-				if (p_shell->session_io.io_echo_on == true) {
-					/* Echo back the input */
-					p_shell->session_io.io_puts(p_shell,
-							&p_shell->input_line
-							[p_shell->input_line_active]
-							[p_shell->input_line_len]);
-				}
+				/* Echo back the input */
+				shell_puts(&p_shell->input_line
+						[p_shell->input_line_active]
+						[p_shell->input_line_len]);
 
 				/* Move to next character in string */
 				p_shell->input_line_len++;
 			} else {
-				/* prINTable character */
-				/* See if a "special" character handler is installed */
-				if (p_shell->session_io.io_special != NULL) {
-					/* Call special character handler */
-					p_shell->session_io.io_special(p_shell, ch);
-				}
+				/* call special character handler */
+				shell_handle_special_char(ch);
 			}
 		} else {
-			/* See if echo is on */
-			if (p_shell->session_io.io_echo_on == true) {
-				/* Echo carriage return / line feed */
-				p_shell->session_io.io_puts(p_shell, "\r\n");
-			}
+			/* Echo carriage return / line feed */
+			shell_puts("\r\n");
 
 			/* Set flag showing line input done */
 			done = true;
@@ -200,7 +323,7 @@ static uint8_t shell_input_line(struct shell *p_shell)
 	return done;
 }
 
-static int shell_process(struct shell *p_shell)
+static int shell_process(void)
 {
 	int status;
 	char *p_input_line;
@@ -224,7 +347,7 @@ static int shell_process(struct shell *p_shell)
 	}
 
 	/* Process command */
-	status = shell_process_cmd(p_shell, p_input_line);
+	status = shell_process_cmd(p_input_line);
 
 	/* Now that the command is processed, zero fill the input buffer */
 	(void)memset((void *) p_shell->input_line[p_shell->input_line_active],
@@ -234,76 +357,52 @@ static int shell_process(struct shell *p_shell)
 	return status;
 }
 
-struct shell_cmd *shell_find_cmd(struct shell *p_shell, const char *cmd_str)
+struct shell_cmd *shell_find_cmd(const char *cmd_str)
 {
 	uint32_t i;
 	struct shell_cmd *p_cmd = NULL;
 
-	if (p_shell->cmd_count <= 0U) {
-		return NULL;
-	}
-
 	for (i = 0U; i < p_shell->cmd_count; i++) {
 		p_cmd = &p_shell->shell_cmd[i];
 		if (strcmp(p_cmd->str, cmd_str) == 0) {
-			break;
+			return p_cmd;
 		}
 	}
-
-	if (i == p_shell->cmd_count) {
-		/* No commands in the list. */
-		p_cmd = NULL;
-	}
-
-	return p_cmd;
+	return NULL;
 }
 
-void kick_shell(struct shell *p_shell)
+void shell_kick(void)
 {
-	int status = (p_shell != NULL) ? 0 : EINVAL;
 	static uint8_t is_cmd_cmplt = 1;
 
-	if (status == 0) {
-		pr_dbg("shell: entering the shell cmd "
-			"handling loop from function %s\n", __func__);
-
-		/* At any given instance, UART may be owned by the HV
-		 * OR by the guest that has enabled the vUart.
-		 * Show HV shell prompt ONLY when HV owns the
-		 * serial port.
-		 */
-		if (vuart_console_active() == NULL) {
-			/* Prompt the user for a selection. */
-			if ((is_cmd_cmplt != 0U) &&
-			    (p_shell->session_io.io_puts != NULL)) {
-				p_shell->session_io.io_puts(p_shell,
-							SHELL_PROMPT_STR);
-			}
-
-			/* Get user's input */
-			is_cmd_cmplt = shell_input_line(p_shell);
-
-			/* If user has pressed the ENTER then process
-			 * the command
-			 */
-			if (is_cmd_cmplt != 0U) {
-				/* Process current input line. */
-				status = shell_process(p_shell);
-			}
+	/* At any given instance, UART may be owned by the HV
+	 * OR by the guest that has enabled the vUart.
+	 * Show HV shell prompt ONLY when HV owns the
+	 * serial port.
+	 */
+	if (vuart_console_active() == NULL) {
+		/* Prompt the user for a selection. */
+		if (is_cmd_cmplt != 0U) {
+			shell_puts(SHELL_PROMPT_STR);
 		}
-	} else {
-		/* Serial port handle couldn't be obtained. Stop the shell
-		 * task.
+
+		/* Get user's input */
+		is_cmd_cmplt = shell_input_line();
+
+		/* If user has pressed the ENTER then process
+		 * the command
 		 */
-		pr_info("shell: stopping the shell task...");
+		if (is_cmd_cmplt != 0U) {
+			/* Process current input line. */
+			(void)shell_process();
+		}
 	}
 }
 
-int shell_process_cmd(struct shell *p_shell, char *p_input_line)
+int shell_process_cmd(char *p_input_line)
 {
 	int status = 0;
 	struct shell_cmd *p_cmd;
-	shell_cmd_fn_t cmd_fcn;
 	char cmd_argv_str[SHELL_CMD_MAX_LEN + 1U];
 	int cmd_argv_mem[sizeof(char *) * ((SHELL_CMD_MAX_LEN + 1U) / 2U)];
 	int cmd_argc;
@@ -328,30 +427,27 @@ int shell_process_cmd(struct shell *p_shell, char *p_input_line)
 	/* Determine if there is a command to process. */
 	if (cmd_argc != 0) {
 		/* See if command is in cmds supported */
-		p_cmd = shell_find_cmd(p_shell, cmd_argv[0]);
+		p_cmd = shell_find_cmd(cmd_argv[0]);
 
 		if (p_cmd != NULL) {
-			/* Make a copy of the command function to in case it is
-			 * removed right before the call.
-			 */
-			cmd_fcn = p_cmd->fcn;
-
 			/* Call the command passing the appropriate command
 			 * arguments.
 			 */
-			status = cmd_fcn(p_shell, cmd_argc, &cmd_argv[0]);
+			status = p_cmd->fcn(cmd_argc, &cmd_argv[0]);
 		} else {	/* unregistered cmd */
-			p_shell->session_io.io_puts(p_shell,
-				"\r\nError: Invalid Command\r\n\r\n");
+			shell_puts("\r\nError: Invalid Command\r\n\r\n");
 		}
 	}
 
 	return status;
 }
 
-void shell_init_serial(struct shell *p_shell)
+void shell_init(void)
 {
-	shell_set_name(p_shell, "Serial");
+	p_shell->shell_cmd = shell_cmds;
+	p_shell->cmd_count = ARRAY_SIZE(shell_cmds);
+
+	(void)strcpy_s((void *)p_shell->name, SHELL_NAME_MAX_LEN, "Serial");
 
 	/* Zero fill the input buffer */
 	(void)memset((void *)p_shell->input_line[p_shell->input_line_active], 0,
@@ -360,8 +456,7 @@ void shell_init_serial(struct shell *p_shell)
 
 #define SHELL_ROWS	10
 #define MAX_INDENT_LEN	16
-int shell_cmd_help(struct shell *p_shell,
-		__unused int argc, __unused char **argv)
+int shell_cmd_help(__unused int argc, __unused char **argv)
 {
 	int status = 0;
 	int spaces = 0;
@@ -369,7 +464,7 @@ int shell_cmd_help(struct shell *p_shell,
 	char space_buf[MAX_INDENT_LEN + 1];
 
 	/* Print title */
-	shell_puts(p_shell, "\r\nRegistered Commands:\r\n\r\n");
+	shell_puts("\r\nRegistered Commands:\r\n\r\n");
 
 	pr_dbg("shell: Number of registered commands = %u in %s\n",
 		p_shell->cmd_count, __func__);
@@ -378,7 +473,7 @@ int shell_cmd_help(struct shell *p_shell,
 	/* Proceed based on the number of registered commands. */
 	if (p_shell->cmd_count == 0U) {
 		/* No registered commands */
-		shell_puts(p_shell, "NONE\r\n");
+		shell_puts("NONE\r\n");
 	} else {
 		int32_t i = 0;
 		uint32_t j;
@@ -394,59 +489,56 @@ int shell_cmd_help(struct shell *p_shell,
 				 */
 
 				/* Print message to the user. */
-				shell_puts(p_shell,
-					"<**** Hit any key to continue ****>");
+				shell_puts("<*** Hit any key to continue ***>");
 
 				/* Wait for a character from user (NOT USED) */
-				(void)p_shell->session_io.io_getc(p_shell);
+				(void)shell_getc();
 
 				/* Print a new line after the key is hit. */
-				shell_puts(p_shell, "\r\n");
+				shell_puts("\r\n");
 			}
 
 			i++;
 
 			/* Output the command string */
-			shell_puts(p_shell, "  ");
-			shell_puts(p_shell, p_cmd->str);
+			shell_puts("  ");
+			shell_puts(p_cmd->str);
 
 			/* Calculate spaces needed for alignment */
 			spaces = MAX_INDENT_LEN - strnlen_s(p_cmd->str,
 					MAX_INDENT_LEN - 1);
 
 			space_buf[spaces] = '\0';
-			shell_puts(p_shell, space_buf);
+			shell_puts(space_buf);
 			space_buf[spaces] = ' ';
 
 			/* Display parameter info if applicable. */
 			if (p_cmd->cmd_param != NULL) {
-				shell_puts(p_shell, p_cmd->cmd_param);
+				shell_puts(p_cmd->cmd_param);
 			}
 
 			/* Display help text if available. */
 			if (p_cmd->help_str != NULL) {
-				shell_puts(p_shell, " - ");
-				shell_puts(p_shell, p_cmd->help_str);
+				shell_puts(" - ");
+				shell_puts(p_cmd->help_str);
 			}
-			shell_puts(p_shell, "\r\n");
+			shell_puts("\r\n");
 		}
 	}
 
-	shell_puts(p_shell, "\r\n");
+	shell_puts("\r\n");
 
 	return status;
 }
 
-int shell_list_vm(struct shell *p_shell,
-		__unused int argc, __unused char **argv)
+int shell_list_vm(__unused int argc, __unused char **argv)
 {
 	int status = 0;
 	char temp_str[MAX_STR_SIZE];
 	struct list_head *pos;
 	struct vm *vm;
 
-	shell_puts(p_shell,
-		"\r\nVM NAME                  VM ID            VM STATE"
+	shell_puts("\r\nVM NAME                  VM ID            VM STATE"
 		"\r\n=======                  =====            ========\r\n");
 
 	spinlock_obtain(&vm_list_lock);
@@ -471,15 +563,14 @@ int shell_list_vm(struct shell *p_shell,
 				vm->attr.id, state);
 
 		/* Output information for this task */
-		shell_puts(p_shell, temp_str);
+		shell_puts(temp_str);
 	}
 	spinlock_release(&vm_list_lock);
 
 	return status;
 }
 
-int shell_list_vcpu(struct shell *p_shell,
-		__unused int argc, __unused char **argv)
+int shell_list_vcpu(__unused int argc, __unused char **argv)
 {
 	int status = 0;
 	char temp_str[MAX_STR_SIZE];
@@ -487,8 +578,7 @@ int shell_list_vcpu(struct shell *p_shell,
 	struct vm *vm;
 	struct vcpu *vcpu;
 
-	shell_puts(p_shell,
-		"\r\nVM ID    PCPU ID    VCPU ID    VCPU ROLE    VCPU STATE"
+	shell_puts("\r\nVM ID    PCPU ID    VCPU ID    VCPU ROLE    VCPU STATE"
 		"\r\n=====    =======    =======    =========    ==========\r\n");
 
 	spinlock_obtain(&vm_list_lock);
@@ -522,7 +612,7 @@ int shell_list_vcpu(struct shell *p_shell,
 					"PRIMARY" : "SECONDARY",
 					state);
 			/* Output information for this task */
-			shell_puts(p_shell, temp_str);
+			shell_puts(temp_str);
 		}
 	}
 	spinlock_release(&vm_list_lock);
@@ -530,8 +620,7 @@ int shell_list_vcpu(struct shell *p_shell,
 	return status;
 }
 
-int shell_pause_vcpu(struct shell *p_shell,
-		int argc, char **argv)
+int shell_pause_vcpu(int argc, char **argv)
 {
 	int status = 0;
 	uint16_t vm_id;
@@ -542,8 +631,7 @@ int shell_pause_vcpu(struct shell *p_shell,
 	/* User input invalidation */
 	if (argc != 3) {
 		status = -EINVAL;
-		shell_puts(p_shell,
-			"Please enter correct cmd with <vm_id, vcpu_id>\r\n");
+		shell_puts("Please enter cmd with <vm_id, vcpu_id>\r\n");
 	} else {
 		status = atoi(argv[1]);
 		if (status < 0) {
@@ -563,23 +651,19 @@ int shell_pause_vcpu(struct shell *p_shell,
 					vcpu->dbg_req_state = VCPU_PAUSED;
 					/* TODO: do we need file a IPI to kick
 					 * VCPU immediately */
-					shell_puts(p_shell,
-						"The vcpu will PAUSE in "
+					shell_puts("The vcpu will PAUSE in "
 						"next vm exit\r\n");
 				} else {
-					shell_puts(p_shell,
-					"Request again, do nothing\r\n");
+					shell_puts("Invalid Request\r\n");
 				}
 			} else {
 				status = -EINVAL;
-				shell_puts(p_shell,
-					"No vcpu found in the input "
+				shell_puts("No vcpu found in the input "
 					"<vm_id, vcpu_id>\r\n");
 			}
 		} else {
 			status = -EINVAL;
-			shell_puts(p_shell,
-					"No vm found in the input "
+			shell_puts("No vm found in the input "
 					"<vm_id, vcpu_id>\r\n");
 		}
 	}
@@ -587,8 +671,7 @@ int shell_pause_vcpu(struct shell *p_shell,
 	return status;
 }
 
-int shell_resume_vcpu(struct shell *p_shell,
-		int argc, char **argv)
+int shell_resume_vcpu(int argc, char **argv)
 {
 	int status = 0;
 	uint16_t vm_id;
@@ -599,8 +682,7 @@ int shell_resume_vcpu(struct shell *p_shell,
 	/* User input invalidation */
 	if (argc != 3) {
 		status = -EINVAL;
-		shell_puts(p_shell,
-			"Please enter correct cmd with <vm_id, vcpu_id>\r\n");
+		shell_puts("Please enter cmd with <vm_id, vcpu_id>\r\n");
 	} else {
 		status = atoi(argv[1]);
 		if (status < 0) {
@@ -617,23 +699,18 @@ int shell_resume_vcpu(struct shell *p_shell,
 			if (vcpu != NULL) {
 				if (vcpu->dbg_req_state == VCPU_PAUSED) {
 					vcpu->dbg_req_state = 0;
-					shell_puts(p_shell,
-						"The vcpu resummed\r\n");
+					shell_puts("The vcpu resummed\r\n");
 				} else {
-					shell_puts(p_shell,
-						"vcpu is not in debug PAUSE, "
-						"do nothing\r\n");
+					shell_puts("Invalid request\r\n");
 				}
 			} else {
 				status = -EINVAL;
-				shell_puts(p_shell,
-					"No vcpu found in the input "
+				shell_puts("No vcpu found in the input "
 					"<vm_id, vcpu_id>\r\n");
 			}
 		} else {
 			status = -EINVAL;
-			shell_puts(p_shell,
-				"No vm found in the input "
+			shell_puts("No vm found in the input "
 				"<vm_id, vcpu_id>\r\n");
 		}
 	}
@@ -642,8 +719,7 @@ int shell_resume_vcpu(struct shell *p_shell,
 }
 
 #define DUMPREG_SP_SIZE	32
-int shell_vcpu_dumpreg(struct shell *p_shell,
-		int argc, char **argv)
+int shell_vcpu_dumpreg(int argc, char **argv)
 {
 	int status = 0;
 	uint16_t vm_id;
@@ -658,8 +734,7 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 
 	/* User input invalidation */
 	if (argc != 3) {
-		shell_puts(p_shell,
-			"Please enter correct cmd with <vm_id, vcpu_id>\r\n");
+		shell_puts("Please enter cmd with <vm_id, vcpu_id>\r\n");
 		return -EINVAL;
 	}
 
@@ -674,82 +749,80 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 	}
 	vm = get_vm_from_vmid(vm_id);
 	if (vm == NULL) {
-		shell_puts(p_shell, "No vm found in the input "
-				"<vm_id, vcpu_id>\r\n");
+		shell_puts("No vm found in the input <vm_id, vcpu_id>\r\n");
 		return -EINVAL;
 	}
 
 	vcpu = vcpu_from_vid(vm, vcpu_id);
 	if (vcpu == NULL) {
-		shell_puts(p_shell, "No vcpu found in the input "
-				"<vm_id, vcpu_id>\r\n");
+		shell_puts("No vcpu found in the input <vm_id, vcpu_id>\r\n");
 		return -EINVAL;
 	}
 
 	cur_context = &vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
 
 	if (vcpu->state != VCPU_PAUSED) {
-		shell_puts(p_shell, "NOTE: VCPU unPAUSEed, regdump "
+		shell_puts("NOTE: VCPU unPAUSEed, regdump "
 				"may not be accurate\r\n");
 	}
 
 	snprintf(temp_str, MAX_STR_SIZE,
 		"=  VM ID %d ==== CPU ID %hu========================\r\n",
 		vm->attr.id, vcpu->vcpu_id);
-	shell_puts(p_shell, temp_str);
+	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  RIP=0x%016llx  RSP=0x%016llx "
 			"RFLAGS=0x%016llx\r\n", cur_context->rip,
 			cur_context->guest_cpu_regs.regs.rsp, cur_context->rflags);
-	shell_puts(p_shell, temp_str);
+	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  CR0=0x%016llx  CR2=0x%016llx\r\n",
 			cur_context->cr0, cur_context->cr2);
-	shell_puts(p_shell, temp_str);
+	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  CR3=0x%016llx  CR4=0x%016llx\r\n",
 			cur_context->cr3, cur_context->cr4);
-	shell_puts(p_shell, temp_str);
+	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  RAX=0x%016llx  RBX=0x%016llx  "
 			"RCX=0x%016llx\r\n",
 			cur_context->guest_cpu_regs.regs.rax,
 			cur_context->guest_cpu_regs.regs.rbx,
 			cur_context->guest_cpu_regs.regs.rcx);
-	shell_puts(p_shell, temp_str);
+	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  RDX=0x%016llx  RDI=0x%016llx  "
 			"RSI=0x%016llx\r\n",
 			cur_context->guest_cpu_regs.regs.rdx,
 			cur_context->guest_cpu_regs.regs.rdi,
 			cur_context->guest_cpu_regs.regs.rsi);
-	shell_puts(p_shell, temp_str);
+	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  RBP=0x%016llx  R8=0x%016llx  "
 			"R9=0x%016llx\r\n",
 			cur_context->guest_cpu_regs.regs.rbp,
 			cur_context->guest_cpu_regs.regs.r8,
 			cur_context->guest_cpu_regs.regs.r9);
-	shell_puts(p_shell, temp_str);
+	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  R10=0x%016llx  R11=0x%016llx  "
 			"R12=0x%016llx\r\n",
 			cur_context->guest_cpu_regs.regs.r10,
 			cur_context->guest_cpu_regs.regs.r11,
 			cur_context->guest_cpu_regs.regs.r12);
-	shell_puts(p_shell, temp_str);
+	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE,
 			"=  R13=0x%016llx  R14=0x%016llx  R15=0x%016llx\r\n",
 			cur_context->guest_cpu_regs.regs.r13,
 			cur_context->guest_cpu_regs.regs.r14,
 			cur_context->guest_cpu_regs.regs.r15);
-	shell_puts(p_shell, temp_str);
+	shell_puts(temp_str);
 
 	/* dump sp */
 	status = copy_from_gva(vcpu, tmp, cur_context->guest_cpu_regs.regs.rsp,
 			DUMPREG_SP_SIZE*sizeof(uint64_t), &err_code);
 	if (status < 0) {
 		/* copy_from_gva fail */
-		shell_puts(p_shell, "Cannot handle user gva yet!\r\n");
+		shell_puts("Cannot handle user gva yet!\r\n");
 	} else {
 		snprintf(temp_str, MAX_STR_SIZE,
 				"\r\nDump RSP for vm %hu, from "
 				"gva 0x%016llx\r\n",
 				vm_id, cur_context->guest_cpu_regs.regs.rsp);
-		shell_puts(p_shell, temp_str);
+		shell_puts(temp_str);
 
 		for (i = 0UL; i < 8UL; i++) {
 			snprintf(temp_str, MAX_STR_SIZE,
@@ -757,7 +830,7 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 					"0x%016llx  0x%016llx\r\n",
 					tmp[i*4UL], tmp[(i*4UL)+1UL],
 					tmp[(i*4UL)+2UL], tmp[(i*4UL)+3UL]);
-			shell_puts(p_shell, temp_str);
+			shell_puts(temp_str);
 		}
 	}
 
@@ -765,8 +838,7 @@ int shell_vcpu_dumpreg(struct shell *p_shell,
 }
 
 #define MAX_MEMDUMP_LEN		(32U*8U)
-int shell_vcpu_dumpmem(struct shell *p_shell,
-		int argc, char **argv)
+int shell_vcpu_dumpmem(int argc, char **argv)
 {
 	int status = 0;
 	uint16_t vm_id;
@@ -782,8 +854,7 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 	/* User input invalidation */
 	if (argc != 4 && argc != 5) {
 		status = -EINVAL;
-		shell_puts(p_shell,
-			"Please enter correct cmd with "
+		shell_puts("Please enter correct cmd with "
 			"<vm_id, vcpu_id, gva, length>\r\n");
 		return status;
 	}
@@ -800,8 +871,7 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 	vm = get_vm_from_vmid(vm_id);
 	if (vm == NULL) {
 		status = -EINVAL;
-		shell_puts(p_shell,
-		"No vm found in the input <vm_id, cpu_id, gva, length>\r\n");
+		shell_puts("No vm found in <vm_id, cpu_id, gva, length>\r\n");
 		return status;
 	}
 
@@ -812,7 +882,7 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 	}
 
 	if (length > MAX_MEMDUMP_LEN) {
-		shell_puts(p_shell, "over max length, round back\r\n");
+		shell_puts("over max length, round back\r\n");
 		length = MAX_MEMDUMP_LEN;
 	}
 
@@ -820,40 +890,37 @@ int shell_vcpu_dumpmem(struct shell *p_shell,
 	if (vcpu != NULL) {
 		status = copy_from_gva(vcpu, tmp, gva, length, &err_code);
 		if (status <  0) {
-			shell_puts(p_shell,
-				"Cannot handle user gva yet!\r\n");
+			shell_puts("Cannot handle user gva yet!\r\n");
 		} else {
 			snprintf(temp_str, MAX_STR_SIZE,
 				"Dump memory for vcpu %hu, from gva 0x%016llx, "
 				"length %d:\r\n", vcpu_id, gva, length);
-			shell_puts(p_shell, temp_str);
+			shell_puts(temp_str);
 
 			for (i = 0U; i < (length/32U); i++) {
 				snprintf(temp_str, MAX_STR_SIZE,
 					"=  0x%016llx  0x%016llx  0x%016llx  "
 					"0x%016llx\r\n", tmp[i*4], tmp[(i*4)+1],
 					tmp[(i*4)+2], tmp[(i*4)+3]);
-				shell_puts(p_shell, temp_str);
+				shell_puts(temp_str);
 			}
 			if ((length % 32U) != 0) {
 				snprintf(temp_str, MAX_STR_SIZE,
 					"=  0x%016llx  0x%016llx  0x%016llx  "
 					"0x%016llx\r\n", tmp[i*4], tmp[(i*4)+1],
 					tmp[(i*4)+2], tmp[(i*4)+3]);
-				shell_puts(p_shell, temp_str);
+				shell_puts(temp_str);
 			}
 		}
 	} else {
 		status = -EINVAL;
-		shell_puts(p_shell,
-			"No vcpu found in the input <vcpu_id, gva, lengthe>\r\n");
+		shell_puts("No vcpu found in <vcpu_id, gva, lengthe>\r\n");
 	}
 
 	return status;
 }
 
-int shell_to_sos_console(struct shell *p_shell,
-		__unused int argc, __unused char **argv)
+int shell_to_sos_console(__unused int argc, __unused char **argv)
 {
 	char temp_str[TEMP_STR_SIZE];
 	uint16_t guest_no = 0U;
@@ -875,7 +942,7 @@ int shell_to_sos_console(struct shell *p_shell,
 				"\r\nError: serial console driver is not "
 				"enabled for VM %d\r\n",
 				guest_no);
-		shell_puts(p_shell, temp_str);
+		shell_puts(temp_str);
 	} else {
 		/* UART is now owned by the SOS.
 		 * Indicate by toggling the flag.
@@ -886,14 +953,13 @@ int shell_to_sos_console(struct shell *p_shell,
 				"\r\n----- Entering Guest %d Shell -----\r\n",
 				guest_no);
 
-		shell_puts(p_shell, temp_str);
+		shell_puts(temp_str);
 	}
 
 	return 0;
 }
 
-int shell_show_cpu_int(struct shell *p_shell,
-		__unused int argc, __unused char **argv)
+int shell_show_cpu_int(__unused int argc, __unused char **argv)
 {
 	char *temp_str = alloc_page();
 
@@ -902,15 +968,14 @@ int shell_show_cpu_int(struct shell *p_shell,
 	}
 
 	get_cpu_interrupt_info(temp_str, CPU_PAGE_SIZE);
-	shell_puts(p_shell, temp_str);
+	shell_puts(temp_str);
 
 	free(temp_str);
 
 	return 0;
 }
 
-int shell_show_ptdev_info(struct shell *p_shell,
-		__unused int argc, __unused char **argv)
+int shell_show_ptdev_info(__unused int argc, __unused char **argv)
 {
 	char *temp_str = alloc_page();
 
@@ -919,21 +984,19 @@ int shell_show_ptdev_info(struct shell *p_shell,
 	}
 
 	get_ptdev_info(temp_str, CPU_PAGE_SIZE);
-	shell_puts(p_shell, temp_str);
+	shell_puts(temp_str);
 
 	free(temp_str);
 
 	return 0;
 }
 
-int shell_reboot(__unused struct shell *p_shell,
-		__unused int argc, __unused char **argv)
+int shell_reboot(__unused int argc, __unused char **argv)
 {
 	return warm_reboot();
 }
 
-int shell_show_req_info(struct shell *p_shell,
-		__unused int argc, __unused char **argv)
+int shell_show_req_info(__unused int argc, __unused char **argv)
 {
 	char *temp_str = alloc_page();
 
@@ -942,14 +1005,14 @@ int shell_show_req_info(struct shell *p_shell,
 	}
 
 	get_req_info(temp_str, CPU_PAGE_SIZE);
-	shell_puts(p_shell, temp_str);
+	shell_puts(temp_str);
 
 	free(temp_str);
 
 	return 0;
 }
 
-int shell_show_vioapic_info(struct shell *p_shell, int argc, char **argv)
+int shell_show_vioapic_info(int argc, char **argv)
 {
 	char *temp_str = alloc_page();
 	uint16_t vmid;
@@ -974,14 +1037,13 @@ int shell_show_vioapic_info(struct shell *p_shell, int argc, char **argv)
 
 	get_vioapic_info(temp_str, CPU_PAGE_SIZE, vmid);
 END:
-	shell_puts(p_shell, temp_str);
+	shell_puts(temp_str);
 	free(temp_str);
 
 	return 0;
 }
 
-int shell_show_ioapic_info(struct shell *p_shell,
-		__unused int argc, __unused char **argv)
+int shell_show_ioapic_info(__unused int argc, __unused char **argv)
 {
 	char *temp_str = alloc_pages(2);
 
@@ -990,15 +1052,14 @@ int shell_show_ioapic_info(struct shell *p_shell,
 	}
 
 	get_ioapic_info(temp_str, 2 * CPU_PAGE_SIZE);
-	shell_puts(p_shell, temp_str);
+	shell_puts(temp_str);
 
 	free(temp_str);
 
 	return 0;
 }
 
-int shell_show_vmexit_profile(struct shell *p_shell,
-		__unused int argc, __unused char **argv)
+int shell_show_vmexit_profile(__unused int argc, __unused char **argv)
 {
 	char *temp_str = alloc_pages(2);
 
@@ -1007,15 +1068,14 @@ int shell_show_vmexit_profile(struct shell *p_shell,
 	}
 
 	get_vmexit_profile(temp_str, 2*CPU_PAGE_SIZE);
-	shell_puts(p_shell, temp_str);
+	shell_puts(temp_str);
 
 	free(temp_str);
 
 	return 0;
 }
 
-int shell_dump_logbuf(__unused struct shell *p_shell,
-		int argc, char **argv)
+int shell_dump_logbuf(int argc, char **argv)
 {
 	uint16_t pcpu_id;
 	int val;
@@ -1034,7 +1094,7 @@ int shell_dump_logbuf(__unused struct shell *p_shell,
 	return status;
 }
 
-int shell_get_loglevel(struct shell *p_shell, __unused int argc, __unused char **argv)
+int shell_get_loglevel(__unused int argc, __unused char **argv)
 {
 	char str[MAX_STR_SIZE] = {0};
 
@@ -1042,12 +1102,12 @@ int shell_get_loglevel(struct shell *p_shell, __unused int argc, __unused char *
 		"console_loglevel: %u, mem_loglevel: %u\r\n",
 		console_loglevel, mem_loglevel);
 
-	shell_puts(p_shell, str);
+	shell_puts(str);
 
 	return 0;
 }
 
-int shell_set_loglevel(struct shell *p_shell, int argc, char **argv)
+int shell_set_loglevel(int argc, char **argv)
 {
 	int status = 0;
 
@@ -1058,15 +1118,14 @@ int shell_set_loglevel(struct shell *p_shell, int argc, char **argv)
 		mem_loglevel = atoi(argv[2]);
 	} else {
 		status = -EINVAL;
-		shell_puts(p_shell,
-			"Please enter correct cmd with "
+		shell_puts("Please enter correct cmd with "
 			"<console_loglevel> [mem_loglevel]\r\n");
 	}
 
 	return status;
 }
 
-int shell_cpuid(struct shell *p_shell, int argc, char **argv)
+int shell_cpuid(int argc, char **argv)
 {
 	char str[MAX_STR_SIZE] = {0};
 	uint32_t leaf, subleaf = 0;
@@ -1078,8 +1137,7 @@ int shell_cpuid(struct shell *p_shell, int argc, char **argv)
 		leaf = strtoul_hex(argv[1]);
 		subleaf = strtoul_hex(argv[2]);
 	} else {
-		shell_puts(p_shell,
-			"Please enter correct cmd with "
+		shell_puts("Please enter correct cmd with "
 			"cpuid <leaf> [subleaf]\r\n");
 		return -EINVAL;
 	}
@@ -1089,50 +1147,29 @@ int shell_cpuid(struct shell *p_shell, int argc, char **argv)
 		"cpuid leaf: 0x%x, subleaf: 0x%x, 0x%x:0x%x:0x%x:0x%x\r\n",
 		leaf, subleaf, eax, ebx, ecx, edx);
 
-	shell_puts(p_shell, str);
+	shell_puts(str);
 
 	return 0;
 }
 
-int shell_trigger_crash(struct shell *p_shell, int argc, char **argv)
+int shell_trigger_crash(int argc, char **argv)
 {
 	char str[MAX_STR_SIZE] = {0};
 
 	(void)argc;
 	(void)argv;
 	snprintf(str, MAX_STR_SIZE, "trigger crash, divide by 0 ...\r\n");
-	shell_puts(p_shell, str);
+	shell_puts(str);
 	snprintf(str, MAX_STR_SIZE, "%d\r", 1/0);
 
 	return 0;
 }
 
-void shell_terminate_serial(__unused struct shell *p_shell)
-{
-}
-
-void shell_puts_serial(__unused struct shell *p_shell, const char *string_ptr)
+void shell_puts(const char *string_ptr)
 {
 	/* Output the string */
 	(void)console_write(string_ptr, strnlen_s(string_ptr,
 				SHELL_STRING_MAX_LEN));
 }
 
-char shell_getc_serial(__unused struct shell *p_shell)
-{
-	return console_getc();
-}
 
-void shell_special_serial(struct shell *p_shell, uint8_t ch)
-{
-	switch (ch) {
-	/* Escape character */
-	case 0x1bU:
-		/* Consume the next 2 characters */
-		(void) p_shell->session_io.io_getc(p_shell);
-		(void) p_shell->session_io.io_getc(p_shell);
-		break;
-	default:
-		break;
-	}
-}
