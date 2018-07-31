@@ -72,7 +72,7 @@ static int query_state(const char *name)
 	req.msgid = DM_QUERY;
 	req.timestamp = time(NULL);
 
-	ret = send_msg(vmname, &req, &ack);
+	ret = send_msg(name, &req, &ack);
 	if (ret)
 		return ret;
 
