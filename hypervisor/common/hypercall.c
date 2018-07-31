@@ -209,7 +209,7 @@ int32_t hcall_destroy_vm(uint16_t vmid)
 	return ret;
 }
 
-int32_t hcall_resume_vm(uint16_t vmid)
+int32_t hcall_start_vm(uint16_t vmid)
 {
 	int32_t ret = 0;
 	struct vm *target_vm = get_vm_from_vmid(vmid);

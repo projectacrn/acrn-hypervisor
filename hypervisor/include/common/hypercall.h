@@ -77,9 +77,9 @@ int32_t hcall_create_vm(struct vm *vm, uint64_t param);
 int32_t hcall_destroy_vm(uint16_t vmid);
 
 /**
- * @brief resume virtual machine
+ * @brief start virtual machine
  *
- * Resume a virtual machine, it will schedule target VM's vcpu to run.
+ * Start a virtual machine, it will schedule target VM's vcpu to run.
  * The function will return -1 if the target VM does not exist or the
  * IOReq buffer page for the VM is not ready.
  *
@@ -87,7 +87,7 @@ int32_t hcall_destroy_vm(uint16_t vmid);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_resume_vm(uint16_t vmid);
+int32_t hcall_start_vm(uint16_t vmid);
 
 /**
  * @brief pause virtual machine
