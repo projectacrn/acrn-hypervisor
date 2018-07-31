@@ -5,26 +5,16 @@
  */
 
 #include <hypervisor.h>
-#include <reboot.h>
 #include "shell_internal.h"
 
-#define TEMP_STR_SIZE		60
-#define MAX_STR_SIZE		256
-
+#define TEMP_STR_SIZE		60U
+#define MAX_STR_SIZE		256U
 #define SHELL_PROMPT_STR	"ACRN:\\>"
-#define NO_SERIAL_SHELL		-4252	/* No serial shell enabled */
-#define KILL_SHELL		-4253	/* Ends processing of shell */
-
-#define SHELL_CMD_VM_ID_ERROR_MESSAGE(CMD) \
-	"Syntax: "CMD" <vm id> where <vm id> is ID of the vm."
-
-/* ASCII Manipulation */
-#define SHELL_ASCII_LOWER_CASE_OFFSET	32
 
 /* Input Line Other - Switch to the "other" input line (there are only two
  * input lines total).
  */
-#define SHELL_INPUT_LINE_OTHER(v)	(((v) + 1) % 2)
+#define SHELL_INPUT_LINE_OTHER(v)	(((v) + 1U) % 2U)
 
 static struct shell_cmd shell_cmds[] = {
 	{
@@ -46,33 +36,21 @@ static struct shell_cmd shell_cmds[] = {
 		.fcn		= shell_list_vcpu,
 	},
 	{
-		.str		= SHELL_CMD_VCPU_PAUSE,
-		.cmd_param	= SHELL_CMD_VCPU_PAUSE_PARAM,
-		.help_str	= SHELL_CMD_VCPU_PAUSE_HELP,
-		.fcn		= shell_pause_vcpu,
-	},
-	{
-		.str		= SHELL_CMD_VCPU_RESUME,
-		.cmd_param	= SHELL_CMD_VCPU_RESUME_PARAM,
-		.help_str	= SHELL_CMD_VCPU_RESUME_HELP,
-		.fcn		= shell_resume_vcpu,
-	},
-	{
 		.str		= SHELL_CMD_VCPU_DUMPREG,
 		.cmd_param	= SHELL_CMD_VCPU_DUMPREG_PARAM,
 		.help_str	= SHELL_CMD_VCPU_DUMPREG_HELP,
 		.fcn		= shell_vcpu_dumpreg,
 	},
 	{
-		.str		= SHELL_CMD_VCPU_DUMPMEM,
-		.cmd_param	= SHELL_CMD_VCPU_DUMPMEM_PARAM,
-		.help_str	= SHELL_CMD_VCPU_DUMPMEM_HELP,
-		.fcn		= shell_vcpu_dumpmem,
+		.str		= SHELL_CMD_DUMPMEM,
+		.cmd_param	= SHELL_CMD_DUMPMEM_PARAM,
+		.help_str	= SHELL_CMD_DUMPMEM_HELP,
+		.fcn		= shell_dumpmem,
 	},
 	{
-		.str		= SHELL_CMD_VM_CONSOLE,
-		.cmd_param	= SHELL_CMD_VM_CONSOLE_PARAM,
-		.help_str	= SHELL_CMD_VM_CONSOLE_HELP,
+		.str		= SHELL_CMD_SOS_CONSOLE,
+		.cmd_param	= SHELL_CMD_SOS_CONSOLE_PARAM,
+		.help_str	= SHELL_CMD_SOS_CONSOLE_HELP,
 		.fcn		= shell_to_sos_console,
 	},
 	{
@@ -86,12 +64,6 @@ static struct shell_cmd shell_cmds[] = {
 		.cmd_param	= SHELL_CMD_PTDEV_PARAM,
 		.help_str	= SHELL_CMD_PTDEV_HELP,
 		.fcn		= shell_show_ptdev_info,
-	},
-	{
-		.str		= SHELL_CMD_REQ,
-		.cmd_param	= SHELL_CMD_REQ_PARAM,
-		.help_str	= SHELL_CMD_REQ_HELP,
-		.fcn		= shell_show_req_info,
 	},
 	{
 		.str		= SHELL_CMD_VIOAPIC,
@@ -118,16 +90,10 @@ static struct shell_cmd shell_cmds[] = {
 		.fcn		= shell_dump_logbuf,
 	},
 	{
-		.str		= SHELL_CMD_GET_LOG_LVL,
-		.cmd_param	= SHELL_CMD_GET_LOG_LVL_PARAM,
-		.help_str	= SHELL_CMD_GET_LOG_LVL_HELP,
-		.fcn		= shell_get_loglevel,
-	},
-	{
-		.str		= SHELL_CMD_SET_LOG_LVL,
-		.cmd_param	= SHELL_CMD_SET_LOG_LVL_PARAM,
-		.help_str	= SHELL_CMD_SET_LOG_LVL_HELP,
-		.fcn		= shell_set_loglevel,
+		.str		= SHELL_CMD_LOG_LVL,
+		.cmd_param	= SHELL_CMD_LOG_LVL_PARAM,
+		.help_str	= SHELL_CMD_LOG_LVL_HELP,
+		.fcn		= shell_loglevel,
 	},
 	{
 		.str		= SHELL_CMD_CPUID,
@@ -139,14 +105,8 @@ static struct shell_cmd shell_cmds[] = {
 		.str		= SHELL_CMD_REBOOT,
 		.cmd_param	= SHELL_CMD_REBOOT_PARAM,
 		.help_str	= SHELL_CMD_REBOOT_HELP,
-		.fcn		= shell_reboot,
+		.fcn		= shell_trigger_crash,
 	},
-		{
-			.str		= SHELL_CMD_TRIGGER_CRASH,
-			.cmd_param	= SHELL_CMD_TRIGGER_CRASH_PARAM,
-			.help_str	= SHELL_CMD_TRIGGER_CRASH_HELP,
-			.fcn		= shell_trigger_crash,
-		},
 };
 
 /* The initial log level*/
@@ -238,10 +198,10 @@ static void shell_handle_special_char(uint8_t ch)
 	}
 }
 
-static uint8_t shell_input_line(void)
+static bool shell_input_line(void)
 {
 	bool done = false;
-	uint8_t ch;
+	char ch;
 
 	ch = shell_getc();
 
@@ -290,7 +250,7 @@ static uint8_t shell_input_line(void)
 		/* Ensure data doesn't exceed full terminal width */
 		if (p_shell->input_line_len < SHELL_CMD_MAX_LEN) {
 			/* See if a "standard" prINTable ASCII character received */
-			if ((ch >= 32U) && (ch <= 126U)) {
+			if ((ch >= 32) && (ch <= 126)) {
 				/* Add character to string */
 				p_shell->input_line[p_shell->input_line_active]
 						[p_shell->input_line_len] = ch;
@@ -373,29 +333,27 @@ struct shell_cmd *shell_find_cmd(const char *cmd_str)
 
 void shell_kick(void)
 {
-	static uint8_t is_cmd_cmplt = 1;
+	static bool is_cmd_cmplt = true;
 
 	/* At any given instance, UART may be owned by the HV
 	 * OR by the guest that has enabled the vUart.
 	 * Show HV shell prompt ONLY when HV owns the
 	 * serial port.
 	 */
-	if (vuart_console_active() == NULL) {
-		/* Prompt the user for a selection. */
-		if (is_cmd_cmplt != 0U) {
-			shell_puts(SHELL_PROMPT_STR);
-		}
+	/* Prompt the user for a selection. */
+	if (is_cmd_cmplt) {
+		shell_puts(SHELL_PROMPT_STR);
+	}
 
-		/* Get user's input */
-		is_cmd_cmplt = shell_input_line();
+	/* Get user's input */
+	is_cmd_cmplt = shell_input_line();
 
-		/* If user has pressed the ENTER then process
-		 * the command
-		 */
-		if (is_cmd_cmplt != 0U) {
-			/* Process current input line. */
-			(void)shell_process();
-		}
+	/* If user has pressed the ENTER then process
+	 * the command
+	 */
+	if (is_cmd_cmplt) {
+		/* Process current input line. */
+		(void)shell_process();
 	}
 }
 
@@ -620,104 +578,6 @@ int shell_list_vcpu(__unused int argc, __unused char **argv)
 	return status;
 }
 
-int shell_pause_vcpu(int argc, char **argv)
-{
-	int status = 0;
-	uint16_t vm_id;
-	uint16_t vcpu_id;
-	struct vm *vm;
-	struct vcpu *vcpu;
-
-	/* User input invalidation */
-	if (argc != 3) {
-		status = -EINVAL;
-		shell_puts("Please enter cmd with <vm_id, vcpu_id>\r\n");
-	} else {
-		status = atoi(argv[1]);
-		if (status < 0) {
-			return -EINVAL;
-		} else {
-			vm_id = (uint16_t)status;
-		}
-		vcpu_id = (uint16_t)atoi(argv[2]);
-		if (vcpu_id >= phys_cpu_num) {
-			return (-EINVAL);
-		}
-		vm = get_vm_from_vmid(vm_id);
-		if (vm != NULL) {
-			vcpu = vcpu_from_vid(vm, vcpu_id);
-			if (vcpu != NULL) {
-				if (vcpu->dbg_req_state != VCPU_PAUSED) {
-					vcpu->dbg_req_state = VCPU_PAUSED;
-					/* TODO: do we need file a IPI to kick
-					 * VCPU immediately */
-					shell_puts("The vcpu will PAUSE in "
-						"next vm exit\r\n");
-				} else {
-					shell_puts("Invalid Request\r\n");
-				}
-			} else {
-				status = -EINVAL;
-				shell_puts("No vcpu found in the input "
-					"<vm_id, vcpu_id>\r\n");
-			}
-		} else {
-			status = -EINVAL;
-			shell_puts("No vm found in the input "
-					"<vm_id, vcpu_id>\r\n");
-		}
-	}
-
-	return status;
-}
-
-int shell_resume_vcpu(int argc, char **argv)
-{
-	int status = 0;
-	uint16_t vm_id;
-	uint16_t vcpu_id;
-	struct vm *vm;
-	struct vcpu *vcpu;
-
-	/* User input invalidation */
-	if (argc != 3) {
-		status = -EINVAL;
-		shell_puts("Please enter cmd with <vm_id, vcpu_id>\r\n");
-	} else {
-		status = atoi(argv[1]);
-		if (status < 0) {
-			return -EINVAL;
-		}
-		vm_id = (uint16_t)status;
-		vcpu_id = (uint16_t)atoi(argv[2]);
-		if (vcpu_id >= phys_cpu_num) {
-			return (-EINVAL);
-		}
-		vm = get_vm_from_vmid(vm_id);
-		if (vm != NULL) {
-			vcpu = vcpu_from_vid(vm, vcpu_id);
-			if (vcpu != NULL) {
-				if (vcpu->dbg_req_state == VCPU_PAUSED) {
-					vcpu->dbg_req_state = 0;
-					shell_puts("The vcpu resummed\r\n");
-				} else {
-					shell_puts("Invalid request\r\n");
-				}
-			} else {
-				status = -EINVAL;
-				shell_puts("No vcpu found in the input "
-					"<vm_id, vcpu_id>\r\n");
-			}
-		} else {
-			status = -EINVAL;
-			shell_puts("No vm found in the input "
-				"<vm_id, vcpu_id>\r\n");
-		}
-	}
-
-	return status;
-}
-
 #define DUMPREG_SP_SIZE	32
 int shell_vcpu_dumpreg(int argc, char **argv)
 {
@@ -838,86 +698,48 @@ int shell_vcpu_dumpreg(int argc, char **argv)
 }
 
 #define MAX_MEMDUMP_LEN		(32U*8U)
-int shell_vcpu_dumpmem(int argc, char **argv)
+int shell_dumpmem(int argc, char **argv)
 {
-	int status = 0;
-	uint16_t vm_id;
-	uint16_t vcpu_id;
-	uint64_t gva;
-	uint64_t tmp[MAX_MEMDUMP_LEN/8];
+	uint64_t addr;
+	uint64_t *ptr;
 	uint32_t i, length = 32U;
 	char temp_str[MAX_STR_SIZE];
-	struct vm *vm;
-	struct vcpu *vcpu;
-	uint32_t err_code = 0;
 
 	/* User input invalidation */
-	if (argc != 4 && argc != 5) {
-		status = -EINVAL;
-		shell_puts("Please enter correct cmd with "
-			"<vm_id, vcpu_id, gva, length>\r\n");
-		return status;
-	}
-
-	status = atoi(argv[1]);
-	if (status < 0) {
+	if (argc != 2 && argc != 3) {
 		return -EINVAL;
 	}
-	vm_id = (uint16_t)status;
-	vcpu_id = (uint16_t)atoi(argv[2]);
-	if (vcpu_id >= phys_cpu_num) {
-		return (-EINVAL);
-	}
-	vm = get_vm_from_vmid(vm_id);
-	if (vm == NULL) {
-		status = -EINVAL;
-		shell_puts("No vm found in <vm_id, cpu_id, gva, length>\r\n");
-		return status;
-	}
 
-	gva = strtoul_hex(argv[3]);
-
-	if (argc == 5) {
-		length = atoi(argv[4]);
-	}
-
+	addr = strtoul_hex(argv[1]);
+	length = atoi(argv[2]);
 	if (length > MAX_MEMDUMP_LEN) {
 		shell_puts("over max length, round back\r\n");
 		length = MAX_MEMDUMP_LEN;
 	}
 
-	vcpu = vcpu_from_vid(vm, (long)vcpu_id);
-	if (vcpu != NULL) {
-		status = copy_from_gva(vcpu, tmp, gva, length, &err_code);
-		if (status <  0) {
-			shell_puts("Cannot handle user gva yet!\r\n");
-		} else {
-			snprintf(temp_str, MAX_STR_SIZE,
-				"Dump memory for vcpu %hu, from gva 0x%016llx, "
-				"length %d:\r\n", vcpu_id, gva, length);
-			shell_puts(temp_str);
+	snprintf(temp_str, MAX_STR_SIZE,
+		"Dump physical memory addr: 0x%016llx, length %d:\r\n",
+		addr, length);
+	shell_puts(temp_str);
 
-			for (i = 0U; i < (length/32U); i++) {
-				snprintf(temp_str, MAX_STR_SIZE,
-					"=  0x%016llx  0x%016llx  0x%016llx  "
-					"0x%016llx\r\n", tmp[i*4], tmp[(i*4)+1],
-					tmp[(i*4)+2], tmp[(i*4)+3]);
-				shell_puts(temp_str);
-			}
-			if ((length % 32U) != 0) {
-				snprintf(temp_str, MAX_STR_SIZE,
-					"=  0x%016llx  0x%016llx  0x%016llx  "
-					"0x%016llx\r\n", tmp[i*4], tmp[(i*4)+1],
-					tmp[(i*4)+2], tmp[(i*4)+3]);
-				shell_puts(temp_str);
-			}
-		}
-	} else {
-		status = -EINVAL;
-		shell_puts("No vcpu found in <vcpu_id, gva, lengthe>\r\n");
+	ptr = (uint64_t *)addr;
+	for (i = 0U; i < (length/32U); i++) {
+		snprintf(temp_str, MAX_STR_SIZE,
+			"=  0x%016llx  0x%016llx  0x%016llx  0x%016llx\r\n",
+			*(ptr + (i*4)), *(ptr + ((i*4)+1)),
+			*(ptr + ((i*4)+2)), *(ptr + ((i*4)+3)));
+		shell_puts(temp_str);
 	}
 
-	return status;
+	if ((length % 32U) != 0) {
+		snprintf(temp_str, MAX_STR_SIZE,
+			"=  0x%016llx  0x%016llx  0x%016llx 0x%016llx\r\n",
+			*(ptr + (i*4)), *(ptr + ((i*4)+1)),
+			*(ptr + ((i*4)+2)), *(ptr + ((i*4)+3)));
+		shell_puts(temp_str);
+	}
+
+	return 0;
 }
 
 int shell_to_sos_console(__unused int argc, __unused char **argv)
@@ -991,27 +813,6 @@ int shell_show_ptdev_info(__unused int argc, __unused char **argv)
 	return 0;
 }
 
-int shell_reboot(__unused int argc, __unused char **argv)
-{
-	return warm_reboot();
-}
-
-int shell_show_req_info(__unused int argc, __unused char **argv)
-{
-	char *temp_str = alloc_page();
-
-	if (temp_str == NULL) {
-		return -ENOMEM;
-	}
-
-	get_req_info(temp_str, CPU_PAGE_SIZE);
-	shell_puts(temp_str);
-
-	free(temp_str);
-
-	return 0;
-}
-
 int shell_show_vioapic_info(int argc, char **argv)
 {
 	char *temp_str = alloc_page();
@@ -1031,6 +832,7 @@ int shell_show_vioapic_info(int argc, char **argv)
 		if (ret >= 0) {
 			vmid = (uint16_t) ret;
 		} else {
+			free(temp_str);
 			return -EINVAL;
 		}
 	}
@@ -1094,35 +896,25 @@ int shell_dump_logbuf(int argc, char **argv)
 	return status;
 }
 
-int shell_get_loglevel(__unused int argc, __unused char **argv)
+int shell_loglevel(int argc, char **argv)
 {
 	char str[MAX_STR_SIZE] = {0};
 
-	snprintf(str, MAX_STR_SIZE,
-		"console_loglevel: %u, mem_loglevel: %u\r\n",
-		console_loglevel, mem_loglevel);
-
-	shell_puts(str);
-
-	return 0;
-}
-
-int shell_set_loglevel(int argc, char **argv)
-{
-	int status = 0;
-
-	if (argc == 2) {
+	if (argc == 1) {
+		snprintf(str, MAX_STR_SIZE,
+			"console_loglevel: %u, mem_loglevel: %u\r\n",
+			console_loglevel, mem_loglevel);
+		shell_puts(str);
+	} else if (argc == 2) {
 		console_loglevel = atoi(argv[1]);
 	} else if (argc == 3) {
 		console_loglevel = atoi(argv[1]);
 		mem_loglevel = atoi(argv[2]);
 	} else {
-		status = -EINVAL;
-		shell_puts("Please enter correct cmd with "
-			"<console_loglevel> [mem_loglevel]\r\n");
+		return -EINVAL;
 	}
 
-	return status;
+	return 0;
 }
 
 int shell_cpuid(int argc, char **argv)
