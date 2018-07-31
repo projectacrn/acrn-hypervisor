@@ -174,6 +174,7 @@ struct vm_description {
 	uint8_t			vm_id;
 	uint64_t		start_hpa;
 	uint64_t		mem_size; /* UOS memory size in hex */
+	bool			vm_vuart;
 	const char		*bootargs;
 #endif
 };

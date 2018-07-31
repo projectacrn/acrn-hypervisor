@@ -189,6 +189,13 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		/* Create virtual uart */
 		vm->vuart = vuart_init(vm);
 	}
+#ifdef CONFIG_PARTITION_HV
+	vm->vrtc = vrtc_init(vm);
+
+	/* Create virtual uart */
+	if (vm_desc->vm_vuart)
+		vm->vuart = vuart_init(vm);
+#endif
 	vm->vpic = vpic_init(vm);
 
 	/* vpic wire_mode default is INTR */
@@ -290,6 +297,10 @@ int shutdown_vm(struct vm *vm)
 
 	bitmap_clear_lock(vm->attr.id, &vmid_bitmap);
 
+#ifdef CONFIG_PARTITION_HV
+	if (vm->vrtc)
+		vrtc_deinit(vm);
+#endif
 	if (vm->vpic != NULL) {
 		vpic_cleanup(vm);
 	}
