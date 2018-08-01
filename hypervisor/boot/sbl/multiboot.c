@@ -290,3 +290,71 @@ int init_vm0_boot_info(struct vm *vm)
 	}
 	return 0;
 }
+
+#ifdef CONFIG_PARTITION_HV
+#define VM1_RAM_SIZE            0x80000000UL
+#define KERNEL_LOAD_OFF         (16 * 1024 * 1024UL)
+#define BOOTARG_LOAD_OFF        (VM1_RAM_SIZE - 8*1024UL)
+
+static inline int strlen(const char *str)
+{
+	int len;
+
+	len = 0;
+	while (*str++)
+		len++;
+
+	return len;
+}
+
+bool init_vm_boot_info(struct vm *vm)
+{
+	struct multiboot_module *mods = NULL;
+	struct multiboot_info *mbi = NULL;
+
+	if (is_vm0(vm)) {
+		pr_info("just for vm1 to get info!");
+		return -EINVAL;
+	}
+
+	if (boot_regs[0] != MULTIBOOT_INFO_MAGIC) {
+		ASSERT(0, "no multiboot info found");
+		return -EINVAL;
+	}
+
+	mbi = (struct multiboot_info *)((uint64_t)boot_regs[1]);
+
+	pr_info("Multiboot detected, flag=0x%x", mbi->mi_flags);
+	if (!(mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS)) {
+		ASSERT(0, "no sos kernel info found");
+		return -EINVAL;
+	}
+
+	pr_info("mod counts=%d\n", mbi->mi_mods_count);
+
+	/* mod[0] is for kernel&cmdline, other mod for ramdisk/firmware info*/
+	mods = (struct multiboot_module *)(uint64_t)mbi->mi_mods_addr;
+
+	pr_info("mod0 start=0x%x, end=0x%x",
+		mods[0].mm_mod_start, mods[0].mm_mod_end);
+	pr_info("cmd addr=0x%x, str=%s", mods[0].mm_string,
+		(char *) (uint64_t)mods[0].mm_string);
+
+	vm->sw.kernel_type = VM_LINUX_GUEST;
+	vm->sw.kernel_info.kernel_src_addr =
+		(void *)(uint64_t)mods[0].mm_mod_start;
+	vm->sw.kernel_info.kernel_size =
+		mods[0].mm_mod_end - mods[0].mm_mod_start;
+	vm->sw.kernel_info.kernel_load_addr = (void *)KERNEL_LOAD_OFF;
+
+	vm->sw.linux_info.bootargs_load_addr = (void *)BOOTARG_LOAD_OFF;
+
+	vm->sw.linux_info.bootargs_src_addr =
+			(void *)vm->vm_desc->bootargs;
+	vm->sw.linux_info.bootargs_size =
+			strlen(vm->vm_desc->bootargs);
+
+
+	return true;
+}
+#endif

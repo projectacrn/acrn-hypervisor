@@ -32,7 +32,7 @@ char console_getc(void)
 	return uart16550_getc();
 }
 
-static void console_handler(void)
+void console_handler(void)
 {
 	struct vuart *vu;
 

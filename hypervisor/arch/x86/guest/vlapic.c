@@ -176,7 +176,11 @@ vlapic_build_id(struct acrn_vlapic *vlapic)
 		/* Get APIC ID sequence format from cpu_storage */
 		id = per_cpu(lapic_id, vcpu->vcpu_id);
 	} else {
+#ifndef CONFIG_PARTITION_HV
 		id = vcpu->vcpu_id;
+#else
+		id = per_cpu(lapic_id, vcpu->pcpu_id);
+#endif
 	}
 
 	dev_dbg(ACRN_DBG_LAPIC, "vlapic APIC PAGE ID : 0x%08x",

@@ -41,6 +41,9 @@ static void init_vm(struct vm_description *vm_desc,
 #else
 	vm_handle->hw.num_vcpus = vm_desc->vm_hw_num_cores;
 #endif
+#ifdef CONFIG_PARTITION_HV
+	vm_handle->vm_desc = vm_desc;
+#endif
 }
 
 /* return a pointer to the virtual machine structure associated with
@@ -102,12 +105,19 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		goto err;
 	}
 
+#ifdef CONFIG_PARTITION_HV
+	vm->attr.id = vm_desc->vm_id;
+	vm->attr.boot_idx = vm_desc->vm_id;
+	if (bitmap_test_and_set(vm->attr.id, &vmid_bitmap)) {
+		pr_fatal("vm id %d already taken\n", vm->attr.id);
+	}
+#else
 	for (id = 0U; id < (size_t)(sizeof(vmid_bitmap) * 8U); id++) {
 		if (!bitmap_test_and_set_lock(id, &vmid_bitmap)) {
 			break;
 		}
 	}
-
+#endif
 	if (id >= (size_t)(sizeof(vmid_bitmap) * 8U)) {
 		pr_err("%s, no more VMs can be supported\n", __func__);
 		status = -EINVAL;
@@ -151,6 +161,11 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		(void)memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
 					&vm_desc->GUID[0],
 					sizeof(vm_desc->GUID));
+#ifdef CONFIG_PARTITION_HV
+		ept_mr_add(vm, vm_desc->start_hpa,
+					0, vm_desc->mem_size, 0x47);
+		init_vm_boot_info(vm);
+#endif
 	}
 
 	INIT_LIST_HEAD(&vm->list);
@@ -174,6 +189,13 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		/* Create virtual uart */
 		vm->vuart = vuart_init(vm);
 	}
+#ifdef CONFIG_PARTITION_HV
+	vm->vrtc = vrtc_init(vm);
+
+	/* Create virtual uart */
+	if (vm_desc->vm_vuart)
+		vm->vuart = vuart_init(vm);
+#endif
 	vm->vpic = vpic_init(vm);
 
 	/* vpic wire_mode default is INTR */
@@ -275,6 +297,10 @@ int shutdown_vm(struct vm *vm)
 
 	bitmap_clear_lock(vm->attr.id, &vmid_bitmap);
 
+#ifdef CONFIG_PARTITION_HV
+	if (vm->vrtc)
+		vrtc_deinit(vm);
+#endif
 	if (vm->vpic != NULL) {
 		vpic_cleanup(vm);
 	}
@@ -357,6 +383,125 @@ void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec)
 	schedule_vcpu(bsp);
 }
 
+
+#ifdef CONFIG_PARTITION_HV
+static int get_vm_desc_and_cpu_role(int cpu_id, struct vm_description **vm_desc,
+				enum vcpu_role *role, int *vm_idx)
+{
+	struct vm_description_array *vm_desc_array;
+	struct vm_description *vm_descriptions;
+	int i, j;
+	int status = 0;
+
+	if (vm_desc == NULL || role == NULL)
+		status = -EINVAL;
+
+	if (status != 0)
+		return status;
+
+	/* Obtain base of user defined VM description array data
+	 * structure
+	 */
+	vm_desc_array = (struct vm_description_array *)get_vm_desc_base();
+	/* Obtain VM description array base */
+	vm_descriptions = &vm_desc_array->vm_desc_array[0];
+
+	status = -EINVAL;
+	/* Iterate virtual machine descriptions to find matching CPU */
+	for (i = 0; i < vm_desc_array->num_vm_desc; i++) {
+		/* Loop through each core allocated to the VM */
+		/* TODO: Need a spin-lock around this loop for SMP VMs */
+		for (j = 0; j < vm_descriptions[i].vm_hw_num_cores; j++) {
+			/* Check to see if the currently running CPU ID
+			 * matches the VM CPU ID
+			 */
+			if (cpu_id !=
+			    vm_descriptions[i].vm_pcpu_ids[j])
+				continue;
+
+			/* See if first CPU for this VM */
+			if (j == 0) {
+				/* Assign role of first CPU as primary VCPU */
+				*role = VCPU_PRIMARY;
+			} else {
+				/* Assign role of secondary CPU */
+				*role = VCPU_SECONDARY;
+			}
+
+			/* Return a pointer to the VM description */
+			*vm_desc = &vm_descriptions[i];
+			*vm_idx = i;
+			/* Set success return status and break from loop */
+			status = 0;
+			break;
+		}
+	}
+
+	/* Return status to caller */
+	return status;
+}
+
+static struct vm_description *get_vm_desc(int idx)
+{
+	struct vm_description_array *vm_desc_array;
+
+	/* Obtain base of user defined VM description array data
+	 * structure
+	 */
+	vm_desc_array = (struct vm_description_array *)get_vm_desc_base();
+	/* Obtain VM description array base */
+	if (idx >= vm_desc_array->num_vm_desc)
+		return NULL;
+	else
+		return &vm_desc_array->vm_desc_array[idx];
+}
+
+/* Create vm/vcpu for vm */
+int prepare_vm(uint16_t pcpu_id)
+{
+	int i, ret;
+	struct vm *vm = NULL;
+	struct vm_description *vm_desc = NULL;
+	int vm_id;
+	enum vcpu_role cpu_role = VCPU_ROLE_UNKNOWN;
+
+	ret = get_vm_desc_and_cpu_role(pcpu_id, &vm_desc, &cpu_role,
+					&vm_id);
+	if (!ret && (cpu_role == VCPU_PRIMARY)) {
+		vm_desc = get_vm_desc(vm_id);
+		ASSERT(vm_desc, "get vm desc failed");
+
+		ret = create_vm(vm_desc, &vm);
+		ASSERT(ret == 0, "VM creation failed!");
+
+		mptable_build(vm, vm_desc->vm_hw_num_cores);
+
+		prepare_vcpu(vm, vm_desc->vm_pcpu_ids[0]);
+
+		/* Prepare the AP for vm */
+		for (i = 1; i < vm_desc->vm_hw_num_cores; i++)
+			prepare_vcpu(vm, vm_desc->vm_pcpu_ids[i]);
+
+		/* start vm BSP automatically */
+		start_vm(vm);
+
+		pr_acrnlog("Start VM%x", vm_id);
+	}
+
+	return ret;
+}
+
+#else
+
+static bool is_vm0_bsp(uint16_t pcpu_id)
+{
+#ifdef CONFIG_VM0_DESC
+	return pcpu_id == vm0_desc.vm_pcpu_ids[0];
+#else
+	return pcpu_id == BOOT_CPU_ID;
+#endif
+}
+
 /* Create vm/vcpu for vm0 */
 int prepare_vm0(void)
 {
@@ -389,6 +534,21 @@ int prepare_vm0(void)
 
 	return err;
 }
+
+int prepare_vm(uint16_t pcpu_id)
+{
+	int err = 0;
+
+	if (is_vm0_bsp(pcpu_id)) {
+		err  = prepare_vm0();
+		if (err != 0) {
+			return err;
+		}
+	}
+
+	return err;
+}
+#endif
 
 #ifdef CONFIG_VM0_DESC
 static inline bool vcpu_in_vm_desc(struct vcpu *vcpu,

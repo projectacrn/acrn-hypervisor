@@ -107,15 +107,6 @@ void vcpu_thread(struct vcpu *vcpu)
 	} while (1);
 }
 
-static bool is_vm0_bsp(uint16_t pcpu_id)
-{
-#ifdef CONFIG_VM0_DESC
-	return pcpu_id == vm0_desc.vm_pcpu_ids[0];
-#else
-	return pcpu_id == BOOT_CPU_ID;
-#endif
-}
-
 int32_t hv_main(uint16_t pcpu_id)
 {
 	int32_t ret;
@@ -143,11 +134,9 @@ int32_t hv_main(uint16_t pcpu_id)
 	/* X2APIC mode is disabled by default. */
 	x2apic_enabled = false;
 
-	if (is_vm0_bsp(pcpu_id)) {
-		ret = prepare_vm0();
-		if (ret != 0) {
-			return ret;
-		}
+	ret = prepare_vm(pcpu_id);
+	if (ret != 0) {
+		return ret;
 	}
 
 	default_idle();

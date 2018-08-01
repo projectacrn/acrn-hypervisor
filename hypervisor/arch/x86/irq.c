@@ -412,7 +412,7 @@ static void handle_spurious_interrupt(uint32_t vector)
 }
 
 /* do_IRQ() */
-void dispatch_interrupt(struct intr_excp_ctx *ctx)
+static void __dispatch_interrupt(struct intr_excp_ctx *ctx)
 {
 	uint32_t vr = ctx->vector;
 	uint32_t irq = vector_to_irq[vr];
@@ -440,6 +440,26 @@ ERR:
 	handle_spurious_interrupt(vr);
 	return;
 }
+
+#ifndef CONFIG_PARTITION_HV
+void dispatch_interrupt(struct intr_excp_ctx *ctx)
+{
+	 __dispatch_interrupt(ctx);
+}
+#else
+void dispatch_interrupt(struct intr_excp_ctx *ctx)
+{
+	uint8_t vr = ctx->vector;
+	struct vcpu *vcpu;
+
+	vcpu = per_cpu(vcpu, get_cpu_id());
+	if (!is_vm0(vcpu->vm) && vr < VECTOR_NOTIFY_VCPU) {
+		send_lapic_eoi();
+		vlapic_intr_edge(vcpu, vr);
+	} else
+		__dispatch_interrupt(ctx);
+}
+#endif
 
 int handle_level_interrupt_common(struct irq_desc *desc,
 			__unused void *handler_data)

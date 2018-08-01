@@ -39,4 +39,8 @@
 #include <vmexit.h>
 #include <cpufeatures.h>
 
+#ifdef CONFIG_PARTITION_MODE
+#include <mptable.h>
+#include <vrtc.h>
+#endif
 #endif /* HV_ARCH_H */

@@ -7,6 +7,57 @@
 #include <hypervisor.h>
 #include <zeropage.h>
 
+#ifdef CONFIG_PARTITION_HV
+
+#define VM1_RAM_SIZE		0x80000000UL
+
+/*
+ * Default e820 mem map:
+ *
+ * there is reserved memory hole for PCI hole and APIC etc
+ * so the memory layout could be separated into lowmem & highmem.
+ *
+ */
+#define VM1_NUM_E820_ENTRIES	4
+struct e820_entry vm1_e820_default_entries[VM1_NUM_E820_ENTRIES] = {
+	{	/* 0 to lowmem */
+		.baseaddr =  0x00000000,
+		.length   =  VM1_RAM_SIZE,
+		.type     =  E820_TYPE_RAM
+	},
+
+	{	/* lowmem to lowmem_limit*/
+		.baseaddr =  VM1_RAM_SIZE,
+		.length   =  0,
+		.type     =  E820_TYPE_RESERVED
+	},
+
+	{	/* lowmem_limit to 4G */
+		.baseaddr =  0xe0000000,
+		.length   =  0x20000000,
+		.type     =  E820_TYPE_RESERVED
+	},
+
+	{
+		.baseaddr =  0x100000000,
+		.length   =  0x000100000,
+		.type     =  E820_TYPE_RESERVED
+	},
+};
+
+static uint32_t create_e820_table(struct e820_entry *_e820)
+{
+	uint32_t i;
+
+	for (i = 0; i < VM1_NUM_E820_ENTRIES; i++) {
+		_e820[i].baseaddr = vm1_e820_default_entries[i].baseaddr;
+		_e820[i].length = vm1_e820_default_entries[i].length;
+		_e820[i].type = vm1_e820_default_entries[i].type;
+	}
+
+	return VM1_NUM_E820_ENTRIES;
+}
+#else
 static uint32_t create_e820_table(struct e820_entry *_e820)
 {
 	uint32_t i;
@@ -22,6 +73,7 @@ static uint32_t create_e820_table(struct e820_entry *_e820)
 
 	return e820_entries;
 }
+#endif
 
 static uint64_t create_zero_page(struct vm *vm)
 {

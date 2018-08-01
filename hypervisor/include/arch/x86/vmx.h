@@ -467,4 +467,9 @@ typedef struct _descriptor_table_{
 }__attribute__((packed)) descriptor_table;
 #endif /* ASSEMBLER */
 
+#ifdef CONFIG_PARTITION_HV
+#define VMX_PREEMTION_TIMER_EXPIRY     40
+#define TSC_CLOCK_FREQ         1000000000
+#endif
+
 #endif /* VMX_H_ */

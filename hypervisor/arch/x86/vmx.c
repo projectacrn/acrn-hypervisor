@@ -1623,6 +1623,34 @@ static void override_uefi_vmcs(struct vcpu *vcpu)
 }
 #endif
 
+#ifdef CONFIG_PARTITION_HV
+void setup_preemption_timer(void)
+{
+	uint32_t value32;
+	uint64_t field;
+	static bool not_init = true;
+
+	if (not_init) {
+		not_init = false;
+		value32 = exec_vmread(VMX_PIN_VM_EXEC_CONTROLS);
+		value32 |= (VMX_PINBASED_CTLS_ENABLE_PTMR);
+		exec_vmwrite(VMX_PIN_VM_EXEC_CONTROLS, value32);
+
+		field = VMX_GUEST_TIMER;
+		value32 = (TSC_CLOCK_FREQ >> (msr_read(MSR_IA32_VMX_MISC) &
+					0x1F));
+		value32 = ((uint64_t)value32 *
+				(uint64_t)VMX_PREEMTION_TIMER_EXPIRY) / 1000;
+		exec_vmwrite(field, value32);
+		pr_dbg("VMX_GUEST_TIMER: 0x%x ", value32);
+
+		value32 = exec_vmread(VMX_EXIT_CONTROLS);
+		value32 |= VMX_EXIT_CTLS_SAVE_PTMR;
+		exec_vmwrite(VMX_EXIT_CONTROLS, value32);
+	}
+}
+#endif
+
 int init_vmcs(struct vcpu *vcpu)
 {
 	uint64_t vmx_rev_id;
@@ -1657,6 +1685,10 @@ int init_vmcs(struct vcpu *vcpu)
 	init_guest_state(vcpu);
 	init_entry_ctrl(vcpu);
 	init_exit_ctrl(vcpu);
+
+#ifdef CONFIG_PARTITION_HV
+	setup_preemption_timer();
+#endif
 
 #ifdef CONFIG_EFI_STUB
 	if (is_vm0(vcpu->vm) && vcpu->pcpu_id == 0U) {

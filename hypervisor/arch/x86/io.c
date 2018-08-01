@@ -111,6 +111,43 @@ int32_t dm_emulate_mmio_post(struct vcpu *vcpu)
 	return emulate_mmio_post(vcpu, io_req);
 }
 
+#ifdef CONFIG_PARTITION_HV
+int io_instr_dest_handler(struct vcpu *vcpu)
+{
+	int cur_context_idx = vcpu->arch_vcpu.cur_context;
+	struct run_context *cur_context;
+	uint32_t data;
+	uint32_t sz;
+	uint64_t exit_qual;
+	uint32_t mask;
+
+	cur_context = &vcpu->arch_vcpu.contexts[cur_context_idx];
+	exit_qual = vcpu->arch_vcpu.exit_qualification;
+	sz = VM_EXIT_IO_INSTRUCTION_SIZE(exit_qual) + 1;
+	mask = 0xfffffffful >> (32 - 8 * sz);
+
+	if (vcpu->req.reqs.pio_request.direction == REQUEST_READ) {
+		data = 0xffffffff;
+		switch (sz) {
+		case 4:
+			data = 0xffffffff;
+			break;
+		case 2:
+			data = 0xffff;
+			break;
+		case 1:
+			data = 0xff;
+			break;
+		}
+
+		cur_context->guest_cpu_regs.regs.rax &= ~mask;
+		cur_context->guest_cpu_regs.regs.rax |= data & mask;
+	}
+
+	return 0;
+}
+#endif
+
 void emulate_io_post(struct vcpu *vcpu)
 {
 	union vhm_request_buffer *req_buf;
@@ -305,7 +342,11 @@ emulate_io(struct vcpu *vcpu, struct io_request *io_req)
 		 *
 		 * ACRN insert request to VHM and inject upcall.
 		 */
+#ifndef CONFIG_PARTITION_HV
 		status = acrn_insert_request_wait(vcpu, io_req);
+#else
+		status = io_instr_dest_handler(vcpu);
+#endif
 
 		if (status != 0) {
 			struct pio_request *pio_req = &io_req->reqs.pio;

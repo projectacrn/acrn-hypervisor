@@ -14,7 +14,9 @@
 
 static int unhandled_vmexit_handler(struct vcpu *vcpu);
 static int xsetbv_vmexit_handler(struct vcpu *vcpu);
-
+#ifdef CONFIG_PARTITION_HV
+static int preemption_timer_handler(struct vcpu *vcpu);
+#endif
 /* VM Dispatch table for Exit condition handling */
 static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_EXCEPTION_OR_NMI] = {
@@ -123,7 +125,11 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_RDTSCP] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_VMX_PREEMPTION_TIMER_EXPIRED] = {
+#ifdef CONFIG_PARTITION_HV
+		.handler = preemption_timer_handler},
+#else
 		.handler = unhandled_vmexit_handler},
+#endif
 	[VMX_EXIT_REASON_INVVPID] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_WBINVD] = {
@@ -360,3 +366,35 @@ static int xsetbv_vmexit_handler(struct vcpu *vcpu)
 	write_xcr(0, val64);
 	return 0;
 }
+
+#ifdef CONFIG_PARTITION_HV
+static int preemption_timer_handler(struct vcpu *vcpu)
+{
+	uint64_t field;
+	uint32_t value32;
+	uint32_t preemtion_timer_freq;
+
+	/* get preemption timer register */
+	field = VMX_GUEST_TIMER;
+	/* calculate preemption timer frequency */
+	preemtion_timer_freq = (TSC_CLOCK_FREQ >>
+				(msr_read(MSR_IA32_VMX_MISC) & 0x1F));
+
+	/* calculate number of ticks corresponding to expiry time */
+	value32 = ((uint64_t) preemtion_timer_freq *
+			(uint64_t) VMX_PREEMTION_TIMER_EXPIRY) / 1000;
+
+	/* write the value into preemption timer register */
+	exec_vmwrite(field, (uint64_t) value32);
+
+	pr_dbg("Resetting VMX_GUEST_TIMER to Value: 0x%x ", value32);
+
+	/* kick console  */
+	console_handler();
+
+	/* Re-execute last instruction */
+	vcpu_retain_rip(vcpu);
+
+	return 0;
+}
+#endif

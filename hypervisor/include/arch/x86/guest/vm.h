@@ -155,6 +155,10 @@ struct vm {
 
 	uint32_t vcpuid_entry_nr, vcpuid_level, vcpuid_xlevel;
 	struct vcpuid_entry vcpuid_entries[MAX_VM_VCPUID_ENTRIES];
+#ifdef CONFIG_PARTITION_HV
+	void *vrtc;
+	struct vm_description   *vm_desc;
+#endif
 };
 
 struct vm_description {
@@ -166,6 +170,13 @@ struct vm_description {
 	uint16_t               vm_hw_num_cores;   /* Number of virtual cores */
 	/* Whether secure world is enabled for current VM. */
 	bool                   sworld_enabled;
+#ifdef CONFIG_PARTITION_HV
+	uint8_t			vm_id;
+	uint64_t		start_hpa;
+	uint64_t		mem_size; /* UOS memory size in hex */
+	bool			vm_vuart;
+	const char		*bootargs;
+#endif
 };
 
 int shutdown_vm(struct vm *vm);
@@ -174,7 +185,7 @@ void resume_vm(struct vm *vm);
 void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec);
 int start_vm(struct vm *vm);
 int create_vm(struct vm_description *vm_desc, struct vm **vm);
-int prepare_vm0(void);
+int prepare_vm(uint16_t pcpu_id);
 #ifdef CONFIG_VM0_DESC
 void vm_fixup(struct vm *vm);
 #endif
@@ -185,4 +196,11 @@ extern struct list_head vm_list;
 extern spinlock_t vm_list_lock;
 extern bool x2apic_enabled;
 
+#ifdef CONFIG_PARTITION_HV
+struct vm_description_array {
+	int                     num_vm_desc;
+	struct vm_description   vm_desc_array[];
+};
+const struct vm_description_array *get_vm_desc_base(void);
+#endif
 #endif /* VM_H_ */

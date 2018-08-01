@@ -11,6 +11,18 @@ config PLATFORM_SBL
 
 endchoice
 
+choice
+	prompt "Hypervisor mode"
+	default SHARING_MODE
+
+config SHARING_MODE
+	bool "Sharing mode"
+
+config PARTITION_MODE
+	bool "Partition mode"
+	depends on PLATFORM_SBL
+endchoice
+
 config PLATFORM
 	string
 	default "uefi" if PLATFORM_UEFI
