@@ -127,23 +127,23 @@ struct shell_cmd {
 #define SHELL_CMD_TRIGGER_CRASH_HELP	"trigger crash"
 
 /* Global function prototypes */
-int shell_show_req_info(int argc, char **argv);
-int shell_cmd_help(int argc, char **argv);
-int shell_list_vm(int argc, char **argv);
-int shell_list_vcpu(int argc, char **argv);
+int shell_show_req_info(__unused int argc, __unused char **argv);
+int shell_cmd_help(__unused int argc, __unused char **argv);
+int shell_list_vm(__unused int argc, __unused char **argv);
+int shell_list_vcpu(__unused int argc, __unused char **argv);
 int shell_pause_vcpu(int argc, char **argv);
 int shell_resume_vcpu(int argc, char **argv);
 int shell_vcpu_dumpreg(int argc, char **argv);
 int shell_vcpu_dumpmem(int argc, char **argv);
 int shell_to_sos_console(int argc, char **argv);
-int shell_show_cpu_int(int argc, char **argv);
-int shell_show_ptdev_info(int argc, char **argv);
-int shell_reboot(int argc, char **argv);
+int shell_show_cpu_int(__unused int argc, __unused char **argv);
+int shell_show_ptdev_info(__unused int argc, __unused char **argv);
+int shell_reboot(__unused int argc, __unused char **argv);
 int shell_show_vioapic_info(int argc, char **argv);
-int shell_show_ioapic_info(int argc, char **argv);
-int shell_show_vmexit_profile(int argc, char **argv);
+int shell_show_ioapic_info(__unused int argc, __unused char **argv);
+int shell_show_vmexit_profile(__unused int argc, __unused char **argv);
 int shell_dump_logbuf(int argc, char **argv);
-int shell_get_loglevel(int argc, char **argv);
+int shell_get_loglevel(__unused int argc, __unused char **argv);
 int shell_set_loglevel(int argc, char **argv);
 int shell_cpuid(int argc, char **argv);
 struct shell_cmd *shell_find_cmd(const char *cmd);
