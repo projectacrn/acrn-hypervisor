@@ -359,7 +359,7 @@ void shell_kick(void)
 
 int shell_process_cmd(char *p_input_line)
 {
-	int status = 0;
+	int status = -EINVAL;
 	struct shell_cmd *p_cmd;
 	char cmd_argv_str[SHELL_CMD_MAX_LEN + 1U];
 	int cmd_argv_mem[sizeof(char *) * ((SHELL_CMD_MAX_LEN + 1U) / 2U)];
@@ -386,14 +386,16 @@ int shell_process_cmd(char *p_input_line)
 	if (cmd_argc != 0) {
 		/* See if command is in cmds supported */
 		p_cmd = shell_find_cmd(cmd_argv[0]);
+		if (p_cmd == NULL) {
+			shell_puts("\r\nError: Invalid command.\r\n");
+			return -EINVAL;
+		}
 
-		if (p_cmd != NULL) {
-			/* Call the command passing the appropriate command
-			 * arguments.
-			 */
-			status = p_cmd->fcn(cmd_argc, &cmd_argv[0]);
-		} else {	/* unregistered cmd */
-			shell_puts("\r\nError: Invalid Command\r\n\r\n");
+		status = p_cmd->fcn(cmd_argc, &cmd_argv[0]);
+		if (status == -EINVAL) {
+			shell_puts("\r\nError: Invalid parameters.\r\n");
+		} else if (status != 0) {
+			shell_puts("\r\nCommand launch failed.\r\n");
 		}
 	}
 
@@ -416,7 +418,6 @@ void shell_init(void)
 #define MAX_INDENT_LEN	16
 int shell_cmd_help(__unused int argc, __unused char **argv)
 {
-	int status = 0;
 	int spaces = 0;
 	struct shell_cmd *p_cmd = NULL;
 	char space_buf[MAX_INDENT_LEN + 1];
@@ -486,12 +487,11 @@ int shell_cmd_help(__unused int argc, __unused char **argv)
 
 	shell_puts("\r\n");
 
-	return status;
+	return 0;
 }
 
 int shell_list_vm(__unused int argc, __unused char **argv)
 {
-	int status = 0;
 	char temp_str[MAX_STR_SIZE];
 	struct list_head *pos;
 	struct vm *vm;
@@ -525,12 +525,11 @@ int shell_list_vm(__unused int argc, __unused char **argv)
 	}
 	spinlock_release(&vm_list_lock);
 
-	return status;
+	return 0;
 }
 
 int shell_list_vcpu(__unused int argc, __unused char **argv)
 {
-	int status = 0;
 	char temp_str[MAX_STR_SIZE];
 	struct list_head *pos;
 	struct vm *vm;
@@ -575,7 +574,7 @@ int shell_list_vcpu(__unused int argc, __unused char **argv)
 	}
 	spinlock_release(&vm_list_lock);
 
-	return status;
+	return 0;
 }
 
 #define DUMPREG_SP_SIZE	32
@@ -753,9 +752,6 @@ int shell_to_sos_console(__unused int argc, __unused char **argv)
 	/* Get the virtual device node */
 	vm = get_vm_from_vmid(guest_no);
 	if (vm == NULL) {
-		pr_err("Error: VM %d is not yet created/started",
-				guest_no);
-
 		return -EINVAL;
 	}
 	vuart = vm->vuart;
@@ -825,24 +821,20 @@ int shell_show_vioapic_info(int argc, char **argv)
 
 	/* User input invalidation */
 	if (argc != 2) {
-		snprintf(temp_str, CPU_PAGE_SIZE, "\r\nvmid param needed\r\n");
-		goto END;
-	} else {
-		ret = atoi(argv[1]);
-		if (ret >= 0) {
-			vmid = (uint16_t) ret;
-		} else {
-			free(temp_str);
-			return -EINVAL;
-		}
+		free(temp_str);
+		return -EINVAL;
+	}
+	ret = atoi(argv[1]);
+	if (ret >= 0) {
+		vmid = (uint16_t) ret;
+		get_vioapic_info(temp_str, CPU_PAGE_SIZE, vmid);
+		shell_puts(temp_str);
+		free(temp_str);
+		return 0;
 	}
 
-	get_vioapic_info(temp_str, CPU_PAGE_SIZE, vmid);
-END:
-	shell_puts(temp_str);
 	free(temp_str);
-
-	return 0;
+	return -EINVAL;
 }
 
 int shell_show_ioapic_info(__unused int argc, __unused char **argv)
@@ -881,19 +873,17 @@ int shell_dump_logbuf(int argc, char **argv)
 {
 	uint16_t pcpu_id;
 	int val;
-	int status = -EINVAL;
 
 	if (argc == 2) {
 		val = atoi(argv[1]);
-		if (val < 0) {
-			return status;
+		if (val >= 0) {
+			pcpu_id = (uint16_t)val;
+			print_logmsg_buffer(pcpu_id);
+			return 0;
 		}
-		pcpu_id = (uint16_t)val;
-		print_logmsg_buffer(pcpu_id);
-		return 0;
 	}
 
-	return status;
+	return -EINVAL;
 }
 
 int shell_loglevel(int argc, char **argv)
