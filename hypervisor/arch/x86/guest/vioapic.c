@@ -87,13 +87,20 @@ vioapic_send_intr(struct vioapic *vioapic, uint8_t pin)
 	phys = ((rte.full & IOAPIC_RTE_DESTMOD) == IOAPIC_RTE_DESTPHY);
 	delmode = (uint32_t)(rte.full & IOAPIC_RTE_DELMOD);
 	level = ((rte.full & IOAPIC_RTE_TRGRLVL) != 0UL);
+	/* For level trigger irq, avoid send intr if
+	 * previous one hasn't received EOI
+	 */
 	if (level) {
+		if (vioapic->rtbl[pin].full & IOAPIC_RTE_REM_IRR) {
+			return;
+		}
 		vioapic->rtbl[pin].full |= IOAPIC_RTE_REM_IRR;
 	}
 
 	vector = rte.u.lo_32 & IOAPIC_RTE_LOW_INTVEC;
 	dest = (uint32_t)(rte.full >> IOAPIC_RTE_DEST_SHIFT);
-	vlapic_deliver_intr(vioapic->vm, level, dest, phys, delmode, vector, false);
+	vlapic_deliver_intr(vioapic->vm, level, dest, phys,
+							delmode, vector, false);
 }
 
 static void
