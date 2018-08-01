@@ -67,6 +67,7 @@
 /* DEBUG */
 #define HC_ID_DBG_BASE              0x60UL
 #define HC_SETUP_SBUF               BASE_HC_ID(HC_ID, HC_ID_DBG_BASE + 0x00UL)
+#define HC_SETUP_HV_NPK_LOG         BASE_HC_ID(HC_ID, HC_ID_DBG_BASE + 0x01UL)
 
 /* Trusty */
 #define HC_ID_TRUSTY_BASE           0x70UL
@@ -184,6 +185,28 @@ struct sbuf_setup_param {
 
 	/** sbuf's guest physical address */
 	uint64_t gpa;
+} __aligned(8);
+
+/**
+ * @brief Info to setup the hypervisor NPK log
+ *
+ * the parameter for HC_SETUP_HV_NPK_LOG hypercall
+ */
+struct hv_npk_log_param {
+	/** the setup command for the hypervisor NPK log */
+	uint16_t cmd;
+
+	/** the setup result for the hypervisor NPK log */
+	uint16_t res;
+
+	/** the loglevel for the hypervisor NPK log */
+	uint16_t loglevel;
+
+	/** Reserved */
+	uint16_t reserved;
+
+	/** the MMIO address for the hypervisor NPK log */
+	uint64_t mmio_addr;
 } __aligned(8);
 
 /**

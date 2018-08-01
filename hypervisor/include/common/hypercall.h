@@ -344,6 +344,17 @@ int32_t hcall_reset_ptdev_intr_info(struct vm *vm, uint16_t vmid,
 int32_t hcall_setup_sbuf(struct vm *vm, uint64_t param);
 
 /**
+  * @brief Setup the hypervisor NPK log.
+  *
+  * @param vm Pointer to VM data structure
+  * @param param guest physical address. This gpa points to
+  *              struct hv_npk_log_param
+  *
+  * @return 0 on success, non-zero on error.
+  */
+int32_t hcall_setup_hv_npk_log(struct vm *vm, uint64_t param);
+
+/**
  * @brief Get VCPU Power state.
  *
  * @param vm pointer to VM data structure
