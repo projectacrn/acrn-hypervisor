@@ -43,5 +43,6 @@ struct vbs_dev_info {
 
 #define VBS_K_SET_DEV _IOW(VBS_K_IOCTL, 0x00, struct vbs_dev_info)
 #define VBS_K_SET_VQ _IOW(VBS_K_IOCTL, 0x01, struct vbs_vqs_info)
+#define VBS_K_RESET_DEV _IO(VBS_K_IOCTL, 0x02)
 
 #endif /* _VBS_COMMON_IF_H_ */
