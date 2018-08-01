@@ -431,45 +431,46 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 
 static void
 vioapic_mmio_rw(struct vioapic *vioapic, uint64_t gpa,
-		uint32_t *data, bool doread)
+		uint32_t *data, bool do_read)
 {
 	uint32_t offset;
 
 	offset = (uint32_t)(gpa - VIOAPIC_BASE);
 
-	/*
-	 * The IOAPIC specification allows 32-bit wide accesses to the
+	VIOAPIC_LOCK(vioapic);
+
+	/* The IOAPIC specification allows 32-bit wide accesses to the
 	 * IOAPIC_REGSEL (offset 0) and IOAPIC_WINDOW (offset 16) registers.
 	 */
-	if (offset != IOAPIC_REGSEL &&
-		offset != IOAPIC_WINDOW &&
-		offset != IOAPIC_EOIR) {
-		if (doread) {
-			*data = 0U;
-		}
-	}
-
-	VIOAPIC_LOCK(vioapic);
-	if (offset == IOAPIC_REGSEL) {
-		if (doread) {
+	switch (offset) {
+	case IOAPIC_REGSEL:
+		if (do_read) {
 			*data = vioapic->ioregsel;
 		} else {
-			vioapic->ioregsel = *data;
+			vioapic->ioregsel = *data & 0xFFU;
 		}
-	} else if (offset == IOAPIC_EOIR) {
-		/* only need to handle write operation */
-		if (!doread) {
+		break;
+	case IOAPIC_EOIR:
+		if (!do_read) {
 			vioapic_write_eoi(vioapic, *data);
 		}
-	} else {
-		if (doread) {
+		break;
+	case IOAPIC_WINDOW:
+		if (do_read) {
 			*data = vioapic_indirect_read(vioapic,
 							vioapic->ioregsel);
 		} else {
-			vioapic_indirect_write(vioapic, vioapic->ioregsel,
-			    *data);
+			vioapic_indirect_write(vioapic,
+						 vioapic->ioregsel, *data);
 		}
+		break;
+	default:
+		if (do_read) {
+			*data = 0xFFFFFFFFU;
+		}
+		break;
 	}
+
 	VIOAPIC_UNLOCK(vioapic);
 }
 
