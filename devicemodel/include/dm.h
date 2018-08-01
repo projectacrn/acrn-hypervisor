@@ -29,8 +29,6 @@
 #ifndef	_DM_H_
 #define	_DM_H_
 
-#define	VMEXIT_CONTINUE		(0)
-#define	VMEXIT_ABORT		(-1)
 #include <stdbool.h>
 #include "types.h"
 #include "vmm.h"
