@@ -137,7 +137,7 @@ static inline uint8_t get_slp_typx(uint32_t pm1_cnt)
 static uint32_t pm1ab_io_read(__unused struct vm_io_handler *hdlr,
 		__unused struct vm *vm, uint16_t addr, size_t width)
 {
-	uint32_t val = io_read(addr, width);
+	uint32_t val = pio_read(addr, width);
 
 	if (host_enter_s3_success == 0U) {
 		/* If host S3 enter failes, we should set BIT_WAK_STS
@@ -186,7 +186,7 @@ static void pm1ab_io_write(__unused struct vm_io_handler *hdlr,
 		}
 	}
 
-	io_write(v, addr, width);
+	pio_write(v, addr, width);
 }
 
 static void

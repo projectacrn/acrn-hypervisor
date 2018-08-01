@@ -157,8 +157,8 @@ static void _irq_desc_free_vector(uint32_t irq)
 
 static void disable_pic_irq(void)
 {
-	io_write_byte(0xffU, 0xA1U);
-	io_write_byte(0xffU, 0x21U);
+	pio_write8(0xffU, 0xA1U);
+	pio_write8(0xffU, 0x21U);
 }
 
 static bool

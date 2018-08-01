@@ -143,7 +143,7 @@ static inline uint32_t read_lapic_reg32(uint32_t offset)
 	if (offset < 0x20U || offset > 0x3ffU)
 		return 0;
 
-	return mmio_read_long(lapic_info.xapic.vaddr + offset);
+	return mmio_read32(lapic_info.xapic.vaddr + offset);
 }
 
 inline void write_lapic_reg32(uint32_t offset, uint32_t value)
@@ -151,7 +151,7 @@ inline void write_lapic_reg32(uint32_t offset, uint32_t value)
 	if (offset < 0x20U || offset > 0x3ffU)
 		return;
 
-	mmio_write_long(value, lapic_info.xapic.vaddr + offset);
+	mmio_write32(value, lapic_info.xapic.vaddr + offset);
 }
 
 static void clear_lapic_isr(void)

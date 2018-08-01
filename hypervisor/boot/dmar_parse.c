@@ -148,10 +148,10 @@ static uint8_t get_secondary_bus(uint8_t bus, uint8_t dev, uint8_t func)
 {
 	uint32_t data;
 
-	io_write_long(PCI_CONFIG_ACCESS_EN | (bus << 16) | (dev << 11) |
+	pio_write32(PCI_CONFIG_ACCESS_EN | (bus << 16) | (dev << 11) |
 		(func << 8) | 0x18, PCI_CONFIG_ADDRESS);
 
-	data = io_read_long(PCI_CONFIG_DATA);
+	data = pio_read32(PCI_CONFIG_DATA);
 
 	return (data >> 8) & 0xff;
 }
