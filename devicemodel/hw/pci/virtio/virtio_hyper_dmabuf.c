@@ -186,7 +186,7 @@ virtio_hyper_dmabuf_reset(void *base)
 	if (kstatus == VIRTIO_DEV_STARTED) {
 		virtio_hyper_dmabuf_k_stop();
 		virtio_hyper_dmabuf_k_reset();
-		kstatus = VIRTIO_DEV_INITIAL;
+		kstatus = VIRTIO_DEV_INIT_SUCCESS;
 	}
 }
 
