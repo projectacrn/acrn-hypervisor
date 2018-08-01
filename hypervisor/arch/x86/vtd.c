@@ -172,7 +172,7 @@ static spinlock_t domain_lock;
 static struct iommu_domain *host_domain;
 static struct list_head iommu_domains;
 
-static void dmar_register_hrhd(struct dmar_drhd_rt *drhd_rt);
+static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint);
 static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus,
 					   uint8_t devfun);
 static void register_hrhd_units(void)

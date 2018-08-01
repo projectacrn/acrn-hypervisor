@@ -57,7 +57,7 @@ int vlapic_pending_intr(struct acrn_vlapic *vlapic, uint32_t *vecptr);
 void vlapic_intr_accepted(struct acrn_vlapic *vlapic, uint32_t vector);
 
 struct acrn_vlapic *vm_lapic_from_pcpuid(struct vm *vm, uint16_t pcpu_id);
-bool is_vlapic_msr(uint32_t num);
+bool is_vlapic_msr(uint32_t msr);
 int vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval);
 int vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval);
 
@@ -70,7 +70,7 @@ int vlapic_write_mmio_reg(struct vcpu *vcpu, uint64_t gpa,
  * Signals to the LAPIC that an interrupt at 'vector' needs to be generated
  * to the 'cpu', the state is recorded in IRR.
  */
-int vlapic_set_intr(struct vcpu *vcpu, uint32_t vector, bool trig);
+int vlapic_set_intr(struct vcpu *vcpu, uint32_t vector, bool level);
 
 #define	LAPIC_TRIG_LEVEL	true
 #define	LAPIC_TRIG_EDGE		false

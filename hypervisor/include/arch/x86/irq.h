@@ -55,7 +55,7 @@ int common_dev_handler_level(struct irq_desc *desc,
 	__unused void *handler_data);
 int quick_handler_nolock(struct irq_desc *desc, __unused void *handler_data);
 
-void init_default_irqs(uint16_t cpu);
+void init_default_irqs(uint16_t cpu_id);
 
 void dispatch_exception(struct intr_excp_ctx *ctx);
 void dispatch_interrupt(struct intr_excp_ctx *ctx);

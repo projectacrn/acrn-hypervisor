@@ -1484,14 +1484,14 @@ vmm_emulate_instruction(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *
 }
 
 int
-vie_alignment_check(uint8_t cpl, uint8_t size, uint64_t cr0, uint64_t rf,
+vie_alignment_check(uint8_t cpl, uint8_t size, uint64_t cr0, uint64_t rflags,
 	uint64_t gla)
 {
 	ASSERT(size == 1U || size == 2U || size == 4U || size == 8U,
 	    "%s: invalid size %hhu", __func__, size);
 	ASSERT(cpl <= 3U, "%s: invalid cpl %d", __func__, cpl);
 
-	if (cpl != 3U || (cr0 & CR0_AM) == 0UL || (rf & PSL_AC) == 0UL) {
+	if (cpl != 3U || (cr0 & CR0_AM) == 0UL || (rflags & PSL_AC) == 0UL) {
 		return 0;
 	}
 

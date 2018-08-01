@@ -251,8 +251,8 @@ struct instr_emul_ctxt {
 
 int vm_get_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t *retval);
 int vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t val);
-int vm_get_seg_desc(struct vcpu *vcpu, enum cpu_reg_name reg,
-		struct seg_desc *ret_desc);
-int vm_set_seg_desc(struct vcpu *vcpu, enum cpu_reg_name reg,
+int vm_get_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
+		struct seg_desc *desc);
+int vm_set_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
 		struct seg_desc *desc);
 #endif

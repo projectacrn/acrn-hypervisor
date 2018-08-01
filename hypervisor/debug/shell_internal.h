@@ -119,9 +119,9 @@ int shell_show_vmexit_profile(__unused int argc, __unused char **argv);
 int shell_dump_logbuf(int argc, char **argv);
 int shell_loglevel(int argc, char **argv);
 int shell_cpuid(int argc, char **argv);
-struct shell_cmd *shell_find_cmd(const char *cmd);
+struct shell_cmd *shell_find_cmd(const char *cmd_str);
 int shell_process_cmd(char *p_input_line);
-void shell_puts(const char *str_ptr);
+void shell_puts(const char *string_ptr);
 int shell_trigger_crash(int argc, char **argv);
 
 #endif /* SHELL_INTER_H */

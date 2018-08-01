@@ -95,12 +95,12 @@ int vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg, uint64_t val)
 }
 
 int vm_set_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
-		struct seg_desc *ret_desc)
+		struct seg_desc *desc)
 {
 	int error;
 	uint32_t base, limit, access;
 
-	if ((vcpu == NULL) || (ret_desc == NULL)) {
+	if ((vcpu == NULL) || (desc == NULL)) {
 		return -EINVAL;
 	}
 
@@ -113,9 +113,9 @@ int vm_set_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
 		return -EINVAL;
 	}
 
-	exec_vmwrite(base, ret_desc->base);
-	exec_vmwrite32(limit, ret_desc->limit);
-	exec_vmwrite32(access, ret_desc->access);
+	exec_vmwrite(base, desc->base);
+	exec_vmwrite32(limit, desc->limit);
+	exec_vmwrite32(access, desc->access);
 
 	return 0;
 }
