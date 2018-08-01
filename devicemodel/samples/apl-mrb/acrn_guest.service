@@ -3,6 +3,7 @@ Description=Start ACRN UOS
 After=systemd-networkd.service
 
 ConditionPathExists=/sys/kernel/gvt
+ConditionPathExists=/dev/mmcblk1p3
 
 [Service]
 Type=simple
