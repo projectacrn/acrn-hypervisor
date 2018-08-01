@@ -5,7 +5,7 @@
 #include <hypervisor.h>
 #include <reloc.h>
 
-struct run_context cpu_ctx;
+struct cpu_context cpu_ctx;
 
 /* whether the host enter s3 success */
 uint8_t host_enter_s3_success = 1U;
