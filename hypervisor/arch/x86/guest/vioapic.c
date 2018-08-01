@@ -230,7 +230,7 @@ vioapic_update_tmr(struct vcpu *vcpu)
 }
 
 static uint32_t
-vioapic_read(struct vioapic *vioapic, uint32_t addr)
+vioapic_indirect_read(struct vioapic *vioapic, uint32_t addr)
 {
 	uint32_t regnum;
 	uint8_t pin, pincount = vioapic_pincount(vioapic->vm);
@@ -305,7 +305,7 @@ vioapic_write_eoi(struct vioapic *vioapic, uint32_t vector)
  * VIOAPIC_UNLOCK(vioapic) by caller.
  */
 static void
-vioapic_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
+vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 {
 	union ioapic_rte last, new;
 	uint64_t changed;
@@ -465,31 +465,14 @@ vioapic_mmio_rw(struct vioapic *vioapic, uint64_t gpa,
 		}
 	} else {
 		if (doread) {
-			*data = vioapic_read(vioapic, vioapic->ioregsel);
+			*data = vioapic_indirect_read(vioapic,
+							vioapic->ioregsel);
 		} else {
-			vioapic_write(vioapic, vioapic->ioregsel,
+			vioapic_indirect_write(vioapic, vioapic->ioregsel,
 			    *data);
 		}
 	}
 	VIOAPIC_UNLOCK(vioapic);
-}
-
-void
-vioapic_mmio_read(struct vm *vm, uint64_t gpa, uint32_t *rval)
-{
-	struct vioapic *vioapic;
-
-	vioapic = vm_ioapic(vm);
-	vioapic_mmio_rw(vioapic, gpa, rval, true);
-}
-
-void
-vioapic_mmio_write(struct vm *vm, uint64_t gpa, uint32_t wval)
-{
-	struct vioapic *vioapic;
-
-	vioapic = vm_ioapic(vm);
-	vioapic_mmio_rw(vioapic, gpa, &wval, false);
 }
 
 void
@@ -600,26 +583,26 @@ int vioapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
 		__unused void *handler_private_data)
 {
 	struct vm *vm = vcpu->vm;
+	struct vioapic *vioapic;
 	struct mmio_request *mmio = &io_req->reqs.mmio;
 	uint64_t gpa = mmio->address;
 	int ret = 0;
+
+	vioapic = vm_ioapic(vm);
 
 	/* Note all RW to IOAPIC are 32-Bit in size */
 	if (mmio->size == 4UL) {
 		uint32_t data = (uint32_t)mmio->value;
 
 		if (mmio->direction == REQUEST_READ) {
-			vioapic_mmio_read(vm,
-					gpa,
-					&data);
+			vioapic_mmio_rw(vioapic, gpa, &data, true);
 			mmio->value = (uint64_t)data;
+
 		} else if (mmio->direction == REQUEST_WRITE) {
-			vioapic_mmio_write(vm,
-					gpa,
-					data);
-		} else {
-			/* Can never happen due to the range of direction. */
-		}
+			vioapic_mmio_rw(vioapic, gpa, &data, false);
+
+		} else
+			ret = -EINVAL;
 	} else {
 		pr_err("All RW to IOAPIC must be 32-bits in size");
 		ret = -EINVAL;
