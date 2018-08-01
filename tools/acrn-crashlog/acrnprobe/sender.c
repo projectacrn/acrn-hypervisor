@@ -224,8 +224,7 @@ static void telemd_get_log(struct log_t *log, void *data)
 	count = ac_scandir(d->srcdir, &filelist, filter_filename_substr,
 			 log->name, NULL);
 	if (count < 0) {
-		LOGE("search (%s) in dir (%s) failed, error (%s)\n", log->name,
-		     d->srcdir, strerror(count));
+		LOGE("search (%s) in dir (%s) failed\n", log->name, d->srcdir);
 		return;
 	}
 	if (!count) {
@@ -289,8 +288,7 @@ static void crashlog_get_log(struct log_t *log, void *data)
 		const int count = config_fmt_to_files(log->path, &files);
 
 		if (count < 0) {
-			LOGE("parse config format (%s) failed, error (%s)\n",
-			     log->path, strerror(count));
+			LOGE("parse config format (%s) failed\n", log->path);
 			return;
 		}
 		if (!count) {
@@ -597,9 +595,8 @@ static int telemd_new_vmevent(const char *line_to_sync,
 		res = find_file(crashlog->outdir, log + strlen("/logs/"),
 				2, &vmlogpath, 1);
 		if (res < 0) {
-			LOGE("find (%s) in (%s) failed, strerror (%s)\n",
-			     log + strlen("/logs/"), crashlog->outdir,
-			     strerror(-res));
+			LOGE("find (%s) in (%s) failed\n",
+			     log + strlen("/logs/"), crashlog->outdir);
 			return VMEVT_DEFER;
 		}
 	}

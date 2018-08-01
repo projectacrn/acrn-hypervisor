@@ -17,9 +17,7 @@ void do_log(const int level,
 	va_list args;
 	char *fmt;
 	char log[MAX_LOG_LEN];
-	char *msg_log;
 	int n = 0;
-	int msg_len = 0;
 #ifdef DEBUG_ACRN_CRASHLOG
 	const char header_fmt[] = "<%-20s%5d>: ";
 #endif
@@ -42,10 +40,8 @@ void do_log(const int level,
 	if (n < 0 || (size_t)n >= sizeof(log))
 		n = 0;
 #endif
-	msg_log = log + n;
-	msg_len = sizeof(log) - n;
 	/* msg */
-	vsnprintf(msg_log, msg_len, fmt, args);
+	vsnprintf(log + n, sizeof(log) - (size_t)n, fmt, args);
 	log[sizeof(log) - 1] = 0;
 	va_end(args);
 
