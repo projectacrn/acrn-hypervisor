@@ -33,21 +33,20 @@ static struct trusty_key_info g_key_info = {
 	.platform = 3U,
 	.num_seeds = 1U
 };
-
 #define save_segment(seg, SEG_NAME) \
 { \
-	seg.selector = exec_vmread16(VMX_GUEST_##SEG_NAME##_SEL); \
-	seg.base = exec_vmread(VMX_GUEST_##SEG_NAME##_BASE); \
-	seg.limit = exec_vmread32(VMX_GUEST_##SEG_NAME##_LIMIT); \
-	seg.attr = exec_vmread32(VMX_GUEST_##SEG_NAME##_ATTR); \
+	seg.selector = exec_vmread16(SEG_NAME##_SEL); \
+	seg.base = exec_vmread(SEG_NAME##_BASE); \
+	seg.limit = exec_vmread32(SEG_NAME##_LIMIT); \
+	seg.attr = exec_vmread32(SEG_NAME##_ATTR); \
 }
 
 #define load_segment(seg, SEG_NAME) \
 { \
-	exec_vmwrite16(VMX_GUEST_##SEG_NAME##_SEL, seg.selector); \
-	exec_vmwrite(VMX_GUEST_##SEG_NAME##_BASE, seg.base); \
-	exec_vmwrite32(VMX_GUEST_##SEG_NAME##_LIMIT, seg.limit); \
-	exec_vmwrite32(VMX_GUEST_##SEG_NAME##_ATTR, seg.attr); \
+	exec_vmwrite16(SEG_NAME##_SEL, seg.selector); \
+	exec_vmwrite(SEG_NAME##_BASE, seg.base); \
+	exec_vmwrite32(SEG_NAME##_LIMIT, seg.limit); \
+	exec_vmwrite32(SEG_NAME##_ATTR, seg.attr); \
 }
 
 #ifndef WORKAROUND_FOR_TRUSTY_4G_MEM
@@ -231,14 +230,14 @@ static void save_world_ctx(struct run_context *context)
 	context->ia32_sysenter_esp = exec_vmread(VMX_GUEST_IA32_SYSENTER_ESP);
 	context->ia32_sysenter_eip = exec_vmread(VMX_GUEST_IA32_SYSENTER_EIP);
 	context->ia32_sysenter_cs = exec_vmread32(VMX_GUEST_IA32_SYSENTER_CS);
-	save_segment(context->cs, CS);
-	save_segment(context->ss, SS);
-	save_segment(context->ds, DS);
-	save_segment(context->es, ES);
-	save_segment(context->fs, FS);
-	save_segment(context->gs, GS);
-	save_segment(context->tr, TR);
-	save_segment(context->ldtr, LDTR);
+	save_segment(context->cs, VMX_GUEST_CS);
+	save_segment(context->ss, VMX_GUEST_SS);
+	save_segment(context->ds, VMX_GUEST_DS);
+	save_segment(context->es, VMX_GUEST_ES);
+	save_segment(context->fs, VMX_GUEST_FS);
+	save_segment(context->gs, VMX_GUEST_GS);
+	save_segment(context->tr, VMX_GUEST_TR);
+	save_segment(context->ldtr, VMX_GUEST_LDTR);
 	/* Only base and limit for IDTR and GDTR */
 	context->idtr.base = exec_vmread(VMX_GUEST_IDTR_BASE);
 	context->gdtr.base = exec_vmread(VMX_GUEST_GDTR_BASE);
@@ -277,14 +276,14 @@ static void load_world_ctx(struct run_context *context)
 	exec_vmwrite32(VMX_GUEST_IA32_SYSENTER_CS, context->ia32_sysenter_cs);
 	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_ESP, context->ia32_sysenter_esp);
 	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_EIP, context->ia32_sysenter_eip);
-	load_segment(context->cs, CS);
-	load_segment(context->ss, SS);
-	load_segment(context->ds, DS);
-	load_segment(context->es, ES);
-	load_segment(context->fs, FS);
-	load_segment(context->gs, GS);
-	load_segment(context->tr, TR);
-	load_segment(context->ldtr, LDTR);
+	load_segment(context->cs, VMX_GUEST_CS);
+	load_segment(context->ss, VMX_GUEST_SS);
+	load_segment(context->ds, VMX_GUEST_DS);
+	load_segment(context->es, VMX_GUEST_ES);
+	load_segment(context->fs, VMX_GUEST_FS);
+	load_segment(context->gs, VMX_GUEST_GS);
+	load_segment(context->tr, VMX_GUEST_TR);
+	load_segment(context->ldtr, VMX_GUEST_LDTR);
 	/* Only base and limit for IDTR and GDTR */
 	exec_vmwrite(VMX_GUEST_IDTR_BASE, context->idtr.base);
 	exec_vmwrite(VMX_GUEST_GDTR_BASE, context->gdtr.base);

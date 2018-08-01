@@ -12,27 +12,6 @@
 /** Replaces 'x' by its value. */
 #define CPP_STRING(x) __CPP_STRING(x)
 
-/** Creates a bitfield mask.
- *
- * @param pos The position of the LSB within the mask.
- * @param width The width of the bitfield in bits.
- *
- * @return The bitfield mask.
- */
-
-#define BITFIELD_MASK(pos, width) (((1<<(width))-1)<<(pos))
-#define BITFIELD_VALUE(v, pos, width) (((v)<<(pos)) & (((1<<(width))-1)<<(pos)))
-
-#define MAKE_BITFIELD_MASK(id) BITFIELD_MASK(id ## _POS, id ## _WIDTH)
-#define MAKE_BITFIELD_VALUE(v, id) BITFIELD_VALUE(v, id ## _POS, id ## _WIDTH)
-
-/** Defines a register within a register block. */
-#define REGISTER(base, off) (base ## _BASE + (off))
-
-#define MAKE_MMIO_REGISTER_ADDRESS(chip, module, register)	\
-	(chip ## _ ## module ## _BASE +				\
-	(chip ## _ ## module ## _ ## register ## _REGISTER))
-
 /* Macro used to check if a value is aligned to the required boundary.
  * Returns TRUE if aligned; FALSE if not aligned
  * NOTE:  The required alignment must be a power of 2 (2, 4, 8, 16, 32, etc)
