@@ -51,6 +51,7 @@ struct vioapic {
 #define	VIOAPIC_LOCK(vioapic)	spinlock_obtain(&((vioapic)->mtx))
 #define	VIOAPIC_UNLOCK(vioapic)	 spinlock_release(&((vioapic)->mtx))
 
+#define IOAPIC_ID_MASK		0x0f000000U
 #define MASK_ALL_INTERRUPTS   0x0001000000010000UL
 #define IOAPIC_RTE_LOW_INTVEC    ((uint32_t)IOAPIC_RTE_INTVEC)
 
@@ -320,7 +321,7 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 	regnum = addr & 0xffUL;
 	switch (regnum) {
 	case IOAPIC_ID:
-		vioapic->id = data & APIC_ID_MASK;
+		vioapic->id = data & IOAPIC_ID_MASK;
 		break;
 	case IOAPIC_VER:
 	case IOAPIC_ARB:
