@@ -24,6 +24,7 @@ specific areas within the ACRN hypervisor system.
    virtio-console.rst
    uart-virtualization.rst
    ACPI-virt-hld.rst
+   interrupt-hld.rst
    APL_GVT-g-hld.rst
    GVT-G-porting.rst
 
