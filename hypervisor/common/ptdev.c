@@ -68,7 +68,7 @@ alloc_entry(struct vm *vm, enum ptdev_intr_type type)
 	struct ptdev_remapping_info *entry;
 
 	/* allocate */
-	entry = calloc(1, sizeof(*entry));
+	entry = calloc(1U, sizeof(*entry));
 	ASSERT(entry != NULL, "alloc memory failed");
 	entry->type = type;
 	entry->vm = vm;

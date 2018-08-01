@@ -56,7 +56,7 @@ struct shared_buf *sbuf_allocate(uint32_t ele_num, uint32_t ele_size)
 		return NULL;
 	}
 
-	sbuf = calloc(1, sbuf_allocate_size);
+	sbuf = calloc(1U, sbuf_allocate_size);
 	if (sbuf == NULL) {
 		pr_err("%s no memory!", __func__);
 		return NULL;

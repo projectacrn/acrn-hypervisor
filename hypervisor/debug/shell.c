@@ -450,7 +450,7 @@ void shell_init(void)
 	(void)strcpy_s((void *)p_shell->name, SHELL_NAME_MAX_LEN, "Serial");
 
 	/* Zero fill the input buffer */
-	(void)memset((void *)p_shell->input_line[p_shell->input_line_active], 0,
+	(void)memset((void *)p_shell->input_line[p_shell->input_line_active], 0U,
 			SHELL_CMD_MAX_LEN + 1U);
 }
 
@@ -1045,7 +1045,7 @@ END:
 
 int shell_show_ioapic_info(__unused int argc, __unused char **argv)
 {
-	char *temp_str = alloc_pages(2);
+	char *temp_str = alloc_pages(2U);
 
 	if (temp_str == NULL) {
 		return -ENOMEM;
@@ -1061,7 +1061,7 @@ int shell_show_ioapic_info(__unused int argc, __unused char **argv)
 
 int shell_show_vmexit_profile(__unused int argc, __unused char **argv)
 {
-	char *temp_str = alloc_pages(2);
+	char *temp_str = alloc_pages(2U);
 
 	if (temp_str == NULL) {
 		return -ENOMEM;
