@@ -652,28 +652,6 @@ num_vcpus_allowed(struct vmctx *ctx)
 	return VM_MAXCPU;
 }
 
-static struct vmctx *
-do_open(const char *vmname)
-{
-	struct vmctx *ctx;
-	int error;
-
-	error = vm_create(vmname);
-	if (error) {
-		perror("vm_create");
-		exit(1);
-
-	}
-
-	ctx = vm_open(vmname);
-	if (ctx == NULL) {
-		perror("vm_open");
-		exit(1);
-	}
-
-	return ctx;
-}
-
 static void
 sig_handler_term(int signo)
 {
@@ -901,12 +879,11 @@ main(int argc, char *argv[])
 	vmname = argv[0];
 
 	for (;;) {
-		ctx = do_open(vmname);
-
-		/* set IOReq buffer page */
-		error = vm_set_shared_io_page(ctx, (unsigned long)vhm_req_buf);
-		if (error)
-			goto fail;
+		ctx = vm_create(vmname, (unsigned long)vhm_req_buf);
+		if (!ctx) {
+			perror("vm_open");
+			exit(1);
+		}
 
 		if (guest_ncpus < 1) {
 			fprintf(stderr, "Invalid guest vCPUs (%d)\n",
@@ -997,7 +974,6 @@ main(int argc, char *argv[])
 		mevent_deinit();
 		vm_unsetup_memory(ctx);
 		vm_destroy(ctx);
-		vm_close(ctx);
 		_ctx = 0;
 
 		vm_set_suspend_mode(VM_SUSPEND_NONE);
@@ -1011,6 +987,5 @@ mevent_fail:
 	vm_unsetup_memory(ctx);
 fail:
 	vm_destroy(ctx);
-	vm_close(ctx);
 	exit(0);
 }

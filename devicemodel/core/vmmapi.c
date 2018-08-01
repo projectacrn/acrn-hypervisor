@@ -58,13 +58,6 @@
 #define SUPPORT_VHM_API_VERSION_MAJOR	1
 #define SUPPORT_VHM_API_VERSION_MINOR	0
 
-int
-vm_create(const char *name)
-{
-	/* TODO: specific part for vm create */
-	return 0;
-}
-
 static int
 check_api(int fd)
 {
@@ -92,7 +85,7 @@ check_api(int fd)
 static int devfd = -1;
 
 struct vmctx *
-vm_open(const char *name)
+vm_create(const char *name, uint64_t req_buf)
 {
 	struct vmctx *ctx;
 	struct acrn_create_vm create_vm;
@@ -138,6 +131,7 @@ vm_open(const char *name)
 	else
 		create_vm.vm_flag &= (~SECURE_WORLD_ENABLED);
 
+	create_vm.req_buf = req_buf;
 	while (retry > 0) {
 		error = ioctl(ctx->fd, IC_CREATE_VM, &create_vm);
 		if (error == 0)
@@ -158,33 +152,6 @@ vm_open(const char *name)
 err:
 	free(ctx);
 	return NULL;
-}
-
-void
-vm_close(struct vmctx *ctx)
-{
-	if (!ctx)
-		return;
-
-	close(ctx->fd);
-	free(ctx);
-	devfd = -1;
-}
-
-int
-vm_set_shared_io_page(struct vmctx *ctx, uint64_t page_vma)
-{
-	int error;
-
-	error = ioctl(ctx->fd, IC_SET_IOREQ_BUFFER, page_vma);
-
-	if (error) {
-		fprintf(stderr, "failed to setup shared io page create VM %s\n",
-				ctx->name);
-		return -1;
-	}
-
-	return 0;
 }
 
 int
@@ -239,8 +206,13 @@ vm_notify_request_done(struct vmctx *ctx, int vcpu)
 void
 vm_destroy(struct vmctx *ctx)
 {
-	if (ctx)
-		ioctl(ctx->fd, IC_DESTROY_VM, NULL);
+	if (!ctx)
+		return;
+
+	ioctl(ctx->fd, IC_DESTROY_VM, NULL);
+	close(ctx->fd);
+	free(ctx);
+	devfd = -1;
 }
 
 int
