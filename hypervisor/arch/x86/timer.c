@@ -261,9 +261,9 @@ static uint64_t pit_calibrate_tsc(uint16_t cal_ms_arg)
 	 * Read/Write least significant byte first, mode 0, 16 bits.
 	 */
 
-	io_write_byte(0x30U, 0x43U);
-	io_write_byte(initial_pit_low, 0x40U);	/* Write LSB */
-	io_write_byte(initial_pit_high, 0x40U);		/* Write MSB */
+	pio_write8(0x30U, 0x43U);
+	pio_write8(initial_pit_low, 0x40U);	/* Write LSB */
+	pio_write8(initial_pit_high, 0x40U);		/* Write MSB */
 
 	current_tsc = rdtsc();
 
@@ -271,10 +271,10 @@ static uint64_t pit_calibrate_tsc(uint16_t cal_ms_arg)
 		/* Port 0x43 ==> Control word write; 0x00 ==> Select
 		 * Counter 0, Counter Latch Command, Mode 0; 16 bits
 		 */
-		io_write_byte(0x00U, 0x43U);
+		pio_write8(0x00U, 0x43U);
 
-		current_pit = io_read_byte(0x40U);	/* Read LSB */
-		current_pit |= io_read_byte(0x40U) << 8U;	/* Read MSB */
+		current_pit = pio_read8(0x40U);	/* Read LSB */
+		current_pit |= pio_read8(0x40U) << 8U;	/* Read MSB */
 		/* Let the counter count down to PIT_TARGET */
 	} while (current_pit > PIT_TARGET);
 

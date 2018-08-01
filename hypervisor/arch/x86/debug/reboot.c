@@ -7,6 +7,6 @@
 
 int warm_reboot(void)
 {
-	io_write_byte(0x6, 0xcf9);
+	pio_write8(0x6, 0xcf9);
 	return 0;
 }

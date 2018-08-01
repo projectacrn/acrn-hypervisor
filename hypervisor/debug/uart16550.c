@@ -35,9 +35,9 @@ static spinlock_t uart_tx_lock;
 static inline uint32_t uart16550_read_reg(uint64_t base, uint16_t reg_idx)
 {
 	if (serial_port_mapped) {
-		return io_read_byte((uint16_t)base + reg_idx);
+		return pio_read8((uint16_t)base + reg_idx);
 	} else {
-		return mmio_read_long((void*)((uint32_t*)HPA2HVA(base) + reg_idx));
+		return mmio_read32((void*)((uint32_t*)HPA2HVA(base) + reg_idx));
 	}
 }
 
@@ -48,9 +48,9 @@ static inline void uart16550_write_reg(uint64_t base,
 	uint32_t val, uint16_t reg_idx)
 {
 	if (serial_port_mapped) {
-		io_write_byte((uint8_t)val, (uint16_t)base + reg_idx);
+		pio_write8((uint8_t)val, (uint16_t)base + reg_idx);
 	} else {
-		mmio_write_long(val, (void*)((uint32_t*)HPA2HVA(base) + reg_idx));
+		mmio_write32(val, (void*)((uint32_t*)HPA2HVA(base) + reg_idx));
 	}
 }
 

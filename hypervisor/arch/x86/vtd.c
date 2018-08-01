@@ -191,16 +191,16 @@ static void register_hrhd_units(void)
 
 static uint32_t iommu_read32(struct dmar_drhd_rt *dmar_uint, uint32_t offset)
 {
-	return mmio_read_long(HPA2HVA(dmar_uint->drhd->reg_base_addr + offset));
+	return mmio_read32(HPA2HVA(dmar_uint->drhd->reg_base_addr + offset));
 }
 
 static uint64_t iommu_read64(struct dmar_drhd_rt *dmar_uint, uint32_t offset)
 {
 	uint64_t value;
 
-	value = mmio_read_long(HPA2HVA(dmar_uint->drhd->reg_base_addr + offset + 4U));
+	value = mmio_read32(HPA2HVA(dmar_uint->drhd->reg_base_addr + offset + 4U));
 	value = value << 32U;
-	value = value | mmio_read_long(HPA2HVA(dmar_uint->drhd->reg_base_addr +
+	value = value | mmio_read32(HPA2HVA(dmar_uint->drhd->reg_base_addr +
 					offset));
 
 	return value;
@@ -209,7 +209,7 @@ static uint64_t iommu_read64(struct dmar_drhd_rt *dmar_uint, uint32_t offset)
 static void iommu_write32(struct dmar_drhd_rt *dmar_uint, uint32_t offset,
 			  uint32_t value)
 {
-	mmio_write_long(value, HPA2HVA(dmar_uint->drhd->reg_base_addr + offset));
+	mmio_write32(value, HPA2HVA(dmar_uint->drhd->reg_base_addr + offset));
 }
 
 static void iommu_write64(struct dmar_drhd_rt *dmar_uint, uint32_t offset,
@@ -218,10 +218,10 @@ static void iommu_write64(struct dmar_drhd_rt *dmar_uint, uint32_t offset,
 	uint32_t temp;
 
 	temp = (uint32_t)value;
-	mmio_write_long(temp, HPA2HVA(dmar_uint->drhd->reg_base_addr + offset));
+	mmio_write32(temp, HPA2HVA(dmar_uint->drhd->reg_base_addr + offset));
 
 	temp = (uint32_t)(value >> 32U);
-	mmio_write_long(temp, HPA2HVA(dmar_uint->drhd->reg_base_addr + offset + 4U));
+	mmio_write32(temp, HPA2HVA(dmar_uint->drhd->reg_base_addr + offset + 4U));
 }
 
 /* flush cache when root table, context table updated */
