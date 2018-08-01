@@ -293,7 +293,7 @@ virtio_rnd_reset(void *base)
 		DPRINTF(("virtio_rnd: VBS-K reset requested!\n"));
 		virtio_rnd_kernel_stop(rnd);
 		virtio_rnd_kernel_reset(rnd);
-		rnd->vbs_k.status = VIRTIO_DEV_INITIAL;
+		rnd->vbs_k.status = VIRTIO_DEV_INIT_SUCCESS;
 	}
 }
 

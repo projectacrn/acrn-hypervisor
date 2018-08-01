@@ -195,7 +195,7 @@ virtio_audio_reset(void *base)
 		DPRINTF(("virtio_audio: VBS-K reset requested!\n"));
 		virtio_audio_kernel_stop(virt_audio);
 		virtio_audio_kernel_reset(virt_audio);
-		virt_audio->vbs_k.kstatus = VIRTIO_DEV_INITIAL;
+		virt_audio->vbs_k.kstatus = VIRTIO_DEV_INIT_SUCCESS;
 	}
 }
 
