@@ -128,6 +128,7 @@ static struct shell_cmd shell_cmds[] = {
 /* The initial log level*/
 uint32_t console_loglevel = CONFIG_CONSOLE_LOGLEVEL_DEFAULT;
 uint32_t mem_loglevel = CONFIG_MEM_LOGLEVEL_DEFAULT;
+uint32_t npk_loglevel = CONFIG_NPK_LOGLEVEL_DEFAULT;
 
 static struct shell hv_shell;
 static struct shell *p_shell = &hv_shell;
@@ -872,17 +873,21 @@ static int shell_loglevel(int argc, char **argv)
 {
 	char str[MAX_STR_SIZE] = {0};
 
-	if (argc == 1) {
-		snprintf(str, MAX_STR_SIZE,
-			"console_loglevel: %u, mem_loglevel: %u\r\n",
-			console_loglevel, mem_loglevel);
-		shell_puts(str);
-	} else if (argc == 2) {
-		console_loglevel = atoi(argv[1]);
-	} else if (argc == 3) {
-		console_loglevel = atoi(argv[1]);
+	switch (argc) {
+	case 4:
+		npk_loglevel = atoi(argv[3]);
+	case 3:
 		mem_loglevel = atoi(argv[2]);
-	} else {
+	case 2:
+		console_loglevel = atoi(argv[1]);
+		break;
+	case 1:
+		snprintf(str, MAX_STR_SIZE, "console_loglevel: %u, "
+			"mem_loglevel: %u, npk_loglevel: %u\r\n",
+			console_loglevel, mem_loglevel, npk_loglevel);
+		shell_puts(str);
+		break;
+	default:
 		return -EINVAL;
 	}
 
