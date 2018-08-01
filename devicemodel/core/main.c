@@ -60,10 +60,15 @@
 #include "monitor.h"
 #include "ioc.h"
 #include "pm.h"
+#include "atomic.h"
 
 #define GUEST_NIO_PORT		0x488	/* guest upcalls via i/o port */
 
-typedef int (*vmexit_handler_t)(struct vmctx *,
+/* Values returned for reads on invalid I/O requests. */
+#define VHM_REQ_PIO_INVAL	(~0U)
+#define VHM_REQ_MMIO_INVAL	(~0UL)
+
+typedef void (*vmexit_handler_t)(struct vmctx *,
 		struct vhm_request *, int *vcpu);
 
 char *vmname;
@@ -287,7 +292,7 @@ delete_cpu(struct vmctx *ctx, int vcpu)
 	return CPU_EMPTY(&cpumask);
 }
 
-static int
+static void
 vmexit_inout(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 {
 	int error;
@@ -303,13 +308,14 @@ vmexit_inout(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 				in ? "in" : "out",
 				bytes == 1 ? 'b' : (bytes == 2 ? 'w' : 'l'),
 				port);
-		return VMEXIT_ABORT;
-	} else {
-		return VMEXIT_CONTINUE;
+
+		if (in) {
+			vhm_req->reqs.pio_request.value = VHM_REQ_PIO_INVAL;
+		}
 	}
 }
 
-static int
+static void
 vmexit_mmio_emul(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 {
 	int err;
@@ -326,14 +332,14 @@ vmexit_mmio_emul(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 		fprintf(stderr, "mmio address 0x%lx, size %ld",
 				vhm_req->reqs.mmio_request.address,
 				vhm_req->reqs.mmio_request.size);
-		vhm_req->processed = REQ_STATE_FAILED;
-		return VMEXIT_ABORT;
+
+		if (vhm_req->reqs.mmio_request.direction == REQUEST_READ) {
+			vhm_req->reqs.mmio_request.value = VHM_REQ_MMIO_INVAL;
+		}
 	}
-	vhm_req->processed = REQ_STATE_SUCCESS;
-	return VMEXIT_CONTINUE;
 }
 
-static int
+static void
 vmexit_pci_emul(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 {
 	int err, in = (vhm_req->reqs.pci_request.direction == REQUEST_READ);
@@ -351,11 +357,11 @@ vmexit_pci_emul(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 			vhm_req->reqs.pci_request.dev,
 			vhm_req->reqs.pci_request.func,
 			vhm_req->reqs.pci_request.reg);
-		return VMEXIT_ABORT;
-	}
 
-	vhm_req->processed = REQ_STATE_SUCCESS;
-	return VMEXIT_CONTINUE;
+		if (in) {
+			vhm_req->reqs.pio_request.value = VHM_REQ_PIO_INVAL;
+		}
+	}
 }
 
 #define	DEBUG_EPT_MISCONFIG
@@ -368,66 +374,15 @@ vmexit_pci_emul(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
 
 #endif	/* #ifdef DEBUG_EPT_MISCONFIG */
 
-static int
-vmexit_bogus(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
-{
-	stats.vmexit_bogus++;
-
-	return VMEXIT_CONTINUE;
-}
-
-static int
-vmexit_reqidle(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
-{
-	stats.vmexit_reqidle++;
-
-	return VMEXIT_CONTINUE;
-}
-
-static int
-vmexit_hlt(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
-{
-	stats.vmexit_hlt++;
-
-	/*
-	 * Just continue execution with the next instruction. We use
-	 * the HLT VM exit as a way to be friendly with the host
-	 * scheduler.
-	 */
-	return VMEXIT_CONTINUE;
-}
-
-static int
-vmexit_pause(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
-{
-	stats.vmexit_pause++;
-
-	return VMEXIT_CONTINUE;
-}
-
-static int
-vmexit_mtrap(struct vmctx *ctx, struct vhm_request *vhm_req, int *pvcpu)
-{
-	stats.vmexit_mtrap++;
-
-	return VMEXIT_CONTINUE;
-}
-
 static vmexit_handler_t handler[VM_EXITCODE_MAX] = {
 	[VM_EXITCODE_INOUT]  = vmexit_inout,
 	[VM_EXITCODE_MMIO_EMUL] = vmexit_mmio_emul,
 	[VM_EXITCODE_PCI_CFG] = vmexit_pci_emul,
-	[VM_EXITCODE_BOGUS]  = vmexit_bogus,
-	[VM_EXITCODE_REQIDLE] = vmexit_reqidle,
-	[VM_EXITCODE_MTRAP]  = vmexit_mtrap,
-	[VM_EXITCODE_HLT]  = vmexit_hlt,
-	[VM_EXITCODE_PAUSE]  = vmexit_pause,
 };
 
 static void
 handle_vmexit(struct vmctx *ctx, struct vhm_request *vhm_req, int vcpu)
 {
-	int rc;
 	enum vm_exitcode exitcode;
 
 	exitcode = vhm_req->type;
@@ -437,17 +392,8 @@ handle_vmexit(struct vmctx *ctx, struct vhm_request *vhm_req, int vcpu)
 		exit(1);
 	}
 
-	rc = (*handler[exitcode])(ctx, vhm_req, &vcpu);
-	switch (rc) {
-	case VMEXIT_CONTINUE:
-		vhm_req->processed = REQ_STATE_SUCCESS;
-		break;
-	case VMEXIT_ABORT:
-		vhm_req->processed = REQ_STATE_FAILED;
-		abort();
-	default:
-		exit(1);
-	}
+	(*handler[exitcode])(ctx, vhm_req, &vcpu);
+	atomic_store(&vhm_req->processed, REQ_STATE_COMPLETE);
 
 	/* If UOS is not in suspend or system reset mode, we don't
 	 * need to notify request done.
@@ -580,8 +526,7 @@ vm_system_reset(struct vmctx *ctx)
 		struct vhm_request *vhm_req;
 
 		vhm_req = &vhm_req_buf[vcpu_id];
-		if (vhm_req->valid &&
-			(vhm_req->processed == REQ_STATE_PROCESSING) &&
+		if ((atomic_load(&vhm_req->processed) == REQ_STATE_PROCESSING) &&
 			(vhm_req->client == ctx->ioreq_client))
 			vm_notify_request_done(ctx, vcpu_id);
 	}
@@ -613,8 +558,7 @@ vm_suspend_resume(struct vmctx *ctx)
 		struct vhm_request *vhm_req;
 
 		vhm_req = &vhm_req_buf[vcpu_id];
-		if (vhm_req->valid &&
-			(vhm_req->processed == REQ_STATE_PROCESSING) &&
+		if ((atomic_load(&vhm_req->processed) == REQ_STATE_PROCESSING) &&
 			(vhm_req->client == ctx->ioreq_client))
 			vm_notify_request_done(ctx, vcpu_id);
 	}
@@ -648,8 +592,7 @@ vm_loop(struct vmctx *ctx)
 
 		for (vcpu_id = 0; vcpu_id < 4; vcpu_id++) {
 			vhm_req = &vhm_req_buf[vcpu_id];
-			if (vhm_req->valid
-				&& (vhm_req->processed == REQ_STATE_PROCESSING)
+			if ((atomic_load(&vhm_req->processed) == REQ_STATE_PROCESSING)
 				&& (vhm_req->client == ctx->ioreq_client))
 				handle_vmexit(ctx, vhm_req, vcpu_id);
 		}
