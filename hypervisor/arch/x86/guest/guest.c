@@ -760,7 +760,7 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 	 * number for it(without trusty) is GUEST_INIT_PT_PAGE_NUM-1.
 	 * here make sure they are init as 0 (page entry no present)
 	 */
-	(void)memset(pml4_addr, 0, PAGE_SIZE_4K * GUEST_INIT_PT_PAGE_NUM-1);
+	(void)memset(pml4_addr, 0U, PAGE_SIZE_4K * GUEST_INIT_PT_PAGE_NUM-1);
 
 	/* Write PML4E */
 	table_present = (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT);
@@ -800,7 +800,7 @@ uint64_t create_guest_initial_paging(struct vm *vm)
 	 */
 	if (vm->sworld_control.sworld_enabled && !is_vm0(vm)) {
 		/* clear page entry for trusty */
-		(void)memset(pml4_addr + 6 * PAGE_SIZE_4K, 0, PAGE_SIZE_4K);
+		(void)memset(pml4_addr + 6U * PAGE_SIZE_4K, 0U, PAGE_SIZE_4K);
 
 		/* Write PDPTE for trusy memory, PD will use 7th page */
 		pd_base_paddr = GUEST_INIT_PAGE_TABLE_START +

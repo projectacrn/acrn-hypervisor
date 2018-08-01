@@ -41,7 +41,7 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	pr_info("Creating VCPU %hu", pcpu_id);
 
 	/* Allocate memory for VCPU */
-	vcpu = calloc(1, sizeof(struct vcpu));
+	vcpu = calloc(1U, sizeof(struct vcpu));
 	ASSERT(vcpu != NULL, "");
 
 	/* Initialize the physical CPU ID for this VCPU */
@@ -96,7 +96,7 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	ASSERT(vcpu->arch_vcpu.vmcs != NULL, "");
 
 	/* Memset VMCS region for this VCPU */
-	(void)memset(vcpu->arch_vcpu.vmcs, 0, CPU_PAGE_SIZE);
+	(void)memset(vcpu->arch_vcpu.vmcs, 0U, CPU_PAGE_SIZE);
 
 	/* Initialize exception field in VCPU context */
 	vcpu->arch_vcpu.exception_info.exception = VECTOR_INVALID;
@@ -283,7 +283,7 @@ void reset_vcpu(struct vcpu *vcpu)
 	vcpu->arch_vcpu.cur_context = NORMAL_WORLD;
 	vcpu->arch_vcpu.irq_window_enabled = 0;
 	vcpu->arch_vcpu.inject_event_pending = false;
-	(void)memset(vcpu->arch_vcpu.vmcs, 0, CPU_PAGE_SIZE);
+	(void)memset(vcpu->arch_vcpu.vmcs, 0U, CPU_PAGE_SIZE);
 
 	vlapic = vcpu->arch_vcpu.vlapic;
 	vlapic_reset(vlapic);

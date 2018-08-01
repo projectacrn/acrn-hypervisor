@@ -52,7 +52,7 @@ static void fifo_reset(struct fifo *fifo)
 
 static void fifo_init(struct fifo *fifo, int sz)
 {
-	fifo->buf = calloc(1, sz);
+	fifo->buf = calloc(1U, sz);
 	ASSERT(fifo->buf != NULL, "");
 	fifo->size = sz;
 	fifo_reset(fifo);
@@ -360,7 +360,7 @@ void *vuart_init(struct vm *vm)
 	struct vuart *vu;
 	uint16_t divisor;
 
-	vu = calloc(1, sizeof(struct vuart));
+	vu = calloc(1U, sizeof(struct vuart));
 	ASSERT(vu != NULL, "");
 
 	/* Set baud rate*/

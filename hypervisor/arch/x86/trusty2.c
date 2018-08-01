@@ -187,7 +187,7 @@ void  destroy_secure_world(struct vm *vm)
 		if ((uint64_t)size < entry.page_size)
 			adjust_size = size;
 
-		(void)memset(HPA2HVA(hpa), 0, adjust_size);
+		(void)memset(HPA2HVA(hpa), 0U, adjust_size);
 		/* restore memory to SOS ept mapping */
 		map_params.pml4_base = vm0->arch_vm.nworld_eptp;
 		map_params.pml4_inverted = vm0->arch_vm.m2p;

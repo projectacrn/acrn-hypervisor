@@ -407,7 +407,7 @@ void allow_guest_io_access(struct vm *vm, uint32_t address_arg, uint32_t nbytes)
 			b = vm->arch_vm.iobitmap[1];
 		}
 		a = address & 0x7fffU;
-		b[a >> 5] &= ~(1 << (a & 0x1fU));
+		b[a >> 5U] &= ~(1U << (a & 0x1fU));
 		address++;
 	}
 }
@@ -437,7 +437,7 @@ static struct vm_io_handler *create_io_handler(uint32_t port, uint32_t len,
 
 	struct vm_io_handler *handler;
 
-	handler = calloc(1, sizeof(struct vm_io_handler));
+	handler = calloc(1U, sizeof(struct vm_io_handler));
 
 	if (handler != NULL) {
 		handler->desc.addr = port;
@@ -461,12 +461,12 @@ void setup_io_bitmap(struct vm *vm)
 	       (vm->arch_vm.iobitmap[1] != NULL), "");
 
 	if (is_vm0(vm)) {
-		(void)memset(vm->arch_vm.iobitmap[0], 0x00, CPU_PAGE_SIZE);
-		(void)memset(vm->arch_vm.iobitmap[1], 0x00, CPU_PAGE_SIZE);
+		(void)memset(vm->arch_vm.iobitmap[0], 0x00U, CPU_PAGE_SIZE);
+		(void)memset(vm->arch_vm.iobitmap[1], 0x00U, CPU_PAGE_SIZE);
 	} else {
 		/* block all IO port access from Guest */
-		(void)memset(vm->arch_vm.iobitmap[0], 0xFF, CPU_PAGE_SIZE);
-		(void)memset(vm->arch_vm.iobitmap[1], 0xFF, CPU_PAGE_SIZE);
+		(void)memset(vm->arch_vm.iobitmap[0], 0xFFU, CPU_PAGE_SIZE);
+		(void)memset(vm->arch_vm.iobitmap[1], 0xFFU, CPU_PAGE_SIZE);
 	}
 }
 
@@ -498,7 +498,7 @@ int register_mmio_emulation_handler(struct vm *vm,
 	int status = -EINVAL;
 	struct mem_io_node *mmio_node;
 
-	if (vm->hw.created_vcpus > 0 && vm->hw.vcpu_array[0]->launched) {
+	if (vm->hw.created_vcpus > 0U && vm->hw.vcpu_array[0]->launched) {
 		ASSERT(false, "register mmio handler after vm launched");
 		return status;
 	}
