@@ -284,10 +284,8 @@ vioapic_write_eoi(struct vioapic *vioapic, uint32_t vector)
 	for (pin = 0U; pin < pincount; pin++) {
 		rte = vioapic->rtbl[pin];
 
-		if ((rte.full & IOAPIC_RTE_REM_IRR) == 0UL) {
-			continue;
-		}
-		if ((rte.u.lo_32 & IOAPIC_RTE_LOW_INTVEC) != vector) {
+		if (((rte.u.lo_32 & IOAPIC_RTE_LOW_INTVEC) != vector) ||
+			((rte.full & IOAPIC_RTE_REM_IRR) == 0UL)) {
 			continue;
 		}
 
@@ -492,12 +490,11 @@ vioapic_process_eoi(struct vm *vm, uint32_t vector)
 	/* notify device to ack if assigned pin */
 	for (pin = 0U; pin < pincount; pin++) {
 		rte = vioapic->rtbl[pin];
-		if ((rte.full & IOAPIC_RTE_REM_IRR) == 0UL) {
+		if (((rte.u.lo_32 & IOAPIC_RTE_LOW_INTVEC) != vector) ||
+			((rte.full & IOAPIC_RTE_REM_IRR) == 0UL)) {
 			continue;
 		}
-		if ((rte.u.lo_32 & IOAPIC_RTE_LOW_INTVEC) != vector) {
-			continue;
-		}
+
 		ptdev_intx_ack(vm, pin, PTDEV_VPIN_IOAPIC);
 	}
 
@@ -508,10 +505,8 @@ vioapic_process_eoi(struct vm *vm, uint32_t vector)
 	VIOAPIC_LOCK(vioapic);
 	for (pin = 0U; pin < pincount; pin++) {
 		rte = vioapic->rtbl[pin];
-		if ((rte.full & IOAPIC_RTE_REM_IRR) == 0UL) {
-			continue;
-		}
-		if ((rte.u.lo_32 & IOAPIC_RTE_LOW_INTVEC) != vector) {
+		if (((rte.u.lo_32 & IOAPIC_RTE_LOW_INTVEC) != vector) ||
+			((rte.full & IOAPIC_RTE_REM_IRR) == 0UL)) {
 			continue;
 		}
 
