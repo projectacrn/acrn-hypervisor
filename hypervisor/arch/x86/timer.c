@@ -45,7 +45,7 @@ static inline void update_physical_timer(struct per_cpu_timers *cpu_timer)
 	}
 }
 
-static void __add_timer(struct per_cpu_timers *cpu_timer,
+static void local_add_timer(struct per_cpu_timers *cpu_timer,
 			struct hv_timer *timer,
 			bool *need_update)
 {
@@ -90,7 +90,7 @@ int add_timer(struct hv_timer *timer)
 
 	pcpu_id  = get_cpu_id();
 	cpu_timer = &per_cpu(cpu_timers, pcpu_id);
-	__add_timer(cpu_timer, timer, &need_update);
+	local_add_timer(cpu_timer, timer, &need_update);
 
 	if (need_update) {
 		update_physical_timer(cpu_timer);
@@ -165,7 +165,7 @@ static void timer_softirq(uint16_t pcpu_id)
 
 	/* This is to make sure we are not blocked due to delay inside func()
 	 * force to exit irq handler after we serviced >31 timers
-	 * caller used to __add_timer() for periodic timer, if there is a delay
+	 * caller used to local_add_timer() for periodic timer, if there is a delay
 	 * inside func(), it will infinitely loop here, because new added timer
 	 * already passed due to previously func()'s delay.
 	 */
@@ -181,7 +181,7 @@ static void timer_softirq(uint16_t pcpu_id)
 			if (timer->mode == TICK_MODE_PERIODIC) {
 				/* update periodic timer fire tsc */
 				timer->fire_tsc += timer->period_in_cycle;
-				__add_timer(cpu_timer, timer, NULL);
+				local_add_timer(cpu_timer, timer, NULL);
 			}
 		} else {
 			break;

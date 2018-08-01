@@ -358,7 +358,7 @@ int decode_instruction(struct vcpu *vcpu)
 	get_guest_paging_info(vcpu, emul_ctxt, csar);
 	cpu_mode = get_vcpu_mode(vcpu);
 
-	retval = __decode_instruction(cpu_mode, SEG_DESC_DEF32(csar),
+	retval = local_decode_instruction(cpu_mode, SEG_DESC_DEF32(csar),
 		&emul_ctxt->vie);
 
 	if (retval != 0) {

@@ -405,7 +405,7 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 	return 0;
 }
 
-static int32_t _set_vm_memory_region(struct vm *vm,
+static int32_t local_set_vm_memory_region(struct vm *vm,
 	struct vm *target_vm, struct vm_memory_region *region)
 {
 	uint64_t hpa, base_paddr;
@@ -491,7 +491,7 @@ int32_t hcall_set_vm_memory_region(struct vm *vm, uint16_t vmid, uint64_t param)
 		return -EPERM;
 	}
 
-	return _set_vm_memory_region(vm, target_vm, &region);
+	return local_set_vm_memory_region(vm, target_vm, &region);
 }
 
 int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param)
@@ -526,7 +526,7 @@ int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param)
 		/* the force pointer change below is for back compatible
 		 * to struct vm_memory_region, it will be removed in the future
 		 */
-		int ret = _set_vm_memory_region(vm, target_vm, &regions[idx]);
+		int ret = local_set_vm_memory_region(vm, target_vm, &regions[idx]);
 		if (ret < 0) {
 			return ret;
 		}

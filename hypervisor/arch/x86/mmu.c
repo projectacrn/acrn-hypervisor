@@ -62,7 +62,7 @@ struct invept_desc {
 	uint64_t _res;
 };
 
-static inline void _invvpid(uint64_t type, uint16_t vpid, uint64_t gva)
+static inline void local_invvpid(uint64_t type, uint16_t vpid, uint64_t gva)
 {
 	int error = 0;
 
@@ -82,7 +82,7 @@ static inline void _invvpid(uint64_t type, uint16_t vpid, uint64_t gva)
 	ASSERT(error == 0, "invvpid error");
 }
 
-static inline void _invept(uint64_t type, struct invept_desc desc)
+static inline void local_invept(uint64_t type, struct invept_desc desc)
 {
 	int error = 0;
 
@@ -159,12 +159,12 @@ void flush_vpid_single(uint16_t vpid)
 		return;
 	}
 
-	_invvpid(VMX_VPID_TYPE_SINGLE_CONTEXT, vpid, 0UL);
+	local_invvpid(VMX_VPID_TYPE_SINGLE_CONTEXT, vpid, 0UL);
 }
 
 void flush_vpid_global(void)
 {
-	_invvpid(VMX_VPID_TYPE_ALL_CONTEXT, 0U, 0UL);
+	local_invvpid(VMX_VPID_TYPE_ALL_CONTEXT, 0U, 0UL);
 }
 
 void invept(struct vcpu *vcpu)
@@ -174,15 +174,15 @@ void invept(struct vcpu *vcpu)
 	if (cpu_has_vmx_ept_cap(VMX_EPT_INVEPT_SINGLE_CONTEXT)) {
 		desc.eptp = HVA2HPA(vcpu->vm->arch_vm.nworld_eptp) |
 				(3UL << 3U) | 6UL;
-		_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
+		local_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
 		if (vcpu->vm->sworld_control.sworld_enabled &&
 			vcpu->vm->arch_vm.sworld_eptp != NULL) {
 			desc.eptp = HVA2HPA(vcpu->vm->arch_vm.sworld_eptp)
 				| (3UL << 3U) | 6UL;
-			_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
+			local_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
 		}
 	} else if (cpu_has_vmx_ept_cap(VMX_EPT_INVEPT_GLOBAL_CONTEXT)) {
-		_invept(INVEPT_TYPE_ALL_CONTEXTS, desc);
+		local_invept(INVEPT_TYPE_ALL_CONTEXTS, desc);
 	} else {
 		/* Neither type of INVEPT is supported. Skip. */
 	}

@@ -221,7 +221,7 @@ static void *get_acpi_tbl(const char *sig)
 	return HPA2HVA(addr);
 }
 
-static uint16_t _parse_madt(void *madt, uint8_t lapic_id_array[MAX_PCPU_NUM])
+static uint16_t local_parse_madt(void *madt, uint8_t lapic_id_array[MAX_PCPU_NUM])
 {
 	uint16_t pcpu_id = 0;
 	struct acpi_madt_local_apic *processor;
@@ -274,7 +274,7 @@ uint16_t parse_madt(uint8_t lapic_id_array[MAX_PCPU_NUM])
 	madt = get_acpi_tbl(ACPI_SIG_MADT);
 	ASSERT(madt != NULL, "fail to get madt");
 
-	return _parse_madt(madt, lapic_id_array);
+	return local_parse_madt(madt, lapic_id_array);
 }
 
 void *get_dmar_table(void)

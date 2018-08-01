@@ -116,7 +116,7 @@ void destroy_ept(struct vm *vm)
 	}
 }
 
-uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
+uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 {
 	uint64_t hpa = 0UL;
 	uint64_t *pgentry, pg_size = 0UL;
@@ -142,7 +142,7 @@ uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 /* using return value 0 as failure, make sure guest will not use hpa 0 */
 uint64_t gpa2hpa(struct vm *vm, uint64_t gpa)
 {
-	return _gpa2hpa(vm, gpa, NULL);
+	return local_gpa2hpa(vm, gpa, NULL);
 }
 
 uint64_t hpa2gpa(struct vm *vm, uint64_t hpa)
