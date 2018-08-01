@@ -141,6 +141,6 @@ void switch_world(struct vcpu *vcpu, int next_world);
 bool initialize_trusty(struct vcpu *vcpu, uint64_t param);
 void destroy_secure_world(struct vm *vm);
 
-void trusty_set_dseed(void *dseed, uint8_t seed_num);
+void trusty_set_dseed(void *dseed, uint8_t dseed_num);
 
 #endif /* TRUSTY_H_ */

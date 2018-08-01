@@ -247,12 +247,12 @@ int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param);
  *
  * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
- * @param param guest physical address. This gpa points to
+ * @param wp_gpa guest physical address. This gpa points to
  *              struct wp_data
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_write_protect_page(struct vm *vm, uint16_t vmid, uint64_t param);
+int32_t hcall_write_protect_page(struct vm *vm, uint16_t vmid, uint64_t wp_gpa);
 
 /**
  * @brief remap PCI MSI interrupt

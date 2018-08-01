@@ -45,7 +45,7 @@ typedef int (*mem_region_write_t)(struct vcpu *vcpu, uint64_t gpa,
  * Emulate the decoded 'vie' instruction.
  *
  * The callbacks 'mrr' and 'mrw' emulate reads and writes to the memory region
- * containing 'gpa'. 'mrarg' is an opaque argument that is passed into the
+ * containing 'gpa'. 'memarg' is an opaque argument that is passed into the
  * callback functions.
  *
  * 'void *vm' should be 'struct vm *' when called from kernel context and
@@ -54,7 +54,7 @@ typedef int (*mem_region_write_t)(struct vcpu *vcpu, uint64_t gpa,
  */
 int vmm_emulate_instruction(struct vcpu *vcpu, uint64_t gpa, struct instr_emul_vie *vie,
 		struct vm_guest_paging *paging, mem_region_read_t mrr,
-		mem_region_write_t mrw, void *mrarg);
+		mem_region_write_t mrw, void *memarg);
 
 int vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
 		uint64_t val_arg, uint8_t size);
@@ -62,7 +62,7 @@ int vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
 /*
  * Returns 1 if an alignment check exception should be injected and 0 otherwise.
  */
-int vie_alignment_check(uint8_t cpl, uint8_t operand_size, uint64_t cr0,
+int vie_alignment_check(uint8_t cpl, uint8_t size, uint64_t cr0,
 	uint64_t rflags, uint64_t gla);
 
 /* Returns 1 if the 'gla' is not canonical and 0 otherwise. */

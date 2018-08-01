@@ -1978,7 +1978,7 @@ vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval)
 }
 
 int
-vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val)
+vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval)
 {
 	int error = 0;
 	uint32_t offset;
@@ -1988,21 +1988,21 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t val)
 
 	switch (msr) {
 	case MSR_IA32_APIC_BASE:
-		error = vlapic_set_apicbase(vlapic, val);
+		error = vlapic_set_apicbase(vlapic, wval);
 		break;
 
 	case MSR_IA32_TSC_DEADLINE:
-		vlapic_set_tsc_deadline_msr(vlapic, val);
+		vlapic_set_tsc_deadline_msr(vlapic, wval);
 		break;
 
 	default:
 		offset = x2apic_msr_to_regoff(msr);
-		error = vlapic_write(vlapic, 0, offset, val);
+		error = vlapic_write(vlapic, 0, offset, wval);
 		break;
 	}
 
-	dev_dbg(ACRN_DBG_LAPIC, "cpu[%hu] wrmsr: %x val=%#x",
-		vcpu->vcpu_id, msr, val);
+	dev_dbg(ACRN_DBG_LAPIC, "cpu[%hu] wrmsr: %x wval=%#x",
+		vcpu->vcpu_id, msr, wval);
 	return error;
 }
 

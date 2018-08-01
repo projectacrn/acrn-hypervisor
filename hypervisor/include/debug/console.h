@@ -18,14 +18,14 @@ void console_init(void);
 
 /** Writes a given number of characters to the console.
  *
- *  @param str A pointer to character array to write.
+ *  @param s A pointer to character array to write.
  *  @param len The number of characters to write.
  *
  *  @return The number of characters written or -1 if an error occurred
  *          and no character was written.
  */
 
-int console_write(const char *s_arg, size_t len);
+int console_write(const char *s, size_t len);
 
 /** Writes a single character to the console.
  *
