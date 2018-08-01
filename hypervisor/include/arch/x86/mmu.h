@@ -391,7 +391,7 @@ int ept_mr_del(struct vm *vm, uint64_t *pml4_page,
 	uint64_t gpa, uint64_t size);
 
 int     ept_violation_vmexit_handler(struct vcpu *vcpu);
-int     ept_misconfig_vmexit_handler(struct vcpu *vcpu);
+int     ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu);
 
 #endif /* ASSEMBLER not defined */
 

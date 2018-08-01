@@ -112,7 +112,7 @@ void
 vlapic_apicv_batch_set_tmr(struct acrn_vlapic *vlapic);
 
 int vlapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
-		void *handler_private_data);
+		__unused void *handler_private_data);
 
 uint32_t vlapic_get_id(struct acrn_vlapic *vlapic);
 uint8_t vlapic_get_apicid(struct acrn_vlapic *vlapic);
@@ -123,13 +123,13 @@ void vlapic_init(struct acrn_vlapic *vlapic);
 void vlapic_reset(struct acrn_vlapic *vlapic);
 void vlapic_restore(struct acrn_vlapic *vlapic, struct lapic_regs *regs);
 bool vlapic_enabled(struct acrn_vlapic *vlapic);
-uint64_t apicv_get_apic_access_addr(struct vm *vm);
+uint64_t apicv_get_apic_access_addr(__unused struct vm *vm);
 uint64_t apicv_get_apic_page_addr(struct acrn_vlapic *vlapic);
 void apicv_inject_pir(struct acrn_vlapic *vlapic);
 int apic_access_vmexit_handler(struct vcpu *vcpu);
 int apic_write_vmexit_handler(struct vcpu *vcpu);
 int veoi_vmexit_handler(struct vcpu *vcpu);
-int tpr_below_threshold_vmexit_handler(struct vcpu *vcpu);
+int tpr_below_threshold_vmexit_handler(__unused struct vcpu *vcpu);
 
 void calcvdest(struct vm *vm, uint64_t *dmask, uint32_t dest, bool phys);
 #endif	/* _VLAPIC_H_ */

@@ -82,7 +82,7 @@ static int
 apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level);
 
 static int
-apicv_pending_intr(struct acrn_vlapic *vlapic, uint32_t *vecptr);
+apicv_pending_intr(struct acrn_vlapic *vlapic, __unused uint32_t *vecptr);
 
 static void
 apicv_set_tmr(struct acrn_vlapic *vlapic, uint32_t vector, bool level);

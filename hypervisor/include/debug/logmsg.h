@@ -29,7 +29,7 @@
 
 extern uint32_t console_loglevel;
 extern uint32_t mem_loglevel;
-void init_logmsg(uint32_t mem_size, uint32_t flags);
+void init_logmsg(__unused uint32_t mem_size, uint32_t flags);
 void print_logmsg_buffer(uint16_t pcpu_id);
 void do_logmsg(uint32_t severity, const char *fmt, ...);
 
