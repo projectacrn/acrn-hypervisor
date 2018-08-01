@@ -68,25 +68,25 @@ __enter_s3:
 	movq %r15, 0x78 + cpu_ctx(%rip)
 
 	pushfq
-	/*168U=0xa8=CPU_CONTEXT_OFFSET_RFLAGS*/
-	popq 0xa8 + cpu_ctx(%rip)
+	/*160U=0xa0=CPU_CONTEXT_OFFSET_RFLAGS*/
+	popq 0xa0 + cpu_ctx(%rip)
 
-	/*504U=0x1f8=CPU_CONTEXT_OFFSET_IDTR*/
-	sidt 0x1f8 + cpu_ctx(%rip)
-	/*536U=0x218=CPU_CONTEXT_OFFSET_LDTR*/
-	sldt 0x218 + cpu_ctx(%rip)
+	/*192U=0xc0=CPU_CONTEXT_OFFSET_IDTR*/
+	sidt 0xc0 + cpu_ctx(%rip)
+	/*216U=0xd8=CPU_CONTEXT_OFFSET_LDTR*/
+	sldt 0xd8 + cpu_ctx(%rip)
 
 	mov %cr0, %rax
 	/*128U=0x80=CPU_CONTEXT_OFFSET_CR0*/
 	mov %rax, 0x80 + cpu_ctx(%rip)
 
 	mov %cr3, %rax
-	/*144U=0x90=CPU_CONTEXT_OFFSET_CR3*/
-	mov %rax, 0x90 + cpu_ctx(%rip)
+	/*184U=0xb8=CPU_CONTEXT_OFFSET_CR3*/
+	mov %rax, 0xb8 + cpu_ctx(%rip)
 
 	mov %cr4, %rax
-	/*152U=0x98=CPU_CONTEXT_OFFSET_CR4*/
-	mov %rax, 0x98 + cpu_ctx(%rip)
+	/*144U=0x90=CPU_CONTEXT_OFFSET_CR4*/
+	mov %rax, 0x90 + cpu_ctx(%rip)
 
 	wbinvd
 
@@ -113,32 +113,28 @@ __enter_s3:
  */
 .global restore_s3_context
 restore_s3_context:
-	/*152U=0x98=CPU_CONTEXT_OFFSET_CR4*/
-	mov 0x98 + cpu_ctx(%rip), %rax
+	/*144U=0x90=CPU_CONTEXT_OFFSET_CR4*/
+	mov 0x90 + cpu_ctx(%rip), %rax
 	mov %rax, %cr4
 
-	/*144U=0x90=CPU_CONTEXT_OFFSET_CR3*/
-	mov 0x90 + cpu_ctx(%rip), %rax
+	/*184U=0xb8=CPU_CONTEXT_OFFSET_CR3*/
+	mov 0xb8 + cpu_ctx(%rip), %rax
 	mov %rax, %cr3
 
 	/*128U=0x80=CPU_CONTEXT_OFFSET_CR0*/
 	mov 0x80 + cpu_ctx(%rip), %rax
 	mov %rax, %cr0
 
-	/*504U=0x1f8=CPU_CONTEXT_OFFSET_IDTR*/
-	lidt 0x1f8 + cpu_ctx(%rip)
-	/*536U=0x218=CPU_CONTEXT_OFFSET_LDTR*/
-	lldt 0x218 + cpu_ctx(%rip)
+	/*192U=0xc0=CPU_CONTEXT_OFFSET_IDTR*/
+	lidt 0xc0 + cpu_ctx(%rip)
+	/*216U=0xd8=CPU_CONTEXT_OFFSET_LDTR*/
+	lldt 0xd8 + cpu_ctx(%rip)
 
-	/*
-	 *312U=0x138=CPU_CONTEXT_OFFSET_SS
-	 *32=0x20=CPU_CONTEXT_OFFSET_RSP
-	 */
-	mov 0x138 + cpu_ctx(%rip), %ss
+	/*32=0x20=CPU_CONTEXT_OFFSET_RSP*/
 	movq 0x20 + cpu_ctx(%rip), %rsp
 
-	/*168U=0xa8=CPU_CONTEXT_OFFSET_RFLAGS*/
-	pushq 0xa8 + cpu_ctx(%rip)
+	/*160U=0xa0=CPU_CONTEXT_OFFSET_RFLAGS*/
+	pushq 0xa0 + cpu_ctx(%rip)
 	popfq
 
 	call load_gdtr_and_tr
