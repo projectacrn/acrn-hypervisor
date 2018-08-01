@@ -380,7 +380,7 @@ bool is_ept_supported(void);
 uint64_t create_guest_initial_paging(struct vm *vm);
 void    destroy_ept(struct vm *vm);
 uint64_t  gpa2hpa(struct vm *vm, uint64_t gpa);
-uint64_t _gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size);
+uint64_t  local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size);
 uint64_t  hpa2gpa(struct vm *vm, uint64_t hpa);
 int ept_mr_add(struct vm *vm, uint64_t hpa_arg,
 	uint64_t gpa_arg, uint64_t size, uint32_t prot_arg);

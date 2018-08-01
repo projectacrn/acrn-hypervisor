@@ -7,7 +7,7 @@
 #include <hypervisor.h>
 #include <zeropage.h>
 
-static uint32_t create_e820_table(struct e820_entry *_e820)
+static uint32_t create_e820_table(struct e820_entry *param_e820)
 {
 	uint32_t i;
 
@@ -15,9 +15,9 @@ static uint32_t create_e820_table(struct e820_entry *_e820)
 			"e820 should be inited");
 
 	for (i = 0U; i < e820_entries; i++) {
-		_e820[i].baseaddr = e820[i].baseaddr;
-		_e820[i].length = e820[i].length;
-		_e820[i].type = e820[i].type;
+		param_e820[i].baseaddr = e820[i].baseaddr;
+		param_e820[i].length = e820[i].length;
+		param_e820[i].type = e820[i].type;
 	}
 
 	return e820_entries;

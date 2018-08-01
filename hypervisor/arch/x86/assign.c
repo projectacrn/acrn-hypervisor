@@ -56,7 +56,7 @@ is_entry_active(struct ptdev_remapping_info *entry)
 
 /* require ptdev_lock protect */
 static inline struct ptdev_remapping_info *
-_lookup_entry_by_id(uint32_t id)
+local_lookup_entry_by_id(uint32_t id)
 {
 	struct ptdev_remapping_info *entry;
 	struct list_head *pos;
@@ -74,7 +74,7 @@ _lookup_entry_by_id(uint32_t id)
 
 /* require ptdev_lock protect */
 static inline struct ptdev_remapping_info *
-_lookup_entry_by_vmsi(struct vm *vm, uint16_t vbdf, uint32_t index)
+local_lookup_entry_by_vmsi(struct vm *vm, uint16_t vbdf, uint32_t index)
 {
 	struct ptdev_remapping_info *entry;
 	struct list_head *pos;
@@ -100,14 +100,14 @@ lookup_entry_by_vmsi(struct vm *vm, uint16_t vbdf, uint32_t index)
 	struct ptdev_remapping_info *entry;
 
 	spinlock_obtain(&ptdev_lock);
-	entry = _lookup_entry_by_vmsi(vm, vbdf, index);
+	entry = local_lookup_entry_by_vmsi(vm, vbdf, index);
 	spinlock_release(&ptdev_lock);
 	return entry;
 }
 
 /* require ptdev_lock protect */
 static inline struct ptdev_remapping_info *
-_lookup_entry_by_vintx(struct vm *vm, uint8_t vpin,
+local_lookup_entry_by_vintx(struct vm *vm, uint8_t vpin,
 		enum ptdev_vpin_source vpin_src)
 {
 	struct ptdev_remapping_info *entry;
@@ -134,7 +134,7 @@ lookup_entry_by_vintx(struct vm *vm, uint8_t vpin,
 	struct ptdev_remapping_info *entry;
 
 	spinlock_obtain(&ptdev_lock);
-	entry = _lookup_entry_by_vintx(vm, vpin, vpin_src);
+	entry = local_lookup_entry_by_vintx(vm, vpin, vpin_src);
 	spinlock_release(&ptdev_lock);
 	return entry;
 }
@@ -307,10 +307,10 @@ add_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 	struct ptdev_remapping_info *entry;
 
 	spinlock_obtain(&ptdev_lock);
-	entry = _lookup_entry_by_id(
+	entry = local_lookup_entry_by_id(
 		entry_id_from_msix(phys_bdf, msix_entry_index));
 	if (entry == NULL) {
-		if (_lookup_entry_by_vmsi(vm, virt_bdf, msix_entry_index) != NULL) {
+		if (local_lookup_entry_by_vmsi(vm, virt_bdf, msix_entry_index) != NULL) {
 			pr_err("MSIX re-add vbdf%x", virt_bdf);
 
 			spinlock_release(&ptdev_lock);
@@ -357,7 +357,7 @@ remove_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint32_t msix_entry_inde
 	struct ptdev_remapping_info *entry;
 
 	spinlock_obtain(&ptdev_lock);
-	entry = _lookup_entry_by_vmsi(vm, virt_bdf, msix_entry_index);
+	entry = local_lookup_entry_by_vmsi(vm, virt_bdf, msix_entry_index);
 	if (entry == NULL) {
 		goto END;
 	}
@@ -393,9 +393,9 @@ add_intx_remapping(struct vm *vm, uint8_t virt_pin,
 		pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
 
 	spinlock_obtain(&ptdev_lock);
-	entry = _lookup_entry_by_id(entry_id_from_intx(phys_pin));
+	entry = local_lookup_entry_by_id(entry_id_from_intx(phys_pin));
 	if (entry == NULL) {
-		if (_lookup_entry_by_vintx(vm, virt_pin, vpin_src) != NULL) {
+		if (local_lookup_entry_by_vintx(vm, virt_pin, vpin_src) != NULL) {
 			pr_err("INTX re-add vpin %d", virt_pin);
 			spinlock_release(&ptdev_lock);
 			return &invalid_entry;
@@ -445,7 +445,7 @@ static void remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin)
 		pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
 
 	spinlock_obtain(&ptdev_lock);
-	entry = _lookup_entry_by_vintx(vm, virt_pin, vpin_src);
+	entry = local_lookup_entry_by_vintx(vm, virt_pin, vpin_src);
 	if (entry == NULL) {
 		goto END;
 	}

@@ -104,7 +104,7 @@ static uint32_t alloc_irq(void)
 }
 
 /* need irq_lock protection before use */
-static void _irq_desc_set_vector(uint32_t irq, uint32_t vr)
+static void local_irq_desc_set_vector(uint32_t irq, uint32_t vr)
 {
 	struct irq_desc *desc;
 
@@ -321,7 +321,7 @@ uint32_t irq_desc_alloc_vector(uint32_t irq, bool lowpri)
 		pr_err("no vector found for irq[%d]", irq);
 		goto OUT;
 	}
-	_irq_desc_set_vector(irq, vr);
+	local_irq_desc_set_vector(irq, vr);
 OUT:
 	spinlock_irqrestore_release(&desc->irq_lock);
 	return vr;

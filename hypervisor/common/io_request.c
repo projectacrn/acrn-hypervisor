@@ -106,7 +106,7 @@ acrn_insert_request_wait(struct vcpu *vcpu, struct io_request *io_req)
 }
 
 #ifdef HV_DEBUG
-static void _get_req_info_(struct vhm_request *req, int *id, char *type,
+static void local_get_req_info_(struct vhm_request *req, int *id, char *type,
 	char *state, char *dir, uint64_t *addr, uint64_t *val)
 {
 	(void)strcpy_s(dir, 16U, "NONE");
@@ -184,7 +184,7 @@ void get_req_info(char *str_arg, int str_max)
 			for (i = 0U; i < VHM_REQUEST_MAX; i++) {
 				req = req_buf->req_queue + i;
 				if (req->valid != 0) {
-					_get_req_info_(req, &client_id, type,
+					local_get_req_info_(req, &client_id, type,
 						state, dir, &addr, &val);
 					len = snprintf(str, size,
 						"\r\n%d\t%d\t%d\t%s\t%s\t%s",

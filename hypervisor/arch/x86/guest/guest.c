@@ -134,7 +134,7 @@ enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 
 /* TODO: Add code to check for Revserved bits, SMAP and PKE when do translation
  * during page walk */
-static int _gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
+static int local_gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
 	uint64_t gva, uint64_t *gpa, uint32_t *err_code)
 {
 	uint32_t i;
@@ -220,7 +220,7 @@ out:
 	return ret;
 }
 
-static int _gva2gpa_pae(struct vcpu *vcpu, struct page_walk_info *pw_info,
+static int local_gva2gpa_pae(struct vcpu *vcpu, struct page_walk_info *pw_info,
 	uint64_t gva, uint64_t *gpa, uint32_t *err_code)
 {
 	int index;
@@ -246,7 +246,7 @@ static int _gva2gpa_pae(struct vcpu *vcpu, struct page_walk_info *pw_info,
 
 	pw_info->level = 2U;
 	pw_info->top_entry = entry;
-	ret = _gva2gpa_common(vcpu, pw_info, gva, gpa, err_code);
+	ret = local_gva2gpa_common(vcpu, pw_info, gva, gpa, err_code);
 
 out:
 	return ret;
@@ -298,15 +298,15 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 
 	if (pm == PAGING_MODE_4_LEVEL) {
 		pw_info.width = 9U;
-		ret = _gva2gpa_common(vcpu, &pw_info, gva, gpa, err_code);
+		ret = local_gva2gpa_common(vcpu, &pw_info, gva, gpa, err_code);
 	} else if(pm == PAGING_MODE_3_LEVEL) {
 		pw_info.width = 9U;
-		ret = _gva2gpa_pae(vcpu, &pw_info, gva, gpa, err_code);
+		ret = local_gva2gpa_pae(vcpu, &pw_info, gva, gpa, err_code);
 	} else if (pm == PAGING_MODE_2_LEVEL) {
 		pw_info.width = 10U;
 		pw_info.pse = ((cur_context->cr4 & CR4_PSE) != 0UL);
 		pw_info.nxe = false;
-		ret = _gva2gpa_common(vcpu, &pw_info, gva, gpa, err_code);
+		ret = local_gva2gpa_common(vcpu, &pw_info, gva, gpa, err_code);
 	} else {
 		*gpa = gva;
 	}
@@ -320,14 +320,14 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	return ret;
 }
 
-static inline uint32_t _copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
+static inline uint32_t local_copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 	uint32_t size, uint32_t fix_pg_size, bool cp_from_vm)
 {
 	uint64_t hpa;
 	uint32_t offset_in_pg, len, pg_size;
 	void *g_ptr;
 
-	hpa = _gpa2hpa(vm, gpa, &pg_size);
+	hpa = local_gpa2hpa(vm, gpa, &pg_size);
 	if (pg_size == 0U) {
 		pr_err("GPA2HPA not found");
 		return 0;
@@ -366,7 +366,7 @@ static inline int copy_gpa(struct vm *vm, void *h_ptr_arg, uint64_t gpa_arg,
 	}
 
 	while (size > 0U) {
-		len = _copy_gpa(vm, h_ptr, gpa, size, 0U, cp_from_vm);
+		len = local_copy_gpa(vm, h_ptr, gpa, size, 0U, cp_from_vm);
 		if (len == 0U) {
 			return -EINVAL;
 		}
@@ -406,7 +406,7 @@ static inline int copy_gva(struct vcpu *vcpu, void *h_ptr_arg, uint64_t gva_arg,
 			return ret;
 		}
 
-		len = _copy_gpa(vcpu->vm, h_ptr, gpa, size,
+		len = local_copy_gpa(vcpu->vm, h_ptr, gpa, size,
 			PAGE_SIZE_4K, cp_from_vm);
 
 		if (len == 0U) {

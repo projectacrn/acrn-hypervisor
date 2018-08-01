@@ -2151,7 +2151,7 @@ decode_moffset(struct instr_emul_vie *vie)
 }
 
 int
-__decode_instruction(enum vm_cpu_mode cpu_mode, bool cs_d, struct instr_emul_vie *vie)
+local_decode_instruction(enum vm_cpu_mode cpu_mode, bool cs_d, struct instr_emul_vie *vie)
 {
 	if (decode_prefixes(vie, cpu_mode, cs_d) != 0) {
 		return -1;
