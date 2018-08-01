@@ -313,6 +313,16 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 			new.u.lo_32 |= (data & ~RTBL_RO_BITS);
 		}
 
+		/* In some special scenarios, the LAPIC somehow hasn't send
+		 * EOI to IOAPIC which cause the Remote IRR bit can't be clear.
+		 * To clear it, some OSes will use EOI Register to clear it for
+		 * 0x20 version IOAPIC, otherwise use switch Trigger Mode to
+		 * Edge Sensitive to clear it.
+		 */
+		if ((new.full & IOAPIC_RTE_TRGRLVL) == 0U) {
+			new.full &= ~IOAPIC_RTE_REM_IRR;
+		}
+
 		changed = last.full ^ new.full;
 		/* pin0 from vpic mask/unmask */
 		if (pin == 0U && (changed & IOAPIC_RTE_INTMASK) != 0UL) {
