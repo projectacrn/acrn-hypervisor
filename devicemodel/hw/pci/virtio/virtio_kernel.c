@@ -38,7 +38,7 @@ vbs_kernel_init(int fd)
 int
 vbs_kernel_reset(int fd)
 {
-	return VIRTIO_SUCCESS;
+	return ioctl(fd, VBS_K_RESET_DEV, NULL);
 }
 
 /*
