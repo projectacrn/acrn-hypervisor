@@ -50,7 +50,7 @@ config LOG_BUF_SIZE
 
 config LOG_DESTINATION
 	int "Bitmap of consoles where logs are printed"
-	default 3
+	default 7
 
 config CPU_UP_TIMEOUT
 	int "Timeout in ms when bringing up secondary CPUs"
@@ -97,6 +97,10 @@ config CONSOLE_LOGLEVEL_DEFAULT
 
 config MEM_LOGLEVEL_DEFAULT
 	int "Default loglevel in memory"
+	default 5
+
+config NPK_LOGLEVEL_DEFAULT
+	int "Default loglevel for the hypervisor NPK log"
 	default 5
 
 config LOW_RAM_SIZE

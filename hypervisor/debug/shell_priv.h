@@ -90,7 +90,8 @@ struct shell {
 #define SHELL_CMD_LOGDUMP_HELP		"log buffer dump"
 
 #define SHELL_CMD_LOG_LVL		"loglevel"
-#define SHELL_CMD_LOG_LVL_PARAM		"[console_loglevel] [mem_loglevel]"
+#define SHELL_CMD_LOG_LVL_PARAM		"[<console_loglevel> [<mem_loglevel> " \
+					"[npk_loglevel]]]"
 #define SHELL_CMD_LOG_LVL_HELP		"get(para is NULL), or set loglevel [0-6]"
 
 #define SHELL_CMD_CPUID			"cpuid"

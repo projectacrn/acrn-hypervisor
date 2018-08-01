@@ -89,14 +89,17 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 	uint16_t pcpu_id;
 	bool do_console_log;
 	bool do_mem_log;
+	bool do_npk_log;
 	char *buffer;
 
 	do_console_log = (((logmsg.flags & LOG_FLAG_STDOUT) != 0U) &&
 					(severity <= console_loglevel));
 	do_mem_log = (((logmsg.flags & LOG_FLAG_MEMORY) != 0U) &&
 					(severity <= mem_loglevel));
+	do_npk_log = ((logmsg.flags & LOG_FLAG_NPK) != 0U &&
+					(severity <= npk_loglevel));
 
-	if (!do_console_log && !do_mem_log) {
+	if (!do_console_log && !do_mem_log && !do_npk_log) {
 		return;
 	}
 
@@ -123,6 +126,10 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 		LOG_MESSAGE_MAX_SIZE
 		- strnlen_s(buffer, LOG_MESSAGE_MAX_SIZE), fmt, args);
 	va_end(args);
+
+	/* Check if flags specify to output to NPK */
+	if (do_npk_log)
+		npk_log_write(buffer, strnlen_s(buffer, LOG_MESSAGE_MAX_SIZE));
 
 	/* Check if flags specify to output to stdout */
 	if (do_console_log) {
