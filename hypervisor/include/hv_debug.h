@@ -13,5 +13,6 @@
 #include <dump.h>
 #include <trace.h>
 #include <sbuf.h>
+#include <npk_log.h>
 
 #endif /* HV_DEBUG_H */

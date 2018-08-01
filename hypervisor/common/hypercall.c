@@ -821,6 +821,34 @@ int32_t hcall_setup_sbuf(__unused struct vm *vm, __unused uint64_t param)
 }
 #endif
 
+#ifdef HV_DEBUG
+int32_t hcall_setup_hv_npk_log(struct vm *vm, uint64_t param)
+{
+	struct hv_npk_log_param npk_param;
+
+	memset((void *)&npk_param, 0, sizeof(npk_param));
+
+	if (copy_from_gpa(vm, &npk_param, param, sizeof(npk_param)) != 0) {
+		pr_err("%s: Unable copy param from vm\n", __func__);
+		return -1;
+	}
+
+	npk_log_setup(&npk_param);
+
+	if (copy_to_gpa(vm, &npk_param, param, sizeof(npk_param)) != 0) {
+		pr_err("%s: Unable copy param to vm\n", __func__);
+		return -1;
+	}
+
+	return 0;
+}
+#else
+int32_t hcall_setup_hv_npk_log(__unused struct vm *vm, __unused uint64_t param)
+{
+	return -ENODEV;
+}
+#endif
+
 int32_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param)
 {
 	uint16_t target_vm_id;

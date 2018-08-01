@@ -159,6 +159,10 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 	case HC_SETUP_SBUF:
 		ret = hcall_setup_sbuf(vm, param1);
 		break;
+
+	case HC_SETUP_HV_NPK_LOG:
+		ret = hcall_setup_hv_npk_log(vm, param1);
+		break;
 #endif
 
 	case HC_WORLD_SWITCH:
