@@ -1245,6 +1245,34 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	pr_dbg("VMX_HOST_IA32_SYSENTER_EIP: 0x%016llx ", value);
 }
 
+static uint32_t check_vmx_ctrl(uint32_t msr, uint32_t ctrl_req)
+{
+	uint64_t vmx_msr;
+	uint32_t vmx_msr_low, vmx_msr_high;
+	uint32_t ctrl = ctrl_req;
+
+	vmx_msr = msr_read(msr);
+	vmx_msr_low  = (uint32_t)vmx_msr;
+	vmx_msr_high = (uint32_t)(vmx_msr >> 32);
+	pr_dbg("VMX_PIN_VM_EXEC_CONTROLS:low=0x%x, high=0x%x\n",
+			vmx_msr_low, vmx_msr_high);
+
+	/* high 32b: must 0 setting
+	 * low 32b:  must 1 setting
+	 */
+	ctrl &= vmx_msr_high;
+	ctrl |= vmx_msr_low;
+
+	if (ctrl_req & ~ctrl) {
+		pr_err("VMX ctrl 0x%x not fully enabled: "
+			"request 0x%x but get 0x%x\n",
+			msr, ctrl_req, ctrl);
+	}
+
+	return ctrl;
+
+}
+
 static void init_exec_ctrl(struct vcpu *vcpu)
 {
 	uint32_t value32;
@@ -1259,11 +1287,9 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	/* Set up VM Execution control to enable Set VM-exits on external
 	 * interrupts preemption timer - pg 2899 24.6.1
 	 */
-	value32 = (uint32_t)msr_read(MSR_IA32_VMX_PINBASED_CTLS);
-
-
 	/* enable external interrupt VM Exit */
-	value32 |= VMX_PINBASED_CTLS_IRQ_EXIT;
+	value32 = check_vmx_ctrl(MSR_IA32_VMX_PINBASED_CTLS,
+			VMX_PINBASED_CTLS_IRQ_EXIT);
 
 	exec_vmwrite32(VMX_PIN_VM_EXEC_CONTROLS, value32);
 	pr_dbg("VMX_PIN_VM_EXEC_CONTROLS: 0x%x ", value32);
@@ -1279,12 +1305,12 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	/* These are bits 1,4-6,8,13-16, and 26, the corresponding bits of
 	 * the IA32_VMX_PROCBASED_CTRLS MSR are always read as 1 --- A.3.2
 	 */
-	value32 = (uint32_t)msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
-	value32 |= (VMX_PROCBASED_CTLS_TSC_OFF |
-		    /* VMX_PROCBASED_CTLS_RDTSC | */
-		    VMX_PROCBASED_CTLS_IO_BITMAP |
-		    VMX_PROCBASED_CTLS_MSR_BITMAP |
-		    VMX_PROCBASED_CTLS_SECONDARY);
+	value32 = check_vmx_ctrl(MSR_IA32_VMX_PROCBASED_CTLS,
+			VMX_PROCBASED_CTLS_TSC_OFF |
+			/* VMX_PROCBASED_CTLS_RDTSC | */
+			VMX_PROCBASED_CTLS_IO_BITMAP |
+			VMX_PROCBASED_CTLS_MSR_BITMAP |
+			VMX_PROCBASED_CTLS_SECONDARY);
 
 	/*Disable VM_EXIT for CR3 access*/
 	value32 &= ~(VMX_PROCBASED_CTLS_CR3_LOAD |
@@ -1311,8 +1337,8 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	 * 24.6.2. Set up for: * Enable EPT * Enable RDTSCP * Unrestricted
 	 * guest (optional)
 	 */
-	value32 = (uint32_t)msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
-	value32 |= (VMX_PROCBASED_CTLS2_EPT |
+	value32 = check_vmx_ctrl(MSR_IA32_VMX_PROCBASED_CTLS2,
+			VMX_PROCBASED_CTLS2_EPT |
 			VMX_PROCBASED_CTLS2_RDTSCP |
 			VMX_PROCBASED_CTLS2_UNRESTRICT);
 
@@ -1466,13 +1492,14 @@ static void init_entry_ctrl(__unused struct vcpu *vcpu)
 	 * on VM entry processor is in IA32e 64 bitmode * Start guest with host
 	 * IA32_PAT and IA32_EFER
 	 */
-	value32 = (uint32_t)msr_read(MSR_IA32_VMX_ENTRY_CTLS);
+	value32 = (VMX_ENTRY_CTLS_LOAD_EFER |
+		   VMX_ENTRY_CTLS_LOAD_PAT);
+
 	if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
 		value32 |= (VMX_ENTRY_CTLS_IA32E_MODE);
 	}
 
-	value32 |= (VMX_ENTRY_CTLS_LOAD_EFER |
-		    VMX_ENTRY_CTLS_LOAD_PAT);
+	value32 = check_vmx_ctrl(MSR_IA32_VMX_ENTRY_CTLS, value32);
 
 	exec_vmwrite32(VMX_ENTRY_CONTROLS, value32);
 	pr_dbg("VMX_ENTRY_CONTROLS: 0x%x ", value32);
@@ -1509,13 +1536,13 @@ static void init_exit_ctrl(__unused struct vcpu *vcpu)
 	 * Enable saving and loading of IA32_PAT and IA32_EFER on VMEXIT Enable
 	 * saving of pre-emption timer on VMEXIT
 	 */
-	value32 = (uint32_t)msr_read(MSR_IA32_VMX_EXIT_CTLS);
-	value32 |= (VMX_EXIT_CTLS_ACK_IRQ |
-		    VMX_EXIT_CTLS_SAVE_PAT |
-		    VMX_EXIT_CTLS_LOAD_PAT |
-		    VMX_EXIT_CTLS_LOAD_EFER |
-		    VMX_EXIT_CTLS_SAVE_EFER |
-		    VMX_EXIT_CTLS_HOST_ADDR64);
+	value32 = check_vmx_ctrl(MSR_IA32_VMX_EXIT_CTLS,
+			VMX_EXIT_CTLS_ACK_IRQ |
+			VMX_EXIT_CTLS_SAVE_PAT |
+			VMX_EXIT_CTLS_LOAD_PAT |
+			VMX_EXIT_CTLS_LOAD_EFER |
+			VMX_EXIT_CTLS_SAVE_EFER |
+			VMX_EXIT_CTLS_HOST_ADDR64);
 
 	exec_vmwrite32(VMX_EXIT_CONTROLS, value32);
 	pr_dbg("VMX_EXIT_CONTROL: 0x%x ", value32);
