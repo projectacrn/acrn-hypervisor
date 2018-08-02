@@ -7,7 +7,7 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-typedef int (*timer_handle_t)(void *);
+typedef int (*timer_handle_t)(void *data);
 
 enum tick_mode {
 	TICK_MODE_ONESHOT = 0,
