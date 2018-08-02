@@ -408,7 +408,6 @@ mouse set for the SOS, and the other set for the UOS.
       [ 1008.519459] input: Logitech USB Optical Mouse as /devices/pci0000:00/0000:00:14.0/usb1/1-1/1-        1:1.0/0003:046D:C077.0008/input/input11
       [ 1008.519714] hid-generic 0003:046D:C077.0008: input,hidraw3: USB HID v1.11 Mouse [Logitech USB Optical Mouse] on usb-   0000:00:14.0-1/input0
 
-    
 #. From ``dmesg`` info, you can easly find specific USB device info connected to certain port
    for example::
     
