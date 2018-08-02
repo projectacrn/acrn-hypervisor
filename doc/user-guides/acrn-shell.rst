@@ -19,7 +19,7 @@ The ACRN hypervisor shell supports the following commands:
      - Lists all VCPUs in all VMs
    * - vcpu_dumpreg <vm_id, vcpu_id>
      - Dumps registers for a specific VCPU
-   * - dumpmem <hva, GVA, length>
+   * - dumpmem <hva, length>
      - Dumps host memory, starting a given address, and for
        a given length (in bytes)
    * - sos_console
@@ -36,8 +36,6 @@ The ACRN hypervisor shell supports the following commands:
      - Shows vmexit profiling
    * - logdump <pcpu_id>
      - Dumps the log buffer for the physical CPU
-   * - trace <cpumask, ms>
-     - Dumps a CPU's recent events within <ms> milliseconds
    * - loglevel [console_loglevel] [mem_loglevel]
      - Get (when paras is NULL)  or Set loglevel [0 (none) - 6 (verbose)] for the console and optionally
        for memory
