@@ -181,8 +181,6 @@ static const struct instr_emul_vie_op one_byte_opcodes[256] = {
 #define	VIE_RM_SIB			4U
 #define	VIE_RM_DISP32			5U
 
-#define	GB				(1024 * 1024 * 1024)
-
 static uint64_t size2mask[9] = {
 	[1] = (1UL << 8U) - 1UL,
 	[2] = (1UL << 16U) - 1UL,
@@ -405,32 +403,6 @@ static int vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg,
 			return -EINVAL;
 		}
 	}
-
-	return 0;
-}
-
-static int vm_set_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
-		struct seg_desc *desc)
-{
-	int error;
-	uint32_t base, limit, access;
-
-	if ((vcpu == NULL) || (desc == NULL)) {
-		return -EINVAL;
-	}
-
-	if (!is_segment_register(seg) && !is_descriptor_table(seg)) {
-		return -EINVAL;
-	}
-
-	error = encode_vmcs_seg_desc(seg, &base, &limit, &access);
-	if ((error != 0) || (access == 0xffffffffU)) {
-		return -EINVAL;
-	}
-
-	exec_vmwrite(base, desc->base);
-	exec_vmwrite32(limit, desc->limit);
-	exec_vmwrite32(access, desc->access);
 
 	return 0;
 }
