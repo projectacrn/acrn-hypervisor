@@ -1685,7 +1685,7 @@ int init_vmcs(struct vcpu *vcpu)
 	init_exit_ctrl(vcpu);
 
 #ifdef CONFIG_EFI_STUB
-	if (is_vm0(vcpu->vm) && vcpu->pcpu_id == 0U) {
+	if (is_vm0(vcpu->vm) && vcpu->pcpu_id == BOOT_CPU_ID) {
 		override_uefi_vmcs(vcpu);
 	}
 #endif

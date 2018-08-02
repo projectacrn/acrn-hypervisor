@@ -1606,7 +1606,7 @@ vlapic_init(struct acrn_vlapic *vlapic)
 	 */
 	vlapic->msr_apicbase = DEFAULT_APIC_BASE | APICBASE_ENABLED;
 
-	if (vlapic->vcpu->vcpu_id == 0U) {
+	if (vlapic->vcpu->vcpu_id == BOOT_CPU_ID) {
 		vlapic->msr_apicbase |= APICBASE_BSP;
 	}
 
