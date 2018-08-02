@@ -8,6 +8,9 @@
 #define VM_H_
 #include <bsp_extern.h>
 
+#ifdef CONFIG_PARTITION_MODE
+#include <mptable.h>
+#endif
 enum vm_privilege_level {
 	VM_PRIVILEGE_LEVEL_HIGH = 0,
 	VM_PRIVILEGE_LEVEL_MEDIUM,
@@ -155,6 +158,9 @@ struct vm {
 
 	uint32_t vcpuid_entry_nr, vcpuid_level, vcpuid_xlevel;
 	struct vcpuid_entry vcpuid_entries[MAX_VM_VCPUID_ENTRIES];
+#ifdef CONFIG_PARTITION_MODE
+	struct vm_description	*vm_desc;
+#endif
 };
 
 struct vm_description {
@@ -166,6 +172,9 @@ struct vm_description {
 	uint16_t               vm_hw_num_cores;   /* Number of virtual cores */
 	/* Whether secure world is enabled for current VM. */
 	bool                   sworld_enabled;
+#ifdef CONFIG_PARTITION_MODE
+	struct mptable_info	*mptable;
+#endif
 };
 
 int shutdown_vm(struct vm *vm);

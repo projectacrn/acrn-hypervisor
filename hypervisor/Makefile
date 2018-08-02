@@ -185,6 +185,10 @@ C_SRCS += boot/sbl/hob_parse.c
 endif
 endif
 
+ifeq ($(CONFIG_PARTITION_MODE), y)
+C_SRCS += arch/x86/guest/mptable.c
+endif
+
 # retpoline support
 ifeq (true, $(shell [ $(GCC_MAJOR) -eq 7 ] && [ $(GCC_MINOR) -ge 3 ] && echo true))
 CFLAGS += -mindirect-branch=thunk-extern -mindirect-branch-register
