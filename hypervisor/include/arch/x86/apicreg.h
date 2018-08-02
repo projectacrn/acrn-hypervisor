@@ -451,7 +451,6 @@ union ioapic_rte {
 /* window register offset */
 #define IOAPIC_REGSEL		0x00U
 #define IOAPIC_WINDOW		0x10U
-#define IOAPIC_EOIR		0x40U
 
 /* indexes into IO APIC */
 #define IOAPIC_ID		0x00U
