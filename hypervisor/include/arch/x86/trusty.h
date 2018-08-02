@@ -7,11 +7,7 @@
 #ifndef TRUSTY_H_
 #define TRUSTY_H_
 
-/* This is a temp solution for 4GB memory */
-#define WORKAROUND_FOR_TRUSTY_4G_MEM
-
 #define BOOTLOADER_SEED_MAX_ENTRIES    10U
-
 #define RPMB_MAX_PARTITION_NUMBER       6
 #define MMC_PROD_NAME_WITH_PSN_LEN      15
 #define BUP_MKHI_BOOTLOADER_SEED_LEN    64U
@@ -94,23 +90,6 @@ struct trusty_key_info {
 	char pad2;
 };
 
-#ifdef WORKAROUND_FOR_TRUSTY_4G_MEM
-void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
-		uint64_t size, uint64_t gpa_rebased);
-struct secure_world_memory {
-	/* The secure world base address of GPA for secure world*/
-	uint64_t base_gpa;
-	/* The secure world base address of HPA */
-	uint64_t base_hpa;
-	/* Secure world runtime memory size */
-	uint64_t length;
-	/* The secure world base address of GPA in SOS */
-	uint64_t gpa_sos;
-	/* The secure world base address of GPA in UOS for normal world */
-	uint64_t gpa_uos;
-};
-
-#else
 struct secure_world_memory {
 	/* The secure world base address of GPA in SOS */
 	uint64_t base_gpa;
@@ -119,7 +98,6 @@ struct secure_world_memory {
 	/* Secure world runtime memory size */
 	uint64_t length;
 };
-#endif
 
 struct secure_world_control {
 	/* Whether secure world is enabled for current VM */
