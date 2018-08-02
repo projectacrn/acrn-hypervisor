@@ -133,7 +133,6 @@ C_SRCS += arch/x86/vmexit.c
 C_SRCS += arch/x86/vmx.c
 C_SRCS += arch/x86/assign.c
 C_SRCS += arch/x86/trusty.c
-C_SRCS += arch/x86/trusty2.c
 C_SRCS += arch/x86/cpu_state_tbl.c
 C_SRCS += arch/x86/mtrr.c
 C_SRCS += arch/x86/pm.c
