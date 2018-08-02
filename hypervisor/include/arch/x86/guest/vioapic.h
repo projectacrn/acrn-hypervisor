@@ -49,9 +49,9 @@ void	vioapic_update_tmr(struct vcpu *vcpu);
 void	vioapic_mmio_write(struct vm *vm, uint64_t gpa, uint32_t wval);
 void	vioapic_mmio_read(struct vm *vm, uint64_t gpa, uint32_t *rval);
 
-uint8_t	vioapic_pincount(struct vm *vm);
+uint32_t	vioapic_pincount(struct vm *vm);
 void	vioapic_process_eoi(struct vm *vm, uint32_t vector);
-void	vioapic_get_rte(struct vm *vm, uint8_t pin, union ioapic_rte *rte);
+void	vioapic_get_rte(struct vm *vm, uint32_t pin, union ioapic_rte *rte);
 int	vioapic_mmio_access_handler(struct vcpu *vcpu,
 	struct io_request *io_req, __unused void *handler_private_data);
 

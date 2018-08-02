@@ -67,12 +67,12 @@ vm_ioapic(struct vm *vm)
 }
 
 static void
-vioapic_send_intr(struct vioapic *vioapic, uint8_t pin)
+vioapic_send_intr(struct vioapic *vioapic, uint32_t pin)
 {
 	uint32_t vector, dest, delmode;
 	union ioapic_rte rte;
 	bool level, phys;
-	uint8_t pincount = vioapic_pincount(vioapic->vm);
+	uint32_t pincount = vioapic_pincount(vioapic->vm);
 
 	if (pin >= pincount) {
 		pr_err("vioapic_send_intr: invalid pin number %hhu", pin);
@@ -105,11 +105,11 @@ vioapic_send_intr(struct vioapic *vioapic, uint8_t pin)
 }
 
 static void
-vioapic_set_pinstate(struct vioapic *vioapic, uint8_t pin, bool newstate)
+vioapic_set_pinstate(struct vioapic *vioapic, uint32_t pin, bool newstate)
 {
 	int oldcnt, newcnt;
 	bool needintr;
-	uint8_t pincount = vioapic_pincount(vioapic->vm);
+	uint32_t pincount = vioapic_pincount(vioapic->vm);
 
 	if (pin >= pincount) {
 		pr_err("vioapic_set_pinstate: invalid pin number %hhu", pin);
@@ -153,7 +153,7 @@ static int
 vioapic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate)
 {
 	struct vioapic *vioapic;
-	uint8_t pin = (uint8_t)irq;
+	uint32_t pin = irq;
 
 	if (pin >= vioapic_pincount(vm)) {
 		return -EINVAL;
@@ -211,7 +211,7 @@ vioapic_update_tmr(struct vcpu *vcpu)
 	union ioapic_rte rte;
 	uint32_t vector, delmode;
 	bool level;
-	uint8_t pin, pincount;
+	uint32_t pin, pincount;
 
 	vlapic = vcpu->arch_vcpu.vlapic;
 	vioapic = vm_ioapic(vcpu->vm);
@@ -241,7 +241,7 @@ static uint32_t
 vioapic_indirect_read(struct vioapic *vioapic, uint32_t addr)
 {
 	uint32_t regnum;
-	uint8_t pin, pincount = vioapic_pincount(vioapic->vm);
+	uint32_t pin, pincount = vioapic_pincount(vioapic->vm);
 
 	regnum = addr & 0xffU;
 	switch (regnum) {
@@ -257,10 +257,10 @@ vioapic_indirect_read(struct vioapic *vioapic, uint32_t addr)
 
 	/* redirection table entries */
 	if ((regnum >= IOAPIC_REDTBL) &&
-	    (regnum < (IOAPIC_REDTBL + ((uint32_t)pincount * 2U)))) {
+	    (regnum < (IOAPIC_REDTBL + (pincount * 2U)))) {
 		uint32_t addr_offset = regnum - IOAPIC_REDTBL;
 		uint32_t rte_offset = addr_offset / 2U;
-		pin = (uint8_t)rte_offset;
+		pin = rte_offset;
 		if ((addr_offset % 2U) != 0U) {
 			return vioapic->rtbl[pin].u.hi_32;
 		} else {
@@ -282,7 +282,7 @@ vioapic_write_eoi(struct vioapic *vioapic, uint32_t vector)
 {
 	struct vm *vm = vioapic->vm;
 	union ioapic_rte rte;
-	uint8_t pin, pincount;
+	uint32_t pin, pincount;
 
 	if (vector < VECTOR_FOR_INTR_START || vector > NR_MAX_VECTOR) {
 		pr_err("vioapic_process_eoi: invalid vector %u", vector);
@@ -316,7 +316,7 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 	union ioapic_rte last, new;
 	uint64_t changed;
 	uint32_t regnum;
-	uint8_t pin, pincount = vioapic_pincount(vioapic->vm);
+	uint32_t pin, pincount = vioapic_pincount(vioapic->vm);
 
 	regnum = addr & 0xffUL;
 	switch (regnum) {
@@ -333,10 +333,10 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 
 	/* redirection table entries */
 	if ((regnum >= IOAPIC_REDTBL) &&
-	    (regnum < (IOAPIC_REDTBL + ((uint32_t)pincount * 2U)))) {
+	    (regnum < (IOAPIC_REDTBL + (pincount * 2U)))) {
 		uint32_t addr_offset = regnum - IOAPIC_REDTBL;
 		uint32_t rte_offset = addr_offset / 2U;
-		pin = (uint8_t)rte_offset;
+		pin = rte_offset;
 
 		last = vioapic->rtbl[pin];
 		new = last;
@@ -430,7 +430,7 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 			struct ptdev_intx_info intx;
 
 			/* NOTE: only support max 256 pin */
-			intx.virt_pin = pin;
+			intx.virt_pin = (uint8_t)pin;
 			intx.vpin_src = PTDEV_VPIN_IOAPIC;
 			ptdev_intx_pin_remap(vioapic->vm, &intx);
 		}
@@ -486,7 +486,7 @@ void
 vioapic_process_eoi(struct vm *vm, uint32_t vector)
 {
 	struct vioapic *vioapic;
-	uint8_t pin, pincount = vioapic_pincount(vm);
+	uint32_t pin, pincount = vioapic_pincount(vm);
 	union ioapic_rte rte;
 
 	if (vector < VECTOR_FOR_INTR_START || vector > NR_MAX_VECTOR) {
@@ -504,7 +504,7 @@ vioapic_process_eoi(struct vm *vm, uint32_t vector)
 			continue;
 		}
 
-		ptdev_intx_ack(vm, pin, PTDEV_VPIN_IOAPIC);
+		ptdev_intx_ack(vm, (uint8_t)pin, PTDEV_VPIN_IOAPIC);
 	}
 
 	/*
@@ -533,7 +533,7 @@ vioapic_process_eoi(struct vm *vm, uint32_t vector)
 void
 vioapic_reset(struct vioapic *vioapic)
 {
-	uint8_t pin, pincount;
+	uint32_t pin, pincount;
 
 	/* Initialize all redirection entries to mask all interrupts */
 	pincount = vioapic_pincount(vioapic->vm);
@@ -575,7 +575,7 @@ vioapic_cleanup(struct vioapic *vioapic)
 	free(vioapic);
 }
 
-uint8_t
+uint32_t
 vioapic_pincount(struct vm *vm)
 {
 	if (is_vm0(vm)) {
@@ -622,7 +622,7 @@ int vioapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
  * @pre vm->arch_vm.virt_ioapic != NULL
  * @pre rte != NULL
  */
-void vioapic_get_rte(struct vm *vm, uint8_t pin, union ioapic_rte *rte)
+void vioapic_get_rte(struct vm *vm, uint32_t pin, union ioapic_rte *rte)
 {
 	struct vioapic *vioapic;
 
@@ -639,7 +639,7 @@ void get_vioapic_info(char *str_arg, int str_max, uint16_t vmid)
 	uint32_t delmode, vector, dest;
 	bool level, phys, remote_irr, mask;
 	struct vm *vm = get_vm_from_vmid(vmid);
-	uint8_t pin, pincount;
+	uint32_t pin, pincount;
 
 	if (vm == NULL) {
 		len = snprintf(str, size,
