@@ -275,12 +275,15 @@ uart_opentty(struct uart_vdev *uart)
 static void
 uart_closetty(struct uart_vdev *uart)
 {
-	if (uart->tty.fd != STDIN_FILENO)
-		mevent_delete_close(uart->mev);
-	else
-		mevent_delete(uart->mev);
+	if (isatty(uart->tty.fd)) {
+		if (uart->tty.fd != STDIN_FILENO)
+			mevent_delete_close(uart->mev);
+		else
+			mevent_delete(uart->mev);
 
-	uart->mev = 0;
+		uart->mev = 0;
+	}
+
 	ttyclose();
 }
 
