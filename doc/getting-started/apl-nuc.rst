@@ -364,31 +364,74 @@ For hugeTLB to work, you'll need to reserve huge pages:
      by using a 2M page, but make sure your huge page reservation size is
      large enough for your usage.
 
+
 USB Device Sharing
 ==========================================
 
-The ACRN hypervisor is able to support USB device sharing
-supposing you have 2 sets of USB keyboard and mouse, 1 set is for SOS, another for UOS
+The ACRN hypervisor supports USB device sharing.  Suppose you have
+two keyboards and mice connected to your device, one keyboard and 
+mouse set for the SOS, and the other set for the UOS.  
 
-For SOS, boot up SOS and plug 2 sets USB keyboard and USB mouse into USB ports of device:
+1. Boot the SOS and plug in the two keyboards and two mice
+   into four available USB ports on the device (the NUC we recommends has 4 USB ports).
 
-  - run "dmesg" to check the kernel log
+#. Run ``dmesg`` to find the kernel messages logging the enumeration
+   of the connected keyboards and mice.  For example::
 
-  - record keyboard and mouse device info: 
+  .. code-block:: none
+
+      # dmesg
+      [  560.469525] usb 1-4: Product: USB Optical Mouse
+      [  560.469600] usb 1-4: Manufacturer: Logitech
+      [  560.472238] input: Logitech USB Optical Mouse as /devices/pci0000:00/0000:00:14.0/usb1/1-4/1- 4:1.0/0003:046D:C018.0005/input/input8
+      [  560.472673] hid-generic 0003:046D:C018.0005: input,hidraw1: USB HID v1.11 Mouse [Logitech USB Optical Mouse] on usb-   0000:00:14.0-4/input0
+      [  561.743470] usb 1-3: USB disconnect, device number 6
+      [  565.504044] usb 1-3: new low-speed USB device number 8 using xhci_hcd
+      [  565.639056] usb 1-3: New USB device found, idVendor=03f0, idProduct=0024
+      [  565.639167] usb 1-3: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+      [  565.639282] usb 1-3: Product: HP Basic USB Keyboard
+      [  565.639362] usb 1-3: Manufacturer: CHICONY
+      [  565.644013] input: CHICONY HP Basic USB Keyboard as /devices/pci0000:00/0000:00:14.0/usb1/1-3/1- 3:1.0/0003:03F0:0024.0006/input/input9
+      [  565.696139] hid-generic 0003:03F0:0024.0006: input,hidraw0: USB HID v1.10 Keyboard [CHICONY HP Basic USB Keyboard] on usb-0000:00:14.0-3/input0
+      [ 1000.587071] usb 1-2: new low-speed USB device number 9 using xhci_hcd
+      [ 1000.719824] usb 1-2: New USB device found, idVendor=046d, idProduct=c315
+      [ 1000.719934] usb 1-2: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+      [ 1000.720048] usb 1-2: Product: Logitech USB Keyboard
+      [ 1000.720143] usb 1-2: Manufacturer: Logitech
+      [ 1000.724286] input: Logitech Logitech USB Keyboard as /devices/pci0000:00/0000:00:14.0/usb1/1-2/1-2:1.0/0003:046D:C315.0007/input/input10
+      [ 1000.776433] hid-generic 0003:046D:C315.0007: input,hidraw2: USB HID v1.10 Keyboard [Logitech Logitech USB Keyboard] on usb-0000:00:14.0-2/input0
+      [ 1008.387071] usb 1-1: new low-speed USB device number 10 using xhci_hcd
+      [ 1008.516312] usb 1-1: New USB device found, idVendor=046d, idProduct=c077
+      [ 1008.516421] usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+      [ 1008.516536] usb 1-1: Product: USB Optical Mouse
+      [ 1008.516610] usb 1-1: Manufacturer: Logitech
+      [ 1008.519459] input: Logitech USB Optical Mouse as /devices/pci0000:00/0000:00:14.0/usb1/1-1/1-        1:1.0/0003:046D:C077.0008/input/input11
+      [ 1008.519714] hid-generic 0003:046D:C077.0008: input,hidraw3: USB HID v1.11 Mouse [Logitech USB Optical Mouse] on usb-   0000:00:14.0-1/input0
+
     
-    for example: 
-                 keyboard 1#: USB/1-3/1-3
+#. From ``dmesg`` info, you can easly find specific USB device info connected to certain port
+   for example::
     
-                 mouse 1#: USB/1-4/1-4
+      keyboard 1#: usb 1-3
+      mouse 1#: usb 1-4 
+      keyboard 2#: usb 1-2
+      mouse 2#: usb 1-1
+   
+   Now you can define which keyboard and mouse to be assigned for UOS, which for SOS. 
+   You'll need this device information in the next step.
 
-                 keyboard 2#: USB/1-2/1-2
-                 
-                 mouse #2: USB/1-1/1-1
+#. Supposing you assign keyboard 2# and mouse 2# to the UOS. Use a text editor to modify
+   ``/usr/share/acrn/samples/nuc/launch_uos.sh`` and add the line (using
+   the keyboard and mouse identified in your dmesg output)::
+
+      -s 9, xhci, 1-1:1-2 \
+
+   Save the file, exit the editor, and run the ``sync`` command to ensure
+   any pending write buffers are written to disk. 
   
-  now let's assign keyboard 1# and mouse 1# to SOS, keyboard 2# and mouse 2# to UOS by modifying 
-  launch_uos.sh
-  
-  
+   by default, keyboard 1# and mouse 1# connected to Device be used for SOS without any additinoal configurartion
+   keyboard 2# and mouse 2# to UOS by modifying launch_uos.sh
+    
    .. code-block:: none
 
       # cd /usr/share/acrn/samples/nuc/
@@ -397,12 +440,13 @@ For SOS, boot up SOS and plug 2 sets USB keyboard and USB mouse into USB ports o
       # -s 9, xhci, 1-1:1-2 \
       # sync
   
-  .. note::
+   .. note::
      you can check and assign USB keyboard and USB mouse to UOS with modifying -s 9, xhci 1-x:1-y \
      according to your USB device info
      
      there is an known issue to use USB keyboard and mouse in UOS, you have to unplug and plug back 
-     keyboard and mouse for UOS after lauch UOS.  
+     keyboard and mouse assigned to UOS after lauch UOS.  
+
 
 Build ACRN from Source
 **********************
