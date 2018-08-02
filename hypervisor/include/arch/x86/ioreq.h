@@ -35,12 +35,12 @@ struct vm;
 struct vcpu;
 
 typedef
-uint32_t (*io_read_fn_t)(struct vm_io_handler *, struct vm *,
-				uint16_t, size_t);
+uint32_t (*io_read_fn_t)(struct vm_io_handler *handler, struct vm *vm,
+				uint16_t port, size_t size);
 
 typedef
-void (*io_write_fn_t)(struct vm_io_handler *, struct vm *,
-				uint16_t, size_t, uint32_t);
+void (*io_write_fn_t)(struct vm_io_handler *handler, struct vm *vm,
+				uint16_t port, size_t size, uint32_t val);
 
 /* Describes a single IO handler description entry. */
 struct vm_io_handler_desc {
@@ -96,7 +96,8 @@ struct vm_io_handler {
 
 /* Typedef for MMIO handler and range check routine */
 struct mmio_request;
-typedef int (*hv_mem_io_handler_t)(struct vcpu *, struct io_request *, void *);
+typedef int (*hv_mem_io_handler_t)(struct vcpu *vcpu, struct io_request *io_req,
+					void *handler_private_data);
 
 /* Structure for MMIO handler node */
 struct mem_io_node {

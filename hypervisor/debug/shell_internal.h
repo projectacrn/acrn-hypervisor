@@ -30,7 +30,7 @@ struct shell {
 };
 
 /* Shell Command Function */
-typedef int (*shell_cmd_fn_t)(int, char **);
+typedef int (*shell_cmd_fn_t)(int argc, char **argv);
 
 /* Shell Command */
 struct shell_cmd {

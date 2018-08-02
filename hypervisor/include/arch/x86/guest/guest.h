@@ -107,7 +107,7 @@ int vmx_vmrun(struct run_context *context, int ops, int ibrs);
 int load_guest(struct vm *vm, struct vcpu *vcpu);
 int general_sw_loader(struct vm *vm, struct vcpu *vcpu);
 
-typedef int (*vm_sw_loader_t)(struct vm *, struct vcpu *);
+typedef int (*vm_sw_loader_t)(struct vm *vm, struct vcpu *vcpu);
 extern vm_sw_loader_t vm_sw_loader;
 
 int copy_from_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);

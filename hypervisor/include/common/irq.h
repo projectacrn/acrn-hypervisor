@@ -24,7 +24,7 @@ enum irq_desc_state {
 	IRQ_DESC_IN_PROCESS,
 };
 
-typedef int (*dev_handler_t)(int irq, void*);
+typedef int (*dev_handler_t)(int irq, void *dev_data);
 struct irq_request_info {
 	/* vector set to 0xE0 ~ 0xFF for pri_register_handler
 	 * and set to VECTOR_INVALID for normal_register_handler
@@ -84,7 +84,7 @@ normal_register_handler(uint32_t irq,
 		const char *name);
 void unregister_handler_common(struct dev_handler_node *node);
 
-typedef int (*irq_handler_t)(struct irq_desc*, void*);
+typedef int (*irq_handler_t)(struct irq_desc *desc, void *handler_data);
 void update_irq_handler(uint32_t irq, irq_handler_t func);
 
 #endif /* COMMON_IRQ_H */
