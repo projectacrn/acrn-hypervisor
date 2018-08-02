@@ -265,7 +265,7 @@ struct vcpu {
 #endif
 };
 
-#define	is_vcpu_bsp(vcpu)	((vcpu)->vcpu_id == 0U)
+#define	is_vcpu_bsp(vcpu)	((vcpu)->vcpu_id == BOOT_CPU_ID)
 /* do not update Guest RIP for next VM Enter */
 static inline void vcpu_retain_rip(struct vcpu *vcpu)
 {
