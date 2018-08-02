@@ -123,10 +123,10 @@ the source code, build it, and install it on your device.
          
         sudo efibootmgr -o xxx,xxx,xxx 
 
-      .. note::
-         By default, the “ACRN Hypervisor” you have just added should be
-         the first one to boot. Verify this by using ``efibootmgr -v`` or
-         by entering the EFI firmware at boot (using :kbd:`F10`)
+   .. note::
+      By default, the “ACRN Hypervisor” you have just added should be
+      the first one to boot. Verify this by using ``efibootmgr -v`` or
+      by entering the EFI firmware at boot (using :kbd:`F10`)
 
 Install the Service OS kernel
 *****************************
@@ -134,7 +134,7 @@ Install the Service OS kernel
 You can download latest Service OS kernel from
 `<https://download.clearlinux.org/releases/current/clear/x86_64/os/Packages/>`_
 
-1. Download the latest Service OS kernel from the latest Clear Linux release
+1. The latest Service OS kernel from the latest Clear Linux release
    from this area:
    https://download.clearlinux.org/releases/current/clear/x86_64/os/Packages.  Look for an
    ``.rpm`` file named ``linux-pk414-sos-<kernel-version>-<build-version>.x86_64.rpm``.
@@ -143,22 +143,13 @@ You can download latest Service OS kernel from
    a specific Clear Linux release from an area with that release number, e.g.: 
    https://download.clearlinux.org/releases/24040/clear/x86_64/os/linux-pk414-sos-4.14.57-69.x86_64.rpm
 
-2. Download Specific Service OS kenrel from specific Clear Linux release:
-   https://download.clearlinx.org/release/<Clear-linux-release>/clear/x86_64/os/Packages.
-   e.g.:
-   Clear-linux-release = 24040
-   `<https://download.clearlinux.org/releases/24040/clear/x86_64/os/linux-pk414-sos-4.14.57-69.x86_64.rpm/>`_
-   
- .. note:: 
-    in this guide, we use and recommend people downloading latest release from "current" path
- 
-#. Download and extract the latest Service OS kernel(for example: current=24040)
+#. Download and extract the latest Service OS kernel(this guide is based on 24040 as the current example)
 
    .. code-block:: none
 
       mkdir ~/kernel-build
       cd ~/kernel-build
-      wget  https://download.clearlinux.org/releases/current/clear/x86_64/os/Packages/linux-pk414-sos-4.14.57-69.x86_64.rpm
+      wget  https://download.clearlinux.org/releases/24040/clear/x86_64/os/Packages/linux-pk414-sos-4.14.57-69.x86_64.rpm
       sudo apt-get install rpm2cpio
       rpm2cpio linux-pk414-sos-4.14.57-69.x86_64.rpm | cpio -idmv
 
@@ -182,7 +173,7 @@ You can download latest Service OS kernel from
                 insmod gzio
                 insmod part_gpt
                 insmod ext2
-                linux  /EFI/org.clearlinux/kernel-org.clearlinux.pk414-sos.4.14.57-69 pci_devices_ignore=(0:18:1) maxcpus=1 console=tty0 console=ttyS0 i915.nuclear_pageflip=1 root=PARTUUID=<UUID of rootfs partition> rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.tsd_init=7 i915.tsd_delay=2000 i915.avail_planes_per_pipe=0x01010F i915.domain_plane_owners=0x011111110000 i915.enable_guc_loading=0 i915.enable_guc_submission=0 i915.enable_preemption=1 i915.context_priority_mode=2 i915.enable_gvt=1 i915.enable_initial_modeset=1 hvlog=2M@0x1FE00000
+                linux  /EFI/org.clearlinux/kernel-org.clearlinux.pk414-sos.4.14.57-69 pci_devices_ignore=(0:18:1)  console=tty0 console=ttyS0 i915.nuclear_pageflip=1 root=PARTUUID=<UUID of rootfs partition> rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.tsd_init=7 i915.tsd_delay=2000 i915.avail_planes_per_pipe=0x01010F i915.domain_plane_owners=0x011111110000 i915.enable_guc_loading=0 i915.enable_guc_submission=0 i915.enable_preemption=1 i915.context_priority_mode=2 i915.enable_gvt=1 i915.enable_initial_modeset=1 hvlog=2M@0x1FE00000
         }
 
    .. note::
@@ -219,13 +210,13 @@ You can download latest Service OS kernel from
    the Ubuntu Desktop and you can now log in (as before).
 
    .. note::
-       if you are not seeing Grub menu after reboot system, you may go into a wrong boot entry
-       you may need to select “ACRN Hypervisor” manually by entering the EFI firmware at boot (using :kbd:`F10`)
+       If you don't see the Grub menu after rebooting the system (and you're
+       not booting into the ACRN hypervisor), you'll need to enter the
+       EFI firmware at boot (using :kbd:`F10`) and manually select ``ACRN Hypervisor``. 
         
    .. note::
-        for the first time reboot after install ACRN, you may see Black Screen after boot up succusfully 
-        don't worry about that, this is known issue becaue of fb mode is disabled, wait a moment
-        the Ubuntu desktop will be displayed
+       If you see a black screen on the first-time reboot after installing the ACRN Hypervisor, 
+       wait a few moments and the Ubuntu desktop will be displayed.
         
    To check if the hypervisor is effectively running, check ``dmesg``. The
    typical output of a successful installation will look like this:
@@ -246,14 +237,14 @@ For the User OS, we are using the same `Clear Linux`_ release version as the Ser
   .. code-block:: none
 
      cd ~
-     wget https://download.clearlinux.org/releases/current/clear/clear-24040-kvm.img.xz
+     wget https://download.clearlinux.org/releases/24040/clear/clear-24040-kvm.img.xz
      unxz clear-24040-kvm.img.xz
 
 * Download the Production Kenrel (PK) kernel
 
   .. code-block:: none
 
-     wget https://download.clearlinux.org/releases/current/clear/x86_64/os/Packages/linux-pk414-standard-4.14.57-69.x86_64.rpm
+     wget https://download.clearlinux.org/releases/24040/clear/x86_64/os/Packages/linux-pk414-standard-4.14.57-69.x86_64.rpm
      rpm2cpio linux-pk414-standard-4.14.57-69.x86_64.rpm | cpio -idmv
 
 * Update the UOS kernel modules
@@ -305,10 +296,11 @@ You are now all set to start the User OS (UOS)
 Enabling network sharing 
 ************************
 
-After booting up SOS and UOS, enabling network sharing is must to test networking in UOS side. 
-enabling the tap and networking bridge in the SOS, you can create a script file to setup.
-below is an example for you reference:(verifed in Ubuntu 14.04 and 16.04 as the SOS) 
- 
+After booting up the SOS and UOS, network sharing must be enabled to give network
+access to the UOS by enabling the TAP and networking bridge in the SOS.  The following
+script example shows how to set this up (verified in Ubuntu 14.04 and 16.04 as the SOS).
+
+
  .. code-block:: none
   
     #!/bin/bash
@@ -338,6 +330,11 @@ below is an example for you reference:(verifed in Ubuntu 14.04 and 16.04 as the 
     brctl addif acrn-br0 acrn_tap0
     ip link set dev acrn_tap0 up
  
-Enabling USB keyboard and mouse for UOS, please :ref:`getting-started-apl-nuc` 
+Enabling USB keyboard and mouse
+*******************************
+
+Please refer to :ref:`getting-started-apl-nuc` for enabling the
+USB keyboard and mouse for the UOS.
+
  
 .. _Clear Linux: https://clearlinux.org
