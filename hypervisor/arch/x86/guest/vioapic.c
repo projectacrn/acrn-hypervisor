@@ -37,6 +37,7 @@
 #define NEED_TMR_UPDATE (~(IOAPIC_RTE_INTMASK | IOAPIC_RTE_INTPOL))
 
 #define ACRN_DBG_IOAPIC	6U
+#define ACRN_IOAPIC_VERSION	0x11U
 
 struct vioapic {
 	struct vm	*vm;
@@ -248,7 +249,8 @@ vioapic_indirect_read(struct vioapic *vioapic, uint32_t addr)
 	case IOAPIC_ID:
 		return vioapic->id;
 	case IOAPIC_VER:
-		return (((uint32_t)pincount - 1U) << MAX_RTE_SHIFT) | 0x11U;
+		return (((uint32_t)pincount - 1U) << MAX_RTE_SHIFT) |
+						ACRN_IOAPIC_VERSION;
 	case IOAPIC_ARB:
 		return vioapic->id;
 	default:
@@ -269,42 +271,6 @@ vioapic_indirect_read(struct vioapic *vioapic, uint32_t addr)
 	}
 
 	return 0;
-}
-
-/*
- * version 0x20+ ioapic has EOI register. And cpu could write vector to this
- * register to clear related IRR.
- * Due to the race between vcpus, ensure to do VIOAPIC_LOCK(vioapic) &
- * VIOAPIC_UNLOCK(vioapic) by caller.
- */
-static void
-vioapic_write_eoi(struct vioapic *vioapic, uint32_t vector)
-{
-	struct vm *vm = vioapic->vm;
-	union ioapic_rte rte;
-	uint32_t pin, pincount;
-
-	if (vector < VECTOR_FOR_INTR_START || vector > NR_MAX_VECTOR) {
-		pr_err("vioapic_process_eoi: invalid vector %u", vector);
-	}
-
-	pincount = vioapic_pincount(vm);
-	for (pin = 0U; pin < pincount; pin++) {
-		rte = vioapic->rtbl[pin];
-
-		if (((rte.u.lo_32 & IOAPIC_RTE_LOW_INTVEC) != vector) ||
-			((rte.full & IOAPIC_RTE_REM_IRR) == 0UL)) {
-			continue;
-		}
-
-		vioapic->rtbl[pin].full &= ~IOAPIC_RTE_REM_IRR;
-		if (vioapic->acnt[pin] > 0) {
-			dev_dbg(ACRN_DBG_IOAPIC,
-				"ioapic pin%hhu: asserted at eoi, acnt %d",
-				pin, vioapic->acnt[pin]);
-			vioapic_send_intr(vioapic, pin);
-		}
-	}
 }
 
 /* Due to the race between vcpus, ensure to do VIOAPIC_LOCK(vioapic) &
@@ -456,11 +422,6 @@ vioapic_mmio_rw(struct vioapic *vioapic, uint64_t gpa,
 			*data = vioapic->ioregsel;
 		} else {
 			vioapic->ioregsel = *data & 0xFFU;
-		}
-		break;
-	case IOAPIC_EOIR:
-		if (!do_read) {
-			vioapic_write_eoi(vioapic, *data);
 		}
 		break;
 	case IOAPIC_WINDOW:
