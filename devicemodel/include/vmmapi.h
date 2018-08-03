@@ -45,6 +45,8 @@
 #define ALIGN_UP(x, align)	(((x) + ((align)-1)) & ~((align)-1))
 #define ALIGN_DOWN(x, align)	((x) & ~((align)-1))
 
+#define CMOS_BUF_SIZE		256
+
 struct vmctx {
 	int     fd;
 	int     vmid;
@@ -61,6 +63,10 @@ struct vmctx {
 	void *atkbdc_base;
 	void *vrtc;
 	void *ioc_dev;
+	/* cmos buffer used to store write/read contents,
+	 * and it should not be cleared when reboot
+	 */
+	uint8_t cmos_buffer[CMOS_BUF_SIZE];
 };
 
 /*
