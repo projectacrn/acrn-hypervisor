@@ -7,6 +7,8 @@
 #include <hypervisor.h>
 #include <hkdf.h>
 
+#define ACRN_DBG_TRUSTY 6U
+
 #define TRUSTY_VERSION   1U
 #define TRUSTY_VERSION_2 2U
 
@@ -430,7 +432,7 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 	}
 
 	if (boot_param.version > TRUSTY_VERSION_2) {
-		pr_err("%s: Version(%u) not supported!\n",
+		dev_dbg(ACRN_DBG_TRUSTY, "%s: Version(%u) not supported!\n",
 				__func__, boot_param.version);
 		return false;
 	}
