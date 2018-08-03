@@ -546,10 +546,11 @@ static void bsp_boot_post(void)
 
 	console_setup_timer();
 
-	/* Start initializing the VM for this CPU */
-	if (hv_main(BOOT_CPU_ID) != 0) {
-		panic("failed to start VM for bsp\n");
-	}
+	exec_vmxon_instr(BOOT_CPU_ID);
+
+	prepare_vm0();
+
+	default_idle();
 
 	/* Control should not come here */
 	cpu_dead(BOOT_CPU_ID);
@@ -621,13 +622,12 @@ static void cpu_secondary_post(void)
 	/* Wait for boot processor to signal all secondary cores to continue */
 	pcpu_sync_sleep(&pcpu_sync, 0UL);
 
-	ret = hv_main(get_cpu_id());
-	if (ret != 0) {
-		panic("hv_main ret = %d\n", ret);
-	}
+	exec_vmxon_instr(get_cpu_id());
 
-	/* Control will only come here for secondary CPUs not configured for
-	 * use or if an error occurs in hv_main
+	default_idle();
+
+	/* Control will only come here for secondary
+	 * CPUs not configured for use.
 	 */
 	cpu_dead(get_cpu_id());
 }

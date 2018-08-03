@@ -107,48 +107,6 @@ void vcpu_thread(struct vcpu *vcpu)
 	} while (1);
 }
 
-static bool is_vm0_bsp(uint16_t pcpu_id)
-{
-#ifdef CONFIG_VM0_DESC
-	return pcpu_id == vm0_desc.vm_pcpu_ids[0];
-#else
-	return pcpu_id == BOOT_CPU_ID;
-#endif
-}
-
-int32_t hv_main(uint16_t pcpu_id)
-{
-	int32_t ret;
-
-	pr_info("%s, Starting common entry point for CPU %hu",
-			__func__, pcpu_id);
-
-	if (pcpu_id != get_cpu_id()) {
-		pr_err("%s, cpu_id %hu mismatch\n", __func__, pcpu_id);
-		return -EINVAL;
-	}
-
-	/* Enable virtualization extensions */
-	ret = exec_vmxon_instr(pcpu_id);
-	if (ret != 0) {
-		return ret;
-	}
-
-	/* X2APIC mode is disabled by default. */
-	x2apic_enabled = false;
-
-	if (is_vm0_bsp(pcpu_id)) {
-		ret = prepare_vm0();
-		if (ret != 0) {
-			return ret;
-		}
-	}
-
-	default_idle();
-
-	return 0;
-}
-
 #ifdef HV_DEBUG
 void get_vmexit_profile(char *str_arg, int str_max)
 {

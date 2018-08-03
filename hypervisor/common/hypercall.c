@@ -161,9 +161,6 @@ int32_t hcall_create_vm(struct vm *vm, uint64_t param)
 {
 	int32_t ret = 0;
 	struct vm *target_vm = NULL;
-	/* VM are created from hv_main() directly
-	 * Here we just return the vmid for DM
-	 */
 	struct acrn_create_vm cv;
 	struct vm_description vm_desc;
 
