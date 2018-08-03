@@ -30,7 +30,7 @@ The ACRN hypervisor shell supports the following commands:
      - Shows pass-through device information
    * - reboot
      - Triggers a system reboot (immediately)
-    * - dump_ioapic
+   * - dump_ioapic
      - Shows native ioapic information
    * - vmexit
      - Shows vmexit profiling
