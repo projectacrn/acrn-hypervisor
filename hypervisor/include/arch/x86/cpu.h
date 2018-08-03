@@ -261,7 +261,6 @@ extern struct cpuinfo_x86 boot_cpu_data;
 /* Function prototypes */
 void cpu_dead(uint16_t pcpu_id);
 void trampoline_start16(void);
-int32_t hv_main(uint16_t cpu_id);
 bool is_vapic_supported(void);
 bool is_vapic_intr_delivery_supported(void);
 bool is_vapic_virt_reg_supported(void);

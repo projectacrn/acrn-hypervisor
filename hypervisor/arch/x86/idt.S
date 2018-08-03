@@ -393,7 +393,7 @@ external_interrupt_save_frame:
 
     /*
      * We disable softirq path from interrupt IRET, since right now all IRQ
-     * are for Guest, and we can execute softirq in hv_main() loop
+     * are for Guest.
      */
 
     popq    %rax
