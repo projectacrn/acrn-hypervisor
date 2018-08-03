@@ -517,8 +517,8 @@ int shell_list_vm(__unused int argc, __unused char **argv)
 		/* Create output string consisting of VM name and VM id
 		 */
 		snprintf(temp_str, MAX_STR_SIZE,
-				"vm_%-24d %-16d %-8s\r\n", vm->attr.id,
-				vm->attr.id, state);
+				"vm_%-24d %-16d %-8s\r\n", vm->vm_id,
+				vm->vm_id, state);
 
 		/* Output information for this task */
 		shell_puts(temp_str);
@@ -562,7 +562,7 @@ int shell_list_vcpu(__unused int argc, __unused char **argv)
 			 */
 			snprintf(temp_str, MAX_STR_SIZE,
 					"  %-9d %-10d %-7hu %-12s %-16s\r\n",
-					vm->attr.id,
+					vm->vm_id,
 					vcpu->pcpu_id,
 					vcpu->vcpu_id,
 					is_vcpu_bsp(vcpu) ?
@@ -627,7 +627,7 @@ int shell_vcpu_dumpreg(int argc, char **argv)
 
 	snprintf(temp_str, MAX_STR_SIZE,
 		"=  VM ID %d ==== CPU ID %hu========================\r\n",
-		vm->attr.id, vcpu->vcpu_id);
+		vm->vm_id, vcpu->vcpu_id);
 	shell_puts(temp_str);
 	snprintf(temp_str, MAX_STR_SIZE, "=  RIP=0x%016llx  RSP=0x%016llx "
 			"RFLAGS=0x%016llx\r\n", cur_context->rip,

@@ -57,7 +57,7 @@ static void dump_guest_reg(struct vcpu *vcpu)
 	printf("Guest Registers:\r\n");
 	printf("=	VM ID %d ==== vCPU ID %hu ===  pCPU ID %d ===="
 			"world %d =============\r\n",
-			vcpu->vm->attr.id, vcpu->vcpu_id, vcpu->pcpu_id,
+			vcpu->vm->vm_id, vcpu->vcpu_id, vcpu->pcpu_id,
 			vcpu->arch_vcpu.cur_context);
 	printf("=	RIP=0x%016llx  RSP=0x%016llx "
 			"RFLAGS=0x%016llx\r\n",

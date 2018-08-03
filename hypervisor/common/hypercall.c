@@ -181,7 +181,7 @@ int32_t hcall_create_vm(struct vm *vm, uint64_t param)
 		cv.vmid = ACRN_INVALID_VMID;
 		ret = -1;
 	} else {
-		cv.vmid = target_vm->attr.id;
+		cv.vmid = target_vm->vm_id;
 		ret = 0;
 	}
 
@@ -393,7 +393,7 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 	vcpu = vcpu_from_vid(target_vm, vcpu_id);
 	if (vcpu == NULL) {
 		pr_err("%s, failed to get VCPU %d context from VM %d\n",
-			__func__, vcpu_id, target_vm->attr.id);
+			__func__, vcpu_id, target_vm->vm_id);
 		return -EINVAL;
 	}
 
@@ -410,13 +410,13 @@ static int32_t local_set_vm_memory_region(struct vm *vm,
 
 	if ((region->size & (CPU_PAGE_SIZE - 1UL)) != 0UL) {
 		pr_err("%s: [vm%d] map size 0x%x is not page aligned",
-			__func__, target_vm->attr.id, region->size);
+			__func__, target_vm->vm_id, region->size);
 		return -EINVAL;
 	}
 
 	hpa = gpa2hpa(vm, region->vm0_gpa);
 	dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x size=0x%x",
-		target_vm->attr.id, region->gpa, hpa, region->size);
+		target_vm->vm_id, region->gpa, hpa, region->size);
 
 	base_paddr = get_hv_image_base();
 	if (((hpa <= base_paddr) &&
@@ -540,7 +540,7 @@ static int32_t write_protect_page(struct vm *vm, struct wp_data *wp)
 
 	hpa = gpa2hpa(vm, wp->gpa);
 	dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x",
-			vm->attr.id, wp->gpa, hpa);
+			vm->vm_id, wp->gpa, hpa);
 
 	base_paddr = get_hv_image_base();
 	if (((hpa <= base_paddr) && (hpa + CPU_PAGE_SIZE > base_paddr)) ||
@@ -665,7 +665,7 @@ int32_t hcall_assign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param)
 
 	if (copy_from_gpa(vm, &bdf, param, sizeof(bdf)) != 0) {
 		pr_err("%s: Unable copy param from vm %d\n",
-			__func__, vm->attr.id);
+			__func__, vm->vm_id);
 		return -EIO;
 	}
 
@@ -673,7 +673,7 @@ int32_t hcall_assign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param)
 	if (target_vm->iommu == NULL) {
 		if (target_vm->arch_vm.nworld_eptp == NULL) {
 			pr_err("%s, EPT of VM not set!\n",
-				__func__, target_vm->attr.id);
+				__func__, target_vm->vm_id);
 			return -EPERM;
 		}
 		/* TODO: how to get vm's address width? */

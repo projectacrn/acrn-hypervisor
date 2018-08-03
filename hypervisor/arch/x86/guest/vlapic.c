@@ -105,7 +105,7 @@ vm_lapic_from_vcpu_id(struct vm *vm, uint16_t vcpu_id)
 	struct vcpu *vcpu;
 
 	vcpu = vcpu_from_vid(vm, vcpu_id);
-	ASSERT(vcpu != NULL, "vm%d, vcpu%hu", vm->attr.id, vcpu_id);
+	ASSERT(vcpu != NULL, "vm%d, vcpu%hu", vm->vm_id, vcpu_id);
 
 	return vcpu->arch_vcpu.vlapic;
 }
@@ -116,7 +116,7 @@ vm_lapic_from_pcpuid(struct vm *vm, uint16_t pcpu_id)
 	struct vcpu *vcpu;
 
 	vcpu = vcpu_from_pid(vm, pcpu_id);
-	ASSERT(vcpu != NULL, "vm%d, pcpu%hu", vm->attr.id, pcpu_id);
+	ASSERT(vcpu != NULL, "vm%d, pcpu%hu", vm->vm_id, pcpu_id);
 
 	return vcpu->arch_vcpu.vlapic;
 }
@@ -1173,7 +1173,7 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 			target_vcpu->arch_vcpu.sipi_vector = vec;
 			pr_err("Start Secondary VCPU%hu for VM[%d]...",
 					target_vcpu->vcpu_id,
-					target_vcpu->vm->attr.id);
+					target_vcpu->vm->vm_id);
 			schedule_vcpu(target_vcpu);
 		} else {
 			pr_err("Unhandled icrlo write with mode %u\n", mode);

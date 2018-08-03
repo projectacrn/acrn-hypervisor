@@ -188,7 +188,7 @@ void get_req_info(char *str_arg, int str_max)
 						state, dir, &addr, &val);
 					len = snprintf(str, size,
 						"\r\n%d\t%d\t%d\t%s\t%s\t%s",
-						vm->attr.id, i, client_id, type,
+						vm->vm_id, i, client_id, type,
 						state, dir);
 					size -= len;
 					str += len;

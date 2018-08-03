@@ -137,7 +137,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 		/* Set VCPU entry point to kernel entry */
 		vcpu->entry_addr = sw_kernel->kernel_entry_addr;
 		pr_info("%s, VM *d VCPU %hu Entry: 0x%016llx ",
-			__func__, vm->attr.id, vcpu->vcpu_id, vcpu->entry_addr);
+			__func__, vm->vm_id, vcpu->vcpu_id, vcpu->entry_addr);
 	}
 
 	/* Calculate the host-physical address where the guest will be loaded */
@@ -220,7 +220,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 		cur_context->guest_cpu_regs.regs.rsi = create_zero_page(vm);
 
 		pr_info("%s, RSI pointing to zero page for VM %d at GPA %X",
-				__func__, vm->attr.id,
+				__func__, vm->vm_id,
 				cur_context->guest_cpu_regs.regs.rsi);
 
 	} else {
