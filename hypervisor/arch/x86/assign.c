@@ -329,10 +329,10 @@ add_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 				" not able to add into vm%d with vbdf%x",
 				entry->phys_bdf,
 				entry->ptdev_intr_info.msi.msix_entry_index,
-				entry->vm->attr.id,
-				entry->virt_bdf, vm->attr.id, virt_bdf);
+				entry->vm->vm_id,
+				entry->virt_bdf, vm->vm_id, virt_bdf);
 			ASSERT(false, "msix entry pbdf%x idx%d already in vm%d",
-			       phys_bdf, msix_entry_index, entry->vm->attr.id);
+			       phys_bdf, msix_entry_index, entry->vm->vm_id);
 
 			spinlock_release(&ptdev_lock);
 			return &invalid_entry;
@@ -345,7 +345,7 @@ add_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 
 	dev_dbg(ACRN_DBG_IRQ,
 		"VM%d MSIX add vector mapping vbdf%x:pbdf%x idx=%d",
-		entry->vm->attr.id, virt_bdf, phys_bdf, msix_entry_index);
+		entry->vm->vm_id, virt_bdf, phys_bdf, msix_entry_index);
 
 	return entry;
 }
@@ -369,7 +369,7 @@ remove_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint32_t msix_entry_inde
 
 	dev_dbg(ACRN_DBG_IRQ,
 		"VM%d MSIX remove vector mapping vbdf-pbdf:0x%x-0x%x idx=%d",
-		entry->vm->attr.id,
+		entry->vm->vm_id,
 		entry->virt_bdf, entry->phys_bdf, msix_entry_index);
 
 	release_entry(entry);
@@ -413,11 +413,11 @@ add_intx_remapping(struct vm *vm, uint8_t virt_pin,
 			pr_err("INTX pin%d already in vm%d with vpin%d,"
 			       " not able to add into vm%d with vpin%d",
 			       entry->ptdev_intr_info.intx.phys_pin,
-			       entry->vm->attr.id,
+			       entry->vm->vm_id,
 			       entry->ptdev_intr_info.intx.virt_pin,
-			       vm->attr.id, virt_pin);
+			       vm->vm_id, virt_pin);
 			ASSERT(false, "intx entry pin%d already vm%d",
-			       phys_pin, entry->vm->attr.id);
+			       phys_pin, entry->vm->vm_id);
 
 			spinlock_release(&ptdev_lock);
 			return &invalid_entry;
@@ -431,7 +431,7 @@ add_intx_remapping(struct vm *vm, uint8_t virt_pin,
 
 	dev_dbg(ACRN_DBG_IRQ,
 		"VM%d INTX add pin mapping vpin%d:ppin%d",
-		entry->vm->attr.id, virt_pin, phys_pin);
+		entry->vm->vm_id, virt_pin, phys_pin);
 
 	return entry;
 }
@@ -466,7 +466,7 @@ static void remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin)
 			"vPIC" : "vIOAPIC",
 			entry->ptdev_intr_info.intx.phys_pin, phys_irq);
 		dev_dbg(ACRN_DBG_IRQ, "from vm%d vpin=%d\n",
-			entry->vm->attr.id,
+			entry->vm->vm_id,
 			entry->ptdev_intr_info.intx.virt_pin);
 	}
 
@@ -677,7 +677,7 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 		entry->ptdev_intr_info.msi.msix_entry_index,
 		entry->ptdev_intr_info.msi.virt_vector,
 		entry->ptdev_intr_info.msi.phys_vector,
-		entry->vm->attr.id);
+		entry->vm->vm_id);
 END:
 	return 0;
 }
@@ -831,7 +831,7 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 			(entry->ptdev_intr_info.intx.vpin_src != 0)?
 				"vIOPIC" : "vPIC",
 			info->virt_pin,
-			entry->vm->attr.id);
+			entry->vm->vm_id);
 	        intx->vpin_src = info->vpin_src;
 	        intx->virt_pin = info->virt_pin;
 	}
@@ -848,7 +848,7 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 				"IOAPIC pin=%hhu pirq=%u deassigned ",
 				phys_pin, phys_irq);
 			dev_dbg(ACRN_DBG_IRQ, "from vm%d vIOAPIC vpin=%d",
-				entry->vm->attr.id,
+				entry->vm->vm_id,
 			        intx->virt_pin);
 			goto END;
 		} else {
@@ -869,7 +869,7 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 
 		dev_dbg(ACRN_DBG_IRQ,
 			"IOAPIC pin=%hhu pirq=%u assigned to vm%d %s vpin=%d",
-			phys_pin, phys_irq, entry->vm->attr.id,
+			phys_pin, phys_irq, entry->vm->vm_id,
 		        intx->vpin_src == PTDEV_VPIN_PIC ?
 			"vPIC" : "vIOAPIC",
 		        intx->virt_pin);
@@ -1037,7 +1037,7 @@ void get_ptdev_info(char *str_arg, int str_max)
 					&bdf, &vbdf);
 			len = snprintf(str, size,
 					"\r\n%d\t%s\t%d\t0x%X\t0x%X",
-					entry->vm->attr.id, type,
+					entry->vm->vm_id, type,
 					irq, vector, dest);
 			size -= len;
 			str += len;

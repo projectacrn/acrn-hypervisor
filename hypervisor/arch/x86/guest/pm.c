@@ -210,7 +210,7 @@ register_gas_io_handler(struct vm *vm, struct acpi_generic_address *gas)
 			&pm1ab_io_read, &pm1ab_io_write);
 
 	pr_dbg("Enable PM1A trap for VM %d, port 0x%x, size %d\n",
-			vm->attr.id, gas_io.base, gas_io.len);
+			vm->vm_id, gas_io.base, gas_io.len);
 }
 
 void register_pm1ab_handler(struct vm *vm)

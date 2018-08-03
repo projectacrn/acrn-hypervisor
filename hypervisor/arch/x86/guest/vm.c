@@ -25,6 +25,25 @@ spinlock_t vm_list_lock = {
 /* used for vmid allocation. And this means the max vm number is 64 */
 static uint64_t vmid_bitmap;
 
+static inline uint16_t alloc_vm_id(void)
+{
+	uint16_t id = ffz64(vmid_bitmap);
+
+	while (id < (size_t)(sizeof(vmid_bitmap) * 8U)) {
+		if (!bitmap_test_and_set_lock(id, &vmid_bitmap)) {
+			return id;
+		}
+		id = ffz64(vmid_bitmap);
+	}
+
+	return INVALID_VM_ID;
+}
+
+static inline void free_vm_id(struct vm *vm)
+{
+	bitmap_clear_lock(vm->vm_id, &vmid_bitmap);
+}
+
 static void init_vm(struct vm_description *vm_desc,
 		struct vm *vm_handle)
 {
@@ -54,7 +73,7 @@ struct vm *get_vm_from_vmid(uint16_t vm_id)
 	spinlock_obtain(&vm_list_lock);
 	list_for_each(pos, &vm_list) {
 		vm = list_entry(pos, struct vm, list);
-		if (vm->attr.id == vm_id) {
+		if (vm->vm_id == vm_id) {
 			spinlock_release(&vm_list_lock);
 			return vm;
 		}
@@ -66,7 +85,6 @@ struct vm *get_vm_from_vmid(uint16_t vm_id)
 
 int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 {
-	uint16_t id;
 	struct vm *vm;
 	int status;
 
@@ -102,20 +120,12 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		goto err;
 	}
 
-	for (id = 0U; id < (size_t)(sizeof(vmid_bitmap) * 8U); id++) {
-		if (!bitmap_test_and_set_lock(id, &vmid_bitmap)) {
-			break;
-		}
-	}
-
-	if (id >= (size_t)(sizeof(vmid_bitmap) * 8U)) {
+	vm->vm_id = alloc_vm_id();
+	if (vm->vm_id == INVALID_VM_ID) {
 		pr_err("%s, no more VMs can be supported\n", __func__);
-		status = -EINVAL;
+		status = -ENODEV;
 		goto err;
 	}
-
-	vm->attr.id = id;
-	vm->attr.boot_idx = id;
 
 	atomic_store16(&vm->hw.created_vcpus, 0U);
 
@@ -273,7 +283,8 @@ int shutdown_vm(struct vm *vm)
 		destroy_iommu_domain(vm->iommu);
 	}
 
-	bitmap_clear_lock(vm->attr.id, &vmid_bitmap);
+	/* Free vm id */
+	free_vm_id(vm);
 
 	if (vm->vpic != NULL) {
 		vpic_cleanup(vm);
@@ -300,7 +311,7 @@ int start_vm(struct vm *vm)
 
 	/* Only start BSP (vid = 0) and let BSP start other APs */
 	vcpu = vcpu_from_vid(vm, 0U);
-	ASSERT(vcpu != NULL, "vm%d, vcpu0", vm->attr.id);
+	ASSERT(vcpu != NULL, "vm%d, vcpu0", vm->vm_id);
 	schedule_vcpu(vcpu);
 
 	return 0;

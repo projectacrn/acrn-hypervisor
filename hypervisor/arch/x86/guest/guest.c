@@ -32,7 +32,7 @@ struct page_walk_info {
 inline bool
 is_vm0(struct vm *vm)
 {
-	return (vm->attr.boot_idx & 0x7FU) == 0U;
+	return (vm->vm_id) == 0U;
 }
 
 inline struct vcpu *vcpu_from_vid(struct vm *vm, uint16_t vcpu_id)

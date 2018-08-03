@@ -25,7 +25,7 @@ uint64_t gpa2hpa_for_trusty(struct vm *vm, uint64_t gpa)
 		pr_dbg("GPA2HPA: 0x%llx->0x%llx", gpa, hpa);
 	} else {
 		pr_err("VM %d GPA2HPA: failed for gpa 0x%llx",
-				vm->attr.boot_idx, gpa);
+				vm->vm_id, gpa);
 	}
 
 	return hpa;

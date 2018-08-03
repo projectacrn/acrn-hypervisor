@@ -129,7 +129,7 @@ uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 		pr_dbg("GPA2HPA: 0x%llx->0x%llx", gpa, hpa);
 	} else {
 		pr_err("VM %d GPA2HPA: failed for gpa 0x%llx",
-				vm->attr.boot_idx, gpa);
+				vm->vm_id, gpa);
 	}
 
 	if (size != NULL) {
@@ -153,7 +153,7 @@ uint64_t hpa2gpa(struct vm *vm, uint64_t hpa)
 			hpa, &pg_size, PTT_EPT);
 	if (pgentry == NULL) {
 		pr_err("VM %d hpa2gpa: failed for hpa 0x%llx",
-				vm->attr.boot_idx, hpa);
+				vm->vm_id, hpa);
 		ASSERT(false, "hpa2gpa not found");
 	}
 	return ((*pgentry & (~(pg_size - 1UL)))

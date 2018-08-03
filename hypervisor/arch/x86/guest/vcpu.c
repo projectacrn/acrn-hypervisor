@@ -75,7 +75,7 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	per_cpu(vcpu, pcpu_id) = vcpu;
 
 	pr_info("PCPU%d is working as VM%d VCPU%d, Role: %s",
-			vcpu->pcpu_id, vcpu->vm->attr.id, vcpu->vcpu_id,
+			vcpu->pcpu_id, vcpu->vm->vm_id, vcpu->vcpu_id,
 			is_vcpu_bsp(vcpu) ? "PRIMARY" : "SECONDARY");
 
 #ifdef CONFIG_START_VM0_BSP_64BIT
@@ -84,7 +84,7 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 		/* Set up temporary guest page tables */
 		vm->arch_vm.guest_init_pml4 = create_guest_initial_paging(vm);
 		pr_info("VM %d VCPU %hu CR3: 0x%016llx ",
-			vm->attr.id, vcpu->vcpu_id,
+			vm->vm_id, vcpu->vcpu_id,
 			vm->arch_vm.guest_init_pml4);
 	}
 #endif
@@ -156,7 +156,7 @@ int start_vcpu(struct vcpu *vcpu)
 	/* If this VCPU is not already launched, launch it */
 	if (!vcpu->launched) {
 		pr_info("VM %d Starting VCPU %hu",
-				vcpu->vm->attr.id, vcpu->vcpu_id);
+				vcpu->vm->vm_id, vcpu->vcpu_id);
 
 		if (vcpu->arch_vcpu.vpid)
 			exec_vmwrite16(VMX_VPID, vcpu->arch_vcpu.vpid);
@@ -185,7 +185,7 @@ int start_vcpu(struct vcpu *vcpu)
 		if (status == 0) {
 			if (is_vcpu_bsp(vcpu)) {
 				pr_info("VM %d VCPU %hu successfully launched",
-					vcpu->vm->attr.id, vcpu->vcpu_id);
+					vcpu->vm->vm_id, vcpu->vcpu_id);
 			}
 		}
 	} else {

@@ -18,10 +18,7 @@ enum vm_privilege_level {
 };
 
 #define	MAX_VM_NAME_LEN		16
-struct vm_attr {
-	uint16_t id;		/* Virtual machine identifier */
-	uint16_t boot_idx;	/* Index indicating the boot sequence for this VM */
-};
+#define INVALID_VM_ID 0xffffU
 
 struct vm_hw_info {
 	uint16_t num_vcpus;	/* Number of total virtual cores */
@@ -129,7 +126,7 @@ struct vcpuid_entry {
 
 struct acrn_vpic;
 struct vm {
-	struct vm_attr attr;	/* Reference to this VM's attributes */
+	uint16_t vm_id;		    /* Virtual machine identifier */
 	struct vm_hw_info hw;	/* Reference to this VM's HW information */
 	struct vm_sw_info sw;	/* Reference to SW associated with this VM */
 	struct vm_pm_info pm;	/* Reference to this VM's arch information */
