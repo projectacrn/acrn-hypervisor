@@ -222,17 +222,6 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 			vcpu->pcpu_id, vcpu->vm->vm_id, vcpu->vcpu_id,
 			is_vcpu_bsp(vcpu) ? "PRIMARY" : "SECONDARY");
 
-#ifdef CONFIG_START_VM0_BSP_64BIT
-	/* Is this VCPU a VM0 BSP, create page hierarchy for this VM */
-	if (is_vcpu_bsp(vcpu) && is_vm0(vcpu->vm)) {
-		/* Set up temporary guest page tables */
-		vm->arch_vm.guest_init_pml4 = create_guest_initial_paging(vm);
-		pr_info("VM %d VCPU %hu CR3: 0x%016llx ",
-			vm->vm_id, vcpu->vcpu_id,
-			vm->arch_vm.guest_init_pml4);
-	}
-#endif
-
 	vcpu->arch_vcpu.vpid = allocate_vpid();
 
 	/* Allocate VMCS region for this VCPU */
