@@ -37,7 +37,7 @@ The ACRN hypervisor shell supports the following commands:
    * - logdump <pcpu_id>
      - Dumps the log buffer for the physical CPU
    * - loglevel [console_loglevel] [mem_loglevel]
-     - Get (when paras is NULL)  or Set loglevel [0 (none) - 6 (verbose)] for the console and optionally
+     - Get (when no parameters are given)  or Set loglevel [0 (none) - 6 (verbose)] for the console and optionally
        for memory
    * - cpuid <leaf> [subleaf]
      - Displays the CPUID leaf [subleaf], in hexadecimal
