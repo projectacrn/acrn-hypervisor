@@ -172,9 +172,8 @@ void default_idle(void)
 			schedule();
 		} else if (need_offline(pcpu_id) != 0) {
 			cpu_dead(pcpu_id);
-		} else {
-			__asm __volatile("pause" ::: "memory");
-		}
+		} else
+			cpu_do_idle(pcpu_id);
 	}
 }
 

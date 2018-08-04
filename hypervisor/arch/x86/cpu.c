@@ -748,6 +748,11 @@ void stop_cpus()
 	}
 }
 
+void cpu_do_idle(__unused uint16_t pcpu_id)
+{
+	__asm __volatile("pause" ::: "memory");
+}
+
 void cpu_dead(uint16_t pcpu_id)
 {
 	/* For debug purposes, using a stack variable in the while loop enables

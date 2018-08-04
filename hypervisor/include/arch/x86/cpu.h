@@ -318,6 +318,7 @@ extern struct cpuinfo_x86 boot_cpu_data;
 #define MAX_CX_ENTRY	(MAX_CSTATE - 1U)
 
 /* Function prototypes */
+void cpu_do_idle(__unused uint16_t pcpu_id);
 void cpu_dead(uint16_t pcpu_id);
 void trampoline_start16(void);
 bool is_vapic_supported(void);
