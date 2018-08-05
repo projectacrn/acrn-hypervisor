@@ -166,8 +166,10 @@ static void disable_pic_irq(void)
 	pio_write8(0xffU, 0x21U);
 }
 
-static int32_t common_register_handler(uint32_t irq_arg,
-		struct irq_request_info *info)
+int32_t request_irq(uint32_t irq_arg,
+		    irq_action_t action_fn,
+		    void *priv_data,
+		    const char *name)
 {
 	struct irq_desc *desc;
 	uint32_t irq = irq_arg, vector;
@@ -200,7 +202,6 @@ static int32_t common_register_handler(uint32_t irq_arg,
 	 *
 	 * =====================================================
 	 */
-	ASSERT(info != NULL, "Invalid param");
 
 	/* HV select a irq for device if irq < 0
 	 * this vector/irq match to APCI DSDT or PCI INTx/MSI
@@ -237,24 +238,25 @@ static int32_t common_register_handler(uint32_t irq_arg,
 
 	if (desc->action == NULL) {
 		spinlock_irqsave_obtain(&desc->irq_lock);
-		desc->priv_data = info->priv_data;
-		desc->action = info->func;
+		desc->priv_data = priv_data;
+		desc->action = action_fn;
 
 		/* we are okay using strcpy_s here even with spinlock
 		 * since no #PG in HV right now
 		 */
-		(void)strcpy_s(desc->name, 32U, info->name);
+		(void)strcpy_s(desc->name, 32U, name);
 
 		spinlock_irqrestore_release(&desc->irq_lock);
 	} else {
 		pr_err("%s: request irq(%u) vr(%u) for %s failed,\
 			already requested", __func__,
-			irq, irq_to_vector(irq), info->name);
+			irq, irq_to_vector(irq), name);
 		return -EBUSY;
 	}
 
 	dev_dbg(ACRN_DBG_IRQ, "[%s] %s irq%d vr:0x%x",
-		__func__, info->name, irq, desc->vector);
+		__func__, desc->name, irq, desc->vector);
+
 	return (int32_t)irq;
 }
 
@@ -556,7 +558,7 @@ void update_irq_handler(uint32_t irq, irq_handler_t func)
 	spinlock_irqrestore_release(&desc->irq_lock);
 }
 
-void unregister_handler_common(uint32_t irq)
+void free_irq(uint32_t irq)
 {
 	struct irq_desc *desc;
 
@@ -578,43 +580,6 @@ void unregister_handler_common(uint32_t irq)
 
 	spinlock_irqrestore_release(&desc->irq_lock);
 	irq_desc_try_free_vector(desc->irq);
-}
-
-/*
- * Allocate IRQ with Vector from VECTOR_DYNAMIC_START ~ VECTOR_DYNAMIC_END
- */
-int32_t normal_register_handler(uint32_t irq,
-		irq_action_t func,
-		void *priv_data,
-		const char *name)
-{
-	struct irq_request_info info;
-
-	info.func = func;
-	info.priv_data = priv_data;
-	info.name = (char *)name;
-
-	return common_register_handler(irq, &info);
-}
-
-/*
- * Allocate IRQ with vector from VECTOR_FIXED_START ~ VECTOR_FIXED_END
- * Allocate a IRQ and install isr on that specific cpu
- * User can install same irq/isr on different CPU by call this function multiple
- * times
- */
-int32_t pri_register_handler(uint32_t irq,
-		irq_action_t func,
-		void *priv_data,
-		const char *name)
-{
-	struct irq_request_info info;
-
-	info.func = func;
-	info.priv_data = priv_data;
-	info.name = (char *)name;
-
-	return common_register_handler(irq, &info);
 }
 
 #ifdef HV_DEBUG

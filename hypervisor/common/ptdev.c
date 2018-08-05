@@ -134,7 +134,7 @@ ptdev_activate_entry(struct ptdev_remapping_info *entry, uint32_t phys_irq)
 	int32_t retval;
 
 	/* register and allocate host vector/irq */
-	retval = normal_register_handler(phys_irq, ptdev_interrupt_handler,
+	retval = request_irq(phys_irq, ptdev_interrupt_handler,
 				         (void *)entry, "dev assign");
 
 	ASSERT(retval >= 0, "dev register failed");
@@ -150,7 +150,7 @@ ptdev_deactivate_entry(struct ptdev_remapping_info *entry)
 
 	atomic_clear32(&entry->active, ACTIVE_FLAG);
 
-	unregister_handler_common(entry->allocated_pirq);
+	free_irq(entry->allocated_pirq);
 	entry->allocated_pirq = IRQ_INVALID;
 
 	/* remove from softirq list if added */

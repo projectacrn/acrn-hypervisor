@@ -29,7 +29,7 @@ static int request_notification_irq(irq_action_t func, void *data,
 	}
 
 	/* all cpu register the same notification vector */
-	retval = pri_register_handler(NOTIFY_IRQ, func, data, name);
+	retval = request_irq(NOTIFY_IRQ, func, data, name);
 	if (retval < 0) {
 		pr_err("Failed to add notify isr");
 		return -ENODEV;
@@ -64,7 +64,7 @@ void setup_notification(void)
 static void cleanup_notification(void)
 {
 	if (notification_irq != IRQ_INVALID) {
-		unregister_handler_common(notification_irq);
+		free_irq(notification_irq);
 	}
 	notification_irq = IRQ_INVALID;
 }
