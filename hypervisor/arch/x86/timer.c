@@ -111,7 +111,7 @@ static int request_timer_irq(irq_action_t func, const char *name)
 {
 	int32_t retval;
 
-	retval = pri_register_handler(TIMER_IRQ, func, NULL, name);
+	retval = request_irq(TIMER_IRQ, func, NULL, name);
 	if (retval >= 0) {
 		update_irq_handler(TIMER_IRQ, quick_handler_nolock);
 	} else {
@@ -208,7 +208,7 @@ void timer_cleanup(void)
 	uint16_t pcpu_id = get_cpu_id();
 
 	if (pcpu_id == BOOT_CPU_ID) {
-		unregister_handler_common(TIMER_IRQ);
+		free_irq(TIMER_IRQ);
 	}
 }
 

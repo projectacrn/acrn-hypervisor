@@ -23,15 +23,7 @@ enum irq_desc_state {
 	IRQ_DESC_IN_PROCESS,
 };
 
-typedef int (*irq_action_t)(uint32_t irq, void *dev_data);
-struct irq_request_info {
-	/* vector set to 0xE0 ~ 0xFF for pri_register_handler
-	 * and set to VECTOR_INVALID for normal_register_handler
-	 */
-	irq_action_t func;
-	void *priv_data;
-	char *name;
-};
+typedef int (*irq_action_t)(uint32_t irq, void *priv_data);
 
 /* any field change in below required irq_lock protection with irqsave */
 struct irq_desc {
@@ -58,17 +50,12 @@ void irq_desc_try_free_vector(uint32_t irq);
 
 uint32_t irq_to_vector(uint32_t irq);
 
-int32_t pri_register_handler(uint32_t irq,
-		irq_action_t func,
-		void *priv_data,
-		const char *name);
+int32_t request_irq(uint32_t irq,
+		    irq_action_t action_fn,
+		    void *priv_data,
+		    const char *name);
 
-int32_t normal_register_handler(uint32_t irq,
-		irq_action_t func,
-		void *priv_data,
-		const char *name);
-
-void unregister_handler_common(uint32_t irq);
+void free_irq(uint32_t irq);
 
 typedef int (*irq_handler_t)(struct irq_desc *desc, void *handler_data);
 void update_irq_handler(uint32_t irq, irq_handler_t func);
