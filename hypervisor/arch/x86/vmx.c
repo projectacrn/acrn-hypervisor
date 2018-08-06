@@ -1173,7 +1173,7 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	exec_vmwrite(field, idtb.base);
 	pr_dbg("VMX_HOST_IDTR_BASE: 0x%x ", idtb.base);
 
-	value32 = (uint32_t)(msr_read(MSR_IA32_SYSENTER_CS) & 0xFFFFFFFFUL);
+	value32 = (uint32_t)msr_read(MSR_IA32_SYSENTER_CS);
 	field = VMX_HOST_IA32_SYSENTER_CS;
 	exec_vmwrite32(field, value32);
 	pr_dbg("VMX_HOST_IA32_SYSENTER_CS: 0x%x ",

@@ -227,16 +227,16 @@ void check_tsc(void)
 	CPU_CR_WRITE(cr4, (temp64 & ~CR4_TSD));
 }
 
-static uint64_t pit_calibrate_tsc(uint16_t cal_ms_arg)
+static uint64_t pit_calibrate_tsc(uint32_t cal_ms_arg)
 {
 #define PIT_TICK_RATE	1193182U
 #define PIT_TARGET	0x3FFFU
 #define PIT_MAX_COUNT	0xFFFFU
 
-	uint16_t cal_ms = cal_ms_arg;
+	uint32_t cal_ms = cal_ms_arg;
 	uint32_t initial_pit;
 	uint16_t current_pit;
-	uint16_t max_cal_ms;
+	uint32_t max_cal_ms;
 	uint64_t current_tsc;
 	uint8_t initial_pit_high, initial_pit_low;
 
@@ -246,7 +246,7 @@ static uint64_t pit_calibrate_tsc(uint16_t cal_ms_arg)
 	/* Assume the 8254 delivers 18.2 ticks per second when 16 bits fully
 	 * wrap.  This is about 1.193MHz or a clock period of 0.8384uSec
 	 */
-	initial_pit = ((uint32_t)cal_ms * PIT_TICK_RATE) / 1000U;
+	initial_pit = (cal_ms * PIT_TICK_RATE) / 1000U;
 	initial_pit += PIT_TARGET;
 	initial_pit_high = (uint8_t)(initial_pit >> 8U);
 	initial_pit_low = (uint8_t)initial_pit;
@@ -267,8 +267,8 @@ static uint64_t pit_calibrate_tsc(uint16_t cal_ms_arg)
 		 */
 		pio_write8(0x00U, 0x43U);
 
-		current_pit = pio_read8(0x40U);	/* Read LSB */
-		current_pit |= pio_read8(0x40U) << 8U;	/* Read MSB */
+		current_pit = (uint16_t)pio_read8(0x40U);	/* Read LSB */
+		current_pit |= (uint16_t)pio_read8(0x40U) << 8U;	/* Read MSB */
 		/* Let the counter count down to PIT_TARGET */
 	} while (current_pit > PIT_TARGET);
 

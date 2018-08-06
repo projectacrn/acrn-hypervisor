@@ -76,7 +76,7 @@
 #include <types.h>
 #include <cpu.h>
 
-#define TSS_AVAIL  (9)
+#define TSS_AVAIL  (9U)
 
 /*
  * Definition of an 8 byte code segment descriptor.
