@@ -6,7 +6,6 @@
 
 #include <hypervisor.h>
 
-#include "guest/instr_emul_wrapper.h"
 #include "guest/instr_emul.h"
 
 #define ACRN_DBG_EPT	6U

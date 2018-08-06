@@ -139,7 +139,6 @@ C_SRCS += arch/x86/pm.c
 S_SRCS += arch/x86/wakeup.S
 C_SRCS += arch/x86/guest/vcpu.c
 C_SRCS += arch/x86/guest/vm.c
-C_SRCS += arch/x86/guest/instr_emul_wrapper.c
 C_SRCS += arch/x86/guest/vlapic.c
 C_SRCS += arch/x86/guest/guest.c
 C_SRCS += arch/x86/guest/vmcall.c
