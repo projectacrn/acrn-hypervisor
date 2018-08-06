@@ -190,65 +190,63 @@ static uint64_t size2mask[9] = {
 
 #define VMX_INVALID_VMCS_FIELD  0xffffffffU
 
-static int encode_vmcs_seg_desc(enum cpu_reg_name seg,
-		uint32_t *base, uint32_t *lim, uint32_t *acc)
+static void encode_vmcs_seg_desc(enum cpu_reg_name seg, struct seg_desc *desc)
 {
 	switch (seg) {
 	case CPU_REG_ES:
-		*base = VMX_GUEST_ES_BASE;
-		*lim = VMX_GUEST_ES_LIMIT;
-		*acc = VMX_GUEST_ES_ATTR;
+		desc->base = VMX_GUEST_ES_BASE;
+		desc->limit = VMX_GUEST_ES_LIMIT;
+		desc->access = VMX_GUEST_ES_ATTR;
 		break;
 	case CPU_REG_CS:
-		*base = VMX_GUEST_CS_BASE;
-		*lim = VMX_GUEST_CS_LIMIT;
-		*acc = VMX_GUEST_CS_ATTR;
+		desc->base = VMX_GUEST_CS_BASE;
+		desc->limit = VMX_GUEST_CS_LIMIT;
+		desc->access = VMX_GUEST_CS_ATTR;
 		break;
 	case CPU_REG_SS:
-		*base = VMX_GUEST_SS_BASE;
-		*lim = VMX_GUEST_SS_LIMIT;
-		*acc = VMX_GUEST_SS_ATTR;
+		desc->base = VMX_GUEST_SS_BASE;
+		desc->limit = VMX_GUEST_SS_LIMIT;
+		desc->access = VMX_GUEST_SS_ATTR;
 		break;
 	case CPU_REG_DS:
-		*base = VMX_GUEST_DS_BASE;
-		*lim = VMX_GUEST_DS_LIMIT;
-		*acc = VMX_GUEST_DS_ATTR;
+		desc->base = VMX_GUEST_DS_BASE;
+		desc->limit = VMX_GUEST_DS_LIMIT;
+		desc->access = VMX_GUEST_DS_ATTR;
 		break;
 	case CPU_REG_FS:
-		*base = VMX_GUEST_FS_BASE;
-		*lim = VMX_GUEST_FS_LIMIT;
-		*acc = VMX_GUEST_FS_ATTR;
+		desc->base = VMX_GUEST_FS_BASE;
+		desc->limit = VMX_GUEST_FS_LIMIT;
+		desc->access = VMX_GUEST_FS_ATTR;
 		break;
 	case CPU_REG_GS:
-		*base = VMX_GUEST_GS_BASE;
-		*lim = VMX_GUEST_GS_LIMIT;
-		*acc = VMX_GUEST_GS_ATTR;
+		desc->base = VMX_GUEST_GS_BASE;
+		desc->limit = VMX_GUEST_GS_LIMIT;
+		desc->access = VMX_GUEST_GS_ATTR;
 		break;
 	case CPU_REG_TR:
-		*base = VMX_GUEST_TR_BASE;
-		*lim = VMX_GUEST_TR_LIMIT;
-		*acc = VMX_GUEST_TR_ATTR;
+		desc->base = VMX_GUEST_TR_BASE;
+		desc->limit = VMX_GUEST_TR_LIMIT;
+		desc->access = VMX_GUEST_TR_ATTR;
 		break;
 	case CPU_REG_LDTR:
-		*base = VMX_GUEST_LDTR_BASE;
-		*lim = VMX_GUEST_LDTR_LIMIT;
-		*acc = VMX_GUEST_LDTR_ATTR;
+		desc->base = VMX_GUEST_LDTR_BASE;
+		desc->limit = VMX_GUEST_LDTR_LIMIT;
+		desc->access = VMX_GUEST_LDTR_ATTR;
 		break;
 	case CPU_REG_IDTR:
-		*base = VMX_GUEST_IDTR_BASE;
-		*lim = VMX_GUEST_IDTR_LIMIT;
-		*acc = 0xffffffffU;
+		desc->base = VMX_GUEST_IDTR_BASE;
+		desc->limit = VMX_GUEST_IDTR_LIMIT;
+		desc->access = 0xffffffffU;
 		break;
 	case CPU_REG_GDTR:
-		*base = VMX_GUEST_GDTR_BASE;
-		*lim = VMX_GUEST_GDTR_LIMIT;
-		*acc = 0xffffffffU;
+		desc->base = VMX_GUEST_GDTR_BASE;
+		desc->limit = VMX_GUEST_GDTR_LIMIT;
+		desc->access = 0xffffffffU;
 		break;
 	default:
-		return -EINVAL;
+		pr_err("%s: invalid seg %d", __func__, seg);
+		break;
 	}
-
-	return 0;
 }
 
 /**
@@ -310,34 +308,6 @@ static uint32_t get_vmcs_field(enum cpu_reg_name ident)
 		return VMX_GUEST_PDPTE3_FULL;
 	default:
 		return VMX_INVALID_VMCS_FIELD;
-	}
-}
-
-static bool is_segment_register(enum cpu_reg_name reg)
-{
-	switch (reg) {
-	case CPU_REG_ES:
-	case CPU_REG_CS:
-	case CPU_REG_SS:
-	case CPU_REG_DS:
-	case CPU_REG_FS:
-	case CPU_REG_GS:
-	case CPU_REG_TR:
-	case CPU_REG_LDTR:
-		return true;
-	default:
-		return false;
-	}
-}
-
-static bool is_descriptor_table(enum cpu_reg_name reg)
-{
-	switch (reg) {
-	case CPU_REG_IDTR:
-	case CPU_REG_GDTR:
-		return true;
-	default:
-		return false;
 	}
 }
 
@@ -407,30 +377,22 @@ static int vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg,
 	return 0;
 }
 
-static int vm_get_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
-		struct seg_desc *desc)
+/**
+ * @pre vcpu != NULL
+ * @pre desc != NULL
+ * @pre seg must be one of segment register (CPU_REG_CS/ES/DS/SS/FS/GS)
+ *      or CPU_REG_TR/LDTR
+ */
+static void vm_get_seg_desc(enum cpu_reg_name seg, struct seg_desc *desc)
 {
-	int error;
-	uint32_t base, limit, access;
+	struct seg_desc tdesc;
 
-	if ((vcpu == NULL) || (desc == NULL)) {
-		return -EINVAL;
-	}
+	/* tdesc->access != 0xffffffffU in this function */
+	encode_vmcs_seg_desc(seg, &tdesc);
 
-	if (!is_segment_register(seg) && !is_descriptor_table(seg)) {
-		return -EINVAL;
-	}
-
-	error = encode_vmcs_seg_desc(seg, &base, &limit, &access);
-	if ((error != 0) || (access == 0xffffffffU)) {
-		return -EINVAL;
-	}
-
-	desc->base = exec_vmread(base);
-	desc->limit = exec_vmread32(limit);
-	desc->access = exec_vmread32(access);
-
-	return 0;
+	desc->base = exec_vmread(tdesc.base);
+	desc->limit = exec_vmread32(tdesc.limit);
+	desc->access = exec_vmread32(tdesc.access);
 }
 
 static void get_guest_paging_info(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt,
@@ -1004,8 +966,8 @@ static int get_gla(struct vcpu *vcpu, __unused struct instr_emul_vie *vie,
 
 	error = vm_get_register(vcpu, CPU_REG_CR0, &cr0);
 	error |= vm_get_register(vcpu, CPU_REG_RFLAGS, &rflags);
-	error |= vm_get_seg_desc(vcpu, seg, &desc);
 	error |= vm_get_register(vcpu, gpr, &val);
+	vm_get_seg_desc(seg, &desc);
 
 	if (error) {
 		pr_err("%s: error(%d) happens when getting cr0/rflags/segment"
@@ -1612,7 +1574,7 @@ static int emulate_stack_op(struct vcpu *vcpu, struct instr_emul_vie *vie,
 		 * stack-segment descriptor determines the size of the
 		 * stack pointer.
 		 */
-		error = vm_get_seg_desc(vcpu, CPU_REG_SS, &ss_desc);
+		vm_get_seg_desc(CPU_REG_SS, &ss_desc);
 		if (SEG_DESC_DEF32(ss_desc.access)) {
 			stackaddrsize = 4U;
 		} else {
