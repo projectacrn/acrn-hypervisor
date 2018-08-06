@@ -27,48 +27,170 @@
  * $FreeBSD$
  */
 
-#ifndef	_VMM_INSTRUCTION_EMUL_H_
-#define	_VMM_INSTRUCTION_EMUL_H_
+#ifndef INSTR_EMUL_WRAPPER_H
+#define INSTR_EMUL_WRAPPER_H
+#include <cpu.h>
 
-#include "instr_emul_wrapper.h"
+/**
+ * Define the following MACRO to make range checking clear.
+ *
+ * CPU_REG_FIRST indicates the first register name, its value
+ * is the same as CPU_REG_RAX;
+ * CPU_REG_LAST indicates the last register name, its value is
+ * the same as CPU_REG_GDTR;
+ *
+ * CPU_REG_GENERAL_FIRST indicates the first general register name,
+ * its value is the same as CPU_REG_RAX;
+ * CPU_REG_GENERAL_LAST indicates the last general register name,
+ * its value is the same as CPU_REG_RDI;
+ *
+ * CPU_REG_NONGENERAL_FIRST indicates the first non general register
+ * name, its value is the same as CPU_REG_CR0;
+ * CPU_REG_NONGENERAL_LAST indicates the last non general register
+ * name, its value is the same as CPU_REG_GDTR;
+ *
+ * CPU_REG_NATURAL_FIRST indicates the first register name that
+ * is corresponds to the natural width field in VMCS, its value
+ * is the same as CPU_REG_CR0;
+ * CPU_REG_NATURAL_LAST indicates the last register name that
+ * is corresponds to the natural width field in VMCS, its value
+ * is the same as CPU_REG_RFLAGS;
+ *
+ * CPU_REG_64BIT_FIRST indicates the first register name that
+ * is corresponds to the 64 bit field in VMCS, its value
+ * is the same as CPU_REG_EFER;
+ * CPU_REG_64BIT_LAST indicates the last register name that
+ * is corresponds to the 64 bit field in VMCS, its value
+ * is the same as CPU_REG_PDPTE3;
+ *
+ * CPU_REG_SEG_FIRST indicates the first segement register name,
+ * its value is the same as CPU_REG_ES;
+ * CPU_REG_SEG_FIRST indicates the last segement register name,
+ * its value is the same as CPU_REG_GS
+ *
+ */
+#define CPU_REG_FIRST			CPU_REG_RAX
+#define CPU_REG_LAST            	CPU_REG_GDTR
+#define CPU_REG_GENERAL_FIRST   	CPU_REG_RAX
+#define CPU_REG_GENERAL_LAST		CPU_REG_R15
+#define CPU_REG_NONGENERAL_FIRST   	CPU_REG_CR0
+#define CPU_REG_NONGENERAL_LAST   	CPU_REG_GDTR
+#define CPU_REG_NATURAL_FIRST		CPU_REG_CR0
+#define CPU_REG_NATURAL_LAST		CPU_REG_RFLAGS
+#define CPU_REG_64BIT_FIRST		CPU_REG_EFER
+#define CPU_REG_64BIT_LAST 		CPU_REG_PDPTE3
+#define CPU_REG_SEG_FIRST		CPU_REG_ES
+#define CPU_REG_SEG_LAST		CPU_REG_GS
 
-/* Emulate the decoded 'ctxt->vie' instruction. */
-int vmm_emulate_instruction(struct instr_emul_ctxt *ctxt);
+struct instr_emul_vie_op {
+	uint8_t		op_type;	/* type of operation (e.g. MOV) */
+	uint16_t	op_flags;
+};
 
-int vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
-		uint64_t val_arg, uint8_t size);
+#define	VIE_INST_SIZE	15U
+struct instr_emul_vie {
+	uint8_t		inst[VIE_INST_SIZE];	/* instruction bytes */
+	uint8_t		num_valid;		/* size of the instruction */
+	uint8_t		num_processed;
+
+	uint8_t		addrsize:4, opsize:4;	/* address and operand sizes */
+	uint8_t		rex_w:1,		/* REX prefix */
+			rex_r:1,
+			rex_x:1,
+			rex_b:1,
+			rex_present:1,
+			repz_present:1,		/* REP/REPE/REPZ prefix */
+			repnz_present:1,	/* REPNE/REPNZ prefix */
+			opsize_override:1,	/* Operand size override */
+			addrsize_override:1,	/* Address size override */
+			seg_override:1;	/* Segment override */
+
+	uint8_t		mod:2,			/* ModRM byte */
+			reg:4,
+			rm:4;
+
+	uint8_t		ss:2,			/* SIB byte */
+			index:4,
+			base:4;
+
+	uint8_t		disp_bytes;
+	uint8_t		imm_bytes;
+
+	uint8_t		scale;
+	enum cpu_reg_name base_register;		/* CPU_REG_xyz */
+	enum cpu_reg_name index_register;	/* CPU_REG_xyz */
+	enum cpu_reg_name segment_register;	/* CPU_REG_xyz */
+
+	int64_t		displacement;		/* optional addr displacement */
+	int64_t		immediate;		/* optional immediate operand */
+
+	uint8_t		decoded;	/* set to 1 if successfully decoded */
+
+	uint8_t		opcode;
+	struct instr_emul_vie_op	op;			/* opcode description */
+};
+
+#define	PSL_C		0x00000001U	/* carry bit */
+#define	PSL_PF		0x00000004U	/* parity bit */
+#define	PSL_AF		0x00000010U	/* bcd carry bit */
+#define	PSL_Z		0x00000040U	/* zero bit */
+#define	PSL_N		0x00000080U	/* negative bit */
+#define	PSL_T		0x00000100U	/* trace enable bit */
+#define	PSL_I		0x00000200U	/* interrupt enable bit */
+#define	PSL_D		0x00000400U	/* string instruction direction bit */
+#define	PSL_V		0x00000800U	/* overflow bit */
+#define	PSL_IOPL	0x00003000U	/* i/o privilege level */
+#define	PSL_NT		0x00004000U	/* nested task bit */
+#define	PSL_RF		0x00010000U	/* resume flag bit */
+#define	PSL_VM		0x00020000U	/* virtual 8086 mode bit */
+#define	PSL_AC		0x00040000U	/* alignment checking */
+#define	PSL_VIF		0x00080000U	/* virtual interrupt enable */
+#define	PSL_VIP		0x00100000U	/* virtual interrupt pending */
+#define	PSL_ID		0x00200000U	/* identification bit */
 
 /*
- * Returns 1 if an alignment check exception should be injected and 0 otherwise.
+ * The 'access' field has the format specified in Table 21-2 of the Intel
+ * Architecture Manual vol 3b.
+ *
+ * XXX The contents of the 'access' field are architecturally defined except
+ * bit 16 - Segment Unusable.
  */
-int vie_alignment_check(uint8_t cpl, uint8_t size, uint64_t cr0,
-	uint64_t rflags, uint64_t gla);
+struct seg_desc {
+	uint64_t	base;
+	uint32_t	limit;
+	uint32_t	access;
+};
 
-/* Returns 1 if the 'gla' is not canonical and 0 otherwise. */
-int vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla);
-
-int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
-	struct seg_desc *desc, uint64_t offset_arg, uint8_t length_arg,
-	uint8_t addrsize, uint32_t prot, uint64_t *gla);
-
-int vie_init(struct instr_emul_vie *vie, struct vcpu *vcpu);
 
 /*
- * Decode the instruction fetched into 'vie' so it can be emulated.
- *
- * 'gla' is the guest linear address provided by the hardware assist
- * that caused the nested page table fault. It is used to verify that
- * the software instruction decoding is in agreement with the hardware.
- *
- * Some hardware assists do not provide the 'gla' to the hypervisor.
- * To skip the 'gla' verification for this or any other reason pass
- * in VIE_INVALID_GLA instead.
+ * Protections are chosen from these bits, or-ed together
  */
-#define	VIE_INVALID_GLA		(1UL << 63)	/* a non-canonical address */
-int
-local_decode_instruction(enum vm_cpu_mode cpu_mode, bool cs_d, struct instr_emul_vie *vie);
+#define	PROT_NONE	0x00U	/* no permissions */
+#define	PROT_READ	0x01U	/* pages can be read */
+#define	PROT_WRITE	0x02U	/* pages can be written */
+#define	PROT_EXEC	0x04U	/* pages can be executed */
+
+#define	SEG_DESC_TYPE(access)		((access) & 0x001fU)
+#define	SEG_DESC_DPL(access)		(((access) >> 5) & 0x3U)
+#define	SEG_DESC_PRESENT(access)	(((access) & 0x0080U) != 0U)
+#define	SEG_DESC_DEF32(access)		(((access) & 0x4000U) != 0U)
+#define	SEG_DESC_GRANULARITY(access)	(((access) & 0x8000U) != 0U)
+#define	SEG_DESC_UNUSABLE(access)	(((access) & 0x10000U) != 0U)
+
+struct vm_guest_paging {
+	uint64_t	cr3;
+	uint8_t		cpl;
+	enum vm_cpu_mode cpu_mode;
+	enum vm_paging_mode paging_mode;
+};
+
+struct instr_emul_ctxt {
+	struct instr_emul_vie vie;
+	struct vm_guest_paging paging;
+	struct vcpu *vcpu;
+};
 
 int emulate_instruction(struct vcpu *vcpu);
 int decode_instruction(struct vcpu *vcpu);
 
-#endif	/* _VMM_INSTRUCTION_EMUL_H_ */
+#endif

@@ -6,7 +6,6 @@
 
 #include <hypervisor.h>
 
-#include "guest/instr_emul_wrapper.h"
 #include "guest/instr_emul.h"
 
 static void complete_ioreq(struct vhm_request *vhm_req)

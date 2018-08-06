@@ -16,7 +16,7 @@
 #include <gdt.h>
 #include <timer.h>
 #include <logmsg.h>
-#include "arch/x86/guest/instr_emul_wrapper.h"
+#include "arch/x86/guest/instr_emul.h"
 
 struct per_cpu_region {
 	uint64_t *sbuf[ACRN_SBUF_ID_MAX];

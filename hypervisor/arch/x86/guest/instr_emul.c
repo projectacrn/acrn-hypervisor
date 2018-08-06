@@ -30,7 +30,6 @@
 
 #include <hypervisor.h>
 
-#include "instr_emul_wrapper.h"
 #include "instr_emul.h"
 
 /* struct vie_op.op_type */
@@ -191,6 +190,447 @@ static uint64_t size2mask[9] = {
 	[8] = ~0UL,
 };
 
+#define VMX_INVALID_VMCS_FIELD  0xffffffffU
+
+static int encode_vmcs_seg_desc(enum cpu_reg_name seg,
+		uint32_t *base, uint32_t *lim, uint32_t *acc)
+{
+	switch (seg) {
+	case CPU_REG_ES:
+		*base = VMX_GUEST_ES_BASE;
+		*lim = VMX_GUEST_ES_LIMIT;
+		*acc = VMX_GUEST_ES_ATTR;
+		break;
+	case CPU_REG_CS:
+		*base = VMX_GUEST_CS_BASE;
+		*lim = VMX_GUEST_CS_LIMIT;
+		*acc = VMX_GUEST_CS_ATTR;
+		break;
+	case CPU_REG_SS:
+		*base = VMX_GUEST_SS_BASE;
+		*lim = VMX_GUEST_SS_LIMIT;
+		*acc = VMX_GUEST_SS_ATTR;
+		break;
+	case CPU_REG_DS:
+		*base = VMX_GUEST_DS_BASE;
+		*lim = VMX_GUEST_DS_LIMIT;
+		*acc = VMX_GUEST_DS_ATTR;
+		break;
+	case CPU_REG_FS:
+		*base = VMX_GUEST_FS_BASE;
+		*lim = VMX_GUEST_FS_LIMIT;
+		*acc = VMX_GUEST_FS_ATTR;
+		break;
+	case CPU_REG_GS:
+		*base = VMX_GUEST_GS_BASE;
+		*lim = VMX_GUEST_GS_LIMIT;
+		*acc = VMX_GUEST_GS_ATTR;
+		break;
+	case CPU_REG_TR:
+		*base = VMX_GUEST_TR_BASE;
+		*lim = VMX_GUEST_TR_LIMIT;
+		*acc = VMX_GUEST_TR_ATTR;
+		break;
+	case CPU_REG_LDTR:
+		*base = VMX_GUEST_LDTR_BASE;
+		*lim = VMX_GUEST_LDTR_LIMIT;
+		*acc = VMX_GUEST_LDTR_ATTR;
+		break;
+	case CPU_REG_IDTR:
+		*base = VMX_GUEST_IDTR_BASE;
+		*lim = VMX_GUEST_IDTR_LIMIT;
+		*acc = 0xffffffffU;
+		break;
+	case CPU_REG_GDTR:
+		*base = VMX_GUEST_GDTR_BASE;
+		*lim = VMX_GUEST_GDTR_LIMIT;
+		*acc = 0xffffffffU;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+/**
+ *
+ *Description:
+ *This local function is to covert register names into
+ *the corresponding field index MACROs in VMCS.
+ *
+ *Post Condition:
+ *In the non-general register names group (CPU_REG_CR0~CPU_REG_GDTR),
+ *for register names CPU_REG_CR2, CPU_REG_IDTR and CPU_REG_GDTR,
+ *this function returns VMX_INVALID_VMCS_FIELD;
+ *for other register names, it returns correspoding field index MACROs
+ *in VMCS.
+ *
+ **/
+static uint32_t get_vmcs_field(enum cpu_reg_name ident)
+{
+	switch (ident) {
+	case CPU_REG_CR0:
+		return VMX_GUEST_CR0;
+	case CPU_REG_CR3:
+		return VMX_GUEST_CR3;
+	case CPU_REG_CR4:
+		return VMX_GUEST_CR4;
+	case CPU_REG_DR7:
+		return VMX_GUEST_DR7;
+	case CPU_REG_RSP:
+		return VMX_GUEST_RSP;
+	case CPU_REG_RIP:
+		return VMX_GUEST_RIP;
+	case CPU_REG_RFLAGS:
+		return VMX_GUEST_RFLAGS;
+	case CPU_REG_ES:
+		return VMX_GUEST_ES_SEL;
+	case CPU_REG_CS:
+		return VMX_GUEST_CS_SEL;
+	case CPU_REG_SS:
+		return VMX_GUEST_SS_SEL;
+	case CPU_REG_DS:
+		return VMX_GUEST_DS_SEL;
+	case CPU_REG_FS:
+		return VMX_GUEST_FS_SEL;
+	case CPU_REG_GS:
+		return VMX_GUEST_GS_SEL;
+	case CPU_REG_TR:
+		return VMX_GUEST_TR_SEL;
+	case CPU_REG_LDTR:
+		return VMX_GUEST_LDTR_SEL;
+	case CPU_REG_EFER:
+		return VMX_GUEST_IA32_EFER_FULL;
+	case CPU_REG_PDPTE0:
+		return VMX_GUEST_PDPTE0_FULL;
+	case CPU_REG_PDPTE1:
+		return VMX_GUEST_PDPTE1_FULL;
+	case CPU_REG_PDPTE2:
+		return VMX_GUEST_PDPTE2_FULL;
+	case CPU_REG_PDPTE3:
+		return VMX_GUEST_PDPTE3_FULL;
+	default:
+		return VMX_INVALID_VMCS_FIELD;
+	}
+}
+
+static bool is_segment_register(enum cpu_reg_name reg)
+{
+	switch (reg) {
+	case CPU_REG_ES:
+	case CPU_REG_CS:
+	case CPU_REG_SS:
+	case CPU_REG_DS:
+	case CPU_REG_FS:
+	case CPU_REG_GS:
+	case CPU_REG_TR:
+	case CPU_REG_LDTR:
+		return true;
+	default:
+		return false;
+	}
+}
+
+static bool is_descriptor_table(enum cpu_reg_name reg)
+{
+	switch (reg) {
+	case CPU_REG_IDTR:
+	case CPU_REG_GDTR:
+		return true;
+	default:
+		return false;
+	}
+}
+
+static int vm_get_register(struct vcpu *vcpu, enum cpu_reg_name reg,
+							uint64_t *retval)
+{
+	if (vcpu == NULL) {
+		return -EINVAL;
+	}
+
+	if ((reg > CPU_REG_LAST) || (reg < CPU_REG_FIRST)) {
+		return -EINVAL;
+	}
+
+	if ((reg >= CPU_REG_GENERAL_FIRST) && (reg <= CPU_REG_GENERAL_LAST)) {
+		*retval = vcpu_get_gpreg(vcpu, reg);
+	} else if ((reg >= CPU_REG_NONGENERAL_FIRST) &&
+		(reg <= CPU_REG_NONGENERAL_LAST)) {
+		uint32_t field = get_vmcs_field(reg);
+
+		if (field != VMX_INVALID_VMCS_FIELD) {
+			if (reg <= CPU_REG_NATURAL_LAST) {
+				*retval = exec_vmread(field);
+			} else if (reg <= CPU_REG_64BIT_LAST) {
+				*retval = exec_vmread64(field);
+			} else {
+				*retval = (uint64_t)exec_vmread16(field);
+			}
+		} else {
+			return -EINVAL;
+		}
+	}
+
+	return 0;
+}
+
+static int vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg,
+								uint64_t val)
+{
+	if (vcpu == NULL) {
+		return -EINVAL;
+	}
+
+	if ((reg > CPU_REG_LAST) || (reg < CPU_REG_FIRST)) {
+		return -EINVAL;
+	}
+
+	if ((reg >= CPU_REG_GENERAL_FIRST) && (reg <= CPU_REG_GENERAL_LAST)) {
+		vcpu_set_gpreg(vcpu, reg, val);
+	} else if ((reg >= CPU_REG_NONGENERAL_FIRST) &&
+		(reg <= CPU_REG_NONGENERAL_LAST)) {
+		uint32_t field = get_vmcs_field(reg);
+
+		if (field != VMX_INVALID_VMCS_FIELD) {
+			if (reg <= CPU_REG_NATURAL_LAST) {
+				exec_vmwrite(field, val);
+			} else if (reg <= CPU_REG_64BIT_LAST) {
+				exec_vmwrite64(field, val);
+			} else {
+				exec_vmwrite16(field, (uint16_t)val);
+			}
+		} else {
+			return -EINVAL;
+		}
+	}
+
+	return 0;
+}
+
+static int vm_set_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
+		struct seg_desc *desc)
+{
+	int error;
+	uint32_t base, limit, access;
+
+	if ((vcpu == NULL) || (desc == NULL)) {
+		return -EINVAL;
+	}
+
+	if (!is_segment_register(seg) && !is_descriptor_table(seg)) {
+		return -EINVAL;
+	}
+
+	error = encode_vmcs_seg_desc(seg, &base, &limit, &access);
+	if ((error != 0) || (access == 0xffffffffU)) {
+		return -EINVAL;
+	}
+
+	exec_vmwrite(base, desc->base);
+	exec_vmwrite32(limit, desc->limit);
+	exec_vmwrite32(access, desc->access);
+
+	return 0;
+}
+
+static int vm_get_seg_desc(struct vcpu *vcpu, enum cpu_reg_name seg,
+		struct seg_desc *desc)
+{
+	int error;
+	uint32_t base, limit, access;
+
+	if ((vcpu == NULL) || (desc == NULL)) {
+		return -EINVAL;
+	}
+
+	if (!is_segment_register(seg) && !is_descriptor_table(seg)) {
+		return -EINVAL;
+	}
+
+	error = encode_vmcs_seg_desc(seg, &base, &limit, &access);
+	if ((error != 0) || (access == 0xffffffffU)) {
+		return -EINVAL;
+	}
+
+	desc->base = exec_vmread(base);
+	desc->limit = exec_vmread32(limit);
+	desc->access = exec_vmread32(access);
+
+	return 0;
+}
+
+static void get_guest_paging_info(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt,
+						uint32_t csar)
+{
+	uint8_t cpl;
+
+	cpl = (uint8_t)((csar >> 5) & 3U);
+	emul_ctxt->paging.cr3 = exec_vmread(VMX_GUEST_CR3);
+	emul_ctxt->paging.cpl = cpl;
+	emul_ctxt->paging.cpu_mode = get_vcpu_mode(vcpu);
+	emul_ctxt->paging.paging_mode = get_vcpu_paging_mode(vcpu);
+}
+
+static int vie_alignment_check(uint8_t cpl, uint8_t size, uint64_t cr0,
+						uint64_t rflags, uint64_t gla)
+{
+	pr_dbg("Checking alignment with cpl: %hhu, addrsize: %hhu", cpl, size);
+
+	if (cpl < 3U || (cr0 & CR0_AM) == 0UL || (rflags & PSL_AC) == 0UL) {
+		return 0;
+	}
+
+	return ((gla & (size - 1U)) != 0UL) ? 1 : 0;
+}
+
+static int vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla)
+{
+	uint64_t mask;
+
+	if (cpu_mode != CPU_MODE_64BIT) {
+		return 0;
+	}
+
+	/*
+	 * The value of the bit 47 in the 'gla' should be replicated in the
+	 * most significant 16 bits.
+	 */
+	mask = ~((1UL << 48) - 1);
+	if ((gla & (1UL << 47)) != 0U) {
+		return ((gla & mask) != mask) ? 1 : 0;
+	} else {
+		return ((gla & mask) != 0U) ? 1 : 0;
+	}
+}
+
+/*
+ *@pre seg must be segment register index
+ *@pre length_arg must be 1, 2, 4 or 8
+ *@pre prot must be PROT_READ or PROT_WRITE
+ *
+ *return 0 - on success
+ *return -1 - on failure
+ */
+static int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
+	struct seg_desc *desc, uint64_t offset_arg, uint8_t length_arg,
+	uint8_t addrsize, uint32_t prot, uint64_t *gla)
+{
+	uint64_t firstoff, low_limit, high_limit, segbase;
+	uint64_t offset = offset_arg;
+	uint8_t length = length_arg;
+	uint8_t glasize;
+	uint32_t type;
+
+	firstoff = offset;
+	if (cpu_mode == CPU_MODE_64BIT) {
+		if (addrsize != 4U && addrsize != 8U) {
+			pr_dbg("%s: invalid addr size %d for cpu mode %d",
+					__func__, addrsize, cpu_mode);
+			return -1;
+		}
+		glasize = 8U;
+	} else {
+		if (addrsize != 2U && addrsize != 4U) {
+			pr_dbg("%s: invalid addr size %d for cpu mode %d",
+					__func__, addrsize, cpu_mode);
+			return -1;
+		}
+		glasize = 4U;
+		/*
+		 * If the segment selector is loaded with a NULL selector
+		 * then the descriptor is unusable and attempting to use
+		 * it results in a #GP(0).
+		 */
+		if (SEG_DESC_UNUSABLE(desc->access)) {
+			return -1;
+		}
+
+		/*
+		 * The processor generates a #NP exception when a segment
+		 * register is loaded with a selector that points to a
+		 * descriptor that is not present. If this was the case then
+		 * it would have been checked before the VM-exit.
+		 */
+		if (SEG_DESC_PRESENT(desc->access) != 0) {
+			/* TODO: Inject #NP */
+			return -1;
+		}
+
+		/* The descriptor type must indicate a code/data segment. */
+		type = SEG_DESC_TYPE(desc->access);
+		if (type < 16 || type > 31) {
+			/*TODO: Inject #GP */
+			return -1;
+		}
+
+		if ((prot & PROT_READ) != 0U) {
+			/* #GP on a read access to a exec-only code segment */
+			if ((type & 0xAU) == 0x8U) {
+				return -1;
+			}
+		}
+
+		if ((prot & PROT_WRITE) != 0U) {
+			/*
+			 * #GP on a write access to a code segment or a
+			 * read-only data segment.
+			 */
+			if ((type & 0x8U) != 0U) {	/* code segment */
+				return -1;
+			}
+
+			if ((type & 0xAU) == 0U) {	/* read-only data seg */
+				return -1;
+			}
+		}
+
+		/*
+		 * 'desc->limit' is fully expanded taking granularity into
+		 * account.
+		 */
+		if ((type & 0xCU) == 0x4U) {
+			/* expand-down data segment */
+			low_limit = desc->limit + 1U;
+			high_limit = SEG_DESC_DEF32(desc->access) ?
+			    0xffffffffU : 0xffffU;
+		} else {
+			/* code segment or expand-up data segment */
+			low_limit = 0U;
+			high_limit = desc->limit;
+		}
+
+		while (length > 0U) {
+			offset &= size2mask[addrsize];
+			if (offset < low_limit || offset > high_limit) {
+				return -1;
+			}
+			offset++;
+			length--;
+		}
+	}
+
+	/*
+	 * In 64-bit mode all segments except %fs and %gs have a segment
+	 * base address of 0.
+	 */
+	if (cpu_mode == CPU_MODE_64BIT && seg != CPU_REG_FS &&
+	    seg != CPU_REG_GS) {
+		segbase = 0UL;
+	} else {
+		segbase = desc->base;
+	}
+
+	/*
+	 * Truncate 'firstoff' to the effective address size before adding
+	 * it to the segment base.
+	 */
+	firstoff &= size2mask[addrsize];
+	*gla = (segbase + firstoff) & size2mask[glasize];
+	return 0;
+}
+
 static int mmio_read(struct vcpu *vcpu, uint64_t *rval)
 {
 	if (vcpu == NULL) {
@@ -211,8 +651,8 @@ static int mmio_write(struct vcpu *vcpu, uint64_t wval)
 	return 0;
 }
 
-static void
-vie_calc_bytereg(struct instr_emul_vie *vie, enum cpu_reg_name *reg, int *lhbr)
+static void vie_calc_bytereg(struct instr_emul_vie *vie,
+					enum cpu_reg_name *reg, int *lhbr)
 {
 	*lhbr = 0;
 	*reg = vie->reg;
@@ -237,8 +677,8 @@ vie_calc_bytereg(struct instr_emul_vie *vie, enum cpu_reg_name *reg, int *lhbr)
 	}
 }
 
-static int
-vie_read_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie, uint8_t *rval)
+static int vie_read_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie,
+								uint8_t *rval)
 {
 	uint64_t val;
 	int error, lhbr;
@@ -259,8 +699,8 @@ vie_read_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie, uint8_t *rval)
 	return error;
 }
 
-static int
-vie_write_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie, uint8_t byte)
+static int vie_write_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie,
+								uint8_t byte)
 {
 	uint64_t origval, val, mask;
 	int error, lhbr;
@@ -285,9 +725,8 @@ vie_write_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie, uint8_t byte)
 	return error;
 }
 
-int
-vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
-		uint64_t val_arg, uint8_t size)
+static int vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
+					uint64_t val_arg, uint8_t size)
 {
 	int error;
 	uint64_t origval;
@@ -582,8 +1021,7 @@ static int emulate_movx(struct vcpu *vcpu, struct instr_emul_vie *vie)
 /*
  * Helper function to calculate and validate a linear address.
  */
-static int
-get_gla(struct vcpu *vcpu, __unused struct instr_emul_vie *vie,
+static int get_gla(struct vcpu *vcpu, __unused struct instr_emul_vie *vie,
 	struct vm_guest_paging *paging,
 	uint8_t opsize, uint8_t addrsize, uint32_t prot, enum cpu_reg_name seg,
 	enum cpu_reg_name gpr, uint64_t *gla, int *fault)
@@ -1365,7 +1803,7 @@ static int emulate_bittest(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	return 0;
 }
 
-int vmm_emulate_instruction(struct instr_emul_ctxt *ctxt)
+static int vmm_emulate_instruction(struct instr_emul_ctxt *ctxt)
 {
 	struct vm_guest_paging *paging = &ctxt->paging;
 	struct instr_emul_vie *vie = &ctxt->vie;
@@ -1423,167 +1861,7 @@ int vmm_emulate_instruction(struct instr_emul_ctxt *ctxt)
 	return error;
 }
 
-int vie_alignment_check(uint8_t cpl, uint8_t size, uint64_t cr0,
-					uint64_t rflags, uint64_t gla)
-{
-	pr_dbg("Checking alignment with cpl: %hhu, addrsize: %hhu", cpl, size);
-
-	if (cpl < 3U || (cr0 & CR0_AM) == 0UL || (rflags & PSL_AC) == 0UL) {
-		return 0;
-	}
-
-	return ((gla & (size - 1U)) != 0UL) ? 1 : 0;
-}
-
-int
-vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla)
-{
-	uint64_t mask;
-
-	if (cpu_mode != CPU_MODE_64BIT) {
-		return 0;
-	}
-
-	/*
-	 * The value of the bit 47 in the 'gla' should be replicated in the
-	 * most significant 16 bits.
-	 */
-	mask = ~((1UL << 48) - 1);
-	if ((gla & (1UL << 47)) != 0U) {
-		return ((gla & mask) != mask) ? 1 : 0;
-	} else {
-		return ((gla & mask) != 0U) ? 1 : 0;
-	}
-}
-
-/*
- *@pre seg must be segment register index
- *@pre length_arg must be 1, 2, 4 or 8
- *@pre prot must be PROT_READ or PROT_WRITE
- *
- *return 0 - on success
- *return -1 - on failure
- */
-int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
-	struct seg_desc *desc, uint64_t offset_arg, uint8_t length_arg,
-	uint8_t addrsize, uint32_t prot, uint64_t *gla)
-{
-	uint64_t firstoff, low_limit, high_limit, segbase;
-	uint64_t offset = offset_arg;
-	uint8_t length = length_arg;
-	uint8_t glasize;
-	uint32_t type;
-
-	firstoff = offset;
-	if (cpu_mode == CPU_MODE_64BIT) {
-		if (addrsize != 4U && addrsize != 8U) {
-			pr_dbg("%s: invalid addr size %d for cpu mode %d",
-					__func__, addrsize, cpu_mode);
-			return -1;
-		}
-		glasize = 8U;
-	} else {
-		if (addrsize != 2U && addrsize != 4U) {
-			pr_dbg("%s: invalid addr size %d for cpu mode %d",
-					__func__, addrsize, cpu_mode);
-			return -1;
-		}
-		glasize = 4U;
-		/*
-		 * If the segment selector is loaded with a NULL selector
-		 * then the descriptor is unusable and attempting to use
-		 * it results in a #GP(0).
-		 */
-		if (SEG_DESC_UNUSABLE(desc->access)) {
-			return -1;
-		}
-
-		/*
-		 * The processor generates a #NP exception when a segment
-		 * register is loaded with a selector that points to a
-		 * descriptor that is not present. If this was the case then
-		 * it would have been checked before the VM-exit.
-		 */
-		if (SEG_DESC_PRESENT(desc->access) != 0) {
-			/* TODO: Inject #NP */
-			return -1;
-		}
-
-		/* The descriptor type must indicate a code/data segment. */
-		type = SEG_DESC_TYPE(desc->access);
-		if (type < 16 || type > 31) {
-			/*TODO: Inject #GP */
-			return -1;
-		}
-
-		if ((prot & PROT_READ) != 0U) {
-			/* #GP on a read access to a exec-only code segment */
-			if ((type & 0xAU) == 0x8U) {
-				return -1;
-			}
-		}
-
-		if ((prot & PROT_WRITE) != 0U) {
-			/*
-			 * #GP on a write access to a code segment or a
-			 * read-only data segment.
-			 */
-			if ((type & 0x8U) != 0U) {	/* code segment */
-				return -1;
-			}
-
-			if ((type & 0xAU) == 0U) {	/* read-only data seg */
-				return -1;
-			}
-		}
-
-		/*
-		 * 'desc->limit' is fully expanded taking granularity into
-		 * account.
-		 */
-		if ((type & 0xCU) == 0x4U) {
-			/* expand-down data segment */
-			low_limit = desc->limit + 1U;
-			high_limit = SEG_DESC_DEF32(desc->access) ?
-			    0xffffffffU : 0xffffU;
-		} else {
-			/* code segment or expand-up data segment */
-			low_limit = 0U;
-			high_limit = desc->limit;
-		}
-
-		while (length > 0U) {
-			offset &= size2mask[addrsize];
-			if (offset < low_limit || offset > high_limit) {
-				return -1;
-			}
-			offset++;
-			length--;
-		}
-	}
-
-	/*
-	 * In 64-bit mode all segments except %fs and %gs have a segment
-	 * base address of 0.
-	 */
-	if (cpu_mode == CPU_MODE_64BIT && seg != CPU_REG_FS &&
-	    seg != CPU_REG_GS) {
-		segbase = 0UL;
-	} else {
-		segbase = desc->base;
-	}
-
-	/*
-	 * Truncate 'firstoff' to the effective address size before adding
-	 * it to the segment base.
-	 */
-	firstoff &= size2mask[addrsize];
-	*gla = (segbase + firstoff) & size2mask[glasize];
-	return 0;
-}
-
-int
-vie_init(struct instr_emul_vie *vie, struct vcpu *vcpu)
+static int vie_init(struct instr_emul_vie *vie, struct vcpu *vcpu)
 {
 	uint64_t guest_rip_gva = vcpu_get_rip(vcpu);
 	uint32_t inst_len = vcpu->arch_vcpu.inst_len;
@@ -1613,8 +1891,7 @@ vie_init(struct instr_emul_vie *vie, struct vcpu *vcpu)
 	return 0;
 }
 
-static int
-vie_peek(struct instr_emul_vie *vie, uint8_t *x)
+static int vie_peek(struct instr_emul_vie *vie, uint8_t *x)
 {
 
 	if (vie->num_processed < vie->num_valid) {
@@ -1625,15 +1902,13 @@ vie_peek(struct instr_emul_vie *vie, uint8_t *x)
 	}
 }
 
-static void
-vie_advance(struct instr_emul_vie *vie)
+static void vie_advance(struct instr_emul_vie *vie)
 {
 
 	vie->num_processed++;
 }
 
-static bool
-segment_override(uint8_t x, enum cpu_reg_name *seg)
+static bool segment_override(uint8_t x, enum cpu_reg_name *seg)
 {
 
 	switch (x) {
@@ -1661,8 +1936,8 @@ segment_override(uint8_t x, enum cpu_reg_name *seg)
 	return true;
 }
 
-static int
-decode_prefixes(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode, bool cs_d)
+static int decode_prefixes(struct instr_emul_vie *vie,
+					enum vm_cpu_mode cpu_mode, bool cs_d)
 {
 	uint8_t x;
 
@@ -1733,8 +2008,7 @@ decode_prefixes(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode, bool cs_d
 	return 0;
 }
 
-static int
-decode_two_byte_opcode(struct instr_emul_vie *vie)
+static int decode_two_byte_opcode(struct instr_emul_vie *vie)
 {
 	uint8_t x;
 
@@ -1752,8 +2026,7 @@ decode_two_byte_opcode(struct instr_emul_vie *vie)
 	return 0;
 }
 
-static int
-decode_opcode(struct instr_emul_vie *vie)
+static int decode_opcode(struct instr_emul_vie *vie)
 {
 	uint8_t x;
 
@@ -1777,8 +2050,7 @@ decode_opcode(struct instr_emul_vie *vie)
 	return 0;
 }
 
-static int
-decode_modrm(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode)
+static int decode_modrm(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode)
 {
 	uint8_t x;
 
@@ -1832,8 +2104,7 @@ decode_modrm(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode)
 	return 0;
 }
 
-static int
-decode_sib(struct instr_emul_vie *vie)
+static int decode_sib(struct instr_emul_vie *vie)
 {
 	uint8_t x;
 
@@ -1900,8 +2171,7 @@ decode_sib(struct instr_emul_vie *vie)
 	return 0;
 }
 
-static int
-decode_displacement(struct instr_emul_vie *vie)
+static int decode_displacement(struct instr_emul_vie *vie)
 {
 	int n, i;
 	uint8_t x;
@@ -1941,8 +2211,7 @@ decode_displacement(struct instr_emul_vie *vie)
 	return 0;
 }
 
-static int
-decode_immediate(struct instr_emul_vie *vie)
+static int decode_immediate(struct instr_emul_vie *vie)
 {
 	int i, n;
 	uint8_t x;
@@ -2006,8 +2275,7 @@ decode_immediate(struct instr_emul_vie *vie)
 	return 0;
 }
 
-static int
-decode_moffset(struct instr_emul_vie *vie)
+static int decode_moffset(struct instr_emul_vie *vie)
 {
 	uint8_t i, n, x;
 	union {
@@ -2042,8 +2310,8 @@ decode_moffset(struct instr_emul_vie *vie)
 	return 0;
 }
 
-int
-local_decode_instruction(enum vm_cpu_mode cpu_mode, bool cs_d, struct instr_emul_vie *vie)
+static int local_decode_instruction(enum vm_cpu_mode cpu_mode,
+				bool cs_d, struct instr_emul_vie *vie)
 {
 	if (decode_prefixes(vie, cpu_mode, cs_d) != 0) {
 		return -1;
@@ -2076,4 +2344,55 @@ local_decode_instruction(enum vm_cpu_mode cpu_mode, bool cs_d, struct instr_emul
 	vie->decoded = 1U;	/* success */
 
 	return 0;
+}
+
+int decode_instruction(struct vcpu *vcpu)
+{
+	struct instr_emul_ctxt *emul_ctxt;
+	uint32_t csar;
+	int retval = 0;
+	enum vm_cpu_mode cpu_mode;
+
+	emul_ctxt = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
+	if (emul_ctxt == NULL) {
+		pr_err("%s: Failed to get emul_ctxt", __func__);
+		return -1;
+	}
+	emul_ctxt->vcpu = vcpu;
+
+	retval = vie_init(&emul_ctxt->vie, vcpu);
+	if (retval < 0) {
+		if (retval != -EFAULT) {
+			pr_err("decode instruction failed @ 0x%016llx:",
+				vcpu_get_rip(vcpu));
+		}
+		return retval;
+	}
+
+	csar = exec_vmread32(VMX_GUEST_CS_ATTR);
+	get_guest_paging_info(vcpu, emul_ctxt, csar);
+	cpu_mode = get_vcpu_mode(vcpu);
+
+	retval = local_decode_instruction(cpu_mode, SEG_DESC_DEF32(csar),
+		&emul_ctxt->vie);
+
+	if (retval != 0) {
+		pr_err("decode instruction failed @ 0x%016llx:",
+			vcpu_get_rip(vcpu));
+		return -EINVAL;
+	}
+
+	return  emul_ctxt->vie.opsize;
+}
+
+int emulate_instruction(struct vcpu *vcpu)
+{
+	struct instr_emul_ctxt *ctxt = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
+
+	if (ctxt == NULL) {
+		pr_err("%s: Failed to get instr_emul_ctxt", __func__);
+		return -1;
+	}
+
+	return vmm_emulate_instruction(ctxt);
 }
