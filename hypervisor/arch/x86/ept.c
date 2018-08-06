@@ -43,6 +43,9 @@ static uint64_t find_next_table(uint32_t table_offset, void *table_base)
 	return sub_table_addr;
 }
 
+/**
+ * @pre pml4_addr != NULL
+ */
 static void free_ept_mem(void *pml4_addr)
 {
 	void *pdpt_addr;
@@ -51,11 +54,6 @@ static void free_ept_mem(void *pml4_addr)
 	uint32_t pml4_index;
 	uint32_t pdpt_index;
 	uint32_t pde_idx;
-
-	if (pml4_addr == NULL) {
-		ASSERT(false, "EPTP is NULL");
-		return;
-	}
 
 	for (pml4_index = 0U; pml4_index < IA32E_NUM_ENTRIES; pml4_index++) {
 		/* Walk from the PML4 table to the PDPT table */
