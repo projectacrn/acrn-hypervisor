@@ -129,14 +129,13 @@ static int ptdev_interrupt_handler(__unused int irq, void *data)
 
 /* active intr with irq registering */
 void
-ptdev_activate_entry(struct ptdev_remapping_info *entry, uint32_t phys_irq,
-		bool lowpri)
+ptdev_activate_entry(struct ptdev_remapping_info *entry, uint32_t phys_irq)
 {
 	struct dev_handler_node *node;
 
 	/* register and allocate host vector/irq */
 	node = normal_register_handler(phys_irq, ptdev_interrupt_handler,
-		(void *)entry, true, lowpri, "dev assign");
+		(void *)entry, true, "dev assign");
 
 	ASSERT(node != NULL, "dev register failed");
 	entry->node = node;

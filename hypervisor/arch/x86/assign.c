@@ -629,7 +629,6 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 		struct ptdev_msi_info *info)
 {
 	struct ptdev_remapping_info *entry;
-	bool lowpri = !is_vm0(vm);
 
 	/*
 	 * Device Model should pre-hold the mapping entries by calling
@@ -668,7 +667,7 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 
 	if (!is_entry_active(entry)) {
 		/* update msi source and active entry */
-		ptdev_activate_entry(entry, IRQ_INVALID, lowpri);
+		ptdev_activate_entry(entry, IRQ_INVALID);
 	}
 
 	/* build physical config MSI, update to info->pmsi_xxx */
@@ -738,7 +737,6 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 	union ioapic_rte rte;
 	uint32_t phys_irq;
 	uint8_t phys_pin;
-	bool lowpri = !is_vm0(vm);
 	bool need_switch_vpin_src = false;
 	struct ptdev_intx_info *intx;
 
@@ -874,7 +872,7 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 		activate_physical_ioapic(vm, entry);
 	} else {
 		/* active entry */
-		ptdev_activate_entry(entry, phys_irq, lowpri);
+		ptdev_activate_entry(entry, phys_irq);
 
 		activate_physical_ioapic(vm, entry);
 

@@ -827,7 +827,7 @@ static int dmar_setup_interrupt(struct dmar_drhd_rt *dmar_uint)
 
 	dmar_uint->dmar_irq_node = normal_register_handler(IRQ_INVALID,
 					dmar_fault_handler,
-					dmar_uint, true, false,
+					dmar_uint, true,
 					"dmar_fault_event");
 
 	if (dmar_uint->dmar_irq_node == NULL) {
