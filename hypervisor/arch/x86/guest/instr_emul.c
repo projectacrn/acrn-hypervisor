@@ -597,11 +597,11 @@ static void vie_calc_bytereg(struct instr_emul_vie *vie,
 	}
 }
 
-static int vie_read_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie,
-								uint8_t *rval)
+static uint8_t vie_read_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
+	int lhbr;
 	uint64_t val;
-	int error = 0, lhbr;
+	uint8_t reg_val;
 	enum cpu_reg_name reg;
 
 	vie_calc_bytereg(vie, &reg, &lhbr);
@@ -612,37 +612,36 @@ static int vie_read_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie,
 	 * base register right by 8 bits (%ah = %rax >> 8).
 	 */
 	if (lhbr != 0) {
-		*rval = (uint8_t)(val >> 8);
+		reg_val = (uint8_t)(val >> 8);
 	} else {
-		*rval = (uint8_t)val;
+		reg_val = (uint8_t)val;
 	}
-	return error;
+
+	return reg_val;
 }
 
-static int vie_write_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie,
+static void vie_write_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie,
 								uint8_t byte)
 {
 	uint64_t origval, val, mask;
-	int error = 0, lhbr;
 	enum cpu_reg_name reg;
+	int lhbr;
 
 	vie_calc_bytereg(vie, &reg, &lhbr);
 	origval = vm_get_register(vcpu, reg);
-	if (error == 0) {
-		val = byte;
-		mask = 0xffU;
-		if (lhbr != 0) {
-			/*
-			 * Shift left by 8 to store 'byte' in a legacy high
-			 * byte register.
-			 */
-			val <<= 8;
-			mask <<= 8;
-		}
-		val |= origval & ~mask;
-		vm_set_register(vcpu, reg, val);
+
+	val = byte;
+	mask = 0xffU;
+	if (lhbr != 0) {
+		/*
+		 * Shift left by 8 to store 'byte' in a legacy high
+		 * byte register.
+		 */
+		val <<= 8;
+		mask <<= 8;
 	}
-	return error;
+	val |= origval & ~mask;
+	vm_set_register(vcpu, reg, val);
 }
 
 static int vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
@@ -744,10 +743,8 @@ static int emulate_mov(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	 * REX + 88/r:	mov r/m8, r8 (%ah, %ch, %dh, %bh not available)
 	 */
 		size = 1U;	/* override for byte operation */
-		error = vie_read_bytereg(vcpu, vie, &byte);
-		if (error == 0) {
-			error = mmio_write(vcpu, byte);
-		}
+		byte = vie_read_bytereg(vcpu, vie);
+		error = mmio_write(vcpu, byte);
 		break;
 	case 0x89U:
 		/*
@@ -771,7 +768,7 @@ static int emulate_mov(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		size = 1U;	/* override for byte operation */
 		error = mmio_read(vcpu, &val);
 		if (error == 0) {
-			error = vie_write_bytereg(vcpu, vie, (uint8_t)val);
+			vie_write_bytereg(vcpu, vie, (uint8_t)val);
 		}
 		break;
 	case 0x8BU:
