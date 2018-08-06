@@ -5,6 +5,8 @@ include ../VERSION
 FULL_VERSION=$(MAJOR_VERSION).$(MINOR_VERSION)$(EXTRA_VERSION)
 BASEDIR := $(shell pwd)
 DM_OBJDIR ?= $(CURDIR)/build
+DM_BUILD_VERSION ?=
+DM_BUILD_TAG ?=
 
 CC ?= gcc
 
@@ -154,16 +156,21 @@ distclean:
 
 include/version.h:
 	touch include/version.h
-	@COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
-	DIRTY=`git diff-index --name-only HEAD`;\
-	if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
-	DAILY_TAG=`git tag --merged HEAD|grep "acrn"|tail -n 1`;\
+	if [ "$(DM_BUILD_VERSION)"x = x -o "$(DM_BUILD_TAG)"x = x ];then\
+		COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
+		DIRTY=`git diff-index --name-only HEAD`;\
+		if [ -n "$$DIRTY" ];then PATCH="$$COMMIT-dirty";else PATCH="$$COMMIT";fi;\
+		DAILY_TAG=`git tag --merged HEAD|grep "acrn"|tail -n 1`;\
+	else\
+		PATCH=$(DM_BUILD_VERSION);\
+		DAILY_TAG=$(DM_BUILD_TAG);\
+	fi;\
 	TIME=`date "+%Y-%m-%d %H:%M:%S"`;\
 	USER=`id -u -n`; \
 	echo "/*" > include/version.h; \
-	sed 's/^/ * /' ../LICENSE >> include/version.h; \
-	echo " */" >> include/version.h; \
-	echo "" >> include/version.h; \
+	sed 's/^/ * /' ../LICENSE >> include/version.h;\
+	echo " */" >> include/version.h;\
+	echo "" >> include/version.h;\
 	echo "#define DM_MAJOR_VERSION $(MAJOR_VERSION)" >> include/version.h;\
 	echo "#define DM_MINOR_VERSION $(MINOR_VERSION)" >> include/version.h;\
 	echo "#define DM_EXTRA_VERSION "\"$(EXTRA_VERSION)\""" >> include/version.h;\
