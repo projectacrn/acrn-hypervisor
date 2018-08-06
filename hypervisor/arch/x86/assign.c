@@ -951,9 +951,10 @@ void ptdev_remove_msix_remapping(struct vm *vm, uint16_t virt_bdf,
 }
 
 #ifdef HV_DEBUG
+#define PTDEV_INVALID_PIN 0xffU
 static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 		uint32_t *irq, uint32_t *vector, uint64_t *dest, bool *lvl_tm,
-		int *pin, int *vpin, uint32_t *bdf, uint32_t *vbdf)
+		uint8_t *pin, uint8_t *vpin, uint32_t *bdf, uint32_t *vbdf)
 {
 	struct ptdev_intx_info *intx = &entry->ptdev_intr_info.intx;
 	if (is_entry_active(entry)) {
@@ -967,8 +968,8 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 			} else {
 				*lvl_tm = false;
 			}
-			*pin = IRQ_INVALID;
-			*vpin = -1;
+			*pin = PTDEV_INVALID_PIN;
+			*vpin = PTDEV_INVALID_PIN;
 			*bdf = entry->phys_bdf;
 			*vbdf = entry->virt_bdf;
 		} else {
@@ -1018,7 +1019,7 @@ void get_ptdev_info(char *str_arg, int str_max)
 	char type[16];
 	uint64_t dest;
 	bool lvl_tm;
-	int32_t pin, vpin;
+	uint8_t pin, vpin;
 	uint32_t bdf, vbdf;
 	struct list_head *pos;
 
@@ -1043,14 +1044,14 @@ void get_ptdev_info(char *str_arg, int str_max)
 			str += len;
 
 			len = snprintf(str, size,
-					"\t%s\t%d\t%d\t%x:%x.%x\t%x:%x.%x",
+					"\t%s\t%hhu\t%hhu\t%x:%x.%x\t%x:%x.%x",
 					is_entry_active(entry) ?
 					(lvl_tm ? "level" : "edge") : "none",
 					pin, vpin,
-					(bdf & 0xff00U) >> 8,
-					(bdf & 0xf8U) >> 3, bdf & 0x7U,
-					(vbdf & 0xff00U) >> 8,
-					(vbdf & 0xf8U) >> 3, vbdf & 0x7U);
+					(bdf & 0xff00U) >> 8U,
+					(bdf & 0xf8U) >> 3U, bdf & 0x7U,
+					(vbdf & 0xff00U) >> 8U,
+					(vbdf & 0xf8U) >> 3U, vbdf & 0x7U);
 			size -= len;
 			str += len;
 		}

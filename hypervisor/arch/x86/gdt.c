@@ -7,18 +7,20 @@
 #include <hypervisor.h>
 
 static void set_tss_desc(union tss_64_descriptor *desc,
-		uint64_t tss, size_t tss_limit, int type)
+		uint64_t tss, size_t tss_limit, uint32_t type)
 {
 	uint32_t u1, u2, u3;
+	uint32_t tss_hi_32 = (uint32_t)(tss >> 32U);
+	uint32_t tss_lo_32 = (uint32_t)tss;
 
-	u1 = (uint32_t)((tss << 16U) & 0xFFFFFFFFUL);
-	u2 = (uint32_t)(tss & 0xFF000000UL);
-	u3 = (uint32_t)((tss & 0x00FF0000UL) >> 16U);
+	u1 = tss_lo_32 << 16U;
+	u2 = tss_lo_32 & 0xFF000000U;
+	u3 = (tss_lo_32 & 0x00FF0000U) >> 16U;
 
 
 	desc->fields.low32.value = u1 | (tss_limit & 0xFFFFU);
-	desc->fields.base_addr_63_32 = (uint32_t)(tss >> 32U);
-	desc->fields.high32.value = (u2 | ((uint32_t)type << 8U) | 0x8000U | u3);
+	desc->fields.base_addr_63_32 = tss_hi_32;
+	desc->fields.high32.value = u2 | (type << 8U) | 0x8000U | u3;
 }
 
 void load_gdtr_and_tr(void)
