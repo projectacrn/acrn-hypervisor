@@ -644,10 +644,15 @@ static void vie_write_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie,
 	vm_set_register(vcpu, reg, val);
 }
 
-static int vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
+/**
+ * @pre vcpu != NULL
+ * @pre size = 1, 2, 4 or 8
+ * @pre ((reg <= CPU_REG_LAST) && (reg >= CPU_REG_FIRST))
+ * @pre ((reg != CPU_REG_CR2) && (reg != CPU_REG_IDTR) && (reg != CPU_REG_GDTR))
+ */
+static void vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
 					uint64_t val_arg, uint8_t size)
 {
-	int error = 0;
 	uint64_t origval;
 	uint64_t val = val_arg;
 
@@ -661,22 +666,17 @@ static int vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
 	case 4U:
 		val &= 0xffffffffUL;
 		break;
-	case 8U:
+	default: /* size == 8 */
 		break;
-	default:
-		return -EINVAL;
 	}
 
 	vm_set_register(vcpu, reg, val);
-
-	return error;
 }
 
 #define	RFLAGS_STATUS_BITS    (PSL_C | PSL_PF | PSL_AF | PSL_Z | PSL_N | PSL_V)
 
-static int vie_update_rflags(struct vcpu *vcpu, uint64_t rflags2, uint64_t psl)
+static void vie_update_rflags(struct vcpu *vcpu, uint64_t rflags2, uint64_t psl)
 {
-	int error = 0;
 	uint8_t size;
 	uint64_t rflags;
 
@@ -686,9 +686,7 @@ static int vie_update_rflags(struct vcpu *vcpu, uint64_t rflags2, uint64_t psl)
 	rflags |= rflags2 & psl;
 	size = 8U;
 
-	error = vie_update_register(vcpu, CPU_REG_RFLAGS, rflags, size);
-
-	return error;
+	vie_update_register(vcpu, CPU_REG_RFLAGS, rflags, size);
 }
 
 /*
@@ -781,8 +779,7 @@ static int emulate_mov(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		error = mmio_read(vcpu, &val);
 		if (error == 0) {
 			reg = vie->reg;
-			error = vie_update_register(vcpu, reg,
-							val, size);
+			vie_update_register(vcpu, reg, val, size);
 		}
 		break;
 	case 0xA1U:
@@ -795,8 +792,7 @@ static int emulate_mov(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		error = mmio_read(vcpu, &val);
 		if (error == 0) {
 			reg = CPU_REG_RAX;
-			error = vie_update_register(vcpu, reg,
-							val, size);
+			vie_update_register(vcpu, reg, val, size);
 		}
 		break;
 	case 0xA3U:
@@ -871,7 +867,7 @@ static int emulate_movx(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		val = (uint8_t)val;
 
 		/* write the result */
-		error = vie_update_register(vcpu, reg, val, size);
+		vie_update_register(vcpu, reg, val, size);
 		break;
 	case 0xB7U:
 		/*
@@ -891,7 +887,7 @@ static int emulate_movx(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		/* zero-extend word */
 		val = (uint16_t)val;
 
-		error = vie_update_register(vcpu, reg, val, size);
+		vie_update_register(vcpu, reg, val, size);
 		break;
 	case 0xBEU:
 		/*
@@ -916,7 +912,7 @@ static int emulate_movx(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		val = (int8_t)val;
 
 		/* write the result */
-		error = vie_update_register(vcpu, reg, val, size);
+		vie_update_register(vcpu, reg, val, size);
 		break;
 	default:
 		break;
@@ -1039,16 +1035,12 @@ static int emulate_movs(struct vcpu *vcpu, struct instr_emul_vie *vie,
 		rdi += opsize;
 	}
 
-	error = vie_update_register(vcpu, CPU_REG_RSI, rsi,
-			vie->addrsize);
-
-	error = vie_update_register(vcpu, CPU_REG_RDI, rdi,
-			vie->addrsize);
+	vie_update_register(vcpu, CPU_REG_RSI, rsi, vie->addrsize);
+	vie_update_register(vcpu, CPU_REG_RDI, rdi, vie->addrsize);
 
 	if (repeat != 0) {
 		rcx = rcx - 1;
-		error = vie_update_register(vcpu, CPU_REG_RCX,
-				rcx, vie->addrsize);
+		vie_update_register(vcpu, CPU_REG_RCX, rcx, vie->addrsize);
 
 		/*
 		 * Repeat the instruction if the count register is not zero.
@@ -1099,13 +1091,11 @@ static int emulate_stos(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		rdi += opsize;
 	}
 
-	error = vie_update_register(vcpu, CPU_REG_RDI, rdi,
-			vie->addrsize);
+	vie_update_register(vcpu, CPU_REG_RDI, rdi, vie->addrsize);
 
 	if (repeat != 0) {
 		rcx = rcx - 1;
-		error = vie_update_register(vcpu, CPU_REG_RCX,
-				rcx, vie->addrsize);
+		vie_update_register(vcpu, CPU_REG_RCX, rcx, vie->addrsize);
 
 		/*
 		 * Repeat the instruction if the count register is not zero.
@@ -1162,18 +1152,18 @@ static int emulate_test(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	default:
 		break;
 	}
-	if (error != 0) {
-		return error;
-	}
 
-	/*
-	 * OF and CF are cleared; the SF, ZF and PF flags are set according
-	 * to the result; AF is undefined.
-	 *
-	 * The updated status flags are obtained by subtracting 0 from 'result'.
-	 */
-	rflags2 = getcc(size, result, 0UL);
-	error = vie_update_rflags(vcpu, rflags2, PSL_PF | PSL_Z | PSL_N);
+	if (error == 0) {
+		/*
+		 * OF and CF are cleared; the SF, ZF and PF flags are set
+		 * according to the result; AF is undefined.
+		 *
+		 * The updated status flags are obtained by subtracting 0 from
+		 * 'result'.
+		 */
+		rflags2 = getcc(size, result, 0UL);
+		vie_update_rflags(vcpu, rflags2, PSL_PF | PSL_Z | PSL_N);
+	}
 
 	return error;
 }
@@ -1211,8 +1201,7 @@ static int emulate_and(struct vcpu *vcpu, struct instr_emul_vie *vie)
 
 		/* perform the operation and write the result */
 		result = val1 & val2;
-		error = vie_update_register(vcpu, reg, result,
-						size);
+		vie_update_register(vcpu, reg, result, size);
 		break;
 	case 0x81U:
 	case 0x83U:
@@ -1245,18 +1234,18 @@ static int emulate_and(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	default:
 		break;
 	}
-	if (error != 0) {
-		return error;
-	}
 
-	/*
-	 * OF and CF are cleared; the SF, ZF and PF flags are set according
-	 * to the result; AF is undefined.
-	 *
-	 * The updated status flags are obtained by subtracting 0 from 'result'.
-	 */
-	rflags2 = getcc(size, result, 0UL);
-	error = vie_update_rflags(vcpu, rflags2, PSL_PF | PSL_Z | PSL_N);
+	if (error == 0) {
+		/*
+		 * OF and CF are cleared; the SF, ZF and PF flags are set
+		 * according to the result; AF is undefined.
+		 *
+		 * The updated status flags are obtained by subtracting 0 from
+		 * 'result'.
+		 */
+		rflags2 = getcc(size, result, 0UL);
+		vie_update_rflags(vcpu, rflags2, PSL_PF | PSL_Z | PSL_N);
+	}
 
 	return error;
 }
@@ -1331,18 +1320,17 @@ static int emulate_or(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	default:
 		break;
 	}
-	if (error != 0) {
-		return error;
+	if (error == 0) {
+		/*
+		 * OF and CF are cleared; the SF, ZF and PF flags are set
+		 * according to the result; AF is undefined.
+		 *
+		 * The updated status flags are obtained by subtracting 0 from
+		 * 'result'.
+		 */
+		rflags2 = getcc(size, result, 0UL);
+		vie_update_rflags(vcpu, rflags2, PSL_PF | PSL_Z | PSL_N);
 	}
-
-	/*
-	 * OF and CF are cleared; the SF, ZF and PF flags are set according
-	 * to the result; AF is undefined.
-	 *
-	 * The updated status flags are obtained by subtracting 0 from 'result'.
-	 */
-	rflags2 = getcc(size, result, 0UL);
-	error = vie_update_rflags(vcpu, rflags2, PSL_PF | PSL_Z | PSL_N);
 
 	return error;
 }
@@ -1434,7 +1422,7 @@ static int emulate_cmp(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		return -EINVAL;
 	}
 
-	error = vie_update_rflags(vcpu, rflags2, RFLAGS_STATUS_BITS);
+	vie_update_rflags(vcpu, rflags2, RFLAGS_STATUS_BITS);
 
 	return error;
 }
@@ -1471,8 +1459,7 @@ static int emulate_sub(struct vcpu *vcpu, struct instr_emul_vie *vie)
 
 		/* perform the operation and write the result */
 		nval = val1 - val2;
-		error = vie_update_register(vcpu, reg, nval,
-						size);
+		vie_update_register(vcpu, reg, nval, size);
 		break;
 	default:
 		break;
@@ -1483,7 +1470,7 @@ static int emulate_sub(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	}
 
 	rflags2 = getcc(size, val1, val2);
-	error = vie_update_rflags(vcpu, rflags2, RFLAGS_STATUS_BITS);
+	vie_update_rflags(vcpu, rflags2, RFLAGS_STATUS_BITS);
 
 	return error;
 }
@@ -1584,9 +1571,9 @@ static int emulate_stack_op(struct vcpu *vcpu, struct instr_emul_vie *vie,
 
 
 	if (error == 0) {
-		error = vie_update_register(vcpu, CPU_REG_RSP, rsp,
-				stackaddrsize);
+		vie_update_register(vcpu, CPU_REG_RSP, rsp, stackaddrsize);
 	}
+
 	return error;
 }
 
@@ -1682,7 +1669,7 @@ static int emulate_bittest(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		rflags &= ~PSL_C;
 	}
 	size = 8U;
-	error = vie_update_register(vcpu, CPU_REG_RFLAGS, rflags, size);
+	vie_update_register(vcpu, CPU_REG_RFLAGS, rflags, size);
 
 	return 0;
 }
