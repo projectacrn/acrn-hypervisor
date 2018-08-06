@@ -472,7 +472,7 @@ vioapic_process_eoi(struct vm *vm, uint32_t vector)
 	uint32_t pin, pincount = vioapic_pincount(vm);
 	union ioapic_rte rte;
 
-	if (vector < VECTOR_FOR_INTR_START || vector > NR_MAX_VECTOR) {
+	if (vector < VECTOR_DYNAMIC_START || vector > NR_MAX_VECTOR) {
 		pr_err("vioapic_process_eoi: invalid vector %u", vector);
 	}
 

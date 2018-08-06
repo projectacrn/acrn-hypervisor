@@ -31,24 +31,14 @@ static void init_irq_desc(void)
 }
 
 /*
- * alloc vector 0x20-0xDF for irq
- *	lowpri:  0x20-0x7F
- *	highpri: 0x80-0xDF
+ * find available vector VECTOR_DYNAMIC_START ~ VECTOR_DYNAMIC_END
  */
-static uint32_t find_available_vector(bool lowpri)
+static uint32_t find_available_vector()
 {
-	uint32_t i, start, end;
-
-	if (lowpri) {
-		start = VECTOR_FOR_NOR_LOWPRI_START;
-		end = VECTOR_FOR_NOR_LOWPRI_END;
-	} else {
-		start = VECTOR_FOR_NOR_HIGHPRI_START;
-		end = VECTOR_FOR_NOR_HIGHPRI_END;
-	}
+	uint32_t i;
 
 	/* TODO: vector lock required */
-	for (i = start; i < end; i++) {
+	for (i = VECTOR_DYNAMIC_START; i <= VECTOR_DYNAMIC_END; i++) {
 		if (vector_to_irq[i] == IRQ_INVALID) {
 			return i;
 		}
@@ -269,11 +259,11 @@ common_register_handler(uint32_t irq_arg,
 OUT:
 	if (added) {
 		/* it is safe to call irq_desc_alloc_vector multiple times*/
-		if (info->vector >= VECTOR_FOR_PRI_START &&
-			info->vector <= VECTOR_FOR_PRI_END) {
+		if (info->vector >= VECTOR_FIXED_START &&
+			info->vector <= VECTOR_FIXED_END) {
 			irq_desc_set_vector(irq, info->vector);
 		} else if (info->vector > NR_MAX_VECTOR) {
-			irq_desc_alloc_vector(irq, info->lowpri);
+			irq_desc_alloc_vector(irq);
 		} else {
 			pr_err("the input vector is not correct");
 			free(node);
@@ -296,7 +286,7 @@ OUT:
 }
 
 /* it is safe to call irq_desc_alloc_vector multiple times*/
-uint32_t irq_desc_alloc_vector(uint32_t irq, bool lowpri)
+uint32_t irq_desc_alloc_vector(uint32_t irq)
 {
 	uint32_t vr = VECTOR_INVALID;
 	struct irq_desc *desc;
@@ -316,7 +306,7 @@ uint32_t irq_desc_alloc_vector(uint32_t irq, bool lowpri)
 	}
 
 	/* FLAT mode, a irq connected to every cpu's same vector */
-	vr = find_available_vector(lowpri);
+	vr = find_available_vector();
 	if (vr > NR_MAX_VECTOR) {
 		pr_err("no vector found for irq[%d]", irq);
 		goto OUT;
@@ -634,20 +624,18 @@ UNLOCK_EXIT:
 }
 
 /*
- * Allocate IRQ with Vector from 0x20 ~ 0xDF
+ * Allocate IRQ with Vector from VECTOR_DYNAMIC_START ~ VECTOR_DYNAMIC_END
  */
 struct dev_handler_node*
 normal_register_handler(uint32_t irq,
 		dev_handler_t func,
 		void *dev_data,
 		bool share,
-		bool lowpri,
 		const char *name)
 {
 	struct irq_request_info info;
 
 	info.vector = VECTOR_INVALID;
-	info.lowpri = lowpri;
 	info.func = func;
 	info.dev_data = dev_data;
 	info.share = share;
@@ -657,7 +645,7 @@ normal_register_handler(uint32_t irq,
 }
 
 /*
- * Allocate IRQ with vector from 0xE0 ~ 0xFF
+ * Allocate IRQ with vector from VECTOR_FIXED_START ~ VECTOR_FIXED_END
  * Allocate a IRQ and install isr on that specific cpu
  * User can install same irq/isr on different CPU by call this function multiple
  * times
@@ -671,12 +659,11 @@ pri_register_handler(uint32_t irq,
 {
 	struct irq_request_info info;
 
-	if (vector < VECTOR_FOR_PRI_START || vector > VECTOR_FOR_PRI_END) {
+	if (vector < VECTOR_FIXED_START || vector > VECTOR_FIXED_END) {
 		return NULL;
 	}
 
 	info.vector = vector;
-	info.lowpri = false;
 	info.func = func;
 	info.dev_data = dev_data;
 	info.share = true;

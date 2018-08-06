@@ -9,18 +9,14 @@
 
 #include <common/irq.h>
 
-/* vectors for normal, usually for devices */
-#define VECTOR_FOR_NOR_LOWPRI_START	0x20U
-#define VECTOR_FOR_NOR_LOWPRI_END	0x7FU
-#define VECTOR_FOR_NOR_HIGHPRI_START	0x80U
-#define VECTOR_FOR_NOR_HIGHPRI_END	0xDFU
-#define VECTOR_FOR_NOR_END		VECTOR_FOR_NOR_HIGHPRI_END
+/* vectors range for dynamic allocation, usually for devices */
+#define VECTOR_DYNAMIC_START	0x20U
+#define VECTOR_DYNAMIC_END	0xDFU
 
-#define VECTOR_FOR_INTR_START		VECTOR_FOR_NOR_LOWPRI_START
+/* vectors range for fixed vectors, usually for HV service */
+#define VECTOR_FIXED_START	0xE0U
+#define VECTOR_FIXED_END	0xFFU
 
-/* vectors for priority, usually for HV service */
-#define VECTOR_FOR_PRI_START	0xE0U
-#define VECTOR_FOR_PRI_END	0xFFU
 #define VECTOR_TIMER		0xEFU
 #define VECTOR_NOTIFY_VCPU	0xF0U
 #define VECTOR_VIRT_IRQ_VHM	0xF7U

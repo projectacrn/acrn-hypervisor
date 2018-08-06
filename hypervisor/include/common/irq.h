@@ -33,7 +33,6 @@ struct irq_request_info {
 	dev_handler_t func;
 	void *dev_data;
 	bool share;
-	bool lowpri;
 	char *name;
 };
 
@@ -61,7 +60,7 @@ struct dev_handler_node {
 
 uint32_t irq_mark_used(uint32_t irq);
 
-uint32_t irq_desc_alloc_vector(uint32_t irq, bool lowpri);
+uint32_t irq_desc_alloc_vector(uint32_t irq);
 void irq_desc_try_free_vector(uint32_t irq);
 
 uint32_t irq_to_vector(uint32_t irq);
@@ -80,7 +79,6 @@ normal_register_handler(uint32_t irq,
 		dev_handler_t func,
 		void *dev_data,
 		bool share,
-		bool lowpri,
 		const char *name);
 void unregister_handler_common(struct dev_handler_node *node);
 
