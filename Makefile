@@ -11,6 +11,8 @@ DM_OUT := $(ROOT_OUT)/devicemodel
 TOOLS_OUT := $(ROOT_OUT)/tools
 MISC_OUT := $(ROOT_OUT)/misc
 DOC_OUT := $(ROOT_OUT)/doc
+BUILD_VERSION ?=
+BUILD_TAG ?=
 export TOOLS_OUT
 
 .PHONY: all hypervisor devicemodel tools misc doc
@@ -27,7 +29,7 @@ sbl-hypervisor:
 
 devicemodel: tools
 	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) clean
-	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT)
+	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) DM_BUILD_VERSION=$(BUILD_VERSION) DM_BUILD_TAG=$(BUILD_TAG)
 
 tools:
 	mkdir -p $(TOOLS_OUT)
