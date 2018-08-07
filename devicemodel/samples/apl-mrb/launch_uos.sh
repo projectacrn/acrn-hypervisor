@@ -330,6 +330,11 @@ do
 	esac
 done
 
+if [ ! -b "/dev/mmcblk1p3" ]; then
+  echo "no /dev/mmcblk1p3 data partition, exit"
+  exit
+fi
+
 mkdir -p /data
 mount /dev/mmcblk1p3 /data
 
