@@ -76,6 +76,17 @@ static inline uint32_t pio_read(uint16_t addr, size_t sz)
 	return pio_read32(addr);
 }
 
+/** Writes a 64 bit value to a memory mapped IO device.
+ *
+ *  @param value The 64 bit value to write.
+ *  @param addr The memory address to write to.
+ */
+static inline void mmio_write64(uint64_t value, const void *addr)
+{
+	volatile uint64_t *addr64 = (volatile uint64_t *)addr;
+	*addr64 = value;
+}
+
 /** Writes a 32 bit value to a memory mapped IO device.
  *
  *  @param value The 32 bit value to write.
@@ -107,6 +118,17 @@ static inline void mmio_write8(uint8_t value, const void *addr)
 {
 	volatile uint8_t *addr8 = (volatile uint8_t *)addr;
 	*addr8 = value;
+}
+
+/** Reads a 64 bit value from a memory mapped IO device.
+ *
+ *  @param addr The memory address to read from.
+ *
+ *  @return The 64 bit value read from the given address.
+ */
+static inline uint64_t mmio_read64(const void *addr)
+{
+	return *((volatile uint64_t *)addr);
 }
 
 /** Reads a 32 bit value from a memory mapped IO device.
@@ -142,6 +164,20 @@ static inline uint8_t mmio_read8(const void *addr)
 	return *((volatile uint8_t *)addr);
 }
 
+/** Reads a 64 Bit memory mapped IO register, mask it and write it back into
+ *  memory mapped IO register.
+ *
+ * @param addr    The address of the memory mapped IO register.
+ * @param mask    The mask to apply to the value read.
+ * @param value   The 64 bit value to write.
+ */
+static inline void set64(const void *addr, uint64_t mask, uint64_t value)
+{
+	uint64_t temp_val;
+
+	temp_val = mmio_read64(addr);
+	mmio_write64((temp_val & ~mask) | value, addr);
+}
 
 /** Reads a 32 Bit memory mapped IO register, mask it and write it back into
  *  memory mapped IO register.
