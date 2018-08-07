@@ -2287,7 +2287,8 @@ int decode_instruction(struct vcpu *vcpu)
 	if (retval != 0) {
 		pr_err("decode instruction failed @ 0x%016llx:",
 			vcpu_get_rip(vcpu));
-		return -EINVAL;
+		vcpu_inject_ud(vcpu);
+		return -EFAULT;
 	}
 
 	return  emul_ctxt->vie.opsize;
