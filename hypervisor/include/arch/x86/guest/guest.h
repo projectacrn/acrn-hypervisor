@@ -46,6 +46,22 @@
 
 #define E820_MAX_ENTRIES    32U
 
+#define save_segment(seg, SEG_NAME) \
+{ \
+	seg.selector = exec_vmread16(SEG_NAME##_SEL); \
+	seg.base = exec_vmread(SEG_NAME##_BASE); \
+	seg.limit = exec_vmread32(SEG_NAME##_LIMIT); \
+	seg.attr = exec_vmread32(SEG_NAME##_ATTR); \
+}
+
+#define load_segment(seg, SEG_NAME) \
+{ \
+	exec_vmwrite16(SEG_NAME##_SEL, seg.selector); \
+	exec_vmwrite(SEG_NAME##_BASE, seg.base); \
+	exec_vmwrite32(SEG_NAME##_LIMIT, seg.limit); \
+	exec_vmwrite32(SEG_NAME##_ATTR, seg.attr); \
+}
+
 struct e820_mem_params {
 	uint64_t mem_bottom;
 	uint64_t mem_top;
