@@ -35,21 +35,6 @@ static struct trusty_key_info g_key_info = {
 	.platform = 3U,
 	.num_seeds = 1U
 };
-#define save_segment(seg, SEG_NAME) \
-{ \
-	seg.selector = exec_vmread16(SEG_NAME##_SEL); \
-	seg.base = exec_vmread(SEG_NAME##_BASE); \
-	seg.limit = exec_vmread32(SEG_NAME##_LIMIT); \
-	seg.attr = exec_vmread32(SEG_NAME##_ATTR); \
-}
-
-#define load_segment(seg, SEG_NAME) \
-{ \
-	exec_vmwrite16(SEG_NAME##_SEL, seg.selector); \
-	exec_vmwrite(SEG_NAME##_BASE, seg.base); \
-	exec_vmwrite32(SEG_NAME##_LIMIT, seg.limit); \
-	exec_vmwrite32(SEG_NAME##_ATTR, seg.attr); \
-}
 
 /**
  * @defgroup trusty_apis Trusty APIs
