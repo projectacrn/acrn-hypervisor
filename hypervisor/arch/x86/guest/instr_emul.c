@@ -161,14 +161,6 @@ static const struct instr_emul_vie_op one_byte_opcodes[256] = {
 	[0x09] = {
 		.op_type = VIE_OP_TYPE_OR,
 	},
-	[0x8F] = {
-		/* XXX Group 1A extended opcode - not just POP */
-		.op_type = VIE_OP_TYPE_POP,
-	},
-	[0xFF] = {
-		/* XXX Group 5 extended opcode - not just PUSH */
-		.op_type = VIE_OP_TYPE_PUSH,
-	}
 };
 
 /* struct vie.mod */
@@ -1511,140 +1503,6 @@ static int emulate_sub(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	return error;
 }
 
-static int emulate_stack_op(struct vcpu *vcpu, struct instr_emul_vie *vie,
-				struct vm_guest_paging *paging)
-{
-	struct seg_desc ss_desc;
-	uint64_t cr0, rflags, rsp, stack_gla, stack_gpa, val;
-	int error, pushop;
-	uint8_t size, stackaddrsize;
-	uint32_t err_code = 0U;
-
-	(void)memset(&ss_desc, 0U, sizeof(ss_desc));
-
-	val = 0UL;
-	size = vie->opsize;
-	pushop = (vie->op.op_type == VIE_OP_TYPE_PUSH) ? 1 : 0;
-
-	/*
-	 * From "Address-Size Attributes for Stack Accesses", Intel SDL, Vol 1
-	 */
-	if (paging->cpu_mode == CPU_MODE_REAL) {
-		stackaddrsize = 2U;
-	} else if (paging->cpu_mode == CPU_MODE_64BIT) {
-		/*
-		 * "Stack Manipulation Instructions in 64-bit Mode", SDM, Vol 3
-		 * - Stack pointer size is always 64-bits.
-		 * - PUSH/POP of 32-bit values is not possible in 64-bit mode.
-		 * - 16-bit PUSH/POP is supported by using the operand size
-		 *   override prefix (66H).
-		 */
-		stackaddrsize = 8U;
-		size = (vie->opsize_override != 0U) ? 2U : 8U;
-	} else {
-		/*
-		 * In protected or compatibility mode the 'B' flag in the
-		 * stack-segment descriptor determines the size of the
-		 * stack pointer.
-		 */
-		vm_get_seg_desc(CPU_REG_SS, &ss_desc);
-		if (SEG_DESC_DEF32(ss_desc.access)) {
-			stackaddrsize = 4U;
-		} else {
-			stackaddrsize = 2U;
-		}
-	}
-
-	cr0 = vm_get_register(vcpu, CPU_REG_CR0);
-	rflags = vm_get_register(vcpu, CPU_REG_RFLAGS);
-	rsp = vm_get_register(vcpu, CPU_REG_RSP);
-
-	if (pushop != 0) {
-		rsp -= size;
-	}
-
-	if (vie_calculate_gla(paging->cpu_mode, CPU_REG_SS, &ss_desc,
-	    rsp, size, stackaddrsize, (pushop != 0)? PROT_WRITE : PROT_READ,
-	    &stack_gla) != 0) {
-		/*vm_inject_ss(vcpu, 0);*/
-		pr_err("TODO: inject ss exception");
-	}
-
-	if (vie_canonical_check(paging->cpu_mode, stack_gla) != 0) {
-		/*vm_inject_ss(vcpu, 0);*/
-		pr_err("TODO: inject ss exception");
-	}
-
-	if (vie_alignment_check(paging->cpl, size, cr0, rflags, stack_gla)
-		!= 0) {
-		/*vm_inject_ac(vcpu, 0);*/
-		pr_err("TODO: inject ac exception");
-		return 0;
-	}
-
-	if (pushop != 0) {
-		err_code |= PAGE_FAULT_WR_FLAG;
-	}
-	error = gva2gpa(vcpu, stack_gla, &stack_gpa, &err_code);
-	if (error < 0) {
-		if (error == -EFAULT) {
-			vcpu_inject_pf(vcpu, stack_gla, err_code);
-		}
-		return error;
-	}
-	if (pushop != 0) {
-		error = mmio_read(vcpu, &val);
-		if (error == 0) {
-			error = mmio_write(vcpu, val);
-		}
-	} else {
-		error = mmio_read(vcpu, &val);
-		if (error == 0) {
-			error = mmio_write(vcpu, val);
-		}
-		rsp += size;
-	}
-
-
-	if (error == 0) {
-		vie_update_register(vcpu, CPU_REG_RSP, rsp, stackaddrsize);
-	}
-
-	return error;
-}
-
-static int emulate_push(struct vcpu *vcpu, struct instr_emul_vie *vie,
-				struct vm_guest_paging *paging)
-{
-	/*
-	 * Table A-6, "Opcode Extensions", Intel SDM, Vol 2.
-	 *
-	 * PUSH is part of the group 5 extended opcodes and is identified
-	 * by ModRM:reg = b110.
-	 */
-	if ((vie->reg & 7U) != 6U) {
-		return -EINVAL;
-	}
-
-	return emulate_stack_op(vcpu, vie, paging);
-}
-
-static int emulate_pop(struct vcpu *vcpu, struct instr_emul_vie *vie,
-				struct vm_guest_paging *paging)
-{
-	/*
-	 * Table A-6, "Opcode Extensions", Intel SDM, Vol 2.
-	 *
-	 * POP is part of the group 1A extended opcodes and is identified
-	 * by ModRM:reg = b000.
-	 */
-	if ((vie->reg & 7U) != 0) {
-		return -EINVAL;
-	}
-
-	return emulate_stack_op(vcpu, vie, paging);
-}
-
 static int emulate_group1(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
 	int error;
@@ -1723,12 +1581,6 @@ static int vmm_emulate_instruction(struct instr_emul_ctxt *ctxt)
 	switch (vie->op.op_type) {
 	case VIE_OP_TYPE_GROUP1:
 		error = emulate_group1(vcpu, vie);
-		break;
-	case VIE_OP_TYPE_POP:
-		error = emulate_pop(vcpu, vie, paging);
-		break;
-	case VIE_OP_TYPE_PUSH:
-		error = emulate_push(vcpu, vie, paging);
 		break;
 	case VIE_OP_TYPE_CMP:
 		error = emulate_cmp(vcpu, vie);
