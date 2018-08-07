@@ -118,7 +118,7 @@ release_all_entries(struct vm *vm)
 }
 
 /* interrupt context */
-static int ptdev_interrupt_handler(__unused int irq, void *data)
+static int ptdev_interrupt_handler(__unused uint32_t irq, void *data)
 {
 	struct ptdev_remapping_info *entry =
 		(struct ptdev_remapping_info *) data;
@@ -131,14 +131,14 @@ static int ptdev_interrupt_handler(__unused int irq, void *data)
 void
 ptdev_activate_entry(struct ptdev_remapping_info *entry, uint32_t phys_irq)
 {
-	struct dev_handler_node *node;
+	int32_t retval;
 
 	/* register and allocate host vector/irq */
-	node = normal_register_handler(phys_irq, ptdev_interrupt_handler,
-		(void *)entry, "dev assign");
+	retval = normal_register_handler(phys_irq, ptdev_interrupt_handler,
+				         (void *)entry, "dev assign");
 
-	ASSERT(node != NULL, "dev register failed");
-	entry->node = node;
+	ASSERT(retval >= 0, "dev register failed");
+	entry->allocated_pirq = (uint32_t)retval;
 
 	atomic_set32(&entry->active, ACTIVE_FLAG);
 }
@@ -150,8 +150,8 @@ ptdev_deactivate_entry(struct ptdev_remapping_info *entry)
 
 	atomic_clear32(&entry->active, ACTIVE_FLAG);
 
-	unregister_handler_common(entry->node);
-	entry->node = NULL;
+	unregister_handler_common(entry->allocated_pirq);
+	entry->allocated_pirq = IRQ_INVALID;
 
 	/* remove from softirq list if added */
 	spinlock_irqsave_obtain(&softirq_dev_lock);

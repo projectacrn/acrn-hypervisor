@@ -51,7 +51,7 @@ struct ptdev_remapping_info {
 	uint16_t phys_bdf;	/* PCI bus:slot.func*/
 	uint32_t active;	/* 1=active, 0=inactive and to free*/
 	enum ptdev_intr_type type;
-	struct dev_handler_node *node;
+	uint32_t allocated_pirq;
 	struct list_head softirq_node;
 	struct list_head entry_node;
 

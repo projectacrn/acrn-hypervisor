@@ -126,8 +126,7 @@ struct dmar_drhd_rt {
 	uint64_t ecap;
 	uint32_t gcmd;  /* sw cache value of global cmd register */
 
-	uint32_t irq;
-	struct dev_handler_node *dmar_irq_node;
+	uint32_t dmar_irq;
 
 	uint32_t max_domain_id;
 
@@ -185,6 +184,7 @@ static void register_hrhd_units(void)
 		drhd_rt = calloc(1U, sizeof(struct dmar_drhd_rt));
 		ASSERT(drhd_rt != NULL, "");
 		drhd_rt->drhd = &info->drhd_units[i];
+		drhd_rt->dmar_irq = IRQ_INVALID;
 		dmar_register_hrhd(drhd_rt);
 	}
 }
@@ -760,7 +760,7 @@ static void fault_record_analysis(__unused uint64_t low, uint64_t high)
 #endif
 }
 
-static int dmar_fault_handler(int irq, void *data)
+static int dmar_fault_handler(uint32_t irq, void *data)
 {
 	struct dmar_drhd_rt *dmar_uint = (struct dmar_drhd_rt *)data;
 	uint32_t fsr;
@@ -819,26 +819,29 @@ static int dmar_fault_handler(int irq, void *data)
 static int dmar_setup_interrupt(struct dmar_drhd_rt *dmar_uint)
 {
 	uint32_t vector;
+	int32_t retval;
 
-	if (dmar_uint->dmar_irq_node != NULL) {
+	if (dmar_uint->dmar_irq != IRQ_INVALID) {
 		dev_dbg(ACRN_DBG_IOMMU, "%s: irq already setup", __func__);
 		return 0;
 	}
 
-	dmar_uint->dmar_irq_node = normal_register_handler(IRQ_INVALID,
+	retval = normal_register_handler(IRQ_INVALID,
 					dmar_fault_handler,
 					dmar_uint,
 					"dmar_fault_event");
 
-	if (dmar_uint->dmar_irq_node == NULL) {
+	if (retval < 0 ) {
 		pr_err("%s: fail to setup interrupt", __func__);
-		return 1;
+		return retval;
+	} else {
+		dmar_uint->dmar_irq = (uint32_t)retval;
 	}
 
-	vector = dev_to_vector(dmar_uint->dmar_irq_node);
+	vector = irq_to_vector(dmar_uint->dmar_irq);
 
 	dev_dbg(ACRN_DBG_IOMMU, "alloc irq#%d vector#%d for dmar_uint",
-			dev_to_irq(dmar_uint->dmar_irq_node), vector);
+			dmar_uint->dmar_irq, vector);
 
 	dmar_fault_msi_write(dmar_uint, vector);
 	dmar_fault_event_unmask(dmar_uint);
