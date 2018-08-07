@@ -1773,6 +1773,7 @@ static int vie_init(struct instr_emul_vie *vie, struct vcpu *vcpu)
 	uint64_t guest_rip_gva = vcpu_get_rip(vcpu);
 	uint32_t inst_len = vcpu->arch_vcpu.inst_len;
 	uint32_t err_code;
+	uint64_t fault_addr;
 	int ret;
 
 	if (inst_len > VIE_INST_SIZE || inst_len == 0U) {
@@ -1785,10 +1786,10 @@ static int vie_init(struct instr_emul_vie *vie, struct vcpu *vcpu)
 
 	err_code = PAGE_FAULT_ID_FLAG;
 	ret = copy_from_gva(vcpu, vie->inst, guest_rip_gva,
-				inst_len, &err_code);
+				inst_len, &err_code, &fault_addr);
 	if (ret < 0) {
 		if (ret == -EFAULT) {
-			vcpu_inject_pf(vcpu, guest_rip_gva, err_code);
+			vcpu_inject_pf(vcpu, fault_addr, err_code);
 		}
 		return ret;
 	}

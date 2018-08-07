@@ -375,7 +375,8 @@ static inline int copy_gpa(struct vm *vm, void *h_ptr_arg, uint64_t gpa_arg,
 }
 
 static inline int copy_gva(struct vcpu *vcpu, void *h_ptr_arg, uint64_t gva_arg,
-	uint32_t size_arg, uint32_t *err_code, bool cp_from_vm)
+	uint32_t size_arg, uint32_t *err_code, uint64_t *fault_addr,
+	bool cp_from_vm)
 {
 	void *h_ptr = h_ptr_arg;
 	uint64_t gpa = 0UL;
@@ -396,6 +397,7 @@ static inline int copy_gva(struct vcpu *vcpu, void *h_ptr_arg, uint64_t gva_arg,
 	while (size > 0U) {
 		ret = gva2gpa(vcpu, gva, &gpa, err_code);
 		if (ret < 0) {
+			*fault_addr = gva;
 			pr_err("error[%d] in GVA2GPA, err_code=0x%x",
 					ret, *err_code);
 			return ret;
@@ -433,15 +435,15 @@ int copy_to_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
 }
 
 int copy_from_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
-	uint32_t size, uint32_t *err_code)
+	uint32_t size, uint32_t *err_code, uint64_t *fault_addr)
 {
-	return copy_gva(vcpu, h_ptr, gva, size, err_code, 1);
+	return copy_gva(vcpu, h_ptr, gva, size, err_code, fault_addr, 1);
 }
 
 int copy_to_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
-	uint32_t size, uint32_t *err_code)
+	uint32_t size, uint32_t *err_code, uint64_t *fault_addr)
 {
-	return copy_gva(vcpu, h_ptr, gva, size, err_code, 0);
+	return copy_gva(vcpu, h_ptr, gva, size, err_code, fault_addr, 0);
 }
 
 void init_e820(void)
