@@ -152,7 +152,10 @@ static inline uint8_t mmio_read8(void *addr)
  */
 static inline void set32(void *addr, uint32_t mask, uint32_t value)
 {
-	mmio_write32((mmio_read32(addr) & ~mask) | value, addr);
+	uint32_t temp_val;
+
+	temp_val = mmio_read32(addr);
+	mmio_write32((temp_val & ~mask) | value, addr);
 }
 
 /** Reads a 16 Bit memory mapped IO register, mask it and write it back into
@@ -164,7 +167,10 @@ static inline void set32(void *addr, uint32_t mask, uint32_t value)
  */
 static inline void set16(void *addr, uint16_t mask, uint16_t value)
 {
-	mmio_write16((mmio_read16(addr) & ~mask) | value, addr);
+	uint16_t temp_val;
+
+	temp_val = mmio_read16(addr);
+	mmio_write16((temp_val & ~mask) | value, addr);
 }
 
 /** Reads a 8 Bit memory mapped IO register, mask it and write it back into
@@ -176,7 +182,10 @@ static inline void set16(void *addr, uint16_t mask, uint16_t value)
  */
 static inline void set8(void *addr, uint8_t mask, uint8_t value)
 {
-	mmio_write8((mmio_read8(addr) & ~mask) | value, addr);
+	uint8_t temp_val;
+
+	temp_val = mmio_read8(addr);
+	mmio_write8((temp_val & ~mask) | value, addr);
 }
 
 #endif /* _IO_H defined */

@@ -14,11 +14,13 @@ static int charout(int cmd, const char *s_arg, uint32_t sz_arg, void *hnd)
 	int *nchars = (int *)hnd;
 	/* working pointer */
 	const char *p = s;
+	int len;
 
 	/* copy mode ? */
 	if (cmd == PRINT_CMD_COPY) {
 		if (sz > 0U) { /* copy 'sz' characters */
-			s += console_write(s, sz);
+			len = console_write(s, sz);
+			s += len;
 		}
 
 		*nchars += (s - p);
