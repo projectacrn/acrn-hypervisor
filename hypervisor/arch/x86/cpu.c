@@ -41,6 +41,7 @@ bool x2apic_enabled = false;
 
 struct cpu_capability {
 	uint8_t vapic_features;
+	uint8_t ept_features;
 };
 static struct cpu_capability cpu_caps;
 
@@ -48,7 +49,7 @@ struct cpuinfo_x86 boot_cpu_data;
 
 static void bsp_boot_post(void);
 static void cpu_secondary_post(void);
-static void vapic_cap_detect(void);
+static void cpu_cap_detect(void);
 static void cpu_xsave_init(void);
 static void set_current_cpu_id(uint16_t pcpu_id);
 static void print_hv_banner(void);
@@ -234,6 +235,11 @@ static int hardware_detect_support(void)
 
 	if (!cpu_has_vmx_unrestricted_guest_cap()) {
 		pr_fatal("%s, unrestricted guest not supported\n", __func__);
+		return -ENODEV;
+	}
+
+	if (!is_ept_supported()) {
+		pr_fatal("%s, EPT not supported\n", __func__);
 		return -ENODEV;
 	}
 
@@ -484,7 +490,7 @@ static void bsp_boot_post(void)
 	set_fs_base();
 #endif
 
-	vapic_cap_detect();
+	cpu_cap_detect();
 
 	cpu_xsave_init();
 
@@ -838,6 +844,26 @@ static bool is_ctrl_setting_allowed(uint64_t msr_val, uint32_t ctrl)
 	return ((((uint32_t)(msr_val >> 32UL)) & ctrl) == ctrl);
 }
 
+static void ept_cap_detect(void)
+{
+	uint64_t msr_val;
+
+	cpu_caps.ept_features = 0U;
+
+	/* Read primary processor based VM control. */
+	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
+
+	/* Check if secondary processor based VM control is available. */
+	if ((msr_val & (((uint64_t)VMX_PROCBASED_CTLS_SECONDARY) << 32)) == 0U)
+		return;
+
+	/* Read secondary processor based VM control. */
+	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
+
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_EPT))
+		cpu_caps.ept_features = 1U;
+}
+
 static void vapic_cap_detect(void)
 {
 	uint8_t features;
@@ -878,6 +904,17 @@ static void vapic_cap_detect(void)
 	}
 
 	cpu_caps.vapic_features = features;
+}
+
+static void cpu_cap_detect(void)
+{
+	vapic_cap_detect();
+	ept_cap_detect();
+}
+
+bool is_ept_supported(void)
+{
+	return (cpu_caps.ept_features != 0U);
 }
 
 bool is_vapic_supported(void)

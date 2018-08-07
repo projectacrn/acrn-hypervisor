@@ -1054,14 +1054,6 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 		}
 	}
 
-	/* Check for EPT support */
-	if (is_ept_supported()) {
-		pr_dbg("EPT is supported");
-	}
-	else {
-		pr_err("Error: EPT is not supported");
-	}
-
 	/* Load EPTP execution control
 	 * TODO: introduce API to make this data driven based
 	 * on VMX_EPT_VPID_CAP

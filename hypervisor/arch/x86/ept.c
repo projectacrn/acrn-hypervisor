@@ -144,35 +144,6 @@ uint64_t hpa2gpa(struct vm *vm, uint64_t hpa)
 			| (hpa & (pg_size - 1UL)));
 }
 
-bool is_ept_supported(void)
-{
-	bool status;
-	uint64_t tmp64;
-
-	/* Read primary processor based VM control. */
-	tmp64 = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
-
-	/* Check if secondary processor based VM control is available. */
-	if ((tmp64 & MMU_MEM_ATTR_BIT_EXECUTE_DISABLE) != 0U) {
-		/* Read primary processor based VM control. */
-		tmp64 = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
-
-		/* Check if EPT is supported. */
-		if ((tmp64 & (((uint64_t)VMX_PROCBASED_CTLS2_EPT) << 32)) != 0U) {
-			/* EPT is present. */
-			status = true;
-		} else {
-			status = false;
-		}
-
-	} else {
-		/* Secondary processor based VM control is not present */
-		status = false;
-	}
-
-	return status;
-}
-
 int ept_violation_vmexit_handler(struct vcpu *vcpu)
 {
 	int status = -EINVAL, ret;
