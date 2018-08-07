@@ -376,7 +376,6 @@ static inline void clflush(volatile void *p)
 }
 
 /* External Interfaces */
-bool is_ept_supported(void);
 uint64_t create_guest_initial_paging(struct vm *vm);
 void    destroy_ept(struct vm *vm);
 uint64_t  gpa2hpa(struct vm *vm, uint64_t gpa);
