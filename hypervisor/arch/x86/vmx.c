@@ -486,7 +486,7 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	return 0;
 }
 
-static bool is_cr4_write_valid(struct vcpu *vcpu, uint64_t cr4)
+static bool is_cr4_write_valid(uint64_t cr4)
 {
 	/* Check if guest try to set fixed to 0 bits or reserved bits */
 	if ((cr4 & cr4_always_off_mask) != 0U)
@@ -542,7 +542,7 @@ int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 {
 	uint64_t cr4_vmx;
 
-	if (!is_cr4_write_valid(vcpu, cr4)) {
+	if (!is_cr4_write_valid(cr4)) {
 		pr_dbg("Invalid cr4 write operation from guest");
 		vcpu_inject_gp(vcpu, 0U);
 		return 0;
@@ -564,7 +564,6 @@ int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 
 static void init_guest_state(struct vcpu *vcpu)
 {
-	uint32_t field;
 	uint16_t value16;
 	uint32_t value32;
 	uint64_t value64;
@@ -677,30 +676,25 @@ static void init_guest_state(struct vcpu *vcpu)
 	}
 
 	/* Selector */
-	field = VMX_GUEST_CS_SEL;
-	exec_vmwrite16(field, sel);
+	exec_vmwrite16(VMX_GUEST_CS_SEL, sel);
 	pr_dbg("VMX_GUEST_CS_SEL: 0x%hx ", sel);
 
 	/* Limit */
-	field = VMX_GUEST_CS_LIMIT;
-	exec_vmwrite32(field, limit);
+	exec_vmwrite32(VMX_GUEST_CS_LIMIT, limit);
 	pr_dbg("VMX_GUEST_CS_LIMIT: 0x%x ", limit);
 
 	/* Access */
-	field = VMX_GUEST_CS_ATTR;
-	exec_vmwrite32(field, access);
+	exec_vmwrite32(VMX_GUEST_CS_ATTR, access);
 	pr_dbg("VMX_GUEST_CS_ATTR: 0x%x ", access);
 
 	/* Base */
-	field = VMX_GUEST_CS_BASE;
-	exec_vmwrite(field, base);
+	exec_vmwrite(VMX_GUEST_CS_BASE, base);
 	pr_dbg("VMX_GUEST_CS_BASE: 0x%016llx ", base);
 
 	/***************************************************/
 	/* Set up instruction pointer and stack pointer */
 	/***************************************************/
 	/* Set up guest instruction pointer */
-	field = VMX_GUEST_RIP;
 	value64 = 0UL;
 	if (vcpu_mode == CPU_MODE_REAL) {
 		/* RIP is set here */
@@ -717,15 +711,14 @@ static void init_guest_state(struct vcpu *vcpu)
 	}
 
 	pr_dbg("GUEST RIP on VMEntry %016llx ", value64);
-	exec_vmwrite(field, value64);
+	exec_vmwrite(VMX_GUEST_RIP, value64);
 
 	if (vcpu_mode == CPU_MODE_64BIT) {
 		/* Set up guest stack pointer to 0 */
-		field = VMX_GUEST_RSP;
 		value64 = 0UL;
 		pr_dbg("GUEST RSP on VMEntry %016llx ",
 				value64);
-		exec_vmwrite(field, value64);
+		exec_vmwrite(VMX_GUEST_RSP, value64);
 	}
 
 	/***************************************************/
@@ -763,13 +756,11 @@ static void init_guest_state(struct vcpu *vcpu)
 	}
 
 	/* GDTR Base */
-	field = VMX_GUEST_GDTR_BASE;
-	exec_vmwrite(field, base);
+	exec_vmwrite(VMX_GUEST_GDTR_BASE, base);
 	pr_dbg("VMX_GUEST_GDTR_BASE: 0x%016llx ", base);
 
 	/* GDTR Limit */
-	field = VMX_GUEST_GDTR_LIMIT;
-	exec_vmwrite32(field, limit);
+	exec_vmwrite32(VMX_GUEST_GDTR_LIMIT, limit);
 	pr_dbg("VMX_GUEST_GDTR_LIMIT: 0x%x ", limit);
 
 	/* IDTR - Interrupt Descriptor Table */
@@ -799,22 +790,19 @@ static void init_guest_state(struct vcpu *vcpu)
 	}
 
 	/* IDTR Base */
-	field = VMX_GUEST_IDTR_BASE;
-	exec_vmwrite(field, base);
+	exec_vmwrite(VMX_GUEST_IDTR_BASE, base);
 	pr_dbg("VMX_GUEST_IDTR_BASE: 0x%016llx ", base);
 
 	/* IDTR Limit */
-	field = VMX_GUEST_IDTR_LIMIT;
-	exec_vmwrite32(field, limit);
+	exec_vmwrite32(VMX_GUEST_IDTR_LIMIT, limit);
 	pr_dbg("VMX_GUEST_IDTR_LIMIT: 0x%x ", limit);
 
 	/***************************************************/
 	/* Debug register */
 	/***************************************************/
 	/* Set up guest Debug register */
-	field = VMX_GUEST_DR7;
 	value64 = 0x400UL;
-	exec_vmwrite(field, value64);
+	exec_vmwrite(VMX_GUEST_DR7, value64);
 	pr_dbg("VMX_GUEST_DR7: 0x%016llx ", value64);
 
 	/***************************************************/
@@ -849,41 +837,31 @@ static void init_guest_state(struct vcpu *vcpu)
 	}
 
 	/* Selector */
-	field = VMX_GUEST_ES_SEL;
-	exec_vmwrite16(field, es);
+	exec_vmwrite16(VMX_GUEST_ES_SEL, es);
 	pr_dbg("VMX_GUEST_ES_SEL: 0x%hx ", es);
 
-	field = VMX_GUEST_SS_SEL;
-	exec_vmwrite16(field, ss);
+	exec_vmwrite16(VMX_GUEST_SS_SEL, ss);
 	pr_dbg("VMX_GUEST_SS_SEL: 0x%hx ", ss);
 
-	field = VMX_GUEST_DS_SEL;
-	exec_vmwrite16(field, ds);
+	exec_vmwrite16(VMX_GUEST_DS_SEL, ds);
 	pr_dbg("VMX_GUEST_DS_SEL: 0x%hx ", ds);
 
-	field = VMX_GUEST_FS_SEL;
-	exec_vmwrite16(field, fs);
+	exec_vmwrite16(VMX_GUEST_FS_SEL, fs);
 	pr_dbg("VMX_GUEST_FS_SEL: 0x%hx ", fs);
 
-	field = VMX_GUEST_GS_SEL;
-	exec_vmwrite16(field, gs);
+	exec_vmwrite16(VMX_GUEST_GS_SEL, gs);
 	pr_dbg("VMX_GUEST_GS_SEL: 0x%hx ", gs);
 
 	/* Limit */
-	field = VMX_GUEST_ES_LIMIT;
-	exec_vmwrite32(field, limit);
+	exec_vmwrite32(VMX_GUEST_ES_LIMIT, limit);
 	pr_dbg("VMX_GUEST_ES_LIMIT: 0x%x ", limit);
-	field = VMX_GUEST_SS_LIMIT;
-	exec_vmwrite32(field, limit);
+	exec_vmwrite32(VMX_GUEST_SS_LIMIT, limit);
 	pr_dbg("VMX_GUEST_SS_LIMIT: 0x%x ", limit);
-	field = VMX_GUEST_DS_LIMIT;
-	exec_vmwrite32(field, limit);
+	exec_vmwrite32(VMX_GUEST_DS_LIMIT, limit);
 	pr_dbg("VMX_GUEST_DS_LIMIT: 0x%x ", limit);
-	field = VMX_GUEST_FS_LIMIT;
-	exec_vmwrite32(field, limit);
+	exec_vmwrite32(VMX_GUEST_FS_LIMIT, limit);
 	pr_dbg("VMX_GUEST_FS_LIMIT: 0x%x ", limit);
-	field = VMX_GUEST_GS_LIMIT;
-	exec_vmwrite32(field, limit);
+	exec_vmwrite32(VMX_GUEST_GS_LIMIT, limit);
 	pr_dbg("VMX_GUEST_GS_LIMIT: 0x%x ", limit);
 
 	/* Access */
@@ -894,20 +872,15 @@ static void init_guest_state(struct vcpu *vcpu)
 		value32 = PROTECTED_MODE_DATA_SEG_AR;
 	}
 
-	field = VMX_GUEST_ES_ATTR;
-	exec_vmwrite32(field, value32);
+	exec_vmwrite32(VMX_GUEST_ES_ATTR, value32);
 	pr_dbg("VMX_GUEST_ES_ATTR: 0x%x ", value32);
-	field = VMX_GUEST_SS_ATTR;
-	exec_vmwrite32(field, value32);
+	exec_vmwrite32(VMX_GUEST_SS_ATTR, value32);
 	pr_dbg("VMX_GUEST_SS_ATTR: 0x%x ", value32);
-	field = VMX_GUEST_DS_ATTR;
-	exec_vmwrite32(field, value32);
+	exec_vmwrite32(VMX_GUEST_DS_ATTR, value32);
 	pr_dbg("VMX_GUEST_DS_ATTR: 0x%x ", value32);
-	field = VMX_GUEST_FS_ATTR;
-	exec_vmwrite32(field, value32);
+	exec_vmwrite32(VMX_GUEST_FS_ATTR, value32);
 	pr_dbg("VMX_GUEST_FS_ATTR: 0x%x ", value32);
-	field = VMX_GUEST_GS_ATTR;
-	exec_vmwrite32(field, value32);
+	exec_vmwrite32(VMX_GUEST_GS_ATTR, value32);
 	pr_dbg("VMX_GUEST_GS_ATTR: 0x%x ", value32);
 
 	/* Base */
@@ -917,86 +890,69 @@ static void init_guest_state(struct vcpu *vcpu)
 		value64 = 0UL;
 	}
 
-	field = VMX_GUEST_ES_BASE;
-	exec_vmwrite(field, value64);
+	exec_vmwrite(VMX_GUEST_ES_BASE, value64);
 	pr_dbg("VMX_GUEST_ES_BASE: 0x%016llx ", value64);
-	field = VMX_GUEST_SS_BASE;
-	exec_vmwrite(field, value64);
+	exec_vmwrite(VMX_GUEST_SS_BASE, value64);
 	pr_dbg("VMX_GUEST_SS_BASE: 0x%016llx ", value64);
-	field = VMX_GUEST_DS_BASE;
-	exec_vmwrite(field, value64);
+	exec_vmwrite(VMX_GUEST_DS_BASE, value64);
 	pr_dbg("VMX_GUEST_DS_BASE: 0x%016llx ", value64);
-	field = VMX_GUEST_FS_BASE;
-	exec_vmwrite(field, value64);
+	exec_vmwrite(VMX_GUEST_FS_BASE, value64);
 	pr_dbg("VMX_GUEST_FS_BASE: 0x%016llx ", value64);
-	field = VMX_GUEST_GS_BASE;
-	exec_vmwrite(field, value64);
+	exec_vmwrite(VMX_GUEST_GS_BASE, value64);
 	pr_dbg("VMX_GUEST_GS_BASE: 0x%016llx ", value64);
 
 	/***************************************************/
 	/* LDT and TR (dummy) */
 	/***************************************************/
-	field = VMX_GUEST_LDTR_SEL;
 	value16 = ldt_idx;
-	exec_vmwrite16(field, value16);
+	exec_vmwrite16(VMX_GUEST_LDTR_SEL, value16);
 	pr_dbg("VMX_GUEST_LDTR_SEL: 0x%hu ", value16);
 
-	field = VMX_GUEST_LDTR_LIMIT;
 	value32 = 0xffffffffU;
-	exec_vmwrite32(field, value32);
+	exec_vmwrite32(VMX_GUEST_LDTR_LIMIT, value32);
 	pr_dbg("VMX_GUEST_LDTR_LIMIT: 0x%x ", value32);
 
-	field = VMX_GUEST_LDTR_ATTR;
 	value32 = 0x10000U;
-	exec_vmwrite32(field, value32);
+	exec_vmwrite32(VMX_GUEST_LDTR_ATTR, value32);
 	pr_dbg("VMX_GUEST_LDTR_ATTR: 0x%x ", value32);
 
-	field = VMX_GUEST_LDTR_BASE;
 	value64 = 0x00UL;
-	exec_vmwrite(field, value64);
+	exec_vmwrite(VMX_GUEST_LDTR_BASE, value64);
 	pr_dbg("VMX_GUEST_LDTR_BASE: 0x%016llx ", value64);
 
 	/* Task Register */
-	field = VMX_GUEST_TR_SEL;
 	value16 = tr_sel;
-	exec_vmwrite16(field, value16);
+	exec_vmwrite16(VMX_GUEST_TR_SEL, value16);
 	pr_dbg("VMX_GUEST_TR_SEL: 0x%hu ", value16);
 
-	field = VMX_GUEST_TR_LIMIT;
 	value32 = 0xffU;
-	exec_vmwrite32(field, value32);
+	exec_vmwrite32(VMX_GUEST_TR_LIMIT, value32);
 	pr_dbg("VMX_GUEST_TR_LIMIT: 0x%x ", value32);
 
-	field = VMX_GUEST_TR_ATTR;
 	value32 = 0x8bU;
-	exec_vmwrite32(field, value32);
+	exec_vmwrite32(VMX_GUEST_TR_ATTR, value32);
 	pr_dbg("VMX_GUEST_TR_ATTR: 0x%x ", value32);
 
-	field = VMX_GUEST_TR_BASE;
 	value64 = 0x00UL;
-	exec_vmwrite(field, value64);
+	exec_vmwrite(VMX_GUEST_TR_BASE, value64);
 	pr_dbg("VMX_GUEST_TR_BASE: 0x%016llx ", value64);
 
-	field = VMX_GUEST_INTERRUPTIBILITY_INFO;
 	value32 = 0U;
-	exec_vmwrite32(field, value32);
+	exec_vmwrite32(VMX_GUEST_INTERRUPTIBILITY_INFO, value32);
 	pr_dbg("VMX_GUEST_INTERRUPTIBILITY_INFO: 0x%x ",
 		  value32);
 
-	field = VMX_GUEST_ACTIVITY_STATE;
 	value32 = 0U;
-	exec_vmwrite32(field, value32);
+	exec_vmwrite32(VMX_GUEST_ACTIVITY_STATE, value32);
 	pr_dbg("VMX_GUEST_ACTIVITY_STATE: 0x%x ",
 		  value32);
 
-	field = VMX_GUEST_SMBASE;
 	value32 = 0U;
-	exec_vmwrite32(field, value32);
+	exec_vmwrite32(VMX_GUEST_SMBASE, value32);
 	pr_dbg("VMX_GUEST_SMBASE: 0x%x ", value32);
 
 	value32 = ((uint32_t)msr_read(MSR_IA32_SYSENTER_CS) & 0xFFFFFFFFU);
-	field = VMX_GUEST_IA32_SYSENTER_CS;
-	exec_vmwrite32(field, value32);
+	exec_vmwrite32(VMX_GUEST_IA32_SYSENTER_CS, value32);
 	pr_dbg("VMX_GUEST_IA32_SYSENTER_CS: 0x%x ",
 		  value32);
 
@@ -1011,30 +967,26 @@ static void init_guest_state(struct vcpu *vcpu)
 		  value64);
 
 	/* Set up guest pending debug exception */
-	field = VMX_GUEST_PENDING_DEBUG_EXCEPT;
 	value64 = 0x0UL;
-	exec_vmwrite(field, value64);
+	exec_vmwrite(VMX_GUEST_PENDING_DEBUG_EXCEPT, value64);
 	pr_dbg("VMX_GUEST_PENDING_DEBUG_EXCEPT: 0x%016llx ", value64);
 
 	/* These fields manage host and guest system calls * pg 3069 31.10.4.2
 	 * - set up these fields with * contents of current SYSENTER ESP and
 	 * EIP MSR values
 	 */
-	field = VMX_GUEST_IA32_SYSENTER_ESP;
 	value64 = msr_read(MSR_IA32_SYSENTER_ESP);
-	exec_vmwrite(field, value64);
+	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_ESP, value64);
 	pr_dbg("VMX_GUEST_IA32_SYSENTER_ESP: 0x%016llx ",
 		  value64);
-	field = VMX_GUEST_IA32_SYSENTER_EIP;
 	value64 = msr_read(MSR_IA32_SYSENTER_EIP);
-	exec_vmwrite(field, value64);
+	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_EIP, value64);
 	pr_dbg("VMX_GUEST_IA32_SYSENTER_EIP: 0x%016llx ",
 		  value64);
 }
 
 static void init_host_state(__unused struct vcpu *vcpu)
 {
-	uint32_t field;
 	uint16_t value16;
 	uint32_t value32;
 	uint64_t value64;
@@ -1058,39 +1010,32 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	 * GS), * Task Register (TR), * Local Descriptor Table Register (LDTR)
 	 *
 	 ***************************************************/
-	field = VMX_HOST_ES_SEL;
 	asm volatile ("movw %%es, %%ax":"=a" (value16));
-	exec_vmwrite16(field, value16);
+	exec_vmwrite16(VMX_HOST_ES_SEL, value16);
 	pr_dbg("VMX_HOST_ES_SEL: 0x%hu ", value16);
 
-	field = VMX_HOST_CS_SEL;
 	asm volatile ("movw %%cs, %%ax":"=a" (value16));
-	exec_vmwrite16(field, value16);
+	exec_vmwrite16(VMX_HOST_CS_SEL, value16);
 	pr_dbg("VMX_HOST_CS_SEL: 0x%hu ", value16);
 
-	field = VMX_HOST_SS_SEL;
 	asm volatile ("movw %%ss, %%ax":"=a" (value16));
-	exec_vmwrite16(field, value16);
+	exec_vmwrite16(VMX_HOST_SS_SEL, value16);
 	pr_dbg("VMX_HOST_SS_SEL: 0x%hu ", value16);
 
-	field = VMX_HOST_DS_SEL;
 	asm volatile ("movw %%ds, %%ax":"=a" (value16));
-	exec_vmwrite16(field, value16);
+	exec_vmwrite16(VMX_HOST_DS_SEL, value16);
 	pr_dbg("VMX_HOST_DS_SEL: 0x%hu ", value16);
 
-	field = VMX_HOST_FS_SEL;
 	asm volatile ("movw %%fs, %%ax":"=a" (value16));
-	exec_vmwrite16(field, value16);
+	exec_vmwrite16(VMX_HOST_FS_SEL, value16);
 	pr_dbg("VMX_HOST_FS_SEL: 0x%hu ", value16);
 
-	field = VMX_HOST_GS_SEL;
 	asm volatile ("movw %%gs, %%ax":"=a" (value16));
-	exec_vmwrite16(field, value16);
+	exec_vmwrite16(VMX_HOST_GS_SEL, value16);
 	pr_dbg("VMX_HOST_GS_SEL: 0x%hu ", value16);
 
-	field = VMX_HOST_TR_SEL;
 	asm volatile ("str %%ax":"=a" (tr_sel));
-	exec_vmwrite16(field, tr_sel);
+	exec_vmwrite16(VMX_HOST_TR_SEL, tr_sel);
 	pr_dbg("VMX_HOST_TR_SEL: 0x%hx ", tr_sel);
 
 	/******************************************************
@@ -1109,8 +1054,7 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	}
 
 	/* Set up the guest and host GDTB base fields with current GDTB base */
-	field = VMX_HOST_GDTR_BASE;
-	exec_vmwrite(field, gdtb.base);
+	exec_vmwrite(VMX_HOST_GDTR_BASE, gdtb.base);
 	pr_dbg("VMX_HOST_GDTR_BASE: 0x%x ", gdtb.base);
 
 	/* TODO: Should guest TR point to host TR ? */
@@ -1135,8 +1079,7 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	realtrbase = realtrbase | (trbase_hi << 32U);
 
 	/* Set up host and guest TR base fields */
-	field = VMX_HOST_TR_BASE;
-	exec_vmwrite(field, realtrbase);
+	exec_vmwrite(VMX_HOST_TR_BASE, realtrbase);
 	pr_dbg("VMX_HOST_TR_BASE: 0x%016llx ", realtrbase);
 
 	/* Obtain the current interrupt descriptor table base */
@@ -1146,13 +1089,11 @@ static void init_host_state(__unused struct vcpu *vcpu)
 		idtb.base |= 0xffff000000000000UL;
 	}
 
-	field = VMX_HOST_IDTR_BASE;
-	exec_vmwrite(field, idtb.base);
+	exec_vmwrite(VMX_HOST_IDTR_BASE, idtb.base);
 	pr_dbg("VMX_HOST_IDTR_BASE: 0x%x ", idtb.base);
 
 	value32 = (uint32_t)msr_read(MSR_IA32_SYSENTER_CS);
-	field = VMX_HOST_IA32_SYSENTER_CS;
-	exec_vmwrite32(field, value32);
+	exec_vmwrite32(VMX_HOST_IA32_SYSENTER_CS, value32);
 	pr_dbg("VMX_HOST_IA32_SYSENTER_CS: 0x%x ",
 			value32);
 
@@ -1174,51 +1115,43 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	pr_dbg("Natural-width********");
 	/* Set up host CR0 field */
 	CPU_CR_READ(cr0, &value);
-	field = VMX_HOST_CR0;
-	exec_vmwrite(field, value);
+	exec_vmwrite(VMX_HOST_CR0, value);
 	pr_dbg("VMX_HOST_CR0: 0x%016llx ", value);
 
 	/* Set up host CR3 field */
 	CPU_CR_READ(cr3, &value);
-	field = VMX_HOST_CR3;
-	exec_vmwrite(field, value);
+	exec_vmwrite(VMX_HOST_CR3, value);
 	pr_dbg("VMX_HOST_CR3: 0x%016llx ", value);
 
 	/* Set up host CR4 field */
 	CPU_CR_READ(cr4, &value);
-	field = VMX_HOST_CR4;
-	exec_vmwrite(field, value);
+	exec_vmwrite(VMX_HOST_CR4, value);
 	pr_dbg("VMX_HOST_CR4: 0x%016llx ", value);
 
 	/* Set up host and guest FS base address */
 	value = msr_read(MSR_IA32_FS_BASE);
-	field = VMX_HOST_FS_BASE;
-	exec_vmwrite(field, value);
+	exec_vmwrite(VMX_HOST_FS_BASE, value);
 	pr_dbg("VMX_HOST_FS_BASE: 0x%016llx ", value);
 	value = msr_read(MSR_IA32_GS_BASE);
-	field = VMX_HOST_GS_BASE;
-	exec_vmwrite(field, value);
+	exec_vmwrite(VMX_HOST_GS_BASE, value);
 	pr_dbg("VMX_HOST_GS_BASE: 0x%016llx ", value);
 
 	/* Set up host instruction pointer on VM Exit */
-	field = VMX_HOST_RIP;
 	value64 = (uint64_t)&vm_exit;
 	pr_dbg("HOST RIP on VMExit %016llx ", value64);
-	exec_vmwrite(field, value64);
+	exec_vmwrite(VMX_HOST_RIP, value64);
 	pr_dbg("vm exit return address = %016llx ", value64);
 
 	/* These fields manage host and guest system calls * pg 3069 31.10.4.2
 	 * - set up these fields with * contents of current SYSENTER ESP and
 	 * EIP MSR values
 	 */
-	field = VMX_HOST_IA32_SYSENTER_ESP;
 	value = msr_read(MSR_IA32_SYSENTER_ESP);
-	exec_vmwrite(field, value);
+	exec_vmwrite(VMX_HOST_IA32_SYSENTER_ESP, value);
 	pr_dbg("VMX_HOST_IA32_SYSENTER_ESP: 0x%016llx ",
 		  value);
-	field = VMX_HOST_IA32_SYSENTER_EIP;
 	value = msr_read(MSR_IA32_SYSENTER_EIP);
-	exec_vmwrite(field, value);
+	exec_vmwrite(VMX_HOST_IA32_SYSENTER_EIP, value);
 	pr_dbg("VMX_HOST_IA32_SYSENTER_EIP: 0x%016llx ", value);
 }
 
@@ -1537,7 +1470,6 @@ static void init_exit_ctrl(__unused struct vcpu *vcpu)
 #ifdef CONFIG_EFI_STUB
 static void override_uefi_vmcs(struct vcpu *vcpu)
 {
-	uint32_t field;
 
 	if (get_vcpu_mode(vcpu) == CPU_MODE_64BIT) {
 		/* CR4 should be set before CR0, because when set CR0, CR4 value
@@ -1549,70 +1481,53 @@ static void override_uefi_vmcs(struct vcpu *vcpu)
 		vcpu_set_cr0(vcpu, efi_ctx->cr0 | CR0_PG | CR0_PE | CR0_NE);
 
 		/* Selector */
-		field = VMX_GUEST_CS_SEL;
-		exec_vmwrite16(field, efi_ctx->cs_sel);
+		exec_vmwrite16(VMX_GUEST_CS_SEL, efi_ctx->cs_sel);
 		pr_dbg("VMX_GUEST_CS_SEL: 0x%hx ", efi_ctx->cs_sel);
 
 		/* Access */
-		field = VMX_GUEST_CS_ATTR;
-		exec_vmwrite32(field, efi_ctx->cs_ar);
+		exec_vmwrite32(VMX_GUEST_CS_ATTR, efi_ctx->cs_ar);
 		pr_dbg("VMX_GUEST_CS_ATTR: 0x%x ", efi_ctx->cs_ar);
 
-		field = VMX_GUEST_ES_SEL;
-		exec_vmwrite16(field, efi_ctx->es_sel);
+		exec_vmwrite16(VMX_GUEST_ES_SEL, efi_ctx->es_sel);
 		pr_dbg("VMX_GUEST_ES_SEL: 0x%hx ", efi_ctx->es_sel);
 
-		field = VMX_GUEST_SS_SEL;
-		exec_vmwrite16(field, efi_ctx->ss_sel);
+		exec_vmwrite16(VMX_GUEST_SS_SEL, efi_ctx->ss_sel);
 		pr_dbg("VMX_GUEST_SS_SEL: 0x%hx ", efi_ctx->ss_sel);
 
-		field = VMX_GUEST_DS_SEL;
-		exec_vmwrite16(field, efi_ctx->ds_sel);
+		exec_vmwrite16(VMX_GUEST_DS_SEL, efi_ctx->ds_sel);
 		pr_dbg("VMX_GUEST_DS_SEL: 0x%hx ", efi_ctx->ds_sel);
 
-		field = VMX_GUEST_FS_SEL;
-		exec_vmwrite16(field, efi_ctx->fs_sel);
+		exec_vmwrite16(VMX_GUEST_FS_SEL, efi_ctx->fs_sel);
 		pr_dbg("VMX_GUEST_FS_SEL: 0x%hx ", efi_ctx->fs_sel);
 
-		field = VMX_GUEST_GS_SEL;
-		exec_vmwrite16(field, efi_ctx->gs_sel);
+		exec_vmwrite16(VMX_GUEST_GS_SEL, efi_ctx->gs_sel);
 		pr_dbg("VMX_GUEST_GS_SEL: 0x%hx ", efi_ctx->gs_sel);
 
 		/* Base */
-		field = VMX_GUEST_ES_BASE;
-		exec_vmwrite(field, efi_ctx->es_sel << 4U);
-		field = VMX_GUEST_SS_BASE;
-		exec_vmwrite(field, efi_ctx->ss_sel << 4U);
-		field = VMX_GUEST_DS_BASE;
-		exec_vmwrite(field, efi_ctx->ds_sel << 4U);
-		field = VMX_GUEST_FS_BASE;
-		exec_vmwrite(field, efi_ctx->fs_sel << 4U);
-		field = VMX_GUEST_GS_BASE;
-		exec_vmwrite(field, efi_ctx->gs_sel << 4U);
+		exec_vmwrite(VMX_GUEST_ES_BASE, efi_ctx->es_sel << 4U);
+		exec_vmwrite(VMX_GUEST_SS_BASE, efi_ctx->ss_sel << 4U);
+		exec_vmwrite(VMX_GUEST_DS_BASE, efi_ctx->ds_sel << 4U);
+		exec_vmwrite(VMX_GUEST_FS_BASE, efi_ctx->fs_sel << 4U);
+		exec_vmwrite(VMX_GUEST_GS_BASE, efi_ctx->gs_sel << 4U);
 
 		/* RSP */
-		field = VMX_GUEST_RSP;
-		exec_vmwrite(field, efi_ctx->rsp);
+		exec_vmwrite(VMX_GUEST_RSP, efi_ctx->rsp);
 		pr_dbg("GUEST RSP on VMEntry %x ", efi_ctx->rsp);
 
 		/* GDTR Base */
-		field = VMX_GUEST_GDTR_BASE;
-		exec_vmwrite(field, efi_ctx->gdt.base);
+		exec_vmwrite(VMX_GUEST_GDTR_BASE, efi_ctx->gdt.base);
 		pr_dbg("VMX_GUEST_GDTR_BASE: 0x%016llx ", efi_ctx->gdt.base);
 
 		/* GDTR Limit */
-		field = VMX_GUEST_GDTR_LIMIT;
-		exec_vmwrite32(field, efi_ctx->gdt.limit);
+		exec_vmwrite32(VMX_GUEST_GDTR_LIMIT, efi_ctx->gdt.limit);
 		pr_dbg("VMX_GUEST_GDTR_LIMIT: 0x%x ", efi_ctx->gdt.limit);
 
 		/* IDTR Base */
-		field = VMX_GUEST_IDTR_BASE;
-		exec_vmwrite(field, efi_ctx->idt.base);
+		exec_vmwrite(VMX_GUEST_IDTR_BASE, efi_ctx->idt.base);
 		pr_dbg("VMX_GUEST_IDTR_BASE: 0x%016llx ", efi_ctx->idt.base);
 
 		/* IDTR Limit */
-		field = VMX_GUEST_IDTR_LIMIT;
-		exec_vmwrite32(field, efi_ctx->idt.limit);
+		exec_vmwrite32(VMX_GUEST_IDTR_LIMIT, efi_ctx->idt.limit);
 		pr_dbg("VMX_GUEST_IDTR_LIMIT: 0x%x ", efi_ctx->idt.limit);
 	}
 
