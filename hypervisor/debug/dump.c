@@ -97,11 +97,11 @@ static void dump_guest_reg(struct vcpu *vcpu)
 static void dump_guest_stack(struct vcpu *vcpu)
 {
 	uint32_t i;
-	uint64_t tmp[DUMP_STACK_SIZE];
+	uint64_t tmp[DUMP_STACK_SIZE], fault_addr;
 	uint32_t err_code = 0;
 
 	if (copy_from_gva(vcpu, tmp, vcpu_get_gpreg(vcpu, CPU_REG_RSP),
-		DUMP_STACK_SIZE, &err_code) < 0) {
+		DUMP_STACK_SIZE, &err_code, &fault_addr) < 0) {
 		printf("\r\nUnabled to Copy Guest Stack:\r\n");
 		return;
 	}
@@ -143,11 +143,11 @@ static void show_guest_call_trace(struct vcpu *vcpu)
 	 *  if the address is invalid, it will cause hv page fault
 	 *  then halt system */
 	while ((count < CALL_TRACE_HIERARCHY_MAX) && (bp != 0)) {
-		uint64_t parent_bp = 0UL;
+		uint64_t parent_bp = 0UL, fault_addr;
 
 		err_code = 0U;
 		err = copy_from_gva(vcpu, &parent_bp, bp, sizeof(parent_bp),
-			&err_code);
+			&err_code, &fault_addr);
 		if (err < 0) {
 			printf("\r\nUnabled to get Guest parent BP\r\n");
 			return;

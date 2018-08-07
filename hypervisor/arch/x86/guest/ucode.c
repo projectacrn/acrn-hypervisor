@@ -27,7 +27,7 @@ uint64_t get_microcode_version(void)
 	((uhdr.data_size != 0U) ? uhdr.data_size : 2000U)
 void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 {
-	uint64_t gva;
+	uint64_t gva, fault_addr;
 	struct ucode_header uhdr;
 	uint32_t data_page_num;
 	size_t data_size;
@@ -38,10 +38,11 @@ void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 	gva = v - sizeof(struct ucode_header);
 
 	err_code = 0U;
-	err = copy_from_gva(vcpu, &uhdr, gva, sizeof(uhdr), &err_code);
+	err = copy_from_gva(vcpu, &uhdr, gva, sizeof(uhdr), &err_code,
+			&fault_addr);
 	if (err < 0) {
 		if (err == -EFAULT) {
-			vcpu_inject_pf(vcpu, gva, err_code);
+			vcpu_inject_pf(vcpu, fault_addr, err_code);
 		}
 		return;
 	}
@@ -56,10 +57,11 @@ void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 	}
 
 	err_code = 0U;
-	err = copy_from_gva(vcpu, ucode_ptr, gva, data_size, &err_code);
+	err = copy_from_gva(vcpu, ucode_ptr, gva, data_size, &err_code,
+			&fault_addr);
 	if (err < 0) {
 		if (err == -EFAULT) {
-			vcpu_inject_pf(vcpu, gva, err_code);
+			vcpu_inject_pf(vcpu, fault_addr, err_code);
 		}
 		return;
 	}

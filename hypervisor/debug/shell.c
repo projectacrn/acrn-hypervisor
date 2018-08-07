@@ -592,7 +592,7 @@ int shell_vcpu_dumpreg(int argc, char **argv)
 	char temp_str[MAX_STR_SIZE];
 	struct vm *vm;
 	struct vcpu *vcpu;
-	uint64_t i;
+	uint64_t i, fault_addr;
 	uint64_t tmp[DUMPREG_SP_SIZE];
 	uint32_t err_code = 0;
 
@@ -676,7 +676,8 @@ int shell_vcpu_dumpreg(int argc, char **argv)
 
 	/* dump sp */
 	status = copy_from_gva(vcpu, tmp, vcpu_get_gpreg(vcpu, CPU_REG_RSP),
-			DUMPREG_SP_SIZE*sizeof(uint64_t), &err_code);
+			DUMPREG_SP_SIZE*sizeof(uint64_t), &err_code,
+			&fault_addr);
 	if (status < 0) {
 		/* copy_from_gva fail */
 		shell_puts("Cannot handle user gva yet!\r\n");
