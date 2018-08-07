@@ -282,26 +282,51 @@ static int vcpu_inject_lo_exception(struct vcpu *vcpu)
 	return 0;
 }
 
+/* Inject external interrupt to guest */
 void vcpu_inject_extint(struct vcpu *vcpu)
 {
 	vcpu_make_request(vcpu, ACRN_REQUEST_EXTINT);
 }
 
+/* Inject NMI to guest */
 void vcpu_inject_nmi(struct vcpu *vcpu)
 {
 	vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
 }
 
+/* Inject general protection exception(#GP) to guest */
 void vcpu_inject_gp(struct vcpu *vcpu, uint32_t err_code)
 {
 	vcpu_queue_exception(vcpu, IDT_GP, err_code);
 	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
 }
 
+/* Inject page fault exception(#PF) to guest */
 void vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code)
 {
 	vcpu_set_cr2(vcpu, addr);
 	vcpu_queue_exception(vcpu, IDT_PF, err_code);
+	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
+}
+
+/* Inject invalid opcode exception(#UD) to guest */
+void vcpu_inject_ud(struct vcpu *vcpu)
+{
+	vcpu_queue_exception(vcpu, IDT_UD, 0);
+	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
+}
+
+/* Inject alignment check exception(#AC) to guest */
+void vcpu_inject_ac(struct vcpu *vcpu)
+{
+	vcpu_queue_exception(vcpu, IDT_AC, 0);
+	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
+}
+
+/* Inject stack fault exception(#SS) to guest */
+void vcpu_inject_ss(struct vcpu *vcpu)
+{
+	vcpu_queue_exception(vcpu, IDT_SS, 0);
 	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
 }
 

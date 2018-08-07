@@ -84,6 +84,9 @@ void vcpu_inject_extint(struct vcpu *vcpu);
 void vcpu_inject_nmi(struct vcpu *vcpu);
 void vcpu_inject_gp(struct vcpu *vcpu, uint32_t err_code);
 void vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code);
+void vcpu_inject_ud(struct vcpu *vcpu);
+void vcpu_inject_ac(struct vcpu *vcpu);
+void vcpu_inject_ss(struct vcpu *vcpu);
 void vcpu_make_request(struct vcpu *vcpu, uint16_t eventid);
 int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector, uint32_t err_code);
 
