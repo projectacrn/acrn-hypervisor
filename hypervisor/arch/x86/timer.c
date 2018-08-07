@@ -8,7 +8,6 @@
 #include <softirq.h>
 
 #define MAX_TIMER_ACTIONS	32U
-#define TIMER_IRQ		(NR_IRQS - 1U)
 #define CAL_MS			10U
 #define MIN_TIMER_PERIOD_US	500U
 
@@ -112,8 +111,7 @@ static int request_timer_irq(irq_action_t func, const char *name)
 {
 	int32_t retval;
 
-	retval = pri_register_handler(TIMER_IRQ, VECTOR_TIMER,
-				      func, NULL, name);
+	retval = pri_register_handler(TIMER_IRQ, func, NULL, name);
 	if (retval >= 0) {
 		update_irq_handler(TIMER_IRQ, quick_handler_nolock);
 	} else {

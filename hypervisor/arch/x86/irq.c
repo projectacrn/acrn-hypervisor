@@ -14,6 +14,12 @@ static uint32_t vector_to_irq[NR_MAX_VECTOR + 1];
 
 spurious_handler_t spurious_handler;
 
+#define NR_STATIC_MAPPINGS     (2U)
+static uint32_t irq_static_mappings[NR_STATIC_MAPPINGS][2] = {
+	{TIMER_IRQ, VECTOR_TIMER},
+	{NOTIFY_IRQ, VECTOR_NOTIFY_VCPU},
+};
+
 static void init_irq_desc(void)
 {
 	uint32_t i;
@@ -28,6 +34,15 @@ static void init_irq_desc(void)
 		vector_to_irq[i] = IRQ_INVALID;
 	}
 
+	/* init fixed mapping for specific irq and vector */
+	for (i = 0U; i < NR_STATIC_MAPPINGS; i++) {
+		uint32_t irq = irq_static_mappings[i][0];
+		uint32_t vr = irq_static_mappings[i][1];
+
+		irq_desc_array[irq].vector = vr;
+		irq_desc_array[irq].used = IRQ_ASSIGNED;
+		vector_to_irq[vr] = irq;
+	}
 }
 
 /*
@@ -155,7 +170,7 @@ static int32_t common_register_handler(uint32_t irq_arg,
 		struct irq_request_info *info)
 {
 	struct irq_desc *desc;
-	uint32_t irq = irq_arg;
+	uint32_t irq = irq_arg, vector;
 	spinlock_rflags;
 
 	/* ======================================================
@@ -206,10 +221,11 @@ static int32_t common_register_handler(uint32_t irq_arg,
 		desc->irq_handler = common_handler_edge;
 	}
 
-	if (info->vector >= VECTOR_FIXED_START &&
-		info->vector <= VECTOR_FIXED_END) {
-		irq_desc_set_vector(irq, info->vector);
-	} else if (info->vector > NR_MAX_VECTOR) {
+	vector = desc->vector;
+	if (vector >= VECTOR_FIXED_START &&
+		vector <= VECTOR_FIXED_END) {
+		irq_desc_set_vector(irq, vector);
+	} else if (vector > NR_MAX_VECTOR) {
 		irq_desc_alloc_vector(irq);
 	}
 
@@ -574,7 +590,6 @@ int32_t normal_register_handler(uint32_t irq,
 {
 	struct irq_request_info info;
 
-	info.vector = VECTOR_INVALID;
 	info.func = func;
 	info.priv_data = priv_data;
 	info.name = (char *)name;
@@ -589,18 +604,12 @@ int32_t normal_register_handler(uint32_t irq,
  * times
  */
 int32_t pri_register_handler(uint32_t irq,
-		uint32_t vector,
 		irq_action_t func,
 		void *priv_data,
 		const char *name)
 {
 	struct irq_request_info info;
 
-	if (vector < VECTOR_FIXED_START || vector > VECTOR_FIXED_END) {
-		return -EINVAL;
-	}
-
-	info.vector = vector;
 	info.func = func;
 	info.priv_data = priv_data;
 	info.name = (char *)name;

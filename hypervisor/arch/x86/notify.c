@@ -20,7 +20,6 @@ static int kick_notification(__unused uint32_t irq, __unused void *data)
 static int request_notification_irq(irq_action_t func, void *data,
 				const char *name)
 {
-	uint32_t irq = IRQ_INVALID; /* system allocate */
 	int32_t retval;
 
 	if (notification_irq != IRQ_INVALID) {
@@ -30,7 +29,7 @@ static int request_notification_irq(irq_action_t func, void *data,
 	}
 
 	/* all cpu register the same notification vector */
-	retval = pri_register_handler(irq, VECTOR_NOTIFY_VCPU, func, data, name);
+	retval = pri_register_handler(NOTIFY_IRQ, func, data, name);
 	if (retval < 0) {
 		pr_err("Failed to add notify isr");
 		return -ENODEV;
