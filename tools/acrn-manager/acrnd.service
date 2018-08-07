@@ -4,7 +4,6 @@ Description=ACRN manager deamon
 [Service]
 Type=simple
 ExecStart=/usr/bin/acrnd
-ExecStop=/usr/bin/killall -s TERM acrnd
 
 [Install]
 WantedBy=multi-user.target

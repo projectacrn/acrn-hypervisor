@@ -9,7 +9,6 @@ After=prepare.service
 [Service]
 Type=simple
 ExecStart=/usr/bin/acrnprobe
-ExecStop=/usr/bin/killall -s TERM acrnprobe
 
 [Install]
 WantedBy=multi-user.target
