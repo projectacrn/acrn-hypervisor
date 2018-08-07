@@ -6,10 +6,10 @@
 
 #include <hypervisor.h>
 
-static struct dev_handler_node *notification_node;
+static uint32_t notification_irq = IRQ_INVALID;
 
 /* run in interrupt context */
-static int kick_notification(__unused int irq, __unused void *data)
+static int kick_notification(__unused uint32_t irq, __unused void *data)
 {
 	/* Notification vector does not require handling here, it's just used
 	 * to kick taget cpu out of non-root mode.
@@ -17,26 +17,27 @@ static int kick_notification(__unused int irq, __unused void *data)
 	return 0;
 }
 
-static int request_notification_irq(dev_handler_t func, void *data,
+static int request_notification_irq(irq_action_t func, void *data,
 				const char *name)
 {
 	uint32_t irq = IRQ_INVALID; /* system allocate */
-	struct dev_handler_node *node = NULL;
+	int32_t retval;
 
-	if (notification_node != NULL) {
+	if (notification_irq != IRQ_INVALID) {
 		pr_info("%s, Notification vector already allocated on this CPU",
 				__func__);
 		return -EBUSY;
 	}
 
 	/* all cpu register the same notification vector */
-	node = pri_register_handler(irq, VECTOR_NOTIFY_VCPU, func, data, name);
-	if (node == NULL) {
+	retval = pri_register_handler(irq, VECTOR_NOTIFY_VCPU, func, data, name);
+	if (retval < 0) {
 		pr_err("Failed to add notify isr");
-		return -1;
+		return -ENODEV;
 	}
-	update_irq_handler(dev_to_irq(node), quick_handler_nolock);
-	notification_node = node;
+
+	notification_irq = (uint32_t)retval;
+
 	return 0;
 }
 
@@ -58,14 +59,13 @@ void setup_notification(void)
 	}
 
 	dev_dbg(ACRN_DBG_PTIRQ, "NOTIFY: irq[%d] setup vector %x",
-		dev_to_irq(notification_node),
-		dev_to_vector(notification_node));
+		notification_irq, irq_to_vector(notification_irq));
 }
 
 static void cleanup_notification(void)
 {
-	if (notification_node != NULL) {
-		unregister_handler_common(notification_node);
+	if (notification_irq != IRQ_INVALID) {
+		unregister_handler_common(notification_irq);
 	}
-	notification_node = NULL;
+	notification_irq = IRQ_INVALID;
 }

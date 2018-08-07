@@ -151,31 +151,12 @@ static void disable_pic_irq(void)
 	pio_write8(0xffU, 0x21U);
 }
 
-static void 
-irq_desc_append_dev(struct irq_desc *desc, void *node)
-{
-	spinlock_rflags;
-
-	spinlock_irqsave_obtain(&desc->irq_lock);
-
-	ASSERT(desc->action == NULL, "irq already registered");
-	/* assign if first node */
-	desc->action = node;
-	desc->used = IRQ_ASSIGNED;
-	if (desc->irq_handler == NULL) {
-		desc->irq_handler = common_handler_edge;
-	}
-
-	spinlock_irqrestore_release(&desc->irq_lock);
-}
-
-static struct dev_handler_node*
-common_register_handler(uint32_t irq_arg,
+static int32_t common_register_handler(uint32_t irq_arg,
 		struct irq_request_info *info)
 {
-	struct dev_handler_node *node = NULL;
 	struct irq_desc *desc;
 	uint32_t irq = irq_arg;
+	spinlock_rflags;
 
 	/* ======================================================
 	 * This is low level ISR handler registering function
@@ -217,43 +198,48 @@ common_register_handler(uint32_t irq_arg,
 
 	if (irq >= NR_IRQS) {
 		pr_err("failed to assign IRQ");
-		goto OUT;
-	}
-
-	node = calloc(1U, sizeof(struct dev_handler_node));
-	if (node == NULL) {
-		pr_err("failed to alloc node");
-		irq_desc_try_free_vector(irq);
-		goto OUT;
+		return -EINVAL;
 	}
 
 	desc = &irq_desc_array[irq];
-	irq_desc_append_dev(desc, node);
+	if (desc->irq_handler == NULL) {
+		desc->irq_handler = common_handler_edge;
+	}
 
 	if (info->vector >= VECTOR_FIXED_START &&
 		info->vector <= VECTOR_FIXED_END) {
 		irq_desc_set_vector(irq, info->vector);
 	} else if (info->vector > NR_MAX_VECTOR) {
 		irq_desc_alloc_vector(irq);
-	} else {
-		pr_err("the input vector is not correct");
-		free(node);
-		return NULL;
 	}
 
-	node->dev_handler = info->func;
-	node->dev_data = info->dev_data;
-	node->desc = desc;
-	/* we are okay using strcpy_s here even with spinlock
-	 * since no #PG in HV right now
-	 */
-	(void)strcpy_s(node->name, 32U, info->name);
+	if (desc->vector == VECTOR_INVALID) {
+		pr_err("the input vector is not correct");
+		/* FIXME: free allocated irq */
+		return -EINVAL;
+	}
+
+	if (desc->action == NULL) {
+		spinlock_irqsave_obtain(&desc->irq_lock);
+		desc->priv_data = info->priv_data;
+		desc->action = info->func;
+
+		/* we are okay using strcpy_s here even with spinlock
+		 * since no #PG in HV right now
+		 */
+		(void)strcpy_s(desc->name, 32U, info->name);
+
+		spinlock_irqrestore_release(&desc->irq_lock);
+	} else {
+		pr_err("%s: request irq(%u) vr(%u) for %s failed,\
+			already requested", __func__,
+			irq, irq_to_vector(irq), info->name);
+		return -EBUSY;
+	}
 
 	dev_dbg(ACRN_DBG_IRQ, "[%s] %s irq%d vr:0x%x",
-		__func__, node->name, irq, desc->vector);
-
-OUT:
-	return node;
+		__func__, info->name, irq, desc->vector);
+	return (int32_t)irq;
 }
 
 /* it is safe to call irq_desc_alloc_vector multiple times*/
@@ -316,16 +302,6 @@ uint32_t irq_to_vector(uint32_t irq)
 	} else {
 		return VECTOR_INVALID;
 	}
-}
-
-uint32_t dev_to_irq(struct dev_handler_node *node)
-{
-	return node->desc->irq;
-}
-
-uint32_t dev_to_vector(struct dev_handler_node *node)
-{
-	return node->desc->vector;
 }
 
 void init_default_irqs(uint16_t cpu_id)
@@ -395,7 +371,7 @@ void dispatch_interrupt(struct intr_excp_ctx *ctx)
 		goto ERR;
 	}
 
-	desc->irq_handler(desc, desc->handler_data);
+	desc->irq_handler(desc, NULL);
 	return;
 ERR:
 	handle_spurious_interrupt(vr);
@@ -427,7 +403,7 @@ void partition_mode_dispatch_interrupt(struct intr_excp_ctx *ctx)
 int handle_level_interrupt_common(struct irq_desc *desc,
 			__unused void *handler_data)
 {
-	struct dev_handler_node *action = desc->action;
+	irq_action_t action = desc->action;
 	spinlock_rflags;
 
 	/*
@@ -451,9 +427,9 @@ int handle_level_interrupt_common(struct irq_desc *desc,
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
-	if (action != NULL && action->dev_handler != NULL) {
-		action->dev_handler(desc->irq, action->dev_data);
-	}
+	if (action != NULL) {
+		action(desc->irq, desc->priv_data);
+ 	}
 
 	if (irq_is_gsi(desc->irq)) {
 		GSI_UNMASK_IRQ(desc->irq);
@@ -467,7 +443,7 @@ int handle_level_interrupt_common(struct irq_desc *desc,
 
 int common_handler_edge(struct irq_desc *desc, __unused void *handler_data)
 {
-	struct dev_handler_node *action = desc->action;
+	irq_action_t action = desc->action;
 	spinlock_rflags;
 
 	/*
@@ -486,8 +462,8 @@ int common_handler_edge(struct irq_desc *desc, __unused void *handler_data)
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
-	if (action != NULL && action->dev_handler != NULL) {
-		action->dev_handler(desc->irq, action->dev_data);
+	if (action != NULL) {
+		action(desc->irq, desc->priv_data);
  	}
 
 	desc->state = IRQ_DESC_PENDING;
@@ -498,7 +474,7 @@ int common_handler_edge(struct irq_desc *desc, __unused void *handler_data)
 
 int common_dev_handler_level(struct irq_desc *desc, __unused void *handler_data)
 {
-	struct dev_handler_node *action = desc->action;
+	irq_action_t action = desc->action;
 	spinlock_rflags;
 
 	/*
@@ -522,8 +498,8 @@ int common_dev_handler_level(struct irq_desc *desc, __unused void *handler_data)
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
-	if (action != NULL && action->dev_handler != NULL) {
-		action->dev_handler(desc->irq, action->dev_data);
+	if (action != NULL) {
+		action(desc->irq, desc->priv_data);
  	}
 
 	desc->state = IRQ_DESC_PENDING;
@@ -536,13 +512,13 @@ int common_dev_handler_level(struct irq_desc *desc, __unused void *handler_data)
 /* no desc->irq_lock for quick handling local interrupt like lapic timer */
 int quick_handler_nolock(struct irq_desc *desc, __unused void *handler_data)
 {
-	struct dev_handler_node *action = desc->action;
+	irq_action_t action = desc->action;
 
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
-	if (action != NULL && action->dev_handler != NULL) {
-		action->dev_handler(desc->irq, action->dev_data);
+	if (action != NULL) {
+		action(desc->irq, desc->priv_data);
  	}
 
 	return 0;
@@ -564,45 +540,43 @@ void update_irq_handler(uint32_t irq, irq_handler_t func)
 	spinlock_irqrestore_release(&desc->irq_lock);
 }
 
-void unregister_handler_common(struct dev_handler_node *node)
+void unregister_handler_common(uint32_t irq)
 {
 	struct irq_desc *desc;
 
 	spinlock_rflags;
 
-	if (node == NULL) {
+	if (irq >= NR_IRQS) {
 		return;
 	}
 
+	desc = &irq_desc_array[irq];
 	dev_dbg(ACRN_DBG_IRQ, "[%s] %s irq%d vr:0x%x",
-		__func__, node->name,
-		dev_to_irq(node),
-		dev_to_vector(node));
+		__func__, desc->name, irq, irq_to_vector(irq));
 
-	desc = node->desc;
 	spinlock_irqsave_obtain(&desc->irq_lock);
 
 	desc->action = NULL;
+	desc->priv_data = NULL;
+	memset(desc->name, '\0', 32U);
 
 	spinlock_irqrestore_release(&desc->irq_lock);
 	irq_desc_try_free_vector(desc->irq);
-	free(node);
 }
 
 /*
  * Allocate IRQ with Vector from VECTOR_DYNAMIC_START ~ VECTOR_DYNAMIC_END
  */
-struct dev_handler_node*
-normal_register_handler(uint32_t irq,
-		dev_handler_t func,
-		void *dev_data,
+int32_t normal_register_handler(uint32_t irq,
+		irq_action_t func,
+		void *priv_data,
 		const char *name)
 {
 	struct irq_request_info info;
 
 	info.vector = VECTOR_INVALID;
 	info.func = func;
-	info.dev_data = dev_data;
+	info.priv_data = priv_data;
 	info.name = (char *)name;
 
 	return common_register_handler(irq, &info);
@@ -614,22 +588,21 @@ normal_register_handler(uint32_t irq,
  * User can install same irq/isr on different CPU by call this function multiple
  * times
  */
-struct dev_handler_node*
-pri_register_handler(uint32_t irq,
+int32_t pri_register_handler(uint32_t irq,
 		uint32_t vector,
-		dev_handler_t func,
-		void *dev_data,
+		irq_action_t func,
+		void *priv_data,
 		const char *name)
 {
 	struct irq_request_info info;
 
 	if (vector < VECTOR_FIXED_START || vector > VECTOR_FIXED_END) {
-		return NULL;
+		return -EINVAL;
 	}
 
 	info.vector = vector;
 	info.func = func;
-	info.dev_data = dev_data;
+	info.priv_data = priv_data;
 	info.name = (char *)name;
 
 	return common_register_handler(irq, &info);

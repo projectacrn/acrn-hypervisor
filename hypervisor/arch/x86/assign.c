@@ -142,7 +142,7 @@ lookup_entry_by_vintx(struct vm *vm, uint8_t vpin,
 static void
 ptdev_update_irq_handler(struct vm *vm, struct ptdev_remapping_info *entry)
 {
-	uint32_t phys_irq = dev_to_irq(entry->node);
+	uint32_t phys_irq = entry->allocated_pirq;
 	struct ptdev_intx_info *intx = &entry->ptdev_intr_info.intx;
 
 	if (entry->type == PTDEV_INTR_MSI) {
@@ -235,8 +235,8 @@ ptdev_build_physical_rte(struct vm *vm,
 		struct ptdev_remapping_info *entry)
 {
 	union ioapic_rte rte;
-	uint32_t phys_irq = dev_to_irq(entry->node);
-	uint32_t vector = dev_to_vector(entry->node);
+	uint32_t phys_irq = entry->allocated_pirq;
+	uint32_t vector = irq_to_vector(phys_irq);
 	struct ptdev_intx_info *intx = &entry->ptdev_intr_info.intx;
 
 	if (intx->vpin_src == PTDEV_VPIN_IOAPIC) {
@@ -457,7 +457,7 @@ static void remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin)
 	}
 
 	if (is_entry_active(entry)) {
-		phys_irq = dev_to_irq(entry->node);
+		phys_irq = entry->allocated_pirq;
 		if (!irq_is_gsi(phys_irq)) {
 			goto END;
 		}
@@ -509,8 +509,8 @@ static void ptdev_intr_handle_irq(struct vm *vm,
 
 		dev_dbg(ACRN_DBG_PTIRQ,
 			"dev-assign: irq=0x%x assert vr: 0x%x vRTE=0x%lx",
-			dev_to_irq(entry->node),
-			irq_to_vector(dev_to_irq(entry->node)),
+			entry->allocated_pirq,
+			irq_to_vector(entry->allocated_pirq),
 			rte.full);
 		break;
 	}
@@ -570,9 +570,9 @@ void ptdev_softirq(__unused uint16_t cpu_id)
 				        msi->vmsi_data);
 			dev_dbg(ACRN_DBG_PTIRQ,
 				"dev-assign: irq=0x%x MSI VR: 0x%x-0x%x",
-				dev_to_irq(entry->node),
+				entry->allocated_pirq,
 			        msi->virt_vector,
-				irq_to_vector(dev_to_irq(entry->node)));
+				irq_to_vector(entry->allocated_pirq));
 			dev_dbg(ACRN_DBG_PTIRQ,
 				" vmsi_addr: 0x%x vmsi_data: 0x%x",
 			        msi->vmsi_addr,
@@ -671,10 +671,11 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 	}
 
 	/* build physical config MSI, update to info->pmsi_xxx */
-	ptdev_build_physical_msi(vm, info, dev_to_vector(entry->node));
+	ptdev_build_physical_msi(vm, info, irq_to_vector(entry->allocated_pirq));
 	entry->ptdev_intr_info.msi = *info;
 	entry->ptdev_intr_info.msi.virt_vector = info->vmsi_data & 0xFFU;
-	entry->ptdev_intr_info.msi.phys_vector = dev_to_vector(entry->node);
+	entry->ptdev_intr_info.msi.phys_vector =
+					irq_to_vector(entry->allocated_pirq);
 
 	/* update irq handler according to info in guest */
 	ptdev_update_irq_handler(vm, entry);
@@ -709,7 +710,7 @@ static void activate_physical_ioapic(struct vm *vm,
 		struct ptdev_remapping_info *entry)
 {
 	union ioapic_rte rte;
-	uint32_t phys_irq = dev_to_irq(entry->node);
+	uint32_t phys_irq = entry->allocated_pirq;
 
 	/* disable interrupt */
 	GSI_MASK_IRQ(phys_irq);
@@ -999,8 +1000,8 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 			*bdf = 0U;
 			*vbdf = 0U;
 		}
-		*irq = dev_to_irq(entry->node);
-		*vector = dev_to_vector(entry->node);
+		*irq = entry->allocated_pirq;
+		*vector = irq_to_vector(entry->allocated_pirq);
 	} else {
 		(void)strcpy_s(type, 16U, "NONE");
 		*irq = IRQ_INVALID;

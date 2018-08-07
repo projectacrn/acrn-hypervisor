@@ -13,7 +13,7 @@
 #define MIN_TIMER_PERIOD_US	500U
 
 uint32_t tsc_khz = 0U;
-static struct dev_handler_node *timer_node;
+
 static void run_timer(struct hv_timer *timer)
 {
 	/* deadline = 0 means stop timer, we should skip */
@@ -108,16 +108,13 @@ void del_timer(struct hv_timer *timer)
 	}
 }
 
-static int request_timer_irq(dev_handler_t func, const char *name)
+static int request_timer_irq(irq_action_t func, const char *name)
 {
-	if (timer_node != NULL) {
-		pr_err("Timer isr already added");
-		unregister_handler_common(timer_node);
-	}
+	int32_t retval;
 
-	timer_node = pri_register_handler(TIMER_IRQ, VECTOR_TIMER,
-					  func, NULL, name);
-	if (timer_node != NULL) {
+	retval = pri_register_handler(TIMER_IRQ, VECTOR_TIMER,
+				      func, NULL, name);
+	if (retval >= 0) {
 		update_irq_handler(TIMER_IRQ, quick_handler_nolock);
 	} else {
 		pr_err("Failed to add timer isr");
@@ -212,9 +209,8 @@ void timer_cleanup(void)
 {
 	uint16_t pcpu_id = get_cpu_id();
 
-	if ((pcpu_id == BOOT_CPU_ID) && (timer_node != NULL)) {
-		unregister_handler_common(timer_node);
-		timer_node = NULL;
+	if (pcpu_id == BOOT_CPU_ID) {
+		unregister_handler_common(TIMER_IRQ);
 	}
 }
 
