@@ -27,6 +27,9 @@
 #define NR_IRQS		(256U + 16U)
 #define IRQ_INVALID		0xffffffffU
 
+#define TIMER_IRQ		(NR_IRQS - 1U)
+#define NOTIFY_IRQ		(NR_IRQS - 2U)
+
 #define DEFAULT_DEST_MODE	IOAPIC_RTE_DESTLOG
 #define DEFAULT_DELIVERY_MODE	IOAPIC_RTE_DELLOPRI
 #define ALL_CPUS_MASK		((1U << phys_cpu_num) - 1U)

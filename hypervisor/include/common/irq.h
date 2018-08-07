@@ -28,7 +28,6 @@ struct irq_request_info {
 	/* vector set to 0xE0 ~ 0xFF for pri_register_handler
 	 * and set to VECTOR_INVALID for normal_register_handler
 	 */
-	uint32_t vector;
 	irq_action_t func;
 	void *priv_data;
 	char *name;
@@ -60,7 +59,6 @@ void irq_desc_try_free_vector(uint32_t irq);
 uint32_t irq_to_vector(uint32_t irq);
 
 int32_t pri_register_handler(uint32_t irq,
-		uint32_t vector,
 		irq_action_t func,
 		void *priv_data,
 		const char *name);
