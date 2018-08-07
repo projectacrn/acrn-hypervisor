@@ -373,7 +373,7 @@ two keyboards and mice connected to your device, one keyboard and
 mouse set for the SOS, and the other set for the UOS.  
 
 1. Boot the SOS and plug in the two keyboards and two mice
-   into four available USB ports on the device (the NUC we recommends has 4 USB ports).
+   into four available USB ports on the device (the NUC we recommend has 4 USB ports).
 
 #. Run ``dmesg`` to find the kernel messages logging the enumeration
    of the connected keyboards and mice.  For example::
@@ -408,18 +408,16 @@ mouse set for the SOS, and the other set for the UOS.
       [ 1008.519459] input: Logitech USB Optical Mouse as /devices/pci0000:00/0000:00:14.0/usb1/1-1/1-        1:1.0/0003:046D:C077.0008/input/input11
       [ 1008.519714] hid-generic 0003:046D:C077.0008: input,hidraw3: USB HID v1.11 Mouse [Logitech USB Optical Mouse] on usb-   0000:00:14.0-1/input0
 
-#. From ``dmesg`` info, you can easly find specific USB device info connected to certain port
+#. From ``dmesg`` info, you can easly find specific USB device info connected to certain port by pluging in 
+   USB device one by one 
    for example::
     
-      keyboard 1#: usb 1-3
-      mouse 1#: usb 1-4 
-      keyboard 2#: usb 1-2
-      mouse 2#: usb 1-1
-   
-   Now you can define which keyboard and mouse to be assigned for UOS, which for SOS. 
-   You'll need this device information in the next step.
+      mouse 1#: usb 1-1
+      keyboard 1#: usb 1-2 
+      keyboard 2#: usb 1-3
+      mouse 2#: usb 1-4
 
-#. Supposing you assign keyboard 2# and mouse 2# to the UOS. Use a text editor to modify
+#. Let's assign keyboard 1# and mouse 1# to the UOS. Use a text editor to modify
    ``/usr/share/acrn/samples/nuc/launch_uos.sh`` and add the line (using
    the keyboard and mouse identified in your dmesg output)::
 
@@ -428,23 +426,12 @@ mouse set for the SOS, and the other set for the UOS.
    Save the file, exit the editor, and run the ``sync`` command to ensure
    any pending write buffers are written to disk. 
   
-   by default, keyboard 1# and mouse 1# connected to Device be used for SOS without any additinoal configurartion
-   keyboard 2# and mouse 2# to UOS by modifying launch_uos.sh
-    
-   .. code-block:: none
-
-      # cd /usr/share/acrn/samples/nuc/
-      # vim lauch_uos.sh
-      # add below line into the file
-      # -s 9, xhci, 1-1:1-2 \
-      # sync
-  
+   by default, keyboard 2# and mouse 2# connected to Device be used for SOS without any additinoal configurartion
+   keyboard 1# and mouse 1# to UOS by modifying launch_uos.sh
+   
    .. note::
-     you can check and assign USB keyboard and USB mouse to UOS with modifying -s 9, xhci 1-x:1-y \
-     according to your USB device info
-     
-     there is an known issue to use USB keyboard and mouse in UOS, you have to unplug and plug back 
-     keyboard and mouse assigned to UOS after lauch UOS.  
+      You may have to unplug and plug in the keyboard and mouse
+      assigned to the UOS after launching the UOS.  
 
 
 Build ACRN from Source
