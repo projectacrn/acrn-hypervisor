@@ -24,7 +24,7 @@ static union ioapic_rte saved_rte[CONFIG_NR_IOAPICS][IOAPIC_MAX_PIN];
  * the irq to ioapic pin mapping should extract from ACPI MADT table
  * hardcoded here
  */
-uint8_t legacy_irq_to_pin[NR_LEGACY_IRQ] = {
+static uint8_t legacy_irq_to_pin[NR_LEGACY_IRQ] = {
 	2U, /* IRQ0*/
 	1U, /* IRQ1*/
 	0U, /* IRQ2 connected to Pin0 (ExtInt source of PIC) if existing */
@@ -43,7 +43,7 @@ uint8_t legacy_irq_to_pin[NR_LEGACY_IRQ] = {
 	15U, /* IRQ15*/
 };
 
-uint64_t legacy_irq_trigger_mode[NR_LEGACY_IRQ] = {
+static uint64_t legacy_irq_trigger_mode[NR_LEGACY_IRQ] = {
 	IOAPIC_RTE_TRGREDG, /* IRQ0*/
 	IOAPIC_RTE_TRGREDG, /* IRQ1*/
 	IOAPIC_RTE_TRGREDG, /* IRQ2*/

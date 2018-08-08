@@ -9,7 +9,7 @@
 #include <ptdev.h>
 
 /* SOFTIRQ_PTDEV list for all CPUs */
-struct list_head softirq_dev_entry_list;
+static struct list_head softirq_dev_entry_list;
 /* passthrough device link */
 struct list_head ptdev_list;
 spinlock_t ptdev_lock;
@@ -26,7 +26,7 @@ struct ptdev_remapping_info invalid_entry = {
  *   ptdev_lock
  *     softirq_dev_lock
  */
-spinlock_t softirq_dev_lock;
+static spinlock_t softirq_dev_lock;
 
 static void ptdev_enqueue_softirq(struct ptdev_remapping_info *entry)
 {

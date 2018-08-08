@@ -61,11 +61,9 @@ struct ptdev_remapping_info {
 	} ptdev_intr_info;
 };
 
-extern struct list_head softirq_dev_entry_list;
 extern struct list_head ptdev_list;
 extern spinlock_t ptdev_lock;
 extern struct ptdev_remapping_info invalid_entry;
-extern spinlock_t softirq_dev_lock;
 
 void ptdev_softirq(__unused uint16_t cpu_id);
 void ptdev_init(void);

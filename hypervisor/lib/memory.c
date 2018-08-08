@@ -20,7 +20,7 @@ Malloc_Heap[CONFIG_HEAP_SIZE] __aligned(CONFIG_MALLOC_ALIGN);
 static uint32_t Malloc_Heap_Bitmap[MALLOC_HEAP_BITMAP_SIZE];
 static uint32_t Malloc_Heap_Contiguity_Bitmap[MALLOC_HEAP_BITMAP_SIZE];
 
-struct mem_pool Memory_Pool = {
+static struct mem_pool Memory_Pool = {
 	.start_addr = Malloc_Heap,
 	.spinlock = {.head = 0U, .tail = 0U},
 	.size = CONFIG_HEAP_SIZE,
@@ -44,7 +44,7 @@ Paging_Heap[CONFIG_NUM_ALLOC_PAGES][CPU_PAGE_SIZE] __aligned(CPU_PAGE_SIZE);
 static uint32_t Paging_Heap_Bitmap[PAGING_HEAP_BITMAP_SIZE];
 static uint32_t Paging_Heap_Contiguity_Bitmap[MALLOC_HEAP_BITMAP_SIZE];
 
-struct mem_pool Paging_Memory_Pool = {
+static struct mem_pool Paging_Memory_Pool = {
 	.start_addr = Paging_Heap,
 	.spinlock = {.head = 0U, .tail = 0U},
 	.size = CONFIG_NUM_ALLOC_PAGES * CPU_PAGE_SIZE,
