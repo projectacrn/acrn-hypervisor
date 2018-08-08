@@ -525,6 +525,11 @@ static void ptdev_intr_handle_irq(struct vm *vm,
 		break;
 	}
 	default:
+		/*
+		 * In this switch statement, intx->vpin_src shall either be
+		 * PTDEV_VPIN_IOAPIC or PTDEV_VPIN_PIC.
+		 * Gracefully return if prior case clauses have not been met.
+		 */
 		break;
 	}
 }
@@ -598,6 +603,12 @@ void ptdev_intx_ack(struct vm *vm, uint8_t virt_pin,
 	case PTDEV_VPIN_PIC:
 		vpic_deassert_irq(vm, virt_pin);
 	default:
+		/*
+		 * In this switch statement,
+		 * entry->ptdev_intr_info.intx.vpin_src shall either be
+		 * PTDEV_VPIN_IOAPIC or PTDEV_VPIN_PIC.
+		 * Gracefully return if prior case clauses have not been met.
+		 */
 		break;
 	}
 

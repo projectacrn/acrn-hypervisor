@@ -254,6 +254,12 @@ vioapic_indirect_read(struct vioapic *vioapic, uint32_t addr)
 	case IOAPIC_ARB:
 		return vioapic->id;
 	default:
+		/*
+		 * In this switch statement, regnum shall either be IOAPIC_ID or
+		 * IOAPIC_VER or IOAPIC_ARB.
+		 * All the other cases will be handled properly later after this
+		 * switch statement.
+		 */
 		break;
 	}
 
@@ -294,6 +300,12 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 		/* readonly */
 		break;
 	default:
+		/*
+		 * In this switch statement, regnum shall either be IOAPIC_ID or
+		 * IOAPIC_VER or IOAPIC_ARB.
+		 * All the other cases will be handled properly later after this
+		 * switch statement.
+		 */
 		break;
 	}
 

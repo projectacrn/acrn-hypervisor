@@ -827,6 +827,12 @@ static int emulate_mov(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		error = mmio_write(vcpu, val);
 		break;
 	default:
+		/*
+		 * For the opcode that is not handled (an invalid opcode), the
+		 * error code is assigned to a default value (-EINVAL).
+		 * Gracefully return this error code if prior case clauses have
+		 * not been met.
+		 */
 		break;
 	}
 
@@ -915,6 +921,12 @@ static int emulate_movx(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		vie_update_register(vcpu, reg, val, size);
 		break;
 	default:
+		/*
+		 * For the opcode that is not handled (an invalid opcode), the
+		 * error code is assigned to a default value (-EINVAL).
+		 * Gracefully return this error code if prior case clauses have
+		 * not been met.
+		 */
 		break;
 	}
 	return error;
@@ -1150,6 +1162,12 @@ static int emulate_test(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		result = val1 & val2;
 		break;
 	default:
+		/*
+		 * For the opcode that is not handled (an invalid opcode), the
+		 * error code is assigned to a default value (-EINVAL).
+		 * Gracefully return this error code if prior case clauses have
+		 * not been met.
+		 */
 		break;
 	}
 
@@ -1232,6 +1250,12 @@ static int emulate_and(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		error = mmio_write(vcpu, result);
 		break;
 	default:
+		/*
+		 * For the opcode that is not handled (an invalid opcode), the
+		 * error code is assigned to a default value (-EINVAL).
+		 * Gracefully return this error code if prior case clauses have
+		 * not been met.
+		 */
 		break;
 	}
 
@@ -1318,6 +1342,12 @@ static int emulate_or(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		error = mmio_write(vcpu, result);
 		break;
 	default:
+		/*
+		 * For the opcode that is not handled (an invalid opcode), the
+		 * error code is assigned to a default value (-EINVAL).
+		 * Gracefully return this error code if prior case clauses have
+		 * not been met.
+		 */
 		break;
 	}
 	if (error == 0) {
@@ -1462,6 +1492,12 @@ static int emulate_sub(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		vie_update_register(vcpu, reg, nval, size);
 		break;
 	default:
+		/*
+		 * For the opcode that is not handled (an invalid opcode), the
+		 * error code is assigned to a default value (-EINVAL).
+		 * Gracefully return this error code if prior case clauses have
+		 * not been met.
+		 */
 		break;
 	}
 

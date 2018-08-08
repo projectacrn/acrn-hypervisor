@@ -194,6 +194,12 @@ static void shell_handle_special_char(uint8_t ch)
 		(void) shell_getc();
 		break;
 	default:
+		/*
+		 * Only the Escape character is treated as special character.
+		 * All the other characters have been handled properly in
+		 * shell_input_line, so they will not be handled in this API.
+		 * Gracefully return if prior case clauses have not been met.
+		 */
 		break;
 	}
 }

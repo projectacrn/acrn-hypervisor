@@ -369,6 +369,12 @@ void guest_cpuid(struct vcpu *vcpu,
 		break;
 
 	default:
+		/*
+		 * In this switch statement, leaf shall either be 0x01U or 0x0bU
+		 * or 0x0dU. All the other cases have been handled properly
+		 * before this switch statement.
+		 * Gracefully return if prior case clauses have not been met.
+		 */
 		break;
 	}
 }
