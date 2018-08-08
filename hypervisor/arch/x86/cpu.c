@@ -14,15 +14,15 @@ spinlock_t trampoline_spinlock = {
 	.tail = 0U
 };
 
-spinlock_t up_count_spinlock = {
+static spinlock_t up_count_spinlock = {
 	.head = 0U,
 	.tail = 0U
 };
 
 struct per_cpu_region *per_cpu_data_base_ptr;
 uint16_t phys_cpu_num = 0U;
-uint64_t pcpu_sync = 0UL;
-volatile uint16_t up_count = 0U;
+static uint64_t pcpu_sync = 0UL;
+static volatile uint16_t up_count = 0U;
 
 /* physical cpu active bitmap, support up to 64 cpus */
 uint64_t pcpu_active_bitmap = 0UL;

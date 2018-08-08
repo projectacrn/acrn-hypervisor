@@ -45,7 +45,7 @@ static const char *const excp_names[32] = {
 };
 
 /* Global variable for save registers on exception */
-struct intr_excp_ctx *crash_ctx;
+static struct intr_excp_ctx *crash_ctx;
 
 static void dump_guest_reg(struct vcpu *vcpu)
 {

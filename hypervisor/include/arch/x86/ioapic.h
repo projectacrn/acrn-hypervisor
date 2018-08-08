@@ -32,7 +32,6 @@ void ioapic_get_rte(uint32_t irq, union ioapic_rte *rte);
 void suspend_ioapic(void);
 void resume_ioapic(void);
 
-extern uint8_t legacy_irq_to_pin[NR_LEGACY_IRQ];
 extern uint8_t pic_ioapic_pin_map[NR_LEGACY_PIN];
 
 #ifdef HV_DEBUG
