@@ -248,6 +248,12 @@ struct vcpu {
 	uint64_t reg_updated;
 };
 
+struct vcpu_dump {
+	struct vcpu *vcpu;
+	char *str;
+	int str_max;
+};
+
 #define	is_vcpu_bsp(vcpu)	((vcpu)->vcpu_id == BOOT_CPU_ID)
 /* do not update Guest RIP for next VM Enter */
 static inline void vcpu_retain_rip(struct vcpu *vcpu)
@@ -289,6 +295,7 @@ int prepare_vcpu(struct vm *vm, uint16_t pcpu_id);
 
 void request_vcpu_pre_work(struct vcpu *vcpu, uint16_t pre_work_id);
 
+void vcpu_dumpreg(void *data);
 #endif
 
 #endif

@@ -606,120 +606,66 @@ static int shell_list_vcpu(__unused int argc, __unused char **argv)
 	return 0;
 }
 
-#define DUMPREG_SP_SIZE	32
 static int shell_vcpu_dumpreg(int argc, char **argv)
 {
 	int status = 0;
 	uint16_t vm_id;
 	uint16_t vcpu_id;
-	char temp_str[MAX_STR_SIZE];
 	struct vm *vm;
 	struct vcpu *vcpu;
-	uint64_t i, fault_addr;
-	uint64_t tmp[DUMPREG_SP_SIZE];
-	uint32_t err_code = 0;
+	uint64_t mask = 0UL;
+	struct vcpu_dump dump;
+	char *temp_str = alloc_page();
+
+	if (temp_str == NULL) {
+		return -ENOMEM;
+	}
 
 	/* User input invalidation */
 	if (argc != 3) {
 		shell_puts("Please enter cmd with <vm_id, vcpu_id>\r\n");
-		return -EINVAL;
+		status = -EINVAL;
+		goto out;
 	}
 
 	status = atoi(argv[1]);
 	if (status < 0) {
-		return -EINVAL;
+		goto out;
 	}
 	vm_id = (uint16_t)status;
 	vcpu_id = (uint16_t)atoi(argv[2]);
 	if (vcpu_id >= phys_cpu_num) {
-		return (-EINVAL);
+		status = -EINVAL;
+		goto out;
 	}
 	vm = get_vm_from_vmid(vm_id);
 	if (vm == NULL) {
 		shell_puts("No vm found in the input <vm_id, vcpu_id>\r\n");
-		return -EINVAL;
+		status = -EINVAL;
+		goto out;
 	}
 
 	vcpu = vcpu_from_vid(vm, vcpu_id);
 	if (vcpu == NULL) {
 		shell_puts("No vcpu found in the input <vm_id, vcpu_id>\r\n");
-		return -EINVAL;
+		status = -EINVAL;
+		goto out;
 	}
 
-	if (vcpu->state != VCPU_PAUSED) {
-		shell_puts("NOTE: VCPU unPAUSEed, regdump "
-				"may not be accurate\r\n");
+	dump.vcpu = vcpu;
+	dump.str = temp_str;
+	dump.str_max = CPU_PAGE_SIZE;
+	if (vcpu->pcpu_id == get_cpu_id())
+		vcpu_dumpreg(&dump);
+	else {
+		bitmap_set_nolock(vcpu->pcpu_id, &mask);
+		smp_call_function(mask, vcpu_dumpreg, &dump);
 	}
+	shell_puts(temp_str);
+	status = 0;
 
-	snprintf(temp_str, MAX_STR_SIZE,
-		"=  VM ID %d ==== CPU ID %hu========================\r\n",
-		vm->vm_id, vcpu->vcpu_id);
-	shell_puts(temp_str);
-	snprintf(temp_str, MAX_STR_SIZE, "=  RIP=0x%016llx  RSP=0x%016llx "
-			"RFLAGS=0x%016llx\r\n", vcpu_get_rip(vcpu),
-			vcpu_get_gpreg(vcpu, CPU_REG_RSP),
-			vcpu_get_rflags(vcpu));
-	shell_puts(temp_str);
-	snprintf(temp_str, MAX_STR_SIZE, "=  CR0=0x%016llx  CR2=0x%016llx\r\n",
-			vcpu_get_cr0(vcpu), vcpu_get_cr2(vcpu));
-	shell_puts(temp_str);
-	snprintf(temp_str, MAX_STR_SIZE, "=  CR3=0x%016llx  CR4=0x%016llx\r\n",
-			exec_vmread(VMX_GUEST_CR3), vcpu_get_cr4(vcpu));
-	shell_puts(temp_str);
-	snprintf(temp_str, MAX_STR_SIZE, "=  RAX=0x%016llx  RBX=0x%016llx  "
-			"RCX=0x%016llx\r\n",
-			vcpu_get_gpreg(vcpu, CPU_REG_RAX),
-			vcpu_get_gpreg(vcpu, CPU_REG_RBX),
-			vcpu_get_gpreg(vcpu, CPU_REG_RCX));
-	shell_puts(temp_str);
-	snprintf(temp_str, MAX_STR_SIZE, "=  RDX=0x%016llx  RDI=0x%016llx  "
-			"RSI=0x%016llx\r\n",
-			vcpu_get_gpreg(vcpu, CPU_REG_RDX),
-			vcpu_get_gpreg(vcpu, CPU_REG_RDI),
-			vcpu_get_gpreg(vcpu, CPU_REG_RSI));
-	shell_puts(temp_str);
-	snprintf(temp_str, MAX_STR_SIZE, "=  RBP=0x%016llx  R8=0x%016llx  "
-			"R9=0x%016llx\r\n",
-			vcpu_get_gpreg(vcpu, CPU_REG_RBP),
-			vcpu_get_gpreg(vcpu, CPU_REG_R8),
-			vcpu_get_gpreg(vcpu, CPU_REG_R9));
-	shell_puts(temp_str);
-	snprintf(temp_str, MAX_STR_SIZE, "=  R10=0x%016llx  R11=0x%016llx  "
-			"R12=0x%016llx\r\n",
-			vcpu_get_gpreg(vcpu, CPU_REG_R10),
-			vcpu_get_gpreg(vcpu, CPU_REG_R11),
-			vcpu_get_gpreg(vcpu, CPU_REG_R12));
-	shell_puts(temp_str);
-	snprintf(temp_str, MAX_STR_SIZE,
-			"=  R13=0x%016llx  R14=0x%016llx  R15=0x%016llx\r\n",
-			vcpu_get_gpreg(vcpu, CPU_REG_R13),
-			vcpu_get_gpreg(vcpu, CPU_REG_R14),
-			vcpu_get_gpreg(vcpu, CPU_REG_R15));
-	shell_puts(temp_str);
-
-	/* dump sp */
-	status = copy_from_gva(vcpu, tmp, vcpu_get_gpreg(vcpu, CPU_REG_RSP),
-			DUMPREG_SP_SIZE*sizeof(uint64_t), &err_code,
-			&fault_addr);
-	if (status < 0) {
-		/* copy_from_gva fail */
-		shell_puts("Cannot handle user gva yet!\r\n");
-	} else {
-		snprintf(temp_str, MAX_STR_SIZE,
-				"\r\nDump RSP for vm %hu, from "
-				"gva 0x%016llx\r\n",
-				vm_id, vcpu_get_gpreg(vcpu, CPU_REG_RSP));
-		shell_puts(temp_str);
-
-		for (i = 0UL; i < 8UL; i++) {
-			snprintf(temp_str, MAX_STR_SIZE,
-					"=  0x%016llx  0x%016llx  "
-					"0x%016llx  0x%016llx\r\n",
-					tmp[i*4UL], tmp[(i*4UL)+1UL],
-					tmp[(i*4UL)+2UL], tmp[(i*4UL)+3UL]);
-			shell_puts(temp_str);
-		}
-	}
+out:
+	free(temp_str);
 
 	return status;
 }
