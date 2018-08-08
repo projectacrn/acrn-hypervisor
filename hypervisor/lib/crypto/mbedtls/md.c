@@ -6,6 +6,7 @@
  * \author Adriaan de Jong <dejong@fox-it.com>
  *
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright (C) 2018, Intel Corporation, All Rights Reserved.
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -23,67 +24,14 @@
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
-#if defined(MBEDTLS_MD_C)
-
-#include "mbedtls/md.h"
-#include "mbedtls/md_internal.h"
-#include "mbedtls/platform_util.h"
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
-#else
-#include <stdlib.h>
-#define mbedtls_calloc    calloc
-#define mbedtls_free       free
-#endif
-
-#include <string.h>
-
-#if defined(MBEDTLS_FS_IO)
-#include <stdio.h>
-#endif
+#include "md.h"
+#include "md_internal.h"
 
 /*
  * Reminder: update profiles in x509_crt.c when adding a new hash!
  */
 static const int supported_digests[] = {
-
-#if defined(MBEDTLS_SHA512_C)
-        MBEDTLS_MD_SHA512,
-        MBEDTLS_MD_SHA384,
-#endif
-
-#if defined(MBEDTLS_SHA256_C)
         MBEDTLS_MD_SHA256,
-        MBEDTLS_MD_SHA224,
-#endif
-
-#if defined(MBEDTLS_SHA1_C)
-        MBEDTLS_MD_SHA1,
-#endif
-
-#if defined(MBEDTLS_RIPEMD160_C)
-        MBEDTLS_MD_RIPEMD160,
-#endif
-
-#if defined(MBEDTLS_MD5_C)
-        MBEDTLS_MD_MD5,
-#endif
-
-#if defined(MBEDTLS_MD4_C)
-        MBEDTLS_MD_MD4,
-#endif
-
-#if defined(MBEDTLS_MD2_C)
-        MBEDTLS_MD_MD2,
-#endif
-
         MBEDTLS_MD_NONE
 };
 
@@ -92,83 +40,12 @@ const int *mbedtls_md_list( void )
     return( supported_digests );
 }
 
-const mbedtls_md_info_t *mbedtls_md_info_from_string( const char *md_name )
-{
-    if( NULL == md_name )
-        return( NULL );
-
-    /* Get the appropriate digest information */
-#if defined(MBEDTLS_MD2_C)
-    if( !strcmp( "MD2", md_name ) )
-        return mbedtls_md_info_from_type( MBEDTLS_MD_MD2 );
-#endif
-#if defined(MBEDTLS_MD4_C)
-    if( !strcmp( "MD4", md_name ) )
-        return mbedtls_md_info_from_type( MBEDTLS_MD_MD4 );
-#endif
-#if defined(MBEDTLS_MD5_C)
-    if( !strcmp( "MD5", md_name ) )
-        return mbedtls_md_info_from_type( MBEDTLS_MD_MD5 );
-#endif
-#if defined(MBEDTLS_RIPEMD160_C)
-    if( !strcmp( "RIPEMD160", md_name ) )
-        return mbedtls_md_info_from_type( MBEDTLS_MD_RIPEMD160 );
-#endif
-#if defined(MBEDTLS_SHA1_C)
-    if( !strcmp( "SHA1", md_name ) || !strcmp( "SHA", md_name ) )
-        return mbedtls_md_info_from_type( MBEDTLS_MD_SHA1 );
-#endif
-#if defined(MBEDTLS_SHA256_C)
-    if( !strcmp( "SHA224", md_name ) )
-        return mbedtls_md_info_from_type( MBEDTLS_MD_SHA224 );
-    if( !strcmp( "SHA256", md_name ) )
-        return mbedtls_md_info_from_type( MBEDTLS_MD_SHA256 );
-#endif
-#if defined(MBEDTLS_SHA512_C)
-    if( !strcmp( "SHA384", md_name ) )
-        return mbedtls_md_info_from_type( MBEDTLS_MD_SHA384 );
-    if( !strcmp( "SHA512", md_name ) )
-        return mbedtls_md_info_from_type( MBEDTLS_MD_SHA512 );
-#endif
-    return( NULL );
-}
-
 const mbedtls_md_info_t *mbedtls_md_info_from_type( mbedtls_md_type_t md_type )
 {
     switch( md_type )
     {
-#if defined(MBEDTLS_MD2_C)
-        case MBEDTLS_MD_MD2:
-            return( &mbedtls_md2_info );
-#endif
-#if defined(MBEDTLS_MD4_C)
-        case MBEDTLS_MD_MD4:
-            return( &mbedtls_md4_info );
-#endif
-#if defined(MBEDTLS_MD5_C)
-        case MBEDTLS_MD_MD5:
-            return( &mbedtls_md5_info );
-#endif
-#if defined(MBEDTLS_RIPEMD160_C)
-        case MBEDTLS_MD_RIPEMD160:
-            return( &mbedtls_ripemd160_info );
-#endif
-#if defined(MBEDTLS_SHA1_C)
-        case MBEDTLS_MD_SHA1:
-            return( &mbedtls_sha1_info );
-#endif
-#if defined(MBEDTLS_SHA256_C)
-        case MBEDTLS_MD_SHA224:
-            return( &mbedtls_sha224_info );
         case MBEDTLS_MD_SHA256:
             return( &mbedtls_sha256_info );
-#endif
-#if defined(MBEDTLS_SHA512_C)
-        case MBEDTLS_MD_SHA384:
-            return( &mbedtls_sha384_info );
-        case MBEDTLS_MD_SHA512:
-            return( &mbedtls_sha512_info );
-#endif
         default:
             return( NULL );
     }
@@ -211,13 +88,6 @@ int mbedtls_md_clone( mbedtls_md_context_t *dst,
 
     return( 0 );
 }
-
-#if ! defined(MBEDTLS_DEPRECATED_REMOVED)
-int mbedtls_md_init_ctx( mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info )
-{
-    return mbedtls_md_setup( ctx, md_info, 1 );
-}
-#endif
 
 int mbedtls_md_setup( mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info, int hmac )
 {
@@ -274,47 +144,6 @@ int mbedtls_md( const mbedtls_md_info_t *md_info, const unsigned char *input, si
 
     return( md_info->digest_func( input, ilen, output ) );
 }
-
-#if defined(MBEDTLS_FS_IO)
-int mbedtls_md_file( const mbedtls_md_info_t *md_info, const char *path, unsigned char *output )
-{
-    int ret;
-    FILE *f;
-    size_t n;
-    mbedtls_md_context_t ctx;
-    unsigned char buf[1024];
-
-    if( md_info == NULL )
-        return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
-
-    if( ( f = fopen( path, "rb" ) ) == NULL )
-        return( MBEDTLS_ERR_MD_FILE_IO_ERROR );
-
-    mbedtls_md_init( &ctx );
-
-    if( ( ret = mbedtls_md_setup( &ctx, md_info, 0 ) ) != 0 )
-        goto cleanup;
-
-    if( ( ret = md_info->starts_func( ctx.md_ctx ) ) != 0 )
-        goto cleanup;
-
-    while( ( n = fread( buf, 1, sizeof( buf ), f ) ) > 0 )
-        if( ( ret = md_info->update_func( ctx.md_ctx, buf, n ) ) != 0 )
-            goto cleanup;
-
-    if( ferror( f ) != 0 )
-        ret = MBEDTLS_ERR_MD_FILE_IO_ERROR;
-    else
-        ret = md_info->finish_func( ctx.md_ctx, output );
-
-cleanup:
-    mbedtls_platform_zeroize( buf, sizeof( buf ) );
-    fclose( f );
-    mbedtls_md_free( &ctx );
-
-    return( ret );
-}
-#endif /* MBEDTLS_FS_IO */
 
 int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const unsigned char *key, size_t keylen )
 {
@@ -463,13 +292,3 @@ mbedtls_md_type_t mbedtls_md_get_type( const mbedtls_md_info_t *md_info )
 
     return md_info->type;
 }
-
-const char *mbedtls_md_get_name( const mbedtls_md_info_t *md_info )
-{
-    if( md_info == NULL )
-        return( NULL );
-
-    return md_info->name;
-}
-
-#endif /* MBEDTLS_MD_C */
