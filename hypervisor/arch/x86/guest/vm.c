@@ -186,6 +186,10 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	}
 	vm->vpic = vpic_init(vm);
 
+#ifdef CONFIG_PARTITION_MODE
+	vpci_init(vm);
+#endif
+
 	/* vpic wire_mode default is INTR */
 	vm->wire_mode = VPIC_WIRE_INTR;
 
@@ -289,6 +293,10 @@ int shutdown_vm(struct vm *vm)
 	if (vm->vpic != NULL) {
 		vpic_cleanup(vm);
 	}
+
+#ifdef CONFIG_PARTITION_MODE
+	vpci_cleanup(vm);
+#endif
 
 	free(vm->hw.vcpu_array);
 
