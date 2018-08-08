@@ -271,7 +271,7 @@ int shutdown_vm(struct vm *vm)
 
 	/* Destroy secure world */
 	if (vm->sworld_control.flag.active) {
-		destroy_secure_world(vm);
+		destroy_secure_world(vm, true);
 	}
 	/* Free EPT allocated resources assigned to VM */
 	destroy_ept(vm);

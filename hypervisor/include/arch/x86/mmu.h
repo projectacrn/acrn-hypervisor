@@ -389,7 +389,7 @@ int ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
 	uint64_t prot_set, uint64_t prot_clr);
 int ept_mr_del(struct vm *vm, uint64_t *pml4_page,
 	uint64_t gpa, uint64_t size);
-
+void free_ept_mem(void *pml4_addr);
 int     ept_violation_vmexit_handler(struct vcpu *vcpu);
 int     ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu);
 
