@@ -19,7 +19,7 @@ static struct vpci_vdev_array vpci_vdev_array1 = {
 
 	 {/*vdev 1*/
 	  .vbdf = PCI_BDF(0x00U, 0x01U, 0x00U),
-	  .ops = NULL,
+	  .ops = &pci_ops_vdev_pt,
 	  .bar = {
 		[0] = {
 		.base = 0UL,
@@ -65,7 +65,7 @@ static struct vpci_vdev_array vpci_vdev_array2 = {
 
 	 {/*vdev 1*/
 	  .vbdf = PCI_BDF(0x00U, 0x01U, 0x00U),
-	  .ops = NULL,
+	  .ops = &pci_ops_vdev_pt,
 	  .bar = {
 		[0] = {
 		.base = 0UL,
