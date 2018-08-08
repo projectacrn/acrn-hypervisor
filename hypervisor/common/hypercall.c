@@ -87,6 +87,11 @@ handle_vpic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
 	case IRQ_PULSE:
 		ret = vpic_pulse_irq(vm, irq);
 	default:
+		/*
+		 * In this switch statement, mode shall either be IRQ_ASSERT or
+		 * IRQ_DEASSERT or IRQ_PULSE.
+		 * Gracefully return if prior case clauses have not been met.
+		 */
 		break;
 	}
 
@@ -113,6 +118,11 @@ handle_vioapic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
 		ret = vioapic_pulse_irq(vm, irq);
 		break;
 	default:
+		/*
+		 * In this switch statement, mode shall either be IRQ_ASSERT or
+		 * IRQ_DEASSERT or IRQ_PULSE.
+		 * Gracefully return if prior case clauses have not been met.
+		 */
 		break;
 	}
 	return ret;

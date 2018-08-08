@@ -531,6 +531,12 @@ lvt_off_to_idx(uint32_t offset)
 		index = APIC_LVT_ERROR;
 		break;
 	default:
+		/*
+		 * For the offset that is not handled (an invalid offset of
+		 * Local Vector Table), its index is assigned to a default
+		 * value, which indicates an invalid index.
+		 * The index will be checked later to guarantee the validity.
+		 */
 		break;
 	}
 	ASSERT(index <= VLAPIC_MAXLVT_INDEX,
@@ -867,6 +873,11 @@ vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t vector)
 			vcpu_inject_nmi(vcpu);
 			break;
 		default:
+			/*
+			 * Only LINT[1:0] pins will be handled here.
+			 * Gracefully return if prior case clauses have not
+			 * been met.
+			 */
 			break;
 		}
 		return 0;

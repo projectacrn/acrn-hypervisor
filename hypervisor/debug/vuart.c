@@ -205,6 +205,11 @@ static void vuart_write(__unused struct vm_io_handler *hdlr,
 		vu->scr = value;
 		break;
 	default:
+		/*
+		 * For the offset that is not handled (either a read-only
+		 * register or an invalid register), ignore the write to it.
+		 * Gracefully return if prior case clauses have not been met.
+		 */
 		break;
 	}
 
