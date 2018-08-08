@@ -167,9 +167,3 @@ void vpci_cleanup(struct vm *vm)
 		}
 	}
 }
-
-void pci_vdev_cfg_handler(struct vpci *vpci, uint32_t in, uint16_t vbdf,
-	uint32_t offset, uint32_t bytes, uint32_t *val)
-{
-	/* vm-exit handler */
-}
