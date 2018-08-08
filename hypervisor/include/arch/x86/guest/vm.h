@@ -10,6 +10,7 @@
 
 #ifdef CONFIG_PARTITION_MODE
 #include <mptable.h>
+#include <vpci.h>
 #endif
 enum vm_privilege_level {
 	VM_PRIVILEGE_LEVEL_HIGH = 0,
@@ -164,8 +165,16 @@ struct vm {
 	struct vcpuid_entry vcpuid_entries[MAX_VM_VCPUID_ENTRIES];
 #ifdef CONFIG_PARTITION_MODE
 	struct vm_description	*vm_desc;
+	struct vpci vpci;
 #endif
 };
+
+#ifdef CONFIG_PARTITION_MODE
+struct vpci_vdev_array {
+	int num_pci_vdev;
+	struct pci_vdev vpci_vdev_list[];
+};
+#endif
 
 struct vm_description {
 	/* The physical CPU IDs associated with this VM - The first CPU listed
@@ -180,6 +189,7 @@ struct vm_description {
 	uint8_t			vm_id;
 	struct mptable_info	*mptable;
 	const char		*bootargs;
+	struct vpci_vdev_array  *vpci_vdev_array;
 #endif
 };
 
@@ -193,6 +203,10 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm);
 int prepare_vm(uint16_t pcpu_id);
 #ifdef CONFIG_VM0_DESC
 void vm_fixup(struct vm *vm);
+#endif
+
+#ifdef CONFIG_PARTITION_MODE
+const struct vm_description_array *get_vm_desc_base(void);
 #endif
 
 struct vm *get_vm_from_vmid(uint16_t vm_id);
