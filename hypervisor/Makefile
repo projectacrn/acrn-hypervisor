@@ -95,7 +95,9 @@ INCLUDE_PATH += include/arch/x86
 INCLUDE_PATH += include/arch/x86/guest
 INCLUDE_PATH += include/debug
 INCLUDE_PATH += include/public
-INCLUDE_PATH += include/common
+ifeq ($(CONFIG_PARTITION_MODE),y)
+INCLUDE_PATH += include/dm/vpci
+endif
 INCLUDE_PATH += bsp/include
 INCLUDE_PATH += bsp/$(CONFIG_PLATFORM)/include/bsp
 INCLUDE_PATH += boot/include
@@ -169,6 +171,11 @@ C_SRCS += common/ptdev.c
 
 ifdef STACK_PROTECTOR
 C_SRCS += common/stack_protector.c
+endif
+
+ifeq ($(CONFIG_PARTITION_MODE),y)
+C_SRCS += $(wildcard dm/vpci/*.c)
+C_SRCS += $(wildcard partition/*.c)
 endif
 
 C_SRCS += bsp/$(CONFIG_PLATFORM)/vm_description.c
