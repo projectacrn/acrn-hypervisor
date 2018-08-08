@@ -2732,9 +2732,6 @@ pci_xhci_rtsregs_write(struct pci_xhci_vdev *xdev,
 		rts->erst_p = XHCI_GADDR(xdev,
 			xdev->rtsregs.erstba_p->qwEvrsTablePtr & ~0x3FUL);
 
-		rts->er_enq_idx = 0;
-		rts->er_events_cnt = 0;
-
 		UPRINTF(LDBG, "wr erstba erst (%p) ptr 0x%lx, sz %u\r\n",
 			rts->erstba_p,
 			rts->erstba_p->qwEvrsTablePtr,
