@@ -131,8 +131,8 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 		dest_pdpte_p++;
 	}
 
-	/* Map gpa_rebased~gpa_rebased+size
-	 * to secure ept mapping
+	/* Map gpa_rebased~gpa_rebased+size to secure ept mapping
+	 * TODO: not create inverted page tables for trusty memory
 	 */
 	map_params.page_table_type = PTT_EPT;
 	map_params.pml4_inverted = vm->arch_vm.m2p;
@@ -162,33 +162,49 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	}
 }
 
-void  destroy_secure_world(struct vm *vm)
+void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 {
-	struct mem_map_params  map_params;
+	void *pdpt_addr;
 	struct vm *vm0 = get_vm_from_vmid(0U);
 
 	if (vm0 == NULL) {
 		pr_err("Parse vm0 context failed.");
 		return;
 	}
-
-	/* clear trusty memory space */
-	(void)memset(HPA2HVA(vm->sworld_control.sworld_memory.base_hpa),
-			0, vm->sworld_control.sworld_memory.length);
+	if (need_clr_mem) {
+		/* clear trusty memory space */
+		(void)memset(HPA2HVA(vm->sworld_control.sworld_memory.base_hpa),
+				0U, vm->sworld_control.sworld_memory.length);
+	}
 
 	/* restore memory to SOS ept mapping */
-	map_params.page_table_type = PTT_EPT;
-	map_params.pml4_base = vm0->arch_vm.nworld_eptp;
-	map_params.pml4_inverted = vm0->arch_vm.m2p;
-
-	map_mem(&map_params, (void *)vm->sworld_control.sworld_memory.base_hpa,
-		(void *)vm->sworld_control.sworld_memory.base_gpa_in_sos,
+	if (ept_mr_add(vm0, vm->sworld_control.sworld_memory.base_hpa,
+			vm->sworld_control.sworld_memory.base_gpa_in_sos,
 			vm->sworld_control.sworld_memory.length,
-			(IA32E_EPT_R_BIT |
-			 IA32E_EPT_W_BIT |
-			 IA32E_EPT_X_BIT |
-			 IA32E_EPT_WB));
+			EPT_RWX | EPT_WB) != 0) {
+		pr_warn("Restore trusty mem to SOS failed");
+	}
 
+	/* Restore memory to guest normal world */
+	if (ept_mr_add(vm, vm->sworld_control.sworld_memory.base_hpa,
+			vm->sworld_control.sworld_memory.base_gpa_in_uos,
+			vm->sworld_control.sworld_memory.length,
+			EPT_RWX | EPT_WB) != 0)	{
+		pr_warn("Restore trusty mem to nworld failed");
+	}
+
+	/* Free trusty ept page-structures */
+	if (vm->arch_vm.sworld_eptp != NULL) {
+		pdpt_addr =
+		(void *)pml4e_page_vaddr(*(uint64_t *)vm->arch_vm.sworld_eptp);
+		/* memset PDPTEs except trusty memory */
+		(void)memset(pdpt_addr, 0UL,
+			NON_TRUSTY_PDPT_ENTRIES * IA32E_COMM_ENTRY_SIZE);
+		free_ept_mem(vm->arch_vm.sworld_eptp);
+		vm->arch_vm.sworld_eptp = NULL;
+	} else {
+		pr_err("sworld eptp is NULL");
+	}
 }
 
 static void save_world_ctx(struct vcpu *vcpu, struct ext_context *ext_ctx)

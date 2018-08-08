@@ -16,6 +16,8 @@
 #define TRUSTY_EPT_REBASE_GPA (511UL * 1024UL * 1024UL * 1024UL)
 #define TRUSTY_MEMORY_SIZE        0x01000000
 
+#define NON_TRUSTY_PDPT_ENTRIES         511U
+
 /* Structure of seed info */
 struct seed_info {
 	uint8_t cse_svn;
@@ -127,7 +129,7 @@ struct trusty_startup_param {
 
 void switch_world(struct vcpu *vcpu, int next_world);
 bool initialize_trusty(struct vcpu *vcpu, uint64_t param);
-void destroy_secure_world(struct vm *vm);
+void destroy_secure_world(struct vm *vm, bool need_clr_mem);
 void save_sworld_context(struct vcpu *vcpu);
 void restore_sworld_context(struct vcpu *vcpu);
 void trusty_set_dseed(void *dseed, uint8_t dseed_num);

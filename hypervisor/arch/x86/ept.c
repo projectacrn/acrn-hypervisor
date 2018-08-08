@@ -45,7 +45,7 @@ static uint64_t find_next_table(uint32_t table_offset, void *table_base)
 /**
  * @pre pml4_addr != NULL
  */
-static void free_ept_mem(void *pml4_addr)
+void free_ept_mem(void *pml4_addr)
 {
 	void *pdpt_addr;
 	void *pde_addr;
@@ -98,18 +98,6 @@ void destroy_ept(struct vm *vm)
 		free_ept_mem(vm->arch_vm.nworld_eptp);
 	if (vm->arch_vm.m2p != NULL)
 		free_ept_mem(vm->arch_vm.m2p);
-
-	/*
-	 * If secure world is initialized, destroy Secure world ept.
-	 * There are two cases secure world is not initialized:
-	 *  - trusty is not enabled. Check sworld_enabled.
-	 *  - trusty is enabled. But not initialized yet.
-	 *    Check vm->arch_vm.sworld_eptp.
-	 */
-	if (vm->sworld_control.flag.active) {
-		free_ept_mem(HPA2HVA(vm->arch_vm.sworld_eptp));
-		vm->arch_vm.sworld_eptp = NULL;
-	}
 }
 
 uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
