@@ -395,16 +395,12 @@ handle_vmexit(struct vmctx *ctx, struct vhm_request *vhm_req, int vcpu)
 	(*handler[exitcode])(ctx, vhm_req, &vcpu);
 	atomic_store(&vhm_req->processed, REQ_STATE_COMPLETE);
 
-	/* If UOS is not in suspend or system reset mode, we don't
-	 * need to notify request done.
-	 *
-	 * But there is little difference between reset and suspend:
-	 *  - We don't need to notify request done for reset because reset
-	 *    doesn't care it.
-	 *  - We don't need to notify request done for suspend because
-	 *    guest will offline all APs, write PM register to trigger
-	 *    PM. Then the PM register writting will trigger the latest
-	 *    vmexit and it doesn't care request done either.
+	/* We cannot notify the VHM/hypervisor on the request completion at this
+	 * point if the UOS is in suspend or system reset mode, as the VM is
+	 * still not paused and a notification can kick off the vcpu to run
+	 * again. Postpone the notification till vm_system_reset() or
+	 * vm_suspend_resume() for resetting the ioreq states in the VHM and
+	 * hypervisor.
 	 */
 	if ((VM_SUSPEND_SYSTEM_RESET == vm_get_suspend_mode()) ||
 		(VM_SUSPEND_SUSPEND == vm_get_suspend_mode()))
@@ -526,7 +522,42 @@ vm_system_reset(struct vmctx *ctx)
 		struct vhm_request *vhm_req;
 
 		vhm_req = &vhm_req_buf[vcpu_id];
-		if ((atomic_load(&vhm_req->processed) == REQ_STATE_PROCESSING) &&
+		/*
+		 * The state of the VHM request already assigned to DM can be
+		 * COMPLETE if it has already been processed by the vm_loop, or
+		 * PROCESSING if the request is assigned to DM after vm_loop
+		 * checks the requests but before this point.
+		 *
+		 * Unless under emergency mode, the vcpu writing to the ACPI PM
+		 * CR should be the only vcpu of that VM that is still
+		 * running. In this case there should be only one completed
+		 * request which is the APIC PM CR write. Notify the completion
+		 * of that request here (after the VM is paused) to reset its
+		 * state.
+		 *
+		 * When handling emergency mode triggered by one vcpu without
+		 * offlining any other vcpus, there can be multiple VHM requests
+		 * with various states. Currently the context of that VM in the
+		 * DM, VHM and hypervisor will be destroyed and recreated,
+		 * causing the states of VHM requests to be dropped.
+		 *
+		 * TODO: If the emergency mode is handled without context
+		 * deletion and recreation, we should be careful on potential
+		 * races when reseting VHM request states. Some considerations
+		 * include:
+		 *
+		 *     * Use cmpxchg instead of load+store when distributing
+		 *       requests.
+		 *
+		 *     * vm_reset in VHM should clean up the ioreq bitmap, while
+		 *       vm_reset in the hypervisor should cleanup the states of
+		 *       VHM requests.
+		 *
+		 *     * vm_reset in VHM should hold a mutex to block the
+		 *       request distribution tasklet from assigned more
+		 *       requests before VM reset is done.
+		 */
+		if ((atomic_load(&vhm_req->processed) == REQ_STATE_COMPLETE) &&
 			(vhm_req->client == ctx->ioreq_client))
 			vm_notify_request_done(ctx, vcpu_id);
 	}
@@ -558,7 +589,10 @@ vm_suspend_resume(struct vmctx *ctx)
 		struct vhm_request *vhm_req;
 
 		vhm_req = &vhm_req_buf[vcpu_id];
-		if ((atomic_load(&vhm_req->processed) == REQ_STATE_PROCESSING) &&
+		/* See the comments in vm_system_reset() for considerations of
+		 * the notification below.
+		 */
+		if ((atomic_load(&vhm_req->processed) == REQ_STATE_COMPLETE) &&
 			(vhm_req->client == ctx->ioreq_client))
 			vm_notify_request_done(ctx, vcpu_id);
 	}
