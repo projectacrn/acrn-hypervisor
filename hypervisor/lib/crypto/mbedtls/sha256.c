@@ -25,17 +25,15 @@
  */
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
 #if defined(MBEDTLS_SHA256_C)
 
-#include "mbedtls/sha256.h"
-#include "mbedtls/platform_util.h"
-
-#include <string.h>
+#include "md.h"
+#include "sha256.h"
 
 #if defined(MBEDTLS_SELF_TEST)
 #if defined(MBEDTLS_PLATFORM_C)
@@ -277,7 +275,7 @@ int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
 
     if( left && ilen >= fill )
     {
-        memcpy( (void *) (ctx->buffer + left), input, fill );
+        memcpy_s( (void *) (ctx->buffer + left), 64, input, fill );
 
         if( ( ret = mbedtls_internal_sha256_process( ctx, ctx->buffer ) ) != 0 )
             return( ret );
@@ -297,7 +295,7 @@ int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
     }
 
     if( ilen > 0 )
-        memcpy( (void *) (ctx->buffer + left), input, ilen );
+        memcpy_s( (void *) (ctx->buffer + left), 64, input, ilen );
 
     return( 0 );
 }

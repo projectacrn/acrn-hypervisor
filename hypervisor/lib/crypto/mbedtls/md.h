@@ -27,7 +27,7 @@
 #ifndef MBEDTLS_MD_H
 #define MBEDTLS_MD_H
 
-#include <stddef.h>
+#include <rtl.h>
 
 #if !defined(MBEDTLS_CONFIG_FILE)
 #include "config.h"
@@ -40,6 +40,8 @@
 #define MBEDTLS_ERR_MD_ALLOC_FAILED                       -0x5180  /**< Failed to allocate memory. */
 #define MBEDTLS_ERR_MD_FILE_IO_ERROR                      -0x5200  /**< Opening or reading of file failed. */
 #define MBEDTLS_ERR_MD_HW_ACCEL_FAILED                    -0x5280  /**< MD hardware accelerator failed. */
+
+#define mbedtls_platform_zeroize(buf, len) memset(buf, 0, len)
 
 #ifdef __cplusplus
 extern "C" {

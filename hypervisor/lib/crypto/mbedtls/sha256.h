@@ -33,8 +33,7 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include <stddef.h>
-#include <stdint.h>
+#include <types.h>
 
 #define MBEDTLS_ERR_SHA256_HW_ACCEL_FAILED                -0x0037  /**< SHA-256 hardware accelerator failed */
 

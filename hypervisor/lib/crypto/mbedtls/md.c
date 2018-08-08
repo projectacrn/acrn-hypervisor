@@ -24,26 +24,23 @@
  */
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
 #if defined(MBEDTLS_MD_C)
 
-#include "mbedtls/md.h"
-#include "mbedtls/md_internal.h"
-#include "mbedtls/platform_util.h"
+#include <hypervisor.h>
+#include "md.h"
+#include "md_internal.h"
 
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
-#include <stdlib.h>
 #define mbedtls_calloc    calloc
 #define mbedtls_free       free
 #endif
-
-#include <string.h>
 
 #if defined(MBEDTLS_FS_IO)
 #include <stdio.h>
