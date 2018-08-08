@@ -36,10 +36,6 @@
 #define MBEDTLS_ERR_HKDF_BAD_INPUT_DATA  -0x5F80  /**< Bad input parameters to function. */
 /* \} name */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  *  \brief  This is the HMAC-based Extract-and-Expand Key Derivation Function
  *          (HKDF).
@@ -117,9 +113,5 @@ int mbedtls_hkdf_extract( const mbedtls_md_info_t *md,
 int mbedtls_hkdf_expand( const mbedtls_md_info_t *md, const unsigned char *prk,
                          size_t prk_len, const unsigned char *info,
                          size_t info_len, unsigned char *okm, size_t okm_len );
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* hkdf.h */
