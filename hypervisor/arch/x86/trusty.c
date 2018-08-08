@@ -5,7 +5,7 @@
  */
 
 #include <hypervisor.h>
-#include <hkdf.h>
+#include <hkdf_wrap.h>
 
 #define TRUSTY_VERSION   1U
 #define TRUSTY_VERSION_2 2U
