@@ -92,4 +92,7 @@ struct vpci {
 	struct pci_addr_info addr_info;
 };
 
+void vpci_init(struct vm *vm);
+void vpci_cleanup(struct vm *vm);
+
 #endif /* VPCI_H_ */
