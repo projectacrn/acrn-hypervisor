@@ -563,7 +563,7 @@ static void bsp_boot_post(void)
 
 	exec_vmxon_instr(BOOT_CPU_ID);
 
-	prepare_vm0();
+	prepare_vm(BOOT_CPU_ID);
 
 	default_idle();
 
