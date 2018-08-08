@@ -440,10 +440,13 @@ static void pci_xhci_update_ep_ring(struct pci_xhci_vdev *xdev,
 				    uint32_t streamid, uint64_t ringaddr,
 				    int ccs);
 static void pci_xhci_init_port(struct pci_xhci_vdev *xdev, int portn);
+static int pci_xhci_connect_port(struct pci_xhci_vdev *xdev, int port,
+		int usb_speed, int need_intr);
+static int pci_xhci_disconnect_port(struct pci_xhci_vdev *xdev, int port,
+		int need_intr);
 static struct pci_xhci_dev_emu *pci_xhci_dev_create(struct pci_xhci_vdev *
 		xdev, void *dev_data);
 static void pci_xhci_dev_destroy(struct pci_xhci_dev_emu *de);
-static int pci_xhci_port_chg(struct pci_xhci_vdev *xdev, int port, int conn);
 static void pci_xhci_set_evtrb(struct xhci_trb *evtrb, uint64_t port,
 		uint32_t errcode, uint32_t evtype);
 static int pci_xhci_xfer_complete(struct pci_xhci_vdev *xdev,
@@ -472,6 +475,7 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	void *ud;
 	uint8_t native_bus, native_pid, native_port;
 	uint16_t native_vid;
+	int native_speed;
 
 	xdev = hci_data;
 
@@ -498,6 +502,7 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	ue->ue_info(ud, USB_INFO_PORT, &native_port, sizeof(native_port));
 	ue->ue_info(ud, USB_INFO_VID, &native_vid, sizeof(native_vid));
 	ue->ue_info(ud, USB_INFO_PID, &native_pid, sizeof(native_pid));
+	ue->ue_info(ud, USB_INFO_SPEED, &native_speed, sizeof(native_speed));
 	UPRINTF(LDBG, "%04x:%04x %d-%d connecting.\r\n",
 			native_vid, native_pid, native_bus, native_port);
 
@@ -543,14 +548,12 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	xdev->ndevices++;
 
 	pci_xhci_reset_slot(xdev, slot);
-	pci_xhci_init_port(xdev, port);
-
 	UPRINTF(LDBG, "%X:%X %d-%d locates in slot %d port %d.\r\n",
 			native_vid, native_pid, native_bus, native_port,
 			slot, port);
 
 	/* Trigger port change event for the arriving device */
-	if (pci_xhci_port_chg(xdev, port, 1))
+	if (pci_xhci_connect_port(xdev, port, native_speed, 1))
 		UPRINTF(LFTL, "fail to report port event\n");
 
 	return 0;
@@ -595,7 +598,7 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 	}
 
 	UPRINTF(LDBG, "report virtual port %d status\r\n", port);
-	if (pci_xhci_port_chg(xdev, port, 0)) {
+	if (pci_xhci_disconnect_port(xdev, port, 1)) {
 		UPRINTF(LFTL, "fail to report event\r\n");
 		return -1;
 	}
@@ -784,31 +787,28 @@ pci_xhci_convert_speed(int lspeed)
 }
 
 static int
-pci_xhci_port_chg(struct pci_xhci_vdev *xdev, int port, int conn)
+pci_xhci_change_port(struct pci_xhci_vdev *xdev, int port, int usb_speed,
+		int conn, int need_intr)
 {
 	int speed, error;
 	struct xhci_trb evtrb;
 	struct pci_xhci_portregs *reg;
-	struct pci_xhci_dev_emu	*dev;
 
 	assert(xdev != NULL);
 
 	reg = XHCI_PORTREG_PTR(xdev, port);
-	dev = XHCI_DEVINST_PTR(xdev, port);
-	if (!dev || !dev->dev_ue || !reg) {
-		UPRINTF(LWRN, "find nullptr with port %d\r\n", port);
-		return -1;
-	}
-
 	if (conn == 0) {
 		reg->portsc &= ~XHCI_PS_CCS;
 		reg->portsc |= (XHCI_PS_CSC |
 				XHCI_PS_PLS_SET(UPS_PORT_LS_RX_DET));
 	} else {
-		speed = pci_xhci_convert_speed(dev->dev_ue->ue_usbspeed);
+		speed = pci_xhci_convert_speed(usb_speed);
 		reg->portsc = XHCI_PS_CCS | XHCI_PS_PP | XHCI_PS_CSC;
 		reg->portsc |= XHCI_PS_SPEED_SET(speed);
 	}
+
+	if (!need_intr)
+		return 0;
 
 	/* make an event for the guest OS */
 	pci_xhci_set_evtrb(&evtrb,
@@ -823,6 +823,20 @@ pci_xhci_port_chg(struct pci_xhci_vdev *xdev, int port, int conn)
 
 	UPRINTF(LDBG, "%s: port %d:%08X\r\n", __func__, port, reg->portsc);
 	return (error == XHCI_TRB_ERROR_SUCCESS) ? 0 : -1;
+}
+
+static int
+pci_xhci_connect_port(struct pci_xhci_vdev *xdev, int port, int usb_speed,
+		int intr)
+{
+	return pci_xhci_change_port(xdev, port, usb_speed, 1, intr);
+}
+
+static int
+pci_xhci_disconnect_port(struct pci_xhci_vdev *xdev, int port, int intr)
+{
+	/* for disconnect, the speed is useless */
+	return pci_xhci_change_port(xdev, port, 0, 0, intr);
 }
 
 static void
@@ -3208,30 +3222,8 @@ pci_xhci_reset_port(struct pci_xhci_vdev *xdev, int portn, int warm)
 static void
 pci_xhci_init_port(struct pci_xhci_vdev *xdev, int portn)
 {
-	struct pci_xhci_portregs *port;
-	struct pci_xhci_dev_emu	*dev;
-
-	port = XHCI_PORTREG_PTR(xdev, portn);
-	dev = XHCI_DEVINST_PTR(xdev, portn);
-	if (dev) {
-		port->portsc = XHCI_PS_CCS |		/* connected */
-			       XHCI_PS_PP;		/* port power */
-
-		if (dev->dev_ue->ue_usbver == 2) {
-			port->portsc |= XHCI_PS_PLS_SET(UPS_PORT_LS_POLL) |
-			       XHCI_PS_SPEED_SET(dev->dev_ue->ue_usbspeed);
-		} else {
-			port->portsc |= XHCI_PS_PLS_SET(UPS_PORT_LS_U0) |
-			       XHCI_PS_PED |		/* enabled */
-			       XHCI_PS_SPEED_SET(dev->dev_ue->ue_usbspeed);
-		}
-
-		UPRINTF(LDBG, "Init port %d 0x%x\n", portn, port->portsc);
-	} else {
-		port->portsc = XHCI_PS_PLS_SET(UPS_PORT_LS_RX_DET) | XHCI_PS_PP;
-		UPRINTF(LDBG, "Init empty port %d 0x%x\n",
-				portn, port->portsc);
-	}
+	XHCI_PORTREG_PTR(xdev, portn)->portsc =
+		XHCI_PS_PLS_SET(UPS_PORT_LS_RX_DET) | XHCI_PS_PP;
 }
 
 static int
