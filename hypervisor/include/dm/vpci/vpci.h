@@ -92,6 +92,8 @@ struct vpci {
 	struct pci_addr_info addr_info;
 };
 
+extern struct pci_vdev_ops pci_ops_vdev_pt;
+
 void vpci_init(struct vm *vm);
 void vpci_cleanup(struct vm *vm);
 

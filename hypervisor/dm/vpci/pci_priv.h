@@ -78,4 +78,76 @@
 void pci_vdev_cfg_handler(struct vpci *vpci, uint32_t in, uint16_t vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val);
 
+static inline uint8_t
+pci_vdev_read_cfg_u8(struct pci_vdev *vdev, uint32_t offset)
+{
+	return (*(uint8_t *)(&vdev->cfgdata[0] + offset));
+}
+
+static inline uint16_t pci_vdev_read_cfg_u16(struct pci_vdev *vdev,
+	uint32_t offset)
+{
+	return (*(uint16_t *)(&vdev->cfgdata[0] + offset));
+}
+
+static inline uint32_t pci_vdev_read_cfg_u32(struct pci_vdev *vdev,
+	uint32_t offset)
+{
+	return (*(uint32_t *)(&vdev->cfgdata[0] + offset));
+}
+
+static inline void
+pci_vdev_write_cfg_u8(struct pci_vdev *vdev, uint32_t offset, uint8_t val)
+{
+	*(uint8_t *)(vdev->cfgdata + offset) = val;
+}
+
+static inline void
+pci_vdev_write_cfg_u16(struct pci_vdev *vdev, uint32_t offset, uint16_t val)
+{
+	*(uint16_t *)(vdev->cfgdata + offset) = val;
+}
+
+static inline void
+pci_vdev_write_cfg_u32(struct pci_vdev *vdev, uint32_t offset, uint32_t val)
+{
+	*(uint32_t *)(vdev->cfgdata + offset) = val;
+}
+
+static inline uint32_t pci_vdev_read_cfg(struct pci_vdev *vdev,
+	uint32_t offset, uint32_t bytes)
+{
+	uint32_t val;
+
+	switch (bytes) {
+	case 1U:
+		val = pci_vdev_read_cfg_u8(vdev, offset);
+		break;
+	case 2U:
+		val = pci_vdev_read_cfg_u16(vdev, offset);
+		break;
+	default:
+		val = pci_vdev_read_cfg_u32(vdev, offset);
+		break;
+	}
+
+	return val;
+}
+
+static inline void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset,
+	uint32_t bytes, uint32_t val)
+{
+	switch (bytes) {
+	case 1U:
+		pci_vdev_write_cfg_u8(vdev, offset, val);
+		break;
+	case 2U:
+		pci_vdev_write_cfg_u16(vdev, offset, val);
+		break;
+	default:
+		pci_vdev_write_cfg_u32(vdev, offset, val);
+		break;
+	}
+}
+
 #endif /* PCI_PRIV_H_ */
