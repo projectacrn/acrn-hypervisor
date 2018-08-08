@@ -437,6 +437,18 @@ int prepare_vm0(void)
 	return err;
 }
 
+int prepare_vm(uint16_t pcpu_id)
+{
+	int err = 0;
+
+	/* prepare vm0 if pcpu_id is BOOT_CPU_ID */
+	if (pcpu_id == BOOT_CPU_ID) {
+		err  = prepare_vm0();
+	}
+
+	return err;
+}
+
 #ifdef CONFIG_VM0_DESC
 static inline bool vcpu_in_vm_desc(struct vcpu *vcpu,
 		struct vm_description *vm_desc)
