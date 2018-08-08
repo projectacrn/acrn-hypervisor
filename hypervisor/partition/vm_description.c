@@ -12,7 +12,7 @@ static struct vpci_vdev_array vpci_vdev_array1 = {
 	.vpci_vdev_list = {
 	 {/*vdev 0: hostbridge */
 	  .vbdf = PCI_BDF(0x00U, 0x00U, 0x00U),
-	  .ops = NULL,
+	  .ops = &pci_ops_vdev_hostbridge,
 	  .bar = {}, /* don't care for hostbridge */
 	  .pdev = {} /* don't care for hostbridge */
 	 },
@@ -58,7 +58,7 @@ static struct vpci_vdev_array vpci_vdev_array2 = {
 	.vpci_vdev_list = {
 	 {/*vdev 0: hostbridge*/
 	  .vbdf = PCI_BDF(0x00U, 0x00U, 0x00U),
-	  .ops = NULL,
+	  .ops = &pci_ops_vdev_hostbridge,
 	  .bar = {}, /* don't care for hostbridge */
 	  .pdev = {} /* don't care for hostbridge */
 	 },
