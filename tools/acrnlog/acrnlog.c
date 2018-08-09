@@ -409,7 +409,7 @@ static const char optString[] = "s:n:t:h";
 static void display_usage(void)
 {
 	printf("acrnlog - tool to collect ACRN hypervisor log\n"
-	       "[Usage] acrnlog [-s] [size] [-n] [number]\n\n"
+	       "[Usage] acrnlog [-s size] [-n number] [-t interval] [-h]\n\n"
 	       "[Options]\n"
 	       "\t-h: print this message\n"
 	       "\t-t: polling interval to collect logs, in ms\n"
