@@ -54,15 +54,24 @@
 #define	VIRTIO_BLK_F_FLUSH	(1 << 9)	/* Cache flush support */
 #define	VIRTIO_BLK_F_TOPOLOGY	(1 << 10)	/* Optimal I/O alignment */
 
+/* Device can toggle its cache between writeback and writethrough modes */
+#define	VIRTIO_BLK_F_CONFIG_WCE	(1 << 11)
+
 /*
- * Host capabilities
+ * Basic device capabilities
  */
 #define VIRTIO_BLK_S_HOSTCAPS      \
 	(VIRTIO_BLK_F_SEG_MAX |						    \
 	VIRTIO_BLK_F_BLK_SIZE |						    \
-	VIRTIO_BLK_F_FLUSH    |						    \
 	VIRTIO_BLK_F_TOPOLOGY |						    \
 	VIRTIO_RING_F_INDIRECT_DESC)	/* indirect descriptors */
+
+/*
+ * Writeback cache bits
+ */
+#define VIRTIO_BLK_F_WB_BITS	\
+	(VIRTIO_BLK_F_FLUSH |	\
+	VIRTIO_BLK_F_CONFIG_WCE)
 
 /*
  * Config space "registers"
@@ -126,6 +135,7 @@ struct virtio_blk {
 	struct blockif_ctxt *bc;
 	char ident[VIRTIO_BLK_BLK_ID_BYTES + 1];
 	struct virtio_blk_ioreq ios[VIRTIO_BLK_RINGSZ];
+	uint8_t original_wce;
 };
 
 static void virtio_blk_reset(void *);
@@ -152,6 +162,7 @@ virtio_blk_reset(void *vdev)
 
 	DPRINTF(("virtio_blk: device reset requested !\n"));
 	virtio_reset_dev(&blk->base);
+	blockif_set_wce(blk->bc, blk->original_wce);
 }
 
 static void
@@ -273,6 +284,17 @@ virtio_blk_notify(void *vdev, struct virtio_vq_info *vq)
 		virtio_blk_proc(blk, vq);
 }
 
+static uint64_t
+virtio_blk_get_caps(struct virtio_blk *blk, bool wb)
+{
+	uint64_t caps;
+
+	caps = VIRTIO_BLK_S_HOSTCAPS;
+	if (wb)
+		caps |= VIRTIO_BLK_F_WB_BITS;
+	return caps;
+}
+
 static int
 virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
@@ -338,7 +360,6 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	/* init virtio struct and virtqueues */
 	virtio_linkup(&blk->base, &virtio_blk_ops, blk, dev, &blk->vq);
 	blk->base.mtx = &blk->mtx;
-	blk->base.device_caps = VIRTIO_BLK_S_HOSTCAPS;
 
 	blk->vq.qsize = VIRTIO_BLK_RINGSZ;
 	/* blk->vq.vq_notify = we have no per-queue notify */
@@ -367,7 +388,10 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	    (sto != 0) ? ((sts - sto) / sectsz) : 0;
 	blk->cfg.topology.min_io_size = 0;
 	blk->cfg.topology.opt_io_size = 0;
-	blk->cfg.writeback = 0;
+	blk->cfg.writeback = blockif_get_wce(blk->bc);
+	blk->original_wce = blk->cfg.writeback; /* save for reset */
+	blk->base.device_caps =
+		virtio_blk_get_caps(blk, !!blk->cfg.writeback);
 
 	/*
 	 * Should we move some of this into virtio.c?  Could
@@ -399,6 +423,9 @@ virtio_blk_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		DPRINTF(("virtio_blk: deinit\n"));
 		blk = (struct virtio_blk *) dev->arg;
 		bctxt = blk->bc;
+		if (blockif_flush_all(bctxt))
+			WPRINTF(("vrito_blk:"
+				"Failed to flush before close\n"));
 		blockif_close(bctxt);
 		free(blk);
 	}
@@ -407,6 +434,23 @@ virtio_blk_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 static int
 virtio_blk_cfgwrite(void *vdev, int offset, int size, uint32_t value)
 {
+	struct virtio_blk *blk = vdev;
+	struct virtio_blk_config *blkcfg = &(blk->cfg);
+	void *ptr;
+
+	ptr = (uint8_t *)blkcfg + offset;
+
+	if ((offset == offsetof(struct virtio_blk_config, writeback))
+		&& (size == 1)) {
+		memcpy(ptr, &value, size);
+		blockif_set_wce(blk->bc, blkcfg->writeback);
+		if (blkcfg->writeback)
+			blk->base.device_caps |= VIRTIO_BLK_F_FLUSH;
+		else
+			blk->base.device_caps &= ~VIRTIO_BLK_F_FLUSH;
+		return 0;
+	}
+
 	DPRINTF(("virtio_blk: write to readonly reg %d\n\r", offset));
 	return -1;
 }
