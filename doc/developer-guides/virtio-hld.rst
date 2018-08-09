@@ -530,7 +530,25 @@ VTBLK_F_TOPOLOGY(bit 10)
 
 To use the virtio-blk device, use the following virtio command::
 
-   -s <slot>,virtio-blk,<filepath>
+   -s <slot>,virtio-blk,<filepath>[,options]
+   
+   options:
+
+   writethru: write operation is reported completed only when the
+   data has been written to physical storage.
+
+   writeback: write operation is reported completed when data is
+   placed in page cache. Needs to be flushed to the physical storage.
+
+   ro: open file with readonly mode.
+
+   sectorsize:
+   1> sectorsize=<sector size>/<physical sector size>
+   2> sectorsize=<sector size>
+   default values for sector size and physical sector size are 512
+
+   range:
+   range=<start lba in file>/<sub file size>
 
 Successful booting of the User OS verifies the correctness of the
 device.
