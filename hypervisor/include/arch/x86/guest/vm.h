@@ -170,7 +170,9 @@ struct vm_description {
 	/* Whether secure world is enabled for current VM. */
 	bool                   sworld_enabled;
 #ifdef CONFIG_PARTITION_MODE
+	uint8_t			vm_id;
 	struct mptable_info	*mptable;
+	const char		*bootargs;
 #endif
 };
 
@@ -191,4 +193,16 @@ struct vm *get_vm_from_vmid(uint16_t vm_id);
 extern struct list_head vm_list;
 extern spinlock_t vm_list_lock;
 
+#ifdef CONFIG_PARTITION_MODE
+struct vm_description_array {
+	int                     num_vm_desc;
+	const struct vm_description   vm_desc_array[];
+};
+
+struct pcpu_vm_desc_mapping {
+	const struct vm_descriptin *vm_desc_ptr;
+	bool is_bsp;
+};
+extern const struct pcpu_vm_desc_mapping pcpu_vm_desc_map[];
+#endif
 #endif /* VM_H_ */

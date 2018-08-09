@@ -404,6 +404,40 @@ void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec)
 	schedule_vcpu(bsp);
 }
 
+#ifdef CONFIG_PARTITION_MODE
+/* Create vm/vcpu for vm */
+int prepare_vm(uint16_t pcpu_id)
+{
+	int ret = 0;
+	uint16_t i;
+	struct vm *vm = NULL;
+	const struct vm_description *vm_desc = NULL;
+	bool is_vm_bsp;
+
+	vm_desc = pcpu_vm_desc_map[pcpu_id].vm_desc_ptr;
+	is_vm_bsp = pcpu_vm_desc_map[pcpu_id].is_bsp;
+
+	if (is_vm_bsp) {
+		ret = create_vm(vm_desc, &vm);
+		ASSERT(ret == 0, "VM creation failed!");
+
+		prepare_vcpu(vm, vm_desc->vm_pcpu_ids[0]);
+
+		/* Prepare the AP for vm */
+		for (i = 1U; i < vm_desc->vm_hw_num_cores; i++)
+			prepare_vcpu(vm, vm_desc->vm_pcpu_ids[i]);
+
+		/* start vm BSP automatically */
+		start_vm(vm);
+
+		pr_acrnlog("Start VM%x", vm_desc->vm_id);
+	}
+
+	return ret;
+}
+
+#else
+
 /* Create vm/vcpu for vm0 */
 int prepare_vm0(void)
 {
@@ -448,6 +482,7 @@ int prepare_vm(uint16_t pcpu_id)
 
 	return err;
 }
+#endif
 
 #ifdef CONFIG_VM0_DESC
 static inline bool vcpu_in_vm_desc(struct vcpu *vcpu,
