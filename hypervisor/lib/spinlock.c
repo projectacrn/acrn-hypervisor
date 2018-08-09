@@ -6,10 +6,11 @@
 
 #include <hv_lib.h>
 
-inline void spinlock_init(spinlock_t *lock)
+void spinlock_init(spinlock_t *lock)
 {
 	(void)memset(lock, 0U, sizeof(spinlock_t));
 }
+
 void spinlock_obtain(spinlock_t *lock)
 {
 

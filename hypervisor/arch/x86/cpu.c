@@ -67,7 +67,7 @@ static uint64_t start_tsc __attribute__((__section__(".bss_noinit")));
 			 : "r"(rsp), "rm"(SP_BOTTOM_MAGIC), "a"(to));   \
 }
 
-inline bool cpu_has_cap(uint32_t bit)
+bool cpu_has_cap(uint32_t bit)
 {
 	uint32_t feat_idx = bit >> 5U;
 	uint32_t feat_bit = bit & 0x1fU;
