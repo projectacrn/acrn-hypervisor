@@ -639,6 +639,10 @@ static void cpu_secondary_post(void)
 
 	exec_vmxon_instr(get_cpu_id());
 
+#ifdef CONFIG_PARTITION_MODE
+	prepare_vm(get_cpu_id());
+#endif
+
 	default_idle();
 
 	/* Control will only come here for secondary
