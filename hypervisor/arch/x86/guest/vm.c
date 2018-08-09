@@ -433,6 +433,8 @@ int prepare_vm(uint16_t pcpu_id)
 		ret = create_vm(vm_desc, &vm);
 		ASSERT(ret == 0, "VM creation failed!");
 
+		mptable_build(vm);
+
 		prepare_vcpu(vm, vm_desc->vm_pcpu_ids[0]);
 
 		/* Prepare the AP for vm */
