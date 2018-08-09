@@ -373,7 +373,11 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 
 	ctx.vector = intr_info & 0xFFU;
 
+#ifdef CONFIG_PARTITION_MODE
+	partition_mode_dispatch_interrupt(&ctx);
+#else
 	dispatch_interrupt(&ctx);
+#endif
 
 	vcpu_retain_rip(vcpu);
 

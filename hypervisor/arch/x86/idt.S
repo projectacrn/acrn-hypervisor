@@ -389,7 +389,11 @@ external_interrupt_save_frame:
     /* Put current stack pointer into 1st param register (rdi) */
     movq    %rsp, %rdi
 
+#ifdef CONFIG_PARTITION_MODE
+    call   partition_mode_dispatch_interrupt
+#else
     call   dispatch_interrupt
+#endif
 
     /*
      * We disable softirq path from interrupt IRET, since right now all IRQ
