@@ -21,8 +21,6 @@ Options:
 -i period               specify polling interval in milliseconds [1-999]
 -t max_time             max time to capture trace data (in second)
 -c                      clear the buffered old data
--r free_space           amount of free space (in MB) remaining on the disk
-                        before acrntrace stops
 
 The ``acrntrace_format.py`` is a offline tool for parsing trace data (as output
 by acrntrace) to human-readable formats based on given format.
@@ -92,12 +90,8 @@ data to your linux system, and running the analysis tool.
 
       # acrntrace
 
-   512MB storage space will be reserved by default. This ensures that acrntrace
-   will exit automatically when the free storage space on the disk is less than
-   reserved space. Reserved space on the disk is configurable through '-r'.
-
-   Trace files are created under ``./acrntrace/``, with a
-   date-time-based directory name such as ``20171115-101605``
+   Trace files are created under current directory where we launch acrntrace,
+   with a date-time-based directory name such as ``./acrntrace/20171115-101605``
 
 #. When done, stop a running ``acrntrace``, with:
 
