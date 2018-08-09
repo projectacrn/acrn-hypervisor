@@ -63,7 +63,7 @@ uint32_t irq_mark_used(uint32_t irq)
 	desc = &irq_desc_array[irq];
 	spinlock_irqsave_obtain(&desc->irq_lock);
 	if (desc->used == IRQ_NOT_ASSIGNED) {
-		desc->used = IRQ_ASSIGNED_NOSHARE;
+		desc->used = IRQ_ASSIGNED;
 	}
 	spinlock_irqrestore_release(&desc->irq_lock);
 	return irq;
@@ -84,7 +84,7 @@ static uint32_t alloc_irq(void)
 		desc = &irq_desc_array[i];
 		spinlock_irqsave_obtain(&desc->irq_lock);
 		if (desc->used == IRQ_NOT_ASSIGNED) {
-			desc->used = IRQ_ASSIGNED_NOSHARE;
+			desc->used = IRQ_ASSIGNED;
 			spinlock_irqrestore_release(&desc->irq_lock);
 			break;
 		}
@@ -151,43 +151,22 @@ static void disable_pic_irq(void)
 	pio_write8(0xffU, 0x21U);
 }
 
-static bool
-irq_desc_append_dev(struct irq_desc *desc, void *node, bool share)
+static void 
+irq_desc_append_dev(struct irq_desc *desc, void *node)
 {
-	struct dev_handler_node *dev_list;
-	bool added = true;
-
 	spinlock_rflags;
 
 	spinlock_irqsave_obtain(&desc->irq_lock);
-	dev_list = desc->dev_list;
 
+	ASSERT(desc->action == NULL, "irq already registered");
 	/* assign if first node */
-	if (dev_list == NULL) {
-		desc->dev_list = node;
-		desc->used = (share)?IRQ_ASSIGNED_SHARED:IRQ_ASSIGNED_NOSHARE;
-
-		/* Only GSI possible for Level and it already init during
-		 * ioapic setup.
-		 * caller can later update it with update_irq_handler()
-		 */
-		if (desc->irq_handler == NULL) {
-			desc->irq_handler = common_handler_edge;
-		}
-	} else if (!share || (desc->used == IRQ_ASSIGNED_NOSHARE)) {
-		/* dev node added failed */
-		added = false;
-	} else {
-		/* dev_list point to last valid node */
-		while (dev_list->next != NULL) {
-			dev_list = dev_list->next;
-		}
-		/* add node */
-		dev_list->next = node;
+	desc->action = node;
+	desc->used = IRQ_ASSIGNED;
+	if (desc->irq_handler == NULL) {
+		desc->irq_handler = common_handler_edge;
 	}
-	spinlock_irqrestore_release(&desc->irq_lock);
 
-	return added;
+	spinlock_irqrestore_release(&desc->irq_lock);
 }
 
 static struct dev_handler_node*
@@ -196,7 +175,6 @@ common_register_handler(uint32_t irq_arg,
 {
 	struct dev_handler_node *node = NULL;
 	struct irq_desc *desc;
-	bool added = false;
 	uint32_t irq = irq_arg;
 
 	/* ======================================================
@@ -250,38 +228,31 @@ common_register_handler(uint32_t irq_arg,
 	}
 
 	desc = &irq_desc_array[irq];
-	added = irq_desc_append_dev(desc, node, info->share);
-	if (!added) {
+	irq_desc_append_dev(desc, node);
+
+	if (info->vector >= VECTOR_FIXED_START &&
+		info->vector <= VECTOR_FIXED_END) {
+		irq_desc_set_vector(irq, info->vector);
+	} else if (info->vector > NR_MAX_VECTOR) {
+		irq_desc_alloc_vector(irq);
+	} else {
+		pr_err("the input vector is not correct");
 		free(node);
-		node = NULL;
-		pr_err("failed to add node to non-shared irq");
+		return NULL;
 	}
+
+	node->dev_handler = info->func;
+	node->dev_data = info->dev_data;
+	node->desc = desc;
+	/* we are okay using strcpy_s here even with spinlock
+	 * since no #PG in HV right now
+	 */
+	(void)strcpy_s(node->name, 32U, info->name);
+
+	dev_dbg(ACRN_DBG_IRQ, "[%s] %s irq%d vr:0x%x",
+		__func__, node->name, irq, desc->vector);
+
 OUT:
-	if (added) {
-		/* it is safe to call irq_desc_alloc_vector multiple times*/
-		if ((info->vector >= VECTOR_FIXED_START) &&
-			(info->vector <= VECTOR_FIXED_END)) {
-			irq_desc_set_vector(irq, info->vector);
-		} else if (info->vector > NR_MAX_VECTOR) {
-			irq_desc_alloc_vector(irq);
-		} else {
-			pr_err("the input vector is not correct");
-			free(node);
-			return NULL;
-		}
-
-		node->dev_handler = info->func;
-		node->dev_data = info->dev_data;
-		node->desc = desc;
-
-		/* we are okay using strcpy_s here even with spinlock
-		 * since no #PG in HV right now
-		 */
-		(void)strcpy_s(node->name, 32U, info->name);
-		dev_dbg(ACRN_DBG_IRQ, "[%s] %s irq%d vr:0x%x",
-			__func__, node->name, irq, desc->vector);
-	}
-
 	return node;
 }
 
@@ -330,7 +301,7 @@ void irq_desc_try_free_vector(uint32_t irq)
 
 	desc = &irq_desc_array[irq];
 	spinlock_irqsave_obtain(&desc->irq_lock);
-	if (desc->dev_list == NULL) {
+	if (desc->action == NULL) {
 		_irq_desc_free_vector(irq);
 	}
 
@@ -456,7 +427,7 @@ void partition_mode_dispatch_interrupt(struct intr_excp_ctx *ctx)
 int handle_level_interrupt_common(struct irq_desc *desc,
 			__unused void *handler_data)
 {
-	struct dev_handler_node *dev = desc->dev_list;
+	struct dev_handler_node *action = desc->action;
 	spinlock_rflags;
 
 	/*
@@ -480,11 +451,8 @@ int handle_level_interrupt_common(struct irq_desc *desc,
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
-	while (dev != NULL) {
-		if (dev->dev_handler != NULL) {
-			dev->dev_handler(desc->irq, dev->dev_data);
-		}
-		dev = dev->next;
+	if (action != NULL && action->dev_handler != NULL) {
+		action->dev_handler(desc->irq, action->dev_data);
 	}
 
 	if (irq_is_gsi(desc->irq)) {
@@ -499,7 +467,7 @@ int handle_level_interrupt_common(struct irq_desc *desc,
 
 int common_handler_edge(struct irq_desc *desc, __unused void *handler_data)
 {
-	struct dev_handler_node *dev = desc->dev_list;
+	struct dev_handler_node *action = desc->action;
 	spinlock_rflags;
 
 	/*
@@ -518,12 +486,9 @@ int common_handler_edge(struct irq_desc *desc, __unused void *handler_data)
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
-	while (dev != NULL) {
-		if (dev->dev_handler != NULL) {
-			dev->dev_handler(desc->irq, dev->dev_data);
-		}
-		dev = dev->next;
-	}
+	if (action != NULL && action->dev_handler != NULL) {
+		action->dev_handler(desc->irq, action->dev_data);
+ 	}
 
 	desc->state = IRQ_DESC_PENDING;
 	spinlock_irqrestore_release(&desc->irq_lock);
@@ -533,7 +498,7 @@ int common_handler_edge(struct irq_desc *desc, __unused void *handler_data)
 
 int common_dev_handler_level(struct irq_desc *desc, __unused void *handler_data)
 {
-	struct dev_handler_node *dev = desc->dev_list;
+	struct dev_handler_node *action = desc->action;
 	spinlock_rflags;
 
 	/*
@@ -557,12 +522,9 @@ int common_dev_handler_level(struct irq_desc *desc, __unused void *handler_data)
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
-	while (dev != NULL) {
-		if (dev->dev_handler != NULL) {
-			dev->dev_handler(desc->irq, dev->dev_data);
-		}
-		dev = dev->next;
-	}
+	if (action != NULL && action->dev_handler != NULL) {
+		action->dev_handler(desc->irq, action->dev_data);
+ 	}
 
 	desc->state = IRQ_DESC_PENDING;
 	spinlock_irqrestore_release(&desc->irq_lock);
@@ -574,17 +536,14 @@ int common_dev_handler_level(struct irq_desc *desc, __unused void *handler_data)
 /* no desc->irq_lock for quick handling local interrupt like lapic timer */
 int quick_handler_nolock(struct irq_desc *desc, __unused void *handler_data)
 {
-	struct dev_handler_node *dev = desc->dev_list;
+	struct dev_handler_node *action = desc->action;
 
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
 
-	while (dev != NULL) {
-		if (dev->dev_handler != NULL) {
-			dev->dev_handler(desc->irq, dev->dev_data);
-		}
-		dev = dev->next;
-	}
+	if (action != NULL && action->dev_handler != NULL) {
+		action->dev_handler(desc->irq, action->dev_data);
+ 	}
 
 	return 0;
 }
@@ -607,7 +566,6 @@ void update_irq_handler(uint32_t irq, irq_handler_t func)
 
 void unregister_handler_common(struct dev_handler_node *node)
 {
-	struct dev_handler_node *head;
 	struct irq_desc *desc;
 
 	spinlock_rflags;
@@ -624,22 +582,8 @@ void unregister_handler_common(struct dev_handler_node *node)
 	desc = node->desc;
 	spinlock_irqsave_obtain(&desc->irq_lock);
 
-	head = desc->dev_list;
-	if (head == node) {
-		desc->dev_list = NULL;
-		goto UNLOCK_EXIT;
-	}
+	desc->action = NULL;
 
-	while (head->next != NULL) {
-		if (head->next == node) {
-			break;
-		}
-		head = head->next;
-	}
-
-	head->next = node->next;
-
-UNLOCK_EXIT:
 	spinlock_irqrestore_release(&desc->irq_lock);
 	irq_desc_try_free_vector(desc->irq);
 	free(node);
@@ -652,7 +596,6 @@ struct dev_handler_node*
 normal_register_handler(uint32_t irq,
 		dev_handler_t func,
 		void *dev_data,
-		bool share,
 		const char *name)
 {
 	struct irq_request_info info;
@@ -660,7 +603,6 @@ normal_register_handler(uint32_t irq,
 	info.vector = VECTOR_INVALID;
 	info.func = func;
 	info.dev_data = dev_data;
-	info.share = share;
 	info.name = (char *)name;
 
 	return common_register_handler(irq, &info);
@@ -681,14 +623,13 @@ pri_register_handler(uint32_t irq,
 {
 	struct irq_request_info info;
 
-	if ((vector < VECTOR_FIXED_START) || (vector > VECTOR_FIXED_END)) {
+	if (vector < VECTOR_FIXED_START || vector > VECTOR_FIXED_END) {
 		return NULL;
 	}
 
 	info.vector = vector;
 	info.func = func;
 	info.dev_data = dev_data;
-	info.share = true;
 	info.name = (char *)name;
 
 	return common_register_handler(irq, &info);
@@ -711,7 +652,7 @@ void get_cpu_interrupt_info(char *str_arg, int str_max)
 		size -= len;
 		str += len;
 	}
-	len = snprintf(str, size, "\tLOST\tSHARE");
+	len = snprintf(str, size, "\tLOST");
 	size -= len;
 	str += len;
 
@@ -729,10 +670,7 @@ void get_cpu_interrupt_info(char *str_arg, int str_max)
 				size -= len;
 				str += len;
 			}
-			len = snprintf(str, size, "\t%d\t%s",
-					desc->irq_lost_cnt,
-					desc->used == IRQ_ASSIGNED_SHARED ?
-					"shared" : "no-shared");
+			len = snprintf(str, size, "\t%d", desc->irq_lost_cnt);
 			size -= len;
 			str += len;
 		}

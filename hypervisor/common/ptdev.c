@@ -135,7 +135,7 @@ ptdev_activate_entry(struct ptdev_remapping_info *entry, uint32_t phys_irq)
 
 	/* register and allocate host vector/irq */
 	node = normal_register_handler(phys_irq, ptdev_interrupt_handler,
-		(void *)entry, true, "dev assign");
+		(void *)entry, "dev assign");
 
 	ASSERT(node != NULL, "dev register failed");
 	entry->node = node;

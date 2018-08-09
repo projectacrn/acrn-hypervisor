@@ -320,6 +320,9 @@ add_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 		entry->virt_bdf = virt_bdf;
 		entry->phys_bdf = phys_bdf;
 		entry->ptdev_intr_info.msi.msix_entry_index = msix_entry_index;
+
+		/* update msi source and active entry */
+		ptdev_activate_entry(entry, IRQ_INVALID);
 	} else if (entry->vm != vm) {
 		if (is_vm0(entry->vm)) {
 			entry->vm = vm;
@@ -404,6 +407,9 @@ add_intx_remapping(struct vm *vm, uint8_t virt_pin,
 		entry->ptdev_intr_info.intx.phys_pin = phys_pin;
 		entry->ptdev_intr_info.intx.virt_pin = virt_pin;
 		entry->ptdev_intr_info.intx.vpin_src = vpin_src;
+
+		/* activate entry */
+		ptdev_activate_entry(entry, pin_to_irq(phys_pin));
 	} else if (entry->vm != vm) {
 		if (is_vm0(entry->vm)) {
 			entry->vm = vm;
@@ -661,13 +667,7 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 	/* handle destroy case */
 	if (is_entry_active(entry) && (info->vmsi_data == 0U)) {
 		info->pmsi_data = 0U;
-		ptdev_deactivate_entry(entry);
 		goto END;
-	}
-
-	if (!is_entry_active(entry)) {
-		/* update msi source and active entry */
-		ptdev_activate_entry(entry, IRQ_INVALID);
 	}
 
 	/* build physical config MSI, update to info->pmsi_xxx */
@@ -829,7 +829,6 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 	if (need_switch_vpin_src) {
 		if (is_entry_active(entry)) {
 			GSI_MASK_IRQ(phys_irq);
-			ptdev_deactivate_entry(entry);
 		}
 		dev_dbg(ACRN_DBG_IRQ,
 			"IOAPIC pin=%hhu pirq=%u vpin=%d switch from %s to %s "
@@ -852,7 +851,6 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 		if (rte.u.lo_32 == 0x10000U) {
 			/* disable interrupt */
 			GSI_MASK_IRQ(phys_irq);
-			ptdev_deactivate_entry(entry);
 			dev_dbg(ACRN_DBG_IRQ,
 				"IOAPIC pin=%hhu pirq=%u deassigned ",
 				phys_pin, phys_irq);
@@ -871,9 +869,6 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 		 */
 		activate_physical_ioapic(vm, entry);
 	} else {
-		/* active entry */
-		ptdev_activate_entry(entry, phys_irq);
-
 		activate_physical_ioapic(vm, entry);
 
 		dev_dbg(ACRN_DBG_IRQ,
