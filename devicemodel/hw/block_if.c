@@ -951,3 +951,29 @@ blockif_candelete(struct blockif_ctxt *bc)
 	assert(bc->magic == BLOCKIF_SIG);
 	return bc->candelete;
 }
+
+uint8_t
+blockif_get_wce(struct blockif_ctxt *bc)
+{
+	assert(bc->magic == BLOCKIF_SIG);
+	return bc->wce;
+}
+
+void
+blockif_set_wce(struct blockif_ctxt *bc, uint8_t wce)
+{
+	assert(bc->magic == BLOCKIF_SIG);
+	bc->wce = wce;
+}
+
+int
+blockif_flush_all(struct blockif_ctxt *bc)
+{
+	int err;
+
+	err=0;
+	assert(bc->magic == BLOCKIF_SIG);
+	if (fsync(bc->fd))
+		err = errno;
+	return err;
+}
