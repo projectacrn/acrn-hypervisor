@@ -27,8 +27,6 @@
 
 /*
  * virtio entropy device emulation.
- * Randomness is sourced from /dev/random which does not block
- * once it has been seeded at bootup.
  */
 
 #include <fcntl.h>
@@ -57,6 +55,10 @@ struct virtio_rnd {
 	pthread_mutex_t mtx;
 	uint64_t cfg;
 	int fd;
+	int in_progress;
+	pthread_t rx_tid;
+	pthread_mutex_t	rx_mtx;
+	pthread_cond_t rx_cond;
 	/* VBS-K variables */
 	struct {
 		enum VBS_K_STATUS status;
@@ -295,37 +297,52 @@ virtio_rnd_reset(void *base)
 	}
 }
 
+static void *
+virtio_rnd_get_entropy(void *param)
+{
+	struct virtio_rnd *rnd = param;
+	struct virtio_vq_info *vq = &rnd->vq;
+	struct iovec iov;
+	uint16_t idx;
+	int len, error;
+
+	for (;;) {
+		pthread_mutex_lock(&rnd->rx_mtx);
+		rnd->in_progress = 0;
+		error = pthread_cond_wait(&rnd->rx_cond, &rnd->rx_mtx);
+		assert(error == 0);
+
+		rnd->in_progress = 1;
+		pthread_mutex_unlock(&rnd->rx_mtx);
+
+		while(vq_has_descs(vq)) {
+			vq_getchain(vq, &idx, &iov, 1, NULL);
+
+			len = read(rnd->fd, iov.iov_base, iov.iov_len);
+			assert(len > 0);
+
+			/* release this chain and handle more */
+			vq_relchain(vq, idx, len);
+		}
+
+		vq_endchains(vq, 1);
+	}
+}
+
 static void
 virtio_rnd_notify(void *base, struct virtio_vq_info *vq)
 {
-	struct iovec iov;
-	struct virtio_rnd *rnd;
-	int len;
-	uint16_t idx;
+	struct virtio_rnd *rnd = base;
 
-	rnd = base;
-
-	if (rnd->fd < 0) {
-		vq_endchains(vq, 0);
+	/* Any ring entries to process */
+	if (!vq_has_descs(vq))
 		return;
-	}
 
-	while (vq_has_descs(vq)) {
-		vq_getchain(vq, &idx, &iov, 1, NULL);
-
-		len = read(rnd->fd, iov.iov_base, iov.iov_len);
-
-		DPRINTF(("%s: %d\r\n", __func__, len));
-
-		/* Catastrophe if unable to read from /dev/random */
-		assert(len > 0);
-
-		/*
-		 * Release this chain and handle more
-		 */
-		vq_relchain(vq, idx, len);
-	}
-	vq_endchains(vq, 1);	/* Generate interrupt if appropriate. */
+	/* Signal the thread for processing */
+	pthread_mutex_lock(&rnd->rx_mtx);
+	if (rnd->in_progress == 0)
+		pthread_cond_signal(&rnd->rx_cond);
+	pthread_mutex_unlock(&rnd->rx_mtx);
 }
 
 static int
@@ -333,13 +350,12 @@ virtio_rnd_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	struct virtio_rnd *rnd = NULL;
 	int fd;
-	int len;
-	uint8_t v;
 	pthread_mutexattr_t attr;
 	int rc;
 	char *opt;
 	char *vbs_k_opt = NULL;
 	enum VBS_K_STATUS kstat = VIRTIO_DEV_INITIAL;
+	char tname[MAXCOMLEN + 1];
 
 	while ((opt = strsep(&opts, ",")) != NULL) {
 		/* vbs_k_opt should be kernel=on */
@@ -355,18 +371,8 @@ virtio_rnd_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	/*
 	 * Should always be able to open /dev/random.
 	 */
-	fd = open("/dev/random", O_RDONLY | O_NONBLOCK);
-
+	fd = open("/dev/random", O_RDONLY);
 	assert(fd >= 0);
-
-	/*
-	 * Check that device is seeded and non-blocking.
-	 */
-	len = read(fd, &v, sizeof(v));
-	if (len <= 0) {
-		WPRINTF(("virtio_rnd: /dev/random not ready, read(): %d", len));
-		goto fail;
-	}
 
 	rnd = calloc(1, sizeof(struct virtio_rnd));
 	if (!rnd) {
@@ -434,6 +440,15 @@ virtio_rnd_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	virtio_set_io_bar(&rnd->base, 0);
 
+	rnd->in_progress = 0;
+	pthread_mutex_init(&rnd->rx_mtx, NULL);
+	pthread_cond_init(&rnd->rx_cond, NULL);
+	pthread_create(&rnd->rx_tid, NULL, virtio_rnd_get_entropy,
+		       (void *)rnd);
+	snprintf(tname, sizeof(tname), "vtrnd-%d:%d tx", dev->slot,
+		 dev->func);
+	pthread_setname_np(rnd->rx_tid, tname);
+
 	return 0;
 
 fail:
@@ -452,12 +467,16 @@ static void
 virtio_rnd_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	struct virtio_rnd *rnd;
+	void *jval;
 
 	rnd = dev->arg;
 	if (rnd == NULL) {
 		DPRINTF(("%s: rnd is NULL\n", __func__));
 		return;
 	}
+
+	pthread_cancel(rnd->rx_tid);
+	pthread_join(rnd->rx_tid, &jval);
 
 	if (rnd->vbs_k.status == VIRTIO_DEV_STARTED) {
 		DPRINTF(("%s: deinit virtio_rnd_k!\n", __func__));
