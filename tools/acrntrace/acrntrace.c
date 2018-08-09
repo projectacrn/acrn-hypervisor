@@ -29,7 +29,7 @@ static int exiting = 0;
 
 /* for opt */
 static uint64_t period = 10000;
-static const char optString[] = "i:hcr:t:";
+static const char optString[] = "i:hct:";
 static const char dev_prefix[] = "acrn_trace_";
 
 static uint32_t flags;
@@ -41,7 +41,7 @@ static int pcpu_num = 0;
 static void display_usage(void)
 {
 	printf("acrntrace - tool to collect ACRN trace data\n"
-	       "[Usage] acrntrace [-i] [period in msec] [-ch]\n\n"
+	       "[Usage] acrntrace [-i period] [-t max_time] [-ch]\n\n"
 	       "[Options]\n"
 	       "\t-h: print this message\n"
 	       "\t-i: period_in_ms: specify polling interval [1-999]\n"
