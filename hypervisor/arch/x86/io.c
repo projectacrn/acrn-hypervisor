@@ -107,6 +107,18 @@ int32_t dm_emulate_mmio_post(struct vcpu *vcpu)
 	return emulate_mmio_post(vcpu, io_req);
 }
 
+#ifdef CONFIG_PARTITION_MODE
+static void io_instr_dest_handler(struct io_request *io_req)
+{
+	struct pio_request *pio_req = &io_req->reqs.pio;
+
+	if (pio_req->direction == REQUEST_READ) {
+		pio_req->value = 0xFFFFFFFFU;
+	}
+	io_req->processed = REQ_STATE_COMPLETE;
+}
+#endif
+
 void emulate_io_post(struct vcpu *vcpu)
 {
 	union vhm_request_buffer *req_buf;
@@ -296,6 +308,15 @@ emulate_io(struct vcpu *vcpu, struct io_request *io_req)
 	}
 
 	if (status == -ENODEV) {
+#ifdef CONFIG_PARTITION_MODE
+		/*
+		 * No handler from HV side, return all FFs on read
+		 * and discard writes.
+		 */
+		io_instr_dest_handler(io_req);
+		status = 0;
+
+#else
 		/*
 		 * No handler from HV side, search from VHM in Dom0
 		 *
@@ -309,6 +330,7 @@ emulate_io(struct vcpu *vcpu, struct io_request *io_req)
 				(pio_req->direction != REQUEST_READ) ? "read" : "write",
 				pio_req->address, pio_req->size);
 		}
+#endif
 	}
 
 	return status;
