@@ -554,7 +554,4 @@
 #define SPEC_ENABLE_STIBP		(1U<<1)
 #define PRED_SET_IBPB			(1U<<0)
 
-/* Turbo config bit */
-#define TURBO_MODE_DISABLE		(1UL<<38)
-
 #endif /* MSR_H */

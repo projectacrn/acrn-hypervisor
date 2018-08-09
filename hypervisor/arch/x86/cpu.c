@@ -378,7 +378,6 @@ static void get_cpu_name(void)
 void bsp_boot_init(void)
 {
 	uint64_t rsp;
-	uint64_t misc_en;
 
 	start_tsc = rdtsc();
 
@@ -387,11 +386,6 @@ void bsp_boot_init(void)
 			(size_t)(&_ld_bss_end - &_ld_bss_start));
 
 	bitmap_set_nolock(BOOT_CPU_ID, &pcpu_active_bitmap);
-
-	misc_en = msr_read(MSR_IA32_MISC_ENABLE);
-	if ((misc_en & TURBO_MODE_DISABLE) == 0UL) {
-		msr_write(MSR_IA32_MISC_ENABLE, misc_en | TURBO_MODE_DISABLE);
-	}
 
 	/* Get CPU capabilities thru CPUID, including the physical address bit
 	 * limit which is required for initializing paging.
@@ -516,7 +510,6 @@ static void bsp_boot_post(void)
 void cpu_secondary_init(void)
 {
 	uint64_t rsp;
-	uint64_t misc_en;
 
 	/* Switch this CPU to use the same page tables set-up by the
 	 * primary/boot CPU
@@ -534,11 +527,6 @@ void cpu_secondary_init(void)
 			      CPU_STATE_INITIALIZING);
 
 	bitmap_set_nolock(get_cpu_id(), &pcpu_active_bitmap);
-
-	misc_en = msr_read(MSR_IA32_MISC_ENABLE);
-	if ((misc_en & TURBO_MODE_DISABLE) == 0UL) {
-		msr_write(MSR_IA32_MISC_ENABLE, misc_en | TURBO_MODE_DISABLE);
-	}
 
 	/* Switch to run-time stack */
 	rsp = (uint64_t)(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
