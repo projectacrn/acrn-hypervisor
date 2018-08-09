@@ -55,6 +55,9 @@ void init_default_irqs(uint16_t cpu_id);
 
 void dispatch_exception(struct intr_excp_ctx *ctx);
 void dispatch_interrupt(struct intr_excp_ctx *ctx);
+#ifdef CONFIG_PARTITION_MODE
+void partition_mode_dispatch_interrupt(struct intr_excp_ctx *ctx);
+#endif
 
 void setup_notification(void);
 
