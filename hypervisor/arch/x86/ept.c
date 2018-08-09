@@ -156,7 +156,6 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 	exit_qual = vcpu->arch_vcpu.exit_qualification;
 
 	io_req->type = REQ_MMIO;
-	io_req->processed = REQ_STATE_PENDING;
 
 	/* Specify if read or write operation */
 	if ((exit_qual & 0x2UL) != 0UL) {
@@ -214,14 +213,11 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 
 	status = emulate_io(vcpu, io_req);
 
-	/* io_req is hypervisor-private. For requests sent to VHM,
-	 * io_req->processed will be PENDING till dm_emulate_mmio_post() is
-	 * called on vcpu resume. */
 	if (status == 0) {
-		if (io_req->processed != REQ_STATE_PENDING) {
-			status = emulate_mmio_post(vcpu, io_req);
-		}
- 	}
+		emulate_mmio_post(vcpu, io_req);
+	} else if (status == IOREQ_PENDING) {
+		status = 0;
+	}
 
 	return status;
 

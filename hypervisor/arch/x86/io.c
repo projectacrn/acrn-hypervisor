@@ -16,35 +16,33 @@ static void complete_ioreq(struct vhm_request *vhm_req)
 
 /**
  * @pre io_req->type == REQ_PORTIO
+ *
+ * @remark This function must be called when \p io_req is completed, after
+ * either a previous call to emulate_io() returning 0 or the corresponding VHM
+ * request having transferred to the COMPLETE state.
  */
-static int32_t
+static void
 emulate_pio_post(struct vcpu *vcpu, struct io_request *io_req)
 {
-	int32_t status;
 	struct pio_request *pio_req = &io_req->reqs.pio;
 	uint64_t mask = 0xFFFFFFFFUL >> (32UL - 8UL * pio_req->size);
 
-	if (io_req->processed == REQ_STATE_COMPLETE) {
-		if (pio_req->direction == REQUEST_READ) {
-			uint64_t value = (uint64_t)pio_req->value;
-			int32_t context_idx = vcpu->arch_vcpu.cur_context;
-			uint64_t rax = vcpu_get_gpreg(vcpu, CPU_REG_RAX);
+	if (pio_req->direction == REQUEST_READ) {
+		uint64_t value = (uint64_t)pio_req->value;
+		uint64_t rax = vcpu_get_gpreg(vcpu, CPU_REG_RAX);
 
-			rax = ((rax) & ~mask) | (value & mask);
-			vcpu_set_gpreg(vcpu, CPU_REG_RAX, rax);
-		}
-		status = 0;
-	} else {
-		status = -1;
+		rax = ((rax) & ~mask) | (value & mask);
+		vcpu_set_gpreg(vcpu, CPU_REG_RAX, rax);
 	}
-
-	return status;
 }
 
 /**
  * @pre vcpu->req.type == REQ_PORTIO
+ *
+ * @remark This function must be called after the VHM request corresponding to
+ * \p vcpu being transferred to the COMPLETE state.
  */
-int32_t dm_emulate_pio_post(struct vcpu *vcpu)
+void dm_emulate_pio_post(struct vcpu *vcpu)
 {
 	uint16_t cur = vcpu->vcpu_id;
 	union vhm_request_buffer *req_buf = NULL;
@@ -60,35 +58,33 @@ int32_t dm_emulate_pio_post(struct vcpu *vcpu)
 	/* VHM emulation data already copy to req, mark to free slot now */
 	complete_ioreq(vhm_req);
 
-	return emulate_pio_post(vcpu, io_req);
+	emulate_pio_post(vcpu, io_req);
 }
 
 /**
  * @pre vcpu->req.type == REQ_MMIO
+ *
+ * @remark This function must be called when \p io_req is completed, after
+ * either a previous call to emulate_io() returning 0 or the corresponding VHM
+ * request having transferred to the COMPLETE state.
  */
-int32_t emulate_mmio_post(struct vcpu *vcpu, struct io_request *io_req)
+void emulate_mmio_post(struct vcpu *vcpu, struct io_request *io_req)
 {
-	int32_t ret;
 	struct mmio_request *mmio_req = &io_req->reqs.mmio;
 
-	if (io_req->processed == REQ_STATE_COMPLETE) {
-		if (mmio_req->direction == REQUEST_READ) {
-			/* Emulate instruction and update vcpu register set */
-			ret = emulate_instruction(vcpu);
-		} else {
-			ret = 0;
-		}
-	} else {
-		ret = 0;
+	if (mmio_req->direction == REQUEST_READ) {
+		/* Emulate instruction and update vcpu register set */
+		emulate_instruction(vcpu);
 	}
-
-	return ret;
 }
 
 /**
  * @pre vcpu->req.type == REQ_MMIO
+ *
+ * @remark This function must be called after the VHM request corresponding to
+ * \p vcpu being transferred to the COMPLETE state.
  */
-int32_t dm_emulate_mmio_post(struct vcpu *vcpu)
+void dm_emulate_mmio_post(struct vcpu *vcpu)
 {
 	uint16_t cur = vcpu->vcpu_id;
 	struct io_request *io_req = &vcpu->req;
@@ -104,7 +100,7 @@ int32_t dm_emulate_mmio_post(struct vcpu *vcpu)
 	/* VHM emulation data already copy to req, mark to free slot now */
 	complete_ioreq(vhm_req);
 
-	return emulate_mmio_post(vcpu, io_req);
+	emulate_mmio_post(vcpu, io_req);
 }
 
 #ifdef CONFIG_PARTITION_MODE
@@ -123,15 +119,12 @@ void emulate_io_post(struct vcpu *vcpu)
 {
 	union vhm_request_buffer *req_buf;
 	struct vhm_request *vhm_req;
-	struct io_request *io_req = &vcpu->req;
 
 	req_buf = (union vhm_request_buffer *)vcpu->vm->sw.io_shared_page;
 	vhm_req = &req_buf->req_queue[vcpu->vcpu_id];
-	io_req->processed = atomic_load32(&vhm_req->processed);
 
 	if ((vhm_req->valid == 0) ||
-		((io_req->processed != REQ_STATE_COMPLETE) &&
-		 (io_req->processed != REQ_STATE_FAILED))) {
+		(atomic_load32(&vhm_req->processed) != REQ_STATE_COMPLETE)) {
 		return;
 	}
 
@@ -205,7 +198,6 @@ hv_emulate_pio(struct vcpu *vcpu, struct io_request *io_req)
 			pr_fatal("Err:IO, port 0x%04x, size=%hu spans devices",
 					port, size);
 			status = -EIO;
-			io_req->processed = REQ_STATE_FAILED;
 			break;
 		} else {
 			if (pio_req->direction == REQUEST_WRITE) {
@@ -221,9 +213,6 @@ hv_emulate_pio(struct vcpu *vcpu, struct io_request *io_req)
 				pr_dbg("IO read on port %04x, data %08x",
 					port, pio_req->value);
 			}
-			/* TODO: failures in the handlers should be reflected
-			 * here. */
-			io_req->processed = REQ_STATE_COMPLETE;
 			status = 0;
 			break;
 		}
@@ -266,7 +255,6 @@ hv_emulate_mmio(struct vcpu *vcpu, struct io_request *io_req)
 		} else if (!((address >= base) && (address + size <= end))) {
 			pr_fatal("Err MMIO, address:0x%llx, size:%x",
 				 address, size);
-			io_req->processed = REQ_STATE_FAILED;
 			return -EIO;
 		} else {
 			/* Handle this MMIO operation */
@@ -284,6 +272,7 @@ hv_emulate_mmio(struct vcpu *vcpu, struct io_request *io_req)
  * deliver to VHM.
  *
  * @return 0       - Successfully emulated by registered handlers.
+ * @return IOREQ_PENDING - The I/O request is delivered to VHM.
  * @return -EIO    - The request spans multiple devices and cannot be emulated.
  * @return Negative on other errors during emulation.
  */
@@ -303,7 +292,6 @@ emulate_io(struct vcpu *vcpu, struct io_request *io_req)
 	default:
 		/* Unknown I/O request type */
 		status = -EINVAL;
-		io_req->processed = REQ_STATE_FAILED;
 		break;
 	}
 
@@ -329,6 +317,8 @@ emulate_io(struct vcpu *vcpu, struct io_request *io_req)
 			pr_fatal("Err:IO %s access to port 0x%04lx, size=%lu",
 				(pio_req->direction != REQUEST_READ) ? "read" : "write",
 				pio_req->address, pio_req->size);
+		} else {
+			status = IOREQ_PENDING;
 		}
 #endif
 	}
@@ -347,7 +337,6 @@ int32_t pio_instr_vmexit_handler(struct vcpu *vcpu)
 	exit_qual = vcpu->arch_vcpu.exit_qualification;
 
 	io_req->type = REQ_PORTIO;
-	io_req->processed = REQ_STATE_PENDING;
 	pio_req->size = VM_EXIT_IO_INSTRUCTION_SIZE(exit_qual) + 1UL;
 	pio_req->address = VM_EXIT_IO_INSTRUCTION_PORT_NUMBER(exit_qual);
 	if (VM_EXIT_IO_INSTRUCTION_ACCESS_DIRECTION(exit_qual) == 0UL) {
@@ -365,13 +354,10 @@ int32_t pio_instr_vmexit_handler(struct vcpu *vcpu)
 
 	status = emulate_io(vcpu, io_req);
 
-	/* io_req is hypervisor-private. For requests sent to VHM,
-	 * io_req->processed will be PENDING till dm_emulate_pio_post() is
-	 * called on vcpu resume. */
 	if (status == 0) {
-		if (io_req->processed != REQ_STATE_PENDING) {
-			status = emulate_pio_post(vcpu, io_req);
-		}
+		emulate_pio_post(vcpu, io_req);
+	} else if (status == IOREQ_PENDING) {
+		status = 0;
 	}
 
 	return status;

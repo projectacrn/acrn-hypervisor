@@ -30,7 +30,6 @@
 #define REQ_STATE_PENDING	0
 #define REQ_STATE_COMPLETE	1
 #define REQ_STATE_PROCESSING	2
-#define REQ_STATE_FAILED	-1
 
 #define REQ_PORTIO	0U
 #define REQ_MMIO	1U
@@ -97,8 +96,6 @@ union vhm_io_request {
  * The state transitions of a VHM request are:
  *
  *    FREE -> PENDING -> PROCESSING -> COMPLETE -> FREE -> ...
- *                                \              /
- *                                 +--> FAILED -+
  *
  * When a request is in COMPLETE or FREE state, the request is owned by the
  * hypervisor. SOS (VHM or DM) shall not read or write the internals of the
@@ -154,12 +151,6 @@ union vhm_io_request {
  *
  *   2. Due to similar reasons, setting state to COMPLETE is the last operation
  *      of request handling in VHM or clients in SOS.
- *
- * The state FAILED is an obsolete state to indicate that the I/O request cannot
- * be handled. In such cases the mediators and DM should switch the state to
- * COMPLETE with the value set to all 1s for read, and skip the request for
- * writes. This state WILL BE REMOVED after the mediators and DM are updated to
- * follow this rule.
  */
 struct vhm_request {
 	/**
@@ -208,7 +199,7 @@ struct vhm_request {
 	 *
 	 * Byte offset: 136.
 	 */
-	int32_t processed;
+	uint32_t processed;
 } __aligned(256);
 
 union vhm_request_buffer {

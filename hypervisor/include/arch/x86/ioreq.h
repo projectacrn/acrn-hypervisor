@@ -10,14 +10,14 @@
 #include <types.h>
 #include <acrn_common.h>
 
+/* The return value of emulate_io() indicating the I/O request is delivered to
+ * VHM but not finished yet. */
+#define IOREQ_PENDING	1
+
 /* Internal representation of a I/O request. */
 struct io_request {
 	/** Type of the request (PIO, MMIO, etc). Refer to vhm_request. */
 	uint32_t type;
-
-	/** Status of request handling. Written by request handlers and read by
-	 * the I/O emulation framework. Refer to vhm_request. */
-	int32_t processed;
 
 	/** Details of this request in the same format as vhm_request. */
 	union vhm_io_request reqs;
@@ -122,8 +122,8 @@ int register_mmio_emulation_handler(struct vm *vm,
 	uint64_t end, void *handler_private_data);
 void unregister_mmio_emulation_handler(struct vm *vm, uint64_t start,
         uint64_t end);
-int32_t emulate_mmio_post(struct vcpu *vcpu, struct io_request *io_req);
-int32_t dm_emulate_mmio_post(struct vcpu *vcpu);
+void emulate_mmio_post(struct vcpu *vcpu, struct io_request *io_req);
+void dm_emulate_mmio_post(struct vcpu *vcpu);
 
 int32_t emulate_io(struct vcpu *vcpu, struct io_request *io_req);
 void emulate_io_post(struct vcpu *vcpu);
