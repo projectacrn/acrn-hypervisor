@@ -193,6 +193,53 @@ struct vm_description {
 #endif
 };
 
+static inline bool is_vm0(struct vm *vm)
+{
+	return (vm->vm_id) == 0U;
+}
+
+static inline struct vcpu *vcpu_from_vid(struct vm *vm, uint16_t vcpu_id)
+{
+	uint16_t i;
+	struct vcpu *vcpu;
+
+	foreach_vcpu(i, vm, vcpu) {
+		if (vcpu->vcpu_id == vcpu_id) {
+			return vcpu;
+		}
+	}
+
+	return NULL;
+}
+
+static inline struct vcpu *vcpu_from_pid(struct vm *vm, uint16_t pcpu_id)
+{
+	uint16_t i;
+	struct vcpu *vcpu;
+
+	foreach_vcpu(i, vm, vcpu) {
+		if (vcpu->pcpu_id == pcpu_id) {
+			return vcpu;
+		}
+	}
+
+	return NULL;
+}
+
+static inline struct vcpu *get_primary_vcpu(struct vm *vm)
+{
+	uint16_t i;
+	struct vcpu *vcpu;
+
+	foreach_vcpu(i, vm, vcpu) {
+		if (is_vcpu_bsp(vcpu)) {
+			return vcpu;
+		}
+	}
+
+	return NULL;
+}
+
 int shutdown_vm(struct vm *vm);
 void pause_vm(struct vm *vm);
 void resume_vm(struct vm *vm);

@@ -29,55 +29,7 @@ struct page_walk_info {
 	bool nxe;		/* MSR_IA32_EFER_NXE_BIT */
 };
 
-inline bool
-is_vm0(struct vm *vm)
-{
-	return (vm->vm_id) == 0U;
-}
-
-inline struct vcpu *vcpu_from_vid(struct vm *vm, uint16_t vcpu_id)
-{
-	uint16_t i;
-	struct vcpu *vcpu;
-
-	foreach_vcpu(i, vm, vcpu) {
-		if (vcpu->vcpu_id == vcpu_id) {
-			return vcpu;
-		}
-	}
-
-	return NULL;
-}
-
-inline struct vcpu *vcpu_from_pid(struct vm *vm, uint16_t pcpu_id)
-{
-	uint16_t i;
-	struct vcpu *vcpu;
-
-	foreach_vcpu(i, vm, vcpu) {
-		if (vcpu->pcpu_id == pcpu_id) {
-			return vcpu;
-		}
-	}
-
-	return NULL;
-}
-
-inline struct vcpu *get_primary_vcpu(struct vm *vm)
-{
-	uint16_t i;
-	struct vcpu *vcpu;
-
-	foreach_vcpu(i, vm, vcpu) {
-		if (is_vcpu_bsp(vcpu)) {
-			return vcpu;
-		}
-	}
-
-	return NULL;
-}
-
-inline uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask)
+uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask)
 {
 	uint16_t vcpu_id;
 	uint64_t dmask = 0UL;
@@ -94,7 +46,7 @@ inline uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask)
 	return dmask;
 }
 
-inline bool vm_lapic_disabled(struct vm *vm)
+bool vm_lapic_disabled(struct vm *vm)
 {
 	uint16_t i;
 	struct vcpu *vcpu;
