@@ -15,8 +15,7 @@ enum irq_mode {
 
 enum irq_state {
 	IRQ_NOT_ASSIGNED = 0,
-	IRQ_ASSIGNED_SHARED,
-	IRQ_ASSIGNED_NOSHARE,
+	IRQ_ASSIGNED,
 };
 
 enum irq_desc_state {
@@ -32,7 +31,6 @@ struct irq_request_info {
 	uint32_t vector;
 	dev_handler_t func;
 	void *dev_data;
-	bool share;
 	char *name;
 };
 
@@ -44,7 +42,7 @@ struct irq_desc {
 	uint32_t vector;	/* assigned vector */
 	void *handler_data;	/* irq_handler private data */
 	int (*irq_handler)(struct irq_desc *irq_desc, void *handler_data);
-	struct dev_handler_node *dev_list;
+	struct dev_handler_node *action;
 	spinlock_t irq_lock;
 	uint64_t *irq_cnt; /* this irq cnt happened on CPUs */
 	uint64_t irq_lost_cnt;
@@ -78,7 +76,6 @@ struct dev_handler_node*
 normal_register_handler(uint32_t irq,
 		dev_handler_t func,
 		void *dev_data,
-		bool share,
 		const char *name);
 void unregister_handler_common(struct dev_handler_node *node);
 
