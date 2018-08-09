@@ -22,6 +22,7 @@ spinlock_t vm_list_lock = {
 	.tail = 0U
 };
 
+#ifndef CONFIG_PARTITION_MODE
 /* used for vmid allocation. And this means the max vm number is 64 */
 static uint64_t vmid_bitmap;
 
@@ -43,6 +44,7 @@ static inline void free_vm_id(struct vm *vm)
 {
 	bitmap_clear_lock(vm->vm_id, &vmid_bitmap);
 }
+#endif
 
 static void init_vm(struct vm_description *vm_desc,
 		struct vm *vm_handle)
@@ -120,12 +122,16 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		goto err;
 	}
 
+#ifdef CONFIG_PARTITION_MODE
+	vm->vm_id = vm_desc->vm_id;
+#else
 	vm->vm_id = alloc_vm_id();
 	if (vm->vm_id == INVALID_VM_ID) {
 		pr_err("%s, no more VMs can be supported\n", __func__);
 		status = -ENODEV;
 		goto err;
 	}
+#endif
 
 	atomic_store16(&vm->hw.created_vcpus, 0U);
 
@@ -291,8 +297,10 @@ int shutdown_vm(struct vm *vm)
 		destroy_iommu_domain(vm->iommu);
 	}
 
+#ifndef CONFIG_PARTITION_MODE
 	/* Free vm id */
 	free_vm_id(vm);
+#endif
 
 	if (vm->vpic != NULL) {
 		vpic_cleanup(vm);
