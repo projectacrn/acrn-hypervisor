@@ -139,7 +139,7 @@ static void local_get_req_info_(struct vhm_request *req, int *id, char *type,
 
 	switch (req->processed) {
 	case REQ_STATE_COMPLETE:
-		(void)strcpy_s(state, 16U, "SUCCESS");
+		(void)strcpy_s(state, 16U, "COMPLETE");
 		break;
 	case REQ_STATE_PENDING:
 		(void)strcpy_s(state, 16U, "PENDING");
@@ -147,8 +147,8 @@ static void local_get_req_info_(struct vhm_request *req, int *id, char *type,
 	case REQ_STATE_PROCESSING:
 		(void)strcpy_s(state, 16U, "PROCESS");
 		break;
-	case REQ_STATE_FAILED:
-		(void)strcpy_s(state, 16U, "FAILED");
+	case REQ_STATE_FREE:
+		(void)strcpy_s(state, 16U, "FREE");
 		break;
 	default:
 		(void)strcpy_s(state, 16U,  "UNKNOWN");

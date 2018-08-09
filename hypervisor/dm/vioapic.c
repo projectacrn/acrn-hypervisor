@@ -597,7 +597,6 @@ int vioapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
 		ret = -EINVAL;
 	}
 
-	io_req->processed = REQ_STATE_COMPLETE;
 	return ret;
 }
 
