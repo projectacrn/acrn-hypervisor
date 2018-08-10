@@ -66,6 +66,7 @@ const struct vm_description_array vm_desc_mrb = {
 				.vm_id = 1U,
 				.start_hpa = 0x100000000UL,
 				.mem_size = 0x80000000UL, /* uses contiguous memory from host */
+				.vm_vuart = true,
 				.bootargs = "root=/dev/sda rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
 						console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
 						consoleblank=0 tsc=reliable"
@@ -78,6 +79,7 @@ const struct vm_description_array vm_desc_mrb = {
 				.vm_id = 2U,
 				.start_hpa = 0x180000000UL,
 				.mem_size = 0x80000000UL, /* uses contiguous memory from host */
+				.vm_vuart = true,
 				.bootargs = "root=/dev/sda rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
 						console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
 						consoleblank=0 tsc=reliable"

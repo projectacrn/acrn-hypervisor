@@ -190,6 +190,7 @@ struct vm_description {
 	struct mptable_info	*mptable;
 	uint64_t		start_hpa;
 	uint64_t		mem_size; /* UOS memory size in hex */
+	bool			vm_vuart;
 	const char		*bootargs;
 	struct vpci_vdev_array  *vpci_vdev_array;
 #endif
