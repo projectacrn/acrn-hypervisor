@@ -1,3 +1,11 @@
+vSBL Version 0.8.1
+- New feature:
+	Support trusty S3 resume.
+- Change:
+	Match Device Id/Vendor Id of emulated watchdog device.
+	Watchdog reset reason changed from "warm" to "watchdog".
+	Increase the limitation of bzImage size (from 15MB to 31MB).
+
 vSBL Version 0.8
 - New feature:
 	Add watchdog reset status report.
