@@ -328,8 +328,8 @@ bool cpu_has_cap(uint32_t bit);
 void load_cpu_state_data(void);
 void bsp_boot_init(void);
 void cpu_secondary_init(void);
-void start_cpus();
-void stop_cpus();
+void start_cpus(void);
+void stop_cpus(void);
 
 /* Read control register */
 #define CPU_CR_READ(cr, result_ptr)                         \
