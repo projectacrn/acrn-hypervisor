@@ -972,7 +972,7 @@ static void *virtio_heci_tx_thread(void *param)
 	while (vheci->status != VHECI_DEINIT) {
 		/* note - tx mutex is locked here */
 		while (!vq_has_descs(vq)) {
-			vq->used->flags &= ~VRING_USED_F_NO_NOTIFY;
+			vq->used->flags &= ~ACRN_VRING_USED_F_NO_NOTIFY;
 			mb();
 			if (vq_has_descs(vq) &&
 				vheci->status != VHECI_RESET)
@@ -984,7 +984,7 @@ static void *virtio_heci_tx_thread(void *param)
 			if (vheci->status == VHECI_DEINIT)
 				goto out;
 		}
-		vq->used->flags |= VRING_USED_F_NO_NOTIFY;
+		vq->used->flags |= ACRN_VRING_USED_F_NO_NOTIFY;
 		pthread_mutex_unlock(&vheci->tx_mutex);
 
 		do {
@@ -1125,7 +1125,7 @@ static void *virtio_heci_rx_thread(void *param)
 	while (vheci->status != VHECI_DEINIT) {
 		/* note - rx mutex is locked here */
 		while (vq_ring_ready(vq)) {
-			vq->used->flags &= ~VRING_USED_F_NO_NOTIFY;
+			vq->used->flags &= ~ACRN_VRING_USED_F_NO_NOTIFY;
 			mb();
 			if (vq_has_descs(vq) &&
 				vheci->rx_need_sched &&
@@ -1138,7 +1138,7 @@ static void *virtio_heci_rx_thread(void *param)
 			if (vheci->status == VHECI_DEINIT)
 				goto out;
 		}
-		vq->used->flags |= VRING_USED_F_NO_NOTIFY;
+		vq->used->flags |= ACRN_VRING_USED_F_NO_NOTIFY;
 
 		do {
 			if (virtio_heci_proc_rx(vheci, vq))
@@ -1166,7 +1166,7 @@ virtio_heci_notify_rx(void *heci, struct virtio_vq_info *vq)
 	/* Signal the rx thread for processing */
 	pthread_mutex_lock(&vheci->rx_mutex);
 	DPRINTF(("vheci: RX: New IN buffer available!\n\r"));
-	vq->used->flags |= VRING_USED_F_NO_NOTIFY;
+	vq->used->flags |= ACRN_VRING_USED_F_NO_NOTIFY;
 	pthread_cond_signal(&vheci->rx_cond);
 	pthread_mutex_unlock(&vheci->rx_mutex);
 }
@@ -1184,7 +1184,7 @@ virtio_heci_notify_tx(void *heci, struct virtio_vq_info *vq)
 	/* Signal the tx thread for processing */
 	pthread_mutex_lock(&vheci->tx_mutex);
 	DPRINTF(("vheci: TX: New OUT buffer available!\n\r"));
-	vq->used->flags |= VRING_USED_F_NO_NOTIFY;
+	vq->used->flags |= ACRN_VRING_USED_F_NO_NOTIFY;
 	pthread_cond_signal(&vheci->tx_cond);
 	pthread_mutex_unlock(&vheci->tx_mutex);
 }
