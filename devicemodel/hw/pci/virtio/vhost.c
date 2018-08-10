@@ -45,6 +45,14 @@ vhost_kernel_deinit(struct vhost_dev *vdev)
 }
 
 static int
+vhost_kernel_set_mem_table(struct vhost_dev *vdev,
+			   struct vhost_memory *mem)
+{
+	/* to be implemented */
+	return -1;
+}
+
+static int
 vhost_kernel_set_vring_addr(struct vhost_dev *vdev,
 			    struct vhost_vring_addr *addr)
 {
@@ -370,8 +378,61 @@ vhost_vq_stop(struct vhost_dev *vdev, int idx)
 static int
 vhost_set_mem_table(struct vhost_dev *vdev)
 {
-	/* to be implemented */
-	return -1;
+	struct vmctx *ctx;
+	struct vhost_memory *mem;
+	uint32_t nregions = 0;
+	int rc;
+
+	ctx = vdev->base->dev->vmctx;
+	if (ctx->lowmem > 0)
+		nregions++;
+	if (ctx->highmem > 0)
+		nregions++;
+
+	mem = calloc(1, sizeof(struct vhost_memory) +
+		sizeof(struct vhost_memory_region) * nregions);
+	if (!mem) {
+		WPRINTF("out of memory\n");
+		return -1;
+	}
+
+	nregions = 0;
+	if (ctx->lowmem > 0) {
+		mem->regions[nregions].guest_phys_addr = (uintptr_t)0;
+		mem->regions[nregions].memory_size = ctx->lowmem;
+		mem->regions[nregions].userspace_addr =
+			(uintptr_t)ctx->baseaddr;
+		DPRINTF("[%d][0x%llx -> 0x%llx, 0x%llx]\n",
+			nregions,
+			mem->regions[nregions].guest_phys_addr,
+			mem->regions[nregions].userspace_addr,
+			mem->regions[nregions].memory_size);
+		nregions++;
+	}
+
+	if (ctx->highmem > 0) {
+		mem->regions[nregions].guest_phys_addr = 4*GB;
+		mem->regions[nregions].memory_size = ctx->highmem;
+		mem->regions[nregions].userspace_addr =
+			(uintptr_t)(ctx->baseaddr + 4*GB);
+		DPRINTF("[%d][0x%llx -> 0x%llx, 0x%llx]\n",
+			nregions,
+			mem->regions[nregions].guest_phys_addr,
+			mem->regions[nregions].userspace_addr,
+			mem->regions[nregions].memory_size);
+		nregions++;
+	}
+
+	mem->nregions = nregions;
+	mem->padding = 0;
+	rc = vhost_kernel_set_mem_table(vdev, mem);
+	free(mem);
+	if (rc < 0) {
+		WPRINTF("set_mem_table failed\n");
+		return -1;
+	}
+
+	return 0;
 }
 
 int
