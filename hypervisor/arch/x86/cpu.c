@@ -667,7 +667,7 @@ static uint16_t get_cpu_id_from_lapic_id(uint8_t lapic_id)
 /*
  * Start all secondary CPUs.
  */
-void start_cpus()
+void start_cpus(void)
 {
 	uint32_t timeout;
 	uint16_t expected_up;
@@ -710,7 +710,7 @@ void start_cpus()
 	}
 }
 
-void stop_cpus()
+void stop_cpus(void)
 {
 	uint16_t pcpu_id, expected_up;
 	uint32_t timeout;
