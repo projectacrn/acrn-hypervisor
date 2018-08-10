@@ -101,7 +101,9 @@ void make_reschedule_request(struct vcpu *vcpu)
 	struct sched_context *ctx = &per_cpu(sched_ctx, vcpu->pcpu_id);
 
 	bitmap_set_lock(NEED_RESCHEDULE, &ctx->flags);
-	send_single_ipi(vcpu->pcpu_id, VECTOR_NOTIFY_VCPU);
+	if (get_cpu_id() != vcpu->pcpu_id) {
+		send_single_ipi(vcpu->pcpu_id, VECTOR_NOTIFY_VCPU);
+	}
 }
 
 int need_reschedule(uint16_t pcpu_id)
@@ -153,7 +155,9 @@ void make_pcpu_offline(uint16_t pcpu_id)
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 
 	bitmap_set_lock(NEED_OFFLINE, &ctx->flags);
-	send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
+	if (get_cpu_id() != pcpu_id) {
+		send_single_ipi(pcpu_id, VECTOR_NOTIFY_VCPU);
+	}
 }
 
 int need_offline(uint16_t pcpu_id)

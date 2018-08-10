@@ -157,7 +157,7 @@ int vmexit_handler(struct vcpu *vcpu)
 	uint16_t basic_exit_reason;
 	int ret;
 
-	if ((int)get_cpu_id() != vcpu->pcpu_id) {
+	if (get_cpu_id() != vcpu->pcpu_id) {
 		pr_fatal("vcpu is not running on its pcpu!");
 		return -EINVAL;
 	}
