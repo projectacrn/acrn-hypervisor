@@ -56,6 +56,6 @@ int start_vm(char *vmname);
 int pause_vm(char *vmname);
 int continue_vm(char *vmname);
 int suspend_vm(char *vmname);
-int resume_vm(char *vmname);
+int resume_vm(char *vmname, unsigned reason);
 
 #endif				/* _ACRNCTL_H_ */

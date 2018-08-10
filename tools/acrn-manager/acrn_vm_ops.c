@@ -392,7 +392,7 @@ int suspend_vm(char *vmname)
 	return ack.data.err;
 }
 
-int resume_vm(char *vmname)
+int resume_vm(char *vmname, unsigned reason)
 {
 	struct mngr_msg req;
 	struct mngr_msg ack;
@@ -400,6 +400,8 @@ int resume_vm(char *vmname)
 	req.magic = MNGR_MSG_MAGIC;
 	req.msgid = DM_RESUME;
 	req.timestamp = time(NULL);
+
+	req.data.reason = reason;
 
 	send_msg(vmname, &req, &ack);
 

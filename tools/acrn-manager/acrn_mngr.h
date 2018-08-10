@@ -27,7 +27,7 @@ struct mngr_msg {
 		int err;
 
 		/* ack of WAKEUP_REASON */
-		int reason;
+		unsigned reason;
 
 		/* ack of DM_QUERY */
 		int state;
