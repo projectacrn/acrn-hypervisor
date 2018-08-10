@@ -444,7 +444,7 @@ void partition_mode_dispatch_interrupt(struct intr_excp_ctx *ctx)
 	 * HV services are handled by HV using dispatch_interrupt.
 	 */
 	vcpu = per_cpu(vcpu, get_cpu_id());
-	if (vr < VECTOR_FOR_PRI_START) {
+	if (vr < VECTOR_FIXED_START) {
 		send_lapic_eoi();
 		vlapic_intr_edge(vcpu, vr);
 	} else {
