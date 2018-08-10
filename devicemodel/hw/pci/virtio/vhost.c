@@ -31,126 +31,152 @@ static int vhost_debug;
 	do { if (vhost_debug) printf(LOG_TAG fmt, ##args); } while (0)
 #define WPRINTF(fmt, args...) printf(LOG_TAG fmt, ##args)
 
+static inline
+int vhost_kernel_ioctl(struct vhost_dev *vdev,
+		       unsigned long int request,
+		       void *arg)
+{
+	int rc;
+
+	rc = ioctl(vdev->fd, request, arg);
+	if (rc < 0)
+		WPRINTF("ioctl failed, fd = %d, request = 0x%lx,"
+			" rc = %d, errno = %d\n",
+			vdev->fd, request, rc, errno);
+	return rc;
+}
+
 static void
 vhost_kernel_init(struct vhost_dev *vdev, struct virtio_base *base,
 		  int fd, int vq_idx, uint32_t busyloop_timeout)
 {
-	/* to be implemented */
+	vdev->base = base;
+	vdev->fd = fd;
+	vdev->vq_idx = vq_idx;
+	vdev->busyloop_timeout = busyloop_timeout;
 }
 
 static void
 vhost_kernel_deinit(struct vhost_dev *vdev)
 {
-	/* to be implemented */
+	vdev->base = NULL;
+	vdev->vq_idx = 0;
+	vdev->busyloop_timeout = 0;
+	if (vdev->fd > 0) {
+		close(vdev->fd);
+		vdev->fd = -1;
+	}
 }
 
 static int
 vhost_kernel_set_mem_table(struct vhost_dev *vdev,
 			   struct vhost_memory *mem)
 {
-	/* to be implemented */
-	return -1;
+	return vhost_kernel_ioctl(vdev, VHOST_SET_MEM_TABLE, mem);
 }
 
 static int
 vhost_kernel_set_vring_addr(struct vhost_dev *vdev,
 			    struct vhost_vring_addr *addr)
 {
-	/* to be implemented */
-	return -1;
+	return vhost_kernel_ioctl(vdev, VHOST_SET_VRING_ADDR, addr);
 }
 
 static int
 vhost_kernel_set_vring_num(struct vhost_dev *vdev,
 			   struct vhost_vring_state *ring)
 {
-	/* to be implemented */
-	return -1;
+	return vhost_kernel_ioctl(vdev, VHOST_SET_VRING_NUM, ring);
 }
 
 static int
 vhost_kernel_set_vring_base(struct vhost_dev *vdev,
 			    struct vhost_vring_state *ring)
 {
-	/* to be implemented */
-	return -1;
+	return vhost_kernel_ioctl(vdev, VHOST_SET_VRING_BASE, ring);
 }
 
 static int
 vhost_kernel_get_vring_base(struct vhost_dev *vdev,
 			    struct vhost_vring_state *ring)
 {
-	/* to be implemented */
-	return -1;
+	return vhost_kernel_ioctl(vdev, VHOST_GET_VRING_BASE, ring);
 }
 
 static int
 vhost_kernel_set_vring_kick(struct vhost_dev *vdev,
 			    struct vhost_vring_file *file)
 {
-	/* to be implemented */
-	return -1;
+	return vhost_kernel_ioctl(vdev, VHOST_SET_VRING_KICK, file);
 }
 
 static int
 vhost_kernel_set_vring_call(struct vhost_dev *vdev,
 			    struct vhost_vring_file *file)
 {
-	/* to be implemented */
-	return -1;
+	return vhost_kernel_ioctl(vdev, VHOST_SET_VRING_CALL, file);
 }
 
 static int
 vhost_kernel_set_vring_busyloop_timeout(struct vhost_dev *vdev,
 					struct vhost_vring_state *s)
 {
-	/* to be implemented */
-	return -1;
+#ifdef VHOST_SET_VRING_BUSYLOOP_TIMEOUT
+	return vhost_kernel_ioctl(vdev, VHOST_SET_VRING_BUSYLOOP_TIMEOUT, s);
+#else
+	return 0;
+#endif
 }
 
 static int
 vhost_kernel_set_features(struct vhost_dev *vdev,
 			  uint64_t features)
 {
-	/* to be implemented */
-	return -1;
+	return vhost_kernel_ioctl(vdev, VHOST_SET_FEATURES, &features);
 }
 
 static int
 vhost_kernel_get_features(struct vhost_dev *vdev,
 			  uint64_t *features)
 {
-	/* to be implemented */
-	return -1;
+	return vhost_kernel_ioctl(vdev, VHOST_GET_FEATURES, features);
 }
 
 static int
 vhost_kernel_set_owner(struct vhost_dev *vdev)
 {
-	/* to be implemented */
-	return -1;
+	return vhost_kernel_ioctl(vdev, VHOST_SET_OWNER, NULL);
 }
 
 static int
 vhost_kernel_reset_device(struct vhost_dev *vdev)
 {
-	/* to be implemented */
-	return -1;
+	return vhost_kernel_ioctl(vdev, VHOST_RESET_OWNER, NULL);
 }
 
 static int
 vhost_kernel_net_set_backend(struct vhost_dev *vdev,
 			     struct vhost_vring_file *file)
 {
-	/* to be implemented */
-	return -1;
+	return vhost_kernel_ioctl(vdev, VHOST_NET_SET_BACKEND, file);
 }
 
 static int
 vhost_eventfd_test_and_clear(int fd)
 {
-	/* to be implemented */
-	return -1;
+	uint64_t count = 0;
+	int rc;
+
+	/*
+	 * each successful read returns an 8-byte integer,
+	 * a read will set the count to zero (EFD_SEMAPHORE
+	 * is not specified when eventfd() is called in
+	 * vhost_vq_init()).
+	 */
+	rc = read(fd, &count, sizeof(count));
+	DPRINTF("read eventfd, rc = %d, errno = %d, count = %ld\n",
+		rc, errno, count);
+	return rc > 0 ? 1 : 0;
 }
 
 static void
