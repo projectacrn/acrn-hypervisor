@@ -47,7 +47,7 @@ static int virtio_input_debug;
 /*
  * Host capabilities
  */
-#define VIRTIO_INPUT_S_HOSTCAPS		(VIRTIO_F_VERSION_1)
+#define VIRTIO_INPUT_S_HOSTCAPS		(ACRN_VIRTIO_F_VERSION_1)
 
 enum virtio_input_config_select {
 	VIRTIO_INPUT_CFG_UNSET		= 0x00,

@@ -64,7 +64,7 @@
 	(VIRTIO_BLK_F_SEG_MAX |						    \
 	VIRTIO_BLK_F_BLK_SIZE |						    \
 	VIRTIO_BLK_F_TOPOLOGY |						    \
-	VIRTIO_RING_F_INDIRECT_DESC)	/* indirect descriptors */
+	ACRN_VIRTIO_RING_F_INDIRECT_DESC)	/* indirect descriptors */
 
 /*
  * Writeback cache bits
@@ -214,7 +214,7 @@ virtio_blk_proc(struct virtio_blk *blk, struct virtio_vq_info *vq)
 	assert(n >= 2 && n <= BLOCKIF_IOV_MAX + 2);
 
 	io = &blk->ios[idx];
-	assert((flags[0] & VRING_DESC_F_WRITE) == 0);
+	assert((flags[0] & ACRN_VRING_DESC_F_WRITE) == 0);
 	assert(iov[0].iov_len == sizeof(struct virtio_blk_hdr));
 	vbh = iov[0].iov_base;
 	memcpy(&io->req.iov, &iov[1], sizeof(struct iovec) * (n - 2));
@@ -222,7 +222,7 @@ virtio_blk_proc(struct virtio_blk *blk, struct virtio_vq_info *vq)
 	io->req.offset = vbh->sector * DEV_BSIZE;
 	io->status = iov[--n].iov_base;
 	assert(iov[n].iov_len == 1);
-	assert(flags[n] & VRING_DESC_F_WRITE);
+	assert(flags[n] & ACRN_VRING_DESC_F_WRITE);
 
 	/*
 	 * XXX
@@ -240,7 +240,7 @@ virtio_blk_proc(struct virtio_blk *blk, struct virtio_vq_info *vq)
 		 * therefore test the inverse of the descriptor bit
 		 * to the op.
 		 */
-		assert(((flags[i] & VRING_DESC_F_WRITE) == 0) == writeop);
+		assert(((flags[i] & ACRN_VRING_DESC_F_WRITE) == 0) == writeop);
 		iolen += iov[i].iov_len;
 	}
 	io->req.resid = iolen;

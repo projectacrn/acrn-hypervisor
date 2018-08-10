@@ -116,9 +116,9 @@
  * The two event fields, <used_event> and <avail_event>, in the
  * avail and used rings (respectively -- note the reversal!), are
  * always provided, but are used only if the virtual device
- * negotiates the VIRTIO_RING_F_EVENT_IDX feature during feature
+ * negotiates the ACRN_VIRTIO_RING_F_EVENT_IDX feature during feature
  * negotiation.  Similarly, both rings provide a flag --
- * VRING_AVAIL_F_NO_INTERRUPT and VRING_USED_F_NO_NOTIFY -- in
+ * ACRN_VRING_AVAIL_F_NO_INTERRUPT and ACRN_VRING_USED_F_NO_NOTIFY -- in
  * their <flags> field, indicating that the guest does not need an
  * interrupt, or that the hypervisor driver does not need a
  * notify, when descriptors are added to the corresponding ring.
@@ -137,9 +137,9 @@
 
 #define VRING_ALIGN	4096
 
-#define VRING_DESC_F_NEXT	(1 << 0)
-#define VRING_DESC_F_WRITE	(1 << 1)
-#define VRING_DESC_F_INDIRECT	(1 << 2)
+#define ACRN_VRING_DESC_F_NEXT		(1 << 0)
+#define ACRN_VRING_DESC_F_WRITE		(1 << 1)
+#define ACRN_VRING_DESC_F_INDIRECT	(1 << 2)
 
 struct virtio_desc {		/* AKA vring_desc */
 	uint64_t	addr;	/* guest physical address */
@@ -153,17 +153,17 @@ struct virtio_used {		/* AKA vring_used_elem */
 	uint32_t	tlen;	/* length written-to */
 } __attribute__((packed));
 
-#define VRING_AVAIL_F_NO_INTERRUPT	1
+#define ACRN_VRING_AVAIL_F_NO_INTERRUPT	1
 
-struct vring_avail {
+struct virtio_vring_avail {
 	uint16_t	flags;	/* VRING_AVAIL_F_* */
 	uint16_t	idx;	/* counts to 65535, then cycles */
 	uint16_t	ring[];	/* size N, reported in QNUM value */
 /*	uint16_t	used_event;	-- after N ring entries */
 } __attribute__((packed));
 
-#define	VRING_USED_F_NO_NOTIFY		1
-struct vring_used {
+#define	ACRN_VRING_USED_F_NO_NOTIFY	1
+struct virtio_vring_used {
 	uint16_t	flags;	/* VRING_USED_F_* */
 	uint16_t	idx;	/* counts to 65535, then cycles */
 	struct virtio_used ring[];
@@ -310,12 +310,12 @@ struct vring_used {
  * Feature flags.
  * Note: bits 0 through 23 are reserved to each device type.
  */
-#define	VIRTIO_F_NOTIFY_ON_EMPTY	(1 << 24)
-#define	VIRTIO_RING_F_INDIRECT_DESC	(1 << 28)
-#define	VIRTIO_RING_F_EVENT_IDX		(1 << 29)
+#define	ACRN_VIRTIO_F_NOTIFY_ON_EMPTY		(1 << 24)
+#define	ACRN_VIRTIO_RING_F_INDIRECT_DESC	(1 << 28)
+#define	ACRN_VIRTIO_RING_F_EVENT_IDX		(1 << 29)
 
 /* v1.0 compliant. */
-#define VIRTIO_F_VERSION_1		(1UL << 32)
+#define ACRN_VIRTIO_F_VERSION_1		(1UL << 32)
 
 /* From section 2.3, "Virtqueue Configuration", of the virtio specification */
 /**
@@ -327,7 +327,7 @@ struct vring_used {
  * @return size of a certain virtqueue, in bytes.
  */
 static inline size_t
-vring_size(u_int qsz)
+virtio_vring_size(u_int qsz)
 {
 	size_t size;
 
@@ -594,9 +594,9 @@ struct virtio_vq_info {
 
 	volatile struct virtio_desc *desc;
 				/**< descriptor array */
-	volatile struct vring_avail *avail;
+	volatile struct virtio_vring_avail *avail;
 				/**< the "avail" ring */
-	volatile struct vring_used *used;
+	volatile struct virtio_vring_used *used;
 				/**< the "used" ring */
 
 	uint32_t gpa_desc[2];	/**< gpa of descriptors */

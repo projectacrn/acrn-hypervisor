@@ -193,7 +193,7 @@ virtio_vq_init(struct virtio_base *base, uint32_t pfn)
 	vq = &base->queues[base->curq];
 	vq->pfn = pfn;
 	phys = (uint64_t)pfn << VRING_PAGE_BITS;
-	size = vring_size(vq->qsize);
+	size = virtio_vring_size(vq->qsize);
 	vb = paddr_guest2host(base->dev->vmctx, phys, size);
 
 	/* First page(s) are descriptors... */
@@ -201,14 +201,14 @@ virtio_vq_init(struct virtio_base *base, uint32_t pfn)
 	vb += vq->qsize * sizeof(struct virtio_desc);
 
 	/* ... immediately followed by "avail" ring (entirely uint16_t's) */
-	vq->avail = (struct vring_avail *)vb;
+	vq->avail = (struct virtio_vring_avail *)vb;
 	vb += (2 + vq->qsize + 1) * sizeof(uint16_t);
 
 	/* Then it's rounded up to the next page... */
 	vb = (char *)roundup2((uintptr_t)vb, VRING_ALIGN);
 
 	/* ... and the last page(s) are the used ring. */
-	vq->used = (struct vring_used *)vb;
+	vq->used = (struct virtio_vring_used *)vb;
 
 	/* Mark queue as allocated, and start at 0 when we use it. */
 	vq->flags = VQ_ALLOC;
@@ -244,13 +244,13 @@ virtio_vq_enable(struct virtio_base *base)
 	phys = (((uint64_t)vq->gpa_avail[1]) << 32) | vq->gpa_avail[0];
 	size = (2 + qsz + 1) * sizeof(uint16_t);
 	vb = paddr_guest2host(base->dev->vmctx, phys, size);
-	vq->avail = (struct vring_avail *)vb;
+	vq->avail = (struct virtio_vring_avail *)vb;
 
 	/* used ring */
 	phys = (((uint64_t)vq->gpa_used[1]) << 32) | vq->gpa_used[0];
 	size = sizeof(uint16_t) * 3 + sizeof(struct virtio_used) * qsz;
 	vb = paddr_guest2host(base->dev->vmctx, phys, size);
-	vq->used = (struct vring_used *)vb;
+	vq->used = (struct virtio_vring_used *)vb;
 
 	/* Mark queue as allocated, and start at 0 when we use it. */
 	vq->flags = VQ_ALLOC;
@@ -378,11 +378,11 @@ vq_getchain(struct virtio_vq_info *vq, uint16_t *pidx,
 			return -1;
 		}
 		vdir = &vq->desc[next];
-		if ((vdir->flags & VRING_DESC_F_INDIRECT) == 0) {
+		if ((vdir->flags & ACRN_VRING_DESC_F_INDIRECT) == 0) {
 			_vq_record(i, vdir, ctx, iov, n_iov, flags);
 			i++;
 		} else if ((base->device_caps &
-		    VIRTIO_RING_F_INDIRECT_DESC) == 0) {
+		    ACRN_VIRTIO_RING_F_INDIRECT_DESC) == 0) {
 			fprintf(stderr,
 			    "%s: descriptor has forbidden INDIRECT flag, "
 			    "driver confused?\r\n",
@@ -409,7 +409,7 @@ vq_getchain(struct virtio_vq_info *vq, uint16_t *pidx,
 			next = 0;
 			for (;;) {
 				vp = &vindir[next];
-				if (vp->flags & VRING_DESC_F_INDIRECT) {
+				if (vp->flags & ACRN_VRING_DESC_F_INDIRECT) {
 					fprintf(stderr,
 					    "%s: indirect desc has INDIR flag,"
 					    " driver confused?\r\n",
@@ -419,7 +419,7 @@ vq_getchain(struct virtio_vq_info *vq, uint16_t *pidx,
 				_vq_record(i, vp, ctx, iov, n_iov, flags);
 				if (++i > VQ_MAX_DESCRIPTORS)
 					goto loopy;
-				if ((vp->flags & VRING_DESC_F_NEXT) == 0)
+				if ((vp->flags & ACRN_VRING_DESC_F_NEXT) == 0)
 					break;
 				next = vp->next;
 				if (next >= n_indir) {
@@ -431,7 +431,7 @@ vq_getchain(struct virtio_vq_info *vq, uint16_t *pidx,
 				}
 			}
 		}
-		if ((vdir->flags & VRING_DESC_F_NEXT) == 0)
+		if ((vdir->flags & ACRN_VRING_DESC_F_NEXT) == 0)
 			return i;
 	}
 loopy:
@@ -464,7 +464,7 @@ void
 vq_relchain(struct virtio_vq_info *vq, uint16_t idx, uint32_t iolen)
 {
 	uint16_t uidx, mask;
-	volatile struct vring_used *vuh;
+	volatile struct virtio_vring_used *vuh;
 	volatile struct virtio_used *vue;
 
 	/*
@@ -513,7 +513,7 @@ vq_endchains(struct virtio_vq_info *vq, int used_all_avail)
 	 * Interrupt generation: if we're using EVENT_IDX,
 	 * interrupt if we've crossed the event threshold.
 	 * Otherwise interrupt is generated if we added "used" entries,
-	 * but suppressed by VRING_AVAIL_F_NO_INTERRUPT.
+	 * but suppressed by ACRN_VRING_AVAIL_F_NO_INTERRUPT.
 	 *
 	 * In any case, though, if NOTIFY_ON_EMPTY is set and the
 	 * entire avail was processed, we need to interrupt always.
@@ -522,9 +522,9 @@ vq_endchains(struct virtio_vq_info *vq, int used_all_avail)
 	old_idx = vq->save_used;
 	vq->save_used = new_idx = vq->used->idx;
 	if (used_all_avail &&
-	    (base->negotiated_caps & VIRTIO_F_NOTIFY_ON_EMPTY))
+	    (base->negotiated_caps & ACRN_VIRTIO_F_NOTIFY_ON_EMPTY))
 		intr = 1;
-	else if (base->negotiated_caps & VIRTIO_RING_F_EVENT_IDX) {
+	else if (base->negotiated_caps & ACRN_VIRTIO_RING_F_EVENT_IDX) {
 		event_idx = VQ_USED_EVENT_IDX(vq);
 		/*
 		 * This calculation is per docs and the kernel
@@ -534,7 +534,7 @@ vq_endchains(struct virtio_vq_info *vq, int used_all_avail)
 			(uint16_t)(new_idx - old_idx);
 	} else {
 		intr = new_idx != old_idx &&
-		    !(vq->avail->flags & VRING_AVAIL_F_NO_INTERRUPT);
+		    !(vq->avail->flags & ACRN_VRING_AVAIL_F_NO_INTERRUPT);
 	}
 	if (intr)
 		vq_interrupt(base, vq);
@@ -1020,7 +1020,7 @@ virtio_set_modern_bar(struct virtio_base *base, bool use_notify_pio)
 
 	vops = base->vops;
 
-	if (!vops || (base->device_caps & VIRTIO_F_VERSION_1) == 0)
+	if (!vops || (base->device_caps & ACRN_VIRTIO_F_VERSION_1) == 0)
 		return -1;
 
 	if (use_notify_pio)
@@ -1036,7 +1036,7 @@ virtio_set_modern_bar(struct virtio_base *base, bool use_notify_pio)
 void
 virtio_dev_error(struct virtio_base *base)
 {
-	if (base->negotiated_caps & VIRTIO_F_VERSION_1) {
+	if (base->negotiated_caps & ACRN_VIRTIO_F_VERSION_1) {
 		/* see 2.1.2. if DRIVER_OK is set, need to send
 		 * a device configuration change notification to the driver
 		 */
