@@ -466,23 +466,27 @@ static int acrnctl_do_suspend(int argc, char *argv[])
 static int acrnctl_do_resume(int argc, char *argv[])
 {
 	struct vmmngr_struct *s;
-	int i;
+	unsigned reason = 0;
 
-	for (i = 1; i < argc; i++) {
-		s = vmmngr_find(argv[i]);
-		if (!s) {
-			printf("Can't find vm %s\n", argv[i]);
-			continue;
-		}
+	s = vmmngr_find(argv[1]);
+	if (!s) {
+		printf("Can't find vm %s\n", argv[1]);
+		return -1;
+	}
 
-		switch (s->state) {
-			case VM_PAUSED:
-				resume_vm(argv[i]);
-				break;
-			default:
-				printf("%s current state %s, can't resume\n",
-					argv[i], state_str[s->state]);
-		}
+	if (argc == 3) {
+		sscanf(argv[2], "%x", &reason);
+		reason = (reason & (0xff << 24)) ? 0 : reason;
+	}
+
+	switch (s->state) {
+		case VM_PAUSED:
+			resume_vm(argv[1], reason);
+			printf("resume %s reason(0x%x\n", argv[1], reason);
+			break;
+		default:
+			printf("%s current state %s, can't resume\n",
+				argv[1], state_str[s->state]);
 	}
 
 	return 0;

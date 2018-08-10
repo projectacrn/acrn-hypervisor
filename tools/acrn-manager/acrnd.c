@@ -105,11 +105,13 @@ static void try_do_works(void)
 }
 
 static void acrnd_run_vm(char *name);
+unsigned get_sos_wakeup_reason(void);
 
 /* Time to run/resume VM */
 void acrnd_vm_timer_func(struct work_arg *arg)
 {
 	struct vmmngr_struct *vm;
+	unsigned reason;
 
 	if (!arg) {
 		pdebug();
@@ -128,7 +130,8 @@ void acrnd_vm_timer_func(struct work_arg *arg)
 		acrnd_run_vm(arg->name);
 		break;
 	case VM_PAUSED:
-		resume_vm(arg->name);
+		reason = get_sos_wakeup_reason();
+		resume_vm(arg->name, reason);
 		break;
 	default:
 		pdebug();
@@ -235,6 +238,7 @@ static int active_all_vms(void)
 	struct vmmngr_struct *vm;
 	int ret = 0;
 	pid_t pid;
+	unsigned reason;
 
 	vmmngr_update();
 
@@ -246,7 +250,8 @@ static int active_all_vms(void)
 				acrnd_run_vm(vm->name);
 			break;
 		case VM_PAUSED:
-			ret += resume_vm(vm->name);
+			reason = get_sos_wakeup_reason();
+			ret += resume_vm(vm->name, reason);
 			break;
 		default:
 			pdebug();
