@@ -145,9 +145,7 @@ C_SRCS += arch/x86/guest/vm.c
 C_SRCS += arch/x86/guest/vlapic.c
 C_SRCS += arch/x86/guest/guest.c
 C_SRCS += arch/x86/guest/vmcall.c
-C_SRCS += arch/x86/guest/vpic.c
 C_SRCS += arch/x86/guest/vmsr.c
-C_SRCS += arch/x86/guest/vioapic.c
 C_SRCS += arch/x86/guest/instr_emul.c
 C_SRCS += arch/x86/guest/ucode.c
 C_SRCS += arch/x86/guest/pm.c
@@ -173,6 +171,8 @@ ifdef STACK_PROTECTOR
 C_SRCS += common/stack_protector.c
 endif
 
+C_SRCS += dm/vpic.c
+C_SRCS += dm/vioapic.c
 ifeq ($(CONFIG_PARTITION_MODE),y)
 C_SRCS += $(wildcard dm/vpci/*.c)
 C_SRCS += $(wildcard partition/*.c)
