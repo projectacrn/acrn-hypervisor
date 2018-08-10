@@ -1893,6 +1893,19 @@ static int decode_sib(struct instr_emul_vie *vie)
 	case VIE_MOD_INDIRECT_DISP32:
 		vie->disp_bytes = 4U;
 		break;
+	default:
+		/*
+		 * All possible values of 'vie->mod':
+		 * 1. VIE_MOD_DIRECT
+		 *    has been handled at the start of this function
+		 * 2. VIE_MOD_INDIRECT_DISP8
+		 *    has been handled in prior case clauses
+		 * 3. VIE_MOD_INDIRECT_DISP32
+		 *    has been handled in prior case clauses
+		 * 4. VIE_MOD_INDIRECT
+		 *    will be handled later after this switch statement
+		 */
+		break;
 	}
 
 	if (vie->mod == VIE_MOD_INDIRECT &&

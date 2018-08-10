@@ -1127,6 +1127,12 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 		dmask = vm_active_cpus(vlapic->vm);
 		bitmap_clear_lock(vlapic->vcpu->vcpu_id, &dmask);
 		break;
+	default:
+		/*
+		 * All possible values of 'shorthand' has been handled in prior
+		 * case clauses.
+		 */
+		break;
 	}
 
 	while ((vcpu_id = ffs64(dmask)) != INVALID_BIT_INDEX) {

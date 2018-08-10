@@ -579,6 +579,18 @@ int vpic_set_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger trigger)
 		case 8U:
 		case 13U:
 			return -EINVAL;
+		default:
+			/*
+			 * The IRQs handled earlier are the ones that could only
+			 * support edge trigger, while the input parameter
+			 * 'trigger' is set as LEVEL_TRIGGER. So, an error code
+			 * (-EINVAL) shall be returned due to the invalid
+			 * operation.
+			 *
+			 * All the other IRQs will be handled properly after
+			 * this switch statement.
+			 */
+			break;
 		}
 	}
 
