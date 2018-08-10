@@ -45,6 +45,54 @@ vhost_kernel_deinit(struct vhost_dev *vdev)
 }
 
 static int
+vhost_kernel_set_vring_addr(struct vhost_dev *vdev,
+			    struct vhost_vring_addr *addr)
+{
+	/* to be implemented */
+	return -1;
+}
+
+static int
+vhost_kernel_set_vring_num(struct vhost_dev *vdev,
+			   struct vhost_vring_state *ring)
+{
+	/* to be implemented */
+	return -1;
+}
+
+static int
+vhost_kernel_set_vring_base(struct vhost_dev *vdev,
+			    struct vhost_vring_state *ring)
+{
+	/* to be implemented */
+	return -1;
+}
+
+static int
+vhost_kernel_get_vring_base(struct vhost_dev *vdev,
+			    struct vhost_vring_state *ring)
+{
+	/* to be implemented */
+	return -1;
+}
+
+static int
+vhost_kernel_set_vring_kick(struct vhost_dev *vdev,
+			    struct vhost_vring_file *file)
+{
+	/* to be implemented */
+	return -1;
+}
+
+static int
+vhost_kernel_set_vring_call(struct vhost_dev *vdev,
+			    struct vhost_vring_file *file)
+{
+	/* to be implemented */
+	return -1;
+}
+
+static int
 vhost_kernel_set_vring_busyloop_timeout(struct vhost_dev *vdev,
 					struct vhost_vring_state *s)
 {
@@ -91,31 +139,232 @@ vhost_kernel_net_set_backend(struct vhost_dev *vdev,
 }
 
 static int
-vhost_vq_init(struct vhost_dev *vdev, int idx)
+vhost_eventfd_test_and_clear(int fd)
 {
 	/* to be implemented */
+	return -1;
+}
+
+static int
+vhost_vq_register_eventfd(struct vhost_dev *vdev,
+			  int idx, bool is_register)
+{
+	/* to be implemented */
+	return -1;
+}
+
+static int
+vhost_vq_init(struct vhost_dev *vdev, int idx)
+{
+	struct vhost_vq *vq;
+
+	if (!vdev || !vdev->vqs)
+		goto fail;
+
+	vq = &vdev->vqs[idx];
+	if (!vq)
+		goto fail;
+
+	vq->kick_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+	if (vq->kick_fd < 0) {
+		WPRINTF("create kick_fd failed\n");
+		goto fail_kick;
+	}
+
+	vq->call_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+	if (vq->call_fd < 0) {
+		WPRINTF("create call_fd failed\n");
+		goto fail_call;
+	}
+
+	vq->idx = idx;
+	vq->dev = vdev;
+	return 0;
+
+fail_call:
+	close(vq->kick_fd);
+fail_kick:
+	vq->kick_fd = -1;
+	vq->call_fd = -1;
+fail:
 	return -1;
 }
 
 static int
 vhost_vq_deinit(struct vhost_vq *vq)
 {
-	/* to be implemented */
-	return -1;
+	if (!vq)
+		return -1;
+
+	if (vq->call_fd > 0) {
+		close(vq->call_fd);
+		vq->call_fd = -1;
+	}
+
+	if (vq->kick_fd > 0) {
+		close(vq->kick_fd);
+		vq->kick_fd = -1;
+	}
+
+	return 0;
 }
 
 static int
 vhost_vq_start(struct vhost_dev *vdev, int idx)
 {
-	/* to be implemented */
+	struct vhost_vq *vq;
+	struct virtio_vq_info *vqi;
+	struct vhost_vring_state ring;
+	struct vhost_vring_addr addr;
+	struct vhost_vring_file file;
+	int rc, q_idx;
+
+	/* sanity check */
+	if (!vdev->base || !vdev->base->queues || !vdev->base->vops ||
+		!vdev->vqs) {
+		WPRINTF("vhost_dev is not initialized\n");
+		goto fail;
+	}
+
+	/*
+	 * vq_idx is introduced to support multi-queue feature of vhost net.
+	 * When multi-queue feature is enabled, every vhost_dev owns part of
+	 * the virtqueues defined by virtio backend driver in device model,
+	 * they are specified by
+	 * [vdev->vq_idx, vdev->vq_idx + vhost_dev->nvqs)
+	 * If multi-queue feature is not required, just leave vdev->vq_idx
+	 * to zero.
+	 */
+	q_idx = idx + vdev->vq_idx;
+	if (q_idx >= vdev->base->vops->nvq) {
+		WPRINTF("invalid vq index: idx = %d, vq_idx = %d\n",
+			idx, vdev->vq_idx);
+		goto fail;
+	}
+	vqi = &vdev->base->queues[q_idx];
+	vq = &vdev->vqs[idx];
+
+	/* clear kick_fd and call_fd */
+	vhost_eventfd_test_and_clear(vq->kick_fd);
+	vhost_eventfd_test_and_clear(vq->call_fd);
+
+	/* register ioeventfd & irqfd */
+	rc = vhost_vq_register_eventfd(vdev, idx, true);
+	if (rc < 0) {
+		WPRINTF("register eventfd failed: idx = %d\n", idx);
+		goto fail;
+	}
+
+	/* VHOST_SET_VRING_NUM */
+	ring.index = idx;
+	ring.num = vqi->qsize;
+	rc = vhost_kernel_set_vring_num(vdev, &ring);
+	if (rc < 0) {
+		WPRINTF("set_vring_num failed: idx = %d\n", idx);
+		goto fail_vring;
+	}
+
+	/* VHOST_SET_VRING_BASE */
+	ring.num = vqi->last_avail;
+	rc = vhost_kernel_set_vring_base(vdev, &ring);
+	if (rc < 0) {
+		WPRINTF("set_vring_base failed: idx = %d, last_avail = %d\n",
+			idx, vqi->last_avail);
+		goto fail_vring;
+	}
+
+	/* VHOST_SET_VRING_ADDR */
+	addr.index = idx;
+	addr.desc_user_addr = (uintptr_t)vqi->desc;
+	addr.avail_user_addr = (uintptr_t)vqi->avail;
+	addr.used_user_addr = (uintptr_t)vqi->used;
+	addr.log_guest_addr = (uintptr_t)NULL;
+	addr.flags = 0;
+	rc = vhost_kernel_set_vring_addr(vdev, &addr);
+	if (rc < 0) {
+		WPRINTF("set_vring_addr failed: idx = %d\n", idx);
+		goto fail_vring;
+	}
+
+	/* VHOST_SET_VRING_CALL */
+	file.index = idx;
+	file.fd = vq->call_fd;
+	rc = vhost_kernel_set_vring_call(vdev, &file);
+	if (rc < 0) {
+		WPRINTF("set_vring_call failed\n");
+		goto fail_vring;
+	}
+
+	/* VHOST_SET_VRING_KICK */
+	file.index = idx;
+	file.fd = vq->kick_fd;
+	rc = vhost_kernel_set_vring_kick(vdev, &file);
+	if (rc < 0) {
+		WPRINTF("set_vring_kick failed: idx = %d", idx);
+		goto fail_vring_kick;
+	}
+
+	return 0;
+
+fail_vring_kick:
+	file.index = idx;
+	file.fd = -1;
+	vhost_kernel_set_vring_call(vdev, &file);
+fail_vring:
+	vhost_vq_register_eventfd(vdev, idx, false);
+fail:
 	return -1;
 }
 
 static int
 vhost_vq_stop(struct vhost_dev *vdev, int idx)
 {
-	/* to be implemented */
-	return -1;
+	struct virtio_vq_info *vqi;
+	struct vhost_vring_file file;
+	struct vhost_vring_state ring;
+	int rc, q_idx;
+
+	/* sanity check */
+	if (!vdev->base || !vdev->base->queues || !vdev->base->vops ||
+		!vdev->vqs) {
+		WPRINTF("vhost_dev is not initialized\n");
+		return -1;
+	}
+
+	q_idx = idx + vdev->vq_idx;
+	if (q_idx >= vdev->base->vops->nvq) {
+		WPRINTF("invalid vq index: idx = %d, vq_idx = %d\n",
+			idx, vdev->vq_idx);
+		return -1;
+	}
+	vqi = &vdev->base->queues[q_idx];
+
+	file.index = idx;
+	file.fd = -1;
+
+	/* VHOST_SET_VRING_KICK */
+	vhost_kernel_set_vring_kick(vdev, &file);
+
+	/* VHOST_SET_VRING_CALL */
+	vhost_kernel_set_vring_call(vdev, &file);
+
+	/* VHOST_GET_VRING_BASE */
+	ring.index = idx;
+	rc = vhost_kernel_get_vring_base(vdev, &ring);
+	if (rc < 0)
+		WPRINTF("get_vring_base failed: idx = %d", idx);
+	else
+		vqi->last_avail = ring.num;
+
+	/* update vqi->save_used */
+	vqi->save_used = vqi->used->idx;
+
+	/* unregister ioeventfd & irqfd */
+	rc = vhost_vq_register_eventfd(vdev, idx, false);
+	if (rc < 0)
+		WPRINTF("unregister eventfd failed: idx = %d\n", idx);
+
+	return rc;
 }
 
 static int
