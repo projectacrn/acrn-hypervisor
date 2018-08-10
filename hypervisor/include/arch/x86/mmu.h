@@ -259,27 +259,27 @@ enum _page_table_present {
 #define PAGE_SIZE_1G	MEM_1G
 
 /* Inline functions for reading/writing memory */
-static inline uint8_t mem_read8(void *addr)
+static inline uint8_t mem_read8(const void *addr)
 {
 	return *(volatile uint8_t *)(addr);
 }
 
-static inline uint16_t mem_read16(void *addr)
+static inline uint16_t mem_read16(const void *addr)
 {
 	return *(volatile uint16_t *)(addr);
 }
 
-static inline uint32_t mem_read32(void *addr)
+static inline uint32_t mem_read32(const void *addr)
 {
 	return *(volatile uint32_t *)(addr);
 }
 
-static inline uint64_t mem_read64(void *addr)
+static inline uint64_t mem_read64(const void *addr)
 {
 	return *(volatile uint64_t *)(addr);
 }
 
-static inline void mem_write8(void *addr, uint8_t data)
+static inline void mem_write8(const void *addr, uint8_t data)
 {
 	volatile uint8_t *addr8 = (volatile uint8_t *)addr;
 	*addr8 = data;
@@ -378,15 +378,15 @@ static inline void clflush(volatile void *p)
 /* External Interfaces */
 uint64_t create_guest_initial_paging(struct vm *vm);
 void    destroy_ept(struct vm *vm);
-uint64_t  gpa2hpa(struct vm *vm, uint64_t gpa);
-uint64_t  local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size);
-uint64_t  hpa2gpa(struct vm *vm, uint64_t hpa);
-int ept_mr_add(struct vm *vm, uint64_t hpa_arg,
+uint64_t  gpa2hpa(const struct vm *vm, uint64_t gpa);
+uint64_t  local_gpa2hpa(const struct vm *vm, uint64_t gpa, uint32_t *size);
+uint64_t  hpa2gpa(const struct vm *vm, uint64_t hpa);
+int ept_mr_add(const struct vm *vm, uint64_t hpa_arg,
 	uint64_t gpa_arg, uint64_t size, uint32_t prot_arg);
-int ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
+int ept_mr_modify(const struct vm *vm, uint64_t *pml4_page,
 	uint64_t gpa, uint64_t size,
 	uint64_t prot_set, uint64_t prot_clr);
-int ept_mr_del(struct vm *vm, uint64_t *pml4_page,
+int ept_mr_del(const struct vm *vm, uint64_t *pml4_page,
 	uint64_t gpa, uint64_t size);
 void free_ept_mem(void *pml4_addr);
 int     ept_violation_vmexit_handler(struct vcpu *vcpu);

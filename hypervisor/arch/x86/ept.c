@@ -10,7 +10,7 @@
 
 #define ACRN_DBG_EPT	6U
 
-static uint64_t find_next_table(uint32_t table_offset, void *table_base)
+static uint64_t find_next_table(uint32_t table_offset, const void *table_base)
 {
 	uint64_t table_entry;
 	uint64_t table_present;
@@ -100,7 +100,7 @@ void destroy_ept(struct vm *vm)
 		free_ept_mem(vm->arch_vm.m2p);
 }
 
-uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
+uint64_t local_gpa2hpa(const struct vm *vm, uint64_t gpa, uint32_t *size)
 {
 	uint64_t hpa = 0UL;
 	uint64_t *pgentry, pg_size = 0UL;
@@ -124,12 +124,12 @@ uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 }
 
 /* using return value 0 as failure, make sure guest will not use hpa 0 */
-uint64_t gpa2hpa(struct vm *vm, uint64_t gpa)
+uint64_t gpa2hpa(const struct vm *vm, uint64_t gpa)
 {
 	return local_gpa2hpa(vm, gpa, NULL);
 }
 
-uint64_t hpa2gpa(struct vm *vm, uint64_t hpa)
+uint64_t hpa2gpa(const struct vm *vm, uint64_t hpa)
 {
 	uint64_t *pgentry, pg_size = 0UL;
 
@@ -251,7 +251,7 @@ int ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu)
 	return status;
 }
 
-int ept_mr_add(struct vm *vm, uint64_t hpa_arg,
+int ept_mr_add(const struct vm *vm, uint64_t hpa_arg,
 	uint64_t gpa_arg, uint64_t size, uint32_t prot_arg)
 {
 	struct mem_map_params map_params;
@@ -290,7 +290,7 @@ int ept_mr_add(struct vm *vm, uint64_t hpa_arg,
 	return 0;
 }
 
-int ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
+int ept_mr_modify(const struct vm *vm, uint64_t *pml4_page,
 		uint64_t gpa, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr)
 {
@@ -308,7 +308,7 @@ int ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
 	return ret;
 }
 
-int ept_mr_del(struct vm *vm, uint64_t *pml4_page,
+int ept_mr_del(const struct vm *vm, uint64_t *pml4_page,
 		uint64_t gpa, uint64_t size)
 {
 	struct vcpu *vcpu;

@@ -53,17 +53,17 @@ static inline uint64_t *pml4e_offset(uint64_t *pml4_page, uint64_t addr)
 	return pml4_page + pml4e_index(addr);
 }
 
-static inline uint64_t *pdpte_offset(uint64_t *pml4e, uint64_t addr)
+static inline uint64_t *pdpte_offset(const uint64_t *pml4e, uint64_t addr)
 {
 	return pml4e_page_vaddr(*pml4e) + pdpte_index(addr);
 }
 
-static inline uint64_t *pde_offset(uint64_t *pdpte, uint64_t addr)
+static inline uint64_t *pde_offset(const uint64_t *pdpte, uint64_t addr)
 {
 	return pdpte_page_vaddr(*pdpte) + pde_index(addr);
 }
 
-static inline uint64_t *pte_offset(uint64_t *pde, uint64_t addr)
+static inline uint64_t *pte_offset(const uint64_t *pde, uint64_t addr)
 {
 	return pde_page_vaddr(*pde) + pte_index(addr);
 }
@@ -71,7 +71,7 @@ static inline uint64_t *pte_offset(uint64_t *pde, uint64_t addr)
 /*
  * pgentry may means pml4e/pdpte/pde/pte
  */
-static inline uint64_t get_pgentry(uint64_t *pte)
+static inline uint64_t get_pgentry(const uint64_t *pte)
 {
 	return *pte;
 }

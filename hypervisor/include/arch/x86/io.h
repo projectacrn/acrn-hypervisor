@@ -81,7 +81,7 @@ static inline uint32_t pio_read(uint16_t addr, size_t sz)
  *  @param value The 32 bit value to write.
  *  @param addr The memory address to write to.
  */
-static inline void mmio_write32(uint32_t value, void *addr)
+static inline void mmio_write32(uint32_t value, const void *addr)
 {
 	volatile uint32_t *addr32 = (volatile uint32_t *)addr;
 	*addr32 = value;
@@ -92,7 +92,7 @@ static inline void mmio_write32(uint32_t value, void *addr)
  *  @param value The 16 bit value to write.
  *  @param addr The memory address to write to.
  */
-static inline void mmio_write16(uint16_t value, void *addr)
+static inline void mmio_write16(uint16_t value, const void *addr)
 {
 	volatile uint16_t *addr16 = (volatile uint16_t *)addr;
 	*addr16 = value;
@@ -103,7 +103,7 @@ static inline void mmio_write16(uint16_t value, void *addr)
  *  @param value The 8 bit value to write.
  *  @param addr The memory address to write to.
  */
-static inline void mmio_write8(uint8_t value, void *addr)
+static inline void mmio_write8(uint8_t value, const void *addr)
 {
 	volatile uint8_t *addr8 = (volatile uint8_t *)addr;
 	*addr8 = value;
@@ -115,7 +115,7 @@ static inline void mmio_write8(uint8_t value, void *addr)
  *
  *  @return The 32 bit value read from the given address.
  */
-static inline uint32_t mmio_read32(void *addr)
+static inline uint32_t mmio_read32(const void *addr)
 {
 	return *((volatile uint32_t *)addr);
 }
@@ -126,7 +126,7 @@ static inline uint32_t mmio_read32(void *addr)
  *
  *  @return The 16 bit value read from the given address.
  */
-static inline uint16_t mmio_read16(void *addr)
+static inline uint16_t mmio_read16(const void *addr)
 {
 	return *((volatile uint16_t *)addr);
 }
@@ -137,7 +137,7 @@ static inline uint16_t mmio_read16(void *addr)
  *
  *  @return The 8 bit  value read from the given address.
  */
-static inline uint8_t mmio_read8(void *addr)
+static inline uint8_t mmio_read8(const void *addr)
 {
 	return *((volatile uint8_t *)addr);
 }
@@ -150,7 +150,7 @@ static inline uint8_t mmio_read8(void *addr)
  * @param mask    The mask to apply to the value read.
  * @param value   The 32 bit value to write.
  */
-static inline void set32(void *addr, uint32_t mask, uint32_t value)
+static inline void set32(const void *addr, uint32_t mask, uint32_t value)
 {
 	uint32_t temp_val;
 
@@ -165,7 +165,7 @@ static inline void set32(void *addr, uint32_t mask, uint32_t value)
  * @param mask    The mask to apply to the value read.
  * @param value   The 16 bit value to write.
  */
-static inline void set16(void *addr, uint16_t mask, uint16_t value)
+static inline void set16(const void *addr, uint16_t mask, uint16_t value)
 {
 	uint16_t temp_val;
 
@@ -180,7 +180,7 @@ static inline void set16(void *addr, uint16_t mask, uint16_t value)
  * @param mask    The mask to apply to the value read.
  * @param value   The 8 bit value to write.
  */
-static inline void set8(void *addr, uint8_t mask, uint8_t value)
+static inline void set8(const void *addr, uint8_t mask, uint8_t value)
 {
 	uint8_t temp_val;
 
