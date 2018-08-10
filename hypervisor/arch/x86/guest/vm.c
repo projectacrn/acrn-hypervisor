@@ -62,6 +62,9 @@ static void init_vm(struct vm_description *vm_desc,
 #else
 	vm_handle->hw.num_vcpus = vm_desc->vm_hw_num_cores;
 #endif
+#ifdef CONFIG_PARTITION_MODE
+	vm_handle->vm_desc = vm_desc;
+#endif
 }
 
 /* return a pointer to the virtual machine structure associated with
@@ -155,7 +158,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 			goto err;
 		}
 #ifndef CONFIG_EFI_STUB
-		status = init_vm0_boot_info(vm);
+		status = init_vm_boot_info(vm);
 		if (status != 0) {
 			goto err;
 		}
@@ -170,6 +173,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 #ifdef CONFIG_PARTITION_MODE
 		ept_mr_add(vm, vm_desc->start_hpa,
 					0UL, vm_desc->mem_size, EPT_RWX|EPT_WB);
+		init_vm_boot_info(vm);
 #endif
 	}
 
