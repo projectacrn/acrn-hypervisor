@@ -89,7 +89,7 @@ static const struct cpu_state_table {
 	}
 };
 
-static int get_state_tbl_idx(char *cpuname)
+static int get_state_tbl_idx(const char *cpuname)
 {
 	int i;
 	int count = ARRAY_SIZE(cpu_state_tbl);
