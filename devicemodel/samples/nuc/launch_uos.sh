@@ -14,10 +14,7 @@ if [[ "$result" != "" ]]; then
 fi
 
 #for memsize setting
-mem_size=1000M
-
-# make sure there is enough 2M hugepages in the pool
-echo 1024 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+mem_size=2048M
 
 acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 2,pci-gvt -G "$3" \
@@ -44,4 +41,4 @@ for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
         fi
 done
 
-launch_clear 2 1 "64 448 8" 0x070F00 clear
+launch_clear 1 3 "64 448 8" 0x070F00 clear
