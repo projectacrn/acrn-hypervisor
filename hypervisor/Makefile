@@ -140,6 +140,7 @@ C_SRCS += arch/x86/cpu_state_tbl.c
 C_SRCS += arch/x86/mtrr.c
 C_SRCS += arch/x86/pm.c
 S_SRCS += arch/x86/wakeup.S
+C_SRCS += arch/x86/static_checks.c
 C_SRCS += arch/x86/guest/vcpu.c
 C_SRCS += arch/x86/guest/vm.c
 C_SRCS += arch/x86/guest/vlapic.c
@@ -165,6 +166,7 @@ C_SRCS += common/schedule.c
 C_SRCS += common/vm_load.c
 C_SRCS += common/io_request.c
 C_SRCS += common/ptdev.c
+C_SRCS += common/static_checks.c
 
 ifdef STACK_PROTECTOR
 C_SRCS += common/stack_protector.c
