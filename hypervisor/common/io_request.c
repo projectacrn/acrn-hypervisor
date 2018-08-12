@@ -62,10 +62,6 @@ acrn_insert_request_wait(struct vcpu *vcpu, struct io_request *io_req)
 	struct vhm_request *vhm_req;
 	uint16_t cur;
 
-	ASSERT(sizeof(struct vhm_request) == (4096U/VHM_REQUEST_MAX),
-			"vhm_request page broken!");
-
-
 	if ((vcpu == NULL) || (io_req == NULL) ||
 		(vcpu->vm->sw.io_shared_page == NULL)) {
 		return -EINVAL;
