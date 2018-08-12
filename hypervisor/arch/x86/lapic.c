@@ -416,18 +416,18 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	return status;
 }
 
-void send_single_ipi(uint16_t pcpu_id, uint32_t vector)
+/* dest_mode must be INTR_LAPIC_ICR_PHYSICAL(0x0U) or
+ * INTR_LAPIC_ICR_LOGICAL(0x1U)
+ */
+void send_dest_ipi(uint32_t dest, uint32_t vector, uint32_t dest_mode)
 {
-	uint32_t dest_lapic_id, hi_32, lo_32;
-
-	/* Get the lapic ID of the destination processor. */
-	dest_lapic_id = per_cpu(lapic_id, pcpu_id);
+	uint32_t hi_32, lo_32;
 
 	/* Set the target processor. */
-	hi_32 = dest_lapic_id << 24;
+	hi_32 = dest << 24U;
 
 	/* Set the vector ID. */
-	lo_32 = vector;
+	lo_32 = vector | (dest_mode << 11U);
 
 	/* Set the destination field to the target processor. */
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_1, hi_32);
@@ -436,6 +436,16 @@ void send_single_ipi(uint16_t pcpu_id, uint32_t vector)
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_0, lo_32);
 
 	wait_for_delivery();
+}
+
+void send_single_ipi(uint16_t pcpu_id, uint32_t vector)
+{
+	uint32_t dest_lapic_id;
+
+	/* Get the lapic ID of the destination processor. */
+	dest_lapic_id = per_cpu(lapic_id, pcpu_id);
+
+	return send_dest_ipi(dest_lapic_id, vector, INTR_LAPIC_ICR_PHYSICAL);
 }
 
 int send_shorthand_ipi(uint8_t vector,

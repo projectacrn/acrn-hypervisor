@@ -141,6 +141,8 @@ uint8_t get_cur_lapic_id(void);
 int send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 		uint16_t dest_pcpu_id,
 		uint64_t cpu_startup_start_address);
+/* API to send an IPI to dest guest */
+void send_dest_ipi(uint32_t dest, uint32_t vector, uint32_t dest_mode);
 /* API to send an IPI to a single guest */
 void send_single_ipi(uint16_t pcpu_id, uint32_t vector);
 
