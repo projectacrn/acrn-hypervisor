@@ -4,22 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#define BOOT_CTX_CR0_OFFSET         0
-#define BOOT_CTX_CR3_OFFSET         8
-#define BOOT_CTX_CR4_OFFSET         16
-#define BOOT_CTX_IDT_OFFSET         24
-#define BOOT_CTX_GDT_OFFSET         34
-#define BOOT_CTX_LDT_SEL_OFFSET     44
-#define BOOT_CTX_TR_SEL_OFFSET      46
-#define BOOT_CTX_CS_SEL_OFFSET      48
-#define BOOT_CTX_SS_SEL_OFFSET      50
-#define BOOT_CTX_DS_SEL_OFFSET      52
-#define BOOT_CTX_ES_SEL_OFFSET      54
-#define BOOT_CTX_FS_SEL_OFFSET      56
-#define BOOT_CTX_GS_SEL_OFFSET      58
-#define BOOT_CTX_CS_AR_OFFSET       60
-#define BOOT_CTX_EFER_LOW_OFFSET    64
-#define BOOT_CTX_EFER_HIGH_OFFSET   68
+#include <vm0_boot.h>
 
     .section    entry, "ax"
     .align      8
