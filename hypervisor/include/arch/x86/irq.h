@@ -47,6 +47,13 @@ struct intr_excp_ctx {
 	uint64_t ss;
 };
 
+typedef void (*smp_call_func_t)(void *data);
+struct smp_call_info_data {
+	smp_call_func_t func;
+	void *data;
+};
+
+void smp_call_function(uint64_t mask, smp_call_func_t func, void *data);
 int handle_level_interrupt_common(struct irq_desc *desc,
 	__unused void *handler_data);
 int common_handler_edge(struct irq_desc *desc, __unused void *handler_data);
