@@ -346,9 +346,6 @@ if [ $launch_type == 5 ]; then
 	fi
 fi
 
-# make sure there is enough 2M hugepages in the pool
-echo 1024 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-
 # offline SOS CPUs except BSP before launch UOS
 for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
         online=`cat $i/online`
