@@ -485,9 +485,6 @@ static void bsp_boot_post(void)
 	/* Start all secondary cores */
 	start_cpus();
 
-	/* Trigger event to allow secondary CPUs to continue */
-	bitmap_set_nolock(0U, &pcpu_sync);
-
 	ASSERT(get_cpu_id() == BOOT_CPU_ID, "");
 
 	init_iommu();
@@ -562,7 +559,7 @@ static void cpu_secondary_post(void)
 	timer_init();
 
 	/* Wait for boot processor to signal all secondary cores to continue */
-	pcpu_sync_sleep(&pcpu_sync, 0UL);
+	wait_sync_change(&pcpu_sync, 0UL);
 
 	exec_vmxon_instr(get_cpu_id());
 
@@ -600,6 +597,9 @@ void start_cpus(void)
 	uint16_t expected_up;
 	uint64_t startup_paddr;
 
+	/* secondary cpu start up will wait for pcpu_sync -> 0UL */
+	atomic_store64(&pcpu_sync, 1UL);
+
 	startup_paddr = prepare_trampoline();
 
 	/* Set flag showing number of CPUs expected to be up to all
@@ -635,6 +635,9 @@ void start_cpus(void)
 		do {
 		} while (1);
 	}
+
+	/* Trigger event to allow secondary CPUs to continue */
+	atomic_store64(&pcpu_sync, 0UL);
 }
 
 void stop_cpus(void)
@@ -724,10 +727,9 @@ static void print_hv_banner(void)
 	printf(boot_msg);
 }
 
-static void pcpu_sync_sleep(uint64_t *sync, uint64_t mask_bit)
+/* wait until *sync == wake_sync */
+void wait_sync_change(uint64_t *sync, uint64_t wake_sync)
 {
-	uint64_t wake_sync = (1UL << mask_bit);
-
 	if (get_monitor_cap()) {
 		/* Wait for the event to be set using monitor/mwait */
 		asm volatile ("1: cmpq      %%rbx,(%%rax)\n"
