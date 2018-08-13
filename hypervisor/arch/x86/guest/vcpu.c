@@ -396,6 +396,7 @@ void destroy_vcpu(struct vcpu *vcpu)
  */
 void reset_vcpu(struct vcpu *vcpu)
 {
+	int i;
 	struct acrn_vlapic *vlapic;
 
 	pr_dbg("vcpu%hu reset", vcpu->vcpu_id);
@@ -418,6 +419,12 @@ void reset_vcpu(struct vcpu *vcpu)
 	vcpu->arch_vcpu.irq_window_enabled = 0;
 	vcpu->arch_vcpu.inject_event_pending = false;
 	(void)memset(vcpu->arch_vcpu.vmcs, 0U, CPU_PAGE_SIZE);
+
+	for (i = 0; i < NR_WORLD; i++) {
+		(void)memset(&vcpu->arch_vcpu.contexts[i], 0U,
+			sizeof(struct run_context));
+	}
+	vcpu->arch_vcpu.cur_context = NORMAL_WORLD;
 
 	vlapic = vcpu->arch_vcpu.vlapic;
 	vlapic_reset(vlapic);
