@@ -16,6 +16,22 @@
  */
 #define SHELL_INPUT_LINE_OTHER(v)	(((v) + 1U) % 2U)
 
+static int shell_cmd_help(__unused int argc, __unused char **argv);
+static int shell_list_vm(__unused int argc, __unused char **argv);
+static int shell_list_vcpu(__unused int argc, __unused char **argv);
+static int shell_vcpu_dumpreg(int argc, char **argv);
+static int shell_dumpmem(int argc, char **argv);
+static int shell_to_sos_console(int argc, char **argv);
+static int shell_show_cpu_int(__unused int argc, __unused char **argv);
+static int shell_show_ptdev_info(__unused int argc, __unused char **argv);
+static int shell_show_vioapic_info(int argc, char **argv);
+static int shell_show_ioapic_info(__unused int argc, __unused char **argv);
+static int shell_show_vmexit_profile(__unused int argc, __unused char **argv);
+static int shell_dump_logbuf(int argc, char **argv);
+static int shell_loglevel(int argc, char **argv);
+static int shell_cpuid(int argc, char **argv);
+static int shell_trigger_crash(int argc, char **argv);
+
 static struct shell_cmd shell_cmds[] = {
 	{
 		.str		= SHELL_CMD_HELP,
@@ -179,9 +195,30 @@ static int string_to_argv(char *argv_str, void *p_argv_mem,
 	return 0;
 }
 
+static struct shell_cmd *shell_find_cmd(const char *cmd_str)
+{
+	uint32_t i;
+	struct shell_cmd *p_cmd = NULL;
+
+	for (i = 0U; i < p_shell->cmd_count; i++) {
+		p_cmd = &p_shell->shell_cmd[i];
+		if (strcmp(p_cmd->str, cmd_str) == 0) {
+			return p_cmd;
+		}
+	}
+	return NULL;
+}
+
 static char shell_getc(void)
 {
 	return console_getc();
+}
+
+static void shell_puts(const char *string_ptr)
+{
+	/* Output the string */
+	(void)console_write(string_ptr, strnlen_s(string_ptr,
+				SHELL_STRING_MAX_LEN));
 }
 
 static void shell_handle_special_char(uint8_t ch)
@@ -289,81 +326,7 @@ static bool shell_input_line(void)
 	return done;
 }
 
-static int shell_process(void)
-{
-	int status;
-	char *p_input_line;
-
-	/* Check for the repeat command character in active input line.
-	 */
-	if (p_shell->input_line[p_shell->input_line_active][0] == '.') {
-		/* Repeat the last command (using inactive input line).
-		 */
-		p_input_line =
-			&p_shell->input_line[SHELL_INPUT_LINE_OTHER
-				(p_shell->input_line_active)][0];
-	} else {
-		/* Process current command (using active input line). */
-		p_input_line =
-			&p_shell->input_line[p_shell->input_line_active][0];
-
-		/* Switch active input line. */
-		p_shell->input_line_active =
-			SHELL_INPUT_LINE_OTHER(p_shell->input_line_active);
-	}
-
-	/* Process command */
-	status = shell_process_cmd(p_input_line);
-
-	/* Now that the command is processed, zero fill the input buffer */
-	(void)memset((void *) p_shell->input_line[p_shell->input_line_active],
-			0, SHELL_CMD_MAX_LEN + 1U);
-
-	/* Process command and return result to caller */
-	return status;
-}
-
-struct shell_cmd *shell_find_cmd(const char *cmd_str)
-{
-	uint32_t i;
-	struct shell_cmd *p_cmd = NULL;
-
-	for (i = 0U; i < p_shell->cmd_count; i++) {
-		p_cmd = &p_shell->shell_cmd[i];
-		if (strcmp(p_cmd->str, cmd_str) == 0) {
-			return p_cmd;
-		}
-	}
-	return NULL;
-}
-
-void shell_kick(void)
-{
-	static bool is_cmd_cmplt = true;
-
-	/* At any given instance, UART may be owned by the HV
-	 * OR by the guest that has enabled the vUart.
-	 * Show HV shell prompt ONLY when HV owns the
-	 * serial port.
-	 */
-	/* Prompt the user for a selection. */
-	if (is_cmd_cmplt) {
-		shell_puts(SHELL_PROMPT_STR);
-	}
-
-	/* Get user's input */
-	is_cmd_cmplt = shell_input_line();
-
-	/* If user has pressed the ENTER then process
-	 * the command
-	 */
-	if (is_cmd_cmplt) {
-		/* Process current input line. */
-		(void)shell_process();
-	}
-}
-
-int shell_process_cmd(char *p_input_line)
+static int shell_process_cmd(char *p_input_line)
 {
 	int status = -EINVAL;
 	struct shell_cmd *p_cmd;
@@ -408,12 +371,72 @@ int shell_process_cmd(char *p_input_line)
 	return status;
 }
 
+static int shell_process(void)
+{
+	int status;
+	char *p_input_line;
+
+	/* Check for the repeat command character in active input line.
+	 */
+	if (p_shell->input_line[p_shell->input_line_active][0] == '.') {
+		/* Repeat the last command (using inactive input line).
+		 */
+		p_input_line =
+			&p_shell->input_line[SHELL_INPUT_LINE_OTHER
+				(p_shell->input_line_active)][0];
+	} else {
+		/* Process current command (using active input line). */
+		p_input_line =
+			&p_shell->input_line[p_shell->input_line_active][0];
+
+		/* Switch active input line. */
+		p_shell->input_line_active =
+			SHELL_INPUT_LINE_OTHER(p_shell->input_line_active);
+	}
+
+	/* Process command */
+	status = shell_process_cmd(p_input_line);
+
+	/* Now that the command is processed, zero fill the input buffer */
+	(void)memset((void *) p_shell->input_line[p_shell->input_line_active],
+			0, SHELL_CMD_MAX_LEN + 1U);
+
+	/* Process command and return result to caller */
+	return status;
+}
+
+
+void shell_kick(void)
+{
+	static bool is_cmd_cmplt = true;
+
+	/* At any given instance, UART may be owned by the HV
+	 * OR by the guest that has enabled the vUart.
+	 * Show HV shell prompt ONLY when HV owns the
+	 * serial port.
+	 */
+	/* Prompt the user for a selection. */
+	if (is_cmd_cmplt) {
+		shell_puts(SHELL_PROMPT_STR);
+	}
+
+	/* Get user's input */
+	is_cmd_cmplt = shell_input_line();
+
+	/* If user has pressed the ENTER then process
+	 * the command
+	 */
+	if (is_cmd_cmplt) {
+		/* Process current input line. */
+		(void)shell_process();
+	}
+}
+
+
 void shell_init(void)
 {
 	p_shell->shell_cmd = shell_cmds;
 	p_shell->cmd_count = ARRAY_SIZE(shell_cmds);
-
-	(void)strcpy_s((void *)p_shell->name, SHELL_NAME_MAX_LEN, "Serial");
 
 	/* Zero fill the input buffer */
 	(void)memset((void *)p_shell->input_line[p_shell->input_line_active], 0U,
@@ -422,7 +445,7 @@ void shell_init(void)
 
 #define SHELL_ROWS	10
 #define MAX_INDENT_LEN	16
-int shell_cmd_help(__unused int argc, __unused char **argv)
+static int shell_cmd_help(__unused int argc, __unused char **argv)
 {
 	int spaces = 0;
 	struct shell_cmd *p_cmd = NULL;
@@ -496,7 +519,7 @@ int shell_cmd_help(__unused int argc, __unused char **argv)
 	return 0;
 }
 
-int shell_list_vm(__unused int argc, __unused char **argv)
+static int shell_list_vm(__unused int argc, __unused char **argv)
 {
 	char temp_str[MAX_STR_SIZE];
 	struct list_head *pos;
@@ -534,7 +557,7 @@ int shell_list_vm(__unused int argc, __unused char **argv)
 	return 0;
 }
 
-int shell_list_vcpu(__unused int argc, __unused char **argv)
+static int shell_list_vcpu(__unused int argc, __unused char **argv)
 {
 	char temp_str[MAX_STR_SIZE];
 	struct list_head *pos;
@@ -584,7 +607,7 @@ int shell_list_vcpu(__unused int argc, __unused char **argv)
 }
 
 #define DUMPREG_SP_SIZE	32
-int shell_vcpu_dumpreg(int argc, char **argv)
+static int shell_vcpu_dumpreg(int argc, char **argv)
 {
 	int status = 0;
 	uint16_t vm_id;
@@ -702,7 +725,7 @@ int shell_vcpu_dumpreg(int argc, char **argv)
 }
 
 #define MAX_MEMDUMP_LEN		(32U*8U)
-int shell_dumpmem(int argc, char **argv)
+static int shell_dumpmem(int argc, char **argv)
 {
 	uint64_t addr;
 	uint64_t *ptr;
@@ -746,7 +769,7 @@ int shell_dumpmem(int argc, char **argv)
 	return 0;
 }
 
-int shell_to_sos_console(__unused int argc, __unused char **argv)
+static int shell_to_sos_console(__unused int argc, __unused char **argv)
 {
 	char temp_str[TEMP_STR_SIZE];
 	uint16_t guest_no = 0U;
@@ -782,7 +805,7 @@ int shell_to_sos_console(__unused int argc, __unused char **argv)
 	return 0;
 }
 
-int shell_show_cpu_int(__unused int argc, __unused char **argv)
+static int shell_show_cpu_int(__unused int argc, __unused char **argv)
 {
 	char *temp_str = alloc_page();
 
@@ -798,7 +821,7 @@ int shell_show_cpu_int(__unused int argc, __unused char **argv)
 	return 0;
 }
 
-int shell_show_ptdev_info(__unused int argc, __unused char **argv)
+static int shell_show_ptdev_info(__unused int argc, __unused char **argv)
 {
 	char *temp_str = alloc_page();
 
@@ -814,7 +837,7 @@ int shell_show_ptdev_info(__unused int argc, __unused char **argv)
 	return 0;
 }
 
-int shell_show_vioapic_info(int argc, char **argv)
+static int shell_show_vioapic_info(int argc, char **argv)
 {
 	char *temp_str = alloc_page();
 	uint16_t vmid;
@@ -842,7 +865,7 @@ int shell_show_vioapic_info(int argc, char **argv)
 	return -EINVAL;
 }
 
-int shell_show_ioapic_info(__unused int argc, __unused char **argv)
+static int shell_show_ioapic_info(__unused int argc, __unused char **argv)
 {
 	char *temp_str = alloc_pages(2U);
 
@@ -858,7 +881,7 @@ int shell_show_ioapic_info(__unused int argc, __unused char **argv)
 	return 0;
 }
 
-int shell_show_vmexit_profile(__unused int argc, __unused char **argv)
+static int shell_show_vmexit_profile(__unused int argc, __unused char **argv)
 {
 	char *temp_str = alloc_pages(2U);
 
@@ -874,7 +897,7 @@ int shell_show_vmexit_profile(__unused int argc, __unused char **argv)
 	return 0;
 }
 
-int shell_dump_logbuf(int argc, char **argv)
+static int shell_dump_logbuf(int argc, char **argv)
 {
 	uint16_t pcpu_id;
 	int val;
@@ -891,7 +914,7 @@ int shell_dump_logbuf(int argc, char **argv)
 	return -EINVAL;
 }
 
-int shell_loglevel(int argc, char **argv)
+static int shell_loglevel(int argc, char **argv)
 {
 	char str[MAX_STR_SIZE] = {0};
 
@@ -912,7 +935,7 @@ int shell_loglevel(int argc, char **argv)
 	return 0;
 }
 
-int shell_cpuid(int argc, char **argv)
+static int shell_cpuid(int argc, char **argv)
 {
 	char str[MAX_STR_SIZE] = {0};
 	uint32_t leaf, subleaf = 0;
@@ -939,7 +962,7 @@ int shell_cpuid(int argc, char **argv)
 	return 0;
 }
 
-int shell_trigger_crash(int argc, char **argv)
+static int shell_trigger_crash(int argc, char **argv)
 {
 	char str[MAX_STR_SIZE] = {0};
 
@@ -951,12 +974,3 @@ int shell_trigger_crash(int argc, char **argv)
 
 	return 0;
 }
-
-void shell_puts(const char *string_ptr)
-{
-	/* Output the string */
-	(void)console_write(string_ptr, strnlen_s(string_ptr,
-				SHELL_STRING_MAX_LEN));
-}
-
-

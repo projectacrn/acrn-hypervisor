@@ -4,30 +4,16 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef SHELL_INTER_H
-#define SHELL_INTER_H
+#ifndef SHELL_PRIV_H
+#define SHELL_PRIV_H
 
 #include <spinlock.h>
-
-struct shell;
-
 
 #define SHELL_CMD_MAX_LEN		100U
 #define SHELL_NAME_MAX_LEN		50
 #define SHELL_PARA_MAX_LEN		64
 #define SHELL_HELP_MAX_LEN		256
 #define SHELL_STRING_MAX_LEN		(CPU_PAGE_SIZE << 2)
-
-/* Shell Control Block */
-struct shell_cmd;
-struct shell {
-	char input_line[2][SHELL_CMD_MAX_LEN + 1U];	/* current & last */
-	char name[SHELL_NAME_MAX_LEN];	/* Session name */
-	uint32_t input_line_len;	/* Length of current input line */
-	uint32_t input_line_active;	/* Active input line index */
-	struct shell_cmd *shell_cmd;	/* cmds supported */
-	uint32_t cmd_count;		/* Count of cmds supported */
-};
 
 /* Shell Command Function */
 typedef int (*shell_cmd_fn_t)(int argc, char **argv);
@@ -39,6 +25,15 @@ struct shell_cmd {
 	char *help_str;		/* Help text associated with the command */
 	shell_cmd_fn_t fcn;	/* Command call-back function */
 
+};
+
+/* Shell Control Block */
+struct shell {
+	char input_line[2][SHELL_CMD_MAX_LEN + 1U];	/* current & last */
+	uint32_t input_line_len;	/* Length of current input line */
+	uint32_t input_line_active;	/* Active input line index */
+	struct shell_cmd *shell_cmd;	/* cmds supported */
+	uint32_t cmd_count;		/* Count of cmds supported */
 };
 
 /* Shell Command list with parameters and help description */
@@ -101,27 +96,4 @@ struct shell_cmd {
 #define SHELL_CMD_CPUID			"cpuid"
 #define SHELL_CMD_CPUID_PARAM		"<leaf> [subleaf]"
 #define SHELL_CMD_CPUID_HELP		"cpuid leaf [subleaf], in hexadecimal"
-
-/* Global function prototypes */
-int shell_show_req_info(__unused int argc, __unused char **argv);
-int shell_cmd_help(__unused int argc, __unused char **argv);
-int shell_list_vm(__unused int argc, __unused char **argv);
-int shell_list_vcpu(__unused int argc, __unused char **argv);
-int shell_vcpu_dumpreg(int argc, char **argv);
-int shell_dumpmem(int argc, char **argv);
-int shell_to_sos_console(int argc, char **argv);
-int shell_show_cpu_int(__unused int argc, __unused char **argv);
-int shell_show_ptdev_info(__unused int argc, __unused char **argv);
-int shell_reboot(__unused int argc, __unused char **argv);
-int shell_show_vioapic_info(int argc, char **argv);
-int shell_show_ioapic_info(__unused int argc, __unused char **argv);
-int shell_show_vmexit_profile(__unused int argc, __unused char **argv);
-int shell_dump_logbuf(int argc, char **argv);
-int shell_loglevel(int argc, char **argv);
-int shell_cpuid(int argc, char **argv);
-struct shell_cmd *shell_find_cmd(const char *cmd_str);
-int shell_process_cmd(char *p_input_line);
-void shell_puts(const char *string_ptr);
-int shell_trigger_crash(int argc, char **argv);
-
-#endif /* SHELL_INTER_H */
+#endif /* SHELL_PRIV_H */
