@@ -284,7 +284,7 @@ unsigned get_sos_wakeup_reason(void)
 	req.msgid = WAKEUP_REASON;
 	req.timestamp = time(NULL);
 
-	if (mngr_send_msg(client_fd, &req, &ack, DEFAULT_TIMEOUT))
+	if (mngr_send_msg(client_fd, &req, &ack, DEFAULT_TIMEOUT) <= 0)
 		fprintf(stderr, "Failed to get wakeup_reason from SOS, err(%d)\n", ret);
 	else
 		ret = ack.data.reason;
