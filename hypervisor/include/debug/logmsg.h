@@ -33,6 +33,39 @@ void init_logmsg(__unused uint32_t mem_size, uint32_t flags);
 void print_logmsg_buffer(uint16_t pcpu_id);
 void do_logmsg(uint32_t severity, const char *fmt, ...);
 
+void asm_assert(int32_t line, const char *file, const char *txt);
+
+#define ASSERT(x, ...) \
+	do { \
+		if (!(x)) {\
+			asm_assert(__LINE__, __FILE__, "fatal error");\
+		} \
+	} while (0)
+
+/** The well known printf() function.
+ *
+ *  Formats a string and writes it to the console output.
+ *
+ *  @param fmt A pointer to the NUL terminated format string.
+ *
+ *  @return The number of characters actually written or a negative
+ *          number if an error occurred.
+ */
+
+int printf(const char *fmt, ...);
+
+/** The well known vprintf() function.
+ *
+ *  Formats a string and writes it to the console output.
+ *
+ *  @param fmt A pointer to the NUL terminated format string.
+ *  @param args The variable long argument list as va_list.
+ *  @return The number of characters actually written or a negative
+ *          number if an error occurred.
+ */
+
+int vprintf(const char *fmt, va_list args);
+
 #else /* HV_DEBUG */
 
 static inline void init_logmsg(__unused uint32_t mem_size,
@@ -47,6 +80,18 @@ static inline void do_logmsg(__unused uint32_t severity,
 
 static inline void print_logmsg_buffer(__unused uint16_t pcpu_id)
 {
+}
+
+#define ASSERT(x, ...)	do { } while (0)
+
+static inline int printf(__unused const char *fmt, ...)
+{
+	return 0;
+}
+
+static inline int vprintf(__unused const char *fmt, __unused va_list args)
+{
+	return 0;
 }
 
 #endif /* HV_DEBUG */
