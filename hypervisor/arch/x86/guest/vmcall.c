@@ -155,9 +155,11 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 		ret = hcall_reset_ptdev_intr_info(vm, (uint16_t)param1, param2);
 		break;
 
+#ifdef HV_DEBUG
 	case HC_SETUP_SBUF:
 		ret = hcall_setup_sbuf(vm, param1);
 		break;
+#endif
 
 	case HC_WORLD_SWITCH:
 		ret = hcall_world_switch(vcpu);

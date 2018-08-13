@@ -19,10 +19,12 @@
 #include "arch/x86/guest/instr_emul.h"
 
 struct per_cpu_region {
+#ifdef HV_DEBUG
 	uint64_t *sbuf[ACRN_SBUF_ID_MAX];
-	uint64_t irq_count[NR_IRQS];
 	uint64_t vmexit_cnt[64];
 	uint64_t vmexit_time[64];
+#endif
+	uint64_t irq_count[NR_IRQS];
 	uint64_t softirq_pending;
 	uint64_t spurious;
 	uint64_t vmxon_region_pa;
