@@ -104,6 +104,18 @@ void init_e820(void);
 void obtain_e820_mem_info(void);
 extern uint32_t e820_entries;
 extern struct e820_entry e820[E820_MAX_ENTRIES];
+
+#ifdef CONFIG_PARTITION_MODE
+/*
+ * Default e820 mem map:
+ *
+ * Assumption is every VM launched by ACRN in partition mode uses 2G of RAM.
+ * there is reserved memory of 64K for MPtable and PCI hole of 512MB
+ */
+#define NUM_E820_ENTRIES        5U
+extern const struct e820_entry e820_default_entries[NUM_E820_ENTRIES];
+#endif
+
 extern uint32_t boot_regs[2];
 extern struct e820_mem_params e820_mem;
 
