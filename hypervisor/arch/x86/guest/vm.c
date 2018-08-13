@@ -366,6 +366,8 @@ int reset_vm(struct vm *vm)
 	}
 
 	vioapic_reset(vm->arch_vm.virt_ioapic);
+	destroy_secure_world(vm, false);
+	vm->sworld_control.flag.active = 0UL;
 
 	start_vm(vm);
 	return 0;
