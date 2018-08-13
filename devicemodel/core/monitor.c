@@ -168,6 +168,8 @@ static void handle_resume(struct mngr_msg *msg, int client_fd, void *param)
 	ack.msgid = msg->msgid;
 	ack.timestamp = msg->timestamp;
 
+	wakeup_reason = msg->data.reason;
+
 	LIST_FOREACH(ops, &vm_ops_head, list) {
 		if (ops->ops->resume) {
 			ret += ops->ops->resume(ops->arg);
@@ -180,8 +182,6 @@ static void handle_resume(struct mngr_msg *msg, int client_fd, void *param)
 		fprintf(stderr, "No handler for id:%u\r\n", msg->msgid);
 	} else
 		ack.data.err = ret;
-
-	wakeup_reason = msg->data.reason;
 
 	mngr_send_msg(client_fd, &ack, NULL, ACK_TIMEOUT);
 }
