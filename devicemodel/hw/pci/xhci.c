@@ -469,22 +469,21 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	struct pci_xhci_dev_emu *de;
 	struct pci_xhci_vdev *xdev;
 	struct usb_devemu *ue;
+	struct usb_native_devinfo *di;
 	int port_start, port_end;
 	int slot_start, slot_end;
 	int port, slot;
 	void *ud;
-	uint8_t native_bus, native_pid, native_port;
-	uint16_t native_vid;
-	int native_speed;
 
 	xdev = hci_data;
+	di = dev_data;
 
 	assert(xdev);
 	assert(dev_data);
 	assert(xdev->devices);
 	assert(xdev->slots);
 
-	de = pci_xhci_dev_create(xdev, dev_data);
+	de = pci_xhci_dev_create(xdev, di);
 	if (!de) {
 		UPRINTF(LFTL, "fail to create device\r\n");
 		return -1;
@@ -498,26 +497,20 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	assert(ue);
 
 	/* print physical information about new device */
-	ue->ue_info(ud, USB_INFO_BUS, &native_bus, sizeof(native_bus));
-	ue->ue_info(ud, USB_INFO_PORT, &native_port, sizeof(native_port));
-	ue->ue_info(ud, USB_INFO_VID, &native_vid, sizeof(native_vid));
-	ue->ue_info(ud, USB_INFO_PID, &native_pid, sizeof(native_pid));
-	ue->ue_info(ud, USB_INFO_SPEED, &native_speed, sizeof(native_speed));
 	UPRINTF(LDBG, "%04x:%04x %d-%d connecting.\r\n",
-			native_vid, native_pid, native_bus, native_port);
+			di->vid, di->pid, di->bus, di->port);
 
-	if (!xdev->native_assign_ports[native_bus] ||
-			!xdev->native_assign_ports[native_bus][native_port]) {
+	if (!xdev->native_assign_ports[di->bus] ||
+			!xdev->native_assign_ports[di->bus][di->port]) {
 		UPRINTF(LDBG, "%04x:%04x %d-%d doesn't belong to this vm, bye."
-				"\r\n", native_vid, native_pid, native_bus,
-				native_port);
+				"\r\n", di->vid, di->pid, di->bus, di->port);
 		goto errout;
 	}
 
-	UPRINTF(LDBG, "%04x:%04x %d-%d belong to this vm.\r\n", native_vid,
-			native_pid, native_bus, native_port);
+	UPRINTF(LDBG, "%04x:%04x %d-%d belong to this vm.\r\n", di->vid,
+			di->pid, di->bus, di->port);
 
-	if (ue->ue_usbver == 2)
+	if (di->bcd < 0x300)
 		port_start = xdev->usb2_port_start;
 	else
 		port_start = xdev->usb3_port_start;
@@ -549,11 +542,11 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 
 	pci_xhci_reset_slot(xdev, slot);
 	UPRINTF(LDBG, "%X:%X %d-%d locates in slot %d port %d.\r\n",
-			native_vid, native_pid, native_bus, native_port,
+			di->vid, di->pid, di->bus, di->port,
 			slot, port);
 
 	/* Trigger port change event for the arriving device */
-	if (pci_xhci_connect_port(xdev, port, native_speed, 1))
+	if (pci_xhci_connect_port(xdev, port, di->speed, 1))
 		UPRINTF(LFTL, "fail to report port event\n");
 
 	return 0;
@@ -588,7 +581,7 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 			continue;
 
 		udev = edev->dev_instance;
-		if (udev->port == native_port)
+		if (udev->info.port == native_port)
 			break;
 	}
 
