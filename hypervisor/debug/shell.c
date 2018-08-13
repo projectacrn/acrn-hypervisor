@@ -5,7 +5,7 @@
  */
 
 #include <hypervisor.h>
-#include "shell_internal.h"
+#include "shell_priv.h"
 
 #define TEMP_STR_SIZE		60U
 #define MAX_STR_SIZE		256U
