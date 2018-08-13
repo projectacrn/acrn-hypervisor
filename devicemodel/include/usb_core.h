@@ -163,6 +163,16 @@ struct usb_data_xfer {
 	pthread_mutex_t mtx;
 };
 
+struct usb_native_devinfo {
+	int speed;
+	uint8_t bus;
+	uint8_t port;
+	uint16_t bcd;
+	uint16_t pid;
+	uint16_t vid;
+	void *priv_data;
+};
+
 enum USB_ERRCODE {
 	USB_ACK,
 	USB_NAK,

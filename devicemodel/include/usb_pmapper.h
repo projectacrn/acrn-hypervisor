@@ -36,14 +36,10 @@ struct usb_dev_ep {
 
 struct usb_dev {
 	/* physical device info */
+	struct usb_native_devinfo info;
 	int addr;
 	int version;
-	int speed;
 	int configuration;
-	uint8_t port;
-	uint8_t bus;
-	uint8_t pid;
-	uint16_t vid;
 
 	/* interface info */
 	int if_num;
@@ -55,8 +51,7 @@ struct usb_dev {
 	struct usb_dev_ep epo[USB_NUM_ENDPOINT];
 
 	/* libusb data */
-	libusb_device           *ldev;
-	libusb_device_handle    *handle;
+	libusb_device_handle *handle;
 };
 
 /*
