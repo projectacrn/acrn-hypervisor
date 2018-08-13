@@ -91,6 +91,7 @@
 #include "pci_core.h"
 #include "xhci.h"
 #include "usb_pmapper.h"
+#include "vmmapi.h"
 
 #undef LOG_TAG
 #define LOG_TAG			"xHCI: "
@@ -485,6 +486,7 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	struct usb_native_devinfo *di;
 	int vport_start, vport_end;
 	int port;
+	int need_intr = 1;
 
 	xdev = hci_data;
 
@@ -534,8 +536,12 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	xdev->port_map_tbl[di->bus][di->port] =
 		VPORT_NUM_STATE(VPORT_CONNECTED, port);
 
+	/* TODO: should revisit in deeper level */
+	if (vm_get_suspend_mode() != VM_SUSPEND_NONE)
+		need_intr = 0;
+
 	/* Trigger port change event for the arriving device */
-	if (pci_xhci_connect_port(xdev, port, di->speed, 1))
+	if (pci_xhci_connect_port(xdev, port, di->speed, need_intr))
 		UPRINTF(LFTL, "fail to report port event\n");
 
 	return 0;
@@ -552,6 +558,7 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 	struct usb_dev *udev;
 	uint8_t port, slot, native_port;
 	uint8_t status;
+	int need_intr = 1;
 
 	assert(hci_data);
 	assert(dev_data);
@@ -593,8 +600,19 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 	xdev->port_map_tbl[di.bus][di.port] = VPORT_NUM_STATE(VPORT_ASSIGNED,
 			0);
 
+	/* TODO: should revisit this in deeper level */
+	if (vm_get_suspend_mode() != VM_SUSPEND_NONE) {
+		XHCI_PORTREG_PTR(xdev, port)->portsc &= ~(XHCI_PS_CSC |
+				XHCI_PS_CCS | XHCI_PS_PED | XHCI_PS_PP);
+		edev->dev_slotstate = XHCI_ST_DISABLED;
+		xdev->devices[port] = NULL;
+		xdev->slots[slot] = NULL;
+		pci_xhci_dev_destroy(edev);
+		need_intr = 0;
+	}
+
 	UPRINTF(LDBG, "report virtual port %d status\r\n", port);
-	if (pci_xhci_disconnect_port(xdev, port, 1)) {
+	if (pci_xhci_disconnect_port(xdev, port, need_intr)) {
 		UPRINTF(LFTL, "fail to report event\r\n");
 		return -1;
 	}
