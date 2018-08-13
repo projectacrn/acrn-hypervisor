@@ -788,6 +788,7 @@ hcall_reset_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param)
 	return ret;
 }
 
+#ifdef HV_DEBUG
 int32_t hcall_setup_sbuf(struct vm *vm, uint64_t param)
 {
 	struct sbuf_setup_param ssp;
@@ -808,6 +809,12 @@ int32_t hcall_setup_sbuf(struct vm *vm, uint64_t param)
 
 	return sbuf_share_setup(ssp.pcpu_id, ssp.sbuf_id, hva);
 }
+#else
+int32_t hcall_setup_sbuf(__unused struct vm *vm, __unused uint64_t param)
+{
+	return -ENODEV;
+}
+#endif
 
 int32_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param)
 {

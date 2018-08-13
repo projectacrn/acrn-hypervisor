@@ -59,11 +59,13 @@ void vcpu_thread(struct vcpu *vcpu)
 			continue;
 		}
 
+#ifdef HV_DEBUG
 		vmexit_end = rdtsc();
 		if (vmexit_begin != 0UL) {
 			per_cpu(vmexit_time, vcpu->pcpu_id)[basic_exit_reason]
 				+= (vmexit_end - vmexit_begin);
 		}
+#endif
 		TRACE_2L(TRACE_VM_ENTER, 0UL, 0UL);
 
 		/* Restore guest TSC_AUX */
@@ -79,7 +81,9 @@ void vcpu_thread(struct vcpu *vcpu)
 			continue;
 		}
 
+#ifdef HV_DEBUG
 		vmexit_begin = rdtsc();
+#endif
 
 		vcpu->arch_vcpu.nrexits++;
 		/* Save guest TSC_AUX */
@@ -90,16 +94,18 @@ void vcpu_thread(struct vcpu *vcpu)
 		CPU_IRQ_ENABLE();
 		/* Dispatch handler */
 		ret = vmexit_handler(vcpu);
+		basic_exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFFU;
 		if (ret < 0) {
 			pr_fatal("dispatch VM exit handler failed for reason"
-				" %d, ret = %d!",
-				vcpu->arch_vcpu.exit_reason & 0xFFFFU, ret);
+				" %d, ret = %d!", basic_exit_reason, ret);
 			vcpu_inject_gp(vcpu, 0U);
 			continue;
 		}
 
-		basic_exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFFU;
+#ifdef HV_DEBUG
 		per_cpu(vmexit_cnt, vcpu->pcpu_id)[basic_exit_reason]++;
+#endif
+
 		TRACE_2L(TRACE_VM_EXIT, basic_exit_reason, vcpu_get_rip(vcpu));
 	} while (1);
 }
