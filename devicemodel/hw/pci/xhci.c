@@ -384,6 +384,10 @@ struct pci_xhci_vdev {
 #define	XHCI_HALTED(xdev)	((xdev)->opregs.usbsts & XHCI_STS_HCH)
 #define	XHCI_GADDR(xdev, a)	paddr_guest2host((xdev)->dev->vmctx, (a), \
 				XHCI_PADDR_SZ - ((a) & (XHCI_PADDR_SZ-1)))
+
+#define VPORT_FREE (0)
+#define VPORT_ASSIGNED (-1)
+
 struct pci_xhci_option_elem {
 	char *parse_opt;
 	int (*parse_fn)(struct pci_xhci_vdev *, char *);
@@ -500,7 +504,7 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	UPRINTF(LDBG, "%04x:%04x %d-%d connecting.\r\n",
 			di->vid, di->pid, di->bus, di->port);
 
-	if (!xdev->native_assign_ports[di->bus][di->port]) {
+	if (xdev->native_assign_ports[di->bus][di->port] == VPORT_FREE) {
 		UPRINTF(LDBG, "%04x:%04x %d-%d doesn't belong to this vm, bye."
 				"\r\n", di->vid, di->pid, di->bus, di->port);
 		goto errout;
@@ -3360,7 +3364,7 @@ pci_xhci_parse_bus_port(struct pci_xhci_vdev *xdev, char *opts)
 		goto errout;
 	}
 
-	xdev->native_assign_ports[bus][port] = 1;
+	xdev->native_assign_ports[bus][port] = VPORT_ASSIGNED;
 errout:
 	if (rc)
 		UPRINTF(LWRN, "%s fails, rc=%d\r\n", __func__, rc);
