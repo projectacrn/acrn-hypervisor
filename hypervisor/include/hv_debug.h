@@ -12,9 +12,6 @@
 #include <console.h>
 #include <dump.h>
 #include <trace.h>
-#include <shell.h>
 #include <sbuf.h>
-#include <assert.h>
-#include <printf.h>
 
 #endif /* HV_DEBUG_H */

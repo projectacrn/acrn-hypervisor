@@ -7,6 +7,9 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
+/* Switching key combinations for shell and uart console */
+#define GUEST_CONSOLE_TO_HV_SWITCH_KEY      0       /* CTRL + SPACE */
+
 #ifdef HV_DEBUG
 extern struct hv_timer console_timer;
 
@@ -52,6 +55,9 @@ static inline void resume_console(void)
 }
 void uart16550_set_property(bool enabled, bool port_mapped, uint64_t base_addr);
 
+void shell_init(void);
+void shell_kick(void);
+
 #else
 static inline void console_init(void)
 {
@@ -70,6 +76,9 @@ static inline void suspend_console(void) {}
 static inline void resume_console(void) {}
 static inline void uart16550_set_property(__unused bool enabled,
 		__unused bool port_mapped, __unused uint64_t base_addr) {}
+
+static inline void shell_init(void) {}
+static inline void shell_kick(void) {}
 #endif
 
 #endif /* CONSOLE_H */
