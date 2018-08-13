@@ -385,18 +385,6 @@ static void get_guest_paging_info(struct vcpu *vcpu, struct instr_emul_ctxt *emu
 	emul_ctxt->paging.paging_mode = get_vcpu_paging_mode(vcpu);
 }
 
-static int vie_alignment_check(uint8_t cpl, uint8_t size, uint64_t cr0,
-						uint64_t rflags, uint64_t gla)
-{
-	pr_dbg("Checking alignment with cpl: %hhu, addrsize: %hhu", cpl, size);
-
-	if (cpl < 3U || (cr0 & CR0_AM) == 0UL || (rflags & PSL_AC) == 0UL) {
-		return 0;
-	}
-
-	return ((gla & (size - 1U)) != 0UL) ? 1 : 0;
-}
-
 static int vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla)
 {
 	uint64_t mask;
@@ -426,12 +414,11 @@ static int vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla)
  *return -1 - on failure
  */
 static int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
-	struct seg_desc *desc, uint64_t offset_arg, uint8_t length_arg,
-	uint8_t addrsize, uint32_t prot, uint64_t *gla)
+	struct seg_desc *desc, uint64_t offset_arg, uint8_t addrsize,
+	uint32_t prot, uint64_t *gla)
 {
-	uint64_t firstoff, low_limit, high_limit, segbase;
+	uint64_t firstoff, segbase;
 	uint64_t offset = offset_arg;
-	uint8_t length = length_arg;
 	uint8_t glasize;
 	uint32_t type;
 
@@ -450,25 +437,6 @@ static int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 			return -1;
 		}
 		glasize = 4U;
-		/*
-		 * If the segment selector is loaded with a NULL selector
-		 * then the descriptor is unusable and attempting to use
-		 * it results in a #GP(0).
-		 */
-		if (SEG_DESC_UNUSABLE(desc->access)) {
-			return -1;
-		}
-
-		/*
-		 * The processor generates a #NP exception when a segment
-		 * register is loaded with a selector that points to a
-		 * descriptor that is not present. If this was the case then
-		 * it would have been checked before the VM-exit.
-		 */
-		if (SEG_DESC_PRESENT(desc->access) != 0) {
-			/* TODO: Inject #NP */
-			return -1;
-		}
 
 		/* The descriptor type must indicate a code/data segment. */
 		type = SEG_DESC_TYPE(desc->access);
@@ -496,30 +464,6 @@ static int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 			if ((type & 0xAU) == 0U) {	/* read-only data seg */
 				return -1;
 			}
-		}
-
-		/*
-		 * 'desc->limit' is fully expanded taking granularity into
-		 * account.
-		 */
-		if ((type & 0xCU) == 0x4U) {
-			/* expand-down data segment */
-			low_limit = desc->limit + 1U;
-			high_limit = SEG_DESC_DEF32(desc->access) ?
-			    0xffffffffU : 0xffffU;
-		} else {
-			/* code segment or expand-up data segment */
-			low_limit = 0U;
-			high_limit = desc->limit;
-		}
-
-		while (length > 0U) {
-			offset &= size2mask[addrsize];
-			if (offset < low_limit || offset > high_limit) {
-				return -1;
-			}
-			offset++;
-			length--;
 		}
 	}
 
@@ -932,6 +876,7 @@ static int get_gla(struct vcpu *vcpu, __unused struct instr_emul_vie *vie,
 	uint8_t opsize, uint8_t addrsize, uint32_t prot, enum cpu_reg_name seg,
 	enum cpu_reg_name gpr, uint64_t *gla, int *fault)
 {
+	int ret;
 	struct seg_desc desc;
 	uint64_t cr0, val, rflags;
 
@@ -940,13 +885,11 @@ static int get_gla(struct vcpu *vcpu, __unused struct instr_emul_vie *vie,
 	val = vm_get_register(vcpu, gpr);
 	vm_get_seg_desc(seg, &desc);
 
-	if (vie_calculate_gla(paging->cpu_mode, seg, &desc, val, opsize,
-	    addrsize, prot, gla) != 0) {
+	if (vie_calculate_gla(paging->cpu_mode, seg, &desc, val, 
+			addrsize, prot, gla) != 0) {
 		if (seg == CPU_REG_SS) {
-			/*vm_inject_ss(vcpu, 0);*/
 			pr_err("TODO: inject ss exception");
 		} else {
-			/*vm_inject_gp(vcpu);*/
 			pr_err("TODO: inject gp exception");
 		}
 		goto guest_fault;
@@ -954,18 +897,10 @@ static int get_gla(struct vcpu *vcpu, __unused struct instr_emul_vie *vie,
 
 	if (vie_canonical_check(paging->cpu_mode, *gla) != 0) {
 		if (seg == CPU_REG_SS) {
-			/*vm_inject_ss(vcpu, 0);*/
 			pr_err("TODO: inject ss exception");
 		} else {
-			/*vm_inject_gp(vcpu);*/
 			pr_err("TODO: inject gp exception");
 		}
-		goto guest_fault;
-	}
-
-	if (vie_alignment_check(paging->cpl, opsize, cr0, rflags, *gla) != 0) {
-		/*vm_inject_ac(vcpu, 0);*/
-		pr_err("TODO: inject ac exception");
 		goto guest_fault;
 	}
 
@@ -974,7 +909,7 @@ static int get_gla(struct vcpu *vcpu, __unused struct instr_emul_vie *vie,
 
 guest_fault:
 	*fault = 1;
-	return 0;
+	return ret;
 }
 
 static int emulate_movs(struct vcpu *vcpu, struct instr_emul_vie *vie,
