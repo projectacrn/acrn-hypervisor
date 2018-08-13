@@ -1636,6 +1636,11 @@ static int vie_init(struct instr_emul_vie *vie, struct vcpu *vcpu)
 
 	(void)memset(vie, 0U, sizeof(struct instr_emul_vie));
 
+	/* init register fields in vie. */
+	vie->base_register = CPU_REG_LAST;
+	vie->index_register = CPU_REG_LAST;
+	vie->segment_register = CPU_REG_LAST;
+
 	err_code = PAGE_FAULT_ID_FLAG;
 	ret = copy_from_gva(vcpu, vie->inst, guest_rip_gva,
 				inst_len, &err_code, &fault_addr);
@@ -1859,6 +1864,42 @@ static int decode_modrm(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode)
 
 	vie->reg |= (vie->rex_r << 3);
 
+	/* SIB */
+	if (vie->mod != VIE_MOD_DIRECT && vie->rm == VIE_RM_SIB) {
+		goto done;
+	}
+
+	vie->base_register = vie->rm;
+
+	switch (vie->mod) {
+	case VIE_MOD_INDIRECT_DISP8:
+		vie->disp_bytes = 1U;
+		break;
+	case VIE_MOD_INDIRECT_DISP32:
+		vie->disp_bytes = 4U;
+		break;
+	case VIE_MOD_INDIRECT:
+		if (vie->rm == VIE_RM_DISP32) {
+			vie->disp_bytes = 4U;
+		/*
+		 * Table 2-7. RIP-Relative Addressing
+		 *
+		 * In 64-bit mode mod=00 r/m=101 implies [rip] + disp32
+		 * whereas in compatibility mode it just implies disp32.
+		 */
+
+			if (cpu_mode == CPU_MODE_64BIT) {
+				vie->base_register = CPU_REG_RIP;
+				pr_err("VM exit with RIP as indirect access");
+			}
+			else {
+				vie->base_register = CPU_REG_LAST;
+			}
+		}
+		break;
+	}
+
+done:
 	vie_advance(vie);
 
 	return 0;
@@ -1935,7 +1976,7 @@ static int decode_sib(struct instr_emul_vie *vie)
 	}
 
 	/* 'scale' makes sense only in the context of an index register */
-	if (vie->index_register <= CPU_REG_LAST) {
+	if (vie->index_register < CPU_REG_LAST) {
 		vie->scale = 1U << vie->ss;
 	}
 
