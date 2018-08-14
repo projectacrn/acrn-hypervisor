@@ -373,7 +373,7 @@ struct pci_xhci_vdev {
 	int (*excap_write)(struct pci_xhci_vdev *, uint64_t, uint64_t);
 	int		usb2_port_start;
 	int		usb3_port_start;
-	uint8_t native_assign_ports[USB_NATIVE_NUM_BUS][USB_NATIVE_NUM_PORT];
+	uint8_t port_map_tbl[USB_NATIVE_NUM_BUS][USB_NATIVE_NUM_PORT];
 	struct timespec mf_prev_time;	/* previous time of accessing MFINDEX */
 };
 
@@ -504,7 +504,7 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	UPRINTF(LDBG, "%04x:%04x %d-%d connecting.\r\n",
 			di->vid, di->pid, di->bus, di->port);
 
-	if (xdev->native_assign_ports[di->bus][di->port] == VPORT_FREE) {
+	if (xdev->port_map_tbl[di->bus][di->port] == VPORT_FREE) {
 		UPRINTF(LDBG, "%04x:%04x %d-%d doesn't belong to this vm, bye."
 				"\r\n", di->vid, di->pid, di->bus, di->port);
 		goto errout;
@@ -3364,7 +3364,7 @@ pci_xhci_parse_bus_port(struct pci_xhci_vdev *xdev, char *opts)
 		goto errout;
 	}
 
-	xdev->native_assign_ports[bus][port] = VPORT_ASSIGNED;
+	xdev->port_map_tbl[bus][port] = VPORT_ASSIGNED;
 errout:
 	if (rc)
 		UPRINTF(LWRN, "%s fails, rc=%d\r\n", __func__, rc);
