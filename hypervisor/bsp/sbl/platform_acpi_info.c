@@ -48,7 +48,7 @@ const struct acpi_info host_acpi_info = {
 			.val_pm1b = 0U,
 			.reserved = 0U
 		},
-		.wake_vector_32 = (uint32_t *)0x7A86BC9CUL,
-		.wake_vector_64 = (uint64_t *)0x7A86BCA8UL
+		.wake_vector_32 = (uint32_t *)0x7A86BBDCUL,
+		.wake_vector_64 = (uint64_t *)0x7A86BBE8UL
 	}
 };
