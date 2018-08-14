@@ -80,12 +80,12 @@ def generate_report(ofile, freq):
 
             rt_sec = float(rt_cycle) / (float(freq) * 1000 * 1000)
 
-            print ("\nVector \t\tCount \tNR_Exit/Sec")
+            print ("%-8s\t%-8s\t%-8s" % ("Vector", "Count", "NR_Exit/Sec"))
             f_csv.writerow(['Vector', 'NR_Exit', 'NR_Exit/Sec'])
             for e in IRQ_EXITS.keys():
                 pct = float(IRQ_EXITS[e]) / rt_sec
-                print ("0x%08x \t %d \t%.2f" % (e, IRQ_EXITS[e], pct))
-                f_csv.writerow([e, IRQ_EXITS[e], '%.2f' % pct])
+                print ("0x%08x\t%-8d\t%-8.2f" % (e, IRQ_EXITS[e], pct))
+                f_csv.writerow(['0x%08x' % e, IRQ_EXITS[e], '%.2f' % pct])
 
     except IOError as err:
         print ("Output File Error: " + str(err))

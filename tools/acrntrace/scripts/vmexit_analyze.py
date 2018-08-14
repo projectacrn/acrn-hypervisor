@@ -171,7 +171,8 @@ def generate_report(ofile, freq):
                             '%.3f' % (rt_sec),
                             '%d' % (freq)])
 
-            print ("Event \tNR_Exit \tNR_Exit/Sec \tTime Consumed \tTime Percentage")
+            print ("%-28s\t%-12s\t%-12s\t%-24s\t%-16s" % ("Event", "NR_Exit",
+                   "NR_Exit/Sec", "Time Consumed(cycles)", "Time percentage"))
             f_csv.writerow(['Exit_Reason',
                             'NR_Exit',
                             'NR_Exit/Sec',
@@ -182,7 +183,7 @@ def generate_report(ofile, freq):
                 ev_freq = float(NR_EXITS[event]) / rt_sec
                 pct = float(TIME_IN_EXIT[event]) * 100 / float(rt_cycle)
 
-                print ("%s \t%d \t%.2f \t%d \t%2.2f" %
+                print ("%-28s\t%-12d\t%-12.2f\t%-24d\t%-16.2f" %
                        (event, NR_EXITS[event], ev_freq, TIME_IN_EXIT[event], pct))
                 row = [event, NR_EXITS[event], '%.2f' % ev_freq, TIME_IN_EXIT[event],
                        '%2.2f' % (pct)]
@@ -190,8 +191,8 @@ def generate_report(ofile, freq):
 
             ev_freq = float(TOTAL_NR_EXITS) / rt_sec
             pct = float(total_exit_time) * 100 / float(rt_cycle)
-            print("Total \t%d \t%.2f \t%d \t%2.2f"
-                  % (TOTAL_NR_EXITS, ev_freq, total_exit_time, pct))
+            print("%-28s\t%-12d\t%-12.2f\t%-24d\t%-16.2f"
+                  % ("Total", TOTAL_NR_EXITS, ev_freq, total_exit_time, pct))
             row = ["Total", TOTAL_NR_EXITS, '%.2f' % ev_freq, total_exit_time,
                    '%2.2f' % (pct)]
             f_csv.writerow(row)
