@@ -58,7 +58,7 @@ complete this setup.
    this feature to have more control over when the updates happen. Use this command
    to disable the autoupdate feature:
 
-   .. code-block:: none
+   .. code-block:: console
 
       # swupd autoupdate --disable
 
@@ -66,13 +66,13 @@ complete this setup.
    on your hardware, use this command to upgrade Clear Linux
    to version 23690 (or newer):
 
-   .. code-block:: none
+   .. code-block:: console
 
       # swupd update -m 23690     # or newer version
 
 #. Use the ``swupd bundle-add`` command and add these Clear Linux bundles:
 
-   .. code-block:: none
+   .. code-block:: console
 
       # swupd bundle-add vim network-basic service-os kernel-pk \
         desktop openssh-server
@@ -109,7 +109,7 @@ partition. Follow these steps:
 
 #. Mount the EFI partition and verify you have the following files:
 
-   .. code-block:: none
+   .. code-block:: console
 
       # mount /dev/sda1 /mnt
 
@@ -136,7 +136,7 @@ partition. Follow these steps:
 #. Put the ``acrn.efi`` hypervisor application (included in the Clear
    Linux release) on the EFI partition with:
 
-   .. code-block:: none
+   .. code-block:: console
 
       # mkdir /mnt/EFI/acrn
       # cp /usr/lib/acrn/acrn.efi /mnt/EFI/acrn/
@@ -148,7 +148,7 @@ partition. Follow these steps:
    Service OS bootloader. Use the ``efibootmgr`` utility to configure the EFI
    firmware and add a new entry that loads the ACRN hypervisor.
 
-   .. code-block:: none
+   .. code-block:: console
 
       # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN"
 
@@ -179,7 +179,7 @@ partition. Follow these steps:
    Here is a more complete example of how to configure the EFI firmware to load the ACRN
    hypervisor and set these parameters.
 
-   .. code-block:: none
+   .. code-block:: console
 
       # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN NUC Hypervisor" \
             -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=disabled"
@@ -209,7 +209,7 @@ partition. Follow these steps:
 
    On the platform, copy the ``acrn.conf`` file to the EFI partition we mounted earlier:
 
-   .. code-block:: none
+   .. code-block:: console
 
       # cp /usr/share/acrn/samples/nuc/acrn.conf /mnt/loader/entries/
 
@@ -226,14 +226,14 @@ partition. Follow these steps:
 #. Add a timeout period for Systemd-Boot to wait, otherwise it will not
    present the boot menu and will always boot the base Clear Linux
 
-   .. code-block:: none
+   .. code-block:: console
 
       # clr-boot-manager set-timeout 20
       # clr-boot-manager update
 
 #. Add new user
 
-   .. code-block:: none
+   .. code-block:: console
 
       # useradd cl-sos
       # passwd cl-sos
@@ -241,7 +241,7 @@ partition. Follow these steps:
 
 #. Enable weston service
 
-   .. code-block:: none
+   .. code-block:: console
 
       # systemctl enable weston@cl-sos
 
@@ -302,14 +302,14 @@ Set up Reference UOS
 
 #. Uncompress it:
 
-   .. code-block:: none
+   .. code-block:: console
 
       # unxz clear-23690-kvm.img.xz
 
 #. Deploy the UOS kernel modules to UOS virtual disk image (note: you'll need to use
    the same **standard** image version number noted in step 1 above):
 
-   .. code-block:: none
+   .. code-block:: console
 
       # losetup -f -P --show /root/clear-23690-kvm.img
       # mount /dev/loop0p3 /mnt
@@ -341,7 +341,7 @@ Set up Reference UOS
    By default, the script is located in the ``/usr/share/acrn/samples/nuc/``
    directory. You can edit it there, and then run it to launch the User OS:
 
-   .. code-block:: none
+   .. code-block:: console
 
       # cd /usr/share/acrn/samples/nuc/
       # ./launch_uos.sh
@@ -442,7 +442,7 @@ each with their own way to install development tools:
 * On a Clear Linux development system, install the ``os-clr-on-clr`` bundle to get
   the necessary tools:
 
-  .. code-block:: none
+  .. code-block:: console
 
      $ sudo swupd bundle-add os-clr-on-clr
      $ sudo swupd bundle-add python3-basic
@@ -450,7 +450,7 @@ each with their own way to install development tools:
 
 * On a Ubuntu/Debian development system:
 
-  .. code-block:: none
+  .. code-block:: console
 
      $ sudo apt install gcc \
           git \
@@ -475,7 +475,7 @@ each with their own way to install development tools:
 
 * On a Fedora/Redhat development system:
 
-  .. code-block:: none
+  .. code-block:: console
 
      $ sudo dnf install gcc \
           git \
@@ -498,7 +498,7 @@ each with their own way to install development tools:
 
 * On a CentOS development system:
 
-  .. code-block:: none
+  .. code-block:: console
 
      $ sudo yum install gcc \
              git \
@@ -536,7 +536,7 @@ repository has three main components in it:
 
 You can build all these components in one go as follows:
 
-.. code-block:: none
+.. code-block:: console
 
    $ git clone https://github.com/projectacrn/acrn-hypervisor
    $ cd acrn-hypervisor
@@ -555,7 +555,7 @@ and are using it as the current working directory.
 
 #. Build the ACRN hypervisor.
 
-   .. code-block:: none
+   .. code-block:: console
 
       $ cd hypervisor
       $ make PLATFORM=uefi
@@ -564,7 +564,7 @@ and are using it as the current working directory.
 
 #. Build the ACRN device model (included in the acrn-hypervisor repo):
 
-   .. code-block:: none
+   .. code-block:: console
 
       $ cd ../devicemodel
       $ make
@@ -573,7 +573,7 @@ and are using it as the current working directory.
 
 #. Build the ACRN tools (included in the acrn-hypervisor repo):
 
-   .. code-block:: none
+   .. code-block:: console
 
       $ cd ../tools
       $ for d in */; do make -C "$d"; done
@@ -596,7 +596,7 @@ based on the platform selected, assuming that you are under the top-level
 directory of acrn-hypervisor. The configuration file, named ``.config``, can be
 found under the target folder of your build.
 
-   .. code-block:: none
+   .. code-block:: console
 
       $ cd hypervisor
       $ make defconfig PLATFORM=uefi
@@ -615,7 +615,7 @@ are under the top-level directory of acrn-hypervisor, generate a default
 configuration file for UEFI, allow you to modify some configurations and build
 the hypervisor using the updated ``.config``.
 
-   .. code-block:: none
+   .. code-block:: console
 
       $ cd hypervisor
       $ make defconfig PLATFORM=uefi
@@ -627,7 +627,7 @@ the hypervisor using the updated ``.config``.
 
 Refer to the help on menuconfig for a detailed guide on the interface.
 
-   .. code-block:: none
+   .. code-block:: console
 
       $ pydoc3 menuconfig
 
@@ -639,7 +639,7 @@ Currently the ACRN hypervisor looks for default configurations under
 specified platform. The following steps allow you to create a defconfig for
 another platform based on a current one.
 
-   .. code-block:: none
+   .. code-block:: console
 
       $ cd hypervisor
       $ make defconfig PLATFORM=uefi
@@ -650,6 +650,6 @@ another platform based on a current one.
 Then you can re-use that configuration by passing the name (``xxx`` in the
 example above) to 'PLATFORM=':
 
-   .. code-block:: none
+   .. code-block:: console
 
       $ make defconfig PLATFORM=xxx
