@@ -136,6 +136,7 @@ SRCS += arch/x86/pm.c
 OBJS := $(patsubst %.c,$(DM_OBJDIR)/%.o,$(SRCS))
 
 HEADERS := $(shell find $(BASEDIR) -name '*.h')
+HEADERS += $(BASEDIR)/include/vmcfg_config.h
 DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 
 PROGRAM := acrn-dm
@@ -145,8 +146,11 @@ SAMPLES_MRB := $(wildcard samples/apl-mrb/*)
 
 BIOS_BIN := $(wildcard bios/*)
 
-all: include/version.h $(PROGRAM)
+all: include/version.h vmcfg_header $(PROGRAM)
 	@echo -n ""
+
+vmcfg_header:
+	make -C $(BASEDIR)/vmcfg $(BASEDIR)/include/vmcfg_config.h BASEDIR=$(BASEDIR)
 
 $(PROGRAM): $(OBJS)
 	$(CC) -o $(DM_OBJDIR)/$@ $(CFLAGS) $(LDFLAGS) $^ $(LIBS)
