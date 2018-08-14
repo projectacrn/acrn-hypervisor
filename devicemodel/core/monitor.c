@@ -15,11 +15,163 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/queue.h>
+#include <unistd.h>
 #include <pthread.h>
 #include "dm.h"
 #include "monitor.h"
 #include "acrn_mngr.h"
 #include "pm.h"
+#include "vmmapi.h"
+
+#define INTR_STORM_MONITOR_PERIOD	10 /* 10 seconds */
+#define INTR_STORM_THRESHOLD	100000 /* 10K times per second */
+
+#define DELAY_INTR_TIME	1 /* 1ms */
+#define DELAY_DURATION	100000 /* 100ms of total duration for delay intr */
+#define TIME_TO_CHECK_AGAIN	2 /* 2seconds */
+
+union intr_monitor_t {
+	struct acrn_intr_monitor monitor;
+	char reserved[4096];
+} __aligned(4096);
+
+static union intr_monitor_t intr_data;
+static uint64_t intr_cnt_buf[MAX_PTDEV_NUM * 2];
+static pthread_t intr_storm_monitor_pid;
+
+/* switch macro, just open in debug */
+/* #define INTR_MONITOR_DBG */
+
+#ifdef INTR_MONITOR_DBG
+static FILE * dbg_file;
+#define DPRINTF(format, args...) \
+do { fprintf(dbg_file, format, args); fflush(dbg_file); } while (0)
+
+/* this is a debug function */
+static void write_intr_data_to_file(const struct acrn_intr_monitor *hdr)
+{
+	static int wr_cnt;
+	int j;
+
+	wr_cnt++;
+	fprintf(dbg_file, "\n==%d time devs=%d==\n", wr_cnt, hdr->buf_cnt / 2);
+	fprintf(dbg_file, "IRQ\t\tCount\n");
+
+	for (j = 0; j < hdr->buf_cnt; j += 2) {
+		if (hdr->buffer[j + 1] != 0) {
+			fprintf(dbg_file, "%ld\t\t%ld\n", hdr->buffer[j],
+				hdr->buffer[j + 1]);
+		}
+	}
+
+	fflush(dbg_file);
+}
+#else
+#define DPRINTF(format, arg...)
+#endif
+
+static void *intr_storm_monitor_thread(void *arg)
+{
+	struct vmctx *ctx = (struct vmctx *)arg;
+	struct acrn_intr_monitor *hdr = &intr_data.monitor;
+	uint64_t delta = 0UL;
+	int ret, i;
+
+#ifdef INTR_MONITOR_DBG
+	dbg_file = fopen("/tmp/intr_log", "w+");
+#endif
+	sleep(INTR_STORM_MONITOR_PERIOD);
+
+	/* first to get interrupt data */
+	hdr->cmd = INTR_CMD_GET_DATA;
+	hdr->buf_cnt = MAX_PTDEV_NUM * 2;
+	memset(hdr->buffer, 0, sizeof(uint64_t) * hdr->buf_cnt);
+
+	ret = vm_intr_monitor(ctx, hdr);
+	if (ret) {
+		DPRINTF("first get intr data failed, ret: %d\n", ret);
+		intr_storm_monitor_pid = 0;
+		return NULL;
+	}
+
+	while (1) {
+#ifdef INTR_MONITOR_DBG
+		write_intr_data_to_file(hdr);
+#endif
+		memcpy(intr_cnt_buf, hdr->buffer,
+			sizeof(uint64_t) * hdr->buf_cnt);
+		sleep(INTR_STORM_MONITOR_PERIOD);
+
+		/* next time to get interrupt data */
+		memset(hdr->buffer, 0, sizeof(uint64_t) * hdr->buf_cnt);
+		ret = vm_intr_monitor(ctx, hdr);
+		if (ret) {
+			DPRINTF("next get intr data failed, ret: %d\n", ret);
+			intr_storm_monitor_pid = 0;
+			break;
+		}
+
+		/*
+		 * calc the delta of the two times count of interrupt;
+		 * compare the IRQ num first, if not same just drop it,
+		 * for it just happens rarelly when devices dynamically
+		 * allocation in SOS or UOS, it can be calc next time
+		 */
+		for (i = 0; i < hdr->buf_cnt; i += 2) {
+			if (hdr->buffer[i] != intr_cnt_buf[i])
+				continue;
+
+			delta = hdr->buffer[i + 1] - intr_cnt_buf[i + 1];
+			if (delta > INTR_STORM_THRESHOLD) {
+#ifdef INTR_MONITOR_DBG
+				write_intr_data_to_file(hdr);
+#endif
+				break;
+			}
+		}
+
+		/* storm detected, handle the intr abnormal status */
+		if (i < hdr->buf_cnt) {
+			DPRINTF("irq=%ld, delta=%ld\n", intr_cnt_buf[i], delta);
+
+			hdr->cmd = INTR_CMD_DELAY_INT;
+			hdr->buffer[0] = DELAY_INTR_TIME;
+			vm_intr_monitor(ctx, hdr);
+			usleep(DELAY_DURATION); /* sleep-delay intr */
+			hdr->buffer[0] = 0; /* cancel to delay intr */
+			vm_intr_monitor(ctx, hdr);
+
+			sleep(TIME_TO_CHECK_AGAIN); /* time to get data again */
+			hdr->cmd = INTR_CMD_GET_DATA;
+			hdr->buf_cnt = MAX_PTDEV_NUM * 2;
+			memset(hdr->buffer, 0,
+				sizeof(uint64_t) * hdr->buf_cnt);
+			vm_intr_monitor(ctx, hdr);
+		}
+	}
+
+	return NULL;
+}
+
+static void start_intr_storm_monitor(struct vmctx *ctx)
+{
+	int ret = pthread_create(&intr_storm_monitor_pid, NULL,
+		intr_storm_monitor_thread, ctx);
+	if (ret) {
+		printf("failed %s %d\n", __func__, __LINE__);
+		intr_storm_monitor_pid = 0;
+	}
+
+	printf("start monitor interrupt data...\n");
+}
+
+static void stop_intr_storm_monitor(void)
+{
+	if (intr_storm_monitor_pid) {
+		pthread_cancel(intr_storm_monitor_pid);
+		intr_storm_monitor_pid = 0;
+	}
+}
 
 /* helpers */
 /* Check if @path is a directory, and create if not exist */
@@ -255,6 +407,8 @@ int monitor_init(struct vmctx *ctx)
 
 	monitor_register_vm_ops(&pmc_ops, ctx, "PMC_VM_OPs");
 
+	start_intr_storm_monitor(ctx);
+
 	return 0;
 
  handlers_err:
@@ -269,4 +423,6 @@ void monitor_close(void)
 {
 	if (monitor_fd >= 0)
 		mngr_close(monitor_fd);
+
+	stop_intr_storm_monitor();
 }

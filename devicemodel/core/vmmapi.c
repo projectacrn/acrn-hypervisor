@@ -651,3 +651,9 @@ vm_get_cpu_state(struct vmctx *ctx, void *state_buf)
 {
 	return ioctl(ctx->fd, IC_PM_GET_CPU_STATE, state_buf);
 }
+
+int
+vm_intr_monitor(struct vmctx *ctx, void *intr_buf)
+{
+	return ioctl(ctx->fd, IC_VM_INTR_MONITOR, intr_buf);
+}

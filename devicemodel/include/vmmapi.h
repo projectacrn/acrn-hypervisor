@@ -152,6 +152,7 @@ int	vm_reset_ptdev_intx_info(struct vmctx *ctx, int virt_pin, bool pic_pin);
 int	vm_create_vcpu(struct vmctx *ctx, uint16_t vcpu_id);
 
 int	vm_get_cpu_state(struct vmctx *ctx, void *state_buf);
+int	vm_intr_monitor(struct vmctx *ctx, void *intr_buf);
 void	vm_stop_watchdog(struct vmctx *ctx);
 void	vm_reset_watchdog(struct vmctx *ctx);
 #endif	/* _VMMAPI_H_ */
