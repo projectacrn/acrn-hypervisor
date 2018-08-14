@@ -373,7 +373,7 @@ struct pci_xhci_vdev {
 	int (*excap_write)(struct pci_xhci_vdev *, uint64_t, uint64_t);
 	int		usb2_port_start;
 	int		usb3_port_start;
-	uint8_t		*native_assign_ports[USB_NATIVE_NUM_BUS];
+	uint8_t native_assign_ports[USB_NATIVE_NUM_BUS][USB_NATIVE_NUM_PORT];
 	struct timespec mf_prev_time;	/* previous time of accessing MFINDEX */
 };
 
@@ -500,8 +500,7 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	UPRINTF(LDBG, "%04x:%04x %d-%d connecting.\r\n",
 			di->vid, di->pid, di->bus, di->port);
 
-	if (!xdev->native_assign_ports[di->bus] ||
-			!xdev->native_assign_ports[di->bus][di->port]) {
+	if (!xdev->native_assign_ports[di->bus][di->port]) {
 		UPRINTF(LDBG, "%04x:%04x %d-%d doesn't belong to this vm, bye."
 				"\r\n", di->vid, di->pid, di->bus, di->port);
 		goto errout;
@@ -3359,15 +3358,6 @@ pci_xhci_parse_bus_port(struct pci_xhci_vdev *xdev, char *opts)
 			!usb_native_is_port_existed(bus, port)) {
 		rc = -2;
 		goto errout;
-	}
-
-	if (!xdev->native_assign_ports[bus]) {
-		xdev->native_assign_ports[bus] = calloc(USB_NATIVE_NUM_PORT,
-				sizeof(uint8_t));
-		if (!xdev->native_assign_ports[bus]) {
-			rc = -3;
-			goto errout;
-		}
 	}
 
 	xdev->native_assign_ports[bus][port] = 1;

@@ -223,8 +223,8 @@ enum USB_ERRCODE {
 #define NATIVE_USBSYS_DEVDIR "/sys/bus/usb/devices"
 #define NATIVE_USB2_SPEED "480"
 #define NATIVE_USB3_SPEED "5000"
-#define USB_NATIVE_NUM_PORT 255
-#define USB_NATIVE_NUM_BUS 255
+#define USB_NATIVE_NUM_PORT 20
+#define USB_NATIVE_NUM_BUS 4
 
 extern int usb_log_level;
 inline int usb_get_log_level(void)		{ return usb_log_level; }
