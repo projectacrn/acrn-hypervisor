@@ -34,7 +34,7 @@
 
 #define REDIR_ENTRIES_HW	120U /* SOS align with native ioapic */
 #define	RTBL_RO_BITS	(uint32_t)(IOAPIC_RTE_REM_IRR | IOAPIC_RTE_DELIVS)
-#define NEED_TMR_UPDATE (~(IOAPIC_RTE_INTMASK | IOAPIC_RTE_INTPOL))
+#define NEED_TMR_UPDATE (IOAPIC_RTE_TRGRMOD | IOAPIC_RTE_DELMOD | IOAPIC_RTE_INTVEC)
 
 #define ACRN_DBG_IOAPIC	6U
 #define ACRN_IOAPIC_VERSION	0x11U
@@ -305,12 +305,12 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 	if ((regnum >= IOAPIC_REDTBL) &&
 	    (regnum < (IOAPIC_REDTBL + (pincount * 2U)))) {
 		uint32_t addr_offset = regnum - IOAPIC_REDTBL;
-		uint32_t rte_offset = addr_offset / 2U;
+		uint32_t rte_offset = addr_offset >> 1U;
 		pin = rte_offset;
 
 		last = vioapic->rtbl[pin];
 		new = last;
-		if ((addr_offset % 2U) != 0U) {
+		if ((addr_offset & 1U) != 0U) {
 			new.u.hi_32 = data;
 		} else {
 			new.u.lo_32 &= RTBL_RO_BITS;
@@ -331,8 +331,7 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 		/* pin0 from vpic mask/unmask */
 		if ((pin == 0U) && ((changed & IOAPIC_RTE_INTMASK) != 0UL)) {
 			/* mask -> umask */
-			if (((last.full & IOAPIC_RTE_INTMASK) != 0UL) &&
-				((new.full & IOAPIC_RTE_INTMASK) == 0UL)) {
+			if ((last.full & IOAPIC_RTE_INTMASK) != 0UL) {
 				if ((vioapic->vm->wire_mode ==
 						VPIC_WIRE_NULL) ||
 						(vioapic->vm->wire_mode ==
@@ -346,8 +345,7 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 					return;
 				}
 			/* unmask -> mask */
-			} else if (((last.full & IOAPIC_RTE_INTMASK) == 0UL) &&
-				((new.full & IOAPIC_RTE_INTMASK) != 0UL)) {
+			} else {
 				if (vioapic->vm->wire_mode ==
 						VPIC_WIRE_IOAPIC) {
 					vioapic->vm->wire_mode =
@@ -355,18 +353,16 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 					dev_dbg(ACRN_DBG_IOAPIC,
 						"vpic wire mode -> INTR");
 				}
-			} else {
-				/* Can never happen since IOAPIC_RTE_INTMASK
-				 * is changed. */
 			}
 		}
 		vioapic->rtbl[pin] = new;
 		dev_dbg(ACRN_DBG_IOAPIC, "ioapic pin%hhu: redir table entry %#lx",
 		    pin, vioapic->rtbl[pin].full);
 		/*
-		 * If any fields in the redirection table entry (except mask
-		 * or polarity) have changed then rendezvous all the vcpus
-		 * to update their vlapic trigger-mode registers.
+		 * If "Trigger Mode" or "Delivery Mode" or "Vector"
+		 * in the redirection table entry have changed then
+		 * rendezvous all the vcpus to update their vlapic
+		 * trigger-mode registers.
 		 */
 		if ((changed & NEED_TMR_UPDATE) != 0UL) {
 			uint16_t i;
@@ -397,15 +393,9 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 			vioapic_send_intr(vioapic, pin);
 		}
 
-		/* remap for active: interrupt mask -> unmask
-		 * remap for deactive: interrupt mask & vector set to 0
-		 * remap for trigger mode change
-		 * remap for polarity change
-		 */
-		if ( ((changed & IOAPIC_RTE_INTMASK) != 0UL) ||
-		     ((changed & IOAPIC_RTE_TRGRMOD) != 0UL) ||
-		     ((changed & IOAPIC_RTE_INTPOL ) != 0UL) ) {
-
+		/* remap for ptdev */
+		if (((new.full & IOAPIC_RTE_INTMASK) == 0UL) ||
+				((last.full & IOAPIC_RTE_INTMASK) == 0UL)) {
 			/* VM enable intr */
 			struct ptdev_intx_info intx;
 
