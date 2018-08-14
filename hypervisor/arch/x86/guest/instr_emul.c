@@ -405,6 +405,40 @@ static int vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla)
 	}
 }
 
+static bool is_desc_valid(struct seg_desc *desc, uint32_t prot)
+{
+	uint32_t type;
+
+	/* The descriptor type must indicate a code/data segment. */
+	type = SEG_DESC_TYPE(desc->access);
+	if (type < 16U || type > 31U) {
+		return false;
+	}
+
+	if ((prot & PROT_READ) != 0U) {
+		/* #GP on a read access to a exec-only code segment */
+		if ((type & 0xAU) == 0x8U) {
+			return false;
+		}
+	}
+
+	if ((prot & PROT_WRITE) != 0U) {
+		/*
+		 * #GP on a write access to a code segment or a
+		 * read-only data segment.
+		 */
+		if ((type & 0x8U) != 0U) {	/* code segment */
+			return false;
+		}
+
+		if ((type & 0xAU) == 0U) {	/* read-only data seg */
+			return false;
+		}
+	}
+
+	return true;
+}
+
 /*
  *@pre seg must be segment register index
  *@pre length_arg must be 1, 2, 4 or 8
@@ -415,7 +449,7 @@ static int vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla)
  */
 static int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	struct seg_desc *desc, uint64_t offset_arg, uint8_t addrsize,
-	uint32_t prot, uint64_t *gla)
+	uint64_t *gla)
 {
 	uint64_t firstoff, segbase;
 	uint64_t offset = offset_arg;
@@ -423,49 +457,7 @@ static int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	uint32_t type;
 
 	firstoff = offset;
-	if (cpu_mode == CPU_MODE_64BIT) {
-		if (addrsize != 4U && addrsize != 8U) {
-			pr_dbg("%s: invalid addr size %d for cpu mode %d",
-					__func__, addrsize, cpu_mode);
-			return -1;
-		}
-		glasize = 8U;
-	} else {
-		if (addrsize != 2U && addrsize != 4U) {
-			pr_dbg("%s: invalid addr size %d for cpu mode %d",
-					__func__, addrsize, cpu_mode);
-			return -1;
-		}
-		glasize = 4U;
-
-		/* The descriptor type must indicate a code/data segment. */
-		type = SEG_DESC_TYPE(desc->access);
-		if (type < 16 || type > 31) {
-			/*TODO: Inject #GP */
-			return -1;
-		}
-
-		if ((prot & PROT_READ) != 0U) {
-			/* #GP on a read access to a exec-only code segment */
-			if ((type & 0xAU) == 0x8U) {
-				return -1;
-			}
-		}
-
-		if ((prot & PROT_WRITE) != 0U) {
-			/*
-			 * #GP on a write access to a code segment or a
-			 * read-only data segment.
-			 */
-			if ((type & 0x8U) != 0U) {	/* code segment */
-				return -1;
-			}
-
-			if ((type & 0xAU) == 0U) {	/* read-only data seg */
-				return -1;
-			}
-		}
-	}
+	glasize = (cpu_mode == CPU_MODE_64BIT) ? 8U: 4U;
 
 	/*
 	 * In 64-bit mode all segments except %fs and %gs have a segment
@@ -886,7 +878,7 @@ static int get_gla(struct vcpu *vcpu, __unused struct instr_emul_vie *vie,
 	vm_get_seg_desc(seg, &desc);
 
 	if (vie_calculate_gla(paging->cpu_mode, seg, &desc, val, 
-			addrsize, prot, gla) != 0) {
+			addrsize, gla) != 0) {
 		if (seg == CPU_REG_SS) {
 			pr_err("TODO: inject ss exception");
 		} else {
