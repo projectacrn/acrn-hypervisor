@@ -65,6 +65,8 @@
 #include "dm.h"
 #include "acpi.h"
 #include "pci_core.h"
+#include "tpm.h"
+#include "vmmapi.h"
 
 /*
  * Define the base address of the ACPI tables, and the offsets to
@@ -80,7 +82,8 @@
 #define	MCFG_OFFSET		0x380
 #define FACS_OFFSET		0x3C0
 #define NHLT_OFFSET		0x400
-#define DSDT_OFFSET		0xE00
+#define TPM2_OFFSET		0xC00
+#define DSDT_OFFSET		0xE40
 
 #define	ASL_TEMPLATE	"dm.XXXXXXX"
 #define ASL_SUFFIX	".aml"
@@ -144,6 +147,8 @@ basl_fwrite_rsdp(FILE *fp, struct vmctx *ctx)
 static int
 basl_fwrite_rsdt(FILE *fp, struct vmctx *ctx)
 {
+	uint32_t num = 0U;
+
 	EFPRINTF(fp, "/*\n");
 	EFPRINTF(fp, " * dm RSDT template\n");
 	EFPRINTF(fp, " */\n");
@@ -159,19 +164,23 @@ basl_fwrite_rsdt(FILE *fp, struct vmctx *ctx)
 	EFPRINTF(fp, "[0004]\t\tAsl Compiler Revision : 00000000\n");
 	EFPRINTF(fp, "\n");
 
-	/* Add in pointers to the MADT, FADT and HPET */
-	EFPRINTF(fp, "[0004]\t\tACPI Table Address 0 : %08X\n",
+	/* Add in pointers to the MADT, FADT, HPET and TPM2 */
+	EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
 	    basl_acpi_base + MADT_OFFSET);
-	EFPRINTF(fp, "[0004]\t\tACPI Table Address 1 : %08X\n",
+	EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
 	    basl_acpi_base + FADT_OFFSET);
-	EFPRINTF(fp, "[0004]\t\tACPI Table Address 2 : %08X\n",
+	EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
 	    basl_acpi_base + HPET_OFFSET);
-	EFPRINTF(fp, "[0004]\t\tACPI Table Address 3 : %08X\n",
+	EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
 	    basl_acpi_base + MCFG_OFFSET);
 
 	if (acpi_table_is_valid(NHLT_ENTRY_NO))
-		EFPRINTF(fp, "[0004]\t\tACPI Table Address 4 : %08X\n",
+		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
 		    basl_acpi_base + NHLT_OFFSET);
+
+	if (ctx->tpm_dev)
+		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : %08X\n", num++,
+		    basl_acpi_base + TPM2_OFFSET);
 
 	EFFLUSH(fp);
 
@@ -181,6 +190,7 @@ basl_fwrite_rsdt(FILE *fp, struct vmctx *ctx)
 static int
 basl_fwrite_xsdt(FILE *fp, struct vmctx *ctx)
 {
+	uint32_t num = 0U;
 	EFPRINTF(fp, "/*\n");
 	EFPRINTF(fp, " * dm XSDT template\n");
 	EFPRINTF(fp, " */\n");
@@ -196,19 +206,23 @@ basl_fwrite_xsdt(FILE *fp, struct vmctx *ctx)
 	EFPRINTF(fp, "[0004]\t\tAsl Compiler Revision : 00000000\n");
 	EFPRINTF(fp, "\n");
 
-	/* Add in pointers to the MADT, FADT and HPET */
-	EFPRINTF(fp, "[0004]\t\tACPI Table Address 0 : 00000000%08X\n",
+	/* Add in pointers to the MADT, FADT, HPET and TPM2 */
+	EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : 00000000%08X\n", num++,
 	    basl_acpi_base + MADT_OFFSET);
-	EFPRINTF(fp, "[0004]\t\tACPI Table Address 1 : 00000000%08X\n",
+	EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : 00000000%08X\n", num++,
 	    basl_acpi_base + FADT_OFFSET);
-	EFPRINTF(fp, "[0004]\t\tACPI Table Address 2 : 00000000%08X\n",
+	EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : 00000000%08X\n", num++,
 	    basl_acpi_base + HPET_OFFSET);
-	EFPRINTF(fp, "[0004]\t\tACPI Table Address 3 : 00000000%08X\n",
+	EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : 00000000%08X\n", num++,
 	    basl_acpi_base + MCFG_OFFSET);
 
 	if (acpi_table_is_valid(NHLT_ENTRY_NO))
-		EFPRINTF(fp, "[0004]\t\tACPI Table Address 4 : 00000000%08X\n",
+		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : 00000000%08X\n", num++,
 		    basl_acpi_base + NHLT_OFFSET);
+
+	if (ctx->tpm_dev)
+		EFPRINTF(fp, "[0004]\t\tACPI Table Address %u : 00000000%08X\n", num++,
+		    basl_acpi_base + TPM2_OFFSET);
 
 	EFFLUSH(fp);
 
@@ -670,6 +684,39 @@ basl_fwrite_facs(FILE *fp, struct vmctx *ctx)
 	return 0;
 }
 
+static int
+basl_fwrite_tpm2(FILE *fp, struct vmctx *ctx)
+{
+	EFPRINTF(fp, "/*\n");
+	EFPRINTF(fp, " * dm TPM2 template\n");
+	EFPRINTF(fp, " */\n");
+
+	EFPRINTF(fp, "[0004]\t\tSignature : \"TPM2\"\n");
+	EFPRINTF(fp, "[0004]\t\tTable Length : 0000004C\n");
+	EFPRINTF(fp, "[0001]\t\tRevision : 00\n");
+	EFPRINTF(fp, "[0001]\t\tChecksum : 00\n");
+	EFPRINTF(fp, "[0006]\t\tOem ID : \"ACRNDM\"\n");
+	EFPRINTF(fp, "[0008]\t\tOem Table ID : \"DMTPM2  \"\n");
+	EFPRINTF(fp, "[0004]\t\tOem Revision : 00000000\n");
+
+	/* iasl will fill the compiler ID/revision fields */
+	EFPRINTF(fp, "[0004]\t\tAsl Compiler ID : \"xxxx\"\n");
+	EFPRINTF(fp, "[0004]\t\tAsl Compiler Revision : 00000000\n");
+
+	EFPRINTF(fp, "[0002]\t\tPlatform Class : 0000\n");
+	EFPRINTF(fp, "[0002]\t\tReserved : 0000\n");
+	EFPRINTF(fp, "[0008]\t\tControl Address : %016lX\n", (long)CRB_REGS_CTRL_REQ);
+	EFPRINTF(fp, "[0004]\t\tStart Method : 00000007\n");
+
+	EFPRINTF(fp, "[0012]\t\tMethod Parameters : 00 00 00 00 00 00 00 00 00 00 00 00\n");
+	EFPRINTF(fp, "[0004]\t\tMinimum Log Length : 00000000\n");
+	EFPRINTF(fp, "[0008]\t\tLog Address : 0000000000000000\n");
+
+	EFFLUSH(fp);
+
+	return 0;
+}
+
 /*
  * Helper routines for writing to the DSDT from other modules.
  */
@@ -739,6 +786,27 @@ dsdt_fixed_mem32(uint32_t base, uint32_t length)
 	dsdt_line("  )");
 }
 
+static void tpm2_crb_fwrite_dsdt(void)
+{
+	dsdt_line("  Scope (\\_SB)");
+	dsdt_line("  {");
+	dsdt_line("    Device (TPM)");
+	dsdt_line("    {");
+	dsdt_line("      Name (_HID, \"MSFT0101\" /* TPM 2.0 Security Device */)  // _HID: Hardware ID");
+	dsdt_line("      Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings");
+	dsdt_line("      {");
+	dsdt_indent(4);
+	dsdt_fixed_mem32(TPM_CRB_MMIO_ADDR, TPM_CRB_MMIO_SIZE);
+	dsdt_unindent(4);
+	dsdt_line("      })");
+	dsdt_line("      Method (_STA, 0, NotSerialized)  // _STA: Status");
+	dsdt_line("      {");
+	dsdt_line("        Return (0x0F)");
+	dsdt_line("      }");
+	dsdt_line("    }");
+	dsdt_line("  }");
+}
+
 static int
 basl_fwrite_dsdt(FILE *fp, struct vmctx *ctx)
 {
@@ -782,6 +850,9 @@ basl_fwrite_dsdt(FILE *fp, struct vmctx *ctx)
 	dsdt_line("  }");
 
 	pm_write_dsdt(ctx, basl_ncpu);
+
+	if (ctx->tpm_dev)
+		tpm2_crb_fwrite_dsdt();
 
 	dsdt_line("}");
 
@@ -981,6 +1052,7 @@ static struct {
 	{ basl_fwrite_mcfg, MCFG_OFFSET, true  },
 	{ basl_fwrite_facs, FACS_OFFSET, true  },
 	{ basl_fwrite_nhlt, NHLT_OFFSET, false }, /*valid with audio ptdev*/
+	{ basl_fwrite_tpm2, TPM2_OFFSET, false },
 	{ basl_fwrite_dsdt, DSDT_OFFSET, true  }
 };
 
@@ -1043,6 +1115,11 @@ acpi_build(struct vmctx *ctx, int ncpu)
 	 * copying them into guest memory
 	 */
 	while (!err && (i < ARRAY_SIZE(basl_ftables))) {
+		if ((basl_ftables[i].offset == TPM2_OFFSET) &&
+			(ctx->tpm_dev != NULL)) {
+				basl_ftables[i].valid = true;
+		}
+
 		if (acpi_table_is_valid(i))
 			err = basl_compile(ctx, basl_ftables[i].wsect,
 					basl_ftables[i].offset);
