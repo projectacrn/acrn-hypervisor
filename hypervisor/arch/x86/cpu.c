@@ -243,6 +243,11 @@ static int hardware_detect_support(void)
 		return -ENODEV;
 	}
 
+	if (boot_cpu_data.cpuid_level < 0x15U) {
+		pr_fatal("%s, required CPU feature not supported\n", __func__);
+		return -ENODEV;
+	}
+
 	ret = check_vmx_mmu_cap();
 	if (ret != 0) {
 		return ret;
