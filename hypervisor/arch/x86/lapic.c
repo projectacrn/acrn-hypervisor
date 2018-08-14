@@ -209,6 +209,9 @@ void early_init_lapic(void)
 	}
 }
 
+/**
+ * @pre pcpu_id < 8U
+ */
 void init_lapic(uint16_t pcpu_id)
 {
 	/* Set the Logical Destination Register */
