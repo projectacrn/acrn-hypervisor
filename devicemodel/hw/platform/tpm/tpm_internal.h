@@ -48,4 +48,11 @@ int swtpm_startup(size_t buffersize);
 /* Cancellation of the current TPM2 command */
 void swtpm_cancel_cmd(void);
 
+/* APIs by tpm_crb.c */
+/* Initialize TPM CRB Virtual Device */
+int init_tpm_crb(struct vmctx *ctx);
+
+/* Deinitialize TPM CRB Virtual Device */
+void deinit_tpm_crb(struct vmctx *ctx);
+
 #endif
