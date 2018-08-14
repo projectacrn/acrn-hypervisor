@@ -210,7 +210,8 @@ char *strcpy_s(char *d_arg, size_t dmax, const char *s_arg)
 	while (dest_avail > 0U) {
 		if (overlap_guard == 0U) {
 			pr_err("%s: overlap happened.", __func__);
-			*(--d) = '\0';
+			d--;
+			*d = '\0';
 			return NULL;
 		}
 
@@ -293,7 +294,8 @@ char *strncpy_s(char *d_arg, size_t dmax, const char *s_arg, size_t slen_arg)
 	while (dest_avail > 0U) {
 		if (overlap_guard == 0U) {
 			pr_err("%s: overlap happened.", __func__);
-			*(--d) = '\0';
+			d--;
+			*d = '\0';
 			return NULL;
 		}
 
