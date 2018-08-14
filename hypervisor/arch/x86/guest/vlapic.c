@@ -169,19 +169,21 @@ static inline uint32_t
 vlapic_build_id(struct acrn_vlapic *vlapic)
 {
 	struct vcpu *vcpu = vlapic->vcpu;
-	uint16_t id;
+	uint8_t vlapic_id;
+	uint32_t lapic_regs_id;
 
 	if (is_vm0(vcpu->vm)) {
 		/* Get APIC ID sequence format from cpu_storage */
-		id = per_cpu(lapic_id, vcpu->vcpu_id);
+		vlapic_id = per_cpu(lapic_id, vcpu->vcpu_id);
 	} else {
-		id = vcpu->vcpu_id;
+		vlapic_id = (uint8_t)vcpu->vcpu_id;
 	}
 
-	dev_dbg(ACRN_DBG_LAPIC, "vlapic APIC PAGE ID : 0x%08x",
-		(id << APIC_ID_SHIFT));
+	lapic_regs_id = vlapic_id << APIC_ID_SHIFT;
 
-	return (id << APIC_ID_SHIFT);
+	dev_dbg(ACRN_DBG_LAPIC, "vlapic APIC PAGE ID : 0x%08x", lapic_regs_id);
+
+	return lapic_regs_id;
 }
 
 static void
