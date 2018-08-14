@@ -454,7 +454,6 @@ static int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	uint64_t firstoff, segbase;
 	uint64_t offset = offset_arg;
 	uint8_t glasize;
-	uint32_t type;
 
 	firstoff = offset;
 	glasize = (cpu_mode == CPU_MODE_64BIT) ? 8U: 4U;
@@ -860,52 +859,97 @@ static int emulate_movx(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	return error;
 }
 
-/*
- * Helper function to calculate and validate a linear address.
+/**
+ * @pre only called by instruction emulation and check was done during
+ *      instruction decode
+ *
+ * @remark This function can only be called in instruction emulation and
+ * suppose always success because the check was done during instruction
+ * decode.
+ *
+ * It's only used by MOVS/STO
  */
-static int get_gla(struct vcpu *vcpu, __unused struct instr_emul_vie *vie,
-	struct vm_guest_paging *paging,
-	uint8_t opsize, uint8_t addrsize, uint32_t prot, enum cpu_reg_name seg,
-	enum cpu_reg_name gpr, uint64_t *gla, int *fault)
+static void get_gva_di_si_nocheck(struct vcpu *vcpu, uint8_t addrsize,
+		enum cpu_reg_name seg, enum cpu_reg_name gpr, uint64_t *gva)
 {
-	int ret;
+	uint64_t val;
 	struct seg_desc desc;
-	uint64_t cr0, val, rflags;
+	enum vm_cpu_mode cpu_mode;
 
-	cr0 = vm_get_register(vcpu, CPU_REG_CR0);
-	rflags = vm_get_register(vcpu, CPU_REG_RFLAGS);
 	val = vm_get_register(vcpu, gpr);
 	vm_get_seg_desc(seg, &desc);
+	cpu_mode = get_vcpu_mode(vcpu);
 
-	if (vie_calculate_gla(paging->cpu_mode, seg, &desc, val, 
-			addrsize, gla) != 0) {
-		if (seg == CPU_REG_SS) {
-			pr_err("TODO: inject ss exception");
-		} else {
-			pr_err("TODO: inject gp exception");
-		}
-		goto guest_fault;
-	}
+	(void)vie_calculate_gla(cpu_mode, seg, &desc, val, addrsize, gva);
 
-	if (vie_canonical_check(paging->cpu_mode, *gla) != 0) {
-		if (seg == CPU_REG_SS) {
-			pr_err("TODO: inject ss exception");
-		} else {
-			pr_err("TODO: inject gp exception");
-		}
-		goto guest_fault;
-	}
-
-	*fault = 0;
-	return 0;
-
-guest_fault:
-	*fault = 1;
-	return ret;
+	return;
 }
 
-static int emulate_movs(struct vcpu *vcpu, struct instr_emul_vie *vie,
-				struct vm_guest_paging *paging)
+/*
+ * @pre only called during instruction decode phase
+ *
+ * @remark This function get gva from ES:DI and DS(other segment):SI. And
+ * do check the failure condition and inject exception to guest accordingly.
+ *
+ * It's only used by MOVS/STO
+ */
+static int get_gva_di_si_check(struct vcpu *vcpu, uint8_t addrsize,
+		uint32_t prot, enum cpu_reg_name seg, enum cpu_reg_name gpr,
+		uint64_t *gva)
+{
+	int ret;
+	uint32_t err_code;
+	struct seg_desc desc;
+	enum vm_cpu_mode cpu_mode;
+	uint64_t val, gpa;
+
+	val = vm_get_register(vcpu, gpr);
+	vm_get_seg_desc(seg, &desc);
+	cpu_mode = get_vcpu_mode(vcpu);
+
+	if (!is_desc_valid(&desc, prot)) {
+		goto exception_inject;
+	}
+
+	if (cpu_mode == CPU_MODE_64BIT) {
+		if ((addrsize != 4U) && (addrsize != 8U)) {
+			goto exception_inject;
+		}
+	} else {
+		if ((addrsize != 2U) && (addrsize != 4U)) {
+			goto exception_inject;
+		}
+	}
+
+	if (vie_calculate_gla(cpu_mode, seg, &desc, val, addrsize, gva) != 0) {
+		goto exception_inject;
+	}
+
+	if (vie_canonical_check(cpu_mode, *gva) != 0) {
+		goto exception_inject;
+	}
+
+	err_code = (prot == PROT_WRITE) ? PAGE_FAULT_WR_FLAG : 0U;
+	ret = gva2gpa(vcpu, (uint64_t)gva, &gpa, &err_code);
+	if (ret < 0) {
+		if (ret == -EFAULT) {
+			vcpu_inject_pf(vcpu, (uint64_t)gva, err_code);
+		}
+		return ret;
+	}
+
+	return 0;
+
+exception_inject:
+	if (seg == CPU_REG_SS) {
+		vcpu_inject_ss(vcpu);
+	} else {
+		vcpu_inject_gp(vcpu, 0U);
+	}
+	return -EFAULT;
+}
+
+static int emulate_movs(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
 	uint64_t dstaddr, srcaddr;
 	uint64_t rcx, rdi, rsi, rflags;
@@ -939,18 +983,10 @@ static int emulate_movs(struct vcpu *vcpu, struct instr_emul_vie *vie,
 	}
 
 	seg = (vie->seg_override != 0U) ? (vie->segment_register) : CPU_REG_DS;
-	error = get_gla(vcpu, vie, paging, opsize, vie->addrsize,
-	    PROT_READ, seg, CPU_REG_RSI, &srcaddr, &fault);
-	if ((error != 0) || (fault != 0)) {
-		goto done;
-	}
 
-	error = get_gla(vcpu, vie, paging, opsize, vie->addrsize,
-		PROT_WRITE, CPU_REG_ES, CPU_REG_RDI, &dstaddr,
-		&fault);
-	if ((error != 0) || (fault != 0)) {
-		goto done;
-	}
+	get_gva_di_si_nocheck(vcpu, vie->addrsize, seg, CPU_REG_RSI, &srcaddr);
+	get_gva_di_si_nocheck(vcpu, vie->addrsize, CPU_REG_ES, CPU_REG_RDI,
+			&dstaddr);
 
 	(void)memcpy_s((void *)dstaddr, 16U, (void *)srcaddr, opsize);
 
@@ -1520,7 +1556,7 @@ static int vmm_emulate_instruction(struct instr_emul_ctxt *ctxt)
 		error = emulate_movx(vcpu, vie);
 		break;
 	case VIE_OP_TYPE_MOVS:
-		error = emulate_movs(vcpu, vie, paging);
+		error = emulate_movs(vcpu, vie);
 		break;
 	case VIE_OP_TYPE_STOS:
 		error = emulate_stos(vcpu, vie);
