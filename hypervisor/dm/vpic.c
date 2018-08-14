@@ -460,14 +460,14 @@ static int vpic_ocw3(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint
 	return 0;
 }
 
+/**
+ * @pre pin < NR_VPIC_PINS_TOTAL
+ */
 static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin, bool newstate)
 {
 	struct i8259_reg_state *i8259;
 	int oldcnt, newcnt;
 	bool level;
-
-	ASSERT(pin < NR_VPIC_PINS_TOTAL,
-	    "vpic_set_pinstate: invalid pin number");
 
 	i8259 = &vpic->i8259[pin >> 3U];
 
@@ -504,22 +504,22 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin, bool newstate
 	vpic_notify_intr(vpic);
 }
 
-static int vpic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate)
+/**
+ * @pre irq < NR_VPIC_PINS_TOTAL
+ */
+static void vpic_set_irqstate(struct vm *vm, uint32_t irq,
+		enum irqstate irqstate)
 {
 	struct acrn_vpic *vpic;
 	struct i8259_reg_state *i8259;
 	uint8_t pin;
-
-	if (irq >= NR_VPIC_PINS_TOTAL) {
-		return -EINVAL;
-	}
 
 	vpic = vm_pic(vm);
 	i8259 = &vpic->i8259[irq >> 3U];
 	pin = (uint8_t)irq;
 
 	if (i8259->ready == false) {
-		return 0;
+		return;
 	}
 
 	VPIC_LOCK(vpic);
@@ -538,97 +538,46 @@ static int vpic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate
 		ASSERT(false, "vpic_set_irqstate: invalid irqstate");
 	}
 	VPIC_UNLOCK(vpic);
-
-	return 0;
 }
 
 /* hypervisor interface: assert/deassert/pulse irq */
-int vpic_assert_irq(struct vm *vm, uint32_t irq)
+void vpic_assert_irq(struct vm *vm, uint32_t irq)
 {
-	return vpic_set_irqstate(vm, irq, IRQSTATE_ASSERT);
+	vpic_set_irqstate(vm, irq, IRQSTATE_ASSERT);
 }
 
-int vpic_deassert_irq(struct vm *vm, uint32_t irq)
+void vpic_deassert_irq(struct vm *vm, uint32_t irq)
 {
-	return vpic_set_irqstate(vm, irq, IRQSTATE_DEASSERT);
+	vpic_set_irqstate(vm, irq, IRQSTATE_DEASSERT);
 }
 
-int vpic_pulse_irq(struct vm *vm, uint32_t irq)
+void vpic_pulse_irq(struct vm *vm, uint32_t irq)
 {
-	return vpic_set_irqstate(vm, irq, IRQSTATE_PULSE);
+	vpic_set_irqstate(vm, irq, IRQSTATE_PULSE);
 }
 
-int vpic_set_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger trigger)
+uint32_t
+vpic_pincount(void)
 {
-	struct acrn_vpic *vpic;
-	uint8_t pin_mask;
-
-	if (irq >= NR_VPIC_PINS_TOTAL) {
-		return -EINVAL;
-	}
-
-	/*
-	 * See comment in vpic_elc_handler.  These IRQs must be
-	 * edge triggered.
-	 */
-	if (trigger == LEVEL_TRIGGER) {
-		switch (irq) {
-		case 0U:
-		case 1U:
-		case 2U:
-		case 8U:
-		case 13U:
-			return -EINVAL;
-		default:
-			/*
-			 * The IRQs handled earlier are the ones that could only
-			 * support edge trigger, while the input parameter
-			 * 'trigger' is set as LEVEL_TRIGGER. So, an error code
-			 * (-EINVAL) shall be returned due to the invalid
-			 * operation.
-			 *
-			 * All the other IRQs will be handled properly after
-			 * this switch statement.
-			 */
-			break;
-		}
-	}
-
-	vpic = vm_pic(vm);
-	pin_mask = (uint8_t)(1U << (irq & 0x7U));
-
-	VPIC_LOCK(vpic);
-
-	if (trigger == LEVEL_TRIGGER) {
-		vpic->i8259[irq >> 3U].elc |=  pin_mask;
-	} else {
-		vpic->i8259[irq >> 3U].elc &=  ~pin_mask;
-	}
-
-	VPIC_UNLOCK(vpic);
-
-	return 0;
+	return NR_VPIC_PINS_TOTAL;
 }
 
-int vpic_get_irq_trigger(struct vm *vm, uint32_t irq, enum vpic_trigger *trigger)
+/**
+ * @pre vm->vpic != NULL
+ * @pre irq < NR_VPIC_PINS_TOTAL
+ */
+void vpic_get_irq_trigger(struct vm *vm, uint32_t irq,
+		enum vpic_trigger *trigger)
 {
 	struct acrn_vpic *vpic;
 
-	if (irq >= NR_VPIC_PINS_TOTAL) {
-		return -EINVAL;
-	}
-
 	vpic = vm_pic(vm);
-	if (vpic == NULL) {
-		return -EINVAL;
-	}
 
 	if ((vpic->i8259[irq >> 3U].elc & (1U << (irq & 0x7U))) != 0U) {
 		*trigger = LEVEL_TRIGGER;
 	} else {
 		*trigger = EDGE_TRIGGER;
 	}
-	return 0;
 }
 
 void vpic_pending_intr(struct vm *vm, uint32_t *vecptr)

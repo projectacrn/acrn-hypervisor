@@ -93,17 +93,15 @@ enum vpic_trigger {
 void *vpic_init(struct vm *vm);
 void vpic_cleanup(struct vm *vm);
 
-int vpic_assert_irq(struct vm *vm, uint32_t irq);
-int vpic_deassert_irq(struct vm *vm, uint32_t irq);
-int vpic_pulse_irq(struct vm *vm, uint32_t irq);
+void vpic_assert_irq(struct vm *vm, uint32_t irq);
+void vpic_deassert_irq(struct vm *vm, uint32_t irq);
+void vpic_pulse_irq(struct vm *vm, uint32_t irq);
 
 void vpic_pending_intr(struct vm *vm, uint32_t *vecptr);
 void vpic_intr_accepted(struct vm *vm, uint32_t vector);
-int vpic_set_irq_trigger(struct vm *vm, uint32_t irq,
-	enum vpic_trigger trigger);
-int vpic_get_irq_trigger(struct vm *vm, uint32_t irq,
+void vpic_get_irq_trigger(struct vm *vm, uint32_t irq,
 	enum vpic_trigger *trigger);
-
+uint32_t vpic_pincount(void);
 bool vpic_is_pin_mask(struct acrn_vpic *vpic, uint8_t virt_pin_arg);
 
 #endif	/* _VPIC_H_ */

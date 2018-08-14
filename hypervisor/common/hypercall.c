@@ -68,24 +68,22 @@ int32_t hcall_get_api_version(struct vm *vm, uint64_t param)
 	return 0;
 }
 
-static int32_t
+/**
+ * @pre vm != NULL
+ */
+static void
 handle_vpic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
 {
-	int32_t ret = -1;
-
-	if (vm == NULL) {
-		return ret;
-	}
 
 	switch (mode) {
 	case IRQ_ASSERT:
-		ret = vpic_assert_irq(vm, irq);
+		vpic_assert_irq(vm, irq);
 		break;
 	case IRQ_DEASSERT:
-		ret = vpic_deassert_irq(vm, irq);
+		vpic_deassert_irq(vm, irq);
 		break;
 	case IRQ_PULSE:
-		ret = vpic_pulse_irq(vm, irq);
+		vpic_pulse_irq(vm, irq);
 	default:
 		/*
 		 * In this switch statement, mode shall either be IRQ_ASSERT or
@@ -94,28 +92,23 @@ handle_vpic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
 		 */
 		break;
 	}
-
-	return ret;
 }
 
-static int32_t
+/**
+ * @pre vm != NULL
+ */
+static void
 handle_vioapic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
 {
-	int32_t ret = -1;
-
-	if (vm == NULL) {
-		return ret;
-	}
-
 	switch (mode) {
 	case IRQ_ASSERT:
-		ret = vioapic_assert_irq(vm, irq);
+		vioapic_assert_irq(vm, irq);
 		break;
 	case IRQ_DEASSERT:
-		ret = vioapic_deassert_irq(vm, irq);
+		vioapic_deassert_irq(vm, irq);
 		break;
 	case IRQ_PULSE:
-		ret = vioapic_pulse_irq(vm, irq);
+		vioapic_pulse_irq(vm, irq);
 		break;
 	default:
 		/*
@@ -125,7 +118,6 @@ handle_vioapic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
 		 */
 		break;
 	}
-	return ret;
 }
 
 static int32_t
@@ -136,8 +128,21 @@ handle_virt_irqline(struct vm *vm, uint16_t target_vmid,
 	uint32_t intr_type;
 	struct vm *target_vm = get_vm_from_vmid(target_vmid);
 
-	if ((vm == NULL) || (param == NULL)) {
-		return -1;
+	if ((vm == NULL) || (param == NULL) || target_vm == NULL) {
+		return -EINVAL;
+	}
+
+	/* Check valid irq */
+	if (param->intr_type == ACRN_INTR_TYPE_IOAPIC
+			&& param->ioapic_irq >= vioapic_pincount(vm)) {
+		return -EINVAL;
+	}
+
+	if (param->intr_type == ACRN_INTR_TYPE_ISA
+			&& (param->pic_irq >= vpic_pincount()
+			|| (param->ioapic_irq != (~0U)
+			&& param->ioapic_irq >= vioapic_pincount(vm)))) {
+		return -EINVAL;
 	}
 
 	intr_type = param->intr_type;
@@ -145,24 +150,24 @@ handle_virt_irqline(struct vm *vm, uint16_t target_vmid,
 	switch (intr_type) {
 	case ACRN_INTR_TYPE_ISA:
 		/* Call vpic for pic injection */
-		ret = handle_vpic_irqline(target_vm, param->pic_irq, mode);
+		handle_vpic_irqline(target_vm, param->pic_irq, mode);
 
 		/* call vioapic for ioapic injection if ioapic_irq != ~0U*/
 		if (param->ioapic_irq != (~0U)) {
 			/* handle IOAPIC irqline */
-			ret = handle_vioapic_irqline(target_vm,
+			handle_vioapic_irqline(target_vm,
 				param->ioapic_irq, mode);
 		}
 		break;
 	case ACRN_INTR_TYPE_IOAPIC:
 		/* handle IOAPIC irqline */
-		ret = handle_vioapic_irqline(target_vm,
+		handle_vioapic_irqline(target_vm,
 				param->ioapic_irq, mode);
 		break;
 	default:
 		dev_dbg(ACRN_DBG_HYCALL, "vINTR inject failed. type=%d",
 				intr_type);
-		ret = -1;
+		ret = -EINVAL;
 	}
 	return ret;
 }
