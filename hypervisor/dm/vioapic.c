@@ -67,17 +67,15 @@ vm_ioapic(struct vm *vm)
 	return (struct vioapic *)vm->arch_vm.virt_ioapic;
 }
 
+/**
+ * @pre pin < vioapic_pincount(vm)
+ */
 static void
 vioapic_send_intr(struct vioapic *vioapic, uint32_t pin)
 {
 	uint32_t vector, dest, delmode;
 	union ioapic_rte rte;
 	bool level, phys;
-	uint32_t pincount = vioapic_pincount(vioapic->vm);
-
-	if (pin >= pincount) {
-		pr_err("vioapic_send_intr: invalid pin number %hhu", pin);
-	}
 
 	rte = vioapic->rtbl[pin];
 
@@ -105,16 +103,14 @@ vioapic_send_intr(struct vioapic *vioapic, uint32_t pin)
 							delmode, vector, false);
 }
 
+/**
+ * @pre pin < vioapic_pincount(vm)
+ */
 static void
 vioapic_set_pinstate(struct vioapic *vioapic, uint32_t pin, bool newstate)
 {
 	int oldcnt, newcnt;
 	bool needintr;
-	uint32_t pincount = vioapic_pincount(vioapic->vm);
-
-	if (pin >= pincount) {
-		pr_err("vioapic_set_pinstate: invalid pin number %hhu", pin);
-	}
 
 	oldcnt = vioapic->acnt[pin];
 	if (newstate) {
@@ -150,15 +146,14 @@ enum irqstate {
 	IRQSTATE_PULSE
 };
 
-static int
+/**
+ * @pre irq < vioapic_pincount(vm)
+ */
+static void
 vioapic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate)
 {
 	struct vioapic *vioapic;
 	uint32_t pin = irq;
-
-	if (pin >= vioapic_pincount(vm)) {
-		return -EINVAL;
-	}
 
 	vioapic = vm_ioapic(vm);
 
@@ -178,26 +173,23 @@ vioapic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate)
 		panic("vioapic_set_irqstate: invalid irqstate %d", irqstate);
 	}
 	VIOAPIC_UNLOCK(vioapic);
-
-	return 0;
 }
 
-int
+void
 vioapic_assert_irq(struct vm *vm, uint32_t irq)
 {
-	return vioapic_set_irqstate(vm, irq, IRQSTATE_ASSERT);
+	vioapic_set_irqstate(vm, irq, IRQSTATE_ASSERT);
 }
 
-int
-vioapic_deassert_irq(struct vm *vm, uint32_t irq)
+void vioapic_deassert_irq(struct vm *vm, uint32_t irq)
 {
-	return vioapic_set_irqstate(vm, irq, IRQSTATE_DEASSERT);
+	vioapic_set_irqstate(vm, irq, IRQSTATE_DEASSERT);
 }
 
-int
+void
 vioapic_pulse_irq(struct vm *vm, uint32_t irq)
 {
-	return vioapic_set_irqstate(vm, irq, IRQSTATE_PULSE);
+	vioapic_set_irqstate(vm, irq, IRQSTATE_PULSE);
 }
 
 /*

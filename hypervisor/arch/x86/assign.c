@@ -896,7 +896,8 @@ int ptdev_add_intx_remapping(struct vm *vm,
 {
 	struct ptdev_remapping_info *entry;
 
-	if (vm == NULL) {
+	if (vm == NULL || (!pic_pin && virt_pin >= vioapic_pincount(vm))
+			|| (pic_pin && virt_pin >= vpic_pincount())) {
 		pr_err("ptdev_add_intx_remapping fails!\n");
 		return -EINVAL;
 	}
