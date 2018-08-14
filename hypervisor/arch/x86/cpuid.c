@@ -119,6 +119,21 @@ static void init_vcpuid_entry(__unused struct vm *vm,
 		entry->ecx = 0U;
 		entry->edx = 0U;
 		break;
+	case 0x16U:
+		if (boot_cpu_data.cpuid_level >= 0x16U) {
+			/* call the cpuid when 0x16 is supported */
+			cpuid_subleaf(leaf, subleaf,
+				&entry->eax, &entry->ebx,
+				&entry->ecx, &entry->edx);
+		} else {
+			/* Use the tsc to derive the emulated 0x16U cpuid. */
+			entry->eax = (uint32_t) (tsc_khz / 1000U);
+			entry->ebx = entry->eax;
+			/* Bus frequency: hard coded to 100M */
+			entry->ecx = 100U;
+			entry->edx = 0U;
+		}
+		break;
 
 	/*
 	 * Leaf 0x40000000
@@ -173,6 +188,11 @@ int set_vcpuid_entries(struct vm *vm)
 	uint32_t i, j;
 
 	init_vcpuid_entry(vm, 0U, 0U, 0U, &entry);
+	if (boot_cpu_data.cpuid_level < 0x16U) {
+		/* The cpuid with zero leaf returns the max level.
+		 * Emulate that the 0x16U is supported */
+		entry.eax = 0x16U;
+	}
 	result = set_vcpuid_entry(vm, &entry);
 	if (result != 0) {
 		return result;
