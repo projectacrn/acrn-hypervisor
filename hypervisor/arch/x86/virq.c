@@ -337,22 +337,13 @@ int interrupt_window_vmexit_handler(struct vcpu *vcpu)
 
 	TRACE_2L(TRACE_VMEXIT_INTERRUPT_WINDOW, 0UL, 0UL);
 
-	if (vcpu == NULL)
-		return -1;
-
-	if (vcpu_pending_request(vcpu)) {
-		/* Do nothing
-		 * acrn_handle_pending_request will continue for this vcpu
-		 */
-	} else {
-		/* No interrupts to inject.
-		 * Disable the interrupt window exiting
-		 */
-		vcpu->arch_vcpu.irq_window_enabled = 0U;
-		value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
-		value32 &= ~(VMX_PROCBASED_CTLS_IRQ_WIN);
-		exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
-	}
+	/* Disable interrupt-window exiting first.
+	 * acrn_handle_pending_request will continue handle for this vcpu
+	 */
+	vcpu->arch_vcpu.irq_window_enabled = 0U;
+	value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
+	value32 &= ~(VMX_PROCBASED_CTLS_IRQ_WIN);
+	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
 
 	vcpu_retain_rip(vcpu);
 	return 0;
