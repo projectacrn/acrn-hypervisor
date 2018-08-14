@@ -2138,6 +2138,91 @@ static int instr_check_di(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt)
 	}
 }
 
+static int instr_check_gva(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt,
+		enum vm_cpu_mode cpu_mode)
+{
+	int ret = 0;
+	uint64_t base, segbase, idx, gva, gpa;
+	uint32_t err_code;
+	enum cpu_reg_name seg;
+	struct instr_emul_vie *vie = &emul_ctxt->vie;
+
+	base = 0UL;
+	if (vie->base_register != CPU_REG_LAST) {
+		base = vm_get_register(vcpu, vie->base_register);
+
+		/* RIP relative addressing starts from the
+		 * following instruction
+		 */
+		if (vie->base_register == CPU_REG_RIP)
+			base += vie->num_processed;
+
+	}
+
+	idx = 0UL;
+	if (vie->index_register != CPU_REG_LAST) {
+		idx = vm_get_register(vcpu, vie->index_register);
+	}
+
+	/* "Specifying a Segment Selector" of SDM Vol1 3.7.4
+	 *
+	 * In legacy IA-32 mode, when ESP or EBP register is used as
+	 * base, the SS segment is default segment.
+	 *
+	 * All data references, except when relative to stack or
+	 * string destination, DS is default segment.
+	 *
+	 * segment override could overwrite the default segment
+	 *
+	 * 64bit mode, segmentation is generally disabled. The
+	 * exception are FS and GS.
+	 */
+	if (vie->seg_override != 0U) {
+		seg = vie->segment_register;
+	} else if ((vie->base_register == CPU_REG_RSP) ||
+			(vie->base_register == CPU_REG_RBP)) {
+		seg = CPU_REG_SS;
+	} else {
+		seg = CPU_REG_DS;
+	}
+
+	if ((cpu_mode == CPU_MODE_64BIT) && (seg != CPU_REG_FS) &&
+			(seg != CPU_REG_GS)) {
+		segbase = 0UL;
+	} else {
+		struct seg_desc desc;
+
+		vm_get_seg_desc(seg, &desc);
+
+		segbase = desc.base;
+	}
+
+	gva = segbase + base + vie->scale * idx + vie->displacement;
+
+	if (vie_canonical_check(cpu_mode, gva) != 0) {
+		if (seg == CPU_REG_SS) {
+			vcpu_inject_ss(vcpu);
+		} else {
+			vcpu_inject_gp(vcpu, 0U);
+		}
+		return -EFAULT;
+	}
+
+	err_code = (vcpu->req.reqs.mmio.direction == REQUEST_WRITE) ?
+	       PAGE_FAULT_WR_FLAG : 0U;
+
+	ret = gva2gpa(vcpu, gva, &gpa, &err_code);
+	if (ret < 0) {
+		if (ret == -EFAULT) {
+			vcpu_inject_pf(vcpu, gva,
+					err_code);
+		}
+		return ret;
+	}
+
+	return 0;
+}
+
 int decode_instruction(struct vcpu *vcpu)
 {
 	struct instr_emul_ctxt *emul_ctxt;
@@ -2190,6 +2275,8 @@ int decode_instruction(struct vcpu *vcpu)
 		retval = instr_check_di(vcpu, emul_ctxt);
 		if (retval < 0)
 			return retval;
+	} else {
+		instr_check_gva(vcpu, emul_ctxt, cpu_mode);
 	}
 
 	return  emul_ctxt->vie.opsize;
