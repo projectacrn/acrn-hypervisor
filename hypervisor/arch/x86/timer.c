@@ -278,10 +278,12 @@ static uint64_t pit_calibrate_tsc(uint32_t cal_ms_arg)
 }
 
 /*
- * Determine TSC frequency via CPUID 0x15
+ * Determine TSC frequency via CPUID 0x15 and 0x16.
  */
 static uint64_t native_calibrate_tsc(void)
 {
+	uint64_t tsc_hz = 0;
+
 	if (boot_cpu_data.cpuid_level >= 0x15U) {
 		uint32_t eax_denominator, ebx_numerator, ecx_hz, reserved;
 
@@ -289,12 +291,18 @@ static uint64_t native_calibrate_tsc(void)
 			&ecx_hz, &reserved);
 
 		if ((eax_denominator != 0U) && (ebx_numerator != 0U)) {
-			return ((uint64_t) ecx_hz *
+			tsc_hz = ((uint64_t) ecx_hz *
 				ebx_numerator) / eax_denominator;
 		}
 	}
 
-	return 0;
+	if ((tsc_hz == 0) && (boot_cpu_data.cpuid_level >= 0x16U)) {
+		uint32_t eax_base_mhz, ebx_max_mhz, ecx_bus_mhz, edx;
+		cpuid(0x16U, &eax_base_mhz, &ebx_max_mhz, &ecx_bus_mhz, &edx);
+		tsc_hz = (uint64_t) eax_base_mhz * 1000000U;
+	}
+
+	return tsc_hz;
 }
 
 void calibrate_tsc(void)
