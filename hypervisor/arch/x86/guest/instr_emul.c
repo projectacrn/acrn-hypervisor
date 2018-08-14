@@ -55,7 +55,7 @@
 #define	VIE_OP_F_IMM8		(1U << 1)  /* 8-bit immediate operand */
 #define	VIE_OP_F_MOFFSET	(1U << 2)  /* 16/32/64-bit immediate moffset */
 #define	VIE_OP_F_NO_MODRM	(1U << 3)
-#define	VIE_OP_F_NO_GLA_VERIFICATION (1U << 4)
+#define	VIE_OP_F_CHECK_GVA_DI   (1U << 4)  /* for movs, need to check DI */
 
 static const struct instr_emul_vie_op two_byte_opcodes[256] = {
 	[0xB6] = {
@@ -108,19 +108,19 @@ static const struct instr_emul_vie_op one_byte_opcodes[256] = {
 	},
 	[0xA4] = {
 		.op_type = VIE_OP_TYPE_MOVS,
-		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_NO_GLA_VERIFICATION
+		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_CHECK_GVA_DI
 	},
 	[0xA5] = {
 		.op_type = VIE_OP_TYPE_MOVS,
-		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_NO_GLA_VERIFICATION
+		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_CHECK_GVA_DI
 	},
 	[0xAA] = {
 		.op_type = VIE_OP_TYPE_STOS,
-		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_NO_GLA_VERIFICATION
+		.op_flags = VIE_OP_F_NO_MODRM
 	},
 	[0xAB] = {
 		.op_type = VIE_OP_TYPE_STOS,
-		.op_flags = VIE_OP_F_NO_MODRM | VIE_OP_F_NO_GLA_VERIFICATION
+		.op_flags = VIE_OP_F_NO_MODRM
 	},
 	[0xC6] = {
 		/* XXX Group 11 extended opcode - not just MOV */
@@ -953,7 +953,7 @@ static int emulate_movs(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
 	uint64_t dstaddr, srcaddr;
 	uint64_t rcx, rdi, rsi, rflags;
-	int error, fault, repeat;
+	int error, repeat;
 	uint8_t opsize;
 	enum cpu_reg_name seg;
 
@@ -1533,7 +1533,6 @@ static int emulate_bittest(struct vcpu *vcpu, struct instr_emul_vie *vie)
 
 static int vmm_emulate_instruction(struct instr_emul_ctxt *ctxt)
 {
-	struct vm_guest_paging *paging = &ctxt->paging;
 	struct instr_emul_vie *vie = &ctxt->vie;
 	struct vcpu *vcpu = ctxt->vcpu;
 	int error;
@@ -2123,6 +2122,22 @@ static int local_decode_instruction(enum vm_cpu_mode cpu_mode,
 	return 0;
 }
 
+/* for instruction MOVS/STO, check the gva gotten from DI/SI. */
+static int instr_check_di(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt)
+{
+	int ret;
+	struct instr_emul_vie *vie = &emul_ctxt->vie;
+	uint64_t gva;
+	enum cpu_reg_name seg;
+
+	ret = get_gva_di_si_check(vcpu, vie->addrsize, PROT_WRITE,
+		CPU_REG_ES, CPU_REG_RDI, &gva);
+
+	if (ret < 0) {
+		return -EFAULT;
+	}
+}
+
 int decode_instruction(struct vcpu *vcpu)
 {
 	struct instr_emul_ctxt *emul_ctxt;
@@ -2158,6 +2173,23 @@ int decode_instruction(struct vcpu *vcpu)
 			vcpu_get_rip(vcpu));
 		vcpu_inject_ud(vcpu);
 		return -EFAULT;
+	}
+
+	/*
+	 * We do operand check in instruction decode phase and
+	 * inject exception accordingly. In late instruction
+	 * emulation, it will always sucess.
+	 *
+	 * We only need to do dst check for movs. For other instructions,
+	 * they always has one register and one mmio which trigger EPT
+	 * by access mmio. With VMX enabled, the related check is done
+	 * by VMX itself before hit EPT violation.
+	 *
+	 */
+	if (emul_ctxt->vie.op.op_flags & VIE_OP_F_CHECK_GVA_DI) {
+		retval = instr_check_di(vcpu, emul_ctxt);
+		if (retval < 0)
+			return retval;
 	}
 
 	return  emul_ctxt->vie.opsize;
