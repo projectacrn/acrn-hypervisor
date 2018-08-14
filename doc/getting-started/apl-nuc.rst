@@ -244,6 +244,7 @@ partition. Follow these steps:
    .. code-block:: console
 
       # systemctl enable weston@cl-sos
+      # systemctl start weston@cl-sos
 
 #. Reboot and select "The ACRN Service OS" to boot, as shown below:
 
