@@ -1137,7 +1137,8 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 		break;
 	}
 
-	while ((vcpu_id = ffs64(dmask)) != INVALID_BIT_INDEX) {
+	for (vcpu_id = ffs64(dmask); vcpu_id != INVALID_BIT_INDEX;
+		vcpu_id = ffs64(dmask)) {
 		bitmap_clear_lock(vcpu_id, &dmask);
 		target_vcpu = vcpu_from_vid(vlapic->vm, vcpu_id);
 		if (target_vcpu == NULL) {

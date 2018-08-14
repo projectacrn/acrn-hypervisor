@@ -29,8 +29,7 @@
 
 #ifndef BITS_H
 #define BITS_H
-
-#define	BUS_LOCK	"lock ; "
+#include <cpu.h>
 /**
  *
  * INVALID_BIT_INDEX means when input paramter is zero,

@@ -152,6 +152,8 @@
 
 #ifndef ASSEMBLER
 
+#define	BUS_LOCK	"lock ; "
+
 /**
  *
  * Identifiers for architecturally defined registers.
