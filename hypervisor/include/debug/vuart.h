@@ -39,16 +39,16 @@ struct fifo {
 };
 
 struct vuart {
-	char data;		/* Data register (R/W) */
-	char ier;		/* Interrupt enable register (R/W) */
-	char lcr;		/* Line control register (R/W) */
-	char mcr;		/* Modem control register (R/W) */
-	char lsr;		/* Line status register (R/W) */
-	char msr;		/* Modem status register (R/W) */
-	char fcr;		/* FIFO control register (W) */
-	char scr;		/* Scratch register (R/W) */
-	char dll;		/* Baudrate divisor latch LSB */
-	char dlh;		/* Baudrate divisor latch MSB */
+	uint8_t data;		/* Data register (R/W) */
+	uint8_t ier;		/* Interrupt enable register (R/W) */
+	uint8_t lcr;		/* Line control register (R/W) */
+	uint8_t mcr;		/* Modem control register (R/W) */
+	uint8_t lsr;		/* Line status register (R/W) */
+	uint8_t msr;		/* Modem status register (R/W) */
+	uint8_t fcr;		/* FIFO control register (W) */
+	uint8_t scr;		/* Scratch register (R/W) */
+	uint8_t dll;		/* Baudrate divisor latch LSB */
+	uint8_t dlh;		/* Baudrate divisor latch MSB */
 
 	struct fifo rxfifo;
 	struct fifo txfifo;

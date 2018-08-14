@@ -133,12 +133,13 @@ static void vuart_toggle_intr(struct vuart *vu)
 	}
 }
 
-static void vuart_write(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, uint16_t offset_arg,
-		__unused size_t width, uint32_t value)
+static void vuart_write(__unused struct vm_io_handler *hdlr, struct vm *vm,
+		uint16_t offset_arg, __unused size_t width, uint32_t value)
 {
 	uint16_t offset = offset_arg;
 	struct vuart *vu = vm_vuart(vm);
+	uint8_t value_u8 = (uint8_t)value;
+
 	offset -= vu->base;
 	vuart_lock(vu);
 	/*
@@ -146,19 +147,19 @@ static void vuart_write(__unused struct vm_io_handler *hdlr,
 	 */
 	if ((vu->lcr & LCR_DLAB) != 0) {
 		if (offset == UART16550_DLL) {
-			vu->dll = value;
+			vu->dll = value_u8;
 			goto done;
 		}
 
 		if (offset == UART16550_DLM) {
-			vu->dlh = value;
+			vu->dlh = value_u8;
 			goto done;
 		}
 	}
 
 	switch (offset) {
 	case UART16550_THR:
-		fifo_putchar(&vu->txfifo, value);
+		fifo_putchar(&vu->txfifo, value_u8);
 		vu->thre_int_pending = true;
 		break;
 	case UART16550_IER:
@@ -166,26 +167,26 @@ static void vuart_write(__unused struct vm_io_handler *hdlr,
 		 * Apply mask so that bits 4-7 are 0
 		 * Also enables bits 0-3 only if they're 1
 		 */
-		vu->ier = value & 0x0FU;
+		vu->ier = value_u8 & 0x0FU;
 		break;
 	case UART16550_FCR:
 		/*
 		 * The FCR_ENABLE bit must be '1' for the programming
 		 * of other FCR bits to be effective.
 		 */
-		if ((value & FCR_FIFOE) == 0U) {
-			vu->fcr = 0;
+		if ((value_u8 & FCR_FIFOE) == 0U) {
+			vu->fcr = 0U;
 		} else {
-			if ((value & FCR_RFR) != 0U) {
+			if ((value_u8 & FCR_RFR) != 0U) {
 				fifo_reset(&vu->rxfifo);
 			}
 
-			vu->fcr = value &
+			vu->fcr = value_u8 &
 				(FCR_FIFOE | FCR_DMA | FCR_RX_MASK);
 		}
 		break;
 	case UART16550_LCR:
-		vu->lcr = value;
+		vu->lcr = value_u8;
 		break;
 	case UART16550_MCR:
 		/* ignore modem */
@@ -202,7 +203,7 @@ static void vuart_write(__unused struct vm_io_handler *hdlr,
 		 */
 		break;
 	case UART16550_SCR:
-		vu->scr = value;
+		vu->scr = value_u8;
 		break;
 	default:
 		/*
@@ -218,14 +219,13 @@ done:
 	vuart_unlock(vu);
 }
 
-static uint32_t vuart_read(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, uint16_t offset_arg,
-		__unused size_t width)
+static uint32_t vuart_read(__unused struct vm_io_handler *hdlr, struct vm *vm,
+		uint16_t offset_arg, __unused size_t width)
 {
 	uint16_t offset = offset_arg;
-	char iir, reg;
-	uint8_t intr_reason;
+	uint8_t iir, reg, intr_reason;
 	struct vuart *vu = vm_vuart(vm);
+
 	offset -= vu->base;
 	vuart_lock(vu);
 	/*
@@ -295,7 +295,7 @@ static uint32_t vuart_read(__unused struct vm_io_handler *hdlr,
 done:
 	vuart_toggle_intr(vu);
 	vuart_unlock(vu);
-	return reg;
+	return (uint32_t)reg;
 }
 
 static void vuart_register_io_handler(struct vm *vm)
@@ -370,8 +370,8 @@ void *vuart_init(struct vm *vm)
 
 	/* Set baud rate*/
 	divisor = UART_CLOCK_RATE / BAUD_9600 / 16U;
-	vu->dll = divisor;
-	vu->dlh = divisor >> 16U;
+	vu->dll = (uint8_t)divisor;
+	vu->dlh = (uint8_t)(divisor >> 8U);
 
 	vu->active = false;
 	vu->base = COM1_BASE;
