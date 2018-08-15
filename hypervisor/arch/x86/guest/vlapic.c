@@ -1431,12 +1431,6 @@ vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg,
 	case APIC_OFFSET_TIMER_DCR:
 		*data = lapic->dcr_timer;
 		break;
-	case APIC_OFFSET_SELF_IPI:
-		/*
-		 * XXX generate a GP fault if vlapic is in x2apic mode
-		 */
-		*data = 0UL;
-		break;
 	case APIC_OFFSET_RRR:
 	default:
 		*data = 0UL;
@@ -1525,9 +1519,6 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset,
 
 	case APIC_OFFSET_ESR:
 		vlapic_esr_write_handler(vlapic);
-		break;
-
-	case APIC_OFFSET_SELF_IPI:
 		break;
 
 	case APIC_OFFSET_VER:
