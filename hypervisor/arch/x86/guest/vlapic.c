@@ -425,8 +425,6 @@ static void vlapic_set_tsc_deadline_msr(struct acrn_vlapic *vlapic,
 	del_timer(timer);
 
 	if (val != 0UL) {
-		struct vcpu_arch *arch = &vlapic->vcpu->arch_vcpu;
-
 		/* transfer guest tsc to host tsc */
 		val -= exec_vmread64(VMX_TSC_OFFSET_FULL);
 		timer->fire_tsc = val;
@@ -1739,14 +1737,6 @@ vlapic_apicv_batch_set_tmr(struct acrn_vlapic *vlapic)
 {
 	if (vlapic->ops.apicv_batch_set_tmr_fn != NULL) {
 		vlapic->ops.apicv_batch_set_tmr_fn(vlapic);
-	}
-}
-
-static void
-vlapic_apicv_set_tmr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
-{
-	if (vlapic->ops.apicv_set_tmr_fn != NULL) {
-		vlapic->ops.apicv_set_tmr_fn(vlapic, vector, level);
 	}
 }
 
