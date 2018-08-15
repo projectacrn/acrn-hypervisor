@@ -54,6 +54,7 @@
 #include "rpmb_backend.h"
 
 #define VIRTIO_RPMB_RINGSZ	64
+#define VIRTIO_RPMB_MAXSEGS	5
 #define ADDR_NOT_PRESENT	-2
 
 static int virtio_rpmb_debug = 1;
@@ -78,158 +79,14 @@ struct virtio_rpmb {
 struct virtio_rpmb_ioctl_cmd {
 	unsigned int cmd;	/*ioctl cmd*/
 	int result;		/* result for ioctl cmd*/
-};
-
-struct virtio_rpmb_ioc_seq_cmd {
-	struct virtio_rpmb_ioctl_cmd ioc;
-	union {
-		__u64 num_of_cmds;	/*num of  seq cmds*/
-		__u64 seq_base;
-	};
+	__u8 target;     /* for emmc */
+	__u8 reserved[3];   /* not used */
 };
 
 struct virtio_rpmb_ioc_seq_data {
-	struct virtio_rpmb_ioc_seq_cmd seq_cmd;
+	__u64 num_of_cmds;	/*num of  seq cmds*/
 	struct rpmb_cmd cmds[SEQ_CMD_MAX + 1];
 };
-
-/*
- * get start address of seq cmds.
- */
-static struct rpmb_cmd *
-virtio_rpmb_get_seq_cmds(void *pdata)
-{
-	struct virtio_rpmb_ioc_seq_data *seq_data;
-
-	if (!pdata) {
-		DPRINTF(("error, invalid args!\n"));
-		return NULL;
-	}
-
-	seq_data = (struct virtio_rpmb_ioc_seq_data *)pdata;
-
-	return (struct rpmb_cmd *)&seq_data->cmds[0];
-}
-
-/*
- * get address of seq specail frames.
- * index:	the index of cmds.
- */
-static struct rpmb_frame *
-virtio_rpmb_get_seq_frames(void *pdata, __u32 index)
-{
-	struct virtio_rpmb_ioc_seq_data *seq_data;
-	struct rpmb_frame *frames;
-	struct rpmb_cmd *cmds, *cmd;
-	__u64 ncmds;
-	__u32 offset = 0;
-	__u32 num = 0;
-
-	if (!pdata || index > SEQ_CMD_MAX) {
-		DPRINTF(("error, invalid args!\n"));
-		return NULL;
-	}
-
-	seq_data = (struct virtio_rpmb_ioc_seq_data *)pdata;
-
-	/* get number of cmds.*/
-	ncmds = seq_data->seq_cmd.num_of_cmds;
-	if (ncmds > SEQ_CMD_MAX) {
-		DPRINTF(("error, ncmds(%llu) > max\n", ncmds));
-		return NULL;
-	}
-
-	/* get start address of cmds.*/
-	cmds = virtio_rpmb_get_seq_cmds(pdata);
-	if (!cmds) {
-		DPRINTF(("fail to get seq cmds.\n"));
-		return NULL;
-	}
-
-	/* get start address of frames.*/
-	frames = (struct rpmb_frame *)&seq_data->cmds[ncmds + 1];
-	if (!frames) {
-		DPRINTF(("error, invalid frames ptr.\n"));
-		return NULL;
-	}
-
-	for (num = 0; num < index; num++) {
-		cmd = &cmds[num];
-		if (!cmd) {
-			DPRINTF(("error, invalid cmd ptr.\n"));
-			return NULL;
-		}
-		offset += cmd->nframes;
-	}
-
-	return (struct rpmb_frame *)&frames[offset];
-}
-
-/*
- * get address of all seq data.
- */
-static void *
-virtio_rpmb_get_seq_data(void *pdata)
-{
-	struct virtio_rpmb_ioc_seq_data *seq_data;
-
-	if (!pdata) {
-		DPRINTF(("error, invalid args!\n"));
-		return NULL;
-	}
-
-	seq_data = (struct virtio_rpmb_ioc_seq_data *)pdata;
-
-	return (void *)&seq_data->seq_cmd.seq_base;
-}
-
-/*
- * Address space is different between
- * SOS VBS-U and UOS kernel.
- * Update frames_ptr to current space.
- */
-static int
-virtio_rpmb_map_seq_frames(struct iovec *iov)
-{
-	struct virtio_rpmb_ioc_seq_cmd *seq_cmd = NULL;
-	struct rpmb_cmd *cmds, *cmd;
-	__u64 index;
-
-	if (!iov) {
-		DPRINTF(("error, invalid arg!\n"));
-		return -1;
-	}
-
-	seq_cmd = (struct virtio_rpmb_ioc_seq_cmd *)(iov->iov_base);
-	if (!seq_cmd || seq_cmd->num_of_cmds > SEQ_CMD_MAX) {
-		DPRINTF(("found invalid data.\n"));
-		return -1;
-	}
-
-	/* get start address of cmds.*/
-	cmds = virtio_rpmb_get_seq_cmds(iov->iov_base);
-	if (!cmds) {
-		DPRINTF(("fail to get seq cmds.\n"));
-		return -1;
-	}
-
-	/* set frames_ptr to VBS-U space.*/
-	for (index = 0; index < seq_cmd->num_of_cmds; index++) {
-		cmd = &cmds[index];
-		if (!cmd) {
-			DPRINTF(("error, invalid cmd ptr.\n"));
-			return -1;
-		}
-		/* set frames address.*/
-		cmd->frames = virtio_rpmb_get_seq_frames(iov->iov_base, index);
-		if (!cmd->frames) {
-			DPRINTF(("fail to get frames[%llu] ptr!\n", index));
-			return -1;
-		}
-	}
-
-	return 0;
-}
 
 static int
 rpmb_check_mac(__u8 *key, struct rpmb_frame *frames, __u8 frame_cnt)
@@ -501,34 +358,49 @@ rpmb_get_blocks(void)
 }
 
 static int
-virtio_rpmb_seq_handler(struct virtio_rpmb *rpmb, struct iovec *iov)
+virtio_rpmb_seq_handler(struct virtio_rpmb *rpmb, struct iovec *iov,
+	int n, int *tlen)
 {
 	struct virtio_rpmb_ioctl_cmd *ioc = NULL;
+	struct virtio_rpmb_ioc_seq_data *seq;
+	struct rpmb_frame *frames;
 	void *pdata;
 	int rc;
+	int i;
+	int size;
 
-	if (!rpmb || !iov) {
+	assert(n >= 3 && n <= VIRTIO_RPMB_MAXSEGS);
+	if (!rpmb || !iov || !tlen) {
 		DPRINTF(("found invalid args!!!\n"));
 		return -1;
 	}
 
-	/* update frames_ptr to curent space*/
-	rc = virtio_rpmb_map_seq_frames(iov);
-	if (rc) {
-		DPRINTF(("fail to map seq frames\n"));
-		return rc;
-	}
-
-	ioc = (struct virtio_rpmb_ioctl_cmd *)(iov->iov_base);
+	ioc = (struct virtio_rpmb_ioctl_cmd *)(iov[0].iov_base);
 	if (!ioc) {
 		DPRINTF(("error, get ioc is NULL!\n"));
 		return -1;
 	}
+	*tlen = iov[0].iov_len;
 
-	pdata = virtio_rpmb_get_seq_data(iov->iov_base);
-	if (!pdata) {
+	seq = (struct virtio_rpmb_ioc_seq_data *)(iov[1].iov_base);
+	if (!seq) {
 		DPRINTF(("fail to get seq data\n"));
 		return -1;
+	}
+	assert((n-2) == seq->num_of_cmds);
+	pdata = (void *)seq;
+
+	for (i = 2; i < n; i++) {
+		frames = (struct rpmb_frame *)(iov[i].iov_base);
+		if (!frames) {
+			DPRINTF(("fail to get frame data\n"));
+			return -1;
+		}
+
+		size = (seq->cmds[i-2].nframes ? :1)* sizeof(struct rpmb_frame);
+		assert(size == iov[i].iov_len);
+		seq->cmds[i-2].frames =
+			(struct rpmb_frame *)(iov[i].iov_base);
 	}
 
 	rc = rpmb_handler(ioc->cmd, pdata);
@@ -538,38 +410,34 @@ virtio_rpmb_seq_handler(struct virtio_rpmb *rpmb, struct iovec *iov)
 	return rc;
 }
 
+/*
+ * To meet the communication protocol from vRPMB FE,
+ * each time we will receive 3 or 4 or 5 iovs.
+ */
 static void
 virtio_rpmb_notify(void *base, struct virtio_vq_info *vq)
 {
-	struct iovec iov;
-	int len;
-	__u16 idx;
+	struct iovec iov[VIRTIO_RPMB_MAXSEGS + 1];
+	int n;
+	int tlen = 0;
+	uint16_t idx;
 	struct virtio_rpmb *rpmb = (struct virtio_rpmb *)base;
 	struct virtio_rpmb_ioctl_cmd *ioc;
 
 	while (vq_has_descs(vq)) {
-		vq_getchain(vq, &idx, &iov, 1, NULL);
+		n = vq_getchain(vq, &idx, iov, VIRTIO_RPMB_MAXSEGS, NULL);
+		assert(n >= 3 && n <= VIRTIO_RPMB_MAXSEGS);
 
-		ioc = (struct virtio_rpmb_ioctl_cmd *)(iov.iov_base);
+		ioc = (struct virtio_rpmb_ioctl_cmd *)(iov[0].iov_base);
+		assert(RPMB_IOC_SEQ_CMD == ioc->cmd);
 
-		switch (ioc->cmd) {
-		case RPMB_IOC_SEQ_CMD:
-			ioc->result = virtio_rpmb_seq_handler(rpmb, &iov);
-			break;
-
-		default:
-			DPRINTF(("found unsupported ioctl(%u)!\n", ioc->cmd));
-			ioc->result = -1;
-			break;
-		}
-
-		len = iov.iov_len;
-		assert(len > 0);
+		ioc->result = virtio_rpmb_seq_handler(rpmb, iov, n, &tlen);
+		assert(tlen > 0);
 
 		/*
 		 * Release this chain and handle more
 		 */
-		vq_relchain(vq, idx, len);
+		vq_relchain(vq, idx, tlen);
 	}
 	vq_endchains(vq, 1);	/* Generate interrupt if appropriate. */
 }
