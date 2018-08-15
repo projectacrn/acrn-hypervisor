@@ -663,6 +663,7 @@ static void activate_physical_ioapic(struct vm *vm,
 {
 	union ioapic_rte rte;
 	uint32_t phys_irq = entry->allocated_pirq;
+	uint32_t intr_mask;
 	bool is_lvl_trigger = false;
 
 	/* disable interrupt */
@@ -670,10 +671,7 @@ static void activate_physical_ioapic(struct vm *vm,
 
 	/* build physical IOAPIC RTE */
 	rte = ptdev_build_physical_rte(vm, entry);
-
-	/* set rte entry */
-	rte.full |= IOAPIC_RTE_INTMSET;
-	ioapic_set_rte(phys_irq, rte);
+	intr_mask = (rte.full & IOAPIC_RTE_INTMASK);
 
 	/* update irq trigger mode according to info in guest */
 	if ((rte.full & IOAPIC_RTE_TRGRMOD) == IOAPIC_RTE_TRGRLVL) {
@@ -681,8 +679,13 @@ static void activate_physical_ioapic(struct vm *vm,
 	}
 	set_irq_trigger_mode(phys_irq, is_lvl_trigger);
 
-	/* enable interrupt */
-	GSI_UNMASK_IRQ(phys_irq);
+	/* set rte entry when masked */
+	rte.full |= IOAPIC_RTE_INTMSET;
+	ioapic_set_rte(phys_irq, rte);
+
+	if (intr_mask == IOAPIC_RTE_INTMCLR) {
+		GSI_UNMASK_IRQ(phys_irq);
+	}
 }
 
 /* Main entry for PCI/Legacy device assignment with INTx, calling from vIOAPIC
@@ -691,7 +694,6 @@ static void activate_physical_ioapic(struct vm *vm,
 int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 {
 	struct ptdev_remapping_info *entry;
-	union ioapic_rte rte;
 	uint32_t phys_irq;
 	uint8_t phys_pin;
 	bool need_switch_vpin_src = false;
@@ -800,41 +802,7 @@ int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info)
 	        intx->vpin_src = info->vpin_src;
 	        intx->virt_pin = info->virt_pin;
 	}
-
-	if (is_entry_active(entry)
-		&& (intx->vpin_src
-			== PTDEV_VPIN_IOAPIC)) {
-		vioapic_get_rte(vm, intx->virt_pin, &rte);
-		if (rte.u.lo_32 == 0x10000U) {
-			/* disable interrupt */
-			GSI_MASK_IRQ(phys_irq);
-			dev_dbg(ACRN_DBG_IRQ,
-				"IOAPIC pin=%hhu pirq=%u deassigned ",
-				phys_pin, phys_irq);
-			dev_dbg(ACRN_DBG_IRQ, "from vm%d vIOAPIC vpin=%d",
-				entry->vm->vm_id,
-			        intx->virt_pin);
-			goto END;
-		} else {
-			/*update rte*/
-			activate_physical_ioapic(vm, entry);
-		}
-	} else if (is_entry_active(entry)
-		&& (intx->vpin_src == PTDEV_VPIN_PIC)) {
-		/* only update here
-		 * deactive vPIC entry when IOAPIC take it over
-		 */
-		activate_physical_ioapic(vm, entry);
-	} else {
-		activate_physical_ioapic(vm, entry);
-
-		dev_dbg(ACRN_DBG_IRQ,
-			"IOAPIC pin=%hhu pirq=%u assigned to vm%d %s vpin=%d",
-			phys_pin, phys_irq, entry->vm->vm_id,
-		        intx->vpin_src == PTDEV_VPIN_PIC ?
-			"vPIC" : "vIOAPIC",
-		        intx->virt_pin);
-	}
+	activate_physical_ioapic(vm, entry);
 END:
 	return 0;
 }
