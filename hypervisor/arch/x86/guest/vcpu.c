@@ -611,7 +611,7 @@ void vcpu_dumpreg(void *data)
 	}
 }
 #else
-void vcpu_dumpreg(__unused struct vcpu *vcpu)
+void vcpu_dumpreg(__unused void *data)
 {
 	return;
 }
