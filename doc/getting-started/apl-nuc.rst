@@ -340,30 +340,6 @@ Set up Reference UOS
       :name: gsg-successful-boot
 
 
-Device Manager memory allocation mechanism
-==========================================
-
-The ACRN Device Manager (DM) virtual memory allocation uses the HugeTLB mechanism.
-(You can read more about `HugeTLB in the linux kernel <https://linuxgazette.net/155/krishnakumar.html>`_
-for more information about how this mechanism works.)
-
-For hugeTLB to work, you'll need to reserve huge pages:
-
-  - For a (large) 1GB huge page reservation, add ``hugepagesz=1G hugepages=reserved_pg_num``
-    (for example, ``hugepagesz=1G hugepages=4``) to the SOS cmdline in
-    ``acrn.conf`` (for EFI)
-
-  - For a (smaller) 2MB huge page reservation, after the SOS starts up, run the
-    command::
-
-       echo reserved_pg_num > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-
-  .. note::
-     You can use 2M reserving method to do reservation for 1G page size, but it
-     may fail.  For an EFI platform, you may skip 1G page reservation
-     by using a 2M page, but make sure your huge page reservation size is
-     large enough for your usage.
-
 Build ACRN from Source
 **********************
 
