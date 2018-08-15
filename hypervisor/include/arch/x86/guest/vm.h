@@ -166,6 +166,7 @@ struct vm {
 #ifdef CONFIG_PARTITION_MODE
 	struct vm_description	*vm_desc;
 	struct vpci vpci;
+	uint8_t vrtc_offset;
 #endif
 };
 
@@ -275,5 +276,7 @@ struct pcpu_vm_desc_mapping {
 	bool is_bsp;
 };
 extern const struct pcpu_vm_desc_mapping pcpu_vm_desc_map[];
+
+void vrtc_init(struct vm *vm);
 #endif
 #endif /* VM_H_ */

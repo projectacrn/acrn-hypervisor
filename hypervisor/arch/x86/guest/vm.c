@@ -205,7 +205,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	if (vm_desc->vm_vuart) {
 		vm->vuart = vuart_init(vm);
 	}
-
+	vrtc_init(vm);
 	vpci_init(vm);
 #endif
 
