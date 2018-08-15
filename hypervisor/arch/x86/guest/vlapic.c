@@ -1319,23 +1319,12 @@ vlapic_svr_write_handler(struct acrn_vlapic *vlapic)
 }
 
 static int
-vlapic_read(struct acrn_vlapic *vlapic, int mmio_access, uint32_t offset_arg,
+vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg,
 		uint64_t *data)
 {
 	struct lapic_regs *lapic = vlapic->apic_page;
 	uint32_t i;
 	uint32_t offset = offset_arg;
-
-	if (mmio_access == 0) {
-		/*
-		 * XXX Generate GP fault for MSR accesses in xAPIC mode
-		 */
-		dev_dbg(ACRN_DBG_LAPIC,
-			"x2APIC MSR read from offset %#x in xAPIC mode",
-			offset);
-		*data = 0UL;
-		goto done;
-	}
 
 	if (offset > sizeof(*lapic)) {
 		*data = 0UL;
@@ -1460,7 +1449,7 @@ done:
 }
 
 static int
-vlapic_write(struct acrn_vlapic *vlapic, int mmio_access, uint32_t offset,
+vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset,
 		uint64_t data)
 {
 	struct lapic_regs *lapic = vlapic->apic_page;
@@ -1475,16 +1464,6 @@ vlapic_write(struct acrn_vlapic *vlapic, int mmio_access, uint32_t offset,
 		offset, data);
 
 	if (offset > sizeof(*lapic)) {
-		return 0;
-	}
-
-	/*
-	 * XXX Generate GP fault for MSR accesses in xAPIC mode
-	 */
-	if (mmio_access == 0) {
-		dev_dbg(ACRN_DBG_LAPIC,
-			"x2APIC MSR write of %#lx to offset %#x in xAPIC mode",
-			data, offset);
 		return 0;
 	}
 
@@ -1920,32 +1899,6 @@ vlapic_intr_msi(struct vm *vm, uint64_t addr, uint64_t msg)
 	return 0;
 }
 
-static bool
-is_x2apic_msr(uint32_t msr)
-{
-	if ((msr >= 0x800U) && (msr <= 0xBFFU)) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
-static uint32_t
-x2apic_msr_to_regoff(uint32_t msr)
-{
-	return (msr - 0x800U) << 4U;
-}
-
-bool
-is_vlapic_msr(uint32_t msr)
-{
-	if (is_x2apic_msr(msr) || (msr == MSR_IA32_APIC_BASE)) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
 /* interrupt context */
 static int vlapic_timer_expired(void *data)
 {
@@ -1972,7 +1925,6 @@ int
 vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval)
 {
 	int error = 0;
-	uint32_t offset;
 	struct acrn_vlapic *vlapic;
 
 	dev_dbg(ACRN_DBG_LAPIC, "cpu[%hu] rdmsr: %x", vcpu->vcpu_id, msr);
@@ -1988,8 +1940,8 @@ vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval)
 		break;
 
 	default:
-		offset = x2apic_msr_to_regoff(msr);
-		error = vlapic_read(vlapic, 0, offset, rval);
+		dev_dbg(ACRN_DBG_LAPIC,
+			"Invalid vmx vapic msr 0x%x access\n", msr);
 		break;
 	}
 
@@ -2000,7 +1952,6 @@ int
 vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval)
 {
 	int error = 0;
-	uint32_t offset;
 	struct acrn_vlapic *vlapic;
 
 	vlapic = vcpu->arch_vcpu.vlapic;
@@ -2015,8 +1966,8 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval)
 		break;
 
 	default:
-		offset = x2apic_msr_to_regoff(msr);
-		error = vlapic_write(vlapic, 0, offset, wval);
+		dev_dbg(ACRN_DBG_LAPIC,
+			"Invalid vmx vapic msr 0x%x access\n", msr);
 		break;
 	}
 
@@ -2044,7 +1995,7 @@ vlapic_write_mmio_reg(struct vcpu *vcpu, uint64_t gpa, uint64_t wval,
 	}
 
 	vlapic = vcpu->arch_vcpu.vlapic;
-	error = vlapic_write(vlapic, 1, off, wval);
+	error = vlapic_write(vlapic, off, wval);
 	return error;
 }
 
@@ -2069,7 +2020,7 @@ vlapic_read_mmio_reg(struct vcpu *vcpu, uint64_t gpa, uint64_t *rval,
 	}
 
 	vlapic = vcpu->arch_vcpu.vlapic;
-	error = vlapic_read(vlapic, 1, off, rval);
+	error = vlapic_read(vlapic, off, rval);
 	return error;
 }
 
@@ -2408,10 +2359,10 @@ int apic_access_vmexit_handler(struct vcpu *vcpu)
 
 	if (access_type == 1UL) {
 		if (emulate_instruction(vcpu) == 0) {
-			err = vlapic_write(vlapic, 1, offset, mmio->value);
+			err = vlapic_write(vlapic, offset, mmio->value);
 		}
 	} else if (access_type == 0UL) {
-		err = vlapic_read(vlapic, 1, offset, &mmio->value);
+		err = vlapic_read(vlapic, offset, &mmio->value);
 		if (err < 0) {
 			return err;
 		}
