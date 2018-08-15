@@ -111,7 +111,6 @@ static void io_instr_dest_handler(struct io_request *io_req)
 	if (pio_req->direction == REQUEST_READ) {
 		pio_req->value = 0xFFFFFFFFU;
 	}
-	io_req->processed = REQ_STATE_COMPLETE;
 }
 #endif
 
