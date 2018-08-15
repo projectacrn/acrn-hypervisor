@@ -58,7 +58,7 @@ complete this setup.
    this feature to have more control over when the updates happen. Use this command
    to disable the autoupdate feature:
 
-   .. code-block:: none
+   .. code-block:: console
 
       # swupd autoupdate --disable
 
@@ -66,13 +66,13 @@ complete this setup.
    on your hardware, use this command to upgrade Clear Linux
    to version 23690 (or newer):
 
-   .. code-block:: none
+   .. code-block:: console
 
       # swupd update -m 23690     # or newer version
 
 #. Use the ``swupd bundle-add`` command and add these Clear Linux bundles:
 
-   .. code-block:: none
+   .. code-block:: console
 
       # swupd bundle-add vim network-basic service-os kernel-pk \
         desktop openssh-server
@@ -109,7 +109,7 @@ partition. Follow these steps:
 
 #. Mount the EFI partition and verify you have the following files:
 
-   .. code-block:: none
+   .. code-block:: console
 
       # mount /dev/sda1 /mnt
 
@@ -136,7 +136,7 @@ partition. Follow these steps:
 #. Put the ``acrn.efi`` hypervisor application (included in the Clear
    Linux release) on the EFI partition with:
 
-   .. code-block:: none
+   .. code-block:: console
 
       # mkdir /mnt/EFI/acrn
       # cp /usr/lib/acrn/acrn.efi /mnt/EFI/acrn/
@@ -148,7 +148,7 @@ partition. Follow these steps:
    Service OS bootloader. Use the ``efibootmgr`` utility to configure the EFI
    firmware and add a new entry that loads the ACRN hypervisor.
 
-   .. code-block:: none
+   .. code-block:: console
 
       # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN"
 
@@ -179,7 +179,7 @@ partition. Follow these steps:
    Here is a more complete example of how to configure the EFI firmware to load the ACRN
    hypervisor and set these parameters.
 
-   .. code-block:: none
+   .. code-block:: console
 
       # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN NUC Hypervisor" \
             -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=disabled"
@@ -209,7 +209,7 @@ partition. Follow these steps:
 
    On the platform, copy the ``acrn.conf`` file to the EFI partition we mounted earlier:
 
-   .. code-block:: none
+   .. code-block:: console
 
       # cp /usr/share/acrn/samples/nuc/acrn.conf /mnt/loader/entries/
 
@@ -226,10 +226,25 @@ partition. Follow these steps:
 #. Add a timeout period for Systemd-Boot to wait, otherwise it will not
    present the boot menu and will always boot the base Clear Linux
 
-   .. code-block:: none
+   .. code-block:: console
 
       # clr-boot-manager set-timeout 20
       # clr-boot-manager update
+
+#. Add new user
+
+   .. code-block:: console
+
+      # useradd cl-sos
+      # passwd cl-sos
+      # usermod -G wheel -a cl-sos
+
+#. Enable weston service
+
+   .. code-block:: console
+
+      # systemctl enable weston@cl-sos
+      # systemctl start weston@cl-sos
 
 #. Reboot and select "The ACRN Service OS" to boot, as shown below:
 
@@ -288,14 +303,14 @@ Set up Reference UOS
 
 #. Uncompress it:
 
-   .. code-block:: none
+   .. code-block:: console
 
       # unxz clear-23690-kvm.img.xz
 
 #. Deploy the UOS kernel modules to UOS virtual disk image (note: you'll need to use
    the same **standard** image version number noted in step 1 above):
 
-   .. code-block:: none
+   .. code-block:: console
 
       # losetup -f -P --show /root/clear-23690-kvm.img
       # mount /dev/loop0p3 /mnt
@@ -327,7 +342,7 @@ Set up Reference UOS
    By default, the script is located in the ``/usr/share/acrn/samples/nuc/``
    directory. You can edit it there, and then run it to launch the User OS:
 
-   .. code-block:: none
+   .. code-block:: console
 
       # cd /usr/share/acrn/samples/nuc/
       # ./launch_uos.sh
@@ -340,29 +355,74 @@ Set up Reference UOS
       :name: gsg-successful-boot
 
 
-Device Manager memory allocation mechanism
+USB Device Sharing
 ==========================================
 
-The ACRN Device Manager (DM) virtual memory allocation uses the HugeTLB mechanism.
-(You can read more about `HugeTLB in the linux kernel <https://linuxgazette.net/155/krishnakumar.html>`_
-for more information about how this mechanism works.)
+The ACRN hypervisor supports USB device sharing.  Suppose you have
+two keyboards and mice connected to your device, one keyboard and 
+mouse set for the SOS, and the other set for the UOS.  
 
-For hugeTLB to work, you'll need to reserve huge pages:
+1. Boot the SOS and plug in the two keyboards and two mice
+   into four available USB ports on the device (the NUC we recommend has 4 USB ports).
 
-  - For a (large) 1GB huge page reservation, add ``hugepagesz=1G hugepages=reserved_pg_num``
-    (for example, ``hugepagesz=1G hugepages=4``) to the SOS cmdline in
-    ``acrn.conf`` (for EFI)
+#. Run ``dmesg`` to find the kernel messages logging the enumeration
+   of the connected keyboards and mice.  For example::
 
-  - For a (smaller) 2MB huge page reservation, after the SOS starts up, run the
-    command::
+  .. code-block:: console
 
-       echo reserved_pg_num > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+      # dmesg
+      [  560.469525] usb 1-4: Product: USB Optical Mouse
+      [  560.469600] usb 1-4: Manufacturer: Logitech
+      [  560.472238] input: Logitech USB Optical Mouse as /devices/pci0000:00/0000:00:14.0/usb1/1-4/1- 4:1.0/0003:046D:C018.0005/input/input8
+      [  560.472673] hid-generic 0003:046D:C018.0005: input,hidraw1: USB HID v1.11 Mouse [Logitech USB Optical Mouse] on usb-   0000:00:14.0-4/input0
+      [  561.743470] usb 1-3: USB disconnect, device number 6
+      [  565.504044] usb 1-3: new low-speed USB device number 8 using xhci_hcd
+      [  565.639056] usb 1-3: New USB device found, idVendor=03f0, idProduct=0024
+      [  565.639167] usb 1-3: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+      [  565.639282] usb 1-3: Product: HP Basic USB Keyboard
+      [  565.639362] usb 1-3: Manufacturer: CHICONY
+      [  565.644013] input: CHICONY HP Basic USB Keyboard as /devices/pci0000:00/0000:00:14.0/usb1/1-3/1- 3:1.0/0003:03F0:0024.0006/input/input9
+      [  565.696139] hid-generic 0003:03F0:0024.0006: input,hidraw0: USB HID v1.10 Keyboard [CHICONY HP Basic USB Keyboard] on usb-0000:00:14.0-3/input0
+      [ 1000.587071] usb 1-2: new low-speed USB device number 9 using xhci_hcd
+      [ 1000.719824] usb 1-2: New USB device found, idVendor=046d, idProduct=c315
+      [ 1000.719934] usb 1-2: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+      [ 1000.720048] usb 1-2: Product: Logitech USB Keyboard
+      [ 1000.720143] usb 1-2: Manufacturer: Logitech
+      [ 1000.724286] input: Logitech Logitech USB Keyboard as /devices/pci0000:00/0000:00:14.0/usb1/1-2/1-2:1.0/0003:046D:C315.0007/input/input10
+      [ 1000.776433] hid-generic 0003:046D:C315.0007: input,hidraw2: USB HID v1.10 Keyboard [Logitech Logitech USB Keyboard] on usb-0000:00:14.0-2/input0
+      [ 1008.387071] usb 1-1: new low-speed USB device number 10 using xhci_hcd
+      [ 1008.516312] usb 1-1: New USB device found, idVendor=046d, idProduct=c077
+      [ 1008.516421] usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+      [ 1008.516536] usb 1-1: Product: USB Optical Mouse
+      [ 1008.516610] usb 1-1: Manufacturer: Logitech
+      [ 1008.519459] input: Logitech USB Optical Mouse as /devices/pci0000:00/0000:00:14.0/usb1/1-1/1-        1:1.0/0003:046D:C077.0008/input/input11
+      [ 1008.519714] hid-generic 0003:046D:C077.0008: input,hidraw3: USB HID v1.11 Mouse [Logitech USB Optical Mouse] on usb-   0000:00:14.0-1/input0
 
-  .. note::
-     You can use 2M reserving method to do reservation for 1G page size, but it
-     may fail.  For an EFI platform, you may skip 1G page reservation
-     by using a 2M page, but make sure your huge page reservation size is
-     large enough for your usage.
+#. From ``dmesg`` info, you can easly find specific USB device info connected to certain port by pluging in 
+   USB device one by one 
+   for example::
+    
+      mouse #1: usb 1-1
+      keyboard #1: usb 1-2 
+      keyboard #2: usb 1-3
+      mouse #2: usb 1-4
+
+#. Let's assign keyboard #1 and mouse #1 to the UOS. Use a text editor to modify
+   ``/usr/share/acrn/samples/nuc/launch_uos.sh`` and add the line (using
+   the keyboard and mouse identified in your dmesg output)::
+
+      -s 9, xhci, 1-1:1-2 \
+
+   Save the file, exit the editor, and run the ``sync`` command to ensure
+   any pending write buffers are written to disk. 
+  
+   In our example, keyboard #2 and mouse #2 will be used to interact with the Service OS (SOS) 
+   and the keyboard #1 and mouse #1 will be used for the User OS (UOS).
+   
+   .. note::
+      You may have to unplug and plug the keyboard and mouse back in (same connectors!)
+      assigned to the UOS after launching the UOS.  
+
 
 Build ACRN from Source
 **********************
@@ -383,7 +443,7 @@ each with their own way to install development tools:
 * On a Clear Linux development system, install the ``os-clr-on-clr`` bundle to get
   the necessary tools:
 
-  .. code-block:: none
+  .. code-block:: console
 
      $ sudo swupd bundle-add os-clr-on-clr
      $ sudo swupd bundle-add python3-basic
@@ -391,7 +451,7 @@ each with their own way to install development tools:
 
 * On a Ubuntu/Debian development system:
 
-  .. code-block:: none
+  .. code-block:: console
 
      $ sudo apt install gcc \
           git \
@@ -416,7 +476,7 @@ each with their own way to install development tools:
 
 * On a Fedora/Redhat development system:
 
-  .. code-block:: none
+  .. code-block:: console
 
      $ sudo dnf install gcc \
           git \
@@ -439,7 +499,7 @@ each with their own way to install development tools:
 
 * On a CentOS development system:
 
-  .. code-block:: none
+  .. code-block:: console
 
      $ sudo yum install gcc \
              git \
@@ -477,7 +537,7 @@ repository has three main components in it:
 
 You can build all these components in one go as follows:
 
-.. code-block:: none
+.. code-block:: console
 
    $ git clone https://github.com/projectacrn/acrn-hypervisor
    $ cd acrn-hypervisor
@@ -496,7 +556,7 @@ and are using it as the current working directory.
 
 #. Build the ACRN hypervisor.
 
-   .. code-block:: none
+   .. code-block:: console
 
       $ cd hypervisor
       $ make PLATFORM=uefi
@@ -505,7 +565,7 @@ and are using it as the current working directory.
 
 #. Build the ACRN device model (included in the acrn-hypervisor repo):
 
-   .. code-block:: none
+   .. code-block:: console
 
       $ cd ../devicemodel
       $ make
@@ -514,7 +574,7 @@ and are using it as the current working directory.
 
 #. Build the ACRN tools (included in the acrn-hypervisor repo):
 
-   .. code-block:: none
+   .. code-block:: console
 
       $ cd ../tools
       $ for d in */; do make -C "$d"; done
@@ -537,7 +597,7 @@ based on the platform selected, assuming that you are under the top-level
 directory of acrn-hypervisor. The configuration file, named ``.config``, can be
 found under the target folder of your build.
 
-   .. code-block:: none
+   .. code-block:: console
 
       $ cd hypervisor
       $ make defconfig PLATFORM=uefi
@@ -556,7 +616,7 @@ are under the top-level directory of acrn-hypervisor, generate a default
 configuration file for UEFI, allow you to modify some configurations and build
 the hypervisor using the updated ``.config``.
 
-   .. code-block:: none
+   .. code-block:: console
 
       $ cd hypervisor
       $ make defconfig PLATFORM=uefi
@@ -568,7 +628,7 @@ the hypervisor using the updated ``.config``.
 
 Refer to the help on menuconfig for a detailed guide on the interface.
 
-   .. code-block:: none
+   .. code-block:: console
 
       $ pydoc3 menuconfig
 
@@ -580,7 +640,7 @@ Currently the ACRN hypervisor looks for default configurations under
 specified platform. The following steps allow you to create a defconfig for
 another platform based on a current one.
 
-   .. code-block:: none
+   .. code-block:: console
 
       $ cd hypervisor
       $ make defconfig PLATFORM=uefi
@@ -591,6 +651,6 @@ another platform based on a current one.
 Then you can re-use that configuration by passing the name (``xxx`` in the
 example above) to 'PLATFORM=':
 
-   .. code-block:: none
+   .. code-block:: console
 
       $ make defconfig PLATFORM=xxx
