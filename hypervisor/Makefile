@@ -177,6 +177,7 @@ C_SRCS += dm/vioapic.c
 ifeq ($(CONFIG_PARTITION_MODE),y)
 C_SRCS += $(wildcard dm/vpci/*.c)
 C_SRCS += $(wildcard partition/*.c)
+C_SRCS += dm/vrtc.c
 endif
 
 C_SRCS += bsp/$(CONFIG_PLATFORM)/vm_description.c
