@@ -1194,6 +1194,8 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 					target_vcpu->vcpu_id,
 					target_vcpu->vm->vm_id);
 			schedule_vcpu(target_vcpu);
+		} else if (mode == APIC_DELMODE_SMI) {
+			pr_info("vmx vapic: SMI IPI do not support\n");
 		} else {
 			pr_err("Unhandled icrlo write with mode %u\n", mode);
 		}
