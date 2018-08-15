@@ -421,13 +421,6 @@ void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
 	*timestamp_ptr = ((uint64_t)tsh << 32) | tsl;         \
 }
 
-/* Define variable(s) required to save / restore architecture interrupt state.
- * These variable(s) are used in conjunction with the ESAL_AR_INT_ALL_DISABLE()
- * and ESAL_AR_INT_ALL_RESTORE() macros to hold any data that must be preserved
- * in order to allow these macros to function correctly.
- */
-#define         CPU_INT_CONTROL_VARS                uint64_t    cpu_int_value
-
 /* Macro to save rflags register */
 #define CPU_RFLAGS_SAVE(rflags_ptr)                     \
 {                                                       \
@@ -453,9 +446,9 @@ void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
  *        defined below and CPU_INT_CONTROL_VARS defined above.
  */
 
-#define CPU_INT_ALL_DISABLE()                       \
+#define CPU_INT_ALL_DISABLE(p_rflags)               \
 {                                                   \
-	CPU_RFLAGS_SAVE(&cpu_int_value);            \
+	CPU_RFLAGS_SAVE(p_rflags);	             \
 	CPU_IRQ_DISABLE();                          \
 }
 
@@ -466,9 +459,9 @@ void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
  * NOTE:  This macro is used in conjunction with CPU_INT_ALL_DISABLE
  *        and CPU_INT_CONTROL_VARS defined above.
  */
-#define CPU_INT_ALL_RESTORE()                       \
+#define CPU_INT_ALL_RESTORE(rflags)                 \
 {                                                   \
-	CPU_RFLAGS_RESTORE(cpu_int_value);          \
+	CPU_RFLAGS_RESTORE(rflags);                 \
 }
 
 /*

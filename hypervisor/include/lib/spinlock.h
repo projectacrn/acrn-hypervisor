@@ -63,18 +63,15 @@ static inline void spinlock_release(spinlock_t *lock)
 
 #endif	/* ASSEMBLER */
 
-#define spinlock_rflags unsigned long cpu_int_value
-
-#define spinlock_irqsave_obtain(l)			\
+#define spinlock_irqsave_obtain(lock, p_rflags)		\
 	do {						\
-		CPU_INT_ALL_DISABLE();			\
-		spinlock_obtain(l);			\
+		CPU_INT_ALL_DISABLE(p_rflags);		\
+		spinlock_obtain(lock);			\
 	} while (0)
 
-#define spinlock_irqrestore_release(l)			\
+#define spinlock_irqrestore_release(lock, rflags)	\
 	do {						\
-		spinlock_release(l);			\
-		CPU_INT_ALL_RESTORE();			\
+		spinlock_release(lock);			\
+		CPU_INT_ALL_RESTORE(rflags);		\
 	} while (0)
-
 #endif /* SPINLOCK_H */
