@@ -54,8 +54,11 @@ Usage
 *****
 
 - The server is launched automatically at boot, and the client is configured in
-  ``core_pattern``. The content of ``core_pattern`` is configured as
-  ``usercrash_c`` while booting up:
+  ``core_pattern`` or ``coredump-wrapper``. In ``prepare.service``, it will
+  check the content of ``/proc/sys/kernel/core_pattern``. If there is
+  ``coredump-wrapper``, which means that ``core_pattern`` has been set in
+  ``systemd``, no need to do it again. Otherwise, the content should be
+  changed by:
 
 .. code-block:: none
 

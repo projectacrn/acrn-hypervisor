@@ -160,8 +160,8 @@ usercrash
 
 The ``usercrash`` is a tool to get the crash info of the crashing process in
 userspace. It works in Client/Server model. Server is autostarted, and client is
-configured in ``core_pattern``, which will be triggered once crash occurs in
-userspace.
+configured in ``core_pattern`` or ``coredump-wrapper``, which will be
+triggered once crash occurs in userspace.
 For more detail on ``usercrash``, please refer :ref:`usercrash_doc`.
 
 .. _`telemetrics-client`: https://github.com/clearlinux/telemetrics-client

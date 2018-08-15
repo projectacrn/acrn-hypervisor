@@ -5,7 +5,12 @@
 #
 
 # modify the core_pattern
-echo "|/usr/bin/usercrash_c %p %e %s" > /proc/sys/kernel/core_pattern
+core_pattern_conf="/proc/sys/kernel/core_pattern"
+
+grep -q "coredump-wrapper" $core_pattern_conf
+if [ "$?" -ne "0" ] then
+	echo "|/usr/bin/usercrash_c %p %e %s" > $core_pattern_conf
+fi
 
 default_conf="/usr/share/defaults/telemetrics/telemetrics.conf"
 user_conf="/etc/telemetrics/telemetrics.conf"
