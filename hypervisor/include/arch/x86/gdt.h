@@ -79,146 +79,13 @@
 #define TSS_AVAIL  (9U)
 
 /*
- * Definition of an 8 byte code segment descriptor.
- */
-union code_segment_descriptor {
-	uint64_t value;
-	struct {
-		union {
-			uint32_t value;
-			struct {
-				uint32_t limit_15_0:16;
-				uint32_t base_15_0:16;
-			} bits;
-		} low32;
-		union {
-			uint32_t value;
-			struct {
-				uint32_t base_23_16:8;
-				uint32_t accessed:1;
-				uint32_t readeable:1;
-				uint32_t conforming:1;
-				uint32_t bit11_set:1;
-				uint32_t bit12_set:1;
-				uint32_t dpl:2;
-				uint32_t present:1;
-				uint32_t limit_19_16:4;
-				uint32_t avl:1;
-				uint32_t x64flag:1;
-				uint32_t dflt:1;
-				uint32_t granularity:1;
-				uint32_t base_31_24:8;
-			} bits;
-		} high32;
-	} fields;
-} __aligned(8);
-
-/*
- * Definition of an 8 byte data segment descriptor.
- */
-union data_segment_descriptor {
-	uint64_t value;
-	struct {
-		union {
-			uint32_t value;
-			struct {
-				uint32_t limit_15_0:16;
-				uint32_t base_15_0:16;
-			} bits;
-		} low32;
-		union {
-			uint32_t value;
-			struct {
-				uint32_t base_23_16:8;
-				uint32_t accessed:1;
-				uint32_t writeable:1;
-				uint32_t expansion:1;
-				uint32_t bit11_clr:1;
-				uint32_t bit12_set:1;
-				uint32_t dpl:2;
-				uint32_t present:1;
-				uint32_t limit_19_16:4;
-				uint32_t avl:1;
-				uint32_t rsvd_clr:1;
-				uint32_t big:1;
-				uint32_t granularity:1;
-				uint32_t base_31_24:8;
-			} bits;
-		} high32;
-	} fields;
-} __aligned(8);
-
-/*
- * Definition of an 8 byte system segment descriptor.
- */
-union system_segment_descriptor {
-	uint64_t value;
-	struct {
-		union {
-			uint32_t value;
-			struct {
-				uint32_t limit_15_0:16;
-				uint32_t base_15_0:16;
-			} bits;
-		} low32;
-		union {
-			uint32_t value;
-			struct {
-				uint32_t base_23_16:8;
-				uint32_t type:4;
-				uint32_t bit12_clr:1;
-				uint32_t dpl:2;
-				uint32_t present:1;
-				uint32_t limit_19_16:4;
-				uint32_t rsvd_1:1;
-				uint32_t rsvd_2_clr:1;
-				uint32_t rsvd_3:1;
-				uint32_t granularity:1;
-				uint32_t base_31_24:8;
-			} bits;
-		} high32;
-	} fields;
-} __aligned(8);
-
-/*
  * Definition of 16 byte TSS and LDT selectors.
  */
-union tss_64_descriptor {
-	uint64_t value;
-	struct {
-		union {
-			uint32_t value;
-			struct {
-				uint32_t limit_15_0:16;
-				uint32_t base_15_0:16;
-			} bits;
-		} low32;
-		union {
-			uint32_t value;
-			struct {
-				uint32_t base_23_16:8;
-				uint32_t type:4;
-				uint32_t bit12_clr:1;
-				uint32_t dpl:2;
-				uint32_t present:1;
-				uint32_t limit_19_16:4;
-				uint32_t rsvd_1:1;
-				uint32_t rsvd_2_clr:1;
-				uint32_t rsvd_3:1;
-				uint32_t granularity:1;
-				uint32_t base_31_24:8;
-			} bits;
-		} high32;
+struct tss_64_descriptor {
+		uint32_t low32_value;
+		uint32_t high32_value;
 		uint32_t base_addr_63_32;
-		union {
-			uint32_t value;
-			struct {
-				uint32_t rsvd_7_0:8;
-				uint32_t bits_12_8_clr:4;
-				uint32_t rsvd_31_13:20;
-			} bits;
-		} offset_12;
-	} fields;
+		uint32_t offset_12;
 } __aligned(8);
 
 /*****************************************************************************
@@ -233,9 +100,9 @@ union tss_64_descriptor {
 struct host_gdt {
 	uint64_t rsvd;
 
-	union code_segment_descriptor host_gdt_code_descriptor;
-	union data_segment_descriptor host_gdt_data_descriptor;
-	union tss_64_descriptor host_gdt_tss_descriptors;
+	uint64_t code_segment_descriptor;
+	uint64_t data_segment_descriptor;
+	struct tss_64_descriptor host_gdt_tss_descriptors;
 } __aligned(8);
 
 /*****************************************************************************

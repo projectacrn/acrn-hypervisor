@@ -6,7 +6,7 @@
 
 #include <hypervisor.h>
 
-static void set_tss_desc(union tss_64_descriptor *desc,
+static void set_tss_desc(struct tss_64_descriptor *desc,
 		uint64_t tss, size_t tss_limit, uint32_t type)
 {
 	uint32_t u1, u2, u3;
@@ -18,9 +18,9 @@ static void set_tss_desc(union tss_64_descriptor *desc,
 	u3 = (tss_lo_32 & 0x00FF0000U) >> 16U;
 
 
-	desc->fields.low32.value = u1 | (tss_limit & 0xFFFFU);
-	desc->fields.base_addr_63_32 = tss_hi_32;
-	desc->fields.high32.value = u2 | (type << 8U) | 0x8000U | u3;
+	desc->low32_value = u1 | (tss_limit & 0xFFFFU);
+	desc->base_addr_63_32 = tss_hi_32;
+	desc->high32_value = u2 | (type << 8U) | 0x8000U | u3;
 }
 
 void load_gdtr_and_tr(void)
@@ -32,9 +32,9 @@ void load_gdtr_and_tr(void)
 	/* first entry is not used */
 	gdt->rsvd = 0xAAAAAAAAAAAAAAAAUL;
 	/* ring 0 code sel descriptor */
-	gdt->host_gdt_code_descriptor.value = 0x00Af9b000000ffffUL;
+	gdt->code_segment_descriptor = 0x00Af9b000000ffffUL;
 	/* ring 0 data sel descriptor */
-	gdt->host_gdt_data_descriptor.value = 0x00cf93000000ffffUL;
+	gdt->data_segment_descriptor = 0x00cf93000000ffffUL;
 
 	tss->ist1 = (uint64_t)get_cpu_var(mc_stack) + CONFIG_STACK_SIZE;
 	tss->ist2 = (uint64_t)get_cpu_var(df_stack) + CONFIG_STACK_SIZE;
