@@ -93,17 +93,16 @@ static inline uint32_t
 ioapic_read_reg32(const void *ioapic_base, const uint32_t offset)
 {
 	uint32_t v;
+	uint64_t rflags;
 
-	spinlock_rflags;
-
-	spinlock_irqsave_obtain(&ioapic_lock);
+	spinlock_irqsave_obtain(&ioapic_lock, &rflags);
 
 	/* Write IOREGSEL */
 	mmio_write32(offset, (void *)ioapic_base + IOAPIC_REGSEL);
 	/* Read  IOWIN */
 	v = mmio_read32((void *)ioapic_base + IOAPIC_WINDOW);
 
-	spinlock_irqrestore_release(&ioapic_lock);
+	spinlock_irqrestore_release(&ioapic_lock, rflags);
 	return v;
 }
 
@@ -111,16 +110,16 @@ static inline void
 ioapic_write_reg32(const void *ioapic_base,
 		const uint32_t offset, const uint32_t value)
 {
-	spinlock_rflags;
+	uint64_t rflags;
 
-	spinlock_irqsave_obtain(&ioapic_lock);
+	spinlock_irqsave_obtain(&ioapic_lock, &rflags);
 
 	/* Write IOREGSEL */
 	mmio_write32(offset, (void *)ioapic_base + IOAPIC_REGSEL);
 	/* Write IOWIN */
 	mmio_write32(value, (void *)ioapic_base + IOAPIC_WINDOW);
 
-	spinlock_irqrestore_release(&ioapic_lock);
+	spinlock_irqrestore_release(&ioapic_lock, rflags);
 }
 
 static inline uint64_t

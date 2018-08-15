@@ -67,20 +67,19 @@ static uint32_t find_available_vector()
  */
 uint32_t irq_mark_used(uint32_t irq)
 {
+	uint64_t rflags;
 	struct irq_desc *desc;
-
-	spinlock_rflags;
 
 	if (irq >= NR_IRQS) {
 		return IRQ_INVALID;
 	}
 
 	desc = &irq_desc_array[irq];
-	spinlock_irqsave_obtain(&desc->irq_lock);
+	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
 	if (desc->used == IRQ_NOT_ASSIGNED) {
 		desc->used = IRQ_ASSIGNED;
 	}
-	spinlock_irqrestore_release(&desc->irq_lock);
+	spinlock_irqrestore_release(&desc->irq_lock, rflags);
 	return irq;
 }
 
@@ -91,19 +90,19 @@ uint32_t irq_mark_used(uint32_t irq)
 static uint32_t alloc_irq(void)
 {
 	uint32_t i;
+	uint64_t rflags;
 	struct irq_desc *desc;
 
-	spinlock_rflags;
 
 	for (i = irq_gsi_num(); i < NR_IRQS; i++) {
 		desc = &irq_desc_array[i];
-		spinlock_irqsave_obtain(&desc->irq_lock);
+		spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
 		if (desc->used == IRQ_NOT_ASSIGNED) {
 			desc->used = IRQ_ASSIGNED;
-			spinlock_irqrestore_release(&desc->irq_lock);
+			spinlock_irqrestore_release(&desc->irq_lock, rflags);
 			break;
 		}
-		spinlock_irqrestore_release(&desc->irq_lock);
+		spinlock_irqrestore_release(&desc->irq_lock, rflags);
 	}
 	return (i == NR_IRQS) ? IRQ_INVALID : i;
 }
@@ -121,15 +120,14 @@ static void local_irq_desc_set_vector(uint32_t irq, uint32_t vr)
 /* lock version of set vector */
 static void irq_desc_set_vector(uint32_t irq, uint32_t vr)
 {
+	uint64_t rflags;
 	struct irq_desc *desc;
 
-	spinlock_rflags;
-
 	desc = &irq_desc_array[irq];
-	spinlock_irqsave_obtain(&desc->irq_lock);
+	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
 	vector_to_irq[vr] = irq;
 	desc->vector = vr;
-	spinlock_irqrestore_release(&desc->irq_lock);
+	spinlock_irqrestore_release(&desc->irq_lock, rflags);
 }
 
 /* used with holding irq_lock outside */
@@ -173,7 +171,7 @@ int32_t request_irq(uint32_t irq_arg,
 {
 	struct irq_desc *desc;
 	uint32_t irq = irq_arg, vector;
-	spinlock_rflags;
+	uint64_t rflags;
 
 	/* ======================================================
 	 * This is low level ISR handler registering function
@@ -237,7 +235,7 @@ int32_t request_irq(uint32_t irq_arg,
 	}
 
 	if (desc->action == NULL) {
-		spinlock_irqsave_obtain(&desc->irq_lock);
+		spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
 		desc->priv_data = priv_data;
 		desc->action = action_fn;
 
@@ -246,7 +244,7 @@ int32_t request_irq(uint32_t irq_arg,
 		 */
 		(void)strcpy_s(desc->name, 32U, name);
 
-		spinlock_irqrestore_release(&desc->irq_lock);
+		spinlock_irqrestore_release(&desc->irq_lock, rflags);
 	} else {
 		pr_err("%s: request irq(%u) vr(%u) for %s failed,\
 			already requested", __func__,
@@ -264,9 +262,9 @@ int32_t request_irq(uint32_t irq_arg,
 uint32_t irq_desc_alloc_vector(uint32_t irq)
 {
 	uint32_t vr = VECTOR_INVALID;
+	uint64_t rflags;
 	struct irq_desc *desc;
 
-	spinlock_rflags;
 
 	/* irq should be always available at this time */
 	if (irq >= NR_IRQS) {
@@ -274,7 +272,7 @@ uint32_t irq_desc_alloc_vector(uint32_t irq)
 	}
 
 	desc = &irq_desc_array[irq];
-	spinlock_irqsave_obtain(&desc->irq_lock);
+	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
 	if (desc->vector != VECTOR_INVALID) {
 		/* already allocated a vector */
 		goto OUT;
@@ -288,15 +286,14 @@ uint32_t irq_desc_alloc_vector(uint32_t irq)
 	}
 	local_irq_desc_set_vector(irq, vr);
 OUT:
-	spinlock_irqrestore_release(&desc->irq_lock);
+	spinlock_irqrestore_release(&desc->irq_lock, rflags);
 	return vr;
 }
 
 void irq_desc_try_free_vector(uint32_t irq)
 {
+	uint64_t rflags;
 	struct irq_desc *desc;
-
-	spinlock_rflags;
 
 	/* legacy irq's vector is reserved and should not be freed */
 	if ((irq >= NR_IRQS) || (irq < NR_LEGACY_IRQ)) {
@@ -304,12 +301,12 @@ void irq_desc_try_free_vector(uint32_t irq)
 	}
 
 	desc = &irq_desc_array[irq];
-	spinlock_irqsave_obtain(&desc->irq_lock);
+	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
 	if (desc->action == NULL) {
 		_irq_desc_free_vector(irq);
 	}
 
-	spinlock_irqrestore_release(&desc->irq_lock);
+	spinlock_irqrestore_release(&desc->irq_lock, rflags);
 
 }
 
@@ -421,8 +418,8 @@ void partition_mode_dispatch_interrupt(struct intr_excp_ctx *ctx)
 int handle_level_interrupt_common(struct irq_desc *desc,
 			__unused void *handler_data)
 {
+	uint64_t rflags;
 	irq_action_t action = desc->action;
-	spinlock_rflags;
 
 	/*
 	 * give other Core a try to return without hold irq_lock
@@ -434,7 +431,7 @@ int handle_level_interrupt_common(struct irq_desc *desc,
 		return 0;
 	}
 
-	spinlock_irqsave_obtain(&desc->irq_lock);
+	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
 	desc->state = IRQ_DESC_IN_PROCESS;
 
 	/* mask iopaic pin */
@@ -454,15 +451,15 @@ int handle_level_interrupt_common(struct irq_desc *desc,
 	}
 
 	desc->state = IRQ_DESC_PENDING;
-	spinlock_irqrestore_release(&desc->irq_lock);
+	spinlock_irqrestore_release(&desc->irq_lock, rflags);
 
 	return 0;
 }
 
 int common_handler_edge(struct irq_desc *desc, __unused void *handler_data)
 {
+	uint64_t rflags;
 	irq_action_t action = desc->action;
-	spinlock_rflags;
 
 	/*
 	 * give other Core a try to return without hold irq_lock
@@ -474,7 +471,7 @@ int common_handler_edge(struct irq_desc *desc, __unused void *handler_data)
 		return 0;
 	}
 
-	spinlock_irqsave_obtain(&desc->irq_lock);
+	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
 	desc->state = IRQ_DESC_IN_PROCESS;
 
 	/* Send EOI to LAPIC/IOAPIC IRR */
@@ -485,15 +482,15 @@ int common_handler_edge(struct irq_desc *desc, __unused void *handler_data)
  	}
 
 	desc->state = IRQ_DESC_PENDING;
-	spinlock_irqrestore_release(&desc->irq_lock);
+	spinlock_irqrestore_release(&desc->irq_lock, rflags);
 
 	return 0;
 }
 
 int common_dev_handler_level(struct irq_desc *desc, __unused void *handler_data)
 {
+	uint64_t rflags;
 	irq_action_t action = desc->action;
-	spinlock_rflags;
 
 	/*
 	 * give other Core a try to return without hold irq_lock
@@ -505,7 +502,7 @@ int common_dev_handler_level(struct irq_desc *desc, __unused void *handler_data)
 		return 0;
 	}
 
-	spinlock_irqsave_obtain(&desc->irq_lock);
+	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
 	desc->state = IRQ_DESC_IN_PROCESS;
 
 	/* mask iopaic pin */
@@ -521,7 +518,7 @@ int common_dev_handler_level(struct irq_desc *desc, __unused void *handler_data)
  	}
 
 	desc->state = IRQ_DESC_PENDING;
-	spinlock_irqrestore_release(&desc->irq_lock);
+	spinlock_irqrestore_release(&desc->irq_lock, rflags);
 
 	/* we did not unmask irq until guest EOI the vector */
 	return 0;
@@ -544,25 +541,23 @@ int quick_handler_nolock(struct irq_desc *desc, __unused void *handler_data)
 
 void update_irq_handler(uint32_t irq, irq_handler_t func)
 {
+	uint64_t rflags;
 	struct irq_desc *desc;
-
-	spinlock_rflags;
 
 	if (irq >= NR_IRQS) {
 		return;
 	}
 
 	desc = &irq_desc_array[irq];
-	spinlock_irqsave_obtain(&desc->irq_lock);
+	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
 	desc->irq_handler = func;
-	spinlock_irqrestore_release(&desc->irq_lock);
+	spinlock_irqrestore_release(&desc->irq_lock, rflags);
 }
 
 void free_irq(uint32_t irq)
 {
+	uint64_t rflags;
 	struct irq_desc *desc;
-
-	spinlock_rflags;
 
 	if (irq >= NR_IRQS) {
 		return;
@@ -572,13 +567,13 @@ void free_irq(uint32_t irq)
 	dev_dbg(ACRN_DBG_IRQ, "[%s] %s irq%d vr:0x%x",
 		__func__, desc->name, irq, irq_to_vector(irq));
 
-	spinlock_irqsave_obtain(&desc->irq_lock);
+	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
 
 	desc->action = NULL;
 	desc->priv_data = NULL;
 	memset(desc->name, '\0', 32U);
 
-	spinlock_irqrestore_release(&desc->irq_lock);
+	spinlock_irqrestore_release(&desc->irq_lock, rflags);
 	irq_desc_try_free_vector(desc->irq);
 }
 

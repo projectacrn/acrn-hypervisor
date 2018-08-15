@@ -47,13 +47,13 @@ static int do_copy_earlylog(struct shared_buf *dst_sbuf,
 {
 	uint32_t buf_size, valid_size;
 	uint32_t cur_tail;
-	spinlock_rflags;
+	uint64_t rflags;
 
 	if ((src_sbuf->ele_size != dst_sbuf->ele_size)
 		&& (src_sbuf->ele_num != dst_sbuf->ele_num)) {
-		spinlock_irqsave_obtain(&(logmsg.lock));
+		spinlock_irqsave_obtain(&(logmsg.lock), &rflags);
 		printf("Error to copy early hvlog: size mismatch\n");
-		spinlock_irqrestore_release(&(logmsg.lock));
+		spinlock_irqrestore_release(&(logmsg.lock), rflags);
 		return -EINVAL;
 	}
 
@@ -87,12 +87,11 @@ void init_logmsg(__unused uint32_t mem_size, uint32_t flags)
 void do_logmsg(uint32_t severity, const char *fmt, ...)
 {
 	va_list args;
-	uint64_t timestamp;
+	uint64_t timestamp, rflags;
 	uint16_t pcpu_id;
 	bool do_console_log;
 	bool do_mem_log;
 	char *buffer;
-	spinlock_rflags;
 
 	do_console_log = (((logmsg.flags & LOG_FLAG_STDOUT) != 0U) &&
 					(severity <= console_loglevel));
@@ -129,12 +128,12 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 
 	/* Check if flags specify to output to stdout */
 	if (do_console_log) {
-		spinlock_irqsave_obtain(&(logmsg.lock));
+		spinlock_irqsave_obtain(&(logmsg.lock), &rflags);
 
 		/* Send buffer to stdout */
 		printf("%s\n\r", buffer);
 
-		spinlock_irqrestore_release(&(logmsg.lock));
+		spinlock_irqrestore_release(&(logmsg.lock), rflags);
 	}
 
 	/* Check if flags specify to output to memory */
@@ -169,11 +168,11 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 
 void print_logmsg_buffer(uint16_t pcpu_id)
 {
-	spinlock_rflags;
 	char buffer[LOG_ENTRY_SIZE + 1];
 	int read_cnt;
 	struct shared_buf **sbuf;
 	int is_earlylog = 0;
+	uint64_t rflags;
 
 	if (pcpu_id >= phys_cpu_num) {
 		return;
@@ -187,13 +186,13 @@ void print_logmsg_buffer(uint16_t pcpu_id)
 				&per_cpu(sbuf, pcpu_id)[ACRN_HVLOG];
 	}
 
-	spinlock_irqsave_obtain(&(logmsg.lock));
+	spinlock_irqsave_obtain(&(logmsg.lock), &rflags);
 	if ((*sbuf) != NULL) {
 		printf("CPU%hu: head: 0x%x, tail: 0x%x %s\n\r",
 			pcpu_id, (*sbuf)->head, (*sbuf)->tail,
 			(is_earlylog != 0) ? "[earlylog]" : "");
 	}
-	spinlock_irqrestore_release(&(logmsg.lock));
+	spinlock_irqrestore_release(&(logmsg.lock), rflags);
 
 	do {
 		uint32_t idx;
@@ -212,8 +211,8 @@ void print_logmsg_buffer(uint16_t pcpu_id)
 		idx = (read_cnt < LOG_ENTRY_SIZE) ? read_cnt : LOG_ENTRY_SIZE;
 		buffer[idx] = '\0';
 
-		spinlock_irqsave_obtain(&(logmsg.lock));
+		spinlock_irqsave_obtain(&(logmsg.lock), &rflags);
 		printf("%s\n\r", buffer);
-		spinlock_irqrestore_release(&(logmsg.lock));
+		spinlock_irqrestore_release(&(logmsg.lock), rflags);
 	} while (read_cnt > 0);
 }
