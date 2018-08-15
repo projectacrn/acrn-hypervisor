@@ -231,6 +231,21 @@ partition. Follow these steps:
       # clr-boot-manager set-timeout 20
       # clr-boot-manager update
 
+#. Add new user
+
+   .. code-block:: console
+
+      # useradd cl-sos
+      # passwd cl-sos
+      # usermod -G wheel -a cl-sos
+
+#. Enable weston service
+
+   .. code-block:: console
+
+      # systemctl enable weston@cl-sos
+      # systemctl start weston@cl-sos
+      
 #. Reboot and select "The ACRN Service OS" to boot, as shown below:
 
 
