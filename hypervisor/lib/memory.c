@@ -366,7 +366,7 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen_arg)
 		ASSERT(false);
 	}
 
-	/*same memory block, no need to copy*/
+	/* same memory block, no need to copy */
 	if (d == s) {
 		return d;
 	}
@@ -374,28 +374,30 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen_arg)
 	dest8 = (uint8_t *)d;
 	src8 = (uint8_t *)s;
 
-        /*small data block*/
-        if (slen < 8U) {
-                while (slen != 0U) {
-                        *dest8 = *src8;
-                        dest8++;
-                        src8++;
-                        slen--;
-                }
+	/* small data block */
+	if (slen < 8U) {
+		while (slen != 0U) {
+			*dest8 = *src8;
+			dest8++;
+			src8++;
+			slen--;
+		}
 
 		return d;
 	}
 
-        /*make sure 8bytes-aligned for at least one addr.*/
-        if ((!MEM_ALIGNED_CHECK(src8, 8)) && (!MEM_ALIGNED_CHECK(dest8, 8))) {
-                for (; (slen != 0U) && ((((uint64_t)src8) & 7UL) != 0UL); slen--) {
-                        *dest8 = *src8;
-                        dest8++;
-                        src8++;
-                }
-        }
+	/* make sure 8bytes-aligned for at least one addr. */
+	if ((!MEM_ALIGNED_CHECK(src8, 8UL)) &&
+			(!MEM_ALIGNED_CHECK(dest8, 8UL))) {
+		for (; (slen != 0U) && ((((uint64_t)src8) & 7UL) != 0UL);
+				slen--) {
+			*dest8 = *src8;
+			dest8++;
+			src8++;
+		}
+	}
 
-	/*copy main data blocks, with rep prefix*/
+	/* copy main data blocks, with rep prefix */
 	if (slen > 8U) {
 		uint32_t ecx;
 
@@ -407,13 +409,13 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen_arg)
 		slen = slen % 8U;
 	}
 
-        /*tail bytes*/
-        while (slen != 0U) {
-                *dest8 = *src8;
-                dest8++;
-                src8++;
-                slen--;
-        }
+	/* tail bytes */
+	while (slen != 0U) {
+		*dest8 = *src8;
+		dest8++;
+		src8++;
+		slen--;
+	}
 
 	return d;
 }
@@ -430,14 +432,14 @@ void *memset(void *base, uint8_t v, size_t n)
 		return NULL;
 	}
 
-        /*do the few bytes to get uint64_t alignment*/
-        count = n;
-        for (; (count != 0U) && (((uint64_t)dest_p & 7UL) != 0UL); count--) {
-                *dest_p = v;
-                dest_p++;
-        }
+	/* do the few bytes to get uint64_t alignment */
+	count = n;
+	for (; (count != 0U) && (((uint64_t)dest_p & 7UL) != 0UL); count--) {
+		*dest_p = v;
+		dest_p++;
+	}
 
-	/*64-bit mode*/
+	/* 64-bit mode */
 	n_q = count >> 3U;
 	asm volatile("cld ; rep ; stosq ; movl %3,%%ecx ; rep ; stosb"
 				: "+c"(n_q), "+D"(dest_p)

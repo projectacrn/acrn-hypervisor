@@ -32,10 +32,10 @@
 
 struct fifo {
 	char *buf;
-	int rindex;	/* index to read from */
-	int windex;	/* index to write to */
-	int num;	/* number of characters in the fifo */
-	int size;	/* size of the fifo */
+	uint32_t rindex;	/* index to read from */
+	uint32_t windex;	/* index to write to */
+	uint32_t num;		/* number of characters in the fifo */
+	uint32_t size;		/* size of the fifo */
 };
 
 struct vuart {
@@ -52,7 +52,7 @@ struct vuart {
 
 	struct fifo rxfifo;
 	struct fifo txfifo;
-	int base;
+	uint16_t base;
 
 	bool thre_int_pending;	/* THRE interrupt pending */
 	bool active;
