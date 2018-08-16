@@ -7,6 +7,10 @@
 #ifndef COMMON_IRQ_H
 #define COMMON_IRQ_H
 
+#define IRQF_NONE	(0U)
+#define IRQF_LEVEL	(1U << 1U)	/* 1: level trigger; 0: edge trigger */
+#define IRQF_PT		(1U << 2U)	/* 1: for passthrough dev */
+
 enum irq_mode {
 	IRQ_PULSE,
 	IRQ_ASSERT,
@@ -26,20 +30,19 @@ struct irq_desc {
 	enum irq_use_state used;	/* this irq have assigned to device */
 	uint32_t vector;	/* assigned vector */
 
-	int (*irq_handler)(struct irq_desc *irq_desc, void *handler_data);
-				/* callback for irq flow handling */
 	irq_action_t action;	/* callback registered from component */
 	void *priv_data;	/* irq_action private data */
+	uint32_t flags;		/* flags for trigger mode/ptdev */
 
 	spinlock_t lock;
 };
 
 int32_t request_irq(uint32_t irq,
 		    irq_action_t action_fn,
-		    void *priv_data);
+		    void *priv_data,
+		    uint32_t flags);
 
 void free_irq(uint32_t irq);
 
-typedef int (*irq_handler_t)(struct irq_desc *desc, void *handler_data);
-void update_irq_handler(uint32_t irq, irq_handler_t func);
+void set_irq_trigger_mode(uint32_t irq, bool is_level_trigger);
 #endif /* COMMON_IRQ_H */

@@ -219,9 +219,9 @@ static void ioapic_set_routing(uint32_t gsi, uint32_t vr)
 	ioapic_set_rte_entry(addr, gsi_table[gsi].pin, rte);
 
 	if ((rte.full & IOAPIC_RTE_TRGRMOD) != 0UL) {
-		update_irq_handler(gsi, handle_level_interrupt_common);
+		set_irq_trigger_mode(gsi, true);
 	} else {
-		update_irq_handler(gsi, common_handler_edge);
+		set_irq_trigger_mode(gsi, false);
 	}
 
 	dev_dbg(ACRN_DBG_IRQ, "GSI: irq:%d pin:%hhu rte:%lx",

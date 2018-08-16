@@ -24,7 +24,7 @@ static void run_timer(struct hv_timer *timer)
 }
 
 /* run in interrupt context */
-static int tsc_deadline_handler(__unused int irq, __unused void *data)
+static int tsc_deadline_handler(__unused uint32_t irq, __unused void *data)
 {
 	fire_softirq(SOFTIRQ_TIMER);
 	return 0;
@@ -107,21 +107,6 @@ void del_timer(struct hv_timer *timer)
 	}
 }
 
-static int request_timer_irq(irq_action_t func)
-{
-	int32_t retval;
-
-	retval = request_irq(TIMER_IRQ, func, NULL);
-	if (retval >= 0) {
-		update_irq_handler(TIMER_IRQ, quick_handler_nolock);
-	} else {
-		pr_err("Failed to add timer isr");
-		return -ENODEV;
-	}
-
-	return 0;
-}
-
 static void init_percpu_timer(uint16_t pcpu_id)
 {
 	struct per_cpu_timers *cpu_timer;
@@ -186,14 +171,16 @@ static void timer_softirq(uint16_t pcpu_id)
 void timer_init(void)
 {
 	uint16_t pcpu_id = get_cpu_id();
+	int32_t retval;
 
 	init_percpu_timer(pcpu_id);
 
 	if (pcpu_id == BOOT_CPU_ID) {
 		register_softirq(SOFTIRQ_TIMER, timer_softirq);
 
-		if (request_timer_irq((irq_action_t)tsc_deadline_handler)
-				< 0) {
+		retval = request_irq(TIMER_IRQ, (irq_action_t)tsc_deadline_handler,
+				     NULL, IRQF_NONE);
+		if (retval < 0) {
 			pr_err("Timer setup failed");
 			return;
 		}
