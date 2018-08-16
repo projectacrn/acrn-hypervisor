@@ -8,7 +8,7 @@
 
 static uint32_t notification_irq = IRQ_INVALID;
 
-static volatile uint64_t smp_call_mask = 0UL;
+static uint64_t smp_call_mask = 0UL;
 
 /* run in interrupt context */
 static int kick_notification(__unused uint32_t irq, __unused void *data)
@@ -97,12 +97,4 @@ void setup_notification(void)
 
 	dev_dbg(ACRN_DBG_PTIRQ, "NOTIFY: irq[%d] setup vector %x",
 		notification_irq, irq_to_vector(notification_irq));
-}
-
-static void cleanup_notification(void)
-{
-	if (notification_irq != IRQ_INVALID) {
-		free_irq(notification_irq);
-	}
-	notification_irq = IRQ_INVALID;
 }

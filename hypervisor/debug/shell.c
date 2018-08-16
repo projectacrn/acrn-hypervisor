@@ -916,7 +916,10 @@ static int shell_trigger_crash(int argc, char **argv)
 	(void)argv;
 	snprintf(str, MAX_STR_SIZE, "trigger crash, divide by 0 ...\r\n");
 	shell_puts(str);
-	snprintf(str, MAX_STR_SIZE, "%d\r", 1/0);
+
+	asm("movl $0x1, %eax");
+	asm("movl $0x0, %ecx");
+	asm("idiv  %ecx");
 
 	return 0;
 }

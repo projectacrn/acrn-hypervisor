@@ -391,21 +391,6 @@ void setup_ioapic_irq(void)
 	ASSERT(nr_gsi <= NR_MAX_GSI, "GSI table overflow");
 }
 
-static void dump_ioapic(void)
-{
-	uint32_t irq;
-
-	for (irq = 0U; irq < nr_gsi; irq++) {
-		void *addr = gsi_table[irq].addr;
-		uint8_t pin = gsi_table[irq].pin;
-		union ioapic_rte rte;
-
-		ioapic_get_rte_entry(addr, pin, &rte);
-		dev_dbg(ACRN_DBG_IRQ, "DUMP: irq:%d pin:%hhu rte:%lx",
-			irq, pin, rte.full);
-	}
-}
-
 void suspend_ioapic(void)
 {
 	uint8_t ioapic_id, ioapic_pin;
