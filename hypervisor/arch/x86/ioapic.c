@@ -371,8 +371,8 @@ void setup_ioapic_irq(void)
 			 * for legacy irq, reserved vector and never free
 			 */
 			if (gsi < NR_LEGACY_IRQ) {
-				vr = irq_desc_alloc_vector(gsi);
-				if (vr > NR_MAX_VECTOR) {
+				vr = alloc_irq_vector(gsi);
+				if (vr == VECTOR_INVALID) {
 					pr_err("failed to alloc VR");
 					gsi++;
 					continue;

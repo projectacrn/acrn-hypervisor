@@ -75,6 +75,9 @@ typedef void (*spurious_handler_t)(uint32_t vector);
 extern spurious_handler_t spurious_handler;
 
 uint32_t alloc_irq_num(uint32_t req_irq);
+uint32_t alloc_irq_vector(uint32_t irq);
+
+uint32_t irq_to_vector(uint32_t irq);
 
 /*
  * Some MSI message definitions

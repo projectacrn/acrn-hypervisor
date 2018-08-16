@@ -34,11 +34,6 @@ struct irq_desc {
 	spinlock_t lock;
 };
 
-uint32_t irq_desc_alloc_vector(uint32_t irq);
-void irq_desc_try_free_vector(uint32_t irq);
-
-uint32_t irq_to_vector(uint32_t irq);
-
 int32_t request_irq(uint32_t irq,
 		    irq_action_t action_fn,
 		    void *priv_data);
