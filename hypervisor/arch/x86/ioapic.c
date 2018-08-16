@@ -334,7 +334,7 @@ ioapic_nr_pins(void *ioapic_base)
 	return nr_pins;
 }
 
-void setup_ioapic_irq(void)
+void setup_ioapic_irqs(void)
 {
 	uint8_t ioapic_id;
 	uint32_t gsi = 0U;

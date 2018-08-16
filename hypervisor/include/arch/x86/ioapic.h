@@ -19,7 +19,7 @@
 #define GSI_MASK_IRQ(irq) irq_gsi_mask_unmask((irq), true)
 #define GSI_UNMASK_IRQ(irq) irq_gsi_mask_unmask((irq), false)
 
-void setup_ioapic_irq(void);
+void setup_ioapic_irqs(void);
 
 bool irq_is_gsi(uint32_t irq);
 uint32_t irq_gsi_num(void);
