@@ -12,6 +12,7 @@
 #include <stdbool.h>
 
 #include "ioc.h"
+#include "monitor.h"
 
 /*
  * Debug printf
@@ -645,16 +646,66 @@ cbc_process_wakeup_reason(struct cbc_pkt *pkt)
 	 */
 	pkt->reason = reason;
 
-	if (pkt->uos_active)
+	if (pkt->uos_active) {
 		reason |= CBC_WK_RSN_SOC;
-	else
+
+		/* Unset RTC bit if UOS sends active heartbeat */
+		reason &= ~CBC_WK_RSN_RTC;
+	} else {
 		reason &= ~CBC_WK_RSN_SOC;
+
+		/*
+		 * Set RTC bit when bootup or resuming reason is
+		 * RTC wakeup reason, and hold the bit until UOS
+		 * sends active heartbeat.
+		 */
+		reason |= pkt->ioc->boot_reason & CBC_WK_RSN_RTC;
+	}
 
 	/* Update periodic wakeup reason */
 	cbc_update_wakeup_reason(pkt, reason);
 
 	/* Send wakeup reason */
 	cbc_send_pkt(pkt);
+}
+
+/*
+ * CBC update RTC timer
+ */
+static void
+cbc_update_rtc_timer(uint16_t value, uint8_t unit)
+{
+	time_t timestamp = 0;
+
+	if (!value) {
+		DPRINTF("%s", "ioc sets RTC timer failure, timer is 0\r\n");
+		return;
+	}
+
+	switch (unit) {
+	case CBC_RTC_TIMER_U_SEC:
+		timestamp += value;
+		break;
+	case CBC_RTC_TIMER_U_MIN:
+		timestamp += value * 60;
+		break;
+	case CBC_RTC_TIMER_U_HOUR:
+		timestamp += value * 60 * 60;
+		break;
+	case CBC_RTC_TIMER_U_DAY:
+		timestamp += value * 60 * 60 * 24;
+		break;
+	case CBC_RTC_TIMER_U_WEEK:
+		timestamp += value * 60 * 60 * 24 * 7;
+		break;
+	default:
+		DPRINTF("ioc sets RTC timer failure, invalid timer unit:%d\r\n",
+				unit);
+		return;
+	}
+
+	/* Call RTC interface of VM monitor */
+	set_wakeup_timer(timestamp);
 }
 
 /*
@@ -668,11 +719,15 @@ cbc_process_heartbeat(struct cbc_pkt *pkt)
 
 	cmd = pkt->req->buf[CBC_SRV_POS];
 	payload = pkt->req->buf + CBC_PAYLOAD_POS;
-	if (cmd != CBC_SC_HB) {
-		DPRINTF("Only handle heartbeat cmd, the cmd:%d\r\n", cmd);
-		return;
+	if (cmd == CBC_SC_HB) {
+		cbc_update_heartbeat(pkt, payload[0], payload[1]);
+	} else if (cmd == CBC_SC_RTC) {
+		uint16_t timer = payload[0] | payload[1] << 8;
+
+		cbc_update_rtc_timer(timer, payload[2]);
 	}
-	cbc_update_heartbeat(pkt, payload[0], payload[1]);
+
+	DPRINTF("ioc discards the lifecycle rx cmd: %d\r\n", cmd);
 }
 
 /*
@@ -901,6 +956,7 @@ cbc_tx_handler(struct cbc_pkt *pkt)
 		pkt->uos_active = true;
 	} else if (pkt->req->rtype == CBC_REQ_T_UOS_INACTIVE) {
 		cbc_update_wakeup_reason(pkt, CBC_WK_RSN_SHUTDOWN);
+
 		cbc_send_pkt(pkt);
 
 		/* Disable UOS active flag */
