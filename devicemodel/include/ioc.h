@@ -181,6 +181,7 @@ enum cbc_system_control_command {
 	CBC_SC_HB	= 2,	/* Heartbeat */
 	CBC_SC_BOOTSEL	= 3,	/* Boot selector */
 	CBC_SC_SPRS_HB	= 4,	/* Suppress heartbeat check */
+	CBC_SC_RTC 	= 5,	/* Set RTC wakeup timer */
 	CBC_SC_MAX
 };
 
@@ -218,6 +219,27 @@ enum cbc_sus_stat_action {
 	CBC_SS_REBOOT2,	/* Ignore twice then reboot */
 	CBC_SS_REFRESH,	/* Ram refresh, S3 */
 	CBC_SS_MAX
+};
+
+/*
+ * CBC system control - RTC: command type.
+ * RTC Message
+ * +------------------+-------------+-------------+-------------+
+ * | SystemControlCMD | Timer value | Timer value | Granularity |
+ * | SVC-Header: 5    | Bits 0...7  | Bits 8...15 | 0 - seconds |
+ * |                  |             |             | 1 - minutes |
+ * |                  |             |             | 2 - hours   |
+ * |                  |             |             | 3 - days    |
+ * |                  |             |             | 4 - week    |
+ * |        8b        |     8b      |     8b      |     8b      |
+ * +------------------+-------------+-------------+-------------+
+ */
+enum cbc_rtc_timer_unit {
+	CBC_RTC_TIMER_U_SEC,
+	CBC_RTC_TIMER_U_MIN,
+	CBC_RTC_TIMER_U_HOUR,
+	CBC_RTC_TIMER_U_DAY,
+	CBC_RTC_TIMER_U_WEEK,
 };
 
 /*
