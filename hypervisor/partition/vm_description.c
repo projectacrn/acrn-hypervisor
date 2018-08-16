@@ -16,7 +16,7 @@
 #define VM1_NUM_CPUS    2U
 
 /* Logical CPU IDs assigned to this VM */
-int VM1_CPUS[VM1_NUM_CPUS] = {0U, 2U};
+uint16_t VM1_CPUS[VM1_NUM_CPUS] = {0U, 2U};
 
 /*********************/
 /* VIRTUAL MACHINE 1 */
@@ -26,7 +26,7 @@ int VM1_CPUS[VM1_NUM_CPUS] = {0U, 2U};
 #define VM2_NUM_CPUS    2U
 
 /* Logical CPU IDs assigned with this VM */
-int VM2_CPUS[VM2_NUM_CPUS] = {3U, 1U};
+uint16_t VM2_CPUS[VM2_NUM_CPUS] = {3U, 1U};
 
 static struct vpci_vdev_array vpci_vdev_array1 = {
 	.num_pci_vdev = 2,
@@ -133,12 +133,13 @@ const struct vm_description_array vm_desc_partition = {
 				.vm_pcpu_ids = &VM1_CPUS[0],
 				.vm_id = 1U,
 				.start_hpa = 0x100000000UL,
-				.mem_size = 0x80000000UL, /* uses contiguous memory from host */
+				.mem_size = 0x20000000UL, /* uses contiguous memory from host */
 				.vm_vuart = true,
 				.bootargs = "root=/dev/sda rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
 						console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
 						consoleblank=0 tsc=reliable",
 				.vpci_vdev_array = &vpci_vdev_array1,
+				.mptable = &mptable_vm1,
 			},
 
 			{
@@ -146,13 +147,14 @@ const struct vm_description_array vm_desc_partition = {
 				.vm_hw_num_cores = VM2_NUM_CPUS,
 				.vm_pcpu_ids = &VM2_CPUS[0],
 				.vm_id = 2U,
-				.start_hpa = 0x180000000UL,
-				.mem_size = 0x80000000UL, /* uses contiguous memory from host */
+				.start_hpa = 0x120000000UL,
+				.mem_size = 0x20000000UL, /* uses contiguous memory from host */
 				.vm_vuart = true,
 				.bootargs = "root=/dev/sda rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
 						console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
 						consoleblank=0 tsc=reliable",
 				.vpci_vdev_array = &vpci_vdev_array2,
+				.mptable = &mptable_vm2,
 			},
 		}
 };
@@ -183,7 +185,7 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 		.type     =  E820_TYPE_RAM
 	},
 
-	{	/* mptable */
+	{	/* mptable 65536U */
 		.baseaddr =  0xF0000U,
 		.length   =  0x10000U,
 		.type     =  E820_TYPE_RESERVED
@@ -191,13 +193,13 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 
 	{	/* mptable to lowmem */
 		.baseaddr =  0x100000U,
-		.length   =  0x7FF00000U,
+		.length   =  0x1FF00000U,
 		.type     =  E820_TYPE_RAM
 	},
 
 	{	/* lowmem to PCI hole */
-		.baseaddr =  0x80000000U,
-		.length   =  0x40000000U,
+		.baseaddr =  0x20000000U,
+		.length   =  0xa0000000U,
 		.type     =  E820_TYPE_RESERVED
 	},
 
