@@ -361,7 +361,7 @@ void setup_ioapic_irq(void)
 			}
 
 			/* pinned irq before use it */
-			if (irq_mark_used(gsi) >= NR_IRQS) {
+			if (alloc_irq_num(gsi) == IRQ_INVALID) {
 				pr_err("failed to alloc IRQ[%d]", gsi);
 				gsi++;
 				continue;
