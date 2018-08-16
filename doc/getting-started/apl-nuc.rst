@@ -235,16 +235,16 @@ partition. Follow these steps:
 
    .. code-block:: console
 
-      # useradd cl-sos
-      # passwd cl-sos
-      # usermod -G wheel -a cl-sos
+      # useradd cl_sos
+      # passwd cl_sos
+      # usermod -G wheel -a cl_sos
 
 #. Enable weston service
 
    .. code-block:: console
 
-      # systemctl enable weston@cl-sos
-      # systemctl start weston@cl-sos
+      # systemctl enable weston@cl_sos
+      # systemctl start weston@cl_sos
       
 #. Reboot and select "The ACRN Service OS" to boot, as shown below:
 
