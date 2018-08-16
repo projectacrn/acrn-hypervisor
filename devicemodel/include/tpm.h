@@ -39,4 +39,14 @@ enum {
 #define TPM_CRB_REG_SIZE ((CRB_DATA_BUFFER) - (TPM_CRB_MMIO_ADDR))
 #define TPM_CRB_DATA_BUFFER_SIZE ((TPM_CRB_MMIO_SIZE) - (TPM_CRB_REG_SIZE))
 
+/* APIs by tpm.c */
+/* Initialize Virtual TPM2 */
+void init_vtpm2(struct vmctx *ctx);
+
+/* Deinitialize Virtual TPM2 */
+void deinit_vtpm2(struct vmctx *ctx);
+
+/* Parse Virtual TPM option from command line */
+int acrn_parse_vtpm2(char *arg);
+
 #endif
