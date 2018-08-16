@@ -104,7 +104,7 @@ static void efi_init(void)
 
 	vm_sw_loader = uefi_sw_loader;
 
-	spurious_handler = efi_spurious_handler;
+	spurious_handler = (spurious_handler_t)efi_spurious_handler;
 
 	save_lapic(&uefi_lapic_regs);
 

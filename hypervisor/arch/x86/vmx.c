@@ -741,7 +741,6 @@ static void init_guest_state(struct vcpu *vcpu)
 static void init_host_state(__unused struct vcpu *vcpu)
 {
 	uint16_t value16;
-	uint32_t value32;
 	uint64_t value64;
 	uint64_t value;
 	uint64_t trbase;
@@ -800,7 +799,6 @@ static void init_host_state(__unused struct vcpu *vcpu)
 	/* TODO: Should guest GDTB point to host GDTB ? */
 	/* Obtain the current global descriptor table base */
 	asm volatile ("sgdt %0":"=m"(gdtb)::"memory");
-	value32 = gdtb.limit;
 
 	if (((gdtb.base >> 47U) & 0x1UL) != 0UL) {
 		gdtb.base |= 0xffff000000000000UL;

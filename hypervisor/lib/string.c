@@ -368,15 +368,6 @@ size_t strnlen_s(const char *str_arg, size_t maxlen_arg)
 	return count;
 }
 
-static char hexdigit(uint8_t decimal_val)
-{
-	static const char hexdigits[] = { '0', '1', '2', '3', '4', '5', '6',
-		'7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-
-	/* Return hex character */
-	return hexdigits[decimal_val & 0x0FU];
-}
-
 int strcmp(const char *s1_arg, const char *s2_arg)
 {
 	const char *s1 = s1_arg;

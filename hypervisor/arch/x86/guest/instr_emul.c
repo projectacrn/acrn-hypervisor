@@ -310,7 +310,7 @@ static uint32_t get_vmcs_field(enum cpu_reg_name ident)
  */
 static uint64_t vm_get_register(struct vcpu *vcpu, enum cpu_reg_name reg)
 {
-	uint64_t reg_val;
+	uint64_t reg_val = 0UL;
 	
 	if ((reg >= CPU_REG_GENERAL_FIRST) && (reg <= CPU_REG_GENERAL_LAST)) {
 		reg_val = vcpu_get_gpreg(vcpu, reg);
@@ -363,7 +363,7 @@ static void vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg,
  */
 static void vm_get_seg_desc(enum cpu_reg_name seg, struct seg_desc *desc)
 {
-	struct seg_desc tdesc;
+	struct seg_desc tdesc = {0UL, 0U, 0U};
 
 	/* tdesc->access != 0xffffffffU in this function */
 	encode_vmcs_seg_desc(seg, &tdesc);

@@ -54,7 +54,6 @@ static void cpu_xsave_init(void);
 static void set_current_cpu_id(uint16_t pcpu_id);
 static void print_hv_banner(void);
 static uint16_t get_cpu_id_from_lapic_id(uint8_t lapic_id);
-static void pcpu_sync_sleep(uint64_t *sync, uint64_t mask_bit);
 int ibrs_type;
 static uint64_t start_tsc __attribute__((__section__(".bss_noinit")));
 
@@ -533,7 +532,6 @@ void cpu_secondary_init(void)
 
 static void cpu_secondary_post(void)
 {
-	int ret;
 
 	/* Release secondary boot spin-lock to allow one of the next CPU(s) to
 	 * perform this common initialization

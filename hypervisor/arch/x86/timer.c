@@ -194,7 +194,8 @@ void timer_init(void)
 	if (pcpu_id == BOOT_CPU_ID) {
 		register_softirq(SOFTIRQ_TIMER, timer_softirq);
 
-		if (request_timer_irq(tsc_deadline_handler, name) < 0) {
+		if (request_timer_irq((irq_action_t)tsc_deadline_handler, name)
+				< 0) {
 			pr_err("Timer setup failed");
 			return;
 		}

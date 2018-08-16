@@ -659,7 +659,7 @@ static int charmem(int cmd, const char *s_arg, uint32_t sz, void *hnd)
 int vsnprintf(char *dst_arg, size_t sz_arg, const char *fmt, va_list args)
 {
 	char *dst = dst_arg;
-	int32_t sz = sz_arg;
+	uint32_t sz = sz_arg;
 	int res = 0;
 
 	if ((sz == 0U) || (dst == NULL)) {

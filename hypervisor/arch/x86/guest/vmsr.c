@@ -51,33 +51,6 @@ static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg)
 	write_map[(msr>>3U)] = value;
 }
 
-/* not used now just leave it for some cases it may be used as API*/
-static void disable_msr_interception(uint8_t *bitmap, uint32_t msr_arg)
-{
-	uint8_t *read_map;
-	uint8_t *write_map;
-	uint8_t value;
-	uint32_t msr = msr_arg;
-	/* low MSR */
-	if (msr < 0x1FFFU) {
-		read_map = bitmap;
-		write_map = bitmap + 2048;
-	} else if ((msr >= 0xc0000000U) && (msr <= 0xc0001fffU)) {
-		read_map = bitmap + 1024;
-		write_map = bitmap + 3072;
-	} else {
-		pr_err("Invalid MSR");
-		return;
-	}
-
-	msr &= 0x1FFFU;
-	value = read_map[(msr>>3U)];
-	value &= ~(1U<<(msr%8U));
-	/* right now we trap for both r/w */
-	read_map[(msr>>3U)] = value;
-	write_map[(msr>>3U)] = value;
-}
-
 void init_msr_emulation(struct vcpu *vcpu)
 {
 	uint32_t i;
