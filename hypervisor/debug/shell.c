@@ -723,6 +723,13 @@ static int shell_to_sos_console(__unused int argc, __unused char **argv)
 	struct vm *vm;
 	struct vuart *vuart;
 
+#ifdef CONFIG_PARTITION_MODE
+	if (argc == 2U) {
+		guest_no = atoi(argv[1]);
+	}
+
+	vuart_vmid = guest_no;
+#endif
 	/* Get the virtual device node */
 	vm = get_vm_from_vmid(guest_no);
 	if (vm == NULL) {
