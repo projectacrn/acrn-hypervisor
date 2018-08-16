@@ -74,6 +74,8 @@ void setup_notification(void);
 typedef void (*spurious_handler_t)(uint32_t vector);
 extern spurious_handler_t spurious_handler;
 
+uint32_t alloc_irq_num(uint32_t req_irq);
+
 /*
  * Some MSI message definitions
  */

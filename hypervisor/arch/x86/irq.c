@@ -8,6 +8,7 @@
 #include <softirq.h>
 
 static spinlock_t exception_spinlock = { .head = 0U, .tail = 0U, };
+static spinlock_t irq_alloc_spinlock = { .head = 0U, .tail = 0U, };
 
 static struct irq_desc irq_desc_array[NR_IRQS];
 static uint32_t vector_to_irq[NR_MAX_VECTOR + 1];
@@ -62,49 +63,60 @@ static uint32_t find_available_vector()
 }
 
 /*
- * check and set irq to be assigned
- * return: IRQ_INVALID if irq already assigned otherwise return irq
+ * alloc an free irq if req_irq is IRQ_INVALID, or else set assigned
+ * return: irq num on success, IRQ_INVALID on failure
  */
-uint32_t irq_mark_used(uint32_t irq)
+uint32_t alloc_irq_num(uint32_t req_irq)
 {
+	uint32_t i;
+	uint32_t irq = req_irq;
 	uint64_t rflags;
 	struct irq_desc *desc;
 
-	if (irq >= NR_IRQS) {
+	if ((irq >= NR_IRQS) && (irq != IRQ_INVALID)) {
+		pr_err("[%s] invalid req_irq %u", __func__, req_irq);
 		return IRQ_INVALID;
 	}
 
-	desc = &irq_desc_array[irq];
-	spinlock_irqsave_obtain(&desc->lock, &rflags);
-	if (desc->used == IRQ_NOT_ASSIGNED) {
+	spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
+	if (irq == IRQ_INVALID) {
+		/* if no valid irq num given, find a free one */
+		for (i = irq_gsi_num(); i < NR_IRQS; i++) {
+			desc = &irq_desc_array[i];
+			if (desc->used == IRQ_NOT_ASSIGNED) {
+				irq = i;
+				break;
+			}
+		}
+	}
+
+	if (irq != IRQ_INVALID) {
+		desc = &irq_desc_array[irq];
 		desc->used = IRQ_ASSIGNED;
 	}
-	spinlock_irqrestore_release(&desc->lock, rflags);
+	spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);
 	return irq;
 }
 
 /*
- * system find available irq and set assigned
- * return: irq, VECTOR_INVALID not found
+ * free irq num allocated via alloc_irq_num()
  */
-static uint32_t alloc_irq(void)
+void free_irq_num(uint32_t irq)
 {
-	uint32_t i;
-	uint64_t rflags;
 	struct irq_desc *desc;
+	uint64_t rflags;
 
-
-	for (i = irq_gsi_num(); i < NR_IRQS; i++) {
-		desc = &irq_desc_array[i];
-		spinlock_irqsave_obtain(&desc->lock, &rflags);
-		if (desc->used == IRQ_NOT_ASSIGNED) {
-			desc->used = IRQ_ASSIGNED;
-			spinlock_irqrestore_release(&desc->lock, rflags);
-			break;
-		}
-		spinlock_irqrestore_release(&desc->lock, rflags);
+	if (irq >= NR_IRQS) {
+		return;
 	}
-	return (i == NR_IRQS) ? IRQ_INVALID : i;
+
+	desc = &irq_desc_array[irq];
+	if ((irq_is_gsi(irq) == false)
+	    && (desc->vector <= VECTOR_DYNAMIC_END)) {
+		spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
+		desc->used = IRQ_NOT_ASSIGNED;
+		spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);
+	}
 }
 
 /* need lock protection before use */
@@ -163,12 +175,12 @@ static void disable_pic_irq(void)
 	pio_write8(0xffU, 0x21U);
 }
 
-int32_t request_irq(uint32_t irq_arg,
+int32_t request_irq(uint32_t req_irq,
 		    irq_action_t action_fn,
 		    void *priv_data)
 {
 	struct irq_desc *desc;
-	uint32_t irq = irq_arg, vector;
+	uint32_t irq, vector;
 	uint64_t rflags;
 
 	/* ======================================================
@@ -198,18 +210,9 @@ int32_t request_irq(uint32_t irq_arg,
 	 *
 	 * =====================================================
 	 */
-
-	/* HV select a irq for device if irq < 0
-	 * this vector/irq match to APCI DSDT or PCI INTx/MSI
-	 */
+	irq = alloc_irq_num(req_irq);
 	if (irq == IRQ_INVALID) {
-		irq = alloc_irq();
-	} else {
-		irq = irq_mark_used(irq);
-	}
-
-	if (irq >= NR_IRQS) {
-		pr_err("failed to assign IRQ");
+		pr_err("[%s] invalid irq num", __func__);
 		return -EINVAL;
 	}
 
@@ -228,7 +231,7 @@ int32_t request_irq(uint32_t irq_arg,
 
 	if (desc->vector == VECTOR_INVALID) {
 		pr_err("the input vector is not correct");
-		/* FIXME: free allocated irq */
+		free_irq_num(irq);
 		return -EINVAL;
 	}
 
@@ -531,6 +534,7 @@ void free_irq(uint32_t irq)
 
 	spinlock_irqrestore_release(&desc->lock, rflags);
 	irq_desc_try_free_vector(desc->irq);
+	free_irq_num(irq);
 }
 
 #ifdef HV_DEBUG
