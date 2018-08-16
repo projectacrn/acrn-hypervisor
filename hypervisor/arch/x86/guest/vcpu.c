@@ -494,6 +494,9 @@ int prepare_vcpu(struct vm *vm, uint16_t pcpu_id)
 		/* Load VM SW */
 		if (!vm_sw_loader)
 			vm_sw_loader = general_sw_loader;
+#ifdef CONFIG_PARTITION_MODE
+			vcpu->arch_vcpu.cpu_mode = CPU_MODE_PROTECTED;
+#else
 		if (is_vm0(vcpu->vm)) {
 			struct boot_ctx *vm0_init_ctx =
 				(struct boot_ctx *)vm0_boot_context;
@@ -515,6 +518,7 @@ int prepare_vcpu(struct vm *vm, uint16_t pcpu_id)
 			vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
 #endif
 		}
+#endif //CONFIG_PARTITION_MODE
 		vm_sw_loader(vm, vcpu);
 	} else {
 		vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
