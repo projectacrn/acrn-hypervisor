@@ -43,6 +43,10 @@
 
 #define vm_vuart(vm)		(vm->vuart)
 
+#ifdef CONFIG_PARTITION_MODE
+int8_t vuart_vmid = - 1;
+#endif
+
 static void fifo_reset(struct fifo *fifo)
 {
 	fifo->rindex = 0U;
@@ -349,7 +353,17 @@ void vuart_console_rx_chars(struct vuart *vu)
 
 struct vuart *vuart_console_active(void)
 {
+#ifdef CONFIG_PARTITION_MODE
+	struct vm *vm;
+
+	if (vuart_vmid == -1) {
+		return NULL;
+	}
+
+	vm = get_vm_from_vmid(vuart_vmid);
+#else
 	struct vm *vm = get_vm_from_vmid(0U);
+#endif
 
 	if ((vm != NULL) && (vm->vuart != NULL)) {
 		struct vuart *vu = vm->vuart;

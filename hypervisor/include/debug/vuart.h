@@ -59,7 +59,9 @@ struct vuart {
 	struct vm *vm;
 	spinlock_t lock;	/* protects all softc elements */
 };
-
+#ifdef CONFIG_PARTITION_MODE
+extern int8_t vuart_vmid;
+#endif
 #ifdef HV_DEBUG
 void *vuart_init(struct vm *vm);
 struct vuart *vuart_console_active(void);
