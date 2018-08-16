@@ -13,8 +13,15 @@
 
 #define MPTABLE_BASE		0xF0000U
 
-/* floating pointer length + maximum length of configuration table */
-#define	MPTABLE_MAX_LENGTH	(65536 + 16)U
+/* 
+ * floating pointer length + maximum length of configuration table
+ * ACRN uses contiguous guest memory from 0xF0000 to place floating pointer
+ * structure and config table. Maximum length of config table is 64K. So the
+ * maximum length of combined floating pointer and config table can go up to
+ * 64K + 16 bytes.Since we are left with only 64K from 0xF0000 to 0x100000(1MB)
+ * max length is limited to 64K.
+ */
+#define	MPTABLE_MAX_LENGTH	65536U
 
 #define LAPIC_VERSION		16U
 
@@ -29,7 +36,7 @@
 #define MPCH_PRODID_LEN         12U
 
 /* Processor entry defines */
-#define MPEP_SIG_FAMILY		6U	/* XXX cwpdm should supply this */
+#define MPEP_SIG_FAMILY		6U
 #define MPEP_SIG_MODEL		26U
 #define MPEP_SIG_STEPPING	5U
 #define MPEP_SIG		\
@@ -163,7 +170,7 @@ struct mptable_info mptable_vm1 = {
 				},
 				{
 					.type = MPCT_ENTRY_PROCESSOR,
-					.apic_id = 4U,
+					.apic_id = 1U,
 					.apic_version = LAPIC_VERSION,
 					.cpu_flags = PROCENTRY_FLAG_EN,
 					.cpu_signature = MPEP_SIG,
@@ -225,7 +232,7 @@ struct mptable_info mptable_vm2 = {
 			.proc_entry_array = {
 				{
 					.type = MPCT_ENTRY_PROCESSOR,
-					.apic_id = 2U,
+					.apic_id = 0U,
 					.apic_version = LAPIC_VERSION,
 					.cpu_flags = PROCENTRY_FLAG_EN | PROCENTRY_FLAG_BP,
 					.cpu_signature = MPEP_SIG,
@@ -233,7 +240,7 @@ struct mptable_info mptable_vm2 = {
 				},
 				{
 					.type = MPCT_ENTRY_PROCESSOR,
-					.apic_id = 6U,
+					.apic_id = 1U,
 					.apic_version = LAPIC_VERSION,
 					.cpu_flags = PROCENTRY_FLAG_EN,
 					.cpu_signature = MPEP_SIG,
@@ -292,12 +299,16 @@ int mptable_build(struct vm *vm)
 	char                    *curraddr;
 	struct mpcth            *mpch;
 	struct mpfps            *mpfp;
+	size_t			mptable_length, table_length;
 
 	startaddr = (char *)GPA2HVA(vm, MPTABLE_BASE);
+
+	table_length = vm->vm_desc->mptable->mpch.base_table_length;
+	mptable_length = sizeof(struct mpfps) + table_length;
 	/* Copy mptable info into guest memory */
-	(void)memcpy_s((void *)startaddr, sizeof(struct mptable_info),
+	(void)memcpy_s((void *)startaddr, MPTABLE_MAX_LENGTH,
 				(void *)vm->vm_desc->mptable,
-				sizeof(struct mptable_info));
+				mptable_length);
 
 	curraddr = startaddr;
 	mpfp = (struct mpfps *)curraddr;
