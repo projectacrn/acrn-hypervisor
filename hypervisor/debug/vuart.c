@@ -32,10 +32,10 @@
 
 #include "uart16550.h"
 
-#define COM1_BASE	0x3F8
-#define COM1_IRQ	4U
-#define RX_FIFO_SIZE		256
-#define TX_FIFO_SIZE		65536
+#define COM1_BASE		0x3F8U
+#define COM1_IRQ		4U
+#define RX_FIFO_SIZE		256U
+#define TX_FIFO_SIZE		65536U
 
 #define vuart_lock_init(vu)	spinlock_init(&((vu)->lock))
 #define vuart_lock(vu)		spinlock_obtain(&((vu)->lock))
@@ -45,12 +45,12 @@
 
 static void fifo_reset(struct fifo *fifo)
 {
-	fifo->rindex = 0;
-	fifo->windex = 0;
-	fifo->num = 0;
+	fifo->rindex = 0U;
+	fifo->windex = 0U;
+	fifo->num = 0U;
 }
 
-static void fifo_init(struct fifo *fifo, int sz)
+static void fifo_init(struct fifo *fifo, uint32_t sz)
 {
 	fifo->buf = calloc(1U, sz);
 	ASSERT(fifo->buf != NULL, "");
@@ -62,11 +62,11 @@ static void fifo_putchar(struct fifo *fifo, char ch)
 {
 	fifo->buf[fifo->windex] = ch;
 	if (fifo->num < fifo->size) {
-		fifo->windex = (fifo->windex + 1) % fifo->size;
+		fifo->windex = (fifo->windex + 1U) % fifo->size;
 		fifo->num++;
 	} else {
-		fifo->rindex = (fifo->rindex + 1) % fifo->size;
-		fifo->windex = (fifo->windex + 1) % fifo->size;
+		fifo->rindex = (fifo->rindex + 1U) % fifo->size;
+		fifo->windex = (fifo->windex + 1U) % fifo->size;
 	}
 }
 
@@ -74,9 +74,9 @@ static char fifo_getchar(struct fifo *fifo)
 {
 	char c;
 
-	if (fifo->num > 0) {
+	if (fifo->num > 0U) {
 		c = fifo->buf[fifo->rindex];
-		fifo->rindex = (fifo->rindex + 1) % fifo->size;
+		fifo->rindex = (fifo->rindex + 1U) % fifo->size;
 		fifo->num--;
 		return c;
 	} else {
@@ -84,7 +84,7 @@ static char fifo_getchar(struct fifo *fifo)
 	}
 }
 
-static int fifo_numchars(struct fifo *fifo)
+static uint32_t fifo_numchars(struct fifo *fifo)
 {
 	return fifo->num;
 }
@@ -98,11 +98,12 @@ static int fifo_numchars(struct fifo *fifo)
  */
 static uint8_t vuart_intr_reason(struct vuart *vu)
 {
-	if (((vu->lsr & LSR_OE) != 0) && ((vu->ier & IER_ELSI) != 0)) {
+	if (((vu->lsr & LSR_OE) != 0U) && ((vu->ier & IER_ELSI) != 0U)) {
 		return IIR_RLS;
-	} else if ((fifo_numchars(&vu->rxfifo) > 0) && ((vu->ier & IER_ERBFI) != 0)) {
+	} else if ((fifo_numchars(&vu->rxfifo) > 0U) &&
+					((vu->ier & IER_ERBFI) != 0U)) {
 		return IIR_RXTOUT;
-	} else if (vu->thre_int_pending && ((vu->ier & IER_ETBEI) != 0)) {
+	} else if (vu->thre_int_pending && ((vu->ier & IER_ETBEI) != 0U)) {
 		return IIR_TXRDY;
 	} else {
 		return IIR_NOPEND;
@@ -145,7 +146,7 @@ static void vuart_write(__unused struct vm_io_handler *hdlr, struct vm *vm,
 	/*
 	 * Take care of the special case DLAB accesses first
 	 */
-	if ((vu->lcr & LCR_DLAB) != 0) {
+	if ((vu->lcr & LCR_DLAB) != 0U) {
 		if (offset == UART16550_DLL) {
 			vu->dll = value_u8;
 			goto done;
@@ -159,7 +160,7 @@ static void vuart_write(__unused struct vm_io_handler *hdlr, struct vm *vm,
 
 	switch (offset) {
 	case UART16550_THR:
-		fifo_putchar(&vu->txfifo, value_u8);
+		fifo_putchar(&vu->txfifo, (char)value_u8);
 		vu->thre_int_pending = true;
 		break;
 	case UART16550_IER:
@@ -231,7 +232,7 @@ static uint32_t vuart_read(__unused struct vm_io_handler *hdlr, struct vm *vm,
 	/*
 	 * Take care of the special case DLAB accesses first
 	 */
-	if ((vu->lcr & LCR_DLAB) != 0) {
+	if ((vu->lcr & LCR_DLAB) != 0U) {
 		if (offset == UART16550_DLL) {
 			reg = vu->dll;
 			goto done;
@@ -245,13 +246,13 @@ static uint32_t vuart_read(__unused struct vm_io_handler *hdlr, struct vm *vm,
 	switch (offset) {
 	case UART16550_RBR:
 		vu->lsr &= ~LSR_OE;
-		reg = fifo_getchar(&vu->rxfifo);
+		reg = (uint8_t)fifo_getchar(&vu->rxfifo);
 		break;
 	case UART16550_IER:
 		reg = vu->ier;
 		break;
 	case UART16550_IIR:
-		iir = ((vu->fcr & FCR_FIFOE) != 0) ? IIR_FIFO_MASK : 0;
+		iir = ((vu->fcr & FCR_FIFOE) != 0U) ? IIR_FIFO_MASK : 0U;
 		intr_reason = vuart_intr_reason(vu);
 		/*
 		 * Deal with side effects of reading the IIR register
@@ -272,7 +273,7 @@ static uint32_t vuart_read(__unused struct vm_io_handler *hdlr, struct vm *vm,
 		/* Transmitter is always ready for more data */
 		vu->lsr |= LSR_TEMT | LSR_THRE;
 		/* Check for new receive data */
-		if (fifo_numchars(&vu->rxfifo) > 0) {
+		if (fifo_numchars(&vu->rxfifo) > 0U) {
 			vu->lsr |= LSR_DR;
 		} else {
 			vu->lsr &= ~LSR_DR;
@@ -283,13 +284,13 @@ static uint32_t vuart_read(__unused struct vm_io_handler *hdlr, struct vm *vm,
 		break;
 	case UART16550_MSR:
 		/* ignore modem I*/
-		reg = 0;
+		reg = 0U;
 		break;
 	case UART16550_SCR:
 		reg = vu->scr;
 		break;
 	default:
-		reg = 0xFF;
+		reg = 0xFFU;
 		break;
 	}
 done:
@@ -315,7 +316,7 @@ static void vuart_register_io_handler(struct vm *vm)
 void vuart_console_tx_chars(struct vuart *vu)
 {
 	vuart_lock(vu);
-	while (fifo_numchars(&vu->txfifo) > 0) {
+	while (fifo_numchars(&vu->txfifo) > 0U) {
 		printf("%c", fifo_getchar(&vu->txfifo));
 	}
 	vuart_unlock(vu);
@@ -363,7 +364,7 @@ struct vuart *vuart_console_active(void)
 void *vuart_init(struct vm *vm)
 {
 	struct vuart *vu;
-	uint16_t divisor;
+	uint32_t divisor;
 
 	vu = calloc(1U, sizeof(struct vuart));
 	ASSERT(vu != NULL, "");
