@@ -828,7 +828,8 @@ static int dmar_setup_interrupt(struct dmar_drhd_rt *dmar_uint)
 
 	retval = request_irq(IRQ_INVALID,
 			     dmar_fault_handler,
-			     dmar_uint);
+			     dmar_uint,
+			     IRQF_NONE);
 
 	if (retval < 0 ) {
 		pr_err("%s: fail to setup interrupt", __func__);

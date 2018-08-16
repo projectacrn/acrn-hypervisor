@@ -15,6 +15,8 @@ static uint32_t vector_to_irq[NR_MAX_VECTOR + 1];
 
 spurious_handler_t spurious_handler;
 
+static inline void handle_irq(struct irq_desc *desc);
+
 #define NR_STATIC_MAPPINGS     (2U)
 static uint32_t irq_static_mappings[NR_STATIC_MAPPINGS][2] = {
 	{TIMER_IRQ, VECTOR_TIMER},
@@ -212,7 +214,8 @@ static void disable_pic_irq(void)
  */
 int32_t request_irq(uint32_t req_irq,
 		    irq_action_t action_fn,
-		    void *priv_data)
+		    void *priv_data,
+		    uint32_t flags)
 {
 	struct irq_desc *desc;
 	uint32_t irq, vector;
@@ -234,11 +237,8 @@ int32_t request_irq(uint32_t req_irq,
 
 	desc = &irq_desc_array[irq];
 	spinlock_irqsave_obtain(&desc->lock, &rflags);
-	if (desc->irq_handler == NULL) {
-		desc->irq_handler = common_handler_edge;
-	}
-
 	if (desc->action == NULL) {
+		desc->flags = flags;
 		desc->priv_data = priv_data;
 		desc->action = action_fn;
 		spinlock_irqrestore_release(&desc->lock, rflags);
@@ -327,12 +327,12 @@ void dispatch_interrupt(struct intr_excp_ctx *ctx)
 		goto ERR;
 	}
 
-	if ((desc->used == IRQ_NOT_ASSIGNED) || (desc->irq_handler == NULL)) {
+	if (desc->used == IRQ_NOT_ASSIGNED) {
 		/* mask irq if possible */
 		goto ERR;
 	}
 
-	desc->irq_handler(desc, NULL);
+	handle_irq(desc);
 	return;
 ERR:
 	handle_spurious_interrupt(vr);
@@ -361,16 +361,26 @@ void partition_mode_dispatch_interrupt(struct intr_excp_ctx *ctx)
 }
 #endif
 
-int handle_level_interrupt_common(struct irq_desc *desc,
-			__unused void *handler_data)
+static inline bool irq_need_mask(struct irq_desc *desc)
 {
-	uint64_t rflags;
+	/* level triggered gsi should be masked */
+	return (((desc->flags & IRQF_LEVEL) != 0U)
+		&& irq_is_gsi(desc->irq));
+}
+
+static inline bool irq_need_unmask(struct irq_desc *desc)
+{
+	/* level triggered gsi for non-ptdev should be unmasked */
+	return (((desc->flags & IRQF_LEVEL) != 0U)
+		&& ((desc->flags & IRQF_PT) == 0U)
+		&& irq_is_gsi(desc->irq));
+}
+
+static inline void handle_irq(struct irq_desc *desc)
+{
 	irq_action_t action = desc->action;
 
-	spinlock_irqsave_obtain(&desc->lock, &rflags);
-
-	/* mask iopaic pin */
-	if (irq_is_gsi(desc->irq)) {
+	if (irq_need_mask(desc)) {
 		GSI_MASK_IRQ(desc->irq);
 	}
 
@@ -381,75 +391,12 @@ int handle_level_interrupt_common(struct irq_desc *desc,
 		action(desc->irq, desc->priv_data);
  	}
 
-	if (irq_is_gsi(desc->irq)) {
+	if (irq_need_unmask(desc)) {
 		GSI_UNMASK_IRQ(desc->irq);
 	}
-
-	spinlock_irqrestore_release(&desc->lock, rflags);
-
-	return 0;
 }
 
-int common_handler_edge(struct irq_desc *desc, __unused void *handler_data)
-{
-	uint64_t rflags;
-	irq_action_t action = desc->action;
-
-	spinlock_irqsave_obtain(&desc->lock, &rflags);
-
-	/* Send EOI to LAPIC/IOAPIC IRR */
-	send_lapic_eoi();
-
-	if (action != NULL) {
-		action(desc->irq, desc->priv_data);
- 	}
-
-	spinlock_irqrestore_release(&desc->lock, rflags);
-
-	return 0;
-}
-
-int common_dev_handler_level(struct irq_desc *desc, __unused void *handler_data)
-{
-	uint64_t rflags;
-	irq_action_t action = desc->action;
-
-	spinlock_irqsave_obtain(&desc->lock, &rflags);
-
-	/* mask iopaic pin */
-	if (irq_is_gsi(desc->irq))  {
-		GSI_MASK_IRQ(desc->irq);
-	}
-
-	/* Send EOI to LAPIC/IOAPIC IRR */
-	send_lapic_eoi();
-
-	if (action != NULL) {
-		action(desc->irq, desc->priv_data);
- 	}
-
-	spinlock_irqrestore_release(&desc->lock, rflags);
-
-	/* we did not unmask irq until guest EOI the vector */
-	return 0;
-}
-
-/* no desc->lock for quick handling local interrupt like lapic timer */
-int quick_handler_nolock(struct irq_desc *desc, __unused void *handler_data)
-{
-	irq_action_t action = desc->action;
-
-	/* Send EOI to LAPIC/IOAPIC IRR */
-	send_lapic_eoi();
-
-	if (action != NULL) {
-		action(desc->irq, desc->priv_data);
- 	}
-
-	return 0;
-}
-
-void update_irq_handler(uint32_t irq, irq_handler_t func)
+void set_irq_trigger_mode(uint32_t irq, bool is_level_trigger)
 {
 	uint64_t rflags;
 	struct irq_desc *desc;
@@ -460,7 +407,11 @@ void update_irq_handler(uint32_t irq, irq_handler_t func)
 
 	desc = &irq_desc_array[irq];
 	spinlock_irqsave_obtain(&desc->lock, &rflags);
-	desc->irq_handler = func;
+	if (is_level_trigger == true) {
+		desc->flags |= IRQF_LEVEL;
+	} else {
+		desc->flags &= ~IRQF_LEVEL;
+	}
 	spinlock_irqrestore_release(&desc->lock, rflags);
 }
 
@@ -483,6 +434,7 @@ void free_irq(uint32_t irq)
 	spinlock_irqsave_obtain(&desc->lock, &rflags);
 	desc->action = NULL;
 	desc->priv_data = NULL;
+	desc->flags = IRQF_NONE;
 	spinlock_irqrestore_release(&desc->lock, rflags);
 }
 

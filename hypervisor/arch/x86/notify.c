@@ -66,7 +66,7 @@ static int request_notification_irq(irq_action_t func, void *data)
 	}
 
 	/* all cpu register the same notification vector */
-	retval = request_irq(NOTIFY_IRQ, func, data);
+	retval = request_irq(NOTIFY_IRQ, func, data, IRQF_NONE);
 	if (retval < 0) {
 		pr_err("Failed to add notify isr");
 		return -ENODEV;

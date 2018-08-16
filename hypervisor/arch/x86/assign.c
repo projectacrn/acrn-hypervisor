@@ -139,51 +139,6 @@ lookup_entry_by_vintx(struct vm *vm, uint8_t vpin,
 	return entry;
 }
 
-static void
-ptdev_update_irq_handler(struct vm *vm, struct ptdev_remapping_info *entry)
-{
-	uint32_t phys_irq = entry->allocated_pirq;
-	struct ptdev_intx_info *intx = &entry->ptdev_intr_info.intx;
-
-	if (entry->type == PTDEV_INTR_MSI) {
-		/* all other MSI and normal maskable */
-		update_irq_handler(phys_irq, common_handler_edge);
-	}
-	/* update irq handler for IOAPIC */
-	if ((entry->type == PTDEV_INTR_INTX)
-		&& (intx->vpin_src
-			== PTDEV_VPIN_IOAPIC)) {
-		union ioapic_rte rte;
-		bool trigger_lvl = false;
-
-		/* VPIN_IOAPIC src means we have vioapic enabled */
-		vioapic_get_rte(vm, intx->virt_pin, &rte);
-		if ((rte.full & IOAPIC_RTE_TRGRMOD) == IOAPIC_RTE_TRGRLVL) {
-			trigger_lvl = true;
-		}
-
-		if (trigger_lvl) {
-			update_irq_handler(phys_irq, common_dev_handler_level);
-		} else {
-			update_irq_handler(phys_irq, common_handler_edge);
-		}
-	}
-	/* update irq handler for PIC */
-	if ((entry->type == PTDEV_INTR_INTX) && (phys_irq < NR_LEGACY_IRQ)
-		&& (intx->vpin_src == PTDEV_VPIN_PIC)) {
-		enum vpic_trigger trigger;
-
-		/* VPIN_PIC src means we have vpic enabled */
-		vpic_get_irq_trigger(vm,
-		        intx->virt_pin, &trigger);
-		if (trigger == LEVEL_TRIGGER) {
-			update_irq_handler(phys_irq, common_dev_handler_level);
-		} else {
-			update_irq_handler(phys_irq, common_handler_edge);
-		}
-	}
-}
-
 static bool ptdev_hv_owned_intx(struct vm *vm, struct ptdev_intx_info *info)
 {
 	/* vm0 pin 4 (uart) is owned by hypervisor under debug version */
@@ -677,9 +632,6 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 	entry->ptdev_intr_info.msi.phys_vector =
 					irq_to_vector(entry->allocated_pirq);
 
-	/* update irq handler according to info in guest */
-	ptdev_update_irq_handler(vm, entry);
-
 	dev_dbg(ACRN_DBG_IRQ,
 		"PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
 		(entry->virt_bdf >> 8) & 0xFFU,
@@ -711,6 +663,7 @@ static void activate_physical_ioapic(struct vm *vm,
 {
 	union ioapic_rte rte;
 	uint32_t phys_irq = entry->allocated_pirq;
+	bool is_lvl_trigger = false;
 
 	/* disable interrupt */
 	GSI_MASK_IRQ(phys_irq);
@@ -722,8 +675,11 @@ static void activate_physical_ioapic(struct vm *vm,
 	rte.full |= IOAPIC_RTE_INTMSET;
 	ioapic_set_rte(phys_irq, rte);
 
-	/* update irq handler according to info in guest */
-	ptdev_update_irq_handler(vm, entry);
+	/* update irq trigger mode according to info in guest */
+	if ((rte.full & IOAPIC_RTE_TRGRMOD) == IOAPIC_RTE_TRGRLVL) {
+		is_lvl_trigger = true;
+	}
+	set_irq_trigger_mode(phys_irq, is_lvl_trigger);
 
 	/* enable interrupt */
 	GSI_UNMASK_IRQ(phys_irq);
