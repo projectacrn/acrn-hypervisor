@@ -128,10 +128,13 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 
 	pr_dbg("Loading guest to run-time location");
 
+/* ACRN in partiton mode boots all VMs without devicemodel */
+#ifndef CONFIG_PARTITION_MODE
 	/* FIXME: set config according to predefined offset */
 	if (!is_vm0(vm)) {
 		return load_guest(vm, vcpu);
 	}
+#endif
 
 	/* calculate the kernel entry point */
 	zeropage = (struct zero_page *)sw_kernel->kernel_src_addr;
