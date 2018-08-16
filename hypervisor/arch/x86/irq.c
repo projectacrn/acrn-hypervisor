@@ -27,7 +27,7 @@ static void init_irq_desc(void)
 	for (i = 0U; i < NR_IRQS; i++) {
 		irq_desc_array[i].irq = i;
 		irq_desc_array[i].vector = VECTOR_INVALID;
-		spinlock_init(&irq_desc_array[i].irq_lock);
+		spinlock_init(&irq_desc_array[i].lock);
 	}
 
 	for (i = 0U; i <= NR_MAX_VECTOR; i++) {
@@ -75,11 +75,11 @@ uint32_t irq_mark_used(uint32_t irq)
 	}
 
 	desc = &irq_desc_array[irq];
-	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
+	spinlock_irqsave_obtain(&desc->lock, &rflags);
 	if (desc->used == IRQ_NOT_ASSIGNED) {
 		desc->used = IRQ_ASSIGNED;
 	}
-	spinlock_irqrestore_release(&desc->irq_lock, rflags);
+	spinlock_irqrestore_release(&desc->lock, rflags);
 	return irq;
 }
 
@@ -96,18 +96,18 @@ static uint32_t alloc_irq(void)
 
 	for (i = irq_gsi_num(); i < NR_IRQS; i++) {
 		desc = &irq_desc_array[i];
-		spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
+		spinlock_irqsave_obtain(&desc->lock, &rflags);
 		if (desc->used == IRQ_NOT_ASSIGNED) {
 			desc->used = IRQ_ASSIGNED;
-			spinlock_irqrestore_release(&desc->irq_lock, rflags);
+			spinlock_irqrestore_release(&desc->lock, rflags);
 			break;
 		}
-		spinlock_irqrestore_release(&desc->irq_lock, rflags);
+		spinlock_irqrestore_release(&desc->lock, rflags);
 	}
 	return (i == NR_IRQS) ? IRQ_INVALID : i;
 }
 
-/* need irq_lock protection before use */
+/* need lock protection before use */
 static void local_irq_desc_set_vector(uint32_t irq, uint32_t vr)
 {
 	struct irq_desc *desc;
@@ -124,13 +124,13 @@ static void irq_desc_set_vector(uint32_t irq, uint32_t vr)
 	struct irq_desc *desc;
 
 	desc = &irq_desc_array[irq];
-	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
+	spinlock_irqsave_obtain(&desc->lock, &rflags);
 	vector_to_irq[vr] = irq;
 	desc->vector = vr;
-	spinlock_irqrestore_release(&desc->irq_lock, rflags);
+	spinlock_irqrestore_release(&desc->lock, rflags);
 }
 
-/* used with holding irq_lock outside */
+/* used with holding lock outside */
 static void _irq_desc_free_vector(uint32_t irq)
 {
 	struct irq_desc *desc;
@@ -145,7 +145,6 @@ static void _irq_desc_free_vector(uint32_t irq)
 
 	vr = desc->vector;
 	desc->used = IRQ_NOT_ASSIGNED;
-	desc->state = IRQ_DESC_PENDING;
 	desc->vector = VECTOR_INVALID;
 
 	vr &= NR_MAX_VECTOR;
@@ -166,8 +165,7 @@ static void disable_pic_irq(void)
 
 int32_t request_irq(uint32_t irq_arg,
 		    irq_action_t action_fn,
-		    void *priv_data,
-		    const char *name)
+		    void *priv_data)
 {
 	struct irq_desc *desc;
 	uint32_t irq = irq_arg, vector;
@@ -235,25 +233,20 @@ int32_t request_irq(uint32_t irq_arg,
 	}
 
 	if (desc->action == NULL) {
-		spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
+		spinlock_irqsave_obtain(&desc->lock, &rflags);
 		desc->priv_data = priv_data;
 		desc->action = action_fn;
 
-		/* we are okay using strcpy_s here even with spinlock
-		 * since no #PG in HV right now
-		 */
-		(void)strcpy_s(desc->name, 32U, name);
-
-		spinlock_irqrestore_release(&desc->irq_lock, rflags);
+		spinlock_irqrestore_release(&desc->lock, rflags);
 	} else {
-		pr_err("%s: request irq(%u) vr(%u) for %s failed,\
+		pr_err("%s: request irq(%u) vr(%u) failed,\
 			already requested", __func__,
-			irq, irq_to_vector(irq), name);
+			irq, irq_to_vector(irq));
 		return -EBUSY;
 	}
 
-	dev_dbg(ACRN_DBG_IRQ, "[%s] %s irq%d vr:0x%x",
-		__func__, desc->name, irq, desc->vector);
+	dev_dbg(ACRN_DBG_IRQ, "[%s] irq%d vr:0x%x",
+		__func__, irq, desc->vector);
 
 	return (int32_t)irq;
 }
@@ -272,7 +265,7 @@ uint32_t irq_desc_alloc_vector(uint32_t irq)
 	}
 
 	desc = &irq_desc_array[irq];
-	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
+	spinlock_irqsave_obtain(&desc->lock, &rflags);
 	if (desc->vector != VECTOR_INVALID) {
 		/* already allocated a vector */
 		goto OUT;
@@ -286,7 +279,7 @@ uint32_t irq_desc_alloc_vector(uint32_t irq)
 	}
 	local_irq_desc_set_vector(irq, vr);
 OUT:
-	spinlock_irqrestore_release(&desc->irq_lock, rflags);
+	spinlock_irqrestore_release(&desc->lock, rflags);
 	return vr;
 }
 
@@ -301,12 +294,12 @@ void irq_desc_try_free_vector(uint32_t irq)
 	}
 
 	desc = &irq_desc_array[irq];
-	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
+	spinlock_irqsave_obtain(&desc->lock, &rflags);
 	if (desc->action == NULL) {
 		_irq_desc_free_vector(irq);
 	}
 
-	spinlock_irqrestore_release(&desc->irq_lock, rflags);
+	spinlock_irqrestore_release(&desc->lock, rflags);
 
 }
 
@@ -421,18 +414,7 @@ int handle_level_interrupt_common(struct irq_desc *desc,
 	uint64_t rflags;
 	irq_action_t action = desc->action;
 
-	/*
-	 * give other Core a try to return without hold irq_lock
-	 * and record irq_lost count here
-	 */
-	if (desc->state != IRQ_DESC_PENDING) {
-		send_lapic_eoi();
-		desc->irq_lost_cnt++;
-		return 0;
-	}
-
-	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
-	desc->state = IRQ_DESC_IN_PROCESS;
+	spinlock_irqsave_obtain(&desc->lock, &rflags);
 
 	/* mask iopaic pin */
 	if (irq_is_gsi(desc->irq)) {
@@ -450,8 +432,7 @@ int handle_level_interrupt_common(struct irq_desc *desc,
 		GSI_UNMASK_IRQ(desc->irq);
 	}
 
-	desc->state = IRQ_DESC_PENDING;
-	spinlock_irqrestore_release(&desc->irq_lock, rflags);
+	spinlock_irqrestore_release(&desc->lock, rflags);
 
 	return 0;
 }
@@ -461,18 +442,7 @@ int common_handler_edge(struct irq_desc *desc, __unused void *handler_data)
 	uint64_t rflags;
 	irq_action_t action = desc->action;
 
-	/*
-	 * give other Core a try to return without hold irq_lock
-	 * and record irq_lost count here
-	 */
-	if (desc->state != IRQ_DESC_PENDING) {
-		send_lapic_eoi();
-		desc->irq_lost_cnt++;
-		return 0;
-	}
-
-	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
-	desc->state = IRQ_DESC_IN_PROCESS;
+	spinlock_irqsave_obtain(&desc->lock, &rflags);
 
 	/* Send EOI to LAPIC/IOAPIC IRR */
 	send_lapic_eoi();
@@ -481,8 +451,7 @@ int common_handler_edge(struct irq_desc *desc, __unused void *handler_data)
 		action(desc->irq, desc->priv_data);
  	}
 
-	desc->state = IRQ_DESC_PENDING;
-	spinlock_irqrestore_release(&desc->irq_lock, rflags);
+	spinlock_irqrestore_release(&desc->lock, rflags);
 
 	return 0;
 }
@@ -492,18 +461,7 @@ int common_dev_handler_level(struct irq_desc *desc, __unused void *handler_data)
 	uint64_t rflags;
 	irq_action_t action = desc->action;
 
-	/*
-	 * give other Core a try to return without hold irq_lock
-	 * and record irq_lost count here
-	 */
-	if (desc->state != IRQ_DESC_PENDING) {
-		send_lapic_eoi();
-		desc->irq_lost_cnt++;
-		return 0;
-	}
-
-	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
-	desc->state = IRQ_DESC_IN_PROCESS;
+	spinlock_irqsave_obtain(&desc->lock, &rflags);
 
 	/* mask iopaic pin */
 	if (irq_is_gsi(desc->irq))  {
@@ -517,14 +475,13 @@ int common_dev_handler_level(struct irq_desc *desc, __unused void *handler_data)
 		action(desc->irq, desc->priv_data);
  	}
 
-	desc->state = IRQ_DESC_PENDING;
-	spinlock_irqrestore_release(&desc->irq_lock, rflags);
+	spinlock_irqrestore_release(&desc->lock, rflags);
 
 	/* we did not unmask irq until guest EOI the vector */
 	return 0;
 }
 
-/* no desc->irq_lock for quick handling local interrupt like lapic timer */
+/* no desc->lock for quick handling local interrupt like lapic timer */
 int quick_handler_nolock(struct irq_desc *desc, __unused void *handler_data)
 {
 	irq_action_t action = desc->action;
@@ -549,9 +506,9 @@ void update_irq_handler(uint32_t irq, irq_handler_t func)
 	}
 
 	desc = &irq_desc_array[irq];
-	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
+	spinlock_irqsave_obtain(&desc->lock, &rflags);
 	desc->irq_handler = func;
-	spinlock_irqrestore_release(&desc->irq_lock, rflags);
+	spinlock_irqrestore_release(&desc->lock, rflags);
 }
 
 void free_irq(uint32_t irq)
@@ -564,16 +521,15 @@ void free_irq(uint32_t irq)
 	}
 
 	desc = &irq_desc_array[irq];
-	dev_dbg(ACRN_DBG_IRQ, "[%s] %s irq%d vr:0x%x",
-		__func__, desc->name, irq, irq_to_vector(irq));
+	dev_dbg(ACRN_DBG_IRQ, "[%s] irq%d vr:0x%x",
+		__func__, irq, irq_to_vector(irq));
 
-	spinlock_irqsave_obtain(&desc->irq_lock, &rflags);
+	spinlock_irqsave_obtain(&desc->lock, &rflags);
 
 	desc->action = NULL;
 	desc->priv_data = NULL;
-	memset(desc->name, '\0', 32U);
 
-	spinlock_irqrestore_release(&desc->irq_lock, rflags);
+	spinlock_irqrestore_release(&desc->lock, rflags);
 	irq_desc_try_free_vector(desc->irq);
 }
 
@@ -594,9 +550,6 @@ void get_cpu_interrupt_info(char *str_arg, int str_max)
 		size -= len;
 		str += len;
 	}
-	len = snprintf(str, size, "\tLOST");
-	size -= len;
-	str += len;
 
 	for (irq = 0U; irq < NR_IRQS; irq++) {
 		desc = &irq_desc_array[irq];
@@ -612,9 +565,6 @@ void get_cpu_interrupt_info(char *str_arg, int str_max)
 				size -= len;
 				str += len;
 			}
-			len = snprintf(str, size, "\t%d", desc->irq_lost_cnt);
-			size -= len;
-			str += len;
 		}
 	}
 	snprintf(str, size, "\r\n");
