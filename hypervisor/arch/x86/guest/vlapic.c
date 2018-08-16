@@ -96,7 +96,7 @@ apicv_batch_set_tmr(struct acrn_vlapic *vlapic);
  */
 static void vlapic_set_error(struct acrn_vlapic *vlapic, uint32_t mask);
 
-static int vlapic_timer_expired(void *data);
+static void vlapic_timer_expired(void *data);
 
 static struct acrn_vlapic *
 vm_lapic_from_vcpu_id(struct vm *vm, uint16_t vcpu_id)
@@ -394,7 +394,11 @@ static void vlapic_icrtmr_write_handler(struct acrn_vlapic *vlapic)
 
 	del_timer(&vtimer->timer);
 	if (set_expiration(vlapic)) {
-		add_timer(&vtimer->timer);
+		/* vlapic_create_timer has been called,
+		 * and timer->fire_tsc is not 0, here
+		 * add_timer should not return error
+		 */
+		(void)add_timer(&vtimer->timer);
 	}
 }
 
@@ -428,8 +432,11 @@ static void vlapic_set_tsc_deadline_msr(struct acrn_vlapic *vlapic,
 		/* transfer guest tsc to host tsc */
 		val -= exec_vmread64(VMX_TSC_OFFSET_FULL);
 		timer->fire_tsc = val;
-
-		add_timer(timer);
+		/* vlapic_create_timer has been called,
+		 * and timer->fire_tsc is not 0,here
+		 * add_timer should not return error
+		 */
+		(void)add_timer(timer);
 	} else {
 		timer->fire_tsc = 0UL;
 	}
@@ -1311,7 +1318,11 @@ vlapic_svr_write_handler(struct acrn_vlapic *vlapic)
 			dev_dbg(ACRN_DBG_LAPIC, "vlapic is software-enabled");
 			if (vlapic_lvtt_period(vlapic)) {
 				if (set_expiration(vlapic)) {
-					add_timer(&vlapic->vtimer.timer);
+					/* vlapic_create_timer has been called,
+					 * and timer->fire_tsc is not 0,here
+					 *  add_timer should not return error
+					 */
+					(void)add_timer(&vlapic->vtimer.timer);
 				}
 			}
 		}
@@ -1883,7 +1894,7 @@ vlapic_intr_msi(struct vm *vm, uint64_t addr, uint64_t msg)
 }
 
 /* interrupt context */
-static int vlapic_timer_expired(void *data)
+static void vlapic_timer_expired(void *data)
 {
 	struct vcpu *vcpu = (struct vcpu *)data;
 	struct acrn_vlapic *vlapic;
@@ -1900,8 +1911,6 @@ static int vlapic_timer_expired(void *data)
 	if (!vlapic_lvtt_period(vlapic)) {
 		vlapic->vtimer.timer.fire_tsc = 0UL;
 	}
-
-	return 0;
 }
 
 int
