@@ -177,7 +177,7 @@ static void *parse_image_boot_params(struct vm *vm, char *cmdline)
 	 */
 	arg_end = strchr(arg, ' ');
 	len = arg_end ? (uint32_t)(arg_end - arg) : strnlen_s(arg, MEM_2K);
-	memset(arg, ' ', len);
+	(void)memset(arg, ' ', len);
 
 	return (void *)boot_params;
 
@@ -297,7 +297,7 @@ int init_vm_boot_info(struct vm *vm)
 		 * kernel cmdline
 		 */
 		if (boot_params_addr != NULL) {
-			memset(buf, 0U, sizeof(buf));
+			(void)memset(buf, 0U, sizeof(buf));
 			snprintf(buf, MAX_BOOT_PARAMS_LEN, "%s0x%X ",
 				boot_params_arg,
 				HVA2GPA(vm, (uint64_t)boot_params_addr));

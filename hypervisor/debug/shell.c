@@ -813,18 +813,19 @@ static int shell_show_vioapic_info(int argc, char **argv)
 
 static int shell_show_ioapic_info(__unused int argc, __unused char **argv)
 {
+	int err = 0;
 	char *temp_str = alloc_pages(2U);
 
 	if (temp_str == NULL) {
 		return -ENOMEM;
 	}
 
-	get_ioapic_info(temp_str, 2 * CPU_PAGE_SIZE);
+	err = get_ioapic_info(temp_str, 2 * CPU_PAGE_SIZE);
 	shell_puts(temp_str);
 
 	free(temp_str);
 
-	return 0;
+	return err;
 }
 
 static int shell_show_vmexit_profile(__unused int argc, __unused char **argv)

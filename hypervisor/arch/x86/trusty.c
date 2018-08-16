@@ -210,10 +210,10 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 static void save_world_ctx(struct vcpu *vcpu, struct ext_context *ext_ctx)
 {
 	/* cache on-demand run_context for efer/rflags/rsp/rip */
-	vcpu_get_efer(vcpu);
-	vcpu_get_rflags(vcpu);
-	vcpu_get_rsp(vcpu);
-	vcpu_get_rip(vcpu);
+	(void)vcpu_get_efer(vcpu);
+	(void)vcpu_get_rflags(vcpu);
+	(void)vcpu_get_rsp(vcpu);
+	(void)vcpu_get_rip(vcpu);
 
 	/* VMCS GUEST field */
 	ext_ctx->vmx_cr0 = exec_vmread(VMX_GUEST_CR0);
@@ -426,7 +426,7 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 	struct vm *vm = vcpu->vm;
 	struct trusty_boot_param boot_param;
 
-	memset(&boot_param, 0U, sizeof(boot_param));
+	(void)memset(&boot_param, 0U, sizeof(boot_param));
 	if (copy_from_gpa(vcpu->vm, &boot_param, param, sizeof(boot_param))) {
 		pr_err("%s: Unable to copy trusty_boot_param\n", __func__);
 		return false;
@@ -497,7 +497,7 @@ void trusty_set_dseed(void *dseed, uint8_t dseed_num)
 
 void save_sworld_context(struct vcpu *vcpu)
 {
-	memcpy_s(&vcpu->vm->sworld_snapshot,
+	(void)memcpy_s(&vcpu->vm->sworld_snapshot,
 			sizeof(struct cpu_context),
 			&vcpu->arch_vcpu.contexts[SECURE_WORLD],
 			sizeof(struct cpu_context));
@@ -513,7 +513,7 @@ void restore_sworld_context(struct vcpu *vcpu)
 		sworld_ctl->sworld_memory.length,
 		TRUSTY_EPT_REBASE_GPA);
 
-	memcpy_s(&vcpu->arch_vcpu.contexts[SECURE_WORLD],
+	(void)memcpy_s(&vcpu->arch_vcpu.contexts[SECURE_WORLD],
 			sizeof(struct cpu_context),
 			&vcpu->vm->sworld_snapshot,
 			sizeof(struct cpu_context));

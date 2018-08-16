@@ -32,7 +32,7 @@ char console_getc(void)
 	return uart16550_getc();
 }
 
-static int console_timer_callback(__unused void *data)
+static void console_timer_callback(__unused void *data)
 {
 	struct vuart *vu;
 
@@ -46,7 +46,6 @@ static int console_timer_callback(__unused void *data)
 	} else {
 		shell_kick();
 	}
-	return 0;
 }
 
 void console_setup_timer(void)
