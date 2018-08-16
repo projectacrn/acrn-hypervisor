@@ -55,8 +55,7 @@ void smp_call_function(uint64_t mask, smp_call_func_t func, void *data)
 	wait_sync_change(&smp_call_mask, 0UL);
 }
 
-static int request_notification_irq(irq_action_t func, void *data,
-				const char *name)
+static int request_notification_irq(irq_action_t func, void *data)
 {
 	int32_t retval;
 
@@ -67,7 +66,7 @@ static int request_notification_irq(irq_action_t func, void *data,
 	}
 
 	/* all cpu register the same notification vector */
-	retval = request_irq(NOTIFY_IRQ, func, data, name);
+	retval = request_irq(NOTIFY_IRQ, func, data);
 	if (retval < 0) {
 		pr_err("Failed to add notify isr");
 		return -ENODEV;
@@ -80,17 +79,14 @@ static int request_notification_irq(irq_action_t func, void *data,
 
 void setup_notification(void)
 {
-	uint16_t cpu;
-	char name[32] = {0};
+	uint16_t cpu = get_cpu_id();
 
-	cpu = get_cpu_id();
 	if (cpu > 0U) {
 		return;
 	}
 
 	/* support IPI notification, VM0 will register all CPU */
-	snprintf(name, 32, "NOTIFY_ISR%d", cpu);
-	if (request_notification_irq(kick_notification, NULL, name) < 0) {
+	if (request_notification_irq(kick_notification, NULL) < 0) {
 		pr_err("Failed to setup notification");
 		return;
 	}

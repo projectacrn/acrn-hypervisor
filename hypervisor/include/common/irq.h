@@ -13,14 +13,9 @@ enum irq_mode {
 	IRQ_DEASSERT,
 };
 
-enum irq_state {
+enum irq_use_state {
 	IRQ_NOT_ASSIGNED = 0,
 	IRQ_ASSIGNED,
-};
-
-enum irq_desc_state {
-	IRQ_DESC_PENDING,
-	IRQ_DESC_IN_PROCESS,
 };
 
 typedef int (*irq_action_t)(uint32_t irq, void *priv_data);
@@ -28,19 +23,15 @@ typedef int (*irq_action_t)(uint32_t irq, void *priv_data);
 /* any field change in below required irq_lock protection with irqsave */
 struct irq_desc {
 	uint32_t irq;		/* index to irq_desc_base */
-	enum irq_state used;	/* this irq have assigned to device */
-	enum irq_desc_state state; /* irq_desc status */
+	enum irq_use_state used;	/* this irq have assigned to device */
 	uint32_t vector;	/* assigned vector */
 
 	int (*irq_handler)(struct irq_desc *irq_desc, void *handler_data);
 				/* callback for irq flow handling */
 	irq_action_t action;	/* callback registered from component */
 	void *priv_data;	/* irq_action private data */
-	char name[32];		/* name of component */
 
-	spinlock_t irq_lock;
-	uint64_t *irq_cnt; /* this irq cnt happened on CPUs */
-	uint64_t irq_lost_cnt;
+	spinlock_t lock;
 };
 
 uint32_t irq_mark_used(uint32_t irq);
@@ -52,8 +43,7 @@ uint32_t irq_to_vector(uint32_t irq);
 
 int32_t request_irq(uint32_t irq,
 		    irq_action_t action_fn,
-		    void *priv_data,
-		    const char *name);
+		    void *priv_data);
 
 void free_irq(uint32_t irq);
 
