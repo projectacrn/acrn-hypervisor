@@ -486,8 +486,8 @@ assign all devices to VM0 except the UART.
 
 If a PCI device (with MSI/MSI-x) is assigned to Guest, the User OS will
 program the PCI config space and set the guest vector to this device. A
-Hypercall ``CWP_VM_PCI_MSIX_FIXUP`` is provided. Once the guest programs
-the guest vector, the User OS may call this hypercall to notify the ACRN
+Hypercall ``HC_VM_PCI_MSIX_REMAP`` is provided. Once the guest programs
+the guest vector, the Service OS may call this hypercall to notify the ACRN
 hypervisor. The hypervisor allocates a host vector, creates a guest-host
 mapping relation, and replaces the guest vector with a real native
 vector for the device:

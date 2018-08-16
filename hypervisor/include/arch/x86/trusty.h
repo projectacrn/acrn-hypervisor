@@ -40,7 +40,7 @@ struct trusty_key_info {
 		0: Dummy (fake secret)
 		1: APL (APL + ABL)
 		2: ICL (ICL + SBL)
-		3: CWP (APL|ICL + SBL + CWP)
+		3: ACRN (APL|ICL + SBL + ACRN)
 		4: Brillo (Android Things)
 	*/
 	uint32_t platform;
