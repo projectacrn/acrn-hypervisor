@@ -345,11 +345,13 @@ Device Manager memory allocation mechanism
 The ACRN Device Manager (DM) virtual memory allocation uses the HugeTLB mechanism.
 (You can read more about `HugeTLB in the linux kernel <https://linuxgazette.net/155/krishnakumar.html>`_
 for more information about how this mechanism works.)
-For hugeTLB to work with 1GB huge page reservation in runtime, it is possible fail sometime. 
-This will make DM fall back to use 2M huge pages. If you want to guarantee 1G huge page reservation
-you'll need to set SOS command line to reserve manually
-For a (large) 1GB huge page reservation, add ``hugepagesz=1G hugepages=reserved_pg_num``
-(for example, ``hugepagesz=1G hugepages=4``) to the SOS cmdline in ``acrn.conf`` (for EFI)
+For hugeTLB to work with a 1GB huge page reservation at runtime, 
+set an SOS command line parameter to reserve this space.  Add 
+``hugepagesz=1G hugepages=<reserved_pg_num>``
+(for example, ``hugepagesz=1G hugepages=4``) to the SOS
+cmdline in ``acrn.conf`` (for EFI).  Without this reservation, the
+DM may fall back to use 2M huge pages.
+
 
 Build ACRN from Source
 **********************
