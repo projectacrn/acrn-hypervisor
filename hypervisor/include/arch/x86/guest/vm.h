@@ -216,7 +216,7 @@ static inline struct vcpu *vcpu_from_vid(struct vm *vm, uint16_t vcpu_id)
 	return NULL;
 }
 
-static inline struct vcpu *vcpu_from_pid(struct vm *vm, uint16_t pcpu_id)
+static inline struct vcpu *vcpu_from_pid(const struct vm *vm, uint16_t pcpu_id)
 {
 	uint16_t i;
 	struct vcpu *vcpu;

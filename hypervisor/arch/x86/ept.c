@@ -104,9 +104,16 @@ uint64_t local_gpa2hpa(const struct vm *vm, uint64_t gpa, uint32_t *size)
 {
 	uint64_t hpa = 0UL;
 	uint64_t *pgentry, pg_size = 0UL;
+	void *eptp;
+	struct vcpu *vcpu = vcpu_from_pid(vm, get_cpu_id());
 
-	pgentry = lookup_address((uint64_t *)vm->arch_vm.nworld_eptp,
-			gpa, &pg_size, PTT_EPT);
+	if (vcpu && (vcpu->arch_vcpu.cur_context == SECURE_WORLD)) {
+		eptp = vm->arch_vm.sworld_eptp;
+	} else {
+		eptp = vm->arch_vm.nworld_eptp;
+	}
+
+	pgentry = lookup_address((uint64_t *)eptp, gpa, &pg_size, PTT_EPT);
 	if (pgentry != NULL) {
 		hpa = ((*pgentry & (~(pg_size - 1UL)))
 				| (gpa & (pg_size - 1UL)));
