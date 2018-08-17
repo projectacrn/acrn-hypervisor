@@ -175,7 +175,7 @@ int vmexit_handler(struct vcpu *vcpu)
 		if (type == VMX_INT_TYPE_HW_EXP) {
 			if ((vector_info & VMX_INT_INFO_ERR_CODE_VALID) != 0U)
 				err_code = exec_vmread32(VMX_IDT_VEC_ERROR_CODE);
-			vcpu_queue_exception(vcpu, vector, err_code);
+			(void)vcpu_queue_exception(vcpu, vector, err_code);
 			vcpu->arch_vcpu.idt_vectoring_info = 0U;
 		} else if (type == VMX_INT_TYPE_NMI) {
 			vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
