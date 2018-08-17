@@ -520,7 +520,7 @@ void ptdev_softirq(__unused uint16_t cpu_id)
 			ptdev_intr_handle_irq(vm, entry);
 		} else {
 			/* TODO: msi destmode check required */
-			vlapic_intr_msi(vm,
+			(void)vlapic_intr_msi(vm,
 				        msi->vmsi_addr,
 				        msi->vmsi_data);
 			dev_dbg(ACRN_DBG_PTIRQ,

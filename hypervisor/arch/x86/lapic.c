@@ -349,18 +349,15 @@ uint8_t get_cur_lapic_id(void)
 	return lapic_id;
 }
 
-int
+/**
+ * @pre cpu_startup_shorthand < INTR_CPU_STARTUP_UNKNOWN
+ */
+void
 send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	uint16_t dest_pcpu_id, uint64_t cpu_startup_start_address)
 {
 	union apic_icr icr;
 	uint8_t shorthand;
-	int status = 0;
-
-	if (cpu_startup_shorthand >= INTR_CPU_STARTUP_UNKNOWN)
-		status = -EINVAL;
-
-	ASSERT(status == 0, "Incorrect arguments");
 
 	icr.value = 0U;
 	icr.bits.destination_mode = INTR_LAPIC_ICR_PHYSICAL;
@@ -412,8 +409,6 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_1, icr.value_32.hi_32);
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_0, icr.value_32.lo_32);
 	wait_for_delivery();
-
-	return status;
 }
 
 /* dest_mode must be INTR_LAPIC_ICR_PHYSICAL(0x0U) or

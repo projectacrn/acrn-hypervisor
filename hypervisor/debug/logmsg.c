@@ -42,7 +42,7 @@ static inline void free_earlylog_sbuf(uint16_t pcpu_id)
 	per_cpu(earlylog_sbuf, pcpu_id) = NULL;
 }
 
-static int do_copy_earlylog(struct shared_buf *dst_sbuf,
+static void do_copy_earlylog(struct shared_buf *dst_sbuf,
 			    struct shared_buf *src_sbuf)
 {
 	uint32_t buf_size, valid_size;
@@ -54,7 +54,7 @@ static int do_copy_earlylog(struct shared_buf *dst_sbuf,
 		spinlock_irqsave_obtain(&(logmsg.lock), &rflags);
 		printf("Error to copy early hvlog: size mismatch\n");
 		spinlock_irqrestore_release(&(logmsg.lock), rflags);
-		return -EINVAL;
+		return;
 	}
 
 	cur_tail = src_sbuf->tail;
@@ -67,8 +67,6 @@ static int do_copy_earlylog(struct shared_buf *dst_sbuf,
 		/* there is chance to lose new log from certain pcpu */
 		dst_sbuf->tail = cur_tail;
 	}
-
-	return 0;
 }
 
 void init_logmsg(__unused uint32_t mem_size, uint32_t flags)
