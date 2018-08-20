@@ -9,15 +9,31 @@
 
 #define ACTIVE_FLAG 0x1U /* any non zero should be okay */
 
-enum ptdev_intr_type {
-	PTDEV_INTR_MSI,
-	PTDEV_INTR_INTX,
-	PTDEV_INTR_INV,
-};
+#define PTDEV_INTR_MSI		(1U << 0U)
+#define PTDEV_INTR_INTX		(1U << 1U)
 
 enum ptdev_vpin_source {
 	PTDEV_VPIN_IOAPIC,
 	PTDEV_VPIN_PIC,
+};
+
+#define DEFINE_MSI_SID(name, a, b)	\
+union source_id name = {.msi_id = {.bdf = (a), .entry_nr = (b)}}
+
+#define DEFINE_IOAPIC_SID(name, a, b)	\
+union source_id name = {.intx_id = {.pin = (a), .src = (b)}}
+
+union source_id {
+	uint32_t value;
+	struct {
+		uint16_t bdf;
+		uint16_t entry_nr;
+	} msi_id;
+	struct {
+		uint8_t pin;
+		uint8_t src;
+		uint16_t reserved;
+	} intx_id;
 };
 
 /* entry per guest virt vector */
@@ -33,37 +49,25 @@ struct ptdev_msi_info {
 	uint32_t phys_vector;
 };
 
-/* entry per guest vioapic pin */
-struct ptdev_intx_info {
-	enum ptdev_vpin_source vpin_src;
-	uint8_t virt_pin;
-	uint8_t phys_pin;
-};
-
 /* entry per each allocated irq/vector
  * it represents a pass-thru device's remapping data entry which collecting
  * information related with its vm and msi/intx mapping & interaction nodes
  * with interrupt handler and softirq.
  */
 struct ptdev_remapping_info {
+	uint32_t intr_type;
+	union source_id phys_sid;
+	union source_id virt_sid;
 	struct vm *vm;
-	uint16_t virt_bdf;	/* PCI bus:slot.func*/
-	uint16_t phys_bdf;	/* PCI bus:slot.func*/
 	uint32_t active;	/* 1=active, 0=inactive and to free*/
-	enum ptdev_intr_type type;
 	uint32_t allocated_pirq;
 	struct list_head softirq_node;
 	struct list_head entry_node;
-
-	union {
-		struct ptdev_msi_info msi;
-		struct ptdev_intx_info intx;
-	} ptdev_intr_info;
+	struct ptdev_msi_info msi;
 };
 
 extern struct list_head ptdev_list;
 extern spinlock_t ptdev_lock;
-extern struct ptdev_remapping_info invalid_entry;
 
 void ptdev_softirq(__unused uint16_t cpu_id);
 void ptdev_init(void);
@@ -71,7 +75,7 @@ void ptdev_release_all_entries(struct vm *vm);
 
 struct ptdev_remapping_info *ptdev_dequeue_softirq(void);
 struct ptdev_remapping_info *alloc_entry(struct vm *vm,
-		enum ptdev_intr_type type);
+		uint32_t intr_type);
 void release_entry(struct ptdev_remapping_info *entry);
 void ptdev_activate_entry(
 		struct ptdev_remapping_info *entry,

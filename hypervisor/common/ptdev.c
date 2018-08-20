@@ -14,11 +14,6 @@ static struct list_head softirq_dev_entry_list;
 struct list_head ptdev_list;
 spinlock_t ptdev_lock;
 
-/* invalid_entry for error return */
-struct ptdev_remapping_info invalid_entry = {
-	.type = PTDEV_INTR_INV,
-};
-
 /*
  * entry could both be in ptdev_list and softirq_dev_entry_list.
  * When release entry, we need make sure entry deleted from both
@@ -64,14 +59,14 @@ ptdev_dequeue_softirq(void)
 
 /* require ptdev_lock protect */
 struct ptdev_remapping_info *
-alloc_entry(struct vm *vm, enum ptdev_intr_type type)
+alloc_entry(struct vm *vm, uint32_t intr_type)
 {
 	struct ptdev_remapping_info *entry;
 
 	/* allocate */
 	entry = calloc(1U, sizeof(*entry));
 	ASSERT(entry != NULL, "alloc memory failed");
-	entry->type = type;
+	entry->intr_type = intr_type;
 	entry->vm = vm;
 
 	INIT_LIST_HEAD(&entry->softirq_node);
