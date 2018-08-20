@@ -1150,6 +1150,7 @@ init_pci(struct vmctx *ctx)
 	struct funcinfo *fi;
 	size_t lowmem;
 	int bus, slot, func;
+	int success_cnt = 0;
 	int error;
 
 	pci_emul_iobase = PCI_EMUL_IOBASE;
@@ -1181,7 +1182,8 @@ init_pci(struct vmctx *ctx)
 				error = pci_emul_init(ctx, ops, bus, slot,
 				    func, fi);
 				if (error)
-					return error;
+					goto pci_emul_init_fail;
+				success_cnt++;
 			}
 		}
 
@@ -1207,7 +1209,7 @@ init_pci(struct vmctx *ctx)
 
 	error = check_gsi_sharing_violation();
 	if (error < 0)
-		return error;
+		goto pci_emul_init_fail;
 
 	/*
 	 * PCI backends are initialized before routing INTx interrupts
@@ -1270,6 +1272,29 @@ init_pci(struct vmctx *ctx)
 	assert(error == 0);
 
 	return 0;
+
+pci_emul_init_fail:
+	for (bus = 0; bus < MAXBUSES && success_cnt > 0; bus++) {
+		bi = pci_businfo[bus];
+		if (bi == NULL)
+			continue;
+		for (slot = 0; slot < MAXSLOTS && success_cnt > 0; slot++) {
+			si = &bi->slotinfo[slot];
+			for (func = 0; func < MAXFUNCS; func++) {
+				fi = &si->si_funcs[func];
+				if (fi->fi_name == NULL)
+					continue;
+				if (success_cnt-- <= 0)
+					break;
+				ops = pci_emul_finddev(fi->fi_name);
+				assert(ops != NULL);
+				pci_emul_deinit(ctx, ops, bus, slot,
+				    func, fi);
+			}
+		}
+	}
+
+	return error;
 }
 
 void
