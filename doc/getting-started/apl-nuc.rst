@@ -331,7 +331,7 @@ Set up Reference UOS
       :language: bash
       :emphasize-lines: 26,28
    
-   Make sure to modify last line in ``launch_uo.sh``, by defualt it is ``launch_clear 1 1 "64 448 8" 0x070F00 clear``, which   
+   Make sure to modify last line in ``launch_uos.sh``, by default it is ``launch_clear 1 1 "64 448 8" 0x070F00 clear``, which   
    means there are 2 cpu cores, 1 for SOS and another for UOS by default. 
    here the APL NUC hardware as an example, which has 4 cpu cores, we allocate 1 for SOS and other 3 for UOS. so make sure 
    it is ``launch_clear 1 3 "64 448 8" 0x070F00 clear`` .
