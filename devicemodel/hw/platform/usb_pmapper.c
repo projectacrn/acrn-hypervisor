@@ -855,6 +855,65 @@ out:
 	return xfer->status;
 }
 
+int
+usb_dev_is_hub(void *pdata)
+{
+	struct libusb_device *ldev;
+	struct libusb_device_descriptor desc;
+	int rc;
+
+	assert(pdata);
+
+	ldev = pdata;
+	rc = libusb_get_device_descriptor(ldev, &desc);
+
+	if (rc)
+		return USB_TYPE_INVALID;
+
+	if (desc.bDeviceClass == LIBUSB_CLASS_HUB)
+		return USB_HUB;
+	else
+		return USB_DEV;
+
+}
+
+enum usb_native_dev_type
+usb_get_parent_dev_type(void *pdata, uint16_t *bus, uint16_t *port)
+{
+	struct libusb_device *ldev;
+	struct libusb_device *libdev;
+	struct libusb_device_descriptor desc;
+	int rc;
+
+	assert(pdata);
+	assert(bus);
+	assert(port);
+
+	ldev = pdata;
+	libdev = libusb_get_parent(ldev);
+
+	if (libdev == NULL) {
+		UPRINTF(LWRN, "libusb_get_parent return NULL\r\n");
+		return USB_TYPE_INVALID;
+	}
+
+	*bus = libusb_get_bus_number(libdev);
+	*port = libusb_get_port_number(libdev);
+
+	rc = libusb_get_device_descriptor(libdev, &desc);
+	if (rc) {
+		UPRINTF(LWRN, "libusb_get_device_descriptor error %d\r\n", rc);
+		return USB_TYPE_INVALID;
+	}
+
+	if (*port == 0)
+		return ROOT_HUB;
+	if (desc.bDeviceClass == LIBUSB_CLASS_HUB)
+		return USB_HUB;
+
+	return USB_TYPE_INVALID;
+}
+
 void *
 usb_dev_init(void *pdata, char *opt)
 {
@@ -1039,6 +1098,9 @@ usb_dev_native_sys_disconn_cb(struct libusb_context *ctx, struct libusb_device
 		*ldev, libusb_hotplug_event event, void *pdata)
 {
 	uint8_t port;
+	uint16_t pport;
+	uint16_t pbus;
+	int rc;
 
 	UPRINTF(LDBG, "disconnect event\r\n");
 
@@ -1048,6 +1110,13 @@ usb_dev_native_sys_disconn_cb(struct libusb_context *ctx, struct libusb_device
 	}
 
 	port = libusb_get_port_number(ldev);
+	rc = usb_get_parent_dev_type(ldev, &pbus, &pport);
+	if (rc == USB_TYPE_INVALID) {
+		UPRINTF(LWRN, "usb_get_parent_dev_type return %d\r\n", rc);
+		return 0;
+	} else if (rc == USB_HUB)
+		port += PORT_HUB_BASE;
+
 	if (g_ctx.disconn_cb)
 		g_ctx.disconn_cb(g_ctx.hci_data, &port);
 

@@ -20,6 +20,9 @@
 #define USB_EP_NR(d) (USB_EP_ADDR(d) & 0xF)
 #define USB_EP_ERR_TYPE 0xFF
 
+/* hub port start address */
+#define PORT_HUB_BASE	0x0A
+
 enum {
 	USB_INFO_VERSION,
 	USB_INFO_SPEED,
@@ -27,6 +30,15 @@ enum {
 	USB_INFO_PORT,
 	USB_INFO_VID,
 	USB_INFO_PID
+};
+
+enum usb_native_dev_type {
+	ROOT_HUB,
+	USB_HUB,
+	USB_DEV,
+	USB_VALID_SUB_DEV,
+	USB_INVALID_SUB_DEV,
+	USB_TYPE_INVALID
 };
 
 struct usb_dev_ep {
@@ -119,4 +131,7 @@ int usb_dev_info(void *pdata, int type, void *value, int size);
 int usb_dev_request(void *pdata, struct usb_data_xfer *xfer);
 int usb_dev_reset(void *pdata);
 int usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx);
+enum usb_native_dev_type usb_get_parent_dev_type(void *pdata, uint16_t *bus,
+		uint16_t *port);
+int usb_dev_is_hub(void *pdata);
 #endif
