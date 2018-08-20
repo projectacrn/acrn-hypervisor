@@ -24,7 +24,7 @@
 
 #define NR_MAX_VECTOR		0xFFU
 #define VECTOR_INVALID		(NR_MAX_VECTOR + 1U)
-#define NR_IRQS		(256U + 16U)
+#define NR_IRQS		256U
 #define IRQ_INVALID		0xffffffffU
 
 #define TIMER_IRQ		(NR_IRQS - 1U)

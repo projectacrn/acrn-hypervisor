@@ -17,17 +17,11 @@ enum irq_mode {
 	IRQ_DEASSERT,
 };
 
-enum irq_use_state {
-	IRQ_NOT_ASSIGNED = 0,
-	IRQ_ASSIGNED,
-};
-
 typedef int (*irq_action_t)(uint32_t irq, void *priv_data);
 
 /* any field change in below required irq_lock protection with irqsave */
 struct irq_desc {
 	uint32_t irq;		/* index to irq_desc_base */
-	enum irq_use_state used;	/* this irq have assigned to device */
 	uint32_t vector;	/* assigned vector */
 
 	irq_action_t action;	/* callback registered from component */
