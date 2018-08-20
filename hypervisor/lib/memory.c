@@ -233,6 +233,10 @@ static void deallocate_mem(struct mem_pool *pool, void *ptr)
 	}
 }
 
+/*
+ * The return address will be CPU_PAGE_SIZE aligned if 'num_bytes' is greater
+ * than CPU_PAGE_SIZE.
+ */
 void *malloc(unsigned int num_bytes)
 {
 	void *memory = NULL;
