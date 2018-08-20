@@ -38,7 +38,7 @@
  */
 int hkdf_sha256(uint8_t *out_key, size_t out_len,
 		const uint8_t *secret, size_t secret_len,
-		const uint8_t *salt, size_t salt_len,
-		const uint8_t *info, size_t info_len);
+		__unused const uint8_t *salt, __unused size_t salt_len,
+		__unused const uint8_t *info, __unused size_t info_len);
 
 #endif  /* HKDF_H */
