@@ -496,4 +496,6 @@ void resume_iommu(void);
 
 /* iommu initialization */
 void init_iommu(void);
+void init_iommu_vm0_domain(struct vm *vm0);
+
 #endif
