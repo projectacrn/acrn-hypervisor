@@ -167,7 +167,7 @@ struct lapic_regs {
 	/* reserved */		PAD4;
 	uint32_t dcr_timer;	PAD3;
 	/* reserved */		PAD4;
-};
+} __aligned(CPU_PAGE_SIZE);
 
 enum LAPIC_REGISTERS {
 	LAPIC_ID	= 0x2,

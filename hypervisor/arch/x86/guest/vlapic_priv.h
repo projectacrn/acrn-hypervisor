@@ -115,10 +115,18 @@ struct vlapic_timer {
 };
 
 struct acrn_vlapic {
+	/*
+	 * Please keep 'apic_page' and 'pir_desc' be the first two fields in
+	 * current structure, as below alignment restrictions are mandatory
+	 * to support APICv features:
+	 * - 'apic_page' MUST be 4KB aligned.
+	 * - 'pir_desc' MUST be 64 bytes aligned.
+	 */
+	struct lapic_regs	apic_page;
+	struct vlapic_pir_desc	pir_desc;
+
 	struct vm		*vm;
 	struct vcpu		*vcpu;
-	struct lapic_regs	*apic_page;
-	struct vlapic_pir_desc		*pir_desc;
 	struct vlapic_ops	ops;
 
 	uint32_t		esr_pending;
@@ -153,7 +161,6 @@ struct acrn_vlapic {
 	 */
 	uint32_t	svr_last;
 	uint32_t	lvt_last[VLAPIC_MAXLVT_INDEX + 1];
-	struct vlapic_pir_desc	pir;
-};
+} __aligned(CPU_PAGE_SIZE);
 
 #endif	/* _VLAPIC_PRIV_H_ */
