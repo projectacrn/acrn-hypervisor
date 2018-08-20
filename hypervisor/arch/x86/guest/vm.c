@@ -7,6 +7,7 @@
 #include <hypervisor.h>
 #include <bsp_extern.h>
 #include <multiboot.h>
+#include <vtd.h>
 
 /* Local variables */
 
@@ -163,6 +164,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 			goto err;
 		}
 #endif
+		init_iommu_vm0_domain(vm);
 	} else {
 		/* populate UOS vm fields according to vm_desc */
 		vm->sworld_control.flag.supported =

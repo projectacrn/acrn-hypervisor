@@ -168,7 +168,8 @@ static uint32_t dmar_hdrh_unit_count;
 static uint32_t max_domain_id = 63U;
 static uint64_t domain_bitmap;
 static spinlock_t domain_lock;
-static struct iommu_domain *host_domain;
+
+static struct iommu_domain *vm0_domain;
 static struct list_head iommu_domains;
 
 static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint);
@@ -514,20 +515,6 @@ static void free_domain_id(uint16_t dom_id)
 	spinlock_obtain(&domain_lock);
 	domain_bitmap &= ~mask;
 	spinlock_release(&domain_lock);
-}
-
-static struct iommu_domain *create_host_domain(void)
-{
-	struct iommu_domain *domain = calloc(1U, sizeof(struct iommu_domain));
-
-	ASSERT(domain != NULL, "");
-	domain->is_host = true;
-	domain->dom_id = alloc_domain_id();
-	/* dmar uint need to support translation passthrough */
-	domain->trans_table_ptr = 0UL;
-	domain->addr_width = 48U;
-
-	return domain;
 }
 
 static void dmar_write_buffer_flush(struct dmar_drhd_rt *dmar_uint)
@@ -1148,7 +1135,7 @@ int assign_iommu_device(struct iommu_domain *domain, uint8_t bus,
 
 	/* TODO: check if the device assigned */
 
-	remove_iommu_device(host_domain, 0U, bus, devfun);
+	remove_iommu_device(vm0_domain, 0U, bus, devfun);
 	add_iommu_device(domain, 0U, bus, devfun);
 	return 0;
 }
@@ -1163,7 +1150,7 @@ int unassign_iommu_device(struct iommu_domain *domain, uint8_t bus,
 	/* TODO: check if the device assigned */
 
 	remove_iommu_device(domain, 0U, bus, devfun);
-	add_iommu_device(host_domain, 0U, bus, devfun);
+	add_iommu_device(vm0_domain, 0U, bus, devfun);
 	return 0;
 }
 
@@ -1282,24 +1269,30 @@ void resume_iommu(void)
 
 void init_iommu(void)
 {
-	uint16_t bus;
-	uint16_t devfun;
-
 	INIT_LIST_HEAD(&dmar_drhd_units);
 	INIT_LIST_HEAD(&iommu_domains);
 
 	spinlock_init(&domain_lock);
 
 	register_hrhd_units();
+}
 
-	host_domain = create_host_domain();
+void init_iommu_vm0_domain(struct vm *vm0)
+{
+	uint16_t bus;
+	uint16_t devfun;
+
+	vm0->iommu = create_iommu_domain(vm0->vm_id,
+		HVA2HPA(vm0->arch_vm.nworld_eptp), 48U);
+
+	vm0_domain = (struct iommu_domain *) vm0->iommu;
 
 	for (bus = 0U; bus <= IOMMU_INIT_BUS_LIMIT; bus++) {
 		for (devfun = 0U; devfun <= 255U; devfun++) {
-			add_iommu_device(host_domain, 0U,
-					 (uint8_t)bus, (uint8_t)devfun);
+			add_iommu_device(vm0_domain, 0U,
+				(uint8_t)bus, (uint8_t)devfun);
 		}
 	}
-
+	CACHE_FLUSH_INVALIDATE_ALL();
 	enable_iommu();
 }
