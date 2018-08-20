@@ -37,10 +37,8 @@ struct irq_desc {
 	spinlock_t lock;
 };
 
-int32_t request_irq(uint32_t irq,
-		    irq_action_t action_fn,
-		    void *priv_data,
-		    uint32_t flags);
+int32_t request_irq(uint32_t req_irq, irq_action_t action_fn, void *priv_data,
+			uint32_t flags);
 
 void free_irq(uint32_t irq);
 

@@ -78,13 +78,14 @@ static inline void vlapic_dump_isr(struct acrn_vlapic *vlapic, char *msg)
 static void *apicv_apic_access_addr;
 
 static int
-apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level);
+apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector,
+			__unused bool level);
 
 static int
 apicv_pending_intr(struct acrn_vlapic *vlapic, __unused uint32_t *vecptr);
 
 static void
-apicv_set_tmr(struct acrn_vlapic *vlapic, uint32_t vector, bool level);
+apicv_set_tmr(__unused struct acrn_vlapic *vlapic, uint32_t vector, bool level);
 
 static void
 apicv_batch_set_tmr(struct acrn_vlapic *vlapic);
@@ -2132,7 +2133,8 @@ void vlapic_free(struct vcpu *vcpu)
  * APIC-v functions
  * **/
 static int
-apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, __unused bool level)
+apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector,
+			__unused bool level)
 {
 	struct vlapic_pir_desc *pir_desc;
 	uint64_t mask;

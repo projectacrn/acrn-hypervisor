@@ -179,10 +179,8 @@ void free_irq_vector(uint32_t irq)
  *
  * return value: valid irq (>=0) on success, otherwise errno (< 0).
  */
-int32_t request_irq(uint32_t req_irq,
-		    irq_action_t action_fn,
-		    void *priv_data,
-		    uint32_t flags)
+int32_t request_irq(uint32_t req_irq, irq_action_t action_fn, void *priv_data,
+			uint32_t flags)
 {
 	struct irq_desc *desc;
 	uint32_t irq, vector;
