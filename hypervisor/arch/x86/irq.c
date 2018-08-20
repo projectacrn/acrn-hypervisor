@@ -10,6 +10,8 @@
 static spinlock_t exception_spinlock = { .head = 0U, .tail = 0U, };
 static spinlock_t irq_alloc_spinlock = { .head = 0U, .tail = 0U, };
 
+#define IRQ_ALLOC_BITMAP_SIZE	INT_DIV_ROUNDUP(NR_IRQS, sizeof(uint64_t))
+static uint64_t irq_alloc_bitmap[IRQ_ALLOC_BITMAP_SIZE];
 static struct irq_desc irq_desc_array[NR_IRQS];
 static uint32_t vector_to_irq[NR_MAX_VECTOR + 1];
 
@@ -27,10 +29,8 @@ static uint32_t irq_static_mappings[NR_STATIC_MAPPINGS][2] = {
  */
 uint32_t alloc_irq_num(uint32_t req_irq)
 {
-	uint32_t i;
 	uint32_t irq = req_irq;
 	uint64_t rflags;
-	struct irq_desc *desc;
 
 	if ((irq >= NR_IRQS) && (irq != IRQ_INVALID)) {
 		pr_err("[%s] invalid req_irq %u", __func__, req_irq);
@@ -40,18 +40,12 @@ uint32_t alloc_irq_num(uint32_t req_irq)
 	spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
 	if (irq == IRQ_INVALID) {
 		/* if no valid irq num given, find a free one */
-		for (i = irq_gsi_num(); i < NR_IRQS; i++) {
-			desc = &irq_desc_array[i];
-			if (desc->used == IRQ_NOT_ASSIGNED) {
-				irq = i;
-				break;
-			}
-		}
+		irq = ffz64_ex(irq_alloc_bitmap, NR_IRQS);
+		irq = (irq == NR_IRQS) ? IRQ_INVALID : irq;
 	}
 
 	if (irq != IRQ_INVALID) {
-		desc = &irq_desc_array[irq];
-		desc->used = IRQ_ASSIGNED;
+		bitmap_set_nolock(irq & 0x3FU, irq_alloc_bitmap + (irq >> 6U));
 	}
 	spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);
 	return irq;
@@ -73,7 +67,8 @@ void free_irq_num(uint32_t irq)
 	if ((irq_is_gsi(irq) == false)
 	    && (desc->vector <= VECTOR_DYNAMIC_END)) {
 		spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
-		desc->used = IRQ_NOT_ASSIGNED;
+		bitmap_test_and_clear_nolock(irq & 0x3FU,
+					     irq_alloc_bitmap + (irq >> 6U));
 		spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);
 	}
 }
@@ -338,7 +333,7 @@ void dispatch_interrupt(struct intr_excp_ctx *ctx)
 		goto ERR;
 	}
 
-	if (desc->used == IRQ_NOT_ASSIGNED) {
+	if (bitmap_test(irq & 0x3FU, irq_alloc_bitmap + (irq >> 6U)) == 0U) {
 		/* mask irq if possible */
 		goto ERR;
 	}
@@ -396,7 +391,6 @@ void get_cpu_interrupt_info(char *str_arg, int str_max)
 	uint16_t pcpu_id;
 	uint32_t irq, vector;
 	int len, size = str_max;
-	struct irq_desc *desc;
 
 	len = snprintf(str, size, "\r\nIRQ\tVECTOR");
 	size -= len;
@@ -408,10 +402,9 @@ void get_cpu_interrupt_info(char *str_arg, int str_max)
 	}
 
 	for (irq = 0U; irq < NR_IRQS; irq++) {
-		desc = &irq_desc_array[irq];
 		vector = irq_to_vector(irq);
-		if ((desc->used != IRQ_NOT_ASSIGNED) &&
-			(vector != VECTOR_INVALID)) {
+		if (bitmap_test(irq & 0x3FU, irq_alloc_bitmap + (irq >> 6U))
+			&& (vector != VECTOR_INVALID)) {
 			len = snprintf(str, size, "\r\n%d\t0x%X", irq, vector);
 			size -= len;
 			str += len;
@@ -447,8 +440,8 @@ static void init_irq_descs(void)
 		uint32_t vr = irq_static_mappings[i][1];
 
 		irq_desc_array[irq].vector = vr;
-		irq_desc_array[irq].used = IRQ_ASSIGNED;
 		vector_to_irq[vr] = irq;
+		bitmap_set_nolock(irq & 0x3FU, irq_alloc_bitmap + (irq >> 6U));
 	}
 }
 
