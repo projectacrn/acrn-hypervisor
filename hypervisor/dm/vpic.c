@@ -374,7 +374,7 @@ static int vpic_ocw1(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint
 		 * remap for deactive: when vIOAPIC take it over
 		 */
 		if (((i8259->mask & bit) == 0U) && ((old & bit) != 0U)) {
-			struct ptdev_intx_info intx;
+			uint8_t virt_pin;
 
 			/* master i8259 pin2 connect with slave i8259,
 			 * not device, so not need pt remap
@@ -383,12 +383,10 @@ static int vpic_ocw1(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint
 				continue;
 			}
 
-			intx.virt_pin = pin;
-			intx.vpin_src = PTDEV_VPIN_PIC;
-			if (!master_pic(vpic, i8259)) {
-				intx.virt_pin += 8U;
-			}
-			ptdev_intx_pin_remap(vpic->vm, &intx);
+			virt_pin = (master_pic(vpic, i8259)) ?
+					pin : (pin + 8U);
+			ptdev_intx_pin_remap(vpic->vm,
+					virt_pin, PTDEV_VPIN_PIC);
 		}
 	}
 

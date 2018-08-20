@@ -397,12 +397,9 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 		if (((new.full & IOAPIC_RTE_INTMASK) == 0UL) ||
 				((last.full & IOAPIC_RTE_INTMASK) == 0UL)) {
 			/* VM enable intr */
-			struct ptdev_intx_info intx;
-
 			/* NOTE: only support max 256 pin */
-			intx.virt_pin = (uint8_t)pin;
-			intx.vpin_src = PTDEV_VPIN_IOAPIC;
-			ptdev_intx_pin_remap(vioapic->vm, &intx);
+			ptdev_intx_pin_remap(vioapic->vm,
+					(uint8_t)pin, PTDEV_VPIN_IOAPIC);
 		}
 	}
 }

@@ -13,7 +13,8 @@ void ptdev_intx_ack(struct vm *vm, uint8_t virt_pin,
 		enum ptdev_vpin_source vpin_src);
 int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 		struct ptdev_msi_info *info);
-int ptdev_intx_pin_remap(struct vm *vm, struct ptdev_intx_info *info);
+int ptdev_intx_pin_remap(struct vm *vm, uint8_t virt_pin,
+		enum ptdev_vpin_source vpin_src);
 int ptdev_add_intx_remapping(struct vm *vm, __unused uint16_t virt_bdf,
 	__unused uint16_t phys_bdf, uint8_t virt_pin, uint8_t phys_pin,
 	bool pic_pin);
