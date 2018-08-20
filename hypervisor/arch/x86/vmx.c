@@ -609,7 +609,7 @@ static void init_guest_context_vm0_bsp(struct vcpu *vcpu)
 {
 	struct ext_context *ectx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ext_ctx;
-	struct boot_ctx * init_ctx = (struct boot_ctx *)vm0_boot_context;
+	struct boot_ctx * init_ctx = (struct boot_ctx *)(&vm0_boot_context);
 	uint16_t *sel;
 	struct segment_sel *seg;
 
@@ -709,7 +709,7 @@ static void init_guest_state(struct vcpu *vcpu)
 {
 	struct cpu_context *ctx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-	struct boot_ctx * init_ctx = (struct boot_ctx *)vm0_boot_context;
+	struct boot_ctx * init_ctx = (struct boot_ctx *)(&vm0_boot_context);
 	enum vm_cpu_mode vcpu_mode = get_vcpu_mode(vcpu);
 
 	vcpu_set_rflags(vcpu, 0x2UL); /* Bit 1 is a active high reserved bit */
