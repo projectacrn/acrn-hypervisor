@@ -160,11 +160,11 @@ ptdev_build_physical_rte(struct vm *vm,
  */
 static struct ptdev_remapping_info *
 add_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
-		uint32_t msix_entry_index)
+		uint32_t entry_nr)
 {
 	struct ptdev_remapping_info *entry;
-	DEFINE_MSI_SID(phys_sid, phys_bdf, msix_entry_index);
-	DEFINE_MSI_SID(virt_sid, virt_bdf, msix_entry_index);
+	DEFINE_MSI_SID(phys_sid, phys_bdf, entry_nr);
+	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
 
 	spinlock_obtain(&ptdev_lock);
 	entry = ptdev_lookup_entry_by_sid(PTDEV_INTR_MSI, &phys_sid, NULL);
@@ -194,7 +194,7 @@ add_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 				entry->vm->vm_id, entry->virt_sid.msi_id.bdf,
 				vm->vm_id, virt_bdf);
 			ASSERT(false, "msix entry pbdf%x idx%d already in vm%d",
-			       phys_bdf, msix_entry_index, entry->vm->vm_id);
+			       phys_bdf, entry_nr, entry->vm->vm_id);
 
 			spinlock_release(&ptdev_lock);
 			return NULL;
@@ -207,17 +207,17 @@ add_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 
 	dev_dbg(ACRN_DBG_IRQ,
 		"VM%d MSIX add vector mapping vbdf%x:pbdf%x idx=%d",
-		entry->vm->vm_id, virt_bdf, phys_bdf, msix_entry_index);
+		entry->vm->vm_id, virt_bdf, phys_bdf, entry_nr);
 
 	return entry;
 }
 
-/* deactive & remove mapping entry of vbdf:msix_entry_index for vm */
+/* deactive & remove mapping entry of vbdf:entry_nr for vm */
 static void
-remove_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint32_t msix_entry_index)
+remove_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint32_t entry_nr)
 {
 	struct ptdev_remapping_info *entry;
-	DEFINE_MSI_SID(virt_sid, virt_bdf, msix_entry_index);
+	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
 
 	spinlock_obtain(&ptdev_lock);
 	entry = ptdev_lookup_entry_by_sid(PTDEV_INTR_MSI, &virt_sid, vm);
@@ -233,7 +233,7 @@ remove_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint32_t msix_entry_inde
 	dev_dbg(ACRN_DBG_IRQ,
 		"VM%d MSIX remove vector mapping vbdf-pbdf:0x%x-0x%x idx=%d",
 		entry->vm->vm_id, virt_bdf,
-		entry->phys_sid.msi_id.bdf, msix_entry_index);
+		entry->phys_sid.msi_id.bdf, entry_nr);
 
 	release_entry(entry);
 
@@ -477,17 +477,17 @@ void ptdev_intx_ack(struct vm *vm, uint8_t virt_pin,
 
 /* Main entry for PCI device assignment with MSI and MSI-X
  * MSI can up to 8 vectors and MSI-X can up to 1024 Vectors
- * We use msix_entry_index to indicate coming vectors
- * msix_entry_index = 0 means first vector
- * user must provide bdf and msix_entry_index
+ * We use entry_nr to indicate coming vectors
+ * entry_nr = 0 means first vector
+ * user must provide bdf and entry_nr
  *
  * This function is called by SOS pci MSI config routine through hcall
  */
 int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
-		struct ptdev_msi_info *info)
+		uint16_t entry_nr, struct ptdev_msi_info *info)
 {
 	struct ptdev_remapping_info *entry;
-	DEFINE_MSI_SID(virt_sid, virt_bdf, info->msix_entry_index);
+	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
 
 	/*
 	 * Device Model should pre-hold the mapping entries by calling
@@ -502,8 +502,8 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 	if (entry == NULL) {
 		/* VM0 we add mapping dynamically */
 		if (is_vm0(vm)) {
-			entry = add_msix_remapping(vm, virt_bdf, virt_bdf,
-				info->msix_entry_index);
+			entry = add_msix_remapping(vm,
+					virt_bdf, virt_bdf, entry_nr);
 			if (entry == NULL) {
 				pr_err("dev-assign: msi entry exist in others");
 				return -ENODEV;
@@ -532,10 +532,8 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 
 	dev_dbg(ACRN_DBG_IRQ,
 		"PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
-		(virt_bdf >> 8) & 0xFFU,
-		(virt_bdf >> 3) & 0x1FU,
-		(virt_bdf) & 0x7U,
-		info->msix_entry_index,
+		(virt_bdf >> 8) & 0xFFU, (virt_bdf >> 3) & 0x1FU,
+		(virt_bdf) & 0x7U, entry_nr,
 		entry->msi.virt_vector,
 		entry->msi.phys_vector,
 		entry->vm->vm_id);

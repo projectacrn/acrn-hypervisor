@@ -623,13 +623,12 @@ int32_t hcall_remap_pci_msix(struct vm *vm, uint16_t vmid, uint64_t param)
 		ret = -1;
 	} else {
 		info.msix = remap.msix;
-		info.msix_entry_index = remap.msix_entry_index;
 		info.vmsi_ctl = remap.msi_ctl;
 		info.vmsi_addr = remap.msi_addr;
 		info.vmsi_data = remap.msi_data;
 
 		ret = ptdev_msix_remap(target_vm,
-				remap.virt_bdf, &info);
+			remap.virt_bdf, remap.msix_entry_index, &info);
 		remap.msi_data = info.pmsi_data;
 		remap.msi_addr = info.pmsi_addr;
 

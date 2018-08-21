@@ -44,7 +44,6 @@ struct ptdev_msi_info {
 	uint32_t pmsi_addr; /* phys msi_addr */
 	uint32_t pmsi_data; /* phys msi_data */
 	int msix;	/* 0-MSI, 1-MSIX */
-	uint32_t msix_entry_index; /* MSI: 0, MSIX: index of vector table*/
 	uint32_t virt_vector;
 	uint32_t phys_vector;
 };
