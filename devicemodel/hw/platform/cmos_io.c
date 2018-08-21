@@ -92,7 +92,7 @@ cmos_io_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		if (in) {
 			*eax = ctx->cmos_buffer[buf_offset];
 			/* read to clear for Key range */
-			if ((buf_offset >= CMOS_VRPMB_START) ||
+			if ((buf_offset >= CMOS_VRPMB_START) &&
 			    (buf_offset <= CMOS_VRPMB_END))
 				ctx->cmos_buffer[buf_offset] = 0;
 		}
