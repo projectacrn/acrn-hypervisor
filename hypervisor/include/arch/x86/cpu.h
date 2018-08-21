@@ -331,8 +331,8 @@ bool cpu_has_cap(uint32_t bit);
 void load_cpu_state_data(void);
 void bsp_boot_init(void);
 void cpu_secondary_init(void);
-void start_cpus();
-void stop_cpus();
+void start_cpus(void);
+void stop_cpus(void);
 void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
 
 /* Read control register */
