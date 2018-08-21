@@ -384,7 +384,7 @@ void *vuart_init(struct vm *vm)
 	ASSERT(vu != NULL, "");
 
 	/* Set baud rate*/
-	divisor = UART_CLOCK_RATE / BAUD_9600 / 16U;
+	divisor = (UART_CLOCK_RATE / BAUD_9600) >> 4U;
 	vu->dll = (uint8_t)divisor;
 	vu->dlh = (uint8_t)(divisor >> 8U);
 

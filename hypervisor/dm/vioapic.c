@@ -259,9 +259,9 @@ vioapic_indirect_read(struct vioapic *vioapic, uint32_t addr)
 	if ((regnum >= IOAPIC_REDTBL) &&
 	    (regnum < (IOAPIC_REDTBL + (pincount * 2U)))) {
 		uint32_t addr_offset = regnum - IOAPIC_REDTBL;
-		uint32_t rte_offset = addr_offset / 2U;
+		uint32_t rte_offset = addr_offset >> 1U;
 		pin = rte_offset;
-		if ((addr_offset % 2U) != 0U) {
+		if ((addr_offset & 0x1U) != 0U) {
 			return vioapic->rtbl[pin].u.hi_32;
 		} else {
 			return vioapic->rtbl[pin].u.lo_32;

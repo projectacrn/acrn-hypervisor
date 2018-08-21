@@ -109,7 +109,7 @@ static void dump_guest_stack(struct vcpu *vcpu)
 	printf("\r\nGuest Stack:\r\n");
 	printf("Dump stack for vcpu %hu, from gva 0x%016llx\r\n",
 			vcpu->vcpu_id, vcpu_get_gpreg(vcpu, CPU_REG_RSP));
-	for (i = 0U; i < (DUMP_STACK_SIZE/32U); i++) {
+	for (i = 0U; i < (DUMP_STACK_SIZE >> 5U); i++) {
 		printf("guest_rsp(0x%llx):  0x%016llx  0x%016llx  "
 				"0x%016llx  0x%016llx\r\n",
 				(vcpu_get_gpreg(vcpu, CPU_REG_RSP)+(i*32)),
@@ -181,10 +181,11 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp_arg, uint16_t pcpu_i
 	uint64_t *sp = (uint64_t *)rsp;
 
 	printf("\r\nHost Stack: CPU_ID = %hu\r\n", pcpu_id);
-	for (i = 0U; i < (DUMP_STACK_SIZE/32U); i++) {
+	for (i = 0U; i < (DUMP_STACK_SIZE >> 5U); i++) {
 		printf("addr(0x%llx)	0x%016llx  0x%016llx  0x%016llx  "
-			  "0x%016llx\r\n", (rsp+(i*32U)), sp[i*4U], sp[(i*4U)+1U],
-			  sp[(i*4U)+2U], sp[(i*4U)+3U]);
+			"0x%016llx\r\n", (rsp + (i * 32U)), sp[i * 4U],
+			sp[(i * 4U) + 1U], sp[(i * 4U) + 2U],
+			sp[(i * 4U) + 3U]);
 	}
 	printf("\r\n");
 

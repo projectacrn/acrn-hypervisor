@@ -44,11 +44,11 @@ static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg)
 	}
 
 	msr &= 0x1FFFU;
-	value = read_map[(msr>>3U)];
-	value |= 1U<<(msr%8U);
+	value = read_map[(msr >> 3U)];
+	value |= 1U << (msr & 0x7U);
 	/* right now we trap for both r/w */
-	read_map[(msr>>3U)] = value;
-	write_map[(msr>>3U)] = value;
+	read_map[(msr >> 3U)] = value;
+	write_map[(msr >> 3U)] = value;
 }
 
 void init_msr_emulation(struct vcpu *vcpu)

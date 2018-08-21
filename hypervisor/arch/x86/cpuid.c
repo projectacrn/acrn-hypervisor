@@ -17,7 +17,7 @@ static inline struct vcpuid_entry *find_vcpuid_entry(const struct vcpu *vcpu,
 	uint32_t leaf = leaf_arg;
 
 	nr = vm->vcpuid_entry_nr;
-	half = nr / 2U;
+	half = nr >> 1U;
 	if (vm->vcpuid_entries[half].leaf < leaf) {
 		i = half;
 	}
