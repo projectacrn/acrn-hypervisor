@@ -970,7 +970,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	 */
 	value32 &= ~VMX_PROCBASED_CTLS_INVLPG;
 
-	if (is_vapic_supported()) {
+	if (is_apicv_supported()) {
 		value32 |= VMX_PROCBASED_CTLS_TPR_SHADOW;
 	} else {
 		/* Add CR8 VMExit for vlapic */
@@ -997,14 +997,14 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 		value32 &= ~VMX_PROCBASED_CTLS2_VPID;
 	}
 
-	if (is_vapic_supported()) {
+	if (is_apicv_supported()) {
 		value32 |= VMX_PROCBASED_CTLS2_VAPIC;
 
-		if (is_vapic_virt_reg_supported()) {
+		if (is_apicv_virt_reg_supported()) {
 			value32 |= VMX_PROCBASED_CTLS2_VAPIC_REGS;
 		}
 
-		if (is_vapic_intr_delivery_supported()) {
+		if (is_apicv_intr_delivery_supported()) {
 			value32 |= VMX_PROCBASED_CTLS2_VIRQ;
 		}
 		else {
@@ -1028,18 +1028,19 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS2, value32);
 	pr_dbg("VMX_PROC_VM_EXEC_CONTROLS2: 0x%x ", value32);
 
-	if (is_vapic_supported()) {
+	if (is_apicv_supported()) {
 		/*APIC-v, config APIC-access address*/
-		value64 = apicv_get_apic_access_addr(vcpu->vm);
+		value64 = vlapic_apicv_get_apic_access_addr(vcpu->vm);
 		exec_vmwrite64(VMX_APIC_ACCESS_ADDR_FULL,
 						value64);
 
 		/*APIC-v, config APIC virtualized page address*/
-		value64 = apicv_get_apic_page_addr(vcpu->arch_vcpu.vlapic);
+		value64 = vlapic_apicv_get_apic_page_addr(
+							vcpu->arch_vcpu.vlapic);
 		exec_vmwrite64(VMX_VIRTUAL_APIC_PAGE_ADDR_FULL,
 						value64);
 
-		if (is_vapic_intr_delivery_supported()) {
+		if (is_apicv_intr_delivery_supported()) {
 			/* Disable all EOI VMEXIT by default and
 			 * clear RVI and SVI.
 			 */

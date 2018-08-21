@@ -216,16 +216,10 @@ vlapic_ldr_write_handler(struct acrn_vlapic *vlapic)
 }
 
 static void
-vlapic_id_write_handler(struct acrn_vlapic *vlapic)
+vlapic_id_write_handler(__unused struct acrn_vlapic *vlapic)
 {
-	struct lapic_regs *lapic;
-
-	/*
-	 * We don't allow the ID register to be modified so reset it back to
-	 * its default value.
-	 */
-	lapic = vlapic->apic_page;
-	lapic->id = vlapic_get_id(vlapic);
+	/* Force APIC ID as readonly */
+	return;
 }
 
 static inline uint32_t
@@ -1201,7 +1195,7 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 					target_vcpu->vm->vm_id);
 			schedule_vcpu(target_vcpu);
 		} else if (mode == APIC_DELMODE_SMI) {
-			pr_info("vmx vapic: SMI IPI do not support\n");
+			pr_info("vlapic: SMI IPI do not support\n");
 		} else {
 			pr_err("Unhandled icrlo write with mode %u\n", mode);
 		}
@@ -1476,7 +1470,6 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset,
 	retval = 0;
 	switch (offset) {
 	case APIC_OFFSET_ID:
-		lapic->id = data32;
 		vlapic_id_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_TPR:
@@ -1934,7 +1927,7 @@ vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval)
 
 	default:
 		dev_dbg(ACRN_DBG_LAPIC,
-			"Invalid vmx vapic msr 0x%x access\n", msr);
+			"Invalid vlapic msr 0x%x access\n", msr);
 		break;
 	}
 
@@ -1960,7 +1953,7 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval)
 
 	default:
 		dev_dbg(ACRN_DBG_LAPIC,
-			"Invalid vmx vapic msr 0x%x access\n", msr);
+			"Invalid vlapic msr 0x%x access\n", msr);
 		break;
 	}
 
@@ -2057,8 +2050,8 @@ int vlapic_create(struct vcpu *vcpu)
 	vlapic->vcpu = vcpu;
 	vlapic->apic_page = (struct lapic_regs *)apic_page;
 
-	if (is_vapic_supported()) {
-		if (is_vapic_intr_delivery_supported()) {
+	if (is_apicv_supported()) {
+		if (is_apicv_intr_delivery_supported()) {
 			vlapic->ops.apicv_set_intr_ready_fn =
 					apicv_set_intr_ready;
 
@@ -2074,7 +2067,7 @@ int vlapic_create(struct vcpu *vcpu)
 
 		if (is_vcpu_bsp(vcpu)) {
 			ept_mr_add(vcpu->vm,
-				apicv_get_apic_access_addr(vcpu->vm),
+				vlapic_apicv_get_apic_access_addr(vcpu->vm),
 				DEFAULT_APIC_BASE, CPU_PAGE_SIZE,
 				IA32E_EPT_W_BIT | IA32E_EPT_R_BIT |
 				IA32E_EPT_UNCACHED);
@@ -2113,7 +2106,7 @@ void vlapic_free(struct vcpu *vcpu)
 
 	del_timer(&vlapic->vtimer.timer);
 
-	if (!is_vapic_supported()) {
+	if (!is_apicv_supported()) {
 		unregister_mmio_emulation_handler(vcpu->vm,
 			(uint64_t)DEFAULT_APIC_BASE,
 			(uint64_t)DEFAULT_APIC_BASE + CPU_PAGE_SIZE);
@@ -2234,7 +2227,7 @@ apicv_batch_set_tmr(struct acrn_vlapic *vlapic)
  *APIC-v: Get the HPA to APIC-access page
  * **/
 uint64_t
-apicv_get_apic_access_addr(__unused struct vm *vm)
+vlapic_apicv_get_apic_access_addr(__unused struct vm *vm)
 {
 	if (apicv_apic_access_addr == NULL) {
 		apicv_apic_access_addr = alloc_page();
@@ -2250,7 +2243,7 @@ apicv_get_apic_access_addr(__unused struct vm *vm)
  *APIC-v: Get the HPA to virtualized APIC registers page
  * **/
 uint64_t
-apicv_get_apic_page_addr(struct acrn_vlapic *vlapic)
+vlapic_apicv_get_apic_page_addr(struct acrn_vlapic *vlapic)
 {
 	return HVA2HPA(vlapic->apic_page);
 }
@@ -2261,7 +2254,7 @@ apicv_get_apic_page_addr(struct acrn_vlapic *vlapic)
  */
 
 void
-apicv_inject_pir(struct acrn_vlapic *vlapic)
+vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
 {
 	struct vlapic_pir_desc *pir_desc;
 	struct lapic_regs *lapic;

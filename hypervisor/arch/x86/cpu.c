@@ -40,7 +40,7 @@ bool x2apic_enabled = false;
 #define VAPIC_FEATURE_VX2APIC_MODE		(1U << 5)
 
 struct cpu_capability {
-	uint8_t vapic_features;
+	uint8_t apicv_features;
 	uint8_t ept_features;
 };
 static struct cpu_capability cpu_caps;
@@ -785,7 +785,7 @@ static void ept_cap_detect(void)
 		cpu_caps.ept_features = 1U;
 }
 
-static void vapic_cap_detect(void)
+static void apicv_cap_detect(void)
 {
 	uint8_t features;
 	uint64_t msr_val;
@@ -794,14 +794,14 @@ static void vapic_cap_detect(void)
 
 	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
 	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS_TPR_SHADOW)) {
-		cpu_caps.vapic_features = 0U;
+		cpu_caps.apicv_features = 0U;
 		return;
 	}
 	features |= VAPIC_FEATURE_TPR_SHADOW;
 
 	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
 	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC)) {
-		cpu_caps.vapic_features = features;
+		cpu_caps.apicv_features = features;
 		return;
 	}
 	features |= VAPIC_FEATURE_VIRT_ACCESS;
@@ -824,12 +824,12 @@ static void vapic_cap_detect(void)
 		}
 	}
 
-	cpu_caps.vapic_features = features;
+	cpu_caps.apicv_features = features;
 }
 
 static void cpu_cap_detect(void)
 {
-	vapic_cap_detect();
+	apicv_cap_detect();
 	ept_cap_detect();
 }
 
@@ -838,19 +838,19 @@ bool is_ept_supported(void)
 	return (cpu_caps.ept_features != 0U);
 }
 
-bool is_vapic_supported(void)
+bool is_apicv_supported(void)
 {
-	return ((cpu_caps.vapic_features & VAPIC_FEATURE_VIRT_ACCESS) != 0U);
+	return ((cpu_caps.apicv_features & VAPIC_FEATURE_VIRT_ACCESS) != 0U);
 }
 
-bool is_vapic_intr_delivery_supported(void)
+bool is_apicv_intr_delivery_supported(void)
 {
-	return ((cpu_caps.vapic_features & VAPIC_FEATURE_INTR_DELIVERY) != 0U);
+	return ((cpu_caps.apicv_features & VAPIC_FEATURE_INTR_DELIVERY) != 0U);
 }
 
-bool is_vapic_virt_reg_supported(void)
+bool is_apicv_virt_reg_supported(void)
 {
-	return ((cpu_caps.vapic_features & VAPIC_FEATURE_VIRT_REG) != 0U);
+	return ((cpu_caps.apicv_features & VAPIC_FEATURE_VIRT_REG) != 0U);
 }
 
 static void cpu_xsave_init(void)

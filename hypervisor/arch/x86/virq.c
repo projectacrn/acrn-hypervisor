@@ -115,8 +115,8 @@ static int vcpu_do_pending_event(struct vcpu *vcpu)
 	uint32_t vector = 0U;
 	int ret = 0;
 
-	if (is_vapic_intr_delivery_supported()) {
-		apicv_inject_pir(vlapic);
+	if (is_apicv_intr_delivery_supported()) {
+		vlapic_apicv_inject_pir(vlapic);
 		return 0;
 	}
 
