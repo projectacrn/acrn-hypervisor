@@ -51,11 +51,11 @@ extern LIST_HEAD(vmmngr_list_struct, vmmngr_struct) vmmngr_head;
 
 /* vm life cycle ops */
 int list_vm(void);
-int stop_vm(char *vmname);
-int start_vm(char *vmname);
-int pause_vm(char *vmname);
-int continue_vm(char *vmname);
-int suspend_vm(char *vmname);
-int resume_vm(char *vmname, unsigned reason);
+int stop_vm(const char *vmname);
+int start_vm(const char *vmname);
+int pause_vm(const char *vmname);
+int continue_vm(const char *vmname);
+int suspend_vm(const char *vmname);
+int resume_vm(const char *vmname, unsigned reason);
 
 #endif				/* _ACRNCTL_H_ */
