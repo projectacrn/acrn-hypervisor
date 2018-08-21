@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef HKDF_H
-#define HKDF_H
+#ifndef HKDF_WRAP_H
+#define HKDF_WRAP_H
 
 #include <types.h>
 
@@ -38,7 +38,7 @@
  */
 int hkdf_sha256(uint8_t *out_key, size_t out_len,
 		const uint8_t *secret, size_t secret_len,
-		__unused const uint8_t *salt, __unused size_t salt_len,
-		__unused const uint8_t *info, __unused size_t info_len);
+		const uint8_t *salt, size_t salt_len,
+		const uint8_t *info, size_t info_len);
 
-#endif  /* HKDF_H */
+#endif  /* HKDF_WRAP_H */

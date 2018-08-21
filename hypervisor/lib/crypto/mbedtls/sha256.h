@@ -28,6 +28,7 @@
 #ifndef MBEDTLS_SHA256_H
 #define MBEDTLS_SHA256_H
 
+#include <types.h>
 #define MBEDTLS_ERR_SHA256_HW_ACCEL_FAILED                -0x0037  /**< SHA-256 hardware accelerator failed */
 
 /**

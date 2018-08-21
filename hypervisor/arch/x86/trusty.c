@@ -5,7 +5,7 @@
  */
 
 #include <hypervisor.h>
-#include <hkdf.h>
+#include <hkdf_wrap.h>
 
 #define ACRN_DBG_TRUSTY 6U
 
