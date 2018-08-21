@@ -43,9 +43,7 @@ struct ptdev_msi_info {
 	uint16_t vmsi_ctl; /* virt msi_ctl */
 	uint32_t pmsi_addr; /* phys msi_addr */
 	uint32_t pmsi_data; /* phys msi_data */
-	int msix;	/* 0-MSI, 1-MSIX */
-	uint32_t virt_vector;
-	uint32_t phys_vector;
+	int is_msix;	/* 0-MSI, 1-MSIX */
 };
 
 /* entry per each allocated irq/vector

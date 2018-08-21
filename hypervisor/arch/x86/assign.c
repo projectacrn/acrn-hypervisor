@@ -426,7 +426,7 @@ void ptdev_softirq(__unused uint16_t cpu_id)
 			dev_dbg(ACRN_DBG_PTIRQ,
 				"dev-assign: irq=0x%x MSI VR: 0x%x-0x%x",
 				entry->allocated_pirq,
-			        msi->virt_vector,
+				msi->vmsi_data & 0xFFU,
 				irq_to_vector(entry->allocated_pirq));
 			dev_dbg(ACRN_DBG_PTIRQ,
 				" vmsi_addr: 0x%x vmsi_data: 0x%x",
@@ -527,15 +527,13 @@ int ptdev_msix_remap(struct vm *vm, uint16_t virt_bdf,
 	/* build physical config MSI, update to info->pmsi_xxx */
 	ptdev_build_physical_msi(vm, info, irq_to_vector(entry->allocated_pirq));
 	entry->msi = *info;
-	entry->msi.virt_vector = info->vmsi_data & 0xFFU;
-	entry->msi.phys_vector = irq_to_vector(entry->allocated_pirq);
 
 	dev_dbg(ACRN_DBG_IRQ,
 		"PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
 		(virt_bdf >> 8) & 0xFFU, (virt_bdf >> 3) & 0x1FU,
 		(virt_bdf) & 0x7U, entry_nr,
-		entry->msi.virt_vector,
-		entry->msi.phys_vector,
+		info->vmsi_data & 0xFFU,
+		irq_to_vector(entry->allocated_pirq),
 		entry->vm->vm_id);
 END:
 	return 0;

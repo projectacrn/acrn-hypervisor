@@ -622,7 +622,7 @@ int32_t hcall_remap_pci_msix(struct vm *vm, uint16_t vmid, uint64_t param)
 	if (!is_vm0(vm)) {
 		ret = -1;
 	} else {
-		info.msix = remap.msix;
+		info.is_msix = remap.msix;
 		info.vmsi_ctl = remap.msi_ctl;
 		info.vmsi_addr = remap.msi_addr;
 		info.vmsi_data = remap.msi_data;
