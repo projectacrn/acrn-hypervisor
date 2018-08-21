@@ -60,7 +60,7 @@ struct vmmngr_struct *vmmngr_find(char *name)
 	return NULL;
 }
 
-static int send_msg(char *vmname, struct mngr_msg *req, struct mngr_msg *ack);
+static int send_msg(const char *vmname, struct mngr_msg *req, struct mngr_msg *ack);
 
 static int query_state(const char *name)
 {
@@ -266,7 +266,7 @@ int shell_cmd(const char *cmd, char *outbuf, int len)
 	return ret;
 }
 
-static int send_msg(char *vmname, struct mngr_msg *req,
+static int send_msg(const char *vmname, struct mngr_msg *req,
 		    struct mngr_msg *ack)
 {
 	int fd, ret;
@@ -311,7 +311,7 @@ int list_vm()
 	return 0;
 }
 
-int start_vm(char *vmname)
+int start_vm(const char *vmname)
 {
 	char cmd[128];
 
@@ -321,7 +321,7 @@ int start_vm(char *vmname)
 	return system(cmd);
 }
 
-int stop_vm(char *vmname)
+int stop_vm(const char *vmname)
 {
 	struct mngr_msg req;
 	struct mngr_msg ack;
@@ -339,7 +339,7 @@ int stop_vm(char *vmname)
 	return ack.data.err;
 }
 
-int pause_vm(char *vmname)
+int pause_vm(const char *vmname)
 {
 	struct mngr_msg req;
 	struct mngr_msg ack;
@@ -356,7 +356,7 @@ int pause_vm(char *vmname)
 	return ack.data.err;
 }
 
-int continue_vm(char *vmname)
+int continue_vm(const char *vmname)
 {
 	struct mngr_msg req;
 	struct mngr_msg ack;
@@ -374,7 +374,7 @@ int continue_vm(char *vmname)
 	return ack.data.err;
 }
 
-int suspend_vm(char *vmname)
+int suspend_vm(const char *vmname)
 {
 	struct mngr_msg req;
 	struct mngr_msg ack;
@@ -392,7 +392,7 @@ int suspend_vm(char *vmname)
 	return ack.data.err;
 }
 
-int resume_vm(char *vmname, unsigned reason)
+int resume_vm(const char *vmname, unsigned reason)
 {
 	struct mngr_msg req;
 	struct mngr_msg ack;
