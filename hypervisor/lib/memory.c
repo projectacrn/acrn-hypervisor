@@ -407,10 +407,10 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen_arg)
 
 		asm volatile ("cld; rep; movsq"
 				: "=&c"(ecx), "=&D"(dest8), "=&S"(src8)
-				: "0" (slen / 8), "1" (dest8), "2" (src8)
+				: "0" (slen >> 3), "1" (dest8), "2" (src8)
 				: "memory");
 
-		slen = slen % 8U;
+		slen = slen & 0x7U;
 	}
 
 	/* tail bytes */

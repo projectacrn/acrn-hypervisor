@@ -180,7 +180,7 @@ vlapic_build_id(struct acrn_vlapic *vlapic)
 		vlapic_id = (uint8_t)vcpu->vcpu_id;
 	}
 
-	lapic_regs_id = vlapic_id << APIC_ID_SHIFT;
+	lapic_regs_id = (uint32_t)vlapic_id << APIC_ID_SHIFT;
 
 	dev_dbg(ACRN_DBG_LAPIC, "vlapic APIC PAGE ID : 0x%08x", lapic_regs_id);
 
@@ -488,12 +488,13 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 			(vlapic, vector, level);
 	}
 
-	idx = vector / 32U;
-	mask = 1U << (vector % 32U);
+	idx = vector >> 5U;
+	mask = 1U << (vector & 0x1fU);
 
 	irrptr = &lapic->irr[0];
 	/* If the interrupt is set, don't try to do it again */
-	if (bitmap32_test_and_set_lock((uint16_t)(vector % 32U), &irrptr[idx].val)) {
+	if (bitmap32_test_and_set_lock((uint16_t)(vector & 0x1fU),
+							&irrptr[idx].val)) {
 		return 0;
 	}
 
@@ -785,8 +786,9 @@ vlapic_update_ppr(struct acrn_vlapic *vlapic)
 		i = 1U;
 		isrptr = &(vlapic->apic_page.isr[0]);
 		for (vector = 0U; vector < 256U; vector++) {
-			idx = vector / 32U;
-			if ((isrptr[idx].val & (1U << (vector % 32U))) != 0U) {
+			idx = vector >> 5U;
+			if ((isrptr[idx].val & (1U << (vector & 0x1fU)))
+									!= 0U) {
 				isrvec = (uint32_t)vlapic->isrvec_stk[i];
 				if ((i > vlapic->isrvec_stk_top) ||
 					((i < ISRVEC_STK_SIZE) &&
@@ -1259,14 +1261,14 @@ vlapic_intr_accepted(struct acrn_vlapic *vlapic, uint32_t vector)
 	 * clear the ready bit for vector being accepted in irr
 	 * and set the vector as in service in isr.
 	 */
-	idx = vector / 32U;
+	idx = vector >> 5U;
 
 	irrptr = &lapic->irr[0];
-	atomic_clear32(&irrptr[idx].val, 1U << (vector % 32U));
+	atomic_clear32(&irrptr[idx].val, 1U << (vector & 0x1fU));
 	vlapic_dump_irr(vlapic, "vlapic_intr_accepted");
 
 	isrptr = &lapic->isr[0];
-	isrptr[idx].val |= 1U << (vector % 32U);
+	isrptr[idx].val |= 1U << (vector & 0x1fU);
 	vlapic_dump_isr(vlapic, "vlapic_intr_accepted");
 
 	/*
@@ -1726,8 +1728,8 @@ vlapic_set_tmr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 
 	lapic = &(vlapic->apic_page);
 	tmrptr = &lapic->tmr[0];
-	idx = vector / 32U;
-	mask = 1U << (vector % 32U);
+	idx = vector >> 5U;
+	mask = 1U << (vector & 0x1fU);
 	if (level) {
 		tmrptr[idx].val |= mask;
 	} else {
@@ -2123,8 +2125,8 @@ apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector,
 
 	pir_desc = &(vlapic->pir_desc);
 
-	idx = vector / 64U;
-	mask = 1UL << (vector % 64U);
+	idx = vector >> 6U;
+	mask = 1UL << (vector & 0x3fU);
 
 	atomic_set64(&pir_desc->pir[idx], mask);
 	notify = (atomic_cmpxchg64(&pir_desc->pending, 0UL, 1UL) == 0UL) ? 1 : 0;
@@ -2172,7 +2174,7 @@ apicv_set_tmr(__unused struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 	uint64_t mask, val;
 	uint32_t field;
 
-	mask = 1UL << (vector % 64U);
+	mask = 1UL << (vector & 0x3fU);
 	field = VMX_EOI_EXIT(vector);
 
 	val = exec_vmread64(field);
@@ -2366,8 +2368,8 @@ int veoi_vmexit_handler(struct vcpu *vcpu)
 	vector = (uint32_t)(vcpu->arch_vcpu.exit_qualification & 0xFFUL);
 
 	tmrptr = &lapic->tmr[0];
-	idx = vector / 32U;
-	mask = 1U << (vector % 32U);
+	idx = vector >> 5U;
+	mask = 1U << (vector & 0x1fU);
 
 	if ((tmrptr[idx].val & mask) != 0U) {
 		/* hook to vIOAPIC */

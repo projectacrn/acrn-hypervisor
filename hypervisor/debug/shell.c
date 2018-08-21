@@ -14,7 +14,7 @@
 /* Input Line Other - Switch to the "other" input line (there are only two
  * input lines total).
  */
-#define SHELL_INPUT_LINE_OTHER(v)	(((v) + 1U) % 2U)
+#define SHELL_INPUT_LINE_OTHER(v)	(((v) + 1U) & 0x1U)
 
 static int shell_cmd_help(__unused int argc, __unused char **argv);
 static int shell_list_vm(__unused int argc, __unused char **argv);
@@ -331,7 +331,7 @@ static int shell_process_cmd(char *p_input_line)
 	int status = -EINVAL;
 	struct shell_cmd *p_cmd;
 	char cmd_argv_str[SHELL_CMD_MAX_LEN + 1U];
-	int cmd_argv_mem[sizeof(char *) * ((SHELL_CMD_MAX_LEN + 1U) / 2U)];
+	int cmd_argv_mem[sizeof(char *) * ((SHELL_CMD_MAX_LEN + 1U) >> 1U)];
 	int cmd_argc;
 	char **cmd_argv;
 
@@ -696,7 +696,7 @@ static int shell_dumpmem(int argc, char **argv)
 	shell_puts(temp_str);
 
 	ptr = (uint64_t *)addr;
-	for (i = 0U; i < (length/32U); i++) {
+	for (i = 0U; i < (length >> 5U); i++) {
 		snprintf(temp_str, MAX_STR_SIZE,
 			"=  0x%016llx  0x%016llx  0x%016llx  0x%016llx\r\n",
 			*(ptr + (i*4)), *(ptr + ((i*4)+1)),
@@ -704,7 +704,7 @@ static int shell_dumpmem(int argc, char **argv)
 		shell_puts(temp_str);
 	}
 
-	if ((length % 32U) != 0) {
+	if ((length & 0x1fU) != 0) {
 		snprintf(temp_str, MAX_STR_SIZE,
 			"=  0x%016llx  0x%016llx  0x%016llx 0x%016llx\r\n",
 			*(ptr + (i*4)), *(ptr + ((i*4)+1)),

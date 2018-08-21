@@ -242,7 +242,7 @@ static void vdev_pt_cfgwrite_bar(struct pci_vdev *vdev, uint32_t offset,
 	bool do_map;
 	int error;
 
-	idx = (offset - PCIR_BAR(0U)) / 4U;
+	idx = (offset - PCIR_BAR(0U)) >> 2U;
 	mask = ~(vdev->bar[idx].size - 1U);
 	bar_update_normal = (new_bar_uos != (uint32_t)~0U);
 	new_bar = new_bar_uos & mask;
