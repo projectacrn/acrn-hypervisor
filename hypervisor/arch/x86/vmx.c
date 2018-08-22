@@ -387,7 +387,7 @@ static bool is_cr0_write_valid(struct vcpu *vcpu, uint64_t cr0)
  *   - PG (31) Trapped to track cpu/paging mode.
  *             Set the value according to the value from guest.
  */
-int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
+void vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 {
 	uint64_t cr0_vmx;
 	uint32_t entry_ctrls;
@@ -396,7 +396,7 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	if (!is_cr0_write_valid(vcpu, cr0)) {
 		pr_dbg("Invalid cr0 write operation from guest");
 		vcpu_inject_gp(vcpu, 0U);
-		return 0;
+		return;
 	}
 
 	/* SDM 2.5
@@ -467,8 +467,6 @@ int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 
 	pr_dbg("VMM: Try to write %016llx, allow to write 0x%016llx to CR0",
 		cr0, cr0_vmx);
-
-	return 0;
 }
 
 static bool is_cr4_write_valid(uint64_t cr4)
@@ -523,14 +521,14 @@ static bool is_cr4_write_valid(uint64_t cr4)
  *   - SMAP (21) Flexible to guest
  *   - PKE (22) Flexible to guest
  */
-int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
+void vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 {
 	uint64_t cr4_vmx;
 
 	if (!is_cr4_write_valid(cr4)) {
 		pr_dbg("Invalid cr4 write operation from guest");
 		vcpu_inject_gp(vcpu, 0U);
-		return 0;
+		return;
 	}
 
 	/* Aways off bits and reserved bits has been filtered above */
@@ -543,8 +541,6 @@ int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 
 	pr_dbg("VMM: Try to write %016llx, allow to write 0x%016llx to CR4",
 		cr4, cr4_vmx);
-
-	return 0;
 }
 
 static void init_guest_context_real(struct vcpu *vcpu)

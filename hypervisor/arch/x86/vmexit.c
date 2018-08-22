@@ -263,7 +263,6 @@ int cpuid_vmexit_handler(struct vcpu *vcpu)
 
 int cr_access_vmexit_handler(struct vcpu *vcpu)
 {
-	int err = 0;
 	uint64_t reg;
 	int idx = VM_EXIT_CR_ACCESS_REG_IDX(vcpu->arch_vcpu.exit_qualification);
 
@@ -275,11 +274,11 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
 		VM_EXIT_CR_ACCESS_CR_NUM(vcpu->arch_vcpu.exit_qualification)) {
 	case 0x00U:
 		/* mov to cr0 */
-		err = vcpu_set_cr0(vcpu, reg);
+		vcpu_set_cr0(vcpu, reg);
 		break;
 	case 0x04U:
 		/* mov to cr4 */
-		err = vcpu_set_cr4(vcpu, reg);
+		vcpu_set_cr4(vcpu, reg);
 		break;
 	case 0x08U:
 		/* mov to cr8 */
@@ -310,7 +309,7 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
 		VM_EXIT_CR_ACCESS_CR_NUM
 			(vcpu->arch_vcpu.exit_qualification));
 
-	return err;
+	return 0;
 }
 
 /*

@@ -24,10 +24,9 @@ static void run_timer(struct hv_timer *timer)
 }
 
 /* run in interrupt context */
-static int tsc_deadline_handler(__unused uint32_t irq, __unused void *data)
+static void tsc_deadline_handler(__unused uint32_t irq, __unused void *data)
 {
 	fire_softirq(SOFTIRQ_TIMER);
-	return 0;
 }
 
 static inline void update_physical_timer(struct per_cpu_timers *cpu_timer)

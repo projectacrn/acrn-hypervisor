@@ -17,7 +17,7 @@ enum irq_mode {
 	IRQ_DEASSERT,
 };
 
-typedef int (*irq_action_t)(uint32_t irq, void *priv_data);
+typedef void (*irq_action_t)(uint32_t irq, void *priv_data);
 
 /* any field change in below required irq_lock protection with irqsave */
 struct irq_desc {

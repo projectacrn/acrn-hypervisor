@@ -111,9 +111,9 @@ inline uint64_t vcpu_get_cr0(struct vcpu *vcpu)
 	return ctx->cr0;
 }
 
-inline int vcpu_set_cr0(struct vcpu *vcpu, uint64_t val)
+inline void vcpu_set_cr0(struct vcpu *vcpu, uint64_t val)
 {
-	return vmx_write_cr0(vcpu, val);
+	vmx_write_cr0(vcpu, val);
 }
 
 inline uint64_t vcpu_get_cr2(struct vcpu *vcpu)
@@ -141,9 +141,9 @@ inline uint64_t vcpu_get_cr4(struct vcpu *vcpu)
 	return ctx->cr4;
 }
 
-inline int vcpu_set_cr4(struct vcpu *vcpu, uint64_t val)
+inline void vcpu_set_cr4(struct vcpu *vcpu, uint64_t val)
 {
-	return vmx_write_cr4(vcpu, val);
+	vmx_write_cr4(vcpu, val);
 }
 
 inline uint64_t vcpu_get_pat_ext(struct vcpu *vcpu)
