@@ -99,6 +99,7 @@ struct vm_arch {
 	void *iobitmap[2];/* IO bitmap page array base address for this VM */
 	void *msr_bitmap;	/* MSR bitmap page base address for this VM */
 	void *virt_ioapic;	/* Virtual IOAPIC base address */
+	struct acrn_vpic vpic;      /* Virtual PIC */
 	/**
 	 * A link to the IO handler of this VM.
 	 * We only register io handle to this link
@@ -125,7 +126,6 @@ struct vcpuid_entry {
 	uint32_t padding;
 };
 
-struct acrn_vpic;
 struct vm {
 	uint16_t vm_id;		    /* Virtual machine identifier */
 	struct vm_hw_info hw;	/* Reference to this VM's HW information */
@@ -134,7 +134,6 @@ struct vm {
 	struct vm_arch arch_vm;	/* Reference to this VM's arch information */
 	enum vm_state state;	/* VM state */
 	void *vuart;		/* Virtual UART */
-	struct acrn_vpic *vpic;      /* Virtual PIC */
 	enum vpic_wire_mode wire_mode;
 	struct iommu_domain *iommu;	/* iommu domain of this VM */
 	struct list_head list; /* list of VM */
@@ -242,6 +241,12 @@ static inline struct vcpu *get_primary_vcpu(struct vm *vm)
 	}
 
 	return NULL;
+}
+
+static inline struct acrn_vpic *
+vm_pic(struct vm *vm)
+{
+	return (struct acrn_vpic *)&(vm->arch_vm.vpic);
 }
 
 int shutdown_vm(struct vm *vm);

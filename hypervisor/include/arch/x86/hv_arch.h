@@ -21,6 +21,7 @@
 #include <trusty.h>
 #include <guest_pm.h>
 #include <host_pm.h>
+#include <vpic.h>
 #include <vm.h>
 #include <cpuid.h>
 #include <mmu.h>
@@ -32,7 +33,6 @@
 #include <assign.h>
 #include <vtd.h>
 
-#include <vpic.h>
 #include <vlapic.h>
 #include <vioapic.h>
 #include <guest.h>
