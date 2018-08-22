@@ -23,6 +23,7 @@
 #include <host_pm.h>
 #include <vpic.h>
 #include <vuart.h>
+#include <vioapic.h>
 #include <vm.h>
 #include <cpuid.h>
 #include <mmu.h>
@@ -35,7 +36,6 @@
 #include <vtd.h>
 
 #include <vlapic.h>
-#include <vioapic.h>
 #include <guest.h>
 #include <vmexit.h>
 #include <cpufeatures.h>
