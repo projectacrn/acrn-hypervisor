@@ -722,7 +722,7 @@ static int shell_to_sos_console(__unused int argc, __unused char **argv)
 	uint16_t guest_no = 0U;
 
 	struct vm *vm;
-	struct vuart *vuart;
+	struct acrn_vuart *vu;
 
 #ifdef CONFIG_PARTITION_MODE
 	if (argc == 2U) {
@@ -736,25 +736,17 @@ static int shell_to_sos_console(__unused int argc, __unused char **argv)
 	if (vm == NULL) {
 		return -EINVAL;
 	}
-	vuart = vm->vuart;
-	if (vuart == NULL) {
-		snprintf(temp_str, TEMP_STR_SIZE,
-				"\r\nError: serial console driver is not "
-				"enabled for VM %d\r\n",
-				guest_no);
-		shell_puts(temp_str);
-	} else {
-		/* UART is now owned by the SOS.
-		 * Indicate by toggling the flag.
-		 */
-		vuart->active = true;
-		/* Output that switching to SOS shell */
-		snprintf(temp_str, TEMP_STR_SIZE,
-				"\r\n----- Entering Guest %d Shell -----\r\n",
-				guest_no);
+	vu = vm_vuart(vm);
+	/* UART is now owned by the SOS.
+	 * Indicate by toggling the flag.
+	 */
+	vu->active = true;
+	/* Output that switching to SOS shell */
+	snprintf(temp_str, TEMP_STR_SIZE,
+			"\r\n----- Entering Guest %d Shell -----\r\n",
+			guest_no);
 
-		shell_puts(temp_str);
-	}
+	shell_puts(temp_str);
 
 	return 0;
 }

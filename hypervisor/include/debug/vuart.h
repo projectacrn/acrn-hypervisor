@@ -38,7 +38,7 @@ struct fifo {
 	uint32_t size;		/* size of the fifo */
 };
 
-struct vuart {
+struct acrn_vuart {
 	uint8_t data;		/* Data register (R/W) */
 	uint8_t ier;		/* Interrupt enable register (R/W) */
 	uint8_t lcr;		/* Line control register (R/W) */
@@ -63,21 +63,20 @@ struct vuart {
 extern int8_t vuart_vmid;
 #endif
 #ifdef HV_DEBUG
-void *vuart_init(struct vm *vm);
-struct vuart *vuart_console_active(void);
-void vuart_console_tx_chars(struct vuart *vu);
-void vuart_console_rx_chars(struct vuart *vu);
+void vuart_init(struct vm *vm);
+struct acrn_vuart *vuart_console_active(void);
+void vuart_console_tx_chars(struct acrn_vuart *vu);
+void vuart_console_rx_chars(struct acrn_vuart *vu);
 #else
-static inline void *vuart_init(__unused struct vm *vm)
+static inline void vuart_init(__unused struct vm *vm)
+{
+}
+static inline struct acrn_vuart *vuart_console_active(void)
 {
 	return NULL;
 }
-static inline struct vuart *vuart_console_active(void)
-{
-	return NULL;
-}
-static inline void vuart_console_tx_chars(__unused struct vuart *vu) {}
-static inline void vuart_console_rx_chars(__unused struct vuart *vu) {}
+static inline void vuart_console_tx_chars(__unused struct acrn_vuart *vu) {}
+static inline void vuart_console_rx_chars(__unused struct acrn_vuart *vu) {}
 #endif /*HV_DEBUG*/
 
 #endif

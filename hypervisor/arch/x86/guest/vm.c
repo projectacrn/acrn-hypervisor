@@ -199,14 +199,14 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		}
 
 		/* Create virtual uart */
-		vm->vuart = vuart_init(vm);
+		vuart_init(vm);
 	}
 	vpic_init(vm);
 
 #ifdef CONFIG_PARTITION_MODE
 	/* Create virtual uart */
 	if (vm_desc->vm_vuart) {
-		vm->vuart = vuart_init(vm);
+		vuart_init(vm);
 	}
 	vrtc_init(vm);
 	vpci_init(vm);

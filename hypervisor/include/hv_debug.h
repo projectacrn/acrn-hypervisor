@@ -8,7 +8,6 @@
 #define HV_DEBUG_H
 
 #include <logmsg.h>
-#include <vuart.h>
 #include <console.h>
 #include <dump.h>
 #include <trace.h>

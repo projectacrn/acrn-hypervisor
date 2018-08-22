@@ -133,7 +133,7 @@ struct vm {
 	struct vm_pm_info pm;	/* Reference to this VM's arch information */
 	struct vm_arch arch_vm;	/* Reference to this VM's arch information */
 	enum vm_state state;	/* VM state */
-	void *vuart;		/* Virtual UART */
+	struct acrn_vuart vuart;		/* Virtual UART */
 	enum vpic_wire_mode wire_mode;
 	struct iommu_domain *iommu;	/* iommu domain of this VM */
 	struct list_head list; /* list of VM */
@@ -241,6 +241,12 @@ static inline struct vcpu *get_primary_vcpu(struct vm *vm)
 	}
 
 	return NULL;
+}
+
+static inline struct acrn_vuart*
+vm_vuart(struct vm *vm)
+{
+	return (struct acrn_vuart *)&(vm->vuart);
 }
 
 static inline struct acrn_vpic *
