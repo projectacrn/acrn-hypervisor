@@ -112,13 +112,6 @@ static void init_vcpuid_entry(__unused struct vm *vm,
 		}
 		break;
 
-	case 0x0aU:
-		/* not support pmu */
-		entry->eax = 0U;
-		entry->ebx = 0U;
-		entry->ecx = 0U;
-		entry->edx = 0U;
-		break;
 	case 0x16U:
 		if (boot_cpu_data.cpuid_level >= 0x16U) {
 			/* call the cpuid when 0x16 is supported */
@@ -252,6 +245,17 @@ int set_vcpuid_entries(struct vm *vm)
 			}
 			break;
 
+		/* These features are disabled */
+		/* PMU is not supported */
+		case 0x0aU:
+		/* Intel RDT */
+		case 0x0fU:
+		case 0x10U:
+		/* Intel SGX */
+		case 0x12U:
+		/* Intel Processor Trace */
+		case 0x14U:
+			break;
 		default:
 			init_vcpuid_entry(vm, i, 0U, 0U, &entry);
 			result = set_vcpuid_entry(vm, &entry);
