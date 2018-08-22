@@ -119,13 +119,12 @@ release_all_entries(struct vm *vm)
 }
 
 /* interrupt context */
-static int ptdev_interrupt_handler(__unused uint32_t irq, void *data)
+static void ptdev_interrupt_handler(__unused uint32_t irq, void *data)
 {
 	struct ptdev_remapping_info *entry =
 		(struct ptdev_remapping_info *) data;
 
 	ptdev_enqueue_softirq(entry);
-	return 0;
 }
 
 /* active intr with irq registering */

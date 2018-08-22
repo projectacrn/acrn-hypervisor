@@ -11,7 +11,7 @@ static uint32_t notification_irq = IRQ_INVALID;
 static uint64_t smp_call_mask = 0UL;
 
 /* run in interrupt context */
-static int kick_notification(__unused uint32_t irq, __unused void *data)
+static void kick_notification(__unused uint32_t irq, __unused void *data)
 {
 	/* Notification vector is used to kick taget cpu out of non-root mode.
 	 * And it also serves for smp call.
@@ -26,8 +26,6 @@ static int kick_notification(__unused uint32_t irq, __unused void *data)
 			smp_call->func(smp_call->data);
 		bitmap_clear_nolock(pcpu_id, &smp_call_mask);
 	}
-
-	return 0;
 }
 
 void smp_call_function(uint64_t mask, smp_call_func_t func, void *data)

@@ -273,11 +273,11 @@ void vcpu_set_efer(struct vcpu *vcpu, uint64_t val);
 uint64_t vcpu_get_rflags(struct vcpu *vcpu);
 void vcpu_set_rflags(struct vcpu *vcpu, uint64_t val);
 uint64_t vcpu_get_cr0(struct vcpu *vcpu);
-int vcpu_set_cr0(struct vcpu *vcpu, uint64_t val);
+void vcpu_set_cr0(struct vcpu *vcpu, uint64_t val);
 uint64_t vcpu_get_cr2(struct vcpu *vcpu);
 void vcpu_set_cr2(struct vcpu *vcpu, uint64_t val);
 uint64_t vcpu_get_cr4(struct vcpu *vcpu);
-int vcpu_set_cr4(struct vcpu *vcpu, uint64_t val);
+void vcpu_set_cr4(struct vcpu *vcpu, uint64_t val);
 uint64_t vcpu_get_pat_ext(struct vcpu *vcpu);
 void vcpu_set_pat_ext(struct vcpu *vcpu, uint64_t val);
 

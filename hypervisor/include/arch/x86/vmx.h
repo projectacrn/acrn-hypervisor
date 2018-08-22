@@ -446,8 +446,8 @@ int exec_vmptrld(void *addr);
 uint64_t vmx_rdmsr_pat(struct vcpu *vcpu);
 int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value);
 
-int vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0);
-int vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4);
+void vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0);
+void vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4);
 
 static inline enum vm_cpu_mode get_vcpu_mode(const struct vcpu *vcpu)
 {

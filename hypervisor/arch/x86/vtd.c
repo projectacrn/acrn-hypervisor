@@ -760,7 +760,7 @@ static void fault_record_analysis(__unused uint64_t low, uint64_t high)
 #endif
 }
 
-static int dmar_fault_handler(uint32_t irq, void *data)
+static void dmar_fault_handler(uint32_t irq, void *data)
 {
 	struct dmar_drhd_rt *dmar_uint = (struct dmar_drhd_rt *)data;
 	uint32_t fsr;
@@ -812,8 +812,6 @@ static int dmar_fault_handler(uint32_t irq, void *data)
 
 		fsr = iommu_read32(dmar_uint, DMAR_FSTS_REG);
 	}
-
-	return 0;
 }
 
 static int dmar_setup_interrupt(struct dmar_drhd_rt *dmar_uint)
