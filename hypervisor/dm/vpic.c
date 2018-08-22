@@ -35,8 +35,6 @@
 /* TODO: add spinlock_locked support? */
 /*#define VPIC_LOCKED(vpic)	spinlock_locked(&((vpic)->lock))*/
 
-#define vm_pic(vm)	(vm->vpic)
-
 #define ACRN_DBG_PIC	6U
 
 enum irqstate {
@@ -45,34 +43,6 @@ enum irqstate {
 	IRQSTATE_PULSE
 };
 
-struct i8259_reg_state {
-	bool		ready;
-	uint8_t		icw_num;
-	uint8_t		rd_cmd_reg;
-
-	bool		aeoi;
-	bool		poll;
-	bool		rotate;
-	bool		sfn;		/* special fully-nested mode */
-
-	uint32_t	irq_base;
-	uint8_t		request;	/* Interrupt Request Register (IIR) */
-	uint8_t		service;	/* Interrupt Service (ISR) */
-	uint8_t		mask;		/* Interrupt Mask Register (IMR) */
-	uint8_t		smm;		/* special mask mode */
-
-	int		acnt[8];	/* sum of pin asserts and deasserts */
-	uint8_t		lowprio;	/* lowest priority irq */
-
-	bool		intr_raised;
-	uint8_t		elc;
-};
-
-struct acrn_vpic {
-	struct vm		*vm;
-	spinlock_t	lock;
-	struct i8259_reg_state	i8259[2];
-};
 
 #define NR_VPIC_PINS_PER_CHIP	8U
 #define NR_VPIC_PINS_TOTAL	16U
@@ -921,27 +891,13 @@ static void vpic_register_io_handler(struct vm *vm)
 			&vpic_elc_io_read, &vpic_elc_io_write);
 }
 
-void *vpic_init(struct vm *vm)
+void vpic_init(struct vm *vm)
 {
-	struct acrn_vpic *vpic;
-
+	struct acrn_vpic *vpic = vm_pic(vm);
 	vpic_register_io_handler(vm);
-
-	vpic = calloc(1U, sizeof(struct acrn_vpic));
-	ASSERT(vpic != NULL, "");
-	vpic->vm = vm;
-	vpic->i8259[0].mask = 0xffU;
-	vpic->i8259[1].mask = 0xffU;
+	vm->arch_vm.vpic.vm = vm;
+	vm->arch_vm.vpic.i8259[0].mask = 0xffU;
+	vm->arch_vm.vpic.i8259[1].mask = 0xffU;
 
 	VPIC_LOCK_INIT(vpic);
-
-	return vpic;
-}
-
-void vpic_cleanup(struct vm *vm)
-{
-	if (vm->vpic != NULL) {
-		free(vm->vpic);
-		vm->vpic = NULL;
-	}
 }

@@ -90,8 +90,36 @@ enum vpic_trigger {
 	LEVEL_TRIGGER
 };
 
-void *vpic_init(struct vm *vm);
-void vpic_cleanup(struct vm *vm);
+struct i8259_reg_state {
+	bool		ready;
+	uint8_t		icw_num;
+	uint8_t		rd_cmd_reg;
+
+	bool		aeoi;
+	bool		poll;
+	bool		rotate;
+	bool		sfn;		/* special fully-nested mode */
+
+	uint32_t	irq_base;
+	uint8_t		request;	/* Interrupt Request Register (IIR) */
+	uint8_t		service;	/* Interrupt Service (ISR) */
+	uint8_t		mask;		/* Interrupt Mask Register (IMR) */
+	uint8_t		smm;		/* special mask mode */
+
+	int		acnt[8];	/* sum of pin asserts and deasserts */
+	uint8_t		lowprio;	/* lowest priority irq */
+
+	bool		intr_raised;
+	uint8_t		elc;
+};
+
+struct acrn_vpic {
+	struct vm		*vm;
+	spinlock_t	lock;
+	struct i8259_reg_state	i8259[2];
+};
+
+void vpic_init(struct vm *vm);
 
 void vpic_assert_irq(struct vm *vm, uint32_t irq);
 void vpic_deassert_irq(struct vm *vm, uint32_t irq);

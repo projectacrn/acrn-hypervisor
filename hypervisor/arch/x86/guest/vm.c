@@ -201,7 +201,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		/* Create virtual uart */
 		vm->vuart = vuart_init(vm);
 	}
-	vm->vpic = vpic_init(vm);
+	vpic_init(vm);
 
 #ifdef CONFIG_PARTITION_MODE
 	/* Create virtual uart */
@@ -238,10 +238,6 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 err:
 	if (vm->arch_vm.virt_ioapic != NULL) {
 		vioapic_cleanup(vm->arch_vm.virt_ioapic);
-	}
-
-	if (vm->vpic != NULL) {
-		vpic_cleanup(vm);
 	}
 
 	if (vm->arch_vm.m2p != NULL) {
@@ -314,9 +310,6 @@ int shutdown_vm(struct vm *vm)
 	free_vm_id(vm);
 #endif
 
-	if (vm->vpic != NULL) {
-		vpic_cleanup(vm);
-	}
 
 #ifdef CONFIG_PARTITION_MODE
 	vpci_cleanup(vm);
