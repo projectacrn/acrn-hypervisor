@@ -216,16 +216,10 @@ vlapic_ldr_write_handler(struct acrn_vlapic *vlapic)
 }
 
 static void
-vlapic_id_write_handler(struct acrn_vlapic *vlapic)
+vlapic_id_write_handler(__unused struct acrn_vlapic *vlapic)
 {
-	struct lapic_regs *lapic;
-
-	/*
-	 * We don't allow the ID register to be modified so reset it back to
-	 * its default value.
-	 */
-	lapic = &(vlapic->apic_page);
-	lapic->id = vlapic_get_id(vlapic);
+	/* Force APIC ID as readonly */
+	return;
 }
 
 static inline uint32_t
@@ -1479,7 +1473,6 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset,
 	retval = 0;
 	switch (offset) {
 	case APIC_OFFSET_ID:
-		lapic->id = data32;
 		vlapic_id_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_TPR:
