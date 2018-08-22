@@ -1198,7 +1198,7 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 					target_vcpu->vm->vm_id);
 			schedule_vcpu(target_vcpu);
 		} else if (mode == APIC_DELMODE_SMI) {
-			pr_info("vmx vapic: SMI IPI do not support\n");
+			pr_info("vlapic: SMI IPI do not support\n");
 		} else {
 			pr_err("Unhandled icrlo write with mode %u\n", mode);
 		}
@@ -1924,7 +1924,7 @@ vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval)
 
 	default:
 		dev_dbg(ACRN_DBG_LAPIC,
-			"Invalid vmx vapic msr 0x%x access\n", msr);
+			"Invalid vlapic msr 0x%x access\n", msr);
 		break;
 	}
 
@@ -1950,7 +1950,7 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval)
 
 	default:
 		dev_dbg(ACRN_DBG_LAPIC,
-			"Invalid vmx vapic msr 0x%x access\n", msr);
+			"Invalid vlapic msr 0x%x access\n", msr);
 		break;
 	}
 
@@ -2041,8 +2041,8 @@ int vlapic_create(struct vcpu *vcpu)
 	ASSERT(vlapic != NULL, "vlapic allocate failed");
 	vlapic->vm = vcpu->vm;
 	vlapic->vcpu = vcpu;
-	if (is_vapic_supported()) {
-		if (is_vapic_intr_delivery_supported()) {
+	if (is_apicv_supported()) {
+		if (is_apicv_intr_delivery_supported()) {
 			vlapic->ops.apicv_set_intr_ready_fn =
 					apicv_set_intr_ready;
 
@@ -2095,7 +2095,7 @@ void vlapic_free(struct vcpu *vcpu)
 
 	del_timer(&vlapic->vtimer.timer);
 
-	if (!is_vapic_supported()) {
+	if (!is_apicv_supported()) {
 		unregister_mmio_emulation_handler(vcpu->vm,
 			(uint64_t)DEFAULT_APIC_BASE,
 			(uint64_t)DEFAULT_APIC_BASE + CPU_PAGE_SIZE);
