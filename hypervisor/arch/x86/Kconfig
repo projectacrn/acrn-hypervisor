@@ -142,4 +142,4 @@ config MTRR_ENABLED
 
 config RELOC
 	bool "Enable relocation"
-	default n
+	default y

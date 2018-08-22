@@ -18,6 +18,7 @@ CFLAGS += -Wall -ffunction-sections
 CFLAGS += -Werror
 CFLAGS += -O2 -D_FORTIFY_SOURCE=2
 CFLAGS += -Wformat -Wformat-security -fno-strict-aliasing
+CFLAGS += -fpie
 
 CFLAGS += -I$(BASEDIR)/include
 CFLAGS += -I$(BASEDIR)/include/public
@@ -43,6 +44,7 @@ endif
 
 LDFLAGS += -Wl,-z,noexecstack
 LDFLAGS += -Wl,-z,relro,-z,now
+LDFLAGS += -pie
 LDFLAGS += -L$(TOOLS_OUT)
 
 LIBS = -lrt
