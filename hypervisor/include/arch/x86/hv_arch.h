@@ -22,6 +22,7 @@
 #include <guest_pm.h>
 #include <host_pm.h>
 #include <vpic.h>
+#include <vuart.h>
 #include <vm.h>
 #include <cpuid.h>
 #include <mmu.h>

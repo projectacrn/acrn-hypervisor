@@ -41,8 +41,6 @@
 #define vuart_lock(vu)		spinlock_obtain(&((vu)->lock))
 #define vuart_unlock(vu)	spinlock_release(&((vu)->lock))
 
-#define vm_vuart(vm)		(vm->vuart)
-
 #ifdef CONFIG_PARTITION_MODE
 int8_t vuart_vmid = - 1;
 #endif
@@ -100,7 +98,7 @@ static uint32_t fifo_numchars(struct fifo *fifo)
  *
  * Return an interrupt reason if one is available.
  */
-static uint8_t vuart_intr_reason(struct vuart *vu)
+static uint8_t vuart_intr_reason(struct acrn_vuart *vu)
 {
 	if (((vu->lsr & LSR_OE) != 0U) && ((vu->ier & IER_ELSI) != 0U)) {
 		return IIR_RLS;
@@ -118,7 +116,7 @@ static uint8_t vuart_intr_reason(struct vuart *vu)
  * Toggle the COM port's intr pin depending on whether or not we have an
  * interrupt condition to report to the processor.
  */
-static void vuart_toggle_intr(struct vuart *vu)
+static void vuart_toggle_intr(struct acrn_vuart *vu)
 {
 	uint8_t intr_reason;
 
@@ -139,7 +137,7 @@ static void vuart_write(__unused struct vm_io_handler *hdlr, struct vm *vm,
 		uint16_t offset_arg, __unused size_t width, uint32_t value)
 {
 	uint16_t offset = offset_arg;
-	struct vuart *vu = vm_vuart(vm);
+	struct acrn_vuart *vu = vm_vuart(vm);
 	uint8_t value_u8 = (uint8_t)value;
 
 	offset -= vu->base;
@@ -226,7 +224,7 @@ static uint32_t vuart_read(__unused struct vm_io_handler *hdlr, struct vm *vm,
 {
 	uint16_t offset = offset_arg;
 	uint8_t iir, reg, intr_reason;
-	struct vuart *vu = vm_vuart(vm);
+	struct acrn_vuart *vu = vm_vuart(vm);
 
 	offset -= vu->base;
 	vuart_lock(vu);
@@ -314,7 +312,7 @@ static void vuart_register_io_handler(struct vm *vm)
 /**
  * @pre vu != NULL
  */
-void vuart_console_tx_chars(struct vuart *vu)
+void vuart_console_tx_chars(struct acrn_vuart *vu)
 {
 	vuart_lock(vu);
 	while (fifo_numchars(&vu->txfifo) > 0U) {
@@ -327,7 +325,7 @@ void vuart_console_tx_chars(struct vuart *vu)
  * @pre vu != NULL
  * @pre vu->active == true
  */
-void vuart_console_rx_chars(struct vuart *vu)
+void vuart_console_rx_chars(struct acrn_vuart *vu)
 {
 	char ch = -1;
 
@@ -348,7 +346,7 @@ void vuart_console_rx_chars(struct vuart *vu)
 	vuart_unlock(vu);
 }
 
-struct vuart *vuart_console_active(void)
+struct acrn_vuart *vuart_console_active(void)
 {
 #ifdef CONFIG_PARTITION_MODE
 	struct vm *vm;
@@ -362,36 +360,31 @@ struct vuart *vuart_console_active(void)
 	struct vm *vm = get_vm_from_vmid(0U);
 #endif
 
-	if ((vm != NULL) && (vm->vuart != NULL)) {
-		struct vuart *vu = vm->vuart;
+	if (vm != NULL) {
+		struct acrn_vuart *vu = vm_vuart(vm);
 
 		if (vu->active) {
-			return vm->vuart;
+			return vu;
 		}
 	}
 	return NULL;
 }
 
-void *vuart_init(struct vm *vm)
+void vuart_init(struct vm *vm)
 {
-	struct vuart *vu;
 	uint32_t divisor;
-
-	vu = calloc(1U, sizeof(struct vuart));
-	ASSERT(vu != NULL, "");
+	struct acrn_vuart *vu = vm_vuart(vm);
 
 	/* Set baud rate*/
 	divisor = (UART_CLOCK_RATE / BAUD_9600) >> 4U;
-	vu->dll = (uint8_t)divisor;
-	vu->dlh = (uint8_t)(divisor >> 8U);
+	vm->vuart.dll = (uint8_t)divisor;
+	vm->vuart.dlh = (uint8_t)(divisor >> 8U);
 
-	vu->active = false;
-	vu->base = COM1_BASE;
-	vu->vm = vm;
-	fifo_init(&vu->rxfifo, RX_FIFO_SIZE);
-	fifo_init(&vu->txfifo, TX_FIFO_SIZE);
+	vm->vuart.active = false;
+	vm->vuart.base = COM1_BASE;
+	vm->vuart.vm = vm;
+	fifo_init(&vm->vuart.rxfifo, RX_FIFO_SIZE);
+	fifo_init(&vm->vuart.txfifo, TX_FIFO_SIZE);
 	vuart_lock_init(vu);
 	vuart_register_io_handler(vm);
-
-	return vu;
 }

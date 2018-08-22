@@ -34,7 +34,7 @@ char console_getc(void)
 
 static void console_timer_callback(__unused void *data)
 {
-	struct vuart *vu;
+	struct acrn_vuart *vu;
 
 	/* Kick HV-Shell and Uart-Console tasks */
 	vu = vuart_console_active();
