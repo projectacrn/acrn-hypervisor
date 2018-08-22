@@ -85,9 +85,6 @@ static int
 apicv_pending_intr(struct acrn_vlapic *vlapic, __unused uint32_t *vecptr);
 
 static void
-apicv_set_tmr(__unused struct acrn_vlapic *vlapic, uint32_t vector, bool level);
-
-static void
 apicv_batch_set_tmr(struct acrn_vlapic *vlapic);
 
 /*
@@ -477,9 +474,8 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 		return 1;
 	}
 
-	if (vlapic->ops.apicv_set_intr_ready_fn != NULL) {
-		return vlapic->ops.apicv_set_intr_ready_fn
-			(vlapic, vector, level);
+	if (is_apicv_intr_delivery_supported()) {
+		return apicv_set_intr_ready(vlapic, vector, level);
 	}
 
 	idx = vector >> 5U;
@@ -1214,8 +1210,8 @@ vlapic_pending_intr(struct acrn_vlapic *vlapic, uint32_t *vecptr)
 	uint32_t i, vector, val, bitpos;
 	struct lapic_reg *irrptr;
 
-	if (vlapic->ops.apicv_pending_intr_fn != NULL) {
-		return vlapic->ops.apicv_pending_intr_fn(vlapic, vecptr);
+	if (is_apicv_intr_delivery_supported()) {
+		return apicv_pending_intr(vlapic, vecptr);
 	}
 
 	irrptr = &lapic->irr[0];
@@ -1245,11 +1241,6 @@ vlapic_intr_accepted(struct acrn_vlapic *vlapic, uint32_t vector)
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 	struct lapic_reg *irrptr, *isrptr;
 	uint32_t idx, stk_top;
-
-	if (vlapic->ops.apicv_intr_accepted_fn != NULL) {
-		vlapic->ops.apicv_intr_accepted_fn(vlapic, vector);
-		return;
-	}
 
 	/*
 	 * clear the ready bit for vector being accepted in irr
@@ -1737,8 +1728,8 @@ vlapic_set_tmr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 void
 vlapic_apicv_batch_set_tmr(struct acrn_vlapic *vlapic)
 {
-	if (vlapic->ops.apicv_batch_set_tmr_fn != NULL) {
-		vlapic->ops.apicv_batch_set_tmr_fn(vlapic);
+	if (is_apicv_intr_delivery_supported()) {
+		apicv_batch_set_tmr(vlapic);
 	}
 }
 
@@ -2042,18 +2033,6 @@ int vlapic_create(struct vcpu *vcpu)
 	vlapic->vm = vcpu->vm;
 	vlapic->vcpu = vcpu;
 	if (is_apicv_supported()) {
-		if (is_apicv_intr_delivery_supported()) {
-			vlapic->ops.apicv_set_intr_ready_fn =
-					apicv_set_intr_ready;
-
-			vlapic->ops.apicv_pending_intr_fn =
-					apicv_pending_intr;
-
-			vlapic->ops.apicv_set_tmr_fn = apicv_set_tmr;
-			vlapic->ops.apicv_batch_set_tmr_fn =
-					apicv_batch_set_tmr;
-		}
-
 		if (is_vcpu_bsp(vcpu)) {
 			uint64_t *pml4_page =
 				(uint64_t *)vcpu->vm->arch_vm.nworld_eptp;
@@ -2163,25 +2142,6 @@ apicv_pending_intr(struct acrn_vlapic *vlapic, __unused uint32_t *vecptr)
 	}
 
 	return 0;
-}
-
-static void
-apicv_set_tmr(__unused struct acrn_vlapic *vlapic, uint32_t vector, bool level)
-{
-	uint64_t mask, val;
-	uint32_t field;
-
-	mask = 1UL << (vector & 0x3fU);
-	field = VMX_EOI_EXIT(vector);
-
-	val = exec_vmread64(field);
-	if (level) {
-		val |= mask;
-	} else {
-		val &= ~mask;
-	}
-
-	exec_vmwrite64(field, val);
 }
 
 /* Update the VMX_EOI_EXIT according to related tmr */
