@@ -96,17 +96,6 @@ struct vlapic_pir_desc {
 	uint64_t unused[3];
 } __aligned(64);
 
-struct vlapic_ops {
-	int (*apicv_set_intr_ready_fn)
-		(struct acrn_vlapic *vlapic, uint32_t vector, bool level);
-	int (*apicv_pending_intr_fn)(struct acrn_vlapic *vlapic, uint32_t *vecptr);
-	void (*apicv_intr_accepted_fn)(struct acrn_vlapic *vlapic, uint32_t vector);
-	void (*apicv_post_intr_fn)(struct acrn_vlapic *vlapic, int hostcpu);
-	void (*apicv_set_tmr_fn)(struct acrn_vlapic *vlapic, uint32_t vector, bool level);
-	void (*apicv_batch_set_tmr_fn)(struct acrn_vlapic *vlapic);
-	void (*enable_x2apic_mode_fn)(struct acrn_vlapic *vlapic);
-};
-
 struct vlapic_timer {
 	struct hv_timer timer;
 	uint32_t mode;
@@ -127,7 +116,6 @@ struct acrn_vlapic {
 
 	struct vm		*vm;
 	struct vcpu		*vcpu;
-	struct vlapic_ops	ops;
 
 	uint32_t		esr_pending;
 	int			esr_firing;
