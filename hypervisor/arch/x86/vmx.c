@@ -1026,12 +1026,13 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 
 	if (is_vapic_supported()) {
 		/*APIC-v, config APIC-access address*/
-		value64 = apicv_get_apic_access_addr(vcpu->vm);
+		value64 = vlapic_apicv_get_apic_access_addr(vcpu->vm);
 		exec_vmwrite64(VMX_APIC_ACCESS_ADDR_FULL,
 						value64);
 
 		/*APIC-v, config APIC virtualized page address*/
-		value64 = apicv_get_apic_page_addr(vcpu->arch_vcpu.vlapic);
+		value64 = vlapic_apicv_get_apic_page_addr(
+							vcpu->arch_vcpu.vlapic);
 		exec_vmwrite64(VMX_VIRTUAL_APIC_PAGE_ADDR_FULL,
 						value64);
 

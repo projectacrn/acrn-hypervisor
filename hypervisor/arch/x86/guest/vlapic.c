@@ -2056,7 +2056,7 @@ int vlapic_create(struct vcpu *vcpu)
 
 		if (is_vcpu_bsp(vcpu)) {
 			ept_mr_add(vcpu->vm,
-				apicv_get_apic_access_addr(vcpu->vm),
+				vlapic_apicv_get_apic_access_addr(vcpu->vm),
 				DEFAULT_APIC_BASE, CPU_PAGE_SIZE,
 				IA32E_EPT_W_BIT | IA32E_EPT_R_BIT |
 				IA32E_EPT_UNCACHED);
@@ -2209,7 +2209,7 @@ apicv_batch_set_tmr(struct acrn_vlapic *vlapic)
  *APIC-v: Get the HPA to APIC-access page
  * **/
 uint64_t
-apicv_get_apic_access_addr(__unused struct vm *vm)
+vlapic_apicv_get_apic_access_addr(__unused struct vm *vm)
 {
 	if (apicv_apic_access_addr == NULL) {
 		apicv_apic_access_addr = alloc_page();
@@ -2225,7 +2225,7 @@ apicv_get_apic_access_addr(__unused struct vm *vm)
  *APIC-v: Get the HPA to virtualized APIC registers page
  * **/
 uint64_t
-apicv_get_apic_page_addr(struct acrn_vlapic *vlapic)
+vlapic_apicv_get_apic_page_addr(struct acrn_vlapic *vlapic)
 {
 	return HVA2HPA(&(vlapic->apic_page));
 }
@@ -2236,7 +2236,7 @@ apicv_get_apic_page_addr(struct acrn_vlapic *vlapic)
  */
 
 void
-apicv_inject_pir(struct acrn_vlapic *vlapic)
+vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
 {
 	struct vlapic_pir_desc *pir_desc;
 	struct lapic_regs *lapic;
