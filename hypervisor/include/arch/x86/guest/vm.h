@@ -98,7 +98,7 @@ struct vm_arch {
 	void *tmp_pg_array;	/* Page array for tmp guest paging struct */
 	void *iobitmap[2];/* IO bitmap page array base address for this VM */
 	void *msr_bitmap;	/* MSR bitmap page base address for this VM */
-	void *virt_ioapic;	/* Virtual IOAPIC base address */
+	struct acrn_vioapic vioapic;	/* Virtual IOAPIC base address */
 	struct acrn_vpic vpic;      /* Virtual PIC */
 	/**
 	 * A link to the IO handler of this VM.
@@ -253,6 +253,12 @@ static inline struct acrn_vpic *
 vm_pic(struct vm *vm)
 {
 	return (struct acrn_vpic *)&(vm->arch_vm.vpic);
+}
+
+static inline struct acrn_vioapic *
+vm_ioapic(struct vm *vm)
+{
+	return (struct acrn_vioapic *)&(vm->arch_vm.vioapic);
 }
 
 int shutdown_vm(struct vm *vm);

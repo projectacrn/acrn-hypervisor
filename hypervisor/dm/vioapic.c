@@ -32,22 +32,11 @@
 
 #include <hypervisor.h>
 
-#define REDIR_ENTRIES_HW	120U /* SOS align with native ioapic */
 #define	RTBL_RO_BITS	(uint32_t)(IOAPIC_RTE_REM_IRR | IOAPIC_RTE_DELIVS)
 #define NEED_TMR_UPDATE (IOAPIC_RTE_TRGRMOD | IOAPIC_RTE_DELMOD | IOAPIC_RTE_INTVEC)
 
 #define ACRN_DBG_IOAPIC	6U
 #define ACRN_IOAPIC_VERSION	0x11U
-
-struct vioapic {
-	struct vm	*vm;
-	spinlock_t	mtx;
-	uint32_t	id;
-	uint32_t	ioregsel;
-	union ioapic_rte rtbl[REDIR_ENTRIES_HW];
-	/* sum of pin asserts (+1) and deasserts (-1) */
-	int32_t acnt[REDIR_ENTRIES_HW];
-};
 
 #define	VIOAPIC_LOCK(vioapic)	spinlock_obtain(&((vioapic)->mtx))
 #define	VIOAPIC_UNLOCK(vioapic)	 spinlock_release(&((vioapic)->mtx))
@@ -61,17 +50,11 @@ static inline const char *pinstate_str(bool asserted)
 	return (asserted) ? "asserted" : "deasserted";
 }
 
-static struct vioapic *
-vm_ioapic(struct vm *vm)
-{
-	return (struct vioapic *)vm->arch_vm.virt_ioapic;
-}
-
 /**
  * @pre pin < vioapic_pincount(vm)
  */
 static void
-vioapic_send_intr(struct vioapic *vioapic, uint32_t pin)
+vioapic_send_intr(struct acrn_vioapic *vioapic, uint32_t pin)
 {
 	uint32_t vector, dest, delmode;
 	union ioapic_rte rte;
@@ -107,7 +90,7 @@ vioapic_send_intr(struct vioapic *vioapic, uint32_t pin)
  * @pre pin < vioapic_pincount(vm)
  */
 static void
-vioapic_set_pinstate(struct vioapic *vioapic, uint32_t pin, bool newstate)
+vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint32_t pin, bool newstate)
 {
 	int oldcnt, newcnt;
 	bool needintr;
@@ -152,7 +135,7 @@ enum irqstate {
 static void
 vioapic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate)
 {
-	struct vioapic *vioapic;
+	struct acrn_vioapic *vioapic;
 	uint32_t pin = irq;
 
 	vioapic = vm_ioapic(vm);
@@ -199,7 +182,7 @@ vioapic_pulse_irq(struct vm *vm, uint32_t irq)
 void
 vioapic_update_tmr(struct vcpu *vcpu)
 {
-	struct vioapic *vioapic;
+	struct acrn_vioapic *vioapic;
 	struct acrn_vlapic *vlapic;
 	union ioapic_rte rte;
 	uint32_t vector, delmode;
@@ -231,7 +214,7 @@ vioapic_update_tmr(struct vcpu *vcpu)
 }
 
 static uint32_t
-vioapic_indirect_read(struct vioapic *vioapic, uint32_t addr)
+vioapic_indirect_read(struct acrn_vioapic *vioapic, uint32_t addr)
 {
 	uint32_t regnum;
 	uint32_t pin, pincount = vioapic_pincount(vioapic->vm);
@@ -275,7 +258,8 @@ vioapic_indirect_read(struct vioapic *vioapic, uint32_t addr)
  * VIOAPIC_UNLOCK(vioapic) by caller.
  */
 static void
-vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
+vioapic_indirect_write(struct acrn_vioapic *vioapic, uint32_t addr,
+		uint32_t data)
 {
 	union ioapic_rte last, new;
 	uint64_t changed;
@@ -405,7 +389,7 @@ vioapic_indirect_write(struct vioapic *vioapic, uint32_t addr, uint32_t data)
 }
 
 static void
-vioapic_mmio_rw(struct vioapic *vioapic, uint64_t gpa,
+vioapic_mmio_rw(struct acrn_vioapic *vioapic, uint64_t gpa,
 		uint32_t *data, bool do_read)
 {
 	uint32_t offset;
@@ -447,7 +431,7 @@ vioapic_mmio_rw(struct vioapic *vioapic, uint64_t gpa,
 void
 vioapic_process_eoi(struct vm *vm, uint32_t vector)
 {
-	struct vioapic *vioapic;
+	struct acrn_vioapic *vioapic;
 	uint32_t pin, pincount = vioapic_pincount(vm);
 	union ioapic_rte rte;
 
@@ -493,7 +477,7 @@ vioapic_process_eoi(struct vm *vm, uint32_t vector)
 }
 
 void
-vioapic_reset(struct vioapic *vioapic)
+vioapic_reset(struct acrn_vioapic *vioapic)
 {
 	uint32_t pin, pincount;
 
@@ -506,35 +490,27 @@ vioapic_reset(struct vioapic *vioapic)
 	vioapic->ioregsel = 0U;
 }
 
-struct vioapic *
+void
 vioapic_init(struct vm *vm)
 {
-	struct vioapic *vioapic;
+	vm->arch_vm.vioapic.vm = vm;
+	spinlock_init(&(vm->arch_vm.vioapic.mtx));
 
-	vioapic = calloc(1U, sizeof(struct vioapic));
-	ASSERT(vioapic != NULL, "");
-
-	vioapic->vm = vm;
-	spinlock_init(&vioapic->mtx);
-
-	vioapic_reset(vioapic);
+	vioapic_reset(vm_ioapic(vm));
 
 	register_mmio_emulation_handler(vm,
 			vioapic_mmio_access_handler,
 			(uint64_t)VIOAPIC_BASE,
 			(uint64_t)VIOAPIC_BASE + VIOAPIC_SIZE,
 			NULL);
-
-	return vioapic;
 }
 
 void
-vioapic_cleanup(struct vioapic *vioapic)
+vioapic_cleanup(struct acrn_vioapic *vioapic)
 {
 	unregister_mmio_emulation_handler(vioapic->vm,
 		(uint64_t)VIOAPIC_BASE,
 		(uint64_t)VIOAPIC_BASE + VIOAPIC_SIZE);
-	free(vioapic);
 }
 
 uint32_t
@@ -551,7 +527,7 @@ int vioapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
 		__unused void *handler_private_data)
 {
 	struct vm *vm = vcpu->vm;
-	struct vioapic *vioapic;
+	struct acrn_vioapic *vioapic;
 	struct mmio_request *mmio = &io_req->reqs.mmio;
 	uint64_t gpa = mmio->address;
 	int ret = 0;
@@ -580,12 +556,12 @@ int vioapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
 }
 
 /**
- * @pre vm->arch_vm.virt_ioapic != NULL
+ * @pre vm->arch_vm.vioapic != NULL
  * @pre rte != NULL
  */
 void vioapic_get_rte(struct vm *vm, uint32_t pin, union ioapic_rte *rte)
 {
-	struct vioapic *vioapic;
+	struct acrn_vioapic *vioapic;
 
 	vioapic = vm_ioapic(vm);
 	*rte = vioapic->rtbl[pin];

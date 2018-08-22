@@ -32,14 +32,25 @@
 #define	_VIOAPIC_H_
 
 #include <apicreg.h>
-#include <vm.h>
 
 #define	VIOAPIC_BASE	0xFEC00000UL
 #define	VIOAPIC_SIZE	4096UL
 
-struct vioapic *vioapic_init(struct vm *vm);
-void	vioapic_cleanup(struct vioapic *vioapic);
-void	vioapic_reset(struct vioapic *vioapic);
+#define REDIR_ENTRIES_HW	120U /* SOS align with native ioapic */
+
+struct acrn_vioapic {
+	struct vm	*vm;
+	spinlock_t	mtx;
+	uint32_t	id;
+	uint32_t	ioregsel;
+	union ioapic_rte rtbl[REDIR_ENTRIES_HW];
+	/* sum of pin asserts (+1) and deasserts (-1) */
+	int32_t acnt[REDIR_ENTRIES_HW];
+};
+
+void    vioapic_init(struct vm *vm);
+void	vioapic_cleanup(struct acrn_vioapic *vioapic);
+void	vioapic_reset(struct acrn_vioapic *vioapic);
 
 void	vioapic_assert_irq(struct vm *vm, uint32_t irq);
 void	vioapic_deassert_irq(struct vm *vm, uint32_t irq);

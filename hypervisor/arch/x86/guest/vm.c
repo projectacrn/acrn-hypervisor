@@ -215,12 +215,8 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	/* vpic wire_mode default is INTR */
 	vm->wire_mode = VPIC_WIRE_INTR;
 
-	/* Allocate full emulated vIOAPIC instance */
-	vm->arch_vm.virt_ioapic = vioapic_init(vm);
-	if (vm->arch_vm.virt_ioapic == NULL) {
-		status = -ENODEV;
-		goto err;
-	}
+	/* Init full emulated vIOAPIC instance */
+	vioapic_init(vm);
 
 	/* Populate return VM handle */
 	*rtn_vm = vm;
@@ -236,9 +232,8 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	return 0;
 
 err:
-	if (vm->arch_vm.virt_ioapic != NULL) {
-		vioapic_cleanup(vm->arch_vm.virt_ioapic);
-	}
+
+	vioapic_cleanup(vm_ioapic(vm));
 
 	if (vm->arch_vm.m2p != NULL) {
 		free(vm->arch_vm.m2p);
@@ -284,8 +279,8 @@ int shutdown_vm(struct vm *vm)
 
 	ptdev_release_all_entries(vm);
 
-	/* cleanup and free vioapic */
-	vioapic_cleanup(vm->arch_vm.virt_ioapic);
+	/* cleanup vioapic */
+	vioapic_cleanup(vm_ioapic(vm));
 
 	/* Destroy secure world */
 	if (vm->sworld_control.flag.active) {
@@ -361,7 +356,7 @@ int reset_vm(struct vm *vm)
 		vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
 	}
 
-	vioapic_reset(vm->arch_vm.virt_ioapic);
+	vioapic_reset(vm_ioapic(vm));
 	destroy_secure_world(vm, false);
 	vm->sworld_control.flag.active = 0UL;
 
