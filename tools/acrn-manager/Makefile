@@ -5,6 +5,7 @@ CFLAGS := -Wall
 CFLAGS += -I../../devicemodel/include
 CFLAGS += -I../../devicemodel/include/public
 CFLAGS += -I../../hypervisor/include
+CFLAGS += -fpie
 
 ifeq ($(RELEASE),0)
 CFLAGS += -g -DMNGR_DEBUG
@@ -13,6 +14,7 @@ endif
 LDFLAGS := -L$(OUT_DIR)
 LDFLAGS += -lacrn-mngr
 LDFLAGS +=  -lpthread
+LDFLAGS += -pie
 
 .PHONY: all
 all: $(OUT_DIR)/libacrn-mngr.a $(OUT_DIR)/acrn_mngr.h $(OUT_DIR)/acrnctl $(OUT_DIR)/acrnd
