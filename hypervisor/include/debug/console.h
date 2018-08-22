@@ -40,7 +40,6 @@ int console_write(const char *s, size_t len);
 
 void console_putc(const char *ch);
 char console_getc(void);
-int console_gets(char *buffer, uint32_t length);
 
 void console_setup_timer(void);
 
@@ -70,7 +69,6 @@ static inline int console_write(__unused const char *str,
 }
 static inline void console_putc(__unused const char *ch) { }
 static inline int console_getc(void) { return 0; }
-static inline int console_gets(char *buffer, uint32_t length) { return 0; }
 static inline void console_setup_timer(void) {}
 static inline void suspend_console(void) {}
 static inline void resume_console(void) {}
