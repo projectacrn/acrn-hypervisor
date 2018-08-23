@@ -197,7 +197,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 		 * reserving. Current strategy is "total_mem_size in Giga -
 		 * remained 1G pages" for reserving.
 		 */
-		if (is_vm0(vm) && check_mmu_1gb_support(PTT_HOST)) {
+		if (is_vm0(vm) && check_mmu_1gb_support(PTT_PRIMARY)) {
 			int32_t reserving_1g_pages;
 
 #ifdef CONFIG_REMAIN_1G_PAGES

@@ -215,7 +215,7 @@
 #define ROUND_PAGE_DOWN(addr) ((addr) & CPU_PAGE_MASK)
 
 enum _page_table_type {
-	PTT_HOST = 0,  /* Mapping for hypervisor */
+	PTT_PRIMARY = 0,  /* Mapping for hypervisor */
 	PTT_EPT = 1,
 	PAGETABLE_TYPE_UNKNOWN,
 };
