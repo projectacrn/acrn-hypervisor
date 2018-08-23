@@ -5,13 +5,13 @@ ACRN GVT-g APIs
 
 GVT-g is Intel's open source GPU virtualization solution and is up-streamed to
 the Linux kernel. Its implementation over KVM is named KVMGT, over Xen it is
-named XenGT, and over ACRN it is named ACRN-GT. GVT-g can exports multiple
+named XenGT, and over ACRN it is named AcrnGT. GVT-g can exports multiple
 virtual GPU (vGPU) instances for virtual machine system (VM). A VM could be
 assigned one vGPU instance. The guest OS graphic driver needs minor
 modification to drive the vGPU adapter in a VM. Every vGPU instance will adopt
 the full HW GPU’s accelerate capability for 3D render and display.
 
-In the following document, ACRN-GT refers to the glue layer between ACRN
+In the following document, AcrnGT refers to the glue layer between ACRN
 hypervisor and GVT-g core device model. It works as the agent of
 hypervisor-related services. It is the only layer that needs to get rewritten
 when porting GVT-g to another hypervisor. For simplicity, in the rest of this
@@ -47,7 +47,7 @@ Intel GVT-g Host Support(vGPU device model)
    :internal:
 
 
-VHM APIs called from ACRN-GT
+VHM APIs called from AcrnGT
 ****************************
 
 The Virtio and Hypervisor Service Module (VHM) is a kernel module in the
@@ -83,14 +83,14 @@ responses to user space modules, notified by vIRQ injections.
 
 .. _MPT_interface:
 
-ACRN-GT mediated pass-through (MPT) interface
+AcrnGT mediated pass-through (MPT) interface
 **************************************************
 
-ACRN-GT receives request from GVT module through MPT interface. Refer to the
+AcrnGT receives request from GVT module through MPT interface. Refer to the
 :ref:`Graphic_mediation` page.
 
 A collection of function callbacks in the MPT module will be attached to GVT
-host at the driver loading stage. ACRN-GT MPT function callbacks are described
+host at the driver loading stage. AcrnGT MPT function callbacks are described
 as below:
 
 
@@ -185,10 +185,10 @@ in the `ACRN kernel GitHub repo`_
 
 .. _sysfs_interface:
 
-ACRN-GT sysfs interface
+AcrnGT sysfs interface
 ***********************
 
-This section contains APIs for the ACRN-GT sysfs interface. Sources are found
+This section contains APIs for the AcrnGT sysfs interface. Sources are found
 in the `ACRN kernel GitHub repo`_
 
 
@@ -212,7 +212,7 @@ figure out what kind of error occurs.
 /sys/kernel/gvt/
 ----------------
 
-The ``/sys/kernel/gvt/`` class sub-directory belongs to ACRN-GT and provides a
+The ``/sys/kernel/gvt/`` class sub-directory belongs to AcrnGT and provides a
 centralized sysfs interface for configuring vGPU properties.
 
 

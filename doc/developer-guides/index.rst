@@ -26,7 +26,7 @@ specific areas within the ACRN hypervisor system.
    ACPI-virt-hld.rst
    interrupt-hld.rst
    APL_GVT-g-hld.rst
-   GVT-G-porting.rst
+   GVT-g-porting.rst
 
 Contributing to the project
 ***************************

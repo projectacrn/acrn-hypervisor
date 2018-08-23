@@ -16,6 +16,9 @@ Glossary of Terms
       real-time and safety-criticality in mind, optimized to streamline
       embedded development through an open source platform.
 
+   AcrnGT
+      Intel GVT-g technology for ACRN.
+
    ACRN-DM
       A user mode device model application running in Service OS to provide
       device emulations in ACRN hypervisor.

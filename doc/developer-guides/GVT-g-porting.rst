@@ -1,6 +1,6 @@
-.. _GVT-G-porting:
+.. _GVT-g-porting:
 
-GVT-G Enabling and Porting Guide
+GVT-g Enabling and Porting Guide
 ################################
 
 Introduction
@@ -8,14 +8,14 @@ Introduction
 
 GVT-g is Intel's Open Source GPU virtualization solution, up-streamed to
 the Linux kernel. Its implementation over KVM is named KVMGT, over Xen
-is named XenGT, and over ACRN is named ACRN-GT. GVT-g can export
+is named XenGT, and over ACRN is named AcrnGT. GVT-g can export
 multiple virtual-GPU (vGPU) instances for virtual machine (VM) system. A
 VM can be assigned one instance of a vGPU. The guest OS graphic driver
 needs only minor modifications to drive the vGPU adapter in a VM. Every
 vGPU instance adopts the full HW GPU's acceleration capability for
 media, 3D rendering, and display.
 
-ACRN-GT refers to the glue layer between the ACRN hypervisor and GVT-g
+AcrnGT refers to the glue layer between the ACRN hypervisor and GVT-g
 core device model. It works as the agent of hypervisor-related services.
 It is the only layer that needs to be rewritten when porting GVT-g to
 other specific hypervisors.
@@ -45,14 +45,14 @@ Overall Components
 ******************
 
 For the GVT-g solution for the ACRN  hypervisor, there are two
-key modules: ACRN-GT and GVT:
+key modules: AcrnGT and GVT:
 
-ACRN-GT module
-  Compiled from ``drivers/gpu/drm/i915/gvt/acrn_gvt.c``, the ACRN-GT
+AcrnGT module
+  Compiled from ``drivers/gpu/drm/i915/gvt/acrn_gvt.c``, the AcrnGT
   module acts as a glue layer between the ACRN hypervisor and the
   interface to the ACRN-DM in user space.
 
-  ACRN-GT is the agent of hypervisor related services, including I/O trap
+  AcrnGT is the agent of hypervisor related services, including I/O trap
   request, IRQ injection, address translation, VM controls, etc. It also
   listens to ACRN hypervisor in ``acrngt_emulation_thread``, and informs GVT
   module of I/O traps.
@@ -61,7 +61,7 @@ ACRN-GT module
   Device Model's routines, and receives request from GVT module through
   the :ref:`MPT_interface`.
 
-  User space programs, such as ACRN-DM, communicate with ACRN-GT through
+  User space programs, such as ACRN-DM, communicate with AcrnGT through
   the :ref:`sysfs_interface` by writing to sysfs node
   ``/sys/kernel/gvt/control/create_gvt_instance``.
 
@@ -87,7 +87,7 @@ VHM module
   I/O responses to user space modules, notified by vIRQ injections.
 
 
-.. figure:: images/GVT-G-porting-image1.png
+.. figure:: images/GVT-g-porting-image1.png
    :width: 700px
    :align: center
    :name: GVT-g_components
@@ -101,27 +101,27 @@ Core scenario interaction sequences
 vGPU creation scenario
 ======================
 
-In this scenario, ACRN-GT receives a create request from ACRN-DM. It
+In this scenario, AcrnGT receives a create request from ACRN-DM. It
 calls GVT's :ref:`intel_gvt_ops_interface` to inform GVT of vGPU
 creation. This interface sets up all vGPU resources such as MMIO, GMA,
-PVINFO, GTT, DISPLAY, and Execlists, and calls back to the ACRN-GT
+PVINFO, GTT, DISPLAY, and Execlists, and calls back to the AcrnGT
 module through the :ref:`MPT_interface` ``attach_vgpu``. Then, the
-ACRN-GT module sets up an I/O request server and asks to trap the PCI
+AcrnGT module sets up an I/O request server and asks to trap the PCI
 configure space of the vGPU (virtual device 0:2:0) via VHM's APIs.
-Finally, the ACRN-GT module launches a ACRN-GT emulation thread to
+Finally, the AcrnGT module launches a AcrnGT emulation thread to
 listen to I/O trap notifications from HVM and ACRN hypervisor.
 
 vGPU destroy scenario
 =====================
 
-In this scenario, ACRN-GT receives a destroy request from ACRN-DM. It
+In this scenario, AcrnGT receives a destroy request from ACRN-DM. It
 calls GVT's :ref:`intel_gvt_ops_interface` to inform GVT of the vGPU destroy
 request, and cleans up all vGPU resources.
 
 vGPU pci configure space write scenario
 =======================================
 
-ACRN traps the vGPU's PCI config space write, notifies ACRN-GT's
+ACRN traps the vGPU's PCI config space write, notifies AcrnGT's
 ``acrngt_emulation_thread``, which calls ``acrngt_hvm_pio_emulation`` to
 handle all I/O trap notifications. This routine calls the GVT's
 :ref:`intel_gvt_ops_interface` ``emulate_cfg_write`` to emulate the vGPU PCI

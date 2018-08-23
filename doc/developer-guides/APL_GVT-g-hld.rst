@@ -1,6 +1,6 @@
-.. _APL_GVT-G-hld:
+.. _APL_GVT-g-hld:
 
-GVT-G high-level design
+GVT-g high-level design
 #######################
 
 Introduction
@@ -55,7 +55,7 @@ native graphics driver can run directly inside a VM.
 Intel® GVT-g technology for Apollo Lake (APL) has been implemented in
 open source hypervisors or Virtual Machine Monitors (VMMs):
 
--  Intel® GVT-g for ACRN, also known as, "ACRN-GVT"
+-  Intel® GVT-g for ACRN, also known as, "AcrnGT"
 -  Intel® GVT-g for KVM, also known as, "KVMGT"
 -  Intel® GVT-g for Xen, also known as, "XenGT"
 
@@ -349,7 +349,7 @@ exposed by the GVT device model.
    :align: center
    :name: gvt-arch
 
-   ACRN-GVT High-level Architecture
+   AcrnGT High-level Architecture
 
 Key Techniques
 **************
@@ -892,18 +892,18 @@ UOS. This policy can be enforced through an SOS i915 kernel command line
 parameter, and can replace the default in-order command submission (no
 preemption) policy.
 
-ACRN-GT
+AcrnGT
 *******
 
 ACRN is a flexible, lightweight reference hypervisor, built with
 real-time and safety-criticality in mind, optimized to streamline
 embedded development through an open source platform.
 
-ACRN-GT is the GVT-g implementation on the ACRN hypervisor. It adapts
+AcrnGT is the GVT-g implementation on the ACRN hypervisor. It adapts
 the MPT interface of GVT-g onto ACRN by using the kernel APIs provided
 by ACRN.
 
-:numref:`full-pic` shows the full architecture of ACRN-GT with a Linux Guest
+:numref:`full-pic` shows the full architecture of AcrnGT with a Linux Guest
 OS and an Android Guest OS.
 
 .. figure:: images/APL_GVT-g-full-pic.png
@@ -911,16 +911,16 @@ OS and an Android Guest OS.
    :align: center
    :name: full-pic
 
-   Full picture of the ACRN-GT
+   Full picture of the AcrnGT
 
-ACRN-GT in kernel
+AcrnGT in kernel
 =================
 
-The ACRN-GT module in the SOS kernel acts as an adaption layer to connect
+The AcrnGT module in the SOS kernel acts as an adaption layer to connect
 between GVT-g in the i915, the VHM module, and the ACRN-DM user space
 application:
 
--  ACRN-GT module implements the MPT interface of GVT-g to provide
+-  AcrnGT module implements the MPT interface of GVT-g to provide
    services to it, including set and unset trap areas, set and unset
    write-protection pages, etc.
 
@@ -931,10 +931,10 @@ application:
 -  It provides user space interfaces through ``sysfs`` to the user space
    ACRN-DM, so that DM can manage the lifecycle of the virtual GPUs.
 
-ACRN-GT in DM
+AcrnGT in DM
 =============
 
-To emulate a PCI device to a Guest, we need an ACRN-GT sub-module in the
+To emulate a PCI device to a Guest, we need an AcrnGT sub-module in the
 ACRN-DM.  This sub-module is responsible for:
 
 -  registering the virtual GPU device to the PCI device tree presented to
