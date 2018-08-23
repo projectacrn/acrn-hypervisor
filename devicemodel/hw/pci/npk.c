@@ -159,11 +159,11 @@ static inline uint32_t *offset2reg(uint64_t offset)
 	return reg;
 }
 
-static inline int valid_param(int m_off, int m_num)
+static inline int valid_param(uint32_t m_off, uint32_t m_num)
 {
-	/* 256-aligned, no less than 256, no overflow */
-	if (!(m_off & 0xFF) && !(m_num & 0xFF) && (m_off >> 8) > 0
-			&& (m_num >> 8) > 0 && m_off + m_num <= NPK_SW_MSTR_NUM)
+	/* 8-aligned, no less than 8, no overflow */
+	if (((m_off & 0x7U) == 0) && ((m_num & 0x7U) == 0) && (m_off > 0x7U)
+			&& (m_num > 0x7U) && (m_off + m_num <= NPK_SW_MSTR_NUM))
 		return 1;
 
 	return 0;
@@ -177,11 +177,12 @@ static inline int valid_param(int m_off, int m_num)
  */
 static int pci_npk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
-	int i, b, s, f, fd, ret, m_off, m_num, error = -1;
+	int i, b, s, f, fd, ret, error = -1;
 	DIR *dir;
 	struct dirent *dent;
 	char name[PATH_MAX];
 	uint8_t h_cfg[PCI_REGMAX + 1];
+	uint32_t m_off, m_num;
 	uint64_t sw_bar_base;
 	struct npk_reg_default_val *d;
 
@@ -210,7 +211,7 @@ static int pci_npk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 */
 
 	/* get the master offset and the number for this guest */
-	if (opts == NULL || sscanf(opts, "%d/%d", &m_off, &m_num) != 2
+	if ((opts == NULL) || (sscanf(opts, "%u/%u", &m_off, &m_num) != 2)
 				|| !valid_param(m_off, m_num)) {
 		m_off = 256;
 		m_num = 256;
