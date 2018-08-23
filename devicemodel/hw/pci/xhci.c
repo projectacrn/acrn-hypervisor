@@ -593,7 +593,7 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 		if (xdev->slots[slot] == edev)
 			break;
 
-	assert(slot < USB_NATIVE_NUM_BUS);
+	assert(slot < XHCI_MAX_SLOTS);
 
 	status = VPORT_STATE(xdev->port_map_tbl[di.bus][di.port]);
 	assert(status == VPORT_EMULATED || status == VPORT_CONNECTED);
