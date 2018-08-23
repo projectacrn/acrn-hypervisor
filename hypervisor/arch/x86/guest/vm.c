@@ -173,8 +173,9 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 					&vm_desc->GUID[0],
 					sizeof(vm_desc->GUID));
 #ifdef CONFIG_PARTITION_MODE
-		ept_mr_add(vm, vm_desc->start_hpa,
-					0UL, vm_desc->mem_size, EPT_RWX|EPT_WB);
+		ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+				vm_desc->start_hpa, 0UL, vm_desc->mem_size,
+				EPT_RWX|EPT_WB);
 		init_vm_boot_info(vm);
 #endif
 	}
