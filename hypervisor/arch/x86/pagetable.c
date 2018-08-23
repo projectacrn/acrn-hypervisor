@@ -48,7 +48,7 @@ static int split_large_page(uint64_t *pte,
 		paddr += paddrinc;
 	}
 
-	ref_prot = (ptt == PTT_HOST) ? PAGE_TABLE : EPT_RWX;
+	ref_prot = (ptt == PTT_PRIMARY) ? PAGE_TABLE : EPT_RWX;
 	set_pgentry(pte, HVA2HPA((void *)pbase) | ref_prot);
 
 	/* TODO: flush the TLB */
@@ -80,7 +80,7 @@ static inline int construct_pgentry(enum _page_table_type ptt, uint64_t *pde)
 		return -ENOMEM;
 	}
 
-	prot = (ptt == PTT_HOST) ? PAGE_TABLE: EPT_RWX;
+	prot = (ptt == PTT_PRIMARY) ? PAGE_TABLE: EPT_RWX;
 	set_pgentry(pde, HVA2HPA(pd_page) | prot);
 	return 0;
 }

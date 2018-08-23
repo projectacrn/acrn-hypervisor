@@ -244,7 +244,7 @@ void init_paging(void)
 	/* Map all memory regions to UC attribute */
 	mmu_add((uint64_t *)mmu_pml4_addr, e820_mem.mem_bottom,
 		e820_mem.mem_bottom, e820_mem.mem_top - e820_mem.mem_bottom,
-		attr_uc, PTT_HOST);
+		attr_uc, PTT_PRIMARY);
 
 	/* Modify WB attribute for E820_TYPE_RAM */
 	for (i = 0U; i < e820_entries; i++) {
@@ -253,7 +253,7 @@ void init_paging(void)
 			mmu_modify_or_del((uint64_t *)mmu_pml4_addr,
 					entry->baseaddr, entry->length,
 					PAGE_CACHE_WB, PAGE_CACHE_MASK,
-					PTT_HOST, MR_MODIFY);
+					PTT_PRIMARY, MR_MODIFY);
 		}
 	}
 
@@ -263,7 +263,7 @@ void init_paging(void)
 	hv_hpa = get_hv_image_base();
 	mmu_modify_or_del((uint64_t *)mmu_pml4_addr, hv_hpa, CONFIG_RAM_SIZE,
 			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER,
-			PTT_HOST, MR_MODIFY);
+			PTT_PRIMARY, MR_MODIFY);
 
 	/* Enable paging */
 	enable_paging(HVA2HPA(mmu_pml4_addr));
