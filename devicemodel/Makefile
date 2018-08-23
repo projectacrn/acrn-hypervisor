@@ -134,6 +134,7 @@ SRCS += arch/x86/pm.c
 
 # vmcfg
 SRCS += vmcfg/vmcfg.c
+SRCS += vmcfg/apl-mrb/vm1/vm1.c
 
 OBJS := $(patsubst %.c,$(DM_OBJDIR)/%.o,$(SRCS))
 

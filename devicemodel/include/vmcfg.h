@@ -16,4 +16,5 @@ struct vmcfg_arg {
 extern struct vmcfg_arg **args_buildin;
 extern int num_args_buildin;
 
+extern struct vmcfg_arg mrb_vm1_args;
 #endif
