@@ -132,6 +132,8 @@ SRCS += core/timer.c
 # arch
 SRCS += arch/x86/pm.c
 
+# vmcfg
+SRCS += vmcfg/vmcfg.c
 
 OBJS := $(patsubst %.c,$(DM_OBJDIR)/%.o,$(SRCS))
 
