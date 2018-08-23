@@ -119,7 +119,7 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	for (i = 0U; i < IA32E_NUM_ENTRIES - 1; i++) {
 		pdpte = mem_read64(src_pdpte_p);
 		if ((pdpte & table_present) != 0UL) {
-			pdpte &= ~IA32E_EPT_X_BIT;
+			pdpte &= ~EPT_EXE;
 			mem_write64(dest_pdpte_p, pdpte);
 		}
 		src_pdpte_p++;

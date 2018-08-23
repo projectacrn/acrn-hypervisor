@@ -27,7 +27,7 @@ static uint64_t find_next_table(uint32_t table_offset, const void *table_base)
 	}
 
 	/* Set table present bits to any of the read/write/execute bits */
-	table_present = (IA32E_EPT_R_BIT | IA32E_EPT_W_BIT | IA32E_EPT_X_BIT);
+	table_present = EPT_RWX;
 
 	/* Determine if a valid entry exists */
 	if ((table_entry & table_present) == 0UL) {
@@ -274,8 +274,8 @@ int ept_mr_add(const struct vm *vm, uint64_t *pml4_page,
 	 * to force snooping of PCIe devices if the page
 	 * is cachable
 	 */
-	if ((prot & IA32E_EPT_MT_MASK) != IA32E_EPT_UNCACHED) {
-		prot |= IA32E_EPT_SNOOP_CTRL;
+	if ((prot & EPT_MT_MASK) != EPT_UNCACHED) {
+		prot |= EPT_SNOOP_CTRL;
 	}
 
 	ret = mmu_add(pml4_page, hpa, gpa, size, prot, PTT_EPT);

@@ -129,24 +129,24 @@ static uint32_t update_ept(struct vm *vm, uint64_t start,
 
 	switch ((uint64_t)type) {
 	case MTRR_MEM_TYPE_WC:
-		attr = IA32E_EPT_WC;
+		attr = EPT_WC;
 		break;
 	case MTRR_MEM_TYPE_WT:
-		attr = IA32E_EPT_WT;
+		attr = EPT_WT;
 		break;
 	case MTRR_MEM_TYPE_WP:
-		attr = IA32E_EPT_WP;
+		attr = EPT_WP;
 		break;
 	case MTRR_MEM_TYPE_WB:
-		attr = IA32E_EPT_WB;
+		attr = EPT_WB;
 		break;
 	case MTRR_MEM_TYPE_UC:
 	default:
-		attr = IA32E_EPT_UNCACHED;
+		attr = EPT_UNCACHED;
 	}
 
 	ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-			start, size, attr, IA32E_EPT_MT_MASK);
+			start, size, attr, EPT_MT_MASK);
 	return attr;
 }
 

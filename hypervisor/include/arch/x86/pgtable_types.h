@@ -38,6 +38,7 @@
 #define EPT_WP			(5UL << EPT_MT_SHIFT)
 #define EPT_WB			(6UL << EPT_MT_SHIFT)
 #define EPT_MT_MASK		(7UL << EPT_MT_SHIFT)
+/* VTD: Second-Level Paging Entries: Snoop Control */
 #define EPT_SNOOP_CTRL		(1UL << 11U)
 #define EPT_VE			(1UL << 63U)
 
