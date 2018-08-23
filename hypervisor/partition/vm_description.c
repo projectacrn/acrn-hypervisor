@@ -137,7 +137,7 @@ const struct vm_description_array vm_desc_partition = {
 				.vm_vuart = true,
 				.bootargs = "root=/dev/sda rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
 						console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
-						consoleblank=0 tsc=reliable",
+						consoleblank=0 tsc=reliable xapic_phys",
 				.vpci_vdev_array = &vpci_vdev_array1,
 				.mptable = &mptable_vm1,
 			},
@@ -152,7 +152,7 @@ const struct vm_description_array vm_desc_partition = {
 				.vm_vuart = true,
 				.bootargs = "root=/dev/sda rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
 						console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
-						consoleblank=0 tsc=reliable",
+						consoleblank=0 tsc=reliable xapic_phys",
 				.vpci_vdev_array = &vpci_vdev_array2,
 				.mptable = &mptable_vm2,
 			},

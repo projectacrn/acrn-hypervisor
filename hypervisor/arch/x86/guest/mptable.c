@@ -170,7 +170,7 @@ struct mptable_info mptable_vm1 = {
 				},
 				{
 					.type = MPCT_ENTRY_PROCESSOR,
-					.apic_id = 1U,
+					.apic_id = 4U,
 					.apic_version = LAPIC_VERSION,
 					.cpu_flags = PROCENTRY_FLAG_EN,
 					.cpu_signature = MPEP_SIG,
@@ -232,7 +232,7 @@ struct mptable_info mptable_vm2 = {
 			.proc_entry_array = {
 				{
 					.type = MPCT_ENTRY_PROCESSOR,
-					.apic_id = 0U,
+					.apic_id = 6U,
 					.apic_version = LAPIC_VERSION,
 					.cpu_flags = PROCENTRY_FLAG_EN | PROCENTRY_FLAG_BP,
 					.cpu_signature = MPEP_SIG,
@@ -240,7 +240,7 @@ struct mptable_info mptable_vm2 = {
 				},
 				{
 					.type = MPCT_ENTRY_PROCESSOR,
-					.apic_id = 1U,
+					.apic_id = 2U,
 					.apic_version = LAPIC_VERSION,
 					.cpu_flags = PROCENTRY_FLAG_EN,
 					.cpu_signature = MPEP_SIG,
