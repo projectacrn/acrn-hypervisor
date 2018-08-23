@@ -279,7 +279,8 @@ int ept_mr_add(const struct vm *vm, uint64_t *pml4_page,
 	}
 
 	ret = mmu_add(pml4_page, hpa, gpa, size, prot, PTT_EPT);
-	if (ret == 0) {
+	/* No need to create inverted page tables for trusty memory */
+	if (ret == 0 && ((void *)pml4_page == vm->arch_vm.nworld_eptp)) {
 		ret = mmu_add((uint64_t *)vm->arch_vm.m2p,
 			gpa, hpa, size, prot, PTT_EPT);
 	}

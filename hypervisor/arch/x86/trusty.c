@@ -127,7 +127,6 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	}
 
 	/* Map [gpa_rebased, gpa_rebased + size) to secure ept mapping
-	 * TODO: not create inverted page tables for trusty memory
 	 */
 	ept_mr_add(vm, (uint64_t *)vm->arch_vm.sworld_eptp,
 			hpa, gpa_rebased, size, EPT_RWX | EPT_WB);
