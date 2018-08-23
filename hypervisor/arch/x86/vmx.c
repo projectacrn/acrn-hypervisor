@@ -953,6 +953,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	value32 = check_vmx_ctrl(MSR_IA32_VMX_PROCBASED_CTLS,
 			VMX_PROCBASED_CTLS_TSC_OFF |
 			/* VMX_PROCBASED_CTLS_RDTSC | */
+			VMX_PROCBASED_CTLS_TPR_SHADOW|
 			VMX_PROCBASED_CTLS_IO_BITMAP |
 			VMX_PROCBASED_CTLS_MSR_BITMAP |
 			VMX_PROCBASED_CTLS_SECONDARY);
@@ -966,15 +967,6 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	 */
 	value32 &= ~VMX_PROCBASED_CTLS_INVLPG;
 
-	if (is_apicv_supported()) {
-		value32 |= VMX_PROCBASED_CTLS_TPR_SHADOW;
-	} else {
-		/* Add CR8 VMExit for vlapic */
-		value32 |=
-			(VMX_PROCBASED_CTLS_CR8_LOAD |
-			VMX_PROCBASED_CTLS_CR8_STORE);
-	}
-
 	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
 	pr_dbg("VMX_PROC_VM_EXEC_CONTROLS: 0x%x ", value32);
 
@@ -983,9 +975,11 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	 * guest (optional)
 	 */
 	value32 = check_vmx_ctrl(MSR_IA32_VMX_PROCBASED_CTLS2,
+			VMX_PROCBASED_CTLS2_VAPIC |
 			VMX_PROCBASED_CTLS2_EPT |
 			VMX_PROCBASED_CTLS2_RDTSCP |
-			VMX_PROCBASED_CTLS2_UNRESTRICT);
+			VMX_PROCBASED_CTLS2_UNRESTRICT|
+			VMX_PROCBASED_CTLS2_VAPIC_REGS);
 
 	if (vcpu->arch_vcpu.vpid != 0U) {
 		value32 |= VMX_PROCBASED_CTLS2_VPID;
@@ -993,27 +987,18 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 		value32 &= ~VMX_PROCBASED_CTLS2_VPID;
 	}
 
-	if (is_apicv_supported()) {
-		value32 |= VMX_PROCBASED_CTLS2_VAPIC;
-
-		if (is_apicv_virt_reg_supported()) {
-			value32 |= VMX_PROCBASED_CTLS2_VAPIC_REGS;
-		}
-
-		if (is_apicv_intr_delivery_supported()) {
-			value32 |= VMX_PROCBASED_CTLS2_VIRQ;
-		}
-		else {
-			/*
-			 * This field exists only on processors that support
-			 * the 1-setting  of the "use TPR shadow"
-			 * VM-execution control.
-			 *
-			 * Set up TPR threshold for virtual interrupt delivery
-			 * - pg 2904 24.6.8
-			 */
-			exec_vmwrite32(VMX_TPR_THRESHOLD, 0U);
-		}
+	if (is_apicv_intr_delivery_supported()) {
+		value32 |= VMX_PROCBASED_CTLS2_VIRQ;
+	} else {
+		/*
+		 * This field exists only on processors that support
+		 * the 1-setting  of the "use TPR shadow"
+		 * VM-execution control.
+		 *
+		 * Set up TPR threshold for virtual interrupt delivery
+		 * - pg 2904 24.6.8
+		 */
+		exec_vmwrite32(VMX_TPR_THRESHOLD, 0U);
 	}
 
 	if (cpu_has_cap(X86_FEATURE_OSXSAVE)) {
@@ -1024,29 +1009,24 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS2, value32);
 	pr_dbg("VMX_PROC_VM_EXEC_CONTROLS2: 0x%x ", value32);
 
-	if (is_apicv_supported()) {
-		/*APIC-v, config APIC-access address*/
-		value64 = vlapic_apicv_get_apic_access_addr(vcpu->vm);
-		exec_vmwrite64(VMX_APIC_ACCESS_ADDR_FULL,
-						value64);
+	/*APIC-v, config APIC-access address*/
+	value64 = vlapic_apicv_get_apic_access_addr(vcpu->vm);
+	exec_vmwrite64(VMX_APIC_ACCESS_ADDR_FULL, value64);
 
-		/*APIC-v, config APIC virtualized page address*/
-		value64 = vlapic_apicv_get_apic_page_addr(
-							vcpu->arch_vcpu.vlapic);
-		exec_vmwrite64(VMX_VIRTUAL_APIC_PAGE_ADDR_FULL,
-						value64);
+	/*APIC-v, config APIC virtualized page address*/
+	value64 = vlapic_apicv_get_apic_page_addr(vcpu->arch_vcpu.vlapic);
+	exec_vmwrite64(VMX_VIRTUAL_APIC_PAGE_ADDR_FULL, value64);
 
-		if (is_apicv_intr_delivery_supported()) {
-			/* Disable all EOI VMEXIT by default and
-			 * clear RVI and SVI.
-			 */
-			exec_vmwrite64(VMX_EOI_EXIT0_FULL, 0UL);
-			exec_vmwrite64(VMX_EOI_EXIT1_FULL, 0UL);
-			exec_vmwrite64(VMX_EOI_EXIT2_FULL, 0UL);
-			exec_vmwrite64(VMX_EOI_EXIT3_FULL, 0UL);
+	if (is_apicv_intr_delivery_supported()) {
+		/* Disable all EOI VMEXIT by default and
+		 * clear RVI and SVI.
+		 */
+		exec_vmwrite64(VMX_EOI_EXIT0_FULL, 0UL);
+		exec_vmwrite64(VMX_EOI_EXIT1_FULL, 0UL);
+		exec_vmwrite64(VMX_EOI_EXIT2_FULL, 0UL);
+		exec_vmwrite64(VMX_EOI_EXIT3_FULL, 0UL);
 
-			exec_vmwrite16(VMX_GUEST_INTR_STATUS, 0);
-		}
+		exec_vmwrite16(VMX_GUEST_INTR_STATUS, 0);
 	}
 
 	/* Load EPTP execution control

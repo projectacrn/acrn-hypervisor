@@ -1950,81 +1950,6 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval)
 	return error;
 }
 
-int
-vlapic_write_mmio_reg(struct vcpu *vcpu, uint64_t gpa, uint64_t wval,
-			uint8_t size)
-{
-	int error;
-	uint32_t off;
-	struct acrn_vlapic *vlapic;
-
-	off = (uint32_t)(gpa - DEFAULT_APIC_BASE);
-
-	/*
-	 * Memory mapped local apic accesses must be 4 bytes wide and
-	 * aligned on a 16-byte boundary.
-	 */
-	if ((size != 4U) || ((off & 0xfU) != 0U)) {
-		return -EINVAL;
-	}
-
-	vlapic = vcpu->arch_vcpu.vlapic;
-	error = vlapic_write(vlapic, off, wval);
-	return error;
-}
-
-int
-vlapic_read_mmio_reg(struct vcpu *vcpu, uint64_t gpa, uint64_t *rval,
-			__unused uint8_t size)
-{
-	int error;
-	uint32_t off;
-	struct acrn_vlapic *vlapic;
-
-	off = (uint32_t)(gpa - DEFAULT_APIC_BASE);
-
-	/*
-	 * Memory mapped local apic accesses should be aligned on a
-	 * 16-byte boundary. They are also suggested to be 4 bytes
-	 * wide, alas not all OSes follow suggestions.
-	 */
-	off &= ~0x3U;
-	if ((off & 0xfU) != 0U) {
-		return -EINVAL;
-	}
-
-	vlapic = vcpu->arch_vcpu.vlapic;
-	error = vlapic_read(vlapic, off, rval);
-	return error;
-}
-
-int vlapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
-		__unused void *handler_private_data)
-{
-	struct mmio_request *mmio_req = &io_req->reqs.mmio;
-	uint64_t gpa = mmio_req->address;
-	int ret = 0;
-
-	/* Note all RW to LAPIC are 32-Bit in size */
-	ASSERT(mmio_req->size == 4UL, "All RW to LAPIC must be 32-bits in size");
-
-	if (mmio_req->direction == REQUEST_READ) {
-		ret = vlapic_read_mmio_reg(vcpu,
-				gpa,
-				&mmio_req->value,
-				mmio_req->size);
-	} else if (mmio_req->direction == REQUEST_WRITE) {
-		ret = vlapic_write_mmio_reg(vcpu,
-				gpa,
-				mmio_req->value,
-				mmio_req->size);
-	} else {
-		/* Can never happen due to the range of mmio_req->direction. */
-	}
-
-	return ret;
-}
-
 int vlapic_create(struct vcpu *vcpu)
 {
 	struct acrn_vlapic *vlapic = calloc(1U, sizeof(struct acrn_vlapic));
@@ -2032,34 +1957,21 @@ int vlapic_create(struct vcpu *vcpu)
 	ASSERT(vlapic != NULL, "vlapic allocate failed");
 	vlapic->vm = vcpu->vm;
 	vlapic->vcpu = vcpu;
-	if (is_apicv_supported()) {
-		if (is_vcpu_bsp(vcpu)) {
-			uint64_t *pml4_page =
-				(uint64_t *)vcpu->vm->arch_vm.nworld_eptp;
-			ept_mr_del(vcpu->vm, pml4_page,
-				DEFAULT_APIC_BASE, CPU_PAGE_SIZE);
 
-			ept_mr_add(vcpu->vm, pml4_page,
-				vlapic_apicv_get_apic_access_addr(vcpu->vm),
-				DEFAULT_APIC_BASE, CPU_PAGE_SIZE,
-				EPT_WR | EPT_RD | EPT_UNCACHED);
-		}
-	} else {
-		/*No APICv support*/
-		if (register_mmio_emulation_handler(vcpu->vm,
-				vlapic_mmio_access_handler,
-				(uint64_t)DEFAULT_APIC_BASE,
-				(uint64_t)DEFAULT_APIC_BASE +
-				CPU_PAGE_SIZE,
-				(void *) 0) != 0) {
-			free(vlapic);
-			return -1;
-		}
+	if (is_vcpu_bsp(vcpu)) {
+		uint64_t *pml4_page =
+			(uint64_t *)vcpu->vm->arch_vm.nworld_eptp;
+		ept_mr_del(vcpu->vm, pml4_page,
+			DEFAULT_APIC_BASE, CPU_PAGE_SIZE);
+
+		ept_mr_add(vcpu->vm, pml4_page,
+			vlapic_apicv_get_apic_access_addr(vcpu->vm),
+			DEFAULT_APIC_BASE, CPU_PAGE_SIZE,
+			EPT_WR | EPT_RD | EPT_UNCACHED);
 	}
 
 	vcpu->arch_vcpu.vlapic = vlapic;
 	vlapic_init(vlapic);
-
 	return 0;
 }
 
@@ -2075,14 +1987,7 @@ void vlapic_free(struct vcpu *vcpu)
 	if (vlapic == NULL) {
 		return;
 	}
-
 	del_timer(&vlapic->vtimer.timer);
-
-	if (!is_apicv_supported()) {
-		unregister_mmio_emulation_handler(vcpu->vm,
-			(uint64_t)DEFAULT_APIC_BASE,
-			(uint64_t)DEFAULT_APIC_BASE + CPU_PAGE_SIZE);
-	}
 
 	free(vlapic);
 }
