@@ -330,7 +330,12 @@ Set up Reference UOS
       :caption: devicemodel/samples/nuc/launch_uos.sh
       :language: bash
       :emphasize-lines: 26,28
-
+   
+   Make sure to modify last line in ``launch_uos.sh``, by default it is ``launch_clear 1 1 "64 448 8" 0x070F00 clear``, which   
+   means there are 2 cpu cores, 1 for SOS and another for UOS by default. 
+   here the APL NUC hardware as an example, which has 4 cpu cores, we allocate 1 for SOS and other 3 for UOS. so make sure 
+   it is ``launch_clear 1 3 "64 448 8" 0x070F00 clear`` .
+   
    .. note::
       In case you have downloaded a different Clear Linux image than the one above
       (``clear-23690-kvm.img.xz``), you will need to modify the Clear Linux file name
