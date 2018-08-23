@@ -126,12 +126,12 @@ static int local_gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_inf
 		}
 
 		/* check if the entry present */
-		if ((entry & MMU_32BIT_PDE_P) == 0U) {
+		if ((entry & PAGE_PRESENT) == 0U) {
 			ret = -EFAULT;
 			goto out;
 		}
 		/* check for R/W */
-		if (pw_info->is_write_access && ((entry & MMU_32BIT_PDE_RW) == 0U)) {
+		if (pw_info->is_write_access && ((entry & PAGE_RW) == 0U)) {
 			/* Case1: Supermode and wp is 1
 			 * Case2: Usermode */
 			if (pw_info->is_user_mode || pw_info->wp) {
@@ -141,16 +141,16 @@ static int local_gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_inf
 		/* check for nx, since for 32-bit paing, the XD bit is
 		 * reserved(0), use the same logic as PAE/4-level paging */
 		if (pw_info->is_inst_fetch && pw_info->nxe &&
-		    ((entry & MMU_MEM_ATTR_BIT_EXECUTE_DISABLE) != 0U)) {
+		    ((entry & PAGE_NX) != 0U)) {
 			fault = 1;
 		}
 
 		/* check for U/S */
-		if (((entry & MMU_32BIT_PDE_US) == 0U) && pw_info->is_user_mode) {
+		if (((entry & PAGE_USER) == 0U) && pw_info->is_user_mode) {
 			fault = 1;
 		}
 
-		if (pw_info->pse && ((i > 0U) && ((entry & MMU_32BIT_PDE_PS) != 0U))) {
+		if (pw_info->pse && ((i > 0U) && ((entry & PAGE_PSE) != 0U))) {
 			break;
 		}
 		addr = entry;
@@ -189,7 +189,7 @@ static int local_gva2gpa_pae(struct vcpu *vcpu, struct page_walk_info *pw_info,
 	index = (gva >> 30) & 0x3UL;
 	entry = base[index];
 
-	if ((entry & MMU_32BIT_PDE_P) == 0U) {
+	if ((entry & PAGE_PRESENT) == 0U) {
 		ret = -EFAULT;
 		goto out;
 	}

@@ -225,14 +225,14 @@ cpu_primary32_gdt_ptr:
     .align  0x1000
     .global cpu_boot32_page_tables_start
 cpu_boot32_page_tables_start:
-    /* 0x3 = (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT) */
+    /* 0x3 = (PAGE_PRESENT | PAGE_RW) */
     .quad   cpu_primary32_pdpt_addr + 0x3
     /*0x1000 = CPU_PAGE_SIZE*/
     .align  0x1000
 cpu_primary32_pdpt_addr:
     address = 0
     .rept   4
-    /* 0x3 = (IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT) */
+    /* 0x3 = (PAGE_PRESENT | PAGE_RW) */
     .quad   cpu_primary32_pdt_addr + address + 0x3
     /*0x1000 = CPU_PAGE_SIZE*/
     address = address + 0x1000
@@ -242,7 +242,7 @@ cpu_primary32_pdpt_addr:
 cpu_primary32_pdt_addr:
     address = 0
     .rept  2048
-    /* 0x83 = (IA32E_PDPTE_PS_BIT | IA32E_COMM_P_BIT | IA32E_COMM_RW_BIT) */
+    /* 0x83 = (PAGE_PSE | PAGE_PRESENT | PAGE_RW) */
     .quad  address + 0x83
     address = address + 0x200000
     .endr

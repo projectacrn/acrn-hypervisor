@@ -10,214 +10,68 @@
 /* Size of all page-table entries (in bytes) */
 #define     IA32E_COMM_ENTRY_SIZE           8U
 
-/* Definitions common for all IA-32e related paging entries */
-#define     IA32E_COMM_P_BIT                0x0000000000000001UL
-#define     IA32E_COMM_RW_BIT               0x0000000000000002UL
-#define     IA32E_COMM_US_BIT               0x0000000000000004UL
-#define     IA32E_COMM_PWT_BIT              0x0000000000000008UL
-#define     IA32E_COMM_PCD_BIT              0x0000000000000010UL
-#define     IA32E_COMM_A_BIT                0x0000000000000020UL
-#define     IA32E_COMM_XD_BIT               0x8000000000000000UL
-
-/* Defines for EPT paging entries */
-#define     IA32E_EPT_R_BIT                 0x0000000000000001UL
-#define     IA32E_EPT_W_BIT                 0x0000000000000002UL
-#define     IA32E_EPT_X_BIT                 0x0000000000000004UL
-#define     IA32E_EPT_UNCACHED              (0UL<<3)
-#define     IA32E_EPT_WC                    (1UL<<3)
-#define     IA32E_EPT_WT                    (4UL<<3)
-#define     IA32E_EPT_WP                    (5UL<<3)
-#define     IA32E_EPT_WB                    (6UL<<3)
-#define     IA32E_EPT_MT_MASK               (7UL<<3)
-#define     IA32E_EPT_PAT_IGNORE            0x0000000000000040UL
-#define     IA32E_EPT_ACCESS_FLAG           0x0000000000000100UL
-#define     IA32E_EPT_DIRTY_FLAG            0x0000000000000200UL
-#define     IA32E_EPT_SNOOP_CTRL            0x0000000000000800UL
-#define     IA32E_EPT_SUPPRESS_VE           0x8000000000000000UL
-
-/* Definitions common or ignored for all IA-32e related paging entries */
-#define     IA32E_COMM_D_BIT                0x0000000000000040UL
-#define     IA32E_COMM_G_BIT                0x0000000000000100UL
-
-/* Definitions exclusive to a Page Map Level 4 Entry (PML4E) */
-#define     IA32E_PML4E_INDEX_MASK_START    39
-#define     IA32E_PML4E_ADDR_MASK           0x0000FF8000000000UL
-
 /* Definitions exclusive to a Page Directory Pointer Table Entry (PDPTE) */
 #define     IA32E_PDPTE_D_BIT               0x0000000000000040UL
 #define     IA32E_PDPTE_PS_BIT              0x0000000000000080UL
 #define     IA32E_PDPTE_PAT_BIT             0x0000000000001000UL
 #define     IA32E_PDPTE_ADDR_MASK           0x0000FFFFC0000000UL
-#define     IA32E_PDPTE_INDEX_MASK_START  \
-		(IA32E_PML4E_INDEX_MASK_START - IA32E_INDEX_MASK_BITS)
 
 /* Definitions exclusive to a Page Directory Entry (PDE) 1G or 2M */
 #define     IA32E_PDE_D_BIT                 0x0000000000000040UL
 #define     IA32E_PDE_PS_BIT                0x0000000000000080UL
 #define     IA32E_PDE_PAT_BIT               0x0000000000001000UL
 #define     IA32E_PDE_ADDR_MASK             0x0000FFFFFFE00000UL
-#define     IA32E_PDE_INDEX_MASK_START    \
-		(IA32E_PDPTE_INDEX_MASK_START - IA32E_INDEX_MASK_BITS)
 
 /* Definitions exclusive to Page Table Entries (PTE) */
 #define     IA32E_PTE_D_BIT                 0x0000000000000040UL
 #define     IA32E_PTE_PAT_BIT               0x0000000000000080UL
 #define     IA32E_PTE_G_BIT                 0x0000000000000100UL
 #define     IA32E_PTE_ADDR_MASK             0x0000FFFFFFFFF000UL
-#define     IA32E_PTE_INDEX_MASK_START    \
-		(IA32E_PDE_INDEX_MASK_START - IA32E_INDEX_MASK_BITS)
 
-/** The 'Present' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_P       0x00000001U
-/** The 'Read/Write' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_RW      0x00000002U
-/** The 'User/Supervisor' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_US      0x00000004U
-/** The 'Page Write Through' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_PWT     0x00000008U
-/** The 'Page Cache Disable' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_PCD     0x00000010U
-/** The 'Accessed' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_A       0x00000020U
-/** The 'Dirty' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_D       0x00000040U
-/** The 'Page Size' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_PS      0x00000080U
-/** The 'Global' bit in a 32 bit paging page directory entry */
-#define MMU_32BIT_PDE_G       0x00000100U
-/** The 'PAT' bit in a page 32 bit paging directory entry */
-#define MMU_32BIT_PDE_PAT     0x00001000U
 /** The flag that indicates that the page fault was caused by a non present
  * page.
  */
-#define PAGE_FAULT_P_FLAG    0x00000001U
+#define PAGE_FAULT_P_FLAG	0x00000001U
 /** The flag that indicates that the page fault was caused by a write access. */
-#define PAGE_FAULT_WR_FLAG   0x00000002U
+#define PAGE_FAULT_WR_FLAG	0x00000002U
 /** The flag that indicates that the page fault was caused in user mode. */
-#define PAGE_FAULT_US_FLAG   0x00000004U
+#define PAGE_FAULT_US_FLAG	0x00000004U
 /** The flag that indicates that the page fault was caused by a reserved bit
  * violation.
  */
-#define PAGE_FAULT_RSVD_FLAG 0x00000008U
+#define PAGE_FAULT_RSVD_FLAG	0x00000008U
 /** The flag that indicates that the page fault was caused by an instruction
  * fetch.
  */
-#define PAGE_FAULT_ID_FLAG   0x00000010U
+#define PAGE_FAULT_ID_FLAG	0x00000010U
 
 /* Defines used for common memory sizes */
-#define             MEM_1K                   1024U
-#define             MEM_2K                  (MEM_1K * 2U)
-#define             MEM_4K                  (MEM_1K * 4U)
-#define             MEM_8K                  (MEM_1K * 8U)
-#define             MEM_16K                 (MEM_1K * 16U)
-#define             MEM_32K                 (MEM_1K * 32U)
-#define             MEM_64K                 (MEM_1K * 64U)
-#define             MEM_128K                (MEM_1K * 128U)
-#define             MEM_256K                (MEM_1K * 256U)
-#define             MEM_512K                (MEM_1K * 512U)
-#define             MEM_1M                  (MEM_1K * 1024U)
-#define             MEM_2M                  (MEM_1M * 2U)
-#define             MEM_4M                  (MEM_1M * 4U)
-#define             MEM_8M                  (MEM_1M * 8U)
-#define             MEM_16M                 (MEM_1M * 16U)
-#define             MEM_32M                 (MEM_1M * 32U)
-#define             MEM_64M                 (MEM_1M * 64U)
-#define             MEM_128M                (MEM_1M * 128U)
-#define             MEM_256M                (MEM_1M * 256U)
-#define             MEM_512M                (MEM_1M * 512U)
-#define             MEM_1G                  (MEM_1M * 1024U)
-#define             MEM_2G                  (MEM_1G * 2U)
-#define             MEM_3G                  (MEM_1G * 3U)
-#define             MEM_4G                  (MEM_1G * 4U)
-#define             MEM_5G                  (MEM_1G * 5U)
-#define             MEM_6G                  (MEM_1G * 6U)
+#define MEM_1K		1024U
+#define MEM_2K		(MEM_1K * 2U)
+#define MEM_4K		(MEM_1K * 4U)
+#define MEM_1M		(MEM_1K * 1024U)
+#define MEM_2M		(MEM_1M * 2U)
+#define MEM_1G		(MEM_1M * 1024U)
 
 #ifndef ASSEMBLER
 
 #include <cpu.h>
 
 /* Define cache line size (in bytes) */
-#define     CACHE_LINE_SIZE                 64U
-
-/* Size of all page structures for IA-32e */
-#define     IA32E_STRUCT_SIZE               MEM_4K
+#define CACHE_LINE_SIZE		64U
 
 /* IA32E Paging constants */
-#define     IA32E_INDEX_MASK_BITS           9
-#define     IA32E_NUM_ENTRIES               512U
-#define     IA32E_INDEX_MASK                (uint64_t)(IA32E_NUM_ENTRIES - 1U)
-#define     IA32E_REF_MASK			\
+#define IA32E_NUM_ENTRIES	512U
+#define IA32E_REF_MASK		\
 		(boot_cpu_data.physical_address_mask)
-#define     IA32E_FIRST_BLOCK_INDEX         1
 
-/* Macro to get PML4 index given an address */
-#define     IA32E_PML4E_INDEX_CALC(address)                 \
-	(uint32_t)((((uint64_t)address >> IA32E_PML4E_INDEX_MASK_START) & \
-		IA32E_INDEX_MASK) * sizeof(uint64_t))
-
-/* Macro to get PDPT index given an address */
-#define     IA32E_PDPTE_INDEX_CALC(address)                 \
-	(uint32_t)((((uint64_t)address >> IA32E_PDPTE_INDEX_MASK_START) & \
-		IA32E_INDEX_MASK) * sizeof(uint64_t))
-
-/* Macro to get PD index given an address */
-#define     IA32E_PDE_INDEX_CALC(address)                   \
-	(uint32_t)((((uint64_t)address >> IA32E_PDE_INDEX_MASK_START) & \
-		IA32E_INDEX_MASK) * sizeof(uint64_t))
-
-/* Macro to get PT index given an address */
-#define     IA32E_PTE_INDEX_CALC(address)                   \
-	(uint32_t)((((uint64_t)address >> IA32E_PTE_INDEX_MASK_START) & \
-		IA32E_INDEX_MASK) * sizeof(uint64_t))
-
-/* Macro to obtain a 2 MB page offset from given linear address */
-#define     IA32E_GET_2MB_PG_OFFSET(address)                \
-		(address & 0x001FFFFF)
-
-/* Macro to obtain a 4KB page offset from given linear address */
-#define     IA32E_GET_4KB_PG_OFFSET(address)                \
-		(address & 0x00000FFF)
-
-/*
- * The following generic attributes MMU_MEM_ATTR_FLAG_xxx may be OR'd with one
- * and only one of the MMU_MEM_ATTR_TYPE_xxx definitions
- */
-
-/* Definitions for memory types related to x64 */
-#define     MMU_MEM_ATTR_BIT_READ_WRITE         IA32E_COMM_RW_BIT
-#define     MMU_MEM_ATTR_BIT_USER_ACCESSIBLE    IA32E_COMM_US_BIT
-#define     MMU_MEM_ATTR_BIT_EXECUTE_DISABLE    IA32E_COMM_XD_BIT
-
-/* Selection of Page Attribute Table (PAT) entries with PAT, PCD and PWT
- * encoding. See also pat.h
- */
-/* Selects PAT0 WB  */
-#define     MMU_MEM_ATTR_TYPE_CACHED_WB       (0x0000000000000000UL)
-/* Selects PAT1 WT  */
-#define     MMU_MEM_ATTR_TYPE_CACHED_WT       (IA32E_COMM_PWT_BIT)
-/* Selects PAT2 UCM */
-#define     MMU_MEM_ATTR_TYPE_UNCACHED_MINUS  (IA32E_COMM_PCD_BIT)
-/* Selects PAT3 UC  */
-#define     MMU_MEM_ATTR_TYPE_UNCACHED        \
-		(IA32E_COMM_PCD_BIT | IA32E_COMM_PWT_BIT)
-/* Selects PAT6 WC  */
-#define     MMU_MEM_ATTR_TYPE_WRITE_COMBINED  \
-		(IA32E_PDPTE_PAT_BIT | IA32E_COMM_PCD_BIT)
-/* Selects PAT7 WP  */
-#define     MMU_MEM_ATTR_TYPE_WRITE_PROTECTED \
-		(IA32E_PDPTE_PAT_BIT | IA32E_COMM_PCD_BIT | IA32E_COMM_PWT_BIT)
-/* memory type bits mask */
-#define     MMU_MEM_ATTR_TYPE_MASK \
-		(IA32E_PDPTE_PAT_BIT | IA32E_COMM_PCD_BIT | IA32E_COMM_PWT_BIT)
-
-#define ROUND_PAGE_UP(addr)  \
+#define ROUND_PAGE_UP(addr)	\
 		((((addr) + (uint64_t)CPU_PAGE_SIZE) - 1UL) & CPU_PAGE_MASK)
 #define ROUND_PAGE_DOWN(addr) ((addr) & CPU_PAGE_MASK)
 
 enum _page_table_type {
-	PTT_PRIMARY = 0,  /* Mapping for hypervisor */
+	PTT_PRIMARY = 0,	/* Mapping for hypervisor */
 	PTT_EPT = 1,
-	PAGETABLE_TYPE_UNKNOWN,
 };
 
 /* Represent the 4 levels of translation tables in IA-32e paging mode */
@@ -226,14 +80,6 @@ enum _page_table_level {
 	IA32E_PDPT = 1,
 	IA32E_PD = 2,
 	IA32E_PT = 3,
-	IA32E_UNKNOWN,
-};
-
-/* Page table entry present */
-enum _page_table_present {
-	PT_NOT_PRESENT = 0,
-	PT_PRESENT = 1,
-	PT_MISCFG_PRESENT = 2,
 };
 
 /* Page size */
