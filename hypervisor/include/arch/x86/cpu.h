@@ -367,17 +367,25 @@ void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
 			"a" (msrl), "d" (msrh));            \
 }
 
+#ifdef CONFIG_PARTITION_MODE
+#define CPU_IRQ_DISABLE()
+#else
 /* Disables interrupts on the current CPU */
 #define CPU_IRQ_DISABLE()                                   \
 {                                                           \
 	asm volatile ("cli\n" : : : "cc");                  \
 }
+#endif
 
+#ifdef CONFIG_PARTITION_MODE
+#define CPU_IRQ_ENABLE()
+#else
 /* Enables interrupts on the current CPU */
 #define CPU_IRQ_ENABLE()                                    \
 {                                                           \
 	asm volatile ("sti\n" : : : "cc");                  \
 }
+#endif
 
 /* This macro writes the stack pointer. */
 #define CPU_SP_WRITE(stack_ptr)                             \
