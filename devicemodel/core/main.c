@@ -62,6 +62,8 @@
 #include "ioc.h"
 #include "pm.h"
 #include "atomic.h"
+#include "vmcfg_config.h"
+#include "vmcfg.h"
 
 #define GUEST_NIO_PORT		0x488	/* guest upcalls via i/o port */
 
@@ -158,6 +160,9 @@ usage(int code)
 		"       -G: GVT args: low_gm_size, high_gm_size, fence_sz\n"
 		"       -v: version\n"
 		"       -i: ioc boot parameters\n"
+#ifdef CONFIG_VM_CFG
+		"       --vmcfg: build-in VM configurations\n"
+#endif
 		"       --vsbl: vsbl file path\n"
 		"       --part_info: guest partition info file path\n"
 		"       --enable_trusty: enable trusty for guest\n"
@@ -704,6 +709,7 @@ enum {
 	CMD_OPT_TRUSTY_ENABLE,
 	CMD_OPT_PTDEV_NO_RESET,
 	CMD_OPT_DEBUGEXIT,
+	CMD_OPT_VMCFG,
 };
 
 static struct option long_options[] = {
@@ -734,6 +740,9 @@ static struct option long_options[] = {
 	{"help",		no_argument,		0, 'h' },
 
 	/* Following cmd option only has long option */
+#ifdef CONFIG_VM_CFG
+	{"vmcfg",		required_argument,	0, CMD_OPT_VMCFG},
+#endif
 	{"vsbl",		required_argument,	0, CMD_OPT_VSBL},
 	{"part_info",		required_argument,	0, CMD_OPT_PART_INFO},
 	{"enable_trusty",	no_argument,		0,
@@ -744,14 +753,15 @@ static struct option long_options[] = {
 	{0,			0,			0,  0  },
 };
 
+static char optstr[] = "abehuwxACHIPSWYvk:r:B:p:g:c:s:m:l:U:G:i:";
+
 int
-main(int argc, char *argv[])
+dm_run(int argc, char *argv[])
 {
 	int c, error, gdb_port, err;
 	int max_vcpus, mptgen, memflags;
 	struct vmctx *ctx;
 	size_t memsize;
-	char *optstr;
 	int option_idx = 0;
 
 	progname = basename(argv[0]);
@@ -767,7 +777,6 @@ main(int argc, char *argv[])
 	if (signal(SIGINT, sig_handler_term) == SIG_ERR)
 		fprintf(stderr, "cannot register handler for SIGINT\n");
 
-	optstr = "abhuwxACSWYvE:k:r:B:p:g:c:s:m:l:U:G:i:";
 	while ((c = getopt_long(argc, argv, optstr, long_options,
 			&option_idx)) != -1) {
 		switch (c) {
@@ -1022,4 +1031,51 @@ mevent_fail:
 fail:
 	vm_destroy(ctx);
 	exit(0);
+}
+
+int main(int argc, char *argv[])
+{
+	int c;
+	int option_idx = 0;
+	int dm_options = 0, vmcfg = 0;
+	int index = -1;
+
+	while ((c = getopt_long(argc, argv, optstr, long_options,
+			&option_idx)) != -1) {
+		switch (c) {
+		case CMD_OPT_VMCFG:
+			vmcfg = 1;
+			index = atoi(optarg);
+			break;
+		default:
+			dm_options++;
+		}
+	}
+
+	if (!vmcfg) {
+		optind = 0;
+		return dm_run(argc, argv);
+	}
+
+	if (dm_options)
+		fprintf(stderr, "Waring: --vmcfg override optional args\n");
+
+	if (index <= 0) {
+		vmcfg_list();
+		return -1;
+	}
+
+	if (index > num_args_buildin) {
+		fprintf(stderr, "Error: --vmcfg %d,  max index is %d\n",
+				index, num_args_buildin);
+		return -1;
+	}
+
+	optind = 0;
+	index--;
+	args_buildin[index]->argv[0] = argv[0];
+	if (args_buildin[index]->setup)
+		args_buildin[index]->setup();
+
+	return dm_run(args_buildin[index]->argc, args_buildin[index]->argv);
 }
