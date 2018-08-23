@@ -7,6 +7,9 @@
 #include <vmcfg.h>
 
 static struct vmcfg_arg *vmcfg_buildin_args[] = {
+#ifdef CONFIG_MRB_VM1
+	&mrb_vm1_args,
+#endif /*CONFIG_MRB_VM1*/
 };
 
 struct vmcfg_arg **args_buildin = vmcfg_buildin_args;
