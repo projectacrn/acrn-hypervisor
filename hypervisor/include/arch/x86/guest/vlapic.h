@@ -60,11 +60,6 @@ struct acrn_vlapic *vm_lapic_from_pcpuid(struct vm *vm, uint16_t pcpu_id);
 int vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval);
 int vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval);
 
-int vlapic_read_mmio_reg(struct vcpu *vcpu, uint64_t gpa, uint64_t *rval,
-			__unused uint8_t size);
-int vlapic_write_mmio_reg(struct vcpu *vcpu, uint64_t gpa,
-			uint64_t wval, uint8_t size);
-
 /*
  * Signals to the LAPIC that an interrupt at 'vector' needs to be generated
  * to the 'cpu', the state is recorded in IRR.
@@ -107,15 +102,9 @@ void vlapic_reset_tmr(struct acrn_vlapic *vlapic);
 void vlapic_set_tmr_one_vec(struct acrn_vlapic *vlapic, uint32_t delmode,
 		uint32_t vector, bool level);
 
-void
-vlapic_apicv_batch_set_tmr(struct acrn_vlapic *vlapic);
-
-int vlapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
-		__unused void *handler_private_data);
-
+void vlapic_apicv_batch_set_tmr(struct acrn_vlapic *vlapic);
 uint32_t vlapic_get_id(struct acrn_vlapic *vlapic);
 uint8_t vlapic_get_apicid(struct acrn_vlapic *vlapic);
-
 int vlapic_create(struct vcpu *vcpu);
 void vlapic_free(struct vcpu *vcpu);
 void vlapic_init(struct acrn_vlapic *vlapic);
@@ -129,6 +118,5 @@ int apic_access_vmexit_handler(struct vcpu *vcpu);
 int apic_write_vmexit_handler(struct vcpu *vcpu);
 int veoi_vmexit_handler(struct vcpu *vcpu);
 int tpr_below_threshold_vmexit_handler(__unused struct vcpu *vcpu);
-
 void calcvdest(struct vm *vm, uint64_t *dmask, uint32_t dest, bool phys);
 #endif	/* _VLAPIC_H_ */

@@ -790,25 +790,26 @@ static void apicv_cap_detect(void)
 	uint8_t features;
 	uint64_t msr_val;
 
-	features = 0U;
-
 	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
 	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS_TPR_SHADOW)) {
-		cpu_caps.apicv_features = 0U;
+		pr_fatal("APICv: No APIC TPR virtualization support.");
 		return;
 	}
-	features |= VAPIC_FEATURE_TPR_SHADOW;
 
 	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
 	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC)) {
-		cpu_caps.apicv_features = features;
+		pr_fatal("APICv: No APIC-access virtualization support.");
 		return;
 	}
-	features |= VAPIC_FEATURE_VIRT_ACCESS;
 
-	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC_REGS)) {
-		features |= VAPIC_FEATURE_VIRT_REG;
+	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC_REGS)) {
+		pr_fatal("APICv: No APIC-register virtualization support.");
+		return;
 	}
+
+	features = (VAPIC_FEATURE_TPR_SHADOW
+			| VAPIC_FEATURE_VIRT_ACCESS
+			| VAPIC_FEATURE_VIRT_REG);
 
 	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VX2APIC)) {
 		features |= VAPIC_FEATURE_VX2APIC_MODE;
@@ -823,7 +824,6 @@ static void apicv_cap_detect(void)
 			features |= VAPIC_FEATURE_POST_INTR;
 		}
 	}
-
 	cpu_caps.apicv_features = features;
 }
 
@@ -838,20 +838,11 @@ bool is_ept_supported(void)
 	return (cpu_caps.ept_features != 0U);
 }
 
-bool is_apicv_supported(void)
-{
-	return ((cpu_caps.apicv_features & VAPIC_FEATURE_VIRT_ACCESS) != 0U);
-}
-
 bool is_apicv_intr_delivery_supported(void)
 {
 	return ((cpu_caps.apicv_features & VAPIC_FEATURE_INTR_DELIVERY) != 0U);
 }
 
-bool is_apicv_virt_reg_supported(void)
-{
-	return ((cpu_caps.apicv_features & VAPIC_FEATURE_VIRT_REG) != 0U);
-}
 
 static void cpu_xsave_init(void)
 {
