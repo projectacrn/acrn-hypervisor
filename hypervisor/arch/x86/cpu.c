@@ -227,6 +227,11 @@ static int hardware_detect_support(void)
 		return -ENODEV;
 	}
 
+	if (!cpu_has_cap(X86_FEATURE_PAGE1GB)) {
+		pr_fatal("%s, not support 1GB page\n", __func__);
+		return -ENODEV;
+	}
+
 	if (!cpu_has_cap(X86_FEATURE_VMX)) {
 		pr_fatal("%s, vmx not supported\n", __func__);
 		return -ENODEV;

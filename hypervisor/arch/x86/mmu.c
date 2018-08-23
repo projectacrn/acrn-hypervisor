@@ -131,6 +131,11 @@ int check_vmx_mmu_cap(void)
 		return -ENODEV;
 	}
 
+	if (!cpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE)) {
+		pr_fatal("%s, ept not support 1GB large page\n", __func__);
+		return -ENODEV;
+	}
+
 	return 0;
 }
 
@@ -185,18 +190,6 @@ void invept(struct vcpu *vcpu)
 	} else {
 		/* Neither type of INVEPT is supported. Skip. */
 	}
-}
-
-bool check_mmu_1gb_support(enum _page_table_type page_table_type)
-{
-	bool status = false;
-
-	if (page_table_type == PTT_EPT) {
-		status = cpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE);
-	} else {
-		status = cpu_has_cap(X86_FEATURE_PAGE1GB);
-	}
-	return status;
 }
 
 uint64_t get_paging_pml4(void)

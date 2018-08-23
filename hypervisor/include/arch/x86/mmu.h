@@ -287,7 +287,6 @@ static inline void mem_write64(void *addr, uint64_t data)
 }
 
 uint64_t get_paging_pml4(void);
-bool check_mmu_1gb_support(enum _page_table_type page_table_type);
 void *alloc_paging_struct(void);
 void free_paging_struct(void *ptr);
 void enable_paging(uint64_t pml4_base_addr);
