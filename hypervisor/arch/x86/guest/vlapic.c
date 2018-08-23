@@ -170,12 +170,21 @@ vlapic_build_id(struct acrn_vlapic *vlapic)
 	uint8_t vlapic_id;
 	uint32_t lapic_regs_id;
 
+#ifdef CONFIG_PARTITION_MODE
+	/*
+	 * Partition mode UOS is forced to use physical mode in xAPIC
+	 * Hence ACRN needs to maintain physical APIC ids for partition
+	 * mode.
+	 */
+	vlapic_id = per_cpu(lapic_id, vcpu->pcpu_id);
+#else
 	if (is_vm0(vcpu->vm)) {
 		/* Get APIC ID sequence format from cpu_storage */
 		vlapic_id = per_cpu(lapic_id, vcpu->vcpu_id);
 	} else {
 		vlapic_id = (uint8_t)vcpu->vcpu_id;
 	}
+#endif
 
 	lapic_regs_id = (uint32_t)vlapic_id << APIC_ID_SHIFT;
 
