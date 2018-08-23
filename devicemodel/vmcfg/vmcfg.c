@@ -5,6 +5,18 @@
 
 #include <vmcfg_config.h>
 #include <vmcfg.h>
+#include <stdio.h>
+
+void vmcfg_list(void)
+{
+	int i;
+	char *name;
+
+	for (i = 0; i < num_args_buildin; i++) {
+		name = args_buildin[i]->argv[args_buildin[i]->argc - 1];
+		printf("%d: %s\n", i + 1, name);
+	}
+}
 
 static struct vmcfg_arg *vmcfg_buildin_args[] = {
 #ifdef CONFIG_MRB_VM1
