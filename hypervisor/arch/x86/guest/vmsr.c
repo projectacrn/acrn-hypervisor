@@ -105,14 +105,6 @@ void init_msr_emulation(struct vcpu *vcpu)
 	value64 = HVA2HPA(vcpu->vm->arch_vm.msr_bitmap);
 	exec_vmwrite64(VMX_MSR_BITMAP_FULL, value64);
 	pr_dbg("VMX_MSR_BITMAP: 0x%016llx ", value64);
-
-	if (!vcpu->guest_msrs) {
-		vcpu->guest_msrs =
-			(uint64_t *)calloc(msrs_count, sizeof(uint64_t));
-	}
-
-	ASSERT(vcpu->guest_msrs != NULL, "");
-	(void)memset(vcpu->guest_msrs, 0U, msrs_count * sizeof(uint64_t));
 }
 
 int rdmsr_vmexit_handler(struct vcpu *vcpu)
