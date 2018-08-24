@@ -54,10 +54,18 @@ struct pci_vdev_ops {
 		uint32_t bytes, uint32_t *val);
 };
 
+enum pcibar_type {
+	PCIBAR_NONE = 0,
+	PCIBAR_IO,
+	PCIBAR_MEM32,
+	PCIBAR_MEM64,
+	PCIBAR_MEMHI64
+};
+
 struct pcibar {
 	uint64_t base;
 	uint64_t size;
-	uint8_t  type;
+	enum pcibar_type type;
 };
 
 struct pci_pdev {

@@ -35,37 +35,49 @@ static struct vpci_vdev_array vpci_vdev_array1 = {
 	 {/*vdev 0: hostbridge */
 	  .vbdf = PCI_BDF(0x00U, 0x00U, 0x00U),
 	  .ops = &pci_ops_vdev_hostbridge,
-	  .bar = {}, /* don't care for hostbridge */
-	  .pdev = {} /* don't care for hostbridge */
+	  .bar = {},
+	  .pdev = {
+		.bdf = PCI_BDF(0x00U, 0x00U, 0x00U),
+		}
 	 },
 
-	 {/*vdev 1*/
+	 {/*vdev 1: SATA controller*/
 	  .vbdf = PCI_BDF(0x00U, 0x01U, 0x00U),
 	  .ops = &pci_ops_vdev_pt,
 	  .bar = {
 		[0] = {
 		.base = 0UL,
+		.size = ALIGN_UP_4K(0x2000UL),
+		.type = PCIBAR_MEM32
+		},
+		[1] = {
+		.base = 0UL,
 		.size = ALIGN_UP_4K(0x100UL),
-		.type = PCIM_BAR_MEM_32
+		.type = PCIBAR_MEM32
 		},
 		[5] = {
 		.base = 0UL,
-		.size = ALIGN_UP_4K(0x2000UL),
-		.type = PCIM_BAR_MEM_32
+		.size = ALIGN_UP_4K(0x800UL),
+		.type = PCIBAR_MEM32
 		},
 	  },
 	 .pdev = {
-		.bdf = PCI_BDF(0x00U, 0x01U, 0x00U),
+		.bdf = PCI_BDF(0x00U, 0x12U, 0x00U),
 		.bar = {
 			[0] = {
-			.base = 0xa9000000UL,
+			.base = 0xb3f10000UL,
+			.size = 0x2000UL,
+			.type = PCIBAR_MEM32
+			},
+			[1] = {
+			.base = 0xb3f53000UL,
 			.size = 0x100UL,
-			.type = PCIM_BAR_MEM_32
+			.type = PCIBAR_MEM32
 			},
 			[5] = {
-			.base = 0x1a0000000UL,
-			.size = 0x2000UL,
-			.type = PCIM_BAR_MEM_64
+			.base = 0xb3f52000UL,
+			.size = 0x800UL,
+			.type = PCIBAR_MEM32
 			},
 			}
 		}
@@ -74,43 +86,67 @@ static struct vpci_vdev_array vpci_vdev_array1 = {
 };
 
 static struct vpci_vdev_array vpci_vdev_array2 = {
-	.num_pci_vdev = 2,
+	.num_pci_vdev = 3,
 
 	.vpci_vdev_list = {
 	 {/*vdev 0: hostbridge*/
 	  .vbdf = PCI_BDF(0x00U, 0x00U, 0x00U),
 	  .ops = &pci_ops_vdev_hostbridge,
-	  .bar = {}, /* don't care for hostbridge */
-	  .pdev = {} /* don't care for hostbridge */
+	  .bar = {},
+	  .pdev = {
+		.bdf = PCI_BDF(0x00U, 0x00U, 0x00U),
+		}
 	 },
 
-	 {/*vdev 1*/
+	 {/*vdev 1: USB controller*/
 	  .vbdf = PCI_BDF(0x00U, 0x01U, 0x00U),
 	  .ops = &pci_ops_vdev_pt,
 	  .bar = {
 		[0] = {
 		.base = 0UL,
-		.size = ALIGN_UP_4K(0x100UL),
-		.type = PCIM_BAR_MEM_32
-		},
-		[5] = {
-		.base = 0UL,
-		.size = ALIGN_UP_4K(0x2000UL),
-		.type = PCIM_BAR_MEM_32
+		.size = ALIGN_UP_4K(0x10000UL),
+		.type = PCIBAR_MEM32
 		},
 	 },
 	 .pdev = {
-		.bdf = PCI_BDF(0x00U, 0x02U, 0x00U),
+		.bdf = PCI_BDF(0x00U, 0x15U, 0x00U),
 		.bar = {
 			[0] = {
-			.base = 0xa8000000UL,
-			.size = 0x100UL,
-			.type = PCIM_BAR_MEM_32
+			.base = 0xb3f00000UL,
+			.size = 0x10000UL,
+			.type = PCIBAR_MEM64
 			},
-			[5] = {
-			.base = 0x1b0000000UL,
-			.size = 0x2000UL,
-			.type = PCIM_BAR_MEM_64
+			}
+		}
+	 },
+
+	 {/*vdev 2: Ethernet*/
+	  .vbdf = PCI_BDF(0x00U, 0x02U, 0x00U),
+	  .ops = &pci_ops_vdev_pt,
+	  .bar = {
+		[0] = {
+		.base = 0UL,
+		.size = ALIGN_UP_4K(0x80000UL),
+		.type = PCIBAR_MEM32
+		},
+		[3] = {
+		.base = 0UL,
+		.size = ALIGN_UP_4K(0x4000UL),
+		.type = PCIBAR_MEM32
+		},
+	 },
+	 .pdev = {
+		.bdf = PCI_BDF(0x02U, 0x00U, 0x00U),
+		.bar = {
+			[0] = {
+			.base = 0xb3c00000UL,
+			.size = 0x80000UL,
+			.type = PCIBAR_MEM32
+			},
+			[3] = {
+			.base = 0xb3c80000UL,
+			.size = 0x4000UL,
+			.type = PCIBAR_MEM32
 			},
 			}
 		}
