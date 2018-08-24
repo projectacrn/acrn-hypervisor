@@ -128,6 +128,8 @@ struct instr_emul_vie {
 
 	uint8_t		opcode;
 	struct instr_emul_vie_op	op;			/* opcode description */
+
+	uint64_t	dst_gpa;	/* saved dst operand gpa. Only for movs */
 };
 
 #define	PSL_C		0x00000001U	/* carry bit */

@@ -869,14 +869,14 @@ static int emulate_movx(struct vcpu *vcpu, struct instr_emul_vie *vie)
  *
  * It's only used by MOVS/STO
  */
-static void get_gva_di_si_nocheck(struct vcpu *vcpu, uint8_t addrsize,
-		enum cpu_reg_name seg, enum cpu_reg_name gpr, uint64_t *gva)
+static void get_gva_si_nocheck(struct vcpu *vcpu, uint8_t addrsize,
+		enum cpu_reg_name seg, uint64_t *gva)
 {
 	uint64_t val;
 	struct seg_desc desc;
 	enum vm_cpu_mode cpu_mode;
 
-	val = vm_get_register(vcpu, gpr);
+	val = vm_get_register(vcpu, CPU_REG_RSI);
 	vm_get_seg_desc(seg, &desc);
 	cpu_mode = get_vcpu_mode(vcpu);
 
@@ -888,14 +888,13 @@ static void get_gva_di_si_nocheck(struct vcpu *vcpu, uint8_t addrsize,
 /*
  * @pre only called during instruction decode phase
  *
- * @remark This function get gva from ES:DI and DS(other segment):SI. And
- * do check the failure condition and inject exception to guest accordingly.
+ * @remark This function get gva from ES:DI. And do check the failure
+ * condition and inject exception to guest accordingly.
  *
  * It's only used by MOVS/STO
  */
-static int get_gva_di_si_check(struct vcpu *vcpu, uint8_t addrsize,
-		uint32_t prot, enum cpu_reg_name seg, enum cpu_reg_name gpr,
-		uint64_t *gva)
+static int get_gva_di_check(struct vcpu *vcpu, struct instr_emul_vie *vie,
+		uint8_t addrsize, uint64_t *gva)
 {
 	int ret;
 	uint32_t err_code;
@@ -903,13 +902,9 @@ static int get_gva_di_si_check(struct vcpu *vcpu, uint8_t addrsize,
 	enum vm_cpu_mode cpu_mode;
 	uint64_t val, gpa;
 
-	val = vm_get_register(vcpu, gpr);
-	vm_get_seg_desc(seg, &desc);
+	val = vm_get_register(vcpu, CPU_REG_RDI);
+	vm_get_seg_desc(CPU_REG_ES, &desc);
 	cpu_mode = get_vcpu_mode(vcpu);
-
-	if (!is_desc_valid(&desc, prot)) {
-		goto exception_inject;
-	}
 
 	if (cpu_mode == CPU_MODE_64BIT) {
 		if ((addrsize != 4U) && (addrsize != 8U)) {
@@ -919,9 +914,14 @@ static int get_gva_di_si_check(struct vcpu *vcpu, uint8_t addrsize,
 		if ((addrsize != 2U) && (addrsize != 4U)) {
 			goto exception_inject;
 		}
+
+		if (!is_desc_valid(&desc, PROT_WRITE)) {
+			goto exception_inject;
+		}
 	}
 
-	if (vie_calculate_gla(cpu_mode, seg, &desc, val, addrsize, gva) != 0) {
+	if (vie_calculate_gla(cpu_mode, CPU_REG_ES, &desc, val, addrsize, gva)
+			!= 0) {
 		goto exception_inject;
 	}
 
@@ -929,8 +929,8 @@ static int get_gva_di_si_check(struct vcpu *vcpu, uint8_t addrsize,
 		goto exception_inject;
 	}
 
-	err_code = (prot == PROT_WRITE) ? PAGE_FAULT_WR_FLAG : 0U;
-	ret = gva2gpa(vcpu, (uint64_t)gva, &gpa, &err_code);
+	err_code = PAGE_FAULT_WR_FLAG;
+	ret = gva2gpa(vcpu, *gva, &gpa, &err_code);
 	if (ret < 0) {
 		if (ret == -EFAULT) {
 			vcpu_inject_pf(vcpu, (uint64_t)gva, err_code);
@@ -938,27 +938,48 @@ static int get_gva_di_si_check(struct vcpu *vcpu, uint8_t addrsize,
 		return ret;
 	}
 
+	/* If we are checking the dest operand for movs instruction,
+	 * we cache the gpa if check pass. It will be used during
+	 * movs instruction emulation.
+	 */
+	vie->dst_gpa = gpa;
+
 	return 0;
 
 exception_inject:
-	if (seg == CPU_REG_SS) {
-		vcpu_inject_ss(vcpu);
-	} else {
-		vcpu_inject_gp(vcpu, 0U);
-	}
+	vcpu_inject_gp(vcpu, 0U);
 	return -EFAULT;
 }
 
+/* MOVs gets the operands from RSI and RDI. Both operands could be memory.
+ * With VMX enabled, one of the operand triggers EPT voilation.
+ *
+ * If it's RSI access trigger EPT voilation, it's source operands and always
+ * read operations. Not neccesary to check whether need to inject fault (done
+ * by VMX already). We do need to check the RDI.
+ *
+ * If it's RDI access trigger EPT voilation, we need to check RDI because it's
+ * always write operations and VMX doens't cover write access check.
+ * Not neccesary to check RSI, because VMX cover it for us.
+ *
+ * In summary,
+ * For MOVs instruction, we always check RDI during instruction decoding phase.
+ * And access RSI without any check during instruction emulation phase.
+ */
 static int emulate_movs(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
-	uint64_t dstaddr, srcaddr;
+	uint64_t src_gva, gpa, val;
+	uint64_t *dst_hva, *src_hva;
 	uint64_t rcx, rdi, rsi, rflags;
+	uint32_t err_code;
+	enum cpu_reg_name seg;
 	int error, repeat;
 	uint8_t opsize;
-	enum cpu_reg_name seg;
+	bool is_mmio_write;
 
 	opsize = (vie->opcode == 0xA4U) ? 1U : vie->opsize;
 	error = 0;
+	is_mmio_write = (vcpu->req.reqs.mmio.direction == REQUEST_WRITE);
 
 	/*
 	 * XXX although the MOVS instruction is only supposed to be used with
@@ -984,11 +1005,25 @@ static int emulate_movs(struct vcpu *vcpu, struct instr_emul_vie *vie)
 
 	seg = (vie->seg_override != 0U) ? (vie->segment_register) : CPU_REG_DS;
 
-	get_gva_di_si_nocheck(vcpu, vie->addrsize, seg, CPU_REG_RSI, &srcaddr);
-	get_gva_di_si_nocheck(vcpu, vie->addrsize, CPU_REG_ES, CPU_REG_RDI,
-			&dstaddr);
+	if (is_mmio_write) {
+		get_gva_si_nocheck(vcpu, vie->addrsize, seg, &src_gva);
 
-	(void)memcpy_s((void *)dstaddr, 16U, (void *)srcaddr, opsize);
+		/* we are sure it will success */
+		(void)gva2gpa(vcpu, src_gva, &gpa, &err_code);
+		src_hva = gpa2hva(vcpu->vm, gpa);
+
+		val = *src_hva;
+
+		mmio_write(vcpu, val);
+	} else {
+		mmio_read(vcpu, &val);
+
+		/* The dest gpa is saved during dst check instruction
+		 * decoding.
+		 */
+		dst_hva = gpa2hva(vcpu->vm, vie->dst_gpa);
+		memcpy_s(dst_hva, opsize, &val, opsize);
+	}
 
 	rsi = vm_get_register(vcpu, CPU_REG_RSI);
 	rdi = vm_get_register(vcpu, CPU_REG_RDI);
@@ -2128,14 +2163,14 @@ static int instr_check_di(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt)
 	int ret;
 	struct instr_emul_vie *vie = &emul_ctxt->vie;
 	uint64_t gva;
-	enum cpu_reg_name seg;
 
-	ret = get_gva_di_si_check(vcpu, vie->addrsize, PROT_WRITE,
-		CPU_REG_ES, CPU_REG_RDI, &gva);
+	ret = get_gva_di_check(vcpu, vie, vie->addrsize, &gva);
 
 	if (ret < 0) {
 		return -EFAULT;
 	}
+
+	return 0;
 }
 
 static int instr_check_gva(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt,
