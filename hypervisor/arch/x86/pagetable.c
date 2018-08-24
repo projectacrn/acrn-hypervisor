@@ -264,7 +264,7 @@ int mmu_modify_or_del(uint64_t *pml4_page,
 	dev_dbg(ACRN_DBG_MMU, "%s, vaddr: 0x%llx, size: 0x%llx\n",
 		__func__, vaddr, size);
 	vaddr_end = vaddr + size;
-	for (; vaddr < vaddr_end; vaddr = vaddr_next) {
+	while (vaddr < vaddr_end) {
 		vaddr_next = (vaddr & PML4E_MASK) + PML4E_SIZE;
 		pml4e = pml4e_offset(pml4_page, vaddr);
 		if (pgentry_present(ptt, *pml4e) == 0UL) {
@@ -276,6 +276,8 @@ int mmu_modify_or_del(uint64_t *pml4_page,
 		if (ret != 0) {
 			return ret;
 		}
+
+		vaddr = vaddr_next;
 	}
 
 	return 0;
@@ -434,7 +436,7 @@ int mmu_add(uint64_t *pml4_page, uint64_t paddr_base,
 	paddr = ROUND_PAGE_UP(paddr_base);
 	vaddr_end = vaddr + ROUND_PAGE_DOWN(size);
 
-	for (; vaddr < vaddr_end; vaddr = vaddr_next) {
+	while (vaddr < vaddr_end) {
 		vaddr_next = (vaddr & PML4E_MASK) + PML4E_SIZE;
 		pml4e = pml4e_offset(pml4_page, vaddr);
 		if (pgentry_present(ptt, *pml4e) == 0UL) {
@@ -449,6 +451,7 @@ int mmu_add(uint64_t *pml4_page, uint64_t paddr_base,
 		}
 
 		paddr += (vaddr_next - vaddr);
+		vaddr = vaddr_next;
 	}
 
 	return 0;

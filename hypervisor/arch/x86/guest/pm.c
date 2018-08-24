@@ -202,8 +202,8 @@ register_gas_io_handler(struct vm *vm, struct acpi_generic_address *gas)
 		return;
 	}
 
-	gas_io.flags = IO_ATTR_RW,
-	gas_io.base = (uint16_t)gas->address,
+	gas_io.flags = IO_ATTR_RW;
+	gas_io.base = (uint16_t)gas->address;
 	gas_io.len = io_len[gas->access_size];
 
 	register_io_emulation_handler(vm, &gas_io,
