@@ -216,6 +216,14 @@ echo "8086 5abc" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:18.0" > /sys/bus/pci/devices/0000:00:18.0/driver/unbind
 echo "0000:00:18.0" > /sys/bus/pci/drivers/pci-stub/bind
 
+# Check if the NPK device/driver is present
+ls -d /sys/bus/pci/drivers/intel_th_pci/0000* 2>/dev/null 1>/dev/null
+if [ $? == 0 ];then
+  npk_virt="-s 0:0:2,npk,8/24"
+else
+  npk_virt=""
+fi
+
 boot_ipu_option=""
 if [ $ipu_passthrough == 1 ];then
     # for ipu passthrough - ipu device 0:3.0
@@ -286,7 +294,7 @@ else
   GVT_args=''
 fi
 
- acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
+ acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio $npk_virt\
    -s 9,virtio-net,$tap \
    -s 3,virtio-blk$boot_dev_flag,/data/$5/$5.img \
    -s 7,passthru,0/15/0 \
