@@ -240,7 +240,7 @@ struct vcpu {
 	 * code.
 	 */
 	uint64_t msr_tsc_aux_guest;
-	uint64_t *guest_msrs;
+	uint64_t guest_msrs[IDX_MAX_MSR];
 #ifdef CONFIG_MTRR_ENABLED
 	struct mtrr_state mtrr;
 #endif

@@ -385,7 +385,6 @@ void destroy_vcpu(struct vcpu *vcpu)
 
 	vlapic_free(vcpu);
 	free(vcpu->arch_vcpu.vmcs);
-	free(vcpu->guest_msrs);
 	per_cpu(ever_run_vcpu, vcpu->pcpu_id) = NULL;
 	free_pcpu(vcpu->pcpu_id);
 	free(vcpu);
