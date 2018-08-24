@@ -35,7 +35,8 @@ void smp_call_function(uint64_t mask, smp_call_func_t func, void *data)
 
 	/* wait for previous smp call complete, which may run on other cpus */
 	while (atomic_cmpxchg64(&smp_call_mask, 0UL, mask & INVALID_BIT_INDEX));
-	while ((pcpu_id = ffs64(mask)) != INVALID_BIT_INDEX) {
+	pcpu_id = ffs64(mask);
+	while (pcpu_id != INVALID_BIT_INDEX) {
 		bitmap_clear_nolock(pcpu_id, &mask);
 		if (bitmap_test(pcpu_id, &pcpu_active_bitmap)) {
 			smp_call = &per_cpu(smp_call_info, pcpu_id);
@@ -46,6 +47,7 @@ void smp_call_function(uint64_t mask, smp_call_func_t func, void *data)
 			pr_err("pcpu_id %d not in active!", pcpu_id);
 			bitmap_clear_nolock(pcpu_id, &smp_call_mask);
 		}
+		pcpu_id = ffs64(mask);
 	}
 	send_dest_ipi(smp_call_mask, VECTOR_NOTIFY_VCPU,
 				INTR_LAPIC_ICR_LOGICAL);

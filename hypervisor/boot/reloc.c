@@ -184,8 +184,9 @@ static void update_trampoline_code_refs(uint64_t dest_pa)
 	*(uint64_t *)(ptr) += dest_pa;
 
 	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(&trampoline_pdpt_addr));
-	for (i = 0; i < 4; i++)
+	for (i = 0; i < 4; i++) {
 		*(uint64_t *)(ptr + sizeof(uint64_t) * i) += dest_pa;
+	}
 
 	/* update the gdt base pointer with relocated offset */
 	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(&trampoline_gdt_ptr));

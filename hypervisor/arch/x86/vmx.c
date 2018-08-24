@@ -547,9 +547,10 @@ static void init_guest_context_real(struct vcpu *vcpu)
 {
 	struct ext_context *ectx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ext_ctx;
+	struct segment_sel *seg;
 
 	/* cs, ss, ds, es, fs, gs; cs will be override later. */
-	for(struct segment_sel *seg = &ectx->cs; seg <= &ectx->gs; seg++) {
+	for (seg = &(ectx->cs); seg <= &(ectx->gs); seg++) {
 		seg->selector = 0U;
 		seg->base = 0UL;
 		seg->limit = 0xFFFFU;
@@ -606,15 +607,15 @@ static void init_guest_context_vm0_bsp(struct vcpu *vcpu)
 	struct ext_context *ectx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ext_ctx;
 	struct boot_ctx * init_ctx = (struct boot_ctx *)(&vm0_boot_context);
-	uint16_t *sel;
+	uint16_t *sel = &(init_ctx->cs_sel);
 	struct segment_sel *seg;
 
-	for(seg = &ectx->cs, sel = &init_ctx->cs_sel;
-	    seg <= &ectx->gs; seg ++, sel++) {
+	for (seg = &(ectx->cs); seg <= &(ectx->gs); seg++) {
 		seg->base     = 0UL;
 		seg->limit    = 0xFFFFFFFFU;
 		seg->attr     = PROTECTED_MODE_DATA_SEG_AR;
 		seg->selector = *sel;
+		sel++;
 	}
 	ectx->cs.attr         = init_ctx->cs_ar;	/* override cs attr */
 
@@ -644,7 +645,7 @@ static void init_guest_context_protect(struct vcpu *vcpu)
 	struct segment_sel *seg;
 
 	ectx->gdtr.base = create_guest_init_gdt(vcpu->vm, &ectx->gdtr.limit);
-	for(seg = &ectx->cs; seg <= &ectx->gs; seg ++) {
+	for (seg = &(ectx->cs); seg <= &(ectx->gs); seg++) {
 		seg->base = 0UL;
 		seg->limit = 0xFFFFFFFFU;
 		seg->attr = PROTECTED_MODE_DATA_SEG_AR;
@@ -721,7 +722,7 @@ static void init_guest_state(struct vcpu *vcpu)
 	ctx->ext_ctx.tr.limit = 0xFFFFU;
 	ctx->ext_ctx.tr.attr = TR_AR;
 
-	if(vcpu_mode == CPU_MODE_REAL) {
+	if (vcpu_mode == CPU_MODE_REAL) {
 		init_guest_context_real(vcpu);
 		init_guest_vmx(vcpu, CR0_ET | CR0_NE, 0, 0);
 	} else if (is_vm0(vcpu->vm) && is_vcpu_bsp(vcpu)) {

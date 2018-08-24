@@ -96,8 +96,9 @@ int load_guest(struct vm *vm, struct vcpu *vcpu)
 	lowmem_gpa_top = *(uint64_t *)hva;
 
 	/* hardcode vcpu entry addr(kernel entry) & rsi (zeropage)*/
-	for (i = 0; i < NUM_GPRS; i++)
+	for (i = 0; i < NUM_GPRS; i++) {
 		vcpu_set_gpreg(vcpu, i, 0UL);
+	}
 
 	hva  = GPA2HVA(vm, lowmem_gpa_top -
 			MEM_4K - MEM_2K);
@@ -169,8 +170,9 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 		/* Documentation states: ebx=0, edi=0, ebp=0, esi=ptr to
 		 * zeropage
 		 */
-		for (i = 0; i < NUM_GPRS; i++)
+		for (i = 0; i < NUM_GPRS; i++) {
 			vcpu_set_gpreg(vcpu, i, 0UL);
+		}
 
 		/* Get host-physical address for guest bootargs */
 		hva = GPA2HVA(vm,
