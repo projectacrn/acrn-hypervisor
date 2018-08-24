@@ -536,13 +536,17 @@ static int shell_list_vm(__unused int argc, __unused char **argv)
 		vm = list_entry(pos, struct vm, list);
 		switch (vm->state) {
 		case VM_CREATED:
-			(void)strcpy_s(state, 32, "Created"); break;
+			(void)strcpy_s(state, 32, "Created");
+			break;
 		case VM_STARTED:
-			(void)strcpy_s(state, 32, "Started"); break;
+			(void)strcpy_s(state, 32, "Started");
+			break;
 		case VM_PAUSED:
-			(void)strcpy_s(state, 32, "Paused"); break;
+			(void)strcpy_s(state, 32, "Paused");
+			break;
 		default:
-			(void)strcpy_s(state, 32, "Unknown"); break;
+			(void)strcpy_s(state, 32, "Unknown");
+			break;
 		}
 		/* Create output string consisting of VM name and VM id
 		 */
@@ -577,13 +581,17 @@ static int shell_list_vcpu(__unused int argc, __unused char **argv)
 		foreach_vcpu(i, vm, vcpu) {
 			switch (vcpu->state) {
 			case VCPU_INIT:
-				(void)strcpy_s(state, 32, "Init"); break;
+				(void)strcpy_s(state, 32, "Init");
+				break;
 			case VCPU_PAUSED:
-				(void)strcpy_s(state, 32, "Paused"); break;
+				(void)strcpy_s(state, 32, "Paused");
+				break;
 			case VCPU_RUNNING:
-				(void)strcpy_s(state, 32, "Running"); break;
+				(void)strcpy_s(state, 32, "Running");
+				break;
 			case VCPU_ZOMBIE:
-				(void)strcpy_s(state, 32, "Zombie"); break;
+				(void)strcpy_s(state, 32, "Zombie");
+				break;
 			default:
 				(void)strcpy_s(state, 32, "Unknown");
 			}

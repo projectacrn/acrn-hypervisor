@@ -327,7 +327,7 @@ static uint8_t dmar_uint_get_msagw(struct dmar_drhd_rt *dmar_uint)
 	uint8_t i;
 	uint8_t sgaw = iommu_cap_sagaw(dmar_uint->cap);
 
-	for (i = 5U; i > 0U;) {
+	for (i = 5U; i > 0U; ) {
 		i--;
 		if (((1U << i) & sgaw) != 0U) {
 			break;
