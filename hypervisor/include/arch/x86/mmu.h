@@ -40,7 +40,6 @@
 #define CACHE_LINE_SIZE		64U
 
 /* IA32E Paging constants */
-#define IA32E_NUM_ENTRIES	512U
 #define IA32E_REF_MASK		\
 		(boot_cpu_data.physical_address_mask)
 
@@ -65,51 +64,6 @@ enum _page_table_level {
 #define PAGE_SIZE_4K	MEM_4K
 #define PAGE_SIZE_2M	MEM_2M
 #define PAGE_SIZE_1G	MEM_1G
-
-/* Inline functions for reading/writing memory */
-static inline uint8_t mem_read8(const void *addr)
-{
-	return *(volatile uint8_t *)(addr);
-}
-
-static inline uint16_t mem_read16(const void *addr)
-{
-	return *(volatile uint16_t *)(addr);
-}
-
-static inline uint32_t mem_read32(const void *addr)
-{
-	return *(volatile uint32_t *)(addr);
-}
-
-static inline uint64_t mem_read64(const void *addr)
-{
-	return *(volatile uint64_t *)(addr);
-}
-
-static inline void mem_write8(const void *addr, uint8_t data)
-{
-	volatile uint8_t *addr8 = (volatile uint8_t *)addr;
-	*addr8 = data;
-}
-
-static inline void mem_write16(void *addr, uint16_t data)
-{
-	volatile uint16_t *addr16 = (volatile uint16_t *)addr;
-	*addr16 = data;
-}
-
-static inline void mem_write32(void *addr, uint32_t data)
-{
-	volatile uint32_t *addr32 = (volatile uint32_t *)addr;
-	*addr32 = data;
-}
-
-static inline void mem_write64(void *addr, uint64_t data)
-{
-	volatile uint64_t *addr64 = (volatile uint64_t *)addr;
-	*addr64 = data;
-}
 
 uint64_t get_paging_pml4(void);
 void *alloc_paging_struct(void);
