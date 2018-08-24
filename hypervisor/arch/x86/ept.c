@@ -10,94 +10,55 @@
 
 #define ACRN_DBG_EPT	6U
 
-static uint64_t find_next_table(uint32_t table_offset, const void *table_base)
-{
-	uint64_t table_entry;
-	uint64_t table_present;
-	uint64_t sub_table_addr = 0UL;
-
-	/* Read the table entry */
-	table_entry = mem_read64(table_base
-			+ (table_offset * IA32E_COMM_ENTRY_SIZE));
-
-	/* If bit 7 is set, entry is not a subtable. */
-	if (((table_entry & IA32E_PDPTE_PS_BIT) != 0U)
-	    || ((table_entry & IA32E_PDE_PS_BIT) != 0U)) {
-		return sub_table_addr;
-	}
-
-	/* Set table present bits to any of the read/write/execute bits */
-	table_present = EPT_RWX;
-
-	/* Determine if a valid entry exists */
-	if ((table_entry & table_present) == 0UL) {
-		/* No entry present */
-		return sub_table_addr;
-	}
-
-	/* Get address of the sub-table */
-	sub_table_addr = table_entry & IA32E_REF_MASK;
-
-	/* Return the next table in the walk */
-	return sub_table_addr;
-}
-
 /**
  * @pre pml4_addr != NULL
  */
-void free_ept_mem(void *pml4_addr)
+void free_ept_mem(uint64_t *pml4_page)
 {
-	void *pdpt_addr;
-	void *pde_addr;
-	void *pte_addr;
-	uint32_t pml4_index;
-	uint32_t pdpt_index;
-	uint32_t pde_idx;
+	uint64_t *pdpt_page, *pd_page, *pt_page;
+	uint64_t *pml4e, *pdpte, *pde;
+	uint64_t pml4e_idx, pdpte_idx, pde_idx;
 
-	for (pml4_index = 0U; pml4_index < IA32E_NUM_ENTRIES; pml4_index++) {
-		/* Walk from the PML4 table to the PDPT table */
-		pdpt_addr = HPA2HVA(find_next_table(pml4_index, pml4_addr));
-		if (pdpt_addr == NULL) {
+	for (pml4e_idx = 0U; pml4e_idx < PTRS_PER_PML4E; pml4e_idx++) {
+		pml4e = pml4_page + pml4e_idx;
+		if (pgentry_present(PTT_EPT, *pml4e) == 0UL) {
 			continue;
 		}
+		pdpt_page = pml4e_page_vaddr(*pml4e);
 
-		for (pdpt_index = 0U; pdpt_index < IA32E_NUM_ENTRIES;
-				pdpt_index++) {
-			/* Walk from the PDPT table to the PD table */
-			pde_addr = HPA2HVA(find_next_table(pdpt_index,
-						pdpt_addr));
-
-			if (pde_addr == NULL) {
+		for (pdpte_idx = 0U; pdpte_idx < PTRS_PER_PDPTE; pdpte_idx++) {
+			pdpte = pdpt_page + pdpte_idx;
+			if ((pgentry_present(PTT_EPT, *pdpte) == 0UL) ||
+					pdpte_large(*pdpte) != 0UL) {
 				continue;
 			}
+			pd_page = pdpte_page_vaddr(*pdpte);
 
-			for (pde_idx = 0U; pde_idx < IA32E_NUM_ENTRIES;
-					pde_idx++) {
-				/* Walk from the PD table to the page table */
-				pte_addr = HPA2HVA(find_next_table(pde_idx,
-						pde_addr));
+			for (pde_idx = 0U; pde_idx < PTRS_PER_PDE; pde_idx++) {
+				pde = pd_page + pde_idx;
+				if ((pgentry_present(PTT_EPT, *pde) == 0UL) ||
+						pde_large(*pde) != 0UL) {
+					continue;
+				}
+				pt_page = pde_page_vaddr(*pde);
 
 				/* Free page table entry table */
-				if (pte_addr != NULL) {
-					free_paging_struct(pte_addr);
-				}
+				free_paging_struct((void *)pt_page);
 			}
 			/* Free page directory entry table */
-			if (pde_addr != NULL) {
-				free_paging_struct(pde_addr);
-			}
+			free_paging_struct((void *)pd_page);
 		}
-		free_paging_struct(pdpt_addr);
+		free_paging_struct((void *)pdpt_page);
 	}
-	free_paging_struct(pml4_addr);
+	free_paging_struct((void *)pml4_page);
 }
 
 void destroy_ept(struct vm *vm)
 {
 	if (vm->arch_vm.nworld_eptp != NULL)
-		free_ept_mem(vm->arch_vm.nworld_eptp);
+		free_ept_mem((uint64_t *)vm->arch_vm.nworld_eptp);
 	if (vm->arch_vm.m2p != NULL)
-		free_ept_mem(vm->arch_vm.m2p);
+		free_ept_mem((uint64_t *)vm->arch_vm.m2p);
 }
 
 uint64_t local_gpa2hpa(const struct vm *vm, uint64_t gpa, uint32_t *size)

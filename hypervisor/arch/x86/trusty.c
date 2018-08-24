@@ -181,8 +181,8 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 		(void *)pml4e_page_vaddr(*(uint64_t *)vm->arch_vm.sworld_eptp);
 		/* memset PDPTEs except trusty memory */
 		(void)memset(pdpt_addr, 0UL,
-			NON_TRUSTY_PDPT_ENTRIES * IA32E_COMM_ENTRY_SIZE);
-		free_ept_mem(vm->arch_vm.sworld_eptp);
+			NON_TRUSTY_PDPT_ENTRIES * sizeof(uint64_t));
+		free_ept_mem((uint64_t *)vm->arch_vm.sworld_eptp);
 		vm->arch_vm.sworld_eptp = NULL;
 	} else {
 		pr_err("sworld eptp is NULL");

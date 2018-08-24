@@ -7,27 +7,6 @@
 #ifndef MMU_H
 #define MMU_H
 
-/* Size of all page-table entries (in bytes) */
-#define     IA32E_COMM_ENTRY_SIZE           8U
-
-/* Definitions exclusive to a Page Directory Pointer Table Entry (PDPTE) */
-#define     IA32E_PDPTE_D_BIT               0x0000000000000040UL
-#define     IA32E_PDPTE_PS_BIT              0x0000000000000080UL
-#define     IA32E_PDPTE_PAT_BIT             0x0000000000001000UL
-#define     IA32E_PDPTE_ADDR_MASK           0x0000FFFFC0000000UL
-
-/* Definitions exclusive to a Page Directory Entry (PDE) 1G or 2M */
-#define     IA32E_PDE_D_BIT                 0x0000000000000040UL
-#define     IA32E_PDE_PS_BIT                0x0000000000000080UL
-#define     IA32E_PDE_PAT_BIT               0x0000000000001000UL
-#define     IA32E_PDE_ADDR_MASK             0x0000FFFFFFE00000UL
-
-/* Definitions exclusive to Page Table Entries (PTE) */
-#define     IA32E_PTE_D_BIT                 0x0000000000000040UL
-#define     IA32E_PTE_PAT_BIT               0x0000000000000080UL
-#define     IA32E_PTE_G_BIT                 0x0000000000000100UL
-#define     IA32E_PTE_ADDR_MASK             0x0000FFFFFFFFF000UL
-
 /** The flag that indicates that the page fault was caused by a non present
  * page.
  */
@@ -211,7 +190,7 @@ int ept_mr_modify(const struct vm *vm, uint64_t *pml4_page,
 	uint64_t prot_set, uint64_t prot_clr);
 int ept_mr_del(const struct vm *vm, uint64_t *pml4_page,
 	uint64_t gpa, uint64_t size);
-void free_ept_mem(void *pml4_addr);
+void free_ept_mem(uint64_t *pml4_page);
 int     ept_violation_vmexit_handler(struct vcpu *vcpu);
 int     ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu);
 
