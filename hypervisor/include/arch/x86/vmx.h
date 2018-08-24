@@ -408,6 +408,7 @@ static inline uint64_t apic_access_offset(uint64_t qual)
 
 #define RFLAGS_C (1U<<0)
 #define RFLAGS_Z (1U<<6)
+#define RFLAGS_AC (1U<<18)
 
 /* CR0 bits hv want to trap to track status change */
 #define CR0_TRAP_MASK (CR0_PE | CR0_PG | CR0_WP | CR0_CD | CR0_NW )

@@ -20,13 +20,16 @@ struct page_walk_info {
 	uint64_t top_entry;	/* Top level paging structure entry */
 	uint32_t level;
 	uint32_t width;
-	bool is_user_mode;
+	bool is_user_mode_access;
 	bool is_write_access;
 	bool is_inst_fetch;
 	bool pse;		/* CR4.PSE for 32bit paing,
 				 * true for PAE/4-level paing */
 	bool wp;		/* CR0.WP */
 	bool nxe;		/* MSR_IA32_EFER_NXE_BIT */
+
+	bool is_smap_on;
+	bool is_smep_on;
 };
 
 uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask)
@@ -81,6 +84,8 @@ static int local_gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_inf
 	uint64_t addr, page_size;
 	int ret = 0;
 	int fault = 0;
+	bool is_user_mode_addr = true;
+	bool is_page_rw_flags_on = true;
 
 	if (pw_info->level < 1U) {
 		return -EINVAL;
@@ -116,30 +121,89 @@ static int local_gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_inf
 			ret = -EFAULT;
 			goto out;
 		}
+
 		/* check for R/W */
-		if (pw_info->is_write_access && ((entry & PAGE_RW) == 0U)) {
-			/* Case1: Supermode and wp is 1
-			 * Case2: Usermode */
-			if (pw_info->is_user_mode || pw_info->wp) {
-				fault = 1;
+		if ((entry & PAGE_RW) == 0U) {
+			if (pw_info->is_write_access) {
+				/* Case1: Supermode and wp is 1
+				 * Case2: Usermode */
+				if (pw_info->is_user_mode_access ||
+						pw_info->wp) {
+					fault = 1;
+					goto out;
+				}
 			}
+			is_page_rw_flags_on = false;
 		}
+
 		/* check for nx, since for 32-bit paing, the XD bit is
 		 * reserved(0), use the same logic as PAE/4-level paging */
 		if (pw_info->is_inst_fetch && pw_info->nxe &&
 		    ((entry & PAGE_NX) != 0U)) {
 			fault = 1;
+			goto out;
 		}
 
 		/* check for U/S */
-		if (((entry & PAGE_USER) == 0U) && pw_info->is_user_mode) {
-			fault = 1;
+		if ((entry & PAGE_USER) == 0U) {
+			is_user_mode_addr = false;
+
+			if (pw_info->is_user_mode_access) {
+				fault = 1;
+				goto out;
+			}
 		}
 
 		if (pw_info->pse && ((i > 0U) && ((entry & PAGE_PSE) != 0U))) {
 			break;
 		}
 		addr = entry;
+	}
+
+	/* When SMAP/SMEP is on, we only need to apply check when address is
+	 * user-mode address.
+	 * Also SMAP/SMEP only impact the supervisor-mode access.
+	 */
+	/* if smap is enabled and supervisor-mode access */
+	if (pw_info->is_smap_on && !pw_info->is_user_mode_access &&
+			is_user_mode_addr) {
+		bool rflags_ac = ((vcpu_get_rflags(vcpu) & RFLAGS_AC) == 1UL);
+
+		/* read from user mode address, eflags.ac = 0 */
+		if (!pw_info->is_write_access && !rflags_ac) {
+			fault = 1;
+			goto out;
+		}
+
+		/* write to user mode address */
+		if (pw_info->is_write_access) {
+			/* cr0.wp = 0, eflags.ac = 0 */
+			if (!pw_info->wp && !rflags_ac) {
+				fault = 1;
+				goto out;
+			}
+
+			/* cr0.wp = 1, eflags.ac = 1, r/w flag is 0
+			 * on any paging structure entry
+			 */
+			if (pw_info->wp && rflags_ac && !is_page_rw_flags_on) {
+				fault = 1;
+				goto out;
+			}
+
+			/* cr0.wp = 1, eflags.ac = 0 */
+			if (pw_info->wp && !rflags_ac) {
+				fault = 1;
+				goto out;
+			}
+		}
+	}
+
+	/* instruction fetch from user-mode address, smep on */
+	if (pw_info->is_smep_on && !pw_info->is_user_mode_access &&
+			is_user_mode_addr && pw_info->is_inst_fetch) {
+		fault = 1;
+		goto out;
 	}
 
 	entry >>= shift;
@@ -230,11 +294,13 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	 * and others.
 	 * So we use DPL of SS access rights field for guest DPL.
 	 */
-	pw_info.is_user_mode =
+	pw_info.is_user_mode_access =
 		(((exec_vmread32(VMX_GUEST_SS_ATTR)>>5) & 0x3U) == 3U);
 	pw_info.pse = true;
 	pw_info.nxe = ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_NXE_BIT) != 0UL);
 	pw_info.wp = ((vcpu_get_cr0(vcpu) & CR0_WP) != 0UL);
+	pw_info.is_smap_on = ((vcpu_get_cr4(vcpu) & CR4_SMAP) != 0UL);
+	pw_info.is_smep_on = ((vcpu_get_cr4(vcpu) & CR4_SMEP) != 0UL);
 
 	*err_code &=  ~PAGE_FAULT_P_FLAG;
 
@@ -254,7 +320,7 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	}
 
 	if (ret == -EFAULT) {
-		if (pw_info.is_user_mode) {
+		if (pw_info.is_user_mode_access) {
 			*err_code |= PAGE_FAULT_US_FLAG;
 		}
 	}
