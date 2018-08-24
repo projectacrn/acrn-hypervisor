@@ -255,7 +255,7 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	if (pm == PAGING_MODE_4_LEVEL) {
 		pw_info.width = 9U;
 		ret = local_gva2gpa_common(vcpu, &pw_info, gva, gpa, err_code);
-	} else if(pm == PAGING_MODE_3_LEVEL) {
+	} else if (pm == PAGING_MODE_3_LEVEL) {
 		pw_info.width = 9U;
 		ret = local_gva2gpa_pae(vcpu, &pw_info, gva, gpa, err_code);
 	} else if (pm == PAGING_MODE_2_LEVEL) {
