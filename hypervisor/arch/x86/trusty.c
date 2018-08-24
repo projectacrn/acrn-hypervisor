@@ -106,21 +106,21 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	 */
 	sub_table_addr = alloc_paging_struct();
 	sworld_pml4e = HVA2HPA(sub_table_addr) | table_present;
-	mem_write64(pml4_base, sworld_pml4e);
+	set_pgentry((uint64_t *)pml4_base, sworld_pml4e);
 
-	nworld_pml4e = mem_read64(vm->arch_vm.nworld_eptp);
+	nworld_pml4e = get_pgentry((uint64_t *)vm->arch_vm.nworld_eptp);
 
 	/*
 	 * copy PTPDEs from normal world EPT to secure world EPT,
 	 * and remove execute access attribute in these entries
 	 */
-	dest_pdpte_p = HPA2HVA(sworld_pml4e & IA32E_REF_MASK);
-	src_pdpte_p = HPA2HVA(nworld_pml4e & IA32E_REF_MASK);
-	for (i = 0U; i < IA32E_NUM_ENTRIES - 1; i++) {
-		pdpte = mem_read64(src_pdpte_p);
+	dest_pdpte_p = pml4e_page_vaddr(sworld_pml4e);
+	src_pdpte_p = pml4e_page_vaddr(nworld_pml4e);
+	for (i = 0U; i < PTRS_PER_PDPTE - 1; i++) {
+		pdpte = get_pgentry(src_pdpte_p);
 		if ((pdpte & table_present) != 0UL) {
 			pdpte &= ~EPT_EXE;
-			mem_write64(dest_pdpte_p, pdpte);
+			set_pgentry(dest_pdpte_p, pdpte);
 		}
 		src_pdpte_p++;
 		dest_pdpte_p++;
