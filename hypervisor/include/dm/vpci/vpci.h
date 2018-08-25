@@ -32,14 +32,12 @@
 
 #define PCI_BAR_COUNT    0x6U
 #define PCI_REGMAX       0xFFU
-#define PCIM_BAR_MEM_32  0U
-#define PCIM_BAR_MEM_64  4U
 
-#define PCI_BDF(b, d, f)   (((b & 0xFFU) << 8) \
-	| ((d & 0x1FU) << 3) | ((f & 0x7U)))
+#define PCI_BDF(b, d, f)   (((b & 0xFFU) << 8U) \
+	| ((d & 0x1FU) << 3U) | ((f & 0x7U)))
 
-#define ALIGN_UP(x, y)   (((x)+((y)-1))&(~((y)-1U)))
-#define ALIGN_UP_4K(x)   ALIGN_UP(x, 4096)
+#define ALIGN_UP(x, y)   (((x) + ((y) - 1U))&(~((y) - 1U)))
+#define ALIGN_UP_4K(x)   ALIGN_UP(x, 4096U)
 
 struct pci_vdev;
 struct pci_vdev_ops {

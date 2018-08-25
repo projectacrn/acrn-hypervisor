@@ -37,12 +37,12 @@
 
 static bool is_cfg_addr(uint16_t addr)
 {
-	return (addr >= PCI_CONFIG_ADDR) && (addr < (PCI_CONFIG_ADDR + 4));
+	return (addr >= PCI_CONFIG_ADDR) && (addr < (PCI_CONFIG_ADDR + 4U));
 }
 
 static bool is_cfg_data(uint16_t addr)
 {
-	return (addr >= PCI_CONFIG_DATA) && (addr < (PCI_CONFIG_DATA + 4));
+	return (addr >= PCI_CONFIG_DATA) && (addr < (PCI_CONFIG_DATA + 4U));
 }
 
 static void pci_cfg_clear_cache(struct pci_addr_info *pi)
@@ -62,9 +62,9 @@ static uint32_t pci_cfg_io_read(__unused struct vm_io_handler *hdlr,
 	if (is_cfg_addr(addr)) {
 		/* TODO: handling the non 4 bytes access */
 		if (bytes == 4U) {
-			val = (PCI_BUS(pi->cached_bdf) << 16)
-				| (PCI_SLOT(pi->cached_bdf) << 11)
-				| (PCI_FUNC(pi->cached_bdf) << 8)
+			val = (PCI_BUS(pi->cached_bdf) << 16U)
+				| (PCI_SLOT(pi->cached_bdf) << 11U)
+				| (PCI_FUNC(pi->cached_bdf) << 8U)
 				| pi->cached_reg;
 
 			if (pi->cached_enable) {
@@ -73,9 +73,9 @@ static uint32_t pci_cfg_io_read(__unused struct vm_io_handler *hdlr,
 		}
 	} else if (is_cfg_data(addr)) {
 		if (pi->cached_enable) {
-			uint16_t offset = addr - 0xcfc;
+			uint16_t offset = addr - PCI_CONFIG_DATA;
 
-			pci_vdev_cfg_handler(&vm->vpci, 1U, pi->cached_bdf,
+			pci_vdev_cfg_handler(vpci, 1U, pi->cached_bdf,
 				pi->cached_reg + offset, bytes, &val);
 
 			pci_cfg_clear_cache(pi);
@@ -97,9 +97,9 @@ static void pci_cfg_io_write(__unused struct vm_io_handler *hdlr,
 		/* TODO: handling the non 4 bytes access */
 		if (bytes == 4U) {
 			pi->cached_bdf = PCI_BDF(
-				((val >> 16) & PCI_BUSMAX),
-				((val >> 11) & PCI_SLOTMAX),
-				((val >> 8) & PCI_FUNCMAX));
+				((val >> 16U) & PCI_BUSMAX),
+				((val >> 11U) & PCI_SLOTMAX),
+				((val >> 8U) & PCI_FUNCMAX));
 
 			pi->cached_reg = val & PCI_REGMAX;
 			pi->cached_enable =
@@ -107,9 +107,9 @@ static void pci_cfg_io_write(__unused struct vm_io_handler *hdlr,
 		}
 	} else if (is_cfg_data(addr)) {
 		if (pi->cached_enable) {
-			uint16_t offset = addr - 0xcfc;
+			uint16_t offset = addr - PCI_CONFIG_DATA;
 
-			pci_vdev_cfg_handler(&vm->vpci, 0U, pi->cached_bdf,
+			pci_vdev_cfg_handler(vpci, 0U, pi->cached_bdf,
 				pi->cached_reg + offset, bytes, &val);
 
 			pci_cfg_clear_cache(pi);
