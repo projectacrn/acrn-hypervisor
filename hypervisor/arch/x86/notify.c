@@ -22,7 +22,7 @@ static void kick_notification(__unused uint32_t irq, __unused void *data)
 		struct smp_call_info_data *smp_call =
 			&per_cpu(smp_call_info, pcpu_id);
 
-		if (smp_call->func)
+		if (smp_call->func != NULL)
 			smp_call->func(smp_call->data);
 		bitmap_clear_nolock(pcpu_id, &smp_call_mask);
 	}
@@ -34,7 +34,8 @@ void smp_call_function(uint64_t mask, smp_call_func_t func, void *data)
 	struct smp_call_info_data *smp_call;
 
 	/* wait for previous smp call complete, which may run on other cpus */
-	while (atomic_cmpxchg64(&smp_call_mask, 0UL, mask & INVALID_BIT_INDEX));
+	while (atomic_cmpxchg64(&smp_call_mask, 0UL, mask & INVALID_BIT_INDEX)
+									!= 0UL);
 	pcpu_id = ffs64(mask);
 	while (pcpu_id != INVALID_BIT_INDEX) {
 		bitmap_clear_nolock(pcpu_id, &mask);

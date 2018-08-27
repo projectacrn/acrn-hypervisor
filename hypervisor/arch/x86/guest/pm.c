@@ -161,9 +161,9 @@ static void pm1ab_io_write(__unused struct vm_io_handler *hdlr,
 
 		if ((addr == vm->pm.sx_state_data->pm1a_cnt.address)
 			&& (val == vm->pm.sx_state_data->s3_pkg.val_pm1a)
-			&& s3_enabled(v)) {
+			&& (s3_enabled(v) != 0U)) {
 
-			if (vm->pm.sx_state_data->pm1b_cnt.address) {
+			if (vm->pm.sx_state_data->pm1b_cnt.address != 0UL) {
 				pm1a_cnt_ready = v;
 			} else {
 				enter_s3(vm, v, 0U);
@@ -173,7 +173,7 @@ static void pm1ab_io_write(__unused struct vm_io_handler *hdlr,
 
 		if ((addr == vm->pm.sx_state_data->pm1b_cnt.address)
 			&& (val == vm->pm.sx_state_data->s3_pkg.val_pm1b)
-			&& s3_enabled(v)) {
+			&& (s3_enabled(v) != 0U)) {
 
 			if (pm1a_cnt_ready != 0U) {
 				enter_s3(vm, pm1a_cnt_ready, v);

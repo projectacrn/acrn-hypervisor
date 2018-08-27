@@ -909,7 +909,7 @@ static uint32_t check_vmx_ctrl(uint32_t msr, uint32_t ctrl_req)
 	ctrl &= vmx_msr_high;
 	ctrl |= vmx_msr_low;
 
-	if (ctrl_req & ~ctrl) {
+	if ((ctrl_req & ~ctrl) != 0U) {
 		pr_err("VMX ctrl 0x%x not fully enabled: "
 			"request 0x%x but get 0x%x\n",
 			msr, ctrl_req, ctrl);

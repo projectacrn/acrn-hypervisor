@@ -283,7 +283,7 @@ int shutdown_vm(struct vm *vm)
 	vioapic_cleanup(vm_ioapic(vm));
 
 	/* Destroy secure world */
-	if (vm->sworld_control.flag.active) {
+	if (vm->sworld_control.flag.active != 0UL) {
 		destroy_secure_world(vm, true);
 	}
 	/* Free EPT allocated resources assigned to VM */

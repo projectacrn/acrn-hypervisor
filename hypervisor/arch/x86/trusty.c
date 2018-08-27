@@ -75,8 +75,8 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 		return;
 	}
 
-	if (!vm->sworld_control.flag.supported
-			|| vm->arch_vm.sworld_eptp != NULL) {
+	if ((vm->sworld_control.flag.supported == 0UL)
+			|| (vm->arch_vm.sworld_eptp != NULL)) {
 		pr_err("Sworld is not supported or Sworld eptp is not NULL");
 		return;
 	}
@@ -409,7 +409,8 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 	struct trusty_boot_param boot_param;
 
 	(void)memset(&boot_param, 0U, sizeof(boot_param));
-	if (copy_from_gpa(vcpu->vm, &boot_param, param, sizeof(boot_param))) {
+	if (copy_from_gpa(vcpu->vm, &boot_param, param, sizeof(boot_param))
+									!= 0) {
 		pr_err("%s: Unable to copy trusty_boot_param\n", __func__);
 		return false;
 	}
