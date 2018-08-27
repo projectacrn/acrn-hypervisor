@@ -151,7 +151,8 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 	void *pdpt_addr;
 	struct vm *vm0 = get_vm_from_vmid(0U);
 	uint64_t hpa = vm->sworld_control.sworld_memory.base_hpa;
-	uint64_t gpa = vm->sworld_control.sworld_memory.base_gpa_in_sos;
+	uint64_t gpa_sos = vm->sworld_control.sworld_memory.base_gpa_in_sos;
+	uint64_t gpa_uos = vm->sworld_control.sworld_memory.base_gpa_in_uos;
 	uint64_t size = vm->sworld_control.sworld_memory.length;
 
 	if (vm0 == NULL) {
@@ -165,13 +166,13 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 
 	/* restore memory to SOS ept mapping */
 	if (ept_mr_add(vm0, vm0->arch_vm.nworld_eptp,
-			hpa, gpa, size, EPT_RWX | EPT_WB) != 0) {
+			hpa, gpa_sos, size, EPT_RWX | EPT_WB) != 0) {
 		pr_warn("Restore trusty mem to SOS failed");
 	}
 
 	/* Restore memory to guest normal world */
 	if (ept_mr_add(vm, vm->arch_vm.nworld_eptp,
-			hpa, gpa, size, EPT_RWX | EPT_WB) != 0)	{
+			hpa, gpa_uos, size, EPT_RWX | EPT_WB) != 0)	{
 		pr_warn("Restore trusty mem to nworld failed");
 	}
 
