@@ -309,7 +309,7 @@ set_expiration(struct acrn_vlapic *vlapic)
 	tmicr = vtimer->tmicr;
 	divisor_shift = vtimer->divisor_shift;
 
-	if (!tmicr || (divisor_shift > 8U)) {
+	if ((tmicr == 0U) || (divisor_shift > 8U)) {
 		return false;
 	}
 
@@ -355,7 +355,7 @@ static uint32_t vlapic_get_ccr(struct acrn_vlapic *vlapic)
 
 	vtimer = &vlapic->vtimer;
 
-	if (vtimer->tmicr && !vlapic_lvtt_tsc_deadline(vlapic)) {
+	if ((vtimer->tmicr != 0U) && !vlapic_lvtt_tsc_deadline(vlapic)) {
 		uint64_t fire_tsc = vtimer->timer.fire_tsc;
 
 		if (now < fire_tsc) {

@@ -70,8 +70,8 @@ static inline bool is_mtrr_enabled(struct vcpu *vcpu)
 
 static inline bool is_fixed_range_mtrr_enabled(struct vcpu *vcpu)
 {
-	return (vcpu->mtrr.cap.bits.fix &&
-		vcpu->mtrr.def_type.bits.fixed_enable);
+	return ((vcpu->mtrr.cap.bits.fix != 0U) &&
+		(vcpu->mtrr.def_type.bits.fixed_enable != 0U));
 }
 
 static inline uint8_t get_default_memory_type(struct vcpu *vcpu)
@@ -99,21 +99,23 @@ void init_mtrr(struct vcpu *vcpu)
 		cap.value = msr_read(MSR_IA32_MTRR_CAP);
 
 	for (i = 0U; i < FIXED_RANGE_MTRR_NUM; i++) {
-		if (cap.bits.fix) {
+		if (cap.bits.fix != 0U) {
 			/*
 			 * The system firmware runs in VMX non-root mode on VM0.
-			 * In some cases, the firmware needs particular mem type at
-			 * certain mmeory locations (e.g. UC for some hardware
-			 * registers), so we need to configure EPT according to the
-			 * content of physical MTRRs.
+			 * In some cases, the firmware needs particular mem type
+			 * at certain mmeory locations (e.g. UC for some
+			 * hardware registers), so we need to configure EPT
+			 * according to the content of physical MTRRs.
 			 */
-			vcpu->mtrr.fixed_range[i].value = msr_read(fixed_mtrr_map[i].msr);
+			vcpu->mtrr.fixed_range[i].value =
+						msr_read(fixed_mtrr_map[i].msr);
 		} else {
 			/*
-			 * For non-vm0 EPT, all memory is setup with WB type in EPT,
-			 * so we setup fixed range MTRRs accordingly
+			 * For non-vm0 EPT, all memory is setup with WB type in
+			 * EPT, so we setup fixed range MTRRs accordingly.
 			 */
-			vcpu->mtrr.fixed_range[i].value = MTRR_FIXED_RANGE_ALL_WB;
+			vcpu->mtrr.fixed_range[i].value =
+							MTRR_FIXED_RANGE_ALL_WB;
 		}
 
 		pr_dbg("vm%d vcpu%hu fixed-range MTRR[%u]: %16llx",

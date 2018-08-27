@@ -733,7 +733,7 @@ static void fault_record_analysis(__unused uint64_t low, uint64_t high)
 
 	/* currently skip PASID related parsing */
 	pr_info("%s, Reason: 0x%x, SID: %x.%x.%x @0x%llx",
-		dma_frcd_up_t(high) ? "Read/Atomic" : "Write",
+		(dma_frcd_up_t(high) != 0U) ? "Read/Atomic" : "Write",
 		dma_frcd_up_fr(high),
 		dma_frcd_up_sid(high) >> 8,
 		(dma_frcd_up_sid(high) >> 3) & 0x1fUL,

@@ -23,13 +23,13 @@ int32_t hcall_world_switch(struct vcpu *vcpu)
 		return -EINVAL;
 	}
 
-	if (!vcpu->vm->sworld_control.flag.supported) {
+	if (vcpu->vm->sworld_control.flag.supported == 0UL) {
 		dev_dbg(ACRN_DBG_TRUSTY_HYCALL,
 			"Secure World is not supported!\n");
 		return -EPERM;
 	}
 
-	if (!vcpu->vm->sworld_control.flag.active) {
+	if (vcpu->vm->sworld_control.flag.active == 0UL) {
 		dev_dbg(ACRN_DBG_TRUSTY_HYCALL,
 			"Trusty is not initialized!\n");
 		return -EPERM;
@@ -44,13 +44,13 @@ int32_t hcall_world_switch(struct vcpu *vcpu)
  */
 int32_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param)
 {
-	if (!vcpu->vm->sworld_control.flag.supported) {
+	if (vcpu->vm->sworld_control.flag.supported == 0UL) {
 		dev_dbg(ACRN_DBG_TRUSTY_HYCALL,
 			"Secure World is not supported!\n");
 		return -EPERM;
 	}
 
-	if (vcpu->vm->sworld_control.flag.active) {
+	if (vcpu->vm->sworld_control.flag.active != 0UL) {
 		dev_dbg(ACRN_DBG_TRUSTY_HYCALL,
 			"Trusty already initialized!\n");
 		return -EPERM;
@@ -76,7 +76,7 @@ int64_t hcall_save_restore_sworld_ctx(struct vcpu *vcpu)
 {
 	struct vm *vm = vcpu->vm;
 
-	if (!vm->sworld_control.flag.supported) {
+	if (vm->sworld_control.flag.supported == 0UL) {
 		dev_dbg(ACRN_DBG_TRUSTY_HYCALL,
 			"Secure World is not supported!\n");
 		return -EPERM;
@@ -89,11 +89,11 @@ int64_t hcall_save_restore_sworld_ctx(struct vcpu *vcpu)
 		return -EPERM;
 	}
 
-	if (vm->sworld_control.flag.active) {
+	if (vm->sworld_control.flag.active != 0UL) {
 		save_sworld_context(vcpu);
 		vm->sworld_control.flag.ctx_saved = 1UL;
 	} else {
-		if (vm->sworld_control.flag.ctx_saved) {
+		if (vm->sworld_control.flag.ctx_saved != 0UL) {
 			restore_sworld_context(vcpu);
 			vm->sworld_control.flag.ctx_saved = 0UL;
 			vm->sworld_control.flag.active = 1UL;

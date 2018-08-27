@@ -286,7 +286,7 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
 		 *
 		 * set reserved bit in CR8 causes GP to guest
 		 */
-		if (reg & ~0xFUL) {
+		if ((reg & ~0xFUL) != 0UL) {
 			pr_dbg("Invalid cr8 write operation from guest");
 			vcpu_inject_gp(vcpu, 0U);
 			break;

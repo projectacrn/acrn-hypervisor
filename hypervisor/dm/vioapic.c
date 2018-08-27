@@ -74,7 +74,7 @@ vioapic_send_intr(struct acrn_vioapic *vioapic, uint32_t pin)
 	 * previous one hasn't received EOI
 	 */
 	if (level) {
-		if (vioapic->rtbl[pin].full & IOAPIC_RTE_REM_IRR) {
+		if ((vioapic->rtbl[pin].full & IOAPIC_RTE_REM_IRR) != 0UL) {
 			return;
 		}
 		vioapic->rtbl[pin].full |= IOAPIC_RTE_REM_IRR;

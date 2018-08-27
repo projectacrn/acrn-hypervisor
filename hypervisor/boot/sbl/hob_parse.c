@@ -14,7 +14,7 @@ void parse_seed_list(struct seed_list_hob *seed_hob)
 	struct seed_entry *entry;
 	struct seed_info dseed_list[BOOTLOADER_SEED_MAX_ENTRIES];
 
-	if (!seed_hob) {
+	if (seed_hob == NULL) {
 		pr_warn("Invalid seed_list hob pointer. Use fake seed!");
 		goto fail;
 	}

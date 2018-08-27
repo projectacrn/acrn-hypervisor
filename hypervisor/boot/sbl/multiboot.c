@@ -176,7 +176,8 @@ static void *parse_image_boot_params(struct vm *vm, char *cmdline)
 	 * compose cmdline for SOS.
 	 */
 	arg_end = strchr(arg, ' ');
-	len = arg_end ? (uint32_t)(arg_end - arg) : strnlen_s(arg, MEM_2K);
+	len = (arg_end != NULL) ? (uint32_t)(arg_end - arg) :
+							strnlen_s(arg, MEM_2K);
 	(void)memset(arg, ' ', len);
 
 	return (void *)boot_params;
