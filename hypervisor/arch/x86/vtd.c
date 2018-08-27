@@ -639,8 +639,17 @@ static void dmar_set_root_table(struct dmar_drhd_rt *dmar_uint)
 {
 	uint64_t address;
 	uint32_t status;
+	void *root_table_vaddr = NULL;
 
 	IOMMU_LOCK(dmar_uint);
+
+	root_table_vaddr = alloc_paging_struct();
+
+	if (root_table_vaddr != NULL) {
+		dmar_uint->root_table_addr = HVA2HPA(root_table_vaddr);
+	} else {
+		ASSERT(false, "failed to allocate root table!");
+	}
 
 	/* Currently don't support extended root table */
 	address = dmar_uint->root_table_addr;
@@ -952,16 +961,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 		return 1;
 	}
 
-	if (dmar_uint->root_table_addr == 0UL) {
-		void *root_table_vaddr = alloc_paging_struct();
-
-		if (root_table_vaddr != NULL) {
-			dmar_uint->root_table_addr = HVA2HPA(root_table_vaddr);
-		} else {
-			ASSERT(false, "failed to allocate root table!");
-			return 1;
-		}
-	}
+	ASSERT(dmar_uint->root_table_addr != 0UL, "root table is not setup");
 
 	root_table = (struct dmar_root_entry *)HPA2HVA(dmar_uint->root_table_addr);
 
@@ -1275,6 +1275,9 @@ void init_iommu(void)
 	spinlock_init(&domain_lock);
 
 	register_hrhd_units();
+
+	CACHE_FLUSH_INVALIDATE_ALL();
+	enable_iommu();
 }
 
 void init_iommu_vm0_domain(struct vm *vm0)
@@ -1293,6 +1296,4 @@ void init_iommu_vm0_domain(struct vm *vm0)
 				(uint8_t)bus, (uint8_t)devfun);
 		}
 	}
-	CACHE_FLUSH_INVALIDATE_ALL();
-	enable_iommu();
 }
