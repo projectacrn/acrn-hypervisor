@@ -247,13 +247,8 @@ acrn_sw_load_vsbl(struct vmctx *ctx)
 	int ret;
 	struct e820_entry *e820;
 	struct vsbl_para *vsbl_para;
-	uint64_t *vsbl_entry =
-		(uint64_t *)(ctx->baseaddr + VSBL_ENTRY_OFF(ctx));
-	uint64_t *cfg_offset =
-		(uint64_t *)(ctx->baseaddr + GUEST_CFG_OFFSET);
 
 	init_cmos_vrpmb(ctx);
-	*cfg_offset = ctx->lowmem;
 
 	vsbl_para = (struct vsbl_para *)
 		(ctx->baseaddr + CONFIGPAGE_OFF(ctx));
@@ -297,12 +292,24 @@ acrn_sw_load_vsbl(struct vmctx *ctx)
 	vsbl_para->e820_entries = add_e820_entry(e820, vsbl_para->e820_entries,
 		vsbl_para->vsbl_address, vsbl_size, E820_TYPE_RESERVED);
 
-
-	*vsbl_entry = VSBL_TOP(ctx) - 16;	/* reset vector */
-	printf("SW_LOAD: vsbl_entry 0x%lx\n", *vsbl_entry);
+	printf("SW_LOAD: vsbl_entry 0x%lx\n", VSBL_TOP(ctx) - 16);
 
 	vsbl_para->boot_device_address = boot_blk_bdf;
 	vsbl_para->trusty_enabled = trusty_enabled;
+
+	/* set guest bsp state. Will call hypercall set bsp state
+	 * after bsp is created.
+	 */
+	memset(&ctx->bsp_regs, 0, sizeof( struct acrn_set_vcpu_regs));
+	ctx->bsp_regs.vcpu_id = 0;
+
+	/* CR0_ET | CR0_NE */
+	ctx->bsp_regs.vcpu_regs.cr0 = 0x30U;
+	ctx->bsp_regs.vcpu_regs.cs_ar = 0x009FU;
+	ctx->bsp_regs.vcpu_regs.cs_sel = 0xF000U;
+	ctx->bsp_regs.vcpu_regs.cs_base = (VSBL_TOP(ctx) - 16) &0xFFFF0000UL;
+	ctx->bsp_regs.vcpu_regs.rip = (VSBL_TOP(ctx) - 16) & 0xFFFFUL;
+	ctx->bsp_regs.vcpu_regs.gprs.rsi = CONFIGPAGE_OFF(ctx);
 
 	return 0;
 }
