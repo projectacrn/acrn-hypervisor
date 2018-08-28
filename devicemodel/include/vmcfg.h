@@ -6,6 +6,8 @@
 #ifndef VMCFG_H
 #define VMCFG_H
 
+#include <getopt.h>
+
 struct vmcfg_arg {
 	char **argv;
 	int argc;
@@ -19,4 +21,5 @@ extern int num_args_buildin;
 extern struct vmcfg_arg mrb_vm1_args;
 
 void vmcfg_list(void);
+void vmcfg_dump(int index, struct option *long_options, char *optstr);
 #endif
