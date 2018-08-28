@@ -162,6 +162,7 @@ usage(int code)
 		"       -i: ioc boot parameters\n"
 #ifdef CONFIG_VM_CFG
 		"       --vmcfg: build-in VM configurations\n"
+		"       --dump: show build-in VM configurations\n"
 #endif
 		"       --vsbl: vsbl file path\n"
 		"       --part_info: guest partition info file path\n"
@@ -710,6 +711,7 @@ enum {
 	CMD_OPT_PTDEV_NO_RESET,
 	CMD_OPT_DEBUGEXIT,
 	CMD_OPT_VMCFG,
+	CMD_OPT_DUMP,
 };
 
 static struct option long_options[] = {
@@ -742,6 +744,7 @@ static struct option long_options[] = {
 	/* Following cmd option only has long option */
 #ifdef CONFIG_VM_CFG
 	{"vmcfg",		required_argument,	0, CMD_OPT_VMCFG},
+	{"dump",		required_argument,	0, CMD_OPT_DUMP},
 #endif
 	{"vsbl",		required_argument,	0, CMD_OPT_VSBL},
 	{"part_info",		required_argument,	0, CMD_OPT_PART_INFO},
@@ -1047,6 +1050,10 @@ int main(int argc, char *argv[])
 			vmcfg = 1;
 			index = atoi(optarg);
 			break;
+		case CMD_OPT_DUMP:
+			index = atoi(optarg);
+			vmcfg_dump(index, long_options, optstr);
+			return 0;
 		default:
 			dm_options++;
 		}
