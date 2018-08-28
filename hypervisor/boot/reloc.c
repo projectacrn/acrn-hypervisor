@@ -104,7 +104,7 @@ void _relocate(void)
 	 * Need to subtract the relocation delta to get the correct
 	 * absolute addresses
 	 */
-	trampoline_end = (uint64_t)_ld_trampoline_end - delta;
+	trampoline_end = (uint64_t)(&_ld_trampoline_end) - delta;
 	primary_32_start = (uint64_t)(&cpu_primary_start_32) - delta;
 	primary_32_end = (uint64_t)(&cpu_primary_start_64) - delta;
 
