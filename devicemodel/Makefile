@@ -202,7 +202,7 @@ $(DM_OBJDIR)/%.o: %.c $(HEADERS)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(CFLAGS) -c $< -o $@
 
-install: $(DM_OBJDIR)/$(PROGRAM) install-samples-nuc install-samples-mrb install-bios
+install: $(DM_OBJDIR)/$(PROGRAM) install-samples-nuc install-samples-mrb install-bios install-vmcfg
 	install -D --mode=0755 $(DM_OBJDIR)/$(PROGRAM) $(DESTDIR)/usr/bin/$(PROGRAM)
 
 install-samples-nuc: $(SAMPLES_NUC)
@@ -216,3 +216,6 @@ install-samples-mrb: $(SAMPLES_MRB)
 install-bios: $(BIOS_BIN)
 	install -d $(DESTDIR)/usr/share/acrn/bios
 	install -D --mode=0664 -t $(DESTDIR)/usr/share/acrn/bios $^
+
+install-vmcfg:
+	make -C $(BASEDIR)/vmcfg install DESTDIR=$(DESTDIR) BASEDIR=$(BASEDIR)
