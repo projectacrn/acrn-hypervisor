@@ -1078,6 +1078,16 @@ process_resume_event(struct ioc_dev *ioc)
 			break;
 		}
 	}
+
+	/*
+	 * The signal channel is inactive after SOS resumed, need to send
+	 * open channel command again to activate the signal channel.
+	 * And it would not impact to UOS itself enter/exit S3.
+	 */
+	if (ioc_ch_xmit(IOC_NATIVE_SIGNAL, cbc_open_channel_command,
+				sizeof(cbc_open_channel_command)) <= 0)
+		DPRINTF("%s", "ioc reopen signal channel failed\r\n");
+
 	return 0;
 }
 
