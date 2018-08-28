@@ -40,13 +40,17 @@
 static spinlock_t pci_device_lock = { .head = 0, .tail = 0 };
 
 
-static uint32_t pci_pdev_calc_address(uint16_t bdf, uint32_t offset)
+static inline uint32_t pci_bar_base(uint32_t bar)
 {
-	uint32_t addr = bdf;
+	return bar & PCIM_BAR_MEM_BASE;
+}
 
-	addr <<= 8;
+static uint32_t pci_pdev_calc_address(union pci_bdf bdf, uint32_t offset)
+{
+	uint32_t addr = (uint32_t)bdf.value;
+
+	addr <<= 8U;
 	addr |= (offset | PCI_CFG_ENABLE);
-
 	return addr;
 }
 
@@ -61,7 +65,7 @@ static uint32_t pci_pdev_read_cfg(struct pci_pdev *pdev,
 	addr = pci_pdev_calc_address(pdev->bdf, offset);
 
 	/* Write address to ADDRESS register */
-	pio_write(addr, PCI_CONFIG_ADDR, 4);
+	pio_write(addr, PCI_CONFIG_ADDR, 4U);
 
 	/* Read result from DATA register */
 	switch (bytes) {
@@ -90,7 +94,7 @@ static void pci_pdev_write_cfg(struct pci_pdev *pdev, uint32_t offset,
 	addr = pci_pdev_calc_address(pdev->bdf, offset);
 
 	/* Write address to ADDRESS register */
-	pio_write(addr, PCI_CONFIG_ADDR, 4);
+	pio_write(addr, PCI_CONFIG_ADDR, 4U);
 
 	/* Write value to DATA register */
 	switch (bytes) {
@@ -112,23 +116,15 @@ static int vdev_pt_init_validate(struct pci_vdev *vdev)
 	uint32_t idx;
 
 	for (idx = 0; idx < (uint32_t)PCI_BAR_COUNT; idx++) {
-		if (vdev->bar[idx].type != PCIM_BAR_MEM_32) {
+		if ((vdev->bar[idx].base != 0x0UL)
+			|| ((vdev->bar[idx].size & 0xFFFUL) != 0x0UL)
+			|| ((vdev->bar[idx].type != PCIBAR_MEM32)
+			&& (vdev->bar[idx].type != PCIBAR_NONE))) {
 			return -EINVAL;
 		}
 	}
 
 	return 0;
-}
-
-static void vdev_pt_init_bar_registers(struct pci_vdev *vdev)
-{
-	uint32_t idx;
-
-	for (idx = 0; idx < (uint32_t)PCI_BAR_COUNT; idx++) {
-		/* Initialize the BAR register in config space */
-		pci_vdev_write_cfg_u32(vdev, PCIR_BAR(idx),
-			PCI_BAR(vdev->bar[idx].base, vdev->bar[idx].type));
-	}
 }
 
 static int vdev_pt_init(struct pci_vdev *vdev)
@@ -138,7 +134,7 @@ static int vdev_pt_init(struct pci_vdev *vdev)
 
 	ret = vdev_pt_init_validate(vdev);
 	if (ret != 0) {
-		pr_err("virtual bar can only be of type PCIM_BAR_MEM_32!");
+		pr_err("Error, invalid bar defined");
 		return ret;
 	}
 
@@ -151,10 +147,8 @@ static int vdev_pt_init(struct pci_vdev *vdev)
 			HVA2HPA(vm->arch_vm.nworld_eptp), 48U);
 	}
 
-	ret = assign_iommu_device(vm->iommu,
-		PCI_BUS(vdev->pdev.bdf), LOBYTE(vdev->pdev.bdf));
-
-	vdev_pt_init_bar_registers(vdev);
+	ret = assign_iommu_device(vm->iommu, vdev->pdev.bdf.bits.b,
+		(uint8_t)(vdev->pdev.bdf.value & 0xFFU));
 
 	return ret;
 }
@@ -164,32 +158,23 @@ static int vdev_pt_deinit(struct pci_vdev *vdev)
 	int ret;
 	struct vm *vm = vdev->vpci->vm;
 
-	ret = unassign_iommu_device(vm->iommu, PCI_BUS(vdev->pdev.bdf),
-		LOBYTE(vdev->pdev.bdf));
+	ret = unassign_iommu_device(vm->iommu, vdev->pdev.bdf.bits.b,
+		(uint8_t)(vdev->pdev.bdf.value & 0xFFU));
 
 	return ret;
-}
-
-static int bar_access(uint32_t coff)
-{
-	if ((coff >= PCIR_BAR(0U)) && (coff < PCIR_BAR(PCI_BAR_COUNT))) {
-		return 1;
-	} else {
-		return 0;
-	}
 }
 
 static int vdev_pt_cfgread(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t *val)
 {
 	/* Assumption: access needed to be aligned on 1/2/4 bytes */
-	if ((offset & (bytes - 1)) != 0U) {
-		*val = 0xffffffffU;
+	if ((offset & (bytes - 1U)) != 0U) {
+		*val = 0xFFFFFFFFU;
 		return -EINVAL;
 	}
 
 	/* PCI BARs is emulated */
-	if (bar_access(offset)) {
+	if (pci_bar_access(offset)) {
 		*val = pci_vdev_read_cfg(vdev, offset, bytes);
 	} else {
 		*val = pci_pdev_read_cfg(&vdev->pdev, offset, bytes);
@@ -204,11 +189,11 @@ static int vdev_pt_remap_bar(struct pci_vdev *vdev, uint32_t idx,
 	int error = 0;
 	struct vm *vm = vdev->vpci->vm;
 
-	if (vdev->bar[idx].base != 0) {
+	if (vdev->bar[idx].base != 0UL) {
 		error = ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
 			vdev->bar[idx].base,
 			vdev->bar[idx].size);
-		if (error) {
+		if (error != 0) {
 			return error;
 		}
 	}
@@ -220,7 +205,7 @@ static int vdev_pt_remap_bar(struct pci_vdev *vdev, uint32_t idx,
 			new_base, /*GPA*/
 			vdev->bar[idx].size,
 			EPT_WR | EPT_RD | EPT_UNCACHED);
-		if (error) {
+		if (error != 0) {
 			return error;
 		}
 	}
@@ -229,7 +214,7 @@ static int vdev_pt_remap_bar(struct pci_vdev *vdev, uint32_t idx,
 
 static uint32_t memen(struct pci_vdev *vdev)
 {
-	return pci_pdev_read_cfg(&vdev->pdev, PCIR_COMMAND, 2)
+	return pci_pdev_read_cfg(&vdev->pdev, PCIR_COMMAND, 2U)
 		& PCIM_CMD_MEMEN;
 }
 
@@ -242,38 +227,41 @@ static void vdev_pt_cfgwrite_bar(struct pci_vdev *vdev, uint32_t offset,
 	bool do_map;
 	int error;
 
-	idx = (offset - PCIR_BAR(0U)) >> 2U;
+	if ((bytes != 4U) || ((offset & 0x3U) != 0U)) {
+		return;
+	}
+
+	idx = (offset - pci_bar_offset(0U)) >> 2U;
 	mask = ~(vdev->bar[idx].size - 1U);
 	bar_update_normal = (new_bar_uos != (uint32_t)~0U);
 	new_bar = new_bar_uos & mask;
-	new_bar |= PCIM_BAR_MEM_SPACE | PCIM_BAR_MEM_32;
 
-	if (PCI_BAR_BASE(new_bar) == vdev->bar[idx].base) {
+	if (pci_bar_base(new_bar) == vdev->bar[idx].base) {
 		return;
 	}
 
 	do_map = (memen(vdev)) && bar_update_normal;
 	if (do_map) {
-		error = vdev_pt_remap_bar(vdev, idx, PCI_BAR_BASE(new_bar));
-		if (error) {
+		error = vdev_pt_remap_bar(vdev, idx, pci_bar_base(new_bar));
+		if (error != 0) {
 			pr_err("vdev_pt_remap_bar failed: %d", idx);
 		}
 	}
 
 	pci_vdev_write_cfg_u32(vdev, offset, new_bar);
-	vdev->bar[idx].base = PCI_BAR_BASE(new_bar);
+	vdev->bar[idx].base = pci_bar_base(new_bar);
 }
 
 static int vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t val)
 {
 	/* Assumption: access needed to be aligned on 1/2/4 bytes */
-	if ((offset & (bytes - 1)) != 0U) {
+	if ((offset & (bytes - 1U)) != 0U) {
 		return -EINVAL;
 	}
 
 	/* PCI BARs are emulated */
-	if (bar_access(offset)) {
+	if (pci_bar_access(offset)) {
 		vdev_pt_cfgwrite_bar(vdev, offset, bytes, val);
 	} else {
 		/* Write directly to physical device's config space */
@@ -286,7 +274,7 @@ static int vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 struct pci_vdev_ops pci_ops_vdev_pt = {
 	.init = vdev_pt_init,
 	.deinit = vdev_pt_deinit,
-	.cfgwrite = vdev_pt_cfgwrite,
 	.cfgread = vdev_pt_cfgread,
+	.cfgwrite = vdev_pt_cfgwrite,
 };
 
