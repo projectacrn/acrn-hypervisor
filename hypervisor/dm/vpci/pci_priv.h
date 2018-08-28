@@ -42,7 +42,6 @@
 #define PCIR_VENDOR      0x00U
 #define PCIR_DEVICE      0x02U
 #define PCIR_COMMAND     0x04U
-#define PCIM_CMD_MEMEN   0x0002U
 #define PCIR_REVID       0x08U
 #define PCIR_SUBCLASS    0x0AU
 #define PCIR_CLASS       0x0BU
