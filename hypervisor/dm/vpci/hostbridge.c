@@ -115,7 +115,9 @@ static int vdev_hostbridge_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 		return -EINVAL;
 	}
 
-	pci_vdev_write_cfg(vdev, offset, bytes, val);
+	if (!pci_bar_access(offset)) {
+		pci_vdev_write_cfg(vdev, offset, bytes, val);
+	}
 
 	return 0;
 }

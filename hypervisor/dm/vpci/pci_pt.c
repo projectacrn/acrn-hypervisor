@@ -131,6 +131,7 @@ static int vdev_pt_init(struct pci_vdev *vdev)
 {
 	int ret;
 	struct vm *vm = vdev->vpci->vm;
+	uint16_t pci_command;
 
 	ret = vdev_pt_init_validate(vdev);
 	if (ret != 0) {
@@ -149,6 +150,11 @@ static int vdev_pt_init(struct pci_vdev *vdev)
 
 	ret = assign_iommu_device(vm->iommu, vdev->pdev.bdf.bits.b,
 		(uint8_t)(vdev->pdev.bdf.value & 0xFFU));
+
+	pci_command = pci_pdev_read_cfg(&vdev->pdev, PCIR_COMMAND, 2U);
+	/* Disable INTX */
+	pci_command |= 0x400U;
+	pci_pdev_write_cfg(&vdev->pdev, PCIR_COMMAND, 2U, pci_command);
 
 	return ret;
 }
@@ -212,44 +218,47 @@ static int vdev_pt_remap_bar(struct pci_vdev *vdev, uint32_t idx,
 	return error;
 }
 
-static uint32_t memen(struct pci_vdev *vdev)
-{
-	return pci_pdev_read_cfg(&vdev->pdev, PCIR_COMMAND, 2U)
-		& PCIM_CMD_MEMEN;
-}
-
 static void vdev_pt_cfgwrite_bar(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t new_bar_uos)
 {
 	uint32_t idx;
 	uint32_t new_bar, mask;
-	bool bar_update_normal = 1;
-	bool do_map;
+	bool bar_update_normal;
 	int error;
 
 	if ((bytes != 4U) || ((offset & 0x3U) != 0U)) {
 		return;
 	}
 
+	new_bar = 0U;
 	idx = (offset - pci_bar_offset(0U)) >> 2U;
 	mask = ~(vdev->bar[idx].size - 1U);
-	bar_update_normal = (new_bar_uos != (uint32_t)~0U);
-	new_bar = new_bar_uos & mask;
 
-	if (pci_bar_base(new_bar) == vdev->bar[idx].base) {
-		return;
-	}
+	switch (vdev->bar[idx].type) {
+	case PCIBAR_NONE:
+		vdev->bar[idx].base = 0UL;
+		break;
 
-	do_map = (memen(vdev)) && bar_update_normal;
-	if (do_map) {
-		error = vdev_pt_remap_bar(vdev, idx, pci_bar_base(new_bar));
-		if (error != 0) {
-			pr_err("vdev_pt_remap_bar failed: %d", idx);
+	case PCIBAR_MEM32:
+		bar_update_normal = (new_bar_uos != (uint32_t)~0U);
+		new_bar = new_bar_uos & mask;
+		if (bar_update_normal) {
+			error = vdev_pt_remap_bar(vdev, idx,
+				pci_bar_base(new_bar));
+			if (error != 0) {
+				pr_err("vdev_pt_remap_bar failed: %d", idx);
+			}
+
+			vdev->bar[idx].base = pci_bar_base(new_bar);
 		}
+		break;
+
+	default:
+		pr_err("Unknown bar type, idx=%d", idx);
+		break;
 	}
 
 	pci_vdev_write_cfg_u32(vdev, offset, new_bar);
-	vdev->bar[idx].base = pci_bar_base(new_bar);
 }
 
 static int vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
