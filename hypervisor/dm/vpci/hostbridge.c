@@ -97,7 +97,7 @@ static int vdev_hostbridge_cfgread(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t *val)
 {
 	/* Assumption: access needed to be aligned on 1/2/4 bytes */
-	if ((offset & (bytes - 1)) != 0U) {
+	if ((offset & (bytes - 1U)) != 0U) {
 		*val = 0xffffffffU;
 		return -EINVAL;
 	}
@@ -111,11 +111,13 @@ static int vdev_hostbridge_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t val)
 {
 	/* Assumption: access needed to be aligned on 1/2/4 bytes */
-	if ((offset & (bytes - 1)) != 0U) {
+	if ((offset & (bytes - 1U)) != 0U) {
 		return -EINVAL;
 	}
 
-	pci_vdev_write_cfg(vdev, offset, bytes, val);
+	if (!pci_bar_access(offset)) {
+		pci_vdev_write_cfg(vdev, offset, bytes, val);
+	}
 
 	return 0;
 }
@@ -123,7 +125,7 @@ static int vdev_hostbridge_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 struct pci_vdev_ops pci_ops_vdev_hostbridge = {
 	.init = vdev_hostbridge_init,
 	.deinit = vdev_hostbridge_deinit,
-	.cfgwrite = vdev_hostbridge_cfgwrite,
 	.cfgread = vdev_hostbridge_cfgread,
+	.cfgwrite = vdev_hostbridge_cfgwrite,
 };
 

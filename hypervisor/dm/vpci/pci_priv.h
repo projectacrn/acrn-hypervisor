@@ -35,10 +35,9 @@
 
 #define PCIM_BAR_MEM_BASE   0xfffffff0U
 #define PCI_BAR_BASE(val)   ((val) & PCIM_BAR_MEM_BASE)
-#define PCI_BAR(base, type) ((base) | (type))
 
-#define PCI_BUS(bdf)   (((bdf) >> 8) & 0xFFU)
-#define PCI_SLOT(bdf)  (((bdf) >> 3) & 0x1FU)
+#define PCI_BUS(bdf)   (((bdf) >> 8U) & 0xFFU)
+#define PCI_SLOT(bdf)  (((bdf) >> 3U) & 0x1FU)
 #define PCI_FUNC(bdf)  ((bdf) & 0x07U)
 
 #define LOBYTE(w)   ((uint8_t)((w) & 0xffU))
@@ -147,6 +146,15 @@ static inline void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset,
 	default:
 		pci_vdev_write_cfg_u32(vdev, offset, val);
 		break;
+	}
+}
+
+static inline int pci_bar_access(uint32_t offset)
+{
+	if ((offset >= PCIR_BAR(0U)) && (offset < PCIR_BAR(PCI_BAR_COUNT))) {
+		return 1;
+	} else {
+		return 0;
 	}
 }
 
