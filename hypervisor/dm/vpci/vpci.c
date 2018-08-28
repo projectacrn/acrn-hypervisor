@@ -37,17 +37,17 @@
 
 static bool is_cfg_addr(uint16_t addr)
 {
-	return (addr >= PCI_CONFIG_ADDR) && (addr < (PCI_CONFIG_ADDR + 4));
+	return (addr >= PCI_CONFIG_ADDR) && (addr < (PCI_CONFIG_ADDR + 4U));
 }
 
 static bool is_cfg_data(uint16_t addr)
 {
-	return (addr >= PCI_CONFIG_DATA) && (addr < (PCI_CONFIG_DATA + 4));
+	return (addr >= PCI_CONFIG_DATA) && (addr < (PCI_CONFIG_DATA + 4U));
 }
 
 static void pci_cfg_clear_cache(struct pci_addr_info *pi)
 {
-	pi->cached_bdf = 0xffffU;
+	pi->cached_bdf.value = 0xFFFFU;
 	pi->cached_reg = 0U;
 	pi->cached_enable = 0U;
 }
@@ -55,33 +55,31 @@ static void pci_cfg_clear_cache(struct pci_addr_info *pi)
 static uint32_t pci_cfg_io_read(__unused struct vm_io_handler *hdlr,
 	struct vm *vm, uint16_t addr, size_t bytes)
 {
-	uint32_t val = 0xffffffffU;
+	uint32_t val = 0xFFFFFFFFU;
 	struct vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
 
 	if (is_cfg_addr(addr)) {
 		/* TODO: handling the non 4 bytes access */
 		if (bytes == 4U) {
-			val = (PCI_BUS(pi->cached_bdf) << 16)
-				| (PCI_SLOT(pi->cached_bdf) << 11)
-				| (PCI_FUNC(pi->cached_bdf) << 8)
-				| pi->cached_reg;
-
+			val = (uint32_t)pi->cached_bdf.value;
+			val <<= 8U;
+			val |= pi->cached_reg;
 			if (pi->cached_enable) {
 				val |= PCI_CFG_ENABLE;
 			}
 		}
 	} else if (is_cfg_data(addr)) {
 		if (pi->cached_enable) {
-			uint16_t offset = addr - 0xcfc;
+			uint16_t offset = addr - PCI_CONFIG_DATA;
 
-			pci_vdev_cfg_handler(&vm->vpci, 1U, pi->cached_bdf,
+			pci_vdev_cfg_handler(vpci, 1U, pi->cached_bdf,
 				pi->cached_reg + offset, bytes, &val);
 
 			pci_cfg_clear_cache(pi);
 		}
 	}  else {
-		val = 0xffffffffU;
+		val = 0xFFFFFFFFU;
 	}
 
 	return val;
@@ -96,10 +94,9 @@ static void pci_cfg_io_write(__unused struct vm_io_handler *hdlr,
 	if (is_cfg_addr(addr)) {
 		/* TODO: handling the non 4 bytes access */
 		if (bytes == 4U) {
-			pi->cached_bdf = PCI_BDF(
-				((val >> 16) & PCI_BUSMAX),
-				((val >> 11) & PCI_SLOTMAX),
-				((val >> 8) & PCI_FUNCMAX));
+			pi->cached_bdf.bits.b = (val >> 16U) & PCI_BUSMAX;
+			pi->cached_bdf.bits.d = (val >> 11U) & PCI_SLOTMAX;
+			pi->cached_bdf.bits.f = (val >> 8U) & PCI_FUNCMAX;
 
 			pi->cached_reg = val & PCI_REGMAX;
 			pi->cached_enable =
@@ -107,9 +104,9 @@ static void pci_cfg_io_write(__unused struct vm_io_handler *hdlr,
 		}
 	} else if (is_cfg_data(addr)) {
 		if (pi->cached_enable) {
-			uint16_t offset = addr - 0xcfc;
+			uint16_t offset = addr - PCI_CONFIG_DATA;
 
-			pci_vdev_cfg_handler(&vm->vpci, 0U, pi->cached_bdf,
+			pci_vdev_cfg_handler(vpci, 0U, pi->cached_bdf,
 				pi->cached_reg + offset, bytes, &val);
 
 			pci_cfg_clear_cache(pi);
@@ -136,9 +133,10 @@ void vpci_init(struct vm *vm)
 	for (i = 0; i < vdev_array->num_pci_vdev; i++) {
 		vdev = &vdev_array->vpci_vdev_list[i];
 		vdev->vpci = vpci;
+
 		if ((vdev->ops != NULL) && (vdev->ops->init != NULL)) {
 			ret = vdev->ops->init(vdev);
-			if (ret) {
+			if (ret != 0) {
 				pr_err("vdev->ops->init failed!");
 			}
 		}
@@ -161,7 +159,7 @@ void vpci_cleanup(struct vm *vm)
 		vdev = &vdev_array->vpci_vdev_list[i];
 		if ((vdev->ops != NULL) && (vdev->ops->deinit != NULL)) {
 			ret = vdev->ops->deinit(vdev);
-			if (ret) {
+			if (ret != 0) {
 				pr_err("vdev->ops->deinit failed!");
 			}
 		}

@@ -38,7 +38,7 @@
 #include "pci_priv.h"
 
 
-static struct pci_vdev *pci_vdev_find(struct vpci *vpci, uint16_t vbdf)
+static struct pci_vdev *pci_vdev_find(struct vpci *vpci, union pci_bdf vbdf)
 {
 	struct vpci_vdev_array *vdev_array;
 	struct pci_vdev *vdev;
@@ -47,7 +47,7 @@ static struct pci_vdev *pci_vdev_find(struct vpci *vpci, uint16_t vbdf)
 	vdev_array = vpci->vm->vm_desc->vpci_vdev_array;
 	for (i = 0; i < vdev_array->num_pci_vdev; i++) {
 		vdev = &vdev_array->vpci_vdev_list[i];
-		if (vdev->vbdf == vbdf) {
+		if (vdev->vbdf.value == vbdf.value) {
 			return vdev;
 		}
 	}
@@ -56,7 +56,7 @@ static struct pci_vdev *pci_vdev_find(struct vpci *vpci, uint16_t vbdf)
 }
 
 /* PCI cfg vm-exit handler */
-void pci_vdev_cfg_handler(struct vpci *vpci, uint32_t in, uint16_t vbdf,
+void pci_vdev_cfg_handler(struct vpci *vpci, uint32_t in, union pci_bdf vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	struct pci_vdev *vdev;
@@ -68,7 +68,7 @@ void pci_vdev_cfg_handler(struct vpci *vpci, uint32_t in, uint16_t vbdf,
 	}
 
 	ret = -EINVAL;
-	if (in) {
+	if (in == 1U) {
 		if ((vdev->ops != NULL) && (vdev->ops->cfgread != NULL)) {
 			ret = vdev->ops->cfgread(vdev, offset, bytes, val);
 		}
@@ -78,7 +78,7 @@ void pci_vdev_cfg_handler(struct vpci *vpci, uint32_t in, uint16_t vbdf,
 		}
 	}
 
-	if (ret) {
+	if (ret != 0) {
 		pr_dbg("pci_vdev_cfg_handler failed, ret=%d", ret);
 	}
 }

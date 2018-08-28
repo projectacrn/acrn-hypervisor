@@ -32,14 +32,6 @@
 
 #define PCI_BAR_COUNT    0x6U
 #define PCI_REGMAX       0xFFU
-#define PCIM_BAR_MEM_32  0U
-#define PCIM_BAR_MEM_64  4U
-
-#define PCI_BDF(b, d, f)   (((b & 0xFFU) << 8) \
-	| ((d & 0x1FU) << 3) | ((f & 0x7U)))
-
-#define ALIGN_UP(x, y)   (((x)+((y)-1))&(~((y)-1U)))
-#define ALIGN_UP_4K(x)   ALIGN_UP(x, 4096)
 
 struct pci_vdev;
 struct pci_vdev_ops {
@@ -54,36 +46,52 @@ struct pci_vdev_ops {
 		uint32_t bytes, uint32_t *val);
 };
 
-struct pcibar {
+union pci_bdf {
+	uint16_t value;
+
+	struct {
+		uint8_t f : 3; /* BITs 0-2 */
+		uint8_t d : 5; /* BITs 3-7 */
+		uint8_t b; /* BITs 8-15 */
+	} bits;
+};
+
+enum pci_bar_type {
+	PCIBAR_NONE = 0,
+	PCIBAR_MEM32,
+	PCIBAR_MEM64,
+};
+
+struct pci_bar {
 	uint64_t base;
 	uint64_t size;
-	uint8_t  type;
+	enum pci_bar_type type;
 };
 
 struct pci_pdev {
 	/* The bar info of the physical PCI device. */
-	struct pcibar bar[PCI_BAR_COUNT];
+	struct pci_bar bar[PCI_BAR_COUNT];
 
 	/* The bus/device/function triple of the physical PCI device. */
-	uint16_t bdf;
+	union pci_bdf bdf;
 };
 
 struct pci_vdev {
 	struct pci_vdev_ops *ops;
 	struct vpci *vpci;
 	/* The bus/device/function triple of the virtual PCI device. */
-	uint16_t vbdf;
+	union pci_bdf vbdf;
 
 	struct pci_pdev pdev;
 
 	uint8_t cfgdata[PCI_REGMAX + 1U];
 
 	/* The bar info of the virtual PCI device. */
-	struct pcibar bar[PCI_BAR_COUNT];
+	struct pci_bar bar[PCI_BAR_COUNT];
 };
 
 struct pci_addr_info {
-	uint16_t cached_bdf;
+	union pci_bdf cached_bdf;
 	uint32_t cached_reg, cached_enable;
 };
 

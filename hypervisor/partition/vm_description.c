@@ -33,42 +33,44 @@ static struct vpci_vdev_array vpci_vdev_array1 = {
 
 	.vpci_vdev_list = {
 	 {/*vdev 0: hostbridge */
-	  .vbdf = PCI_BDF(0x00U, 0x00U, 0x00U),
+	  .vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x0U},
 	  .ops = &pci_ops_vdev_hostbridge,
-	  .bar = {}, /* don't care for hostbridge */
-	  .pdev = {} /* don't care for hostbridge */
+	  .bar = {},
+	  .pdev = {
+		.bdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x0U},
+	  }
 	 },
 
 	 {/*vdev 1*/
-	  .vbdf = PCI_BDF(0x00U, 0x01U, 0x00U),
+	  .vbdf.bits = {.b = 0x00U, .d = 0x01U, .f = 0x0U},
 	  .ops = &pci_ops_vdev_pt,
 	  .bar = {
 		[0] = {
 		.base = 0UL,
-		.size = ALIGN_UP_4K(0x100UL),
-		.type = PCIM_BAR_MEM_32
+		.size = 0x1000UL,
+		.type = PCIBAR_MEM32
 		},
 		[5] = {
 		.base = 0UL,
-		.size = ALIGN_UP_4K(0x2000UL),
-		.type = PCIM_BAR_MEM_32
+		.size = 0x2000UL,
+		.type = PCIBAR_MEM32
 		},
 	  },
-	 .pdev = {
-		.bdf = PCI_BDF(0x00U, 0x01U, 0x00U),
+	  .pdev = {
+		.bdf.bits = {.b = 0x00U, .d = 0x01U, .f = 0x0U},
 		.bar = {
 			[0] = {
 			.base = 0xa9000000UL,
 			.size = 0x100UL,
-			.type = PCIM_BAR_MEM_32
+			.type = PCIBAR_MEM32
 			},
 			[5] = {
 			.base = 0x1a0000000UL,
 			.size = 0x2000UL,
-			.type = PCIM_BAR_MEM_64
+			.type = PCIBAR_MEM64
 			},
-			}
 		}
+	  }
 	 },
 	}
 };
@@ -78,42 +80,42 @@ static struct vpci_vdev_array vpci_vdev_array2 = {
 
 	.vpci_vdev_list = {
 	 {/*vdev 0: hostbridge*/
-	  .vbdf = PCI_BDF(0x00U, 0x00U, 0x00U),
+	  .vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x0U},
 	  .ops = &pci_ops_vdev_hostbridge,
 	  .bar = {}, /* don't care for hostbridge */
 	  .pdev = {} /* don't care for hostbridge */
 	 },
 
 	 {/*vdev 1*/
-	  .vbdf = PCI_BDF(0x00U, 0x01U, 0x00U),
+	  .vbdf.bits = {.b = 0x00U, .d = 0x01U, .f = 0x0U},
 	  .ops = &pci_ops_vdev_pt,
 	  .bar = {
 		[0] = {
 		.base = 0UL,
-		.size = ALIGN_UP_4K(0x100UL),
-		.type = PCIM_BAR_MEM_32
+		.size = 0x1000UL,
+		.type = PCIBAR_MEM32
 		},
 		[5] = {
 		.base = 0UL,
-		.size = ALIGN_UP_4K(0x2000UL),
-		.type = PCIM_BAR_MEM_32
+		.size = 0x2000UL,
+		.type = PCIBAR_MEM32
 		},
-	 },
-	 .pdev = {
-		.bdf = PCI_BDF(0x00U, 0x02U, 0x00U),
+	  },
+	  .pdev = {
+		.bdf.bits = {.b = 0x00U, .d = 0x02U, .f = 0x0U},
 		.bar = {
 			[0] = {
 			.base = 0xa8000000UL,
 			.size = 0x100UL,
-			.type = PCIM_BAR_MEM_32
+			.type = PCIBAR_MEM32
 			},
 			[5] = {
 			.base = 0x1b0000000UL,
 			.size = 0x2000UL,
-			.type = PCIM_BAR_MEM_64
+			.type = PCIBAR_MEM64
 			},
-			}
 		}
+	  }
 	 },
 	}
 };

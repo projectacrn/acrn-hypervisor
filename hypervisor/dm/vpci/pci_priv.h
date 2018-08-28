@@ -33,50 +33,33 @@
 #include <hv_debug.h>
 #include "vpci.h"
 
-#define PCIM_BAR_MEM_BASE   0xfffffff0U
-#define PCI_BAR_BASE(val)   ((val) & PCIM_BAR_MEM_BASE)
-#define PCI_BAR(base, type) ((base) | (type))
+#define PCIM_BAR_MEM_BASE  0xFFFFFFF0U
 
-#define PCI_BUS(bdf)   (((bdf) >> 8) & 0xFFU)
-#define PCI_SLOT(bdf)  (((bdf) >> 3) & 0x1FU)
-#define PCI_FUNC(bdf)  ((bdf) & 0x07U)
-
-#define LOBYTE(w)   ((uint8_t)((w) & 0xffU))
-
-#define PCI_BUSMAX    0xffU
-#define PCI_SLOTMAX   0x1fU
+#define PCI_BUSMAX    0xFFU
+#define PCI_SLOTMAX   0x1FU
 #define PCI_FUNCMAX   0x7U
-
-#define MAXBUSES   (PCI_BUSMAX + 1U)
-#define MAXSLOTS   (PCI_SLOTMAX + 1U)
-#define MAXFUNCS   (PCI_FUNCMAX + 1U)
 
 #define PCIR_VENDOR      0x00U
 #define PCIR_DEVICE      0x02U
 #define PCIR_COMMAND     0x04U
 #define PCIM_CMD_MEMEN   0x0002U
 #define PCIR_REVID       0x08U
-#define PCIR_SUBCLASS    0x0aU
-#define PCIR_CLASS       0x0bU
-#define PCIR_HDRTYPE     0x0eU
+#define PCIR_SUBCLASS    0x0AU
+#define PCIR_CLASS       0x0BU
+#define PCIR_HDRTYPE     0x0EU
 #define PCIM_HDRTYPE_NORMAL   0x00U
 #define PCIM_MFDEV            0x80U
-
-#define PCIR_BARS     0x10U
-#define PCIR_BAR(x)   (PCIR_BARS + ((x) * 4U))
-
-#define PCIM_BAR_MEM_SPACE   0U
 
 #define PCIC_BRIDGE       0x06U
 #define PCIS_BRIDGE_HOST  0x00U
 
-#define PCI_CONFIG_ADDR   0xcf8U
-#define PCI_CONFIG_DATA   0xcfcU
+#define PCI_CONFIG_ADDR   0xCF8U
+#define PCI_CONFIG_DATA   0xCFCU
 
 #define PCI_CFG_ENABLE    0x80000000U
 
-void pci_vdev_cfg_handler(struct vpci *vpci, uint32_t in, uint16_t vbdf,
-	uint32_t offset, uint32_t bytes, uint32_t *val);
+void pci_vdev_cfg_handler(struct vpci *vpci, uint32_t in,
+	union pci_bdf vbdf, uint32_t offset, uint32_t bytes, uint32_t *val);
 
 static inline uint8_t
 pci_vdev_read_cfg_u8(struct pci_vdev *vdev, uint32_t offset)
@@ -147,6 +130,21 @@ static inline void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset,
 	default:
 		pci_vdev_write_cfg_u32(vdev, offset, val);
 		break;
+	}
+}
+
+static inline uint32_t pci_bar_offset(uint32_t idx)
+{
+	return 0x10U + (idx << 2U);
+}
+
+static inline int pci_bar_access(uint32_t offset)
+{
+	if ((offset >= pci_bar_offset(0U))
+		&& (offset < pci_bar_offset(PCI_BAR_COUNT))) {
+		return 1;
+	} else {
+		return 0;
 	}
 }
 
