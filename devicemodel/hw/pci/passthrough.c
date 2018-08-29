@@ -672,6 +672,7 @@ init_msix_table(struct vmctx *ctx, struct passthru_dev *ptdev, uint64_t base)
 	/* Map everything before the MSI-X table */
 	if (table_offset > 0) {
 		len = table_offset;
+		warnx("Map part of MSI-X BAR!\n");
 		error = vm_map_ptdev_mmio(ctx, b, s, f, start, len, base);
 		if (error)
 			return error;
@@ -703,6 +704,7 @@ init_msix_table(struct vmctx *ctx, struct passthru_dev *ptdev, uint64_t base)
 	/* Map everything beyond the end of the MSI-X table */
 	if (remaining > 0) {
 		len = remaining;
+		warnx("Map remaining of MSI-X BAR!\n");
 		error = vm_map_ptdev_mmio(ctx, b, s, f, start, len, base);
 		if (error)
 			return error;
@@ -1064,7 +1066,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	struct passthru_dev *ptdev;
 	uint8_t bus, slot, func;
 	uint16_t virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
-	int vector_cnt = 0;
+	int i, vector_cnt = 0;
 
 	if (!dev->arg) {
 		warnx("%s: passthru_dev is NULL", __func__);
@@ -1093,6 +1095,20 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		vm_reset_ptdev_msix_info(ctx, virt_bdf, vector_cnt);
 		if (ptdev->msix.capoff)
 			free(dev->msix.table);
+	}
+
+	/* unmap the physical BAR in guest MMIO space */
+	for (i = 0; i <= PCI_BARMAX; i++) {
+
+		if (ptdev->bar[i].size == 0 ||
+			i == pci_msix_table_bar(dev) ||
+			ptdev->bar[i].type == PCIBAR_IO)
+			continue;
+
+		vm_unmap_ptdev_mmio(ctx, ptdev->sel.bus,
+				ptdev->sel.dev, ptdev->sel.func,
+				dev->bar[i].addr, ptdev->bar[i].size,
+				ptdev->bar[i].addr);
 	}
 
 	free(ptdev);

@@ -550,6 +550,22 @@ vm_map_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
 }
 
 int
+vm_unmap_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
+		   vm_paddr_t gpa, size_t len, vm_paddr_t hpa)
+{
+	struct vm_memmap memmap;
+
+	bzero(&memmap, sizeof(struct vm_memmap));
+	memmap.type = VM_MMIO;
+	memmap.len = len;
+	memmap.gpa = gpa;
+	memmap.hpa = hpa;
+	memmap.prot = PROT_ALL;
+
+	return ioctl(ctx->fd, IC_UNSET_MEMSEG, &memmap);
+}
+
+int
 vm_setup_ptdev_msi(struct vmctx *ctx, struct acrn_vm_pci_msix_remap *msi_remap)
 {
 	if (!msi_remap)
