@@ -42,6 +42,11 @@
 #define CMOS_VRPMB_START	0x20
 #define CMOS_VRPMB_END		0x9F
 
+/* cmos buffer used to store write/read contents,
+ * and it should not be cleared when reboot
+ */
+static	uint8_t cmos_buffer[CMOS_BUF_SIZE];
+
 /* #define CMOS_DEBUG */
 #ifdef CMOS_DEBUG
 static FILE * dbg_file;
@@ -90,14 +95,14 @@ cmos_io_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		}
 
 		if (in) {
-			*eax = ctx->cmos_buffer[buf_offset];
+			*eax = cmos_buffer[buf_offset];
 			/* read to clear for Key range */
 			if ((buf_offset >= CMOS_VRPMB_START) &&
 			    (buf_offset <= CMOS_VRPMB_END))
-				ctx->cmos_buffer[buf_offset] = 0;
+				cmos_buffer[buf_offset] = 0;
 		}
 		else
-			ctx->cmos_buffer[buf_offset] = (uint8_t)*eax;
+			cmos_buffer[buf_offset] = (uint8_t)*eax;
 
 		next_ops = 0;
 	}
@@ -110,7 +115,7 @@ INOUT_PORT(cmos_io, CMOS_DATA, IOPORT_F_INOUT, cmos_io_handler);
 
 int init_cmos_vrpmb(struct vmctx *ctx)
 {
-	uint8_t *vrpmb_buffer = &ctx->cmos_buffer[CMOS_VRPMB_START];
+	uint8_t *vrpmb_buffer = &cmos_buffer[CMOS_VRPMB_START];
 
 	/* get vrpmb key, and store it to cmos buffer */
 	if (!get_vrpmb_key(vrpmb_buffer, RPMB_KEY_LEN)) {
