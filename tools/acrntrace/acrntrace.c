@@ -154,7 +154,7 @@ static int get_cpu_num(void)
 
 static int create_trace_file_dir(char *dir)
 {
-	int err;
+	int err = 0;
 	char cmd[CMD_MAX_LEN];
 	char time_str[TIME_STR_LEN];
 	time_t timep;
@@ -193,7 +193,7 @@ static int create_trace_file_dir(char *dir)
 
 	pr_dbg("dir %s creted\n", dir);
 
-	return WIFEXITED(err) ? WEXITSTATUS(err) : EXIT_FAILURE;
+	return err;
 }
 
 /* function executed in each consumer thread */
