@@ -287,7 +287,6 @@ else
 fi
 
  acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
-   -l com1,stdio \
    -s 9,virtio-net,$tap \
    -s 3,virtio-blk$boot_dev_flag,/data/$5/$5.img \
    -s 7,passthru,0/15/0 \
