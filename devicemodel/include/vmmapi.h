@@ -63,10 +63,6 @@ struct vmctx {
 	void *atkbdc_base;
 	void *vrtc;
 	void *ioc_dev;
-	/* cmos buffer used to store write/read contents,
-	 * and it should not be cleared when reboot
-	 */
-	uint8_t cmos_buffer[CMOS_BUF_SIZE];
 };
 
 /*
