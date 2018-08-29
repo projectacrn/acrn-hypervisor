@@ -67,6 +67,7 @@ install:
 	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/debugger $(DESTDIR)/usr/bin/
 	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/usercrash_c $(DESTDIR)/usr/bin/
 	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/usercrash_s $(DESTDIR)/usr/bin/
+	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/usercrash-wrapper $(DESTDIR)/usr/bin/
 	@install -p -D -m 0755 data/acrnprobe_prepare.sh $(DESTDIR)/usr/bin/
 	@install -d $(DESTDIR)/usr/lib/systemd/system.conf.d/
 	@install -p -D -m 0644 data/40-watchdog.conf $(DESTDIR)/usr/lib/systemd/system.conf.d/
@@ -93,6 +94,9 @@ uninstall:
 	fi
 	@if [ -e "$(DESTDIR)/usr/bin/usercrash_s" ];then \
 		$(RM) $(DESTDIR)/usr/bin/usercrash_s; \
+	fi
+	@if [ -e "$(DESTDIR)/usr/bin/usercrash-wrapper" ];then \
+		$(RM) $(DESTDIR)/usr/bin/usercrash-wrapper; \
 	fi
 	@if [ -e "$(DESTDIR)/usr/lib/systemd/system.conf.d/40-watchdog.conf" ];then \
 		$(RM) $(DESTDIR)/usr/lib/systemd/system.conf.d/40-watchdog.conf; \

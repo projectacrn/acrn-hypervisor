@@ -4,13 +4,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-# modify the core_pattern
 core_pattern_conf="/proc/sys/kernel/core_pattern"
+crashlog_path="/var/log/crashlog"
 
-grep -q "coredump-wrapper" $core_pattern_conf
-if [ "$?" -ne "0" ] then
-	echo "|/usr/bin/usercrash_c %p %e %s" > $core_pattern_conf
+if [ ! -d $crashlog_path ]; then
+	mkdir -p $crashlog_path
 fi
+
+# backup the default core_pattern
+cat $core_pattern_conf > /var/log/crashlog/default_core_pattern
+
+# update the content of core_pattern, passdown all the parameters
+echo "|/usr/bin/usercrash-wrapper %E %P %u %g %s %t %c %h %e %p %i %I %d" > $core_pattern_conf
 
 default_conf="/usr/share/defaults/telemetrics/telemetrics.conf"
 user_conf="/etc/telemetrics/telemetrics.conf"
