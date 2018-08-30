@@ -7,7 +7,7 @@ Description
 ***********
 
 The ``usercrash`` tool gets the crash info for the crashing process in
-userpace. The collected information is saved as usercrash_xx under
+userspace. The collected information is saved as usercrash_xx under
 ``/var/log/usercrashes/``.
 
 Design

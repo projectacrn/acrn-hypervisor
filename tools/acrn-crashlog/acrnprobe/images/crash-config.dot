@@ -1,0 +1,21 @@
+digraph {
+  {
+     node [shape=plaintext];
+     "level 1" -> "level 2" -> "level 3";
+  }
+
+  node [shape=box;style="rounded,filled";color=AntiqueWhite;];
+  c1 [ label="crash A\nid 1\ncrash root" ];
+  c2 [ label="crash B\nid 2" ];
+  c3 [ label="crash C\nid 3\ncrash leaf" ];
+  c4 [ label="crash D\nid 4\ncrash leaf" ];
+  c5 [ label="crash E\nid 5\ncrash root\ncrash leaf" ];
+  { rank = same; "level 1"; c1; c5;}
+  { rank = same; "level 2"; c2; c4;}
+  { rank = same; "level 3"; c3;}
+
+  node [shape=box;color="transparent";];
+  "None" -> {c1 c5} [ label="inherit 0" ];
+  c1 -> {c2 c4} [ label="inherit 1" ];
+  c2 -> c3 [ label="inherit 2" ];
+}
