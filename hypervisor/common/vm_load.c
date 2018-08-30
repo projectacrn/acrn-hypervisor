@@ -151,7 +151,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	if (is_vcpu_bsp(vcpu)) {
 		/* Set VCPU entry point to kernel entry */
 		vcpu->entry_addr = sw_kernel->kernel_entry_addr;
-		pr_info("%s, VM *d VCPU %hu Entry: 0x%016llx ",
+		pr_info("%s, VM %hu VCPU %hu Entry: 0x%016llx ",
 			__func__, vm->vm_id, vcpu->vcpu_id, vcpu->entry_addr);
 	}
 
