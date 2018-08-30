@@ -79,19 +79,10 @@ telemetrics-client on the system:
    telemetrics daemon. The work flow of ``acrnprobe`` and
    telemetrics-client is shown in :numref:`crashlog-workflow`:
 
-.. graphviz::
+.. graphviz:: images/crashlog-workflow.dot
    :name: crashlog-workflow
    :align: center
    :caption: acrnprobe and telemetrics-client workflow
-
-    digraph {
-       bgcolor=transparent; rankdir=LR;
-       node [shape="rectangle" style="filled" color="lightblue"]
-       edge [fontsize="12" fontcolor="blue"]
-
-       "acrnprobe" -> "telemetrics-client" [label="crashlog\npath"]
-       "telemetrics-client" -> "backend"   [label="log\ncontent"]
-    }
 
 
 Crashlog can be retrieved with ``telem_journal`` command:

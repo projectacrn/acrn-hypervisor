@@ -97,29 +97,10 @@ D inherit from crash A, and crash C is the child of crash B.
 Build crash tree in configuration
 =================================
 
-.. graphviz::
-
-   digraph {
-      {
-         node [shape=plaintext];
-         "level 1" -> "level 2" -> "level 3";
-      }
-
-      node [shape=box;style="rounded,filled";color=AntiqueWhite;];
-      c1 [ label="crash A\nid 1\ncrash root" ];
-      c2 [ label="crash B\nid 2" ];
-      c3 [ label="crash C\nid 3\ncrash leaf" ];
-      c4 [ label="crash D\nid 4\ncrash leaf" ];
-      c5 [ label="crash E\nid 5\ncrash root\ncrash leaf" ];
-      { rank = same; "level 1"; c1; c5;}
-      { rank = same; "level 2"; c2; c4;}
-      { rank = same; "level 3"; c3;}
-
-      node [shape=box;color="transparent";];
-      "None" -> {c1 c5} [ label="inherit 0" ];
-      c1 -> {c2 c4} [ label="inherit 1" ];
-      c2 -> c3 [ label="inherit 2" ];
-   }
+.. graphviz:: images/crash-config.dot
+   :name: crash-config
+   :align: center
+   :caption: Build crash tree in configuration
 
 Match crash at runtime
 ======================
@@ -136,33 +117,10 @@ If a crash A is triggered, then the candidates are crash A, B, C and D.
 The following diagram describes what ``acrnprobe`` will do if the matched
 result is crash D.
 
-.. graphviz::
-
-   digraph {
-      {
-         node [shape=plaintext];
-         "level 1" -> "level 2" -> "level 3";
-      }
-
-      node [shape=box;style="rounded,filled";color=AntiqueWhite;];
-      c1 [ label="crash A\nid 1\ncrash root" ];
-      c2 [ label="crash B\nid 2" ];
-      c3 [ label="crash C\nid 3\ncrash leaf" ];
-      c4 [ label="crash D\nid 4\ncrash leaf" ];
-      { rank = same; "level 1"; c1;}
-      { rank = same; "level 2"; c2; c4;}
-      { rank = same; "level 3"; c3;}
-
-      node [shape=box;style="rounded,dashed";];
-      exp1 [ label="crash B matches fail\nmatch for the next child\nof crash A"];
-      exp2 [ label="crash D matches successfully\nreturn crash D"];
-
-      node [shape=box;style="invis";];
-      "channel" -> c1 [ label="trigger" ]
-      c1 -> {exp1 exp2}
-      exp1 -> c2 -> c3 [ style=dashed dir=none]
-      exp2 -> c4
-   }
+.. graphviz:: images/crash-match.dot
+   :name: crash-match
+   :align: center
+   :caption: Match crash at runtime
 
 Sections
 ********

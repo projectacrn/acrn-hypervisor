@@ -42,7 +42,7 @@ doxy:
 	$(Q)(cat acrn.doxyfile) | doxygen - > doc.log 2>&1
 
 content:
-	$(Q)scripts/extract_content.py
+	$(Q)scripts/extract_content.py . tools
 
 kconfig:
 	$(Q)srctree=../hypervisor \
