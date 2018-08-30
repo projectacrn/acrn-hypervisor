@@ -2240,7 +2240,7 @@ int decode_instruction(struct vcpu *vcpu)
 	retval = vie_init(&emul_ctxt->vie, vcpu);
 	if (retval < 0) {
 		if (retval != -EFAULT) {
-			pr_err("decode instruction failed @ 0x%016llx:",
+			pr_err("init vie failed @ 0x%016llx:",
 				vcpu_get_rip(vcpu));
 		}
 		return retval;

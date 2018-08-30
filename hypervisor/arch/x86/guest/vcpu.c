@@ -182,7 +182,7 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	ASSERT(vm != NULL, "");
 	ASSERT(rtn_vcpu_handle != NULL, "");
 
-	pr_info("Creating VCPU %hu", pcpu_id);
+	pr_info("Creating VCPU working on PCPU%hu", pcpu_id);
 
 	/* Allocate memory for VCPU */
 	vcpu = calloc(1U, sizeof(struct vcpu));
