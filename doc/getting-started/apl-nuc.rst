@@ -201,7 +201,7 @@ partition. Follow these steps:
 
    A starter acrn.conf configuration file is included in the Clear Linux release and is
    also available in the acrn-hypervisor/hypervisor GitHub repo as `acrn.conf
-   <https://github.com/projectacrn/acrn-hypervisor/hypervisor/tree/master/bsp/uefi/clearlinux/acrn.conf>`__
+   <https://github.com/projectacrn/acrn-hypervisor/blob/master/hypervisor/bsp/uefi/clearlinux/acrn.conf>`__
    as shown here:
 
    .. literalinclude:: ../../hypervisor/bsp/uefi/clearlinux/acrn.conf
