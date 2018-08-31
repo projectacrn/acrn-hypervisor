@@ -32,10 +32,14 @@
 /* Memory mapped registers */
 #define ESB_TIMER1_REG	0x00 /* Timer1 value after each reset */
 #define ESB_TIMER2_REG	0x04 /* Timer2 value after each reset */
+#define ESB_GIS_REG	0x08 /* General Interrupt Status register */
 #define ESB_RELOAD_REG	0x0c /* Reload register */
 
 #define ESB_WDT_ENABLE	(0x01 << 1)   /* Enable WDT */
 #define ESB_WDT_LOCK	(0x01 << 0)   /* Lock (nowayout) */
+
+#define ESB_WDT_INT_ACT	(0x01 << 0)   /* WDT INT is active */
+#define ESB_WDT_INT_MSK	0x3           /* WDT INT TYPE mask */
 
 #define ESB_WDT_REBOOT	(0x01 << 5)   /* Enable reboot on timeout */
 #define ESB_WDT_RELOAD	(0x01 << 8)   /* Ping/kick dog  */
@@ -77,6 +81,8 @@ struct info_wdt {
 	struct acrn_timer timer;
 
 	bool reboot_enabled;/* "reboot" on wdt out */
+	bool intr_enabled;  /* "intr" on wdt stage 1 time out */
+	bool intr_active;   /* interrupt is active */
 
 	bool locked;        /* If true, enabled field cannot be changed. */
 	bool wdt_enabled;   /* If true, watchdog is enabled. */
@@ -106,10 +112,22 @@ static void start_wdt_timer(void);
 static void
 wdt_expired_handler(void *arg)
 {
+	struct pci_vdev *dev = (struct pci_vdev *)arg;
+
 	DPRINTF("wdt timer out! stage=%d, reboot=%d\n",
 		wdt_state.stage, wdt_state.reboot_enabled);
 
 	if (wdt_state.stage == 1) {
+		if (wdt_state.intr_enabled) {
+
+			if (pci_msi_enabled(dev))
+				pci_generate_msi(dev, 0);
+			else
+				pci_lintr_assert(dev);
+
+			wdt_state.intr_active = true;
+		}
+
 		wdt_state.stage = 2;
 		start_wdt_timer();
 	} else {
@@ -202,6 +220,7 @@ pci_wdt_cfg_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 
 	if (offset == ESB_CONFIG_REG && bytes == 2) {
 		wdt_state.reboot_enabled = ((val & ESB_WDT_REBOOT) == 0);
+		wdt_state.intr_enabled = ((val & ESB_WDT_INT_MSK) == 0);
 		need_cfg = 0;
 
 	} else if (offset == ESB_LOCK_REG && bytes == 1) {
@@ -232,7 +251,18 @@ pci_wdt_bar_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	DPRINTF("%s: addr = 0x%x, val = 0x%x, size=%d\n",
 		__func__, (int) offset, (int)value, size);
 
-	if (offset == ESB_RELOAD_REG) {
+	if (offset == ESB_GIS_REG) {
+		if ((value & ESB_WDT_INT_ACT) == 1) {
+
+			wdt_state.intr_active = false;
+
+			if ((wdt_state.intr_enabled == true)
+					&& (dev->lintr.state == ASSERTED)) {
+				pci_lintr_deassert(dev);
+				DPRINTF("%s: intr deasserted\n\r", __func__);
+			}
+		}
+	} else if (offset == ESB_RELOAD_REG) {
 		assert(size == 2);
 
 		if (value == ESB_UNLOCK1)
@@ -273,7 +303,12 @@ pci_wdt_bar_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	assert(baridx == 0);
 	DPRINTF("%s: addr = 0x%x, size=%d\n\r", __func__, (int) offset, size);
 
-	if (offset == ESB_RELOAD_REG) {
+	if (offset == ESB_GIS_REG) {
+		if ((wdt_state.intr_enabled == true)
+				&& (wdt_state.intr_active == true))
+			ret |= ESB_WDT_INT_ACT;
+
+	} else if (offset == ESB_RELOAD_REG) {
 		assert(size == 2);
 
 		DPRINTF("%s: timeout: %d\n\r", __func__, wdt_timeout);
@@ -303,6 +338,8 @@ pci_wdt_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	wdt_state.reboot_enabled = true;
+	wdt_state.intr_enabled = false;
+	wdt_state.intr_active = false;
 	wdt_state.locked = false;
 	wdt_state.wdt_armed = false;
 	wdt_state.wdt_enabled = false;
@@ -320,6 +357,9 @@ pci_wdt_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_set_cfgdata8(dev, PCIR_CLASS, PCIC_BASEPERIPH);
 	pci_set_cfgdata8(dev, PCIR_SUBCLASS, PCIS_BASEPERIPH_OTHER);
 
+	pci_emul_add_msicap(dev, 1);
+	pci_lintr_request(dev);
+
 #ifdef WDT_DEBUG
 	dbg_file = fopen("/tmp/wdt_log", "w+");
 #endif
@@ -336,6 +376,9 @@ pci_wdt_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	acrn_timer_deinit(&wdt_state.timer);
 
 	memset(&wdt_state, 0, sizeof(wdt_state));
+
+	pci_lintr_release(dev);
+
 }
 
 /* stop/reset watchdog will be invoked during guest enter/exit S3.
