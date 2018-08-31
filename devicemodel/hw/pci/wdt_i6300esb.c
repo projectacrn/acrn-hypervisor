@@ -41,15 +41,30 @@
 #define ESB_WDT_REBOOT	(0x01 << 5)   /* Enable reboot on timeout */
 #define ESB_WDT_RELOAD	(0x01 << 8)   /* Ping/kick dog  */
 #define	ESB_WDT_TIMEOUT	(0x01 << 9)   /* WDT timeout happened? */
-#define TIMER_TO_SECONDS(val)	(val >> 9)
+
+/* Per i6300esb spec, in default watchdog timer prescaler
+ * the 20-bit Preload Value is loaded into bits 34:15 of the
+ * main down counter. The resulting timer clock is the PCI
+ * Clock (33 MHz) divided by 2^^15 . The approximate clock
+ * generated is 1 KHz, so right shift 10 bits of preload value
+ * to get the exact seconds for this timer.
+ */
+#define TIMER_TO_SECONDS(val)	(val >> 10)
 
 /* Magic constants */
 #define ESB_UNLOCK1	0x80   /* Step 1 to unlock reset registers  */
 #define ESB_UNLOCK2	0x86   /* Step 2 to unlock reset registers  */
 
 #define WDT_TIMER_SIG			0x55AA
+
+/* the default 20-bit preload value */
 #define DEFAULT_MAX_TIMER_VAL		0x000FFFFF
-#define	DEFAULT_RESET_TIMER_VAL		60
+
+/* stage timer is set to 60s after reset, then left shift 10 bits of seconds
+ * to transform to the preload value of the watchdog timer which run in
+ * 1KHz clock.
+ */
+#define	DEFAULT_RESET_TIMER_VAL		(60 << 10)
 
 /* for debug */
 /* #define WDT_DEBUG */
