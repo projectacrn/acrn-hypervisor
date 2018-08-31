@@ -252,6 +252,7 @@ enum cbc_rx_signal_id {
 	CBC_SIG_ID_HTUST	= 20025,	/* HvacTemperatureUnitsSetting */
 	CBC_SIG_ID_HVSST	= 20026,	/* HvacVentilationSeatSetting */
 	CBC_SIG_ID_HRAST	= 20027,	/* HvacRecirculationAutomaticSetting */
+	CBC_SIG_ID_USBVBUS	= 20028,	/* SupportUsbOtgVbusControl */
 	CBC_SIG_ID_VICL		= 651,		/* VideoInCtrl */
 };
 

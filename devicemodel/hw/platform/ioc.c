@@ -533,6 +533,7 @@ static struct cbc_signal cbc_rx_signal_table[] = {
 	{(uint16_t)CBC_SIG_ID_HTUST,	32,	CBC_ACTIVE},
 	{(uint16_t)CBC_SIG_ID_HVSST,	32,	CBC_ACTIVE},
 	{(uint16_t)CBC_SIG_ID_HRAST,	32,	CBC_ACTIVE},
+	{(uint16_t)CBC_SIG_ID_USBVBUS,  1,      CBC_ACTIVE},
 	{(uint16_t)CBC_SIG_ID_VICL,	8,	CBC_ACTIVE},
 };
 
@@ -572,6 +573,7 @@ static struct wlist_signal wlist_rx_signal_table[] = {
 	{(uint16_t)CBC_SIG_ID_HTUST,	DEFAULT_WLIST_NODE},
 	{(uint16_t)CBC_SIG_ID_HVSST,	DEFAULT_WLIST_NODE},
 	{(uint16_t)CBC_SIG_ID_HRAST,	DEFAULT_WLIST_NODE},
+	{(uint16_t)CBC_SIG_ID_USBVBUS,  DEFAULT_WLIST_NODE},
 };
 
 static struct wlist_signal wlist_tx_signal_table[] = {
