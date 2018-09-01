@@ -10,6 +10,7 @@ Developer Guides
    primer
    GVT-g-porting
    trusty
+   l1tf
    ../api/index
    ../reference/kconfig/index
 
