@@ -349,22 +349,22 @@ void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
 }
 
 /* Read MSR */
-#define CPU_MSR_READ(reg, msr_val_ptr)                      \
-{                                                           \
-	uint32_t  msrl, msrh;                                 \
-	asm volatile (" rdmsr ":"=a"(msrl),                 \
-			"=d"(msrh) : "c" (reg));            \
-	*msr_val_ptr = ((uint64_t)msrh<<32) | msrl;           \
+static inline void cpu_msr_read(uint32_t reg, uint64_t *msr_val_ptr)
+{
+	uint32_t  msrl, msrh;
+
+	asm volatile (" rdmsr ":"=a"(msrl), "=d"(msrh) : "c" (reg));
+	*msr_val_ptr = ((uint64_t)msrh << 32U) | msrl;
 }
 
 /* Write MSR */
-#define CPU_MSR_WRITE(reg, msr_val)                         \
-{                                                           \
-	uint32_t msrl, msrh;                                  \
-	msrl = (uint32_t)msr_val;                             \
-	msrh = (uint32_t)(msr_val >> 32);                     \
-	asm volatile (" wrmsr " : : "c" (reg),              \
-			"a" (msrl), "d" (msrh));            \
+static inline void cpu_msr_write(uint32_t reg, uint64_t msr_val)
+{
+	uint32_t msrl, msrh;
+
+	msrl = (uint32_t)msr_val;
+	msrh = (uint32_t)(msr_val >> 32U);
+	asm volatile (" wrmsr " : : "c" (reg), "a" (msrl), "d" (msrh));
 }
 
 #ifdef CONFIG_PARTITION_MODE
@@ -388,10 +388,11 @@ void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
 #endif
 
 /* This macro writes the stack pointer. */
-#define CPU_SP_WRITE(stack_ptr)                             \
-{                                                           \
-	uint64_t rsp = (uint64_t)stack_ptr & ~(CPU_STACK_ALIGN - 1UL);  \
-	asm volatile ("movq %0, %%rsp" : : "r"(rsp));             \
+static inline void cpu_sp_write(uint64_t *stack_ptr)
+{
+	uint64_t rsp = (uint64_t)stack_ptr & ~(CPU_STACK_ALIGN - 1UL);
+
+	asm volatile ("movq %0, %%rsp" : : "r"(rsp));
 }
 
 /* Synchronizes all read accesses from memory */
@@ -419,12 +420,13 @@ void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
 }
 
 /* Read time-stamp counter / processor ID */
-#define CPU_RDTSCP_EXECUTE(timestamp_ptr, cpu_id_ptr)       \
-{                                                           \
-	uint32_t  tsl, tsh;                                   \
-	asm volatile ("rdtscp":"=a"(tsl), "=d"(tsh),        \
-			"=c"(*cpu_id_ptr));                 \
-	*timestamp_ptr = ((uint64_t)tsh << 32) | tsl;         \
+static inline void
+cpu_rdtscp_execute(uint64_t *timestamp_ptr, uint32_t *cpu_id_ptr)
+{
+	uint32_t tsl, tsh;
+
+	asm volatile ("rdtscp":"=a"(tsl), "=d"(tsh), "=c"(*cpu_id_ptr));
+	*timestamp_ptr = ((uint64_t)tsh << 32U) | tsl;
 }
 
 /* Macro to save rflags register */
@@ -500,21 +502,19 @@ static inline uint64_t cpu_rbp_get(void)
 	return ret;
 }
 
-
-
 static inline uint64_t
 msr_read(uint32_t reg_num)
 {
 	uint64_t msr_val;
 
-	CPU_MSR_READ(reg_num, &msr_val);
+	cpu_msr_read(reg_num, &msr_val);
 	return msr_val;
 }
 
 static inline void
 msr_write(uint32_t reg_num, uint64_t value64)
 {
-	CPU_MSR_WRITE(reg_num, value64);
+	cpu_msr_write(reg_num, value64);
 }
 
 static inline void

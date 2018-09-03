@@ -336,9 +336,9 @@ int32_t pio_instr_vmexit_handler(struct vcpu *vcpu)
 	exit_qual = vcpu->arch_vcpu.exit_qualification;
 
 	io_req->type = REQ_PORTIO;
-	pio_req->size = VM_EXIT_IO_INSTRUCTION_SIZE(exit_qual) + 1UL;
-	pio_req->address = VM_EXIT_IO_INSTRUCTION_PORT_NUMBER(exit_qual);
-	if (VM_EXIT_IO_INSTRUCTION_ACCESS_DIRECTION(exit_qual) == 0UL) {
+	pio_req->size = vm_exit_io_instruction_size(exit_qual) + 1UL;
+	pio_req->address = vm_exit_io_instruction_port_number(exit_qual);
+	if (vm_exit_io_instruction_access_direction(exit_qual) == 0UL) {
 		pio_req->direction = REQUEST_WRITE;
 		pio_req->value = (uint32_t)vcpu_get_gpreg(vcpu, CPU_REG_RAX);
 	} else {

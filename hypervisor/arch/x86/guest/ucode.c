@@ -23,8 +23,11 @@ uint64_t get_microcode_version(void)
  * According to SDM vol 3 Table 9-7. If data_size field of uCode
  * header is zero, the ucode length is 2000
  */
-#define	UCODE_GET_DATA_SIZE(uhdr)	\
-	((uhdr.data_size != 0U) ? uhdr.data_size : 2000U)
+static inline size_t get_ucode_data_size(struct ucode_header *uhdr)
+{
+	return ((uhdr->data_size != 0U) ? uhdr->data_size : 2000U);
+}
+
 void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 {
 	uint64_t gva, fault_addr;
@@ -47,7 +50,7 @@ void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 		return;
 	}
 
-	data_size = UCODE_GET_DATA_SIZE(uhdr) + sizeof(struct ucode_header);
+	data_size = get_ucode_data_size(&uhdr) + sizeof(struct ucode_header);
 	data_page_num =
 		((data_size + CPU_PAGE_SIZE) - 1U) >> CPU_PAGE_SHIFT;
 
