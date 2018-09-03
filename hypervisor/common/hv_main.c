@@ -70,7 +70,7 @@ void vcpu_thread(struct vcpu *vcpu)
 
 		/* Restore guest TSC_AUX */
 		if (vcpu->launched) {
-			CPU_MSR_WRITE(MSR_IA32_TSC_AUX,
+			cpu_msr_write(MSR_IA32_TSC_AUX,
 					vcpu->msr_tsc_aux_guest);
 		}
 
@@ -87,9 +87,9 @@ void vcpu_thread(struct vcpu *vcpu)
 
 		vcpu->arch_vcpu.nrexits++;
 		/* Save guest TSC_AUX */
-		CPU_MSR_READ(MSR_IA32_TSC_AUX, &vcpu->msr_tsc_aux_guest);
+		cpu_msr_read(MSR_IA32_TSC_AUX, &vcpu->msr_tsc_aux_guest);
 		/* Restore native TSC_AUX */
-		CPU_MSR_WRITE(MSR_IA32_TSC_AUX, tsc_aux_hyp_cpu);
+		cpu_msr_write(MSR_IA32_TSC_AUX, tsc_aux_hyp_cpu);
 
 		CPU_IRQ_ENABLE();
 		/* Dispatch handler */
