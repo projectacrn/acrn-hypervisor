@@ -30,6 +30,8 @@ uint64_t pcpu_active_bitmap = 0UL;
 
 /* X2APIC mode is disabled by default. */
 bool x2apic_enabled = false;
+static bool skip_l1dfl_vmentry;
+static uint64_t x86_arch_capabilities;
 
 /* TODO: add more capability per requirement */
 /* APICv features */
@@ -418,6 +420,18 @@ void bsp_boot_init(void)
 
 static bool check_cpu_security_config(void)
 {
+	if (cpu_has_cap(X86_FEATURE_ARCH_CAP)) {
+		x86_arch_capabilities = msr_read(MSR_IA32_ARCH_CAPABILITIES);
+		skip_l1dfl_vmentry = ((x86_arch_capabilities
+			& IA32_ARCH_CAP_SKIP_L1DFL_VMENTRY) != 0UL);
+	} else {
+		return false;
+	}
+
+	if ((!cpu_has_cap(X86_FEATURE_L1D_FLUSH)) && (!skip_l1dfl_vmentry)) {
+		return false;
+	}
+
 	if (!cpu_has_cap(X86_FEATURE_IBRS_IBPB) &&
 		!cpu_has_cap(X86_FEATURE_STIBP)) {
 		return false;

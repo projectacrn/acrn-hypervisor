@@ -44,6 +44,8 @@
 #define MSR_IA32_APERF                      0x000000E8U
 /* Actual performance clock counter */
 #define MSR_IA32_MTRR_CAP                   0x000000FEU	/* MTRR capability */
+#define MSR_IA32_ARCH_CAPABILITIES          0x0000010AU
+#define MSR_IA32_FLUSH_CMD                  0x0000010BU
 #define MSR_IA32_SYSENTER_CS                0x00000174U	/* CS for sysenter */
 #define MSR_IA32_SYSENTER_ESP               0x00000175U	/* ESP for sysenter */
 #define MSR_IA32_SYSENTER_EIP               0x00000176U	/* EIP for sysenter */
@@ -566,5 +568,15 @@ static inline bool pat_mem_type_invalid(uint64_t x)
 #define SPEC_ENABLE_IBRS		(1U<<0U)
 #define SPEC_ENABLE_STIBP		(1U<<1U)
 #define PRED_SET_IBPB			(1U<<0U)
+
+/* IA32 ARCH Capabilities bit */
+#define IA32_ARCH_CAP_RDCL_NO			(1U << 0U)
+#define IA32_ARCH_CAP_IBRS_ALL			(1U << 1U)
+#define IA32_ARCH_CAP_RSBA			(1U << 2U)
+#define IA32_ARCH_CAP_SKIP_L1DFL_VMENTRY	(1U << 3U)
+#define IA32_ARCH_CAP_SSB_NO			(1U << 4U)
+
+/* Flush L1 D-cache */
+#define IA32_L1D_FLUSH		(1UL << 0U)
 
 #endif /* MSR_H */
