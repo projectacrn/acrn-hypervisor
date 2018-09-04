@@ -451,6 +451,16 @@ a guest's vMSI. The handler then injects the corresponding virtual
 interrupt into the guest, based on vPIC/vIOAPIC/vLAPIC APIs described
 earlier.
 
+Interrupt Storm Mitigation
+==========================
+
+When the Device Model (DM) launches a User OS (UOS), the ACRN hypervisor
+will remap the interrupt for this user OS's pass-through devices. When
+an interrupt occurs for a pass-through device, the CPU core is assigned
+to that User OS gets trapped into the hypervisor. The benefit of such a
+mechanism is that, should an interrupt storm happen in a particular UOS,
+it will have only a minimal effect on the performance of the Service OS.
+
 Interrupt/Exception Injection Process
 =====================================
 
