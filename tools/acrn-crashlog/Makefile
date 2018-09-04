@@ -67,8 +67,8 @@ install:
 	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/debugger $(DESTDIR)/usr/bin/
 	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/usercrash_c $(DESTDIR)/usr/bin/
 	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/usercrash_s $(DESTDIR)/usr/bin/
-	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/usercrash-wrapper $(DESTDIR)/usr/bin/
 	@install -p -D -m 0755 data/acrnprobe_prepare.sh $(DESTDIR)/usr/bin/
+	@install -p -D -m 0755 data/usercrash-wrapper $(DESTDIR)/usr/bin/
 	@install -d $(DESTDIR)/usr/lib/systemd/system.conf.d/
 	@install -p -D -m 0644 data/40-watchdog.conf $(DESTDIR)/usr/lib/systemd/system.conf.d/
 	@install -d $(DESTDIR)/usr/share/defaults/telemetrics/
