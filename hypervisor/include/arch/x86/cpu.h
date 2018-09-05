@@ -334,18 +334,18 @@ void stop_cpus(void);
 void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
 
 /* Read control register */
-#define CPU_CR_READ(cr, result_ptr)                         \
-{                                                           \
-	asm volatile ("mov %%" __CPP_STRING(cr) ", %0"      \
-			: "=r"(*result_ptr));               \
+#define CPU_CR_READ(cr, result_ptr)				\
+{								\
+	asm volatile ("mov %%" STRINGIFY(cr) ", %0"		\
+			: "=r"(*(result_ptr)));			\
 }
 
 /* Write control register */
-#define CPU_CR_WRITE(cr, value)                             \
-{                                                           \
-	asm volatile ("mov %0, %%" __CPP_STRING(cr)         \
-			: /* No output */                   \
-			: "r"(value));                      \
+#define CPU_CR_WRITE(cr, value)					\
+{								\
+	asm volatile ("mov %0, %%" STRINGIFY(cr)		\
+			: /* No output */			\
+			: "r"(value));				\
 }
 
 /* Read MSR */

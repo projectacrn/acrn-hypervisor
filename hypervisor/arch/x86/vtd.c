@@ -85,20 +85,6 @@ dmar_set_bitslice(uint64_t var, uint64_t mask,
 
 #define DMAR_OP_TIMEOUT CYCLES_PER_MS
 
-#define DMAR_WAIT_COMPLETION(offset, condition, status) \
-	do {                                                \
-                /* variable start isn't used when built as release version */ \
-		__unused uint64_t start = rdtsc();             \
-		while (1) {                                     \
-			status = iommu_read32(dmar_uint, offset);   \
-			if (condition)                              \
-				break;                                  \
-			ASSERT(((rdtsc() - start) < CYCLES_PER_MS),        \
-				"DMAR OP Timeout!");   \
-			asm volatile ("pause" ::: "memory");        \
-		}                                               \
-	} while (0)
-
 enum dmar_cirg_type {
 	DMAR_CIRG_RESERVED = 0,
 	DMAR_CIRG_GLOBAL,
@@ -223,6 +209,36 @@ static void iommu_write64(struct dmar_drhd_rt *dmar_uint, uint32_t offset,
 
 	temp = (uint32_t)(value >> 32U);
 	mmio_write32(temp, HPA2HVA(dmar_uint->drhd->reg_base_addr + offset + 4U));
+}
+
+static inline void
+dmar_wait_completion(struct dmar_drhd_rt *dmar_uint, uint32_t offset,
+	uint32_t mask, bool pre_condition, uint32_t *status)
+{
+	/* variable start isn't used when built as release version */
+	__unused uint64_t start = rdtsc();
+	bool condition, temp_condition;
+
+	while (1) {
+		*status = iommu_read32(dmar_uint, offset);
+		temp_condition = ((*status & mask) == 0U) ? true : false;
+
+		/*
+		 * pre_condition    temp_condition    | condition
+		 * -----------------------------------|----------
+		 * true             true              | true
+		 * true             false             | false
+		 * false            true              | false
+		 * false            false             | true
+		 */
+		condition = (temp_condition == pre_condition) ? true : false;
+
+		if (condition)
+			break;
+		ASSERT(((rdtsc() - start) < CYCLES_PER_MS),
+			"DMAR OP Timeout!");
+		asm volatile ("pause" ::: "memory");
+	}
 }
 
 /* flush cache when root table, context table updated */
@@ -355,8 +371,8 @@ static void dmar_enable_translation(struct dmar_drhd_rt *dmar_uint)
 	iommu_write32(dmar_uint, DMAR_GCMD_REG, dmar_uint->gcmd);
 
 	/* 32-bit register */
-	DMAR_WAIT_COMPLETION(DMAR_GSTS_REG, (status & DMA_GSTS_TES) != 0U, status);
-
+	dmar_wait_completion(dmar_uint, DMAR_GSTS_REG, DMA_GSTS_TES, false,
+				&status);
 
 	status = iommu_read32(dmar_uint, DMAR_GSTS_REG);
 
@@ -374,7 +390,9 @@ static void dmar_disable_translation(struct dmar_drhd_rt *dmar_uint)
 	iommu_write32(dmar_uint, DMAR_GCMD_REG, dmar_uint->gcmd);
 
 	/* 32-bit register */
-	DMAR_WAIT_COMPLETION(DMAR_GSTS_REG, (status & DMA_GSTS_TES) == 0U, status);
+	dmar_wait_completion(dmar_uint, DMAR_GSTS_REG, DMA_GSTS_TES, true,
+				&status);
+
 	IOMMU_UNLOCK(dmar_uint);
 }
 
@@ -530,7 +548,8 @@ static void dmar_write_buffer_flush(struct dmar_drhd_rt *dmar_uint)
 			  dmar_uint->gcmd | DMA_GCMD_WBF);
 
 	/* read lower 32 bits to check */
-	DMAR_WAIT_COMPLETION(DMAR_GSTS_REG, (status & DMA_GSTS_WBFS) == 0U, status);
+	dmar_wait_completion(dmar_uint, DMAR_GSTS_REG, DMA_GSTS_WBFS, true,
+				&status);
 	IOMMU_UNLOCK(dmar_uint);
 }
 
@@ -565,8 +584,8 @@ static void dmar_invalid_context_cache(struct dmar_drhd_rt *dmar_uint,
 	IOMMU_LOCK(dmar_uint);
 	iommu_write64(dmar_uint, DMAR_CCMD_REG, cmd);
 	/* read upper 32bits to check */
-	DMAR_WAIT_COMPLETION(DMAR_CCMD_REG + 4U, (status & DMA_CCMD_ICC_32) == 0U,
-				 status);
+	dmar_wait_completion(dmar_uint, DMAR_CCMD_REG + 4U, DMA_CCMD_ICC_32,
+				true, &status);
 
 	IOMMU_UNLOCK(dmar_uint);
 
@@ -615,8 +634,8 @@ static void dmar_invalid_iotlb(struct dmar_drhd_rt *dmar_uint,
 
 	iommu_write64(dmar_uint, dmar_uint->ecap_iotlb_offset + 8U, cmd);
 	/* read upper 32bits to check */
-	DMAR_WAIT_COMPLETION(dmar_uint->ecap_iotlb_offset + 12U,
-				 (status & DMA_IOTLB_IVT_32) == 0U, status);
+	dmar_wait_completion(dmar_uint, dmar_uint->ecap_iotlb_offset + 12U,
+				DMA_IOTLB_IVT_32, true, &status);
 	IOMMU_UNLOCK(dmar_uint);
 
 	if (dma_iotlb_get_iaig_32(status) == 0U) {
@@ -651,7 +670,8 @@ static void dmar_set_root_table(struct dmar_drhd_rt *dmar_uint)
 			dmar_uint->gcmd | DMA_GCMD_SRTP);
 
 	/* 32-bit register */
-	DMAR_WAIT_COMPLETION(DMAR_GSTS_REG, (status & DMA_GSTS_RTPS) != 0U, status);
+	dmar_wait_completion(dmar_uint, DMAR_GSTS_REG, DMA_GSTS_RTPS, false,
+				&status);
 	IOMMU_UNLOCK(dmar_uint);
 }
 

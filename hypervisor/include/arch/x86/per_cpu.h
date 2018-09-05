@@ -57,7 +57,7 @@ extern uint64_t pcpu_active_bitmap;
  * get percpu data for pcpu_id.
  */
 #define per_cpu(name, pcpu_id)	\
-	(per_cpu_data_base_ptr[pcpu_id].name)
+	(per_cpu_data_base_ptr[(pcpu_id)].name)
 
 /* get percpu data for current pcpu */
 #define get_cpu_var(name)	per_cpu(name, get_cpu_id())

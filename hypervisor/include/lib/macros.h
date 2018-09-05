@@ -8,9 +8,7 @@
 #define MACROS_H
 
 /** Replaces 'x' by the string "x". */
-#define __CPP_STRING(x) #x
-/** Replaces 'x' by its value. */
-#define CPP_STRING(x) __CPP_STRING(x)
+#define STRINGIFY(x) #x
 
 /* Macro used to check if a value is aligned to the required boundary.
  * Returns TRUE if aligned; FALSE if not aligned

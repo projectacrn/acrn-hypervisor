@@ -112,11 +112,11 @@ static inline void list_splice_init(struct list_head *list,
 	((type *)((char *)(ptr)-(uint64_t)(&((type *)0)->member)))
 
 #define list_for_each(pos, head) \
-	for (pos = (head)->next; pos != (head); pos = pos->next)
+	for ((pos) = (head)->next; (pos) != (head); (pos) = (pos)->next)
 
 #define list_for_each_safe(pos, n, head) \
-	for (pos = (head)->next, n = pos->next; pos != (head); \
-		pos = n, n = pos->next)
+	for ((pos) = (head)->next, (n) = (pos)->next; (pos) != (head); \
+		(pos) = (n), (n) = (pos)->next)
 
 #define get_first_item(attached, type, member) \
 	((type *)((char *)((attached)->next)-(uint64_t)(&((type *)0)->member)))
