@@ -66,11 +66,11 @@ struct ptdev_remapping_info {
 extern struct list_head ptdev_list;
 extern spinlock_t ptdev_lock;
 
-void ptdev_softirq(__unused uint16_t cpu_id);
+void ptdev_softirq(uint16_t pcpu_id);
 void ptdev_init(void);
 void ptdev_release_all_entries(struct vm *vm);
 
-struct ptdev_remapping_info *ptdev_dequeue_softirq(void);
+struct ptdev_remapping_info *ptdev_dequeue_softirq(struct vm *vm);
 struct ptdev_remapping_info *alloc_entry(struct vm *vm,
 		uint32_t intr_type);
 void release_entry(struct ptdev_remapping_info *entry);

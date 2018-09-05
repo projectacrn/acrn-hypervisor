@@ -8,52 +8,49 @@
 #include <softirq.h>
 #include <ptdev.h>
 
-/* SOFTIRQ_PTDEV list for all CPUs */
-static struct list_head softirq_dev_entry_list;
 /* passthrough device link */
 struct list_head ptdev_list;
 spinlock_t ptdev_lock;
 
 /*
- * entry could both be in ptdev_list and softirq_dev_entry_list.
+ * entry could both be in ptdev_list and vm->softirq_dev_entry_list.
  * When release entry, we need make sure entry deleted from both
  * lists. We have to require two locks and the lock sequence is:
  *   ptdev_lock
- *     softirq_dev_lock
+ *     vm->softirq_dev_lock
  */
-static spinlock_t softirq_dev_lock;
 
 static void ptdev_enqueue_softirq(struct ptdev_remapping_info *entry)
 {
 	uint64_t rflags;
 
 	/* enqueue request in order, SOFTIRQ_PTDEV will pickup */
-	spinlock_irqsave_obtain(&softirq_dev_lock, &rflags);
+	spinlock_irqsave_obtain(&entry->vm->softirq_dev_lock, &rflags);
 
 	/* avoid adding recursively */
 	list_del(&entry->softirq_node);
 	/* TODO: assert if entry already in list */
 	list_add_tail(&entry->softirq_node,
-			&softirq_dev_entry_list);
-	spinlock_irqrestore_release(&softirq_dev_lock, rflags);
+			&entry->vm->softirq_dev_entry_list);
+	spinlock_irqrestore_release(&entry->vm->softirq_dev_lock, rflags);
 	fire_softirq(SOFTIRQ_PTDEV);
 }
 
 struct ptdev_remapping_info*
-ptdev_dequeue_softirq(void)
+ptdev_dequeue_softirq(struct vm *vm)
 {
 	uint64_t rflags;
 	struct ptdev_remapping_info *entry = NULL;
 
-	spinlock_irqsave_obtain(&softirq_dev_lock, &rflags);
+	spinlock_irqsave_obtain(&vm->softirq_dev_lock, &rflags);
 
-	if (!list_empty(&softirq_dev_entry_list)) {
-		entry = get_first_item(&softirq_dev_entry_list,
+	if (!list_empty(&vm->softirq_dev_entry_list)) {
+		entry = get_first_item(&vm->softirq_dev_entry_list,
 			struct ptdev_remapping_info, softirq_node);
 		list_del_init(&entry->softirq_node);
 	}
 
-	spinlock_irqrestore_release(&softirq_dev_lock, rflags);
+	spinlock_irqrestore_release(&vm->softirq_dev_lock, rflags);
 	return entry;
 }
 
@@ -91,9 +88,9 @@ release_entry(struct ptdev_remapping_info *entry)
 	 * remove entry from softirq list.the ptdev_lock
 	 * is required before calling release_entry.
 	 */
-	spinlock_irqsave_obtain(&softirq_dev_lock, &rflags);
+	spinlock_irqsave_obtain(&entry->vm->softirq_dev_lock, &rflags);
 	list_del_init(&entry->softirq_node);
-	spinlock_irqrestore_release(&softirq_dev_lock, rflags);
+	spinlock_irqrestore_release(&entry->vm->softirq_dev_lock, rflags);
 
 	free(entry);
 }
@@ -149,9 +146,9 @@ ptdev_deactivate_entry(struct ptdev_remapping_info *entry)
 	entry->allocated_pirq = IRQ_INVALID;
 
 	/* remove from softirq list if added */
-	spinlock_irqsave_obtain(&softirq_dev_lock, &rflags);
+	spinlock_irqsave_obtain(&entry->vm->softirq_dev_lock, &rflags);
 	list_del_init(&entry->softirq_node);
-	spinlock_irqrestore_release(&softirq_dev_lock, rflags);
+	spinlock_irqrestore_release(&entry->vm->softirq_dev_lock, rflags);
 }
 
 void ptdev_init(void)
@@ -161,8 +158,6 @@ void ptdev_init(void)
 
 	INIT_LIST_HEAD(&ptdev_list);
 	spinlock_init(&ptdev_lock);
-	INIT_LIST_HEAD(&softirq_dev_entry_list);
-	spinlock_init(&softirq_dev_lock);
 
 	register_softirq(SOFTIRQ_PTDEV, ptdev_softirq);
 }
