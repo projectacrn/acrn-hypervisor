@@ -430,21 +430,23 @@ static int32_t local_set_vm_memory_region(struct vm *vm,
 		return -EINVAL;
 	}
 
-	hpa = gpa2hpa(vm, region->vm0_gpa);
-	dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x size=0x%x",
-		target_vm->vm_id, region->gpa, hpa, region->size);
-
-	base_paddr = get_hv_image_base();
-	if (((hpa <= base_paddr) &&
-		((hpa + region->size) > base_paddr)) ||
-		((hpa >= base_paddr) &&
-		(hpa < (base_paddr + CONFIG_RAM_SIZE)))) {
-		pr_err("%s: overlap the HV memory region.", __func__);
-		return -EFAULT;
-	}
+	dev_dbg(ACRN_DBG_HYCALL,
+		"[vm%d] type=%d gpa=0x%x vm0_gpa=0x%x size=0x%x",
+		target_vm->vm_id, region->type, region->gpa,
+		region->vm0_gpa, region->size);
 
 	pml4_page = (uint64_t *)target_vm->arch_vm.nworld_eptp;
 	if (region->type != MR_DEL) {
+		hpa = gpa2hpa(vm, region->vm0_gpa);
+		base_paddr = get_hv_image_base();
+		if (((hpa <= base_paddr) &&
+				((hpa + region->size) > base_paddr)) ||
+				((hpa >= base_paddr) &&
+				 (hpa < (base_paddr + CONFIG_RAM_SIZE)))) {
+			pr_err("%s: overlap the HV memory region.", __func__);
+			return -EFAULT;
+		}
+
 		prot = 0UL;
 		/* access right */
 		if ((region->prot & MEM_ACCESS_READ) != 0U) {
