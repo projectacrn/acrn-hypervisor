@@ -252,6 +252,11 @@ static int hardware_detect_support(void)
 		return -ENODEV;
 	}
 
+	if (is_vmx_disabled()) {
+		pr_fatal("%s, VMX can not be enabled\n", __func__);
+		return -ENODEV;
+	}
+
 	ret = check_vmx_mmu_cap();
 	if (ret != 0) {
 		return ret;
