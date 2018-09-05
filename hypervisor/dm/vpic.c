@@ -43,18 +43,9 @@ enum irqstate {
 	IRQSTATE_PULSE
 };
 
-
 #define NR_VPIC_PINS_PER_CHIP	8U
 #define NR_VPIC_PINS_TOTAL	16U
 #define VPIC_INVALID_PIN	0xffU
-
-/*
- * Loop over all the pins in priority order from highest to lowest.
- */
-#define	PIC_PIN_FOREACH(pinvar, i8259, tmpvar)			\
-	for (tmpvar = 0U, pinvar = (i8259->lowprio + 1U) & 0x7U;	\
-	    tmpvar < NR_VPIC_PINS_PER_CHIP;				\
-	    tmpvar++, pinvar = (pinvar + 1U) & 0x7U)
 
 static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin, bool newstate);
 
@@ -72,7 +63,9 @@ static inline uint8_t vpic_get_highest_isrpin(struct i8259_reg_state *i8259)
 {
 	uint8_t bit, pin, i;
 
-	PIC_PIN_FOREACH(pin, i8259, i) {
+	pin = (i8259->lowprio + 1U) & 0x7U;
+
+	for (i = 0U; i < NR_VPIC_PINS_PER_CHIP; i++) {
 		bit = (uint8_t)(1U << pin);
 
 		if ((i8259->service & bit) != 0U) {
@@ -81,11 +74,13 @@ static inline uint8_t vpic_get_highest_isrpin(struct i8259_reg_state *i8259)
 			 * cleared by a non-specific EOI in Special Mask Mode.
 			 */
 			if ((i8259->smm != 0U) && ((i8259->mask & bit) != 0U)) {
+				pin = (pin + 1U) & 0x7U;
 				continue;
 			} else {
 				return pin;
 			}
 		}
+		pin = (pin + 1U) & 0x7U;
 	}
 
 	return VPIC_INVALID_PIN;
@@ -115,7 +110,9 @@ static inline uint8_t vpic_get_highest_irrpin(struct i8259_reg_state *i8259)
 		serviced = 0U;
 	}
 
-	PIC_PIN_FOREACH(pin, i8259, tmp) {
+	pin = (i8259->lowprio + 1U) & 0x7U;
+
+	for (tmp = 0U; tmp < NR_VPIC_PINS_PER_CHIP; tmp++) {
 		bit = (uint8_t)(1U << pin);
 
 		/*
@@ -133,6 +130,8 @@ static inline uint8_t vpic_get_highest_irrpin(struct i8259_reg_state *i8259)
 		if (((i8259->request & bit) != 0) && ((i8259->mask & bit) == 0)) {
 			return pin;
 		}
+
+		pin = (pin + 1U) & 0x7U;
 	}
 
 	return VPIC_INVALID_PIN;
@@ -314,9 +313,10 @@ static int vpic_ocw1(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint
 		vpic->vm, val);
 
 	i8259->mask = val & 0xffU;
+	pin = (i8259->lowprio + 1U) & 0x7U;
 
 	/* query and setup if pin/irq is for passthrough device */
-	PIC_PIN_FOREACH(pin, i8259, i) {
+	for (i = 0U; i < NR_VPIC_PINS_PER_CHIP; i++) {
 		bit = (uint8_t)(1U << pin);
 
 		/* remap for active: interrupt mask -> unmask
@@ -329,6 +329,7 @@ static int vpic_ocw1(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint
 			 * not device, so not need pt remap
 			 */
 			if ((pin == 2U) && master_pic(vpic, i8259)) {
+				pin = (pin + 1U) & 0x7U;
 				continue;
 			}
 
@@ -337,6 +338,7 @@ static int vpic_ocw1(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint
 			ptdev_intx_pin_remap(vpic->vm,
 					virt_pin, PTDEV_VPIN_PIC);
 		}
+		pin = (pin + 1U) & 0x7U;
 	}
 
 	return 0;

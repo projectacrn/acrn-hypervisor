@@ -9,7 +9,7 @@
 
 #include <types.h>
 
-#define va_start(x, y) __builtin_va_start((x), (y))
-#define va_end(x)     __builtin_va_end(x)
+#define va_start	__builtin_va_start
+#define va_end		__builtin_va_end
 
 #endif /* STDARG_H */

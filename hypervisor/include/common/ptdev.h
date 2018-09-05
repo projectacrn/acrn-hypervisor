@@ -18,10 +18,10 @@ enum ptdev_vpin_source {
 };
 
 #define DEFINE_MSI_SID(name, a, b)	\
-union source_id name = {.msi_id = {.bdf = (a), .entry_nr = (b)}}
+union source_id (name) = {.msi_id = {.bdf = (a), .entry_nr = (b)} }
 
 #define DEFINE_IOAPIC_SID(name, a, b)	\
-union source_id name = {.intx_id = {.pin = (a), .src = (b)}}
+union source_id (name) = {.intx_id = {.pin = (a), .src = (b)} }
 
 union source_id {
 	uint32_t value;

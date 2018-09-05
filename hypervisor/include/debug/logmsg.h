@@ -134,7 +134,7 @@ static inline int vprintf(__unused const char *fmt, __unused va_list args)
 
 #define dev_dbg(lvl, ...)					\
 	do {							\
-		do_logmsg(lvl, pr_prefix __VA_ARGS__);	\
+		do_logmsg((lvl), pr_prefix __VA_ARGS__);	\
 	} while (0)
 
 #define panic(...) 							\

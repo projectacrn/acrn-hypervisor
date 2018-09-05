@@ -18,10 +18,10 @@
 
 #include <mmu.h>
 
-#define foreach_vcpu(idx, vm, vcpu)				\
-	for (idx = 0U, vcpu = vm->hw.vcpu_array[idx];		\
-		idx < vm->hw.num_vcpus;				\
-		idx++, vcpu = vm->hw.vcpu_array[idx])		\
+#define foreach_vcpu(idx, vm, vcpu)					\
+	for ((idx) = 0U, vcpu = vm->hw.vcpu_array[(idx)];		\
+		(idx) < vm->hw.num_vcpus;				\
+		(idx)++, vcpu = vm->hw.vcpu_array[(idx)])		\
 		if (vcpu != NULL)
 
 /* the index is matched with emulated msrs array*/
@@ -46,20 +46,20 @@
 
 #define E820_MAX_ENTRIES    32U
 
-#define save_segment(seg, SEG_NAME) \
-{ \
-	seg.selector = exec_vmread16(SEG_NAME##_SEL); \
-	seg.base = exec_vmread(SEG_NAME##_BASE); \
-	seg.limit = exec_vmread32(SEG_NAME##_LIMIT); \
-	seg.attr = exec_vmread32(SEG_NAME##_ATTR); \
+#define save_segment(seg, SEG_NAME)				\
+{								\
+	(seg).selector = exec_vmread16(SEG_NAME##_SEL);		\
+	(seg).base = exec_vmread(SEG_NAME##_BASE);		\
+	(seg).limit = exec_vmread32(SEG_NAME##_LIMIT);		\
+	(seg).attr = exec_vmread32(SEG_NAME##_ATTR);		\
 }
 
-#define load_segment(seg, SEG_NAME) \
-{ \
-	exec_vmwrite16(SEG_NAME##_SEL, seg.selector); \
-	exec_vmwrite(SEG_NAME##_BASE, seg.base); \
-	exec_vmwrite32(SEG_NAME##_LIMIT, seg.limit); \
-	exec_vmwrite32(SEG_NAME##_ATTR, seg.attr); \
+#define load_segment(seg, SEG_NAME)				\
+{								\
+	exec_vmwrite16(SEG_NAME##_SEL, (seg).selector);		\
+	exec_vmwrite(SEG_NAME##_BASE, (seg).base);		\
+	exec_vmwrite32(SEG_NAME##_LIMIT, (seg).limit);		\
+	exec_vmwrite32(SEG_NAME##_ATTR, (seg).attr);		\
 }
 
 struct e820_mem_params {
