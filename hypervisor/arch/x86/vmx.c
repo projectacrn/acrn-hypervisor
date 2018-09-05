@@ -84,42 +84,28 @@ int exec_vmxon_instr(uint16_t pcpu_id)
 {
 	uint64_t tmp64, vmcs_pa;
 	uint32_t tmp32;
-	int ret = -ENOMEM;
-	void *vmxon_region_va;
+	int ret = 0;
+	void *vmxon_region_va = (void *)per_cpu(vmxon_region, pcpu_id);
+	uint64_t vmxon_region_pa;
 	struct vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
 
-	/* Allocate page aligned memory for VMXON region */
-	if (per_cpu(vmxon_region_pa, pcpu_id) == 0UL) {
-		vmxon_region_va = alloc_page();
-	}
-	else {
-		vmxon_region_va = HPA2HVA(per_cpu(vmxon_region_pa, pcpu_id));
-	}
+	/* Initialize vmxon page with revision id from IA32 VMX BASIC MSR */
+	tmp32 = (uint32_t)msr_read(MSR_IA32_VMX_BASIC);
+	(void)memcpy_s((uint32_t *) vmxon_region_va, 4U, (void *)&tmp32, 4U);
 
-	if (vmxon_region_va != NULL) {
-		/* Initialize vmxon page with revision id from IA32 VMX BASIC
-		 * MSR
-		 */
-		tmp32 = (uint32_t)msr_read(MSR_IA32_VMX_BASIC);
-		(void)memcpy_s((uint32_t *) vmxon_region_va, 4U, (void *)&tmp32, 4U);
+	/* Turn on CR0.NE and CR4.VMXE */
+	CPU_CR_READ(cr0, &tmp64);
+	CPU_CR_WRITE(cr0, tmp64 | CR0_NE);
+	CPU_CR_READ(cr4, &tmp64);
+	CPU_CR_WRITE(cr4, tmp64 | CR4_VMXE);
 
-		/* Turn on CR0.NE and CR4.VMXE */
-		CPU_CR_READ(cr0, &tmp64);
-		CPU_CR_WRITE(cr0, tmp64 | CR0_NE);
-		CPU_CR_READ(cr4, &tmp64);
-		CPU_CR_WRITE(cr4, tmp64 | CR4_VMXE);
+	/* Turn ON VMX */
+	vmxon_region_pa = HVA2HPA(vmxon_region_va);
+	ret = exec_vmxon(&vmxon_region_pa);
 
-		/* Turn ON VMX */
-		per_cpu(vmxon_region_pa, pcpu_id) = HVA2HPA(vmxon_region_va);
-		ret = exec_vmxon(&per_cpu(vmxon_region_pa, pcpu_id));
-
-		if (vcpu != NULL) {
-			vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
-			ret = exec_vmptrld(&vmcs_pa);
-		}
-	} else {
-		pr_err("%s, alloc memory for VMXON region failed\n",
-				__func__);
+	if (vcpu != NULL) {
+		vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
+		ret = exec_vmptrld(&vmcs_pa);
 	}
 
 	return ret;
