@@ -93,7 +93,6 @@ enum vm_paging_mode {
 /*
  * VM related APIs
  */
-bool vm_lapic_disabled(const struct vm *vm);
 uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask);
 
 int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa, uint32_t *err_code);

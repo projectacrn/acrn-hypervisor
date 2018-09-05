@@ -130,6 +130,5 @@ void vpic_intr_accepted(struct vm *vm, uint32_t vector);
 void vpic_get_irq_trigger(struct vm *vm, uint32_t irq,
 	enum vpic_trigger *trigger);
 uint32_t vpic_pincount(void);
-bool vpic_is_pin_mask(struct acrn_vpic *vpic, uint8_t virt_pin_arg);
 
 #endif	/* _VPIC_H_ */
