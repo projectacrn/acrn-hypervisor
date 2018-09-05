@@ -240,7 +240,7 @@ For the User OS, we are using the same `Clear Linux`_ release version as the Ser
      wget https://download.clearlinux.org/releases/24040/clear/clear-24040-kvm.img.xz
      unxz clear-24040-kvm.img.xz
 
-* Download the Production Kenrel (PK) kernel
+* Download the Production Kernel (PK) kernel
 
   .. code-block:: none
 
