@@ -394,25 +394,26 @@ static void ptdev_intr_handle_irq(struct vm *vm,
 	}
 }
 
-void ptdev_softirq(__unused uint16_t cpu_id)
+void ptdev_softirq(uint16_t pcpu_id)
 {
+	struct vcpu *vcpu = (struct vcpu *)per_cpu(vcpu, pcpu_id);
+	struct vm *vm = vcpu->vm;
+
 	while (1) {
-		struct ptdev_remapping_info *entry = ptdev_dequeue_softirq();
-		struct ptdev_msi_info *msi = &entry->msi;
-		struct vm *vm;
+		struct ptdev_remapping_info *entry = ptdev_dequeue_softirq(vm);
+		struct ptdev_msi_info *msi;
 
 		if (entry == NULL) {
 			break;
 		}
+
+		msi = &entry->msi;
 
 		/* skip any inactive entry */
 		if (!is_entry_active(entry)) {
 			/* service next item */
 			continue;
 		}
-
-		/* TBD: need valid vm */
-		vm = entry->vm;
 
 		/* handle real request */
 		if (entry->intr_type == PTDEV_INTR_INTX) {

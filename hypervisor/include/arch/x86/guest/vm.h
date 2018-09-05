@@ -167,6 +167,9 @@ struct vm {
 	struct vpci vpci;
 	uint8_t vrtc_offset;
 #endif
+
+	spinlock_t softirq_dev_lock;
+	struct list_head softirq_dev_entry_list;
 };
 
 #ifdef CONFIG_PARTITION_MODE
