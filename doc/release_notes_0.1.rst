@@ -63,7 +63,7 @@ Developers can configure hypervisor via Kconfig parameters. (See
 New ACRN tools
 ==============
 
-We've added a collectioin of support tools including acrnctl, acrntrace, acrnlog,
+We've added a collection of support tools including acrnctl, acrntrace, acrnlog,
 acrn-crashlog, acrnprobe. (See :ref:`tools` documentation for details.)
 
 Known Issues

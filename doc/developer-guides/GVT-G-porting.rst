@@ -13,7 +13,7 @@ multiple virtual-GPU (vGPU) instances for virtual machine (VM) system. A
 VM can be assigned one instance of a vGPU. The guest OS graphic driver
 needs only minor modifications to drive the vGPU adapter in a VM. Every
 vGPU instance adopts the full HW GPU's acceleration capability for
-media, 3D renderingi, and display.
+media, 3D rendering, and display.
 
 ACRN-GT refers to the glue layer between the ACRN hypervisor and GVT-g
 core device model. It works as the agent of hypervisor-related services.

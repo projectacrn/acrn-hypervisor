@@ -109,7 +109,7 @@ left-justified, and right-justified, respectively.
 Finite-State Machine
 ********************
 
-Here's an example of using graphviz for definine a finite-state machine
+Here's an example of using graphviz for defining a finite-state machine
 for pumping gas:
 
 .. literalinclude:: images/gaspump.dot
