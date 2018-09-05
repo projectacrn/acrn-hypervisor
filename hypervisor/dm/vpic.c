@@ -305,27 +305,6 @@ static int vpic_icw4(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint
 	return 0;
 }
 
-bool vpic_is_pin_mask(struct acrn_vpic *vpic, uint8_t virt_pin_arg)
-{
-	struct i8259_reg_state *i8259;
-	uint8_t virt_pin = virt_pin_arg;
-
-	if (virt_pin < 8U) {
-		i8259 = &vpic->i8259[0];
-	} else if (virt_pin < 16U) {
-		i8259 = &vpic->i8259[1];
-		virt_pin -= 8U;
-	} else {
-		return true;
-	}
-
-	if ((i8259->mask & (1U << virt_pin)) != 0U) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
 static int vpic_ocw1(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
 	uint8_t pin, i, bit;

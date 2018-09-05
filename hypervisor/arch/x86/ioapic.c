@@ -260,11 +260,6 @@ void ioapic_set_rte(uint32_t irq, union ioapic_rte rte)
 		rte.full);
 }
 
-uint32_t irq_gsi_num(void)
-{
-	return nr_gsi;
-}
-
 bool irq_is_gsi(uint32_t irq)
 {
 	return irq < nr_gsi;

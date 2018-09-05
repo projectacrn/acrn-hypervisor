@@ -22,7 +22,6 @@
 void setup_ioapic_irqs(void);
 
 bool irq_is_gsi(uint32_t irq);
-uint32_t irq_gsi_num(void);
 uint8_t irq_to_pin(uint32_t irq);
 uint32_t pin_to_irq(uint8_t pin);
 void irq_gsi_mask_unmask(uint32_t irq, bool mask);

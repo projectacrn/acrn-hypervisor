@@ -95,11 +95,6 @@ static inline void local_invept(uint64_t type, struct invept_desc desc)
 	ASSERT(error == 0, "invept error");
 }
 
-static inline void inv_tlb_one_page(void *addr)
-{
-	asm volatile ("invlpg (%0)"  : : "r" (addr) : "memory");
-}
-
 static inline bool cpu_has_vmx_ept_cap(uint32_t bit_mask)
 {
 	return ((vmx_caps.ept & bit_mask) != 0U);

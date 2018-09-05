@@ -46,20 +46,6 @@ uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask)
 	return dmask;
 }
 
-bool vm_lapic_disabled(const struct vm *vm)
-{
-	uint16_t i;
-	struct vcpu *vcpu;
-
-	foreach_vcpu(i, vm, vcpu) {
-		if (vlapic_enabled(vcpu->arch_vcpu.vlapic)) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
 enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 {
 	enum vm_cpu_mode cpu_mode;
