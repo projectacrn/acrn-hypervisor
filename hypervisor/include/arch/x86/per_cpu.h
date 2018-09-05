@@ -19,6 +19,8 @@
 #include "arch/x86/guest/instr_emul.h"
 
 struct per_cpu_region {
+	/* vmxon_region MUST be 4KB-aligned */
+	uint8_t vmxon_region[CPU_PAGE_SIZE];
 #ifdef HV_DEBUG
 	uint64_t *sbuf[ACRN_SBUF_ID_MAX];
 	uint64_t vmexit_cnt[64];
@@ -28,7 +30,6 @@ struct per_cpu_region {
 	uint64_t irq_count[NR_IRQS];
 	uint64_t softirq_pending;
 	uint64_t spurious;
-	uint64_t vmxon_region_pa;
 	struct shared_buf *earlylog_sbuf;
 	void *vcpu;
 	void *ever_run_vcpu;
