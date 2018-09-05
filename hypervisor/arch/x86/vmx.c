@@ -26,6 +26,21 @@ static uint64_t cr4_host_mask;
 static uint64_t cr4_always_on_mask;
 static uint64_t cr4_always_off_mask;
 
+bool is_vmx_disabled(void)
+{
+	uint64_t msr_val;
+
+	/* Read Feature ControL MSR */
+	msr_val = msr_read(MSR_IA32_FEATURE_CONTROL);
+
+	/* Check if feature control is locked and vmx cannot be enabled */
+	if ((msr_val & MSR_IA32_FEATURE_CONTROL_LOCK) != 0U &&
+		(msr_val & MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX) == 0U) {
+		return true;
+	}
+	return false;
+}
+
 static inline int exec_vmxon(void *addr)
 {
 	uint64_t rflags;
@@ -41,14 +56,7 @@ static inline int exec_vmxon(void *addr)
 	tmp64 = msr_read(MSR_IA32_FEATURE_CONTROL);
 
 	/* Determine if feature control is locked */
-	if ((tmp64 & MSR_IA32_FEATURE_CONTROL_LOCK) != 0U) {
-		/* See if VMX enabled */
-		if ((tmp64 & MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX) == 0U) {
-			/* Return error - VMX can't be enabled */
-			pr_err("%s, VMX can't be enabled\n", __func__);
-			status = -EINVAL;
-		}
-	} else {
+	if ((tmp64 & MSR_IA32_FEATURE_CONTROL_LOCK) == 0U) {
 		/* Lock and enable VMX support */
 		tmp64 |= (MSR_IA32_FEATURE_CONTROL_LOCK |
 			  MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX);
