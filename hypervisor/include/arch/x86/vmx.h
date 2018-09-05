@@ -415,7 +415,7 @@
 #define VMX_SUPPORT_UNRESTRICTED_GUEST (1U<<5)
 
 /* External Interfaces */
-int exec_vmxon_instr(uint16_t pcpu_id);
+void exec_vmxon_instr(uint16_t pcpu_id);
 
 /**
  * Read field from VMCS.
@@ -436,12 +436,12 @@ void exec_vmwrite32(uint32_t field, uint32_t value);
 void exec_vmwrite64(uint32_t field_full, uint64_t value);
 #define exec_vmwrite exec_vmwrite64
 
-int init_vmcs(struct vcpu *vcpu);
+void init_vmcs(struct vcpu *vcpu);
 
-int vmx_off(uint16_t pcpu_id);
+void vmx_off(uint16_t pcpu_id);
 
-int exec_vmclear(void *addr);
-int exec_vmptrld(void *addr);
+void exec_vmclear(void *addr);
+void exec_vmptrld(void *addr);
 
 uint64_t vmx_rdmsr_pat(struct vcpu *vcpu);
 int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value);
