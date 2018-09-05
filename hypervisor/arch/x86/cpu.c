@@ -461,8 +461,7 @@ static void bsp_boot_post(void)
 	pr_dbg("Core %hu is up", BOOT_CPU_ID);
 
 	if (hardware_detect_support() != 0) {
-		pr_fatal("hardware not support!\n");
-		return;
+		panic("hardware not support!");
 	}
 
 	/* Warn for security feature not ready */
