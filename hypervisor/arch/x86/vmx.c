@@ -41,21 +41,19 @@ bool is_vmx_disabled(void)
 	return false;
 }
 
-static inline int exec_vmxon(void *addr)
+/**
+ * @pre addr != NULL && addr is 4KB-aligned
+ * rev[31:0]  32 bits located at vmxon region physical address
+ * @pre rev[30:0] == VMCS revision && rev[31] == 0
+ */
+static inline void exec_vmxon(void *addr)
 {
-	uint64_t rflags;
 	uint64_t tmp64;
-	int status = 0;
-
-	if (addr == NULL) {
-		pr_err("%s, Incorrect arguments\n", __func__);
-		return -EINVAL;
-	}
 
 	/* Read Feature ControL MSR */
 	tmp64 = msr_read(MSR_IA32_FEATURE_CONTROL);
 
-	/* Determine if feature control is locked */
+	/* Check if feature control is locked */
 	if ((tmp64 & MSR_IA32_FEATURE_CONTROL_LOCK) == 0U) {
 		/* Lock and enable VMX support */
 		tmp64 |= (MSR_IA32_FEATURE_CONTROL_LOCK |
@@ -63,36 +61,26 @@ static inline int exec_vmxon(void *addr)
 		msr_write(MSR_IA32_FEATURE_CONTROL, tmp64);
 	}
 
-	/* Ensure previous operations successful */
-	if (status == 0) {
-		/* Turn VMX on */
-		asm volatile (
-			      "vmxon (%%rax)\n"
-			      "pushfq\n"
-			      "pop %0\n":"=r" (rflags)
-			      : "a"(addr)
-			      : "cc", "memory");
+	/* Turn VMX on, pre-conditions can avoid VMfailInvalid
+	 * here no need check RFLAGS since it will generate #GP or #UD
+	 * except VMsuccess. SDM 30.3
+	 */
+	asm volatile (
+			"vmxon (%%rax)\n"
+			:
+			: "a"(addr)
+			: "cc", "memory");
 
-		/* if carry and zero flags are clear operation success */
-		if ((rflags & (RFLAGS_C | RFLAGS_Z)) != 0U) {
-			pr_err("%s, Turn VMX on failed\n", __func__);
-			status = -EINVAL;
-		}
-	}
-
-	/* Return result to caller */
-	return status;
 }
 
-/* Per cpu data to hold the vmxon_region_pa for each pcpu.
+/* Per cpu data to hold the vmxon_region for each pcpu.
  * It will be used again when we start a pcpu after the pcpu was down.
  * S3 enter/exit will use it.
  */
-int exec_vmxon_instr(uint16_t pcpu_id)
+void exec_vmxon_instr(uint16_t pcpu_id)
 {
 	uint64_t tmp64, vmcs_pa;
 	uint32_t tmp32;
-	int ret = 0;
 	void *vmxon_region_va = (void *)per_cpu(vmxon_region, pcpu_id);
 	uint64_t vmxon_region_pa;
 	struct vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
@@ -109,86 +97,61 @@ int exec_vmxon_instr(uint16_t pcpu_id)
 
 	/* Turn ON VMX */
 	vmxon_region_pa = HVA2HPA(vmxon_region_va);
-	ret = exec_vmxon(&vmxon_region_pa);
+	exec_vmxon(&vmxon_region_pa);
 
 	if (vcpu != NULL) {
 		vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
-		ret = exec_vmptrld(&vmcs_pa);
+		exec_vmptrld(&vmcs_pa);
 	}
-
-	return ret;
 }
 
-int vmx_off(uint16_t pcpu_id)
+void vmx_off(uint16_t pcpu_id)
 {
-	int ret = 0;
 
 	struct vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
 	uint64_t vmcs_pa;
 
 	if (vcpu != NULL) {
 		vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
-		ret = exec_vmclear((void *)&vmcs_pa);
-		if (ret != 0) {
-			return ret;
-		}
+		exec_vmclear((void *)&vmcs_pa);
 	}
 
 	asm volatile ("vmxoff" : : : "memory");
-
-	return 0;
 }
 
-int exec_vmclear(void *addr)
+/**
+ * @pre addr != NULL && addr is 4KB-aligned
+ * @pre addr != VMXON pointer
+ */
+void exec_vmclear(void *addr)
 {
-	uint64_t rflags;
-	int status = 0;
 
-	if (addr == NULL) {
-		status = -EINVAL;
-	}
-	ASSERT(status == 0, "Incorrect arguments");
-
+	/* pre-conditions can avoid VMfail
+	 * here no need check RFLAGS since it will generate #GP or #UD
+	 * except VMsuccess. SDM 30.3
+	 */
 	asm volatile (
 		"vmclear (%%rax)\n"
-		"pushfq\n"
-		"pop %0\n"
-		:"=r" (rflags)
+		:
 		: "a"(addr)
 		: "cc", "memory");
-
-	/* if carry and zero flags are clear operation success */
-	if ((rflags & (RFLAGS_C | RFLAGS_Z)) != 0U) {
-		status = -EINVAL;
-	}
-
-	return status;
 }
 
-int exec_vmptrld(void *addr)
+/**
+ * @pre addr != NULL && addr is 4KB-aligned
+ * @pre addr != VMXON pointer
+ */
+void exec_vmptrld(void *addr)
 {
-	uint64_t rflags;
-	int status = 0;
-
-	if (addr == NULL) {
-		status = -EINVAL;
-	}
-	ASSERT(status == 0, "Incorrect arguments");
-
+	/* pre-conditions can avoid VMfail
+	 * here no need check RFLAGS since it will generate #GP or #UD
+	 * except VMsuccess. SDM 30.3
+	 */
 	asm volatile (
 		"vmptrld (%%rax)\n"
-		"pushfq\n"
-		"pop %0\n"
-		: "=r" (rflags)
+		:
 		: "a"(addr)
 		: "cc", "memory");
-
-	/* if carry and zero flags are clear operation success */
-	if ((rflags & (RFLAGS_C | RFLAGS_Z)) != 0U) {
-		status = -EINVAL;
-	}
-
-	return status;
 }
 
 uint64_t exec_vmread64(uint32_t field_full)
@@ -1170,16 +1133,13 @@ static void init_exit_ctrl(__unused struct vcpu *vcpu)
 	exec_vmwrite32(VMX_EXIT_MSR_LOAD_COUNT, 0U);
 }
 
-int init_vmcs(struct vcpu *vcpu)
+/**
+ * @pre vcpu != NULL
+ */
+void init_vmcs(struct vcpu *vcpu)
 {
 	uint64_t vmx_rev_id;
-	int status = 0;
 	uint64_t vmcs_pa;
-
-	if (vcpu == NULL) {
-		status = -EINVAL;
-	}
-	ASSERT(status == 0, "Incorrect arguments");
 
 	/* Log message */
 	pr_dbg("Initializing VMCS");
@@ -1190,12 +1150,10 @@ int init_vmcs(struct vcpu *vcpu)
 
 	/* Execute VMCLEAR on current VMCS */
 	vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
-	status = exec_vmclear((void *)&vmcs_pa);
-	ASSERT(status == 0, "Failed VMCLEAR during VMCS setup!");
+	exec_vmclear((void *)&vmcs_pa);
 
 	/* Load VMCS pointer */
-	status = exec_vmptrld((void *)&vmcs_pa);
-	ASSERT(status == 0, "Failed VMCS pointer load!");
+	exec_vmptrld((void *)&vmcs_pa);
 
 	/* Initialize the Virtual Machine Control Structure (VMCS) */
 	init_host_state(vcpu);
@@ -1204,7 +1162,4 @@ int init_vmcs(struct vcpu *vcpu)
 	init_guest_state(vcpu);
 	init_entry_ctrl(vcpu);
 	init_exit_ctrl(vcpu);
-
-	/* Return status to caller */
-	return status;
 }
