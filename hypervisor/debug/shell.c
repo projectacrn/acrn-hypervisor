@@ -11,6 +11,8 @@
 #define MAX_STR_SIZE		256U
 #define SHELL_PROMPT_STR	"ACRN:\\>"
 
+char shell_log_buf[CPU_PAGE_SIZE*2];
+
 /* Input Line Other - Switch to the "other" input line (there are only two
  * input lines total).
  */
@@ -624,11 +626,6 @@ static int shell_vcpu_dumpreg(int argc, char **argv)
 	struct vcpu *vcpu;
 	uint64_t mask = 0UL;
 	struct vcpu_dump dump;
-	char *temp_str = alloc_page();
-
-	if (temp_str == NULL) {
-		return -ENOMEM;
-	}
 
 	/* User input invalidation */
 	if (argc != 3) {
@@ -662,7 +659,7 @@ static int shell_vcpu_dumpreg(int argc, char **argv)
 	}
 
 	dump.vcpu = vcpu;
-	dump.str = temp_str;
+	dump.str = shell_log_buf;
 	dump.str_max = CPU_PAGE_SIZE;
 	if (vcpu->pcpu_id == get_cpu_id())
 		vcpu_dumpreg(&dump);
@@ -670,12 +667,10 @@ static int shell_vcpu_dumpreg(int argc, char **argv)
 		bitmap_set_nolock(vcpu->pcpu_id, &mask);
 		smp_call_function(mask, vcpu_dumpreg, &dump);
 	}
-	shell_puts(temp_str);
+	shell_puts(shell_log_buf);
 	status = 0;
 
 out:
-	free(temp_str);
-
 	return status;
 }
 
@@ -761,93 +756,53 @@ static int shell_to_sos_console(__unused int argc, __unused char **argv)
 
 static int shell_show_cpu_int(__unused int argc, __unused char **argv)
 {
-	char *temp_str = alloc_page();
-
-	if (temp_str == NULL) {
-		return -ENOMEM;
-	}
-
-	get_cpu_interrupt_info(temp_str, CPU_PAGE_SIZE);
-	shell_puts(temp_str);
-
-	free(temp_str);
-
+	get_cpu_interrupt_info(shell_log_buf, CPU_PAGE_SIZE);
+	shell_puts(shell_log_buf);
 	return 0;
 }
 
 static int shell_show_ptdev_info(__unused int argc, __unused char **argv)
 {
-	char *temp_str = alloc_page();
-
-	if (temp_str == NULL) {
-		return -ENOMEM;
-	}
-
-	get_ptdev_info(temp_str, CPU_PAGE_SIZE);
-	shell_puts(temp_str);
-
-	free(temp_str);
+	get_ptdev_info(shell_log_buf, CPU_PAGE_SIZE);
+	shell_puts(shell_log_buf);
 
 	return 0;
 }
 
 static int shell_show_vioapic_info(int argc, char **argv)
 {
-	char *temp_str = alloc_page();
 	uint16_t vmid;
 	int32_t ret;
 
-	if (temp_str == NULL) {
-		return -ENOMEM;
-	}
-
 	/* User input invalidation */
 	if (argc != 2) {
-		free(temp_str);
 		return -EINVAL;
 	}
 	ret = atoi(argv[1]);
 	if (ret >= 0) {
 		vmid = (uint16_t) ret;
-		get_vioapic_info(temp_str, CPU_PAGE_SIZE, vmid);
-		shell_puts(temp_str);
-		free(temp_str);
+		get_vioapic_info(shell_log_buf, CPU_PAGE_SIZE, vmid);
+		shell_puts(shell_log_buf);
 		return 0;
 	}
 
-	free(temp_str);
 	return -EINVAL;
 }
 
 static int shell_show_ioapic_info(__unused int argc, __unused char **argv)
 {
 	int err = 0;
-	char *temp_str = alloc_pages(2U);
 
-	if (temp_str == NULL) {
-		return -ENOMEM;
-	}
-
-	err = get_ioapic_info(temp_str, 2 * CPU_PAGE_SIZE);
-	shell_puts(temp_str);
-
-	free(temp_str);
+	err = get_ioapic_info(shell_log_buf, 2 * CPU_PAGE_SIZE);
+	shell_puts(shell_log_buf);
 
 	return err;
 }
 
 static int shell_show_vmexit_profile(__unused int argc, __unused char **argv)
 {
-	char *temp_str = alloc_pages(2U);
-
-	if (temp_str == NULL) {
-		return -ENOMEM;
-	}
-
-	get_vmexit_profile(temp_str, 2*CPU_PAGE_SIZE);
-	shell_puts(temp_str);
-
-	free(temp_str);
+	get_vmexit_profile(shell_log_buf, 2*CPU_PAGE_SIZE);
+	shell_puts(shell_log_buf);
 
 	return 0;
 }
