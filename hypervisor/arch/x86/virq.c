@@ -109,15 +109,18 @@ void vcpu_make_request(struct vcpu *vcpu, uint16_t eventid)
 	}
 }
 
-static int vcpu_do_pending_event(struct vcpu *vcpu)
+static int vcpu_inject_vlapic_int(struct vcpu *vcpu)
 {
 	struct acrn_vlapic *vlapic = vcpu->arch_vcpu.vlapic;
 	uint32_t vector = 0U;
 	int ret = 0;
 
+	/*
+	 * This function used for inject virtual interrupt
+	 * through vmcs.
+	 */
 	if (is_apicv_intr_delivery_supported()) {
-		vlapic_apicv_inject_pir(vlapic);
-		return 0;
+		return -1;
 	}
 
 	/* Query vLapic to get vector to inject */
@@ -383,11 +386,11 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 {
 	int ret = 0;
 	uint32_t tmp;
-	bool intr_pending = false;
 	uint32_t intr_info;
 	uint32_t error_code;
 	struct vcpu_arch * arch_vcpu = &vcpu->arch_vcpu;
 	uint64_t *pending_req_bits = &arch_vcpu->pending_req;
+	struct acrn_vlapic *vlapic = vcpu->arch_vcpu.vlapic;
 
 	if (bitmap_test_and_clear_lock(ACRN_REQUEST_TRP_FAULT, pending_req_bits)) {
 		pr_fatal("Triple fault happen -> shutdown!");
@@ -446,6 +449,19 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 		goto INTR_WIN;
 	}
 
+	/*
+	 * If the "virtual-interrupt delivery" is enabled,
+	 * sync the pending interrupts to irr and update rvi if needed.
+	 * Then CPU will start evaluate the pending virtual interrupts
+	 * in the later vm-entry.
+	 *
+	 */
+	if (is_apicv_intr_delivery_supported() &&
+		bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT,
+			pending_req_bits)) {
+		vlapic_apicv_inject_pir(vlapic);
+	}
+
 	/* Guest interruptable or not */
 	if (is_guest_irq_enabled(vcpu)) {
 		/* Inject external interrupt first */
@@ -456,11 +472,15 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 			goto INTR_WIN;
 		}
 
-		/* Inject vLAPIC vectors */
-		if (bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT,
-			pending_req_bits)) {
-			/* has pending vLAPIC interrupts */
-			ret = vcpu_do_pending_event(vcpu);
+		/*
+		 * For "virtual-interrupt delivery" disabled case, if
+		 * the virtual interrupt injection conditions are satified,
+		 * then inject through vmcs.
+		 */
+		if (!is_apicv_intr_delivery_supported() &&
+			bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT,
+						pending_req_bits)) {
+			ret = vcpu_inject_vlapic_int(vcpu);
 			goto INTR_WIN;
 		}
 	}
@@ -470,11 +490,19 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 		goto INTR_WIN;
 
 INTR_WIN:
-	/* check if we have new interrupt pending for next VMExit */
-	intr_pending = vcpu_pending_request(vcpu);
+	/*
+	 * If "virtual-interrupt delivered" is enabled, CPU will evaluate
+	 * and automatic inject the virtual interrupts in appropriate time.
+	 * And from SDM Vol3 29.2.1, the apicv only trigger evaluation of
+	 * pending virtual interrupts when "interrupt-window exiting" is 0.
+	 */
+	if (is_apicv_intr_delivery_supported() ||
+		!vcpu_pending_request(vcpu)) {
+		return ret;
+	}
 
 	/* Enable interrupt window exiting if pending */
-	if (intr_pending && arch_vcpu->irq_window_enabled == 0U) {
+	if (arch_vcpu->irq_window_enabled == 0U) {
 		arch_vcpu->irq_window_enabled = 1U;
 		tmp = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
 		tmp |= VMX_PROCBASED_CTLS_IRQ_WIN;
