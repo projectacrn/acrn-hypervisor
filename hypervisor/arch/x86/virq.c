@@ -495,9 +495,18 @@ INTR_WIN:
 	 * and automatic inject the virtual interrupts in appropriate time.
 	 * And from SDM Vol3 29.2.1, the apicv only trigger evaluation of
 	 * pending virtual interrupts when "interrupt-window exiting" is 0.
+	 *
+	 * External interrupt(from vpic) can't be delivered by "virtual-
+	 * interrupt delivery", it only deliver interrupt from vlapic.
+	 *
+	 * So need to enable "interrupt-window exiting", when there is
+	 * an ExtInt or there is lapic interrupt and virtual interrupt
+	 * deliver is disabled.
 	 */
-	if (is_apicv_intr_delivery_supported() ||
-		!vcpu_pending_request(vcpu)) {
+	if (!bitmap_test(ACRN_REQUEST_EXTINT,
+						pending_req_bits) &&
+		(is_apicv_intr_delivery_supported() ||
+		!vcpu_pending_request(vcpu))) {
 		return ret;
 	}
 
