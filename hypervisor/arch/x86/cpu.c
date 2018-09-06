@@ -416,6 +416,16 @@ void bsp_boot_init(void)
 	SWITCH_TO(rsp, bsp_boot_post);
 }
 
+static bool check_cpu_security_config(void)
+{
+	if (!cpu_has_cap(X86_FEATURE_IBRS_IBPB) &&
+		!cpu_has_cap(X86_FEATURE_STIBP)) {
+		return false;
+	}
+
+	return true;
+}
+
 static void bsp_boot_post(void)
 {
 #ifdef STACK_PROTECTOR
@@ -465,8 +475,7 @@ static void bsp_boot_post(void)
 	}
 
 	/* Warn for security feature not ready */
-	if (!cpu_has_cap(X86_FEATURE_IBRS_IBPB) &&
-			!cpu_has_cap(X86_FEATURE_STIBP)) {
+	if (!check_cpu_security_config()) {
 		pr_fatal("SECURITY WARNING!!!!!!");
 		pr_fatal("Please apply the latest CPU uCode patch!");
 	}
