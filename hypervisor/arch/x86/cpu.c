@@ -401,7 +401,9 @@ void bsp_boot_init(void)
 	load_cpu_state_data();
 
 	/* Initialize the hypervisor paging */
-	init_paging();
+	if (init_paging() != 0) {
+		return;
+	}
 
 	early_init_lapic();
 

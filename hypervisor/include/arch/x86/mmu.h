@@ -70,7 +70,7 @@ void *alloc_paging_struct(void);
 void free_paging_struct(void *ptr);
 void enable_paging(uint64_t pml4_base_addr);
 void enable_smep(void);
-void init_paging(void);
+int init_paging(void);
 int mmu_add(uint64_t *pml4_page, uint64_t paddr_base,
 		uint64_t vaddr_base, uint64_t size,
 		uint64_t prot, enum _page_table_type ptt);

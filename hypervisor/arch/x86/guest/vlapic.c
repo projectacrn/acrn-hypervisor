@@ -1961,6 +1961,7 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval)
 
 int vlapic_create(struct vcpu *vcpu)
 {
+	int err = 0;
 	struct acrn_vlapic *vlapic = calloc(1U, sizeof(struct acrn_vlapic));
 
 	ASSERT(vlapic != NULL, "vlapic allocate failed");
@@ -1970,18 +1971,28 @@ int vlapic_create(struct vcpu *vcpu)
 	if (is_vcpu_bsp(vcpu)) {
 		uint64_t *pml4_page =
 			(uint64_t *)vcpu->vm->arch_vm.nworld_eptp;
-		ept_mr_del(vcpu->vm, pml4_page,
-			DEFAULT_APIC_BASE, CPU_PAGE_SIZE);
+		/* vm0 has mapped all ranges, need to unmap firstly */
+		if (is_vm0(vcpu->vm)) {
+			err = ept_mr_del(vcpu->vm, pml4_page,
+					DEFAULT_APIC_BASE, CPU_PAGE_SIZE);
+			if (err != 0) {
+				return err;
+			}
+		}
 
-		ept_mr_add(vcpu->vm, pml4_page,
-			vlapic_apicv_get_apic_access_addr(vcpu->vm),
-			DEFAULT_APIC_BASE, CPU_PAGE_SIZE,
-			EPT_WR | EPT_RD | EPT_UNCACHED);
+		err = ept_mr_add(vcpu->vm, pml4_page,
+				vlapic_apicv_get_apic_access_addr(vcpu->vm),
+				DEFAULT_APIC_BASE, CPU_PAGE_SIZE,
+				EPT_WR | EPT_RD | EPT_UNCACHED);
+		if (err != 0) {
+			return err;
+		}
+
 	}
 
 	vcpu->arch_vcpu.vlapic = vlapic;
 	vlapic_init(vlapic);
-	return 0;
+	return err;
 }
 
 void vlapic_free(struct vcpu *vcpu)

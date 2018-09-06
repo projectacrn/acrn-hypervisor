@@ -214,11 +214,12 @@ void enable_smep(void)
 }
 
 
-void init_paging(void)
+int init_paging(void)
 {
 	struct e820_entry *entry;
 	uint64_t hv_hpa;
 	uint32_t i;
+	int err = 0;
 	uint64_t attr_uc = (PAGE_TABLE | PAGE_CACHE_UC);
 
 	pr_dbg("HV MMU Initialization");
@@ -230,18 +231,24 @@ void init_paging(void)
 	obtain_e820_mem_info();
 
 	/* Map all memory regions to UC attribute */
-	mmu_add((uint64_t *)mmu_pml4_addr, e820_mem.mem_bottom,
+	err = mmu_add((uint64_t *)mmu_pml4_addr, e820_mem.mem_bottom,
 		e820_mem.mem_bottom, e820_mem.mem_top - e820_mem.mem_bottom,
 		attr_uc, PTT_PRIMARY);
+	if (err != 0) {
+		return err;
+	}
 
 	/* Modify WB attribute for E820_TYPE_RAM */
 	for (i = 0U; i < e820_entries; i++) {
 		entry = &e820[i];
 		if (entry->type == E820_TYPE_RAM) {
-			mmu_modify_or_del((uint64_t *)mmu_pml4_addr,
+			err = mmu_modify_or_del((uint64_t *)mmu_pml4_addr,
 					entry->baseaddr, entry->length,
 					PAGE_CACHE_WB, PAGE_CACHE_MASK,
 					PTT_PRIMARY, MR_MODIFY);
+			if (err != 0) {
+				return err;
+			}
 		}
 	}
 
@@ -249,12 +256,17 @@ void init_paging(void)
 	 * to supervisor-mode for hypervisor owned memroy.
 	 */
 	hv_hpa = get_hv_image_base();
-	mmu_modify_or_del((uint64_t *)mmu_pml4_addr, hv_hpa, CONFIG_RAM_SIZE,
+	err = mmu_modify_or_del((uint64_t *)mmu_pml4_addr, hv_hpa,
+			CONFIG_RAM_SIZE,
 			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER,
 			PTT_PRIMARY, MR_MODIFY);
+	if (err != 0) {
+		return err;
+	}
 
 	/* Enable paging */
 	enable_paging(HVA2HPA(mmu_pml4_addr));
+	return 0;
 }
 
 void *alloc_paging_struct(void)
