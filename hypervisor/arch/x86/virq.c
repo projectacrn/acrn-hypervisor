@@ -503,6 +503,10 @@ INTR_WIN:
 	 * an ExtInt or there is lapic interrupt and virtual interrupt
 	 * deliver is disabled.
 	 */
+	if (arch_vcpu->irq_window_enabled == 1U) {
+		return ret;
+	}
+
 	if (!bitmap_test(ACRN_REQUEST_EXTINT,
 						pending_req_bits) &&
 		(is_apicv_intr_delivery_supported() ||
@@ -510,13 +514,10 @@ INTR_WIN:
 		return ret;
 	}
 
-	/* Enable interrupt window exiting if pending */
-	if (arch_vcpu->irq_window_enabled == 0U) {
-		arch_vcpu->irq_window_enabled = 1U;
-		tmp = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
-		tmp |= VMX_PROCBASED_CTLS_IRQ_WIN;
-		exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, tmp);
-	}
+	tmp = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
+	tmp |= VMX_PROCBASED_CTLS_IRQ_WIN;
+	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, tmp);
+	arch_vcpu->irq_window_enabled = 1U;
 
 	return ret;
 }
