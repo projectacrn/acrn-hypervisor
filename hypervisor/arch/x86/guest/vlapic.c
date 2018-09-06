@@ -2096,7 +2096,7 @@ vlapic_apicv_get_apic_access_addr(__unused struct vm *vm)
 
 		(void)memset((void *)apicv_apic_access_addr, 0U, CPU_PAGE_SIZE);
 	}
-	return HVA2HPA(apicv_apic_access_addr);
+	return hva2hpa(apicv_apic_access_addr);
 }
 
 /**
@@ -2105,7 +2105,7 @@ vlapic_apicv_get_apic_access_addr(__unused struct vm *vm)
 uint64_t
 vlapic_apicv_get_apic_page_addr(struct acrn_vlapic *vlapic)
 {
-	return HVA2HPA(&(vlapic->apic_page));
+	return hva2hpa(&(vlapic->apic_page));
 }
 
 /*

@@ -102,7 +102,7 @@ void init_msr_emulation(struct vcpu *vcpu)
 	}
 
 	/* Set up MSR bitmap - pg 2904 24.6.9 */
-	value64 = HVA2HPA(vcpu->vm->arch_vm.msr_bitmap);
+	value64 = hva2hpa(vcpu->vm->arch_vm.msr_bitmap);
 	exec_vmwrite64(VMX_MSR_BITMAP_FULL, value64);
 	pr_dbg("VMX_MSR_BITMAP: 0x%016llx ", value64);
 }

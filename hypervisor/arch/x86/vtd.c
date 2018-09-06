@@ -178,16 +178,17 @@ static void register_hrhd_units(void)
 
 static uint32_t iommu_read32(struct dmar_drhd_rt *dmar_uint, uint32_t offset)
 {
-	return mmio_read32(HPA2HVA(dmar_uint->drhd->reg_base_addr + offset));
+	return mmio_read32(hpa2hva(dmar_uint->drhd->reg_base_addr + offset));
 }
 
 static uint64_t iommu_read64(struct dmar_drhd_rt *dmar_uint, uint32_t offset)
 {
 	uint64_t value;
 
-	value = mmio_read32(HPA2HVA(dmar_uint->drhd->reg_base_addr + offset + 4U));
+	value = mmio_read32(hpa2hva(dmar_uint->drhd->reg_base_addr + offset +
+									4U));
 	value = value << 32U;
-	value = value | mmio_read32(HPA2HVA(dmar_uint->drhd->reg_base_addr +
+	value = value | mmio_read32(hpa2hva(dmar_uint->drhd->reg_base_addr +
 					offset));
 
 	return value;
@@ -196,7 +197,7 @@ static uint64_t iommu_read64(struct dmar_drhd_rt *dmar_uint, uint32_t offset)
 static void iommu_write32(struct dmar_drhd_rt *dmar_uint, uint32_t offset,
 			  uint32_t value)
 {
-	mmio_write32(value, HPA2HVA(dmar_uint->drhd->reg_base_addr + offset));
+	mmio_write32(value, hpa2hva(dmar_uint->drhd->reg_base_addr + offset));
 }
 
 static void iommu_write64(struct dmar_drhd_rt *dmar_uint, uint32_t offset,
@@ -205,10 +206,11 @@ static void iommu_write64(struct dmar_drhd_rt *dmar_uint, uint32_t offset,
 	uint32_t temp;
 
 	temp = (uint32_t)value;
-	mmio_write32(temp, HPA2HVA(dmar_uint->drhd->reg_base_addr + offset));
+	mmio_write32(temp, hpa2hva(dmar_uint->drhd->reg_base_addr + offset));
 
 	temp = (uint32_t)(value >> 32U);
-	mmio_write32(temp, HPA2HVA(dmar_uint->drhd->reg_base_addr + offset + 4U));
+	mmio_write32(temp,
+		hpa2hva(dmar_uint->drhd->reg_base_addr + offset + 4U));
 }
 
 static inline void
@@ -976,14 +978,15 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 		void *root_table_vaddr = alloc_paging_struct();
 
 		if (root_table_vaddr != NULL) {
-			dmar_uint->root_table_addr = HVA2HPA(root_table_vaddr);
+			dmar_uint->root_table_addr = hva2hpa(root_table_vaddr);
 		} else {
 			ASSERT(false, "failed to allocate root table!");
 			return 1;
 		}
 	}
 
-	root_table = (struct dmar_root_entry *)HPA2HVA(dmar_uint->root_table_addr);
+	root_table =
+		(struct dmar_root_entry *)hpa2hva(dmar_uint->root_table_addr);
 
 	root_entry = root_table + bus;
 
@@ -994,7 +997,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 
 		if (vaddr != NULL) {
 			/* create context table for the bus if not present */
-			context_table_addr = HVA2HPA(vaddr);
+			context_table_addr = hva2hpa(vaddr);
 
 			context_table_addr = context_table_addr >> 12;
 
@@ -1022,7 +1025,8 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 
 	context_table_addr = context_table_addr << 12;
 
-	context_table = (struct dmar_context_entry *)HPA2HVA(context_table_addr);
+	context_table =
+		(struct dmar_context_entry *)hpa2hva(context_table_addr);
 	context_entry = context_table + devfun;
 
 	/* the context entry should not be present */
@@ -1114,14 +1118,16 @@ remove_iommu_device(struct iommu_domain *domain, uint16_t segment,
 		return 1;
 	}
 
-	root_table = (struct dmar_root_entry *)HPA2HVA(dmar_uint->root_table_addr);
+	root_table =
+		(struct dmar_root_entry *)hpa2hva(dmar_uint->root_table_addr);
 	root_entry = root_table + bus;
 
 	context_table_addr = dmar_get_bitslice(root_entry->lower,
 					       ROOT_ENTRY_LOWER_CTP_MASK,
 					       ROOT_ENTRY_LOWER_CTP_POS);
 	context_table_addr = context_table_addr << 12;
-	context_table = (struct dmar_context_entry *)HPA2HVA(context_table_addr);
+	context_table =
+		(struct dmar_context_entry *)hpa2hva(context_table_addr);
 
 	context_entry = context_table + devfun;
 
@@ -1303,7 +1309,7 @@ void init_iommu_vm0_domain(struct vm *vm0)
 	uint16_t devfun;
 
 	vm0->iommu = create_iommu_domain(vm0->vm_id,
-		HVA2HPA(vm0->arch_vm.nworld_eptp), 48U);
+		hva2hpa(vm0->arch_vm.nworld_eptp), 48U);
 
 	vm0_domain = (struct iommu_domain *) vm0->iommu;
 

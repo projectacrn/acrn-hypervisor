@@ -105,7 +105,7 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	 * of gpa_rebased to gpa_rebased + size
 	 */
 	sub_table_addr = alloc_paging_struct();
-	sworld_pml4e = HVA2HPA(sub_table_addr) | table_present;
+	sworld_pml4e = hva2hpa(sub_table_addr) | table_present;
 	set_pgentry((uint64_t *)pml4_base, sworld_pml4e);
 
 	nworld_pml4e = get_pgentry((uint64_t *)vm->arch_vm.nworld_eptp);
@@ -160,7 +160,7 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 	}
 	if (need_clr_mem) {
 		/* clear trusty memory space */
-		(void)memset(HPA2HVA(hpa), 0U, size);
+		(void)memset(hpa2hva(hpa), 0U, size);
 	}
 
 	/* restore memory to SOS ept mapping */
@@ -316,12 +316,12 @@ void switch_world(struct vcpu *vcpu, int next_world)
 	/* load EPTP for next world */
 	if (next_world == NORMAL_WORLD) {
 		exec_vmwrite64(VMX_EPT_POINTER_FULL,
-			HVA2HPA(vcpu->vm->arch_vm.nworld_eptp) |
-			(3UL<<3) | 6UL);
+			hva2hpa(vcpu->vm->arch_vm.nworld_eptp) |
+			(3UL << 3) | 6UL);
 	} else {
 		exec_vmwrite64(VMX_EPT_POINTER_FULL,
-			HVA2HPA(vcpu->vm->arch_vm.sworld_eptp) |
-			(3UL<<3) | 6UL);
+			hva2hpa(vcpu->vm->arch_vm.sworld_eptp) |
+			(3UL << 3) | 6UL);
 	}
 
 	/* Update world index */
@@ -338,7 +338,7 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 	struct trusty_mem *mem;
 	struct trusty_key_info *key_info;
 
-	mem = (struct trusty_mem *)(HPA2HVA(mem_base_hpa));
+	mem = (struct trusty_mem *)(hpa2hva(mem_base_hpa));
 
 	/* copy key_info to the first page of trusty memory */
 	(void)memcpy_s(&mem->first_page.data.key_info, sizeof(g_key_info),
@@ -442,7 +442,7 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 	trusty_base_hpa = vm->sworld_control.sworld_memory.base_hpa;
 
 	exec_vmwrite64(VMX_EPT_POINTER_FULL,
-			HVA2HPA(vm->arch_vm.sworld_eptp) | (3UL<<3) | 6UL);
+			hva2hpa(vm->arch_vm.sworld_eptp) | (3UL << 3) | 6UL);
 
 	/* save Normal World context */
 	save_world_ctx(vcpu, &vcpu->arch_vcpu.contexts[NORMAL_WORLD].ext_ctx);

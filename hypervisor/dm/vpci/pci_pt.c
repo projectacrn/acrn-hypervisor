@@ -145,7 +145,7 @@ static int vdev_pt_init(struct pci_vdev *vdev)
 			vm->arch_vm.nworld_eptp = alloc_paging_struct();
 		}
 		vm->iommu = create_iommu_domain(vm->vm_id,
-			HVA2HPA(vm->arch_vm.nworld_eptp), 48U);
+			hva2hpa(vm->arch_vm.nworld_eptp), 48U);
 	}
 
 	ret = assign_iommu_device(vm->iommu, vdev->pdev.bdf.bits.b,

@@ -30,8 +30,16 @@
 
 #ifndef ASSEMBLER
 /* gpa --> hpa -->hva */
-#define GPA2HVA(vm, x) HPA2HVA(gpa2hpa(vm, x))
-#define HVA2GPA(vm, x) hpa2gpa(vm, HVA2HPA(x))
+static inline void *gpa2hva(const struct vm *vm, uint64_t x)
+{
+	return hpa2hva(gpa2hpa(vm, x));
+}
+
+static inline uint64_t hva2gpa(const struct vm *vm, void *x)
+{
+	return hpa2gpa(vm, hva2hpa(x));
+}
+
 #endif	/* !ASSEMBLER */
 
 #endif /* HYPERVISOR_H */

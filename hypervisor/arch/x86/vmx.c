@@ -96,11 +96,11 @@ void exec_vmxon_instr(uint16_t pcpu_id)
 	CPU_CR_WRITE(cr4, tmp64 | CR4_VMXE);
 
 	/* Turn ON VMX */
-	vmxon_region_pa = HVA2HPA(vmxon_region_va);
+	vmxon_region_pa = hva2hpa(vmxon_region_va);
 	exec_vmxon(&vmxon_region_pa);
 
 	if (vcpu != NULL) {
-		vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
+		vmcs_pa = hva2hpa(vcpu->arch_vcpu.vmcs);
 		exec_vmptrld(&vmcs_pa);
 	}
 }
@@ -112,7 +112,7 @@ void vmx_off(uint16_t pcpu_id)
 	uint64_t vmcs_pa;
 
 	if (vcpu != NULL) {
-		vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
+		vmcs_pa = hva2hpa(vcpu->arch_vcpu.vmcs);
 		exec_vmclear((void *)&vmcs_pa);
 	}
 
@@ -991,7 +991,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	 * TODO: introduce API to make this data driven based
 	 * on VMX_EPT_VPID_CAP
 	 */
-	value64 = HVA2HPA(vm->arch_vm.nworld_eptp) | (3UL << 3U) | 6UL;
+	value64 = hva2hpa(vm->arch_vm.nworld_eptp) | (3UL << 3U) | 6UL;
 	exec_vmwrite64(VMX_EPT_POINTER_FULL, value64);
 	pr_dbg("VMX_EPT_POINTER: 0x%016llx ", value64);
 
@@ -1022,10 +1022,10 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	exec_vmwrite32(VMX_CR3_TARGET_COUNT, 0U);
 
 	/* Set up IO bitmap register A and B - pg 2902 24.6.4 */
-	value64 = HVA2HPA(vm->arch_vm.iobitmap[0]);
+	value64 = hva2hpa(vm->arch_vm.iobitmap[0]);
 	exec_vmwrite64(VMX_IO_BITMAP_A_FULL, value64);
 	pr_dbg("VMX_IO_BITMAP_A: 0x%016llx ", value64);
-	value64 = HVA2HPA(vm->arch_vm.iobitmap[1]);
+	value64 = hva2hpa(vm->arch_vm.iobitmap[1]);
 	exec_vmwrite64(VMX_IO_BITMAP_B_FULL, value64);
 	pr_dbg("VMX_IO_BITMAP_B: 0x%016llx ", value64);
 
@@ -1149,7 +1149,7 @@ void init_vmcs(struct vcpu *vcpu)
 	(void)memcpy_s(vcpu->arch_vcpu.vmcs, 4U, (void *)&vmx_rev_id, 4U);
 
 	/* Execute VMCLEAR on current VMCS */
-	vmcs_pa = HVA2HPA(vcpu->arch_vcpu.vmcs);
+	vmcs_pa = hva2hpa(vcpu->arch_vcpu.vmcs);
 	exec_vmclear((void *)&vmcs_pa);
 
 	/* Load VMCS pointer */
