@@ -37,7 +37,8 @@ static inline uint32_t uart16550_read_reg(uint64_t base, uint16_t reg_idx)
 	if (serial_port_mapped) {
 		return pio_read8((uint16_t)base + reg_idx);
 	} else {
-		return mmio_read32((void*)((uint32_t*)HPA2HVA(base) + reg_idx));
+		return mmio_read32((void *)((uint32_t *)hpa2hva(base) +
+								reg_idx));
 	}
 }
 
@@ -50,7 +51,8 @@ static inline void uart16550_write_reg(uint64_t base,
 	if (serial_port_mapped) {
 		pio_write8((uint8_t)val, (uint16_t)base + reg_idx);
 	} else {
-		mmio_write32(val, (void*)((uint32_t*)HPA2HVA(base) + reg_idx));
+		mmio_write32(val, (void *)((uint32_t *)hpa2hva(base) +
+								reg_idx));
 	}
 }
 

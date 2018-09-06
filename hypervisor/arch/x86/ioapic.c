@@ -86,7 +86,7 @@ static void *map_ioapic(uint64_t ioapic_paddr)
 	/* At some point we may need to translate this paddr to a vaddr.
 	 * 1:1 mapping for now.
 	 */
-	return HPA2HVA(ioapic_paddr);
+	return hpa2hva(ioapic_paddr);
 }
 
 static inline uint32_t

@@ -172,11 +172,11 @@ void invept(struct vcpu *vcpu)
 	struct invept_desc desc = {0};
 
 	if (cpu_has_vmx_ept_cap(VMX_EPT_INVEPT_SINGLE_CONTEXT)) {
-		desc.eptp = HVA2HPA(vcpu->vm->arch_vm.nworld_eptp) |
+		desc.eptp = hva2hpa(vcpu->vm->arch_vm.nworld_eptp) |
 				(3UL << 3U) | 6UL;
 		local_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
 		if (vcpu->vm->sworld_control.flag.active != 0UL) {
-			desc.eptp = HVA2HPA(vcpu->vm->arch_vm.sworld_eptp)
+			desc.eptp = hva2hpa(vcpu->vm->arch_vm.sworld_eptp)
 				| (3UL << 3U) | 6UL;
 			local_invept(INVEPT_TYPE_SINGLE_CONTEXT, desc);
 		}
@@ -190,7 +190,7 @@ void invept(struct vcpu *vcpu)
 uint64_t get_paging_pml4(void)
 {
 	/* Return address to caller */
-	return HVA2HPA(mmu_pml4_addr);
+	return hva2hpa(mmu_pml4_addr);
 }
 
 void enable_paging(uint64_t pml4_base_addr)
@@ -254,7 +254,7 @@ void init_paging(void)
 			PTT_PRIMARY, MR_MODIFY);
 
 	/* Enable paging */
-	enable_paging(HVA2HPA(mmu_pml4_addr));
+	enable_paging(hva2hpa(mmu_pml4_addr));
 }
 
 void *alloc_paging_struct(void)

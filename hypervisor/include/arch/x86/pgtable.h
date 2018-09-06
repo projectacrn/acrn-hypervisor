@@ -10,8 +10,15 @@
 #include <pgtable_types.h>
 
 /* hpa <--> hva, now it is 1:1 mapping */
-#define HPA2HVA(x) ((void *)(x))
-#define HVA2HPA(x) ((uint64_t)(x))
+static inline void *hpa2hva(uint64_t x)
+{
+	return (void *)x;
+}
+
+static inline uint64_t hva2hpa(void *x)
+{
+	return (uint64_t)x;
+}
 
 static inline uint64_t pml4e_index(uint64_t address)
 {
@@ -35,17 +42,17 @@ static inline uint64_t pte_index(uint64_t address)
 
 static inline uint64_t *pml4e_page_vaddr(uint64_t pml4e)
 {
-	return HPA2HVA(pml4e & PML4E_PFN_MASK);
+	return hpa2hva(pml4e & PML4E_PFN_MASK);
 }
 
 static inline uint64_t *pdpte_page_vaddr(uint64_t pdpte)
 {
-	return HPA2HVA(pdpte & PDPTE_PFN_MASK);
+	return hpa2hva(pdpte & PDPTE_PFN_MASK);
 }
 
 static inline uint64_t *pde_page_vaddr(uint64_t pde)
 {
-	return HPA2HVA(pde & PDE_PFN_MASK);
+	return hpa2hva(pde & PDE_PFN_MASK);
 }
 
 static inline uint64_t *pml4e_offset(uint64_t *pml4_page, uint64_t addr)

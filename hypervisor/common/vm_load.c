@@ -47,14 +47,14 @@ static uint64_t create_zero_page(struct vm *vm)
 	uint64_t gpa, addr;
 
 	/* Set zeropage in Linux Guest RAM region just past boot args */
-	hva = GPA2HVA(vm, (uint64_t)sw_linux->bootargs_load_addr);
+	hva = gpa2hva(vm, (uint64_t)sw_linux->bootargs_load_addr);
 	zeropage = (struct zero_page *)((char *)hva + MEM_4K);
 
 	/* clear the zeropage */
 	(void)memset(zeropage, 0U, MEM_2K);
 
 	/* copy part of the header into the zero page */
-	hva = GPA2HVA(vm, (uint64_t)sw_kernel->kernel_load_addr);
+	hva = gpa2hva(vm, (uint64_t)sw_kernel->kernel_load_addr);
 	(void)memcpy_s(&(zeropage->hdr), sizeof(zeropage->hdr),
 				&(hva->hdr), sizeof(hva->hdr));
 
@@ -79,7 +79,7 @@ static uint64_t create_zero_page(struct vm *vm)
 	zeropage->e820_nentries = (uint8_t)create_e820_table(zeropage->e820);
 
 	/* Get the host physical address of the zeropage */
-	gpa = hpa2gpa(vm, HVA2HPA((uint64_t)zeropage));
+	gpa = hpa2gpa(vm, hva2hpa((void *)zeropage));
 
 	/* Return Physical Base Address of zeropage */
 	return gpa;
@@ -92,7 +92,7 @@ int load_guest(struct vm *vm, struct vcpu *vcpu)
 	void *hva;
 	uint64_t  lowmem_gpa_top;
 
-	hva  = GPA2HVA(vm, GUEST_CFG_OFFSET);
+	hva  = gpa2hva(vm, GUEST_CFG_OFFSET);
 	lowmem_gpa_top = *(uint64_t *)hva;
 
 	/* hardcode vcpu entry addr(kernel entry) & rsi (zeropage)*/
@@ -100,7 +100,7 @@ int load_guest(struct vm *vm, struct vcpu *vcpu)
 		vcpu_set_gpreg(vcpu, i, 0UL);
 	}
 
-	hva  = GPA2HVA(vm, lowmem_gpa_top -
+	hva  = gpa2hva(vm, lowmem_gpa_top -
 			MEM_4K - MEM_2K);
 	vcpu->entry_addr = (void *)(*((uint64_t *)hva));
 	vcpu_set_gpreg(vcpu, CPU_REG_RSI, lowmem_gpa_top - MEM_4K);
@@ -156,7 +156,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	}
 
 	/* Calculate the host-physical address where the guest will be loaded */
-	hva = GPA2HVA(vm, (uint64_t)sw_kernel->kernel_load_addr);
+	hva = gpa2hva(vm, (uint64_t)sw_kernel->kernel_load_addr);
 
 	/* Copy the guest kernel image to its run-time location */
 	(void)memcpy_s((void *)hva, sw_kernel->kernel_size,
@@ -175,7 +175,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 		}
 
 		/* Get host-physical address for guest bootargs */
-		hva = GPA2HVA(vm,
+		hva = gpa2hva(vm,
 			(uint64_t)sw_linux->bootargs_load_addr);
 
 		/* Copy Guest OS bootargs to its load location */
@@ -221,7 +221,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 		/* Check if a RAM disk is present with Linux guest */
 		if (sw_linux->ramdisk_src_addr != NULL) {
 			/* Get host-physical address for guest RAM disk */
-			hva = GPA2HVA(vm,
+			hva = gpa2hva(vm,
 				(uint64_t)sw_linux->ramdisk_load_addr);
 
 			/* Copy RAM disk to its load location */

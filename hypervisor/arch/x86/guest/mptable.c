@@ -301,7 +301,7 @@ int mptable_build(struct vm *vm)
 	struct mpfps            *mpfp;
 	size_t			mptable_length, table_length;
 
-	startaddr = (char *)GPA2HVA(vm, MPTABLE_BASE);
+	startaddr = (char *)gpa2hva(vm, MPTABLE_BASE);
 
 	table_length = vm->vm_desc->mptable->mpch.base_table_length;
 	mptable_length = sizeof(struct mpfps) + table_length;

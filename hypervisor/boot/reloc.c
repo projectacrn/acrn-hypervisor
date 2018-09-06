@@ -141,7 +141,7 @@ uint64_t read_trampoline_sym(void *sym)
 {
 	uint64_t *hva;
 
-	hva = HPA2HVA(trampoline_start16_paddr) + trampoline_relo_addr(sym);
+	hva = hpa2hva(trampoline_start16_paddr) + trampoline_relo_addr(sym);
 	return *hva;
 }
 
@@ -149,7 +149,7 @@ void write_trampoline_sym(void *sym, uint64_t val)
 {
 	uint64_t *hva;
 
-	hva = HPA2HVA(trampoline_start16_paddr) + trampoline_relo_addr(sym);
+	hva = hpa2hva(trampoline_start16_paddr) + trampoline_relo_addr(sym);
 	*hva = val;
 }
 
@@ -168,41 +168,41 @@ static void update_trampoline_code_refs(uint64_t dest_pa)
 	 */
 	val = dest_pa + trampoline_relo_addr(&trampoline_fixup_target);
 
-	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(&trampoline_fixup_cs));
+	ptr = hpa2hva(dest_pa + trampoline_relo_addr(&trampoline_fixup_cs));
 	*(uint16_t *)(ptr) = (uint16_t)((val >> 4) & 0xFFFFU);
 
-	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(&trampoline_fixup_ip));
+	ptr = hpa2hva(dest_pa + trampoline_relo_addr(&trampoline_fixup_ip));
 	*(uint16_t *)(ptr) = (uint16_t)(val & 0xfU);
 
 	/* Update temporary page tables */
-	ptr = HPA2HVA(dest_pa +
+	ptr = hpa2hva(dest_pa +
 			trampoline_relo_addr(&CPU_Boot_Page_Tables_ptr));
 	*(uint32_t *)(ptr) += (uint32_t)dest_pa;
 
-	ptr = HPA2HVA(dest_pa +
+	ptr = hpa2hva(dest_pa +
 			trampoline_relo_addr(&CPU_Boot_Page_Tables_Start));
 	*(uint64_t *)(ptr) += dest_pa;
 
-	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(&trampoline_pdpt_addr));
+	ptr = hpa2hva(dest_pa + trampoline_relo_addr(&trampoline_pdpt_addr));
 	for (i = 0; i < 4; i++) {
 		*(uint64_t *)(ptr + sizeof(uint64_t) * i) += dest_pa;
 	}
 
 	/* update the gdt base pointer with relocated offset */
-	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(&trampoline_gdt_ptr));
+	ptr = hpa2hva(dest_pa + trampoline_relo_addr(&trampoline_gdt_ptr));
 	*(uint64_t *)(ptr + 2) += dest_pa;
 
 	/* update trampoline jump pointer with relocated offset */
-	ptr = HPA2HVA(dest_pa +
+	ptr = hpa2hva(dest_pa +
 			trampoline_relo_addr(&trampoline_start64_fixup));
 	*(uint32_t *)ptr += dest_pa;
 
 	/* update trampoline's main entry pointer */
-	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(main_entry));
+	ptr = hpa2hva(dest_pa + trampoline_relo_addr(main_entry));
 	*(uint64_t *)ptr += get_hv_image_delta();
 
 	/* update trampoline's spinlock pointer */
-	ptr = HPA2HVA(dest_pa + trampoline_relo_addr(&trampoline_spinlock_ptr));
+	ptr = hpa2hva(dest_pa + trampoline_relo_addr(&trampoline_spinlock_ptr));
 	*(uint64_t *)ptr += get_hv_image_delta();
 }
 
@@ -220,7 +220,7 @@ uint64_t prepare_trampoline(void)
 	pr_dbg("trampoline code: %llx size %x", dest_pa, size);
 
 	/* Copy segment for AP initialization code below 1MB */
-	(void)memcpy_s(HPA2HVA(dest_pa), (size_t)size, &_ld_trampoline_load,
+	(void)memcpy_s(hpa2hva(dest_pa), (size_t)size, &_ld_trampoline_load,
 			(size_t)size);
 	update_trampoline_code_refs(dest_pa);
 	trampoline_start16_paddr = dest_pa;

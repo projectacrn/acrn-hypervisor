@@ -177,7 +177,7 @@ static void map_lapic(void)
 	/* At some point we may need to translate this paddr to a vaddr. 1:1
 	 * mapping for now.
 	 */
-	lapic_info.xapic.vaddr = HPA2HVA(lapic_info.xapic.paddr);
+	lapic_info.xapic.vaddr = hpa2hva(lapic_info.xapic.paddr);
 }
 
 void early_init_lapic(void)

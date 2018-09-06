@@ -144,15 +144,16 @@ static void *get_rsdp(void)
 #endif
 
 	/* EBDA is addressed by the 16 bit pointer at 0x40E */
-	addr = (uint16_t *)HPA2HVA(0x40E);
+	addr = (uint16_t *)hpa2hva(0x40eUL);
 
-	rsdp = biosacpi_search_rsdp((char *)HPA2HVA((uint64_t)(*addr << 4)), 0x400);
+	rsdp = biosacpi_search_rsdp((char *)hpa2hva((uint64_t)(*addr) << 4U),
+									0x400);
 	if (rsdp != NULL) {
 		return rsdp;
 	}
 
 	/* Check the upper memory BIOS space, 0xe0000 - 0xfffff. */
-	rsdp = biosacpi_search_rsdp((char *)HPA2HVA(0xe0000), 0x20000);
+	rsdp = biosacpi_search_rsdp((char *)hpa2hva(0xe0000UL), 0x20000);
 	if (rsdp != NULL) {
 		return rsdp;
 	}
@@ -163,7 +164,7 @@ static void *get_rsdp(void)
 static int
 probe_table(uint64_t address, const char *sig)
 {
-	void *va =  HPA2HVA(address);
+	void *va =  hpa2hva(address);
 	struct acpi_table_header *table = (struct acpi_table_header *)va;
 
 	if (strncmp(table->signature, sig, ACPI_NAME_SIZE) != 0) {
@@ -189,7 +190,8 @@ static void *get_acpi_tbl(const char *sig)
 		 * the version 1.0 portion of the RSDP.  Version 2.0 has
 		 * an additional checksum that we verify first.
 		 */
-		xsdt = (struct acpi_table_xsdt *)HPA2HVA(rsdp->xsdt_physical_address);
+		xsdt = (struct acpi_table_xsdt *)
+					hpa2hva(rsdp->xsdt_physical_address);
 		count = (xsdt->header.length -
 				sizeof(struct acpi_table_header)) /
 		    sizeof(uint64_t);
@@ -203,7 +205,7 @@ static void *get_acpi_tbl(const char *sig)
 	} else {
 		/* Root table is an RSDT (32-bit physical addresses) */
 		rsdt = (struct acpi_table_rsdt *)
-				HPA2HVA((uint64_t)rsdp->rsdt_physical_address);
+				hpa2hva((uint64_t)rsdp->rsdt_physical_address);
 		count = (rsdt->header.length -
 				sizeof(struct acpi_table_header)) /
 			sizeof(uint32_t);
@@ -216,7 +218,7 @@ static void *get_acpi_tbl(const char *sig)
 		}
 	}
 
-	return HPA2HVA(addr);
+	return hpa2hva(addr);
 }
 
 static uint16_t local_parse_madt(void *madt, uint8_t lapic_id_array[MAX_PCPU_NUM])

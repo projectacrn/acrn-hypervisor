@@ -92,7 +92,7 @@ static int local_gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_inf
 		i--;
 
 		addr = addr & IA32E_REF_MASK;
-		base = GPA2HVA(vcpu->vm, addr);
+		base = gpa2hva(vcpu->vm, addr);
 		if (base == NULL) {
 			ret = -EFAULT;
 			goto out;
@@ -166,7 +166,7 @@ static int local_gva2gpa_pae(struct vcpu *vcpu, struct page_walk_info *pw_info,
 	int ret;
 
 	addr = pw_info->top_entry & 0xFFFFFFF0U;
-	base = GPA2HVA(vcpu->vm, addr);
+	base = gpa2hva(vcpu->vm, addr);
 	if (base == NULL) {
 		ret = -EFAULT;
 		goto out;
@@ -283,7 +283,7 @@ static inline uint32_t local_copy_gpa(const struct vm *vm, void *h_ptr, uint64_t
 	len = (size > (pg_size - offset_in_pg)) ?
 		(pg_size - offset_in_pg) : size;
 
-	g_ptr = HPA2HVA(hpa);
+	g_ptr = hpa2hva(hpa);
 
 	if (cp_from_vm) {
 		(void)memcpy_s(h_ptr, len, g_ptr, len);
@@ -399,13 +399,13 @@ void init_e820(void)
 
 	if (boot_regs[0] == MULTIBOOT_INFO_MAGIC) {
 		struct multiboot_info *mbi = (struct multiboot_info *)
-			(HPA2HVA((uint64_t)boot_regs[1]));
+			(hpa2hva((uint64_t)boot_regs[1]));
 
 		pr_info("Multiboot info detected\n");
 		if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MMAP) != 0U) {
 			struct multiboot_mmap *mmap =
 				(struct multiboot_mmap *)
-				HPA2HVA((uint64_t)mbi->mi_mmap_addr);
+				hpa2hva((uint64_t)mbi->mi_mmap_addr);
 			e820_entries = mbi->mi_mmap_length/
 				sizeof(struct multiboot_mmap);
 			if (e820_entries > E820_MAX_ENTRIES) {
@@ -671,7 +671,7 @@ static const uint64_t guest_init_gdt[] = {
 
 uint64_t create_guest_init_gdt(struct vm *vm, uint32_t *limit)
 {
-	void *gtd_addr = GPA2HVA(vm, GUEST_INIT_GDT_START);
+	void *gtd_addr = gpa2hva(vm, GUEST_INIT_GDT_START);
 
 	*limit = sizeof(guest_init_gdt) - 1U;
 	(void)memcpy_s(gtd_addr, 64U, guest_init_gdt, sizeof(guest_init_gdt));

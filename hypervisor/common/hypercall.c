@@ -381,7 +381,7 @@ int32_t hcall_set_ioreq_buffer(struct vm *vm, uint16_t vmid, uint64_t param)
 		return -EINVAL;
 	}
 
-	target_vm->sw.io_shared_page = HPA2HVA(hpa);
+	target_vm->sw.io_shared_page = hpa2hva(hpa);
 
 	req_buf = target_vm->sw.io_shared_page;
 	for (i = 0U; i < VHM_REQUEST_MAX; i++) {
@@ -534,7 +534,7 @@ int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param)
 
 	idx = 0U;
 	/*TODO: use copy_from_gpa for this buffer page */
-	regions = GPA2HVA(vm, set_regions.regions_gpa);
+	regions = gpa2hva(vm, set_regions.regions_gpa);
 	while (idx < set_regions.mr_num) {
 		/* the force pointer change below is for back compatible
 		 * to struct vm_memory_region, it will be removed in the future
@@ -693,7 +693,7 @@ int32_t hcall_assign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param)
 		}
 		/* TODO: how to get vm's address width? */
 		target_vm->iommu = create_iommu_domain(vmid,
-				HVA2HPA(target_vm->arch_vm.nworld_eptp), 48U);
+				hva2hpa(target_vm->arch_vm.nworld_eptp), 48U);
 		if (target_vm->iommu == NULL) {
 			return -ENODEV;
 		}
@@ -807,7 +807,7 @@ int32_t hcall_setup_sbuf(struct vm *vm, uint64_t param)
 	}
 
 	if (ssp.gpa != 0U) {
-		hva = (uint64_t *)GPA2HVA(vm, ssp.gpa);
+		hva = (uint64_t *)gpa2hva(vm, ssp.gpa);
 	} else {
 		hva = (uint64_t *)NULL;
 	}
