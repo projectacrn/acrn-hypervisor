@@ -57,7 +57,7 @@ static struct trusty_key_info g_key_info = {
  * @param gpa_rebased gpa rebased to offset xxx (511G_OFFSET)
  *
  */
-static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
+static int create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 		uint64_t size, uint64_t gpa_rebased)
 {
 	uint64_t nworld_pml4e = 0UL;
@@ -69,27 +69,32 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	void *sub_table_addr = NULL, *pml4_base = NULL;
 	struct vm *vm0 = get_vm_from_vmid(0U);
 	uint16_t i;
+	int err = 0;
 
 	if (vm0 == NULL) {
 		pr_err("Parse vm0 context failed.");
-		return;
+		return -EINVAL;
 	}
 
 	if ((vm->sworld_control.flag.supported == 0UL)
 			|| (vm->arch_vm.sworld_eptp != NULL)) {
 		pr_err("Sworld is not supported or Sworld eptp is not NULL");
-		return;
+		return -EINVAL;
 	}
 
 	/* Check the physical address should be continuous */
 	if (!check_continuous_hpa(vm, gpa_orig, size))	{
 		ASSERT(false, "The physical addr is not continuous for Trusty");
-		return;
+		return -EFAULT;
 	}
 
 	/* Unmap gpa_orig~gpa_orig+size from guest normal world ept mapping */
-	ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+	err = ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
 			gpa_orig, size);
+	if (err != 0) {
+		pr_err("Unmap trusty memory from normal world failed");
+		return err;
+	}
 
 	/* Copy PDPT entries from Normal world to Secure world
 	 * Secure world can access Normal World's memory,
@@ -128,14 +133,22 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 
 	/* Map [gpa_rebased, gpa_rebased + size) to secure ept mapping
 	 */
-	ept_mr_add(vm, (uint64_t *)vm->arch_vm.sworld_eptp,
+	err = ept_mr_add(vm, (uint64_t *)vm->arch_vm.sworld_eptp,
 			hpa, gpa_rebased, size, EPT_RWX | EPT_WB);
+	if (err != 0) {
+		pr_err("Create secure world ept failed");
+		return err;
+	}
 
 	/* Get the gpa address in SOS */
 	gpa = hpa2gpa(vm0, hpa);
 	/* Unmap trusty memory space from sos ept mapping*/
-	ept_mr_del(vm0, (uint64_t *)vm0->arch_vm.nworld_eptp,
+	err = ept_mr_del(vm0, (uint64_t *)vm0->arch_vm.nworld_eptp,
 			gpa, size);
+	if (err != 0) {
+		pr_err("Unmap trusty memory from SOS failed");
+		return err;
+	}
 
 	/* Backup secure world info, will be used when
 	 * destroy secure world and suspend UOS */
@@ -143,6 +156,7 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	vm->sworld_control.sworld_memory.base_gpa_in_uos = gpa_orig;
 	vm->sworld_control.sworld_memory.base_hpa = hpa;
 	vm->sworld_control.sworld_memory.length = size;
+	return 0;
 }
 
 void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
@@ -154,8 +168,8 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 	uint64_t gpa_uos = vm->sworld_control.sworld_memory.base_gpa_in_uos;
 	uint64_t size = vm->sworld_control.sworld_memory.length;
 
-	if (vm0 == NULL) {
-		pr_err("Parse vm0 context failed.");
+	if (vm0 == NULL || vm->arch_vm.sworld_eptp == NULL) {
+		pr_err("vm0 or sworld_eptp is NULL");
 		return;
 	}
 	if (need_clr_mem) {
@@ -163,30 +177,31 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 		(void)memset(HPA2HVA(hpa), 0U, size);
 	}
 
-	/* restore memory to SOS ept mapping */
+	/* restore memory to SOS ept mapping
+	 * here only print error information if failed
+	 * since it will be shutdown or reset
+	 */
 	if (ept_mr_add(vm0, vm0->arch_vm.nworld_eptp,
 			hpa, gpa_sos, size, EPT_RWX | EPT_WB) != 0) {
-		pr_warn("Restore trusty mem to SOS failed");
+		pr_err("Restore trusty mem to SOS failed");
 	}
 
-	/* Restore memory to guest normal world */
+	/* Restore memory to guest normal world
+	 * here only print error information if failed
+	 */
 	if (ept_mr_add(vm, vm->arch_vm.nworld_eptp,
 			hpa, gpa_uos, size, EPT_RWX | EPT_WB) != 0)	{
-		pr_warn("Restore trusty mem to nworld failed");
+		pr_err("Restore trusty mem to nworld failed");
 	}
 
 	/* Free trusty ept page-structures */
-	if (vm->arch_vm.sworld_eptp != NULL) {
-		pdpt_addr =
-		(void *)pml4e_page_vaddr(*(uint64_t *)vm->arch_vm.sworld_eptp);
-		/* memset PDPTEs except trusty memory */
-		(void)memset(pdpt_addr, 0UL,
+	pdpt_addr =
+	(void *)pml4e_page_vaddr(*(uint64_t *)vm->arch_vm.sworld_eptp);
+	/* memset PDPTEs except trusty memory */
+	(void)memset(pdpt_addr, 0UL,
 			NON_TRUSTY_PDPT_ENTRIES * sizeof(uint64_t));
-		free_ept_mem((uint64_t *)vm->arch_vm.sworld_eptp);
-		vm->arch_vm.sworld_eptp = NULL;
-	} else {
-		pr_err("sworld eptp is NULL");
-	}
+	free_ept_mem((uint64_t *)vm->arch_vm.sworld_eptp);
+	vm->arch_vm.sworld_eptp = NULL;
 }
 
 static void save_world_ctx(struct vcpu *vcpu, struct ext_context *ext_ctx)
@@ -437,8 +452,10 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 		(void)memset(&boot_param.rpmb_key[0], 0U, 64U);
 	}
 
-	create_secure_world_ept(vm, trusty_base_gpa, trusty_mem_size,
-						TRUSTY_EPT_REBASE_GPA);
+	if (create_secure_world_ept(vm, trusty_base_gpa, trusty_mem_size,
+						TRUSTY_EPT_REBASE_GPA) != 0) {
+		return false;
+	}
 	trusty_base_hpa = vm->sworld_control.sworld_memory.base_hpa;
 
 	exec_vmwrite64(VMX_EPT_POINTER_FULL,
@@ -486,20 +503,25 @@ void save_sworld_context(struct vcpu *vcpu)
 			sizeof(struct cpu_context));
 }
 
-void restore_sworld_context(struct vcpu *vcpu)
+int restore_sworld_context(struct vcpu *vcpu)
 {
+	int err = 0;
 	struct secure_world_control *sworld_ctl =
 		&vcpu->vm->sworld_control;
 
-	create_secure_world_ept(vcpu->vm,
+	err = create_secure_world_ept(vcpu->vm,
 		sworld_ctl->sworld_memory.base_gpa_in_uos,
 		sworld_ctl->sworld_memory.length,
 		TRUSTY_EPT_REBASE_GPA);
+	if (err != 0) {
+		return err;
+	}
 
 	(void)memcpy_s(&vcpu->arch_vcpu.contexts[SECURE_WORLD],
 			sizeof(struct cpu_context),
 			&vcpu->vm->sworld_snapshot,
 			sizeof(struct cpu_context));
+	return err;
 }
 
 /**
