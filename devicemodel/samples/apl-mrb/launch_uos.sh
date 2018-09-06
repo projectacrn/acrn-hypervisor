@@ -15,7 +15,7 @@ vm_name=vm$1
 vm_name=${vm_name}-${mac:9:8}
 
 # create a unique tap device for each VM
-tap=tap_LaaG
+tap=tap_$6
 tap_exist=$(ip a | grep acrn_"$tap" | awk '{print $1}')
 if [ "$tap_exist"x != "x" ]; then
   echo "tap device existed, reuse acrn_$tap"
@@ -96,7 +96,7 @@ if [ "$setup_mem" != "" ];then
 fi
 
 boot_dev_flag=",b"
-if [ $6 == 1 ];then
+if [ $7 == 1 ];then
   boot_image_option="--vsbl /usr/share/acrn/bios/VSBL_debug.bin"
 else
   boot_image_option="--vsbl /usr/share/acrn/bios/VSBL.bin"
@@ -146,7 +146,7 @@ vm_name=vm$1
 vm_name=${vm_name}-${mac:9:8}
 
 # create a unique tap device for each VM
-tap=tap_AaaG
+tap=tap_$6
 tap_exist=$(ip a | grep acrn_"$tap" | awk '{print $1}')
 if [ "$tap_exist"x != "x" ]; then
   echo "tap device existed, reuse acrn_$tap"
@@ -265,7 +265,7 @@ kernel_cmdline_generic="maxcpus=$2 nohpet tsc=reliable intel_iommu=off \
    i915.enable_hangcheck=0 use_nuclear_flip=1 i915.enable_guc_submission=0 i915.enable_guc=0"
 
 boot_dev_flag=",b"
-if [ $6 == 1 ];then
+if [ $7 == 1 ];then
   boot_image_option="--vsbl /usr/share/acrn/bios/VSBL_debug.bin"
 else
   boot_image_option="--vsbl /usr/share/acrn/bios/VSBL.bin"
@@ -377,20 +377,20 @@ done
 
 case $launch_type in
 	1) echo "Launch clearlinux UOS"
-		launch_clearlinux 1 3 "64 448 8" 0x070F00 clearlinux $debug
+		launch_clearlinux 1 3 "64 448 8" 0x070F00 clearlinux "LaaG" $debug
 		;;
 	2) echo "Launch android UOS"
-		launch_android 1 3 "64 448 8" 0x070F00 android $debug
+		launch_android 1 3 "64 448 8" 0x070F00 android "AaaG" $debug
 		;;
 	3) echo "Launch clearlinux UOS + android UOS"
-		launch_android 1 2 "64 448 4" 0x00000C android $debug &
+		launch_android 1 2 "64 448 4" 0x00000C android "AaaG" $debug &
 		sleep 5
-		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux $debug
+		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux "LaaG" $debug
 		;;
 	4) echo "Launch two clearlinux UOSs"
-		launch_clearlinux 1 1 "64 448 4" 0x00000C clearlinux $debug &
+		launch_clearlinux 1 1 "64 448 4" 0x00000C clearlinux "L1aaG" $debug &
 		sleep 5
-		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux_dup $debug
+		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux_dup "L2aaG" $debug
 		;;
 esac
 
