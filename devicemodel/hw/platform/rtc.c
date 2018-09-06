@@ -33,11 +33,17 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <time.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/syscall.h>
+#include <sys/signalfd.h>
 
 #include "vmmapi.h"
 #include "inout.h"
 #include "mc146818rtc.h"
 #include "rtc.h"
+#include "mevent.h"
 
 /* #define DEBUG_RTC */
 #ifdef DEBUG_RTC
@@ -70,6 +76,8 @@ struct rtcdev {
 struct vrtc {
 	struct vmctx *vm;
 	pthread_mutex_t	mtx;
+	int		signal_fd;
+	struct mevent	*mevp;
 	timer_t		periodic_timer_id;  /*periodic timer id*/
 	timer_t		update_timer_id;    /*update timer id*/
 	u_int		addr;               /* RTC register to read or write */
@@ -114,6 +122,9 @@ struct clktime {
  * - RTC date/time fields have invalid values
  */
 #define	VRTC_BROKEN_TIME	((time_t)-1)
+
+/* signo of timers created by vrtc */
+#define	VRTC_TIMER_SIGNO	SIGALRM
 
 #define	RTC_IRQ			8
 #define	RTCSB_BIN		0x04
@@ -564,30 +575,29 @@ fail:
 	return VRTC_BROKEN_TIME;
 }
 
-static timer_t
-vrtc_create_timer(struct vrtc *vrtc, time_t sec, time_t nsec, void (*cb)())
+static void
+vrtc_create_timer(timer_t *timer_id, time_t sec, time_t nsec)
 {
-	timer_t timerid;
 	struct sigevent sigevt;
 	struct itimerspec ts;
 
 	memset(&sigevt, 0, sizeof(struct sigevent));
 	memset(&ts, 0, sizeof(struct itimerspec));
 
-	sigevt.sigev_value.sival_ptr = vrtc;
-	sigevt.sigev_notify = SIGEV_THREAD;
-	sigevt.sigev_notify_function = cb;
+	/* there is no glibc wrapper for gettid */
+	sigevt._sigev_un._tid = syscall(SYS_gettid);
+	sigevt.sigev_value.sival_ptr = timer_id;
+	sigevt.sigev_notify = SIGEV_THREAD_ID | SIGEV_SIGNAL;
+	sigevt.sigev_signo = VRTC_TIMER_SIGNO;
 
-	assert(timer_create(CLOCK_REALTIME, &sigevt, &timerid) == 0);
+	assert(timer_create(CLOCK_REALTIME, &sigevt, timer_id) == 0);
 	/*setting the interval time*/
 	ts.it_interval.tv_sec = sec;
 	ts.it_interval.tv_nsec = nsec;
 	/*set the delay time it will be started when timer_setting*/
 	ts.it_value.tv_sec = sec;
 	ts.it_value.tv_nsec = nsec;
-	assert(timer_settime(timerid, 0, &ts, NULL) == 0);
-
-	return timerid;
+	assert(timer_settime(*timer_id, 0, &ts, NULL) == 0);
 }
 
 static void
@@ -811,8 +821,7 @@ vrtc_set_reg_b(struct vrtc *vrtc, uint8_t newval)
 		}
 
 		/*create the new periodic timer*/
-		vrtc->periodic_timer_id =
-		    vrtc_create_timer(vrtc, 0, newfreq, vrtc_periodic_timer);
+		vrtc_create_timer(&vrtc->periodic_timer_id, 0, newfreq);
 		assert(vrtc->periodic_timer_id > 0);
 
 	} else {
@@ -873,8 +882,7 @@ vrtc_set_reg_a(struct vrtc *vrtc, uint8_t newval)
 		}
 
 		/*create the new periodic timer*/
-		vrtc->periodic_timer_id =
-		     vrtc_create_timer(vrtc, 0, newfreq, vrtc_periodic_timer);
+		vrtc_create_timer(&vrtc->periodic_timer_id, 0, newfreq);
 		assert(vrtc->periodic_timer_id > 0);
 	} else {
 		/*Nothing to do*/
@@ -1100,12 +1108,49 @@ vrtc_enable_localtime(int l_time)
 	local_time = l_time;
 }
 
+static void
+vrtc_handle_timer(int fd __attribute__((unused)),
+		  enum ev_type t __attribute__((unused)),
+		  void *arg)
+{
+	struct vrtc *vrtc = arg;
+	struct signalfd_siginfo info;
+	timer_t *timer_id;
+	int len;
+
+	while (1) {
+		len = read(vrtc->signal_fd, &info, sizeof(info));
+		if (len == -1 && errno == EAGAIN)
+			break;
+		if (len == -1) {
+			RTC_DEBUG("signal_fd read failed: error = %d\n",
+				errno);
+			break;
+		}
+		if (len != sizeof(info)) {
+			RTC_DEBUG("signal_fd read len error: len = %d\n",
+				len);
+			break;
+		}
+
+		timer_id = (timer_t *)info.ssi_ptr;
+		if (*timer_id == vrtc->update_timer_id)
+			vrtc_update_timer(vrtc);
+		else if (*timer_id == vrtc->periodic_timer_id)
+			vrtc_periodic_timer(vrtc);
+		else
+			RTC_DEBUG("unsupported timer_id 0xlx\n", *timer_id);
+	}
+}
+
 int
 vrtc_init(struct vmctx *ctx)
 {
 	struct vrtc *vrtc;
 	struct rtcdev *rtc;
 	time_t curtime;
+	sigset_t mask;
+	int flags;
 	struct inout_port rtc_addr, rtc_data;
 
 	vrtc = calloc(1, sizeof(struct vrtc));
@@ -1114,11 +1159,6 @@ vrtc_init(struct vmctx *ctx)
 	ctx->vrtc = vrtc;
 
 	pthread_mutex_init(&vrtc->mtx, NULL);
-
-	/*create update interrupt timer(1s)*/
-	vrtc->update_timer_id =
-		vrtc_create_timer(vrtc, 1, 0, vrtc_update_timer);
-	assert(vrtc->update_timer_id > 0);
 
 	memset(&rtc_addr, 0, sizeof(struct inout_port));
 	memset(&rtc_data, 0, sizeof(struct inout_port));
@@ -1162,6 +1202,31 @@ vrtc_init(struct vmctx *ctx)
 	secs_to_rtc(curtime, vrtc, 0);
 	pthread_mutex_unlock(&vrtc->mtx);
 
+	/*block VRTC_TIMER_SIGNO so it can be polled by signalfd*/
+	sigemptyset(&mask);
+	sigaddset(&mask, VRTC_TIMER_SIGNO);
+	pthread_sigmask(SIG_BLOCK, &mask, NULL);
+
+	/*create signalfd*/
+	vrtc->signal_fd = signalfd(-1, &mask, 0);
+	assert(vrtc->signal_fd > 0);
+
+	/*set close-on-exec*/
+	flags = fcntl(vrtc->signal_fd, F_GETFD);
+	fcntl(vrtc->signal_fd, F_SETFD, flags | FD_CLOEXEC);
+
+	/*set non-block*/
+	flags = fcntl(vrtc->signal_fd, F_GETFL);
+	fcntl(vrtc->signal_fd, F_SETFL, flags | O_NONBLOCK);
+
+	vrtc->mevp = mevent_add(vrtc->signal_fd, EVF_READ,
+		vrtc_handle_timer, vrtc);
+	assert(vrtc->mevp != NULL);
+
+	/*create update interrupt timer(1s)*/
+	vrtc_create_timer(&vrtc->update_timer_id, 1, 0);
+	assert(vrtc->update_timer_id > 0);
+
 	return 0;
 }
 
@@ -1170,6 +1235,29 @@ vrtc_deinit(struct vmctx *ctx)
 {
 	struct vrtc *vrtc = ctx->vrtc;
 	struct inout_port iop;
+	sig_t prev_sig_handler;
+
+	/*delete timer*/
+	if (vrtc->update_timer_id > 0) {
+		vrtc_delete_timer(vrtc->update_timer_id);
+		vrtc->update_timer_id = (timer_t)-1;
+	}
+
+	if (vrtc->periodic_timer_id > 0) {
+		vrtc_delete_timer(vrtc->periodic_timer_id);
+		vrtc->periodic_timer_id = (timer_t)-1;
+	}
+
+	if (vrtc->mevp)
+		mevent_delete(vrtc->mevp);
+
+	if (vrtc->signal_fd > 0)
+		close(vrtc->signal_fd);
+
+	/*clear pending signals*/
+	prev_sig_handler = signal(VRTC_TIMER_SIGNO, SIG_IGN);
+	if (prev_sig_handler != SIG_ERR)
+		signal(VRTC_TIMER_SIGNO, prev_sig_handler);
 
 	memset(&iop, 0, sizeof(struct inout_port));
 	iop.name = "rtc";
@@ -1183,7 +1271,6 @@ vrtc_deinit(struct vmctx *ctx)
 	iop.size = 1;
 	unregister_inout(&iop);
 
-	vrtc_delete_timer(vrtc->update_timer_id);
 	free(vrtc);
 	ctx->vrtc = NULL;
 }
