@@ -14,6 +14,8 @@ CFLAGS	+= -m64 -D_GNU_SOURCE
 ifeq ($(RELEASE),0)
 CFLAGS	+= -DDEBUG_ACRN_CRASHLOG
 endif
+CFLAGS += -fpie
+LDFLAGS += -pie
 INCLUDE := -I $(BASEDIR)/common/include
 export INCLUDE
 export BUILDDIR
@@ -43,6 +45,7 @@ ifeq ($(strip $(LIB_EXIST)),ltelemetry)
         EXTRA_LIBS += -ltelemetry
 endif
 export CFLAGS
+export LDFLAGS
 export EXTRA_LIBS
 
 .PHONY:all

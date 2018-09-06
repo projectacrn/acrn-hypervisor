@@ -15,7 +15,7 @@ LIBS = -levent -lpthread $(EXTRA_LIBS)
 usercrash_s: $(BUILDDIR)/usercrash/obj/protocol.o \
 	$(BUILDDIR)/usercrash/obj/server.o \
 	$(BUILDDIR)/common/obj/log_sys.o
-	$(CC) -g $(CFLAGS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ $(LIBS)
+	$(CC) -g $(CFLAGS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ $(LIBS) $(LDFLAGS)
 
 usercrash_c: $(BUILDDIR)/usercrash/obj/protocol.o \
 	$(BUILDDIR)/usercrash/obj/client.o \
@@ -24,7 +24,7 @@ usercrash_c: $(BUILDDIR)/usercrash/obj/protocol.o \
 	$(BUILDDIR)/common/obj/cmdutils.o \
 	$(BUILDDIR)/common/obj/fsutils.o \
 	$(BUILDDIR)/common/obj/strutils.o
-	$(CC) -g $(CFLAGS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ $(LIBS)
+	$(CC) -g $(CFLAGS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ $(LIBS) $(LDFLAGS)
 
 debugger: $(BUILDDIR)/usercrash/obj/debugger.o \
 	$(BUILDDIR)/usercrash/obj/crash_dump.o \
@@ -32,7 +32,7 @@ debugger: $(BUILDDIR)/usercrash/obj/debugger.o \
 	$(BUILDDIR)/common/obj/cmdutils.o \
 	$(BUILDDIR)/common/obj/fsutils.o \
 	$(BUILDDIR)/common/obj/strutils.o
-	$(CC) -g $(CFLAGS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ $(LIBS)
+	$(CC) -g $(CFLAGS) $(INCLUDE) $^ -o $(BUILDDIR)/usercrash/bin/$@ $(LIBS) $(LDFLAGS)
 
 $(BUILDDIR)/usercrash/obj/%.o:%.c
 	$(CC) $(CFLAGS) $(INCLUDE) -o $@ -c $<
