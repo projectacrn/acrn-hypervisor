@@ -1,8 +1,10 @@
 
 OUT_DIR ?= .
+CFLAGS += -fpie
+LDFLAGS += -pie
 
 all:
-	$(CC) -g acrnlog.c -o $(OUT_DIR)/acrnlog -lpthread
+	$(CC) -g acrnlog.c -o $(OUT_DIR)/acrnlog -lpthread $(CFLAGS) $(LDFLAGS)
 	cp acrnlog.service $(OUT_DIR)/acrnlog.service
 
 clean:
