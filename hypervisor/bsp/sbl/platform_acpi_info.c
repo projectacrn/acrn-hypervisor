@@ -48,7 +48,12 @@ const struct acpi_info host_acpi_info = {
 			.val_pm1b = 0U,
 			.reserved = 0U
 		},
+#if 0	/* set to 0 if run with ABL, set to 1 if switch back to SBL; */
 		.wake_vector_32 = (uint32_t *)0x7A86BBDCUL,
 		.wake_vector_64 = (uint64_t *)0x7A86BBE8UL
+#else
+		.wake_vector_32 = (uint32_t *)0x7AEDCEFCUL,
+		.wake_vector_64 = (uint64_t *)0x7AEDCF08UL
+#endif
 	}
 };
