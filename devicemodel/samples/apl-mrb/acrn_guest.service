@@ -10,7 +10,7 @@ ConditionPathExists=/dev/acrn_vhm
 [Service]
 Type=simple
 RemainAfterExit=false
-ExecStart=/bin/sh /usr/share/acrn/samples/apl-mrb/launch_uos.sh -V 5
+ExecStart=/bin/sh /usr/share/acrn/samples/apl-mrb/launch_uos.sh -V 6
 
 [Install]
 WantedBy=multi-user.target
