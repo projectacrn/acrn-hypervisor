@@ -124,7 +124,7 @@ void init_mtrr(struct vcpu *vcpu)
 	}
 }
 
-static uint32_t update_ept(struct vm *vm, uint64_t start,
+static void update_ept(struct vm *vm, uint64_t start,
 	uint64_t size, uint8_t type)
 {
 	uint64_t attr;
@@ -145,11 +145,13 @@ static uint32_t update_ept(struct vm *vm, uint64_t start,
 	case MTRR_MEM_TYPE_UC:
 	default:
 		attr = EPT_UNCACHED;
+		break;
 	}
 
-	ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-			start, size, attr, EPT_MT_MASK);
-	return attr;
+	if (ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+				start, size, attr, EPT_MT_MASK) != 0) {
+		pr_err("%s: Modify memory attribute failed", __func__);
+	}
 }
 
 static void update_ept_mem_type(struct vcpu *vcpu)
