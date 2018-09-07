@@ -74,7 +74,7 @@ void vcpu_thread(struct vcpu *vcpu)
 					vcpu->msr_tsc_aux_guest);
 		}
 
-		ret = start_vcpu(vcpu);
+		ret = run_vcpu(vcpu);
 		if (ret != 0) {
 			pr_fatal("vcpu resume failed");
 			pause_vcpu(vcpu, VCPU_ZOMBIE);
