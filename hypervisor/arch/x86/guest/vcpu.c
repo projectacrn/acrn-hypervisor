@@ -224,13 +224,6 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 
 	vcpu->arch_vcpu.vpid = allocate_vpid();
 
-	/* Allocate VMCS region for this VCPU */
-	vcpu->arch_vcpu.vmcs = alloc_page();
-	ASSERT(vcpu->arch_vcpu.vmcs != NULL, "");
-
-	/* Memset VMCS region for this VCPU */
-	(void)memset(vcpu->arch_vcpu.vmcs, 0U, CPU_PAGE_SIZE);
-
 	/* Initialize exception field in VCPU context */
 	vcpu->arch_vcpu.exception_info.exception = VECTOR_INVALID;
 
@@ -384,7 +377,6 @@ void destroy_vcpu(struct vcpu *vcpu)
 	atomic_dec16(&vcpu->vm->hw.created_vcpus);
 
 	vlapic_free(vcpu);
-	free(vcpu->arch_vcpu.vmcs);
 	per_cpu(ever_run_vcpu, vcpu->pcpu_id) = NULL;
 	free_pcpu(vcpu->pcpu_id);
 	free(vcpu);
