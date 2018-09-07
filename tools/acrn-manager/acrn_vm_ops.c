@@ -50,7 +50,7 @@ static pthread_mutex_t vmmngr_mutex = PTHREAD_MUTEX_INITIALIZER;
 struct vmmngr_list_struct vmmngr_head;
 static unsigned long update_count = 0;
 
-struct vmmngr_struct *vmmngr_find(char *name)
+struct vmmngr_struct *vmmngr_find(const char *name)
 {
 	struct vmmngr_struct *s;
 
