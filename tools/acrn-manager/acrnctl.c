@@ -38,6 +38,8 @@
 #define RESUME_DESC    "Resume virtual machine from suspend state"
 #define RESET_DESC     "Stop and then start virtual machine VM_NAME"
 
+#define STOP_TIMEOUT	10U
+
 struct acrnctl_cmd {
 	const char *cmd;
 	const char desc[128];	/* Description of the cmd */
@@ -492,6 +494,25 @@ static int acrnctl_do_resume(int argc, char *argv[])
 	return 0;
 }
 
+static int wait_vm_stop(const char * vmname, unsigned int timeout)
+{
+	unsigned long t = timeout;
+	struct vmmngr_struct *s;
+
+	do {
+		/* list and update the vm status */
+		vmmngr_update();
+
+		s =  vmmngr_find(vmname);
+		if (s->state == VM_CREATED)
+			return 0;
+
+		sleep(1);
+	} while (t--);
+
+	return -1;
+}
+
 static int acrnctl_do_reset(int argc, char *argv[])
 {
 	struct vmmngr_struct *s;
@@ -511,6 +532,11 @@ static int acrnctl_do_reset(int argc, char *argv[])
 			case VM_STARTED:
 			case VM_PAUSED:
 				stop_vm(argv[i]);
+				if (wait_vm_stop(argv[i], STOP_TIMEOUT)) {
+					printf("Failed to stop %s in %u sec\n",
+						argv[i], STOP_TIMEOUT);
+					break;
+				}
 				start_vm(argv[i]);
 				break;
 			default:

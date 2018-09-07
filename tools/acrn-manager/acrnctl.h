@@ -28,7 +28,7 @@ extern const char *state_str[];
  *
  * @return vmmngr_struct * if find, NULL not find
  */
-struct vmmngr_struct *vmmngr_find(char *vmname);
+struct vmmngr_struct *vmmngr_find(const char *vmname);
 
 /* Per-vm vm managerment struct */
 struct vmmngr_struct {
