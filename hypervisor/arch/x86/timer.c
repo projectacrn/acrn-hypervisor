@@ -188,15 +188,6 @@ void timer_init(void)
 	init_tsc_deadline_timer();
 }
 
-void timer_cleanup(void)
-{
-	uint16_t pcpu_id = get_cpu_id();
-
-	if (pcpu_id == BOOT_CPU_ID) {
-		free_irq(TIMER_IRQ);
-	}
-}
-
 void check_tsc(void)
 {
 	uint64_t temp64;
