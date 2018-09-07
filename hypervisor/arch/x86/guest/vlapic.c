@@ -82,7 +82,7 @@ vlapic_dump_isr(__unused struct acrn_vlapic *vlapic, __unused char *msg) {}
 #endif
 
 /*APIC-v APIC-access address */
-static void *apicv_apic_access_addr;
+static uint8_t apicv_apic_access_addr[CPU_PAGE_SIZE] __aligned(CPU_PAGE_SIZE);
 
 static int
 apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector,
@@ -2098,13 +2098,6 @@ apicv_batch_set_tmr(struct acrn_vlapic *vlapic)
 uint64_t
 vlapic_apicv_get_apic_access_addr(__unused struct vm *vm)
 {
-	if (apicv_apic_access_addr == NULL) {
-		apicv_apic_access_addr = alloc_page();
-		ASSERT(apicv_apic_access_addr != NULL,
-					"apicv allocate failed.");
-
-		(void)memset((void *)apicv_apic_access_addr, 0U, CPU_PAGE_SIZE);
-	}
 	return hva2hpa(apicv_apic_access_addr);
 }
 
