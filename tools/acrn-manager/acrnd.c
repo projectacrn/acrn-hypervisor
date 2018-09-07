@@ -146,11 +146,9 @@ static int load_timer_list(void)
 {
 	FILE *fp;
 	struct work_arg arg = {};
-	time_t expire;
-	time_t record;
-	time_t current;
+	time_t expire, current;
 	char l[256];
-	char s1[16], s2[64], s3[64];	/* vmname & expire */
+	char s1[16], s2[64];	/* vmname & expire */
 	int ret = 0;
 
 	pthread_mutex_lock(&timer_file_mutex);
@@ -162,17 +160,14 @@ static int load_timer_list(void)
 		goto open_file_err;
 	}
 
-	current = time(NULL);
-
 	while (!feof(fp)) {
 		memset(l, 0, 256);
 		fgets(l, 255, fp);
 
 		memset(s1, 0, 16);
 		memset(s2, 0, 64);
-		memset(s3, 0, 64);
 
-		sscanf(l, "%s\t%s\t%s", s1, s2, s3);
+		sscanf(l, "%s\t%s", s1, s2);
 
 		if (strlen(s1) == 0 || strlen(s1) > 16) {
 			perror("Invalid vmname from timer list file");
@@ -188,15 +183,7 @@ static int load_timer_list(void)
 			continue;
 		}
 
-		record = strtoul(s3, NULL, 10);
-		if (record == 0 || errno == ERANGE) {
-			perror("Invalid record time from timer list file");
-			continue;
-		}
-
-		if (current == (time_t) -1)
-			current = record;
-
+		current = time(NULL);
 		if (expire > current)
 			expire -= current;
 		else
@@ -376,14 +363,7 @@ static int store_timer_list(void)
 	FILE *fp;
 	struct acrnd_work *w, *twork;
 	time_t sys_wakeup = 0;
-	time_t current;
 	int ret = 0;
-
-	current = time(NULL);
-	if (current == (time_t) - 1) {
-		pdebug();
-		return -1;
-	}
 
 	pthread_mutex_lock(&timer_file_mutex);
 	fp = fopen(TIMER_LIST_FILE, "w+");
@@ -400,7 +380,7 @@ static int store_timer_list(void)
 			sys_wakeup = w->expire;
 		if (w->expire < sys_wakeup)
 			sys_wakeup = w->expire;
-		fprintf(fp, "%s\t%lu\t%lu\n", w->arg.name, w->expire, current);
+		fprintf(fp, "%s\t%lu\n", w->arg.name, w->expire);
 
 		/* remove work from list after it's saved onto fs */
 		LIST_REMOVE(w, list);
