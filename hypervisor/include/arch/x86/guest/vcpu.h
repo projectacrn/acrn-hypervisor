@@ -164,11 +164,11 @@ struct cpu_context {
 };
 
 struct vcpu_arch {
+	/* vmcs region for this vcpu, MUST be 4KB-aligned */
+	uint8_t vmcs[CPU_PAGE_SIZE];
 	int cur_context;
 	struct cpu_context contexts[NR_WORLD];
 
-	/* A pointer to the VMCS for this CPU. */
-	void *vmcs;
 	uint16_t vpid;
 
 	/* Holds the information needed for IRQ/exception handling. */
@@ -205,14 +205,14 @@ struct vcpu_arch {
 
 	/* per vcpu lapic */
 	void *vlapic;
-};
+} __aligned(CPU_PAGE_SIZE);
 
 struct vm;
 struct vcpu {
+	/* Architecture specific definitions for this VCPU */
+	struct vcpu_arch arch_vcpu;
 	uint16_t pcpu_id;	/* Physical CPU ID of this VCPU */
 	uint16_t vcpu_id;	/* virtual identifier for VCPU */
-	struct vcpu_arch arch_vcpu;
-		/* Architecture specific definitions for this VCPU */
 	struct vm *vm;		/* Reference to the VM this VCPU belongs to */
 	void *entry_addr;  /* Entry address for this VCPU when first started */
 
@@ -246,7 +246,7 @@ struct vcpu {
 #endif
 	uint64_t reg_cached;
 	uint64_t reg_updated;
-};
+} __aligned(CPU_PAGE_SIZE);
 
 struct vcpu_dump {
 	struct vcpu *vcpu;
