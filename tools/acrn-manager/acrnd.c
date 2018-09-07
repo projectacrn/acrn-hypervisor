@@ -40,7 +40,7 @@ static pthread_mutex_t work_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t acrnd_stop_mutex = PTHREAD_MUTEX_INITIALIZER;
 static unsigned int acrnd_stop_timeout;
 /* acrnd_add_work(), add a worker function.
- * @func, the worker function.
+ * @func, the worker function, will be called with work_mutex hold.
  * @sec, when add a @func(), after @sec seconds @func() will be called.
  * @arg, a cpoy of @arg will be pass to @func.
  */
@@ -93,25 +93,26 @@ static void try_do_works(void)
 		return;
 	}
 
+	pthread_mutex_lock(&work_mutex);
 	list_foreach_safe(work, &work_head, list, twork) {
-		if (current > work->expire) {
-			pthread_mutex_lock(&work_mutex);
+		if (current >= work->expire) {
 			work->func(&work->arg);
 			LIST_REMOVE(work, list);
-			pthread_mutex_unlock(&work_mutex);
 			free(work);
 		}
 	}
+	pthread_mutex_unlock(&work_mutex);
 }
 
 static void acrnd_run_vm(char *name);
 unsigned get_sos_wakeup_reason(void);
 
-/* Time to run/resume VM */
+/* Timer callback to run/resume VM.
+ * Will be called with work_mutex hold
+ */
 void acrnd_vm_timer_func(struct work_arg *arg)
 {
 	struct vmmngr_struct *vm;
-	unsigned reason;
 
 	if (!arg) {
 		pdebug();
@@ -130,8 +131,7 @@ void acrnd_vm_timer_func(struct work_arg *arg)
 		acrnd_run_vm(arg->name);
 		break;
 	case VM_PAUSED:
-		reason = get_sos_wakeup_reason();
-		resume_vm(arg->name, reason);
+		resume_vm(arg->name, CBC_WK_RSN_RTC);
 		break;
 	default:
 		pdebug();
@@ -261,6 +261,21 @@ static int active_all_vms(void)
 	return ret ? -1 : 0;
 }
 
+static int wakeup_suspended_vms(unsigned wakeup_reason)
+{
+	struct vmmngr_struct *vm;
+	int ret = 0;
+
+	vmmngr_update();
+
+	LIST_FOREACH(vm, &vmmngr_head, list) {
+		if (vm->state == VM_PAUSED)
+			ret += resume_vm(vm->name, wakeup_reason);
+	}
+
+	return ret ? -1 : 0;
+}
+
 #define SOS_LCS_SOCK		"sos-lcs"
 #define DEFAULT_TIMEOUT	2U
 #define ACRND_NAME		"acrnd"
@@ -345,7 +360,7 @@ static int set_sos_timer(time_t due_time)
  RETRY:
 	ret =
 	    mngr_send_msg(client_fd, &req, &ack, DEFAULT_TIMEOUT);
-	while (ret != 0 && retry < 5) {
+	while (ret <= 0 && retry < 5) {
 		printf("Fail to set sos wakeup timer(err:%d), retry %d...\n",
 		       ret, retry++);
 		goto RETRY;
@@ -359,7 +374,7 @@ static int set_sos_timer(time_t due_time)
 static int store_timer_list(void)
 {
 	FILE *fp;
-	struct acrnd_work *w;
+	struct acrnd_work *w, *twork;
 	time_t sys_wakeup = 0;
 	time_t current;
 	int ret = 0;
@@ -378,7 +393,7 @@ static int store_timer_list(void)
 		goto open_file_err;
 	}
 	pthread_mutex_lock(&work_mutex);
-	LIST_FOREACH(w, &work_head, list) {
+	list_foreach_safe(w, &work_head, list, twork) {
 		if (w->func != acrnd_vm_timer_func)
 			continue;
 		if (!sys_wakeup)
@@ -386,6 +401,10 @@ static int store_timer_list(void)
 		if (w->expire < sys_wakeup)
 			sys_wakeup = w->expire;
 		fprintf(fp, "%s\t%lu\t%lu\n", w->arg.name, w->expire, current);
+
+		/* remove work from list after it's saved onto fs */
+		LIST_REMOVE(w, list);
+		free(w);
 	}
 	pthread_mutex_unlock(&work_mutex);
 
@@ -536,28 +555,31 @@ void handle_acrnd_resume(struct mngr_msg *msg, int client_fd, void *param)
 
 	ack.msgid = msg->msgid;
 	ack.timestamp = msg->timestamp;
-	ack.data.err = 0;
-
-	/* Do we have a timer list file to load? */
-	if (!stat(TIMER_LIST_FILE, &st))
-		if (S_ISREG(st.st_mode)) {
-			ack.data.err = load_timer_list();
-			if (ack.data.err)
-				pdebug();
-			goto reply_ack;
-		}
+	ack.data.err = -1;
 
 	/* acrnd get wakeup_reason from sos lcs */
 	wakeup_reason = get_sos_wakeup_reason();
 
 	if (wakeup_reason & CBC_WK_RSN_RTC) {
-		/* do nothing, just wait the acrnd_work to expire */
-		goto reply_ack;
+		/* wakeup by RTC timer */
+		if (!stat(TIMER_LIST_FILE, &st)
+			&& S_ISREG(st.st_mode)) {
+			ack.data.err = load_timer_list();
+			if (ack.data.err == 0) {
+				/* load timers successfully */
+				try_do_works();
+				goto reply_ack;
+			}
+		}
+
+		perror("Error to load timers, wakeup all VMs");
+		ack.data.err = wakeup_suspended_vms(wakeup_reason);	
+	} else {
+		printf("Resumed UOS, by ignition button\n");
+		ack.data.err = wakeup_suspended_vms(wakeup_reason);
 	}
 
-	ack.data.err = active_all_vms();
-
- reply_ack:
+reply_ack:
 	unlink(TIMER_LIST_FILE);
 
 	if (client_fd > 0)
