@@ -415,7 +415,7 @@ int32_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int64_t hcall_save_restore_sworld_ctx(struct vcpu *vcpu);
+int32_t hcall_save_restore_sworld_ctx(struct vcpu *vcpu);
 
 /**
  * @}

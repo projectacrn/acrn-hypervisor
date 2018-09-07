@@ -72,8 +72,9 @@ int32_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param)
 	return 0;
 }
 
-int64_t hcall_save_restore_sworld_ctx(struct vcpu *vcpu)
+int32_t hcall_save_restore_sworld_ctx(struct vcpu *vcpu)
 {
+	int err = 0;
 	struct vm *vm = vcpu->vm;
 
 	if (vm->sworld_control.flag.supported == 0UL) {
@@ -94,11 +95,11 @@ int64_t hcall_save_restore_sworld_ctx(struct vcpu *vcpu)
 		vm->sworld_control.flag.ctx_saved = 1UL;
 	} else {
 		if (vm->sworld_control.flag.ctx_saved != 0UL) {
-			restore_sworld_context(vcpu);
+			err = restore_sworld_context(vcpu);
 			vm->sworld_control.flag.ctx_saved = 0UL;
 			vm->sworld_control.flag.active = 1UL;
 		}
 	}
 
-	return 0;
+	return err;
 }

@@ -178,6 +178,7 @@ struct vcpu *get_ever_run_vcpu(uint16_t pcpu_id)
 int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 {
 	struct vcpu *vcpu;
+	int err = 0;
 
 	ASSERT(vm != NULL, "");
 	ASSERT(rtn_vcpu_handle != NULL, "");
@@ -238,7 +239,7 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	vcpu->arch_vcpu.cur_context = NORMAL_WORLD;
 
 	/* Create per vcpu vlapic */
-	vlapic_create(vcpu);
+	err = vlapic_create(vcpu);
 
 #ifdef CONFIG_MTRR_ENABLED
 	init_mtrr(vcpu);
@@ -256,7 +257,7 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 
 	(void)memset(&vcpu->req, 0U, sizeof(struct io_request));
 
-	return 0;
+	return err;
 }
 
 static void set_vcpu_mode(struct vcpu *vcpu, uint32_t cs_attr)

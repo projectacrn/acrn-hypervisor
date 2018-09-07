@@ -494,12 +494,12 @@ int register_mmio_emulation_handler(struct vm *vm,
 	hv_mem_io_handler_t read_write, uint64_t start,
 	uint64_t end, void *handler_private_data)
 {
-	int status = -EINVAL;
+	int status = 0;
 	struct mem_io_node *mmio_node;
 
 	if ((vm->hw.created_vcpus > 0U) && vm->hw.vcpu_array[0]->launched) {
 		ASSERT(false, "register mmio handler after vm launched");
-		return status;
+		return -EINVAL;
 	}
 
 	/* Ensure both a read/write handler and range check function exist */
@@ -526,13 +526,10 @@ int register_mmio_emulation_handler(struct vm *vm,
 			 * need to unmap it.
 			 */
 			if (is_vm0(vm)) {
-				ept_mr_del(vm,
+				status = ept_mr_del(vm,
 					(uint64_t *)vm->arch_vm.nworld_eptp,
 					start, end - start);
 			}
-
-			/* Return success */
-			status = 0;
 		}
 	}
 
