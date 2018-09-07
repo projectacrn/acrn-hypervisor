@@ -88,6 +88,8 @@ enum vm_state {
 struct vm_arch {
 	/* I/O bitmaps A and B for this VM, MUST be 4-Kbyte aligned */
 	uint8_t io_bitmap[CPU_PAGE_SIZE*2];
+	/* MSR bitmap region for this VM, MUST be 4-Kbyte aligned */
+	uint8_t msr_bitmap[CPU_PAGE_SIZE];
 
 	uint64_t guest_init_pml4;/* Guest init pml4 */
 	/* EPT hierarchy for Normal World */
@@ -99,7 +101,6 @@ struct vm_arch {
 	void *sworld_eptp;
 	void *m2p;		/* machine address to guest physical address */
 	void *tmp_pg_array;	/* Page array for tmp guest paging struct */
-	void *msr_bitmap;	/* MSR bitmap page base address for this VM */
 	struct acrn_vioapic vioapic;	/* Virtual IOAPIC base address */
 	struct acrn_vpic vpic;      /* Virtual PIC */
 	/**

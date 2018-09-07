@@ -55,7 +55,7 @@ void init_msr_emulation(struct vcpu *vcpu)
 {
 	uint32_t i;
 	uint32_t msrs_count =  ARRAY_SIZE(emulated_msrs);
-	void *msr_bitmap;
+	uint8_t *msr_bitmap;
 	uint64_t value64;
 
 	ASSERT(msrs_count == IDX_MAX_MSR,
@@ -63,12 +63,6 @@ void init_msr_emulation(struct vcpu *vcpu)
 
 	/*msr bitmap, just allocated/init once, and used for all vm's vcpu*/
 	if (is_vcpu_bsp(vcpu)) {
-
-		/* Allocate and initialize memory for MSR bitmap region*/
-		vcpu->vm->arch_vm.msr_bitmap = alloc_page();
-		ASSERT(vcpu->vm->arch_vm.msr_bitmap != NULL, "");
-		(void)memset(vcpu->vm->arch_vm.msr_bitmap, 0x0U, CPU_PAGE_SIZE);
-
 		msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
 
 		for (i = 0U; i < msrs_count; i++) {
