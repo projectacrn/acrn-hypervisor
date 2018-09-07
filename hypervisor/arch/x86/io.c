@@ -312,9 +312,13 @@ emulate_io(struct vcpu *vcpu, struct io_request *io_req)
 		status = acrn_insert_request_wait(vcpu, io_req);
 
 		if (status != 0) {
+			/* here for both IO & MMIO, the direction, address,
+			 * size definition is same
+			 */
 			struct pio_request *pio_req = &io_req->reqs.pio;
-			pr_fatal("Err:IO %s access to port 0x%04lx, size=%lu",
-				(pio_req->direction != REQUEST_READ) ? "read" : "write",
+			pr_fatal("%s Err: access dir %d, type %d, "
+				"addr = 0x%llx, size=%lu", __func__,
+				pio_req->direction, io_req->type,
 				pio_req->address, pio_req->size);
 		} else {
 			status = IOREQ_PENDING;
