@@ -1,3 +1,11 @@
+vSBL Version 0.9
+- New feature:
+	Update vFastboot to v0.9
+	Support vRPMB key handover for AaaG.
+	Support to append SSDT to ACPI table for First Stage Mount in AaaG.
+- Change:
+	Enable to set boot target to CrashOS when panic happens in vSBL debug version, release version is not affected.
+
 vSBL Version 0.8.1
 - New feature:
 	Support trusty S3 resume.
