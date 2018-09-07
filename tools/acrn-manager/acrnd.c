@@ -263,7 +263,6 @@ static int active_all_vms(void)
 
 #define SOS_LCS_SOCK		"sos-lcs"
 #define DEFAULT_TIMEOUT	2U
-#define SOS_ADVANCE_WKUP	10U	/* WKUP SOS 10 sec in advance */
 #define ACRND_NAME		"acrnd"
 static int acrnd_fd = -1;
 
@@ -393,8 +392,6 @@ static int store_timer_list(void)
 	/* If any timer is stored
 	 * system must be awake at sys_wakeup */
 	if (sys_wakeup) {
-		if (sys_wakeup > SOS_ADVANCE_WKUP)
-			sys_wakeup -= SOS_ADVANCE_WKUP;
 		set_sos_timer(sys_wakeup);
 	} else {
 		unlink(TIMER_LIST_FILE);
