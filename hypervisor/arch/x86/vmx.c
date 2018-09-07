@@ -1022,10 +1022,10 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	exec_vmwrite32(VMX_CR3_TARGET_COUNT, 0U);
 
 	/* Set up IO bitmap register A and B - pg 2902 24.6.4 */
-	value64 = hva2hpa(vm->arch_vm.iobitmap[0]);
+	value64 = hva2hpa(vm->arch_vm.io_bitmap);
 	exec_vmwrite64(VMX_IO_BITMAP_A_FULL, value64);
 	pr_dbg("VMX_IO_BITMAP_A: 0x%016llx ", value64);
-	value64 = hva2hpa(vm->arch_vm.iobitmap[1]);
+	value64 = hva2hpa(&(vm->arch_vm.io_bitmap[CPU_PAGE_SIZE]));
 	exec_vmwrite64(VMX_IO_BITMAP_B_FULL, value64);
 	pr_dbg("VMX_IO_BITMAP_B: 0x%016llx ", value64);
 

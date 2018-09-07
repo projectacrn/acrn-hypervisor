@@ -94,7 +94,7 @@ static inline void init_cx_port(struct vm *vm)
 		if (cx_data->cx_reg.space_id == SPACE_SYSTEM_IO) {
 			uint16_t port = (uint16_t)cx_data->cx_reg.address;
 
-			allow_guest_io_access(vm, port, 1U);
+			allow_guest_pio_access(vm, port, 1U);
 		}
 	}
 }

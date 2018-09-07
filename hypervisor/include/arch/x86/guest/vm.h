@@ -86,6 +86,9 @@ enum vm_state {
 };
 
 struct vm_arch {
+	/* I/O bitmaps A and B for this VM, MUST be 4-Kbyte aligned */
+	uint8_t io_bitmap[CPU_PAGE_SIZE*2];
+
 	uint64_t guest_init_pml4;/* Guest init pml4 */
 	/* EPT hierarchy for Normal World */
 	void *nworld_eptp;
@@ -96,7 +99,6 @@ struct vm_arch {
 	void *sworld_eptp;
 	void *m2p;		/* machine address to guest physical address */
 	void *tmp_pg_array;	/* Page array for tmp guest paging struct */
-	void *iobitmap[2];/* IO bitmap page array base address for this VM */
 	void *msr_bitmap;	/* MSR bitmap page base address for this VM */
 	struct acrn_vioapic vioapic;	/* Virtual IOAPIC base address */
 	struct acrn_vpic vpic;      /* Virtual PIC */
@@ -111,7 +113,8 @@ struct vm_arch {
 	struct vm_io_handler *io_handler;
 
 	/* reference to virtual platform to come here (as needed) */
-};
+} __aligned(CPU_PAGE_SIZE);
+
 
 #define CPUID_CHECK_SUBLEAF	(1U << 0)
 #define MAX_VM_VCPUID_ENTRIES	64U
@@ -127,11 +130,11 @@ struct vcpuid_entry {
 };
 
 struct vm {
+	struct vm_arch arch_vm; /* Reference to this VM's arch information */
 	uint16_t vm_id;		    /* Virtual machine identifier */
 	struct vm_hw_info hw;	/* Reference to this VM's HW information */
 	struct vm_sw_info sw;	/* Reference to SW associated with this VM */
 	struct vm_pm_info pm;	/* Reference to this VM's arch information */
-	struct vm_arch arch_vm;	/* Reference to this VM's arch information */
 	enum vm_state state;	/* VM state */
 	struct acrn_vuart vuart;		/* Virtual UART */
 	enum vpic_wire_mode wire_mode;
@@ -170,7 +173,7 @@ struct vm {
 
 	spinlock_t softirq_dev_lock;
 	struct list_head softirq_dev_entry_list;
-};
+} __aligned(CPU_PAGE_SIZE);
 
 #ifdef CONFIG_PARTITION_MODE
 struct vpci_vdev_array {
