@@ -391,44 +391,32 @@ static void empty_io_handler_list(struct vm *vm)
 void free_io_emulation_resource(struct vm *vm)
 {
 	empty_io_handler_list(vm);
-
-	/* Free I/O emulation bitmaps */
-	free(vm->arch_vm.iobitmap[0]);
-	free(vm->arch_vm.iobitmap[1]);
 }
 
-void allow_guest_io_access(struct vm *vm, uint32_t address_arg, uint32_t nbytes)
+void allow_guest_pio_access(struct vm *vm, uint16_t port_address,
+		uint32_t nbytes)
 {
-	uint32_t address = address_arg;
+	uint16_t address = port_address;
 	uint32_t *b;
 	uint32_t i;
-	uint32_t a;
 
-	b = vm->arch_vm.iobitmap[0];
+	b = (uint32_t *)vm->arch_vm.io_bitmap;
 	for (i = 0U; i < nbytes; i++) {
-		if ((address & 0x8000U) != 0U) {
-			b = vm->arch_vm.iobitmap[1];
-		}
-		a = address & 0x7fffU;
-		b[a >> 5U] &= ~(1U << (a & 0x1fU));
+		b[address >> 5U] &= ~(1U << (address & 0x1fU));
 		address++;
 	}
 }
 
-static void deny_guest_io_access(struct vm *vm, uint32_t address_arg, uint32_t nbytes)
+static void deny_guest_pio_access(struct vm *vm, uint16_t port_address,
+		uint32_t nbytes)
 {
-	uint32_t address = address_arg;
+	uint16_t address = port_address;
 	uint32_t *b;
 	uint32_t i;
-	uint32_t a;
 
-	b = vm->arch_vm.iobitmap[0];
+	b = (uint32_t *)vm->arch_vm.io_bitmap;
 	for (i = 0U; i < nbytes; i++) {
-		if ((address & 0x8000U) != 0U) {
-			b = vm->arch_vm.iobitmap[1];
-		}
-		a = address & 0x7fffU;
-		b[a >> 5U] |= (1U << (a & 0x1fU));
+		b[address >> 5U] |= (1U << (address & 0x1fU));
 		address++;
 	}
 }
@@ -456,20 +444,11 @@ static struct vm_io_handler *create_io_handler(uint32_t port, uint32_t len,
 
 void setup_io_bitmap(struct vm *vm)
 {
-	/* Allocate VM architecture state and IO bitmaps A and B */
-	vm->arch_vm.iobitmap[0] = alloc_page();
-	vm->arch_vm.iobitmap[1] = alloc_page();
-
-	ASSERT((vm->arch_vm.iobitmap[0] != NULL) &&
-	       (vm->arch_vm.iobitmap[1] != NULL), "");
-
 	if (is_vm0(vm)) {
-		(void)memset(vm->arch_vm.iobitmap[0], 0x00U, CPU_PAGE_SIZE);
-		(void)memset(vm->arch_vm.iobitmap[1], 0x00U, CPU_PAGE_SIZE);
+		(void)memset(vm->arch_vm.io_bitmap, 0x00U, CPU_PAGE_SIZE * 2);
 	} else {
 		/* block all IO port access from Guest */
-		(void)memset(vm->arch_vm.iobitmap[0], 0xFFU, CPU_PAGE_SIZE);
-		(void)memset(vm->arch_vm.iobitmap[1], 0xFFU, CPU_PAGE_SIZE);
+		(void)memset(vm->arch_vm.io_bitmap, 0xFFU, CPU_PAGE_SIZE * 2);
 	}
 }
 
@@ -485,7 +464,7 @@ void register_io_emulation_handler(struct vm *vm, struct vm_io_range *range,
 	}
 
 	if (is_vm0(vm)) {
-		deny_guest_io_access(vm, range->base, range->len);
+		deny_guest_pio_access(vm, range->base, range->len);
 	}
 
 	handler = create_io_handler(range->base,
