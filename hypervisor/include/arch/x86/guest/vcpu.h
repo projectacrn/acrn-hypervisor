@@ -283,7 +283,7 @@ void vcpu_set_pat_ext(struct vcpu *vcpu, uint64_t val);
 
 struct vcpu* get_ever_run_vcpu(uint16_t pcpu_id);
 int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle);
-int start_vcpu(struct vcpu *vcpu);
+int run_vcpu(struct vcpu *vcpu);
 int shutdown_vcpu(struct vcpu *vcpu);
 void destroy_vcpu(struct vcpu *vcpu);
 

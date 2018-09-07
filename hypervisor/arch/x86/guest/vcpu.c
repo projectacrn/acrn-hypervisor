@@ -273,7 +273,7 @@ static void set_vcpu_mode(struct vcpu *vcpu, uint32_t cs_attr)
 	}
 }
 
-int start_vcpu(struct vcpu *vcpu)
+int run_vcpu(struct vcpu *vcpu)
 {
 	uint32_t instlen;
 	uint64_t rip;
