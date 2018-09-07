@@ -292,9 +292,6 @@ int shutdown_vm(struct vm *vm)
 	/* Free EPT allocated resources assigned to VM */
 	destroy_ept(vm);
 
-	/* Free MSR bitmap */
-	free(vm->arch_vm.msr_bitmap);
-
 	/* TODO: De-initialize I/O Emulation */
 	free_io_emulation_resource(vm);
 
