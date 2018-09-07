@@ -701,7 +701,6 @@ void cpu_dead(uint16_t pcpu_id)
 	}
 
 	/* clean up native stuff */
-	timer_cleanup();
 	vmx_off(pcpu_id);
 	cache_flush_invalidate_all();
 
