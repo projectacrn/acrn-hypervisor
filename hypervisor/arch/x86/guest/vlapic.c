@@ -1970,8 +1970,10 @@ int vlapic_create(struct vcpu *vcpu)
 	if (is_vcpu_bsp(vcpu)) {
 		uint64_t *pml4_page =
 			(uint64_t *)vcpu->vm->arch_vm.nworld_eptp;
-		ept_mr_del(vcpu->vm, pml4_page,
-			DEFAULT_APIC_BASE, CPU_PAGE_SIZE);
+		/* only need unmap it from SOS as UOS never mapped it */
+		if (is_vm0(vcpu->vm))
+			ept_mr_del(vcpu->vm, pml4_page,
+				DEFAULT_APIC_BASE, CPU_PAGE_SIZE);
 
 		ept_mr_add(vcpu->vm, pml4_page,
 			vlapic_apicv_get_apic_access_addr(vcpu->vm),
