@@ -158,6 +158,12 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 		pr_err("Parse vm0 context failed.");
 		return;
 	}
+
+	if (vm->arch_vm.sworld_eptp == NULL) {
+		pr_err("sworld eptp is NULL, it's not created");
+		return;
+	}
+
 	if (need_clr_mem) {
 		/* clear trusty memory space */
 		(void)memset(hpa2hva(hpa), 0U, size);
@@ -176,17 +182,13 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 	}
 
 	/* Free trusty ept page-structures */
-	if (vm->arch_vm.sworld_eptp != NULL) {
-		pdpt_addr =
+	pdpt_addr =
 		(void *)pml4e_page_vaddr(*(uint64_t *)vm->arch_vm.sworld_eptp);
-		/* memset PDPTEs except trusty memory */
-		(void)memset(pdpt_addr, 0UL,
-			NON_TRUSTY_PDPT_ENTRIES * sizeof(uint64_t));
-		free_ept_mem((uint64_t *)vm->arch_vm.sworld_eptp);
-		vm->arch_vm.sworld_eptp = NULL;
-	} else {
-		pr_err("sworld eptp is NULL");
-	}
+	/* memset PDPTEs except trusty memory */
+	(void)memset(pdpt_addr, 0UL,
+		NON_TRUSTY_PDPT_ENTRIES * sizeof(uint64_t));
+	free_ept_mem((uint64_t *)vm->arch_vm.sworld_eptp);
+	vm->arch_vm.sworld_eptp = NULL;
 }
 
 static void save_world_ctx(struct vcpu *vcpu, struct ext_context *ext_ctx)
