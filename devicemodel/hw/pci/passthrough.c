@@ -462,7 +462,8 @@ msix_table_read(struct passthru_dev *ptdev, uint64_t offset, int size)
 	int index;
 
 	dev = ptdev->dev;
-	if (offset >= dev->msix.pba_offset &&
+	if (dev->msix.pba_bar == dev->msix.table_bar &&
+	    offset >= dev->msix.pba_offset &&
 	    offset < dev->msix.pba_offset + dev->msix.pba_size) {
 		switch (size) {
 		case 1:
@@ -541,7 +542,8 @@ msix_table_write(struct vmctx *ctx, int vcpu, struct passthru_dev *ptdev,
 	int index;
 
 	dev = ptdev->dev;
-	if (offset >= dev->msix.pba_offset &&
+	if (dev->msix.pba_bar == dev->msix.table_bar &&
+	    offset >= dev->msix.pba_offset &&
 	    offset < dev->msix.pba_offset + dev->msix.pba_size) {
 		switch (size) {
 		case 1:
