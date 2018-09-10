@@ -17,6 +17,34 @@ ACRN device model, and documentation.
 Version 0.2 new features
 ************************
 
+Fixed Issues
+============
+:acrn-issue:`663` - Black screen displayed after booting SOS/UOS
+
+:acrn-issue:`676` - Hypervisor and DM version numbers incorrect
+
+:acrn-issue:`1126` - VPCI coding style and bugs fixes for partition mode
+
+:acrn-issue:`1125` - VPCI coding style and bugs fixes found in integration testing for partition mode
+
+:acrn-issue:`1101` - missing acrn_mngr.h
+
+:acrn-issue:`1071` - hypervisor cannot boot on skylake i5-6500
+
+:acrn-issue:`1003` - CPU: cpu info is not correct
+
+:acrn-issue:`971` -  acrncrashlog funcitons need to be enhance
+
+:acrn-issue:`843` - ACRN boot failure
+
+:acrn-issue:`721` - DM for IPU mediation
+
+:acrn-issue:`707` - Issues found with instructions for using Ubuntu as SOS
+
+:acrn-issue:`706` - Invisible mouse cursor in UOS
+
+:acrn-issue:`424` - ClearLinux desktop GUI of SOS fails to launch
+
 
 Known Issues
 ************
