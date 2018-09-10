@@ -5,7 +5,7 @@
 
 #include <hypervisor.h>
 
-static int npk_log_enabled, npk_log_setup_ref;
+static int32_t npk_log_enabled, npk_log_setup_ref;
 static uint64_t base;
 
 static inline int npk_write(const char *value, void *addr, size_t sz)
@@ -90,7 +90,7 @@ void npk_log_write(const char *buf, size_t buf_len)
 		return;
 
 	/* calculate the channel offset based on cpu_id and npk_log_ref */
-	ref = (atomic_inc_return((int *)&per_cpu(npk_log_ref, cpu_id)) - 1)
+	ref = (atomic_inc_return((int32_t *)&per_cpu(npk_log_ref, cpu_id)) - 1)
 		& HV_NPK_LOG_REF_MASK;
 	channel += (cpu_id << HV_NPK_LOG_REF_SHIFT) + ref;
 	len = min(buf_len, HV_NPK_LOG_MAX);

@@ -7,14 +7,6 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-/** Add an offset (in bytes) to an (base)address.
- *
- *  @param  addr Baseaddress
- *  @param  off  Offset
- *  @return Returns baseaddress + offset in bytes.
- */
-#define ADD_OFFSET(addr, off) (void *)(((uint8_t *)(addr))+(off))
-
 #define offsetof(st, m) __builtin_offsetof(st, m)
 
 /** Roundup (x/y) to ( x/y + (x%y) ? 1 : 0) **/

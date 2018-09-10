@@ -391,8 +391,8 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen_arg)
 	}
 
 	/* make sure 8bytes-aligned for at least one addr. */
-	if ((!MEM_ALIGNED_CHECK(src8, 8UL)) &&
-			(!MEM_ALIGNED_CHECK(dest8, 8UL))) {
+	if ((!mem_aligned_check((uint64_t)src8, 8UL)) &&
+			(!mem_aligned_check((uint64_t)dest8, 8UL))) {
 		for (; (slen != 0U) && ((((uint64_t)src8) & 7UL) != 0UL);
 				slen--) {
 			*dest8 = *src8;

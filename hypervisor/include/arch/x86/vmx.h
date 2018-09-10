@@ -58,7 +58,7 @@
 #define	VMX_EOI_EXIT2_HIGH			0x00002021U
 #define	VMX_EOI_EXIT3_FULL			0x00002022U
 #define	VMX_EOI_EXIT3_HIGH			0x00002023U
-#define	VMX_EOI_EXIT(vector)	(VMX_EOI_EXIT0_FULL + (((vector) >> 6U) * 2U))
+
 #define VMX_XSS_EXITING_BITMAP_FULL		0x0000202CU
 #define VMX_XSS_EXITING_BITMAP_HIGH		0x0000202DU
 /* 64-bit read-only data fields */
@@ -374,7 +374,19 @@
 #define VMX_INT_TYPE_HW_EXP		3U
 #define VMX_INT_TYPE_SW_EXP		6U
 
-/*VM exit qulifications for APIC-access
+#define VM_SUCCESS	0
+#define VM_FAIL		-1
+
+#define VMX_VMENTRY_FAIL	0x80000000U
+
+#ifndef ASSEMBLER
+
+static inline uint32_t vmx_eoi_exit(uint32_t vector)
+{
+	return (VMX_EOI_EXIT0_FULL + ((vector >> 6U) * 2U));
+}
+
+/* VM exit qulifications for APIC-access
  * Access type:
  *  0  = linear access for a data read during instruction execution
  *  1  = linear access for a data write during instruction execution
@@ -384,16 +396,15 @@
  *  15 = guest-physical access for an instructon fetch or during
  *       instruction execution
  */
-#define APIC_ACCESS_TYPE(qual)		(((qual) >> 12U) & 0xFUL)
-#define APIC_ACCESS_OFFSET(qual)	((qual) & 0xFFFU)
+static inline uint64_t apic_access_type(uint64_t qual)
+{
+	return ((qual >> 12U) & 0xFUL);
+}
 
-
-#define VM_SUCCESS	0
-#define VM_FAIL		-1
-
-#define VMX_VMENTRY_FAIL 	0x80000000U
-
-#ifndef ASSEMBLER
+static inline uint64_t apic_access_offset(uint64_t qual)
+{
+	return (qual & 0xFFFUL);
+}
 
 #define RFLAGS_C (1U<<0)
 #define RFLAGS_Z (1U<<6)

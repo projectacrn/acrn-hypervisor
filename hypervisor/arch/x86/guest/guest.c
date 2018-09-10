@@ -605,8 +605,8 @@ uint64_t e820_alloc_low_memory(uint32_t size_arg)
 		entry = &e820[i];
 		uint64_t start, end, length;
 
-		start = ROUND_PAGE_UP(entry->baseaddr);
-		end = ROUND_PAGE_DOWN(entry->baseaddr + entry->length);
+		start = round_page_up(entry->baseaddr);
+		end = round_page_down(entry->baseaddr + entry->length);
 		length = end - start;
 		length = (end > start) ? (end - start) : 0;
 

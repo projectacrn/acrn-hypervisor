@@ -150,7 +150,7 @@ static int modify_or_del_pde(uint64_t *pdpte,
 		}
 		if (pde_large(*pde) != 0UL) {
 			if (vaddr_next > vaddr_end ||
-					!MEM_ALIGNED_CHECK(vaddr, PDE_SIZE)) {
+					!mem_aligned_check(vaddr, PDE_SIZE)) {
 				ret = split_large_page(pde, IA32E_PD, ptt);
 				if (ret != 0) {
 					return ret;
@@ -205,7 +205,7 @@ static int modify_or_del_pdpte(uint64_t *pml4e,
 		}
 		if (pdpte_large(*pdpte) != 0UL) {
 			if (vaddr_next > vaddr_end ||
-					!MEM_ALIGNED_CHECK(vaddr, PDPTE_SIZE)) {
+					!mem_aligned_check(vaddr, PDPTE_SIZE)) {
 				ret = split_large_page(pdpte, IA32E_PDPT, ptt);
 				if (ret != 0) {
 					return ret;
@@ -254,8 +254,8 @@ int mmu_modify_or_del(uint64_t *pml4_page,
 	uint64_t *pml4e;
 	int ret;
 
-	if (!MEM_ALIGNED_CHECK(vaddr, PAGE_SIZE_4K) ||
-		!MEM_ALIGNED_CHECK(size, PAGE_SIZE_4K) ||
+	if (!mem_aligned_check(vaddr, (uint64_t)PAGE_SIZE_4K) ||
+		!mem_aligned_check(size, (uint64_t)PAGE_SIZE_4K) ||
 		(type != MR_MODIFY && type != MR_DEL)) {
 		pr_err("%s, invalid parameters!\n", __func__);
 		return -EINVAL;
@@ -337,8 +337,8 @@ static int add_pde(uint64_t *pdpte, uint64_t paddr_start,
 		uint64_t vaddr_next = (vaddr & PDE_MASK) + PDE_SIZE;
 
 		if (pgentry_present(ptt, *pde) == 0UL) {
-			if (MEM_ALIGNED_CHECK(paddr, PDE_SIZE) &&
-				MEM_ALIGNED_CHECK(vaddr, PDE_SIZE) &&
+			if (mem_aligned_check(paddr, PDE_SIZE) &&
+				mem_aligned_check(vaddr, PDE_SIZE) &&
 				(vaddr_next <= vaddr_end)) {
 				set_pgentry(pde, paddr | (prot | PAGE_PSE));
 				if (vaddr_next < vaddr_end) {
@@ -386,8 +386,8 @@ static int add_pdpte(uint64_t *pml4e, uint64_t paddr_start,
 		uint64_t vaddr_next = (vaddr & PDPTE_MASK) + PDPTE_SIZE;
 
 		if (pgentry_present(ptt, *pdpte) == 0UL) {
-			if (MEM_ALIGNED_CHECK(paddr, PDPTE_SIZE) &&
-				MEM_ALIGNED_CHECK(vaddr, PDPTE_SIZE) &&
+			if (mem_aligned_check(paddr, PDPTE_SIZE) &&
+				mem_aligned_check(vaddr, PDPTE_SIZE) &&
 				(vaddr_next <= vaddr_end)) {
 				set_pgentry(pdpte, paddr | (prot | PAGE_PSE));
 				if (vaddr_next < vaddr_end) {
@@ -432,9 +432,9 @@ int mmu_add(uint64_t *pml4_page, uint64_t paddr_base,
 		__func__, paddr_base, vaddr_base, size);
 
 	/* align address to page size*/
-	vaddr = ROUND_PAGE_UP(vaddr_base);
-	paddr = ROUND_PAGE_UP(paddr_base);
-	vaddr_end = vaddr + ROUND_PAGE_DOWN(size);
+	vaddr = round_page_up(vaddr_base);
+	paddr = round_page_up(paddr_base);
+	vaddr_end = vaddr + round_page_down(size);
 
 	while (vaddr < vaddr_end) {
 		vaddr_next = (vaddr & PML4E_MASK) + PML4E_SIZE;

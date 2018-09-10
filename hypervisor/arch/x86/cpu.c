@@ -709,7 +709,7 @@ void cpu_dead(uint16_t pcpu_id)
 	/* clean up native stuff */
 	timer_cleanup();
 	vmx_off(pcpu_id);
-	CACHE_FLUSH_INVALIDATE_ALL();
+	cache_flush_invalidate_all();
 
 	/* Set state to show CPU is dead */
 	cpu_set_current_state(pcpu_id, CPU_STATE_DEAD);

@@ -9,7 +9,10 @@
 #define LONG_MAX        (ULONG_MAX >> 1U)        /* 0x7FFFFFFF */
 #define LONG_MIN        (~LONG_MAX)             /* 0x80000000 */
 
-#define ISSPACE(c) ((c == ' ') || (c == '\t'))
+static inline bool is_space(char c)
+{
+	return ((c == ' ') || (c == '\t'));
+}
 
 /*
  * Convert a string to a long integer - decimal support only.
@@ -28,7 +31,7 @@ long strtol_deci(const char *nptr)
 	do {
 		c = *s;
 		s++;
-	} while (ISSPACE(c));
+	} while (is_space(c));
 
 	if (c == '-') {
 		neg = 1;
@@ -107,7 +110,7 @@ uint64_t strtoul_hex(const char *nptr)
 	do {
 		c = *s;
 		s++;
-	} while (ISSPACE(c));
+	} while (is_space(c));
 
 	if ((c == '0') && ((*s == 'x') || (*s == 'X'))) {
 		c = s[1];

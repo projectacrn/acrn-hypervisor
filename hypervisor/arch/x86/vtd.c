@@ -1319,6 +1319,6 @@ void init_iommu_vm0_domain(struct vm *vm0)
 				(uint8_t)bus, (uint8_t)devfun);
 		}
 	}
-	CACHE_FLUSH_INVALIDATE_ALL();
+	cache_flush_invalidate_all();
 	enable_iommu();
 }

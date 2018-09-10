@@ -243,12 +243,6 @@ extern spinlock_t trampoline_spinlock;
  * to locate the per cpu data.
  */
 
-#define	PER_CPU_DATA_OFFSET(sym_addr)					\
-	((uint64_t)(sym_addr) - (uint64_t)(_ld_cpu_data_start))
-
-#define	PER_CPU_DATA_SIZE						\
-	((uint64_t)_ld_cpu_data_end - (uint64_t)(_ld_cpu_data_start))
-
 /* CPUID feature words */
 #define	FEAT_1_ECX		0U     /* CPUID[1].ECX */
 #define	FEAT_1_EDX		1U     /* CPUID[1].EDX */

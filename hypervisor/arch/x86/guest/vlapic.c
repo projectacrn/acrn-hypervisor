@@ -37,7 +37,11 @@
 #include "vlapic.h"
 
 #define VLAPIC_VERBOS 0
-#define	PRIO(x)			((x) >> 4)
+
+static inline uint32_t prio(uint32_t x)
+{
+	return (x >> 4U);
+}
 
 #define VLAPIC_VERSION		(16U)
 
@@ -70,8 +74,11 @@ static inline void vlapic_dump_isr(struct acrn_vlapic *vlapic, char *msg)
 	}
 }
 #else
-#define vlapic_dump_irr(vlapic, msg)
-#define vlapic_dump_isr(vlapic, msg)
+static inline void
+vlapic_dump_irr(__unused struct acrn_vlapic *vlapic, __unused char *msg) {}
+
+static inline void
+vlapic_dump_isr(__unused struct acrn_vlapic *vlapic, __unused char *msg) {}
 #endif
 
 /*APIC-v APIC-access address */
@@ -770,7 +777,7 @@ vlapic_update_ppr(struct acrn_vlapic *vlapic)
 		lastprio = -1;
 		for (i = 1U; i <= vlapic->isrvec_stk_top; i++) {
 			isrvec = (uint32_t)vlapic->isrvec_stk[i];
-			curprio = (int32_t)PRIO(isrvec);
+			curprio = (int32_t)prio(isrvec);
 			if (curprio <= lastprio) {
 				dump_isrvec_stk(vlapic);
 				panic("isrvec_stk does not satisfy invariant");
@@ -800,7 +807,7 @@ vlapic_update_ppr(struct acrn_vlapic *vlapic)
 		}
 	}
 
-	if (PRIO(tpr) >= PRIO(top_isrvec)) {
+	if (prio(tpr) >= prio(top_isrvec)) {
 		ppr = tpr;
 	} else {
 		ppr = top_isrvec & 0xf0U;
@@ -1232,7 +1239,7 @@ vlapic_pending_intr(struct acrn_vlapic *vlapic, uint32_t *vecptr)
 		bitpos = (uint32_t)fls32(val);
 		if (bitpos != INVALID_BIT_INDEX) {
 			vector = (i * 32U) + bitpos;
-			if (PRIO(vector) > PRIO(lapic->ppr)) {
+			if (prio(vector) > prio(lapic->ppr)) {
 				if (vecptr != NULL) {
 					*vecptr = vector;
 				}
@@ -2079,7 +2086,7 @@ apicv_batch_set_tmr(struct acrn_vlapic *vlapic)
 		val = ptr[(s/TMR_STEP_LEN) + 1].val;
 		val <<= TMR_STEP_LEN;
 		val |= ptr[s/TMR_STEP_LEN].val;
-		exec_vmwrite64(VMX_EOI_EXIT(s), val);
+		exec_vmwrite64(vmx_eoi_exit(s), val);
 
 		s += EOI_STEP_LEN;
 	}
@@ -2189,11 +2196,11 @@ int apic_access_vmexit_handler(struct vcpu *vcpu)
 	struct mmio_request *mmio = &vcpu->req.reqs.mmio;
 
 	qual = vcpu->arch_vcpu.exit_qualification;
-	access_type = APIC_ACCESS_TYPE(qual);
+	access_type = apic_access_type(qual);
 
 	/*parse offset if linear access*/
 	if (access_type <= 3UL) {
-		offset = (uint32_t)APIC_ACCESS_OFFSET(qual);
+		offset = (uint32_t)apic_access_offset(qual);
 	}
 
 	vlapic = vcpu->arch_vcpu.vlapic;

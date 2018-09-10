@@ -509,12 +509,15 @@
 #define PAT_MEM_TYPE_WP                     0x05UL	/* write protected */
 #define PAT_MEM_TYPE_WB                     0x06UL	/* writeback */
 #define PAT_MEM_TYPE_UCM                    0x07UL	/* uncached minus */
-#define PAT_MEM_TYPE_INVALID(x)             (((x) != PAT_MEM_TYPE_UC) && \
-                                            ((x) != PAT_MEM_TYPE_WC) && \
-                                            ((x) != PAT_MEM_TYPE_WT) && \
-                                            ((x) != PAT_MEM_TYPE_WP) && \
-                                            ((x) != PAT_MEM_TYPE_WB) && \
-                                            ((x) != PAT_MEM_TYPE_UCM))
+
+#ifndef ASSEMBLER
+static inline bool pat_mem_type_invalid(uint64_t x)
+{
+	return ((x != PAT_MEM_TYPE_UC) && (x != PAT_MEM_TYPE_WC) &&
+		(x != PAT_MEM_TYPE_WT) && (x != PAT_MEM_TYPE_WP) &&
+		(x != PAT_MEM_TYPE_WB) && (x != PAT_MEM_TYPE_UCM));
+}
+#endif /* ASSEMBLER */
 
 /* 5 high-order bits in every field are reserved */
 #define PAT_FIELD_RSV_BITS                  (0xF8U)

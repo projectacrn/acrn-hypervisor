@@ -14,7 +14,7 @@
 
 struct logmsg {
 	uint32_t flags;
-	int seq;
+	int32_t seq;
 	spinlock_t lock;
 };
 
