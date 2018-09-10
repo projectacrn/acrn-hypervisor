@@ -254,7 +254,11 @@ struct vcpu_dump {
 	int str_max;
 };
 
-#define	is_vcpu_bsp(vcpu)	((vcpu)->vcpu_id == BOOT_CPU_ID)
+static inline bool is_vcpu_bsp(struct vcpu *vcpu)
+{
+	return (vcpu->vcpu_id == BOOT_CPU_ID);
+}
+
 /* do not update Guest RIP for next VM Enter */
 static inline void vcpu_retain_rip(struct vcpu *vcpu)
 {

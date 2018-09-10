@@ -14,13 +14,9 @@
  * Returns TRUE if aligned; FALSE if not aligned
  * NOTE:  The required alignment must be a power of 2 (2, 4, 8, 16, 32, etc)
  */
-#define MEM_ALIGNED_CHECK(value, req_align)                             \
-	(((uint64_t)(value) & ((uint64_t)(req_align) - 1UL)) == 0UL)
-
-#if !defined(ASSEMBLER) && !defined(LINKER_SCRIPT)
-
-#define ARRAY_LENGTH(x) (sizeof(x)/sizeof((x)[0]))
-
-#endif
+static inline bool mem_aligned_check(uint64_t value, uint64_t req_align)
+{
+	return ((value & (req_align - 1UL)) == 0UL);
+}
 
 #endif /* INCLUDE_MACROS_H defined */

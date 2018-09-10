@@ -159,10 +159,25 @@ struct seg_desc {
 #define	PROT_READ	0x01U	/* pages can be read */
 #define	PROT_WRITE	0x02U	/* pages can be written */
 
-#define	SEG_DESC_TYPE(access)		((access) & 0x001fU)
-#define	SEG_DESC_PRESENT(access)	(((access) & 0x0080U) != 0U)
-#define	SEG_DESC_DEF32(access)		(((access) & 0x4000U) != 0U)
-#define	SEG_DESC_UNUSABLE(access)	(((access) & 0x10000U) != 0U)
+static inline uint32_t seg_desc_type(uint32_t access)
+{
+	return (access & 0x001fU);
+}
+
+static inline bool seg_desc_present(uint32_t access)
+{
+	return ((access & 0x0080U) != 0U);
+}
+
+static inline bool seg_desc_def32(uint32_t access)
+{
+	return ((access & 0x4000U) != 0U);
+}
+
+static inline bool seg_desc_unusable(uint32_t access)
+{
+	return ((access & 0x10000U) != 0U);
+}
 
 struct vm_guest_paging {
 	uint64_t	cr3;

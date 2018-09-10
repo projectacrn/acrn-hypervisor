@@ -156,13 +156,19 @@ build_atomic_swap(atomic_swap64, "q", uint64_t, p, v)
  * #define atomic_readandclear32(P) \
  * (return (*(uint32_t *)(P)); *(uint32_t *)(P) = 0U;)
   */
-#define atomic_readandclear32(p)		atomic_swap32(p, 0U)
+static inline uint32_t atomic_readandclear32(uint32_t *p)
+{
+	return atomic_swap32(p, 0U);
+}
 
  /*
  * #define atomic_readandclear64(P) \
  * (return (*(uint64_t *)(P)); *(uint64_t *)(P) = 0UL;)
   */
-#define atomic_readandclear64(p)	atomic_swap64(p, 0UL)
+static inline uint64_t atomic_readandclear64(uint64_t *p)
+{
+	return atomic_swap64(p, 0UL);
+}
 
 #define build_atomic_cmpxchg(name, size, type, ptr, old, new)	\
 static inline type name(volatile type *ptr,			\
@@ -188,19 +194,47 @@ static inline type name(type *ptr, type v)			\
 	return v;						\
  }
 build_atomic_xadd(atomic_xadd16, "w", uint16_t, p, v)
-build_atomic_xadd(atomic_xadd32, "l", int, p, v)
-build_atomic_xadd(atomic_xadd64, "q", long, p, v)
+build_atomic_xadd(atomic_xadd32, "l", int32_t, p, v)
+build_atomic_xadd(atomic_xadd64, "q", int64_t, p, v)
 
-#define atomic_add_return(p, v)		( atomic_xadd32(p, v) + v )
-#define atomic_sub_return(p, v)		( atomic_xadd32(p, -v) - v )
+static inline int32_t atomic_add_return(int32_t *p, int32_t v)
+{
+	return (atomic_xadd32(p, v) + v);
+}
 
-#define atomic_inc_return(v)		atomic_add_return((v), 1)
-#define atomic_dec_return(v)		atomic_sub_return((v), 1)
+static inline int32_t atomic_sub_return(int32_t *p, int32_t v)
+{
+	return (atomic_xadd32(p, -v) - v);
+}
 
-#define atomic_add64_return(p, v)	( atomic_xadd64(p, v) + v )
-#define atomic_sub64_return(p, v)	( atomic_xadd64(p, -v) - v )
+static inline int32_t atomic_inc_return(int32_t *v)
+{
+	return atomic_add_return(v, 1);
+}
 
-#define atomic_inc64_return(v)		atomic_add64_return((v), 1)
-#define atomic_dec64_return(v)		atomic_sub64_return((v), 1)
+static inline int32_t atomic_dec_return(int32_t *v)
+{
+	return atomic_sub_return(v, 1);
+}
+
+static inline int64_t atomic_add64_return(int64_t *p, int64_t v)
+{
+	return (atomic_xadd64(p, v) + v);
+}
+
+static inline int64_t atomic_sub64_return(int64_t *p, int64_t v)
+{
+	return (atomic_xadd64(p, -v) - v);
+}
+
+static inline int64_t atomic_inc64_return(int64_t *v)
+{
+	return atomic_add64_return(v, 1);
+}
+
+static inline int64_t atomic_dec64_return(int64_t *v)
+{
+	return atomic_sub64_return(v, 1);
+}
 
 #endif /* ATOMIC_H*/

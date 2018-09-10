@@ -410,7 +410,7 @@ static bool is_desc_valid(struct seg_desc *desc, uint32_t prot)
 	uint32_t type;
 
 	/* The descriptor type must indicate a code/data segment. */
-	type = SEG_DESC_TYPE(desc->access);
+	type = seg_desc_type(desc->access);
 	if (type < 16U || type > 31U) {
 		return false;
 	}
@@ -2250,7 +2250,7 @@ int decode_instruction(struct vcpu *vcpu)
 	get_guest_paging_info(vcpu, emul_ctxt, csar);
 	cpu_mode = get_vcpu_mode(vcpu);
 
-	retval = local_decode_instruction(cpu_mode, SEG_DESC_DEF32(csar),
+	retval = local_decode_instruction(cpu_mode, seg_desc_def32(csar),
 		&emul_ctxt->vie);
 
 	if (retval != 0) {

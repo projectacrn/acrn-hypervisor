@@ -43,9 +43,15 @@
 #define IA32E_REF_MASK		\
 		(boot_cpu_data.physical_address_mask)
 
-#define ROUND_PAGE_UP(addr)	\
-		((((addr) + (uint64_t)CPU_PAGE_SIZE) - 1UL) & CPU_PAGE_MASK)
-#define ROUND_PAGE_DOWN(addr) ((addr) & CPU_PAGE_MASK)
+static inline uint64_t round_page_up(uint64_t addr)
+{
+	return (((addr + (uint64_t)CPU_PAGE_SIZE) - 1UL) & CPU_PAGE_MASK);
+}
+
+static inline uint64_t round_page_down(uint64_t addr)
+{
+	return (addr & CPU_PAGE_MASK);
+}
 
 enum _page_table_type {
 	PTT_PRIMARY = 0,	/* Mapping for hypervisor */
@@ -102,12 +108,12 @@ struct e820_entry {
 #pragma pack()
 
 /* E820 memory types */
-#define E820_TYPE_RAM           1U	/* EFI 1, 2, 3, 4, 5, 6, 7 */
-#define E820_TYPE_RESERVED      2U
+#define E820_TYPE_RAM		1U	/* EFI 1, 2, 3, 4, 5, 6, 7 */
+#define E820_TYPE_RESERVED	2U
 /* EFI 0, 11, 12, 13 (everything not used elsewhere) */
-#define E820_TYPE_ACPI_RECLAIM  3U	/* EFI 9 */
-#define E820_TYPE_ACPI_NVS      4U	/* EFI 10 */
-#define E820_TYPE_UNUSABLE      5U	/* EFI 8 */
+#define E820_TYPE_ACPI_RECLAIM	3U	/* EFI 9 */
+#define E820_TYPE_ACPI_NVS	4U	/* EFI 10 */
+#define E820_TYPE_UNUSABLE	5U	/* EFI 8 */
 
 /** Calculates the page table address for a given address.
  *
@@ -122,9 +128,9 @@ static inline void *mmu_pt_for_pde(uint32_t *pd, uint32_t vaddr)
 	return pd + (((vaddr >> 22U) + 1U) * 1024U);
 }
 
-#define CACHE_FLUSH_INVALIDATE_ALL()			\
-{							\
-	asm volatile ("   wbinvd\n" : : : "memory");	\
+static inline void cache_flush_invalidate_all(void)
+{
+	asm volatile ("   wbinvd\n" : : : "memory");
 }
 
 static inline void clflush(volatile void *p)
@@ -133,20 +139,19 @@ static inline void clflush(volatile void *p)
 }
 
 /* External Interfaces */
-void    destroy_ept(struct vm *vm);
-uint64_t  gpa2hpa(const struct vm *vm, uint64_t gpa);
-uint64_t  local_gpa2hpa(const struct vm *vm, uint64_t gpa, uint32_t *size);
-uint64_t  hpa2gpa(const struct vm *vm, uint64_t hpa);
+void destroy_ept(struct vm *vm);
+uint64_t gpa2hpa(const struct vm *vm, uint64_t gpa);
+uint64_t local_gpa2hpa(const struct vm *vm, uint64_t gpa, uint32_t *size);
+uint64_t hpa2gpa(const struct vm *vm, uint64_t hpa);
 int ept_mr_add(const struct vm *vm, uint64_t *pml4_page, uint64_t hpa,
-	uint64_t gpa, uint64_t size, uint64_t prot_orig);
-int ept_mr_modify(const struct vm *vm, uint64_t *pml4_page,
-	uint64_t gpa, uint64_t size,
-	uint64_t prot_set, uint64_t prot_clr);
-int ept_mr_del(const struct vm *vm, uint64_t *pml4_page,
-	uint64_t gpa, uint64_t size);
+		uint64_t gpa, uint64_t size, uint64_t prot_orig);
+int ept_mr_modify(const struct vm *vm, uint64_t *pml4_page, uint64_t gpa,
+		uint64_t size, uint64_t prot_set, uint64_t prot_clr);
+int ept_mr_del(const struct vm *vm, uint64_t *pml4_page, uint64_t gpa,
+		uint64_t size);
 void free_ept_mem(uint64_t *pml4_page);
-int     ept_violation_vmexit_handler(struct vcpu *vcpu);
-int     ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu);
+int ept_violation_vmexit_handler(struct vcpu *vcpu);
+int ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu);
 
 #endif /* ASSEMBLER not defined */
 

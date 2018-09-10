@@ -286,5 +286,5 @@ void dump_exception(struct intr_excp_ctx *ctx, uint16_t pcpu_id)
 
 	/* Save registers*/
 	crash_ctx = ctx;
-	CACHE_FLUSH_INVALIDATE_ALL();
+	cache_flush_invalidate_all();
 }

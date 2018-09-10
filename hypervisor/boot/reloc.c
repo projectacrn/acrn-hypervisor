@@ -24,8 +24,12 @@ struct Elf64_Rel {
 	uint64_t reserved;
 };
 
-#define ELF64_R_TYPE(i)		((i) & 0xffffffff)
-#define R_X86_64_RELATIVE	8
+static inline uint64_t elf64_r_type(uint64_t i)
+{
+	return (i & 0xffffffffUL);
+}
+
+#define R_X86_64_RELATIVE	8UL
 
 uint64_t trampoline_start16_paddr;
 
@@ -109,7 +113,7 @@ void _relocate(void)
 	primary_32_end = (uint64_t)(&cpu_primary_start_64) - delta;
 
 	while (start < end) {
-		if ((ELF64_R_TYPE(start->r_info)) == R_X86_64_RELATIVE) {
+		if ((elf64_r_type(start->r_info)) == R_X86_64_RELATIVE) {
 			addr = (uint64_t *)(delta + start->r_offset);
 
 			/*

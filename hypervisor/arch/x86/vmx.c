@@ -271,7 +271,7 @@ int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value)
 
 	for (i = 0U; i < 8U; i++) {
 		field = (value >> (i * 8U)) & 0xffUL;
-		if (PAT_MEM_TYPE_INVALID(field) ||
+		if (pat_mem_type_invalid(field) ||
 				((PAT_FIELD_RSV_BITS & field) != 0UL)) {
 			pr_err("invalid guest IA32_PAT: 0x%016llx", value);
 			vcpu_inject_gp(vcpu, 0U);
@@ -399,7 +399,7 @@ void vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 				 * disabled behavior
 				 */
 				exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, PAT_ALL_UC_VALUE);
-				CACHE_FLUSH_INVALIDATE_ALL();
+				cache_flush_invalidate_all();
 			} else {
 				/* Restore IA32_PAT to enable cache again */
 				exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL,
