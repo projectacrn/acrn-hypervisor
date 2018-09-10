@@ -30,7 +30,74 @@
 #ifndef _VLAPIC_H_
 #define	_VLAPIC_H_
 
-struct acrn_vlapic;
+/*
+ * 16 priority levels with at most one vector injected per level.
+ */
+#define	ISRVEC_STK_SIZE		(16U + 1U)
+
+#define VLAPIC_MAXLVT_INDEX	APIC_LVT_CMCI
+
+struct vlapic_pir_desc {
+	uint64_t pir[4];
+	uint64_t pending;
+	uint64_t unused[3];
+} __aligned(64);
+
+struct vlapic_timer {
+	struct hv_timer timer;
+	uint32_t mode;
+	uint32_t tmicr;
+	uint32_t divisor_shift;
+};
+
+struct acrn_vlapic {
+	/*
+	 * Please keep 'apic_page' and 'pir_desc' be the first two fields in
+	 * current structure, as below alignment restrictions are mandatory
+	 * to support APICv features:
+	 * - 'apic_page' MUST be 4KB aligned.
+	 * - 'pir_desc' MUST be 64 bytes aligned.
+	 */
+	struct lapic_regs	apic_page;
+	struct vlapic_pir_desc	pir_desc;
+
+	struct vm		*vm;
+	struct vcpu		*vcpu;
+
+	uint32_t		esr_pending;
+	int			esr_firing;
+
+	struct vlapic_timer	vtimer;
+
+	/*
+	 * The 'isrvec_stk' is a stack of vectors injected by the local apic.
+	 * A vector is popped from the stack when the processor does an EOI.
+	 * The vector on the top of the stack is used to compute the
+	 * Processor Priority in conjunction with the TPR.
+	 *
+	 * Note: isrvec_stk_top is unsigned and always equal to the number of
+	 * vectors in the stack.
+	 *
+	 * Operations:
+	 *     init: isrvec_stk_top = 0;
+	 *     push: isrvec_stk_top++; isrvec_stk[isrvec_stk_top] = x;
+	 *     pop : isrvec_stk_top--;
+	 */
+	uint8_t		isrvec_stk[ISRVEC_STK_SIZE];
+	uint32_t	isrvec_stk_top;
+
+	uint64_t	msr_apicbase;
+
+	/*
+	 * Copies of some registers in the virtual APIC page. We do this for
+	 * a couple of different reasons:
+	 * - to be able to detect what changed (e.g. svr_last)
+	 * - to maintain a coherent snapshot of the register (e.g. lvt_last)
+	 */
+	uint32_t	svr_last;
+	uint32_t	lvt_last[VLAPIC_MAXLVT_INDEX + 1];
+} __aligned(CPU_PAGE_SIZE);
+
 
 /* APIC write handlers */
 void vlapic_set_cr8(struct acrn_vlapic *vlapic, uint64_t val);

@@ -17,6 +17,8 @@
 #include <io.h>
 #include <ioreq.h>
 #include <mtrr.h>
+#include <timer.h>
+#include <vlapic.h>
 #include <vcpu.h>
 #include <trusty.h>
 #include <guest_pm.h>
@@ -30,12 +32,10 @@
 #include <pgtable_types.h>
 #include <pgtable.h>
 #include <irq.h>
-#include <timer.h>
 #include <vmx.h>
 #include <assign.h>
 #include <vtd.h>
 
-#include <vlapic.h>
 #include <guest.h>
 #include <vmexit.h>
 #include <cpufeatures.h>
