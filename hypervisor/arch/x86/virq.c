@@ -78,7 +78,7 @@ static bool vcpu_pending_request(struct vcpu *vcpu)
 	int ret = 0;
 
 	/* Query vLapic to get vector to inject */
-	vlapic = vcpu->arch_vcpu.vlapic;
+	vlapic = vcpu_vlapic(vcpu);
 	ret = vlapic_pending_intr(vlapic, &vector);
 
 	/* we need to check and raise request if we have pending event
@@ -111,7 +111,7 @@ void vcpu_make_request(struct vcpu *vcpu, uint16_t eventid)
 
 static int vcpu_inject_vlapic_int(struct vcpu *vcpu)
 {
-	struct acrn_vlapic *vlapic = vcpu->arch_vcpu.vlapic;
+	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
 	uint32_t vector = 0U;
 	int ret = 0;
 
@@ -390,7 +390,7 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 	uint32_t error_code;
 	struct vcpu_arch * arch_vcpu = &vcpu->arch_vcpu;
 	uint64_t *pending_req_bits = &arch_vcpu->pending_req;
-	struct acrn_vlapic *vlapic = vcpu->arch_vcpu.vlapic;
+	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
 
 	if (bitmap_test_and_clear_lock(ACRN_REQUEST_TRP_FAULT, pending_req_bits)) {
 		pr_fatal("Triple fault happen -> shutdown!");

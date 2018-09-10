@@ -294,11 +294,11 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
 			vcpu_inject_gp(vcpu, 0U);
 			break;
 		}
-		vlapic_set_cr8(vcpu->arch_vcpu.vlapic, reg);
+		vlapic_set_cr8(vcpu_vlapic(vcpu), reg);
 		break;
 	case 0x18UL:
 		/* mov from cr8 */
-		reg = vlapic_get_cr8(vcpu->arch_vcpu.vlapic);
+		reg = vlapic_get_cr8(vcpu_vlapic(vcpu));
 		vcpu_set_gpreg(vcpu, idx, reg);
 		break;
 	default:

@@ -166,6 +166,8 @@ struct cpu_context {
 struct vcpu_arch {
 	/* vmcs region for this vcpu, MUST be 4KB-aligned */
 	uint8_t vmcs[CPU_PAGE_SIZE];
+	/* per vcpu lapic */
+	struct acrn_vlapic vlapic;
 	int cur_context;
 	struct cpu_context contexts[NR_WORLD];
 
@@ -203,8 +205,6 @@ struct vcpu_arch {
 	bool inject_event_pending;
 	struct event_injection_info inject_info;
 
-	/* per vcpu lapic */
-	void *vlapic;
 } __aligned(CPU_PAGE_SIZE);
 
 struct vm;
@@ -262,6 +262,12 @@ static inline bool is_vcpu_bsp(struct vcpu *vcpu)
 static inline void vcpu_retain_rip(struct vcpu *vcpu)
 {
 	(vcpu)->arch_vcpu.inst_len = 0U;
+}
+
+static inline struct acrn_vlapic *
+vcpu_vlapic(struct vcpu *vcpu)
+{
+	return &(vcpu->arch_vcpu.vlapic);
 }
 
 /* External Interfaces */

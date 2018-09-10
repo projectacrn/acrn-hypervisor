@@ -972,7 +972,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	exec_vmwrite64(VMX_APIC_ACCESS_ADDR_FULL, value64);
 
 	/*APIC-v, config APIC virtualized page address*/
-	value64 = vlapic_apicv_get_apic_page_addr(vcpu->arch_vcpu.vlapic);
+	value64 = vlapic_apicv_get_apic_page_addr(vcpu_vlapic(vcpu));
 	exec_vmwrite64(VMX_VIRTUAL_APIC_PAGE_ADDR_FULL, value64);
 
 	if (is_apicv_intr_delivery_supported()) {

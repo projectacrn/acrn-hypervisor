@@ -417,7 +417,7 @@ void reset_vcpu(struct vcpu *vcpu)
 	}
 	vcpu->arch_vcpu.cur_context = NORMAL_WORLD;
 
-	vlapic = vcpu->arch_vcpu.vlapic;
+	vlapic = vcpu_vlapic(vcpu);
 	vlapic_reset(vlapic);
 }
 
