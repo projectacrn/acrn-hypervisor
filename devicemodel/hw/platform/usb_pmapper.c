@@ -22,6 +22,85 @@ static inline uint8_t usb_dev_get_ep_type(struct usb_dev *udev, int pid,
 		int epnum);
 
 static int
+usb_dev_scan_dev()
+{
+	int i, num_devs;
+	struct libusb_device **devlist;
+	struct libusb_device *ldev;
+	struct usb_native_devinfo di;
+	struct libusb_device_descriptor d;
+	int rc;
+
+	if (!g_ctx.libusb_ctx)
+		return -1;
+
+	num_devs = libusb_get_device_list(g_ctx.libusb_ctx, &devlist);
+	if (num_devs < 0)
+		return -1;
+
+	for (i = 0; i < num_devs; ++i) {
+		ldev = devlist[i];
+
+		memset(&di, 0, sizeof(di));
+
+		di.bus = libusb_get_bus_number(ldev);
+		di.port = libusb_get_port_number(ldev);
+		di.speed = libusb_get_device_speed(ldev);
+
+		rc = libusb_get_device_descriptor(ldev, &d);
+		if (rc) {
+			UPRINTF(LWRN, "fail to get descriptor for %d-%d\r\n",
+					di.bus, di.port);
+			continue;
+		}
+
+		di.pid = d.idProduct;
+		di.vid = d.idVendor;
+		di.bcd = d.bcdUSB;
+		di.priv_data = ldev;
+
+		if (di.port == 0)
+			continue;
+		if (d.bDeviceClass != LIBUSB_CLASS_HUB)
+			continue;
+
+		if (g_ctx.conn_cb)
+			g_ctx.conn_cb(g_ctx.hci_data, &di);
+	}
+
+	for (i = 0; i < num_devs; ++i) {
+		ldev = devlist[i];
+
+		memset(&di, 0, sizeof(di));
+		di.bus = libusb_get_bus_number(ldev);
+		di.port = libusb_get_port_number(ldev);
+		di.speed = libusb_get_device_speed(ldev);
+
+		rc = libusb_get_device_descriptor(ldev, &d);
+		if (rc) {
+			UPRINTF(LWRN, "fail to get descriptor for %d-%d\r\n",
+					di.bus, di.port);
+			continue;
+		}
+
+		di.pid = d.idProduct;
+		di.vid = d.idVendor;
+		di.bcd = d.bcdUSB;
+		di.priv_data = ldev;
+
+		if (di.port == 0)
+			continue;
+		if (d.bDeviceClass == LIBUSB_CLASS_HUB)
+			continue;
+
+		if (g_ctx.conn_cb)
+			g_ctx.conn_cb(g_ctx.hci_data, &di);
+	}
+
+	return num_devs;
+}
+
+static int
 libusb_speed_to_usb_speed(int libusb_speed)
 {
 	int speed = LIBUSB_SPEED_UNKNOWN;
@@ -1134,6 +1213,7 @@ usb_dev_sys_init(usb_dev_sys_cb conn_cb, usb_dev_sys_cb disconn_cb,
 	libusb_hotplug_callback_handle native_conn_handle;
 	libusb_hotplug_callback_handle native_disconn_handle;
 	int native_pid, native_vid, native_cls, rc;
+	int num_devs;
 
 	assert(conn_cb);
 	assert(disconn_cb);
@@ -1155,6 +1235,10 @@ usb_dev_sys_init(usb_dev_sys_cb conn_cb, usb_dev_sys_cb disconn_cb,
 	g_ctx.disconn_cb   = disconn_cb;
 	g_ctx.notify_cb    = notify_cb;
 	g_ctx.intr_cb      = intr_cb;
+
+	num_devs = usb_dev_scan_dev();
+	UPRINTF(LINF, "found %d devices before Guest OS booted\r\n", num_devs);
+
 	native_conn_evt    = LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED;
 	native_disconn_evt = LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT;
 	native_pid         = LIBUSB_HOTPLUG_MATCH_ANY;

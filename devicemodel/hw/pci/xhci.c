@@ -502,11 +502,45 @@ pci_xhci_get_dev_type(struct pci_xhci_vdev *xdev, void *dev_data)
 }
 
 static int
+pci_xhci_get_free_rh_port(struct pci_xhci_vdev *xdev, struct usb_native_devinfo
+		*di)
+{
+	volatile int  bus;
+	volatile int ports, porte;
+	volatile int i, j;
+	int used;
+
+	assert(xdev);
+	assert(di);
+
+	if (di->bcd < 0x300) {
+		bus = 1;
+		ports = xdev->usb2_port_start;
+	} else {
+		bus = 2;
+		ports = xdev->usb3_port_start;
+	}
+	porte = ports + (XHCI_MAX_DEVS / 2);
+
+	for (i = ports; i < porte; i++) {
+		used = 0;
+		for (j = 1; j < USB_NATIVE_NUM_PORT; ++j) {
+			if (VPORT_NUM(xdev->port_map_tbl[bus][j]) == i) {
+				used = 1;
+				break;
+			}
+		}
+		if (!used)
+			return i;
+	}
+	return -1;
+}
+
+static int
 pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 {
 	struct pci_xhci_vdev *xdev;
 	struct usb_native_devinfo *di;
-	int vport_start, vport_end;
 	int port;
 	int need_intr = 1;
 	enum usb_native_dev_type type;
@@ -560,20 +594,8 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	UPRINTF(LDBG, "%04x:%04x %d-%d belong to this vm.\r\n", di->vid,
 			di->pid, di->bus, di->port);
 
-	if (di->bcd < 0x300) {
-		vport_start = xdev->usb2_port_start;
-		vport_end = vport_start + (XHCI_MAX_DEVS / 2);
-	} else {
-		vport_start = xdev->usb3_port_start;
-		vport_end = vport_start + (XHCI_MAX_DEVS / 2);
-	}
-
-	/* find free port */
-	for (port = vport_start; port < vport_end; port++)
-		if (!xdev->devices[port])
-			break;
-
-	if (port >= vport_end) {
+	port = pci_xhci_get_free_rh_port(xdev, di);
+	if (port < 0) {
 		UPRINTF(LFTL, "no free virtual port for native device %d-%d"
 				"\r\n", di->bus, di->port);
 		goto errout;
@@ -587,7 +609,7 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 		VPORT_NUM_STATE(VPORT_CONNECTED, port);
 
 	/* TODO: should revisit in deeper level */
-	if (vm_get_suspend_mode() != VM_SUSPEND_NONE)
+	if (vm_get_suspend_mode() != VM_SUSPEND_NONE || xhci_in_use == 0)
 		need_intr = 0;
 
 	/* Trigger port change event for the arriving device */
@@ -1462,16 +1484,34 @@ done:
 static struct usb_native_devinfo *
 pci_xhci_find_native_devinfo(struct pci_xhci_vdev *xdev)
 {
-	int i, j;
+	int i, j, x, y;
+	int minp = XHCI_MAX_DEVS;
+	int temp;
 
 	assert(xdev);
+
+	/* FIXME
+	 * Use the device with minimum port number to do the 'Enable Slot'
+	 * command. This is ok with Linux, but not 100% compatible with
+	 * xHCI spec. Will fix this in future. Need follow xHCI spec to bind
+	 * slot to device in address device command.
+	 */
+	x = y = -1;
 	for (i = 0; i < USB_NATIVE_NUM_BUS; ++i)
 		for (j = 0; j < USB_NATIVE_NUM_PORT; ++j)
 			if (VPORT_STATE(xdev->port_map_tbl[i][j]) ==
-					VPORT_CONNECTED)
-				return &xdev->native_dev_info[i][j];
-
-	return NULL;
+					VPORT_CONNECTED) {
+				temp = VPORT_NUM(xdev->port_map_tbl[i][j]);
+				if (minp > temp) {
+					x = i;
+					y = j;
+					minp = temp;
+				}
+			}
+	if (x == -1 || y == -1)
+		return NULL;
+	else
+		return &xdev->native_dev_info[x][y];
 }
 
 static uint32_t
@@ -3726,7 +3766,6 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		UPRINTF(LWRN, "controller already defined\r\n");
 		return -1;
 	}
-	xhci_in_use = 1;
 
 	xdev = calloc(1, sizeof(struct pci_xhci_vdev));
 	if (!xdev) {
@@ -3839,6 +3878,7 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	pthread_mutex_init(&xdev->mtx, NULL);
 
+	xhci_in_use = 1;
 done:
 	if (error) {
 		UPRINTF(LFTL, "%s fail, error=%d\n", __func__, error);
