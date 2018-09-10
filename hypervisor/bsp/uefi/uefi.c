@@ -37,7 +37,7 @@ void efi_spurious_handler(int vector)
 		return;
 
 	vcpu = per_cpu(vcpu, 0);
-	if ((vcpu != NULL) && vcpu->arch_vcpu.vlapic) {
+	if (vcpu != NULL) {
 		ret = vlapic_set_intr(vcpu, vector, 0);
 		if (ret != 0)
 			pr_err("%s vlapic set intr fail, interrupt lost\n",
@@ -62,7 +62,7 @@ int uefi_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	if (!is_vm0(vm))
 		return load_guest(vm, vcpu);
 
-	vlapic_restore(vcpu->arch_vcpu.vlapic, &uefi_lapic_regs);
+	vlapic_restore(vcpu_vlapic(vcpu), &uefi_lapic_regs);
 
 	vcpu->entry_addr = (void *)efi_ctx->rip;
 	memcpy_s(&cur_context->guest_cpu_regs, sizeof(struct cpu_gp_regs),

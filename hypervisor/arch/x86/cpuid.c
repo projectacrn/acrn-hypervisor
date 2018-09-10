@@ -297,7 +297,7 @@ int set_vcpuid_entries(struct vm *vm)
 	return 0;
 }
 
-void guest_cpuid(const struct vcpu *vcpu,
+void guest_cpuid(struct vcpu *vcpu,
 		uint32_t *eax, uint32_t *ebx,
 		uint32_t *ecx, uint32_t *edx)
 {
@@ -329,7 +329,7 @@ void guest_cpuid(const struct vcpu *vcpu,
 	case 0x01U:
 	{
 		cpuid(leaf, eax, ebx, ecx, edx);
-		uint32_t apicid = vlapic_get_id(vcpu->arch_vcpu.vlapic);
+		uint32_t apicid = vlapic_get_id(vcpu_vlapic(vcpu));
 		/* Patching initial APIC ID */
 		*ebx &= ~APIC_ID_MASK;
 		*ebx |= (apicid & APIC_ID_MASK);

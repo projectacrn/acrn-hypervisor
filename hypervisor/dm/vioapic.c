@@ -189,7 +189,7 @@ vioapic_update_tmr(struct vcpu *vcpu)
 	bool level;
 	uint32_t pin, pincount;
 
-	vlapic = vcpu->arch_vcpu.vlapic;
+	vlapic = vcpu_vlapic(vcpu);
 	vioapic = vm_ioapic(vcpu->vm);
 
 	VIOAPIC_LOCK(vioapic);

@@ -36,7 +36,7 @@ int32_t hcall_sos_offline_cpu(struct vm *vm, uint64_t lapicid)
 	pr_info("sos offline cpu with lapicid %lld", lapicid);
 
 	foreach_vcpu(i, vm, vcpu) {
-		if (vlapic_get_apicid(vcpu->arch_vcpu.vlapic) == lapicid) {
+		if (vlapic_get_apicid(vcpu_vlapic(vcpu)) == lapicid) {
 			/* should not offline BSP */
 			if (vcpu->vcpu_id == BOOT_CPU_ID)
 				return -1;
