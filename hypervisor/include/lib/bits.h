@@ -138,7 +138,7 @@ static inline uint64_t ffz64_ex(const uint64_t *addr, uint64_t size)
 {
 	uint64_t idx;
 
-	for (idx = 0; (idx << 6U) < size; idx++) {
+	for (idx = 0UL; (idx << 6U) < size; idx++) {
 		if (addr[idx] != ~0UL)
 			return (idx << 6U) + ffz64(addr[idx]);
 	}

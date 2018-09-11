@@ -265,7 +265,7 @@ void *alloc_paging_struct(void)
 	ptr = alloc_page();
 
 	ASSERT(ptr != NULL, "page alloc failed!");
-	(void)memset(ptr, 0, CPU_PAGE_SIZE);
+	(void)memset(ptr, 0U, CPU_PAGE_SIZE);
 
 	return ptr;
 }
@@ -273,7 +273,7 @@ void *alloc_paging_struct(void)
 void free_paging_struct(void *ptr)
 {
 	if (ptr != NULL) {
-		(void)memset(ptr, 0, CPU_PAGE_SIZE);
+		(void)memset(ptr, 0U, CPU_PAGE_SIZE);
 		free(ptr);
 	}
 }

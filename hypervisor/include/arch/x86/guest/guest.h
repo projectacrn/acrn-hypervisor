@@ -83,10 +83,10 @@ struct vm_lu_mem_map {
 
 /* Use # of paging level to identify paging mode */
 enum vm_paging_mode {
-	PAGING_MODE_0_LEVEL = 0,	/* Flat */
-	PAGING_MODE_2_LEVEL = 2,	/* 32bit paging, 2-level */
-	PAGING_MODE_3_LEVEL = 3,	/* PAE paging, 3-level */
-	PAGING_MODE_4_LEVEL = 4,	/* 64bit paging, 4-level */
+	PAGING_MODE_0_LEVEL = 0U,	/* Flat */
+	PAGING_MODE_2_LEVEL = 2U,	/* 32bit paging, 2-level */
+	PAGING_MODE_3_LEVEL = 3U,	/* PAE paging, 3-level */
+	PAGING_MODE_4_LEVEL = 4U,	/* 64bit paging, 4-level */
 	PAGING_MODE_NUM,
 };
 

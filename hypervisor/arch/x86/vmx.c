@@ -681,14 +681,14 @@ static void init_guest_state(struct vcpu *vcpu)
 
 	if (vcpu_mode == CPU_MODE_REAL) {
 		init_guest_context_real(vcpu);
-		init_guest_vmx(vcpu, CR0_ET | CR0_NE, 0, 0);
+		init_guest_vmx(vcpu, CR0_ET | CR0_NE, 0UL, 0UL);
 	} else if (is_vm0(vcpu->vm) && is_vcpu_bsp(vcpu)) {
 		init_guest_context_vm0_bsp(vcpu);
 		init_guest_vmx(vcpu, init_ctx->cr0, init_ctx->cr3,
 			       init_ctx->cr4 & ~CR4_VMXE);
 	} else {
 		init_guest_context_protect(vcpu);
-		init_guest_vmx(vcpu, CR0_ET | CR0_NE | CR0_PE, 0, 0);
+		init_guest_vmx(vcpu, CR0_ET | CR0_NE | CR0_PE, 0UL, 0UL);
 	}
 }
 
@@ -984,7 +984,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 		exec_vmwrite64(VMX_EOI_EXIT2_FULL, 0UL);
 		exec_vmwrite64(VMX_EOI_EXIT3_FULL, 0UL);
 
-		exec_vmwrite16(VMX_GUEST_INTR_STATUS, 0);
+		exec_vmwrite16(VMX_GUEST_INTR_STATUS, 0U);
 	}
 
 	/* Load EPTP execution control

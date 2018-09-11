@@ -65,7 +65,7 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	uint64_t gpa = 0UL;
 	uint64_t hpa = gpa2hpa(vm, gpa_orig);
 	uint64_t table_present = EPT_RWX;
-	uint64_t pdpte = 0, *dest_pdpte_p = NULL, *src_pdpte_p = NULL;
+	uint64_t pdpte = 0UL, *dest_pdpte_p = NULL, *src_pdpte_p = NULL;
 	void *sub_table_addr = NULL, *pml4_base = NULL;
 	struct vm *vm0 = get_vm_from_vmid(0U);
 	uint16_t i;
