@@ -71,7 +71,7 @@ static void do_copy_earlylog(struct shared_buf *dst_sbuf,
 
 void init_logmsg(__unused uint32_t mem_size, uint32_t flags)
 {
-	int16_t pcpu_id;
+	uint16_t pcpu_id;
 
 	logmsg.flags = flags;
 	logmsg.seq = 0;
@@ -201,7 +201,7 @@ void print_logmsg_buffer(uint16_t pcpu_id)
 
 	do {
 		uint32_t idx;
-		(void)memset(buffer, 0U, LOG_ENTRY_SIZE + 1);
+		(void)memset(buffer, 0U, LOG_ENTRY_SIZE + 1U);
 
 		if (*sbuf == NULL) {
 			return;

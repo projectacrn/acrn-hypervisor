@@ -36,8 +36,8 @@
 #define ACPI_SIG_MADT             "APIC" /* Multiple APIC Description Table */
 #define ACPI_SIG_DMAR             "DMAR"
 #define RSDP_CHECKSUM_LENGTH       20
-#define ACPI_NAME_SIZE             4
-#define ACPI_MADT_TYPE_LOCAL_APIC  0
+#define ACPI_NAME_SIZE             4U
+#define ACPI_MADT_TYPE_LOCAL_APIC  0U
 #define ACPI_MADT_ENABLED          1U
 #define ACPI_OEM_TABLE_ID_SIZE     8
 
@@ -113,7 +113,7 @@ biosacpi_search_rsdp(char *base, int length)
 
 		/* compare signature, validate checksum */
 		if (strncmp(rsdp->signature, ACPI_SIG_RSDP,
-				strnlen_s(ACPI_SIG_RSDP, 8)) == 0) {
+				strnlen_s(ACPI_SIG_RSDP, 8U)) == 0) {
 			cp = (uint8_t *)rsdp;
 			sum = 0U;
 			for (idx = 0; idx < RSDP_CHECKSUM_LENGTH; idx++) {
@@ -179,12 +179,12 @@ static void *get_acpi_tbl(const char *sig)
 	struct acpi_table_rsdp *rsdp;
 	struct acpi_table_rsdt *rsdt;
 	struct acpi_table_xsdt *xsdt;
-	uint64_t addr = 0;
-	int i, count;
+	uint64_t addr = 0UL;
+	uint32_t i, count;
 
 	rsdp = (struct acpi_table_rsdp *)global_rsdp;
 
-	if ((rsdp->revision >= 2) && (rsdp->xsdt_physical_address != 0U)) {
+	if ((rsdp->revision >= 2U) && (rsdp->xsdt_physical_address != 0UL)) {
 		/*
 		 * AcpiOsGetRootPointer only verifies the checksum for
 		 * the version 1.0 portion of the RSDP.  Version 2.0 has
@@ -196,7 +196,7 @@ static void *get_acpi_tbl(const char *sig)
 				sizeof(struct acpi_table_header)) /
 		    sizeof(uint64_t);
 
-		for (i = 0; i < count; i++) {
+		for (i = 0U; i < count; i++) {
 			if (probe_table(xsdt->table_offset_entry[i], sig) != 0) {
 				addr = xsdt->table_offset_entry[i];
 				break;
@@ -210,7 +210,7 @@ static void *get_acpi_tbl(const char *sig)
 				sizeof(struct acpi_table_header)) /
 			sizeof(uint32_t);
 
-		for (i = 0; i < count; i++) {
+		for (i = 0U; i < count; i++) {
 			if (probe_table(rsdt->table_offset_entry[i], sig) != 0) {
 				addr = rsdt->table_offset_entry[i];
 				break;
@@ -223,7 +223,7 @@ static void *get_acpi_tbl(const char *sig)
 
 static uint16_t local_parse_madt(void *madt, uint8_t lapic_id_array[MAX_PCPU_NUM])
 {
-	uint16_t pcpu_id = 0;
+	uint16_t pcpu_id = 0U;
 	struct acpi_madt_local_apic *processor;
 	struct acpi_table_madt *madt_ptr;
 	void *first;

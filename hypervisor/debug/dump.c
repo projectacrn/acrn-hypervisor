@@ -98,7 +98,7 @@ static void dump_guest_stack(struct vcpu *vcpu)
 {
 	uint32_t i;
 	uint64_t tmp[DUMP_STACK_SIZE], fault_addr;
-	uint32_t err_code = 0;
+	uint32_t err_code = 0U;
 
 	if (copy_from_gva(vcpu, tmp, vcpu_get_gpreg(vcpu, CPU_REG_RSP),
 		DUMP_STACK_SIZE, &err_code, &fault_addr) < 0) {
@@ -112,7 +112,7 @@ static void dump_guest_stack(struct vcpu *vcpu)
 	for (i = 0U; i < (DUMP_STACK_SIZE >> 5U); i++) {
 		printf("guest_rsp(0x%llx):  0x%016llx  0x%016llx  "
 				"0x%016llx  0x%016llx\r\n",
-				(vcpu_get_gpreg(vcpu, CPU_REG_RSP)+(i*32)),
+				(vcpu_get_gpreg(vcpu, CPU_REG_RSP)+(i*32U)),
 				tmp[i*4], tmp[(i*4)+1],
 				tmp[(i*4)+2], tmp[(i*4)+3]);
 	}
@@ -142,7 +142,7 @@ static void show_guest_call_trace(struct vcpu *vcpu)
 	 *  try to print out call trace,here can not check if the rbp is valid
 	 *  if the address is invalid, it will cause hv page fault
 	 *  then halt system */
-	while ((count < CALL_TRACE_HIERARCHY_MAX) && (bp != 0)) {
+	while ((count < CALL_TRACE_HIERARCHY_MAX) && (bp != 0UL)) {
 		uint64_t parent_bp = 0UL, fault_addr;
 
 		err_code = 0U;
@@ -215,7 +215,7 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp_arg, uint16_t pcpu_i
 		&& (cb_hierarchy < CALL_TRACE_HIERARCHY_MAX)) {
 		printf("----> 0x%016llx\r\n",
 				*(uint64_t *)(rbp + sizeof(uint64_t)));
-		if (*(uint64_t *)(rbp + (2*sizeof(uint64_t)))
+		if (*(uint64_t *)(rbp + (2U*sizeof(uint64_t)))
 				== SP_BOTTOM_MAGIC) {
 			break;
 		}

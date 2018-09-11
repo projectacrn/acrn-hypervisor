@@ -20,7 +20,7 @@
 #define LOG_FLAG_STDOUT		0x00000001U
 #define LOG_FLAG_MEMORY		0x00000002U
 #define LOG_FLAG_NPK		0x00000004U
-#define LOG_ENTRY_SIZE	80
+#define LOG_ENTRY_SIZE	80U
 /* Size of buffer used to store a message being logged,
  * should align to LOG_ENTRY_SIZE.
  */

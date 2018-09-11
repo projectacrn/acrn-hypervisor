@@ -26,10 +26,10 @@
  */
 #define VHM_REQUEST_MAX 16U
 
-#define REQ_STATE_FREE          3
-#define REQ_STATE_PENDING	0
-#define REQ_STATE_COMPLETE	1
-#define REQ_STATE_PROCESSING	2
+#define REQ_STATE_FREE          3U
+#define REQ_STATE_PENDING	0U
+#define REQ_STATE_COMPLETE	1U
+#define REQ_STATE_PROCESSING	2U
 
 #define REQ_PORTIO	0U
 #define REQ_MMIO	1U

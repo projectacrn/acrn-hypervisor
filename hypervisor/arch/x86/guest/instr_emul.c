@@ -639,15 +639,15 @@ build_getcc(getcc64, uint64_t, x, y)
 static uint64_t getcc(uint8_t opsize, uint64_t x, uint64_t y)
 {
 	switch (opsize) {
-		case 1:
-			return getcc8((uint8_t) x, (uint8_t) y);
-		case 2:
-			return getcc16((uint16_t) x, (uint16_t) y);
-		case 4:
-			return getcc32((uint32_t) x, (uint32_t) y);
-		default:	/* opsize == 8 */
-			return getcc64(x, y);
-		}
+	case 1U:
+		return getcc8((uint8_t) x, (uint8_t) y);
+	case 2U:
+		return getcc16((uint16_t) x, (uint16_t) y);
+	case 4U:
+		return getcc32((uint32_t) x, (uint32_t) y);
+	default:	/* opsize == 8 */
+		return getcc64(x, y);
+	}
 }
 
 static int emulate_mov(struct vcpu *vcpu, struct instr_emul_vie *vie)
@@ -740,7 +740,7 @@ static int emulate_mov(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		 * REX + C6/0	mov r/m8, imm8
 		 */
 		size = 1U;	/* override for byte operation */
-		error = mmio_write(vcpu, vie->immediate);
+		error = mmio_write(vcpu, (uint64_t)vie->immediate);
 		break;
 	case 0xC7U:
 		/*

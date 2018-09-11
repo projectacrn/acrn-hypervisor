@@ -828,7 +828,7 @@ int32_t hcall_setup_hv_npk_log(struct vm *vm, uint64_t param)
 {
 	struct hv_npk_log_param npk_param;
 
-	memset((void *)&npk_param, 0, sizeof(npk_param));
+	memset((void *)&npk_param, 0U, sizeof(npk_param));
 
 	if (copy_from_gpa(vm, &npk_param, param, sizeof(npk_param)) != 0) {
 		pr_err("%s: Unable copy param from vm\n", __func__);

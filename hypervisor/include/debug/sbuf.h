@@ -13,12 +13,12 @@
 #define SHARED_BUFFER_H
 
 #define SBUF_MAGIC	0x5aa57aa71aa13aa3UL
-#define SBUF_MAX_SIZE	(1 << 22)
-#define SBUF_HEAD_SIZE	64
+#define SBUF_MAX_SIZE	(1UL << 22U)
+#define SBUF_HEAD_SIZE	64U
 
 /* sbuf flags */
-#define OVERRUN_CNT_EN	(1 << 0) /* whether overrun counting is enabled */
-#define OVERWRITE_EN	(1 << 1) /* whether overwrite is enabled */
+#define OVERRUN_CNT_EN	(1U << 0U) /* whether overrun counting is enabled */
+#define OVERWRITE_EN	(1U << 1U) /* whether overwrite is enabled */
 
 /**
  * (sbuf) head + buf (store (ele_num - 1) elements at most)
