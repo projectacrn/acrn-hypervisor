@@ -306,11 +306,15 @@ void switch_world(struct vcpu *vcpu, int next_world)
 	copy_smc_param(&arch_vcpu->contexts[!next_world].run_ctx,
 			&arch_vcpu->contexts[next_world].run_ctx);
 
-	/* load EPTP for next world */
 	if (next_world == NORMAL_WORLD) {
+		/* load EPTP for next world */
 		exec_vmwrite64(VMX_EPT_POINTER_FULL,
 			hva2hpa(vcpu->vm->arch_vm.nworld_eptp) |
 			(3UL << 3U) | 0x6UL);
+
+#ifndef CONFIG_L1D_FLUSH_VMENTRY_ENABLED
+		cpu_l1d_flush();
+#endif
 	} else {
 		exec_vmwrite64(VMX_EPT_POINTER_FULL,
 			hva2hpa(vcpu->vm->arch_vm.sworld_eptp) |
