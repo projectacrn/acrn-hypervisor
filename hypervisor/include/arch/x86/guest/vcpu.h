@@ -222,7 +222,6 @@ struct vcpu {
 	/* State of debug request for this VCPU */
 	volatile enum vcpu_state dbg_req_state;
 	uint64_t sync;	/*hold the bit events*/
-	struct acrn_vlapic *vlapic;	/* per vCPU virtualized LAPIC */
 
 	struct list_head run_list; /* inserted to schedule runqueue */
 	uint64_t pending_pre_work; /* any pre work pending? */
