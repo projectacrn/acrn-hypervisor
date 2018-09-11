@@ -300,3 +300,7 @@ config ENFORCE_VALIDATED_ACPI_INFO
 	  tools to generate such data is required. Otherwise a warning will be
 	  printed when validated ACPI info is unavailable, but a binary can
 	  still be built with the ACPI info template.
+
+config L1D_FLUSH_VMENTRY_ENABLED
+	bool "Enable L1 cache flush before VM entry"
+	default n
