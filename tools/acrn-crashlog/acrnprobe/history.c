@@ -192,7 +192,8 @@ void hist_raise_uptime(char *lastuptime)
 		if (hours / uptime_hours >= loop_uptime_event) {
 			loop_uptime_event = (hours / uptime_hours) + 1;
 
-			key = generate_event_id(uptime->name, "");
+			key = generate_event_id((const char *)uptime->name,
+						NULL, KEY_SHORT);
 			if (key == NULL) {
 				LOGE("generate event id failed, error (%s)\n",
 				     strerror(errno));
@@ -210,7 +211,7 @@ void hist_raise_infoerror(char *type)
 {
 	char *key;
 
-	key = generate_event_id("ERROR", type);
+	key = generate_event_id("ERROR", (const char *)type, KEY_SHORT);
 	if (key == NULL) {
 		LOGE("generate event id failed, error (%s)\n",
 		     strerror(errno));
