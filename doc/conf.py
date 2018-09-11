@@ -20,6 +20,9 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('.'))
 
+RELEASE = ""
+if "RELEASE" in os.environ:
+   RELEASE = os.environ["RELEASE"]
 
 # -- General configuration ------------------------------------------------
 
@@ -177,6 +180,8 @@ else:
 
 if tags.has('release'):
    current_version = version
+   if RELEASE:
+      version = current_version = RELEASE
 else:
    version = current_version = "latest"
 
