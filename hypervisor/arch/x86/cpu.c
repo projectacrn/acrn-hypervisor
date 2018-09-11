@@ -23,6 +23,7 @@ struct per_cpu_region *per_cpu_data_base_ptr;
 uint16_t phys_cpu_num = 0U;
 static uint64_t pcpu_sync = 0UL;
 static volatile uint16_t up_count = 0U;
+static uint64_t startup_paddr = 0UL;
 
 /* physical cpu active bitmap, support up to 64 cpus */
 uint64_t pcpu_active_bitmap = 0UL;
@@ -491,6 +492,7 @@ static void bsp_boot_post(void)
 	init_scheduler();
 
 	/* Start all secondary cores */
+	startup_paddr = prepare_trampoline();
 	start_cpus();
 
 	ASSERT(get_cpu_id() == BOOT_CPU_ID, "");
@@ -602,12 +604,9 @@ void start_cpus(void)
 {
 	uint32_t timeout;
 	uint16_t expected_up;
-	uint64_t startup_paddr;
 
 	/* secondary cpu start up will wait for pcpu_sync -> 0UL */
 	atomic_store64(&pcpu_sync, 1UL);
-
-	startup_paddr = prepare_trampoline();
 
 	/* Set flag showing number of CPUs expected to be up to all
 	 * cpus
