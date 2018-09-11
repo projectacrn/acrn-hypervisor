@@ -426,6 +426,10 @@ int run_vcpu(struct vcpu *vcpu)
 		if (ibrs_type == IBRS_RAW)
 			msr_write(MSR_IA32_PRED_CMD, PRED_SET_IBPB);
 
+#ifdef CONFIG_L1D_FLUSH_VMENTRY_ENABLED
+		cpu_l1d_flush();
+#endif
+
 		/* Launch the VM */
 		status = vmx_vmrun(ctx, VM_LAUNCH, ibrs_type);
 
@@ -444,6 +448,9 @@ int run_vcpu(struct vcpu *vcpu)
 		rip = vcpu_get_rip(vcpu);
 		exec_vmwrite(VMX_GUEST_RIP, ((rip+(uint64_t)instlen) &
 				0xFFFFFFFFFFFFFFFFUL));
+#ifdef CONFIG_L1D_FLUSH_VMENTRY_ENABLED
+		cpu_l1d_flush();
+#endif
 
 		/* Resume the VM */
 		status = vmx_vmrun(ctx, VM_RESUME, ibrs_type);

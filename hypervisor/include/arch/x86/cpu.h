@@ -324,6 +324,7 @@ void cpu_secondary_init(void);
 void start_cpus(void);
 void stop_cpus(void);
 void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
+void cpu_l1d_flush(void);
 
 /* Read control register */
 #define CPU_CR_READ(cr, result_ptr)				\
