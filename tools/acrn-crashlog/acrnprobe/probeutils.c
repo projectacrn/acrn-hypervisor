@@ -94,129 +94,30 @@ int get_current_time_long(char *buf)
 	return strftime(buf, LONG_TIME_SIZE, "%Y-%m-%d/%H:%M:%S  ", time_val);
 }
 
-/**
- * Compute a key with 20 characters
- *
- * @param[out] key The result key.
- * @param seed1 Seed.
- * @param seed2 Seed.
- *
- * @return 0 if successful, or -1 if not.
- */
-static int compute_key(char *key, char *seed1, char *seed2)
+static int compute_key(char *key, size_t key_len, const char *seed)
 {
-	static SHA_CTX *sha;
-	char buf[VERSION_SIZE] = {'\0',};
-	long long time_ns = 0;
-	char *tmp_key = key;
-	unsigned char results[SHA_DIGEST_LENGTH];
-	int i;
-	int ret;
-
-	if (sha == NULL) {
-		sha = (SHA_CTX *)malloc(sizeof(SHA_CTX));
-		if (sha == NULL) {
-			LOGE("cannot create SHA_CTX memory...\n");
-			return -1;
-		}
-
-		ret = SHA1_Init(sha);
-		if (ret != 1) {
-			LOGE("SHA1_Init failed, error (%s)\n",
-			     strerror(errno));
-			free(sha);
-			sha = NULL;
-			return -1;
-		}
-	}
-
-	if (!key || !seed1 || !seed2)
-		return -1;
-
-	time_ns = get_uptime();
-	snprintf(buf, VERSION_SIZE, "%s%s%s%s%lld", gbuildversion, guuid, seed1,
-		 seed2, time_ns);
-
-	ret = SHA1_Update(sha, (unsigned char *)buf, strlen(buf));
-	if (ret != 1) {
-		LOGE("SHA1_Update failed, error (%s)\n",
-		     strerror(errno));
-		return -1;
-	}
-
-	ret = SHA1_Final(results, sha);
-	if (ret != 1) {
-		LOGE("SHA1_Final failed, error (%s)\n",
-		     strerror(errno));
-		return -1;
-	}
-
-	for (i = 0; i < SHA_DIGEST_LENGTH / 2; i++) {
-		sprintf(tmp_key, "%02x", results[i]);
-		tmp_key += 2;
-	}
-	*tmp_key = 0;
-
-	return 0;
-}
-
-/**
- * Compute a key with 32 characters
- *
- * @param[out] key The result key.
- * @param seed Seed.
- *
- * @return 0 if successful, or -1 if not.
- */
-static int compute_key256(char *key, char *seed)
-{
-	static SHA256_CTX *sha;
-	char buf[VERSION_SIZE] = {'\0',};
-	long long time_ns = 0;
+	SHA256_CTX sha;
+	char buf[VERSION_SIZE];
+	long long time_ns;
 	char *tmp_key = key;
 	unsigned char results[SHA256_DIGEST_LENGTH];
-	int i;
-	int ret;
-
-	if (sha == NULL) {
-		sha = (SHA256_CTX *)malloc(sizeof(SHA256_CTX));
-		if (sha == NULL) {
-			LOGE("cannot create SHA256_CTX memory...\n");
-			return -1;
-		}
-
-		ret = SHA256_Init(sha);
-		if (ret != 1) {
-			LOGE("SHA256_Init failed, error (%s)\n",
-			     strerror(errno));
-			free(sha);
-			sha = NULL;
-			return -1;
-		}
-	}
+	size_t i;
 
 	if (!key || !seed)
 		return -1;
+	if (key_len > SHA256_DIGEST_LENGTH * 2 || !key_len)
+		return -1;
 
+	SHA256_Init(&sha);
 	time_ns = get_uptime();
-	snprintf(buf, VERSION_SIZE, "%s%s%s%lld", gbuildversion, guuid, seed,
-		 time_ns);
+	snprintf(buf, VERSION_SIZE, "%s%s%lld", gbuildversion, guuid, time_ns);
 
-	ret = SHA256_Update(sha, (unsigned char *)buf, strlen(buf));
-	if (ret != 1) {
-		LOGE("SHA256_Update failed, error (%s)\n",
-		     strerror(errno));
-		return -1;
-	}
+	SHA256_Update(&sha, (unsigned char *)buf, strlen(buf));
+	SHA256_Update(&sha, (unsigned char *)seed, strlen(seed));
 
-	ret = SHA256_Final(results, sha);
-	if (ret != 1) {
-		LOGE("SHA256_Final failed, error (%s)\n",
-		     strerror(errno));
-		return -1;
-	}
+	SHA256_Final(results, &sha);
 
-	for (i = 0; i < SHA256_DIGEST_LENGTH / 2; i++) {
+	for (i = 0; i < key_len / 2; i++) {
 		sprintf(tmp_key, "%02x", results[i]);
 		tmp_key += 2;
 	}
@@ -226,49 +127,54 @@ static int compute_key256(char *key, char *seed)
 }
 
 /**
- * Generate a event id with 20 characters
+ * Generate an event id with specified type.
  *
- * @param seed1 Seed.
- * @param seed2 Seed.
+ * @param seed1 Seed1.
+ * @param seed2 Seed2, this parameter will be ignored if the value is NULL.
+ * @param type The type of key. The length of generated id will be 20
+ *		characters if type is KEY_SHORT; 32 characters if type is
+ *		KEY_LONG.
  *
  * @return a pointer to result haskkey if successful, or NULL if not.
  */
-char *generate_event_id(char *seed1, char *seed2)
+char *generate_event_id(const char *seed1, const char *seed2,
+			enum key_type type)
 {
 	int ret;
-	char *key = (char *)malloc(SHA_DIGEST_LENGTH + 1);
+	char *buf;
+	char *key;
+	size_t klen;
 
-	if (!key)
+	if (!seed1)
 		return NULL;
 
-	ret = compute_key(key, seed1, seed2);
-	if (ret < 0) {
-		LOGE("compute_key error\n");
-		free(key);
-		key = NULL;
+	if (type == KEY_SHORT)
+		klen = SHORT_KEY_LENGTH;
+	else if (type == KEY_LONG)
+		klen = LONG_KEY_LENGTH;
+	else
+		return NULL;
+
+	key = (char *)malloc(klen + 1);
+	if (!key) {
+		LOGE("failed to generate event id, out of memory\n");
+		return NULL;
 	}
 
-	return key;
-}
+	if (seed2) {
+		if (asprintf(&buf, "%s%s", seed1, seed2) == -1) {
+			LOGE("failed to generate event id, out of memory\n");
+			free(key);
+			return NULL;
+		}
+		ret = compute_key(key, klen, (const char *)buf);
+		free(buf);
+	} else {
+		ret = compute_key(key, klen, seed1);
+	}
 
-/**
- * Generate a event id with 32 characters
- *
- * @param seed Seed.
- *
- * @return a pointer to result haskkey if successful, or NULL if not.
- */
-char *generate_eventid256(char *seed)
-{
-	int ret;
-	char *key = (char *)malloc(SHA256_DIGEST_LENGTH + 1);
-
-	if (!key)
-		return NULL;
-
-	ret = compute_key256(key, seed);
 	if (ret < 0) {
-		LOGE("compute_key256 error\n");
+		LOGE("compute_key error\n");
 		free(key);
 		key = NULL;
 	}

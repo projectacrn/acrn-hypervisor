@@ -11,6 +11,7 @@
 #include <openssl/sha.h>
 #include <ext2fs/ext2fs.h>
 #include "event_queue.h"
+#include "probeutils.h"
 
 #define CONTENT_MAX 10
 #define EXPRESSION_MAX 5
@@ -38,7 +39,7 @@ struct vm_t {
 	ext2_filsys datafs;
 	unsigned long history_size[SENDER_MAX];
 	char *history_data;
-	char last_synced_line_key[SENDER_MAX][SHA_DIGEST_LENGTH + 1];
+	char last_synced_line_key[SENDER_MAX][SHORT_KEY_LENGTH + 1];
 };
 
 struct log_t {

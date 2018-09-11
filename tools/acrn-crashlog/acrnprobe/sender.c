@@ -357,7 +357,7 @@ static void telemd_send_crash(struct event_t *e)
 		return;
 	}
 
-	eventid = generate_eventid256(class);
+	eventid = generate_event_id((const char *)class, NULL, KEY_LONG);
 	if (eventid == NULL) {
 		LOGE("generate eventid failed, error (%s)\n", strerror(errno));
 		goto free_class;
@@ -436,7 +436,7 @@ static void telemd_send_info(struct event_t *e)
 		return;
 	}
 
-	eventid = generate_eventid256(class);
+	eventid = generate_event_id((const char *)class, NULL, KEY_LONG);
 	if (eventid == NULL) {
 		LOGE("generate eventid failed, error (%s)\n", strerror(errno));
 		goto free_class;
@@ -608,7 +608,7 @@ static int telemd_new_vmevent(const char *line_to_sync,
 		goto free_vmlogpath;
 	}
 
-	eventid = generate_eventid256(class);
+	eventid = generate_event_id((const char *)class, NULL, KEY_LONG);
 	if (eventid == NULL) {
 		LOGE("generate eventid failed, error (%s)\n", strerror(errno));
 		ret = VMEVT_DEFER;
@@ -739,7 +739,7 @@ static void crashlog_send_crash(struct event_t *e)
 
 	/* change the class for other senders */
 	e->private = (void *)crash;
-	key = generate_event_id("CRASH", crash->name);
+	key = generate_event_id("CRASH", (const char *)crash->name, KEY_SHORT);
 	if (key == NULL) {
 		LOGE("generate event id failed, error (%s)\n",
 		     strerror(errno));
@@ -818,7 +818,8 @@ static void crashlog_send_info(struct event_t *e)
 	int id;
 	struct info_t *info = (struct info_t *)e->private;
 	struct log_t *log;
-	char *key = generate_event_id("INFO", info->name);
+	char *key = generate_event_id("INFO", (const char *)info->name,
+				      KEY_SHORT);
 
 	if (key == NULL) {
 		LOGE("generate event id failed, error (%s)\n",
@@ -862,7 +863,7 @@ static void crashlog_send_reboot(void)
 		return;
 
 	if (swupdated(crashlog)) {
-		key = generate_event_id("INFO", "SWUPDATE");
+		key = generate_event_id("INFO", "SWUPDATE", KEY_SHORT);
 		if (key == NULL) {
 			LOGE("generate event id failed, error (%s)\n",
 			     strerror(errno));
@@ -874,7 +875,7 @@ static void crashlog_send_reboot(void)
 	}
 
 	read_startupreason(reason, sizeof(reason));
-	key = generate_event_id("REBOOT", reason);
+	key = generate_event_id("REBOOT", (const char *)reason, KEY_SHORT);
 	if (key == NULL) {
 		LOGE("generate event id failed, error (%s)\n",
 		     strerror(errno));
@@ -931,7 +932,7 @@ static int crashlog_new_vmevent(const char *line_to_sync,
 		return ret;
 	}
 
-	key = generate_event_id("SOS", vmkey);
+	key = generate_event_id("SOS", (const char *)vmkey, KEY_SHORT);
 	if (key == NULL) {
 		LOGE("generate event id failed, error (%s)\n",
 		     strerror(errno));
