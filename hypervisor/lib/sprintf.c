@@ -38,8 +38,8 @@
 /** The original value was a (unsigned) short. */
 #define PRINT_FLAG_SHORT		0x00000080U
 
-/** The original value was a (unsigned) long. */
-#define PRINT_FLAG_LONG			0x00000100U
+/** The original value was a (unsigned) long. 64bit on ACRN also */
+#define PRINT_FLAG_LONG			0x00000200U
 
 /** The original value was a (unsigned) long long. */
 #define PRINT_FLAG_LONG_LONG		0x00000200U
