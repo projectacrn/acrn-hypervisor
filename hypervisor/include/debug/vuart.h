@@ -30,6 +30,9 @@
 #ifndef _VUART_H_
 #define	_VUART_H_
 
+#define RX_BUF_SIZE		256U
+#define TX_BUF_SIZE		8192U
+
 struct fifo {
 	char *buf;
 	uint32_t rindex;	/* index to read from */
@@ -53,7 +56,10 @@ struct acrn_vuart {
 	struct fifo rxfifo;
 	struct fifo txfifo;
 	uint16_t base;
-
+#ifdef CONFIG_PARTITION_MODE
+	char vuart_rx_buf[RX_BUF_SIZE];
+	char vuart_tx_buf[TX_BUF_SIZE];
+#endif
 	bool thre_int_pending;	/* THRE interrupt pending */
 	bool active;
 	struct vm *vm;
