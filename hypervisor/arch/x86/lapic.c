@@ -382,8 +382,10 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	/* Give 10ms for INIT sequence to complete for old processors.
 	 * Modern processors (family == 6) don't need to wait here.
 	 */
-	if (boot_cpu_data.family != 6U)
-		mdelay(10U);
+	if (boot_cpu_data.family != 6U) {
+		/* delay 10ms */
+		udelay(10000U);
+	}
 
 	/* De-assert INIT IPI */
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_1, icr.value_32.hi_32);
