@@ -80,9 +80,6 @@ dmar_set_bitslice(uint64_t var, uint64_t mask,
 #define DMAR_MSI_REDIRECTION_CPU         (0 << DMAR_MSI_REDIRECTION_SHIFT)
 #define DMAR_MSI_REDIRECTION_LOWPRI      (1 << DMAR_MSI_REDIRECTION_SHIFT)
 
-#define IOMMU_LOCK(u) spinlock_obtain(&((u)->lock))
-#define IOMMU_UNLOCK(u) spinlock_release(&((u)->lock))
-
 #define DMAR_OP_TIMEOUT CYCLES_PER_MS
 
 enum dmar_cirg_type {
@@ -368,7 +365,7 @@ static void dmar_enable_translation(struct dmar_drhd_rt *dmar_uint)
 {
 	uint32_t status;
 
-	IOMMU_LOCK(dmar_uint);
+	spinlock_obtain(&(dmar_uint->lock));
 	dmar_uint->gcmd |= DMA_GCMD_TE;
 	iommu_write32(dmar_uint, DMAR_GCMD_REG, dmar_uint->gcmd);
 
@@ -378,7 +375,7 @@ static void dmar_enable_translation(struct dmar_drhd_rt *dmar_uint)
 
 	status = iommu_read32(dmar_uint, DMAR_GSTS_REG);
 
-	IOMMU_UNLOCK(dmar_uint);
+	spinlock_release(&(dmar_uint->lock));
 
 	dev_dbg(ACRN_DBG_IOMMU, "%s: gsr:0x%x", __func__, status);
 }
@@ -387,7 +384,7 @@ static void dmar_disable_translation(struct dmar_drhd_rt *dmar_uint)
 {
 	uint32_t status;
 
-	IOMMU_LOCK(dmar_uint);
+	spinlock_obtain(&(dmar_uint->lock));
 	dmar_uint->gcmd &= ~DMA_GCMD_TE;
 	iommu_write32(dmar_uint, DMAR_GCMD_REG, dmar_uint->gcmd);
 
@@ -395,7 +392,7 @@ static void dmar_disable_translation(struct dmar_drhd_rt *dmar_uint)
 	dmar_wait_completion(dmar_uint, DMAR_GSTS_REG, DMA_GSTS_TES, true,
 				&status);
 
-	IOMMU_UNLOCK(dmar_uint);
+	spinlock_release(&(dmar_uint->lock));
 }
 
 static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
@@ -545,14 +542,14 @@ static void dmar_write_buffer_flush(struct dmar_drhd_rt *dmar_uint)
 		return;
 	}
 
-	IOMMU_LOCK(dmar_uint);
+	spinlock_obtain(&(dmar_uint->lock));
 	iommu_write32(dmar_uint, DMAR_GCMD_REG,
 			  dmar_uint->gcmd | DMA_GCMD_WBF);
 
 	/* read lower 32 bits to check */
 	dmar_wait_completion(dmar_uint, DMAR_GSTS_REG, DMA_GSTS_WBFS, true,
 				&status);
-	IOMMU_UNLOCK(dmar_uint);
+	spinlock_release(&(dmar_uint->lock));
 }
 
 /*
@@ -583,13 +580,13 @@ static void dmar_invalid_context_cache(struct dmar_drhd_rt *dmar_uint,
 		return;
 	}
 
-	IOMMU_LOCK(dmar_uint);
+	spinlock_obtain(&(dmar_uint->lock));
 	iommu_write64(dmar_uint, DMAR_CCMD_REG, cmd);
 	/* read upper 32bits to check */
 	dmar_wait_completion(dmar_uint, DMAR_CCMD_REG + 4U, DMA_CCMD_ICC_32,
 				true, &status);
 
-	IOMMU_UNLOCK(dmar_uint);
+	spinlock_release(&(dmar_uint->lock));
 
 	dev_dbg(ACRN_DBG_IOMMU, "cc invalidation granularity %d",
 		dma_ccmd_get_caig_32(status));
@@ -629,7 +626,7 @@ static void dmar_invalid_iotlb(struct dmar_drhd_rt *dmar_uint,
 		pr_err("unknown IIRG type");
 		return;
 	}
-	IOMMU_LOCK(dmar_uint);
+	spinlock_obtain(&(dmar_uint->lock));
 	if (addr != 0U) {
 		iommu_write64(dmar_uint, dmar_uint->ecap_iotlb_offset, addr);
 	}
@@ -638,7 +635,7 @@ static void dmar_invalid_iotlb(struct dmar_drhd_rt *dmar_uint,
 	/* read upper 32bits to check */
 	dmar_wait_completion(dmar_uint, dmar_uint->ecap_iotlb_offset + 12U,
 				DMA_IOTLB_IVT_32, true, &status);
-	IOMMU_UNLOCK(dmar_uint);
+	spinlock_release(&(dmar_uint->lock));
 
 	if (dma_iotlb_get_iaig_32(status) == 0U) {
 		pr_err("fail to invalidate IOTLB!, 0x%x, 0x%x",
@@ -661,7 +658,7 @@ static void dmar_set_root_table(struct dmar_drhd_rt *dmar_uint)
 	uint64_t address;
 	uint32_t status;
 
-	IOMMU_LOCK(dmar_uint);
+	spinlock_obtain(&(dmar_uint->lock));
 
 	/* Currently don't support extended root table */
 	address = dmar_uint->root_table_addr;
@@ -674,21 +671,21 @@ static void dmar_set_root_table(struct dmar_drhd_rt *dmar_uint)
 	/* 32-bit register */
 	dmar_wait_completion(dmar_uint, DMAR_GSTS_REG, DMA_GSTS_RTPS, false,
 				&status);
-	IOMMU_UNLOCK(dmar_uint);
+	spinlock_release(&(dmar_uint->lock));
 }
 
 static void dmar_fault_event_mask(struct dmar_drhd_rt *dmar_uint)
 {
-	IOMMU_LOCK(dmar_uint);
+	spinlock_obtain(&(dmar_uint->lock));
 	iommu_write32(dmar_uint, DMAR_FECTL_REG, DMA_FECTL_IM);
-	IOMMU_UNLOCK(dmar_uint);
+	spinlock_release(&(dmar_uint->lock));
 }
 
 static void dmar_fault_event_unmask(struct dmar_drhd_rt *dmar_uint)
 {
-	IOMMU_LOCK(dmar_uint);
+	spinlock_obtain(&(dmar_uint->lock));
 	iommu_write32(dmar_uint, DMAR_FECTL_REG, 0U);
-	IOMMU_UNLOCK(dmar_uint);
+	spinlock_release(&(dmar_uint->lock));
 }
 
 static void dmar_fault_msi_write(struct dmar_drhd_rt *dmar_uint,
@@ -704,10 +701,10 @@ static void dmar_fault_msi_write(struct dmar_drhd_rt *dmar_uint,
 	 */
 	addr_low = 0xFEE00000U | ((uint32_t)(lapic_id) << 12U);
 
-	IOMMU_LOCK(dmar_uint);
+	spinlock_obtain(&(dmar_uint->lock));
 	iommu_write32(dmar_uint, DMAR_FEDATA_REG, data);
 	iommu_write32(dmar_uint, DMAR_FEADDR_REG, addr_low);
-	IOMMU_UNLOCK(dmar_uint);
+	spinlock_release(&(dmar_uint->lock));
 }
 
 #if DBG_IOMMU

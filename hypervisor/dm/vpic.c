@@ -29,9 +29,6 @@
 
 #include <hypervisor.h>
 
-/* TODO: add spinlock_locked support? */
-/*#define VPIC_LOCKED(vpic)	spinlock_locked(&((vpic)->lock))*/
-
 #define ACRN_DBG_PIC	6U
 
 enum irqstate {
