@@ -348,8 +348,6 @@ static int print_decimal(struct print_param *param, int64_t value)
 	union u_qword v;
 	/* next value in 32/64 bit */
 	union u_qword nv;
-	/* helper union for division result */
-	struct udiv_result d;
 	int ret;
 
 	/* assume an unsigned 64 bit value */
@@ -381,10 +379,9 @@ static int print_decimal(struct print_param *param, int64_t value)
 	/* process 64 bit value as long as needed */
 	while (v.dwords.high != 0U) {
 		/* determine digits from right to left */
-		udiv64(v.qword, 10U, &d);
 		pos--;
-		*pos = d.r.dwords.low + '0';
-		v.qword = d.q.qword;
+		*pos = (char)(v.qword % 10UL) + '0';
+		v.qword = v.qword / 10UL;
 	}
 
 	/* process 32 bit (or reduced 64 bit) value */
