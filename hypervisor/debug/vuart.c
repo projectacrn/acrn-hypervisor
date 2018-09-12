@@ -34,8 +34,6 @@
 
 #define COM1_BASE		0x3F8U
 #define COM1_IRQ		4U
-#define RX_FIFO_SIZE		256U
-#define TX_FIFO_SIZE		65536U
 
 #define vuart_lock_init(vu)	spinlock_init(&((vu)->lock))
 #define vuart_lock(vu)		spinlock_obtain(&((vu)->lock))
@@ -50,14 +48,6 @@ static void fifo_reset(struct fifo *fifo)
 	fifo->rindex = 0U;
 	fifo->windex = 0U;
 	fifo->num = 0U;
-}
-
-static void fifo_init(struct fifo *fifo, uint32_t sz)
-{
-	fifo->buf = calloc(1U, sz);
-	ASSERT(fifo->buf != NULL, "");
-	fifo->size = sz;
-	fifo_reset(fifo);
 }
 
 static void fifo_putchar(struct fifo *fifo, char ch)
@@ -89,6 +79,16 @@ static char fifo_getchar(struct fifo *fifo)
 static uint32_t fifo_numchars(struct fifo *fifo)
 {
 	return fifo->num;
+}
+
+static void vuart_fifo_init(struct acrn_vuart *vu)
+{
+	vu->txfifo.buf = vu->vuart_tx_buf;
+	vu->txfifo.size = TX_BUF_SIZE;
+	vu->rxfifo.buf = vu->vuart_rx_buf;
+	vu->rxfifo.size = RX_BUF_SIZE;
+	fifo_reset(&(vu->txfifo));
+	fifo_reset(&(vu->rxfifo));
 }
 
 /*
@@ -383,8 +383,7 @@ void vuart_init(struct vm *vm)
 	vm->vuart.active = false;
 	vm->vuart.base = COM1_BASE;
 	vm->vuart.vm = vm;
-	fifo_init(&vm->vuart.rxfifo, RX_FIFO_SIZE);
-	fifo_init(&vm->vuart.txfifo, TX_FIFO_SIZE);
+	vuart_fifo_init(vu);
 	vuart_lock_init(vu);
 	vuart_register_io_handler(vm);
 }
