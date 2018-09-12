@@ -38,9 +38,6 @@
 #define ACRN_DBG_IOAPIC	6U
 #define ACRN_IOAPIC_VERSION	0x11U
 
-#define	VIOAPIC_LOCK(vioapic)	spinlock_obtain(&((vioapic)->mtx))
-#define	VIOAPIC_UNLOCK(vioapic)	 spinlock_release(&((vioapic)->mtx))
-
 #define IOAPIC_ID_MASK		0x0f000000U
 #define MASK_ALL_INTERRUPTS   0x0001000000010000UL
 #define IOAPIC_RTE_LOW_INTVEC    ((uint32_t)IOAPIC_RTE_INTVEC)
@@ -140,7 +137,7 @@ vioapic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate)
 
 	vioapic = vm_ioapic(vm);
 
-	VIOAPIC_LOCK(vioapic);
+	spinlock_obtain(&(vioapic->mtx));
 	switch (irqstate) {
 	case IRQSTATE_ASSERT:
 		vioapic_set_pinstate(vioapic, pin, true);
@@ -155,7 +152,7 @@ vioapic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate)
 	default:
 		panic("vioapic_set_irqstate: invalid irqstate %d", irqstate);
 	}
-	VIOAPIC_UNLOCK(vioapic);
+	spinlock_release(&(vioapic->mtx));
 }
 
 void
@@ -192,7 +189,7 @@ vioapic_update_tmr(struct vcpu *vcpu)
 	vlapic = vcpu_vlapic(vcpu);
 	vioapic = vm_ioapic(vcpu->vm);
 
-	VIOAPIC_LOCK(vioapic);
+	spinlock_obtain(&(vioapic->mtx));
 	pincount = vioapic_pincount(vcpu->vm);
 	for (pin = 0U; pin < pincount; pin++) {
 		rte = vioapic->rtbl[pin];
@@ -210,7 +207,7 @@ vioapic_update_tmr(struct vcpu *vcpu)
 		vlapic_set_tmr_one_vec(vlapic, delmode, vector, level);
 	}
 	vlapic_apicv_batch_set_tmr(vlapic);
-	VIOAPIC_UNLOCK(vioapic);
+	spinlock_release(&(vioapic->mtx));
 }
 
 static uint32_t
@@ -254,8 +251,9 @@ vioapic_indirect_read(struct acrn_vioapic *vioapic, uint32_t addr)
 	return 0;
 }
 
-/* Due to the race between vcpus, ensure to do VIOAPIC_LOCK(vioapic) &
- * VIOAPIC_UNLOCK(vioapic) by caller.
+/*
+ * Due to the race between vcpus, ensure to do spinlock_obtain(&(vioapic->mtx))
+ * & spinlock_release(&(vioapic->mtx)) by caller.
  */
 static void
 vioapic_indirect_write(struct acrn_vioapic *vioapic, uint32_t addr,
@@ -396,7 +394,7 @@ vioapic_mmio_rw(struct acrn_vioapic *vioapic, uint64_t gpa,
 
 	offset = (uint32_t)(gpa - VIOAPIC_BASE);
 
-	VIOAPIC_LOCK(vioapic);
+	spinlock_obtain(&(vioapic->mtx));
 
 	/* The IOAPIC specification allows 32-bit wide accesses to the
 	 * IOAPIC_REGSEL (offset 0) and IOAPIC_WINDOW (offset 16) registers.
@@ -425,7 +423,7 @@ vioapic_mmio_rw(struct acrn_vioapic *vioapic, uint64_t gpa,
 		break;
 	}
 
-	VIOAPIC_UNLOCK(vioapic);
+	spinlock_release(&(vioapic->mtx));
 }
 
 void
@@ -457,7 +455,7 @@ vioapic_process_eoi(struct vm *vm, uint32_t vector)
 	 * XXX keep track of the pins associated with this vector instead
 	 * of iterating on every single pin each time.
 	 */
-	VIOAPIC_LOCK(vioapic);
+	spinlock_obtain(&(vioapic->mtx));
 	for (pin = 0U; pin < pincount; pin++) {
 		rte = vioapic->rtbl[pin];
 		if (((rte.u.lo_32 & IOAPIC_RTE_LOW_INTVEC) != vector) ||
@@ -473,7 +471,7 @@ vioapic_process_eoi(struct vm *vm, uint32_t vector)
 			vioapic_send_intr(vioapic, pin);
 		}
 	}
-	VIOAPIC_UNLOCK(vioapic);
+	spinlock_release(&(vioapic->mtx));
 }
 
 void

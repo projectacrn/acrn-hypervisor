@@ -29,9 +29,6 @@
 
 #include <hypervisor.h>
 
-#define	VPIC_LOCK_INIT(vpic)	spinlock_init(&((vpic)->lock))
-#define	VPIC_LOCK(vpic)		spinlock_obtain(&((vpic)->lock))
-#define	VPIC_UNLOCK(vpic)	spinlock_release(&((vpic)->lock))
 /* TODO: add spinlock_locked support? */
 /*#define VPIC_LOCKED(vpic)	spinlock_locked(&((vpic)->lock))*/
 
@@ -471,7 +468,7 @@ static void vpic_set_irqstate(struct vm *vm, uint32_t irq,
 		return;
 	}
 
-	VPIC_LOCK(vpic);
+	spinlock_obtain(&(vpic->lock));
 	switch (irqstate) {
 	case IRQSTATE_ASSERT:
 		vpic_set_pinstate(vpic, pin, true);
@@ -486,7 +483,7 @@ static void vpic_set_irqstate(struct vm *vm, uint32_t irq,
 	default:
 		ASSERT(false, "vpic_set_irqstate: invalid irqstate");
 	}
-	VPIC_UNLOCK(vpic);
+	spinlock_release(&(vpic->lock));
 }
 
 /* hypervisor interface: assert/deassert/pulse irq */
@@ -539,7 +536,7 @@ void vpic_pending_intr(struct vm *vm, uint32_t *vecptr)
 
 	i8259 = &vpic->i8259[0];
 
-	VPIC_LOCK(vpic);
+	spinlock_obtain(&(vpic->lock));
 
 	pin = vpic_get_highest_irrpin(i8259);
 	if (pin == 2U) {
@@ -553,7 +550,7 @@ void vpic_pending_intr(struct vm *vm, uint32_t *vecptr)
 	 */
 	if (pin >= NR_VPIC_PINS_PER_CHIP) {
 		*vecptr = VECTOR_INVALID;
-		VPIC_UNLOCK(vpic);
+		spinlock_release(&(vpic->lock));
 		return;
 	}
 
@@ -561,7 +558,7 @@ void vpic_pending_intr(struct vm *vm, uint32_t *vecptr)
 
 	dev_dbg(ACRN_DBG_PIC, "Got pending vector 0x%x\n", *vecptr);
 
-	VPIC_UNLOCK(vpic);
+	spinlock_release(&(vpic->lock));
 }
 
 static void vpic_pin_accepted(struct i8259_reg_state *i8259, uint8_t pin)
@@ -589,7 +586,7 @@ void vpic_intr_accepted(struct vm *vm, uint32_t vector)
 
 	vpic = vm_pic(vm);
 
-	VPIC_LOCK(vpic);
+	spinlock_obtain(&(vpic->lock));
 
 	pin = (uint8_t)(vector & 0x7U);
 
@@ -606,7 +603,7 @@ void vpic_intr_accepted(struct vm *vm, uint32_t vector)
 
 	vpic_notify_intr(vpic);
 
-	VPIC_UNLOCK(vpic);
+	spinlock_release(&(vpic->lock));
 }
 
 static int vpic_read(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
@@ -614,7 +611,7 @@ static int vpic_read(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
 {
 	uint8_t pin;
 
-	VPIC_LOCK(vpic);
+	spinlock_obtain(&(vpic->lock));
 
 	if (i8259->poll) {
 		i8259->poll = false;
@@ -640,7 +637,7 @@ static int vpic_read(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
 		}
 	}
 
-	VPIC_UNLOCK(vpic);
+	spinlock_release(&(vpic->lock));
 
 	return 0;
 }
@@ -654,7 +651,7 @@ static int vpic_write(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
 	error = 0;
 	val = (uint8_t)*eax;
 
-	VPIC_LOCK(vpic);
+	spinlock_obtain(&(vpic->lock));
 
 	if ((port & ICU_IMR_OFFSET) != 0U) {
 		switch (i8259->icw_num) {
@@ -689,7 +686,7 @@ static int vpic_write(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
 		vpic_notify_intr(vpic);
 	}
 
-	VPIC_UNLOCK(vpic);
+	spinlock_release(&(vpic->lock));
 
 	return error;
 }
@@ -793,7 +790,7 @@ static int vpic_elc_handler(struct vm *vm, bool in, uint16_t port, size_t bytes,
 		return -1;
 	}
 
-	VPIC_LOCK(vpic);
+	spinlock_obtain(&(vpic->lock));
 
 	if (in) {
 		if (is_master) {
@@ -819,7 +816,7 @@ static int vpic_elc_handler(struct vm *vm, bool in, uint16_t port, size_t bytes,
 		}
 	}
 
-	VPIC_UNLOCK(vpic);
+	spinlock_release(&(vpic->lock));
 
 	return 0;
 }
@@ -880,5 +877,5 @@ void vpic_init(struct vm *vm)
 	vm->arch_vm.vpic.i8259[0].mask = 0xffU;
 	vm->arch_vm.vpic.i8259[1].mask = 0xffU;
 
-	VPIC_LOCK_INIT(vpic);
+	spinlock_init(&(vpic->lock));
 }
