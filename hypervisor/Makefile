@@ -154,7 +154,6 @@ C_SRCS += arch/x86/guest/pm.c
 C_SRCS += lib/spinlock.c
 C_SRCS += lib/udelay.c
 C_SRCS += lib/mdelay.c
-C_SRCS += lib/div.c
 C_SRCS += lib/string.c
 C_SRCS += lib/memory.c
 C_SRCS += lib/crypto/hkdf_wrap.c
