@@ -19,12 +19,6 @@ union u_qword {
 
 };
 
-struct udiv_result {
-	union u_qword q;
-	union u_qword r;
-
-};
-
 /* Function prototypes */
 void udelay(uint32_t us);
 void *memchr(const void *void_s, int c, size_t n);
@@ -37,8 +31,6 @@ void mdelay(uint32_t loop_count_arg);
 size_t strnlen_s(const char *str_arg, size_t maxlen_arg);
 void *memset(void *base, uint8_t v, size_t n);
 void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen_arg);
-int udiv64(uint64_t dividend_arg, uint64_t divisor_arg, struct udiv_result *res);
-int udiv32(uint32_t dividend, uint32_t divisor, struct udiv_result *res);
 int atoi(const char *str);
 long strtol_deci(const char *nptr);
 uint64_t strtoul_hex(const char *nptr);
