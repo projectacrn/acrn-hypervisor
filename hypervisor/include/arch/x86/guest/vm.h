@@ -253,7 +253,7 @@ static inline struct vcpu *get_primary_vcpu(struct vm *vm)
 static inline struct acrn_vuart*
 vm_vuart(struct vm *vm)
 {
-	return (struct acrn_vuart *)&(vm->vuart);
+	return &(vm->vuart);
 }
 
 static inline struct acrn_vpic *
