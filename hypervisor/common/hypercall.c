@@ -995,3 +995,47 @@ int32_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param)
 
 	}
 }
+
+/**
+ *@pre Pointer vm shall point to VM0
+ */
+int32_t hcall_vm_intr_monitor(struct vm *vm, uint16_t vmid, uint64_t param)
+{
+	struct acrn_intr_monitor *intr_hdr;
+	uint64_t hpa;
+	struct vm *target_vm = get_vm_from_vmid(vmid);
+
+	if (target_vm == NULL) {
+		return -1;
+	}
+
+	/* the param for this hypercall is page aligned */
+	hpa = gpa2hpa(vm, param);
+	if (hpa == 0UL) {
+		pr_err("%s: invalid GPA.\n", __func__);
+		return -EINVAL;
+	}
+
+	intr_hdr = (struct acrn_intr_monitor *)hpa2hva(hpa);
+
+	switch (intr_hdr->cmd) {
+	case INTR_CMD_GET_DATA:
+		intr_hdr->buf_cnt = get_vm_ptdev_intr_data(target_vm,
+			intr_hdr->buffer, intr_hdr->buf_cnt);
+		break;
+
+	case INTR_CMD_DELAY_INT:
+		/* buffer[0] is the delay time (in MS), if 0 to cancel delay */
+		target_vm->intr_inject_delay_delta =
+			intr_hdr->buffer[0] * CYCLES_PER_MS;
+		break;
+
+	default:
+		/* if cmd wrong it goes here should not happen */
+		break;
+	}
+
+	pr_dbg("intr monitor:%d, cnt=%d", intr_hdr->cmd, intr_hdr->buf_cnt);
+
+	return 0;
+}

@@ -388,6 +388,19 @@ int32_t hcall_setup_hv_npk_log(struct vm *vm, uint64_t param);
 int32_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param);
 
 /**
+ * @brief Get VCPU a VM's interrupt count data.
+ *
+ * @param vm pointer to VM data structure
+ * @param vmid id of the VM
+ * @param param guest physical address. This gpa points to data structure of
+ *              acrn_intr_monitor
+ *
+ * @pre Pointer vm shall point to VM0
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_vm_intr_monitor(struct vm *vm, uint16_t vmid, uint64_t param);
+
+/**
  * @defgroup trusty_hypercall Trusty Hypercalls
  *
  * This is a special group that includes all hypercalls
