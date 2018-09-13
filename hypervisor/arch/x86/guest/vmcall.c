@@ -181,6 +181,10 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 		ret = hcall_save_restore_sworld_ctx(vcpu);
 		break;
 
+	case HC_VM_INTR_MONITOR:
+		ret = hcall_vm_intr_monitor(vm, (uint16_t)param1, param2);
+		break;
+
 	default:
 		pr_err("op %d: Invalid hypercall\n", hypcall_id);
 		ret = -EPERM;
