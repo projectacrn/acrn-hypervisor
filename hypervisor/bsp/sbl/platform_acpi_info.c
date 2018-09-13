@@ -6,7 +6,7 @@
 
 #include <hypervisor.h>
 
-const struct acpi_info host_acpi_info = {
+struct acpi_info host_acpi_info = {
 	.x86_family = 6U,
 	.x86_model = 0x5CU,			/* ApolloLake */
 	.pm_s_state = {

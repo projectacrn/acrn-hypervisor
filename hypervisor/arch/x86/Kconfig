@@ -116,6 +116,10 @@ config RAM_SIZE
 	hex "Size of the RAM region assigned to the hypervisor"
 	default 0x02000000
 
+config CONSTANT_ACPI
+	bool "The platform ACPI info is constant"
+	default n
+
 config DMAR_PARSE_ENABLED
 	bool
 	default n if PLATFORM_SBL
