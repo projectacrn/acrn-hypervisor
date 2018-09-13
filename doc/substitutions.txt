@@ -17,3 +17,4 @@
    :rtrim:
 .. |micro|  unicode:: U+000B5 .. MICRO SIGN
    :rtrim:
+.. |oplus|  unicode:: U+02295 .. CIRCLED PLUS SIGN
