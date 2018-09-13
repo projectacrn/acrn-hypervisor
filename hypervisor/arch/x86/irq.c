@@ -41,12 +41,13 @@ uint32_t alloc_irq_num(uint32_t req_irq)
 	if (irq == IRQ_INVALID) {
 		/* if no valid irq num given, find a free one */
 		irq = ffz64_ex(irq_alloc_bitmap, NR_IRQS);
-		irq = (irq == NR_IRQS) ? IRQ_INVALID : irq;
 	}
 
-	if (irq != IRQ_INVALID) {
+	if (irq >= NR_IRQS) {
+		irq = IRQ_INVALID;
+	} else {
 		bitmap_set_nolock((uint16_t)(irq & 0x3FU),
-			      irq_alloc_bitmap + (irq >> 6U));
+				irq_alloc_bitmap + (irq >> 6U));
 	}
 	spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);
 	return irq;
@@ -323,7 +324,13 @@ void dispatch_interrupt(struct intr_excp_ctx *ctx)
 	uint32_t irq = vector_to_irq[vr];
 	struct irq_desc *desc;
 
-	if (irq == IRQ_INVALID) {
+	/* The value from vector_to_irq[] must be:
+	 * IRQ_INVALID, which means the vector is not allocated;
+	 * or
+	 * < NR_IRQS, which is the irq number it bound with;
+	 * Any other value means there is something wrong.
+	 */
+	if (irq == IRQ_INVALID || irq >= NR_IRQS) {
 		goto ERR;
 	}
 
