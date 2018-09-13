@@ -142,10 +142,6 @@ int copy_to_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
 uint64_t create_guest_init_gdt(struct vm *vm, uint32_t *limit);
 extern uint8_t vm0_boot_context;
 
-#ifdef HV_DEBUG
-void get_req_info(char *str_arg, int str_max);
-#endif /* HV_DEBUG */
-
 #endif	/* !ASSEMBLER */
 
 #endif /* GUEST_H*/
