@@ -9,11 +9,9 @@
 
 #include <types.h>
 #include <errno.h>
-#include <macros.h>
 #include <rtl.h>
 #include <spinlock.h>
 #include <mem_mgt.h>
-#include <stdarg.h>
 #include <util.h>
 #include <list.h>
 #include <atomic.h>
