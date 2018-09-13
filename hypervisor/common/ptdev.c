@@ -36,6 +36,14 @@ static void ptdev_enqueue_softirq(struct ptdev_remapping_info *entry)
 	fire_softirq(SOFTIRQ_PTDEV);
 }
 
+static void ptdev_intr_delay_callback(void *data)
+{
+	struct ptdev_remapping_info *entry =
+		(struct ptdev_remapping_info *) data;
+
+	ptdev_enqueue_softirq(entry);
+}
+
 struct ptdev_remapping_info*
 ptdev_dequeue_softirq(struct vm *vm)
 {
@@ -44,10 +52,20 @@ ptdev_dequeue_softirq(struct vm *vm)
 
 	spinlock_irqsave_obtain(&vm->softirq_dev_lock, &rflags);
 
-	if (!list_empty(&vm->softirq_dev_entry_list)) {
+	while (!list_empty(&vm->softirq_dev_entry_list)) {
 		entry = get_first_item(&vm->softirq_dev_entry_list,
 			struct ptdev_remapping_info, softirq_node);
+
 		list_del_init(&entry->softirq_node);
+
+		/* if vm0, just dequeue, if uos, check delay timer */
+		if (is_vm0(entry->vm) ||
+			timer_expired(&entry->intr_delay_timer)) {
+			break;
+		} else {
+			/* add it into timer list; dequeue next one */
+			(void)add_timer(&entry->intr_delay_timer);
+		}
 	}
 
 	spinlock_irqrestore_release(&vm->softirq_dev_lock, rflags);
@@ -68,6 +86,10 @@ alloc_entry(struct vm *vm, uint32_t intr_type)
 
 	INIT_LIST_HEAD(&entry->softirq_node);
 	INIT_LIST_HEAD(&entry->entry_node);
+
+	entry->intr_count = 0UL;
+	initialize_timer(&entry->intr_delay_timer, ptdev_intr_delay_callback,
+		entry, 0UL, 0, 0UL);
 
 	atomic_clear32(&entry->active, ACTIVE_FLAG);
 	list_add(&entry->entry_node, &ptdev_list);
@@ -115,6 +137,22 @@ static void ptdev_interrupt_handler(__unused uint32_t irq, void *data)
 {
 	struct ptdev_remapping_info *entry =
 		(struct ptdev_remapping_info *) data;
+
+	/*
+	 * "interrupt storm" detection & delay intr injection just for UOS
+	 * pass-thru devices, collect its data and delay injection if needed
+	 */
+	if (!is_vm0(entry->vm)) {
+		entry->intr_count++;
+
+		/* if delta > 0, set the delay TSC, dequeue to handle */
+		if (entry->vm->intr_inject_delay_delta > 0UL) {
+			entry->intr_delay_timer.fire_tsc = rdtsc() +
+				entry->vm->intr_inject_delay_delta;
+		} else {
+			entry->intr_delay_timer.fire_tsc = 0UL;
+		}
+	}
 
 	ptdev_enqueue_softirq(entry);
 }
@@ -168,4 +206,28 @@ void ptdev_release_all_entries(struct vm *vm)
 	spinlock_obtain(&ptdev_lock);
 	release_all_entries(vm);
 	spinlock_release(&ptdev_lock);
+}
+
+uint32_t get_vm_ptdev_intr_data(const struct vm *target_vm, uint64_t *buffer,
+	uint32_t buffer_cnt)
+{
+	uint32_t index = 0U;
+	struct ptdev_remapping_info *entry;
+	struct list_head *pos, *tmp;
+
+	list_for_each_safe(pos, tmp, &ptdev_list) {
+		entry = list_entry(pos, struct ptdev_remapping_info,
+				entry_node);
+		if (entry->vm == target_vm) {
+			buffer[index] = entry->allocated_pirq;
+			buffer[index + 1U] = entry->intr_count;
+
+			index += 2U;
+			if (index >= buffer_cnt) {
+				break;
+			}
+		}
+	}
+
+	return index;
 }

@@ -48,6 +48,11 @@ static inline void initialize_timer(struct hv_timer *timer,
 	}
 }
 
+static inline bool timer_expired(const struct hv_timer *timer)
+{
+	return ((timer->fire_tsc == 0UL) || (rdtsc() >= timer->fire_tsc));
+}
+
 /*
  * Don't call add_timer/del_timer in the timer callback function.
  */
