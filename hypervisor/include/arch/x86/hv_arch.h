@@ -29,7 +29,6 @@
 #include <vm.h>
 #include <cpuid.h>
 #include <mmu.h>
-#include <pgtable_types.h>
 #include <pgtable.h>
 #include <irq.h>
 #include <vmx.h>
