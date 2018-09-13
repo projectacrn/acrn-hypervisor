@@ -10,6 +10,7 @@
 #ifndef ASSEMBLER
 
 #include <types.h>
+#include <rtl.h>
 
 /** The architecture dependent spinlock type. */
 typedef struct _spinlock {
@@ -19,8 +20,33 @@ typedef struct _spinlock {
 } spinlock_t;
 
 /* Function prototypes */
-void spinlock_init(spinlock_t *lock);
-void spinlock_obtain(spinlock_t *lock);
+static inline void spinlock_init(spinlock_t *lock)
+{
+	(void)memset(lock, 0U, sizeof(spinlock_t));
+}
+
+static inline void spinlock_obtain(spinlock_t *lock)
+{
+
+	/* The lock function atomically increments and exchanges the head
+	 * counter of the queue. If the old head of the queue is equal to the
+	 * tail, we have locked the spinlock. Otherwise we have to wait.
+	 */
+
+	asm volatile ("   movl $0x1,%%eax\n"
+		      "   lock xaddl %%eax,%[head]\n"
+		      "   cmpl %%eax,%[tail]\n"
+		      "   jz 1f\n"
+		      "2: pause\n"
+		      "   cmpl %%eax,%[tail]\n"
+		      "   jnz 2b\n"
+		      "1:\n"
+		      :
+		      :
+		      [head] "m"(lock->head),
+		      [tail] "m"(lock->tail)
+		      : "cc", "memory", "eax");
+}
 
 static inline void spinlock_release(spinlock_t *lock)
 {
