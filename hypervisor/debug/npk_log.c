@@ -44,6 +44,7 @@ void npk_log_setup(struct hv_npk_log_param *param)
 	case HV_NPK_LOG_CMD_CONF:
 		if (param->mmio_addr || param->loglevel != 0xffffU)
 			param->res = HV_NPK_LOG_RES_OK;
+		/* falls through */
 	case HV_NPK_LOG_CMD_ENABLE:
 		if (param->mmio_addr)
 			base = param->mmio_addr;

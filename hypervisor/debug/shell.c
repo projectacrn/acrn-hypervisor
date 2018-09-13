@@ -831,8 +831,10 @@ static int shell_loglevel(int argc, char **argv)
 	switch (argc) {
 	case 4:
 		npk_loglevel = atoi(argv[3]);
+		/* falls through */
 	case 3:
 		mem_loglevel = atoi(argv[2]);
+		/* falls through */
 	case 2:
 		console_loglevel = atoi(argv[1]);
 		break;
