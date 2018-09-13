@@ -61,6 +61,9 @@ struct ptdev_remapping_info {
 	struct list_head softirq_node;
 	struct list_head entry_node;
 	struct ptdev_msi_info msi;
+
+	uint64_t intr_count;
+	struct hv_timer intr_delay_timer; /* used for delay intr injection */
 };
 
 extern struct list_head ptdev_list;
@@ -82,5 +85,8 @@ void ptdev_deactivate_entry(struct ptdev_remapping_info *entry);
 #ifdef HV_DEBUG
 void get_ptdev_info(char *str_arg, int str_max);
 #endif /* HV_DEBUG */
+
+uint32_t get_vm_ptdev_intr_data(const struct vm *target_vm, uint64_t *buffer,
+	uint32_t buffer_cnt);
 
 #endif /* PTDEV_H */

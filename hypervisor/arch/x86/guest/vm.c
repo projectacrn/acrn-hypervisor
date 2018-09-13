@@ -187,6 +187,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 
 	INIT_LIST_HEAD(&vm->softirq_dev_entry_list);
 	spinlock_init(&vm->softirq_dev_lock);
+	vm->intr_inject_delay_delta = 0UL;
 
 	/* Set up IO bit-mask such that VM exit occurs on
 	 * selected IO ranges
