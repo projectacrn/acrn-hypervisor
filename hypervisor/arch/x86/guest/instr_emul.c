@@ -1778,6 +1778,7 @@ static int decode_two_byte_opcode(struct instr_emul_vie *vie)
 		return -1;
 	}
 
+	vie->opcode = x;
 	vie->op = two_byte_opcodes[x];
 
 	if (vie->op.op_type == VIE_OP_TYPE_NONE) {
