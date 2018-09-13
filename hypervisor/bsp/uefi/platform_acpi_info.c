@@ -10,17 +10,49 @@
 
 #include <hypervisor.h>
 
-const struct acpi_info host_acpi_info = {
-	0,				/* x86 family */
-	0,				/* x86 model */
-	{
-		{SPACE_SYSTEM_IO, 0, 0, 0, 0},	/* PM1a EVT */
-		{SPACE_SYSTEM_IO, 0, 0, 0, 0},	/* PM1b EVT */
-		{SPACE_SYSTEM_IO, 0, 0, 0, 0},	/* PM1a CNT */
-		{SPACE_SYSTEM_IO, 0, 0, 0, 0},	/* PM1b CNT */
-		{0,	0,	0},		/* _S3 Package */
-		{0,	0,	0},		/* _S5 Package */
-		(uint32_t *)0,			/* Wake Vector 32 */
-		(uint64_t *)0			/* Wake Vector 64 */
+struct acpi_info host_acpi_info = {
+	.x86_family = 0U,
+	.x86_model = 0U,
+	.pm_s_state = {
+		.pm1a_evt = {
+			.space_id = SPACE_SYSTEM_IO,
+			.bit_width = 0U,
+			.bit_offset = 0U,
+			.access_size = 0U,
+			.address = 0UL
+		},
+		.pm1b_evt = {
+			.space_id = SPACE_SYSTEM_IO,
+			.bit_width = 0U,
+			.bit_offset = 0U,
+			.access_size = 0U,
+			.address = 0UL
+		},
+		.pm1a_cnt = {
+			.space_id = SPACE_SYSTEM_IO,
+			.bit_width = 0U,
+			.bit_offset = 0U,
+			.access_size = 0U,
+			.address = 0UL
+		},
+		.pm1b_cnt = {
+			.space_id = SPACE_SYSTEM_IO,
+			.bit_width = 0U,
+			.bit_offset = 0U,
+			.access_size = 0U,
+			.address = 0UL
+		},
+		.s3_pkg = {
+			.val_pm1a = 0U,
+			.val_pm1b = 0U,
+			.reserved = 0U
+		},
+		.s5_pkg = {
+			.val_pm1a = 0U,
+			.val_pm1b = 0U,
+			.reserved = 0U
+		},
+		.wake_vector_32 = (uint32_t *)0UL,
+		.wake_vector_64 = (uint64_t *)0UL
 	}
 };
