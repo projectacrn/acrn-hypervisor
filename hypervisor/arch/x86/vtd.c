@@ -30,6 +30,10 @@
 #define ROOT_ENTRY_LOWER_CTP_POS            (12U)
 #define ROOT_ENTRY_LOWER_CTP_MASK           (0xFFFFFFFFFFFFFUL)
 
+/* 4 iommu fault register state */
+#define	IOMMU_FAULT_REGISTER_STATE_NUM	4U
+#define	IOMMU_FAULT_REGISTER_SIZE	4U
+
 #define CTX_ENTRY_UPPER_AW_POS          (0U)
 #define CTX_ENTRY_UPPER_AW_MASK         \
 		(0x7UL << CTX_ENTRY_UPPER_AW_POS)
@@ -118,6 +122,7 @@ struct dmar_drhd_rt {
 	uint16_t cap_num_fault_regs;
 	uint16_t cap_fault_reg_offset;
 	uint16_t ecap_iotlb_offset;
+	uint32_t fault_state[IOMMU_FAULT_REGISTER_STATE_NUM]; /* 32bit registers */
 };
 
 struct dmar_root_entry {
@@ -1205,16 +1210,11 @@ void disable_iommu(void)
 	}
 }
 
-/* 4 iommu fault register state */
-#define	IOMMU_FAULT_REGISTER_STATE_NUM	4U
-static uint32_t
-iommu_fault_state[CONFIG_MAX_IOMMU_NUM][IOMMU_FAULT_REGISTER_STATE_NUM];
-
 void suspend_iommu(void)
 {
 	struct dmar_drhd_rt *dmar_unit;
 	struct list_head *pos;
-	uint32_t i, iommu_idx = 0U;
+	uint32_t i;
 
 	list_for_each(pos, &dmar_drhd_units) {
 		dmar_unit = list_entry(pos, struct dmar_drhd_rt, list);
@@ -1230,21 +1230,12 @@ void suspend_iommu(void)
 
 		/* save IOMMU fault register state */
 		for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++) {
-			iommu_fault_state[iommu_idx][i] =
-				iommu_read32(dmar_unit, DMAR_FECTL_REG +
-					(i * IOMMU_FAULT_REGISTER_STATE_NUM));
+			dmar_unit->fault_state[i] =  iommu_read32(dmar_unit,
+				DMAR_FECTL_REG + (i * IOMMU_FAULT_REGISTER_SIZE));
+
 		}
 		/* disable translation */
 		dmar_disable_translation(dmar_unit);
-
-		/* If the number of real iommu devices is larger than we
-		 * defined in kconfig.
-		 */
-		if (iommu_idx > CONFIG_MAX_IOMMU_NUM) {
-			pr_err("iommu dev number is larger than pre-defined");
-			break;
-		}
-		iommu_idx++;
 	}
 }
 
@@ -1252,7 +1243,7 @@ void resume_iommu(void)
 {
 	struct dmar_drhd_rt *dmar_unit;
 	struct list_head *pos;
-	uint32_t i, iommu_idx = 0U;
+	uint32_t i;
 
 	/* restore IOMMU fault register state */
 	list_for_each(pos, &dmar_drhd_units) {
@@ -1273,20 +1264,11 @@ void resume_iommu(void)
 		/* restore IOMMU fault register state */
 		for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++) {
 			iommu_write32(dmar_unit, DMAR_FECTL_REG +
-				(i * IOMMU_FAULT_REGISTER_STATE_NUM),
-				iommu_fault_state[iommu_idx][i]);
+				(i * IOMMU_FAULT_REGISTER_SIZE),
+				dmar_unit->fault_state[i]);
 		}
 		/* enable translation */
 		dmar_enable_translation(dmar_unit);
-
-		/* If the number of real iommu devices is larger than we
-		 * defined in kconfig.
-		 */
-		if (iommu_idx > CONFIG_MAX_IOMMU_NUM) {
-			pr_err("iommu dev number is larger than pre-defined");
-			break;
-		}
-		iommu_idx++;
 	}
 }
 
