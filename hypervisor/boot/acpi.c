@@ -34,6 +34,7 @@
 #define ACPI_SIG_RSDP             "RSD PTR " /* Root System Description Ptr */
 #define ACPI_OEM_ID_SIZE           6
 #define ACPI_SIG_MADT             "APIC" /* Multiple APIC Description Table */
+#define ACPI_SIG_FADT             "FACP" /* Fixed ACPI Description Table */
 #define ACPI_SIG_DMAR             "DMAR"
 #define RSDP_CHECKSUM_LENGTH       20
 #define ACPI_NAME_SIZE             4U
@@ -281,3 +282,86 @@ void *get_dmar_table(void)
 {
 	return get_acpi_tbl(ACPI_SIG_DMAR);
 }
+
+#ifndef CONFIG_CONSTANT_ACPI
+/* Per ACPI spec:
+ * There are two fundamental types of ACPI tables:
+ *
+ * Tables that contain AML code produced from the ACPI Source Language (ASL).
+ * These include the DSDT, any SSDTs, and sometimes OEM-specific tables (OEMx).
+ *
+ * Tables that contain simple data and no AML byte code. These types of tables
+ * are known as ACPI Data Tables. They include tables such as the FADT, MADT,
+ * ECDT, SRAT, etc. -essentially any table other than a DSDT or SSDT.
+ *
+ * The second type of table, the ACPI Data Table, could be parsed here.
+ *
+ * When ACRN go production, the platform ACPI data should be fixed. The
+ * Kconfig of CONSTANT_ACPI will be set to yes, then this code is not needed.
+ */
+
+#define ACPI_SIG_FACS		0x53434146U	/* "FACS" */
+
+/* FACP field offsets */
+#define OFFSET_FACS_ADDR	36U
+#define OFFSET_FACS_X_ADDR	132U
+
+/* FACS field offsets */
+#define OFFSET_FACS_SIGNATURE	0U
+#define OFFSET_FACS_LENGTH	4U
+#define OFFSET_WAKE_VECTOR_32	12U
+#define OFFSET_WAKE_VECTOR_64	24U
+
+/* get a dword value from given table and its offset */
+static inline uint32_t get_acpi_dt_dword(uint8_t *dt_addr, uint32_t dt_offset)
+{
+	return *(uint32_t *)(dt_addr + dt_offset);
+}
+
+/* get a qword value from given table and its offset */
+static inline uint64_t get_acpi_dt_qword(uint8_t *dt_addr, uint32_t dt_offset)
+{
+	return *(uint64_t *)(dt_addr + dt_offset);
+}
+
+static void *get_facs_table(void)
+{
+	uint8_t *facp_addr, *facs_addr, *facs_x_addr;
+	uint32_t signature, length;
+
+	facp_addr = (uint8_t *)get_acpi_tbl(ACPI_SIG_FADT);
+
+	if (facp_addr == NULL) {
+		return NULL;
+	}
+
+	facs_addr = (uint8_t *)(uint64_t)get_acpi_dt_dword(facp_addr,
+						OFFSET_FACS_ADDR);
+
+	facs_x_addr = (uint8_t *)get_acpi_dt_qword(facp_addr,
+						OFFSET_FACS_X_ADDR);
+
+	if (facs_x_addr != NULL) {
+		facs_addr = facs_x_addr;
+	}
+
+	if (facs_addr == NULL) {
+		return NULL;
+	}
+
+	signature = get_acpi_dt_dword(facs_addr, OFFSET_FACS_SIGNATURE);
+
+	if (signature != ACPI_SIG_FACS) {
+		return NULL;
+	}
+
+	length = get_acpi_dt_dword(facs_addr, OFFSET_FACS_LENGTH);
+
+	if (length < 64U) {
+		return NULL;
+	}
+
+	return facs_addr;
+}
+
+#endif
