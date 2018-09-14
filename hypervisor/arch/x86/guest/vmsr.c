@@ -14,22 +14,81 @@ enum rw_mode {
 	READ_WRITE
 };
 
-/*MRS need to be emulated, the order in this array better as freq of ops*/
-static const uint32_t emulated_msrs[] = {
-	MSR_IA32_TSC_DEADLINE,  /* Enable TSC_DEADLINE VMEXIT */
-	MSR_IA32_BIOS_UPDT_TRIG, /* Enable MSR_IA32_BIOS_UPDT_TRIG */
-	MSR_IA32_BIOS_SIGN_ID, /* Enable MSR_IA32_BIOS_SIGN_ID */
+/*
+ * List of intercepted MSRs.
+ * If any MSRs appear in this array but not handled in any swith statements
+ * in either rdmsr_vmexit_handler() or wrmsr_vmexit_handler(), a GP will
+ * be thrown to the guest for any R/W accesses.
+ */
+#define NUM_EMULATED_MSR	58U
+static const uint32_t emulated_msrs[NUM_EMULATED_MSR] = {
+	/* Emulated MSRs */
+	MSR_IA32_TSC_DEADLINE,
+	MSR_IA32_BIOS_UPDT_TRIG,
+	MSR_IA32_BIOS_SIGN_ID,
 	MSR_IA32_TIME_STAMP_COUNTER,
 	MSR_IA32_PAT,
 	MSR_IA32_APIC_BASE,
 
-/* following MSR not emulated now */
-/*
- *	MSR_IA32_SYSENTER_CS,
- *	MSR_IA32_SYSENTER_ESP,
- *	MSR_IA32_SYSENTER_EIP,
- *	MSR_IA32_TSC_AUX,
- */
+	MSR_IA32_PERF_CTL,
+
+	MSR_IA32_MTRR_CAP,
+	MSR_IA32_MTRR_DEF_TYPE,
+	MSR_IA32_MTRR_FIX64K_00000,
+	MSR_IA32_MTRR_FIX16K_80000,
+	MSR_IA32_MTRR_FIX16K_A0000,
+	MSR_IA32_MTRR_FIX4K_C0000,
+	MSR_IA32_MTRR_FIX4K_C8000,
+	MSR_IA32_MTRR_FIX4K_D0000,
+	MSR_IA32_MTRR_FIX4K_D8000,
+	MSR_IA32_MTRR_FIX4K_E0000,
+	MSR_IA32_MTRR_FIX4K_E8000,
+	MSR_IA32_MTRR_FIX4K_F0000,
+	MSR_IA32_MTRR_FIX4K_F8000,
+
+	/* Following MSRs intercepted, and throw GP for any access */
+
+	/* Variable MTRRs are not supported */
+	MSR_IA32_MTRR_PHYSBASE_0,
+	MSR_IA32_MTRR_PHYSMASK_0,
+	MSR_IA32_MTRR_PHYSBASE_1,
+	MSR_IA32_MTRR_PHYSMASK_1,
+	MSR_IA32_MTRR_PHYSBASE_2,
+	MSR_IA32_MTRR_PHYSMASK_2,
+	MSR_IA32_MTRR_PHYSBASE_3,
+	MSR_IA32_MTRR_PHYSMASK_3,
+	MSR_IA32_MTRR_PHYSBASE_4,
+	MSR_IA32_MTRR_PHYSMASK_4,
+	MSR_IA32_MTRR_PHYSBASE_5,
+	MSR_IA32_MTRR_PHYSMASK_5,
+	MSR_IA32_MTRR_PHYSBASE_6,
+	MSR_IA32_MTRR_PHYSMASK_6,
+	MSR_IA32_MTRR_PHYSBASE_7,
+	MSR_IA32_MTRR_PHYSMASK_7,
+	MSR_IA32_MTRR_PHYSBASE_8,
+	MSR_IA32_MTRR_PHYSMASK_8,
+	MSR_IA32_MTRR_PHYSBASE_9,
+	MSR_IA32_MTRR_PHYSMASK_9,
+
+	/* No level 2 VMX: CPUID.01H.ECX[5] */
+	MSR_IA32_VMX_BASIC,
+	MSR_IA32_VMX_PINBASED_CTLS,
+	MSR_IA32_VMX_PROCBASED_CTLS,
+	MSR_IA32_VMX_EXIT_CTLS,
+	MSR_IA32_VMX_ENTRY_CTLS,
+	MSR_IA32_VMX_MISC,
+	MSR_IA32_VMX_CR0_FIXED0,
+	MSR_IA32_VMX_CR0_FIXED1,
+	MSR_IA32_VMX_CR4_FIXED0,
+	MSR_IA32_VMX_CR4_FIXED1,
+	MSR_IA32_VMX_VMCS_ENUM,
+	MSR_IA32_VMX_PROCBASED_CTLS2,
+	MSR_IA32_VMX_EPT_VPID_CAP,
+	MSR_IA32_VMX_TRUE_PINBASED_CTLS,
+	MSR_IA32_VMX_TRUE_PROCBASED_CTLS,
+	MSR_IA32_VMX_TRUE_EXIT_CTLS,
+	MSR_IA32_VMX_TRUE_ENTRY_CTLS,
+	MSR_IA32_VMX_VMFUNC,
 };
 
 static const uint32_t x2apic_msrs[] = {
@@ -143,50 +202,20 @@ static void init_msr_area(struct acrn_vcpu *vcpu)
 void init_msr_emulation(struct acrn_vcpu *vcpu)
 {
 	uint32_t i;
-	uint32_t msrs_count =  ARRAY_SIZE(emulated_msrs);
 	uint8_t *msr_bitmap;
 	uint64_t value64;
 
-	ASSERT(msrs_count == IDX_MAX_MSR,
-		"MSR ID should be matched with emulated_msrs");
-
-	/*msr bitmap, just allocated/init once, and used for all vm's vcpu*/
 	if (is_vcpu_bsp(vcpu)) {
 		msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
 
-		for (i = 0U; i < msrs_count; i++) {
+		for (i = 0U; i < NUM_EMULATED_MSR; i++) {
 			enable_msr_interception(msr_bitmap, emulated_msrs[i], READ_WRITE);
-		}
-
-		enable_msr_interception(msr_bitmap, MSR_IA32_PERF_CTL, READ_WRITE);
-
-		/* below MSR protected from guest OS, if access to inject gp*/
-		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_CAP, READ_WRITE);
-		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_DEF_TYPE, READ_WRITE);
-
-		for (i = MSR_IA32_MTRR_PHYSBASE_0;
-			i <= MSR_IA32_MTRR_PHYSMASK_9; i++) {
-			enable_msr_interception(msr_bitmap, i, READ_WRITE);
-		}
-
-		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_FIX64K_00000, READ_WRITE);
-		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_FIX16K_80000, READ_WRITE);
-		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_FIX16K_A0000, READ_WRITE);
-
-		for (i = MSR_IA32_MTRR_FIX4K_C0000;
-			i <= MSR_IA32_MTRR_FIX4K_F8000; i++) {
-			enable_msr_interception(msr_bitmap, i, READ_WRITE);
-		}
-
-		for (i = MSR_IA32_VMX_BASIC;
-			i <= MSR_IA32_VMX_TRUE_ENTRY_CTLS; i++) {
-			enable_msr_interception(msr_bitmap, i, READ_WRITE);
 		}
 
 		intercept_x2apic_msrs(msr_bitmap, READ_WRITE);
 	}
 
-	/* Set up MSR bitmap - pg 2904 24.6.9 */
+	/* Setup MSR bitmap - Intel SDM Vol3 24.6.9 */
 	value64 = hva2hpa(vcpu->vm->arch_vm.msr_bitmap);
 	exec_vmwrite64(VMX_MSR_BITMAP_FULL, value64);
 	pr_dbg("VMX_MSR_BITMAP: 0x%016llx ", value64);
@@ -234,7 +263,7 @@ int rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 #ifdef CONFIG_MTRR_ENABLED
 		v = mtrr_rdmsr(vcpu, msr);
 #else
-		vcpu_inject_gp(vcpu, 0U);
+		err = -EACCES;
 #endif
 		break;
 	}
@@ -246,23 +275,6 @@ int rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_PERF_CTL:
 	{
 		v = msr_read(msr);
-		break;
-	}
-
-	/* following MSR not emulated now just left for future */
-	case MSR_IA32_SYSENTER_CS:
-	{
-		v = (uint64_t)exec_vmread32(VMX_GUEST_IA32_SYSENTER_CS);
-		break;
-	}
-	case MSR_IA32_SYSENTER_ESP:
-	{
-		v = exec_vmread(VMX_GUEST_IA32_SYSENTER_ESP);
-		break;
-	}
-	case MSR_IA32_SYSENTER_EIP:
-	{
-		v = exec_vmread(VMX_GUEST_IA32_SYSENTER_EIP);
 		break;
 	}
 	case MSR_IA32_PAT:
@@ -281,13 +293,9 @@ int rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		if (is_x2apic_msr(msr)) {
 			err = vlapic_rdmsr(vcpu, msr, &v);
 		} else {
-			if (!(((msr >= MSR_IA32_MTRR_PHYSBASE_0) &&
-				(msr <= MSR_IA32_MTRR_PHYSMASK_9)) ||
-				((msr >= MSR_IA32_VMX_BASIC) &&
-				(msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS)))) {
-				pr_warn("rdmsr: %lx should not come here!", msr);
-			}
-			vcpu_inject_gp(vcpu, 0U);
+			pr_warn("%s(): vm%d vcpu%d reading MSR %lx not supported",
+				__func__, vcpu->vm->vm_id, vcpu->vcpu_id, msr);
+			err = -EACCES;
 			v = 0UL;
 		}
 		break;
@@ -329,7 +337,6 @@ int wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		exec_vmwrite64(VMX_TSC_OFFSET_FULL, v - rdtsc());
 		break;
 	}
-
 	case MSR_IA32_MTRR_DEF_TYPE:
 	case MSR_IA32_MTRR_FIX64K_00000:
 	case MSR_IA32_MTRR_FIX16K_80000:
@@ -346,13 +353,8 @@ int wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 #ifdef CONFIG_MTRR_ENABLED
 		mtrr_wrmsr(vcpu, msr, v);
 #else
-		vcpu_inject_gp(vcpu, 0U);
+		err = -EACCES;
 #endif
-		break;
-	}
-	case MSR_IA32_MTRR_CAP:
-	{
-		vcpu_inject_gp(vcpu, 0U);
 		break;
 	}
 	case MSR_IA32_BIOS_SIGN_ID:
@@ -375,31 +377,9 @@ int wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		msr_write(msr, v);
 		break;
 	}
-
-	/* following MSR not emulated now just left for future */
-	case MSR_IA32_SYSENTER_CS:
-	{
-		exec_vmwrite32(VMX_GUEST_IA32_SYSENTER_CS, (uint32_t)v);
-		break;
-	}
-	case MSR_IA32_SYSENTER_ESP:
-	{
-		exec_vmwrite(VMX_GUEST_IA32_SYSENTER_ESP, v);
-		break;
-	}
-	case MSR_IA32_SYSENTER_EIP:
-	{
-		exec_vmwrite(VMX_GUEST_IA32_SYSENTER_EIP, v);
-		break;
-	}
 	case MSR_IA32_PAT:
 	{
 		err = vmx_wrmsr_pat(vcpu, v);
-		break;
-	}
-	case MSR_IA32_GS_BASE:
-	{
-		exec_vmwrite(VMX_GUEST_GS_BASE, v);
 		break;
 	}
 	case MSR_IA32_APIC_BASE:
@@ -412,13 +392,9 @@ int wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		if (is_x2apic_msr(msr)) {
 			err = vlapic_wrmsr(vcpu, msr, v);
 		} else {
-			if (!(((msr >= MSR_IA32_MTRR_PHYSBASE_0) &&
-				(msr <= MSR_IA32_MTRR_PHYSMASK_9)) ||
-				((msr >= MSR_IA32_VMX_BASIC) &&
-				(msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS)))) {
-				pr_warn("wrmsr: %lx should not come here!", msr);
-			}
-			vcpu_inject_gp(vcpu, 0U);
+			pr_warn("%s(): vm%d vcpu%d writing MSR %lx not supported",
+				__func__, vcpu->vm->vm_id, vcpu->vcpu_id, msr);
+			err = -EACCES;
 		}
 		break;
 	}

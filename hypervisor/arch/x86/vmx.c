@@ -277,8 +277,7 @@ int vmx_wrmsr_pat(struct acrn_vcpu *vcpu, uint64_t value)
 		if (pat_mem_type_invalid(field) ||
 				((PAT_FIELD_RSV_BITS & field) != 0UL)) {
 			pr_err("invalid guest IA32_PAT: 0x%016llx", value);
-			vcpu_inject_gp(vcpu, 0U);
-			return 0;
+			return -EINVAL;
 		}
 	}
 
