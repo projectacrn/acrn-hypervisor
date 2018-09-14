@@ -66,11 +66,6 @@
 	(HOST_GDT_RING0_CPU_TSS_SEL +					\
 		(HOST_GDT_RING0_TSS_SELECTORS * X64_TSS_DESC_SIZE))
 
-/* Defined position of Interrupt Stack Tables */
-#define MACHINE_CHECK_IST   (0x1)
-#define DOUBLE_FAULT_IST    (0x2)
-#define STACK_FAULT_IST     (0x3)
-
 #ifndef ASSEMBLER
 
 #include <types.h>

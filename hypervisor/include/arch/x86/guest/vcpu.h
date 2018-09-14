@@ -9,9 +9,6 @@
 
 #define	ACRN_VCPU_MMIO_COMPLETE		(0U)
 
-/* Size of various elements within the VCPU structure */
-#define REG_SIZE                            8
-
 /* Number of GPRs saved / restored for guest in VCPU structure */
 #define NUM_GPRS                            16U
 #define GUEST_STATE_AREA_SIZE               512

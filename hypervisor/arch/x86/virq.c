@@ -7,7 +7,6 @@
 #include <hypervisor.h>
 
 #define EXCEPTION_ERROR_CODE_VALID  8U
-#define INTERRPUT_QUEUE_BUFF_SIZE   255
 
 #define ACRN_DBG_INTR	6U
 

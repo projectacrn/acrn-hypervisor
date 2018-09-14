@@ -7,10 +7,6 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-/* Defines for TRUE / FALSE conditions */
-#define		HV_FALSE		0
-#define		HV_TRUE			1
-
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define __aligned(x)		__attribute__((aligned(x)))
 #define __packed	__attribute__((packed))

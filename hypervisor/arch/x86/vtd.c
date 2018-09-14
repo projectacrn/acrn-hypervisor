@@ -22,7 +22,6 @@
  */
 #define IOMMU_INIT_BUS_LIMIT        (0xfU)
 
-#define PAGE_MASK                   (0xFFFUL)
 #define LEVEL_WIDTH 9U
 
 #define ROOT_ENTRY_LOWER_PRESENT_POS        (0U)
@@ -83,8 +82,6 @@ dmar_set_bitslice(uint64_t var, uint64_t mask,
 #define DMAR_MSI_REDIRECTION_SHIFT       (3)
 #define DMAR_MSI_REDIRECTION_CPU         (0 << DMAR_MSI_REDIRECTION_SHIFT)
 #define DMAR_MSI_REDIRECTION_LOWPRI      (1 << DMAR_MSI_REDIRECTION_SHIFT)
-
-#define DMAR_OP_TIMEOUT CYCLES_PER_MS
 
 enum dmar_cirg_type {
 	DMAR_CIRG_RESERVED = 0,
