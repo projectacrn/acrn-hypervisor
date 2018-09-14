@@ -982,16 +982,15 @@ exception_inject:
  */
 static int emulate_movs(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
-	uint64_t src_gva, gpa, val;
+	uint64_t src_gva, gpa, val = 0UL;
 	uint64_t *dst_hva, *src_hva;
 	uint64_t rcx, rdi, rsi, rflags;
 	uint32_t err_code;
 	enum cpu_reg_name seg;
 	int error, repeat;
-	uint8_t opsize;
+	uint8_t opsize = vie->opsize;
 	bool is_mmio_write;
 
-	opsize = (vie->opcode == 0xA4U) ? 1U : vie->opsize;
 	error = 0;
 	is_mmio_write = (vcpu->req.reqs.mmio.direction == REQUEST_WRITE);
 
@@ -1025,8 +1024,7 @@ static int emulate_movs(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		/* we are sure it will success */
 		(void)gva2gpa(vcpu, src_gva, &gpa, &err_code);
 		src_hva = gpa2hva(vcpu->vm, gpa);
-
-		val = *src_hva;
+		(void)memcpy_s(&val, opsize, src_hva, opsize);
 
 		mmio_write(vcpu, val);
 	} else {
@@ -1036,7 +1034,7 @@ static int emulate_movs(struct vcpu *vcpu, struct instr_emul_vie *vie)
 		 * decoding.
 		 */
 		dst_hva = gpa2hva(vcpu->vm, vie->dst_gpa);
-		memcpy_s(dst_hva, opsize, &val, opsize);
+		(void)memcpy_s(dst_hva, opsize, &val, opsize);
 	}
 
 	rsi = vm_get_register(vcpu, CPU_REG_RSI);
@@ -1072,11 +1070,10 @@ done:
 static int emulate_stos(struct vcpu *vcpu, struct instr_emul_vie *vie)
 {
 	int error, repeat;
-	uint8_t opsize;
+	uint8_t opsize = vie->opsize;
 	uint64_t val;
 	uint64_t rcx, rdi, rflags;
 
-	opsize = (vie->opcode == 0xAAU) ? 1U : vie->opsize;
 	repeat = vie->repz_present | vie->repnz_present;
 
 	if (repeat != 0) {
@@ -1800,11 +1797,13 @@ static int decode_two_byte_opcode(struct instr_emul_vie *vie)
 	}
 
 	vie_advance(vie);
+
 	return 0;
 }
 
 static int decode_opcode(struct instr_emul_vie *vie)
 {
+	int ret = 0;
 	uint8_t x;
 
 	if (vie_peek(vie, &x) != 0) {
@@ -1821,10 +1820,20 @@ static int decode_opcode(struct instr_emul_vie *vie)
 	vie_advance(vie);
 
 	if (vie->op.op_type == VIE_OP_TYPE_TWO_BYTE) {
-		return decode_two_byte_opcode(vie);
+		ret = decode_two_byte_opcode(vie);
 	}
 
-	return 0;
+	/* Fixup the opsize according to opcode w bit:
+	 * If w bit of opcode is 0, the operand size is 1 byte
+	 * If w bit of opcode is 1, the operand size is decided
+	 * by prefix and default operand size attribute (handled
+	 * in decode_prefixes).
+	 */
+	if ((ret == 0) && ((vie->opcode & 0x1U) == 0U)) {
+		vie->opsize = 1U;
+	}
+
+	return ret;
 }
 
 static int decode_modrm(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode)
