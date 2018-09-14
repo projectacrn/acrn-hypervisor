@@ -7,8 +7,6 @@
 #ifndef INTR_LAPIC_H
 #define INTR_LAPIC_H
 
-#define DEBUG_LAPIC 0
-
 /* intr_lapic_icr_delivery_mode */
 #define INTR_LAPIC_ICR_FIXED    0x0U
 #define INTR_LAPIC_ICR_LP          0x1U

@@ -6,12 +6,6 @@
 
 #include <hypervisor.h>
 
-/* Rate range 1 to 1000 or 1uSec to 1mSec */
-#define APIC_TIMER_MAX      0xffffffffU
-#define HYPE_PERIOD_MAX     1000
-#define APIC_DIVIDE_BY_ONE  0x0b
-#define PIT_TARGET          0x3FFFU
-
 /* xAPIC/x2APIC Interrupt Command Register (ICR) structure */
 union apic_icr {
 	uint64_t value;

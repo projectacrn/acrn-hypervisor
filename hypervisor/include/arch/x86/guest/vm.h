@@ -18,7 +18,6 @@ enum vm_privilege_level {
 	VM_PRIVILEGE_LEVEL_LOW
 };
 
-#define	MAX_VM_NAME_LEN		16
 #define INVALID_VM_ID 0xffffU
 
 struct vm_hw_info {

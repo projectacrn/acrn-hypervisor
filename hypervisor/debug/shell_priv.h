@@ -10,9 +10,6 @@
 #include <spinlock.h>
 
 #define SHELL_CMD_MAX_LEN		100U
-#define SHELL_NAME_MAX_LEN		50
-#define SHELL_PARA_MAX_LEN		64
-#define SHELL_HELP_MAX_LEN		256
 #define SHELL_STRING_MAX_LEN		(CPU_PAGE_SIZE << 2)
 
 /* Shell Command Function */

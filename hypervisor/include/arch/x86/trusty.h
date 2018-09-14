@@ -14,7 +14,6 @@
 
 /* Trusty EPT rebase gpa: 511G */
 #define TRUSTY_EPT_REBASE_GPA (511UL * 1024UL * 1024UL * 1024UL)
-#define TRUSTY_MEMORY_SIZE        0x01000000
 
 #define NON_TRUSTY_PDPT_ENTRIES         511U
 
