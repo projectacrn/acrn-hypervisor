@@ -69,6 +69,7 @@ clean:
 
 publish:
 	mkdir -p $(PUBLISHDIR)
+	cd $(PUBLISHDIR)/..; git pull origin master
 	rm -fr $(PUBLISHDIR)/*
 	cp -r $(BUILDDIR)/html/* $(PUBLISHDIR)
 	cp scripts/publish-README.md $(PUBLISHDIR)/../README.md
