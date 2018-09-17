@@ -470,13 +470,14 @@ static int32_t local_set_vm_memory_region(struct vm *vm,
 			prot |= EPT_UNCACHED;
 		}
 		/* create gpa to hpa EPT mapping */
-		return ept_mr_add(target_vm, pml4_page, hpa,
+		ept_mr_add(target_vm, pml4_page, hpa,
 				region->gpa, region->size, prot);
 	} else {
-		return ept_mr_del(target_vm, pml4_page,
+		ept_mr_del(target_vm, pml4_page,
 				region->gpa, region->size);
 	}
 
+	return 0;
 }
 
 /**
@@ -571,8 +572,10 @@ static int32_t write_protect_page(struct vm *vm, struct wp_data *wp)
 	prot_set = (wp->set != 0U) ? 0UL : EPT_WR;
 	prot_clr = (wp->set != 0U) ? EPT_WR : 0UL;
 
-	return ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+	ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
 		wp->gpa, CPU_PAGE_SIZE, prot_set, prot_clr);
+
+	return 0;
 }
 
 /**
