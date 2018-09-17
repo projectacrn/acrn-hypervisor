@@ -165,7 +165,7 @@ struct ext_context {
 #define NORMAL_WORLD	0
 #define SECURE_WORLD	1
 
-#define NUM_WORLD_MSRS		1U
+#define NUM_WORLD_MSRS		2U
 #define NUM_COMMON_MSRS		6U
 #define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS)
 
