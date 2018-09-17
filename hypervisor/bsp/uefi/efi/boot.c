@@ -224,9 +224,11 @@ switch_to_guest_mode(EFI_HANDLE image)
 	efi_ctx = (struct boot_ctx *)(UINTN)addr;
 
 	/* reserve secondary memory region for hv */
-	err = emalloc_for_low_mem(&addr, CONFIG_LOW_RAM_SIZE);
+	err = emalloc_reserved_mem(&addr, CONFIG_LOW_RAM_SIZE, MEM_ADDR_1MB);
 	if (err != EFI_SUCCESS)
 		goto out;
+	if (addr < 4096)
+		Print(L"Warning: CPU trampoline code buf occupied zero-page\n");
 
 	efi_ctx->ap_trampoline_buf = (void *)addr;
 

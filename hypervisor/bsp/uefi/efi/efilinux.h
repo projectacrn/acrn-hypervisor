@@ -45,6 +45,8 @@
 #define EFILINUX_VERSION_MAJOR 1
 #define EFILINUX_VERSION_MINOR 0
 
+#define MEM_ADDR_1MB (1 << 20)
+
 
 extern EFI_SYSTEM_TABLE *sys_table;
 extern EFI_BOOT_SERVICES *boot;
@@ -183,6 +185,22 @@ handle_protocol(EFI_HANDLE handle, EFI_GUID *protocol, void **interface)
                                  handle, protocol, interface);
 }
 
+
+/*
+ * emalloc_reserved_mem - it is called to allocate memory hypervisor itself
+ * and trampoline code, and mark the allocate memory as EfiReserved memory
+ * type so that SOS won't touch it during boot.
+ * @addr: a pointer to the allocated address on success
+ * @size: size in bytes of the requested allocation
+ * @max_addr: the allocated memory must be no more than this threshold
+ */
+static inline EFI_STATUS emalloc_reserved_mem(EFI_PHYSICAL_ADDRESS *addr,
+	UINTN size, EFI_PHYSICAL_ADDRESS max_addr)
+{
+	*addr = max_addr;
+	return allocate_pages(AllocateMaxAddress, EfiReservedMemoryType,
+		EFI_SIZE_TO_PAGES(size), addr);
+}
 
 /**
  * exit - Terminate a loaded EFI image
