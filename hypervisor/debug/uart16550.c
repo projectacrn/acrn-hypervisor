@@ -150,16 +150,19 @@ char uart16550_getc(void)
 /**
  * @pre uart_enabled == true
  */
-static void uart16550_putc(const char c)
+static void uart16550_putc(char c)
 {
+	uint8_t temp;
 	uint32_t reg;
+
 	/* Ensure there are no further Transmit buffer write requests */
 	do {
 		reg = uart16550_read_reg(uart_base_address, UART16550_LSR);
 	} while ((reg & LSR_THRE) == 0U || (reg & LSR_TEMT) == 0U);
 
+	temp = (uint8_t)c;
 	/* Transmit the character. */
-	uart16550_write_reg(uart_base_address, c, UART16550_THR);
+	uart16550_write_reg(uart_base_address, (uint32_t)temp, UART16550_THR);
 }
 
 int uart16550_puts(const char *buf, uint32_t len)

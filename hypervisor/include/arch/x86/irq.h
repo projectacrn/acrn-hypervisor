@@ -22,6 +22,11 @@
 #define VECTOR_VIRT_IRQ_VHM	0xF7U
 #define VECTOR_SPURIOUS		0xFFU
 
+/* the maximum number of msi entry is 2048 according to PCI
+ * local bus specification
+ */
+#define MAX_MSI_ENTRY 0x800U
+
 #define NR_MAX_VECTOR		0xFFU
 #define VECTOR_INVALID		(NR_MAX_VECTOR + 1U)
 #define NR_IRQS		256U

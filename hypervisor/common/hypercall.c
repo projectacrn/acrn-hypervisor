@@ -654,9 +654,11 @@ int32_t hcall_remap_pci_msix(struct vm *vm, uint16_t vmid, uint64_t param)
 	info.vmsi_ctl = remap.msi_ctl;
 	info.vmsi_addr = remap.msi_addr;
 	info.vmsi_data = remap.msi_data;
-
-	ret = ptdev_msix_remap(target_vm,
-		remap.virt_bdf, remap.msix_entry_index, &info);
+	if (remap.msix_entry_index >= MAX_MSI_ENTRY) {
+		return -1;
+	}
+	ret = ptdev_msix_remap(target_vm, remap.virt_bdf,
+		    (uint16_t)remap.msix_entry_index, &info);
 	remap.msi_data = info.pmsi_data;
 	remap.msi_addr = info.pmsi_addr;
 

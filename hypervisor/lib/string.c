@@ -156,14 +156,14 @@ int atoi(const char *str)
 	return (int)strtol_deci(str);
 }
 
-char *strchr(const char *s_arg, int ch)
+char *strchr(char *s_arg, char ch)
 {
-	const char *s = s_arg;
+	char *s = s_arg;
 	while ((*s != '\0') && (*s != ch)) {
 		++s;
 	}
 
-	return ((*s) != '\0') ? ((char *)s) : NULL;
+	return ((*s) != '\0') ? s : NULL;
 }
 
 /**

@@ -182,58 +182,69 @@ static uint64_t size2mask[9] = {
 
 #define VMX_INVALID_VMCS_FIELD  0xffffffffU
 
-static void encode_vmcs_seg_desc(enum cpu_reg_name seg, struct seg_desc *desc)
+/*
+ * This struct seg_desc_vmcs is defined separately to hold the vmcs field
+ * address of segment selector.
+ */
+struct seg_desc_vmcs {
+	uint32_t	base_field;
+	uint32_t	limit_field;
+	uint32_t	access_field;
+};
+
+static void encode_vmcs_seg_desc(enum cpu_reg_name seg,
+	struct seg_desc_vmcs *desc)
 {
 	switch (seg) {
 	case CPU_REG_ES:
-		desc->base = VMX_GUEST_ES_BASE;
-		desc->limit = VMX_GUEST_ES_LIMIT;
-		desc->access = VMX_GUEST_ES_ATTR;
+		desc->base_field = VMX_GUEST_ES_BASE;
+		desc->limit_field = VMX_GUEST_ES_LIMIT;
+		desc->access_field = VMX_GUEST_ES_ATTR;
 		break;
 	case CPU_REG_CS:
-		desc->base = VMX_GUEST_CS_BASE;
-		desc->limit = VMX_GUEST_CS_LIMIT;
-		desc->access = VMX_GUEST_CS_ATTR;
+		desc->base_field = VMX_GUEST_CS_BASE;
+		desc->limit_field = VMX_GUEST_CS_LIMIT;
+		desc->access_field = VMX_GUEST_CS_ATTR;
 		break;
 	case CPU_REG_SS:
-		desc->base = VMX_GUEST_SS_BASE;
-		desc->limit = VMX_GUEST_SS_LIMIT;
-		desc->access = VMX_GUEST_SS_ATTR;
+		desc->base_field = VMX_GUEST_SS_BASE;
+		desc->limit_field = VMX_GUEST_SS_LIMIT;
+		desc->access_field = VMX_GUEST_SS_ATTR;
 		break;
 	case CPU_REG_DS:
-		desc->base = VMX_GUEST_DS_BASE;
-		desc->limit = VMX_GUEST_DS_LIMIT;
-		desc->access = VMX_GUEST_DS_ATTR;
+		desc->base_field = VMX_GUEST_DS_BASE;
+		desc->limit_field = VMX_GUEST_DS_LIMIT;
+		desc->access_field = VMX_GUEST_DS_ATTR;
 		break;
 	case CPU_REG_FS:
-		desc->base = VMX_GUEST_FS_BASE;
-		desc->limit = VMX_GUEST_FS_LIMIT;
-		desc->access = VMX_GUEST_FS_ATTR;
+		desc->base_field = VMX_GUEST_FS_BASE;
+		desc->limit_field = VMX_GUEST_FS_LIMIT;
+		desc->access_field = VMX_GUEST_FS_ATTR;
 		break;
 	case CPU_REG_GS:
-		desc->base = VMX_GUEST_GS_BASE;
-		desc->limit = VMX_GUEST_GS_LIMIT;
-		desc->access = VMX_GUEST_GS_ATTR;
+		desc->base_field = VMX_GUEST_GS_BASE;
+		desc->limit_field = VMX_GUEST_GS_LIMIT;
+		desc->access_field = VMX_GUEST_GS_ATTR;
 		break;
 	case CPU_REG_TR:
-		desc->base = VMX_GUEST_TR_BASE;
-		desc->limit = VMX_GUEST_TR_LIMIT;
-		desc->access = VMX_GUEST_TR_ATTR;
+		desc->base_field = VMX_GUEST_TR_BASE;
+		desc->limit_field = VMX_GUEST_TR_LIMIT;
+		desc->access_field = VMX_GUEST_TR_ATTR;
 		break;
 	case CPU_REG_LDTR:
-		desc->base = VMX_GUEST_LDTR_BASE;
-		desc->limit = VMX_GUEST_LDTR_LIMIT;
-		desc->access = VMX_GUEST_LDTR_ATTR;
+		desc->base_field = VMX_GUEST_LDTR_BASE;
+		desc->limit_field = VMX_GUEST_LDTR_LIMIT;
+		desc->access_field = VMX_GUEST_LDTR_ATTR;
 		break;
 	case CPU_REG_IDTR:
-		desc->base = VMX_GUEST_IDTR_BASE;
-		desc->limit = VMX_GUEST_IDTR_LIMIT;
-		desc->access = 0xffffffffU;
+		desc->base_field = VMX_GUEST_IDTR_BASE;
+		desc->limit_field = VMX_GUEST_IDTR_LIMIT;
+		desc->access_field = 0xffffffffU;
 		break;
 	case CPU_REG_GDTR:
-		desc->base = VMX_GUEST_GDTR_BASE;
-		desc->limit = VMX_GUEST_GDTR_LIMIT;
-		desc->access = 0xffffffffU;
+		desc->base_field = VMX_GUEST_GDTR_BASE;
+		desc->limit_field = VMX_GUEST_GDTR_LIMIT;
+		desc->access_field = 0xffffffffU;
 		break;
 	default:
 		pr_err("%s: invalid seg %d", __func__, seg);
@@ -363,14 +374,14 @@ static void vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg,
  */
 static void vm_get_seg_desc(enum cpu_reg_name seg, struct seg_desc *desc)
 {
-	struct seg_desc tdesc = {0UL, 0U, 0U};
+	struct seg_desc_vmcs tdesc = {0U, 0U, 0U};
 
 	/* tdesc->access != 0xffffffffU in this function */
 	encode_vmcs_seg_desc(seg, &tdesc);
 
-	desc->base = exec_vmread(tdesc.base);
-	desc->limit = exec_vmread32(tdesc.limit);
-	desc->access = exec_vmread32(tdesc.access);
+	desc->base = exec_vmread(tdesc.base_field);
+	desc->limit = exec_vmread32(tdesc.limit_field);
+	desc->access = exec_vmread32(tdesc.access_field);
 }
 
 static void get_guest_paging_info(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt,
