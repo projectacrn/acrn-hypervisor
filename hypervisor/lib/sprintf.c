@@ -185,7 +185,7 @@ static const char *get_length_modifier(const char *s_arg,
 	return s;
 }
 
-static int format_number(struct print_param *param)
+static void format_number(struct print_param *param)
 {
 	/* contains the character used for padding */
 	char pad;
@@ -193,8 +193,6 @@ static int format_number(struct print_param *param)
 	uint32_t width;
 	/* number of characters to insert for width (w) and precision (p) */
 	uint32_t p = 0U, w = 0U;
-	/* the result */
-	int res = 0;
 
 	/* initialize variables */
 	width = param->vars.valuelen + param->vars.prefixlen;
@@ -225,11 +223,8 @@ static int format_number(struct print_param *param)
 			pad = '0';
 
 			/* emit prefix, return early if an error occurred */
-			res = param->emit(PRINT_CMD_COPY, param->vars.prefix,
+			param->emit(PRINT_CMD_COPY, param->vars.prefix,
 					param->vars.prefixlen, param->data);
-			if ((param->vars.prefix != NULL) && (res < 0)) {
-				return res;
-			}
 
 			/* invalidate prefix */
 			param->vars.prefix = NULL;
@@ -239,48 +234,31 @@ static int format_number(struct print_param *param)
 		/* fill the width with the padding character, return early if
 		 * an error occurred
 		 */
-		res = param->emit(PRINT_CMD_FILL, &pad, w, param->data);
-		if (res < 0) {
-			return res;
-		}
+		param->emit(PRINT_CMD_FILL, &pad, w, param->data);
 	}
 
 	/* emit prefix (if any), return early in case of an error */
-	res = param->emit(PRINT_CMD_COPY, param->vars.prefix,
+	param->emit(PRINT_CMD_COPY, param->vars.prefix,
 			param->vars.prefixlen, param->data);
-	if ((param->vars.prefix != NULL) && (res < 0)) {
-		return res;
-	}
 
 	/* insert additional 0's for precision, return early if an error
 	 * occurred
 	 */
-	res = param->emit(PRINT_CMD_FILL, "0", p, param->data);
-	if (res < 0) {
-		return res;
-	}
+	param->emit(PRINT_CMD_FILL, "0", p, param->data);
 
 	/* emit the pre-calculated result, return early in case of an error */
-	res = param->emit(PRINT_CMD_COPY, param->vars.value,
+	param->emit(PRINT_CMD_COPY, param->vars.value,
 			param->vars.valuelen, param->data);
-	if (res < 0) {
-		return res;
-	}
 
 	/* handle left justification */
 	if ((param->vars.flags & PRINT_FLAG_LEFT_JUSTIFY) != 0U) {
 		/* emit trailing blanks, return early in case of an error */
-		res = param->emit(PRINT_CMD_FILL, " ", w, param->data);
-		if (res < 0) {
-			return res;
-		}
+		param->emit(PRINT_CMD_FILL, " ", w, param->data);
 	}
 
-	/* done, return the last result */
-	return res;
 }
 
-static int print_pow2(struct print_param *param,
+static void print_pow2(struct print_param *param,
 		uint64_t v_arg, uint32_t shift)
 {
 	uint64_t v = v_arg;
@@ -294,7 +272,6 @@ static int print_pow2(struct print_param *param,
 	const char (*digits)[HEX_DIGITS_LEN];
 	/* mask to extract next character */
 	uint64_t mask;
-	int ret;
 
 	/* calculate mask */
 	mask = (1UL << shift) - 1UL;
@@ -330,15 +307,14 @@ static int print_pow2(struct print_param *param,
 	param->vars.value = pos;
 	param->vars.valuelen = (digitbuff + sizeof(digitbuff)) - pos;
 
-	ret = format_number(param);
+	format_number(param);
 
 	param->vars.value = NULL;
 	param->vars.valuelen = 0U;
 
-	return ret;
 }
 
-static int print_decimal(struct print_param *param, int64_t value)
+static void print_decimal(struct print_param *param, int64_t value)
 {
 	/* max. required buffer for unsigned long long in decimal format */
 	char digitbuff[20];
@@ -348,7 +324,6 @@ static int print_decimal(struct print_param *param, int64_t value)
 	union u_qword v;
 	/* next value in 32/64 bit */
 	union u_qword nv;
-	int ret;
 
 	/* assume an unsigned 64 bit value */
 	v.qword = ((uint64_t)value) & param->vars.mask;
@@ -400,15 +375,14 @@ static int print_decimal(struct print_param *param, int64_t value)
 	param->vars.value = pos;
 	param->vars.valuelen = (digitbuff + sizeof(digitbuff)) - pos;
 
-	ret = format_number(param);
+	format_number(param);
 
 	param->vars.value = NULL;
 	param->vars.valuelen = 0U;
 
-	return ret;
 }
 
-static int print_string(struct print_param *param, const char *s)
+static void print_string(struct print_param *param, const char *s)
 {
 	/* the length of the string (-1) if unknown */
 	uint32_t len;
@@ -416,8 +390,6 @@ static int print_string(struct print_param *param, const char *s)
 	 * width
 	 */
 	uint32_t w = 0U;
-	/* the last result of the emit function */
-	int res;
 
 	len = strnlen_s(s, PRINT_STRING_MAX_LEN);
 
@@ -437,36 +409,25 @@ static int print_string(struct print_param *param, const char *s)
 	 * occurred
 	 */
 	if ((param->vars.flags & PRINT_FLAG_LEFT_JUSTIFY) == 0U) {
-		res = param->emit(PRINT_CMD_FILL, " ", w, param->data);
-		if (res < 0) {
-			return res;
-		}
+		param->emit(PRINT_CMD_FILL, " ", w, param->data);
 	}
 
-	res = param->emit(PRINT_CMD_COPY, s, len, param->data);
-	if (res < 0) {
-		return res;
-	}
+	param->emit(PRINT_CMD_COPY, s, len, param->data);
 
 	/* emit additional characters on the right, return early if an error
 	 * occurred
 	 */
 	if ((param->vars.flags & PRINT_FLAG_LEFT_JUSTIFY) != 0U) {
-		res = param->emit(PRINT_CMD_FILL, " ", w, param->data);
-		if (res < 0) {
-			return res;
-		}
+		param->emit(PRINT_CMD_FILL, " ", w, param->data);
 	}
 
-	return res;
 }
 
-int do_print(const char *fmt_arg, struct print_param *param,
+void do_print(const char *fmt_arg, struct print_param *param,
 		__builtin_va_list args)
 {
 	const char *fmt = fmt_arg;
-	/* the result of this function */
-	int res = 0;
+
 	/* temp. storage for the next character */
 	char ch;
 	/* temp. pointer to the start of an analysed character sequence */
@@ -485,11 +446,8 @@ int do_print(const char *fmt_arg, struct print_param *param,
 		 * pass all characters until the next '%' to the emit function.
 		 * Return early if the function fails
 		 */
-		res = param->emit(PRINT_CMD_COPY, start, fmt - start,
+			param->emit(PRINT_CMD_COPY, start, fmt - start,
 				param->data);
-		if (res < 0) {
-			return res;
-		}
 
 		/* continue only if the '%' character was found */
 		if (*fmt == '%') {
@@ -523,16 +481,16 @@ int do_print(const char *fmt_arg, struct print_param *param,
 
 			/* a single '%'? => print out a single '%' */
 			if (ch == '%') {
-				res = param->emit(PRINT_CMD_COPY, &ch, 1U,
+				param->emit(PRINT_CMD_COPY, &ch, 1U,
 						param->data);
 			} else if ((ch == 'd') || (ch == 'i')) {
 			/* decimal number */
 				if ((param->vars.flags &
 					PRINT_FLAG_LONG_LONG) != 0U) {
-					res = print_decimal(param,
+					print_decimal(param,
 						__builtin_va_arg(args, long));
 				} else {
-					res = print_decimal(param,
+					print_decimal(param,
 						__builtin_va_arg(args, int));
 				}
 			}
@@ -541,11 +499,11 @@ int do_print(const char *fmt_arg, struct print_param *param,
 				param->vars.flags |= PRINT_FLAG_UINT32;
 				if ((param->vars.flags &
 					PRINT_FLAG_LONG_LONG) != 0U) {
-					res = print_decimal(param,
+					print_decimal(param,
 						(int64_t)__builtin_va_arg(args,
 						uint64_t));
 				} else {
-					res = print_decimal(param,
+					print_decimal(param,
 						(int64_t)__builtin_va_arg(args,
 						uint32_t));
 				}
@@ -554,11 +512,11 @@ int do_print(const char *fmt_arg, struct print_param *param,
 			else if (ch == 'o') {
 				if ((param->vars.flags &
 					PRINT_FLAG_LONG_LONG) != 0U) {
-					res = print_pow2(param,
+					print_pow2(param,
 						__builtin_va_arg(args,
 						uint64_t), 3U);
 				} else {
-					res = print_pow2(param,
+					print_pow2(param,
 						__builtin_va_arg(args,
 						uint32_t), 3U);
 				}
@@ -570,11 +528,11 @@ int do_print(const char *fmt_arg, struct print_param *param,
 				}
 				if ((param->vars.flags &
 					PRINT_FLAG_LONG_LONG) != 0U) {
-					res = print_pow2(param,
+					print_pow2(param,
 						__builtin_va_arg(args,
 						uint64_t), 4U);
 				} else {
-					res = print_pow2(param,
+					print_pow2(param,
 						__builtin_va_arg(args,
 						uint32_t), 4U);
 				}
@@ -586,12 +544,12 @@ int do_print(const char *fmt_arg, struct print_param *param,
 				if (s == NULL) {
 					s = "(null)";
 				}
-				res = print_string(param, s);
+				print_string(param, s);
 			}
 			/* pointer argument */
 			else if (ch == 'p') {
 				param->vars.flags |= PRINT_FLAG_ALTERNATE_FORM;
-				res = print_pow2(param, (uint64_t)
+				print_pow2(param, (uint64_t)
 					__builtin_va_arg(args, void *), 4U);
 			}
 			/* single character argument */
@@ -600,25 +558,19 @@ int do_print(const char *fmt_arg, struct print_param *param,
 
 				c[0] = __builtin_va_arg(args, int);
 				c[1] = 0;
-				res = print_string(param, c);
+				print_string(param, c);
 			}
 			/* default: print the format specifier as it is */
 			else {
-				res = param->emit(PRINT_CMD_COPY, start,
+				param->emit(PRINT_CMD_COPY, start,
 						fmt - start, param->data);
 			}
 		}
-		/* return if an error occurred */
-		if (res < 0) {
-			return res;
-		}
 	}
 
-	/* done. Return the result of the last emit function call */
-	return res;
 }
 
-static int charmem(int cmd, const char *s_arg, uint32_t sz, void *hnd)
+static void charmem(size_t cmd, const char *s_arg, uint32_t sz, void *hnd)
 {
 	const char *s = s_arg;
 	/* pointer to the snprint parameter list */
@@ -650,18 +602,14 @@ static int charmem(int cmd, const char *s_arg, uint32_t sz, void *hnd)
 		(void)memset(p, (uint8_t)*s, n);
 	}
 
-	return (int)n;
 }
 
-int vsnprintf(char *dst_arg, size_t sz_arg, const char *fmt, va_list args)
+size_t vsnprintf(char *dst_arg, size_t sz_arg, const char *fmt, va_list args)
 {
 	char *dst = dst_arg;
 	uint32_t sz = sz_arg;
-	int res;
+	size_t res = 0U;
 
-	if ((sz == 0U) || (dst == NULL)) {
-		return -1;
-	}
 
 	/* struct to store all necessary parameters */
 	struct print_param param;
@@ -677,10 +625,8 @@ int vsnprintf(char *dst_arg, size_t sz_arg, const char *fmt, va_list args)
 	param.emit = charmem;
 	param.data = &snparam;
 
-	/* execute the printf() */
-	if (do_print(fmt, &param, args) < 0) {
-		return -1;
-	}
+	/* execute the printf()*/
+	do_print(fmt, &param, args);
 
 	/* ensure the written string is NULL terminated */
 	if (snparam.wrtn < sz) {
@@ -691,18 +637,18 @@ int vsnprintf(char *dst_arg, size_t sz_arg, const char *fmt, va_list args)
 	}
 
 	/* return the number of chars which would be written */
-	res = (int)snparam.wrtn;
+	res = snparam.wrtn;
 
 	/* done */
 	return res;
 }
 
-int snprintf(char *dest, int sz, const char *fmt, ...)
+size_t snprintf(char *dest, size_t sz, const char *fmt, ...)
 {
 	/* variable argument list needed for do_print() */
 	va_list args;
 	/* the result of this function */
-	int res;
+	size_t res;
 
 	va_start(args, fmt);
 
