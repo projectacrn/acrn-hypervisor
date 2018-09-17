@@ -176,6 +176,23 @@ struct cpu_context {
 	struct ext_context ext_ctx;
 };
 
+/* Intel SDM 24.8.2, the address must be 16-byte aligned */
+struct msr_store_entry {
+	uint32_t msr_num;
+	uint32_t reserved;
+	uint64_t value;
+} __aligned(16);
+
+enum {
+	MSR_AREA_TSC_AUX = 0,
+	MSR_AREA_COUNT,
+};
+
+struct msr_store_area {
+	struct msr_store_entry guest[MSR_AREA_COUNT];
+	struct msr_store_entry host[MSR_AREA_COUNT];
+};
+
 struct acrn_vcpu_arch {
 	/* vmcs region for this vcpu, MUST be 4KB-aligned */
 	uint8_t vmcs[CPU_PAGE_SIZE];
@@ -199,9 +216,6 @@ struct acrn_vcpu_arch {
 	uint32_t irq_window_enabled;
 	uint32_t nrexits;
 
-	/* Auxiliary TSC value */
-	uint64_t msr_tsc_aux;
-
 	/* VCPU context state information */
 	uint32_t exit_reason;
 	uint32_t idt_vectoring_info;
@@ -217,6 +231,8 @@ struct acrn_vcpu_arch {
 	bool inject_event_pending;
 	struct event_injection_info inject_info;
 
+	/* List of MSRS to be stored and loaded on VM exits or VM entries */
+	struct msr_store_area msr_area;
 } __aligned(CPU_PAGE_SIZE);
 
 struct acrn_vm;
@@ -242,14 +258,6 @@ struct acrn_vcpu {
 
 	struct io_request req; /* used by io/ept emulation */
 
-	/* save guest msr tsc aux register.
-	 * Before VMENTRY, save guest MSR_TSC_AUX to this fields.
-	 * After VMEXIT, restore this fields to guest MSR_TSC_AUX.
-	 * This is only temperary workaround. Once MSR emulation
-	 * is enabled, we should remove this fields and related
-	 * code.
-	 */
-	uint64_t msr_tsc_aux_guest;
 	uint64_t guest_msrs[IDX_MAX_MSR];
 #ifdef CONFIG_MTRR_ENABLED
 	struct mtrr_state mtrr;

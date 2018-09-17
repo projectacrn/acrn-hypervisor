@@ -611,10 +611,6 @@ int prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 		return ret;
 	}
 
-	/* init_vmcs is delayed to vcpu vmcs launch first time */
-	/* initialize the vcpu tsc aux */
-	vcpu->msr_tsc_aux_guest = vcpu->vcpu_id;
-
 	set_pcpu_used(pcpu_id);
 
 	INIT_LIST_HEAD(&vcpu->run_list);

@@ -132,6 +132,14 @@ static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg, enum rw_mode mode)
 	}
 }
 
+static void init_msr_area(struct acrn_vcpu *vcpu)
+{
+	vcpu->arch.msr_area.guest[MSR_AREA_TSC_AUX].msr_num = MSR_IA32_TSC_AUX;
+	vcpu->arch.msr_area.guest[MSR_AREA_TSC_AUX].value = vcpu->vcpu_id;
+	vcpu->arch.msr_area.host[MSR_AREA_TSC_AUX].msr_num = MSR_IA32_TSC_AUX;
+	vcpu->arch.msr_area.host[MSR_AREA_TSC_AUX].value = vcpu->pcpu_id;
+}
+
 void init_msr_emulation(struct acrn_vcpu *vcpu)
 {
 	uint32_t i;
@@ -182,6 +190,9 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 	value64 = hva2hpa(vcpu->vm->arch_vm.msr_bitmap);
 	exec_vmwrite64(VMX_MSR_BITMAP_FULL, value64);
 	pr_dbg("VMX_MSR_BITMAP: 0x%016llx ", value64);
+
+	/* Initialize the MSR save/store area */
+	init_msr_area(vcpu);
 }
 
 int rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
@@ -257,11 +268,6 @@ int rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_PAT:
 	{
 		v = vmx_rdmsr_pat(vcpu);
-		break;
-	}
-	case MSR_IA32_TSC_AUX:
-	{
-		v = vcpu->arch.msr_tsc_aux;
 		break;
 	}
 	case MSR_IA32_APIC_BASE:
@@ -394,11 +400,6 @@ int wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_GS_BASE:
 	{
 		exec_vmwrite(VMX_GUEST_GS_BASE, v);
-		break;
-	}
-	case MSR_IA32_TSC_AUX:
-	{
-		vcpu->arch.msr_tsc_aux = v;
 		break;
 	}
 	case MSR_IA32_APIC_BASE:
