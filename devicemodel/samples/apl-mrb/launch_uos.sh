@@ -42,6 +42,10 @@ fi
 
 #for VT-d device setting
 modprobe pci_stub
+echo "8086 5aa8" > /sys/bus/pci/drivers/pci-stub/new_id
+echo "0000:00:15.0" > /sys/bus/pci/devices/0000:00:15.0/driver/unbind
+echo "0000:00:15.0" > /sys/bus/pci/drivers/pci-stub/bind
+
 echo "8086 5aaa" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:15.1" > /sys/bus/pci/devices/0000:00:15.1/driver/unbind
 echo "0000:00:15.1" > /sys/bus/pci/drivers/pci-stub/bind
@@ -115,7 +119,7 @@ acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:
   -s 8,wdt-i6300esb \
   -s 3,virtio-blk$boot_dev_flag,/data/$5/$5.img \
   -s 4,virtio-net,$tap $boot_image_option \
-  -s 7,xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \
+  -s 7,passthru,0/15/0 \
   -s 9,passthru,0/15/1 \
   -s 15,passthru,0/f/0 \
   -s 27,passthru,0/1b/0 \
@@ -174,6 +178,10 @@ fi
 
 #for VT-d device setting
 modprobe pci_stub
+echo "8086 5aa8" > /sys/bus/pci/drivers/pci-stub/new_id
+echo "0000:00:15.0" > /sys/bus/pci/devices/0000:00:15.0/driver/unbind
+echo "0000:00:15.0" > /sys/bus/pci/drivers/pci-stub/bind
+
 echo "8086 5aaa" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:15.1" > /sys/bus/pci/devices/0000:00:15.1/driver/unbind
 echo "0000:00:15.1" > /sys/bus/pci/drivers/pci-stub/bind
@@ -289,7 +297,7 @@ fi
  acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio $npk_virt\
    -s 9,virtio-net,$tap \
    -s 3,virtio-blk$boot_dev_flag,/data/$5/$5.img \
-   -s 7,xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \
+   -s 7,passthru,0/15/0 \
    -s 8,passthru,0/15/1 \
    -s 13,virtio-rpmb \
    -s 10,virtio-hyper_dmabuf \
