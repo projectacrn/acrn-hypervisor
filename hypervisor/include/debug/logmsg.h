@@ -54,7 +54,7 @@ void asm_assert(int32_t line, const char *file, const char *txt);
  *          number if an error occurred.
  */
 
-int printf(const char *fmt, ...);
+void printf(const char *fmt, ...);
 
 /** The well known vprintf() function.
  *
@@ -66,7 +66,7 @@ int printf(const char *fmt, ...);
  *          number if an error occurred.
  */
 
-int vprintf(const char *fmt, va_list args);
+void vprintf(const char *fmt, va_list args);
 
 #else /* HV_DEBUG */
 
@@ -85,14 +85,14 @@ static inline void print_logmsg_buffer(__unused uint16_t pcpu_id)
 
 #define ASSERT(x, ...)	do { } while (0)
 
-static inline int printf(__unused const char *fmt, ...)
+static inline void printf(__unused const char *fmt, ...)
 {
-	return 0;
+
 }
 
-static inline int vprintf(__unused const char *fmt, __unused va_list args)
+static inline void vprintf(__unused const char *fmt, __unused va_list args)
 {
-	return 0;
+
 }
 
 #endif /* HV_DEBUG */
