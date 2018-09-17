@@ -956,7 +956,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	exec_vmwrite(VMX_CR3_TARGET_3, 0UL);
 }
 
-static void init_entry_ctrl(__unused const struct acrn_vcpu *vcpu)
+static void init_entry_ctrl(const struct acrn_vcpu *vcpu)
 {
 	uint32_t value32;
 
@@ -985,7 +985,8 @@ static void init_entry_ctrl(__unused const struct acrn_vcpu *vcpu)
 	 * MSRs on load from memory on VM entry from mem address provided by
 	 * VM-entry MSR load address field
 	 */
-	exec_vmwrite32(VMX_ENTRY_MSR_LOAD_COUNT, 0U);
+	exec_vmwrite32(VMX_ENTRY_MSR_LOAD_COUNT, MSR_AREA_COUNT);
+	exec_vmwrite64(VMX_ENTRY_MSR_LOAD_ADDR_FULL, (uint64_t)vcpu->arch.msr_area.guest);
 
 	/* Set up VM entry interrupt information field pg 2909 24.8.3 */
 	exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, 0U);
@@ -997,7 +998,7 @@ static void init_entry_ctrl(__unused const struct acrn_vcpu *vcpu)
 	exec_vmwrite32(VMX_ENTRY_INSTR_LENGTH, 0U);
 }
 
-static void init_exit_ctrl(void)
+static void init_exit_ctrl(struct acrn_vcpu *vcpu)
 {
 	uint32_t value32;
 
@@ -1029,8 +1030,10 @@ static void init_exit_ctrl(void)
 	 * The 64 bit VM-exit MSR store and load address fields provide the
 	 * corresponding addresses
 	 */
-	exec_vmwrite32(VMX_EXIT_MSR_STORE_COUNT, 0U);
-	exec_vmwrite32(VMX_EXIT_MSR_LOAD_COUNT, 0U);
+	exec_vmwrite32(VMX_EXIT_MSR_STORE_COUNT, MSR_AREA_COUNT);
+	exec_vmwrite32(VMX_EXIT_MSR_LOAD_COUNT, MSR_AREA_COUNT);
+	exec_vmwrite64(VMX_EXIT_MSR_STORE_ADDR_FULL, (uint64_t)vcpu->arch.msr_area.guest);
+	exec_vmwrite64(VMX_EXIT_MSR_LOAD_ADDR_FULL, (uint64_t)vcpu->arch.msr_area.host);
 }
 
 /**
@@ -1061,7 +1064,7 @@ void init_vmcs(struct acrn_vcpu *vcpu)
 	init_exec_ctrl(vcpu);
 	init_guest_state(vcpu);
 	init_entry_ctrl(vcpu);
-	init_exit_ctrl();
+	init_exit_ctrl(vcpu);
 }
 
 #ifndef CONFIG_PARTITION_MODE

@@ -20,7 +20,6 @@ static void run_vcpu_pre_work(struct acrn_vcpu *vcpu)
 void vcpu_thread(struct acrn_vcpu *vcpu)
 {
 	uint32_t basic_exit_reason = 0U;
-	uint64_t tsc_aux_hyp_cpu = (uint64_t) vcpu->pcpu_id;
 	int32_t ret = 0;
 
 	/* If vcpu is not launched, we need to do init_vmcs first */
@@ -62,12 +61,6 @@ void vcpu_thread(struct acrn_vcpu *vcpu)
 
 		profiling_vmenter_handler(vcpu);
 
-		/* Restore guest TSC_AUX */
-		if (vcpu->launched) {
-			cpu_msr_write(MSR_IA32_TSC_AUX,
-					vcpu->msr_tsc_aux_guest);
-		}
-
 		ret = run_vcpu(vcpu);
 		if (ret != 0) {
 			pr_fatal("vcpu resume failed");
@@ -76,10 +69,6 @@ void vcpu_thread(struct acrn_vcpu *vcpu)
 		}
 
 		vcpu->arch.nrexits++;
-		/* Save guest TSC_AUX */
-		cpu_msr_read(MSR_IA32_TSC_AUX, &vcpu->msr_tsc_aux_guest);
-		/* Restore native TSC_AUX */
-		cpu_msr_write(MSR_IA32_TSC_AUX, tsc_aux_hyp_cpu);
 
 		CPU_IRQ_ENABLE();
 		/* Dispatch handler */
