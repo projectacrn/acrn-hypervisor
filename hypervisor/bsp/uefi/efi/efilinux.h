@@ -46,6 +46,7 @@
 #define EFILINUX_VERSION_MINOR 0
 
 #define MEM_ADDR_1MB (1 << 20)
+#define MEM_ADDR_4GB (0xFFFFFFFF)
 
 
 extern EFI_SYSTEM_TABLE *sys_table;
@@ -199,6 +200,22 @@ static inline EFI_STATUS emalloc_reserved_mem(EFI_PHYSICAL_ADDRESS *addr,
 {
 	*addr = max_addr;
 	return allocate_pages(AllocateMaxAddress, EfiReservedMemoryType,
+		EFI_SIZE_TO_PAGES(size), addr);
+}
+
+
+/*
+ * emalloc_fixed_addr - it is called to allocate memory hypervisor itself
+ * when CONFIG_RELOC config is NOT enable.And mark the allocated memory as
+ * EfiReserved memory type so that SOS won't touch it during boot.
+ * @addr: a pointer to the allocated address on success
+ * @size: size in bytes of the requested allocation
+ */
+static inline EFI_STATUS emalloc_fixed_addr(EFI_PHYSICAL_ADDRESS *addr,
+	UINTN size, EFI_PHYSICAL_ADDRESS fixed_addr)
+{
+	*addr = fixed_addr;
+	return allocate_pages(AllocateAddress, EfiReservedMemoryType,
 		EFI_SIZE_TO_PAGES(size), addr);
 }
 
