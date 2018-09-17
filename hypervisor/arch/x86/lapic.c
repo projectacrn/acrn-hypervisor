@@ -241,66 +241,68 @@ void init_lapic(uint16_t pcpu_id)
 
 void save_lapic(struct lapic_regs *regs)
 {
-	regs->id = read_lapic_reg32(LAPIC_ID_REGISTER);
-	regs->tpr = read_lapic_reg32(LAPIC_TASK_PRIORITY_REGISTER);
-	regs->apr = read_lapic_reg32(LAPIC_ARBITRATION_PRIORITY_REGISTER);
-	regs->ppr = read_lapic_reg32(LAPIC_PROCESSOR_PRIORITY_REGISTER);
-	regs->ldr = read_lapic_reg32(LAPIC_LOGICAL_DESTINATION_REGISTER);
-	regs->dfr = read_lapic_reg32(LAPIC_DESTINATION_FORMAT_REGISTER);
-	regs->tmr[0].val = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_0);
-	regs->tmr[1].val = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_1);
-	regs->tmr[2].val = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_2);
-	regs->tmr[3].val = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_3);
-	regs->tmr[4].val = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_4);
-	regs->tmr[5].val = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_5);
-	regs->tmr[6].val = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_6);
-	regs->tmr[7].val = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_7);
-	regs->svr = read_lapic_reg32(LAPIC_SPURIOUS_VECTOR_REGISTER);
-	regs->lvt[APIC_LVT_TIMER].val =
+	regs->id.v = read_lapic_reg32(LAPIC_ID_REGISTER);
+	regs->tpr.v = read_lapic_reg32(LAPIC_TASK_PRIORITY_REGISTER);
+	regs->apr.v = read_lapic_reg32(LAPIC_ARBITRATION_PRIORITY_REGISTER);
+	regs->ppr.v = read_lapic_reg32(LAPIC_PROCESSOR_PRIORITY_REGISTER);
+	regs->ldr.v = read_lapic_reg32(LAPIC_LOGICAL_DESTINATION_REGISTER);
+	regs->dfr.v = read_lapic_reg32(LAPIC_DESTINATION_FORMAT_REGISTER);
+	regs->tmr[0].v = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_0);
+	regs->tmr[1].v = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_1);
+	regs->tmr[2].v = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_2);
+	regs->tmr[3].v = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_3);
+	regs->tmr[4].v = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_4);
+	regs->tmr[5].v = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_5);
+	regs->tmr[6].v = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_6);
+	regs->tmr[7].v = read_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_7);
+	regs->svr.v = read_lapic_reg32(LAPIC_SPURIOUS_VECTOR_REGISTER);
+	regs->lvt[APIC_LVT_TIMER].v =
 		read_lapic_reg32(LAPIC_LVT_TIMER_REGISTER);
-	regs->lvt[APIC_LVT_LINT0].val =
+	regs->lvt[APIC_LVT_LINT0].v =
 		read_lapic_reg32(LAPIC_LVT_LINT0_REGISTER);
-	regs->lvt[APIC_LVT_LINT1].val =
+	regs->lvt[APIC_LVT_LINT1].v =
 		read_lapic_reg32(LAPIC_LVT_LINT1_REGISTER);
-	regs->lvt[APIC_LVT_ERROR].val =
+	regs->lvt[APIC_LVT_ERROR].v =
 		read_lapic_reg32(LAPIC_LVT_ERROR_REGISTER);
-	regs->icr_timer = read_lapic_reg32(LAPIC_INITIAL_COUNT_REGISTER);
-	regs->ccr_timer = read_lapic_reg32(LAPIC_CURRENT_COUNT_REGISTER);
-	regs->dcr_timer = read_lapic_reg32(LAPIC_DIVIDE_CONFIGURATION_REGISTER);
+	regs->icr_timer.v = read_lapic_reg32(LAPIC_INITIAL_COUNT_REGISTER);
+	regs->ccr_timer.v = read_lapic_reg32(LAPIC_CURRENT_COUNT_REGISTER);
+	regs->dcr_timer.v =
+		read_lapic_reg32(LAPIC_DIVIDE_CONFIGURATION_REGISTER);
 }
 
 static void restore_lapic(struct lapic_regs *regs)
 {
-	write_lapic_reg32(LAPIC_ID_REGISTER, regs->id);
-	write_lapic_reg32(LAPIC_TASK_PRIORITY_REGISTER, regs->tpr);
-	write_lapic_reg32(LAPIC_LOGICAL_DESTINATION_REGISTER, regs->ldr );
-	write_lapic_reg32(LAPIC_DESTINATION_FORMAT_REGISTER, regs->dfr );
-	write_lapic_reg32(LAPIC_SPURIOUS_VECTOR_REGISTER, regs->svr );
+	write_lapic_reg32(LAPIC_ID_REGISTER, regs->id.v);
+	write_lapic_reg32(LAPIC_TASK_PRIORITY_REGISTER, regs->tpr.v);
+	write_lapic_reg32(LAPIC_LOGICAL_DESTINATION_REGISTER, regs->ldr.v);
+	write_lapic_reg32(LAPIC_DESTINATION_FORMAT_REGISTER, regs->dfr.v);
+	write_lapic_reg32(LAPIC_SPURIOUS_VECTOR_REGISTER, regs->svr.v);
 	write_lapic_reg32(LAPIC_LVT_TIMER_REGISTER,
-			regs->lvt[APIC_LVT_TIMER].val);
+			regs->lvt[APIC_LVT_TIMER].v);
 
 	write_lapic_reg32(LAPIC_LVT_LINT0_REGISTER,
-			regs->lvt[APIC_LVT_LINT0].val);
+			regs->lvt[APIC_LVT_LINT0].v);
 	write_lapic_reg32(LAPIC_LVT_LINT1_REGISTER,
-			regs->lvt[APIC_LVT_LINT1].val);
+			regs->lvt[APIC_LVT_LINT1].v);
 
 	write_lapic_reg32(LAPIC_LVT_ERROR_REGISTER,
-			regs->lvt[APIC_LVT_ERROR].val);
-	write_lapic_reg32(LAPIC_INITIAL_COUNT_REGISTER, regs->icr_timer);
-	write_lapic_reg32(LAPIC_DIVIDE_CONFIGURATION_REGISTER, regs->dcr_timer);
+			regs->lvt[APIC_LVT_ERROR].v);
+	write_lapic_reg32(LAPIC_INITIAL_COUNT_REGISTER, regs->icr_timer.v);
+	write_lapic_reg32(LAPIC_DIVIDE_CONFIGURATION_REGISTER,
+			regs->dcr_timer.v);
 
 
-	write_lapic_reg32(LAPIC_ARBITRATION_PRIORITY_REGISTER, regs->apr);
-	write_lapic_reg32(LAPIC_PROCESSOR_PRIORITY_REGISTER, regs->ppr);
-	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_0, regs->tmr[0].val);
-	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_1, regs->tmr[1].val);
-	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_2, regs->tmr[2].val);
-	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_3, regs->tmr[3].val);
-	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_4, regs->tmr[4].val);
-	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_5, regs->tmr[5].val);
-	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_6, regs->tmr[6].val);
-	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_7, regs->tmr[7].val);
-	write_lapic_reg32(LAPIC_CURRENT_COUNT_REGISTER, regs->ccr_timer);
+	write_lapic_reg32(LAPIC_ARBITRATION_PRIORITY_REGISTER, regs->apr.v);
+	write_lapic_reg32(LAPIC_PROCESSOR_PRIORITY_REGISTER, regs->ppr.v);
+	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_0, regs->tmr[0].v);
+	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_1, regs->tmr[1].v);
+	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_2, regs->tmr[2].v);
+	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_3, regs->tmr[3].v);
+	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_4, regs->tmr[4].v);
+	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_5, regs->tmr[5].v);
+	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_6, regs->tmr[6].v);
+	write_lapic_reg32(LAPIC_TRIGGER_MODE_REGISTER_7, regs->tmr[7].v);
+	write_lapic_reg32(LAPIC_CURRENT_COUNT_REGISTER, regs->ccr_timer.v);
 }
 
 void suspend_lapic(void)

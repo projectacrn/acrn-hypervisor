@@ -118,55 +118,38 @@
 /******************************************************************************
  * LOCAL APIC structure
  */
-
-#ifndef LOCORE
-
-#define PAD3	uint32_t: 32; uint32_t: 32; uint32_t: 32
-#define PAD4	uint32_t: 32; uint32_t: 32; uint32_t: 32; uint32_t: 32
-
 struct lapic_reg {
-	uint32_t val;		PAD3;
+	uint32_t v;
+	uint32_t pad[3];
 };
 
 struct lapic_regs {
-	/* reserved */		PAD4;
-	/* reserved */		PAD4;
-	uint32_t id;		PAD3;
-	uint32_t version;	PAD3;
-	/* reserved */		PAD4;
-	/* reserved */		PAD4;
-	/* reserved */		PAD4;
-	/* reserved */		PAD4;
-	uint32_t tpr;		PAD3;
-	uint32_t apr;		PAD3;
-	uint32_t ppr;		PAD3;
-	uint32_t eoi;		PAD3;
-	/* reserved */		PAD4;
-	uint32_t ldr;		PAD3;
-	uint32_t dfr;		PAD3;
-	uint32_t svr;		PAD3;
+	struct lapic_reg	rsv0[2];
+	struct lapic_reg	id;
+	struct lapic_reg	version;
+	struct lapic_reg	rsv1[4];
+	struct lapic_reg	tpr;
+	struct lapic_reg	apr;
+	struct lapic_reg	ppr;
+	struct lapic_reg	eoi;
+	struct lapic_reg	rsv2;
+	struct lapic_reg	ldr;
+	struct lapic_reg	dfr;
+	struct lapic_reg	svr;
 	struct lapic_reg	isr[8];
 	struct lapic_reg	tmr[8];
 	struct lapic_reg	irr[8];
-	uint32_t esr;		PAD3;
-	/* reserved */		PAD4;
-	/* reserved */		PAD4;
-	/* reserved */		PAD4;
-	/* reserved */		PAD4;
-	/* reserved */		PAD4;
-	/* reserved */		PAD4;
-	uint32_t lvt_cmci;	PAD3;
-	uint32_t icr_lo;	PAD3;
-	uint32_t icr_hi;	PAD3;
+	struct lapic_reg	esr;
+	struct lapic_reg	rsv3[6];
+	struct lapic_reg	lvt_cmci;
+	struct lapic_reg	icr_lo;
+	struct lapic_reg	icr_hi;
 	struct lapic_reg	lvt[6];
-	uint32_t icr_timer;	PAD3;
-	uint32_t ccr_timer;	PAD3;
-	/* reserved */		PAD4;
-	/* reserved */		PAD4;
-	/* reserved */		PAD4;
-	/* reserved */		PAD4;
-	uint32_t dcr_timer;	PAD3;
-	/* reserved */		PAD4;
+	struct lapic_reg	icr_timer;
+	struct lapic_reg	ccr_timer;
+	struct lapic_reg	rsv4[4];
+	struct lapic_reg	dcr_timer;
+	struct lapic_reg	rsv5;
 } __aligned(CPU_PAGE_SIZE);
 
 enum LAPIC_REGISTERS {
@@ -249,8 +232,10 @@ enum LAPIC_REGISTERS {
  */
 
 struct ioapic {
-	uint32_t ioregsel;	PAD3;
-	uint32_t iowin;	PAD3;
+	uint32_t ioregsel;
+	uint32_t rsv0[3];
+	uint32_t iowin;
+	uint32_t rsv1[3];
 };
 
 /* IOAPIC Redirection Table (RTE) Entry structure */
@@ -261,12 +246,6 @@ union ioapic_rte {
 		uint32_t hi_32;
 	} u;
 };
-
-#undef PAD4
-#undef PAD3
-
-#endif  /* !LOCORE */
-
 
 /******************************************************************************
  * various code 'logical' values
