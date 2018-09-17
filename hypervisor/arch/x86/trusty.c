@@ -167,6 +167,7 @@ static void save_world_ctx(struct acrn_vcpu *vcpu, struct ext_context *ext_ctx)
 	(void)vcpu_get_rip(vcpu);
 
 	/* VMCS GUEST field */
+	ext_ctx->tsc_offset = exec_vmread(VMX_TSC_OFFSET_FULL);
 	ext_ctx->vmx_cr0 = exec_vmread(VMX_GUEST_CR0);
 	ext_ctx->vmx_cr4 = exec_vmread(VMX_GUEST_CR4);
 	ext_ctx->vmx_cr0_read_shadow = exec_vmread(VMX_CR0_READ_SHADOW);

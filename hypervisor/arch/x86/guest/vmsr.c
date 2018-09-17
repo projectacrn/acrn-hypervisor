@@ -17,12 +17,13 @@ enum rw_mode {
 static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
 	/*
 	 * MSRs that trusty may touch and need isolation between secure and normal world
-	 * This may include MSR_IA32_TSC_ADJUST, MSR_IA32_STAR, MSR_IA32_LSTAR, MSR_IA32_FMASK,
+	 * This may include MSR_IA32_STAR, MSR_IA32_LSTAR, MSR_IA32_FMASK,
 	 * MSR_IA32_KERNEL_GS_BASE, MSR_IA32_SYSENTER_ESP, MSR_IA32_SYSENTER_CS, MSR_IA32_SYSENTER_EIP
 	 *
 	 * Number of entries: NUM_WORLD_MSRS
 	 */
 	MSR_IA32_PAT,
+	MSR_IA32_TSC_ADJUST,
 
 	/*
 	 * MSRs don't need isolation between worlds
@@ -307,6 +308,9 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 		for (msr = MSR_IA32_L3_MASK_0; msr < MSR_IA32_BNDCFGS; msr++) {
 			enable_msr_interception(msr_bitmap, msr, READ_WRITE);
 		}
+
+		/* don't need to intercept rdmsr for these MSRs */
+		enable_msr_interception(msr_bitmap, MSR_IA32_TIME_STAMP_COUNTER, WRITE);
 	}
 
 	/* Setup MSR bitmap - Intel SDM Vol3 24.6.9 */
@@ -334,10 +338,9 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		err = vlapic_rdmsr(vcpu, msr, &v);
 		break;
 	}
-	case MSR_IA32_TIME_STAMP_COUNTER:
+	case MSR_IA32_TSC_ADJUST:
 	{
-		/* Add the TSC_offset to host TSC to get guest TSC */
-		v = rdtsc() + exec_vmread64(VMX_TSC_OFFSET_FULL);
+		v = vcpu_get_guest_msr(vcpu, MSR_IA32_TSC_ADJUST);
 		break;
 	}
 	case MSR_IA32_MTRR_CAP:
@@ -405,6 +408,49 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	return err;
 }
 
+/*
+ * Intel SDM 17.17.3: If an execution of WRMSR to the
+ * IA32_TIME_STAMP_COUNTER MSR adds (or subtracts) value X from the
+ * TSC, the logical processor also adds (or subtracts) value X from
+ * the IA32_TSC_ADJUST MSR.
+ */
+static void set_guest_tsc(struct acrn_vcpu *vcpu, uint64_t guest_tsc)
+{
+	uint64_t tsc_delta, tsc_offset_delta, tsc_adjust;
+
+	tsc_delta = guest_tsc - rdtsc();
+
+	/* the delta between new and existing TSC_OFFSET */
+	tsc_offset_delta = tsc_delta - exec_vmread64(VMX_TSC_OFFSET_FULL);
+
+	/* apply this delta to TSC_ADJUST */
+	tsc_adjust = vcpu_get_guest_msr(vcpu, MSR_IA32_TSC_ADJUST);
+	vcpu_set_guest_msr(vcpu, MSR_IA32_TSC_ADJUST, tsc_adjust + tsc_offset_delta);
+
+	/* write to VMCS because rdtsc and rdtscp are not intercepted */
+	exec_vmwrite64(VMX_TSC_OFFSET_FULL, tsc_delta);
+}
+
+/*
+ * Intel SDM 17.17.3: "If an execution of WRMSR to the IA32_TSC_ADJUST
+ * MSR adds (or subtracts) value X from that MSR, the logical
+ * processor also adds (or subtracts) value X from the TSC."
+ */
+static void set_guest_tsc_adjust(struct acrn_vcpu *vcpu, uint64_t tsc_adjust)
+{
+	uint64_t tsc_offset, tsc_adjust_delta;
+
+	/* delta of the new and existing IA32_TSC_ADJUST */
+	tsc_adjust_delta = tsc_adjust - vcpu_get_guest_msr(vcpu, MSR_IA32_TSC_ADJUST);
+
+	/* apply this delta to existing TSC_OFFSET */
+	tsc_offset = exec_vmread64(VMX_TSC_OFFSET_FULL);
+	exec_vmwrite64(VMX_TSC_OFFSET_FULL, tsc_offset + tsc_adjust_delta);
+
+	/* IA32_TSC_ADJUST is supposed to carry the value it's written to */
+	vcpu_set_guest_msr(vcpu, MSR_IA32_TSC_ADJUST, tsc_adjust);
+}
+
 int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int32_t err = 0;
@@ -425,10 +471,14 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 		err = vlapic_wrmsr(vcpu, msr, v);
 		break;
 	}
+	case MSR_IA32_TSC_ADJUST:
+	{
+		set_guest_tsc_adjust(vcpu, v);
+		break;
+	}
 	case MSR_IA32_TIME_STAMP_COUNTER:
 	{
-		/*Caculate TSC offset from changed TSC MSR value*/
-		exec_vmwrite64(VMX_TSC_OFFSET_FULL, v - rdtsc());
+		set_guest_tsc(vcpu, v);
 		break;
 	}
 	case MSR_IA32_MTRR_DEF_TYPE:
