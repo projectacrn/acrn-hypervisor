@@ -50,7 +50,7 @@ void smp_call_function(uint64_t mask, smp_call_func_t func, void *data)
 		}
 		pcpu_id = ffs64(mask);
 	}
-	send_dest_ipi(smp_call_mask, VECTOR_NOTIFY_VCPU,
+	send_dest_ipi((uint32_t)smp_call_mask, VECTOR_NOTIFY_VCPU,
 				INTR_LAPIC_ICR_LOGICAL);
 	/* wait for current smp call complete */
 	wait_sync_change(&smp_call_mask, 0UL);

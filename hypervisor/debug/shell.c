@@ -224,11 +224,11 @@ static void shell_puts(const char *string_ptr)
 				SHELL_STRING_MAX_LEN));
 }
 
-static void shell_handle_special_char(uint8_t ch)
+static void shell_handle_special_char(char ch)
 {
 	switch (ch) {
 	/* Escape character */
-	case 0x1bU:
+	case 0x1b:
 		/* Consume the next 2 characters */
 		(void) shell_getc();
 		(void) shell_getc();

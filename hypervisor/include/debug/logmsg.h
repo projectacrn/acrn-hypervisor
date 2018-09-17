@@ -24,7 +24,7 @@
 /* Size of buffer used to store a message being logged,
  * should align to LOG_ENTRY_SIZE.
  */
-#define LOG_MESSAGE_MAX_SIZE	(4 * LOG_ENTRY_SIZE)
+#define LOG_MESSAGE_MAX_SIZE	(4U * LOG_ENTRY_SIZE)
 
 #if defined(HV_DEBUG)
 

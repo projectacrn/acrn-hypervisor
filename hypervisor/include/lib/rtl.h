@@ -26,7 +26,7 @@ int strcmp(const char *s1_arg, const char *s2_arg);
 int strncmp(const char *s1_arg, const char *s2_arg, size_t n_arg);
 char *strcpy_s(char *d_arg, size_t dmax, const char *s_arg);
 char *strncpy_s(char *d_arg, size_t dmax, const char *s_arg, size_t slen_arg);
-char *strchr(const char *s_arg, int ch);
+char *strchr(char *s_arg, char ch);
 size_t strnlen_s(const char *str_arg, size_t maxlen_arg);
 void *memset(void *base, uint8_t v, size_t n);
 void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen_arg);

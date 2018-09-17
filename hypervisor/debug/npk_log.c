@@ -84,7 +84,7 @@ void npk_log_write(const char *buf, size_t buf_len)
 	const char *p = buf;
 	int sz;
 	uint32_t ref;
-	size_t len;
+	uint16_t len;
 
 	if (!npk_log_enabled || !channel)
 		return;
@@ -93,7 +93,7 @@ void npk_log_write(const char *buf, size_t buf_len)
 	ref = (atomic_inc_return((int32_t *)&per_cpu(npk_log_ref, cpu_id)) - 1)
 		& HV_NPK_LOG_REF_MASK;
 	channel += (cpu_id << HV_NPK_LOG_REF_SHIFT) + ref;
-	len = min(buf_len, HV_NPK_LOG_MAX);
+	len = (uint16_t)(min(buf_len, HV_NPK_LOG_MAX));
 	mmio_write32(HV_NPK_LOG_HDR, &(channel->DnTS));
 	mmio_write16(len, &(channel->Dn));
 

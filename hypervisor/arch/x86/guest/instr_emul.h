@@ -154,7 +154,6 @@ struct seg_desc {
 	uint32_t	access;
 };
 
-
 /*
  * Protections are chosen from these bits, or-ed together
  */
