@@ -68,11 +68,10 @@ static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
 
 EFI_STATUS construct_mbi(EFI_PHYSICAL_ADDRESS hv_hpa)
 {
-	UINTN map_size, _map_size, map_key;
+	UINTN map_size, map_key;
 	UINT32 desc_version;
 	UINTN desc_size;
 	EFI_MEMORY_DESCRIPTOR *map_buf;
-	EFI_PHYSICAL_ADDRESS addr;
 	EFI_STATUS err = EFI_SUCCESS;
 	struct multiboot_info *mbi;
 	struct multiboot_mmap *mmap;
@@ -92,11 +91,9 @@ EFI_STATUS construct_mbi(EFI_PHYSICAL_ADDRESS hv_hpa)
 		goto out;
 
 again:
-	_map_size = map_size;
-	err = emalloc(map_size, 1, &addr);
+	err = allocate_pool(EfiLoaderData, map_size, (void **) &map_buf);
 	if (err != EFI_SUCCESS)
 		goto out;
-	map_buf = (EFI_MEMORY_DESCRIPTOR *)(UINTN)addr;
 
 	/*
 	 * Remember! We've already allocated map_buf with emalloc (and
@@ -115,7 +112,7 @@ again:
 			 * larger. 'map_size' has been updated by the
 			 * call to memory_map().
 			 */
-			efree((UINTN)map_buf, _map_size);
+			free_pool(map_buf);
 			goto again;
 		}
 		goto out;
