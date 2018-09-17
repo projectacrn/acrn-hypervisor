@@ -32,6 +32,7 @@ bool is_hypercall_from_ring0(void);
  * @param vm Pointer to VM data structure
  * @param lapicid lapic id of the vcpu which wants to offline
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_sos_offline_cpu(struct vm *vm, uint64_t lapicid);
@@ -45,6 +46,7 @@ int32_t hcall_sos_offline_cpu(struct vm *vm, uint64_t lapicid);
  * @param param guest physical memory address. The api version returned
  *              will be copied to this gpa
  *
+ * @pre Pointer vm shall point to VM0 
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_get_api_version(struct vm *vm, uint64_t param);
@@ -60,6 +62,7 @@ int32_t hcall_get_api_version(struct vm *vm, uint64_t param);
  * @param param guest physical memory address. This gpa points to
  *              struct acrn_create_vm
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_create_vm(struct vm *vm, uint64_t param);
@@ -128,6 +131,7 @@ int32_t hcall_pause_vm(uint16_t vmid);
  * @param param guest physical address. This gpa points to
  *              struct acrn_create_vcpu
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_create_vcpu(struct vm *vm, uint16_t vmid, uint64_t param);
@@ -143,6 +147,7 @@ int32_t hcall_create_vcpu(struct vm *vm, uint16_t vmid, uint64_t param);
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to struct acrn_irqline
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_assert_irqline(struct vm *vm, uint16_t vmid, uint64_t param);
@@ -158,6 +163,7 @@ int32_t hcall_assert_irqline(struct vm *vm, uint16_t vmid, uint64_t param);
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to struct acrn_irqline
  *
+ * @pre @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_deassert_irqline(struct vm *vm, uint16_t vmid, uint64_t param);
@@ -173,6 +179,7 @@ int32_t hcall_deassert_irqline(struct vm *vm, uint16_t vmid, uint64_t param);
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to struct acrn_irqline
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_pulse_irqline(struct vm *vm, uint16_t vmid, uint64_t param);
@@ -187,6 +194,7 @@ int32_t hcall_pulse_irqline(struct vm *vm, uint16_t vmid, uint64_t param);
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to struct acrn_msi_entry
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_inject_msi(struct vm *vm, uint16_t vmid, uint64_t param);
@@ -202,6 +210,7 @@ int32_t hcall_inject_msi(struct vm *vm, uint16_t vmid, uint64_t param);
  * @param param guest physical address. This gpa points to
  *              struct acrn_set_ioreq_buffer
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_ioreq_buffer(struct vm *vm, uint16_t vmid, uint64_t param);
@@ -227,6 +236,7 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id);
  * @param param guest physical address. This gpa points to
  *              struct vm_set_memmap
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_vm_memory_region(struct vm *vm, uint16_t vmid, uint64_t param);
@@ -238,6 +248,7 @@ int32_t hcall_set_vm_memory_region(struct vm *vm, uint16_t vmid, uint64_t param)
  * @param param guest physical address. This gpa points to
  *              struct set_memmaps
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param);
@@ -250,6 +261,7 @@ int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param);
  * @param wp_gpa guest physical address. This gpa points to
  *              struct wp_data
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_write_protect_page(struct vm *vm, uint16_t vmid, uint64_t wp_gpa);
@@ -265,6 +277,7 @@ int32_t hcall_write_protect_page(struct vm *vm, uint16_t vmid, uint64_t wp_gpa);
  * @param param guest physical address. This gpa points to
  *              struct acrn_vm_pci_msix_remap
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_remap_pci_msix(struct vm *vm, uint16_t vmid, uint64_t param);
@@ -279,6 +292,7 @@ int32_t hcall_remap_pci_msix(struct vm *vm, uint16_t vmid, uint64_t param);
  * @param vmid ID of the VM
  * @param param guest physical address. This gpa points to struct vm_gpa2hpa
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_gpa_to_hpa(struct vm *vm, uint16_t vmid, uint64_t param);
@@ -291,6 +305,7 @@ int32_t hcall_gpa_to_hpa(struct vm *vm, uint16_t vmid, uint64_t param);
  * @param param guest physical address. This gpa points to
  *              physical BDF of the assigning ptdev
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_assign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param);
@@ -303,6 +318,7 @@ int32_t hcall_assign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param);
  * @param param guest physical address. This gpa points to
  *              physical BDF of the deassigning ptdev
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_deassign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param);
@@ -315,6 +331,7 @@ int32_t hcall_deassign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param);
  * @param param guest physical address. This gpa points to data structure of
  *              hc_ptdev_irq including intr remapping info
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param);
@@ -327,6 +344,7 @@ int32_t hcall_set_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param);
  * @param param guest physical address. This gpa points to data structure of
  *              hc_ptdev_irq including intr remapping info
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_reset_ptdev_intr_info(struct vm *vm, uint16_t vmid,
@@ -339,6 +357,7 @@ int32_t hcall_reset_ptdev_intr_info(struct vm *vm, uint16_t vmid,
  * @param param guest physical address. This gpa points to
  *              struct sbuf_setup_param
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_setup_sbuf(struct vm *vm, uint64_t param);
@@ -350,6 +369,7 @@ int32_t hcall_setup_sbuf(struct vm *vm, uint64_t param);
   * @param param guest physical address. This gpa points to
   *              struct hv_npk_log_param
   *
+  * @pre Pointer vm shall point to VM0
   * @return 0 on success, non-zero on error.
   */
 int32_t hcall_setup_hv_npk_log(struct vm *vm, uint64_t param);
@@ -361,6 +381,7 @@ int32_t hcall_setup_hv_npk_log(struct vm *vm, uint64_t param);
  * @param cmd cmd to show get which VCPU power state data
  * @param param VCPU power state data
  *
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 

@@ -25,13 +25,13 @@ bool is_hypercall_from_ring0(void)
 	return false;
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_sos_offline_cpu(struct vm *vm, uint64_t lapicid)
 {
 	struct vcpu *vcpu;
 	int i;
-
-	if (!is_vm0(vm))
-		return -1;
 
 	pr_info("sos offline cpu with lapicid %lld", lapicid);
 
@@ -49,13 +49,12 @@ int32_t hcall_sos_offline_cpu(struct vm *vm, uint64_t lapicid)
 	return 0;
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_get_api_version(struct vm *vm, uint64_t param)
 {
 	struct hc_api_version version;
-
-	if (!is_vm0(vm)) {
-		return -1;
-	}
 
 	version.major_version = HV_API_MAJOR_VERSION;
 	version.minor_version = HV_API_MINOR_VERSION;
@@ -69,7 +68,7 @@ int32_t hcall_get_api_version(struct vm *vm, uint64_t param)
 }
 
 /**
- * @pre vm != NULL
+ *@pre Pointer vm shall point to VM0
  */
 static void
 handle_vpic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
@@ -95,7 +94,7 @@ handle_vpic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
 }
 
 /**
- * @pre vm != NULL
+ *@pre Pointer vm shall point to VM0
  */
 static void
 handle_vioapic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
@@ -120,6 +119,9 @@ handle_vioapic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
 	}
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 static int32_t
 handle_virt_irqline(struct vm *vm, uint16_t target_vmid,
 		struct acrn_irqline *param, enum irq_mode mode)
@@ -128,7 +130,7 @@ handle_virt_irqline(struct vm *vm, uint16_t target_vmid,
 	uint32_t intr_type;
 	struct vm *target_vm = get_vm_from_vmid(target_vmid);
 
-	if ((vm == NULL) || (param == NULL) || target_vm == NULL) {
+	if ((param == NULL) || target_vm == NULL) {
 		return -EINVAL;
 	}
 
@@ -172,6 +174,9 @@ handle_virt_irqline(struct vm *vm, uint16_t target_vmid,
 	return ret;
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_create_vm(struct vm *vm, uint64_t param)
 {
 	int32_t ret = 0;
@@ -251,6 +256,9 @@ int32_t hcall_pause_vm(uint16_t vmid)
 	return 0;
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_create_vcpu(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret;
@@ -289,6 +297,9 @@ int32_t hcall_reset_vm(uint16_t vmid)
 	return 0;
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_assert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
@@ -303,6 +314,9 @@ int32_t hcall_assert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 	return ret;
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_deassert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
@@ -317,6 +331,9 @@ int32_t hcall_deassert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 	return ret;
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_pulse_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
@@ -331,6 +348,9 @@ int32_t hcall_pulse_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 	return ret;
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_inject_msi(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
@@ -351,6 +371,9 @@ int32_t hcall_inject_msi(struct vm *vm, uint16_t vmid, uint64_t param)
 	return ret;
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_set_ioreq_buffer(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
@@ -417,6 +440,9 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 	return 0;
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 static int32_t local_set_vm_memory_region(struct vm *vm,
 	struct vm *target_vm, struct vm_memory_region *region)
 {
@@ -480,12 +506,15 @@ static int32_t local_set_vm_memory_region(struct vm *vm,
 
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_set_vm_memory_region(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	struct vm_memory_region region;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
-	if ((vm == NULL) || (target_vm == NULL)) {
+	if (target_vm == NULL) {
 		return -EINVAL;
 	}
 
@@ -496,10 +525,6 @@ int32_t hcall_set_vm_memory_region(struct vm *vm, uint16_t vmid, uint64_t param)
 		return -EFAULT;
 	}
 
-	if (!is_vm0(vm)) {
-		pr_err("%s: Not coming from service vm", __func__);
-		return -EPERM;
-	}
 
 	if (is_vm0(target_vm)) {
 		pr_err("%s: Targeting to service vm", __func__);
@@ -509,6 +534,9 @@ int32_t hcall_set_vm_memory_region(struct vm *vm, uint16_t vmid, uint64_t param)
 	return local_set_vm_memory_region(vm, target_vm, &region);
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param)
 {
 	struct set_regions set_regions;
@@ -516,10 +544,6 @@ int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param)
 	struct vm *target_vm;
 	uint32_t idx;
 
-	if (!is_vm0(vm)) {
-		pr_err("%s: Not coming from service vm", __func__);
-		return -EPERM;
-	}
 
 	(void)memset((void *)&set_regions, 0U, sizeof(set_regions));
 
@@ -550,6 +574,9 @@ int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param)
 	return 0;
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 static int32_t write_protect_page(struct vm *vm, struct wp_data *wp)
 {
 	uint64_t hpa, base_paddr;
@@ -575,18 +602,16 @@ static int32_t write_protect_page(struct vm *vm, struct wp_data *wp)
 		wp->gpa, CPU_PAGE_SIZE, prot_set, prot_clr);
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_write_protect_page(struct vm *vm, uint16_t vmid, uint64_t wp_gpa)
 {
 	struct wp_data wp;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
-	if ((vm == NULL) || (target_vm == NULL)) {
+	if (target_vm == NULL) {
 		return -EINVAL;
-	}
-
-	if (!is_vm0(vm)) {
-		pr_err("%s: Not coming from service vm", __func__);
-		return -EPERM;
 	}
 
 	if (is_vm0(target_vm)) {
@@ -604,6 +629,9 @@ int32_t hcall_write_protect_page(struct vm *vm, uint16_t vmid, uint64_t wp_gpa)
 	return write_protect_page(target_vm, &wp);
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_remap_pci_msix(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
@@ -622,28 +650,27 @@ int32_t hcall_remap_pci_msix(struct vm *vm, uint16_t vmid, uint64_t param)
 		return -1;
 	}
 
-	if (!is_vm0(vm)) {
-		ret = -1;
-	} else {
-		info.is_msix = remap.msix;
-		info.vmsi_ctl = remap.msi_ctl;
-		info.vmsi_addr = remap.msi_addr;
-		info.vmsi_data = remap.msi_data;
+	info.is_msix = remap.msix;
+	info.vmsi_ctl = remap.msi_ctl;
+	info.vmsi_addr = remap.msi_addr;
+	info.vmsi_data = remap.msi_data;
 
-		ret = ptdev_msix_remap(target_vm,
-			remap.virt_bdf, remap.msix_entry_index, &info);
-		remap.msi_data = info.pmsi_data;
-		remap.msi_addr = info.pmsi_addr;
+	ret = ptdev_msix_remap(target_vm,
+		remap.virt_bdf, remap.msix_entry_index, &info);
+	remap.msi_data = info.pmsi_data;
+	remap.msi_addr = info.pmsi_addr;
 
-		if (copy_to_gpa(vm, &remap, param, sizeof(remap)) != 0) {
-			pr_err("%s: Unable copy param to vm\n", __func__);
-			return -1;
-		}
+	if (copy_to_gpa(vm, &remap, param, sizeof(remap)) != 0) {
+		pr_err("%s: Unable copy param to vm\n", __func__);
+		return -1;
 	}
 
 	return ret;
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_gpa_to_hpa(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
@@ -669,6 +696,9 @@ int32_t hcall_gpa_to_hpa(struct vm *vm, uint16_t vmid, uint64_t param)
 	return ret;
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_assign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret;
@@ -707,6 +737,9 @@ int32_t hcall_assign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param)
 	return ret;
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_deassign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
@@ -727,6 +760,9 @@ int32_t hcall_deassign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param)
 	return ret;
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_set_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
@@ -761,6 +797,9 @@ int32_t hcall_set_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param)
 	return ret;
 }
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t
 hcall_reset_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param)
 {
@@ -796,6 +835,9 @@ hcall_reset_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param)
 }
 
 #ifdef HV_DEBUG
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_setup_sbuf(struct vm *vm, uint64_t param)
 {
 	struct sbuf_setup_param ssp;
@@ -824,6 +866,9 @@ int32_t hcall_setup_sbuf(__unused struct vm *vm, __unused uint64_t param)
 #endif
 
 #ifdef HV_DEBUG
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_setup_hv_npk_log(struct vm *vm, uint64_t param)
 {
 	struct hv_npk_log_param npk_param;
@@ -851,6 +896,9 @@ int32_t hcall_setup_hv_npk_log(__unused struct vm *vm, __unused uint64_t param)
 }
 #endif
 
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param)
 {
 	uint16_t target_vm_id;
