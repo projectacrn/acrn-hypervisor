@@ -368,11 +368,6 @@ static inline int copy_gpa(const struct vm *vm, void *h_ptr_arg, uint64_t gpa_ar
 	uint64_t gpa = gpa_arg;
 	uint32_t size = size_arg;
 
-	if (vm == NULL) {
-		pr_err("guest phy addr copy need vm param");
-		return -EINVAL;
-	}
-
 	while (size > 0U) {
 		len = local_copy_gpa(vm, h_ptr, gpa, size, 0U, cp_from_vm);
 		if (len == 0U) {
@@ -431,17 +426,24 @@ static inline int copy_gva(struct vcpu *vcpu, void *h_ptr_arg, uint64_t gva_arg,
 	return 0;
 }
 
-/* Caller(Guest) should make sure gpa is continuous.
+/* @pre Caller(Guest) should make sure gpa is continuous.
  * - gpa from hypercall input which from kernel stack is gpa continuous, not
  *   support kernel stack from vmap
  * - some other gpa from hypercall parameters, VHM should make sure it's
  *   continuous
+ * @pre Pointer vm is non-NULL
  */
 int copy_from_gpa(const struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
 {
 	return copy_gpa(vm, h_ptr, gpa, size, 1);
 }
-
+/* @pre Caller(Guest) should make sure gpa is continuous.
+ * - gpa from hypercall input which from kernel stack is gpa continuous, not
+ *   support kernel stack from vmap
+ * - some other gpa from hypercall parameters, VHM should make sure it's
+ *   continuous
+ * @pre Pointer vm is non-NULL
+ */
 int copy_to_gpa(const struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
 {
 	return copy_gpa(vm, h_ptr, gpa, size, 0);
