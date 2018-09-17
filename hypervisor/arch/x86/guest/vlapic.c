@@ -60,7 +60,7 @@ static inline void vlapic_dump_irr(struct acrn_vlapic *vlapic, char *msg)
 
 	for (i = 0U; i < 8U; i++)
 		dev_dbg(ACRN_DBG_LAPIC, "%s irr%u 0x%08x",
-				msg, i, irrptr[i].val);
+				msg, i, irrptr[i].v);
 }
 
 static inline void vlapic_dump_isr(struct acrn_vlapic *vlapic, char *msg)
@@ -70,7 +70,7 @@ static inline void vlapic_dump_isr(struct acrn_vlapic *vlapic, char *msg)
 
 	for (i = 0U; i < 8U; i++) {
 		dev_dbg(ACRN_DBG_LAPIC, "%s isr%u 0x%08x",
-				msg, i, isrptr[0].val);
+				msg, i, isrptr[0].v);
 	}
 }
 #else
@@ -159,14 +159,14 @@ vm_active_cpus(struct vm *vm)
 uint32_t
 vlapic_get_id(struct acrn_vlapic *vlapic)
 {
-	uint32_t id = vlapic->apic_page.id;
+	uint32_t id = vlapic->apic_page.id.v;
 	return id;
 }
 
 uint8_t
 vlapic_get_apicid(struct acrn_vlapic *vlapic)
 {
-	uint32_t apicid = (vlapic->apic_page.id) >> APIC_ID_SHIFT;
+	uint32_t apicid = (vlapic->apic_page.id.v) >> APIC_ID_SHIFT;
 	return (uint8_t)apicid;
 }
 
@@ -206,12 +206,13 @@ vlapic_dfr_write_handler(struct acrn_vlapic *vlapic)
 	struct lapic_regs *lapic;
 
 	lapic = &(vlapic->apic_page);
-	lapic->dfr &= APIC_DFR_MODEL_MASK;
-	lapic->dfr |= APIC_DFR_RESERVED;
+	lapic->dfr.v &= APIC_DFR_MODEL_MASK;
+	lapic->dfr.v |= APIC_DFR_RESERVED;
 
-	if ((lapic->dfr & APIC_DFR_MODEL_MASK) == APIC_DFR_MODEL_FLAT) {
+	if ((lapic->dfr.v & APIC_DFR_MODEL_MASK) == APIC_DFR_MODEL_FLAT) {
 		dev_dbg(ACRN_DBG_LAPIC, "vlapic DFR in Flat Model");
-	} else if ((lapic->dfr & APIC_DFR_MODEL_MASK) == APIC_DFR_MODEL_CLUSTER) {
+	} else if ((lapic->dfr.v & APIC_DFR_MODEL_MASK)
+			== APIC_DFR_MODEL_CLUSTER) {
 		dev_dbg(ACRN_DBG_LAPIC, "vlapic DFR in Cluster Model");
 	} else {
 		dev_dbg(ACRN_DBG_LAPIC, "DFR in Unknown Model %#x", lapic->dfr);
@@ -224,7 +225,7 @@ vlapic_ldr_write_handler(struct acrn_vlapic *vlapic)
 	struct lapic_regs *lapic;
 
 	lapic = &(vlapic->apic_page);
-	lapic->ldr &= ~APIC_LDR_RESERVED;
+	lapic->ldr.v &= ~APIC_LDR_RESERVED;
 	dev_dbg(ACRN_DBG_LAPIC, "vlapic LDR set to %#x", lapic->ldr);
 }
 
@@ -247,28 +248,28 @@ vlapic_timer_divisor_shift(uint32_t dcr)
 static inline bool
 vlapic_lvtt_oneshot(struct acrn_vlapic *vlapic)
 {
-	return (((vlapic->apic_page.lvt[APIC_LVT_TIMER].val) & APIC_LVTT_TM)
+	return (((vlapic->apic_page.lvt[APIC_LVT_TIMER].v) & APIC_LVTT_TM)
 				== APIC_LVTT_TM_ONE_SHOT);
 }
 
 static inline bool
 vlapic_lvtt_period(struct acrn_vlapic *vlapic)
 {
-	return (((vlapic->apic_page.lvt[APIC_LVT_TIMER].val) & APIC_LVTT_TM)
+	return (((vlapic->apic_page.lvt[APIC_LVT_TIMER].v) & APIC_LVTT_TM)
 				==  APIC_LVTT_TM_PERIODIC);
 }
 
 static inline bool
 vlapic_lvtt_tsc_deadline(struct acrn_vlapic *vlapic)
 {
-	return (((vlapic->apic_page.lvt[APIC_LVT_TIMER].val) & APIC_LVTT_TM)
+	return (((vlapic->apic_page.lvt[APIC_LVT_TIMER].v) & APIC_LVTT_TM)
 				==  APIC_LVTT_TM_TSCDLT);
 }
 
 static inline bool
 vlapic_lvtt_masked(struct acrn_vlapic *vlapic)
 {
-	return ((vlapic->apic_page.lvt[APIC_LVT_TIMER].val) & APIC_LVTT_M)
+	return ((vlapic->apic_page.lvt[APIC_LVT_TIMER].v) & APIC_LVTT_M)
 				!= 0U;
 }
 
@@ -381,7 +382,7 @@ static void vlapic_dcr_write_handler(struct acrn_vlapic *vlapic)
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 
 	vtimer = &vlapic->vtimer;
-	divisor_shift = vlapic_timer_divisor_shift(lapic->dcr_timer);
+	divisor_shift = vlapic_timer_divisor_shift(lapic->dcr_timer.v);
 
 	vtimer->divisor_shift = divisor_shift;
 }
@@ -397,7 +398,7 @@ static void vlapic_icrtmr_write_handler(struct acrn_vlapic *vlapic)
 
 	lapic = &(vlapic->apic_page);
 	vtimer = &vlapic->vtimer;
-	vtimer->tmicr = lapic->icr_timer;
+	vtimer->tmicr = lapic->icr_timer.v;
 
 	del_timer(&vtimer->timer);
 	if (set_expiration(vlapic)) {
@@ -455,7 +456,7 @@ vlapic_esr_write_handler(struct acrn_vlapic *vlapic)
 	struct lapic_regs *lapic;
 
 	lapic = &(vlapic->apic_page);
-	lapic->esr = vlapic->esr_pending;
+	lapic->esr.v = vlapic->esr_pending;
 	vlapic->esr_pending = 0U;
 }
 
@@ -474,7 +475,7 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 		"invalid vector %u", vector);
 
 	lapic = &(vlapic->apic_page);
-	if ((lapic->svr & APIC_SVR_ENABLE) == 0U) {
+	if ((lapic->svr.v & APIC_SVR_ENABLE) == 0U) {
 		dev_dbg(ACRN_DBG_LAPIC,
 			"vlapic is software disabled, ignoring interrupt %u",
 			vector);
@@ -498,7 +499,7 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 	irrptr = &lapic->irr[0];
 	/* If the interrupt is set, don't try to do it again */
 	if (bitmap32_test_and_set_lock((uint16_t)(vector & 0x1fU),
-							&irrptr[idx].val)) {
+							&irrptr[idx].v)) {
 		return 0;
 	}
 
@@ -507,10 +508,10 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 	 * the vlapic TMR registers.
 	 */
 	tmrptr = &lapic->tmr[0];
-	if ((tmrptr[idx].val & mask) != (level ? mask : 0U)) {
+	if ((tmrptr[idx].v & mask) != (level ? mask : 0U)) {
 		dev_dbg(ACRN_DBG_LAPIC,
 		"vlapic TMR[%u] is 0x%08x but interrupt is %s-triggered",
-		idx, tmrptr[idx].val, level ? "level" : "edge");
+		idx, tmrptr[idx].v, level ? "level" : "edge");
 	}
 
 	vlapic_dump_irr(vlapic, "vlapic_set_intr_ready");
@@ -568,7 +569,7 @@ vlapic_get_lvtptr(struct acrn_vlapic *vlapic, uint32_t offset)
 
 	switch (offset) {
 	case APIC_OFFSET_CMCI_LVT:
-		return &lapic->lvt_cmci;
+		return &lapic->lvt_cmci.v;
 	case APIC_OFFSET_TIMER_LVT:
 	case APIC_OFFSET_THERM_LVT:
 	case APIC_OFFSET_PERF_LVT:
@@ -576,7 +577,7 @@ vlapic_get_lvtptr(struct acrn_vlapic *vlapic, uint32_t offset)
 	case APIC_OFFSET_LINT1_LVT:
 	case APIC_OFFSET_ERROR_LVT:
 		i = lvt_off_to_idx(offset);
-		return &(lapic->lvt[i].val);
+		return &(lapic->lvt[i].v);
 	default:
 		panic("vlapic_get_lvt: invalid LVT\n");
 	}
@@ -603,7 +604,7 @@ vlapic_lvt_write_handler(struct acrn_vlapic *vlapic, uint32_t offset)
 	val = *lvtptr;
 	idx = lvt_off_to_idx(offset);
 
-	if ((lapic->svr & APIC_SVR_ENABLE) == 0U) {
+	if ((lapic->svr.v & APIC_SVR_ENABLE) == 0U) {
 		val |= APIC_LVT_M;
 	}
 	mask = APIC_LVT_M | APIC_LVT_DS | APIC_LVT_VECTOR;
@@ -664,25 +665,25 @@ vlapic_mask_lvts(struct acrn_vlapic *vlapic)
 {
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 
-	lapic->lvt_cmci |= APIC_LVT_M;
+	lapic->lvt_cmci.v |= APIC_LVT_M;
 	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_CMCI_LVT);
 
-	lapic->lvt[APIC_LVT_TIMER].val |= APIC_LVT_M;
+	lapic->lvt[APIC_LVT_TIMER].v |= APIC_LVT_M;
 	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_TIMER_LVT);
 
-	lapic->lvt[APIC_LVT_THERMAL].val |= APIC_LVT_M;
+	lapic->lvt[APIC_LVT_THERMAL].v |= APIC_LVT_M;
 	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_THERM_LVT);
 
-	lapic->lvt[APIC_LVT_PMC].val |= APIC_LVT_M;
+	lapic->lvt[APIC_LVT_PMC].v |= APIC_LVT_M;
 	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_PERF_LVT);
 
-	lapic->lvt[APIC_LVT_LINT0].val |= APIC_LVT_M;
+	lapic->lvt[APIC_LVT_LINT0].v |= APIC_LVT_M;
 	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_LINT0_LVT);
 
-	lapic->lvt[APIC_LVT_LINT1].val |= APIC_LVT_M;
+	lapic->lvt[APIC_LVT_LINT1].v |= APIC_LVT_M;
 	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_LINT1_LVT);
 
-	lapic->lvt[APIC_LVT_ERROR].val |= APIC_LVT_M;
+	lapic->lvt[APIC_LVT_ERROR].v |= APIC_LVT_M;
 	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_ERROR_LVT);
 }
 
@@ -730,7 +731,7 @@ dump_isrvec_stk(struct acrn_vlapic *vlapic)
 
 	isrptr = &(vlapic->apic_page.isr[0]);
 	for (i = 0U; i < 8U; i++) {
-		printf("ISR%u 0x%08x\n", i, isrptr[i].val);
+		printf("ISR%u 0x%08x\n", i, isrptr[i].v);
 	}
 
 	for (i = 0U; i <= vlapic->isrvec_stk_top; i++) {
@@ -755,7 +756,7 @@ vlapic_update_ppr(struct acrn_vlapic *vlapic)
 	 * bits is set in the ISRx registers.
 	 */
 	top_isrvec = (uint32_t)vlapic->isrvec_stk[vlapic->isrvec_stk_top];
-	tpr = vlapic->apic_page.tpr;
+	tpr = vlapic->apic_page.tpr.v;
 
 	/* update ppr */
 	{
@@ -791,7 +792,7 @@ vlapic_update_ppr(struct acrn_vlapic *vlapic)
 		isrptr = &(vlapic->apic_page.isr[0]);
 		for (vector = 0U; vector < 256U; vector++) {
 			idx = vector >> 5U;
-			if ((isrptr[idx].val & (1U << (vector & 0x1fU)))
+			if ((isrptr[idx].v & (1U << (vector & 0x1fU)))
 									!= 0U) {
 				isrvec = (uint32_t)vlapic->isrvec_stk[i];
 				if ((i > vlapic->isrvec_stk_top) ||
@@ -811,7 +812,7 @@ vlapic_update_ppr(struct acrn_vlapic *vlapic)
 		ppr = top_isrvec & 0xf0U;
 	}
 
-	vlapic->apic_page.ppr = ppr;
+	vlapic->apic_page.ppr.v = ppr;
 	dev_dbg(ACRN_DBG_LAPIC, "%s 0x%02x", __func__, ppr);
 }
 
@@ -828,19 +829,19 @@ vlapic_process_eoi(struct acrn_vlapic *vlapic)
 	/* i ranges effectively from 7 to 0 */
 	for (i = 8U; i > 0U; ) {
 		i--;
-		bitpos = (uint32_t)fls32(isrptr[i].val);
+		bitpos = (uint32_t)fls32(isrptr[i].v);
 		if (bitpos != INVALID_BIT_INDEX) {
 			if (vlapic->isrvec_stk_top == 0U) {
 				panic("invalid vlapic isrvec_stk_top %u",
 					vlapic->isrvec_stk_top);
 			}
-			isrptr[i].val &= ~(1U << bitpos);
+			isrptr[i].v &= ~(1U << bitpos);
 			vector = (i * 32U) + bitpos;
 			dev_dbg(ACRN_DBG_LAPIC, "EOI vector %u", vector);
 			vlapic_dump_isr(vlapic, "vlapic_process_eoi");
 			vlapic->isrvec_stk_top--;
 			vlapic_update_ppr(vlapic);
-			if ((tmrptr[i].val & (1U << bitpos)) != 0U) {
+			if ((tmrptr[i].v & (1U << bitpos)) != 0U) {
 				/* hook to vIOAPIC */
 				vioapic_process_eoi(vlapic->vm, vector);
 			}
@@ -986,8 +987,8 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 			bitmap_clear_lock(vcpu_id, &amask);
 
 			vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
-			dfr = vlapic->apic_page.dfr;
-			ldr = vlapic->apic_page.ldr;
+			dfr = vlapic->apic_page.dfr.v;
+			ldr = vlapic->apic_page.ldr.v;
 
 			if ((dfr & APIC_DFR_MODEL_MASK) ==
 					APIC_DFR_MODEL_FLAT) {
@@ -1019,8 +1020,8 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 				if (lowprio) {
 					if (target == NULL) {
 						target = vlapic;
-					} else if (target->apic_page.ppr >
-						vlapic->apic_page.ppr) {
+					} else if (target->apic_page.ppr.v >
+						vlapic->apic_page.ppr.v) {
 						target = vlapic;
 					} else {
 						/* target is the dest */
@@ -1048,10 +1049,10 @@ vlapic_set_tpr(struct acrn_vlapic *vlapic, uint32_t val)
 {
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 
-	if (lapic->tpr != val) {
+	if (lapic->tpr.v != val) {
 		dev_dbg(ACRN_DBG_LAPIC,
 			"vlapic TPR changed from %#x to %#x", lapic->tpr, val);
-		lapic->tpr = val;
+		lapic->tpr.v = val;
 		vlapic_update_ppr(vlapic);
 	}
 }
@@ -1061,7 +1062,7 @@ vlapic_get_tpr(struct acrn_vlapic *vlapic)
 {
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 
-	return lapic->tpr;
+	return lapic->tpr.v;
 }
 
 void
@@ -1101,10 +1102,10 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 	struct vcpu *target_vcpu;
 
 	lapic = &(vlapic->apic_page);
-	lapic->icr_lo &= ~APIC_DELSTAT_PEND;
+	lapic->icr_lo.v &= ~APIC_DELSTAT_PEND;
 
-	icr_low = lapic->icr_lo;
-	icr_high = lapic->icr_hi;
+	icr_low = lapic->icr_lo.v;
+	icr_high = lapic->icr_hi.v;
 	dest = icr_high >> APIC_ID_SHIFT;
 	vec = icr_low & APIC_VECTOR_MASK;
 	mode = icr_low & APIC_DELMODE_MASK;
@@ -1233,11 +1234,11 @@ vlapic_pending_intr(struct acrn_vlapic *vlapic, uint32_t *vecptr)
 	/* i ranges effectively from 7 to 0 */
 	for (i = 8U; i > 0U; ) {
 		i--;
-		val = atomic_load32(&irrptr[i].val);
+		val = atomic_load32(&irrptr[i].v);
 		bitpos = (uint32_t)fls32(val);
 		if (bitpos != INVALID_BIT_INDEX) {
 			vector = (i * 32U) + bitpos;
-			if (prio(vector) > prio(lapic->ppr)) {
+			if (prio(vector) > prio(lapic->ppr.v)) {
 				if (vecptr != NULL) {
 					*vecptr = vector;
 				}
@@ -1263,11 +1264,11 @@ vlapic_intr_accepted(struct acrn_vlapic *vlapic, uint32_t vector)
 	idx = vector >> 5U;
 
 	irrptr = &lapic->irr[0];
-	atomic_clear32(&irrptr[idx].val, 1U << (vector & 0x1fU));
+	atomic_clear32(&irrptr[idx].v, 1U << (vector & 0x1fU));
 	vlapic_dump_irr(vlapic, "vlapic_intr_accepted");
 
 	isrptr = &lapic->isr[0];
-	isrptr[idx].val |= 1U << (vector & 0x1fU);
+	isrptr[idx].v |= 1U << (vector & 0x1fU);
 	vlapic_dump_isr(vlapic, "vlapic_intr_accepted");
 
 	/*
@@ -1292,7 +1293,7 @@ vlapic_svr_write_handler(struct acrn_vlapic *vlapic)
 
 	lapic = &(vlapic->apic_page);
 
-	new = lapic->svr;
+	new = lapic->svr.v;
 	old = vlapic->svr_last;
 	vlapic->svr_last = new;
 
@@ -1348,31 +1349,31 @@ vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg,
 	offset &= ~0x3UL;
 	switch (offset) {
 	case APIC_OFFSET_ID:
-		*data = lapic->id;
+		*data = lapic->id.v;
 		break;
 	case APIC_OFFSET_VER:
-		*data = lapic->version;
+		*data = lapic->version.v;
 		break;
 	case APIC_OFFSET_TPR:
 		*data = vlapic_get_tpr(vlapic);
 		break;
 	case APIC_OFFSET_APR:
-		*data = lapic->apr;
+		*data = lapic->apr.v;
 		break;
 	case APIC_OFFSET_PPR:
-		*data = lapic->ppr;
+		*data = lapic->ppr.v;
 		break;
 	case APIC_OFFSET_EOI:
-		*data = lapic->eoi;
+		*data = lapic->eoi.v;
 		break;
 	case APIC_OFFSET_LDR:
-		*data = lapic->ldr;
+		*data = lapic->ldr.v;
 		break;
 	case APIC_OFFSET_DFR:
-		*data = lapic->dfr;
+		*data = lapic->dfr.v;
 		break;
 	case APIC_OFFSET_SVR:
-		*data = lapic->svr;
+		*data = lapic->svr.v;
 		break;
 	case APIC_OFFSET_ISR0:
 	case APIC_OFFSET_ISR1:
@@ -1383,7 +1384,7 @@ vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg,
 	case APIC_OFFSET_ISR6:
 	case APIC_OFFSET_ISR7:
 		i = (offset - APIC_OFFSET_ISR0) >> 4;
-		*data = lapic->isr[i].val;
+		*data = lapic->isr[i].v;
 		break;
 	case APIC_OFFSET_TMR0:
 	case APIC_OFFSET_TMR1:
@@ -1394,7 +1395,7 @@ vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg,
 	case APIC_OFFSET_TMR6:
 	case APIC_OFFSET_TMR7:
 		i = (offset - APIC_OFFSET_TMR0) >> 4;
-		*data = lapic->tmr[i].val;
+		*data = lapic->tmr[i].v;
 		break;
 	case APIC_OFFSET_IRR0:
 	case APIC_OFFSET_IRR1:
@@ -1405,16 +1406,16 @@ vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg,
 	case APIC_OFFSET_IRR6:
 	case APIC_OFFSET_IRR7:
 		i = (offset - APIC_OFFSET_IRR0) >> 4;
-		*data = lapic->irr[i].val;
+		*data = lapic->irr[i].v;
 		break;
 	case APIC_OFFSET_ESR:
-		*data = lapic->esr;
+		*data = lapic->esr.v;
 		break;
 	case APIC_OFFSET_ICR_LOW:
-		*data = lapic->icr_lo;
+		*data = lapic->icr_lo.v;
 		break;
 	case APIC_OFFSET_ICR_HI:
-		*data = lapic->icr_hi;
+		*data = lapic->icr_hi.v;
 		break;
 	case APIC_OFFSET_CMCI_LVT:
 	case APIC_OFFSET_TIMER_LVT:
@@ -1436,14 +1437,14 @@ vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg,
 		if (vlapic_lvtt_tsc_deadline(vlapic)) {
 			*data = 0UL;
 		} else {
-			*data = lapic->icr_timer;
+			*data = lapic->icr_timer.v;
 		}
 		break;
 	case APIC_OFFSET_TIMER_CCR:
 		*data = vlapic_get_ccr(vlapic);
 		break;
 	case APIC_OFFSET_TIMER_DCR:
-		*data = lapic->dcr_timer;
+		*data = lapic->dcr_timer.v;
 		break;
 	case APIC_OFFSET_RRR:
 	default:
@@ -1487,23 +1488,23 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset,
 		vlapic_process_eoi(vlapic);
 		break;
 	case APIC_OFFSET_LDR:
-		lapic->ldr = data32;
+		lapic->ldr.v = data32;
 		vlapic_ldr_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_DFR:
-		lapic->dfr = data32;
+		lapic->dfr.v = data32;
 		vlapic_dfr_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_SVR:
-		lapic->svr = data32;
+		lapic->svr.v = data32;
 		vlapic_svr_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_ICR_LOW:
-		lapic->icr_lo = data32;
+		lapic->icr_lo.v = data32;
 		retval = vlapic_icrlo_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_ICR_HI:
-		lapic->icr_hi = data32;
+		lapic->icr_hi.v = data32;
 		break;
 	case APIC_OFFSET_CMCI_LVT:
 	case APIC_OFFSET_TIMER_LVT:
@@ -1521,12 +1522,12 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset,
 		if (vlapic_lvtt_tsc_deadline(vlapic)) {
 			break;
 		}
-		lapic->icr_timer = data32;
+		lapic->icr_timer.v = data32;
 		vlapic_icrtmr_write_handler(vlapic);
 		break;
 
 	case APIC_OFFSET_TIMER_DCR:
-		lapic->dcr_timer = data32;
+		lapic->dcr_timer.v = data32;
 		vlapic_dcr_write_handler(vlapic);
 		break;
 
@@ -1564,19 +1565,19 @@ vlapic_reset(struct acrn_vlapic *vlapic)
 	(void)memset((void *)lapic, 0U, CPU_PAGE_SIZE);
 	(void)memset((void *)&(vlapic->pir_desc), 0U, sizeof(vlapic->pir_desc));
 
-	lapic->id = vlapic_build_id(vlapic);
-	lapic->version = VLAPIC_VERSION;
-	lapic->version |= (VLAPIC_MAXLVT_INDEX << MAXLVTSHIFT);
-	lapic->dfr = 0xffffffffU;
-	lapic->svr = APIC_SVR_VECTOR;
+	lapic->id.v = vlapic_build_id(vlapic);
+	lapic->version.v = VLAPIC_VERSION;
+	lapic->version.v |= (VLAPIC_MAXLVT_INDEX << MAXLVTSHIFT);
+	lapic->dfr.v = 0xffffffffU;
+	lapic->svr.v = APIC_SVR_VECTOR;
 	vlapic_mask_lvts(vlapic);
 	vlapic_reset_tmr(vlapic);
 
-	lapic->icr_timer = 0U;
-	lapic->dcr_timer = 0U;
+	lapic->icr_timer.v = 0U;
+	lapic->dcr_timer.v = 0U;
 	vlapic_reset_timer(vlapic);
 
-	vlapic->svr_last = lapic->svr;
+	vlapic->svr_last = lapic->svr.v;
 
 	for (i = 0U; i < (VLAPIC_MAXLVT_INDEX + 1U); i++) {
 		vlapic->lvt_last[i] = 0U;
@@ -1626,14 +1627,14 @@ void vlapic_restore(struct acrn_vlapic *vlapic, struct lapic_regs *regs)
 	lapic->ldr = regs->ldr;
 	lapic->dfr = regs->dfr;
 	for (i = 0; i < 8; i++) {
-		lapic->tmr[i].val = regs->tmr[i].val;
+		lapic->tmr[i].v = regs->tmr[i].v;
 	}
 	lapic->svr = regs->svr;
 	vlapic_svr_write_handler(vlapic);
-	lapic->lvt[APIC_LVT_TIMER].val = regs->lvt[APIC_LVT_TIMER].val;
-	lapic->lvt[APIC_LVT_LINT0].val = regs->lvt[APIC_LVT_LINT0].val;
-	lapic->lvt[APIC_LVT_LINT1].val = regs->lvt[APIC_LVT_LINT1].val;
-	lapic->lvt[APIC_LVT_ERROR].val = regs->lvt[APIC_LVT_ERROR].val;
+	lapic->lvt[APIC_LVT_TIMER].v = regs->lvt[APIC_LVT_TIMER].v;
+	lapic->lvt[APIC_LVT_LINT0].v = regs->lvt[APIC_LVT_LINT0].v;
+	lapic->lvt[APIC_LVT_LINT1].v = regs->lvt[APIC_LVT_LINT1].v;
+	lapic->lvt[APIC_LVT_ERROR].v = regs->lvt[APIC_LVT_ERROR].v;
 	lapic->icr_timer = regs->icr_timer;
 	lapic->ccr_timer = regs->ccr_timer;
 	lapic->dcr_timer = regs->dcr_timer;
@@ -1712,7 +1713,7 @@ vlapic_enabled(struct acrn_vlapic *vlapic)
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 
 	if (((vlapic->msr_apicbase & APICBASE_ENABLED) != 0U) &&
-			((lapic->svr & APIC_SVR_ENABLE) != 0U)) {
+			((lapic->svr.v & APIC_SVR_ENABLE) != 0U)) {
 		return true;
 	} else {
 		return false;
@@ -1731,9 +1732,9 @@ vlapic_set_tmr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 	idx = vector >> 5U;
 	mask = 1U << (vector & 0x1fU);
 	if (level) {
-		tmrptr[idx].val |= mask;
+		tmrptr[idx].v |= mask;
 	} else {
-		tmrptr[idx].val &= ~mask;
+		tmrptr[idx].v &= ~mask;
 	}
 }
 
@@ -1903,7 +1904,8 @@ static void vlapic_timer_expired(void *data)
 
 	/* inject vcpu timer interrupt if not masked */
 	if (!vlapic_lvtt_masked(vlapic)) {
-		vlapic_intr_edge(vcpu, lapic->lvt[APIC_LVT_TIMER].val & APIC_LVTT_VECTOR);
+		vlapic_intr_edge(vcpu,
+			lapic->lvt[APIC_LVT_TIMER].v & APIC_LVTT_VECTOR);
 	}
 
 	if (!vlapic_lvtt_period(vlapic)) {
@@ -2041,7 +2043,7 @@ apicv_pending_intr(struct acrn_vlapic *vlapic, __unused uint32_t *vecptr)
 	}
 
 	lapic = &(vlapic->apic_page);
-	ppr = lapic->ppr & 0xF0U;
+	ppr = lapic->ppr.v & 0xF0U;
 
 	if (ppr == 0U) {
 		return 1;
@@ -2076,9 +2078,9 @@ apicv_batch_set_tmr(struct acrn_vlapic *vlapic)
 	e = 256U;
 
 	while (s < e) {
-		val = ptr[(s/TMR_STEP_LEN) + 1].val;
+		val = ptr[(s/TMR_STEP_LEN) + 1].v;
 		val <<= TMR_STEP_LEN;
-		val |= ptr[s/TMR_STEP_LEN].val;
+		val |= ptr[s/TMR_STEP_LEN].v;
 		exec_vmwrite64(vmx_eoi_exit(s), val);
 
 		s += EOI_STEP_LEN;
@@ -2130,8 +2132,8 @@ vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
 	for (i = 0U; i < 4U; i++) {
 		val = atomic_readandclear64(&pir_desc->pir[i]);
 		if (val != 0UL) {
-			irr[i * 2U].val |= (uint32_t)val;
-			irr[(i * 2U) + 1U].val |= (uint32_t)(val >> 32);
+			irr[i * 2U].v |= (uint32_t)val;
+			irr[(i * 2U) + 1U].v |= (uint32_t)(val >> 32);
 
 			pirbase = 64U*i;
 			pirval = val;
@@ -2237,7 +2239,7 @@ int veoi_vmexit_handler(struct vcpu *vcpu)
 	idx = vector >> 5U;
 	mask = 1U << (vector & 0x1fU);
 
-	if ((tmrptr[idx].val & mask) != 0U) {
+	if ((tmrptr[idx].v & mask) != 0U) {
 		/* hook to vIOAPIC */
 		vioapic_process_eoi(vlapic->vm, vector);
 	}
