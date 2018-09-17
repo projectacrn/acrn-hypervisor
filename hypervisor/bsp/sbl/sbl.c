@@ -62,4 +62,7 @@ struct dmar_info *get_dmar_info(void)
 
 void    init_bsp(void)
 {
+#ifndef CONFIG_CONSTANT_ACPI
+	acpi_fixup();
+#endif
 }

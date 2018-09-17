@@ -115,6 +115,9 @@ static void efi_init(void)
 
 void init_bsp(void)
 {
+#ifndef CONFIG_CONSTANT_ACPI
+	acpi_fixup();
+#endif
 	parse_hv_cmdline();
 
 #ifdef CONFIG_EFI_STUB
