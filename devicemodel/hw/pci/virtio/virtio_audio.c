@@ -40,7 +40,7 @@
  * Queue definitions.
  * Audio mediator uses two queues: one for interrupt and the other for messages.
  */
-#define VIRTIO_AUDIO_VQ_NUM  4 /*2 currently we use 4 vq, may change later*/
+#define VIRTIO_AUDIO_VQ_NUM  4 /*4 currently we use 4 vq, may change later*/
 
 const char *vbs_k_audio_dev_path = "/dev/vbs_k_audio";
 
@@ -80,7 +80,7 @@ static void virtio_audio_reset(void *base);
 
 static struct virtio_ops virtio_audio_ops_k = {
 	"virtio_audio",		/* our name */
-	VIRTIO_AUDIO_VQ_NUM,	/* we support 2 virtqueue */
+	VIRTIO_AUDIO_VQ_NUM,	/* we support 4 virtqueue */
 	0,			/* config reg size */
 	virtio_audio_reset,	/* reset */
 	virtio_audio_k_no_notify,	/* device-wide qnotify */
@@ -331,6 +331,8 @@ virtio_audio_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	/* vq[0] and vq[1] are for interrupt and messages */
 	virt_audio->vq[0].qsize = VIRTIO_AUDIO_RINGSZ;
 	virt_audio->vq[1].qsize = VIRTIO_AUDIO_RINGSZ;
+	virt_audio->vq[2].qsize = VIRTIO_AUDIO_RINGSZ;
+	virt_audio->vq[3].qsize = VIRTIO_AUDIO_RINGSZ;
 
 	/* initialize config space */
 	pci_set_cfgdata16(dev, PCIR_DEVICE, VIRTIO_DEV_AUDIO);
