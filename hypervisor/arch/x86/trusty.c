@@ -417,27 +417,29 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 		return false;
 	}
 
-	if (boot_param.version > TRUSTY_VERSION_2) {
-		dev_dbg(ACRN_DBG_TRUSTY, "%s: Version(%u) not supported!\n",
-				__func__, boot_param.version);
-		return false;
-	}
-
-	trusty_entry_gpa = (uint64_t)boot_param.entry_point;
-	trusty_base_gpa = (uint64_t)boot_param.base_addr;
-	trusty_mem_size = boot_param.mem_size;
-
-	if (boot_param.version >= TRUSTY_VERSION_2) {
-		trusty_entry_gpa |=
+	switch (boot_param.version) {
+	case TRUSTY_VERSION_2:
+		trusty_entry_gpa = ((uint64_t)boot_param.entry_point) |
 			(((uint64_t)boot_param.entry_point_high) << 32);
-		trusty_base_gpa |=
+		trusty_base_gpa = ((uint64_t)boot_param.base_addr) |
 			(((uint64_t)boot_param.base_addr_high) << 32);
 
 		/* copy rpmb_key from OSloader */
 		(void)memcpy_s(&g_key_info.rpmb_key[0][0], 64U,
 				&boot_param.rpmb_key[0], 64U);
 		(void)memset(&boot_param.rpmb_key[0], 0U, 64U);
+		break;
+	case TRUSTY_VERSION:
+		trusty_entry_gpa = (uint64_t)boot_param.entry_point;
+		trusty_base_gpa = (uint64_t)boot_param.base_addr;
+		break;
+	default:
+		dev_dbg(ACRN_DBG_TRUSTY, "%s: Version(%u) not supported!\n",
+				__func__, boot_param.version);
+		return false;
 	}
+
+	trusty_mem_size = boot_param.mem_size;
 
 	create_secure_world_ept(vm, trusty_base_gpa, trusty_mem_size,
 						TRUSTY_EPT_REBASE_GPA);
