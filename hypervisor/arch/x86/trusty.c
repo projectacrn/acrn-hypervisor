@@ -160,16 +160,12 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 	}
 
 	/* restore memory to SOS ept mapping */
-	if (ept_mr_add(vm0, vm0->arch_vm.nworld_eptp,
-			hpa, gpa_sos, size, EPT_RWX | EPT_WB) != 0) {
-		pr_warn("Restore trusty mem to SOS failed");
-	}
+	ept_mr_add(vm0, vm0->arch_vm.nworld_eptp,
+			hpa, gpa_sos, size, EPT_RWX | EPT_WB);
 
 	/* Restore memory to guest normal world */
-	if (ept_mr_add(vm, vm->arch_vm.nworld_eptp,
-			hpa, gpa_uos, size, EPT_RWX | EPT_WB) != 0)	{
-		pr_warn("Restore trusty mem to nworld failed");
-	}
+	ept_mr_add(vm, vm->arch_vm.nworld_eptp,
+			hpa, gpa_uos, size, EPT_RWX | EPT_WB);
 
 	/* Free trusty ept page-structures */
 	pdpt_addr =

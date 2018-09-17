@@ -92,7 +92,7 @@ static inline int construct_pgentry(enum _page_table_type ptt, uint64_t *pde)
  * type: MR_DEL
  * delete [vaddr_start, vaddr_end) MT PT mapping
  */
-static int modify_or_del_pte(uint64_t *pde,
+static void modify_or_del_pte(uint64_t *pde,
 		uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot_set, uint64_t prot_clr,
 		enum _page_table_type ptt, uint32_t type)
@@ -107,8 +107,7 @@ static int modify_or_del_pte(uint64_t *pde,
 		uint64_t *pte = pt_page + index;
 
 		if (pgentry_present(ptt, *pte) == 0UL) {
-			pr_err("%s, invalid op, pte not present\n", __func__);
-			return -EFAULT;
+			panic("invalid op, pte not present");
 		}
 
 		local_modify_or_del_pte(pte, prot_set, prot_clr, type);
@@ -117,8 +116,6 @@ static int modify_or_del_pte(uint64_t *pde,
 			break;
 		}
 	}
-
-	return 0;
 }
 
 /*
@@ -128,12 +125,11 @@ static int modify_or_del_pte(uint64_t *pde,
  * type: MR_DEL
  * delete [vaddr_start, vaddr_end) MT PT mapping
  */
-static int modify_or_del_pde(uint64_t *pdpte,
+static void modify_or_del_pde(uint64_t *pdpte,
 		uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot_set, uint64_t prot_clr,
 		enum _page_table_type ptt, uint32_t type)
 {
-	int ret = 0;
 	uint64_t *pd_page = pdpte_page_vaddr(*pdpte);
 	uint64_t vaddr = vaddr_start;
 	uint64_t index = pde_index(vaddr);
@@ -145,15 +141,14 @@ static int modify_or_del_pde(uint64_t *pdpte,
 		uint64_t vaddr_next = (vaddr & PDE_MASK) + PDE_SIZE;
 
 		if (pgentry_present(ptt, *pde) == 0UL) {
-			pr_err("%s, invalid op, pde not present\n", __func__);
-			return -EFAULT;
+			panic("invalid op, pde not present");
 		}
 		if (pde_large(*pde) != 0UL) {
 			if (vaddr_next > vaddr_end ||
 					!mem_aligned_check(vaddr, PDE_SIZE)) {
-				ret = split_large_page(pde, IA32E_PD, ptt);
+				int ret = split_large_page(pde, IA32E_PD, ptt);
 				if (ret != 0) {
-					return ret;
+					panic("split large PDE failed");
 				}
 			} else {
 				local_modify_or_del_pte(pde,
@@ -162,18 +157,16 @@ static int modify_or_del_pde(uint64_t *pdpte,
 					vaddr = vaddr_next;
 					continue;
 				}
-				return 0;
+				break;	/* done */
 			}
 		}
-		ret = modify_or_del_pte(pde, vaddr, vaddr_end,
+		modify_or_del_pte(pde, vaddr, vaddr_end,
 				prot_set, prot_clr, ptt, type);
-		if (ret != 0 || (vaddr_next >= vaddr_end)) {
-			return ret;
+		if (vaddr_next >= vaddr_end) {
+			break;	/* done */
 		}
 		vaddr = vaddr_next;
 	}
-
-	return ret;
 }
 
 /*
@@ -183,12 +176,11 @@ static int modify_or_del_pde(uint64_t *pdpte,
  * type: MR_DEL
  * delete [vaddr_start, vaddr_end) MT PT mapping
  */
-static int modify_or_del_pdpte(uint64_t *pml4e,
+static void modify_or_del_pdpte(uint64_t *pml4e,
 		uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot_set, uint64_t prot_clr,
 		enum _page_table_type ptt, uint32_t type)
 {
-	int ret = 0;
 	uint64_t *pdpt_page = pml4e_page_vaddr(*pml4e);
 	uint64_t vaddr = vaddr_start;
 	uint64_t index = pdpte_index(vaddr);
@@ -200,15 +192,14 @@ static int modify_or_del_pdpte(uint64_t *pml4e,
 		uint64_t vaddr_next = (vaddr & PDPTE_MASK) + PDPTE_SIZE;
 
 		if (pgentry_present(ptt, *pdpte) == 0UL) {
-			pr_err("%s, invalid op, pdpte not present\n", __func__);
-			return -EFAULT;
+			panic("invalid op, pdpte not present");
 		}
 		if (pdpte_large(*pdpte) != 0UL) {
 			if (vaddr_next > vaddr_end ||
 					!mem_aligned_check(vaddr, PDPTE_SIZE)) {
-				ret = split_large_page(pdpte, IA32E_PDPT, ptt);
+				int ret = split_large_page(pdpte, IA32E_PDPT, ptt);
 				if (ret != 0) {
-					return ret;
+					panic("split large PDPTE failed");
 				}
 			} else {
 				local_modify_or_del_pte(pdpte,
@@ -217,18 +208,16 @@ static int modify_or_del_pdpte(uint64_t *pml4e,
 					vaddr = vaddr_next;
 					continue;
 				}
-				return 0;
+				break;	/* done */
 			}
 		}
-		ret = modify_or_del_pde(pdpte, vaddr, vaddr_end,
+		modify_or_del_pde(pdpte, vaddr, vaddr_end,
 				prot_set, prot_clr, ptt, type);
-		if (ret != 0 || (vaddr_next >= vaddr_end)) {
-			return ret;
+		if (vaddr_next >= vaddr_end) {
+			break;	/* done */
 		}
 		vaddr = vaddr_next;
 	}
-
-	return ret;
 }
 
 /*
@@ -244,50 +233,36 @@ static int modify_or_del_pdpte(uint64_t *pml4e,
  * type: MR_DEL
  * delete [vaddr_base, vaddr_base + size ) memory region page table mapping.
  */
-int mmu_modify_or_del(uint64_t *pml4_page,
+void mmu_modify_or_del(uint64_t *pml4_page,
 		uint64_t vaddr_base, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr,
 		enum _page_table_type ptt, uint32_t type)
 {
-	uint64_t vaddr = vaddr_base;
+	uint64_t vaddr = round_page_up(vaddr_base);
 	uint64_t vaddr_next, vaddr_end;
 	uint64_t *pml4e;
-	int ret;
 
-	if (!mem_aligned_check(vaddr, (uint64_t)PAGE_SIZE_4K) ||
-		!mem_aligned_check(size, (uint64_t)PAGE_SIZE_4K) ||
-		(type != MR_MODIFY && type != MR_DEL)) {
-		pr_err("%s, invalid parameters!\n", __func__);
-		return -EINVAL;
-	}
-
+	vaddr_end = vaddr + round_page_down(size);
 	dev_dbg(ACRN_DBG_MMU, "%s, vaddr: 0x%llx, size: 0x%llx\n",
 		__func__, vaddr, size);
-	vaddr_end = vaddr + size;
+
 	while (vaddr < vaddr_end) {
 		vaddr_next = (vaddr & PML4E_MASK) + PML4E_SIZE;
 		pml4e = pml4e_offset(pml4_page, vaddr);
 		if (pgentry_present(ptt, *pml4e) == 0UL) {
-			pr_err("%s, invalid op, pml4e not present\n", __func__);
-			return -EFAULT;
+			panic("invalid op, pml4e not present");
 		}
-		ret = modify_or_del_pdpte(pml4e, vaddr, vaddr_end,
+		modify_or_del_pdpte(pml4e, vaddr, vaddr_end,
 					prot_set, prot_clr, ptt, type);
-		if (ret != 0) {
-			return ret;
-		}
-
 		vaddr = vaddr_next;
 	}
-
-	return 0;
 }
 
 /*
  * In PT level,
  * add [vaddr_start, vaddr_end) to [paddr_base, ...) MT PT mapping
  */
-static int add_pte(uint64_t *pde, uint64_t paddr_start,
+static void add_pte(uint64_t *pde, uint64_t paddr_start,
 		uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot, enum _page_table_type ptt)
 {
@@ -302,29 +277,25 @@ static int add_pte(uint64_t *pde, uint64_t paddr_start,
 		uint64_t *pte = pt_page + index;
 
 		if (pgentry_present(ptt, *pte) != 0UL) {
-			pr_err("%s, invalid op, pte present\n", __func__);
-			return -EFAULT;
+			panic("invalid op, pte present");
 		}
 
 		set_pgentry(pte, paddr | prot);
 		paddr += PTE_SIZE;
 		vaddr += PTE_SIZE;
 		if (vaddr >= vaddr_end)
-			return 0;
+			break;	/* done */
 	}
-
-	return 0;
 }
 
 /*
  * In PD level,
  * add [vaddr_start, vaddr_end) to [paddr_base, ...) MT PT mapping
  */
-static int add_pde(uint64_t *pdpte, uint64_t paddr_start,
+static void add_pde(uint64_t *pdpte, uint64_t paddr_start,
 		uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot, enum _page_table_type ptt)
 {
-	int ret = 0;
 	uint64_t *pd_page = pdpte_page_vaddr(*pdpte);
 	uint64_t vaddr = vaddr_start;
 	uint64_t paddr = paddr_start;
@@ -346,34 +317,31 @@ static int add_pde(uint64_t *pdpte, uint64_t paddr_start,
 					vaddr = vaddr_next;
 					continue;
 				}
-				return 0;
+				break;	/* done */
 			} else {
-				ret = construct_pgentry(ptt, pde);
+				int ret = construct_pgentry(ptt, pde);
 				if (ret != 0) {
-					return ret;
+					panic("construct pde page table fail");
 				}
 			}
 		}
-		ret = add_pte(pde, paddr, vaddr, vaddr_end, prot, ptt);
-		if (ret != 0 || (vaddr_next >= vaddr_end)) {
-			return ret;
+		add_pte(pde, paddr, vaddr, vaddr_end, prot, ptt);
+		if (vaddr_next >= vaddr_end) {
+			break;	/* done */
 		}
 		paddr += (vaddr_next - vaddr);
 		vaddr = vaddr_next;
 	}
-
-	return ret;
 }
 
 /*
  * In PDPT level,
  * add [vaddr_start, vaddr_end) to [paddr_base, ...) MT PT mapping
  */
-static int add_pdpte(uint64_t *pml4e, uint64_t paddr_start,
+static void add_pdpte(uint64_t *pml4e, uint64_t paddr_start,
 		uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot, enum _page_table_type ptt)
 {
-	int ret = 0;
 	uint64_t *pdpt_page = pml4e_page_vaddr(*pml4e);
 	uint64_t vaddr = vaddr_start;
 	uint64_t paddr = paddr_start;
@@ -395,23 +363,21 @@ static int add_pdpte(uint64_t *pml4e, uint64_t paddr_start,
 					vaddr = vaddr_next;
 					continue;
 				}
-				return 0;
+				break;	/* done */
 			} else {
-				ret = construct_pgentry(ptt, pdpte);
+				int ret = construct_pgentry(ptt, pdpte);
 				if (ret != 0) {
-					return ret;
+					panic("construct pdpte page table fail");
 				}
 			}
 		}
-		ret = add_pde(pdpte, paddr, vaddr, vaddr_end, prot, ptt);
-		if (ret != 0 || (vaddr_next >= vaddr_end)) {
-			return ret;
+		add_pde(pdpte, paddr, vaddr, vaddr_end, prot, ptt);
+		if (vaddr_next >= vaddr_end) {
+			break;	/* done */
 		}
 		paddr += (vaddr_next - vaddr);
 		vaddr = vaddr_next;
 	}
-
-	return ret;
 }
 
 /*
@@ -419,14 +385,13 @@ static int add_pdpte(uint64_t *pml4e, uint64_t paddr_start,
  * add [vaddr_base, vaddr_base + size ) memory region page table mapping.
  * @pre: the prot should set before call this function.
  */
-int mmu_add(uint64_t *pml4_page, uint64_t paddr_base,
+void mmu_add(uint64_t *pml4_page, uint64_t paddr_base,
 		uint64_t vaddr_base, uint64_t size,
 		uint64_t prot, enum _page_table_type ptt)
 {
 	uint64_t vaddr, vaddr_next, vaddr_end;
 	uint64_t paddr;
 	uint64_t *pml4e;
-	int ret;
 
 	dev_dbg(ACRN_DBG_MMU, "%s, paddr 0x%llx, vaddr 0x%llx, size 0x%llx\n",
 		__func__, paddr_base, vaddr_base, size);
@@ -440,21 +405,16 @@ int mmu_add(uint64_t *pml4_page, uint64_t paddr_base,
 		vaddr_next = (vaddr & PML4E_MASK) + PML4E_SIZE;
 		pml4e = pml4e_offset(pml4_page, vaddr);
 		if (pgentry_present(ptt, *pml4e) == 0UL) {
-			ret = construct_pgentry(ptt, pml4e);
+			int ret = construct_pgentry(ptt, pml4e);
 			if (ret != 0) {
-				return ret;
+				panic("construct pml4e page table fail");
 			}
 		}
-		ret = add_pdpte(pml4e, paddr, vaddr, vaddr_end, prot, ptt);
-		if (ret != 0) {
-			return ret;
-		}
+		add_pdpte(pml4e, paddr, vaddr, vaddr_end, prot, ptt);
 
 		paddr += (vaddr_next - vaddr);
 		vaddr = vaddr_next;
 	}
-
-	return 0;
 }
 
 uint64_t *lookup_address(uint64_t *pml4_page,

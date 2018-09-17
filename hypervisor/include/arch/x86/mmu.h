@@ -77,10 +77,10 @@ void free_paging_struct(void *ptr);
 void enable_paging(uint64_t pml4_base_addr);
 void enable_smep(void);
 void init_paging(void);
-int mmu_add(uint64_t *pml4_page, uint64_t paddr_base,
+void mmu_add(uint64_t *pml4_page, uint64_t paddr_base,
 		uint64_t vaddr_base, uint64_t size,
 		uint64_t prot, enum _page_table_type ptt);
-int mmu_modify_or_del(uint64_t *pml4_page,
+void mmu_modify_or_del(uint64_t *pml4_page,
 		uint64_t vaddr_base, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr,
 		enum _page_table_type ptt, uint32_t type);
@@ -130,11 +130,11 @@ void destroy_ept(struct vm *vm);
 uint64_t gpa2hpa(struct vm *vm, uint64_t gpa);
 uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size);
 uint64_t hpa2gpa(struct vm *vm, uint64_t hpa);
-int ept_mr_add(struct vm *vm, uint64_t *pml4_page, uint64_t hpa,
+void ept_mr_add(struct vm *vm, uint64_t *pml4_page, uint64_t hpa,
 		uint64_t gpa, uint64_t size, uint64_t prot_orig);
-int ept_mr_modify(struct vm *vm, uint64_t *pml4_page, uint64_t gpa,
+void ept_mr_modify(struct vm *vm, uint64_t *pml4_page, uint64_t gpa,
 		uint64_t size, uint64_t prot_set, uint64_t prot_clr);
-int ept_mr_del(struct vm *vm, uint64_t *pml4_page, uint64_t gpa,
+void ept_mr_del(struct vm *vm, uint64_t *pml4_page, uint64_t gpa,
 		uint64_t size);
 void free_ept_mem(uint64_t *pml4_page);
 int ept_violation_vmexit_handler(struct vcpu *vcpu);

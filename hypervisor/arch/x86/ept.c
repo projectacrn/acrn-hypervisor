@@ -219,12 +219,11 @@ int ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu)
 	return status;
 }
 
-int ept_mr_add(struct vm *vm, uint64_t *pml4_page,
+void ept_mr_add(struct vm *vm, uint64_t *pml4_page,
 	uint64_t hpa, uint64_t gpa, uint64_t size, uint64_t prot_orig)
 {
 	uint16_t i;
 	struct vcpu *vcpu;
-	int ret;
 	uint64_t prot = prot_orig;
 
 	dev_dbg(ACRN_DBG_EPT, "%s, vm[%d] hpa: 0x%016llx gpa: 0x%016llx ",
@@ -239,59 +238,51 @@ int ept_mr_add(struct vm *vm, uint64_t *pml4_page,
 		prot |= EPT_SNOOP_CTRL;
 	}
 
-	ret = mmu_add(pml4_page, hpa, gpa, size, prot, PTT_EPT);
+	mmu_add(pml4_page, hpa, gpa, size, prot, PTT_EPT);
 	/* No need to create inverted page tables for trusty memory */
-	if (ret == 0 && ((void *)pml4_page == vm->arch_vm.nworld_eptp)) {
-		ret = mmu_add((uint64_t *)vm->arch_vm.m2p,
+	if ((void *)pml4_page == vm->arch_vm.nworld_eptp) {
+		mmu_add((uint64_t *)vm->arch_vm.m2p,
 			gpa, hpa, size, prot, PTT_EPT);
 	}
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 	}
-
-	return ret;
 }
 
-int ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
+void ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
 		uint64_t gpa, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr)
 {
 	struct vcpu *vcpu;
 	uint16_t i;
-	int ret;
 
-	ret = mmu_modify_or_del(pml4_page, gpa, size,
+	mmu_modify_or_del(pml4_page, gpa, size,
 			prot_set, prot_clr, PTT_EPT, MR_MODIFY);
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 	}
-
-	return ret;
 }
 
-int ept_mr_del(struct vm *vm, uint64_t *pml4_page,
+void ept_mr_del(struct vm *vm, uint64_t *pml4_page,
 		uint64_t gpa, uint64_t size)
 {
 	struct vcpu *vcpu;
 	uint16_t i;
-	int ret;
 	uint64_t hpa = gpa2hpa(vm, gpa);
 
 	dev_dbg(ACRN_DBG_EPT, "%s,vm[%d] gpa 0x%llx size 0x%llx\n",
 			__func__, vm->vm_id, gpa, size);
 
-	ret = mmu_modify_or_del(pml4_page, gpa, size,
+	mmu_modify_or_del(pml4_page, gpa, size,
 			0UL, 0UL, PTT_EPT, MR_DEL);
-	if ((ret == 0) && (hpa != 0UL)) {
-		ret = mmu_modify_or_del((uint64_t *)vm->arch_vm.m2p,
+	if ((void *)pml4_page == vm->arch_vm.nworld_eptp) {
+		mmu_modify_or_del((uint64_t *)vm->arch_vm.m2p,
 				hpa, size, 0UL, 0UL, PTT_EPT, MR_DEL);
 	}
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 	}
-
-	return ret;
 }

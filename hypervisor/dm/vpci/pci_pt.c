@@ -185,33 +185,25 @@ static int vdev_pt_cfgread(struct pci_vdev *vdev, uint32_t offset,
 	return 0;
 }
 
-static int vdev_pt_remap_bar(struct pci_vdev *vdev, uint32_t idx,
+static void vdev_pt_remap_bar(struct pci_vdev *vdev, uint32_t idx,
 	uint32_t new_base)
 {
-	int error = 0;
 	struct vm *vm = vdev->vpci->vm;
 
 	if (vdev->bar[idx].base != 0UL) {
-		error = ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+		ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
 			vdev->bar[idx].base,
 			vdev->bar[idx].size);
-		if (error != 0) {
-			return error;
-		}
 	}
 
 	if (new_base != 0U) {
 		/* Map the physical BAR in the guest MMIO space */
-		error = ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+		ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
 			vdev->pdev.bar[idx].base, /* HPA */
 			new_base, /*GPA*/
 			vdev->bar[idx].size,
 			EPT_WR | EPT_RD | EPT_UNCACHED);
-		if (error != 0) {
-			return error;
-		}
 	}
-	return error;
 }
 
 static void vdev_pt_cfgwrite_bar(struct pci_vdev *vdev, uint32_t offset,
@@ -220,7 +212,6 @@ static void vdev_pt_cfgwrite_bar(struct pci_vdev *vdev, uint32_t offset,
 	uint32_t idx;
 	uint32_t new_bar, mask;
 	bool bar_update_normal;
-	int error;
 
 	if ((bytes != 4U) || ((offset & 0x3U) != 0U)) {
 		return;
@@ -239,11 +230,8 @@ static void vdev_pt_cfgwrite_bar(struct pci_vdev *vdev, uint32_t offset,
 		bar_update_normal = (new_bar_uos != (uint32_t)~0U);
 		new_bar = new_bar_uos & mask;
 		if (bar_update_normal) {
-			error = vdev_pt_remap_bar(vdev, idx,
+			vdev_pt_remap_bar(vdev, idx,
 				pci_bar_base(new_bar));
-			if (error != 0) {
-				pr_err("vdev_pt_remap_bar failed: %d", idx);
-			}
 
 			vdev->bar[idx].base = pci_bar_base(new_bar);
 		}
