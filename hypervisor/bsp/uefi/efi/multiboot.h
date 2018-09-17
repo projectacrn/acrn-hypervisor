@@ -147,7 +147,7 @@ struct multiboot_info {
 	uint32_t		unused_mi_vbe_interface_seg;
 	uint32_t		unused_mi_vbe_interface_off;
 	uint32_t	unused_mi_vbe_interface_len;
-};
+}__attribute__((aligned(8)));
 
 
 /*
