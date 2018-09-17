@@ -44,13 +44,6 @@
 #ifndef __STDLIB_H__
 #define __STDLIB_H__
 
-extern void *malloc(UINTN size);
-extern void free(void *buf);
-extern void *calloc(UINTN nmemb, UINTN size);
-
-extern EFI_STATUS emalloc(UINTN, UINTN, EFI_PHYSICAL_ADDRESS *);
-extern EFI_STATUS __emalloc(UINTN, UINTN, EFI_PHYSICAL_ADDRESS *, EFI_MEMORY_TYPE);
-extern void efree(EFI_PHYSICAL_ADDRESS, UINTN);
 
 static inline void memset(void *dstv, char ch, UINTN size)
 {
@@ -78,39 +71,6 @@ static inline int strlen(const char *str)
 		len++;
 
 	return len;
-}
-
-static inline char *strstr(const char *haystack, const char *needle)
-{
-	const char *p;
-	const char *word = NULL;
-	int len = strlen(needle);
-
-	if (!len)
-		return NULL;
-
-	p = haystack;
-	while (*p) {
-		word = p;
-		if (!strncmpa((CHAR8 *)p, (CHAR8 *)needle, len))
-			break;
-		p++;
-		word = NULL;
-	}
-
-	return (char *)word;
-}
-
-static inline char *strdup(const char *src)
-{
-	int len;
-	char *dst;
-
-	len = strlen(src);
-	dst = malloc(len + 1);
-	if (dst)
-		memcpy(dst, src, len + 1);
-	return dst;
 }
 
 static inline CHAR16 *strstr_16(CHAR16 *haystack, CHAR16 *needle)
