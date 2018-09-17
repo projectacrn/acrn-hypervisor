@@ -36,4 +36,8 @@ extern struct acpi_info host_acpi_info;
 /* BSP Interfaces */
 void init_bsp(void);
 
+#ifndef CONFIG_CONSTANT_ACPI
+void acpi_fixup(void);
+#endif
+
 #endif /* BSP_EXTERN_H */
