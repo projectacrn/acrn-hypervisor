@@ -173,6 +173,7 @@ struct vm {
 
 	spinlock_t softirq_dev_lock;
 	struct list_head softirq_dev_entry_list;
+	uint64_t intr_inject_delay_delta; /* delay of intr injection */
 } __aligned(CPU_PAGE_SIZE);
 
 #ifdef CONFIG_PARTITION_MODE

@@ -456,6 +456,26 @@ enum pm_cmd_type {
 };
 
 /**
+ * @brief Info to get a VM interrupt count data
+ *
+ * the parameter for HC_VM_INTR_MONITOR hypercall
+ */
+#define MAX_PTDEV_NUM 24
+struct acrn_intr_monitor {
+	/** sub command for intr monitor */
+	uint32_t cmd;
+	/** the count of this buffer to save */
+	uint32_t buf_cnt;
+
+	/** the buffer which save each interrupt count */
+	uint64_t buffer[MAX_PTDEV_NUM * 2];
+} __aligned(8);
+
+/** cmd for intr monitor **/
+#define INTR_CMD_GET_DATA 0
+#define INTR_CMD_DELAY_INT 1
+
+/**
  * @}
  */
 #endif /* _ACRN_COMMON_H_ */

@@ -54,6 +54,15 @@ ptdev_dequeue_softirq(struct vm *vm)
 	return entry;
 }
 
+static void ptdev_intr_delay_callback(void *data)
+{
+	struct ptdev_remapping_info *entry =
+		(struct ptdev_remapping_info *) data;
+
+	entry->intr_delay_timer.fire_tsc = 0UL;
+	ptdev_enqueue_softirq(entry);
+}
+
 /* require ptdev_lock protect */
 struct ptdev_remapping_info *
 alloc_entry(struct vm *vm, uint32_t intr_type)
@@ -68,6 +77,10 @@ alloc_entry(struct vm *vm, uint32_t intr_type)
 
 	INIT_LIST_HEAD(&entry->softirq_node);
 	INIT_LIST_HEAD(&entry->entry_node);
+
+	entry->intr_count = 0UL;
+	initialize_timer(&entry->intr_delay_timer, ptdev_intr_delay_callback,
+		entry, 0UL, 0, 0UL);
 
 	atomic_clear32(&entry->active, ACTIVE_FLAG);
 	list_add(&entry->entry_node, &ptdev_list);
@@ -115,6 +128,29 @@ static void ptdev_interrupt_handler(__unused uint32_t irq, void *data)
 {
 	struct ptdev_remapping_info *entry =
 		(struct ptdev_remapping_info *) data;
+
+	/*
+	 * "interrupt storm" detection & delay intr injection just for UOS
+	 * pass-thru devices, collect its data and delay injection if needed
+	 */
+	if (!is_vm0(entry->vm)) {
+		entry->intr_count++;
+
+		/* if delta > 0, it needs to delay the irq */
+		if (entry->vm->intr_inject_delay_delta > 0UL) {
+
+			/*
+			 * if delay timer fire_tsc == 0, add it into timer
+			 * list, else it was added already, just ignore
+			 */
+			if (entry->intr_delay_timer.fire_tsc == 0UL) {
+				entry->intr_delay_timer.fire_tsc = rdtsc() +
+					entry->vm->intr_inject_delay_delta;
+				(void)add_timer(&entry->intr_delay_timer);
+			}
+			return;
+		}
+	}
 
 	ptdev_enqueue_softirq(entry);
 }
@@ -168,4 +204,28 @@ void ptdev_release_all_entries(struct vm *vm)
 	spinlock_obtain(&ptdev_lock);
 	release_all_entries(vm);
 	spinlock_release(&ptdev_lock);
+}
+
+uint32_t get_vm_ptdev_intr_data(const struct vm *target_vm, uint64_t *buffer,
+	uint32_t buffer_cnt)
+{
+	uint32_t index = 0U;
+	struct ptdev_remapping_info *entry;
+	struct list_head *pos, *tmp;
+
+	list_for_each_safe(pos, tmp, &ptdev_list) {
+		entry = list_entry(pos, struct ptdev_remapping_info,
+				entry_node);
+		if (entry->vm == target_vm) {
+			buffer[index] = entry->allocated_pirq;
+			buffer[index + 1] = entry->intr_count;
+
+			index += 2;
+			if (index >= buffer_cnt) {
+				break;
+			}
+		}
+	}
+
+	return index;
 }
