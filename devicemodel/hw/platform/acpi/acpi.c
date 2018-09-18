@@ -80,7 +80,7 @@
 #define	MCFG_OFFSET		0x380
 #define FACS_OFFSET		0x3C0
 #define NHLT_OFFSET		0x400
-#define DSDT_OFFSET		0xC00
+#define DSDT_OFFSET		0xE00
 
 #define	ASL_TEMPLATE	"dm.XXXXXXX"
 #define ASL_SUFFIX	".aml"
@@ -166,6 +166,10 @@ basl_fwrite_rsdt(FILE *fp, struct vmctx *ctx)
 	    basl_acpi_base + HPET_OFFSET);
 	EFPRINTF(fp, "[0004]\t\tACPI Table Address 3 : %08X\n",
 	    basl_acpi_base + MCFG_OFFSET);
+
+	if (acpi_table_is_valid(NHLT_ENTRY_NO))
+		EFPRINTF(fp, "[0004]\t\tACPI Table Address 4 : %08X\n",
+		    basl_acpi_base + NHLT_OFFSET);
 
 	EFFLUSH(fp);
 
@@ -615,7 +619,7 @@ basl_fwrite_nhlt(FILE *fp, struct vmctx *ctx)
 	EFPRINTF(fp, "[0001]\t\tChecksum : 00\n");
 	EFPRINTF(fp, "[0006]\t\tOem ID : \"INTEL \"\n");
 	EFPRINTF(fp, "[0008]\t\tOem Table ID : \"NHLT-GPA\"\n");
-	EFPRINTF(fp, "[0004]\t\tOem Revision : 00000008\n");
+	EFPRINTF(fp, "[0004]\t\tOem Revision : 00000003\n");
 
 	/* iasl will fill in the compiler ID/revision fields */
 	EFPRINTF(fp, "[0004]\t\tAsl Compiler ID : \"xxxx\"\n");
