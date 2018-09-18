@@ -33,83 +33,6 @@
  * Local && I/O APIC definitions.
  */
 
-/*
- * Pentium P54C+ Built-in APIC
- * (Advanced programmable Interrupt Controller)
- *
- * Base Address of Built-in APIC in memory location
- * is 0xfee00000.
- *
- * Map of APIC Registers:
- *
- * Offset (hex)    Description                     Read/Write state
- * 000             Reserved
- * 010             Reserved
- * 020 ID          Local APIC ID                   R/W
- * 030 VER         Local APIC Version              R
- * 040             Reserved
- * 050             Reserved
- * 060             Reserved
- * 070             Reserved
- * 080             Task Priority Register          R/W
- * 090             Arbitration Priority Register   R
- * 0A0             Processor Priority Register     R
- * 0B0             EOI Register                    W
- * 0C0 RRR         Remote read                     R
- * 0D0             Logical Destination             R/W
- * 0E0             Destination Format Register     0..27 R;  28..31 R/W
- * 0F0 SVR         Spurious Interrupt Vector Reg.  0..3  R;  4..9   R/W
- * 100             ISR  000-031                    R
- * 110             ISR  032-063                    R
- * 120             ISR  064-095                    R
- * 130             ISR  095-128                    R
- * 140             ISR  128-159                    R
- * 150             ISR  160-191                    R
- * 160             ISR  192-223                    R
- * 170             ISR  224-255                    R
- * 180             TMR  000-031                    R
- * 190             TMR  032-063                    R
- * 1A0             TMR  064-095                    R
- * 1B0             TMR  095-128                    R
- * 1C0             TMR  128-159                    R
- * 1D0             TMR  160-191                    R
- * 1E0             TMR  192-223                    R
- * 1F0             TMR  224-255                    R
- * 200             IRR  000-031                    R
- * 210             IRR  032-063                    R
- * 220             IRR  064-095                    R
- * 230             IRR  095-128                    R
- * 240             IRR  128-159                    R
- * 250             IRR  160-191                    R
- * 260             IRR  192-223                    R
- * 270             IRR  224-255                    R
- * 280             Error Status Register           R
- * 290             Reserved
- * 2A0             Reserved
- * 2B0             Reserved
- * 2C0             Reserved
- * 2D0             Reserved
- * 2E0             Reserved
- * 2F0             Local Vector Table (CMCI)       R/W
- * 300 ICR_LOW     Interrupt Command Reg. (0-31)   R/W
- * 310 ICR_HI      Interrupt Command Reg. (32-63)  R/W
- * 320             Local Vector Table (Timer)      R/W
- * 330             Local Vector Table (Thermal)    R/W (PIV+)
- * 340             Local Vector Table (Performance) R/W (P6+)
- * 350 LVT1        Local Vector Table (LINT0)      R/W
- * 360 LVT2        Local Vector Table (LINT1)      R/W
- * 370 LVT3        Local Vector Table (ERROR)      R/W
- * 380             Initial Count Reg. for Timer    R/W
- * 390             Current Count of Timer          R
- * 3A0             Reserved
- * 3B0             Reserved
- * 3C0             Reserved
- * 3D0             Reserved
- * 3E0             Timer Divide Configuration Reg. R/W
- * 3F0             Reserved
- */
-
-
 /******************************************************************************
  * global defines, etc.
  */
@@ -123,33 +46,36 @@ struct lapic_reg {
 	uint32_t pad[3];
 };
 
-struct lapic_regs {
+struct lapic_regs {			 /*OFFSET(Hex)*/
 	struct lapic_reg	rsv0[2];
-	struct lapic_reg	id;
-	struct lapic_reg	version;
+	struct lapic_reg	id;	  /*020*/
+	struct lapic_reg	version;  /*030*/
 	struct lapic_reg	rsv1[4];
-	struct lapic_reg	tpr;
-	struct lapic_reg	apr;
-	struct lapic_reg	ppr;
-	struct lapic_reg	eoi;
-	struct lapic_reg	rsv2;
-	struct lapic_reg	ldr;
-	struct lapic_reg	dfr;
-	struct lapic_reg	svr;
-	struct lapic_reg	isr[8];
-	struct lapic_reg	tmr[8];
-	struct lapic_reg	irr[8];
-	struct lapic_reg	esr;
-	struct lapic_reg	rsv3[6];
-	struct lapic_reg	lvt_cmci;
-	struct lapic_reg	icr_lo;
-	struct lapic_reg	icr_hi;
-	struct lapic_reg	lvt[6];
-	struct lapic_reg	icr_timer;
-	struct lapic_reg	ccr_timer;
-	struct lapic_reg	rsv4[4];
-	struct lapic_reg	dcr_timer;
-	struct lapic_reg	rsv5;
+	struct lapic_reg	tpr;	  /*080*/
+	struct lapic_reg	apr;	  /*090*/
+	struct lapic_reg	ppr;	  /*0A0*/
+	struct lapic_reg	eoi;	  /*0B0*/
+	struct lapic_reg	rrd;	  /*0C0*/
+	struct lapic_reg	ldr;	  /*0D0*/
+	struct lapic_reg	dfr;	  /*0EO*/
+	struct lapic_reg	svr;	  /*0F0*/
+	struct lapic_reg	isr[8];   /*100 -- 170*/
+	struct lapic_reg	tmr[8];	  /*180 -- 1F0*/
+	struct lapic_reg	irr[8];	  /*200 -- 270*/
+	struct lapic_reg	esr;	  /*280*/
+	struct lapic_reg	rsv2[6];
+	struct lapic_reg	lvt_cmci; /*2F0*/
+	struct lapic_reg	icr_lo;   /*300*/
+	struct lapic_reg	icr_hi;	  /*310*/
+	struct lapic_reg	lvt[6];	  /*320 -- 370*/
+	struct lapic_reg	icr_timer;/*380*/
+	struct lapic_reg	ccr_timer;/*390*/
+	struct lapic_reg	rsv3[4];
+	struct lapic_reg	dcr_timer;/*3E0*/
+	struct lapic_reg	rsv4;
+
+	/*roundup sizeof current struct to 4KB*/
+	struct lapic_reg	rsv5[192]; /*400 -- FF0*/
 } __aligned(CPU_PAGE_SIZE);
 
 enum LAPIC_REGISTERS {
