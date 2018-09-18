@@ -129,6 +129,25 @@ Fixed Issues
 
 Known Issues
 ************
+:acrn-issue:`677` - SSD Disk ID not consistent between SOS/UOS
+The SSD disk ID in the UOS is not the same as in the SOS when
+the SSD device is pass-through to the UOS. The ID is also changing after
+a reboot.  **Impact:** There is no impact to functionality.
+**Workaround:** None.The issue will be fixed in the next release.
+
+
+:acrn-issue:`1268` - GPU hang happened when running GfxBench Car Chase in SOS and UOS.
+There were always "GPU HANG" log info printed in dmesg log in SOS and UOS and
+failed to load GfxBench Car Chase animation in HDMI & VGA monitors.
+**Impact:** Car Chase may stop running after the GPU hang, but not block other Gfx apps.
+**Workaround:** None. The issue will be fixed in the next release.
+
+
+:acrn-issue:`1270` - SOS and UOS can play video but no display video animation output on monitor.
+Video does not display in SOS and UOS. No animation displayed with timer keep running. **Impact:**
+There is no video animation on monitor screen when playing video in SOS or UOS.
+**Workaround:** None. The issue will be fixed in the next release.
+
 
 .. comment
    Use the syntax:
