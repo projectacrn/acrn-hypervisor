@@ -493,7 +493,11 @@ modify_bar_registration(struct pci_vdev *dev, int idx, int registration)
 		error = EINVAL;
 		break;
 	}
-	assert(error == 0);
+
+	/* FIXME: workaround for unregister_mem for fastboot. */
+	if (error != 0) {
+		printf("modify_bar_registration failed with %d", error);
+	}
 }
 
 static void
