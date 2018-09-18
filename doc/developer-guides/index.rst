@@ -28,6 +28,7 @@ specific areas within the ACRN hypervisor system.
    APL_GVT-g-hld.rst
    GVT-g-porting.rst
    security-hld.rst
+   watchdog-hld.rst
 
 Contributing to the project
 ***************************
