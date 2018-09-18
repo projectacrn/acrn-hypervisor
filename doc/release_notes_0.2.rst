@@ -22,32 +22,35 @@ VT-x, VT-d
 Based on Intel VT-x virtualization technology, ACRN emulates a virtual
 CPU with core partition and simple schedule. VT-d provides hardware
 support for isolating and restricting device accesses to the owner of
-the partition managing the device. It allows assigning I/O devices to a VM,
-and extending the protection and isolation properties of VMs for I/O operations.
+the partition managing the device. It allows assigning I/O devices to a
+VM, and extending the protection and isolation properties of VMs for I/O
+operations.
 
 PIC/IOAPIC/MSI/MSI-X/PCI/LAPIC
 ================================
-ACRN hypervisor supports virtualized APIC-V/EPT/IOAPIC/LAPIC functionality.
+ACRN hypervisor supports virtualized APIC-V/EPT/IOAPIC/LAPIC
+functionality.
 
 Ethernet
 ================
-ACRN hypervisor supports virtualized Ethernet functionality. Ethernet Mediator is
-executed in the Service OS and provides packet forwarding between the physical
-networking devices (Ethernet, Wi-Fi, etc.) and virtual devices in the Guest
-VMs(also called "User OS"). Virtual Ethernet device could be shared by Linux,
-Android, and Service OS guests for regular (i.e. non-AVB) traffic. All hypervisor
-para-virtualized I/O is implemented using the VirtIO specification Ethernet pass-through.
+ACRN hypervisor supports virtualized Ethernet functionality. Ethernet
+Mediator is executed in the Service OS and provides packet forwarding
+between the physical networking devices (Ethernet, Wi-Fi, etc.) and
+virtual devices in the Guest VMs(also called "User OS"). Virtual
+Ethernet device could be shared by Linux, Android, and Service OS guests
+for regular (i.e. non-AVB) traffic. All hypervisor para-virtualized I/O
+is implemented using the VirtIO specification Ethernet pass-through.
 
 Storage (eMMC)
 ================
-ACRN hypervisor supports virtualized non-volatile R/W storage for the Service
-OS and Guest OS instances, supporting VM private storage and/or storage shared
-between Guest OS instances.
+ACRN hypervisor supports virtualized non-volatile R/W storage for the
+Service OS and Guest OS instances, supporting VM private storage and/or
+storage shared between Guest OS instances.
 
 USB (xDCI)
 ================
-ACRN hypervisor supports virtualized assignment of all USB xHCI and/or xDCI
-controllers to a Guest OS from the platform.
+ACRN hypervisor supports virtualized assignment of all USB xHCI and/or
+xDCI controllers to a Guest OS from the platform.
 
 USB Mediator (xHCI and DRD)
 ===========================
@@ -55,15 +58,16 @@ ACRN hypervisor supports a virtualized USB Mediator.
 
 CSME
 ================
-ACRN hypervisor supports a CSME to a single Linux, Android, or RTOS guest or
-the Service OS even when in a virtualized environment.
+ACRN hypervisor supports a CSME to a single Linux, Android, or RTOS
+guest or the Service OS even when in a virtualized environment.
 
 WiFi
 ================
-ACRN hypervisor supports the passthrough assignment of the WiFi subsystem to the IVI,
-enables control of the WiFi as an in-vehicle hotspot for 3rd party devices,
-provides 3rd party device applications access to the vehicle,
-and provides access of 3rd party devices to the TCU provided connectivity.
+ACRN hypervisor supports the passthrough assignment of the WiFi
+subsystem to the IVI, enables control of the WiFi as an in-vehicle
+hotspot for 3rd party devices, provides 3rd party device applications
+access to the vehicle, and provides access of 3rd party devices to the
+TCU provided connectivity.
 
 IPU (MIPI-CS2, HDMI-in)
 ========================
@@ -72,16 +76,16 @@ guest OS, without sharing.
 
 Bluetooth
 ================
-ACRN hypervisor supports bluetooth controller passthrough to a single Guest OS (IVI).
+ACRN hypervisor supports bluetooth controller passthrough to a single
+Guest OS (IVI).
 
 GPU  – Preemption
 ==================
-GPU Preemption is one typical automotive use case which requires
-the system to preempt GPU resources occupied by lower priority
-workloads.  This is done to ensure performance of the most critical
-workload can be achieved. Three different schedulers for the GPU
-are involved: i915 UOS scheduler, Mediator GVT scheduler, and
-i915 SOS scheduler.
+GPU Preemption is one typical automotive use case which requires the
+system to preempt GPU resources occupied by lower priority workloads.
+This is done to ensure performance of the most critical workload can be
+achieved. Three different schedulers for the GPU are involved: i915 UOS
+scheduler, Mediator GVT scheduler, and i915 SOS scheduler.
 
 GPU – display surface sharing via Hyper DMA
 ============================================
@@ -100,53 +104,44 @@ ACRN hypervisor supports S3 feature, partially enabled in LaaG.
 Fixed Issues
 ************
 
-:acrn-issue:`663` - Black screen displayed after booting SOS/UOS
-
-:acrn-issue:`676` - Hypervisor and DM version numbers incorrect
-
-:acrn-issue:`1126` - VPCI coding style and bugs fixes for partition mode
-
-:acrn-issue:`1125` - VPCI coding style and bugs fixes found in integration testing for partition mode
-
-:acrn-issue:`1101` - missing acrn_mngr.h
-
-:acrn-issue:`1071` - hypervisor cannot boot on skylake i5-6500
-
-:acrn-issue:`1003` - CPU: cpu info is not correct
-
-:acrn-issue:`971` -  acrncrashlog funcitons need to be enhance
-
-:acrn-issue:`843` - ACRN boot failure
-
-:acrn-issue:`721` - DM for IPU mediation
-
-:acrn-issue:`707` - Issues found with instructions for using Ubuntu as SOS
-
-:acrn-issue:`706` - Invisible mouse cursor in UOS
-
-:acrn-issue:`424` - ClearLinux desktop GUI of SOS fails to launch
+* :acrn-issue:`663` - Black screen displayed after booting SOS/UOS
+* :acrn-issue:`676` - Hypervisor and DM version numbers incorrect
+* :acrn-issue:`1126` - VPCI coding style and bugs fixes for partition mode
+* :acrn-issue:`1125` - VPCI coding style and bugs fixes found in integration testing for partition mode
+* :acrn-issue:`1101` - missing acrn_mngr.h
+* :acrn-issue:`1071` - hypervisor cannot boot on skylake i5-6500
+* :acrn-issue:`1003` - CPU: cpu info is not correct
+* :acrn-issue:`971` -  acrncrashlog functions need to be enhance
+* :acrn-issue:`843` - ACRN boot failure
+* :acrn-issue:`721` - DM for IPU mediation
+* :acrn-issue:`707` - Issues found with instructions for using Ubuntu as SOS
+* :acrn-issue:`706` - Invisible mouse cursor in UOS
+* :acrn-issue:`424` - Clear Linux desktop GUI of SOS fails to launch
 
 
 Known Issues
 ************
 :acrn-issue:`677` - SSD Disk ID not consistent between SOS/UOS
-The SSD disk ID in the UOS is not the same as in the SOS when
-the SSD device is pass-through to the UOS. The ID is also changing after
-a reboot.  **Impact:** There is no impact to functionality.
-**Workaround:** None.The issue will be fixed in the next release.
+   The SSD disk ID in the UOS is not the same as in the SOS when the SSD
+   device is passed-through to the UOS (it should be). The ID is also
+   changing after a reboot (it shouldn't).  **Impact:** There is no impact
+   to functionality.  **Workaround:** None. The issues will be fixed in the
+   next release.
 
 
-:acrn-issue:`1268` - GPU hang happened when running GfxBench Car Chase in SOS and UOS.
-There were always "GPU HANG" log info printed in dmesg log in SOS and UOS and
-failed to load GfxBench Car Chase animation in HDMI & VGA monitors.
-**Impact:** Car Chase may stop running after the GPU hang, but not block other Gfx apps.
-**Workaround:** None. The issue will be fixed in the next release.
+:acrn-issue:`1268` - GPU hangs when running GfxBench Car Chase in SOS and UOS.
+   A "GPU HANG" log messages is printed in the dmesg log in SOS and UOS and
+   is fails to load GfxBench Car Chase animation in HDMI and VGA monitors.
+   **Impact:** Car Chase may stop running after the GPU hangs, but does not
+   block other Gfx apps.  **Workaround:** None. The issue will be fixed in
+   the next release.
 
 
-:acrn-issue:`1270` - SOS and UOS can play video but no display video animation output on monitor.
-Video does not display in SOS and UOS. No animation displayed with timer keep running. **Impact:**
-There is no video animation on monitor screen when playing video in SOS or UOS.
-**Workaround:** None. The issue will be fixed in the next release.
+:acrn-issue:`1270` - SOS and UOS play video but don't display video animation output on monitor.
+   Video does not display in SOS and UOS. Animation is not displayed with
+   the running timer. **Impact:** There is no video animation on monitor
+   screen when playing video in SOS or UOS.  **Workaround:** None. The
+   issue will be fixed in the next release.
 
 
 .. comment
