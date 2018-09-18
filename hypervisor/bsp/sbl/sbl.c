@@ -6,19 +6,6 @@
 
 #include <hypervisor.h>
 
-/* IOAPIC id */
-#define SBL_IOAPIC_ID   8U
-/* IOAPIC base address */
-#define SBL_IOAPIC_ADDR 0xfec00000U
-/* IOAPIC range size */
-#define SBL_IOAPIC_SIZE 0x100000U
-/* Local APIC base address */
-#define SBL_LAPIC_ADDR 0xfee00000U
-/* Local APIC range size */
-#define SBL_LAPIC_SIZE 0x100000U
-/* Number of PCI IRQ assignments */
-#define SBL_PCI_IRQ_ASSIGNMENT_NUM 28
-
 #ifndef CONFIG_DMAR_PARSE_ENABLED
 static struct dmar_dev_scope default_drhd_unit_dev_scope0[] = {
 	{ .bus = 0U, .devfun = DEVFUN(0x2U, 0U), },

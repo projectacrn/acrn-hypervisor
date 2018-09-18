@@ -8,19 +8,6 @@
 #include <multiboot.h>
 #include <vm0_boot.h>
 
-/* IOAPIC id */
-#define UEFI_IOAPIC_ID   8
-/* IOAPIC base address */
-#define UEFI_IOAPIC_ADDR 0xfec00000
-/* IOAPIC range size */
-#define UEFI_IOAPIC_SIZE 0x100000
-/* Local APIC base address */
-#define UEFI_LAPIC_ADDR 0xfee00000
-/* Local APIC range size */
-#define UEFI_LAPIC_SIZE 0x100000
-/* Number of PCI IRQ assignments */
-#define UEFI_PCI_IRQ_ASSIGNMENT_NUM 28
-
 #ifdef CONFIG_EFI_STUB
 static void efi_init(void);
 
