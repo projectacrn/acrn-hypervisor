@@ -74,6 +74,8 @@ void	init_inout(void);
 int	emulate_inout(struct vmctx *ctx, int *pvcpu, struct pio_request *req);
 int	register_inout(struct inout_port *iop);
 int	unregister_inout(struct inout_port *iop);
+int	enable_inout(struct inout_port *iop);
+int	disable_inout(struct inout_port *iop);
 int	init_bvmcons(void);
 void	deinit_bvmcons(void);
 void	enable_bvmcons(void);

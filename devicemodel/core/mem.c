@@ -33,6 +33,7 @@
  */
 
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -47,6 +48,7 @@ struct mmio_rb_range {
 	struct mem_range	mr_param;
 	uint64_t                mr_base;
 	uint64_t                mr_end;
+	bool			enabled;
 };
 
 struct mmio_rb_tree;
@@ -181,6 +183,10 @@ emulate_mem(struct vmctx *ctx, struct mmio_request *mmio_req)
 
 	assert(entry != NULL);
 
+	if (entry->enabled == false) {
+		return -1;
+	}
+
 	if (mmio_req->direction == REQUEST_READ)
 		err = mem_read(ctx, 0, paddr, (uint64_t *)&mmio_req->value,
 				size, &entry->mr_param);
@@ -207,6 +213,7 @@ register_mem_int(struct mmio_rb_tree *rbt, struct mem_range *memp)
 		mrp->mr_param = *memp;
 		mrp->mr_base = memp->base;
 		mrp->mr_end = memp->base + memp->size - 1;
+		mrp->enabled = true;
 		pthread_rwlock_wrlock(&mmio_rwlock);
 		if (mmio_rb_lookup(rbt, memp->base, &entry) != 0)
 			err = mmio_rb_add(rbt, mrp);
@@ -217,6 +224,68 @@ register_mem_int(struct mmio_rb_tree *rbt, struct mem_range *memp)
 		err = -1;
 
 	return err;
+}
+
+int
+disable_mem(struct mem_range *memp)
+{
+	uint64_t paddr = memp->base;
+	struct mmio_rb_range *entry = NULL;
+
+	pthread_rwlock_rdlock(&mmio_rwlock);
+	/*
+	 * First check the per-VM cache
+	 */
+	if (mmio_hint && paddr >= mmio_hint->mr_base &&
+			paddr <= mmio_hint->mr_end)
+		entry = mmio_hint;
+
+	if (entry == NULL) {
+		if (mmio_rb_lookup(&mmio_rb_root, paddr, &entry) == 0)
+			/* Update the per-VMU cache */
+			mmio_hint = entry;
+		else if (mmio_rb_lookup(&mmio_rb_fallback, paddr, &entry)) {
+			pthread_rwlock_unlock(&mmio_rwlock);
+			return -ESRCH;
+		}
+	}
+
+	assert(entry != NULL);
+	entry->enabled = false;
+	pthread_rwlock_unlock(&mmio_rwlock);
+
+	return 0;
+}
+
+int
+enable_mem(struct mem_range *memp)
+{
+	uint64_t paddr = memp->base;
+	struct mmio_rb_range *entry = NULL;
+
+	pthread_rwlock_rdlock(&mmio_rwlock);
+	/*
+	 * First check the per-VM cache
+	 */
+	if (mmio_hint && paddr >= mmio_hint->mr_base &&
+			paddr <= mmio_hint->mr_end)
+		entry = mmio_hint;
+
+	if (entry == NULL) {
+		if (mmio_rb_lookup(&mmio_rb_root, paddr, &entry) == 0)
+			/* Update the per-VMU cache */
+			mmio_hint = entry;
+		else if (mmio_rb_lookup(&mmio_rb_fallback, paddr, &entry)) {
+			pthread_rwlock_unlock(&mmio_rwlock);
+			return -ESRCH;
+		}
+	}
+
+	assert(entry != NULL);
+	entry->enabled = true;
+	pthread_rwlock_unlock(&mmio_rwlock);
+
+	return 0;
 }
 
 int
