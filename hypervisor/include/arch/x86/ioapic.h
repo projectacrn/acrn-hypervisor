@@ -33,7 +33,7 @@ void gsi_unmask_irq(uint32_t irq);
 extern uint8_t pic_ioapic_pin_map[NR_LEGACY_PIN];
 
 #ifdef HV_DEBUG
-int get_ioapic_info(char *str_arg, int str_max_len);
+int get_ioapic_info(char *str_arg, size_t str_max_len);
 #endif /* HV_DEBUG */
 
 #endif /* IOAPIC_H */

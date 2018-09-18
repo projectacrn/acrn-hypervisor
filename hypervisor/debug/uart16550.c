@@ -165,11 +165,11 @@ static void uart16550_putc(char c)
 	uart16550_write_reg(uart_base_address, (uint32_t)temp, UART16550_THR);
 }
 
-int uart16550_puts(const char *buf, uint32_t len)
+size_t uart16550_puts(const char *buf, uint32_t len)
 {
 	uint32_t i;
 	if (!uart_enabled) {
-		return (int)len;
+		return len;
 	}
 	spinlock_obtain(&uart_tx_lock);
 	for (i = 0U; i < len; i++) {
@@ -182,7 +182,7 @@ int uart16550_puts(const char *buf, uint32_t len)
 		buf++;
 	}
 	spinlock_release(&uart_tx_lock);
-	return (int)len;
+	return len;
 }
 
 void uart16550_set_property(bool enabled, bool port_mapped, uint64_t base_addr)

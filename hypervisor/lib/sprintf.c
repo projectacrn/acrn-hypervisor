@@ -653,7 +653,7 @@ size_t snprintf(char *dest, size_t sz, const char *fmt, ...)
 	va_start(args, fmt);
 
 	/* execute the printf() */
-	res = vsnprintf(dest, (size_t)sz, fmt, args);
+	res = vsnprintf(dest, sz, fmt, args);
 
 	/* destroy parameter list */
 	va_end(args);

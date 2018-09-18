@@ -68,7 +68,7 @@ static void parse_other_modules(struct vm *vm,
 			static int copy_once = 1;
 
 			start = end + 1; /*it is fw name for boot args */
-			snprintf(dyn_bootargs, 100, " %s=0x%x@0x%x ",
+			snprintf(dyn_bootargs, 100U, " %s=0x%x@0x%x ",
 				start, mod_size, mod_addr);
 			dev_dbg(ACRN_DBG_BOOT, "fw-%d: %s", i, dyn_bootargs);
 

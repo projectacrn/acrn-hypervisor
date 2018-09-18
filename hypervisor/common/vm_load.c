@@ -185,7 +185,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 #ifdef CONFIG_CMA
 		/* add "cma=XXXXM@0xXXXXXXXX" to cmdline*/
 		if (is_vm0(vm) && (e820_mem.max_ram_blk_size > 0)) {
-			snprintf(dyn_bootargs, 100, " cma=%dM@0x%llx",
+			snprintf(dyn_bootargs, 100U, " cma=%dM@0x%llx",
 					(e820_mem.max_ram_blk_size >> 20),
 					e820_mem.max_ram_blk_base);
 			(void)strcpy_s((char *)hva
@@ -208,7 +208,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 						3;
 #endif
 			if (reserving_1g_pages > 0) {
-				snprintf(dyn_bootargs, 100,
+				snprintf(dyn_bootargs, 100U,
 					" hugepagesz=1G hugepages=%d",
 					reserving_1g_pages);
 				(void)strcpy_s((char *)hva
