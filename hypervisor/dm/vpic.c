@@ -412,6 +412,10 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin, bool newstate
 	int oldcnt, newcnt;
 	bool level;
 
+	if (pin >= NR_VPIC_PINS_TOTAL) {
+		return;
+	}
+
 	i8259 = &vpic->i8259[pin >> 3U];
 
 	oldcnt = i8259->acnt[pin & 0x7U];
@@ -456,6 +460,10 @@ static void vpic_set_irqstate(struct vm *vm, uint32_t irq,
 	struct acrn_vpic *vpic;
 	struct i8259_reg_state *i8259;
 	uint8_t pin;
+
+	if (irq >= NR_VPIC_PINS_TOTAL) {
+		return;
+	}
 
 	vpic = vm_pic(vm);
 	i8259 = &vpic->i8259[irq >> 3U];

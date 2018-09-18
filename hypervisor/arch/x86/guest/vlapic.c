@@ -1562,7 +1562,7 @@ vlapic_reset(struct acrn_vlapic *vlapic)
 	struct lapic_regs *lapic;
 
 	lapic = &(vlapic->apic_page);
-	(void)memset((void *)lapic, 0U, CPU_PAGE_SIZE);
+	(void)memset((void *)lapic, 0U, sizeof(struct lapic_regs));
 	(void)memset((void *)&(vlapic->pir_desc), 0U, sizeof(vlapic->pir_desc));
 
 	lapic->id.v = vlapic_build_id(vlapic);

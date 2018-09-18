@@ -289,13 +289,16 @@ uint32_t pin_to_irq(uint8_t pin)
 void
 irq_gsi_mask_unmask(uint32_t irq, bool mask)
 {
-	void *addr = gsi_table[irq].addr;
-	uint8_t pin = gsi_table[irq].pin;
+	void *addr;
+	uint8_t pin;
 	union ioapic_rte rte;
 
 	if (!irq_is_gsi(irq)) {
 		return;
 	}
+
+	addr = gsi_table[irq].addr;
+	pin = gsi_table[irq].pin;
 
 	ioapic_get_rte_entry(addr, pin, &rte);
 	if (mask) {
