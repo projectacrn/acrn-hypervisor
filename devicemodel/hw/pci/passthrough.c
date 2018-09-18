@@ -72,11 +72,14 @@
 
 #define	PCI_BDF_GPU		0x00000010	/* 00:02.0 */
 
-/* Some audio driver get topology data from ACPI NHLT table, thus need copy host
- * NHLT to guest. Default audio driver doesn't require this, so make it off by
- * default to avoid unexpected failure.
+/* Some audio drivers get topology data from ACPI NHLT table.
+ * For such drivers, we need to copy the host NHLT table to make it
+ * available to the Guest OS. Most audio drivers don't need this by
+ * default, when that's the case setting this macro to 0 will avoid
+ * unexpected failures.
+ * The cAVS audio needs this however, so we enable this feature.
  */
-#define AUDIO_NHLT_HACK 0
+#define AUDIO_NHLT_HACK 1
 
 static int iofd = -1;
 static int memfd = -1;
