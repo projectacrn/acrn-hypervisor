@@ -22,7 +22,7 @@ void console_putc(const char *ch)
 }
 
 
-int console_write(const char *s, size_t len)
+size_t console_write(const char *s, size_t len)
 {
 	return  uart16550_puts(s, len);
 }

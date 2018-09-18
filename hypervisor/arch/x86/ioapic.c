@@ -446,11 +446,11 @@ static void get_rte_info(union ioapic_rte rte, bool *mask, bool *irr,
 	*dest = (uint32_t)(rte.full >> APIC_ID_SHIFT);
 }
 
-int get_ioapic_info(char *str_arg, int str_max_len)
+int get_ioapic_info(char *str_arg, size_t str_max_len)
 {
 	char *str = str_arg;
 	uint32_t irq;
-	int len, size = str_max_len;
+	size_t len, size = str_max_len;
 
 	len = snprintf(str, size,
 	"\r\nIRQ\tPIN\tRTE.HI32\tRTE.LO32\tVEC\tDST\tDM\tTM\tDELM\tIRR\tMASK");
@@ -481,7 +481,7 @@ int get_ioapic_info(char *str_arg, int str_max_len)
 		size -= len;
 		str += len;
 
-		if (size < 2) {
+		if (size < 2U) {
 			pr_err("\r\nsmall buffer for ioapic dump");
 			return -1;
 		}

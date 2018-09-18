@@ -83,7 +83,7 @@ void ptdev_activate_entry(
 void ptdev_deactivate_entry(struct ptdev_remapping_info *entry);
 
 #ifdef HV_DEBUG
-void get_ptdev_info(char *str_arg, int str_max);
+void get_ptdev_info(char *str_arg, size_t str_max);
 #endif /* HV_DEBUG */
 
 uint32_t get_vm_ptdev_intr_data(const struct vm *target_vm, uint64_t *buffer,

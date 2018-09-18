@@ -28,7 +28,7 @@ void console_init(void);
  *          and no character was written.
  */
 
-int console_write(const char *s, size_t len);
+size_t console_write(const char *s, size_t len);
 
 /** Writes a single character to the console.
  *
@@ -62,13 +62,13 @@ static inline void console_init(void)
 {
 }
 
-static inline int console_write(__unused const char *str,
+static inline size_t console_write(__unused const char *str,
 			__unused size_t len)
 {
 	return 0;
 }
 static inline void console_putc(__unused const char *ch) { }
-static inline int console_getc(void) { return 0; }
+static inline char console_getc(void) { return '\0'; }
 static inline void console_setup_timer(void) {}
 static inline void suspend_console(void) {}
 static inline void resume_console(void) {}

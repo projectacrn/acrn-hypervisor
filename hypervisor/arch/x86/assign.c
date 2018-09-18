@@ -798,11 +798,11 @@ static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
 	}
 }
 
-void get_ptdev_info(char *str_arg, int str_max)
+void get_ptdev_info(char *str_arg, size_t str_max)
 {
 	char *str = str_arg;
 	struct ptdev_remapping_info *entry;
-	int len, size = str_max;
+	size_t len, size = str_max;
 	uint32_t irq, vector;
 	char type[16];
 	uint64_t dest;

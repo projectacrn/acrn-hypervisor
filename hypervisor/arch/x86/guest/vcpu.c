@@ -543,7 +543,7 @@ void vcpu_dumpreg(void *data)
 	struct vcpu_dump *dump = data;
 	struct vcpu *vcpu = dump->vcpu;
 	char *str = dump->str;
-	int len, size = dump->str_max;
+	size_t len, size = dump->str_max;
 
 	len = snprintf(str, size,
 		"=  VM ID %d ==== CPU ID %hu========================\r\n"

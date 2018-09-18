@@ -113,11 +113,11 @@ void vcpu_thread(struct vcpu *vcpu)
 }
 
 #ifdef HV_DEBUG
-void get_vmexit_profile(char *str_arg, int str_max)
+void get_vmexit_profile(char *str_arg, size_t str_max)
 {
 	char *str = str_arg;
 	uint16_t cpu, i;
-	int len, size = str_max;
+	size_t len, size = str_max;
 
 	len = snprintf(str, size, "\r\nNow(us) = %16lld\r\n",
 			ticks_to_us(rdtsc()));

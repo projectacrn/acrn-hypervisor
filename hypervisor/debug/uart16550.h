@@ -108,6 +108,6 @@
 
 void uart16550_init(void);
 char uart16550_getc(void);
-int uart16550_puts(const char *buf, uint32_t len);
+size_t uart16550_puts(const char *buf, uint32_t len);
 
 #endif /* !UART16550_H */

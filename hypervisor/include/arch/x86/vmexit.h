@@ -85,7 +85,7 @@ static inline uint64_t vm_exit_io_instruction_port_number(uint64_t exit_qual)
 }
 
 #ifdef HV_DEBUG
-void get_vmexit_profile(char *str_arg, int str_max);
+void get_vmexit_profile(char *str_arg, size_t str_max);
 #endif /* HV_DEBUG */
 
 #endif /* VMEXIT_H_ */

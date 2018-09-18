@@ -392,12 +392,12 @@ void partition_mode_dispatch_interrupt(struct intr_excp_ctx *ctx)
 #endif
 
 #ifdef HV_DEBUG
-void get_cpu_interrupt_info(char *str_arg, int str_max)
+void get_cpu_interrupt_info(char *str_arg, size_t str_max)
 {
 	char *str = str_arg;
 	uint16_t pcpu_id;
 	uint32_t irq, vector;
-	int len, size = str_max;
+	size_t len, size = str_max;
 
 	len = snprintf(str, size, "\r\nIRQ\tVECTOR");
 	size -= len;
