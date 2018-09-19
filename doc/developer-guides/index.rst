@@ -29,6 +29,7 @@ specific areas within the ACRN hypervisor system.
    GVT-g-porting.rst
    security-hld.rst
    watchdog-hld.rst
+   network-virt-hld.rst
 
 Contributing to the project
 ***************************
