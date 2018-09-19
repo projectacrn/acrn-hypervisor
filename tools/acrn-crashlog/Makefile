@@ -104,8 +104,8 @@ install:
 	@install -p -D -m 0755 $(BUILDDIR)/usercrash/bin/usercrash_s $(DESTDIR)/usr/bin/
 	@install -p -D -m 0755 data/acrnprobe_prepare.sh $(DESTDIR)/usr/bin/
 	@install -p -D -m 0755 data/usercrash-wrapper $(DESTDIR)/usr/bin/
-	@install -d $(DESTDIR)/usr/lib/systemd/system.conf.d/
-	@install -p -D -m 0644 data/40-watchdog.conf $(DESTDIR)/usr/lib/systemd/system.conf.d/
+	@install -d $(DESTDIR)/usr/share/acrn/crashlog
+	@install -p -D -m 0644 data/40-watchdog.conf $(DESTDIR)/usr/share/acrn/crashlog
 	@install -d $(DESTDIR)/usr/share/defaults/telemetrics/
 	@install -p -D -m 0644 data/acrnprobe.xml $(DESTDIR)/usr/share/defaults/telemetrics/
 	@install -d $(DESTDIR)/usr/lib/systemd/system/
@@ -133,8 +133,8 @@ uninstall:
 	@if [ -e "$(DESTDIR)/usr/bin/usercrash-wrapper" ];then \
 		$(RM) $(DESTDIR)/usr/bin/usercrash-wrapper; \
 	fi
-	@if [ -e "$(DESTDIR)/usr/lib/systemd/system.conf.d/40-watchdog.conf" ];then \
-		$(RM) $(DESTDIR)/usr/lib/systemd/system.conf.d/40-watchdog.conf; \
+	@if [ -e "$(DESTDIR)/usr/share/acrn/crashlog/40-watchdog.conf" ];then \
+		$(RM) $(DESTDIR)/usr/share/acrn/crashlog/40-watchdog.conf; \
 	fi
 	@if [ -e "$(DESTDIR)/usr/share/defaults/telemetrics/acrnprobe.xml" ];then \
 		$(RM) $(DESTDIR)/usr/share/defaults/telemetrics/acrnprobe.xml; \
