@@ -659,8 +659,26 @@ static void dmar_set_root_table(struct dmar_drhd_rt *dmar_uint)
 {
 	uint64_t address;
 	uint32_t status;
+	void *root_table_vaddr = NULL;
 
 	spinlock_obtain(&(dmar_uint->lock));
+
+	/*
+	 * dmar_set_root_table is called from init_iommu and
+	 * resume_iommu. So NULL check on this pointer is needed
+	 * so that we do not change the root table pointer in the
+	 * resume flow.
+	 */
+
+	if (dmar_uint->root_table_addr == 0UL) {
+		root_table_vaddr = alloc_paging_struct();
+
+		if (root_table_vaddr != NULL) {
+			dmar_uint->root_table_addr = hva2hpa(root_table_vaddr);
+		} else {
+			ASSERT(false, "failed to allocate root table!");
+		}
+	}
 
 	/* Currently don't support extended root table */
 	address = dmar_uint->root_table_addr;
@@ -973,16 +991,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 		return 1;
 	}
 
-	if (dmar_uint->root_table_addr == 0UL) {
-		void *root_table_vaddr = alloc_paging_struct();
-
-		if (root_table_vaddr != NULL) {
-			dmar_uint->root_table_addr = hva2hpa(root_table_vaddr);
-		} else {
-			ASSERT(false, "failed to allocate root table!");
-			return 1;
-		}
-	}
+	ASSERT(dmar_uint->root_table_addr != 0UL, "root table is not setup");
 
 	root_table =
 		(struct dmar_root_entry *)hpa2hva(dmar_uint->root_table_addr);
@@ -1277,6 +1286,8 @@ void init_iommu(void)
 	spinlock_init(&domain_lock);
 
 	register_hrhd_units();
+
+	enable_iommu();
 }
 
 void init_iommu_vm0_domain(struct vm *vm0)
@@ -1296,5 +1307,4 @@ void init_iommu_vm0_domain(struct vm *vm0)
 		}
 	}
 	cache_flush_invalidate_all();
-	enable_iommu();
 }
