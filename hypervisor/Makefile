@@ -1,5 +1,5 @@
 #
-# ACRN Hypervisor
+# ACRN Hypervisor 1
 #
 
 include ../VERSION
