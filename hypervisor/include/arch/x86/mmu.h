@@ -115,19 +115,6 @@ struct e820_entry {
 #define E820_TYPE_ACPI_NVS	4U	/* EFI 10 */
 #define E820_TYPE_UNUSABLE	5U	/* EFI 8 */
 
-/** Calculates the page table address for a given address.
- *
- * @param pd The base address of the page directory.
- * @param vaddr The virtual address to calculate the page table address for.
- *
- * @return A pointer to the page table for the specified virtual address.
- *
- */
-static inline void *mmu_pt_for_pde(uint32_t *pd, uint32_t vaddr)
-{
-	return pd + (((vaddr >> 22U) + 1U) * 1024U);
-}
-
 static inline void cache_flush_invalidate_all(void)
 {
 	asm volatile ("   wbinvd\n" : : : "memory");
