@@ -1,20 +1,51 @@
+T := $(CURDIR)
+OUT_DIR ?= $(shell mkdir -p $(T)/build;cd $(T)/build;pwd)
+CC ?= gcc
 
-OUT_DIR ?= .
+CFLAGS := -g -O0 -std=gnu11
+CFLAGS += -D_GNU_SOURCE
+CFLAGS += -DNO_OPENSSL
+CFLAGS += -m64
+CFLAGS += -Wall -ffunction-sections
+CFLAGS += -Werror
+CFLAGS += -O2 -D_FORTIFY_SOURCE=2
+CFLAGS += -Wformat -Wformat-security -fno-strict-aliasing
+CFLAGS += -fpie -fpic
+#FIXME: remove me. work-around for system() calls, which will be removed
+CFLAGS += -Wno-format-truncation -Wno-unused-result
 
-CFLAGS := -Wall
 CFLAGS += -I../../devicemodel/include
 CFLAGS += -I../../devicemodel/include/public
 CFLAGS += -I../../hypervisor/include
-CFLAGS += -fpie
+
+GCC_MAJOR=$(shell echo __GNUC__ | $(CC) -E -x c - | tail -n 1)
+GCC_MINOR=$(shell echo __GNUC_MINOR__ | $(CC) -E -x c - | tail -n 1)
+
+#enable stack overflow check
+STACK_PROTECTOR := 1
+
+ifdef STACK_PROTECTOR
+ifeq (true, $(shell [ $(GCC_MAJOR) -gt 4 ] && echo true))
+CFLAGS += -fstack-protector-strong
+else
+ifeq (true, $(shell [ $(GCC_MAJOR) -eq 4 ] && [ $(GCC_MINOR) -ge 9 ] && echo true))
+CFLAGS += -fstack-protector-strong
+else
+CFLAGS += -fstack-protector
+endif
+endif
+endif
 
 ifeq ($(RELEASE),0)
 CFLAGS += -g -DMNGR_DEBUG
 endif
 
-LDFLAGS := -L$(OUT_DIR)
-LDFLAGS += -lacrn-mngr
-LDFLAGS +=  -lpthread
+LDFLAGS := -Wl,-z,noexecstack
+LDFLAGS += -Wl,-z,relro,-z,now
 LDFLAGS += -pie
+LDFLAGS += -L$(OUT_DIR)
+LDFLAGS +=  -lpthread
+LDFLAGS += -lacrn-mngr
 
 .PHONY: all
 all: $(OUT_DIR)/libacrn-mngr.a $(OUT_DIR)/acrn_mngr.h $(OUT_DIR)/acrnctl $(OUT_DIR)/acrnd
@@ -42,11 +73,12 @@ clean:
 	rm -f $(OUT_DIR)/acrnctl
 	rm -f $(OUT_DIR)/acrn_mngr.o
 	rm -f $(OUT_DIR)/libacrn-mngr.a
+	rm -f $(OUT_DIR)/acrnd
 ifneq ($(OUT_DIR),.)
 	rm -f $(OUT_DIR)/acrn_mngr.h
 	rm -f $(OUT_DIR)/acrnd.service
+	rm -rf $(OUT_DIR)
 endif
-	rm -f $(OUT_DIR)/acrnd
 
 .PHONY: install
 install: $(OUT_DIR)/acrnctl $(OUT_DIR)/acrn_mngr.h $(OUT_DIR)/libacrn-mngr.a
