@@ -10,7 +10,7 @@
 uint64_t get_microcode_version(void)
 {
 	uint64_t val;
-	uint32_t eax = 0U, ebx = 0U, ecx = 0U, edx = 0U;
+	uint32_t eax, ebx, ecx, edx;
 
 	msr_write(MSR_IA32_BIOS_SIGN_ID, 0U);
 	cpuid(CPUID_FEATURES, &eax, &ebx, &ecx, &edx);

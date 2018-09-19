@@ -657,7 +657,7 @@ int vsnprintf(char *dst_arg, size_t sz_arg, const char *fmt, va_list args)
 {
 	char *dst = dst_arg;
 	uint32_t sz = sz_arg;
-	int res = 0;
+	int res;
 
 	if ((sz == 0U) || (dst == NULL)) {
 		return -1;

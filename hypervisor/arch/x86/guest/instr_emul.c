@@ -247,6 +247,9 @@ static void encode_vmcs_seg_desc(enum cpu_reg_name seg,
 		desc->access_field = 0xffffffffU;
 		break;
 	default:
+		desc->base_field = 0U;
+		desc->limit_field = 0U;
+		desc->access_field = 0U;
 		pr_err("%s: invalid seg %d", __func__, seg);
 		break;
 	}
@@ -374,7 +377,7 @@ static void vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg,
  */
 static void vm_get_seg_desc(enum cpu_reg_name seg, struct seg_desc *desc)
 {
-	struct seg_desc_vmcs tdesc = {0U, 0U, 0U};
+	struct seg_desc_vmcs tdesc;
 
 	/* tdesc->access != 0xffffffffU in this function */
 	encode_vmcs_seg_desc(seg, &tdesc);
@@ -2188,7 +2191,7 @@ static int instr_check_di(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt)
 static int instr_check_gva(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt,
 		enum vm_cpu_mode cpu_mode)
 {
-	int ret = 0;
+	int ret;
 	uint64_t base, segbase, idx, gva, gpa;
 	uint32_t err_code;
 	enum cpu_reg_name seg;
@@ -2274,7 +2277,7 @@ int decode_instruction(struct vcpu *vcpu)
 {
 	struct instr_emul_ctxt *emul_ctxt;
 	uint32_t csar;
-	int retval = 0;
+	int retval;
 	enum vm_cpu_mode cpu_mode;
 
 	emul_ctxt = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);

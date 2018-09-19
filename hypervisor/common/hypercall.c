@@ -179,7 +179,7 @@ handle_virt_irqline(struct vm *vm, uint16_t target_vmid,
  */
 int32_t hcall_create_vm(struct vm *vm, uint64_t param)
 {
-	int32_t ret = 0;
+	int32_t ret;
 	struct vm *target_vm = NULL;
 	struct acrn_create_vm cv;
 	struct vm_description vm_desc;
@@ -215,7 +215,7 @@ int32_t hcall_create_vm(struct vm *vm, uint64_t param)
 
 int32_t hcall_destroy_vm(uint16_t vmid)
 {
-	int32_t ret = 0;
+	int32_t ret;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
 	if (target_vm == NULL) {
@@ -228,7 +228,7 @@ int32_t hcall_destroy_vm(uint16_t vmid)
 
 int32_t hcall_start_vm(uint16_t vmid)
 {
-	int32_t ret = 0;
+	int32_t ret;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
 	if (target_vm == NULL) {
@@ -302,7 +302,7 @@ int32_t hcall_reset_vm(uint16_t vmid)
  */
 int32_t hcall_assert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 {
-	int32_t ret = 0;
+	int32_t ret;
 	struct acrn_irqline irqline;
 
 	if (copy_from_gpa(vm, &irqline, param, sizeof(irqline)) != 0) {
@@ -319,7 +319,7 @@ int32_t hcall_assert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
  */
 int32_t hcall_deassert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 {
-	int32_t ret = 0;
+	int32_t ret;
 	struct acrn_irqline irqline;
 
 	if (copy_from_gpa(vm, &irqline, param, sizeof(irqline)) != 0) {
@@ -336,7 +336,7 @@ int32_t hcall_deassert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
  */
 int32_t hcall_pulse_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 {
-	int32_t ret = 0;
+	int32_t ret;
 	struct acrn_irqline irqline;
 
 	if (copy_from_gpa(vm, &irqline, param, sizeof(irqline)) != 0) {
@@ -353,7 +353,7 @@ int32_t hcall_pulse_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
  */
 int32_t hcall_inject_msi(struct vm *vm, uint16_t vmid, uint64_t param)
 {
-	int32_t ret = 0;
+	int32_t ret;
 	struct acrn_msi_entry msi;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
@@ -376,8 +376,7 @@ int32_t hcall_inject_msi(struct vm *vm, uint16_t vmid, uint64_t param)
  */
 int32_t hcall_set_ioreq_buffer(struct vm *vm, uint16_t vmid, uint64_t param)
 {
-	int32_t ret = 0;
-	uint64_t hpa = 0UL;
+	uint64_t hpa;
 	struct acrn_set_ioreq_buffer iobuf;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 	union vhm_request_buffer *req_buf;
@@ -411,7 +410,7 @@ int32_t hcall_set_ioreq_buffer(struct vm *vm, uint16_t vmid, uint64_t param)
 		atomic_store32(&req_buf->req_queue[i].processed, REQ_STATE_FREE);
 	}
 
-	return ret;
+	return 0;
 }
 
 int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
@@ -634,7 +633,7 @@ int32_t hcall_write_protect_page(struct vm *vm, uint16_t vmid, uint64_t wp_gpa)
  */
 int32_t hcall_remap_pci_msix(struct vm *vm, uint16_t vmid, uint64_t param)
 {
-	int32_t ret = 0;
+	int32_t ret;
 	struct acrn_vm_pci_msix_remap remap;
 	struct ptdev_msi_info info;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
@@ -767,7 +766,7 @@ int32_t hcall_deassign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param)
  */
 int32_t hcall_set_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param)
 {
-	int32_t ret = 0;
+	int32_t ret;
 	struct hc_ptdev_irq irq;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 

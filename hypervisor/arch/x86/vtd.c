@@ -965,7 +965,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 	struct dmar_context_entry *context_table;
 	struct dmar_root_entry *root_entry;
 	struct dmar_context_entry *context_entry;
-	uint64_t upper = 0UL;
+	uint64_t upper;
 	uint64_t lower = 0UL;
 
 	if (domain == NULL) {
