@@ -280,8 +280,8 @@ void free_paging_struct(void *ptr)
 
 bool check_continuous_hpa(struct vm *vm, uint64_t gpa_arg, uint64_t size_arg)
 {
-	uint64_t curr_hpa = 0UL;
-	uint64_t next_hpa = 0UL;
+	uint64_t curr_hpa;
+	uint64_t next_hpa;
 	uint64_t gpa = gpa_arg;
 	uint64_t size = size_arg;
 

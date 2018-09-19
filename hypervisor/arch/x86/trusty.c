@@ -60,13 +60,13 @@ static struct trusty_key_info g_key_info = {
 static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 		uint64_t size, uint64_t gpa_rebased)
 {
-	uint64_t nworld_pml4e = 0UL;
-	uint64_t sworld_pml4e = 0UL;
-	uint64_t gpa = 0UL;
+	uint64_t nworld_pml4e;
+	uint64_t sworld_pml4e;
+	uint64_t gpa;
 	uint64_t hpa = gpa2hpa(vm, gpa_orig);
 	uint64_t table_present = EPT_RWX;
-	uint64_t pdpte = 0UL, *dest_pdpte_p = NULL, *src_pdpte_p = NULL;
-	void *sub_table_addr = NULL, *pml4_base = NULL;
+	uint64_t pdpte, *dest_pdpte_p, *src_pdpte_p;
+	void *sub_table_addr, *pml4_base;
 	struct vm *vm0 = get_vm_from_vmid(0U);
 	uint16_t i;
 

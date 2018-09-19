@@ -450,7 +450,7 @@ void shell_init(void)
 #define MAX_INDENT_LEN	16
 static int shell_cmd_help(__unused int argc, __unused char **argv)
 {
-	int spaces = 0;
+	int spaces;
 	struct shell_cmd *p_cmd = NULL;
 	char space_buf[MAX_INDENT_LEN + 1];
 
@@ -679,7 +679,7 @@ static int shell_dumpmem(int argc, char **argv)
 {
 	uint64_t addr;
 	uint64_t *ptr;
-	uint32_t i, length = 32U;
+	uint32_t i, length;
 	char temp_str[MAX_STR_SIZE];
 
 	/* User input invalidation */
