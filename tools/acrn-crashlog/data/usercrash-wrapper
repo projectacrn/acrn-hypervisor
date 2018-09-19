@@ -17,38 +17,26 @@ if [ ! -f $default_core_pattern_file ]; then
 	exit -1
 fi
 
-# default coredump app and usercrash parameters index file under /tmp
-d_param_index_file=/tmp/default_param_index_file
-u_param_index_file=/tmp/usercrash_param_index_file
+# We know the parameter order
+my_order=(%E %P %u %g %s %t %c %h %e %p %i %I %d)
+my_params=($*)
 
-# function to get the params from the input arguments
+# An O(n^2) function to look up the value
 function get_params()
 {
-	raw_params=$1
-
-	count=$[(${#raw_params} + 1) / 3]
-	for((i=0;i<$count;i++))
+	local ret=""
+	for args in $*
 	do
-		a_index=$[$i * 3 + 1]
-		param_list[$i]=${raw_params:($a_index):1}
+		for index in ${!my_order[@]}
+		do
+			if [ ${my_order[${index}]} = ${args} ]
+			then
+				ret="${ret} ${my_params[${index}]}"
+				break
+			fi
+		done
 	done
-	return 0;
-}
-
-# function to generate the index for the parameters of default coredump app
-function gen_index()
-{
-	full_list=$1
-	dump_list=$2
-
-	i=0
-	for arg in ${dump_list[@]}
-	do
-		q=(`expr \`expr $(expr index "$full_list" "$arg") + 1\` / 2`)
-		index[$i]=$[$q - 1]
-		let i+=1
-	done
-	return 0;
+	echo ${ret}
 }
 
 # get default core_pattern parameters list
@@ -59,71 +47,7 @@ default_params=${default_content#* }
 t_app=${default_content%% *}
 default_app=${t_app#*|}
 
-# function to save the index to /tmp. The index is the parameter
-# index of the default coredump app and usercrash referring to
-# the full parameters.
-function save_index()
-{
-	# get full coredump parameters list
-	pattern=`cat /proc/sys/kernel/core_pattern`
-	full_params=${pattern#* }
+usercrash_var=$(get_params "%p %e %s")
+default_var=$(get_params ${default_params})
 
-	get_params "$full_params"
-	for((i=0;i<$count;i++))
-	do
-		full_param_list[$i]=${param_list[$i]}
-	done
-
-	get_params "$default_params"
-	for((i=0;i<$count;i++))
-	do
-		default_param_list[$i]=${param_list[$i]}
-	done
-
-	# get the index of default parameter list accroding to
-	# the full parameter list
-	gen_index "${full_param_list[*]}" "${default_param_list[*]}"
-	for((j=0;j<$i;j++))
-	do
-		default_param_index[$j]=${index[$j]}
-	done
-	echo "${default_param_index[@]}" > $d_param_index_file
-
-	# get the index of usercrash_c parameter accroding to
-	# the full parameter list
-	usercrash_param_list=("p" "e" "s")
-	gen_index "${full_param_list[*]}" "${usercrash_param_list[*]}"
-	for((j=0;j<$i;j++))
-	do
-		usercrash_param_index[$j]=${index[$j]}
-	done
-	echo "${usercrash_param_index[@]}" > $u_param_index_file
-}
-
-if [[ ! -f $d_param_index_file ]] || [[ ! -f $u_param_index_file ]];then
-	save_index
-fi
-
-# get all the value of parameters in var[]
-i=0
-for p in "$@"
-do
-	var[$i]=$p
-	let i+=1
-done
-
-str_usercrash_param_index=`cat $u_param_index_file`
-u_param_index_arr=(${str_usercrash_param_index// / })
-for((i=0;i<${#u_param_index_arr[@]};i++))
-do
-	usercrash_var[$i]=${var[${u_param_index_arr[$i]}]}
-done
-
-str_default_param_index=`cat $d_param_index_file`
-d_param_index_arr=(${str_default_param_index// / })
-for((i=0;i<${#d_param_index_arr[@]};i++))
-do
-	default_var[$i]=${var[${d_param_index_arr[$i]}]}
-done
-
-tee >(/usr/bin/usercrash_c ${usercrash_var[*]}) | $default_app ${default_var[*]}
+tee >(/usr/bin/usercrash_c ${usercrash_var}) | ${default_app} ${default_var}
