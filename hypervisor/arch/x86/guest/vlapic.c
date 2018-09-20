@@ -518,10 +518,20 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 	return 1;
 }
 
+/**
+ * @pre offset value shall be one of the folllowing values:
+ *	APIC_OFFSET_CMCI_LVT
+ *	APIC_OFFSET_TIMER_LVT
+ *	APIC_OFFSET_THERM_LVT
+ *	APIC_OFFSET_PERF_LVT
+ *	APIC_OFFSET_LINT0_LVT
+ *	APIC_OFFSET_LINT1_LVT
+ *	APIC_OFFSET_ERROR_LVT
+ */
 static inline uint32_t
 lvt_off_to_idx(uint32_t offset)
 {
-	uint32_t index = ~0U;
+	uint32_t index;
 
 	switch (offset) {
 	case APIC_OFFSET_CMCI_LVT:
@@ -543,24 +553,29 @@ lvt_off_to_idx(uint32_t offset)
 		index = APIC_LVT_LINT1;
 		break;
 	case APIC_OFFSET_ERROR_LVT:
-		index = APIC_LVT_ERROR;
-		break;
 	default:
 		/*
-		 * For the offset that is not handled (an invalid offset of
-		 * Local Vector Table), its index is assigned to a default
-		 * value, which indicates an invalid index.
-		 * The index will be checked later to guarantee the validity.
+		 * The function caller could guarantee the pre condition.
+		 * So, all of the possible 'offset' other than
+		 * APIC_OFFSET_ERROR_LVT has been handled in prior cases.
 		 */
+		index = APIC_LVT_ERROR;
 		break;
 	}
-	ASSERT(index <= VLAPIC_MAXLVT_INDEX,
-		"%s: invalid lvt index %u for offset %#x",
-		__func__, index, offset);
 
 	return index;
 }
 
+/**
+ * @pre offset value shall be one of the folllowing values:
+ *	APIC_OFFSET_CMCI_LVT
+ *	APIC_OFFSET_TIMER_LVT
+ *	APIC_OFFSET_THERM_LVT
+ *	APIC_OFFSET_PERF_LVT
+ *	APIC_OFFSET_LINT0_LVT
+ *	APIC_OFFSET_LINT1_LVT
+ *	APIC_OFFSET_ERROR_LVT
+ */
 static inline uint32_t *
 vlapic_get_lvtptr(struct acrn_vlapic *vlapic, uint32_t offset)
 {
@@ -570,16 +585,14 @@ vlapic_get_lvtptr(struct acrn_vlapic *vlapic, uint32_t offset)
 	switch (offset) {
 	case APIC_OFFSET_CMCI_LVT:
 		return &lapic->lvt_cmci.v;
-	case APIC_OFFSET_TIMER_LVT:
-	case APIC_OFFSET_THERM_LVT:
-	case APIC_OFFSET_PERF_LVT:
-	case APIC_OFFSET_LINT0_LVT:
-	case APIC_OFFSET_LINT1_LVT:
-	case APIC_OFFSET_ERROR_LVT:
+	default:
+		/*
+		 * The function caller could guarantee the pre condition.
+		 * All the possible 'offset' other than APIC_OFFSET_CMCI_LVT
+		 * could be handled here.
+		 */
 		i = lvt_off_to_idx(offset);
 		return &(lapic->lvt[i].v);
-	default:
-		panic("vlapic_get_lvt: invalid LVT\n");
 	}
 }
 

@@ -128,6 +128,10 @@ enum irqstate {
 
 /**
  * @pre irq < vioapic_pincount(vm)
+ * @pre irqstate value shall be one of the folllowing values:
+ *	IRQSTATE_ASSERT
+ *	IRQSTATE_DEASSERT
+ *	IRQSTATE_PULSE
  */
 static void
 vioapic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate)
@@ -150,7 +154,11 @@ vioapic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate)
 		vioapic_set_pinstate(vioapic, pin, false);
 		break;
 	default:
-		panic("vioapic_set_irqstate: invalid irqstate %d", irqstate);
+		/*
+		 * The function caller could guarantee the pre condition.
+		 * All the possible 'irqstate' has been handled in prior cases.
+		 */
+		break;
 	}
 	spinlock_release(&(vioapic->mtx));
 }
