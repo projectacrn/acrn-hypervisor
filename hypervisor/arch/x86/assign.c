@@ -324,7 +324,7 @@ static void remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin)
 	if (is_entry_active(entry)) {
 		phys_irq = entry->allocated_pirq;
 		/* disable interrupt */
-		GSI_MASK_IRQ(phys_irq);
+		gsi_mask_irq(phys_irq);
 
 		ptdev_deactivate_entry(entry);
 		dev_dbg(ACRN_DBG_IRQ,
@@ -472,7 +472,7 @@ void ptdev_intx_ack(struct vm *vm, uint8_t virt_pin,
 
 	dev_dbg(ACRN_DBG_PTIRQ, "dev-assign: irq=0x%x acked vr: 0x%x",
 			phys_irq, irq_to_vector(phys_irq));
-	GSI_UNMASK_IRQ(phys_irq);
+	gsi_unmask_irq(phys_irq);
 }
 
 /* Main entry for PCI device assignment with MSI and MSI-X
@@ -548,7 +548,7 @@ static void activate_physical_ioapic(struct vm *vm,
 	bool is_lvl_trigger = false;
 
 	/* disable interrupt */
-	GSI_MASK_IRQ(phys_irq);
+	gsi_mask_irq(phys_irq);
 
 	/* build physical IOAPIC RTE */
 	rte = ptdev_build_physical_rte(vm, entry);
@@ -565,7 +565,7 @@ static void activate_physical_ioapic(struct vm *vm,
 	ioapic_set_rte(phys_irq, rte);
 
 	if (intr_mask == IOAPIC_RTE_INTMCLR) {
-		GSI_UNMASK_IRQ(phys_irq);
+		gsi_unmask_irq(phys_irq);
 	}
 }
 

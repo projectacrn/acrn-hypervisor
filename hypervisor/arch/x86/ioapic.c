@@ -286,7 +286,7 @@ uint32_t pin_to_irq(uint8_t pin)
 	return IRQ_INVALID;
 }
 
-void
+static void
 irq_gsi_mask_unmask(uint32_t irq, bool mask)
 {
 	void *addr;
@@ -309,6 +309,16 @@ irq_gsi_mask_unmask(uint32_t irq, bool mask)
 	ioapic_set_rte_entry(addr, pin, rte);
 	dev_dbg(ACRN_DBG_PTIRQ, "update: irq:%d pin:%hhu rte:%lx",
 		irq, pin, rte.full);
+}
+
+void gsi_mask_irq(uint32_t irq)
+{
+	irq_gsi_mask_unmask(irq, true);
+}
+
+void gsi_unmask_irq(uint32_t irq)
+{
+	irq_gsi_mask_unmask(irq, false);
 }
 
 static uint8_t
