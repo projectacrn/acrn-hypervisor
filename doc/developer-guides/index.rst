@@ -19,17 +19,17 @@ specific areas within the ACRN hypervisor system.
 .. toctree::
    :maxdepth: 1
 
-   memmgt-hld.rst
-   virtio-hld.rst
-   virtio-console.rst
-   uart-virtualization.rst
    ACPI-virt-hld.rst
-   interrupt-hld.rst
    APL_GVT-g-hld.rst
    GVT-g-porting.rst
-   security-hld.rst
-   watchdog-hld.rst
+   interrupt-hld.rst
+   memmgt-hld.rst
    network-virt-hld.rst
+   security-hld.rst
+   uart-virtualization.rst
+   virtio-hld.rst
+   virtio-console.rst
+   watchdog-hld.rst
 
 Contributing to the project
 ***************************
