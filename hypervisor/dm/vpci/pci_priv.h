@@ -30,35 +30,7 @@
 #ifndef PCI_PRIV_H_
 #define PCI_PRIV_H_
 
-#include <hv_debug.h>
-#include "vpci.h"
-
-#define PCIM_BAR_MEM_BASE  0xFFFFFFF0U
-
-#define PCI_BUSMAX    0xFFU
-#define PCI_SLOTMAX   0x1FU
-#define PCI_FUNCMAX   0x7U
-
-#define PCIR_VENDOR      0x00U
-#define PCIR_DEVICE      0x02U
-#define PCIR_COMMAND     0x04U
-#define PCIR_REVID       0x08U
-#define PCIR_SUBCLASS    0x0AU
-#define PCIR_CLASS       0x0BU
-#define PCIR_HDRTYPE     0x0EU
-#define PCIM_HDRTYPE_NORMAL   0x00U
-#define PCIM_MFDEV            0x80U
-
-#define PCIC_BRIDGE       0x06U
-#define PCIS_BRIDGE_HOST  0x00U
-
-#define PCI_CONFIG_ADDR   0xCF8U
-#define PCI_CONFIG_DATA   0xCFCU
-
-#define PCI_CFG_ENABLE    0x80000000U
-
-void pci_vdev_cfg_handler(struct vpci *vpci, uint32_t in,
-	union pci_bdf vbdf, uint32_t offset, uint32_t bytes, uint32_t *val);
+#include <pci.h>
 
 static inline uint8_t
 pci_vdev_read_cfg_u8(struct pci_vdev *vdev, uint32_t offset)
@@ -132,19 +104,7 @@ static inline void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset,
 	}
 }
 
-static inline uint32_t pci_bar_offset(uint32_t idx)
-{
-	return 0x10U + (idx << 2U);
-}
-
-static inline int pci_bar_access(uint32_t offset)
-{
-	if ((offset >= pci_bar_offset(0U))
-		&& (offset < pci_bar_offset(PCI_BAR_COUNT))) {
-		return 1;
-	} else {
-		return 0;
-	}
-}
+void pci_vdev_cfg_handler(struct vpci *vpci, uint32_t in,
+	union pci_bdf vbdf, uint32_t offset, uint32_t bytes, uint32_t *val);
 
 #endif /* PCI_PRIV_H_ */

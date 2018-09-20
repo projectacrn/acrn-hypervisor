@@ -101,6 +101,7 @@ INCLUDE_PATH += include/debug
 INCLUDE_PATH += include/public
 ifeq ($(CONFIG_PARTITION_MODE),y)
 INCLUDE_PATH += include/dm/vpci
+INCLUDE_PATH += include/dm
 endif
 INCLUDE_PATH += bsp/include
 INCLUDE_PATH += bsp/include/$(CONFIG_PLATFORM)
