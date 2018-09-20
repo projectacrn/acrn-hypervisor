@@ -31,7 +31,7 @@ static void loginfo(int fd, const char *fmt, ...)
 {
 	char buf[512];
 	va_list ap;
-	size_t len;
+	size_t len, ret;
 
 	va_start(ap, fmt);
 	vsnprintf(buf, sizeof(buf), fmt, ap);
@@ -41,7 +41,10 @@ static void loginfo(int fd, const char *fmt, ...)
 	if (len <= 0)
 		return;
 
-	write(fd, buf, len);
+	ret = write(fd, buf, len);
+	if (ret != len) {
+		LOGE("write in loginfo failed\n");
+	}
 }
 
 static const char *get_signame(int sig)
@@ -113,6 +116,7 @@ static int get_backtrace(int pid, int fd, int sig, const char *comm)
 {
 	char *membkt;
 	char format[FORMAT_LENGTH];
+	size_t len, ret;
 
 	loginfo(fd, "\nBackTrace:\n\n");
 	memset(format, 0, sizeof(format));
@@ -130,8 +134,13 @@ static int get_backtrace(int pid, int fd, int sig, const char *comm)
 		LOGE("get gdb info failed\n");
 		return -1;
 	}
-	write(fd, membkt, strlen(membkt));
+	len = strlen(membkt);
+	ret = write(fd, membkt, len);
 	free(membkt);
+	if (ret != len) {
+		LOGE("write file failed\n");
+		return -1;
+	}
 	return 0;
 
 }
@@ -159,7 +168,11 @@ static int save_proc_info(int pid, int fd, const char *path, const char *name)
 		LOGE("read file failed\n");
 		return -1;
 	}
-	write(fd, data, size);
+	ret = write(fd, data, size);
+	if ((unsigned long)ret != size) {
+		LOGE("write file failed\n");
+		return -1;
+	}
 	free(data);
 	return 0;
 
