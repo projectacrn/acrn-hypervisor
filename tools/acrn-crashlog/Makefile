@@ -5,18 +5,50 @@
 BASEDIR 	:= $(shell pwd)
 OUT_DIR 	?= $(BASEDIR)
 BUILDDIR	:= $(OUT_DIR)/acrn-crashlog
-CC		:= gcc
+CC		?= gcc
 RM		= rm
 RELEASE 	?= 0
 
-CFLAGS	:= -Wall -Wextra -pedantic
-CFLAGS	+= -m64 -D_GNU_SOURCE
 ifeq ($(RELEASE),0)
 CFLAGS	+= -DDEBUG_ACRN_CRASHLOG
 endif
+
+CFLAGS := -g -O0 -std=gnu11
+CFLAGS += -D_GNU_SOURCE
+CFLAGS += -m64
+CFLAGS += -Wall -ffunction-sections
+CFLAGS += -Werror
+CFLAGS += -O2 -D_FORTIFY_SOURCE=2
+CFLAGS += -Wformat -Wformat-security -fno-strict-aliasing
 CFLAGS += -fpie
+CFLAGS += -Wall -Wextra -pedantic
+
+CFLAGS += -I$(BASEDIR)/include
+CFLAGS += -I$(BASEDIR)/include/public
+
+GCC_MAJOR=$(shell echo __GNUC__ | $(CC) -E -x c - | tail -n 1)
+GCC_MINOR=$(shell echo __GNUC_MINOR__ | $(CC) -E -x c - | tail -n 1)
+
+#enable stack overflow check
+STACK_PROTECTOR := 1
+
+ifdef STACK_PROTECTOR
+ifeq (true, $(shell [ $(GCC_MAJOR) -gt 4 ] && echo true))
+CFLAGS += -fstack-protector-strong
+else
+ifeq (true, $(shell [ $(GCC_MAJOR) -eq 4 ] && [ $(GCC_MINOR) -ge 9 ] && echo true))
+CFLAGS += -fstack-protector-strong
+else
+CFLAGS += -fstack-protector
+endif
+endif
+endif
+
+LDFLAGS += -Wl,-z,noexecstack
+LDFLAGS += -Wl,-z,relro,-z,now
 LDFLAGS += -pie
 INCLUDE := -I $(BASEDIR)/common/include
+
 export INCLUDE
 export BUILDDIR
 export CC

@@ -8,8 +8,7 @@ LIBS		= -lpthread -lxml2 -lcrypto -lrt -lblkid -lext2fs -lcom_err \
 INCLUDE		+= -I $(CURDIR)/include -I /usr/include/libxml2
 INCLUDE		+= -I $(BUILDDIR)/include/acrnprobe
 CFLAGS 		+= $(INCLUDE)
-CFLAGS 		+= -g -O0 -std=gnu11
-CFLAGS 		+= -ffunction-sections -fdata-sections
+CFLAGS 		+= -fdata-sections
 
 LDFLAGS 	+= $(LIBS) -Wl,--gc-sections
 
