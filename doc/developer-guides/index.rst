@@ -20,6 +20,7 @@ specific areas within the ACRN hypervisor system.
    :maxdepth: 1
 
    memmgt-hld.rst
+   timer-hld.rst
    virtio-hld.rst
    virtio-console.rst
    uart-virtualization.rst
