@@ -66,7 +66,7 @@ void *get_rsdp_from_uefi(void)
 	if (!efi_initialized)
 		efi_init();
 
-	return hpa2hva(efi_ctx->rsdp);
+	return hpa2hva((uint64_t)efi_ctx->rsdp);
 }
 
 void *get_ap_trampoline_buf(void)

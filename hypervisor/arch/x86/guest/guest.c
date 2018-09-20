@@ -167,7 +167,7 @@ static int local_gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_inf
 	/* if smap is enabled and supervisor-mode access */
 	if (pw_info->is_smap_on && !pw_info->is_user_mode_access &&
 			is_user_mode_addr) {
-		bool rflags_ac = ((vcpu_get_rflags(vcpu) & RFLAGS_AC) == 1UL);
+		bool rflags_ac = ((vcpu_get_rflags(vcpu) & RFLAGS_AC) != 0UL);
 
 		/* read from user mode address, eflags.ac = 0 */
 		if (!pw_info->is_write_access && !rflags_ac) {

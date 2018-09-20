@@ -143,7 +143,7 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 
 	/* Check if flags specify to output to memory */
 	if (do_mem_log) {
-		int i, msg_len;
+		unsigned int i, msg_len;
 		struct shared_buf *sbuf = (struct shared_buf *)
 					per_cpu(sbuf, pcpu_id)[ACRN_HVLOG];
 		struct shared_buf *early_sbuf = per_cpu(earlylog_sbuf, pcpu_id);
@@ -162,7 +162,7 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 		if (sbuf != NULL) {
 			msg_len = strnlen_s(buffer, LOG_MESSAGE_MAX_SIZE);
 
-			for (i = 0; i < (((msg_len - 1) / LOG_ENTRY_SIZE) + 1);
+			for (i = 0U; i < (((msg_len - 1U) / LOG_ENTRY_SIZE) + 1U);
 					i++) {
 				(void)sbuf_put(sbuf, (uint8_t *)buffer +
 							(i * LOG_ENTRY_SIZE));
@@ -213,7 +213,8 @@ void print_logmsg_buffer(uint16_t pcpu_id)
 			return;
 		}
 
-		idx = (read_cnt < LOG_ENTRY_SIZE) ? read_cnt : LOG_ENTRY_SIZE;
+		idx = ((uint32_t)read_cnt < LOG_ENTRY_SIZE) ?
+				(uint32_t)read_cnt : LOG_ENTRY_SIZE;
 		buffer[idx] = '\0';
 
 		spinlock_irqsave_obtain(&(logmsg.lock), &rflags);
