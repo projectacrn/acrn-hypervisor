@@ -16,20 +16,19 @@
 #define NR_LEGACY_PIN		NR_LEGACY_IRQ
 #define NR_MAX_GSI		(CONFIG_NR_IOAPICS * IOAPIC_MAX_LINES)
 
-#define GSI_MASK_IRQ(irq) irq_gsi_mask_unmask((irq), true)
-#define GSI_UNMASK_IRQ(irq) irq_gsi_mask_unmask((irq), false)
-
 void setup_ioapic_irqs(void);
 
 bool irq_is_gsi(uint32_t irq);
 uint8_t irq_to_pin(uint32_t irq);
 uint32_t pin_to_irq(uint8_t pin);
-void irq_gsi_mask_unmask(uint32_t irq, bool mask);
 void ioapic_set_rte(uint32_t irq, union ioapic_rte rte);
 void ioapic_get_rte(uint32_t irq, union ioapic_rte *rte);
 
 void suspend_ioapic(void);
 void resume_ioapic(void);
+
+void gsi_mask_irq(uint32_t irq);
+void gsi_unmask_irq(uint32_t irq);
 
 extern uint8_t pic_ioapic_pin_map[NR_LEGACY_PIN];
 

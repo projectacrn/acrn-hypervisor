@@ -302,7 +302,7 @@ static inline void handle_irq(struct irq_desc *desc)
 	irq_action_t action = desc->action;
 
 	if (irq_need_mask(desc))  {
-		GSI_MASK_IRQ(desc->irq);
+		gsi_mask_irq(desc->irq);
 	}
 
 	/* Send EOI to LAPIC/IOAPIC IRR */
@@ -313,7 +313,7 @@ static inline void handle_irq(struct irq_desc *desc)
 	}
 
 	if (irq_need_unmask(desc)) {
-		GSI_UNMASK_IRQ(desc->irq);
+		gsi_unmask_irq(desc->irq);
 	}
 }
 
