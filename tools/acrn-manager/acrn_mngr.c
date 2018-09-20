@@ -479,8 +479,11 @@ static int connect_to_server(const char *name)
 	}
 
 	mfd->addr.sun_family = AF_UNIX;
-	snprintf(mfd->addr.sun_path, sizeof(mfd->addr.sun_path),
+	ret = snprintf(mfd->addr.sun_path, sizeof(mfd->addr.sun_path),
 		 "/run/acrn/mngr/%s", s_name);
+	if ((ret >= 0) && (ret < strlen(s_name)))
+		printf("WARN: %s is truncated\n", s_name);
+
 	closedir(dir);
 	ret =
 	    connect(mfd->fd, (struct sockaddr *)&mfd->addr, sizeof(mfd->addr));
