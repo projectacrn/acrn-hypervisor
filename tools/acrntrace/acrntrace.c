@@ -141,7 +141,7 @@ static int get_cpu_num(void)
 		return -1;
 	}
 
-	while (pdir = readdir(dir)) {
+	while ((pdir = readdir(dir)) != NULL) {
 		ret = strstr(pdir->d_name, dev_prefix);
 		if (ret)
 			cpu_num++;
@@ -154,20 +154,22 @@ static int get_cpu_num(void)
 
 static int create_trace_file_dir(char *dir)
 {
-	int err = 0;
-	char cmd[CMD_MAX_LEN];
-	char time_str[TIME_STR_LEN];
+	int err = 0, ret;
+	char time_str[TIME_STR_LEN + 1];
 	time_t timep;
 	struct tm *p;
 	struct stat st;
 
 	time(&timep);
 	p = localtime(&timep);
-	if (p)
-		snprintf(time_str, TIME_STR_LEN, "%d%02d%02d-%02d%02d%02d",
-			 (1900 + p->tm_year), (1 + p->tm_mon), p->tm_mday,
-			 p->tm_hour, p->tm_min, p->tm_sec);
-	else
+	if (p) {
+		ret = snprintf(time_str, TIME_STR_LEN + 1,
+			       "%04d%02d%02d-%02d%02d%02d",
+			       (1900 + p->tm_year), (1 + p->tm_mon),
+			       p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
+		if (ret > TIME_STR_LEN)
+			printf("WARN: time_str may be truncated\n");
+	} else
 		snprintf(time_str, TIME_STR_LEN, "00000000-000000");
 
 	pr_info("start tracing at %s\n", time_str);
@@ -181,7 +183,10 @@ static int create_trace_file_dir(char *dir)
 		}
 	}
 
-	snprintf(dir, TRACE_FILE_DIR_LEN, "%s%s", TRACE_FILE_ROOT, time_str);
+	ret = snprintf(dir, TRACE_FILE_DIR_LEN, "%s%s",
+		       TRACE_FILE_ROOT, time_str);
+	if (ret < (strlen(TRACE_FILE_ROOT) + strlen(time_str)))
+		printf("WARN: trace file dir name is truncated\n");
 	if (stat(dir, &st)) {
 		err = mkdir(dir, 0644);
 		if (err) {
@@ -200,12 +205,8 @@ static int create_trace_file_dir(char *dir)
 static void reader_fn(param_t * param)
 {
 	int ret;
-	uint32_t cpuid = param->cpuid;
 	int fd = param->trace_fd;
 	shared_buf_t *sbuf = param->sbuf;
-	trace_ev_t e;
-	struct statvfs stat;
-	uint64_t freespace;
 
 	pr_dbg("reader thread[%lu] created for FILE*[0x%p]\n",
 	       pthread_self(), fp);
