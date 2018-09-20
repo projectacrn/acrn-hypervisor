@@ -44,8 +44,15 @@ static const char *const excp_names[32] = {
 	[31] = "Intel Reserved"
 };
 
-/* Global variable for save registers on exception */
-static struct intr_excp_ctx *crash_ctx;
+/*
+ * Global variable for save registers on exception.
+ * don't change crash_ctx to static.
+ * crash_ctx is for offline analysis when system crashed, not for runtime usage.
+ * as crash_ctx is only be set without being read, compiler will regard
+ * crash_ctx as an useless variable if it is set to static, and will not
+ * generate code for it.
+ */
+struct intr_excp_ctx *crash_ctx;
 
 static void dump_guest_reg(struct vcpu *vcpu)
 {
