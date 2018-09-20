@@ -67,7 +67,7 @@ static int get_cpu_num(void)
 		return -1;
 	}
 
-	while (pdir = readdir(dir)) {
+	while ((pdir = readdir(dir)) != NULL) {
 		ret = strstr(pdir->d_name, prefix);
 		if (ret)
 			cpu_num++;
@@ -389,7 +389,7 @@ static int mk_dir(const char *path)
 				path, strerror(errno));
 			return -1;
 		}
-		while (pdir = readdir(dir)) {
+		while ((pdir = readdir(dir)) != NULL) {
 			find = strstr(pdir->d_name, prefix);
 			if (!find)
 				continue;
@@ -458,7 +458,7 @@ static pthread_t cur_thread;
 
 int main(int argc, char *argv[])
 {
-	char name[24];
+	char name[32];
 	int i, ret;
 	int num_cur, num_last;
 	struct hvlog_msg *msg;
