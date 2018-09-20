@@ -175,8 +175,8 @@ create_rte_for_legacy_irq(uint32_t irq, uint32_t vr)
 	rte.full |= DEFAULT_DELIVERY_MODE;
 	rte.full |= (IOAPIC_RTE_INTVEC & (uint64_t)vr);
 
-	/* FIXME: Fixed to active Low? */
-	rte.full |= IOAPIC_RTE_INTALO;
+	/* Fixed to active high */
+	rte.full |= IOAPIC_RTE_INTAHI;
 
 	/* Dest field: legacy irq fixed to CPU0 */
 	rte.full |= (1UL << IOAPIC_RTE_DEST_SHIFT);
@@ -200,8 +200,8 @@ create_rte_for_gsi_irq(uint32_t irq, uint32_t vr)
 	rte.full |= DEFAULT_DELIVERY_MODE;
 	rte.full |= (IOAPIC_RTE_INTVEC & (uint64_t)vr);
 
-	/* FIXME: Fixed to active Low? */
-	rte.full |= IOAPIC_RTE_INTALO;
+	/* Fixed to active high */
+	rte.full |= IOAPIC_RTE_INTAHI;
 
 	/* Dest field */
 	rte.full |= ((uint64_t)ALL_CPUS_MASK << IOAPIC_RTE_DEST_SHIFT);
