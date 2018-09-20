@@ -145,6 +145,7 @@ static uint32_t update_ept(struct vm *vm, uint64_t start,
 	case MTRR_MEM_TYPE_UC:
 	default:
 		attr = EPT_UNCACHED;
+		break;
 	}
 
 	ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp,

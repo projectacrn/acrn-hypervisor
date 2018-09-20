@@ -453,6 +453,10 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin, bool newstate
 
 /**
  * @pre irq < NR_VPIC_PINS_TOTAL
+ * @pre irqstate value shall be one of the folllowing values:
+ *	IRQSTATE_ASSERT
+ *	IRQSTATE_DEASSERT
+ *	IRQSTATE_PULSE
  */
 static void vpic_set_irqstate(struct vm *vm, uint32_t irq,
 		enum irqstate irqstate)
@@ -486,7 +490,11 @@ static void vpic_set_irqstate(struct vm *vm, uint32_t irq,
 		vpic_set_pinstate(vpic, pin, false);
 		break;
 	default:
-		ASSERT(false, "vpic_set_irqstate: invalid irqstate");
+		/*
+		 * The function caller could guarantee the pre condition.
+		 * All the possible 'irqstate' has been handled in prior cases.
+		 */
+		break;
 	}
 	spinlock_release(&(vpic->lock));
 }
