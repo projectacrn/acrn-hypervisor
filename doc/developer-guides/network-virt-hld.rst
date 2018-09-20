@@ -136,7 +136,7 @@ ACRN UOS TX FLOW
 ================
 
 The following shows the ACRN UOS network TX flow, using TCP as an
-example, showing the flow through each layer:.
+example, showing the flow through each layer:
 
 UOS TCP Layer
 -------------
