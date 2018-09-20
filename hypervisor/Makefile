@@ -19,7 +19,7 @@ HV_OBJDIR ?= $(CURDIR)/build
 HV_FILE := acrn
 
 # initialize the flags we used
-CFLAGS :=
+CFLAGS := -fno-omit-frame-pointer
 ASFLAGS :=
 LDFLAGS :=
 ARCH_CFLAGS :=
