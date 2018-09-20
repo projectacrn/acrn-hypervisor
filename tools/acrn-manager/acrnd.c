@@ -175,7 +175,7 @@ static int load_timer_list(void)
 		}
 
 		memset(arg.name, 0, sizeof(arg.name));
-		strncpy(arg.name, s1, sizeof(s1));
+		strncpy(arg.name, s1, sizeof(arg.name));
 
 		expire = strtoul(s2, NULL, 10);
 		if (expire == 0 || errno == ERANGE) {
