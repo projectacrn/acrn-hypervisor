@@ -13,5 +13,6 @@ char *strrstr(const char *s, const char *str);
 char *next_line(char *buf);
 char *strtrim(char *str);
 int strcnt(char *str, char c);
-
+int str_split_ere(const char *str, size_t slen,
+		const char *fmt, size_t flen, ...);
 #endif
