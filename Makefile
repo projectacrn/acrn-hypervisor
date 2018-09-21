@@ -12,6 +12,8 @@ TOOLS_OUT := $(ROOT_OUT)/tools
 DOC_OUT := $(ROOT_OUT)/doc
 BUILD_VERSION ?=
 BUILD_TAG ?=
+DESTDIR ?=
+SYSROOTDIR ?=
 export TOOLS_OUT
 
 .PHONY: all hypervisor devicemodel tools doc
