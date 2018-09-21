@@ -10,9 +10,26 @@ real-time and safety-criticality in mind, optimized to streamline
 embedded development through an open source platform. Check out the
 :ref:`introduction` for more information.
 
-The project ACRN reference code can be found on GitHub in
-https://github.com/projectacrn.  It includes the ACRN hypervisor, the
-ACRN device model, and documentation.
+
+All project ACRN source code is maintained in the
+https://github.com/projectacrn repository and includes the ACRN
+hypervisor, the ACRN device model, and documentation.  You can either
+download this source code as a zip or tar.gz file (see the `ACRN v0.2
+GitHub release page
+<https://github.com/projectacrn/acrn-hypervisor/releases/tag/v0.2>`_ or
+use Git clone and checkout commands:
+
+.. code-block:: bash
+
+   git clone https://github.com/projectacrn/acrn-hypervisor
+   cd acrn-hypervisor
+   git checkout tags/v0.2
+
+The projects online technical documentation is also tagged to correspond
+with a specific release: v0.2 documents and can be found at
+https://projectacrn.github.io/v0.2/.  Documentation for the latest
+(master) branch is found at https://projectacrn.github.io/latest/.
+
 
 Version 0.2 new features
 ************************
@@ -147,10 +164,13 @@ Known Issues
 .. comment
    Use the syntax:
 
-   :acrn-issue:`663` - Black screen displayed after booting SOS/UOS
-     The ``weston`` display server, window manager, and compositor used by ACRN
-     (from Clear Linux) may not have been properly installed and started.
-     **Workaround** is described in ACRN GitHub issue :acrn-issue:`663`.
+   :acrn-issue:`663` - Short issue description
+     Longer description that helps explain the problem from the user's
+     point of view (not internal reasons).  **Impact:** What's the
+     consequences of the issue, and how it can affect the user or system.
+     **Workaround:** Describe a workaround if one exists (or refer them to the
+     :acrn-issue:`663`` if described well there. If no workaround, say
+     "none".
 
 
 Change Log
