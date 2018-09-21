@@ -37,13 +37,13 @@ complete this setup.
 
 .. note::
 
-   ACRN v0.1 (and the current master branch) requires Clear Linux
-   version 23690 or newer.  If you use a newer version of Clear Linux,
+   ACRN v0.2 (and the current master branch) requires Clear Linux
+   version 25130 or newer.  If you use a newer version of Clear Linux,
    you'll need to adjust the instructions below to reference the version
    number of Clear Linux you are using.
 
 #. Download the compressed Clear installer image from
-   https://download.clearlinux.org/releases/23690/clear/clear-23690-installer.img.xz
+   https://download.clearlinux.org/releases/25130/clear/clear-25130-installer.img.xz
    and follow the `Clear Linux installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
    as a starting point for installing Clear Linux onto your platform.  Follow the recommended
@@ -64,18 +64,18 @@ complete this setup.
 
 #. If you have an older version of Clear Linux already installed
    on your hardware, use this command to upgrade Clear Linux
-   to version 23690 (or newer):
+   to version 25130 (or newer):
 
    .. code-block:: none
 
-      # swupd update -m 23690     # or newer version
+      # swupd update -m 25130     # or newer version
 
 #. Use the ``swupd bundle-add`` command and add these Clear Linux bundles:
 
    .. code-block:: none
 
       # swupd bundle-add vim network-basic service-os kernel-pk \
-        desktop openssh-server
+        desktop openssh-server software-defined-cockpit
 
    .. table:: Clear Linux bundles
       :widths: auto
@@ -100,6 +100,10 @@ complete this setup.
       | openssh-server     | Server-side support for secure connectivity and   |
       |                    | remote login using the SSH protocol               |
       +--------------------+---------------------------------------------------+
+      |software-defined    + Run the automotive software defined cockpit       +
+      |-cockpit            + which has graphic, media, sound and connectivity  +
+      |                    +                                                   +
+      +--------------------+---------------------------------------------------+
 
 Add the ACRN hypervisor to the EFI Partition
 ============================================
@@ -115,9 +119,9 @@ partition. Follow these steps:
 
       # ls -1 /mnt/EFI/org.clearlinux
       bootloaderx64.efi
-      kernel-org.clearlinux.native.4.17.6-590
-      kernel-org.clearlinux.pk414-sos.4.14.52-63
-      kernel-org.clearlinux.pk414-standard.4.14.52-63
+      kernel-org.clearlinux.native.4.18.9-635
+      kernel-org.clearlinux.pk414-sos.4.14.68-99
+      kernel-org.clearlinux.pk414-standard.4.14.68-99
       loaderx64.efi
 
    .. note::
@@ -254,9 +258,9 @@ partition. Follow these steps:
       :caption: ACRN Service OS Boot Menu
 
       => The ACRN Service OS
-      Clear Linux OS for Intel Architecture (Clear-linux-native-4.17.6.590)
-      Clear Linux OS for Intel Architecture (Clear-linux-pk414-sos-4.14.52.63)
-      Clear Linux OS for Intel Architecture (Clear-linux-pk414-standard-4.14.52.63)
+      Clear Linux OS for Intel Architecture (Clear-linux-native-4.18.9-635)
+      Clear Linux OS for Intel Architecture (Clear-linux-pk414-sos-4.14.68-99)
+      Clear Linux OS for Intel Architecture (Clear-linux-pk414-standard-4.14.68-99)
       EFI Default Loader
       Reboot Into Firmware Interface
 
@@ -289,12 +293,12 @@ Set up Reference UOS
 ====================
 
 #. On your platform, download the pre-built reference Clear Linux UOS
-   image version 23690 (or newer) into your (root) home directory:
+   image version 25130 (or newer) into your (root) home directory:
 
    .. code-block:: none
 
       # cd ~
-      # curl -O https://download.clearlinux.org/releases/23690/clear/clear-23690-kvm.img.xz
+      # curl -O https://download.clearlinux.org/releases/25130/clear/clear-25130-kvm.img.xz
 
    .. note::
       In case you want to use or try out a newer version of Clear Linux as the UOS, you can
@@ -305,16 +309,16 @@ Set up Reference UOS
 
    .. code-block:: none
 
-      # unxz clear-23690-kvm.img.xz
+      # unxz clear-25130-kvm.img.xz
 
 #. Deploy the UOS kernel modules to UOS virtual disk image (note: you'll need to use
    the same **standard** image version number noted in step 1 above):
 
    .. code-block:: none
 
-      # losetup -f -P --show /root/clear-23690-kvm.img
+      # losetup -f -P --show /root/clear-25130-kvm.img
       # mount /dev/loop0p3 /mnt
-      # cp -r /usr/lib/modules/4.14.52-63.pk414-standard /mnt/lib/modules/
+      # cp -r /usr/lib/modules/4.14.68-99.pk414-standard /mnt/lib/modules/
       # umount /mnt
       # sync
 
@@ -333,7 +337,7 @@ Set up Reference UOS
 
    .. note::
       In case you have downloaded a different Clear Linux image than the one above
-      (``clear-23690-kvm.img.xz``), you will need to modify the Clear Linux file name
+      (``clear-25130-kvm.img.xz``), you will need to modify the Clear Linux file name
       and version number highlighted above (the ``-s 3,virtio-blk`` argument) to match
       what you have downloaded above. Likewise, you may need to adjust the kernel file
       name on the second line highlighted (check the exact name to be used using:
