@@ -14,24 +14,30 @@ enum rw_mode {
 	READ_WRITE
 };
 
-/*
- * List of intercepted MSRs.
- * If any MSRs appear in this array but not handled in any swith statements
- * in either rdmsr_vmexit_handler() or wrmsr_vmexit_handler(), a GP will
- * be thrown to the guest for any R/W accesses.
- */
-#define NUM_EMULATED_MSR	96U
-static const uint32_t emulated_msrs[NUM_EMULATED_MSR] = {
-	/* Emulated MSRs */
+static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
+	/*
+	 * MSRs that trusty may touch and need isolation between secure and normal world
+	 * This may include MSR_IA32_TSC_ADJUST, MSR_IA32_STAR, MSR_IA32_LSTAR, MSR_IA32_FMASK,
+	 * MSR_IA32_KERNEL_GS_BASE, MSR_IA32_SYSENTER_ESP, MSR_IA32_SYSENTER_CS, MSR_IA32_SYSENTER_EIP
+	 *
+	 * Number of entries: NUM_WORLD_MSRS
+	 */
+	MSR_IA32_PAT,
+
+	/*
+	 * MSRs don't need isolation between worlds
+	 * Number of entries: NUM_COMMON_MSRS
+	 */
 	MSR_IA32_TSC_DEADLINE,
 	MSR_IA32_BIOS_UPDT_TRIG,
 	MSR_IA32_BIOS_SIGN_ID,
 	MSR_IA32_TIME_STAMP_COUNTER,
-	MSR_IA32_PAT,
 	MSR_IA32_APIC_BASE,
+	MSR_IA32_PERF_CTL
+};
 
-	MSR_IA32_PERF_CTL,
-
+#define NUM_MTRR_MSRS	13U
+static const uint32_t mtrr_msrs[NUM_MTRR_MSRS] = {
 	MSR_IA32_MTRR_CAP,
 	MSR_IA32_MTRR_DEF_TYPE,
 	MSR_IA32_MTRR_FIX64K_00000,
@@ -44,10 +50,12 @@ static const uint32_t emulated_msrs[NUM_EMULATED_MSR] = {
 	MSR_IA32_MTRR_FIX4K_E0000,
 	MSR_IA32_MTRR_FIX4K_E8000,
 	MSR_IA32_MTRR_FIX4K_F0000,
-	MSR_IA32_MTRR_FIX4K_F8000,
+	MSR_IA32_MTRR_FIX4K_F8000
+};
 
-	/* Following MSRs intercepted, and throw GP for any access */
-
+/* Following MSRs are intercepted, but it throws GPs for any guest accesses */
+#define NUM_UNSUPPORTED_MSRS	76U
+static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	/* Variable MTRRs are not supported */
 	MSR_IA32_MTRR_PHYSBASE_0,
 	MSR_IA32_MTRR_PHYSMASK_0,
@@ -145,8 +153,8 @@ static const uint32_t emulated_msrs[NUM_EMULATED_MSR] = {
 	/* MSR 0xC90 ... 0xD8F, not in this array */
 };
 
-#define NUM_X2APIC_MSR	44U
-static const uint32_t x2apic_msrs[NUM_X2APIC_MSR] = {
+#define NUM_X2APIC_MSRS	44U
+static const uint32_t x2apic_msrs[NUM_X2APIC_MSRS] = {
 	MSR_IA32_EXT_XAPICID,
 	MSR_IA32_EXT_APIC_VERSION,
 	MSR_IA32_EXT_APIC_TPR,
@@ -241,7 +249,7 @@ static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg, enum rw_mode mode)
 	uint8_t *msr_bitmap = msr_bitmap_arg;
 	uint32_t i;
 
-	for (i = 0U; i < NUM_X2APIC_MSR; i++) {
+	for (i = 0U; i < NUM_X2APIC_MSRS; i++) {
 		enable_msr_interception(msr_bitmap, x2apic_msrs[i], mode);
 	}
 }
@@ -263,11 +271,19 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 	if (is_vcpu_bsp(vcpu)) {
 		msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
 
-		for (i = 0U; i < NUM_EMULATED_MSR; i++) {
-			enable_msr_interception(msr_bitmap, emulated_msrs[i], READ_WRITE);
+		for (i = 0U; i < NUM_GUEST_MSRS; i++) {
+			enable_msr_interception(msr_bitmap, emulated_guest_msrs[i], READ_WRITE);
+		}
+
+		for (i = 0U; i < NUM_MTRR_MSRS; i++) {
+			enable_msr_interception(msr_bitmap, mtrr_msrs[i], READ_WRITE);
 		}
 
 		intercept_x2apic_msrs(msr_bitmap, READ_WRITE);
+
+		for (i = 0U; i < NUM_UNSUPPORTED_MSRS; i++) {
+			enable_msr_interception(msr_bitmap, unsupported_msrs[i], READ_WRITE);
+		}
 
 		/* RDT-A disabled: CPUID.07H.EBX[12], CPUID.10H */
 		for (msr = MSR_IA32_L3_MASK_0; msr < MSR_IA32_BNDCFGS; msr++) {

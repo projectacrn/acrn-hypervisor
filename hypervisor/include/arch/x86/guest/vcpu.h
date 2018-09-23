@@ -166,6 +166,10 @@ struct ext_context {
 #define NORMAL_WORLD	0
 #define SECURE_WORLD	1
 
+#define NUM_WORLD_MSRS		1U
+#define NUM_COMMON_MSRS		6U
+#define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS)
+
 struct event_injection_info {
 	uint32_t intr_info;
 	uint32_t error_code;
@@ -174,6 +178,9 @@ struct event_injection_info {
 struct cpu_context {
 	struct run_context run_ctx;
 	struct ext_context ext_ctx;
+
+	/* per world MSRs, need isolation between secure and normal world */
+	uint32_t world_msrs[NUM_WORLD_MSRS];
 };
 
 /* Intel SDM 24.8.2, the address must be 16-byte aligned */
@@ -200,6 +207,9 @@ struct acrn_vcpu_arch {
 	struct acrn_vlapic vlapic;
 	int cur_context;
 	struct cpu_context contexts[NR_WORLD];
+
+	/* common MSRs, world_msrs[] is a subset of it */
+	uint64_t guest_msrs[NUM_GUEST_MSRS];
 
 	uint16_t vpid;
 
