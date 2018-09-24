@@ -19,7 +19,7 @@
 .highlight-console .highlight {
    background-color: black;
 }
-.highlight-console .highlight .go, .highlight-console .highlight .gp {
+.highlight-console .highlight pre, .highlight-console .highlight .go, .highlight-console .highlight .gp {
    color: white;
 }
 .highlight-console .highlight .hll {
