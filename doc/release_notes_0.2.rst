@@ -1,7 +1,7 @@
 .. _release_notes_0.2:
 
-ACRN v0.2 (Sep 2018) DRAFT
-##########################
+ACRN v0.2 (Sep 2018)
+####################
 
 We are pleased to announce the release of Project ACRN version 0.2.
 
@@ -12,10 +12,10 @@ embedded development through an open source platform. Check out the
 
 
 All project ACRN source code is maintained in the
-https://github.com/projectacrn repository and includes the ACRN
-hypervisor, the ACRN device model, and documentation.  You can either
-download this source code as a zip or tar.gz file (see the `ACRN v0.2
-GitHub release page
+https://github.com/projectacrn/acrn-hypervisor repository and includes
+folders for the ACRN hypervisor, the ACRN device model, and documentation.
+You can either download this source code as a zip or tar.gz file (see
+the `ACRN v0.2 GitHub release page
 <https://github.com/projectacrn/acrn-hypervisor/releases/tag/v0.2>`_ or
 use Git clone and checkout commands:
 
@@ -23,10 +23,10 @@ use Git clone and checkout commands:
 
    git clone https://github.com/projectacrn/acrn-hypervisor
    cd acrn-hypervisor
-   git checkout tags/v0.2
+   git checkout v0.2
 
-The projects online technical documentation is also tagged to correspond
-with a specific release: v0.2 documents and can be found at
+The project's online technical documentation is also tagged to correspond
+with a specific release: generated v0.2 documents can be found at
 https://projectacrn.github.io/v0.2/.  Documentation for the latest
 (master) branch is found at https://projectacrn.github.io/latest/.
 
