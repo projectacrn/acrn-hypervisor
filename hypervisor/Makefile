@@ -100,7 +100,6 @@ INCLUDE_PATH += include/arch/x86/guest
 INCLUDE_PATH += include/debug
 INCLUDE_PATH += include/public
 ifeq ($(CONFIG_PARTITION_MODE),y)
-INCLUDE_PATH += include/dm/vpci
 INCLUDE_PATH += include/dm
 endif
 INCLUDE_PATH += bsp/include
@@ -183,6 +182,7 @@ C_SRCS += dm/vioapic.c
 ifeq ($(CONFIG_PARTITION_MODE),y)
 C_SRCS += $(wildcard dm/vpci/*.c)
 C_SRCS += $(wildcard partition/*.c)
+C_SRCS += dm/hw/pci.c
 C_SRCS += dm/vrtc.c
 endif
 
