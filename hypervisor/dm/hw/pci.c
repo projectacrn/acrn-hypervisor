@@ -99,6 +99,24 @@ void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes,	uint
 	spinlock_release(&pci_device_lock);
 }
 
+/* enable: 1: enable INTx; 0: Disable INTx */
+void enable_disable_pci_intx(union pci_bdf bdf, bool enable)
+{
+	uint32_t cmd, new_cmd;
+
+	/* Set or clear the INTXDIS bit in COMMAND register */
+	cmd = pci_pdev_read_cfg(bdf, PCIR_COMMAND, 2U);
+	if (enable) {
+		new_cmd = cmd & ~PCIM_CMD_INTxDIS;
+	} else {
+		new_cmd = cmd | PCIM_CMD_INTxDIS;
+	}
+
+	if ((cmd ^ new_cmd) != 0U) {
+		pci_pdev_write_cfg(bdf, PCIR_COMMAND, 0x2U, new_cmd);
+	}
+}
+
 #define BUS_SCAN_SKIP		0U
 #define BUS_SCAN_PENDING  	1U
 #define BUS_SCAN_COMPLETE	2U
