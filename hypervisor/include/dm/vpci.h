@@ -59,6 +59,12 @@ struct pci_pdev {
 	union pci_bdf bdf;
 };
 
+/* MSI capability structure */
+struct msi {
+	uint32_t  capoff;
+	uint32_t  caplen;
+};
+
 struct pci_vdev {
 	struct pci_vdev_ops *ops;
 	struct vpci *vpci;
@@ -71,6 +77,10 @@ struct pci_vdev {
 
 	/* The bar info of the virtual PCI device. */
 	struct pci_bar bar[PCI_BAR_COUNT];
+
+#ifndef CONFIG_PARTITION_MODE
+	struct msi msi;
+#endif
 };
 
 struct pci_addr_info {

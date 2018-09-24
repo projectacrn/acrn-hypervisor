@@ -32,6 +32,11 @@
 
 #include <pci.h>
 
+static inline bool in_range(uint32_t value, uint32_t lower, uint32_t len)
+{
+	return ((value >= lower) && (value < (lower + len)));
+}
+
 static inline uint8_t
 pci_vdev_read_cfg_u8(struct pci_vdev *vdev, uint32_t offset)
 {
@@ -69,8 +74,11 @@ pci_vdev_write_cfg_u32(struct pci_vdev *vdev, uint32_t offset, uint32_t val)
 }
 
 extern struct vpci_ops partition_mode_vpci_ops;
+extern struct pci_vdev_ops pci_ops_vdev_msi;
 
 uint32_t pci_vdev_read_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes);
 void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
+
+void populate_msi_struct(struct pci_vdev *vdev);
 
 #endif /* PCI_PRIV_H_ */
