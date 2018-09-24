@@ -161,6 +161,12 @@ Known Issues
    issue will be fixed in the next release.
 
 
+:acrn-issue:`1319` - SD card pass-through: UOS can’t see SD card after UOS reboot.
+   SD card could not be found after UOS reboot in pass-through mode.
+   **Impact:** There is no SD card after UOS reboot.
+   **Workaround:** None. The issue will be fixed in the next release.
+
+
 .. comment
    Use the syntax:
 
