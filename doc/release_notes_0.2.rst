@@ -27,7 +27,7 @@ use Git clone and checkout commands:
 
 The project's online technical documentation is also tagged to correspond
 with a specific release: generated v0.2 documents can be found at
-https://projectacrn.github.io/v0.2/.  Documentation for the latest
+https://projectacrn.github.io/0.2/.  Documentation for the latest
 (master) branch is found at https://projectacrn.github.io/latest/.
 
 
