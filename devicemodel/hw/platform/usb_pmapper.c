@@ -1176,7 +1176,8 @@ static int
 usb_dev_native_sys_disconn_cb(struct libusb_context *ctx, struct libusb_device
 		*ldev, libusb_hotplug_event event, void *pdata)
 {
-	uint8_t port;
+	struct libusb_device_descriptor d;
+	struct usb_native_devinfo di;
 	uint16_t pport;
 	uint16_t pbus;
 	int rc;
@@ -1188,16 +1189,26 @@ usb_dev_native_sys_disconn_cb(struct libusb_context *ctx, struct libusb_device
 		return -1;
 	}
 
-	port = libusb_get_port_number(ldev);
+	libusb_get_device_descriptor(ldev, &d);
+	di.bus = libusb_get_bus_number(ldev);
+	di.speed = libusb_get_device_speed(ldev);
+
+	/* FIXME: * should use libusb_get_port_numbers here */
+	di.port = libusb_get_port_number(ldev);
+	di.pid = d.idProduct;
+	di.vid = d.idVendor;
+	di.bcd = d.bcdUSB;
+	di.priv_data = ldev;
+
 	rc = usb_get_parent_dev_type(ldev, &pbus, &pport);
 	if (rc == USB_TYPE_INVALID) {
 		UPRINTF(LWRN, "usb_get_parent_dev_type return %d\r\n", rc);
 		return 0;
 	} else if (rc == USB_HUB)
-		port += PORT_HUB_BASE;
+		di.port += PORT_HUB_BASE;
 
 	if (g_ctx.disconn_cb)
-		g_ctx.disconn_cb(g_ctx.hci_data, &port);
+		g_ctx.disconn_cb(g_ctx.hci_data, &di);
 
 	return 0;
 }
