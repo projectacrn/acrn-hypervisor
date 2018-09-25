@@ -30,10 +30,6 @@
 
 #define STR_LEN 1024
 
-#define KB      (1024UL)
-#define MB      (1024 * 1024UL)
-#define GB      (1024 * 1024 * 1024UL)
-
 /* E820 memory types */
 #define E820_TYPE_RAM           1   /* EFI 1, 2, 3, 4, 5, 6, 7 */
 /* EFI 0, 11, 12, 13 (everything not used elsewhere) */
