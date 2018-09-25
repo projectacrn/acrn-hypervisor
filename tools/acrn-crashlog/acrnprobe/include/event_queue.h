@@ -22,7 +22,7 @@ __extension__
 struct event_t {
 	int watchfd;
 	enum event_type_t event_type;
-	char *channel;
+	const char *channel;
 	void *private;
 
 	TAILQ_ENTRY(event_t) entries;

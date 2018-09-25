@@ -72,7 +72,7 @@ static char *next_vm_event(const char *cursor, const char *data,
 			size_t dlen, const struct vm_t *vm)
 {
 	char *line_to_sync = (char *)~(0);
-	char *syncevent;
+	const char *syncevent;
 	int id;
 
 	if (!cursor || !vm)
@@ -408,7 +408,7 @@ static void sync_lines_stage2(const struct sender_t *sender,
 			continue;
 		}
 
-		vm = get_vm_by_name(vm_name);
+		vm = get_vm_by_name((const char *)vm_name);
 		if (!vm || !vm->history_data)
 			continue;
 

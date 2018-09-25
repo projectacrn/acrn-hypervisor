@@ -60,8 +60,8 @@ static struct channel_t channels[] = {
  *  or NULL on error.
  */
 static struct event_t *create_event(enum event_type_t event_type,
-				char *channel, void *private,
-				int watchfd, char *path)
+				const char *channel, void *private,
+				int watchfd, const char *path)
 {
 	struct event_t *e;
 	int path_len = 0;

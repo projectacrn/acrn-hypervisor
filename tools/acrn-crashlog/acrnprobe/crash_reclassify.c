@@ -84,7 +84,7 @@ static int crash_has_mightcontents(const struct crash_t *crash,
 	int ret = 1;
 	int ret_exp;
 	int expid, cntid;
-	char * const *exp;
+	const char * const *exp;
 	const char *content;
 
 	for_each_expression_crash(expid, exp, crash) {
@@ -128,7 +128,7 @@ static int crash_match_content(const struct crash_t *crash, const char *file)
 static int _get_data(const char *file, const struct crash_t *crash,
 			char **data, const int index)
 {
-	char *search_key;
+	const char *search_key;
 	char *value;
 	char *end;
 	int size;

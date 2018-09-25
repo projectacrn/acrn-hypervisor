@@ -43,9 +43,9 @@ int get_current_time_long(char buf[32]);
 unsigned long long get_uptime(void);
 char *generate_event_id(const char *seed1, const char *seed2,
 				enum key_type type);
-void generate_crashfile(char *dir, char *event, char *hashkey,
-			char *type, char *data0,
-			char *data1, char *data2);
+void generate_crashfile(const char *dir, const char *event, const char *hashkey,
+			const char *type, const char *data0,
+			const char *data1, const char *data2);
 char *generate_log_dir(enum e_dir_mode mode, char *hashkey);
 int is_boot_id_changed(void);
 

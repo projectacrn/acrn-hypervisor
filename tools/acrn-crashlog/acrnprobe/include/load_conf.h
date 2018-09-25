@@ -8,7 +8,6 @@
 
 #include <stdio.h>
 #include <sys/queue.h>
-#include <openssl/sha.h>
 #include <ext2fs/ext2fs.h>
 #include "event_queue.h"
 #include "probeutils.h"
@@ -25,43 +24,60 @@
 #define VM_EVENT_TYPE_MAX 20
 
 struct trigger_t {
-	char *name;
-	char *type;
-	char *path;
+	const char	*name;
+	size_t		name_len;
+	const char	*type;
+	size_t		type_len;
+	const char	*path;
+	size_t		path_len;
 };
 
 struct vm_t {
-	char *name;
-	char *channel;
-	char *interval;
-	char *syncevent[VM_EVENT_TYPE_MAX];
+	const char	*name;
+	size_t		name_len;
+	const char	*channel;
+	size_t		channel_len;
+	const char	*interval;
+	size_t		interval_len;
+	const char	*syncevent[VM_EVENT_TYPE_MAX];
+	size_t		syncevent_len[VM_EVENT_TYPE_MAX];
 
-	ext2_filsys datafs;
-	unsigned long history_size[SENDER_MAX];
-	char *history_data;
-	char last_synced_line_key[SENDER_MAX][SHORT_KEY_LENGTH + 1];
+	ext2_filsys	datafs;
+	unsigned long	history_size[SENDER_MAX];
+	char		*history_data;
+	char		last_synced_line_key[SENDER_MAX][SHORT_KEY_LENGTH + 1];
 };
 
 struct log_t {
-	char *name;
-	char *type;
-	char *path;
-	char *lines;
+	const char	*name;
+	size_t		name_len;
+	const char	*type;
+	size_t		type_len;
+	const char	*path;
+	size_t		path_len;
+	const char	*lines;
+	size_t		lines_len;
 
 	void (*get)(struct log_t *, void *);
 };
 
 struct crash_t {
-	char *name;
-	char *channel;
-	char *interval;
+	const char	*name;
+	size_t		name_len;
+	const char	*channel;
+	size_t		channel_len;
+	const char	*interval;
+	size_t		interval_len;
 	struct trigger_t *trigger;
-	char *content[CONTENT_MAX];
-	char *mightcontent[EXPRESSION_MAX][CONTENT_MAX];
-	struct log_t *log[LOG_MAX];
-	char *data[DATA_MAX];
+	const char	*content[CONTENT_MAX];
+	size_t		content_len[CONTENT_MAX];
+	const char	*mightcontent[EXPRESSION_MAX][CONTENT_MAX];
+	size_t		mightcontent_len[EXPRESSION_MAX][CONTENT_MAX];
+	struct log_t	*log[LOG_MAX];
+	const char	*data[DATA_MAX];
+	size_t		data_len[DATA_MAX];
 
-	struct crash_t *parents;
+	struct crash_t	*parents;
 
 	TAILQ_ENTRY(crash_t) entries;
 	TAILQ_HEAD(, crash_t) children;
@@ -73,42 +89,53 @@ struct crash_t {
 };
 
 struct info_t {
-	char *name;
-	char *channel;
-	char *interval;
+	const char	*name;
+	size_t		name_len;
+	const char	*channel;
+	size_t		channel_len;
+	const char	*interval;
+	size_t		interval_len;
 	struct trigger_t *trigger;
-	struct log_t *log[LOG_MAX];
+	struct log_t	*log[LOG_MAX];
 };
 
 struct uptime_t {
-	char *name;
-	char *frequency;
-	char *eventhours;
+	const char	*name;
+	size_t		name_len;
+	const char	*frequency;
+	size_t		frequency_len;
+	const char	*eventhours;
+	size_t		eventhours_len;
 
 	int wd;
 	char *path;
 };
 
 struct sender_t {
-	char *name;
-	char *outdir;
-	char *maxcrashdirs;
-	char *maxlines;
-	char *spacequota;
+	const char	*name;
+	size_t		name_len;
+	const char	*outdir;
+	size_t		outdir_len;
+	const char	*maxcrashdirs;
+	size_t		maxcrashdirs_len;
+	const char	*maxlines;
+	size_t		maxlines_len;
+	const char	*spacequota;
+	size_t		spacequota_len;
 	struct uptime_t *uptime;
 
 	void (*send)(struct event_t *);
-	char *log_vmrecordid;
-	int sw_updated; /* each sender has their own record */
+	char		*log_vmrecordid;
+	int		sw_updated; /* each sender has their own record */
 };
 
 struct conf_t {
 	struct sender_t *sender[SENDER_MAX];
-	struct vm_t *vm[VM_MAX];
+	struct vm_t	*vm[VM_MAX];
 	struct trigger_t *trigger[TRIGGER_MAX];
-	struct log_t *log[LOG_MAX];
-	struct crash_t *crash[CRASH_MAX];
-	struct info_t *info[INFO_MAX];
+	struct log_t	*log[LOG_MAX];
+	struct crash_t	*crash[CRASH_MAX];
+	struct info_t	*info[INFO_MAX];
 };
 
 struct conf_t conf;
@@ -168,7 +195,7 @@ struct conf_t conf;
 ({ \
 		int _ret = 0; \
 		int _id; \
-		char *content; \
+		const char *content; \
 		for_each_content_expression(_id, content, exp) { \
 			if (content) \
 				_ret = 1; \
@@ -204,11 +231,11 @@ struct conf_t conf;
 )
 
 int load_conf(const char *path);
-struct trigger_t *get_trigger_by_name(char *name);
-struct log_t *get_log_by_name(char *name);
+struct trigger_t *get_trigger_by_name(const char *name);
+struct log_t *get_log_by_name(const char *name);
 struct vm_t *get_vm_by_name(const char *name);
 int sender_id(const struct sender_t *sender);
-struct sender_t *get_sender_by_name(char *name);
+struct sender_t *get_sender_by_name(const char *name);
 enum event_type_t get_conf_by_wd(int wd, void **private);
 struct crash_t *get_crash_by_wd(int wd);
 int crash_depth(struct crash_t *tcrash);
