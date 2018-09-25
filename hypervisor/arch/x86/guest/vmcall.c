@@ -50,6 +50,11 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 		ret = hcall_get_api_version(vm, param1);
 		break;
 
+	case HC_SET_CALLBACK_VECTOR:
+		ret = hcall_set_callback_vector(vm, param1);
+
+		break;
+
 	case HC_CREATE_VM:
 		ret = hcall_create_vm(vm, param1);
 		break;

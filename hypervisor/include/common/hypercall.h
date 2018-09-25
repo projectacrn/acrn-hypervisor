@@ -456,6 +456,21 @@ int64_t hcall_save_restore_sworld_ctx(struct vcpu *vcpu);
  */ // End of trusty_hypercall
 
 /**
+ * @brief set upcall notifier vector
+ *
+ * This is the API that helps to switch the notifer vecotr. If this API is
+ * not called, the hypervisor will use the default notifier vector(0xF7)
+ * to notify the SOS kernel.
+ *
+ * @param vm Pointer to VM data structure
+ * @param the expected notifier vector from guest
+ *
+ * @pre Pointer vm shall point to VM0
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_set_callback_vector(struct vm *vm, uint64_t param);
+
+/**
  * @}
  */ // End of acrn_hypercall
 
