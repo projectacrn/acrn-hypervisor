@@ -1036,3 +1036,23 @@ int32_t hcall_vm_intr_monitor(struct vm *vm, uint16_t vmid, uint64_t param)
 
 	return 0;
 }
+
+/**
+ *@pre Pointer vm shall point to VM0
+ */
+int32_t hcall_set_callback_vector(struct vm *vm, uint64_t param)
+{
+	if (!is_vm0(vm)) {
+		pr_err("%s: Targeting to service vm", __func__);
+		return -EPERM;
+	}
+
+	if ((param > NR_MAX_VECTOR) || (param < VECTOR_DYNAMIC_START)) {
+		pr_err("%s: Invalid passed vector\n");
+		return -EINVAL;
+	}
+
+	acrn_vhm_vector = param;
+
+	return 0;
+}

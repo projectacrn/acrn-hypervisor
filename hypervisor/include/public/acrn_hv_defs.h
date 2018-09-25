@@ -27,6 +27,7 @@
 #define HC_ID_GEN_BASE               0x0UL
 #define HC_GET_API_VERSION          BASE_HC_ID(HC_ID, HC_ID_GEN_BASE + 0x00UL)
 #define HC_SOS_OFFLINE_CPU          BASE_HC_ID(HC_ID, HC_ID_GEN_BASE + 0x01UL)
+#define HC_SET_CALLBACK_VECTOR      BASE_HC_ID(HC_ID, HC_ID_GEN_BASE + 0x02UL)
 
 /* VM management */
 #define HC_ID_VM_BASE               0x10UL
