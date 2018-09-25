@@ -7,8 +7,9 @@
 #define __STRUTILS_H__
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+#define s_not_expect(res, size) (res < 0 || (size_t)res >= size)
 
-int strlinelen(char *str);
+ssize_t strlinelen(const char *str, size_t size);
 char *strrstr(const char *s, const char *str);
 char *next_line(char *buf);
 char *strtrim(char *str);

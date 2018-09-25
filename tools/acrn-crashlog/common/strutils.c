@@ -15,22 +15,23 @@
  * Get the length of line.
  *
  * @param str Start address of line.
+ * @param size Size of searched space.
  *
- * @return the length of line if successful, or -1 if not.
- *	   This function return length of string if string doesn't contain \n.
+ * @return the length of line (excludes \n) if successful, or -1 if not.
+ *	   This function return -1 if string doesn't contain \n.
  */
-int strlinelen(char *str)
+ssize_t strlinelen(const char *str, size_t size)
 {
-	char *tag;
+	char *tail;
 
 	if (!str)
 		return -1;
 
-	tag = strchr(str, '\n');
-	if (tag)
-		return tag - str + 1;
+	tail = memchr(str, '\n', size);
+	if (tail)
+		return tail - str;
 
-	return strlen(str);
+	return -1;
 }
 
 /**

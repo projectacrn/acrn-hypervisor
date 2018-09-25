@@ -542,6 +542,7 @@ static void telemd_send_reboot(void)
 }
 
 static int telemd_new_vmevent(const char *line_to_sync,
+				size_t len __attribute__((unused)),
 				const struct vm_t *vm)
 {
 	char event[ANDROID_WORD_LEN];
@@ -887,7 +888,8 @@ static void crashlog_send_reboot(void)
 }
 
 static int crashlog_new_vmevent(const char *line_to_sync,
-					const struct vm_t *vm)
+				size_t len __attribute__((unused)),
+				const struct vm_t *vm)
 {
 	struct sender_t *crashlog;
 	char event[ANDROID_WORD_LEN];
