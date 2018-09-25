@@ -21,6 +21,7 @@
 #define VECTOR_NOTIFY_VCPU	0xF0U
 #define VECTOR_VIRT_IRQ_VHM	0xF7U
 #define VECTOR_SPURIOUS		0xFFU
+#define VECTOR_HYPERVISOR_CALLBACK_VHM	0xF3U
 
 /* the maximum number of msi entry is 2048 according to PCI
  * local bus specification
