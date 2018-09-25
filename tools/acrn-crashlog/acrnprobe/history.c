@@ -228,27 +228,23 @@ void hist_raise_infoerror(char *type)
 	free(key);
 }
 
-static int get_time_firstline(char *buffer)
+static int get_time_from_firstline(char *buffer, size_t size)
 {
-	char firstline[MAXLINESIZE];
-	int ret;
-	char *fmt = "%*[^ ]%*[ ]%*[^ ]%*[ ]%[^ ]%*c";
+	char lasttime[MAXLINESIZE];
+	const char *prefix = "#V1.0 CURRENTUPTIME   ";
+	int len;
 
-	memset(firstline, 0, MAXLINESIZE);
-	ret = file_read_string(history_file, firstline, MAXLINESIZE);
-	if (ret <= 0) {
-		LOGW("file_read_string failed, %d %s\n", ret, strerror(-ret));
+	len = file_read_key_value(history_file, prefix, MAXLINESIZE, lasttime);
+	if (len <= 0) {
+		LOGW("failed to read value from %s, error %s\n",
+		      history_file, strerror(-len));
 		return -1;
 	}
-
-	if (!strstr(firstline, "#V1.0 "))
+	if ((size_t)len >= size)
 		return -1;
 
-	ret = sscanf(firstline, fmt, buffer);
-	if (ret != 1) {
-		LOGE("get last time failed, %d %s\n", ret, firstline);
-		return -1;
-	}
+	*(char *)mempcpy(buffer, lasttime, len) = '\0';
+
 	return 0;
 }
 
@@ -272,7 +268,7 @@ int prepare_history(void)
 		}
 	}
 
-	ret = get_time_firstline(linebuf);
+	ret = get_time_from_firstline(linebuf, MAXLINESIZE);
 	if (ret == 0) {
 		current_lines = count_lines_in_file(history_file);
 		hist_raise_uptime(linebuf);

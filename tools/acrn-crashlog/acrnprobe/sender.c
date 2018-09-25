@@ -572,8 +572,10 @@ static int telemd_new_vmevent(const char *line_to_sync,
 		ANDROID_ENEVT_FMT ANDROID_KEY_FMT ANDROID_LONGTIME_FMT
 		ANDROID_TYPE_FMT ANDROID_LINE_REST_FMT;
 
-	res = sscanf(line_to_sync, vm_format, event, vmkey, longtime,
-		     type, rest);
+	res = str_split_ere(line_to_sync, len, vm_format, strlen(vm_format),
+			    event, sizeof(event), vmkey, sizeof(vmkey),
+			    longtime, sizeof(longtime),
+			    type, sizeof(type), rest, sizeof(rest));
 	if (res != 5) {
 		LOGE("get an invalid line from (%s), skip\n", vm->name);
 		return VMEVT_HANDLED;
@@ -917,8 +919,10 @@ static int crashlog_new_vmevent(const char *line_to_sync,
 		ANDROID_ENEVT_FMT ANDROID_KEY_FMT ANDROID_LONGTIME_FMT
 		ANDROID_TYPE_FMT ANDROID_LINE_REST_FMT;
 
-	res = sscanf(line_to_sync, vm_format, event, vmkey, longtime,
-		     type, rest);
+	res = str_split_ere(line_to_sync, len, vm_format, strlen(vm_format),
+			    event, sizeof(event), vmkey, sizeof(vmkey),
+			    longtime, sizeof(longtime),
+			    type, sizeof(type), rest, sizeof(rest));
 	if (res != 5) {
 		LOGE("get an invalid line from (%s), skip\n", vm->name);
 		return ret;
