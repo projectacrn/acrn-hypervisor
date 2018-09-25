@@ -7,6 +7,8 @@
 
 #define ACRN_DBG_IOREQUEST	6U
 
+uint32_t acrn_vhm_vector = VECTOR_VIRT_IRQ_VHM;
+
 static void fire_vhm_interrupt(void)
 {
 	/*
@@ -22,7 +24,7 @@ static void fire_vhm_interrupt(void)
 	vcpu = vcpu_from_vid(vm0, 0U);
 	ASSERT(vcpu != NULL, "vcpu_from_vid failed");
 
-	vlapic_intr_edge(vcpu, VECTOR_VIRT_IRQ_VHM);
+	vlapic_intr_edge(vcpu, acrn_vhm_vector);
 }
 
 static void acrn_print_request(uint16_t vcpu_id, struct vhm_request *req)
