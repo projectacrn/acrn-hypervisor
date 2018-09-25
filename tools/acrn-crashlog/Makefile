@@ -54,12 +54,12 @@ export BUILDDIR
 export CC
 export RM
 
-PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):/usr/lib/pkgconfig
-PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):/usr/share/pkgconfig
-PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):/usr/local/lib/pkgconfig
-PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):/usr/local/share/pkgconfig
-PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):/usr/lib32/pkgconfig
-PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):/usr/lib64/pkgconfig
+PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):$(SYSROOT)/usr/lib/pkgconfig
+PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):$(SYSROOT)/usr/share/pkgconfig
+PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):$(SYSROOT)/usr/local/lib/pkgconfig
+PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):$(SYSROOT)/usr/local/share/pkgconfig
+PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):$(SYSROOT)/usr/lib32/pkgconfig
+PKG_CONFIG_PATH := $(PKG_CONFIG_PATH):$(SYSROOT)/usr/lib64/pkgconfig
 
 EXTRA_LIBS = -lsystemd-journal
 PKG_CONFIG := $(shell export PKG_CONFIG_PATH=$(PKG_CONFIG_PATH); \
