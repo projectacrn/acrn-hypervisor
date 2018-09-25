@@ -319,6 +319,20 @@ struct log_t *get_log_by_name(char *name)
 	return NULL;
 }
 
+struct vm_t *get_vm_by_name(const char *name)
+{
+	int id;
+	struct vm_t *vm;
+
+	for_each_vm(id, vm, conf) {
+		if (!vm)
+			continue;
+		if (strcmp(name, vm->name) == 0)
+			return vm;
+	}
+	return NULL;
+}
+
 int crash_depth(struct crash_t *tcrash)
 {
 	int id;

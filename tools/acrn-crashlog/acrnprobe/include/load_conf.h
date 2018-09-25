@@ -206,6 +206,7 @@ struct conf_t conf;
 int load_conf(const char *path);
 struct trigger_t *get_trigger_by_name(char *name);
 struct log_t *get_log_by_name(char *name);
+struct vm_t *get_vm_by_name(const char *name);
 int sender_id(const struct sender_t *sender);
 struct sender_t *get_sender_by_name(char *name);
 enum event_type_t get_conf_by_wd(int wd, void **private);
