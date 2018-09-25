@@ -71,7 +71,7 @@ static inline int get_file_size(const char *filepath)
 }
 
 char *mm_get_line(struct mm_file_t *mfile, int line);
-int mkdir_p(char *path);
+int mkdir_p(const char *path);
 int mm_count_lines(struct mm_file_t *mfile);
 struct mm_file_t *mmap_file(const char *path);
 void unmap_file(struct mm_file_t *mfile);
@@ -89,7 +89,7 @@ int file_read_int(const char *filename, unsigned int *pcurrent);
 int file_update_int(const char *filename, unsigned int current,
 			unsigned int max);
 int do_copy_eof(const char *src, const char *des);
-int space_available(char *path, int quota);
+int space_available(const char *path, int quota);
 int count_lines_in_file(const char *filename);
 int read_full_binary_file(const char *path, unsigned long *size,
 			void **data);
@@ -108,7 +108,8 @@ int filter_filename_startswith(const struct dirent *entry,
 					const void *arg);
 int dir_contains(const char *dir, const char *filename, int exact);
 int lsdir(const char *dir, char *fullname[], int limit);
-int find_file(char *dir, char *target_file, int depth, char *path[], int limit);
+int find_file(const char *dir, char *target_file, int depth, char *path[],
+		int limit);
 int read_file(const char *path, unsigned long *size, void **data);
 int is_ac_filefmt(const char *file_fmt);
 int config_fmt_to_files(const char *file_fmt, char ***out);

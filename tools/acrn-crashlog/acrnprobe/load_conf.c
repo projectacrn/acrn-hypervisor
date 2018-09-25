@@ -9,6 +9,7 @@
 #include "load_conf.h"
 #include "event_queue.h"
 #include "log_sys.h"
+#include "strutils.h"
 
 static void print(void)
 {
@@ -21,7 +22,6 @@ static void print(void)
 	struct info_t *info;
 	struct crash_t *crash;
 	struct crash_t *crash_tmp;
-	char buf[512];
 
 #define print_id_item(item, root, id) \
 		LOGD("%-8s(%d): %-15s:(%s)\n", #root, id, #item, root->item)
@@ -90,17 +90,36 @@ static void print(void)
 	}
 
 	for_each_crash(id, crash, conf) {
+		char buf[512];
+		char *tail;
+		int len;
+
 		if (!crash)
 			continue;
 
 		print_id_item(name, crash, id);
-		memset(buf, 0, sizeof(*buf));
+		memset(buf, 0, sizeof(buf));
 		LOGD("%-8s(%d): properties: %s, %s\n", "crash", id,
 		     is_root_crash(crash) ? "root" : "non-root",
 		     is_leaf_crash(crash) ? "leaf" : "non-leaf");
-		sprintf(buf + strlen(buf), "%-8s(%d): children: ", "crash", id);
-		for_crash_children(crash_tmp, crash)
-			sprintf(buf + strlen(buf), "%s ", crash_tmp->name);
+		len = snprintf(buf, sizeof(buf), "%-8s(%d): children: ",
+			     "crash", id);
+		if (s_not_expect(len, sizeof(buf))) {
+			LOGE("failed to construct the children of crash\n");
+			continue;
+		}
+		tail = buf + len;
+		for_crash_children(crash_tmp, crash) {
+			if (len + crash_tmp->name_len + 2 >= sizeof(buf)) {
+				LOGE("names of children too long - truncate\n");
+				break;;
+			}
+			tail = mempcpy(tail, crash_tmp->name,
+				       crash_tmp->name_len);
+			*tail++ = ' ';
+			len += crash_tmp->name_len + 1;
+		}
+		*tail = '\0';
 		LOGD("%s\n", buf);
 		print_id_item(trigger->name, crash, id);
 		print_id_item(channel, crash, id);
@@ -173,7 +192,8 @@ static int get_expid_index(xmlNodePtr cur, const int max)
 		int _ret = -1; \
 		load##mem = xmlNodeGetContent(cur); \
 		if (load##mem) { \
-			type->mem = (char *)load##mem; \
+			type->mem = (const char *)load##mem; \
+			type->mem##_len = xmlStrlen(load##mem); \
 			_ret = 0; \
 		} \
 		_ret; \
@@ -190,7 +210,8 @@ static int get_expid_index(xmlNodePtr cur, const int max)
 		if (load##mem) { \
 			index = get_id_index(cur, max); \
 			if (index != -1) { \
-				type->mem[index] = (char *)load##mem; \
+				type->mem[index] = (const char *)load##mem; \
+				type->mem##_len[index] = xmlStrlen(load##mem); \
 				_ret = 0; \
 			} \
 		} \
@@ -201,9 +222,15 @@ static int get_expid_index(xmlNodePtr cur, const int max)
 #define load_trigger(cur, event) \
 (__extension__ \
 ({ \
+		int _ret = -1; \
 		xmlChar *content = xmlNodeGetContent(cur); \
-		event->trigger = get_trigger_by_name((char *)content); \
-		xmlFree(content); \
+		if (content) { \
+			event->trigger = \
+				get_trigger_by_name((const char *)content); \
+			xmlFree(content); \
+			_ret = 0; \
+		} \
+		_ret; \
 }) \
 )
 
@@ -276,7 +303,7 @@ int sender_id(const struct sender_t *s)
 	return -1;
 }
 
-struct sender_t *get_sender_by_name(char *name)
+struct sender_t *get_sender_by_name(const char *name)
 {
 	int id;
 	struct sender_t *sender;
@@ -291,7 +318,7 @@ struct sender_t *get_sender_by_name(char *name)
 	return NULL;
 }
 
-struct trigger_t *get_trigger_by_name(char *name)
+struct trigger_t *get_trigger_by_name(const char *name)
 {
 	int id;
 	struct trigger_t *trigger;
@@ -305,7 +332,7 @@ struct trigger_t *get_trigger_by_name(char *name)
 	return NULL;
 }
 
-struct log_t *get_log_by_name(char *name)
+struct log_t *get_log_by_name(const char *name)
 {
 	int id;
 	struct log_t *log;
@@ -388,7 +415,9 @@ static int parse_info(xmlNodePtr cur, struct info_t *info)
 			if (id == -1)
 				return -1;
 			content = xmlNodeGetContent(cur);
-			info->log[id] = get_log_by_name((char *)content);
+			if (!content)
+				return -1;
+			info->log[id] = get_log_by_name((const char *)content);
 			xmlFree(content);
 		}
 
@@ -450,7 +479,9 @@ static int parse_crash(xmlNodePtr cur, struct crash_t *crash)
 				return -1;
 
 			content = xmlNodeGetContent(cur);
-			crash->log[id] = get_log_by_name((char *)content);
+			if (!content)
+				return -1;
+			crash->log[id] = get_log_by_name((const char *)content);
 			xmlFree(content);
 		} else if (name_is(cur, "data"))
 			res = load_cur_content_with_id(cur, crash,
@@ -462,7 +493,10 @@ static int parse_crash(xmlNodePtr cur, struct crash_t *crash)
 				return -1;
 
 			content = xmlNodeGetContent(cur);
-			crash->mightcontent[expid][id] = (char *)content;
+			if (!content)
+				return -1;
+			crash->mightcontent[expid][id] = (const char *)content;
+			crash->mightcontent_len[expid][id] = xmlStrlen(content);
 		}
 
 		if (res)

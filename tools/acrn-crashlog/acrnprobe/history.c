@@ -40,12 +40,12 @@
 		"#EVENT  ID                    DATE                 TYPE\n"
 
 struct history_entry {
-	char *event;
-	char *type;
-	char *log;
+	const char *event;
+	const char *type;
+	const char *log;
 	const char *lastuptime; /* for uptime */
-	char *key;
-	char *eventtime;
+	const char *key;
+	const char *eventtime;
 };
 
 char *history_file;
@@ -115,8 +115,8 @@ free:
 	free(des);
 }
 
-void hist_raise_event(char *event, char *type, char *log, char *lastuptime,
-		char *key)
+void hist_raise_event(const char *event, const char *type, const char *log,
+			const char *lastuptime, const char *key)
 {
 	char line[MAXLINESIZE];
 	char eventtime[LONG_TIME_SIZE];

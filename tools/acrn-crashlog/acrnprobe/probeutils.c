@@ -206,7 +206,7 @@ static int reserve_log_folder(enum e_dir_mode mode, char *dir,
 	int plen;
 	int dlen;
 	struct sender_t *crashlog;
-	char *outdir;
+	const char *outdir;
 	unsigned int maxdirs;
 
 	crashlog = get_sender_by_name("crashlog");
@@ -273,9 +273,9 @@ static int reserve_log_folder(enum e_dir_mode mode, char *dir,
  * @param type Subtype of this event.
  * @param data* String obtained by get_data.
  */
-void generate_crashfile(char *dir, char *event, char *hashkey,
-			char *type, char *data0,
-			char *data1, char *data2)
+void generate_crashfile(const char *dir, const char *event, const char *hashkey,
+			const char *type, const char *data0,
+			const char *data1, const char *data2)
 {
 	char *buf;
 	char *path;

@@ -72,7 +72,7 @@ static int close_file(const char *filename, FILE *fp)
  *
  * @return 0 if successful, or a negative errno-style value if not.
  */
-int mkdir_p(char *path)
+int mkdir_p(const char *path)
 {
 	if (!path)
 		return -EINVAL;
@@ -621,7 +621,7 @@ int do_copy_eof(const char *src, const char *des)
  * @return 1 if the percentage of using space is lower than the specified quota.
  *         or 0 if not.
  */
-int space_available(char *path, int quota)
+int space_available(const char *path, int quota)
 {
 	struct statfs diskInfo;
 	unsigned long long totalBlocks;
@@ -1070,7 +1070,8 @@ free:
  *
  * @return the count of searched files on success, or -1 on error.
  */
-int find_file(char *dir, char *target_file, int depth, char *path[], int limit)
+int find_file(const char *dir, char *target_file, int depth, char *path[],
+		int limit)
 {
 	int i, ret;
 	int count = 0;
