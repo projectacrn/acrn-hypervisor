@@ -678,9 +678,8 @@ END:
  * - currently, one phys_pin can only be held by one pin source (vPIC or
  *   vIOAPIC)
  */
-int ptdev_add_intx_remapping(struct vm *vm,
-			__unused uint16_t virt_bdf, __unused uint16_t phys_bdf,
-			uint8_t virt_pin, uint8_t phys_pin, bool pic_pin)
+int ptdev_add_intx_remapping(struct vm *vm, uint8_t virt_pin, uint8_t phys_pin,
+				bool pic_pin)
 {
 	struct ptdev_remapping_info *entry;
 

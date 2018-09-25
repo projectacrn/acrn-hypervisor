@@ -134,8 +134,8 @@ static inline uint8_t get_slp_typx(uint32_t pm1_cnt)
 	return (uint8_t)((pm1_cnt & 0x1fffU) >> BIT_SLP_TYPx);
 }
 
-static uint32_t pm1ab_io_read(__unused struct vm_io_handler *hdlr,
-		__unused struct vm *vm, uint16_t addr, size_t width)
+static uint32_t pm1ab_io_read(__unused struct vm *vm, uint16_t addr,
+			size_t width)
 {
 	uint32_t val = pio_read(addr, width);
 
@@ -150,9 +150,8 @@ static uint32_t pm1ab_io_read(__unused struct vm_io_handler *hdlr,
 	return val;
 }
 
-static void pm1ab_io_write(__unused struct vm_io_handler *hdlr,
-		__unused struct vm *vm, uint16_t addr, size_t width,
-		uint32_t v)
+static void pm1ab_io_write(__unused struct vm *vm, uint16_t addr, size_t width,
+			uint32_t v)
 {
 	static uint32_t pm1a_cnt_ready = 0U;
 

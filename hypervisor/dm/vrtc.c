@@ -46,8 +46,7 @@ static uint8_t cmos_get_reg_val(uint8_t addr)
 	return reg;
 }
 
-static uint32_t vrtc_read(__unused struct vm_io_handler *hdlr, struct vm *vm,
-	uint16_t addr, __unused size_t width)
+static uint32_t vrtc_read(struct vm *vm, uint16_t addr, __unused size_t width)
 {
 	uint8_t reg;
 	uint8_t offset;
@@ -62,8 +61,8 @@ static uint32_t vrtc_read(__unused struct vm_io_handler *hdlr, struct vm *vm,
 	return reg;
 }
 
-static void vrtc_write(__unused struct vm_io_handler *hdlr, struct vm *vm, uint16_t addr,
-	size_t width, uint32_t value)
+static void vrtc_write(struct vm *vm, uint16_t addr, size_t width,
+			uint32_t value)
 {
 
 	if (width != 1U)

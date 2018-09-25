@@ -52,8 +52,7 @@ static void pci_cfg_clear_cache(struct pci_addr_info *pi)
 	pi->cached_enable = 0U;
 }
 
-static uint32_t pci_cfg_io_read(__unused struct vm_io_handler *hdlr,
-	struct vm *vm, uint16_t addr, size_t bytes)
+static uint32_t pci_cfg_io_read(struct vm *vm, uint16_t addr, size_t bytes)
 {
 	uint32_t val = 0xFFFFFFFFU;
 	struct vpci *vpci = &vm->vpci;
@@ -85,8 +84,8 @@ static uint32_t pci_cfg_io_read(__unused struct vm_io_handler *hdlr,
 	return val;
 }
 
-static void pci_cfg_io_write(__unused struct vm_io_handler *hdlr,
-	struct vm *vm, uint16_t addr, size_t bytes, uint32_t val)
+static void pci_cfg_io_write(struct vm *vm, uint16_t addr, size_t bytes,
+			uint32_t val)
 {
 	struct vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;

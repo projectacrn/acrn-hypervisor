@@ -203,7 +203,7 @@ void exec_vmwrite16(uint32_t field, uint16_t value)
 	exec_vmwrite64(field, (uint64_t)value);
 }
 
-static void init_cr0_cr4_host_mask(__unused struct vcpu *vcpu)
+static void init_cr0_cr4_host_mask(void)
 {
 	static bool inited = false;
 	uint64_t fixed0, fixed1;
@@ -692,7 +692,7 @@ static void init_guest_state(struct vcpu *vcpu)
 	}
 }
 
-static void init_host_state(__unused struct vcpu *vcpu)
+static void init_host_state(void)
 {
 	uint16_t value16;
 	uint64_t value64;
@@ -968,7 +968,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	pr_dbg("VMX_PROC_VM_EXEC_CONTROLS2: 0x%x ", value32);
 
 	/*APIC-v, config APIC-access address*/
-	value64 = vlapic_apicv_get_apic_access_addr(vcpu->vm);
+	value64 = vlapic_apicv_get_apic_access_addr();
 	exec_vmwrite64(VMX_APIC_ACCESS_ADDR_FULL, value64);
 
 	/*APIC-v, config APIC virtualized page address*/
@@ -1043,7 +1043,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	/* Natural-width */
 	pr_dbg("Natural-width*********");
 
-	init_cr0_cr4_host_mask(vcpu);
+	init_cr0_cr4_host_mask();
 
 	/* The CR3 target registers work in concert with VMX_CR3_TARGET_COUNT
 	 * field. Using these registers guest CR3 access can be managed. i.e.,
@@ -1097,7 +1097,7 @@ static void init_entry_ctrl(__unused struct vcpu *vcpu)
 	exec_vmwrite32(VMX_ENTRY_INSTR_LENGTH, 0U);
 }
 
-static void init_exit_ctrl(__unused struct vcpu *vcpu)
+static void init_exit_ctrl(void)
 {
 	uint32_t value32;
 
@@ -1156,10 +1156,10 @@ void init_vmcs(struct vcpu *vcpu)
 	exec_vmptrld((void *)&vmcs_pa);
 
 	/* Initialize the Virtual Machine Control Structure (VMCS) */
-	init_host_state(vcpu);
+	init_host_state();
 	/* init exec_ctrl needs to run before init_guest_state */
 	init_exec_ctrl(vcpu);
 	init_guest_state(vcpu);
 	init_entry_ctrl(vcpu);
-	init_exit_ctrl(vcpu);
+	init_exit_ctrl();
 }
