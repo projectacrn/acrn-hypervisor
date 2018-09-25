@@ -366,6 +366,8 @@ struct pci_xhci_vdev {
 	struct pci_xhci_portregs *portregs;
 	struct pci_xhci_dev_emu  **devices; /* XHCI[port] = device */
 	struct pci_xhci_dev_emu  **slots;   /* slots assigned from 1 */
+
+	bool		slot_allocated[XHCI_MAX_SLOTS];
 	int		ndevices;
 	uint16_t	pid;
 	uint16_t	vid;
@@ -1482,85 +1484,39 @@ done:
 }
 
 static struct usb_native_devinfo *
-pci_xhci_find_native_devinfo(struct pci_xhci_vdev *xdev)
+pci_xhci_find_native_devinfo_by_vport(struct pci_xhci_vdev *xdev, uint8_t vport)
 {
-	int i, j, x, y;
-	int minp = XHCI_MAX_DEVS;
-	int temp;
+	int i, j;
 
 	assert(xdev);
 
-	/* FIXME
-	 * Use the device with minimum port number to do the 'Enable Slot'
-	 * command. This is ok with Linux, but not 100% compatible with
-	 * xHCI spec. Will fix this in future. Need follow xHCI spec to bind
-	 * slot to device in address device command.
-	 */
-	x = y = -1;
 	for (i = 0; i < USB_NATIVE_NUM_BUS; ++i)
 		for (j = 0; j < USB_NATIVE_NUM_PORT; ++j)
-			if (VPORT_STATE(xdev->port_map_tbl[i][j]) ==
-					VPORT_CONNECTED) {
-				temp = VPORT_NUM(xdev->port_map_tbl[i][j]);
-				if (minp > temp) {
-					x = i;
-					y = j;
-					minp = temp;
-				}
-			}
-	if (x == -1 || y == -1)
-		return NULL;
-	else
-		return &xdev->native_dev_info[x][y];
+			if (VPORT_NUM(xdev->port_map_tbl[i][j]) == vport)
+				return &xdev->native_dev_info[i][j];
+	return NULL;
 }
 
 static uint32_t
 pci_xhci_cmd_enable_slot(struct pci_xhci_vdev *xdev, uint32_t *slot)
 {
-	struct pci_xhci_dev_emu *dev;
 	uint32_t cmderr;
-	struct usb_native_devinfo *di;
-	int i, vport;
+	int i;
 
-	cmderr = XHCI_TRB_ERROR_NO_SLOTS;
-
-	di = pci_xhci_find_native_devinfo(xdev);
-	if (!di) {
-		UPRINTF(LWRN, "unexpected Enable Slot commnad\r\n");
-		return -1;
-	}
-
-	assert(di->priv_data);
-	dev = pci_xhci_dev_create(xdev, di);
-	if (!dev) {
-		UPRINTF(LFTL, "fail to create device\r\n");
-		return -1;
-	}
-
-	vport = VPORT_NUM(xdev->port_map_tbl[di->bus][di->port]);
-	assert(vport > 0);
-	assert(!xdev->devices[vport]);
-
-	xdev->devices[vport] = dev;
-	xdev->ndevices++;
-
-	for (i = 1; i <= XHCI_MAX_SLOTS; i++) {
-		if (XHCI_SLOTDEV_PTR(xdev, i) == NULL) {
-			xdev->slots[i] = dev;
-			*slot = i;
-			dev->dev_slotstate = XHCI_ST_ENABLED;
-			cmderr = XHCI_TRB_ERROR_SUCCESS;
-			dev->hci.hci_address = i;
-			xdev->port_map_tbl[di->bus][di->port] =
-				VPORT_NUM_STATE(VPORT_EMULATED, vport);
+	cmderr = XHCI_TRB_ERROR_SUCCESS;
+	for (i = 1; i <= XHCI_MAX_SLOTS; i++)
+		if (xdev->slot_allocated[i] == false)
 			break;
-		}
+
+	if (i > XHCI_MAX_SLOTS)
+		cmderr = XHCI_TRB_ERROR_NO_SLOTS;
+	else {
+		xdev->slot_allocated[i] = true;
+		*slot = i;
 	}
 
-	UPRINTF(LDBG, "enable slot (error=%d) slot %u for native device "
-			"%d-%d\r\n", cmderr != XHCI_TRB_ERROR_SUCCESS, *slot,
-			di->bus, di->port);
-
+	UPRINTF(LDBG, "enable slot (error=%d) return slot %u\r\n",
+			cmderr != XHCI_TRB_ERROR_SUCCESS, *slot);
 	return cmderr;
 }
 
@@ -1611,6 +1567,7 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 
 		xdev->devices[i] = NULL;
 		xdev->slots[slot] = NULL;
+		xdev->slot_allocated[slot] = false;
 
 		di = &udev->info;
 		xdev->port_map_tbl[di->bus][di->port] =
@@ -1688,10 +1645,12 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 {
 	struct pci_xhci_dev_emu	*dev;
 	struct xhci_input_dev_ctx *input_ctx;
-	struct xhci_slot_ctx	*islot_ctx;
-	struct xhci_dev_ctx	*dev_ctx;
-	struct xhci_endp_ctx	*ep0_ctx;
-	uint32_t		cmderr;
+	struct xhci_slot_ctx *islot_ctx;
+	struct xhci_dev_ctx *dev_ctx;
+	struct xhci_endp_ctx *ep0_ctx;
+	struct usb_native_devinfo *di;
+	uint32_t cmderr;
+	uint8_t rh_port;
 
 	input_ctx = XHCI_GADDR(xdev, trb->qwTrb0 & ~0xFUL);
 	islot_ctx = &input_ctx->ctx_slot;
@@ -1714,6 +1673,40 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 		UPRINTF(LDBG, "address device, input ctl invalid\r\n");
 		cmderr = XHCI_TRB_ERROR_TRB;
 		goto done;
+	}
+
+	if (slot <= 0 || slot > XHCI_MAX_SLOTS ||
+			xdev->slot_allocated[slot] == false) {
+		UPRINTF(LDBG, "address device, invalid slot %d\r\n", slot);
+		cmderr = XHCI_TRB_ERROR_SLOT_NOT_ON;
+		goto done;
+	}
+
+	dev = xdev->slots[slot];
+	if (!dev) {
+		rh_port = XHCI_SCTX_1_RH_PORT_GET(islot_ctx->dwSctx1);
+
+		di = pci_xhci_find_native_devinfo_by_vport(xdev, rh_port);
+		if (di == NULL) {
+			cmderr = XHCI_TRB_ERROR_TRB;
+			UPRINTF(LFTL, "invalid root hub port %d\r\n", rh_port);
+			goto done;
+		}
+
+		UPRINTF(LDBG, "create virtual device for %d-%d on virtual "
+				"port %d\r\n", di->bus, di->port, rh_port);
+
+		dev = pci_xhci_dev_create(xdev, di);
+		if (!dev) {
+			UPRINTF(LFTL, "fail to create device for %d-%d\r\n",
+					di->bus, di->port);
+			goto done;
+		}
+
+		xdev->devices[rh_port] = dev;
+		xdev->ndevices++;
+		xdev->slots[slot] = dev;
+		dev->hci.hci_address = slot;
 	}
 
 	/* assign address to slot */
@@ -3349,8 +3342,8 @@ static void
 pci_xhci_reset_port(struct pci_xhci_vdev *xdev, int portn, int warm)
 {
 	struct pci_xhci_portregs *port;
-	struct pci_xhci_dev_emu	*dev;
-	struct xhci_trb		evtrb;
+	struct xhci_trb evtrb;
+	struct usb_native_devinfo *di;
 	int speed, error;
 
 	assert(portn <= XHCI_MAX_DEVS);
@@ -3358,26 +3351,29 @@ pci_xhci_reset_port(struct pci_xhci_vdev *xdev, int portn, int warm)
 	UPRINTF(LDBG, "reset port %d\r\n", portn);
 
 	port = XHCI_PORTREG_PTR(xdev, portn);
-	dev = XHCI_DEVINST_PTR(xdev, portn);
-	if (dev) {
-		speed = pci_xhci_convert_speed(dev->dev_ue->ue_usbspeed);
-		port->portsc &= ~(XHCI_PS_PLS_MASK | XHCI_PS_PR | XHCI_PS_PRC);
-		port->portsc |= XHCI_PS_PED | XHCI_PS_SPEED_SET(speed);
+	di = pci_xhci_find_native_devinfo_by_vport(xdev, portn);
+	if (!di) {
+		UPRINTF(LWRN, "fail to reset port %d\r\n", portn);
+		return;
+	}
 
-		if (warm && dev->dev_ue->ue_usbver == 3)
-			port->portsc |= XHCI_PS_WRC;
+	speed = pci_xhci_convert_speed(di->speed);
+	port->portsc &= ~(XHCI_PS_PLS_MASK | XHCI_PS_PR | XHCI_PS_PRC);
+	port->portsc |= XHCI_PS_PED | XHCI_PS_SPEED_SET(speed);
 
-		if ((port->portsc & XHCI_PS_PRC) == 0) {
-			port->portsc |= XHCI_PS_PRC;
+	if (warm && di->bcd >= 0x300)
+		port->portsc |= XHCI_PS_WRC;
 
-			pci_xhci_set_evtrb(&evtrb, portn,
-			     XHCI_TRB_ERROR_SUCCESS,
-			     XHCI_TRB_EVENT_PORT_STS_CHANGE);
-			error = pci_xhci_insert_event(xdev, &evtrb, 1);
-			if (error != XHCI_TRB_ERROR_SUCCESS)
-				UPRINTF(LWRN, "reset port insert event "
-					"failed\n");
-		}
+	if ((port->portsc & XHCI_PS_PRC) == 0) {
+		port->portsc |= XHCI_PS_PRC;
+
+		pci_xhci_set_evtrb(&evtrb, portn,
+		     XHCI_TRB_ERROR_SUCCESS,
+		     XHCI_TRB_EVENT_PORT_STS_CHANGE);
+		error = pci_xhci_insert_event(xdev, &evtrb, 1);
+		if (error != XHCI_TRB_ERROR_SUCCESS)
+			UPRINTF(LWRN, "reset port insert event "
+				"failed\n");
 	}
 }
 
