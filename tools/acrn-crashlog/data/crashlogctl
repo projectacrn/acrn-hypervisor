@@ -3,6 +3,8 @@
 # Copyright (C) <2018> Intel Corporation
 # SPDX-License-Identifier: BSD-3-Clause
 #
+# crashlogctl is part of acrn-hypervisor.
+#
 
 declare -a CRASHLOG_SERVICES=(
   acrnprobe.service
