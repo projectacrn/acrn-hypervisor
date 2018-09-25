@@ -33,6 +33,7 @@
 #include "load_conf.h"
 #include "log_sys.h"
 #include "probeutils.h"
+#include "strutils.h"
 
 #define CRASH_CURRENT_LOG       "currentcrashlog"
 #define STATS_CURRENT_LOG       "currentstatslog"
@@ -98,6 +99,7 @@ static int compute_key(char *key, size_t key_len, const char *seed)
 {
 	SHA256_CTX sha;
 	char buf[VERSION_SIZE];
+	int len;
 	long long time_ns;
 	char *tmp_key = key;
 	unsigned char results[SHA256_DIGEST_LENGTH];
@@ -110,7 +112,10 @@ static int compute_key(char *key, size_t key_len, const char *seed)
 
 	SHA256_Init(&sha);
 	time_ns = get_uptime();
-	snprintf(buf, VERSION_SIZE, "%s%s%lld", gbuildversion, guuid, time_ns);
+	len = snprintf(buf, VERSION_SIZE, "%s%s%lld",
+			gbuildversion, guuid, time_ns);
+	if (s_not_expect(len , VERSION_SIZE))
+		return -1;
 
 	SHA256_Update(&sha, (unsigned char *)buf, strlen(buf));
 	SHA256_Update(&sha, (unsigned char *)seed, strlen(seed));
@@ -118,7 +123,9 @@ static int compute_key(char *key, size_t key_len, const char *seed)
 	SHA256_Final(results, &sha);
 
 	for (i = 0; i < key_len / 2; i++) {
-		sprintf(tmp_key, "%02x", results[i]);
+		len = snprintf(tmp_key, 3, "%02x", results[i]);
+		if (s_not_expect(len, 3))
+			return -1;
 		tmp_key += 2;
 	}
 	*tmp_key = 0;
@@ -194,8 +201,10 @@ char *generate_event_id(const char *seed1, const char *seed2,
 static int reserve_log_folder(enum e_dir_mode mode, char *dir,
 				unsigned int *current)
 {
-	char path[512];
+	char path[PATH_MAX];
 	int res;
+	int plen;
+	int dlen;
 	struct sender_t *crashlog;
 	char *outdir;
 	unsigned int maxdirs;
@@ -208,22 +217,29 @@ static int reserve_log_folder(enum e_dir_mode mode, char *dir,
 
 	switch (mode) {
 	case MODE_CRASH:
-		sprintf(path, "%s/%s", outdir, CRASH_CURRENT_LOG);
-		sprintf(dir, "%s/%s", outdir, "crashlog");
+		plen = snprintf(path, PATH_MAX, "%s/%s", outdir,
+				CRASH_CURRENT_LOG);
+		dlen = snprintf(dir, PATH_MAX, "%s/%s", outdir, "crashlog");
 		break;
 	case MODE_STATS:
-		sprintf(path, "%s/%s", outdir, STATS_CURRENT_LOG);
-		sprintf(dir, "%s/%s", outdir, "stats");
+		plen = snprintf(path, PATH_MAX, "%s/%s", outdir,
+			STATS_CURRENT_LOG);
+		dlen = snprintf(dir, PATH_MAX, "%s/%s", outdir, "stats");
 		break;
 	case MODE_VMEVENT:
-		sprintf(path, "%s/%s", outdir, VM_CURRENT_LOG);
-		sprintf(dir, "%s/%s", outdir, "vmevent");
+		plen = snprintf(path, PATH_MAX, "%s/%s", outdir,
+				VM_CURRENT_LOG);
+		dlen = snprintf(dir, PATH_MAX, "%s/%s", outdir, "vmevent");
 		break;
 	default:
 		LOGW("Invalid mode %d\n", mode);
 		return -1;
 	}
 
+	if (s_not_expect(plen, PATH_MAX) || s_not_expect(dlen, PATH_MAX)) {
+		LOGE("the length of path/dir is too long\n");
+		return -1;
+	}
 	/* Read current value in file */
 	res = file_read_int(path, current);
 	if (res < 0)
