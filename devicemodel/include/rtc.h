@@ -33,6 +33,12 @@
 
 #define IO_RTC	0x070	/* RTC */
 
+#define	RTC_LMEM_LSB	0x34
+#define	RTC_LMEM_MSB	0x35
+#define	RTC_HMEM_LSB	0x5b
+#define	RTC_HMEM_SB	0x5c
+#define	RTC_HMEM_MSB	0x5d
+
 struct vrtc;
 struct vmctx;
 

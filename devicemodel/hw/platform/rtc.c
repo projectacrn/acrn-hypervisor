@@ -1147,6 +1147,8 @@ int
 vrtc_init(struct vmctx *ctx)
 {
 	struct vrtc *vrtc;
+	size_t lomem, himem;
+	int err;
 	struct rtcdev *rtc;
 	time_t curtime;
 	sigset_t mask;
@@ -1159,6 +1161,28 @@ vrtc_init(struct vmctx *ctx)
 	ctx->vrtc = vrtc;
 
 	pthread_mutex_init(&vrtc->mtx, NULL);
+
+	/*
+	 * Report guest memory size in nvram cells as required by UEFI.
+	 * Little-endian encoding.
+	 * 0x34/0x35 - 64KB chunks above 16MB, below 4GB
+	 * 0x5b/0x5c/0x5d - 64KB chunks above 4GB
+	 */
+	lomem = vm_get_lowmem_size(ctx);
+	assert(lomem >= 16 * MB);
+	lomem = (lomem - 16 * MB) / (64 * KB);
+	err = vrtc_nvram_write(vrtc, RTC_LMEM_LSB, lomem);
+	assert(err == 0);
+	err = vrtc_nvram_write(vrtc, RTC_LMEM_MSB, lomem >> 8);
+	assert(err == 0);
+
+	himem = vm_get_highmem_size(ctx) / (64 * KB);
+	err = vrtc_nvram_write(vrtc, RTC_HMEM_LSB, himem);
+	assert(err == 0);
+	err = vrtc_nvram_write(vrtc, RTC_HMEM_SB, himem >> 8);
+	assert(err == 0);
+	err = vrtc_nvram_write(vrtc, RTC_HMEM_MSB, himem >> 16);
+	assert(err == 0);
 
 	memset(&rtc_addr, 0, sizeof(struct inout_port));
 	memset(&rtc_data, 0, sizeof(struct inout_port));
