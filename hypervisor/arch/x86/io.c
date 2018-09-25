@@ -200,14 +200,14 @@ hv_emulate_pio(struct vcpu *vcpu, struct io_request *io_req)
 			break;
 		} else {
 			if (pio_req->direction == REQUEST_WRITE) {
-				handler->desc.io_write(handler, vm, port, size,
-					pio_req->value & mask);
+				handler->desc.io_write(vm, port, size,
+							pio_req->value & mask);
 
 				pr_dbg("IO write on port %04x, data %08x", port,
 					pio_req->value & mask);
 			} else {
-				pio_req->value = handler->desc.io_read(handler,
-						vm, port, size);
+				pio_req->value = handler->desc.io_read(vm, port,
+									size);
 
 				pr_dbg("IO read on port %04x, data %08x",
 					port, pio_req->value);

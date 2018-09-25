@@ -86,8 +86,7 @@ static inline int set_vcpuid_entry(struct vm *vm,
 /**
  * initialization of virtual CPUID leaf
  */
-static void init_vcpuid_entry(__unused struct vm *vm,
-			uint32_t leaf, uint32_t subleaf,
+static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 			uint32_t flags, struct vcpuid_entry *entry)
 {
 	entry->leaf = leaf;
@@ -180,7 +179,7 @@ int set_vcpuid_entries(struct vm *vm)
 	uint32_t limit;
 	uint32_t i, j;
 
-	init_vcpuid_entry(vm, 0U, 0U, 0U, &entry);
+	init_vcpuid_entry(0U, 0U, 0U, &entry);
 	if (boot_cpu_data.cpuid_level < 0x16U) {
 		/* The cpuid with zero leaf returns the max level.
 		 * Emulate that the 0x16U is supported */
@@ -204,8 +203,7 @@ int set_vcpuid_entries(struct vm *vm)
 		{
 			uint32_t times;
 
-			init_vcpuid_entry(vm, i, 0U,
-				CPUID_CHECK_SUBLEAF, &entry);
+			init_vcpuid_entry(i, 0U, CPUID_CHECK_SUBLEAF, &entry);
 			result = set_vcpuid_entry(vm, &entry);
 			if (result != 0) {
 				return result;
@@ -213,8 +211,8 @@ int set_vcpuid_entries(struct vm *vm)
 
 			times = entry.eax & 0xffUL;
 			for (j = 1U; j < times; j++) {
-				init_vcpuid_entry(vm, i, j,
-					CPUID_CHECK_SUBLEAF, &entry);
+				init_vcpuid_entry(i, j, CPUID_CHECK_SUBLEAF,
+						&entry);
 				result = set_vcpuid_entry(vm, &entry);
 				if (result != 0) {
 					return result;
@@ -230,8 +228,8 @@ int set_vcpuid_entries(struct vm *vm)
 					break;
 				}
 
-				init_vcpuid_entry(vm, i, j,
-					CPUID_CHECK_SUBLEAF, &entry);
+				init_vcpuid_entry(i, j, CPUID_CHECK_SUBLEAF,
+						&entry);
 				if ((i == 0x04U) && (entry.eax == 0U)) {
 					break;
 				}
@@ -257,7 +255,7 @@ int set_vcpuid_entries(struct vm *vm)
 		case 0x14U:
 			break;
 		default:
-			init_vcpuid_entry(vm, i, 0U, 0U, &entry);
+			init_vcpuid_entry(i, 0U, 0U, &entry);
 			result = set_vcpuid_entry(vm, &entry);
 			if (result != 0) {
 				return result;
@@ -266,19 +264,19 @@ int set_vcpuid_entries(struct vm *vm)
 		}
 	}
 
-	init_vcpuid_entry(vm, 0x40000000U, 0U, 0U, &entry);
+	init_vcpuid_entry(0x40000000U, 0U, 0U, &entry);
 	result = set_vcpuid_entry(vm, &entry);
 	if (result != 0) {
 		return result;
 	}
 
-	init_vcpuid_entry(vm, 0x40000010U, 0U, 0U, &entry);
+	init_vcpuid_entry(0x40000010U, 0U, 0U, &entry);
 	result = set_vcpuid_entry(vm, &entry);
 	if (result != 0) {
 		return result;
 	}
 
-	init_vcpuid_entry(vm, 0x80000000U, 0U, 0U, &entry);
+	init_vcpuid_entry(0x80000000U, 0U, 0U, &entry);
 	result = set_vcpuid_entry(vm, &entry);
 	if (result != 0) {
 		return result;
@@ -287,7 +285,7 @@ int set_vcpuid_entries(struct vm *vm)
 	limit = entry.eax;
 	vm->vcpuid_xlevel = limit;
 	for (i = 0x80000001U; i <= limit; i++) {
-		init_vcpuid_entry(vm, i, 0U, 0U, &entry);
+		init_vcpuid_entry(i, 0U, 0U, &entry);
 		result = set_vcpuid_entry(vm, &entry);
 		if (result != 0) {
 			return result;

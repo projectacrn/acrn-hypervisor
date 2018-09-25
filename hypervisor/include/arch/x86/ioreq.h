@@ -35,12 +35,10 @@ struct vm;
 struct vcpu;
 
 typedef
-uint32_t (*io_read_fn_t)(struct vm_io_handler *handler, struct vm *vm,
-				uint16_t port, size_t size);
+uint32_t (*io_read_fn_t)(struct vm *vm, uint16_t port, size_t size);
 
 typedef
-void (*io_write_fn_t)(struct vm_io_handler *handler, struct vm *vm,
-				uint16_t port, size_t size, uint32_t val);
+void (*io_write_fn_t)(struct vm *vm, uint16_t port, size_t size, uint32_t val);
 
 /* Describes a single IO handler description entry. */
 struct vm_io_handler_desc {

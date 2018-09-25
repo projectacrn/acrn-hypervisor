@@ -178,7 +178,7 @@ void vlapic_init(struct acrn_vlapic *vlapic);
 void vlapic_reset(struct acrn_vlapic *vlapic);
 void vlapic_restore(struct acrn_vlapic *vlapic, struct lapic_regs *regs);
 bool vlapic_enabled(struct acrn_vlapic *vlapic);
-uint64_t vlapic_apicv_get_apic_access_addr(__unused struct vm *vm);
+uint64_t vlapic_apicv_get_apic_access_addr(void);
 uint64_t vlapic_apicv_get_apic_page_addr(struct acrn_vlapic *vlapic);
 void vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic);
 int apic_access_vmexit_handler(struct vcpu *vcpu);

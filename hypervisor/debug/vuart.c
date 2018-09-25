@@ -133,8 +133,8 @@ static void vuart_toggle_intr(struct acrn_vuart *vu)
 	}
 }
 
-static void vuart_write(__unused struct vm_io_handler *hdlr, struct vm *vm,
-		uint16_t offset_arg, __unused size_t width, uint32_t value)
+static void vuart_write(struct vm *vm, uint16_t offset_arg,
+			__unused size_t width, uint32_t value)
 {
 	uint16_t offset = offset_arg;
 	struct acrn_vuart *vu = vm_vuart(vm);
@@ -219,8 +219,8 @@ done:
 	vuart_unlock(vu);
 }
 
-static uint32_t vuart_read(__unused struct vm_io_handler *hdlr, struct vm *vm,
-		uint16_t offset_arg, __unused size_t width)
+static uint32_t vuart_read(struct vm *vm, uint16_t offset_arg,
+			__unused size_t width)
 {
 	uint16_t offset = offset_arg;
 	uint8_t iir, reg, intr_reason;

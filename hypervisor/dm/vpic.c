@@ -724,8 +724,7 @@ static int vpic_master_handler(struct vm *vm, bool in, uint16_t port,
 	return vpic_write(vpic, i8259, port, eax);
 }
 
-static uint32_t vpic_master_io_read(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, uint16_t addr, size_t width)
+static uint32_t vpic_master_io_read(struct vm *vm, uint16_t addr, size_t width)
 {
 	uint32_t val = 0U;
 
@@ -736,8 +735,8 @@ static uint32_t vpic_master_io_read(__unused struct vm_io_handler *hdlr,
 	return val;
 }
 
-static void vpic_master_io_write(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, uint16_t addr, size_t width, uint32_t v)
+static void vpic_master_io_write(struct vm *vm, uint16_t addr, size_t width,
+				uint32_t v)
 {
 	uint32_t val = v;
 
@@ -767,8 +766,7 @@ static int vpic_slave_handler(struct vm *vm, bool in, uint16_t port,
 	return vpic_write(vpic, i8259, port, eax);
 }
 
-static uint32_t vpic_slave_io_read(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, uint16_t addr, size_t width)
+static uint32_t vpic_slave_io_read(struct vm *vm, uint16_t addr, size_t width)
 {
 	uint32_t val = 0U;
 
@@ -779,8 +777,8 @@ static uint32_t vpic_slave_io_read(__unused struct vm_io_handler *hdlr,
 	return val;
 }
 
-static void vpic_slave_io_write(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, uint16_t addr, size_t width, uint32_t v)
+static void vpic_slave_io_write(struct vm *vm, uint16_t addr, size_t width,
+				uint32_t v)
 {
 	uint32_t val = v;
 
@@ -834,8 +832,7 @@ static int vpic_elc_handler(struct vm *vm, bool in, uint16_t port, size_t bytes,
 	return 0;
 }
 
-static uint32_t vpic_elc_io_read(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, uint16_t addr, size_t width)
+static uint32_t vpic_elc_io_read(struct vm *vm, uint16_t addr, size_t width)
 {
 	uint32_t val = 0U;
 
@@ -845,8 +842,8 @@ static uint32_t vpic_elc_io_read(__unused struct vm_io_handler *hdlr,
 	return val;
 }
 
-static void vpic_elc_io_write(__unused struct vm_io_handler *hdlr,
-		struct vm *vm, uint16_t addr, size_t width, uint32_t v)
+static void vpic_elc_io_write(struct vm *vm, uint16_t addr, size_t width,
+				uint32_t v)
 {
 	uint32_t val = v;
 

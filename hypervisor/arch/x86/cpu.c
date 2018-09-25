@@ -688,7 +688,7 @@ void stop_cpus(void)
 	}
 }
 
-void cpu_do_idle(__unused uint16_t pcpu_id)
+void cpu_do_idle(void)
 {
 	__asm __volatile("pause" ::: "memory");
 }

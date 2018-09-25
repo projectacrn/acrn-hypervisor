@@ -85,11 +85,10 @@ vlapic_dump_isr(__unused struct acrn_vlapic *vlapic, __unused char *msg) {}
 static uint8_t apicv_apic_access_addr[CPU_PAGE_SIZE] __aligned(CPU_PAGE_SIZE);
 
 static int
-apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector,
-			__unused bool level);
+apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector);
 
 static int
-apicv_pending_intr(struct acrn_vlapic *vlapic, __unused uint32_t *vecptr);
+apicv_pending_intr(struct acrn_vlapic *vlapic);
 
 static void
 apicv_batch_set_tmr(struct acrn_vlapic *vlapic);
@@ -227,13 +226,6 @@ vlapic_ldr_write_handler(struct acrn_vlapic *vlapic)
 	lapic = &(vlapic->apic_page);
 	lapic->ldr.v &= ~APIC_LDR_RESERVED;
 	dev_dbg(ACRN_DBG_LAPIC, "vlapic LDR set to %#x", lapic->ldr);
-}
-
-static void
-vlapic_id_write_handler(__unused struct acrn_vlapic *vlapic)
-{
-	/* Force APIC ID as readonly */
-	return;
 }
 
 static inline uint32_t
@@ -490,7 +482,7 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 	}
 
 	if (is_apicv_intr_delivery_supported()) {
-		return apicv_set_intr_ready(vlapic, vector, level);
+		return apicv_set_intr_ready(vlapic, vector);
 	}
 
 	idx = vector >> 5U;
@@ -1239,7 +1231,7 @@ vlapic_pending_intr(struct acrn_vlapic *vlapic, uint32_t *vecptr)
 	struct lapic_reg *irrptr;
 
 	if (is_apicv_intr_delivery_supported()) {
-		return apicv_pending_intr(vlapic, vecptr);
+		return apicv_pending_intr(vlapic);
 	}
 
 	irrptr = &lapic->irr[0];
@@ -1492,7 +1484,7 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset,
 	retval = 0;
 	switch (offset) {
 	case APIC_OFFSET_ID:
-		vlapic_id_write_handler(vlapic);
+		/* Force APIC ID as read only */
 		break;
 	case APIC_OFFSET_TPR:
 		vlapic_set_tpr(vlapic, data32 & 0xffU);
@@ -1995,7 +1987,7 @@ int vlapic_create(struct vcpu *vcpu)
 				DEFAULT_APIC_BASE, CPU_PAGE_SIZE);
 
 		ept_mr_add(vcpu->vm, pml4_page,
-			vlapic_apicv_get_apic_access_addr(vcpu->vm),
+			vlapic_apicv_get_apic_access_addr(),
 			DEFAULT_APIC_BASE, CPU_PAGE_SIZE,
 			EPT_WR | EPT_RD | EPT_UNCACHED);
 	}
@@ -2022,8 +2014,7 @@ void vlapic_free(struct vcpu *vcpu)
  * APIC-v functions
  * **/
 static int
-apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector,
-			__unused bool level)
+apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector)
 {
 	struct vlapic_pir_desc *pir_desc;
 	uint64_t mask;
@@ -2041,7 +2032,7 @@ apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector,
 }
 
 static int
-apicv_pending_intr(struct acrn_vlapic *vlapic, __unused uint32_t *vecptr)
+apicv_pending_intr(struct acrn_vlapic *vlapic)
 {
 	struct vlapic_pir_desc *pir_desc;
 	struct lapic_regs *lapic;
@@ -2104,7 +2095,7 @@ apicv_batch_set_tmr(struct acrn_vlapic *vlapic)
  *APIC-v: Get the HPA to APIC-access page
  * **/
 uint64_t
-vlapic_apicv_get_apic_access_addr(__unused struct vm *vm)
+vlapic_apicv_get_apic_access_addr(void)
 {
 	return hva2hpa(apicv_apic_access_addr);
 }
@@ -2278,7 +2269,7 @@ int apic_write_vmexit_handler(struct vcpu *vcpu)
 
 	switch (offset) {
 	case APIC_OFFSET_ID:
-		vlapic_id_write_handler(vlapic);
+		/* Force APIC ID as read only */
 		break;
 	case APIC_OFFSET_EOI:
 		vlapic_process_eoi(vlapic);
