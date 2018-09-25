@@ -121,4 +121,6 @@ void cancel_event_injection(struct vcpu *vcpu);
 void get_cpu_interrupt_info(char *str_arg, int str_max);
 #endif /* HV_DEBUG */
 
+extern uint32_t acrn_vhm_vector;
+
 #endif /* ARCH_IRQ_H */
