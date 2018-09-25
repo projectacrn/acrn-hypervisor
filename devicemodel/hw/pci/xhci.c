@@ -1942,7 +1942,8 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 	assert(dev_ctx != NULL);
 	ep_ctx = &dev_ctx->ctx_ep[epid];
 
-	if ((ep_ctx->dwEpCtx0 & 0x7) != XHCI_ST_EPCTX_HALTED) {
+	if (type == XHCI_TRB_TYPE_RESET_EP &&
+			(ep_ctx->dwEpCtx0 & 0x7) != XHCI_ST_EPCTX_HALTED) {
 		cmderr = XHCI_TRB_ERROR_CONTEXT_STATE;
 		goto done;
 	}
