@@ -5,7 +5,7 @@ VERSION_H	= $(BUILDDIR)/include/acrnprobe/version.h
 
 LIBS		= -lpthread -lxml2 -lcrypto -lrt -lblkid -lext2fs -lcom_err \
 		  $(EXTRA_LIBS)
-INCLUDE		+= -I $(CURDIR)/include -I /usr/include/libxml2
+INCLUDE		+= -I $(CURDIR)/include -I $(SYSROOT)/usr/include/libxml2
 INCLUDE		+= -I $(BUILDDIR)/include/acrnprobe
 CFLAGS 		+= $(INCLUDE)
 CFLAGS 		+= -fdata-sections

@@ -53,12 +53,12 @@ endif
 # its tools and libraries in different folders. The next couple of
 # variables will determine and set the right path for both the
 # tools $(GNUEFI_DIR) and libraries $(LIBDIR)
-GNUEFI_DIR := $(shell find /usr/lib* -name elf_$(ARCH)_efi.lds -type f | xargs dirname)
+GNUEFI_DIR := $(shell find $(SYSROOT)/usr/lib* -name elf_$(ARCH)_efi.lds -type f | xargs dirname)
 LIBDIR := $(subst gnuefi,,$(GNUEFI_DIR))
 CRT0 := $(GNUEFI_DIR)/crt0-efi-$(ARCH).o
 LDSCRIPT := $(GNUEFI_DIR)/elf_$(ARCH)_efi.lds
 
-INCDIR := /usr/include
+INCDIR := $(SYSROOT)/usr/include
 
 CFLAGS=-I. -I.. -I../../../include/arch/x86/guest -I$(INCDIR)/efi -I$(INCDIR)/efi/$(ARCH) \
 		-DEFI_FUNCTION_WRAPPER -fPIC -fshort-wchar -ffreestanding \
