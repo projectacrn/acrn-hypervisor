@@ -32,6 +32,7 @@
 #include "history.h"
 #include "log_sys.h"
 #include "probeutils.h"
+#include "strutils.h"
 
 #define HISTORY_FIRST_LINE_FMT \
 		"#V1.0 CURRENTUPTIME   %-24s\n"
@@ -186,7 +187,12 @@ void hist_raise_uptime(char *lastuptime)
 			return;
 		}
 
-		sprintf(firstline, HISTORY_FIRST_LINE_FMT, boot_time);
+		ret = snprintf(firstline, sizeof(firstline),
+			       HISTORY_FIRST_LINE_FMT, boot_time);
+		if (s_not_expect(ret, sizeof(firstline))) {
+			LOGE("failed to construct the firstline\n");
+			return;
+		}
 		replace_file_head(history_file, firstline);
 
 		if (hours / uptime_hours >= loop_uptime_event) {
@@ -249,8 +255,9 @@ static int get_time_firstline(char *buffer)
 int prepare_history(void)
 {
 	int ret;
+	int llen;
 	struct sender_t *crashlog;
-	char linebuf[MAXLINESIZE] = {0};
+	char linebuf[MAXLINESIZE];
 
 	crashlog = get_sender_by_name("crashlog");
 	if (!crashlog)
@@ -272,7 +279,12 @@ int prepare_history(void)
 	} else {
 		/* new history */
 		LOGW("new history\n");
-		sprintf(linebuf, HISTORY_FIRST_LINE_FMT, "0000:00:00");
+		llen = snprintf(linebuf, sizeof(linebuf),
+				HISTORY_FIRST_LINE_FMT, "0000:00:00");
+		if (s_not_expect(llen, sizeof(linebuf))) {
+			LOGE("failed to construct the fristline\n");
+			return -EINVAL;
+		}
 		ret = overwrite_file(history_file, linebuf);
 		if (ret < 0) {
 			LOGE("Write (%s, %s) failed, error (%s)\n",
