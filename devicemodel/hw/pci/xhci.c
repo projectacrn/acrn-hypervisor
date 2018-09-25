@@ -630,7 +630,7 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 	struct pci_xhci_dev_emu *edev;
 	struct usb_native_devinfo di;
 	struct usb_dev *udev;
-	uint8_t port, slot, native_port;
+	uint8_t port, slot;
 	uint8_t status;
 	int need_intr = 1;
 
@@ -640,10 +640,17 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 	xdev = hci_data;
 	assert(xdev->devices);
 
-	native_port = *((uint8_t *)dev_data);
-	if (!pci_xhci_is_valid_portnum(native_port)) {
-		UPRINTF(LFTL, "invalid physical port %d\r\n", native_port);
+	di = *((struct usb_native_devinfo *)dev_data);
+	if (!pci_xhci_is_valid_portnum(di.port)) {
+		UPRINTF(LFTL, "invalid physical port %d\r\n", di.port);
 		return -1;
+	}
+
+	status = VPORT_STATE(xdev->port_map_tbl[di.bus][di.port]);
+	if (status == VPORT_HUB_CONNECTED) {
+		xdev->port_map_tbl[di.bus][di.port] =
+			VPORT_NUM_STATE(VPORT_ASSIGNED, 0);
+		return 0;
 	}
 
 	for (port = 1; port <= XHCI_MAX_DEVS; ++port) {
@@ -652,14 +659,28 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 			continue;
 
 		udev = edev->dev_instance;
-		if (udev->info.port == native_port) {
-			di = udev->info;
-			break;
+		if (udev->info.port == di.port) {
+			int old_t, new_t;
+			uint8_t old_ports[7]; /* max USB hub tiers are 7 */
+			uint8_t new_ports[7];
+
+			/* get tiers and port info */
+			old_t = libusb_get_port_numbers(udev->info.priv_data,
+					old_ports, sizeof(old_ports));
+			new_t = libusb_get_port_numbers(di.priv_data,
+					new_ports, sizeof(new_ports));
+
+			if (old_t == new_t &&
+					!memcmp(old_ports, new_ports, old_t)) {
+				di = udev->info;
+				break;
+			}
+			UPRINTF(LFTL, "multi-hub is not supported yet\r\n");
 		}
 	}
 
 	if (port == XHCI_MAX_DEVS + 1) {
-		UPRINTF(LFTL, "fail to find physical port %d\r\n", native_port);
+		UPRINTF(LFTL, "fail to find physical port %d\r\n", di.port);
 		return -1;
 	}
 
@@ -667,7 +688,6 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 		if (xdev->slots[slot] == edev)
 			break;
 
-	status = VPORT_STATE(xdev->port_map_tbl[di.bus][di.port]);
 	assert(status == VPORT_EMULATED || status == VPORT_CONNECTED);
 	xdev->port_map_tbl[di.bus][di.port] = VPORT_NUM_STATE(VPORT_ASSIGNED,
 			0);
