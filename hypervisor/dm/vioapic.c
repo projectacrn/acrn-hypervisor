@@ -529,8 +529,7 @@ vioapic_pincount(struct vm *vm)
 	}
 }
 
-int vioapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req,
-		__unused void *handler_private_data)
+int vioapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req)
 {
 	struct vm *vm = vcpu->vm;
 	struct acrn_vioapic *vioapic;

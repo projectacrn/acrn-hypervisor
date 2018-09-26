@@ -76,7 +76,7 @@ struct trace_entry {
 } __attribute__((aligned(8)));
 
 static inline bool
-trace_check(uint16_t cpu_id, __unused uint32_t evid)
+trace_check(uint16_t cpu_id)
 {
 	if (per_cpu(sbuf, cpu_id)[ACRN_TRACE] == NULL) {
 		return false;
@@ -105,7 +105,7 @@ TRACE_2L(uint32_t evid, uint64_t e, uint64_t f)
 	struct trace_entry entry;
 	uint16_t cpu_id = get_cpu_id();
 
-	if (!trace_check(cpu_id, evid)) {
+	if (!trace_check(cpu_id)) {
 		return;
 	}
 
@@ -121,7 +121,7 @@ TRACE_4I(uint32_t evid, uint32_t a, uint32_t b, uint32_t c,
 	struct trace_entry entry;
 	uint16_t cpu_id = get_cpu_id();
 
-	if (!trace_check(cpu_id, evid)) {
+	if (!trace_check(cpu_id)) {
 		return;
 	}
 
@@ -139,7 +139,7 @@ TRACE_6C(uint32_t evid, uint8_t a1, uint8_t a2, uint8_t a3,
 	struct trace_entry entry;
 	uint16_t cpu_id = get_cpu_id();
 
-	if (!trace_check(cpu_id, evid)) {
+	if (!trace_check(cpu_id)) {
 		return;
 	}
 
@@ -163,7 +163,7 @@ TRACE_16STR(uint32_t evid, const char name[])
 	uint16_t cpu_id = get_cpu_id();
 	size_t len, i;
 
-	if (!trace_check(cpu_id, evid)) {
+	if (!trace_check(cpu_id)) {
 		return;
 	}
 

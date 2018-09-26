@@ -31,7 +31,7 @@
 extern uint32_t console_loglevel;
 extern uint32_t mem_loglevel;
 extern uint32_t npk_loglevel;
-void init_logmsg(__unused uint32_t mem_size, uint32_t flags);
+void init_logmsg(uint32_t flags);
 void print_logmsg_buffer(uint16_t pcpu_id);
 void do_logmsg(uint32_t severity, const char *fmt, ...);
 
@@ -70,8 +70,7 @@ int vprintf(const char *fmt, va_list args);
 
 #else /* HV_DEBUG */
 
-static inline void init_logmsg(__unused uint32_t mem_size,
-			__unused uint32_t flags)
+static inline void init_logmsg(__unused uint32_t flags)
 {
 }
 

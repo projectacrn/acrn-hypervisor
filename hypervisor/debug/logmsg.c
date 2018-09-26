@@ -69,7 +69,7 @@ static void do_copy_earlylog(struct shared_buf *dst_sbuf,
 	}
 }
 
-void init_logmsg(__unused uint32_t mem_size, uint32_t flags)
+void init_logmsg(uint32_t flags)
 {
 	uint16_t pcpu_id;
 
