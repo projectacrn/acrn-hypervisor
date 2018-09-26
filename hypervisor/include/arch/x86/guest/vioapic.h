@@ -61,7 +61,7 @@ uint32_t	vioapic_pincount(struct vm *vm);
 void	vioapic_process_eoi(struct vm *vm, uint32_t vector);
 void	vioapic_get_rte(struct vm *vm, uint32_t pin, union ioapic_rte *rte);
 int	vioapic_mmio_access_handler(struct vcpu *vcpu,
-	struct io_request *io_req, __unused void *handler_private_data);
+	struct io_request *io_req);
 
 #ifdef HV_DEBUG
 void get_vioapic_info(char *str_arg, int str_max, uint16_t vmid);

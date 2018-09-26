@@ -450,8 +450,7 @@ static void bsp_boot_post(void)
 	calibrate_tsc();
 
 	/* Enable logging */
-	init_logmsg(CONFIG_LOG_BUF_SIZE,
-		       CONFIG_LOG_DESTINATION);
+	init_logmsg(CONFIG_LOG_DESTINATION);
 
 	pr_acrnlog("HV version %s-%s-%s %s (daily tag:%s) build by %s, start time %lluus",
 			HV_FULL_VERSION,

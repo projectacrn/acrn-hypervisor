@@ -257,8 +257,7 @@ hv_emulate_mmio(struct vcpu *vcpu, struct io_request *io_req)
 			return -EIO;
 		} else {
 			/* Handle this MMIO operation */
-			status = mmio_handler->read_write(vcpu, io_req,
-					mmio_handler->handler_private_data);
+			status = mmio_handler->read_write(vcpu, io_req);
 			break;
 		}
 	}
