@@ -27,7 +27,7 @@
 extern char *history_file;
 
 int prepare_history(void);
-void hist_raise_infoerror(char *type);
+void hist_raise_infoerror(const char *type, size_t tlen);
 void hist_raise_uptime(char *lastuptime);
 void hist_raise_event(const char *event, const char *type, const char *log,
 			const char *lastuptime, const char *key);

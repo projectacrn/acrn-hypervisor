@@ -41,11 +41,13 @@ enum key_type {
 int get_uptime_string(char newuptime[24], int *hours);
 int get_current_time_long(char buf[32]);
 unsigned long long get_uptime(void);
-char *generate_event_id(const char *seed1, const char *seed2,
-				enum key_type type);
-void generate_crashfile(const char *dir, const char *event, const char *hashkey,
-			const char *type, const char *data0,
-			const char *data1, const char *data2);
+char *generate_event_id(const char *seed1, size_t slen1, const char *seed2,
+			size_t slen2, enum key_type type);
+void generate_crashfile(const char *dir, const char *event, size_t elen,
+			const char *hashkey, size_t hlen,
+			const char *type, size_t tlen, const char *data0,
+			size_t d0len, const char *data1, size_t d1len,
+			const char *data2, size_t d2len);
 char *generate_log_dir(enum e_dir_mode mode, char *hashkey);
 int is_boot_id_changed(void);
 

@@ -55,19 +55,20 @@ static struct channel_t channels[] = {
  * @param private The corresponding configuration info to the event.
  * @param watchfd For watch channel, so far, only used by inotify.
  * @param path File which trigger this event.
+ * @param plen The length of path.
  *
  * @return a pointer to the filled event if successful,
  *  or NULL on error.
  */
 static struct event_t *create_event(enum event_type_t event_type,
 				const char *channel, void *private,
-				int watchfd, const char *path)
+				int watchfd, const char *path, size_t plen)
 {
 	struct event_t *e;
-	int path_len = 0;
+	size_t path_len = 0;
 
 	if (path) {
-		path_len = strlen(path);
+		path_len = plen;
 		if (path_len > PATH_MAX) {
 			LOGE("invalid path, drop event.\n");
 			return NULL;
@@ -83,7 +84,7 @@ static struct event_t *create_event(enum event_type_t event_type,
 		e->event_type = event_type;
 		if (path_len > 0) {
 			e->len = path_len;
-			memcpy(e->path, path, path_len + 1);
+			*(char *)(mempcpy(e->path, path, path_len)) = '\0';
 		}
 	} else {
 		LOGE("malloc failed, error (%s)\n", strerror(errno));
@@ -110,7 +111,7 @@ static void channel_oneshot(struct channel_t *cnl)
 	if (!is_boot_id_changed())
 		return;
 
-	e = create_event(REBOOT, cname, NULL, 0, NULL);
+	e = create_event(REBOOT, cname, NULL, 0, NULL, 0);
 	if (e)
 		event_enqueue(e);
 
@@ -127,7 +128,8 @@ static void channel_oneshot(struct channel_t *cnl)
 		if (!strcmp("file", crash->trigger->type)) {
 			if (file_exists(crash->trigger->path)) {
 				e = create_event(CRASH, cname, (void *)crash,
-						 0, crash->trigger->path);
+						 0, crash->trigger->path,
+						 crash->trigger->path_len);
 				if (e)
 					event_enqueue(e);
 			}
@@ -137,7 +139,8 @@ static void channel_oneshot(struct channel_t *cnl)
 			read_startupreason(rreason, sizeof(rreason));
 			if (!strcmp(rreason, crash->content[0])) {
 				e = create_event(CRASH, cname, (void *)crash,
-						 0, crash->trigger->path);
+						 0, crash->trigger->path,
+						 crash->trigger->path_len);
 				if (e)
 					event_enqueue(e);
 			}
@@ -155,7 +158,7 @@ static void channel_oneshot(struct channel_t *cnl)
 		    !strcmp("file", info->trigger->type) &&
 		    file_exists(info->trigger->path)) {
 			e = create_event(INFO, cname, (void *)info,
-					 0, NULL);
+					 0, NULL, 0);
 			if (e)
 				event_enqueue(e);
 		}
@@ -177,7 +180,7 @@ static struct polling_job_t {
 static void polling_vm(union sigval v __attribute__((unused)))
 {
 
-	struct event_t *e = create_event(VM, "polling", NULL, 0, NULL);
+	struct event_t *e = create_event(VM, "polling", NULL, 0, NULL, 0);
 
 	if (e)
 		event_enqueue(e);
@@ -238,7 +241,7 @@ static void channel_polling(struct channel_t *cnl)
 		if (!vm)
 			continue;
 
-		if (strncmp(vm->channel, "polling", strlen(vm->channel)))
+		if (strcmp(vm->channel, "polling"))
 			continue;
 
 		vm_job.timer_val = atoi(vm->interval);
@@ -340,7 +343,6 @@ static int receive_inotify_events(struct channel_t *channel)
 	int read_left;
 	char buf[256];
 	char *p;
-	char *name;
 	struct event_t *e;
 	struct inotify_event *ievent;
 	enum event_type_t event_type;
@@ -382,14 +384,9 @@ static int receive_inotify_events(struct channel_t *channel)
 			if (event_type == UNKNOWN) {
 				LOGE("get a unknown event\n");
 			} else {
-				if (!ievent->len)
-					name = NULL;
-				else
-					name = ievent->name;
-
 				e = create_event(event_type, channel->name,
 						 private, channel->fd,
-						 name);
+						 ievent->name, ievent->len);
 				if (e)
 					event_enqueue(e);
 			}
@@ -411,7 +408,7 @@ static int receive_inotify_events(struct channel_t *channel)
  */
 static void heart_beat(void)
 {
-	struct event_t *e = create_event(HEART_BEAT, NULL, NULL, 0, NULL);
+	struct event_t *e = create_event(HEART_BEAT, NULL, NULL, 0, NULL, 0);
 
 	if (e)
 		event_enqueue(e);

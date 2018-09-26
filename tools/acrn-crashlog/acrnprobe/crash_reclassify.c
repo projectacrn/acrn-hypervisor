@@ -125,19 +125,14 @@ static int crash_match_content(const struct crash_t *crash, const char *file)
 		crash_has_mightcontents(crash, file);
 }
 
-static int _get_data(const char *file, const struct crash_t *crash,
+static ssize_t _get_data(const char *file, const struct crash_t *crash,
 			char **data, const int index)
 {
 	const char *search_key;
 	char *value;
 	char *end;
-	int size;
-	int max_size = 255;
-
-	if (!data)
-		return 0;
-
-	*data = NULL;
+	ssize_t size;
+	const size_t max_size = 255;
 
 	search_key = crash->data[index];
 	if (!search_key)
@@ -151,8 +146,11 @@ static int _get_data(const char *file, const struct crash_t *crash,
 	if (!end)
 		return 0;
 
-	size = MIN(max_size, end - value);
-	*data =  malloc(size + 1);
+	size = MIN(max_size, (size_t)(end - value));
+	if (!size)
+		return 0;
+
+	*data = malloc(size + 1);
 	if (*data == NULL)
 		return -ENOMEM;
 
@@ -171,35 +169,45 @@ static int _get_data(const char *file, const struct crash_t *crash,
  * @param[out] data1 Searched result, according to 'data1' configuread in crash.
  * @param[out] data2 Searched result, according to 'data2' configuread in crash.
  *
- * @return 0 if successful, or errno if not.
+ * @return 0 if successful, or -1 if not.
  */
 static int get_data(const char *file, const struct crash_t *crash,
-			char **data0, char **data1, char **data2)
+			char **data0, size_t *d0len, char **data1,
+			size_t *d1len, char **data2, size_t *d2len)
 {
-	int res;
+	ssize_t res;
 
 	/* to find strings which match conf words */
 	res = _get_data(file, crash, data0, 0);
 	if (res < 0)
 		goto fail;
+	*d0len = (size_t)res;
 
 	res = _get_data(file, crash, data1, 1);
 	if (res < 0)
 		goto free_data0;
+	*d1len = (size_t)res;
 
 	res = _get_data(file, crash, data2, 2);
 	if (res < 0)
 		goto free_data1;
+	*d2len = (size_t)res;
 
 	return 0;
 free_data1:
-	if (data1 && *data1)
+	if (*data1)
 		free(*data1);
 free_data0:
-	if (data0 && *data0)
+	if (*data0)
 		free(*data0);
 fail:
-	return res;
+	*data0 = NULL;
+	*data1 = NULL;
+	*data2 = NULL;
+	*d0len = 0;
+	*d1len = 0;
+	*d2len = 0;
+	return -1;
 }
 
 static struct crash_t *crash_find_matched_child(const struct crash_t *crash,
@@ -276,8 +284,10 @@ static struct crash_t *crash_find_matched_child(const struct crash_t *crash,
  *	   or NULL if not.
  */
 static struct crash_t *crash_reclassify_by_content(const struct crash_t *rcrash,
-					const char *rtrfile_fmt, char **data0,
-					char **data1, char **data2)
+					const char *rtrfile_fmt,
+					char **data0, size_t *d0len,
+					char **data1, size_t *d1len,
+					char **data2, size_t *d2len)
 {
 	int count;
 	const struct crash_t *crash;
@@ -286,12 +296,17 @@ static struct crash_t *crash_reclassify_by_content(const struct crash_t *rcrash,
 	char **trfiles;
 	void *content;
 	unsigned long size;
-	int res;
 	int i;
 
-	if (!rcrash)
+	if (!rcrash || !data0 || !d0len || !data1 || !d1len || !data2 || !d2len)
 		return NULL;
 
+	*data0 = NULL;
+	*data1 = NULL;
+	*data2 = NULL;
+	*d0len = 0;
+	*d1len = 0;
+	*d2len = 0;
 	crash = rcrash;
 
 	while (1) {
@@ -307,25 +322,26 @@ static struct crash_t *crash_reclassify_by_content(const struct crash_t *rcrash,
 	else
 		trfile_fmt = ret_crash->trigger->path;
 
+	/* trfile may not be specified */
+	if (!trfile_fmt)
+		return (struct crash_t *)ret_crash;
+
 	count = config_fmt_to_files(trfile_fmt, &trfiles);
 	if (count <= 0)
 		return (struct crash_t *)ret_crash;
 
 	/* get data from last file */
-	res = read_file(trfiles[count - 1], &size, &content);
-	if (res == -1) {
-		LOGE("read %s failed, error (%s)\n",
+	if (read_file(trfiles[count - 1], &size, &content) == -1) {
+		LOGE("failed to read %s, error (%s)\n",
 		     trfiles[count - 1], strerror(errno));
 		goto free_files;
 	}
 	if (!size)
 		goto free_files;
 
-	res = get_data(content, ret_crash, data0, data1, data2);
-	if (res < 0) {
-		LOGE("get data error, error (%s)\n",
-		     strerror(res));
-	}
+	if (get_data(content, ret_crash, data0, d0len, data1, d1len,
+		       data2, d2len) == -1)
+		LOGE("failed to get data\n");
 
 	free(content);
 

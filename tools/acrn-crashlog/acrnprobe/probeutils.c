@@ -95,7 +95,8 @@ int get_current_time_long(char *buf)
 	return strftime(buf, LONG_TIME_SIZE, "%Y-%m-%d/%H:%M:%S  ", time_val);
 }
 
-static int compute_key(char *key, size_t key_len, const char *seed)
+static int compute_key(char *key, size_t klen, const char *seed,
+			const size_t slen)
 {
 	SHA256_CTX sha;
 	char buf[VERSION_SIZE];
@@ -105,9 +106,9 @@ static int compute_key(char *key, size_t key_len, const char *seed)
 	unsigned char results[SHA256_DIGEST_LENGTH];
 	size_t i;
 
-	if (!key || !seed)
+	if (!key || !seed || !slen)
 		return -1;
-	if (key_len > SHA256_DIGEST_LENGTH * 2 || !key_len)
+	if (klen > SHA256_DIGEST_LENGTH * 2 || !klen)
 		return -1;
 
 	SHA256_Init(&sha);
@@ -117,12 +118,12 @@ static int compute_key(char *key, size_t key_len, const char *seed)
 	if (s_not_expect(len , VERSION_SIZE))
 		return -1;
 
-	SHA256_Update(&sha, (unsigned char *)buf, strlen(buf));
-	SHA256_Update(&sha, (unsigned char *)seed, strlen(seed));
+	SHA256_Update(&sha, (unsigned char *)buf, strnlen(buf, VERSION_SIZE));
+	SHA256_Update(&sha, (unsigned char *)seed, strnlen(seed, slen));
 
 	SHA256_Final(results, &sha);
 
-	for (i = 0; i < key_len / 2; i++) {
+	for (i = 0; i < klen / 2; i++) {
 		len = snprintf(tmp_key, 3, "%02x", results[i]);
 		if (s_not_expect(len, 3))
 			return -1;
@@ -144,15 +145,15 @@ static int compute_key(char *key, size_t key_len, const char *seed)
  *
  * @return a pointer to result haskkey if successful, or NULL if not.
  */
-char *generate_event_id(const char *seed1, const char *seed2,
-			enum key_type type)
+char *generate_event_id(const char *seed1, size_t slen1, const char *seed2,
+			size_t slen2, enum key_type type)
 {
 	int ret;
 	char *buf;
 	char *key;
 	size_t klen;
 
-	if (!seed1)
+	if (!seed1 || !slen1)
 		return NULL;
 
 	if (type == KEY_SHORT)
@@ -174,10 +175,10 @@ char *generate_event_id(const char *seed1, const char *seed2,
 			free(key);
 			return NULL;
 		}
-		ret = compute_key(key, klen, (const char *)buf);
+		ret = compute_key(key, klen, (const char *)buf, slen1 + slen2);
 		free(buf);
 	} else {
-		ret = compute_key(key, klen, seed1);
+		ret = compute_key(key, klen, seed1, slen1);
 	}
 
 	if (ret < 0) {
@@ -255,14 +256,15 @@ static int reserve_log_folder(enum e_dir_mode mode, char *dir,
 	return 0;
 }
 
-#define strcat_fmt(buf, fmt, ...) \
-(__extension__ \
-({ \
-	char __buf[1024] = {'\0',}; \
-	snprintf(__buf, sizeof(__buf), fmt, ##__VA_ARGS__); \
-	strcat(buf, __buf); \
-}) \
-)
+static char *cf_line(char *dest, const char *k, size_t klen, const char *v,
+			size_t vlen)
+{
+	char *t;
+
+	t = mempcpy(dest, k, klen);
+	t = mempcpy(t, v, vlen);
+	return mempcpy(t, "\n", 1);
+}
 
 /**
  * Create a crashfile with given params.
@@ -273,69 +275,78 @@ static int reserve_log_folder(enum e_dir_mode mode, char *dir,
  * @param type Subtype of this event.
  * @param data* String obtained by get_data.
  */
-void generate_crashfile(const char *dir, const char *event, const char *hashkey,
-			const char *type, const char *data0,
-			const char *data1, const char *data2)
+void generate_crashfile(const char *dir,
+			const char *event, size_t elen,
+			const char *hashkey, size_t hlen,
+			const char *type, size_t tlen,
+			const char *data0, size_t d0len,
+			const char *data1, size_t d1len,
+			const char *data2, size_t d2len)
 {
 	char *buf;
 	char *path;
+	char *tail;
 	char datetime[LONG_TIME_SIZE];
 	char uptime[UPTIME_SIZE];
 	int hours;
-	int ret;
 	const int fmtsize = 128;
+	size_t ltlen;
+	int n;
 	int filesize;
 
-	datetime[0] = 0;
-	ret = get_current_time_long(datetime);
-	if (ret <= 0)
+	if (!dir || !event || !elen || !hashkey || !hlen ||
+	    !type || !tlen)
 		return;
-	uptime[0] = 0;
-	get_uptime_string(uptime, &hours);
+	if (d0len > 0 && !data0)
+		return;
+	if (d1len > 0 && !data1)
+		return;
+	if (d2len > 0 && !data2)
+		return;
 
-	filesize = fmtsize + strlen(event) +
-		   strlen(hashkey) + strlen(guuid) +
-		   strlen(datetime) + strlen(uptime) +
-		   strlen(gbuildversion) + strlen(type);
-	if (data0)
-		filesize += strlen(data0);
-	if (data1)
-		filesize += strlen(data1);
-	if (data2)
-		filesize += strlen(data2);
+	ltlen = get_current_time_long(datetime);
+	if (!ltlen)
+		return;
+	n = get_uptime_string(uptime, &hours);
+	if (n < 0)
+		return;
+
+	filesize = fmtsize + ltlen + n + elen + hlen + tlen + d0len + d1len +
+		   d2len + strnlen(guuid, UUID_SIZE) +
+		   strnlen(gbuildversion, BUILD_VERSION_SIZE);
 
 	buf = malloc(filesize);
 	if (buf == NULL) {
-		LOGE("compute string failed, out of memory\n");
+		LOGE("out of memory\n");
 		return;
 	}
 
-	memset(buf, 0, filesize);
-	strcat_fmt(buf, "EVENT=%s\n", event);
-	strcat_fmt(buf, "ID=%s\n", hashkey);
-	strcat_fmt(buf, "DEVICEID=%s\n", guuid);
-	strcat_fmt(buf, "DATE=%s\n", datetime);
-	strcat_fmt(buf, "UPTIME=%s\n", uptime);
-	strcat_fmt(buf, "BUILD=%s\n", gbuildversion);
-	strcat_fmt(buf, "TYPE=%s\n", type);
-	if (data0)
-		strcat_fmt(buf, "DATA0=%s\n", data0);
-	if (data1)
-		strcat_fmt(buf, "DATA1=%s\n", data1);
-	if (data2)
-		strcat_fmt(buf, "DATA2=%s\n", data2);
-	strcat(buf, "_END\n");
+	tail = cf_line(buf, "EVENT=", 6, event, elen);
+	tail = cf_line(tail, "ID=", 3, hashkey, hlen);
+	tail = cf_line(tail, "DEVICEID=", 9, guuid, strnlen(guuid, UUID_SIZE));
+	tail = cf_line(tail, "DATE=", 5, datetime, ltlen);
+	tail = cf_line(tail, "UPTIME=", 7, uptime, n);
+	tail = cf_line(tail, "BUILD=", 6, gbuildversion,
+		       strnlen(gbuildversion, BUILD_VERSION_SIZE));
+	tail = cf_line(tail, "TYPE=", 5, type, tlen);
 
-	ret = asprintf(&path, "%s/%s", dir, "crashfile");
-	if (ret < 0) {
-		LOGE("compute string failed, out of memory\n");
+	if (d0len)
+		tail = cf_line(tail, "DATA0=", 6, data0, d0len);
+	if (d1len)
+		tail = cf_line(tail, "DATA1=", 6, data1, d1len);
+	if (d2len)
+		tail = cf_line(tail, "DATA2=", 6, data2, d2len);
+	tail = mempcpy(tail, "_END\n", 5);
+	*tail = '\0';
+
+	if (asprintf(&path, "%s/crashfile", dir) == -1) {
+		LOGE("out of memory\n");
 		free(buf);
 		return;
 	}
 
-	ret = overwrite_file(path, buf);
-	if (ret)
-		LOGE("new crashfile (%s) fail, error (%s)\n", path,
+	if (overwrite_file(path, buf) != 0)
+		LOGE("failed to new crashfile (%s), error (%s)\n", path,
 		     strerror(errno));
 
 	free(buf);
@@ -364,14 +375,14 @@ char *generate_log_dir(enum e_dir_mode mode, char *hashkey)
 	ret = asprintf(&path, "%s%d_%s", dir, current, hashkey);
 	if (ret == -1) {
 		LOGE("construct log path failed, out of memory\n");
-		hist_raise_infoerror("DIR CREATE");
+		hist_raise_infoerror("DIR CREATE", 10);
 		return NULL;
 	}
 
 	ret = mkdir(path, 0777);
 	if (ret == -1) {
 		LOGE("Cannot create dir %s\n", path);
-		hist_raise_infoerror("DIR CREATE");
+		hist_raise_infoerror("DIR CREATE", 10);
 		free(path);
 		return NULL;
 	}

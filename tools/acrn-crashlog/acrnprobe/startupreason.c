@@ -35,10 +35,10 @@ static int get_cmdline_bootreason(char *bootreason, const size_t limit)
 	int res;
 	unsigned long size;
 	char *start, *p1, *p2, *end;
-	void *cmdline;
-	const char key[] = "ABL.reset=";
+	char *cmdline;
+	const char *key = "ABL.reset=";
 
-	res = read_file(CURRENT_KERNEL_CMDLINE, &size, &cmdline);
+	res = read_file(CURRENT_KERNEL_CMDLINE, &size, (void *)&cmdline);
 	if (res < 0) {
 		LOGE("failed to read file %s - %s\n",
 		     CURRENT_KERNEL_CMDLINE, strerror(errno));
@@ -66,13 +66,15 @@ static int get_cmdline_bootreason(char *bootreason, const size_t limit)
 	else
 		end = MAX(p1, p2);
 
-	if (end)
-		*end = 0;
+	if (!end)
+		end = cmdline + size;
 
-	const size_t len = MIN(strlen(start), limit - 1);
+	const size_t len = MIN((size_t)(end - start), (size_t)(limit - 1));
 
-	if (len > 0)
-		memcpy(bootreason, start, len + 1);
+	if (len > 0) {
+		memcpy(bootreason, start, len);
+		*(bootreason + len) = 0;
+	}
 
 	free(cmdline);
 	return len;
@@ -99,6 +101,9 @@ void read_startupreason(char *startupreason, const size_t limit)
 	int res;
 	static char reboot_reason_cache[REBOOT_REASON_SIZE];
 
+	if (!startupreason || !limit)
+		return;
+
 	if (!reboot_reason_cache[0]) {
 		/* fill cache */
 		res = get_default_bootreason(reboot_reason_cache,
@@ -108,7 +113,8 @@ void read_startupreason(char *startupreason, const size_t limit)
 				sizeof(reboot_reason_cache));
 	}
 
-	const size_t len = MIN(strlen(reboot_reason_cache), limit - 1);
+	const size_t len = MIN(strnlen(reboot_reason_cache, REBOOT_REASON_SIZE),
+			       limit - 1);
 
 	memcpy(startupreason, reboot_reason_cache, len);
 	*(startupreason + len) = 0;
