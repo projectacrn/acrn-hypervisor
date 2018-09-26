@@ -705,7 +705,8 @@ END:
 	return 0;
 }
 
-/* except vm0, Device Model should call this function to pre-hold ptdev intx
+/* @pre vm != NULL
+ * except vm0, Device Model should call this function to pre-hold ptdev intx
  * entries:
  * - the entry is identified by phys_pin:
  *   one entry vs. one phys_pin
@@ -717,7 +718,7 @@ int ptdev_add_intx_remapping(struct vm *vm, uint8_t virt_pin, uint8_t phys_pin,
 {
 	struct ptdev_remapping_info *entry;
 
-	if (vm == NULL || (!pic_pin && virt_pin >= vioapic_pincount(vm))
+	if ((!pic_pin && virt_pin >= vioapic_pincount(vm))
 			|| (pic_pin && virt_pin >= vpic_pincount())) {
 		pr_err("ptdev_add_intx_remapping fails!\n");
 		return -EINVAL;
@@ -728,13 +729,11 @@ int ptdev_add_intx_remapping(struct vm *vm, uint8_t virt_pin, uint8_t phys_pin,
 	return (entry != NULL) ? 0 : -ENODEV;
 }
 
+/*
+ * @pre vm != NULL
+ */
 void ptdev_remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin)
 {
-	if (vm == NULL) {
-		pr_err("ptdev_remove_intr_remapping fails!\n");
-		return;
-	}
-
 	remove_intx_remapping(vm, virt_pin, pic_pin);
 }
 
@@ -759,15 +758,13 @@ int ptdev_add_msix_remapping(struct vm *vm, uint16_t virt_bdf,
 	return 0;
 }
 
+/*
+ * @pre vm != NULL
+ */
 void ptdev_remove_msix_remapping(struct vm *vm, uint16_t virt_bdf,
 		uint32_t vector_count)
 {
 	uint32_t i;
-
-	if (vm == NULL) {
-		pr_err("ptdev_remove_msix_remapping fails!\n");
-		return;
-	}
 
 	for (i = 0U; i < vector_count; i++) {
 		remove_msix_remapping(vm, virt_bdf, i);

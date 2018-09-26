@@ -70,11 +70,6 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	struct vm *vm0 = get_vm_from_vmid(0U);
 	uint16_t i;
 
-	if (vm0 == NULL) {
-		pr_err("Parse vm0 context failed.");
-		return;
-	}
-
 	if ((vm->sworld_control.flag.supported == 0UL)
 			|| (vm->arch_vm.sworld_eptp != NULL)) {
 		pr_err("Sworld is not supported or Sworld eptp is not NULL");
@@ -153,11 +148,6 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 	uint64_t gpa_sos = vm->sworld_control.sworld_memory.base_gpa_in_sos;
 	uint64_t gpa_uos = vm->sworld_control.sworld_memory.base_gpa_in_uos;
 	uint64_t size = vm->sworld_control.sworld_memory.length;
-
-	if (vm0 == NULL) {
-		pr_err("Parse vm0 context failed.");
-		return;
-	}
 
 	if (vm->arch_vm.sworld_eptp == NULL) {
 		pr_err("sworld eptp is NULL, it's not created");

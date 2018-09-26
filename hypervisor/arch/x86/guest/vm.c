@@ -23,6 +23,8 @@ spinlock_t vm_list_lock = {
 	.tail = 0U
 };
 
+static struct vm vm_array[CONFIG_MAX_VM_NUM] __aligned(CPU_PAGE_SIZE);
+
 #ifndef CONFIG_PARTITION_MODE
 /* used for vmid allocation. And this means the max vm number is 64 */
 static uint64_t vmid_bitmap;
@@ -89,23 +91,29 @@ struct vm *get_vm_from_vmid(uint16_t vm_id)
 	return NULL;
 }
 
+/**
+ * @pre vm_desc != NULL && rtn_vm != NULL
+ */
 int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 {
 	struct vm *vm;
 	int status;
+	uint16_t vm_id;
 
-	if ((vm_desc == NULL) || (rtn_vm == NULL)) {
-		pr_err("%s, invalid paramater\n", __func__);
-		return -EINVAL;
+#ifdef CONFIG_PARTITION_MODE
+	vm_id = vm_desc->vm_id;
+#else
+	vm_id = alloc_vm_id();
+#endif
+	if (vm_id >= CONFIG_MAX_VM_NUM) {
+		pr_err("%s, vm id is invalid!\n", __func__);
+		return -ENODEV;
 	}
 
 	/* Allocate memory for virtual machine */
-	vm = calloc(1U, sizeof(struct vm));
-	if (vm == NULL) {
-		pr_err("%s, vm allocation failed\n", __func__);
-		return -ENOMEM;
-	}
-
+	vm = &vm_array[vm_id];
+	(void)memset((void *)vm, 0U, sizeof(struct vm));
+	vm->vm_id = vm_id;
 	/*
 	 * Map Virtual Machine to its VM Description
 	 */
@@ -117,7 +125,6 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	if (vm->hw.num_vcpus == 0U) {
 		vm->hw.num_vcpus = phys_cpu_num;
 	}
-
 	vm->hw.vcpu_array =
 		calloc(1U, sizeof(struct vcpu *) * vm->hw.num_vcpus);
 	if (vm->hw.vcpu_array == NULL) {
@@ -125,17 +132,6 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		status = -ENOMEM;
 		goto err;
 	}
-
-#ifdef CONFIG_PARTITION_MODE
-	vm->vm_id = vm_desc->vm_id;
-#else
-	vm->vm_id = alloc_vm_id();
-	if (vm->vm_id == INVALID_VM_ID) {
-		pr_err("%s, no more VMs can be supported\n", __func__);
-		status = -ENODEV;
-		goto err;
-	}
-#endif
 
 	atomic_store16(&vm->hw.created_vcpus, 0U);
 
@@ -250,20 +246,17 @@ err:
 	if (vm->hw.vcpu_array != NULL) {
 		free(vm->hw.vcpu_array);
 	}
-
-	free(vm);
 	return status;
 }
 
+/*
+ * @pre vm != NULL
+ */
 int shutdown_vm(struct vm *vm)
 {
 	int status = 0;
 	uint16_t i;
 	struct vcpu *vcpu = NULL;
-
-	if (vm == NULL) {
-		return -EINVAL;
-	}
 
 	pause_vm(vm);
 
@@ -310,12 +303,7 @@ int shutdown_vm(struct vm *vm)
 #ifdef CONFIG_PARTITION_MODE
 	vpci_cleanup(vm);
 #endif
-
 	free(vm->hw.vcpu_array);
-
-	/* TODO: De-Configure HV-SW */
-	/* Deallocate VM */
-	free(vm);
 
 	/* Return status to caller */
 	return status;
