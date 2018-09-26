@@ -62,6 +62,12 @@ complete this setup.
 
       # swupd autoupdate --disable
 
+   .. note::
+      The Clear Linux installer will automatically check for updates and install the
+      latest version available on your system. If you wish to use a specific version
+      (such as 25130), you can achieve that after the installation has completed using
+      ``swupd verify --fix --picky -m 25130``
+
 #. If you have an older version of Clear Linux already installed
    on your hardware, use this command to upgrade Clear Linux
    to version 25130 (or newer):
