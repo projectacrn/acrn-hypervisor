@@ -744,13 +744,9 @@ static void init_host_state(void)
 	uint16_t value16;
 	uint64_t value64;
 	uint64_t value;
-	uint64_t trbase;
-	uint64_t trbase_lo;
-	uint64_t trbase_hi;
-	uint64_t realtrbase;
+	uint64_t tss_addr;
 	descriptor_table gdtb = {0U, 0UL};
 	descriptor_table idtb = {0U, 0UL};
-	uint16_t tr_sel;
 
 	pr_dbg("*********************");
 	pr_dbg("Initialize host state");
@@ -787,9 +783,8 @@ static void init_host_state(void)
 	exec_vmwrite16(VMX_HOST_GS_SEL, value16);
 	pr_dbg("VMX_HOST_GS_SEL: 0x%hu ", value16);
 
-	asm volatile ("str %%ax":"=a" (tr_sel));
-	exec_vmwrite16(VMX_HOST_TR_SEL, tr_sel);
-	pr_dbg("VMX_HOST_TR_SEL: 0x%hx ", tr_sel);
+	exec_vmwrite16(VMX_HOST_TR_SEL, HOST_GDT_RING0_CPU_TSS_SEL);
+	pr_dbg("VMX_HOST_TR_SEL: 0x%hx ", HOST_GDT_RING0_CPU_TSS_SEL);
 
 	/******************************************************
 	 * 32-bit fields
@@ -809,30 +804,10 @@ static void init_host_state(void)
 	exec_vmwrite(VMX_HOST_GDTR_BASE, gdtb.base);
 	pr_dbg("VMX_HOST_GDTR_BASE: 0x%x ", gdtb.base);
 
-	/* TODO: Should guest TR point to host TR ? */
-	trbase = gdtb.base + tr_sel;
-	if (((trbase >> 47U) & 0x1UL) != 0UL) {
-		trbase |= 0xffff000000000000UL;
-	}
-
-	/* SS segment override */
-	asm volatile ("mov %0,%%rax\n"
-		      ".byte 0x36\n"
-		      "movq (%%rax),%%rax\n":"=a" (trbase_lo):"0"(trbase)
-	    );
-	realtrbase = ((trbase_lo >> 16U) & (0x0ffffUL)) |
-	    (((trbase_lo >> 32U) & 0x000000ffUL) << 16U) |
-	    (((trbase_lo >> 56U) & 0xffUL) << 24U);
-
-	/* SS segment override for upper32 bits of base in ia32e mode */
-	asm volatile (
-		      ".byte 0x36\n"
-		      "movq 8(%%rax),%%rax\n":"=a" (trbase_hi):"0"(trbase));
-	realtrbase = realtrbase | (trbase_hi << 32U);
-
-	/* Set up host and guest TR base fields */
-	exec_vmwrite(VMX_HOST_TR_BASE, realtrbase);
-	pr_dbg("VMX_HOST_TR_BASE: 0x%016llx ", realtrbase);
+	tss_addr = hva2hpa((void *)&get_cpu_var(tss));
+	/* Set up host TR base fields */
+	exec_vmwrite(VMX_HOST_TR_BASE, tss_addr);
+	pr_dbg("VMX_HOST_TR_BASE: 0x%016llx ", tss_addr);
 
 	/* Obtain the current interrupt descriptor table base */
 	asm volatile ("sidt %0":"=m"(idtb)::"memory");
