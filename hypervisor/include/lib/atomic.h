@@ -176,7 +176,7 @@ static inline type name(volatile type *ptr,			\
 {								\
 	type ret;						\
 	asm volatile(BUS_LOCK "cmpxchg" size " %2,%1"		\
-			: "=a" (ret), "+m" (*p)			\
+			: "=a" (ret), "+m" (*ptr)		\
 			: "r" (new), "0" (old)			\
 			: "memory");				\
 	return ret;						\
@@ -188,7 +188,7 @@ build_atomic_cmpxchg(atomic_cmpxchg64, "q", uint64_t, p, old, new)
 static inline type name(type *ptr, type v)			\
 {								\
 	asm volatile(BUS_LOCK "xadd" size " %0,%1"		\
-			: "+r" (v), "+m" (*p)			\
+			: "+r" (v), "+m" (*ptr)			\
 			:					\
 			: "cc", "memory");			\
 	return v;						\
