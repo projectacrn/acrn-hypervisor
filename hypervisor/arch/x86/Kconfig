@@ -147,3 +147,8 @@ config MTRR_ENABLED
 config RELOC
 	bool "Enable relocation"
 	default y
+
+config IOMMU_INIT_BUS_LIMIT
+	hex "bus limitation when iommu init"
+	default 0xf if PLATFORM_SBL
+	default 0xff if PLATFORM_UEFI
