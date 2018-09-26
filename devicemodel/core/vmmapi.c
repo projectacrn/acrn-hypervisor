@@ -613,6 +613,12 @@ vm_create_vcpu(struct vmctx *ctx, uint16_t vcpu_id)
 }
 
 int
+vm_set_vcpu_regs(struct vmctx *ctx, struct acrn_set_vcpu_regs *vcpu_regs)
+{
+	return ioctl(ctx->fd, IC_SET_VCPU_REGS, vcpu_regs);
+}
+
+int
 vm_get_device_fd(struct vmctx *ctx)
 {
 	return ctx->fd;
