@@ -105,9 +105,9 @@ complete this setup.
       | openssh-server     | Server-side support for secure connectivity and   |
       |                    | remote login using the SSH protocol               |
       +--------------------+---------------------------------------------------+
-      |software-defined    + Run the automotive software defined cockpit       +
-      |-cockpit            + which has graphic, media, sound and connectivity  +
-      |                    +                                                   +
+      | software-defined   | Run the automotive software defined cockpit       |
+      | -cockpit           | which has graphic, media, sound and connectivity  |
+      |                    |                                                   |
       +--------------------+---------------------------------------------------+
 
 Add the ACRN hypervisor to the EFI Partition
@@ -224,7 +224,7 @@ partition. Follow these steps:
 
    You will need to edit this file to adjust the kernel version (``linux`` section),
    insert the ``PARTUUID`` of your ``/dev/sda3`` partition
-   (``root=PARTUUID=<><UUID of rootfs partition>``) in the ``options`` section, and
+   (``root=PARTUUID=<UUID of rootfs partition>``) in the ``options`` section, and
    add the ``hugepagesz=1G hugepages=2`` at end of the ``options`` section.
 
    Use ``blkid`` to find out what your ``/dev/sda3`` ``PARTUUID`` value is.
