@@ -1548,27 +1548,37 @@ vm_resume_handler(void *arg)
 int
 ioc_parse(const char *opts)
 {
-	char *tmp;
-	char *param = strdup(opts);
+	char *tmp, *str, *cpy;
 	int rc;
 
-	tmp = strtok(param, ",");
-	rc = snprintf(virtual_uart_path, sizeof(virtual_uart_path), "%s", param);
+	cpy = str = strdup(opts);
+	if (!cpy)
+		return -ENOMEM;
+
+	/*
+	 * IOC mediator parameters format as below:
+	 * <virtual_uart_path>[,<wakeup_reason>]
+	 * For e.g. "/run/acrn/ioc_vm1,0x20"
+	 */
+	tmp = strsep(&str, ",");
+	if (!tmp)
+		goto exit;
+
+	rc = snprintf(virtual_uart_path, sizeof(virtual_uart_path), "%s", tmp);
 	if (rc < 0 || rc >= sizeof(virtual_uart_path))
 		WPRINTF("ioc gets incomplete virtual uart path:%s\r\n",
 				virtual_uart_path);
-	if (tmp != NULL) {
-		tmp = strtok(NULL, ",");
-		if (tmp != NULL) {
-			ioc_boot_reason = strtoul(tmp, 0, 0);
 
-			/*
-			 * Mask invalid bits of wakeup reason for IOC mediator
-			 */
-			ioc_boot_reason &= CBC_WK_RSN_ALL;
-		}
-	}
-	free(param);
+	if (!str)
+		goto exit;
+
+	ioc_boot_reason = strtoul(str, 0, 0);
+
+	/* Mask invalid bits of wakeup reason for IOC mediator */
+	ioc_boot_reason &= CBC_WK_RSN_ALL;
+
+exit:
+	free(cpy);
 	return 0;
 }
 
