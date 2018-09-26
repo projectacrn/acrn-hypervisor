@@ -463,7 +463,7 @@ int64_t hcall_save_restore_sworld_ctx(struct vcpu *vcpu);
  * to notify the SOS kernel.
  *
  * @param vm Pointer to VM data structure
- * @param the expected notifier vector from guest
+ * @param param the expected notifier vector from guest
  *
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
