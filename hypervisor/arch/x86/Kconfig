@@ -32,6 +32,10 @@ config RELEASE
 	bool "Release build"
 	default n
 
+config MAX_VM_NUM
+	int "Maximum number of VM"
+	default 4
+
 config NR_IOAPICS
 	int "Maximum number of IOAPICs supported"
 	default 1

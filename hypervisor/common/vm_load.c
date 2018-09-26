@@ -115,6 +115,9 @@ int load_guest(struct vm *vm, struct vcpu *vcpu)
 	return ret;
 }
 
+/*
+ * @pre vm != NULL
+ */
 int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 {
 	int32_t ret = 0;
@@ -124,8 +127,6 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	struct zero_page *zeropage;
 	struct sw_linux *sw_linux = &(vm->sw.linux_info);
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
-
-	ASSERT(vm != NULL, "Incorrect argument");
 
 	pr_dbg("Loading guest to run-time location");
 

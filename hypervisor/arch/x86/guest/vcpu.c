@@ -230,7 +230,10 @@ void set_vcpu_regs(struct vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs)
 }
 
 /***********************************************************************
- *  vcpu_id/pcpu_id mapping table:
+ *
+ *  @pre vm != NULL && rtn_vcpu_handle != NULL
+ *
+ * vcpu_id/pcpu_id mapping table:
  *
  * if
  *     VM0_CPUS[2] = {0, 2} , VM1_CPUS[2] = {3, 1};
@@ -245,8 +248,6 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 {
 	struct vcpu *vcpu;
 
-	ASSERT(vm != NULL, "");
-	ASSERT(rtn_vcpu_handle != NULL, "");
 
 	pr_info("Creating VCPU working on PCPU%hu", pcpu_id);
 
