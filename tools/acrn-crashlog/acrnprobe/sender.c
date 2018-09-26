@@ -275,7 +275,7 @@ static void crashlog_get_log(struct log_t *log, void *data)
 
 	quota = atoi(crashlog->spacequota);
 	if (!space_available(crashlog->outdir, quota)) {
-		hist_raise_infoerror("SPACE_FULL");
+		hist_raise_infoerror("SPACE_FULL", 10);
 		return;
 	}
 
@@ -357,7 +357,8 @@ static void telemd_send_crash(struct event_t *e)
 		return;
 	}
 
-	eventid = generate_event_id((const char *)class, NULL, KEY_LONG);
+	eventid = generate_event_id((const char *)class, ret, NULL, 0,
+		  KEY_LONG);
 	if (eventid == NULL) {
 		LOGE("generate eventid failed, error (%s)\n", strerror(errno));
 		goto free_class;
@@ -436,7 +437,8 @@ static void telemd_send_info(struct event_t *e)
 		return;
 	}
 
-	eventid = generate_event_id((const char *)class, NULL, KEY_LONG);
+	eventid = generate_event_id((const char *)class, ret, NULL, 0,
+		  KEY_LONG);
 	if (eventid == NULL) {
 		LOGE("generate eventid failed, error (%s)\n", strerror(errno));
 		goto free_class;
@@ -611,7 +613,8 @@ static int telemd_new_vmevent(const char *line_to_sync,
 		goto free_vmlogpath;
 	}
 
-	eventid = generate_event_id((const char *)class, NULL, KEY_LONG);
+	eventid = generate_event_id((const char *)class, res, NULL, 0,
+		  KEY_LONG);
 	if (eventid == NULL) {
 		LOGE("generate eventid failed, error (%s)\n", strerror(errno));
 		ret = VMEVT_DEFER;
@@ -713,53 +716,67 @@ static void telemd_send(struct event_t *e)
 static void crashlog_send_crash(struct event_t *e)
 {
 	struct crash_t *crash;
-	struct log_t *log;
-	struct sender_t *crashlog;
-	char *key  = NULL;
+	char *key;
+	char *data0;
+	char *data1;
+	char *data2;
+	size_t d0len;
+	size_t d1len;
+	size_t d2len;
 	char *trfile = NULL;
-	char *data0 = NULL;
-	char *data1 = NULL;
-	char *data2 = NULL;
-	int id;
-	int ret = 0;
-	int quota;
+	struct sender_t *crashlog = get_sender_by_name("crashlog");
 	struct crash_t *rcrash = (struct crash_t *)e->private;
 
+	if (!crashlog)
+		return;
+
 	if (!strcmp(rcrash->trigger->type, "dir")) {
-		ret = asprintf(&trfile, "%s/%s", rcrash->trigger->path,
-			       e->path);
-		if (ret < 0) {
-			LOGE("compute string failed, out of memory\n");
+		if (asprintf(&trfile, "%s/%s", rcrash->trigger->path,
+			     e->path) == -1) {
+			LOGE("out of memory\n");
 			return;
 		}
 	}
 
-	crash = rcrash->reclassify(rcrash, trfile, &data0, &data1, &data2);
+	crash = rcrash->reclassify(rcrash, trfile, &data0, &d0len, &data1,
+				   &d1len, &data2, &d2len);
+	if (trfile)
+		free(trfile);
 	if (crash == NULL) {
-		LOGE("reclassify crash (%s) failed\n", rcrash->name);
-		goto free_trfile;
+		LOGE("failed to reclassify rcrash (%s)\n", rcrash->name);
+		return;
 	}
-
 	/* change the class for other senders */
 	e->private = (void *)crash;
-	key = generate_event_id("CRASH", (const char *)crash->name, KEY_SHORT);
+
+	key = generate_event_id("CRASH", 5, (const char *)crash->name,
+				crash->name_len, KEY_SHORT);
 	if (key == NULL) {
-		LOGE("generate event id failed, error (%s)\n",
+		LOGE("failed to generate event id, error (%s)\n",
 		     strerror(errno));
 		goto free_data;
 	}
 
-	if (to_collect_logs(crash) ||
-	    !strcmp(e->channel, "inotify")) {
+	/* check space before collecting logs */
+	if (!space_available(crashlog->outdir, atoi(crashlog->spacequota))) {
+		hist_raise_infoerror("SPACE_FULL", 10);
+		hist_raise_event("CRASH", crash->name, NULL, "", key);
+		goto free_key;
+	}
+
+	if (to_collect_logs(crash) || !strcmp(e->channel, "inotify")) {
+		struct log_t *log;
+		int id;
+
 		e->dir = generate_log_dir(MODE_CRASH, key);
 		if (e->dir == NULL) {
-			LOGE("generate crashlog dir failed\n");
+			LOGE("failed to generate crashlog dir\n");
 			goto free_key;
 		}
 
-		generate_crashfile(e->dir, "CRASH", key,
-				   crash->name,
-				   data0, data1, data2);
+		generate_crashfile(e->dir, "CRASH", 5, key, SHORT_KEY_LENGTH,
+				   crash->name, crash->name_len,
+				   data0, d0len, data1, d1len, data2, d2len);
 		for_each_log_collect(id, log, crash) {
 			if (!log)
 				continue;
@@ -769,36 +786,25 @@ static void crashlog_send_crash(struct event_t *e)
 
 	}
 
-	crashlog = get_sender_by_name("crashlog");
-	if (!crashlog)
-		goto free_key;
-
-	quota = atoi(crashlog->spacequota);
-	if (!space_available(crashlog->outdir, quota)) {
-		hist_raise_infoerror("SPACE_FULL");
-	} else if (!strcmp(e->channel, "inotify")) {
+	if (!strcmp(e->channel, "inotify")) {
 		/* get the trigger file */
 		char *src;
 		char *des;
 
-		ret = asprintf(&des, "%s/%s", e->dir, e->path);
-		if (ret < 0) {
-			LOGE("compute string failed, out of memory\n");
+		if (asprintf(&des, "%s/%s", e->dir, e->path) == -1) {
+			LOGE("out of memory\n");
 			goto free_key;
 		}
 
-		ret = asprintf(&src, "%s/%s", crash->trigger->path, e->path);
-		if (ret < 0) {
-			LOGE("compute string failed, out of memory\n");
+		if (asprintf(&src, "%s/%s", crash->trigger->path,
+			     e->path) == -1) {
+			LOGE("out of memory\n");
 			free(des);
 			goto free_key;
 		}
 
-		ret = do_copy_tail(src, des, 0);
-		if (ret < 0) {
-			LOGE("copy (%s) to (%s) failed, error (%s)\n",
-			     src, des, strerror(-ret));
-		}
+		if (do_copy_tail(src, des, 0) < 0)
+			LOGE("failed to copy (%s) to (%s)\n", src, des);
 
 		free(src);
 		free(des);
@@ -809,11 +815,12 @@ static void crashlog_send_crash(struct event_t *e)
 free_key:
 	free(key);
 free_data:
-	free(data0);
-	free(data1);
-	free(data2);
-free_trfile:
-	free(trfile);
+	if (data0)
+		free(data0);
+	if (data1)
+		free(data1);
+	if (data2)
+		free(data2);
 }
 
 static void crashlog_send_info(struct event_t *e)
@@ -821,8 +828,8 @@ static void crashlog_send_info(struct event_t *e)
 	int id;
 	struct info_t *info = (struct info_t *)e->private;
 	struct log_t *log;
-	char *key = generate_event_id("INFO", (const char *)info->name,
-				      KEY_SHORT);
+	char *key = generate_event_id("INFO", 4, (const char *)info->name,
+				      info->name_len, KEY_SHORT);
 
 	if (key == NULL) {
 		LOGE("generate event id failed, error (%s)\n",
@@ -866,7 +873,7 @@ static void crashlog_send_reboot(void)
 		return;
 
 	if (swupdated(crashlog)) {
-		key = generate_event_id("INFO", "SWUPDATE", KEY_SHORT);
+		key = generate_event_id("INFO", 4, "SWUPDATE", 8, KEY_SHORT);
 		if (key == NULL) {
 			LOGE("generate event id failed, error (%s)\n",
 			     strerror(errno));
@@ -878,7 +885,8 @@ static void crashlog_send_reboot(void)
 	}
 
 	read_startupreason(reason, sizeof(reason));
-	key = generate_event_id("REBOOT", (const char *)reason, KEY_SHORT);
+	key = generate_event_id("REBOOT", 6, (const char *)reason,
+				strnlen(reason, REBOOT_REASON_SIZE), KEY_SHORT);
 	if (key == NULL) {
 		LOGE("generate event id failed, error (%s)\n",
 		     strerror(errno));
@@ -934,11 +942,12 @@ static int crashlog_new_vmevent(const char *line_to_sync,
 
 	quota = atoi(crashlog->spacequota);
 	if (!space_available(crashlog->outdir, quota)) {
-		hist_raise_infoerror("SPACE_FULL");
+		hist_raise_infoerror("SPACE_FULL", 10);
 		return ret;
 	}
 
-	key = generate_event_id("SOS", (const char *)vmkey, KEY_SHORT);
+	key = generate_event_id("SOS", 3, (const char *)vmkey,
+				strnlen(vmkey, ANDROID_WORD_LEN), KEY_SHORT);
 	if (key == NULL) {
 		LOGE("generate event id failed, error (%s)\n",
 		     strerror(errno));
@@ -951,6 +960,12 @@ static int crashlog_new_vmevent(const char *line_to_sync,
 		ret = VMEVT_DEFER;
 		goto free_key;
 	}
+
+	generate_crashfile(dir, event, strnlen(event, ANDROID_WORD_LEN),
+			   key, SHORT_KEY_LENGTH,
+			   type, strnlen(type, ANDROID_WORD_LEN),
+			   vm->name, vm->name_len,
+			   vmkey, strnlen(vmkey, ANDROID_WORD_LEN), NULL, 0);
 
 	/* if line contains log, we need dump each file in the logdir
 	 */
@@ -969,14 +984,12 @@ static int crashlog_new_vmevent(const char *line_to_sync,
 			}
 			res = remove(dir);
 			if (res == -1 && errno != ENOENT)
-				LOGE("remove %s faield (%d)\n", dir, -errno);
+				LOGE("failed to remove %s (%d)\n", dir, -errno);
 
 			goto free_dir;
 		}
 	}
 
-	generate_crashfile(dir, event, key, type, vm->name,
-			   vmkey, NULL);
 	hist_raise_event(vm->name, type, dir, "", key);
 
 free_dir:
@@ -1066,15 +1079,13 @@ int init_sender(void)
 			close(fd);
 		}
 
-		if (!strncmp(sender->name, "crashlog",
-			     strlen(sender->name))) {
+		if (!strcmp(sender->name, "crashlog")) {
 			sender->send = crashlog_send;
 			ret = prepare_history();
 			if (ret)
 				return -1;
 #ifdef HAVE_TELEMETRICS_CLIENT
-		} else if (!strncmp(sender->name, "telemd",
-				    strlen(sender->name))) {
+		} else if (!strcmp(sender->name, "telemd")) {
 			sender->send = telemd_send;
 #endif
 		}
