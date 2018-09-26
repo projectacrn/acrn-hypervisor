@@ -17,11 +17,6 @@
 #define ACRN_DBG_IOMMU 6U
 #endif
 
-/* set an appropriate bus limitation when iommu init,
- * to reduce memory & time cost
- */
-#define IOMMU_INIT_BUS_LIMIT        (0xfU)
-
 #define LEVEL_WIDTH 9U
 
 #define ROOT_ENTRY_LOWER_PRESENT_POS        (0U)
@@ -1300,7 +1295,7 @@ void init_iommu_vm0_domain(struct vm *vm0)
 
 	vm0_domain = (struct iommu_domain *) vm0->iommu;
 
-	for (bus = 0U; bus <= IOMMU_INIT_BUS_LIMIT; bus++) {
+	for (bus = 0U; bus <= CONFIG_IOMMU_INIT_BUS_LIMIT; bus++) {
 		for (devfun = 0U; devfun <= 255U; devfun++) {
 			add_iommu_device(vm0_domain, 0U,
 				(uint8_t)bus, (uint8_t)devfun);
