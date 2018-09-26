@@ -1550,9 +1550,13 @@ ioc_parse(const char *opts)
 {
 	char *tmp;
 	char *param = strdup(opts);
+	int rc;
 
 	tmp = strtok(param, ",");
-	snprintf(virtual_uart_path, sizeof(virtual_uart_path), "%s", param);
+	rc = snprintf(virtual_uart_path, sizeof(virtual_uart_path), "%s", param);
+	if (rc < 0 || rc >= sizeof(virtual_uart_path))
+		WPRINTF("ioc gets incomplete virtual uart path:%s\r\n",
+				virtual_uart_path);
 	if (tmp != NULL) {
 		tmp = strtok(NULL, ",");
 		if (tmp != NULL) {
@@ -1575,6 +1579,7 @@ int
 ioc_init(struct vmctx *ctx)
 {
 	int i;
+	int rc;
 	struct ioc_dev *ioc;
 
 	IOC_LOG_INIT;
@@ -1668,7 +1673,10 @@ ioc_init(struct vmctx *ctx)
 			ARRAY_SIZE(wlist_tx_group_table));
 
 	/* Setup IOC rx members */
-	snprintf(ioc->rx_name, sizeof(ioc->rx_name), "ioc_rx");
+	rc = snprintf(ioc->rx_name, sizeof(ioc->rx_name), "ioc_rx");
+	if (rc < 0)
+		WPRINTF("%s", "ioc fails to set ioc_rx thread name\r\n");
+
 	ioc->ioc_dev_rx = cbc_rx_handler;
 	pthread_cond_init(&ioc->rx_cond, NULL);
 	pthread_mutex_init(&ioc->rx_mtx, NULL);
@@ -1683,7 +1691,10 @@ ioc_init(struct vmctx *ctx)
 	ioc->rx_config.wlist_grp_tbl = wlist_rx_group_table;
 
 	/* Setup IOC tx members */
-	snprintf(ioc->tx_name, sizeof(ioc->tx_name), "ioc_tx");
+	rc = snprintf(ioc->tx_name, sizeof(ioc->tx_name), "ioc_tx");
+	if (rc < 0)
+		WPRINTF("%s", "ioc fails to set ioc_tx thread name\r\n");
+
 	ioc->ioc_dev_tx = cbc_tx_handler;
 	pthread_cond_init(&ioc->tx_cond, NULL);
 	pthread_mutex_init(&ioc->tx_mtx, NULL);
@@ -1710,7 +1721,10 @@ ioc_init(struct vmctx *ctx)
 	if (ioc_create_thread(ioc->tx_name, &ioc->tx_tid, ioc_tx_thread,
 			(void *)ioc) < 0)
 		goto work_err;
-	snprintf(ioc->name, sizeof(ioc->name), "ioc_core");
+	rc = snprintf(ioc->name, sizeof(ioc->name), "ioc_core");
+	if (rc < 0)
+		WPRINTF("%s", "ioc fails to set ioc_core thread name\r\n");
+
 	if (ioc_create_thread(ioc->name, &ioc->tid, ioc_core_thread,
 			(void *)ioc) < 0)
 		goto work_err;
