@@ -242,7 +242,7 @@ partition. Follow these steps:
 
 #. Add new user
 
-   .. code-block:: console
+   .. code-block:: none
 
       # useradd cl_sos
       # passwd cl_sos
@@ -250,7 +250,7 @@ partition. Follow these steps:
 
 #. Enable weston service
 
-   .. code-block:: console
+   .. code-block:: none
 
       # systemctl enable weston@cl_sos
       # systemctl start weston@cl_sos
@@ -285,6 +285,18 @@ partition. Follow these steps:
 
 #. From here you can login as root using the password you set previously when
    you installed Clear Linux.
+
+#. (**Optional**) The ``software-defined-cockpit`` bundle installs the
+   ``ioc-cbc-tools`` on the system and activates three ``systemd`` services.
+   Those services do not work on off-the-shelf platforms such as NUCs, UP2.
+   You can disable them as shown here:
+
+   .. code-block:: none
+
+      # systemctl mask cbc_attach
+      # systemctl mask cbc_lifecycle
+      # systemctl mask cbc_thermald
+
 
 ACRN Network Bridge
 ===================
