@@ -269,6 +269,8 @@ add_cpu(struct vmctx *ctx, int guest_ncpus)
 		mt_vmm_info[i].mt_vcpu = i;
 	}
 
+	vm_set_vcpu_regs(ctx, &ctx->bsp_regs);
+
 	error = pthread_create(&mt_vmm_info[0].mt_thr, NULL,
 	    start_thread, &mt_vmm_info[0]);
 
