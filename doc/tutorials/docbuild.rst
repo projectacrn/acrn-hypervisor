@@ -130,7 +130,7 @@ Our documentation processing has been tested to run with:
 
 * Python 3.6.3
 * Doxygen version 1.8.13
-* Sphinx version 1.7.5
+* Sphinx version 1.7.7
 * Breathe version 4.9.1
 * docutils version 0.14
 * sphinx_rtd_theme version 0.4.0
@@ -159,6 +159,13 @@ tools:
    pip3 install --user -r scripts/requirements.txt
 
 And with that you're ready to generate the documentation.
+
+.. note::
+
+   We've provided a script you can run to show what versions of the
+   doc building tools you have installed ::
+
+      doc/scripts/show-versions.py
 
 Documentation presentation theme
 ********************************
