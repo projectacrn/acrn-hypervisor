@@ -11,11 +11,6 @@
 #define IRQF_LEVEL	(1U << 1U)	/* 1: level trigger; 0: edge trigger */
 #define IRQF_PT		(1U << 2U)	/* 1: for passthrough dev */
 
-enum irq_mode {
-	IRQ_PULSE,
-	IRQ_ASSERT,
-	IRQ_DEASSERT,
-};
 
 typedef void (*irq_action_t)(uint32_t irq, void *priv_data);
 

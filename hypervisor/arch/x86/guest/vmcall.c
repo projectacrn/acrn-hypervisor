@@ -99,6 +99,12 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 		ret = hcall_pulse_irqline(vm, (uint16_t)param1, param2);
 		break;
 
+	case HC_SET_IRQLINE:
+		/* param1: vmid */
+		ret = hcall_set_irqline(vm, (uint16_t)param1,
+				(struct acrn_irqline_ops *)&param2);
+		break;
+
 	case HC_INJECT_MSI:
 		/* param1: vmid */
 		ret = hcall_inject_msi(vm, (uint16_t)param1, param2);

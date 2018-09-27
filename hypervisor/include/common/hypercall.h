@@ -184,6 +184,23 @@ int32_t hcall_deassert_irqline(struct vm *vm, uint16_t vmid, uint64_t param);
  */
 int32_t hcall_pulse_irqline(struct vm *vm, uint16_t vmid, uint64_t param);
 
+
+/**
+ * @brief set or clear IRQ line
+ *
+ * Set or clear a virtual IRQ line for a VM, which could be from ISA
+ * or IOAPIC, normally it triggers an edge IRQ.
+ * The function will return -1 if the target VM does not exist.
+ *
+ * @param vm Pointer to VM data structure
+ * @param vmid ID of the VM
+ * @irq_req: request command for IRQ set or clear
+ *
+ * @pre Pointer vm shall point to VM0
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_set_irqline(struct vm *vm, uint16_t vmid,
+				struct acrn_irqline_ops *ops);
 /**
  * @brief inject MSI interrupt
  *
