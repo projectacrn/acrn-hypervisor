@@ -71,22 +71,19 @@ int32_t hcall_get_api_version(struct vm *vm, uint64_t param)
  *@pre Pointer vm shall point to VM0
  */
 static void
-handle_vpic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
+handle_vpic_irqline(struct vm *vm, uint32_t irq, uint32_t operation)
 {
-
-	switch (mode) {
-	case IRQ_ASSERT:
+	switch (operation) {
+	case GSI_SET_HIGH:
 		vpic_assert_irq(vm, irq);
 		break;
-	case IRQ_DEASSERT:
+	case GSI_SET_LOW:
 		vpic_deassert_irq(vm, irq);
 		break;
-	case IRQ_PULSE:
+	case GSI_RAISING_PULSE:
 		vpic_pulse_irq(vm, irq);
 	default:
 		/*
-		 * In this switch statement, mode shall either be IRQ_ASSERT or
-		 * IRQ_DEASSERT or IRQ_PULSE.
 		 * Gracefully return if prior case clauses have not been met.
 		 */
 		break;
@@ -97,22 +94,20 @@ handle_vpic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
  *@pre Pointer vm shall point to VM0
  */
 static void
-handle_vioapic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
+handle_vioapic_irqline(struct vm *vm, uint32_t irq, uint32_t operation)
 {
-	switch (mode) {
-	case IRQ_ASSERT:
+	switch (operation) {
+	case GSI_SET_HIGH:
 		vioapic_assert_irq(vm, irq);
 		break;
-	case IRQ_DEASSERT:
+	case GSI_SET_LOW:
 		vioapic_deassert_irq(vm, irq);
 		break;
-	case IRQ_PULSE:
+	case GSI_RAISING_PULSE:
 		vioapic_pulse_irq(vm, irq);
 		break;
 	default:
 		/*
-		 * In this switch statement, mode shall either be IRQ_ASSERT or
-		 * IRQ_DEASSERT or IRQ_PULSE.
 		 * Gracefully return if prior case clauses have not been met.
 		 */
 		break;
@@ -124,7 +119,7 @@ handle_vioapic_irqline(struct vm *vm, uint32_t irq, enum irq_mode mode)
  */
 static int32_t
 handle_virt_irqline(struct vm *vm, uint16_t target_vmid,
-		struct acrn_irqline *param, enum irq_mode mode)
+		struct acrn_irqline *param, uint32_t operation)
 {
 	int32_t ret = 0;
 	uint32_t intr_type;
@@ -152,19 +147,19 @@ handle_virt_irqline(struct vm *vm, uint16_t target_vmid,
 	switch (intr_type) {
 	case ACRN_INTR_TYPE_ISA:
 		/* Call vpic for pic injection */
-		handle_vpic_irqline(target_vm, param->pic_irq, mode);
+		handle_vpic_irqline(target_vm, param->pic_irq, operation);
 
 		/* call vioapic for ioapic injection if ioapic_irq != ~0U*/
 		if (param->ioapic_irq != (~0U)) {
 			/* handle IOAPIC irqline */
 			handle_vioapic_irqline(target_vm,
-				param->ioapic_irq, mode);
+				param->ioapic_irq, operation);
 		}
 		break;
 	case ACRN_INTR_TYPE_IOAPIC:
 		/* handle IOAPIC irqline */
 		handle_vioapic_irqline(target_vm,
-				param->ioapic_irq, mode);
+				param->ioapic_irq, operation);
 		break;
 	default:
 		dev_dbg(ACRN_DBG_HYCALL, "vINTR inject failed. type=%d",
@@ -309,7 +304,7 @@ int32_t hcall_assert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 		pr_err("%s: Unable copy param to vm\n", __func__);
 		return -1;
 	}
-	ret = handle_virt_irqline(vm, vmid, &irqline, IRQ_ASSERT);
+	ret = handle_virt_irqline(vm, vmid, &irqline, GSI_SET_HIGH);
 
 	return ret;
 }
@@ -326,7 +321,7 @@ int32_t hcall_deassert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 		pr_err("%s: Unable copy param to vm\n", __func__);
 		return -1;
 	}
-	ret = handle_virt_irqline(vm, vmid, &irqline, IRQ_DEASSERT);
+	ret = handle_virt_irqline(vm, vmid, &irqline, GSI_SET_LOW);
 
 	return ret;
 }
@@ -343,9 +338,36 @@ int32_t hcall_pulse_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 		pr_err("%s: Unable copy param to vm\n", __func__);
 		return -1;
 	}
-	ret = handle_virt_irqline(vm, vmid, &irqline, IRQ_PULSE);
+	ret = handle_virt_irqline(vm, vmid, &irqline, GSI_RAISING_PULSE);
 
 	return ret;
+}
+
+/**
+ *@pre Pointer vm shall point to VM0
+ */
+int32_t hcall_set_irqline(struct vm *vm, uint16_t vmid,
+				struct acrn_irqline_ops *ops)
+{
+	struct vm *target_vm = get_vm_from_vmid(vmid);
+
+	if (target_vm == NULL) {
+		return -EINVAL;
+	}
+
+	if (ops->nr_gsi >= vioapic_pincount(vm)) {
+		return -EINVAL;
+	}
+
+	if (ops->nr_gsi < vpic_pincount()) {
+		/* Call vpic for pic injection */
+		handle_vpic_irqline(target_vm, ops->nr_gsi, ops->op);
+	}
+
+	/* handle IOAPIC irqline */
+	handle_vioapic_irqline(target_vm, ops->nr_gsi, ops->op);
+
+	return 0;
 }
 
 /**

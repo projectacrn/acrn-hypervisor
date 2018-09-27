@@ -264,6 +264,22 @@ struct acrn_set_ioreq_buffer {
 /** Interrupt type for acrn_irqline: inject interrupt to both PIC and IOAPIC */
 #define	ACRN_INTR_TYPE_IOAPIC	1U
 
+/** Operation types for setting IRQ line */
+#define GSI_SET_HIGH		0U
+#define GSI_SET_LOW		1U
+#define GSI_RAISING_PULSE	2U
+#define GSI_FALLING_PULSE	3U
+
+/**
+ * @brief Info to Set/Clear/Pulse a virtual IRQ line for a VM
+ *
+ * the parameter for HC_SET_IRQLINE hypercall
+ */
+struct acrn_irqline_ops {
+	uint32_t nr_gsi;
+	uint32_t op;
+} __aligned(8);
+
 /**
  * @brief Info to assert/deassert/pulse a virtual IRQ line for a VM
  *
