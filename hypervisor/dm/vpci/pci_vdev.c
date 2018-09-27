@@ -30,11 +30,6 @@
 /* Virtual PCI device related operations (read/write, etc) */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
-#include <acrn_hv_defs.h>
 #include "pci_priv.h"
 
 
