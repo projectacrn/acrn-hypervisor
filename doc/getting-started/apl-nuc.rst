@@ -74,8 +74,8 @@ complete this setup.
 
    .. code-block:: none
 
-      # swupd bundle-add vim network-basic service-os kernel-pk \
-        desktop openssh-server software-defined-cockpit
+      # swupd bundle-add vim sudo network-basic service-os kernel-pk \
+          openssh-server software-defined-cockpit
 
    .. table:: Clear Linux bundles
       :widths: auto
@@ -86,6 +86,8 @@ complete this setup.
       +====================+===================================================+
       | vim                | vim text editor                                   |
       +--------------------+---------------------------------------------------+
+      | sudo               | sudo command                                      |
+      +--------------------+---------------------------------------------------+
       | network-basic      | Run network utilities and modify network settings |
       +--------------------+---------------------------------------------------+
       | service-os         | Add the acrn hypervisor, the acrn devicemodel and |
@@ -93,9 +95,6 @@ complete this setup.
       +--------------------+---------------------------------------------------+
       | kernel-pk          | Run the Intel "PK" kernel(product kernel source)  |
       |                    | and enterprise-style kernel with backports        |
-      +--------------------+---------------------------------------------------+
-      | desktop            | Graphical desktop application, with Weston        |
-      |                    | compositing window manager included               |
       +--------------------+---------------------------------------------------+
       | openssh-server     | Server-side support for secure connectivity and   |
       |                    | remote login using the SSH protocol               |
