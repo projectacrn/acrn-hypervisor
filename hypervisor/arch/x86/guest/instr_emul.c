@@ -633,19 +633,19 @@ static void vie_update_rflags(struct vcpu *vcpu, uint64_t rflags2, uint64_t psl)
 /*
  * Return the status flags that would result from doing (x - y).
  */
-#define build_getcc(name, type, x, y)	\
-static uint64_t name(type x, type y)	\
-{					\
-	uint64_t rflags;		\
-					\
+#define build_getcc(name, type)					\
+static uint64_t name(type x, type y)				\
+{								\
+	uint64_t rflags;					\
+								\
 	__asm __volatile("sub %2,%1; pushfq; popq %0" :		\
 			"=r" (rflags), "+r" (x) : "m" (y));	\
 	return rflags;						\
 }
-build_getcc(getcc8, uint8_t, x, y)
-build_getcc(getcc16, uint16_t, x, y)
-build_getcc(getcc32, uint32_t, x, y)
-build_getcc(getcc64, uint64_t, x, y)
+build_getcc(getcc8, uint8_t)
+build_getcc(getcc16, uint16_t)
+build_getcc(getcc32, uint32_t)
+build_getcc(getcc64, uint64_t)
 
 /**
  * @pre opsize = 1, 2, 4 or 8
