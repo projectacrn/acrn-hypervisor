@@ -37,6 +37,7 @@ typedef uint64_t cap_ioctl_t;
 
 #define SET_FOREACH(pvar, set)                      \
 	for (pvar = SET_BEGIN(set); pvar < SET_LIMIT(set); pvar++)
+
 #define nitems(x) (sizeof((x)) / sizeof((x)[0]))
 #define roundup2(x, y)  (((x)+((y)-1))&(~((y)-1)))
 #define rounddown2(x, y) ((x)&(~((y)-1)))

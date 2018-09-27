@@ -55,6 +55,7 @@
 #include "lpc.h"
 #include "smbiostbl.h"
 #include "rtc.h"
+#include "pit.h"
 #include "version.h"
 #include "sw_load.h"
 #include "monitor.h"
@@ -430,6 +431,10 @@ vm_init_vdevs(struct vmctx *ctx)
 	if (ret < 0)
 		goto vrtc_fail;
 
+	ret = vpit_init(ctx);
+	if (ret < 0)
+		goto vpit_fail;
+
 	sci_init(ctx);
 	init_bvmcons();
 
@@ -442,10 +447,13 @@ vm_init_vdevs(struct vmctx *ctx)
 		goto pci_fail;
 
 	return 0;
+
 pci_fail:
 	monitor_close();
 monitor_fail:
 	deinit_bvmcons();
+	vpit_deinit(ctx);
+vpit_fail:
 	vrtc_deinit(ctx);
 vrtc_fail:
 	ioc_deinit(ctx);
@@ -461,6 +469,7 @@ vm_deinit_vdevs(struct vmctx *ctx)
 	deinit_pci(ctx);
 	monitor_close();
 	deinit_bvmcons();
+	vpit_deinit(ctx);
 	vrtc_deinit(ctx);
 	ioc_deinit(ctx);
 	atkbdc_deinit(ctx);
@@ -483,6 +492,7 @@ vm_reset_vdevs(struct vmctx *ctx)
 	 * could be assigned with different number after reset.
 	 */
 	atkbdc_deinit(ctx);
+	vpit_deinit(ctx);
 	vrtc_deinit(ctx);
 
 	deinit_pci(ctx);
@@ -491,6 +501,7 @@ vm_reset_vdevs(struct vmctx *ctx)
 
 	atkbdc_init(ctx);
 	vrtc_init(ctx);
+	vpit_init(ctx);
 
 	ioapic_init(ctx);
 	pci_irq_init(ctx);

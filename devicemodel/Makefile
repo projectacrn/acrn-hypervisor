@@ -68,6 +68,7 @@ SRCS += hw/platform/usb_pmapper.c
 SRCS += hw/platform/atkbdc.c
 SRCS += hw/platform/ps2mouse.c
 SRCS += hw/platform/rtc.c
+SRCS += hw/platform/pit.c
 SRCS += hw/platform/ps2kbd.c
 SRCS += hw/platform/ioapic.c
 SRCS += hw/platform/cmos_io.c
