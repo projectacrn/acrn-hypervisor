@@ -359,9 +359,11 @@ static void ptdev_intr_handle_irq(struct vm *vm,
 		}
 
 		if (trigger_lvl) {
-			vioapic_assert_irq(vm, virt_sid->intx_id.pin);
+			vioapic_set_irq(vm, virt_sid->intx_id.pin,
+					GSI_SET_HIGH);
 		} else {
-			vioapic_pulse_irq(vm, virt_sid->intx_id.pin);
+			vioapic_set_irq(vm, virt_sid->intx_id.pin,
+					GSI_RAISING_PULSE);
 		}
 
 		dev_dbg(ACRN_DBG_PTIRQ,
@@ -378,9 +380,10 @@ static void ptdev_intr_handle_irq(struct vm *vm,
 		/* VPIN_PIC src means we have vpic enabled */
 		vpic_get_irq_trigger(vm, virt_sid->intx_id.pin, &trigger);
 		if (trigger == LEVEL_TRIGGER) {
-			vpic_assert_irq(vm, virt_sid->intx_id.pin);
+			vpic_set_irq(vm, virt_sid->intx_id.pin, GSI_SET_HIGH);
 		} else {
-			vpic_pulse_irq(vm, virt_sid->intx_id.pin);
+			vpic_set_irq(vm, virt_sid->intx_id.pin,
+					GSI_RAISING_PULSE);
 		}
 		break;
 	}
@@ -457,10 +460,10 @@ void ptdev_intx_ack(struct vm *vm, uint8_t virt_pin,
 	 */
 	switch (vpin_src) {
 	case PTDEV_VPIN_IOAPIC:
-		vioapic_deassert_irq(vm, virt_pin);
+		vioapic_set_irq(vm, virt_pin, GSI_SET_LOW);
 		break;
 	case PTDEV_VPIN_PIC:
-		vpic_deassert_irq(vm, virt_pin);
+		vpic_set_irq(vm, virt_pin, GSI_SET_LOW);
 	default:
 		/*
 		 * In this switch statement, vpin_src shall either be

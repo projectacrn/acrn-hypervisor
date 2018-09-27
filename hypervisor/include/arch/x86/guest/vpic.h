@@ -121,9 +121,7 @@ struct acrn_vpic {
 
 void vpic_init(struct vm *vm);
 
-void vpic_assert_irq(struct vm *vm, uint32_t irq);
-void vpic_deassert_irq(struct vm *vm, uint32_t irq);
-void vpic_pulse_irq(struct vm *vm, uint32_t irq);
+void vpic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation);
 
 void vpic_pending_intr(struct vm *vm, uint32_t *vecptr);
 void vpic_intr_accepted(struct vm *vm, uint32_t vector);

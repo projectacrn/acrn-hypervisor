@@ -70,53 +70,6 @@ int32_t hcall_get_api_version(struct vm *vm, uint64_t param)
 /**
  *@pre Pointer vm shall point to VM0
  */
-static void
-handle_vpic_irqline(struct vm *vm, uint32_t irq, uint32_t operation)
-{
-	switch (operation) {
-	case GSI_SET_HIGH:
-		vpic_assert_irq(vm, irq);
-		break;
-	case GSI_SET_LOW:
-		vpic_deassert_irq(vm, irq);
-		break;
-	case GSI_RAISING_PULSE:
-		vpic_pulse_irq(vm, irq);
-	default:
-		/*
-		 * Gracefully return if prior case clauses have not been met.
-		 */
-		break;
-	}
-}
-
-/**
- *@pre Pointer vm shall point to VM0
- */
-static void
-handle_vioapic_irqline(struct vm *vm, uint32_t irq, uint32_t operation)
-{
-	switch (operation) {
-	case GSI_SET_HIGH:
-		vioapic_assert_irq(vm, irq);
-		break;
-	case GSI_SET_LOW:
-		vioapic_deassert_irq(vm, irq);
-		break;
-	case GSI_RAISING_PULSE:
-		vioapic_pulse_irq(vm, irq);
-		break;
-	default:
-		/*
-		 * Gracefully return if prior case clauses have not been met.
-		 */
-		break;
-	}
-}
-
-/**
- *@pre Pointer vm shall point to VM0
- */
 static int32_t
 handle_virt_irqline(struct vm *vm, uint16_t target_vmid,
 		struct acrn_irqline *param, uint32_t operation)
@@ -147,19 +100,18 @@ handle_virt_irqline(struct vm *vm, uint16_t target_vmid,
 	switch (intr_type) {
 	case ACRN_INTR_TYPE_ISA:
 		/* Call vpic for pic injection */
-		handle_vpic_irqline(target_vm, param->pic_irq, operation);
+		vpic_set_irq(target_vm, param->pic_irq, operation);
 
 		/* call vioapic for ioapic injection if ioapic_irq != ~0U*/
 		if (param->ioapic_irq != (~0U)) {
 			/* handle IOAPIC irqline */
-			handle_vioapic_irqline(target_vm,
-				param->ioapic_irq, operation);
+			vioapic_set_irq(target_vm,
+					param->ioapic_irq, operation);
 		}
 		break;
 	case ACRN_INTR_TYPE_IOAPIC:
 		/* handle IOAPIC irqline */
-		handle_vioapic_irqline(target_vm,
-				param->ioapic_irq, operation);
+		vioapic_set_irq(target_vm, param->ioapic_irq, operation);
 		break;
 	default:
 		dev_dbg(ACRN_DBG_HYCALL, "vINTR inject failed. type=%d",
@@ -361,11 +313,11 @@ int32_t hcall_set_irqline(struct vm *vm, uint16_t vmid,
 
 	if (ops->nr_gsi < vpic_pincount()) {
 		/* Call vpic for pic injection */
-		handle_vpic_irqline(target_vm, ops->nr_gsi, ops->op);
+		vpic_set_irq(target_vm, ops->nr_gsi, ops->op);
 	}
 
 	/* handle IOAPIC irqline */
-	handle_vioapic_irqline(target_vm, ops->nr_gsi, ops->op);
+	vioapic_set_irq(target_vm, ops->nr_gsi, ops->op);
 
 	return 0;
 }

@@ -120,21 +120,16 @@ vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint32_t pin, bool newstate)
 	}
 }
 
-enum irqstate {
-	IRQSTATE_ASSERT,
-	IRQSTATE_DEASSERT,
-	IRQSTATE_PULSE
-};
-
 /**
  * @pre irq < vioapic_pincount(vm)
- * @pre irqstate value shall be one of the folllowing values:
- *	IRQSTATE_ASSERT
- *	IRQSTATE_DEASSERT
- *	IRQSTATE_PULSE
+ * @pre operation value shall be one of the folllowing values:
+ *	GSI_SET_HIGH
+ *	GSI_SET_LOW
+ *	GSI_RAISING_PULSE
+ *	GSI_FALLING_PULSE
  */
-static void
-vioapic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate)
+void
+vioapic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation)
 {
 	struct acrn_vioapic *vioapic;
 	uint32_t pin = irq;
@@ -142,42 +137,28 @@ vioapic_set_irqstate(struct vm *vm, uint32_t irq, enum irqstate irqstate)
 	vioapic = vm_ioapic(vm);
 
 	spinlock_obtain(&(vioapic->mtx));
-	switch (irqstate) {
-	case IRQSTATE_ASSERT:
+	switch (operation) {
+	case GSI_SET_HIGH:
 		vioapic_set_pinstate(vioapic, pin, true);
 		break;
-	case IRQSTATE_DEASSERT:
+	case GSI_SET_LOW:
 		vioapic_set_pinstate(vioapic, pin, false);
 		break;
-	case IRQSTATE_PULSE:
+	case GSI_RAISING_PULSE:
 		vioapic_set_pinstate(vioapic, pin, true);
 		vioapic_set_pinstate(vioapic, pin, false);
+		break;
+	case GSI_FALLING_PULSE:
+		vioapic_set_pinstate(vioapic, pin, false);
+		vioapic_set_pinstate(vioapic, pin, true);
 		break;
 	default:
 		/*
 		 * The function caller could guarantee the pre condition.
-		 * All the possible 'irqstate' has been handled in prior cases.
 		 */
 		break;
 	}
 	spinlock_release(&(vioapic->mtx));
-}
-
-void
-vioapic_assert_irq(struct vm *vm, uint32_t irq)
-{
-	vioapic_set_irqstate(vm, irq, IRQSTATE_ASSERT);
-}
-
-void vioapic_deassert_irq(struct vm *vm, uint32_t irq)
-{
-	vioapic_set_irqstate(vm, irq, IRQSTATE_DEASSERT);
-}
-
-void
-vioapic_pulse_irq(struct vm *vm, uint32_t irq)
-{
-	vioapic_set_irqstate(vm, irq, IRQSTATE_PULSE);
 }
 
 /*

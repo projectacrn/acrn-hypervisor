@@ -31,12 +31,6 @@
 
 #define ACRN_DBG_PIC	6U
 
-enum irqstate {
-	IRQSTATE_ASSERT,
-	IRQSTATE_DEASSERT,
-	IRQSTATE_PULSE
-};
-
 #define NR_VPIC_PINS_PER_CHIP	8U
 #define NR_VPIC_PINS_TOTAL	16U
 #define VPIC_INVALID_PIN	0xffU
@@ -206,7 +200,7 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 			 * to vioapic pin0 (irq2)
 			 * From MPSpec session 5.1
 			 */
-			vioapic_pulse_irq(vpic->vm, 0U);
+			vioapic_set_irq(vpic->vm, 0U, GSI_RAISING_PULSE);
 		}
 	} else {
 		dev_dbg(ACRN_DBG_PIC,
@@ -453,13 +447,13 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin, bool newstate
 
 /**
  * @pre irq < NR_VPIC_PINS_TOTAL
- * @pre irqstate value shall be one of the folllowing values:
- *	IRQSTATE_ASSERT
- *	IRQSTATE_DEASSERT
- *	IRQSTATE_PULSE
+ * @pre operation value shall be one of the folllowing values:
+ *	GSI_SET_HIGH
+ *	GSI_SET_LOW
+ *	GSI_RAISING_PULSE
+ *	GSI_FALLING_PULSE
  */
-static void vpic_set_irqstate(struct vm *vm, uint32_t irq,
-		enum irqstate irqstate)
+void vpic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation)
 {
 	struct acrn_vpic *vpic;
 	struct i8259_reg_state *i8259;
@@ -478,41 +472,28 @@ static void vpic_set_irqstate(struct vm *vm, uint32_t irq,
 	}
 
 	spinlock_obtain(&(vpic->lock));
-	switch (irqstate) {
-	case IRQSTATE_ASSERT:
+	switch (operation) {
+	case GSI_SET_HIGH:
 		vpic_set_pinstate(vpic, pin, true);
 		break;
-	case IRQSTATE_DEASSERT:
+	case GSI_SET_LOW:
 		vpic_set_pinstate(vpic, pin, false);
 		break;
-	case IRQSTATE_PULSE:
+	case GSI_RAISING_PULSE:
 		vpic_set_pinstate(vpic, pin, true);
 		vpic_set_pinstate(vpic, pin, false);
+		break;
+	case GSI_FALLING_PULSE:
+		vpic_set_pinstate(vpic, pin, false);
+		vpic_set_pinstate(vpic, pin, true);
 		break;
 	default:
 		/*
 		 * The function caller could guarantee the pre condition.
-		 * All the possible 'irqstate' has been handled in prior cases.
 		 */
 		break;
 	}
 	spinlock_release(&(vpic->lock));
-}
-
-/* hypervisor interface: assert/deassert/pulse irq */
-void vpic_assert_irq(struct vm *vm, uint32_t irq)
-{
-	vpic_set_irqstate(vm, irq, IRQSTATE_ASSERT);
-}
-
-void vpic_deassert_irq(struct vm *vm, uint32_t irq)
-{
-	vpic_set_irqstate(vm, irq, IRQSTATE_DEASSERT);
-}
-
-void vpic_pulse_irq(struct vm *vm, uint32_t irq)
-{
-	vpic_set_irqstate(vm, irq, IRQSTATE_PULSE);
 }
 
 uint32_t
