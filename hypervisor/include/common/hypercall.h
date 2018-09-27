@@ -194,7 +194,7 @@ int32_t hcall_pulse_irqline(struct vm *vm, uint16_t vmid, uint64_t param);
  *
  * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
- * @irq_req: request command for IRQ set or clear
+ * @param ops request command for IRQ set or clear
  *
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
