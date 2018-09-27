@@ -291,8 +291,6 @@ static void init_percpu_data_area(void)
 {
 	uint16_t i;
 	uint16_t pcpu_num = 0U;
-	uint16_t bsp_cpu_id;
-	uint8_t bsp_lapic_id = 0U;
 	uint8_t lapic_id_array[MAX_PCPU_NUM];
 
 	/* Save all lapic_id detected via parse_mdt in lapic_id_array */
@@ -308,10 +306,8 @@ static void init_percpu_data_area(void)
 		per_cpu(lapic_id, i) = lapic_id_array[i];
 	}
 
-	bsp_lapic_id = get_cur_lapic_id();
-
-	bsp_cpu_id = get_cpu_id_from_lapic_id(bsp_lapic_id);
-	ASSERT(bsp_cpu_id != INVALID_CPU_ID, "fail to get phy cpu id");
+	ASSERT(get_cpu_id_from_lapic_id(get_cur_lapic_id()) != INVALID_CPU_ID,
+		"fail to get phy cpu id");
 }
 
 static void cpu_set_current_state(uint16_t pcpu_id, enum cpu_state state)
