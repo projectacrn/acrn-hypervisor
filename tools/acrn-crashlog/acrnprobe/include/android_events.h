@@ -11,7 +11,9 @@ extern char *loop_dev;
 
 #define VMEVT_HANDLED 0
 #define VMEVT_DEFER -1
+#define VMEVT_MISSLOG -2
 
+#define ANDROID_LOGS_DIR "/logs/"
 #define IGN_SPACES "%*[[[:space:]]*]"
 #define IGN_RESTS "%*[[.]*]"
 #define IGN_ONEWORD "%*[[^[:space:]]*]" IGN_SPACES

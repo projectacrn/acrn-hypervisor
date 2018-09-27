@@ -32,38 +32,6 @@ static const char *android_img = "/data/android/android.img";
 static const char *android_histpath = "logs/history_event";
 char *loop_dev;
 
-static char *get_line(const char *str, size_t str_size,
-			const char *area, size_t area_size,
-			const char *search_from, size_t *len)
-{
-	char *p;
-	char *match;
-	char *tail;
-	ssize_t search_size = area + area_size - search_from;
-
-	if (search_size < 0 || (size_t)search_size < str_size)
-		return NULL;
-
-	match = memmem(search_from, search_size, str, str_size);
-	if (!match)
-		return NULL;
-	tail = memchr(match + str_size, '\n',
-		      area + area_size - match - str_size);
-	if (!tail)
-		return NULL;
-
-	for (p = match; p >= area; p--) {
-		if (*p == '\n') {
-			*len = tail - p - 1;
-			return (char *)(p + 1);
-		}
-	}
-
-	*len = tail - area;
-	return (char *)area;
-}
-
-
 /* Find the next event that needs to be synced.
  * There is a history_event file in UOS side, it records UOS's events in
  * real-time. Generally, the cursor point to the first unsynchronized line.
@@ -117,8 +85,10 @@ static char *next_vm_event(const char *cursor, const char *data,
 			 * 'type'.
 			 */
 			if (!new || memcmp(new, type + 1, tlen - 1) ||
-			    *(new + tlen - 1) != ' ')
+			    *(new + tlen - 1) != ' ') {
+				free(type);
 				continue;
+			}
 		} else {
 			new = get_line(type, (size_t)tlen, data, dlen,
 				       cursor, &len);
@@ -136,10 +106,11 @@ static char *next_vm_event(const char *cursor, const char *data,
 	return line_to_sync;
 }
 
-#define VMRECORD_HEAD_LINES 6
+#define VMRECORD_HEAD_LINES 7
 #define VMRECORD_TAG_LEN 9
 #define VMRECORD_TAG_WAITING_SYNC	"      <=="
 #define VMRECORD_TAG_NOT_FOUND		"NOT_FOUND"
+#define VMRECORD_TAG_MISS_LOG		"MISS_LOGS"
 #define VMRECORD_TAG_SUCCESS		"         "
 static int generate_log_vmrecord(const char *path)
 {
@@ -148,6 +119,7 @@ static int generate_log_vmrecord(const char *path)
 		" * This file records VM id synced or about to be synched,\n"
 		" * the tag \"<==\" indicates event waiting to sync.\n"
 		" * the tag \"NOT_FOUND\" indicates event not found in UOS.\n"
+		" * the tag \"MISS_LOGS\" indicates event miss logs in UOS.\n"
 		" */\n\n";
 
 	LOGD("Generate (%s)\n", path);
@@ -204,7 +176,12 @@ static int refresh_key_synced_stage1(const struct sender_t *sender,
 			return -1;
 		}
 
-		append_file(log_vmrecordid, log_new);
+		if (append_file(log_vmrecordid, log_new,
+				strnlen(log_new, 64)) < 0) {
+			LOGE("failed to add new record (%s) to (%s)\n",
+			     log_new, log_vmrecordid);
+			return -1;
+		}
 		return 0;
 	}
 
@@ -215,7 +192,8 @@ static int refresh_key_synced_stage1(const struct sender_t *sender,
 
 enum stage2_refresh_type_t {
 	SUCCESS,
-	NOT_FOUND
+	NOT_FOUND,
+	MISS_LOG
 };
 
 static int refresh_key_synced_stage2(char *line, size_t len,
@@ -228,6 +206,8 @@ static int refresh_key_synced_stage2(char *line, size_t len,
 		memcpy(tag, VMRECORD_TAG_SUCCESS, VMRECORD_TAG_LEN);
 	else if (type == NOT_FOUND)
 		memcpy(tag, VMRECORD_TAG_NOT_FOUND, VMRECORD_TAG_LEN);
+	else if (type == MISS_LOG)
+		memcpy(tag, VMRECORD_TAG_MISS_LOG, VMRECORD_TAG_LEN);
 	else
 		return -1;
 
@@ -390,7 +370,7 @@ static void sync_lines_stage2(const struct sender_t *sender,
 	}
 
 	for (record = next_record(recos, recos->begin, &recolen); record;
-	     record = next_record(recos, record, &recolen)) {
+	     record = next_record(recos, record + recolen, &recolen)) {
 		const char * const record_fmt =
 			VM_NAME_FMT ANDROID_KEY_FMT IGN_RESTS;
 		char *hist_line;
@@ -398,6 +378,7 @@ static void sync_lines_stage2(const struct sender_t *sender,
 		char vm_name[32];
 		char vmkey[ANDROID_WORD_LEN];
 		struct vm_t *vm;
+		int res;
 
 		/* VMNAME xxxxxxxxxxxxxxxxxxxx <== */
 		if (str_split_ere(record, recolen,
@@ -421,8 +402,11 @@ static void sync_lines_stage2(const struct sender_t *sender,
 			continue;
 		}
 
-		if (fn(hist_line, len + 1, vm) == VMEVT_HANDLED)
+		res = fn(hist_line, len + 1, vm);
+		if (res == VMEVT_HANDLED)
 			refresh_key_synced_stage2(record, recolen, SUCCESS);
+		else if (res == VMEVT_MISSLOG)
+			refresh_key_synced_stage2(record, recolen, MISS_LOG);
 	}
 
 out:
@@ -454,8 +438,9 @@ static void get_last_line_synced(const struct sender_t *sender)
 			continue;
 
 		snprintf(vm_name, sizeof(vm_name), "%s ", vm->name);
-		ret = file_read_key_value_r(sender->log_vmrecordid, vm_name,
-					    sizeof(vmkey), vmkey);
+		ret = file_read_key_value_r(vmkey, sizeof(vmkey),
+					    sender->log_vmrecordid,
+					    vm_name, strnlen(vm_name, 32));
 		if (ret == -ENOENT) {
 			LOGD("no (%s), will generate\n",
 			     sender->log_vmrecordid);
@@ -536,8 +521,8 @@ static char *setup_loop_dev(void)
 /* This function searches all android vms' new events and call the fn for
  * each event.
  *
- * Note that: fn should return 0 to indicate event has been handled,
- *	      or fn will be called in a time loop until it returns 0.
+ * Note that: fn should return VMEVT_HANDLED to indicate event has been handled.
+ *	      fn will be called in a time loop if it returns VMEVT_DEFER.
  */
 void refresh_vm_history(const struct sender_t *sender,
 		int (*fn)(const char*, size_t, const struct vm_t *))
