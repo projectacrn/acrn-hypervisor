@@ -39,6 +39,7 @@
 #include "pci_core.h"
 #include "irq.h"
 #include "lpc.h"
+#include "pit.h"
 #include "uart_core.h"
 
 #define	IO_ICU1		0x20
@@ -50,9 +51,6 @@ SET_DECLARE(lpc_sysres_set, struct lpc_sysres);
 #define	ELCR_PORT	0x4d0
 SYSRES_IO(ELCR_PORT, 2);
 
-#define	IO_TIMER1_PORT	0x40
-
-#define	NMISC_PORT	0x61
 SYSRES_IO(NMISC_PORT, 1);
 
 static struct pci_vdev *lpc_bridge;
