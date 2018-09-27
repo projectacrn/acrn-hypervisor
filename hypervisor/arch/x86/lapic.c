@@ -438,7 +438,7 @@ void send_single_ipi(uint16_t pcpu_id, uint32_t vector)
 	/* Get the lapic ID of the destination processor. */
 	dest_lapic_id = per_cpu(lapic_id, pcpu_id);
 
-	return send_dest_ipi(dest_lapic_id, vector, INTR_LAPIC_ICR_PHYSICAL);
+	send_dest_ipi(dest_lapic_id, vector, INTR_LAPIC_ICR_PHYSICAL);
 }
 
 int send_shorthand_ipi(uint8_t vector,
