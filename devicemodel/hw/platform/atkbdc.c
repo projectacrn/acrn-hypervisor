@@ -49,7 +49,7 @@ atkbdc_assert_kbd_intr(struct atkbdc_base *base)
 {
 	if ((base->ram[0] & KBD_ENABLE_KBD_INT) != 0) {
 		base->kbd.irq_active = true;
-		vm_isa_pulse_irq(base->ctx, base->kbd.irq, base->kbd.irq);
+		vm_set_gsi_irq(base->ctx, base->kbd.irq, GSI_RAISING_PULSE);
 	}
 }
 
@@ -58,7 +58,7 @@ atkbdc_assert_aux_intr(struct atkbdc_base *base)
 {
 	if ((base->ram[0] & KBD_ENABLE_AUX_INT) != 0) {
 		base->aux.irq_active = true;
-		vm_isa_pulse_irq(base->ctx, base->aux.irq, base->aux.irq);
+		vm_set_gsi_irq(base->ctx, base->aux.irq, GSI_RAISING_PULSE);
 	}
 }
 

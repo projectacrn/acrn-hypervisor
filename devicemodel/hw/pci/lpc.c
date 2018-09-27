@@ -105,9 +105,9 @@ lpc_uart_intr_assert(void *arg)
 	assert(lpc_uart->irq >= 0);
 
 	if (lpc_bridge)
-		vm_isa_pulse_irq(lpc_bridge->vmctx,
+		vm_set_gsi_irq(lpc_bridge->vmctx,
 				 lpc_uart->irq,
-				 lpc_uart->irq);
+				 GSI_RAISING_PULSE);
 }
 
 static void

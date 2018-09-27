@@ -93,7 +93,7 @@ sci_assert(struct vmctx *ctx)
 {
 	if (sci_active)
 		return;
-	vm_isa_assert_irq(ctx, SCI_INT, SCI_INT);
+	vm_set_gsi_irq(ctx, SCI_INT, GSI_SET_HIGH);
 	sci_active = 1;
 }
 
@@ -102,7 +102,7 @@ sci_deassert(struct vmctx *ctx)
 {
 	if (!sci_active)
 		return;
-	vm_isa_deassert_irq(ctx, SCI_INT, SCI_INT);
+	vm_set_gsi_irq(ctx, SCI_INT, GSI_SET_LOW);
 	sci_active = 0;
 }
 

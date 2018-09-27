@@ -94,10 +94,10 @@ pirq_write(struct vmctx *ctx, int pin, uint8_t val)
 	pthread_mutex_lock(&pirq->lock);
 	if (pirq->reg != (val & (PIRQ_DIS | PIRQ_IRQ))) {
 		if (pirq->active_count != 0 && pirq_valid_irq(pirq->reg))
-			vm_isa_deassert_irq(ctx, pirq->reg & PIRQ_IRQ, -1);
+			vm_set_gsi_irq(ctx, pirq->reg & PIRQ_IRQ, GSI_SET_LOW);
 		pirq->reg = val & (PIRQ_DIS | PIRQ_IRQ);
 		if (pirq->active_count != 0 && pirq_valid_irq(pirq->reg))
-			vm_isa_assert_irq(ctx, pirq->reg & PIRQ_IRQ, -1);
+			vm_set_gsi_irq(ctx, pirq->reg & PIRQ_IRQ, GSI_SET_HIGH);
 	}
 	pthread_mutex_unlock(&pirq->lock);
 }
@@ -147,43 +147,13 @@ void pci_irq_deinit(struct vmctx *ctx)
 void
 pci_irq_assert(struct pci_vdev *dev)
 {
-	struct pirq *pirq;
-
-	if (dev->lintr.pirq_pin > 0) {
-		assert(dev->lintr.pirq_pin <= nitems(pirqs));
-		pirq = &pirqs[dev->lintr.pirq_pin - 1];
-		pthread_mutex_lock(&pirq->lock);
-		pirq->active_count++;
-		if (pirq->active_count == 1 && pirq_valid_irq(pirq->reg)) {
-			vm_isa_assert_irq(dev->vmctx, pirq->reg & PIRQ_IRQ,
-			    dev->lintr.ioapic_irq);
-			pthread_mutex_unlock(&pirq->lock);
-			return;
-		}
-		pthread_mutex_unlock(&pirq->lock);
-	}
-	vm_ioapic_assert_irq(dev->vmctx, dev->lintr.ioapic_irq);
+	vm_set_gsi_irq(dev->vmctx, dev->lintr.ioapic_irq, GSI_SET_HIGH);
 }
 
 void
 pci_irq_deassert(struct pci_vdev *dev)
 {
-	struct pirq *pirq;
-
-	if (dev->lintr.pirq_pin > 0) {
-		assert(dev->lintr.pirq_pin <= nitems(pirqs));
-		pirq = &pirqs[dev->lintr.pirq_pin - 1];
-		pthread_mutex_lock(&pirq->lock);
-		pirq->active_count--;
-		if (pirq->active_count == 0 && pirq_valid_irq(pirq->reg)) {
-			vm_isa_deassert_irq(dev->vmctx, pirq->reg & PIRQ_IRQ,
-			    dev->lintr.ioapic_irq);
-			pthread_mutex_unlock(&pirq->lock);
-			return;
-		}
-		pthread_mutex_unlock(&pirq->lock);
-	}
-	vm_ioapic_deassert_irq(dev->vmctx, dev->lintr.ioapic_irq);
+	vm_set_gsi_irq(dev->vmctx, dev->lintr.ioapic_irq, GSI_SET_LOW);
 }
 
 int
