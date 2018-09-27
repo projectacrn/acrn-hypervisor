@@ -11,24 +11,11 @@
 
 /* Local variables */
 
-/* VMs list */
-struct list_head vm_list = {
-	.next = &vm_list,
-	.prev = &vm_list,
-};
-
-/* Lock for VMs list */
-spinlock_t vm_list_lock = {
-	.head = 0U,
-	.tail = 0U
-};
-
 static struct vm vm_array[CONFIG_MAX_VM_NUM] __aligned(CPU_PAGE_SIZE);
 
-#ifndef CONFIG_PARTITION_MODE
-/* used for vmid allocation. And this means the max vm number is 64 */
 static uint64_t vmid_bitmap;
 
+/* used for vmid allocation. And this means the max vm number is 64 */
 static inline uint16_t alloc_vm_id(void)
 {
 	uint16_t id = ffz64(vmid_bitmap);
@@ -47,7 +34,11 @@ static inline void free_vm_id(struct vm *vm)
 {
 	bitmap_clear_lock(vm->vm_id, &vmid_bitmap);
 }
-#endif
+
+static inline bool is_vm_valid(uint16_t vm_id)
+{
+	return bitmap_test(vm_id, &vmid_bitmap);
+}
 
 static void init_vm(struct vm_description *vm_desc,
 		struct vm *vm_handle)
@@ -75,20 +66,11 @@ static void init_vm(struct vm_description *vm_desc,
  */
 struct vm *get_vm_from_vmid(uint16_t vm_id)
 {
-	struct vm *vm = NULL;
-	struct list_head *pos;
-
-	spinlock_obtain(&vm_list_lock);
-	list_for_each(pos, &vm_list) {
-		vm = list_entry(pos, struct vm, list);
-		if (vm->vm_id == vm_id) {
-			spinlock_release(&vm_list_lock);
-			return vm;
-		}
+	if (is_vm_valid(vm_id)) {
+		return &vm_array[vm_id];
+	} else {
+		return NULL;
 	}
-	spinlock_release(&vm_list_lock);
-
-	return NULL;
 }
 
 /**
@@ -102,6 +84,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 
 #ifdef CONFIG_PARTITION_MODE
 	vm_id = vm_desc->vm_id;
+	bitmap_set_lock(vm_id, &vmid_bitmap);
 #else
 	vm_id = alloc_vm_id();
 #endif
@@ -175,11 +158,6 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		init_vm_boot_info(vm);
 #endif
 	}
-
-	INIT_LIST_HEAD(&vm->list);
-	spinlock_obtain(&vm_list_lock);
-	list_add(&vm->list, &vm_list);
-	spinlock_release(&vm_list_lock);
 
 	INIT_LIST_HEAD(&vm->softirq_dev_entry_list);
 	spinlock_init(&vm->softirq_dev_lock);
@@ -269,10 +247,6 @@ int shutdown_vm(struct vm *vm)
 		reset_vcpu(vcpu);
 		destroy_vcpu(vcpu);
 	}
-
-	spinlock_obtain(&vm_list_lock);
-	list_del_init(&vm->list);
-	spinlock_release(&vm_list_lock);
 
 	ptdev_release_all_entries(vm);
 
