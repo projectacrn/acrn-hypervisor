@@ -116,11 +116,7 @@ int	vm_run(struct vmctx *ctx);
 int	vm_suspend(struct vmctx *ctx, enum vm_suspend_how how);
 int	vm_apicid2vcpu(struct vmctx *ctx, int apicid);
 int	vm_lapic_msi(struct vmctx *ctx, uint64_t addr, uint64_t msg);
-int	vm_ioapic_assert_irq(struct vmctx *ctx, int irq);
-int	vm_ioapic_deassert_irq(struct vmctx *ctx, int irq);
-int	vm_isa_assert_irq(struct vmctx *ctx, int atpic_irq, int ioapic_irq);
-int	vm_isa_deassert_irq(struct vmctx *ctx, int atpic_irq, int ioapic_irq);
-int	vm_isa_pulse_irq(struct vmctx *ctx, int atpic_irq, int ioapic_irq);
+int	vm_set_gsi_irq(struct vmctx *ctx, int gsi, uint32_t operation);
 int	vm_assign_ptdev(struct vmctx *ctx, int bus, int slot, int func);
 int	vm_unassign_ptdev(struct vmctx *ctx, int bus, int slot, int func);
 int	vm_map_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,
