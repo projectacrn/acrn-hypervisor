@@ -514,6 +514,9 @@ The build results are found in the ``build`` directory.
    artefacts, set the ``O`` (that is capital letter 'O') to the
    desired value. Example: ``make O=build-uefi PLATFORM=uefi``.
 
+Generating the documentation is decribed in details in the :ref:`acrn_doc`
+tutorial.
+
 You can also build these components individually. The following
 steps assume that you have already cloned the ``acrn-hypervisor`` repository
 and are using it as the current working directory.
