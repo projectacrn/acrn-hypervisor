@@ -52,9 +52,7 @@ void    vioapic_init(struct vm *vm);
 void	vioapic_cleanup(struct acrn_vioapic *vioapic);
 void	vioapic_reset(struct acrn_vioapic *vioapic);
 
-void	vioapic_assert_irq(struct vm *vm, uint32_t irq);
-void	vioapic_deassert_irq(struct vm *vm, uint32_t irq);
-void	vioapic_pulse_irq(struct vm *vm, uint32_t irq);
+void	vioapic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation);
 void	vioapic_update_tmr(struct vcpu *vcpu);
 
 uint32_t	vioapic_pincount(struct vm *vm);

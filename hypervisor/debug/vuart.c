@@ -123,13 +123,13 @@ static void vuart_toggle_intr(struct acrn_vuart *vu)
 	intr_reason = vuart_intr_reason(vu);
 
 	if (intr_reason != IIR_NOPEND) {
-		vpic_assert_irq(vu->vm, COM1_IRQ);
+		vpic_set_irq(vu->vm, COM1_IRQ, GSI_SET_HIGH);
 
-		vioapic_assert_irq(vu->vm, COM1_IRQ);
+		vioapic_set_irq(vu->vm, COM1_IRQ, GSI_SET_HIGH);
 
-		vpic_deassert_irq(vu->vm, COM1_IRQ);
+		vpic_set_irq(vu->vm, COM1_IRQ, GSI_SET_LOW);
 
-		vioapic_deassert_irq(vu->vm, COM1_IRQ);
+		vioapic_set_irq(vu->vm, COM1_IRQ, GSI_SET_LOW);
 	}
 }
 
