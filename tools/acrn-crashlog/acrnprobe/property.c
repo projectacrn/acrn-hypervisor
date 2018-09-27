@@ -71,8 +71,9 @@ static int get_buildversion(struct sender_t *sender)
 	char *logbuildid;
 	char *currentbuild = gbuildversion;
 
-	ret = file_read_key_value(OS_VERSION, OS_VERSION_KEY,
-				  sizeof(gbuildversion), gbuildversion);
+	ret = file_read_key_value(gbuildversion, sizeof(gbuildversion),
+				  OS_VERSION, OS_VERSION_KEY,
+				  strlen(OS_VERSION_KEY));
 	if (ret <= 0) {
 		LOGE("failed to get version from %s, error (%s)\n",
 		     OS_VERSION, strerror(-ret));

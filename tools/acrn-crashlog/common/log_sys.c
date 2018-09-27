@@ -4,46 +4,35 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <systemd/sd-journal.h>
+#include <stdarg.h>
 #include "log_sys.h"
 
-void do_log(const int level,
-#ifdef DEBUG_ACRN_CRASHLOG
-			const char *func, const int line,
-#endif
-			...)
+void debug_log(const int level, const char *func, const int line, ...)
 {
 	va_list args;
 	char *fmt;
-	char log[MAX_LOG_LEN];
-	int n = 0;
-#ifdef DEBUG_ACRN_CRASHLOG
-	const char header_fmt[] = "<%-20s%5d>: ";
-#endif
+	char *head;
+	char *msg;
 
 	if (level > LOG_LEVEL)
 		return;
 
-#ifdef DEBUG_ACRN_CRASHLOG
 	va_start(args, line);
-#else
-	va_start(args, level);
-#endif
 	fmt = va_arg(args, char *);
 	if (!fmt)
 		return;
-
-#ifdef DEBUG_ACRN_CRASHLOG
-	/* header */
-	n = snprintf(log, sizeof(log), header_fmt, func, line);
-	if (n < 0 || (size_t)n >= sizeof(log))
-		n = 0;
-#endif
-	/* msg */
-	vsnprintf(log + n, sizeof(log) - (size_t)n, fmt, args);
-	log[sizeof(log) - 1] = 0;
+	if (vasprintf(&msg, fmt, args) == -1)
+		return;
 	va_end(args);
 
-	sd_journal_print(level, "%s", log);
+	if (asprintf(&head, "<%-20s%5d>: ", func, line) == -1) {
+		free(msg);
+		return;
+	}
+
+	sd_journal_print(level, "%s%s", head, msg);
+	free(msg);
+	free(head);
 }

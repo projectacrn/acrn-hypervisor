@@ -12,6 +12,62 @@
 #include "fsutils.h"
 
 /**
+ * Find the first line containing specified string in given area.
+ *
+ * @param str A pointer to the string contained by target line.
+ * @param str_size String length of str.
+ * @param area A pointer to the area where target line may be located.
+ *             This pointer will be returned if the specified string is in
+ *             the first line of area (There is not '\n' located between area
+ *             and the head of searched string).
+ * @param area_size String length of area.
+ * @param search_from A pointer where searching starts. It should be greater
+ *                    than or equal to area, and less than area + area_size.
+ * @param[out] len The length of target line (excludes \n), it only be modified
+ *             when function returns successfully.
+ *
+ * @return a pointer to the head of target line within area (it may be greater
+ *         than search_from).
+ *         NULL will be returned if the specified string is not found in
+ *         any lines (lines must end with '\n'. It means the real searching
+ *         scope is from search_from to the last '\n' in area).
+ */
+char *get_line(const char *str, size_t str_size,
+		const char *area, size_t area_size,
+		const char *search_from, size_t *len)
+{
+	char *p;
+	char *match;
+	char *tail;
+	ssize_t search_size = area + area_size - search_from;
+
+	if (!str || !str_size || !area || !area_size || !search_from || !len)
+		return NULL;
+
+	if (search_from < area || search_from >= area + area_size ||
+	    (size_t)search_size < str_size)
+		return NULL;
+
+	match = memmem(search_from, search_size, str, str_size);
+	if (!match)
+		return NULL;
+	tail = memchr(match + str_size, '\n',
+		      area + area_size - match - str_size);
+	if (!tail)
+		return NULL;
+
+	for (p = match; p >= area; p--) {
+		if (*p == '\n') {
+			*len = tail - p - 1;
+			return (char *)(p + 1);
+		}
+	}
+
+	*len = tail - area;
+	return (char *)area;
+}
+
+/**
  * Get the length of line.
  *
  * @param str Start address of line.
@@ -57,52 +113,30 @@ char *strrstr(const char *s, const char *substr)
 	return NULL;
 }
 
-char *next_line(char *buf)
+char *strtrim(char *str, size_t len)
 {
+	size_t h_del = 0;
+	size_t reserve;
 	char *p;
 
-	p  = strchr(buf, '\n');
-	/* if meet end of buf, the return value is also NULL */
-	if (p)
-		return p + 1;
+	if (!len)
+		return str;
 
-	return NULL;
-}
+	for (p = str; p < str + len && *p == ' '; p++)
+		h_del++;
 
-static char *strtriml(char *str)
-{
-	char *p = str;
-
-	while (*p == ' ')
-		p++;
-	return memmove(str, p, strlen(p) + 1);
-}
-
-static char *strtrimr(char *str)
-{
-	size_t len;
-	char *end;
-
-	len = strlen(str);
-	if (len > 0) {
-		end = str + strlen(str) - 1;
-		while (*end == ' ' && end >= str) {
-			*end = 0;
-			end--;
-		}
+	reserve = len - h_del;
+	if (!reserve) {
+		*str = '\0';
+		return str;
 	}
 
+	for (p = str + len - 1; p >= str && *p == ' '; p--)
+		reserve--;
+
+	memmove(str, str + h_del, reserve);
+	*(str + reserve) = '\0';
 	return str;
-}
-
-char *strtrim(char *str)
-{
-	if (str) {
-		strtrimr(str);
-		return strtriml(str);
-	}
-
-	return NULL;
 }
 
 int strcnt(char *str, char c)

@@ -32,12 +32,11 @@
 #include <sys/vfs.h>
 #include <sys/wait.h>
 #include <stdlib.h>
+#include <ftw.h>
 #include "fsutils.h"
 #include "cmdutils.h"
 #include "strutils.h"
 #include "log_sys.h"
-
-#define MAX_SEARCH_DIRS 4096
 
 /**
  * Help function to do fclose. In some cases (full partition),
@@ -79,6 +78,30 @@ int mkdir_p(const char *path)
 
 	/* return 0 if path exists */
 	return exec_out2file(NULL, "mkdir -p %s", path);
+}
+
+static int rmfile(const char *path,
+		const struct stat *sbuf __attribute__((unused)),
+		int type __attribute__((unused)),
+		struct FTW *ftwb __attribute__((unused)))
+{
+	if (remove(path) == -1) {
+		LOGE("failed to remove (%s), error (%s)\n", path,
+		     strerror(errno));
+		return -1;
+	}
+	return 0;
+}
+
+int remove_r(const char *dir)
+{
+	if (!dir)
+		return -1;
+
+	if (nftw(dir, rmfile, 10, FTW_DEPTH | FTW_MOUNT | FTW_PHYS) == -1)
+		return -1;
+
+	return 0;
 }
 
 /**
@@ -141,7 +164,6 @@ char *mm_get_line(struct mm_file_t *mfile, int line)
 struct mm_file_t *mmap_file(const char *path)
 {
 	struct mm_file_t *mfile;
-	int size;
 
 	mfile = malloc(sizeof(struct mm_file_t));
 	if (!mfile) {
@@ -167,8 +189,7 @@ struct mm_file_t *mmap_file(const char *path)
 		     path, strerror(errno));
 		goto close_fd;
 	}
-	size = mfile->size > 0 ? mfile->size : PAGE_SIZE;
-	mfile->begin = mmap(NULL, size, PROT_READ|PROT_WRITE, MAP_SHARED,
+	mfile->begin = mmap(NULL, mfile->size, PROT_READ|PROT_WRITE, MAP_SHARED,
 			    mfile->fd, 0);
 	if (mfile->begin == MAP_FAILED) {
 		LOGE("mmap (%s) failed, error (%s)\n", path, strerror(errno));
@@ -293,22 +314,18 @@ int do_mv(char *src, char *dest)
  *
  * @return 0 if successful, or a negative errno-style value if not.
  */
-int append_file(char *filename, char *text)
+ssize_t append_file(const char *filename, const char *text, size_t tlen)
 {
-	int fd, res, len;
+	int fd, res;
 
-	if (!filename || !text)
+	if (!filename || !text || !tlen)
 		return -EINVAL;
 
-	len = strlen(text);
-	if (!len)
-		return -EINVAL;
-
-	fd = open(filename, O_RDWR | O_APPEND);
+	fd = open(filename, O_WRONLY | O_APPEND);
 	if (fd < 0)
 		return -errno;
 
-	res = write(fd, text, len);
+	res = write(fd, text, tlen);
 	close(fd);
 
 	return (res == -1 ? -errno : res);
@@ -344,7 +361,7 @@ int replace_file_head(char *filename, char *text)
  * The file is created if it does not exist, otherwise it is truncated.
  *
  * @param filename Path of file.
- * @param text String need to be appended.
+ * @param text String need to be written.
  *
  * @return 0 if successful, or a negative errno-style value if not.
  */
@@ -369,42 +386,6 @@ int overwrite_file(const char *filename, const char *value)
 }
 
 /**
- * Read line from file descriptor.
- *
- * @param fd File descriptor.
- * @param[out] buffer Content of line.
- *
- * @return length of line if successful, or a negative errno-style value if not.
- */
-int readline(int fd, char buffer[MAXLINESIZE])
-{
-	int size = 0, res;
-	char *pbuffer = &buffer[0];
-
-	/* Read the file until end of line or file */
-	while ((res = read(fd, pbuffer, 1)) == 1 && size < MAXLINESIZE-1) {
-		if (pbuffer[0] == '\n') {
-			buffer[++size] = 0;
-			return size;
-		}
-		pbuffer++;
-		size++;
-	}
-
-	/* Check the last read result */
-	if (res < 0) {
-		/* ernno is checked in the upper layer as we could
-		 * print the filename here
-		 */
-		return res;
-	}
-	/* last line */
-	buffer[size] = 0;
-
-	return size;
-}
-
-/**
  * Read the first line from file.
  *
  * @param file Path of file.
@@ -414,7 +395,7 @@ int readline(int fd, char buffer[MAXLINESIZE])
  * @return length of string if successful, or a negative errno-style value
  *	   if not.
  */
-int file_read_string(const char *file, char *string, int size)
+ssize_t file_read_string(const char *file, char *string, const int size)
 {
 	FILE *fp;
 	char *res;
@@ -440,7 +421,7 @@ int file_read_string(const char *file, char *string, int size)
 	end = strchr(string, '\n');
 	if (end)
 		*end = 0;
-	return strlen(string);
+	return strnlen(string, size);
 }
 
 /**
@@ -678,89 +659,17 @@ int count_lines_in_file(const char *filename)
 	return ret;
 }
 
-/**
- * Read binary file.
- *
- * @param path File path to read.
- * @param[out] File size being read.
- * @param[out] data File content.
- *
- * @return 0 if successful, or -1 if not.
- */
-int read_full_binary_file(const char *path, unsigned long *size, void **data)
+static ssize_t _file_read_key_value(char *value, const size_t limit,
+				const char *path, const char *key,
+				size_t klen, const char op)
 {
-	FILE *f;
-	long _size;
-	void *buf;
-	int err;
-
-	if (!path || !data || !size) {
-		errno = EINVAL;
-		return -1;
-	}
-
-	f = fopen(path, "rb");
-	if (!f)
-		return -1;
-
-	if (fseek(f, 0, SEEK_END) == -1) {
-		err = errno;
-		goto close;
-	}
-
-	_size = ftell(f);
-	if (_size == -1) {
-		err = errno;
-		goto close;
-	} else if (!_size) {
-		err = ERANGE;
-		goto close;
-	}
-
-	if (fseek(f, 0, SEEK_SET) == -1) {
-		err = errno;
-		goto close;
-	}
-
-	buf = malloc(_size + 10);
-	if (!buf) {
-		err = ENOMEM;
-		goto close;
-	}
-
-	memset(buf, 0, _size + 10);
-	if (fread(buf, 1, _size, f) != (unsigned int)_size) {
-		err = EBADF;
-		goto free;
-	}
-
-	close_file(path, f);
-
-	*data = buf;
-	*size = (unsigned long)_size;
-
-	return 0;
-
-free:
-	free(buf);
-close:
-	close_file(path, f);
-	errno = err;
-	return -1;
-}
-
-static int _file_read_key_value(const char *path, const char op,
-				const char *key, const size_t limit,
-				char *value)
-{
-	int fd;
-	int size;
 	size_t len;
-	char *data;
 	char *msg = NULL;
-	char *end, *start;
+	struct mm_file_t *f = mmap_file(path);
 
-	if (!key || !path) {
+	if (!f)
+		return -errno;
+	if (!key) {
 		errno = EINVAL;
 		return -errno;
 	}
@@ -770,63 +679,47 @@ static int _file_read_key_value(const char *path, const char op,
 		return -errno;
 	}
 
-	size = get_file_size(path);
-	if (size < 0)
-		return size;
-	if (!size) {
-		errno = ENOMSG;
-		return -errno;
-	}
-
-	fd = open(path, O_RDONLY);
-	if (fd < 0)
-		return -errno;
-
-	data = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
-	if (data == MAP_FAILED)
-		goto close;
-
 	if (op == 'l')
-		msg = strstr(data, key);
-	else if (op == 'r')
-		msg = strrstr(data, key);
+		msg = get_line(key, klen, f->begin, f->size, f->begin, &len);
+	else if (op == 'r') {
+		char *msg_tmp;
+
+		msg = f->begin;
+		len = 0;
+		while ((msg_tmp = get_line(key, klen, f->begin, f->size,
+					  msg, &len)))
+			msg = msg_tmp + len;
+		if (msg != f->begin)
+			msg -= len;
+		else
+			msg = NULL;
+	}
 	if (!msg) {
 		errno = ENOMSG;
 		goto unmap;
 	}
 
-	start = msg + strlen(key);
-	end = strchr(start, '\n');
-	if (end == NULL)
-		end = data + size;
+	len = MIN(len - klen, limit - 1);
+	*(char *)mempcpy(value, msg + klen, len) = '\0';
 
-	len = end - start;
-	len = MIN(len, limit - 1);
-	memcpy(value, start, len);
-	*(value + len) = 0;
-
-	munmap(data, size);
-	close(fd);
-
+	unmap_file(f);
 	return len;
 
 unmap:
-	munmap(data, size);
-close:
-	close(fd);
+	unmap_file(f);
 	return -errno;
 }
 
-int file_read_key_value(const char *path, const char *key,
-			const size_t limit, char *value)
+ssize_t file_read_key_value(char *value, const size_t limit, const char *path,
+			const char *key, size_t klen)
 {
-	return _file_read_key_value(path, 'l', key, limit, value);
+	return _file_read_key_value(value, limit, path, key, klen, 'l');
 }
 
-int file_read_key_value_r(const char *path, const char *key,
-			const size_t limit, char *value)
+ssize_t file_read_key_value_r(char *value, const size_t limit, const char *path,
+			const char *key, size_t klen)
 {
-	return _file_read_key_value(path, 'r', key, limit, value);
+	return _file_read_key_value(value, limit, path, key, klen, 'r');
 }
 
 /**
@@ -914,41 +807,46 @@ e_free:
 /* filters return zero if the match is successful */
 int filter_filename_substr(const struct dirent *entry, const void *arg)
 {
-	const char *substr = (const char *)arg;
+	struct ac_filter_data *d = (struct ac_filter_data *)arg;
 
-	return !strstr(entry->d_name, substr);
+	return !memmem(entry->d_name, _D_EXACT_NAMLEN(entry), d->str, d->len);
 }
 
 int filter_filename_exactly(const struct dirent *entry, const void *arg)
 {
-	const char *fname = (const char *)arg;
+	struct ac_filter_data *d = (struct ac_filter_data *)arg;
 
-	return strcmp(entry->d_name, fname);
+	return strcmp(entry->d_name, d->str);
 }
 
 int filter_filename_startswith(const struct dirent *entry,
 				const void *arg)
 {
-	const char *str = (const char *)arg;
+	struct ac_filter_data *d = (struct ac_filter_data *)arg;
 
-	return memcmp(entry->d_name, str, strlen(str));
+	if (_D_EXACT_NAMLEN(entry) < d->len)
+		return -1;
+
+	return memcmp(entry->d_name, d->str, d->len);
 }
 
-int dir_contains(const char *dir, const char *filename, const int exact)
+int dir_contains(const char *dir, const char *filename, size_t flen,
+		const int exact)
 {
 	int ret;
 	int i;
 	struct dirent **filelist;
+	struct ac_filter_data acfd = {filename, flen};
 
-	if (!dir || !filename)
+	if (!dir || !filename || !flen)
 		return -1;
 
 	if (exact)
 		ret = ac_scandir(dir, &filelist, filter_filename_exactly,
-			      (const void *)filename, 0);
+				 (const void *)&acfd, 0);
 	else
 		ret = ac_scandir(dir, &filelist, filter_filename_substr,
-			      (const void *)filename, 0);
+				 (const void *)&acfd, 0);
 	if (ret <= 0)
 		return ret;
 
@@ -1008,121 +906,108 @@ free_list:
 	return count;
 }
 
-static int is_subdir(const struct dirent *entry)
-{
-	return (entry->d_type == DT_DIR) &&
-		strcmp(entry->d_name, ".") &&
-		strcmp(entry->d_name, "..");
-}
-
-static void expand_dir(char *_dirs[], int *count, int depth, int max_depth)
-{
-	int files;
-	int i;
-	int res;
-	struct dirent **filelist;
-	char *subdir;
-	char *name;
-	char *current_dir = _dirs[*count - 1];
-
-	if (depth > max_depth)
-		return;
-
-
-	files = scandir(current_dir, &filelist, is_subdir, 0);
-	if (files < 0) {
-		LOGE("lsdir failed, error (%s)\n", strerror(-files));
-		return;
-	}
-
-	for (i = 0; i < files; i++) {
-		if (*count >= MAX_SEARCH_DIRS) {
-			LOGE("too many dirs(%d) under %s\n",
-			     *count, _dirs[0]);
-			goto free;
-		}
-
-		name = filelist[i]->d_name;
-		res = asprintf(&subdir, "%s/%s", current_dir, name);
-		if (res < 0) {
-			LOGE("compute string failed, out of memory\n");
-			goto free;
-		}
-
-		_dirs[*count] = subdir;
-		(*count)++;
-		expand_dir(_dirs, count, depth++, max_depth);
-	}
-free:
-	for (i = 0; i < files; i++)
-		free(filelist[i]);
-	free(filelist);
-}
-
 /**
  * Find target file in specified dir.
  *
  * @param dir Where to start search.
  * @param target_file Target file to search.
- * @param depth File's depth in the directory tree.
+ * @param tflen The length of target_file.
+ * @param depth Descend at most depth of directories below the starting dir.
  * @param path[out] Searched file path in given dir.
  * @param limit The number of files uplayer want to get.
  *
  * @return the count of searched files on success, or -1 on error.
  */
-int find_file(const char *dir, char *target_file, int depth, char *path[],
-		int limit)
+int find_file(const char *dir, const char *target_file, size_t tflen,
+		int depth, char *path[], int limit)
 {
-	int i, ret;
-	int count = 0;
-	char *_dirs[MAX_SEARCH_DIRS];
-	int dirs;
+	int wdepth = 0;
+	int found = 0;
+	char wdir[PATH_MAX];
+	DIR **dp;
 
-	if (depth < 1 || !dir || !target_file || !path || limit <= 0)
+	if (!dir || !target_file || !tflen || !path || limit <= 0)
 		return -1;
-
-	ret = asprintf(&_dirs[0], "%s", dir);
-	if (ret < 0) {
-		LOGE("compute string failed, out of memory\n");
+	if (!memccpy(wdir, dir, 0, PATH_MAX))
+		return -1;
+	dp = calloc(depth + 1, sizeof(DIR *));
+	if (!dp) {
+		LOGE("out of memory\n");
 		return -1;
 	}
-	dirs = 1;
 
-	/* expand all dirs */
-	expand_dir(_dirs, &dirs, 1, depth);
-	for (i = 0; i < dirs; i++) {
-		if (count >= limit)
-			goto free;
+	while (wdepth >= 0) {
+		struct dirent *dirp;
 
-		ret = dir_contains(_dirs[i], target_file, 1);
-		if (ret == 1) {
-			ret = asprintf(&path[count++], "%s/%s",
-				       _dirs[i], target_file);
-			if (ret < 0) {
-				LOGE("compute string failed, out of memory\n");
-				ret = -1;
-				goto fail;
+		if (!dp[wdepth]) {
+			/* new stream */
+			dp[wdepth] = opendir(wdir);
+			if (!dp[wdepth]) {
+				LOGE("failed to opendir (%s), error (%s)\n",
+				     wdir, strerror(errno));
+				goto fail_open;
 			}
-		} else if (ret < 0) {
-			LOGE("dir_contains failed\n");
-			ret = -1;
-			goto fail;
+		}
+
+		while (!(errno = 0) && (dirp = readdir(dp[wdepth]))) {
+			if (!strcmp(dirp->d_name, ".") ||
+			    !strcmp(dirp->d_name, ".."))
+				continue;
+
+			if (!strcmp(dirp->d_name, target_file)) {
+				if (asprintf(&path[found], "%s/%s", wdir,
+				    dirp->d_name) == -1) {
+					LOGE("out of memory\n");
+					goto fail_read;
+				}
+				if (++found == limit)
+					goto end;
+			}
+
+			if (dirp->d_type == DT_DIR && wdepth < depth) {
+				/* search in subdir */
+				*(char *)
+				mempcpy(mempcpy(wdir + strnlen(wdir, PATH_MAX),
+					"/", 1),
+					dirp->d_name,
+					strnlen(dirp->d_name, NAME_MAX)) = '\0';
+				wdepth++;
+				break;
+			}
+		}
+		if (!dirp) {
+			if (!errno) {
+				/* meet the end of stream, back to the parent */
+				char *p;
+
+				closedir(dp[wdepth]);
+				dp[wdepth--] = NULL;
+				p = strrchr(wdir, '/');
+				if (p)
+					*p = '\0';
+			} else {
+				LOGE("failed to readdir, (%s)\n",
+				     strerror(errno));
+				goto fail_read;
+			}
 		}
 	}
+end:
+	while (wdepth >= 0)
+		closedir(dp[wdepth--]);
+	free(dp);
+	return found;
 
-free:
-	for (i = 0; i < dirs; i++)
-		free(_dirs[i]);
-
-	return count;
-fail:
-	for (i = 0; i < dirs; i++)
-		free(_dirs[i]);
-
-	for (i = 0; i < count; i++)
-		free(path[i]);
-
-	return ret;
+fail_read:
+	LOGE("failed to search in dir %s\n", wdir);
+	closedir(dp[wdepth]);
+fail_open:
+	while (wdepth)
+		closedir(dp[--wdepth]);
+	while (found)
+		free(path[--found]);
+	free(dp);
+	return -1;
 }
 
 int read_file(const char *path, unsigned long *size, void **data)
@@ -1214,6 +1099,7 @@ int config_fmt_to_files(const char *file_fmt, char ***out)
 	int ret = 0;
 	struct dirent **filelist;
 	char **out_array;
+	struct ac_filter_data acfd;
 
 	if (!file_fmt || !out)
 		return -1;
@@ -1247,14 +1133,15 @@ int config_fmt_to_files(const char *file_fmt, char ***out)
 	*p = '\0';
 	file_prefix = p + 1;
 	p = strrchr(file_prefix, '[');
-	if (p) {
-		*p = '\0';
-	} else {
+	if (!p) {
 		ret = -1;
 		LOGE("unsupported formats (%s)\n", dir);
 		goto free_dir;
 	}
 
+	*p = '\0';
+	acfd.str = file_prefix;
+	acfd.len = p - file_prefix;
 
 	if (!directory_exists(dir)) {
 		ret = 0;
@@ -1276,7 +1163,7 @@ int config_fmt_to_files(const char *file_fmt, char ***out)
 
 	/* get all files which start with prefix */
 	count = ac_scandir(dir, &filelist, filter_filename_startswith,
-			   file_prefix, alphasort);
+			   &acfd, alphasort);
 	if (count < 0) {
 		ret = -1;
 		LOGE("failed to ac_scandir\n");

@@ -43,6 +43,11 @@ struct mm_file_t {
 	int size;
 };
 
+struct ac_filter_data {
+	const char *str;
+	size_t len;
+};
+
 static inline int file_exists(const char *filename)
 {
 	struct stat info;
@@ -72,18 +77,17 @@ static inline int get_file_size(const char *filepath)
 
 char *mm_get_line(struct mm_file_t *mfile, int line);
 int mkdir_p(const char *path);
+int remove_r(const char *dir);
 int mm_count_lines(struct mm_file_t *mfile);
 struct mm_file_t *mmap_file(const char *path);
 void unmap_file(struct mm_file_t *mfile);
 int do_copy_tail(const char *src, const char *dest, int limit);
 int do_mv(char *src, char *dest);
-int append_file(char *filename, char *text);
-int mm_replace_str_line(struct mm_file_t *mfile, char *replace,
-			int line);
+ssize_t append_file(const char *filename, const char *text, size_t tlen);
 int replace_file_head(char *filename, char *text);
 int overwrite_file(const char *filename, const char *value);
 int readline(int fd, char buffer[MAXLINESIZE]);
-int file_read_string(const char *file, char *string, int size);
+ssize_t file_read_string(const char *file, char *string, const int size);
 void file_reset_init(const char *filename);
 int file_read_int(const char *filename, unsigned int *pcurrent);
 int file_update_int(const char *filename, unsigned int current,
@@ -93,10 +97,10 @@ int space_available(const char *path, int quota);
 int count_lines_in_file(const char *filename);
 int read_full_binary_file(const char *path, unsigned long *size,
 			void **data);
-int file_read_key_value(const char *path, const char *key,
-			const size_t limit, char *value);
-int file_read_key_value_r(const char *path, const char *key,
-			const size_t limit, char *value);
+ssize_t file_read_key_value(char *value, const size_t limit, const char *path,
+			const char *key, size_t klen);
+ssize_t file_read_key_value_r(char *value, const size_t limit, const char *path,
+			const char *key, size_t klen);
 int ac_scandir(const char *dirp, struct dirent ***namelist,
 		int (*filter)(const struct dirent *, const void *),
 		const void *farg,
@@ -106,10 +110,10 @@ int filter_filename_substr(const struct dirent *entry, const void *arg);
 int filter_filename_exactly(const struct dirent *entry, const void *arg);
 int filter_filename_startswith(const struct dirent *entry,
 					const void *arg);
-int dir_contains(const char *dir, const char *filename, int exact);
+int dir_contains(const char *dir, const char *filename, size_t flen, int exact);
 int lsdir(const char *dir, char *fullname[], int limit);
-int find_file(const char *dir, char *target_file, int depth, char *path[],
-		int limit);
+int find_file(const char *dir, const char *target_file, size_t tflen,
+		int depth, char *path[], int limit);
 int read_file(const char *path, unsigned long *size, void **data);
 int is_ac_filefmt(const char *file_fmt);
 int config_fmt_to_files(const char *file_fmt, char ***out);

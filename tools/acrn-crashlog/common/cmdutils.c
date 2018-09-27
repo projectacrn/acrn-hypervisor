@@ -136,7 +136,7 @@ int exec_out2file(const char *outfile, const char *fmt, ...)
 	if (ret < 0)
 		return ret;
 
-	strtrim(cmd);
+	strtrim(cmd, ret);
 	argc = strcnt(cmd, ' ') + 1;
 
 	argv = (char **)calloc(argc + 1, sizeof(char *));
@@ -171,11 +171,12 @@ int exec_out2file(const char *outfile, const char *fmt, ...)
  * to memory. The memory is allocated by this function and needs to be freed
  * after return.
  *
+ * @param[out] outmem The pointer to command's output.
  * @param fmt Format string of command.
  *
- * @return a pointer to command's output if successful, or NULL if not.
+ * @return the length of command's output if successful, or -1 if not.
  */
-char *exec_out2mem(const char *fmt, ...)
+ssize_t exec_out2mem(char **outmem, const char *fmt, ...)
 {
 	va_list args;
 	char *cmd;
@@ -183,23 +184,25 @@ char *exec_out2mem(const char *fmt, ...)
 	char *out = NULL;
 	char *new;
 	char tmp[1024];
-	int memsize = 0;
-	int newlen = 0;
-	int len = 0;
+	size_t memsize = 0;
+	size_t newlen = 0;
+	ssize_t len = 0;
 	int ret;
 
 	va_start(args, fmt);
 	ret = vasprintf(&cmd, fmt, args);
 	va_end(args);
 	if (ret < 0)
-		return NULL;
+		return -1;
 
 	pp = popen(cmd, "r");
-	if (!pp)
-		goto free_cmd;
+	if (!pp) {
+		free(cmd);
+		return -1;
+	}
 
 	while (fgets(tmp, 1024, pp) != NULL) {
-		newlen += strlen(tmp);
+		newlen += strnlen(tmp, 1024);
 		if (newlen + 1 > memsize) {
 			memsize += 1024;
 			new = realloc(out, memsize);
@@ -208,20 +211,22 @@ char *exec_out2mem(const char *fmt, ...)
 					free(out);
 					out = NULL;
 				}
+				len = -1;
 				goto end;
 			} else {
 				out = new;
 			}
 		}
-		memcpy(out + len, tmp, strlen(tmp) + 1);
+		/* fgets read at most 1023 bytes and plus '\0' */
+		memcpy(out + len, tmp, strnlen(tmp, 1024) + 1);
 
 		len = newlen;
 	}
 
 end:
+	*outmem = out;
 	pclose(pp);
-free_cmd:
 	free(cmd);
 
-	return out;
+	return len;
 }

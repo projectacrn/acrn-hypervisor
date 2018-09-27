@@ -122,7 +122,6 @@ void hist_raise_event(const char *event, const char *type, const char *log,
 	char eventtime[LONG_TIME_SIZE];
 	struct sender_t *crashlog;
 	int maxlines;
-	int ret;
 	struct history_entry entry = {
 		.event = event,
 		.type = type,
@@ -143,16 +142,13 @@ void hist_raise_event(const char *event, const char *type, const char *log,
 		backup_history();
 	}
 
-	ret = get_current_time_long(eventtime);
-	if (ret <= 0)
+	if (get_current_time_long(eventtime) <= 0)
 		return;
 
 	entry.eventtime = eventtime;
 	entry_to_history_line(&entry, line);
-	ret = append_file(history_file, line);
-	if (ret < 0) {
-		LOGE("append (%s) failed, error (%s)\n", history_file,
-		     strerror(errno));
+	if (append_file(history_file, line, strnlen(line, MAXLINESIZE)) <= 0) {
+		LOGE("failed to append (%s) to (%s)\n", line, history_file);
 		return;
 	}
 }
@@ -235,7 +231,8 @@ static int get_time_from_firstline(char *buffer, size_t size)
 	const char *prefix = "#V1.0 CURRENTUPTIME   ";
 	int len;
 
-	len = file_read_key_value(history_file, prefix, MAXLINESIZE, lasttime);
+	len = file_read_key_value(lasttime, MAXLINESIZE, history_file, prefix,
+				  strlen(prefix));
 	if (len <= 0) {
 		LOGW("failed to read value from %s, error %s\n",
 		      history_file, strerror(-len));
@@ -289,11 +286,12 @@ int prepare_history(void)
 			     strerror(errno));
 			return ret;
 		}
-		ret = append_file(history_file, HISTORY_BLANK_LINE2);
+		ret = append_file(history_file, HISTORY_BLANK_LINE2,
+				  sizeof(HISTORY_BLANK_LINE2) - 1);
 		if (ret < 0) {
 			LOGE("Write (%s, %s) failed, error (%s)\n",
 			     history_file, HISTORY_BLANK_LINE2,
-			     strerror(errno));
+			     strerror(-ret));
 			return ret;
 		}
 		current_lines = count_lines_in_file(history_file);

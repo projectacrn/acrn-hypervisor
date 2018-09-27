@@ -216,13 +216,14 @@ static void telemd_get_log(struct log_t *log, void *data)
 	int res;
 	int i;
 	struct dirent **filelist;
+	struct ac_filter_data acfd = {log->name, log->name_len};
 
 	if (d->srcdir == NULL)
 		goto send_nologs;
 
 	/* search file which use log->name as substring */
 	count = ac_scandir(d->srcdir, &filelist, filter_filename_substr,
-			 log->name, NULL);
+			   &acfd, NULL);
 	if (count < 0) {
 		LOGE("search (%s) in dir (%s) failed\n", log->name, d->srcdir);
 		return;
@@ -544,8 +545,7 @@ static void telemd_send_reboot(void)
 }
 
 static int telemd_new_vmevent(const char *line_to_sync,
-				size_t len __attribute__((unused)),
-				const struct vm_t *vm)
+				size_t len, const struct vm_t *vm)
 {
 	char event[ANDROID_WORD_LEN];
 	char longtime[ANDROID_WORD_LEN];
@@ -589,21 +589,26 @@ static int telemd_new_vmevent(const char *line_to_sync,
 		severity = INFO_SEVERITY;
 
 	/* if line contains log, fill vmlogpath */
-	log = strstr(rest, "/logs/");
+	log = strstr(rest, ANDROID_LOGS_DIR);
 	if (log) {
-		struct sender_t *crashlog;
+		struct sender_t *crashlog = get_sender_by_name("crashlog");
+		const char *logf;
+		size_t logflen;
+		int res;
 
-		crashlog = get_sender_by_name("crashlog");
 		if (!crashlog)
 			return VMEVT_HANDLED;
 
-		res = find_file(crashlog->outdir, log + strlen("/logs/"),
-				2, &vmlogpath, 1);
-		if (res < 0) {
-			LOGE("find (%s) in (%s) failed\n",
-			     log + strlen("/logs/"), crashlog->outdir);
+		logf = log + sizeof(ANDROID_LOGS_DIR) - 1;
+		logflen = &rest[0] + strnlen(rest, PATH_MAX) - logf;
+		res = find_file(crashlog->outdir, logf, logflen, 1,
+				&vmlogpath, 1);
+		if (res == -1) {
+			LOGE("failed to find (%s) in (%s)\n",
+			     logf, crashlog->outdir);
 			return VMEVT_DEFER;
-		}
+		} else if (res == 0)
+			return VMEVT_DEFER;
 	}
 
 	res = asprintf(&class, "%s/%s/%s", vm->name, event, type);
@@ -898,8 +903,7 @@ static void crashlog_send_reboot(void)
 }
 
 static int crashlog_new_vmevent(const char *line_to_sync,
-				size_t len __attribute__((unused)),
-				const struct vm_t *vm)
+				size_t len, const struct vm_t *vm)
 {
 	struct sender_t *crashlog;
 	char event[ANDROID_WORD_LEN];
@@ -980,12 +984,18 @@ static int crashlog_new_vmevent(const char *line_to_sync,
 				ret = VMEVT_DEFER;
 			} else {
 				LOGW("(%s) is missing\n", vmlogpath);
-				ret = VMEVT_HANDLED; /* missing logdir */
+				ret = VMEVT_MISSLOG; /* missing logdir */
 			}
-			res = remove(dir);
-			if (res == -1 && errno != ENOENT)
+			if (remove_r(dir) == -1)
 				LOGE("failed to remove %s (%d)\n", dir, -errno);
-
+			goto free_dir;
+		}
+		if (cnt == 1) {
+			LOGW("(%s) is empty, will sync it in the next loop\n",
+			     vmlogpath);
+			ret = VMEVT_DEFER;
+			if (remove_r(dir) == -1)
+				LOGE("failed to remove %s (%d)\n", dir, -errno);
 			goto free_dir;
 		}
 	}

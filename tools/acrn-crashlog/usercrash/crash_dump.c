@@ -129,12 +129,11 @@ static int get_backtrace(int pid, int fd, int sig, const char *comm)
 			return -1;
 		}
 	}
-	membkt = exec_out2mem(GET_GDB_INFO, format);
-	if (!membkt) {
+	len = exec_out2mem(&membkt, GET_GDB_INFO, format);
+	if (len <= 0) {
 		LOGE("get gdb info failed\n");
 		return -1;
 	}
-	len = strlen(membkt);
 	ret = write(fd, membkt, len);
 	free(membkt);
 	if (ret != len) {

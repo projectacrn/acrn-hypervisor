@@ -5,4 +5,4 @@
 
 int execv_out2file(char * const argv[], const char *outfile);
 int exec_out2file(const char *outfile, const char *fmt, ...);
-char *exec_out2mem(const char *fmt, ...);
+ssize_t exec_out2mem(char **outmem, const char *fmt, ...);
