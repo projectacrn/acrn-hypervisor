@@ -5,10 +5,6 @@
  */
 
 #include <hypervisor.h>
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
 
 #define CMOS_ADDR_PORT		0x70U
 #define CMOS_DATA_PORT		0x71U

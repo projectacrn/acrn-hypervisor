@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hv_lib.h>
+#include <hypervisor.h>
 
 #ifndef NULL
 #define NULL ((void *) 0)

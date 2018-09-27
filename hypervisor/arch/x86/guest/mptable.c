@@ -4,12 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hv_lib.h>
-#include <acrn_common.h>
-#include <hv_arch.h>
-#include <hv_debug.h>
-#include <bsp_extern.h>
-#include <mptable.h>
+#include <hypervisor.h>
 
 #define MPTABLE_BASE		0xF0000U
 

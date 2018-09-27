@@ -22,9 +22,17 @@
 
 /* Include config header file containing config options */
 #include <types.h>
+#include <errno.h>
+#include <rtl.h>
+#include <spinlock.h>
+#include <mem_mgt.h>
+#include <util.h>
+#include <list.h>
+#include <atomic.h>
+#include <bits.h>
+#include <sprintf.h>
 #include "acrn_common.h"
 #include <acrn_hv_defs.h>
-#include <hv_lib.h>
 #include <hv_arch.h>
 #include <hv_debug.h>
 
