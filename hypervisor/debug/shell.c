@@ -525,17 +525,18 @@ static int shell_cmd_help(__unused int argc, __unused char **argv)
 static int shell_list_vm(__unused int argc, __unused char **argv)
 {
 	char temp_str[MAX_STR_SIZE];
-	struct list_head *pos;
 	struct vm *vm;
+	uint16_t idx;
+	char state[32];
 
 	shell_puts("\r\nVM NAME                  VM ID            VM STATE"
 		"\r\n=======                  =====            ========\r\n");
 
-	spinlock_obtain(&vm_list_lock);
-	list_for_each(pos, &vm_list) {
-		char state[32];
-
-		vm = list_entry(pos, struct vm, list);
+	for (idx = 0; idx < CONFIG_MAX_VM_NUM; idx++) {
+		vm = get_vm_from_vmid(idx);
+		if (vm == NULL) {
+			continue;
+		}
 		switch (vm->state) {
 		case VM_CREATED:
 			(void)strcpy_s(state, 32, "Created");
@@ -559,7 +560,6 @@ static int shell_list_vm(__unused int argc, __unused char **argv)
 		/* Output information for this task */
 		shell_puts(temp_str);
 	}
-	spinlock_release(&vm_list_lock);
 
 	return 0;
 }
@@ -567,19 +567,20 @@ static int shell_list_vm(__unused int argc, __unused char **argv)
 static int shell_list_vcpu(__unused int argc, __unused char **argv)
 {
 	char temp_str[MAX_STR_SIZE];
-	struct list_head *pos;
 	struct vm *vm;
 	struct vcpu *vcpu;
+	char state[32];
+	uint16_t i;
+	uint16_t idx;
 
 	shell_puts("\r\nVM ID    PCPU ID    VCPU ID    VCPU ROLE    VCPU STATE"
 		"\r\n=====    =======    =======    =========    ==========\r\n");
 
-	spinlock_obtain(&vm_list_lock);
-	list_for_each(pos, &vm_list) {
-		char state[32];
-		uint16_t i;
-
-		vm = list_entry(pos, struct vm, list);
+	for (idx = 0; idx < CONFIG_MAX_VM_NUM; idx++) {
+		vm = get_vm_from_vmid(idx);
+		if (vm == NULL) {
+			continue;
+		}
 		foreach_vcpu(i, vm, vcpu) {
 			switch (vcpu->state) {
 			case VCPU_INIT:
@@ -612,7 +613,6 @@ static int shell_list_vcpu(__unused int argc, __unused char **argv)
 			shell_puts(temp_str);
 		}
 	}
-	spinlock_release(&vm_list_lock);
 
 	return 0;
 }

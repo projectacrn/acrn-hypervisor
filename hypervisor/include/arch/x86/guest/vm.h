@@ -139,7 +139,6 @@ struct vm {
 	struct acrn_vuart vuart;		/* Virtual UART */
 	enum vpic_wire_mode wire_mode;
 	struct iommu_domain *iommu;	/* iommu domain of this VM */
-	struct list_head list; /* list of VM */
 	spinlock_t spinlock;	/* Spin-lock used to protect VM modifications */
 
 	struct list_head mmio_list; /* list for mmio. This list is not updated
@@ -278,9 +277,6 @@ const struct vm_description_array *get_vm_desc_base(void);
 #endif
 
 struct vm *get_vm_from_vmid(uint16_t vm_id);
-
-extern struct list_head vm_list;
-extern spinlock_t vm_list_lock;
 
 #ifdef CONFIG_PARTITION_MODE
 struct vm_description_array {
