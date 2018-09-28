@@ -45,11 +45,11 @@ extern const uint64_t guest_entry;
 static UINT64 hv_hpa;
 
 static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
-			struct multiboot_info *mbi, struct boot_ctx *efi_ctx)
+			struct multiboot_info *mbi, struct efi_context *efi_ctx)
 {
 	hv_func hf;
 
-	efi_ctx->rip = (uint64_t)&guest_entry;
+	efi_ctx->vcpu_regs.rip = (uint64_t)&guest_entry;
 
 	/* The 64-bit entry of acrn hypervisor is 0x200 from the start
 	 * address of hv image. But due to there is multiboot header,
@@ -75,7 +75,7 @@ EFI_STATUS construct_mbi(EFI_PHYSICAL_ADDRESS hv_hpa)
 	EFI_STATUS err = EFI_SUCCESS;
 	struct multiboot_info *mbi;
 	struct multiboot_mmap *mmap;
-	struct boot_ctx *efi_ctx;
+	struct efi_context *efi_ctx;
 	int i, j;
 
 	mbi = MBOOT_INFO_PTR(hv_hpa);
@@ -199,7 +199,7 @@ switch_to_guest_mode(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
 	EFI_PHYSICAL_ADDRESS addr;
 	EFI_STATUS err;
 	struct multiboot_info *mbi;
-	struct boot_ctx *efi_ctx;
+	struct efi_context *efi_ctx;
 	struct acpi_table_rsdp *rsdp = NULL;
 	int i;
 	EFI_CONFIGURATION_TABLE *config_table;
@@ -250,24 +250,24 @@ switch_to_guest_mode(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
 
 	asm volatile ("pushf\n\t"
 		      "pop %0\n\t"
-		      : "=r"(efi_ctx->rflags)
+		      : "=r"(efi_ctx->vcpu_regs.rflags)
 		      : );
-	asm volatile ("movq %%rax, %0" : "=r"(efi_ctx->gprs.rax));
-	asm volatile ("movq %%rbx, %0" : "=r"(efi_ctx->gprs.rbx));
-	asm volatile ("movq %%rcx, %0" : "=r"(efi_ctx->gprs.rcx));
-	asm volatile ("movq %%rdx, %0" : "=r"(efi_ctx->gprs.rdx));
-	asm volatile ("movq %%rdi, %0" : "=r"(efi_ctx->gprs.rdi));
-	asm volatile ("movq %%rsi, %0" : "=r"(efi_ctx->gprs.rsi));
-	asm volatile ("movq %%rsp, %0" : "=r"(efi_ctx->gprs.rsp));
-	asm volatile ("movq %%rbp, %0" : "=r"(efi_ctx->gprs.rbp));
-	asm volatile ("movq %%r8,  %0" : "=r"(efi_ctx->gprs.r8));
-	asm volatile ("movq %%r9,  %0" : "=r"(efi_ctx->gprs.r9));
-	asm volatile ("movq %%r10, %0" : "=r"(efi_ctx->gprs.r10));
-	asm volatile ("movq %%r11, %0" : "=r"(efi_ctx->gprs.r11));
-	asm volatile ("movq %%r12, %0" : "=r"(efi_ctx->gprs.r12));
-	asm volatile ("movq %%r13, %0" : "=r"(efi_ctx->gprs.r13));
-	asm volatile ("movq %%r14, %0" : "=r"(efi_ctx->gprs.r14));
-	asm volatile ("movq %%r15, %0" : "=r"(efi_ctx->gprs.r15));
+	asm volatile ("movq %%rax, %0" : "=r"(efi_ctx->vcpu_regs.gprs.rax));
+	asm volatile ("movq %%rbx, %0" : "=r"(efi_ctx->vcpu_regs.gprs.rbx));
+	asm volatile ("movq %%rcx, %0" : "=r"(efi_ctx->vcpu_regs.gprs.rcx));
+	asm volatile ("movq %%rdx, %0" : "=r"(efi_ctx->vcpu_regs.gprs.rdx));
+	asm volatile ("movq %%rdi, %0" : "=r"(efi_ctx->vcpu_regs.gprs.rdi));
+	asm volatile ("movq %%rsi, %0" : "=r"(efi_ctx->vcpu_regs.gprs.rsi));
+	asm volatile ("movq %%rsp, %0" : "=r"(efi_ctx->vcpu_regs.gprs.rsp));
+	asm volatile ("movq %%rbp, %0" : "=r"(efi_ctx->vcpu_regs.gprs.rbp));
+	asm volatile ("movq %%r8,  %0" : "=r"(efi_ctx->vcpu_regs.gprs.r8));
+	asm volatile ("movq %%r9,  %0" : "=r"(efi_ctx->vcpu_regs.gprs.r9));
+	asm volatile ("movq %%r10, %0" : "=r"(efi_ctx->vcpu_regs.gprs.r10));
+	asm volatile ("movq %%r11, %0" : "=r"(efi_ctx->vcpu_regs.gprs.r11));
+	asm volatile ("movq %%r12, %0" : "=r"(efi_ctx->vcpu_regs.gprs.r12));
+	asm volatile ("movq %%r13, %0" : "=r"(efi_ctx->vcpu_regs.gprs.r13));
+	asm volatile ("movq %%r14, %0" : "=r"(efi_ctx->vcpu_regs.gprs.r14));
+	asm volatile ("movq %%r15, %0" : "=r"(efi_ctx->vcpu_regs.gprs.r15));
 
 	hv_jump(hv_hpa, mbi, efi_ctx);
 	asm volatile (".global guest_entry\n\t"

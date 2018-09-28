@@ -85,15 +85,13 @@ struct acrn_vcpu_regs {
 	uint16_t        reserved_16[4];
 };
 
-struct boot_ctx {
-	struct acrn_vcpu_regs vcpu_regs;
 #ifdef CONFIG_EFI_STUB
+struct efi_context {
+	struct acrn_vcpu_regs vcpu_regs;
 	void *rsdp;
 	void *ap_trampoline_buf;
-#endif
 }__attribute__((packed));
 
-#ifdef CONFIG_EFI_STUB
 void *get_rsdp_from_uefi(void);
 void *get_ap_trampoline_buf(void);
 #endif
