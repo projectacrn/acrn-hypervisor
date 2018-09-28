@@ -183,17 +183,17 @@ static uint64_t size2mask[9] = {
 #define VMX_INVALID_VMCS_FIELD  0xffffffffU
 
 /*
- * This struct seg_desc_vmcs is defined separately to hold the vmcs field
+ * This struct vmcs_seg_field is defined separately to hold the vmcs field
  * address of segment selector.
  */
-struct seg_desc_vmcs {
+struct vmcs_seg_field {
 	uint32_t	base_field;
 	uint32_t	limit_field;
 	uint32_t	access_field;
 };
 
 static void encode_vmcs_seg_desc(enum cpu_reg_name seg,
-	struct seg_desc_vmcs *desc)
+	struct vmcs_seg_field *desc)
 {
 	switch (seg) {
 	case CPU_REG_ES:
@@ -377,7 +377,7 @@ static void vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg,
  */
 static void vm_get_seg_desc(enum cpu_reg_name seg, struct seg_desc *desc)
 {
-	struct seg_desc_vmcs tdesc;
+	struct vmcs_seg_field tdesc;
 
 	/* tdesc->access != 0xffffffffU in this function */
 	encode_vmcs_seg_desc(seg, &tdesc);
