@@ -37,6 +37,7 @@
 #define	VIOAPIC_SIZE	4096UL
 
 #define REDIR_ENTRIES_HW	120U /* SOS align with native ioapic */
+#define STATE_BITMAP_SIZE	INT_DIV_ROUNDUP(REDIR_ENTRIES_HW, 64U)
 
 struct acrn_vioapic {
 	struct vm	*vm;
@@ -44,8 +45,8 @@ struct acrn_vioapic {
 	uint32_t	id;
 	uint32_t	ioregsel;
 	union ioapic_rte rtbl[REDIR_ENTRIES_HW];
-	/* sum of pin asserts (+1) and deasserts (-1) */
-	int32_t acnt[REDIR_ENTRIES_HW];
+	/* pin_state status bitmap: 1 - high, 0 - low */
+	uint64_t pin_state[STATE_BITMAP_SIZE];
 };
 
 void    vioapic_init(struct vm *vm);
@@ -53,6 +54,7 @@ void	vioapic_cleanup(struct acrn_vioapic *vioapic);
 void	vioapic_reset(struct acrn_vioapic *vioapic);
 
 void	vioapic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation);
+void	vioapic_set_irq_nolock(struct vm *vm, uint32_t irq, uint32_t operation);
 void	vioapic_update_tmr(struct vcpu *vcpu);
 
 uint32_t	vioapic_pincount(struct vm *vm);

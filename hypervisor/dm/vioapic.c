@@ -42,11 +42,6 @@
 #define MASK_ALL_INTERRUPTS   0x0001000000010000UL
 #define IOAPIC_RTE_LOW_INTVEC    ((uint32_t)IOAPIC_RTE_INTVEC)
 
-static inline const char *pinstate_str(bool asserted)
-{
-	return (asserted) ? "asserted" : "deasserted";
-}
-
 /**
  * @pre pin < vioapic_pincount(vm)
  */
@@ -87,36 +82,67 @@ vioapic_send_intr(struct acrn_vioapic *vioapic, uint32_t pin)
  * @pre pin < vioapic_pincount(vm)
  */
 static void
-vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint32_t pin, bool newstate)
+vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint16_t pin, uint32_t level)
 {
-	int oldcnt, newcnt;
-	bool needintr;
+	uint32_t old_lvl;
+	union ioapic_rte rte = vioapic->rtbl[pin];
 
-	oldcnt = vioapic->acnt[pin];
-	if (newstate) {
-		vioapic->acnt[pin]++;
+	old_lvl = (uint32_t)bitmap_test(pin & 0x3FU, &vioapic->pin_state[pin >> 6U]);
+	if (level == 0U) {
+		/* clear pin_state and deliver interrupt according to polarity */
+		bitmap_clear_nolock(pin & 0x3FU,
+				&vioapic->pin_state[pin >> 6U]);
+		if (((rte.full & IOAPIC_RTE_INTPOL) != 0UL)
+			&& old_lvl != level) {
+			vioapic_send_intr(vioapic, pin);
+		}
 	} else {
-		vioapic->acnt[pin]--;
+		/* set pin_state and deliver intrrupt according to polarity */
+		bitmap_set_nolock(pin & 0x3FU, &vioapic->pin_state[pin >> 6U]);
+		if (((rte.full & IOAPIC_RTE_INTPOL) == 0UL)
+			&& old_lvl != level) {
+			vioapic_send_intr(vioapic, pin);
+		}
 	}
-	newcnt = vioapic->acnt[pin];
+}
 
-	if (newcnt < 0) {
-		pr_err("ioapic pin%hhu: bad acnt %d", pin, newcnt);
-	}
+/**
+ * @pre irq < vioapic_pincount(vm)
+ * @pre operation value shall be one of the folllowing values:
+ *	GSI_SET_HIGH
+ *	GSI_SET_LOW
+ *	GSI_RAISING_PULSE
+ *	GSI_FALLING_PULSE
+ * @pre call with vioapic lock
+ */
+void
+vioapic_set_irq_nolock(struct vm *vm, uint32_t irq, uint32_t operation)
+{
+	struct acrn_vioapic *vioapic;
+	uint16_t pin = (uint16_t)irq;
 
-	needintr = false;
-	if ((oldcnt == 0) && (newcnt == 1)) {
-		needintr = true;
-		dev_dbg(ACRN_DBG_IOAPIC, "ioapic pin%hhu: asserted", pin);
-	} else if ((oldcnt == 1) && (newcnt == 0)) {
-		dev_dbg(ACRN_DBG_IOAPIC, "ioapic pin%hhu: deasserted", pin);
-	} else {
-		dev_dbg(ACRN_DBG_IOAPIC, "ioapic pin%hhu: %s, ignored, acnt %d",
-		    pin, pinstate_str(newstate), newcnt);
-	}
+	vioapic = vm_ioapic(vm);
 
-	if (needintr) {
-		vioapic_send_intr(vioapic, pin);
+	switch (operation) {
+	case GSI_SET_HIGH:
+		vioapic_set_pinstate(vioapic, pin, 1U);
+		break;
+	case GSI_SET_LOW:
+		vioapic_set_pinstate(vioapic, pin, 0U);
+		break;
+	case GSI_RAISING_PULSE:
+		vioapic_set_pinstate(vioapic, pin, 1U);
+		vioapic_set_pinstate(vioapic, pin, 0U);
+		break;
+	case GSI_FALLING_PULSE:
+		vioapic_set_pinstate(vioapic, pin, 0U);
+		vioapic_set_pinstate(vioapic, pin, 1U);
+		break;
+	default:
+		/*
+		 * The function caller could guarantee the pre condition.
+		 */
+		break;
 	}
 }
 
@@ -131,33 +157,10 @@ vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint32_t pin, bool newstate)
 void
 vioapic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation)
 {
-	struct acrn_vioapic *vioapic;
-	uint32_t pin = irq;
-
-	vioapic = vm_ioapic(vm);
+	struct acrn_vioapic *vioapic = vm_ioapic(vm);
 
 	spinlock_obtain(&(vioapic->mtx));
-	switch (operation) {
-	case GSI_SET_HIGH:
-		vioapic_set_pinstate(vioapic, pin, true);
-		break;
-	case GSI_SET_LOW:
-		vioapic_set_pinstate(vioapic, pin, false);
-		break;
-	case GSI_RAISING_PULSE:
-		vioapic_set_pinstate(vioapic, pin, true);
-		vioapic_set_pinstate(vioapic, pin, false);
-		break;
-	case GSI_FALLING_PULSE:
-		vioapic_set_pinstate(vioapic, pin, false);
-		vioapic_set_pinstate(vioapic, pin, true);
-		break;
-	default:
-		/*
-		 * The function caller could guarantee the pre condition.
-		 */
-		break;
-	}
+	vioapic_set_irq_nolock(vm, irq, operation);
 	spinlock_release(&(vioapic->mtx));
 }
 
@@ -238,6 +241,16 @@ vioapic_indirect_read(struct acrn_vioapic *vioapic, uint32_t addr)
 	}
 
 	return 0;
+}
+
+static inline bool vioapic_need_intr(struct acrn_vioapic *vioapic, uint16_t pin)
+{
+	uint32_t lvl =(uint32_t)bitmap_test(pin & 0x3FU,
+			&vioapic->pin_state[pin >> 6U]);
+	union ioapic_rte rte = vioapic->rtbl[pin];
+
+	return !!((((rte.full & IOAPIC_RTE_INTPOL) != 0UL) && lvl == 0U) ||
+		(((rte.full & IOAPIC_RTE_INTPOL) == 0UL) && lvl != 0U));
 }
 
 /*
@@ -356,11 +369,10 @@ vioapic_indirect_write(struct acrn_vioapic *vioapic, uint32_t addr,
 		 */
 		if (((vioapic->rtbl[pin].full & IOAPIC_RTE_INTMASK) ==
 			IOAPIC_RTE_INTMCLR) &&
-			((vioapic->rtbl[pin].full & IOAPIC_RTE_REM_IRR) == 0UL) &&
-			(vioapic->acnt[pin] > 0)) {
+			((vioapic->rtbl[pin].full & IOAPIC_RTE_REM_IRR) == 0UL)
+			&& vioapic_need_intr(vioapic, (uint16_t)pin)) {
 			dev_dbg(ACRN_DBG_IOAPIC,
-				"ioapic pin%hhu: asserted at rtbl write, acnt %d",
-				pin, vioapic->acnt[pin]);
+				"ioapic pin%hhu: asserted at rtbl write", pin);
 			vioapic_send_intr(vioapic, pin);
 		}
 
@@ -453,10 +465,9 @@ vioapic_process_eoi(struct vm *vm, uint32_t vector)
 		}
 
 		vioapic->rtbl[pin].full &= (~IOAPIC_RTE_REM_IRR);
-		if (vioapic->acnt[pin] > 0) {
+		if (vioapic_need_intr(vioapic, (uint16_t)pin)) {
 			dev_dbg(ACRN_DBG_IOAPIC,
-				"ioapic pin%hhu: asserted at eoi, acnt %d",
-				pin, vioapic->acnt[pin]);
+				"ioapic pin%hhu: asserted at eoi", pin);
 			vioapic_send_intr(vioapic, pin);
 		}
 	}
