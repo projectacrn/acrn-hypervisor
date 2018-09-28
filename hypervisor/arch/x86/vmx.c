@@ -563,7 +563,8 @@ static void init_guest_context_vm0_bsp(struct vcpu *vcpu)
 {
 	struct ext_context *ectx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ext_ctx;
-	struct boot_ctx * init_ctx = (struct boot_ctx *)(&vm0_boot_context);
+	struct acrn_vcpu_regs* init_ctx =
+		(struct acrn_vcpu_regs*)(&vm0_boot_context);
 	uint16_t *sel = &(init_ctx->cs_sel);
 	struct segment_sel *seg;
 
@@ -588,9 +589,9 @@ static void init_guest_context_vm0_bsp(struct vcpu *vcpu)
 	ectx->ldtr.selector  = init_ctx->ldt_sel;
 	ectx->tr.selector    = init_ctx->tr_sel;
 #ifdef CONFIG_EFI_STUB
-	vcpu_set_rsp(vcpu, efi_ctx->gprs.rsp);
+	vcpu_set_rsp(vcpu, efi_ctx->vcpu_regs.gprs.rsp);
 	/* clear flags for CF/PF/AF/ZF/SF/OF */
-	vcpu_set_rflags(vcpu, efi_ctx->rflags & ~(0x8d5UL));
+	vcpu_set_rflags(vcpu, efi_ctx->vcpu_regs.rflags & ~(0x8d5UL));
 #endif
 }
 
@@ -663,7 +664,8 @@ static void init_guest_state(struct vcpu *vcpu)
 {
 	struct cpu_context *ctx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-	struct boot_ctx * init_ctx = (struct boot_ctx *)(&vm0_boot_context);
+	struct acrn_vcpu_regs* init_ctx =
+		(struct acrn_vcpu_regs*)(&vm0_boot_context);
 	enum vm_cpu_mode vcpu_mode = get_vcpu_mode(vcpu);
 
 	vcpu_set_rflags(vcpu, 0x2UL); /* Bit 1 is a active high reserved bit */

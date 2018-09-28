@@ -78,6 +78,6 @@ cpu_primary_save_64:
     .align  8
     .global vm0_boot_context
 vm0_boot_context:
-    .rept   9
-    .quad   0x0000000000000000
+    .rept   SIZE_OF_BOOT_CTX
+    .byte 0x00
     .endr
