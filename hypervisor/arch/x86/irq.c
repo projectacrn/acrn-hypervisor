@@ -54,20 +54,18 @@ uint32_t alloc_irq_num(uint32_t req_irq)
 }
 
 /*
+ * @pre: irq is not in irq_static_mappings
  * free irq num allocated via alloc_irq_num()
  */
 void free_irq_num(uint32_t irq)
 {
-	struct irq_desc *desc;
 	uint64_t rflags;
 
 	if (irq >= NR_IRQS) {
 		return;
 	}
 
-	desc = &irq_desc_array[irq];
-	if ((irq_is_gsi(irq) == false)
-	    && (desc->vector <= VECTOR_DYNAMIC_END)) {
+	if (irq_is_gsi(irq) == false) {
 		spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
 		bitmap_test_and_clear_nolock((uint16_t)(irq & 0x3FU),
 					     irq_alloc_bitmap + (irq >> 6U));
