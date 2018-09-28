@@ -328,7 +328,7 @@ int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	return ret;
 }
 
-static inline uint32_t local_copy_gpa(const struct vm *vm, void *h_ptr, uint64_t gpa,
+static inline uint32_t local_copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 	uint32_t size, uint32_t fix_pg_size, bool cp_from_vm)
 {
 	uint64_t hpa;
@@ -360,7 +360,7 @@ static inline uint32_t local_copy_gpa(const struct vm *vm, void *h_ptr, uint64_t
 	return len;
 }
 
-static inline int copy_gpa(const struct vm *vm, void *h_ptr_arg, uint64_t gpa_arg,
+static inline int copy_gpa(struct vm *vm, void *h_ptr_arg, uint64_t gpa_arg,
 	uint32_t size_arg, bool cp_from_vm)
 {
 	void *h_ptr = h_ptr_arg;
@@ -433,7 +433,7 @@ static inline int copy_gva(struct vcpu *vcpu, void *h_ptr_arg, uint64_t gva_arg,
  *   continuous
  * @pre Pointer vm is non-NULL
  */
-int copy_from_gpa(const struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
+int copy_from_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
 {
 	return copy_gpa(vm, h_ptr, gpa, size, 1);
 }
@@ -444,7 +444,7 @@ int copy_from_gpa(const struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
  *   continuous
  * @pre Pointer vm is non-NULL
  */
-int copy_to_gpa(const struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
+int copy_to_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
 {
 	return copy_gpa(vm, h_ptr, gpa, size, 0);
 }

@@ -149,7 +149,7 @@ extern vm_sw_loader_t vm_sw_loader;
  *   continuous
  * @pre Pointer vm is non-NULL
  */
-int copy_from_gpa(const struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
+int copy_from_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
 /* @pre Caller(Guest) should make sure gpa is continuous.
  * - gpa from hypercall input which from kernel stack is gpa continuous, not
  *   support kernel stack from vmap
@@ -157,7 +157,7 @@ int copy_from_gpa(const struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
  *   continuous
  * @pre Pointer vm is non-NULL
  */
-int copy_to_gpa(const struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
+int copy_to_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
 int copy_from_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
 	uint32_t size, uint32_t *err_code, uint64_t *fault_addr);
 int copy_to_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
