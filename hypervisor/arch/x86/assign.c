@@ -107,6 +107,23 @@ ptdev_build_physical_rte(struct vm *vm,
 		vioapic_get_rte(vm, virt_sid->intx_id.pin, &virt_rte);
 		rte = virt_rte;
 
+		/* init polarity & pin state */
+		if ((rte.full & IOAPIC_RTE_INTPOL) != 0UL) {
+			if (entry->polarity == 0U) {
+				vioapic_set_irq_nolock(vm,
+					(uint32_t)virt_sid->intx_id.pin,
+					GSI_SET_HIGH);
+			}
+			entry->polarity = 1U;
+		} else {
+			if (entry->polarity == 1U) {
+				vioapic_set_irq_nolock(vm,
+					(uint32_t)virt_sid->intx_id.pin,
+					GSI_SET_LOW);
+			}
+			entry->polarity = 0U;
+		}
+
 		/* physical destination cpu mask */
 		phys = ((virt_rte.full & IOAPIC_RTE_DESTMOD) == IOAPIC_RTE_DESTPHY);
 		dest = (uint32_t)(virt_rte.full >> IOAPIC_RTE_DEST_SHIFT);
@@ -359,11 +376,21 @@ static void ptdev_intr_handle_irq(struct vm *vm,
 		}
 
 		if (trigger_lvl) {
-			vioapic_set_irq(vm, virt_sid->intx_id.pin,
-					GSI_SET_HIGH);
+			if (entry->polarity) {
+				vioapic_set_irq(vm, virt_sid->intx_id.pin,
+						GSI_SET_LOW);
+			} else {
+				vioapic_set_irq(vm, virt_sid->intx_id.pin,
+						GSI_SET_HIGH);
+			}
 		} else {
-			vioapic_set_irq(vm, virt_sid->intx_id.pin,
-					GSI_RAISING_PULSE);
+			if (entry->polarity) {
+				vioapic_set_irq(vm, virt_sid->intx_id.pin,
+						GSI_FALLING_PULSE);
+			} else {
+				vioapic_set_irq(vm, virt_sid->intx_id.pin,
+						GSI_RAISING_PULSE);
+			}
 		}
 
 		dev_dbg(ACRN_DBG_PTIRQ,
@@ -460,7 +487,11 @@ void ptdev_intx_ack(struct vm *vm, uint8_t virt_pin,
 	 */
 	switch (vpin_src) {
 	case PTDEV_VPIN_IOAPIC:
-		vioapic_set_irq(vm, virt_pin, GSI_SET_LOW);
+		if (entry->polarity) {
+			vioapic_set_irq(vm, virt_pin, GSI_SET_HIGH);
+		} else {
+			vioapic_set_irq(vm, virt_pin, GSI_SET_LOW);
+		}
 		break;
 	case PTDEV_VPIN_PIC:
 		vpic_set_irq(vm, virt_pin, GSI_SET_LOW);

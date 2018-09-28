@@ -58,6 +58,7 @@ struct ptdev_remapping_info {
 	struct vm *vm;
 	uint32_t active;	/* 1=active, 0=inactive and to free*/
 	uint32_t allocated_pirq;
+	uint32_t polarity; /* 0=active high, 1=active low*/
 	struct list_head softirq_node;
 	struct list_head entry_node;
 	struct ptdev_msi_info msi;
