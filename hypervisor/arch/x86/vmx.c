@@ -7,7 +7,7 @@
 #include <hypervisor.h>
 #include <vm0_boot.h>
 #ifdef CONFIG_EFI_STUB
-extern struct boot_ctx* efi_ctx;
+extern struct efi_context* efi_ctx;
 #endif
 
 #define REAL_MODE_BSP_INIT_CODE_SEL	(0xf000U)
