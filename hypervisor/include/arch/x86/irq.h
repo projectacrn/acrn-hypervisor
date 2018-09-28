@@ -33,6 +33,7 @@
 #define NR_IRQS		256U
 #define IRQ_INVALID		0xffffffffU
 
+#define NR_STATIC_MAPPINGS     (2U)
 #define TIMER_IRQ		(NR_IRQS - 1U)
 #define NOTIFY_IRQ		(NR_IRQS - 2U)
 

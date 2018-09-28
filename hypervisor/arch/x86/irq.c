@@ -17,8 +17,12 @@ static uint32_t vector_to_irq[NR_MAX_VECTOR + 1];
 
 spurious_handler_t spurious_handler;
 
-#define NR_STATIC_MAPPINGS     (2U)
-static uint32_t irq_static_mappings[NR_STATIC_MAPPINGS][2] = {
+struct static_mapping_table {
+	uint32_t irq;
+	uint32_t vector;
+};
+
+static struct static_mapping_table irq_static_mappings[NR_STATIC_MAPPINGS] = {
 	{TIMER_IRQ, VECTOR_TIMER},
 	{NOTIFY_IRQ, VECTOR_NOTIFY_VCPU},
 };
@@ -444,8 +448,8 @@ static void init_irq_descs(void)
 
 	/* init fixed mapping for specific irq and vector */
 	for (i = 0U; i < NR_STATIC_MAPPINGS; i++) {
-		uint32_t irq = irq_static_mappings[i][0];
-		uint32_t vr = irq_static_mappings[i][1];
+		uint32_t irq = irq_static_mappings[i].irq;
+		uint32_t vr = irq_static_mappings[i].vector;
 
 		irq_desc_array[irq].vector = vr;
 		vector_to_irq[vr] = irq;
