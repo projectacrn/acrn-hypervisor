@@ -52,8 +52,8 @@ int uefi_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	vlapic_restore(vcpu_vlapic(vcpu), &uefi_lapic_regs);
 
 	vcpu->entry_addr = (void *)efi_ctx->rip;
-	memcpy_s(&cur_context->guest_cpu_regs, sizeof(struct cpu_gp_regs),
-		 &efi_ctx->gprs, sizeof(struct cpu_gp_regs));
+	memcpy_s(&cur_context->guest_cpu_regs, sizeof(struct acrn_gp_regs),
+		 &efi_ctx->gprs, sizeof(struct acrn_gp_regs));
 
 	/* defer irq enabling till vlapic is ready */
 	CPU_IRQ_ENABLE();

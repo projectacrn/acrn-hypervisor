@@ -44,7 +44,7 @@
  * Definition of the stack frame layout
  */
 struct intr_excp_ctx {
-	struct cpu_gp_regs gp_regs;
+	struct acrn_gp_regs gp_regs;
 	uint64_t vector;
 	uint64_t error_code;
 	uint64_t rip;

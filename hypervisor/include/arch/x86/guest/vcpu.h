@@ -77,7 +77,7 @@ struct run_context {
  * in vmx_asm.S match
  */
 	union {
-		struct cpu_gp_regs regs;
+		struct acrn_gp_regs regs;
 		uint64_t longs[NUM_GPRS];
 	} guest_cpu_regs;
 
