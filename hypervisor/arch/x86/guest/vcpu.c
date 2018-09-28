@@ -489,8 +489,8 @@ int prepare_vcpu(struct vm *vm, uint16_t pcpu_id)
 			vcpu->arch_vcpu.cpu_mode = CPU_MODE_PROTECTED;
 #else
 		if (is_vm0(vcpu->vm)) {
-			struct boot_ctx *vm0_init_ctx =
-				(struct boot_ctx *)(&vm0_boot_context);
+			struct acrn_vcpu_regs *vm0_init_ctx =
+				(struct acrn_vcpu_regs *)(&vm0_boot_context);
 			/* VM0 bsp start mode is decided by the boot context
 			 * setup by bootloader / bios */
 			if ((vm0_init_ctx->ia32_efer & MSR_IA32_EFER_LMA_BIT) &&
