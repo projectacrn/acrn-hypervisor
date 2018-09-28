@@ -133,13 +133,9 @@ static void vuart_toggle_intr(struct acrn_vuart *vu)
 	intr_reason = vuart_intr_reason(vu);
 
 	if (intr_reason != IIR_NOPEND) {
-		vpic_set_irq(vu->vm, COM1_IRQ, GSI_SET_HIGH);
-
-		vioapic_set_irq(vu->vm, COM1_IRQ, GSI_SET_HIGH);
-
-		vpic_set_irq(vu->vm, COM1_IRQ, GSI_SET_LOW);
-
-		vioapic_set_irq(vu->vm, COM1_IRQ, GSI_SET_LOW);
+		/* active low for COM1_IRQ polarity */
+		vpic_set_irq(vu->vm, COM1_IRQ, GSI_FALLING_PULSE);
+		vioapic_set_irq(vu->vm, COM1_IRQ, GSI_FALLING_PULSE);
 	}
 }
 
