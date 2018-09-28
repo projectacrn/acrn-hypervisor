@@ -10,7 +10,7 @@
 /* General-purpose register layout aligned with the general-purpose register idx
  * when vmexit, such as vmexit due to CR access, refer to SMD Vol.3C 27-6.
  */
-struct cpu_gp_regs {
+struct acrn_gp_regs {
 	uint64_t rax;
 	uint64_t rcx;
 	uint64_t rdx;

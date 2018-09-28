@@ -167,7 +167,7 @@
  */
 enum cpu_reg_name {
 	/* General purpose register layout should align with
-	 * struct cpu_gp_regs
+	 * struct acrn_gp_regs
 	 */
 	CPU_REG_RAX,
 	CPU_REG_RCX,

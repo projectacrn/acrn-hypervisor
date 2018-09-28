@@ -69,7 +69,7 @@ struct boot_ctx {
 	uint32_t   cs_ar;
 	uint64_t   ia32_efer;
 #ifdef CONFIG_EFI_STUB
-	struct cpu_gp_regs gprs;
+	struct acrn_gp_regs gprs;
 	uint64_t   rip;
 	uint64_t   rflags;
 	void *rsdp;
