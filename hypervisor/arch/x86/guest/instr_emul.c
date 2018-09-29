@@ -2330,7 +2330,7 @@ int decode_instruction(struct vcpu *vcpu)
 	 * by VMX itself before hit EPT violation.
 	 *
 	 */
-	if (emul_ctxt->vie.op.op_flags & VIE_OP_F_CHECK_GVA_DI) {
+	if ((emul_ctxt->vie.op.op_flags & VIE_OP_F_CHECK_GVA_DI) != 0U) {
 		retval = instr_check_di(vcpu, emul_ctxt);
 		if (retval < 0)
 			return retval;
