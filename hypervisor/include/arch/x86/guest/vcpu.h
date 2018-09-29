@@ -288,6 +288,8 @@ void vcpu_set_pat_ext(struct vcpu *vcpu, uint64_t val);
 void set_vcpu_regs(struct vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs);
 void reset_vcpu_regs(struct vcpu *vcpu);
 void set_ap_entry(struct vcpu *vcpu, uint64_t entry);
+void set_bsp_real_mode_entry(struct vcpu *vcpu);
+void set_bsp_protect_mode_regs(struct vcpu *vcpu);
 
 static inline bool is_long_mode(struct vcpu *vcpu)
 {
