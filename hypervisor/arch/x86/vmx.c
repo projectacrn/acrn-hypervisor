@@ -292,6 +292,18 @@ int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value)
 	return 0;
 }
 
+static void load_pdptrs(struct vcpu *vcpu)
+{
+	uint64_t guest_cr3 = exec_vmread(VMX_GUEST_CR3);
+	/* TODO: check whether guest cr3 is valid */
+	uint64_t *guest_cr3_hva = (uint64_t *)gpa2hva(vcpu->vm, guest_cr3);
+
+	exec_vmwrite64(VMX_GUEST_PDPTE0_FULL, get_pgentry(guest_cr3_hva + 0UL));
+	exec_vmwrite64(VMX_GUEST_PDPTE1_FULL, get_pgentry(guest_cr3_hva + 1UL));
+	exec_vmwrite64(VMX_GUEST_PDPTE2_FULL, get_pgentry(guest_cr3_hva + 2UL));
+	exec_vmwrite64(VMX_GUEST_PDPTE3_FULL, get_pgentry(guest_cr3_hva + 3UL));
+}
+
 static bool is_cr0_write_valid(struct vcpu *vcpu, uint64_t cr0)
 {
 	/* Shouldn't set always off bit */
@@ -348,7 +360,8 @@ void vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 {
 	uint64_t cr0_vmx;
 	uint32_t entry_ctrls;
-	bool paging_enabled = is_paging_enabled(vcpu);
+	bool old_paging_enabled = is_paging_enabled(vcpu);
+	uint64_t cr0_changed_bits = vcpu_get_cr0(vcpu) ^ cr0;
 
 	if (!is_cr0_write_valid(vcpu, cr0)) {
 		pr_dbg("Invalid cr0 write operation from guest");
@@ -360,37 +373,41 @@ void vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 	 * When loading a control register, reserved bit should always set
 	 * to the value previously read.
 	 */
-	cr0 = (cr0 & ~CR0_RESERVED_MASK) |
-		(vcpu_get_cr0(vcpu) & CR0_RESERVED_MASK);
+	cr0 &= ~CR0_RESERVED_MASK;
 
-	if (((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL) &&
-	    !paging_enabled && ((cr0 & CR0_PG) != 0UL)) {
-		/* Enable long mode */
-		pr_dbg("VMM: Enable long mode");
-		entry_ctrls = exec_vmread32(VMX_ENTRY_CONTROLS);
-		entry_ctrls |= VMX_ENTRY_CTLS_IA32E_MODE;
-		exec_vmwrite32(VMX_ENTRY_CONTROLS, entry_ctrls);
+	if (!old_paging_enabled && ((cr0 & CR0_PG) != 0UL)) {
+		if ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL) {
+			/* Enable long mode */
+			pr_dbg("VMM: Enable long mode");
+			entry_ctrls = exec_vmread32(VMX_ENTRY_CONTROLS);
+			entry_ctrls |= VMX_ENTRY_CTLS_IA32E_MODE;
+			exec_vmwrite32(VMX_ENTRY_CONTROLS, entry_ctrls);
 
-		vcpu_set_efer(vcpu,
-			vcpu_get_efer(vcpu) | MSR_IA32_EFER_LMA_BIT);
-	} else if (((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL) &&
-		   paging_enabled && ((cr0 & CR0_PG) == 0UL)){
-		/* Disable long mode */
-		pr_dbg("VMM: Disable long mode");
-		entry_ctrls = exec_vmread32(VMX_ENTRY_CONTROLS);
-		entry_ctrls &= ~VMX_ENTRY_CTLS_IA32E_MODE;
-		exec_vmwrite32(VMX_ENTRY_CONTROLS, entry_ctrls);
+			vcpu_set_efer(vcpu,
+				vcpu_get_efer(vcpu) | MSR_IA32_EFER_LMA_BIT);
+		} else if (is_pae(vcpu)) {
+			/* enabled PAE from paging disabled */
+			load_pdptrs(vcpu);
+		} else {
+		}
+	} else if (old_paging_enabled && ((cr0 & CR0_PG) == 0UL)) {
+		if ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL) {
+			/* Disable long mode */
+			pr_dbg("VMM: Disable long mode");
+			entry_ctrls = exec_vmread32(VMX_ENTRY_CONTROLS);
+			entry_ctrls &= ~VMX_ENTRY_CTLS_IA32E_MODE;
+			exec_vmwrite32(VMX_ENTRY_CONTROLS, entry_ctrls);
 
-		vcpu_set_efer(vcpu,
-			vcpu_get_efer(vcpu) & ~MSR_IA32_EFER_LMA_BIT);
-	} else {
-		/* CR0.PG unchanged. */
+			vcpu_set_efer(vcpu,
+				vcpu_get_efer(vcpu) & ~MSR_IA32_EFER_LMA_BIT);
+		} else {
+		}
 	}
 
-	/* If CR0.CD or CR0.NW get changed */
-	if (((vcpu_get_cr0(vcpu) ^ cr0) & (CR0_CD | CR0_NW)) != 0UL) {
-		/* No action if only CR0.NW is changed */
-		if (((vcpu_get_cr0(vcpu) ^ cr0) & CR0_CD) != 0UL) {
+	/* If CR0.CD or CR0.NW get cr0_changed_bits */
+	if ((cr0_changed_bits & (CR0_CD | CR0_NW)) != 0UL) {
+		/* No action if only CR0.NW is cr0_changed_bits */
+		if ((cr0_changed_bits & CR0_CD) != 0UL) {
 			if ((cr0 & CR0_CD) != 0UL) {
 				/*
 				 * When the guest requests to set CR0.CD, we don't allow
@@ -407,6 +424,10 @@ void vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 			}
 			vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 		}
+	}
+
+	if ((cr0_changed_bits & (CR0_PG | CR0_WP)) != 0UL) {
+		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 	}
 
 	/* CR0 has no always off bits, except the always on bits, and reserved
@@ -426,7 +447,7 @@ void vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 		cr0, cr0_vmx);
 }
 
-static bool is_cr4_write_valid(uint64_t cr4)
+static bool is_cr4_write_valid(struct vcpu *vcpu, uint64_t cr4)
 {
 	/* Check if guest try to set fixed to 0 bits or reserved bits */
 	if ((cr4 & cr4_always_off_mask) != 0U)
@@ -439,6 +460,12 @@ static bool is_cr4_write_valid(uint64_t cr4)
 	/* Do NOT support PCID in guest */
 	if ((cr4 & CR4_PCIDE) != 0UL)
 		return false;
+
+	if (is_long_mode(vcpu)) {
+		if ((cr4 & CR4_PAE) == 0UL) {
+			return false;
+		}
+	}
 
 	return true;
 }
@@ -481,11 +508,22 @@ static bool is_cr4_write_valid(uint64_t cr4)
 void vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 {
 	uint64_t cr4_vmx;
+	uint64_t old_cr4 = vcpu_get_cr4(vcpu);
 
-	if (!is_cr4_write_valid(cr4)) {
+	if (!is_cr4_write_valid(vcpu, cr4)) {
 		pr_dbg("Invalid cr4 write operation from guest");
 		vcpu_inject_gp(vcpu, 0U);
 		return;
+	}
+
+	if (((cr4 ^ old_cr4) & (CR4_PGE | CR4_PSE | CR4_PAE |
+			CR4_SMEP | CR4_SMAP | CR4_PKE)) != 0UL) {
+		if (((cr4 & CR4_PAE) != 0UL) && is_paging_enabled(vcpu) &&
+				(is_long_mode(vcpu))) {
+			load_pdptrs(vcpu);
+		}
+
+		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 	}
 
 	/* Aways off bits and reserved bits has been filtered above */
