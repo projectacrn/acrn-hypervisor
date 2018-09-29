@@ -470,7 +470,8 @@ virtio_input_get_config(struct virtio_input *vi, uint8_t select,
 			cfg->u.string);
 		if (rc >= 0) {
 			cfg->select = VIRTIO_INPUT_CFG_ID_NAME;
-			cfg->size = strlen(cfg->u.string);
+			cfg->size = strnlen(cfg->u.string,
+				sizeof(cfg->u.string));
 			found = true;
 		}
 		break;

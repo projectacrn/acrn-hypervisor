@@ -40,6 +40,7 @@
 #include <assert.h>
 #include <pthread.h>
 #include <termios.h>
+#include <limits.h>
 
 #include "dm.h"
 #include "pci_core.h"
@@ -326,7 +327,7 @@ virtio_console_announce_port(struct virtio_console_port *port)
 
 	event.event = VIRTIO_CONSOLE_PORT_NAME;
 	virtio_console_control_send(port->console, &event, port->name,
-	    strlen(port->name));
+	    strnlen(port->name, NAME_MAX));
 }
 
 static void
