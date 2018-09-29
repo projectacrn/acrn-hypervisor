@@ -27,8 +27,8 @@
  * $FreeBSD$
  */
 
-#ifndef _VUART_H_
-#define	_VUART_H_
+#ifndef VUART_H
+#define VUART_H
 
 #define RX_BUF_SIZE		256U
 #define TX_BUF_SIZE		8192U
@@ -83,6 +83,6 @@ static inline struct acrn_vuart *vuart_console_active(void)
 }
 static inline void vuart_console_tx_chars(__unused struct acrn_vuart *vu) {}
 static inline void vuart_console_rx_chars(__unused struct acrn_vuart *vu) {}
-#endif /*HV_DEBUG*/
+#endif /* HV_DEBUG */
 
-#endif
+#endif /* VUART_H */

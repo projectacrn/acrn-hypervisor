@@ -38,7 +38,7 @@
  */
 
     .extern     cpu_secondary_init
-    .extern     _ld_bss_end
+    .extern     ld_bss_end
     .extern     HOST_GDTR
 
     .section     .trampoline_reset,"ax"

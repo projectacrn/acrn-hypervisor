@@ -56,7 +56,7 @@ static int split_large_page(uint64_t *pte,
 	return 0;
 }
 
-static inline void __modify_or_del_pte(uint64_t *pte,
+static inline void local_modify_or_del_pte(uint64_t *pte,
 		uint64_t prot_set, uint64_t prot_clr, uint32_t type)
 {
 	if (type == MR_MODIFY) {
@@ -111,7 +111,7 @@ static int modify_or_del_pte(uint64_t *pde,
 			return -EFAULT;
 		}
 
-		__modify_or_del_pte(pte, prot_set, prot_clr, type);
+		local_modify_or_del_pte(pte, prot_set, prot_clr, type);
 		vaddr += PTE_SIZE;
 		if (vaddr >= vaddr_end) {
 			break;
@@ -156,7 +156,7 @@ static int modify_or_del_pde(uint64_t *pdpte,
 					return ret;
 				}
 			} else {
-				__modify_or_del_pte(pde,
+				local_modify_or_del_pte(pde,
 					prot_set, prot_clr, type);
 				if (vaddr_next < vaddr_end) {
 					vaddr = vaddr_next;
@@ -211,7 +211,7 @@ static int modify_or_del_pdpte(uint64_t *pml4e,
 					return ret;
 				}
 			} else {
-				__modify_or_del_pte(pdpte,
+				local_modify_or_del_pte(pdpte,
 					prot_set, prot_clr, type);
 				if (vaddr_next < vaddr_end) {
 					vaddr = vaddr_next;

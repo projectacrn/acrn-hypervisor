@@ -27,8 +27,8 @@
  * $FreeBSD$
  */
 
-#ifndef _VLAPIC_PRIV_H_
-#define	_VLAPIC_PRIV_H_
+#ifndef VLAPIC_PRIV_H
+#define VLAPIC_PRIV_H
 
 /*
  * APIC Register:		Offset	Description
@@ -82,4 +82,4 @@
 #define APIC_OFFSET_TIMER_DCR	0x3E0U	/* Timer's Divide Configuration	*/
 
 
-#endif	/* _VLAPIC_PRIV_H_ */
+#endif /* VLAPIC_PRIV_H */

@@ -27,8 +27,8 @@
  * $FreeBSD$
  */
 
-#ifndef _VLAPIC_H_
-#define	_VLAPIC_H_
+#ifndef VLAPIC_H
+#define VLAPIC_H
 
 /*
  * 16 priority levels with at most one vector injected per level.
@@ -186,4 +186,4 @@ int apic_write_vmexit_handler(struct vcpu *vcpu);
 int veoi_vmexit_handler(struct vcpu *vcpu);
 int tpr_below_threshold_vmexit_handler(__unused struct vcpu *vcpu);
 void calcvdest(struct vm *vm, uint64_t *dmask, uint32_t dest, bool phys);
-#endif	/* _VLAPIC_H_ */
+#endif /* VLAPIC_H */

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef __MEM_MGT_H__
-#define __MEM_MGT_H__
+#ifndef MEM_MGT_H
+#define MEM_MGT_H
 
 /* Macros */
 #define BITMAP_WORD_SIZE         32U
@@ -28,4 +28,4 @@ void *alloc_page(void);
 void *alloc_pages(unsigned int page_num);
 void free(void *ptr);
 
-#endif /* MEM_MGT_H_ */
+#endif /* MEM_MGT_H */

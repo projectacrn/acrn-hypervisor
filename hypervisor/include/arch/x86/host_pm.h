@@ -11,10 +11,9 @@
 
 extern uint8_t host_enter_s3_success;
 
-int enter_s3(struct vm *vm, uint32_t pm1a_cnt_val,
-		uint32_t pm1b_cnt_val);
-extern void __enter_s3(struct vm *vm, uint32_t pm1a_cnt_val,
+int enter_s3(struct vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val);
+extern void asm_enter_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 		uint32_t pm1b_cnt_val);
 extern void restore_s3_context(void);
 
-#endif	/* ARCH_X86_PM_H */
+#endif	/* HOST_PM_H */

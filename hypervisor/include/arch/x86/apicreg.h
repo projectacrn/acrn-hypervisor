@@ -26,8 +26,8 @@
  * $FreeBSD$
  */
 
-#ifndef _APICREG_H_
-#define _APICREG_H_
+#ifndef APICREG_H
+#define APICREG_H
 
 /*
  * Local && I/O APIC definitions.
@@ -432,4 +432,4 @@ union ioapic_rte {
 
 #define IOAPIC_RTE_INTVEC	0x000000ffUL /*R/W: INT vector field*/
 
-#endif /* _APICREG_H_ */
+#endif /* APICREG_H */

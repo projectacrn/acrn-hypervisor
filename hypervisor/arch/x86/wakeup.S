@@ -30,8 +30,8 @@
    .extern    do_acpi_s3
    .extern    trampoline_spinlock
 
-   .global    __enter_s3
-__enter_s3:
+   .global    asm_enter_s3
+asm_enter_s3:
 	/*
 	 * 0U=0x0=CPU_CONTEXT_OFFSET_RAX
 	 * 8U=0x8=CPU_CONTEXT_OFFSET_RCX

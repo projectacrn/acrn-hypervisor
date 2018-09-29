@@ -27,8 +27,8 @@
  * $FreeBSD$
  */
 
-#ifndef _VPIC_H_
-#define	_VPIC_H_
+#ifndef VPIC_H
+#define VPIC_H
 
 #define	ICU_IMR_OFFSET	1U
 
@@ -129,4 +129,4 @@ void vpic_get_irq_trigger(struct vm *vm, uint32_t irq,
 	enum vpic_trigger *trigger);
 uint32_t vpic_pincount(void);
 
-#endif	/* _VPIC_H_ */
+#endif /* VPIC_H */

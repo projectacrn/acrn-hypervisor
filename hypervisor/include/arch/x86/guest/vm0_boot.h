@@ -26,7 +26,6 @@
 #define BOOT_CTX_EFER_HIGH_OFFSET   204
 #define SIZE_OF_BOOT_CTX            296
 #else
-#include <gpr.h>
 #define BOOT_CTX_CR0_OFFSET         176U
 #define BOOT_CTX_CR3_OFFSET         192U
 #define BOOT_CTX_CR4_OFFSET         184U
