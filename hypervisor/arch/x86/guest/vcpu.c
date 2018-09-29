@@ -321,7 +321,7 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 
 static void set_vcpu_mode(struct vcpu *vcpu, uint32_t cs_attr)
 {
-	if (vcpu_get_efer(vcpu) & MSR_IA32_EFER_LMA_BIT) {
+	if (is_long_mode(vcpu)) {
 		if (cs_attr & 0x2000)		/* CS.L = 1 */
 			vcpu->arch_vcpu.cpu_mode = CPU_MODE_64BIT;
 		else

@@ -59,10 +59,10 @@ enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 		return PAGING_MODE_0_LEVEL;
 	}
 	else if (cpu_mode == CPU_MODE_PROTECTED) {
-		if ((vcpu_get_cr4(vcpu) & CR4_PAE) != 0U) {
+		if (is_pae(vcpu)) {
 			return PAGING_MODE_3_LEVEL;
 		}
-		else if ((vcpu_get_cr0(vcpu) & CR0_PG) != 0U) {
+		else if (is_paging_enabled(vcpu)) {
 			return PAGING_MODE_2_LEVEL;
 		}
 		return PAGING_MODE_0_LEVEL;

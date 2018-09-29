@@ -305,7 +305,7 @@ static bool is_cr0_write_valid(struct vcpu *vcpu, uint64_t cr0)
 	 * CR0.PG = 1, CR4.PAE = 0 and IA32_EFER.LME = 1 is invalid.
 	 * CR0.PE = 0 and CR0.PG = 1 is invalid.
 	 */
-	if (((cr0 & CR0_PG) != 0UL) && ((vcpu_get_cr4(vcpu) & CR4_PAE) == 0UL)
+	if (((cr0 & CR0_PG) != 0UL) && !is_pae(vcpu)
 		&& ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL))
 		return false;
 
@@ -348,7 +348,7 @@ void vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 {
 	uint64_t cr0_vmx;
 	uint32_t entry_ctrls;
-	bool paging_enabled = !!(vcpu_get_cr0(vcpu) & CR0_PG);
+	bool paging_enabled = is_paging_enabled(vcpu);
 
 	if (!is_cr0_write_valid(vcpu, cr0)) {
 		pr_dbg("Invalid cr0 write operation from guest");

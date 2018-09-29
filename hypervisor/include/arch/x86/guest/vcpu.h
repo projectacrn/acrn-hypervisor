@@ -287,6 +287,21 @@ uint64_t vcpu_get_pat_ext(struct vcpu *vcpu);
 void vcpu_set_pat_ext(struct vcpu *vcpu, uint64_t val);
 void set_vcpu_regs(struct vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs);
 
+static inline bool is_long_mode(struct vcpu *vcpu)
+{
+	return (vcpu_get_efer(vcpu) & MSR_IA32_EFER_LMA_BIT) != 0UL;
+}
+
+static inline bool is_paging_enabled(struct vcpu *vcpu)
+{
+	return (vcpu_get_cr0(vcpu) & CR0_PG) != 0UL;
+}
+
+static inline bool is_pae(struct vcpu *vcpu)
+{
+	return (vcpu_get_cr4(vcpu) & CR4_PAE) != 0UL;
+}
+
 struct vcpu* get_ever_run_vcpu(uint16_t pcpu_id);
 int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle);
 int run_vcpu(struct vcpu *vcpu);
