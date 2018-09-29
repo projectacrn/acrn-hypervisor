@@ -163,6 +163,72 @@ struct vcpu *get_ever_run_vcpu(uint16_t pcpu_id)
 	return per_cpu(ever_run_vcpu, pcpu_id);
 }
 
+void set_vcpu_regs(struct vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs)
+{
+	struct ext_context *ectx;
+	struct run_context *ctx;
+	uint16_t *sel = &(vcpu_regs->cs_sel);
+	struct segment_sel *seg;
+	uint32_t limit, attr;
+
+	ectx = &(vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ext_ctx);
+	ctx = &(vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx);
+
+	if (vcpu_regs->cs_ar & (1U << 15U)) {
+		limit = 0xFFFFFFFFU;
+	} else {
+		limit = 0xFFFFU;
+	}
+
+	if (vcpu_regs->cr0 & CR0_PE) {
+		attr = PROTECTED_MODE_DATA_SEG_AR;
+	} else {
+		attr = REAL_MODE_DATA_SEG_AR;
+	}
+
+	for (seg = &(ectx->cs); seg <= &(ectx->gs); seg++) {
+		seg->base     = 0UL;
+		seg->limit    = limit;
+		seg->attr     = attr;
+		seg->selector = *sel;
+		sel++;
+	}
+
+	/* override cs attr/base */
+	ectx->cs.attr = vcpu_regs->cs_ar;
+	ectx->cs.base = vcpu_regs->cs_base;
+
+	ectx->gdtr.base = vcpu_regs->gdt.base;
+	ectx->gdtr.limit = vcpu_regs->gdt.limit;
+
+	ectx->idtr.base = vcpu_regs->idt.base;
+	ectx->idtr.limit = vcpu_regs->idt.limit;
+
+	ectx->ldtr.selector = vcpu_regs->ldt_sel;
+	ectx->tr.selector = vcpu_regs->tr_sel;
+
+	memcpy_s(&(ctx->guest_cpu_regs), sizeof(struct acrn_gp_regs),
+			&(vcpu_regs->gprs), sizeof(struct acrn_gp_regs));
+
+	vcpu_set_rip(vcpu, vcpu_regs->rip);
+	vcpu_set_efer(vcpu, vcpu_regs->ia32_efer);
+	vcpu_set_rsp(vcpu, vcpu_regs->gprs.rsp);
+
+	if (vcpu_regs->rflags == 0UL) {
+		vcpu_set_rflags(vcpu, 0x02UL);
+	} else {
+		vcpu_set_rflags(vcpu, vcpu_regs->rflags & ~(0x8d5UL));
+	}
+
+	/* cr0, cr3 and cr4 needs be set without using API.
+	 * The real cr0/cr3/cr4 writing will be delayed to
+	 * init_vmcs
+	 */
+	ctx->cr0 = vcpu_regs->cr0;
+	ectx->cr3 = vcpu_regs->cr3;
+	ctx->cr4 = vcpu_regs->cr4;
+}
+
 /***********************************************************************
  *  vcpu_id/pcpu_id mapping table:
  *
