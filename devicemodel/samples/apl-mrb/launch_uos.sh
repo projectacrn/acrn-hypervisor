@@ -89,7 +89,9 @@ echo "0000:00:1b.0" > /sys/bus/pci/drivers/pci-stub/bind
 
 #for memsize setting
 memsize=`cat /proc/meminfo|head -n 1|awk '{print $2}'`
-if [ $memsize -gt 4000000 ];then
+if [ $memsize -gt 8000000 ];then
+    mem_size=6G
+elif [ $memsize -gt 4000000 ];then
     mem_size=2048M
 else
     mem_size=1750M
@@ -249,7 +251,9 @@ fi
 
 #for memsize setting
 memsize=`cat /proc/meminfo|head -n 1|awk '{print $2}'`
-if [ $memsize -gt 4000000 ];then
+if [ $memsize -gt 8000000 ];then
+    mem_size=6G
+elif [ $memsize -gt 4000000 ];then
     mem_size=2048M
 else
     mem_size=1750M
