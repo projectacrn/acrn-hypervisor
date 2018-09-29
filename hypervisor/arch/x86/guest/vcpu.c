@@ -252,6 +252,17 @@ void reset_vcpu_regs(struct vcpu *vcpu)
 	set_vcpu_regs(vcpu, &realmode_init_regs);
 }
 
+void set_ap_entry(struct vcpu *vcpu, uint64_t entry)
+{
+	struct ext_context *ectx;
+
+	ectx = &(vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ext_ctx);
+	ectx->cs.selector = (uint16_t)((entry >> 4UL) & 0xFFFFU);
+	ectx->cs.base = ectx->cs.selector << 4UL;
+
+	vcpu_set_rip(vcpu, 0UL);
+}
+
 /***********************************************************************
  *
  *  @pre vm != NULL && rtn_vcpu_handle != NULL
