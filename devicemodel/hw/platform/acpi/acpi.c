@@ -278,7 +278,7 @@ basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 	EFPRINTF(fp, "[0001]\t\tSource : %02X\n", SCI_INT);
 	EFPRINTF(fp, "[0004]\t\tInterrupt : %08X\n", SCI_INT);
 	EFPRINTF(fp, "[0002]\t\tFlags (decoded below) : 0000\n");
-	EFPRINTF(fp, "\t\t\tPolarity : 3\n");
+	EFPRINTF(fp, "\t\t\tPolarity : 1\n");
 	EFPRINTF(fp, "\t\t\tTrigger Mode : 3\n");
 	EFPRINTF(fp, "\n");
 
