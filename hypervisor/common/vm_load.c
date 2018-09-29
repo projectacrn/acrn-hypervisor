@@ -138,6 +138,8 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	}
 #endif
 
+	set_vcpu_regs(vcpu, (struct acrn_vcpu_regs *)&vm0_boot_context);
+
 	/* calculate the kernel entry point */
 	zeropage = (struct zero_page *)sw_kernel->kernel_src_addr;
 	kernel_entry_offset = (uint32_t)(zeropage->hdr.setup_sects + 1U) * 512U;
@@ -151,9 +153,10 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 			+ kernel_entry_offset);
 	if (is_vcpu_bsp(vcpu)) {
 		/* Set VCPU entry point to kernel entry */
-		vcpu->entry_addr = sw_kernel->kernel_entry_addr;
+		vcpu_set_rip(vcpu, (uint64_t)sw_kernel->kernel_entry_addr);
 		pr_info("%s, VM %hu VCPU %hu Entry: 0x%016llx ",
-			__func__, vm->vm_id, vcpu->vcpu_id, vcpu->entry_addr);
+			__func__, vm->vm_id, vcpu->vcpu_id,
+			sw_kernel->kernel_entry_addr);
 	}
 
 	/* Calculate the host-physical address where the guest will be loaded */
