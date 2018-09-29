@@ -68,7 +68,7 @@ uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 	void *eptp;
 	struct vcpu *vcpu = vcpu_from_pid(vm, get_cpu_id());
 
-	if (vcpu && (vcpu->arch_vcpu.cur_context == SECURE_WORLD)) {
+	if ((vcpu != NULL) && (vcpu->arch_vcpu.cur_context == SECURE_WORLD)) {
 		eptp = vm->arch_vm.sworld_eptp;
 	} else {
 		eptp = vm->arch_vm.nworld_eptp;

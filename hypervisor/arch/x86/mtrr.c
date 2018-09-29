@@ -65,7 +65,7 @@ get_subrange_start_of_fixed_mtrr(uint32_t index, uint32_t subrange_id)
 
 static inline bool is_mtrr_enabled(struct vcpu *vcpu)
 {
-	return vcpu->mtrr.def_type.bits.enable;
+	return (vcpu->mtrr.def_type.bits.enable != 0U);
 }
 
 static inline bool is_fixed_range_mtrr_enabled(struct vcpu *vcpu)

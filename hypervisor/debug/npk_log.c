@@ -5,7 +5,8 @@
 
 #include <hypervisor.h>
 
-static int32_t npk_log_enabled, npk_log_setup_ref;
+static int32_t npk_log_setup_ref;
+static bool npk_log_enabled;
 static uint64_t base;
 
 static inline int npk_write(const char *value, void *addr, size_t sz)
@@ -42,15 +43,15 @@ void npk_log_setup(struct hv_npk_log_param *param)
 
 	switch (param->cmd) {
 	case HV_NPK_LOG_CMD_CONF:
-		if (param->mmio_addr || param->loglevel != 0xffffU)
+		if ((param->mmio_addr != 0UL) || (param->loglevel != 0xffffU))
 			param->res = HV_NPK_LOG_RES_OK;
 		/* falls through */
 	case HV_NPK_LOG_CMD_ENABLE:
-		if (param->mmio_addr)
+		if (param->mmio_addr != 0UL)
 			base = param->mmio_addr;
 		if (param->loglevel != 0xffffU)
 			npk_loglevel = param->loglevel;
-		if (base && param->cmd == HV_NPK_LOG_CMD_ENABLE) {
+		if ((base != 0UL) && (param->cmd == HV_NPK_LOG_CMD_ENABLE)) {
 			if (!npk_log_enabled)
 				for (i = 0; i < phys_cpu_num; i++)
 					per_cpu(npk_log_ref, i) = 0;
@@ -87,7 +88,7 @@ void npk_log_write(const char *buf, size_t buf_len)
 	uint32_t ref;
 	uint16_t len;
 
-	if (!npk_log_enabled || !channel)
+	if (!npk_log_enabled || (channel == NULL))
 		return;
 
 	/* calculate the channel offset based on cpu_id and npk_log_ref */

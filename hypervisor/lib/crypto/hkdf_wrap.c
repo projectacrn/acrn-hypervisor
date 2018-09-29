@@ -15,7 +15,7 @@ int hkdf_sha256(uint8_t *out_key, size_t out_len,
 	const mbedtls_md_info_t *md;
 
 	md = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
-	if (!md) {
+	if (md == NULL) {
 		return 0;
 	}
 
