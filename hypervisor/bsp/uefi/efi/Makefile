@@ -61,6 +61,7 @@ LDSCRIPT := $(GNUEFI_DIR)/elf_$(ARCH)_efi.lds
 INCDIR := $(SYSROOT)/usr/include
 
 CFLAGS=-I. -I.. -I../../../include/arch/x86/guest -I$(INCDIR)/efi -I$(INCDIR)/efi/$(ARCH) \
+		-I../../../include/public -I../../../include/lib \
 		-DEFI_FUNCTION_WRAPPER -fPIC -fshort-wchar -ffreestanding \
 		-Wall -I../fs/ -D$(ARCH) -O2 \
 		-include config.h

@@ -248,6 +248,68 @@ struct acrn_create_vcpu {
 	uint16_t pcpu_id;
 } __aligned(8);
 
+/* General-purpose register layout aligned with the general-purpose register idx
+ * when vmexit, such as vmexit due to CR access, refer to SMD Vol.3C 27-6.
+ */
+struct acrn_gp_regs {
+	uint64_t rax;
+	uint64_t rcx;
+	uint64_t rdx;
+	uint64_t rbx;
+	uint64_t rsp;
+	uint64_t rbp;
+	uint64_t rsi;
+	uint64_t rdi;
+	uint64_t r8;
+	uint64_t r9;
+	uint64_t r10;
+	uint64_t r11;
+	uint64_t r12;
+	uint64_t r13;
+	uint64_t r14;
+	uint64_t r15;
+};
+
+/* struct to define how the descriptor stored in memory.
+ * Refer SDM Vol3 3.5.1 "Segment Descriptor Tables"
+ * Figure 3-11
+ */
+struct acrn_descriptor_ptr {
+	uint16_t limit;
+	uint64_t base;
+	uint16_t reserved[3];   /* align struct size to 64bit */
+} __attribute__((packed));
+
+struct acrn_vcpu_regs {
+	struct acrn_gp_regs gprs;
+	struct acrn_descriptor_ptr gdt;
+	struct acrn_descriptor_ptr idt;
+
+	uint64_t        rip;
+	uint64_t        cs_base;
+	uint64_t        cr0;
+	uint64_t        cr4;
+	uint64_t        cr3;
+	uint64_t        ia32_efer;
+	uint64_t        rflags;
+	uint64_t        reserved_64[4];
+
+	uint32_t        cs_ar;
+	uint32_t        reserved_32[4];
+
+	/* don't change the order of following sel */
+	uint16_t        cs_sel;
+	uint16_t        ss_sel;
+	uint16_t        ds_sel;
+	uint16_t        es_sel;
+	uint16_t        fs_sel;
+	uint16_t        gs_sel;
+	uint16_t        ldt_sel;
+	uint16_t        tr_sel;
+
+	uint16_t        reserved_16[4];
+};
+
 /**
  * @brief Info to set ioreq buffer for a created VM
  *
