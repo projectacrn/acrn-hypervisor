@@ -85,7 +85,8 @@ static int usercrashd_connect(int pid, int *usercrashd_socket,
 		LOGE("crash process name is NULL\n");
 		return -1;
 	}
-	sockfd = socket_local_client(SOCKET_NAME, SOCK_SEQPACKET);
+	sockfd = socket_local_client(SOCKET_NAME, strlen(SOCKET_NAME),
+			SOCK_SEQPACKET);
 	if (sockfd == -1) {
 		LOGE("failed to connect to usercrashd, error (%s)\n",
 			strerror(errno));
@@ -212,8 +213,8 @@ int main(int argc, char *argv[])
 
 	if (argc == 4) {
 		/* it's from coredump */
-		pid = atoi(argv[1]);
-		sig = atoi(argv[3]);
+		pid = (int)strtol(argv[1], NULL, 10);
+		sig = (int)strtol(argv[3], NULL, 10);
 		ret = usercrashd_connect(pid, &sock, &out_fd, argv[2]);
 		if (ret) {
 			LOGE("usercrashd_connect failed, error (%s)\n",
