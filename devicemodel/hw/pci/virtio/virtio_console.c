@@ -148,7 +148,6 @@ static void virtio_console_reset(void *);
 static void virtio_console_notify_rx(void *, struct virtio_vq_info *);
 static void virtio_console_notify_tx(void *, struct virtio_vq_info *);
 static int virtio_console_cfgread(void *, int, int, uint32_t *);
-static int virtio_console_cfgwrite(void *, int, int, uint32_t);
 static void virtio_console_neg_features(void *, uint64_t);
 static void virtio_console_control_send(struct virtio_console *,
 	struct virtio_console_control *, const void *, size_t);
@@ -162,7 +161,7 @@ static struct virtio_ops virtio_console_ops = {
 	virtio_console_reset,		/* reset */
 	NULL,				/* device-wide qnotify */
 	virtio_console_cfgread,		/* read virtio config */
-	virtio_console_cfgwrite,	/* write virtio config */
+	NULL,				/* write virtio config */
 	virtio_console_neg_features,	/* apply negotiated features */
 	NULL,				/* called on guest set status */
 };
@@ -204,12 +203,6 @@ virtio_console_cfgread(void *vdev, int offset, int size, uint32_t *retval)
 
 	ptr = (uint8_t *)console->config + offset;
 	memcpy(retval, ptr, size);
-	return 0;
-}
-
-static int
-virtio_console_cfgwrite(void *vdev, int offset, int size, uint32_t val)
-{
 	return 0;
 }
 
