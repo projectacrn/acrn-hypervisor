@@ -1,6 +1,14 @@
 #!/bin/bash
 
+
+kernel_version=$(uname -r | awk -F. '{ printf("%d.%d", $1,$2) }')
+
 ipu_passthrough=0
+
+# this is the temporal solution before IPU is ready on 4.19
+if [ "$kernel_version" = "4.19" ]; then
+ipu_passthrough=1
+fi
 
 function launch_clearlinux()
 {
