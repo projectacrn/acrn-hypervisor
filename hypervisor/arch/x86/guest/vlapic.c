@@ -1207,11 +1207,11 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 				continue;
 			}
 
-			target_vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
-			target_vcpu->arch_vcpu.sipi_vector = vec;
 			pr_err("Start Secondary VCPU%hu for VM[%d]...",
 					target_vcpu->vcpu_id,
 					target_vcpu->vm->vm_id);
+			target_vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
+			set_ap_entry(target_vcpu, vec << 12U);
 			schedule_vcpu(target_vcpu);
 		} else if (mode == APIC_DELMODE_SMI) {
 			pr_info("vlapic: SMI IPI do not support\n");

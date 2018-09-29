@@ -374,10 +374,14 @@ void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec)
 	vm->state = VM_STARTED;
 
 	reset_vcpu(bsp);
-	bsp->entry_addr = (void *)(uint64_t)wakeup_vec;
-	bsp->arch_vcpu.cpu_mode = CPU_MODE_REAL;
-	init_vmcs(bsp);
 
+	/* When SOS resume from S3, it will return to real mode
+	 * with entry set to wakeup_vec.
+	 */
+	bsp->arch_vcpu.cpu_mode = CPU_MODE_REAL;
+	set_ap_entry(bsp, wakeup_vec);
+
+	init_vmcs(bsp);
 	schedule_vcpu(bsp);
 }
 
