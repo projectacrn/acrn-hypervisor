@@ -286,6 +286,7 @@ void vcpu_set_cr4(struct vcpu *vcpu, uint64_t val);
 uint64_t vcpu_get_pat_ext(struct vcpu *vcpu);
 void vcpu_set_pat_ext(struct vcpu *vcpu, uint64_t val);
 void set_vcpu_regs(struct vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs);
+void reset_vcpu_regs(struct vcpu *vcpu);
 
 static inline bool is_long_mode(struct vcpu *vcpu)
 {
