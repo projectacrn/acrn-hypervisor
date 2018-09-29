@@ -545,84 +545,6 @@ void vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 		cr4, cr4_vmx);
 }
 
-static void init_guest_context_real(struct vcpu *vcpu)
-{
-	struct ext_context *ectx =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ext_ctx;
-	struct segment_sel *seg;
-
-	/* cs, ss, ds, es, fs, gs; cs will be override later. */
-	for (seg = &(ectx->cs); seg <= &(ectx->gs); seg++) {
-		seg->selector = 0U;
-		seg->base = 0UL;
-		seg->limit = 0xFFFFU;
-		seg->attr = REAL_MODE_DATA_SEG_AR;
-	}
-
-	if (is_vcpu_bsp(vcpu)) {
-		/* There are two cases that we will start bsp in real
-		 * mode:
-		 * 1. UOS start
-		 * 2. SOS resume from S3
-		 *
-		 * For 1, DM will set correct entry_addr.
-		 * For 2, SOS resume caller will set entry_addr to
-		 *        SOS wakeup vec. According to ACPI FACS spec,
-		 *        wakeup vec should be < 1MB. So we use < 1MB
-		 *        to detect whether it's resume from S3 and we
-		 *        setup CS:IP to
-		 *        (wakeup_vec >> 4):(wakeup_vec & 0x000F)
-		 *        if it's resume from S3.
-		 *
-		 */
-		if ((uint64_t)vcpu->entry_addr < 0x100000UL) {
-			ectx->cs.selector = (uint16_t)
-				(((uint64_t)vcpu->entry_addr & 0xFFFF0UL) >> 4U);
-			ectx->cs.base = (uint64_t)ectx->cs.selector << 4U;
-			vcpu_set_rip(vcpu, (uint64_t)vcpu->entry_addr & 0x0FUL);
-		} else {
-			/* BSP is initialized with real mode */
-			ectx->cs.selector = REAL_MODE_BSP_INIT_CODE_SEL;
-			/* For unrestricted guest, it is able
-			 * to set a high base address
-			 */
-			ectx->cs.base = (uint64_t)vcpu->entry_addr & 0xFFFF0000UL;
-			vcpu_set_rip(vcpu, 0x0000FFF0UL);
-		}
-	} else {
-		/* AP is initialized with real mode
-		 * and CS value is left shift 8 bits from sipi vector.
-		 */
-		ectx->cs.selector = (uint16_t)(vcpu->arch_vcpu.sipi_vector << 8U);
-		ectx->cs.base = (uint64_t)ectx->cs.selector << 4U;
-	}
-	ectx->cs.attr = REAL_MODE_CODE_SEG_AR;
-
-	ectx->gdtr.base = 0UL;
-	ectx->gdtr.limit = 0xFFFFU;
-	ectx->idtr.base = 0UL;
-	ectx->idtr.limit = 0xFFFFU;
-}
-
-/* only be called for UOS when bsp start from protected mode */
-static void init_guest_context_protect(struct vcpu *vcpu)
-{
-	struct ext_context *ectx =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ext_ctx;
-	struct segment_sel *seg;
-
-	ectx->gdtr.base = create_guest_init_gdt(vcpu->vm, &ectx->gdtr.limit);
-	for (seg = &(ectx->cs); seg <= &(ectx->gs); seg++) {
-		seg->base = 0UL;
-		seg->limit = 0xFFFFFFFFU;
-		seg->attr = PROTECTED_MODE_DATA_SEG_AR;
-		seg->selector = 0x18U;
-	}
-	ectx->cs.attr = PROTECTED_MODE_CODE_SEG_AR;
-	ectx->cs.selector = 0x10U; /* Linear code segment */
-	vcpu_set_rip(vcpu, (uint64_t)vcpu->entry_addr);
-}
-
 /* rip, rsp, ia32_efer and rflags are written to VMCS in start_vcpu */
 static void init_guest_vmx(struct vcpu *vcpu, uint64_t cr0, uint64_t cr3,
 	uint64_t cr4)
@@ -673,32 +595,9 @@ static void init_guest_state(struct vcpu *vcpu)
 {
 	struct cpu_context *ctx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-	struct acrn_vcpu_regs* init_ctx = &vm0_boot_context;
-	enum vm_cpu_mode vcpu_mode = get_vcpu_mode(vcpu);
 
-	vcpu_set_rflags(vcpu, 0x2UL); /* Bit 1 is a active high reserved bit */
-
-	/* ldtr */
-	ctx->ext_ctx.ldtr.selector = 0U;
-	ctx->ext_ctx.ldtr.base = 0UL;
-	ctx->ext_ctx.ldtr.limit = 0xFFFFU;
-	ctx->ext_ctx.ldtr.attr = LDTR_AR;
-	/* tr */
-	ctx->ext_ctx.tr.selector = 0U;
-	ctx->ext_ctx.tr.base = 0UL;
-	ctx->ext_ctx.tr.limit = 0xFFFFU;
-	ctx->ext_ctx.tr.attr = TR_AR;
-
-	if (vcpu_mode == CPU_MODE_REAL) {
-		init_guest_context_real(vcpu);
-		init_guest_vmx(vcpu, CR0_ET | CR0_NE, 0UL, 0UL);
-	} else if (is_vm0(vcpu->vm) && is_vcpu_bsp(vcpu)) {
-		init_guest_vmx(vcpu, init_ctx->cr0, init_ctx->cr3,
-			       init_ctx->cr4 & ~CR4_VMXE);
-	} else {
-		init_guest_context_protect(vcpu);
-		init_guest_vmx(vcpu, CR0_ET | CR0_NE | CR0_PE, 0UL, 0UL);
-	}
+	init_guest_vmx(vcpu, ctx->run_ctx.cr0, ctx->ext_ctx.cr3,
+			ctx->run_ctx.cr4 & ~CR4_VMXE);
 }
 
 static void init_host_state(void)

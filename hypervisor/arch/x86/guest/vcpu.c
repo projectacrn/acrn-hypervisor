@@ -207,6 +207,18 @@ void set_vcpu_regs(struct vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs)
 	ectx->ldtr.selector = vcpu_regs->ldt_sel;
 	ectx->tr.selector = vcpu_regs->tr_sel;
 
+	/* NOTE:
+	 * This is to set the ldtr and tr to default value.
+	 * If the set_vcpu_regs is used not only for vcpu state
+	 * initialization, this part of code needs be revised.
+	 */
+	ectx->ldtr.base = 0UL;
+	ectx->tr.base = 0UL;
+	ectx->ldtr.limit = 0xFFFFU;
+	ectx->tr.limit = 0xFFFFU;
+	ectx->ldtr.attr = LDTR_AR;
+	ectx->tr.attr = TR_AR;
+
 	memcpy_s(&(ctx->guest_cpu_regs), sizeof(struct acrn_gp_regs),
 			&(vcpu_regs->gprs), sizeof(struct acrn_gp_regs));
 

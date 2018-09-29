@@ -194,7 +194,6 @@ struct vcpu_arch {
 	/* Information related to secondary / AP VCPU start-up */
 	enum vm_cpu_mode cpu_mode;
 	uint8_t nr_sipi;
-	uint32_t sipi_vector;
 
 	/* interrupt injection information */
 	uint64_t pending_req;
