@@ -24,27 +24,29 @@
 #define DUMP_FILE "/tmp/core"
 #define BUFFER_SIZE 8196
 #define LINK_LEN 512
+#define TID "Tgid:"
 /* 128 means the length of the DUMP_FILE */
 #define FORMAT_LENGTH (LINK_LEN + 128)
 
 static void loginfo(int fd, const char *fmt, ...)
 {
-	char buf[512];
+	char *buf;
 	va_list ap;
-	size_t len, ret;
+	int len, ret;
 
 	va_start(ap, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, ap);
-	va_end(ap);
-
-	len = strlen(buf);
-	if (len <= 0)
+	len = vasprintf(&buf, fmt, ap);
+	if (len == -1) {
+		LOGE("write to buf failed\n");
 		return;
+	}
+	va_end(ap);
 
 	ret = write(fd, buf, len);
 	if (ret != len) {
 		LOGE("write in loginfo failed\n");
 	}
+	free(buf);
 }
 
 static const char *get_signame(int sig)
@@ -249,7 +251,7 @@ static int save_usercrash_file(int pid, int tgid, const char *comm,
 }
 
 static int get_key_value(int pid, const char *path, const char *key,
-		char *value, size_t value_len)
+		const size_t klen, char *value, const size_t value_len)
 {
 	int len;
 	int ret;
@@ -276,7 +278,7 @@ static int get_key_value(int pid, const char *path, const char *key,
 	end = strchr(msg, '\n');
 	if (end == NULL)
 		end = data + size;
-	start = msg + strlen(key);
+	start = msg + klen;
 	len = end - start;
 	if (len >= (int)value_len) {
 		free(data);
@@ -312,12 +314,13 @@ void crash_dump(int pid, int sig, int out_fd)
 	}
 	comm[ret] = '\0';
 
-	ret = get_key_value(pid, GET_TID, "Tgid:", result, sizeof(result));
+	ret = get_key_value(pid, GET_TID, TID, strlen(TID),
+			result, sizeof(result));
 	if (ret) {
 		LOGE("get Tgid error\n");
 		return;
 	}
-	tgid = atoi(result);
+	tgid = (int)strtol(result, NULL, 10);
 	if (!sig)
 		sig = DEBUGGER_SIGNAL;
 	if (save_usercrash_file(pid, tgid, comm, sig, out_fd))

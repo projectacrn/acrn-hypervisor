@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 
 	if (argc == 2) {
 		/* it's from shell cmd */
-		pid = atoi(argv[1]);
+		pid = (int)strtol(argv[1], NULL, 10);
 		crash_dump(pid, 0, STDOUT_FILENO);
 	} else {
 		print_usage();

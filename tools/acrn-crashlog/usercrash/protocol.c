@@ -31,23 +31,21 @@
 	(sizeof(struct sockaddr_un) - offsetof(struct sockaddr_un, sun_path))
 
 /* Documented in header file. */
-static int socket_make_sockaddr_un(const char *name,
+static int socket_make_sockaddr_un(const char *name, const size_t len,
 		struct sockaddr_un *p_addr, socklen_t *alen)
 {
-	size_t name_len;
 	size_t socket_len;
 
 	socket_len = strlen(RESERVED_SOCKET_PREFIX);
 	if (socket_len >= SUN_PATH_MAX)
 		return -1;
 	strncpy(p_addr->sun_path, RESERVED_SOCKET_PREFIX, socket_len + 1);
-	name_len = strlen(name);
-	if (name_len >= (SUN_PATH_MAX - socket_len))
+	if (len >= (SUN_PATH_MAX - socket_len))
 		return -1;
-	strncat(p_addr->sun_path, name, name_len);
+	strncat(p_addr->sun_path, name, len);
 
 	p_addr->sun_family = AF_LOCAL;
-	*alen = name_len + socket_len +
+	*alen = len + socket_len +
 		offsetof(struct sockaddr_un, sun_path) + 1;
 	return 0;
 }
@@ -58,13 +56,14 @@ static int socket_make_sockaddr_un(const char *name,
  * fd is not closed on error. that's your job.
  *
  */
-static int socket_local_client_connect(int fd, const char *name)
+static int socket_local_client_connect(int fd, const char *name,
+		const size_t len)
 {
 	struct sockaddr_un addr;
 	socklen_t alen;
 	int err;
 
-	err = socket_make_sockaddr_un(name, &addr, &alen);
+	err = socket_make_sockaddr_un(name, len, &addr, &alen);
 
 	if (err < 0)
 		goto error;
@@ -85,7 +84,7 @@ error:
  * connect to peer named "name"
  * returns fd or -1 on error
  */
-int socket_local_client(const char *name, int type)
+int socket_local_client(const char *name, const size_t len, int type)
 {
 	int s;
 
@@ -93,7 +92,7 @@ int socket_local_client(const char *name, int type)
 	if (s < 0)
 		return -1;
 
-	if (socket_local_client_connect(s, name) < 0) {
+	if (socket_local_client_connect(s, name, len) < 0) {
 		close(s);
 		return -1;
 	}
@@ -108,12 +107,12 @@ static int socket_bind(int fd, const char *name)
 	size_t name_len;
 
 	addr.sun_family = AF_UNIX;
-	name_len = strlen(name);
+	name_len = strnlen(name, SOCKET_PATH_MAX);
 	if (name_len >= SUN_PATH_MAX)
 		return -1;
 	strncpy(addr.sun_path, name, name_len + 1);
 	unlink(addr.sun_path);
-	alen = strlen(addr.sun_path) + sizeof(addr.sun_family);
+	alen = strnlen(addr.sun_path, SUN_PATH_MAX) + sizeof(addr.sun_family);
 
 	if (bind(fd, (struct sockaddr *)&addr, alen) == -1)
 		return -1;
@@ -121,7 +120,7 @@ static int socket_bind(int fd, const char *name)
 	return fd;
 }
 
-static int create_socket_server(const char *name, int type)
+int create_socket_server(const char *name, int type)
 {
 	int err;
 	int fd;
@@ -138,15 +137,6 @@ static int create_socket_server(const char *name, int type)
 	}
 
 	return fd;
-}
-
-int linux_get_control_socket(const char *name)
-{
-	char socketName[64];
-
-	snprintf(socketName, sizeof(socketName), RESERVED_SOCKET_PREFIX "%s",
-				name);
-	return create_socket_server(socketName, SOCK_SEQPACKET);
 }
 
 ssize_t send_fd(int sockfd, const void *data, size_t len, int fd)
