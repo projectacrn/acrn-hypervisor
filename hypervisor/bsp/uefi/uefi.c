@@ -39,8 +39,8 @@ void efi_spurious_handler(int vector)
 int uefi_sw_loader(struct vm *vm, struct vcpu *vcpu)
 {
 	int ret = 0;
-	struct run_context *cur_context =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx;
+	struct acrn_vcpu_regs *vcpu_regs =
+		(struct acrn_vcpu_regs *)&vm0_boot_context;
 
 	ASSERT(vm != NULL, "Incorrect argument");
 
@@ -51,9 +51,17 @@ int uefi_sw_loader(struct vm *vm, struct vcpu *vcpu)
 
 	vlapic_restore(vcpu_vlapic(vcpu), &uefi_lapic_regs);
 
-	vcpu->entry_addr = (void *)efi_ctx->vcpu_regs.rip;
-	memcpy_s(&cur_context->guest_cpu_regs, sizeof(struct acrn_gp_regs),
-		 &efi_ctx->vcpu_regs.gprs, sizeof(struct acrn_gp_regs));
+	/* For UEFI platform, the bsp init regs come from two places:
+	 * 1. saved in efi_boot: gpregs, rip
+	 * 2. saved when HV started: other registers
+	 * We copy the info saved in efi_boot to vm0_boot_context and
+	 * init bsp with vm0_boot_context.
+	 */
+	memcpy_s(&(vcpu_regs->gprs), sizeof(struct acrn_gp_regs),
+		&(efi_ctx->vcpu_regs.gprs), sizeof(struct acrn_gp_regs));
+
+	vcpu_regs->rip = efi_ctx->vcpu_regs.rip;
+	set_vcpu_regs(vcpu, vcpu_regs);
 
 	/* defer irq enabling till vlapic is ready */
 	CPU_IRQ_ENABLE();

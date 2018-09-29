@@ -604,42 +604,6 @@ static void init_guest_context_real(struct vcpu *vcpu)
 	ectx->idtr.limit = 0xFFFFU;
 }
 
-static void init_guest_context_vm0_bsp(struct vcpu *vcpu)
-{
-	struct ext_context *ectx =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ext_ctx;
-	struct acrn_vcpu_regs* init_ctx =
-		(struct acrn_vcpu_regs*)(&vm0_boot_context);
-	uint16_t *sel = &(init_ctx->cs_sel);
-	struct segment_sel *seg;
-
-	for (seg = &(ectx->cs); seg <= &(ectx->gs); seg++) {
-		seg->base     = 0UL;
-		seg->limit    = 0xFFFFFFFFU;
-		seg->attr     = PROTECTED_MODE_DATA_SEG_AR;
-		seg->selector = *sel;
-		sel++;
-	}
-	ectx->cs.attr         = init_ctx->cs_ar;	/* override cs attr */
-
-	vcpu_set_rip(vcpu, (uint64_t)vcpu->entry_addr);
-	vcpu_set_efer(vcpu, init_ctx->ia32_efer);
-
-	ectx->gdtr.base      = init_ctx->gdt.base;
-	ectx->gdtr.limit     = init_ctx->gdt.limit;
-
-	ectx->idtr.base      = init_ctx->idt.base;
-	ectx->idtr.limit     = init_ctx->idt.limit;
-
-	ectx->ldtr.selector  = init_ctx->ldt_sel;
-	ectx->tr.selector    = init_ctx->tr_sel;
-#ifdef CONFIG_EFI_STUB
-	vcpu_set_rsp(vcpu, efi_ctx->vcpu_regs.gprs.rsp);
-	/* clear flags for CF/PF/AF/ZF/SF/OF */
-	vcpu_set_rflags(vcpu, efi_ctx->vcpu_regs.rflags & ~(0x8d5UL));
-#endif
-}
-
 /* only be called for UOS when bsp start from protected mode */
 static void init_guest_context_protect(struct vcpu *vcpu)
 {
@@ -730,7 +694,6 @@ static void init_guest_state(struct vcpu *vcpu)
 		init_guest_context_real(vcpu);
 		init_guest_vmx(vcpu, CR0_ET | CR0_NE, 0UL, 0UL);
 	} else if (is_vm0(vcpu->vm) && is_vcpu_bsp(vcpu)) {
-		init_guest_context_vm0_bsp(vcpu);
 		init_guest_vmx(vcpu, init_ctx->cr0, init_ctx->cr3,
 			       init_ctx->cr4 & ~CR4_VMXE);
 	} else {
