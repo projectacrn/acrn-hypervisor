@@ -39,8 +39,7 @@ void efi_spurious_handler(int vector)
 int uefi_sw_loader(struct vm *vm, struct vcpu *vcpu)
 {
 	int ret = 0;
-	struct acrn_vcpu_regs *vcpu_regs =
-		(struct acrn_vcpu_regs *)&vm0_boot_context;
+	struct acrn_vcpu_regs *vcpu_regs = &vm0_boot_context;
 
 	ASSERT(vm != NULL, "Incorrect argument");
 

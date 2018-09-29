@@ -88,21 +88,22 @@ static uint64_t create_zero_page(struct vm *vm)
 int load_guest(struct vm *vm, struct vcpu *vcpu)
 {
 	int32_t ret = 0;
-	uint32_t i;
 	void *hva;
 	uint64_t  lowmem_gpa_top;
 
 	hva  = gpa2hva(vm, GUEST_CFG_OFFSET);
 	lowmem_gpa_top = *(uint64_t *)hva;
 
-	/* hardcode vcpu entry addr(kernel entry) & rsi (zeropage)*/
-	for (i = 0U; i < NUM_GPRS; i++) {
-		vcpu_set_gpreg(vcpu, i, 0UL);
-	}
-
 	hva  = gpa2hva(vm, lowmem_gpa_top -
 			MEM_4K - MEM_2K);
 	vcpu->entry_addr = (void *)(*((uint64_t *)hva));
+
+	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL) {
+		set_bsp_real_mode_entry(vcpu);
+	} else {
+		set_bsp_protect_mode_regs(vcpu);
+	}
+
 	vcpu_set_gpreg(vcpu, CPU_REG_RSI, lowmem_gpa_top - MEM_4K);
 
 	pr_info("%s, Set config according to predefined offset:",
@@ -138,7 +139,7 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	}
 #endif
 
-	set_vcpu_regs(vcpu, (struct acrn_vcpu_regs *)&vm0_boot_context);
+	set_vcpu_regs(vcpu, &vm0_boot_context);
 
 	/* calculate the kernel entry point */
 	zeropage = (struct zero_page *)sw_kernel->kernel_src_addr;

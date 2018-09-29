@@ -673,8 +673,7 @@ static void init_guest_state(struct vcpu *vcpu)
 {
 	struct cpu_context *ctx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
-	struct acrn_vcpu_regs* init_ctx =
-		(struct acrn_vcpu_regs*)(&vm0_boot_context);
+	struct acrn_vcpu_regs* init_ctx = &vm0_boot_context;
 	enum vm_cpu_mode vcpu_mode = get_vcpu_mode(vcpu);
 
 	vcpu_set_rflags(vcpu, 0x2UL); /* Bit 1 is a active high reserved bit */
