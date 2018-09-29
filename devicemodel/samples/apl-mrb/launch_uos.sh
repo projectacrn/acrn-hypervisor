@@ -385,12 +385,18 @@ for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
         fi
 done
 
+gvt_args=0x070F00
+# this is the temporal solution before plane_restriction is ready on 4.19
+if [ "$kernel_version" = "4.19" ]; then
+gvt_args=0
+fi
+
 case $launch_type in
 	1) echo "Launch clearlinux UOS"
-		launch_clearlinux 1 3 "64 448 8" 0x070F00 clearlinux "LaaG" $debug
+		launch_clearlinux 1 3 "64 448 8" $gvt_args clearlinux "LaaG" $debug
 		;;
 	2) echo "Launch android UOS"
-		launch_android 1 3 "64 448 8" 0x070F00 android "AaaG" $debug
+		launch_android 1 3 "64 448 8" $gvt_args android "AaaG" $debug
 		;;
 	3) echo "Launch clearlinux UOS + android UOS"
 		launch_android 1 2 "64 448 4" 0x00000C android "AaaG" $debug &
