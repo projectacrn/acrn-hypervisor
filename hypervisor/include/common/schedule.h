@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef	_HV_CORE_SCHEDULE_
-#define	_HV_CORE_SCHEDULE_
+#ifndef SCHEDULE_H
+#define SCHEDULE_H
 
 #define	NEED_RESCHEDULE		(1U)
 #define	NEED_OFFLINE		(2U)
@@ -39,5 +39,5 @@ int need_offline(uint16_t pcpu_id);
 void schedule(void);
 
 void vcpu_thread(struct vcpu *vcpu);
-#endif
+#endif /* SCHEDULE_H */
 

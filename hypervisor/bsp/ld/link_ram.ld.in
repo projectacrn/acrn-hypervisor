@@ -46,20 +46,20 @@ SECTIONS
 	} > ram
 
 	. = ALIGN(4) ;
-    _ld_trampoline_load = .;
+    ld_trampoline_load = .;
 
-    .trampoline : AT (_ld_trampoline_load)
+    .trampoline : AT (ld_trampoline_load)
     {
-        _ld_trampoline_start = .;
+        ld_trampoline_start = .;
         *(.trampoline_reset);
         . = ALIGN(4);
-        _ld_trampoline_end = .;
+        ld_trampoline_end = .;
 
     } > lowram
 
-    _ld_trampoline_size = _ld_trampoline_end - _ld_trampoline_start;
+    ld_trampoline_size = ld_trampoline_end - ld_trampoline_start;
 
-    .data (_ld_trampoline_load + _ld_trampoline_size):
+    .data (ld_trampoline_load + ld_trampoline_size):
     {
         *(.data) ;
         *(.data*) ;
@@ -79,12 +79,12 @@ SECTIONS
     .bss (NOLOAD):
     {
         . = ALIGN(4) ;
-        _ld_bss_start = . ;
+        ld_bss_start = . ;
         *(.bss) ;
         *(.bss*) ;
         *(COMMON) ;
         . = ALIGN(4) ;
-        _ld_bss_end = . ;
+        ld_bss_end = . ;
     } > ram
 
     _ld_ram_size = LENGTH(ram) ;

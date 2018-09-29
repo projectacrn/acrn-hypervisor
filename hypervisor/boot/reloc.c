@@ -70,7 +70,7 @@ static uint64_t trampoline_relo_addr(void *addr)
 	return (uint64_t)addr - get_hv_image_delta();
 }
 
-void _relocate(void)
+void relocate(void)
 {
 #ifdef CONFIG_RELOC
 	struct Elf64_Dyn *dyn;
@@ -108,7 +108,7 @@ void _relocate(void)
 	 * Need to subtract the relocation delta to get the correct
 	 * absolute addresses
 	 */
-	trampoline_end = (uint64_t)(&_ld_trampoline_end) - delta;
+	trampoline_end = (uint64_t)(&ld_trampoline_end) - delta;
 	primary_32_start = (uint64_t)(&cpu_primary_start_32) - delta;
 	primary_32_end = (uint64_t)(&cpu_primary_start_64) - delta;
 
@@ -214,7 +214,7 @@ uint64_t prepare_trampoline(void)
 {
 	uint64_t size, dest_pa;
 
-	size = (uint64_t)(&_ld_trampoline_end - &_ld_trampoline_start);
+	size = (uint64_t)(&ld_trampoline_end - &ld_trampoline_start);
 #ifndef CONFIG_EFI_STUB
 	dest_pa = e820_alloc_low_memory(CONFIG_LOW_RAM_SIZE);
 #else
@@ -224,7 +224,7 @@ uint64_t prepare_trampoline(void)
 	pr_dbg("trampoline code: %llx size %x", dest_pa, size);
 
 	/* Copy segment for AP initialization code below 1MB */
-	(void)memcpy_s(hpa2hva(dest_pa), (size_t)size, &_ld_trampoline_load,
+	(void)memcpy_s(hpa2hva(dest_pa), (size_t)size, &ld_trampoline_load,
 			(size_t)size);
 	update_trampoline_code_refs(dest_pa);
 	trampoline_start16_paddr = dest_pa;

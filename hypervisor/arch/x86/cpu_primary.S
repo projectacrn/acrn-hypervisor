@@ -131,7 +131,7 @@ cpu_primary_start_64:
 primary_start_long_mode:
 
     /* Initialize temporary stack pointer */
-    lea     _ld_bss_end(%rip), %rsp
+    lea     ld_bss_end(%rip), %rsp
     /*0x1000 = CPU_PAGE_SIZE*/
     add     $0x1000,%rsp
     /* 16 = CPU_STACK_ALIGN */
@@ -142,7 +142,7 @@ primary_start_long_mode:
      * Notes: this includes the fixup to IDT tables and temporary
      *     page tables
      */
-    call _relocate
+    call relocate
 
     /* Load temportary GDT pointer value */
     lea     cpu_primary32_gdt_ptr(%rip), %rbx
@@ -172,7 +172,7 @@ after:
 
     /*
      * Fix up the IDT desciptors
-     * The relocation delta in IDT tables has been fixed in _relocate()
+     * The relocation delta in IDT tables has been fixed in relocate()
      */
     leal   HOST_IDT(%rip), %edx
     movl   $HOST_IDT_ENTRIES, %ecx

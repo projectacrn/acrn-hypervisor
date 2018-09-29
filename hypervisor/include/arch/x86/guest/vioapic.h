@@ -28,8 +28,8 @@
  * $FreeBSD$
  */
 
-#ifndef _VIOAPIC_H_
-#define	_VIOAPIC_H_
+#ifndef VIOAPIC_H
+#define VIOAPIC_H
 
 #include <apicreg.h>
 
@@ -65,4 +65,4 @@ int	vioapic_mmio_access_handler(struct vcpu *vcpu,
 void get_vioapic_info(char *str_arg, size_t str_max, uint16_t vmid);
 #endif /* HV_DEBUG */
 
-#endif
+#endif /* VIOAPIC_H */

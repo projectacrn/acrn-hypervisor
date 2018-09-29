@@ -248,7 +248,7 @@ int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector,
 	return 0;
 }
 
-static void _vcpu_inject_exception(struct vcpu *vcpu, uint32_t vector)
+static void vcpu_inject_exception(struct vcpu *vcpu, uint32_t vector)
 {
 	if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U) {
 		exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE,
@@ -266,7 +266,7 @@ static int vcpu_inject_hi_exception(struct vcpu *vcpu)
 	uint32_t vector = vcpu->arch_vcpu.exception_info.exception;
 
 	if (vector == IDT_MC || vector == IDT_BP || vector == IDT_DB) {
-		_vcpu_inject_exception(vcpu, vector);
+		vcpu_inject_exception(vcpu, vector);
 		return 1;
 	}
 
@@ -279,7 +279,7 @@ static int vcpu_inject_lo_exception(struct vcpu *vcpu)
 
 	/* high priority exception already be injected */
 	if (vector <= NR_MAX_VECTOR) {
-		_vcpu_inject_exception(vcpu, vector);
+		vcpu_inject_exception(vcpu, vector);
 		return 1;
 	}
 

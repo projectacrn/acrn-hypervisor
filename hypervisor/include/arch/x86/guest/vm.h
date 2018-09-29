@@ -146,13 +146,6 @@ struct vm {
 				     * when vm is active. So no lock needed
 				     */
 
-	struct _vm_shared_memory *shared_memory_area;
-
-	struct {
-		struct _vm_virtual_device_node *head;
-		struct _vm_virtual_device_node *tail;
-	} virtual_device_list;
-
 	unsigned char GUID[16];
 	struct secure_world_control sworld_control;
 

@@ -59,7 +59,7 @@ static uint16_t vmx_vpid_nr = VMX_MIN_NR_VPID;
 
 struct invept_desc {
 	uint64_t eptp;
-	uint64_t _res;
+	uint64_t res;
 };
 
 static inline void local_invvpid(uint64_t type, uint16_t vpid, uint64_t gva)

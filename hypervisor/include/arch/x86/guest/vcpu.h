@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef _VCPU_H_
-#define	_VCPU_H_
+#ifndef VCPU_H
+#define VCPU_H
 
 #define	ACRN_VCPU_MMIO_COMPLETE		(0U)
 
@@ -47,7 +47,6 @@
 #ifndef ASSEMBLER
 
 #include <guest.h>
-#include <gpr.h>
 
 enum vcpu_state {
 	VCPU_INIT,
@@ -239,7 +238,7 @@ struct vcpu {
 	uint64_t guest_msrs[IDX_MAX_MSR];
 #ifdef CONFIG_MTRR_ENABLED
 	struct mtrr_state mtrr;
-#endif
+#endif /* CONFIG_MTRR_ENABLED */
 	uint64_t reg_cached;
 	uint64_t reg_updated;
 } __aligned(CPU_PAGE_SIZE);
@@ -303,6 +302,6 @@ int prepare_vcpu(struct vm *vm, uint16_t pcpu_id);
 void request_vcpu_pre_work(struct vcpu *vcpu, uint16_t pre_work_id);
 
 void vcpu_dumpreg(void *data);
-#endif
+#endif /* ASSEMBLER */
 
-#endif
+#endif /* VCPU_H */

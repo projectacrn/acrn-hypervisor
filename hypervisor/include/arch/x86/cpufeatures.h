@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef __X86_CPUFEATURES_H__
-#define __X86_CPUFEATURES_H__
+#ifndef CPUFEATURES_H
+#define CPUFEATURES_H
 
 /* Intel-defined CPU features, CPUID level 0x00000001 (ECX)*/
 #define X86_FEATURE_SSE3	((FEAT_1_ECX << 5U) +  0U)
@@ -83,4 +83,4 @@
 #define X86_FEATURE_PAGE1GB	((FEAT_8000_0001_EDX << 5U) + 26U)
 #define X86_FEATURE_LM		((FEAT_8000_0001_EDX << 5U) + 29U)
 
-#endif /*__X86_CPUFEATURES_H__*/
+#endif /* CPUFEATURES_H */

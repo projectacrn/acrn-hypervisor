@@ -388,8 +388,8 @@ void bsp_boot_init(void)
 	start_tsc = rdtsc();
 
 	/* Clear BSS */
-	(void)memset(&_ld_bss_start, 0U,
-			(size_t)(&_ld_bss_end - &_ld_bss_start));
+	(void)memset(&ld_bss_start, 0U,
+			(size_t)(&ld_bss_end - &ld_bss_start));
 
 	bitmap_set_nolock(BOOT_CPU_ID, &pcpu_active_bitmap);
 

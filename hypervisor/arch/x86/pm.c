@@ -123,7 +123,7 @@ int enter_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 	suspend_iommu();
 	suspend_lapic();
 
-	__enter_s3(vm, pm1a_cnt_val, pm1b_cnt_val);
+	asm_enter_s3(vm, pm1a_cnt_val, pm1b_cnt_val);
 
 	/* release the lock aquired in trampoline code */
 	spinlock_release(&trampoline_spinlock);
