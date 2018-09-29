@@ -36,6 +36,7 @@
 #include "efilinux.h"
 #include "stdlib.h"
 #include "boot.h"
+#include "acrn_common.h"
 #include "vm0_boot.h"
 
 EFI_SYSTEM_TABLE *sys_table;
