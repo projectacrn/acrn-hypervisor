@@ -46,18 +46,6 @@
 #include "pci_core.h"
 #include "acpi.h"
 
-#ifndef _PATH_DEVPCI
-#define	_PATH_DEVPCI	"/dev/pci"
-#endif
-
-#ifndef	_PATH_DEVIO
-#define	_PATH_DEVIO	"/dev/io"
-#endif
-
-#ifndef _PATH_MEM
-#define	_PATH_MEM	"/dev/mem"
-#endif
-
 #ifndef PCI_COMMAND_INTX_DISABLE
 #define PCI_COMMAND_INTX_DISABLE ((uint16_t)0x400)
 #endif
@@ -81,8 +69,8 @@
  */
 #define AUDIO_NHLT_HACK 1
 
+/* TODO: Add support for IO BAR of PTDev */
 static int iofd = -1;
-static int memfd = -1;
 
 /* reference count for libpciaccess init/deinit */
 static int pciaccess_ref_cnt;
@@ -662,14 +650,14 @@ init_msix_table(struct vmctx *ctx, struct passthru_dev *ptdev, uint64_t base)
 			else
 				dev->msix.pba_page_offset = table_offset +
 				    table_size - 4096;
-			dev->msix.pba_page = mmap(NULL, 4096, PROT_READ |
-			    PROT_WRITE, MAP_SHARED, memfd, start +
-			    dev->msix.pba_page_offset);
-			if (dev->msix.pba_page == MAP_FAILED) {
-				warn(
-			    "Failed to map PBA page for MSI-X on %x/%x/%x",
-				    b, s, f);
-				return -1;
+			error = pci_device_map_range(ptdev->phys_dev,
+				base + dev->msix.pba_page_offset, 4096,
+				PCI_DEV_MAP_FLAG_WRITABLE, &dev->msix.pba_page);
+			if (error) {
+				warnx(
+				"Failed to map PBA page for MSI-X on %x/%x/%x.",
+					b, s, f);
+				return error;
 			}
 		}
 	}
