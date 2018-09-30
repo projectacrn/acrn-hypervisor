@@ -262,112 +262,112 @@
 #define VMX_EXIT_REASON_XRSTORS                                      0x00000040U
 
 /* VMX execution control bits (pin based) */
-#define VMX_PINBASED_CTLS_IRQ_EXIT     (1U<<0)
-#define VMX_PINBASED_CTLS_NMI_EXIT     (1U<<3)
-#define VMX_PINBASED_CTLS_VIRT_NMI     (1U<<5)
-#define VMX_PINBASED_CTLS_ENABLE_PTMR  (1U<<6)
-#define VMX_PINBASED_CTLS_POST_IRQ     (1U<<7)
+#define VMX_PINBASED_CTLS_IRQ_EXIT     (1U<<0U)
+#define VMX_PINBASED_CTLS_NMI_EXIT     (1U<<3U)
+#define VMX_PINBASED_CTLS_VIRT_NMI     (1U<<5U)
+#define VMX_PINBASED_CTLS_ENABLE_PTMR  (1U<<6U)
+#define VMX_PINBASED_CTLS_POST_IRQ     (1U<<7U)
 
 /* VMX execution control bits (processor based) */
-#define VMX_PROCBASED_CTLS_IRQ_WIN     (1U<<2)
-#define VMX_PROCBASED_CTLS_TSC_OFF     (1U<<3)
-#define VMX_PROCBASED_CTLS_HLT         (1U<<7)
-#define VMX_PROCBASED_CTLS_INVLPG      (1U<<9)
-#define VMX_PROCBASED_CTLS_MWAIT       (1U<<10)
-#define VMX_PROCBASED_CTLS_RDPMC       (1U<<11)
-#define VMX_PROCBASED_CTLS_RDTSC       (1U<<12)
-#define VMX_PROCBASED_CTLS_CR3_LOAD    (1U<<15)
-#define VMX_PROCBASED_CTLS_CR3_STORE   (1U<<16)
-#define VMX_PROCBASED_CTLS_CR8_LOAD    (1U<<19)
-#define VMX_PROCBASED_CTLS_CR8_STORE   (1U<<20)
-#define VMX_PROCBASED_CTLS_TPR_SHADOW  (1U<<21)
-#define VMX_PROCBASED_CTLS_NMI_WINEXIT (1U<<22)
-#define VMX_PROCBASED_CTLS_MOV_DR      (1U<<23)
-#define VMX_PROCBASED_CTLS_UNCOND_IO   (1U<<24)
-#define VMX_PROCBASED_CTLS_IO_BITMAP   (1U<<25)
-#define VMX_PROCBASED_CTLS_MON_TRAP    (1U<<27)
-#define VMX_PROCBASED_CTLS_MSR_BITMAP  (1U<<28)
-#define VMX_PROCBASED_CTLS_MONITOR     (1U<<29)
-#define VMX_PROCBASED_CTLS_PAUSE       (1U<<30)
-#define VMX_PROCBASED_CTLS_SECONDARY   (1U<<31)
-#define VMX_PROCBASED_CTLS2_VAPIC      (1U<<0)
-#define VMX_PROCBASED_CTLS2_EPT        (1U<<1)
-#define VMX_PROCBASED_CTLS2_DESC_TABLE (1U<<2)
-#define VMX_PROCBASED_CTLS2_RDTSCP     (1U<<3)
-#define VMX_PROCBASED_CTLS2_VX2APIC    (1U<<4)
-#define VMX_PROCBASED_CTLS2_VPID       (1U<<5)
-#define VMX_PROCBASED_CTLS2_WBINVD     (1U<<6)
-#define VMX_PROCBASED_CTLS2_UNRESTRICT (1U<<7)
-#define VMX_PROCBASED_CTLS2_VAPIC_REGS (1U<<8)
-#define VMX_PROCBASED_CTLS2_VIRQ       (1U<<9)
-#define VMX_PROCBASED_CTLS2_PAUSE_LOOP (1U<<10)
-#define VMX_PROCBASED_CTLS2_RDRAND     (1U<<11)
-#define VMX_PROCBASED_CTLS2_INVPCID    (1U<<12)
-#define VMX_PROCBASED_CTLS2_VM_FUNCS   (1U<<13)
-#define VMX_PROCBASED_CTLS2_VMCS_SHADW (1U<<14)
-#define VMX_PROCBASED_CTLS2_RDSEED     (1U<<16)
-#define VMX_PROCBASED_CTLS2_EPT_VE     (1U<<18)
-#define VMX_PROCBASED_CTLS2_XSVE_XRSTR (1U<<20)
+#define VMX_PROCBASED_CTLS_IRQ_WIN     (1U<<2U)
+#define VMX_PROCBASED_CTLS_TSC_OFF     (1U<<3U)
+#define VMX_PROCBASED_CTLS_HLT         (1U<<7U)
+#define VMX_PROCBASED_CTLS_INVLPG      (1U<<9U)
+#define VMX_PROCBASED_CTLS_MWAIT       (1U<<10U)
+#define VMX_PROCBASED_CTLS_RDPMC       (1U<<11U)
+#define VMX_PROCBASED_CTLS_RDTSC       (1U<<12U)
+#define VMX_PROCBASED_CTLS_CR3_LOAD    (1U<<15U)
+#define VMX_PROCBASED_CTLS_CR3_STORE   (1U<<16U)
+#define VMX_PROCBASED_CTLS_CR8_LOAD    (1U<<19U)
+#define VMX_PROCBASED_CTLS_CR8_STORE   (1U<<20U)
+#define VMX_PROCBASED_CTLS_TPR_SHADOW  (1U<<21U)
+#define VMX_PROCBASED_CTLS_NMI_WINEXIT (1U<<22U)
+#define VMX_PROCBASED_CTLS_MOV_DR      (1U<<23U)
+#define VMX_PROCBASED_CTLS_UNCOND_IO   (1U<<24U)
+#define VMX_PROCBASED_CTLS_IO_BITMAP   (1U<<25U)
+#define VMX_PROCBASED_CTLS_MON_TRAP    (1U<<27U)
+#define VMX_PROCBASED_CTLS_MSR_BITMAP  (1U<<28U)
+#define VMX_PROCBASED_CTLS_MONITOR     (1U<<29U)
+#define VMX_PROCBASED_CTLS_PAUSE       (1U<<30U)
+#define VMX_PROCBASED_CTLS_SECONDARY   (1U<<31U)
+#define VMX_PROCBASED_CTLS2_VAPIC      (1U<<0U)
+#define VMX_PROCBASED_CTLS2_EPT        (1U<<1U)
+#define VMX_PROCBASED_CTLS2_DESC_TABLE (1U<<2U)
+#define VMX_PROCBASED_CTLS2_RDTSCP     (1U<<3U)
+#define VMX_PROCBASED_CTLS2_VX2APIC    (1U<<4U)
+#define VMX_PROCBASED_CTLS2_VPID       (1U<<5U)
+#define VMX_PROCBASED_CTLS2_WBINVD     (1U<<6U)
+#define VMX_PROCBASED_CTLS2_UNRESTRICT (1U<<7U)
+#define VMX_PROCBASED_CTLS2_VAPIC_REGS (1U<<8U)
+#define VMX_PROCBASED_CTLS2_VIRQ       (1U<<9U)
+#define VMX_PROCBASED_CTLS2_PAUSE_LOOP (1U<<10U)
+#define VMX_PROCBASED_CTLS2_RDRAND     (1U<<11U)
+#define VMX_PROCBASED_CTLS2_INVPCID    (1U<<12U)
+#define VMX_PROCBASED_CTLS2_VM_FUNCS   (1U<<13U)
+#define VMX_PROCBASED_CTLS2_VMCS_SHADW (1U<<14U)
+#define VMX_PROCBASED_CTLS2_RDSEED     (1U<<16U)
+#define VMX_PROCBASED_CTLS2_EPT_VE     (1U<<18U)
+#define VMX_PROCBASED_CTLS2_XSVE_XRSTR (1U<<20U)
 
 /* MSR_IA32_VMX_EPT_VPID_CAP: EPT and VPID capability bits */
-#define VMX_EPT_EXECUTE_ONLY		(1U << 0)
-#define VMX_EPT_PAGE_WALK_4		(1U << 6)
-#define VMX_EPT_PAGE_WALK_5		(1U << 7)
-#define VMX_EPTP_UC			(1U << 8)
-#define VMX_EPTP_WB			(1U << 14)
-#define VMX_EPT_2MB_PAGE		(1U << 16)
-#define VMX_EPT_1GB_PAGE		(1U << 17)
-#define VMX_EPT_INVEPT			(1U << 20)
-#define VMX_EPT_AD			(1U << 21)
-#define VMX_EPT_INVEPT_SINGLE_CONTEXT	(1U << 25)
-#define VMX_EPT_INVEPT_GLOBAL_CONTEXT	(1U << 26)
+#define VMX_EPT_EXECUTE_ONLY		(1U << 0U)
+#define VMX_EPT_PAGE_WALK_4		(1U << 6U)
+#define VMX_EPT_PAGE_WALK_5		(1U << 7U)
+#define VMX_EPTP_UC			(1U << 8U)
+#define VMX_EPTP_WB			(1U << 14U)
+#define VMX_EPT_2MB_PAGE		(1U << 16U)
+#define VMX_EPT_1GB_PAGE		(1U << 17U)
+#define VMX_EPT_INVEPT  		(1U << 20U)
+#define VMX_EPT_AD			(1U << 21U)
+#define VMX_EPT_INVEPT_SINGLE_CONTEXT	(1U << 25U)
+#define VMX_EPT_INVEPT_GLOBAL_CONTEXT	(1U << 26U)
 
-#define VMX_MIN_NR_VPID			1U
-#define VMX_MAX_NR_VPID			(1U << 5)
+#define VMX_MIN_NR_VPID 		1U
+#define VMX_MAX_NR_VPID 		(1U << 5U)
 
 #define VMX_VPID_TYPE_INDIVIDUAL_ADDR	0UL
 #define VMX_VPID_TYPE_SINGLE_CONTEXT	1UL
 #define VMX_VPID_TYPE_ALL_CONTEXT	2UL
 #define VMX_VPID_TYPE_SINGLE_NON_GLOBAL	3UL
 
-#define VMX_VPID_INVVPID			(1U << 0) /* (32 - 32) */
-#define VMX_VPID_INVVPID_INDIVIDUAL_ADDR	(1U << 8) /* (40 - 32) */
-#define VMX_VPID_INVVPID_SINGLE_CONTEXT		(1U << 9) /* (41 - 32) */
-#define VMX_VPID_INVVPID_GLOBAL_CONTEXT		(1U << 10) /* (42 - 32) */
-#define VMX_VPID_INVVPID_SINGLE_NON_GLOBAL	(1U << 11) /* (43 - 32) */
+#define VMX_VPID_INVVPID			(1U << 0U) /* (32 - 32) */
+#define VMX_VPID_INVVPID_INDIVIDUAL_ADDR	(1U << 8U) /* (40 - 32) */
+#define VMX_VPID_INVVPID_SINGLE_CONTEXT 	(1U << 9U) /* (41 - 32) */
+#define VMX_VPID_INVVPID_GLOBAL_CONTEXT 	(1U << 10U) /* (42 - 32) */
+#define VMX_VPID_INVVPID_SINGLE_NON_GLOBAL	(1U << 11U) /* (43 - 32) */
 
-#define VMX_EPT_MT_EPTE_SHIFT		3
+#define VMX_EPT_MT_EPTE_SHIFT		3U
 #define VMX_EPTP_PWL_MASK		0x38UL
-#define VMX_EPTP_PWL_4			0x18UL
-#define VMX_EPTP_PWL_5			0x20UL
-#define VMX_EPTP_AD_ENABLE_BIT		(1UL << 6)
+#define VMX_EPTP_PWL_4  		0x18UL
+#define VMX_EPTP_PWL_5  		0x20UL
+#define VMX_EPTP_AD_ENABLE_BIT  	(1UL << 6U)
 #define VMX_EPTP_MT_MASK		0x7UL
-#define VMX_EPTP_MT_WB			0x6UL
-#define VMX_EPTP_MT_UC			0x0UL
+#define VMX_EPTP_MT_WB  		0x6UL
+#define VMX_EPTP_MT_UC  		0x0UL
 
 /* VMX exit control bits */
-#define VMX_EXIT_CTLS_SAVE_DBG         (1U<<2)
-#define VMX_EXIT_CTLS_HOST_ADDR64      (1U<<9)
-#define VMX_EXIT_CTLS_LOAD_PERF        (1U<<12)
-#define VMX_EXIT_CTLS_ACK_IRQ          (1U<<15)
-#define VMX_EXIT_CTLS_SAVE_PAT         (1U<<18)
-#define VMX_EXIT_CTLS_LOAD_PAT         (1U<<19)
-#define VMX_EXIT_CTLS_SAVE_EFER        (1U<<20)
-#define VMX_EXIT_CTLS_LOAD_EFER        (1U<<21)
-#define VMX_EXIT_CTLS_SAVE_PTMR        (1U<<22)
+#define VMX_EXIT_CTLS_SAVE_DBG         (1U<<2U)
+#define VMX_EXIT_CTLS_HOST_ADDR64      (1U<<9U)
+#define VMX_EXIT_CTLS_LOAD_PERF        (1U<<12U)
+#define VMX_EXIT_CTLS_ACK_IRQ          (1U<<15U)
+#define VMX_EXIT_CTLS_SAVE_PAT         (1U<<18U)
+#define VMX_EXIT_CTLS_LOAD_PAT         (1U<<19U)
+#define VMX_EXIT_CTLS_SAVE_EFER        (1U<<20U)
+#define VMX_EXIT_CTLS_LOAD_EFER        (1U<<21U)
+#define VMX_EXIT_CTLS_SAVE_PTMR        (1U<<22U)
 
 /* VMX entry control bits */
-#define VMX_ENTRY_CTLS_LOAD_DBG        (1U<<2)
-#define VMX_ENTRY_CTLS_IA32E_MODE      (1U<<9)
-#define VMX_ENTRY_CTLS_ENTRY_SMM       (1U<<10)
-#define VMX_ENTRY_CTLS_DEACT_DUAL      (1U<<11)
-#define VMX_ENTRY_CTLS_LOAD_PERF       (1U<<13)
-#define VMX_ENTRY_CTLS_LOAD_PAT        (1U<<14)
-#define VMX_ENTRY_CTLS_LOAD_EFER       (1U<<15)
+#define VMX_ENTRY_CTLS_LOAD_DBG        (1U<<2U)
+#define VMX_ENTRY_CTLS_IA32E_MODE      (1U<<9U)
+#define VMX_ENTRY_CTLS_ENTRY_SMM       (1U<<10U)
+#define VMX_ENTRY_CTLS_DEACT_DUAL      (1U<<11U)
+#define VMX_ENTRY_CTLS_LOAD_PERF       (1U<<13U)
+#define VMX_ENTRY_CTLS_LOAD_PAT        (1U<<14U)
+#define VMX_ENTRY_CTLS_LOAD_EFER       (1U<<15U)
 
 /* VMX entry/exit Interrupt info */
-#define VMX_INT_INFO_ERR_CODE_VALID	(1U<<11)
-#define VMX_INT_INFO_VALID		(1U<<31)
+#define VMX_INT_INFO_ERR_CODE_VALID	(1U<<11U)
+#define VMX_INT_INFO_VALID		(1U<<31U)
 #define VMX_INT_TYPE_MASK		(0x700U)
 #define VMX_INT_TYPE_EXT_INT		0U
 #define VMX_INT_TYPE_NMI		2U
@@ -406,9 +406,9 @@ static inline uint64_t apic_access_offset(uint64_t qual)
 	return (qual & 0xFFFUL);
 }
 
-#define RFLAGS_C (1U<<0)
-#define RFLAGS_Z (1U<<6)
-#define RFLAGS_AC (1U<<18)
+#define RFLAGS_C (1U<<0U)
+#define RFLAGS_Z (1U<<6U)
+#define RFLAGS_AC (1U<<18U)
 
 /* CR0 bits hv want to trap to track status change */
 #define CR0_TRAP_MASK (CR0_PE | CR0_PG | CR0_WP | CR0_CD | CR0_NW )
@@ -424,7 +424,7 @@ static inline uint64_t apic_access_offset(uint64_t qual)
 				CR4_OSXMMEXCPT | CR4_SMAP | CR4_PKE |        \
 				CR4_SMXE | CR4_UMIP )
 
-#define VMX_SUPPORT_UNRESTRICTED_GUEST (1U<<5)
+#define VMX_SUPPORT_UNRESTRICTED_GUEST (1U<<5U)
 
 /* External Interfaces */
 void exec_vmxon_instr(uint16_t pcpu_id);
