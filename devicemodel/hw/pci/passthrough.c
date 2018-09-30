@@ -81,6 +81,12 @@ static pthread_mutex_t ref_cnt_mtx = PTHREAD_MUTEX_INITIALIZER;
  */
 static bool no_reset = false;
 
+struct mmio_map {
+	uint64_t gpa;
+	uint64_t hpa;
+	size_t size;
+};
+
 struct passthru_dev {
 	struct pci_vdev *dev;
 	struct pcibar bar[PCI_BARMAX + 1];
@@ -102,6 +108,11 @@ struct passthru_dev {
 	 *   need_reset - reset dev before passthrough
 	 */
 	bool need_reset;
+	/* The memory pages, which not overlap with MSI-X table will be
+	 * passed-through to guest, two potential ranges, before and after MSI-X
+	 * Table if any.
+	 */
+	struct mmio_map	msix_bar_mmio[2];
 };
 
 void ptdev_no_reset(bool enable)
@@ -665,10 +676,17 @@ init_msix_table(struct vmctx *ctx, struct passthru_dev *ptdev, uint64_t base)
 	/* Map everything before the MSI-X table */
 	if (table_offset > 0) {
 		len = table_offset;
-		warnx("Map part of MSI-X BAR!\n");
 		error = vm_map_ptdev_mmio(ctx, b, s, f, start, len, base);
-		if (error)
+		if (error) {
+			warnx(
+			"Failed to map MSI-X BAR passthru pages on %x/%x/%x",
+				b,s,f);
 			return error;
+		}
+		/* save mapping info, which need to be unmapped when deinit */
+		ptdev->msix_bar_mmio[0].gpa = start;
+		ptdev->msix_bar_mmio[0].hpa = base;
+		ptdev->msix_bar_mmio[0].size = len;
 
 		base += len;
 		start += len;
@@ -697,13 +715,56 @@ init_msix_table(struct vmctx *ctx, struct passthru_dev *ptdev, uint64_t base)
 	/* Map everything beyond the end of the MSI-X table */
 	if (remaining > 0) {
 		len = remaining;
-		warnx("Map remaining of MSI-X BAR!\n");
 		error = vm_map_ptdev_mmio(ctx, b, s, f, start, len, base);
-		if (error)
+		if (error) {
+			warnx(
+			"Failed to map MSI-X BAR passthru pages on %x/%x/%x",
+				b,s,f);
 			return error;
+		}
+		/* save mapping info, which need to be unmapped when deinit */
+		ptdev->msix_bar_mmio[1].gpa = start;
+		ptdev->msix_bar_mmio[1].hpa = base;
+		ptdev->msix_bar_mmio[1].size = len;
 	}
 
 	return 0;
+}
+
+static void
+deinit_msix_table(struct vmctx *ctx, struct pci_vdev *dev)
+{
+	struct passthru_dev *ptdev = (struct passthru_dev *) dev->arg;;
+	uint16_t virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
+	int vector_cnt = dev->msix.table_count;
+
+	printf("ptdev reset msix: 0x%x-%x, vector_cnt=%d.\n",
+			virt_bdf, ptdev->phys_bdf, vector_cnt);
+	vm_reset_ptdev_msix_info(ctx, virt_bdf, vector_cnt);
+	free(dev->msix.table);
+
+	if (dev->msix.pba_page != NULL) {
+		if (pci_device_unmap_range(ptdev->phys_dev,
+					   dev->msix.pba_page, 4096))
+			warnx("Failed to unmap pba page.");
+		dev->msix.pba_page = NULL;
+	}
+
+	/* We passthrough the pages not overlap with MSI-X table to guest,
+	 * need to unmap them  when deinit.
+	 */
+	for (int i = 0; i < 2; i++) {
+		if(ptdev->msix_bar_mmio[i].size != 0) {
+			if (vm_unmap_ptdev_mmio(ctx, ptdev->sel.bus,
+					ptdev->sel.dev, ptdev->sel.func,
+					ptdev->msix_bar_mmio[i].gpa,
+					ptdev->msix_bar_mmio[i].size,
+					ptdev->msix_bar_mmio[i].hpa)) {
+				warnx("Failed to  unmap MSI-X BAR pt pages.");
+			}
+			ptdev->msix_bar_mmio[i].size = 0;
+		}
+	}
 }
 
 static int
@@ -1059,7 +1120,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	struct passthru_dev *ptdev;
 	uint8_t bus, slot, func;
 	uint16_t virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
-	int i, vector_cnt = 0;
+	int i;
 
 	if (!dev->arg) {
 		warnx("%s: passthru_dev is NULL", __func__);
@@ -1067,28 +1128,21 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	ptdev = (struct passthru_dev *) dev->arg;
-	pciaccess_cleanup();
 	bus = (ptdev->phys_bdf >> 8) & 0xff;
 	slot = (ptdev->phys_bdf & 0xff) >> 3;
 	func = ptdev->phys_bdf & 0x7;
 
 	if (ptdev->msix.capoff != 0)
-		vector_cnt = dev->msix.table_count;
-	else if (ptdev->msi.capoff != 0)
-		/* currently, only support one vector for MSI */
-		vector_cnt = 1;
+		deinit_msix_table(ctx, dev);
+	else if(ptdev->msi.capoff != 0) {
+		/* Currently only support 1 vector */
+		printf("ptdev reset msi: 0x%x-%x\n", virt_bdf, ptdev->phys_bdf);
+		vm_reset_ptdev_msix_info(ctx, virt_bdf, 1);
+	}
 
 	printf("vm_reset_ptdev_intx:0x%x-%x, ioapic virpin=%d.\n",
 			virt_bdf, ptdev->phys_bdf, dev->lintr.ioapic_irq);
 	vm_reset_ptdev_intx_info(ctx, dev->lintr.ioapic_irq, false);
-
-	if (vector_cnt > 0) {
-		printf("vm_reset_ptdev_msix:0x%x-%x, vector_cnt=%d.\n",
-				virt_bdf, ptdev->phys_bdf, vector_cnt);
-		vm_reset_ptdev_msix_info(ctx, virt_bdf, vector_cnt);
-		if (ptdev->msix.capoff)
-			free(dev->msix.table);
-	}
 
 	/* unmap the physical BAR in guest MMIO space */
 	for (i = 0; i <= PCI_BARMAX; i++) {
@@ -1104,6 +1158,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 				ptdev->bar[i].addr);
 	}
 
+	pciaccess_cleanup();
 	free(ptdev);
 	vm_unassign_ptdev(ctx, bus, slot, func);
 }
