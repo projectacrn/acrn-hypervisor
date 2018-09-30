@@ -131,8 +131,9 @@ static int vcpu_inject_vlapic_int(struct vcpu *vcpu)
 	 * - maskable interrupt vectors [16,255] can be delivered
 	 *   through the local APIC.
 	 */
-	if (ret == 0)
+	if (ret == 0) {
 		return -1;
+	}
 
 	if (!(vector >= 16U && vector <= 255U)) {
 		dev_dbg(ACRN_DBG_INTR, "invalid vector %d from local APIC",
@@ -194,17 +195,17 @@ void dump_lapic(void)
 /* SDM Vol3 -6.15, Table 6-4 - interrupt and exception classes */
 static int get_excep_class(uint32_t vector)
 {
-	if (vector == IDT_DE || vector == IDT_TS || vector == IDT_NP ||
-		vector == IDT_SS || vector == IDT_GP)
+	if ((vector == IDT_DE) || (vector == IDT_TS) || (vector == IDT_NP) ||
+		(vector == IDT_SS) || (vector == IDT_GP)) {
 		return EXCEPTION_CLASS_CONT;
-	else if (vector == IDT_PF || vector == IDT_VE)
+	} else if ((vector == IDT_PF) || (vector == IDT_VE)) {
 		return EXCEPTION_CLASS_PF;
-	else
+	} else {
 		return EXCEPTION_CLASS_BENIGN;
+	}
 }
 
-int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector,
-	uint32_t err_code)
+int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector, uint32_t err_code)
 {
 	struct vcpu_arch *arch_vcpu = &vcpu->arch_vcpu;
 	/* VECTOR_INVALID is also greater than 32 */
@@ -240,10 +241,11 @@ int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector,
 
 	arch_vcpu->exception_info.exception = vector;
 
-	if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U)
+	if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U) {
 		arch_vcpu->exception_info.error = err_code;
-	else
+	} else {
 		arch_vcpu->exception_info.error = 0U;
+	}
 
 	return 0;
 }
@@ -391,19 +393,26 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 	uint64_t *pending_req_bits = &arch_vcpu->pending_req;
 	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
 
-	if (bitmap_test_and_clear_lock(ACRN_REQUEST_TRP_FAULT, pending_req_bits)) {
+	if (bitmap_test_and_clear_lock(ACRN_REQUEST_TRP_FAULT,
+						pending_req_bits)) {
 		pr_fatal("Triple fault happen -> shutdown!");
 		return -EFAULT;
 	}
 
-	if (bitmap_test_and_clear_lock(ACRN_REQUEST_EPT_FLUSH, pending_req_bits))
+	if (bitmap_test_and_clear_lock(ACRN_REQUEST_EPT_FLUSH,
+						pending_req_bits)) {
 		invept(vcpu);
+	}
 
-	if (bitmap_test_and_clear_lock(ACRN_REQUEST_VPID_FLUSH, pending_req_bits))
+	if (bitmap_test_and_clear_lock(ACRN_REQUEST_VPID_FLUSH,
+						pending_req_bits)) {
 		flush_vpid_single(arch_vcpu->vpid);
+	}
 
-	if (bitmap_test_and_clear_lock(ACRN_REQUEST_TMR_UPDATE, pending_req_bits))
+	if (bitmap_test_and_clear_lock(ACRN_REQUEST_TMR_UPDATE,
+						pending_req_bits)) {
 		vioapic_update_tmr(vcpu);
+	}
 
 	/* handling cancelled event injection when vcpu is switched out */
 	if (arch_vcpu->inject_event_pending) {
@@ -423,8 +432,9 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 
 	/* SDM Vol 3 - table 6-2, inject high priority exception before
 	 * maskable hardware interrupt */
-	if (vcpu_inject_hi_exception(vcpu) != 0)
+	if (vcpu_inject_hi_exception(vcpu) != 0) {
 		goto INTR_WIN;
+	}
 
 	/* inject NMI before maskable hardware interrupt */
 	if (bitmap_test_and_clear_lock(ACRN_REQUEST_NMI, pending_req_bits)) {
@@ -485,8 +495,9 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 	}
 
 	/* SDM Vol3 table 6-2, inject lowpri exception */
-	if (vcpu_inject_lo_exception(vcpu) != 0)
+	if (vcpu_inject_lo_exception(vcpu) != 0) {
 		goto INTR_WIN;
+	}
 
 INTR_WIN:
 	/*
@@ -536,9 +547,10 @@ void cancel_event_injection(struct vcpu *vcpu)
 	if ((intinfo & VMX_INT_INFO_VALID) != 0U) {
 		vcpu->arch_vcpu.inject_event_pending = true;
 
-		if ((intinfo & (EXCEPTION_ERROR_CODE_VALID << 8)) != 0U)
+		if ((intinfo & (EXCEPTION_ERROR_CODE_VALID << 8U)) != 0U) {
 			vcpu->arch_vcpu.inject_info.error_code =
 				exec_vmread32(VMX_ENTRY_EXCEPTION_ERROR_CODE);
+		}
 
 		vcpu->arch_vcpu.inject_info.intr_info = intinfo;
 		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, 0U);
@@ -557,8 +569,9 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 		status = -EINVAL;
 	}
 
-	if (status != 0)
+	if (status != 0) {
 		return status;
+	}
 
 	pr_dbg(" Handling guest exception");
 
@@ -577,10 +590,11 @@ int exception_vmexit_handler(struct vcpu *vcpu)
 			cpl = exec_vmread32(VMX_GUEST_CS_ATTR);
 			cpl = (cpl >> 5U) & 3U;
 
-			if (cpl < 3U)
+			if (cpl < 3U) {
 				int_err_code &= ~4U;
-			else
+			} else {
 				int_err_code |= 4U;
+			}
 		}
 	}
 

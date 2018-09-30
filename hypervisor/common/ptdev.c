@@ -127,8 +127,9 @@ release_all_entries(struct vm *vm)
 	list_for_each_safe(pos, tmp, &ptdev_list) {
 		entry = list_entry(pos, struct ptdev_remapping_info,
 				entry_node);
-		if (entry->vm == vm)
+		if (entry->vm == vm) {
 			release_entry(entry);
+		}
 	}
 }
 
@@ -191,8 +192,9 @@ ptdev_deactivate_entry(struct ptdev_remapping_info *entry)
 
 void ptdev_init(void)
 {
-	if (get_cpu_id() > 0)
+	if (get_cpu_id() != BOOT_CPU_ID) {
 		return;
+	}
 
 	INIT_LIST_HEAD(&ptdev_list);
 	spinlock_init(&ptdev_lock);

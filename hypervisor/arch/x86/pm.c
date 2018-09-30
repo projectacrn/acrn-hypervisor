@@ -23,20 +23,22 @@ static void acpi_gas_write(struct acpi_generic_address *gas, uint32_t val)
 {
 	uint16_t val16 = (uint16_t)val;
 
-	if (gas->space_id == SPACE_SYSTEM_MEMORY)
+	if (gas->space_id == SPACE_SYSTEM_MEMORY) {
 		mmio_write16(val16, hpa2hva(gas->address));
-	else
+	} else {
 		pio_write16(val16, (uint16_t)gas->address);
+	}
 }
 
 static uint32_t acpi_gas_read(struct acpi_generic_address *gas)
 {
 	uint32_t ret = 0U;
 
-	if (gas->space_id == SPACE_SYSTEM_MEMORY)
+	if (gas->space_id == SPACE_SYSTEM_MEMORY) {
 		ret = mmio_read16(hpa2hva(gas->address));
-	else
+	} else {
 		ret = pio_read16((uint16_t)gas->address);
+	}
 
 	return ret;
 }
@@ -49,8 +51,9 @@ void do_acpi_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 
 	acpi_gas_write(&(sx_data->pm1a_cnt), pm1a_cnt_val);
 
-	if (vm->pm.sx_state_data->pm1b_cnt.address != 0U)
+	if (vm->pm.sx_state_data->pm1b_cnt.address != 0U) {
 		acpi_gas_write(&(sx_data->pm1b_cnt), pm1b_cnt_val);
+	}
 
 	while (1) {
 		/* polling PM1 state register to detect wether
@@ -70,8 +73,9 @@ void do_acpi_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 		 * WAK_STS(bit 15) is set if system will transition to working
 		 * state.
 		 */
-		if ((s1 & (1U << BIT_WAK_STS)) != 0U)
+		if ((s1 & (1U << BIT_WAK_STS)) != 0U) {
 			break;
+		}
 	}
 }
 

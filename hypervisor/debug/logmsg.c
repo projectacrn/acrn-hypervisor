@@ -128,8 +128,9 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 	va_end(args);
 
 	/* Check if flags specify to output to NPK */
-	if (do_npk_log)
+	if (do_npk_log) {
 		npk_log_write(buffer, strnlen_s(buffer, LOG_MESSAGE_MAX_SIZE));
+	}
 
 	/* Check if flags specify to output to stdout */
 	if (do_console_log) {

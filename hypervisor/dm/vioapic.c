@@ -538,12 +538,11 @@ int vioapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req)
 		if (mmio->direction == REQUEST_READ) {
 			vioapic_mmio_rw(vioapic, gpa, &data, true);
 			mmio->value = (uint64_t)data;
-
 		} else if (mmio->direction == REQUEST_WRITE) {
 			vioapic_mmio_rw(vioapic, gpa, &data, false);
-
-		} else
+		} else {
 			ret = -EINVAL;
+		}
 	} else {
 		pr_err("All RW to IOAPIC must be 32-bits in size");
 		ret = -EINVAL;

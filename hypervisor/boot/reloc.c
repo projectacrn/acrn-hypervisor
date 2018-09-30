@@ -82,8 +82,9 @@ void relocate(void)
 
 	/* get the delta that needs to be patched */
 	delta = get_hv_image_delta();
-	if (delta == 0U)
+	if (delta == 0U) {
 		return;
+	}
 
 	/* Look for the descriptoin of relocation sections */
 	for (dyn = (struct Elf64_Dyn *)_DYNAMIC; dyn->d_tag != DT_NULL; dyn++) {
@@ -101,8 +102,9 @@ void relocate(void)
 	}
 
 	/* Sanity check */
-	if ((start == NULL) || (size == 0U))
+	if ((start == NULL) || (size == 0U)) {
 		return;
+	}
 
 	/*
 	 * Need to subtract the relocation delta to get the correct

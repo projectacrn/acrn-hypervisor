@@ -38,8 +38,9 @@ int32_t hcall_sos_offline_cpu(struct vm *vm, uint64_t lapicid)
 	foreach_vcpu(i, vm, vcpu) {
 		if (vlapic_get_apicid(vcpu_vlapic(vcpu)) == lapicid) {
 			/* should not offline BSP */
-			if (vcpu->vcpu_id == BOOT_CPU_ID)
+			if (vcpu->vcpu_id == BOOT_CPU_ID) {
 				return -1;
+			}
 			pause_vcpu(vcpu, VCPU_ZOMBIE);
 			reset_vcpu(vcpu);
 			destroy_vcpu(vcpu);
@@ -237,8 +238,9 @@ int32_t hcall_reset_vm(uint16_t vmid)
 {
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
-	if ((target_vm == NULL) || is_vm0(target_vm))
+	if ((target_vm == NULL) || is_vm0(target_vm)) {
 		return -1;
+	}
 
 	reset_vm(target_vm);
 	return 0;

@@ -229,8 +229,9 @@ dmar_wait_completion(struct dmar_drhd_rt *dmar_uint, uint32_t offset,
 		 */
 		condition = (temp_condition == pre_condition) ? true : false;
 
-		if (condition)
+		if (condition) {
 			break;
+		}
 		ASSERT(((rdtsc() - start) < CYCLES_PER_MS),
 			"DMAR OP Timeout!");
 		asm volatile ("pause" ::: "memory");

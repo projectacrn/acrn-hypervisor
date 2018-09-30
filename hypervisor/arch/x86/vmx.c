@@ -307,8 +307,9 @@ static void load_pdptrs(struct vcpu *vcpu)
 static bool is_cr0_write_valid(struct vcpu *vcpu, uint64_t cr0)
 {
 	/* Shouldn't set always off bit */
-	if ((cr0 & cr0_always_off_mask) != 0UL)
+	if ((cr0 & cr0_always_off_mask) != 0UL) {
 		return false;
+	}
 
 	/* SDM 25.3 "Changes to instruction behavior in VMX non-root"
 	 *
@@ -318,19 +319,22 @@ static bool is_cr0_write_valid(struct vcpu *vcpu, uint64_t cr0)
 	 * CR0.PE = 0 and CR0.PG = 1 is invalid.
 	 */
 	if (((cr0 & CR0_PG) != 0UL) && !is_pae(vcpu)
-		&& ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL))
+		&& ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL)) {
 		return false;
+	}
 
-	if (((cr0 & CR0_PE) == 0UL) && ((cr0 & CR0_PG) != 0UL))
+	if (((cr0 & CR0_PE) == 0UL) && ((cr0 & CR0_PG) != 0UL)) {
 		return false;
+	}
 
 	/* SDM 6.15 "Exception and Interrupt Refrerence" GP Exception
 	 *
 	 * Loading CR0 regsiter with a set NW flag and a clear CD flag
 	 * is invalid
 	 */
-	if (((cr0 & CR0_CD) == 0UL) && ((cr0 & CR0_NW) != 0UL))
+	if (((cr0 & CR0_CD) == 0UL) && ((cr0 & CR0_NW) != 0UL)) {
 		return false;
+	}
 
 	return true;
 }
@@ -450,16 +454,19 @@ void vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 static bool is_cr4_write_valid(struct vcpu *vcpu, uint64_t cr4)
 {
 	/* Check if guest try to set fixed to 0 bits or reserved bits */
-	if ((cr4 & cr4_always_off_mask) != 0U)
+	if ((cr4 & cr4_always_off_mask) != 0U) {
 		return false;
+	}
 
 	/* Do NOT support nested guest */
-	if ((cr4 & CR4_VMXE) != 0UL)
+	if ((cr4 & CR4_VMXE) != 0UL) {
 		return false;
+	}
 
 	/* Do NOT support PCID in guest */
-	if ((cr4 & CR4_PCIDE) != 0UL)
+	if ((cr4 & CR4_PCIDE) != 0UL) {
 		return false;
+	}
 
 	if (is_long_mode(vcpu)) {
 		if ((cr4 & CR4_PAE) == 0UL) {

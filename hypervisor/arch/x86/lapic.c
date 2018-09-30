@@ -134,16 +134,18 @@ static union lapic_base_msr lapic_base_msr;
 
 static inline uint32_t read_lapic_reg32(uint32_t offset)
 {
-	if (offset < 0x20U || offset > 0x3ffU)
+	if ((offset < 0x20U) || (offset > 0x3ffU)) {
 		return 0;
+	}
 
 	return mmio_read32(lapic_info.xapic.vaddr + offset);
 }
 
 void write_lapic_reg32(uint32_t offset, uint32_t value)
 {
-	if (offset < 0x20U || offset > 0x3ffU)
+	if ((offset < 0x20U) || (offset > 0x3ffU)) {
 		return;
+	}
 
 	mmio_write32(value, lapic_info.xapic.vaddr + offset);
 }
@@ -398,10 +400,11 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_0, icr.value_32.lo_32);
 	wait_for_delivery();
 
-	if (boot_cpu_data.family == 6U)
+	if (boot_cpu_data.family == 6U) {
 		udelay(10U); /* 10us is enough for Modern processors */
-	else
+	} else {
 		udelay(200U); /* 200us for old processors */
+	}
 
 	/* Send another start IPI as per the Intel Arch specification */
 	write_lapic_reg32(LAPIC_INT_COMMAND_REGISTER_1, icr.value_32.hi_32);
@@ -449,8 +452,9 @@ int send_shorthand_ipi(uint8_t vector,
 
 	if ((shorthand < INTR_LAPIC_ICR_SELF)
 			|| (shorthand > INTR_LAPIC_ICR_ALL_EX_SELF)
-			|| (delivery_mode > INTR_LAPIC_ICR_NMI))
+			|| (delivery_mode > INTR_LAPIC_ICR_NMI)) {
 		status = -EINVAL;
+	}
 
 	ASSERT(status == 0, "Incorrect arguments");
 
