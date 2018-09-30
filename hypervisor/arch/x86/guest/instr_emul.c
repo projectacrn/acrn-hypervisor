@@ -2213,8 +2213,9 @@ static int instr_check_gva(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt,
 		/* RIP relative addressing starts from the
 		 * following instruction
 		 */
-		if (vie->base_register == CPU_REG_RIP)
+		if (vie->base_register == CPU_REG_RIP) {
 			base += vie->num_processed;
+		}
 
 	}
 
@@ -2332,8 +2333,9 @@ int decode_instruction(struct vcpu *vcpu)
 	 */
 	if ((emul_ctxt->vie.op.op_flags & VIE_OP_F_CHECK_GVA_DI) != 0U) {
 		retval = instr_check_di(vcpu, emul_ctxt);
-		if (retval < 0)
+		if (retval < 0) {
 			return retval;
+		}
 	} else {
 		instr_check_gva(vcpu, emul_ctxt, cpu_mode);
 	}

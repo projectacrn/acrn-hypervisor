@@ -283,8 +283,10 @@ static void add_pte(uint64_t *pde, uint64_t paddr_start,
 		set_pgentry(pte, paddr | prot);
 		paddr += PTE_SIZE;
 		vaddr += PTE_SIZE;
-		if (vaddr >= vaddr_end)
+
+		if (vaddr >= vaddr_end) {
 			break;	/* done */
+		}
 	}
 }
 

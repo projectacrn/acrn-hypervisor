@@ -39,8 +39,9 @@ void do_softirq(void)
 
 	while (true) {
 		nr = ffs64(*softirq_pending_bitmap);
-		if (nr >= NR_SOFTIRQS)
+		if (nr >= NR_SOFTIRQS) {
 			break;
+		}
 
 		bitmap_clear_lock(nr, softirq_pending_bitmap);
 		(*softirq_handlers[nr])(cpu_id);

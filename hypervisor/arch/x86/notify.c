@@ -22,8 +22,9 @@ static void kick_notification(__unused uint32_t irq, __unused void *data)
 		struct smp_call_info_data *smp_call =
 			&per_cpu(smp_call_info, pcpu_id);
 
-		if (smp_call->func != NULL)
+		if (smp_call->func != NULL) {
 			smp_call->func(smp_call->data);
+		}
 		bitmap_clear_nolock(pcpu_id, &smp_call_mask);
 	}
 }

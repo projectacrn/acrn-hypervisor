@@ -172,8 +172,9 @@ static void get_cpu_capabilities(void)
 #ifndef CONFIG_RETPOLINE
 	if (cpu_has_cap(X86_FEATURE_IBRS_IBPB)) {
 		ibrs_type = IBRS_RAW;
-		if (cpu_has_cap(X86_FEATURE_STIBP))
+		if (cpu_has_cap(X86_FEATURE_STIBP)) {
 			ibrs_type = IBRS_OPT;
+		}
 	}
 #endif
 }
@@ -789,14 +790,16 @@ static void ept_cap_detect(void)
 	msr_val = msr_val >> 32U;
 
 	/* Check if secondary processor based VM control is available. */
-	if ((msr_val & VMX_PROCBASED_CTLS_SECONDARY) == 0UL)
+	if ((msr_val & VMX_PROCBASED_CTLS_SECONDARY) == 0UL) {
 		return;
+	}
 
 	/* Read secondary processor based VM control. */
 	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
 
-	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_EPT))
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_EPT)) {
 		cpu_caps.ept_features = 1U;
+	}
 }
 
 static void apicv_cap_detect(void)

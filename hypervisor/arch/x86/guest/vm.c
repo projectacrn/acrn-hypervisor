@@ -308,13 +308,15 @@ int reset_vm(struct vm *vm)
 	int i;
 	struct vcpu *vcpu = NULL;
 
-	if (vm->state != VM_PAUSED)
+	if (vm->state != VM_PAUSED) {
 		return -1;
+	}
 
 	foreach_vcpu(i, vm, vcpu) {
 		reset_vcpu(vcpu);
-		if (is_vcpu_bsp(vcpu))
+		if (is_vcpu_bsp(vcpu)) {
 			vm_sw_loader(vm, vcpu);
+		}
 
 		vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
 	}

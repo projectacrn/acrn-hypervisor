@@ -95,8 +95,9 @@ void init_mtrr(struct vcpu *vcpu)
 	vcpu->mtrr.def_type.bits.fixed_enable = 1U;
 	vcpu->mtrr.def_type.bits.type = MTRR_MEM_TYPE_UC;
 
-	if (is_vm0(vcpu->vm))
+	if (is_vm0(vcpu->vm)) {
 		cap.value = msr_read(MSR_IA32_MTRR_CAP);
+	}
 
 	for (i = 0U; i < FIXED_RANGE_MTRR_NUM; i++) {
 		if (cap.bits.fix != 0U) {

@@ -661,9 +661,9 @@ static int shell_vcpu_dumpreg(int argc, char **argv)
 	dump.vcpu = vcpu;
 	dump.str = shell_log_buf;
 	dump.str_max = CPU_PAGE_SIZE;
-	if (vcpu->pcpu_id == get_cpu_id())
+	if (vcpu->pcpu_id == get_cpu_id()) {
 		vcpu_dumpreg(&dump);
-	else {
+	} else {
 		bitmap_set_nolock(vcpu->pcpu_id, &mask);
 		smp_call_function(mask, vcpu_dumpreg, &dump);
 	}

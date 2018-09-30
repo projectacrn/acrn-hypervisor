@@ -55,10 +55,12 @@ void free_ept_mem(uint64_t *pml4_page)
 
 void destroy_ept(struct vm *vm)
 {
-	if (vm->arch_vm.nworld_eptp != NULL)
+	if (vm->arch_vm.nworld_eptp != NULL) {
 		free_ept_mem((uint64_t *)vm->arch_vm.nworld_eptp);
-	if (vm->arch_vm.m2p != NULL)
+	}
+	if (vm->arch_vm.m2p != NULL) {
 		free_ept_mem((uint64_t *)vm->arch_vm.m2p);
+	}
 }
 /* using return value INVALID_HPA as error code */
 uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
