@@ -46,7 +46,7 @@ content:
 
 kconfig:
 	$(Q)srctree=../hypervisor \
-	    python3 scripts/genrest.py ../hypervisor/Kconfig reference/kconfig/
+	    python3 scripts/genrest.py Kconfig reference/kconfig/
 
 pullsource:
 	$(Q)scripts/pullsource.sh
