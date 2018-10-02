@@ -95,7 +95,7 @@
 
 #undef LOG_TAG
 #define LOG_TAG			"xHCI: "
-#define	XHCI_MAX_DEVS		20	/* 10 root hub + 10 external hub */
+#define	XHCI_MAX_DEVS		8	/* 4 USB3 + 4 USB2 devs */
 #define	XHCI_MAX_SLOTS		64	/* min allowed by Windows drivers */
 
 /*
@@ -396,7 +396,6 @@ struct pci_xhci_vdev {
 #define VPORT_ASSIGNED (1)
 #define VPORT_CONNECTED (2)
 #define VPORT_EMULATED (3)
-#define VPORT_HUB_CONNECTED (4)
 
 /* helpers for get port mapping information */
 #define VPORT_NUM(state) (state & 0xFF)
@@ -482,27 +481,6 @@ static struct pci_xhci_option_elem xhci_option_table[] = {
 	{"cap", pci_xhci_parse_extcap}
 };
 
-static enum usb_native_dev_type
-pci_xhci_get_dev_type(struct pci_xhci_vdev *xdev, void *dev_data)
-{
-	uint16_t port, bus;
-	struct usb_native_devinfo *di;
-
-	assert(dev_data);
-
-	di = dev_data;
-	if (usb_get_parent_dev_type(di->priv_data, &bus, &port) == USB_HUB) {
-		if (VPORT_STATE(xdev->port_map_tbl[bus][port])  ==
-				VPORT_HUB_CONNECTED) {
-			di->port += PORT_HUB_BASE;
-			return USB_VALID_SUB_DEV;
-		} else
-			return USB_INVALID_SUB_DEV;
-	}
-
-	return USB_DEV;
-}
-
 static int
 pci_xhci_get_free_rh_port(struct pci_xhci_vdev *xdev, struct usb_native_devinfo
 		*di)
@@ -545,9 +523,6 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	struct usb_native_devinfo *di;
 	int port;
 	int need_intr = 1;
-	enum usb_native_dev_type type;
-	int state;
-	int rc;
 
 	xdev = hci_data;
 
@@ -562,36 +537,13 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	UPRINTF(LDBG, "%04x:%04x %d-%d connecting.\r\n",
 			di->vid, di->pid, di->bus, di->port);
 
-	type = pci_xhci_get_dev_type(xdev, di);
-	if (type == USB_DEV) {
-		if (VPORT_STATE(xdev->port_map_tbl[di->bus][di->port]) ==
-				VPORT_FREE) {
-			UPRINTF(LDBG, "%04x:%04x %d-%d doesn't belong to this"
-					" vm, bye.\r\n", di->vid, di->pid,
-					di->bus, di->port);
-			goto errout;
-		}
-	} else if (type == USB_INVALID_SUB_DEV)
-		return 0;
-
-	state = VPORT_STATE(xdev->port_map_tbl[di->bus][di->port]);
-	if (state == VPORT_CONNECTED || state == VPORT_EMULATED ||
-			state == VPORT_HUB_CONNECTED) {
-		UPRINTF(LFTL, "do not support multiple hubs currently, reject "
-				"device %d-%d\r\n", di->bus, di->port);
+	if (VPORT_STATE(xdev->port_map_tbl[di->bus][di->port]) ==
+			VPORT_FREE) {
+		UPRINTF(LDBG, "%04x:%04x %d-%d doesn't belong to this"
+				" vm, bye.\r\n", di->vid, di->pid,
+				di->bus, di->port);
 		goto errout;
 	}
-
-	rc = usb_dev_is_hub(di->priv_data);
-	if (rc == USB_HUB) {
-		xdev->port_map_tbl[di->bus][di->port] =
-			VPORT_NUM_STATE(VPORT_HUB_CONNECTED, 0);
-		return 0;
-	} else if (rc == USB_TYPE_INVALID) {
-		UPRINTF(LWRN, "usb_dev_is_hub failed\r\n");
-		goto errout;
-	}
-
 
 	UPRINTF(LDBG, "%04x:%04x %d-%d belong to this vm.\r\n", di->vid,
 			di->pid, di->bus, di->port);
@@ -647,11 +599,6 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 	}
 
 	status = xdev->port_map_tbl[di.bus][di.port];
-	if (VPORT_STATE(status) == VPORT_HUB_CONNECTED) {
-		xdev->port_map_tbl[di.bus][di.port] =
-			VPORT_NUM_STATE(VPORT_ASSIGNED, 0);
-		return 0;
-	}
 
 	for (port = 1; port <= XHCI_MAX_DEVS; ++port) {
 		edev = xdev->devices[port];
@@ -659,24 +606,8 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 			continue;
 
 		udev = edev->dev_instance;
-		if (udev->info.port == di.port) {
-			int old_t, new_t;
-			uint8_t old_ports[7]; /* max USB hub tiers are 7 */
-			uint8_t new_ports[7];
-
-			/* get tiers and port info */
-			old_t = libusb_get_port_numbers(udev->info.priv_data,
-					old_ports, sizeof(old_ports));
-			new_t = libusb_get_port_numbers(di.priv_data,
-					new_ports, sizeof(new_ports));
-
-			if (old_t == new_t &&
-					!memcmp(old_ports, new_ports, old_t)) {
-				di = udev->info;
-				break;
-			}
-			UPRINTF(LFTL, "multi-hub is not supported yet\r\n");
-		}
+		if (udev->info.port == di.port)
+			break;
 	}
 
 	if (port > XHCI_MAX_DEVS) {
