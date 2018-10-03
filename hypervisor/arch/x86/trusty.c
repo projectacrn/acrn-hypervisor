@@ -177,13 +177,13 @@ static void save_world_ctx(struct acrn_vcpu *vcpu, struct ext_context *ext_ctx)
 
 	/*
 	 * Similar to CR0 and CR4, the actual value of guest's IA32_PAT MSR
-	 * (represented by ext_ctx->vmx_ia32_pat) could be different from the
-	 * value that guest reads (represented by ext_ctx->ia32_pat).
+	 * (represented by ext_ctx->ia32_pat) could be different from the
+	 * value that guest reads (guest_msrs[IA32_PAT]).
 	 *
-	 * the wrmsr handler keeps track of 'ia32_pat', and we only
-	 * need to load 'vmx_ia32_pat' here.
+	 * the wrmsr handler keeps track of 'guest_msrs', and we only
+	 * need to save/load 'ext_ctx->ia32_pat' in world switch.
 	 */
-	ext_ctx->vmx_ia32_pat = exec_vmread64(VMX_GUEST_IA32_PAT_FULL);
+	ext_ctx->ia32_pat = exec_vmread64(VMX_GUEST_IA32_PAT_FULL);
 	ext_ctx->ia32_sysenter_esp = exec_vmread(VMX_GUEST_IA32_SYSENTER_ESP);
 	ext_ctx->ia32_sysenter_eip = exec_vmread(VMX_GUEST_IA32_SYSENTER_EIP);
 	ext_ctx->ia32_sysenter_cs = exec_vmread32(VMX_GUEST_IA32_SYSENTER_CS);
@@ -237,7 +237,7 @@ static void load_world_ctx(struct acrn_vcpu *vcpu, const struct ext_context *ext
 	exec_vmwrite(VMX_GUEST_CR3, ext_ctx->cr3);
 	exec_vmwrite(VMX_GUEST_DR7, ext_ctx->dr7);
 	exec_vmwrite64(VMX_GUEST_IA32_DEBUGCTL_FULL, ext_ctx->ia32_debugctl);
-	exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, ext_ctx->vmx_ia32_pat);
+	exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, ext_ctx->ia32_pat);
 	exec_vmwrite32(VMX_GUEST_IA32_SYSENTER_CS, ext_ctx->ia32_sysenter_cs);
 	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_ESP, ext_ctx->ia32_sysenter_esp);
 	exec_vmwrite(VMX_GUEST_IA32_SYSENTER_EIP, ext_ctx->ia32_sysenter_eip);
@@ -426,8 +426,6 @@ static bool init_secure_world_env(struct acrn_vcpu *vcpu,
 		TRUSTY_EPT_REBASE_GPA + size;
 
 	vcpu->arch.contexts[SECURE_WORLD].ext_ctx.tsc_offset = 0UL;
-	vcpu->arch.contexts[SECURE_WORLD].ext_ctx.ia32_pat =
-		vcpu->arch.contexts[NORMAL_WORLD].ext_ctx.ia32_pat;
 
 	/* Init per world MSRs */
 	for (i = 0U; i < NUM_WORLD_MSRS; i++) {
