@@ -85,41 +85,7 @@ static uint64_t create_zero_page(struct vm *vm)
 	return gpa;
 }
 
-int load_guest(struct vm *vm, struct vcpu *vcpu)
-{
-	int32_t ret = 0;
-	void *hva;
-	uint64_t  lowmem_gpa_top;
-
-	hva  = gpa2hva(vm, GUEST_CFG_OFFSET);
-	lowmem_gpa_top = *(uint64_t *)hva;
-
-	hva  = gpa2hva(vm, lowmem_gpa_top -
-			MEM_4K - MEM_2K);
-	vcpu->entry_addr = (void *)(*((uint64_t *)hva));
-
-	if (get_vcpu_mode(vcpu) == CPU_MODE_REAL) {
-		set_bsp_real_mode_entry(vcpu);
-	} else {
-		set_bsp_protect_mode_regs(vcpu);
-	}
-
-	vcpu_set_gpreg(vcpu, CPU_REG_RSI, lowmem_gpa_top - MEM_4K);
-
-	pr_info("%s, Set config according to predefined offset:",
-			__func__);
-	pr_info("VCPU%hu Entry: 0x%llx, RSI: 0x%016llx, cr3: 0x%016llx",
-			vcpu->vcpu_id, vcpu->entry_addr,
-			vcpu_get_gpreg(vcpu, CPU_REG_RSI),
-			vm->arch_vm.guest_init_pml4);
-
-	return ret;
-}
-
-/*
- * @pre vm != NULL
- */
-int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
+int general_sw_loader(struct vm *vm)
 {
 	int32_t ret = 0;
 	void *hva;
@@ -128,16 +94,9 @@ int general_sw_loader(struct vm *vm, struct vcpu *vcpu)
 	struct zero_page *zeropage;
 	struct sw_linux *sw_linux = &(vm->sw.linux_info);
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
+	struct vcpu *vcpu = get_primary_vcpu(vm);
 
 	pr_dbg("Loading guest to run-time location");
-
-/* ACRN in partiton mode boots all VMs without devicemodel */
-#ifndef CONFIG_PARTITION_MODE
-	/* FIXME: set config according to predefined offset */
-	if (!is_vm0(vm)) {
-		return load_guest(vm, vcpu);
-	}
-#endif
 
 	set_vcpu_regs(vcpu, &vm0_boot_context);
 
