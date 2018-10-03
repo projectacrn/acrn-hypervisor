@@ -300,6 +300,40 @@ int32_t hcall_pulse_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
 /**
  *@pre Pointer vm shall point to VM0
  */
+int32_t hcall_set_vcpu_regs(struct vm *vm, uint16_t vmid, uint64_t param)
+{
+	struct vm *target_vm = get_vm_from_vmid(vmid);
+	struct acrn_set_vcpu_regs vcpu_regs;
+	struct vcpu *vcpu;
+
+	if ((target_vm == NULL) || (param == 0U) || is_vm0(target_vm)) {
+		return -1;
+	}
+
+	/* Only allow setup init ctx while target_vm is inactive */
+	if (target_vm->state == VM_STARTED) {
+		return -1;
+	}
+
+	if (copy_from_gpa(vm, &vcpu_regs, param, sizeof(vcpu_regs)) != 0) {
+		pr_err("%s: Unable copy param to vm\n", __func__);
+		return -1;
+	}
+
+	vcpu = vcpu_from_vid(target_vm, vcpu_regs.vcpu_id);
+	if (vcpu == NULL) {
+		pr_err("%s: invalid vcpu_id for set_vcpu_regs\n", __func__);
+		return -1;
+	}
+
+	set_vcpu_regs(vcpu, &(vcpu_regs.vcpu_regs));
+
+	return 0;
+}
+
+/**
+ *@pre Pointer vm shall point to VM0
+ */
 int32_t hcall_set_irqline(struct vm *vm, uint16_t vmid,
 				struct acrn_irqline_ops *ops)
 {

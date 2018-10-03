@@ -137,6 +137,22 @@ int32_t hcall_pause_vm(uint16_t vmid);
 int32_t hcall_create_vcpu(struct vm *vm, uint16_t vmid, uint64_t param);
 
 /**
+ * @brief set vcpu regs
+ *
+ * Set the vcpu regs. It will set the vcpu init regs from DM. Now,
+ * it's only applied to BSP. AP always uses fixed init regs.
+ * The function will return -1 if the targat VM or BSP doesn't exist.
+ *
+ * @param vm Pointer to VM data structure
+ * @param vmid ID of the VM
+ * @param param guest physical address. This gpa points to
+ *              struct acrn_vcpu_regs
+ *
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_set_vcpu_regs(struct vm *vm, uint16_t vmid, uint64_t param);
+
+/**
  * @brief assert IRQ line
  *
  * Assert a virtual IRQ line for a VM, which could be from ISA or IOAPIC,
