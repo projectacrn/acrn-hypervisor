@@ -311,6 +311,22 @@ struct acrn_vcpu_regs {
 };
 
 /**
+ * @brief Info to set vcpu state
+ *
+ * the pamameter for HC_SET_VCPU_STATE
+ */
+struct acrn_set_vcpu_regs {
+	/** the virtual CPU ID for the VCPU to set state */
+	uint16_t vcpu_id;
+
+	/** reserved space to make cpu_state aligned to 8 bytes */
+	uint16_t reserved0[3];
+
+	/** the structure to hold vcpu state */
+	struct acrn_vcpu_regs vcpu_regs;
+} __attribute__((aligned(8)));
+
+/**
  * @brief Info to set ioreq buffer for a created VM
  *
  * the parameter for HC_SET_IOREQ_BUFFER hypercall
