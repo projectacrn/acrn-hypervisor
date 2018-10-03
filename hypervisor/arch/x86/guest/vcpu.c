@@ -146,18 +146,6 @@ inline void vcpu_set_cr4(struct acrn_vcpu *vcpu, uint64_t val)
 	vmx_write_cr4(vcpu, val);
 }
 
-inline uint64_t vcpu_get_pat_ext(const struct acrn_vcpu *vcpu)
-{
-	return vcpu->arch.contexts[vcpu->arch.cur_context].
-		ext_ctx.ia32_pat;
-}
-
-inline void vcpu_set_pat_ext(struct acrn_vcpu *vcpu, uint64_t val)
-{
-	vcpu->arch.contexts[vcpu->arch.cur_context].ext_ctx.ia32_pat
-		= val;
-}
-
 uint64_t vcpu_get_guest_msr(const struct acrn_vcpu *vcpu, uint32_t msr)
 {
 	uint32_t index = vmsr_get_guest_msr_index(msr);

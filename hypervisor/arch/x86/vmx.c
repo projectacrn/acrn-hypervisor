@@ -260,11 +260,11 @@ static void init_cr0_cr4_host_mask(void)
 uint64_t vmx_rdmsr_pat(const struct acrn_vcpu *vcpu)
 {
 	/*
-	 * note: if context->cr0.CD is set, the actual value in guest's
+	 * note: if run_ctx->cr0.CD is set, the actual value in guest's
 	 * IA32_PAT MSR is PAT_ALL_UC_VALUE, which may be different from
-	 * the saved value saved_context->ia32_pat
+	 * the saved value guest_msrs[MSR_IA32_PAT]
 	 */
-	return vcpu_get_pat_ext(vcpu);
+	return vcpu_get_guest_msr(vcpu, MSR_IA32_PAT);
 }
 
 int vmx_wrmsr_pat(struct acrn_vcpu *vcpu, uint64_t value)
@@ -281,7 +281,7 @@ int vmx_wrmsr_pat(struct acrn_vcpu *vcpu, uint64_t value)
 		}
 	}
 
-	vcpu_set_pat_ext(vcpu, value);
+	vcpu_set_guest_msr(vcpu, MSR_IA32_PAT, value);
 
 	/*
 	 * If context->cr0.CD is set, we defer any further requests to write
@@ -430,7 +430,7 @@ void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0)
 			} else {
 				/* Restore IA32_PAT to enable cache again */
 				exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL,
-					vcpu_get_pat_ext(vcpu));
+					vcpu_get_guest_msr(vcpu, MSR_IA32_PAT));
 			}
 			vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 		}
@@ -592,7 +592,7 @@ static void init_guest_vmx(struct acrn_vcpu *vcpu, uint64_t cr0, uint64_t cr3,
 	exec_vmwrite32(VMX_GUEST_INTERRUPTIBILITY_INFO, 0U);
 	exec_vmwrite32(VMX_GUEST_ACTIVITY_STATE, 0U);
 	exec_vmwrite32(VMX_GUEST_SMBASE, 0U);
-	vcpu_set_pat_ext(vcpu, PAT_POWER_ON_VALUE);
+	vcpu_set_guest_msr(vcpu, MSR_IA32_PAT, PAT_POWER_ON_VALUE);
 	exec_vmwrite(VMX_GUEST_IA32_PAT_FULL, PAT_POWER_ON_VALUE);
 	exec_vmwrite(VMX_GUEST_DR7, DR7_INIT_VALUE);
 }

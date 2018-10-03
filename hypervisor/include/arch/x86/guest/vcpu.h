@@ -141,7 +141,6 @@ struct ext_context {
 	uint64_t ia32_kernel_gs_base;
 
 	uint64_t ia32_pat;
-	uint64_t vmx_ia32_pat;
 	uint32_t ia32_sysenter_cs;
 	uint64_t ia32_sysenter_esp;
 	uint64_t ia32_sysenter_eip;
@@ -469,9 +468,6 @@ uint64_t vcpu_get_cr4(struct acrn_vcpu *vcpu);
  * @param[in] val the value set CR4
  */
 void vcpu_set_cr4(struct acrn_vcpu *vcpu, uint64_t val);
-
-uint64_t vcpu_get_pat_ext(const struct acrn_vcpu *vcpu);
-void vcpu_set_pat_ext(struct acrn_vcpu *vcpu, uint64_t val);
 
 /**
  * @brief get guest emulated MSR
