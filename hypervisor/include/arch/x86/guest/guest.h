@@ -135,10 +135,9 @@ void init_msr_emulation(struct vcpu *vcpu);
 struct run_context;
 int vmx_vmrun(struct run_context *context, int ops, int ibrs);
 
-int load_guest(struct vm *vm, struct vcpu *vcpu);
-int general_sw_loader(struct vm *vm, struct vcpu *vcpu);
+int general_sw_loader(struct vm *vm);
 
-typedef int (*vm_sw_loader_t)(struct vm *vm, struct vcpu *vcpu);
+typedef int (*vm_sw_loader_t)(struct vm *vm);
 extern vm_sw_loader_t vm_sw_loader;
 
 /* @pre Caller(Guest) should make sure gpa is continuous.

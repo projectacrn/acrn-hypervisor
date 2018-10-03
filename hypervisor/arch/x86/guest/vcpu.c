@@ -661,6 +661,7 @@ int prepare_vcpu(struct vm *vm, uint16_t pcpu_id)
 			} else {
 				return -EINVAL;
 			}
+			vm_sw_loader(vm);
 		} else {
 #ifdef CONFIG_EFI_STUB
 			/* currently non-vm0 will boot kernel directly */
@@ -670,7 +671,6 @@ int prepare_vcpu(struct vm *vm, uint16_t pcpu_id)
 #endif
 		}
 #endif //CONFIG_PARTITION_MODE
-		vm_sw_loader(vm, vcpu);
 	} else {
 		vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
 	}

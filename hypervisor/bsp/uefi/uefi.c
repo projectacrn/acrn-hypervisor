@@ -36,17 +36,15 @@ void efi_spurious_handler(int vector)
 	return;
 }
 
-int uefi_sw_loader(struct vm *vm, struct vcpu *vcpu)
+int uefi_sw_loader(struct vm *vm)
 {
 	int ret = 0;
+	struct vcpu *vcpu = get_primary_vcpu(vm);
 	struct acrn_vcpu_regs *vcpu_regs = &vm0_boot_context;
 
 	ASSERT(vm != NULL, "Incorrect argument");
 
 	pr_dbg("Loading guest to run-time location");
-
-	if (!is_vm0(vm))
-		return load_guest(vm, vcpu);
 
 	vlapic_restore(vcpu_vlapic(vcpu), &uefi_lapic_regs);
 
