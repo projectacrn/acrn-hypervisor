@@ -6,30 +6,13 @@ Developer Guides
 .. toctree::
    :maxdepth: 1
 
-   primer.rst
-   ../api/index.rst
-   ../reference/kconfig/index.rst
+   hld/index
+   primer
+   GVT-g-porting
+   trusty
+   ../api/index
+   ../reference/kconfig/index
 
-High-Level Design Guides
-************************
-
-These documents describe the high-level design, background, and motivation for
-specific areas within the ACRN hypervisor system.
-
-.. toctree::
-   :maxdepth: 1
-
-   ACPI-virt-hld.rst
-   APL_GVT-g-hld.rst
-   GVT-g-porting.rst
-   interrupt-hld.rst
-   memmgt-hld.rst
-   network-virt-hld.rst
-   security-hld.rst
-   uart-virtualization.rst
-   virtio-hld.rst
-   virtio-console.rst
-   watchdog-hld.rst
 
 Contributing to the project
 ***************************
@@ -41,6 +24,6 @@ project.
 .. toctree::
    :maxdepth: 1
 
-   contribute_guidelines.rst
-   doc_guidelines.rst
-   graphviz.rst
+   contribute_guidelines
+   doc_guidelines
+   graphviz
