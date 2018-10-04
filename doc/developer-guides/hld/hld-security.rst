@@ -1,4 +1,4 @@
-.. _security-hld:
+.. _hld-security:
 
 Security high-level design
 ##########################

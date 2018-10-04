@@ -1,7 +1,7 @@
-.. virtio-console:
+.. _virtio-console:
 
-Virtio-Console High-Level design
-################################
+Virtio-console
+##############
 
 The Virtio-console is a simple device for data input and output.  The
 console's virtio device ID is ``3`` and can have from 1 to 16 ports.
@@ -181,3 +181,4 @@ The File backend only supports console output to a file (no input).
 #. Add the console parameter to the guest OS kernel command line::
 
       console=hvc0
+
