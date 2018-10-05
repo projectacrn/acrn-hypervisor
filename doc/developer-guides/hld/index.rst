@@ -14,7 +14,7 @@ background, and motivation for specific areas within the ACRN hypervisor
 system.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    Overview <hld-overview>
    Hypervisor <hld-hypervisor>
