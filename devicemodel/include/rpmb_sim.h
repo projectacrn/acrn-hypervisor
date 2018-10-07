@@ -28,7 +28,7 @@
 #ifndef __RPMB_SIM_H__
 #define __RPMB_SIM_H__
 
-inline uint32_t swap32(uint32_t val)
+static inline uint32_t swap32(uint32_t val)
 {
 	return ((val & (uint32_t)0x000000ffUL) << 24)
 		| ((val & (uint32_t)0x0000ff00UL) <<  8)
@@ -36,7 +36,7 @@ inline uint32_t swap32(uint32_t val)
 		| ((val & (uint32_t)0xff000000UL) >> 24);
 }
 
-inline uint16_t swap16(uint16_t val)
+static inline uint16_t swap16(uint16_t val)
 {
 	return ((val & (uint16_t)0x00ffU) << 8)
 		| ((val & (uint16_t)0xff00U) >> 8);
