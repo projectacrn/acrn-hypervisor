@@ -227,8 +227,8 @@ enum USB_ERRCODE {
 #define USB_NATIVE_NUM_BUS 4
 
 extern int usb_log_level;
-inline int usb_get_log_level(void)		{ return usb_log_level; }
-inline void usb_set_log_level(int level)	{ usb_log_level = level; }
+static inline int usb_get_log_level(void)		{ return usb_log_level; }
+static inline void usb_set_log_level(int level)	{ usb_log_level = level; }
 void usb_parse_log_level(char level);
 struct usb_devemu *usb_emu_finddev(char *name);
 int usb_native_is_bus_existed(uint8_t bus_num);
