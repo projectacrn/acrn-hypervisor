@@ -55,7 +55,7 @@ enum {
 	XHCI_ST_EPCTX_ERROR
 };
 
-#define	XHCI_MAX_DEVICES	MIN(USB_MAX_DEVICES, 128)
+#define	XHCI_MAX_VIRT_PORTS	MIN(USB_MAX_DEVICES, 128)
 #define	XHCI_MAX_ENDPOINTS	32	/* hardcoded - do not change */
 #define	XHCI_MAX_SCRATCHPADS	32
 #define	XHCI_MAX_EVENTS		(16 * 13)
