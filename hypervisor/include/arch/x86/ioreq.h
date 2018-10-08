@@ -94,8 +94,7 @@ struct vm_io_handler {
 
 /* Typedef for MMIO handler and range check routine */
 struct mmio_request;
-typedef int (*hv_mem_io_handler_t)(struct vcpu *vcpu,
-					struct io_request *io_req);
+typedef int (*hv_mem_io_handler_t)(struct io_request *io_req, void *handler_private_data);
 
 /* Structure for MMIO handler node */
 struct mem_io_node {

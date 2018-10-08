@@ -511,7 +511,7 @@ vioapic_init(struct vm *vm)
 			vioapic_mmio_access_handler,
 			(uint64_t)VIOAPIC_BASE,
 			(uint64_t)VIOAPIC_BASE + VIOAPIC_SIZE,
-			NULL);
+			vm);
 }
 
 void
@@ -532,9 +532,9 @@ vioapic_pincount(const struct vm *vm)
 	}
 }
 
-int vioapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req)
+int vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
 {
-	struct vm *vm = vcpu->vm;
+	struct vm *vm = (struct vm *)handler_private_data;
 	struct acrn_vioapic *vioapic;
 	struct mmio_request *mmio = &io_req->reqs.mmio;
 	uint64_t gpa = mmio->address;
