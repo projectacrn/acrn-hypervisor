@@ -434,7 +434,7 @@ int prepare_vm(uint16_t pcpu_id)
 	int ret = 0;
 	uint16_t i;
 	struct vm *vm = NULL;
-	const struct vm_description *vm_desc = NULL;
+	struct vm_description *vm_desc = NULL;
 	bool is_vm_bsp;
 
 	vm_desc = pcpu_vm_desc_map[pcpu_id].vm_desc_ptr;

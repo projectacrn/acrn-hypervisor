@@ -15,6 +15,54 @@
 
 #define MAX_BOOT_PARAMS_LEN 64U
 
+#ifdef CONFIG_PARTITION_MODE
+int init_vm_boot_info(struct vm *vm)
+{
+	struct multiboot_module *mods = NULL;
+	struct multiboot_info *mbi = NULL;
+
+	if (boot_regs[0] != MULTIBOOT_INFO_MAGIC) {
+		ASSERT(false, "no multiboot info found");
+		return -EINVAL;
+	}
+
+	mbi = hpa2hva((uint64_t)boot_regs[1]);
+
+	dev_dbg(ACRN_DBG_BOOT, "Multiboot detected, flag=0x%x", mbi->mi_flags);
+	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
+		ASSERT(false, "no kernel info found");
+		return -EINVAL;
+	}
+
+	dev_dbg(ACRN_DBG_BOOT, "mod counts=%d\n", mbi->mi_mods_count);
+
+	/* mod[0] is for kernel&cmdline, other mod for ramdisk/firmware info*/
+	mods = (struct multiboot_module *)(uint64_t)mbi->mi_mods_addr;
+
+	dev_dbg(ACRN_DBG_BOOT, "mod0 start=0x%x, end=0x%x",
+		mods[0].mm_mod_start, mods[0].mm_mod_end);
+	dev_dbg(ACRN_DBG_BOOT, "cmd addr=0x%x, str=%s", mods[0].mm_string,
+		(char *) (uint64_t)mods[0].mm_string);
+
+	vm->sw.kernel_type = VM_LINUX_GUEST;
+	vm->sw.kernel_info.kernel_src_addr =
+			hpa2hva((uint64_t)mods[0].mm_mod_start);
+	vm->sw.kernel_info.kernel_size =
+			mods[0].mm_mod_end - mods[0].mm_mod_start;
+
+	vm->sw.kernel_info.kernel_load_addr = (void *)(16 * 1024 * 1024UL);
+
+	vm->sw.linux_info.bootargs_src_addr =
+				(void *)vm->vm_desc->bootargs;
+	vm->sw.linux_info.bootargs_size =
+			strnlen_s(vm->vm_desc->bootargs, MEM_2K);
+
+	vm->sw.linux_info.bootargs_load_addr = (void *)(vm->vm_desc->mem_size -  8*1024UL);
+
+	return 0;
+}
+
+#else
 static const char *boot_params_arg = "ImageBootParamsAddr=";
 
 struct image_boot_params {
@@ -187,53 +235,6 @@ fail:
 	return NULL;
 }
 
-#ifdef CONFIG_PARTITION_MODE
-int init_vm_boot_info(struct vm *vm)
-{
-	struct multiboot_module *mods = NULL;
-	struct multiboot_info *mbi = NULL;
-
-	if (boot_regs[0] != MULTIBOOT_INFO_MAGIC) {
-		ASSERT(false, "no multiboot info found");
-		return -EINVAL;
-	}
-
-	mbi = hpa2hva((uint64_t)boot_regs[1]);
-
-	dev_dbg(ACRN_DBG_BOOT, "Multiboot detected, flag=0x%x", mbi->mi_flags);
-	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
-		ASSERT(false, "no kernel info found");
-		return -EINVAL;
-	}
-
-	dev_dbg(ACRN_DBG_BOOT, "mod counts=%d\n", mbi->mi_mods_count);
-
-	/* mod[0] is for kernel&cmdline, other mod for ramdisk/firmware info*/
-	mods = (struct multiboot_module *)(uint64_t)mbi->mi_mods_addr;
-
-	dev_dbg(ACRN_DBG_BOOT, "mod0 start=0x%x, end=0x%x",
-		mods[0].mm_mod_start, mods[0].mm_mod_end);
-	dev_dbg(ACRN_DBG_BOOT, "cmd addr=0x%x, str=%s", mods[0].mm_string,
-		(char *) (uint64_t)mods[0].mm_string);
-
-	vm->sw.kernel_type = VM_LINUX_GUEST;
-	vm->sw.kernel_info.kernel_src_addr =
-			hpa2hva((uint64_t)mods[0].mm_mod_start);
-	vm->sw.kernel_info.kernel_size =
-			mods[0].mm_mod_end - mods[0].mm_mod_start;
-
-	vm->sw.kernel_info.kernel_load_addr = (void *)(16 * 1024 * 1024UL);
-
-	vm->sw.linux_info.bootargs_src_addr =
-				vm->vm_desc->bootargs;
-	vm->sw.linux_info.bootargs_size =
-			strnlen_s(vm->vm_desc->bootargs, MEM_2K);
-
-	vm->sw.linux_info.bootargs_load_addr = (void *)(vm->vm_desc->mem_size -  8*1024UL);
-
-	return 0;
-}
-#else
 /**
  * @param[inout] vm pointer to a vm descriptor
  *
