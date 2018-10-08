@@ -77,10 +77,10 @@ static int vdev_pt_init(struct pci_vdev *vdev)
 	ret = assign_iommu_device(vm->iommu, vdev->pdev.bdf.bits.b,
 		(uint8_t)(vdev->pdev.bdf.value & 0xFFU));
 
-	pci_command = pci_pdev_read_cfg(&vdev->pdev, PCIR_COMMAND, 2U);
+	pci_command = pci_pdev_read_cfg(vdev->pdev.bdf, PCIR_COMMAND, 2U);
 	/* Disable INTX */
 	pci_command |= 0x400U;
-	pci_pdev_write_cfg(&vdev->pdev, PCIR_COMMAND, 2U, pci_command);
+	pci_pdev_write_cfg(vdev->pdev.bdf, PCIR_COMMAND, 2U, pci_command);
 
 	return ret;
 }
@@ -109,7 +109,7 @@ static int vdev_pt_cfgread(struct pci_vdev *vdev, uint32_t offset,
 	if (pci_bar_access(offset)) {
 		*val = pci_vdev_read_cfg(vdev, offset, bytes);
 	} else {
-		*val = pci_pdev_read_cfg(&vdev->pdev, offset, bytes);
+		*val = pci_pdev_read_cfg(vdev->pdev.bdf, offset, bytes);
 	}
 
 	return 0;
@@ -188,7 +188,7 @@ static int vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 		vdev_pt_cfgwrite_bar(vdev, offset, bytes, val);
 	} else {
 		/* Write directly to physical device's config space */
-		pci_pdev_write_cfg(&vdev->pdev, offset, bytes, val);
+		pci_pdev_write_cfg(vdev->pdev.bdf, offset, bytes, val);
 	}
 
 	return 0;
