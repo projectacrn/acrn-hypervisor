@@ -44,14 +44,14 @@ static uint32_t pci_pdev_calc_address(union pci_bdf bdf, uint32_t offset)
 	return addr;
 }
 
-uint32_t pci_pdev_read_cfg(struct pci_pdev *pdev, uint32_t offset, uint32_t bytes)
+uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes)
 {
 	uint32_t addr;
 	uint32_t val;
 
 	spinlock_obtain(&pci_device_lock);
 
-	addr = pci_pdev_calc_address(pdev->bdf, offset);
+	addr = pci_pdev_calc_address(bdf, offset);
 
 	/* Write address to ADDRESS register */
 	pio_write32(addr, PCI_CONFIG_ADDR);
@@ -73,14 +73,13 @@ uint32_t pci_pdev_read_cfg(struct pci_pdev *pdev, uint32_t offset, uint32_t byte
 	return val;
 }
 
-void pci_pdev_write_cfg(struct pci_pdev *pdev, uint32_t offset, uint32_t bytes,
-	uint32_t val)
+void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes,	uint32_t val)
 {
 	uint32_t addr;
 
 	spinlock_obtain(&pci_device_lock);
 
-	addr = pci_pdev_calc_address(pdev->bdf, offset);
+	addr = pci_pdev_calc_address(bdf, offset);
 
 	/* Write address to ADDRESS register */
 	pio_write32(addr, PCI_CONFIG_ADDR);

@@ -157,4 +157,7 @@ static inline bool pci_bar_access(uint32_t offset)
 	}
 }
 
+uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes);
+void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
+
 #endif /* PCI_H_ */
