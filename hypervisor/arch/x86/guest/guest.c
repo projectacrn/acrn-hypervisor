@@ -714,36 +714,3 @@ uint64_t e820_alloc_low_memory(uint32_t size_arg)
 	pr_fatal("Can't allocate memory under 1M from E820\n");
 	return ACRN_INVALID_HPA;
 }
-
-/*******************************************************************
- *         GUEST initial GDT table
- *
- * If guest starts with protected mode, HV needs to prepare Guest GDT.
- ******************************************************************/
-
-#define GUEST_INIT_GDT_SKIP_SIZE	0x8000UL
-#define GUEST_INIT_GDT_START	(trampoline_start16_paddr +	\
-					GUEST_INIT_GDT_SKIP_SIZE)
-
-/* The GDT defined below compatible with linux kernel */
-#define GUEST_INIT_GDT_DESC_0	(0x0)
-#define GUEST_INIT_GDT_DESC_1	(0x0)
-#define GUEST_INIT_GDT_DESC_2	(0x00CF9B000000FFFFUL) /* Linear Code */
-#define GUEST_INIT_GDT_DESC_3	(0x00CF93000000FFFFUL) /* Linear Data */
-
-static const uint64_t guest_init_gdt[] = {
-	GUEST_INIT_GDT_DESC_0,
-	GUEST_INIT_GDT_DESC_1,
-	GUEST_INIT_GDT_DESC_2,
-	GUEST_INIT_GDT_DESC_3,
-};
-
-uint64_t create_guest_init_gdt(struct vm *vm, uint32_t *limit)
-{
-	void *gtd_addr = gpa2hva(vm, GUEST_INIT_GDT_START);
-
-	*limit = sizeof(guest_init_gdt) - 1U;
-	(void)memcpy_s(gtd_addr, 64U, guest_init_gdt, sizeof(guest_init_gdt));
-
-	return GUEST_INIT_GDT_START;
-};
