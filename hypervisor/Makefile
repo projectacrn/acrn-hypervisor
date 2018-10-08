@@ -193,7 +193,8 @@ C_SRCS += bsp/$(CONFIG_PLATFORM)/cmdline.c
 else
 ifeq ($(CONFIG_PLATFORM), sbl)
 C_SRCS += boot/sbl/multiboot.c
-C_SRCS += boot/sbl/hob_parse.c
+C_SRCS += boot/sbl/sbl_seed_parse.c
+C_SRCS += boot/sbl/abl_seed_parse.c
 endif
 endif
 

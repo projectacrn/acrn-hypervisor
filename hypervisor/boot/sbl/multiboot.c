@@ -7,7 +7,8 @@
 #include <hypervisor.h>
 #include <multiboot.h>
 #include <zeropage.h>
-#include <hob_parse.h>
+#include <sbl_seed_parse.h>
+#include <abl_seed_parse.h>
 
 #define BOOT_ARGS_LOAD_ADDR				0x24EFC000
 
@@ -63,16 +64,6 @@ int init_vm_boot_info(struct vm *vm)
 }
 
 #else
-static const char *boot_params_arg = "ImageBootParamsAddr=";
-
-struct image_boot_params {
-	uint32_t size_of_this_struct;
-	uint32_t version;
-	uint64_t p_seed_list;
-	uint64_t p_platform_info;
-	uint64_t reserved;
-};
-
 /* There are two sources for vm0 kernel cmdline:
  * - cmdline from sbl. mbi->cmdline
  * - cmdline from acrn stitching tool. mod[0].mm_string
@@ -164,77 +155,6 @@ static void *get_kernel_load_addr(void *kernel_src_addr)
 	return kernel_src_addr;
 }
 
-/*
- * parse_image_boot_params
- *
- * description:
- *    This function parse image_boot_params from cmdline. Mainly on
- *    1. parse structure address from cmdline
- *    2. get seed_list address and call function to parse seed
- *    3. convert address in the structure from HPA to SOS's GPA
- *    4. clear original image_boot_params argument in cmdline since
- *       original address is HPA, need to convert and append later
- *       when compose kernel command line.
- *
- * input:
- *    vm            pointer to vm structure
- *    cmdline       pointer to cmdline string
- *
- * return value:
- *    boot_params   HVA of image_boot_params if parse success, or
- *                  else a NULL pointer.
- */
-static void *parse_image_boot_params(struct vm *vm, char *cmdline)
-{
-	char *arg, *arg_end;
-	char *param;
-	uint32_t len;
-	struct image_boot_params *boot_params;
-
-	if (cmdline == NULL) {
-		goto fail;
-	}
-
-	len = strnlen_s(boot_params_arg, MAX_BOOT_PARAMS_LEN);
-	arg = strstr_s(cmdline, MEM_2K, boot_params_arg, len);
-	if (arg == NULL) {
-		goto fail;
-	}
-
-	param = arg + len;
-	boot_params = (struct image_boot_params *)hpa2hva(strtoul_hex(param));
-	if (boot_params == NULL) {
-		goto fail;
-	}
-
-	parse_seed_list((struct seed_list_hob *)hpa2hva(
-				boot_params->p_seed_list));
-
-	/*
-	 * Convert the addresses to SOS GPA since this structure will be used
-	 * in SOS.
-	 */
-	boot_params->p_seed_list = hpa2gpa(vm, boot_params->p_seed_list);
-	boot_params->p_platform_info =
-				hpa2gpa(vm, boot_params->p_platform_info);
-
-	/*
-	 * Replace original arguments with spaces since SOS's GPA is not
-	 * identity mapped to HPA. The argument will be appended later when
-	 * compose cmdline for SOS.
-	 */
-	arg_end = strchr(arg, ' ');
-	len = (arg_end != NULL) ? (uint32_t)(arg_end - arg) :
-							strnlen_s(arg, MEM_2K);
-	(void)memset(arg, ' ', len);
-
-	return (void *)boot_params;
-
-fail:
-	parse_seed_list(NULL);
-	return NULL;
-}
-
 /**
  * @param[inout] vm pointer to a vm descriptor
  *
@@ -287,21 +207,27 @@ int init_vm_boot_info(struct vm *vm)
 	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_CMDLINE) != 0U) {
 		char *cmd_src, *cmd_dst;
 		uint32_t off = 0U;
-		void *boot_params_addr;
+		bool status = false;
 		char buf[MAX_BOOT_PARAMS_LEN];
 
 		cmd_dst = kernel_cmdline;
 		cmd_src = hpa2hva((uint64_t)mbi->mi_cmdline);
 
-		boot_params_addr = parse_image_boot_params(vm, cmd_src);
+		(void)memset(buf, 0U, sizeof(buf));
 		/*
-		 * Convert ImageBootParamsAddr to SOS GPA and append to
-		 * kernel cmdline
+		 * The seed passing interface is different for ABL and SBL,
+		 * so here first try to get seed from SBL, if fail then try
+		 * ABL.
 		 */
-		if (boot_params_addr != NULL) {
-			(void)memset(buf, 0U, sizeof(buf));
-			snprintf(buf, MAX_BOOT_PARAMS_LEN, "%s0x%X ",
-				boot_params_arg, hva2gpa(vm, boot_params_addr));
+		status = sbl_seed_parse(vm, cmd_src, buf, sizeof(buf));
+		if (!status) {
+			status = abl_seed_parse(vm, cmd_src, buf, sizeof(buf));
+		}
+
+		if (status) {
+			/*
+			 * append the seed argument to kernel cmdline
+			 */
 			(void)strncpy_s(cmd_dst, MEM_2K, buf,
 						MAX_BOOT_PARAMS_LEN);
 			off = strnlen_s(cmd_dst, MEM_2K);
