@@ -304,7 +304,6 @@ int reset_vm(struct vm *vm)
 
 	foreach_vcpu(i, vm, vcpu) {
 		reset_vcpu(vcpu);
-		vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
 	}
 
 	if (is_vm0(vm)) {
@@ -377,7 +376,6 @@ void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec)
 	/* When SOS resume from S3, it will return to real mode
 	 * with entry set to wakeup_vec.
 	 */
-	bsp->arch_vcpu.cpu_mode = CPU_MODE_REAL;
 	set_ap_entry(bsp, wakeup_vec);
 
 	init_vmcs(bsp);

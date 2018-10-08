@@ -163,6 +163,21 @@ struct vcpu *get_ever_run_vcpu(uint16_t pcpu_id)
 	return per_cpu(ever_run_vcpu, pcpu_id);
 }
 
+static void set_vcpu_mode(struct vcpu *vcpu, uint32_t cs_attr, uint64_t ia32_efer,
+		uint64_t cr0)
+{
+	if (ia32_efer & MSR_IA32_EFER_LMA_BIT) {
+		if (cs_attr & 0x2000)		/* CS.L = 1 */
+			vcpu->arch_vcpu.cpu_mode = CPU_MODE_64BIT;
+		else
+			vcpu->arch_vcpu.cpu_mode = CPU_MODE_COMPATIBILITY;
+	} else if (cr0 & CR0_PE) {
+		vcpu->arch_vcpu.cpu_mode = CPU_MODE_PROTECTED;
+	} else {
+		vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
+	}
+}
+
 void set_vcpu_regs(struct vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs)
 {
 	struct ext_context *ectx;
@@ -239,6 +254,9 @@ void set_vcpu_regs(struct vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs)
 	ctx->cr0 = vcpu_regs->cr0;
 	ectx->cr3 = vcpu_regs->cr3;
 	ctx->cr4 = vcpu_regs->cr4;
+
+	set_vcpu_mode(vcpu, vcpu_regs->cs_ar, vcpu_regs->ia32_efer,
+			vcpu_regs->cr0);
 }
 
 static struct acrn_vcpu_regs realmode_init_regs = {
@@ -411,24 +429,10 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	return 0;
 }
 
-static void set_vcpu_mode(struct vcpu *vcpu, uint32_t cs_attr)
-{
-	if (is_long_mode(vcpu)) {
-		if (cs_attr & 0x2000)		/* CS.L = 1 */
-			vcpu->arch_vcpu.cpu_mode = CPU_MODE_64BIT;
-		else
-			vcpu->arch_vcpu.cpu_mode = CPU_MODE_COMPATIBILITY;
-	} else if (vcpu_get_cr0(vcpu) & CR0_PE) {
-		vcpu->arch_vcpu.cpu_mode = CPU_MODE_PROTECTED;
-	} else {
-		vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
-	}
-}
-
 int run_vcpu(struct vcpu *vcpu)
 {
-	uint32_t instlen;
-	uint64_t rip;
+	uint32_t instlen, cs_attr;
+	uint64_t rip, ia32_efer, cr0;
 	struct run_context *ctx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx;
 	int64_t status = 0;
@@ -494,7 +498,10 @@ int run_vcpu(struct vcpu *vcpu)
 
 	vcpu->reg_cached = 0UL;
 
-	set_vcpu_mode(vcpu, exec_vmread32(VMX_GUEST_CS_ATTR));
+	cs_attr = exec_vmread32(VMX_GUEST_CS_ATTR);
+	ia32_efer = vcpu_get_efer(vcpu);
+	cr0 = vcpu_get_cr0(vcpu);
+	set_vcpu_mode(vcpu, cs_attr, ia32_efer, cr0);
 
 	/* Obtain current VCPU instruction length */
 	vcpu->arch_vcpu.inst_len = exec_vmread32(VMX_EXIT_INSTR_LEN);
@@ -642,41 +649,15 @@ int prepare_vcpu(struct vm *vm, uint16_t pcpu_id)
 	ret = create_vcpu(pcpu_id, vm, &vcpu);
 	ASSERT(ret == 0, "vcpu create failed");
 
-	if (is_vcpu_bsp(vcpu)) {
-		/* Load VM SW */
-		if (!vm_sw_loader)
-			vm_sw_loader = general_sw_loader;
-#ifdef CONFIG_PARTITION_MODE
-			vcpu->arch_vcpu.cpu_mode = CPU_MODE_PROTECTED;
-#else
-		if (is_vm0(vcpu->vm)) {
-			struct acrn_vcpu_regs *vm0_init_ctx = &vm0_boot_context;
-			/* VM0 bsp start mode is decided by the boot context
-			 * setup by bootloader / bios */
-			if ((vm0_init_ctx->ia32_efer & MSR_IA32_EFER_LMA_BIT) &&
-			    (vm0_init_ctx->cs_ar & 0x2000)) {
-				vcpu->arch_vcpu.cpu_mode = CPU_MODE_64BIT;
-			} else if (vm0_init_ctx->cr0 & CR0_PE) {
-				vcpu->arch_vcpu.cpu_mode = CPU_MODE_PROTECTED;
-			} else {
-				return -EINVAL;
-			}
-			vm_sw_loader(vm);
-		} else {
-#ifdef CONFIG_EFI_STUB
-			/* currently non-vm0 will boot kernel directly */
-			vcpu->arch_vcpu.cpu_mode = CPU_MODE_PROTECTED;
-#else
-			vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
-#endif
-		}
-#endif //CONFIG_PARTITION_MODE
-	} else {
-		vcpu->arch_vcpu.cpu_mode = CPU_MODE_REAL;
+	if (!vm_sw_loader) {
+		vm_sw_loader = general_sw_loader;
+	}
+
+	if (is_vm0(vm)) {
+		vm_sw_loader(vm);
 	}
 
 	/* init_vmcs is delayed to vcpu vmcs launch first time */
-
 	/* initialize the vcpu tsc aux */
 	vcpu->msr_tsc_aux_guest = vcpu->vcpu_id;
 
