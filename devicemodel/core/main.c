@@ -499,12 +499,12 @@ vm_reset_vdevs(struct vmctx *ctx)
 	pci_irq_deinit(ctx);
 	ioapic_deinit();
 
+	pci_irq_init(ctx);
 	atkbdc_init(ctx);
 	vrtc_init(ctx);
 	vpit_init(ctx);
 
 	ioapic_init(ctx);
-	pci_irq_init(ctx);
 	init_pci(ctx);
 
 	if (acpi) {
