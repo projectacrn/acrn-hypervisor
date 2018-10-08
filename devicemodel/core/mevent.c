@@ -30,7 +30,6 @@
  * Micro event library for FreeBSD, designed for a single i/o thread
  * using EPOLL, and having events be persistent by default.
  */
-
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -59,8 +58,8 @@ static pthread_mutex_t mevent_lmutex = PTHREAD_MUTEX_INITIALIZER;
 struct mevent {
 	void	(*me_func)(int, enum ev_type, void *);
 	int	me_fd;
-	enum ev_type me_type;
-	void *me_param;
+	enum	ev_type me_type;
+	void	*me_param;
 	int	me_cq;
 	int	me_state;
 	int	me_closefd;
@@ -125,11 +124,12 @@ mevent_kq_filter(struct mevent *mevp)
 
 	if (mevp->me_type == EVF_WRITE)
 		retval = EPOLLOUT;
+
 	return retval;
 }
 
 static void
-mevent_destroy()
+mevent_destroy(void)
 {
 	struct mevent *mevp, *tmpp;
 	struct epoll_event ee;
@@ -142,9 +142,8 @@ mevent_destroy()
 		ee.data.ptr = mevp;
 		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, mevp->me_fd, &ee);
 
-		if ((mevp->me_type == EVF_READ ||
-			mevp->me_type == EVF_WRITE)
-			&& mevp->me_fd != STDIN_FILENO)
+		if ((mevp->me_type == EVF_READ || mevp->me_type == EVF_WRITE) &&
+		    mevp->me_fd != STDIN_FILENO)
 			close(mevp->me_fd);
 
 		free(mevp);
@@ -221,13 +220,42 @@ mevent_add(int tfd, enum ev_type type,
 int
 mevent_enable(struct mevent *evp)
 {
-	return 0;
+	int ret;
+	struct epoll_event ee;
+	struct mevent *lp, *mevp = NULL;
+
+	mevent_qlock();
+	/* Verify that the fd/type tuple is not present in the list */
+	LIST_FOREACH(lp, &global_head, me_list) {
+		if (lp == evp) {
+			mevp = lp;
+			break;
+		}
+	}
+	mevent_qunlock();
+
+	if (!mevp)
+		return -1;
+
+	ee.events = mevent_kq_filter(mevp);
+	ee.data.ptr = mevp;
+	ret = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, mevp->me_fd, &ee);
+	if (ret < 0 && errno == EEXIST)
+		ret = 0;
+
+	return ret;
 }
 
 int
 mevent_disable(struct mevent *evp)
 {
-	return 0;
+	int ret;
+
+	ret = epoll_ctl(epoll_fd, EPOLL_CTL_DEL, evp->me_fd, NULL);
+	if (ret < 0 && errno == ENOENT)
+		ret = 0;
+
+	return ret;
 }
 
 static int
@@ -333,8 +361,8 @@ mevent_dispatch(void)
 		suspend_mode = vm_get_suspend_mode();
 
 		if ((suspend_mode != VM_SUSPEND_NONE) &&
-			(suspend_mode != VM_SUSPEND_SYSTEM_RESET) &&
-			(suspend_mode != VM_SUSPEND_SUSPEND))
+		    (suspend_mode != VM_SUSPEND_SYSTEM_RESET) &&
+		    (suspend_mode != VM_SUSPEND_SUSPEND))
 			break;
 	}
 }
