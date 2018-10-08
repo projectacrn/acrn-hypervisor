@@ -46,6 +46,24 @@ usb_get_native_devinfo(struct libusb_device *ldev,
 		return false;
 	}
 
+	/* set device type */
+	if (ROOTHUB_PORT(info->path) == 0)
+		info->type = USB_TYPE_ROOTHUB;
+	else if (d.bDeviceClass == LIBUSB_CLASS_HUB)
+		info->type = USB_TYPE_EXTHUB;
+	else if (info->path.path[1] == 0)
+		info->type = USB_TYPE_ROOTHUB_SUBDEV;
+	else
+		info->type = USB_TYPE_EXTHUB_SUBDEV;
+
+	if (info->type == USB_TYPE_EXTHUB) {
+		info->maxchild = usb_get_hub_port_num(&info->path);
+		if (info->maxchild < 0)
+			UPRINTF(LFTL, "fail to get count of numbers of hub"
+					" %d-%s\r\n", info->path.bus,
+					usb_dev_path(&info->path));
+	}
+
 	info->pid = d.idProduct;
 	info->vid = d.idVendor;
 	info->bcd = d.bcdUSB;
@@ -73,15 +91,36 @@ usb_dev_scan_dev()
 	if (num_devs < 0)
 		return -1;
 
+	/* first pass, process external hubs */
 	for (i = 0; i < num_devs; ++i) {
 		ldev = devlist[i];
 
 		ret = usb_get_native_devinfo(ldev, &di, &d);
 		if (ret == false)
 			continue;
+
 		if (ROOTHUB_PORT(di.path) == 0)
 			continue;
-		if (d.bDeviceClass == LIBUSB_CLASS_HUB)
+
+		if (di.type != USB_TYPE_EXTHUB)
+			continue;
+
+		if (g_ctx.conn_cb)
+			g_ctx.conn_cb(g_ctx.hci_data, &di);
+	}
+
+	/* second pass, process devices */
+	for (i = 0; i < num_devs; ++i) {
+		ldev = devlist[i];
+
+		ret = usb_get_native_devinfo(ldev, &di, &d);
+		if (ret == false)
+			continue;
+
+		if (ROOTHUB_PORT(di.path) == 0)
+			continue;
+
+		if (di.type == USB_TYPE_EXTHUB)
 			continue;
 
 		if (g_ctx.conn_cb)
@@ -941,8 +980,8 @@ usb_dev_init(void *pdata, char *opt)
 	int ver;
 
 	assert(pdata);
-
 	di = pdata;
+
 	libusb_get_device_descriptor(di->priv_data, &desc);
 	UPRINTF(LINF, "Found USB device: %d-%s\r\nPID(0x%X), VID(0x%X) CLASS"
 			"(0x%X) SUBCLASS(0x%X) BCD(0x%X) SPEED(%d)\r\n",
@@ -1088,7 +1127,6 @@ usb_dev_native_sys_conn_cb(struct libusb_context *ctx, struct libusb_device
 		*ldev, libusb_hotplug_event event, void *pdata)
 {
 	struct usb_native_devinfo di;
-	struct libusb_device_descriptor d;
 	bool ret;
 
 	UPRINTF(LDBG, "connect event\r\n");
@@ -1098,11 +1136,8 @@ usb_dev_native_sys_conn_cb(struct libusb_context *ctx, struct libusb_device
 		return -1;
 	}
 
-	ret = usb_get_native_devinfo(ldev, &di, &d);
+	ret = usb_get_native_devinfo(ldev, &di, NULL);
 	if (ret == false)
-		return 0;
-
-	if (d.bDeviceClass == LIBUSB_CLASS_HUB)
 		return 0;
 
 	if (g_ctx.conn_cb)
@@ -1116,7 +1151,6 @@ usb_dev_native_sys_disconn_cb(struct libusb_context *ctx, struct libusb_device
 		*ldev, libusb_hotplug_event event, void *pdata)
 {
 	struct usb_native_devinfo di;
-	struct libusb_device_descriptor d;
 	bool ret;
 
 	UPRINTF(LDBG, "disconnect event\r\n");
@@ -1126,11 +1160,8 @@ usb_dev_native_sys_disconn_cb(struct libusb_context *ctx, struct libusb_device
 		return -1;
 	}
 
-	ret = usb_get_native_devinfo(ldev, &di, &d);
+	ret = usb_get_native_devinfo(ldev, &di, NULL);
 	if (ret == false)
-		return 0;
-
-	if (d.bDeviceClass == LIBUSB_CLASS_HUB)
 		return 0;
 
 	if (g_ctx.disconn_cb)

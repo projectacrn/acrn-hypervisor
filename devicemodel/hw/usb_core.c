@@ -264,3 +264,37 @@ usb_dev_path(struct usb_devpath *path)
 
 	return output;
 }
+
+int
+usb_get_hub_port_num(struct usb_devpath *path)
+{
+	int rc, fd;
+	char buf[128];
+	char cnt[8];
+
+	if (!usb_native_is_bus_existed(path->bus))
+		return -1;
+
+	snprintf(buf, sizeof(buf), "%s/%d-%s/maxchild", NATIVE_USBSYS_DEVDIR,
+			path->bus, usb_dev_path(path));
+	if (access(buf, R_OK)) {
+		UPRINTF(LWRN, "can't find maxchild file\r\n");
+		return -1;
+	}
+
+	fd = open(buf, O_RDONLY);
+	if (fd < 0) {
+		UPRINTF(LWRN, "fail to open maxchild file\r\n");
+		return -1;
+	}
+
+	rc = read(fd, &cnt, sizeof(cnt));
+	if (rc < 0) {
+		UPRINTF(LWRN, "fail to read maxchild file\r\n");
+		close(fd);
+		return -1;
+	}
+
+	close(fd);
+	return atoi(cnt);
+}

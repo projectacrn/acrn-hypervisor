@@ -119,6 +119,4 @@ int usb_dev_info(void *pdata, int type, void *value, int size);
 int usb_dev_request(void *pdata, struct usb_data_xfer *xfer);
 int usb_dev_reset(void *pdata);
 int usb_dev_data(void *pdata, struct usb_data_xfer *xfer, int dir, int epctx);
-enum usb_native_dev_type usb_get_parent_dev_type(void *pdata, uint16_t *bus,
-		uint16_t *port);
 #endif
