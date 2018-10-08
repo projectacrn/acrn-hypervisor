@@ -157,7 +157,7 @@ static struct vpci_vdev_array vpci_vdev_array2 = {
 /*******************************/
 /* User Defined VM definitions */
 /*******************************/
-const struct vm_description_array vm_desc_partition = {
+struct vm_description_array vm_desc_partition = {
 		/* Number of user virtual machines */
 		.num_vm_desc = NUM_USER_VMS,
 
