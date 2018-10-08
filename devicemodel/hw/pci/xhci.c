@@ -95,7 +95,7 @@
 
 #undef LOG_TAG
 #define LOG_TAG			"xHCI: "
-#define	XHCI_MAX_DEVS		8	/* 4 USB3 + 4 USB2 devs */
+#define	XHCI_MAX_DEVS		20	/* 10 root hub + 10 external hub */
 #define	XHCI_MAX_SLOTS		64	/* min allowed by Windows drivers */
 
 /*
@@ -344,6 +344,12 @@ struct pci_xhci_dev_emu {
 	struct usb_hci		hci;
 };
 
+struct pci_xhci_native_port {
+	struct usb_native_devinfo info;
+	uint8_t vport;
+	uint8_t state;
+};
+
 struct pci_xhci_vdev {
 	struct pci_vdev *dev;
 	pthread_mutex_t mtx;
@@ -377,9 +383,11 @@ struct pci_xhci_vdev {
 	int		usb2_port_start;
 	int		usb3_port_start;
 
-	uint16_t port_map_tbl[USB_NATIVE_NUM_BUS][USB_NATIVE_NUM_PORT];
-	struct usb_native_devinfo
-		native_dev_info[USB_NATIVE_NUM_BUS][USB_NATIVE_NUM_PORT];
+	/*
+	 * native_ports uses for record the command line assigned native root
+	 * hub ports and its child external hub ports.
+	 */
+	struct pci_xhci_native_port native_ports[XHCI_MAX_VIRT_PORTS];
 	struct timespec mf_prev_time;	/* previous time of accessing MFINDEX */
 };
 
@@ -396,11 +404,6 @@ struct pci_xhci_vdev {
 #define VPORT_ASSIGNED (1)
 #define VPORT_CONNECTED (2)
 #define VPORT_EMULATED (3)
-
-/* helpers for get port mapping information */
-#define VPORT_NUM(state) (state & 0xFF)
-#define VPORT_STATE(state) ((state >> 8) & 0xFF)
-#define VPORT_NUM_STATE(status, num) (((status & 0xFF) << 8) | (num & 0xFF))
 
 struct pci_xhci_option_elem {
 	char *parse_opt;
@@ -482,37 +485,89 @@ static struct pci_xhci_option_elem xhci_option_table[] = {
 };
 
 static int
-pci_xhci_get_free_rh_port(struct pci_xhci_vdev *xdev, struct usb_native_devinfo
-		*di)
+pci_xhci_get_free_vport(struct pci_xhci_vdev *xdev,
+		struct usb_native_devinfo *di)
 {
-	volatile int  bus;
-	volatile int ports, porte;
-	volatile int i, j;
-	int used;
+	int ports, porte;
+	int i, j;
 
 	assert(xdev);
 	assert(di);
 
-	if (di->bcd < 0x300) {
-		bus = 1;
+	if (di->bcd < 0x300)
 		ports = xdev->usb2_port_start;
-	} else {
-		bus = 2;
+	else
 		ports = xdev->usb3_port_start;
-	}
+
 	porte = ports + (XHCI_MAX_DEVS / 2);
 
-	for (i = ports; i < porte; i++) {
-		used = 0;
-		for (j = 1; j < USB_NATIVE_NUM_PORT; ++j) {
-			if (VPORT_NUM(xdev->port_map_tbl[bus][j]) == i) {
-				used = 1;
+	for (i = ports; i <= porte; i++) {
+		for (j = 0; j < XHCI_MAX_VIRT_PORTS; j++)
+			if (xdev->native_ports[j].vport == i)
 				break;
-			}
-		}
-		if (!used)
+
+		if (j >= XHCI_MAX_VIRT_PORTS)
 			return i;
 	}
+	return -1;
+}
+
+static int
+pci_xhci_set_native_port_assigned(struct pci_xhci_vdev *xdev,
+		struct usb_native_devinfo *info)
+{
+	int i;
+
+	assert(xdev);
+	assert(info);
+	assert(xdev->native_ports);
+
+	for (i = 0; i < XHCI_MAX_VIRT_PORTS; i++)
+		if (xdev->native_ports[i].state == VPORT_FREE)
+			break;
+
+	if (i < XHCI_MAX_VIRT_PORTS) {
+		xdev->native_ports[i].info = *info;
+		xdev->native_ports[i].state = VPORT_ASSIGNED;
+		return i;
+	}
+
+	return -1;
+}
+
+static int
+pci_xhci_get_native_port_index_by_path(struct pci_xhci_vdev *xdev,
+		struct usb_devpath *path)
+{
+	int i;
+	struct usb_devpath *p;
+
+	assert(xdev);
+	assert(path);
+
+	for (i = 0; i < XHCI_MAX_VIRT_PORTS; i++) {
+		p = &xdev->native_ports[i].info.path;
+
+		if (p->depth != path->depth)
+			continue;
+
+		if (memcmp(p->path, path->path, path->depth) == 0)
+			return i;
+	}
+	return -1;
+}
+
+static int
+pci_xhci_get_native_port_index_by_vport(struct pci_xhci_vdev *xdev,
+		uint8_t vport)
+{
+	int i;
+
+	assert(xdev);
+	for (i = 0; i < XHCI_MAX_VIRT_PORTS; i++)
+		if (xdev->native_ports[i].vport == vport)
+			return i;
+
 	return -1;
 }
 
@@ -521,8 +576,9 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 {
 	struct pci_xhci_vdev *xdev;
 	struct usb_native_devinfo *di;
-	int port;
+	int vport;
 	int need_intr = 1;
+	int index;
 
 	xdev = hci_data;
 
@@ -537,37 +593,38 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	UPRINTF(LDBG, "%04x:%04x %d-%s connecting.\r\n", di->vid, di->pid,
 			di->path.bus, usb_dev_path(&di->path));
 
-	if (VPORT_STATE(xdev->port_map_tbl[di->path.bus]
-				[ROOTHUB_PORT(di->path)]) == VPORT_FREE) {
-		UPRINTF(LDBG, "%04x:%04x %d-%d doesn't belong to this"
+	index = pci_xhci_get_native_port_index_by_path(xdev, &di->path);
+	if (index < 0) {
+		UPRINTF(LDBG, "%04x:%04x %d-%s doesn't belong to this"
 				" vm, bye.\r\n", di->vid, di->pid,
-				di->path.bus, ROOTHUB_PORT(di->path));
-		goto errout;
+				di->path.bus, usb_dev_path(&di->path));
+		return 0;
 	}
 	UPRINTF(LDBG, "%04x:%04x %d-%s belong to this vm.\r\n", di->vid,
 			di->pid, di->path.bus, usb_dev_path(&di->path));
 
-	port = pci_xhci_get_free_rh_port(xdev, di);
-	if (port < 0) {
+	vport = pci_xhci_get_free_vport(xdev, di);
+	if (vport <= 0) {
 		UPRINTF(LFTL, "no free virtual port for native device %d-%s"
-				"\r\n", di->path.bus, usb_dev_path(&di->path));
+				"\r\n", di->path.bus,
+				usb_dev_path(&di->path));
 		goto errout;
 	}
 
+	xdev->native_ports[index].vport = vport;
+	xdev->native_ports[index].info = *di;
+	xdev->native_ports[index].state = VPORT_CONNECTED;
+
 	UPRINTF(LDBG, "%04X:%04X %d-%s is attached to virtual port %d.\r\n",
 			di->vid, di->pid, di->path.bus,
-			usb_dev_path(&di->path), port);
-
-	xdev->native_dev_info[di->path.bus][ROOTHUB_PORT(di->path)] = *di;
-	xdev->port_map_tbl[di->path.bus][ROOTHUB_PORT(di->path)] =
-		VPORT_NUM_STATE(VPORT_CONNECTED, port);
+			usb_dev_path(&di->path), vport);
 
 	/* TODO: should revisit in deeper level */
 	if (vm_get_suspend_mode() != VM_SUSPEND_NONE || xhci_in_use == 0)
 		need_intr = 0;
 
 	/* Trigger port change event for the arriving device */
-	if (pci_xhci_connect_port(xdev, port, di->speed, need_intr))
+	if (pci_xhci_connect_port(xdev, vport, di->speed, need_intr))
 		UPRINTF(LFTL, "fail to report port event\n");
 
 	return 0;
@@ -581,10 +638,10 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 	struct pci_xhci_vdev *xdev;
 	struct pci_xhci_dev_emu *edev;
 	struct usb_native_devinfo di;
-	struct usb_dev *udev;
-	uint8_t port, slot;
-	uint16_t status;
+	uint8_t vport, slot;
+	uint16_t state;
 	int need_intr = 1;
+	int index;
 
 	assert(hci_data);
 	assert(dev_data);
@@ -599,65 +656,53 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 		return -1;
 	}
 
-	status = xdev->port_map_tbl[di.path.bus][ROOTHUB_PORT(di.path)];
-
-	for (port = 1; port <= XHCI_MAX_DEVS; ++port) {
-		edev = xdev->devices[port];
-		if (!edev)
-			continue;
-
-		udev = edev->dev_instance;
-		if (ROOTHUB_PORT(udev->info.path) == ROOTHUB_PORT(di.path))
-			break;
-	}
-
-	if (port > XHCI_MAX_DEVS) {
-		if (VPORT_STATE(status) == VPORT_CONNECTED &&
-				VPORT_NUM(status) > 0) {
-			/*
-			 * When this place is reached, it means the physical
-			 * USB device is disconnected before the emulation
-			 * procedure is started. The related states should be
-			 * cleared for future connecting.
-			 */
-			UPRINTF(LFTL, "disconnect VPORT_CONNECTED device: "
-					"%d-%s vport %d\r\n", di.path.bus,
-					usb_dev_path(&di.path),
-					VPORT_NUM(status));
-
-			pci_xhci_disconnect_port(xdev, VPORT_NUM(status), 0);
-			xdev->port_map_tbl[di.path.bus][ROOTHUB_PORT(di.path)]
-				= VPORT_NUM_STATE(VPORT_ASSIGNED, 0);
-		}
-
+	index = pci_xhci_get_native_port_index_by_path(xdev, &di.path);
+	if (index < 0) {
 		UPRINTF(LFTL, "fail to find physical port %d\r\n",
 				ROOTHUB_PORT(di.path));
 		return -1;
 	}
 
+	state = xdev->native_ports[index].state;
+	vport = xdev->native_ports[index].vport;
+
+	if (state == VPORT_CONNECTED && vport > 0) {
+		/*
+		 * When this place is reached, it means the physical
+		 * USB device is disconnected before the emulation
+		 * procedure is started. The related states should be
+		 * cleared for future connecting.
+		 */
+		UPRINTF(LFTL, "disconnect VPORT_CONNECTED device: "
+				"%d-%s vport %d\r\n", di.path.bus,
+				usb_dev_path(&di.path), vport);
+		pci_xhci_disconnect_port(xdev, vport, 0);
+		xdev->native_ports[index].state = VPORT_ASSIGNED;
+		return 0;
+	}
+
+	edev = xdev->devices[vport];
 	for (slot = 1; slot < XHCI_MAX_SLOTS; ++slot)
 		if (xdev->slots[slot] == edev)
 			break;
 
-	assert(VPORT_STATE(status) == VPORT_EMULATED ||
-			VPORT_STATE(status) == VPORT_CONNECTED);
-
-	xdev->port_map_tbl[di.path.bus][ROOTHUB_PORT(di.path)] =
-		VPORT_NUM_STATE(VPORT_ASSIGNED, 0);
+	assert(state == VPORT_EMULATED || state == VPORT_CONNECTED);
+	xdev->native_ports[index].state = VPORT_ASSIGNED;
+	xdev->native_ports[index].vport = 0;
 
 	/* TODO: should revisit this in deeper level */
 	if (vm_get_suspend_mode() != VM_SUSPEND_NONE) {
-		XHCI_PORTREG_PTR(xdev, port)->portsc &= ~(XHCI_PS_CSC |
+		XHCI_PORTREG_PTR(xdev, vport)->portsc &= ~(XHCI_PS_CSC |
 				XHCI_PS_CCS | XHCI_PS_PED | XHCI_PS_PP);
 		edev->dev_slotstate = XHCI_ST_DISABLED;
-		xdev->devices[port] = NULL;
+		xdev->devices[vport] = NULL;
 		xdev->slots[slot] = NULL;
 		pci_xhci_dev_destroy(edev);
 		need_intr = 0;
 	}
 
-	UPRINTF(LDBG, "report virtual port %d status\r\n", port);
-	if (pci_xhci_disconnect_port(xdev, port, need_intr)) {
+	UPRINTF(LDBG, "report virtual port %d status %d\r\n", vport, state);
+	if (pci_xhci_disconnect_port(xdev, vport, need_intr)) {
 		UPRINTF(LFTL, "fail to report event\r\n");
 		return -1;
 	}
@@ -1456,20 +1501,6 @@ done:
 	return err;
 }
 
-static struct usb_native_devinfo *
-pci_xhci_find_native_devinfo_by_vport(struct pci_xhci_vdev *xdev, uint8_t vport)
-{
-	int i, j;
-
-	assert(xdev);
-
-	for (i = 0; i < USB_NATIVE_NUM_BUS; ++i)
-		for (j = 0; j < USB_NATIVE_NUM_PORT; ++j)
-			if (VPORT_NUM(xdev->port_map_tbl[i][j]) == vport)
-				return &xdev->native_dev_info[i][j];
-	return NULL;
-}
-
 static uint32_t
 pci_xhci_cmd_enable_slot(struct pci_xhci_vdev *xdev, uint32_t *slot)
 {
@@ -1500,7 +1531,7 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 	struct usb_dev *udev;
 	struct usb_native_devinfo *di;
 	uint32_t cmderr;
-	int i;
+	int i, index;
 
 	UPRINTF(LDBG, "pci_xhci disable slot %u\r\n", slot);
 
@@ -1543,14 +1574,17 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 		xdev->slot_allocated[slot] = false;
 
 		di = &udev->info;
-		xdev->port_map_tbl[di->path.bus][ROOTHUB_PORT(di->path)] =
-			VPORT_NUM_STATE(VPORT_ASSIGNED, 0);
+		index = pci_xhci_get_native_port_index_by_path(xdev, &di->path);
+		if (index < 0) {
+			cmderr = XHCI_TRB_ERROR_SLOT_NOT_ON;
+			goto done;
+		}
 
+		xdev->native_ports[index].state = VPORT_ASSIGNED;
+		pci_xhci_dev_destroy(dev);
 		UPRINTF(LINF, "disable slot %d for native device %d-%s"
 				"\r\n", slot, di->path.bus,
 				usb_dev_path(&di->path));
-
-		pci_xhci_dev_destroy(dev);
 	} else
 		UPRINTF(LWRN, "invalid slot %d\r\n", slot);
 
@@ -1658,15 +1692,17 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 
 	dev = xdev->slots[slot];
 	if (!dev) {
-		rh_port = XHCI_SCTX_1_RH_PORT_GET(islot_ctx->dwSctx1);
+		int index;
 
-		di = pci_xhci_find_native_devinfo_by_vport(xdev, rh_port);
-		if (di == NULL) {
+		rh_port = XHCI_SCTX_1_RH_PORT_GET(islot_ctx->dwSctx1);
+		index = pci_xhci_get_native_port_index_by_vport(xdev, rh_port);
+		if (index < 0) {
 			cmderr = XHCI_TRB_ERROR_TRB;
 			UPRINTF(LFTL, "invalid root hub port %d\r\n", rh_port);
 			goto done;
 		}
 
+		di = &xdev->native_ports[index].info;
 		UPRINTF(LDBG, "create virtual device for %d-%s on virtual "
 				"port %d\r\n", di->path.bus,
 				usb_dev_path(&di->path), rh_port);
@@ -1679,6 +1715,7 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 			goto done;
 		}
 
+		xdev->native_ports[index].state = VPORT_EMULATED;
 		xdev->devices[rh_port] = dev;
 		xdev->ndevices++;
 		xdev->slots[slot] = dev;
@@ -3321,17 +3358,19 @@ pci_xhci_reset_port(struct pci_xhci_vdev *xdev, int portn, int warm)
 	struct xhci_trb evtrb;
 	struct usb_native_devinfo *di;
 	int speed, error;
+	int index;
 
 	assert(portn <= XHCI_MAX_DEVS);
 
 	UPRINTF(LDBG, "reset port %d\r\n", portn);
 
 	port = XHCI_PORTREG_PTR(xdev, portn);
-	di = pci_xhci_find_native_devinfo_by_vport(xdev, portn);
-	if (!di) {
+	index = pci_xhci_get_native_port_index_by_vport(xdev, portn);
+	if (index < 0) {
 		UPRINTF(LWRN, "fail to reset port %d\r\n", portn);
 		return;
 	}
+	di = &xdev->native_ports[index].info;
 
 	speed = pci_xhci_convert_speed(di->speed);
 	port->portsc &= ~(XHCI_PS_PLS_MASK | XHCI_PS_PR | XHCI_PS_PRC);
@@ -3483,7 +3522,9 @@ static int
 pci_xhci_parse_bus_port(struct pci_xhci_vdev *xdev, char *opts)
 {
 	int rc = 0, cnt;
-	uint32_t port, bus;
+	uint32_t port, bus, index;
+	struct usb_devpath path;
+	struct usb_native_devinfo di;
 
 	assert(xdev);
 	assert(opts);
@@ -3502,10 +3543,18 @@ pci_xhci_parse_bus_port(struct pci_xhci_vdev *xdev, char *opts)
 		goto errout;
 	}
 
-	xdev->port_map_tbl[bus][port] =
-		VPORT_NUM_STATE(VPORT_ASSIGNED, 0);
-	return 0;
+	memset(&path, 0, sizeof(path));
+	path.bus = bus;
+	path.depth = 1;
+	path.path[0] = port;
+	di.path = path;
+	index = pci_xhci_set_native_port_assigned(xdev, &di);
+	if (index < 0) {
+		UPRINTF(LFTL, "fail to assign native_port\r\n");
+		goto errout;
+	}
 
+	return 0;
 errout:
 	if (rc)
 		UPRINTF(LWRN, "%s fails, rc=%d\r\n", __func__, rc);
