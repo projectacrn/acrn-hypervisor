@@ -571,6 +571,112 @@ pci_xhci_get_native_port_index_by_vport(struct pci_xhci_vdev *xdev,
 	return -1;
 }
 
+static void
+pci_xhci_clr_native_port_assigned(struct pci_xhci_vdev *xdev,
+		struct usb_native_devinfo *info)
+{
+	int i;
+
+	assert(xdev);
+	assert(info);
+	assert(xdev->native_ports);
+
+	i = pci_xhci_get_native_port_index_by_path(xdev, &info->path);
+	if (i >= 0) {
+		xdev->native_ports[i].state = VPORT_FREE;
+		xdev->native_ports[i].vport = 0;
+	}
+}
+
+static int
+pci_xhci_assign_hub_ports(struct pci_xhci_vdev *xdev,
+		struct usb_native_devinfo *info)
+{
+	int index;
+	uint8_t i;
+	struct usb_native_devinfo di;
+	struct usb_devpath *path;
+
+	if (!xdev || !info || info->type != USB_TYPE_EXTHUB)
+		return -1;
+
+	index = pci_xhci_get_native_port_index_by_path(xdev, &info->path);
+	if (index < 0) {
+		UPRINTF(LDBG, "cannot find hub %d-%s\r\n", info->path.bus,
+				usb_dev_path(&info->path));
+		return -1;
+	}
+
+	xdev->native_ports[index].info = *info;
+	UPRINTF(LDBG, "Found an USB hub %d-%s with %d port(s).\r\n",
+			info->path.bus, usb_dev_path(&info->path),
+			info->maxchild);
+
+	path = &di.path;
+	for (i = 1; i <= info->maxchild; i++) {
+
+		/* make a device path for hub ports */
+		memcpy(path->path, info->path.path, info->path.depth);
+		memcpy(path->path + info->path.depth, &i, sizeof(i));
+		memset(path->path + info->path.depth + 1, 0,
+				USB_MAX_TIERS - info->path.depth - 1);
+		path->depth = info->path.depth + 1;
+		path->bus = info->path.bus;
+
+		/* set the device path as assigned */
+		index = pci_xhci_set_native_port_assigned(xdev, &di);
+		if (index < 0) {
+			UPRINTF(LFTL, "too many USB devices\r\n");
+			return -1;
+		}
+		UPRINTF(LDBG, "Add %d-%s as assigned port\r\n",
+				path->bus, usb_dev_path(path));
+	}
+	return 0;
+}
+
+static int
+pci_xhci_unassign_hub_ports(struct pci_xhci_vdev *xdev,
+		struct usb_native_devinfo *info)
+{
+	uint8_t i, index;
+	struct usb_native_devinfo di, *oldinfo;
+	struct usb_devpath *path;
+
+	if (!xdev || !info || info->type != USB_TYPE_EXTHUB)
+		return -1;
+
+	index = pci_xhci_get_native_port_index_by_path(xdev, &info->path);
+	if (index < 0) {
+		UPRINTF(LFTL, "cannot find USB hub %d-%s\r\n",
+			info->path.bus, usb_dev_path(&info->path));
+		return -1;
+	}
+
+	oldinfo = &xdev->native_ports[index].info;
+	UPRINTF(LDBG, "Disconnect an USB hub %d-%s with %d port(s)\r\n",
+			oldinfo->path.bus, usb_dev_path(&oldinfo->path),
+			oldinfo->maxchild);
+
+	path = &di.path;
+	for (i = 1; i <= oldinfo->maxchild; i++) {
+
+		/* make a device path for hub ports */
+		memcpy(path->path, oldinfo->path.path, oldinfo->path.depth);
+		memcpy(path->path + oldinfo->path.depth, &i, sizeof(i));
+		memset(path->path + oldinfo->path.depth + 1, 0,
+				USB_MAX_TIERS - oldinfo->path.depth - 1);
+		path->depth = oldinfo->path.depth + 1;
+		path->bus = oldinfo->path.bus;
+
+		/* clear the device path as not assigned */
+		pci_xhci_clr_native_port_assigned(xdev, &di);
+		UPRINTF(LDBG, "Del %d-%s as assigned port\r\n",
+				path->bus, usb_dev_path(path));
+	}
+	return 0;
+}
+
 static int
 pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 {
@@ -579,6 +685,7 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	int vport;
 	int need_intr = 1;
 	int index;
+	int rc;
 
 	xdev = hci_data;
 
@@ -600,6 +707,15 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 				di->path.bus, usb_dev_path(&di->path));
 		return 0;
 	}
+
+	if (di->type == USB_TYPE_EXTHUB) {
+		rc = pci_xhci_assign_hub_ports(xdev, di);
+		if (rc < 0)
+			UPRINTF(LFTL, "fail to assign ports of hub %d-%s\r\n",
+					di->path.bus, usb_dev_path(&di->path));
+		return 0;
+	}
+
 	UPRINTF(LDBG, "%04x:%04x %d-%s belong to this vm.\r\n", di->vid,
 			di->pid, di->path.bus, usb_dev_path(&di->path));
 
@@ -637,11 +753,12 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 {
 	struct pci_xhci_vdev *xdev;
 	struct pci_xhci_dev_emu *edev;
-	struct usb_native_devinfo di;
+	struct usb_native_devinfo *di;
 	uint8_t vport, slot;
 	uint16_t state;
 	int need_intr = 1;
 	int index;
+	int rc;
 
 	assert(hci_data);
 	assert(dev_data);
@@ -649,18 +766,27 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 	xdev = hci_data;
 	assert(xdev->devices);
 
-	di = *((struct usb_native_devinfo *)dev_data);
-	if (!pci_xhci_is_valid_portnum(ROOTHUB_PORT(di.path))) {
+	di = dev_data;
+	if (!pci_xhci_is_valid_portnum(ROOTHUB_PORT(di->path))) {
 		UPRINTF(LFTL, "invalid physical port %d\r\n",
-				ROOTHUB_PORT(di.path));
+				ROOTHUB_PORT(di->path));
 		return -1;
 	}
 
-	index = pci_xhci_get_native_port_index_by_path(xdev, &di.path);
+	index = pci_xhci_get_native_port_index_by_path(xdev, &di->path);
 	if (index < 0) {
 		UPRINTF(LFTL, "fail to find physical port %d\r\n",
-				ROOTHUB_PORT(di.path));
+				ROOTHUB_PORT(di->path));
 		return -1;
+	}
+
+	if (di->type == USB_TYPE_EXTHUB) {
+		rc = pci_xhci_unassign_hub_ports(xdev, di);
+		if (rc < 0)
+			UPRINTF(LFTL, "fail to unassign the ports of hub"
+					" %d-%s\r\n", di->path.bus,
+					usb_dev_path(&di->path));
+		return 0;
 	}
 
 	state = xdev->native_ports[index].state;
@@ -674,8 +800,8 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 		 * cleared for future connecting.
 		 */
 		UPRINTF(LFTL, "disconnect VPORT_CONNECTED device: "
-				"%d-%s vport %d\r\n", di.path.bus,
-				usb_dev_path(&di.path), vport);
+				"%d-%s vport %d\r\n", di->path.bus,
+				usb_dev_path(&di->path), vport);
 		pci_xhci_disconnect_port(xdev, vport, 0);
 		xdev->native_ports[index].state = VPORT_ASSIGNED;
 		return 0;

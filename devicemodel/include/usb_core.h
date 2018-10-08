@@ -84,6 +84,14 @@ enum usb_xfer_blk_stat {
 	USB_XFER_BLK_HANDLED
 };
 
+enum usb_native_devtype {
+	USB_TYPE_ROOTHUB,
+	USB_TYPE_EXTHUB,
+	USB_TYPE_ROOTHUB_SUBDEV,
+	USB_TYPE_EXTHUB_SUBDEV,
+	USB_TYPE_NONE
+};
+
 #define USB_MAX_TIERS 7
 
 struct usb_hci;
@@ -174,9 +182,11 @@ struct usb_devpath {
 
 struct usb_native_devinfo {
 	int speed;
+	int maxchild;
 	uint16_t bcd;
 	uint16_t pid;
 	uint16_t vid;
+	enum usb_native_devtype type;
 	struct usb_devpath path;
 	void *priv_data;
 };
@@ -247,5 +257,6 @@ struct usb_data_xfer_block *usb_data_xfer_append(struct usb_data_xfer *xfer,
 						 int blen,
 						 void *hci_data,
 						 int ccs);
+int usb_get_hub_port_num(struct usb_devpath *path);
 char *usb_dev_path(struct usb_devpath *path);
 #endif /* _USB_CORE_H_ */
