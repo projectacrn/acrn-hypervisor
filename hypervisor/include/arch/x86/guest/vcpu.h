@@ -209,7 +209,6 @@ struct vcpu {
 	uint16_t pcpu_id;	/* Physical CPU ID of this VCPU */
 	uint16_t vcpu_id;	/* virtual identifier for VCPU */
 	struct vm *vm;		/* Reference to the VM this VCPU belongs to */
-	void *entry_addr;  /* Entry address for this VCPU when first started */
 
 	/* State of this VCPU before suspend */
 	volatile enum vcpu_state prev_state;
@@ -287,8 +286,6 @@ void vcpu_set_pat_ext(struct vcpu *vcpu, uint64_t val);
 void set_vcpu_regs(struct vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs);
 void reset_vcpu_regs(struct vcpu *vcpu);
 void set_ap_entry(struct vcpu *vcpu, uint64_t entry);
-void set_bsp_real_mode_entry(struct vcpu *vcpu);
-void set_bsp_protect_mode_regs(struct vcpu *vcpu);
 
 static inline bool is_long_mode(struct vcpu *vcpu)
 {

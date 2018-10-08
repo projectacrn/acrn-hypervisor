@@ -293,51 +293,6 @@ void set_ap_entry(struct vcpu *vcpu, uint64_t entry)
 	vcpu_set_rip(vcpu, 0UL);
 }
 
-
-/* NOTE: set_bsp_real_mode_entry & set_bsp_protect_mode_regs is only temporary
- * function called by UOS. Once we make UOS to use hypercall to set BSP entry,
- * we will remove these two functions.
- */
-
-/*
- * @pre reset_vcpu_regs is called in advance
- */
-void set_bsp_real_mode_entry(struct vcpu *vcpu)
-{
-	struct ext_context *ectx;
-
-	ectx = &(vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ext_ctx);
-
-	ectx->cs.selector = REAL_MODE_BSP_INIT_CODE_SEL;
-	ectx->cs.base = 0x3ff0000UL;
-	vcpu_set_rip(vcpu, 0xFFF0UL);
-}
-
-static struct acrn_vcpu_regs protect_mode_init_regs = {
-	.cs_ar = PROTECTED_MODE_CODE_SEG_AR,
-	.cs_sel = 0x10U,
-	.ss_sel = 0x18U,
-	.ds_sel = 0x18U,
-	.es_sel = 0x18U,
-	.cr0 = CR0_ET | CR0_NE | CR0_PE,
-	.cr3 = 0UL,
-	.cr4 = 0UL,
-};
-
-void set_bsp_protect_mode_regs(struct vcpu *vcpu)
-{
-	/* if vcpu is in protect mode, we need to set registers
-	 * according to protect_init_regs first.
-	 */
-	uint32_t limit;
-	protect_mode_init_regs.gdt.base = create_guest_init_gdt(vcpu->vm,
-			&limit);
-	protect_mode_init_regs.gdt.limit = (uint16_t) (limit & 0xFFFFU);
-	set_vcpu_regs(vcpu, &protect_mode_init_regs);
-
-	vcpu_set_rip(vcpu, (uint64_t)vcpu->entry_addr);
-}
-
 /***********************************************************************
  *
  *  @pre vm != NULL && rtn_vcpu_handle != NULL
