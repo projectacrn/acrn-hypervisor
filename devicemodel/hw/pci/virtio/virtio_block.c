@@ -254,10 +254,29 @@ virtio_blk_proc(struct virtio_blk *blk, struct virtio_vq_info *vq)
 
 	switch (type) {
 	case VBH_OP_READ:
-		err = blockif_read(blk->bc, &io->req);
-		break;
 	case VBH_OP_WRITE:
-		err = blockif_write(blk->bc, &io->req);
+		/*
+		 * VirtIO v1.0 spec 04 5.2.5:
+		 * - Protocol unit size is always 512 bytes.
+		 * - blk_size (logical block size) and physical_block_exp
+		 *   (physical block size) do not affect the units in the
+		 *   protocol, only performance.
+		 *
+		 * VirtIO v1.0 spec 04 5.2.6.1:
+		 * - A driver MUST NOT submit a request which would cause a
+		 *   read or write beyond capacity.
+		 */
+		if ((iolen & (DEV_BSIZE - 1)) ||
+		    vbh->sector + iolen / DEV_BSIZE > blk->cfg.capacity) {
+			DPRINTF(("virtio_blk: invalid request, iolen = %ld, "
+			         "sector = %lu, capacity = %lu\n\r", iolen,
+			         vbh->sector, blk->cfg.capacity));
+			virtio_blk_done(&io->req, EINVAL);
+			return;
+		}
+
+		err = ((type == VBH_OP_READ) ? blockif_read : blockif_write)
+				(blk->bc, &io->req);
 		break;
 	case VBH_OP_FLUSH:
 	case VBH_OP_FLUSH_OUT:
