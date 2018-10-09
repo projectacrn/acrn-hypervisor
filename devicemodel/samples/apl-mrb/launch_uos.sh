@@ -276,6 +276,10 @@ else
 fi
 kernel_cmdline="$kernel_cmdline_generic"
 
+if [ "$kernel_version" = "4.19" ]; then
+  kernel_cmdline="$kernel_cmdline_generic"" i915.enable_pvmmio=0x27"
+fi
+
 : '
 select right virtual slots for acrn_dm:
 1. some passthru device need virtual slot same as physical, like audio 0:e.0 at
@@ -298,6 +302,12 @@ else
   GVT_args=''
 fi
 
+if [ "$kernel_version" = "4.19" ]; then
+  audio_option=''
+else
+  audio_option='-s 14,passthru,0/e/0,keep_gsi'
+fi
+
  acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio $npk_virt\
    -s 9,virtio-net,$tap \
    -s 3,virtio-blk$boot_dev_flag,/data/$5/$5.img \
@@ -306,7 +316,7 @@ fi
    -s 13,virtio-rpmb \
    -s 10,virtio-hyper_dmabuf \
    -s 11,wdt-i6300esb \
-   -s 14,passthru,0/e/0,keep_gsi \
+   $audio_option  \
    -s 23,passthru,0/17/0 \
    -s 15,passthru,0/f/0 \
    -s 27,passthru,0/1b/0 \
