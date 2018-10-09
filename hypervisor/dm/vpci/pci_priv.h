@@ -68,10 +68,9 @@ pci_vdev_write_cfg_u32(struct pci_vdev *vdev, uint32_t offset, uint32_t val)
 	*(uint32_t *)(vdev->cfgdata + offset) = val;
 }
 
+extern struct vpci_ops partition_mode_vpci_ops;
+
 uint32_t pci_vdev_read_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes);
 void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
-
-void pci_vdev_cfg_handler(struct vpci *vpci, uint32_t in, union pci_bdf vbdf, uint32_t offset,
-	uint32_t bytes, uint32_t *val);
 
 #endif /* PCI_PRIV_H_ */
