@@ -98,7 +98,6 @@ struct blockif_ctxt {
 	int			magic;
 	int			fd;
 	int			isblk;
-	int			isgeom;
 	int			candelete;
 	int			rdonly;
 	off_t			size;
@@ -233,99 +232,38 @@ blockif_complete(struct blockif_ctxt *bc, struct blockif_elem *be)
 }
 
 static void
-blockif_proc(struct blockif_ctxt *bc, struct blockif_elem *be, uint8_t *buf)
+blockif_proc(struct blockif_ctxt *bc, struct blockif_elem *be)
 {
 	struct blockif_req *br;
 	off_t arg[2];
-	ssize_t clen, len, off, boff, voff;
-	int i, err;
+	ssize_t len;
+	int err;
 
 	br = be->req;
-	if (br->iovcnt <= 1)
-		buf = NULL;
 	err = 0;
 	switch (be->op) {
 	case BOP_READ:
-		if (buf == NULL) {
-			len = preadv(bc->fd, br->iov, br->iovcnt,
-				     br->offset + bc->sub_file_start_lba);
-			if (len < 0)
-				err = errno;
-			else
-				br->resid -= len;
-			break;
-		}
-		i = 0;
-		off = voff = 0;
-		while (br->resid > 0) {
-			len = MIN(br->resid, MAXPHYS);
-			if (pread(bc->fd, buf, len, br->offset +
-			    off + bc->sub_file_start_lba) < 0) {
-				err = errno;
-				break;
-			}
-			boff = 0;
-			do {
-				clen = MIN(len - boff, br->iov[i].iov_len -
-				    voff);
-				memcpy(br->iov[i].iov_base + voff,
-				    buf + boff, clen);
-				if (clen < br->iov[i].iov_len - voff)
-					voff += clen;
-				else {
-					i++;
-					voff = 0;
-				}
-				boff += clen;
-			} while (boff < len);
-			off += len;
+		len = preadv(bc->fd, br->iov, br->iovcnt,
+				 br->offset + bc->sub_file_start_lba);
+		if (len < 0)
+			err = errno;
+		else
 			br->resid -= len;
-		}
 		break;
 	case BOP_WRITE:
 		if (bc->rdonly) {
 			err = EROFS;
 			break;
 		}
-		if (buf == NULL) {
-			len = pwritev(bc->fd, br->iov, br->iovcnt,
-				      br->offset + bc->sub_file_start_lba);
-			if (len < 0)
-				err = errno;
-			else {
-				br->resid -= len;
-				err = blockif_flush_cache(bc);
-			}
-			break;
-		}
-		i = 0;
-		off = voff = 0;
-		while (br->resid > 0) {
-			len = MIN(br->resid, MAXPHYS);
-			boff = 0;
-			do {
-				clen = MIN(len - boff, br->iov[i].iov_len -
-				    voff);
-				memcpy(buf + boff,
-				    br->iov[i].iov_base + voff, clen);
-				if (clen < br->iov[i].iov_len - voff)
-					voff += clen;
-				else {
-					i++;
-					voff = 0;
-				}
-				boff += clen;
-			} while (boff < len);
-			if (pwrite(bc->fd, buf, len, br->offset +
-			    off + bc->sub_file_start_lba) < 0) {
-				err = errno;
-				break;
-			}
-			off += len;
-			br->resid -= len;
-		}
-		err = blockif_flush_cache(bc);
 
+		len = pwritev(bc->fd, br->iov, br->iovcnt,
+				  br->offset + bc->sub_file_start_lba);
+		if (len < 0)
+			err = errno;
+		else {
+			br->resid -= len;
+			err = blockif_flush_cache(bc);
+		}
 		break;
 	case BOP_FLUSH:
 		if (fsync(bc->fd))
@@ -364,20 +302,16 @@ blockif_thr(void *arg)
 	struct blockif_ctxt *bc;
 	struct blockif_elem *be;
 	pthread_t t;
-	uint8_t *buf;
 
 	bc = arg;
-	if (bc->isgeom)
-		buf = malloc(MAXPHYS);
-	else
-		buf = NULL;
 	t = pthread_self();
 
 	pthread_mutex_lock(&bc->mtx);
+
 	for (;;) {
 		while (blockif_dequeue(bc, t, &be)) {
 			pthread_mutex_unlock(&bc->mtx);
-			blockif_proc(bc, be, buf);
+			blockif_proc(bc, be);
 			pthread_mutex_lock(&bc->mtx);
 			blockif_complete(bc, be);
 		}
@@ -386,10 +320,8 @@ blockif_thr(void *arg)
 			break;
 		pthread_cond_wait(&bc->cond, &bc->mtx);
 	}
-	pthread_mutex_unlock(&bc->mtx);
 
-	if (buf)
-		free(buf);
+	pthread_mutex_unlock(&bc->mtx);
 	pthread_exit(NULL);
 	return NULL;
 }
@@ -486,7 +418,7 @@ blockif_open(const char *optstr, const char *ident)
 	/* struct diocgattr_arg arg; */
 	off_t size, psectsz, psectoff;
 	int fd, i, sectsz;
-	int writeback, ro, candelete, geom, ssopt, pssopt;
+	int writeback, ro, candelete, ssopt, pssopt;
 	long sz;
 	long long b;
 	int err_code = -1;
@@ -565,7 +497,7 @@ blockif_open(const char *optstr, const char *ident)
 	size = sbuf.st_size;
 	sectsz = DEV_BSIZE;
 	psectsz = psectoff = 0;
-	candelete = geom = 0;
+	candelete = 0;
 
 	if (S_ISBLK(sbuf.st_mode)) {
 		/* get size */
@@ -660,7 +592,6 @@ blockif_open(const char *optstr, const char *ident)
 	bc->magic = BLOCKIF_SIG;
 	bc->fd = fd;
 	bc->isblk = S_ISBLK(sbuf.st_mode);
-	bc->isgeom = geom;
 	bc->candelete = candelete;
 	bc->rdonly = ro;
 	bc->size = size;
