@@ -68,12 +68,14 @@ static uint32_t pci_cfg_io_read(struct vm *vm, uint16_t addr, size_t bytes)
 		if (pi->cached_enable) {
 			uint16_t offset = addr - PCI_CONFIG_DATA;
 
-			pci_vdev_cfg_handler(vpci, 1U, pi->cached_bdf,
-				pi->cached_reg + offset, bytes, &val);
+			if ((vpci->ops != NULL) && (vpci->ops->cfgread != NULL)) {
+				vpci->ops->cfgread(vpci, pi->cached_bdf,
+					pi->cached_reg + offset, bytes, &val);
+			}
 
 			pci_cfg_clear_cache(pi);
 		}
-	}  else {
+	} else {
 		val = 0xFFFFFFFFU;
 	}
 
@@ -89,9 +91,9 @@ static void pci_cfg_io_write(struct vm *vm, uint16_t addr, size_t bytes,
 	if (is_cfg_addr(addr)) {
 		/* TODO: handling the non 4 bytes access */
 		if (bytes == 4U) {
-			pi->cached_bdf.bits.b = (val >> 16U) & PCI_BUSMAX;
-			pi->cached_bdf.bits.d = (val >> 11U) & PCI_SLOTMAX;
-			pi->cached_bdf.bits.f = (val >> 8U) & PCI_FUNCMAX;
+			pi->cached_bdf.bits.b = (uint8_t)(val >> 16U) & PCI_BUSMAX;
+			pi->cached_bdf.bits.d = (uint8_t)(val >> 11U) & PCI_SLOTMAX;
+			pi->cached_bdf.bits.f = (uint8_t)(val >> 8U) & PCI_FUNCMAX;
 
 			pi->cached_reg = val & PCI_REGMAX;
 			pi->cached_enable =
@@ -101,62 +103,40 @@ static void pci_cfg_io_write(struct vm *vm, uint16_t addr, size_t bytes,
 		if (pi->cached_enable) {
 			uint16_t offset = addr - PCI_CONFIG_DATA;
 
-			pci_vdev_cfg_handler(vpci, 0U, pi->cached_bdf,
-				pi->cached_reg + offset, bytes, &val);
-
+			if ((vpci->ops != NULL) && (vpci->ops->cfgwrite != NULL)) {
+				vpci->ops->cfgwrite(vpci, pi->cached_bdf,
+					pi->cached_reg + offset, bytes, val);
+			}
 			pci_cfg_clear_cache(pi);
 		}
 	} else {
 		pr_err("Not PCI cfg data/addr port access!");
 	}
-
 }
 
 void vpci_init(struct vm *vm)
 {
 	struct vpci *vpci = &vm->vpci;
-	struct vpci_vdev_array *vdev_array;
-	struct pci_vdev *vdev;
-	int i;
-	int ret;
-	struct vm_io_range pci_cfg_range = {.flags = IO_ATTR_RW,
-		.base = PCI_CONFIG_ADDR, .len = 8U};
+	struct vm_io_range pci_cfg_range = {
+		.flags = IO_ATTR_RW,
+		.base = PCI_CONFIG_ADDR,
+		.len = 8U
+	};
 
 	vpci->vm = vm;
-	vdev_array = vm->vm_desc->vpci_vdev_array;
+	vpci->ops = &partition_mode_vpci_ops;
 
-	for (i = 0; i < vdev_array->num_pci_vdev; i++) {
-		vdev = &vdev_array->vpci_vdev_list[i];
-		vdev->vpci = vpci;
-
-		if ((vdev->ops != NULL) && (vdev->ops->init != NULL)) {
-			ret = vdev->ops->init(vdev);
-			if (ret != 0) {
-				pr_err("vdev->ops->init failed!");
-			}
-		}
+	if ((vpci->ops->init != NULL) && (vpci->ops->init(vm) == 0)) {
+		register_io_emulation_handler(vm, &pci_cfg_range,
+			&pci_cfg_io_read, &pci_cfg_io_write);
 	}
-
-	register_io_emulation_handler(vm, &pci_cfg_range,
-		&pci_cfg_io_read, &pci_cfg_io_write);
 }
 
 void vpci_cleanup(struct vm *vm)
 {
-	struct vpci_vdev_array *vdev_array;
-	struct pci_vdev *vdev;
-	int i;
-	int ret;
+	struct vpci *vpci = &vm->vpci;
 
-	vdev_array = vm->vm_desc->vpci_vdev_array;
-
-	for (i = 0; i < vdev_array->num_pci_vdev; i++) {
-		vdev = &vdev_array->vpci_vdev_list[i];
-		if ((vdev->ops != NULL) && (vdev->ops->deinit != NULL)) {
-			ret = vdev->ops->deinit(vdev);
-			if (ret != 0) {
-				pr_err("vdev->ops->deinit failed!");
-			}
-		}
+	if ((vpci->ops != NULL) && (vpci->ops->deinit != NULL)) {
+		vpci->ops->deinit(vm);
 	}
 }

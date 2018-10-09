@@ -78,9 +78,20 @@ struct pci_addr_info {
 	uint32_t cached_reg, cached_enable;
 };
 
+struct vpci_ops {
+	int (*init)(struct vm *vm);
+	void (*deinit)(struct vm *vm);
+	void (*cfgread)(struct vpci *vpci, union pci_bdf vbdf, uint32_t offset,
+		uint32_t bytes, uint32_t *val);
+	void (*cfgwrite)(struct vpci *vpci, union pci_bdf vbdf, uint32_t offset,
+		uint32_t bytes, uint32_t val);
+};
+
+
 struct vpci {
 	struct vm *vm;
 	struct pci_addr_info addr_info;
+	struct vpci_ops *ops;
 };
 
 extern struct pci_vdev_ops pci_ops_vdev_hostbridge;
