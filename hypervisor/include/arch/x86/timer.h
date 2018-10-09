@@ -20,7 +20,7 @@ struct per_cpu_timers {
 
 struct hv_timer {
 	struct list_head node;		/* link all timers */
-	int mode;			/* timer mode: one-shot or periodic */
+	enum tick_mode mode;			/* timer mode: one-shot or periodic */
 	uint64_t fire_tsc;		/* tsc deadline to interrupt */
 	uint64_t period_in_cycle;	/* period of the periodic timer in unit of TSC cycles */
 	timer_handle_t func;		/* callback if time reached */
