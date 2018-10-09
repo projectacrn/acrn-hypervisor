@@ -243,3 +243,24 @@ void usb_parse_log_level(char level)
 		usb_set_log_level(LFTL);
 	}
 }
+
+char *
+usb_dev_path(struct usb_devpath *path)
+{
+	static char output[sizeof("01.02.03.04.05.06.07")+1];
+	int i, r, n;
+
+	if (!path)
+		return NULL;
+
+	r = n = sizeof(output);
+	r -= snprintf(output, n, "%d", path->path[0]);
+
+	for (i = 1; i < path->depth; i++) {
+		r -= snprintf(output + n - r, r, ".%d", path->path[i]);
+		if (r < 0)
+			return NULL;
+	}
+
+	return output;
+}

@@ -84,6 +84,8 @@ enum usb_xfer_blk_stat {
 	USB_XFER_BLK_HANDLED
 };
 
+#define USB_MAX_TIERS 7
+
 struct usb_hci;
 struct usb_device_request;
 struct usb_data_xfer;
@@ -163,13 +165,19 @@ struct usb_data_xfer {
 	pthread_mutex_t mtx;
 };
 
+struct usb_devpath {
+	uint8_t bus;
+	uint8_t depth;
+	uint8_t path[USB_MAX_TIERS];
+};
+#define ROOTHUB_PORT(x) ((x).path[0])
+
 struct usb_native_devinfo {
 	int speed;
-	uint8_t bus;
-	uint8_t port;
 	uint16_t bcd;
 	uint16_t pid;
 	uint16_t vid;
+	struct usb_devpath path;
 	void *priv_data;
 };
 
@@ -239,5 +247,5 @@ struct usb_data_xfer_block *usb_data_xfer_append(struct usb_data_xfer *xfer,
 						 int blen,
 						 void *hci_data,
 						 int ccs);
-
+char *usb_dev_path(struct usb_devpath *path);
 #endif /* _USB_CORE_H_ */
