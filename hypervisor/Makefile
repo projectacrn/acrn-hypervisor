@@ -176,15 +176,19 @@ endif
 
 C_SRCS += dm/vpic.c
 C_SRCS += dm/vioapic.c
-ifeq ($(CONFIG_PARTITION_MODE),y)
-C_SRCS += $(wildcard partition/*.c)
 C_SRCS += dm/hw/pci.c
 C_SRCS += dm/vpci/core.c
 C_SRCS += dm/vpci/vpci.c
+ifeq ($(CONFIG_PARTITION_MODE),y)
+C_SRCS += $(wildcard partition/*.c)
 C_SRCS += dm/vpci/partition_mode.c
 C_SRCS += dm/vpci/hostbridge.c
 C_SRCS += dm/vpci/pci_pt.c
 C_SRCS += dm/vrtc.c
+else
+C_SRCS += dm/vpci/sharing_mode.c
+C_SRCS += dm/vpci/msi.c
+C_SRCS += dm/vpci/msix.c
 endif
 
 C_SRCS += bsp/$(CONFIG_PLATFORM)/$(CONFIG_PLATFORM).c
