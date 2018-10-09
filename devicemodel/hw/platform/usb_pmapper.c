@@ -21,6 +21,41 @@ static struct usb_dev_sys_ctx_info g_ctx;
 static inline uint8_t usb_dev_get_ep_type(struct usb_dev *udev, int pid,
 		int epnum);
 
+static bool
+usb_get_native_devinfo(struct libusb_device *ldev,
+		struct usb_native_devinfo *info,
+		struct libusb_device_descriptor *desc)
+{
+	struct libusb_device_descriptor d;
+	int rc;
+
+	if (!ldev || !info)
+		return false;
+
+	memset(info, 0, sizeof(*info));
+	info->speed = libusb_get_device_speed(ldev);
+	info->priv_data = ldev;
+	info->path.bus = libusb_get_bus_number(ldev);
+	info->path.depth = libusb_get_port_numbers(ldev, info->path.path,
+			USB_MAX_TIERS);
+
+	rc = libusb_get_device_descriptor(ldev, &d);
+	if (rc) {
+		UPRINTF(LWRN, "fail to get descriptor for %d-%s\r\n",
+				info->path.bus, usb_dev_path(&info->path));
+		return false;
+	}
+
+	info->pid = d.idProduct;
+	info->vid = d.idVendor;
+	info->bcd = d.bcdUSB;
+
+	if (desc != NULL)
+		*desc = d;
+
+	return true;
+}
+
 static int
 usb_dev_scan_dev()
 {
@@ -29,7 +64,7 @@ usb_dev_scan_dev()
 	struct libusb_device *ldev;
 	struct usb_native_devinfo di;
 	struct libusb_device_descriptor d;
-	int rc;
+	bool ret;
 
 	if (!g_ctx.libusb_ctx)
 		return -1;
@@ -41,24 +76,9 @@ usb_dev_scan_dev()
 	for (i = 0; i < num_devs; ++i) {
 		ldev = devlist[i];
 
-		memset(&di, 0, sizeof(di));
-		di.path.bus = libusb_get_bus_number(ldev);
-		di.path.depth = libusb_get_port_numbers(ldev, di.path.path,
-				USB_MAX_TIERS);
-		di.speed = libusb_get_device_speed(ldev);
-
-		rc = libusb_get_device_descriptor(ldev, &d);
-		if (rc) {
-			UPRINTF(LWRN, "fail to get descriptor for %d-%s\r\n",
-					di.path.bus, usb_dev_path(&di.path));
+		ret = usb_get_native_devinfo(ldev, &di, &d);
+		if (ret == false)
 			continue;
-		}
-
-		di.pid = d.idProduct;
-		di.vid = d.idVendor;
-		di.bcd = d.bcdUSB;
-		di.priv_data = ldev;
-
 		if (ROOTHUB_PORT(di.path) == 0)
 			continue;
 		if (d.bDeviceClass == LIBUSB_CLASS_HUB)
@@ -1067,8 +1087,9 @@ static int
 usb_dev_native_sys_conn_cb(struct libusb_context *ctx, struct libusb_device
 		*ldev, libusb_hotplug_event event, void *pdata)
 {
-	struct libusb_device_descriptor d;
 	struct usb_native_devinfo di;
+	struct libusb_device_descriptor d;
+	bool ret;
 
 	UPRINTF(LDBG, "connect event\r\n");
 
@@ -1077,15 +1098,9 @@ usb_dev_native_sys_conn_cb(struct libusb_context *ctx, struct libusb_device
 		return -1;
 	}
 
-	libusb_get_device_descriptor(ldev, &d);
-	di.path.bus = libusb_get_bus_number(ldev);
-	di.path.depth = libusb_get_port_numbers(ldev, di.path.path,
-			USB_MAX_TIERS);
-	di.speed = libusb_get_device_speed(ldev);
-	di.pid = d.idProduct;
-	di.vid = d.idVendor;
-	di.bcd = d.bcdUSB;
-	di.priv_data = ldev;
+	ret = usb_get_native_devinfo(ldev, &di, &d);
+	if (ret == false)
+		return 0;
 
 	if (d.bDeviceClass == LIBUSB_CLASS_HUB)
 		return 0;
@@ -1100,8 +1115,9 @@ static int
 usb_dev_native_sys_disconn_cb(struct libusb_context *ctx, struct libusb_device
 		*ldev, libusb_hotplug_event event, void *pdata)
 {
-	struct libusb_device_descriptor d;
 	struct usb_native_devinfo di;
+	struct libusb_device_descriptor d;
+	bool ret;
 
 	UPRINTF(LDBG, "disconnect event\r\n");
 
@@ -1110,16 +1126,9 @@ usb_dev_native_sys_disconn_cb(struct libusb_context *ctx, struct libusb_device
 		return -1;
 	}
 
-	libusb_get_device_descriptor(ldev, &d);
-	di.path.bus = libusb_get_bus_number(ldev);
-	di.speed = libusb_get_device_speed(ldev);
-	di.path.depth = libusb_get_port_numbers(ldev, di.path.path,
-			USB_MAX_TIERS);
-
-	di.pid = d.idProduct;
-	di.vid = d.idVendor;
-	di.bcd = d.bcdUSB;
-	di.priv_data = ldev;
+	ret = usb_get_native_devinfo(ldev, &di, &d);
+	if (ret == false)
+		return 0;
 
 	if (d.bDeviceClass == LIBUSB_CLASS_HUB)
 		return 0;
