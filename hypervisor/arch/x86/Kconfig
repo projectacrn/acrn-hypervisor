@@ -201,6 +201,11 @@ config IOMMU_INIT_BUS_LIMIT
 	default 0xf if PLATFORM_SBL
 	default 0xff if PLATFORM_UEFI
 
+config MAX_PCI_DEV_NUM
+	int "Maximum number of PCI dev"
+	range 1 1024
+	default 96
+
 config MAX_MSIX_TABLE_NUM
 	int "Maximum number of MSI-X Table per device"
 	range 1 2048
