@@ -124,7 +124,12 @@ void vpci_init(struct vm *vm)
 	};
 
 	vpci->vm = vm;
+
+#ifdef CONFIG_PARTITION_MODE
 	vpci->ops = &partition_mode_vpci_ops;
+#else
+	vpci->ops = &sharing_mode_vpci_ops;
+#endif
 
 	if ((vpci->ops->init != NULL) && (vpci->ops->init(vm) == 0)) {
 		register_io_emulation_handler(vm, &pci_cfg_range,

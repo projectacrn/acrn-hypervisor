@@ -85,7 +85,14 @@ struct msix {
 };
 
 struct pci_vdev {
+#ifndef CONFIG_PARTITION_MODE
+#define MAX_VPCI_DEV_OPS   4U
+	struct pci_vdev_ops ops[MAX_VPCI_DEV_OPS];
+	uint32_t nr_ops;
+#else
 	struct pci_vdev_ops *ops;
+#endif
+
 	struct vpci *vpci;
 	/* The bus/device/function triple of the virtual PCI device. */
 	union pci_bdf vbdf;
