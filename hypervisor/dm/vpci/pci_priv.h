@@ -75,6 +75,7 @@ pci_vdev_write_cfg_u32(struct pci_vdev *vdev, uint32_t offset, uint32_t val)
 
 extern struct vpci_ops partition_mode_vpci_ops;
 extern struct pci_vdev_ops pci_ops_vdev_msi;
+extern struct pci_vdev_ops pci_ops_vdev_msix;
 
 uint32_t pci_vdev_read_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes);
 void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
