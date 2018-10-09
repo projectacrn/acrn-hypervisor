@@ -122,8 +122,14 @@ mevent_kq_filter(struct mevent *mevp)
 	if (mevp->me_type == EVF_READ)
 		retval = EPOLLIN;
 
+	if (mevp->me_type == EVF_READ_ET)
+		retval = EPOLLIN | EPOLLET;
+
 	if (mevp->me_type == EVF_WRITE)
 		retval = EPOLLOUT;
+
+	if (mevp->me_type == EVF_WRITE_ET)
+		retval = EPOLLOUT | EPOLLET;
 
 	return retval;
 }
@@ -142,8 +148,11 @@ mevent_destroy(void)
 		ee.data.ptr = mevp;
 		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, mevp->me_fd, &ee);
 
-		if ((mevp->me_type == EVF_READ || mevp->me_type == EVF_WRITE) &&
-		    mevp->me_fd != STDIN_FILENO)
+		if ((mevp->me_type == EVF_READ ||
+		     mevp->me_type == EVF_READ_ET ||
+		     mevp->me_type == EVF_WRITE ||
+		     mevp->me_type == EVF_WRITE_ET) &&
+		     mevp->me_fd != STDIN_FILENO)
 			close(mevp->me_fd);
 
 		free(mevp);

@@ -32,6 +32,8 @@
 enum ev_type {
 	EVF_READ,
 	EVF_WRITE,
+	EVF_READ_ET,
+	EVF_WRITE_ET,
 	EVF_TIMER,		/* Not supported yet */
 	EVF_SIGNAL		/* Not supported yet */
 };
