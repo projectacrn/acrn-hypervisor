@@ -42,14 +42,15 @@ usb_dev_scan_dev()
 		ldev = devlist[i];
 
 		memset(&di, 0, sizeof(di));
-		di.bus = libusb_get_bus_number(ldev);
-		di.port = libusb_get_port_number(ldev);
+		di.path.bus = libusb_get_bus_number(ldev);
+		di.path.depth = libusb_get_port_numbers(ldev, di.path.path,
+				USB_MAX_TIERS);
 		di.speed = libusb_get_device_speed(ldev);
 
 		rc = libusb_get_device_descriptor(ldev, &d);
 		if (rc) {
-			UPRINTF(LWRN, "fail to get descriptor for %d-%d\r\n",
-					di.bus, di.port);
+			UPRINTF(LWRN, "fail to get descriptor for %d-%s\r\n",
+					di.path.bus, usb_dev_path(&di.path));
 			continue;
 		}
 
@@ -58,7 +59,7 @@ usb_dev_scan_dev()
 		di.bcd = d.bcdUSB;
 		di.priv_data = ldev;
 
-		if (di.port == 0)
+		if (ROOTHUB_PORT(di.path) == 0)
 			continue;
 		if (d.bDeviceClass == LIBUSB_CLASS_HUB)
 			continue;
@@ -453,19 +454,19 @@ static int
 usb_dev_native_toggle_if(struct usb_dev *udev, int claim)
 {
 	struct libusb_config_descriptor *config;
-	uint8_t b, p, c, i;
+	struct usb_devpath *path;
+	uint8_t c, i;
 	int rc = 0, r;
 
 	assert(udev);
 	assert(udev->handle);
 	assert(claim == 1 || claim == 0);
 
-	b = udev->info.bus;
-	p = udev->info.port;
-
+	path = &udev->info.path;
 	r = libusb_get_active_config_descriptor(udev->info.priv_data, &config);
 	if (r) {
-		UPRINTF(LWRN, "%d-%d: can't get config\r\n", b, p);
+		UPRINTF(LWRN, "%d-%s: can't get config\r\n", path->bus,
+				usb_dev_path(path));
 		return -1;
 	}
 
@@ -485,14 +486,16 @@ usb_dev_native_toggle_if(struct usb_dev *udev, int claim)
 		}
 		if (r) {
 			rc = -1;
-			UPRINTF(LWRN, "%d-%d:%d.%d can't %s if, r %d\r\n", b,
-					p, c, i, claim == 1 ? "claim" :
-					"release", r);
+			UPRINTF(LWRN, "%d-%s:%d.%d can't %s if, r %d\r\n",
+					path->bus, usb_dev_path(path), c, i,
+					claim == 1 ? "claim" : "release", r);
 		}
 	}
 	if (rc)
-		UPRINTF(LWRN, "%d-%d fail to %s rc %d\r\n", b, p,
-				claim == 1 ? "claim" : "release", rc);
+		UPRINTF(LWRN, "%d-%s fail to %s rc %d\r\n", path->bus,
+				usb_dev_path(path), claim == 1 ? "claim" :
+				"release", rc);
+
 	libusb_free_config_descriptor(config);
 	return rc;
 }
@@ -501,19 +504,19 @@ static int
 usb_dev_native_toggle_if_drivers(struct usb_dev *udev, int attach)
 {
 	struct libusb_config_descriptor *config;
-	uint8_t b, p, c, i;
+	struct usb_devpath *path;
+	uint8_t c, i;
 	int rc = 0, r;
 
 	assert(udev);
 	assert(udev->handle);
 	assert(attach == 1 || attach == 0);
 
-	b = udev->info.bus;
-	p = udev->info.port;
-
+	path = &udev->info.path;
 	r = libusb_get_active_config_descriptor(udev->info.priv_data, &config);
 	if (r) {
-		UPRINTF(LWRN, "%d-%d: can't get config\r\n", b, p);
+		UPRINTF(LWRN, "%d-%s: can't get config\r\n", path->bus,
+				usb_dev_path(path));
 		return -1;
 	}
 
@@ -531,14 +534,16 @@ usb_dev_native_toggle_if_drivers(struct usb_dev *udev, int attach)
 
 		if (r) {
 			rc = -1;
-			UPRINTF(LWRN, "%d-%d:%d.%d can't %stach if driver, r %d"
-					"\r\n", b, p, c, i, attach == 1 ? "at" :
-					"de", r);
+			UPRINTF(LWRN, "%d-%s:%d.%d can't %stach if driver, r %d"
+					"\r\n", path->bus, usb_dev_path(path),
+					c, i, attach == 1 ? "at" : "de", r);
 		}
 	}
 	if (rc)
-		UPRINTF(LWRN, "%d-%d fail to %s rc %d\r\n", b, p,
-				attach == 1 ? "attach" : "detach", rc);
+		UPRINTF(LWRN, "%d-%s fail to %s rc %d\r\n", path->bus,
+				usb_dev_path(path), attach == 1 ? "attach" :
+				"detach", rc);
+
 	libusb_free_config_descriptor(config);
 	return rc;
 }
@@ -591,8 +596,8 @@ err1:
 	usb_dev_native_toggle_if(udev, 0);
 	libusb_free_config_descriptor(cfg);
 err2:
-	UPRINTF(LWRN, "%d-%d: fail to set config\r\n", udev->info.bus,
-			udev->info.port);
+	UPRINTF(LWRN, "%d-%s: fail to set config\r\n", udev->info.path.bus,
+			usb_dev_path(&udev->info.path));
 	xfer->status = USB_ERR_STALLED;
 }
 
@@ -607,8 +612,8 @@ usb_dev_set_if(struct usb_dev *udev, int iface, int alt, struct usb_data_xfer
 	if (iface >= USB_NUM_INTERFACE)
 		goto errout;
 
-	UPRINTF(LDBG, "%d-%d set if, iface %d alt %d\r\n", udev->info.bus,
-			udev->info.port, iface, alt);
+	UPRINTF(LDBG, "%d-%s set if, iface %d alt %d\r\n", udev->info.path.bus,
+			usb_dev_path(&udev->info.path), iface, alt);
 
 	if (libusb_set_interface_alt_setting(udev->handle, iface, alt))
 		goto errout;
@@ -624,8 +629,11 @@ usb_dev_set_if(struct usb_dev *udev, int iface, int alt, struct usb_data_xfer
 
 errout:
 	xfer->status = USB_ERR_STALLED;
-	UPRINTF(LDBG, "%d-%d fail to set if, iface %d alt %d\r\n",
-			udev->info.bus, udev->info.port, iface, alt);
+	UPRINTF(LDBG, "%d-%s fail to set if, iface %d alt %d\r\n",
+			udev->info.path.bus,
+			usb_dev_path(&udev->info.path),
+			iface,
+			alt);
 }
 
 static struct usb_data_xfer_block *
@@ -916,10 +924,11 @@ usb_dev_init(void *pdata, char *opt)
 
 	di = pdata;
 	libusb_get_device_descriptor(di->priv_data, &desc);
-	UPRINTF(LINF, "Found USB device: %d-%d\r\nPID(0x%X), VID(0x%X) CLASS"
+	UPRINTF(LINF, "Found USB device: %d-%s\r\nPID(0x%X), VID(0x%X) CLASS"
 			"(0x%X) SUBCLASS(0x%X) BCD(0x%X) SPEED(%d)\r\n",
-			di->bus, di->port, di->pid, di->vid, desc.bDeviceClass,
-			desc.bDeviceSubClass, di->bcd, di->speed);
+			di->path.bus, usb_dev_path(&di->path), di->pid,
+			di->vid, desc.bDeviceClass, desc.bDeviceSubClass,
+			di->bcd, di->speed);
 
 	/* allocate and populate udev */
 	udev = calloc(1, sizeof(struct usb_dev));
@@ -927,7 +936,7 @@ usb_dev_init(void *pdata, char *opt)
 		goto errout;
 
 	/* this is a root hub */
-	if (di->port == 0)
+	if (ROOTHUB_PORT(di->path) == 0)
 		goto errout;
 
 	switch (desc.bcdUSB) {
@@ -1016,12 +1025,12 @@ usb_dev_info(void *pdata, int type, void *value, int size)
 		pv = &udev->info.speed;
 		break;
 	case USB_INFO_BUS:
-		sz = sizeof(udev->info.bus);
-		pv = &udev->info.bus;
+		sz = sizeof(udev->info.path.bus);
+		pv = &udev->info.path.bus;
 		break;
 	case USB_INFO_PORT:
-		sz = sizeof(udev->info.port);
-		pv = &udev->info.port;
+		sz = sizeof(udev->info.path.path[0]);
+		pv = &udev->info.path.path[0];
 		break;
 	case USB_INFO_VID:
 		sz = sizeof(udev->info.vid);
@@ -1069,9 +1078,10 @@ usb_dev_native_sys_conn_cb(struct libusb_context *ctx, struct libusb_device
 	}
 
 	libusb_get_device_descriptor(ldev, &d);
-	di.bus = libusb_get_bus_number(ldev);
+	di.path.bus = libusb_get_bus_number(ldev);
+	di.path.depth = libusb_get_port_numbers(ldev, di.path.path,
+			USB_MAX_TIERS);
 	di.speed = libusb_get_device_speed(ldev);
-	di.port = libusb_get_port_number(ldev);
 	di.pid = d.idProduct;
 	di.vid = d.idVendor;
 	di.bcd = d.bcdUSB;
@@ -1101,11 +1111,11 @@ usb_dev_native_sys_disconn_cb(struct libusb_context *ctx, struct libusb_device
 	}
 
 	libusb_get_device_descriptor(ldev, &d);
-	di.bus = libusb_get_bus_number(ldev);
+	di.path.bus = libusb_get_bus_number(ldev);
 	di.speed = libusb_get_device_speed(ldev);
+	di.path.depth = libusb_get_port_numbers(ldev, di.path.path,
+			USB_MAX_TIERS);
 
-	/* FIXME: * should use libusb_get_port_numbers here */
-	di.port = libusb_get_port_number(ldev);
 	di.pid = d.idProduct;
 	di.vid = d.idVendor;
 	di.bcd = d.bcdUSB;
