@@ -51,6 +51,12 @@ struct pci_bar {
 	enum pci_bar_type type;
 };
 
+struct msix_table_entry {
+	uint64_t	addr;
+	uint32_t	data;
+	uint32_t	vector_control;
+};
+
 struct pci_pdev {
 	/* The bar info of the physical PCI device. */
 	struct pci_bar bar[PCI_BAR_COUNT];
@@ -63,6 +69,19 @@ struct pci_pdev {
 struct msi {
 	uint32_t  capoff;
 	uint32_t  caplen;
+};
+
+/* MSI-X capability structure */
+struct msix {
+	struct msix_table_entry tables[CONFIG_MAX_MSIX_TABLE_NUM];
+	uint64_t  mmio_gpa;
+	uint64_t  mmio_hva;
+	uint64_t  mmio_size;
+	uint32_t  capoff;
+	uint32_t  caplen;
+	uint32_t  table_bar;
+	uint32_t  table_offset;
+	uint32_t  table_count;
 };
 
 struct pci_vdev {
@@ -80,6 +99,7 @@ struct pci_vdev {
 
 #ifndef CONFIG_PARTITION_MODE
 	struct msi msi;
+	struct msix msix;
 #endif
 };
 
