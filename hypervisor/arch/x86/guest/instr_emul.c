@@ -2338,7 +2338,7 @@ int decode_instruction(struct vcpu *vcpu)
 		instr_check_gva(vcpu, emul_ctxt, cpu_mode);
 	}
 
-	return  emul_ctxt->vie.opsize;
+	return (int)(emul_ctxt->vie.opsize);
 }
 
 int emulate_instruction(struct vcpu *vcpu)

@@ -16,7 +16,7 @@ int vmexit_handler(struct vcpu *vcpu);
 int vmcall_vmexit_handler(struct vcpu *vcpu);
 int cpuid_vmexit_handler(struct vcpu *vcpu);
 int cr_access_vmexit_handler(struct vcpu *vcpu);
-
+extern void vm_exit(void);
 static inline uint64_t
 vm_exit_qualification_bit_mask(uint64_t exit_qual, uint32_t msb, uint32_t lsb)
 {

@@ -132,7 +132,6 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu);
 int wrmsr_vmexit_handler(struct vcpu *vcpu);
 void init_msr_emulation(struct vcpu *vcpu);
 
-extern const char vm_exit;
 struct run_context;
 int vmx_vmrun(struct run_context *context, int ops, int ibrs);
 

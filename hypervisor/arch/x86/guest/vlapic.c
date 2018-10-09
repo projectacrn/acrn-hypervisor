@@ -289,7 +289,7 @@ static void vlapic_reset_timer(struct acrn_vlapic *vlapic)
 
 	timer = &vlapic->vtimer.timer;
 	del_timer(timer);
-	timer->mode = 0;
+	timer->mode = TICK_MODE_ONESHOT;
 	timer->fire_tsc = 0UL;
 	timer->period_in_cycle = 0UL;
 }
