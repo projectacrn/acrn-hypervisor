@@ -82,13 +82,9 @@ void sbuf_free(struct shared_buf *sbuf)
 	free(sbuf);
 }
 
-int sbuf_get(struct shared_buf *sbuf, uint8_t *data)
+uint32_t sbuf_get(struct shared_buf *sbuf, uint8_t *data)
 {
 	const void *from;
-
-	if ((sbuf == NULL) || (data == NULL)) {
-		return -EINVAL;
-	}
 
 	if (sbuf_is_empty(sbuf)) {
 		/* no data available */
@@ -122,15 +118,11 @@ int sbuf_get(struct shared_buf *sbuf, uint8_t *data)
  * negative:	failed.
  */
 
-int sbuf_put(struct shared_buf *sbuf, uint8_t *data)
+uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 {
 	void *to;
 	uint32_t next_tail;
 	bool trigger_overwrite = false;
-
-	if ((sbuf == NULL) || (data == NULL)) {
-		return -EINVAL;
-	}
 
 	next_tail = sbuf_next_ptr(sbuf->tail, sbuf->ele_size, sbuf->size);
 	/* if this write would trigger overrun */
