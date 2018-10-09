@@ -174,7 +174,7 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 void print_logmsg_buffer(uint16_t pcpu_id)
 {
 	char buffer[LOG_ENTRY_SIZE + 1];
-	int read_cnt;
+	uint32_t read_cnt;
 	struct shared_buf **sbuf;
 	int is_earlylog = 0;
 	uint64_t rflags;
@@ -203,13 +203,13 @@ void print_logmsg_buffer(uint16_t pcpu_id)
 		uint32_t idx;
 		(void)memset(buffer, 0U, LOG_ENTRY_SIZE + 1U);
 
-		if (*sbuf == NULL) {
+		if ((*sbuf == NULL) || (buffer == NULL)) {
 			return;
 		}
 
 		read_cnt = sbuf_get(*sbuf, (uint8_t *)buffer);
 
-		if (read_cnt <= 0) {
+		if (read_cnt == 0U) {
 			return;
 		}
 
@@ -220,5 +220,5 @@ void print_logmsg_buffer(uint16_t pcpu_id)
 		spinlock_irqsave_obtain(&(logmsg.lock), &rflags);
 		printf("%s\n\r", buffer);
 		spinlock_irqrestore_release(&(logmsg.lock), rflags);
-	} while (read_cnt > 0);
+	} while (read_cnt > 0U);
 }
