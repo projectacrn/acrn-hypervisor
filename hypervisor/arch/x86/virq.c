@@ -132,7 +132,7 @@ static int vcpu_inject_vlapic_int(struct vcpu *vcpu)
 	 *   through the local APIC.
 	 */
 	if (ret == 0) {
-		return -1;
+		return 0;
 	}
 
 	if (!(vector >= 16U && vector <= 255U)) {
