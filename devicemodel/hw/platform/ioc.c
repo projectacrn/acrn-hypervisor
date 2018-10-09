@@ -270,6 +270,7 @@ static struct cbc_signal cbc_tx_signal_table[] = {
 	{(uint16_t)CBC_SIG_ID_SWSCB,	3,	CBC_ACTIVE},
 	{(uint16_t)CBC_SIG_ID_SWPLB,	3,	CBC_ACTIVE},
 	{(uint16_t)CBC_SIG_ID_SWPCB,	3,	CBC_ACTIVE},
+	{(uint16_t)CBC_SIG_ID_SWPSB,    3, 	CBC_ACTIVE},
 	{(uint16_t)CBC_SIG_ID_SWHB,	3,	CBC_ACTIVE},
 	{(uint16_t)CBC_SIG_ID_SWEB,	3,	CBC_ACTIVE},
 	{(uint16_t)CBC_SIG_ID_SWECB,	3,	CBC_ACTIVE},
