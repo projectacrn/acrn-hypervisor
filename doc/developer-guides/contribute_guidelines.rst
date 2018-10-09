@@ -275,6 +275,12 @@ source files for the hypervisor, devicemodel, and documentation:
    agreement with the `DCO`_.  See the `Commit Guidelines`_ section
    below for specific guidelines for writing your commit messages.
 
+   All commits must be mapped to a GitHub issue for a feature or bug. Add a
+   ``Tracked-On: #issue-number`` line to your commit message together
+   with the issue number, for example::
+
+      Tracked-On: #1420
+
 #. Push your topic branch with your changes to your fork in your personal
    GitHub account::
 
@@ -367,9 +373,10 @@ Changes are submitted as Git commits. Each commit message must contain:
 * A Signed-off-by line, ``Signed-off-by: <name> <email>`` typically added
   automatically by using ``git commit -s``
 
-* If the change addresses an issue, include a line of the form::
+* For traceability, all changes must include reference to a GitHub
+  issue. Include a line of the form::
 
-      Fixes #<brief description about the reported issue>.
+      Tracked-On: #issue-number
 
 
 All changes and topics sent to GitHub must be well-formed, as described above.
