@@ -93,4 +93,4 @@ devicemodel-install:
 	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) install
 
 tools-install:
-	make -C $(T)/tools OUT_DIR=$(TOOLS_OUT) install
+	make -C $(T)/tools OUT_DIR=$(TOOLS_OUT) RELEASE=$(RELEASE) install
