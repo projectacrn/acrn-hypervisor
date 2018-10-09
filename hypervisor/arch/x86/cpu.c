@@ -483,6 +483,7 @@ static void bsp_boot_post(void)
 
 	timer_init();
 	setup_notification();
+	setup_posted_intr_notification();
 	ptdev_init();
 
 	init_scheduler();
@@ -860,6 +861,10 @@ bool is_apicv_intr_delivery_supported(void)
 	return ((cpu_caps.apicv_features & VAPIC_FEATURE_INTR_DELIVERY) != 0U);
 }
 
+bool is_apicv_posted_intr_supported(void)
+{
+	return ((cpu_caps.apicv_features & VAPIC_FEATURE_POST_INTR) != 0U);
+}
 
 static void cpu_xsave_init(void)
 {
