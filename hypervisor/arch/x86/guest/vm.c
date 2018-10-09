@@ -152,8 +152,9 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		vuart_init(vm);
 	}
 	vrtc_init(vm);
-	vpci_init(vm);
 #endif
+
+	vpci_init(vm);
 
 	/* vpic wire_mode default is INTR */
 	vm->wire_mode = VPIC_WIRE_INTR;
@@ -231,10 +232,7 @@ int shutdown_vm(struct vm *vm)
 	free_vm_id(vm);
 #endif
 
-
-#ifdef CONFIG_PARTITION_MODE
 	vpci_cleanup(vm);
-#endif
 
 	/* Return status to caller */
 	return status;

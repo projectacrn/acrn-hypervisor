@@ -7,10 +7,10 @@
 #ifndef VM_H_
 #define VM_H_
 #include <bsp_extern.h>
+#include <vpci.h>
 
 #ifdef CONFIG_PARTITION_MODE
 #include <mptable.h>
-#include <vpci.h>
 #endif
 enum vm_privilege_level {
 	VM_PRIVILEGE_LEVEL_HIGH = 0,
@@ -155,9 +155,9 @@ struct vm {
 
 	uint32_t vcpuid_entry_nr, vcpuid_level, vcpuid_xlevel;
 	struct vcpuid_entry vcpuid_entries[MAX_VM_VCPUID_ENTRIES];
+	struct vpci vpci;
 #ifdef CONFIG_PARTITION_MODE
 	struct vm_description	*vm_desc;
-	struct vpci vpci;
 	uint8_t vrtc_offset;
 #endif
 
