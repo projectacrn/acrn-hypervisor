@@ -4,13 +4,13 @@ ACRN-Crashlog
 Introduction
 ************
 
-``ACRN-Crashlog`` is a joint name for the tools (``acrnprobe``,
-``usercrash_s``, ``usercrash_c``, ``debugger``, and more). Together
-these tools collect logs and information after each crash or event on an
-ACRN platform, including the hypervisor, Service OS (SOS), and Android
-as a Guest (AaaG). ``ACRN-Crashlog`` provides a flexible way to
-configure which events are of interest, by using an XML configuration
-file.
+``ACRN-Crashlog`` is a collective name for various tools (``acrnprobe``,
+``usercrash_s``, ``usercrash_c``, ``debugger``, and more) and a overall
+control utility called ``crashlogctl``. Together these tools collect logs
+and information after each crash or event on an ACRN platform, including
+the hypervisor, Service OS (SOS), and Android as a Guest (AaaG).
+``ACRN-Crashlog`` provides a flexible way to configure which events are
+of interest, by using an XML configuration file.
 
 Building
 ********
@@ -60,6 +60,96 @@ To install the build:
 
    $ cd acrn-crashlog
    $ sudo make install
+
+Enabling/Disabling
+******************
+
+To enable this tool:
+
+.. code-block:: none
+
+   $ sudo crashlogctl enable
+
+Then it will show:
+
+.. code-block:: console
+
+   ... Backup core pattern to /var/log/crashlog/default_core_pattern
+   '/usr/share/defaults/telemetrics/telemetrics.conf' ->
+   '/etc/telemetrics/telemetrics.conf'
+   ... Set server_delivery_enabled=false in /etc/telemetrics/telemetrics.conf
+   ... Set record_retention_enabled=true in /etc/telemetrics/telemetrics.conf
+   '/usr/share/acrn/crashlog/40-watchdog.conf' ->
+   '/etc/systemd/system.conf.d/40-watchdog.conf'
+   '/usr/share/acrn/crashlog/80-coredump.conf' ->
+   '/etc/sysctl.d/80-coredump.conf'
+   Created symlink /etc/systemd/system/hprobe.timer → /dev/null.
+   Created symlink /etc/systemd/system/telemd-update-trigger.service →
+   /dev/null.
+   Created symlink /etc/systemd/system/pstore-clean.service → /dev/null.
+   Created symlink /etc/systemd/system/pstore-probe.service → /dev/null.
+   Created symlink /etc/systemd/system/oops-probe.service → /dev/null.
+   Created symlink /etc/systemd/system/klogscanner.service → /dev/null.
+   Created symlink /etc/systemd/system/journal-probe.service → /dev/null.
+   Created symlink /etc/systemd/system/bert-probe.service → /dev/null.
+   Created symlink /etc/systemd/system/multi-user.target.wants/acrnprobe.service
+   → /usr/lib/systemd/system/acrnprobe.service.
+   Created symlink /etc/systemd/system/multi-user.target.wants/usercrash.service
+   → /usr/lib/systemd/system/usercrash.service.
+   *** Please reboot your system. ***
+
+Follow the hints to reboot the system:
+
+.. code-block:: none
+
+   $ sudo reboot
+
+To disable this tool:
+
+.. code-block:: none
+
+   $ sudo crashlogctl disable
+
+Then it will show:
+
+.. code-block:: console
+
+   Removed /etc/systemd/system/multi-user.target.wants/acrnprobe.service.
+   Removed /etc/systemd/system/multi-user.target.wants/usercrash.service.
+   Removed /etc/systemd/system/hprobe.timer.
+   Removed /etc/systemd/system/telemd-update-trigger.service.
+   Removed /etc/systemd/system/pstore-clean.service.
+   Removed /etc/systemd/system/pstore-probe.service.
+   Removed /etc/systemd/system/oops-probe.service.
+   Removed /etc/systemd/system/klogscanner.service.
+   Removed /etc/systemd/system/journal-probe.service.
+   Removed /etc/systemd/system/bert-probe.service.
+   removed '/etc/sysctl.d/80-coredump.conf'
+   removed '/etc/systemd/system.conf.d/40-watchdog.conf'
+   ... Set server_delivery_enabled=true in /etc/telemetrics/telemetrics.conf
+   ... Set record_retention_enabled=false in /etc/telemetrics/telemetrics.conf
+   *** Please reboot your system. ***
+
+Follow the hints to reboot the system:
+
+.. code-block:: none
+
+   $ sudo reboot
+
+To check the status of this tool:
+
+.. code-block:: none
+
+   $ sudo crashlogctl is-active
+
+It will show the status of the related services like:
+
+.. code-block:: console
+
+   telemprobd : active
+   telempostd : active
+   acrnprobe  : inactive
+   usercrash  : inactive
 
 Usage
 *****

@@ -53,19 +53,12 @@ The work flow diagram:
 Usage
 *****
 
-- The server is launched automatically at boot, and the client is configured in
-  ``core_pattern`` or ``coredump-wrapper``. In ``prepare.service``, it will
-  check the content of ``/proc/sys/kernel/core_pattern``. If there is
-  ``coredump-wrapper``, which means that ``core_pattern`` has been set in
-  ``systemd``, no need to do it again. Otherwise, the content should be
-  changed by:
-
-.. code-block:: none
-
-   $ echo "|/usr/bin/usercrash_c %p %e %s" > /proc/sys/kernel/core_pattern
-
-That means client will be triggered once userspace crash occurs. Then the
-event will be sent to server from client.
+- The server is launched automatically at boot after this tool is enabled with
+  instruction ``sudo crashlogctl enable``, and the client is configured in
+  ``usercrash-wrapper``, which is set as the app of ``core_pattern``. In
+  ``usercrash-wrapper``, it will collect and reorder the parameters of the
+  client and default app. Once a crash occurs in user space, the client and
+  default app will be invoked separately.
 
 - The ``debugger`` is an independent tool to dump the debug information of the
   specific process, including backtrace, stack, opened files, registers value,
