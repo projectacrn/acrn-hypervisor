@@ -96,3 +96,22 @@ void setup_notification(void)
 	dev_dbg(ACRN_DBG_PTIRQ, "NOTIFY: irq[%d] setup vector %x",
 		notification_irq, irq_to_vector(notification_irq));
 }
+
+static void posted_intr_notification(__unused uint32_t irq, __unused void *data)
+{
+	/* Dummy IRQ handler for case that Posted-Interrupt Notification
+	 * is sent to vCPU in root mode(isn't running),interrupt will be
+	 * picked up in next vmentry,do nothine here.
+	 */
+}
+
+/*pre-conditon: be called only by BSP initialization proccess*/
+void setup_posted_intr_notification(void)
+{
+	if (request_irq(POSTED_INTR_NOTIFY_IRQ,
+			posted_intr_notification,
+			NULL, IRQF_NONE) < 0) {
+		pr_err("Failed to setup posted-intr notification");
+		return;
+	}
+}

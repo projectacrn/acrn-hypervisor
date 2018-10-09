@@ -460,6 +460,7 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 	struct lapic_reg *irrptr, *tmrptr;
 	uint32_t mask;
 	uint32_t idx;
+	int pending_intr;
 
 	ASSERT(vector <= NR_MAX_VECTOR,
 		"invalid vector %u", vector);
@@ -480,7 +481,26 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 	}
 
 	if (is_apicv_intr_delivery_supported()) {
-		return apicv_set_intr_ready(vlapic, vector);
+		pending_intr = apicv_set_intr_ready(vlapic, vector);
+		if ((pending_intr != 0)
+			&& is_apicv_posted_intr_supported()
+			&& (get_cpu_id() != vlapic->vcpu->pcpu_id)) {
+			/*
+			 * Send interrupt to vCPU via posted interrupt way:
+			 * 1. If target vCPU is in non-root mode(running),
+			 *    send PI notification to vCPU and hardware will
+			 *    sync PIR to vIRR automatically.
+			 * 2. If target vCPU is in root mode(isn't running),
+			 *    record this request as ACRN_REQUEST_EVENT,then
+			 *    will pick up the interrupt from PIR and inject
+			 *    it to vCPU in next vmentry.
+			 */
+			bitmap_set_lock(ACRN_REQUEST_EVENT,
+				&vlapic->vcpu->arch_vcpu.pending_req);
+			vlapic_post_intr(vlapic->vcpu->pcpu_id);
+			return 0;
+		}
+		return pending_intr;
 	}
 
 	idx = vector >> 5U;
@@ -506,6 +526,20 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 
 	vlapic_dump_irr(vlapic, "vlapic_set_intr_ready");
 	return 1;
+}
+
+/* Post an interrupt to the vcpu running on 'hostcpu'. */
+void vlapic_post_intr(uint16_t dest_pcpu_id)
+{
+	send_single_ipi(dest_pcpu_id, VECTOR_POSTED_INTR);
+}
+
+uint64_t apicv_get_pir_desc_paddr(struct vcpu *vcpu)
+{
+	struct acrn_vlapic *vlapic;
+
+	vlapic = &vcpu->arch_vcpu.vlapic;
+	return hva2hpa(&(vlapic->pir_desc));
 }
 
 /**
@@ -1817,8 +1851,6 @@ vlapic_set_intr(struct vcpu *vcpu, uint32_t vector, bool level)
 	vlapic = vcpu_vlapic(vcpu);
 	if (vlapic_set_intr_ready(vlapic, vector, level) != 0) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
-	} else {
-		ret = -ENODEV;
 	}
 
 	return ret;

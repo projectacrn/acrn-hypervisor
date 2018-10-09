@@ -25,6 +25,7 @@ struct static_mapping_table {
 static struct static_mapping_table irq_static_mappings[NR_STATIC_MAPPINGS] = {
 	{TIMER_IRQ, VECTOR_TIMER},
 	{NOTIFY_IRQ, VECTOR_NOTIFY_VCPU},
+	{POSTED_INTR_NOTIFY_IRQ, VECTOR_POSTED_INTR},
 };
 
 /*

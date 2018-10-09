@@ -773,6 +773,10 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	value32 = check_vmx_ctrl(MSR_IA32_VMX_PINBASED_CTLS,
 			VMX_PINBASED_CTLS_IRQ_EXIT);
 
+	if (is_apicv_posted_intr_supported()) {
+		value32 |= VMX_PINBASED_CTLS_POST_IRQ;
+	}
+
 	exec_vmwrite32(VMX_PIN_VM_EXEC_CONTROLS, value32);
 	pr_dbg("VMX_PIN_VM_EXEC_CONTROLS: 0x%x ", value32);
 
@@ -864,6 +868,12 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 		exec_vmwrite64(VMX_EOI_EXIT3_FULL, 0UL);
 
 		exec_vmwrite16(VMX_GUEST_INTR_STATUS, 0U);
+		if (is_apicv_posted_intr_supported()) {
+			exec_vmwrite16(VMX_POSTED_INTR_VECTOR,
+					VECTOR_POSTED_INTR);
+			exec_vmwrite64(VMX_PIR_DESC_ADDR_FULL,
+					apicv_get_pir_desc_paddr(vcpu));
+		}
 	}
 
 	/* Load EPTP execution control
