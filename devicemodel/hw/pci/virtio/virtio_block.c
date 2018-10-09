@@ -171,6 +171,9 @@ virtio_blk_done(struct blockif_req *br, int err)
 	struct virtio_blk_ioreq *io = br->param;
 	struct virtio_blk *blk = io->blk;
 
+	if (err)
+		DPRINTF(("virtio_blk: done with error = %d\n\r", err));
+
 	/* convert errno into a virtio block error return */
 	if (err == EOPNOTSUPP || err == ENOSYS)
 		*io->status = VIRTIO_BLK_S_UNSUPP;
@@ -245,7 +248,7 @@ virtio_blk_proc(struct virtio_blk *blk, struct virtio_vq_info *vq)
 	}
 	io->req.resid = iolen;
 
-	DPRINTF(("virtio-block: %s op, %zd bytes, %d segs, offset %ld\n\r",
+	DPRINTF(("virtio_blk: %s op, %zd bytes, %d segs, offset %ld\n\r",
 		 writeop ? "write" : "read/ident", iolen, i - 1,
 		 io->req.offset));
 
@@ -309,7 +312,7 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	int rc;
 
 	if (opts == NULL) {
-		printf("virtio-block: backing device required\n");
+		printf("virtio_blk: backing device required\n");
 		return -1;
 	}
 
