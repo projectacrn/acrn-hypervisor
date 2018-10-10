@@ -336,9 +336,10 @@ static inline uint32_t local_copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 	void *g_ptr;
 
 	hpa = local_gpa2hpa(vm, gpa, &pg_size);
-	if (pg_size == 0U) {
-		pr_err("GPA2HPA not found");
-		return 0;
+	if (hpa == INVALID_HPA) {
+		pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping",
+			__func__, vm->vm_id, gpa);
+		return 0U;
 	}
 
 	if (fix_pg_size != 0U) {

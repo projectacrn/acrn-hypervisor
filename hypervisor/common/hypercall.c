@@ -371,8 +371,9 @@ int32_t hcall_set_ioreq_buffer(struct vm *vm, uint16_t vmid, uint64_t param)
 			vmid, iobuf.req_buf);
 
 	hpa = gpa2hpa(vm, iobuf.req_buf);
-	if (hpa == 0UL) {
-		pr_err("%s: invalid GPA.\n", __func__);
+	if (hpa == INVALID_HPA) {
+		pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
+			__func__, vm->vm_id, iobuf.req_buf);
 		target_vm->sw.io_shared_page = NULL;
 		return -EINVAL;
 	}
@@ -437,6 +438,11 @@ static int32_t local_set_vm_memory_region(struct vm *vm,
 	pml4_page = (uint64_t *)target_vm->arch_vm.nworld_eptp;
 	if (region->type != MR_DEL) {
 		hpa = gpa2hpa(vm, region->vm0_gpa);
+		if (hpa == INVALID_HPA) {
+			pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
+				__func__, vm->vm_id, region->vm0_gpa);
+			return -EINVAL;
+		}
 		base_paddr = get_hv_image_base();
 		if (((hpa <= base_paddr) &&
 				((hpa + region->size) > base_paddr)) ||
@@ -558,6 +564,11 @@ static int32_t write_protect_page(struct vm *vm, struct wp_data *wp)
 	uint64_t prot_clr;
 
 	hpa = gpa2hpa(vm, wp->gpa);
+	if (hpa == INVALID_HPA) {
+		pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
+			__func__, vm->vm_id, wp->gpa);
+		return -EINVAL;
+	}
 	dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x",
 			vm->vm_id, wp->gpa, hpa);
 
@@ -666,6 +677,11 @@ int32_t hcall_gpa_to_hpa(struct vm *vm, uint16_t vmid, uint64_t param)
 		return -1;
 	}
 	v_gpa2hpa.hpa = gpa2hpa(target_vm, v_gpa2hpa.gpa);
+	if (v_gpa2hpa.hpa == INVALID_HPA) {
+		pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
+			__func__, target_vm->vm_id, v_gpa2hpa.gpa);
+		return -EINVAL;
+	}
 	if (copy_to_gpa(vm, &v_gpa2hpa, param, sizeof(v_gpa2hpa)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
 		return -1;
@@ -985,8 +1001,9 @@ int32_t hcall_vm_intr_monitor(struct vm *vm, uint16_t vmid, uint64_t param)
 
 	/* the param for this hypercall is page aligned */
 	hpa = gpa2hpa(vm, param);
-	if (hpa == 0UL) {
-		pr_err("%s: invalid GPA.\n", __func__);
+	if (hpa == INVALID_HPA) {
+		pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
+			__func__, vm->vm_id, param);
 		return -EINVAL;
 	}
 

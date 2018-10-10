@@ -63,6 +63,7 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	uint64_t nworld_pml4e;
 	uint64_t sworld_pml4e;
 	uint64_t gpa;
+	/* Check the HPA of parameter gpa_orig when invoking check_continuos_hpa */
 	uint64_t hpa = gpa2hpa(vm, gpa_orig);
 	uint64_t table_present = EPT_RWX;
 	uint64_t pdpte, *dest_pdpte_p, *src_pdpte_p;
@@ -76,7 +77,10 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 		return;
 	}
 
-	/* Check the physical address should be continuous */
+	/**
+	 * Check the HPA of parameter gpa_orig should exist
+	 * Check the physical address should be continuous
+	 */
 	if (!check_continuous_hpa(vm, gpa_orig, size))	{
 		ASSERT(false, "The physical addr is not continuous for Trusty");
 		return;

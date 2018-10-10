@@ -292,7 +292,8 @@ bool check_continuous_hpa(struct vm *vm, uint64_t gpa_arg, uint64_t size_arg)
 		curr_hpa = gpa2hpa(vm, gpa);
 		gpa += PAGE_SIZE_4K;
 		next_hpa = gpa2hpa(vm, gpa);
-		if (next_hpa != (curr_hpa + PAGE_SIZE_4K)) {
+		if ((curr_hpa == INVALID_HPA) || (next_hpa == INVALID_HPA)
+			|| (next_hpa != (curr_hpa + PAGE_SIZE_4K))) {
 			return false;
 		}
 		size -= PAGE_SIZE_4K;
