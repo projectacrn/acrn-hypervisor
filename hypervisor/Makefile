@@ -182,7 +182,6 @@ C_SRCS += $(wildcard partition/*.c)
 C_SRCS += dm/vrtc.c
 endif
 
-C_SRCS += bsp/$(CONFIG_PLATFORM)/vm_description.c
 C_SRCS += bsp/$(CONFIG_PLATFORM)/$(CONFIG_PLATFORM).c
 C_SRCS += bsp/$(CONFIG_PLATFORM)/platform_acpi_info.c
 
