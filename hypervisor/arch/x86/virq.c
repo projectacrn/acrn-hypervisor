@@ -430,6 +430,25 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 		goto INTR_WIN;
 	}
 
+	/*
+	 * From SDM Vol3 26.3.2.5:
+	 * Once the virtual interrupt is recognized, it will be delivered
+	 * in VMX non-root operation immediately after VM entry(including
+	 * any specified event injection) completes.
+	 *
+	 * So the hardware can handle vmcs event injection and
+	 * evaluation/delivery of apicv virtual interrupts in one time
+	 * vm-entry.
+	 *
+	 * Here to sync the pending interrupts to irr and update rvi if
+	 * needed. And then try to handle vmcs event injection.
+	 */
+	if (is_apicv_intr_delivery_supported() &&
+		bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT,
+			pending_req_bits)) {
+		vlapic_apicv_inject_pir(vlapic);
+	}
+
 	/* SDM Vol 3 - table 6-2, inject high priority exception before
 	 * maskable hardware interrupt */
 	if (vcpu_inject_hi_exception(vcpu) != 0) {
@@ -456,19 +475,6 @@ int acrn_handle_pending_request(struct vcpu *vcpu)
 		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
 				arch_vcpu->idt_vectoring_info);
 		goto INTR_WIN;
-	}
-
-	/*
-	 * If the "virtual-interrupt delivery" is enabled,
-	 * sync the pending interrupts to irr and update rvi if needed.
-	 * Then CPU will start evaluate the pending virtual interrupts
-	 * in the later vm-entry.
-	 *
-	 */
-	if (is_apicv_intr_delivery_supported() &&
-		bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT,
-			pending_req_bits)) {
-		vlapic_apicv_inject_pir(vlapic);
 	}
 
 	/* Guest interruptable or not */
