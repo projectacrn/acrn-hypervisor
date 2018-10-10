@@ -38,6 +38,8 @@ extern int guest_ncpus;
 extern char *guest_uuid_str;
 extern uint8_t trusty_enabled;
 extern char *vsbl_file_name;
+extern char *kernel_file_name;
+extern char *elf_file_name;
 extern char *vmname;
 extern bool stdio_in_use;
 

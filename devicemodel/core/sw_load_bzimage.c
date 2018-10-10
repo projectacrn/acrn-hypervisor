@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include "dm.h"
 #include "vmmapi.h"
 #include "sw_load.h"
 
@@ -137,6 +138,8 @@ acrn_parse_kernel(char *arg)
 				kernel_path);
 			exit(10); /* Non-zero */
 		}
+		kernel_file_name = kernel_path;
+
 		with_kernel = 1;
 		printf("SW_LOAD: get kernel path %s\n", kernel_path);
 		return 0;
