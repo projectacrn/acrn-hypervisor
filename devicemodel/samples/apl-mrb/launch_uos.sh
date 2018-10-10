@@ -10,6 +10,15 @@ if [ "$kernel_version" = "4.19" ]; then
 ipu_passthrough=1
 fi
 
+cse_passthrough=0
+hbm_ver=`cat /sys/class/mei/mei0/hbm_ver`
+major_ver=`echo $hbm_ver | cut -d '.' -f1`
+minor_ver=`echo $hbm_ver | cut -d '.' -f2`
+if [[ "$major_ver" -lt "2" ]] || \
+   [[ "$major_ver" == "2" && "$minor_ver" -lt "2" ]]; then
+    cse_passthrough=1
+fi
+
 function launch_clearlinux()
 {
 if [ ! -f "/data/$5/$5.img" ]; then
@@ -54,11 +63,6 @@ echo "8086 5aaa" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:15.1" > /sys/bus/pci/devices/0000:00:15.1/driver/unbind
 echo "0000:00:15.1" > /sys/bus/pci/drivers/pci-stub/bind
 
-#For CSME passthrough
-echo "8086 5a9a" > /sys/bus/pci/drivers/pci-stub/new_id
-echo "0000:00:0f.0" > /sys/bus/pci/devices/0000:00:0f.0/driver/unbind
-echo "0000:00:0f.0" > /sys/bus/pci/drivers/pci-stub/bind
-
 boot_ipu_option=""
 if [ $ipu_passthrough == 1 ];then
     # for ipu passthrough - ipu device 0:3.0
@@ -80,6 +84,16 @@ if [ $ipu_passthrough == 1 ];then
     fi
 else
     boot_ipu_option="$boot_ipu_option"" -s 21,virtio-ipu "
+fi
+
+boot_cse_option=""
+if [ $cse_passthrough == 1 ]; then
+    echo "8086 5a9a" > /sys/bus/pci/drivers/pci-stub/new_id
+    echo "0000:00:0f.0" > /sys/bus/pci/devices/0000:00:0f.0/driver/unbind
+    echo "0000:00:0f.0" > /sys/bus/pci/drivers/pci-stub/bind
+    boot_cse_option="$boot_cse_option"" -s 15,passthru,0/0f/0 "
+else
+    boot_cse_option="$boot_cse_option"" -s 15,virtio-heci,d1 "
 fi
 
 # for sd card passthrough - SDXC/MMC Host Controller 00:1b.0
@@ -127,7 +141,7 @@ acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:
   -s 4,virtio-net,$tap $boot_image_option \
   -s 7,xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \
   -s 9,passthru,0/15/1 \
-  -s 15,passthru,0/f/0 \
+  $boot_cse_option \
   -s 27,passthru,0/1b/0 \
   $boot_ipu_option      \
   -i /run/acrn/ioc_$vm_name,0x20 \
@@ -198,11 +212,6 @@ echo "8086 5ab4" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:17.0" > /sys/bus/pci/devices/0000:00:17.0/driver/unbind
 echo "0000:00:17.0" > /sys/bus/pci/drivers/pci-stub/bind
 
-#For CSME passthrough
-echo "8086 5a9a" > /sys/bus/pci/drivers/pci-stub/new_id
-echo "0000:00:0f.0" > /sys/bus/pci/devices/0000:00:0f.0/driver/unbind
-echo "0000:00:0f.0" > /sys/bus/pci/drivers/pci-stub/bind
-
 # for sd card passthrough - SDXC/MMC Host Controller 00:1b.0
 echo "8086 5aca" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:1b.0" > /sys/bus/pci/devices/0000:00:1b.0/driver/unbind
@@ -250,6 +259,16 @@ if [ $ipu_passthrough == 1 ];then
     fi
 else
     boot_ipu_option="$boot_ipu_option"" -s 21,virtio-ipu "
+fi
+
+boot_cse_option=""
+if [ $cse_passthrough == 1 ]; then
+    echo "8086 5a9a" > /sys/bus/pci/drivers/pci-stub/new_id
+    echo "0000:00:0f.0" > /sys/bus/pci/devices/0000:00:0f.0/driver/unbind
+    echo "0000:00:0f.0" > /sys/bus/pci/drivers/pci-stub/bind
+    boot_cse_option="$boot_cse_option"" -s 15,passthru,0/0f/0 "
+else
+    boot_cse_option="$boot_cse_option"" -s 15,virtio-heci,d1 "
 fi
 
 #for memsize setting
@@ -311,7 +330,7 @@ fi
    -s 11,wdt-i6300esb \
    -s 14,passthru,0/e/0,keep_gsi  \
    -s 23,passthru,0/17/0 \
-   -s 15,passthru,0/f/0 \
+   $boot_cse_option \
    -s 27,passthru,0/1b/0 \
    -s 24,passthru,0/18/0 \
    -s 18,passthru,3/0/0,keep_gsi \
