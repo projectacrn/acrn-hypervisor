@@ -59,7 +59,7 @@ usb_get_native_devinfo(struct libusb_device *ldev,
 	if (info->type == USB_TYPE_EXTHUB) {
 		info->maxchild = usb_get_hub_port_num(&info->path);
 		if (info->maxchild < 0)
-			UPRINTF(LFTL, "fail to get count of numbers of hub"
+			UPRINTF(LDBG, "fail to get count of numbers of hub"
 					" %d-%s\r\n", info->path.bus,
 					usb_dev_path(&info->path));
 	}
@@ -74,15 +74,61 @@ usb_get_native_devinfo(struct libusb_device *ldev,
 	return true;
 }
 
+static void
+internal_scan(struct libusb_device ***list, int list_sz, int depth,
+		int8_t *visit, int visit_sz)
+{
+	int i;
+	struct libusb_device **devlist;
+	struct usb_native_devinfo di;
+
+	assert(visit);
+	assert(list);
+	assert(visit_sz >= list_sz);
+	devlist = *list;
+
+	if (depth >= USB_MAX_TIERS) {
+		UPRINTF(LFTL, "max hub layers(7) reached, stop scan\r\n");
+		return;
+	}
+
+	/* The scanning must be done according to the order from depth 1 to
+	 * USB_MAX_TIERS. The reason is if hub exist in the USB device tree,
+	 * the ports of hub should be assigned first, and then its child
+	 * is scanned. The reason is external hub ports are dyanmically
+	 * assigned.
+	 */
+
+	/* scan devices and assign ports if hub is found */
+	for (i = 0; i < list_sz; i++) {
+		if (usb_get_native_devinfo(devlist[i], &di, NULL) == false)
+			continue;
+
+		if (!visit[i] && di.path.depth == depth &&
+				ROOTHUB_PORT(di.path)) {
+			visit[i] = 1;
+			if (g_ctx.conn_cb)
+				g_ctx.conn_cb(g_ctx.hci_data, &di);
+		}
+	}
+
+	/* do the scanning in deeper depth */
+	for (i = 0; i < list_sz; i++) {
+		if (usb_get_native_devinfo(devlist[i], &di, NULL) == false)
+			continue;
+
+		if (!visit[i] && di.path.depth > depth && ROOTHUB_PORT(di.path))
+			internal_scan(list, list_sz, depth + 1, visit,
+					visit_sz);
+	}
+}
+
 static int
 usb_dev_scan_dev()
 {
-	int i, num_devs;
+	int num_devs;
 	struct libusb_device **devlist;
-	struct libusb_device *ldev;
-	struct usb_native_devinfo di;
-	struct libusb_device_descriptor d;
-	bool ret;
+	int8_t visit[USB_MAX_DEVICES];
 
 	if (!g_ctx.libusb_ctx)
 		return -1;
@@ -91,42 +137,8 @@ usb_dev_scan_dev()
 	if (num_devs < 0)
 		return -1;
 
-	/* first pass, process external hubs */
-	for (i = 0; i < num_devs; ++i) {
-		ldev = devlist[i];
-
-		ret = usb_get_native_devinfo(ldev, &di, &d);
-		if (ret == false)
-			continue;
-
-		if (ROOTHUB_PORT(di.path) == 0)
-			continue;
-
-		if (di.type != USB_TYPE_EXTHUB)
-			continue;
-
-		if (g_ctx.conn_cb)
-			g_ctx.conn_cb(g_ctx.hci_data, &di);
-	}
-
-	/* second pass, process devices */
-	for (i = 0; i < num_devs; ++i) {
-		ldev = devlist[i];
-
-		ret = usb_get_native_devinfo(ldev, &di, &d);
-		if (ret == false)
-			continue;
-
-		if (ROOTHUB_PORT(di.path) == 0)
-			continue;
-
-		if (di.type == USB_TYPE_EXTHUB)
-			continue;
-
-		if (g_ctx.conn_cb)
-			g_ctx.conn_cb(g_ctx.hci_data, &di);
-	}
-
+	memset(visit, 0, sizeof(visit));
+	internal_scan(&devlist, num_devs, 1, visit, USB_MAX_DEVICES);
 	return num_devs;
 }
 
