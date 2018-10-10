@@ -1376,7 +1376,7 @@ passthru_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 }
 
 static void
-write_dsdt_xhci(struct pci_vdev *dev)
+write_dsdt_xdci(struct pci_vdev *dev)
 {
 	printf("write virt-%x:%x.%x in dsdt for XDCI @ 00:15.1\n",
 	       dev->bus,
@@ -1999,7 +1999,7 @@ passthru_write_dsdt(struct pci_vdev *dev)
 	/* Provides ACPI extra info */
 	if (device == 0x5aaa)
 		/* XDCI @ 00:15.1 to enable ADB */
-		write_dsdt_xhci(dev);
+		write_dsdt_xdci(dev);
 	else if (device == 0x5ab4)
 		/* HDAC @ 00:17.0 as codec */
 		write_dsdt_hdac(dev);
