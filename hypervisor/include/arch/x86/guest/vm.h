@@ -22,7 +22,6 @@ enum vm_privilege_level {
 
 struct vm_hw_info {
 	uint16_t num_vcpus;	/* Number of total virtual cores */
-	uint16_t exp_num_vcpus;	/* Number of real expected virtual cores */
 	uint16_t created_vcpus;	/* Number of created vcpus */
 	struct vcpu **vcpu_array;	/* vcpu array of this VM */
 	uint64_t gpa_lowtop;    /* top lowmem gpa of this VM */
@@ -268,9 +267,6 @@ int start_vm(struct vm *vm);
 int reset_vm(struct vm *vm);
 int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm);
 int prepare_vm(uint16_t pcpu_id);
-#ifdef CONFIG_VM0_DESC
-void vm_fixup(struct vm *vm);
-#endif
 
 #ifdef CONFIG_PARTITION_MODE
 const struct vm_description_array *get_vm_desc_base(void);

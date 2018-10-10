@@ -30,7 +30,6 @@ struct acpi_info {
 /**********************************/
 /* EXTERNAL VARIABLES             */
 /**********************************/
-extern struct vm_description vm0_desc;
 extern struct acpi_info host_acpi_info;
 
 /* BSP Interfaces */

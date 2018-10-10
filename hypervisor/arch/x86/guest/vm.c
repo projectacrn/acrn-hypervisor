@@ -44,18 +44,8 @@ static void init_vm(struct vm_description *vm_desc,
 		struct vm *vm_handle)
 {
 	/* Populate VM attributes from VM description */
-#ifdef CONFIG_VM0_DESC
-	if (is_vm0(vm_handle)) {
-		/* Allocate all cpus to vm0 at the beginning */
-		vm_handle->hw.num_vcpus = phys_cpu_num;
-		vm_handle->hw.exp_num_vcpus = vm_desc->vm_hw_num_cores;
-	} else {
-		vm_handle->hw.num_vcpus = vm_desc->vm_hw_num_cores;
-		vm_handle->hw.exp_num_vcpus = vm_desc->vm_hw_num_cores;
-	}
-#else
 	vm_handle->hw.num_vcpus = vm_desc->vm_hw_num_cores;
-#endif
+
 #ifdef CONFIG_PARTITION_MODE
 	vm_handle->vm_desc = vm_desc;
 #endif
@@ -433,13 +423,12 @@ int prepare_vm0(void)
 	int err;
 	uint16_t i;
 	struct vm *vm = NULL;
-	struct vm_description *vm_desc = &vm0_desc;
+	struct vm_description vm0_desc;
 
-#ifndef CONFIG_VM0_DESC
-	vm_desc->vm_hw_num_cores = phys_cpu_num;
-#endif
+	(void)memset((void *)&vm0_desc, 0U, sizeof(vm0_desc));
+	vm0_desc.vm_hw_num_cores = phys_cpu_num;
 
-	err = create_vm(vm_desc, &vm);
+	err = create_vm(&vm0_desc, &vm);
 	if (err != 0) {
 		return err;
 	}
@@ -470,52 +459,5 @@ int prepare_vm(uint16_t pcpu_id)
 	}
 
 	return err;
-}
-#endif
-
-#ifdef CONFIG_VM0_DESC
-static inline bool vcpu_in_vm_desc(struct vcpu *vcpu,
-		struct vm_description *vm_desc)
-{
-	int i;
-
-	for (i = 0; i < vm_desc->vm_hw_num_cores; i++) {
-		if (vcpu->pcpu_id == vm_desc->vm_pcpu_ids[i]) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
-/*
- * fixup vm0 for expected vcpu:
- *  vm0 is starting with all physical cpus, it's mainly for UEFI boot to
- *  handle all physical mapped APs wakeup during boot service exit.
- *  this fixup is used to pause then destroy non-expect-enabled vcpus from VM0.
- *
- * NOTE: if you want to enable mult-vpucs for vm0, please make sure the pcpu_id
- *       is in order, for example:
- *       - one vcpu:    VM0_CPUS[VM0_NUM_CPUS] = {0};
- *       - two vcpus:   VM0_CPUS[VM0_NUM_CPUS] = {0, 1};
- *       - three vcpus: VM0_CPUS[VM0_NUM_CPUS] = {0, 1, 2};
- */
-void vm_fixup(struct vm *vm)
-{
-	if (is_vm0(vm) && (vm->hw.exp_num_vcpus < vm->hw.num_vcpus)) {
-		struct vm_description *vm_desc = &vm0_desc;
-		struct vcpu *vcpu;
-		uint16_t i;
-
-		foreach_vcpu(i, vm, vcpu) {
-			if (!vcpu_in_vm_desc(vcpu, vm_desc)) {
-				pause_vcpu(vcpu, VCPU_ZOMBIE);
-				reset_vcpu(vcpu);
-				destroy_vcpu(vcpu);
-			}
-		}
-
-		vm->hw.num_vcpus = vm->hw.exp_num_vcpus;
-	}
 }
 #endif
