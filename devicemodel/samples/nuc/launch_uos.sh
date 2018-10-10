@@ -1,7 +1,5 @@
 #!/bin/bash
 
-kernel_version=$(uname -r | awk -F. '{ printf("%d.%d", $1,$2) }')
-
 function launch_clear()
 {
 vm_name=vm$1
@@ -43,10 +41,4 @@ for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
         fi
 done
 
-gvt_args=0x070F00
-# this is the temporal solution before plane_restriction is ready on 4.19
-if [ "$kernel_version" = "4.19" ]; then
-gvt_args=0
-fi
-
-launch_clear 1 1 "64 448 8" $gvt_args clear
+launch_clear 1 1 "64 448 8" 0x070F00 clear
