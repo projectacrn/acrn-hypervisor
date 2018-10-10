@@ -60,10 +60,10 @@ void destroy_ept(struct vm *vm)
 	if (vm->arch_vm.m2p != NULL)
 		free_ept_mem((uint64_t *)vm->arch_vm.m2p);
 }
-
+/* using return value INVALID_HPA as error code */
 uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 {
-	uint64_t hpa = 0UL;
+	uint64_t hpa = INVALID_HPA;
 	uint64_t *pgentry, pg_size = 0UL;
 	void *eptp;
 	struct vcpu *vcpu = vcpu_from_pid(vm, get_cpu_id());
@@ -83,15 +83,19 @@ uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 		pr_err("VM %d GPA2HPA: failed for gpa 0x%llx",
 				vm->vm_id, gpa);
 	}
-
-	if (size != NULL) {
+	/** 
+	 * If specified parameter size is not NULL and
+	 * the HPA of parameter gpa is found, pg_size shall
+	 * be returned through parameter size.
+	 */
+	if ((size != NULL) && (hpa != INVALID_HPA)) {
 		*size = (uint32_t)pg_size;
 	}
 
 	return hpa;
 }
 
-/* using return value 0 as failure, make sure guest will not use hpa 0 */
+/* using return value INVALID_HPA as error code */
 uint64_t gpa2hpa(struct vm *vm, uint64_t gpa)
 {
 	return local_gpa2hpa(vm, gpa, NULL);
@@ -264,7 +268,9 @@ void ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 	}
 }
-
+/**
+ * @pre [gpa,gpa+size) has been mapped into host physical memory region
+ */
 void ept_mr_del(struct vm *vm, uint64_t *pml4_page,
 		uint64_t gpa, uint64_t size)
 {

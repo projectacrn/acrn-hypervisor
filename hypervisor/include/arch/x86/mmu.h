@@ -90,6 +90,9 @@ void flush_vpid_single(uint16_t vpid);
 void flush_vpid_global(void);
 void invept(struct vcpu *vcpu);
 bool check_continuous_hpa(struct vm *vm, uint64_t gpa_arg, uint64_t size_arg);
+/**
+ *@pre (pml4_page != NULL) && (pg_size != NULL)
+ */
 uint64_t *lookup_address(uint64_t *pml4_page, uint64_t addr,
 		uint64_t *pg_size, enum _page_table_type ptt);
 
@@ -125,15 +128,32 @@ static inline void clflush(volatile void *p)
 	asm volatile ("clflush (%0)" :: "r"(p));
 }
 
+/**
+ * Invalid HPA is defined for error checking,
+ * according to SDM vol.3A 4.1.4, the maximum
+ * host physical address width is 52
+ */
+#define INVALID_HPA	(0x1UL << 52U)
 /* External Interfaces */
 void destroy_ept(struct vm *vm);
+/**
+ * @return INVALID_HPA - the HPA of parameter gpa is unmapping
+ * @return hpa - the HPA of parameter gpa is hpa
+ */
 uint64_t gpa2hpa(struct vm *vm, uint64_t gpa);
+/**
+ * @return INVALID_HPA - the HPA of parameter gpa is unmapping
+ * @return hpa - the HPA of parameter gpa is hpa
+ */
 uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size);
 uint64_t hpa2gpa(struct vm *vm, uint64_t hpa);
 void ept_mr_add(struct vm *vm, uint64_t *pml4_page, uint64_t hpa,
 		uint64_t gpa, uint64_t size, uint64_t prot_orig);
 void ept_mr_modify(struct vm *vm, uint64_t *pml4_page, uint64_t gpa,
 		uint64_t size, uint64_t prot_set, uint64_t prot_clr);
+/**
+ * @pre [gpa,gpa+size) has been mapped into host physical memory region
+ */
 void ept_mr_del(struct vm *vm, uint64_t *pml4_page, uint64_t gpa,
 		uint64_t size);
 void free_ept_mem(uint64_t *pml4_page);
