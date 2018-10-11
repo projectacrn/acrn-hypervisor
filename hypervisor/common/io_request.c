@@ -74,6 +74,50 @@ void reset_vm_ioreqs(struct acrn_vm *vm)
 	}
 }
 
+static bool has_complete_ioreq(struct acrn_vcpu *vcpu)
+{
+	union vhm_request_buffer *req_buf = NULL;
+	struct vhm_request *vhm_req;
+	struct acrn_vm *vm;
+
+	vm = vcpu->vm;
+	req_buf = (union vhm_request_buffer *)vm->sw.io_shared_page;
+	if (req_buf != NULL) {
+		vhm_req = &req_buf->req_queue[vcpu->vcpu_id];
+		if (vhm_req->valid &&
+			atomic_load32(&vhm_req->processed)
+				== REQ_STATE_COMPLETE) {
+			return true;
+
+		}
+	}
+
+	return false;
+}
+
+/**
+ * @brief Handle completed ioreq if any one pending
+ *
+ * @param pcpu_id The physical cpu id of vcpu whose IO request to be checked
+ *
+ * @return N/A
+ */
+void handle_complete_ioreq(uint16_t pcpu_id)
+{
+	struct acrn_vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
+	struct acrn_vm *vm;
+
+	if (vcpu != NULL) {
+		vm = vcpu->vm;
+		if (vm->sw.is_completion_polling) {
+			if (has_complete_ioreq(vcpu)) {
+				/* we have completed ioreq pending */
+				emulate_io_post(vcpu);
+			}
+		}
+	}
+}
+
 /**
  * @brief Deliver \p io_req to SOS and suspend \p vcpu till its completion
  *
@@ -103,6 +147,9 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 	vhm_req->type = io_req->type;
 	(void)memcpy_s(&vhm_req->reqs, sizeof(union vhm_io_request),
 		&io_req->reqs, sizeof(union vhm_io_request));
+	if (vcpu->vm->sw.is_completion_polling) {
+		vhm_req->completion_polling = 1U;
+	}
 
 	/* pause vcpu, wait for VHM to handle the MMIO request.
 	 * TODO: when pause_vcpu changed to switch vcpu out directlly, we

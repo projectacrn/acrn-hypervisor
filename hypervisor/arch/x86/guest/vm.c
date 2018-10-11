@@ -162,6 +162,10 @@ int create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 	/* Populate return VM handle */
 	*rtn_vm = vm;
 	vm->sw.io_shared_page = NULL;
+#ifdef CONFIG_IOREQ_POLLING
+	/* Now, enable IO completion polling mode for all VMs with CONFIG_IOREQ_POLLING. */
+	vm->sw.is_completion_polling = true;
+#endif
 
 	status = set_vcpuid_entries(vm);
 	if (status != 0) {
