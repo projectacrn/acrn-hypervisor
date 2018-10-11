@@ -129,14 +129,30 @@ static uint8_t vuart_intr_reason(struct acrn_vuart *vu)
 static void vuart_toggle_intr(struct acrn_vuart *vu)
 {
 	uint8_t intr_reason;
+	union ioapic_rte rte;
+	uint32_t operation;
 
 	intr_reason = vuart_intr_reason(vu);
+	vioapic_get_rte(vu->vm, COM1_IRQ, &rte);
 
-	if (intr_reason != IIR_NOPEND) {
-		/* active low for COM1_IRQ polarity */
-		vpic_set_irq(vu->vm, COM1_IRQ, GSI_FALLING_PULSE);
-		vioapic_set_irq(vu->vm, COM1_IRQ, GSI_FALLING_PULSE);
+	/* TODO:
+	 * Here should assert vuart irq according to COM1_IRQ polarity.
+	 * The best way is to get the polarity info from ACIP table.
+	 * Here we just get the info from vioapic configuration.
+	 * based on this, we can still have irq storm during guest
+	 * modify the vioapic setting, as it's only for debug uart,
+	 * we want to make it as an known issue.
+	 */
+	if ((rte.full & IOAPIC_RTE_INTPOL) != 0UL) {
+		operation = (intr_reason != IIR_NOPEND) ?
+				GSI_SET_LOW : GSI_SET_HIGH;
+	} else {
+		operation = (intr_reason != IIR_NOPEND) ?
+				GSI_SET_HIGH : GSI_SET_LOW;
 	}
+
+	vpic_set_irq(vu->vm, COM1_IRQ, operation);
+	vioapic_set_irq(vu->vm, COM1_IRQ, operation);
 }
 
 static void vuart_write(struct vm *vm, uint16_t offset_arg,
