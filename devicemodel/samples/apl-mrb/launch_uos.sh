@@ -276,10 +276,6 @@ else
 fi
 kernel_cmdline="$kernel_cmdline_generic"
 
-if [ "$kernel_version" = "4.19" ]; then
-  kernel_cmdline="$kernel_cmdline_generic"" i915.enable_pvmmio=0x27"
-fi
-
 : '
 select right virtual slots for acrn_dm:
 1. some passthru device need virtual slot same as physical, like audio 0:e.0 at
