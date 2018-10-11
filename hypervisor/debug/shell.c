@@ -204,7 +204,7 @@ static struct shell_cmd *shell_find_cmd(const char *cmd_str)
 	struct shell_cmd *p_cmd = NULL;
 
 	for (i = 0U; i < p_shell->cmd_count; i++) {
-		p_cmd = &p_shell->shell_cmd[i];
+		p_cmd = &p_shell->cmds[i];
 		if (strcmp(p_cmd->str, cmd_str) == 0) {
 			return p_cmd;
 		}
@@ -438,7 +438,7 @@ void shell_kick(void)
 
 void shell_init(void)
 {
-	p_shell->shell_cmd = shell_cmds;
+	p_shell->cmds = shell_cmds;
 	p_shell->cmd_count = ARRAY_SIZE(shell_cmds);
 
 	/* Zero fill the input buffer */
@@ -470,7 +470,7 @@ static int shell_cmd_help(__unused int argc, __unused char **argv)
 		uint32_t j;
 
 		for (j = 0U; j < p_shell->cmd_count; j++) {
-			p_cmd = &p_shell->shell_cmd[j];
+			p_cmd = &p_shell->cmds[j];
 
 			/* Check if we've filled the screen with info */
 			/* i + 1 used to avoid 0%SHELL_ROWS=0 */

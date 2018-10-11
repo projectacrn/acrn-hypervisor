@@ -311,12 +311,12 @@ static void init_percpu_data_area(void)
 		"fail to get phy cpu id");
 }
 
-static void cpu_set_current_state(uint16_t pcpu_id, enum cpu_state state)
+static void cpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state)
 {
 	spinlock_obtain(&up_count_spinlock);
 
 	/* Check if state is initializing */
-	if (state == CPU_STATE_INITIALIZING) {
+	if (state == PCPU_STATE_INITIALIZING) {
 		/* Increment CPU up count */
 		up_count++;
 
@@ -325,12 +325,12 @@ static void cpu_set_current_state(uint16_t pcpu_id, enum cpu_state state)
 	}
 
 	/* If cpu is dead, decrement CPU up count */
-	if (state == CPU_STATE_DEAD) {
+	if (state == PCPU_STATE_DEAD) {
 		up_count--;
 	}
 
 	/* Set state for the specified CPU */
-	per_cpu(cpu_state, pcpu_id) = state;
+	per_cpu(boot_state, pcpu_id) = state;
 
 	spinlock_release(&up_count_spinlock);
 }
@@ -429,7 +429,7 @@ static void bsp_boot_post(void)
 	cpu_xsave_init();
 
 	/* Set state for this CPU to initializing */
-	cpu_set_current_state(BOOT_CPU_ID, CPU_STATE_INITIALIZING);
+	cpu_set_current_state(BOOT_CPU_ID, PCPU_STATE_INITIALIZING);
 
 	/* Perform any necessary BSP initialization */
 	init_bsp();
@@ -527,7 +527,7 @@ void cpu_secondary_init(void)
 	 * and Set state for this CPU to initializing
 	 */
 	cpu_set_current_state(get_cpu_id_from_lapic_id(get_cur_lapic_id()),
-			      CPU_STATE_INITIALIZING);
+			      PCPU_STATE_INITIALIZING);
 
 	bitmap_set_nolock(get_cpu_id(), &pcpu_active_bitmap);
 
@@ -706,7 +706,7 @@ void cpu_dead(uint16_t pcpu_id)
 	cache_flush_invalidate_all();
 
 	/* Set state to show CPU is dead */
-	cpu_set_current_state(pcpu_id, CPU_STATE_DEAD);
+	cpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);
 
 	/* Halt the CPU */
 	do {
