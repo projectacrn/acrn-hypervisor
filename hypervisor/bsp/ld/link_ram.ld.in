@@ -1,5 +1,3 @@
-#include "config.h"
-
 ENTRY(cpu_primary_start_32)
 
 MEMORY
