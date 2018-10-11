@@ -108,7 +108,6 @@ vm_lapic_from_vcpu_id(struct vm *vm, uint16_t vcpu_id)
 	struct vcpu *vcpu;
 
 	vcpu = vcpu_from_vid(vm, vcpu_id);
-	ASSERT(vcpu != NULL, "vm%d, vcpu%hu", vm->vm_id, vcpu_id);
 
 	return vcpu_vlapic(vcpu);
 }
@@ -119,7 +118,6 @@ vm_lapic_from_pcpuid(struct vm *vm, uint16_t pcpu_id)
 	struct vcpu *vcpu;
 
 	vcpu = vcpu_from_pid(vm, pcpu_id);
-	ASSERT(vcpu != NULL, "vm%d, pcpu%hu", vm->vm_id, pcpu_id);
 
 	return vcpu_vlapic(vcpu);
 }
@@ -1996,13 +1994,12 @@ int vlapic_create(struct vcpu *vcpu)
 	return 0;
 }
 
+/*
+ *  @pre vcpu != NULL
+ */
 void vlapic_free(struct vcpu *vcpu)
 {
 	struct acrn_vlapic *vlapic = NULL;
-
-	if (vcpu == NULL) {
-		return;
-	}
 
 	vlapic = vcpu_vlapic(vcpu);
 

@@ -34,6 +34,12 @@ config RELEASE
 
 config MAX_VM_NUM
 	int "Maximum number of VM"
+	range 1 8
+	default 4
+
+config MAX_VCPUS_PER_VM
+	int "Maximum number of VCPUS per VM"
+	range 1 8
 	default 4
 
 config NR_IOAPICS

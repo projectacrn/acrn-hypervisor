@@ -21,11 +21,11 @@ enum vm_privilege_level {
 #define INVALID_VM_ID 0xffffU
 
 struct vm_hw_info {
-	uint16_t num_vcpus;	/* Number of total virtual cores */
+	/* vcpu array of this VM */
+	struct vcpu vcpu_array[CONFIG_MAX_VCPUS_PER_VM];
 	uint16_t created_vcpus;	/* Number of created vcpus */
-	struct vcpu **vcpu_array;	/* vcpu array of this VM */
 	uint64_t gpa_lowtop;    /* top lowmem gpa of this VM */
-};
+} __aligned(CPU_PAGE_SIZE);
 
 struct sw_linux {
 	void *ramdisk_src_addr;		/* HVA */
@@ -130,10 +130,10 @@ struct vcpuid_entry {
 
 struct vm {
 	struct vm_arch arch_vm; /* Reference to this VM's arch information */
-	uint16_t vm_id;		    /* Virtual machine identifier */
 	struct vm_hw_info hw;	/* Reference to this VM's HW information */
 	struct vm_sw_info sw;	/* Reference to SW associated with this VM */
 	struct vm_pm_info pm;	/* Reference to this VM's arch information */
+	uint16_t vm_id;		    /* Virtual machine identifier */
 	enum vm_state state;	/* VM state */
 	struct acrn_vuart vuart;		/* Virtual UART */
 	enum vpic_wire_mode wire_mode;

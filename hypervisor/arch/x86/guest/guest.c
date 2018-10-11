@@ -42,7 +42,6 @@ uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask)
 		vcpu_id = ffs64(vdmask)) {
 		bitmap_clear_lock(vcpu_id, &vdmask);
 		vcpu = vcpu_from_vid(vm, vcpu_id);
-		ASSERT(vcpu != NULL, "vcpu_from_vid failed");
 		bitmap_set_lock(vcpu->pcpu_id, &dmask);
 	}
 
@@ -383,6 +382,9 @@ static inline int copy_gpa(struct vm *vm, void *h_ptr_arg, uint64_t gpa_arg,
 	return 0;
 }
 
+/*
+ * @pre vcpu != NULL && err_code != NULL
+ */
 static inline int copy_gva(struct vcpu *vcpu, void *h_ptr_arg, uint64_t gva_arg,
 	uint32_t size_arg, uint32_t *err_code, uint64_t *fault_addr,
 	bool cp_from_vm)
@@ -393,15 +395,6 @@ static inline int copy_gva(struct vcpu *vcpu, void *h_ptr_arg, uint64_t gva_arg,
 	uint32_t len;
 	uint64_t gva = gva_arg;
 	uint32_t size = size_arg;
-
-	if (vcpu == NULL) {
-		pr_err("guest virt addr copy need vcpu param");
-		return -EINVAL;
-	}
-	if (err_code == NULL) {
-		pr_err("guest virt addr copy need err_code param");
-		return -EINVAL;
-	}
 
 	while (size > 0U) {
 		ret = gva2gpa(vcpu, gva, &gpa, err_code);

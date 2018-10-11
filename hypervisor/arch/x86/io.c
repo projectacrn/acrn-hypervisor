@@ -479,7 +479,7 @@ int register_mmio_emulation_handler(struct vm *vm,
 	int status = -EINVAL;
 	struct mem_io_node *mmio_node;
 
-	if ((vm->hw.created_vcpus > 0U) && vm->hw.vcpu_array[0]->launched) {
+	if ((vm->hw.created_vcpus > 0U) && vm->hw.vcpu_array[0].launched) {
 		ASSERT(false, "register mmio handler after vm launched");
 		return status;
 	}

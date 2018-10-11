@@ -99,10 +99,8 @@ void exec_vmxon_instr(uint16_t pcpu_id)
 	vmxon_region_pa = hva2hpa(vmxon_region_va);
 	exec_vmxon(&vmxon_region_pa);
 
-	if (vcpu != NULL) {
-		vmcs_pa = hva2hpa(vcpu->arch_vcpu.vmcs);
-		exec_vmptrld(&vmcs_pa);
-	}
+	vmcs_pa = hva2hpa(vcpu->arch_vcpu.vmcs);
+	exec_vmptrld(&vmcs_pa);
 }
 
 void vmx_off(uint16_t pcpu_id)
@@ -111,10 +109,8 @@ void vmx_off(uint16_t pcpu_id)
 	struct vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
 	uint64_t vmcs_pa;
 
-	if (vcpu != NULL) {
-		vmcs_pa = hva2hpa(vcpu->arch_vcpu.vmcs);
-		exec_vmclear((void *)&vmcs_pa);
-	}
+	vmcs_pa = hva2hpa(vcpu->arch_vcpu.vmcs);
+	exec_vmclear((void *)&vmcs_pa);
 
 	asm volatile ("vmxoff" : : : "memory");
 }

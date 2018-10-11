@@ -53,6 +53,7 @@ enum vcpu_state {
 	VCPU_RUNNING,
 	VCPU_PAUSED,
 	VCPU_ZOMBIE,
+	VCPU_OFFLINE,
 	VCPU_UNKNOWN_STATE,
 };
 
@@ -304,9 +305,15 @@ static inline bool is_pae(struct vcpu *vcpu)
 
 struct vcpu* get_ever_run_vcpu(uint16_t pcpu_id);
 int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle);
+/*
+ *  @pre vcpu != NULL
+ */
 int run_vcpu(struct vcpu *vcpu);
 int shutdown_vcpu(struct vcpu *vcpu);
-void destroy_vcpu(struct vcpu *vcpu);
+/*
+ *  @pre vcpu != NULL
+ */
+void offline_vcpu(struct vcpu *vcpu);
 
 void reset_vcpu(struct vcpu *vcpu);
 void pause_vcpu(struct vcpu *vcpu, enum vcpu_state new_state);

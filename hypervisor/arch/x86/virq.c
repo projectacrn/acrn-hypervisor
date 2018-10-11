@@ -563,21 +563,15 @@ void cancel_event_injection(struct vcpu *vcpu)
 	}
 }
 
+/*
+ * @pre vcpu != NULL
+ */
 int exception_vmexit_handler(struct vcpu *vcpu)
 {
 	uint32_t intinfo, int_err_code = 0U;
 	uint32_t exception_vector = VECTOR_INVALID;
 	uint32_t cpl;
 	int status = 0;
-
-	if (vcpu == NULL) {
-		TRACE_4I(TRACE_VMEXIT_EXCEPTION_OR_NMI, 0U, 0U, 0U, 0U);
-		status = -EINVAL;
-	}
-
-	if (status != 0) {
-		return status;
-	}
 
 	pr_dbg(" Handling guest exception");
 

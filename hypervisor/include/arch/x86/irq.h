@@ -110,7 +110,9 @@ void vcpu_inject_ac(struct vcpu *vcpu);
 void vcpu_inject_ss(struct vcpu *vcpu);
 void vcpu_make_request(struct vcpu *vcpu, uint16_t eventid);
 int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector, uint32_t err_code);
-
+/*
+ * @pre vcpu != NULL
+ */
 int exception_vmexit_handler(struct vcpu *vcpu);
 int interrupt_window_vmexit_handler(struct vcpu *vcpu);
 int external_interrupt_vmexit_handler(struct vcpu *vcpu);

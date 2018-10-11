@@ -21,7 +21,6 @@ static void fire_vhm_interrupt(void)
 	vm0 = get_vm_from_vmid(0U);
 
 	vcpu = vcpu_from_vid(vm0, 0U);
-	ASSERT(vcpu != NULL, "vcpu_from_vid failed");
 
 	vlapic_intr_edge(vcpu, acrn_vhm_vector);
 }
@@ -56,6 +55,9 @@ static void acrn_print_request(uint16_t vcpu_id, struct vhm_request *req)
 	}
 }
 
+/*
+ * @pre vcpu != NULL && io_req != NULL
+ */
 int32_t
 acrn_insert_request_wait(struct vcpu *vcpu, struct io_request *io_req)
 {
@@ -63,8 +65,7 @@ acrn_insert_request_wait(struct vcpu *vcpu, struct io_request *io_req)
 	struct vhm_request *vhm_req;
 	uint16_t cur;
 
-	if ((vcpu == NULL) || (io_req == NULL) ||
-		(vcpu->vm->sw.io_shared_page == NULL)) {
+	if (vcpu->vm->sw.io_shared_page == NULL) {
 		return -EINVAL;
 	}
 
