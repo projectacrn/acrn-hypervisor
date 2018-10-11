@@ -38,10 +38,12 @@ config MAX_VM_NUM
 
 config NR_IOAPICS
 	int "Maximum number of IOAPICs supported"
+	range 1 2
 	default 1
 
 config MAX_IOMMU_NUM
 	int "Maximum number of iommu dev"
+	range 1 2
 	default 2
 
 config STACK_SIZE
@@ -54,11 +56,20 @@ config LOG_BUF_SIZE
 
 config LOG_DESTINATION
 	int "Bitmap of consoles where logs are printed"
+	range 0 7
 	default 7
+	help
+	A bitmap indicating the destinations of log messages. Currently there
+	are 3 destinations available. Bit 0 represents the serial console, bit
+	1 the SOS ACRN log and bit 2 NPK log.
 
 config CPU_UP_TIMEOUT
 	int "Timeout in ms when bringing up secondary CPUs"
+	range 100 200
 	default 100
+	help
+	A 32-bit integer specifying the timeout in microsecond when waiting for
+	secondary CPUs to start up.
 
 choice
 	prompt "serial IO type"
@@ -77,14 +88,21 @@ config SERIAL_MMIO_BASE
 	hex "Base address of serial MMIO region"
 	depends on SERIAL_MMIO
 	default 0xfc000000
+	help
+	A 64-bit integer indicating the base physical address of the
+	memory-mapped UART registers.
 
 config SERIAL_PIO_BASE
 	hex "Base address of serial PIO region"
 	depends on SERIAL_PIO
 	default 0x3f8
+	help
+	The base of the UART ports. This is logically 16-bit but used as a
+	64-bit integer.
 
 config MALLOC_ALIGN
 	int "Block size in the heap for malloc()"
+	range 8 32
 	default 16
 
 config NUM_ALLOC_PAGES
@@ -97,28 +115,45 @@ config HEAP_SIZE
 
 config CONSOLE_LOGLEVEL_DEFAULT
 	int "Default loglevel on the serial console"
+	range 0 6
 	default 3
 
 config MEM_LOGLEVEL_DEFAULT
 	int "Default loglevel in memory"
+	range 0 6
 	default 5
 
 config NPK_LOGLEVEL_DEFAULT
 	int "Default loglevel for the hypervisor NPK log"
+	range 0 6
 	default 5
 
 config LOW_RAM_SIZE
 	hex "Size of the low RAM region"
 	default 0x00010000
+	help
+	A 32-bit integer indicating the size of RAM region below address
+	0x10000, starting from address 0x0.
 
 config RAM_START
 	hex "Address of the RAM region assigned to the hypervisor"
 	default 0x6e000000 if PLATFORM_SBL
 	default 0x00100000 if PLATFORM_UEFI
+	help
+	A 64-bit integer indicating the base address to where the hypervisor
+	should be loaded to. If RELOC is disabled the bootloader is required to
+	load the hypervisor to this specific address. Otherwise the hypervisor
+	will not boot.With RELOC enabled the hypervisor is capable of relocating
+	its symbols to where it is placed at, and thus the bootloader may not
+	place the hypervisor at this specific address.
 
 config RAM_SIZE
 	hex "Size of the RAM region assigned to the hypervisor"
 	default 0x02000000
+	help
+	A 64-bit integer indicating the size of RAM assigned to the
+	hypervisor. It is ensured at link time that the footprint of the
+	hypervisor does not exceed this size.
 
 config CONSTANT_ACPI
 	bool "The platform ACPI info is constant"
@@ -133,6 +168,9 @@ config GPU_SBDF
 	hex
 	depends on DMAR_PARSE_ENABLED
 	default 0x00000010
+	help
+	A 32-bit integer encoding the segment, bus, device and function of the
+	GPU.
 
 config EFI_STUB
 	bool
