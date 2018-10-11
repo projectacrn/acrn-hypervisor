@@ -173,6 +173,9 @@ void vlapic_apicv_batch_set_tmr(struct acrn_vlapic *vlapic);
 uint32_t vlapic_get_id(struct acrn_vlapic *vlapic);
 uint8_t vlapic_get_apicid(struct acrn_vlapic *vlapic);
 int vlapic_create(struct vcpu *vcpu);
+/*
+ *  @pre vcpu != NULL
+ */
 void vlapic_free(struct vcpu *vcpu);
 void vlapic_init(struct acrn_vlapic *vlapic);
 void vlapic_reset(struct acrn_vlapic *vlapic);

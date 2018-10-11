@@ -126,7 +126,9 @@ void dm_emulate_mmio_post(struct vcpu *vcpu);
 
 int32_t emulate_io(struct vcpu *vcpu, struct io_request *io_req);
 void emulate_io_post(struct vcpu *vcpu);
-
+/*
+ * @pre vcpu != NULL && io_req != NULL
+ */
 int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct io_request *io_req);
 
 #endif /* IOREQ_H */

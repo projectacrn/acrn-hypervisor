@@ -40,17 +40,6 @@ static inline bool is_vm_valid(uint16_t vm_id)
 	return bitmap_test(vm_id, &vmid_bitmap);
 }
 
-static void init_vm(struct vm_description *vm_desc,
-		struct vm *vm_handle)
-{
-	/* Populate VM attributes from VM description */
-	vm_handle->hw.num_vcpus = vm_desc->vm_hw_num_cores;
-
-#ifdef CONFIG_PARTITION_MODE
-	vm_handle->vm_desc = vm_desc;
-#endif
-}
-
 /* return a pointer to the virtual machine structure associated with
  * this VM ID
  */
@@ -87,25 +76,12 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	vm = &vm_array[vm_id];
 	(void)memset((void *)vm, 0U, sizeof(struct vm));
 	vm->vm_id = vm_id;
-	/*
-	 * Map Virtual Machine to its VM Description
-	 */
-	init_vm(vm_desc, vm);
-
+#ifdef CONFIG_PARTITION_MODE
+	/* Map Virtual Machine to its VM Description */
+	vm->vm_desc = vm_desc;
+#endif
 	/* Init mmio list */
 	INIT_LIST_HEAD(&vm->mmio_list);
-
-	if (vm->hw.num_vcpus == 0U) {
-		vm->hw.num_vcpus = phys_cpu_num;
-	}
-	vm->hw.vcpu_array =
-		calloc(1U, sizeof(struct vcpu *) * vm->hw.num_vcpus);
-	if (vm->hw.vcpu_array == NULL) {
-		pr_err("%s, vcpu_array allocation failed\n", __func__);
-		status = -ENOMEM;
-		goto err;
-	}
-
 	atomic_store16(&vm->hw.created_vcpus, 0U);
 
 	/* gpa_lowtop are used for system start up */
@@ -211,9 +187,6 @@ err:
 		free(vm->arch_vm.nworld_eptp);
 	}
 
-	if (vm->hw.vcpu_array != NULL) {
-		free(vm->hw.vcpu_array);
-	}
 	return status;
 }
 
@@ -235,7 +208,7 @@ int shutdown_vm(struct vm *vm)
 
 	foreach_vcpu(i, vm, vcpu) {
 		reset_vcpu(vcpu);
-		destroy_vcpu(vcpu);
+		offline_vcpu(vcpu);
 	}
 
 	ptdev_release_all_entries(vm);
@@ -267,7 +240,6 @@ int shutdown_vm(struct vm *vm)
 #ifdef CONFIG_PARTITION_MODE
 	vpci_cleanup(vm);
 #endif
-	free(vm->hw.vcpu_array);
 
 	/* Return status to caller */
 	return status;
@@ -284,7 +256,6 @@ int start_vm(struct vm *vm)
 
 	/* Only start BSP (vid = 0) and let BSP start other APs */
 	vcpu = vcpu_from_vid(vm, 0U);
-	ASSERT(vcpu != NULL, "vm%d, vcpu0", vm->vm_id);
 	schedule_vcpu(vcpu);
 
 	return 0;

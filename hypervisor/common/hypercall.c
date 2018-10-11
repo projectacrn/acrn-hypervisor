@@ -43,7 +43,7 @@ int32_t hcall_sos_offline_cpu(struct vm *vm, uint64_t lapicid)
 			}
 			pause_vcpu(vcpu, VCPU_ZOMBIE);
 			reset_vcpu(vcpu);
-			destroy_vcpu(vcpu);
+			offline_vcpu(vcpu);
 		}
 	}
 

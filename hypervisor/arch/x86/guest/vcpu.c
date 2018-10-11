@@ -311,15 +311,25 @@ void set_ap_entry(struct vcpu *vcpu, uint64_t entry)
 int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 {
 	struct vcpu *vcpu;
-
+	uint16_t vcpu_id;
 
 	pr_info("Creating VCPU working on PCPU%hu", pcpu_id);
 
+	/*
+	 * vcpu->vcpu_id = vm->hw.created_vcpus;
+	 * vm->hw.created_vcpus++;
+	 */
+	vcpu_id = atomic_xadd16(&vm->hw.created_vcpus, 1U);
+	if (vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
+		pr_err("%s, vcpu id is invalid!\n", __func__);
+		return -EINVAL;
+	}
 	/* Allocate memory for VCPU */
-	vcpu = calloc(1U, sizeof(struct vcpu));
-	ASSERT(vcpu != NULL, "");
+	vcpu = &(vm->hw.vcpu_array[vcpu_id]);
+	(void)memset((void *)vcpu, 0U, sizeof(struct vcpu));
 
-	/* Initialize the physical CPU ID for this VCPU */
+	/* Initialize CPU ID for this VCPU */
+	vcpu->vcpu_id = vcpu_id;
 	vcpu->pcpu_id = pcpu_id;
 	per_cpu(ever_run_vcpu, pcpu_id) = vcpu;
 
@@ -333,19 +343,6 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	 * specific vcpu destroy on fly, this vcpu_id assignment
 	 * needs revise.
 	 */
-
-	/*
-	 * vcpu->vcpu_id = vm->hw.created_vcpus;
-	 * vm->hw.created_vcpus++;
-	 */
-	vcpu->vcpu_id = atomic_xadd16(&vm->hw.created_vcpus, 1U);
-	/* vm->hw.vcpu_array[vcpu->vcpu_id] = vcpu; */
-	atomic_store64(
-		(uint64_t *)&vm->hw.vcpu_array[vcpu->vcpu_id],
-		(uint64_t)vcpu);
-
-	ASSERT(vcpu->vcpu_id < vm->hw.num_vcpus,
-			"Allocated vcpu_id is out of range!");
 
 	per_cpu(vcpu, pcpu_id) = vcpu;
 
@@ -384,6 +381,9 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	return 0;
 }
 
+/*
+ *  @pre vcpu != NULL
+ */
 int run_vcpu(struct vcpu *vcpu)
 {
 	uint32_t instlen, cs_attr;
@@ -391,8 +391,6 @@ int run_vcpu(struct vcpu *vcpu)
 	struct run_context *ctx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx;
 	int64_t status = 0;
-
-	ASSERT(vcpu != NULL, "Incorrect arguments");
 
 	if (bitmap_test_and_clear_lock(CPU_REG_RIP, &vcpu->reg_updated))
 		exec_vmwrite(VMX_GUEST_RIP, ctx->rip);
@@ -486,21 +484,15 @@ int shutdown_vcpu(__unused struct vcpu *vcpu)
 	return 0;
 }
 
-void destroy_vcpu(struct vcpu *vcpu)
+/*
+ *  @pre vcpu != NULL
+ */
+void offline_vcpu(struct vcpu *vcpu)
 {
-	ASSERT(vcpu != NULL, "Incorrect arguments");
-
-	/* vcpu->vm->hw.vcpu_array[vcpu->vcpu_id] = NULL; */
-	atomic_store64(
-		(uint64_t *)&vcpu->vm->hw.vcpu_array[vcpu->vcpu_id],
-		(uint64_t)NULL);
-
-	atomic_dec16(&vcpu->vm->hw.created_vcpus);
-
 	vlapic_free(vcpu);
 	per_cpu(ever_run_vcpu, vcpu->pcpu_id) = NULL;
 	free_pcpu(vcpu->pcpu_id);
-	free(vcpu);
+	vcpu->state = VCPU_OFFLINE;
 }
 
 /* NOTE:
@@ -602,7 +594,9 @@ int prepare_vcpu(struct vm *vm, uint16_t pcpu_id)
 	struct vcpu *vcpu = NULL;
 
 	ret = create_vcpu(pcpu_id, vm, &vcpu);
-	ASSERT(ret == 0, "vcpu create failed");
+	if (ret != 0) {
+		return ret;
+	}
 
 	if (!vm_sw_loader) {
 		vm_sw_loader = general_sw_loader;
