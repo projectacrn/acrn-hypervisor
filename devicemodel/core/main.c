@@ -80,7 +80,6 @@ char *vsbl_file_name;
 uint8_t trusty_enabled;
 bool stdio_in_use;
 
-static int guest_vmexit_on_hlt, guest_vmexit_on_pause;
 static int virtio_msix = 1;
 static int x2apic_mode;	/* default is xAPIC */
 
@@ -136,14 +135,11 @@ usage(int code)
 		"       -b: enable bvmcons\n"
 		"       -c: # cpus (default 1)\n"
 		"       -C: include guest memory in core file\n"
-		"       -e: exit on unhandled I/O access\n"
 		"       -g: gdb port\n"
 		"       -h: help\n"
-		"       -H: vmexit from the guest on hlt\n"
 		"       -l: LPC device configuration\n"
 		"       -m: memory size in MB\n"
 		"       -p: pin 'vcpu' to 'hostcpu'\n"
-		"       -P: vmexit from the guest on pause\n"
 		"       -s: <slot,driver,configinfo> PCI slot config\n"
 		"       -S: guest memory cannot be swapped\n"
 		"       -u: RTC keeps UTC time\n"
@@ -171,7 +167,7 @@ usage(int code)
 static void
 print_version(void)
 {
-	fprintf(stderr, "DM version is: %s-%s (daily tag:%s), build by %s@%s\n",
+	fprintf(stdout, "DM version is: %s-%s (daily tag:%s), build by %s@%s\n",
 			DM_FULL_VERSION,
 			DM_BUILD_VERSION, DM_DAILY_TAG, DM_BUILD_USER, DM_BUILD_TIME);
 
@@ -695,12 +691,11 @@ static struct option long_options[] = {
 	{"ncpus",		required_argument,	0, 'c' },
 	{"memflags_incore",	no_argument,		0, 'C' },
 	{"gdb_port",		required_argument,	0, 'g' },
+	{"ioc node",		required_argument,	0, 'i' },
 	{"lpc",			required_argument,	0, 'l' },
 	{"pci_slot",		required_argument,	0, 's' },
 	{"memflags_wired",	no_argument,		0, 'S' },
 	{"memsize",		required_argument,	0, 'm' },
-	{"ioapic",		no_argument,		0, 'I' },
-	{"vmexit_pause",	no_argument,		0, 'P' },
 	{"rtc_localtime",	no_argument,		0, 'u' },
 	{"uuid",		required_argument,	0, 'U' },
 	{"strictmsr",		no_argument,		0, 'w' },
@@ -747,7 +742,7 @@ main(int argc, char *argv[])
 	if (signal(SIGINT, sig_handler_term) == SIG_ERR)
 		fprintf(stderr, "cannot register handler for SIGINT\n");
 
-	optstr = "abehuwxACHIPSWYvk:r:B:p:g:c:s:m:l:U:G:i:";
+	optstr = "abhuwxACSWYvk:r:B:p:g:c:s:m:l:U:G:i:";
 	while ((c = getopt_long(argc, argv, optstr, long_options,
 			&option_idx)) != -1) {
 		switch (c) {
@@ -800,21 +795,6 @@ main(int argc, char *argv[])
 			error = vm_parse_memsize(optarg, &memsize);
 			if (error)
 				errx(EX_USAGE, "invalid memsize '%s'", optarg);
-			break;
-		case 'H':
-			guest_vmexit_on_hlt = 1;
-			break;
-		case 'I':
-			/*
-			 * The "-I" option was used to add an ioapic to the
-			 * virtual machine.
-			 *
-			 * An ioapic is now provided unconditionally for each
-			 * virtual machine and this option is now deprecated.
-			 */
-			break;
-		case 'P':
-			guest_vmexit_on_pause = 1;
 			break;
 		case 'u':
 			vrtc_enable_localtime(0);
