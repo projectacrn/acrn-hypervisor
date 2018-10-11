@@ -412,7 +412,6 @@ handle_vmexit(struct vmctx *ctx, struct vhm_request *vhm_req, int vcpu)
 	}
 
 	(*handler[exitcode])(ctx, vhm_req, &vcpu);
-	atomic_store(&vhm_req->processed, REQ_STATE_COMPLETE);
 
 	/* We cannot notify the VHM/hypervisor on the request completion at this
 	 * point if the UOS is in suspend or system reset mode, as the VM is
