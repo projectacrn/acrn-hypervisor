@@ -93,6 +93,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 		status = -ENOMEM;
 		goto err;
 	}
+	sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp);
 
 	/* Only for SOS: Configure VM software information */
 	/* For UOS: This VM software information is configure in DM */

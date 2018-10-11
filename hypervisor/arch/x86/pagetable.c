@@ -65,7 +65,7 @@ static inline void local_modify_or_del_pte(uint64_t *pte,
 		new_pte |= prot_set;
 		set_pgentry(pte, new_pte);
 	} else {
-		set_pgentry(pte, 0);
+		sanitize_pte_entry(pte);
 	}
 }
 
@@ -79,6 +79,8 @@ static inline int construct_pgentry(enum _page_table_type ptt, uint64_t *pde)
 	if (pd_page == NULL) {
 		return -ENOMEM;
 	}
+
+	sanitize_pte((uint64_t *)pd_page);
 
 	prot = (ptt == PTT_PRIMARY) ? PAGE_TABLE: EPT_RWX;
 	set_pgentry(pde, hva2hpa(pd_page) | prot);

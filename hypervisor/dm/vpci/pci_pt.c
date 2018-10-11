@@ -69,6 +69,7 @@ static int vdev_pt_init(struct pci_vdev *vdev)
 	if (vm->iommu == NULL) {
 		if (vm->arch_vm.nworld_eptp == 0UL) {
 			vm->arch_vm.nworld_eptp = alloc_paging_struct();
+			sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp);
 		}
 		vm->iommu = create_iommu_domain(vm->vm_id,
 			hva2hpa(vm->arch_vm.nworld_eptp), 48U);

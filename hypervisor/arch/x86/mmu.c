@@ -31,6 +31,7 @@
 #include <reloc.h>
 
 static void *mmu_pml4_addr;
+static void *sanitized_page[CPU_PAGE_SIZE];
 
 static struct vmx_capability {
 	uint32_t ept;
@@ -187,6 +188,24 @@ void invept(const struct vcpu *vcpu)
 	}
 }
 
+static inline uint64_t get_sanitized_page(void)
+{
+	return hva2hpa(sanitized_page);
+}
+
+void sanitize_pte_entry(uint64_t *ptep)
+{
+	set_pgentry(ptep, get_sanitized_page());
+}
+
+void sanitize_pte(uint64_t *pt_page)
+{
+	uint64_t i;
+	for (i = 0UL; i < PTRS_PER_PTE; i++) {
+		sanitize_pte_entry(pt_page + i);
+	}
+}
+
 uint64_t get_paging_pml4(void)
 {
 	/* Return address to caller */
@@ -255,6 +274,9 @@ void init_paging(void)
 
 	/* Enable paging */
 	enable_paging(hva2hpa(mmu_pml4_addr));
+
+	/* set ptep in sanitized_page point to itself */
+	sanitize_pte((uint64_t *)sanitized_page);
 }
 
 void *alloc_paging_struct(void)

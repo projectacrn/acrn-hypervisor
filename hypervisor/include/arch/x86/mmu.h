@@ -75,6 +75,8 @@ struct cpu_page {
 	uint8_t contents[CPU_PAGE_SIZE];
 };
 
+void sanitize_pte_entry(uint64_t *ptep);
+void sanitize_pte(uint64_t *pt_page);
 uint64_t get_paging_pml4(void);
 void *alloc_paging_struct(void);
 void free_paging_struct(void *ptr);
