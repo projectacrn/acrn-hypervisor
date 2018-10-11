@@ -776,8 +776,20 @@ static void ept_cap_detect(void)
 	/* Read primary processor based VM control. */
 	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
 
+	/*
+	 * According to SDM A.3.2 Primary Processor-Based VM-Execution Controls:
+	 * The IA32_VMX_PROCBASED_CTLS MSR (index 482H) reports on the allowed
+	 * settings of most of the primary processor-based VM-execution controls
+	 * (see Section 24.6.2):
+	 * Bits 63:32 indicate the allowed 1-settings of these controls.
+	 * VM entry allows control X to be 1 if bit 32+X in the MSR is set to 1;
+	 * if bit 32+X in the MSR is cleared to 0, VM entry fails if control X
+	 * is 1.
+	 */
+	msr_val = msr_val >> 32U;
+
 	/* Check if secondary processor based VM control is available. */
-	if ((msr_val & (((uint64_t)VMX_PROCBASED_CTLS_SECONDARY) << 32)) == 0U)
+	if ((msr_val & VMX_PROCBASED_CTLS_SECONDARY) == 0UL)
 		return;
 
 	/* Read secondary processor based VM control. */
