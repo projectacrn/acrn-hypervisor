@@ -99,6 +99,7 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	 */
 	pml4_base = alloc_paging_struct();
 	vm->arch_vm.sworld_eptp = pml4_base;
+	sanitize_pte((uint64_t *)vm->arch_vm.sworld_eptp);
 
 	/* The trusty memory is remapped to guest physical address
 	 * of gpa_rebased to gpa_rebased + size
@@ -147,6 +148,7 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 
 void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 {
+	uint64_t j;
 	void *pdpt_addr;
 	struct vm *vm0 = get_vm_from_vmid(0U);
 	uint64_t hpa = vm->sworld_control.sworld_memory.base_hpa;
@@ -175,9 +177,10 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 	/* Free trusty ept page-structures */
 	pdpt_addr =
 		(void *)pml4e_page_vaddr(*(uint64_t *)vm->arch_vm.sworld_eptp);
-	/* memset PDPTEs except trusty memory */
-	(void)memset(pdpt_addr, 0UL,
-		NON_TRUSTY_PDPT_ENTRIES * sizeof(uint64_t));
+	/* identical PDPTEs except trusty memory */
+	for (j = 0UL; j < NON_TRUSTY_PDPT_ENTRIES; j++) {
+		sanitize_pte_entry((uint64_t *)pdpt_addr + j);
+	}
 	free_ept_mem((uint64_t *)vm->arch_vm.sworld_eptp);
 	vm->arch_vm.sworld_eptp = NULL;
 }
