@@ -535,6 +535,10 @@ int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param)
 	}
 
 	target_vm = get_vm_from_vmid(set_regions.vmid);
+	if (target_vm == NULL) {
+		return -EINVAL;
+	}
+
 	if (is_vm0(target_vm)) {
 		pr_err("%s: Targeting to service vm", __func__);
 		return -EFAULT;
