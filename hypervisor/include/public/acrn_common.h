@@ -268,11 +268,18 @@ struct vhm_request {
 	uint32_t type;
 
 	/**
-	 * Reserved.
+	 * @brief Hypervisor will poll completion if set.
 	 *
 	 * Byte offset: 4.
 	 */
-	uint32_t reserved0[15];
+	uint32_t completion_polling;
+
+	/**
+	 * Reserved.
+	 *
+	 * Byte offset: 8.
+	 */
+	uint32_t reserved0[14];
 
 	/**
 	 * Details about this request. For REQ_PORTIO, this has type
