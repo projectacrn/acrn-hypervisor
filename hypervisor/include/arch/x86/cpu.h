@@ -268,12 +268,12 @@ extern spinlock_t trampoline_spinlock;
 #define BROADCAST_CPU_ID 0xfffeU
 
 /* CPU states defined */
-enum cpu_state {
-	CPU_STATE_RESET = 0,
-	CPU_STATE_INITIALIZING,
-	CPU_STATE_RUNNING,
-	CPU_STATE_HALTED,
-	CPU_STATE_DEAD,
+enum pcpu_boot_state {
+	PCPU_STATE_RESET = 0,
+	PCPU_STATE_INITIALIZING,
+	PCPU_STATE_RUNNING,
+	PCPU_STATE_HALTED,
+	PCPU_STATE_DEAD,
 };
 
 struct cpu_state_info {

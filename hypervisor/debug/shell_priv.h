@@ -29,7 +29,7 @@ struct shell {
 	char input_line[2][SHELL_CMD_MAX_LEN + 1U];	/* current & last */
 	uint32_t input_line_len;	/* Length of current input line */
 	uint32_t input_line_active;	/* Active input line index */
-	struct shell_cmd *shell_cmd;	/* cmds supported */
+	struct shell_cmd *cmds;	/* cmds supported */
 	uint32_t cmd_count;		/* Count of cmds supported */
 };
 
