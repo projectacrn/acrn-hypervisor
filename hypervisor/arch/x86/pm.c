@@ -7,6 +7,50 @@
 
 struct cpu_context cpu_ctx;
 
+/* The values in this structure should come from host ACPI table */
+struct pm_s_state_data host_pm_s_state = {
+	.pm1a_evt = {
+		.space_id = PM1A_EVT_SPACE_ID,
+		.bit_width = PM1A_EVT_BIT_WIDTH,
+		.bit_offset = PM1A_EVT_BIT_OFFSET,
+		.access_size = PM1A_EVT_ACCESS_SIZE,
+		.address = PM1A_EVT_ADDRESS
+	},
+	.pm1b_evt = {
+		.space_id = PM1B_EVT_SPACE_ID,
+		.bit_width = PM1B_EVT_BIT_WIDTH,
+		.bit_offset = PM1B_EVT_BIT_OFFSET,
+		.access_size = PM1B_EVT_ACCESS_SIZE,
+		.address = PM1B_EVT_ADDRESS
+	},
+	.pm1a_cnt = {
+		.space_id = PM1A_CNT_SPACE_ID,
+		.bit_width = PM1A_CNT_BIT_WIDTH,
+		.bit_offset = PM1A_CNT_BIT_OFFSET,
+		.access_size = PM1A_CNT_ACCESS_SIZE,
+		.address = PM1A_CNT_ADDRESS
+	},
+	.pm1b_cnt = {
+		.space_id = PM1B_CNT_SPACE_ID,
+		.bit_width = PM1B_CNT_BIT_WIDTH,
+		.bit_offset = PM1B_CNT_BIT_OFFSET,
+		.access_size = PM1B_CNT_ACCESS_SIZE,
+		.address = PM1B_CNT_ADDRESS
+	},
+	.s3_pkg = {
+		.val_pm1a = S3_PKG_VAL_PM1A,
+		.val_pm1b = S3_PKG_VAL_PM1B,
+		.reserved = S3_PKG_RESERVED
+	},
+	.s5_pkg = {
+		.val_pm1a = S5_PKG_VAL_PM1A,
+		.val_pm1b = S5_PKG_VAL_PM1B,
+		.reserved = S5_PKG_RESERVED
+	},
+	.wake_vector_32 = (uint32_t *)WAKE_VECTOR_32,
+	.wake_vector_64 = (uint64_t *)WAKE_VECTOR_64
+};
+
 /* whether the host enter s3 success */
 uint8_t host_enter_s3_success = 1U;
 

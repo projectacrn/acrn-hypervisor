@@ -377,9 +377,9 @@ void acpi_fixup(void)
 	facs_addr = get_facs_table();
 
 	if (facs_addr != NULL) {
-		host_acpi_info.pm_s_state.wake_vector_32 =
+		host_pm_s_state.wake_vector_32 =
 			(uint32_t *)(facs_addr + OFFSET_WAKE_VECTOR_32);
-		host_acpi_info.pm_s_state.wake_vector_64 =
+		host_pm_s_state.wake_vector_64 =
 			(uint64_t *)(facs_addr + OFFSET_WAKE_VECTOR_64);
 	}
 }

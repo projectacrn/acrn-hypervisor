@@ -111,17 +111,15 @@ void vm_setup_cpu_state(struct vm *vm)
  */
 int vm_load_pm_s_state(struct vm *vm)
 {
-	if ((boot_cpu_data.family == host_acpi_info.x86_family)
-		&& (boot_cpu_data.model == host_acpi_info.x86_model)) {
-		vm->pm.sx_state_data = (struct pm_s_state_data *)
-						&host_acpi_info.pm_s_state;
-		pr_info("System S3/S5 is supported.");
-		return 0;
-	} else {
-		vm->pm.sx_state_data = NULL;
-		pr_err("System S3/S5 is NOT supported.");
-		return -1;
-	}
+#ifdef ACPI_INFO_VALIDATED
+	vm->pm.sx_state_data = (struct pm_s_state_data *)&host_pm_s_state;
+	pr_info("System S3/S5 is supported.");
+	return 0;
+#else
+	vm->pm.sx_state_data = NULL;
+	pr_err("System S3/S5 is NOT supported.");
+	return -1;
+#endif
 }
 
 static inline uint32_t s3_enabled(uint32_t pm1_cnt)
