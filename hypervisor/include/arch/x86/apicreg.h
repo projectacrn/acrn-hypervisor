@@ -350,9 +350,6 @@ union ioapic_rte {
  * I/O APIC defines
  */
 
-/* default physical locations of an IO APIC */
-#define DEFAULT_IO_APIC_BASE	0xfec00000UL
-
 /* window register offset */
 #define IOAPIC_REGSEL		0x00U
 #define IOAPIC_WINDOW		0x10U

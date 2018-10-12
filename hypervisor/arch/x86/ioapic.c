@@ -122,24 +122,17 @@ ioapic_write_reg32(const void *ioapic_base,
 	spinlock_irqrestore_release(&ioapic_lock, rflags);
 }
 
+/**
+ * @pre apic_id < 2
+ */
 static inline uint64_t
 get_ioapic_base(uint8_t apic_id)
 {
-	uint64_t addr = 0xffffffffffffffffUL;
+	const uint64_t addr[2] = {IOAPIC0_BASE, IOAPIC1_BASE};
 
-	/* should extract next ioapic from ACPI MADT table */
-	if (apic_id == 0U) {
-		addr = DEFAULT_IO_APIC_BASE;
-	} else if (apic_id == 1U) {
-		addr = 0xfec3f000UL;
-	} else if (apic_id == 2U) {
-		addr = 0xfec7f000UL;
-	} else {
-		ASSERT(apic_id <= 2U, "ACPI MADT table missing");
-	}
-	return addr;
+	/* the ioapic base should be extracted from ACPI MADT table */
+	return addr[apic_id];
 }
-
 
 static inline void
 ioapic_get_rte_entry(void *ioapic_addr,
