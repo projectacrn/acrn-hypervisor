@@ -30,7 +30,8 @@
 #define IDX_BIOS_SIGN_ID		(IDX_BIOS_UPDT_TRIG + 1U)
 #define IDX_TSC		(IDX_BIOS_SIGN_ID + 1U)
 #define IDX_PAT		(IDX_TSC + 1U)
-#define IDX_MAX_MSR	(IDX_PAT + 1U)
+#define IDX_APIC_BASE	(IDX_PAT + 1U)
+#define IDX_MAX_MSR	(IDX_APIC_BASE + 1U)
 
 /*
  * VCPU related APIs
