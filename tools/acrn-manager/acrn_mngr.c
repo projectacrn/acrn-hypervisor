@@ -39,8 +39,6 @@ static int check_dir(const char *path)
 }
 
 #define MNGR_SOCK_FMT		"/run/acrn/mngr/%s.%d.socket"
-#define MNGR_HANDLER_OFFSET	1024	/* The developer should not create more than
-					   1024 file descriptors in his application */
 #define MNGR_MAX_HANDLER	8
 #define MNGR_MAX_CLIENT		4
 #define PATH_LEN	128
@@ -296,32 +294,6 @@ static struct mngr_fd *desc_to_mfd(int val)
 	return find;
 }
 
-static int alloc_new_val_and_insert(struct mngr_fd *mfd)
-{
-	int i;
-	struct mngr_fd *fd;
-
-	pthread_mutex_lock(&mngr_fd_mtx);
-
-	mfd->desc = -1;
-	for (i = 0; i < MNGR_MAX_HANDLER; i++) {
-		fd = desc_to_mfd_nolock(i + MNGR_HANDLER_OFFSET);
-		if (!fd) {
-			mfd->desc = i + MNGR_HANDLER_OFFSET;
-			break;
-		}
-	}
-
-	if (mfd->desc >= 0)
-		LIST_INSERT_HEAD(&mngr_fd_head, mfd, list);
-	else
-		pdebug();
-
-	pthread_mutex_unlock(&mngr_fd_mtx);
-
-	return mfd->desc;
-}
-
 static int create_new_server(const char *name)
 {
 	struct mngr_fd *mfd;
@@ -374,18 +346,14 @@ static int create_new_server(const char *name)
 		goto poll_err;
 	}
 
+	mfd->desc = mfd->fd;
 	/* add this to mngr_fd_head */
-	ret = alloc_new_val_and_insert(mfd);
-	if (ret < 0) {
-		pdebug();
-		goto alloc_val;
-	}
+	pthread_mutex_lock(&mngr_fd_mtx);
+	LIST_INSERT_HEAD(&mngr_fd_head, mfd, list);
+	pthread_mutex_unlock(&mngr_fd_mtx);
 
-	return ret;
+	return mfd->desc;
 
- alloc_val:
-	mfd->polling = 0;
-	pthread_join(mfd->poll_thread, NULL);
  poll_err:
 	mfd->listening = 0;
 	pthread_join(mfd->listen_thread, NULL);
@@ -491,17 +459,15 @@ static int connect_to_server(const char *name)
 		goto connect_err;
 	}
 
+	mfd->desc = mfd->fd;
 	/* add this to mngr_fd_head */
-	ret = alloc_new_val_and_insert(mfd);
-	if (ret < 0) {
-		pdebug();
-		goto alloc_val;
-	}
+	pthread_mutex_lock(&mngr_fd_mtx);
+	LIST_INSERT_HEAD(&mngr_fd_head, mfd, list);
+	pthread_mutex_unlock(&mngr_fd_mtx);
 
 	closedir(dir);
-	return ret;
+	return mfd->desc;
 
- alloc_val:
  connect_err:
 	close(mfd->fd);
  sock_err:
@@ -599,21 +565,10 @@ int mngr_add_handler(int server_fd, unsigned id,
 int mngr_send_msg(int fd, struct mngr_msg *req, struct mngr_msg *ack,
 		  unsigned timeout)
 {
-	int socket_fd;
-	struct mngr_fd *mfd;
+	int socket_fd = fd;
 	fd_set rfd, wfd;
 	struct timeval t;
 	int ret;
-
-	if (fd < MNGR_HANDLER_OFFSET)
-		socket_fd = fd;
-	else {
-		mfd = desc_to_mfd(fd);
-		if (!mfd)
-			socket_fd = fd;
-		else
-			socket_fd = mfd->fd;
-	}
 
 	if (!req) {
 		printf("%s %d\n", __FUNCTION__, __LINE__);
