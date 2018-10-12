@@ -569,14 +569,8 @@ static struct config_reg modern_config_regs[] = {
 	{ VIRTIO_COMMON_GF,		4, 0, "GF" },
 	{ VIRTIO_COMMON_MSIX,		2, 0, "MSIX" },
 	{ VIRTIO_COMMON_NUMQ,		2, 1, "NUMQ" },
-
-	/*
-	 * TODO: change size to 1 for the below 2 registers when
-	 * HV can report corret size
-	 */
-	{ VIRTIO_COMMON_STATUS,		4, 0, "STATUS" },
-	{ VIRTIO_COMMON_CFGGENERATION,	4, 1, "CFGGENERATION" },
-
+	{ VIRTIO_COMMON_STATUS,		1, 0, "STATUS" },
+	{ VIRTIO_COMMON_CFGGENERATION,	1, 1, "CFGGENERATION" },
 	{ VIRTIO_COMMON_Q_SELECT,	2, 0, "Q_SELECT" },
 	{ VIRTIO_COMMON_Q_SIZE,		2, 0, "Q_SIZE" },
 	{ VIRTIO_COMMON_Q_MSIX,		2, 0, "Q_MSIX" },
