@@ -288,6 +288,15 @@ void emulate_io_post(struct acrn_vcpu *vcpu);
 int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request *io_req);
 
 /**
+ * @brief Reset all IO requests status of the VM
+ *
+ * @param vm The VM whose IO requests to be reset
+ *
+ * @return N/A
+ */
+void reset_vm_ioreqs(struct acrn_vm *vm);
+
+/**
  * @}
  */
 

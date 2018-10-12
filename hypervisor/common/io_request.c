@@ -56,6 +56,25 @@ static void acrn_print_request(uint16_t vcpu_id, const struct vhm_request *req)
 }
 
 /**
+ * @brief Reset all IO requests status of the VM
+ *
+ * @param vm The VM whose IO requests to be reset
+ *
+ * @return N/A
+ */
+void reset_vm_ioreqs(struct acrn_vm *vm)
+{
+	uint16_t i;
+	union vhm_request_buffer *req_buf;
+
+	req_buf = vm->sw.io_shared_page;
+	for (i = 0U; i < VHM_REQUEST_MAX; i++) {
+		req_buf->req_queue[i].valid = 0U;
+		atomic_store32(&req_buf->req_queue[i].processed, REQ_STATE_FREE);
+	}
+}
+
+/**
  * @brief Deliver \p io_req to SOS and suspend \p vcpu till its completion
  *
  * @param vcpu The virtual CPU that triggers the MMIO access
