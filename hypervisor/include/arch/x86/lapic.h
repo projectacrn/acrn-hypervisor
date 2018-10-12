@@ -33,9 +33,6 @@
 #define INTR_LAPIC_ICR_ALL_INC_SELF         0x2U
 #define INTR_LAPIC_ICR_ALL_EX_SELF            0x3U
 
-/* Default LAPIC base */
-#define LAPIC_BASE                              0xFEE00000U
-
 /* LAPIC register bit and bitmask definitions */
 #define LAPIC_SVR_VECTOR                        0x000000FFU
 #define LAPIC_SVR_APIC_ENABLE_MASK                   0x00000100U
