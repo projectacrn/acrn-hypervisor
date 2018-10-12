@@ -484,7 +484,6 @@ static int connect_to_server(const char *name)
 	if ((ret >= 0) && (ret < strlen(s_name)))
 		printf("WARN: %s is truncated\n", s_name);
 
-	closedir(dir);
 	ret =
 	    connect(mfd->fd, (struct sockaddr *)&mfd->addr, sizeof(mfd->addr));
 	if (ret < 0) {
@@ -499,6 +498,7 @@ static int connect_to_server(const char *name)
 		goto alloc_val;
 	}
 
+	closedir(dir);
 	return ret;
 
  alloc_val:
@@ -507,6 +507,7 @@ static int connect_to_server(const char *name)
  sock_err:
 	free(mfd);
  alloc_mfd:
+	closedir(dir);
 	return ret;
 }
 

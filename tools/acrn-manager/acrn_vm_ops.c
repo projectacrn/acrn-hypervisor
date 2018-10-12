@@ -150,6 +150,7 @@ static void _scan_alive_vm(void)
 		vm->update = update_count;
 	}
 
+	closedir(dir);
 }
 
 static void _scan_added_vm(void)
@@ -218,6 +219,8 @@ static void _scan_added_vm(void)
 		vm->state = VM_CREATED;
 		vm->update = update_count;
 	}
+
+	closedir(dir);
 }
 
 static void _remove_dead_vm(void)
