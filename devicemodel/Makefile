@@ -122,6 +122,7 @@ SRCS += core/mptbl.c
 SRCS += core/main.c
 SRCS += core/hugetlb.c
 SRCS += core/vrpmb.c
+SRCS += core/timer.c
 
 # arch
 SRCS += arch/x86/pm.c
