@@ -709,7 +709,7 @@ static void dmar_fault_msi_write(struct dmar_drhd_rt *dmar_uint,
 {
 	uint32_t data;
 	uint32_t addr_low;
-	uint8_t lapic_id = get_cur_lapic_id();
+	uint32_t lapic_id = get_cur_lapic_id();
 
 	data = DMAR_MSI_DELIVERY_LOWPRI | vector;
 	/* redirection hint: 0
