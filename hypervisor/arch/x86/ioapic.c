@@ -18,7 +18,7 @@ static struct gsi_table gsi_table[NR_MAX_GSI];
 static uint32_t nr_gsi;
 static spinlock_t ioapic_lock;
 
-static union ioapic_rte saved_rte[CONFIG_NR_IOAPICS][IOAPIC_MAX_PIN];
+static union ioapic_rte saved_rte[NR_IOAPICS][IOAPIC_MAX_PIN];
 
 /*
  * the irq to ioapic pin mapping should extract from ACPI MADT table
@@ -351,7 +351,7 @@ void setup_ioapic_irqs(void)
 	spinlock_init(&ioapic_lock);
 
 	for (ioapic_id = 0U;
-	     ioapic_id < CONFIG_NR_IOAPICS; ioapic_id++) {
+	     ioapic_id < NR_IOAPICS; ioapic_id++) {
 		void *addr;
 		uint8_t pin, nr_pins;
 
@@ -403,7 +403,7 @@ void suspend_ioapic(void)
 {
 	uint8_t ioapic_id, ioapic_pin;
 
-	for (ioapic_id = 0U; ioapic_id < CONFIG_NR_IOAPICS; ioapic_id++) {
+	for (ioapic_id = 0U; ioapic_id < NR_IOAPICS; ioapic_id++) {
 		void *addr;
 		uint8_t nr_pins;
 
@@ -420,7 +420,7 @@ void resume_ioapic(void)
 {
 	uint8_t ioapic_id, ioapic_pin;
 
-	for (ioapic_id = 0U; ioapic_id < CONFIG_NR_IOAPICS; ioapic_id++) {
+	for (ioapic_id = 0U; ioapic_id < NR_IOAPICS; ioapic_id++) {
 		void *addr;
 		uint8_t nr_pins;
 
