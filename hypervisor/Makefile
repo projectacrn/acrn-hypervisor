@@ -103,7 +103,7 @@ ifeq ($(CONFIG_PARTITION_MODE),y)
 INCLUDE_PATH += include/dm/vpci
 endif
 INCLUDE_PATH += bsp/include
-INCLUDE_PATH += bsp/$(CONFIG_PLATFORM)/include/bsp
+INCLUDE_PATH += bsp/include/$(CONFIG_PLATFORM)
 INCLUDE_PATH += boot/include
 INCLUDE_PATH += $(HV_OBJDIR)/include
 
@@ -186,7 +186,6 @@ C_SRCS += dm/vrtc.c
 endif
 
 C_SRCS += bsp/$(CONFIG_PLATFORM)/$(CONFIG_PLATFORM).c
-C_SRCS += bsp/$(CONFIG_PLATFORM)/platform_acpi_info.c
 
 ifeq ($(CONFIG_PLATFORM),uefi)
 C_SRCS += bsp/$(CONFIG_PLATFORM)/cmdline.c

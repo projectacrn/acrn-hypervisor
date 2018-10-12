@@ -18,6 +18,8 @@
 #ifndef BSP_EXTERN_H
 #define BSP_EXTERN_H
 
+#include "platform_acpi_info.h"
+
 #define UOS_DEFAULT_START_ADDR   (0x100000000UL)
 
 struct acpi_info {
@@ -30,8 +32,6 @@ struct acpi_info {
 /**********************************/
 /* EXTERNAL VARIABLES             */
 /**********************************/
-extern struct acpi_info host_acpi_info;
-
 /* BSP Interfaces */
 void init_bsp(void);
 
