@@ -13,14 +13,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
-#include <time.h>
 #include <assert.h>
 #include <stdbool.h>
 
 #include "vmmapi.h"
 #include "mevent.h"
 #include "pci_core.h"
+#include "timer.h"
 
 #define WDT_REG_BAR_SIZE		0x10
 
@@ -55,8 +54,6 @@
 #define ESB_UNLOCK1	0x80   /* Step 1 to unlock reset registers  */
 #define ESB_UNLOCK2	0x86   /* Step 2 to unlock reset registers  */
 
-#define WDT_TIMER_SIG			0x55AA
-
 /* the default 20-bit preload value */
 #define DEFAULT_MAX_TIMER_VAL		0x000FFFFF
 
@@ -77,13 +74,13 @@ do { fprintf(dbg_file, format, args); fflush(dbg_file); } while (0)
 #endif
 
 struct info_wdt {
+	struct acrn_timer timer;
+
 	bool reboot_enabled;/* "reboot" on wdt out */
 
 	bool locked;        /* If true, enabled field cannot be changed. */
 	bool wdt_enabled;   /* If true, watchdog is enabled. */
-
-	bool timer_created;
-	timer_t wdt_timerid;
+	bool wdt_armed;
 
 	uint32_t timer1_val;
 	uint32_t timer2_val;
@@ -107,10 +104,10 @@ static void start_wdt_timer(void);
  * action to guest OS
  */
 static void
-wdt_expired_thread(union sigval v)
+wdt_expired_handler(void *arg)
 {
-	DPRINTF("wdt timer out! id=0x%x, stage=%d, reboot=%d\n",
-		v.sival_int, wdt_state.stage, wdt_state.reboot_enabled);
+	DPRINTF("wdt timer out! stage=%d, reboot=%d\n",
+		wdt_state.stage, wdt_state.reboot_enabled);
 
 	if (wdt_state.stage == 1) {
 		wdt_state.stage = 2;
@@ -136,51 +133,20 @@ stop_wdt_timer(void)
 {
 	struct itimerspec timer_val;
 
-	DPRINTF("%s: timer_created=%d\n", __func__, wdt_state.timer_created);
+	DPRINTF("%s: wdt_armed=%d\n", __func__, wdt_state.wdt_armed);
 
-	if (!wdt_state.timer_created)
+	if (!wdt_state.wdt_armed)
 		return;
 
 	memset(&timer_val, 0, sizeof(struct itimerspec));
-	timer_settime(wdt_state.wdt_timerid, 0, &timer_val, NULL);
-}
-
-static void
-delete_wdt_timer(void)
-{
-	if (!wdt_state.timer_created)
-		return;
-
-	DPRINTF("%s: timer %ld deleted\n", __func__,
-		(uint64_t)wdt_state.wdt_timerid);
-
-	timer_delete(wdt_state.wdt_timerid);
-	wdt_state.timer_created = false;
-}
-
-static void
-reset_wdt_timer(int seconds)
-{
-	struct itimerspec timer_val;
-
-	DPRINTF("%s: time=%d\n", __func__, seconds);
-	memset(&timer_val, 0, sizeof(struct itimerspec));
-	timer_settime(wdt_state.wdt_timerid, 0, &timer_val, NULL);
-
-	timer_val.it_value.tv_sec = seconds;
-	if (timer_settime(wdt_state.wdt_timerid, 0, &timer_val, NULL) == -1) {
-		perror("timer_settime failed.\n");
-		timer_delete(wdt_state.wdt_timerid);
-		wdt_state.timer_created = 0;
-		exit(-1);
-	}
+	acrn_timer_settime(&wdt_state.timer, &timer_val);
+	wdt_state.wdt_armed = false;
 }
 
 static void
 start_wdt_timer(void)
 {
 	int seconds;
-	struct sigevent sig_evt;
 	struct itimerspec timer_val;
 
 	if (!wdt_state.wdt_enabled)
@@ -191,34 +157,19 @@ start_wdt_timer(void)
 	else
 		seconds = TIMER_TO_SECONDS(wdt_state.timer2_val);
 
-	DPRINTF("%s: created=%d, time=%d\n", __func__,
-			wdt_state.timer_created, seconds);
-	memset(&sig_evt, 0, sizeof(struct sigevent));
-	if (wdt_state.timer_created) {
-		reset_wdt_timer(seconds);
-		return;
-	}
-
-	sig_evt.sigev_value.sival_int = WDT_TIMER_SIG;
-	sig_evt.sigev_notify = SIGEV_THREAD;
-	sig_evt.sigev_notify_function = wdt_expired_thread;
-
-	if (timer_create(CLOCK_REALTIME, &sig_evt,
-		&wdt_state.wdt_timerid) == -1) {
-		perror("timer_create failed.\n");
-		exit(-1);
-	}
+	DPRINTF("%s: armed=%d, time=%d\n", __func__,
+			wdt_state.wdt_armed, seconds);
 
 	memset(&timer_val, 0, sizeof(struct itimerspec));
 	timer_val.it_value.tv_sec = seconds;
 
-	if (timer_settime(wdt_state.wdt_timerid, 0, &timer_val, NULL) == -1) {
-		perror("timer_settime failed.\n");
-		timer_delete(wdt_state.wdt_timerid);
-		exit(-1);
+	if (acrn_timer_settime(&wdt_state.timer, &timer_val) == -1) {
+		perror("WDT timerfd_settime failed.\n");
+		wdt_state.wdt_armed = false;
+		return;
 	}
 
-	wdt_state.timer_created = true;
+	wdt_state.wdt_armed = true;
 }
 
 static int
@@ -341,14 +292,19 @@ pci_wdt_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	/*the wdt just has one inistance */
 	if (wdt_state.reboot_enabled && wdt_state.timer1_val) {
-		perror("wdt can't be created twice, please check!");
+		perror("wdt can't be initialized twice, please check!");
 		return -1;
 	}
 
 	/* init wdt state info */
+	wdt_state.timer.clockid = CLOCK_MONOTONIC;
+	if (acrn_timer_init(&wdt_state.timer, wdt_expired_handler, dev) != 0) {
+		return -1;
+	}
+
 	wdt_state.reboot_enabled = true;
 	wdt_state.locked = false;
-	wdt_state.timer_created = false;
+	wdt_state.wdt_armed = false;
 	wdt_state.wdt_enabled = false;
 
 	wdt_state.stage = 1;
@@ -377,7 +333,8 @@ pci_wdt_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 static void
 pci_wdt_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
-	delete_wdt_timer();
+	acrn_timer_deinit(&wdt_state.timer);
+
 	memset(&wdt_state, 0, sizeof(wdt_state));
 }
 
