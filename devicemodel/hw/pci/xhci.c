@@ -4001,12 +4001,12 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 * ended by EXCAP_GROUP_END at last item.
 	 */
 	excap = xdev->excap_ptr;
-	xdev->excapoff = excap->start;
-
 	if (!excap) {
-		UPRINTF(LWRN, "Failed to set xHCI extended capability\r\n");
-		return -1;
+		error = -1;
+		goto done;
 	}
+
+	xdev->excapoff = excap->start;
 
 	do {
 		xdev->regsend = excap->end;
