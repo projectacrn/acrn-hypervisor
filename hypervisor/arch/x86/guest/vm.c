@@ -315,7 +315,6 @@ int reset_vm(struct vm *vm)
 	destroy_secure_world(vm, false);
 	vm->sworld_control.flag.active = 0UL;
 
-	start_vm(vm);
 	return 0;
 }
 
