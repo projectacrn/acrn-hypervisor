@@ -42,11 +42,6 @@ config MAX_VCPUS_PER_VM
 	range 1 8
 	default 4
 
-config NR_IOAPICS
-	int "Maximum number of IOAPICs supported"
-	range 1 2
-	default 1
-
 config MAX_IOMMU_NUM
 	int "Maximum number of iommu dev"
 	range 1 2

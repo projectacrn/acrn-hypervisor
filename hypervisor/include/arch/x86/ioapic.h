@@ -14,7 +14,7 @@
 #define IOAPIC_MAX_LINES	120U
 #define NR_LEGACY_IRQ		16U
 #define NR_LEGACY_PIN		NR_LEGACY_IRQ
-#define NR_MAX_GSI		(CONFIG_NR_IOAPICS * IOAPIC_MAX_LINES)
+#define NR_MAX_GSI		(NR_IOAPICS * IOAPIC_MAX_LINES)
 
 void setup_ioapic_irqs(void);
 

@@ -12,6 +12,9 @@
 
 #define ACPI_INFO_VALIDATED
 
+/* APIC */
+#define NR_IOAPICS		1U
+
 /* pm sstate data */
 #define PM1A_EVT_SPACE_ID	SPACE_SYSTEM_IO
 #define PM1A_EVT_BIT_WIDTH	0x20U
