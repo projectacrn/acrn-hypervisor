@@ -69,6 +69,8 @@
  */
 #define AUDIO_NHLT_HACK 1
 
+extern uint64_t audio_nhlt_len;
+
 /* TODO: Add support for IO BAR of PTDev */
 static int iofd = -1;
 
@@ -1555,9 +1557,10 @@ write_dsdt_hdas(struct pci_vdev *dev)
 				" MaxNotFixed, NonCacheable, ReadOnly,");
 	dsdt_line("	    0x0000000000000000, // Granularity");
 	dsdt_line("	    0x00000000000F2800, // Range Minimum");
-	dsdt_line("	    0x00000000000F2FDE, // Range Maximum");
+	dsdt_line("	    0x%08X, 		// Range Maximum",
+				0xF2800 + audio_nhlt_len -1);
 	dsdt_line("	    0x0000000000000000, // Translation Offset");
-	dsdt_line("	    0x00000000000007DF, // Length");
+	dsdt_line("	    0x%08X, 		// Length", audio_nhlt_len);
 	dsdt_line("	    ,, _Y06, AddressRangeACPI, TypeStatic)");
 	dsdt_line("    })");
 	dsdt_line("    Name (_S0W, 0x03)  // _S0W: S0 Device Wake State");

@@ -86,6 +86,8 @@
 #define ASL_SUFFIX	".aml"
 #define ASL_COMPILER	"/usr/sbin/iasl"
 
+uint64_t audio_nhlt_len = 0;
+
 static int basl_keep_temps;
 static int basl_verbose_iasl;
 static int basl_ncpu;
@@ -595,8 +597,10 @@ basl_fwrite_nhlt(FILE *fp, struct vmctx *ctx)
 		return -1;
 	}
 
+
+	audio_nhlt_len = lseek(fd, 0, SEEK_END);
 	/* check if file size exceeds reserved room */
-	if (lseek(fd, 0, SEEK_END) > DSDT_OFFSET - NHLT_OFFSET) {
+	if (audio_nhlt_len > DSDT_OFFSET - NHLT_OFFSET) {
 		fprintf(stderr, "Host NHLT exceeds reserved room!\n");
 		close(fd);
 		return -1;
