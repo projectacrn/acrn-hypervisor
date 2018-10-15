@@ -71,7 +71,7 @@ void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
 
 	msr_write(MSR_IA32_BIOS_UPDT_TRIG,
 			(uint64_t)ucode_ptr + sizeof(struct ucode_header));
-	get_microcode_version();
+	(void)get_microcode_version();
 
 	free(ucode_ptr);
 }

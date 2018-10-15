@@ -166,7 +166,7 @@ static void update_ept_mem_type(struct vcpu *vcpu)
 	 * - when def_type.FE is clear, MTRRdefType.type is applied
 	 */
 	if (!is_mtrr_enabled(vcpu) || !is_fixed_range_mtrr_enabled(vcpu)) {
-		update_ept(vcpu->vm, 0U, MAX_FIXED_RANGE_ADDR,
+		(void)update_ept(vcpu->vm, 0U, MAX_FIXED_RANGE_ADDR,
 			get_default_memory_type(vcpu));
 		return;
 	}
@@ -182,14 +182,14 @@ static void update_ept_mem_type(struct vcpu *vcpu)
 			if (type == vcpu->mtrr.fixed_range[i].type[j]) {
 				size += get_subrange_size_of_fixed_mtrr(i);
 			} else {
-				update_ept(vcpu->vm, start, size, type);
+			  (void)update_ept(vcpu->vm, start, size, type);
 				type = vcpu->mtrr.fixed_range[i].type[j];
 				start = get_subrange_start_of_fixed_mtrr(i, j);
 				size = get_subrange_size_of_fixed_mtrr(i);
 			}
 		}
 
-		update_ept(vcpu->vm, start, size, type);
+		(void)update_ept(vcpu->vm, start, size, type);
 	}
 }
 
