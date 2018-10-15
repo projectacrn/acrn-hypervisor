@@ -386,6 +386,12 @@ vm_reset(struct vmctx *ctx)
 	ioctl(ctx->fd, IC_RESET_VM, &ctx->vmid);
 }
 
+void
+vm_clear_ioreq(struct vmctx *ctx)
+{
+	ioctl(ctx->fd, IC_CLEAR_VM_IOREQ, NULL);
+}
+
 static int suspend_mode = VM_SUSPEND_NONE;
 
 void
