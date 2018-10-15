@@ -72,7 +72,7 @@ void free_irq_num(uint32_t irq)
 
 	if (irq_is_gsi(irq) == false) {
 		spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
-		bitmap_test_and_clear_nolock((uint16_t)(irq & 0x3FU),
+		(void)bitmap_test_and_clear_nolock((uint16_t)(irq & 0x3FU),
 					     irq_alloc_bitmap + (irq >> 6U));
 		spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);
 	}

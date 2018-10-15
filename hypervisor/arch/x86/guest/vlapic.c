@@ -724,14 +724,14 @@ vlapic_mask_lvts(struct acrn_vlapic *vlapic)
 	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_ERROR_LVT);
 }
 
-static int
+static void
 vlapic_fire_lvt(struct acrn_vlapic *vlapic, uint32_t lvt)
 {
 	uint32_t vec, mode;
 	struct vcpu *vcpu = vlapic->vcpu;
 
 	if ((lvt & APIC_LVT_M) != 0U) {
-		return 0;
+		return;
 	}
 
 	vec = lvt & APIC_LVT_VECTOR;
@@ -741,7 +741,7 @@ vlapic_fire_lvt(struct acrn_vlapic *vlapic, uint32_t lvt)
 	case APIC_LVT_DM_FIXED:
 		if (vec < 16U) {
 			vlapic_set_error(vlapic, APIC_ESR_SEND_ILLEGAL_VECTOR);
-			return 0;
+			return;
 		}
 		if (vlapic_set_intr_ready(vlapic, vec, false) != 0) {
 			vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
@@ -755,9 +755,10 @@ vlapic_fire_lvt(struct acrn_vlapic *vlapic, uint32_t lvt)
 		break;
 	default:
 		/* Other modes ignored */
-		return 0;
+		pr_warn("func:%s other mode is not support\n",__func__);
+		return;
 	}
-	return 1;
+	return;
 }
 
 static void
