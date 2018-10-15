@@ -298,12 +298,6 @@ else
   GVT_args=''
 fi
 
-if [ "$kernel_version" = "4.19" ]; then
-  audio_option=''
-else
-  audio_option='-s 14,passthru,0/e/0,keep_gsi'
-fi
-
  acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio $npk_virt\
    -s 9,virtio-net,$tap \
    -s 3,virtio-blk$boot_dev_flag,/data/$5/$5.img \
@@ -312,7 +306,7 @@ fi
    -s 13,virtio-rpmb \
    -s 10,virtio-hyper_dmabuf \
    -s 11,wdt-i6300esb \
-   $audio_option  \
+   -s 14,passthru,0/e/0,keep_gsi  \
    -s 23,passthru,0/17/0 \
    -s 15,passthru,0/f/0 \
    -s 27,passthru,0/1b/0 \
@@ -380,7 +374,7 @@ if [ $launch_type == 6 ]; then
 	elif [ -f "/data/alios/alios.img" ]; then
 	  launch_type=5;
 	else
-	  launch_type=1;  
+	  launch_type=1;
 	fi
 fi
 
