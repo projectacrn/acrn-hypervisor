@@ -35,7 +35,7 @@
 #define NR_VPIC_PINS_TOTAL	16U
 #define VPIC_INVALID_PIN	0xffU
 
-static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin, bool newstate);
+static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin, uint8_t level);
 
 static inline bool master_pic(struct acrn_vpic *vpic, struct i8259_reg_state *i8259)
 {
@@ -144,8 +144,8 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 		 * Cascade the request from the slave to the master.
 		 */
 		i8259->intr_raised = true;
-		vpic_set_pinstate(vpic, (uint8_t)2U, true);
-		vpic_set_pinstate(vpic, (uint8_t)2U, false);
+		vpic_set_pinstate(vpic, (uint8_t)2U, 1U);
+		vpic_set_pinstate(vpic, (uint8_t)2U, 0U);
 	} else {
 		dev_dbg(ACRN_DBG_PIC,
 		"pic slave no eligible interrupt (imr 0x%x irr 0x%x isr 0x%x)",
@@ -398,46 +398,37 @@ static int vpic_ocw3(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint
 /**
  * @pre pin < NR_VPIC_PINS_TOTAL
  */
-static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin, bool newstate)
+static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin,
+		uint8_t level)
 {
 	struct i8259_reg_state *i8259;
-	int oldcnt, newcnt;
-	bool level;
-
-	if (pin >= NR_VPIC_PINS_TOTAL) {
-		return;
-	}
+	uint8_t old_lvl;
+	bool lvl_trigger;
 
 	i8259 = &vpic->i8259[pin >> 3U];
-
-	oldcnt = i8259->acnt[pin & 0x7U];
-	if (newstate) {
-		i8259->acnt[pin & 0x7U]++;
+	old_lvl = i8259->pin_state[pin & 0x7U];
+	if (level) {
+		i8259->pin_state[pin & 0x7U] = 1U;
 	} else {
-		i8259->acnt[pin & 0x7U]--;
-	}
-	newcnt = i8259->acnt[pin & 0x7U];
-
-	if (newcnt < 0) {
-		pr_warn("pic pin%hhu: bad acnt %d\n", pin, newcnt);
+		i8259->pin_state[pin & 0x7U] = 0U;
 	}
 
-	level = ((vpic->i8259[pin >> 3U].elc & (1U << (pin & 0x7U))) != 0);
+	lvl_trigger = ((vpic->i8259[pin >> 3U].elc & (1U << (pin & 0x7U))) != 0);
 
-	if (((oldcnt == 0) && (newcnt == 1)) || ((newcnt > 0) && (level == true))) {
-		/* rising edge or level */
+	if (((old_lvl == 0U) && (level == 1U)) ||
+			((level == 1U) && (lvl_trigger == true))) {
+		/* raising edge or level */
 		dev_dbg(ACRN_DBG_PIC, "pic pin%hhu: asserted\n", pin);
 		i8259->request |= (uint8_t)(1U << (pin & 0x7U));
-	} else if ((oldcnt == 1) && (newcnt == 0)) {
+	} else if ((old_lvl == 1U) && (level == 0U)) {
 		/* falling edge */
 		dev_dbg(ACRN_DBG_PIC, "pic pin%hhu: deasserted\n", pin);
-		if (level) {
+		if (lvl_trigger) {
 			i8259->request &= ~(uint8_t)(1U << (pin & 0x7U));
 		}
 	} else {
-		dev_dbg(ACRN_DBG_PIC,
-			"pic pin%hhu: %s, ignored, acnt %d\n",
-			pin, newstate ? "asserted" : "deasserted", newcnt);
+		dev_dbg(ACRN_DBG_PIC, "pic pin%hhu: %s, ignored\n",
+			pin, level ? "asserted" : "deasserted");
 	}
 
 	vpic_notify_intr(vpic);
@@ -472,18 +463,18 @@ void vpic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation)
 	spinlock_obtain(&(vpic->lock));
 	switch (operation) {
 	case GSI_SET_HIGH:
-		vpic_set_pinstate(vpic, pin, true);
+		vpic_set_pinstate(vpic, pin, 1U);
 		break;
 	case GSI_SET_LOW:
-		vpic_set_pinstate(vpic, pin, false);
+		vpic_set_pinstate(vpic, pin, 0U);
 		break;
 	case GSI_RAISING_PULSE:
-		vpic_set_pinstate(vpic, pin, true);
-		vpic_set_pinstate(vpic, pin, false);
+		vpic_set_pinstate(vpic, pin, 1U);
+		vpic_set_pinstate(vpic, pin, 0U);
 		break;
 	case GSI_FALLING_PULSE:
-		vpic_set_pinstate(vpic, pin, false);
-		vpic_set_pinstate(vpic, pin, true);
+		vpic_set_pinstate(vpic, pin, 0U);
+		vpic_set_pinstate(vpic, pin, 1U);
 		break;
 	default:
 		/*
