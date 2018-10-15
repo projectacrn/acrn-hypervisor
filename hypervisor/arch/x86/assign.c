@@ -45,8 +45,8 @@ is_entry_active(struct ptdev_remapping_info *entry)
 
 static bool ptdev_hv_owned_intx(struct vm *vm, union source_id *virt_sid)
 {
-	/* vm0 pin 4 (uart) is owned by hypervisor under debug version */
-	if (is_vm0(vm) && (virt_sid->intx_id.pin == 4U)) {
+	/* vm0 vuart pin is owned by hypervisor under debug version */
+	if (is_vm0(vm) && (virt_sid->intx_id.pin == COM1_IRQ)) {
 		return true;
 	} else {
 		return false;
