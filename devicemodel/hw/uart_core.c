@@ -188,8 +188,10 @@ rxfifo_reset(struct uart_vdev *uart, int size)
 		 * Enable mevent to trigger when new characters are available
 		 * on the tty fd.
 		 */
-		error = mevent_enable(uart->mev);
-		assert(error == 0);
+		if (isatty(uart->tty.fd)) {
+			error = mevent_enable(uart->mev);
+			assert(error == 0);
+		}
 	}
 }
 
@@ -219,8 +221,10 @@ rxfifo_putchar(struct uart_vdev *uart, uint8_t ch)
 				/*
 				 * Disable mevent callback if the FIFO is full.
 				 */
-				error = mevent_disable(uart->mev);
-				assert(error == 0);
+				if (isatty(uart->tty.fd)) {
+					error = mevent_disable(uart->mev);
+					assert(error == 0);
+				}
 			}
 		}
 		return 0;
@@ -243,7 +247,7 @@ rxfifo_getchar(struct uart_vdev *uart)
 		fifo->rindex = (fifo->rindex + 1) % fifo->size;
 		fifo->num--;
 		if (wasfull) {
-			if (uart->tty.opened) {
+			if (uart->tty.opened && isatty(uart->tty.fd)) {
 				error = mevent_enable(uart->mev);
 				assert(error == 0);
 			}
