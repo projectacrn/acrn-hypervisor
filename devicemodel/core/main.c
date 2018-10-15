@@ -550,13 +550,11 @@ vm_reset_vdevs(struct vmctx *ctx)
 static void
 vm_system_reset(struct vmctx *ctx)
 {
-	int vcpu_id = 0;
-
 	/*
 	 * If we get system reset request, we don't want to exit the
 	 * vcpu_loop/vm_loop/mevent_loop. So we do:
 	 *   1. pause VM
-	 *   2. notify request done to reset ioreq state in vhm
+	 *   2. flush and clear ioreqs
 	 *   3. reset virtual devices
 	 *   4. load software for UOS
 	 *   5. hypercall reset vm
@@ -564,49 +562,23 @@ vm_system_reset(struct vmctx *ctx)
 	 */
 
 	vm_pause(ctx);
-	for (vcpu_id = 0; vcpu_id < 4; vcpu_id++) {
-		struct vhm_request *vhm_req;
 
-		vhm_req = &vhm_req_buf[vcpu_id];
-		/*
-		 * The state of the VHM request already assigned to DM can be
-		 * COMPLETE if it has already been processed by the vm_loop, or
-		 * PROCESSING if the request is assigned to DM after vm_loop
-		 * checks the requests but before this point.
-		 *
-		 * Unless under emergency mode, the vcpu writing to the ACPI PM
-		 * CR should be the only vcpu of that VM that is still
-		 * running. In this case there should be only one completed
-		 * request which is the APIC PM CR write. Notify the completion
-		 * of that request here (after the VM is paused) to reset its
-		 * state.
-		 *
-		 * When handling emergency mode triggered by one vcpu without
-		 * offlining any other vcpus, there can be multiple VHM requests
-		 * with various states. Currently the context of that VM in the
-		 * DM, VHM and hypervisor will be destroyed and recreated,
-		 * causing the states of VHM requests to be dropped.
-		 *
-		 * TODO: If the emergency mode is handled without context
-		 * deletion and recreation, we should be careful on potential
-		 * races when reseting VHM request states. Some considerations
-		 * include:
-		 *
-		 *     * Use cmpxchg instead of load+store when distributing
-		 *       requests.
-		 *
-		 *     * vm_reset in VHM should clean up the ioreq bitmap, while
-		 *       vm_reset in the hypervisor should cleanup the states of
-		 *       VHM requests.
-		 *
-		 *     * vm_reset in VHM should hold a mutex to block the
-		 *       request distribution tasklet from assigned more
-		 *       requests before VM reset is done.
-		 */
-		if ((atomic_load(&vhm_req->processed) == REQ_STATE_COMPLETE) &&
-			(vhm_req->client == ctx->ioreq_client))
-			vm_notify_request_done(ctx, vcpu_id);
-	}
+	/*
+	 * After vm_pause, there should be no new coming ioreq.
+	 *
+	 * Unless under emergency mode, the vcpu writing to the ACPI PM
+	 * CR should be the only vcpu of that VM that is still
+	 * running. In this case there should be only one completed
+	 * request which is the APIC PM CR write. VM reset will reset it
+	 *
+	 * When handling emergency mode triggered by one vcpu without
+	 * offlining any other vcpus, there can be multiple VHM requests
+	 * with various states. We should be careful on potential races
+	 * when resetting especially in SMP SOS. vm_clear_ioreq can be used
+	 * to clear all ioreq status in VHM after VM pause, then let VM
+	 * reset in hypervisor reset all ioreqs.
+	 */
+	vm_clear_ioreq(ctx);
 
 	vm_reset_vdevs(ctx);
 	vm_reset(ctx);
@@ -621,31 +593,19 @@ vm_system_reset(struct vmctx *ctx)
 static void
 vm_suspend_resume(struct vmctx *ctx)
 {
-	int vcpu_id = 0;
-
 	/*
 	 * If we get warm reboot request, we don't want to exit the
 	 * vcpu_loop/vm_loop/mevent_loop. So we do:
 	 *   1. pause VM
-	 *   2. notify request done to reset ioreq state in vhm
+	 *   2. flush and clear ioreqs
 	 *   3. stop vm watchdog
 	 *   4. wait for resume signal
 	 *   5. reset vm watchdog
 	 *   6. hypercall restart vm
 	 */
 	vm_pause(ctx);
-	for (vcpu_id = 0; vcpu_id < 4; vcpu_id++) {
-		struct vhm_request *vhm_req;
 
-		vhm_req = &vhm_req_buf[vcpu_id];
-		/* See the comments in vm_system_reset() for considerations of
-		 * the notification below.
-		 */
-		if ((atomic_load(&vhm_req->processed) == REQ_STATE_COMPLETE) &&
-			(vhm_req->client == ctx->ioreq_client))
-			vm_notify_request_done(ctx, vcpu_id);
-	}
-
+	vm_clear_ioreq(ctx);
 	vm_stop_watchdog(ctx);
 	wait_for_resume(ctx);
 
