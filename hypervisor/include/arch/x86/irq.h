@@ -92,17 +92,17 @@ uint32_t irq_to_vector(uint32_t irq);
 /*
  * Some MSI message definitions
  */
-#define	MSI_ADDR_MASK	0xfff00000U
-#define	MSI_ADDR_BASE	0xfee00000U
-#define	MSI_ADDR_RH	0x00000008U	/* Redirection Hint */
-#define	MSI_ADDR_LOG	0x00000004U	/* Destination Mode */
+#define	MSI_ADDR_MASK	0xfff00000UL
+#define	MSI_ADDR_BASE	0xfee00000UL
+#define	MSI_ADDR_RH	0x00000008UL	/* Redirection Hint */
+#define	MSI_ADDR_LOG	0x00000004UL	/* Destination Mode */
 
 /* RFLAGS */
-#define HV_ARCH_VCPU_RFLAGS_IF              (1U<<9)
+#define HV_ARCH_VCPU_RFLAGS_IF              (1UL<<9U)
 
 /* Interruptability State info */
-#define HV_ARCH_VCPU_BLOCKED_BY_MOVSS       (1U<<1)
-#define HV_ARCH_VCPU_BLOCKED_BY_STI         (1U<<0)
+#define HV_ARCH_VCPU_BLOCKED_BY_MOVSS       (1UL<<1U)
+#define HV_ARCH_VCPU_BLOCKED_BY_STI         (1UL<<0U)
 
 void vcpu_inject_extint(struct vcpu *vcpu);
 void vcpu_inject_nmi(struct vcpu *vcpu);

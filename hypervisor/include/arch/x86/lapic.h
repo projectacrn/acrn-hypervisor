@@ -86,11 +86,11 @@
 #define LAPIC_DIVIDE_CONFIGURATION_REGISTER     0x000003E0U
 
 /* LAPIC CPUID bit and bitmask definitions */
-#define CPUID_OUT_RDX_APIC_PRESENT              ((uint64_t) 1UL <<  9)
-#define CPUID_OUT_RCX_X2APIC_PRESENT            ((uint64_t) 1UL << 21)
+#define CPUID_OUT_RDX_APIC_PRESENT              ((uint64_t) 1UL <<  9U)
+#define CPUID_OUT_RCX_X2APIC_PRESENT            ((uint64_t) 1UL << 21U)
 
 /* LAPIC MSR bit and bitmask definitions */
-#define MSR_01B_XAPIC_GLOBAL_ENABLE             ((uint64_t) 1UL << 11)
+#define MSR_01B_XAPIC_GLOBAL_ENABLE             ((uint64_t) 1UL << 11U)
 
 /* LAPIC register bit and bitmask definitions */
 #define LAPIC_SVR_VECTOR                        0x000000FFU
@@ -100,9 +100,9 @@
 #define LAPIC_DELIVERY_MODE_EXTINT_MASK         0x00000700U
 
 /* LAPIC Timer bit and bitmask definitions */
-#define LAPIC_TMR_ONESHOT                       ((uint32_t) 0x0U << 17)
-#define LAPIC_TMR_PERIODIC                      ((uint32_t) 0x1U << 17)
-#define LAPIC_TMR_TSC_DEADLINE                  ((uint32_t) 0x2U << 17)
+#define LAPIC_TMR_ONESHOT                       ((uint32_t) 0x0U << 17U)
+#define LAPIC_TMR_PERIODIC                      ((uint32_t) 0x1U << 17U)
+#define LAPIC_TMR_TSC_DEADLINE                  ((uint32_t) 0x2U << 17U)
 
 enum intr_cpu_startup_shorthand {
 	INTR_CPU_STARTUP_USE_DEST,

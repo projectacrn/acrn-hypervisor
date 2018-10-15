@@ -498,9 +498,9 @@
 #define MSR_IA32_EFER_NXE_BIT                   (1UL<<11U)
 
 /* FEATURE CONTROL bits */
-#define MSR_IA32_FEATURE_CONTROL_LOCK           (1U<<0)
-#define MSR_IA32_FEATURE_CONTROL_VMX_SMX        (1U<<1)
-#define MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX     (1U<<2)
+#define MSR_IA32_FEATURE_CONTROL_LOCK           (1U<<0U)
+#define MSR_IA32_FEATURE_CONTROL_VMX_SMX        (1U<<1U)
+#define MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX     (1U<<2U)
 
 /* PAT memory type definitions */
 #define PAT_MEM_TYPE_UC                     0x00UL	/* uncached */
@@ -553,8 +553,8 @@ static inline bool pat_mem_type_invalid(uint64_t x)
 #define MTRR_VALID                   0x800U	/* MTRR setting is  valid */
 
 /* SPEC & PRED bit */
-#define SPEC_ENABLE_IBRS		(1U<<0)
-#define SPEC_ENABLE_STIBP		(1U<<1)
-#define PRED_SET_IBPB			(1U<<0)
+#define SPEC_ENABLE_IBRS		(1U<<0U)
+#define SPEC_ENABLE_STIBP		(1U<<1U)
+#define PRED_SET_IBPB			(1U<<0U)
 
 #endif /* MSR_H */

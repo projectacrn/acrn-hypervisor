@@ -42,12 +42,12 @@
 /* IOAPIC device model info */
 #define VIOAPIC_RTE_NUM	48U  /* vioapic pins */
 
-#if VIOAPIC_RTE_NUM < 24
+#if VIOAPIC_RTE_NUM < 24U
 #error "VIOAPIC_RTE_NUM must be larger than 23"
 #endif
 
 /* Generic VM flags from guest OS */
-#define SECURE_WORLD_ENABLED    (1UL<<0)  /* Whether secure world is enabled */
+#define SECURE_WORLD_ENABLED    (1UL<<0U)  /* Whether secure world is enabled */
 
 /**
  * @brief Hypercall
@@ -524,9 +524,9 @@ struct pm_s_state_data {
 #define PMCMD_STATE_NUM_MASK	0x0000ff00U
 #define PMCMD_TYPE_MASK		0x000000ffU
 
-#define PMCMD_VMID_SHIFT	24
-#define PMCMD_VCPUID_SHIFT	16
-#define PMCMD_STATE_NUM_SHIFT	8
+#define PMCMD_VMID_SHIFT	24U
+#define PMCMD_VCPUID_SHIFT	16U
+#define PMCMD_STATE_NUM_SHIFT	8U
 
 enum pm_cmd_type {
 	PMCMD_GET_PX_CNT,

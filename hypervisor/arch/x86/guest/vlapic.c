@@ -46,9 +46,9 @@ static inline uint32_t prio(uint32_t x)
 #define VLAPIC_VERSION		(16U)
 
 #define	APICBASE_RESERVED	0x000002ffU
-#define	APICBASE_BSP		0x00000100U
+#define	APICBASE_BSP		0x00000100UL
 #define	APICBASE_X2APIC		0x00000400U
-#define	APICBASE_ENABLED	0x00000800U
+#define	APICBASE_ENABLED	0x00000800UL
 
 #define ACRN_DBG_LAPIC	6U
 
@@ -1748,7 +1748,7 @@ vlapic_enabled(struct acrn_vlapic *vlapic)
 {
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 
-	if (((vlapic->msr_apicbase & APICBASE_ENABLED) != 0U) &&
+	if (((vlapic->msr_apicbase & APICBASE_ENABLED) != 0UL) &&
 			((lapic->svr.v & APIC_SVR_ENABLE) != 0U)) {
 		return true;
 	} else {

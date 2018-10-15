@@ -287,8 +287,8 @@ void set_ap_entry(struct vcpu *vcpu, uint64_t entry)
 	struct ext_context *ectx;
 
 	ectx = &(vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ext_ctx);
-	ectx->cs.selector = (uint16_t)((entry >> 4UL) & 0xFFFFU);
-	ectx->cs.base = ectx->cs.selector << 4UL;
+	ectx->cs.selector = (uint16_t)((entry >> 4U) & 0xFFFFU);
+	ectx->cs.base = ectx->cs.selector << 4U;
 
 	vcpu_set_rip(vcpu, 0UL);
 }

@@ -39,7 +39,7 @@
 #define CPU_H
 
 /* Define page size */
-#define CPU_PAGE_SHIFT          12
+#define CPU_PAGE_SHIFT          12U
 #define CPU_PAGE_SIZE           0x1000U
 #define CPU_PAGE_MASK           0xFFFFFFFFFFFFF000UL
 
@@ -47,7 +47,7 @@
 #define MAX_PCPU_NUM	128U
 
 #define MMU_PTE_PAGE_SHIFT	CPU_PAGE_SHIFT
-#define MMU_PDE_PAGE_SHIFT	21
+#define MMU_PDE_PAGE_SHIFT	21U
 
 /* Define CPU stack alignment */
 #define CPU_STACK_ALIGN         16UL
@@ -269,7 +269,7 @@ extern spinlock_t trampoline_spinlock;
 
 /* CPU states defined */
 enum pcpu_boot_state {
-	PCPU_STATE_RESET = 0,
+	PCPU_STATE_RESET = 0U,
 	PCPU_STATE_INITIALIZING,
 	PCPU_STATE_RUNNING,
 	PCPU_STATE_HALTED,
@@ -518,7 +518,7 @@ write_xcr(int reg, uint64_t val)
 	uint32_t low, high;
 
 	low = (uint32_t)val;
-	high = (uint32_t)(val >> 32);
+	high = (uint32_t)(val >> 32U);
 	asm volatile("xsetbv" : : "c" (reg), "a" (low), "d" (high));
 }
 #else /* ASSEMBLER defined */
