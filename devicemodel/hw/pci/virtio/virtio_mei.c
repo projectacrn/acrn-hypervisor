@@ -222,6 +222,9 @@ static void vmei_dbg_print_hex(const char *title,
 #define VMEI_BUF_SZ      (VMEI_BUF_DEPTH * VMEI_SLOT_SZ)
 #define VMEI_RING_SZ     64
 
+#define MEI_SYSFS_ROOT "/sys/class/mei"
+#define MEI_DEV_STATE_LEN 12
+
 struct mei_virtio_cfg {
 	uint32_t buf_depth;
 	uint8_t hw_ready;
@@ -660,4 +663,86 @@ static int mei_sysfs_read_property_uuid(char *fname, guid_t *uuid)
 		return -1;
 
 	return guid_parse(buf, sizeof(buf), uuid);
+}
+
+static void
+vmei_virtual_fw_reset(struct virtio_mei *vmei)
+{
+	DPRINTF("Firmware reset\n");
+	struct vmei_me_client *e;
+
+	vmei_set_status(vmei, VMEI_STS_RESET);
+	vmei->config->hw_ready = 0;
+	close(vmei->hbm_fd);
+
+	/* disconnect all */
+	pthread_mutex_lock(&vmei->list_mutex);
+	LIST_FOREACH(e, &vmei->active_clients, list) {
+		vmei_me_client_destroy_host_clients(e);
+	}
+	pthread_mutex_unlock(&vmei->list_mutex);
+}
+
+static void
+vmei_reset(void *vth)
+{
+	struct virtio_mei *vmei = vth;
+
+	DPRINTF("device reset requested!\n");
+	vmei_virtual_fw_reset(vmei);
+	virtio_reset_dev(&vmei->base);
+}
+
+static void vmei_del_reset_event(struct virtio_mei *vmei)
+{
+	if (vmei->reset_mevp)
+		mevent_delete_close(vmei->reset_mevp);
+
+	vmei->reset_mevp = NULL;
+}
+
+static void
+vmei_reset_callback(int fd, enum ev_type type, void *param)
+{
+	static bool first_time = true;
+	struct virtio_mei *vmei = param;
+	char buf[MEI_DEV_STATE_LEN] = {0};
+	int sz;
+
+	lseek(fd, 0, SEEK_SET);
+	sz = read(fd, buf, 12);
+	if (first_time) {
+		first_time = false;
+		return;
+	}
+
+	if (sz != 7 || memcmp(buf, "ENABLED", 7))
+		return;
+
+	DPRINTF("Reset state callback\n");
+
+	vmei_virtual_fw_reset(vmei);
+	vmei_free_me_clients(vmei);
+	vmei_start(vmei, true);
+}
+
+static int vmei_add_reset_event(struct virtio_mei *vmei)
+{
+	char devpath[256];
+	int dev_state_fd;
+
+	snprintf(devpath, sizeof(devpath) - 1, "%s/%s/%s",
+		 MEI_SYSFS_ROOT, vmei->name, "dev_state");
+
+	dev_state_fd = open(devpath, O_RDONLY);
+	if (dev_state_fd < 0)
+		return -errno;
+
+	vmei->reset_mevp = mevent_add(dev_state_fd, EVF_READ_ET,
+				      vmei_reset_callback, vmei);
+	if (!vmei->reset_mevp) {
+		close(dev_state_fd);
+		return -ENOMEM;
+	}
+	return 0;
 }
