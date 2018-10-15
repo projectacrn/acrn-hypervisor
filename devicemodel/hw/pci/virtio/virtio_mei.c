@@ -129,3 +129,20 @@ static int guid_unparse(const guid_t *guid, char *str, size_t len)
 	return 0;
 }
 
+struct refcnt {
+	void (*destroy)(const struct refcnt *ref);
+	int count;
+};
+
+static inline void
+refcnt_get(const struct refcnt *ref)
+{
+	__sync_add_and_fetch((int *)&ref->count, 1);
+}
+
+static inline void
+refcnt_put(const struct refcnt *ref)
+{
+	if (__sync_sub_and_fetch((int *)&ref->count, 1) == 0)
+		ref->destroy(ref);
+}
