@@ -106,7 +106,7 @@ struct i8259_reg_state {
 	uint8_t		mask;		/* Interrupt Mask Register (IMR) */
 	uint8_t		smm;		/* special mask mode */
 
-	int		acnt[8];	/* sum of pin asserts and deasserts */
+	uint8_t		pin_state[8];	/* pin state for level */
 	uint8_t		lowprio;	/* lowest priority irq */
 
 	bool		intr_raised;
