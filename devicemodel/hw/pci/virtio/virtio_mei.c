@@ -153,6 +153,32 @@ refcnt_put(const struct refcnt *ref)
 		ref->destroy(ref);
 }
 
+#define MEI_FW_STATUS_MAX 6
+
+#define VMEI_VQ_NUM   2
+#define VMEI_RXQ      0
+#define VMEI_TXQ      1
+#define VMEI_RX_SEGS  1
+#define VMEI_TX_SEGS  2
+
+/*
+ * MEI HW max support FIFO depth is 128
+ * We might support larger depth, which need change MEI driver
+ */
+
+#define VMEI_BUF_DEPTH  128
+#define VMEI_SLOT_SZ      4
+#define VMEI_BUF_SZ      (VMEI_BUF_DEPTH * VMEI_SLOT_SZ)
+#define VMEI_RING_SZ     64
+
+struct mei_virtio_cfg {
+	uint32_t buf_depth;
+	uint8_t hw_ready;
+	uint8_t host_reset;
+	uint8_t reserved[2];
+	uint32_t fw_status[MEI_FW_STATUS_MAX];
+} __attribute__((packed));
+
 static int mei_sysfs_read_property_file(const char *fname, char *buf, size_t sz)
 {
 	int fd;
