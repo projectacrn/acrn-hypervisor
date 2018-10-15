@@ -182,7 +182,7 @@ union ioapic_rte {
  */
 
 /* default physical locations of LOCAL (CPU) APICs */
-#define DEFAULT_APIC_BASE	0xfee00000U
+#define DEFAULT_APIC_BASE	0xfee00000UL
 
 /* constants relating to APIC ID registers */
 #define APIC_ID_MASK		0xff000000U

@@ -315,13 +315,13 @@ static inline uint8_t dma_ccmd_get_caig_32(uint32_t gaig)
 
 
 /* IOTLB_REG */
-#define DMA_IOTLB_IVT				(((uint64_t)1UL) << 63)
-#define DMA_IOTLB_IVT_32			(((uint32_t)1U) << 31)
-#define DMA_IOTLB_GLOBAL_INVL		(((uint64_t)1UL) << 60)
-#define DMA_IOTLB_DOMAIN_INVL		(((uint64_t)2UL) << 60)
-#define DMA_IOTLB_PAGE_INVL			(((uint64_t)3UL) << 60)
-#define DMA_IOTLB_DR				(((uint64_t)1UL) << 49)
-#define DMA_IOTLB_DW				(((uint64_t)1UL) << 48)
+#define DMA_IOTLB_IVT				(((uint64_t)1UL) << 63U)
+#define DMA_IOTLB_IVT_32			(((uint32_t)1U)  << 31U)
+#define DMA_IOTLB_GLOBAL_INVL			(((uint64_t)1UL) << 60U)
+#define DMA_IOTLB_DOMAIN_INVL			(((uint64_t)2UL) << 60U)
+#define DMA_IOTLB_PAGE_INVL			(((uint64_t)3UL) << 60U)
+#define DMA_IOTLB_DR				(((uint64_t)1UL) << 49U)
+#define DMA_IOTLB_DW				(((uint64_t)1UL) << 48U)
 static inline uint64_t dma_iotlb_did(uint16_t did)
 {
 	return (((uint64_t)(did & 0xffffU)) << 32U);
@@ -338,10 +338,10 @@ static inline uint8_t dma_iotlb_invl_addr_am(uint8_t am)
 	return (am & 0x3fU);
 }
 
-#define DMA_IOTLB_INVL_ADDR_IH_UNMODIFIED	(((uint64_t)1UL) << 6)
+#define DMA_IOTLB_INVL_ADDR_IH_UNMODIFIED	(((uint64_t)1UL) << 6U)
 
 /* FECTL_REG */
-#define DMA_FECTL_IM				(((uint32_t)1U) << 31)
+#define DMA_FECTL_IM				(((uint32_t)1U) << 31U)
 
 /* FSTS_REG */
 static inline bool dma_fsts_pfo(uint32_t pfo)
@@ -441,7 +441,7 @@ static inline uint32_t dma_frcd_up_sid(uint64_t up_sid)
 
 #define DRHD_FLAG_INCLUDE_PCI_ALL_MASK      (1U)
 
-#define DEVFUN(dev, fun)            (((dev & 0x1FU) << 3) | ((fun & 0x7U)))
+#define DEVFUN(dev, fun)            (((dev & 0x1FU) << 3U) | ((fun & 0x7U)))
 
 struct dmar_dev_scope {
 	uint8_t bus;
