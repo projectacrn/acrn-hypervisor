@@ -203,6 +203,24 @@ static void vmei_dbg_print_hex(const char *title,
 	fprintf(dbg_file, "\n");
 }
 
+static void
+vmei_dbg_client_properties(const struct mei_client_properties *prop)
+{
+	char guid_str[UUID_STR_LEN] = {0};
+
+	if (vmei_debug < 2)
+		return;
+
+	guid_unparse(&prop->protocol_name, guid_str, UUID_STR_LEN);
+
+	DPRINTF("client properties:\n");
+	DPRINTF("\t fixed_address:      %d\n", prop->fixed_address);
+	DPRINTF("\t protocol_version:   %d\n", prop->protocol_version);
+	DPRINTF("\t max_connections:    %d\n", prop->max_connections);
+	DPRINTF("\t single_recv_buf:    %d\n", prop->single_recv_buf);
+	DPRINTF("\t max_msg_length:     %u\n", prop->max_msg_length);
+	DPRINTF("\t protocol_name:      %s\n", guid_str);
+}
 
 #define MEI_FW_STATUS_MAX 6
 
@@ -595,6 +613,53 @@ static void vmei_free_me_clients(struct virtio_mei *vmei)
 	pthread_mutex_unlock(&vmei->list_mutex);
 }
 
+/**
+ *  vmei_get_free_me_id() - search for free me id in clients map
+ *
+ * @vmei: virtio mei device
+ * @fixed: is a a fixed address client
+ *
+ * Return: free me id, 0 - if none found
+ */
+static uint8_t
+vmei_clients_map_find_free(struct virtio_mei *vmei, bool fixed)
+{
+	unsigned int octet, bit;
+	uint8_t *valid_addresses = vmei->me_clients_map.valid_addresses;
+
+	for (octet = fixed ? 0 : 4; octet < 32; octet++) {
+		for (bit = 0; bit < 8; bit++) {
+			/* ID 0 is reserved and should not be allocated*/
+			if (!octet && !bit)
+				continue;
+			if (!(valid_addresses[octet] & BIT(bit)))
+				return octet * 8 + bit;
+		}
+	}
+	return 0;
+}
+
+/**
+ * vmei_clients_map_update() - set or unset me id in the valid address map
+ *
+ * @vmei: virtio mei device
+ * @me_id: me client id
+ * @set: set or unset the client id
+ */
+static void
+vmei_clients_map_update(struct virtio_mei *vmei, uint8_t me_id, bool set)
+{
+	unsigned int octet, bit;
+	uint8_t *valid_addresses = vmei->me_clients_map.valid_addresses;
+
+	octet = me_id / 8;
+	bit = me_id % 8;
+
+	if (set)
+		valid_addresses[octet] |= BIT(bit);
+	else
+		valid_addresses[octet] &= ~BIT(bit);
+}
 
 static int mei_sysfs_read_property_file(const char *fname, char *buf, size_t sz)
 {
@@ -663,6 +728,129 @@ static int mei_sysfs_read_property_uuid(char *fname, guid_t *uuid)
 		return -1;
 
 	return guid_parse(buf, sizeof(buf), uuid);
+}
+
+static int mei_sysfs_read_properties(char *devpath, size_t size, size_t offset,
+				     struct mei_client_properties *props)
+{
+	uint32_t max_msg_length;
+
+	snprintf(&devpath[offset], size - offset, "%s", "uuid");
+	if (mei_sysfs_read_property_uuid(devpath, &props->protocol_name) < 0)
+		return -EFAULT;
+
+	snprintf(&devpath[offset], size - offset, "%s", "version");
+	if (mei_sysfs_read_property_u8(devpath, &props->protocol_version) < 0)
+		return -EFAULT;
+
+	snprintf(&devpath[offset], size - offset, "%s", "fixed");
+	if (mei_sysfs_read_property_u8(devpath, &props->fixed_address) < 0)
+		props->fixed_address = 0;
+
+	/* Use local variable as function is unaware of the unaligned pointer */
+	snprintf(&devpath[offset], size - offset, "%s", "max_len");
+	if (mei_sysfs_read_property_u32(devpath, &max_msg_length) < 0)
+		max_msg_length = 512;
+	props->max_msg_length = max_msg_length;
+
+	snprintf(&devpath[offset], size - offset, "%s", "max_conn");
+	if (mei_sysfs_read_property_u8(devpath, &props->max_connections) < 0)
+		props->max_connections = 1;
+
+	return 0;
+}
+static bool is_prefix(const char *prfx, const char *str, size_t maxlen)
+{
+	if (!prfx || !str || prfx[0] == '\0')
+		return false;
+
+	return strncmp(prfx, str, maxlen);
+}
+
+static int vmei_me_client_scan_list(struct virtio_mei *vmei)
+{
+	DIR *dev_dir = NULL;
+	struct dirent *ent;
+	char devpath[256];
+	int d_offset, c_offset;
+	uint8_t me_id = 1;
+	struct vmei_me_client *mclient;
+	uint8_t vtag, vtag_supported = 0;
+
+	d_offset = snprintf(devpath, sizeof(devpath) - 1, "%s/%s/%s",
+			    MEI_SYSFS_ROOT, vmei->name, "device/");
+	if (d_offset < 0)
+		return -1;
+
+	dev_dir = opendir(devpath);
+	if (!dev_dir) {
+		WPRINTF("opendir failed %d", errno);
+		return -1;
+	}
+	/*
+	 * iterate over device directory and find the directories
+	 * starting with "mei::" - those are the clients.
+	 */
+	while ((ent = readdir(dev_dir)) != NULL) {
+
+		if (ent->d_type == DT_DIR &&
+		    is_prefix("mei::", ent->d_name, DEV_NAME_SIZE)) {
+
+			struct mei_client_properties props;
+
+			memset(&props, 0, sizeof(props));
+
+			DPRINTF("found client %s %s\n", ent->d_name, devpath);
+
+			c_offset = snprintf(&devpath[d_offset],
+					    sizeof(devpath) - d_offset,
+					    "%s/", ent->d_name);
+			if (c_offset < 0)
+				continue;
+			c_offset += d_offset;
+
+			vtag = 0;
+			snprintf(&devpath[c_offset],
+				 sizeof(devpath) - c_offset, "%s", "vtag");
+			if (mei_sysfs_read_property_u8(devpath, &vtag) < 0)
+				vtag = 0;
+
+			if (!vtag)
+				continue;
+
+			if (mei_sysfs_read_properties(devpath,
+						      sizeof(devpath), c_offset,
+						      &props) < 0)
+				continue;
+
+			me_id = vmei_clients_map_find_free(vmei,
+							   props.fixed_address);
+
+			mclient = vmei_me_client_create(vmei, me_id, &props);
+			if (!mclient)
+				continue;
+
+			vmei_clients_map_update(vmei, me_id, true);
+			vmei_add_me_client(mclient);
+
+			vtag_supported = 1;
+		}
+	}
+
+	vmei_dbg_print_hex("me_clients_map",
+			   vmei->me_clients_map.valid_addresses,
+			    sizeof(vmei->me_clients_map.valid_addresses));
+
+	closedir(dev_dir);
+
+	/*
+	 * Don't return error in order not to the crash DM;
+	 * currently it cannot deal with single driver error.
+	 */
+	if (!vtag_supported)
+		WPRINTF("The platform doesn't support vtags!!!\n");
+
+	return 0;
 }
 
 static int
