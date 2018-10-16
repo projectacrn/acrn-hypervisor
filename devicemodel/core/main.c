@@ -84,6 +84,7 @@ bool stdio_in_use;
 
 static int virtio_msix = 1;
 static int x2apic_mode;	/* default is xAPIC */
+static bool debugexit_enabled;
 
 static int strictmsr = 1;
 
@@ -131,7 +132,7 @@ usage(int code)
 		"Usage: %s [-abehuwxACHPSTWY] [-c vcpus] [-g <gdb port>] [-l <lpc>]\n"
 		"       %*s [-m mem] [-p vcpu:hostcpu] [-s <pci>] [-U uuid] \n"
 		"       %*s [--vsbl vsbl_file_name] [--part_info part_info_name]\n"
-		"       %*s [--enable_trusty] <vm>\n"
+		"       %*s [--enable_trusty] [--debugexit] <vm>\n"
 		"       -a: local apic is in xAPIC mode (deprecated)\n"
 		"       -A: create ACPI tables\n"
 		"       -b: enable bvmcons\n"
@@ -160,7 +161,8 @@ usage(int code)
 		"       --vsbl: vsbl file path\n"
 		"       --part_info: guest partition info file path\n"
 		"       --enable_trusty: enable trusty for guest\n"
-		"       --ptdev_no_reset: disable reset check for ptdev\n",
+		"       --ptdev_no_reset: disable reset check for ptdev\n"
+		"	--debugexit: enable debug exit function\n",
 		progname, (int)strlen(progname), "", (int)strlen(progname), "",
 		(int)strlen(progname), "");
 
@@ -439,6 +441,9 @@ vm_init_vdevs(struct vmctx *ctx)
 	sci_init(ctx);
 	init_bvmcons();
 
+	if (debugexit_enabled)
+		init_debugexit();
+
 	ret = monitor_init(ctx);
 	if (ret < 0)
 		goto monitor_fail;
@@ -452,6 +457,9 @@ vm_init_vdevs(struct vmctx *ctx)
 pci_fail:
 	monitor_close();
 monitor_fail:
+	if (debugexit_enabled)
+		deinit_debugexit();
+
 	deinit_bvmcons();
 	vpit_deinit(ctx);
 vpit_fail:
@@ -469,6 +477,10 @@ vm_deinit_vdevs(struct vmctx *ctx)
 {
 	deinit_pci(ctx);
 	monitor_close();
+
+	if (debugexit_enabled)
+		deinit_debugexit();
+
 	deinit_bvmcons();
 	vpit_deinit(ctx);
 	vrtc_deinit(ctx);
@@ -493,6 +505,10 @@ vm_reset_vdevs(struct vmctx *ctx)
 	 * could be assigned with different number after reset.
 	 */
 	atkbdc_deinit(ctx);
+
+	if (debugexit_enabled)
+		deinit_debugexit();
+
 	vpit_deinit(ctx);
 	vrtc_deinit(ctx);
 
@@ -504,6 +520,9 @@ vm_reset_vdevs(struct vmctx *ctx)
 	atkbdc_init(ctx);
 	vrtc_init(ctx);
 	vpit_init(ctx);
+
+	if (debugexit_enabled)
+		init_debugexit();
 
 	ioapic_init(ctx);
 	init_pci(ctx);
@@ -684,6 +703,7 @@ enum {
 	CMD_OPT_PART_INFO,
 	CMD_OPT_TRUSTY_ENABLE,
 	CMD_OPT_PTDEV_NO_RESET,
+	CMD_OPT_DEBUGEXIT,
 };
 
 static struct option long_options[] = {
@@ -720,6 +740,7 @@ static struct option long_options[] = {
 					CMD_OPT_TRUSTY_ENABLE},
 	{"ptdev_no_reset",	no_argument,		0,
 		CMD_OPT_PTDEV_NO_RESET},
+	{"debugexit",		no_argument,		0, CMD_OPT_DEBUGEXIT},
 	{0,			0,			0,  0  },
 };
 
@@ -868,6 +889,9 @@ main(int argc, char *argv[])
 			break;
 		case CMD_OPT_PTDEV_NO_RESET:
 			ptdev_no_reset(true);
+			break;
+		case CMD_OPT_DEBUGEXIT:
+			debugexit_enabled = true;
 			break;
 		case 'h':
 			usage(0);
