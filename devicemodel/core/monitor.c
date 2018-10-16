@@ -26,7 +26,7 @@
 #include "log.h"
 
 #define INTR_STORM_MONITOR_PERIOD	10 /* 10 seconds */
-#define INTR_STORM_THRESHOLD	100000 /* 10K times per second */
+#define INTR_STORM_THRESHOLD	1000000 /* 10K times per second */
 
 #define DELAY_INTR_TIME	1 /* 1ms */
 #define DELAY_DURATION	100000 /* 100ms of total duration for delay intr */
