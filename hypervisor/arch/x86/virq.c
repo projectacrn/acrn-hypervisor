@@ -261,6 +261,9 @@ static void vcpu_inject_exception(struct vcpu *vcpu, uint32_t vector)
 			(exception_type[vector] << 8U) | (vector & 0xFFU));
 
 	vcpu->arch_vcpu.exception_info.exception = VECTOR_INVALID;
+
+	/* retain rip for exception injection */
+	vcpu_retain_rip(vcpu);
 }
 
 static int vcpu_inject_hi_exception(struct vcpu *vcpu)
