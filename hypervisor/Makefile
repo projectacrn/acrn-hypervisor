@@ -103,7 +103,7 @@ ifeq ($(CONFIG_PARTITION_MODE),y)
 INCLUDE_PATH += include/dm/vpci
 endif
 INCLUDE_PATH += bsp/include
-INCLUDE_PATH += bsp/$(CONFIG_PLATFORM)/include/bsp
+INCLUDE_PATH += bsp/$(CONFIG_PLATFORM_BOOTFW)/include/bsp
 INCLUDE_PATH += boot/include
 INCLUDE_PATH += $(HV_OBJDIR)/include
 
@@ -185,13 +185,13 @@ C_SRCS += $(wildcard partition/*.c)
 C_SRCS += dm/vrtc.c
 endif
 
-C_SRCS += bsp/$(CONFIG_PLATFORM)/$(CONFIG_PLATFORM).c
-C_SRCS += bsp/$(CONFIG_PLATFORM)/platform_acpi_info.c
+C_SRCS += bsp/$(CONFIG_PLATFORM_BOOTFW)/$(CONFIG_PLATFORM_BOOTFW).c
+C_SRCS += bsp/$(CONFIG_PLATFORM_BOOTFW)/platform_acpi_info.c
 
-ifeq ($(CONFIG_PLATFORM),uefi)
-C_SRCS += bsp/$(CONFIG_PLATFORM)/cmdline.c
+ifeq ($(CONFIG_PLATFORM_BOOTFW),uefi)
+C_SRCS += bsp/$(CONFIG_PLATFORM_BOOTFW)/cmdline.c
 else
-ifeq ($(CONFIG_PLATFORM), sbl)
+ifeq ($(CONFIG_PLATFORM_BOOTFW), sbl)
 C_SRCS += boot/sbl/multiboot.c
 C_SRCS += boot/sbl/hob_parse.c
 endif
@@ -227,7 +227,7 @@ VERSION := $(HV_OBJDIR)/include/version.h
 .PHONY: all
 all: $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
-ifeq ($(CONFIG_PLATFORM), uefi)
+ifeq ($(CONFIG_PLATFORM_BOOTFW), uefi)
 all: efi
 .PHONY: efi
 efi: $(HV_OBJDIR)/$(HV_FILE).bin
@@ -238,7 +238,7 @@ install: efi
 	make -C bsp/uefi/efi HV_OBJDIR=$(HV_OBJDIR) install
 endif
 
-ifeq ($(CONFIG_PLATFORM), sbl)
+ifeq ($(CONFIG_PLATFORM_BOOTFW), sbl)
 install: $(HV_OBJDIR)/$(HV_FILE).32.out
 	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).sbl
 endif

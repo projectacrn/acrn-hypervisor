@@ -23,7 +23,7 @@ config PARTITION_MODE
 	depends on PLATFORM_SBL
 endchoice
 
-config PLATFORM
+config PLATFORM_BOOTFW
 	string
 	default "uefi" if PLATFORM_UEFI
 	default "sbl" if PLATFORM_SBL
