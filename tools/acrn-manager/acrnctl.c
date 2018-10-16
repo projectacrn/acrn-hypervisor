@@ -504,8 +504,13 @@ static int wait_vm_stop(const char * vmname, unsigned int timeout)
 		vmmngr_update();
 
 		s =  vmmngr_find(vmname);
-		if (s->state == VM_CREATED)
-			return 0;
+		if (s == NULL) {
+			printf("%s: vm %s not found\n", __func__, vmname);
+			return -1;
+		} else {
+			if (s->state == VM_CREATED)
+				return 0;
+		}
 
 		sleep(1);
 	} while (t--);
