@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2011 NetApp, Inc.
+ * Copyright (c) 2018 Intel
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -11,10 +11,10 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY NETAPP, INC ``AS IS'' AND
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL NETAPP, INC OR CONTRIBUTORS BE LIABLE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -22,33 +22,59 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * $FreeBSD$
  */
 
-#ifndef	_DM_H_
-#define	_DM_H_
-
+#include <assert.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "types.h"
-#include "vmm.h"
+#include "vmmapi.h"
+#include "inout.h"
+#include "mevent.h"
 
-struct vmctx;
-extern int guest_ncpus;
-extern char *guest_uuid_str;
-extern uint8_t trusty_enabled;
-extern char *vsbl_file_name;
-extern char *kernel_file_name;
-extern char *elf_file_name;
-extern char *vmname;
-extern bool stdio_in_use;
+#define DEBUG_IO_BASE	(0xf4)
+#define	DEBUG_IO_SIZE	(1)
 
-int vmexit_task_switch(struct vmctx *ctx, struct vhm_request *vhm_req,
-		       int *vcpu);
-void *paddr_guest2host(struct vmctx *ctx, uintptr_t addr, size_t len);
-void *dm_gpa2hva(uint64_t gpa, size_t size);
-int  virtio_uses_msix(void);
-void ptdev_no_reset(bool enable);
-void init_debugexit(void);
-void deinit_debugexit(void);
-#endif
+static int
+debugexit_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
+	      uint32_t *eax, void *arg)
+{
+	if (in)
+		*eax = 0xFFFF;
+	else {
+		vm_suspend(ctx, VM_SUSPEND_POWEROFF);
+		mevent_notify();
+	}
+	return 0;
+}
+
+void
+init_debugexit(void)
+{
+	struct inout_port iop;
+
+	memset(&iop, 0, sizeof(struct inout_port));
+	iop.name = "debugexit";
+	iop.port = DEBUG_IO_BASE;
+	iop.size = DEBUG_IO_SIZE;
+	iop.flags = IOPORT_F_INOUT;
+	iop.handler = debugexit_handler;
+
+	register_inout(&iop);
+}
+
+void
+deinit_debugexit(void)
+{
+	struct inout_port iop;
+
+	memset(&iop, 0, sizeof(struct inout_port));
+	iop.name = "debugexit";
+	iop.port = DEBUG_IO_BASE;
+	iop.size = DEBUG_IO_SIZE;
+
+	unregister_inout(&iop);
+}
