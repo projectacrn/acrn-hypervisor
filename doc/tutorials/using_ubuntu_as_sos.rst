@@ -188,20 +188,19 @@ You can download latest Service OS kernel from
         The command line for the kernel in /etc/grub.d/40_custom should be all
         as a single line, not as multiple lines. Otherwise the kernel will fail to boot
 
+   * Modify the ``/etc/default/grub`` file to make the grub menu visible when booting.
+     There are a couple of lines to be modified, as shown below.
+
+     .. code-block:: none
+
+        #GRUB_HIDDEN_TIMEOUT=0
+        GRUB_HIDDEN_TIMEOUT_QUIET=false
+
    * Update Grub on your system
 
      .. code-block:: none
 
         sudo update-grub
-
-     At this point, you need to modify ``/boot/grub/grub.cfg`` file manually to
-     enable the timeout so that the system has an opportunity to show you the
-     grub menu. (Without this the grub choice menu won't display.)
-
-     .. code-block:: none
-
-        #set timeout_style=hidden
-        set timeout = 10
 
 #. Reboot the system
    
