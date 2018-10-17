@@ -103,19 +103,12 @@ uint64_t gpa2hpa(struct vm *vm, uint64_t gpa)
 	return local_gpa2hpa(vm, gpa, NULL);
 }
 
-uint64_t hpa2gpa(struct vm *vm, uint64_t hpa)
+/**
+ * @pre: the gpa and hpa are identical mapping in SOS.
+ */
+uint64_t vm0_hpa2gpa(uint64_t hpa)
 {
-	uint64_t *pgentry, pg_size = 0UL;
-
-	pgentry = lookup_address((uint64_t *)vm->arch_vm.m2p,
-			hpa, &pg_size, PTT_EPT);
-	if (pgentry == NULL) {
-		pr_err("VM %d hpa2gpa: failed for hpa 0x%llx",
-				vm->vm_id, hpa);
-		ASSERT(false, "hpa2gpa not found");
-	}
-	return ((*pgentry & (~(pg_size - 1UL)))
-			| (hpa & (pg_size - 1UL)));
+	return hpa;
 }
 
 int ept_violation_vmexit_handler(struct vcpu *vcpu)

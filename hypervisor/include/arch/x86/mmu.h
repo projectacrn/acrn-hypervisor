@@ -134,6 +134,7 @@ static inline void clflush(volatile void *p)
  * host physical address width is 52
  */
 #define INVALID_HPA	(0x1UL << 52U)
+#define INVALID_GPA	(0x1UL << 52U)
 /* External Interfaces */
 void destroy_ept(struct vm *vm);
 /**
@@ -146,7 +147,10 @@ uint64_t gpa2hpa(struct vm *vm, uint64_t gpa);
  * @return hpa - the HPA of parameter gpa is hpa
  */
 uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size);
-uint64_t hpa2gpa(struct vm *vm, uint64_t hpa);
+/**
+ * @pre: the gpa and hpa are identical mapping in SOS.
+ */
+uint64_t vm0_hpa2gpa(uint64_t hpa);
 void ept_mr_add(struct vm *vm, uint64_t *pml4_page, uint64_t hpa,
 		uint64_t gpa, uint64_t size, uint64_t prot_orig);
 void ept_mr_modify(struct vm *vm, uint64_t *pml4_page, uint64_t gpa,

@@ -131,7 +131,8 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 			hpa, gpa_rebased, size, EPT_RWX | EPT_WB);
 
 	/* Get the gpa address in SOS */
-	gpa = hpa2gpa(vm0, hpa);
+	gpa = vm0_hpa2gpa(hpa);
+
 	/* Unmap trusty memory space from sos ept mapping*/
 	ept_mr_del(vm0, (uint64_t *)vm0->arch_vm.nworld_eptp,
 			gpa, size);
