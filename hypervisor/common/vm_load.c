@@ -47,8 +47,9 @@ static uint64_t create_zero_page(struct vm *vm)
 	uint64_t gpa, addr;
 
 	/* Set zeropage in Linux Guest RAM region just past boot args */
-	hva = gpa2hva(vm, (uint64_t)sw_linux->bootargs_load_addr);
-	zeropage = (struct zero_page *)((char *)hva + MEM_4K);
+	gpa = (uint64_t)sw_linux->bootargs_load_addr + MEM_4K;
+	hva = gpa2hva(vm, gpa);
+	zeropage = hva;
 
 	/* clear the zeropage */
 	(void)memset(zeropage, 0U, MEM_2K);
@@ -77,9 +78,6 @@ static uint64_t create_zero_page(struct vm *vm)
 
 	/* Create/add e820 table entries in zeropage */
 	zeropage->e820_nentries = (uint8_t)create_e820_table(zeropage->e820);
-
-	/* Get the host physical address of the zeropage */
-	gpa = hpa2gpa(vm, hva2hpa((void *)zeropage));
 
 	/* Return Physical Base Address of zeropage */
 	return gpa;
