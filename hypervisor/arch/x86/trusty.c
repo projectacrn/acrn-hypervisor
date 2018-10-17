@@ -351,6 +351,7 @@ static bool setup_trusty_info(struct vcpu *vcpu,
 			pr_err("%s: derive dvseed failed!", __func__);
 			return false;
 		}
+		key_info->dseed_list[i].cse_svn = g_key_info.dseed_list[i].cse_svn;
 	}
 
 	/* Prepare trusty startup param */
