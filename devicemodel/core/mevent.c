@@ -56,18 +56,20 @@ static int mevent_pipefd[2];
 static pthread_mutex_t mevent_lmutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct mevent {
-	void	(*me_func)(int, enum ev_type, void *);
-	int	me_fd;
-	enum	ev_type me_type;
-	void	*me_param;
-	int	me_cq;
-	int	me_state;
-	int	me_closefd;
+	void			(*me_func)(int, enum ev_type, void *);
+	int			me_fd;
+	enum			ev_type me_type;
+	void			*me_param;
+	int			me_cq;
+	int			me_state;
 
-	LIST_ENTRY(mevent) me_list;
+	int			closefd;
+	LIST_ENTRY(mevent)	me_list;
 };
 
 static LIST_HEAD(listhead, mevent) global_head;
+/* List holds the mevent node which is requested to deleted */
+static LIST_HEAD(del_listhead, mevent) del_head;
 
 static void
 mevent_qlock(void)
@@ -79,6 +81,12 @@ static void
 mevent_qunlock(void)
 {
 	pthread_mutex_unlock(&mevent_lmutex);
+}
+
+static bool
+is_dispatch_thread(void)
+{
+	return (pthread_self() == mevent_tid);
 }
 
 static void
@@ -138,15 +146,11 @@ static void
 mevent_destroy(void)
 {
 	struct mevent *mevp, *tmpp;
-	struct epoll_event ee;
 
 	mevent_qlock();
-
 	list_foreach_safe(mevp, &global_head, me_list, tmpp) {
 		LIST_REMOVE(mevp, me_list);
-		ee.events = mevent_kq_filter(mevp);
-		ee.data.ptr = mevp;
-		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, mevp->me_fd, &ee);
+		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, mevp->me_fd, NULL);
 
 		if ((mevp->me_type == EVF_READ ||
 		     mevp->me_type == EVF_READ_ET ||
@@ -158,6 +162,21 @@ mevent_destroy(void)
 		free(mevp);
 	}
 
+	/* the mevp in del_head was removed from epoll when add it
+	 * to del_head already.
+	 */
+	list_foreach_safe(mevp, &del_head, me_list, tmpp) {
+		LIST_REMOVE(mevp, me_list);
+
+		if ((mevp->me_type == EVF_READ ||
+		     mevp->me_type == EVF_READ_ET ||
+		     mevp->me_type == EVF_WRITE ||
+		     mevp->me_type == EVF_WRITE_ET) &&
+		     mevp->me_fd != STDIN_FILENO)
+			close(mevp->me_fd);
+
+		free(mevp);
+	}
 	mevent_qunlock();
 }
 
@@ -169,9 +188,9 @@ mevent_handle(struct epoll_event *kev, int numev)
 
 	for (i = 0; i < numev; i++) {
 		mevp = kev[i].data.ptr;
-		/* XXX check for EV_ERROR ? */
 
-		(*mevp->me_func)(mevp->me_fd, mevp->me_type, mevp->me_param);
+		if (mevp->me_state)
+			(*mevp->me_func)(mevp->me_fd, mevp->me_type, mevp->me_param);
 	}
 }
 
@@ -210,6 +229,7 @@ mevent_add(int tfd, enum ev_type type,
 	mevp->me_type = type;
 	mevp->me_func = func;
 	mevp->me_param = param;
+	mevp->me_state = 1;
 
 	ee.events = mevent_kq_filter(mevp);
 	ee.data.ptr = mevp;
@@ -267,23 +287,50 @@ mevent_disable(struct mevent *evp)
 	return ret;
 }
 
+static void
+mevent_add_to_del_list(struct mevent *evp, int closefd)
+{
+	mevent_qlock();
+	LIST_INSERT_HEAD(&del_head, evp, me_list);
+	mevent_qunlock();
+
+	mevent_notify();
+}
+
+static void
+mevent_drain_del_list(void)
+{
+	struct mevent *evp, *tmpp;
+
+	mevent_qlock();
+	list_foreach_safe(evp, &del_head, me_list, tmpp) {
+		LIST_REMOVE(evp, me_list);
+		if (evp->closefd) {
+			close(evp->me_fd);
+		}
+		free(evp);
+	}
+	mevent_qunlock();
+}
+
 static int
 mevent_delete_event(struct mevent *evp, int closefd)
 {
-	struct epoll_event ee;
-
 	mevent_qlock();
 	LIST_REMOVE(evp, me_list);
 	mevent_qunlock();
+	evp->me_state = 0;
+	evp->closefd = closefd;
 
-	ee.events = mevent_kq_filter(evp);
-	ee.data.ptr = evp;
-	epoll_ctl(epoll_fd, EPOLL_CTL_DEL, evp->me_fd, &ee);
-
-	if (closefd)
-		close(evp->me_fd);
-
-	free(evp);
+	epoll_ctl(epoll_fd, EPOLL_CTL_DEL, evp->me_fd, NULL);
+	if (!is_dispatch_thread()) {
+		mevent_add_to_del_list(evp, closefd);
+	} else {
+		if (evp->closefd) {
+			close(evp->me_fd);
+		}
+		free(evp);
+	}
 	return 0;
 }
 
@@ -322,6 +369,8 @@ mevent_deinit(void)
 {
 	mevent_destroy();
 	close(epoll_fd);
+	if (mevent_pipefd[1] != 0)
+		close(mevent_pipefd[1]);
 }
 
 void
@@ -366,9 +415,9 @@ mevent_dispatch(void)
 		 * Handle reported events
 		 */
 		mevent_handle(eventlist, ret);
+		mevent_drain_del_list();
 
 		suspend_mode = vm_get_suspend_mode();
-
 		if ((suspend_mode != VM_SUSPEND_NONE) &&
 		    (suspend_mode != VM_SUSPEND_SYSTEM_RESET) &&
 		    (suspend_mode != VM_SUSPEND_SUSPEND))
