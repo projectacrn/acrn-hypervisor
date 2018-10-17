@@ -85,8 +85,13 @@ static void
 vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint16_t pin, uint32_t level)
 {
 	uint32_t old_lvl;
-	union ioapic_rte rte = vioapic->rtbl[pin];
+	union ioapic_rte rte;
 
+	if (pin >= REDIR_ENTRIES_HW) {
+		return;
+	}
+
+	rte = vioapic->rtbl[pin];
 	old_lvl = (uint32_t)bitmap_test(pin & 0x3FU, &vioapic->pin_state[pin >> 6U]);
 	if (level == 0U) {
 		/* clear pin_state and deliver interrupt according to polarity */
@@ -245,9 +250,15 @@ vioapic_indirect_read(struct acrn_vioapic *vioapic, uint32_t addr)
 
 static inline bool vioapic_need_intr(struct acrn_vioapic *vioapic, uint16_t pin)
 {
-	uint32_t lvl =(uint32_t)bitmap_test(pin & 0x3FU,
-			&vioapic->pin_state[pin >> 6U]);
-	union ioapic_rte rte = vioapic->rtbl[pin];
+	uint32_t lvl;
+	union ioapic_rte rte;
+
+	if (pin >= REDIR_ENTRIES_HW) {
+		return false;
+	}
+
+	rte = vioapic->rtbl[pin];
+	lvl = (uint32_t)bitmap_test(pin & 0x3FU, &vioapic->pin_state[pin >> 6U]);
 
 	return !!((((rte.full & IOAPIC_RTE_INTPOL) != 0UL) && lvl == 0U) ||
 		(((rte.full & IOAPIC_RTE_INTPOL) == 0UL) && lvl != 0U));
