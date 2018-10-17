@@ -1020,52 +1020,51 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 		 */
 		*dmask = 0UL;
 		amask = vm_active_cpus(vm);
-		for (vcpu_id = ffs64(amask); vcpu_id != INVALID_BIT_INDEX;
-			vcpu_id = ffs64(amask)) {
-			bitmap_clear_lock(vcpu_id, &amask);
+		for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
+			if (amask & (1U << vcpu_id)) {
+				vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
+				dfr = vlapic->apic_page.dfr.v;
+				ldr = vlapic->apic_page.ldr.v;
 
-			vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
-			dfr = vlapic->apic_page.dfr.v;
-			ldr = vlapic->apic_page.ldr.v;
+				if ((dfr & APIC_DFR_MODEL_MASK) ==
+						APIC_DFR_MODEL_FLAT) {
+					ldest = ldr >> 24;
+					mda_ldest = mda_flat_ldest;
+				} else if ((dfr & APIC_DFR_MODEL_MASK) ==
+						APIC_DFR_MODEL_CLUSTER) {
 
-			if ((dfr & APIC_DFR_MODEL_MASK) ==
-					APIC_DFR_MODEL_FLAT) {
-				ldest = ldr >> 24;
-				mda_ldest = mda_flat_ldest;
-			} else if ((dfr & APIC_DFR_MODEL_MASK) ==
-					APIC_DFR_MODEL_CLUSTER) {
+					cluster = ldr >> 28;
+					ldest = (ldr >> 24) & 0xfU;
 
-				cluster = ldr >> 28;
-				ldest = (ldr >> 24) & 0xfU;
-
-				if (cluster != mda_cluster_id) {
+					if (cluster != mda_cluster_id) {
+						continue;
+					}
+					mda_ldest = mda_cluster_ldest;
+				} else {
+					/*
+					 * Guest has configured a bad logical
+					 * model for this vcpu - skip it.
+					 */
+					dev_dbg(ACRN_DBG_LAPIC,
+							"CANNOT deliver interrupt");
+					dev_dbg(ACRN_DBG_LAPIC,
+							"vlapic has bad logical model %x", dfr);
 					continue;
 				}
-				mda_ldest = mda_cluster_ldest;
-			} else {
-				/*
-				 * Guest has configured a bad logical
-				 * model for this vcpu - skip it.
-				 */
-				dev_dbg(ACRN_DBG_LAPIC,
-					"CANNOT deliver interrupt");
-				dev_dbg(ACRN_DBG_LAPIC,
-					"vlapic has bad logical model %x", dfr);
-				continue;
-			}
 
-			if ((mda_ldest & ldest) != 0U) {
-				if (lowprio) {
-					if (target == NULL) {
-						target = vlapic;
-					} else if (target->apic_page.ppr.v >
-						vlapic->apic_page.ppr.v) {
-						target = vlapic;
+				if ((mda_ldest & ldest) != 0U) {
+					if (lowprio) {
+						if (target == NULL) {
+							target = vlapic;
+						} else if (target->apic_page.ppr.v >
+								vlapic->apic_page.ppr.v) {
+							target = vlapic;
+						} else {
+							/* target is the dest */
+						}
 					} else {
-						/* target is the dest */
+						bitmap_set_lock(vcpu_id, dmask);
 					}
-				} else {
-					bitmap_set_lock(vcpu_id, dmask);
 				}
 			}
 		}
@@ -1076,7 +1075,7 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 	}
 }
 
-void
+	void
 calcvdest(struct vm *vm, uint64_t *dmask, uint32_t dest, bool phys)
 {
 	vlapic_calcdest(vm, dmask, dest, phys, false);
@@ -1189,66 +1188,63 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 		break;
 	}
 
-	for (vcpu_id = ffs64(dmask); vcpu_id != INVALID_BIT_INDEX;
-		vcpu_id = ffs64(dmask)) {
-		bitmap_clear_lock(vcpu_id, &dmask);
-		target_vcpu = vcpu_from_vid(vlapic->vm, vcpu_id);
-		if (target_vcpu == NULL) {
-			continue;
-		}
+	for (vcpu_id = 0U; vcpu_id < vlapic->vm->hw.created_vcpus; vcpu_id++) {
+		if (dmask & (1U << vcpu_id)) {
+			target_vcpu = vcpu_from_vid(vlapic->vm, vcpu_id);
 
-		if (mode == APIC_DELMODE_FIXED) {
-			vlapic_set_intr(target_vcpu, vec,
-				LAPIC_TRIG_EDGE);
-			dev_dbg(ACRN_DBG_LAPIC,
-				"vlapic sending ipi %u to vcpu_id %hu",
-				vec, vcpu_id);
-		} else if (mode == APIC_DELMODE_NMI) {
-			vcpu_inject_nmi(target_vcpu);
-			dev_dbg(ACRN_DBG_LAPIC,
-				"vlapic send ipi nmi to vcpu_id %hu", vcpu_id);
-		} else if (mode == APIC_DELMODE_INIT) {
-			if ((icr_low & APIC_LEVEL_MASK) == APIC_LEVEL_DEASSERT) {
-				continue;
+			if (mode == APIC_DELMODE_FIXED) {
+				vlapic_set_intr(target_vcpu, vec,
+						LAPIC_TRIG_EDGE);
+				dev_dbg(ACRN_DBG_LAPIC,
+						"vlapic sending ipi %u to vcpu_id %hu",
+						vec, vcpu_id);
+			} else if (mode == APIC_DELMODE_NMI) {
+				vcpu_inject_nmi(target_vcpu);
+				dev_dbg(ACRN_DBG_LAPIC,
+						"vlapic send ipi nmi to vcpu_id %hu", vcpu_id);
+			} else if (mode == APIC_DELMODE_INIT) {
+				if ((icr_low & APIC_LEVEL_MASK) == APIC_LEVEL_DEASSERT) {
+					continue;
+				}
+
+				dev_dbg(ACRN_DBG_LAPIC,
+						"Sending INIT from VCPU %hu to %hu",
+						vlapic->vcpu->vcpu_id, vcpu_id);
+
+				/* put target vcpu to INIT state and wait for SIPI */
+				pause_vcpu(target_vcpu, VCPU_PAUSED);
+				reset_vcpu(target_vcpu);
+				/* new cpu model only need one SIPI to kick AP run,
+				 * the second SIPI will be ignored as it move out of
+				 * wait-for-SIPI state.
+				 */
+				target_vcpu->arch_vcpu.nr_sipi = 1U;
+			} else if (mode == APIC_DELMODE_STARTUP) {
+				/* Ignore SIPIs in any state other than wait-for-SIPI */
+				if ((target_vcpu->state != VCPU_INIT) ||
+						(target_vcpu->arch_vcpu.nr_sipi == 0U)) {
+					continue;
+				}
+
+				dev_dbg(ACRN_DBG_LAPIC,
+						"Sending SIPI from VCPU %hu to %hu with vector %u",
+						vlapic->vcpu->vcpu_id, vcpu_id, vec);
+
+				target_vcpu->arch_vcpu.nr_sipi--;
+				if (target_vcpu->arch_vcpu.nr_sipi > 0U) {
+					continue;
+				}
+
+				pr_err("Start Secondary VCPU%hu for VM[%d]...",
+						target_vcpu->vcpu_id,
+						target_vcpu->vm->vm_id);
+				set_ap_entry(target_vcpu, vec << 12U);
+				schedule_vcpu(target_vcpu);
+			} else if (mode == APIC_DELMODE_SMI) {
+				pr_info("vlapic: SMI IPI do not support\n");
+			} else {
+				pr_err("Unhandled icrlo write with mode %u\n", mode);
 			}
-
-			dev_dbg(ACRN_DBG_LAPIC,
-				"Sending INIT from VCPU %hu to %hu",
-				vlapic->vcpu->vcpu_id, vcpu_id);
-
-			/* put target vcpu to INIT state and wait for SIPI */
-			pause_vcpu(target_vcpu, VCPU_PAUSED);
-			reset_vcpu(target_vcpu);
-			/* new cpu model only need one SIPI to kick AP run,
-			 * the second SIPI will be ignored as it move out of
-			 * wait-for-SIPI state.
-			 */
-			target_vcpu->arch_vcpu.nr_sipi = 1U;
-		} else if (mode == APIC_DELMODE_STARTUP) {
-			/* Ignore SIPIs in any state other than wait-for-SIPI */
-			if ((target_vcpu->state != VCPU_INIT) ||
-					(target_vcpu->arch_vcpu.nr_sipi == 0U)) {
-				continue;
-			}
-
-			dev_dbg(ACRN_DBG_LAPIC,
-				"Sending SIPI from VCPU %hu to %hu with vector %u",
-				vlapic->vcpu->vcpu_id, vcpu_id, vec);
-
-			target_vcpu->arch_vcpu.nr_sipi--;
-			if (target_vcpu->arch_vcpu.nr_sipi > 0U) {
-				continue;
-			}
-
-			pr_err("Start Secondary VCPU%hu for VM[%d]...",
-					target_vcpu->vcpu_id,
-					target_vcpu->vm->vm_id);
-			set_ap_entry(target_vcpu, vec << 12U);
-			schedule_vcpu(target_vcpu);
-		} else if (mode == APIC_DELMODE_SMI) {
-			pr_info("vlapic: SMI IPI do not support\n");
-		} else {
-			pr_err("Unhandled icrlo write with mode %u\n", mode);
 		}
 	}
 
@@ -1723,22 +1719,19 @@ vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest, bool phys,
 	 */
 	vlapic_calcdest(vm, &dmask, dest, phys, lowprio);
 
-	for (vcpu_id = ffs64(dmask); vcpu_id != INVALID_BIT_INDEX;
-		vcpu_id = ffs64(dmask)) {
+	for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
 		struct acrn_vlapic *vlapic;
-		bitmap_clear_lock(vcpu_id, &dmask);
-		target_vcpu = vcpu_from_vid(vm, vcpu_id);
-		if (target_vcpu == NULL) {
-			return;
-		}
+		if (dmask & (1U << vcpu_id)) {
+			target_vcpu = vcpu_from_vid(vm, vcpu_id);
 
-		/* only make request when vlapic enabled */
-		vlapic = vcpu_vlapic(target_vcpu);
-		if (vlapic_enabled(vlapic)) {
-			if (delmode == IOAPIC_RTE_DELEXINT) {
-				vcpu_inject_extint(target_vcpu);
-			} else {
-				vlapic_set_intr(target_vcpu, vec, level);
+			/* only make request when vlapic enabled */
+			vlapic = vcpu_vlapic(target_vcpu);
+			if (vlapic_enabled(vlapic)) {
+				if (delmode == IOAPIC_RTE_DELEXINT) {
+					vcpu_inject_extint(target_vcpu);
+				} else {
+					vlapic_set_intr(target_vcpu, vec, level);
+				}
 			}
 		}
 	}
@@ -1875,13 +1868,13 @@ vlapic_set_local_intr(struct vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
 		bitmap_set_lock(vcpu_id, &dmask);
 	}
 	error = 0;
-	for (vcpu_id = ffs64(dmask); vcpu_id != INVALID_BIT_INDEX;
-		vcpu_id = ffs64(dmask)) {
-		bitmap_clear_lock(vcpu_id, &dmask);
-		vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
-		error = vlapic_trigger_lvt(vlapic, vector);
-		if (error != 0) {
-			break;
+	for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
+		if (dmask & (1U << vcpu_id)) {
+			vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
+			error = vlapic_trigger_lvt(vlapic, vector);
+			if (error != 0) {
+				break;
+			}
 		}
 	}
 

@@ -651,13 +651,13 @@ static int shell_vcpu_dumpreg(int argc, char **argv)
 		goto out;
 	}
 
-	vcpu = vcpu_from_vid(vm, vcpu_id);
-	if (vcpu == NULL) {
+	if (vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
 		shell_puts("No vcpu found in the input <vm_id, vcpu_id>\r\n");
 		status = -EINVAL;
 		goto out;
 	}
 
+	vcpu = vcpu_from_vid(vm, vcpu_id);
 	dump.vcpu = vcpu;
 	dump.str = shell_log_buf;
 	dump.str_max = CPU_PAGE_SIZE;

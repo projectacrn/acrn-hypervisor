@@ -199,6 +199,9 @@ static inline bool is_vm0(struct vm *vm)
 	return (vm->vm_id) == 0U;
 }
 
+/*
+ * @pre vcpu_id < CONFIG_MAX_VCPUS_PER_VM
+ */
 static inline struct vcpu *vcpu_from_vid(struct vm *vm, uint16_t vcpu_id)
 {
 	uint16_t i;
@@ -206,11 +209,10 @@ static inline struct vcpu *vcpu_from_vid(struct vm *vm, uint16_t vcpu_id)
 
 	foreach_vcpu(i, vm, vcpu) {
 		if (vcpu->vcpu_id == vcpu_id) {
-			return vcpu;
+			break;
 		}
 	}
-
-	return NULL;
+	return vcpu;
 }
 
 static inline struct vcpu *vcpu_from_pid(struct vm *vm, uint16_t pcpu_id)
