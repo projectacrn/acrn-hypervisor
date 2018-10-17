@@ -267,7 +267,7 @@ For the User OS, we are using the same `Clear Linux`_ release version as the Ser
 
   .. code-block:: none
 
-     sudo apt-get instal iasl
+     sudo apt-get install iasl
      sudo cp /usr/bin/iasl /usr/sbin/iasl
 
 * Adjust ``launch_uos.sh``
@@ -328,7 +328,11 @@ script example shows how to set this up (verified in Ubuntu 14.04 and 16.04 as t
   
     brctl addif acrn-br0 acrn_tap0
     ip link set dev acrn_tap0 up
- 
+
+.. note::
+   The SOS network interface is called ``enp3s0`` in the script above. You will need
+   to adjust the script if your system uses a different name (e.g. ``eno1``).
+
 Enabling USB keyboard and mouse
 *******************************
 
