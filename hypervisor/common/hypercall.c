@@ -319,12 +319,12 @@ int32_t hcall_set_vcpu_regs(struct vm *vm, uint16_t vmid, uint64_t param)
 		return -1;
 	}
 
-	vcpu = vcpu_from_vid(target_vm, vcpu_regs.vcpu_id);
-	if (vcpu == NULL) {
+	if (vcpu_regs.vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
 		pr_err("%s: invalid vcpu_id for set_vcpu_regs\n", __func__);
 		return -1;
 	}
 
+	vcpu = vcpu_from_vid(target_vm, vcpu_regs.vcpu_id);
 	set_vcpu_regs(vcpu, &(vcpu_regs.vcpu_regs));
 
 	return 0;
@@ -437,13 +437,13 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 	dev_dbg(ACRN_DBG_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
 			vmid, vcpu_id);
 
-	vcpu = vcpu_from_vid(target_vm, vcpu_id);
-	if (vcpu == NULL) {
+	if (vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
 		pr_err("%s, failed to get VCPU %d context from VM %d\n",
 			__func__, vcpu_id, target_vm->vm_id);
 		return -EINVAL;
 	}
 
+	vcpu = vcpu_from_vid(target_vm, vcpu_id);
 	emulate_io_post(vcpu);
 
 	return 0;

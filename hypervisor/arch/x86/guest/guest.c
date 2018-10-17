@@ -38,11 +38,11 @@ uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask)
 	uint64_t dmask = 0UL;
 	struct vcpu *vcpu;
 
-	for (vcpu_id = ffs64(vdmask); vcpu_id != INVALID_BIT_INDEX;
-		vcpu_id = ffs64(vdmask)) {
-		bitmap_clear_lock(vcpu_id, &vdmask);
-		vcpu = vcpu_from_vid(vm, vcpu_id);
-		bitmap_set_lock(vcpu->pcpu_id, &dmask);
+	for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
+		if (vdmask & (1U << vcpu_id)) {
+			vcpu = vcpu_from_vid(vm, vcpu_id);
+			bitmap_set_lock(vcpu->pcpu_id, &dmask);
+		}
 	}
 
 	return dmask;
