@@ -58,9 +58,6 @@ void destroy_ept(struct vm *vm)
 	if (vm->arch_vm.nworld_eptp != NULL) {
 		free_ept_mem((uint64_t *)vm->arch_vm.nworld_eptp);
 	}
-	if (vm->arch_vm.m2p != NULL) {
-		free_ept_mem((uint64_t *)vm->arch_vm.m2p);
-	}
 }
 /* using return value INVALID_HPA as error code */
 uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
@@ -238,11 +235,6 @@ void ept_mr_add(struct vm *vm, uint64_t *pml4_page,
 	}
 
 	mmu_add(pml4_page, hpa, gpa, size, prot, PTT_EPT);
-	/* No need to create inverted page tables for trusty memory */
-	if ((void *)pml4_page == vm->arch_vm.nworld_eptp) {
-		mmu_add((uint64_t *)vm->arch_vm.m2p,
-			gpa, hpa, size, prot, PTT_EPT);
-	}
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
@@ -271,17 +263,12 @@ void ept_mr_del(struct vm *vm, uint64_t *pml4_page,
 {
 	struct vcpu *vcpu;
 	uint16_t i;
-	uint64_t hpa = gpa2hpa(vm, gpa);
 
 	dev_dbg(ACRN_DBG_EPT, "%s,vm[%d] gpa 0x%llx size 0x%llx\n",
 			__func__, vm->vm_id, gpa, size);
 
 	mmu_modify_or_del(pml4_page, gpa, size,
 			0UL, 0UL, PTT_EPT, MR_DEL);
-	if ((void *)pml4_page == vm->arch_vm.nworld_eptp) {
-		mmu_modify_or_del((uint64_t *)vm->arch_vm.m2p,
-				hpa, size, 0UL, 0UL, PTT_EPT, MR_DEL);
-	}
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);

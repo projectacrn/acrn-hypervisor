@@ -88,9 +88,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	vm->hw.gpa_lowtop = 0UL;
 
 	vm->arch_vm.nworld_eptp = alloc_paging_struct();
-	vm->arch_vm.m2p = alloc_paging_struct();
-	if ((vm->arch_vm.nworld_eptp == NULL) ||
-			(vm->arch_vm.m2p == NULL)) {
+	if (vm->arch_vm.nworld_eptp == NULL) {
 		pr_fatal("%s, alloc memory for EPTP failed\n", __func__);
 		status = -ENOMEM;
 		goto err;
@@ -178,10 +176,6 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 err:
 
 	vioapic_cleanup(vm_ioapic(vm));
-
-	if (vm->arch_vm.m2p != NULL) {
-		free(vm->arch_vm.m2p);
-	}
 
 	if (vm->arch_vm.nworld_eptp != NULL) {
 		free(vm->arch_vm.nworld_eptp);
