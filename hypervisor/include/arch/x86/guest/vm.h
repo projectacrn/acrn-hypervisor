@@ -97,7 +97,6 @@ struct vm_arch {
 	 * but Normal World can not access Secure World's memory.
 	 */
 	void *sworld_eptp;
-	void *m2p;		/* machine address to guest physical address */
 	void *tmp_pg_array;	/* Page array for tmp guest paging struct */
 	struct acrn_vioapic vioapic;	/* Virtual IOAPIC base address */
 	struct acrn_vpic vpic;      /* Virtual PIC */
