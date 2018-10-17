@@ -210,10 +210,8 @@ int shutdown_vm(struct acrn_vm *vm)
 		destroy_iommu_domain(vm->iommu);
 	}
 
-#ifndef CONFIG_PARTITION_MODE
 	/* Free vm id */
 	free_vm_id(vm);
-#endif
 
 	vpci_cleanup(vm);
 
