@@ -498,4 +498,5 @@ void restore_sworld_context(struct vcpu *vcpu)
 
 /**
  * @}
- */ // End of trusty_apis
+ */
+/* End of trusty_apis */
