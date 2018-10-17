@@ -43,7 +43,7 @@
 #include <efilib.h>
 #include "stdlib.h"
 
-#define	DOS_FILE_MAGIC_NUMBER	0x5A4D  //"MZ"
+#define	DOS_FILE_MAGIC_NUMBER	0x5A4D  /* "MZ" */
 struct DosFileHeader {
 	uint16_t  mMagic;
         uint16_t  LastSize;
@@ -68,7 +68,7 @@ struct DosFileHeader {
 
 #define IMAGE_FILE_MACHINE_I386	0x14c
 #define IMAGE_FILE_MACHINE_AMD64    0x8664
-#define PE_FILE_MAGIC_NUMBER	0x00004550 	//"PE\0\0" 
+#define PE_FILE_MAGIC_NUMBER	0x00004550 	/* "PE\0\0" */
 struct PeHeader {
 	uint32_t mMagic; 
 	uint16_t mMachine;

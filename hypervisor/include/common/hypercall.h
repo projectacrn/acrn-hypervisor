@@ -486,7 +486,8 @@ int64_t hcall_save_restore_sworld_ctx(struct vcpu *vcpu);
 
 /**
  * @}
- */ // End of trusty_hypercall
+ */
+/* End of trusty_hypercall */
 
 /**
  * @brief set upcall notifier vector
@@ -505,6 +506,7 @@ int32_t hcall_set_callback_vector(struct vm *vm, uint64_t param);
 
 /**
  * @}
- */ // End of acrn_hypercall
+ */
+/* End of acrn_hypercall */
 
 #endif /* HYPERCALL_H*/

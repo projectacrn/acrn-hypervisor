@@ -42,8 +42,6 @@
 struct multiboot_info;
 extern struct multiboot_info mbi;
 
-// ========================================================================
-
 /*
  * Multiboot header structure.
  */
@@ -79,7 +77,6 @@ struct multiboot_header {
  */
 extern struct multiboot_header *Multiboot_Header;
 
-// ========================================================================
 /*
  * Multiboot information structure.
  */
@@ -178,7 +175,5 @@ struct multiboot_module {
 };
 
 #endif /* !defined(_LOCORE) */
-
-// ========================================================================
 
 #endif /* _MULTIBOOT_H */
