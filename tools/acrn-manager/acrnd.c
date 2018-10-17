@@ -162,7 +162,11 @@ static int load_timer_list(void)
 
 	while (!feof(fp)) {
 		memset(l, 0, 256);
-		fgets(l, 255, fp);
+
+		/* Ignore null line */
+		if (!fgets(l, 255, fp)) {
+			continue;
+		}
 
 		memset(s1, 0, 16);
 		memset(s2, 0, 64);
@@ -170,7 +174,7 @@ static int load_timer_list(void)
 		sscanf(l, "%s\t%s", s1, s2);
 
 		if (strlen(s1) == 0 || strlen(s1) > 16) {
-			perror("Invalid vmname from timer list file");
+			fprintf(stderr, "Invalid vmname %s from timer list file\n", s1);
 			continue;
 		}
 
