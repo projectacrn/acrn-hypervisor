@@ -41,6 +41,7 @@
 #include "block_if.h"
 
 #define VIRTIO_BLK_RINGSZ	64
+#define VIRTIO_BLK_MAX_OPTS_LEN	256
 
 #define VIRTIO_BLK_S_OK	0
 #define VIRTIO_BLK_S_IOERR	1
@@ -338,7 +339,10 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	/*
 	 * The supplied backing file has to exist
 	 */
-	snprintf(bident, sizeof(bident), "%d:%d", dev->slot, dev->func);
+	if (snprintf(bident, sizeof(bident), "%d:%d",
+				dev->slot, dev->func) >= sizeof(bident)) {
+		WPRINTF(("bident error, please check slot and func\n"));
+	}
 	bctxt = blockif_open(opts, bident);
 	if (bctxt == NULL) {
 		perror("Could not open backing file");
@@ -391,10 +395,14 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 * md5 sum of the filename
 	 */
 	MD5_Init(&mdctx);
-	MD5_Update(&mdctx, opts, strlen(opts));
+	MD5_Update(&mdctx, opts, strnlen(opts, VIRTIO_BLK_MAX_OPTS_LEN));
 	MD5_Final(digest, &mdctx);
-	sprintf(blk->ident, "ACRN--%02X%02X-%02X%02X-%02X%02X",
-	    digest[0], digest[1], digest[2], digest[3], digest[4], digest[5]);
+	if (snprintf(blk->ident, sizeof(blk->ident),
+		"ACRN--%02X%02X-%02X%02X-%02X%02X", digest[0],
+		digest[1], digest[2], digest[3], digest[4],
+		digest[5]) >= sizeof(blk->ident)) {
+		WPRINTF(("virtio_blk: block ident too long\n"));
+	}
 
 	/* setup virtio block config space */
 	blk->cfg.capacity = size / DEV_BSIZE; /* 512-byte units */

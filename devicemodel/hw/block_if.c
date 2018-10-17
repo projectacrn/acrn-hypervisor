@@ -45,6 +45,7 @@
 #include "dm.h"
 #include "block_if.h"
 #include "ahci.h"
+#include "dm_string.h"
 
 /*
  * Notes:
@@ -429,8 +430,11 @@ blockif_open(const char *optstr, const char *ident)
 
 	fd = -1;
 	ssopt = 0;
+	pssopt = 0;
 	ro = 0;
 	sub_file_assign = 0;
+	sub_file_start_lba = 0;
+	sub_file_size = 0;
 
 	/* writethru is on by default */
 	writeback = 0;
@@ -454,14 +458,30 @@ blockif_open(const char *optstr, const char *ident)
 			writeback = 0;
 		else if (!strcmp(cp, "ro"))
 			ro = 1;
-		else if (sscanf(cp, "sectorsize=%d/%d", &ssopt, &pssopt) == 2)
-			;
-		else if (sscanf(cp, "sectorsize=%d", &ssopt) == 1)
-			pssopt = ssopt;
-		else if (sscanf(cp, "range=%ld/%ld", &sub_file_start_lba,
-				&sub_file_size) == 2)
-			sub_file_assign = 1;
-		else {
+		else if (!strncmp(cp, "sectorsize", strlen("sectorsize"))) {
+			/*
+			 *  sectorsize=<sector size>
+			 * or
+			 *  sectorsize=<sector size>/<physical sector size>
+			 */
+			if (strsep(&cp, "=") && !dm_strtoi(cp, &cp, 10, &ssopt)) {
+				pssopt = ssopt;
+				if (*cp == '/' &&
+					dm_strtoi(cp + 1, &cp, 10, &pssopt) < 0)
+					goto err;
+			} else {
+				goto err;
+			}
+		} else if (!strncmp(cp, "range", strlen("range"))) {
+			/* range=<start lba>/<subfile size> */
+			if (strsep(&cp, "=") &&
+				!dm_strtol(cp, &cp, 10, &sub_file_start_lba) &&
+				*cp == '/' &&
+				!dm_strtol(cp + 1, &cp, 10, &sub_file_size))
+				sub_file_assign = 1;
+			else
+				goto err;
+		} else {
 			fprintf(stderr, "Invalid device option \"%s\"\n", cp);
 			goto err;
 		}
@@ -610,8 +630,11 @@ blockif_open(const char *optstr, const char *ident)
 	}
 
 	for (i = 0; i < BLOCKIF_NUMTHR; i++) {
+		if (snprintf(tname, sizeof(tname), "blk-%s-%d",
+					ident, i) >= sizeof(tname)) {
+			perror("blk thread name too long");
+		}
 		pthread_create(&bc->btid[i], NULL, blockif_thr, bc);
-		snprintf(tname, sizeof(tname), "blk-%s-%d", ident, i);
 		pthread_setname_np(bc->btid[i], tname);
 	}
 
