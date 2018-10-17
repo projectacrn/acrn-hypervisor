@@ -373,7 +373,7 @@ struct pci_xhci_vdev {
 	struct pci_xhci_dev_emu  **devices; /* XHCI[port] = device */
 	struct pci_xhci_dev_emu  **slots;   /* slots assigned from 1 */
 
-	bool		slot_allocated[XHCI_MAX_SLOTS];
+	bool		slot_allocated[XHCI_MAX_SLOTS + 1];
 	int		ndevices;
 	uint16_t	pid;
 	uint16_t	vid;
