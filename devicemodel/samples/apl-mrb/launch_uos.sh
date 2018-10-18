@@ -226,6 +226,9 @@ else
   npk_virt=""
 fi
 
+# WA for USB role switch hang issue, disable runtime PM of xHCI device
+echo on > /sys/devices/pci0000:00/0000:00:15.0/power/control
+
 boot_ipu_option=""
 if [ $ipu_passthrough == 1 ];then
     # for ipu passthrough - ipu device 0:3.0
