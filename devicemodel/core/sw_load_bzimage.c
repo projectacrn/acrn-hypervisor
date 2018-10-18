@@ -298,6 +298,10 @@ acrn_prepare_zeropage(struct vmctx *ctx, int setup_size)
 
 	/* Create/add e820 table entries in zeropage */
 	zeropage->e820_nentries = acrn_create_e820_table(ctx, zeropage->e820);
+	if (opregion_start != 0) {
+		zeropage->e820_nentries = add_e820_entry(zeropage->e820, zeropage->e820_nentries,
+			opregion_start, OPREGION_SIZE, E820_TYPE_RESERVED);
+	}
 
 	return 0;
 }

@@ -89,6 +89,8 @@ struct mmio_map {
 	size_t size;
 };
 
+uint32_t opregion_start = 0;
+
 struct passthru_dev {
 	struct pci_vdev *dev;
 	struct pcibar bar[PCI_BARMAX + 1];
@@ -848,6 +850,12 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (error < 0)
 		goto done;
 
+	if (ptdev->phys_bdf == PCI_BDF_GPU) {
+		opregion_start = read_config(ptdev->phys_dev, PCIR_ASLS_CTL, 4);
+		printf("Opregion start=%x\n", opregion_start);
+		opregion_start = ALIGN_DOWN(opregion_start, 4096);
+	}
+
 	/* If ptdev support MSI/MSIX, stop here to skip virtual INTx setup.
 	 * Forge Guest to use MSI/MSIX in this case to mitigate IRQ sharing
 	 * issue
@@ -998,6 +1006,13 @@ passthru_cfgread(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	if ((PCI_BDF(dev->bus, dev->slot, dev->func) == PCI_BDF_GPU)
 		&& (coff == PCIR_GMCH_CTL)) {
 		*rv &= ~PCIM_GMCH_CTL_GMS;
+	}
+
+	if ((PCI_BDF(dev->bus, dev->slot, dev->func) == PCI_BDF_GPU)
+		&& (coff == PCIR_ASLS_CTL)) {
+		printf("passthrough opregion = %x\n", ptdev->phys_bdf);
+		vm_unmap_ptdev_mmio(ctx, 0, 2, 0, opregion_start, OPREGION_SIZE, opregion_start);
+		vm_map_ptdev_mmio(ctx, 0, 2, 0, opregion_start, OPREGION_SIZE, opregion_start);
 	}
 
 	return 0;

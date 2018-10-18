@@ -143,4 +143,9 @@ void	vm_reset_watchdog(struct vmctx *ctx);
 
 int	vm_ioeventfd(struct vmctx *ctx, struct acrn_ioeventfd *args);
 int	vm_irqfd(struct vmctx *ctx, struct acrn_irqfd *args);
+
+extern uint32_t				opregion_start;
+#define OPREGION_SIZE			0x3000
+#define PCIR_ASLS_CTL			0xFC
+
 #endif	/* _VMMAPI_H_ */
