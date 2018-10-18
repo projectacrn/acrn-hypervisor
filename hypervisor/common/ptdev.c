@@ -119,7 +119,7 @@ release_entry(struct ptdev_remapping_info *entry)
 
 /* require ptdev_lock protect */
 static void
-release_all_entries(struct vm *vm)
+release_all_entries(const struct vm *vm)
 {
 	struct ptdev_remapping_info *entry;
 	struct list_head *pos, *tmp;
@@ -202,7 +202,7 @@ void ptdev_init(void)
 	register_softirq(SOFTIRQ_PTDEV, ptdev_softirq);
 }
 
-void ptdev_release_all_entries(struct vm *vm)
+void ptdev_release_all_entries(const struct vm *vm)
 {
 	/* VM already down */
 	spinlock_obtain(&ptdev_lock);

@@ -17,7 +17,7 @@
  */
 static inline struct ptdev_remapping_info *
 ptdev_lookup_entry_by_sid(uint32_t intr_type,
-		union source_id *sid, struct vm *vm)
+		union source_id *sid,const struct vm *vm)
 {
 	struct ptdev_remapping_info *entry;
 	struct list_head *pos;
@@ -43,7 +43,7 @@ is_entry_active(struct ptdev_remapping_info *entry)
 	return atomic_load32(&entry->active) == ACTIVE_FLAG;
 }
 
-static bool ptdev_hv_owned_intx(struct vm *vm, union source_id *virt_sid)
+static bool ptdev_hv_owned_intx(const struct vm *vm, union source_id *virt_sid)
 {
 	/* vm0 vuart pin is owned by hypervisor under debug version */
 	if (is_vm0(vm) && (virt_sid->intx_id.pin == COM1_IRQ)) {
@@ -230,7 +230,7 @@ add_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 
 /* deactive & remove mapping entry of vbdf:entry_nr for vm */
 static void
-remove_msix_remapping(struct vm *vm, uint16_t virt_bdf, uint32_t entry_nr)
+remove_msix_remapping(const struct vm *vm, uint16_t virt_bdf, uint32_t entry_nr)
 {
 	struct ptdev_remapping_info *entry;
 	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
@@ -324,7 +324,7 @@ add_intx_remapping(struct vm *vm, uint8_t virt_pin,
 }
 
 /* deactive & remove mapping entry of vpin for vm */
-static void remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin)
+static void remove_intx_remapping(const struct vm *vm, uint8_t virt_pin, bool pic_pin)
 {
 	uint32_t phys_irq;
 	struct ptdev_remapping_info *entry;
@@ -732,7 +732,7 @@ int ptdev_add_intx_remapping(struct vm *vm, uint8_t virt_pin, uint8_t phys_pin,
 /*
  * @pre vm != NULL
  */
-void ptdev_remove_intx_remapping(struct vm *vm, uint8_t virt_pin, bool pic_pin)
+void ptdev_remove_intx_remapping(const struct vm *vm, uint8_t virt_pin, bool pic_pin)
 {
 	remove_intx_remapping(vm, virt_pin, pic_pin);
 }
@@ -761,7 +761,7 @@ int ptdev_add_msix_remapping(struct vm *vm, uint16_t virt_bdf,
 /*
  * @pre vm != NULL
  */
-void ptdev_remove_msix_remapping(struct vm *vm, uint16_t virt_bdf,
+void ptdev_remove_msix_remapping(const struct vm *vm, uint16_t virt_bdf,
 		uint32_t vector_count)
 {
 	uint32_t i;

@@ -30,7 +30,7 @@ static inline uint16_t alloc_vm_id(void)
 	return INVALID_VM_ID;
 }
 
-static inline void free_vm_id(struct vm *vm)
+static inline void free_vm_id(const struct vm *vm)
 {
 	bitmap_clear_lock(vm->vm_id, &vmid_bitmap);
 }

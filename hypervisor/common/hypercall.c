@@ -72,7 +72,7 @@ int32_t hcall_get_api_version(struct vm *vm, uint64_t param)
  *@pre Pointer vm shall point to VM0
  */
 static int32_t
-handle_virt_irqline(struct vm *vm, uint16_t target_vmid,
+handle_virt_irqline(const struct vm *vm, uint16_t target_vmid,
 		struct acrn_irqline *param, uint32_t operation)
 {
 	int32_t ret = 0;
@@ -333,7 +333,7 @@ int32_t hcall_set_vcpu_regs(struct vm *vm, uint16_t vmid, uint64_t param)
 /**
  *@pre Pointer vm shall point to VM0
  */
-int32_t hcall_set_irqline(struct vm *vm, uint16_t vmid,
+int32_t hcall_set_irqline(const struct vm *vm, uint16_t vmid,
 				struct acrn_irqline_ops *ops)
 {
 	struct vm *target_vm = get_vm_from_vmid(vmid);
@@ -1073,7 +1073,7 @@ int32_t hcall_vm_intr_monitor(struct vm *vm, uint16_t vmid, uint64_t param)
 /**
  *@pre Pointer vm shall point to VM0
  */
-int32_t hcall_set_callback_vector(struct vm *vm, uint64_t param)
+int32_t hcall_set_callback_vector(const struct vm *vm, uint64_t param)
 {
 	if (!is_vm0(vm)) {
 		pr_err("%s: Targeting to service vm", __func__);

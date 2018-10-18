@@ -72,7 +72,7 @@ extern spinlock_t ptdev_lock;
 
 void ptdev_softirq(uint16_t pcpu_id);
 void ptdev_init(void);
-void ptdev_release_all_entries(struct vm *vm);
+void ptdev_release_all_entries(const struct vm *vm);
 
 struct ptdev_remapping_info *ptdev_dequeue_softirq(struct vm *vm);
 struct ptdev_remapping_info *alloc_entry(struct vm *vm,

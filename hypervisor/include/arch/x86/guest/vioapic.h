@@ -57,7 +57,7 @@ void	vioapic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation);
 void	vioapic_set_irq_nolock(struct vm *vm, uint32_t irq, uint32_t operation);
 void	vioapic_update_tmr(struct vcpu *vcpu);
 
-uint32_t	vioapic_pincount(struct vm *vm);
+uint32_t	vioapic_pincount(const struct vm *vm);
 void	vioapic_process_eoi(struct vm *vm, uint32_t vector);
 void	vioapic_get_rte(struct vm *vm, uint32_t pin, union ioapic_rte *rte);
 int	vioapic_mmio_access_handler(struct vcpu *vcpu,

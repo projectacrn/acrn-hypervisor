@@ -6,9 +6,9 @@
 
 #include <hypervisor.h>
 
-int validate_pstate(struct vm *vm, uint64_t perf_ctl)
+int validate_pstate(const struct vm *vm, uint64_t perf_ctl)
 {
-	struct cpu_px_data *px_data;
+	const struct cpu_px_data *px_data;
 	int i, px_cnt;
 
 	if (is_vm0(vm)) {

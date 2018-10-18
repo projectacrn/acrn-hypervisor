@@ -523,7 +523,7 @@ vioapic_cleanup(struct acrn_vioapic *vioapic)
 }
 
 uint32_t
-vioapic_pincount(struct vm *vm)
+vioapic_pincount(const struct vm *vm)
 {
 	if (is_vm0(vm)) {
 		return REDIR_ENTRIES_HW;

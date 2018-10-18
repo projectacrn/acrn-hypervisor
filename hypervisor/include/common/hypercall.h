@@ -215,7 +215,7 @@ int32_t hcall_pulse_irqline(struct vm *vm, uint16_t vmid, uint64_t param);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_irqline(struct vm *vm, uint16_t vmid,
+int32_t hcall_set_irqline(const struct vm *vm, uint16_t vmid,
 				struct acrn_irqline_ops *ops);
 /**
  * @brief inject MSI interrupt
@@ -502,7 +502,7 @@ int64_t hcall_save_restore_sworld_ctx(struct vcpu *vcpu);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_callback_vector(struct vm *vm, uint64_t param);
+int32_t hcall_set_callback_vector(const struct vm *vm, uint64_t param);
 
 /**
  * @}
