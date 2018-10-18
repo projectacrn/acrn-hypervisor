@@ -38,6 +38,7 @@ if [ -s "${LOG_FILE}" ]; then
 	   echo
 	   cat doc.warnings
 	   echo
+	   exit 1
    else
 	   echo -e "${green}No new errors/warnings."
 	   $TPUT sgr0
