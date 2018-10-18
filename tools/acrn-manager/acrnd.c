@@ -423,11 +423,17 @@ static int wait_for_stop(unsigned int timeout)
 
 	/* list and update the vm status */
 	do {
-		if (check_vms_status(VM_CREATED) == 0)
-			return SHUTDOWN;
+		printf("Waiting %lu seconds for all vms enter S3/S5 state\n", t);
 
-		if (check_vms_status(VM_PAUSED) == 0)
+		if (check_vms_status(VM_CREATED) == 0) {
+			printf("All vms have entered S5 state successfully\n");
+			return SHUTDOWN;
+		}
+
+		if (check_vms_status(VM_PAUSED) == 0) {
+			printf("All vms have entered S3 state successfully\n");
 			return SUSPEND;
+		}
 
 		sleep(1);
 	}
@@ -446,7 +452,7 @@ static void* notify_stop_state(void *arg)
 
 	rc = wait_for_stop(acrnd_stop_timeout);
 	if (rc < 0) {
-		fprintf(stderr, "cannot get VMs stop state\n");
+		fprintf(stderr, "Timeout(%u sec) to wait all vms enter S3/S5\n", acrnd_stop_timeout);
 		req.msgid = SUSPEND;
 		req.data.err = -1;
 	} else {
