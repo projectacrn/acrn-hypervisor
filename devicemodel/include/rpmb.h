@@ -37,7 +37,7 @@
 #define RPMB_SIM_MODE       1
 #define RPMB_BLOCK_SIZE     256
 #define RPMB_FRAME_SIZE     512
-#define RPMB_PHY_PATH_NAME  "/dev/rpmb0"
+#define RPMB_PHY_PATH_NAME  "/dev/rpmbmux"
 #define RPMB_SIM_PATH_NAME  "/data/rpmbfile"
 #define SEQ_CMD_MAX         3	/*support up to 3 cmds*/
 
