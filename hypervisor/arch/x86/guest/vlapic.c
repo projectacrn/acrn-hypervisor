@@ -140,11 +140,11 @@ static uint16_t vm_apicid2vcpu_id(struct vm *vm, uint8_t lapicid)
 }
 
 static uint64_t
-vm_active_cpus(struct vm *vm)
+vm_active_cpus(const struct vm *vm)
 {
 	uint64_t dmask = 0UL;
 	uint16_t i;
-	struct vcpu *vcpu;
+	const struct vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
 		bitmap_set_lock(vcpu->vcpu_id, &dmask);

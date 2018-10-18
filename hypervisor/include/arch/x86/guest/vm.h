@@ -194,7 +194,7 @@ struct vm_description {
 #endif
 };
 
-static inline bool is_vm0(struct vm *vm)
+static inline bool is_vm0(const struct vm *vm)
 {
 	return (vm->vm_id) == 0U;
 }
