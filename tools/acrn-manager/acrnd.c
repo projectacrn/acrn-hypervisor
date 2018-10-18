@@ -189,8 +189,12 @@ static int load_timer_list(void)
 		else
 			expire = 1;
 
-		if (acrnd_add_work(acrnd_vm_timer_func, &arg, expire))
-			ret = -1;
+		ret = acrnd_add_work(acrnd_vm_timer_func, &arg, expire);
+		if (ret != 0) {
+			fprintf(stderr, "Failed to add vm timer, errno %d", ret);
+		} else {
+			printf("vm %s will be activated at %ld seconds later\n", s1, expire);
+		}
 	}
 
 	fclose(fp);
@@ -585,21 +589,25 @@ static void handle_on_exit(void)
 int init_vm(void)
 {
 	unsigned int wakeup_reason;
-	struct stat st;
-
-	if (!stat(TIMER_LIST_FILE, &st))
-		if (S_ISREG(st.st_mode))
-			return load_timer_list();
+	int ret;
 
 	/* init all UOSs, according wakeup_reason */
 	wakeup_reason = get_sos_wakeup_reason();
 
-	if (wakeup_reason & CBC_WK_RSN_RTC)
-		return load_timer_list();
-	else {
-		/* TODO: auto start UOSs */
-		return active_all_vms();
+	if (wakeup_reason & CBC_WK_RSN_RTC) {
+		printf("Loading timer list to set vms wakeup time\n");
+		ret = load_timer_list();
+		if (ret == 0) {
+			printf("Successfully activate vms from timer list\n");
+			return 0;
+		} else {
+			printf("Error happens when load timer list, errno %d\n", ret);
+		}
 	}
+
+	/* TODO: auto start UOSs */
+	printf("Activating all vms\n");
+	return active_all_vms();
 }
 
 int main(int argc, char *argv[])
