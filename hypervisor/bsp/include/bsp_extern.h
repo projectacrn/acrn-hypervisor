@@ -18,6 +18,7 @@
 #ifndef BSP_EXTERN_H
 #define BSP_EXTERN_H
 
+#include "default_acpi_info.h"
 #include "platform_acpi_info.h"
 
 #define UOS_DEFAULT_START_ADDR   (0x100000000UL)
