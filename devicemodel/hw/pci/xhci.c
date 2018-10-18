@@ -2053,7 +2053,8 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 
 	epid = XHCI_TRB_3_EP_GET(trb->dwTrb3);
 
-	UPRINTF(LDBG, "reset ep %u: slot %u\r\n", epid, slot);
+	UPRINTF(LDBG, "reset ep %u: slot %u cmd_type: %02X\r\n", epid, slot,
+			XHCI_TRB_3_TYPE_GET(trb->dwTrb3));
 
 	cmderr = XHCI_TRB_ERROR_SUCCESS;
 
@@ -2082,6 +2083,12 @@ pci_xhci_cmd_reset_ep(struct pci_xhci_vdev *xdev,
 		cmderr = XHCI_TRB_ERROR_CONTEXT_STATE;
 		goto done;
 	}
+
+	/* FIXME: Currently nothing to do when Stop Endpoint Command is
+	 * received. Will refine it strictly according to xHCI spec.
+	 */
+	if (type == XHCI_TRB_TYPE_STOP_EP)
+		goto done;
 
 	devep = &dev->eps[epid];
 	if (devep->ep_xfer != NULL)
