@@ -297,7 +297,7 @@ rpmb_read_block(__u8 mode, __u8 *key, __u16 addr, void *buf, __u32 count)
 	}
 
 	rc = rpmb_check_response("read blocks", RPMB_RESP_DATA_READ,
-							frame_out, count, key, NULL, &addr);
+							frame_out, count, NULL, NULL, &addr);
 
 	if (rc)
 		return rc;
