@@ -548,6 +548,9 @@ pci_xhci_get_native_port_index_by_path(struct pci_xhci_vdev *xdev,
 	for (i = 0; i < XHCI_MAX_VIRT_PORTS; i++) {
 		p = &xdev->native_ports[i].info.path;
 
+		if (p->bus != path->bus)
+			continue;
+
 		if (p->depth != path->depth)
 			continue;
 
