@@ -57,6 +57,7 @@
 #define VIRTIO_RPMB_MAXSEGS	5
 #define ADDR_NOT_PRESENT	-2
 
+static const char PHYSICAL_RPMB_STR[] = "physical_rpmb";
 static int virtio_rpmb_debug = 1;
 #define DPRINTF(params) do { if (virtio_rpmb_debug) printf params; } while (0)
 #define WPRINTF(params) (printf params)
@@ -538,20 +539,14 @@ virtio_rpmb_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		goto out;
 	}
 
-	// TODO: keep it for self-adaption rpmb mode
-	/*rc = rpmb_get_counter(RPMB_PHY_MODE, key, &rpmb_counter, &rpmb_result);
-	if (rc) {
-		DPRINTF(("rpmb_get_counter failed\n"));
-		goto out;
-	}*/
-
 	memset(key, 0, RPMB_KEY_32_LEN);
-	/*TODO: hardcode rpmb mode to RPMB_SIM_MODE*/
-	rpmb_result = RPMB_RES_GENERAL_FAILURE;
-	if (rpmb_result == RPMB_RES_OK) {
+
+	if (opts && !strncmp(opts, PHYSICAL_RPMB_STR, sizeof(PHYSICAL_RPMB_STR))) {
+		DPRINTF(("RPMB in physical mode!\n"));
 		rpmb_mode_init(RPMB_PHY_MODE);
 		rpmb_block_count = rpmb_search_size(RPMB_PHY_MODE, key, 0);
 	} else {
+		DPRINTF(("RPMB in simulated mode!\n"));
 		rc = rpmb_sim_key_init(key);
 		if (rc) {
 			DPRINTF(("rpmb_sim_key_init failed!\n"));
@@ -565,7 +560,6 @@ virtio_rpmb_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		}
 
 		rpmb_mode_init(RPMB_SIM_MODE);
-
 		rpmb_block_count = rpmb_search_size(RPMB_SIM_MODE, key, 0);
 	}
 

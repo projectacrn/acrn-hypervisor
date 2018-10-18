@@ -64,15 +64,16 @@ static uint16_t get_rpmb_blocks(void)
 	return rpmb_get_blocks();
 }
 
-//TODO: hardcode keybox size. It will be read from keybox header from RPMB.
+/* Common area of RPMB refers to the start area of RPMB
+ * shared among all UOS with RO access.
+ * It's predefined to 32KB in size which contains:
+ * AttKB(up to 16KB), RPMB info header (256B)
+ * and the remaining size for future uasge.
+ */
 static uint16_t get_common_blocks(void)
 {
-	uint16_t kb_blocks;
-	uint32_t kb_size = 15872;
-
-	kb_blocks = (kb_size + (RPMB_BLOCK_SIZE -1)) / RPMB_BLOCK_SIZE;
-	//reserve for simulated rpmb + KBox header + padding
-	return kb_blocks + 1 + 1 + 1;
+	uint16_t common_size = 32 * 1024;
+	return common_size / RPMB_BLOCK_SIZE;
 }
 
 static uint16_t get_accessible_blocks(void)
