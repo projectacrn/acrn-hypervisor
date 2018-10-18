@@ -281,14 +281,13 @@ static int send_msg(const char *vmname, struct mngr_msg *req,
 
 	fd = mngr_open_un(vmname, MNGR_CLIENT);
 	if (fd < 0) {
-		printf("%s: Unable to open %s. line %d\n", __FUNCTION__,
-		       vmname, __LINE__);
+		printf("Unable to open vm %s socket. It may have been shutdown\n", vmname);
 		return -1;
 	}
 
 	ret = mngr_send_msg(fd, req, ack, 1);
 	if (ret < 0) {
-		printf("%s: Unable to send msg\n", __FUNCTION__);
+		printf("Unable to send msg to vm %s socket. It may have been shutdown\n", vmname);
 		mngr_close(fd);
 		return ret;
 	}
