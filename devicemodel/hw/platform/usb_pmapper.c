@@ -244,22 +244,6 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 		}
 	}
 
-	/* in case the xfer is reset by the USB_DATA_XFER_RESET */
-	if (xfer->reset == 1) {
-		UPRINTF(LDBG, "ep%d reset detected\r\n", xfer->epid);
-		xfer->reset = 0;
-		/* ONLY interrupt transfer needs this.
-		 * The transfer here is an old one before endpoint reset, so it
-		 * should be discarded. But for bulk transfer, the transfer here
-		 * is a new one after reset, so it should be kept.
-		 */
-		if (usb_dev_get_ep_type(req->udev, xfer->pid & 1,
-					xfer->epid / 2) == USB_ENDPOINT_INT) {
-			UPRINTF(LDBG, "goto reset out\r\n");
-			goto reset_out;
-		}
-	}
-
 	/* handle the blocks belong to this request */
 	buf_idx = 0;
 	idx = req->blk_start;
@@ -323,7 +307,6 @@ out:
 	if (do_intr && g_ctx.intr_cb)
 		g_ctx.intr_cb(xfer->dev, NULL);
 
-reset_out:
 	/* unlock and release memory */
 	USB_DATA_XFER_UNLOCK(xfer);
 	libusb_free_transfer(libusb_xfer);

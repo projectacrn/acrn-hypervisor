@@ -168,7 +168,6 @@ struct usb_data_xfer {
 	void    *dev;		/* struct pci_xhci_dev_emu *dev */
 	int     epid;		/* related endpoint id */
 	int     pid;		/* token id */
-	int	reset;		/* detect ep reset */
 	int	status;
 	pthread_mutex_t mtx;
 };
@@ -219,7 +218,6 @@ enum USB_ERRCODE {
 			memset((x)->data, 0, sizeof((x)->data));	\
 			(x)->ndata = 0;					\
 			(x)->head = (x)->tail = 0;			\
-			(x)->reset = 1;					\
 			pthread_mutex_unlock((&(x)->mtx));		\
 		} while (0)
 
