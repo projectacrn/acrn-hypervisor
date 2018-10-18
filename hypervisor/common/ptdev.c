@@ -65,6 +65,7 @@ ptdev_dequeue_softirq(struct vm *vm)
 		} else {
 			/* add it into timer list; dequeue next one */
 			(void)add_timer(&entry->intr_delay_timer);
+			entry = NULL;
 		}
 	}
 
@@ -187,6 +188,7 @@ ptdev_deactivate_entry(struct ptdev_remapping_info *entry)
 	/* remove from softirq list if added */
 	spinlock_irqsave_obtain(&entry->vm->softirq_dev_lock, &rflags);
 	list_del_init(&entry->softirq_node);
+	del_timer(&entry->intr_delay_timer);
 	spinlock_irqrestore_release(&entry->vm->softirq_dev_lock, rflags);
 }
 
