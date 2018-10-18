@@ -121,6 +121,10 @@ static void *intr_storm_monitor_thread(void *arg)
 			if (hdr->buffer[i] != intr_cnt_buf[i])
 				continue;
 
+			/* avoid delta overflow */
+			if (hdr->buffer[i + 1] < intr_cnt_buf[i + 1])
+				continue;
+
 			delta = hdr->buffer[i + 1] - intr_cnt_buf[i + 1];
 			if (delta > INTR_STORM_THRESHOLD) {
 #ifdef INTR_MONITOR_DBG
