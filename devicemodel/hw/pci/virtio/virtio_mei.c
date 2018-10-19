@@ -974,6 +974,159 @@ static int vmei_add_reset_event(struct virtio_mei *vmei)
 	return 0;
 }
 
+static inline uint8_t
+errno_to_hbm_conn_status(int err)
+{
+	switch (err) {
+	case 0:		return MEI_CL_CONN_SUCCESS;
+	case ENOTTY:	return MEI_CL_CONN_NOT_FOUND;
+	case EBUSY:	return MEI_CL_CONN_ALREADY_STARTED;
+	case EINVAL:	return MEI_HBM_INVALID_PARAMETER;
+	default:	return MEI_HBM_INVALID_PARAMETER;
+	}
+}
+
+/**
+ * vmei_host_client_native_connect() connect host client
+ *    to the native driver and register with mevent.
+ *
+ * @hclient: host client instance
+ * Return: HBM status cot_client
+ */
+static uint8_t
+vmei_host_client_native_connect(struct vmei_host_client *hclient)
+{
+	struct virtio_mei *vmei = vmei_host_client_to_vmei(hclient);
+	struct vmei_me_client *mclient;
+	struct mei_connect_client_data_vtag connection_data;
+
+	mclient = hclient->mclient;
+
+	/* open mei node */
+	hclient->client_fd = open(vmei->devnode, O_RDWR | O_NONBLOCK);
+	if (hclient->client_fd < 0) {
+		HCL_WARN(hclient, "open %s failed %d\n", vmei->devnode, errno);
+		return MEI_HBM_REJECTED;
+	}
+
+	memset(&connection_data, 0, sizeof(connection_data));
+	memcpy(&connection_data.connect.in_client_uuid,
+	       &mclient->props.protocol_name,
+	       sizeof(connection_data.connect.in_client_uuid));
+	connection_data.connect.vtag  = vmei->vtag;
+
+	if (ioctl(hclient->client_fd, IOCTL_MEI_CONNECT_CLIENT_VTAG,
+		  &connection_data) == -1) {
+		HCL_DBG(hclient, "connect failed %d!\n", errno);
+		return errno_to_hbm_conn_status(errno);
+	}
+
+	/* add READ event into mevent */
+	hclient->rx_mevp = mevent_add(hclient->client_fd, EVF_READ,
+				      vmei_rx_callback, hclient);
+	if (!hclient->rx_mevp)
+		return MEI_HBM_REJECTED;
+
+	if (!hclient->recv_creds)
+		mevent_disable(hclient->rx_mevp);
+
+	HCL_DBG(hclient, "connect succeeded!\n");
+
+	return MEI_HBM_SUCCESS;
+}
+
+static ssize_t
+vmei_host_client_native_write(struct vmei_host_client *hclient)
+{
+	struct virtio_mei *vmei = vmei_host_client_to_vmei(hclient);
+	ssize_t len, lencnt = 0;
+	int err;
+	unsigned int iovcnt, i;
+	struct vmei_circular_iobufs *bufs = &hclient->send_bufs;
+
+	if (!vmei)
+		return -EINVAL;
+
+	if (hclient->client_fd < 0) {
+		HCL_WARN(hclient, "invalid client fd [%d]\n",
+			 hclient->client_fd);
+		return -EINVAL;
+	}
+
+	if (bufs->i_idx == bufs->r_idx) {
+		/* nothing to send actually */
+		WPRINTF("no buffer to send\n");
+		return 0;
+	}
+
+	while (bufs->i_idx != bufs->r_idx) {
+		/*
+		 * calculate number of entries
+		 * while taking care of wraparound
+		 */
+		iovcnt = (bufs->i_idx > bufs->r_idx) ?
+			 (bufs->i_idx - bufs->r_idx) :
+			 (VMEI_IOBUFS_MAX - bufs->r_idx);
+
+		for (i = 0; i < iovcnt; i++) {
+			len = writev(hclient->client_fd,
+				     &bufs->bufs[bufs->r_idx + i],
+				     1);
+			if (len < 0) {
+				err = -errno;
+				if (err != -EAGAIN)
+					WPRINTF("write failed! error[%d]\n",
+						errno);
+				if (err == -ENODEV)
+					vmei_set_status(vmei,
+							VMEI_STS_PENDING_RESET);
+				return -errno;
+			}
+
+			lencnt += len;
+
+			bufs->bufs[bufs->r_idx + i].iov_len = 0;
+			bufs->complete[bufs->r_idx + i] = 0;
+		}
+
+		bufs->r_idx = (bufs->i_idx > bufs->r_idx) ? bufs->i_idx : 0;
+	}
+
+	return lencnt;
+}
+
+/*
+ * A completed read guarantees that a client message is completed,
+ * transmission of client message is started by a flow control message of HBM
+ */
+static ssize_t
+vmei_host_client_native_read(struct vmei_host_client *hclient)
+{
+	struct virtio_mei *vmei = vmei_host_client_to_vmei(hclient);
+	ssize_t len;
+
+	if (hclient->client_fd < 0) {
+		HCL_WARN(hclient, "RX: invalid client fd\n");
+		return -1;
+	}
+
+	/* read with max_message_length */
+	len = read(hclient->client_fd, hclient->recv_buf, hclient->recv_buf_sz);
+	if (len < 0) {
+		HCL_WARN(hclient, "RX: read failed! read error[%d]\n", errno);
+		if (errno == ENODEV)
+			vmei_set_status(vmei, VMEI_STS_PENDING_RESET);
+		return len;
+	}
+
+	HCL_DBG(hclient, "RX: append data len=%zd at off=%d\n",
+		len, hclient->recv_offset);
+
+	hclient->recv_offset = len;
+
+	return hclient->recv_offset;
+}
+
 static int
 vmei_cfgread(void *vsc, int offset, int size, uint32_t *retval)
 {
