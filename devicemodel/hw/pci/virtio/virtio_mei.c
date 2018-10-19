@@ -665,6 +665,45 @@ static int mei_sysfs_read_property_uuid(char *fname, guid_t *uuid)
 	return guid_parse(buf, sizeof(buf), uuid);
 }
 
+static int
+vmei_read_fw_status(struct virtio_mei *vmei, uint32_t *fw_status)
+{
+	int offset, i;
+	unsigned long int res;
+	char path[256];
+	/* each value consist of 8 digits and \n, \0 at the end */
+	char buf[MEI_FW_STATUS_MAX * 9 + 1] = {0};
+	char *nptr, *endptr;
+
+	if (!fw_status)
+		return -1;
+
+	offset = snprintf(path, sizeof(path) - 1, "%s/%s/%s",
+			  MEI_SYSFS_ROOT, vmei->name, "fw_status");
+	if (offset < 0)
+		return -1;
+
+	if (mei_sysfs_read_property_file(path, buf, sizeof(buf) - 1) < 0)
+		return -1;
+
+	nptr = buf;
+	for (i = 0; i < MEI_FW_STATUS_MAX; i++) {
+		res = strtoul(nptr, &endptr, 16);
+		if (res == ULONG_MAX) {
+			fw_status[i] = 0;
+			continue;
+		}
+		if (nptr == endptr) {
+			fw_status[i] = 0;
+			continue;
+		}
+		fw_status[i] = res;
+		nptr = endptr;
+	}
+
+	return 0;
+}
+
 static void
 vmei_virtual_fw_reset(struct virtio_mei *vmei)
 {
@@ -746,3 +785,52 @@ static int vmei_add_reset_event(struct virtio_mei *vmei)
 	}
 	return 0;
 }
+
+static int
+vmei_cfgread(void *vsc, int offset, int size, uint32_t *retval)
+{
+	struct virtio_mei *vmei = vsc;
+	void *ptr;
+
+	if (offset + size >= (int)offsetof(struct mei_virtio_cfg, fw_status)) {
+		if (vmei_read_fw_status(vmei, vmei->config->fw_status) < 0)
+			return -1;
+	}
+
+	ptr = (uint8_t *)vmei->config + offset;
+	memcpy(retval, ptr, size);
+	DPRINTF("fw_status[%d] = 0x%08x\n", (offset / size) - 2, *retval);
+	return 0;
+}
+
+static int
+vmei_cfgwrite(void *vsc, int offset, int size, uint32_t val)
+{
+	struct virtio_mei *vmei = vsc;
+
+	DPRINTF("cfgwrite: offset = %d, size = %d val = %d\n",
+		offset, size, val);
+
+	if (offset != offsetof(struct mei_virtio_cfg, host_reset)) {
+		WPRINTF("cfgwrite: not a reset\n");
+		return 0;
+	}
+
+	if (size == sizeof(uint8_t) && val == 1) {
+		DPRINTF("cfgwrite: host_reset [%d]\n", val);
+		/* guest initate reset need restart */
+
+		vmei_virtual_fw_reset(vmei);
+		virtio_config_changed(&vmei->base);
+	}
+
+	if (size == sizeof(uint8_t) && val == 0) {
+		DPRINTF("cfgwrite: host_reset_release [%d]\n", val);
+		/* guest initate reset need restart */
+
+		virtio_config_changed(&vmei->base);
+	}
+
+	return 0;
+}
+
