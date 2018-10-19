@@ -980,6 +980,8 @@ static int vmei_add_reset_event(struct virtio_mei *vmei)
 	return 0;
 }
 
+static void vmei_rx_callback(int fd, enum ev_type type, void *param);
+
 static inline uint8_t
 errno_to_hbm_conn_status(int err)
 {
@@ -1654,6 +1656,233 @@ vmei_host_client_native_read(struct vmei_host_client *hclient)
 	hclient->recv_offset = len;
 
 	return hclient->recv_offset;
+}
+
+static void
+vmei_rx_callback(int fd, enum ev_type type, void *param)
+{
+	struct vmei_host_client *hclient = param;
+	struct virtio_mei *vmei = vmei_host_client_to_vmei(hclient);
+	ssize_t ret;
+
+	if (!vmei)
+		return;
+
+	if (!vmei_host_client_get(hclient)) {
+		DPRINTF("RX: client has been released, ignore data.\n");
+		return;
+	}
+
+	pthread_mutex_lock(&vmei->rx_mutex);
+	if (vmei->status != VMEI_STS_READY) {
+		HCL_DBG(hclient, "vmei is not ready %d\n", vmei->status);
+		goto out;
+	}
+
+	if (hclient->recv_offset) {
+		/* still has data in recv_buf, wait guest reading */
+		HCL_DBG(hclient, "data in recv_buf, wait for UOS reading.\n");
+		goto out;
+	}
+
+	/* read data from mei driver */
+	ret = vmei_host_client_native_read(hclient);
+	if (ret <= 0) {
+		HCL_DBG(hclient, "RX: no data %zd\n", ret);
+		goto out;
+	}
+	vmei->rx_need_sched = true;
+
+	HCL_DBG(hclient, "RX: read %zd bytes from the FW\n", ret);
+
+	/* wake up rx thread. */
+	pthread_cond_signal(&vmei->rx_cond);
+
+out:
+	pthread_mutex_unlock(&vmei->rx_mutex);
+	vmei_host_client_put(hclient);
+	if (vmei->status == VMEI_STS_PENDING_RESET) {
+		vmei_virtual_fw_reset(vmei);
+		/* Let's wait 100ms for HBM enumeration done */
+		usleep(100000);
+		virtio_config_changed(&vmei->base);
+	}
+}
+
+/*
+ * Process the data received from native mei cdev and hbm emulation
+ * handler, assemable related mei header then copy to rx virtqueue.
+ */
+static void
+vmei_proc_vclient_rx(struct vmei_host_client *hclient,
+		     struct virtio_vq_info *vq)
+{
+	struct iovec iov[VMEI_RX_SEGS + 1];
+	struct mei_msg_hdr *hdr;
+	uint16_t idx = 0;
+	int n, len;
+	int buf_len;
+	uint8_t *buf;
+	bool complete = true;
+
+	n = vq_getchain(vq, &idx, iov, VMEI_RX_SEGS, NULL);
+	assert(n == VMEI_RX_SEGS);
+	if (n != VMEI_RX_SEGS)
+		return;
+
+	len = hclient->recv_offset - hclient->recv_handled;
+	HCL_DBG(hclient, "RX: DM->UOS: off=%d len=%d\n",
+		hclient->recv_handled, len);
+
+	buf_len = VMEI_BUF_SZ - sizeof(*hdr);
+	hdr = (struct mei_msg_hdr *)iov[0].iov_base;
+	buf = (uint8_t *)iov[0].iov_base + sizeof(*hdr);
+
+	if (len > buf_len) {
+		len = buf_len;
+		complete = false;
+	}
+
+	mei_set_msg_hdr(hclient, hdr, len, complete);
+	memcpy(buf, hclient->recv_buf + hclient->recv_handled, len);
+	hclient->recv_handled += len;
+
+	HCL_DBG(hclient, "RX: complete = %d DM->UOS:off=%d len=%d\n",
+		complete, hclient->recv_handled, len);
+	len += sizeof(struct mei_msg_hdr);
+
+	if (complete) {
+		hclient->recv_offset = 0;
+		hclient->recv_handled = 0;
+		if (hclient->host_addr) {
+			hclient->recv_creds--;
+			mevent_disable(hclient->rx_mevp);
+		}
+	}
+
+	vq_relchain(vq, idx, len);
+}
+
+/**
+ * vmei_proc_rx() process rx UOS
+ * @vmei: virtio mei device
+ * @vq: virtio queue
+ *
+ * Function looks for client with pending buffer and sends
+ * it to the UOS.
+ *
+ * Locking: Must run under rx mutex
+ * Return:
+ *	true - need reschedule
+ */
+static bool
+vmei_proc_rx(struct virtio_mei *vmei, struct virtio_vq_info *vq)
+{
+	struct vmei_me_client *me;
+	struct vmei_host_client *e, *hclient = NULL;
+
+	/*  Find a client with data */
+	pthread_mutex_lock(&vmei->list_mutex);
+	LIST_FOREACH(me, &vmei->active_clients, list) {
+		pthread_mutex_lock(&me->list_mutex);
+		LIST_FOREACH(e, &me->connections, list) {
+			if (e->recv_offset - e->recv_handled > 0) {
+				if (e->recv_creds) {
+					hclient = vmei_host_client_get(e);
+					pthread_mutex_unlock(&me->list_mutex);
+					goto found;
+				}
+			}
+		}
+		pthread_mutex_unlock(&me->list_mutex);
+	}
+found:
+	pthread_mutex_unlock(&vmei->list_mutex);
+
+	/* no client has data to be processed */
+	if (!hclient) {
+		DPRINTF("RX: No client with data\n");
+		return false;
+	}
+
+	vmei_proc_vclient_rx(hclient, vq);
+	pthread_mutex_lock(&vmei->tx_mutex);
+	if (vmei_host_ready_send_buffers(hclient))
+		pthread_cond_signal(&vmei->tx_cond);
+	pthread_mutex_unlock(&vmei->tx_mutex);
+	vmei_host_client_put(hclient);
+
+	return true;
+}
+
+/*
+ * Thread which will handle processing of RX desc
+ */
+
+static void *vmei_rx_thread(void *param)
+{
+	struct virtio_mei *vmei = param;
+	struct virtio_vq_info *vq;
+	int err;
+
+	vq = &vmei->vqs[VMEI_RXQ];
+
+	/*
+	 * Let us wait till the rx queue pointers get initialised &
+	 * first tx signaled
+	 */
+	pthread_mutex_lock(&vmei->rx_mutex);
+	err = pthread_cond_wait(&vmei->rx_cond, &vmei->rx_mutex);
+	assert(err == 0);
+	if (err)
+		goto out;
+
+	while (vmei->status != VMEI_STST_DEINIT) {
+		/* note - rx mutex is locked here */
+		while (vq_ring_ready(vq)) {
+			vq->used->flags &= ~ACRN_VRING_USED_F_NO_NOTIFY;
+			mb();
+			if (vq_has_descs(vq) &&
+			    vmei->rx_need_sched &&
+			    vmei->status != VMEI_STS_RESET)
+				break;
+
+			err = pthread_cond_wait(&vmei->rx_cond,
+						&vmei->rx_mutex);
+			assert(err == 0);
+			if (err || vmei->status == VMEI_STST_DEINIT)
+				goto out;
+		}
+		vq->used->flags |= ACRN_VRING_USED_F_NO_NOTIFY;
+
+		do {
+			vmei->rx_need_sched = vmei_proc_rx(vmei, vq);
+		} while (vq_has_descs(vq) && vmei->rx_need_sched);
+
+		if (!vq_has_descs(vq))
+			vq_endchains(vq, 1);
+	}
+out:
+	pthread_mutex_unlock(&vmei->rx_mutex);
+	pthread_exit(NULL);
+}
+
+static void
+vmei_notify_rx(void *data, struct virtio_vq_info *vq)
+{
+	struct virtio_mei *vmei = data;
+	/*
+	 * Any ring entries to process?
+	 */
+	if (!vq_has_descs(vq))
+		return;
+
+	/* Signal the rx thread for processing */
+	pthread_mutex_lock(&vmei->rx_mutex);
+	DPRINTF("RX: New IN buffer available!\n");
+	vq->used->flags |= ACRN_VRING_USED_F_NO_NOTIFY;
+	pthread_cond_signal(&vmei->rx_cond);
+	pthread_mutex_unlock(&vmei->rx_mutex);
 }
 
 static int
