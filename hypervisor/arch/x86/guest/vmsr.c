@@ -20,7 +20,7 @@ enum rw_mode {
  * in either rdmsr_vmexit_handler() or wrmsr_vmexit_handler(), a GP will
  * be thrown to the guest for any R/W accesses.
  */
-#define NUM_EMULATED_MSR	58U
+#define NUM_EMULATED_MSR	96U
 static const uint32_t emulated_msrs[NUM_EMULATED_MSR] = {
 	/* Emulated MSRs */
 	MSR_IA32_TSC_DEADLINE,
@@ -89,6 +89,60 @@ static const uint32_t emulated_msrs[NUM_EMULATED_MSR] = {
 	MSR_IA32_VMX_TRUE_EXIT_CTLS,
 	MSR_IA32_VMX_TRUE_ENTRY_CTLS,
 	MSR_IA32_VMX_VMFUNC,
+
+	/* SGX disabled: CPUID.12H.EAX[0], CPUID.07H.ECX[30] */
+	MSR_IA32_SGXLEPUBKEYHASH0,
+	MSR_IA32_SGXLEPUBKEYHASH1,
+	MSR_IA32_SGXLEPUBKEYHASH2,
+	MSR_IA32_SGXLEPUBKEYHASH3,
+
+	/* SGX disabled : CPUID.07H.EBX[2] */
+	MSR_IA32_SGX_SVN_STATUS,
+
+	/* SGX disabled : CPUID.12H.EAX[0] */
+	MSR_SGXOWNEREPOCH0,
+	MSR_SGXOWNEREPOCH1,
+
+	/* Performance Counters and Events: CPUID.0AH.EAX[15:8] */
+	MSR_IA32_PMC0,
+	MSR_IA32_PMC1,
+	MSR_IA32_PMC2,
+	MSR_IA32_PMC3,
+	MSR_IA32_PMC4,
+	MSR_IA32_PMC5,
+	MSR_IA32_PMC6,
+	MSR_IA32_PMC7,
+	MSR_IA32_PERFEVTSEL0,
+	MSR_IA32_PERFEVTSEL1,
+	MSR_IA32_PERFEVTSEL2,
+	MSR_IA32_PERFEVTSEL3,
+	MSR_IA32_A_PMC0,
+	MSR_IA32_A_PMC1,
+	MSR_IA32_A_PMC2,
+	MSR_IA32_A_PMC3,
+	MSR_IA32_A_PMC4,
+	MSR_IA32_A_PMC5,
+	MSR_IA32_A_PMC6,
+	MSR_IA32_A_PMC7,
+	/* CPUID.0AH.EAX[7:0] */
+	MSR_IA32_FIXED_CTR_CTL,
+	MSR_IA32_PERF_GLOBAL_STATUS,
+	MSR_IA32_PERF_GLOBAL_CTRL,
+	MSR_IA32_PERF_GLOBAL_OVF_CTRL,
+	MSR_IA32_PERF_GLOBAL_STATUS_SET,
+	MSR_IA32_PERF_GLOBAL_INUSE,
+
+	/* QOS Configuration disabled: CPUID.10H.ECX[2] */
+	MSR_IA32_L3_QOS_CFG,
+	MSR_IA32_L2_QOS_CFG,
+
+	/* RDT-M disabled: CPUID.07H.EBX[12], CPUID.07H.EBX[15] */
+	MSR_IA32_QM_EVTSEL,
+	MSR_IA32_QM_CTR,
+	MSR_IA32_PQR_ASSOC
+
+	/* RDT-A disabled: CPUID.07H.EBX[12], CPUID.10H */
+	/* MSR 0xC90 ... 0xD8F, not in this array */
 };
 
 static const uint32_t x2apic_msrs[] = {
@@ -201,7 +255,7 @@ static void init_msr_area(struct acrn_vcpu *vcpu)
 
 void init_msr_emulation(struct acrn_vcpu *vcpu)
 {
-	uint32_t i;
+	uint32_t msr, i;
 	uint8_t *msr_bitmap;
 	uint64_t value64;
 
@@ -213,6 +267,11 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 		}
 
 		intercept_x2apic_msrs(msr_bitmap, READ_WRITE);
+
+		/* RDT-A disabled: CPUID.07H.EBX[12], CPUID.10H */
+		for (msr = MSR_IA32_L3_MASK_0; msr < MSR_IA32_BNDCFGS; msr++) {
+			enable_msr_interception(msr_bitmap, msr, READ_WRITE);
+		}
 	}
 
 	/* Setup MSR bitmap - Intel SDM Vol3 24.6.9 */
