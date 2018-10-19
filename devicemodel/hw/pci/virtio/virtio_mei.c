@@ -2079,3 +2079,238 @@ struct virtio_ops virtio_mei_ops = {
 	.apply_features = NULL,
 	.set_status = NULL,
 };
+
+static int filter_dirs(const struct dirent *d)
+{
+	return !((strcmp(d->d_name, ".") == 0) ||
+		(strcmp(d->d_name, "..") == 0));
+}
+
+static int
+vmei_get_devname(char *name, size_t namesize,
+		 unsigned int bus, unsigned int slot, unsigned int func)
+{
+	char path[256];
+	struct stat buf;
+	struct dirent **namelist = NULL;
+	int n, ret = 0;
+
+	snprintf(path, sizeof(path),
+		 "/sys/bus/pci/drivers/mei_me/0000:%02x:%02x.%1u/mei/",
+		 bus, slot, func);
+
+	if (stat(path, &buf) < 0)
+		return -1;
+
+	n = scandir(path, &namelist, filter_dirs, alphasort);
+	if (n == 1)
+		snprintf(name, namesize, "%s", namelist[0]->d_name);
+	else
+		ret = -1;
+
+	while (n-- > 0)
+		free(namelist[n]);
+	free(namelist);
+
+	return ret;
+}
+
+static int
+vmei_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
+{
+	struct virtio_mei *vmei;
+	char tname[MAXCOMLEN + 1];
+	pthread_mutexattr_t attr;
+	int i, rc;
+	char *endptr = NULL;
+	char *opt;
+	unsigned int bus = 0, slot = 0, func = 0;
+	char name[DEV_NAME_SIZE + 1];
+
+	vmei_debug = 0;
+
+	if (!opts)
+		goto init;
+
+	while ((opt = strsep(&opts, ",")) != NULL) {
+		if (sscanf(opt, "%x/%x/%x", &bus, &slot, &func) == 3)
+			continue;
+		if (!strncmp(opt, "d", 1)) {
+			vmei_debug = strtoul(opt + 1, &endptr, 10);
+			if (endptr == opt || vmei_debug > 8) {
+				vmei_debug  = 0;
+				WPRINTF("init: unknown debug flag %s\n",
+					opts + 1);
+			}
+			continue;
+		}
+		WPRINTF("Invalid option: %s\n", opt);
+	}
+
+	if (vmei_debug)
+		vmei_dbg_file = fopen("/tmp/vmei_log", "a+");
+
+init:
+	rc = vmei_get_devname(name, sizeof(name), bus, slot, func);
+	if (rc) {
+		WPRINTF("init: fail to get mei path!\n");
+		strncpy(name, "mei0", sizeof(name));
+	}
+
+	DPRINTF("init: starting\n");
+	vmei = calloc(1, sizeof(*vmei));
+	if (!vmei) {
+		WPRINTF("init: fail to alloc virtio_heci!\n");
+		goto fail;
+	}
+
+	vmei->config = calloc(1, sizeof(*vmei->config));
+	if (!vmei->config) {
+		WPRINTF("init: fail to alloc vmei_config!\n");
+		goto fail;
+	}
+
+	/* FIXME: fix get correct mapping */
+	vmei->vtag = ctx->vmid;
+	if (!vmei->vtag)
+		vmei->vtag = 1;
+
+	vmei->config->buf_depth = VMEI_BUF_DEPTH;
+	vmei->config->hw_ready = 0;
+
+	strncpy(vmei->name, name, sizeof(vmei->name));
+	vmei->name[sizeof(vmei->name) - 1] = 0;
+	snprintf(vmei->devnode, sizeof(vmei->devnode) - 1,
+		 "/dev/%s", vmei->name);
+
+	DPRINTF("devnode = %s\n", vmei->devnode);
+
+	if (vmei_add_reset_event(vmei) < 0)
+		WPRINTF("init: resets won't be detected\n");
+
+	/* init mutex attribute properly */
+	rc = pthread_mutexattr_init(&attr);
+	if (rc) {
+		WPRINTF("init: mutexattr init fail, error %d!\n", rc);
+		goto fail;
+	}
+
+	if (virtio_uses_msix()) {
+		rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_DEFAULT);
+		if (rc) {
+			WPRINTF("init: mutexattr_settype failed, error %d!\n",
+				rc);
+			goto fail;
+		}
+	} else {
+		rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+		if (rc) {
+			WPRINTF("init: mutexattr_settype failed, error %d!\n",
+				rc);
+			goto fail;
+		}
+	}
+	rc = pthread_mutex_init(&vmei->mutex, &attr);
+	pthread_mutexattr_destroy(&attr);
+	if (rc) {
+		WPRINTF("init: mutex init failed, error %d!\n", rc);
+		goto fail;
+	}
+
+	virtio_linkup(&vmei->base, &virtio_mei_ops, vmei, dev, vmei->vqs);
+	vmei->base.mtx = &vmei->mutex;
+
+	for (i = 0; i < VMEI_VQ_NUM; i++)
+		vmei->vqs[i].qsize = VMEI_RING_SZ;
+	vmei->vqs[VMEI_RXQ].notify = vmei_notify_rx;
+	vmei->vqs[VMEI_TXQ].notify = vmei_notify_tx;
+
+	/* initialize config space */
+	pci_set_cfgdata16(dev, PCIR_DEVICE, VIRTIO_DEV_HECI);
+	pci_set_cfgdata16(dev, PCIR_VENDOR, INTEL_VENDOR_ID);
+	pci_set_cfgdata8(dev, PCIR_CLASS, PCIC_SIMPLECOMM);
+	pci_set_cfgdata8(dev, PCIR_SUBCLASS, PCIS_SIMPLECOMM_OTHER);
+	pci_set_cfgdata16(dev, PCIR_SUBDEV_0, VIRTIO_TYPE_HECI);
+	pci_set_cfgdata16(dev, PCIR_SUBVEND_0, INTEL_VENDOR_ID);
+
+	if (virtio_interrupt_init(&vmei->base, virtio_uses_msix()))
+		goto setup_fail;
+	virtio_set_io_bar(&vmei->base, 0);
+
+	/*
+	 * tx stuff, thread, mutex, cond
+	 */
+	pthread_mutex_init(&vmei->tx_mutex, NULL);
+	pthread_cond_init(&vmei->tx_cond, NULL);
+	pthread_create(&vmei->tx_thread, NULL,
+		       vmei_tx_thread, vmei);
+	snprintf(tname, sizeof(tname), "vmei-%d:%d tx", dev->slot, dev->func);
+	pthread_setname_np(vmei->tx_thread, tname);
+
+	/*
+	 * rx stuff
+	 */
+	pthread_mutex_init(&vmei->rx_mutex, NULL);
+	pthread_cond_init(&vmei->rx_cond, NULL);
+	pthread_create(&vmei->rx_thread, NULL,
+		       vmei_rx_thread, (void *)vmei);
+	snprintf(tname, sizeof(tname), "vmei-%d:%d rx", dev->slot, dev->func);
+	pthread_setname_np(vmei->rx_thread, tname);
+
+	/*
+	 * init clients
+	 */
+	pthread_mutexattr_init(&attr);
+	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&vmei->list_mutex, &attr);
+	pthread_mutexattr_destroy(&attr);
+	LIST_INIT(&vmei->active_clients);
+
+	/*
+	 * start mei backend
+	 */
+	if (vmei_start(vmei, true) < 0)
+		goto start_fail;
+
+	return 0;
+
+start_fail:
+	vmei_stop(vmei);
+setup_fail:
+	pthread_mutex_destroy(&vmei->mutex);
+fail:
+	if (vmei) {
+		free(vmei->config);
+		free(vmei);
+	}
+
+	WPRINTF("init: error\n");
+	return -1;
+}
+
+static void
+vmei_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
+{
+	struct virtio_mei *vmei = (struct virtio_mei *)dev->arg;
+
+	(void)opts;
+
+	if (!vmei)
+		return;
+
+	vmei_del_reset_event(vmei);
+	vmei_stop(vmei);
+
+	pthread_mutex_destroy(&vmei->mutex);
+	free(vmei->config);
+	free(vmei);
+}
+
+const struct pci_vdev_ops pci_ops_vmei = {
+	.class_name     = "virtio-heci",
+	.vdev_init      = vmei_init,
+	.vdev_barwrite  = virtio_pci_write,
+	.vdev_barread   = virtio_pci_read,
+	.vdev_deinit    = vmei_deinit
+};
+DEFINE_PCI_DEVTYPE(pci_ops_vmei);
