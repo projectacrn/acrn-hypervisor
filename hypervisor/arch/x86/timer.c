@@ -80,6 +80,8 @@ int add_timer(struct hv_timer *timer)
 		return -EINVAL;
 	}
 
+	ASSERT(list_empty(&timer->node), "add timer again!\n");
+
 	/* limit minimal periodic timer cycle period */
 	if (timer->mode == TICK_MODE_PERIODIC) {
 		timer->period_in_cycle = max(timer->period_in_cycle,
