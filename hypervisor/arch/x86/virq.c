@@ -184,11 +184,11 @@ void dump_lapic(void)
 {
 	dev_dbg(ACRN_DBG_INTR,
 		"LAPIC: TIME %08x, init=0x%x cur=0x%x ISR=0x%x IRR=0x%x",
-		msr_read(MSR_IA32_EXT_APIC_LVT_TIMER),
-		msr_read(MSR_IA32_EXT_APIC_INIT_COUNT),
-		msr_read(MSR_IA32_EXT_APIC_CUR_COUNT),
-		msr_read(MSR_IA32_EXT_APIC_ISR7),
-		msr_read(MSR_IA32_EXT_APIC_IRR7)
+		mmio_read32(hpa2hva(LAPIC_BASE + LAPIC_LVT_TIMER_REGISTER)),
+		mmio_read32(hpa2hva(LAPIC_BASE + LAPIC_INITIAL_COUNT_REGISTER)),
+		mmio_read32(hpa2hva(LAPIC_BASE + LAPIC_CURRENT_COUNT_REGISTER)),
+		mmio_read32(hpa2hva(LAPIC_BASE + LAPIC_IN_SERVICE_REGISTER_7)),
+		mmio_read32(hpa2hva(LAPIC_BASE + LAPIC_INT_REQUEST_REGISTER_7))
 		);
 }
 

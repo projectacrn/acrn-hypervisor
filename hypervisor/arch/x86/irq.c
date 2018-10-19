@@ -484,7 +484,7 @@ void interrupt_init(uint16_t pcpu_id)
 	struct host_idt_descriptor *idtd = &HOST_IDTR;
 
 	set_idt(idtd);
-	init_lapic();
+	init_lapic(pcpu_id);
 	init_default_irqs(pcpu_id);
 #ifndef CONFIG_EFI_STUB
 	CPU_IRQ_ENABLE();

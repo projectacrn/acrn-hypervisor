@@ -120,7 +120,7 @@ static void init_tsc_deadline_timer(void)
 
 	val = VECTOR_TIMER;
 	val |= APIC_LVTT_TM_TSCDLT; /* TSC deadline and unmask */
-	msr_write(MSR_IA32_EXT_APIC_LVT_TIMER, val);
+	write_lapic_reg32(LAPIC_LVT_TIMER_REGISTER, val);
 	asm volatile("mfence" : : : "memory");
 
 	/* disarm timer */
