@@ -34,7 +34,6 @@ $(eval $(call override_config,PLATFORM,sbl))
 $(eval $(call override_config,RELEASE,n))
 
 $(eval $(call check_dep_exec,python3,KCONFIG_DEPS))
-$(eval $(call check_dep_exec,pip3,KCONFIG_DEPS))
 $(eval $(call check_dep_py3lib,kconfiglib,KCONFIG_DEPS))
 
 # This target invoke silentoldconfig to generate or update a .config. Useful as
