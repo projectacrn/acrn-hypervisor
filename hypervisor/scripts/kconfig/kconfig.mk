@@ -30,6 +30,12 @@ endif
 endif
 
 -include $(HV_OBJDIR)/$(HV_CONFIG_MK)
+ifeq ($(shell [ $(HV_OBJDIR)/$(HV_CONFIG) -nt $(HV_OBJDIR)/$(HV_CONFIG_MK) ] && echo 1),1)
+# config.mk may be outdated if .config has been overwritten. To update config.mk
+# in such cases, we include .config again to get the new configurations. This
+# only happens when GNU make checks the prerequisites.
+-include $(HV_OBJDIR)/$(HV_CONFIG)
+endif
 
 # Backward-compatibility for PLATFORM=(sbl|uefi)
 # * PLATFORM=sbl is equivalent to BOARD=apl-mrb
@@ -85,9 +91,6 @@ defconfig: $(KCONFIG_DEPS)
 # new one if no previous .config exists. This target can be used as a
 # prerequisite of all the others to make sure that the .config is consistent
 # even it has been modified manually before.
-#
-# Note: Should not pass CONFIG_xxx to silentoldconfig here because config.mk can
-# be out-dated.
 .PHONY: oldconfig
 oldconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
