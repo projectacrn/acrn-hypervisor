@@ -254,7 +254,7 @@ partition. Follow these steps:
 
       # systemctl enable weston@cl_sos
       # systemctl start weston@cl_sos
-      
+
 #. Reboot and select "The ACRN Service OS" to boot, as shown below:
 
 
@@ -537,7 +537,7 @@ The build results are found in the ``build`` directory.
 .. note::
    if you wish to use a different target folder for the build
    artefacts, set the ``O`` (that is capital letter 'O') to the
-   desired value. Example: ``make O=build-uefi PLATFORM=uefi``.
+   desired value. Example: ``make O=build-nuc BOARD=nuc6cayh``.
 
 Generating the documentation is decribed in details in the :ref:`acrn_doc`
 tutorial.
@@ -551,7 +551,7 @@ and are using it as the current working directory.
    .. code-block:: none
 
       $ cd hypervisor
-      $ make PLATFORM=uefi
+      $ make BOARD=nuc6cayh
 
    The build results are found in the ``build`` directory.
 
@@ -578,8 +578,8 @@ Generate the hypervisor configurations
 ======================================
 
 The ACRN hypervisor leverages Kconfig to manage configurations, powered by
-Kconfiglib. A default configuration is generated based on the platform you have
-selected via the ``PLATFORM=`` command line parameter. You can make further
+Kconfiglib. A default configuration is generated based on the board you have
+selected via the ``BOARD=`` command line parameter. You can make further
 changes to that default configuration to adjust to your specific
 requirements.
 
@@ -592,9 +592,9 @@ found under the target folder of your build.
    .. code-block:: none
 
       $ cd hypervisor
-      $ make defconfig PLATFORM=uefi
+      $ make defconfig BOARD=nuc6cayh
 
-The PLATFORM specified is used to select a defconfig under
+The BOARD specified is used to select a defconfig under
 ``arch/x86/configs/``. The other command-line based options (e.g. ``RELEASE``)
 take no effects when generating a defconfig.
 
@@ -611,7 +611,7 @@ the hypervisor using the updated ``.config``.
    .. code-block:: none
 
       $ cd hypervisor
-      $ make defconfig PLATFORM=uefi
+      $ make defconfig BOARD=nuc6cayh
       $ make menuconfig              # Modify the configurations per your needs
       $ make                         # Build the hypervisor with the new .config
 
@@ -628,21 +628,21 @@ Create a new default configuration
 ==================================
 
 Currently the ACRN hypervisor looks for default configurations under
-``hypervisor/arch/x86/configs/<PLATFORM>.config``, where ``<PLATFORM>`` is the
+``hypervisor/arch/x86/configs/<BOARD>.config``, where ``<BOARD>`` is the
 specified platform. The following steps allow you to create a defconfig for
 another platform based on a current one.
 
    .. code-block:: none
 
       $ cd hypervisor
-      $ make defconfig PLATFORM=uefi
+      $ make defconfig BOARD=nuc6cayh
       $ make menuconfig         # Modify the configurations
       $ make savedefconfig      # The minimized config reside at build/defconfig
       $ cp build/defconfig arch/x86/configs/xxx.config
 
 Then you can re-use that configuration by passing the name (``xxx`` in the
-example above) to 'PLATFORM=':
+example above) to 'BOARD=':
 
    .. code-block:: none
 
-      $ make defconfig PLATFORM=xxx
+      $ make defconfig BOARD=xxx

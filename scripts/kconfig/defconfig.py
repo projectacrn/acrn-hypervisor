@@ -12,28 +12,45 @@ import sys, os
 import kconfiglib
 
 def usage():
-    sys.stdout.write("%s: <Kconfig file> <defconfig> <path to .config>\n" % sys.argv[0])
+    sys.stdout.write("%s: <Kconfig file> <path to .config>\n" % sys.argv[0])
 
 def main():
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 3:
         usage()
         sys.exit(1)
+
+    target_board = os.environ['BOARD']
 
     kconfig_path = sys.argv[1]
     if not os.path.isfile(kconfig_path):
         sys.stderr.write("Cannot find file %s\n" % kconfig_path)
         sys.exit(1)
 
-    defconfig_path = sys.argv[2]
-    if not os.path.isfile(defconfig_path):
-        sys.stderr.write("Cannot find file %s\n" % defconfig_path)
+    kconfig = kconfiglib.Kconfig(kconfig_path)
+    defconfig_path = kconfig.defconfig_filename
+    if not defconfig_path or not os.path.isfile(defconfig_path):
+        sys.stderr.write("No defconfig found for board %s.\n" % target_board)
         sys.exit(1)
 
-    sys.stdout.write("Default configuration based on %s.\n" % defconfig_path)
-    kconfig = kconfiglib.Kconfig(kconfig_path)
     kconfig.load_config(defconfig_path)
-    kconfig.write_config(sys.argv[3])
-    sys.stdout.write("Configuration written to %s.\n" % sys.argv[3])
+
+    config_path = sys.argv[2]
+    if os.path.isfile(config_path):
+        # No need to change .config if it is already equivalent to the specified
+        # default.
+        kconfig_current = kconfiglib.Kconfig(kconfig_path)
+        kconfig_current.load_config(config_path)
+        same_config = True
+        for sym in kconfig_current.syms:
+            if kconfig_current.syms[sym].str_value != kconfig.syms[sym].str_value:
+                same_config = False
+                break
+        if same_config:
+            sys.exit(0)
+
+    sys.stdout.write("Default configuration based on %s.\n" % defconfig_path)
+    kconfig.write_config(config_path)
+    sys.stdout.write("Configuration written to %s.\n" % config_path)
 
 if __name__ == "__main__":
     main()
