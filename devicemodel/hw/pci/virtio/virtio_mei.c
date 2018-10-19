@@ -934,52 +934,6 @@ static void vmei_del_reset_event(struct virtio_mei *vmei)
 	vmei->reset_mevp = NULL;
 }
 
-static void
-vmei_reset_callback(int fd, enum ev_type type, void *param)
-{
-	static bool first_time = true;
-	struct virtio_mei *vmei = param;
-	char buf[MEI_DEV_STATE_LEN] = {0};
-	int sz;
-
-	lseek(fd, 0, SEEK_SET);
-	sz = read(fd, buf, 12);
-	if (first_time) {
-		first_time = false;
-		return;
-	}
-
-	if (sz != 7 || memcmp(buf, "ENABLED", 7))
-		return;
-
-	DPRINTF("Reset state callback\n");
-
-	vmei_virtual_fw_reset(vmei);
-	vmei_free_me_clients(vmei);
-	vmei_start(vmei, true);
-}
-
-static int vmei_add_reset_event(struct virtio_mei *vmei)
-{
-	char devpath[256];
-	int dev_state_fd;
-
-	snprintf(devpath, sizeof(devpath) - 1, "%s/%s/%s",
-		 MEI_SYSFS_ROOT, vmei->name, "dev_state");
-
-	dev_state_fd = open(devpath, O_RDONLY);
-	if (dev_state_fd < 0)
-		return -errno;
-
-	vmei->reset_mevp = mevent_add(dev_state_fd, EVF_READ_ET,
-				      vmei_reset_callback, vmei);
-	if (!vmei->reset_mevp) {
-		close(dev_state_fd);
-		return -ENOMEM;
-	}
-	return 0;
-}
-
 static void vmei_rx_callback(int fd, enum ev_type type, void *param);
 
 static inline uint8_t
@@ -1350,6 +1304,51 @@ vmei_hbm_handler(struct virtio_mei *vmei, const void *data)
 	default:
 		DPRINTF("HBM cmd[0x%X] unhandled\n", hbm_cmd->cmd);
 	}
+}
+
+int vmei_fixed_client_connect(struct vmei_me_client *mclient)
+{
+	struct vmei_host_client *hclient;
+	uint8_t status;
+
+	/* SKIP over HBM */
+	if (!mclient->client_id)
+		return 0;
+
+	if (!mclient->props.fixed_address)
+		return 0;
+
+	hclient = vmei_host_client_create(mclient, 0);
+	if (!hclient) {
+		DPRINTF("vmei_host_client_create failed %d!\n",
+			mclient->client_id);
+		return -1;
+	}
+
+	status = vmei_host_client_native_connect(hclient);
+	if (status) {
+		vmei_host_client_put(hclient);
+		DPRINTF("vmei_host_client_connect failed %d!\n",
+			mclient->client_id);
+		return -1;
+	}
+
+	return 0;
+}
+
+static int vmei_fixed_clients_connect(struct virtio_mei *vmei)
+{
+	struct vmei_me_client *e;
+
+	DPRINTF("connecting fixed clients\n");
+
+	pthread_mutex_lock(&vmei->list_mutex);
+	LIST_FOREACH(e, &vmei->active_clients, list) {
+		vmei_fixed_client_connect(e);
+	}
+	pthread_mutex_unlock(&vmei->list_mutex);
+
+	return 0;
 }
 
 static inline bool hdr_is_hbm(const struct mei_msg_hdr *hdr)
@@ -1886,6 +1885,141 @@ vmei_notify_rx(void *data, struct virtio_vq_info *vq)
 }
 
 static int
+vmei_start(struct virtio_mei *vmei, bool do_rescan)
+{
+	static struct vmei_host_client *hclient;
+	const struct mei_client_properties props = {
+		.protocol_name  = NULL_UUID_LE,
+		.protocol_version = 0,
+		.max_connections = 1,
+		.fixed_address = 1,
+		.single_recv_buf = 0,
+		.max_msg_length = VMEI_BUF_SZ,
+	};
+	int pipefd[2];
+
+	/* create HBM client (address 0) */
+	if (do_rescan && !vmei->hbm_client)
+		vmei->hbm_client = vmei_me_client_create(vmei, 0, &props);
+
+	if (!vmei->hbm_client) {
+		WPRINTF("hbm client creation failed\n");
+		return -1;
+	}
+
+	/*
+	 * create a dummy host client for the HBM client
+	 * so that the HBM client will have rx/tx buffers
+	 */
+	hclient = vmei_host_client_create(vmei->hbm_client, 0);
+	if (!hclient)
+		goto hclient_failed;
+
+	if (pipe2(pipefd, O_DIRECT) < 0)
+		goto scan_failed;
+
+	hclient->client_fd = pipefd[0];
+	hclient->rx_mevp = mevent_add(hclient->client_fd, EVF_READ,
+				      vmei_rx_callback, hclient);
+	vmei->hbm_fd = pipefd[1];
+
+	if (do_rescan) {
+		vmei_add_me_client(vmei->hbm_client);
+		if (vmei_me_client_scan_list(vmei) < 0)
+			goto scan_failed;
+	}
+
+	vmei_fixed_clients_connect(vmei);
+
+	vmei->config->hw_ready = 1;
+	vmei_set_status(vmei, VMEI_STS_READY);
+
+	return 0;
+
+scan_failed:
+	vmei_host_client_put(hclient);
+
+hclient_failed:
+	vmei_me_client_put(vmei->hbm_client);
+	vmei->hbm_client = NULL;
+
+	return -1;
+}
+
+static int
+vmei_stop(struct virtio_mei *vmei)
+{
+	vmei_set_status(vmei, VMEI_STST_DEINIT);
+	pthread_mutex_lock(&vmei->tx_mutex);
+	pthread_cond_signal(&vmei->tx_cond);
+	pthread_mutex_unlock(&vmei->tx_mutex);
+
+	pthread_mutex_lock(&vmei->rx_mutex);
+	pthread_cond_signal(&vmei->rx_cond);
+	pthread_mutex_unlock(&vmei->rx_mutex);
+
+	vmei_virtual_fw_reset(vmei);
+
+	pthread_join(vmei->rx_thread, NULL);
+	pthread_join(vmei->tx_thread, NULL);
+
+	vmei_free_me_clients(vmei);
+
+	pthread_mutex_destroy(&vmei->rx_mutex);
+	pthread_mutex_destroy(&vmei->tx_mutex);
+	pthread_mutex_destroy(&vmei->list_mutex);
+
+	return 0;
+}
+
+static void
+vmei_reset_callback(int fd, enum ev_type type, void *param)
+{
+	static bool first_time = true;
+	struct virtio_mei *vmei = param;
+	char buf[MEI_DEV_STATE_LEN] = {0};
+	int sz;
+
+	lseek(fd, 0, SEEK_SET);
+	sz = read(fd, buf, 12);
+	if (first_time) {
+		first_time = false;
+		return;
+	}
+
+	if (sz != 7 || memcmp(buf, "ENABLED", 7))
+		return;
+
+	DPRINTF("Reset state callback\n");
+
+	vmei_virtual_fw_reset(vmei);
+	vmei_free_me_clients(vmei);
+	vmei_start(vmei, true);
+}
+
+static int vmei_add_reset_event(struct virtio_mei *vmei)
+{
+	char devpath[256];
+	int dev_state_fd;
+
+	snprintf(devpath, sizeof(devpath) - 1, "%s/%s/%s",
+		 MEI_SYSFS_ROOT, vmei->name, "dev_state");
+
+	dev_state_fd = open(devpath, O_RDONLY);
+	if (dev_state_fd < 0)
+		return -errno;
+
+	vmei->reset_mevp = mevent_add(dev_state_fd, EVF_READ_ET,
+				      vmei_reset_callback, vmei);
+	if (!vmei->reset_mevp) {
+		close(dev_state_fd);
+		return -ENOMEM;
+	}
+	return 0;
+}
+
+
+static int
 vmei_cfgread(void *vsc, int offset, int size, uint32_t *retval)
 {
 	struct virtio_mei *vmei = vsc;
@@ -1927,9 +2061,21 @@ vmei_cfgwrite(void *vsc, int offset, int size, uint32_t val)
 		DPRINTF("cfgwrite: host_reset_release [%d]\n", val);
 		/* guest initate reset need restart */
 
+		vmei_start(vmei, false);
 		virtio_config_changed(&vmei->base);
 	}
 
 	return 0;
 }
 
+struct virtio_ops virtio_mei_ops = {
+	.name    = "virtio_heci",
+	.nvq     =  VMEI_VQ_NUM,
+	.cfgsize = sizeof(struct mei_virtio_cfg),
+	.reset   = vmei_reset,
+	.qnotify = NULL,
+	.cfgread = vmei_cfgread,
+	.cfgwrite = vmei_cfgwrite,
+	.apply_features = NULL,
+	.set_status = NULL,
+};
