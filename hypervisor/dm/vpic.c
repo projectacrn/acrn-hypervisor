@@ -405,6 +405,10 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin,
 	uint8_t old_lvl;
 	bool lvl_trigger;
 
+	if (pin >= NR_VPIC_PINS_TOTAL) {
+		return;
+	}
+
 	i8259 = &vpic->i8259[pin >> 3U];
 	old_lvl = i8259->pin_state[pin & 0x7U];
 	if (level) {
