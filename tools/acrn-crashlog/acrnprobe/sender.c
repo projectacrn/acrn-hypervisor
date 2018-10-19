@@ -463,7 +463,7 @@ free_class:
 
 static void telemd_send_uptime(void)
 {
-	struct sender_t *telemd;
+	struct sender_t *telemd = get_sender_by_name("telemd");
 	struct uptime_t *uptime;
 	char *class;
 	char boot_time[UPTIME_SIZE];
@@ -472,12 +472,14 @@ static void telemd_send_uptime(void)
 	static int uptime_hours;
 	static int loop_uptime_event = 1;
 
+	if (!telemd)
+		return;
+
 	ret = get_uptime_string(boot_time, &hours);
 	if (ret < 0) {
 		LOGE("cannot get uptime - %s\n", strerror(-ret));
 		return;
 	}
-	telemd = get_sender_by_name("telemd");
 	uptime = telemd->uptime;
 	uptime_hours = atoi(uptime->eventhours);
 	if (hours / uptime_hours >= loop_uptime_event) {
@@ -505,12 +507,14 @@ static void telemd_send_uptime(void)
 
 static void telemd_send_reboot(void)
 {
-	struct sender_t *telemd;
+	struct sender_t *telemd = get_sender_by_name("telemd");
 	char *class;
 	char reason[REBOOT_REASON_SIZE];
 	int ret;
 
-	telemd = get_sender_by_name("telemd");
+	if (!telemd)
+		return;
+
 	if (swupdated(telemd)) {
 		char *content;
 
