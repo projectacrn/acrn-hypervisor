@@ -1350,6 +1350,11 @@ vmei_hbm_handler(struct virtio_mei *vmei, const void *data)
 	}
 }
 
+static inline bool hdr_is_hbm(const struct mei_msg_hdr *hdr)
+{
+	return hdr->host_addr == 0 && hdr->me_addr == 0;
+}
+
 static ssize_t
 vmei_host_client_native_write(struct vmei_host_client *hclient)
 {
@@ -1408,6 +1413,215 @@ vmei_host_client_native_write(struct vmei_host_client *hclient)
 	}
 
 	return lencnt;
+}
+
+static void
+vmei_proc_tx(struct virtio_mei *vmei, struct virtio_vq_info *vq)
+{
+	struct iovec iov[VMEI_TX_SEGS + 1];
+	uint16_t idx;
+	size_t tlen;
+	int n;
+
+	struct mei_msg_hdr *hdr;
+	uint8_t *data;
+	uint8_t i_idx;
+	struct vmei_circular_iobufs *bufs;
+
+	struct vmei_host_client *hclient  = NULL;
+
+	/*
+	 * Obtain chain of descriptors.
+	 * The first one is hdr, the second is for payload.
+	 */
+	n = vq_getchain(vq, &idx, iov, VMEI_TX_SEGS, NULL);
+	assert(n == 2);
+
+	hdr = (struct mei_msg_hdr *)iov[0].iov_base;
+	data = (uint8_t *)iov[1].iov_base;
+
+	tlen = iov[0].iov_len + iov[1].iov_len;
+
+	DPRINTF("TX: UOS->DM, hdr[h=%02d me=%02d comp=%1d] length[%d]\n",
+		hdr->host_addr, hdr->me_addr, hdr->msg_complete, hdr->length);
+	vmei_dbg_print_hex("TX: UOS->DM", iov[1].iov_base, iov[1].iov_len);
+
+	if (hdr_is_hbm(hdr)) {
+		vmei_hbm_handler(vmei, data);
+		goto out;
+	}
+	/* general client client
+	 * must be in active_clients list.
+	 */
+	hclient = vmei_find_host_client(vmei, hdr->me_addr, hdr->host_addr);
+	if (!hclient) {
+		DPRINTF("TX: ME[%02d:%02d] NOT found!\n",
+			hdr->host_addr,  hdr->host_addr);
+		goto failed;
+	}
+
+	pthread_mutex_lock(&vmei->tx_mutex);
+	bufs = &hclient->send_bufs;
+	i_idx = bufs->i_idx;
+	HCL_DBG(hclient, "TX: client found complete = %d\n",
+		bufs->complete[i_idx]);
+	/* check for overflow
+	 * here there are 2 types of possible overflows :
+	 *  (1) no available buffers (all buffers are taken) and
+	 *  (2) no space in the current buffer
+	 */
+	if ((i_idx + 1) % VMEI_IOBUFS_MAX == bufs->r_idx ||
+	    (bufs->buf_sz - bufs->bufs[i_idx].iov_len < hdr->length)) {
+		HCL_DBG(hclient, "TX: overflow\n");
+		/* close the connection according to spec */
+		/* FIXME need to remove the clinet */
+		vmei_hbm_disconnect_client(hclient);
+		pthread_mutex_unlock(&vmei->tx_mutex);
+		vmei_host_client_put(hclient);
+		goto out;
+	}
+	/* copy buffer from virtqueue to send_buf */
+	memcpy(bufs->bufs[i_idx].iov_base + bufs->bufs[i_idx].iov_len,
+	       data, hdr->length);
+
+	bufs->bufs[i_idx].iov_len += hdr->length;
+	if (hdr->msg_complete) {
+		/* send complete msg to HW */
+		HCL_DBG(hclient, "TX: completed, sening msg to FW\n");
+		bufs->complete[i_idx] = 1;
+		bufs->i_idx++;
+		if (bufs->i_idx >= VMEI_IOBUFS_MAX) /* wraparound */
+			bufs->i_idx = 0;
+		pthread_cond_signal(&vmei->tx_cond);
+	}
+	pthread_mutex_unlock(&vmei->tx_mutex);
+	vmei_host_client_put(hclient);
+out:
+	/* chain is processed, release it and set tlen */
+	vq_relchain(vq, idx, tlen);
+	DPRINTF("TX: release OUT-vq idx[%d]\n", idx);
+
+	if (vmei->rx_need_sched) {
+		pthread_mutex_lock(&vmei->rx_mutex);
+		pthread_cond_signal(&vmei->rx_cond);
+		pthread_mutex_unlock(&vmei->rx_mutex);
+	}
+
+	return;
+
+failed:
+	if (vmei->status == VMEI_STS_PENDING_RESET) {
+		vmei_virtual_fw_reset(vmei);
+		/* Let's wait 100ms for HBM enumeration done */
+		usleep(100000);
+		virtio_config_changed(&vmei->base);
+	}
+	/* drop the data */
+	vq_relchain(vq, idx, tlen);
+}
+
+static void
+vmei_notify_tx(void *data, struct virtio_vq_info *vq)
+{
+	struct virtio_mei *vmei = data;
+	/*
+	 * Any ring entries to process?
+	 */
+	if (!vq_has_descs(vq))
+		return;
+
+	pthread_mutex_lock(&vmei->tx_mutex);
+	DPRINTF("TX: New OUT buffer available!\n");
+	vq->used->flags |= ACRN_VRING_USED_F_NO_NOTIFY;
+	pthread_mutex_unlock(&vmei->tx_mutex);
+
+	while (vq_has_descs(vq))
+		vmei_proc_tx(vmei, vq);
+
+	vq_endchains(vq, 1);
+
+	pthread_mutex_lock(&vmei->tx_mutex);
+	DPRINTF("TX: New OUT buffer available!\n");
+	vq->used->flags &= ~ACRN_VRING_USED_F_NO_NOTIFY;
+	pthread_mutex_unlock(&vmei->tx_mutex);
+}
+
+static int
+vmei_host_ready_send_buffers(struct vmei_host_client *hclient)
+{
+	struct vmei_circular_iobufs *bufs = &hclient->send_bufs;
+
+	return bufs->complete[bufs->r_idx];
+}
+
+/**
+ * Thread which will handle processing native writes
+ */
+static void *vmei_tx_thread(void *param)
+{
+	struct virtio_mei *vmei = param;
+	struct timespec max_wait = {0, 0};
+	int err;
+
+	pthread_mutex_lock(&vmei->tx_mutex);
+	err = pthread_cond_wait(&vmei->tx_cond, &vmei->tx_mutex);
+	assert(err == 0);
+	if (err)
+		goto out;
+
+	while (vmei->status != VMEI_STST_DEINIT) {
+		struct vmei_me_client *me;
+		struct vmei_host_client *e;
+		ssize_t len;
+		int pending_cnt = 0;
+		int send_ready  = 0;
+
+		pthread_mutex_lock(&vmei->list_mutex);
+		LIST_FOREACH(me, &vmei->active_clients, list) {
+			pthread_mutex_lock(&me->list_mutex);
+			LIST_FOREACH(e, &me->connections, list) {
+				if (!vmei_host_ready_send_buffers(e))
+					continue;
+
+				len = vmei_host_client_native_write(e);
+				if (len < 0 && len != -EAGAIN) {
+					HCL_WARN(e, "TX:send failed %zd\n",
+						 len);
+					pthread_mutex_unlock(&me->list_mutex);
+					goto unlock;
+				}
+				if (vmei->status == VMEI_STS_RESET) {
+					pthread_mutex_unlock(&me->list_mutex);
+					goto unlock;
+				}
+
+				send_ready = vmei_host_ready_send_buffers(e);
+				pending_cnt += send_ready;
+				if (!send_ready)
+					vmei_hbm_flow_ctl_req(e);
+			}
+			pthread_mutex_unlock(&me->list_mutex);
+		}
+unlock:
+		pthread_mutex_unlock(&vmei->list_mutex);
+
+		if (pending_cnt == 0) {
+			err = pthread_cond_wait(&vmei->tx_cond,
+						&vmei->tx_mutex);
+		} else {
+			max_wait.tv_sec = time(NULL) + 2;
+			max_wait.tv_nsec = 0;
+			err = pthread_cond_timedwait(&vmei->tx_cond,
+						     &vmei->tx_mutex,
+						     &max_wait);
+		}
+
+		if (vmei->status == VMEI_STST_DEINIT)
+			goto out;
+	}
+out:
+	pthread_mutex_unlock(&vmei->tx_mutex);
+	pthread_exit(NULL);
 }
 
 /*
