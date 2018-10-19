@@ -45,6 +45,16 @@ config PLATFORM
 	default "uefi" if PLATFORM_UEFI
 	default "sbl" if PLATFORM_SBL
 
+config BOARD
+	string "Target board"
+	help
+	The target board this build runs on top of.
+
+config DEFCONFIG_LIST
+	string
+	option defconfig_list
+	default "arch/x86/configs/$BOARD.config"
+
 config RELEASE
 	bool "Release build"
 	default n

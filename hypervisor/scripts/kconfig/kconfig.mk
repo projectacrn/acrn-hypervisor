@@ -30,8 +30,26 @@ endif
 endif
 
 -include $(HV_OBJDIR)/$(HV_CONFIG_MK)
-$(eval $(call override_config,PLATFORM,sbl))
+
+# Backward-compatibility for PLATFORM=(sbl|uefi)
+# * PLATFORM=sbl is equivalent to BOARD=apl-mrb
+# * PLATFORM=uefi is equivalent to BOARD=apl-nuc (i.e. NUC6CAYH)
+ifndef BOARD
+ifeq ($(PLATFORM),sbl)
+BOARD=apl-mrb
+else ifeq ($(PLATFORM),uefi)
+BOARD=apl-nuc
+endif
+endif
+
+$(eval $(call override_config,BOARD,apl-mrb))
 $(eval $(call override_config,RELEASE,n))
+
+ifdef BOARD
+TARGET_BOARD=$(BOARD)
+else
+TARGET_BOARD=$(CONFIG_BOARD)
+endif
 
 $(eval $(call check_dep_exec,python3,KCONFIG_DEPS))
 $(eval $(call check_dep_py3lib,kconfiglib,KCONFIG_DEPS))
@@ -59,8 +77,8 @@ $(HV_OBJDIR)/$(HV_CONFIG_H): $(HV_OBJDIR)/$(HV_CONFIG)
 .PHONY: defconfig
 defconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
-	@python3 $(KCONFIG_DIR)/defconfig.py Kconfig \
-		arch/x86/configs/$(CONFIG_PLATFORM).config \
+	@BOARD=$(TARGET_BOARD) \
+	 python3 $(KCONFIG_DIR)/defconfig.py Kconfig \
 		$(HV_OBJDIR)/$(HV_CONFIG)
 
 # Use silentoldconfig to forcefully update the current .config, or generate a
@@ -73,9 +91,9 @@ defconfig: $(KCONFIG_DEPS)
 .PHONY: oldconfig
 oldconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
-	@python3 $(KCONFIG_DIR)/silentoldconfig.py Kconfig \
+	@BOARD=$(TARGET_BOARD) \
+	 python3 $(KCONFIG_DIR)/silentoldconfig.py Kconfig \
 		$(HV_OBJDIR)/$(HV_CONFIG) \
-		PLATFORM_$(shell echo $(PLATFORM) | tr a-z A-Z)=y \
 		RELEASE=$(RELEASE)
 
 # Minimize the current .config. This target can be used to generate a defconfig
