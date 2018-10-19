@@ -38,7 +38,11 @@ $(eval $(call check_dep_py3lib,kconfiglib,KCONFIG_DEPS))
 
 # This target invoke silentoldconfig to generate or update a .config. Useful as
 # a prerequisite of other targets depending on .config.
+#
+# A dummy command is necessary to trigger the remaking of config.mk right after
+# oldconfig changes HV_CONFIG in the same execution of make.
 $(HV_OBJDIR)/$(HV_CONFIG): oldconfig
+	@true
 
 # Note: This target must not depend on a phony target (e.g. oldconfig) because
 # it'll trigger endless re-execution of make.
