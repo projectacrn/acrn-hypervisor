@@ -101,7 +101,6 @@ INCLUDE_PATH += include/debug
 INCLUDE_PATH += include/public
 INCLUDE_PATH += include/dm
 INCLUDE_PATH += bsp/include
-INCLUDE_PATH += bsp/include/$(CONFIG_PLATFORM)
 INCLUDE_PATH += boot/include
 INCLUDE_PATH += $(HV_OBJDIR)/include
 
@@ -227,6 +226,34 @@ S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(S_SRCS))
 DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 VERSION := $(HV_OBJDIR)/include/version.h
 
+# Create platform_acpi_info.h
+SOURCE_ACPI_INFO_HEADER := bsp/include/$(CONFIG_BOARD)_acpi_info.h
+TEMPLATE_ACPI_INFO_HEADER := bsp/include/$(CONFIG_PLATFORM)/platform_acpi_info.h
+TARGET_ACPI_INFO_HEADER := $(HV_OBJDIR)/include/platform_acpi_info.h
+
+$(TARGET_ACPI_INFO_HEADER): $(HV_OBJDIR)/$(HV_CONFIG)
+ifeq (,$(wildcard $(SOURCE_ACPI_INFO_HEADER)))
+	@echo "******* No ACPI info found *******" && \
+	 echo "Expected ACPI info header at $(SOURCE_ACPI_INFO_HEADER)" && \
+	 echo "" && \
+	 echo "The ACPI info header for this board is not available. Please use" && \
+	 echo "an offline tool on the target board to generate a validated one." && \
+	 echo "More details will be available soon."
+ifdef CONFIG_ENFORCE_VALIDATED_ACPI_INFO
+	@echo "" && \
+	 echo "If you want to build the hypervisor with the template ACPI info," && \
+	 echo "unset ENFORCE_VALIDATED_ACPI_INFO using 'make menuconfig'." && \
+	 false
+else
+	@echo "" && \
+	 echo "Using the template at $(TEMPLATE_ACPI_INFO_HEADER) instead" && \
+	 echo "**********************************"
+	@cp $(TEMPLATE_ACPI_INFO_HEADER) $(TARGET_ACPI_INFO_HEADER)
+endif
+else
+	@cp $(SOURCE_ACPI_INFO_HEADER) $(TARGET_ACPI_INFO_HEADER)
+endif
+
 .PHONY: all
 all: $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
@@ -301,7 +328,7 @@ $(VERSION):
 -include $(C_OBJS:.o=.d)
 -include $(S_OBJS:.o=.d)
 
-$(HV_OBJDIR)/%.o: %.c $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H)
+$(HV_OBJDIR)/%.o: %.c $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H) $(TARGET_ACPI_INFO_HEADER)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(patsubst %, -I%, $(INCLUDE_PATH)) -I. -c $(CFLAGS) $(ARCH_CFLAGS) $< -o $@ -MMD -MT $@
 
