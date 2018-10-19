@@ -47,7 +47,10 @@ int shell_cmd(const char *cmd, char *outbuf, int len);
  */
 void vmmngr_update(void);
 
-extern LIST_HEAD(vmmngr_list_struct, vmmngr_struct) vmmngr_head;
+struct vmmngr_list_struct {
+	struct vmmngr_struct *lh_first;
+};
+extern struct vmmngr_list_struct vmmngr_head;
 
 /* vm life cycle ops */
 int list_vm(void);
