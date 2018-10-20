@@ -1043,6 +1043,12 @@ pci_xhci_change_port(struct pci_xhci_vdev *xdev, int port, int usb_speed,
 	if (!need_intr)
 		return 0;
 
+	if (!(xdev->opregs.usbcmd & XHCI_CMD_INTE))
+		need_intr = 0;
+
+	if (!(xdev->opregs.usbcmd & XHCI_CMD_RS))
+		return 0;
+
 	/* make an event for the guest OS */
 	pci_xhci_set_evtrb(&evtrb,
 			port,
