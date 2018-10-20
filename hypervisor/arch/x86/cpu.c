@@ -54,7 +54,7 @@ static void cpu_cap_detect(void);
 static void cpu_xsave_init(void);
 static void set_current_cpu_id(uint16_t pcpu_id);
 static void print_hv_banner(void);
-static uint16_t get_cpu_id_from_lapic_id(uint8_t lapic_id);
+static uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id);
 int ibrs_type;
 static uint64_t start_tsc __attribute__((__section__(".bss_noinit")));
 
@@ -276,9 +276,9 @@ static void alloc_phy_cpu_data(uint16_t pcpu_num)
 	ASSERT(per_cpu_data_base_ptr != NULL, "");
 }
 
-uint16_t __attribute__((weak)) parse_madt(uint8_t lapic_id_array[MAX_PCPU_NUM])
+uint16_t __attribute__((weak)) parse_madt(uint32_t lapic_id_array[MAX_PCPU_NUM])
 {
-	static const uint8_t lapic_id[] = {0U, 2U, 4U, 6U};
+	static const uint32_t lapic_id[] = {0U, 2U, 4U, 6U};
 	uint32_t i;
 
 	for (i = 0U; i < ARRAY_SIZE(lapic_id); i++) {
@@ -292,7 +292,7 @@ static void init_percpu_data_area(void)
 {
 	uint16_t i;
 	uint16_t pcpu_num = 0U;
-	uint8_t lapic_id_array[MAX_PCPU_NUM];
+	uint32_t lapic_id_array[MAX_PCPU_NUM];
 
 	/* Save all lapic_id detected via parse_mdt in lapic_id_array */
 	pcpu_num = parse_madt(lapic_id_array);
@@ -306,9 +306,6 @@ static void init_percpu_data_area(void)
 	for (i = 0U; i < pcpu_num; i++) {
 		per_cpu(lapic_id, i) = lapic_id_array[i];
 	}
-
-	ASSERT(get_cpu_id_from_lapic_id(get_cur_lapic_id()) != INVALID_CPU_ID,
-		"fail to get phy cpu id");
 }
 
 static void cpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state)
@@ -405,6 +402,10 @@ void bsp_boot_init(void)
 
 	/* Initialize the hypervisor paging */
 	init_paging();
+
+	if (!cpu_has_cap(X86_FEATURE_X2APIC)) {
+		panic("x2APIC is not present!");
+	}
 
 	early_init_lapic();
 
@@ -581,7 +582,7 @@ static void cpu_secondary_post(void)
 	cpu_dead(get_cpu_id());
 }
 
-static uint16_t get_cpu_id_from_lapic_id(uint8_t lapic_id)
+static uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id)
 {
 	uint16_t i;
 

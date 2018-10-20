@@ -47,7 +47,8 @@ struct per_cpu_region {
 	uint8_t sf_stack[CONFIG_STACK_SIZE] __aligned(16);
 	uint8_t stack[CONFIG_STACK_SIZE] __aligned(16);
 	char logbuf[LOG_MESSAGE_MAX_SIZE];
-	uint8_t lapic_id;
+	uint32_t lapic_id;
+	uint32_t lapic_ldr;
 	struct smp_call_info_data smp_call_info;
 } __aligned(CPU_PAGE_SIZE); /* per_cpu_region size aligned with CPU_PAGE_SIZE */
 

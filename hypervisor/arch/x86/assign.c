@@ -53,10 +53,25 @@ static bool ptdev_hv_owned_intx(const struct vm *vm, union source_id *virt_sid)
 	}
 }
 
+static uint64_t calculate_logical_dest_mask(uint64_t pdmask)
+{
+	uint64_t dest_mask = 0UL;
+	uint64_t pcpu_mask = pdmask;
+	uint16_t pcpu_id;
+
+	pcpu_id = ffs64(pcpu_mask);
+	while (pcpu_id != INVALID_BIT_INDEX) {
+		bitmap_clear_nolock(pcpu_id, &pcpu_mask);
+		dest_mask |= per_cpu(lapic_ldr, pcpu_id);
+		pcpu_id = ffs64(pcpu_mask);
+	}
+	return dest_mask;
+}
+
 static void ptdev_build_physical_msi(struct vm *vm, struct ptdev_msi_info *info,
 		uint32_t vector)
 {
-	uint64_t vdmask, pdmask;
+	uint64_t vdmask, pdmask, dest_mask;
 	uint32_t dest, delmode;
 	bool phys;
 
@@ -78,10 +93,11 @@ static void ptdev_build_physical_msi(struct vm *vm, struct ptdev_msi_info *info,
 	info->pmsi_data &= ~0x7FFU;
 	info->pmsi_data |= delmode | vector;
 
+	dest_mask = calculate_logical_dest_mask(pdmask);
 	/* update physical dest mode & dest field */
 	info->pmsi_addr = info->vmsi_addr;
 	info->pmsi_addr &= ~0xFF00CU;
-	info->pmsi_addr |= (uint32_t)(pdmask << 12U) |
+	info->pmsi_addr |= (uint32_t)(dest_mask << 12U) |
 				MSI_ADDR_RH | MSI_ADDR_LOG;
 
 	dev_dbg(ACRN_DBG_IRQ, "MSI addr:data = 0x%x:%x(V) -> 0x%x:%x(P)",
@@ -99,7 +115,7 @@ ptdev_build_physical_rte(struct vm *vm,
 	union source_id *virt_sid = &entry->virt_sid;
 
 	if (virt_sid->intx_id.src == PTDEV_VPIN_IOAPIC) {
-		uint64_t vdmask, pdmask, delmode;
+		uint64_t vdmask, pdmask, delmode, dest_mask;
 		uint32_t dest;
 		union ioapic_rte virt_rte;
 		bool phys;
@@ -142,9 +158,10 @@ ptdev_build_physical_rte(struct vm *vm,
 			IOAPIC_RTE_DELMOD | IOAPIC_RTE_INTVEC);
 		rte.full |= IOAPIC_RTE_DESTLOG | delmode | (uint64_t)vector;
 
+		dest_mask = calculate_logical_dest_mask(pdmask);
 		/* update physical dest field */
 		rte.full &= ~IOAPIC_RTE_DEST_MASK;
-		rte.full |= pdmask << IOAPIC_RTE_DEST_SHIFT;
+		rte.full |= dest_mask << IOAPIC_RTE_DEST_SHIFT;
 
 		dev_dbg(ACRN_DBG_IRQ, "IOAPIC RTE = 0x%x:%x(V) -> 0x%x:%x(P)",
 			virt_rte.u.hi_32, virt_rte.u.lo_32,
