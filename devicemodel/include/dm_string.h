@@ -20,7 +20,7 @@
  * @return 0  no error.
  */
 
-int dm_strtol(char *s, char **end, unsigned int base, long *val);
+int dm_strtol(const char *s, char **end, unsigned int base, long *val);
 
 /**
  * @brief Convert string to an integer.
@@ -34,7 +34,7 @@ int dm_strtol(char *s, char **end, unsigned int base, long *val);
  * @return 0  no error.
  */
 
-int dm_strtoi(char *s, char **end, unsigned int base, int *val);
+int dm_strtoi(const char *s, char **end, unsigned int base, int *val);
 
 /**
  * @brief Convert string to an unsigned long integer.
@@ -48,7 +48,7 @@ int dm_strtoi(char *s, char **end, unsigned int base, int *val);
  * @return 0  no error.
  */
 
-int dm_strtoul(char *s, char **end, unsigned int base, unsigned long *val);
+int dm_strtoul(const char *s, char **end, unsigned int base, unsigned long *val);
 
 /**
  * @brief Convert string to an unsigned integer.
@@ -62,6 +62,6 @@ int dm_strtoul(char *s, char **end, unsigned int base, unsigned long *val);
  * @return 0  no error.
  */
 
-int dm_strtoui(char *s, char **end, unsigned int base, unsigned int *val);
+int dm_strtoui(const char *s, char **end, unsigned int base, unsigned int *val);
 
 #endif

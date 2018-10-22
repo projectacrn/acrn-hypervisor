@@ -11,7 +11,7 @@
 #include "dm_string.h"
 
 int
-dm_strtol(char *s, char **end, unsigned int base, long *val)
+dm_strtol(const char *s, char **end, unsigned int base, long *val)
 {
 	if (!s)
 		goto err;
@@ -28,7 +28,7 @@ err:
 }
 
 int
-dm_strtoi(char *s, char **end, unsigned int base, int *val)
+dm_strtoi(const char *s, char **end, unsigned int base, int *val)
 {
 	long l_val;
 	int ret;
@@ -40,7 +40,7 @@ dm_strtoi(char *s, char **end, unsigned int base, int *val)
 }
 
 int
-dm_strtoul(char *s, char **end, unsigned int base, unsigned long *val)
+dm_strtoul(const char *s, char **end, unsigned int base, unsigned long *val)
 {
 	if (!s)
 		goto err;
@@ -57,7 +57,7 @@ err:
 }
 
 int
-dm_strtoui(char *s, char **end, unsigned int base, unsigned int *val)
+dm_strtoui(const char *s, char **end, unsigned int base, unsigned int *val)
 {
 	unsigned long l_val;
 	int ret;
