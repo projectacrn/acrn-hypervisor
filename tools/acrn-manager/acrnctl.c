@@ -18,8 +18,10 @@
 #include <sys/queue.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <stdbool.h>
 #include "acrn_mngr.h"
 #include "acrnctl.h"
+#include "ioc.h"
 
 #define ACRNCTL_OPT_ROOT	"/opt/acrn/conf"
 
@@ -468,7 +470,7 @@ static int acrnctl_do_suspend(int argc, char *argv[])
 static int acrnctl_do_resume(int argc, char *argv[])
 {
 	struct vmmngr_struct *s;
-	unsigned reason = 0;
+	unsigned reason = CBC_WK_RSN_BTN;
 
 	s = vmmngr_find(argv[1]);
 	if (!s) {
@@ -479,7 +481,8 @@ static int acrnctl_do_resume(int argc, char *argv[])
 	if (argc == 3) {
 		sscanf(argv[2], "%x", &reason);
 		reason = (reason & (0xff << 24)) ? 0 : reason;
-	}
+	} else
+		printf("No wake up reason, use 0x%x\n", reason);
 
 	switch (s->state) {
 		case VM_PAUSED:
