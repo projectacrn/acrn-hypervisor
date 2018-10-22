@@ -12,7 +12,7 @@ static spinlock_t irq_alloc_spinlock = { .head = 0U, .tail = 0U, };
 
 #define IRQ_ALLOC_BITMAP_SIZE	INT_DIV_ROUNDUP(NR_IRQS, 64U)
 static uint64_t irq_alloc_bitmap[IRQ_ALLOC_BITMAP_SIZE];
-static struct irq_desc irq_desc_array[NR_IRQS];
+struct irq_desc irq_desc_array[NR_IRQS];
 static uint32_t vector_to_irq[NR_MAX_VECTOR + 1];
 
 spurious_handler_t spurious_handler;
@@ -350,7 +350,12 @@ void dispatch_interrupt(const struct intr_excp_ctx *ctx)
 		/* mask irq if possible */
 		goto ERR;
 	}
-
+#ifdef PROFILING_ON
+	/* Saves ctx info into irq_desc */
+	desc->ctx_rip = ctx->rip;
+	desc->ctx_rflags = ctx->rflags;
+	desc->ctx_cs = ctx->cs;
+#endif
 	handle_irq(desc);
 	return;
 ERR:
