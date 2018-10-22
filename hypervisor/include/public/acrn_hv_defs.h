@@ -72,6 +72,7 @@
 #define HC_ID_DBG_BASE              0x60UL
 #define HC_SETUP_SBUF               BASE_HC_ID(HC_ID, HC_ID_DBG_BASE + 0x00UL)
 #define HC_SETUP_HV_NPK_LOG         BASE_HC_ID(HC_ID, HC_ID_DBG_BASE + 0x01UL)
+#define HC_PROFILING_OPS            BASE_HC_ID(HC_ID, HC_ID_DBG_BASE + 0x02UL)
 
 /* Trusty */
 #define HC_ID_TRUSTY_BASE           0x70UL
@@ -316,5 +317,16 @@ struct trusty_boot_param {
 /**
  * @}
  */
+
+enum profiling_cmd_type {
+	PROFILING_MSR_OPS = 0U,
+	PROFILING_GET_VMINFO,
+	PROFILING_GET_VERSION,
+	PROFILING_GET_CONTROL_SWITCH,
+	PROFILING_SET_CONTROL_SWITCH,
+	PROFILING_CONFIG_PMI,
+	PROFILING_CONFIG_VMSWITCH,
+	PROFILING_GET_PCPUID
+};
 
 #endif /* ACRN_HV_DEFS_H */

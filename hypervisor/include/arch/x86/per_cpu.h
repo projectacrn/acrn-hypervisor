@@ -17,6 +17,7 @@
 #include <timer.h>
 #include <logmsg.h>
 #include "arch/x86/guest/instr_emul.h"
+#include <profiling.h>
 
 struct per_cpu_region {
 	/* vmxon_region MUST be 4KB-aligned */
@@ -50,6 +51,9 @@ struct per_cpu_region {
 	uint32_t lapic_id;
 	uint32_t lapic_ldr;
 	struct smp_call_info_data smp_call_info;
+#ifdef PROFILING_ON
+	struct profiling_info_wrapper profiling_info;
+#endif
 } __aligned(CPU_PAGE_SIZE); /* per_cpu_region size aligned with CPU_PAGE_SIZE */
 
 extern struct per_cpu_region *per_cpu_data_base_ptr;

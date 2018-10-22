@@ -218,7 +218,7 @@ endif
 C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(C_SRCS))
 ifneq ($(CONFIG_RELEASE),y)
 C_OBJS += $(patsubst %.c,$(HV_OBJDIR)/%.o,$(D_SRCS))
-CFLAGS += -DHV_DEBUG
+CFLAGS += -DHV_DEBUG -DPROFILING_ON
 endif
 S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(S_SRCS))
 

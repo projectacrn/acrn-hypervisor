@@ -173,6 +173,10 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 	case HC_SETUP_HV_NPK_LOG:
 		ret = hcall_setup_hv_npk_log(vm, param1);
 		break;
+
+	case HC_PROFILING_OPS:
+		ret = hcall_profiling_ops(vm, param1, param2);
+		break;
 #endif
 
 	case HC_WORLD_SWITCH:
