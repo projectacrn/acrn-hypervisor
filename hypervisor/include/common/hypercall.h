@@ -46,7 +46,7 @@ int32_t hcall_sos_offline_cpu(struct vm *vm, uint64_t lapicid);
  * @param param guest physical memory address. The api version returned
  *              will be copied to this gpa
  *
- * @pre Pointer vm shall point to VM0 
+ * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_get_api_version(struct vm *vm, uint64_t param);
@@ -406,6 +406,19 @@ int32_t hcall_setup_sbuf(struct vm *vm, uint64_t param);
   * @return 0 on success, non-zero on error.
   */
 int32_t hcall_setup_hv_npk_log(struct vm *vm, uint64_t param);
+
+/**
+ * @brief Execute profiling operation
+ *
+ * @param vm Pointer to VM data structure
+ * @param cmd profiling command to be executed
+ * @param cmd profiling command to be executed
+ * @param param guest physical address. This gpa points to
+ *             data structure required by each command
+ *
+ * @return 0 on success, non-zero on error.
+ */
+int32_t hcall_profiling_ops(struct vm *vm, uint64_t cmd, uint64_t param);
 
 /**
  * @brief Get VCPU Power state.
