@@ -30,8 +30,7 @@ enum VBS_K_STATUS {
 #define VIRTIO_ERROR_GENERAL			5
 
 /* VBS-K common ops */
-/* VBS-K init/reset*/
-int vbs_kernel_init(int fd);
+/* VBS-K reset*/
 int vbs_kernel_reset(int fd);
 
 /* VBS-K start/stop */
