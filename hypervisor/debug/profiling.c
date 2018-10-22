@@ -8,6 +8,7 @@
 #include <hypervisor.h>
 
 #define ACRN_DBG_PROFILING		5U
+#define ACRN_ERR_PROFILING		3U
 
 #define MAJOR_VERSION			1
 #define MINOR_VERSION			0
@@ -20,15 +21,57 @@ static uint32_t profiling_pmi_irq = IRQ_INVALID;
 
 static void profiling_initialize_vmsw(void)
 {
-	/* to be implemented */
+	dev_dbg(ACRN_DBG_PROFILING, "%s: entering cpu%d",
+		__func__, get_cpu_id());
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting cpu%d",
+		__func__, get_cpu_id());
 }
 
 /*
  * Configure the PMU's for sep/socwatch profiling.
+ * Initial write of PMU registers.
+ * Walk through the entries and write the value of the register accordingly.
+ * Note: current_group is always set to 0, only 1 group is supported.
  */
 static void profiling_initialize_pmi(void)
 {
-	/* to be implemented */
+	uint32_t i, group_id;
+	struct profiling_msr_op *msrop = NULL;
+	struct sep_state *ss = &get_cpu_var(profiling_info.sep_state);
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: entering cpu%d",
+		__func__, get_cpu_id());
+
+	if (ss == NULL) {
+		dev_dbg(ACRN_ERR_PROFILING, "%s: exiting cpu%d",
+			__func__, get_cpu_id());
+		return;
+	}
+
+	group_id = ss->current_pmi_group_id = 0U;
+	for (i = 0U; i < MAX_MSR_LIST_NUM; i++) {
+		msrop = &(ss->pmi_initial_msr_list[group_id][i]);
+		if (msrop != NULL) {
+			if (msrop->msr_id == (uint32_t)-1) {
+				break;
+			}
+			if (msrop->msr_id == MSR_IA32_DEBUGCTL) {
+				ss->guest_debugctl_value = msrop->value;
+			}
+			if (msrop->msr_op_type == (uint8_t)MSR_OP_WRITE) {
+				msr_write(msrop->msr_id, msrop->value);
+				dev_dbg(ACRN_DBG_PROFILING,
+				"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%llx",
+				__func__, get_cpu_id(), msrop->msr_id, msrop->value);
+			}
+		}
+	}
+
+	ss->pmu_state = PMU_SETUP;
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting cpu%d",
+		__func__,  get_cpu_id());
 }
 
 /*
@@ -225,23 +268,142 @@ int32_t profiling_set_control(__unused struct vm *vm, __unused uint64_t addr)
 /*
  * Configure PMI on all cpus
  */
-int32_t profiling_configure_pmi(__unused struct vm *vm, __unused uint64_t addr)
+int32_t profiling_configure_pmi(struct vm *vm, uint64_t addr)
 {
-	/* to be implemented
-	 * call to smp_call_function profiling_ipi_handler
-	 */
+	uint16_t i;
+	struct profiling_pmi_config pmi_config;
+
+	(void)memset((void *)&pmi_config, 0U, sizeof(pmi_config));
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+
+	if (copy_from_gpa(vm, &pmi_config, addr, sizeof(pmi_config)) != 0) {
+		pr_err("%s: Unable to copy addr from vm\n", __func__);
+		return -EINVAL;
+	}
+
+	for (i = 0U; i < phys_cpu_num; i++) {
+		if (!((per_cpu(profiling_info.sep_state, i).pmu_state ==
+				PMU_INITIALIZED) ||
+			(per_cpu(profiling_info.sep_state, i).pmu_state ==
+				PMU_SETUP))) {
+			pr_err("%s: invalid pmu_state %u on cpu%d",
+			__func__, per_cpu(profiling_info.sep_state, i).pmu_state, i);
+			return -EINVAL;
+		}
+	}
+
+	if (pmi_config.num_groups == 0U ||
+		pmi_config.num_groups > MAX_GROUP_NUM) {
+		pr_err("%s: invalid num_groups %u",
+			__func__, pmi_config.num_groups);
+		return -EINVAL;
+	}
+
+	for (i = 0U; i < phys_cpu_num; i++) {
+		per_cpu(profiling_info.ipi_cmd, i) = IPI_PMU_CONFIG;
+		per_cpu(profiling_info.sep_state, i).num_pmi_groups
+			= pmi_config.num_groups;
+
+		(void)memcpy_s((void *)per_cpu(profiling_info.sep_state, i).pmi_initial_msr_list,
+		sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM*MAX_GROUP_NUM,
+		(void *)pmi_config.initial_list,
+		sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM*MAX_GROUP_NUM);
+
+		(void)memcpy_s((void *)per_cpu(profiling_info.sep_state, i).pmi_start_msr_list,
+		sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM*MAX_GROUP_NUM,
+		(void *)pmi_config.start_list,
+		sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM*MAX_GROUP_NUM);
+
+		(void)memcpy_s((void *)per_cpu(profiling_info.sep_state, i).pmi_stop_msr_list,
+		sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM*MAX_GROUP_NUM,
+		(void *)pmi_config.stop_list,
+		sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM*MAX_GROUP_NUM);
+
+		(void)memcpy_s((void *)per_cpu(profiling_info.sep_state, i).pmi_entry_msr_list,
+		sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM*MAX_GROUP_NUM,
+		(void *)pmi_config.entry_list,
+		sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM*MAX_GROUP_NUM);
+
+		(void)memcpy_s((void *)per_cpu(profiling_info.sep_state, i).pmi_exit_msr_list,
+		sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM*MAX_GROUP_NUM,
+		(void *)pmi_config.exit_list,
+		sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM*MAX_GROUP_NUM);
+	}
+
+	smp_call_function(pcpu_active_bitmap, profiling_ipi_handler, NULL);
+
+	if (copy_to_gpa(vm, &pmi_config, addr, sizeof(pmi_config)) != 0) {
+		pr_err("%s: Unable to copy addr to vm\n", __func__);
+		return -EINVAL;
+	}
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting", __func__);
 	return 0;
 }
 
 /*
  * Configure for VM-switch data on all cpus
  */
-int32_t profiling_configure_vmsw(__unused struct vm *vm, __unused uint64_t addr)
+int32_t profiling_configure_vmsw(struct vm *vm, uint64_t addr)
 {
-	/* to be implemented
-	 * call to smp_call_function profiling_ipi_handler
-	 */
-	return 0;
+	uint16_t i;
+	int32_t ret = 0;
+	struct profiling_vmsw_config vmsw_config;
+
+	(void)memset((void *)&vmsw_config, 0U, sizeof(vmsw_config));
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+
+	if (copy_from_gpa(vm, &vmsw_config, addr, sizeof(vmsw_config)) != 0) {
+		pr_err("%s: Unable to copy addr from vm\n", __func__);
+		return -EINVAL;
+	}
+
+	switch (vmsw_config.collector_id) {
+	case COLLECT_PROFILE_DATA:
+		for (i = 0U; i < phys_cpu_num; i++) {
+			per_cpu(profiling_info.ipi_cmd, i) = IPI_VMSW_CONFIG;
+
+			(void)memcpy_s(
+			(void *)per_cpu(profiling_info.sep_state, i).vmsw_initial_msr_list,
+			sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM,
+			(void *)vmsw_config.initial_list,
+			sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM);
+
+			(void)memcpy_s(
+			(void *)per_cpu(profiling_info.sep_state, i).vmsw_entry_msr_list,
+			sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM,
+			(void *)vmsw_config.entry_list,
+			sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM);
+
+			(void)memcpy_s(
+			(void *)per_cpu(profiling_info.sep_state, i).vmsw_exit_msr_list,
+			sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM,
+			(void *)vmsw_config.exit_list,
+			sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM);
+		}
+
+		smp_call_function(pcpu_active_bitmap, profiling_ipi_handler, NULL);
+
+		break;
+	case COLLECT_POWER_DATA:
+		break;
+	default:
+		pr_err("%s: unknown collector %d",
+			__func__, vmsw_config.collector_id);
+		ret = -EINVAL;
+		break;
+	}
+
+	if (copy_to_gpa(vm, &vmsw_config, addr, sizeof(vmsw_config)) != 0) {
+		pr_err("%s: Unable to copy addr to vm\n", __func__);
+		return -EINVAL;
+	}
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting", __func__);
+
+	return ret;
 }
 
 /*
