@@ -588,6 +588,7 @@ pci_xhci_clr_native_port_assigned(struct pci_xhci_vdev *xdev,
 	if (i >= 0) {
 		xdev->native_ports[i].state = VPORT_FREE;
 		xdev->native_ports[i].vport = 0;
+		memset(&xdev->native_ports[i].info, 0, sizeof(*info));
 	}
 }
 
