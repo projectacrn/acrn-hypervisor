@@ -33,6 +33,11 @@ enum MSR_CMD_TYPE {
 	MSR_OP_READ_CLEAR
 };
 
+enum PMU_MSR_TYPE {
+	PMU_MSR_CCCR = 0,
+	PMU_MSR_ESCR,
+	PMU_MSR_DATA
+};
 typedef enum IPI_COMMANDS {
 	IPI_MSR_OP = 0,
 	IPI_PMU_CONFIG,
@@ -212,6 +217,46 @@ struct sep_state {
 	uint64_t saved_debugctl_value;
 } __aligned(8);
 
+struct core_pmu_sample {
+	/* context where PMI is triggered */
+	uint32_t	os_id;
+	/* the task id */
+	uint32_t	task_id;
+	/* instruction pointer */
+	uint64_t	rip;
+	/* the task name */
+	char		task[16];
+	/* physical cpu ID */
+	uint32_t	cpu_id;
+	/* the process id */
+	uint32_t	process_id;
+	/* perf global status msr value (for overflow status) */
+	uint64_t	overflow_status;
+	/* rflags */
+	uint32_t	rflags;
+	/* code segment */
+	uint32_t	cs;
+} __aligned(SEP_BUF_ENTRY_SIZE);
+
+#define NUM_LBR_ENTRY		32
+
+struct lbr_pmu_sample {
+	/* LBR TOS */
+	uint64_t	lbr_tos;
+	/* LBR FROM IP */
+	uint64_t	lbr_from_ip[NUM_LBR_ENTRY];
+	/* LBR TO IP */
+	uint64_t	lbr_to_ip[NUM_LBR_ENTRY];
+	/* LBR info */
+	uint64_t	lbr_info[NUM_LBR_ENTRY];
+} __aligned(SEP_BUF_ENTRY_SIZE);
+
+struct pmu_sample {
+	/* core pmu sample */
+	struct core_pmu_sample	csample;
+	/* lbr pmu sample */
+	struct lbr_pmu_sample	lsample;
+} __aligned(SEP_BUF_ENTRY_SIZE);
 
 struct vm_switch_trace {
 	uint64_t vm_enter_tsc;
@@ -228,6 +273,7 @@ struct profiling_info_wrapper {
 	struct sep_state		sep_state;
 	struct guest_vm_info	vm_info;
 	ipi_commands			ipi_cmd;
+	struct pmu_sample		pmu_sample;
 	struct vm_switch_trace	vm_switch_trace;
 	socwatch_state			soc_state;
 	struct sw_msr_op_info	sw_msr_op_info;

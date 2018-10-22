@@ -372,6 +372,9 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 	}
 
 	ctx.vector = intr_info & 0xFFU;
+	ctx.rip    = vcpu_get_rip(vcpu);
+	ctx.rflags = vcpu_get_rflags(vcpu);
+	ctx.cs     = exec_vmread32(VMX_GUEST_CS_SEL);
 
 #ifdef CONFIG_PARTITION_MODE
 	partition_mode_dispatch_interrupt(&ctx);

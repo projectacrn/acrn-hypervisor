@@ -488,6 +488,16 @@
 #define MSR_ATOM_LER_TO_LIP                 0x000001DEU
 /* Last exception record to linear IP */
 
+#ifdef PROFILING_ON
+/* Core (and Goldmont) specific MSRs */
+#define MSR_CORE_LASTBRANCH_TOS				0x000001C9U
+/* Last branch record stack TOS */
+#define MSR_CORE_LASTBRANCH_0_FROM_IP		0x00000680U
+/* Last branch record 0 from IP */
+#define MSR_CORE_LASTBRANCH_0_TO_IP			0x000006C0U
+/* Last branch record 0 to IP */
+#endif
+
 /* LINCROFT specific MSRs */
 #define MSR_LNC_BIOS_CACHE_AS_RAM           0x000002E0U    /* Configure CAR */
 
