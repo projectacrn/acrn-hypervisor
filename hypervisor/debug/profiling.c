@@ -212,11 +212,113 @@ static void profiling_disable_pmu(void)
 }
 
 /*
+ * Read profiling data and transferred to SOS
+ * Drop transfer of profiling data if sbuf is full/insufficient and log it
+ */
+static int profiling_generate_data(__unused int32_t collector, __unused uint32_t type)
+{
+	/* to be implemented */
+	return 0;
+}
+
+/*
  * Performs MSR operations - read, write and clear
  */
 static void profiling_handle_msrops(void)
 {
-	/* to be implemented */
+	uint32_t i, j;
+	struct profiling_msr_ops_list *my_msr_node
+		= get_cpu_var(profiling_info.msr_node);
+	struct sw_msr_op_info *sw_msrop
+		= &(get_cpu_var(profiling_info.sw_msr_op_info));
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: entering cpu%d",
+		__func__, get_cpu_id());
+
+	if ((my_msr_node == NULL) ||
+		(my_msr_node->msr_op_state != (int32_t)MSR_OP_REQUESTED)) {
+		dev_dbg(ACRN_DBG_PROFILING, "%s: invalid my_msr_node on cpu%d",
+			__func__, get_cpu_id());
+	}
+
+	if ((my_msr_node->num_entries == 0U) ||
+		(my_msr_node->num_entries >= MAX_MSR_LIST_NUM)) {
+		dev_dbg(ACRN_DBG_PROFILING,
+		"%s: invalid num_entries on cpu%d",
+		__func__, get_cpu_id());
+		return;
+	}
+
+	for (i = 0U; i < my_msr_node->num_entries; i++) {
+		switch (my_msr_node->entries[i].msr_op_type) {
+		case MSR_OP_READ:
+			my_msr_node->entries[i].value
+				= msr_read(my_msr_node->entries[i].msr_id);
+			dev_dbg(ACRN_DBG_PROFILING,
+			"%s: MSRREAD cpu%d, msr_id=0x%x, msr_val=0x%llx",
+			__func__, get_cpu_id(),	my_msr_node->entries[i].msr_id,
+			my_msr_node->entries[i].value);
+			break;
+		case MSR_OP_READ_CLEAR:
+			my_msr_node->entries[i].value
+				= msr_read(my_msr_node->entries[i].msr_id);
+			dev_dbg(ACRN_DBG_PROFILING,
+			"%s: MSRREADCLEAR cpu%d, msr_id=0x%x, msr_val=0x%llx",
+			__func__, get_cpu_id(), my_msr_node->entries[i].msr_id,
+			my_msr_node->entries[i].value);
+			msr_write(my_msr_node->entries[i].msr_id, 0U);
+			break;
+		case MSR_OP_WRITE:
+			msr_write(my_msr_node->entries[i].msr_id,
+				my_msr_node->entries[i].value);
+			dev_dbg(ACRN_DBG_PROFILING,
+			"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%llx",
+			__func__, get_cpu_id(), my_msr_node->entries[i].msr_id,
+			my_msr_node->entries[i].value);
+			break;
+		default:
+			pr_err("%s: unknown MSR op_type %u on cpu %d",
+			__func__, my_msr_node->entries[i].msr_op_type,
+			get_cpu_id());
+			break;
+		}
+	}
+
+	my_msr_node->msr_op_state = (int32_t)MSR_OP_HANDLED;
+
+	/* Also generates sample */
+	if ((my_msr_node->collector_id == COLLECT_POWER_DATA) &&
+			(sw_msrop != NULL)) {
+
+		sw_msrop->cpu_id = get_cpu_id();
+		sw_msrop->valid_entries = my_msr_node->num_entries;
+
+		/*
+		 * if 'param' is 0, then skip generating a sample since it is
+		 * an immediate MSR read operation.
+		 */
+		if (my_msr_node->entries[0].param == 0UL) {
+			for (j = 0U; j < my_msr_node->num_entries; ++j) {
+				sw_msrop->core_msr[j]
+					= my_msr_node->entries[j].value;
+				/*
+				 * socwatch uses the 'param' field to store the
+				 * sample id needed by socwatch to identify the
+				 * type of sample during post-processing
+				 */
+				sw_msrop->sample_id
+					= my_msr_node->entries[j].param;
+			}
+
+			/* generate sample */
+			(void)profiling_generate_data(COLLECT_POWER_DATA,
+						SOCWATCH_MSR_OP);
+		}
+		my_msr_node->msr_op_state = (int32_t)MSR_OP_REQUESTED;
+	}
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting cpu%d",
+		__func__, get_cpu_id());
 }
 
 /*
@@ -325,12 +427,33 @@ void profiling_stop_pmu(void)
 /*
  * Performs MSR operations on all the CPU's
  */
-
-int32_t profiling_msr_ops_all_cpus(__unused struct vm *vm, __unused uint64_t addr)
+int32_t profiling_msr_ops_all_cpus(struct vm *vm, uint64_t addr)
 {
-	/* to be implemented
-	 * call to smp_call_function profiling_ipi_handler
-	 */
+	uint16_t i;
+	struct profiling_msr_ops_list msr_list[phys_cpu_num];
+
+	(void)memset((void *)&msr_list, 0U, sizeof(msr_list));
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+
+	if (copy_from_gpa(vm, &msr_list, addr, sizeof(msr_list)) != 0) {
+		pr_err("%s: Unable to copy addr from vm\n", __func__);
+		return -EINVAL;
+	}
+
+	for (i = 0U; i < phys_cpu_num; i++) {
+		per_cpu(profiling_info.ipi_cmd, i) = IPI_MSR_OP;
+		per_cpu(profiling_info.msr_node, i) = &(msr_list[i]);
+	}
+
+	smp_call_function(pcpu_active_bitmap, profiling_ipi_handler, NULL);
+
+	if (copy_to_gpa(vm, &msr_list, addr, sizeof(msr_list)) != 0) {
+		pr_err("%s: Unable to copy addr from vm\n", __func__);
+		return -EINVAL;
+	}
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting", __func__);
 	return 0;
 }
 
