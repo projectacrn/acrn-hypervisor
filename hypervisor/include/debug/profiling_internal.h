@@ -18,6 +18,7 @@
 #define COLLECT_PROFILE_DATA	0
 #define COLLECT_POWER_DATA		1
 
+#define SEP_BUF_ENTRY_SIZE 		32U
 #define SOCWATCH_MSR_OP			100U
 
 enum MSR_CMD_STATUS {
@@ -159,6 +160,16 @@ struct vmexit_msr {
 	uint64_t msr_data;
 };
 
+struct guest_vm_info {
+	uint64_t	vmenter_tsc;
+	uint64_t	vmexit_tsc;
+	uint64_t	vmexit_reason;
+	uint64_t	guest_rip;
+	uint64_t	guest_rflags;
+	uint64_t	guest_cs;
+	int32_t		guest_vm_id;
+	int32_t		external_vector;
+};
 struct sep_state {
 	sep_pmu_state pmu_state;
 
@@ -201,13 +212,23 @@ struct sep_state {
 	uint64_t saved_debugctl_value;
 } __aligned(8);
 
+
+struct vm_switch_trace {
+	uint64_t vm_enter_tsc;
+	uint64_t vm_exit_tsc;
+	uint64_t vm_exit_reason;
+	int32_t  os_id;
+}__aligned(SEP_BUF_ENTRY_SIZE);
+
 /*
  * Wrapper containing  SEP sampling/profiling related data structures
  */
 struct profiling_info_wrapper {
 	struct profiling_msr_ops_list	*msr_node;
 	struct sep_state		sep_state;
+	struct guest_vm_info	vm_info;
 	ipi_commands			ipi_cmd;
+	struct vm_switch_trace	vm_switch_trace;
 	socwatch_state			soc_state;
 	struct sw_msr_op_info	sw_msr_op_info;
 } __aligned(8);
