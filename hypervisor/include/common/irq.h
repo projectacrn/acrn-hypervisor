@@ -24,6 +24,11 @@ struct irq_desc {
 	uint32_t flags;		/* flags for trigger mode/ptdev */
 
 	spinlock_t lock;
+#ifdef PROFILING_ON
+	uint64_t ctx_rip;
+	uint64_t ctx_rflags;
+	uint64_t ctx_cs;
+#endif
 };
 
 int32_t request_irq(uint32_t req_irq, irq_action_t action_fn, void *priv_data,
