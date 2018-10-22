@@ -28,13 +28,7 @@ vbs_vqs_info_set(int fd, void *arg)
 }
 
 /* VBS-K common ops */
-/* VBS-K init/reset */
-int
-vbs_kernel_init(int fd)
-{
-	return VIRTIO_SUCCESS;
-}
-
+/* VBS-K reset */
 int
 vbs_kernel_reset(int fd)
 {
