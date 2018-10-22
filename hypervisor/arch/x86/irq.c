@@ -26,6 +26,7 @@ static struct static_mapping_table irq_static_mappings[NR_STATIC_MAPPINGS] = {
 	{TIMER_IRQ, VECTOR_TIMER},
 	{NOTIFY_IRQ, VECTOR_NOTIFY_VCPU},
 	{POSTED_INTR_NOTIFY_IRQ, VECTOR_POSTED_INTR},
+	{PMI_IRQ, VECTOR_PMI},
 };
 
 /*
@@ -96,7 +97,7 @@ uint32_t alloc_irq_vector(uint32_t irq)
 	}
 
 	desc = &irq_desc_array[irq];
-	
+
 	if (desc->vector != VECTOR_INVALID) {
 		if (vector_to_irq[desc->vector] == irq) {
 			/* statically binded */
@@ -121,7 +122,7 @@ uint32_t alloc_irq_vector(uint32_t irq)
 			}
 		}
 		vr = (vr > VECTOR_DYNAMIC_END) ? VECTOR_INVALID : vr;
-		
+
 		spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);
 	}
 
