@@ -20,12 +20,11 @@ enum {
 	HV_NPK_LOG_CMD_QUERY,
 };
 
-
-#define	HV_NPK_LOG_RES_INVALID	0x1U
-#define	HV_NPK_LOG_RES_OK	0x2U
-#define	HV_NPK_LOG_RES_KO	0x3U
-#define	HV_NPK_LOG_RES_ENABLED	0x4U
-#define	HV_NPK_LOG_RES_DISABLED	0x5U
+#define	HV_NPK_LOG_RES_INVALID	0x0U
+#define	HV_NPK_LOG_RES_OK	0x1U
+#define	HV_NPK_LOG_RES_KO	0x2U
+#define	HV_NPK_LOG_RES_ENABLED	0x3U
+#define	HV_NPK_LOG_RES_DISABLED	0x4U
 
 struct hv_npk_log_param;
 
