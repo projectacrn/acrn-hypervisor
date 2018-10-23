@@ -190,13 +190,22 @@ In general, follow the `Linux kernel coding style`_, with the
 following exceptions:
 
 * Add braces to every ``if`` and ``else`` body, even for single-line code
-  blocks. Use the ``--ignore BRACES`` flag to make *checkpatch* stop
-  complaining.
+  blocks.
 * Use spaces instead of tabs to align comments after declarations, as needed.
 * Use C89-style single line comments, ``/*  */``. The C99-style single line
   comment, ``//``, is not allowed.
 * Use ``/**  */`` for doxygen comments that need to appear in the documentation.
+* The line limit is 120 columns instead of 80 columns. Note that tabs are
+  8-column wide.
 
+You can use *checkpatch* from Linux kernel to check the compliance. ACRN
+maintains a `checkpatch conf`_ which customizes the script to stop warning on
+the exceptions above. Invoke *checkpatch* with the root of ``acrn-hypervisor``
+repository as the current working directory to make the configurations
+effective.
+
+.. _checkpatch conf:
+   https://github.com/projectacrn/acrn-hypervisor/blob/master/.checkpatch.conf
 
 .. _Contribution workflow:
 
