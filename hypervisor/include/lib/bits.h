@@ -231,26 +231,26 @@ build_bitmap_clear(bitmap32_clear_lock, "l", uint32_t, BUS_LOCK)
  * Note:Input parameter nr shall be less than 64. If nr>=64, it will
  * be truncated.
  */
-static inline bool bitmap_test(uint16_t nr_arg, volatile uint64_t *addr)
+static inline bool bitmap_test(uint16_t nr_arg, const volatile uint64_t *addr)
 {
 	uint16_t nr;
 	int32_t ret=0;
 	nr = nr_arg & 0x3fU;
 	asm volatile("btq %q2,%1\n\tsbbl %0, %0"
-			: "=r" (ret), "=m" (*addr)
-			: "r" ((uint64_t)nr)
+			: "=r" (ret)
+			: "m" (*addr), "r" ((uint64_t)nr)
 			: "cc", "memory");
 	return (ret != 0);
 }
 
-static inline bool bitmap32_test(uint16_t nr_arg, volatile uint32_t *addr)
+static inline bool bitmap32_test(uint16_t nr_arg, const volatile uint32_t *addr)
 {
 	uint16_t nr;
 	int32_t ret=0;
 	nr = nr_arg & 0x1fU;
 	asm volatile("btl %2,%1\n\tsbbl %0, %0"
-			: "=r" (ret), "=m" (*addr)
-			: "r" ((uint32_t)nr)
+			: "=r" (ret)
+			: "m" (*addr), "r" ((uint32_t)nr)
 			: "cc", "memory");
 	return (ret != 0);
 }
