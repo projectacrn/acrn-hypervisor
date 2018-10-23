@@ -390,7 +390,6 @@ usb_dev_prepare_xfer(struct usb_data_xfer *xfer, int *count, int *size)
 			 * 1. LINK trb is in the middle of trbs.
 			 * 2. LINK trb is a single trb.
 			 */
-			c++;
 			block->processed = USB_XFER_BLK_HANDLED;
 			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 			continue;
