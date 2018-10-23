@@ -250,7 +250,7 @@ static void init_cr0_cr4_host_mask(void)
 	pr_dbg("CR4 mask value: 0x%016llx", cr4_host_mask);
 }
 
-uint64_t vmx_rdmsr_pat(struct vcpu *vcpu)
+uint64_t vmx_rdmsr_pat(const struct vcpu *vcpu)
 {
 	/*
 	 * note: if context->cr0.CD is set, the actual value in guest's
@@ -288,7 +288,7 @@ int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value)
 	return 0;
 }
 
-static void load_pdptrs(struct vcpu *vcpu)
+static void load_pdptrs(const struct vcpu *vcpu)
 {
 	uint64_t guest_cr3 = exec_vmread(VMX_GUEST_CR3);
 	/* TODO: check whether guest cr3 is valid */
@@ -945,7 +945,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	exec_vmwrite(VMX_CR3_TARGET_3, 0UL);
 }
 
-static void init_entry_ctrl(__unused struct vcpu *vcpu)
+static void init_entry_ctrl(__unused const struct vcpu *vcpu)
 {
 	uint32_t value32;
 

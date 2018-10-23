@@ -148,7 +148,7 @@ static int vcpu_inject_vlapic_int(struct vcpu *vcpu)
 	return 0;
 }
 
-static int vcpu_do_pending_extint(struct vcpu *vcpu)
+static int vcpu_do_pending_extint(const struct vcpu *vcpu)
 {
 	struct vm *vm;
 	struct vcpu *primary;

@@ -88,7 +88,7 @@ int check_vmx_mmu_cap(void);
 uint16_t allocate_vpid(void);
 void flush_vpid_single(uint16_t vpid);
 void flush_vpid_global(void);
-void invept(struct vcpu *vcpu);
+void invept(const struct vcpu *vcpu);
 bool check_continuous_hpa(struct vm *vm, uint64_t gpa_arg, uint64_t size_arg);
 /**
  *@pre (pml4_page != NULL) && (pg_size != NULL)
