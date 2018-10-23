@@ -315,15 +315,15 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 
 	pr_info("Creating VCPU working on PCPU%hu", pcpu_id);
 
+	if (vm->hw.created_vcpus >= CONFIG_MAX_VCPUS_PER_VM) {
+		pr_err("%s, no more vcpus can be supported!\n", __func__);
+		return -EINVAL;
+	}
 	/*
 	 * vcpu->vcpu_id = vm->hw.created_vcpus;
 	 * vm->hw.created_vcpus++;
 	 */
 	vcpu_id = atomic_xadd16(&vm->hw.created_vcpus, 1U);
-	if (vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
-		pr_err("%s, vcpu id is invalid!\n", __func__);
-		return -EINVAL;
-	}
 	/* Allocate memory for VCPU */
 	vcpu = &(vm->hw.vcpu_array[vcpu_id]);
 	(void)memset((void *)vcpu, 0U, sizeof(struct vcpu));
