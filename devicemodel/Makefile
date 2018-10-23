@@ -22,6 +22,7 @@ CFLAGS += -fpie
 
 CFLAGS += -I$(BASEDIR)/include
 CFLAGS += -I$(BASEDIR)/include/public
+CFLAGS += -I$(DM_OBJDIR)/include
 CFLAGS += -I$(TOOLS_OUT)
 
 GCC_MAJOR=$(shell echo __GNUC__ | $(CC) -E -x c - | tail -n 1)
@@ -137,8 +138,12 @@ SRCS += vmcfg/apl-mrb/vm1/vm1.c
 
 OBJS := $(patsubst %.c,$(DM_OBJDIR)/%.o,$(SRCS))
 
+VERSION_H := $(DM_OBJDIR)/include/version.h
+VMCFG_CONFIG_H := $(DM_OBJDIR)/include/vmcfg_config.h
+
 HEADERS := $(shell find $(BASEDIR) -name '*.h')
-HEADERS += $(BASEDIR)/include/vmcfg_config.h
+HEADERS += $(VERSION_H) $(VMCFG_CONFIG_H)
+
 DISTCLEAN_OBJS := $(shell find $(BASEDIR) -name '*.o')
 
 PROGRAM := acrn-dm
@@ -148,31 +153,26 @@ SAMPLES_MRB := $(wildcard samples/apl-mrb/*)
 
 BIOS_BIN := $(wildcard bios/*)
 
-all: include/version.h vmcfg_header $(PROGRAM)
+all: $(DM_OBJDIR)/$(PROGRAM)
 	@echo -n ""
 
-vmcfg_header:
-	make -C $(BASEDIR)/vmcfg $(BASEDIR)/include/vmcfg_config.h BASEDIR=$(BASEDIR)
+$(VMCFG_CONFIG_H):
+	make -C $(BASEDIR)/vmcfg $@ BASEDIR=$(BASEDIR) DM_OBJDIR=$(DM_OBJDIR)
 
-$(PROGRAM): $(OBJS)
-	$(CC) -o $(DM_OBJDIR)/$@ $(CFLAGS) $(LDFLAGS) $^ $(LIBS)
+$(DM_OBJDIR)/$(PROGRAM): $(OBJS)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LIBS)
 
 clean:
-	rm -f $(OBJS)
-	rm -f include/version.h
-	rm -f $(OBJS)
 	rm -rf $(DM_OBJDIR)
-	if test -f $(PROGRAM); then rm $(PROGRAM); fi
 
 distclean:
 	rm -f $(DISTCLEAN_OBJS)
-	rm -f include/version.h
-	rm -f $(OBJS)
 	rm -rf $(DM_OBJDIR)
 	rm -f tags TAGS cscope.files cscope.in.out cscope.out cscope.po.out GTAGS GPATH GRTAGS GSYMS
 
-include/version.h:
-	touch include/version.h
+$(VERSION_H):
+	mkdir -p $(DM_OBJDIR)/include
+	touch $(VERSION_H)
 	if [ "$(DM_BUILD_VERSION)"x = x -o "$(DM_BUILD_TAG)"x = x ];then\
 		COMMIT=`git rev-parse --verify --short HEAD 2>/dev/null`;\
 		DIRTY=`git diff-index --name-only HEAD`;\
@@ -184,18 +184,18 @@ include/version.h:
 	fi;\
 	TIME=`date "+%Y-%m-%d %H:%M:%S"`;\
 	USER=`id -u -n`; \
-	echo "/*" > include/version.h; \
-	sed 's/^/ * /' ../LICENSE >> include/version.h;\
-	echo " */" >> include/version.h;\
-	echo "" >> include/version.h;\
-	echo "#define DM_MAJOR_VERSION $(MAJOR_VERSION)" >> include/version.h;\
-	echo "#define DM_MINOR_VERSION $(MINOR_VERSION)" >> include/version.h;\
-	echo "#define DM_EXTRA_VERSION "\"$(EXTRA_VERSION)\""" >> include/version.h;\
-	echo "#define DM_FULL_VERSION "\"$(FULL_VERSION)\""" >> include/version.h;\
-	echo "#define DM_DAILY_TAG "\""$$DAILY_TAG"\""" >> include/version.h;\
-	echo "#define DM_BUILD_VERSION "\""$$PATCH"\""" >> include/version.h;\
-	echo "#define DM_BUILD_TIME "\""$$TIME"\""" >> include/version.h;\
-	echo "#define DM_BUILD_USER "\""$$USER"\""" >> include/version.h
+	echo "/*" > $(VERSION_H); \
+	sed 's/^/ * /' ../LICENSE >> $(VERSION_H);\
+	echo " */" >> $(VERSION_H);\
+	echo "" >> $(VERSION_H);\
+	echo "#define DM_MAJOR_VERSION $(MAJOR_VERSION)" >> $(VERSION_H);\
+	echo "#define DM_MINOR_VERSION $(MINOR_VERSION)" >> $(VERSION_H);\
+	echo "#define DM_EXTRA_VERSION "\"$(EXTRA_VERSION)\""" >> $(VERSION_H);\
+	echo "#define DM_FULL_VERSION "\"$(FULL_VERSION)\""" >> $(VERSION_H);\
+	echo "#define DM_DAILY_TAG "\""$$DAILY_TAG"\""" >> $(VERSION_H);\
+	echo "#define DM_BUILD_VERSION "\""$$PATCH"\""" >> $(VERSION_H);\
+	echo "#define DM_BUILD_TIME "\""$$TIME"\""" >> $(VERSION_H);\
+	echo "#define DM_BUILD_USER "\""$$USER"\""" >> $(VERSION_H)
 
 $(DM_OBJDIR)/%.o: %.c $(HEADERS)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
