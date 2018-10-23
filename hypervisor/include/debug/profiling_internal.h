@@ -217,6 +217,16 @@ struct sep_state {
 	uint64_t saved_debugctl_value;
 } __aligned(8);
 
+struct data_header {
+	int32_t collector_id;
+	uint16_t cpu_id;
+	uint16_t data_type;
+	uint64_t tsc;
+	uint64_t payload_size;
+	uint64_t reserved;
+} __aligned(SEP_BUF_ENTRY_SIZE);
+
+#define DATA_HEADER_SIZE ((uint64_t)sizeof(struct data_header))
 struct core_pmu_sample {
 	/* context where PMI is triggered */
 	uint32_t	os_id;
@@ -238,6 +248,7 @@ struct core_pmu_sample {
 	uint32_t	cs;
 } __aligned(SEP_BUF_ENTRY_SIZE);
 
+#define CORE_PMU_SAMPLE_SIZE ((uint64_t)sizeof(struct core_pmu_sample))
 #define NUM_LBR_ENTRY		32
 
 struct lbr_pmu_sample {
@@ -251,6 +262,7 @@ struct lbr_pmu_sample {
 	uint64_t	lbr_info[NUM_LBR_ENTRY];
 } __aligned(SEP_BUF_ENTRY_SIZE);
 
+#define LBR_PMU_SAMPLE_SIZE ((uint64_t)sizeof(struct lbr_pmu_sample))
 struct pmu_sample {
 	/* core pmu sample */
 	struct core_pmu_sample	csample;
@@ -265,6 +277,7 @@ struct vm_switch_trace {
 	int32_t  os_id;
 }__aligned(SEP_BUF_ENTRY_SIZE);
 
+#define VM_SWITCH_TRACE_SIZE ((uint64_t)sizeof(struct vm_switch_trace))
 /*
  * Wrapper containing  SEP sampling/profiling related data structures
  */
