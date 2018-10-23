@@ -65,7 +65,7 @@ uint64_t get_hv_image_base(void)
  *  - The HV code is always relocated to higher address, compared
  *    with CONFIG_RAM_START
  */
-static uint64_t trampoline_relo_addr(void *addr)
+static uint64_t trampoline_relo_addr(const void *addr)
 {
 	return (uint64_t)addr - get_hv_image_delta();
 }
@@ -143,7 +143,7 @@ void relocate(void)
 #endif
 }
 
-uint64_t read_trampoline_sym(void *sym)
+uint64_t read_trampoline_sym(const void *sym)
 {
 	uint64_t *hva;
 
@@ -151,7 +151,7 @@ uint64_t read_trampoline_sym(void *sym)
 	return *hva;
 }
 
-void write_trampoline_sym(void *sym, uint64_t val)
+void write_trampoline_sym(const void *sym, uint64_t val)
 {
 	uint64_t *hva;
 

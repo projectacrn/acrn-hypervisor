@@ -329,7 +329,7 @@ static bool shell_input_line(void)
 	return done;
 }
 
-static int shell_process_cmd(char *p_input_line)
+static int shell_process_cmd(const char *p_input_line)
 {
 	int status = -EINVAL;
 	struct shell_cmd *p_cmd;

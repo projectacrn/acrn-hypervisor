@@ -80,7 +80,7 @@ static inline char fifo_getchar(struct fifo *fifo)
 	}
 }
 
-static inline uint32_t fifo_numchars(struct fifo *fifo)
+static inline uint32_t fifo_numchars(const struct fifo *fifo)
 {
 	return fifo->num;
 }
@@ -107,7 +107,7 @@ static inline void vuart_fifo_init(struct acrn_vuart *vu)
  *
  * Return an interrupt reason if one is available.
  */
-static uint8_t vuart_intr_reason(struct acrn_vuart *vu)
+static uint8_t vuart_intr_reason(const struct acrn_vuart *vu)
 {
 	if (((vu->lsr & LSR_OE) != 0U) && ((vu->ier & IER_ELSI) != 0U)) {
 		return IIR_RLS;
@@ -125,7 +125,7 @@ static uint8_t vuart_intr_reason(struct acrn_vuart *vu)
  * Toggle the COM port's intr pin depending on whether or not we have an
  * interrupt condition to report to the processor.
  */
-static void vuart_toggle_intr(struct acrn_vuart *vu)
+static void vuart_toggle_intr(const struct acrn_vuart *vu)
 {
 	uint8_t intr_reason;
 	union ioapic_rte rte;

@@ -382,7 +382,7 @@ static void print_decimal(struct print_param *param, int64_t value)
 
 }
 
-static void print_string(struct print_param *param, const char *s)
+static void print_string(const struct print_param *param, const char *s)
 {
 	/* the length of the string (-1) if unknown */
 	uint32_t len;

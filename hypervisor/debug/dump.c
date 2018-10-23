@@ -247,7 +247,7 @@ void asm_assert(int32_t line, const char *file, const char *txt)
 	} while (1);
 }
 
-void dump_intr_excp_frame(struct intr_excp_ctx *ctx)
+void dump_intr_excp_frame(const struct intr_excp_ctx *ctx)
 {
 	const char *name = "Not defined";
 

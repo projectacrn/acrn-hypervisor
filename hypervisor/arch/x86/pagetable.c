@@ -92,7 +92,7 @@ static inline int construct_pgentry(enum _page_table_type ptt, uint64_t *pde)
  * type: MR_DEL
  * delete [vaddr_start, vaddr_end) MT PT mapping
  */
-static void modify_or_del_pte(uint64_t *pde,
+static void modify_or_del_pte(const uint64_t *pde,
 		uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot_set, uint64_t prot_clr,
 		enum _page_table_type ptt, uint32_t type)
@@ -125,7 +125,7 @@ static void modify_or_del_pte(uint64_t *pde,
  * type: MR_DEL
  * delete [vaddr_start, vaddr_end) MT PT mapping
  */
-static void modify_or_del_pde(uint64_t *pdpte,
+static void modify_or_del_pde(const uint64_t *pdpte,
 		uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot_set, uint64_t prot_clr,
 		enum _page_table_type ptt, uint32_t type)
@@ -176,7 +176,7 @@ static void modify_or_del_pde(uint64_t *pdpte,
  * type: MR_DEL
  * delete [vaddr_start, vaddr_end) MT PT mapping
  */
-static void modify_or_del_pdpte(uint64_t *pml4e,
+static void modify_or_del_pdpte(const uint64_t *pml4e,
 		uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot_set, uint64_t prot_clr,
 		enum _page_table_type ptt, uint32_t type)
@@ -262,7 +262,7 @@ void mmu_modify_or_del(uint64_t *pml4_page,
  * In PT level,
  * add [vaddr_start, vaddr_end) to [paddr_base, ...) MT PT mapping
  */
-static void add_pte(uint64_t *pde, uint64_t paddr_start,
+static void add_pte(const uint64_t *pde, uint64_t paddr_start,
 		uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot, enum _page_table_type ptt)
 {
@@ -294,7 +294,7 @@ static void add_pte(uint64_t *pde, uint64_t paddr_start,
  * In PD level,
  * add [vaddr_start, vaddr_end) to [paddr_base, ...) MT PT mapping
  */
-static void add_pde(uint64_t *pdpte, uint64_t paddr_start,
+static void add_pde(const uint64_t *pdpte, uint64_t paddr_start,
 		uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot, enum _page_table_type ptt)
 {
@@ -340,7 +340,7 @@ static void add_pde(uint64_t *pdpte, uint64_t paddr_start,
  * In PDPT level,
  * add [vaddr_start, vaddr_end) to [paddr_base, ...) MT PT mapping
  */
-static void add_pdpte(uint64_t *pml4e, uint64_t paddr_start,
+static void add_pdpte(const uint64_t *pml4e, uint64_t paddr_start,
 		uint64_t vaddr_start, uint64_t vaddr_end,
 		uint64_t prot, enum _page_table_type ptt)
 {

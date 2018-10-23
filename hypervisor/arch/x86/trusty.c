@@ -236,7 +236,7 @@ static void save_world_ctx(struct vcpu *vcpu, struct ext_context *ext_ctx)
 			: : "r" (ext_ctx->fxstore_guest_area) : "memory");
 }
 
-static void load_world_ctx(struct vcpu *vcpu, struct ext_context *ext_ctx)
+static void load_world_ctx(struct vcpu *vcpu, const struct ext_context *ext_ctx)
 {
 	/* mark to update on-demand run_context for efer/rflags/rsp */
 	bitmap_set_lock(CPU_REG_EFER, &vcpu->reg_updated);
@@ -283,7 +283,7 @@ static void load_world_ctx(struct vcpu *vcpu, struct ext_context *ext_ctx)
 	asm volatile("fxrstor (%0)" : : "r" (ext_ctx->fxstore_guest_area));
 }
 
-static void copy_smc_param(struct run_context *prev_ctx,
+static void copy_smc_param(const struct run_context *prev_ctx,
 				struct run_context *next_ctx)
 {
 	next_ctx->guest_cpu_regs.regs.rdi = prev_ctx->guest_cpu_regs.regs.rdi;
@@ -456,7 +456,7 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 	return false;
 }
 
-void trusty_set_dseed(void *dseed, uint8_t dseed_num)
+void trusty_set_dseed(const void *dseed, uint8_t dseed_num)
 {
 	/* Use fake seed if input param is invalid */
 	if ((dseed == NULL) || (dseed_num == 0U) ||

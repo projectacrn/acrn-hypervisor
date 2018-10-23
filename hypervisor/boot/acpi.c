@@ -318,13 +318,13 @@ void *get_dmar_table(void)
 #define OFFSET_WAKE_VECTOR_64	24U
 
 /* get a dword value from given table and its offset */
-static inline uint32_t get_acpi_dt_dword(uint8_t *dt_addr, uint32_t dt_offset)
+static inline uint32_t get_acpi_dt_dword(const uint8_t *dt_addr, uint32_t dt_offset)
 {
 	return *(uint32_t *)(dt_addr + dt_offset);
 }
 
 /* get a qword value from given table and its offset */
-static inline uint64_t get_acpi_dt_qword(uint8_t *dt_addr, uint32_t dt_offset)
+static inline uint64_t get_acpi_dt_qword(const uint8_t *dt_addr, uint32_t dt_offset)
 {
 	return *(uint64_t *)(dt_addr + dt_offset);
 }

@@ -512,7 +512,7 @@ static int mmio_write(struct vcpu *vcpu, uint64_t wval)
 	return 0;
 }
 
-static void vie_calc_bytereg(struct instr_emul_vie *vie,
+static void vie_calc_bytereg(const struct instr_emul_vie *vie,
 					enum cpu_reg_name *reg, int *lhbr)
 {
 	*lhbr = 0;
@@ -538,7 +538,7 @@ static void vie_calc_bytereg(struct instr_emul_vie *vie,
 	}
 }
 
-static uint8_t vie_read_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie)
+static uint8_t vie_read_bytereg(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int lhbr;
 	uint64_t val;
@@ -561,7 +561,7 @@ static uint8_t vie_read_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	return reg_val;
 }
 
-static void vie_write_bytereg(struct vcpu *vcpu, struct instr_emul_vie *vie,
+static void vie_write_bytereg(struct vcpu *vcpu, const struct instr_emul_vie *vie,
 								uint8_t byte)
 {
 	uint64_t origval, val, mask;
@@ -664,7 +664,7 @@ static uint64_t getcc(uint8_t opsize, uint64_t x, uint64_t y)
 	}
 }
 
-static int emulate_mov(struct vcpu *vcpu, struct instr_emul_vie *vie)
+static int emulate_mov(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -780,7 +780,7 @@ static int emulate_mov(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	return error;
 }
 
-static int emulate_movx(struct vcpu *vcpu, struct instr_emul_vie *vie)
+static int emulate_movx(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -980,7 +980,7 @@ exception_inject:
  * For MOVs instruction, we always check RDI during instruction decoding phase.
  * And access RSI without any check during instruction emulation phase.
  */
-static int emulate_movs(struct vcpu *vcpu, struct instr_emul_vie *vie)
+static int emulate_movs(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	uint64_t src_gva, gpa, val = 0UL;
 	uint64_t *dst_hva, *src_hva;
@@ -1067,7 +1067,7 @@ done:
 	return error;
 }
 
-static int emulate_stos(struct vcpu *vcpu, struct instr_emul_vie *vie)
+static int emulate_stos(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error, repeat;
 	uint8_t opsize = vie->opsize;
@@ -1121,7 +1121,7 @@ static int emulate_stos(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	return 0;
 }
 
-static int emulate_test(struct vcpu *vcpu, struct instr_emul_vie *vie)
+static int emulate_test(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -1187,7 +1187,7 @@ static int emulate_test(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	return error;
 }
 
-static int emulate_and(struct vcpu *vcpu, struct instr_emul_vie *vie)
+static int emulate_and(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -1275,7 +1275,7 @@ static int emulate_and(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	return error;
 }
 
-static int emulate_or(struct vcpu *vcpu, struct instr_emul_vie *vie)
+static int emulate_or(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -1366,7 +1366,7 @@ static int emulate_or(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	return error;
 }
 
-static int emulate_cmp(struct vcpu *vcpu, struct instr_emul_vie *vie)
+static int emulate_cmp(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -1458,7 +1458,7 @@ static int emulate_cmp(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	return error;
 }
 
-static int emulate_sub(struct vcpu *vcpu, struct instr_emul_vie *vie)
+static int emulate_sub(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -1512,7 +1512,7 @@ static int emulate_sub(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	return error;
 }
 
-static int emulate_group1(struct vcpu *vcpu, struct instr_emul_vie *vie)
+static int emulate_group1(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error;
 
@@ -1534,7 +1534,7 @@ static int emulate_group1(struct vcpu *vcpu, struct instr_emul_vie *vie)
 	return error;
 }
 
-static int emulate_bittest(struct vcpu *vcpu, struct instr_emul_vie *vie)
+static int emulate_bittest(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	uint64_t val, rflags, bitmask;
 	int error;
@@ -1664,7 +1664,7 @@ static int vie_init(struct instr_emul_vie *vie, struct vcpu *vcpu)
 	return 0;
 }
 
-static int vie_peek(struct instr_emul_vie *vie, uint8_t *x)
+static int vie_peek(const struct instr_emul_vie *vie, uint8_t *x)
 {
 
 	if (vie->num_processed < vie->num_valid) {

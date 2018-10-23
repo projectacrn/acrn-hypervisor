@@ -9,8 +9,8 @@
 extern void relocate(void);
 extern uint64_t get_hv_image_delta(void);
 extern uint64_t get_hv_image_base(void);
-extern uint64_t read_trampoline_sym(void *sym);
-extern void write_trampoline_sym(void *sym, uint64_t val);
+extern uint64_t read_trampoline_sym(const void *sym);
+extern void write_trampoline_sym(const void *sym, uint64_t val);
 extern uint64_t prepare_trampoline(void);
 
 /* external symbols that are helpful for relocation */

@@ -73,7 +73,7 @@ int quick_handler_nolock(struct irq_desc *desc, __unused void *handler_data);
 void init_default_irqs(uint16_t cpu_id);
 
 void dispatch_exception(struct intr_excp_ctx *ctx);
-void dispatch_interrupt(struct intr_excp_ctx *ctx);
+void dispatch_interrupt(const struct intr_excp_ctx *ctx);
 #ifdef CONFIG_PARTITION_MODE
 void partition_mode_dispatch_interrupt(struct intr_excp_ctx *ctx);
 #endif

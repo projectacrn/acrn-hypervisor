@@ -17,7 +17,7 @@
  */
 static inline struct ptdev_remapping_info *
 ptdev_lookup_entry_by_sid(uint32_t intr_type,
-		union source_id *sid,const struct vm *vm)
+		const union source_id *sid,const struct vm *vm)
 {
 	struct ptdev_remapping_info *entry;
 	struct list_head *pos;
@@ -38,12 +38,12 @@ ptdev_lookup_entry_by_sid(uint32_t intr_type,
 }
 
 static inline bool
-is_entry_active(struct ptdev_remapping_info *entry)
+is_entry_active(const struct ptdev_remapping_info *entry)
 {
 	return atomic_load32(&entry->active) == ACTIVE_FLAG;
 }
 
-static bool ptdev_hv_owned_intx(const struct vm *vm, union source_id *virt_sid)
+static bool ptdev_hv_owned_intx(const struct vm *vm, const union source_id *virt_sid)
 {
 	/* vm0 vuart pin is owned by hypervisor under debug version */
 	if (is_vm0(vm) && (virt_sid->intx_id.pin == COM1_IRQ)) {
@@ -377,9 +377,9 @@ END:
 }
 
 static void ptdev_intr_handle_irq(struct vm *vm,
-		struct ptdev_remapping_info *entry)
+		const struct ptdev_remapping_info *entry)
 {
-	union source_id *virt_sid = &entry->virt_sid;
+	const union source_id *virt_sid = &entry->virt_sid;
 	switch (virt_sid->intx_id.src) {
 	case PTDEV_VPIN_IOAPIC:
 	{
@@ -790,7 +790,7 @@ void ptdev_remove_msix_remapping(const struct vm *vm, uint16_t virt_bdf,
 
 #ifdef HV_DEBUG
 #define PTDEV_INVALID_PIN 0xffU
-static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
+static void get_entry_info(const struct ptdev_remapping_info *entry, char *type,
 		uint32_t *irq, uint32_t *vector, uint64_t *dest, bool *lvl_tm,
 		uint8_t *pin, uint8_t *vpin, uint32_t *bdf, uint32_t *vbdf)
 {

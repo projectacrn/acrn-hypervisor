@@ -25,7 +25,7 @@ static void fire_vhm_interrupt(void)
 	vlapic_intr_edge(vcpu, acrn_vhm_vector);
 }
 
-static void acrn_print_request(uint16_t vcpu_id, struct vhm_request *req)
+static void acrn_print_request(uint16_t vcpu_id, const struct vhm_request *req)
 {
 	switch (req->type) {
 	case REQ_MMIO:
@@ -59,7 +59,7 @@ static void acrn_print_request(uint16_t vcpu_id, struct vhm_request *req)
  * @pre vcpu != NULL && io_req != NULL
  */
 int32_t
-acrn_insert_request_wait(struct vcpu *vcpu, struct io_request *io_req)
+acrn_insert_request_wait(struct vcpu *vcpu, const struct io_request *io_req)
 {
 	union vhm_request_buffer *req_buf = NULL;
 	struct vhm_request *vhm_req;

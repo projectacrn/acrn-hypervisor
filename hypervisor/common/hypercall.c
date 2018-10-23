@@ -73,7 +73,7 @@ int32_t hcall_get_api_version(struct vm *vm, uint64_t param)
  */
 static int32_t
 handle_virt_irqline(const struct vm *vm, uint16_t target_vmid,
-		struct acrn_irqline *param, uint32_t operation)
+		const struct acrn_irqline *param, uint32_t operation)
 {
 	int32_t ret = 0;
 	uint32_t intr_type;
@@ -334,7 +334,7 @@ int32_t hcall_set_vcpu_regs(struct vm *vm, uint16_t vmid, uint64_t param)
  *@pre Pointer vm shall point to VM0
  */
 int32_t hcall_set_irqline(const struct vm *vm, uint16_t vmid,
-				struct acrn_irqline_ops *ops)
+				const struct acrn_irqline_ops *ops)
 {
 	uint32_t irq_pic;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
@@ -459,7 +459,7 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
  *@pre Pointer vm shall point to VM0
  */
 static int32_t local_set_vm_memory_region(struct vm *vm,
-	struct vm *target_vm, struct vm_memory_region *region)
+	struct vm *target_vm, const struct vm_memory_region *region)
 {
 	uint64_t hpa, base_paddr;
 	uint64_t prot;
@@ -602,7 +602,7 @@ int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param)
 /**
  *@pre Pointer vm shall point to VM0
  */
-static int32_t write_protect_page(struct vm *vm, struct wp_data *wp)
+static int32_t write_protect_page(struct vm *vm,const struct wp_data *wp)
 {
 	uint64_t hpa, base_paddr;
 	uint64_t prot_set;

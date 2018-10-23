@@ -50,7 +50,7 @@ struct acrn_vioapic {
 };
 
 void    vioapic_init(struct vm *vm);
-void	vioapic_cleanup(struct acrn_vioapic *vioapic);
+void	vioapic_cleanup(const struct acrn_vioapic *vioapic);
 void	vioapic_reset(struct acrn_vioapic *vioapic);
 
 void	vioapic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation);

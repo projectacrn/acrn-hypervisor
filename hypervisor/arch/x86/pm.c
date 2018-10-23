@@ -63,7 +63,7 @@ void restore_msrs(void)
 #endif
 }
 
-static void acpi_gas_write(struct acpi_generic_address *gas, uint32_t val)
+static void acpi_gas_write(const struct acpi_generic_address *gas, uint32_t val)
 {
 	uint16_t val16 = (uint16_t)val;
 
@@ -74,7 +74,7 @@ static void acpi_gas_write(struct acpi_generic_address *gas, uint32_t val)
 	}
 }
 
-static uint32_t acpi_gas_read(struct acpi_generic_address *gas)
+static uint32_t acpi_gas_read(const struct acpi_generic_address *gas)
 {
 	uint32_t ret = 0U;
 

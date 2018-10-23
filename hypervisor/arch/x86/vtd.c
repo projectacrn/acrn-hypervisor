@@ -170,12 +170,12 @@ static void register_hrhd_units(void)
 	}
 }
 
-static uint32_t iommu_read32(struct dmar_drhd_rt *dmar_uint, uint32_t offset)
+static uint32_t iommu_read32(const struct dmar_drhd_rt *dmar_uint, uint32_t offset)
 {
 	return mmio_read32(hpa2hva(dmar_uint->drhd->reg_base_addr + offset));
 }
 
-static uint64_t iommu_read64(struct dmar_drhd_rt *dmar_uint, uint32_t offset)
+static uint64_t iommu_read64(const struct dmar_drhd_rt *dmar_uint, uint32_t offset)
 {
 	uint64_t value;
 
@@ -188,13 +188,13 @@ static uint64_t iommu_read64(struct dmar_drhd_rt *dmar_uint, uint32_t offset)
 	return value;
 }
 
-static void iommu_write32(struct dmar_drhd_rt *dmar_uint, uint32_t offset,
+static void iommu_write32(const struct dmar_drhd_rt *dmar_uint, uint32_t offset,
 			  uint32_t value)
 {
 	mmio_write32(value, hpa2hva(dmar_uint->drhd->reg_base_addr + offset));
 }
 
-static void iommu_write64(struct dmar_drhd_rt *dmar_uint, uint32_t offset,
+static void iommu_write64(const struct dmar_drhd_rt *dmar_uint, uint32_t offset,
 			  uint64_t value)
 {
 	uint32_t temp;
@@ -208,7 +208,7 @@ static void iommu_write64(struct dmar_drhd_rt *dmar_uint, uint32_t offset,
 }
 
 static inline void
-dmar_wait_completion(struct dmar_drhd_rt *dmar_uint, uint32_t offset,
+dmar_wait_completion(const struct dmar_drhd_rt *dmar_uint, uint32_t offset,
 	uint32_t mask, bool pre_condition, uint32_t *status)
 {
 	/* variable start isn't used when built as release version */
@@ -239,7 +239,7 @@ dmar_wait_completion(struct dmar_drhd_rt *dmar_uint, uint32_t offset,
 }
 
 /* flush cache when root table, context table updated */
-static void iommu_flush_cache(struct dmar_drhd_rt *dmar_uint,
+static void iommu_flush_cache(const struct dmar_drhd_rt *dmar_uint,
 			      void *p, uint32_t size)
 {
 	uint32_t i;
@@ -335,7 +335,7 @@ static inline uint8_t width_to_agaw(uint32_t width)
 	return width_to_level(width) - 2U;
 }
 
-static uint8_t dmar_uint_get_msagw(struct dmar_drhd_rt *dmar_uint)
+static uint8_t dmar_uint_get_msagw(const struct dmar_drhd_rt *dmar_uint)
 {
 	uint8_t i;
 	uint8_t sgaw = iommu_cap_sagaw(dmar_uint->cap);
@@ -350,7 +350,7 @@ static uint8_t dmar_uint_get_msagw(struct dmar_drhd_rt *dmar_uint)
 }
 
 static bool
-dmar_unit_support_aw(struct dmar_drhd_rt *dmar_uint, uint32_t addr_width)
+dmar_unit_support_aw(const struct dmar_drhd_rt *dmar_uint, uint32_t addr_width)
 {
 	uint8_t aw;
 
@@ -935,7 +935,7 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_ta
 /**
  * @pre domain != NULL
  */
-void destroy_iommu_domain(struct iommu_domain *domain)
+void destroy_iommu_domain(const struct iommu_domain *domain)
 {
 	/* currently only support ept */
 	if (!domain->is_tt_ept) {
@@ -952,7 +952,7 @@ void destroy_iommu_domain(struct iommu_domain *domain)
 	free(domain);
 }
 
-static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
+static int add_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 		uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_uint;
@@ -1100,7 +1100,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 }
 
 static int
-remove_iommu_device(struct iommu_domain *domain, uint16_t segment,
+remove_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 		uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_uint;
@@ -1156,7 +1156,7 @@ remove_iommu_device(struct iommu_domain *domain, uint16_t segment,
 	return 0;
 }
 
-int assign_iommu_device(struct iommu_domain *domain, uint8_t bus,
+int assign_iommu_device(const struct iommu_domain *domain, uint8_t bus,
 				uint8_t devfun)
 {
 	if (domain == NULL) {
@@ -1171,7 +1171,7 @@ int assign_iommu_device(struct iommu_domain *domain, uint8_t bus,
 	return add_iommu_device(domain, 0U, bus, devfun);
 }
 
-int unassign_iommu_device(struct iommu_domain *domain, uint8_t bus,
+int unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus,
 				uint8_t devfun)
 {
 	if (domain == NULL) {

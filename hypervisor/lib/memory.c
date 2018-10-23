@@ -187,7 +187,7 @@ static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
 	return (void *)NULL;
 }
 
-static void deallocate_mem(struct mem_pool *pool, void *ptr)
+static void deallocate_mem(struct mem_pool *pool, const void *ptr)
 {
 	uint32_t *bitmask, *contiguity_bitmask;
 	uint32_t bmp_idx, bit_idx, buff_idx;
@@ -297,7 +297,7 @@ void *calloc(unsigned int num_elements, unsigned int element_size)
 	return memory;
 }
 
-void free(void *ptr)
+void free(const void *ptr)
 {
 	/* Check if ptr belongs to 16-Bytes aligned Memory Pool */
 	if ((Memory_Pool.start_addr < ptr) &&

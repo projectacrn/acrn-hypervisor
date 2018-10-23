@@ -101,7 +101,7 @@ struct acrn_vlapic {
 
 /* APIC write handlers */
 void vlapic_set_cr8(struct acrn_vlapic *vlapic, uint64_t val);
-uint64_t vlapic_get_cr8(struct acrn_vlapic *vlapic);
+uint64_t vlapic_get_cr8(const struct acrn_vlapic *vlapic);
 
 /*
  * Returns 0 if there is no eligible vector that can be delivered to the
@@ -113,7 +113,7 @@ uint64_t vlapic_get_cr8(struct acrn_vlapic *vlapic);
  * Note that the vector does not automatically transition to the ISR as a
  * result of calling this function.
  */
-int vlapic_pending_intr(struct acrn_vlapic *vlapic, uint32_t *vecptr);
+int vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr);
 
 /*
  * Transition 'vector' from IRR to ISR. This function is called with the
@@ -172,8 +172,8 @@ void vlapic_set_tmr_one_vec(struct acrn_vlapic *vlapic, uint32_t delmode,
 		uint32_t vector, bool level);
 
 void vlapic_apicv_batch_set_tmr(struct acrn_vlapic *vlapic);
-uint32_t vlapic_get_id(struct acrn_vlapic *vlapic);
-uint8_t vlapic_get_apicid(struct acrn_vlapic *vlapic);
+uint32_t vlapic_get_id(const struct acrn_vlapic *vlapic);
+uint8_t vlapic_get_apicid(const struct acrn_vlapic *vlapic);
 int vlapic_create(struct vcpu *vcpu);
 /*
  *  @pre vcpu != NULL
@@ -181,8 +181,8 @@ int vlapic_create(struct vcpu *vcpu);
 void vlapic_free(struct vcpu *vcpu);
 void vlapic_init(struct acrn_vlapic *vlapic);
 void vlapic_reset(struct acrn_vlapic *vlapic);
-void vlapic_restore(struct acrn_vlapic *vlapic, struct lapic_regs *regs);
-bool vlapic_enabled(struct acrn_vlapic *vlapic);
+void vlapic_restore(struct acrn_vlapic *vlapic, const struct lapic_regs *regs);
+bool vlapic_enabled(const struct acrn_vlapic *vlapic);
 uint64_t vlapic_apicv_get_apic_access_addr(void);
 uint64_t vlapic_apicv_get_apic_page_addr(struct acrn_vlapic *vlapic);
 void vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic);

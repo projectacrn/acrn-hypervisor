@@ -11,7 +11,7 @@
 
 #include <hypervisor.h>
 
-static inline bool sbuf_is_empty(struct shared_buf *sbuf)
+static inline bool sbuf_is_empty(const struct shared_buf *sbuf)
 {
 	return (sbuf->head == sbuf->tail);
 }
