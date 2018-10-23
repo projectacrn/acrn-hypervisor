@@ -8,7 +8,7 @@ TRACE_CFLAGS += -DNO_OPENSSL
 TRACE_CFLAGS += -m64
 TRACE_CFLAGS += -Wall -ffunction-sections
 TRACE_CFLAGS += -Werror
-TRACE_CFLAGS += -O2 -D_FORTIFY_SOURCE=2
+TRACE_CFLAGS += -O2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
 TRACE_CFLAGS += -Wformat -Wformat-security -fno-strict-aliasing
 TRACE_CFLAGS += -fpie -fpic
 TRACE_CFLAGS += $(CFLAGS)

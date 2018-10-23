@@ -8,7 +8,7 @@ LOG_CFLAGS += -DNO_OPENSSL
 LOG_CFLAGS += -m64
 LOG_CFLAGS += -Wall -ffunction-sections
 LOG_CFLAGS += -Werror
-LOG_CFLAGS += -O2 -D_FORTIFY_SOURCE=2
+LOG_CFLAGS += -O2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
 LOG_CFLAGS += -Wformat -Wformat-security -fno-strict-aliasing
 LOG_CFLAGS += -fpie -fpic
 LOG_CFLAGS += $(CFLAGS)
