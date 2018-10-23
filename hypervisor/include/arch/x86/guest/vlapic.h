@@ -125,7 +125,6 @@ void vlapic_intr_accepted(struct acrn_vlapic *vlapic, uint32_t vector);
 void vlapic_post_intr(uint16_t dest_pcpu_id);
 uint64_t apicv_get_pir_desc_paddr(struct vcpu *vcpu);
 
-struct acrn_vlapic *vm_lapic_from_pcpuid(struct vm *vm, uint16_t pcpu_id);
 int vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval);
 int vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval);
 
