@@ -16,7 +16,7 @@ CFLAGS += -DNO_OPENSSL
 CFLAGS += -m64
 CFLAGS += -Wall -ffunction-sections
 CFLAGS += -Werror
-CFLAGS += -O2 -D_FORTIFY_SOURCE=2
+CFLAGS += -O2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
 CFLAGS += -Wformat -Wformat-security -fno-strict-aliasing
 CFLAGS += -fpie
 
