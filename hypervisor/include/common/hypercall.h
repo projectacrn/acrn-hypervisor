@@ -216,7 +216,7 @@ int32_t hcall_pulse_irqline(struct vm *vm, uint16_t vmid, uint64_t param);
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_set_irqline(const struct vm *vm, uint16_t vmid,
-				struct acrn_irqline_ops *ops);
+				const struct acrn_irqline_ops *ops);
 /**
  * @brief inject MSI interrupt
  *

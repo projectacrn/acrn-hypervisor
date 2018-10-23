@@ -43,7 +43,7 @@ static inline void free_earlylog_sbuf(uint16_t pcpu_id)
 }
 
 static void do_copy_earlylog(struct shared_buf *dst_sbuf,
-			    struct shared_buf *src_sbuf)
+			    const struct shared_buf *src_sbuf)
 {
 	uint32_t buf_size, valid_size;
 	uint32_t cur_tail;

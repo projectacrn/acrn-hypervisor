@@ -285,14 +285,14 @@ static void handle_spurious_interrupt(uint32_t vector)
 	}
 }
 
-static inline bool irq_need_mask(struct irq_desc *desc)
+static inline bool irq_need_mask(const struct irq_desc *desc)
 {
 	/* level triggered gsi should be masked */
 	return (((desc->flags & IRQF_LEVEL) != 0U)
 		&& irq_is_gsi(desc->irq));
 }
 
-static inline bool irq_need_unmask(struct irq_desc *desc)
+static inline bool irq_need_unmask(const struct irq_desc *desc)
 {
 	/* level triggered gsi for non-ptdev should be unmasked */
 	return (((desc->flags & IRQF_LEVEL) != 0U)
@@ -300,7 +300,7 @@ static inline bool irq_need_unmask(struct irq_desc *desc)
 		&& irq_is_gsi(desc->irq));
 }
 
-static inline void handle_irq(struct irq_desc *desc)
+static inline void handle_irq(const struct irq_desc *desc)
 {
 	irq_action_t action = desc->action;
 
@@ -321,7 +321,7 @@ static inline void handle_irq(struct irq_desc *desc)
 }
 
 /* do_IRQ() */
-void dispatch_interrupt(struct intr_excp_ctx *ctx)
+void dispatch_interrupt(const struct intr_excp_ctx *ctx)
 {
 	uint32_t vr = ctx->vector;
 	uint32_t irq = vector_to_irq[vr];

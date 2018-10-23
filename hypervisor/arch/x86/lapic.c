@@ -266,7 +266,7 @@ void save_lapic(struct lapic_regs *regs)
 		read_lapic_reg32(LAPIC_DIVIDE_CONFIGURATION_REGISTER);
 }
 
-static void restore_lapic(struct lapic_regs *regs)
+static void restore_lapic(const struct lapic_regs *regs)
 {
 	write_lapic_reg32(LAPIC_ID_REGISTER, regs->id.v);
 	write_lapic_reg32(LAPIC_TASK_PRIORITY_REGISTER, regs->tpr.v);

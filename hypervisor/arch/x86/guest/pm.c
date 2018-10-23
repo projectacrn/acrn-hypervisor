@@ -187,7 +187,7 @@ static void pm1ab_io_write(__unused struct vm *vm, uint16_t addr, size_t width,
 }
 
 static void
-register_gas_io_handler(struct vm *vm, struct acpi_generic_address *gas)
+register_gas_io_handler(struct vm *vm, const struct acpi_generic_address *gas)
 {
 	uint8_t io_len[5] = {0, 1, 2, 4, 8};
 	struct vm_io_range gas_io;

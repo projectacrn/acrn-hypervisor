@@ -72,7 +72,7 @@ enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 
 /* TODO: Add code to check for Revserved bits, SMAP and PKE when do translation
  * during page walk */
-static int local_gva2gpa_common(struct vcpu *vcpu, struct page_walk_info *pw_info,
+static int local_gva2gpa_common(struct vcpu *vcpu, const struct page_walk_info *pw_info,
 	uint64_t gva, uint64_t *gpa, uint32_t *err_code)
 {
 	uint32_t i;

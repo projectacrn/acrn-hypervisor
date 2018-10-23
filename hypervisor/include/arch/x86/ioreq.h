@@ -112,7 +112,7 @@ void   setup_io_bitmap(struct vm *vm);
 void   free_io_emulation_resource(struct vm *vm);
 void   allow_guest_pio_access(struct vm *vm, uint16_t port_address,
 		uint32_t nbytes);
-void   register_io_emulation_handler(struct vm *vm, struct vm_io_range *range,
+void   register_io_emulation_handler(struct vm *vm, const struct vm_io_range *range,
 		io_read_fn_t io_read_fn_ptr,
 		io_write_fn_t io_write_fn_ptr);
 
@@ -121,7 +121,7 @@ int register_mmio_emulation_handler(struct vm *vm,
 	uint64_t end, void *handler_private_data);
 void unregister_mmio_emulation_handler(struct vm *vm, uint64_t start,
         uint64_t end);
-void emulate_mmio_post(struct vcpu *vcpu, struct io_request *io_req);
+void emulate_mmio_post(struct vcpu *vcpu, const struct io_request *io_req);
 void dm_emulate_mmio_post(struct vcpu *vcpu);
 
 int32_t emulate_io(struct vcpu *vcpu, struct io_request *io_req);
@@ -129,6 +129,6 @@ void emulate_io_post(struct vcpu *vcpu);
 /*
  * @pre vcpu != NULL && io_req != NULL
  */
-int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct io_request *io_req);
+int32_t acrn_insert_request_wait(struct vcpu *vcpu, const struct io_request *io_req);
 
 #endif /* IOREQ_H */

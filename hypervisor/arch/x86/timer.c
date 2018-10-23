@@ -13,7 +13,7 @@
 
 uint32_t tsc_khz = 0U;
 
-static void run_timer(struct hv_timer *timer)
+static void run_timer(const struct hv_timer *timer)
 {
 	/* deadline = 0 means stop timer, we should skip */
 	if ((timer->func != NULL) && (timer->fire_tsc != 0UL)) {

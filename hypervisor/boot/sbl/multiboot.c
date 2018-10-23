@@ -73,7 +73,7 @@ static char kernel_cmdline[MEM_2K];
 
 /* now modules support: FIRMWARE & RAMDISK & SeedList */
 static void parse_other_modules(struct vm *vm,
-	struct multiboot_module *mods, uint32_t mods_count)
+	const struct multiboot_module *mods, uint32_t mods_count)
 {
 	uint32_t i;
 
