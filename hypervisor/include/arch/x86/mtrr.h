@@ -45,7 +45,7 @@ struct mtrr_state {
 };
 
 void mtrr_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t value);
-uint64_t mtrr_rdmsr(struct vcpu *vcpu, uint32_t msr);
+uint64_t mtrr_rdmsr(const struct vcpu *vcpu, uint32_t msr);
 void init_mtrr(struct vcpu *vcpu);
 
 #endif /* MTRR_H */

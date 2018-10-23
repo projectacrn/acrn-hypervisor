@@ -458,7 +458,7 @@ void vmx_off(uint16_t pcpu_id);
 void exec_vmclear(void *addr);
 void exec_vmptrld(void *addr);
 
-uint64_t vmx_rdmsr_pat(struct vcpu *vcpu);
+uint64_t vmx_rdmsr_pat(const struct vcpu *vcpu);
 int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value);
 
 void vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0);

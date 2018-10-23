@@ -68,7 +68,7 @@ void dm_emulate_pio_post(struct vcpu *vcpu)
  * either a previous call to emulate_io() returning 0 or the corresponding VHM
  * request having transferred to the COMPLETE state.
  */
-void emulate_mmio_post(struct vcpu *vcpu, const struct io_request *io_req)
+void emulate_mmio_post(const struct vcpu *vcpu, const struct io_request *io_req)
 {
 	const struct mmio_request *mmio_req = &io_req->reqs.mmio;
 
@@ -173,7 +173,7 @@ void emulate_io_post(struct vcpu *vcpu)
  * @return -EIO    - The request spans multiple devices and cannot be emulated.
  */
 int32_t
-hv_emulate_pio(struct vcpu *vcpu, struct io_request *io_req)
+hv_emulate_pio(const struct vcpu *vcpu, struct io_request *io_req)
 {
 	int32_t status = -ENODEV;
 	uint16_t port, size;

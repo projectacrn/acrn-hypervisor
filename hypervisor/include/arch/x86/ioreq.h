@@ -121,7 +121,7 @@ int register_mmio_emulation_handler(struct vm *vm,
 	uint64_t end, void *handler_private_data);
 void unregister_mmio_emulation_handler(struct vm *vm, uint64_t start,
         uint64_t end);
-void emulate_mmio_post(struct vcpu *vcpu, const struct io_request *io_req);
+void emulate_mmio_post(const struct vcpu *vcpu, const struct io_request *io_req);
 void dm_emulate_mmio_post(struct vcpu *vcpu);
 
 int32_t emulate_io(struct vcpu *vcpu, struct io_request *io_req);

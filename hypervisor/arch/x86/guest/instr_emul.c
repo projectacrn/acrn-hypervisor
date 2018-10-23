@@ -322,7 +322,7 @@ static uint32_t get_vmcs_field(enum cpu_reg_name ident)
  * @pre ((reg <= CPU_REG_LAST) && (reg >= CPU_REG_FIRST))
  * @pre ((reg != CPU_REG_CR2) && (reg != CPU_REG_IDTR) && (reg != CPU_REG_GDTR))
  */
-static uint64_t vm_get_register(struct vcpu *vcpu, enum cpu_reg_name reg)
+static uint64_t vm_get_register(const struct vcpu *vcpu, enum cpu_reg_name reg)
 {
 	uint64_t reg_val = 0UL;
 	
@@ -492,7 +492,7 @@ static int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	return 0;
 }
 
-static int mmio_read(struct vcpu *vcpu, uint64_t *rval)
+static int mmio_read(const struct vcpu *vcpu, uint64_t *rval)
 {
 	if (vcpu == NULL) {
 		return -EINVAL;
@@ -538,7 +538,7 @@ static void vie_calc_bytereg(const struct instr_emul_vie *vie,
 	}
 }
 
-static uint8_t vie_read_bytereg(struct vcpu *vcpu, const struct instr_emul_vie *vie)
+static uint8_t vie_read_bytereg(const struct vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int lhbr;
 	uint64_t val;
@@ -883,7 +883,7 @@ static int emulate_movx(struct vcpu *vcpu, const struct instr_emul_vie *vie)
  *
  * It's only used by MOVS/STO
  */
-static void get_gva_si_nocheck(struct vcpu *vcpu, uint8_t addrsize,
+static void get_gva_si_nocheck(const struct vcpu *vcpu, uint8_t addrsize,
 		enum cpu_reg_name seg, uint64_t *gva)
 {
 	uint64_t val;
@@ -2343,7 +2343,7 @@ int decode_instruction(struct vcpu *vcpu)
 	return (int)(emul_ctxt->vie.opsize);
 }
 
-int emulate_instruction(struct vcpu *vcpu)
+int emulate_instruction(const struct vcpu *vcpu)
 {
 	struct instr_emul_ctxt *ctxt = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
 

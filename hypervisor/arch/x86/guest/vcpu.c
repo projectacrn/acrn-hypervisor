@@ -10,9 +10,9 @@
 
 vm_sw_loader_t vm_sw_loader;
 
-inline uint64_t vcpu_get_gpreg(struct vcpu *vcpu, uint32_t reg)
+inline uint64_t vcpu_get_gpreg(const struct vcpu *vcpu, uint32_t reg)
 {
-	struct run_context *ctx =
+	const struct run_context *ctx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx;
 
 	return ctx->guest_cpu_regs.longs[reg];
@@ -146,7 +146,7 @@ inline void vcpu_set_cr4(struct vcpu *vcpu, uint64_t val)
 	vmx_write_cr4(vcpu, val);
 }
 
-inline uint64_t vcpu_get_pat_ext(struct vcpu *vcpu)
+inline uint64_t vcpu_get_pat_ext(const struct vcpu *vcpu)
 {
 	return vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].
 		ext_ctx.ia32_pat;

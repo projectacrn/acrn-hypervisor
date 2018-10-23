@@ -248,7 +248,7 @@ struct vcpu_dump {
 	int str_max;
 };
 
-static inline bool is_vcpu_bsp(struct vcpu *vcpu)
+static inline bool is_vcpu_bsp(const struct vcpu *vcpu)
 {
 	return (vcpu->vcpu_id == BOOT_CPU_ID);
 }
@@ -266,7 +266,7 @@ vcpu_vlapic(struct vcpu *vcpu)
 }
 
 /* External Interfaces */
-uint64_t vcpu_get_gpreg(struct vcpu *vcpu, uint32_t reg);
+uint64_t vcpu_get_gpreg(const struct vcpu *vcpu, uint32_t reg);
 void vcpu_set_gpreg(struct vcpu *vcpu, uint32_t reg, uint64_t val);
 uint64_t vcpu_get_rip(struct vcpu *vcpu);
 void vcpu_set_rip(struct vcpu *vcpu, uint64_t val);
@@ -282,7 +282,7 @@ uint64_t vcpu_get_cr2(struct vcpu *vcpu);
 void vcpu_set_cr2(struct vcpu *vcpu, uint64_t val);
 uint64_t vcpu_get_cr4(struct vcpu *vcpu);
 void vcpu_set_cr4(struct vcpu *vcpu, uint64_t val);
-uint64_t vcpu_get_pat_ext(struct vcpu *vcpu);
+uint64_t vcpu_get_pat_ext(const struct vcpu *vcpu);
 void vcpu_set_pat_ext(struct vcpu *vcpu, uint64_t val);
 void set_vcpu_regs(struct vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs);
 void reset_vcpu_regs(struct vcpu *vcpu);
