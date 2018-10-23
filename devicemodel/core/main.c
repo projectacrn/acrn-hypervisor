@@ -756,7 +756,7 @@ static struct option long_options[] = {
 	{0,			0,			0,  0  },
 };
 
-static char optstr[] = "abehuwxACHIPSWYvk:r:B:p:g:c:s:m:l:U:G:i:";
+static char optstr[] = "abhuwxACSWYvE:k:r:B:p:g:c:s:m:l:U:G:i:";
 
 int
 dm_run(int argc, char *argv[])
