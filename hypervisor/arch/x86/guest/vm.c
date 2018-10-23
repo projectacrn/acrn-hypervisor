@@ -272,7 +272,7 @@ int reset_vm(struct vm *vm)
 	}
 
 	if (is_vm0(vm)) {
-		vm_sw_loader(vm);
+		(void )vm_sw_loader(vm);
 	}
 
 	vioapic_reset(vm_ioapic(vm));
@@ -372,6 +372,12 @@ int prepare_vm(uint16_t pcpu_id)
 		for (i = 1U; i < vm_desc->vm_hw_num_cores; i++)
 			prepare_vcpu(vm, vm_desc->vm_pcpu_ids[i]);
 
+		if (!vm_sw_loader) {
+			vm_sw_loader = general_sw_loader;
+		}
+
+		(void )vm_sw_loader(vm);
+
 		/* start vm BSP automatically */
 		start_vm(vm);
 
@@ -405,6 +411,14 @@ int prepare_vm0(void)
 		if (err != 0) {
 			return err;
 		}
+	}
+
+	if (!vm_sw_loader) {
+		vm_sw_loader = general_sw_loader;
+	}
+
+	if (is_vm0(vm)) {
+		(void )vm_sw_loader(vm);
 	}
 
 	/* start vm0 BSP automatically */

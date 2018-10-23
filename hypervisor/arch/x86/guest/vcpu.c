@@ -598,14 +598,6 @@ int prepare_vcpu(struct vm *vm, uint16_t pcpu_id)
 		return ret;
 	}
 
-	if (!vm_sw_loader) {
-		vm_sw_loader = general_sw_loader;
-	}
-
-	if (is_vm0(vm)) {
-		vm_sw_loader(vm);
-	}
-
 	/* init_vmcs is delayed to vcpu vmcs launch first time */
 	/* initialize the vcpu tsc aux */
 	vcpu->msr_tsc_aux_guest = vcpu->vcpu_id;
