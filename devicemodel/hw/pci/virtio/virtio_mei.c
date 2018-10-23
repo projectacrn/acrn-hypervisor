@@ -1257,6 +1257,8 @@ vmei_hbm_handler(struct virtio_mei *vmei, const void *data)
 		memset(&disconnect_res, 0, sizeof(disconnect_res));
 		disconnect_res.hbm_cmd.cmd = MEI_HBM_CLIENT_DISCONNECT;
 		disconnect_res.hbm_cmd.is_response = 1;
+		disconnect_res.me_addr = disconnect_req->me_addr;
+		disconnect_res.host_addr = disconnect_req->host_addr;
 		disconnect_res.status = status;
 		vmei_hbm_response(vmei, &disconnect_res,
 				  sizeof(disconnect_res));
