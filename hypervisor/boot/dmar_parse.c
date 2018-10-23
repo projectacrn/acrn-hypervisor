@@ -6,12 +6,9 @@
 
 #ifdef CONFIG_DMAR_PARSE_ENABLED
 #include <hypervisor.h>
+#include "pci.h"
 #include "vtd.h"
 #include "acpi.h"
-
-#define PCI_CONFIG_ADDRESS	0xcf8
-#define PCI_CONFIG_DATA		0xcfc
-#define PCI_CONFIG_ACCESS_EN	0x80000000
 
 enum acpi_dmar_type {
 	ACPI_DMAR_TYPE_HARDWARE_UNIT        = 0,
@@ -148,8 +145,8 @@ static uint8_t get_secondary_bus(uint8_t bus, uint8_t dev, uint8_t func)
 {
 	uint32_t data;
 
-	pio_write32(PCI_CONFIG_ACCESS_EN | (bus << 16) | (dev << 11) |
-		(func << 8) | 0x18, PCI_CONFIG_ADDRESS);
+	pio_write32(PCI_CFG_ENABLE | (bus << 16) | (dev << 11) |
+		(func << 8) | 0x18, PCI_CONFIG_ADDR);
 
 	data = pio_read32(PCI_CONFIG_DATA);
 

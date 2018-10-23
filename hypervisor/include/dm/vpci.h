@@ -30,8 +30,7 @@
 #ifndef VPCI_H_
 #define VPCI_H_
 
-#define PCI_BAR_COUNT    0x6U
-#define PCI_REGMAX       0xFFU
+#include <pci.h>
 
 struct pci_vdev;
 struct pci_vdev_ops {
@@ -44,22 +43,6 @@ struct pci_vdev_ops {
 
 	int (*cfgread)(struct pci_vdev *vdev, uint32_t offset,
 		uint32_t bytes, uint32_t *val);
-};
-
-union pci_bdf {
-	uint16_t value;
-
-	struct {
-		uint8_t f : 3; /* BITs 0-2 */
-		uint8_t d : 5; /* BITs 3-7 */
-		uint8_t b; /* BITs 8-15 */
-	} bits;
-};
-
-enum pci_bar_type {
-	PCIBAR_NONE = 0,
-	PCIBAR_MEM32,
-	PCIBAR_MEM64,
 };
 
 struct pci_bar {
