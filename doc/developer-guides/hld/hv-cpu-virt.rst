@@ -1207,6 +1207,7 @@ APIs to register its IO/MMIO range:
      - unregister a MMIO emulation handler for a hypervisor emulated device
        by specific MMIO range
 
+.. _instruction-emulation:
 
 Instruction Emulation
 *********************
