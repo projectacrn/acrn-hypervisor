@@ -308,7 +308,7 @@ static void init_percpu_data_area(void)
 
 	alloc_phy_cpu_data(pcpu_num);
 
-	for (i = 0U; i < pcpu_num; i++) {
+	for (i = 0U; (i < pcpu_num) && (i < CONFIG_MAX_PCPU_NUM); i++) {
 		per_cpu(lapic_id, i) = lapic_id_array[i];
 	}
 }
@@ -592,7 +592,7 @@ static uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id)
 {
 	uint16_t i;
 
-	for (i = 0U; i < phys_cpu_num; i++) {
+	for (i = 0U; (i < phys_cpu_num) && (i < CONFIG_MAX_PCPU_NUM); i++) {
 		if (per_cpu(lapic_id, i) == lapic_id) {
 			return i;
 		}
