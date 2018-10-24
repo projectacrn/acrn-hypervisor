@@ -19,7 +19,7 @@ static spinlock_t up_count_spinlock = {
 	.tail = 0U
 };
 
-struct per_cpu_region *per_cpu_data_base_ptr;
+struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(CPU_PAGE_SIZE);
 uint16_t phys_cpu_num = 0U;
 static uint64_t pcpu_sync = 0UL;
 static volatile uint16_t up_count = 0U;
@@ -273,14 +273,6 @@ static int hardware_detect_support(void)
 	return 0;
 }
 
-static void alloc_phy_cpu_data(uint16_t pcpu_num)
-{
-	phys_cpu_num = pcpu_num;
-
-	per_cpu_data_base_ptr = calloc(pcpu_num, sizeof(struct per_cpu_region));
-	ASSERT(per_cpu_data_base_ptr != NULL, "");
-}
-
 uint16_t __attribute__((weak)) parse_madt(uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 {
 	static const uint32_t lapic_id[] = {0U, 2U, 4U, 6U};
@@ -293,7 +285,7 @@ uint16_t __attribute__((weak)) parse_madt(uint32_t lapic_id_array[CONFIG_MAX_PCP
 	return ((uint16_t)ARRAY_SIZE(lapic_id));
 }
 
-static void init_percpu_data_area(void)
+static void init_percpu_lapic_id(void)
 {
 	uint16_t i;
 	uint16_t pcpu_num = 0U;
@@ -306,7 +298,7 @@ static void init_percpu_data_area(void)
 		ASSERT(false);
 	}
 
-	alloc_phy_cpu_data(pcpu_num);
+	phys_cpu_num = pcpu_num;
 
 	for (i = 0U; (i < pcpu_num) && (i < CONFIG_MAX_PCPU_NUM); i++) {
 		per_cpu(lapic_id, i) = lapic_id_array[i];
@@ -414,7 +406,7 @@ void bsp_boot_init(void)
 
 	early_init_lapic();
 
-	init_percpu_data_area();
+	init_percpu_lapic_id();
 
 	load_gdtr_and_tr();
 
