@@ -77,7 +77,7 @@ void init_logmsg(uint32_t flags)
 	logmsg.seq = 0;
 
 	/* allocate sbuf for log before sos booting */
-	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
+	for (pcpu_id = 0U; (pcpu_id < phys_cpu_num) && (pcpu_id < CONFIG_MAX_PCPU_NUM); pcpu_id++) {
 		alloc_earlylog_sbuf(pcpu_id);
 	}
 }
