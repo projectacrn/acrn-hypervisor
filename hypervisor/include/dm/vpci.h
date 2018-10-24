@@ -144,5 +144,7 @@ extern struct pci_vdev_ops pci_ops_vdev_pt;
 
 void vpci_init(struct vm *vm);
 void vpci_cleanup(struct vm *vm);
+void vpci_set_ptdev_intr_info(struct vm *target_vm, uint16_t vbdf, uint16_t pbdf);
+void vpci_reset_ptdev_intr_info(struct vm *target_vm, uint16_t vbdf, uint16_t pbdf);
 
 #endif /* VPCI_H_ */
