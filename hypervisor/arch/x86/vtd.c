@@ -94,6 +94,7 @@ enum dmar_iirg_type {
 
 /* dmar unit runtime data */
 struct dmar_drhd_rt {
+	uint32_t index;
 	struct list_head list;
 	spinlock_t lock;
 
@@ -137,6 +138,25 @@ struct iommu_domain {
 	uint64_t trans_table_ptr;
 };
 
+struct context_table {
+	struct cpu_page buses[CONFIG_IOMMU_INIT_BUS_LIMIT];
+};
+
+static struct cpu_page root_tables[CONFIG_MAX_IOMMU_NUM] __aligned(CPU_PAGE_SIZE);
+static struct context_table ctx_tables[CONFIG_MAX_IOMMU_NUM] __aligned(CPU_PAGE_SIZE);
+
+static inline uint8_t*
+get_root_table(uint32_t dmar_index)
+{
+	return root_tables[dmar_index].contents;
+}
+
+static inline uint8_t*
+get_ctx_table(uint32_t dmar_index, uint8_t bus_no)
+{
+	return ctx_tables[dmar_index].buses[bus_no].contents;
+}
+
 static struct list_head dmar_drhd_units;
 static uint32_t dmar_hdrh_unit_count;
 
@@ -164,6 +184,7 @@ static void register_hrhd_units(void)
 	for (i = 0U; i < info->drhd_count; i++) {
 		drhd_rt = calloc(1U, sizeof(struct dmar_drhd_rt));
 		ASSERT(drhd_rt != NULL, "");
+		drhd_rt->index = i;
 		drhd_rt->drhd = &info->drhd_units[i];
 		drhd_rt->dmar_irq = IRQ_INVALID;
 		dmar_register_hrhd(drhd_rt);
@@ -655,7 +676,6 @@ static void dmar_set_root_table(struct dmar_drhd_rt *dmar_uint)
 {
 	uint64_t address;
 	uint32_t status;
-	void *root_table_vaddr = NULL;
 
 	spinlock_obtain(&(dmar_uint->lock));
 
@@ -667,13 +687,7 @@ static void dmar_set_root_table(struct dmar_drhd_rt *dmar_uint)
 	 */
 
 	if (dmar_uint->root_table_addr == 0UL) {
-		root_table_vaddr = alloc_paging_struct();
-
-		if (root_table_vaddr != NULL) {
-			dmar_uint->root_table_addr = hva2hpa(root_table_vaddr);
-		} else {
-			ASSERT(false, "failed to allocate root table!");
-		}
+		dmar_uint->root_table_addr = hva2hpa(get_root_table(dmar_uint->index));
 	}
 
 	/* Currently don't support extended root table */
@@ -997,37 +1011,30 @@ static int add_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 	if (dmar_get_bitslice(root_entry->lower,
 	        ROOT_ENTRY_LOWER_PRESENT_MASK,
 		ROOT_ENTRY_LOWER_PRESENT_POS) == 0UL) {
-		void *vaddr = alloc_paging_struct();
+		/* create context table for the bus if not present */
+		context_table_addr = hva2hpa(get_ctx_table(dmar_uint->index, bus));
 
-		if (vaddr != NULL) {
-			/* create context table for the bus if not present */
-			context_table_addr = hva2hpa(vaddr);
+		context_table_addr = context_table_addr >> CPU_PAGE_SHIFT;
 
-			context_table_addr = context_table_addr >> 12;
+		lower = dmar_set_bitslice(lower,
+				ROOT_ENTRY_LOWER_CTP_MASK,
+				ROOT_ENTRY_LOWER_CTP_POS,
+				context_table_addr);
+		lower = dmar_set_bitslice(lower,
+				ROOT_ENTRY_LOWER_PRESENT_MASK,
+				ROOT_ENTRY_LOWER_PRESENT_POS, 1UL);
 
-			lower = dmar_set_bitslice(lower,
-				 ROOT_ENTRY_LOWER_CTP_MASK,
-			         ROOT_ENTRY_LOWER_CTP_POS,
-				 context_table_addr);
-			lower = dmar_set_bitslice(lower,
-				 ROOT_ENTRY_LOWER_PRESENT_MASK,
-				 ROOT_ENTRY_LOWER_PRESENT_POS, 1UL);
-
-			root_entry->upper = 0UL;
-			root_entry->lower = lower;
-			iommu_flush_cache(dmar_uint, root_entry,
+		root_entry->upper = 0UL;
+		root_entry->lower = lower;
+		iommu_flush_cache(dmar_uint, root_entry,
 				sizeof(struct dmar_root_entry));
-		} else {
-			ASSERT(false, "failed to allocate context table!");
-			return 1;
-		}
 	} else {
 		context_table_addr = dmar_get_bitslice(root_entry->lower,
 				ROOT_ENTRY_LOWER_CTP_MASK,
 			        ROOT_ENTRY_LOWER_CTP_POS);
 	}
 
-	context_table_addr = context_table_addr << 12;
+	context_table_addr = context_table_addr << CPU_PAGE_SHIFT;
 
 	context_table =
 		(struct dmar_context_entry *)hpa2hva(context_table_addr);
