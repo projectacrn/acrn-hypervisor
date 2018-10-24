@@ -251,22 +251,6 @@ int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param);
 int32_t hcall_write_protect_page(struct vm *vm, uint16_t vmid, uint64_t wp_gpa);
 
 /**
- * @brief remap PCI MSI interrupt
- *
- * Remap a PCI MSI interrupt from a VM's virtual vector to native vector.
- * The function will return -1 if the target VM does not exist.
- *
- * @param vm Pointer to VM data structure
- * @param vmid ID of the VM
- * @param param guest physical address. This gpa points to
- *              struct acrn_vm_pci_msix_remap
- *
- * @pre Pointer vm shall point to VM0
- * @return 0 on success, non-zero on error.
- */
-int32_t hcall_remap_pci_msix(struct vm *vm, uint16_t vmid, uint64_t param);
-
-/**
  * @brief translate guest physical address to host physical address
  *
  * Translate guest physical address to host physical address for a VM.

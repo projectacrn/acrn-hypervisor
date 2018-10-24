@@ -200,3 +200,39 @@ struct vpci_ops sharing_mode_vpci_ops = {
 	.cfgread = sharing_mode_cfgread,
 	.cfgwrite = sharing_mode_cfgwrite,
 };
+
+void vpci_set_ptdev_intr_info(struct vm *target_vm, uint16_t vbdf, uint16_t pbdf)
+{
+	struct pci_vdev *vdev;
+
+	vdev = sharing_mode_find_vdev((union pci_bdf)pbdf);
+	if (vdev == NULL) {
+		pr_err("%s, can't find PCI device for vm%d, vbdf (0x%x) pbdf (0x%x)", __func__,
+			target_vm->vm_id, vbdf, pbdf);
+		return;
+	}
+
+	/* UOS may do BDF mapping */
+	vdev->vpci = &target_vm->vpci;
+	vdev->vbdf.value = vbdf;
+	vdev->pdev.bdf.value = pbdf;
+}
+
+void vpci_reset_ptdev_intr_info(struct vm *target_vm, uint16_t vbdf, uint16_t pbdf)
+{
+	struct pci_vdev *vdev;
+	struct vm *vm;
+
+	vdev = sharing_mode_find_vdev((union pci_bdf)pbdf);
+	if (vdev == NULL) {
+		pr_err("%s, can't find PCI device for vm%d, vbdf (0x%x) pbdf (0x%x)", __func__,
+			target_vm->vm_id, vbdf, pbdf);
+		return;
+	}
+
+	/* Return this PCI device to SOS */
+	if (vdev->vpci->vm == target_vm) {
+		vm = get_vm_from_vmid(0U);
+		vdev->vpci = &vm->vpci;
+	}
+}
