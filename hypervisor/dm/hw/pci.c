@@ -31,8 +31,8 @@
 #include <pci.h>
 
 static spinlock_t pci_device_lock = {
-	.head = 0,
-	.tail = 0
+	.head = 0U,
+	.tail = 0U
 };
 
 static uint32_t pci_pdev_calc_address(union pci_bdf bdf, uint32_t offset)
@@ -54,15 +54,15 @@ uint32_t pci_pdev_read_cfg(struct pci_pdev *pdev, uint32_t offset, uint32_t byte
 	addr = pci_pdev_calc_address(pdev->bdf, offset);
 
 	/* Write address to ADDRESS register */
-	pio_write(addr, PCI_CONFIG_ADDR, 4U);
+	pio_write32(addr, PCI_CONFIG_ADDR);
 
 	/* Read result from DATA register */
 	switch (bytes) {
 	case 1U:
-		val = pio_read8(PCI_CONFIG_DATA + (offset & 3U));
+		val = (uint32_t)pio_read8(PCI_CONFIG_DATA + ((uint16_t)offset & 3U));
 		break;
 	case 2U:
-		val = pio_read16(PCI_CONFIG_DATA + (offset & 2U));
+		val = (uint32_t)pio_read16(PCI_CONFIG_DATA + ((uint16_t)offset & 2U));
 		break;
 	default:
 		val = pio_read32(PCI_CONFIG_DATA);
@@ -83,15 +83,15 @@ void pci_pdev_write_cfg(struct pci_pdev *pdev, uint32_t offset, uint32_t bytes,
 	addr = pci_pdev_calc_address(pdev->bdf, offset);
 
 	/* Write address to ADDRESS register */
-	pio_write(addr, PCI_CONFIG_ADDR, 4U);
+	pio_write32(addr, PCI_CONFIG_ADDR);
 
 	/* Write value to DATA register */
 	switch (bytes) {
 	case 1U:
-		pio_write8(val, PCI_CONFIG_DATA + (offset & 3U));
+		pio_write8((uint8_t)val, PCI_CONFIG_DATA + ((uint16_t)offset & 3U));
 		break;
 	case 2U:
-		pio_write16(val, PCI_CONFIG_DATA + (offset & 2U));
+		pio_write16((uint16_t)val, PCI_CONFIG_DATA + ((uint16_t)offset & 2U));
 		break;
 	default:
 		pio_write32(val, PCI_CONFIG_DATA);
