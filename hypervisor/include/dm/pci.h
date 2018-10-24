@@ -144,16 +144,16 @@ enum pci_bar_type {
 
 static inline uint32_t pci_bar_offset(uint32_t idx)
 {
-	return 0x10U + (idx << 2U);
+	return PCIR_BARS + (idx << 2U);
 }
 
-static inline int pci_bar_access(uint32_t offset)
+static inline bool pci_bar_access(uint32_t offset)
 {
 	if ((offset >= pci_bar_offset(0U))
 		&& (offset < pci_bar_offset(PCI_BAR_COUNT))) {
-		return 1;
+		return true;
 	} else {
-		return 0;
+		return false;
 	}
 }
 
