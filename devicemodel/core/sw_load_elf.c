@@ -294,7 +294,7 @@ acrn_sw_load_elf(struct vmctx *ctx)
 	ctx->bsp_regs.vcpu_regs.gprs.rax = MULTIBOOT_MACHINE_STATE_MAGIC;
 
 	if (multiboot_image == 1) {
-		mi = (struct multiboot_info *)ctx->baseaddr + MULTIBOOT_OFFSET;
+		mi = (struct multiboot_info *)(ctx->baseaddr + MULTIBOOT_OFFSET);
 		memset(mi, 0, sizeof(*mi));
 
 		if (multiboot_flags == (1 << 1)) {
