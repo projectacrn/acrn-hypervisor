@@ -559,47 +559,6 @@ int32_t hcall_write_protect_page(struct vm *vm, uint16_t vmid, uint64_t wp_gpa)
 /**
  *@pre Pointer vm shall point to VM0
  */
-int32_t hcall_remap_pci_msix(struct vm *vm, uint16_t vmid, uint64_t param)
-{
-	int32_t ret;
-	struct acrn_vm_pci_msix_remap remap;
-	struct ptdev_msi_info info;
-	struct vm *target_vm = get_vm_from_vmid(vmid);
-
-	if (target_vm == NULL) {
-		return -1;
-	}
-
-	(void)memset((void *)&remap, 0U, sizeof(remap));
-
-	if (copy_from_gpa(vm, &remap, param, sizeof(remap)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
-	}
-
-	info.is_msix = remap.msix;
-	info.vmsi_ctl = remap.msi_ctl;
-	info.vmsi_addr = remap.msi_addr;
-	info.vmsi_data = remap.msi_data;
-	if (remap.msix_entry_index >= MAX_MSI_ENTRY) {
-		return -1;
-	}
-	ret = ptdev_msix_remap(target_vm, remap.virt_bdf,
-		    (uint16_t)remap.msix_entry_index, &info);
-	remap.msi_data = info.pmsi_data;
-	remap.msi_addr = info.pmsi_addr;
-
-	if (copy_to_gpa(vm, &remap, param, sizeof(remap)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
-	}
-
-	return ret;
-}
-
-/**
- *@pre Pointer vm shall point to VM0
- */
 int32_t hcall_gpa_to_hpa(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
@@ -714,6 +673,11 @@ int32_t hcall_set_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param)
 		return -1;
 	}
 
+	/* Inform vPCI about the interupt info changes */
+#ifndef CONFIG_PARTITION_MODE
+	vpci_set_ptdev_intr_info(target_vm, irq.virt_bdf, irq.phys_bdf);
+#endif
+
 	if (irq.type == IRQ_INTX) {
 		ret = ptdev_add_intx_remapping(target_vm, irq.is.intx.virt_pin,
 				irq.is.intx.phys_pin, irq.is.intx.pic_pin);
@@ -755,6 +719,15 @@ hcall_reset_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param)
 				irq.is.intx.virt_pin,
 				irq.is.intx.pic_pin);
 	} else if ((irq.type == IRQ_MSI) || (irq.type == IRQ_MSIX)) {
+
+		/*
+		 * Inform vPCI about the interupt info changes
+		 * TODO: Need to add bdf info for IRQ_INTX type in devicemodel
+		 */
+#ifndef CONFIG_PARTITION_MODE
+		vpci_reset_ptdev_intr_info(target_vm, irq.virt_bdf, irq.phys_bdf);
+#endif
+
 		ptdev_remove_msix_remapping(target_vm,
 				irq.virt_bdf,
 				irq.is.msix.vector_cnt);

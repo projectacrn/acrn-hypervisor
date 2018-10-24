@@ -119,10 +119,12 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 		ret = hcall_write_protect_page(vm, (uint16_t)param1, param2);
 		break;
 
-
+	/*
+	 * Don't do MSI remapping and make the pmsi_data equal to vmsi_data
+	 * This is a temporary solution before this hypercall is removed from SOS
+	 */
 	case HC_VM_PCI_MSIX_REMAP:
-		/* param1: vmid */
-		ret = hcall_remap_pci_msix(vm, (uint16_t)param1, param2);
+		ret = 0;
 		break;
 
 	case HC_VM_GPA2HPA:
