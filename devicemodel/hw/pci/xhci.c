@@ -1032,7 +1032,7 @@ pci_xhci_change_port(struct pci_xhci_vdev *xdev, int port, int usb_speed,
 
 	reg = XHCI_PORTREG_PTR(xdev, port);
 	if (conn == 0) {
-		reg->portsc &= ~XHCI_PS_CCS;
+		reg->portsc &= ~(XHCI_PS_CCS | XHCI_PS_PED);
 		reg->portsc |= (XHCI_PS_CSC |
 				XHCI_PS_PLS_SET(UPS_PORT_LS_RX_DET));
 	} else {
