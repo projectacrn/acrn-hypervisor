@@ -406,7 +406,7 @@ int prepare_vm0(void)
 	}
 
 	/* Allocate all cpus to vm0 at the beginning */
-	for (i = 0U; i < phys_cpu_num; i++) {
+	for (i = 0U; i < vm0_desc.vm_hw_num_cores; i++) {
 		err = prepare_vcpu(vm, i);
 		if (err != 0) {
 			return err;

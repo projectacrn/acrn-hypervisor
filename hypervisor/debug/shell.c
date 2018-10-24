@@ -640,10 +640,7 @@ static int shell_vcpu_dumpreg(int argc, char **argv)
 	}
 	vm_id = (uint16_t)status;
 	vcpu_id = (uint16_t)atoi(argv[2]);
-	if (vcpu_id >= phys_cpu_num) {
-		status = -EINVAL;
-		goto out;
-	}
+
 	vm = get_vm_from_vmid(vm_id);
 	if (vm == NULL) {
 		shell_puts("No vm found in the input <vm_id, vcpu_id>\r\n");
@@ -651,8 +648,8 @@ static int shell_vcpu_dumpreg(int argc, char **argv)
 		goto out;
 	}
 
-	if (vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
-		shell_puts("No vcpu found in the input <vm_id, vcpu_id>\r\n");
+	if (vcpu_id >= vm->hw.created_vcpus) {
+		shell_puts("vcpu id is out of range\r\n");
 		status = -EINVAL;
 		goto out;
 	}
