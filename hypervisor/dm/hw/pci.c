@@ -98,3 +98,66 @@ void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes,	uint
 	}
 	spinlock_release(&pci_device_lock);
 }
+
+#define BUS_SCAN_SKIP		0U
+#define BUS_SCAN_PENDING  	1U
+#define BUS_SCAN_COMPLETE	2U
+void pci_scan_bus(pci_enumeration_cb cb_func, void *cb_data)
+{
+	union pci_bdf pbdf;
+	uint8_t hdr_type, secondary_bus;
+	uint32_t bus, dev, func, val;
+	uint8_t bus_to_scan[PCI_BUSMAX + 1] = { BUS_SCAN_SKIP };
+
+	/* start from bus 0 */
+	bus_to_scan[0U] = BUS_SCAN_PENDING;
+
+	for (bus = 0U; bus <= PCI_BUSMAX; bus++) {
+		if (bus_to_scan[bus] != BUS_SCAN_PENDING) {
+			continue;
+		}
+
+		bus_to_scan[bus] = BUS_SCAN_COMPLETE;
+		pbdf.bits.b = bus;
+
+		for (dev = 0U; dev <= PCI_SLOTMAX; dev++) {
+			pbdf.bits.d = dev;
+
+			for (func = 0U; func <= PCI_FUNCMAX; func++) {
+				pbdf.bits.f = func;
+				val = pci_pdev_read_cfg(pbdf, PCIR_VENDOR, 4U);
+
+				if ((val == 0xFFFFFFFFU) || (val == 0x0U)) {
+					/* If function 0 is not implemented, skip to next device */
+					if (func == 0U) {
+						break;
+					}
+
+					/* continue scan next function */
+					continue;
+				}
+
+				if (cb_func != NULL) {
+					cb_func(pbdf.value, cb_data);
+				}
+
+				hdr_type = (uint8_t)pci_pdev_read_cfg(pbdf, PCIR_HDRTYPE, 1U);
+				if ((hdr_type & PCIM_HDRTYPE) == PCIM_HDRTYPE_BRIDGE) {
+
+					/* Secondary bus to be scanned */
+					secondary_bus = (uint8_t)pci_pdev_read_cfg(pbdf, PCIR_SECBUS_1, 1U);
+					if (bus_to_scan[secondary_bus] != BUS_SCAN_SKIP) {
+						pr_err("%s, bus %d may be downstream of different PCI bridges", secondary_bus);
+					} else {
+						bus_to_scan[secondary_bus] = BUS_SCAN_PENDING;
+					}
+				}
+
+				/* skip if it doesn't have multiple functions */
+				if ((hdr_type & PCIM_MFDEV) == 0U) {
+					break;
+				}
+			}
+		}
+	}
+}
