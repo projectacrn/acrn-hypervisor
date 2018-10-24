@@ -42,6 +42,11 @@ config MAX_VCPUS_PER_VM
 	range 1 8
 	default 4
 
+config MAX_PCPU_NUM
+	int "Maximum number of PCPU"
+	range 1 8
+	default 8
+
 config MAX_IOMMU_NUM
 	int "Maximum number of iommu dev"
 	range 1 2
