@@ -28,7 +28,7 @@ struct acpi_table_header {
 	uint32_t                asl_compiler_revision;
 };
 
-uint16_t parse_madt(uint32_t lapic_id_array[MAX_PCPU_NUM]);
+uint16_t parse_madt(uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM]);
 
 void *get_dmar_table(void);
 #endif /* !ACPI_H */

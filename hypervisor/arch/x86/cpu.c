@@ -276,7 +276,7 @@ static void alloc_phy_cpu_data(uint16_t pcpu_num)
 	ASSERT(per_cpu_data_base_ptr != NULL, "");
 }
 
-uint16_t __attribute__((weak)) parse_madt(uint32_t lapic_id_array[MAX_PCPU_NUM])
+uint16_t __attribute__((weak)) parse_madt(uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 {
 	static const uint32_t lapic_id[] = {0U, 2U, 4U, 6U};
 	uint32_t i;
@@ -292,7 +292,7 @@ static void init_percpu_data_area(void)
 {
 	uint16_t i;
 	uint16_t pcpu_num = 0U;
-	uint32_t lapic_id_array[MAX_PCPU_NUM];
+	uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM];
 
 	/* Save all lapic_id detected via parse_mdt in lapic_id_array */
 	pcpu_num = parse_madt(lapic_id_array);
