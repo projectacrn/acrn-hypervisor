@@ -336,6 +336,7 @@ int32_t hcall_set_vcpu_regs(struct vm *vm, uint16_t vmid, uint64_t param)
 int32_t hcall_set_irqline(const struct vm *vm, uint16_t vmid,
 				struct acrn_irqline_ops *ops)
 {
+	uint32_t irq_pic;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
 	if (target_vm == NULL) {
@@ -347,8 +348,13 @@ int32_t hcall_set_irqline(const struct vm *vm, uint16_t vmid,
 	}
 
 	if (ops->nr_gsi < vpic_pincount()) {
-		/* Call vpic for pic injection */
-		vpic_set_irq(target_vm, ops->nr_gsi, ops->op);
+		/*
+		 * IRQ line for 8254 timer is connected to
+		 * I/O APIC pin #2 but PIC pin #0,route GSI
+		 * number #2 to PIC IRQ #0.
+		 */
+		irq_pic = (ops->nr_gsi == 2U) ? 0U : ops->nr_gsi;
+		vpic_set_irq(target_vm, irq_pic, ops->op);
 	}
 
 	/* handle IOAPIC irqline */
