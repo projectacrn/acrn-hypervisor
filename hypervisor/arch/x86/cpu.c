@@ -259,6 +259,11 @@ static int hardware_detect_support(void)
 		return -ENODEV;
 	}
 
+	if (phys_cpu_num > CONFIG_MAX_PCPU_NUM) {
+		pr_fatal("%s, pcpu number(%d) is out of range\n", __func__, phys_cpu_num);
+		return -ENODEV;
+	}
+
 	ret = check_vmx_mmu_cap();
 	if (ret != 0) {
 		return ret;
