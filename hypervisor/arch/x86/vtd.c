@@ -95,7 +95,6 @@ enum dmar_iirg_type {
 /* dmar unit runtime data */
 struct dmar_drhd_rt {
 	uint32_t index;
-	struct list_head list;
 	spinlock_t lock;
 
 	struct dmar_drhd *drhd;
@@ -157,8 +156,7 @@ get_ctx_table(uint32_t dmar_index, uint8_t bus_no)
 	return ctx_tables[dmar_index].buses[bus_no].contents;
 }
 
-static struct list_head dmar_drhd_units;
-static uint32_t dmar_hdrh_unit_count;
+static struct dmar_drhd_rt dmar_drhd_units[CONFIG_MAX_IOMMU_NUM];
 
 /* Use to record the domain ids that are used,
  * support 64 domains (should be enough?)
@@ -175,20 +173,32 @@ static struct list_head iommu_domains;
 static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint);
 static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus,
 					   uint8_t devfun);
-static void register_hrhd_units(void)
+static int register_hrhd_units(void)
 {
 	struct dmar_info *info = get_dmar_info();
 	struct dmar_drhd_rt *drhd_rt;
 	uint32_t i;
 
+	if (info == NULL || info->drhd_count == 0U) {
+		pr_fatal("%s: can't find dmar info\n", __func__);
+		return -ENODEV;
+	}
+
+	if (info->drhd_count > CONFIG_MAX_IOMMU_NUM) {
+		pr_fatal("%s: dmar count(%d) beyond the limitation(%d)\n",
+				__func__, info->drhd_count, CONFIG_MAX_IOMMU_NUM);
+		return -EINVAL;
+	}
+
 	for (i = 0U; i < info->drhd_count; i++) {
-		drhd_rt = calloc(1U, sizeof(struct dmar_drhd_rt));
-		ASSERT(drhd_rt != NULL, "");
+		drhd_rt = &dmar_drhd_units[i];
 		drhd_rt->index = i;
 		drhd_rt->drhd = &info->drhd_units[i];
 		drhd_rt->dmar_irq = IRQ_INVALID;
 		dmar_register_hrhd(drhd_rt);
 	}
+
+	return 0;
 }
 
 static uint32_t iommu_read32(const struct dmar_drhd_rt *dmar_uint, uint32_t offset)
@@ -417,7 +427,7 @@ static void dmar_disable_translation(struct dmar_drhd_rt *dmar_uint)
 static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
 {
 	dev_dbg(ACRN_DBG_IOMMU, "Register dmar uint [%d] @0x%llx",
-			dmar_hdrh_unit_count,
+			dmar_uint->index,
 			dmar_uint->drhd->reg_base_addr);
 
 	spinlock_init(&dmar_uint->lock);
@@ -477,16 +487,6 @@ static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
 		max_domain_id = dmar_uint->max_domain_id;
 	}
 
-	/* register operation is considered serial, no lock here */
-	if ((dmar_uint->drhd->flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK) != 0U) {
-		list_add_tail(&dmar_uint->list, &dmar_drhd_units);
-	}
-	else {
-		list_add(&dmar_uint->list, &dmar_drhd_units);
-	}
-
-	dmar_hdrh_unit_count++;
-
 	if ((dmar_uint->gcmd & DMA_GCMD_TE) != 0U) {
 		dmar_disable_translation(dmar_uint);
 	}
@@ -495,12 +495,12 @@ static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
 static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus,
 					   uint8_t devfun)
 {
+	struct dmar_info *info = get_dmar_info();
 	struct dmar_drhd_rt *dmar_uint;
-	struct list_head *pos;
-	uint32_t i;
+	uint32_t i, j;
 
-	list_for_each(pos, &dmar_drhd_units) {
-		dmar_uint = list_entry(pos, struct dmar_drhd_rt, list);
+	for (j = 0U; j < info->drhd_count; j++) {
+		dmar_uint = &dmar_drhd_units[j];
 
 		if (dmar_uint->drhd->segment != segment) {
 			continue;
@@ -1195,11 +1195,12 @@ int unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus,
 
 void enable_iommu(void)
 {
+	struct dmar_info *info = get_dmar_info();
 	struct dmar_drhd_rt *dmar_uint;
-	struct list_head *pos;
+	uint32_t j;
 
-	list_for_each(pos, &dmar_drhd_units) {
-		dmar_uint = list_entry(pos, struct dmar_drhd_rt, list);
+	for (j = 0U; j < info->drhd_count; j++) {
+		dmar_uint = &dmar_drhd_units[j];
 		if (!dmar_uint->drhd->ignore) {
 			dmar_enable(dmar_uint);
 		}
@@ -1212,23 +1213,24 @@ void enable_iommu(void)
 
 void disable_iommu(void)
 {
+	struct dmar_info *info = get_dmar_info();
 	struct dmar_drhd_rt *dmar_uint;
-	struct list_head *pos;
+	uint32_t j;
 
-	list_for_each(pos, &dmar_drhd_units) {
-		dmar_uint = list_entry(pos, struct dmar_drhd_rt, list);
+	for (j = 0U; j < info->drhd_count; j++) {
+		dmar_uint = &dmar_drhd_units[j];
 		dmar_disable(dmar_uint);
 	}
 }
 
 void suspend_iommu(void)
 {
+	struct dmar_info *info = get_dmar_info();
 	struct dmar_drhd_rt *dmar_unit;
-	struct list_head *pos;
-	uint32_t i;
+	uint32_t i, j;
 
-	list_for_each(pos, &dmar_drhd_units) {
-		dmar_unit = list_entry(pos, struct dmar_drhd_rt, list);
+	for (j = 0U; j < info->drhd_count; j++) {
+		dmar_unit = &dmar_drhd_units[j];
 
 		if (dmar_unit->drhd->ignore) {
 			continue;
@@ -1253,12 +1255,12 @@ void suspend_iommu(void)
 void resume_iommu(void)
 {
 	struct dmar_drhd_rt *dmar_unit;
-	struct list_head *pos;
-	uint32_t i;
+	struct dmar_info *info = get_dmar_info();
+	uint32_t i, j;
 
 	/* restore IOMMU fault register state */
-	list_for_each(pos, &dmar_drhd_units) {
-		dmar_unit = list_entry(pos, struct dmar_drhd_rt, list);
+	for (j = 0U; j < info->drhd_count; j++) {
+		dmar_unit = &dmar_drhd_units[j];
 
 		if (dmar_unit->drhd->ignore) {
 			continue;
@@ -1283,18 +1285,24 @@ void resume_iommu(void)
 	}
 }
 
-void init_iommu(void)
+int init_iommu(void)
 {
-	INIT_LIST_HEAD(&dmar_drhd_units);
+	int ret = 0;
+
 	INIT_LIST_HEAD(&iommu_domains);
 
 	spinlock_init(&domain_lock);
 
-	register_hrhd_units();
+	ret = register_hrhd_units();
+	if (ret != 0) {
+		return ret;
+	}
 
 	enable_iommu();
 
 	cache_flush_invalidate_all();
+
+	return ret;
 }
 
 void init_iommu_vm0_domain(struct vm *vm0)

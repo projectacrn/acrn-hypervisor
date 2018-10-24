@@ -324,8 +324,9 @@ int parse_dmar_table(void)
  */
 struct dmar_info *get_dmar_info(void)
 {
-	parse_dmar_table();
+	if (dmar_info_parsed.drhd_count == 0) {
+		parse_dmar_table();
+	}
 	return &dmar_info_parsed;
 }
-
 #endif
