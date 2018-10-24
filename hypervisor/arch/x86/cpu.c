@@ -479,7 +479,9 @@ static void bsp_boot_post(void)
 	/* Initialize interrupts */
 	interrupt_init(BOOT_CPU_ID);
 
-	init_iommu();
+	if (init_iommu() != 0) {
+		panic("failed to initialize iommu!");
+	}
 
 	timer_init();
 	profiling_setup();
