@@ -987,7 +987,7 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 		 */
 		*dmask = 0UL;
 		vcpu_id = vm_apicid2vcpu_id(vm, (uint8_t)dest);
-		if (vcpu_id < phys_cpu_num) {
+		if (vcpu_id < vm->hw.created_vcpus) {
 			bitmap_set_lock(vcpu_id, dmask);
 		}
 	} else {
@@ -1619,9 +1619,6 @@ vlapic_reset(struct acrn_vlapic *vlapic)
 void
 vlapic_init(struct acrn_vlapic *vlapic)
 {
-	ASSERT(vlapic->vcpu->vcpu_id < phys_cpu_num,
-		"%s: vcpu_id is not initialized", __func__);
-
 	/*
 	 * If the vlapic is configured in x2apic mode then it will be
 	 * accessed in the critical section via the MSR emulation code.
@@ -1848,7 +1845,7 @@ vlapic_set_local_intr(struct vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
 	int error;
 	uint16_t vcpu_id = vcpu_id_arg;
 
-	if ((vcpu_id != BROADCAST_CPU_ID) && (vcpu_id >= phys_cpu_num)) {
+	if ((vcpu_id != BROADCAST_CPU_ID) && (vcpu_id >= vm->hw.created_vcpus)) {
 		return -EINVAL;
 	}
 
