@@ -229,7 +229,7 @@ static void *get_acpi_tbl(const char *sig)
 static uint16_t
 local_parse_madt(void *madt, uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 {
-	uint16_t pcpu_id = 0U;
+	uint16_t pcpu_num = 0U;
 	struct acpi_madt_local_apic *processor;
 	struct acpi_table_madt *madt_ptr;
 	void *first;
@@ -249,16 +249,10 @@ local_parse_madt(void *madt, uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 		if (entry->type == ACPI_MADT_TYPE_LOCAL_APIC) {
 			processor = (struct acpi_madt_local_apic *)entry;
 			if ((processor->lapic_flags & ACPI_MADT_ENABLED) != 0U) {
-				lapic_id_array[pcpu_id] = processor->id;
-				pcpu_id++;
-				/*
-				 * set the pcpu_num as 0U to indicate the
-				 * potential overflow
-				 */
-				if (pcpu_id >= CONFIG_MAX_PCPU_NUM) {
-					pcpu_id = 0U;
-					break;
+				if (pcpu_num < CONFIG_MAX_PCPU_NUM) {
+					lapic_id_array[pcpu_num] = processor->id;
 				}
+				pcpu_num++;
 			}
 		}
 
@@ -266,7 +260,7 @@ local_parse_madt(void *madt, uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 				(((uint64_t)entry) + entry->length);
 	}
 
-	return pcpu_id;
+	return pcpu_num;
 }
 
 /* The lapic_id info gotten from madt will be returned in lapic_id_array */
