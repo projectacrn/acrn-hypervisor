@@ -172,10 +172,10 @@ SW configuration for Service OS (VM0):
 SW configuration for User OS (VMx):
 
 -  **ACPI**: the virtual ACPI table is built by DM and put at VMx's
-   F-Segment. Refer to :ref:`hld-emulated-devices` for details.
+   F-Segment. Refer to :ref:`hld-io-emulation` for details.
 
 -  **E820**: the virtual E820 table is built by the DM then passed to
-   the zero page. Refer to :ref:`hld-emulated-devices` for details.
+   the zero page. Refer to :ref:`hld-io-emulation` for details.
 
 -  **Zero Page**: the DM prepares the zero page at location of
    "lowmem_top - 4K" in VMx. This location is set into VMx's

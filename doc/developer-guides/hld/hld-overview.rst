@@ -94,6 +94,8 @@ start/stop/pause, virtual CPU pause/resume,etc.
 
    ACRN Architecture
 
+.. _intro-io-emulation:
+
 Device Emulation
 ================
 

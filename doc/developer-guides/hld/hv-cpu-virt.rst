@@ -1148,6 +1148,8 @@ setting.
 
 The ``mov to cr4`` emulation is similar to cr0 emulation noted above.
 
+.. _io-mmio-emulation:
+
 IO/MMIO Emulation
 *****************
 
