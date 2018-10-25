@@ -11,6 +11,7 @@
 
 #define MAX_NR_VCPUS			8
 #define MAX_NR_VMS				6
+
 #define MAX_MSR_LIST_NUM		15U
 #define MAX_GROUP_NUM			1U
 
@@ -50,6 +51,18 @@ typedef enum PROFILING_SEP_FEATURE {
 	VM_SWITCH_TRACING,
 	MAX_SEP_FEATURE_ID
 } profiling_sep_feature;
+
+typedef enum SOCWATCH_STATE {
+	SW_SETUP = 0,
+	SW_RUNNING,
+	SW_STOPPED
+} socwatch_state;
+
+typedef enum PROFILING_SOCWATCH_FEATURE {
+	SOCWATCH_COMMAND = 0,
+	SOCWATCH_VM_SWITCH_TRACING,
+	MAX_SOCWATCH_FEATURE_ID
+} profiling_socwatch_feature;
 
 struct profiling_version_info {
 	int32_t major;
@@ -120,6 +133,12 @@ struct profiling_vmsw_config {
 	struct profiling_msr_op exit_list[MAX_MSR_LIST_NUM];
 };
 
+struct vmexit_msr {
+	uint32_t msr_idx;
+	uint32_t reserved;
+	uint64_t msr_data;
+};
+
 struct sep_state {
 	sep_pmu_state pmu_state;
 
@@ -146,7 +165,20 @@ struct sep_state {
 	struct profiling_msr_op
 		vmsw_exit_msr_list[MAX_GROUP_NUM][MAX_MSR_LIST_NUM];
 
+	/* sep handling statistics */
+	uint32_t samples_logged;
+	uint32_t samples_dropped;
+	uint32_t valid_pmi_count;
+	uint32_t total_pmi_count;
+	uint32_t total_vmexit_count;
+	uint32_t frozen_well;
+	uint32_t frozen_delayed;
+	uint32_t nofrozen_pmi;
+
+	struct vmexit_msr vmexit_msr_list[MAX_MSR_LIST_NUM];
+	int32_t vmexit_msr_cnt;
 	uint64_t guest_debugctl_value;
+	uint64_t saved_debugctl_value;
 } __aligned(8);
 
 /*
@@ -155,6 +187,7 @@ struct sep_state {
 struct profiling_info_wrapper {
 	struct sep_state		sep_state;
 	ipi_commands			ipi_cmd;
+	socwatch_state			soc_state;
 } __aligned(8);
 
 int32_t profiling_get_version_info(struct vm *vm, uint64_t addr);

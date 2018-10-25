@@ -13,9 +13,14 @@
 #define MAJOR_VERSION			1
 #define MINOR_VERSION			0
 
+
+#define LVT_PERFCTR_BIT_UNMASK		0xFFFEFFFFU
 #define LVT_PERFCTR_BIT_MASK		0x10000U
+#define VALID_DEBUGCTL_BIT_MASK		0x1801U
 
 static uint64_t	sep_collection_switch;
+static uint64_t	socwatch_collection_switch;
+static bool		in_pmu_profiling;
 
 static uint32_t profiling_pmi_irq = IRQ_INVALID;
 
@@ -79,7 +84,73 @@ static void profiling_initialize_pmi(void)
  */
 static void profiling_enable_pmu(void)
 {
-	/* to be implemented */
+	uint32_t lvt_perf_ctr;
+	uint32_t i;
+	uint32_t group_id;
+	struct profiling_msr_op *msrop = NULL;
+	struct sep_state *ss = &get_cpu_var(profiling_info.sep_state);
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: entering cpu%d",
+		__func__, get_cpu_id());
+
+	if (ss == NULL) {
+		dev_dbg(ACRN_ERR_PROFILING, "%s: exiting cpu%d",
+			__func__, get_cpu_id());
+		return;
+	}
+
+	/* Unmask LAPIC LVT entry for PMC register */
+	lvt_perf_ctr = (uint32_t) msr_read(MSR_IA32_EXT_APIC_LVT_PMI);
+	dev_dbg(ACRN_DBG_PROFILING, "%s: 0x%x, 0x%llx",
+		__func__, MSR_IA32_EXT_APIC_LVT_PMI, lvt_perf_ctr);
+	lvt_perf_ctr &= LVT_PERFCTR_BIT_UNMASK;
+	msr_write(MSR_IA32_EXT_APIC_LVT_PMI, lvt_perf_ctr);
+	dev_dbg(ACRN_DBG_PROFILING, "%s: 0x%x, 0x%llx",
+		__func__, MSR_IA32_EXT_APIC_LVT_PMI, lvt_perf_ctr);
+
+	if (ss->guest_debugctl_value != 0U) {
+		/* Set the VM Exit MSR Load in VMCS */
+		if (ss->vmexit_msr_cnt == 0) {
+			ss->vmexit_msr_cnt = 1;
+			ss->vmexit_msr_list[0].msr_idx
+				= MSR_IA32_DEBUGCTL;
+			ss->vmexit_msr_list[0].msr_data
+				= ss->guest_debugctl_value &
+					VALID_DEBUGCTL_BIT_MASK;
+
+			exec_vmwrite64(VMX_EXIT_MSR_LOAD_ADDR_FULL,
+				hva2hpa(ss->vmexit_msr_list));
+			exec_vmwrite(VMX_EXIT_MSR_LOAD_COUNT,
+				(uint64_t)ss->vmexit_msr_cnt);
+		}
+
+		/* VMCS GUEST field */
+		ss->saved_debugctl_value
+			= exec_vmread64(VMX_GUEST_IA32_DEBUGCTL_FULL);
+		exec_vmwrite64(VMX_GUEST_IA32_DEBUGCTL_FULL,
+		  (ss->guest_debugctl_value & VALID_DEBUGCTL_BIT_MASK));
+	}
+
+	group_id = ss->current_pmi_group_id;
+	for (i = 0U; i < MAX_MSR_LIST_NUM; i++) {
+		msrop = &(ss->pmi_start_msr_list[group_id][i]);
+		if (msrop != NULL) {
+			if (msrop->msr_id == (uint32_t)-1) {
+				break;
+			}
+			if (msrop->msr_op_type == (uint8_t)MSR_OP_WRITE) {
+				msr_write(msrop->msr_id, msrop->value);
+				dev_dbg(ACRN_DBG_PROFILING,
+				"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%llx",
+				__func__, get_cpu_id(), msrop->msr_id, msrop->value);
+			}
+		}
+	}
+
+	ss->pmu_state = PMU_RUNNING;
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting cpu%d",
+		__func__,  get_cpu_id());
 }
 
 /*
@@ -87,7 +158,57 @@ static void profiling_enable_pmu(void)
  */
 static void profiling_disable_pmu(void)
 {
-	/* to be implemented */
+	uint32_t lvt_perf_ctr;
+	uint32_t i;
+	uint32_t group_id;
+	struct profiling_msr_op *msrop = NULL;
+	struct sep_state *ss = &get_cpu_var(profiling_info.sep_state);
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: entering cpu%d",
+		__func__,  get_cpu_id());
+
+	if (ss == NULL) {
+		dev_dbg(ACRN_ERR_PROFILING, "%s: exiting cpu%d",
+			__func__, get_cpu_id());
+		return;
+	}
+
+	if (ss->vmexit_msr_cnt == 1) {
+		/* Set the VM Exit MSR Load in VMCS */
+		exec_vmwrite(VMX_EXIT_MSR_LOAD_COUNT, 0x0U);
+		exec_vmwrite64(VMX_GUEST_IA32_DEBUGCTL_FULL,
+			ss->saved_debugctl_value);
+
+		ss->vmexit_msr_cnt = 0;
+	}
+
+	group_id = ss->current_pmi_group_id;
+	for (i = 0U; i < MAX_MSR_LIST_NUM; i++) {
+		msrop = &(ss->pmi_stop_msr_list[group_id][i]);
+		if (msrop != NULL) {
+			if (msrop->msr_id == (uint32_t)-1) {
+				break;
+			}
+			if (msrop->msr_op_type == (uint8_t)MSR_OP_WRITE) {
+				msr_write(msrop->msr_id, msrop->value);
+				dev_dbg(ACRN_DBG_PROFILING,
+				"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%llx",
+				__func__, get_cpu_id(), msrop->msr_id, msrop->value);
+			}
+		}
+	}
+
+	/* Mask LAPIC LVT entry for PMC register */
+	lvt_perf_ctr = (uint32_t) msr_read(MSR_IA32_EXT_APIC_LVT_PMI);
+
+	lvt_perf_ctr |= LVT_PERFCTR_BIT_MASK;
+	msr_write(MSR_IA32_EXT_APIC_LVT_PMI, lvt_perf_ctr);
+
+
+	ss->pmu_state = PMU_SETUP;
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting cpu%d",
+		__func__,  get_cpu_id());
 }
 
 /*
@@ -105,6 +226,101 @@ static void profiling_pmi_handler(__unused unsigned int irq, __unused void *data
 {
 	/* to be implemented */
 }
+
+/*
+ * Initialize sep state and enable PMU counters
+ */
+void profiling_start_pmu(void)
+{
+	uint16_t i;
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+
+	if (in_pmu_profiling) {
+		return;
+	}
+
+	for (i = 0U; i < phys_cpu_num; i++) {
+		if (per_cpu(profiling_info.sep_state, i).pmu_state != PMU_SETUP) {
+			pr_err("%s: invalid pmu_state %u on cpu%d",
+			__func__, get_cpu_var(profiling_info.sep_state).pmu_state, i);
+			return;
+		}
+	}
+
+	for (i = 0U; i < phys_cpu_num; i++) {
+		per_cpu(profiling_info.ipi_cmd, i) = IPI_PMU_START;
+		per_cpu(profiling_info.sep_state, i).samples_logged = 0U;
+		per_cpu(profiling_info.sep_state, i).samples_dropped = 0U;
+		per_cpu(profiling_info.sep_state, i).valid_pmi_count = 0U;
+		per_cpu(profiling_info.sep_state, i).total_pmi_count = 0U;
+		per_cpu(profiling_info.sep_state, i).total_vmexit_count = 0U;
+		per_cpu(profiling_info.sep_state, i).frozen_well = 0U;
+		per_cpu(profiling_info.sep_state, i).frozen_delayed = 0U;
+		per_cpu(profiling_info.sep_state, i).nofrozen_pmi = 0U;
+		per_cpu(profiling_info.sep_state, i).pmu_state = PMU_RUNNING;
+	}
+
+	smp_call_function(pcpu_active_bitmap, profiling_ipi_handler, NULL);
+
+	in_pmu_profiling = true;
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: done", __func__);
+}
+
+/*
+ * Reset sep state and Disable all the PMU counters
+ */
+void profiling_stop_pmu(void)
+{
+	uint16_t i;
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+
+	if (!in_pmu_profiling) {
+		return;
+	}
+
+	for (i = 0U; i < phys_cpu_num; i++) {
+		per_cpu(profiling_info.ipi_cmd, i) = IPI_PMU_STOP;
+		if (per_cpu(profiling_info.sep_state, i).pmu_state == PMU_RUNNING) {
+			per_cpu(profiling_info.sep_state, i).pmu_state = PMU_SETUP;
+		}
+
+		dev_dbg(ACRN_DBG_PROFILING,
+		"%s: pmi_cnt[%d] = total:%u valid=%u, vmexit_cnt=%u",
+		__func__, i, per_cpu(profiling_info.sep_state, i).total_pmi_count,
+		per_cpu(profiling_info.sep_state, i).valid_pmi_count,
+		per_cpu(profiling_info.sep_state, i).total_vmexit_count);
+
+		dev_dbg(ACRN_DBG_PROFILING,
+		"%s: cpu%d frozen well:%u frozen delayed=%u, nofrozen_pmi=%u",
+		__func__, i, per_cpu(profiling_info.sep_state, i).frozen_well,
+		per_cpu(profiling_info.sep_state, i).frozen_delayed,
+		per_cpu(profiling_info.sep_state, i).nofrozen_pmi);
+
+		dev_dbg(ACRN_DBG_PROFILING,
+		"%s: cpu%d samples captured:%u samples dropped=%u",
+		__func__, i, per_cpu(profiling_info.sep_state, i).samples_logged,
+		per_cpu(profiling_info.sep_state, i).samples_dropped);
+
+		per_cpu(profiling_info.sep_state, i).samples_logged = 0U;
+		per_cpu(profiling_info.sep_state, i).samples_dropped = 0U;
+		per_cpu(profiling_info.sep_state, i).valid_pmi_count = 0U;
+		per_cpu(profiling_info.sep_state, i).total_pmi_count = 0U;
+		per_cpu(profiling_info.sep_state, i).total_vmexit_count = 0U;
+		per_cpu(profiling_info.sep_state, i).frozen_well = 0U;
+		per_cpu(profiling_info.sep_state, i).frozen_delayed = 0U;
+		per_cpu(profiling_info.sep_state, i).nofrozen_pmi = 0U;
+	}
+
+	smp_call_function(pcpu_active_bitmap, profiling_ipi_handler, NULL);
+
+	in_pmu_profiling = false;
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: done.", __func__);
+}
+
 
 /*
  * Performs MSR operations on all the CPU's
@@ -259,9 +475,115 @@ int32_t profiling_get_control(struct vm *vm, uint64_t addr)
 /*
  * Update the profiling type based on control switch
  */
-int32_t profiling_set_control(__unused struct vm *vm, __unused uint64_t addr)
+int32_t profiling_set_control(struct vm *vm, uint64_t addr)
 {
-	/* to be implemented */
+	uint64_t old_switch;
+	uint64_t new_switch;
+	uint64_t i;
+
+	struct profiling_control prof_control;
+
+	(void)memset((void *)&prof_control, 0U, sizeof(prof_control));
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+
+	if (copy_from_gpa(vm, &prof_control, addr, sizeof(prof_control)) != 0) {
+		pr_err("%s: Unable to copy addr from vm\n", __func__);
+		return -EINVAL;
+	}
+
+	switch (prof_control.collector_id) {
+	case COLLECT_PROFILE_DATA:
+		old_switch = sep_collection_switch;
+		new_switch = prof_control.switches;
+		sep_collection_switch = prof_control.switches;
+
+		dev_dbg(ACRN_DBG_PROFILING,
+			" old_switch: %llu sep_collection_switch: %llu!",
+			   old_switch, sep_collection_switch);
+
+		for (i = 0U; i < (uint64_t)MAX_SEP_FEATURE_ID; i++) {
+			if ((new_switch ^ old_switch) & (0x1U << i)) {
+				switch (i) {
+				case CORE_PMU_SAMPLING:
+				case CORE_PMU_COUNTING:
+					if (new_switch & (0x1U << i)) {
+						profiling_start_pmu();
+					} else {
+						profiling_stop_pmu();
+					}
+					break;
+				case LBR_PMU_SAMPLING:
+					break;
+				case VM_SWITCH_TRACING:
+					break;
+				default:
+					dev_dbg(ACRN_DBG_PROFILING,
+					"%s: feature not supported %u",
+					 __func__, i);
+					break;
+				}
+			}
+		}
+		break;
+	case COLLECT_POWER_DATA:
+		dev_dbg(ACRN_DBG_PROFILING,
+			"%s: configuring socwatch", __func__);
+
+		socwatch_collection_switch = prof_control.switches;
+
+		dev_dbg(ACRN_DBG_PROFILING,
+			"socwatch_collection_switch: %llu!",
+			socwatch_collection_switch);
+
+		if (socwatch_collection_switch != 0UL) {
+			dev_dbg(ACRN_DBG_PROFILING,
+			"%s: socwatch start collection invoked!", __func__);
+			for (i = 0U; i < (uint64_t)MAX_SOCWATCH_FEATURE_ID; i++) {
+				if (socwatch_collection_switch & (0x1U << i)) {
+					switch (i) {
+					case SOCWATCH_COMMAND:
+						break;
+					case SOCWATCH_VM_SWITCH_TRACING:
+						dev_dbg(ACRN_DBG_PROFILING,
+						"%s: socwatch vm-switch feature requested!",
+						__func__);
+						break;
+					default:
+						dev_dbg(ACRN_DBG_PROFILING,
+						"%s: socwatch feature not supported %u",
+						__func__, i);
+						break;
+					}
+				}
+			}
+			for (i = 0U; i < phys_cpu_num; i++) {
+				per_cpu(profiling_info.soc_state, i)
+					= SW_RUNNING;
+			}
+		} else { /* stop socwatch collection */
+			dev_dbg(ACRN_DBG_PROFILING,
+			"%s: socwatch stop collection invoked or collection switch not set!",
+			__func__);
+			for (i = 0U; i < phys_cpu_num; i++) {
+				per_cpu(profiling_info.soc_state, i)
+					= SW_STOPPED;
+			}
+		}
+		break;
+	default:
+		pr_err("%s: unknown collector %d",
+			__func__, prof_control.collector_id);
+		break;
+	}
+
+	if (copy_to_gpa(vm, &prof_control, addr, sizeof(prof_control)) != 0) {
+		pr_err("%s: Unable to copy addr to vm\n", __func__);
+		return -EINVAL;
+	}
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting", __func__);
+
 	return 0;
 }
 
@@ -504,6 +826,12 @@ void profiling_setup(void)
 		}
 		profiling_pmi_irq = (uint32_t)retval;
 	}
+
+	per_cpu(profiling_info.sep_state, cpu).valid_pmi_count = 0U;
+	per_cpu(profiling_info.sep_state, cpu).total_pmi_count = 0U;
+	per_cpu(profiling_info.sep_state, cpu).total_vmexit_count = 0U;
+	per_cpu(profiling_info.sep_state, cpu).pmu_state = PMU_INITIALIZED;
+	per_cpu(profiling_info.sep_state, cpu).vmexit_msr_cnt = 0;
 
 	msr_write(MSR_IA32_EXT_APIC_LVT_PMI,
 		VECTOR_PMI | LVT_PERFCTR_BIT_MASK);
