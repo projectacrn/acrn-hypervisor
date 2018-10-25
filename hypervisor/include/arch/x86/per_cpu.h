@@ -24,6 +24,9 @@ struct per_cpu_region {
 	uint8_t vmxon_region[CPU_PAGE_SIZE];
 #ifdef HV_DEBUG
 	uint64_t *sbuf[ACRN_SBUF_ID_MAX];
+	char logbuf[LOG_MESSAGE_MAX_SIZE];
+	bool is_early_logbuf;
+	char early_logbuf[CONFIG_LOG_BUF_SIZE];
 	uint64_t vmexit_cnt[64];
 	uint64_t vmexit_time[64];
 	uint32_t npk_log_ref;
@@ -31,7 +34,6 @@ struct per_cpu_region {
 	uint64_t irq_count[NR_IRQS];
 	uint64_t softirq_pending;
 	uint64_t spurious;
-	struct shared_buf *earlylog_sbuf;
 	void *vcpu;
 	void *ever_run_vcpu;
 #ifdef STACK_PROTECTOR
@@ -47,7 +49,6 @@ struct per_cpu_region {
 	uint8_t df_stack[CONFIG_STACK_SIZE] __aligned(16);
 	uint8_t sf_stack[CONFIG_STACK_SIZE] __aligned(16);
 	uint8_t stack[CONFIG_STACK_SIZE] __aligned(16);
-	char logbuf[LOG_MESSAGE_MAX_SIZE];
 	uint32_t lapic_id;
 	uint32_t lapic_ldr;
 	struct smp_call_info_data smp_call_info;
