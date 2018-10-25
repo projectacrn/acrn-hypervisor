@@ -482,6 +482,8 @@ static void bsp_boot_post(void)
 	/* Initialize interrupts */
 	interrupt_init(BOOT_CPU_ID);
 
+	init_iommu();
+
 	timer_init();
 	setup_notification();
 	setup_posted_intr_notification();
@@ -494,8 +496,6 @@ static void bsp_boot_post(void)
 	start_cpus();
 
 	ASSERT(get_cpu_id() == BOOT_CPU_ID, "");
-
-	init_iommu();
 
 	console_setup_timer();
 
