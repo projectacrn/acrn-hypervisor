@@ -157,6 +157,7 @@ void write_trampoline_sym(const void *sym, uint64_t val)
 
 	hva = hpa2hva(trampoline_start16_paddr) + trampoline_relo_addr(sym);
 	*hva = val;
+	clflush(hva);
 }
 
 static void update_trampoline_code_refs(uint64_t dest_pa)
@@ -214,7 +215,7 @@ static void update_trampoline_code_refs(uint64_t dest_pa)
 
 uint64_t prepare_trampoline(void)
 {
-	uint64_t size, dest_pa;
+	uint64_t size, dest_pa, i;
 
 	size = (uint64_t)(&ld_trampoline_end - &ld_trampoline_start);
 #ifndef CONFIG_EFI_STUB
@@ -229,6 +230,11 @@ uint64_t prepare_trampoline(void)
 	(void)memcpy_s(hpa2hva(dest_pa), (size_t)size, &ld_trampoline_load,
 			(size_t)size);
 	update_trampoline_code_refs(dest_pa);
+
+	for (i = 0UL; i < size; i = i + CACHE_LINE_SIZE) {
+		clflush(hpa2hva(dest_pa + i));
+	}
+
 	trampoline_start16_paddr = dest_pa;
 
 	return dest_pa;
