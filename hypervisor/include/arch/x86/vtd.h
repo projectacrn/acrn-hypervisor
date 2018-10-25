@@ -480,7 +480,7 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id,
 	uint64_t translation_table, uint32_t addr_width);
 
 /* Destroy the iommu domain */
-void destroy_iommu_domain(const struct iommu_domain *domain);
+void destroy_iommu_domain(struct iommu_domain *domain);
 
 /* Enable translation of iommu*/
 void enable_iommu(void);
