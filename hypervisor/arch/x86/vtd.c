@@ -1286,6 +1286,8 @@ void init_iommu(void)
 	register_hrhd_units();
 
 	enable_iommu();
+
+	cache_flush_invalidate_all();
 }
 
 void init_iommu_vm0_domain(struct vm *vm0)
