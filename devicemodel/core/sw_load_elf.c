@@ -194,7 +194,7 @@ acrn_load_elf(struct vmctx *ctx, char *elf_file_name, unsigned long *entry,
 	 * info prepared.
 	 */
 	ptr32 = (unsigned int *) elf_buf;
-	for (i = 0; i < ELF_BUF_LEN/4; i++) {
+	for (i = 0; i <= ((ELF_BUF_LEN/4) - 3); i++) {
 		if (ptr32[i] == MULTIBOOT_HEAD_MAGIC) {
 			int j = 0;
 			unsigned int sum = 0;
