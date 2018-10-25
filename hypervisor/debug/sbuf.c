@@ -25,63 +25,6 @@ uint32_t sbuf_next_ptr(uint32_t pos_arg,
 	return pos;
 }
 
-static inline uint32_t sbuf_calculate_allocate_size(uint32_t ele_num,
-						uint32_t ele_size)
-{
-	uint64_t sbuf_allocate_size;
-
-	sbuf_allocate_size = ele_num * ele_size;
-	sbuf_allocate_size +=  SBUF_HEAD_SIZE;
-	if (sbuf_allocate_size > SBUF_MAX_SIZE) {
-		pr_err("%s, num=0x%x, size=0x%x exceed 0x%x",
-			__func__, ele_num, ele_size, SBUF_MAX_SIZE);
-		return 0;
-	}
-
-	return (uint32_t) sbuf_allocate_size;
-}
-
-struct shared_buf *sbuf_allocate(uint32_t ele_num, uint32_t ele_size)
-{
-	struct shared_buf *sbuf;
-	uint32_t sbuf_allocate_size;
-
-	if ((ele_num == 0U) || (ele_size == 0U)) {
-		pr_err("%s invalid parameter!", __func__);
-		return NULL;
-	}
-
-	sbuf_allocate_size = sbuf_calculate_allocate_size(ele_num, ele_size);
-	if (sbuf_allocate_size == 0U) {
-		return NULL;
-	}
-
-	sbuf = calloc(1U, sbuf_allocate_size);
-	if (sbuf == NULL) {
-		pr_err("%s no memory!", __func__);
-		return NULL;
-	}
-
-	sbuf->ele_num = ele_num;
-	sbuf->ele_size = ele_size;
-	sbuf->size = ele_num * ele_size;
-	sbuf->magic = SBUF_MAGIC;
-	pr_info("%s ele_num=0x%x, ele_size=0x%x allocated",
-			__func__, ele_num, ele_size);
-	return sbuf;
-}
-
-void sbuf_free(struct shared_buf *sbuf)
-{
-	if ((sbuf == NULL) || (sbuf->magic != SBUF_MAGIC)) {
-		pr_err("%s invalid parameter!", __func__);
-		return;
-	}
-
-	sbuf->magic = 0UL;
-	free(sbuf);
-}
-
 uint32_t sbuf_get(struct shared_buf *sbuf, uint8_t *data)
 {
 	const void *from;

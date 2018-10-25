@@ -74,8 +74,6 @@ static inline void sbuf_add_flags(struct shared_buf *sbuf, uint64_t flags)
 	sbuf->flags |= flags;
 }
 
-struct shared_buf *sbuf_allocate(uint32_t ele_num, uint32_t ele_size);
-void sbuf_free(struct shared_buf *sbuf);
 /**
  *@pre sbuf != NULL
  *@pre data != NULL
@@ -106,18 +104,6 @@ static inline void sbuf_set_flags(
 static inline void sbuf_add_flags(
 		__unused struct shared_buf *sbuf,
 		__unused uint64_t flags)
-{
-}
-
-static inline struct shared_buf *sbuf_allocate(
-		__unused uint32_t ele_num,
-		__unused uint32_t ele_size)
-{
-	return NULL;
-}
-
-static inline void sbuf_free(
-		__unused struct shared_buf *sbuf)
 {
 }
 

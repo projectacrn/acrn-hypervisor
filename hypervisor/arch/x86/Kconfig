@@ -99,6 +99,10 @@ config STACK_SIZE
 	  The size of stacks used by physical cores. Each core uses one stack
 	  for normal operations and another three for specific exceptions.
 
+config LOG_BUF_SIZE
+	hex "Capacity of logbuf for each physical cpu"
+	default 0x40000
+
 config LOG_DESTINATION
 	int "Bitmap of consoles where logs are printed"
 	range 0 7

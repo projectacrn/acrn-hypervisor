@@ -10,7 +10,6 @@
  * transfered to SOS:
  * bsp/uefi/clearlinux/acrn.conf: hvlog=2M@0x1FE00000
  */
-#define HVLOG_BUF_SIZE		(2*1024*1024)
 
 struct logmsg {
 	uint32_t flags;
@@ -20,26 +19,16 @@ struct logmsg {
 
 static struct logmsg logmsg;
 
-static inline void alloc_earlylog_sbuf(uint16_t pcpu_id)
+static inline void init_earlylog_sbuf(uint16_t pcpu_id)
 {
+	struct shared_buf *sbuf = (struct shared_buf *)per_cpu(early_logbuf, pcpu_id);
 	uint32_t ele_size = LOG_ENTRY_SIZE;
-	uint32_t ele_num = (((HVLOG_BUF_SIZE >> 1U) / phys_cpu_num)
-			   - SBUF_HEAD_SIZE) / ele_size;
+	uint32_t ele_num = ((CONFIG_LOG_BUF_SIZE - SBUF_HEAD_SIZE) / ele_size);
 
-	per_cpu(earlylog_sbuf, pcpu_id) = sbuf_allocate(ele_num, ele_size);
-	if (per_cpu(earlylog_sbuf, pcpu_id) == NULL) {
-		printf("failed to allcate sbuf for hvlog - %hu\n", pcpu_id);
-	}
-}
-
-static inline void free_earlylog_sbuf(uint16_t pcpu_id)
-{
-	if (per_cpu(earlylog_sbuf, pcpu_id) == NULL) {
-		return;
-	}
-
-	free(per_cpu(earlylog_sbuf, pcpu_id));
-	per_cpu(earlylog_sbuf, pcpu_id) = NULL;
+	sbuf->ele_num = ele_num;
+	sbuf->ele_size = ele_size;
+	sbuf->size = ele_num * ele_size;
+	sbuf->magic = SBUF_MAGIC;
 }
 
 static void do_copy_earlylog(struct shared_buf *dst_sbuf,
@@ -78,7 +67,8 @@ void init_logmsg(uint32_t flags)
 
 	/* allocate sbuf for log before sos booting */
 	for (pcpu_id = 0U; (pcpu_id < phys_cpu_num) && (pcpu_id < CONFIG_MAX_PCPU_NUM); pcpu_id++) {
-		alloc_earlylog_sbuf(pcpu_id);
+		init_earlylog_sbuf(pcpu_id);
+		per_cpu(is_early_logbuf, pcpu_id) = true;
 	}
 }
 
@@ -147,13 +137,13 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 		unsigned int i, msg_len;
 		struct shared_buf *sbuf = (struct shared_buf *)
 					per_cpu(sbuf, pcpu_id)[ACRN_HVLOG];
-		struct shared_buf *early_sbuf = per_cpu(earlylog_sbuf, pcpu_id);
+		struct shared_buf *early_sbuf = (struct shared_buf *)per_cpu(early_logbuf, pcpu_id);
 
-		if (early_sbuf != NULL) {
+		if (per_cpu(is_early_logbuf, pcpu_id)) {
 			if (sbuf != NULL) {
 				/* switch to sbuf from sos */
 				do_copy_earlylog(sbuf, early_sbuf);
-				free_earlylog_sbuf(pcpu_id);
+				per_cpu(is_early_logbuf, pcpu_id) = false;
 			} else {
 				/* use earlylog sbuf if no sbuf from sos */
 				sbuf = early_sbuf;
@@ -176,7 +166,7 @@ void print_logmsg_buffer(uint16_t pcpu_id)
 {
 	char buffer[LOG_ENTRY_SIZE + 1];
 	uint32_t read_cnt;
-	struct shared_buf **sbuf;
+	struct shared_buf *sbuf;
 	int is_earlylog = 0;
 	uint64_t rflags;
 
@@ -184,31 +174,22 @@ void print_logmsg_buffer(uint16_t pcpu_id)
 		return;
 	}
 
-	if (per_cpu(earlylog_sbuf, pcpu_id) != NULL) {
-		sbuf = &per_cpu(earlylog_sbuf, pcpu_id);
-		is_earlylog = 1;
-	} else {
-		sbuf = (struct shared_buf **)
-				&per_cpu(sbuf, pcpu_id)[ACRN_HVLOG];
-	}
+	sbuf = (struct shared_buf *)per_cpu(early_logbuf, pcpu_id);
+	is_earlylog = 1;
 
 	spinlock_irqsave_obtain(&(logmsg.lock), &rflags);
-	if ((*sbuf) != NULL) {
-		printf("CPU%hu: head: 0x%x, tail: 0x%x %s\n\r",
-			pcpu_id, (*sbuf)->head, (*sbuf)->tail,
-			(is_earlylog != 0) ? "[earlylog]" : "");
-	}
+
+	printf("CPU%hu: head: 0x%x, tail: 0x%x %s\n\r",
+		pcpu_id, (sbuf)->head, (sbuf)->tail,
+		(is_earlylog != 0) ? "[earlylog]" : "");
+
 	spinlock_irqrestore_release(&(logmsg.lock), rflags);
 
 	do {
 		uint32_t idx;
 		(void)memset(buffer, 0U, LOG_ENTRY_SIZE + 1U);
 
-		if ((*sbuf == NULL) || (buffer == NULL)) {
-			return;
-		}
-
-		read_cnt = sbuf_get(*sbuf, (uint8_t *)buffer);
+		read_cnt = sbuf_get(sbuf, (uint8_t *)buffer);
 
 		if (read_cnt == 0U) {
 			return;
