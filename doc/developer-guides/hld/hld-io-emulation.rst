@@ -362,10 +362,3 @@ The following APIs are provided for I/O emulation at runtime:
    int32_t pio_instr_vmexit_handler(struct vcpu *vcpu)
 
 .. note:: change these to reference API material from ioreq.h
-
-.. toctree::
-   :maxdepth: 1
-
-   GVT-g GPU Virtualization <hld-APL_GVT-g>
-   UART virtualization <uart-virt-hld>
-   Watchdoc virtualization <watchdog-hld>
