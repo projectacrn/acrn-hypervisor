@@ -181,12 +181,19 @@ Enabling partition mode
      shell> fs1:
      fs1:\> EFI\ubuntu\grubx64.efi
 
-  Here we will see the following menu. Select entry ``ACRN Partition Mode`` and
+  Here we will see the following GRUB menu. Select entry ``ACRN Partition Mode`` and
   press ``Enter`` and then the ACRN hypervisor will be loaded automatically.
 
-  .. figure:: images/partition_mode_grub_menu.png
-     :align: center
-     :name: Partition Mode Grub Menu
+  .. code-block:: console
+     :emphasize-lines: 2
+
+      ACRN Partition Mode with Zephyr
+     *ACRN Partition Mode
+      ADG Partition Mode
+      Advanced options for Ubuntu
+      System setup
+      Restore Ubuntu 16.04 to factory state
+
 
 Playing with ACRN hypervisor with partition mode
 ************************************************
