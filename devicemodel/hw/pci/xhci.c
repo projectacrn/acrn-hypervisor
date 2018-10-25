@@ -1716,7 +1716,6 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 			goto done;
 		}
 
-		xdev->native_ports[index].state = VPORT_ASSIGNED;
 		pci_xhci_dev_destroy(dev);
 		UPRINTF(LINF, "disable slot %d for native device %d-%s"
 				"\r\n", slot, di->path.bus,
