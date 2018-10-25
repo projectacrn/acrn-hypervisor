@@ -11,4 +11,4 @@ Hypervisor high-level design
    hv-cpu-virt
    Memory management <memmgt-hld>
    I/O Emulation <hld-io-emulation>
-   Interrupt management <interrupt-hld>
+   Physical Interrupt <interrupt-hld>
