@@ -19,7 +19,7 @@ system.
    Overview <hld-overview>
    Hypervisor <hld-hypervisor>
    Device Model <hld-devicemodel>
-   I/O Emulation <hld-io-emulation>
+   Emulated Devices <hld-emulated-devices>
    Virtio Devices <hld-virtio-devices>
    VM Management <hld-vm-management>
    Power Management <hld-power-management>
