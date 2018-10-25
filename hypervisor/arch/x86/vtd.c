@@ -107,8 +107,6 @@ struct dmar_drhd_rt {
 
 	uint32_t dmar_irq;
 
-	uint32_t max_domain_id;
-
 	bool cap_pw_coherency;  /* page-walk coherency */
 	uint8_t cap_msagaw;
 	uint16_t cap_num_fault_regs;
@@ -128,10 +126,8 @@ struct dmar_context_entry {
 };
 
 struct iommu_domain {
-	struct list_head list;
 	bool is_host;
 	bool is_tt_ept;     /* if reuse EPT of the domain */
-	uint16_t dom_id;
 	uint16_t vm_id;
 	uint32_t addr_width;   /* address width of the domain */
 	uint64_t trans_table_ptr;
@@ -158,19 +154,18 @@ get_ctx_table(uint32_t dmar_index, uint8_t bus_no)
 
 static struct dmar_drhd_rt dmar_drhd_units[CONFIG_MAX_IOMMU_NUM];
 
-/* Use to record the domain ids that are used,
- * support 64 domains (should be enough?)
- * domain id 0 is reserved,
- * bit0 --> domain id 0, ..., bit63 --> domain id 63
- */
-static uint32_t max_domain_id = 63U;
-static uint64_t domain_bitmap;
-static spinlock_t domain_lock;
-
 static struct iommu_domain *vm0_domain;
-static struct list_head iommu_domains;
 
-static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint);
+/* Domain id 0 is reserved in some cases per VT-d */
+#define MAX_DOMAIN_NUM (CONFIG_MAX_IOMMU_NUM + 1)
+static struct iommu_domain iommu_domains[MAX_DOMAIN_NUM];
+
+static inline uint16_t vmid_to_domainid(uint16_t vm_id)
+{
+	return vm_id + 1U;
+}
+
+static int dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint);
 static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus,
 					   uint8_t devfun);
 static int register_hrhd_units(void)
@@ -178,6 +173,7 @@ static int register_hrhd_units(void)
 	struct dmar_info *info = get_dmar_info();
 	struct dmar_drhd_rt *drhd_rt;
 	uint32_t i;
+	int ret = 0;
 
 	if (info == NULL || info->drhd_count == 0U) {
 		pr_fatal("%s: can't find dmar info\n", __func__);
@@ -195,7 +191,10 @@ static int register_hrhd_units(void)
 		drhd_rt->index = i;
 		drhd_rt->drhd = &info->drhd_units[i];
 		drhd_rt->dmar_irq = IRQ_INVALID;
-		dmar_register_hrhd(drhd_rt);
+		ret = dmar_register_hrhd(drhd_rt);
+		if (ret != 0) {
+			return ret;
+		}
 	}
 
 	return 0;
@@ -424,7 +423,7 @@ static void dmar_disable_translation(struct dmar_drhd_rt *dmar_uint)
 	spinlock_release(&(dmar_uint->lock));
 }
 
-static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
+static int dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
 {
 	dev_dbg(ACRN_DBG_IOMMU, "Register dmar uint [%d] @0x%llx",
 			dmar_uint->index,
@@ -459,11 +458,13 @@ static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
 
 	/* check capability */
 	if ((iommu_cap_super_page_val(dmar_uint->cap) & 0x1U) == 0U) {
-		dev_dbg(ACRN_DBG_IOMMU, "dmar uint doesn't support 2MB page!");
+		pr_fatal("%s: dmar uint doesn't support 2MB page!\n", __func__);
+		return -ENODEV;
 	}
 
 	if ((iommu_cap_super_page_val(dmar_uint->cap) & 0x2U) == 0U) {
-		dev_dbg(ACRN_DBG_IOMMU, "dmar uint doesn't support 1GB page!");
+		pr_fatal("%s: dmar uint doesn't support 1GB page!\n", __func__);
+		return -ENODEV;
 	}
 
 	/* when the hardware support snoop control,
@@ -477,19 +478,11 @@ static void dmar_register_hrhd(struct dmar_drhd_rt *dmar_uint)
 			"dmar uint doesn't support snoop control!");
 	}
 
-	dmar_uint->max_domain_id = iommu_cap_ndoms(dmar_uint->cap) - 1;
-
-	if (dmar_uint->max_domain_id > 63U) {
-		dmar_uint->max_domain_id = 63U;
-	}
-
-	if (max_domain_id > dmar_uint->max_domain_id) {
-		max_domain_id = dmar_uint->max_domain_id;
-	}
-
 	if ((dmar_uint->gcmd & DMA_GCMD_TE) != 0U) {
 		dmar_disable_translation(dmar_uint);
 	}
+
+	return 0;
 }
 
 static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus,
@@ -522,35 +515,6 @@ static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus,
 	}
 
 	return NULL;
-}
-
-static uint8_t alloc_domain_id(void)
-{
-	uint8_t i;
-	uint64_t mask;
-
-	spinlock_obtain(&domain_lock);
-	/* domain id 0 is reserved, when CM = 1.
-	 * so domain id allocation start from 1
-	 */
-	for (i = 1U; i < 64U; i++) {
-		mask = (1UL << i);
-		if ((domain_bitmap & mask) == 0UL) {
-			domain_bitmap |= mask;
-			break;
-		}
-	}
-	spinlock_release(&domain_lock);
-	return i;
-}
-
-static void free_domain_id(uint16_t dom_id)
-{
-	uint64_t mask = (1UL << dom_id);
-
-	spinlock_obtain(&domain_lock);
-	domain_bitmap &= ~mask;
-	spinlock_release(&domain_lock);
 }
 
 static void dmar_write_buffer_flush(struct dmar_drhd_rt *dmar_uint)
@@ -908,7 +872,6 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_ta
 		uint32_t addr_width)
 {
 	struct iommu_domain *domain;
-	uint16_t domain_id;
 
 	/* TODO: check if a domain with the vm_id exists */
 
@@ -917,29 +880,21 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_ta
 		return NULL;
 	}
 
-	domain_id = alloc_domain_id();
-	if (domain_id > max_domain_id) {
-		pr_err("domain id is exhausted");
-		return NULL;
-	}
+	/*
+	 * A hypercall is called to create an iommu domain for a valid VM,
+	 * and hv code limit the VM number to CONFIG_MAX_VM_NUM.
+	 * So the array iommu_domains will not be accessed out of range.
+	 */
+	domain = &iommu_domains[vmid_to_domainid(vm_id)];
 
-	domain = calloc(1U, sizeof(struct iommu_domain));
-
-	ASSERT(domain != NULL, "");
 	domain->is_host = false;
-	domain->dom_id = domain_id;
 	domain->vm_id = vm_id;
 	domain->trans_table_ptr = translation_table;
 	domain->addr_width = addr_width;
 	domain->is_tt_ept = true;
 
-
-	spinlock_obtain(&domain_lock);
-	list_add(&domain->list, &iommu_domains);
-	spinlock_release(&domain_lock);
-
 	dev_dbg(ACRN_DBG_IOMMU, "create domain [%d]: vm_id = %hu, ept@0x%x",
-		domain->dom_id,
+		vmid_to_domainid(domain->vm_id),
 		domain->vm_id,
 		domain->trans_table_ptr);
 
@@ -949,7 +904,7 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_ta
 /**
  * @pre domain != NULL
  */
-void destroy_iommu_domain(const struct iommu_domain *domain)
+void destroy_iommu_domain(struct iommu_domain *domain)
 {
 	/* currently only support ept */
 	if (!domain->is_tt_ept) {
@@ -957,13 +912,7 @@ void destroy_iommu_domain(const struct iommu_domain *domain)
 	}
 
 	/* TODO: check if any device assigned to this domain */
-
-	spinlock_obtain(&domain_lock);
-	list_del(&domain->list);
-	spinlock_release(&domain_lock);
-
-	free_domain_id(domain->dom_id);
-	free(domain);
+	(void)memset(domain, 0U, sizeof(*domain));
 }
 
 static int add_iommu_device(const struct iommu_domain *domain, uint16_t segment,
@@ -977,10 +926,6 @@ static int add_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 	struct dmar_context_entry *context_entry;
 	uint64_t upper;
 	uint64_t lower = 0UL;
-
-	if (domain == NULL) {
-		return 1;
-	}
 
 	dmar_uint = device_to_dmaru(segment, bus, devfun);
 	if (dmar_uint == NULL) {
@@ -1088,7 +1033,7 @@ static int add_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 	upper = dmar_set_bitslice(upper,
 	          CTX_ENTRY_UPPER_DID_MASK,
 		  CTX_ENTRY_UPPER_DID_POS,
-		  domain->dom_id);
+		  (uint64_t)vmid_to_domainid(domain->vm_id));
 	lower = dmar_set_bitslice(lower,
 		  CTX_ENTRY_LOWER_SLPTPTR_MASK,
 		  CTX_ENTRY_LOWER_SLPTPTR_POS,
@@ -1118,10 +1063,6 @@ remove_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 	struct dmar_context_entry *context_entry;
 	uint16_t dom_id;
 
-	if (domain == NULL) {
-		return 1;
-	}
-
 	dmar_uint = device_to_dmaru(segment, bus, devfun);
 	if (dmar_uint == NULL) {
 		pr_err("no dmar unit found for device:0x%x:%x",
@@ -1144,7 +1085,7 @@ remove_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 
 	dom_id = (uint16_t)dmar_get_bitslice(context_entry->upper,
 		        CTX_ENTRY_UPPER_DID_MASK, CTX_ENTRY_UPPER_DID_POS);
-	if (dom_id != domain->dom_id) {
+	if (dom_id != vmid_to_domainid(domain->vm_id)) {
 		pr_err("%s: domain id mismatch", __func__);
 		return 1;
 	}
@@ -1166,10 +1107,6 @@ remove_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 int assign_iommu_device(const struct iommu_domain *domain, uint8_t bus,
 				uint8_t devfun)
 {
-	if (domain == NULL) {
-		return 1;
-	}
-
 	/* TODO: check if the device assigned */
 
 	if (remove_iommu_device(vm0_domain, 0U, bus, devfun) == 1) {
@@ -1181,10 +1118,6 @@ int assign_iommu_device(const struct iommu_domain *domain, uint8_t bus,
 int unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus,
 				uint8_t devfun)
 {
-	if (domain == NULL) {
-		return 1;
-	}
-
 	/* TODO: check if the device assigned */
 
 	if (remove_iommu_device(domain, 0U, bus, devfun) == 1) {
@@ -1288,10 +1221,6 @@ void resume_iommu(void)
 int init_iommu(void)
 {
 	int ret = 0;
-
-	INIT_LIST_HEAD(&iommu_domains);
-
-	spinlock_init(&domain_lock);
 
 	ret = register_hrhd_units();
 	if (ret != 0) {
