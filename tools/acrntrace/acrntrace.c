@@ -96,7 +96,7 @@ static int parse_opt(int argc, char *argv[])
 	while ((opt = getopt(argc, argv, optString)) != -1) {
 		switch (opt) {
 		case 'i':
-			ret = atoi(optarg);
+			ret = strtol(optarg, NULL, 10);
 			if (ret <= 0 || ret >=1000) {
 				pr_err("'-i' require integer between [1-999]\n");
 				return -EINVAL;
@@ -105,7 +105,7 @@ static int parse_opt(int argc, char *argv[])
 			pr_dbg("Period is %lu\n", period);
 			break;
 		case 't':
-			ret = atoi(optarg);
+			ret = strtol(optarg, NULL, 10);
 			if (ret <= 0) {
 				pr_err("'-t' require integer greater than 0\n");
 				return -EINVAL;
@@ -169,8 +169,10 @@ static int create_trace_file_dir(char *dir)
 			       p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
 		if (ret > TIME_STR_LEN)
 			printf("WARN: time_str may be truncated\n");
-	} else
-		snprintf(time_str, TIME_STR_LEN, "00000000-000000");
+	} else {
+		if (snprintf(time_str, TIME_STR_LEN, "00000000-000000") >= TIME_STR_LEN)
+			printf("WARN: time_str is truncated\n\n");
+	}
 
 	pr_info("start tracing at %s\n", time_str);
 
@@ -185,7 +187,7 @@ static int create_trace_file_dir(char *dir)
 
 	ret = snprintf(dir, TRACE_FILE_DIR_LEN, "%s%s",
 		       TRACE_FILE_ROOT, time_str);
-	if (ret < (strlen(TRACE_FILE_ROOT) + strlen(time_str)))
+	if (ret >= TRACE_FILE_DIR_LEN)
 		printf("WARN: trace file dir name is truncated\n");
 	if (stat(dir, &st)) {
 		err = mkdir(dir, 0644);
@@ -231,7 +233,10 @@ static int create_reader(reader_struct * reader, uint32_t cpu)
 {
 	char trace_file_name[TRACE_FILE_NAME_LEN];
 
-	snprintf(reader->dev_name, DEV_PATH_LEN, "/dev/%s%u", dev_prefix, cpu);
+	if (snprintf(reader->dev_name, DEV_PATH_LEN, "/dev/%s%u", dev_prefix, cpu)
+			>= DEV_PATH_LEN)
+		printf("WARN: device name is truncated\n");
+
 	reader->param.cpuid = cpu;
 
 	reader->dev_fd = open(reader->dev_name, O_RDWR);
@@ -254,8 +259,9 @@ static int create_reader(reader_struct * reader, uint32_t cpu)
 	       cpu, reader->param.sbuf->magic, reader->param.sbuf->ele_num,
 	       reader->param.sbuf->ele_size);
 
-	snprintf(trace_file_name, TRACE_FILE_NAME_LEN, "%s/%d", trace_file_dir,
-		 cpu);
+	if(snprintf(trace_file_name, TRACE_FILE_NAME_LEN, "%s/%d", trace_file_dir,
+		 cpu) >= TRACE_FILE_NAME_LEN)
+		printf("WARN: trace file name is truncated\n");
 	reader->param.trace_fd = open(trace_file_name,
 					O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (!reader->param.trace_fd) {
