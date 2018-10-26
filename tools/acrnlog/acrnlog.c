@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#include <limits.h>
 #include <dirent.h>
 #include <errno.h>
 #include <pthread.h>
@@ -26,6 +27,37 @@
 /* num of physical cpu, not the cpu num seen on SOS */
 static unsigned int pcpu_num = PCPU_NUM;
 static unsigned long interval = DEFAULT_POLL_INTERVAL;
+
+/* this is for log file */
+#define LOG_FILE_SIZE	(1024*1024)
+#define LOG_FILE_NUM 	4
+static size_t hvlog_log_size = LOG_FILE_SIZE;
+static unsigned short hvlog_log_num = LOG_FILE_NUM;
+
+struct hvlog_file {
+	const char *path;
+	int fd;
+
+	size_t left_space;
+	unsigned short index;
+	unsigned short num;
+};
+
+static struct hvlog_file cur_log = {
+	.path = "/tmp/acrnlog/acrnlog_cur",
+	.fd = -1,
+	.left_space = 0,
+	.index = ~0,
+	.num = LOG_FILE_NUM
+};
+
+static struct hvlog_file last_log = {
+	.path = "/tmp/acrnlog/acrnlog_last",
+	.fd = -1,
+	.left_space = 0,
+	.index = ~0,
+	.num = LOG_FILE_NUM
+};
 
 struct hvlog_msg {
 	__u64 usec;		/* timestamp, from tsc reset in usec */
@@ -49,6 +81,8 @@ struct hvlog_dev {
 	char entry_latch[LOG_ELEMENT_SIZE];	/* latch for an sbuf element */
 	struct hvlog_msg latched_msg;	/* latch for parsed msg */
 };
+
+size_t write_log_file(struct hvlog_file * log, const char *buf, size_t len);
 
 /*
  * get pcpu_num, which is equal to num of acrnlog dev
@@ -86,10 +120,12 @@ static int get_cpu_num(void)
  */
 struct hvlog_msg *hvlog_read_dev(struct hvlog_dev *dev)
 {
+	char *p = NULL;
 	int ret;
 	size_t len = 0;
 	struct hvlog_msg *msg[2];
 	int msg_num;
+	char warn_msg[LOG_MSG_SIZE] = {0};
 
 	msg[0] = dev->msg;
 	msg[1] = &dev->latched_msg;
@@ -111,22 +147,30 @@ struct hvlog_msg *hvlog_read_dev(struct hvlog_dev *dev)
 				 LOG_ELEMENT_SIZE);
 			if (!ret)
 				break;
-			/* do we read a new meaasge? */
-			ret =
-			    sscanf(&msg[0]->raw[msg[0]->len],
-				   "[%lluus][cpu=%d][sev=%d][seq=%llu]:",
-				   &msg[msg_num]->usec, &msg[msg_num]->cpu,
-				   &msg[msg_num]->sev, &msg[msg_num]->seq);
-			if (ret == 4) {
-				msg_num++;
-				/* if we read another new msg, latch it */
-				/* to process next time */
-				if (msg_num > 1) {
-					dev->latched = 1;
-					memcpy(dev->entry_latch,
-					       &msg[0]->raw[msg[0]->len],
-					       LOG_ELEMENT_SIZE);
-					break;
+			/* do we read a new meaasge?
+			 * msg[0]->raw[msg[0]->len format: [%lluus][cpu=%d][sev=%d][seq=%llu]: */
+			p = strstr(&msg[0]->raw[msg[0]->len], "][seq=");
+			if (p) {
+				p = p + strlen("][seq=");
+				msg[msg_num]->seq = strtoull(p, NULL, 10);
+				if ((errno == ERANGE && (msg[msg_num]->seq == ULLONG_MAX))
+						|| (errno != 0 && msg[msg_num]->seq == 0)) {
+					if (snprintf(warn_msg, LOG_MSG_SIZE, "\n\n\t%s[invalid seq]\n\n\n",
+								LOG_INCOMPLETE_WARNING) >= LOG_MSG_SIZE) {
+						printf("WARN: warning message is truncated\n");
+					}
+					write_log_file(&cur_log, warn_msg, strnlen(warn_msg, LOG_MSG_SIZE));
+				} else {
+					msg_num++;
+					/* if we read another new msg, latch it */
+					/* to process next time */
+					if (msg_num > 1) {
+						dev->latched = 1;
+						memcpy(dev->entry_latch,
+							   &msg[0]->raw[msg[0]->len],
+							LOG_ELEMENT_SIZE);
+						break;
+					}
 				}
 			}
 		}
@@ -138,7 +182,7 @@ struct hvlog_msg *hvlog_read_dev(struct hvlog_dev *dev)
 			continue;
 		}
 
-		len = strlen(&msg[0]->raw[msg[0]->len]);
+		len = strnlen(&msg[0]->raw[msg[0]->len], LOG_MSG_SIZE);
 		msg[0]->len += len;
 	} while (len == LOG_ELEMENT_SIZE &&
 		 msg[0]->len < LOG_MSG_SIZE - LOG_ELEMENT_SIZE);
@@ -258,37 +302,6 @@ static struct hvlog_msg *get_min_seq_msg(struct hvlog_data *data, int num_dev)
 
 	return msg;
 }
-
-/* this is for log file */
-#define LOG_FILE_SIZE	(1024*1024)
-#define LOG_FILE_NUM 	4
-static size_t hvlog_log_size = LOG_FILE_SIZE;
-static unsigned short hvlog_log_num = LOG_FILE_NUM;
-
-struct hvlog_file {
-	const char *path;
-	int fd;
-
-	size_t left_space;
-	unsigned short index;
-	unsigned short num;
-};
-
-static struct hvlog_file cur_log = {
-	.path = "/tmp/acrnlog/acrnlog_cur",
-	.fd = -1,
-	.left_space = 0,
-	.index = ~0,
-	.num = LOG_FILE_NUM
-};
-
-static struct hvlog_file last_log = {
-	.path = "/tmp/acrnlog/acrnlog_last",
-	.fd = -1,
-	.left_space = 0,
-	.index = ~0,
-	.num = LOG_FILE_NUM
-};
 
 static int new_log_file(struct hvlog_file *log)
 {
@@ -434,15 +447,27 @@ static int parse_opt(int argc, char *argv[])
 	while ((opt = getopt(argc, argv, optString)) != -1) {
 		switch (opt) {
 		case 's':
-			hvlog_log_size = atoll(optarg) * 1024;
+			ret = strtoll(optarg, NULL, 10);
+			if ((errno == ERANGE && (ret == LLONG_MAX || ret == LLONG_MIN))
+					|| (errno != 0 && ret == 0)) {
+				printf("'-s' invalid parameter: %s\n", optarg);
+				return -EINVAL;
+			}
+
+			hvlog_log_size = ret * 1024;
 			break;
 		case 'n':
-			ret = atoi(optarg);
+			ret = strtol(optarg, NULL, 10);
+			if ((errno == ERANGE && (ret == LONG_MAX || ret == LONG_MIN))
+					|| (errno != 0 && ret == 0)) {
+				printf("'-n' invalid parameter: %s\n", optarg);
+				return -EINVAL;
+			}
 			if (ret > 3)
 				hvlog_log_num = ret;
 			break;
 		case 't':
-			ret = atoi(optarg);
+			ret = strtol(optarg, NULL, 10);
 			if (ret <= 0 || ret >=1000) {
 				printf("'-t' require integer between [1-999]\n");
 				return -EINVAL;
