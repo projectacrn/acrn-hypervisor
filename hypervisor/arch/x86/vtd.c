@@ -1109,9 +1109,10 @@ int assign_iommu_device(const struct iommu_domain *domain, uint8_t bus,
 {
 	/* TODO: check if the device assigned */
 
-	if (remove_iommu_device(vm0_domain, 0U, bus, devfun) == 1) {
+	if ((vm0_domain != NULL) && (remove_iommu_device(vm0_domain, 0U, bus, devfun) == 1)) {
 		return 1;
 	}
+
 	return add_iommu_device(domain, 0U, bus, devfun);
 }
 
@@ -1123,7 +1124,12 @@ int unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus,
 	if (remove_iommu_device(domain, 0U, bus, devfun) == 1) {
 		return 1;
 	}
-	return add_iommu_device(vm0_domain, 0U, bus, devfun);
+
+	if ((vm0_domain != NULL) && (add_iommu_device(vm0_domain, 0U, bus, devfun) == 1)) {
+		return 1;
+	}
+
+	return 0;
 }
 
 void enable_iommu(void)
