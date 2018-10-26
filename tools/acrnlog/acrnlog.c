@@ -301,9 +301,11 @@ static int new_log_file(struct hvlog_file *log)
 		log->fd = -1;
 	}
 
-	snprintf(file_name, sizeof(file_name), "%s.%hu", log->path,
-		 log->index + 1);
-	remove(file_name);
+	if (snprintf(file_name, sizeof(file_name), "%s.%hu", log->path,
+		 log->index + 1) >= sizeof(file_name)) {
+		printf("WARN: log path is truncated\n");
+	} else
+		remove(file_name);
 
 	log->fd = open(file_name, O_RDWR | O_CREAT | O_TRUNC, 0666);
 	if (log->fd < 0) {
@@ -313,9 +315,11 @@ static int new_log_file(struct hvlog_file *log)
 
 	log->left_space = hvlog_log_size;
 	log->index++;
-	snprintf(file_name, sizeof(file_name), "%s.%hu", log->path,
-			log->index - hvlog_log_num);
-	remove(file_name);
+	if (snprintf(file_name, sizeof(file_name), "%s.%hu", log->path,
+			log->index - hvlog_log_num) >= sizeof(file_name)) {
+		printf("WARN: log path is truncated\n");
+	} else
+		remove(file_name);
 
 	return 0;
 }
@@ -350,11 +354,13 @@ static void *cur_read_func(void *arg)
 
 		/* if msg->seq is not contineous, warn for logs missing */
 		if (last_seq + 1 < msg->seq) {
-			snprintf(warn_msg, LOG_MSG_SIZE,
+			if (snprintf(warn_msg, LOG_MSG_SIZE,
 				 "\n\n\t%s[%lu ms]\n\n\n",
-				 LOG_INCOMPLETE_WARNING, interval);
+				 LOG_INCOMPLETE_WARNING, interval) >= LOG_MSG_SIZE) {
+				printf("WARN: warning message is truncated\n");
+			}
 
-			write_log_file(&cur_log, warn_msg, strlen(warn_msg));
+			write_log_file(&cur_log, warn_msg, strnlen(warn_msg, LOG_MSG_SIZE));
 		}
 
 		last_seq = msg->seq;
@@ -394,9 +400,11 @@ static int mk_dir(const char *path)
 			if (!find)
 				continue;
 
-			snprintf(acrnlog_file, sizeof(acrnlog_file), "%s/%s%d",
-					path, prefix, index++);
-			remove(acrnlog_file);
+			if (snprintf(acrnlog_file, sizeof(acrnlog_file), "%s/%s%d",
+					path, prefix, index++) >= sizeof(acrnlog_file)) {
+				printf("WARN: acrnlog file path is truncated\n");
+			} else
+				remove(acrnlog_file);
 		}
 	}
 
@@ -489,7 +497,10 @@ int main(int argc, char *argv[])
 
 	num_cur = 0;
 	for (i = 0; i < pcpu_num; i++) {
-		snprintf(name, sizeof(name), "/dev/acrn_hvlog_cur_%d", i);
+		if (snprintf(name, sizeof(name), "/dev/acrn_hvlog_cur_%d", i) >= sizeof(name)) {
+			printf("ERROR: cur hvlog path is truncated\n");
+			return -1;
+		}
 		cur[i].dev = hvlog_open_dev(name);
 		if (!cur[i].dev)
 			perror(name);
@@ -500,7 +511,10 @@ int main(int argc, char *argv[])
 
 	num_last = 0;
 	for (i = 0; i < pcpu_num; i++) {
-		snprintf(name, sizeof(name), "/dev/acrn_hvlog_last_%d", i);
+		if (snprintf(name, sizeof(name), "/dev/acrn_hvlog_last_%d", i) >= sizeof(name)) {
+			printf("ERROR: last hvlog path is truncated\n");
+			return -1;
+		}
 		last[i].dev = hvlog_open_dev(name);
 		if (!last[i].dev)
 			perror(name);
