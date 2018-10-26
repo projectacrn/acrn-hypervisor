@@ -258,7 +258,10 @@ int shell_cmd(const char *cmd, char *outbuf, int len)
 
 	memset(cmd_buf, 0, sizeof(cmd_buf));
 	memset(outbuf, 0, len);
-	snprintf(cmd_buf, sizeof(cmd_buf), "%s 2>&1", cmd);
+	if (snprintf(cmd_buf, sizeof(cmd_buf), "%s 2>&1", cmd) >= sizeof(cmd_buf)) {
+		printf("ERROR: shell command is truncated\n");
+		return -1;
+	}
 	ptr = popen(cmd_buf, "re");
 	if (!ptr)
 		return -1;
@@ -317,8 +320,11 @@ int start_vm(const char *vmname)
 {
 	char cmd[128];
 
-	snprintf(cmd, sizeof(cmd), "bash %s/add/%s.sh $(cat %s/add/%s.args)",
-		 ACRNCTL_OPT_ROOT, vmname, ACRNCTL_OPT_ROOT, vmname);
+	if (snprintf(cmd, sizeof(cmd), "bash %s/add/%s.sh $(cat %s/add/%s.args)",
+			ACRNCTL_OPT_ROOT, vmname, ACRNCTL_OPT_ROOT, vmname) >= sizeof(cmd)) {
+		printf("ERROR: command is truncated\n");
+		return -1;
+	}
 
 	return system(cmd);
 }

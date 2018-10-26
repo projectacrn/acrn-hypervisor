@@ -106,8 +106,11 @@ static int write_tmp_file(int fd, int n, char *word[])
 		if (!strcmp(word[0] + len - strlen("acrn-dm"), "acrn-dm")) {
 			find_acrn_dm++;
 			memset(buf, 0, sizeof(buf));
-			snprintf(buf, sizeof(buf), "%s gentmpfile",
-				 acrnctl_bin_path);
+			if (snprintf(buf, sizeof(buf), "%s gentmpfile",
+						acrnctl_bin_path) >= sizeof(buf)) {
+				printf("ERROR: acrnctl bin path is truncated\n");
+				return -1;
+			}
 			ret = write(fd, buf, strlen(buf));
 			if (ret < 0)
 				return -1;
@@ -117,7 +120,8 @@ static int write_tmp_file(int fd, int n, char *word[])
 
 	while (i < n) {
 		memset(buf, 0, sizeof(buf));
-		snprintf(buf, sizeof(buf), " %s", word[i]);
+		if (snprintf(buf, sizeof(buf), " %s", word[i]) >= sizeof(buf))
+			printf("WARN: buf is truncated\n");
 		i++;
 		ret = write(fd, buf, strlen(buf));
 		if (ret < 0)
@@ -191,7 +195,12 @@ static int acrnctl_do_add(int argc, char *argv[])
 
 	/* open tmp file for write */
 	memset(fname, 0, sizeof(fname));
-	snprintf(fname, sizeof(fname), "%s%s", argv[1], TMP_FILE_SUFFIX);
+	if (snprintf(fname, sizeof(fname), "%s%s", argv[1], TMP_FILE_SUFFIX)
+			>= sizeof(fname)) {
+		printf("ERROR: file name is truncated\n");
+		ret = -1;
+		goto file_exceed;
+	}
 	fd_tmp = open(fname, O_RDWR | O_CREAT | O_TRUNC, 0666);
 	if (fd_tmp < 0) {
 		perror(fname);
@@ -229,21 +238,38 @@ static int acrnctl_do_add(int argc, char *argv[])
 		goto no_acrn_dm;
 	}
 
-	snprintf(cmd, sizeof(cmd), "mv %s %s.back", argv[1], argv[1]);
+	if (snprintf(cmd, sizeof(cmd), "mv %s %s.back", argv[1], argv[1])
+			>= sizeof(cmd)) {
+		printf("ERROR: cmd is truncated\n");
+		ret = -1;
+		goto get_vmname;
+	}
 	system(cmd);
 
-	snprintf(cmd, sizeof(cmd), "mv %s %s", fname, argv[1]);
+	if (snprintf(cmd, sizeof(cmd), "mv %s %s", fname, argv[1]) >= sizeof(cmd)) {
+		printf("ERROR: cmd is truncated\n");
+		ret = -1;
+		goto get_vmname;
+	}
 	system(cmd);
 
 	memset(vmname, 0, sizeof(vmname));
-	snprintf(cmd, sizeof(cmd), "bash %s%s >./%s.result", argv[1],
-		 args, argv[1]);
+	if (snprintf(cmd, sizeof(cmd), "bash %s%s >./%s.result", argv[1],
+			args, argv[1]) >= sizeof(cmd)) {
+		printf("ERROR: cmd is truncated\n");
+		ret = -1 ;
+		goto get_vmname;
+	}
 	ret = shell_cmd(cmd, cmd_out, sizeof(cmd_out));
 	if (ret < 0)
 		goto get_vmname;
 
-	snprintf(cmd, sizeof(cmd), "grep -a \"acrnctl: \" ./%s.result",
-		 argv[1]);
+	if (snprintf(cmd, sizeof(cmd), "grep -a \"acrnctl: \" ./%s.result",
+			argv[1]) >= sizeof(cmd)) {
+		printf("ERROR: cmd is truncated\n");
+		ret = -1;
+		goto get_vmname;
+	}
 	ret = shell_cmd(cmd, cmd_out, sizeof(cmd_out));
 	if (ret < 0)
 		goto get_vmname;
@@ -251,7 +277,11 @@ static int acrnctl_do_add(int argc, char *argv[])
 	ret = sscanf(cmd_out, "acrnctl: %s", vmname);
 	if (ret != 1) {
 		ret = -1;
-		snprintf(cmd, sizeof(cmd), "cat ./%s.result", argv[1]);
+
+		if (snprintf(cmd, sizeof(cmd), "cat ./%s.result", argv[1]) >= sizeof(cmd)) {
+			printf("ERROR: cmd is truncated\n");
+			goto get_vmname;
+		}
 		shell_cmd(cmd, cmd_out, sizeof(cmd_out));
 
 		/* Properly null-terminate cmd_out */
@@ -270,7 +300,12 @@ static int acrnctl_do_add(int argc, char *argv[])
 		goto get_vmname;
 	}
 
-	snprintf(cmd, sizeof(cmd), "mkdir -p %s/add", ACRNCTL_OPT_ROOT);
+	if (snprintf(cmd, sizeof(cmd), "mkdir -p %s/add", ACRNCTL_OPT_ROOT)
+			>= sizeof(cmd)) {
+		printf("ERROR: cmd is truncated\n");
+		ret = -1;
+		goto get_vmname;
+	}
 	system(cmd);
 
 	s = vmmngr_find(vmname);
@@ -281,29 +316,47 @@ static int acrnctl_do_add(int argc, char *argv[])
 		goto vm_exist;
 	}
 
-	snprintf(cmd, sizeof(cmd), "cp %s.back %s/add/%s.sh", argv[1],
-		 ACRNCTL_OPT_ROOT, vmname);
+	if (snprintf(cmd, sizeof(cmd), "cp %s.back %s/add/%s.sh", argv[1],
+		 ACRNCTL_OPT_ROOT, vmname) >= sizeof(cmd)) {
+		printf("ERROR: cmd is truncated\n");
+		ret = -1;
+		goto vm_exist;
+	}
 	system(cmd);
 
-	snprintf(cmd, sizeof(cmd), "echo %s >%s/add/%s.args", args,
-		 ACRNCTL_OPT_ROOT, vmname);
+	if (snprintf(cmd, sizeof(cmd), "echo %s >%s/add/%s.args", args,
+		 ACRNCTL_OPT_ROOT, vmname) >= sizeof(cmd)) {
+		printf("ERROR: cmd is truncated\n");
+		ret = -1;
+		goto vm_exist;
+	}
 	system(cmd);
 	printf("%s added\n", vmname);
 
  vm_exist:
  get_vmname:
-	snprintf(cmd, sizeof(cmd), "rm -f ./%s.result", argv[1]);
-	system(cmd);
+	if (snprintf(cmd, sizeof(cmd), "rm -f ./%s.result", argv[1]) >= sizeof(cmd)) {
+		printf("WARN: cmd is truncated\n");
+	} else
+		system(cmd);
 
-	snprintf(cmd, sizeof(cmd), "mv %s %s", argv[1], fname);
-	system(cmd);
+	if (snprintf(cmd, sizeof(cmd), "mv %s %s", argv[1], fname) >= sizeof(cmd)) {
+		printf("ERROR: cmd is truncated\n");
+		ret = -1;
+	} else
+		system(cmd);
 
-	snprintf(cmd, sizeof(cmd), "mv %s.back %s", argv[1], argv[1]);
-	system(cmd);
+	if (snprintf(cmd, sizeof(cmd), "mv %s.back %s", argv[1], argv[1]) >= sizeof(cmd)) {
+		printf("ERROR: cmd is truncated\n");
+		ret = -1;
+	} else
+		system(cmd);
 
  no_acrn_dm:
-	snprintf(cmd, sizeof(cmd), "rm -f %s", fname);
-	system(cmd);
+	if (snprintf(cmd, sizeof(cmd), "rm -f %s", fname) >= sizeof(cmd)) {
+		 printf("WARN: cmd is truncated\n");
+	} else
+		system(cmd);
  write_tmpfile:
 	close(fd_tmp);
  open_tmp_file:
@@ -355,11 +408,17 @@ static int acrnctl_do_del(int argc, char *argv[])
 			       state_str[s->state]);
 			continue;
 		}
-		snprintf(cmd, sizeof(cmd), "rm -f %s/add/%s.sh",
-			 ACRNCTL_OPT_ROOT, argv[i]);
+		if (snprintf(cmd, sizeof(cmd), "rm -f %s/add/%s.sh",
+			 ACRNCTL_OPT_ROOT, argv[i]) >= sizeof(cmd)) {
+			printf("WARN: cmd is truncated\n");
+			return -1;
+		}
 		system(cmd);
-		snprintf(cmd, sizeof(cmd), "rm -f %s/add/%s.args",
-			 ACRNCTL_OPT_ROOT, argv[i]);
+		if (snprintf(cmd, sizeof(cmd), "rm -f %s/add/%s.args",
+			 ACRNCTL_OPT_ROOT, argv[i]) >= sizeof(cmd)) {
+			printf("WARN: cmd is truncated\n");
+			return -1;
+		}
 		system(cmd);
 	}
 

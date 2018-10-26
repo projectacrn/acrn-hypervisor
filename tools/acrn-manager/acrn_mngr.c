@@ -300,7 +300,10 @@ static int create_new_server(const char *name)
 	int ret;
 	char path[128] = { };
 
-	snprintf(path, sizeof(path), MNGR_SOCK_FMT, name, getpid());
+	if (snprintf(path, sizeof(path), MNGR_SOCK_FMT, name, getpid()) >= sizeof(path)) {
+		printf("WARN: the path is truncated\n");
+		return -1;
+	}
 
 	mfd = calloc(1, sizeof(*mfd));
 	if (!mfd) {
@@ -449,7 +452,7 @@ static int connect_to_server(const char *name)
 	mfd->addr.sun_family = AF_UNIX;
 	ret = snprintf(mfd->addr.sun_path, sizeof(mfd->addr.sun_path),
 		 "/run/acrn/mngr/%s", s_name);
-	if ((ret >= 0) && (ret < strlen(s_name)))
+	if (ret >= sizeof(mfd->addr.sun_path))
 		printf("WARN: %s is truncated\n", s_name);
 
 	ret =

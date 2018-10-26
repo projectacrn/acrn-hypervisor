@@ -219,14 +219,18 @@ static void acrnd_run_vm(char *name)
 {
 	char log_path[128] = {};
 
-	snprintf(log_path, sizeof(log_path) -1, ACRND_LOG_FMT, name);
-	unlink(log_path);
-	stdin = freopen(log_path, "w+", stdin);
-	stdout = freopen(log_path, "w+", stdout);
-	stderr = freopen(log_path, "w+", stderr);
-	fflush(stdin);
-	fflush(stdout);
-	fflush(stderr);
+	if (snprintf(log_path, sizeof(log_path) -1, ACRND_LOG_FMT, name)
+			>= sizeof(log_path) -1) {
+		printf("WARN: log path is truncated\n");
+	} else {
+		unlink(log_path);
+		stdin = freopen(log_path, "w+", stdin);
+		stdout = freopen(log_path, "w+", stdout);
+		stderr = freopen(log_path, "w+", stderr);
+		fflush(stdin);
+		fflush(stdout);
+		fflush(stderr);
+	}
 
 	start_vm(name);
 	printf("%s exited!\n", name);
