@@ -187,9 +187,8 @@ Enabling partition mode
   .. code-block:: console
      :emphasize-lines: 2
 
-      ACRN Partition Mode with Zephyr
-     *ACRN Partition Mode
-      ADG Partition Mode
+     *Ubuntu
+      ACRN Partition Mode
       Advanced options for Ubuntu
       System setup
       Restore Ubuntu 16.04 to factory state
