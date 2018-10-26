@@ -85,10 +85,7 @@ uint8_t trusty_enabled;
 bool stdio_in_use;
 
 static int virtio_msix = 1;
-static int x2apic_mode;	/* default is xAPIC */
 static bool debugexit_enabled;
-
-static int strictmsr = 1;
 
 static int acpi;
 
@@ -131,28 +128,20 @@ static void
 usage(int code)
 {
 	fprintf(stderr,
-		"Usage: %s [-abehuwxACHPSTWY] [-c vcpus] [-g <gdb port>] [-l <lpc>]\n"
+		"Usage: %s [-hAEWY] [-c vcpus] [-l <lpc>]\n"
 		"       %*s [-m mem] [-p vcpu:hostcpu] [-s <pci>] [-U uuid] \n"
 		"       %*s [--vsbl vsbl_file_name] [--part_info part_info_name]\n"
 		"       %*s [--enable_trusty] [--debugexit] <vm>\n"
-		"       -a: local apic is in xAPIC mode (deprecated)\n"
 		"       -A: create ACPI tables\n"
-		"       -b: enable bvmcons\n"
 		"       -c: # cpus (default 1)\n"
-		"       -C: include guest memory in core file\n"
 		"       -E: elf image path\n"
-		"       -g: gdb port\n"
 		"       -h: help\n"
 		"       -l: LPC device configuration\n"
 		"       -m: memory size in MB\n"
 		"       -p: pin 'vcpu' to 'hostcpu'\n"
 		"       -s: <slot,driver,configinfo> PCI slot config\n"
-		"       -S: guest memory cannot be swapped\n"
-		"       -u: RTC keeps UTC time\n"
 		"       -U: uuid\n"
-		"       -w: ignore unimplemented MSRs\n"
 		"       -W: force virtio to use single-vector MSI\n"
-		"       -x: local apic is in x2APIC mode\n"
 		"       -Y: disable MPtable generation\n"
 		"       -k: kernel image path\n"
 		"       -r: ramdisk image path\n"
@@ -168,7 +157,7 @@ usage(int code)
 		"       --part_info: guest partition info file path\n"
 		"       --enable_trusty: enable trusty for guest\n"
 		"       --ptdev_no_reset: disable reset check for ptdev\n"
-		"	--debugexit: enable debug exit function\n",
+		"       --debugexit: enable debug exit function\n",
 		progname, (int)strlen(progname), "", (int)strlen(progname), "",
 		(int)strlen(progname), "");
 
@@ -445,7 +434,6 @@ vm_init_vdevs(struct vmctx *ctx)
 		goto vpit_fail;
 
 	sci_init(ctx);
-	init_bvmcons();
 
 	if (debugexit_enabled)
 		init_debugexit();
@@ -466,7 +454,6 @@ monitor_fail:
 	if (debugexit_enabled)
 		deinit_debugexit();
 
-	deinit_bvmcons();
 	vpit_deinit(ctx);
 vpit_fail:
 	vrtc_deinit(ctx);
@@ -487,7 +474,6 @@ vm_deinit_vdevs(struct vmctx *ctx)
 	if (debugexit_enabled)
 		deinit_debugexit();
 
-	deinit_bvmcons();
 	vpit_deinit(ctx);
 	vrtc_deinit(ctx);
 	ioc_deinit(ctx);
@@ -715,24 +701,16 @@ enum {
 };
 
 static struct option long_options[] = {
-	{"no_x2apic_mode",	no_argument,		0, 'a' },
 	{"acpi",		no_argument,		0, 'A' },
-	{"bvmcons",		no_argument,		0, 'b' },
 	{"pincpu",		required_argument,	0, 'p' },
 	{"ncpus",		required_argument,	0, 'c' },
-	{"memflags_incore",	no_argument,		0, 'C' },
 	{"elf_file",		required_argument,	0, 'E' },
-	{"gdb_port",		required_argument,	0, 'g' },
-	{"ioc node",		required_argument,	0, 'i' },
+	{"ioc_node",		required_argument,	0, 'i' },
 	{"lpc",			required_argument,	0, 'l' },
 	{"pci_slot",		required_argument,	0, 's' },
-	{"memflags_wired",	no_argument,		0, 'S' },
 	{"memsize",		required_argument,	0, 'm' },
-	{"rtc_localtime",	no_argument,		0, 'u' },
 	{"uuid",		required_argument,	0, 'U' },
-	{"strictmsr",		no_argument,		0, 'w' },
 	{"virtio_msix",		no_argument,		0, 'W' },
-	{"x2apic_mode",		no_argument,		0, 'x' },
 	{"mptgen",		no_argument,		0, 'Y' },
 	{"kernel",		required_argument,	0, 'k' },
 	{"ramdisk",		required_argument,	0, 'r' },
@@ -756,23 +734,21 @@ static struct option long_options[] = {
 	{0,			0,			0,  0  },
 };
 
-static char optstr[] = "abhuwxACSWYvE:k:r:B:p:g:c:s:m:l:U:G:i:";
+static char optstr[] = "hAWYvE:k:r:B:p:c:s:m:l:U:G:i:";
 
 int
 dm_run(int argc, char *argv[])
 {
-	int c, error, gdb_port, err;
-	int max_vcpus, mptgen, memflags;
+	int c, error, err;
+	int max_vcpus, mptgen;
 	struct vmctx *ctx;
 	size_t memsize;
 	int option_idx = 0;
 
 	progname = basename(argv[0]);
-	gdb_port = 0;
 	guest_ncpus = 1;
 	memsize = 256 * MB;
 	mptgen = 1;
-	memflags = 0;
 	quit_vm_loop = 0;
 
 	if (signal(SIGHUP, sig_handler_term) == SIG_ERR)
@@ -783,14 +759,8 @@ dm_run(int argc, char *argv[])
 	while ((c = getopt_long(argc, argv, optstr, long_options,
 			&option_idx)) != -1) {
 		switch (c) {
-		case 'a':
-			x2apic_mode = 0;
-			break;
 		case 'A':
 			acpi = 1;
-			break;
-		case 'b':
-			enable_bvmcons();
 			break;
 		case 'p':
 			if (pincpu_parse(optarg) != 0) {
@@ -802,19 +772,12 @@ dm_run(int argc, char *argv[])
 		case 'c':
 			guest_ncpus = atoi(optarg);
 			break;
-		case 'C':
-			memflags |= VM_MEM_F_INCORE;
-			break;
 		case 'E':
 			if (acrn_parse_elf(optarg) != 0)
 				exit(1);
 			else
 				break;
 			break;
-		case 'g':
-			gdb_port = atoi(optarg);
-			break;
-
 		case 'i':
 			ioc_parse(optarg);
 			break;
@@ -831,28 +794,16 @@ dm_run(int argc, char *argv[])
 				exit(1);
 			else
 				break;
-		case 'S':
-			memflags |= VM_MEM_F_WIRED;
-			break;
 		case 'm':
 			error = vm_parse_memsize(optarg, &memsize);
 			if (error)
 				errx(EX_USAGE, "invalid memsize '%s'", optarg);
 			break;
-		case 'u':
-			vrtc_enable_localtime(0);
-			break;
 		case 'U':
 			guest_uuid_str = optarg;
 			break;
-		case 'w':
-			strictmsr = 0;
-			break;
 		case 'W':
 			virtio_msix = 0;
-			break;
-		case 'x':
-			x2apic_mode = 1;
 			break;
 		case 'Y':
 			mptgen = 0;
@@ -944,7 +895,6 @@ dm_run(int argc, char *argv[])
 			goto fail;
 		}
 
-		vm_set_memflags(ctx, memflags);
 		err = vm_setup_memory(ctx, memsize);
 		if (err) {
 			fprintf(stderr, "Unable to setup memory (%d)\n", errno);
@@ -957,9 +907,6 @@ dm_run(int argc, char *argv[])
 				errno);
 			goto mevent_fail;
 		}
-
-		if (gdb_port != 0)
-			fprintf(stderr, "dbgport not supported\n");
 
 		if (vm_init_vdevs(ctx) < 0) {
 			fprintf(stderr, "Unable to init vdev (%d)\n", errno);

@@ -120,7 +120,6 @@ vm_create(const char *name, uint64_t req_buf)
 	uuid_copy(create_vm.GUID, vm_uuid);
 
 	ctx->fd = devfd;
-	ctx->memflags = 0;
 	ctx->lowmem_limit = 2 * GB;
 	ctx->name = (char *)(ctx + 1);
 	strcpy(ctx->name, name);
@@ -260,18 +259,6 @@ void
 vm_set_lowmem_limit(struct vmctx *ctx, uint32_t limit)
 {
 	ctx->lowmem_limit = limit;
-}
-
-void
-vm_set_memflags(struct vmctx *ctx, int flags)
-{
-	ctx->memflags = flags;
-}
-
-int
-vm_get_memflags(struct vmctx *ctx)
-{
-	return ctx->memflags;
 }
 
 int

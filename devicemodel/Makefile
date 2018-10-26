@@ -121,7 +121,6 @@ SRCS += core/console.c
 SRCS += core/inout.c
 SRCS += core/mem.c
 SRCS += core/post.c
-SRCS += core/consport.c
 SRCS += core/vmmapi.c
 SRCS += core/mptbl.c
 SRCS += core/main.c

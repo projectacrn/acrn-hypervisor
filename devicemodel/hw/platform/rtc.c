@@ -144,7 +144,6 @@ static const int month_days[12] = {
 	31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
 
-static int local_time = 1;
 
 /*
  * This inline avoids some unnecessary modulo operations
@@ -1062,12 +1061,6 @@ vrtc_reset(struct vrtc *vrtc)
 	vrtc_set_reg_c(vrtc, 0);
 
 	pthread_mutex_unlock(&vrtc->mtx);
-}
-
-void
-vrtc_enable_localtime(int l_time)
-{
-	local_time = l_time;
 }
 
 int
