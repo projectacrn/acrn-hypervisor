@@ -8,21 +8,13 @@
 
 #define NUM_USER_VMS    2U
 
-/**********************/
-/* VIRTUAL MACHINE 0 */
-/*********************/
-
-/* Number of CPUs in this VM*/
+/* Number of CPUs in VM1 */
 #define VM1_NUM_CPUS    2U
 
 /* Logical CPU IDs assigned to this VM */
 uint16_t VM1_CPUS[VM1_NUM_CPUS] = {0U, 2U};
 
-/*********************/
-/* VIRTUAL MACHINE 1 */
-/*********************/
-
-/* Number of CPUs in this VM*/
+/* Number of CPUs in VM2 */
 #define VM2_NUM_CPUS    2U
 
 /* Logical CPU IDs assigned with this VM */
