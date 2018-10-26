@@ -256,7 +256,7 @@ vlapic_lvtt_masked(const struct acrn_vlapic *vlapic)
 /**
  * @pre vlapic != NULL
  */
-static void vlapic_create_timer(struct acrn_vlapic *vlapic)
+static void vlapic_init_timer(struct acrn_vlapic *vlapic)
 {
 	struct vlapic_timer *vtimer;
 
@@ -382,7 +382,7 @@ static void vlapic_icrtmr_write_handler(struct acrn_vlapic *vlapic)
 
 	del_timer(&vtimer->timer);
 	if (set_expiration(vlapic)) {
-		/* vlapic_create_timer has been called,
+		/* vlapic_init_timer has been called,
 		 * and timer->fire_tsc is not 0, here
 		 * add_timer should not return error
 		 */
@@ -420,7 +420,7 @@ static void vlapic_set_tsc_deadline_msr(struct acrn_vlapic *vlapic,
 		/* transfer guest tsc to host tsc */
 		val -= exec_vmread64(VMX_TSC_OFFSET_FULL);
 		timer->fire_tsc = val;
-		/* vlapic_create_timer has been called,
+		/* vlapic_init_timer has been called,
 		 * and timer->fire_tsc is not 0,here
 		 * add_timer should not return error
 		 */
@@ -1344,7 +1344,7 @@ vlapic_svr_write_handler(struct acrn_vlapic *vlapic)
 			dev_dbg(ACRN_DBG_LAPIC, "vlapic is software-enabled");
 			if (vlapic_lvtt_period(vlapic)) {
 				if (set_expiration(vlapic)) {
-					/* vlapic_create_timer has been called,
+					/* vlapic_init_timer has been called,
 					 * and timer->fire_tsc is not 0,here
 					 *  add_timer should not return error
 					 */
@@ -1583,6 +1583,15 @@ vlapic_reset(struct acrn_vlapic *vlapic)
 	uint32_t i;
 	struct lapic_regs *lapic;
 
+	/*
+	 * Upon reset, vlapic is set to xAPIC mode.
+	 */
+	vlapic->msr_apicbase = DEFAULT_APIC_BASE | APICBASE_ENABLED;
+
+	if (vlapic->vcpu->vcpu_id == BOOT_CPU_ID) {
+		vlapic->msr_apicbase |= APICBASE_BSP;
+	}
+
 	lapic = &(vlapic->apic_page);
 	(void)memset((void *)lapic, 0U, sizeof(struct lapic_regs));
 	(void)memset((void *)&(vlapic->pir_desc), 0U, sizeof(vlapic->pir_desc));
@@ -1618,17 +1627,10 @@ vlapic_reset(struct acrn_vlapic *vlapic)
 void
 vlapic_init(struct acrn_vlapic *vlapic)
 {
-	/*
-	 * If the vlapic is configured in x2apic mode then it will be
-	 * accessed in the critical section via the MSR emulation code.
-	 */
-	vlapic->msr_apicbase = DEFAULT_APIC_BASE | APICBASE_ENABLED;
+	ASSERT(vlapic->vcpu->vcpu_id < phys_cpu_num,
+		"%s: vcpu_id is not initialized", __func__);
 
-	if (vlapic->vcpu->vcpu_id == BOOT_CPU_ID) {
-		vlapic->msr_apicbase |= APICBASE_BSP;
-	}
-
-	vlapic_create_timer(vlapic);
+	vlapic_init_timer(vlapic);
 
 	vlapic_reset(vlapic);
 }
