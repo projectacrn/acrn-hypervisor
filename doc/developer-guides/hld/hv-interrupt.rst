@@ -348,6 +348,8 @@ conditions:
 
    Request IRQ for different conditions
 
+.. _ipi-management:
+
 IPI Management
 **************
 

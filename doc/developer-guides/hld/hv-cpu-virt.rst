@@ -514,6 +514,8 @@ that will trigger an error message and return without handling:
 
 Details of each vm exit reason handler are described in other sections.
 
+.. _pending-request-handlers:
+
 Pending Request Handlers
 ========================
 
