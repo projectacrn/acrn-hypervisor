@@ -215,20 +215,16 @@ static int load_timer_list(void)
 	return ret;
 }
 
-#define ACRND_LOG_FMT	"/opt/acrn/%s.log"
+static int logfile = 1;
 
 static void acrnd_run_vm(char *name)
 {
-	char log_path[128] = {};
-
-	if (snprintf(log_path, sizeof(log_path) -1, ACRND_LOG_FMT, name)
-			>= sizeof(log_path) -1) {
-		printf("WARN: log path is truncated\n");
-	} else {
-		unlink(log_path);
-		stdin = freopen(log_path, "w+", stdin);
-		stdout = freopen(log_path, "w+", stdout);
-		stderr = freopen(log_path, "w+", stderr);
+	/*If do not use logfile, then output to stdout,
+	 so that it can be redirected to journal by systemd */
+	if (logfile) {
+		stdin = freopen("/dev/null", "r+", stdin);
+		stdout = freopen("/dev/null", "r+", stdout);
+		stderr = freopen("/dev/null", "r+", stderr);
 		fflush(stdin);
 		fflush(stdout);
 		fflush(stderr);
@@ -653,8 +649,22 @@ static void sigterm_handler(int signo)
 	sigterm = 1;
 }
 
+static const char optString[] = "t";
+
 int main(int argc, char *argv[])
 {
+	int opt;
+
+	while ((opt = getopt(argc, argv, optString)) != -1) {
+		switch (opt) {
+		case 't':
+			 logfile = 0;
+			 break;
+		default:
+			 printf("Ingrone unknown opt: %c\n", opt);
+		}
+	}
+
 	/* create listening thread */
 	acrnd_fd = mngr_open_un(ACRND_NAME, MNGR_SERVER);
 	if (acrnd_fd < 0) {
