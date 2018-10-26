@@ -71,60 +71,6 @@ int32_t hcall_get_api_version(struct vm *vm, uint64_t param)
 /**
  *@pre Pointer vm shall point to VM0
  */
-static int32_t
-handle_virt_irqline(const struct vm *vm, uint16_t target_vmid,
-		const struct acrn_irqline *param, uint32_t operation)
-{
-	int32_t ret = 0;
-	uint32_t intr_type;
-	struct vm *target_vm = get_vm_from_vmid(target_vmid);
-
-	if ((param == NULL) || target_vm == NULL) {
-		return -EINVAL;
-	}
-
-	/* Check valid irq */
-	if (param->intr_type == ACRN_INTR_TYPE_IOAPIC
-			&& param->ioapic_irq >= vioapic_pincount(vm)) {
-		return -EINVAL;
-	}
-
-	if (param->intr_type == ACRN_INTR_TYPE_ISA
-			&& (param->pic_irq >= vpic_pincount()
-			|| (param->ioapic_irq != (~0U)
-			&& param->ioapic_irq >= vioapic_pincount(vm)))) {
-		return -EINVAL;
-	}
-
-	intr_type = param->intr_type;
-
-	switch (intr_type) {
-	case ACRN_INTR_TYPE_ISA:
-		/* Call vpic for pic injection */
-		vpic_set_irq(target_vm, param->pic_irq, operation);
-
-		/* call vioapic for ioapic injection if ioapic_irq != ~0U*/
-		if (param->ioapic_irq != (~0U)) {
-			/* handle IOAPIC irqline */
-			vioapic_set_irq(target_vm,
-					param->ioapic_irq, operation);
-		}
-		break;
-	case ACRN_INTR_TYPE_IOAPIC:
-		/* handle IOAPIC irqline */
-		vioapic_set_irq(target_vm, param->ioapic_irq, operation);
-		break;
-	default:
-		dev_dbg(ACRN_DBG_HYCALL, "vINTR inject failed. type=%d",
-				intr_type);
-		ret = -EINVAL;
-	}
-	return ret;
-}
-
-/**
- *@pre Pointer vm shall point to VM0
- */
 int32_t hcall_create_vm(struct vm *vm, uint64_t param)
 {
 	int32_t ret;
@@ -243,57 +189,6 @@ int32_t hcall_reset_vm(uint16_t vmid)
 	}
 
 	return reset_vm(target_vm);
-}
-
-/**
- *@pre Pointer vm shall point to VM0
- */
-int32_t hcall_assert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
-{
-	int32_t ret;
-	struct acrn_irqline irqline;
-
-	if (copy_from_gpa(vm, &irqline, param, sizeof(irqline)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
-	}
-	ret = handle_virt_irqline(vm, vmid, &irqline, GSI_SET_HIGH);
-
-	return ret;
-}
-
-/**
- *@pre Pointer vm shall point to VM0
- */
-int32_t hcall_deassert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
-{
-	int32_t ret;
-	struct acrn_irqline irqline;
-
-	if (copy_from_gpa(vm, &irqline, param, sizeof(irqline)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
-	}
-	ret = handle_virt_irqline(vm, vmid, &irqline, GSI_SET_LOW);
-
-	return ret;
-}
-
-/**
- *@pre Pointer vm shall point to VM0
- */
-int32_t hcall_pulse_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
-{
-	int32_t ret;
-	struct acrn_irqline irqline;
-
-	if (copy_from_gpa(vm, &irqline, param, sizeof(irqline)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
-	}
-	ret = handle_virt_irqline(vm, vmid, &irqline, GSI_RAISING_PULSE);
-
-	return ret;
 }
 
 /**

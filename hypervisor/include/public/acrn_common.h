@@ -336,12 +336,6 @@ struct acrn_set_ioreq_buffer {
 	uint64_t req_buf;
 } __aligned(8);
 
-/** Interrupt type for acrn_irqline: inject interrupt to IOAPIC */
-#define	ACRN_INTR_TYPE_ISA	0U
-
-/** Interrupt type for acrn_irqline: inject interrupt to both PIC and IOAPIC */
-#define	ACRN_INTR_TYPE_IOAPIC	1U
-
 /** Operation types for setting IRQ line */
 #define GSI_SET_HIGH		0U
 #define GSI_SET_LOW		1U
@@ -356,34 +350,6 @@ struct acrn_set_ioreq_buffer {
 struct acrn_irqline_ops {
 	uint32_t nr_gsi;
 	uint32_t op;
-} __aligned(8);
-
-/**
- * @brief Info to assert/deassert/pulse a virtual IRQ line for a VM
- *
- * the parameter for HC_ASSERT_IRQLINE/HC_DEASSERT_IRQLINE/HC_PULSE_IRQLINE
- * hypercall
- */
-struct acrn_irqline {
-	/** interrupt type which could be IOAPIC or ISA */
-	uint32_t intr_type;
-
-	/** reserved for alignment padding */
-	uint32_t reserved;
-
-	/** pic IRQ for ISA type */
-	uint32_t pic_irq;
-
-	/** Reserved */
-	uint32_t reserved0;
-
-	/** ioapic IRQ for IOAPIC & ISA TYPE,
-	 *  if ~0U then this IRQ will not be injected
-	 */
-	uint32_t ioapic_irq;
-
-	/** Reserved */
-	uint32_t reserved1;
 } __aligned(8);
 
 /**
