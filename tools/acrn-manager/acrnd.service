@@ -7,8 +7,9 @@ ConditionPathExists=/dev/acrn_vhm
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/acrnd
+ExecStart=/usr/bin/acrnd -t
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
-
