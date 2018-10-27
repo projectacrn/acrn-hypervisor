@@ -245,14 +245,18 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 	}
 
 	/* handle the blocks belong to this request */
+	i = 0;
 	buf_idx = 0;
 	idx = req->blk_start;
-	for (i = 0; i < req->blk_count; i++) {
+	while (i < req->blk_count) {
 		done = 0;
 		block = &xfer->data[idx % USB_MAX_XFER_BLOCKS];
 
 		/* Link TRB need to be skipped */
 		if (!block->buf || !block->blen) {
+			/* FIXME: should change hard coded USB_MAX_XFER_BLOCKS
+			 * to dynamically mechanism to avoid dead loop.
+			 */
 			idx = (idx + 1) % USB_MAX_XFER_BLOCKS;
 			continue;
 		}
@@ -285,6 +289,7 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 				block->blen = 0;
 			}
 		}
+		i++;
 	}
 
 stall_out:
