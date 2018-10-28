@@ -1708,12 +1708,6 @@ vmei_rx_callback(int fd, enum ev_type type, void *param)
 out:
 	pthread_mutex_unlock(&vmei->rx_mutex);
 	vmei_host_client_put(hclient);
-	if (vmei->status == VMEI_STS_PENDING_RESET) {
-		vmei_virtual_fw_reset(vmei);
-		/* Let's wait 100ms for HBM enumeration done */
-		usleep(100000);
-		virtio_config_changed(&vmei->base);
-	}
 }
 
 /*
@@ -1939,7 +1933,9 @@ vmei_start(struct virtio_mei *vmei, bool do_rescan)
 
 	vmei_fixed_clients_connect(vmei);
 
-	vmei->config->hw_ready = 1;
+	if (!do_rescan)
+		vmei->config->hw_ready = 1;
+
 	vmei_set_status(vmei, VMEI_STS_READY);
 
 	return 0;
@@ -2001,6 +1997,7 @@ vmei_reset_callback(int fd, enum ev_type type, void *param)
 	DPRINTF("Reset state callback\n");
 
 	vmei_virtual_fw_reset(vmei);
+	virtio_config_changed(&vmei->base);
 	vmei_free_me_clients(vmei);
 	vmei_start(vmei, true);
 }
