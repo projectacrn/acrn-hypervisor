@@ -2123,6 +2123,7 @@ vmei_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	struct virtio_mei *vmei;
 	char tname[MAXCOMLEN + 1];
 	pthread_mutexattr_t attr;
+	int mutex_type;
 	int i, rc;
 	char *endptr = NULL;
 	char *opt;
@@ -2197,21 +2198,17 @@ init:
 		goto fail;
 	}
 
-	if (virtio_uses_msix()) {
-		rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_DEFAULT);
-		if (rc) {
-			WPRINTF("init: mutexattr_settype failed, error %d!\n",
-				rc);
-			goto fail;
-		}
-	} else {
-		rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-		if (rc) {
-			WPRINTF("init: mutexattr_settype failed, error %d!\n",
-				rc);
-			goto fail;
-		}
+	mutex_type = virtio_uses_msix() ?
+		PTHREAD_MUTEX_DEFAULT :
+		PTHREAD_MUTEX_RECURSIVE;
+
+	rc = pthread_mutexattr_settype(&attr, mutex_type);
+	if (rc) {
+		pthread_mutexattr_destroy(&attr);
+		WPRINTF("init: mutexattr_settype failed, error %d!\n", rc);
+		goto fail;
 	}
+
 	rc = pthread_mutex_init(&vmei->mutex, &attr);
 	pthread_mutexattr_destroy(&attr);
 	if (rc) {
