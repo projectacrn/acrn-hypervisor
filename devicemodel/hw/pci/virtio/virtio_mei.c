@@ -962,6 +962,9 @@ vmei_host_client_native_connect(struct vmei_host_client *hclient)
 	struct vmei_me_client *mclient;
 	struct mei_connect_client_data_vtag connection_data;
 
+	if (!vmei)
+		return MEI_HBM_REJECTED;
+
 	mclient = hclient->mclient;
 
 	/* open mei node */
@@ -1636,6 +1639,9 @@ vmei_host_client_native_read(struct vmei_host_client *hclient)
 {
 	struct virtio_mei *vmei = vmei_host_client_to_vmei(hclient);
 	ssize_t len;
+
+	if (!vmei)
+		return -1;
 
 	if (hclient->client_fd < 0) {
 		HCL_WARN(hclient, "RX: invalid client fd\n");
