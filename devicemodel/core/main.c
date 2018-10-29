@@ -157,7 +157,9 @@ usage(int code)
 		"       --part_info: guest partition info file path\n"
 		"       --enable_trusty: enable trusty for guest\n"
 		"       --ptdev_no_reset: disable reset check for ptdev\n"
-		"       --debugexit: enable debug exit function\n",
+		"       --debugexit: enable debug exit function\n"
+		"       --intr_monitor: enable interrupt storm monitor\n"
+		"............its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms)\n",
 		progname, (int)strlen(progname), "", (int)strlen(progname), "",
 		(int)strlen(progname), "");
 
@@ -701,6 +703,7 @@ enum {
 	CMD_OPT_DEBUGEXIT,
 	CMD_OPT_VMCFG,
 	CMD_OPT_DUMP,
+	CMD_OPT_INTR_MONITOR,
 };
 
 static struct option long_options[] = {
@@ -734,6 +737,7 @@ static struct option long_options[] = {
 	{"ptdev_no_reset",	no_argument,		0,
 		CMD_OPT_PTDEV_NO_RESET},
 	{"debugexit",		no_argument,		0, CMD_OPT_DEBUGEXIT},
+	{"intr_monitor",	required_argument,	0, CMD_OPT_INTR_MONITOR},
 	{0,			0,			0,  0  },
 };
 
@@ -858,6 +862,12 @@ dm_run(int argc, char *argv[])
 			break;
 		case CMD_OPT_DEBUGEXIT:
 			debugexit_enabled = true;
+			break;
+		case CMD_OPT_INTR_MONITOR:
+			if (acrn_parse_intr_monitor(optarg) != 0) {
+				errx(EX_USAGE, "invalid intr-monitor params %s", optarg);
+				exit(1);
+			}
 			break;
 		case 'h':
 			usage(0);

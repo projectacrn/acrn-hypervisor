@@ -33,4 +33,5 @@ int monitor_register_vm_ops(struct monitor_vm_ops *ops, void *arg,
 /* helper functions for vm_ops callback developer */
 unsigned get_wakeup_reason(void);
 int set_wakeup_timer(time_t t);
+int acrn_parse_intr_monitor(const char *opt);
 #endif

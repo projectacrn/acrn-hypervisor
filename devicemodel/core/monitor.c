@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include "dm.h"
+#include "dm_string.h"
 #include "monitor.h"
 #include "acrn_mngr.h"
 #include "pm.h"
@@ -30,6 +31,14 @@
 #define DELAY_DURATION	100000 /* 100ms of total duration for delay intr */
 #define TIME_TO_CHECK_AGAIN	2 /* 2seconds */
 
+struct intr_monitor_setting_t {
+	bool enable;
+	uint32_t threshold;    /* intr count in probe_period when intr storm happens */
+	uint32_t probe_period;  /* seconds: the period to probe intr data */
+	uint32_t delay_time;      /* ms: the time to delay each intr injection */
+	uint32_t delay_duration;  /* us: the delay duration, after it, intr injection restore to normal */
+};
+
 union intr_monitor_t {
 	struct acrn_intr_monitor monitor;
 	char reserved[4096];
@@ -38,6 +47,10 @@ union intr_monitor_t {
 static union intr_monitor_t intr_data;
 static uint64_t intr_cnt_buf[MAX_PTDEV_NUM * 2];
 static pthread_t intr_storm_monitor_pid;
+
+static struct intr_monitor_setting_t intr_monitor_setting = {
+	.enable = false,
+};
 
 /* switch macro, just open in debug */
 /* #define INTR_MONITOR_DBG */
@@ -59,8 +72,7 @@ static void write_intr_data_to_file(const struct acrn_intr_monitor *hdr)
 
 	for (j = 0; j < hdr->buf_cnt; j += 2) {
 		if (hdr->buffer[j + 1] != 0) {
-			fprintf(dbg_file, "%ld\t\t%ld\n", hdr->buffer[j],
-				hdr->buffer[j + 1]);
+			fprintf(dbg_file, "%ld\t\t%ld\n", hdr->buffer[j], hdr->buffer[j + 1]);
 		}
 	}
 
@@ -80,7 +92,7 @@ static void *intr_storm_monitor_thread(void *arg)
 #ifdef INTR_MONITOR_DBG
 	dbg_file = fopen("/tmp/intr_log", "w+");
 #endif
-	sleep(INTR_STORM_MONITOR_PERIOD);
+	sleep(intr_monitor_setting.probe_period);
 
 	/* first to get interrupt data */
 	hdr->cmd = INTR_CMD_GET_DATA;
@@ -98,9 +110,8 @@ static void *intr_storm_monitor_thread(void *arg)
 #ifdef INTR_MONITOR_DBG
 		write_intr_data_to_file(hdr);
 #endif
-		memcpy(intr_cnt_buf, hdr->buffer,
-			sizeof(uint64_t) * hdr->buf_cnt);
-		sleep(INTR_STORM_MONITOR_PERIOD);
+		memcpy(intr_cnt_buf, hdr->buffer, sizeof(uint64_t) * hdr->buf_cnt);
+		sleep(intr_monitor_setting.probe_period);
 
 		/* next time to get interrupt data */
 		memset(hdr->buffer, 0, sizeof(uint64_t) * hdr->buf_cnt);
@@ -126,7 +137,7 @@ static void *intr_storm_monitor_thread(void *arg)
 				continue;
 
 			delta = hdr->buffer[i + 1] - intr_cnt_buf[i + 1];
-			if (delta > INTR_STORM_THRESHOLD) {
+			if (delta > intr_monitor_setting.threshold) {
 #ifdef INTR_MONITOR_DBG
 				write_intr_data_to_file(hdr);
 #endif
@@ -139,17 +150,16 @@ static void *intr_storm_monitor_thread(void *arg)
 			DPRINTF("irq=%ld, delta=%ld\n", intr_cnt_buf[i], delta);
 
 			hdr->cmd = INTR_CMD_DELAY_INT;
-			hdr->buffer[0] = DELAY_INTR_TIME;
+			hdr->buffer[0] = intr_monitor_setting.delay_time;
 			vm_intr_monitor(ctx, hdr);
-			usleep(DELAY_DURATION); /* sleep-delay intr */
+			usleep(intr_monitor_setting.delay_duration); /* sleep-delay intr */
 			hdr->buffer[0] = 0; /* cancel to delay intr */
 			vm_intr_monitor(ctx, hdr);
 
 			sleep(TIME_TO_CHECK_AGAIN); /* time to get data again */
 			hdr->cmd = INTR_CMD_GET_DATA;
 			hdr->buf_cnt = MAX_PTDEV_NUM * 2;
-			memset(hdr->buffer, 0,
-				sizeof(uint64_t) * hdr->buf_cnt);
+			memset(hdr->buffer, 0, sizeof(uint64_t) * hdr->buf_cnt);
 			vm_intr_monitor(ctx, hdr);
 		}
 	}
@@ -159,14 +169,15 @@ static void *intr_storm_monitor_thread(void *arg)
 
 static void start_intr_storm_monitor(struct vmctx *ctx)
 {
-	int ret = pthread_create(&intr_storm_monitor_pid, NULL,
-		intr_storm_monitor_thread, ctx);
-	if (ret) {
-		printf("failed %s %d\n", __func__, __LINE__);
-		intr_storm_monitor_pid = 0;
-	}
+	if (intr_monitor_setting.enable) {
+		int ret = pthread_create(&intr_storm_monitor_pid, NULL, intr_storm_monitor_thread, ctx);
+		if (ret) {
+			printf("failed %s %d\n", __func__, __LINE__);
+			intr_storm_monitor_pid = 0;
+		}
 
-	printf("start monitor interrupt data...\n");
+		printf("start monitor interrupt data...\n");
+	}
 }
 
 static void stop_intr_storm_monitor(void)
@@ -176,6 +187,40 @@ static void stop_intr_storm_monitor(void)
 		intr_storm_monitor_pid = 0;
 	}
 }
+
+/*
+.* interrupt monitor setting params, current interrupt mitigation will delay UOS's
+.* pass-through devices' interrupt injection, the settings input from acrn-dm:
+.* params:
+.* threshold: each intr count/second when intr storm happens;
+.* probe_period: seconds -- the period to probe intr data;
+.* delay_time: ms -- the time to delay each intr injection;
+ * delay_duration; us -- the delay duration, after it, intr injection restore to normal
+.*/
+int acrn_parse_intr_monitor(const char *opt)
+{
+	uint32_t threshold, period, delay, duration;
+	char *cp;
+
+	if((!dm_strtoui(opt, &cp, 10, &threshold) && *cp == ',') &&
+		(!dm_strtoui(cp + 1, &cp, 10, &period) && *cp == ',') &&
+		(!dm_strtoui(cp + 1, &cp, 10, &delay) && *cp == ',') &&
+		(!dm_strtoui(cp + 1, &cp, 10, &duration))) {
+		printf("interrupt storm monitor params: %d, %d, %d, %d\n", threshold, period, delay, duration);
+	} else {
+		printf("%s: not correct, it should be like: --intr_monitor 10000,10,1,100, please check!\n", opt);
+		return -1;
+	}
+
+	intr_monitor_setting.enable = true;
+	intr_monitor_setting.threshold = threshold * period;
+	intr_monitor_setting.probe_period = period;
+	intr_monitor_setting.delay_time = delay;
+	intr_monitor_setting.delay_duration = duration * 1000;
+
+	return 0;
+}
+
 
 /* helpers */
 /* Check if @path is a directory, and create if not exist */
