@@ -344,6 +344,7 @@ acrn_sw_load_bzimage(struct vmctx *ctx)
 
 	ctx->bsp_regs.vcpu_regs.cs_sel = 0x10U;
 	ctx->bsp_regs.vcpu_regs.cs_ar = 0xC09BU;
+	ctx->bsp_regs.vcpu_regs.cs_limit = 0xFFFFFFFFU;
 
 	ctx->bsp_regs.vcpu_regs.ds_sel = 0x18U;
 	ctx->bsp_regs.vcpu_regs.ss_sel = 0x18U;

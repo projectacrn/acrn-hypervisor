@@ -283,6 +283,7 @@ acrn_sw_load_elf(struct vmctx *ctx)
 
 	ctx->bsp_regs.vcpu_regs.cs_ar = 0xCF9BU;
 	ctx->bsp_regs.vcpu_regs.cs_sel = 0x8U;
+	ctx->bsp_regs.vcpu_regs.cs_limit = 0xFFFFFFFFU;
 
 	ctx->bsp_regs.vcpu_regs.ds_sel = 0x10U;
 	ctx->bsp_regs.vcpu_regs.ss_sel = 0x10U;
