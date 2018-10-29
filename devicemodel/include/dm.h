@@ -45,7 +45,17 @@ extern bool stdio_in_use;
 
 int vmexit_task_switch(struct vmctx *ctx, struct vhm_request *vhm_req,
 		       int *vcpu);
-void *paddr_guest2host(struct vmctx *ctx, uintptr_t addr, size_t len);
+
+/**
+ * @brief Convert guest physical address to host virtual address
+ *
+ * @param ctx Pointer to to struct vmctx representing VM context.
+ * @param gaddr Guest physical address base.
+ * @param len Guest physical address length.
+ *
+ * @return NULL on convert failed and host virtual address on successful.
+ */
+void *paddr_guest2host(struct vmctx *ctx, uintptr_t gaddr, size_t len);
 int  virtio_uses_msix(void);
 void ptdev_no_reset(bool enable);
 void init_debugexit(void);

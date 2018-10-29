@@ -209,6 +209,15 @@ pincpu_parse(const char *opt)
 	return 0;
 }
 
+/**
+ * @brief Convert guest physical address to host virtual address
+ *
+ * @param ctx Pointer to to struct vmctx representing VM context.
+ * @param gaddr Guest physical address base.
+ * @param len Guest physical address length.
+ *
+ * @return NULL on convert failed and host virtual address on successful.
+ */
 void *
 paddr_guest2host(struct vmctx *ctx, uintptr_t gaddr, size_t len)
 {

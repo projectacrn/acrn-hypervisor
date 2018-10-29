@@ -252,10 +252,45 @@ int	pci_emul_find_capability(struct pci_vdev *dev, uint8_t capid,
 				 int *p_capoff);
 int	pci_emul_add_msicap(struct pci_vdev *pi, int msgnum);
 int	pci_emul_add_pciecap(struct pci_vdev *pi, int pcie_device_type);
-void	pci_generate_msi(struct pci_vdev *pi, int msgnum);
-void	pci_generate_msix(struct pci_vdev *pi, int msgnum);
-void	pci_lintr_assert(struct pci_vdev *pi);
-void	pci_lintr_deassert(struct pci_vdev *pi);
+
+/**
+ * @brief Generate a MSI interrupt to guest
+ *
+ * @param dev Pointer to struct pci_vdev representing virtual PCI device.
+ * @param index Message data index.
+ *
+ * @return N/A
+ */
+void	pci_generate_msi(struct pci_vdev *dev, int index);
+
+/**
+ * @brief Generate a MSI-X interrupt to guest
+ *
+ * @param dev Pointer to struct pci_vdev representing virtual PCI device.
+ * @param index MSIs table entry index.
+ *
+ * @return N/A
+ */
+void	pci_generate_msix(struct pci_vdev *dev, int index);
+
+/**
+ * @brief Assert INTx pin of virtual PCI device
+ *
+ * @param dev Pointer to struct pci_vdev representing virtual PCI device.
+ *
+ * @return N/A
+ */
+void	pci_lintr_assert(struct pci_vdev *dev);
+
+/**
+ * @brief Deassert INTx pin of virtual PCI device
+ *
+ * @param dev Pointer to struct pci_vdev representing virtual PCI device.
+ *
+ * @return N/A
+ */
+void	pci_lintr_deassert(struct pci_vdev *dev);
+
 void	pci_lintr_request(struct pci_vdev *pi);
 void	pci_lintr_release(struct pci_vdev *pi);
 int	pci_msi_enabled(struct pci_vdev *pi);
@@ -282,46 +317,97 @@ int	check_gsi_sharing_violation(void);
 int	pciaccess_init(void);
 void	pciaccess_cleanup(void);
 
+/**
+ * @brief Set virtual PCI device's configuration space in 1 byte width
+ *
+ * @param dev Pointer to struct pci_vdev representing virtual PCI device.
+ * @param offset Offset in configuration space.
+ * @param val Value in 1 byte.
+ *
+ * @return N/A
+ */
 static inline void
-pci_set_cfgdata8(struct pci_vdev *pi, int offset, uint8_t val)
+pci_set_cfgdata8(struct pci_vdev *dev, int offset, uint8_t val)
 {
 	assert(offset <= PCI_REGMAX);
-	*(uint8_t *)(pi->cfgdata + offset) = val;
+	*(uint8_t *)(dev->cfgdata + offset) = val;
 }
 
+/**
+ * @brief Set virtual PCI device's configuration space in 2 bytes width
+ *
+ * @param dev Pointer to struct pci_vdev representing virtual PCI device.
+ * @param offset Offset in configuration space.
+ * @param val Value in 2 bytes.
+ *
+ * @return N/A
+ */
 static inline void
-pci_set_cfgdata16(struct pci_vdev *pi, int offset, uint16_t val)
+pci_set_cfgdata16(struct pci_vdev *dev, int offset, uint16_t val)
 {
 	assert(offset <= (PCI_REGMAX - 1) && (offset & 1) == 0);
-	*(uint16_t *)(pi->cfgdata + offset) = val;
+	*(uint16_t *)(dev->cfgdata + offset) = val;
 }
 
+/**
+ * @brief Set virtual PCI device's configuration space in 4 bytes width
+ *
+ * @param dev Pointer to struct pci_vdev representing virtual PCI device.
+ * @param offset Offset in configuration space.
+ * @param val Value in 4 bytes.
+ *
+ * @return N/A
+ */
 static inline void
-pci_set_cfgdata32(struct pci_vdev *pi, int offset, uint32_t val)
+pci_set_cfgdata32(struct pci_vdev *dev, int offset, uint32_t val)
 {
 	assert(offset <= (PCI_REGMAX - 3) && (offset & 3) == 0);
-	*(uint32_t *)(pi->cfgdata + offset) = val;
+	*(uint32_t *)(dev->cfgdata + offset) = val;
 }
 
+/**
+ * @brief Get virtual PCI device's configuration space in 1 byte width
+ *
+ * @param dev Pointer to struct pci_vdev representing virtual PCI device.
+ * @param offset Offset in configuration space.
+ *
+ * @return The configuration value in 1 byte.
+ */
 static inline uint8_t
-pci_get_cfgdata8(struct pci_vdev *pi, int offset)
+pci_get_cfgdata8(struct pci_vdev *dev, int offset)
 {
 	assert(offset <= PCI_REGMAX);
-	return (*(uint8_t *)(pi->cfgdata + offset));
+	return (*(uint8_t *)(dev->cfgdata + offset));
 }
 
+/**
+ * @brief Get virtual PCI device's configuration space in 2 byte width
+ *
+ * @param dev Pointer to struct pci_vdev representing virtual PCI device.
+ * @param offset Offset in configuration space.
+ *
+ * @return The configuration value in 2 bytes.
+ */
 static inline uint16_t
-pci_get_cfgdata16(struct pci_vdev *pi, int offset)
+pci_get_cfgdata16(struct pci_vdev *dev, int offset)
 {
 	assert(offset <= (PCI_REGMAX - 1) && (offset & 1) == 0);
-	return (*(uint16_t *)(pi->cfgdata + offset));
+	return (*(uint16_t *)(dev->cfgdata + offset));
 }
 
+/**
+ * @brief Get virtual PCI device's configuration space in 4 byte width
+ *
+ * @param dev Pointer to struct pci_vdev representing virtual PCI device.
+ * @param offset Offset in configuration space.
+ *
+ * @return The configuration value in 4 bytes.
+ */
 static inline uint32_t
-pci_get_cfgdata32(struct pci_vdev *pi, int offset)
+pci_get_cfgdata32(struct pci_vdev *dev, int offset)
 {
 	assert(offset <= (PCI_REGMAX - 3) && (offset & 3) == 0);
-	return (*(uint32_t *)(pi->cfgdata + offset));
+	return (*(uint32_t *)(dev->cfgdata + offset));
 }
 
 #endif /* _PCI_CORE_H_ */
