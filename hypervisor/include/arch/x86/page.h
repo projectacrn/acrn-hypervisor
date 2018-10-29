@@ -13,6 +13,21 @@
 /* size of the low MMIO address space: 2GB */
 #define PLATFORM_LO_MMIO_SIZE	0x80000000UL
 
+#define PML4_PAGE_NUM(size)	1UL
+#define PDPT_PAGE_NUM(size)	(((size) + PML4E_SIZE - 1UL) >> PML4E_SHIFT)
+#define PD_PAGE_NUM(size)	(((size) + PDPTE_SIZE - 1UL) >> PDPTE_SHIFT)
+#define PT_PAGE_NUM(size)	(((size) + PDE_SIZE - 1UL) >> PDE_SHIFT)
+
+/* The size of the guest physical address space, covered by the EPT page table of a VM */
+#define EPT_ADDRESS_SPACE(size)	((size != 0UL) ? (size + PLATFORM_LO_MMIO_SIZE) : 0UL)
+
+#define TRUSTY_PML4_PAGE_NUM(size)	(1UL)
+#define TRUSTY_PDPT_PAGE_NUM(size)	(1UL)
+#define TRUSTY_PD_PAGE_NUM(size)	(PD_PAGE_NUM(size))
+#define TRUSTY_PT_PAGE_NUM(size)	(PT_PAGE_NUM(size))
+#define TRUSTY_PGTABLE_PAGE_NUM(size)	\
+(TRUSTY_PML4_PAGE_NUM(size) + TRUSTY_PDPT_PAGE_NUM(size) + TRUSTY_PD_PAGE_NUM(size) + TRUSTY_PT_PAGE_NUM(size))
+
 struct page {
 	uint8_t contents[PAGE_SIZE];
 } __aligned(PAGE_SIZE);

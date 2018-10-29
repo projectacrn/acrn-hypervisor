@@ -238,39 +238,57 @@ void init_paging(void)
 	struct e820_entry *entry;
 	uint64_t hv_hpa;
 	uint32_t i;
+	uint64_t low32_max_ram = 0UL;
+	uint64_t high64_max_ram;
 	uint64_t attr_uc = (PAGE_TABLE | PAGE_CACHE_UC);
 
 	pr_dbg("HV MMU Initialization");
 
 	/* Allocate memory for Hypervisor PML4 table */
-	mmu_pml4_addr = alloc_paging_struct();
+	mmu_pml4_addr = ppt_mem_ops.get_pml4_page(ppt_mem_ops.info, 0UL);
 
 	init_e820();
 	obtain_e820_mem_info();
 
+	/* align to 2MB */
+	high64_max_ram = (e820_mem.mem_top + PDE_SIZE - 1UL) & PDE_MASK;
+
+	if (high64_max_ram > (CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE) ||
+			high64_max_ram < (1UL << 32U)) {
+		panic("Please configure HV_ADDRESS_SPACE correctly!\n");
+	}
+
 	/* Map all memory regions to UC attribute */
-	mmu_add((uint64_t *)mmu_pml4_addr, e820_mem.mem_bottom,
-		e820_mem.mem_bottom, e820_mem.mem_top - e820_mem.mem_bottom,
-		attr_uc, PTT_PRIMARY);
+	mmu_add((uint64_t *)mmu_pml4_addr, e820_mem.mem_bottom, e820_mem.mem_bottom,
+		high64_max_ram - e820_mem.mem_bottom, attr_uc, &ppt_mem_ops);
 
 	/* Modify WB attribute for E820_TYPE_RAM */
 	for (i = 0U; i < e820_entries; i++) {
 		entry = &e820[i];
 		if (entry->type == E820_TYPE_RAM) {
-			mmu_modify_or_del((uint64_t *)mmu_pml4_addr,
-					entry->baseaddr, entry->length,
-					PAGE_CACHE_WB, PAGE_CACHE_MASK,
-					PTT_PRIMARY, MR_MODIFY);
+			if (entry->baseaddr < (1UL << 32U)) {
+				uint64_t end = entry->baseaddr + entry->length;
+				if (end < (1UL << 32U) && (end > low32_max_ram)) {
+					low32_max_ram = end;
+				}
+			}
 		}
 	}
+
+	mmu_modify_or_del((uint64_t *)mmu_pml4_addr, 0UL, (low32_max_ram + PDE_SIZE - 1UL) & PDE_MASK,
+			PAGE_CACHE_WB, PAGE_CACHE_MASK, &ppt_mem_ops, MR_MODIFY);
+
+	mmu_modify_or_del((uint64_t *)mmu_pml4_addr, (1UL << 32U), high64_max_ram - (1UL << 32U),
+			PAGE_CACHE_WB, PAGE_CACHE_MASK, &ppt_mem_ops, MR_MODIFY);
 
 	/* set the paging-structure entries' U/S flag
 	 * to supervisor-mode for hypervisor owned memroy.
 	 */
 	hv_hpa = get_hv_image_base();
-	mmu_modify_or_del((uint64_t *)mmu_pml4_addr, hv_hpa, CONFIG_HV_RAM_SIZE,
+	mmu_modify_or_del((uint64_t *)mmu_pml4_addr, hv_hpa & PDE_MASK,
+		CONFIG_HV_RAM_SIZE + ((hv_hpa & (PDE_SIZE - 1UL)) != 0UL) ? PDE_SIZE : 0UL,
 			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER,
-			PTT_PRIMARY, MR_MODIFY);
+			&ppt_mem_ops, MR_MODIFY);
 
 	/* Enable paging */
 	enable_paging(hva2hpa(mmu_pml4_addr));

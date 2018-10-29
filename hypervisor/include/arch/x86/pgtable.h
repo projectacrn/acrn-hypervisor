@@ -162,9 +162,4 @@ static inline uint64_t pdpte_large(uint64_t pdpte)
 	return pdpte & PAGE_PSE;
 }
 
-static inline uint64_t pgentry_present(enum _page_table_type ptt, uint64_t pte)
-{
-	return (ptt == PTT_PRIMARY) ? (pte & PAGE_PRESENT) : (pte & EPT_RWX);
-}
-
 #endif /* PGTABLE_H */

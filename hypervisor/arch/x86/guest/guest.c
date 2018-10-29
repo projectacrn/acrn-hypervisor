@@ -619,6 +619,10 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 		"vm0: bottom memory - 0x%llx, top memory - 0x%llx\n",
 		e820_mem.mem_bottom, e820_mem.mem_top);
 
+	if (e820_mem.mem_top > EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE)) {
+		panic("Please configure VM0_ADDRESS_SPACE correctly!\n");
+	}
+
 	/* create real ept map for all ranges with UC */
 	ept_mr_add(vm, pml4_page,
 			e820_mem.mem_bottom, e820_mem.mem_bottom,

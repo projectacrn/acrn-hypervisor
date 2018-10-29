@@ -35,6 +35,7 @@
 #ifndef ASSEMBLER
 
 #include <cpu.h>
+#include <page.h>
 
 /* Define cache line size (in bytes) */
 #define CACHE_LINE_SIZE		64U
@@ -52,11 +53,6 @@ static inline uint64_t round_page_down(uint64_t addr)
 {
 	return (addr & CPU_PAGE_MASK);
 }
-
-enum _page_table_type {
-	PTT_PRIMARY = 0,	/* Mapping for hypervisor */
-	PTT_EPT = 1,
-};
 
 /* Represent the 4 levels of translation tables in IA-32e paging mode */
 enum _page_table_level {
@@ -83,13 +79,10 @@ void free_paging_struct(void *ptr);
 void enable_paging(uint64_t pml4_base_addr);
 void enable_smep(void);
 void init_paging(void);
-void mmu_add(uint64_t *pml4_page, uint64_t paddr_base,
-		uint64_t vaddr_base, uint64_t size,
-		uint64_t prot, enum _page_table_type ptt);
-void mmu_modify_or_del(uint64_t *pml4_page,
-		uint64_t vaddr_base, uint64_t size,
-		uint64_t prot_set, uint64_t prot_clr,
-		enum _page_table_type ptt, uint32_t type);
+void mmu_add(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_base,
+		uint64_t size, uint64_t prot, const struct memory_ops *mem_ops);
+void mmu_modify_or_del(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
+		uint64_t prot_set, uint64_t prot_clr, const struct memory_ops *mem_ops, uint32_t type);
 int check_vmx_mmu_cap(void);
 uint16_t allocate_vpid(void);
 void flush_vpid_single(uint16_t vpid);
@@ -100,7 +93,7 @@ bool check_continuous_hpa(struct vm *vm, uint64_t gpa_arg, uint64_t size_arg);
  *@pre (pml4_page != NULL) && (pg_size != NULL)
  */
 uint64_t *lookup_address(uint64_t *pml4_page, uint64_t addr,
-		uint64_t *pg_size, enum _page_table_type ptt);
+		uint64_t *pg_size, const struct memory_ops *mem_ops);
 
 #pragma pack(1)
 
@@ -166,7 +159,6 @@ void ept_mr_modify(struct vm *vm, uint64_t *pml4_page, uint64_t gpa,
  */
 void ept_mr_del(struct vm *vm, uint64_t *pml4_page, uint64_t gpa,
 		uint64_t size);
-void free_ept_mem(uint64_t *pml4_page);
 int ept_violation_vmexit_handler(struct vcpu *vcpu);
 int ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu);
 
