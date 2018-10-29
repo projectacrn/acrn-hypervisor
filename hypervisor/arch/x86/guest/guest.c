@@ -537,8 +537,8 @@ static void rebuild_vm0_e820(void)
 	uint32_t i;
 	uint64_t entry_start;
 	uint64_t entry_end;
-	uint64_t hv_start = get_hv_image_base();
-	uint64_t hv_end  = hv_start + CONFIG_RAM_SIZE;
+	uint64_t hv_start_pa = get_hv_image_base();
+	uint64_t hv_end_pa  = hv_start_pa + CONFIG_HV_RAM_SIZE;
 	struct e820_entry *entry, new_entry = {0};
 
 	/* hypervisor mem need be filter out from e820 table
@@ -550,36 +550,36 @@ static void rebuild_vm0_e820(void)
 		entry_end = entry->baseaddr + entry->length;
 
 		/* No need handle in these cases*/
-		if ((entry->type != E820_TYPE_RAM) || (entry_end <= hv_start)
-				|| (entry_start >= hv_end)) {
+		if ((entry->type != E820_TYPE_RAM) || (entry_end <= hv_start_pa)
+				|| (entry_start >= hv_end_pa)) {
 			continue;
 		}
 
 		/* filter out hv mem and adjust length of this entry*/
-		if ((entry_start < hv_start) && (entry_end <= hv_end)) {
-			entry->length = hv_start - entry_start;
+		if ((entry_start < hv_start_pa) && (entry_end <= hv_end_pa)) {
+			entry->length = hv_start_pa - entry_start;
 			continue;
 		}
 		/* filter out hv mem and need to create a new entry*/
-		if ((entry_start < hv_start) && (entry_end > hv_end)) {
-			entry->length = hv_start - entry_start;
-			new_entry.baseaddr = hv_end;
-			new_entry.length = entry_end - hv_end;
+		if ((entry_start < hv_start_pa) && (entry_end > hv_end_pa)) {
+			entry->length = hv_start_pa - entry_start;
+			new_entry.baseaddr = hv_end_pa;
+			new_entry.length = entry_end - hv_end_pa;
 			new_entry.type = E820_TYPE_RAM;
 			continue;
 		}
 		/* This entry is within the range of hv mem
 		 * change to E820_TYPE_RESERVED
 		 */
-		if ((entry_start >= hv_start) && (entry_end <= hv_end)) {
+		if ((entry_start >= hv_start_pa) && (entry_end <= hv_end_pa)) {
 			entry->type = E820_TYPE_RESERVED;
 			continue;
 		}
 
-		if ((entry_start >= hv_start) && (entry_start < hv_end)
-				&& (entry_end > hv_end)) {
-			entry->baseaddr = hv_end;
-			entry->length = entry_end - hv_end;
+		if ((entry_start >= hv_start_pa) && (entry_start < hv_end_pa)
+				&& (entry_end > hv_end_pa)) {
+			entry->baseaddr = hv_end_pa;
+			entry->length = entry_end - hv_end_pa;
 			continue;
 		}
 
@@ -595,7 +595,7 @@ static void rebuild_vm0_e820(void)
 		entry->type = new_entry.type;
 	}
 
-	e820_mem.total_mem_size -= CONFIG_RAM_SIZE;
+	e820_mem.total_mem_size -= CONFIG_HV_RAM_SIZE;
 }
 
 /**
@@ -649,7 +649,7 @@ int prepare_vm0_memmap_and_e820(struct vm *vm)
 	 * will cause EPT violation if sos accesses hv memory
 	 */
 	hv_hpa = get_hv_image_base();
-	ept_mr_del(vm, pml4_page, hv_hpa, CONFIG_RAM_SIZE);
+	ept_mr_del(vm, pml4_page, hv_hpa, CONFIG_HV_RAM_SIZE);
 	return 0;
 }
 
