@@ -13,4 +13,5 @@ Hypervisor high-level design
    I/O Emulation <hv-io-emulation>
    Physical Interrupt <hv-interrupt>
    Timer <hv-timer>
-   Virtual Interrupt <hv-virt-interrupt.rst>
+   Virtual Interrupt <hv-virt-interrupt>
+   VT-d <hv-vt-d>
