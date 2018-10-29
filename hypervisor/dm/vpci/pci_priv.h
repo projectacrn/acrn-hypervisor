@@ -37,40 +37,34 @@ static inline bool in_range(uint32_t value, uint32_t lower, uint32_t len)
 	return ((value >= lower) && (value < (lower + len)));
 }
 
-static inline uint8_t
-pci_vdev_read_cfg_u8(struct pci_vdev *vdev, uint32_t offset)
+static inline uint8_t pci_vdev_read_cfg_u8(struct pci_vdev *vdev, uint32_t offset)
 {
-	return (*(uint8_t *)(&vdev->cfgdata[0] + offset));
+	return vdev->cfgdata.data_8[offset];
 }
 
-static inline uint16_t pci_vdev_read_cfg_u16(struct pci_vdev *vdev,
-	uint32_t offset)
+static inline uint16_t pci_vdev_read_cfg_u16(struct pci_vdev *vdev, uint32_t offset)
 {
-	return (*(uint16_t *)(&vdev->cfgdata[0] + offset));
+	return vdev->cfgdata.data_16[offset >> 1U];
 }
 
-static inline uint32_t pci_vdev_read_cfg_u32(struct pci_vdev *vdev,
-	uint32_t offset)
+static inline uint32_t pci_vdev_read_cfg_u32(struct pci_vdev *vdev, uint32_t offset)
 {
-	return (*(uint32_t *)(&vdev->cfgdata[0] + offset));
+	return vdev->cfgdata.data_32[offset >> 2U];
 }
 
-static inline void
-pci_vdev_write_cfg_u8(struct pci_vdev *vdev, uint32_t offset, uint8_t val)
+static inline void pci_vdev_write_cfg_u8(struct pci_vdev *vdev, uint32_t offset, uint8_t val)
 {
-	*(uint8_t *)(vdev->cfgdata + offset) = val;
+	vdev->cfgdata.data_8[offset] = val;
 }
 
-static inline void
-pci_vdev_write_cfg_u16(struct pci_vdev *vdev, uint32_t offset, uint16_t val)
+static inline void pci_vdev_write_cfg_u16(struct pci_vdev *vdev, uint32_t offset, uint16_t val)
 {
-	*(uint16_t *)(vdev->cfgdata + offset) = val;
+	vdev->cfgdata.data_16[offset >> 1U] = val;
 }
 
-static inline void
-pci_vdev_write_cfg_u32(struct pci_vdev *vdev, uint32_t offset, uint32_t val)
+static inline void pci_vdev_write_cfg_u32(struct pci_vdev *vdev, uint32_t offset, uint32_t val)
 {
-	*(uint32_t *)(vdev->cfgdata + offset) = val;
+	vdev->cfgdata.data_32[offset >> 2U] = val;
 }
 
 extern struct vpci_ops partition_mode_vpci_ops;
