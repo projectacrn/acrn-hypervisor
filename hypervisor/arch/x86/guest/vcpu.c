@@ -189,16 +189,17 @@ void set_vcpu_regs(struct vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs)
 	ectx = &(vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ext_ctx);
 	ctx = &(vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx);
 
-	if (vcpu_regs->cs_ar & (1U << 15U)) {
-		limit = 0xFFFFFFFFU;
-	} else {
-		limit = 0xFFFFU;
-	}
-
+	/* NOTE:
+	 * This is to set the attr and limit to default value.
+	 * If the set_vcpu_regs is used not only for vcpu state
+	 * initialization, this part of code needs be revised.
+	 */
 	if (vcpu_regs->cr0 & CR0_PE) {
 		attr = PROTECTED_MODE_DATA_SEG_AR;
+		limit = PROTECTED_MODE_SEG_LIMIT;
 	} else {
 		attr = REAL_MODE_DATA_SEG_AR;
+		limit = REAL_MODE_SEG_LIMIT;
 	}
 
 	for (seg = &(ectx->cs); seg <= &(ectx->gs); seg++) {
@@ -209,9 +210,10 @@ void set_vcpu_regs(struct vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs)
 		sel++;
 	}
 
-	/* override cs attr/base */
+	/* override cs attr/base/limit */
 	ectx->cs.attr = vcpu_regs->cs_ar;
 	ectx->cs.base = vcpu_regs->cs_base;
+	ectx->cs.limit = vcpu_regs->cs_limit;
 
 	ectx->gdtr.base = vcpu_regs->gdt.base;
 	ectx->gdtr.limit = vcpu_regs->gdt.limit;
@@ -271,6 +273,7 @@ static struct acrn_vcpu_regs realmode_init_regs = {
 	.cs_ar = REAL_MODE_CODE_SEG_AR,
 	.cs_sel = REAL_MODE_BSP_INIT_CODE_SEL,
 	.cs_base = 0xFFFF0000UL,
+	.cs_limit = 0xFFFFU,
 	.rip = 0xFFF0UL,
 	.cr0 = CR0_ET | CR0_NE,
 	.cr3 = 0UL,
