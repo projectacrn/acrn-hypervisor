@@ -170,11 +170,6 @@ void pci_scan_bus(pci_enumeration_cb cb_func, void *cb_data)
 						bus_to_scan[secondary_bus] = BUS_SCAN_PENDING;
 					}
 				}
-
-				/* skip if it doesn't have multiple functions */
-				if ((hdr_type & PCIM_MFDEV) == 0U) {
-					break;
-				}
 			}
 		}
 	}
