@@ -68,7 +68,7 @@ static int vdev_pt_init(struct pci_vdev *vdev)
 	/* Create an iommu domain for target VM if not created */
 	if (vm->iommu == NULL) {
 		if (vm->arch_vm.nworld_eptp == 0UL) {
-			vm->arch_vm.nworld_eptp = alloc_paging_struct();
+			vm->arch_vm.nworld_eptp = vm->arch_vm.ept_mem_ops.get_pml4_page(vm->arch_vm.ept_mem_ops.info, 0UL);
 			sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp);
 		}
 		vm->iommu = create_iommu_domain(vm->vm_id,

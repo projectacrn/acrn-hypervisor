@@ -356,7 +356,7 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 static int32_t local_set_vm_memory_region(struct vm *vm,
 	struct vm *target_vm, const struct vm_memory_region *region)
 {
-	uint64_t hpa, base_paddr;
+	uint64_t hpa, base_paddr, gpa_end;
 	uint64_t prot;
 	uint64_t *pml4_page;
 
@@ -364,6 +364,14 @@ static int32_t local_set_vm_memory_region(struct vm *vm,
 		pr_err("%s: [vm%d] map size 0x%x is not page aligned",
 			__func__, target_vm->vm_id, region->size);
 		return -EINVAL;
+	}
+
+	gpa_end = region->gpa + region->size;
+	if ((gpa_end > vm->arch_vm.ept_mem_ops.info->ept.top_address_space) &&
+		(region->gpa < TRUSTY_EPT_REBASE_GPA)) {
+			pr_err("%s, invalid gpa: 0x%llx, size: 0x%llx, top_address_space: 0x%llx", __func__,
+				region->gpa, region->size, vm->arch_vm.ept_mem_ops.info->ept.top_address_space);
+			return -EINVAL;
 	}
 
 	dev_dbg(ACRN_DBG_HYCALL,

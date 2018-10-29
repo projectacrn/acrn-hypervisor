@@ -87,12 +87,8 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	/* gpa_lowtop are used for system start up */
 	vm->hw.gpa_lowtop = 0UL;
 
-	vm->arch_vm.nworld_eptp = alloc_paging_struct();
-	if (vm->arch_vm.nworld_eptp == NULL) {
-		pr_fatal("%s, alloc memory for EPTP failed\n", __func__);
-		status = -ENOMEM;
-		goto err;
-	}
+	init_ept_mem_ops(vm);
+	vm->arch_vm.nworld_eptp = vm->arch_vm.ept_mem_ops.get_pml4_page(vm->arch_vm.ept_mem_ops.info, 0UL);
 	sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp);
 
 	/* Only for SOS: Configure VM software information */
@@ -180,7 +176,7 @@ err:
 	vioapic_cleanup(vm_ioapic(vm));
 
 	if (vm->arch_vm.nworld_eptp != NULL) {
-		free(vm->arch_vm.nworld_eptp);
+		(void)memset(vm->arch_vm.nworld_eptp, 0U, CPU_PAGE_SIZE);
 	}
 
 	return status;
@@ -212,10 +208,6 @@ int shutdown_vm(struct vm *vm)
 	/* cleanup vioapic */
 	vioapic_cleanup(vm_ioapic(vm));
 
-	/* Destroy secure world */
-	if (vm->sworld_control.flag.active != 0UL) {
-		destroy_secure_world(vm, true);
-	}
 	/* Free EPT allocated resources assigned to VM */
 	destroy_ept(vm);
 

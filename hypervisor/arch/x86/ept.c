@@ -10,55 +10,18 @@
 
 #define ACRN_DBG_EPT	6U
 
-/**
- * @pre pml4_addr != NULL
- */
-void free_ept_mem(uint64_t *pml4_page)
-{
-	uint64_t *pdpt_page, *pd_page, *pt_page;
-	uint64_t *pml4e, *pdpte, *pde;
-	uint64_t pml4e_idx, pdpte_idx, pde_idx;
-
-	for (pml4e_idx = 0U; pml4e_idx < PTRS_PER_PML4E; pml4e_idx++) {
-		pml4e = pml4_page + pml4e_idx;
-		if (pgentry_present(PTT_EPT, *pml4e) == 0UL) {
-			continue;
-		}
-		pdpt_page = pml4e_page_vaddr(*pml4e);
-
-		for (pdpte_idx = 0U; pdpte_idx < PTRS_PER_PDPTE; pdpte_idx++) {
-			pdpte = pdpt_page + pdpte_idx;
-			if ((pgentry_present(PTT_EPT, *pdpte) == 0UL) ||
-					pdpte_large(*pdpte) != 0UL) {
-				continue;
-			}
-			pd_page = pdpte_page_vaddr(*pdpte);
-
-			for (pde_idx = 0U; pde_idx < PTRS_PER_PDE; pde_idx++) {
-				pde = pd_page + pde_idx;
-				if ((pgentry_present(PTT_EPT, *pde) == 0UL) ||
-						pde_large(*pde) != 0UL) {
-					continue;
-				}
-				pt_page = pde_page_vaddr(*pde);
-
-				/* Free page table entry table */
-				free_paging_struct((void *)pt_page);
-			}
-			/* Free page directory entry table */
-			free_paging_struct((void *)pd_page);
-		}
-		free_paging_struct((void *)pdpt_page);
-	}
-	free_paging_struct((void *)pml4_page);
-}
-
 void destroy_ept(struct vm *vm)
 {
+	/* Destroy secure world */
+	if (vm->sworld_control.flag.active != 0UL) {
+		destroy_secure_world(vm, true);
+	}
+
 	if (vm->arch_vm.nworld_eptp != NULL) {
-		free_ept_mem((uint64_t *)vm->arch_vm.nworld_eptp);
+		(void)memset(vm->arch_vm.nworld_eptp, 0U, CPU_PAGE_SIZE);
 	}
 }
+
 /* using return value INVALID_HPA as error code */
 uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 {
@@ -73,7 +36,7 @@ uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 		eptp = vm->arch_vm.nworld_eptp;
 	}
 
-	pgentry = lookup_address((uint64_t *)eptp, gpa, &pg_size, PTT_EPT);
+	pgentry = lookup_address((uint64_t *)eptp, gpa, &pg_size, &vm->arch_vm.ept_mem_ops);
 	if (pgentry != NULL) {
 		hpa = ((*pgentry & (~(pg_size - 1UL)))
 				| (gpa & (pg_size - 1UL)));
@@ -222,9 +185,8 @@ void ept_mr_add(struct vm *vm, uint64_t *pml4_page,
 	struct vcpu *vcpu;
 	uint64_t prot = prot_orig;
 
-	dev_dbg(ACRN_DBG_EPT, "%s, vm[%d] hpa: 0x%016llx gpa: 0x%016llx ",
-			__func__, vm->vm_id, hpa, gpa);
-	dev_dbg(ACRN_DBG_EPT, "size: 0x%016llx prot: 0x%016x\n", size, prot);
+	dev_dbg(ACRN_DBG_EPT, "%s, vm[%d] hpa: 0x%016llx gpa: 0x%016llx size: 0x%016llx prot: 0x%016x\n",
+			__func__, vm->vm_id, hpa, gpa, size, prot);
 
 	/* EPT & VT-d share the same page tables, set SNP bit
 	 * to force snooping of PCIe devices if the page
@@ -234,7 +196,7 @@ void ept_mr_add(struct vm *vm, uint64_t *pml4_page,
 		prot |= EPT_SNOOP_CTRL;
 	}
 
-	mmu_add(pml4_page, hpa, gpa, size, prot, PTT_EPT);
+	mmu_add(pml4_page, hpa, gpa, size, prot, &vm->arch_vm.ept_mem_ops);
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
@@ -248,8 +210,9 @@ void ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
 	struct vcpu *vcpu;
 	uint16_t i;
 
-	mmu_modify_or_del(pml4_page, gpa, size,
-			prot_set, prot_clr, PTT_EPT, MR_MODIFY);
+	dev_dbg(ACRN_DBG_EPT, "%s,vm[%d] gpa 0x%llx size 0x%llx\n", __func__, vm->vm_id, gpa, size);
+
+	mmu_modify_or_del(pml4_page, gpa, size, prot_set, prot_clr, &vm->arch_vm.ept_mem_ops, MR_MODIFY);
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
@@ -258,17 +221,14 @@ void ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
 /**
  * @pre [gpa,gpa+size) has been mapped into host physical memory region
  */
-void ept_mr_del(struct vm *vm, uint64_t *pml4_page,
-		uint64_t gpa, uint64_t size)
+void ept_mr_del(struct vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t size)
 {
 	struct vcpu *vcpu;
 	uint16_t i;
 
-	dev_dbg(ACRN_DBG_EPT, "%s,vm[%d] gpa 0x%llx size 0x%llx\n",
-			__func__, vm->vm_id, gpa, size);
+	dev_dbg(ACRN_DBG_EPT, "%s,vm[%d] gpa 0x%llx size 0x%llx\n", __func__, vm->vm_id, gpa, size);
 
-	mmu_modify_or_del(pml4_page, gpa, size,
-			0UL, 0UL, PTT_EPT, MR_DEL);
+	mmu_modify_or_del(pml4_page, gpa, size, 0UL, 0UL, &vm->arch_vm.ept_mem_ops, MR_DEL);
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);

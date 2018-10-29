@@ -97,14 +97,14 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	 * Normal World.PD/PT are shared in both Secure world's EPT
 	 * and Normal World's EPT
 	 */
-	pml4_base = alloc_paging_struct();
+	pml4_base = vm->arch_vm.ept_mem_ops.get_pml4_page(vm->arch_vm.ept_mem_ops.info, TRUSTY_EPT_REBASE_GPA);
 	vm->arch_vm.sworld_eptp = pml4_base;
 	sanitize_pte((uint64_t *)vm->arch_vm.sworld_eptp);
 
 	/* The trusty memory is remapped to guest physical address
 	 * of gpa_rebased to gpa_rebased + size
 	 */
-	sub_table_addr = alloc_paging_struct();
+	sub_table_addr = vm->arch_vm.ept_mem_ops.get_pdpt_page(vm->arch_vm.ept_mem_ops.info, TRUSTY_EPT_REBASE_GPA);
 	sworld_pml4e = hva2hpa(sub_table_addr) | table_present;
 	set_pgentry((uint64_t *)pml4_base, sworld_pml4e);
 
@@ -148,8 +148,6 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 
 void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 {
-	uint64_t j;
-	void *pdpt_addr;
 	struct vm *vm0 = get_vm_from_vmid(0U);
 	uint64_t hpa = vm->sworld_control.sworld_memory.base_hpa;
 	uint64_t gpa_sos = vm->sworld_control.sworld_memory.base_gpa_in_sos;
@@ -174,14 +172,8 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 	ept_mr_add(vm, vm->arch_vm.nworld_eptp,
 			hpa, gpa_uos, size, EPT_RWX | EPT_WB);
 
-	/* Free trusty ept page-structures */
-	pdpt_addr =
-		(void *)pml4e_page_vaddr(*(uint64_t *)vm->arch_vm.sworld_eptp);
-	/* identical PDPTEs except trusty memory */
-	for (j = 0UL; j < NON_TRUSTY_PDPT_ENTRIES; j++) {
-		sanitize_pte_entry((uint64_t *)pdpt_addr + j);
-	}
-	free_ept_mem((uint64_t *)vm->arch_vm.sworld_eptp);
+	/* sanitize trusty ept page-structures */
+	sanitize_pte((uint64_t *)vm->arch_vm.sworld_eptp);
 	vm->arch_vm.sworld_eptp = NULL;
 }
 
