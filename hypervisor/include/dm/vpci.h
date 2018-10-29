@@ -84,6 +84,12 @@ struct msix {
 	uint32_t  table_count;
 };
 
+union cfgdata {
+	uint8_t data_8[PCI_REGMAX + 1U];
+	uint16_t data_16[(PCI_REGMAX + 1U) >> 2U];
+	uint32_t data_32[(PCI_REGMAX + 1U) >> 4U];
+};
+
 struct pci_vdev {
 #ifndef CONFIG_PARTITION_MODE
 #define MAX_VPCI_DEV_OPS   4U
@@ -99,7 +105,7 @@ struct pci_vdev {
 
 	struct pci_pdev pdev;
 
-	uint8_t cfgdata[PCI_REGMAX + 1U];
+	union cfgdata cfgdata;
 
 	/* The bar info of the virtual PCI device. */
 	struct pci_bar bar[PCI_BAR_COUNT];

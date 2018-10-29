@@ -55,7 +55,7 @@ static int vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
 	info.vmsi_addr = vdev->msix.tables[index].addr;
 	info.vmsi_data = (enable) ? vdev->msix.tables[index].data : 0U;
 
-	ret = ptdev_msix_remap(vdev->vpci->vm, vdev->vbdf.value, index, &info);
+	ret = ptdev_msix_remap(vdev->vpci->vm, vdev->vbdf.value, (uint16_t)index, &info);
 	if (ret != 0) {
 		return ret;
 	}
@@ -222,7 +222,7 @@ static void vmsix_table_rw(struct pci_vdev *vdev, struct mmio_request *mmio, uin
 		if ((pci_vdev_read_cfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U) & PCIM_MSIXCTRL_MSIX_ENABLE)
 			== PCIM_MSIXCTRL_MSIX_ENABLE) {
 
-			if ((((entry->vector_control ^ vector_control) & PCIM_MSIX_VCTRL_MASK) != 0U) || message_changed)  {
+			if ((((entry->vector_control ^ vector_control) & PCIM_MSIX_VCTRL_MASK) != 0U) || message_changed) {
 				unmasked = ((entry->vector_control & PCIM_MSIX_VCTRL_MASK) == 0U);
 				(void)vmsix_remap_one_entry(vdev, index, unmasked);
 			}
@@ -271,7 +271,7 @@ static void decode_msix_table_bar(struct pci_vdev *vdev)
 	}
 
 	/* Get the base address */
-	base = (uint64_t)(bar_lo & PCIM_BAR_MEM_BASE);
+	base = (uint64_t)bar_lo & PCIM_BAR_MEM_BASE;
 	if ((bar_lo & PCIM_BAR_MEM_TYPE) == PCIM_BAR_MEM_64) {
 		bar_hi = pci_pdev_read_cfg(pbdf, pci_bar_offset(bir + 1U), 4U);
 		base |= ((uint64_t)bar_hi << 32U);
