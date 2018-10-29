@@ -69,6 +69,8 @@
 #define REAL_MODE_CODE_SEG_AR           (0x009fU)
 #define PROTECTED_MODE_DATA_SEG_AR      (0xc093U)
 #define PROTECTED_MODE_CODE_SEG_AR      (0xc09bU)
+#define REAL_MODE_SEG_LIMIT             (0xffffU)
+#define PROTECTED_MODE_SEG_LIMIT        (0xffffffffU)
 #define DR7_INIT_VALUE                  (0x400UL)
 #define LDTR_AR                         (0x0082U) /* LDT, type must be 2, refer to SDM Vol3 26.3.1.2 */
 #define TR_AR                           (0x008bU) /* TSS (busy), refer to SDM Vol3 26.3.1.2 */
