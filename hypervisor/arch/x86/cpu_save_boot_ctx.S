@@ -32,6 +32,13 @@ cpu_primary_save_32:
     /* Clear Limit field, bit 8-11 */
     andl    $0x0000f0ff, %ecx
     mov     %ecx, BOOT_CTX_CS_AR_OFFSET(%eax)
+
+    /* Save CS limit field */
+    mov     %cs, %cx
+    xor     %edx, %edx
+    lsl     %ecx, %edx
+    mov     %edx, BOOT_CTX_CS_LIMIT_OFFSET(%eax)
+
     mov     %es,  BOOT_CTX_ES_SEL_OFFSET(%eax)
     mov     %ss,  BOOT_CTX_SS_SEL_OFFSET(%eax)
     mov     %ds,  BOOT_CTX_DS_SEL_OFFSET(%eax)
@@ -62,6 +69,13 @@ cpu_primary_save_64:
     /* Clear Limit field, bit 8-11 */
     andl    $0x0000f0ff, %ecx
     mov     %ecx, BOOT_CTX_CS_AR_OFFSET(%r8)
+
+    /* Save CS limit field */
+    mov     %cs, %cx
+    xor     %edx, %edx
+    lsl     %ecx, %edx
+    mov     %edx, BOOT_CTX_CS_LIMIT_OFFSET(%r8)
+
     mov     %es,  BOOT_CTX_ES_SEL_OFFSET(%r8)
     mov     %ss,  BOOT_CTX_SS_SEL_OFFSET(%r8)
     mov     %ds,  BOOT_CTX_DS_SEL_OFFSET(%r8)
