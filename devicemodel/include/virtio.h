@@ -698,15 +698,15 @@ struct iovec;
  * @brief Link a virtio_base to its constants, the virtio device,
  * and the PCI emulation.
  *
- * @param vb Pointer to struct virtio_base.
- * @param vo Pointer to struct virtio_ops.
+ * @param base Pointer to struct virtio_base.
+ * @param vops Pointer to struct virtio_ops.
  * @param pci_virtio_dev Pointer to instance of certain virtio device.
  * @param dev Pointer to struct pci_vdev which emulates a PCI device.
  * @param queues Pointer to struct virtio_vq_info, normally an array.
  *
  * @return NULL
  */
-void virtio_linkup(struct virtio_base *vb, struct virtio_ops *vo,
+void virtio_linkup(struct virtio_base *base, struct virtio_ops *vops,
 		   void *pci_virtio_dev, struct pci_vdev *dev,
 		   struct virtio_vq_info *queues);
 
@@ -717,24 +717,27 @@ void virtio_linkup(struct virtio_base *vb, struct virtio_ops *vo,
  * Wrapper function for virtio_intr_init() for cases we directly use
  * BAR 1 for MSI-X capabilities.
  *
- * @param vb Pointer to struct virtio_base.
+ * @param base Pointer to struct virtio_base.
  * @param use_msix If using MSI-X.
  *
  * @return 0 on success and non-zero on fail.
  */
-int virtio_interrupt_init(struct virtio_base *vb, int use_msix);
+int virtio_interrupt_init(struct virtio_base *base, int use_msix);
 
 /**
  * @brief Initialize MSI-X vector capabilities if we're to use MSI-X,
  * or MSI capabilities if not.
  *
- * @param vb Pointer to struct virtio_base.
+ * We assume we want one MSI-X vector per queue, here, plus one
+ * for the config vec.
+ *
+ * @param base Pointer to struct virtio_base.
  * @param barnum Which BAR[0..5] to use.
  * @param use_msix If using MSI-X.
  *
  * @return 0 on success and non-zero on fail.
  */
-int virtio_intr_init(struct virtio_base *vb, int barnum, int use_msix);
+int virtio_intr_init(struct virtio_base *base, int barnum, int use_msix);
 
 /**
  * @brief Reset device (device-wide).
@@ -743,21 +746,24 @@ int virtio_intr_init(struct virtio_base *vb, int barnum, int use_msix);
  * But we don't wipe out the internal pointers, by just clearing
  * the VQ_ALLOC flag.
  *
- * @param vb Pointer to struct virtio_base.
+ * It resets negotiated features to "none".
+ * If MSI-X is enabled, this also resets all the vectors to NO_VECTOR.
+ *
+ * @param base Pointer to struct virtio_base.
  *
  * @return N/A
  */
-void virtio_reset_dev(struct virtio_base *vb);
+void virtio_reset_dev(struct virtio_base *base);
 
 /**
  * @brief Set I/O BAR (usually 0) to map PCI config registers.
  *
- * @param vb Pointer to struct virtio_base.
+ * @param base Pointer to struct virtio_base.
  * @param barnum Which BAR[0..5] to use.
  *
  * @return N/A
  */
-void virtio_set_io_bar(struct virtio_base *vb, int barnum);
+void virtio_set_io_bar(struct virtio_base *base, int barnum);
 
 /**
  * @brief Walk through the chain of descriptors involved in a request

@@ -45,9 +45,17 @@
  */
 #define DEV_STRUCT(vs) ((void *)(vs))
 
-/*
- * Link a virtio_base to its constants, the virtio device, and
- * the PCI emulation.
+/**
+ * @brief Link a virtio_base to its constants, the virtio device,
+ * and the PCI emulation.
+ *
+ * @param base Pointer to struct virtio_base.
+ * @param vops Pointer to struct virtio_ops.
+ * @param pci_virtio_dev Pointer to instance of certain virtio device.
+ * @param dev Pointer to struct pci_vdev which emulates a PCI device.
+ * @param queues Pointer to struct virtio_vq_info, normally an array.
+ *
+ * @return NULL
  */
 void
 virtio_linkup(struct virtio_base *base, struct virtio_ops *vops,
@@ -69,14 +77,19 @@ virtio_linkup(struct virtio_base *base, struct virtio_ops *vops,
 	}
 }
 
-/*
- * Reset device (device-wide).  This erases all queues, i.e.,
- * all the queues become invalid (though we don't wipe out the
- * internal pointers, we just clear the VQ_ALLOC flag).
+/**
+ * @brief Reset device (device-wide).
+ *
+ * This erases all queues, i.e., all the queues become invalid.
+ * But we don't wipe out the internal pointers, by just clearing
+ * the VQ_ALLOC flag.
  *
  * It resets negotiated features to "none".
- *
  * If MSI-X is enabled, this also resets all the vectors to NO_VECTOR.
+ *
+ * @param base Pointer to struct virtio_base.
+ *
+ * @return N/A
  */
 void
 virtio_reset_dev(struct virtio_base *base)
@@ -114,8 +127,13 @@ virtio_reset_dev(struct virtio_base *base)
 	base->config_generation = 0;
 }
 
-/*
- * Set I/O BAR (usually 0) to map PCI config registers.
+/**
+ * @brief Set I/O BAR (usually 0) to map PCI config registers.
+ *
+ * @param base Pointer to struct virtio_base.
+ * @param barnum Which BAR[0..5] to use.
+ *
+ * @return N/A
  */
 void
 virtio_set_io_bar(struct virtio_base *base, int barnum)
@@ -131,12 +149,19 @@ virtio_set_io_bar(struct virtio_base *base, int barnum)
 	base->legacy_pio_bar_idx = barnum;
 }
 
-/*
- * Initialize MSI-X vector capabilities if we're to use MSI-X,
+/**
+ * @brief Initialize MSI-X vector capabilities if we're to use MSI-X,
  * or MSI capabilities if not.
  *
  * We assume we want one MSI-X vector per queue, here, plus one
  * for the config vec.
+ *
+ *
+ * @param base Pointer to struct virtio_base.
+ * @param barnum Which BAR[0..5] to use.
+ * @param use_msix If using MSI-X.
+ *
+ * @return 0 on success and non-zero on fail.
  */
 int
 virtio_intr_init(struct virtio_base *base, int barnum, int use_msix)
@@ -163,12 +188,17 @@ virtio_intr_init(struct virtio_base *base, int barnum, int use_msix)
 	return 0;
 }
 
-/*
- * Initialize MSI-X vector capabilities if we're to use MSI-X,
+/**
+ * @brief Initialize MSI-X vector capabilities if we're to use MSI-X,
  * or MSI capabilities if not.
  *
- * Wrapper function for virtio_intr_init() since by default we
- * will use bar 1 for MSI-X.
+ * Wrapper function for virtio_intr_init() for cases we directly use
+ * BAR 1 for MSI-X capabilities.
+ *
+ * @param base Pointer to struct virtio_base.
+ * @param use_msix If using MSI-X.
+ *
+ * @return 0 on success and non-zero on fail.
  */
 int
 virtio_interrupt_init(struct virtio_base *base, int use_msix)
@@ -1006,6 +1036,18 @@ virtio_set_modern_pio_bar(struct virtio_base *base, int barnum)
 	return 0;
 }
 
+/**
+ * @brief Set modern BAR (usually 4) to map PCI config registers.
+ *
+ * Set modern MMIO BAR (usually 4) to map virtio 1.0 capabilities and optional
+ * set modern PIO BAR (usually 2) to map notify capability. This interface is
+ * only valid for modern virtio.
+ *
+ * @param base Pointer to struct virtio_base.
+ * @param use_notify_pio Whether use pio for notify capability.
+ *
+ * @return 0 on success and non-zero on fail.
+ */
 int
 virtio_set_modern_bar(struct virtio_base *base, bool use_notify_pio)
 {
@@ -1027,6 +1069,17 @@ virtio_set_modern_bar(struct virtio_base *base, bool use_notify_pio)
 	return rc;
 }
 
+/**
+ * @brief Indicate the device has experienced an error.
+ *
+ * This is called when the device has experienced an error from which it
+ * cannot re-cover. DEVICE_NEEDS_RESET is set to the device status register
+ * and a config change intr is sent to the guest driver.
+ *
+ * @param base Pointer to struct virtio_base.
+ *
+ * @return N/A
+ */
 void
 virtio_dev_error(struct virtio_base *base)
 {
@@ -1604,6 +1657,21 @@ virtio_pci_modern_pio_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		pthread_mutex_unlock(base->mtx);
 }
 
+/**
+ * @brief Handle PCI configuration space reads.
+ *
+ * Handle virtio standard register reads, and dispatch other reads to
+ * actual virtio device driver.
+ *
+ * @param ctx Pointer to struct vmctx representing VM context.
+ * @param vcpu VCPU ID.
+ * @param dev Pointer to struct pci_vdev which emulates a PCI device.
+ * @param baridx Which BAR[0..5] to use.
+ * @param offset Register offset in bytes within a BAR region.
+ * @param size Access range in bytes.
+ *
+ * @return register value.
+ */
 uint64_t
 virtio_pci_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		int baridx, uint64_t offset, int size)
@@ -1634,6 +1702,22 @@ virtio_pci_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	return size == 1 ? 0xff : size == 2 ? 0xffff : 0xffffffff;
 }
 
+/**
+ * @brief Handle PCI configuration space writes.
+ *
+ * Handle virtio standard register writes, and dispatch other writes to
+ * actual virtio device driver.
+ *
+ * @param ctx Pointer to struct vmctx representing VM context.
+ * @param vcpu VCPU ID.
+ * @param dev Pointer to struct pci_vdev which emulates a PCI device.
+ * @param baridx Which BAR[0..5] to use.
+ * @param offset Register offset in bytes within a BAR region.
+ * @param size Access range in bytes.
+ * @param value Data value to be written into register.
+ *
+ * @return N/A
+ */
 void
 virtio_pci_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		 int baridx, uint64_t offset, int size, uint64_t value)
@@ -1670,6 +1754,22 @@ virtio_pci_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		base->vops->name, baridx);
 }
 
+/**
+ * @brief Handle PCI configuration space reads.
+ *
+ * Handle virtio PCI configuration space reads. Only the specific registers
+ * that need speical operation are handled in this callback. For others just
+ * fallback to pci core. This interface is only valid for virtio modern.
+ *
+ * @param ctx Pointer to struct vmctx representing VM context.
+ * @param vcpu VCPU ID.
+ * @param dev Pointer to struct pci_vdev which emulates a PCI device.
+ * @param coff Register offset in bytes within PCI configuration space.
+ * @param bytes Access range in bytes.
+ * @param rv The value returned as read.
+ *
+ * @return 0 on handled and non-zero on non-handled.
+ */
 int
 virtio_pci_modern_cfgread(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 			  int coff, int bytes, uint32_t *rv)
@@ -1719,6 +1819,22 @@ virtio_pci_modern_cfgread(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	return -1;
 }
 
+/**
+ * @brief Handle PCI configuration space writes.
+ *
+ * Handle virtio PCI configuration space writes. Only the specific registers
+ * that need speical operation are handled in this callback. For others just
+ * fallback to pci core. This interface is only valid for virtio modern.
+ *
+ * @param ctx Pointer to struct vmctx representing VM context.
+ * @param vcpu VCPU ID.
+ * @param dev Pointer to struct pci_vdev which emulates a PCI device.
+ * @param coff Register offset in bytes within PCI configuration space.
+ * @param bytes Access range in bytes.
+ * @param val The value to write.
+ *
+ * @return 0 on handled and non-zero on non-handled.
+ */
 int
 virtio_pci_modern_cfgwrite(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 			   int coff, int bytes, uint32_t val)

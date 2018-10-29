@@ -12,6 +12,13 @@
 
 #include "vbs_common_if.h"		/* data format between VBS-U & VBS-K */
 
+/**
+ * @brief APIs for virtio backend in kernel module
+ *
+ * @addtogroup acrn_virtio
+ * @{
+ */
+
 enum VBS_K_STATUS {
 	VIRTIO_DEV_INITIAL = 1,		/* initial status */
 	VIRTIO_DEV_PRE_INIT,		/* detected thru cmdline option */
@@ -30,12 +37,37 @@ enum VBS_K_STATUS {
 #define VIRTIO_ERROR_GENERAL			5
 
 /* VBS-K common ops */
-/* VBS-K reset*/
+/**
+ * @brief Virtio kernel module reset.
+ *
+ * @param fd File descriptor representing virtio backend in kernel module.
+ *
+ * @return 0 on OK and non-zero on error.
+ */
 int vbs_kernel_reset(int fd);
 
-/* VBS-K start/stop */
+/**
+ * @brief Virtio kernel module start.
+ *
+ * @param fd File descriptor representing virtio backend in kernel module.
+ * @param dev Pointer to struct vbs_dev_info.
+ * @param vqs Pointer to struct vbs_vqs_info.
+ *
+ * @return 0 on OK and non-zero on error.
+ */
 int vbs_kernel_start(int fd, struct vbs_dev_info *dev,
 		     struct vbs_vqs_info *vqs);
+
+/**
+ * @brief Virtio kernel module stop.
+ *
+ * @param fd File descriptor representing virtio backend in kernel module.
+ *
+ * @return 0 on OK and non-zero on error.
+ */
 int vbs_kernel_stop(int fd);
 
+/**
+ * @}
+ */
 #endif

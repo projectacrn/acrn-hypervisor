@@ -5,11 +5,24 @@
  *
  */
 
+/**
+ * @file vhost.h
+ *
+ * @brief VHOST APIs for ACRN Project
+ */
+
 #ifndef __VHOST_H__
 #define __VHOST_H__
 
 #include "virtio.h"
 #include "mevent.h"
+
+/**
+ * @brief vhost APIs
+ *
+ * @addtogroup acrn_virtio
+ * @{
+ */
 
 struct vhost_vq {
 	int kick_fd;		/**< fd of kick eventfd */
@@ -71,7 +84,7 @@ struct vhost_dev {
  * @brief vhost_dev initialization.
  *
  * This interface is called to initialize the vhost_dev. It must be called
- * before the actual feature negoitiation with the guest OS starts.
+ * before the actual feature negotiation with the guest OS starts.
  *
  * @param vdev Pointer to struct vhost_dev.
  * @param base Pointer to struct virtio_base.
@@ -133,4 +146,7 @@ int vhost_dev_stop(struct vhost_dev *vdev);
  */
 int vhost_net_set_backend(struct vhost_dev *vdev, int backend_fd);
 
+/**
+ * @}
+ */
 #endif

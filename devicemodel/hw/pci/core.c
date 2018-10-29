@@ -1638,6 +1638,14 @@ pci_msix_enabled(struct pci_vdev *dev)
 	return (dev->msix.enabled && !dev->msi.enabled);
 }
 
+/**
+ * @brief Generate a MSI-X interrupt to guest
+ *
+ * @param dev Pointer to struct pci_vdev representing virtual PCI device.
+ * @param index MSIx table entry index.
+ *
+ * @return N/A
+ */
 void
 pci_generate_msix(struct pci_vdev *dev, int index)
 {
@@ -1659,6 +1667,14 @@ pci_generate_msix(struct pci_vdev *dev, int index)
 	}
 }
 
+/**
+ * @brief Generate a MSI interrupt to guest
+ *
+ * @param dev Pointer to struct pci_vdev representing virtual PCI device.
+ * @param index Message data index.
+ *
+ * @return N/A
+ */
 void
 pci_generate_msi(struct pci_vdev *dev, int index)
 {
@@ -1760,6 +1776,13 @@ pci_lintr_route(struct pci_vdev *dev)
 	pci_set_cfgdata8(dev, PCIR_INTLINE, pirq_irq(ii->ii_pirq_pin));
 }
 
+/**
+ * @brief Assert INTx pin of virtual PCI device
+ *
+ * @param dev Pointer to struct pci_vdev representing virtual PCI device.
+ *
+ * @return N/A
+ */
 void
 pci_lintr_assert(struct pci_vdev *dev)
 {
@@ -1776,6 +1799,13 @@ pci_lintr_assert(struct pci_vdev *dev)
 	pthread_mutex_unlock(&dev->lintr.lock);
 }
 
+/**
+ * @brief Deassert INTx pin of virtual PCI device
+ *
+ * @param dev Pointer to struct pci_vdev representing virtual PCI device.
+ *
+ * @return N/A
+ */
 void
 pci_lintr_deassert(struct pci_vdev *dev)
 {

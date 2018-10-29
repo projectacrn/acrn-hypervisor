@@ -812,7 +812,12 @@ INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/include/arch/x86/ioapic.h \
                           ../hypervisor/include/arch/x86/irq.h \
                           ../hypervisor/include/arch/x86/lapic.h \
-                          ../hypervisor/include/common/irq.h
+                          ../hypervisor/include/common/irq.h \
+                          ../devicemodel/include/virtio_kernel.h \
+                          ../devicemodel/include/vhost.h \
+                          ../devicemodel/include/dm.h \
+                          ../devicemodel/include/pci_core.h \
+                          ../devicemodel/include/public/vhm_ioctl_defs.h
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses

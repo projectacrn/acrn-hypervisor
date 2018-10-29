@@ -383,13 +383,55 @@ common to all VBS-K modules, are the counterparts to preserve the
 related information. The related information is necessary to kernel-land
 vring service API helpers.
 
+VHOST Key Data Structures
+=========================
+
+The key data structures for vhost are listed as follows.
+
+.. doxygenstruct:: vhost_dev
+   :project: Project ACRN
+
+.. doxygenstruct:: vhost_vq
+   :project: Project ACRN
+
 DM APIs
 =======
 
 The DM APIs are exported by DM, and they should be used when realizing
 BE device drivers on ACRN.
 
-[API Material from doxygen comments]
+.. doxygenfunction:: paddr_guest2host
+   :project: Project ACRN
+
+.. doxygenfunction:: pci_set_cfgdata8
+   :project: Project ACRN
+
+.. doxygenfunction:: pci_set_cfgdata16
+   :project: Project ACRN
+
+.. doxygenfunction:: pci_set_cfgdata32
+   :project: Project ACRN
+
+.. doxygenfunction:: pci_get_cfgdata8
+   :project: Project ACRN
+
+.. doxygenfunction:: pci_get_cfgdata16
+   :project: Project ACRN
+
+.. doxygenfunction:: pci_get_cfgdata32
+   :project: Project ACRN
+
+.. doxygenfunction:: pci_lintr_assert
+   :project: Project ACRN
+
+.. doxygenfunction:: pci_lintr_deassert
+   :project: Project ACRN
+
+.. doxygenfunction:: pci_generate_msi
+   :project: Project ACRN
+
+.. doxygenfunction:: pci_generate_msix
+   :project: Project ACRN
 
 VBS APIs
 ========
@@ -404,7 +446,41 @@ VBS-U APIs
 These APIs provided by VBS-U are callbacks to be registered to DM, and
 the virtio framework within DM will invoke them appropriately.
 
-[API Material from doxygen comments]
+.. doxygenstruct:: virtio_ops
+   :project: Project ACRN
+
+.. doxygenfunction:: virtio_pci_read
+   :project: Project ACRN
+
+.. doxygenfunction:: virtio_pci_write
+   :project: Project ACRN
+
+.. doxygenfunction:: virtio_dev_error
+   :project: Project ACRN
+
+.. doxygenfunction:: virtio_interrupt_init
+   :project: Project ACRN
+
+.. doxygenfunction:: virtio_linkup
+   :project: Project ACRN
+
+.. doxygenfunction:: virtio_reset_dev
+   :project: Project ACRN
+
+.. doxygenfunction:: virtio_set_io_bar
+   :project: Project ACRN
+
+.. doxygenfunction:: virtio_set_modern_bar
+   :project: Project ACRN
+
+.. doxygenfunction:: virtio_pci_modern_cfgread
+   :project: Project ACRN
+
+.. doxygenfunction:: virtio_pci_modern_cfgwrite
+   :project: Project ACRN
+
+.. doxygenfunction:: virtio_config_changed
+   :project: Project ACRN
 
 VBS-K APIs
 ----------
@@ -415,12 +491,92 @@ the following APIs to implement their VBS-K modules.
 APIs provided by DM
 ~~~~~~~~~~~~~~~~~~~
 
-[API Material from doxygen comments]
+.. doxygenfunction:: vbs_kernel_reset
+   :project: Project ACRN
+
+.. doxygenfunction:: vbs_kernel_start
+   :project: Project ACRN
+
+.. doxygenfunction:: vbs_kernel_stop
+   :project: Project ACRN
 
 APIs provided by VBS-K modules in service OS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-[API Material from doxygen comments]
+.. kernel-doc:: include/linux/vbs/vbs.h
+   :functions: virtio_dev_init
+               virtio_dev_ioctl
+               virtio_vqs_ioctl
+               virtio_dev_register
+               virtio_dev_deregister
+               virtio_vqs_index_get
+               virtio_dev_reset
+
+VHOST APIS
+==========
+
+APIs provided by DM
+-------------------
+
+.. doxygenfunction:: vhost_dev_init
+   :project: Project ACRN
+
+.. doxygenfunction:: vhost_dev_deinit
+   :project: Project ACRN
+
+.. doxygenfunction:: vhost_dev_start
+   :project: Project ACRN
+
+.. doxygenfunction:: vhost_dev_stop
+   :project: Project ACRN
+
+Linux vhost IOCTLs
+------------------
+
+``#define VHOST_GET_FEATURES      _IOR(VHOST_VIRTIO, 0x00, __u64)``
+  This IOCTL is used to get the supported feature flags by vhost kernel driver.
+``#define VHOST_SET_FEATURES      _IOW(VHOST_VIRTIO, 0x00, __u64)``
+  This IOCTL is used to set the supported feature flags to vhost kernel driver.
+``#define VHOST_SET_OWNER _IO(VHOST_VIRTIO, 0x01)``
+  This IOCTL is used to set current process as the exclusive owner of the vhost
+  char device. It must be called before any other vhost commands.
+``#define VHOST_RESET_OWNER _IO(VHOST_VIRTIO, 0x02)``
+  This IOCTL is used to give up the ownership of the vhost char device.
+``#define VHOST_SET_MEM_TABLE     _IOW(VHOST_VIRTIO, 0x03, struct vhost_memory)``
+  This IOCTL is used to convey the guest OS memory layout to vhost kernel driver.
+``#define VHOST_SET_VRING_NUM _IOW(VHOST_VIRTIO, 0x10, struct vhost_vring_state)``
+  This IOCTL is used to set the number of descriptors in virtio ring. It cannot
+  be modified while the virtio ring is running.
+``#define VHOST_SET_VRING_ADDR _IOW(VHOST_VIRTIO, 0x11, struct vhost_vring_addr)``
+  This IOCTL is used to set the address of the virtio ring.
+``#define VHOST_SET_VRING_BASE _IOW(VHOST_VIRTIO, 0x12, struct vhost_vring_state)``
+  This IOCTL is used to set the base value where virtqueue looks for available
+  descriptors.
+``#define VHOST_GET_VRING_BASE _IOWR(VHOST_VIRTIO, 0x12, struct vhost_vring_state)``
+  This IOCTL is used to get the base value where virtqueue looks for available
+  descriptors.
+``#define VHOST_SET_VRING_KICK _IOW(VHOST_VIRTIO, 0x20, struct vhost_vring_file)``
+  This IOCTL is used to set the eventfd on which vhost can poll for guest
+  virtqueue kicks.
+``#define VHOST_SET_VRING_CALL _IOW(VHOST_VIRTIO, 0x21, struct vhost_vring_file)``
+  This IOCTL is used to set the eventfd which is used by vhost do inject
+  virtual interrupt.
+
+VHM eventfd IOCTLs
+------------------
+
+.. doxygenstruct:: acrn_ioeventfd
+   :project: Project ACRN
+
+``#define IC_EVENT_IOEVENTFD              _IC_ID(IC_ID, IC_ID_EVENT_BASE + 0x00)``
+  This IOCTL is used to register/unregister ioeventfd with appropriate address,
+  length and data value.
+
+.. doxygenstruct:: acrn_irqfd
+   :project: Project ACRN
+
+``#define IC_EVENT_IRQFD                  _IC_ID(IC_ID, IC_ID_EVENT_BASE + 0x01)``
+  This IOCTL is used to register/unregister irqfd with appropriate MSI information.
 
 VQ APIs
 =======
@@ -433,7 +589,20 @@ to be identical between VBS-U and VBS-K, so that users don't need to
 learn different APIs when implementing BE drivers based on VBS-U and
 VBS-K.
 
-[API Material from doxygen comments]
+.. doxygenfunction:: vq_interrupt
+   :project: Project ACRN
+
+.. doxygenfunction:: vq_getchain
+   :project: Project ACRN
+
+.. doxygenfunction:: vq_retchain
+   :project: Project ACRN
+
+.. doxygenfunction:: vq_relchain
+   :project: Project ACRN
+
+.. doxygenfunction:: vq_endchains
+   :project: Project ACRN
 
 Below is an example showing a typical logic of how a BE driver handles
 requests from a FE driver.

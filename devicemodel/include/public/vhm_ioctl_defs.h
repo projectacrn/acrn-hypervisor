@@ -117,113 +117,117 @@
 #define IC_EVENT_IRQFD			_IC_ID(IC_ID, IC_ID_EVENT_BASE + 0x01)
 
 /**
- * struct vm_memmap - EPT memory mapping info for guest
+ * @brief EPT memory mapping info for guest
  */
 struct vm_memmap {
-	/** @type: memory mapping type */
+	/** memory mapping type */
 	uint32_t type;
-	/** @using_vma: using vma_base to get vm0_gpa,
+	/** using vma_base to get vm0_gpa,
 	 * only for type == VM_MEMMAP_SYSMEM
 	 */
 	uint32_t using_vma;
-	/** @gpa: user OS guest physical start address of memory mapping */
+	/** user OS guest physical start address of memory mapping */
 	uint64_t gpa;
-	/** union */
 	union {
-		/** @hpa: host physical start address of memory,
+		/** host physical start address of memory,
 		 * only for type == VM_MMIO
 		 */
 		uint64_t hpa;
-		/** @vma_base: service OS user virtual start address of
+		/** service OS user virtual start address of
 		 * memory, only for type == VM_MEMMAP_SYSMEM &&
 		 * using_vma == true
 		 */
 		uint64_t vma_base;
 	};
-	/** @len: the length of memory range mapped */
+	/** the length of memory range mapped */
 	uint64_t len;	/* mmap length */
-	/** @prot: memory mapping attribute */
+	/** memory mapping attribute */
 	uint32_t prot;	/* RWX */
 };
 
 /**
- * struct ic_ptdev_irq - pass thru device irq data structure
+ * @brief pass thru device irq data structure
  */
 struct ic_ptdev_irq {
 #define IRQ_INTX 0
 #define IRQ_MSI 1
 #define IRQ_MSIX 2
-	/** @type: irq type */
+	/** irq type */
 	uint32_t type;
-	/** @virt_bdf: virtual bdf description of pass thru device */
+	/** virtual bdf description of pass thru device */
 	uint16_t virt_bdf;	/* IN: Device virtual BDF# */
-	/** @phy_bdf: physical bdf description of pass thru device */
+	/** physical bdf description of pass thru device */
 	uint16_t phys_bdf;	/* IN: Device physical BDF# */
-	/** union */
 	union {
-		/** struct intx - info of IOAPIC/PIC interrupt */
+		/** info of IOAPIC/PIC interrupt */
 		struct {
-			/** @virt_pin: virtual IOAPIC pin */
+			/** virtual IOAPIC pin */
 			uint32_t virt_pin;
-			/** @phys_pin: physical IOAPIC pin */
+			/** physical IOAPIC pin */
 			uint32_t phys_pin;
-			/** @pic_pin: PIC pin */
+			/** PIC pin */
 			uint32_t is_pic_pin;
 		} intx;
 
-		/** struct msix - info of MSI/MSIX interrupt */
+		/** info of MSI/MSIX interrupt */
 		struct {
                         /* Keep this filed on top of msix */
-			/** @vector_cnt: vector count of MSI/MSIX */
+			/** vector count of MSI/MSIX */
 			uint32_t vector_cnt;
 
-			/** @table_size: size of MSIX table(round up to 4K) */
+			/** size of MSIX table(round up to 4K) */
 			uint32_t table_size;
 
-			/** @table_paddr: physical address of MSIX table */
+			/** physical address of MSIX table */
 			uint64_t table_paddr;
 		} msix;
 	};
 };
 
 /**
- * struct ioreq_notify - data strcture to notify hypervisor ioreq is handled
- *
- * @client_id: client id to identify ioreq client
- * @vcpu: identify the ioreq submitter
+ * @brief data strcture to notify hypervisor ioreq is handled
  */
 struct ioreq_notify {
-       int32_t client_id;
-       uint32_t vcpu;
+	/** client id to identify ioreq client */
+	int32_t client_id;
+	/** identify the ioreq submitter */
+	uint32_t vcpu;
 };
 
 /**
- * struct api_version - data structure to track VHM API version
- *
- * @major_version: major version of VHM API
- * @minor_version: minor version of VHM API
+ * @brief data structure to track VHM API version
  */
 struct api_version {
+	/** major version of VHM API */
 	uint32_t major_version;
+	/** minor version of VHM API */
 	uint32_t minor_version;
 };
 
+struct acrn_ioeventfd {
 #define ACRN_IOEVENTFD_FLAG_PIO		0x01
 #define ACRN_IOEVENTFD_FLAG_DATAMATCH	0x02
 #define ACRN_IOEVENTFD_FLAG_DEASSIGN	0x04
-struct acrn_ioeventfd {
+       /** file descriptor of the eventfd of this ioeventfd */
        int32_t fd;
+       /** flag for ioeventfd ioctl */
        uint32_t flags;
+       /** base address to be monitored */
        uint64_t addr;
+       /** address length */
        uint32_t len;
        uint32_t reserved;
+       /** data to be matched */
        uint64_t data;
 };
 
-#define ACRN_IRQFD_FLAG_DEASSIGN	0x01
 struct acrn_irqfd {
+#define ACRN_IRQFD_FLAG_DEASSIGN	0x01
+       /** file descriptor of the eventfd of this irqfd */
        int32_t fd;
+       /** flag for irqfd ioctl */
        uint32_t flags;
+       /** MSI interrupt to be injected */
        struct acrn_msi_entry msi;
 };
 #endif /* VHM_IOCTL_DEFS_H */
