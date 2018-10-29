@@ -442,6 +442,7 @@ vlapic_esr_write_handler(struct acrn_vlapic *vlapic)
 
 /*
  * Returns 1 if the vcpu needs to be notified of the interrupt and 0 otherwise.
+ * @pre vector >= 16
  */
 static int
 vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
@@ -461,13 +462,6 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 			"vlapic is software disabled, ignoring interrupt %u",
 			vector);
 		return 0;
-	}
-
-	if (vector < 16U) {
-		vlapic_set_error(vlapic, APIC_ESR_RECEIVE_ILLEGAL_VECTOR);
-		dev_dbg(ACRN_DBG_LAPIC,
-			"vlapic ignoring interrupt to vector %u", vector);
-		return 1;
 	}
 
 	if (is_apicv_intr_delivery_supported()) {
@@ -714,6 +708,9 @@ vlapic_mask_lvts(struct acrn_vlapic *vlapic)
 	vlapic_lvt_write_handler(vlapic, APIC_OFFSET_ERROR_LVT);
 }
 
+/*
+ * @pre vec = (lvt & APIC_LVT_VECTOR) >=16
+ */
 static void
 vlapic_fire_lvt(struct acrn_vlapic *vlapic, uint32_t lvt)
 {
@@ -729,10 +726,6 @@ vlapic_fire_lvt(struct acrn_vlapic *vlapic, uint32_t lvt)
 
 	switch (mode) {
 	case APIC_LVT_DM_FIXED:
-		if (vec < 16U) {
-			vlapic_set_error(vlapic, APIC_ESR_SEND_ILLEGAL_VECTOR);
-			return;
-		}
 		if (vlapic_set_intr_ready(vlapic, vec, false) != 0) {
 			vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 		}
@@ -896,7 +889,9 @@ vlapic_set_error(struct acrn_vlapic *vlapic, uint32_t mask)
 	vlapic_fire_lvt(vlapic, lvt | APIC_LVT_DM_FIXED);
 	vlapic->esr_firing = 0;
 }
-
+/*
+ * @pre vector <= 255
+ */
 static int
 vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t vector)
 {
@@ -954,7 +949,11 @@ vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t vector)
 	default:
 		return -EINVAL;
 	}
-	vlapic_fire_lvt(vlapic, lvt);
+	if (vector < 16U) {
+		vlapic_set_error(vlapic, APIC_ESR_RECEIVE_ILLEGAL_VECTOR);
+	} else {
+		vlapic_fire_lvt(vlapic, lvt);
+	}
 	return 0;
 }
 
@@ -1825,11 +1824,18 @@ vlapic_set_intr(struct vcpu *vcpu, uint32_t vector, bool level)
 	 * According to section "Maskable Hardware Interrupts" in Intel SDM
 	 * vectors 16 through 255 can be delivered through the local APIC.
 	 */
-	if ((vector < 16U) || (vector > 255U)) {
+	if (vector > 255U) {
 		return -EINVAL;
 	}
 
 	vlapic = vcpu_vlapic(vcpu);
+	if (vector < 16U) {
+		vlapic_set_error(vlapic, APIC_ESR_RECEIVE_ILLEGAL_VECTOR);
+		dev_dbg(ACRN_DBG_LAPIC,
+		    "vlapic ignoring interrupt to vector %u", vector);
+		return 0;
+	}
+
 	if (vlapic_set_intr_ready(vlapic, vector, level) != 0) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 	}
