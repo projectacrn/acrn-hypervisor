@@ -307,6 +307,7 @@ acrn_sw_load_vsbl(struct vmctx *ctx)
 	ctx->bsp_regs.vcpu_regs.cr0 = 0x30U;
 	ctx->bsp_regs.vcpu_regs.cs_ar = 0x009FU;
 	ctx->bsp_regs.vcpu_regs.cs_sel = 0xF000U;
+	ctx->bsp_regs.vcpu_regs.cs_limit = 0xFFFFU;
 	ctx->bsp_regs.vcpu_regs.cs_base = (VSBL_TOP(ctx) - 16) &0xFFFF0000UL;
 	ctx->bsp_regs.vcpu_regs.rip = (VSBL_TOP(ctx) - 16) & 0xFFFFUL;
 	ctx->bsp_regs.vcpu_regs.gprs.rsi = CONFIGPAGE_OFF(ctx);

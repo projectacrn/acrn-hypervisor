@@ -309,7 +309,8 @@ struct acrn_vcpu_regs {
 	uint64_t        reserved_64[4];
 
 	uint32_t        cs_ar;
-	uint32_t        reserved_32[4];
+	uint32_t        cs_limit;
+	uint32_t        reserved_32[3];
 
 	/* don't change the order of following sel */
 	uint16_t        cs_sel;
