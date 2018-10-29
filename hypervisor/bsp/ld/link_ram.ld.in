@@ -6,7 +6,7 @@ MEMORY
     lowram  :   ORIGIN = 0, LENGTH = CONFIG_LOW_RAM_SIZE
 
     /* 32 MBytes of RAM for HV */
-    ram     :   ORIGIN = CONFIG_RAM_START, LENGTH = CONFIG_RAM_SIZE
+    ram     :   ORIGIN = CONFIG_HV_RAM_START, LENGTH = CONFIG_HV_RAM_SIZE
 }
 
 SECTIONS

@@ -33,7 +33,7 @@ static inline uint64_t elf64_r_type(uint64_t i)
 
 uint64_t trampoline_start16_paddr;
 
-/* get the delta between CONFIG_RAM_START and the actual load address */
+/* get the delta between CONFIG_HV_RAM_START and the actual load address */
 uint64_t get_hv_image_delta(void)
 {
 	uint64_t addr;
@@ -52,7 +52,7 @@ uint64_t get_hv_image_delta(void)
 /* get the actual Hypervisor load address */
 uint64_t get_hv_image_base(void)
 {
-	return (get_hv_image_delta() + CONFIG_RAM_START);
+	return (get_hv_image_delta() + CONFIG_HV_RAM_START);
 }
 
 /*
@@ -63,7 +63,7 @@ uint64_t get_hv_image_base(void)
  * This function is valid if:
  *  - The hpa of HV code is always higher than trampoline code
  *  - The HV code is always relocated to higher address, compared
- *    with CONFIG_RAM_START
+ *    with CONFIG_HV_RAM_START
  */
 static uint64_t trampoline_relo_addr(const void *addr)
 {

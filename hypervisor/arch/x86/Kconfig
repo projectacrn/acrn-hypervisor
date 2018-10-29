@@ -208,25 +208,32 @@ config LOW_RAM_SIZE
 	  A 32-bit integer indicating the size of RAM region below address
 	  0x10000, starting from address 0x0.
 
-config RAM_START
-	hex "Address of the RAM region assigned to the hypervisor"
+config HV_RAM_START
+	hex "Start physical address of the RAM region used by the hypervisor"
 	default 0x6e000000 if PLATFORM_SBL
 	default 0x00100000 if PLATFORM_UEFI
 	help
-	  A 64-bit integer indicating the base address to where the hypervisor
+	  A 64-bit integer indicating the base physical address to where the hypervisor
 	  should be loaded to. If RELOC is disabled the bootloader is required
 	  to load the hypervisor to this specific address. Otherwise the
 	  hypervisor will not boot. With RELOC enabled the hypervisor is capable
 	  of relocating its symbols to where it is placed at, and thus the
 	  bootloader may not place the hypervisor at this specific address.
 
-config RAM_SIZE
-	hex "Size of the RAM region assigned to the hypervisor"
-	default 0x02000000
+config HV_RAM_SIZE
+	hex "Size of the RAM region used by the hypervisor"
+	default 0x04000000
 	help
-	  A 64-bit integer indicating the size of RAM assigned to the
-	  hypervisor. It is ensured at link time that the footprint of the
-	  hypervisor does not exceed this size.
+	  A 64-bit integer indicating the size of RAM used by the hypervisor.
+	  It is ensured at link time that the footprint of the hypervisor
+	  does not exceed this size.
+
+config PLATFORM_RAM_SIZE
+	hex "Size of the physical platform RAM"
+	default 0x200000000
+	help
+	  A 64-bit integer indicating the size of the physical platform RAM
+	  (not included the MMIO).
 
 config CONSTANT_ACPI
 	bool "The platform ACPI info is constant"

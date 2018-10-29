@@ -268,7 +268,7 @@ void init_paging(void)
 	 * to supervisor-mode for hypervisor owned memroy.
 	 */
 	hv_hpa = get_hv_image_base();
-	mmu_modify_or_del((uint64_t *)mmu_pml4_addr, hv_hpa, CONFIG_RAM_SIZE,
+	mmu_modify_or_del((uint64_t *)mmu_pml4_addr, hv_hpa, CONFIG_HV_RAM_SIZE,
 			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER,
 			PTT_PRIMARY, MR_MODIFY);
 

@@ -356,7 +356,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	}
 
 	/* without relocateion enabled, hypervisor binary need to reside in
-	 * fixed memory address starting from CONFIG_RAM_START, make a call
+	 * fixed memory address starting from CONFIG_HV_RAM_START, make a call
 	 * to emalloc_fixed_addr for that case. With CONFIG_RELOC enabled,
 	 * hypervisor is able to do relocation, the only requirement is that
 	 * it need to reside in memory below 4GB, call emalloc_reserved_mem()
@@ -365,7 +365,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 #ifdef CONFIG_RELOC
 	err = emalloc_reserved_mem(&hv_hpa, HV_RUNTIME_MEM_SIZE, MEM_ADDR_4GB);
 #else
-	err = emalloc_fixed_addr(&hv_hpa, HV_RUNTIME_MEM_SIZE, CONFIG_RAM_START);
+	err = emalloc_fixed_addr(&hv_hpa, HV_RUNTIME_MEM_SIZE, CONFIG_HV_RAM_START);
 #endif
 	if (err != EFI_SUCCESS)
 		goto failed;
