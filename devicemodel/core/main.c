@@ -215,12 +215,6 @@ paddr_guest2host(struct vmctx *ctx, uintptr_t gaddr, size_t len)
 	return vm_map_gpa(ctx, gaddr, len);
 }
 
-void *
-dm_gpa2hva(uint64_t gpa, size_t size)
-{
-	return vm_map_gpa(_ctx, gpa, size);
-}
-
 int
 virtio_uses_msix(void)
 {
