@@ -15,3 +15,4 @@ Hypervisor high-level design
    Timer <hv-timer>
    Virtual Interrupt <hv-virt-interrupt>
    VT-d <hv-vt-d>
+   Device Passthrough <hv-dev-passthrough>
