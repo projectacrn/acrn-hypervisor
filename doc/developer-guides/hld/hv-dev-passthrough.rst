@@ -1,6 +1,6 @@
 .. _hv-device-passthrough:
 
-Device PassThrough
+Device Passthrough
 ##################
 
 A critical part of virtualization is virtualizing devices: exposing all
@@ -118,7 +118,7 @@ PCI device through two paths: implemented in hypervisor or in SOS device
 model.
 
 - When configuration emulation is in the hypervisor, the interception of
-  0xCF8/CFC port and emulatation of PCI configuration space access are
+  0xCF8/CFC port and emulation of PCI configuration space access are
   tricky and unclean. Therefore the final solution is to reuse the
   PCI emulation infrastructure of SOS device model. The hypervisor
   routes the UOS 0xCF8/CFC access to device model, and keeps blind to the
@@ -160,7 +160,7 @@ done on-demand rather than on hypervisor initialization.
    Initialization of remapping of virtual IOAPIC interrupts for SOS
 
 :numref:`init-remapping` above illustrates how remapping of (virtual) IOAPIC
-interrupts are remappied for SOS. VM exit occurs whenever SOS tries to
+interrupts are remapped for SOS. VM exit occurs whenever SOS tries to
 unmask an interrupt in (virtual) IOAPIC by writing to the Redirection
 Table Entry (or RTE). The hypervisor then invokes the IOAPIC emulation
 handler (refer to :ref:`hld-io-emulation` for details on I/O emulation) which
@@ -183,7 +183,7 @@ When the UOS needs to access the physical device by passthrough, it uses
 the following steps:
 
 -  UOS gets a virtual interrupt
--  VM exit happens and the trapped vCPU is the target where the interrup
+-  VM exit happens and the trapped vCPU is the target where the interrupt
    will be injected.
 -  Hypervisor will handle the interrupt and translate the vector
    according to ptdev_remapping_info.

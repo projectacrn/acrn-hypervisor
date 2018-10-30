@@ -148,12 +148,12 @@ Secure World. Secure world can access Normal World's memory, but Normal
 world cannot access Secure World's memory.
 
 VM0 domain
-   VM0 domain is created when ithe hypervisor creates VM0 for the
+   VM0 domain is created when the hypervisor creates VM0 for the
    Service OS.
 
    IOMMU uses the EPT table of Normal world of VM0 as the address
    translation structures for the devices in VM0 domain. The Normal world’s
-   EPT table of VM0 doesn’t include the memory resource of ithe hypervisor
+   EPT table of VM0 doesn’t include the memory resource of the hypervisor
    and Secure worlds if any. So the devices in VM0 domain can’t access the
    memory belong to hypervisor or secure worlds.
 
@@ -266,7 +266,7 @@ is remove from VM0 domain and added to the VM domain related to the User
 OS, which changes the address translation table from EPT of VM0 to EPT
 of User OS for the device.
 
-To un-assign a device means to un-assign the device from an User OS. The
+To unassign a device means to unassign the device from an User OS. The
 device is remove from the VM domain related to the User OS, then added
 back to VM0 domain, which changes the address translation table from EPT
 of User OS to EPT of VM0 for the device.

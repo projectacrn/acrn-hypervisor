@@ -53,7 +53,7 @@ Virtio introduction
 Virtio is an abstraction layer over devices in a para-virtualized
 hypervisor. Virtio was developed by Rusty Russell when he worked at IBM
 research to support his lguest hypervisor in 2007, and it quickly became
-the de-facto standard for KVM's para-virtualized I/O devices.
+the de facto standard for KVM's para-virtualized I/O devices.
 
 Virtio is very popular for virtual I/O devices because is provides a
 straightforward, efficient, standard, and extensible mechanism, and
