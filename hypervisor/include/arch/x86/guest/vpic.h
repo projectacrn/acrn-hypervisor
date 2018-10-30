@@ -30,6 +30,13 @@
 #ifndef VPIC_H
 #define VPIC_H
 
+/**
+ * @file vpic.h
+ *
+ * @brief public APIs for virtual PIC
+ */
+
+
 #define	ICU_IMR_OFFSET	1U
 
 /* Initialization control word 1. Written to even address. */
@@ -121,12 +128,54 @@ struct acrn_vpic {
 
 void vpic_init(struct vm *vm);
 
+/**
+ * @brief virtual PIC
+ *
+ * @addtogroup acrn_vpic ACRN vPIC
+ * @{
+ */
+
+/**
+ * @brief Set vPIC IRQ line status.
+ *
+ * @param[in] vm        Pointer to target VM
+ * @param[in] irq       Target IRQ number
+ * @param[in] operation action options:GSI_SET_HIGH/GSI_SET_LOW/
+ *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
+ *
+ * @return void
+ */
 void vpic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation);
 
+/**
+ * @brief Get pending virtual interrupts for vPIC.
+ *
+ * @param[in]    vm     Pointer to target VM
+ * @param[inout] vecptr Pointer to vector buffer and will be filled
+ *			with eligible vector if any.
+ *
+ * @return void.
+ */
 void vpic_pending_intr(struct vm *vm, uint32_t *vecptr);
+
+/**
+ * @brief Accept virtual interrupt for vPIC.
+ *
+ * @param[in] vm     Pointer to target VM
+ * @param[in] vector Target virtual interrupt vector
+ *
+ * @return void
+ *
+ * @pre vm != NULL
+ */
 void vpic_intr_accepted(struct vm *vm, uint32_t vector);
 void vpic_get_irq_trigger(struct vm *vm, uint32_t irq,
 	enum vpic_trigger *trigger);
 uint32_t vpic_pincount(void);
+
+/**
+ * @}
+ */
+/* End of acrn_vpic */
 
 #endif /* VPIC_H */
