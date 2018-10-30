@@ -56,30 +56,114 @@
  * @{
  */
 
+/**
+ * @brief Representation of a MMIO request
+ */
 struct mmio_request {
+	/**
+	 * @brief Direction of the access
+	 *
+	 * Either \p REQUEST_READ or \p REQUEST_WRITE.
+	 */
 	uint32_t direction;
+
+	/**
+	 * @brief reserved
+	 */
 	uint32_t reserved;
+
+	/**
+	 * @brief Address of the I/O access
+	 */
 	uint64_t address;
+
+	/**
+	 * @brief Width of the I/O access in byte
+	 */
 	uint64_t size;
+
+	/**
+	 * @brief The value read for I/O reads or to be written for I/O writes
+	 */
 	uint64_t value;
 } __aligned(8);
 
+/**
+ * @brief Representation of a port I/O request
+ */
 struct pio_request {
+	/**
+	 * @brief Direction of the access
+	 *
+	 * Either \p REQUEST_READ or \p REQUEST_WRITE.
+	 */
 	uint32_t direction;
+
+	/**
+	 * @brief reserved
+	 */
 	uint32_t reserved;
+
+	/**
+	 * @brief Port address of the I/O access
+	 */
 	uint64_t address;
+
+	/**
+	 * @brief Width of the I/O access in byte
+	 */
 	uint64_t size;
+
+	/**
+	 * @brief The value read for I/O reads or to be written for I/O writes
+	 */
 	uint32_t value;
 } __aligned(8);
 
+/**
+ * @brief Representation of a PCI configuration space access
+ */
 struct pci_request {
+	/**
+	 * @brief Direction of the access
+	 *
+	 * Either \p REQUEST_READ or \p REQUEST_WRITE.
+	 */
 	uint32_t direction;
+
+	/**
+	 * @brief Reserved
+	 */
 	uint32_t reserved[3];/* need keep same header fields with pio_request */
+
+	/**
+	 * @brief Width of the I/O access in byte
+	 */
 	int64_t size;
+
+	/**
+	 * @brief The value read for I/O reads or to be written for I/O writes
+	 */
 	int32_t value;
+
+	/**
+	 * @brief The \p bus part of the BDF of the device
+	 */
 	int32_t bus;
+
+	/**
+	 * @brief The \p device part of the BDF of the device
+	 */
 	int32_t dev;
+
+	/**
+	 * @brief The \p function part of the BDF of the device
+	 */
 	int32_t func;
+
+	/**
+	 * @brief The register to be accessed in the configuration space
+	 */
 	int32_t reg;
 } __aligned(8);
 
@@ -107,33 +191,56 @@ union vhm_io_request {
  * Based on the rules above, a typical VHM request lifecycle should looks like
  * the following.
  *
- *                     (assume the initial state is FREE)
+ * @verbatim embed:rst:leading-asterisk
  *
- *       SOS vCPU 0                SOS vCPU x                    UOS vCPU y
+ * +-----------------------+-------------------------+----------------------+
+ * | SOS vCPU 0            | SOS vCPU x              | UOS vCPU y           |
+ * +=======================+=========================+======================+
+ * |                       |                         | **Hypervisor**:      |
+ * |                       |                         |                      |
+ * |                       |                         | - Fill in type,      |
+ * |                       |                         |   addr, etc.         |
+ * |                       |                         | - Pause UOS vCPU y   |
+ * |                       |                         | - Set state to       |
+ * |                       |                         |   PENDING **(a)**    |
+ * |                       |                         | - Fire upcall to     |
+ * |                       |                         |   SOS vCPU 0         |
+ * |                       |                         |                      |
+ * +-----------------------+-------------------------+----------------------+
+ * | **VHM**:              |                         |                      |
+ * |                       |                         |                      |
+ * | - Scan for pending    |                         |                      |
+ * |   requests            |                         |                      |
+ * | - Set state to        |                         |                      |
+ * |   PROCESSING **(b)**  |                         |                      |
+ * | - Assign requests to  |                         |                      |
+ * |   clients **(c)**     |                         |                      |
+ * |                       |                         |                      |
+ * +-----------------------+-------------------------+----------------------+
+ * |                       | **Client**:             |                      |
+ * |                       |                         |                      |
+ * |                       | - Scan for assigned     |                      |
+ * |                       |   requests              |                      |
+ * |                       | - Handle the            |                      |
+ * |                       |   requests **(d)**      |                      |
+ * |                       | - Set state to COMPLETE |                      |
+ * |                       | - Notify the hypervisor |                      |
+ * |                       |                         |                      |
+ * +-----------------------+-------------------------+----------------------+
+ * |                       | **Hypervisor**:         |                      |
+ * |                       |                         |                      |
+ * |                       | - resume UOS vCPU y     |                      |
+ * |                       |   **(e)**               |                      |
+ * |                       |                         |                      |
+ * +-----------------------+-------------------------+----------------------+
+ * |                       |                         | **Hypervisor**:      |
+ * |                       |                         |                      |
+ * |                       |                         | - Post-work **(f)**  |
+ * |                       |                         | - set state to FREE  |
+ * |                       |                         |                      |
+ * +-----------------------+-------------------------+----------------------+
  *
- *                                                 hypervisor:
- *                                                     fill in type, addr, etc.
- *                                                     pause UOS vcpu y
- *                                                     set state to PENDING (a)
- *                                                     fire upcall to SOS vCPU 0
- *
- *  VHM:
- *      scan for pending requests
- *      set state to PROCESSING (b)
- *      assign requests to clients (c)
- *
- *                            client:
- *                                scan for assigned requests
- *                                handle the requests (d)
- *                                set state to COMPLETE
- *                                notify the hypervisor
- *
- *                            hypervisor:
- *                                resume UOS vcpu y (e)
- *
- *                                                 hypervisor:
- *                                                     post-work (f)
- *                                                     set state to FREE
+ * @endverbatim
  *
  * Note that the following shall hold.
  *

@@ -55,11 +55,15 @@ static void acrn_print_request(uint16_t vcpu_id, const struct vhm_request *req)
 	}
 }
 
-/*
+/**
+ * @brief Deliver \p io_req to SOS and suspend \p vcpu till its completion
+ *
+ * @param vcpu The virtual CPU that triggers the MMIO access
+ * @param io_req The I/O request holding the details of the MMIO access
+ *
  * @pre vcpu != NULL && io_req != NULL
  */
-int32_t
-acrn_insert_request_wait(struct vcpu *vcpu, const struct io_request *io_req)
+int32_t acrn_insert_request_wait(struct vcpu *vcpu, const struct io_request *io_req)
 {
 	union vhm_request_buffer *req_buf = NULL;
 	struct vhm_request *vhm_req;
