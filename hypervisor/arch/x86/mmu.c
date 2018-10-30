@@ -30,7 +30,7 @@
 #include <hypervisor.h>
 #include <reloc.h>
 
-static void *mmu_pml4_addr;
+static void *ppt_mmu_pml4_addr;
 static void *sanitized_page[CPU_PAGE_SIZE];
 
 static struct vmx_capability {
@@ -206,13 +206,7 @@ void sanitize_pte(uint64_t *pt_page)
 	}
 }
 
-uint64_t get_paging_pml4(void)
-{
-	/* Return address to caller */
-	return hva2hpa(mmu_pml4_addr);
-}
-
-void enable_paging(uint64_t pml4_base_addr)
+void enable_paging(void)
 {
 	uint64_t tmp64 = 0UL;
 
@@ -220,7 +214,7 @@ void enable_paging(uint64_t pml4_base_addr)
 	CPU_CR_READ(cr0, &tmp64);
 	CPU_CR_WRITE(cr0, tmp64 | CR0_WP);
 
-	CPU_CR_WRITE(cr3, pml4_base_addr);
+	CPU_CR_WRITE(cr3, hva2hpa(ppt_mmu_pml4_addr));
 }
 
 void enable_smep(void)
@@ -240,12 +234,12 @@ void init_paging(void)
 	uint32_t i;
 	uint64_t low32_max_ram = 0UL;
 	uint64_t high64_max_ram;
-	uint64_t attr_uc = (PAGE_TABLE | PAGE_CACHE_UC);
+	uint64_t attr_uc = (PAGE_PRESENT | PAGE_RW | PAGE_USER | PAGE_CACHE_UC);
 
 	pr_dbg("HV MMU Initialization");
 
 	/* Allocate memory for Hypervisor PML4 table */
-	mmu_pml4_addr = ppt_mem_ops.get_pml4_page(ppt_mem_ops.info, 0UL);
+	ppt_mmu_pml4_addr = ppt_mem_ops.get_pml4_page(ppt_mem_ops.info, 0UL);
 
 	init_e820();
 	obtain_e820_mem_info();
@@ -259,7 +253,7 @@ void init_paging(void)
 	}
 
 	/* Map all memory regions to UC attribute */
-	mmu_add((uint64_t *)mmu_pml4_addr, e820_mem.mem_bottom, e820_mem.mem_bottom,
+	mmu_add((uint64_t *)ppt_mmu_pml4_addr, e820_mem.mem_bottom, e820_mem.mem_bottom,
 		high64_max_ram - e820_mem.mem_bottom, attr_uc, &ppt_mem_ops);
 
 	/* Modify WB attribute for E820_TYPE_RAM */
@@ -275,47 +269,26 @@ void init_paging(void)
 		}
 	}
 
-	mmu_modify_or_del((uint64_t *)mmu_pml4_addr, 0UL, (low32_max_ram + PDE_SIZE - 1UL) & PDE_MASK,
+	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, 0UL, (low32_max_ram + PDE_SIZE - 1UL) & PDE_MASK,
 			PAGE_CACHE_WB, PAGE_CACHE_MASK, &ppt_mem_ops, MR_MODIFY);
 
-	mmu_modify_or_del((uint64_t *)mmu_pml4_addr, (1UL << 32U), high64_max_ram - (1UL << 32U),
+	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (1UL << 32U), high64_max_ram - (1UL << 32U),
 			PAGE_CACHE_WB, PAGE_CACHE_MASK, &ppt_mem_ops, MR_MODIFY);
 
 	/* set the paging-structure entries' U/S flag
 	 * to supervisor-mode for hypervisor owned memroy.
 	 */
 	hv_hpa = get_hv_image_base();
-	mmu_modify_or_del((uint64_t *)mmu_pml4_addr, hv_hpa & PDE_MASK,
+	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, hv_hpa & PDE_MASK,
 		CONFIG_HV_RAM_SIZE + ((hv_hpa & (PDE_SIZE - 1UL)) != 0UL) ? PDE_SIZE : 0UL,
 			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER,
 			&ppt_mem_ops, MR_MODIFY);
 
 	/* Enable paging */
-	enable_paging(hva2hpa(mmu_pml4_addr));
+	enable_paging();
 
 	/* set ptep in sanitized_page point to itself */
 	sanitize_pte((uint64_t *)sanitized_page);
-}
-
-void *alloc_paging_struct(void)
-{
-	void *ptr = NULL;
-
-	/* Allocate a page from Hypervisor heap */
-	ptr = alloc_page();
-
-	ASSERT(ptr != NULL, "page alloc failed!");
-	(void)memset(ptr, 0U, CPU_PAGE_SIZE);
-
-	return ptr;
-}
-
-void free_paging_struct(void *ptr)
-{
-	if (ptr != NULL) {
-		(void)memset(ptr, 0U, CPU_PAGE_SIZE);
-		free(ptr);
-	}
 }
 
 bool check_continuous_hpa(struct vm *vm, uint64_t gpa_arg, uint64_t size_arg)

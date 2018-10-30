@@ -25,9 +25,6 @@
 #define PAGE_CACHE_UC_MINUS	PAGE_PCD
 #define PAGE_CACHE_UC		(PAGE_PCD | PAGE_PWT)
 
-#define PAGE_TABLE		(PAGE_PRESENT | PAGE_RW | PAGE_USER)
-
-
 #define EPT_RD			(1UL << 0U)
 #define EPT_WR			(1UL << 1U)
 #define EPT_EXE			(1UL << 2U)

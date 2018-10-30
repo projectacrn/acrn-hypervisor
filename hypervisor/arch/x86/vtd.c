@@ -134,10 +134,10 @@ struct iommu_domain {
 };
 
 struct context_table {
-	struct cpu_page buses[CONFIG_IOMMU_INIT_BUS_LIMIT];
+	struct page buses[CONFIG_IOMMU_INIT_BUS_LIMIT];
 };
 
-static struct cpu_page root_tables[CONFIG_MAX_IOMMU_NUM] __aligned(CPU_PAGE_SIZE);
+static struct page root_tables[CONFIG_MAX_IOMMU_NUM] __aligned(CPU_PAGE_SIZE);
 static struct context_table ctx_tables[CONFIG_MAX_IOMMU_NUM] __aligned(CPU_PAGE_SIZE);
 
 static inline uint8_t*
