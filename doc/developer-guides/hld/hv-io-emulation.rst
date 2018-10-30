@@ -37,7 +37,7 @@ inside the hypervisor:
 :option:`CONFIG_PARTITION_MODE` is the only configuration option that affects the
 functionality of I/O emulation. With :option:`CONFIG_PARTITION_MODE` enabled,
 the hypervisor never sends I/O request to any VM. Unhandled I/O reads
-get all 1’s and writes are silently dropped.
+get all 1's and writes are silently dropped.
 
 I/O emulation does not rely on any calibration data.
 
@@ -97,7 +97,7 @@ following cases exist:
    -  Otherwise it is implied that the access crosses the boundary of
       multiple devices which the hypervisor does not emulate. Thus
       no handler is called and no I/O request will be delivered to
-      SOS. I/O reads get all 1’s and I/O writes are dropped.
+      SOS. I/O reads get all 1's and I/O writes are dropped.
 
 -  If the range of the I/O access does not overlap with any range of the
    handlers, the I/O access is delivered to SOS as an I/O request
@@ -119,7 +119,7 @@ requests. The 4-KByte page consists of 16 256-Byte slots, indexed by
 vCPU ID. It is required for the DM to allocate and set up the request
 buffer on VM creation, otherwise I/O accesses from UOS cannot be
 emulated by SOS, and all I/O accesses not handled by the I/O handlers in
-the hypervisor will be dropped (reads get all 1’s).
+the hypervisor will be dropped (reads get all 1's).
 
 Refer to Section 4.4.1 for the details of I/O requests and the
 initialization of the I/O request buffer.
@@ -216,8 +216,8 @@ The states are transferred as follow:
 States are accessed using atomic operations to avoid getting unexpected
 states on one core when it is written on another.
 
-Note that there is no state to represent a ‘failed’ I/O request. SOS
-should return all 1’s for reads and ignore writes whenever it cannot
+Note that there is no state to represent a 'failed' I/O request. SOS
+should return all 1's for reads and ignore writes whenever it cannot
 handle the I/O request, and change the state of the request to COMPLETE.
 
 Post-work

@@ -50,7 +50,7 @@ The timer softirq handler will check each expired timer on its
 timer_list.  Before calling the expired timer callback handler, it will
 remove the timer from its logical cpu timer_list. After calling the
 timer callback handler, it will re-add the timer to the timer_list if
-it’s a periodic timer. If you want to modify a timer before it expires,
+it's a periodic timer. If you want to modify a timer before it expires,
 you should call del_timer to remove the timer from the timer_list, then
 call add_timer again after updating the timer fields.
 

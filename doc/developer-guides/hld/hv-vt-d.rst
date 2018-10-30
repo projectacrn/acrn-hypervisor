@@ -138,7 +138,7 @@ host physical address (HPA).
 Domains and Memory Isolation
 ============================
 
-There are no DMA operations inside the hypervisor, so ACRN doesn’t
+There are no DMA operations inside the hypervisor, so ACRN doesn't
 create a domain for the hypervisor. No DMA operations from pass-through
 devices can access the hypervisor memory.
 
@@ -152,9 +152,9 @@ VM0 domain
    Service OS.
 
    IOMMU uses the EPT table of Normal world of VM0 as the address
-   translation structures for the devices in VM0 domain. The Normal world’s
-   EPT table of VM0 doesn’t include the memory resource of the hypervisor
-   and Secure worlds if any. So the devices in VM0 domain can’t access the
+   translation structures for the devices in VM0 domain. The Normal world's
+   EPT table of VM0 doesn't include the memory resource of the hypervisor
+   and Secure worlds if any. So the devices in VM0 domain can't access the
    memory belong to hypervisor or secure worlds.
 
 Other domains
@@ -162,14 +162,14 @@ Other domains
    domain for each User OS.
 
    IOMMU uses the EPT table of Normal world of a VM as the address
-   translation structures for the devices in the domain. The Normal world’s
+   translation structures for the devices in the domain. The Normal world's
    EPT table of the VM only allows devices to access the memory
    allocated for Normal world of the VM.
 
 Page-walk coherency
 ===================
 
-For the VT-d hardware, which doesn’t support page-walk coherency,
+For the VT-d hardware, which doesn't support page-walk coherency,
 hypervisor needs to make sure the updates of VT-d tables are synced in
 memory:
 
@@ -179,7 +179,7 @@ memory:
 -  EPT table of a VM.
 
 ACRN will flush the related cache line after updates of these structures
-if the VT-d hardware doesn’t support page-walk coherency.
+if the VT-d hardware doesn't support page-walk coherency.
 
 Super-page support
 ==================
@@ -191,7 +191,7 @@ Snoop control
 =============
 
 If VT-d hardware supports snoop control, it allows VT-d to control to
-ignore the “no-snoop attribute” in PCI-E transactions.
+ignore the "no-snoop attribute" in PCI-E transactions.
 
 The following table shows the snoop behavior of DMA operation controlled by the
 combination of:
@@ -238,7 +238,7 @@ ACRN enable Snoop Control by default if all enabled VT-d DMAR units
 support Snoop Control by setting bit 11 of leaf PTE of EPT table. Bit 11
 of leaf PTE of EPT is ignored by MMU. So no side effect for MMU.
 
-If one of the enabled VT-d DMAR units doesn’t support Snoop Control,
+If one of the enabled VT-d DMAR units doesn't support Snoop Control,
 then Bit 11 of leaf PET of EPT is not set since the field is treated as
 reserved(0) by VT-d hardware implementations not supporting Snoop
 Control.
@@ -252,7 +252,7 @@ be multiple DMAR units on the platform, ACRN allows some of the DMAR
 units to be ignored. If some DMAR unit(s) are marked as ignored, they
 would not be enabled.
 
-Hypervisor creates VM0 domain using the Normal World’s EPT table of VM0
+Hypervisor creates VM0 domain using the Normal World's EPT table of VM0
 as address translation table when creating VM0 as Service OS. And all
 PCI devices on the platform are added to VM0 domain. Then enable DMAR
 translation for DMAR unit(s) if they are not marked as ignored.
@@ -312,7 +312,7 @@ information or DMAR table.
 
 -  void init_iommu_vm0_domain(struct vm \*vm0)
 
-   Create VM0 domain using the Normal World’s EPT table of VM0 as address
+   Create VM0 domain using the Normal World's EPT table of VM0 as address
    translation table. Add all PCI devices on the platform to VM0 domain. Then enable
    DMAR translation.
 

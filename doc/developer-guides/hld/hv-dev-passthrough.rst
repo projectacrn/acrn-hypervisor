@@ -23,7 +23,7 @@ The difference between device emulation and passthrough is shown in
 :numref:`emu-passthru-diff`. You can notice device emulation has
 a longer access path which causes worse performance compared with
 passthrough. Passthrough can deliver near-native performance, but
-can’t support device sharing.
+can't support device sharing.
 
 .. figure:: images/passthru-image30.png
    :align: center
@@ -66,7 +66,7 @@ DMA Remapping
 To enable passthrough, for VM DMA access the VM can only
 support GPA, while physical DMA requires HPA. One work-around
 is building identity mapping so that GPA is equal to HPA, but this
-is not recommended as some VM don’t support relocation well. To
+is not recommended as some VM don't support relocation well. To
 address this issue, Intel introduces VT-d in chipset to add one
 remapping engine to translate GPA to HPA for DMA operations.
 

@@ -1,4 +1,4 @@
-.. acrnshell:
+.. _acrnshell:
 
 ACRN Shell Commands
 ###################
