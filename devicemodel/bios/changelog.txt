@@ -1,3 +1,7 @@
+vSBL Version 1.0.1
+- Bug fix:
+	Fix AaaG user build boot failure when AaaG with memory size > 2GB and flash unlocked.
+
 vSBL Version 1.0
 - New feature:
 	Update vFastboot to v1.0
