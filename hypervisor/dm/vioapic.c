@@ -112,13 +112,18 @@ vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint16_t pin, uint32_t level)
 }
 
 /**
+ * @brief Set vIOAPIC IRQ line status.
+ *
+ * Similar with vioapic_set_irq(),but would not make sure
+ * operation be done with ioapic lock.
+ *
+ * @param[in] vm        Pointer to target VM
+ * @param[in] irq       Target IRQ number
+ * @param[in] operation Action options: GSI_SET_HIGH/GSI_SET_LOW/
+ *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
+ *
  * @pre irq < vioapic_pincount(vm)
- * @pre operation value shall be one of the folllowing values:
- *	GSI_SET_HIGH
- *	GSI_SET_LOW
- *	GSI_RAISING_PULSE
- *	GSI_FALLING_PULSE
- * @pre call with vioapic lock
+ * @return void
  */
 void
 vioapic_set_irq_nolock(struct vm *vm, uint32_t irq, uint32_t operation)
@@ -152,12 +157,16 @@ vioapic_set_irq_nolock(struct vm *vm, uint32_t irq, uint32_t operation)
 }
 
 /**
+ * @brief Set vIOAPIC IRQ line status.
+ *
+ * @param[in] vm        Pointer to target VM
+ * @param[in] irq       Target IRQ number
+ * @param[in] operation Action options: GSI_SET_HIGH/GSI_SET_LOW/
+ *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
+ *
  * @pre irq < vioapic_pincount(vm)
- * @pre operation value shall be one of the folllowing values:
- *	GSI_SET_HIGH
- *	GSI_SET_LOW
- *	GSI_RAISING_PULSE
- *	GSI_FALLING_PULSE
+ *
+ * @return void
  */
 void
 vioapic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation)

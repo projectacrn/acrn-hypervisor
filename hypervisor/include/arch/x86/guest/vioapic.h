@@ -31,6 +31,12 @@
 #ifndef VIOAPIC_H
 #define VIOAPIC_H
 
+/**
+ * @file vioapic.h
+ *
+ * @brief public APIs for virtual I/O APIC
+ */
+
 #include <apicreg.h>
 
 #define	VIOAPIC_BASE	0xFEC00000UL
@@ -53,7 +59,42 @@ void    vioapic_init(struct vm *vm);
 void	vioapic_cleanup(const struct acrn_vioapic *vioapic);
 void	vioapic_reset(struct acrn_vioapic *vioapic);
 
+
+/**
+ * @brief virtual I/O APIC
+ *
+ * @addtogroup acrn_vioapic ACRN vIOAPIC
+ * @{
+ */
+
+/**
+ * @brief Set vIOAPIC IRQ line status.
+ *
+ * @param[in] vm        Pointer to target VM
+ * @param[in] irq       Target IRQ number
+ * @param[in] operation Action options: GSI_SET_HIGH/GSI_SET_LOW/
+ *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
+ *
+ * @pre irq < vioapic_pincount(vm)
+ *
+ * @return void
+ */
 void	vioapic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation);
+
+/**
+ * @brief Set vIOAPIC IRQ line status.
+ *
+ * Similar with vioapic_set_irq(),but would not make sure
+ * operation be done with ioapic lock.
+ *
+ * @param[in] vm        Pointer to target VM
+ * @param[in] irq       Target IRQ number
+ * @param[in] operation Action options: GSI_SET_HIGH/GSI_SET_LOW/
+ *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
+ *
+ * @pre irq < vioapic_pincount(vm)
+ * @return void
+ */
 void	vioapic_set_irq_nolock(struct vm *vm, uint32_t irq, uint32_t operation);
 void	vioapic_update_tmr(struct vcpu *vcpu);
 
@@ -66,4 +107,8 @@ int		vioapic_mmio_access_handler(struct io_request *io_req, void *handler_privat
 void get_vioapic_info(char *str_arg, size_t str_max, uint16_t vmid);
 #endif /* HV_DEBUG */
 
+/**
+ * @}
+ */
+/* End of acrn_vioapic */
 #endif /* VIOAPIC_H */
