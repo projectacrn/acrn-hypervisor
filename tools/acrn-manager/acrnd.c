@@ -153,8 +153,7 @@ static int load_timer_list(void)
 	struct work_arg arg = {};
 	time_t expire, current;
 	char l[256];
-	char s1[16], s2[64];	/* vmname & expire */
-	int ret = 0;
+	int i, ret = 0;
 
 	pthread_mutex_lock(&timer_file_mutex);
 
@@ -173,20 +172,23 @@ static int load_timer_list(void)
 			continue;
 		}
 
-		memset(s1, 0, 16);
-		memset(s2, 0, 64);
+		/* get vmname from the string "l", which has "[vmname]\t[expire]" */
+		for (i = 0; i < sizeof(arg.name); i++) {
+			if (l[i] == '\t') {
+				arg.name[i] = '\0';
+				break;
+			}
+			arg.name[i] = l[i];
+		}
 
-		sscanf(l, "%s\t%s", s1, s2);
-
-		if (strlen(s1) == 0 || strlen(s1) > 16) {
-			fprintf(stderr, "Invalid vmname %s from timer list file\n", s1);
+		/* can't found vmname in the string "l" or vmname is truncated */
+		if (i == 0 || i == sizeof(arg.name)) {
+			fprintf(stderr, "Invalid vmname %s from timer list file\n", arg.name);
 			continue;
 		}
 
-		memset(arg.name, 0, sizeof(arg.name));
-		strncpy(arg.name, s1, sizeof(arg.name));
-
-		expire = strtoul(s2, NULL, 10);
+		/* get expire from the string "l" */
+		expire = strtoul(&l[i + 1], NULL, 10);
 		if (expire == 0 || errno == ERANGE) {
 			perror("Invalid expire from timer list file");
 			continue;
@@ -202,7 +204,7 @@ static int load_timer_list(void)
 		if (ret != 0) {
 			fprintf(stderr, "Failed to add vm timer, errno %d", ret);
 		} else {
-			printf("vm %s will be activated at %ld seconds later\n", s1, expire);
+			printf("vm %s will be activated at %ld seconds later\n", arg.name, expire);
 		}
 	}
 
