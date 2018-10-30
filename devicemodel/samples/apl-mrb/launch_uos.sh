@@ -101,12 +101,12 @@ echo "8086 5aca" > /sys/bus/pci/drivers/pci-stub/new_id
 echo "0000:00:1b.0" > /sys/bus/pci/devices/0000:00:1b.0/driver/unbind
 echo "0000:00:1b.0" > /sys/bus/pci/drivers/pci-stub/bind
 
-#for memsize setting
+#for memsize setting, total 8GB(>7.5GB) uos->6GB, 4GB(>3.5GB) uos->2GB
 memsize=`cat /proc/meminfo|head -n 1|awk '{print $2}'`
-if [ $memsize -gt 8000000 ];then
+if [ $memsize -gt 7500000 ];then
     mem_size=6G
-elif [ $memsize -gt 4000000 ];then
-    mem_size=2048M
+elif [ $memsize -gt 3500000 ];then
+    mem_size=2G
 else
     mem_size=1750M
 fi
@@ -271,12 +271,12 @@ else
     boot_cse_option="$boot_cse_option"" -s 15,virtio-heci,d1 "
 fi
 
-#for memsize setting
+#for memsize setting, total 8GB(>7.5GB) uos->6GB, 4GB(>3.5GB) uos->2GB
 memsize=`cat /proc/meminfo|head -n 1|awk '{print $2}'`
-if [ $memsize -gt 8000000 ];then
+if [ $memsize -gt 7500000 ];then
     mem_size=6G
-elif [ $memsize -gt 4000000 ];then
-    mem_size=2048M
+elif [ $memsize -gt 3500000 ];then
+    mem_size=2G
 else
     mem_size=1750M
 fi
