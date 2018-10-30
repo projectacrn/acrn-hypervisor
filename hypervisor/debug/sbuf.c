@@ -11,12 +11,12 @@
 
 #include <hypervisor.h>
 
-static inline bool sbuf_is_empty(struct shared_buf *sbuf)
+static inline bool sbuf_is_empty(const struct shared_buf *sbuf)
 {
 	return (sbuf->head == sbuf->tail);
 }
 
-static inline uint32_t sbuf_next_ptr(uint32_t pos_arg,
+uint32_t sbuf_next_ptr(uint32_t pos_arg,
 		uint32_t span, uint32_t scope)
 {
 	uint32_t pos = pos_arg;

@@ -83,21 +83,6 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 		ret = hcall_set_vcpu_regs(vm, (uint16_t)param1, param2);
 		break;
 
-	case HC_ASSERT_IRQLINE:
-		/* param1: vmid */
-		ret = hcall_assert_irqline(vm, (uint16_t)param1, param2);
-		break;
-
-	case HC_DEASSERT_IRQLINE:
-		/* param1: vmid */
-		ret = hcall_deassert_irqline(vm, (uint16_t)param1, param2);
-		break;
-
-	case HC_PULSE_IRQLINE:
-		/* param1: vmid */
-		ret = hcall_pulse_irqline(vm, (uint16_t)param1, param2);
-		break;
-
 	case HC_SET_IRQLINE:
 		/* param1: vmid */
 		ret = hcall_set_irqline(vm, (uint16_t)param1,
@@ -172,6 +157,10 @@ int vmcall_vmexit_handler(struct vcpu *vcpu)
 
 	case HC_SETUP_HV_NPK_LOG:
 		ret = hcall_setup_hv_npk_log(vm, param1);
+		break;
+
+	case HC_PROFILING_OPS:
+		ret = hcall_profiling_ops(vm, param1, param2);
 		break;
 #endif
 

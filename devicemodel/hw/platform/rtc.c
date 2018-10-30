@@ -144,7 +144,6 @@ static const int month_days[12] = {
 	31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
 
-static int local_time = 1;
 
 /*
  * This inline avoids some unnecessary modulo operations
@@ -717,13 +716,10 @@ vrtc_set_reg_c(struct vrtc *vrtc, uint8_t newval)
 	}
 
 	if (!oldirqf && newirqf) {
-
-		vm_isa_assert_irq(vrtc->vm, RTC_IRQ, RTC_IRQ);
-		/*vm_ioapic_assert_irq(vrtc->vm, RTC_IRQ);*/
+		vm_set_gsi_irq(vrtc->vm, RTC_IRQ, GSI_SET_HIGH);
 		RTC_DEBUG("RTC irq %d asserted\n", RTC_IRQ);
 	} else if (oldirqf && !newirqf) {
-		vm_isa_deassert_irq(vrtc->vm, RTC_IRQ, RTC_IRQ);
-		/*vm_ioapic_deassert_irq(vrtc->vm, RTC_IRQ);*/
+		vm_set_gsi_irq(vrtc->vm, RTC_IRQ, GSI_SET_LOW);
 		RTC_DEBUG("RTC irq %d deasserted\n", RTC_IRQ);
 	}
 }
@@ -1062,12 +1058,6 @@ vrtc_reset(struct vrtc *vrtc)
 	vrtc_set_reg_c(vrtc, 0);
 
 	pthread_mutex_unlock(&vrtc->mtx);
-}
-
-void
-vrtc_enable_localtime(int l_time)
-{
-	local_time = l_time;
 }
 
 int

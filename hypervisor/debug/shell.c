@@ -329,7 +329,7 @@ static bool shell_input_line(void)
 	return done;
 }
 
-static int shell_process_cmd(char *p_input_line)
+static int shell_process_cmd(const char *p_input_line)
 {
 	int status = -EINVAL;
 	struct shell_cmd *p_cmd;
@@ -640,10 +640,7 @@ static int shell_vcpu_dumpreg(int argc, char **argv)
 	}
 	vm_id = (uint16_t)status;
 	vcpu_id = (uint16_t)atoi(argv[2]);
-	if (vcpu_id >= phys_cpu_num) {
-		status = -EINVAL;
-		goto out;
-	}
+
 	vm = get_vm_from_vmid(vm_id);
 	if (vm == NULL) {
 		shell_puts("No vm found in the input <vm_id, vcpu_id>\r\n");
@@ -651,8 +648,8 @@ static int shell_vcpu_dumpreg(int argc, char **argv)
 		goto out;
 	}
 
-	if (vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
-		shell_puts("No vcpu found in the input <vm_id, vcpu_id>\r\n");
+	if (vcpu_id >= vm->hw.created_vcpus) {
+		shell_puts("vcpu id is out of range\r\n");
 		status = -EINVAL;
 		goto out;
 	}
@@ -726,8 +723,9 @@ static int shell_to_sos_console(__unused int argc, __unused char **argv)
 
 	struct vm *vm;
 	struct acrn_vuart *vu;
-
 #ifdef CONFIG_PARTITION_MODE
+	struct vm_description *vm_desc;
+
 	if (argc == 2U) {
 		guest_no = atoi(argv[1]);
 	}
@@ -739,6 +737,16 @@ static int shell_to_sos_console(__unused int argc, __unused char **argv)
 	if (vm == NULL) {
 		return -EINVAL;
 	}
+
+#ifdef CONFIG_PARTITION_MODE
+	vm_desc = vm->vm_desc;
+	if (vm_desc != NULL && vm_desc->vm_vuart == false) {
+		snprintf(temp_str, TEMP_STR_SIZE, "No vUART configured for vm%d\n", guest_no);
+		shell_puts(temp_str);
+		return 0;
+	}
+#endif
+
 	vu = vm_vuart(vm);
 	/* UART is now owned by the SOS.
 	 * Indicate by toggling the flag.

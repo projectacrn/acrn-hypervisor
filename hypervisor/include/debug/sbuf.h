@@ -39,6 +39,8 @@
 enum {
 	ACRN_TRACE,
 	ACRN_HVLOG,
+	ACRN_SEP,
+	ACRN_SOCWATCH,
 	ACRN_SBUF_ID_MAX,
 };
 
@@ -85,6 +87,7 @@ uint32_t sbuf_get(struct shared_buf *sbuf, uint8_t *data);
  */
 uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data);
 int sbuf_share_setup(uint16_t pcpu_id, uint32_t sbuf_id, uint64_t *hva);
+uint32_t sbuf_next_ptr(uint32_t pos, uint32_t span, uint32_t scope);
 
 #else /* HV_DEBUG */
 

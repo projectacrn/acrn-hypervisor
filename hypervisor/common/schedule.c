@@ -96,7 +96,7 @@ static struct vcpu *select_next_vcpu(uint16_t pcpu_id)
 	return vcpu;
 }
 
-void make_reschedule_request(struct vcpu *vcpu)
+void make_reschedule_request(const struct vcpu *vcpu)
 {
 	struct sched_context *ctx = &per_cpu(sched_ctx, vcpu->pcpu_id);
 

@@ -120,7 +120,6 @@ vm_create(const char *name, uint64_t req_buf)
 	uuid_copy(create_vm.GUID, vm_uuid);
 
 	ctx->fd = devfd;
-	ctx->memflags = 0;
 	ctx->lowmem_limit = 2 * GB;
 	ctx->name = (char *)(ctx + 1);
 	strcpy(ctx->name, name);
@@ -260,18 +259,6 @@ void
 vm_set_lowmem_limit(struct vmctx *ctx, uint32_t limit)
 {
 	ctx->lowmem_limit = limit;
-}
-
-void
-vm_set_memflags(struct vmctx *ctx, int flags)
-{
-	ctx->memflags = flags;
-}
-
-int
-vm_get_memflags(struct vmctx *ctx)
-{
-	return ctx->memflags;
 }
 
 int
@@ -429,58 +416,15 @@ vm_lapic_msi(struct vmctx *ctx, uint64_t addr, uint64_t msg)
 }
 
 int
-vm_ioapic_assert_irq(struct vmctx *ctx, int irq)
+vm_set_gsi_irq(struct vmctx *ctx, int gsi, uint32_t operation)
 {
-	struct acrn_irqline ioapic_irq;
+	struct acrn_irqline_ops op;
+	uint64_t *req =  (uint64_t *)&op;
 
-	bzero(&ioapic_irq, sizeof(ioapic_irq));
-	ioapic_irq.intr_type = ACRN_INTR_TYPE_IOAPIC;
-	ioapic_irq.ioapic_irq = irq;
+	op.op = operation;
+	op.nr_gsi = (uint32_t)gsi;
 
-	return ioctl(ctx->fd, IC_ASSERT_IRQLINE, &ioapic_irq);
-}
-
-int
-vm_ioapic_deassert_irq(struct vmctx *ctx, int irq)
-{
-	struct acrn_irqline ioapic_irq;
-
-	bzero(&ioapic_irq, sizeof(ioapic_irq));
-	ioapic_irq.intr_type = ACRN_INTR_TYPE_IOAPIC;
-	ioapic_irq.ioapic_irq = irq;
-
-	return ioctl(ctx->fd, IC_DEASSERT_IRQLINE, &ioapic_irq);
-}
-
-static int
-vm_isa_irq(struct vmctx *ctx, int irq, int ioapic_irq, unsigned long call_id)
-{
-	struct acrn_irqline isa_irq;
-
-	bzero(&isa_irq, sizeof(isa_irq));
-	isa_irq.intr_type = ACRN_INTR_TYPE_ISA;
-	isa_irq.pic_irq = irq;
-	isa_irq.ioapic_irq = ioapic_irq;
-
-	return ioctl(ctx->fd, call_id, &isa_irq);
-}
-
-int
-vm_isa_assert_irq(struct vmctx *ctx, int atpic_irq, int ioapic_irq)
-{
-	return vm_isa_irq(ctx, atpic_irq, ioapic_irq, IC_ASSERT_IRQLINE);
-}
-
-int
-vm_isa_deassert_irq(struct vmctx *ctx, int atpic_irq, int ioapic_irq)
-{
-	return vm_isa_irq(ctx, atpic_irq, ioapic_irq, IC_DEASSERT_IRQLINE);
-}
-
-int
-vm_isa_pulse_irq(struct vmctx *ctx, int atpic_irq, int ioapic_irq)
-{
-	return vm_isa_irq(ctx, atpic_irq, ioapic_irq, IC_PULSE_IRQLINE);
+	return ioctl(ctx->fd, IC_SET_IRQLINE, *req);
 }
 
 int

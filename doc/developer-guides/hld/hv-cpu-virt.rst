@@ -514,6 +514,8 @@ that will trigger an error message and return without handling:
 
 Details of each vm exit reason handler are described in other sections.
 
+.. _pending-request-handlers:
+
 Pending Request Handlers
 ========================
 
@@ -1148,6 +1150,8 @@ setting.
 
 The ``mov to cr4`` emulation is similar to cr0 emulation noted above.
 
+.. _io-mmio-emulation:
+
 IO/MMIO Emulation
 *****************
 
@@ -1207,6 +1211,7 @@ APIs to register its IO/MMIO range:
      - unregister a MMIO emulation handler for a hypervisor emulated device
        by specific MMIO range
 
+.. _instruction-emulation:
 
 Instruction Emulation
 *********************

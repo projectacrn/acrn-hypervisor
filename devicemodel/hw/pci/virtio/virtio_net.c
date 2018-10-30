@@ -46,6 +46,7 @@
 #include "mevent.h"
 #include "virtio.h"
 #include "vhost.h"
+#include "dm_string.h"
 
 #define VIRTIO_NET_RINGSZ	1024
 #define VIRTIO_NET_MAXSEGS	256
@@ -200,18 +201,31 @@ static struct virtio_ops virtio_net_ops = {
 static struct ether_addr *
 ether_aton(const char *a, struct ether_addr *e)
 {
-	int i;
 	unsigned int o0, o1, o2, o3, o4, o5;
+	char *cp;
 
-	i = sscanf(a, "%x:%x:%x:%x:%x:%x", &o0, &o1, &o2, &o3, &o4, &o5);
-	if (i != 6)
+	if(!dm_strtoui(a, &cp, 16, &o0) &&
+	   *cp == ':' &&
+	   !dm_strtoui(cp + 1, &cp, 16, &o1) &&
+	   *cp == ':' &&
+	   !dm_strtoui(cp + 1, &cp, 16, &o2) &&
+	   *cp == ':' &&
+	   !dm_strtoui(cp + 1, &cp, 16, &o3) &&
+	   *cp == ':' &&
+	   !dm_strtoui(cp + 1, &cp, 16, &o4) &&
+	   *cp == ':' &&
+	   !dm_strtoui(cp + 1, &cp, 16, &o5)) {
+		e->ether_addr_octet[0] = o0;
+		e->ether_addr_octet[1] = o1;
+		e->ether_addr_octet[2] = o2;
+		e->ether_addr_octet[3] = o3;
+		e->ether_addr_octet[4] = o4;
+		e->ether_addr_octet[5] = o5;
+	}
+	else {
 		return NULL;
-	e->ether_addr_octet[0] = o0;
-	e->ether_addr_octet[1] = o1;
-	e->ether_addr_octet[2] = o2;
-	e->ether_addr_octet[3] = o3;
-	e->ether_addr_octet[4] = o4;
-	e->ether_addr_octet[5] = o5;
+	}
+
 	return e;
 }
 
@@ -646,16 +660,12 @@ static void
 virtio_net_tap_setup(struct virtio_net *net, char *devname)
 {
 	char tbuf[80 + 5];	/* room for "acrn_" prefix */
-	char *tbuf_ptr;
 	int vhost_fd = -1;
+	int rc;
 
-	tbuf_ptr = tbuf;
-
-	strcpy(tbuf, "acrn_");
-
-	tbuf_ptr += 5;
-
-	strncat(tbuf_ptr, devname, sizeof(tbuf) - 6);
+	rc = snprintf(tbuf, strnlen(devname, 79) + 6, "acrn_%s", devname);
+	if (rc < 0 || rc >= 85)	/* give warning if error or truncation happens */
+		WPRINTF(("Fail to set tap device name %s\n", tbuf));
 
 	net->virtio_net_rx = virtio_net_tap_rx;
 	net->virtio_net_tx = virtio_net_tap_tx;

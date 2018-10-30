@@ -1,6 +1,6 @@
 .. _hld-emulated-devices:
 
-Emulated Devices high-level design
+Emulated devices high-level design
 ##################################
 
 .. toctree::

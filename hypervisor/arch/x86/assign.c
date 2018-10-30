@@ -17,7 +17,7 @@
  */
 static inline struct ptdev_remapping_info *
 ptdev_lookup_entry_by_sid(uint32_t intr_type,
-		union source_id *sid,const struct vm *vm)
+		const union source_id *sid,const struct vm *vm)
 {
 	struct ptdev_remapping_info *entry;
 	struct list_head *pos;
@@ -38,12 +38,12 @@ ptdev_lookup_entry_by_sid(uint32_t intr_type,
 }
 
 static inline bool
-is_entry_active(struct ptdev_remapping_info *entry)
+is_entry_active(const struct ptdev_remapping_info *entry)
 {
 	return atomic_load32(&entry->active) == ACTIVE_FLAG;
 }
 
-static bool ptdev_hv_owned_intx(const struct vm *vm, union source_id *virt_sid)
+static bool ptdev_hv_owned_intx(const struct vm *vm, const union source_id *virt_sid)
 {
 	/* vm0 vuart pin is owned by hypervisor under debug version */
 	if (is_vm0(vm) && (virt_sid->intx_id.pin == COM1_IRQ)) {
@@ -53,15 +53,30 @@ static bool ptdev_hv_owned_intx(const struct vm *vm, union source_id *virt_sid)
 	}
 }
 
+static uint64_t calculate_logical_dest_mask(uint64_t pdmask)
+{
+	uint64_t dest_mask = 0UL;
+	uint64_t pcpu_mask = pdmask;
+	uint16_t pcpu_id;
+
+	pcpu_id = ffs64(pcpu_mask);
+	while (pcpu_id != INVALID_BIT_INDEX) {
+		bitmap_clear_nolock(pcpu_id, &pcpu_mask);
+		dest_mask |= per_cpu(lapic_ldr, pcpu_id);
+		pcpu_id = ffs64(pcpu_mask);
+	}
+	return dest_mask;
+}
+
 static void ptdev_build_physical_msi(struct vm *vm, struct ptdev_msi_info *info,
 		uint32_t vector)
 {
-	uint64_t vdmask, pdmask;
+	uint64_t vdmask, pdmask, dest_mask;
 	uint32_t dest, delmode;
 	bool phys;
 
 	/* get physical destination cpu mask */
-	dest = (info->vmsi_addr >> 12) & 0xffU;
+	dest = (uint32_t)(info->vmsi_addr >> 12) & 0xffU;
 	phys = ((info->vmsi_addr & MSI_ADDR_LOG) != MSI_ADDR_LOG);
 
 	calcvdest(vm, &vdmask, dest, phys);
@@ -78,13 +93,13 @@ static void ptdev_build_physical_msi(struct vm *vm, struct ptdev_msi_info *info,
 	info->pmsi_data &= ~0x7FFU;
 	info->pmsi_data |= delmode | vector;
 
+	dest_mask = calculate_logical_dest_mask(pdmask);
 	/* update physical dest mode & dest field */
 	info->pmsi_addr = info->vmsi_addr;
 	info->pmsi_addr &= ~0xFF00CU;
-	info->pmsi_addr |= (uint32_t)(pdmask << 12U) |
-				MSI_ADDR_RH | MSI_ADDR_LOG;
+	info->pmsi_addr |= (dest_mask << 12U) |	MSI_ADDR_RH | MSI_ADDR_LOG;
 
-	dev_dbg(ACRN_DBG_IRQ, "MSI addr:data = 0x%x:%x(V) -> 0x%x:%x(P)",
+	dev_dbg(ACRN_DBG_IRQ, "MSI addr:data = 0x%llx:%x(V) -> 0x%llx:%x(P)",
 		info->vmsi_addr, info->vmsi_data,
 		info->pmsi_addr, info->pmsi_data);
 }
@@ -99,7 +114,7 @@ ptdev_build_physical_rte(struct vm *vm,
 	union source_id *virt_sid = &entry->virt_sid;
 
 	if (virt_sid->intx_id.src == PTDEV_VPIN_IOAPIC) {
-		uint64_t vdmask, pdmask, delmode;
+		uint64_t vdmask, pdmask, delmode, dest_mask;
 		uint32_t dest;
 		union ioapic_rte virt_rte;
 		bool phys;
@@ -142,9 +157,10 @@ ptdev_build_physical_rte(struct vm *vm,
 			IOAPIC_RTE_DELMOD | IOAPIC_RTE_INTVEC);
 		rte.full |= IOAPIC_RTE_DESTLOG | delmode | (uint64_t)vector;
 
+		dest_mask = calculate_logical_dest_mask(pdmask);
 		/* update physical dest field */
 		rte.full &= ~IOAPIC_RTE_DEST_MASK;
-		rte.full |= pdmask << IOAPIC_RTE_DEST_SHIFT;
+		rte.full |= dest_mask << IOAPIC_RTE_DEST_SHIFT;
 
 		dev_dbg(ACRN_DBG_IRQ, "IOAPIC RTE = 0x%x:%x(V) -> 0x%x:%x(P)",
 			virt_rte.u.hi_32, virt_rte.u.lo_32,
@@ -360,9 +376,9 @@ END:
 }
 
 static void ptdev_intr_handle_irq(struct vm *vm,
-		struct ptdev_remapping_info *entry)
+		const struct ptdev_remapping_info *entry)
 {
-	union source_id *virt_sid = &entry->virt_sid;
+	const union source_id *virt_sid = &entry->virt_sid;
 	switch (virt_sid->intx_id.src) {
 	case PTDEV_VPIN_IOAPIC:
 	{
@@ -459,7 +475,7 @@ void ptdev_softirq(uint16_t pcpu_id)
 				msi->vmsi_data & 0xFFU,
 				irq_to_vector(entry->allocated_pirq));
 			dev_dbg(ACRN_DBG_PTIRQ,
-				" vmsi_addr: 0x%x vmsi_data: 0x%x",
+				" vmsi_addr: 0x%llx vmsi_data: 0x%x",
 			        msi->vmsi_addr,
 			        msi->vmsi_data);
 		}
@@ -773,7 +789,7 @@ void ptdev_remove_msix_remapping(const struct vm *vm, uint16_t virt_bdf,
 
 #ifdef HV_DEBUG
 #define PTDEV_INVALID_PIN 0xffU
-static void get_entry_info(struct ptdev_remapping_info *entry, char *type,
+static void get_entry_info(const struct ptdev_remapping_info *entry, char *type,
 		uint32_t *irq, uint32_t *vector, uint64_t *dest, bool *lvl_tm,
 		uint8_t *pin, uint8_t *vpin, uint32_t *bdf, uint32_t *vbdf)
 {

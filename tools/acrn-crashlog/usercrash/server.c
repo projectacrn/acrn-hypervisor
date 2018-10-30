@@ -43,6 +43,7 @@
 #include "protocol.h"
 #include "log_sys.h"
 #include "version.h"
+#include "strutils.h"
 
 #define FILE_PATH_LEN_MAX 256
 
@@ -377,9 +378,10 @@ static void print_usage(void)
 
 int main(int argc, char *argv[])
 {
-	char socket_path[128];
+	char socket_path[SOCKET_PATH_MAX];
 	DIR *dir;
 	int fd;
+	int len;
 	evutil_socket_t crash_socket;
 	int opt;
 	struct sigaction action;
@@ -434,22 +436,26 @@ int main(int argc, char *argv[])
 	debuggerd_register_handlers(&action);
 
 	find_oldest_usercrash();
-
+	len = snprintf(socket_path, sizeof(socket_path), "%s/%s",
+			RESERVED_SOCKET_PREFIX, SOCKET_NAME);
+	if (s_not_expect(len , sizeof(socket_path))) {
+		LOGE("construct socket path error\n");
+		exit(EXIT_FAILURE);
+	}
 	/**
 	 * evutil_socket_t on other platform except WIN32 platform is int
 	 * type, but on WIN32 platform evutil_socket_t is intptr_t type.
 	 * So, considering compatibility, here need to transfer socket fd to
 	 * evutil_socket_t type.
 	 */
-	crash_socket = (evutil_socket_t)linux_get_control_socket(SOCKET_NAME);
+	crash_socket = (evutil_socket_t)create_socket_server(socket_path,
+			SOCK_SEQPACKET);
 
 	if (crash_socket == -1) {
 		LOGE("failed to get socket from init, error (%s)\n",
 					strerror(errno));
 		exit(EXIT_FAILURE);
 	}
-	snprintf(socket_path, sizeof(socket_path), "%s/%s",
-			RESERVED_SOCKET_PREFIX, SOCKET_NAME);
 	if (chmod(socket_path, 0622) == -1) {
 		LOGE("failed to change usercrashd_crash priority\n");
 		goto fail;

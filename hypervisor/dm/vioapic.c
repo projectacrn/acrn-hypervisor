@@ -208,7 +208,7 @@ vioapic_update_tmr(struct vcpu *vcpu)
 }
 
 static uint32_t
-vioapic_indirect_read(struct acrn_vioapic *vioapic, uint32_t addr)
+vioapic_indirect_read(const struct acrn_vioapic *vioapic, uint32_t addr)
 {
 	uint32_t regnum;
 	uint32_t pin, pincount = vioapic_pincount(vioapic->vm);
@@ -248,7 +248,7 @@ vioapic_indirect_read(struct acrn_vioapic *vioapic, uint32_t addr)
 	return 0;
 }
 
-static inline bool vioapic_need_intr(struct acrn_vioapic *vioapic, uint16_t pin)
+static inline bool vioapic_need_intr(const struct acrn_vioapic *vioapic, uint16_t pin)
 {
 	uint32_t lvl;
 	union ioapic_rte rte;
@@ -511,11 +511,11 @@ vioapic_init(struct vm *vm)
 			vioapic_mmio_access_handler,
 			(uint64_t)VIOAPIC_BASE,
 			(uint64_t)VIOAPIC_BASE + VIOAPIC_SIZE,
-			NULL);
+			vm);
 }
 
 void
-vioapic_cleanup(struct acrn_vioapic *vioapic)
+vioapic_cleanup(const struct acrn_vioapic *vioapic)
 {
 	unregister_mmio_emulation_handler(vioapic->vm,
 		(uint64_t)VIOAPIC_BASE,
@@ -532,9 +532,9 @@ vioapic_pincount(const struct vm *vm)
 	}
 }
 
-int vioapic_mmio_access_handler(struct vcpu *vcpu, struct io_request *io_req)
+int vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
 {
-	struct vm *vm = vcpu->vm;
+	struct vm *vm = (struct vm *)handler_private_data;
 	struct acrn_vioapic *vioapic;
 	struct mmio_request *mmio = &io_req->reqs.mmio;
 	uint64_t gpa = mmio->address;

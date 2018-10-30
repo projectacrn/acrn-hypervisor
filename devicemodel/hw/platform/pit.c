@@ -245,7 +245,7 @@ vpit_timer_handler(union sigval s)
 	c = &vpit->channel[arg->channel_num];
 
 	/* generate a rising edge on OUT */
-	vm_isa_pulse_irq(vpit->vm, PIT_ATPIC_IRQ, PIT_IOAPIC_IRQ);
+	vm_set_gsi_irq(vpit->vm, PIT_IOAPIC_IRQ, GSI_RAISING_PULSE);
 
 	/* CR -> CE if necessary */
 	pit_load_ce(c);

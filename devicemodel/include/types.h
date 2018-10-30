@@ -18,6 +18,11 @@ typedef uint64_t cap_ioctl_t;
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
+#define container_of(ptr, type, member) ({                   \
+	const typeof(((type *)0)->member) * __mptr = (ptr);  \
+	(type *)((char *)__mptr - (offsetof(type, member))); \
+})
+
 #define __aligned(x)		__attribute__((aligned(x)))
 #define __section(x)		__attribute__((__section__(x)))
 #define __MAKE_SET(set, sym)                        \

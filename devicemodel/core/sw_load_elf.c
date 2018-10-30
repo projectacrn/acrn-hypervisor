@@ -194,7 +194,7 @@ acrn_load_elf(struct vmctx *ctx, char *elf_file_name, unsigned long *entry,
 	 * info prepared.
 	 */
 	ptr32 = (unsigned int *) elf_buf;
-	for (i = 0; i < ELF_BUF_LEN/4; i++) {
+	for (i = 0; i <= ((ELF_BUF_LEN/4) - 3); i++) {
 		if (ptr32[i] == MULTIBOOT_HEAD_MAGIC) {
 			int j = 0;
 			unsigned int sum = 0;
@@ -294,7 +294,7 @@ acrn_sw_load_elf(struct vmctx *ctx)
 	ctx->bsp_regs.vcpu_regs.gprs.rax = MULTIBOOT_MACHINE_STATE_MAGIC;
 
 	if (multiboot_image == 1) {
-		mi = (struct multiboot_info *)ctx->baseaddr + MULTIBOOT_OFFSET;
+		mi = (struct multiboot_info *)(ctx->baseaddr + MULTIBOOT_OFFSET);
 		memset(mi, 0, sizeof(*mi));
 
 		if (multiboot_flags == (1 << 1)) {

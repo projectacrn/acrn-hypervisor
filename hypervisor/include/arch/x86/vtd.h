@@ -468,11 +468,11 @@ extern struct dmar_info *get_dmar_info(void);
 struct iommu_domain;
 
 /* Assign a device specified by bus & devfun to a iommu domain */
-int assign_iommu_device(struct iommu_domain *domain,
+int assign_iommu_device(const struct iommu_domain *domain,
 	uint8_t bus, uint8_t devfun);
 
 /* Unassign a device specified by bus & devfun to a iommu domain */
-int unassign_iommu_device(struct iommu_domain *domain,
+int unassign_iommu_device(const struct iommu_domain *domain,
 	uint8_t bus, uint8_t devfun);
 
 /* Create a iommu domain for a VM specified by vm_id */
@@ -480,7 +480,7 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id,
 	uint64_t translation_table, uint32_t addr_width);
 
 /* Destroy the iommu domain */
-void destroy_iommu_domain(struct iommu_domain *domain);
+void destroy_iommu_domain(const struct iommu_domain *domain);
 
 /* Enable translation of iommu*/
 void enable_iommu(void);

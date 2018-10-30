@@ -30,35 +30,12 @@
 #ifndef PCI_PRIV_H_
 #define PCI_PRIV_H_
 
-#include <hv_debug.h>
-#include "vpci.h"
+#include <pci.h>
 
-#define PCIM_BAR_MEM_BASE  0xFFFFFFF0U
-
-#define PCI_BUSMAX    0xFFU
-#define PCI_SLOTMAX   0x1FU
-#define PCI_FUNCMAX   0x7U
-
-#define PCIR_VENDOR      0x00U
-#define PCIR_DEVICE      0x02U
-#define PCIR_COMMAND     0x04U
-#define PCIR_REVID       0x08U
-#define PCIR_SUBCLASS    0x0AU
-#define PCIR_CLASS       0x0BU
-#define PCIR_HDRTYPE     0x0EU
-#define PCIM_HDRTYPE_NORMAL   0x00U
-#define PCIM_MFDEV            0x80U
-
-#define PCIC_BRIDGE       0x06U
-#define PCIS_BRIDGE_HOST  0x00U
-
-#define PCI_CONFIG_ADDR   0xCF8U
-#define PCI_CONFIG_DATA   0xCFCU
-
-#define PCI_CFG_ENABLE    0x80000000U
-
-void pci_vdev_cfg_handler(struct vpci *vpci, uint32_t in,
-	union pci_bdf vbdf, uint32_t offset, uint32_t bytes, uint32_t *val);
+static inline bool in_range(uint32_t value, uint32_t lower, uint32_t len)
+{
+	return ((value >= lower) && (value < (lower + len)));
+}
 
 static inline uint8_t
 pci_vdev_read_cfg_u8(struct pci_vdev *vdev, uint32_t offset)
@@ -96,55 +73,17 @@ pci_vdev_write_cfg_u32(struct pci_vdev *vdev, uint32_t offset, uint32_t val)
 	*(uint32_t *)(vdev->cfgdata + offset) = val;
 }
 
-static inline uint32_t pci_vdev_read_cfg(struct pci_vdev *vdev,
-	uint32_t offset, uint32_t bytes)
-{
-	uint32_t val;
+extern struct vpci_ops partition_mode_vpci_ops;
+extern struct vpci_ops sharing_mode_vpci_ops;
+extern struct pci_vdev_ops pci_ops_vdev_msi;
+extern struct pci_vdev_ops pci_ops_vdev_msix;
 
-	switch (bytes) {
-	case 1U:
-		val = pci_vdev_read_cfg_u8(vdev, offset);
-		break;
-	case 2U:
-		val = pci_vdev_read_cfg_u16(vdev, offset);
-		break;
-	default:
-		val = pci_vdev_read_cfg_u32(vdev, offset);
-		break;
-	}
+uint32_t pci_vdev_read_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes);
+void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 
-	return val;
-}
+void populate_msi_struct(struct pci_vdev *vdev);
 
-static inline void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset,
-	uint32_t bytes, uint32_t val)
-{
-	switch (bytes) {
-	case 1U:
-		pci_vdev_write_cfg_u8(vdev, offset, val);
-		break;
-	case 2U:
-		pci_vdev_write_cfg_u16(vdev, offset, val);
-		break;
-	default:
-		pci_vdev_write_cfg_u32(vdev, offset, val);
-		break;
-	}
-}
-
-static inline uint32_t pci_bar_offset(uint32_t idx)
-{
-	return 0x10U + (idx << 2U);
-}
-
-static inline int pci_bar_access(uint32_t offset)
-{
-	if ((offset >= pci_bar_offset(0U))
-		&& (offset < pci_bar_offset(PCI_BAR_COUNT))) {
-		return 1;
-	} else {
-		return 0;
-	}
-}
+struct pci_vdev *sharing_mode_find_vdev(union pci_bdf vbdf);
+void add_vdev_handler(struct pci_vdev *vdev, struct pci_vdev_ops *ops);
 
 #endif /* PCI_PRIV_H_ */

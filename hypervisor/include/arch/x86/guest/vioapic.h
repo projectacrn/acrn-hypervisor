@@ -50,7 +50,7 @@ struct acrn_vioapic {
 };
 
 void    vioapic_init(struct vm *vm);
-void	vioapic_cleanup(struct acrn_vioapic *vioapic);
+void	vioapic_cleanup(const struct acrn_vioapic *vioapic);
 void	vioapic_reset(struct acrn_vioapic *vioapic);
 
 void	vioapic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation);
@@ -60,8 +60,7 @@ void	vioapic_update_tmr(struct vcpu *vcpu);
 uint32_t	vioapic_pincount(const struct vm *vm);
 void	vioapic_process_eoi(struct vm *vm, uint32_t vector);
 void	vioapic_get_rte(struct vm *vm, uint32_t pin, union ioapic_rte *rte);
-int	vioapic_mmio_access_handler(struct vcpu *vcpu,
-	struct io_request *io_req);
+int		vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private_data);
 
 #ifdef HV_DEBUG
 void get_vioapic_info(char *str_arg, size_t str_max, uint16_t vmid);

@@ -96,24 +96,25 @@ as below:
 
 .. code-block:: c
 
-	struct intel_gvt_mpt acrn_gvt_mpt = {
-		.host_init = acrngt_host_init,
-		.host_exit = acrngt_host_exit,
-		.attach_vgpu = acrngt_attach_vgpu,
-		.detach_vgpu = acrngt_detach_vgpu,
-		.inject_msi = acrngt_inject_msi,
-		.from_virt_to_mfn = acrngt_virt_to_mfn,
-		.set_wp_page = acrngt_set_wp_page,
-		.unset_wp_page = acrngt_unset_wp_page,
-		.read_gpa = acrngt_read_gpa,
-		.write_gpa = acrngt_write_gpa,
-		.gfn_to_mfn = acrngt_gfn_to_pfn,
-		.map_gfn_to_mfn = acrngt_map_gfn_to_mfn,
-		.set_trap_area = acrngt_set_trap_area,
-		.set_pvmmio = acrngt_set_pvmmio,
-		.pause_domain = acrn_pause_domain,
-		.unpause_domain= acrn_unpause_domain,
-		.dom0_ready = acrngt_dom0_ready,
+        struct intel_gvt_mpt acrn_gvt_mpt = {
+                .host_init = acrngt_host_init,
+                .host_exit = acrngt_host_exit,
+                .attach_vgpu = acrngt_attach_vgpu,
+                .detach_vgpu = acrngt_detach_vgpu,
+                .inject_msi = acrngt_inject_msi,
+                .from_virt_to_mfn = acrngt_virt_to_mfn,
+                .enable_page_track = acrngt_page_track_add,
+                .disable_page_track = acrngt_page_track_remove,
+                .read_gpa = acrngt_read_gpa,
+                .write_gpa = acrngt_write_gpa,
+                .gfn_to_mfn = acrngt_gfn_to_pfn,
+                .map_gfn_to_mfn = acrngt_map_gfn_to_mfn,
+                .dma_map_guest_page = acrngt_dma_map_guest_page,
+                .dma_unmap_guest_page = acrngt_dma_unmap_guest_page,
+                .set_trap_area = acrngt_set_trap_area,
+                .set_pvmmio = acrngt_set_pvmmio,
+                .dom0_ready = acrngt_dom0_ready,
+
 	};
 	EXPORT_SYMBOL_GPL(acrn_gvt_mpt);
 
@@ -130,16 +131,16 @@ This section describes the wrap functions:
                intel_gvt_hypervisor_detach_vgpu
                intel_gvt_hypervisor_inject_msi
                intel_gvt_hypervisor_virt_to_mfn
-               intel_gvt_hypervisor_set_wp_page
-               intel_gvt_hypervisor_unset_wp_page
+               intel_gvt_hypervisor_enable_page_track
+               intel_gvt_hypervisor_disable_page_track
                intel_gvt_hypervisor_read_gpa
                intel_gvt_hypervisor_write_gpa
                intel_gvt_hypervisor_gfn_to_mfn
                intel_gvt_hypervisor_map_gfn_to_mfn
+               intel_gvt_hypervisor_dma_map_guest_page
+               intel_gvt_hypervisor_dma_unmap_guest_page
                intel_gvt_hypervisor_set_trap_area
                intel_gvt_hypervisor_set_pvmmio
-               intel_gvt_hypervisor_pause_domain
-               intel_gvt_hypervisor_unpause_domain
                intel_gvt_hypervisor_dom0_ready
 
 .. _intel_gvt_ops_interface:

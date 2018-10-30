@@ -22,9 +22,9 @@ static void complete_ioreq(struct vhm_request *vhm_req)
  * request having transferred to the COMPLETE state.
  */
 static void
-emulate_pio_post(struct vcpu *vcpu, struct io_request *io_req)
+emulate_pio_post(struct vcpu *vcpu, const struct io_request *io_req)
 {
-	struct pio_request *pio_req = &io_req->reqs.pio;
+	const struct pio_request *pio_req = &io_req->reqs.pio;
 	uint64_t mask = 0xFFFFFFFFUL >> (32UL - 8UL * pio_req->size);
 
 	if (pio_req->direction == REQUEST_READ) {
@@ -68,9 +68,9 @@ void dm_emulate_pio_post(struct vcpu *vcpu)
  * either a previous call to emulate_io() returning 0 or the corresponding VHM
  * request having transferred to the COMPLETE state.
  */
-void emulate_mmio_post(struct vcpu *vcpu, struct io_request *io_req)
+void emulate_mmio_post(const struct vcpu *vcpu, const struct io_request *io_req)
 {
-	struct mmio_request *mmio_req = &io_req->reqs.mmio;
+	const struct mmio_request *mmio_req = &io_req->reqs.mmio;
 
 	if (mmio_req->direction == REQUEST_READ) {
 		/* Emulate instruction and update vcpu register set */
@@ -173,7 +173,7 @@ void emulate_io_post(struct vcpu *vcpu)
  * @return -EIO    - The request spans multiple devices and cannot be emulated.
  */
 int32_t
-hv_emulate_pio(struct vcpu *vcpu, struct io_request *io_req)
+hv_emulate_pio(const struct vcpu *vcpu, struct io_request *io_req)
 {
 	int32_t status = -ENODEV;
 	uint16_t port, size;
@@ -257,7 +257,7 @@ hv_emulate_mmio(struct vcpu *vcpu, struct io_request *io_req)
 			return -EIO;
 		} else {
 			/* Handle this MMIO operation */
-			status = mmio_handler->read_write(vcpu, io_req);
+			status = mmio_handler->read_write(io_req, mmio_handler->handler_private_data);
 			break;
 		}
 	}
@@ -451,7 +451,7 @@ void setup_io_bitmap(struct vm *vm)
 	}
 }
 
-void register_io_emulation_handler(struct vm *vm, struct vm_io_range *range,
+void register_io_emulation_handler(struct vm *vm, const struct vm_io_range *range,
 		io_read_fn_t io_read_fn_ptr,
 		io_write_fn_t io_write_fn_ptr)
 {

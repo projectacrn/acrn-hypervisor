@@ -373,7 +373,7 @@ struct pci_xhci_vdev {
 	struct pci_xhci_dev_emu  **devices; /* XHCI[port] = device */
 	struct pci_xhci_dev_emu  **slots;   /* slots assigned from 1 */
 
-	bool		slot_allocated[XHCI_MAX_SLOTS];
+	bool		slot_allocated[XHCI_MAX_SLOTS + 1];
 	int		ndevices;
 	uint16_t	pid;
 	uint16_t	vid;
@@ -588,6 +588,7 @@ pci_xhci_clr_native_port_assigned(struct pci_xhci_vdev *xdev,
 	if (i >= 0) {
 		xdev->native_ports[i].state = VPORT_FREE;
 		xdev->native_ports[i].vport = 0;
+		memset(&xdev->native_ports[i].info, 0, sizeof(*info));
 	}
 }
 
@@ -1031,7 +1032,7 @@ pci_xhci_change_port(struct pci_xhci_vdev *xdev, int port, int usb_speed,
 
 	reg = XHCI_PORTREG_PTR(xdev, port);
 	if (conn == 0) {
-		reg->portsc &= ~XHCI_PS_CCS;
+		reg->portsc &= ~(XHCI_PS_CCS | XHCI_PS_PED);
 		reg->portsc |= (XHCI_PS_CSC |
 				XHCI_PS_PLS_SET(UPS_PORT_LS_RX_DET));
 	} else {
@@ -1041,6 +1042,12 @@ pci_xhci_change_port(struct pci_xhci_vdev *xdev, int port, int usb_speed,
 	}
 
 	if (!need_intr)
+		return 0;
+
+	if (!(xdev->opregs.usbcmd & XHCI_CMD_INTE))
+		need_intr = 0;
+
+	if (!(xdev->opregs.usbcmd & XHCI_CMD_RS))
 		return 0;
 
 	/* make an event for the guest OS */
@@ -1709,7 +1716,6 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 			goto done;
 		}
 
-		xdev->native_ports[index].state = VPORT_ASSIGNED;
 		pci_xhci_dev_destroy(dev);
 		UPRINTF(LINF, "disable slot %d for native device %d-%s"
 				"\r\n", slot, di->path.bus,
@@ -4001,12 +4007,12 @@ pci_xhci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 * ended by EXCAP_GROUP_END at last item.
 	 */
 	excap = xdev->excap_ptr;
-	xdev->excapoff = excap->start;
-
 	if (!excap) {
-		UPRINTF(LWRN, "Failed to set xHCI extended capability\r\n");
-		return -1;
+		error = -1;
+		goto done;
 	}
+
+	xdev->excapoff = excap->start;
 
 	do {
 		xdev->regsend = excap->end;

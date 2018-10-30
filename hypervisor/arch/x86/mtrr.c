@@ -63,18 +63,18 @@ get_subrange_start_of_fixed_mtrr(uint32_t index, uint32_t subrange_id)
 		get_subrange_size_of_fixed_mtrr(index));
 }
 
-static inline bool is_mtrr_enabled(struct vcpu *vcpu)
+static inline bool is_mtrr_enabled(const struct vcpu *vcpu)
 {
 	return (vcpu->mtrr.def_type.bits.enable != 0U);
 }
 
-static inline bool is_fixed_range_mtrr_enabled(struct vcpu *vcpu)
+static inline bool is_fixed_range_mtrr_enabled(const struct vcpu *vcpu)
 {
 	return ((vcpu->mtrr.cap.bits.fix != 0U) &&
 		(vcpu->mtrr.def_type.bits.fixed_enable != 0U));
 }
 
-static inline uint8_t get_default_memory_type(struct vcpu *vcpu)
+static inline uint8_t get_default_memory_type(const struct vcpu *vcpu)
 {
 	return (uint8_t)(vcpu->mtrr.def_type.bits.type);
 }
@@ -154,7 +154,7 @@ static uint32_t update_ept(struct vm *vm, uint64_t start,
 	return attr;
 }
 
-static void update_ept_mem_type(struct vcpu *vcpu)
+static void update_ept_mem_type(const struct vcpu *vcpu)
 {
 	uint8_t type;
 	uint64_t start, size;
@@ -236,9 +236,9 @@ void mtrr_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t value)
 	}
 }
 
-uint64_t mtrr_rdmsr(struct vcpu *vcpu, uint32_t msr)
+uint64_t mtrr_rdmsr(const struct vcpu *vcpu, uint32_t msr)
 {
-	struct mtrr_state *mtrr = &vcpu->mtrr;
+	const struct mtrr_state *mtrr = &vcpu->mtrr;
 	uint64_t ret = 0UL;
 	uint32_t index;
 

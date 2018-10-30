@@ -88,9 +88,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 	vm->hw.gpa_lowtop = 0UL;
 
 	vm->arch_vm.nworld_eptp = alloc_paging_struct();
-	vm->arch_vm.m2p = alloc_paging_struct();
-	if ((vm->arch_vm.nworld_eptp == NULL) ||
-			(vm->arch_vm.m2p == NULL)) {
+	if (vm->arch_vm.nworld_eptp == NULL) {
 		pr_fatal("%s, alloc memory for EPTP failed\n", __func__);
 		status = -ENOMEM;
 		goto err;
@@ -178,10 +176,6 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 err:
 
 	vioapic_cleanup(vm_ioapic(vm));
-
-	if (vm->arch_vm.m2p != NULL) {
-		free(vm->arch_vm.m2p);
-	}
 
 	if (vm->arch_vm.nworld_eptp != NULL) {
 		free(vm->arch_vm.nworld_eptp);
@@ -278,7 +272,7 @@ int reset_vm(struct vm *vm)
 	}
 
 	if (is_vm0(vm)) {
-		vm_sw_loader(vm);
+		(void )vm_sw_loader(vm);
 	}
 
 	vioapic_reset(vm_ioapic(vm));
@@ -378,6 +372,12 @@ int prepare_vm(uint16_t pcpu_id)
 		for (i = 1U; i < vm_desc->vm_hw_num_cores; i++)
 			prepare_vcpu(vm, vm_desc->vm_pcpu_ids[i]);
 
+		if (!vm_sw_loader) {
+			vm_sw_loader = general_sw_loader;
+		}
+
+		(void )vm_sw_loader(vm);
+
 		/* start vm BSP automatically */
 		start_vm(vm);
 
@@ -406,11 +406,19 @@ int prepare_vm0(void)
 	}
 
 	/* Allocate all cpus to vm0 at the beginning */
-	for (i = 0U; i < phys_cpu_num; i++) {
+	for (i = 0U; i < vm0_desc.vm_hw_num_cores; i++) {
 		err = prepare_vcpu(vm, i);
 		if (err != 0) {
 			return err;
 		}
+	}
+
+	if (!vm_sw_loader) {
+		vm_sw_loader = general_sw_loader;
+	}
+
+	if (is_vm0(vm)) {
+		(void )vm_sw_loader(vm);
 	}
 
 	/* start vm0 BSP automatically */

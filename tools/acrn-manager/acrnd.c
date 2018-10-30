@@ -5,6 +5,7 @@
 
 #include <time.h>
 #include <pthread.h>
+#include <signal.h>
 #include <sys/queue.h>
 #include <sys/stat.h>
 #include <stdlib.h>
@@ -39,6 +40,10 @@ static pthread_mutex_t work_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static pthread_mutex_t acrnd_stop_mutex = PTHREAD_MUTEX_INITIALIZER;
 static unsigned int acrnd_stop_timeout;
+
+static int sigterm = 0; /* Exit acrnd when recevied SIGTERM and stop all vms */
+#define VMS_STOP_TIMEOUT 20 /* Wait VMS_STOP_TIMEOUT sec to stop all vms */
+
 /* acrnd_add_work(), add a worker function.
  * @func, the worker function, will be called with work_mutex hold.
  * @sec, when add a @func(), after @sec seconds @func() will be called.
@@ -254,6 +259,23 @@ static int active_all_vms(void)
 	}
 
 	return ret ? -1 : 0;
+}
+
+static void stop_all_vms(void)
+{
+	struct vmmngr_struct *vm;
+	int err;
+
+	vmmngr_update();
+
+	LIST_FOREACH(vm, &vmmngr_head, list) {
+		err = stop_vm(vm->name);
+		if (err != 0) {
+			fprintf(stderr, "Fail to send stop cmd to vm %s\n", vm->name);
+		} else {
+			printf("Send stop cmd to vm %s successfully\n", vm->name);
+		}
+	}
 }
 
 static int wakeup_suspended_vms(unsigned wakeup_reason)
@@ -582,6 +604,7 @@ reply_ack:
 
 static void handle_on_exit(void)
 {
+	printf("Exiting from acrnd\n");
 	store_timer_list();
 
 	if (acrnd_fd > 0) {
@@ -614,6 +637,12 @@ int init_vm(void)
 	return active_all_vms();
 }
 
+static void sigterm_handler(int signo)
+{
+	printf("Received signal %d, Will stop all the vms within %d sec\n", signo, VMS_STOP_TIMEOUT);
+	sigterm = 1;
+}
+
 int main(int argc, char *argv[])
 {
 	/* create listening thread */
@@ -632,15 +661,27 @@ int main(int argc, char *argv[])
 
 	atexit(handle_on_exit);
 
+	if (signal(SIGTERM, sigterm_handler) == SIG_ERR) {
+		fprintf(stderr, "Can not catch signal SIGTERM(%d), err: %s\n", SIGTERM, strerror(errno));
+	}
+
 	mngr_add_handler(acrnd_fd, ACRND_TIMER, handle_timer_req, NULL);
 	mngr_add_handler(acrnd_fd, ACRND_STOP, handle_acrnd_stop, NULL);
 	mngr_add_handler(acrnd_fd, ACRND_RESUME, handle_acrnd_resume, NULL);
 
 	/* Last thing, run our timer works */
-	while (1) {
+	while (!sigterm) {
 		try_do_works();
 		sleep(1);
 	}
+
+	/*
+	 * Try to stop all the vms when receiving SIGTERM within VMS_STOP_TIMEOUT sec
+	 * gracefully. acrnd will exit after waiting maximal VMS_STOP_TIMEOUT sec.
+	 * System will kill all other vms which can not be stopped within VMS_STOP_TIMEOUT sec.
+	 */
+	stop_all_vms();
+	wait_for_stop(VMS_STOP_TIMEOUT);
 
 	return 0;
 }

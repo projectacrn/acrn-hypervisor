@@ -13,7 +13,7 @@
 
 uint32_t tsc_khz = 0U;
 
-static void run_timer(struct hv_timer *timer)
+static void run_timer(const struct hv_timer *timer)
 {
 	/* deadline = 0 means stop timer, we should skip */
 	if ((timer->func != NULL) && (timer->fire_tsc != 0UL)) {
@@ -80,6 +80,8 @@ int add_timer(struct hv_timer *timer)
 		return -EINVAL;
 	}
 
+	ASSERT(list_empty(&timer->node), "add timer again!\n");
+
 	/* limit minimal periodic timer cycle period */
 	if (timer->mode == TICK_MODE_PERIODIC) {
 		timer->period_in_cycle = max(timer->period_in_cycle,
@@ -120,7 +122,7 @@ static void init_tsc_deadline_timer(void)
 
 	val = VECTOR_TIMER;
 	val |= APIC_LVTT_TM_TSCDLT; /* TSC deadline and unmask */
-	write_lapic_reg32(LAPIC_LVT_TIMER_REGISTER, val);
+	msr_write(MSR_IA32_EXT_APIC_LVT_TIMER, val);
 	asm volatile("mfence" : : : "memory");
 
 	/* disarm timer */

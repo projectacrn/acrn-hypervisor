@@ -32,79 +32,9 @@
 #include <hypervisor.h>
 #include "pci_priv.h"
 
-
-static spinlock_t pci_device_lock = { .head = 0, .tail = 0 };
-
-
 static inline uint32_t pci_bar_base(uint32_t bar)
 {
 	return bar & PCIM_BAR_MEM_BASE;
-}
-
-static uint32_t pci_pdev_calc_address(union pci_bdf bdf, uint32_t offset)
-{
-	uint32_t addr = (uint32_t)bdf.value;
-
-	addr <<= 8U;
-	addr |= (offset | PCI_CFG_ENABLE);
-	return addr;
-}
-
-static uint32_t pci_pdev_read_cfg(struct pci_pdev *pdev,
-	uint32_t offset, uint32_t bytes)
-{
-	uint32_t addr;
-	uint32_t val;
-
-	spinlock_obtain(&pci_device_lock);
-
-	addr = pci_pdev_calc_address(pdev->bdf, offset);
-
-	/* Write address to ADDRESS register */
-	pio_write(addr, PCI_CONFIG_ADDR, 4U);
-
-	/* Read result from DATA register */
-	switch (bytes) {
-	case 1U:
-		val = pio_read8(PCI_CONFIG_DATA + (offset & 3U));
-		break;
-	case 2U:
-		val = pio_read16(PCI_CONFIG_DATA + (offset & 2U));
-		break;
-	default:
-		val = pio_read32(PCI_CONFIG_DATA);
-		break;
-	}
-	spinlock_release(&pci_device_lock);
-
-	return val;
-}
-
-static void pci_pdev_write_cfg(struct pci_pdev *pdev, uint32_t offset,
-	uint32_t bytes, uint32_t val)
-{
-	uint32_t addr;
-
-	spinlock_obtain(&pci_device_lock);
-
-	addr = pci_pdev_calc_address(pdev->bdf, offset);
-
-	/* Write address to ADDRESS register */
-	pio_write(addr, PCI_CONFIG_ADDR, 4U);
-
-	/* Write value to DATA register */
-	switch (bytes) {
-	case 1U:
-		pio_write8(val, PCI_CONFIG_DATA + (offset & 3U));
-		break;
-	case 2U:
-		pio_write16(val, PCI_CONFIG_DATA + (offset & 2U));
-		break;
-	default:
-		pio_write32(val, PCI_CONFIG_DATA);
-		break;
-	}
-	spinlock_release(&pci_device_lock);
 }
 
 static int vdev_pt_init_validate(struct pci_vdev *vdev)
@@ -147,10 +77,10 @@ static int vdev_pt_init(struct pci_vdev *vdev)
 	ret = assign_iommu_device(vm->iommu, vdev->pdev.bdf.bits.b,
 		(uint8_t)(vdev->pdev.bdf.value & 0xFFU));
 
-	pci_command = pci_pdev_read_cfg(&vdev->pdev, PCIR_COMMAND, 2U);
+	pci_command = pci_pdev_read_cfg(vdev->pdev.bdf, PCIR_COMMAND, 2U);
 	/* Disable INTX */
 	pci_command |= 0x400U;
-	pci_pdev_write_cfg(&vdev->pdev, PCIR_COMMAND, 2U, pci_command);
+	pci_pdev_write_cfg(vdev->pdev.bdf, PCIR_COMMAND, 2U, pci_command);
 
 	return ret;
 }
@@ -179,7 +109,7 @@ static int vdev_pt_cfgread(struct pci_vdev *vdev, uint32_t offset,
 	if (pci_bar_access(offset)) {
 		*val = pci_vdev_read_cfg(vdev, offset, bytes);
 	} else {
-		*val = pci_pdev_read_cfg(&vdev->pdev, offset, bytes);
+		*val = pci_pdev_read_cfg(vdev->pdev.bdf, offset, bytes);
 	}
 
 	return 0;
@@ -258,7 +188,7 @@ static int vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 		vdev_pt_cfgwrite_bar(vdev, offset, bytes, val);
 	} else {
 		/* Write directly to physical device's config space */
-		pci_pdev_write_cfg(&vdev->pdev, offset, bytes, val);
+		pci_pdev_write_cfg(vdev->pdev.bdf, offset, bytes, val);
 	}
 
 	return 0;

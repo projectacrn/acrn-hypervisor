@@ -19,7 +19,7 @@ static spinlock_t up_count_spinlock = {
 	.tail = 0U
 };
 
-struct per_cpu_region *per_cpu_data_base_ptr;
+struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(CPU_PAGE_SIZE);
 uint16_t phys_cpu_num = 0U;
 static uint64_t pcpu_sync = 0UL;
 static volatile uint16_t up_count = 0U;
@@ -54,7 +54,7 @@ static void cpu_cap_detect(void);
 static void cpu_xsave_init(void);
 static void set_current_cpu_id(uint16_t pcpu_id);
 static void print_hv_banner(void);
-static uint16_t get_cpu_id_from_lapic_id(uint8_t lapic_id);
+static uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id);
 int ibrs_type;
 static uint64_t start_tsc __attribute__((__section__(".bss_noinit")));
 
@@ -259,6 +259,11 @@ static int hardware_detect_support(void)
 		return -ENODEV;
 	}
 
+	if (phys_cpu_num > CONFIG_MAX_PCPU_NUM) {
+		pr_fatal("%s, pcpu number(%d) is out of range\n", __func__, phys_cpu_num);
+		return -ENODEV;
+	}
+
 	ret = check_vmx_mmu_cap();
 	if (ret != 0) {
 		return ret;
@@ -268,17 +273,9 @@ static int hardware_detect_support(void)
 	return 0;
 }
 
-static void alloc_phy_cpu_data(uint16_t pcpu_num)
+uint16_t __attribute__((weak)) parse_madt(uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 {
-	phys_cpu_num = pcpu_num;
-
-	per_cpu_data_base_ptr = calloc(pcpu_num, sizeof(struct per_cpu_region));
-	ASSERT(per_cpu_data_base_ptr != NULL, "");
-}
-
-uint16_t __attribute__((weak)) parse_madt(uint8_t lapic_id_array[MAX_PCPU_NUM])
-{
-	static const uint8_t lapic_id[] = {0U, 2U, 4U, 6U};
+	static const uint32_t lapic_id[] = {0U, 2U, 4U, 6U};
 	uint32_t i;
 
 	for (i = 0U; i < ARRAY_SIZE(lapic_id); i++) {
@@ -288,11 +285,11 @@ uint16_t __attribute__((weak)) parse_madt(uint8_t lapic_id_array[MAX_PCPU_NUM])
 	return ((uint16_t)ARRAY_SIZE(lapic_id));
 }
 
-static void init_percpu_data_area(void)
+static void init_percpu_lapic_id(void)
 {
 	uint16_t i;
 	uint16_t pcpu_num = 0U;
-	uint8_t lapic_id_array[MAX_PCPU_NUM];
+	uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM];
 
 	/* Save all lapic_id detected via parse_mdt in lapic_id_array */
 	pcpu_num = parse_madt(lapic_id_array);
@@ -301,14 +298,11 @@ static void init_percpu_data_area(void)
 		ASSERT(false);
 	}
 
-	alloc_phy_cpu_data(pcpu_num);
+	phys_cpu_num = pcpu_num;
 
-	for (i = 0U; i < pcpu_num; i++) {
+	for (i = 0U; (i < pcpu_num) && (i < CONFIG_MAX_PCPU_NUM); i++) {
 		per_cpu(lapic_id, i) = lapic_id_array[i];
 	}
-
-	ASSERT(get_cpu_id_from_lapic_id(get_cur_lapic_id()) != INVALID_CPU_ID,
-		"fail to get phy cpu id");
 }
 
 static void cpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state)
@@ -406,9 +400,13 @@ void bsp_boot_init(void)
 	/* Initialize the hypervisor paging */
 	init_paging();
 
+	if (!cpu_has_cap(X86_FEATURE_X2APIC)) {
+		panic("x2APIC is not present!");
+	}
+
 	early_init_lapic();
 
-	init_percpu_data_area();
+	init_percpu_lapic_id();
 
 	load_gdtr_and_tr();
 
@@ -481,7 +479,10 @@ static void bsp_boot_post(void)
 	/* Initialize interrupts */
 	interrupt_init(BOOT_CPU_ID);
 
+	init_iommu();
+
 	timer_init();
+	profiling_setup();
 	setup_notification();
 	setup_posted_intr_notification();
 	ptdev_init();
@@ -493,8 +494,6 @@ static void bsp_boot_post(void)
 	start_cpus();
 
 	ASSERT(get_cpu_id() == BOOT_CPU_ID, "");
-
-	init_iommu();
 
 	console_setup_timer();
 
@@ -563,7 +562,7 @@ static void cpu_secondary_post(void)
 	interrupt_init(get_cpu_id());
 
 	timer_init();
-
+	profiling_setup();
 	/* Wait for boot processor to signal all secondary cores to continue */
 	wait_sync_change(&pcpu_sync, 0UL);
 
@@ -581,11 +580,11 @@ static void cpu_secondary_post(void)
 	cpu_dead(get_cpu_id());
 }
 
-static uint16_t get_cpu_id_from_lapic_id(uint8_t lapic_id)
+static uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id)
 {
 	uint16_t i;
 
-	for (i = 0U; i < phys_cpu_num; i++) {
+	for (i = 0U; (i < phys_cpu_num) && (i < CONFIG_MAX_PCPU_NUM); i++) {
 		if (per_cpu(lapic_id, i) == lapic_id) {
 			return i;
 		}

@@ -38,10 +38,10 @@ union source_id {
 
 /* entry per guest virt vector */
 struct ptdev_msi_info {
-	uint32_t vmsi_addr; /* virt msi_addr */
+	uint64_t vmsi_addr; /* virt msi_addr */
 	uint32_t vmsi_data; /* virt msi_data */
 	uint16_t vmsi_ctl; /* virt msi_ctl */
-	uint32_t pmsi_addr; /* phys msi_addr */
+	uint64_t pmsi_addr; /* phys msi_addr */
 	uint32_t pmsi_data; /* phys msi_data */
 	int is_msix;	/* 0-MSI, 1-MSIX */
 };

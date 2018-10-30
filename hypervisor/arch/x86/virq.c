@@ -148,7 +148,7 @@ static int vcpu_inject_vlapic_int(struct vcpu *vcpu)
 	return 0;
 }
 
-static int vcpu_do_pending_extint(struct vcpu *vcpu)
+static int vcpu_do_pending_extint(const struct vcpu *vcpu)
 {
 	struct vm *vm;
 	struct vcpu *primary;
@@ -184,11 +184,11 @@ void dump_lapic(void)
 {
 	dev_dbg(ACRN_DBG_INTR,
 		"LAPIC: TIME %08x, init=0x%x cur=0x%x ISR=0x%x IRR=0x%x",
-		mmio_read32(hpa2hva(LAPIC_BASE + LAPIC_LVT_TIMER_REGISTER)),
-		mmio_read32(hpa2hva(LAPIC_BASE + LAPIC_INITIAL_COUNT_REGISTER)),
-		mmio_read32(hpa2hva(LAPIC_BASE + LAPIC_CURRENT_COUNT_REGISTER)),
-		mmio_read32(hpa2hva(LAPIC_BASE + LAPIC_IN_SERVICE_REGISTER_7)),
-		mmio_read32(hpa2hva(LAPIC_BASE + LAPIC_INT_REQUEST_REGISTER_7))
+		msr_read(MSR_IA32_EXT_APIC_LVT_TIMER),
+		msr_read(MSR_IA32_EXT_APIC_INIT_COUNT),
+		msr_read(MSR_IA32_EXT_APIC_CUR_COUNT),
+		msr_read(MSR_IA32_EXT_APIC_ISR7),
+		msr_read(MSR_IA32_EXT_APIC_IRR7)
 		);
 }
 
@@ -372,6 +372,9 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 	}
 
 	ctx.vector = intr_info & 0xFFU;
+	ctx.rip    = vcpu_get_rip(vcpu);
+	ctx.rflags = vcpu_get_rflags(vcpu);
+	ctx.cs     = exec_vmread32(VMX_GUEST_CS_SEL);
 
 #ifdef CONFIG_PARTITION_MODE
 	partition_mode_dispatch_interrupt(&ctx);

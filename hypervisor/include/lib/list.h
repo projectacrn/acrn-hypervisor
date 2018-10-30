@@ -62,7 +62,7 @@ static inline void list_del_node(struct list_head *prev, struct list_head *next)
 	prev->next = next;
 }
 
-static inline void list_del(struct list_head *entry)
+static inline void list_del(const struct list_head *entry)
 {
 	list_del_node(entry->prev, entry->next);
 }
@@ -73,12 +73,12 @@ static inline void list_del_init(struct list_head *entry)
 	INIT_LIST_HEAD(entry);
 }
 
-static inline _Bool list_empty(struct list_head *head)
+static inline _Bool list_empty(const struct list_head *head)
 {
 	return head->next == head;
 }
 
-static inline void list_splice_node(struct list_head *list,
+static inline void list_splice_node(const struct list_head *list,
 				 struct list_head *head)
 {
 	struct list_head *first = list->next;
@@ -92,7 +92,7 @@ static inline void list_splice_node(struct list_head *list,
 	at->prev = last;
 }
 
-static inline void list_splice(struct list_head *list, struct list_head *head)
+static inline void list_splice(const struct list_head *list, struct list_head *head)
 {
 	if (!list_empty(list)) {
 		list_splice_node(list, head);

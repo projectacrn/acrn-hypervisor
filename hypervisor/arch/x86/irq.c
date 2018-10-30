@@ -12,7 +12,7 @@ static spinlock_t irq_alloc_spinlock = { .head = 0U, .tail = 0U, };
 
 #define IRQ_ALLOC_BITMAP_SIZE	INT_DIV_ROUNDUP(NR_IRQS, 64U)
 static uint64_t irq_alloc_bitmap[IRQ_ALLOC_BITMAP_SIZE];
-static struct irq_desc irq_desc_array[NR_IRQS];
+struct irq_desc irq_desc_array[NR_IRQS];
 static uint32_t vector_to_irq[NR_MAX_VECTOR + 1];
 
 spurious_handler_t spurious_handler;
@@ -26,6 +26,7 @@ static struct static_mapping_table irq_static_mappings[NR_STATIC_MAPPINGS] = {
 	{TIMER_IRQ, VECTOR_TIMER},
 	{NOTIFY_IRQ, VECTOR_NOTIFY_VCPU},
 	{POSTED_INTR_NOTIFY_IRQ, VECTOR_POSTED_INTR},
+	{PMI_IRQ, VECTOR_PMI},
 };
 
 /*
@@ -96,7 +97,7 @@ uint32_t alloc_irq_vector(uint32_t irq)
 	}
 
 	desc = &irq_desc_array[irq];
-	
+
 	if (desc->vector != VECTOR_INVALID) {
 		if (vector_to_irq[desc->vector] == irq) {
 			/* statically binded */
@@ -121,7 +122,7 @@ uint32_t alloc_irq_vector(uint32_t irq)
 			}
 		}
 		vr = (vr > VECTOR_DYNAMIC_END) ? VECTOR_INVALID : vr;
-		
+
 		spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);
 	}
 
@@ -285,14 +286,14 @@ static void handle_spurious_interrupt(uint32_t vector)
 	}
 }
 
-static inline bool irq_need_mask(struct irq_desc *desc)
+static inline bool irq_need_mask(const struct irq_desc *desc)
 {
 	/* level triggered gsi should be masked */
 	return (((desc->flags & IRQF_LEVEL) != 0U)
 		&& irq_is_gsi(desc->irq));
 }
 
-static inline bool irq_need_unmask(struct irq_desc *desc)
+static inline bool irq_need_unmask(const struct irq_desc *desc)
 {
 	/* level triggered gsi for non-ptdev should be unmasked */
 	return (((desc->flags & IRQF_LEVEL) != 0U)
@@ -300,7 +301,7 @@ static inline bool irq_need_unmask(struct irq_desc *desc)
 		&& irq_is_gsi(desc->irq));
 }
 
-static inline void handle_irq(struct irq_desc *desc)
+static inline void handle_irq(const struct irq_desc *desc)
 {
 	irq_action_t action = desc->action;
 
@@ -321,7 +322,7 @@ static inline void handle_irq(struct irq_desc *desc)
 }
 
 /* do_IRQ() */
-void dispatch_interrupt(struct intr_excp_ctx *ctx)
+void dispatch_interrupt(const struct intr_excp_ctx *ctx)
 {
 	uint32_t vr = ctx->vector;
 	uint32_t irq = vector_to_irq[vr];
@@ -349,7 +350,12 @@ void dispatch_interrupt(struct intr_excp_ctx *ctx)
 		/* mask irq if possible */
 		goto ERR;
 	}
-
+#ifdef PROFILING_ON
+	/* Saves ctx info into irq_desc */
+	desc->ctx_rip = ctx->rip;
+	desc->ctx_rflags = ctx->rflags;
+	desc->ctx_cs = ctx->cs;
+#endif
 	handle_irq(desc);
 	return;
 ERR:

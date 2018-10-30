@@ -52,7 +52,6 @@ struct vmctx {
 	int     vmid;
 	int     ioreq_client;
 	uint32_t lowmem_limit;
-	int     memflags;
 	size_t  lowmem;
 	size_t  highmem;
 	char    *baseaddr;
@@ -68,17 +67,6 @@ struct vmctx {
 	/* BSP state. guest loader needs to fill it */
 	struct acrn_set_vcpu_regs bsp_regs;
 };
-
-/*
- * 'flags' value passed to 'vm_set_memflags()'.
- */
-#define	VM_MEM_F_INCORE	0x01	/* include guest memory in core file */
-#define	VM_MEM_F_WIRED	0x02	/* guest memory is wired */
-
-#define	VM_MEMMAP_F_WIRED	0x01
-#define	VM_MEMMAP_F_IOMMU	0x02
-
-#define	VM_MEMSEG_NAME(m)	((m)->name[0] != '\0' ? (m)->name : NULL)
 
 #define	PROT_RW		(PROT_READ | PROT_WRITE)
 #define	PROT_ALL	(PROT_READ | PROT_WRITE | PROT_EXEC)
@@ -122,19 +110,13 @@ void	hugetlb_unsetup_memory(struct vmctx *ctx);
 void	*vm_map_gpa(struct vmctx *ctx, vm_paddr_t gaddr, size_t len);
 uint32_t vm_get_lowmem_limit(struct vmctx *ctx);
 void	vm_set_lowmem_limit(struct vmctx *ctx, uint32_t limit);
-void	vm_set_memflags(struct vmctx *ctx, int flags);
-int	vm_get_memflags(struct vmctx *ctx);
 size_t	vm_get_lowmem_size(struct vmctx *ctx);
 size_t	vm_get_highmem_size(struct vmctx *ctx);
 int	vm_run(struct vmctx *ctx);
 int	vm_suspend(struct vmctx *ctx, enum vm_suspend_how how);
 int	vm_apicid2vcpu(struct vmctx *ctx, int apicid);
 int	vm_lapic_msi(struct vmctx *ctx, uint64_t addr, uint64_t msg);
-int	vm_ioapic_assert_irq(struct vmctx *ctx, int irq);
-int	vm_ioapic_deassert_irq(struct vmctx *ctx, int irq);
-int	vm_isa_assert_irq(struct vmctx *ctx, int atpic_irq, int ioapic_irq);
-int	vm_isa_deassert_irq(struct vmctx *ctx, int atpic_irq, int ioapic_irq);
-int	vm_isa_pulse_irq(struct vmctx *ctx, int atpic_irq, int ioapic_irq);
+int	vm_set_gsi_irq(struct vmctx *ctx, int gsi, uint32_t operation);
 int	vm_assign_ptdev(struct vmctx *ctx, int bus, int slot, int func);
 int	vm_unassign_ptdev(struct vmctx *ctx, int bus, int slot, int func);
 int	vm_map_ptdev_mmio(struct vmctx *ctx, int bus, int slot, int func,

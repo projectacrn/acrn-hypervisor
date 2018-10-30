@@ -1,3 +1,10 @@
+vSBL Version 1.0
+- New feature:
+	Update vFastboot to v1.0
+	Boot time optimization
+	Support Crash mode, which uses vFastboot in vSBL as Crash mode target.
+	Support Ramooops.
+
 vSBL Version 0.9
 - New feature:
 	Update vFastboot to v0.9

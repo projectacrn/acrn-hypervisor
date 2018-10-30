@@ -27,7 +27,7 @@ uint64_t get_microcode_version(void)
  * According to SDM vol 3 Table 9-7. If data_size field of uCode
  * header is zero, the ucode length is 2000
  */
-static inline size_t get_ucode_data_size(struct ucode_header *uhdr)
+static inline size_t get_ucode_data_size(const struct ucode_header *uhdr)
 {
 	return ((uhdr->data_size != 0U) ? uhdr->data_size : 2000U);
 }

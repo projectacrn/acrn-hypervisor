@@ -37,7 +37,7 @@
 
 static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin, uint8_t level);
 
-static inline bool master_pic(struct acrn_vpic *vpic, struct i8259_reg_state *i8259)
+static inline bool master_pic(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259)
 {
 
 	if (i8259 == &vpic->i8259[0]) {
@@ -47,7 +47,7 @@ static inline bool master_pic(struct acrn_vpic *vpic, struct i8259_reg_state *i8
 	}
 }
 
-static inline uint8_t vpic_get_highest_isrpin(struct i8259_reg_state *i8259)
+static inline uint8_t vpic_get_highest_isrpin(const struct i8259_reg_state *i8259)
 {
 	uint8_t bit, pin, i;
 
@@ -74,7 +74,7 @@ static inline uint8_t vpic_get_highest_isrpin(struct i8259_reg_state *i8259)
 	return VPIC_INVALID_PIN;
 }
 
-static inline uint8_t vpic_get_highest_irrpin(struct i8259_reg_state *i8259)
+static inline uint8_t vpic_get_highest_irrpin(const struct i8259_reg_state *i8259)
 {
 	uint8_t serviced, bit, pin, tmp;
 
@@ -207,7 +207,7 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 	}
 }
 
-static int vpic_icw1(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
+static int vpic_icw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 icw1 0x%x\n",
 		vpic->vm, val);
@@ -237,7 +237,7 @@ static int vpic_icw1(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint
 	return 0;
 }
 
-static int vpic_icw2(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
+static int vpic_icw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 icw2 0x%x\n",
 		vpic->vm, val);
@@ -249,7 +249,7 @@ static int vpic_icw2(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint
 	return 0;
 }
 
-static int vpic_icw3(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
+static int vpic_icw3(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 icw3 0x%x\n",
 		vpic->vm, val);
@@ -259,7 +259,7 @@ static int vpic_icw3(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint
 	return 0;
 }
 
-static int vpic_icw4(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
+static int vpic_icw4(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 icw4 0x%x\n",
 		vpic->vm, val);
@@ -290,7 +290,7 @@ static int vpic_icw4(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint
 	return 0;
 }
 
-static int vpic_ocw1(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
+static int vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
 	uint8_t pin, i, bit;
 	uint8_t old = i8259->mask;

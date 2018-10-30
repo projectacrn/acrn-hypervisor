@@ -43,7 +43,7 @@ static inline void free_earlylog_sbuf(uint16_t pcpu_id)
 }
 
 static void do_copy_earlylog(struct shared_buf *dst_sbuf,
-			    struct shared_buf *src_sbuf)
+			    const struct shared_buf *src_sbuf)
 {
 	uint32_t buf_size, valid_size;
 	uint32_t cur_tail;
@@ -77,7 +77,7 @@ void init_logmsg(uint32_t flags)
 	logmsg.seq = 0;
 
 	/* allocate sbuf for log before sos booting */
-	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
+	for (pcpu_id = 0U; (pcpu_id < phys_cpu_num) && (pcpu_id < CONFIG_MAX_PCPU_NUM); pcpu_id++) {
 		alloc_earlylog_sbuf(pcpu_id);
 	}
 }

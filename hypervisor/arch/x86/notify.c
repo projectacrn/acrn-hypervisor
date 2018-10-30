@@ -25,7 +25,7 @@ static void kick_notification(__unused uint32_t irq, __unused void *data)
 		if (smp_call->func != NULL) {
 			smp_call->func(smp_call->data);
 		}
-		bitmap_clear_nolock(pcpu_id, &smp_call_mask);
+		bitmap_clear_lock(pcpu_id, &smp_call_mask);
 	}
 }
 
@@ -51,8 +51,7 @@ void smp_call_function(uint64_t mask, smp_call_func_t func, void *data)
 		}
 		pcpu_id = ffs64(mask);
 	}
-	send_dest_ipi((uint32_t)smp_call_mask, VECTOR_NOTIFY_VCPU,
-				INTR_LAPIC_ICR_LOGICAL);
+	send_dest_ipi_mask((uint32_t)smp_call_mask, VECTOR_NOTIFY_VCPU);
 	/* wait for current smp call complete */
 	wait_sync_change(&smp_call_mask, 0UL);
 }

@@ -23,6 +23,7 @@
 #define VECTOR_VIRT_IRQ_VHM	0xF7U
 #define VECTOR_SPURIOUS		0xFFU
 #define VECTOR_HYPERVISOR_CALLBACK_VHM	0xF3U
+#define VECTOR_PMI			0xF4U
 
 /* the maximum number of msi entry is 2048 according to PCI
  * local bus specification
@@ -34,10 +35,11 @@
 #define NR_IRQS		256U
 #define IRQ_INVALID		0xffffffffU
 
-#define NR_STATIC_MAPPINGS     (3U)
+#define NR_STATIC_MAPPINGS     (4U)
 #define TIMER_IRQ		(NR_IRQS - 1U)
 #define NOTIFY_IRQ		(NR_IRQS - 2U)
 #define POSTED_INTR_NOTIFY_IRQ	(NR_IRQS - 3U)
+#define PMI_IRQ			(NR_IRQS - 4U)
 
 #define DEFAULT_DEST_MODE	IOAPIC_RTE_DESTLOG
 #define DEFAULT_DELIVERY_MODE	IOAPIC_RTE_DELLOPRI
@@ -73,7 +75,7 @@ int quick_handler_nolock(struct irq_desc *desc, __unused void *handler_data);
 void init_default_irqs(uint16_t cpu_id);
 
 void dispatch_exception(struct intr_excp_ctx *ctx);
-void dispatch_interrupt(struct intr_excp_ctx *ctx);
+void dispatch_interrupt(const struct intr_excp_ctx *ctx);
 #ifdef CONFIG_PARTITION_MODE
 void partition_mode_dispatch_interrupt(struct intr_excp_ctx *ctx);
 #endif

@@ -30,16 +30,43 @@ endif
 endif
 
 -include $(HV_OBJDIR)/$(HV_CONFIG_MK)
-$(eval $(call override_config,PLATFORM,sbl))
+ifeq ($(shell [ $(HV_OBJDIR)/$(HV_CONFIG) -nt $(HV_OBJDIR)/$(HV_CONFIG_MK) ] && echo 1),1)
+# config.mk may be outdated if .config has been overwritten. To update config.mk
+# in such cases, we include .config again to get the new configurations. This
+# only happens when GNU make checks the prerequisites.
+-include $(HV_OBJDIR)/$(HV_CONFIG)
+endif
+
+# Backward-compatibility for PLATFORM=(sbl|uefi)
+# * PLATFORM=sbl is equivalent to BOARD=apl-mrb
+# * PLATFORM=uefi is equivalent to BOARD=apl-nuc (i.e. NUC6CAYH)
+ifndef BOARD
+ifeq ($(PLATFORM),sbl)
+BOARD=apl-mrb
+else ifeq ($(PLATFORM),uefi)
+BOARD=apl-nuc
+endif
+endif
+
+$(eval $(call override_config,BOARD,apl-mrb))
 $(eval $(call override_config,RELEASE,n))
 
+ifdef BOARD
+TARGET_BOARD=$(BOARD)
+else
+TARGET_BOARD=$(CONFIG_BOARD)
+endif
+
 $(eval $(call check_dep_exec,python3,KCONFIG_DEPS))
-$(eval $(call check_dep_exec,pip3,KCONFIG_DEPS))
 $(eval $(call check_dep_py3lib,kconfiglib,KCONFIG_DEPS))
 
 # This target invoke silentoldconfig to generate or update a .config. Useful as
 # a prerequisite of other targets depending on .config.
+#
+# A dummy command is necessary to trigger the remaking of config.mk right after
+# oldconfig changes HV_CONFIG in the same execution of make.
 $(HV_OBJDIR)/$(HV_CONFIG): oldconfig
+	@true
 
 # Note: This target must not depend on a phony target (e.g. oldconfig) because
 # it'll trigger endless re-execution of make.
@@ -56,23 +83,20 @@ $(HV_OBJDIR)/$(HV_CONFIG_H): $(HV_OBJDIR)/$(HV_CONFIG)
 .PHONY: defconfig
 defconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
-	@python3 $(KCONFIG_DIR)/defconfig.py Kconfig \
-		arch/x86/configs/$(CONFIG_PLATFORM).config \
+	@BOARD=$(TARGET_BOARD) \
+	 python3 $(KCONFIG_DIR)/defconfig.py Kconfig \
 		$(HV_OBJDIR)/$(HV_CONFIG)
 
 # Use silentoldconfig to forcefully update the current .config, or generate a
 # new one if no previous .config exists. This target can be used as a
 # prerequisite of all the others to make sure that the .config is consistent
 # even it has been modified manually before.
-#
-# Note: Should not pass CONFIG_xxx to silentoldconfig here because config.mk can
-# be out-dated.
 .PHONY: oldconfig
 oldconfig: $(KCONFIG_DEPS)
 	@mkdir -p $(HV_OBJDIR)
-	@python3 $(KCONFIG_DIR)/silentoldconfig.py Kconfig \
+	@BOARD=$(TARGET_BOARD) \
+	 python3 $(KCONFIG_DIR)/silentoldconfig.py Kconfig \
 		$(HV_OBJDIR)/$(HV_CONFIG) \
-		PLATFORM_$(shell echo $(PLATFORM) | tr a-z A-Z)=y \
 		RELEASE=$(RELEASE)
 
 # Minimize the current .config. This target can be used to generate a defconfig

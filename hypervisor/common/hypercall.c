@@ -71,60 +71,6 @@ int32_t hcall_get_api_version(struct vm *vm, uint64_t param)
 /**
  *@pre Pointer vm shall point to VM0
  */
-static int32_t
-handle_virt_irqline(const struct vm *vm, uint16_t target_vmid,
-		struct acrn_irqline *param, uint32_t operation)
-{
-	int32_t ret = 0;
-	uint32_t intr_type;
-	struct vm *target_vm = get_vm_from_vmid(target_vmid);
-
-	if ((param == NULL) || target_vm == NULL) {
-		return -EINVAL;
-	}
-
-	/* Check valid irq */
-	if (param->intr_type == ACRN_INTR_TYPE_IOAPIC
-			&& param->ioapic_irq >= vioapic_pincount(vm)) {
-		return -EINVAL;
-	}
-
-	if (param->intr_type == ACRN_INTR_TYPE_ISA
-			&& (param->pic_irq >= vpic_pincount()
-			|| (param->ioapic_irq != (~0U)
-			&& param->ioapic_irq >= vioapic_pincount(vm)))) {
-		return -EINVAL;
-	}
-
-	intr_type = param->intr_type;
-
-	switch (intr_type) {
-	case ACRN_INTR_TYPE_ISA:
-		/* Call vpic for pic injection */
-		vpic_set_irq(target_vm, param->pic_irq, operation);
-
-		/* call vioapic for ioapic injection if ioapic_irq != ~0U*/
-		if (param->ioapic_irq != (~0U)) {
-			/* handle IOAPIC irqline */
-			vioapic_set_irq(target_vm,
-					param->ioapic_irq, operation);
-		}
-		break;
-	case ACRN_INTR_TYPE_IOAPIC:
-		/* handle IOAPIC irqline */
-		vioapic_set_irq(target_vm, param->ioapic_irq, operation);
-		break;
-	default:
-		dev_dbg(ACRN_DBG_HYCALL, "vINTR inject failed. type=%d",
-				intr_type);
-		ret = -EINVAL;
-	}
-	return ret;
-}
-
-/**
- *@pre Pointer vm shall point to VM0
- */
 int32_t hcall_create_vm(struct vm *vm, uint64_t param)
 {
 	int32_t ret;
@@ -248,57 +194,6 @@ int32_t hcall_reset_vm(uint16_t vmid)
 /**
  *@pre Pointer vm shall point to VM0
  */
-int32_t hcall_assert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
-{
-	int32_t ret;
-	struct acrn_irqline irqline;
-
-	if (copy_from_gpa(vm, &irqline, param, sizeof(irqline)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
-	}
-	ret = handle_virt_irqline(vm, vmid, &irqline, GSI_SET_HIGH);
-
-	return ret;
-}
-
-/**
- *@pre Pointer vm shall point to VM0
- */
-int32_t hcall_deassert_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
-{
-	int32_t ret;
-	struct acrn_irqline irqline;
-
-	if (copy_from_gpa(vm, &irqline, param, sizeof(irqline)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
-	}
-	ret = handle_virt_irqline(vm, vmid, &irqline, GSI_SET_LOW);
-
-	return ret;
-}
-
-/**
- *@pre Pointer vm shall point to VM0
- */
-int32_t hcall_pulse_irqline(struct vm *vm, uint16_t vmid, uint64_t param)
-{
-	int32_t ret;
-	struct acrn_irqline irqline;
-
-	if (copy_from_gpa(vm, &irqline, param, sizeof(irqline)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
-	}
-	ret = handle_virt_irqline(vm, vmid, &irqline, GSI_RAISING_PULSE);
-
-	return ret;
-}
-
-/**
- *@pre Pointer vm shall point to VM0
- */
 int32_t hcall_set_vcpu_regs(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	struct vm *target_vm = get_vm_from_vmid(vmid);
@@ -334,8 +229,9 @@ int32_t hcall_set_vcpu_regs(struct vm *vm, uint16_t vmid, uint64_t param)
  *@pre Pointer vm shall point to VM0
  */
 int32_t hcall_set_irqline(const struct vm *vm, uint16_t vmid,
-				struct acrn_irqline_ops *ops)
+				const struct acrn_irqline_ops *ops)
 {
+	uint32_t irq_pic;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
 	if (target_vm == NULL) {
@@ -347,8 +243,13 @@ int32_t hcall_set_irqline(const struct vm *vm, uint16_t vmid,
 	}
 
 	if (ops->nr_gsi < vpic_pincount()) {
-		/* Call vpic for pic injection */
-		vpic_set_irq(target_vm, ops->nr_gsi, ops->op);
+		/*
+		 * IRQ line for 8254 timer is connected to
+		 * I/O APIC pin #2 but PIC pin #0,route GSI
+		 * number #2 to PIC IRQ #0.
+		 */
+		irq_pic = (ops->nr_gsi == 2U) ? 0U : ops->nr_gsi;
+		vpic_set_irq(target_vm, irq_pic, ops->op);
 	}
 
 	/* handle IOAPIC irqline */
@@ -453,7 +354,7 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
  *@pre Pointer vm shall point to VM0
  */
 static int32_t local_set_vm_memory_region(struct vm *vm,
-	struct vm *target_vm, struct vm_memory_region *region)
+	struct vm *target_vm, const struct vm_memory_region *region)
 {
 	uint64_t hpa, base_paddr;
 	uint64_t prot;
@@ -596,7 +497,7 @@ int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param)
 /**
  *@pre Pointer vm shall point to VM0
  */
-static int32_t write_protect_page(struct vm *vm, struct wp_data *wp)
+static int32_t write_protect_page(struct vm *vm,const struct wp_data *wp)
 {
 	uint64_t hpa, base_paddr;
 	uint64_t prot_set;

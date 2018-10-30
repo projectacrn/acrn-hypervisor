@@ -38,6 +38,25 @@ static uint32_t create_e820_table(struct e820_entry *param_e820)
 }
 #endif
 
+static void prepare_bsp_gdt(struct vm *vm)
+{
+	size_t gdt_len;
+	uint64_t gdt_base_hpa;
+	void *gdt_base_hva;
+
+	gdt_base_hpa = gpa2hpa(vm, vm0_boot_context.gdt.base);
+	if (vm0_boot_context.gdt.base == gdt_base_hpa) {
+		return;
+	} else {
+		gdt_base_hva = hpa2hva(gdt_base_hpa);
+		gdt_len = ((size_t)vm0_boot_context.gdt.limit + 1U)/sizeof(uint8_t);
+
+		(void )memcpy_s(gdt_base_hva, gdt_len, hpa2hva(vm0_boot_context.gdt.base), gdt_len);
+	}
+
+	return;
+}
+
 static uint64_t create_zero_page(struct vm *vm)
 {
 	struct zero_page *zeropage;
@@ -47,8 +66,9 @@ static uint64_t create_zero_page(struct vm *vm)
 	uint64_t gpa, addr;
 
 	/* Set zeropage in Linux Guest RAM region just past boot args */
-	hva = gpa2hva(vm, (uint64_t)sw_linux->bootargs_load_addr);
-	zeropage = (struct zero_page *)((char *)hva + MEM_4K);
+	gpa = (uint64_t)sw_linux->bootargs_load_addr + MEM_4K;
+	hva = gpa2hva(vm, gpa);
+	zeropage = hva;
 
 	/* clear the zeropage */
 	(void)memset(zeropage, 0U, MEM_2K);
@@ -78,9 +98,6 @@ static uint64_t create_zero_page(struct vm *vm)
 	/* Create/add e820 table entries in zeropage */
 	zeropage->e820_nentries = (uint8_t)create_e820_table(zeropage->e820);
 
-	/* Get the host physical address of the zeropage */
-	gpa = hpa2gpa(vm, hva2hpa((void *)zeropage));
-
 	/* Return Physical Base Address of zeropage */
 	return gpa;
 }
@@ -98,6 +115,7 @@ int general_sw_loader(struct vm *vm)
 
 	pr_dbg("Loading guest to run-time location");
 
+	prepare_bsp_gdt(vm);
 	set_vcpu_regs(vcpu, &vm0_boot_context);
 
 	/* calculate the kernel entry point */
