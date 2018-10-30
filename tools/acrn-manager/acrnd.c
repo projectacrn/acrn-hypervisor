@@ -347,6 +347,10 @@ static void handle_timer_req(struct mngr_msg *msg, int client_fd, void *param)
 	}
 
 	strncpy(arg.name, msg->data.acrnd_timer.name, sizeof(arg.name) - 1);
+	if (sizeof(arg.name) - 1 < strnlen(msg->data.acrnd_timer.name, VMNAME_LEN)) {
+		perror("timer name was truncated\n");
+		goto reply_ack;
+	}
 
 	if (acrnd_add_work(acrnd_vm_timer_func, &arg, msg->data.acrnd_timer.t)) {
 		pdebug();

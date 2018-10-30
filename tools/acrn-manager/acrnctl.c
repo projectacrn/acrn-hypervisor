@@ -92,6 +92,7 @@ static int check_name(const char *name)
 
 static const char *acrnctl_bin_path;
 static int find_acrn_dm;
+#define MAX_WORD   64
 
 static int write_tmp_file(int fd, int n, char *word[])
 {
@@ -101,7 +102,7 @@ static int write_tmp_file(int fd, int n, char *word[])
 	if (!n)
 		return 0;
 
-	len = strlen(word[0]);
+	len = strnlen(word[0], MAX_WORD);
 	if (len >= strlen("acrn-dm")) {
 		if (!strcmp(word[0] + len - strlen("acrn-dm"), "acrn-dm")) {
 			find_acrn_dm++;
@@ -111,7 +112,7 @@ static int write_tmp_file(int fd, int n, char *word[])
 				printf("ERROR: acrnctl bin path is truncated\n");
 				return -1;
 			}
-			ret = write(fd, buf, strlen(buf));
+			ret = write(fd, buf, strnlen(buf, sizeof(buf)));
 			if (ret < 0)
 				return -1;
 			i++;
@@ -123,7 +124,7 @@ static int write_tmp_file(int fd, int n, char *word[])
 		if (snprintf(buf, sizeof(buf), " %s", word[i]) >= sizeof(buf))
 			printf("WARN: buf is truncated\n");
 		i++;
-		ret = write(fd, buf, strlen(buf));
+		ret = write(fd, buf, strnlen(buf, sizeof(buf)));
 		if (ret < 0)
 			return -1;
 	}
@@ -134,7 +135,6 @@ static int write_tmp_file(int fd, int n, char *word[])
 }
 
 #define MAX_FILE_SIZE   (4096 * 4)
-#define MAX_WORD	64
 #define FILE_NAME_LENGTH	128
 
 #define TMP_FILE_SUFFIX		".acrnctl"
@@ -155,7 +155,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 	char vmname[128];
 	size_t len = sizeof(cmd_out);
 
-	if (strlen(argv[1]) >= FILE_NAME_LENGTH) {
+	if (strnlen(argv[1], FILE_NAME_LENGTH) == FILE_NAME_LENGTH) {
 		printf("file name too long: %s\n", argv[1]);
 		return -1;
 	}
