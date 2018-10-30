@@ -134,6 +134,33 @@ static int write_tmp_file(int fd, int n, char *word[])
 	return 0;
 }
 
+/*
+ * get vmname from the string src, and src
+ * format is "acrnctl: [vmname]"
+ */
+static inline int _get_vmname(const char *src, char *vmname, int max_len_vmname)
+{
+	const char *vmname_p = NULL;
+
+	if (!strncmp("acrnctl: ", src, strlen("acrnctl: "))) {
+		vmname_p = src + strlen("acrnctl: ");
+
+		memset(vmname, 0, max_len_vmname);
+		strncpy(vmname, vmname_p, max_len_vmname);
+		if(vmname[max_len_vmname - 1]) {
+			/* vmname is truncated */
+			printf("get vmname failed, vmname is truncated\n");
+			return -1;
+		}
+	} else {
+		/* the prefix of the string "src" isn't "acrnctl: " */
+		printf("can't found prefix 'acrnctl: '\n");
+		return -1;
+	}
+
+	return 0;
+}
+
 #define MAX_FILE_SIZE   (4096 * 4)
 #define FILE_NAME_LENGTH	128
 
@@ -150,7 +177,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 	char fname[FILE_NAME_LENGTH + sizeof(TMP_FILE_SUFFIX)];
 	char cmd[128];
 	char args[128];
-	int p, i;
+	int p, i, len_cmd_out = 0;
 	char cmd_out[256];
 	char vmname[128];
 	size_t len = sizeof(cmd_out);
@@ -253,7 +280,6 @@ static int acrnctl_do_add(int argc, char *argv[])
 	}
 	system(cmd);
 
-	memset(vmname, 0, sizeof(vmname));
 	if (snprintf(cmd, sizeof(cmd), "bash %s%s >./%s.result", argv[1],
 			args, argv[1]) >= sizeof(cmd)) {
 		printf("ERROR: cmd is truncated\n");
@@ -270,14 +296,18 @@ static int acrnctl_do_add(int argc, char *argv[])
 		ret = -1;
 		goto get_vmname;
 	}
-	ret = shell_cmd(cmd, cmd_out, sizeof(cmd_out));
-	if (ret < 0)
+	len_cmd_out = shell_cmd(cmd, cmd_out, sizeof(cmd_out));
+	if (len_cmd_out < 0) {
+		ret = len_cmd_out;
 		goto get_vmname;
+	}
 
-	ret = sscanf(cmd_out, "acrnctl: %s", vmname);
-	if (ret != 1) {
-		ret = -1;
+	if(cmd_out[len_cmd_out - 1] == '\n')
+		cmd_out[len_cmd_out - 1] = '\0';
 
+	ret = _get_vmname(cmd_out, vmname, sizeof(vmname));
+	if (ret < 0) {
+		/* failed to get vmname */
 		if (snprintf(cmd, sizeof(cmd), "cat ./%s.result", argv[1]) >= sizeof(cmd)) {
 			printf("ERROR: cmd is truncated\n");
 			goto get_vmname;
@@ -538,7 +568,7 @@ static int acrnctl_do_resume(int argc, char *argv[])
 	}
 
 	if (argc == 3) {
-		sscanf(argv[2], "%x", &reason);
+		reason = strtoul(argv[2], NULL, 16);
 		reason = (reason & (0xff << 24)) ? 0 : reason;
 	} else
 		printf("No wake up reason, use 0x%x\n", reason);

@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
+#include <limits.h>
 #include <pthread.h>
 #include <dirent.h>
 #include <sys/stat.h>
@@ -82,6 +83,39 @@ static int query_state(const char *name)
 	return ack.data.state;
 }
 
+/*
+ * get vmname and pid from /run/acrn/mngr/[vmname].monitor.[pid].socket
+ */
+static inline int _get_vmname_pid(const char *src, char *p_vmname,
+		int max_len_vmname, int *pid)
+{
+	char *p = NULL;
+
+	p = strchr(src, '.');
+	/* p - src: length of the substring "vmname" in the sting "src" */
+	if (!p || p - src == 0 || p - src >= max_len_vmname)
+		return -1;
+	else
+		strncpy(p_vmname, src, p - src);
+
+	/* move the pointer to the "pid" in the string "src" */
+	if (strncmp(".monitor.", p, strlen(".monitor.")))
+		return -1;
+	else
+		p = p + strlen(".monitor.");
+
+	*pid = strtol(p, NULL, 10);
+	if ((errno == ERANGE && (*pid == LONG_MAX || *pid == LONG_MIN))
+			|| (errno != 0 && *pid == 0))
+		return -1;
+
+	p = strchr(p, '.');
+	if (!p || strncmp(".socket", p, strlen(".socket")))
+		return -1;
+
+	return 0;
+}
+
 /* find all the running DM process, which has */
 /* /run/acrn/mngr/[vmname].monitor.[pid].socket */
 static void _scan_alive_vm(void)
@@ -107,10 +141,8 @@ static void _scan_alive_vm(void)
 
 	while ((entry = readdir(dir))) {
 		memset(name, 0, sizeof(name));
-		ret =
-		    sscanf(entry->d_name, "%[^.].monitor.%d.socket", name,
-			   &pid);
-		if (ret != 2)
+		ret = _get_vmname_pid(entry->d_name, name, sizeof(name), &pid);
+		if (ret < 0)
 			continue;
 
 		if (name[sizeof(name) - 1]) {
@@ -153,6 +185,34 @@ static void _scan_alive_vm(void)
 	closedir(dir);
 }
 
+/*
+ * get vmname and suffix from src,
+ * which has [vmname].[suffix]
+ */
+static inline int _get_vmname_suffix(const char *src,
+		char *name, int max_len_name, char *suffix, int max_len_suffix)
+{
+	char *p = NULL;
+
+	p = strchr(src, '.');
+	/* p - src: length of the substring vmname in the string src*/
+	if (!p || p - src == 0)
+		return -1;
+
+	strncpy(name, src, p - src);
+	if (p - src >= max_len_name) {
+		pdebug();
+		/* truncate name and go a head */
+		name[max_len_name - 1] = '\0';
+	}
+
+	strncpy(suffix, p + 1, max_len_suffix);
+	if (strncmp(suffix, "sh", strlen("sh")))
+		return -1;
+
+	return 0;
+}
+
 static void _scan_added_vm(void)
 {
 	DIR *dir;
@@ -181,27 +241,17 @@ static void _scan_added_vm(void)
 	}
 
 	while ((entry = readdir(dir))) {
-		memset(name, 0, sizeof(name));
-		memset(suffix, 0, sizeof(suffix));
-
 		ret = strnlen(entry->d_name, sizeof(entry->d_name));
 		if (ret >= sizeof(name)) {
 			pdebug();
 			continue;
 		}
 
-		ret = sscanf(entry->d_name, "%[^.].%s", name, suffix);
-
-		if (ret != 2)
-			continue;
-
-		if (name[sizeof(name) - 1]) {
-			pdebug();
-			/* truncate name and go a head */
-			name[sizeof(name) - 1] = 0;
-		}
-
-		if (strncmp(suffix, "sh", sizeof("sh")))
+		memset(name, 0, sizeof(name));
+		memset(suffix, 0, sizeof(suffix));
+		ret = _get_vmname_suffix(entry->d_name,
+				name, sizeof(name), suffix, sizeof(suffix));
+		if (ret < 0)
 			continue;
 
 		vm = vmmngr_find(name);

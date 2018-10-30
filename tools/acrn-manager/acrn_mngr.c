@@ -408,8 +408,7 @@ static int connect_to_server(const char *name)
 	struct mngr_fd *mfd;
 	int ret;
 	DIR *dir;
-	char buf[128] = { };
-	char *s_name = NULL;
+	char *s_name = NULL, *p = NULL;
 	struct dirent *entry;
 
 	dir = opendir("/run/acrn/mngr");
@@ -419,11 +418,13 @@ static int connect_to_server(const char *name)
 	}
 
 	while ((entry = readdir(dir))) {
-		memset(buf, 0, sizeof(buf));
-		ret = sscanf(entry->d_name, "%[^.]", buf);
-		if (ret != 1)
+		p = strchr(entry->d_name, '.');
+		if (!p || p == entry->d_name)
 			continue;
-		if (!strncmp(buf, name, sizeof(buf))) {
+		else
+			ret = p - entry->d_name;
+
+		if (!strncmp(entry->d_name, name, ret)) {
 			s_name = entry->d_name;
 			break;
 		}
