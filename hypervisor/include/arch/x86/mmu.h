@@ -67,16 +67,9 @@ enum _page_table_level {
 #define PAGE_SIZE_2M	MEM_2M
 #define PAGE_SIZE_1G	MEM_1G
 
-struct cpu_page {
-	uint8_t contents[CPU_PAGE_SIZE];
-};
-
 void sanitize_pte_entry(uint64_t *ptep);
 void sanitize_pte(uint64_t *pt_page);
-uint64_t get_paging_pml4(void);
-void *alloc_paging_struct(void);
-void free_paging_struct(void *ptr);
-void enable_paging(uint64_t pml4_base_addr);
+void enable_paging(void);
 void enable_smep(void);
 void init_paging(void);
 void mmu_add(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_base,

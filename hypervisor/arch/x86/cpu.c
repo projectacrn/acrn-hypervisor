@@ -542,7 +542,7 @@ void cpu_secondary_init(void)
 	/* Switch this CPU to use the same page tables set-up by the
 	 * primary/boot CPU
 	 */
-	enable_paging(get_paging_pml4());
+	enable_paging();
 
 	enable_smep();
 

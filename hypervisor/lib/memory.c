@@ -31,30 +31,6 @@ static struct mem_pool Memory_Pool = {
 	.contiguity_bitmap = Malloc_Heap_Contiguity_Bitmap
 };
 
-/************************************************************************/
-/*        Memory pool declaration (block size = CPU_PAGE_SIZE)          */
-/************************************************************************/
-static uint8_t __bss_noinit
-Paging_Heap[CONFIG_NUM_ALLOC_PAGES][CPU_PAGE_SIZE] __aligned(CPU_PAGE_SIZE);
-
-#define PAGING_HEAP_BUFF_SIZE      CPU_PAGE_SIZE
-#define PAGING_HEAP_TOTAL_BUFF     CONFIG_NUM_ALLOC_PAGES
-#define PAGING_HEAP_BITMAP_SIZE \
-	INT_DIV_ROUNDUP(PAGING_HEAP_TOTAL_BUFF, BITMAP_WORD_SIZE)
-static uint32_t Paging_Heap_Bitmap[PAGING_HEAP_BITMAP_SIZE];
-static uint32_t Paging_Heap_Contiguity_Bitmap[MALLOC_HEAP_BITMAP_SIZE];
-
-static struct mem_pool Paging_Memory_Pool = {
-	.start_addr = Paging_Heap,
-	.spinlock = {.head = 0U, .tail = 0U},
-	.size = CONFIG_NUM_ALLOC_PAGES * CPU_PAGE_SIZE,
-	.buff_size = PAGING_HEAP_BUFF_SIZE,
-	.total_buffs = PAGING_HEAP_TOTAL_BUFF,
-	.bmp_size = PAGING_HEAP_BITMAP_SIZE,
-	.bitmap = Paging_Heap_Bitmap,
-	.contiguity_bitmap = Paging_Heap_Contiguity_Bitmap
-};
-
 static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
 {
 
@@ -247,11 +223,6 @@ void *malloc(unsigned int num_bytes)
 		 * Request memory allocation from smaller segmented memory pool
 		 */
 		memory = allocate_mem(&Memory_Pool, num_bytes);
-	} else {
-		uint32_t page_num =
-			((num_bytes + CPU_PAGE_SIZE) - 1U) >> CPU_PAGE_SHIFT;
-		/* Request memory allocation through alloc_page */
-		memory = alloc_pages(page_num);
 	}
 
 	/* Check if memory allocation is successful */
@@ -261,26 +232,6 @@ void *malloc(unsigned int num_bytes)
 
 	/* Return memory pointer to caller */
 	return memory;
-}
-
-void *alloc_pages(unsigned int page_num)
-{
-	void *memory = NULL;
-
-	/* Request memory allocation from Page-aligned memory pool */
-	memory = allocate_mem(&Paging_Memory_Pool, page_num * CPU_PAGE_SIZE);
-
-	/* Check if memory allocation is successful */
-	if (memory == NULL) {
-		pr_err("%s: failed to alloc %d pages", __func__, page_num);
-	}
-
-	return memory;
-}
-
-void *alloc_page(void)
-{
-	return alloc_pages(1U);
 }
 
 void *calloc(unsigned int num_elements, unsigned int element_size)
@@ -305,14 +256,6 @@ void free(const void *ptr)
 			(Memory_Pool.total_buffs * Memory_Pool.buff_size)))) {
 		/* Free buffer in 16-Bytes aligned Memory Pool */
 		deallocate_mem(&Memory_Pool, ptr);
-	}
-	/* Check if ptr belongs to page aligned Memory Pool */
-	else if ((Paging_Memory_Pool.start_addr < ptr) &&
-			(ptr < (Paging_Memory_Pool.start_addr +
-				(Paging_Memory_Pool.total_buffs *
-				 Paging_Memory_Pool.buff_size)))) {
-		/* Free buffer in page aligned Memory Pool */
-		deallocate_mem(&Paging_Memory_Pool, ptr);
 	}
 }
 
