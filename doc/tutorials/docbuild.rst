@@ -137,6 +137,9 @@ Our documentation processing has been tested to run with:
 
 Depending on your Linux version, install the needed tools:
 
+* For Clear Linux: follow the :ref:`getting-started-apl-nuc` to install
+  all the tools required
+
 * For Ubuntu use:
 
   .. code-block:: bash
@@ -150,13 +153,26 @@ Depending on your Linux version, install the needed tools:
 
      sudo dnf install doxygen python3-pip python3-wheel make graphviz
 
-And for either Linux environment, install the remaining python-based
+And for any of these Linux environments, install the remaining python-based
 tools:
 
 .. code-block:: bash
 
    cd ~/projectacrn/acrn-hypervisor/doc
    pip3 install --user -r scripts/requirements.txt
+
+Add ``$HOME/.local/bin`` to the front of your ``PATH`` so the system will
+find expected versions of python utilities such as ``sphinx-build`` and
+``breathe``:
+
+.. code-block:: bash
+
+   printf "\nexport PATH=\$HOME/.local/bin:\$PATH" >> ~/.bashrc
+
+.. note::
+
+   You will need to open a new terminal for this change to be effective.
+   Adding this to your ``~/.bashrc`` file ensures it is set by default.
 
 And with that you're ready to generate the documentation.
 

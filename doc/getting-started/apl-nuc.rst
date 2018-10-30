@@ -416,14 +416,12 @@ each with their own way to install development tools:
      ACRN uses ``menuconfig``, a python3 text-based user interface (TUI) for
      configuring hypervisor options and using python's ``kconfiglib`` library.
 
-* On a Clear Linux development system, install the ``os-clr-on-clr`` bundle to get
-  the necessary tools:
+* On a Clear Linux development system, install the necessary tools:
 
   .. code-block:: none
 
-     $ sudo swupd bundle-add os-clr-on-clr
-     $ sudo swupd bundle-add python3-basic
-     $ sudo pip3 install kconfiglib
+     $ sudo swupd bundle-add os-clr-on-clr os-core-dev python3-basic
+     $ pip3 install --user kconfiglib
 
 * On a Ubuntu/Debian development system:
 
