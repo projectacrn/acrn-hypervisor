@@ -15,6 +15,8 @@ static void complete_ioreq(struct vhm_request *vhm_req)
 }
 
 /**
+ * @brief Post-work for port I/O emulation
+ *
  * @pre io_req->type == REQ_PORTIO
  *
  * @remark This function must be called when \p io_req is completed, after
@@ -37,6 +39,8 @@ emulate_pio_post(struct vcpu *vcpu, const struct io_request *io_req)
 }
 
 /**
+ * @brief Post-work of VHM requests for port I/O emulation
+ *
  * @pre vcpu->req.type == REQ_PORTIO
  *
  * @remark This function must be called after the VHM request corresponding to
@@ -62,11 +66,16 @@ void dm_emulate_pio_post(struct vcpu *vcpu)
 }
 
 /**
- * @pre vcpu->req.type == REQ_MMIO
+ * @brief General post-work for MMIO emulation
+ *
+ * @param vcpu The virtual CPU that triggers the MMIO access
+ * @param io_req The I/O request holding the details of the MMIO access
+ *
+ * @pre io_req->type == REQ_MMIO
  *
  * @remark This function must be called when \p io_req is completed, after
  * either a previous call to emulate_io() returning 0 or the corresponding VHM
- * request having transferred to the COMPLETE state.
+ * request transferring to the COMPLETE state.
  */
 void emulate_mmio_post(const struct vcpu *vcpu, const struct io_request *io_req)
 {
@@ -79,6 +88,10 @@ void emulate_mmio_post(const struct vcpu *vcpu, const struct io_request *io_req)
 }
 
 /**
+ * @brief Post-work of VHM requests for MMIO emulation
+ *
+ * @param vcpu The virtual CPU that triggers the MMIO access
+ *
  * @pre vcpu->req.type == REQ_MMIO
  *
  * @remark This function must be called after the VHM request corresponding to
@@ -114,6 +127,11 @@ static void io_instr_dest_handler(struct io_request *io_req)
 }
 #endif
 
+/**
+ * @brief General post-work for all kinds of VHM requests for I/O emulation
+ *
+ * @param vcpu The virtual CPU that triggers the MMIO access
+ */
 void emulate_io_post(struct vcpu *vcpu)
 {
 	union vhm_request_buffer *req_buf;
@@ -266,12 +284,18 @@ hv_emulate_mmio(struct vcpu *vcpu, struct io_request *io_req)
 }
 
 /**
+ * @brief Emulate \p io_req for \p vcpu
+ *
  * Handle an I/O request by either invoking a hypervisor-internal handler or
  * deliver to VHM.
+ *
+ * @param vcpu The virtual CPU that triggers the MMIO access
+ * @param io_req The I/O request holding the details of the MMIO access
  *
  * @return 0       - Successfully emulated by registered handlers.
  * @return IOREQ_PENDING - The I/O request is delivered to VHM.
  * @return -EIO    - The request spans multiple devices and cannot be emulated.
+ * @return -EINVAL - \p io_req has an invalid type.
  * @return Negative on other errors during emulation.
  */
 int32_t
@@ -328,6 +352,11 @@ emulate_io(struct vcpu *vcpu, struct io_request *io_req)
 	return status;
 }
 
+/**
+ * @brief The handler of VM exits on I/O instructions
+ *
+ * @param vcpu The virtual CPU which triggers the VM exit on I/O instruction
+ */
 int32_t pio_instr_vmexit_handler(struct vcpu *vcpu)
 {
 	int32_t status;
@@ -387,11 +416,26 @@ static void empty_io_handler_list(struct vm *vm)
 	vm->arch_vm.io_handler = NULL;
 }
 
+/**
+ * @brief Free I/O bitmaps and port I/O handlers of \p vm
+ *
+ * @param vm The VM whose I/O bitmaps and handlers are to be freed
+ */
 void free_io_emulation_resource(struct vm *vm)
 {
 	empty_io_handler_list(vm);
 }
 
+/**
+ * @brief Allow a VM to access a port I/O range
+ *
+ * This API enables direct access from the given \p vm to the port I/O space
+ * starting from \p port_address to \p port_address + \p nbytes - 1.
+ *
+ * @param vm The VM whose port I/O access permissions is to be changed
+ * @param port_address The start address of the port I/O range
+ * @param nbytes The size of the range, in bytes
+ */
 void allow_guest_pio_access(struct vm *vm, uint16_t port_address,
 		uint32_t nbytes)
 {
@@ -441,6 +485,11 @@ static struct vm_io_handler *create_io_handler(uint32_t port, uint32_t len,
 	return handler;
 }
 
+/**
+ * @brief Initialize the I/O bitmap for \p vm
+ *
+ * @param vm The VM whose I/O bitmap is to be initialized
+ */
 void setup_io_bitmap(struct vm *vm)
 {
 	if (is_vm0(vm)) {
@@ -451,6 +500,14 @@ void setup_io_bitmap(struct vm *vm)
 	}
 }
 
+/**
+ * @brief Register a port I/O handler
+ *
+ * @param vm The VM to which the port I/O handlers are registered
+ * @param range The port I/O range that the given handlers can emulate
+ * @param io_read_fn_ptr The handler for emulating reads from the given range
+ * @param io_write_fn_ptr The handler for emulating writes to the given range
+ */
 void register_io_emulation_handler(struct vm *vm, const struct vm_io_range *range,
 		io_read_fn_t io_read_fn_ptr,
 		io_write_fn_t io_write_fn_ptr)
@@ -472,6 +529,20 @@ void register_io_emulation_handler(struct vm *vm, const struct vm_io_range *rang
 	register_io_handler(vm, handler);
 }
 
+/**
+ * @brief Register a MMIO handler
+ *
+ * This API registers a MMIO handler to \p vm before it is launched.
+ *
+ * @param vm The VM to which the MMIO handler is registered
+ * @param read_write The handler for emulating accesses to the given range
+ * @param start The base address of the range \p read_write can emulate
+ * @param end The end of the range (exclusive) \p read_write can emulate
+ * @param handler_private_data Handler-specific data which will be passed to \p read_write when called
+ *
+ * @return 0 - Registration succeeds
+ * @return -EINVAL - \p read_write is NULL, \p end is not larger than \p start or \p vm has been launched
+ */
 int register_mmio_emulation_handler(struct vm *vm,
 	hv_mem_io_handler_t read_write, uint64_t start,
 	uint64_t end, void *handler_private_data)
@@ -522,6 +593,13 @@ int register_mmio_emulation_handler(struct vm *vm,
 	return status;
 }
 
+/**
+ * @brief Unregister a MMIO handler
+ *
+ * @param vm The VM from which MMIO handlers are unregistered
+ * @param start The base address of the range the to-be-unregistered handler is for
+ * @param end The end of the range (exclusive) the to-be-unregistered handler is for
+ */
 void unregister_mmio_emulation_handler(struct vm *vm, uint64_t start,
 	uint64_t end)
 {
