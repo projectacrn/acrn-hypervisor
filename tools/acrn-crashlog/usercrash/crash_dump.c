@@ -119,17 +119,23 @@ static int get_backtrace(int pid, int fd, int sig, const char *comm)
 	char *membkt;
 	char format[FORMAT_LENGTH];
 	size_t len, ret;
+	int flen;
 
 	loginfo(fd, "\nBackTrace:\n\n");
 	memset(format, 0, sizeof(format));
 	if (sig == DEBUGGER_SIGNAL) {
-		snprintf(format, sizeof(format), "-p %d", pid);
+		flen = snprintf(format, sizeof(format), "-p %d", pid);
 	} else {
-		snprintf(format, sizeof(format), "%s %s", comm, DUMP_FILE);
+		flen = snprintf(format, sizeof(format), "%s %s", comm,
+				DUMP_FILE);
 		if (save_coredump(DUMP_FILE) == -1) {
 			LOGE("save core file failed\n");
 			return -1;
 		}
+	}
+	if (s_not_expect(flen, sizeof(format))) {
+		LOGE("failed to generate format\n");
+		return -1;
 	}
 	len = exec_out2mem(&membkt, GET_GDB_INFO, format);
 	if (len <= 0) {
@@ -163,7 +169,11 @@ static int save_proc_info(int pid, int fd, const char *path, const char *name)
 
 	loginfo(fd, "\n%s:\n\n", name);
 	memset(format, 0, sizeof(format));
-	snprintf(format, sizeof(format), path, pid);
+	ret = snprintf(format, sizeof(format), path, pid);
+	if (s_not_expect(ret, sizeof(format))) {
+		LOGE("failed to generate format");
+		return -1;
+	}
 	ret = read_file(format, &size, (void *)&data);
 	if (ret) {
 		LOGE("read file failed\n");
@@ -191,7 +201,11 @@ static int get_openfiles(int pid, int fd, const char *path, const char *name)
 
 	loginfo(fd, "\n%s:\n\n", name);
 	memset(format, 0, sizeof(format));
-	snprintf(format, sizeof(format), path, pid);
+	ret = snprintf(format, sizeof(format), path, pid);
+	if (s_not_expect(ret, sizeof(format))) {
+		LOGE("failed to generate format");
+		return -1;
+	}
 	fdcount = lsdir(format, files, ARRAY_SIZE(files));
 	if (fdcount < 0) {
 		LOGE("get fd list failed\n");
@@ -263,7 +277,11 @@ static int get_key_value(int pid, const char *path, const char *key,
 	char format[128];
 
 	memset(format, 0, sizeof(format));
-	snprintf(format, sizeof(format), path, pid);
+	ret = snprintf(format, sizeof(format), path, pid);
+	if (s_not_expect(ret, sizeof(format))) {
+		LOGE("failed to generate format");
+		return -1;
+	}
 	ret = read_file(format, &size, (void *)&data);
 	if (ret || !data) {
 		LOGE("read file failed\n");
@@ -306,7 +324,11 @@ void crash_dump(int pid, int sig, int out_fd)
 	char format[128];
 
 	memset(format, 0, sizeof(format));
-	snprintf(format, sizeof(format), GET_COMM, pid);
+	ret = snprintf(format, sizeof(format), GET_COMM, pid);
+	if (s_not_expect(ret, sizeof(format))) {
+		LOGE("failed to generate format\n");
+		return;
+	}
 	ret = readlink(format, comm, LINK_LEN);
 	if (ret < 0 || ret >= LINK_LEN) {
 		LOGE("get process exe link failed\n");

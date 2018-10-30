@@ -62,8 +62,8 @@ static int cal_log_filepath(char **out, const struct log_t *log,
 		need_timestamp = 1;
 
 	if (need_timestamp) {
-		timebuf[0] = 0;
-		get_uptime_string(timebuf, &hours);
+		if (get_uptime_string(timebuf, &hours) == -1)
+			return -1;
 		return asprintf(out, "%s/%s_%s", desdir, filename, timebuf);
 	}
 
@@ -115,16 +115,8 @@ unmap:
 }
 
 static void get_log_file(const char *despath, const char *srcpath,
-			const char *tail_lines)
+			int lines)
 {
-	int lines;
-
-	if (!tail_lines) {
-		get_log_file_complete(despath, srcpath);
-		return;
-	}
-
-	lines = atoi(tail_lines);
 	if (lines > 0)
 		get_log_file_tail(despath, srcpath, lines);
 	else
@@ -155,9 +147,16 @@ static void get_log_by_type(const char *despath, const struct log_t *log,
 	if (!despath || !log || !srcpath)
 		return;
 
-	if (!strcmp("file", log->type))
-		get_log_file(despath, srcpath, log->lines);
-	else if (!strcmp("node", log->type))
+	if (!strcmp("file", log->type)) {
+		int lines;
+
+		if (!log->lines)
+			lines = 0;
+		else
+			if (cfg_atoi(log->lines, log->lines_len, &lines) == -1)
+				return;
+		get_log_file(despath, srcpath, lines);
+	} else if (!strcmp("node", log->type))
 		get_log_node(despath, log->path);
 	else if (!strcmp("cmd", log->type))
 		get_log_cmd(despath, log->path);
@@ -213,7 +212,7 @@ static void telemd_get_log(struct log_t *log, void *data)
 	char fpath[PATH_MAX];
 	char *msg;
 	int count;
-	int res;
+	int len;
 	int i;
 	struct dirent **filelist;
 	struct ac_filter_data acfd = {log->name, log->name_len};
@@ -225,21 +224,24 @@ static void telemd_get_log(struct log_t *log, void *data)
 	count = ac_scandir(d->srcdir, &filelist, filter_filename_substr,
 			   &acfd, NULL);
 	if (count < 0) {
-		LOGE("search (%s) in dir (%s) failed\n", log->name, d->srcdir);
+		LOGE("error occurs when scanning (%s)\n", d->srcdir);
 		return;
 	}
 	if (!count) {
-		LOGE("dir (%s) does not contains (%s)\n", d->srcdir,
-		     log->name);
+		LOGE("couldn't find any files with substr (%s) under (%s)\n",
+		     log->name, d->srcdir);
 		goto send_nologs;
 	}
 
 	for (i = 0; i < count; i++) {
-		snprintf(fpath, sizeof(fpath), "%s/%s", d->srcdir,
-			 filelist[i]->d_name);
+		len = snprintf(fpath, sizeof(fpath), "%s/%s", d->srcdir,
+			       filelist[i]->d_name);
 		free(filelist[i]);
-		telemd_send_data(fpath, d->eventid,
-				 d->severity, d->class);
+		if (s_not_expect(len, sizeof(fpath)))
+			LOGW("failed to generate path, event %s\n", d->eventid);
+		else
+			telemd_send_data(fpath, d->eventid,
+					 d->severity, d->class);
 	}
 
 	free(filelist);
@@ -247,10 +249,9 @@ static void telemd_get_log(struct log_t *log, void *data)
 	return;
 
 send_nologs:
-	res = asprintf(&msg, "no log generated on %s, check probe's log.",
-		       log->name);
-	if (res < 0) {
-		LOGE("compute string failed, out of memory\n");
+	if (asprintf(&msg, "couldn't find logs with (%s), check probe's log.",
+		     log->name) == -1) {
+		LOGE("failed to generate msg, out of memory\n");
 		return;
 	}
 
@@ -274,7 +275,10 @@ static void crashlog_get_log(struct log_t *log, void *data)
 	if (!crashlog)
 		return;
 
-	quota = atoi(crashlog->spacequota);
+	if (cfg_atoi(crashlog->spacequota, crashlog->spacequota_len,
+		     &quota) == -1)
+		return;
+
 	if (!space_available(crashlog->outdir, quota)) {
 		hist_raise_infoerror("SPACE_FULL", 10);
 		return;
@@ -481,7 +485,10 @@ static void telemd_send_uptime(void)
 		return;
 	}
 	uptime = telemd->uptime;
-	uptime_hours = atoi(uptime->eventhours);
+	if (cfg_atoi(uptime->eventhours, uptime->eventhours_len,
+		     &uptime_hours) == -1)
+		return;
+
 	if (hours / uptime_hours >= loop_uptime_event) {
 		char *content;
 
@@ -605,8 +612,8 @@ static int telemd_new_vmevent(const char *line_to_sync,
 
 		logf = log + sizeof(ANDROID_LOGS_DIR) - 1;
 		logflen = &rest[0] + strnlen(rest, PATH_MAX) - logf;
-		res = find_file(crashlog->outdir, logf, logflen, 1,
-				&vmlogpath, 1);
+		res = find_file(crashlog->outdir, crashlog->outdir_len, logf,
+				logflen, 1, &vmlogpath, 1);
 		if (res == -1) {
 			LOGE("failed to find (%s) in (%s)\n",
 			     logf, crashlog->outdir);
@@ -729,6 +736,7 @@ static void crashlog_send_crash(struct event_t *e)
 	char *data0;
 	char *data1;
 	char *data2;
+	int quota;
 	size_t d0len;
 	size_t d1len;
 	size_t d2len;
@@ -767,7 +775,11 @@ static void crashlog_send_crash(struct event_t *e)
 	}
 
 	/* check space before collecting logs */
-	if (!space_available(crashlog->outdir, atoi(crashlog->spacequota))) {
+	if (cfg_atoi(crashlog->spacequota, crashlog->spacequota_len,
+		     &quota) == -1)
+		goto free_key;
+
+	if (!space_available(crashlog->outdir, quota)) {
 		hist_raise_infoerror("SPACE_FULL", 10);
 		hist_raise_event("CRASH", crash->name, NULL, "", key);
 		goto free_key;
@@ -948,7 +960,10 @@ static int crashlog_new_vmevent(const char *line_to_sync,
 	if (!crashlog)
 		return ret;
 
-	quota = atoi(crashlog->spacequota);
+	if (cfg_atoi(crashlog->spacequota, crashlog->spacequota_len,
+		     &quota) == -1)
+		return ret;
+
 	if (!space_available(crashlog->outdir, quota)) {
 		hist_raise_infoerror("SPACE_FULL", 10);
 		return ret;
@@ -1085,9 +1100,8 @@ int init_sender(void)
 		if (uptime) {
 			fd = open(uptime->path, O_RDWR | O_CREAT, 0666);
 			if (fd < 0) {
-				LOGE("open failed with (%s, %d), error (%s)\n",
-				     uptime->path, atoi(uptime->frequency),
-				     strerror(errno));
+				LOGE("failed to open (%s), error (%s)\n",
+				     uptime->path, strerror(errno));
 				return -errno;
 			}
 			close(fd);

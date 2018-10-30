@@ -132,6 +132,7 @@ static struct crash_node *pop_front(void)
 static void find_oldest_usercrash(void)
 {
 	int i;
+	int len;
 	int oldest_usercrash = 0;
 	time_t oldest_time = LONG_MAX;
 	char path[FILE_PATH_LEN_MAX];
@@ -139,8 +140,12 @@ static void find_oldest_usercrash(void)
 
 	memset(path, 0, FILE_PATH_LEN_MAX);
 	for (i = 0; i < usercrash_count; ++i) {
-		snprintf(path, sizeof(path), "%s/usercrash_%02d",
+		len = snprintf(path, sizeof(path), "%s/usercrash_%02d",
 				usercrash_directory, i);
+		if (s_not_expect(len, sizeof(path))) {
+			LOGE("failed to generate path\n");
+			continue;
+		}
 		if (stat(path, &st) != 0) {
 			if (errno == ENOENT) {
 				oldest_usercrash = i;
@@ -168,11 +173,16 @@ static int get_usercrash(struct crash_node *crash)
 	 * interleaving their output
 	 */
 	int result;
+	int len;
 	char file_name[FILE_PATH_LEN_MAX];
 
 	memset(file_name, 0, FILE_PATH_LEN_MAX);
-	snprintf(file_name, sizeof(file_name), "%s/usercrash_%02d",
+	len = snprintf(file_name, sizeof(file_name), "%s/usercrash_%02d",
 				usercrash_directory, next_usercrash);
+	if (s_not_expect(len, sizeof(file_name))) {
+		LOGE("failed to generate file name\n");
+		return -1;
+	}
 
 	if (unlink(file_name) != 0 && errno != ENOENT) {
 		LOGE("failed to unlink usercrash at %s\n", file_name);

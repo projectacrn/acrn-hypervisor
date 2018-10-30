@@ -230,7 +230,7 @@ static int create_polling_job(struct polling_job_t *pjob)
 static void channel_polling(struct channel_t *cnl)
 {
 	int id;
-	int ret;
+	int jt;
 	struct vm_t *vm;
 	char *cname = cnl->name;
 
@@ -244,15 +244,27 @@ static void channel_polling(struct channel_t *cnl)
 		if (strcmp(vm->channel, "polling"))
 			continue;
 
-		vm_job.timer_val = atoi(vm->interval);
+		if (cfg_atoi(vm->interval, vm->interval_len,
+			     &jt) == -1) {
+			LOGE("invalid interval (%s) in config file, exiting\n",
+			     vm->interval);
+			exit(EXIT_FAILURE);
+		}
+
+		if (jt <= 0) {
+			LOGE("interval (%s) must be greater than 0, exiting\n",
+			     vm->interval);
+			exit(EXIT_FAILURE);
+		} else
+			vm_job.timer_val = (uint32_t)jt;
+
 	}
 
 	LOGD("start polling job with %ds\n", vm_job.timer_val);
 	vm_job.fn = polling_vm;
 	vm_job.type = VM;
-	ret = create_polling_job(&vm_job);
-	if (ret < 0) {
-		LOGE("create polling job failed\n, error (%s)\n",
+	if (create_polling_job(&vm_job) == -1) {
+		LOGE("failed to create polling job\n, error (%s)\n",
 		     strerror(errno));
 		exit(EXIT_FAILURE);
 	}

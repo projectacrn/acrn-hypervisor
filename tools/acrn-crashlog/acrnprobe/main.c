@@ -45,15 +45,19 @@ static void uptime(const struct sender_t *sender)
 	if (!uptime)
 		return;
 
-	frequency = atoi(uptime->frequency);
+	if (cfg_atoi(uptime->frequency, uptime->frequency_len,
+		     &frequency) == -1) {
+		LOGE("Invalid frequency (%s) in config file, exiting...\n",
+		     uptime->frequency);
+		exit(-1);
+	}
 	if (frequency > 0)
 		sleep(frequency);
 
 	fd = open(uptime->path, O_RDWR | O_CREAT, 0666);
 	if (fd < 0)
 		LOGE("open uptime_file with (%d, %s) failed, error (%s)\n",
-				atoi(uptime->frequency), uptime->path,
-				strerror(errno));
+				frequency, uptime->path, strerror(errno));
 	else
 		close(fd);
 }

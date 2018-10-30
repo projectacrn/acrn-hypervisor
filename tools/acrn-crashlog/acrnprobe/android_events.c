@@ -437,22 +437,24 @@ static void get_last_line_synced(const struct sender_t *sender)
 		if (vm->last_synced_line_key[sid][0])
 			continue;
 
-		snprintf(vm_name, sizeof(vm_name), "%s ", vm->name);
+		ret = snprintf(vm_name, sizeof(vm_name), "%s ", vm->name);
+		if (s_not_expect(ret, sizeof(vm_name)))
+			continue;
+
 		ret = file_read_key_value_r(vmkey, sizeof(vmkey),
 					    sender->log_vmrecordid,
 					    vm_name, strnlen(vm_name, 32));
 		if (ret == -ENOENT) {
-			LOGD("no (%s), will generate\n",
+			LOGD("(%s) does not exist, will generate it\n",
 			     sender->log_vmrecordid);
 			generate_log_vmrecord(sender->log_vmrecordid);
 			continue;
 		} else if (ret == -ENOMSG) {
-			LOGD("no vm record id for (%s)\n", vm->name);
+			LOGD("couldn't find any records with (%s)\n", vm->name);
 			continue;
 		} else if (ret < 0) {
-			LOGE("read key-value in (%s) for (%s), error (%s)\n",
-			     sender->log_vmrecordid, vm->name,
-			     strerror(errno));
+			LOGE("failed to search records in (%s), error (%s)\n",
+			     sender->log_vmrecordid, strerror(errno));
 			continue;
 		}
 		p = strchr(vmkey, ' ');
@@ -463,8 +465,8 @@ static void get_last_line_synced(const struct sender_t *sender)
 						strnlen(vmkey, sizeof(vmkey)),
 						MM_ONLY);
 		if (ret < 0) {
-			LOGE("get a non-key vm event (%s) for (%s)\n",
-			     vmkey, vm->name);
+			LOGE("invalid vm event (%s) in (%s)\n",
+			     vmkey, sender->log_vmrecordid);
 			continue;
 		}
 	}
@@ -488,8 +490,11 @@ static char *setup_loop_dev(void)
 
 	devnr = loopdev_num_get_free();
 	for (i = 0; i < devnr; i++) {
-		snprintf(loop_dev_tmp, ARRAY_SIZE(loop_dev_tmp),
-			 "/dev/loop%d", i);
+		res = snprintf(loop_dev_tmp, ARRAY_SIZE(loop_dev_tmp),
+			       "/dev/loop%d", i);
+		if (s_not_expect(res, ARRAY_SIZE(loop_dev_tmp)))
+			return NULL;
+
 		if (loopdev_check_parname(loop_dev_tmp,
 					  ANDROID_DATA_PAR_NAME)) {
 			loop_dev = strdup(loop_dev_tmp);

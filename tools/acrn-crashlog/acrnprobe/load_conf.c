@@ -152,7 +152,9 @@ static int get_prop_int(xmlNodePtr cur, const char *key, const int max)
 		return -1;
 	}
 
-	value = atoi((char *)prop);
+	if (cfg_atoi((const char *)prop, xmlStrlen(prop), &value) == -1)
+		return -1;
+
 	xmlFree(prop);
 
 	if (value > max) {
@@ -379,6 +381,25 @@ int crash_depth(struct crash_t *tcrash)
 	return level;
 }
 
+int cfg_atoi(const char *a, size_t alen, int *i)
+{
+	char *eptr;
+	int res;
+
+	if (!a || !alen || !i)
+		return -1;
+
+	res = (int)strtol(a, &eptr, 0);
+	if (a + alen != eptr) {
+		LOGE("Failed to convert (%s) to type int, check config file\n",
+		     a);
+		return -1;
+	}
+
+	*i = res;
+	return 0;
+}
+
 static int is_enable(xmlNodePtr cur)
 {
 	xmlChar *prop;
@@ -524,8 +545,10 @@ static int parse_crashes(xmlNodePtr crashes)
 				return -1;
 
 			res = get_prop_int(cur, "inherit", CRASH_MAX);
-			if (res < 0)
+			if (res < 0) {
+				free(crash);
 				return -1;
+			}
 
 			id = res - 1;
 			if (id >= 0) {

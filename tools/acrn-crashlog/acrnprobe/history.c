@@ -51,40 +51,43 @@ struct history_entry {
 char *history_file;
 static int current_lines;
 
-static void entry_to_history_line(struct history_entry *entry,
-				char newline[MAXLINESIZE])
+static int entry_to_history_line(struct history_entry *entry,
+				char *newline, size_t size)
 {
-	newline[0] = 0;
-	if (entry->log != NULL) {
-		char *ptr;
-		char tmp[PATH_MAX];
+	const char *general_event_with_msg = "%-8s%-22s%-20s%-16s %s\n";
+	const char *general_event_without_msg = "%-8s%-22s%-20s%-16s\n";
+	const char *simple_event = "%-8s%-22s%-20s%s\n";
+	int len;
 
-		strncpy(tmp, entry->log, PATH_MAX);
-		tmp[PATH_MAX - 1] = 0;
-		ptr = strrchr(tmp, '/');
-		if (ptr && ptr[1] == 0)
-			ptr[0] = 0;
-		snprintf(newline, MAXLINESIZE, "%-8s%-22s%-20s%s %s\n",
-			 entry->event, entry->key, entry->eventtime,
-			 entry->type, tmp);
-	} else if (entry->type != NULL && entry->type[0]) {
-		if (entry->lastuptime != NULL) {
-			snprintf(newline, MAXLINESIZE,
-				 "%-8s%-22s%-20s%-16s %s\n",
-				 entry->event, entry->key,
-				 entry->eventtime, entry->type,
-				 entry->lastuptime);
+	if (!entry || !entry->event || !entry->key || !entry->eventtime)
+		return -1;
+
+	if (entry->type) {
+		const char *fmt;
+		const char *msg;
+
+		if (entry->log || entry->lastuptime) {
+			fmt = general_event_with_msg;
+			msg = entry->log ? entry->log : entry->lastuptime;
+			len = snprintf(newline, size, fmt,
+				       entry->event, entry->key,
+				       entry->eventtime, entry->type, msg);
 		} else {
-			snprintf(newline, MAXLINESIZE,
-				 "%-8s%-22s%-20s%-16s\n",
-				 entry->event, entry->key, entry->eventtime,
-				 entry->type);
+			fmt = general_event_without_msg;
+			len = snprintf(newline, size, fmt,
+				       entry->event, entry->key,
+				       entry->eventtime, entry->type);
 		}
-	} else {
-		snprintf(newline, MAXLINESIZE, "%-8s%-22s%-20s%s\n",
-			 entry->event, entry->key, entry->eventtime,
-			 entry->lastuptime);
-	}
+	} else if (entry->lastuptime) {
+		len = snprintf(newline, size, simple_event,
+			       entry->event, entry->key,
+			       entry->eventtime, entry->lastuptime);
+	} else
+		return -1;
+
+	if (s_not_expect(len, size))
+		return -1;
+	return 0;
 }
 
 static void backup_history(void)
@@ -135,7 +138,10 @@ void hist_raise_event(const char *event, const char *type, const char *log,
 	if (!crashlog)
 		return;
 
-	maxlines = atoi(crashlog->maxlines);
+	if (cfg_atoi(crashlog->maxlines, crashlog->maxlines_len,
+		     &maxlines) == -1)
+		return;
+
 	if (++current_lines >= maxlines) {
 		LOGW("lines of (%s) meet quota %d, backup... Pls clean!\n",
 		     history_file, maxlines);
@@ -146,7 +152,10 @@ void hist_raise_event(const char *event, const char *type, const char *log,
 		return;
 
 	entry.eventtime = eventtime;
-	entry_to_history_line(&entry, line);
+	if (entry_to_history_line(&entry, line, sizeof(line)) == -1) {
+		LOGE("failed to generate new line\n");
+		return;
+	}
 	if (append_file(history_file, line, strnlen(line, MAXLINESIZE)) <= 0) {
 		LOGE("failed to append (%s) to (%s)\n", line, history_file);
 		return;
@@ -171,7 +180,9 @@ void hist_raise_uptime(char *lastuptime)
 		return;
 
 	uptime = crashlog->uptime;
-	uptime_hours = atoi(uptime->eventhours);
+	if (cfg_atoi(uptime->eventhours, uptime->eventhours_len,
+		     &uptime_hours) == -1)
+		return;
 
 	if (lastuptime)
 		hist_raise_event(uptime->name, NULL, NULL, lastuptime,
