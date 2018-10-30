@@ -475,6 +475,7 @@ static void profiling_handle_msrops(void)
 		(my_msr_node->msr_op_state != (int32_t)MSR_OP_REQUESTED)) {
 		dev_dbg(ACRN_DBG_PROFILING, "%s: invalid my_msr_node on cpu%d",
 			__func__, get_cpu_id());
+		return;
 	}
 
 	if ((my_msr_node->num_entries == 0U) ||
