@@ -308,7 +308,7 @@ CPU may be running under either VMX root mode or non-root mode.
   exit processing flow will call dispatch_interrupt() to dispatch and
   handle the interrupt.
 
-After an interrupt occures from either path shown in
+After an interrupt occurs from either path shown in
 :numref:`phy-interrupt-processing`, ACRN hypervisor will jump to
 dispatch_interrupt. This function gets the vector of the generated
 interrupt from the context, gets IRQ number from vector_to_irq[], and

@@ -486,7 +486,7 @@ optional):
 
     -s 4,virtio-net,<tap_name>,[mac=<XX:XX:XX:XX:XX:XX>]
 
-When the UOS is lauched, run ``ifconfig`` to check the network. enp0s4r
+When the UOS is launched, run ``ifconfig`` to check the network. enp0s4r
 is the virtual NIC created by acrn-dm:
 
 .. code-block:: none
@@ -517,7 +517,7 @@ top level architecture to the detailed TX and RX flow.  Currently, the
 control plane and data plane are all processed in ACRN device model,
 which may bring some overhead. But this is not a bottleneck for 1000Mbit
 NICs or below. Network bandwidth for virtualization can be very close to
-the native bandwidgh. For high speed NIC (e.g.  10Gb or above), it is
+the native bandwidth. For high speed NIC (e.g.  10Gb or above), it is
 necessary to separate the data plane from the control plane. We can use
 vhost for acceleration. For most IoT scenarios, processing in user space
 is simple and reasonable.

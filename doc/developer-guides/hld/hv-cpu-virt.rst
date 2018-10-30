@@ -1251,7 +1251,7 @@ In the handlers for EPT violation or APIC access VM exit, ACRN will:
    direction. It will finally complete this MMIO request emulation
    by:
 
-   a. puting req.val to req.addr for write operation
+   a. putting req.val to req.addr for write operation
    b. getting req.val from req.addr for read operation
 
 5. If the access direction is read, then do *emulate_instruction* to

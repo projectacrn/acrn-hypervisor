@@ -356,7 +356,7 @@ from different huge pages in Service OS as shown in
 
 As Service OS has full knowledge of these huge pages size,
 GPA\ :sup:`SOS` and GPA\ :sup:`UOS`, it works with the hypervisor
-to complete UOS's hostr-to-guest mapping using this pseudo code:
+to complete UOS's host-to-guest mapping using this pseudo code:
 
 .. code-block: none
 
