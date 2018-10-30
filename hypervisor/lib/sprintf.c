@@ -508,19 +508,6 @@ void do_print(const char *fmt_arg, struct print_param *param,
 						uint32_t));
 				}
 			}
-			/* octal number */
-			else if (ch == 'o') {
-				if ((param->vars.flags &
-					PRINT_FLAG_LONG_LONG) != 0U) {
-					print_pow2(param,
-						__builtin_va_arg(args,
-						uint64_t), 3U);
-				} else {
-					print_pow2(param,
-						__builtin_va_arg(args,
-						uint32_t), 3U);
-				}
-			}
 			/* hexadecimal number */
 			else if ((ch == 'X') || (ch == 'x')) {
 				if (ch == 'X') {
@@ -545,12 +532,6 @@ void do_print(const char *fmt_arg, struct print_param *param,
 					s = "(null)";
 				}
 				print_string(param, s);
-			}
-			/* pointer argument */
-			else if (ch == 'p') {
-				param->vars.flags |= PRINT_FLAG_ALTERNATE_FORM;
-				print_pow2(param, (uint64_t)
-					__builtin_va_arg(args, void *), 4U);
 			}
 			/* single character argument */
 			else if (ch == 'c') {
