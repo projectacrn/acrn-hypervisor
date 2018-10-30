@@ -62,6 +62,7 @@ int get_uptime_string(char *newuptime, int *hours)
 {
 	long long tm;
 	int seconds, minutes;
+	int len;
 
 	tm = get_uptime();
 	if (tm == -1)
@@ -78,8 +79,11 @@ int get_uptime_string(char *newuptime, int *hours)
 	/* hours */
 	*hours /= 60;
 
-	return snprintf(newuptime, UPTIME_SIZE, "%04d:%02d:%02d", *hours,
-			minutes, seconds);
+	len = snprintf(newuptime, UPTIME_SIZE, "%04d:%02d:%02d", *hours,
+		       minutes, seconds);
+	if (s_not_expect(len, UPTIME_SIZE))
+		return -1;
+	return 0;
 }
 
 int get_current_time_long(char *buf)
@@ -208,7 +212,7 @@ static int reserve_log_folder(enum e_dir_mode mode, char *dir,
 	int dlen;
 	struct sender_t *crashlog;
 	const char *outdir;
-	unsigned int maxdirs;
+	int maxdirs;
 
 	crashlog = get_sender_by_name("crashlog");
 	if (!crashlog)
@@ -246,9 +250,15 @@ static int reserve_log_folder(enum e_dir_mode mode, char *dir,
 	if (res < 0)
 		return res;
 
-	maxdirs = atoi(crashlog->maxcrashdirs);
+	if (cfg_atoi(crashlog->maxcrashdirs, crashlog->maxcrashdirs_len,
+		     &maxdirs) == -1)
+		return -1;
+	if (maxdirs <= 0) {
+		LOGE("failed to reserve dir, maxdirs must be greater than 0\n");
+		return -1;
+	}
 	/* Open file in read/write mode to update the new current */
-	res = file_update_int(path, *current, maxdirs);
+	res = file_update_int(path, *current, (unsigned int)maxdirs);
 	if (res < 0)
 		return res;
 
@@ -408,8 +418,11 @@ int is_boot_id_changed(void)
 	if (res == -1 || !size)
 		return result;
 
-	snprintf(logged_boot_id_path, sizeof(logged_boot_id_path), "%s/%s",
-		 crashlog->outdir, BOOTID_LOG);
+	res = snprintf(logged_boot_id_path, sizeof(logged_boot_id_path),
+		       "%s/%s", crashlog->outdir, BOOTID_LOG);
+	if (s_not_expect(res, sizeof(logged_boot_id_path)))
+		goto out;
+
 	if (file_exists(logged_boot_id_path)) {
 		res = read_file(logged_boot_id_path, &size, &logged_boot_id);
 		if (res == -1 || !size)

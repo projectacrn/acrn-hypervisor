@@ -240,5 +240,6 @@ struct sender_t *get_sender_by_name(const char *name);
 enum event_type_t get_conf_by_wd(int wd, void **private);
 struct crash_t *get_crash_by_wd(int wd);
 int crash_depth(struct crash_t *tcrash);
+int cfg_atoi(const char *a, size_t alen, int *i);
 
 #endif

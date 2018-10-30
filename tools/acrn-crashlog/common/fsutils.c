@@ -910,6 +910,7 @@ free_list:
  * Find target file in specified dir.
  *
  * @param dir Where to start search.
+ * @param dlen Length of dir.
  * @param target_file Target file to search.
  * @param tflen The length of target_file.
  * @param depth Descend at most depth of directories below the starting dir.
@@ -918,8 +919,8 @@ free_list:
  *
  * @return the count of searched files on success, or -1 on error.
  */
-int find_file(const char *dir, const char *target_file, size_t tflen,
-		int depth, char *path[], int limit)
+int find_file(const char *dir, size_t dlen, const char *target_file,
+		size_t tflen, int depth, char *path[], int limit)
 {
 	int wdepth = 0;
 	int found = 0;
@@ -928,8 +929,9 @@ int find_file(const char *dir, const char *target_file, size_t tflen,
 
 	if (!dir || !target_file || !tflen || !path || limit <= 0)
 		return -1;
-	if (!memccpy(wdir, dir, 0, PATH_MAX))
+	if (dlen >= PATH_MAX)
 		return -1;
+	*(char *)mempcpy(wdir, dir, dlen) = '\0';
 	dp = calloc(depth + 1, sizeof(DIR *));
 	if (!dp) {
 		LOGE("out of memory\n");
@@ -1095,7 +1097,7 @@ int config_fmt_to_files(const char *file_fmt, char ***out)
 	char *file_prefix;
 	int i;
 	int count;
-	int res;
+	int res = 0;
 	int ret = 0;
 	struct dirent **filelist;
 	char **out_array;
@@ -1114,7 +1116,7 @@ int config_fmt_to_files(const char *file_fmt, char ***out)
 		/* It's an regular file as default */
 		out_array = malloc(sizeof(char *));
 		if (!out_array) {
-			ret = -errno;
+			ret = -1;
 			goto free_dir;
 		}
 
@@ -1126,7 +1128,7 @@ int config_fmt_to_files(const char *file_fmt, char ***out)
 	/* get dir and file prefix from format */
 	p = strrchr(dir, '/');
 	if (!p) {
-		LOGE("only support abs path, dir (%s)\n", dir);
+		LOGE("only support abs path, dir (%s)\n", file_fmt);
 		ret = -1;
 		goto free_dir;
 	}
@@ -1135,7 +1137,7 @@ int config_fmt_to_files(const char *file_fmt, char ***out)
 	p = strrchr(file_prefix, '[');
 	if (!p) {
 		ret = -1;
-		LOGE("unsupported formats (%s)\n", dir);
+		LOGE("unsupported formats (%s)\n", file_fmt);
 		goto free_dir;
 	}
 
@@ -1151,15 +1153,16 @@ int config_fmt_to_files(const char *file_fmt, char ***out)
 	subfix = strrchr(file_fmt, '[');
 	if (!subfix) {
 		ret = -1;
-		LOGE("unsupported formats (%s)\n", dir);
+		LOGE("unsupported formats (%s)\n", file_fmt);
 		goto free_dir;
 	}
-	res = sscanf(subfix, "[%2[01-*]]", type);
-	if (res != 1) {
+	p = memccpy(type, subfix + 1, ']', 3);
+	if (!p) {
 		ret = -1;
-		LOGE("unsupported formats (%s)\n", dir);
+		LOGE("unsupported formats (%s)\n", file_fmt);
 		goto free_dir;
-	}
+	} else
+		*(p - 1) = '\0';
 
 	/* get all files which start with prefix */
 	count = ac_scandir(dir, &filelist, filter_filename_startswith,

@@ -112,8 +112,8 @@ int filter_filename_startswith(const struct dirent *entry,
 					const void *arg);
 int dir_contains(const char *dir, const char *filename, size_t flen, int exact);
 int lsdir(const char *dir, char *fullname[], int limit);
-int find_file(const char *dir, const char *target_file, size_t tflen,
-		int depth, char *path[], int limit);
+int find_file(const char *dir, size_t dlen, const char *target_file,
+		size_t tflen, int depth, char *path[], int limit);
 int read_file(const char *path, unsigned long *size, void **data);
 int is_ac_filefmt(const char *file_fmt);
 int config_fmt_to_files(const char *file_fmt, char ***out);
