@@ -299,66 +299,54 @@ Initialization and Deinitialization
 
 The following structure represents a port I/O handler:
 
-.. note:: add reference to vm_io_handler_desc definition in ioreq.h
+.. doxygenstruct:: vm_io_handler_desc
+   :project: Project ACRN
 
 The following structure represents a MMIO handler.
 
-.. note:: add reference to mem_io_node definition in ioreq.h
-
+.. doxygenstruct:: mem_io_node
+   :project: Project ACRN
 
 The following APIs are provided to initialize, deinitialize or configure
 I/O bitmaps and register or unregister I/O handlers:
 
-.. code-block:: c
+.. doxygenfunction:: setup_io_bitmap
+   :project: Project ACRN
 
-   /* Initialize the I/O bitmap for vm. */
-   void setup_io_bitmap(struct vm *vm)
+.. doxygenfunction:: allow_guest_pio_access
+   :project: Project ACRN
 
-   /* Allow a VM to access a port I/O range.
-    * This API enables direct access from the given vm to the port I/O space
-    * starting from address_arg to address_arg + nbytes - 1.
-    */
-   void allow_guest_io_access(struct vm *vm, uint32_t address_arg, uint32_t nbytes)
+.. doxygenfunction:: free_io_emulation_resource
+   :project: Project ACRN
 
-   /* Free I/O bitmaps and port I/O handlers of vm. */
-   void free_io_emulation_resource(struct vm *vm)
+.. doxygenfunction:: register_io_emulation_handler
+   :project: Project ACRN
 
-   /* Register a port I/O handler. */
-   void register_io_emulation_handler(struct vm *vm, struct vm_io_range *range,
-                                      io_read_fn_t io_read_fn_ptr, io_write_fn_t io_write_fn_ptr)
+.. doxygenfunction:: register_mmio_emulation_handler
+   :project: Project ACRN
 
-   /* Register a MMIO handler. */
-   int register_mmio_emulation_handler(struct vm *vm, hv_mem_io_handler_t read_write,
-                                       uint64_t start, uint64_t end, void *handler_private_data)
-
-   /* Unregister a MMIO handler.*/
-   void unregister_mmio_emulation_handler(struct vm *vm, uint64_t start, uint64_t end)
-
-.. note:: change these to reference API material from ioreq.h
+.. doxygenfunction:: unregister_mmio_emulation_handler
+   :project: Project ACRN
 
 I/O Emulation
 =============
 
 The following APIs are provided for I/O emulation at runtime:
 
-.. code-block:: c
+.. doxygenfunction:: emulate_io
+   :project: Project ACRN
 
-   /* Emulate the given I/O access for vcpu. */
-   int32_t emulate_io(struct vcpu *vcpu, struct io_request *io_req)
+.. doxygenfunction:: acrn_insert_request_wait
+   :project: Project ACRN
 
-   /* Deliver io_req to SOS and suspend vcpu till its completion. */
-   int32_t acrn_insert_request_wait(struct vcpu *vcpu, struct io_request *io_req)
+.. doxygenfunction:: emulate_io_post
+   :project: Project ACRN
 
-   /* General post-work for port I/O emulation. */
-   void emulate_io_post(struct vcpu *vcpu)
+.. doxygenfunction:: emulate_mmio_post
+   :project: Project ACRN
 
-   /* General post-work for MMIO emulation. */
-   void emulate_mmio_post(struct vcpu *vcpu, struct io_request *io_req)
+.. doxygenfunction:: dm_emulate_mmio_post
+   :project: Project ACRN
 
-   /* Post-work of I/O requests for MMIO. */
-   void dm_emulate_mmio_post(struct vcpu *vcpu)
-
-   /* The handler of VM exits on I/O instructions. */
-   int32_t pio_instr_vmexit_handler(struct vcpu *vcpu)
-
-.. note:: change these to reference API material from ioreq.h
+.. doxygenfunction:: pio_instr_vmexit_handler
+   :project: Project ACRN
