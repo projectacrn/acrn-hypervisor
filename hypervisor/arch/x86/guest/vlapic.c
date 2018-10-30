@@ -531,12 +531,35 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 	return 1;
 }
 
-/* Post an interrupt to the vcpu running on 'hostcpu'. */
+/**
+ * @brief Send notification vector to target pCPU.
+ *
+ * If APICv Posted-Interrupt is enabled and target pCPU is in non-root mode,
+ * pCPU will sync pending virtual interrupts from PIR to vIRR automatically,
+ * without VM exit.
+ * If pCPU in root-mode, virtual interrupt will be injected in next VM entry.
+ *
+ * @param[in] dest_pcpu_id Target CPU ID.
+ *
+ * @return void
+ */
 void vlapic_post_intr(uint16_t dest_pcpu_id)
 {
 	send_single_ipi(dest_pcpu_id, VECTOR_POSTED_INTR);
 }
 
+/**
+ * @brief Get physical address to PIR description.
+ *
+ * If APICv Posted-interrupt is supported, this address will be configured
+ * to VMCS "Posted-interrupt descriptor address" field.
+ *
+ * @param[in] vcpu Target vCPU
+ *
+ * @return physicall address to PIR
+ *
+ * @pre vcpu != NULL
+ */
 uint64_t apicv_get_pir_desc_paddr(struct vcpu *vcpu)
 {
 	struct acrn_vlapic *vlapic;
@@ -1286,6 +1309,19 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 	return 0;	/* handled completely in the kernel */
 }
 
+/**
+ * @brief Get pending virtual interrupts for vLAPIC.
+ *
+ * @param[in]    vlapic Pointer to target vLAPIC data structure
+ * @param[inout] vecptr Pointer to vector buffer and will be filled
+ *               with eligible vector if any.
+ *
+ * @return 0 - There is no eligible pending vector.
+ * @return 1 - There is pending vector.
+ *
+ * @remark The vector does not automatically transition to the ISR as a
+ *	   result of calling this function.
+ */
 int
 vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr)
 {
@@ -1318,6 +1354,21 @@ vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr)
 	return 0;
 }
 
+/**
+ * @brief Accept virtual interrupt.
+ *
+ * Transition 'vector' from IRR to ISR. This function is called with the
+ * vector returned by 'vlapic_pending_intr()' when the guest is able to
+ * accept this interrupt (i.e. RFLAGS.IF = 1 and no conditions exist that
+ * block interrupt delivery).
+ *
+ * @param[in] vlapic Pointer to target vLAPIC data structure
+ * @param[in] vector Target virtual interrupt vector
+ *
+ * @return void
+ *
+ * @pre vlapic != NULL
+ */
 void
 vlapic_intr_accepted(struct acrn_vlapic *vlapic, uint32_t vector)
 {
@@ -1879,17 +1930,12 @@ int
 vlapic_set_intr(struct vcpu *vcpu, uint32_t vector, bool level)
 {
 	struct acrn_vlapic *vlapic;
-	int ret = 0;
-
-	if (vcpu == NULL) {
-		return -EINVAL;
-	}
 
 	/*
 	 * According to section "Maskable Hardware Interrupts" in Intel SDM
 	 * vectors 16 through 255 can be delivered through the local APIC.
 	 */
-	if (vector > 255U) {
+	if ((vcpu == NULL) || (vector > 255U)) {
 		return -EINVAL;
 	}
 
@@ -1905,9 +1951,22 @@ vlapic_set_intr(struct vcpu *vcpu, uint32_t vector, bool level)
 		vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 	}
 
-	return ret;
+	return 0;
 }
 
+/**
+ * @brief Triggers LAPIC local interrupt(LVT).
+ *
+ * @param[in] vm           Pointer to VM data structure
+ * @param[in] vcpu_id_arg  ID of vCPU, BROADCAST_CPU_ID means triggering
+ *			   interrupt to all vCPUs.
+ * @param[in] vector       Vector to be fired.
+ *
+ * @return 0 on success.
+ * @return -EINVAL on error that vcpu_id_arg or vector is invalid.
+ *
+ * @pre vm != NULL
+ */
 int
 vlapic_set_local_intr(struct vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
 {
@@ -1939,6 +1998,18 @@ vlapic_set_local_intr(struct vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
 	return error;
 }
 
+/**
+ * @brief Inject MSI to target VM.
+ *
+ * @param[in] vm   Pointer to VM data structure
+ * @param[in] addr MSI address.
+ * @param[in] msg  MSI data.
+ *
+ * @return 0 on success.
+ * @return non-zero on error that addr is invalid.
+ *
+ * @pre vm != NULL
+ */
 int
 vlapic_intr_msi(struct vm *vm, uint64_t addr, uint64_t msg)
 {

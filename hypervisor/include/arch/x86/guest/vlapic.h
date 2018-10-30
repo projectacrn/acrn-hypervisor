@@ -30,6 +30,14 @@
 #ifndef VLAPIC_H
 #define VLAPIC_H
 
+
+/**
+ * @file vlapic.h
+ *
+ * @brief public APIs for virtual LAPIC
+ */
+
+
 /*
  * 16 priority levels with at most one vector injected per level.
  */
@@ -103,26 +111,72 @@ struct acrn_vlapic {
 void vlapic_set_cr8(struct acrn_vlapic *vlapic, uint64_t val);
 uint64_t vlapic_get_cr8(const struct acrn_vlapic *vlapic);
 
-/*
- * Returns 0 if there is no eligible vector that can be delivered to the
- * guest at this time and non-zero otherwise.
+/**
+ * @brief virtual LAPIC
  *
- * If an eligible vector number is found and 'vecptr' is not NULL then it will
- * be stored in the location pointed to by 'vecptr'.
+ * @addtogroup acrn_vlapic ACRN vLAPIC
+ * @{
+ */
+
+
+/**
+ * @brief Get pending virtual interrupts for vLAPIC.
  *
- * Note that the vector does not automatically transition to the ISR as a
- * result of calling this function.
+ * @param[in]    vlapic Pointer to target vLAPIC data structure
+ * @param[inout] vecptr Pointer to vector buffer and will be filled
+ *               with eligible vector if any.
+ *
+ * @return 0 - There is no eligible pending vector.
+ * @return 1 - There is pending vector.
+ *
+ * @remark The vector does not automatically transition to the ISR as a
+ *	   result of calling this function.
  */
 int vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr);
 
-/*
+/**
+ * @brief Accept virtual interrupt.
+ *
  * Transition 'vector' from IRR to ISR. This function is called with the
  * vector returned by 'vlapic_pending_intr()' when the guest is able to
  * accept this interrupt (i.e. RFLAGS.IF = 1 and no conditions exist that
  * block interrupt delivery).
+ *
+ * @param[in] vlapic Pointer to target vLAPIC data structure
+ * @param[in] vector Target virtual interrupt vector
+ *
+ * @return void
+ *
+ * @pre vlapic != NULL
  */
 void vlapic_intr_accepted(struct acrn_vlapic *vlapic, uint32_t vector);
+
+/**
+ * @brief Send notification vector to target pCPU.
+ *
+ * If APICv Posted-Interrupt is enabled and target pCPU is in non-root mode,
+ * pCPU will sync pending virtual interrupts from PIR to vIRR automatically,
+ * without VM exit.
+ * If pCPU in root-mode, virtual interrupt will be injected in next VM entry.
+ *
+ * @param[in] dest_pcpu_id Target CPU ID.
+ *
+ * @return void
+ */
 void vlapic_post_intr(uint16_t dest_pcpu_id);
+
+/**
+ * @brief Get physical address to PIR description.
+ *
+ * If APICv Posted-interrupt is supported, this address will be configured
+ * to VMCS "Posted-interrupt descriptor address" field.
+ *
+ * @param[in] vcpu Target vCPU
+ *
+ * @return physicall address to PIR
+ *
+ * @pre vcpu != NULL
+ */
 uint64_t apicv_get_pir_desc_paddr(struct vcpu *vcpu);
 
 int vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval);
@@ -136,24 +190,63 @@ int vlapic_set_intr(struct vcpu *vcpu, uint32_t vector, bool level);
 
 #define	LAPIC_TRIG_LEVEL	true
 #define	LAPIC_TRIG_EDGE		false
+/**
+ * @brief Pend level-trigger mode virtual interrupt to vCPU.
+ *
+ * @param[in] vcpu    Pointer to target vCPU data structure
+ * @param[in] vector  Vector to be injected.
+ *
+ * @return 0 on success.
+ * @return -EINVAL on error that vector is invalid or vcpu is NULL.
+ */
 static inline int
 vlapic_intr_level(struct vcpu *vcpu, uint32_t vector)
 {
 	return vlapic_set_intr(vcpu, vector, LAPIC_TRIG_LEVEL);
 }
 
+/**
+ * @brief Pend edge-trigger mode virtual interrupt to vCPU.
+ *
+ * @param[in] vcpu    Pointer to target vCPU data structure
+ * @param[in] vector  Vector to be injected.
+ *
+ * @return 0 on success.
+ * @return -EINVAL on error that vector is invalid or vcpu is NULL.
+ */
 static inline int
 vlapic_intr_edge(struct vcpu *vcpu, uint32_t vector)
 {
 	return vlapic_set_intr(vcpu, vector, LAPIC_TRIG_EDGE);
 }
 
-/*
- * Triggers the LAPIC local interrupt (LVT) 'vector' on 'cpu'.  'cpu' can
- * be set to -1 to trigger the interrupt on all CPUs.
+/**
+ * @brief Triggers LAPIC local interrupt(LVT).
+ *
+ * @param[in] vm           Pointer to VM data structure
+ * @param[in] vcpu_id_arg  ID of vCPU, BROADCAST_CPU_ID means triggering
+ *			   interrupt to all vCPUs.
+ * @param[in] vector       Vector to be fired.
+ *
+ * @return 0 on success.
+ * @return -EINVAL on error that vcpu_id_arg or vector is invalid.
+ *
+ * @pre vm != NULL
  */
 int vlapic_set_local_intr(struct vm *vm, uint16_t vcpu_id_arg, uint32_t vector);
 
+/**
+ * @brief Inject MSI to target VM.
+ *
+ * @param[in] vm   Pointer to VM data structure
+ * @param[in] addr MSI address.
+ * @param[in] msg  MSI data.
+ *
+ * @return 0 on success.
+ * @return non-zero on error that addr is invalid.
+ *
+ * @pre vm != NULL
+ */
 int vlapic_intr_msi(struct vm *vm, uint64_t addr, uint64_t msg);
 
 void vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest,
@@ -189,4 +282,9 @@ int apic_write_vmexit_handler(struct vcpu *vcpu);
 int veoi_vmexit_handler(struct vcpu *vcpu);
 int tpr_below_threshold_vmexit_handler(__unused struct vcpu *vcpu);
 void calcvdest(struct vm *vm, uint64_t *dmask, uint32_t dest, bool phys);
+
+/**
+ * @}
+ */
+/* End of acrn_vlapic */
 #endif /* VLAPIC_H */
