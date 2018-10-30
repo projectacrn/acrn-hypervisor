@@ -9,8 +9,19 @@
 
 #define ACRN_DBG_TRUSTY_HYCALL 6U
 
-/* this hcall is only come from trusty enabled vcpu itself, and cannot be
- * called from other vcpus
+/**
+ * @brief Switch vCPU state between Normal/Secure World.
+ *
+ * * The hypervisor uses this hypercall to do the world switch
+ * * The hypervisor needs to:
+ *   * save current world vCPU contexts, and load the next world
+ *     vCPU contexts
+ *   * update ``rdi``, ``rsi``, ``rdx``, ``rbx`` to next world
+ *     vCPU contexts
+ *
+ * @param vcpu Pointer to VCPU data structure
+ *
+ * @return 0 on success, non-zero on error.
  */
 int32_t hcall_world_switch(struct acrn_vcpu *vcpu)
 {
@@ -39,8 +50,19 @@ int32_t hcall_world_switch(struct acrn_vcpu *vcpu)
 	return 0;
 }
 
-/* this hcall is only come from trusty enabled vcpu itself, and cannot be
- * called from other vcpus
+/**
+ * @brief Initialize environment for Trusty-OS on a vCPU.
+ *
+ * * It is used by the User OS bootloader (``UOS_Loader``) to request ACRN
+ *   to initialize Trusty
+ * * The Trusty memory region range, entry point must be specified
+ * * The hypervisor needs to save current vCPU contexts (Normal World)
+ *
+ * @param vcpu Pointer to vCPU data structure
+ * @param param guest physical address. This gpa points to
+ *              trusty_boot_param structure
+ *
+ * @return 0 on success, non-zero on error.
  */
 int32_t hcall_initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param)
 {
@@ -72,6 +94,13 @@ int32_t hcall_initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param)
 	return 0;
 }
 
+/**
+ * @brief Save/Restore Context of Secure World.
+ *
+ * @param vcpu Pointer to VCPU data structure
+ *
+ * @return 0 on success, non-zero on error.
+ */
 int64_t hcall_save_restore_sworld_ctx(struct acrn_vcpu *vcpu)
 {
 	struct acrn_vm *vm = vcpu->vm;
