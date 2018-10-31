@@ -735,7 +735,7 @@ static uint32_t check_vmx_ctrl(uint32_t msr, uint32_t ctrl_req)
 
 	vmx_msr = msr_read(msr);
 	vmx_msr_low  = (uint32_t)vmx_msr;
-	vmx_msr_high = (uint32_t)(vmx_msr >> 32);
+	vmx_msr_high = (uint32_t)(vmx_msr >> 32U);
 	pr_dbg("VMX_PIN_VM_EXEC_CONTROLS:low=0x%x, high=0x%x\n",
 			vmx_msr_low, vmx_msr_high);
 

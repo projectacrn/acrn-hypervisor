@@ -76,7 +76,7 @@ static void ptdev_build_physical_msi(struct vm *vm, struct ptdev_msi_info *info,
 	bool phys;
 
 	/* get physical destination cpu mask */
-	dest = (uint32_t)(info->vmsi_addr >> 12) & 0xffU;
+	dest = (uint32_t)(info->vmsi_addr >> CPU_PAGE_SHIFT) & 0xffU;
 	phys = ((info->vmsi_addr & MSI_ADDR_LOG) != MSI_ADDR_LOG);
 
 	calcvdest(vm, &vdmask, dest, phys);
@@ -796,7 +796,7 @@ static void get_entry_info(const struct ptdev_remapping_info *entry, char *type,
 	if (is_entry_active(entry)) {
 		if (entry->intr_type == PTDEV_INTR_MSI) {
 			(void)strcpy_s(type, 16U, "MSI");
-			*dest = (entry->msi.pmsi_addr & 0xFF000U) >> 12;
+			*dest = (entry->msi.pmsi_addr & 0xFF000U) >> CPU_PAGE_SHIFT;
 			if ((entry->msi.pmsi_data & APIC_TRIGMOD_LEVEL) != 0U) {
 				*lvl_tm = true;
 			} else {

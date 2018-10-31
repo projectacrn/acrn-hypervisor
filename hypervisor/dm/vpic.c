@@ -417,7 +417,7 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin,
 		i8259->pin_state[pin & 0x7U] = 0U;
 	}
 
-	lvl_trigger = ((vpic->i8259[pin >> 3U].elc & (1U << (pin & 0x7U))) != 0);
+	lvl_trigger = ((vpic->i8259[pin >> 3U].elc & (1U << (pin & 0x7U))) != 0U);
 
 	if (((old_lvl == 0U) && (level == 1U)) ||
 			((level == 1U) && (lvl_trigger == true))) {
@@ -552,7 +552,7 @@ static void vpic_pin_accepted(struct i8259_reg_state *i8259, uint8_t pin)
 {
 	i8259->intr_raised = false;
 
-	if ((i8259->elc & (1U << pin)) == 0) {
+	if ((i8259->elc & (1U << pin)) == 0U) {
 		/*only used edge trigger mode*/
 		i8259->request &= ~(uint8_t)(1U << pin);
 	}

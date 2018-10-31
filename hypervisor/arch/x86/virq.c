@@ -364,7 +364,7 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 
 	intr_info = exec_vmread32(VMX_EXIT_INT_INFO);
 	if (((intr_info & VMX_INT_INFO_VALID) == 0U) ||
-		(((intr_info & VMX_INT_TYPE_MASK) >> 8)
+		(((intr_info & VMX_INT_TYPE_MASK) >> 8U)
 		!= VMX_INT_TYPE_EXT_INT)) {
 		pr_err("Invalid VM exit interrupt info:%x", intr_info);
 		vcpu_retain_rip(vcpu);

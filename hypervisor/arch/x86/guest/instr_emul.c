@@ -51,11 +51,11 @@
 #define VIE_OP_TYPE_TEST	15U
 
 /* struct vie_op.op_flags */
-#define	VIE_OP_F_IMM		(1U << 0)  /* 16/32-bit immediate operand */
-#define	VIE_OP_F_IMM8		(1U << 1)  /* 8-bit immediate operand */
-#define	VIE_OP_F_MOFFSET	(1U << 2)  /* 16/32/64-bit immediate moffset */
-#define	VIE_OP_F_NO_MODRM	(1U << 3)
-#define	VIE_OP_F_CHECK_GVA_DI   (1U << 4)  /* for movs, need to check DI */
+#define	VIE_OP_F_IMM		(1U << 0U)  /* 16/32-bit immediate operand */
+#define	VIE_OP_F_IMM8		(1U << 1U)  /* 8-bit immediate operand */
+#define	VIE_OP_F_MOFFSET	(1U << 2U)  /* 16/32/64-bit immediate moffset */
+#define	VIE_OP_F_NO_MODRM	(1U << 3U)
+#define	VIE_OP_F_CHECK_GVA_DI   (1U << 4U)  /* for movs, need to check DI */
 
 static const struct instr_emul_vie_op two_byte_opcodes[256] = {
 	[0xB6] = {
@@ -411,8 +411,8 @@ static int vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla)
 	 * The value of the bit 47 in the 'gla' should be replicated in the
 	 * most significant 16 bits.
 	 */
-	mask = ~((1UL << 48) - 1);
-	if ((gla & (1UL << 47)) != 0U) {
+	mask = ~((1UL << 48U) - 1UL);
+	if ((gla & (1UL << 47U)) != 0U) {
 		return ((gla & mask) != mask) ? 1 : 0;
 	} else {
 		return ((gla & mask) != 0U) ? 1 : 0;
@@ -553,7 +553,7 @@ static uint8_t vie_read_bytereg(const struct vcpu *vcpu, const struct instr_emul
 	 * base register right by 8 bits (%ah = %rax >> 8).
 	 */
 	if (lhbr != 0) {
-		reg_val = (uint8_t)(val >> 8);
+		reg_val = (uint8_t)(val >> 8U);
 	} else {
 		reg_val = (uint8_t)val;
 	}
@@ -578,8 +578,8 @@ static void vie_write_bytereg(struct vcpu *vcpu, const struct instr_emul_vie *vi
 		 * Shift left by 8 to store 'byte' in a legacy high
 		 * byte register.
 		 */
-		val <<= 8;
-		mask <<= 8;
+		val <<= 8U;
+		mask <<= 8U;
 	}
 	val |= origval & ~mask;
 	vm_set_register(vcpu, reg, val);
@@ -1852,9 +1852,9 @@ static int decode_modrm(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode)
 		return -1;
 	}
 
-	vie->mod = (x >> 6) & 0x3U;
-	vie->rm =  (x >> 0) & 0x7U;
-	vie->reg = (x >> 3) & 0x7U;
+	vie->mod = (x >> 6U) & 0x3U;
+	vie->rm =  (x >> 0U) & 0x7U;
+	vie->reg = (x >> 3U) & 0x7U;
 
 	/*
 	 * A direct addressing mode makes no sense in the context of an EPT
@@ -1880,10 +1880,10 @@ static int decode_modrm(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode)
 		 * this case.
 		 */
 	} else {
-		vie->rm |= (vie->rex_b << 3);
+		vie->rm |= (vie->rex_b << 3U);
 	}
 
-	vie->reg |= (vie->rex_r << 3);
+	vie->reg |= (vie->rex_r << 3U);
 
 	/* SIB */
 	if (vie->mod != VIE_MOD_DIRECT && vie->rm == VIE_RM_SIB) {
@@ -1940,13 +1940,13 @@ static int decode_sib(struct instr_emul_vie *vie)
 	}
 
 	/* De-construct the SIB byte */
-	vie->ss = (x >> 6) & 0x3U;
-	vie->index = (x >> 3) & 0x7U;
-	vie->base = (x >> 0) & 0x7U;
+	vie->ss = (x >> 6U) & 0x3U;
+	vie->index = (x >> 3U) & 0x7U;
+	vie->base = (x >> 0U) & 0x7U;
 
 	/* Apply the REX prefix modifiers */
-	vie->index |= vie->rex_x << 3;
-	vie->base |= vie->rex_b << 3;
+	vie->index |= vie->rex_x << 3U;
+	vie->base |= vie->rex_b << 3U;
 
 	switch (vie->mod) {
 	case VIE_MOD_INDIRECT_DISP8:
