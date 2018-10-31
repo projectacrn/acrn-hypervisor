@@ -186,53 +186,23 @@ Interfaces Design
 MMU Initialization
 ------------------
 
-.. list-table::
-   :widths: 50 50
-   :header-rows: 1
+.. doxygenfunction:: enable_smep
+   :project: Project ACRN
 
-   * - APIs
-     - Description
+.. doxygenfunction:: enable_paging
+   :project: Project ACRN
 
-   * - void enable_smep(void)
-     - Supervisor-mode execution prevention (SMEP) enable
-
-   * - void enable_paging(uint64_t pml64_base_addr)
-     - MMU paging enable
-
-   * - void init_paging(void)
-     - MMU page tables initialization
-
-   * - uint64_t get_paging_pml4(void)
-     - Page map level 4 (PML4) table start address getting
-
-Page Allocation
----------------
-
-.. list-table::
-   :widths: 50 50
-   :header-rows: 1
-
-   * - APIs
-     - Description
-
-   * - void \* alloc_paging_struct(void)
-     - Allocate one page from memory page pool
+.. doxygenfunction:: init_paging
+   :project: Project ACRN
 
 Address Space Translation
 -------------------------
 
-.. list-table::
-   :widths: 50 50
-   :header-rows: 1
+.. doxygenfunction:: hpa2hva
+   :project: Project ACRN
 
-   * - APIs
-     - Description
-
-   * - HPA2HVA(x)
-     - Translate host-physical address to host-virtual address
-
-   * - HVA2HPA(x)
-     - Translate host-virtual address to host-physical address
+.. doxygenfunction:: hva2hpa
+   :project: Project ACRN
 
 
 Hypervisor Memory Virtualization
@@ -448,147 +418,82 @@ Here is a list of major memory related APIs in HV:
 EPT/VPID Capability Checking
 ----------------------------
 
-.. list-table::
-   :widths: 50 50
-   :header-rows: 1
-
-   * - APIs
-     - Description
-
-   * - int check_vmx_mmu_cap(void)
-     - EPT and VPID capability checking
-
-
-1GB Hugepage Supporting Checking
---------------------------------
-
-.. list-table::
-   :widths: 50 50
-   :header-rows: 1
-
-   * - APIs
-     - Description
-
-   * - bool check_mmu_1gb_support(enum _page_table_type page_table_type)
-     - 1GB page supporting capability checking
+.. doxygenfunction:: check_vmx_mmu_cap
+   :project: Project ACRN
 
 Data Transferring between hypervisor and VM
 -------------------------------------------
 
-.. list-table::
-   :widths: 50 50
-   :header-rows: 1
+.. doxygenfunction:: copy_from_gpa
+   :project: Project ACRN
 
-   * - APIs
-     - Description
+.. doxygenfunction:: copy_to_gpa
+   :project: Project ACRN
 
-   * - int copy_from_gpa(const struct vm \*vm, void \*h_ptr, uint64_t gpa, uint32_t size)
-     - Copy data from VM GPA space to HV address space
+.. doxygenfunction:: copy_from_gva
+   :project: Project ACRN
 
-   * - int copy_to_gpa(const struct vm \*vm, void \*h_ptr, uint64_t gpa, uint32_t size)
-     - Copy data from HV address space to VM GPA space
-
-   * - int copy_from_gva(struct vcpu \*vcpu, void \*h_ptr, uint64_t gva,
-       uint32_t size, uint32_t \*err_code, uint64_t \*fault_addr)
-     - Copy data from VM GVA space to HV address space
-
-   * - int copy_to_gva(struct vcpu \*vcpu, void \*h_ptr, uint64_t gva,
-       uint32_t size, uint32_t \*err_code, uint64_t \*fault_addr)
-     - Copy data from HV address space to VM GVA space
+.. doxygenfunction:: copy_to_gva
+   :project: Project ACRN
 
 Address Space Translation
 -------------------------
 
-.. list-table::
-   :widths: 50 50
-   :header-rows: 1
+.. doxygenfunction:: gpa2hpa
+   :project: Project ACRN
 
-   * - APIs
-     - Description
+.. doxygenfunction:: vm0_hpa2gpa
+   :project: Project ACRN
 
-   * - uint64_t gpa2hpa(const struct vm \*vm, uint64_t gpa)
-     - Translating from guest-physical address to host-physical address
-
-   * - uint64_t hpa2gpa(const struct vm \*vm, uint64_t hpa)
-     - Translating from host-physical address to guest-physical address
-
-   * - bool check_continuous_hpa(struct vm \*vm, uint64_t gpa_arg, uint64_t size_arg)
-     - Host-physical address continuous checking
+.. doxygenfunction:: check_continuous_hpa
+   :project: Project ACRN
 
 EPT
 ---
 
-.. list-table::
-   :widths: 50 50
-   :header-rows: 1
+.. doxygenfunction:: ept_mr_add
+   :project: Project ACRN
 
-   * - APIs
-     - Description
+.. doxygenfunction:: ept_mr_del
+   :project: Project ACRN
 
-   * - int ept_mr_add(const struct vm \*vm, uint64_t hpa_arg, uint64_t gpa_arg,
-       uint64_t size, uint32_t prot_arg)
-     - Guest-physical memory region mapping
+.. doxygenfunction:: ept_mr_modify
+   :project: Project ACRN
 
-   * - int ept_mr_del(const struct vm \*vm, uint64_t \*pml4_page, uint64_t gpa,
-       uint64_t size)
-     - Guest-physical memory region unmapping
+.. doxygenfunction:: destroy_ept
+   :project: Project ACRN
 
-   * - int ept_mr_modify(const struct vm \*vm, uint64_t \*pml4_page, uint64_t gpa,
-       uint64_t size, uint64_t prot_set, uint64_t prot_clr)
-     - Guest-physical memory page access right or memory type updating
+.. doxygenfunction:: invept
+   :project: Project ACRN
 
-   * - void destroy_ept(struct vm \*vm)
-     - EPT page tables destroy
+.. doxygenfunction:: ept_violation_vmexit_handler
+   :project: Project ACRN
 
-   * - void free_ept_mem(void \*pml4_addr)
-     - EPT page tables free
-
-   * - void invept(struct vcpu \*vcpu)
-     - Guest-physical mappings and combined mappings invalidation
-
-   * - int ept_violation_vmexit_handler(struct vcpu \*vcpu)
-     - EPT violation handling
-
-   * - int ept_misconfig_vmexit_handler(__unused struct vcpu \*vcpu)
-     - EPT misconfiguration handling
+.. doxygenfunction:: ept_misconfig_vmexit_handler
+   :project: Project ACRN
 
 Virtual MTRR
 ------------
 
-.. list-table::
-   :widths: 50 50
-   :header-rows: 1
+.. doxygenfunction:: init_mtrr
+   :project: Project ACRN
 
-   * - APIs
-     - Description
+.. doxygenfunction:: mtrr_wrmsr
+   :project: Project ACRN
 
-   * - void init_mtrr(struct vcpu \*vcpu)
-     - Virtual MTRR initialization
-
-   * - void mtrr_wrmsr(struct vcpu \*vcpu, uint32_t msr, uint64_t value)
-     - Virtual MTRR MSR write
-
-   * - uint64_t mtrr_rdmsr(struct vcpu \*vcpu, uint32_t msr)
-     - Virtual MTRR MSR read
+.. doxygenfunction:: mtrr_rdmsr
+   :project: Project ACRN
 
 VPID
 ----
+.. doxygenfunction:: allocate_vpid
+   :project: Project ACRN
 
-.. list-table::
-   :widths: 50 50
-   :header-rows: 1
+.. doxygenfunction:: flush_vpid_single
+   :project: Project ACRN
 
-   * - APIs
-     - Description
-
-   * - uint16_t allocate_vpid(void)
-     - VPID allocation
-
-   * - void flush_vpid_single(uint16_t vpid)
-     - Specified VPID flush
-
-   * - void flush_vpid_global(void)
-     - All VPID flush
+.. doxygenfunction:: flush_vpid_global
+   :project: Project ACRN
 
 Service OS Memory Management
 ****************************
