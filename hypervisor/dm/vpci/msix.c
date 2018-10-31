@@ -48,6 +48,7 @@ static int vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
 {
 	struct msix_table_entry *pentry;
 	struct ptdev_msi_info info;
+	volatile uint32_t *ptr32;
 	uint64_t hva;
 	int ret;
 
@@ -63,7 +64,15 @@ static int vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
 	/* Write the table entry to the physical structure */
 	hva = vdev->msix.mmio_hva + vdev->msix.table_offset;
 	pentry = (struct msix_table_entry *)hva + index;
-	pentry->addr = info.pmsi_addr;
+
+	/*
+	 * PCI 3.0 Spec allows writing to Message Address and Message Upper Address
+	 * fields with a single QWORD write, but some hardware can accept 32 bits
+	 * write only
+	 */
+	ptr32 = (uint32_t *)&pentry->addr;
+	ptr32[0] = (uint32_t)info.pmsi_addr;
+	ptr32[1] = (info.pmsi_addr >> 32U);
 	pentry->data = info.pmsi_data;
 	pentry->vector_control = vdev->msix.tables[index].vector_control;
 
