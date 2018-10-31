@@ -245,7 +245,7 @@ struct vcpu {
 struct vcpu_dump {
 	struct vcpu *vcpu;
 	char *str;
-	int str_max;
+	uint32_t str_max;
 };
 
 static inline bool is_vcpu_bsp(const struct vcpu *vcpu)
