@@ -25,6 +25,7 @@ static inline int npk_write(const char *value, void *addr, size_t sz)
 	} else if (sz >= 1U) {
 		mmio_write8(*(uint8_t *)value, addr);
 		ret = 1;
+	} else {
 	}
 
 	return ret;

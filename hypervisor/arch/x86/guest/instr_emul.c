@@ -339,6 +339,7 @@ static uint64_t vm_get_register(const struct vcpu *vcpu, enum cpu_reg_name reg)
 		} else {
 			reg_val = (uint64_t)exec_vmread16(field);
 		}
+	} else {
 	}
 
 	return reg_val;
@@ -366,6 +367,7 @@ static void vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg,
 		} else {
 			exec_vmwrite16(field, (uint16_t)val);
 		}
+	} else {
 	}
 }
 

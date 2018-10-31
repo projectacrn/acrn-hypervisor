@@ -63,6 +63,7 @@ enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 		}
 		else if (is_paging_enabled(vcpu)) {
 			return PAGING_MODE_2_LEVEL;
+		} else {
 		}
 		return PAGING_MODE_0_LEVEL;
 	} else {	/* compatibility or 64bit mode */

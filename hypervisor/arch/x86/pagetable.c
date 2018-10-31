@@ -438,6 +438,7 @@ uint64_t *lookup_address(uint64_t *pml4_page,
 	} else if (pdpte_large(*pdpte) != 0UL) {
 		*pg_size = PDPTE_SIZE;
 		return pdpte;
+	} else {
 	}
 
 	pde = pde_offset(pdpte, addr);
@@ -446,6 +447,7 @@ uint64_t *lookup_address(uint64_t *pml4_page,
 	} else if (pde_large(*pde) != 0UL) {
 		*pg_size = PDE_SIZE;
 		return pde;
+	} else {
 	}
 
 	pte = pte_offset(pde, addr);

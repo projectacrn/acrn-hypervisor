@@ -360,6 +360,7 @@ int32_t pio_instr_vmexit_handler(struct vcpu *vcpu)
 		emulate_pio_post(vcpu, io_req);
 	} else if (status == IOREQ_PENDING) {
 		status = 0;
+	} else {
 	}
 
 	return status;

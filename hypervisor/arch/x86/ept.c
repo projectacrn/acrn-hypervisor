@@ -181,6 +181,7 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu)
 		emulate_mmio_post(vcpu, io_req);
 	} else if (status == IOREQ_PENDING) {
 		status = 0;
+	} else {
 	}
 
 	return status;

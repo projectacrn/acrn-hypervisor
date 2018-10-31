@@ -368,6 +368,7 @@ static int shell_process_cmd(const char *p_input_line)
 			shell_puts("\r\nError: Invalid parameters.\r\n");
 		} else if (status != 0) {
 			shell_puts("\r\nCommand launch failed.\r\n");
+		} else {
 		}
 	}
 

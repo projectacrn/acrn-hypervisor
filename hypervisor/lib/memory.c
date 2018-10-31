@@ -313,6 +313,7 @@ void free(const void *ptr)
 				 Paging_Memory_Pool.buff_size)))) {
 		/* Free buffer in page aligned Memory Pool */
 		deallocate_mem(&Paging_Memory_Pool, ptr);
+	} else {
 	}
 }
 

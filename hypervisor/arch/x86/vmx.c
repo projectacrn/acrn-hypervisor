@@ -424,6 +424,7 @@ void vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 			}
 			vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 		}
+	} else {
 	}
 
 	if ((cr0_changed_bits & (CR0_PG | CR0_WP)) != 0UL) {
