@@ -3,7 +3,11 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-
+/**
+ * @file guest.h
+ *
+ * @brief Data transferring between hypervisor and VM
+ */
 #ifndef GUEST_H
 #define GUEST_H
 
@@ -142,8 +146,24 @@ int general_sw_loader(struct vm *vm);
 
 typedef int (*vm_sw_loader_t)(struct vm *vm);
 extern vm_sw_loader_t vm_sw_loader;
-
-/* @pre Caller(Guest) should make sure gpa is continuous.
+/**
+ * @brief Data transfering between hypervisor and VM
+ *
+ * @defgroup acrn_mem ACRN Memory Management
+ * @{
+ */
+/**
+ * @brief Copy data from VM GPA space to HV address space
+ *
+ * @param[in] vm The pointer that points to VM data structure
+ * @param[in] h_ptr The pointer that points the start HV address
+ *                  of HV memory region which data is stored in
+ * @param[out] gpa The start GPA address of GPA memory region which data
+ *                 will be copied into
+ * @param[in] size The size (bytes) of GPA memory region which data is
+ *                 stored in
+ *
+ * @pre Caller(Guest) should make sure gpa is continuous.
  * - gpa from hypercall input which from kernel stack is gpa continuous, not
  *   support kernel stack from vmap
  * - some other gpa from hypercall parameters, VHM should make sure it's
@@ -151,7 +171,18 @@ extern vm_sw_loader_t vm_sw_loader;
  * @pre Pointer vm is non-NULL
  */
 int copy_from_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
-/* @pre Caller(Guest) should make sure gpa is continuous.
+/**
+ * @brief Copy data from HV address space to VM GPA space
+ *
+ * @param[in] vm The pointer that points to VM data structure
+ * @param[in] h_ptr The pointer that points the start HV address
+ *                  of HV memory region which data is stored in
+ * @param[out] gpa The start GPA address of GPA memory region which data
+ *                 will be copied into
+ * @param[in] size The size (bytes) of GPA memory region which data will be
+ *                 copied into
+ *
+ * @pre Caller(Guest) should make sure gpa is continuous.
  * - gpa from hypercall input which from kernel stack is gpa continuous, not
  *   support kernel stack from vmap
  * - some other gpa from hypercall parameters, VHM should make sure it's
@@ -159,12 +190,40 @@ int copy_from_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
  * @pre Pointer vm is non-NULL
  */
 int copy_to_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
+/**
+ * @brief Copy data from VM GVA space to HV address space
+ *
+ * @param[in] vcpu The pointer that points to vcpu data structure
+ * @param[out] h_ptr The pointer that returns the start HV address
+ *                   of HV memory region which data will be copied to
+ * @param[in] gva The start GVA address of GVA memory region which data
+ *                is stored in
+ * @param[in] size The size (bytes) of GVA memory region which data is
+ *                 stored in
+ * @param[out] err_code The page fault flags
+ * @param[out] fault_addr The GVA address that causes a page fault
+ */
 int copy_from_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
 	uint32_t size, uint32_t *err_code, uint64_t *fault_addr);
+/**
+ * @brief Copy data from HV address space to VM GVA space
+ *
+ * @param[in] vcpu The pointer that points to vcpu data structure
+ * @param[in] h_ptr The pointer that points the start HV address
+ *                   of HV memory region which data is stored in
+ * @param[out] gva The start GVA address of GVA memory region which data
+ *                will be copied into
+ * @param[in] size The size (bytes) of GVA memory region which data will
+ *                 be copied into
+ * @param[out] err_code The page fault flags
+ * @param[out] fault_addr The GVA address that causes a page fault
+ */
 int copy_to_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
 	uint32_t size, uint32_t *err_code, uint64_t *fault_addr);
 extern struct acrn_vcpu_regs vm0_boot_context;
-
+/**
+ * @}
+ */
 #endif	/* !ASSEMBLER */
 
 #endif /* GUEST_H*/
