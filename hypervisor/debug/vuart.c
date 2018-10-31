@@ -32,7 +32,7 @@
 
 #include "uart16550.h"
 
-#define COM1_BASE		0x3F8U
+#define COM1_BASE		0x3E8U
 
 #ifndef CONFIG_PARTITION_MODE
 static char vuart_rx_buf[RX_BUF_SIZE];
