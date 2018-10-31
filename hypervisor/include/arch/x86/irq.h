@@ -89,6 +89,12 @@ extern spurious_handler_t spurious_handler;
 uint32_t alloc_irq_num(uint32_t req_irq);
 uint32_t alloc_irq_vector(uint32_t irq);
 
+
+/**
+ * @brief Get vector number of an interupt from irq number
+ *
+ * @param[in]	irq	The irq_num to convert
+ */
 uint32_t irq_to_vector(uint32_t irq);
 
 /*
@@ -122,11 +128,27 @@ int exception_vmexit_handler(struct vcpu *vcpu);
 int interrupt_window_vmexit_handler(struct vcpu *vcpu);
 int external_interrupt_vmexit_handler(struct vcpu *vcpu);
 int acrn_handle_pending_request(struct vcpu *vcpu);
+
+/**
+ * @brief Initialize the interrupt
+ *
+ * To do interrupt initialization for a cpu, will be called for each physical cpu.
+ *
+ * @param[in]	pcpu_id The id of physical cpu to initialize
+ */
 void interrupt_init(uint16_t pcpu_id);
 
 void cancel_event_injection(struct vcpu *vcpu);
 
 #ifdef HV_DEBUG
+/**
+ * @brief Get the interupt statistics
+ *
+ * It's for debug only.
+ *
+ * @param[in]	str_max	The max size of the string containing interrupt info
+ * @param[inout]	str_arg	Pointer to the output interrupt info
+ */
 void get_cpu_interrupt_info(char *str_arg, size_t str_max);
 #endif /* HV_DEBUG */
 

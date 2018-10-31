@@ -470,7 +470,7 @@ related operations.
    void free_irq(uint32_t irq)
       /*   Free irq num and unregister the irq action. */
 
-   void set_irq_trigger_mode(uint32_t irq, bool is_level_trigger)
+   void set_irq_trigger_mode(uint32_t irq, bool is_level_triggered)
       /*   Set the irq trigger mode: edge-triggered or level-triggered */
 
    uint32_t irq_to_vector(uint32_t irq)

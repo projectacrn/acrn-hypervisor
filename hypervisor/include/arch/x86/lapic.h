@@ -51,17 +51,54 @@ enum intr_cpu_startup_shorthand {
 	INTR_CPU_STARTUP_UNKNOWN,
 };
 
+
+/**
+ * @brief Save context of lapic
+ *
+ * @param[inout]	regs	Pointer to struct lapic_regs to hold the
+ *				context of current lapic
+ */
 void save_lapic(struct lapic_regs *regs);
 void early_init_lapic(void);
 void init_lapic(uint16_t pcpu_id);
 void send_lapic_eoi(void);
+
+/**
+ * @brief Get the lapic id
+ *
+ * @return lapic id
+ */
 uint32_t get_cur_lapic_id(void);
+
+/**
+ * @brief Send an SIPI to a specific cpu
+ *
+ * Send an Startup IPI to a specific cpu, to notify the cpu to start booting.
+ *
+ * @param[in]	cpu_startup_shorthand The startup_shorthand
+ * @param[in]	dest_pcpu_id The id of destination physical cpu
+ * @param[in]	cpu_startup_start_address The address for the dest pCPU to start running
+ *
+ * @pre cpu_startup_shorthand < INTR_CPU_STARTUP_UNKNOWN
+ */
 void send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 		uint16_t dest_pcpu_id,
 		uint64_t cpu_startup_start_address);
-/* API to send an IPI to multiple pCPUs */
+
+/**
+ * @brief Send an IPI to multiple pCPUs
+ *
+ * @param[in]	dest_mask The mask of destination physical cpus
+ * @param[in]	vector The vector of interrupt
+ */
 void send_dest_ipi_mask(uint32_t dest_mask, uint32_t vector);
-/* API to send an IPI to a single pCPU */
+
+/**
+ * @brief Send an IPI to a single pCPU
+ *
+ * @param[in]	pcpu_id The id of destination physical cpu
+ * @param[in]	vector The vector of interrupt
+ */
 void send_single_ipi(uint16_t pcpu_id, uint32_t vector);
 
 void suspend_lapic(void);
