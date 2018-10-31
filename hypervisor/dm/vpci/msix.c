@@ -315,6 +315,7 @@ static int vmsix_init(struct pci_vdev *vdev)
 {
 	uint32_t msgctrl;
 	uint32_t table_info, i;
+	uint64_t addr_hi, addr_lo;
 	struct msix *msix = &vdev->msix;
 
 	msgctrl = pci_pdev_read_cfg(vdev->pdev.bdf, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
@@ -339,14 +340,31 @@ static int vmsix_init(struct pci_vdev *vdev)
 
 	decode_msix_table_bar(vdev);
 
-	/*
-	* MSI-X table structures is in a 4 KB aligned range,
-	* while it's possible that the MSI-X PBA co-reside within this
-	* naturally aligned 4 KB address range
-	*/
 	if (msix->mmio_gpa != 0U) {
+		/*
+		 * PCI Spec: a BAR may also map other usable address space that is not associated
+		 * with MSI-X structures, but it must not share any naturally aligned 4 KB
+		 * address range with one where either MSI-X structure resides.
+		 * The MSI-X Table and MSI-X PBA are permitted to co-reside within a naturally
+		 * aligned 4 KB address range.
+		 *
+		 * If PBA or others reside in the same BAR with MSI-X Table, devicemodel could
+		 * emulate them and maps these memory range at the 4KB boundary. Here, we should
+		 * make sure only intercept the minimum number of 4K pages needed for MSI-X table.
+		 */
+
+		/* The higher boundary of the 4KB aligned address range for MSI-X table */
+		addr_hi = msix->mmio_gpa + msix->table_offset + msix->table_count * MSIX_TABLE_ENTRY_SIZE;
+		addr_hi = round_page_up(addr_hi);
+
+		/* The lower boundary of the 4KB aligned address range for MSI-X table */
+		addr_lo = round_page_down(msix->mmio_gpa + msix->table_offset);
+
+		msix->intercepted_gpa = addr_lo;
+		msix->intercepted_size = addr_hi - addr_lo;
+
 		(void)register_mmio_emulation_handler(vdev->vpci->vm, vmsix_table_mmio_access_handler,
-			msix->mmio_gpa,	msix->mmio_gpa + msix->mmio_size, vdev);
+			msix->intercepted_gpa, msix->intercepted_gpa + msix->intercepted_size, vdev);
 	}
 
 	return 0;
@@ -354,10 +372,10 @@ static int vmsix_init(struct pci_vdev *vdev)
 
 static int vmsix_deinit(struct pci_vdev *vdev)
 {
-	if (vdev->msix.mmio_gpa != 0UL) {
-		unregister_mmio_emulation_handler(vdev->vpci->vm, vdev->msix.mmio_gpa,
-			vdev->msix.mmio_gpa + vdev->msix.mmio_size);
-		vdev->msix.mmio_gpa = 0U;
+	if (vdev->msix.intercepted_size != 0UL) {
+		unregister_mmio_emulation_handler(vdev->vpci->vm, vdev->msix.intercepted_gpa,
+			vdev->msix.intercepted_gpa + vdev->msix.intercepted_size);
+		vdev->msix.intercepted_size = 0U;
 	}
 
 	if (vdev->msix.table_count != 0U) {
