@@ -88,9 +88,10 @@ timely kick action, it will call DM API to reboot that UOS.
 In the UOS launch script, add: ``-s xx,wdt-i6300esb`` into DM parameters.
 (xx is the virtual PCI BDF number as with other PCI devices)
 
-Make sure the UOS kernel has the I6300ESB driver enabled: ``CONFIG_I6300ESB_WDT=y``. After the UOS
-boots up, the watchdog device will be created as node ``/dev/watchdog``,
-and can be used as a normal device file.
+Make sure the UOS kernel has the I6300ESB driver enabled:
+``CONFIG_I6300ESB_WDT=y``. After the UOS boots up, the watchdog device
+will be created as node ``/dev/watchdog``, and can be used as a normal
+device file.
 
 Usually the UOS needs a watchdog service (daemon) to run in userland and
 kick the watchdog periodically. If something prevents the daemon from
