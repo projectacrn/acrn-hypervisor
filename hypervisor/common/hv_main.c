@@ -123,33 +123,51 @@ void get_vmexit_profile(char *str_arg, size_t str_max)
 	uint16_t cpu, i;
 	size_t len, size = str_max;
 
-	len = snprintf(str, size, "\r\nNow(us) = %16lld\r\n",
-			ticks_to_us(rdtsc()));
+	len = snprintf(str, size, "\r\nNow(us) = %16lld\r\n", ticks_to_us(rdtsc()));
+	if (len >= size) {
+		goto overflow;
+	}
 	size -= len;
 	str += len;
 
 	len = snprintf(str, size, "\r\nREASON");
+	if (len >= size) {
+		goto overflow;
+	}
 	size -= len;
 	str += len;
 
 	for (cpu = 0U; cpu < phys_cpu_num; cpu++) {
 		len = snprintf(str, size, "\t      CPU%hu\t        US", cpu);
+		if (len >= size) {
+			goto overflow;
+		}
 		size -= len;
 		str += len;
 	}
 
 	for (i = 0U; i < 64U; i++) {
 		len = snprintf(str, size, "\r\n0x%x", i);
+		if (len >= size) {
+			goto overflow;
+		}
 		size -= len;
 		str += len;
 		for (cpu = 0U; cpu < phys_cpu_num; cpu++) {
-			len = snprintf(str, size, "\t%10lld\t%10lld",
-				per_cpu(vmexit_cnt, cpu)[i],
+			len = snprintf(str, size, "\t%10lld\t%10lld", per_cpu(vmexit_cnt, cpu)[i],
 				ticks_to_us(per_cpu(vmexit_time, cpu)[i]));
+			if (len >= size) {
+				goto overflow;
+			}
+
 			size -= len;
 			str += len;
 		}
 	}
 	snprintf(str, size, "\r\n");
+	return;
+
+overflow:
+	printf("buffer size could not be enough! please check!\n");
 }
 #endif /* HV_DEBUG */

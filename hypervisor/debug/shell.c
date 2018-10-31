@@ -11,7 +11,8 @@
 #define MAX_STR_SIZE		256U
 #define SHELL_PROMPT_STR	"ACRN:\\>"
 
-char shell_log_buf[CPU_PAGE_SIZE*2];
+#define SHELL_LOG_BUF_SIZE		(CPU_PAGE_SIZE * CONFIG_MAX_PCPU_NUM / 2U)
+static char shell_log_buf[SHELL_LOG_BUF_SIZE];
 
 /* Input Line Other - Switch to the "other" input line (there are only two
  * input lines total).
@@ -657,7 +658,7 @@ static int shell_vcpu_dumpreg(int argc, char **argv)
 	vcpu = vcpu_from_vid(vm, vcpu_id);
 	dump.vcpu = vcpu;
 	dump.str = shell_log_buf;
-	dump.str_max = CPU_PAGE_SIZE;
+	dump.str_max = SHELL_LOG_BUF_SIZE;
 	if (vcpu->pcpu_id == get_cpu_id()) {
 		vcpu_dumpreg(&dump);
 	} else {
@@ -764,14 +765,14 @@ static int shell_to_sos_console(__unused int argc, __unused char **argv)
 
 static int shell_show_cpu_int(__unused int argc, __unused char **argv)
 {
-	get_cpu_interrupt_info(shell_log_buf, CPU_PAGE_SIZE);
+	get_cpu_interrupt_info(shell_log_buf, SHELL_LOG_BUF_SIZE);
 	shell_puts(shell_log_buf);
 	return 0;
 }
 
 static int shell_show_ptdev_info(__unused int argc, __unused char **argv)
 {
-	get_ptdev_info(shell_log_buf, CPU_PAGE_SIZE);
+	get_ptdev_info(shell_log_buf, SHELL_LOG_BUF_SIZE);
 	shell_puts(shell_log_buf);
 
 	return 0;
@@ -789,7 +790,7 @@ static int shell_show_vioapic_info(int argc, char **argv)
 	ret = atoi(argv[1]);
 	if (ret >= 0) {
 		vmid = (uint16_t) ret;
-		get_vioapic_info(shell_log_buf, CPU_PAGE_SIZE, vmid);
+		get_vioapic_info(shell_log_buf, SHELL_LOG_BUF_SIZE, vmid);
 		shell_puts(shell_log_buf);
 		return 0;
 	}
@@ -801,7 +802,7 @@ static int shell_show_ioapic_info(__unused int argc, __unused char **argv)
 {
 	int err = 0;
 
-	err = get_ioapic_info(shell_log_buf, 2 * CPU_PAGE_SIZE);
+	err = get_ioapic_info(shell_log_buf, SHELL_LOG_BUF_SIZE);
 	shell_puts(shell_log_buf);
 
 	return err;
@@ -809,7 +810,7 @@ static int shell_show_ioapic_info(__unused int argc, __unused char **argv)
 
 static int shell_show_vmexit_profile(__unused int argc, __unused char **argv)
 {
-	get_vmexit_profile(shell_log_buf, 2*CPU_PAGE_SIZE);
+	get_vmexit_profile(shell_log_buf, SHELL_LOG_BUF_SIZE);
 	shell_puts(shell_log_buf);
 
 	return 0;
