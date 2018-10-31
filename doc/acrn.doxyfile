@@ -799,7 +799,11 @@ INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/include/public/acrn_common.h \
                           ../hypervisor/include/public/acrn_hv_defs.h \
                           ../hypervisor/arch/x86/trusty.c \
-                          ../devicemodel/include/virtio.h
+                          ../devicemodel/include/virtio.h \
+                          ../hypervisor/include/arch/x86/ioapic.h \
+                          ../hypervisor/include/arch/x86/irq.h \
+                          ../hypervisor/include/arch/x86/lapic.h \
+                          ../hypervisor/include/common/irq.h
 
 
 # This tag can be used to specify the character encoding of the source files

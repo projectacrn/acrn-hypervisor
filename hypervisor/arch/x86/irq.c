@@ -245,7 +245,7 @@ void free_irq(uint32_t irq)
 	spinlock_irqrestore_release(&desc->lock, rflags);
 }
 
-void set_irq_trigger_mode(uint32_t irq, bool is_level_trigger)
+void set_irq_trigger_mode(uint32_t irq, bool is_level_triggered)
 {
 	uint64_t rflags;
 	struct irq_desc *desc;
@@ -256,7 +256,7 @@ void set_irq_trigger_mode(uint32_t irq, bool is_level_trigger)
 
 	desc = &irq_desc_array[irq];
 	spinlock_irqsave_obtain(&desc->lock, &rflags);
-	if (is_level_trigger == true) {
+	if (is_level_triggered == true) {
 		desc->flags |= IRQF_LEVEL;
 	} else {
 		desc->flags &= ~IRQF_LEVEL;
