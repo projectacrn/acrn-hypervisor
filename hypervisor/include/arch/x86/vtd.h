@@ -465,37 +465,155 @@ struct dmar_info {
 
 extern struct dmar_info *get_dmar_info(void);
 
+/**
+ * @file vtd.h
+ *
+ * @brief public APIs for VT-d
+ */
+
+/**
+ * @brief VT-d
+ *
+ * @defgroup acrn_vtd ACRN VT-d
+ * @{
+ */
+
+
+/**
+ * @brief iommu domain.
+ *
+ * This struct declaration for iommu domain.
+ *
+ */
 struct iommu_domain;
 
-/* Assign a device specified by bus & devfun to a iommu domain */
+/**
+ * @brief Assign a device specified by bus & devfun to a iommu domain.
+ *
+ * Remove the device from the VM0 domain (if present), and add it to the specific domain.
+ *
+ * @param[in]    domain iommu domain the device is assigned to
+ * @param[in]    bus the 8-bit bus number of the device
+ * @param[in]    devfun the 8-bit device(5-bit):function(3-bit) of the device
+ *
+ * @return 0 - on success.
+ * @return 1 - fail to unassign the device
+ *
+ * @pre domain != NULL
+ *
+ */
 int assign_iommu_device(const struct iommu_domain *domain,
 	uint8_t bus, uint8_t devfun);
 
-/* Unassign a device specified by bus & devfun to a iommu domain */
+/**
+ * @brief Unassign a device specified by bus & devfun from a iommu domain .
+ *
+ * Remove the device from the specific domain, and then add it to the VM0 domain (if present).
+ *
+ * @param[in]    domain iommu domain the device is assigned to
+ * @param[in]    bus the 8-bit bus number of the device
+ * @param[in]    devfun the 8-bit device(5-bit):function(3-bit) of the device
+ *
+ * @return 0 - on success.
+ * @return 1 - fail to unassign the device
+ *
+ * @pre domain != NULL
+ *
+ */
 int unassign_iommu_device(const struct iommu_domain *domain,
 	uint8_t bus, uint8_t devfun);
 
-/* Create a iommu domain for a VM specified by vm_id */
+/**
+ * @brief Create a iommu domain for a VM specified by vm_id.
+ *
+ * Create a iommu domain for a VM specified by vm_id, along with address translation table and address width.
+ *
+ * @param[in] vm_id vm_id of the VM the domain created for
+ * @param[in] translation_table the physcial address of EPT table of the VM specified by the vm_id
+ * @param[in] addr_width address width of the VM
+ *
+ * @return Pointer pointer to iommu_domain
+ * @return NULL if translation_table is 0
+ *
+ * @pre vm_id is valid
+ * @pre translation_table != 0
+ *
+ */
 struct iommu_domain *create_iommu_domain(uint16_t vm_id,
 	uint64_t translation_table, uint32_t addr_width);
 
-/* Destroy the iommu domain */
+/**
+ * @brief Destroy the specific iommu domain.
+ *
+ * Destroy the specific iommu domain when a VM no longer needs it.
+ *
+ * @param[in] domain iommu domain to destroy
+ *
+ * @pre domain != NULL
+ *
+ */
 void destroy_iommu_domain(struct iommu_domain *domain);
 
-/* Enable translation of iommu*/
+/**
+ * @brief Enable translation of IOMMUs.
+ *
+ * Enable address translation of all IOMMUs, which are not ignored on the platform.
+ *
+ */
 void enable_iommu(void);
 
-/* Disable translation of iommu*/
+/**
+ * @brief Disable translation of IOMMUs.
+ *
+ * Disable address translation of all IOMMUs, which are not ignored on the platform.
+ *
+ */
 void disable_iommu(void);
 
-/* suspend iomu */
+/**
+ * @brief Suspend IOMMUs.
+ *
+ * Suspend all IOMMUs, which are not ignored on the platform.
+ *
+ */
 void suspend_iommu(void);
 
-/* resume iomu */
+/**
+ * @brief Resume IOMMUs.
+ *
+ * Resume all IOMMUs, which are not ignored on the platform.
+ *
+ */
 void resume_iommu(void);
 
-/* iommu initialization */
+/**
+ * @brief Init IOMMUs.
+ *
+ * Register DMAR units on the platform according to the pre-parsed information or DMAR table.
+ *
+ * @return 0 - on success
+ * @return non-zero - iommu is a must have feature, if init_iommu failed, the system should not continue booting
+ *
+ */
 int init_iommu(void);
+
+/**
+ * @brief Init VM0 domain of iommu.
+ *
+ * Create VM0 domain using the Normal World's EPT table of VM0 as address translation table.
+ * All PCI devices are added to the VM0 domain when creating it.
+ *
+ * @param[in] vm0 pointer to VM0
+ *
+ * @pre vm0 shall point to VM0
+ *
+ * @remark to reduce boot time & memory cost, a config IOMMU_INIT_BUS_LIMIT, which limit the bus number.
+ *
+ */
 void init_iommu_vm0_domain(struct vm *vm0);
+
+/**
+  * @}
+  */
 
 #endif
