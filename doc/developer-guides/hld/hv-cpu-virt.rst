@@ -125,14 +125,8 @@ The VHM will respond to the ioctl:
 The hypercall ``HC_CREATE_VCPU`` is handled in the hypervisor with
 the parameter:
 
-.. code-block:: c
-
-   struct acrn_create_vcpu {
-      /** the virtual CPU ID for the VCPU created */
-      uint16_t vcpu_id;
-      /** the physical CPU ID for the VCPU created */
-      uint16_t pcpu_id;
-   } __attribute__((aligned(8)));
+.. doxygenstruct:: acrn_create_vcpu
+   :project: Project ACRN
 
 CPU assignment management in HV
 ===============================
@@ -187,43 +181,26 @@ the major states are:
 
    ACRN vCPU state transitions
 
-This table shows the functions which drive the state machine of the vCPU
+Following functions are used to drive the state machine of the vCPU
 lifecycle:
 
-.. list-table::
-   :widths: 20 80
-   :header-rows: 1
+.. doxygenfunction:: create_vcpu
+   :project: Project ACRN
 
-   * - **Function**
-     - **Description**
+.. doxygenfunction:: schedule_vcpu
+   :project: Project ACRN
 
-   * - create_vcpu
-     - Creates/allocates a vCPU instance, with initialization for its
-       vcpu_id, vpid, vmcs, vlapic, etc. It sets the init vCPU state
-       to VCPU_INIT.
+.. doxygenfunction:: pause_vcpu
+   :project: Project ACRN
 
-   * - schedule_vcpu
-     - Adds a vCPU into the run queue and make a reschedule request for it.
-       It sets the vCPU state to VCPU_RUNNING.
+.. doxygenfunction:: resume_vcpu
+   :project: Project ACRN
 
-   * - pause_vcpu
-     - Change a vCPU state to VCPU_PAUSED or VCPU_ZOMBIE, and make a
-       reschedule request for it.
+.. doxygenfunction:: reset_vcpu
+   :project: Project ACRN
 
-   * - resume_vcpu
-     - Change a vCPU state to VCPU_RUNNING, and make a reschedule request
-       for it.
-
-   * - reset_vcpu
-     - Reset all fields in a vCPU instance, the vCPU state is reset to
-       VCPU_INIT.
-
-   * - destroy_vcpu
-     - Destroy/free a vCPU instance.
-
-   * - start/run_vcpu
-     - An interface in vCPU thread to implement VM entry and VM exit.
-       A CPU switches between VMX root mode and non-root mode based on it.
+.. doxygenfunction:: run_vcpu
+   :project: Project ACRN
 
 
 vCPU Scheduling
@@ -322,37 +299,8 @@ vCPU Run Context
 During a vCPU switch between root and non-root mode, the run context of
 the vCPU is saved and restored using this structure:
 
-.. code-block:: c
-
-   struct run_context {
-   /* Contains the guest register set.
-    * NOTE: This must be the first element in the structure, so that
-    * the offsets in vmx_asm.S match
-    */
-      union {
-         struct cpu_gp_regs regs;
-         uint64_t longs[NUM_GPRS];
-      } guest_cpu_regs;
-
-      /* The guests CR registers 0, 2, 3 and 4. */
-      uint64_t cr0;
-
-      /* CPU_CONTEXT_OFFSET_CR2 =
-       * offsetof(struct run_context, cr2) = 136
-       */
-      uint64_t cr2;
-      uint64_t cr4;
-
-      uint64_t rip;
-      uint64_t rflags;
-
-      /* CPU_CONTEXT_OFFSET_IA32_SPEC_CTRL =
-       * offsetof(struct run_context, ia32_spec_ctrl) = 168
-       */
-      uint64_t ia32_spec_ctrl;
-      uint64_t ia32_efer;
-   };
-
+.. doxygenstruct:: run_context
+   :project: Project ACRN
 
 The vCPU handles runtime context saving by three different
 categories:
@@ -385,54 +333,53 @@ categories:
 
 For the first two categories above, ACRN provides these get/set APIs:
 
-.. list-table::
-   :widths: 30 70
-   :header-rows: 1
+.. doxygenfunction:: vcpu_get_gpreg
+   :project: Project ACRN
 
-   * - **APIs**
-     - **Desc**
+.. doxygenfunction:: vcpu_set_gpreg
+   :project: Project ACRN
 
-   * - vcpu_get_gpreg
-     - Get target vCPU's general purpose registers value in run_context
+.. doxygenfunction:: vcpu_get_rip
+   :project: Project ACRN
 
-   * - vcpu_set_gpreg
-     - Set target vCPU's general purpose registers value in run_context
+.. doxygenfunction:: vcpu_set_rip
+   :project: Project ACRN
 
-   * - vcpu_get_rip
-     - Get & cache target vCPU's RIP in run_context
+.. doxygenfunction:: vcpu_get_rsp
+   :project: Project ACRN
 
-   * - vcpu_set_rip
-     - Update target vCPU's RIP in run_context
+.. doxygenfunction:: vcpu_set_rsp
+   :project: Project ACRN
 
-   * - vcpu_get_rsp
-     - Get & cache target vCPU's RSP in run_context
+.. doxygenfunction:: vcpu_get_efer
+   :project: Project ACRN
 
-   * - vcpu_set_rsp
-     - Update target vCPU's RSP in run_context
+.. doxygenfunction:: vcpu_set_efer
+   :project: Project ACRN
 
-   * - vcpu_get_efer
-     - Get & cache target vCPU's EFER in run_context
+.. doxygenfunction:: vcpu_get_rflags
+   :project: Project ACRN
 
-   * - vcpu_set_efer
-     - Update target vCPU's EFER in run_context
+.. doxygenfunction:: vcpu_set_rflags
+   :project: Project ACRN
 
-   * - vcpu_get_rflags
-     - Get & cache target vCPU's RFLAGS in run_context
+.. doxygenfunction:: vcpu_get_cr0
+   :project: Project ACRN
 
-   * - vcpu_set_rflags
-     - Update target vCPU's RFLAGS in run_context
+.. doxygenfunction:: vcpu_set_cr0
+   :project: Project ACRN
 
-   * - vcpu_get_cr2
-     - Get target vCPU's CR2 register value in run_context
+.. doxygenfunction:: vcpu_get_cr2
+   :project: Project ACRN
 
-   * - vcpu_set_cr2
-     - Set target vCPU's CR2 register value in run_context
+.. doxygenfunction:: vcpu_set_cr2
+   :project: Project ACRN
 
-   * - vcpu_get_cr0/4
-     - Get & cache target vCPU's CR0/4 register in run_context
+.. doxygenfunction:: vcpu_get_cr4
+   :project: Project ACRN
 
-   * - vcpu_set_cr0/4
-     - Update target vCPU's CR0/4 register in run_context
+.. doxygenfunction:: vcpu_set_cr4
+   :project: Project ACRN
 
 
 VM Exit Handlers
@@ -646,49 +593,10 @@ For a guest vCPU's state initialization:
    -  UOS BSP: DM context initialization through hypercall
 
 -  If it's AP, then it will always start from real mode, and the start
-       vector will always come from vlapic INIT-SIPI emulation. So there
-       is no need for *boot_ctx*. Instead we use a static guest state setting
-       pre-defined for real mode.
+       vector will always come from vlapic INIT-SIPI emulation. 
 
-.. code-block:: c
-
-   struct acrn_vcpu_state {
-          struct acrn_gp_regs gprs;
-          struct acrn_dt_desc gdt;
-          uint64_t        rip;
-          uint64_t        cs_base;
-          uint64_t        cr0;
-          uint64_t        cr4;
-          uint64_t        reserved_64[4];
-
-          uint32_t        cs_ar;
-          uint32_t        reserved_32[4];
-
-          /* don't change the order of following sel */
-          uint16_t        cs_sel;
-          uint16_t        ss_sel;
-          uint16_t        ds_sel;
-          uint16_t        es_sel;
-          uint16_t        fs_sel;
-          uint16_t        gs_sel;
-
-          uint16_t        reserved_16[4];
-   };
-
-   struct boot_ctx {
-          struct acrn_vcpu_state vcpu_state;
-          struct acrn_dt_desc  idt;
-          uint64_t   cr3;
-          uint64_t   ia32_efer;
-          uint64_t   rflags;
-
-          void *rsdp;
-          void *ap_trampoline_buf;
-
-          uint16_t   ldt_sel;
-          uint16_t   tr_sel;
-   }__attribute__((aligned(8)));
-
+.. doxygenstruct:: acrn_vcpu_regs
+   :project: Project ACRN
 
 .. list-table::
    :widths: 20 40 10 30
