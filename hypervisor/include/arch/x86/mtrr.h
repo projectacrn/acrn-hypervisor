@@ -2,10 +2,19 @@
  * Copyright (C) <2018> Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-
+/**
+ * @file mtrr.h
+ *
+ * @brief MTRR Virtualization
+ */
 #ifndef MTRR_H
 #define MTRR_H
-
+/**
+ * @brief MTRR Virtualization
+ *
+ * @addtogroup acrn_mem ACRN Memory Management
+ * @{
+ */
 #define FIXED_RANGE_MTRR_NUM	11U
 #define MTRR_SUB_RANGE_NUM	8U
 
@@ -44,8 +53,34 @@ struct mtrr_state {
 	union mtrr_fixed_range_reg	fixed_range[FIXED_RANGE_MTRR_NUM];
 };
 
+/**
+ * @brief Virtual MTRR MSR write
+ *
+ * @param[inout] vcpu The pointer that points VCPU data structure
+ * @param[in] msr Virtual MTRR MSR Address
+ * @param[in] value The value that will be writen into virtual MTRR MSR
+ *
+ * @return None
+ */
 void mtrr_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t value);
+/**
+ * @brief Virtual MTRR MSR read
+ *
+ * @param[in] vcpu The pointer that points VCPU data structure
+ * @param[in] msr Virtual MTRR MSR Address
+ *
+ * @return unsigned long integer - The specified virtual MTRR MSR value
+ */
 uint64_t mtrr_rdmsr(const struct vcpu *vcpu, uint32_t msr);
+/**
+ * @brief Virtual MTRR initialization
+ *
+ * @param[inout] vcpu The pointer that points VCPU data structure
+ *
+ * @return None
+ */
 void init_mtrr(struct vcpu *vcpu);
-
+/**
+ * @}
+ */
 #endif /* MTRR_H */

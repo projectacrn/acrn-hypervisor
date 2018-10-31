@@ -3,7 +3,11 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-
+/**
+ * @file pgtable.h
+ *
+ * @brief Address translation and page table operations
+ */
 #ifndef PGTABLE_H
 #define PGTABLE_H
 
@@ -66,13 +70,31 @@
 #define PML4E_PFN_MASK		0x0000FFFFFFFFF000UL
 #define PDPTE_PFN_MASK		0x0000FFFFFFFFF000UL
 #define PDE_PFN_MASK		0x0000FFFFFFFFF000UL
-
+/**
+ * @brief Address space translation
+ *
+ * @addtogroup acrn_mem ACRN Memory Management
+ * @{
+ */
 /* hpa <--> hva, now it is 1:1 mapping */
+/**
+ * @brief Translate host-physical address to host-virtual address
+ *
+ * @param[in] x The specified host-physical address
+ *
+ * @return void pointer - The host-virtual address
+ */
 static inline void *hpa2hva(uint64_t x)
 {
 	return (void *)x;
 }
-
+/**
+ * @brief Translate host-virtual address to host-physical address
+ *
+ * @param[in] x The specified host-virtual address
+ *
+ * @return unsigned long integer - The host-physical address
+ */
 static inline uint64_t hva2hpa(void *x)
 {
 	return (uint64_t)x;
@@ -159,4 +181,7 @@ static inline uint64_t pdpte_large(uint64_t pdpte)
 	return pdpte & PAGE_PSE;
 }
 
+/**
+ * @}
+ */
 #endif /* PGTABLE_H */
