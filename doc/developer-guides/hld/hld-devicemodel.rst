@@ -781,7 +781,7 @@ ACPI Virtualization
 *******************
 
 Introduction
-************
+============
 
 Advanced Configuration and Power Interface (ACPI) provides an open
 standard that operating systems can use to discover and configure
