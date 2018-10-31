@@ -235,7 +235,7 @@ static int local_gva2gpa_pae(struct vcpu *vcpu, struct page_walk_info *pw_info,
 		goto out;
 	}
 
-	index = (gva >> 30) & 0x3UL;
+	index = (gva >> 30U) & 0x3UL;
 	entry = base[index];
 
 	if ((entry & PAGE_PRESENT) == 0U) {

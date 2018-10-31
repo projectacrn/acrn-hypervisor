@@ -310,11 +310,11 @@ void switch_world(struct vcpu *vcpu, int next_world)
 	if (next_world == NORMAL_WORLD) {
 		exec_vmwrite64(VMX_EPT_POINTER_FULL,
 			hva2hpa(vcpu->vm->arch_vm.nworld_eptp) |
-			(3UL << 3) | 6UL);
+			(3UL << 3U) | 0x6UL);
 	} else {
 		exec_vmwrite64(VMX_EPT_POINTER_FULL,
 			hva2hpa(vcpu->vm->arch_vm.sworld_eptp) |
-			(3UL << 3) | 6UL);
+			(3UL << 3U) | 0x6UL);
 	}
 
 	/* Update world index */
@@ -412,9 +412,9 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 	switch (boot_param.version) {
 	case TRUSTY_VERSION_2:
 		trusty_entry_gpa = ((uint64_t)boot_param.entry_point) |
-			(((uint64_t)boot_param.entry_point_high) << 32);
+			(((uint64_t)boot_param.entry_point_high) << 32U);
 		trusty_base_gpa = ((uint64_t)boot_param.base_addr) |
-			(((uint64_t)boot_param.base_addr_high) << 32);
+			(((uint64_t)boot_param.base_addr_high) << 32U);
 
 		/* copy rpmb_key from OSloader */
 		(void)memcpy_s(&g_key_info.rpmb_key[0][0], 64U,
@@ -438,7 +438,7 @@ bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
 	trusty_base_hpa = vm->sworld_control.sworld_memory.base_hpa;
 
 	exec_vmwrite64(VMX_EPT_POINTER_FULL,
-			hva2hpa(vm->arch_vm.sworld_eptp) | (3UL << 3) | 6UL);
+			hva2hpa(vm->arch_vm.sworld_eptp) | (3UL << 3U) | 0x6UL);
 
 	/* save Normal World context */
 	save_world_ctx(vcpu, &vcpu->arch_vcpu.contexts[NORMAL_WORLD].ext_ctx);

@@ -112,7 +112,7 @@ int check_vmx_mmu_cap(void)
 	/* Read the MSR register of EPT and VPID Capability -  SDM A.10 */
 	val = msr_read(MSR_IA32_VMX_EPT_VPID_CAP);
 	vmx_caps.ept = (uint32_t) val;
-	vmx_caps.vpid = (uint32_t) (val >> 32);
+	vmx_caps.vpid = (uint32_t) (val >> 32U);
 
 	if (!cpu_has_vmx_ept_cap(VMX_EPT_INVEPT)) {
 		pr_fatal("%s, invept not supported\n", __func__);

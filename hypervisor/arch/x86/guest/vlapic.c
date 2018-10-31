@@ -1000,7 +1000,7 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 		 * In the "Cluster Model" the MDA is used to identify a
 		 * specific cluster and a set of APICs in that cluster.
 		 */
-		mda_cluster_id = (dest >> 4) & 0xfU;
+		mda_cluster_id = (dest >> 4U) & 0xfU;
 		mda_cluster_ldest = dest & 0xfU;
 
 		/*
@@ -1017,13 +1017,13 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 
 				if ((dfr & APIC_DFR_MODEL_MASK) ==
 						APIC_DFR_MODEL_FLAT) {
-					ldest = ldr >> 24;
+					ldest = ldr >> 24U;
 					mda_ldest = mda_flat_ldest;
 				} else if ((dfr & APIC_DFR_MODEL_MASK) ==
 						APIC_DFR_MODEL_CLUSTER) {
 
-					cluster = ldr >> 28;
-					ldest = (ldr >> 24) & 0xfU;
+					cluster = ldr >> 28U;
+					ldest = (ldr >> 24U) & 0xfU;
 
 					if (cluster != mda_cluster_id) {
 						continue;
@@ -1405,7 +1405,7 @@ vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg,
 	case APIC_OFFSET_ISR5:
 	case APIC_OFFSET_ISR6:
 	case APIC_OFFSET_ISR7:
-		i = (offset - APIC_OFFSET_ISR0) >> 4;
+		i = (offset - APIC_OFFSET_ISR0) >> 4U;
 		*data = lapic->isr[i].v;
 		break;
 	case APIC_OFFSET_TMR0:
@@ -1416,7 +1416,7 @@ vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg,
 	case APIC_OFFSET_TMR5:
 	case APIC_OFFSET_TMR6:
 	case APIC_OFFSET_TMR7:
-		i = (offset - APIC_OFFSET_TMR0) >> 4;
+		i = (offset - APIC_OFFSET_TMR0) >> 4U;
 		*data = lapic->tmr[i].v;
 		break;
 	case APIC_OFFSET_IRR0:
@@ -1427,7 +1427,7 @@ vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg,
 	case APIC_OFFSET_IRR5:
 	case APIC_OFFSET_IRR6:
 	case APIC_OFFSET_IRR7:
-		i = (offset - APIC_OFFSET_IRR0) >> 4;
+		i = (offset - APIC_OFFSET_IRR0) >> 4U;
 		*data = lapic->irr[i].v;
 		break;
 	case APIC_OFFSET_ESR:
@@ -2155,7 +2155,7 @@ vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
 		val = atomic_readandclear64(&pir_desc->pir[i]);
 		if (val != 0UL) {
 			irr[i * 2U].v |= (uint32_t)val;
-			irr[(i * 2U) + 1U].v |= (uint32_t)(val >> 32);
+			irr[(i * 2U) + 1U].v |= (uint32_t)(val >> 32U);
 
 			pirbase = 64U*i;
 			pirval = val;

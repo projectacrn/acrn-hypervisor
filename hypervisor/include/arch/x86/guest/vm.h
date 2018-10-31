@@ -114,7 +114,7 @@ struct vm_arch {
 } __aligned(CPU_PAGE_SIZE);
 
 
-#define CPUID_CHECK_SUBLEAF	(1U << 0)
+#define CPUID_CHECK_SUBLEAF	(1U << 0U)
 #define MAX_VM_VCPUID_ENTRIES	64U
 struct vcpuid_entry {
 	uint32_t eax;
