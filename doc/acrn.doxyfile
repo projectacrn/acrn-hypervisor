@@ -791,6 +791,10 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  =  custom-doxygen/mainpage.md \
+                          ../hypervisor/include/arch/x86/guest/guest.h \
+                          ../hypervisor/include/arch/x86/mmu.h \
+                          ../hypervisor/include/arch/x86/mtrr.h \
+                          ../hypervisor/include/arch/x86/pgtable.h \
                           ../hypervisor/include/common/hypercall.h \
                           ../hypervisor/include/public/acrn_common.h \
                           ../hypervisor/include/public/acrn_hv_defs.h \
@@ -2070,6 +2074,7 @@ PREDEFINED             = "__attribute__(x)=" \
                          "__deprecated=" \
                          "__aligned(x)=" \
                          "__packed=" \
+                         "__unused=" \
                          "__printf_like(x, y)="
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
