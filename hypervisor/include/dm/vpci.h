@@ -77,6 +77,8 @@ struct msix {
 	uint64_t  mmio_gpa;
 	uint64_t  mmio_hva;
 	uint64_t  mmio_size;
+	uint64_t  intercepted_gpa;
+	uint64_t  intercepted_size;
 	uint32_t  capoff;
 	uint32_t  caplen;
 	uint32_t  table_bar;
