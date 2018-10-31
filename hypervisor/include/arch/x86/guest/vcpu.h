@@ -4,6 +4,12 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+/**
+ * @file vcpu.h
+ *
+ * @brief public APIs for vcpu operations
+ */
+
 #ifndef VCPU_H
 #define VCPU_H
 
@@ -48,6 +54,13 @@
 
 #include <guest.h>
 
+/**
+ * @brief vcpu
+ *
+ * @defgroup acrn_vcpu ACRN vcpu
+ * @{
+ */
+
 enum vcpu_state {
 	VCPU_INIT,
 	VCPU_RUNNING,
@@ -71,12 +84,15 @@ struct segment_sel {
 	uint32_t attr;
 };
 
+/**
+ * @brief registers info saved for vcpu running context
+ */
 struct run_context {
 /* Contains the guest register set.
  * NOTE: This must be the first element in the structure, so that the offsets
  * in vmx_asm.S match
  */
-	union {
+	union guest_cpu_regs_t {
 		struct acrn_gp_regs regs;
 		uint64_t longs[NUM_GPRS];
 	} guest_cpu_regs;
@@ -266,26 +282,207 @@ vcpu_vlapic(struct vcpu *vcpu)
 }
 
 /* External Interfaces */
+
+/**
+ * @brief get vcpu register value
+ *
+ * Get target vCPU's general purpose registers value in run_context.
+ *
+ * @param[in] vcpu pointer to vcpu data structure
+ * @param[in] reg register of the vcpu
+ *
+ * @return the value of the register.
+ */
 uint64_t vcpu_get_gpreg(const struct vcpu *vcpu, uint32_t reg);
+
+/**
+ * @brief set vcpu register value
+ *
+ * Set target vCPU's general purpose registers value in run_context.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @param[in] reg register of the vcpu
+ * @param[in] val the value set the register of the vcpu
+ */
 void vcpu_set_gpreg(struct vcpu *vcpu, uint32_t reg, uint64_t val);
+
+/**
+ * @brief get vcpu RIP value
+ *
+ * Get & cache target vCPU's RIP in run_context.
+ *
+ * @param[in] vcpu pointer to vcpu data structure
+ *
+ * @return the value of RIP.
+ */
 uint64_t vcpu_get_rip(struct vcpu *vcpu);
+
+/**
+ * @brief set vcpu RIP value
+ *
+ * Update target vCPU's RIP in run_context.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @param[in] val the value set RIP
+ */
 void vcpu_set_rip(struct vcpu *vcpu, uint64_t val);
+
+/**
+ * @brief get vcpu RSP value
+ *
+ * Get & cache target vCPU's RSP in run_context.
+ *
+ * @param[in] vcpu pointer to vcpu data structure
+ *
+ * @return the value of RSP.
+ */
 uint64_t vcpu_get_rsp(struct vcpu *vcpu);
+
+/**
+ * @brief set vcpu RSP value
+ *
+ * Update target vCPU's RSP in run_context.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @param[in] val the value set RSP
+ */
 void vcpu_set_rsp(struct vcpu *vcpu, uint64_t val);
+
+/**
+ * @brief get vcpu EFER value
+ *
+ * Get & cache target vCPU's EFER in run_context.
+ *
+ * @param[in] vcpu pointer to vcpu data structure
+ *
+ * @return the value of EFER.
+ */
 uint64_t vcpu_get_efer(struct vcpu *vcpu);
+
+/**
+ * @brief set vcpu EFER value
+ *
+ * Update target vCPU's EFER in run_context.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @param[in] val the value set EFER
+ */
 void vcpu_set_efer(struct vcpu *vcpu, uint64_t val);
+
+/**
+ * @brief get vcpu RFLAG value
+ *
+ * Get & cache target vCPU's RFLAGS in run_context.
+ *
+ * @param[in] vcpu pointer to vcpu data structure
+ *
+ * @return the value of RFLAGS.
+ */
 uint64_t vcpu_get_rflags(struct vcpu *vcpu);
+
+/**
+ * @brief set vcpu RFLAGS value
+ *
+ * Update target vCPU's RFLAGS in run_context.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @param[in] val the value set RFLAGS
+ */
 void vcpu_set_rflags(struct vcpu *vcpu, uint64_t val);
+
+/**
+ * @brief get vcpu CR0 value
+ *
+ * Get & cache target vCPU's CR0 in run_context.
+ *
+ * @param[in] vcpu pointer to vcpu data structure
+ *
+ * @return the value of CR0.
+ */
 uint64_t vcpu_get_cr0(struct vcpu *vcpu);
+
+/**
+ * @brief set vcpu CR0 value
+ *
+ * Update target vCPU's CR0 in run_context.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @param[in] val the value set CR0
+ */
 void vcpu_set_cr0(struct vcpu *vcpu, uint64_t val);
+
+/**
+ * @brief get vcpu CR2 value
+ *
+ * Get & cache target vCPU's CR2 in run_context.
+ *
+ * @param[in] vcpu pointer to vcpu data structure
+ *
+ * @return the value of CR2.
+ */
 uint64_t vcpu_get_cr2(struct vcpu *vcpu);
+
+/**
+ * @brief set vcpu CR2 value
+ *
+ * Update target vCPU's CR2 in run_context.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @param[in] val the value set CR2
+ */
 void vcpu_set_cr2(struct vcpu *vcpu, uint64_t val);
+
+/**
+ * @brief get vcpu CR4 value
+ *
+ * Get & cache target vCPU's CR4 in run_context.
+ *
+ * @param[in] vcpu pointer to vcpu data structure
+ *
+ * @return the value of CR4.
+ */
 uint64_t vcpu_get_cr4(struct vcpu *vcpu);
+
+/**
+ * @brief set vcpu CR4 value
+ *
+ * Update target vCPU's CR4 in run_context.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @param[in] val the value set CR4
+ */
 void vcpu_set_cr4(struct vcpu *vcpu, uint64_t val);
+
 uint64_t vcpu_get_pat_ext(const struct vcpu *vcpu);
 void vcpu_set_pat_ext(struct vcpu *vcpu, uint64_t val);
+
+/**
+ * @brief set all the vcpu registers
+ *
+ * Update target vCPU's all registers in run_context.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @param[in] vcpu_regs all the registers' value
+ */
 void set_vcpu_regs(struct vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs);
+
+/**
+ * @brief reset all the vcpu registers
+ *
+ * Reset target vCPU's all registers in run_context to initial values.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ */
 void reset_vcpu_regs(struct vcpu *vcpu);
+
+/**
+ * @brief set the vcpu AP entry
+ *
+ * Set target vCPU's AP running entry in run_context.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @param[in] entry the entry value for AP
+ */
 void set_ap_entry(struct vcpu *vcpu, uint64_t entry);
 
 static inline bool is_long_mode(struct vcpu *vcpu)
@@ -304,26 +501,102 @@ static inline bool is_pae(struct vcpu *vcpu)
 }
 
 struct vcpu* get_ever_run_vcpu(uint16_t pcpu_id);
+
+/**
+ * @brief create a vcpu for the target vm
+ *
+ * Creates/allocates a vCPU instance, with initialization for its vcpu_id,
+ * vpid, vmcs, vlapic, etc. It sets the init vCPU state to VCPU_INIT
+ *
+ * @param[in] pcpu_id created vcpu will run on this pcpu
+ * @param[in] vm pointer to vm data structure, this vcpu will owned by this vm.
+ * @param[out] rtn_vcpu_handle pointer to the created vcpu
+ *
+ * @return 0: vcpu created successfully, other values failed.
+ */
 int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle);
-/*
- *  @pre vcpu != NULL
+
+/**
+ * @brief run into non-root mode based on vcpu setting
+ *
+ * An interface in vCPU thread to implement VM entry and VM exit.
+ * A CPU switches between VMX root mode and non-root mode based on it.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @pre vcpu != NULL
+ *
+ * @return 0: vcpu run successfully, other values failed.
  */
 int run_vcpu(struct vcpu *vcpu);
+
 int shutdown_vcpu(struct vcpu *vcpu);
-/*
- *  @pre vcpu != NULL
+
+/**
+ * @brief unmap the vcpu with pcpu and free its vlapic
+ *
+ * Unmap the vcpu with pcpu and free its vlapic, and set the vcpu state to offline
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @pre vcpu != NULL
  */
 void offline_vcpu(struct vcpu *vcpu);
 
+/**
+ * @brief reset vcpu state and values
+ *
+ * Reset all fields in a vCPU instance, the vCPU state is reset to VCPU_INIT.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ */
 void reset_vcpu(struct vcpu *vcpu);
+
+/**
+ * @brief pause the vcpu and set new state
+ *
+ * Change a vCPU state to VCPU_PAUSED or VCPU_ZOMBIE, and make a reschedule request for it.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ * @param[in] new_state the state to set vcpu
+ */
 void pause_vcpu(struct vcpu *vcpu, enum vcpu_state new_state);
+
+/**
+ * @brief resume the vcpu
+ *
+ * Change a vCPU state to VCPU_RUNNING, and make a reschedule request for it.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ */
 void resume_vcpu(struct vcpu *vcpu);
+
+/**
+ * @brief set the vcpu to running state, then it will be scheculed.
+ *
+ * Adds a vCPU into the run queue and make a reschedule request for it. It sets the vCPU state to VCPU_RUNNING.
+ *
+ * @param[inout] vcpu pointer to vcpu data structure
+ */
 void schedule_vcpu(struct vcpu *vcpu);
+
+/**
+ * @brief create a vcpu for the vm and mapped to the pcpu.
+ *
+ * Create a vcpu for the vm, and mapped to the pcpu.
+ *
+ * @param[inout] vm pointer to vm data structure
+ * @param[in] pcpu_id which the vcpu will be mapped 
+ */
 int prepare_vcpu(struct vm *vm, uint16_t pcpu_id);
 
 void request_vcpu_pre_work(struct vcpu *vcpu, uint16_t pre_work_id);
 
 void vcpu_dumpreg(void *data);
+
+/**
+ * @}
+ */
+/* End of acrn_vcpu */
+
 #endif /* ASSEMBLER */
 
 #endif /* VCPU_H */

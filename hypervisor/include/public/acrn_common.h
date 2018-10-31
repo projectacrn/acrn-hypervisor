@@ -280,6 +280,9 @@ struct acrn_descriptor_ptr {
 	uint16_t reserved[3];   /* align struct size to 64bit */
 } __attribute__((packed));
 
+/**
+ * @brief registers info for vcpu.
+ */
 struct acrn_vcpu_regs {
 	struct acrn_gp_regs gprs;
 	struct acrn_descriptor_ptr gdt;
