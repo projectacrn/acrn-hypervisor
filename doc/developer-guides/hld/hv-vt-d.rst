@@ -35,7 +35,7 @@ For generic platforms, ACRN hypervisor retrieves DMAR information from
 the ACPI table, and parses the DMAR reporting structure to discover the
 number of DMA-remapping hardware units present in the platform as well as
 the devices under the scope of a remapping hardware unit, as shown in
-:numref:`dma-remap-report`: 
+:numref:`dma-remap-report`:
 
 .. figure:: images/vt-d-image90.png
    :align: center
@@ -297,76 +297,38 @@ handler will be called to report error event.
 Data structures and interfaces
 ******************************
 
-.. note:: Needs API reference to include/arch/x86/vtd.h
-
 initialization and deinitialization
 ===================================
 
 The following APIs are provided during initialization and
 deinitialization:
 
--  void init_iommu(void)
+.. doxygenfunction:: init_iommu
+   :project: Project ACRN
 
-Register DMAR units on the platform according to the reparsed
-information or DMAR table.
+.. doxygenfunction:: init_iommu_vm0_domain
+   :project: Project ACRN
 
--  void init_iommu_vm0_domain(struct vm \*vm0)
-
-   Create VM0 domain using the Normal World's EPT table of VM0 as address
-   translation table. Add all PCI devices on the platform to VM0 domain. Then enable
-   DMAR translation.
-
--  void destroy_iommu_domain(struct iommu_domain \*domain)
-
-   Destroy the iommu domain.
-
-VT-d
-====
+runtime
+=======
 
 The following API are provided during runtime:
 
--  void suspend_iommu(void)
+.. doxygenfunction:: create_iommu_domain
+   :project: Project ACRN
 
-   Suspend IOMMU.
+.. doxygenfunction:: destroy_iommu_domain
+   :project: Project ACRN
 
--  void resume_iommu(void)
+.. doxygenfunction:: suspend_iommu
+   :project: Project ACRN
 
-   Resume IOMMU.
+.. doxygenfunction:: resume_iommu
+   :project: Project ACRN
 
--  struct iommu_domain \*create_iommu_domain(uint16_t vm_id,
-   uint64_t translation_table, uint32_t addr_width)
+.. doxygenfunction:: assign_iommu_device
+   :project: Project ACRN
 
-   Create a iommu domain for a VM specified by vm_id.
-   translation_table should be the physical address of EPT table of the VM
-   specified by the vm_id, the value cannot be NULL.
-   Return the iommu_domain created for the VM if not NULL.
-   Error if the return NULL.
-
--  int assign_iommu_device(struct iommu_domain \*domain, uint8_t
-   bus, uint8_t devfun)
-
-   Assign a device specified by bus & devfun to a iommu domain. The device
-   is removed from VM0 domain and added to the domain specified.
-
-   domain: specified the domain the device should be assigned to.
-
-   bus: the 8-bit bus value of the pass-through device.
-
-   devfun: the 8-bit device function value of the pass-through device.
-
-   return: return 0 if success, other if error.
-
--  int unassign_iommu_device(struct iommu_domain \*domain,
-
-   uint8_t bus, uint8_t devfun);
-
-   Unassign a device specified by bus & devfun from a iommu domain.
-
-   domain: specified the domain the device should be removed from.
-
-   bus: the 8-bit bus value of the pass-through device.
-
-   devfun: the 8-bit device function value of the pass-through device.
-
-   return: return 0 if success, other if error.
+.. doxygenfunction:: unassign_iommu_device
+   :project: Project ACRN
 
