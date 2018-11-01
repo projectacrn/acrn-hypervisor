@@ -44,7 +44,17 @@ static inline bool msixtable_access(struct pci_vdev *vdev, uint32_t offset)
 	return in_range(offset, vdev->msix.table_offset, vdev->msix.table_count * MSIX_TABLE_ENTRY_SIZE);
 }
 
-static int vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
+static void vmsix_disable_entry(struct pci_vdev *vdev, uint32_t index)
+{
+	struct msix_table_entry *pentry;
+	uint64_t hva;
+
+	hva = vdev->msix.mmio_hva + vdev->msix.table_offset;
+	pentry = (struct msix_table_entry *)hva + index;
+	mmio_write32(vdev->msix.tables[index].vector_control, (const void *)&(pentry->vector_control));
+}
+
+static int vmsix_update_entry(struct pci_vdev *vdev, uint32_t index)
 {
 	struct msix_table_entry *pentry;
 	struct ptdev_msi_info info;
@@ -53,7 +63,7 @@ static int vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
 
 	info.is_msix = 1;
 	info.vmsi_addr = vdev->msix.tables[index].addr;
-	info.vmsi_data = (enable) ? vdev->msix.tables[index].data : 0U;
+	info.vmsi_data = vdev->msix.tables[index].data;
 
 	ret = ptdev_msix_remap(vdev->vpci->vm, vdev->vbdf.value, (uint16_t)index, &info);
 	if (ret != 0) {
@@ -78,70 +88,39 @@ static int vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
 	return ret;
 }
 
-static inline void enable_disable_msix(struct pci_vdev *vdev, bool enable)
-{
-	uint32_t msgctrl;
-
-	msgctrl = pci_vdev_read_cfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
-	if (enable) {
-		msgctrl |= PCIM_MSIXCTRL_MSIX_ENABLE;
-	} else {
-		msgctrl &= ~PCIM_MSIXCTRL_MSIX_ENABLE;
-	}
-	pci_pdev_write_cfg(vdev->pdev.bdf, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U, msgctrl);
-}
-
 /* Do MSI-X remap for all MSI-X table entries in the target device */
-static int vmsix_remap(struct pci_vdev *vdev, bool enable)
+static int vmsix_enable(struct pci_vdev *vdev)
 {
-	uint32_t index;
+	uint32_t msgoff = vdev->msix.capoff + PCIR_MSIX_CTRL;
+	uint32_t msgctrl, index;
 	int ret;
 
-	/* disable MSI-X during configuration */
-	enable_disable_msix(vdev, false);
-
 	for (index = 0U; index < vdev->msix.table_count; index++) {
-		ret = vmsix_remap_entry(vdev, index, enable);
-		if (ret != 0) {
-			return ret;
+		if ((vdev->msix.tables[index].vector_control & PCIM_MSIX_VCTRL_MASK) == 0U) {
+			ret = vmsix_update_entry(vdev, index);
+			if (ret != 0) {
+				return ret;
+			}
 		}
 	}
 
-	/* If MSI Enable is being set, make sure INTxDIS bit is set */
-	if (enable) {
-		enable_disable_pci_intx(vdev->pdev.bdf, false);
-	}
-	enable_disable_msix(vdev, enable);
+	/* make sure INTxDIS bit is set */
+	enable_disable_pci_intx(vdev->pdev.bdf, false);
+
+	msgctrl = pci_vdev_read_cfg(vdev, msgoff, 2U);
+	pci_pdev_write_cfg(vdev->pdev.bdf, msgoff, 2U, msgctrl);
 
 	return 0;
 }
 
-/* Do MSI-X remap for one MSI-X table entry only */
-static int vmsix_remap_one_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
+static void vmsix_disable(struct pci_vdev *vdev)
 {
+	uint32_t msgoff = vdev->msix.capoff + PCIR_MSIX_CTRL;
 	uint32_t msgctrl;
-	int ret;
 
-	/* disable MSI-X during configuration */
-	enable_disable_msix(vdev, false);
-
-	ret = vmsix_remap_entry(vdev, index, enable);
-	if (ret != 0) {
-		return ret;
-	}
-
-	/* If MSI Enable is being set, make sure INTxDIS bit is set */
-	if (enable) {
-		enable_disable_pci_intx(vdev->pdev.bdf, false);
-	}
-
-	/* Restore MSI-X Enable bit */
-	msgctrl = pci_vdev_read_cfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
-	if ((msgctrl & PCIM_MSIXCTRL_MSIX_ENABLE) == PCIM_MSIXCTRL_MSIX_ENABLE) {
-		pci_pdev_write_cfg(vdev->pdev.bdf, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U, msgctrl);
-	}
-
-	return ret;
+	/* MSI-X Enable bit is cleared in vdev */
+	msgctrl = pci_vdev_read_cfg(vdev, msgoff, 2U);
+	pci_pdev_write_cfg(vdev->pdev.bdf, msgoff, 2U, msgctrl);
 }
 
 static int vmsix_cfgread(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
@@ -170,14 +149,14 @@ static int vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes
 		if ((offset - vdev->msix.capoff) == PCIR_MSIX_CTRL) {
 			if (((msgctrl ^ val) & PCIM_MSIXCTRL_MSIX_ENABLE) != 0U) {
 				if ((val & PCIM_MSIXCTRL_MSIX_ENABLE) != 0U) {
-					(void)vmsix_remap(vdev, true);
+					(void)vmsix_enable(vdev);
 				} else {
-					(void)vmsix_remap(vdev, false);
+					vmsix_disable(vdev);
 				}
 			}
 
 			if (((msgctrl ^ val) & PCIM_MSIXCTRL_FUNCTION_MASK) != 0U) {
-				pci_pdev_write_cfg(vdev->pdev.bdf, offset, 2U, msgctrl);
+				pci_pdev_write_cfg(vdev->pdev.bdf, offset, 2U, val);
 			}
 		}
 
@@ -217,10 +196,22 @@ static void vmsix_table_rw(struct pci_vdev *vdev, struct mmio_request *mmio, uin
 		/* Save for comparison */
 		vector_control = entry->vector_control;
 
-		/* Writing different value to Message Data/Addr? */
-		if (((offsetof(struct msix_table_entry, addr) == entry_offset) && (entry->addr != mmio->value)) ||
-			((offsetof(struct msix_table_entry, data) == entry_offset) && (entry->data != (uint32_t)mmio->value))) {
-			message_changed = true;
+		/*
+		 * Writing different value to Message Data/Addr?
+		 * PCI Spec: Software is permitted to fill in MSI-X Table entry DWORD fields individually
+		 * with DWORD writes, or software in certain cases is permitted to fill in appropriate pairs
+		 * of DWORDs with a single QWORD write
+		 */
+		if (entry_offset < offsetof(struct msix_table_entry, data)) {
+			uint64_t qword_mask = ~0U;
+			if (mmio->size == 4U) {
+				qword_mask = (entry_offset == 0U) ? 0x00000000FFFFFFFFU : 0xFFFFFFFF00000000U;
+			}
+			message_changed = ((entry->addr & qword_mask) != (mmio->value & qword_mask));
+		} else {
+			if (entry_offset == offsetof(struct msix_table_entry, data)) {
+				message_changed = (entry->data != (uint32_t)mmio->value);
+			}
 		}
 
 		/* Write to pci_vdev */
@@ -230,9 +221,17 @@ static void vmsix_table_rw(struct pci_vdev *vdev, struct mmio_request *mmio, uin
 		if ((pci_vdev_read_cfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U) & PCIM_MSIXCTRL_MSIX_ENABLE)
 			== PCIM_MSIXCTRL_MSIX_ENABLE) {
 
-			if ((((entry->vector_control ^ vector_control) & PCIM_MSIX_VCTRL_MASK) != 0U) || message_changed) {
-				unmasked = ((entry->vector_control & PCIM_MSIX_VCTRL_MASK) == 0U);
-				(void)vmsix_remap_one_entry(vdev, index, unmasked);
+			unmasked = ((entry->vector_control & PCIM_MSIX_VCTRL_MASK) == 0U);
+			if (((entry->vector_control ^ vector_control) & PCIM_MSIX_VCTRL_MASK) != 0U) {
+				if (unmasked) {
+					(void)vmsix_update_entry(vdev, index);
+				} else {
+					vmsix_disable_entry(vdev, index);
+				}
+			} else {
+				if (message_changed && unmasked) {
+					(void)vmsix_update_entry(vdev, index);
+				}
 			}
 		}
 	}
@@ -246,7 +245,7 @@ static int vmsix_table_mmio_access_handler(struct io_request *io_req, void *hand
 	uint64_t hva;
 
 	vdev = (struct pci_vdev *)handler_private_data;
-	offset = mmio->address - vdev->msix.mmio_gpa;
+	offset = mmio->address - vdev->msix.intercepted_gpa;
 
 	if (msixtable_access(vdev, (uint32_t)offset)) {
 		vmsix_table_rw(vdev, mmio, (uint32_t)offset);
@@ -350,7 +349,9 @@ static int vmsix_init(struct pci_vdev *vdev)
 
 	/* Mask all table entries */
 	for (i = 0U; i < msix->table_count; i++) {
-		msix->tables[i].vector_control |= PCIM_MSIX_VCTRL_MASK;
+		msix->tables[i].vector_control = PCIM_MSIX_VCTRL_MASK;
+		msix->tables[i].addr = 0U;
+		msix->tables[i].data = 0U;
 	}
 
 	decode_msix_table_bar(vdev);

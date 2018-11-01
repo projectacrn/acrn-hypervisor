@@ -39,7 +39,7 @@ static inline bool msicap_access(struct pci_vdev *vdev, uint32_t offset)
 	return in_range(offset, vdev->msi.capoff, vdev->msi.caplen);
 }
 
-static int vmsi_remap(struct pci_vdev *vdev, bool enable)
+static int vmsi_update(struct pci_vdev *vdev)
 {
 	struct ptdev_msi_info info;
 	union pci_bdf pbdf = vdev->pdev.bdf;
@@ -47,13 +47,9 @@ static int vmsi_remap(struct pci_vdev *vdev, bool enable)
 	uint32_t capoff = vdev->msi.capoff;
 	uint32_t msgctrl, msgdata;
 	uint32_t addrlo, addrhi;
-	int ret;
+	int ret = 0;
 
-	/* Disable MSI during configuration */
 	msgctrl = pci_vdev_read_cfg(vdev, capoff + PCIR_MSI_CTRL, 2U);
-	if ((msgctrl & PCIM_MSICTRL_MSI_ENABLE) == PCIM_MSICTRL_MSI_ENABLE) {
-		pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_CTRL, 2U, msgctrl & ~PCIM_MSICTRL_MSI_ENABLE);
-	}
 
 	/* Read the MSI capability structure from virtual device */
 	addrlo = pci_vdev_read_cfg_u32(vdev, capoff + PCIR_MSI_ADDR);
@@ -67,13 +63,7 @@ static int vmsi_remap(struct pci_vdev *vdev, bool enable)
 
 	info.is_msix = 0;
 	info.vmsi_addr = (uint64_t)addrlo | ((uint64_t)addrhi << 32U);
-
-	/* MSI is being enabled or disabled */
-	if (enable) {
-		info.vmsi_data = msgdata;
-	} else {
-		info.vmsi_data = 0U;
-	}
+	info.vmsi_data = msgdata;
 
 	ret = ptdev_msix_remap(vm, vdev->vbdf.value, 0U, &info);
 	if (ret != 0) {
@@ -89,13 +79,37 @@ static int vmsi_remap(struct pci_vdev *vdev, bool enable)
 		pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_DATA, 0x2U, (uint16_t)info.pmsi_data);
 	}
 
-	/* If MSI Enable is being set, make sure INTxDIS bit is set */
-	if (enable) {
-		enable_disable_pci_intx(pbdf, false);
-		pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_CTRL, 2U, msgctrl | PCIM_MSICTRL_MSI_ENABLE);
+	return ret;
+}
+
+static int vmsi_enable(struct pci_vdev *vdev)
+{
+	union pci_bdf pbdf = vdev->pdev.bdf;
+	uint32_t msgoff = vdev->msi.capoff + PCIR_MSI_CTRL;
+	uint32_t msgctrl;
+	int ret = 0;
+
+	ret = vmsi_update(vdev);
+	if (ret != 0) {
+		return ret;
 	}
 
+	/* make sure INTxDIS bit is set */
+	enable_disable_pci_intx(pbdf, false);
+
+	msgctrl = pci_vdev_read_cfg(vdev, msgoff, 2U);
+	pci_pdev_write_cfg(pbdf, msgoff, 2U, msgctrl);
+
 	return ret;
+}
+
+static void vmsi_disable(struct pci_vdev *vdev)
+{
+	uint32_t msgoff = vdev->msi.capoff + PCIR_MSI_CTRL;
+	uint32_t msgctrl;
+
+	msgctrl = pci_vdev_read_cfg(vdev, msgoff, 2U);
+	pci_pdev_write_cfg(vdev->pdev.bdf, msgoff, 2U, msgctrl);
 }
 
 static int vmsi_cfgread(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
@@ -112,7 +126,6 @@ static int vmsi_cfgread(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, 
 static int vmsi_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	bool message_changed = false;
-	bool enable;
 	uint32_t msgctrl;
 
 	/* Writing MSI Capability Structure */
@@ -132,11 +145,14 @@ static int vmsi_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
 		/* Do remap if MSI Enable bit is being changed */
 		if (((offset - vdev->msi.capoff) == PCIR_MSI_CTRL) &&
 			(((msgctrl ^ val) & PCIM_MSICTRL_MSI_ENABLE) != 0U)) {
-			enable = ((val & PCIM_MSICTRL_MSI_ENABLE) != 0U);
-			(void)vmsi_remap(vdev, enable);
+			if ((val & PCIM_MSICTRL_MSI_ENABLE) != 0U) {
+				(void)vmsi_enable(vdev);
+			} else {
+				vmsi_disable(vdev);
+			}
 		} else {
 			if (message_changed && ((msgctrl & PCIM_MSICTRL_MSI_ENABLE) != 0U)) {
-				(void)vmsi_remap(vdev, true);
+				(void)vmsi_update(vdev);
 			}
 		}
 
