@@ -208,6 +208,33 @@ virtio_input_cfgwrite(void *vdev, int offset, int size, uint32_t val)
 	return 0;
 }
 
+static bool
+virtio_input_ignore_event(struct virtio_input_event *event)
+{
+	if (!event)
+		return true;
+
+	/* kernel commit 29cc309d8bf19a36c5196bf626662319af6e3c0b
+	 * (HID: hid-multitouch: forward MSC_TIMESTAMP)
+	 * since kernel 4.15
+	 * (EV_MSC, MSC_TIMESTAMP) is added to each frame just before
+	 * the SYN event. EV_MSC is configured as INPUT_PASS_TO_ALL.
+	 * In the use case of virtio-input, there is a loop as follows:
+	 * - A mt frame with (EV_MSC, MSC_TIMESTAMP) is passed to FE.
+	 * - FE will call virtinput_status to pass (EV_MSC, MSC_TIMESTAMP)
+	 *   back to BE.
+	 * - BE writes this event to evdev. Because (EV_MSC, MSC_TIMESTAMP)
+	 *   is configured as INPUT_PASS_TO_ALL, it will be written into
+	 *   the event buffer of evdev then be read out by BE without
+	 *   SYN followed.
+	 * - Each mt frame will introduce one (EV_MSC, MSC_TIMESTAMP).
+	 *   Later the frame becomes larger and larger...
+	 */
+	if ((event->type == EV_MSC) && (event->code == MSC_TIMESTAMP))
+		return true;
+	return false;
+}
+
 static void
 virtio_input_notify_event_vq(void *vdev, struct virtio_vq_info *vq)
 {
@@ -230,14 +257,23 @@ virtio_input_notify_status_vq(void *vdev, struct virtio_vq_info *vq)
 		n = vq_getchain(vq, &idx, &iov, 1, NULL);
 		assert(n == 1);
 
-		memcpy(&event, iov.iov_base, sizeof(event));
-		host_event.type = event.type;
-		host_event.code = event.code;
-		host_event.value = event.value;
-		len = write(vi->fd, &host_event, sizeof(host_event));
-		if (len == -1)
-			WPRINTF(("%s: write failed, len = %d, errno = %d\n",
-				__func__, len, errno));
+		if (vi->fd > 0) {
+			memcpy(&event, iov.iov_base, sizeof(event));
+			if (!virtio_input_ignore_event(&event)) {
+				host_event.type = event.type;
+				host_event.code = event.code;
+				host_event.value = event.value;
+				if (gettimeofday(&host_event.time, NULL)) {
+					WPRINTF(("vtinput: gettimeofday failed\n"));
+					break;
+				}
+				len = write(vi->fd, &host_event, sizeof(host_event));
+				if (len == -1)
+					WPRINTF(("%s: write failed, len = %d, "
+						"errno = %d\n",
+						__func__, len, errno));
+			}
+		}
 		vq_relchain(vq, idx, sizeof(event)); /* Release the chain */
 	}
 	vq_endchains(vq, 1);	/* Generate interrupt if appropriate. */
