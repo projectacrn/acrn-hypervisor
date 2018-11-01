@@ -427,3 +427,22 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 
 	return err;
 }
+
+void update_msr_bitmap_x2apic_apicv(struct vcpu *vcpu)
+{
+	uint8_t *msr_bitmap;
+
+	msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
+	intercept_x2apic_msrs(msr_bitmap, WRITE);
+	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_CUR_COUNT, READ);
+	/*
+	 * Open read-only interception for write-only
+	 * registers to inject gp on reads. EOI and Self-IPI
+	 * Writes are disabled for EOI, TPR and Self-IPI as
+	 * writes to them are virtualized with Register Virtualization
+	 * Refer to Section 29.1 in Intel SDM Vol. 3
+	 */
+	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_TPR, DISABLE);
+	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_EOI, READ);
+	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_SELF_IPI, READ);
+}

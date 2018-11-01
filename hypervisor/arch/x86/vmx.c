@@ -26,6 +26,8 @@ static uint64_t cr4_host_mask;
 static uint64_t cr4_always_on_mask;
 static uint64_t cr4_always_off_mask;
 
+void update_msr_bitmap_x2apic_apicv(struct vcpu *vcpu);
+
 bool is_vmx_disabled(void)
 {
 	uint64_t msr_val;
@@ -1051,4 +1053,14 @@ void init_vmcs(struct vcpu *vcpu)
 	init_guest_state(vcpu);
 	init_entry_ctrl(vcpu);
 	init_exit_ctrl();
+}
+
+void switch_apicv_mode_x2apic(struct vcpu *vcpu)
+{
+	uint32_t value32;
+	value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS2);
+	value32 &= ~VMX_PROCBASED_CTLS2_VAPIC;
+	value32 |= VMX_PROCBASED_CTLS2_VX2APIC;
+	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS2, value32);
+	update_msr_bitmap_x2apic_apicv(vcpu);
 }
