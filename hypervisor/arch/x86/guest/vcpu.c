@@ -668,6 +668,9 @@ void vcpu_dumpreg(void *data)
 		vcpu_get_gpreg(vcpu, CPU_REG_R13),
 		vcpu_get_gpreg(vcpu, CPU_REG_R14),
 		vcpu_get_gpreg(vcpu, CPU_REG_R15));
+	if (len >= size) {
+		goto overflow;
+	}
 	size -= len;
 	str += len;
 
@@ -678,24 +681,34 @@ void vcpu_dumpreg(void *data)
 	if (status < 0) {
 		/* copy_from_gva fail */
 		len = snprintf(str, size, "Cannot handle user gva yet!\r\n");
+		if (len >= size) {
+			goto overflow;
+		}
 		size -= len;
 		str += len;
 	} else {
-		len = snprintf(str, size,
-			"\r\nDump RSP for vm %hu, from gva 0x%016llx\r\n",
+		len = snprintf(str, size, "\r\nDump RSP for vm %hu, from gva 0x%016llx\r\n",
 			vcpu->vm->vm_id, vcpu_get_gpreg(vcpu, CPU_REG_RSP));
+		if (len >= size) {
+			goto overflow;
+		}
 		size -= len;
 		str += len;
 
 		for (i = 0UL; i < 8UL; i++) {
-			len = snprintf(str, size, "=  0x%016llx  0x%016llx  "
-					"0x%016llx  0x%016llx\r\n",
-					tmp[i*4UL], tmp[(i*4UL)+1UL],
-					tmp[(i*4UL)+2UL], tmp[(i*4UL)+3UL]);
+			len = snprintf(str, size, "=  0x%016llx  0x%016llx 0x%016llx  0x%016llx\r\n",
+					tmp[i*4UL], tmp[(i*4UL)+1UL], tmp[(i*4UL)+2UL], tmp[(i*4UL)+3UL]);
+			if (len >= size) {
+				goto overflow;
+			}
 			size -= len;
 			str += len;
 		}
 	}
+	return;
+
+overflow:
+	printf("buffer size could not be enough! please check!\n");
 }
 #else
 void vcpu_dumpreg(__unused void *data)

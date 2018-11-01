@@ -586,15 +586,19 @@ void get_vioapic_info(char *str_arg, size_t str_max, uint16_t vmid)
 	uint32_t pin, pincount;
 
 	if (vm == NULL) {
-		len = snprintf(str, size,
-			"\r\nvm is not exist for vmid %hu", vmid);
+		len = snprintf(str, size, "\r\nvm is not exist for vmid %hu", vmid);
+		if (len >= size) {
+			goto overflow;
+		}
 		size -= len;
 		str += len;
 		goto END;
 	}
 
-	len = snprintf(str, size,
-		"\r\nPIN\tVEC\tDM\tDEST\tTM\tDELM\tIRR\tMASK");
+	len = snprintf(str, size, "\r\nPIN\tVEC\tDM\tDEST\tTM\tDELM\tIRR\tMASK");
+	if (len >= size) {
+		goto overflow;
+	}
 	size -= len;
 	str += len;
 
@@ -610,15 +614,20 @@ void get_vioapic_info(char *str_arg, size_t str_max, uint16_t vmid)
 		vector = rte.u.lo_32 & IOAPIC_RTE_LOW_INTVEC;
 		dest = (uint32_t)(rte.full >> IOAPIC_RTE_DEST_SHIFT);
 
-		len = snprintf(str, size,
-				"\r\n%hhu\t0x%X\t%s\t0x%X\t%s\t%u\t%d\t%d",
-				pin, vector, phys ? "phys" : "logic",
-				dest, level ? "level" : "edge",
+		len = snprintf(str, size, "\r\n%hhu\t0x%X\t%s\t0x%X\t%s\t%u\t%d\t%d",
+				pin, vector, phys ? "phys" : "logic", dest, level ? "level" : "edge",
 				delmode >> 8U, remote_irr, mask);
+		if (len >= size) {
+			goto overflow;
+		}
 		size -= len;
 		str += len;
 	}
 END:
 	snprintf(str, size, "\r\n");
+	return;
+
+overflow:
+	printf("buffer size could not be enough! please check!\n");
 }
 #endif /* HV_DEBUG */

@@ -411,10 +411,17 @@ void get_cpu_interrupt_info(char *str_arg, size_t str_max)
 	size_t len, size = str_max;
 
 	len = snprintf(str, size, "\r\nIRQ\tVECTOR");
+	if (len >= size) {
+		goto overflow;
+	}
 	size -= len;
 	str += len;
+
 	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
 		len = snprintf(str, size, "\tCPU%d", pcpu_id);
+		if (len >= size) {
+			goto overflow;
+		}
 		size -= len;
 		str += len;
 	}
@@ -425,17 +432,27 @@ void get_cpu_interrupt_info(char *str_arg, size_t str_max)
 			irq_alloc_bitmap + (irq >> 6U))
 			&& (vector != VECTOR_INVALID)) {
 			len = snprintf(str, size, "\r\n%d\t0x%X", irq, vector);
+			if (len >= size) {
+				goto overflow;
+			}
 			size -= len;
 			str += len;
+
 			for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
-				len = snprintf(str, size, "\t%d",
-					per_cpu(irq_count, pcpu_id)[irq]);
+				len = snprintf(str, size, "\t%d", per_cpu(irq_count, pcpu_id)[irq]);
+				if (len >= size) {
+					goto overflow;
+				}
 				size -= len;
 				str += len;
 			}
 		}
 	}
 	snprintf(str, size, "\r\n");
+	return;
+
+overflow:
+	printf("buffer size could not be enough! please check!\n");
 }
 #endif /* HV_DEBUG */
 

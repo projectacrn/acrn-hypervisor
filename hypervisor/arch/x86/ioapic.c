@@ -445,8 +445,10 @@ int get_ioapic_info(char *str_arg, size_t str_max_len)
 	uint32_t irq;
 	size_t len, size = str_max_len;
 
-	len = snprintf(str, size,
-	"\r\nIRQ\tPIN\tRTE.HI32\tRTE.LO32\tVEC\tDST\tDM\tTM\tDELM\tIRR\tMASK");
+	len = snprintf(str, size, "\r\nIRQ\tPIN\tRTE.HI32\tRTE.LO32\tVEC\tDST\tDM\tTM\tDELM\tIRR\tMASK");
+	if (len >= size) {
+		goto overflow;
+	}
 	size -= len;
 	str += len;
 
@@ -463,24 +465,27 @@ int get_ioapic_info(char *str_arg, size_t str_max_len)
 		get_rte_info(rte, &mask, &irr, &phys, &delmode, &level,
 			&vector, &dest);
 
-		len = snprintf(str, size, "\r\n%03d\t%03hhu\t0x%08X\t0x%08X\t",
-			irq, pin, rte.u.hi_32, rte.u.lo_32);
+		len = snprintf(str, size, "\r\n%03d\t%03hhu\t0x%08X\t0x%08X\t", irq, pin, rte.u.hi_32, rte.u.lo_32);
+		if (len >= size) {
+			goto overflow;
+		}
 		size -= len;
 		str += len;
 
 		len = snprintf(str, size, "0x%02X\t0x%02X\t%s\t%s\t%u\t%d\t%d",
-			vector, dest, phys ? "phys" : "logic",
-			level ? "level" : "edge", delmode >> 8, irr, mask);
+			vector, dest, phys ? "phys" : "logic", level ? "level" : "edge", delmode >> 8, irr, mask);
+		if (len >= size) {
+			goto overflow;
+		}
 		size -= len;
 		str += len;
-
-		if (size < 2U) {
-			pr_err("\r\nsmall buffer for ioapic dump");
-			return -1;
-		}
 	}
 
 	snprintf(str, size, "\r\n");
+	return 0;
+
+overflow:
+	printf("buffer size could not be enough! please check!\n");
 	return 0;
 }
 #endif /* HV_DEBUG */

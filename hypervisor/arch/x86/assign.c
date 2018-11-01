@@ -855,8 +855,10 @@ void get_ptdev_info(char *str_arg, size_t str_max)
 	uint32_t bdf, vbdf;
 	struct list_head *pos;
 
-	len = snprintf(str, size,
-		"\r\nVM\tTYPE\tIRQ\tVEC\tDEST\tTM\tPIN\tVPIN\tBDF\tVBDF");
+	len = snprintf(str, size, "\r\nVM\tTYPE\tIRQ\tVEC\tDEST\tTM\tPIN\tVPIN\tBDF\tVBDF");
+	if (len >= size) {
+		goto overflow;
+	}
 	size -= len;
 	str += len;
 
@@ -868,22 +870,25 @@ void get_ptdev_info(char *str_arg, size_t str_max)
 			get_entry_info(entry, type, &irq, &vector,
 					&dest, &lvl_tm, &pin, &vpin,
 					&bdf, &vbdf);
-			len = snprintf(str, size,
-					"\r\n%d\t%s\t%d\t0x%X\t0x%X",
-					entry->vm->vm_id, type,
-					irq, vector, dest);
+			len = snprintf(str, size, "\r\n%d\t%s\t%d\t0x%X\t0x%X",
+					entry->vm->vm_id, type, irq, vector, dest);
+			if (len >= size) {
+				spinlock_release(&ptdev_lock);
+				goto overflow;
+			}
 			size -= len;
 			str += len;
 
-			len = snprintf(str, size,
-					"\t%s\t%hhu\t%hhu\t%x:%x.%x\t%x:%x.%x",
-					is_entry_active(entry) ?
-					(lvl_tm ? "level" : "edge") : "none",
-					pin, vpin,
-					(bdf & 0xff00U) >> 8U,
+			len = snprintf(str, size, "\t%s\t%hhu\t%hhu\t%x:%x.%x\t%x:%x.%x",
+					is_entry_active(entry) ? (lvl_tm ? "level" : "edge") : "none",
+					pin, vpin, (bdf & 0xff00U) >> 8U,
 					(bdf & 0xf8U) >> 3U, bdf & 0x7U,
 					(vbdf & 0xff00U) >> 8U,
 					(vbdf & 0xf8U) >> 3U, vbdf & 0x7U);
+			if (len >= size) {
+				spinlock_release(&ptdev_lock);
+				goto overflow;
+			}
 			size -= len;
 			str += len;
 		}
@@ -891,5 +896,9 @@ void get_ptdev_info(char *str_arg, size_t str_max)
 	spinlock_release(&ptdev_lock);
 
 	snprintf(str, size, "\r\n");
+	return;
+
+overflow:
+	printf("buffer size could not be enough! please check!\n");
 }
 #endif /* HV_DEBUG */
