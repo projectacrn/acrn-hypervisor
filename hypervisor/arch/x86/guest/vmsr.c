@@ -7,6 +7,13 @@
 #include <hypervisor.h>
 #include <ucode.h>
 
+enum rw_mode {
+	DISABLE = 0U,
+	READ,
+	WRITE,
+	READ_WRITE
+};
+
 /*MRS need to be emulated, the order in this array better as freq of ops*/
 static const uint32_t emulated_msrs[] = {
 	MSR_IA32_TSC_DEADLINE,  /* Enable TSC_DEADLINE VMEXIT */
@@ -72,12 +79,13 @@ static const uint32_t x2apic_msrs[] = {
 	MSR_IA32_EXT_APIC_SELF_IPI,
 };
 
-static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg)
+static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg, enum rw_mode mode)
 {
 	uint8_t *read_map;
 	uint8_t *write_map;
-	uint8_t value;
 	uint32_t msr = msr_arg;
+	uint8_t msr_bit;
+	uint32_t msr_index;
 	/* low MSR */
 	if (msr < 0x1FFFU) {
 		read_map = bitmap;
@@ -91,11 +99,20 @@ static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg)
 	}
 
 	msr &= 0x1FFFU;
-	value = read_map[(msr >> 3U)];
-	value |= 1U << (msr & 0x7U);
-	/* right now we trap for both r/w */
-	read_map[(msr >> 3U)] = value;
-	write_map[(msr >> 3U)] = value;
+	msr_bit = 1U << (msr & 0x7U);
+	msr_index = msr >> 3U;
+
+	if ((mode & READ) == READ) {
+		read_map[msr_index] |= msr_bit;
+	} else {
+		read_map[msr_index] &= ~msr_bit;
+	}
+
+	if ((mode & WRITE) == WRITE) {
+		write_map[msr_index] |= msr_bit;
+	} else {
+		write_map[msr_index] &= ~msr_bit;
+	}
 }
 
 /*
@@ -105,13 +122,13 @@ static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg)
  * 0x802 and 0x83F, are not intercepted
  */
 
-static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg)
+static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg, enum rw_mode mode)
 {
 	uint8_t *msr_bitmap = msr_bitmap_arg;
 	uint32_t i;
 
 	for (i = 0U; i < ARRAY_SIZE(x2apic_msrs); i++) {
-		enable_msr_interception(msr_bitmap, x2apic_msrs[i]);
+		enable_msr_interception(msr_bitmap, x2apic_msrs[i], mode);
 	}
 }
 
@@ -130,35 +147,35 @@ void init_msr_emulation(struct vcpu *vcpu)
 		msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
 
 		for (i = 0U; i < msrs_count; i++) {
-			enable_msr_interception(msr_bitmap, emulated_msrs[i]);
+			enable_msr_interception(msr_bitmap, emulated_msrs[i], READ_WRITE);
 		}
 
-		enable_msr_interception(msr_bitmap, MSR_IA32_PERF_CTL);
+		enable_msr_interception(msr_bitmap, MSR_IA32_PERF_CTL, READ_WRITE);
 
 		/* below MSR protected from guest OS, if access to inject gp*/
-		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_CAP);
-		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_DEF_TYPE);
+		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_CAP, READ_WRITE);
+		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_DEF_TYPE, READ_WRITE);
 
 		for (i = MSR_IA32_MTRR_PHYSBASE_0;
 			i <= MSR_IA32_MTRR_PHYSMASK_9; i++) {
-			enable_msr_interception(msr_bitmap, i);
+			enable_msr_interception(msr_bitmap, i, READ_WRITE);
 		}
 
-		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_FIX64K_00000);
-		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_FIX16K_80000);
-		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_FIX16K_A0000);
+		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_FIX64K_00000, READ_WRITE);
+		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_FIX16K_80000, READ_WRITE);
+		enable_msr_interception(msr_bitmap, MSR_IA32_MTRR_FIX16K_A0000, READ_WRITE);
 
 		for (i = MSR_IA32_MTRR_FIX4K_C0000;
 			i <= MSR_IA32_MTRR_FIX4K_F8000; i++) {
-			enable_msr_interception(msr_bitmap, i);
+			enable_msr_interception(msr_bitmap, i, READ_WRITE);
 		}
 
 		for (i = MSR_IA32_VMX_BASIC;
 			i <= MSR_IA32_VMX_TRUE_ENTRY_CTLS; i++) {
-			enable_msr_interception(msr_bitmap, i);
+			enable_msr_interception(msr_bitmap, i, READ_WRITE);
 		}
 
-		intercept_x2apic_msrs(msr_bitmap);
+		intercept_x2apic_msrs(msr_bitmap, READ_WRITE);
 	}
 
 	/* Set up MSR bitmap - pg 2904 24.6.9 */
