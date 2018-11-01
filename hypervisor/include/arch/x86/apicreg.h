@@ -72,7 +72,7 @@ struct lapic_regs {			 /*OFFSET(Hex)*/
 	struct lapic_reg	ccr_timer;/*390*/
 	struct lapic_reg	rsv3[4];
 	struct lapic_reg	dcr_timer;/*3E0*/
-	struct lapic_reg	rsv4;
+	struct lapic_reg	self_ipi; /*3F0*/
 
 	/*roundup sizeof current struct to 4KB*/
 	struct lapic_reg	rsv5[192]; /*400 -- FF0*/
