@@ -49,6 +49,8 @@ static inline uint32_t prio(uint32_t x)
 #define	APICBASE_BSP		0x00000100UL
 #define	APICBASE_X2APIC		0x00000400U
 #define	APICBASE_ENABLED	0x00000800UL
+#define LOGICAL_ID_MASK         0xFU
+#define CLUSTER_ID_MASK         0xFFFF0U
 
 #define ACRN_DBG_LAPIC	6U
 
@@ -101,6 +103,8 @@ apicv_batch_set_tmr(const struct acrn_vlapic *vlapic);
 static void vlapic_set_error(struct acrn_vlapic *vlapic, uint32_t mask);
 
 static void vlapic_timer_expired(void *data);
+
+static inline bool is_x2apic_enabled(const struct acrn_vlapic *vlapic);
 
 static struct acrn_vlapic *
 vm_lapic_from_vcpu_id(struct vm *vm, uint16_t vcpu_id)
@@ -180,11 +184,27 @@ vlapic_build_id(const struct acrn_vlapic *vlapic)
 	}
 #endif
 
-	lapic_regs_id = (uint32_t)vlapic_id << APIC_ID_SHIFT;
+	if (is_x2apic_enabled(vlapic)) {
+		lapic_regs_id = vlapic_id;
+	} else {
+		lapic_regs_id = (uint32_t)vlapic_id << APIC_ID_SHIFT;
+	}
 
 	dev_dbg(ACRN_DBG_LAPIC, "vlapic APIC PAGE ID : 0x%08x", lapic_regs_id);
 
 	return lapic_regs_id;
+}
+
+static inline void vlapic_build_x2apic_id(struct acrn_vlapic *vlapic)
+{
+	struct lapic_regs *lapic;
+	uint32_t logical_id, cluster_id;
+
+	lapic = &(vlapic->apic_page);
+	lapic->id.v = vlapic_build_id(vlapic);
+	logical_id = lapic->id.v & LOGICAL_ID_MASK;
+	cluster_id = (lapic->id.v & CLUSTER_ID_MASK) >> 4U;
+	lapic->ldr.v = (cluster_id << 16U) | (1U << logical_id);
 }
 
 static void
@@ -1671,6 +1691,17 @@ vlapic_get_apicbase(const struct acrn_vlapic *vlapic)
 static int
 vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new)
 {
+
+	uint64_t changed;
+	changed = vlapic->msr_apicbase ^ new;
+
+	if (changed == APICBASE_X2APIC) {
+		if ((new & APICBASE_X2APIC) == APICBASE_X2APIC) {
+			vlapic->msr_apicbase = new;
+			vlapic_build_x2apic_id(vlapic);
+			return 0;
+		}
+	}
 
 	if (vlapic->msr_apicbase != new) {
 		dev_dbg(ACRN_DBG_LAPIC,
