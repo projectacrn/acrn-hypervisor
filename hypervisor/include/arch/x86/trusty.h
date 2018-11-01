@@ -12,6 +12,8 @@
 #define MMC_PROD_NAME_WITH_PSN_LEN      15U
 #define BUP_MKHI_BOOTLOADER_SEED_LEN    64U
 
+#define TRUSTY_RAM_SIZE	(16UL * 1024UL * 1024UL)	/* 16 MB for now */
+
 /* Trusty EPT rebase gpa: 511G */
 #define TRUSTY_EPT_REBASE_GPA (511UL * 1024UL * 1024UL * 1024UL)
 

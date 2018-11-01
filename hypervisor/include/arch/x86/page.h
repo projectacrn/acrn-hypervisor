@@ -25,6 +25,7 @@ union pgtable_pages_info {
 		struct page *pt_base;
 	} ppt;
 	struct {
+		uint64_t top_address_space;
 		struct page *nworld_pml4_base;
 		struct page *nworld_pdpt_base;
 		struct page *nworld_pd_base;
@@ -44,5 +45,6 @@ struct memory_ops {
 };
 
 extern const struct memory_ops ppt_mem_ops;
+void init_ept_mem_ops(struct vm *vm);
 
 #endif /* PAGE_H */

@@ -8,6 +8,7 @@
 #define VM_H_
 #include <bsp_extern.h>
 #include <vpci.h>
+#include <page.h>
 
 #ifdef CONFIG_PARTITION_MODE
 #include <mptable.h>
@@ -97,6 +98,8 @@ struct vm_arch {
 	 * but Normal World can not access Secure World's memory.
 	 */
 	void *sworld_eptp;
+	struct memory_ops ept_mem_ops;
+
 	void *tmp_pg_array;	/* Page array for tmp guest paging struct */
 	struct acrn_vioapic vioapic;	/* Virtual IOAPIC base address */
 	struct acrn_vpic vpic;      /* Virtual PIC */
