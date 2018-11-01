@@ -235,6 +235,21 @@ config PLATFORM_RAM_SIZE
 	  A 64-bit integer indicating the size of the physical platform RAM
 	  (not included the MMIO).
 
+config SOS_RAM_SIZE
+	hex "Size of the vm0 RAM"
+	default 0x200000000 if SHARING_MODE
+	default 0x000000000 if PARTITION_MODE
+	help
+	  A 64-bit integer indicating the size of the vm0 RAM (not included the MMIO).
+
+ config UOS_RAM_SIZE
+	hex "Size of the UOS RAM"
+	default 0x100000000 if SHARING_MODE
+	default 0x100000000 if PARTITION_MODE
+	help
+	  A 64-bit integer indicating the size of the user OS RAM (not included the MMIO).
+	  Now we assume each UOS uses same amount of RAM size.
+
 config CONSTANT_ACPI
 	bool "The platform ACPI info is constant"
 	default n
