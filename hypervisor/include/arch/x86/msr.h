@@ -529,6 +529,18 @@ static inline bool pat_mem_type_invalid(uint64_t x)
 		(x != PAT_MEM_TYPE_WT) && (x != PAT_MEM_TYPE_WP) &&
 		(x != PAT_MEM_TYPE_WB) && (x != PAT_MEM_TYPE_UCM));
 }
+
+static inline bool is_x2apic_msr(uint32_t msr)
+{
+	bool ret = false;
+	/*
+	 * if msr is in the range of x2APIC MSRs
+	 */
+	if ((msr >= MSR_IA32_EXT_XAPICID) && (msr <= MSR_IA32_EXT_APIC_SELF_IPI)) {
+		ret = true;
+	}
+	return ret;
+}
 #endif /* ASSEMBLER */
 
 /* 5 high-order bits in every field are reserved */

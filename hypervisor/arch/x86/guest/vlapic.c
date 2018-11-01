@@ -1936,6 +1936,32 @@ static void vlapic_timer_expired(void *data)
 	}
 }
 
+static inline bool is_x2apic_enabled(const struct acrn_vlapic *vlapic)
+{
+	if ((vlapic_get_apicbase(vlapic) & APICBASE_X2APIC) == 0UL) {
+		return false;
+	} else {
+		return true;
+	}
+}
+
+static int vlapic_x2apic_access(struct vcpu *vcpu)
+{
+	struct acrn_vlapic *vlapic;
+	int error = 0;
+
+	vlapic = vcpu_vlapic(vcpu);
+	if (is_x2apic_enabled(vlapic) == false) {
+		/*
+		 * If vLAPIC is in xAPIC mode and guest tries to access x2APIC MSRs
+		 * inject a GP to guest
+		 */
+		error = -1;
+	}
+
+	return error;
+}
+
 int
 vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval)
 {
@@ -1955,8 +1981,13 @@ vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval)
 		break;
 
 	default:
-		dev_dbg(ACRN_DBG_LAPIC,
-			"Invalid vlapic msr 0x%x access\n", msr);
+		if (is_x2apic_msr(msr)) {
+			error = vlapic_x2apic_access(vcpu);
+		} else {
+			error = -1;
+			dev_dbg(ACRN_DBG_LAPIC,
+				"Invalid vlapic msr 0x%x access\n", msr);
+		}
 		break;
 	}
 
@@ -1981,8 +2012,13 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval)
 		break;
 
 	default:
-		dev_dbg(ACRN_DBG_LAPIC,
-			"Invalid vlapic msr 0x%x access\n", msr);
+		if (is_x2apic_msr(msr)) {
+			error = vlapic_x2apic_access(vcpu);
+		} else {
+			error = -1;
+			dev_dbg(ACRN_DBG_LAPIC,
+				"Invalid vlapic msr 0x%x access\n", msr);
+		}
 		break;
 	}
 

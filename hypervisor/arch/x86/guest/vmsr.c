@@ -25,6 +25,53 @@ static const uint32_t emulated_msrs[] = {
  */
 };
 
+static const uint32_t x2apic_msrs[] = {
+	MSR_IA32_EXT_XAPICID,
+	MSR_IA32_EXT_APIC_VERSION,
+	MSR_IA32_EXT_APIC_TPR,
+	MSR_IA32_EXT_APIC_PPR,
+	MSR_IA32_EXT_APIC_EOI,
+	MSR_IA32_EXT_APIC_LDR,
+	MSR_IA32_EXT_APIC_SIVR,
+	MSR_IA32_EXT_APIC_ISR0,
+	MSR_IA32_EXT_APIC_ISR1,
+	MSR_IA32_EXT_APIC_ISR2,
+	MSR_IA32_EXT_APIC_ISR3,
+	MSR_IA32_EXT_APIC_ISR4,
+	MSR_IA32_EXT_APIC_ISR5,
+	MSR_IA32_EXT_APIC_ISR6,
+	MSR_IA32_EXT_APIC_ISR7,
+	MSR_IA32_EXT_APIC_TMR0,
+	MSR_IA32_EXT_APIC_TMR1,
+	MSR_IA32_EXT_APIC_TMR2,
+	MSR_IA32_EXT_APIC_TMR3,
+	MSR_IA32_EXT_APIC_TMR4,
+	MSR_IA32_EXT_APIC_TMR5,
+	MSR_IA32_EXT_APIC_TMR6,
+	MSR_IA32_EXT_APIC_TMR7,
+	MSR_IA32_EXT_APIC_IRR0,
+	MSR_IA32_EXT_APIC_IRR1,
+	MSR_IA32_EXT_APIC_IRR2,
+	MSR_IA32_EXT_APIC_IRR3,
+	MSR_IA32_EXT_APIC_IRR4,
+	MSR_IA32_EXT_APIC_IRR5,
+	MSR_IA32_EXT_APIC_IRR6,
+	MSR_IA32_EXT_APIC_IRR7,
+	MSR_IA32_EXT_APIC_ESR,
+	MSR_IA32_EXT_APIC_LVT_CMCI,
+	MSR_IA32_EXT_APIC_ICR,
+	MSR_IA32_EXT_APIC_LVT_TIMER,
+	MSR_IA32_EXT_APIC_LVT_THERMAL,
+	MSR_IA32_EXT_APIC_LVT_PMI,
+	MSR_IA32_EXT_APIC_LVT_LINT0,
+	MSR_IA32_EXT_APIC_LVT_LINT1,
+	MSR_IA32_EXT_APIC_LVT_ERROR,
+	MSR_IA32_EXT_APIC_INIT_COUNT,
+	MSR_IA32_EXT_APIC_CUR_COUNT,
+	MSR_IA32_EXT_APIC_DIV_CONF,
+	MSR_IA32_EXT_APIC_SELF_IPI,
+};
+
 static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg)
 {
 	uint8_t *read_map;
@@ -49,6 +96,23 @@ static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg)
 	/* right now we trap for both r/w */
 	read_map[(msr >> 3U)] = value;
 	write_map[(msr >> 3U)] = value;
+}
+
+/*
+ * Enable read and write msr interception for x2APIC MSRs
+ * MSRs that are not supported in the x2APIC range of MSRs,
+ * i.e. anything other than the ones below and between
+ * 0x802 and 0x83F, are not intercepted
+ */
+
+static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg)
+{
+	uint8_t *msr_bitmap = msr_bitmap_arg;
+	uint32_t i;
+
+	for (i = 0U; i < ARRAY_SIZE(x2apic_msrs); i++) {
+		enable_msr_interception(msr_bitmap, x2apic_msrs[i]);
+	}
 }
 
 void init_msr_emulation(struct vcpu *vcpu)
@@ -93,6 +157,8 @@ void init_msr_emulation(struct vcpu *vcpu)
 			i <= MSR_IA32_VMX_TRUE_ENTRY_CTLS; i++) {
 			enable_msr_interception(msr_bitmap, i);
 		}
+
+		intercept_x2apic_msrs(msr_bitmap);
 	}
 
 	/* Set up MSR bitmap - pg 2904 24.6.9 */
@@ -189,14 +255,18 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 	}
 	default:
 	{
-		if (!(((msr >= MSR_IA32_MTRR_PHYSBASE_0) &&
-			(msr <= MSR_IA32_MTRR_PHYSMASK_9)) ||
-		      ((msr >= MSR_IA32_VMX_BASIC) &&
-			(msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS)))) {
-			pr_warn("rdmsr: %lx should not come here!", msr);
+		if (is_x2apic_msr(msr)) {
+			err = vlapic_rdmsr(vcpu, msr, &v);
+		} else {
+			if (!(((msr >= MSR_IA32_MTRR_PHYSBASE_0) &&
+				(msr <= MSR_IA32_MTRR_PHYSMASK_9)) ||
+				((msr >= MSR_IA32_VMX_BASIC) &&
+				(msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS)))) {
+				pr_warn("rdmsr: %lx should not come here!", msr);
+			}
+			vcpu_inject_gp(vcpu, 0U);
+			v = 0UL;
 		}
-		vcpu_inject_gp(vcpu, 0U);
-		v = 0UL;
 		break;
 	}
 	}
@@ -321,13 +391,17 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	}
 	default:
 	{
-		if (!(((msr >= MSR_IA32_MTRR_PHYSBASE_0) &&
-			(msr <= MSR_IA32_MTRR_PHYSMASK_9)) ||
-		      ((msr >= MSR_IA32_VMX_BASIC) &&
-			(msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS)))) {
-			pr_warn("rdmsr: %lx should not come here!", msr);
+		if (is_x2apic_msr(msr)) {
+			err = vlapic_wrmsr(vcpu, msr, v);
+		} else {
+			if (!(((msr >= MSR_IA32_MTRR_PHYSBASE_0) &&
+				(msr <= MSR_IA32_MTRR_PHYSMASK_9)) ||
+				((msr >= MSR_IA32_VMX_BASIC) &&
+				(msr <= MSR_IA32_VMX_TRUE_ENTRY_CTLS)))) {
+				pr_warn("wrmsr: %lx should not come here!", msr);
+			}
+			vcpu_inject_gp(vcpu, 0U);
 		}
-		vcpu_inject_gp(vcpu, 0U);
 		break;
 	}
 	}
