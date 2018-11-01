@@ -7,6 +7,13 @@
 #ifndef ARCH_IRQ_H
 #define ARCH_IRQ_H
 
+/**
+ * @file arch/x86/irq.h
+ *
+ * @brief public APIs for virtual IRQ
+ */
+
+
 #include <common/irq.h>
 
 /* vectors range for dynamic allocation, usually for devices */
@@ -112,15 +119,111 @@ uint32_t irq_to_vector(uint32_t irq);
 #define HV_ARCH_VCPU_BLOCKED_BY_MOVSS       (1UL<<1U)
 #define HV_ARCH_VCPU_BLOCKED_BY_STI         (1UL<<0U)
 
+/**
+ * @brief virtual IRQ
+ *
+ * @addtogroup acrn_virq ACRN vIRQ
+ * @{
+ */
+
+/**
+ * @brief Queue exception to guest.
+ *
+ * This exception may be injected immediately or later,
+ * depends on the exeception class.
+ *
+ * @param[in] vcpu     Pointer to vCPU.
+ * @param[in] vector   Vector of the exeception.
+ * @param[in] err_code Error Code to be injected.
+ *
+ * @return 0 on success
+ * @return -EINVAL on error that vector is invalid.
+ *
+ * @pre vcpu != NULL
+ */
+int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector, uint32_t err_code);
+
+/**
+ * @brief Inject external interrupt to guest.
+ *
+ * @param[in] vcpu Pointer to vCPU.
+ *
+ * @return void
+ *
+ * @pre vcpu != NULL
+ */
 void vcpu_inject_extint(struct vcpu *vcpu);
+
+/**
+ * @brief Inject NMI to guest.
+ *
+ * @param[in] vcpu Pointer to vCPU.
+ *
+ * @return void
+ *
+ * @pre vcpu != NULL
+ */
 void vcpu_inject_nmi(struct vcpu *vcpu);
+
+/**
+ * @brief Inject general protection exeception(GP) to guest.
+ *
+ * @param[in] vcpu     Pointer to vCPU.
+ * @param[in] err_code Error Code to be injected.
+ *
+ * @return void
+ *
+ * @pre vcpu != NULL
+ */
 void vcpu_inject_gp(struct vcpu *vcpu, uint32_t err_code);
+
+/**
+ * @brief Inject page fault exeception(PF) to guest.
+ *
+ * @param[in] vcpu     Pointer to vCPU.
+ * @param[in] addr     Address that result in PF.
+ * @param[in] err_code Error Code to be injected.
+ *
+ * @return void
+ *
+ * @pre vcpu != NULL
+ */
 void vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code);
+
+/**
+ * @brief Inject invalid opcode exeception(UD) to guest.
+ *
+ * @param[in] vcpu Pointer to vCPU.
+ *
+ * @return void
+ *
+ * @pre vcpu != NULL
+ */
 void vcpu_inject_ud(struct vcpu *vcpu);
+
+/**
+ * @brief Inject alignment check exeception(AC) to guest.
+ *
+ * @param[in] vcpu Pointer to vCPU.
+ *
+ * @return void
+ *
+ * @pre vcpu != NULL
+ */
 void vcpu_inject_ac(struct vcpu *vcpu);
+
+/**
+ * @brief Inject stack fault exeception(SS) to guest.
+ *
+ * @param[in] vcpu Pointer to vCPU.
+ *
+ * @return void
+ *
+ * @pre vcpu != NULL
+ */
 void vcpu_inject_ss(struct vcpu *vcpu);
 void vcpu_make_request(struct vcpu *vcpu, uint16_t eventid);
-int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector, uint32_t err_code);
+
 /*
  * @pre vcpu != NULL
  */
@@ -154,4 +257,8 @@ void get_cpu_interrupt_info(char *str_arg, size_t str_max);
 
 extern uint32_t acrn_vhm_vector;
 
+/**
+ * @}
+ */
+/* End of acrn_virq */
 #endif /* ARCH_IRQ_H */
