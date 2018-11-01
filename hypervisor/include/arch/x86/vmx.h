@@ -464,6 +464,7 @@ int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value);
 void vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0);
 void vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4);
 bool is_vmx_disabled(void);
+void switch_apicv_mode_x2apic(struct vcpu *vcpu);
 
 static inline enum vm_cpu_mode get_vcpu_mode(const struct vcpu *vcpu)
 {

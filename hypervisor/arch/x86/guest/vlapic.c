@@ -1718,6 +1718,7 @@ vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new)
 		if ((new & APICBASE_X2APIC) == APICBASE_X2APIC) {
 			vlapic->msr_apicbase = new;
 			vlapic_build_x2apic_id(vlapic);
+			switch_apicv_mode_x2apic(vlapic->vcpu);
 			return 0;
 		}
 	}
