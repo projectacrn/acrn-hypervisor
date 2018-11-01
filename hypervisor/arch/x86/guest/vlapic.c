@@ -1996,18 +1996,34 @@ static inline bool is_x2apic_enabled(const struct acrn_vlapic *vlapic)
 	}
 }
 
-static int vlapic_x2apic_access(struct vcpu *vcpu)
+static inline  uint32_t x2apic_msr_to_regoff(uint32_t msr)
+{
+
+	return (((msr - 0x800U) & 0x3FFU) << 4U);
+}
+
+static int vlapic_x2apic_access(struct vcpu *vcpu, uint32_t msr, bool write, uint64_t *val)
 {
 	struct acrn_vlapic *vlapic;
-	int error = 0;
+	uint32_t offset;
+	int error = -1;
 
+	/*
+	 * If vLAPIC is in xAPIC mode and guest tries to access x2APIC MSRs
+	 * inject a GP to guest
+	 */
 	vlapic = vcpu_vlapic(vcpu);
-	if (is_x2apic_enabled(vlapic) == false) {
-		/*
-		 * If vLAPIC is in xAPIC mode and guest tries to access x2APIC MSRs
-		 * inject a GP to guest
-		 */
-		error = -1;
+	if (is_x2apic_enabled(vlapic)) {
+		offset = x2apic_msr_to_regoff(msr);
+		if (write) {
+			if (!is_x2apic_read_only_msr(msr)) {
+				error = vlapic_write(vlapic, offset, *val);
+			}
+		} else {
+			if (!is_x2apic_write_only_msr(msr)) {
+				error = vlapic_read(vlapic, offset, val);
+			}
+		}
 	}
 
 	return error;
@@ -2033,7 +2049,7 @@ vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval)
 
 	default:
 		if (is_x2apic_msr(msr)) {
-			error = vlapic_x2apic_access(vcpu);
+			error = vlapic_x2apic_access(vcpu, msr, false, rval);
 		} else {
 			error = -1;
 			dev_dbg(ACRN_DBG_LAPIC,
@@ -2064,7 +2080,7 @@ vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval)
 
 	default:
 		if (is_x2apic_msr(msr)) {
-			error = vlapic_x2apic_access(vcpu);
+			error = vlapic_x2apic_access(vcpu, msr, true, &wval);
 		} else {
 			error = -1;
 			dev_dbg(ACRN_DBG_LAPIC,
