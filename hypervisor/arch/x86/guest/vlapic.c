@@ -1146,6 +1146,52 @@ vlapic_get_cr8(const struct acrn_vlapic *vlapic)
 	return (uint64_t)(tpr >> 4U);
 }
 
+static void
+vlapic_process_init_sipi(struct vcpu* target_vcpu, uint32_t mode,
+				uint32_t icr_low, uint16_t vcpu_id)
+{
+	if (mode == APIC_DELMODE_INIT) {
+		if ((icr_low & APIC_LEVEL_MASK) == APIC_LEVEL_DEASSERT) {
+			return;
+		}
+
+		dev_dbg(ACRN_DBG_LAPIC,
+				"Sending INIT from VCPU %hu to %hu",
+				target_vcpu->vcpu_id, vcpu_id);
+
+		/* put target vcpu to INIT state and wait for SIPI */
+		pause_vcpu(target_vcpu, VCPU_PAUSED);
+		reset_vcpu(target_vcpu);
+		/* new cpu model only need one SIPI to kick AP run,
+		 * the second SIPI will be ignored as it move out of
+		 * wait-for-SIPI state.
+		*/
+		target_vcpu->arch_vcpu.nr_sipi = 1U;
+	} else if (mode == APIC_DELMODE_STARTUP) {
+		/* Ignore SIPIs in any state other than wait-for-SIPI */
+		if ((target_vcpu->state != VCPU_INIT) ||
+			(target_vcpu->arch_vcpu.nr_sipi == 0U)) {
+				return;
+		}
+
+		dev_dbg(ACRN_DBG_LAPIC,
+				"Sending SIPI from VCPU %hu to %hu with vector %u",
+				target_vcpu->vcpu_id, vcpu_id,
+				(icr_low & APIC_VECTOR_MASK));
+
+		target_vcpu->arch_vcpu.nr_sipi--;
+		if (target_vcpu->arch_vcpu.nr_sipi > 0U) {
+			return;
+		}
+
+		pr_err("Start Secondary VCPU%hu for VM[%d]...",
+				target_vcpu->vcpu_id,
+				target_vcpu->vm->vm_id);
+		set_ap_entry(target_vcpu, (icr_low & APIC_VECTOR_MASK) << 12U);
+		schedule_vcpu(target_vcpu);
+	}
+}
+
 static int
 vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 {
@@ -1217,52 +1263,18 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 
 			if (mode == APIC_DELMODE_FIXED) {
 				vlapic_set_intr(target_vcpu, vec,
-						LAPIC_TRIG_EDGE);
+					LAPIC_TRIG_EDGE);
 				dev_dbg(ACRN_DBG_LAPIC,
-						"vlapic sending ipi %u to vcpu_id %hu",
-						vec, vcpu_id);
+					"vlapic sending ipi %u to vcpu_id %hu",
+					vec, vcpu_id);
 			} else if (mode == APIC_DELMODE_NMI) {
 				vcpu_inject_nmi(target_vcpu);
 				dev_dbg(ACRN_DBG_LAPIC,
-						"vlapic send ipi nmi to vcpu_id %hu", vcpu_id);
+					"vlapic send ipi nmi to vcpu_id %hu", vcpu_id);
 			} else if (mode == APIC_DELMODE_INIT) {
-				if ((icr_low & APIC_LEVEL_MASK) == APIC_LEVEL_DEASSERT) {
-					continue;
-				}
-
-				dev_dbg(ACRN_DBG_LAPIC,
-						"Sending INIT from VCPU %hu to %hu",
-						vlapic->vcpu->vcpu_id, vcpu_id);
-
-				/* put target vcpu to INIT state and wait for SIPI */
-				pause_vcpu(target_vcpu, VCPU_PAUSED);
-				reset_vcpu(target_vcpu);
-				/* new cpu model only need one SIPI to kick AP run,
-				 * the second SIPI will be ignored as it move out of
-				 * wait-for-SIPI state.
-				 */
-				target_vcpu->arch_vcpu.nr_sipi = 1U;
+				vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
 			} else if (mode == APIC_DELMODE_STARTUP) {
-				/* Ignore SIPIs in any state other than wait-for-SIPI */
-				if ((target_vcpu->state != VCPU_INIT) ||
-						(target_vcpu->arch_vcpu.nr_sipi == 0U)) {
-					continue;
-				}
-
-				dev_dbg(ACRN_DBG_LAPIC,
-						"Sending SIPI from VCPU %hu to %hu with vector %u",
-						vlapic->vcpu->vcpu_id, vcpu_id, vec);
-
-				target_vcpu->arch_vcpu.nr_sipi--;
-				if (target_vcpu->arch_vcpu.nr_sipi > 0U) {
-					continue;
-				}
-
-				pr_err("Start Secondary VCPU%hu for VM[%d]...",
-						target_vcpu->vcpu_id,
-						target_vcpu->vm->vm_id);
-				set_ap_entry(target_vcpu, vec << 12U);
-				schedule_vcpu(target_vcpu);
+				vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
 			} else if (mode == APIC_DELMODE_SMI) {
 				pr_info("vlapic: SMI IPI do not support\n");
 			} else {
@@ -2002,7 +2014,58 @@ static inline  uint32_t x2apic_msr_to_regoff(uint32_t msr)
 	return (((msr - 0x800U) & 0x3FFU) << 4U);
 }
 
-static int vlapic_x2apic_access(struct vcpu *vcpu, uint32_t msr, bool write, uint64_t *val)
+#ifdef CONFIG_PARTITION_MODE
+/*
+ * If x2apic is pass-thru to guests, we have to special case the following
+ * 1. INIT Delivery mode
+ * 2. SIPI Delivery mode
+ * For all other cases, send IPI on the wire.
+ * No shorthand and Physical destination mode are only supported.
+ */
+
+static int
+vlapic_x2apic_pt_icr_access(struct vm *vm, uint64_t val)
+{
+	uint64_t apic_id = (uint32_t) (val >> 32U);
+	uint32_t icr_low = val;
+	uint32_t mode = icr_low & APIC_DELMODE_MASK;
+	uint16_t vcpu_id;
+	struct vcpu *target_vcpu;
+	bool phys;
+	uint32_t shorthand;
+
+	phys = ((icr_low & APIC_DESTMODE_LOG) == 0UL);
+	shorthand = icr_low & APIC_DEST_MASK;
+
+	if ((phys == false) || (shorthand  != APIC_DEST_DESTFLD)) {
+		pr_err("Logical destination mode or shorthands \
+				not supported in ICR forpartition mode\n");
+		return -1;
+	}
+
+	vcpu_id = vm_apicid2vcpu_id(vm, apic_id);
+	target_vcpu = vcpu_from_vid(vm, vcpu_id);
+
+	if (target_vcpu == NULL) {
+		return 0;
+	}
+	switch (mode) {
+	case APIC_DELMODE_INIT:
+		vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
+	break;
+	case APIC_DELMODE_STARTUP:
+		vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
+	break;
+	default:
+		msr_write(MSR_IA32_EXT_APIC_ICR, (apic_id << 32U) | icr_low);
+	break;
+	}
+	return 0;
+}
+#endif
+
+static int vlapic_x2apic_access(struct vcpu *vcpu, uint32_t msr, bool write,
+								uint64_t *val)
 {
 	struct acrn_vlapic *vlapic;
 	uint32_t offset;
@@ -2014,6 +2077,14 @@ static int vlapic_x2apic_access(struct vcpu *vcpu, uint32_t msr, bool write, uin
 	 */
 	vlapic = vcpu_vlapic(vcpu);
 	if (is_x2apic_enabled(vlapic)) {
+#ifdef CONFIG_PARTITION_MODE
+		if (vcpu->vm->vm_desc->lapic_pt) {
+			if (msr == MSR_IA32_EXT_APIC_ICR) {
+				error = vlapic_x2apic_pt_icr_access(vcpu->vm, *val);
+			}
+			return error;
+		}
+#endif
 		offset = x2apic_msr_to_regoff(msr);
 		if (write) {
 			if (!is_x2apic_read_only_msr(msr)) {

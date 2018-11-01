@@ -27,6 +27,7 @@ static uint64_t cr4_always_on_mask;
 static uint64_t cr4_always_off_mask;
 
 void update_msr_bitmap_x2apic_apicv(struct vcpu *vcpu);
+void update_msr_bitmap_x2apic_passthru(struct vcpu *vcpu);
 
 bool is_vmx_disabled(void)
 {
@@ -1055,6 +1056,7 @@ void init_vmcs(struct vcpu *vcpu)
 	init_exit_ctrl();
 }
 
+#ifndef CONFIG_PARTITION_MODE
 void switch_apicv_mode_x2apic(struct vcpu *vcpu)
 {
 	uint32_t value32;
@@ -1064,3 +1066,52 @@ void switch_apicv_mode_x2apic(struct vcpu *vcpu)
 	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS2, value32);
 	update_msr_bitmap_x2apic_apicv(vcpu);
 }
+#else
+void switch_apicv_mode_x2apic(struct vcpu *vcpu)
+{
+	uint32_t value32;
+	if(vcpu->vm->vm_desc->lapic_pt) {
+		/*
+		 * Disable external interrupt exiting and irq ack
+		 * Disable posted interrupt processing
+		 * update x2apic msr bitmap for pass-thru
+		 * enable inteception only for ICR
+		 * disable pre-emption for TSC DEADLINE MSR
+		 * Disable Register Virtualization and virtual interrupt delivery
+		 * Disable "use TPR shadow"
+		 */
+
+		value32 = exec_vmread32(VMX_PIN_VM_EXEC_CONTROLS);
+		value32 &= ~VMX_PINBASED_CTLS_IRQ_EXIT;
+		if (is_apicv_posted_intr_supported()) {
+			value32 &= ~VMX_PINBASED_CTLS_POST_IRQ;
+		}
+		exec_vmwrite32(VMX_PIN_VM_EXEC_CONTROLS, value32);
+
+		value32 = exec_vmread32(VMX_EXIT_CONTROLS);
+		value32 &= ~VMX_EXIT_CTLS_ACK_IRQ;
+		exec_vmwrite32(VMX_EXIT_CONTROLS, value32);
+
+		value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
+		value32 &= ~VMX_PROCBASED_CTLS_TPR_SHADOW;
+		exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
+
+		exec_vmwrite32(VMX_TPR_THRESHOLD, 0U);
+
+		value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS2);
+		value32 &= ~VMX_PROCBASED_CTLS2_VAPIC_REGS;
+		if (is_apicv_intr_delivery_supported()) {
+			value32 &= ~VMX_PROCBASED_CTLS2_VIRQ;
+		}
+		exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS2, value32);
+
+		update_msr_bitmap_x2apic_passthru(vcpu);
+	} else {
+		value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS2);
+		value32 &= ~VMX_PROCBASED_CTLS2_VAPIC;
+		value32 |= VMX_PROCBASED_CTLS2_VX2APIC;
+		exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS2, value32);
+		update_msr_bitmap_x2apic_apicv(vcpu);
+	}
+}
+#endif

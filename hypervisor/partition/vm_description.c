@@ -183,6 +183,7 @@ struct vm_description_array vm_desc_partition = {
 						consoleblank=0 tsc=reliable xapic_phys",
 				.vpci_vdev_array = &vpci_vdev_array2,
 				.mptable = &mptable_vm2,
+				.lapic_pt = true,
 			},
 		}
 };
