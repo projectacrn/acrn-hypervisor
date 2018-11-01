@@ -49,10 +49,10 @@ static inline uint32_t prio(uint32_t x)
 #define	APICBASE_BSP		0x00000100UL
 #define	APICBASE_X2APIC		0x00000400U
 #define	APICBASE_ENABLED	0x00000800UL
-#define LOGICAL_ID_MASK         0xFU
-#define CLUSTER_ID_MASK         0xFFFF0U
+#define LOGICAL_ID_MASK		0xFU
+#define CLUSTER_ID_MASK		0xFFFF0U
 
-#define ACRN_DBG_LAPIC	6U
+#define ACRN_DBG_LAPIC		6U
 
 #if VLAPIC_VERBOS
 static inline void vlapic_dump_irr(struct acrn_vlapic *vlapic, char *msg)
@@ -1011,19 +1011,6 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 		}
 	} else {
 		/*
-		 * In the "Flat Model" the MDA is interpreted as an 8-bit wide
-		 * bitmask. This model is only available in the xAPIC mode.
-		 */
-		mda_flat_ldest = dest & 0xffU;
-
-		/*
-		 * In the "Cluster Model" the MDA is used to identify a
-		 * specific cluster and a set of APICs in that cluster.
-		 */
-		mda_cluster_id = (dest >> 4U) & 0xfU;
-		mda_cluster_ldest = dest & 0xfU;
-
-		/*
 		 * Logical mode: match each APIC that has a bit set
 		 * in its LDR that matches a bit in the ldest.
 		 */
@@ -1032,35 +1019,59 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 		for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
 			if (amask & (1U << vcpu_id)) {
 				vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
-				dfr = vlapic->apic_page.dfr.v;
-				ldr = vlapic->apic_page.ldr.v;
 
-				if ((dfr & APIC_DFR_MODEL_MASK) ==
-						APIC_DFR_MODEL_FLAT) {
-					ldest = ldr >> 24U;
-					mda_ldest = mda_flat_ldest;
-				} else if ((dfr & APIC_DFR_MODEL_MASK) ==
-						APIC_DFR_MODEL_CLUSTER) {
+				if (is_x2apic_enabled(vlapic)){
+					ldr = vlapic->apic_page.ldr.v;
+					ldest = ldr & 0xFFFFU;
 
-					cluster = ldr >> 28U;
-					ldest = (ldr >> 24U) & 0xfU;
-
-					if (cluster != mda_cluster_id) {
+					mda_cluster_id = (dest >> 16U) & 0xFFFFU;
+					mda_ldest = dest & 0xFFFFU;
+					if (mda_cluster_id != ((ldr >> 16U) & 0xFFFFU)) {
 						continue;
 					}
-					mda_ldest = mda_cluster_ldest;
 				} else {
 					/*
-					 * Guest has configured a bad logical
-					 * model for this vcpu - skip it.
+					 * In the "Flat Model" the MDA is interpreted as an 8-bit wide
+					 * bitmask. This model is only available in the xAPIC mode.
 					 */
-					dev_dbg(ACRN_DBG_LAPIC,
-							"CANNOT deliver interrupt");
-					dev_dbg(ACRN_DBG_LAPIC,
-							"vlapic has bad logical model %x", dfr);
-					continue;
-				}
+					mda_flat_ldest = dest & 0xffU;
 
+					/*
+					 * In the "Cluster Model" the MDA is used to identify a
+					 * specific cluster and a set of APICs in that cluster.
+					 */
+					mda_cluster_id = (dest >> 4U) & 0xfU;
+					mda_cluster_ldest = dest & 0xfU;
+
+					dfr = vlapic->apic_page.dfr.v;
+					ldr = vlapic->apic_page.ldr.v;
+
+					if ((dfr & APIC_DFR_MODEL_MASK) ==
+							APIC_DFR_MODEL_FLAT) {
+						ldest = ldr >> 24U;
+						mda_ldest = mda_flat_ldest;
+					} else if ((dfr & APIC_DFR_MODEL_MASK) ==
+							APIC_DFR_MODEL_CLUSTER) {
+
+						cluster = ldr >> 28U;
+						ldest = (ldr >> 24U) & 0xfU;
+
+						if (cluster != mda_cluster_id) {
+							continue;
+						}
+						mda_ldest = mda_cluster_ldest;
+					} else {
+						/*
+						 * Guest has configured a bad logical
+						 * model for this vcpu - skip it.
+						 */
+						dev_dbg(ACRN_DBG_LAPIC,
+								"CANNOT deliver interrupt");
+						dev_dbg(ACRN_DBG_LAPIC,
+								"vlapic has bad logical model %x", dfr);
+						continue;
+					}
+				}
 				if ((mda_ldest & ldest) != 0U) {
 					if (lowprio) {
 						if (target == NULL) {
@@ -1152,7 +1163,11 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 
 	icr_low = lapic->icr_lo.v;
 	icr_high = lapic->icr_hi.v;
-	dest = icr_high >> APIC_ID_SHIFT;
+	if (is_x2apic_enabled(vlapic)) {
+		dest = icr_high;
+	} else {
+		dest = icr_high >> APIC_ID_SHIFT;
+	}
 	vec = icr_low & APIC_VECTOR_MASK;
 	mode = icr_low & APIC_DELMODE_MASK;
 	phys = ((icr_low & APIC_DESTMODE_LOG) == 0UL);
@@ -1542,7 +1557,12 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset,
 		vlapic_svr_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_ICR_LOW:
-		lapic->icr_lo.v = data32;
+		if (is_x2apic_enabled(vlapic)) {
+			lapic->icr_hi.v = (uint32_t)(data >> 32U);
+			lapic->icr_lo.v = data32;
+		} else {
+			lapic->icr_lo.v = data32;
+		}
 		retval = vlapic_icrlo_write_handler(vlapic);
 		break;
 	case APIC_OFFSET_ICR_HI:
