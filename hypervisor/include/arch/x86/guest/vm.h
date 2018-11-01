@@ -193,6 +193,7 @@ struct vm_description {
 	bool			vm_vuart;
 	const char		*bootargs;
 	struct vpci_vdev_array  *vpci_vdev_array;
+	bool	lapic_pt;
 #endif
 };
 

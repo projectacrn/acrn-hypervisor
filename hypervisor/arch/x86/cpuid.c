@@ -360,6 +360,9 @@ void guest_cpuid(struct vcpu *vcpu,
 
 	case 0x0bU:
 		/* Patching X2APIC */
+#ifdef CONFIG_PARTITION_MODE
+		cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
+#else
 		if (is_vm0(vcpu->vm)) {
 			cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
 		} else {
@@ -388,6 +391,7 @@ void guest_cpuid(struct vcpu *vcpu,
 			break;
 			}
 		}
+#endif
 		break;
 
 	case 0x0dU:

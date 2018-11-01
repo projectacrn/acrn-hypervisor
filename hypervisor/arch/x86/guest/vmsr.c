@@ -446,3 +446,17 @@ void update_msr_bitmap_x2apic_apicv(struct vcpu *vcpu)
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_EOI, READ);
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_SELF_IPI, READ);
 }
+
+void update_msr_bitmap_x2apic_passthru(struct vcpu *vcpu)
+{
+	uint32_t msr;
+	uint8_t *msr_bitmap;
+
+	msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
+	for (msr = MSR_IA32_EXT_XAPICID;
+			msr <= MSR_IA32_EXT_APIC_SELF_IPI; msr++) {
+		enable_msr_interception(msr_bitmap, msr, DISABLE);
+	}
+	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_ICR, WRITE);
+	enable_msr_interception(msr_bitmap, MSR_IA32_TSC_DEADLINE, DISABLE);
+}
