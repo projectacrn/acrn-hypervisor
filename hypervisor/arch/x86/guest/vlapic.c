@@ -2374,6 +2374,18 @@ int veoi_vmexit_handler(struct vcpu *vcpu)
 	return 0;
 }
 
+static void vlapic_x2apic_self_ipi_handler(struct acrn_vlapic *vlapic)
+{
+	struct lapic_regs *lapic;
+	uint32_t vector;
+	struct vcpu *target_vcpu;
+
+	lapic = &(vlapic->apic_page);
+	vector = lapic->self_ipi.v & 0xFFU;
+	target_vcpu = vlapic->vcpu;
+	vlapic_set_intr(target_vcpu, vector, LAPIC_TRIG_EDGE);
+}
+
 int apic_write_vmexit_handler(struct vcpu *vcpu)
 {
 	uint64_t qual;
@@ -2427,6 +2439,11 @@ int apic_write_vmexit_handler(struct vcpu *vcpu)
 		break;
 	case APIC_OFFSET_TIMER_DCR:
 		vlapic_dcr_write_handler(vlapic);
+		break;
+	case APIC_OFFSET_SELF_IPI:
+		if (is_x2apic_enabled(vlapic)) {
+			vlapic_x2apic_self_ipi_handler(vlapic);
+		}
 		break;
 	default:
 		handled = 0;

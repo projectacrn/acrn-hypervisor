@@ -80,6 +80,6 @@
 #define APIC_OFFSET_TIMER_ICR	0x380U	/* Timer's Initial Count	*/
 #define APIC_OFFSET_TIMER_CCR	0x390U	/* Timer's Current Count	*/
 #define APIC_OFFSET_TIMER_DCR	0x3E0U	/* Timer's Divide Configuration	*/
-
+#define APIC_OFFSET_SELF_IPI    0x3F0U  /* Self IPI Register */
 
 #endif /* VLAPIC_PRIV_H */
