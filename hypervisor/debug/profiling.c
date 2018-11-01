@@ -336,6 +336,7 @@ static int profiling_generate_data(int32_t collector, uint32_t type)
 			pkt_header.collector_id = collector;
 			pkt_header.cpu_id = get_cpu_id();
 			pkt_header.data_type = 1U << type;
+			pkt_header.reserved = MAGIC_NUMBER;
 
 			switch (type) {
 			case CORE_PMU_SAMPLING:
@@ -534,7 +535,7 @@ static void profiling_handle_msrops(void)
 		 * if 'param' is 0, then skip generating a sample since it is
 		 * an immediate MSR read operation.
 		 */
-		if (my_msr_node->entries[0].param == 0UL) {
+		if (my_msr_node->entries[0].param != 0UL) {
 			for (j = 0U; j < my_msr_node->num_entries; ++j) {
 				sw_msrop->core_msr[j]
 					= my_msr_node->entries[j].value;
