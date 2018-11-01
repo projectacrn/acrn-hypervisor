@@ -6,8 +6,6 @@
 
 #include <hypervisor.h>
 
-extern bool x2apic_enabled;
-
 static inline struct vcpuid_entry *find_vcpuid_entry(const struct vcpu *vcpu,
 					uint32_t leaf_arg, uint32_t subleaf)
 {
@@ -337,13 +335,6 @@ void guest_cpuid(struct vcpu *vcpu,
 		*edx &= ~CPUID_EDX_MTRR;
 #endif
 
-		/* Patching X2APIC, X2APIC mode is disabled by default. */
-		if (x2apic_enabled) {
-			*ecx |= CPUID_ECX_x2APIC;
-		} else {
-			*ecx &= ~CPUID_ECX_x2APIC;
-		}
-
 		/* mask pcid */
 		*ecx &= ~CPUID_ECX_PCID;
 
@@ -369,13 +360,33 @@ void guest_cpuid(struct vcpu *vcpu,
 
 	case 0x0bU:
 		/* Patching X2APIC */
-		if (!x2apic_enabled) {
-			*eax = 0U;
-			*ebx = 0U;
-			*ecx = 0U;
-			*edx = 0U;
-		} else {
+		if (is_vm0(vcpu->vm)) {
 			cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
+		} else {
+			*ecx = subleaf & 0xFFU;
+			*edx = vlapic_get_apicid(vcpu_vlapic(vcpu));
+			/* No HT emulation for UOS */
+			switch (subleaf) {
+			case 0U:
+				*eax = 0U;
+				*ebx = 1U;
+				*ecx |= (1U << 8U);
+			break;
+			case 1U:
+				if (vcpu->vm->hw.created_vcpus == 1U) {
+					*eax = 0U;
+				} else {
+					*eax = (uint32_t)fls32(vcpu->vm->hw.created_vcpus - 1U) + 1U;
+				}
+				*ebx = vcpu->vm->hw.created_vcpus;
+				*ecx |= (2U << 8U);
+			break;
+			default:
+				*eax = 0U;
+				*ebx = 0U;
+				*ecx |= (0U << 8U);
+			break;
+			}
 		}
 		break;
 

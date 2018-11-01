@@ -23,8 +23,6 @@ static uint64_t startup_paddr = 0UL;
 /* physical cpu active bitmap, support up to 64 cpus */
 uint64_t pcpu_active_bitmap = 0UL;
 
-/* X2APIC mode is disabled by default. */
-bool x2apic_enabled = false;
 static bool skip_l1dfl_vmentry;
 static uint64_t x86_arch_capabilities;
 
