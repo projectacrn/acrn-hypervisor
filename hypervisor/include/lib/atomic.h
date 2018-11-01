@@ -41,6 +41,7 @@ static inline type name(const volatile type *ptr)	\
 			: "cc", "memory");		\
 	return ret;					\
 }
+build_atomic_load(atomic_load16, "w", uint16_t)
 build_atomic_load(atomic_load32, "l", uint32_t)
 build_atomic_load(atomic_load64, "q", uint64_t)
 
@@ -63,6 +64,7 @@ static inline void name(type *ptr)			\
 			: "=m" (*ptr)			\
 			:  "m" (*ptr));			\
 }
+build_atomic_inc(atomic_inc16, "w", uint16_t)
 build_atomic_inc(atomic_inc32, "l", uint32_t)
 build_atomic_inc(atomic_inc64, "q", uint64_t)
 
