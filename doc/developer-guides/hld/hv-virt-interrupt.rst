@@ -94,30 +94,29 @@ an interrupt, for example:
 
 These APIs will finish by making a request for *ACRN_REQUEST_EVENT.*
 
-lapic_intr_level
-   used by HV to issue a level triggered vector to vLAPIC. This vector
-   will update into IRR registers
+.. doxygenfunction:: vlapic_intr_level
+  :project: Project ACRN
 
-lapic_intr_edge
-   used by HV to issue an edge triggered vector to vLAPIC. This vector
-   will update into IRR registers
+.. doxygenfunction:: vlapic_intr_edge
+  :project: Project ACRN
 
-lapic_intr_msi
-   Used by HV to issue a MSI to vLAPIC. This vector will update into IRR
-   registers
+.. doxygenfunction:: vlapic_intr_accepted
+  :project: Project ACRN
 
-vlapic_set_local_intr
-   Triggers the LAPIC local interrupt (LVT) 'vector' on 'cpu'. 'cpu' can
-   be set to -1 to trigger the interrupt on all CPUs.
+.. doxygenfunction:: vlapic_pending_intr
+  :project: Project ACRN
 
-vlapic_pending_intr
-   Check if vLAPIC has pending vector and return the vector with highest
-   priority if there is pending virtual interrupts.
+.. doxygenfunction:: vlapic_set_local_intr
+  :project: Project ACRN
 
-vlapic_intr_accepted
-   Used in case of no APICv support. If a vector triggers the vLAPIC,
-   this vector is then moved from IRR registers to ISR registers. It
-   indicates the vector is accepted by Guest and Guest is processing it.
+.. doxygenfunction:: vlapic_intr_msi
+  :project: Project ACRN
+
+.. doxygenfunction:: vlapic_post_intr
+  :project: Project ACRN
+
+.. doxygenfunction:: apicv_get_pir_desc_paddr
+  :project: Project ACRN
 
 EOI processing
 ==============
@@ -145,15 +144,11 @@ vLAPIC APIs.
 
 **Supported APIs:**
 
-vioapic_assert_irq
-   assert a PIN according to active low or active high.
+.. doxygenfunction:: vioapic_set_irq
+  :project: Project ACRN
 
-vioapic_deassert_irq
-   de-assert a PIN according to assigned device or emulated device
-   status.
-
-vioapic_pulse_irq
-   trigger an edge interrupt.
+.. doxygenfunction:: vioapic_set_irq_nolock
+  :project: Project ACRN
 
 Virtual PIC
 ***********
@@ -170,20 +165,18 @@ If an interrupt source from vPIC need to inject an interrupt, the
 following APIs need be called, which will finally make a request for
 *ACRN_REQUEST_EXTINT or ACRN_REQUEST_EVENT*:
 
-.. code-block:: c
-
-   int vpic_assert_irq(struct vm *vm, uint32_t irq);
-   int vpic_deassert_irq(struct vm *vm, uint32_t irq);
-   int vpic_pulse_irq(struct vm *vm, uint32_t irq);
+.. doxygenfunction:: vpic_set_irq
+  :project: Project ACRN
 
 The following APIs are used to query the vector needed to be injected and ACK
 the service (means move the interrupt from request service - IRR to in
 service - ISR):
 
-.. code-block:: c
+.. doxygenfunction:: vpic_pending_intr
+  :project: Project ACRN
 
-   void vpic_pending_intr(struct vm *vm, uint32_t *vecptr);
-   void vpic_intr_accepted(struct vm *vm, uint32_t vector);
+.. doxygenfunction:: vpic_intr_accepted
+  :project: Project ACRN
 
 Virtual Exception
 *****************
@@ -198,11 +191,29 @@ hypervisor, for example:
 
 ACRN hypervisor implements virtual exception injection using these APIs:
 
-.. code-block:: c
+.. doxygenfunction:: vcpu_queue_exception
+  :project: Project ACRN
 
-   int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector, uint32_t err_code);
-   int vcpu_inject_gp(struct vcpu *vcpu, uint32_t err_code);
-   int vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code);
+.. doxygenfunction:: vcpu_inject_extint
+  :project: Project ACRN
+
+.. doxygenfunction:: vcpu_inject_nmi
+  :project: Project ACRN
+
+.. doxygenfunction:: vcpu_inject_gp
+  :project: Project ACRN
+
+.. doxygenfunction:: vcpu_inject_pf
+  :project: Project ACRN
+
+.. doxygenfunction:: vcpu_inject_ud
+  :project: Project ACRN
+
+.. doxygenfunction:: vcpu_inject_ac
+  :project: Project ACRN
+
+.. doxygenfunction:: vcpu_inject_ss
+  :project: Project ACRN
 
 ACRN hypervisor uses the *vcpu_inject_gp/vcpu_inject_pf* functions
 to queue exception request, and follows SDM vol3 - 6.15, Table 6-5 to
