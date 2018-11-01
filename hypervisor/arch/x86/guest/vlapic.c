@@ -148,17 +148,16 @@ vm_active_cpus(const struct vm *vm)
 }
 
 uint32_t
-vlapic_get_id(const struct acrn_vlapic *vlapic)
+vlapic_get_apicid(struct acrn_vlapic *vlapic)
 {
-	uint32_t id = vlapic->apic_page.id.v;
-	return id;
-}
+	uint32_t apicid;
+	if (is_x2apic_enabled(vlapic)) {
+		apicid = vlapic->apic_page.id.v;
+	} else {
+		apicid = (vlapic->apic_page.id.v) >> APIC_ID_SHIFT;
+	}
 
-uint8_t
-vlapic_get_apicid(const struct acrn_vlapic *vlapic)
-{
-	uint32_t apicid = (vlapic->apic_page.id.v) >> APIC_ID_SHIFT;
-	return (uint8_t)apicid;
+	return apicid;
 }
 
 static inline uint32_t

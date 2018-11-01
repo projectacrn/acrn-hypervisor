@@ -327,10 +327,10 @@ void guest_cpuid(struct vcpu *vcpu,
 	case 0x01U:
 	{
 		cpuid(leaf, eax, ebx, ecx, edx);
-		uint32_t apicid = vlapic_get_id(vcpu_vlapic(vcpu));
+		uint32_t apicid = vlapic_get_apicid(vcpu_vlapic(vcpu));
 		/* Patching initial APIC ID */
 		*ebx &= ~APIC_ID_MASK;
-		*ebx |= (apicid & APIC_ID_MASK);
+		*ebx |= (apicid <<  APIC_ID_SHIFT);
 
 #ifndef CONFIG_MTRR_ENABLED
 		/* mask mtrr */
