@@ -14,15 +14,10 @@ spinlock_t trampoline_spinlock = {
 	.tail = 0U
 };
 
-static spinlock_t up_count_spinlock = {
-	.head = 0U,
-	.tail = 0U
-};
-
 struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(CPU_PAGE_SIZE);
 uint16_t phys_cpu_num = 0U;
 static uint64_t pcpu_sync = 0UL;
-static volatile uint16_t up_count = 0U;
+static uint16_t up_count = 0U;
 static uint64_t startup_paddr = 0UL;
 
 /* physical cpu active bitmap, support up to 64 cpus */
@@ -309,12 +304,10 @@ static void init_percpu_lapic_id(void)
 
 static void cpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state)
 {
-	spinlock_obtain(&up_count_spinlock);
-
 	/* Check if state is initializing */
 	if (state == PCPU_STATE_INITIALIZING) {
 		/* Increment CPU up count */
-		up_count++;
+		atomic_inc16(&up_count);
 
 		/* Save this CPU's logical ID to the TSC AUX MSR */
 		set_current_cpu_id(pcpu_id);
@@ -322,13 +315,11 @@ static void cpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state)
 
 	/* If cpu is dead, decrement CPU up count */
 	if (state == PCPU_STATE_DEAD) {
-		up_count--;
+		atomic_dec16(&up_count);
 	}
 
 	/* Set state for the specified CPU */
 	per_cpu(boot_state, pcpu_id) = state;
-
-	spinlock_release(&up_count_spinlock);
 }
 
 #ifdef STACK_PROTECTOR
@@ -645,7 +636,7 @@ void start_cpus(void)
 	 * configured time-out has expired
 	 */
 	timeout = CONFIG_CPU_UP_TIMEOUT * 1000U;
-	while ((up_count != expected_up) && (timeout != 0U)) {
+	while ((atomic_load16(&up_count) != expected_up) && (timeout != 0U)) {
 		/* Delay 10us */
 		udelay(10U);
 
@@ -654,7 +645,7 @@ void start_cpus(void)
 	}
 
 	/* Check to see if all expected CPUs are actually up */
-	if (up_count != expected_up) {
+	if (atomic_load16(&up_count) != expected_up) {
 		/* Print error */
 		pr_fatal("Secondary CPUs failed to come up");
 
@@ -682,7 +673,7 @@ void stop_cpus(void)
 	}
 
 	expected_up = 1U;
-	while ((up_count != expected_up) && (timeout != 0U)) {
+	while ((atomic_load16(&up_count) != expected_up) && (timeout != 0U)) {
 		/* Delay 10us */
 		udelay(10U);
 
@@ -690,7 +681,7 @@ void stop_cpus(void)
 		timeout -= 10U;
 	}
 
-	if (up_count != expected_up) {
+	if (atomic_load16(&up_count) != expected_up) {
 		pr_fatal("Can't make all APs offline");
 
 		/* if partial APs is down, it's not easy to recover
