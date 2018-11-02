@@ -99,25 +99,14 @@ static inline uint64_t ept_pgentry_present(uint64_t pte)
 
 static inline struct page *ept_get_pml4_page(const union pgtable_pages_info *info, __unused uint64_t gpa)
 {
-	struct page *page;
-	if (gpa < TRUSTY_EPT_REBASE_GPA) {
-		page = info->ept.nworld_pml4_base;
-	} else {
-		page = info->ept.sworld_pgtable_base;
-	}
+	struct page *page = info->ept.nworld_pml4_base;
 	(void)memset(page, 0U, PAGE_SIZE);
 	return page;
 }
 
 static inline struct page *ept_get_pdpt_page(const union pgtable_pages_info *info, uint64_t gpa)
 {
-	struct page *page;
-	if (gpa < TRUSTY_EPT_REBASE_GPA) {
-		page = info->ept.nworld_pdpt_base + (gpa >> PML4E_SHIFT);
-	} else {
-		page = info->ept.sworld_pgtable_base + TRUSTY_PML4_PAGE_NUM(TRUSTY_EPT_REBASE_GPA) +
-			((gpa - TRUSTY_EPT_REBASE_GPA) >> PML4E_SHIFT);
-	}
+	struct page *page = info->ept.nworld_pdpt_base + (gpa >> PML4E_SHIFT);
 	(void)memset(page, 0U, PAGE_SIZE);
 	return page;
 }
