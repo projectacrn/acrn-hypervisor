@@ -1077,7 +1077,7 @@ remove_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 	context_table_addr = dmar_get_bitslice(root_entry->lower,
 					       ROOT_ENTRY_LOWER_CTP_MASK,
 					       ROOT_ENTRY_LOWER_CTP_POS);
-	context_table_addr = context_table_addr << 12;
+	context_table_addr = context_table_addr << CPU_PAGE_SHIFT;
 	context_table =
 		(struct dmar_context_entry *)hpa2hva(context_table_addr);
 
