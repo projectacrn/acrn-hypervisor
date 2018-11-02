@@ -5,12 +5,9 @@
  */
 #include <hypervisor.h>
 
-#define DEFINE_PGTABLE_PAGE(prefix, lvl, LVL, size)	\
-		static struct page prefix ## lvl ## _pages[LVL ## _PAGE_NUM(size)]
-
-DEFINE_PGTABLE_PAGE(ppt_, pml4, PML4, CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE);
-DEFINE_PGTABLE_PAGE(ppt_, pdpt, PDPT, CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE);
-DEFINE_PGTABLE_PAGE(ppt_, pd, PD, CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE);
+static struct page ppt_pml4_pages[PML4_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
+static struct page ppt_pdpt_pages[PDPT_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
+static struct page ppt_pd_pages[PD_PAGE_NUM(CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)];
 
 /* ppt: pripary page table */
 static union pgtable_pages_info ppt_pages_info = {
@@ -61,10 +58,10 @@ const struct memory_ops ppt_mem_ops = {
 	.get_pd_page = ppt_get_pd_page,
 };
 
-DEFINE_PGTABLE_PAGE(vm0_, pml4, PML4, EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE));
-DEFINE_PGTABLE_PAGE(vm0_, pdpt, PDPT, EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE));
-DEFINE_PGTABLE_PAGE(vm0_, pd, PD, EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE));
-DEFINE_PGTABLE_PAGE(vm0_, pt, PT, EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE));
+static struct page vm0_pml4_pages[PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
+static struct page vm0_pdpt_pages[PDPT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
+static struct page vm0_pd_pages[PD_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
+static struct page vm0_pt_pages[PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
 
 /* uos_nworld_pml4_pages[i] is ...... of UOS i (whose vm_id = i +1) */
 static struct page uos_nworld_pml4_pages[CONFIG_MAX_VM_NUM - 1U][PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
