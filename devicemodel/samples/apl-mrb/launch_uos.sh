@@ -122,6 +122,9 @@ else
   boot_image_option="--vsbl /usr/share/acrn/bios/VSBL.bin"
 fi
 
+#interrupt storm monitor for pass-through devices, params order: 
+#threshold/s,probe-period(s),intr-inject-delay-time(ms),delay-duration(ms)
+intr_storm_monitor="--intr_monitor 10000,10,1,100"
 
 acrn-dm --help 2>&1 | grep 'GVT args'
 if [ $? == 0 ];then
@@ -143,6 +146,7 @@ acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:
   -s 9,passthru,0/15/1 \
   $boot_cse_option \
   -s 27,passthru,0/1b/0 \
+  $intr_storm_monitor \
   $boot_ipu_option      \
   -i /run/acrn/ioc_$vm_name,0x20 \
   -l com2,/run/acrn/ioc_$vm_name \
@@ -311,6 +315,10 @@ image, it should be kept using 3 as fixed value for Android Guest on Gordon_peak
 ACRN project
 '
 
+#interrupt storm monitor for pass-through devices, params order: 
+#threshold/s,probe-period(s),intr-inject-delay-time(ms),delay-duration(ms)
+intr_storm_monitor="--intr_monitor 10000,10,1,100"
+
 acrn-dm --help 2>&1 | grep 'GVT args'
 if [ $? == 0 ];then
   GVT_args=$3
@@ -334,6 +342,7 @@ fi
    -s 27,passthru,0/1b/0 \
    -s 24,passthru,0/18/0 \
    -s 18,passthru,3/0/0,keep_gsi \
+   $intr_storm_monitor \
    $boot_ipu_option      \
    -i /run/acrn/ioc_$vm_name,0x20 \
    -l com2,/run/acrn/ioc_$vm_name \
