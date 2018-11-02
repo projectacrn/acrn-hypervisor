@@ -261,6 +261,7 @@ requirements:
 
 5) Put hypervisor security data in UC memory if possible
 6) Enable L1D_FLUSH_VMENTRY option, if
+
    - Doing 5) is not feasible, or
    - CPU sharing is enabled (in the future)
 
