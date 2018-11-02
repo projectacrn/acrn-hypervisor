@@ -48,7 +48,6 @@ static int vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
 {
 	struct msix_table_entry *pentry;
 	struct ptdev_msi_info info;
-	volatile uint32_t *ptr32;
 	uint64_t hva;
 	int ret;
 
@@ -70,11 +69,11 @@ static int vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
 	 * fields with a single QWORD write, but some hardware can accept 32 bits
 	 * write only
 	 */
-	ptr32 = (uint32_t *)&pentry->addr;
-	ptr32[0] = (uint32_t)info.pmsi_addr;
-	ptr32[1] = (info.pmsi_addr >> 32U);
-	pentry->data = info.pmsi_data;
-	pentry->vector_control = vdev->msix.tables[index].vector_control;
+	mmio_write32((uint32_t)(info.pmsi_addr), (const void *)&(pentry->addr));
+	mmio_write32((uint32_t)(info.pmsi_addr >> 32U), (const void *)((char *)&(pentry->addr) + 4U));
+
+	mmio_write32(info.pmsi_data, (const void *)&(pentry->data));
+	mmio_write32(vdev->msix.tables[index].vector_control, (const void *)&(pentry->vector_control));
 
 	return ret;
 }
@@ -254,11 +253,27 @@ static int vmsix_table_mmio_access_handler(struct io_request *io_req, void *hand
 	} else {
 		hva = vdev->msix.mmio_hva + offset;
 
+		/* Only DWORD and QWORD are permitted */
+		if ((mmio->size != 4U) && (mmio->size != 8U)) {
+			pr_err("%s, Only DWORD and QWORD are permitted", __func__);
+			return -EINVAL;
+		}
+
 		/* MSI-X PBA and Capability Table could be in the same range */
 		if (mmio->direction == REQUEST_READ) {
-			(void)memcpy_s(&mmio->value, (size_t)mmio->size, (const void *)hva, (size_t)mmio->size);
+			/* mmio->size is either 4U or 8U */
+			if (mmio->size == 4U) {
+				mmio->value = (uint64_t)mmio_read32((const void *)hva);
+			} else {
+				mmio->value = mmio_read64((const void *)hva);
+			}
 		} else {
-			(void)memcpy_s((void *)hva, (size_t)mmio->size, &mmio->value, (size_t)mmio->size);
+			/* mmio->size is either 4U or 8U */
+			if (mmio->size == 4U) {
+				mmio_write32((uint32_t)(mmio->value), (const void *)hva);
+			} else {
+				mmio_write64(mmio->value, (const void *)hva);
+			}
 		}
 	}
 
