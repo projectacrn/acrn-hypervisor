@@ -253,8 +253,8 @@ void init_paging(void)
 	}
 
 	/* Map all memory regions to UC attribute */
-	mmu_add((uint64_t *)ppt_mmu_pml4_addr, e820_mem.mem_bottom, e820_mem.mem_bottom,
-		high64_max_ram - e820_mem.mem_bottom, attr_uc, &ppt_mem_ops);
+	mmu_add((uint64_t *)ppt_mmu_pml4_addr, 0UL, 0UL,
+		high64_max_ram - 0UL, attr_uc, &ppt_mem_ops);
 
 	/* Modify WB attribute for E820_TYPE_RAM */
 	for (i = 0U; i < e820_entries; i++) {

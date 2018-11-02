@@ -75,7 +75,8 @@ config MAX_VM_NUM
 config MAX_VCPUS_PER_VM
 	int "Maximum number of VCPUS per VM"
 	range 1 8
-	default 4
+	default 4 if PLATFORM_SBL
+	default 8 if PLATFORM_UEFI
 	help
 	  The maximum number of virtual CPUs the hypervisor can support in a
 	  single VM.
@@ -218,7 +219,8 @@ config HV_RAM_START
 
 config HV_RAM_SIZE
 	hex "Size of the RAM region used by the hypervisor"
-	default 0x04800000
+	default 0x04800000 if PLATFORM_SBL
+	default 0x08000000 if PLATFORM_UEFI
 	help
 	  A 64-bit integer indicating the size of RAM used by the hypervisor.
 	  It is ensured at link time that the footprint of the hypervisor
@@ -226,22 +228,23 @@ config HV_RAM_SIZE
 
 config PLATFORM_RAM_SIZE
 	hex "Size of the physical platform RAM"
-	default 0x200000000
+	default 0x200000000 if PLATFORM_SBL
+	default 0x400000000 if PLATFORM_UEFI
 	help
 	  A 64-bit integer indicating the size of the physical platform RAM
 	  (not included the MMIO).
 
 config SOS_RAM_SIZE
 	hex "Size of the vm0 RAM"
-	default 0x200000000 if SHARING_MODE
-	default 0x000000000 if PARTITION_MODE
+	default 0x200000000 if PLATFORM_SBL
+	default 0x400000000 if PLATFORM_UEFI
 	help
 	  A 64-bit integer indicating the size of the vm0 RAM (not included the MMIO).
 
  config UOS_RAM_SIZE
 	hex "Size of the UOS RAM"
-	default 0x100000000 if SHARING_MODE
-	default 0x100000000 if PARTITION_MODE
+	default 0x100000000 if PLATFORM_SBL
+	default 0x200000000 if PLATFORM_UEFI
 	help
 	  A 64-bit integer indicating the size of the user OS RAM (not included the MMIO).
 	  Now we assume each UOS uses same amount of RAM size.
