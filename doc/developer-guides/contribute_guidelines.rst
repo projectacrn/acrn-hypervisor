@@ -176,6 +176,14 @@ is set up correctly by using:
    git config --global user.name "David Developer"
    git config --global user.email "david.developer@company.com"
 
+Tracked-on
+==========
+
+All commits must be mapped to a GitHub issue for a feature or bug. Add a
+Tracked-On: #issue-number line to your commit message together with the
+issue number, for example::
+
+   Tracked-On: #1420
 
 Coding Style
 ************
