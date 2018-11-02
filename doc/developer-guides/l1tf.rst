@@ -29,7 +29,7 @@ memory range checks or nested translations. Specifically:
 
 * Intel SGX protected memory checks are not applied.
 * Extended Page Table (EPT) guest physical to host physical address 
-translation is not applied.
+  translation is not applied.
 * SMM protected memory checks are not applied.
 
 The following CVE entries are related to the L1TF:
@@ -113,7 +113,7 @@ same pCPU thus next VM may steal information in L1D which comes
 from activity of previous VM on the same pCPU. 
 
 Normal_world->Secure_world Attack
-******************************
+*********************************
 
 ACRN supports Android guest, which requires two running worlds 
 (normal world vs. secure world). Two worlds run on the same CPU, 
