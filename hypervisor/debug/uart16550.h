@@ -52,12 +52,12 @@
 /*enable/disable receive data read request interrupt*/
 
 /* definition for LCR */
-#define LCR_DLAB	(1U << 7) /*DLAB THR/RBR&IER or DLL&DLM= Bit 7*/
-#define LCR_SB		(1U << 6) /*break control on/off= Bit 6*/
-#define LCR_SP		(1U << 5) /*Specifies the operation of parity bit*/
-#define LCR_EPS		(1U << 4) /*Specifies the logic of a parity bit*/
-#define LCR_PEN		(1U << 3) /*Specifies whether to add a parity bit*/
-#define LCR_STB		(1U << 2) /*stop bit length*/
+#define LCR_DLAB	(1U << 7U) /*DLAB THR/RBR&IER or DLL&DLM= Bit 7*/
+#define LCR_SB		(1U << 6U) /*break control on/off= Bit 6*/
+#define LCR_SP		(1U << 5U) /*Specifies the operation of parity bit*/
+#define LCR_EPS		(1U << 4U) /*Specifies the logic of a parity bit*/
+#define LCR_PEN		(1U << 3U) /*Specifies whether to add a parity bit*/
+#define LCR_STB		(1U << 2U) /*stop bit length*/
 #define LCR_WL8		(0x03U) /*number of bits of serial data*/
 #define LCR_WL7		(0x02U) /*number of bits of serial data*/
 #define LCR_WL6		(0x01U) /*number of bits of serial data*/
@@ -70,32 +70,32 @@
 
 /* bit definitions for LSR */
 /* at least one error in data within fifo */
-#define LSR_ERR		(1U << 7)
+#define LSR_ERR		(1U << 7U)
 /* Transmit data Present */
-#define LSR_TEMT	(1U << 6)
+#define LSR_TEMT	(1U << 6U)
 /* Transmit data write request present */
-#define LSR_THRE	(1U << 5)
+#define LSR_THRE	(1U << 5U)
 /* Break interrupt data Present */
-#define LSR_BI		(1U << 4)
+#define LSR_BI		(1U << 4U)
 /* Framing Error Occurred */
-#define LSR_FE		(1U << 3)
+#define LSR_FE		(1U << 3U)
 /* Parity Error Occurred */
-#define LSR_PE		(1U << 2)
+#define LSR_PE		(1U << 2U)
 /* Overrun error */
-#define LSR_OE		(1U << 1)
+#define LSR_OE		(1U << 1U)
 /* Readable received data is present */
-#define LSR_DR		(1U << 0)
+#define LSR_DR		(1U << 0U)
 
 /* definition for MCR */
-#define MCR_RTS		(1U << 1) /* Request to Send */
-#define MCR_DTR		(1U << 0) /* Data Terminal Ready */
+#define MCR_RTS		(1U << 1U) /* Request to Send */
+#define MCR_DTR		(1U << 0U) /* Data Terminal Ready */
 
 /* definition for FCR */
 #define FCR_RX_MASK	0xc0U
-#define FCR_DMA		(1U << 3)
-#define FCR_TFR		(1U << 2) /* Reset Transmit Fifo */
-#define FCR_RFR		(1U << 1) /* Reset Receive Fifo */
-#define FCR_FIFOE	(1U << 0) /* Fifo Enable */
+#define FCR_DMA		(1U << 3U)
+#define FCR_TFR		(1U << 2U) /* Reset Transmit Fifo */
+#define FCR_RFR		(1U << 1U) /* Reset Receive Fifo */
+#define FCR_FIFOE	(1U << 0U) /* Fifo Enable */
 
 #define UART_IER_DISABLE_ALL	0x00000000U
 

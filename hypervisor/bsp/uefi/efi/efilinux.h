@@ -45,8 +45,8 @@
 #define EFILINUX_VERSION_MAJOR 1
 #define EFILINUX_VERSION_MINOR 0
 
-#define MEM_ADDR_1MB (1 << 20)
-#define MEM_ADDR_4GB (0xFFFFFFFF)
+#define MEM_ADDR_1MB (1U << 20U)
+#define MEM_ADDR_4GB (0xFFFFFFFFU)
 
 
 extern EFI_SYSTEM_TABLE *sys_table;

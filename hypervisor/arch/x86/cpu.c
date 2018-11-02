@@ -30,12 +30,12 @@ static uint64_t x86_arch_capabilities;
 
 /* TODO: add more capability per requirement */
 /* APICv features */
-#define VAPIC_FEATURE_VIRT_ACCESS		(1U << 0)
-#define VAPIC_FEATURE_VIRT_REG			(1U << 1)
-#define VAPIC_FEATURE_INTR_DELIVERY		(1U << 2)
-#define VAPIC_FEATURE_TPR_SHADOW		(1U << 3)
-#define VAPIC_FEATURE_POST_INTR		(1U << 4)
-#define VAPIC_FEATURE_VX2APIC_MODE		(1U << 5)
+#define VAPIC_FEATURE_VIRT_ACCESS		(1U << 0U)
+#define VAPIC_FEATURE_VIRT_REG			(1U << 1U)
+#define VAPIC_FEATURE_INTR_DELIVERY		(1U << 2U)
+#define VAPIC_FEATURE_TPR_SHADOW		(1U << 3U)
+#define VAPIC_FEATURE_POST_INTR			(1U << 4U)
+#define VAPIC_FEATURE_VX2APIC_MODE		(1U << 5U)
 
 struct cpu_capability {
 	uint8_t apicv_features;

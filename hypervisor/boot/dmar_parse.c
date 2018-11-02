@@ -145,12 +145,12 @@ static uint8_t get_secondary_bus(uint8_t bus, uint8_t dev, uint8_t func)
 {
 	uint32_t data;
 
-	pio_write32(PCI_CFG_ENABLE | (bus << 16) | (dev << 11) |
-		(func << 8) | 0x18, PCI_CONFIG_ADDR);
+	pio_write32(PCI_CFG_ENABLE | (bus << 16U) | (dev << 11U) |
+		(func << 8U) | 0x18U, PCI_CONFIG_ADDR);
 
 	data = pio_read32(PCI_CONFIG_DATA);
 
-	return (data >> 8) & 0xff;
+	return (data >> 8U) & 0xffU;
 }
 
 static uint16_t
@@ -173,7 +173,7 @@ dmar_path_bdf(int path_len, int busno,
 		dev = path[i].device;
 		fun = path[i].function;
 	}
-	return (bus << 8 | DEVFUN(dev, fun));
+	return (bus << 8U | DEVFUN(dev, fun));
 }
 
 
@@ -267,8 +267,8 @@ handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd,
 
 		consumed = handle_dmar_devscope(dev_scope, cp, remaining);
 
-		if (((drhd->segment << 16) |
-		     (dev_scope->bus << 8) |
+		if (((drhd->segment << 16U) |
+		     (dev_scope->bus << 8U) |
 		     dev_scope->devfun) == CONFIG_GPU_SBDF) {
 			ASSERT(dev_count == 1, "no dedicated iommu for gpu");
 			drhd->ignore = true;

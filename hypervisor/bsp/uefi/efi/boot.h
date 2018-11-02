@@ -63,7 +63,7 @@
 	uint32_t msrl, msrh;                                 \
 	asm volatile ("rdmsr" : "=a"(msrl),                 \
 		"=d"(msrh) : "c" (reg));            \
-	*msr_val_ptr = ((uint64_t)msrh<<32) | msrl;           \
+	*msr_val_ptr = ((uint64_t)msrh << 32U) | msrl;           \
 }
 
 EFI_STATUS get_pe_section(CHAR8 *base, char *section, UINTN *vaddr, UINTN *size);
