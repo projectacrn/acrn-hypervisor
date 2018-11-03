@@ -166,6 +166,11 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 		(void)memset(hpa2hva(hpa), 0U, size);
 	}
 
+	ept_mr_del(vm, vm->arch_vm.sworld_eptp, gpa_uos, size);
+	/* sanitize trusty ept page-structures */
+	sanitize_pte((uint64_t *)vm->arch_vm.sworld_eptp);
+	vm->arch_vm.sworld_eptp = NULL;
+
 	/* restore memory to SOS ept mapping */
 	ept_mr_add(vm0, vm0->arch_vm.nworld_eptp,
 			hpa, gpa_sos, size, EPT_RWX | EPT_WB);
@@ -174,9 +179,6 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 	ept_mr_add(vm, vm->arch_vm.nworld_eptp,
 			hpa, gpa_uos, size, EPT_RWX | EPT_WB);
 
-	/* sanitize trusty ept page-structures */
-	sanitize_pte((uint64_t *)vm->arch_vm.sworld_eptp);
-	vm->arch_vm.sworld_eptp = NULL;
 }
 
 static void save_world_ctx(struct vcpu *vcpu, struct ext_context *ext_ctx)

@@ -280,7 +280,7 @@ void init_paging(void)
 	 */
 	hv_hpa = get_hv_image_base();
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, hv_hpa & PDE_MASK,
-		CONFIG_HV_RAM_SIZE + ((hv_hpa & (PDE_SIZE - 1UL)) != 0UL) ? PDE_SIZE : 0UL,
+		CONFIG_HV_RAM_SIZE + (((hv_hpa & (PDE_SIZE - 1UL)) != 0UL) ? PDE_SIZE : 0UL),
 			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER,
 			&ppt_mem_ops, MR_MODIFY);
 
