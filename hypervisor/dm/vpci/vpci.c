@@ -54,6 +54,14 @@ static uint32_t pci_cfg_io_read(struct vm *vm, uint16_t addr, size_t bytes)
 	struct vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
 
+	if (addr == 0xCF9U) {
+		if (is_vm0(vm) && (bytes == 1U)) {
+			return pio_read8(addr);
+		} else {
+			return 0U;
+		}
+	}
+
 	if (is_cfg_addr(addr)) {
 		/* TODO: handling the non 4 bytes access */
 		if (bytes == 4U) {
@@ -87,6 +95,13 @@ static void pci_cfg_io_write(struct vm *vm, uint16_t addr, size_t bytes,
 {
 	struct vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
+
+	if (addr == 0xCF9U) {
+		if (is_vm0(vm) && (bytes == 1U)) {
+			pio_write8((uint8_t)val, addr);
+		}
+		return;
+	}
 
 	if (is_cfg_addr(addr)) {
 		/* TODO: handling the non 4 bytes access */
