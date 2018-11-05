@@ -89,7 +89,7 @@ void vcpu_thread(struct acrn_vcpu *vcpu)
 		vmexit_begin = rdtsc();
 #endif
 
-		vcpu->arch_vcpu.nrexits++;
+		vcpu->arch.nrexits++;
 		/* Save guest TSC_AUX */
 		cpu_msr_read(MSR_IA32_TSC_AUX, &vcpu->msr_tsc_aux_guest);
 		/* Restore native TSC_AUX */
@@ -98,7 +98,7 @@ void vcpu_thread(struct acrn_vcpu *vcpu)
 		CPU_IRQ_ENABLE();
 		/* Dispatch handler */
 		ret = vmexit_handler(vcpu);
-		basic_exit_reason = vcpu->arch_vcpu.exit_reason & 0xFFFFU;
+		basic_exit_reason = vcpu->arch.exit_reason & 0xFFFFU;
 		if (ret < 0) {
 			pr_fatal("dispatch VM exit handler failed for reason"
 				" %d, ret = %d!", basic_exit_reason, ret);

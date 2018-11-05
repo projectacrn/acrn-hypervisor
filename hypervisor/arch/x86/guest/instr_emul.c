@@ -1631,7 +1631,7 @@ static int vmm_emulate_instruction(struct instr_emul_ctxt *ctxt)
 static int vie_init(struct instr_emul_vie *vie, struct acrn_vcpu *vcpu)
 {
 	uint64_t guest_rip_gva = vcpu_get_rip(vcpu);
-	uint32_t inst_len = vcpu->arch_vcpu.inst_len;
+	uint32_t inst_len = vcpu->arch.inst_len;
 	uint32_t err_code;
 	uint64_t fault_addr;
 	int ret;

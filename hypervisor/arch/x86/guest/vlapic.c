@@ -499,7 +499,7 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 			 *    it to vCPU in next vmentry.
 			 */
 			bitmap_set_lock(ACRN_REQUEST_EVENT,
-				&vlapic->vcpu->arch_vcpu.pending_req);
+				&vlapic->vcpu->arch.pending_req);
 			vlapic_post_intr(vlapic->vcpu->pcpu_id);
 			return 0;
 		}
@@ -564,7 +564,7 @@ uint64_t apicv_get_pir_desc_paddr(struct acrn_vcpu *vcpu)
 {
 	struct acrn_vlapic *vlapic;
 
-	vlapic = &vcpu->arch_vcpu.vlapic;
+	vlapic = &vcpu->arch.vlapic;
 	return hva2hpa(&(vlapic->pir_desc));
 }
 
@@ -1189,11 +1189,11 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode,
 		 * the second SIPI will be ignored as it move out of
 		 * wait-for-SIPI state.
 		*/
-		target_vcpu->arch_vcpu.nr_sipi = 1U;
+		target_vcpu->arch.nr_sipi = 1U;
 	} else if (mode == APIC_DELMODE_STARTUP) {
 		/* Ignore SIPIs in any state other than wait-for-SIPI */
 		if ((target_vcpu->state != VCPU_INIT) ||
-			(target_vcpu->arch_vcpu.nr_sipi == 0U)) {
+			(target_vcpu->arch.nr_sipi == 0U)) {
 				return;
 		}
 
@@ -1202,8 +1202,8 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode,
 				target_vcpu->vcpu_id, vcpu_id,
 				(icr_low & APIC_VECTOR_MASK));
 
-		target_vcpu->arch_vcpu.nr_sipi--;
-		if (target_vcpu->arch_vcpu.nr_sipi > 0U) {
+		target_vcpu->arch.nr_sipi--;
+		if (target_vcpu->arch.nr_sipi > 0U) {
 			return;
 		}
 
@@ -2238,8 +2238,8 @@ vlapic_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t wval)
 
 int vlapic_create(struct acrn_vcpu *vcpu)
 {
-	vcpu->arch_vcpu.vlapic.vm = vcpu->vm;
-	vcpu->arch_vcpu.vlapic.vcpu = vcpu;
+	vcpu->arch.vlapic.vm = vcpu->vm;
+	vcpu->arch.vlapic.vcpu = vcpu;
 
 	if (is_vcpu_bsp(vcpu)) {
 		uint64_t *pml4_page =
@@ -2450,7 +2450,7 @@ int apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
 	struct acrn_vlapic *vlapic;
 	struct mmio_request *mmio = &vcpu->req.reqs.mmio;
 
-	qual = vcpu->arch_vcpu.exit_qualification;
+	qual = vcpu->arch.exit_qualification;
 	access_type = apic_access_type(qual);
 
 	/*parse offset if linear access*/
@@ -2500,7 +2500,7 @@ int veoi_vmexit_handler(struct acrn_vcpu *vcpu)
 
 	vlapic = vcpu_vlapic(vcpu);
 	lapic = &(vlapic->apic_page);
-	vector = (uint32_t)(vcpu->arch_vcpu.exit_qualification & 0xFFUL);
+	vector = (uint32_t)(vcpu->arch.exit_qualification & 0xFFUL);
 
 	tmrptr = &lapic->tmr[0];
 	idx = vector >> 5U;
@@ -2535,7 +2535,7 @@ int apic_write_vmexit_handler(struct acrn_vcpu *vcpu)
 	uint32_t offset;
 	struct acrn_vlapic *vlapic = NULL;
 
-	qual = vcpu->arch_vcpu.exit_qualification;
+	qual = vcpu->arch.exit_qualification;
 	offset = (uint32_t)(qual & 0xFFFUL);
 
 	handled = 1;

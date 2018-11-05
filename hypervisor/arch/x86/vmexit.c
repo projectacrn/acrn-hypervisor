@@ -163,11 +163,11 @@ int vmexit_handler(struct acrn_vcpu *vcpu)
 	}
 
 	/* Obtain interrupt info */
-	vcpu->arch_vcpu.idt_vectoring_info =
+	vcpu->arch.idt_vectoring_info =
 	    exec_vmread32(VMX_IDT_VEC_INFO_FIELD);
 	/* Filter out HW exception & NMI */
-	if ((vcpu->arch_vcpu.idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
-		uint32_t vector_info = vcpu->arch_vcpu.idt_vectoring_info;
+	if ((vcpu->arch.idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
+		uint32_t vector_info = vcpu->arch.idt_vectoring_info;
 		uint32_t vector = vector_info & 0xffU;
 		uint32_t type = (vector_info & VMX_INT_TYPE_MASK) >> 8U;
 		uint32_t err_code = 0U;
@@ -177,25 +177,25 @@ int vmexit_handler(struct acrn_vcpu *vcpu)
 				err_code = exec_vmread32(VMX_IDT_VEC_ERROR_CODE);
 			}
 			(void)vcpu_queue_exception(vcpu, vector, err_code);
-			vcpu->arch_vcpu.idt_vectoring_info = 0U;
+			vcpu->arch.idt_vectoring_info = 0U;
 		} else if (type == VMX_INT_TYPE_NMI) {
 			vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
-			vcpu->arch_vcpu.idt_vectoring_info = 0U;
+			vcpu->arch.idt_vectoring_info = 0U;
 		} else {
 			/* No action on EXT_INT or SW exception. */
 		}
 	}
 
 	/* Calculate basic exit reason (low 16-bits) */
-	basic_exit_reason = (uint16_t)(vcpu->arch_vcpu.exit_reason & 0xFFFFU);
+	basic_exit_reason = (uint16_t)(vcpu->arch.exit_reason & 0xFFFFU);
 
 	/* Log details for exit */
-	pr_dbg("Exit Reason: 0x%016llx ", vcpu->arch_vcpu.exit_reason);
+	pr_dbg("Exit Reason: 0x%016llx ", vcpu->arch.exit_reason);
 
 	/* Ensure exit reason is within dispatch table */
 	if (basic_exit_reason >= ARRAY_SIZE(dispatch_table)) {
 		pr_err("Invalid Exit Reason: 0x%016llx ",
-				vcpu->arch_vcpu.exit_reason);
+				vcpu->arch.exit_reason);
 		return -EINVAL;
 	}
 
@@ -208,7 +208,7 @@ int vmexit_handler(struct acrn_vcpu *vcpu)
 	 */
 	if (dispatch->need_exit_qualification != 0U) {
 		/* Get exit qualification */
-		vcpu->arch_vcpu.exit_qualification =
+		vcpu->arch.exit_qualification =
 		    exec_vmread(VMX_EXIT_QUALIFICATION);
 	}
 
@@ -232,12 +232,12 @@ static int unhandled_vmexit_handler(struct acrn_vcpu *vcpu)
 	pr_fatal("Error: Unhandled VM exit condition from guest at 0x%016llx ",
 			exec_vmread(VMX_GUEST_RIP));
 
-	pr_fatal("Exit Reason: 0x%016llx ", vcpu->arch_vcpu.exit_reason);
+	pr_fatal("Exit Reason: 0x%016llx ", vcpu->arch.exit_reason);
 
 	pr_err("Exit qualification: 0x%016llx ",
 			exec_vmread(VMX_EXIT_QUALIFICATION));
 
-	TRACE_2L(TRACE_VMEXIT_UNHANDLED, vcpu->arch_vcpu.exit_reason, 0UL);
+	TRACE_2L(TRACE_VMEXIT_UNHANDLED, vcpu->arch.exit_reason, 0UL);
 
 	return 0;
 }
@@ -268,7 +268,7 @@ int cr_access_vmexit_handler(struct acrn_vcpu *vcpu)
 	uint32_t idx;
 	uint64_t exit_qual;
 
-	exit_qual = vcpu->arch_vcpu.exit_qualification;
+	exit_qual = vcpu->arch.exit_qualification;
 	idx = (uint32_t)vm_exit_cr_access_reg_idx(exit_qual);
 
 	ASSERT((idx <= 15U), "index out of range");
@@ -328,7 +328,7 @@ static int xsetbv_vmexit_handler(struct acrn_vcpu *vcpu)
 		return 0;
 	}
 
-	idx = vcpu->arch_vcpu.cur_context;
+	idx = vcpu->arch.cur_context;
 	if (idx >= NR_WORLD) {
 		return -1;
 	}

@@ -102,7 +102,7 @@ void exec_vmxon_instr(uint16_t pcpu_id)
 	vmxon_region_pa = hva2hpa(vmxon_region_va);
 	exec_vmxon(&vmxon_region_pa);
 
-	vmcs_pa = hva2hpa(vcpu->arch_vcpu.vmcs);
+	vmcs_pa = hva2hpa(vcpu->arch.vmcs);
 	exec_vmptrld(&vmcs_pa);
 }
 
@@ -112,7 +112,7 @@ void vmx_off(uint16_t pcpu_id)
 	struct acrn_vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
 	uint64_t vmcs_pa;
 
-	vmcs_pa = hva2hpa(vcpu->arch_vcpu.vmcs);
+	vmcs_pa = hva2hpa(vcpu->arch.vmcs);
 	exec_vmclear((void *)&vmcs_pa);
 
 	asm volatile ("vmxoff" : : : "memory");
@@ -549,7 +549,7 @@ static void init_guest_vmx(struct acrn_vcpu *vcpu, uint64_t cr0, uint64_t cr3,
 	uint64_t cr4)
 {
 	struct cpu_context *ctx =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+		&vcpu->arch.contexts[vcpu->arch.cur_context];
 	struct ext_context *ectx = &ctx->ext_ctx;
 
 	vcpu_set_cr4(vcpu, cr4);
@@ -593,7 +593,7 @@ static void init_guest_vmx(struct acrn_vcpu *vcpu, uint64_t cr0, uint64_t cr3,
 static void init_guest_state(struct acrn_vcpu *vcpu)
 {
 	struct cpu_context *ctx =
-		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
+		&vcpu->arch.contexts[vcpu->arch.cur_context];
 
 	init_guest_vmx(vcpu, ctx->run_ctx.cr0, ctx->ext_ctx.cr3,
 			ctx->run_ctx.cr4 & ~CR4_VMXE);
@@ -825,7 +825,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 			VMX_PROCBASED_CTLS2_UNRESTRICT|
 			VMX_PROCBASED_CTLS2_VAPIC_REGS);
 
-	if (vcpu->arch_vcpu.vpid != 0U) {
+	if (vcpu->arch.vpid != 0U) {
 		value32 |= VMX_PROCBASED_CTLS2_VPID;
 	} else {
 		value32 &= ~VMX_PROCBASED_CTLS2_VPID;
@@ -1038,10 +1038,10 @@ void init_vmcs(struct acrn_vcpu *vcpu)
 
 	/* Obtain the VM Rev ID from HW and populate VMCS page with it */
 	vmx_rev_id = msr_read(MSR_IA32_VMX_BASIC);
-	(void)memcpy_s(vcpu->arch_vcpu.vmcs, 4U, (void *)&vmx_rev_id, 4U);
+	(void)memcpy_s(vcpu->arch.vmcs, 4U, (void *)&vmx_rev_id, 4U);
 
 	/* Execute VMCLEAR on current VMCS */
-	vmcs_pa = hva2hpa(vcpu->arch_vcpu.vmcs);
+	vmcs_pa = hva2hpa(vcpu->arch.vmcs);
 	exec_vmclear((void *)&vmcs_pa);
 
 	/* Load VMCS pointer */

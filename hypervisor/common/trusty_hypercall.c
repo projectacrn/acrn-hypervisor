@@ -14,7 +14,7 @@
  */
 int32_t hcall_world_switch(struct acrn_vcpu *vcpu)
 {
-	int32_t next_world_id = !(vcpu->arch_vcpu.cur_context);
+	int32_t next_world_id = !(vcpu->arch.cur_context);
 
 	if (next_world_id >= NR_WORLD) {
 		dev_dbg(ACRN_DBG_TRUSTY_HYCALL,
@@ -56,7 +56,7 @@ int32_t hcall_initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param)
 		return -EPERM;
 	}
 
-	if (vcpu->arch_vcpu.cur_context != NORMAL_WORLD) {
+	if (vcpu->arch.cur_context != NORMAL_WORLD) {
 		dev_dbg(ACRN_DBG_TRUSTY_HYCALL,
 			"%s, must initialize Trusty from Normal World!\n",
 			__func__);

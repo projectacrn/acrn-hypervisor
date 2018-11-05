@@ -261,7 +261,7 @@ int rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	}
 	case MSR_IA32_TSC_AUX:
 	{
-		v = vcpu->arch_vcpu.msr_tsc_aux;
+		v = vcpu->arch.msr_tsc_aux;
 		break;
 	}
 	case MSR_IA32_APIC_BASE:
@@ -398,7 +398,7 @@ int wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	}
 	case MSR_IA32_TSC_AUX:
 	{
-		vcpu->arch_vcpu.msr_tsc_aux = v;
+		vcpu->arch.msr_tsc_aux = v;
 		break;
 	}
 	case MSR_IA32_APIC_BASE:

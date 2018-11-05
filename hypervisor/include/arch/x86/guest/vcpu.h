@@ -176,7 +176,7 @@ struct cpu_context {
 	struct ext_context ext_ctx;
 };
 
-struct vcpu_arch {
+struct acrn_vcpu_arch {
 	/* vmcs region for this vcpu, MUST be 4KB-aligned */
 	uint8_t vmcs[CPU_PAGE_SIZE];
 	/* per vcpu lapic */
@@ -222,7 +222,7 @@ struct vcpu_arch {
 struct vm;
 struct acrn_vcpu {
 	/* Architecture specific definitions for this VCPU */
-	struct vcpu_arch arch_vcpu;
+	struct acrn_vcpu_arch arch;
 	uint16_t pcpu_id;	/* Physical CPU ID of this VCPU */
 	uint16_t vcpu_id;	/* virtual identifier for VCPU */
 	struct vm *vm;		/* Reference to the VM this VCPU belongs to */
@@ -272,13 +272,13 @@ static inline bool is_vcpu_bsp(const struct acrn_vcpu *vcpu)
 /* do not update Guest RIP for next VM Enter */
 static inline void vcpu_retain_rip(struct acrn_vcpu *vcpu)
 {
-	(vcpu)->arch_vcpu.inst_len = 0U;
+	(vcpu)->arch.inst_len = 0U;
 }
 
 static inline struct acrn_vlapic *
 vcpu_vlapic(struct acrn_vcpu *vcpu)
 {
-	return &(vcpu->arch_vcpu.vlapic);
+	return &(vcpu->arch.vlapic);
 }
 
 /* External Interfaces */
