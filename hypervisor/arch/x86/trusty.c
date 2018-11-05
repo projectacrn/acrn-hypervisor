@@ -181,7 +181,7 @@ void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
 
 }
 
-static void save_world_ctx(struct vcpu *vcpu, struct ext_context *ext_ctx)
+static void save_world_ctx(struct acrn_vcpu *vcpu, struct ext_context *ext_ctx)
 {
 	/* cache on-demand run_context for efer/rflags/rsp/rip */
 	(void)vcpu_get_efer(vcpu);
@@ -235,7 +235,7 @@ static void save_world_ctx(struct vcpu *vcpu, struct ext_context *ext_ctx)
 			: : "r" (ext_ctx->fxstore_guest_area) : "memory");
 }
 
-static void load_world_ctx(struct vcpu *vcpu, const struct ext_context *ext_ctx)
+static void load_world_ctx(struct acrn_vcpu *vcpu, const struct ext_context *ext_ctx)
 {
 	/* mark to update on-demand run_context for efer/rflags/rsp */
 	bitmap_set_lock(CPU_REG_EFER, &vcpu->reg_updated);
@@ -291,7 +291,7 @@ static void copy_smc_param(const struct run_context *prev_ctx,
 	next_ctx->guest_cpu_regs.regs.rbx = prev_ctx->guest_cpu_regs.regs.rbx;
 }
 
-void switch_world(struct vcpu *vcpu, int next_world)
+void switch_world(struct acrn_vcpu *vcpu, int next_world)
 {
 	struct vcpu_arch *arch_vcpu = &vcpu->arch_vcpu;
 
@@ -327,7 +327,7 @@ void switch_world(struct vcpu *vcpu, int next_world)
 /* Put key_info and trusty_startup_param in the first Page of Trusty
  * runtime memory
  */
-static bool setup_trusty_info(struct vcpu *vcpu,
+static bool setup_trusty_info(struct acrn_vcpu *vcpu,
 			uint32_t mem_size, uint64_t mem_base_hpa)
 {
 	uint32_t i;
@@ -381,7 +381,7 @@ static bool setup_trusty_info(struct vcpu *vcpu,
  * RIP, RSP and RDI are specified below, other GP registers are leaved
  * as 0.
  */
-static bool init_secure_world_env(struct vcpu *vcpu,
+static bool init_secure_world_env(struct acrn_vcpu *vcpu,
 				uint64_t entry_gpa,
 				uint64_t base_hpa,
 				uint32_t size)
@@ -398,7 +398,7 @@ static bool init_secure_world_env(struct vcpu *vcpu,
 	return setup_trusty_info(vcpu, size, base_hpa);
 }
 
-bool initialize_trusty(struct vcpu *vcpu, uint64_t param)
+bool initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param)
 {
 	uint64_t trusty_entry_gpa, trusty_base_gpa, trusty_base_hpa;
 	uint32_t trusty_mem_size;
@@ -477,7 +477,7 @@ void trusty_set_dseed(const void *dseed, uint8_t dseed_num)
 			dseed, sizeof(struct seed_info) * dseed_num);
 }
 
-void save_sworld_context(struct vcpu *vcpu)
+void save_sworld_context(struct acrn_vcpu *vcpu)
 {
 	(void)memcpy_s(&vcpu->vm->sworld_snapshot,
 			sizeof(struct cpu_context),
@@ -485,7 +485,7 @@ void save_sworld_context(struct vcpu *vcpu)
 			sizeof(struct cpu_context));
 }
 
-void restore_sworld_context(struct vcpu *vcpu)
+void restore_sworld_context(struct acrn_vcpu *vcpu)
 {
 	struct secure_world_control *sworld_ctl =
 		&vcpu->vm->sworld_control;

@@ -168,7 +168,7 @@ void flush_vpid_global(void)
 	local_invvpid(VMX_VPID_TYPE_ALL_CONTEXT, 0U, 0UL);
 }
 
-void invept(const struct vcpu *vcpu)
+void invept(const struct acrn_vcpu *vcpu)
 {
 	struct invept_desc desc = {0};
 

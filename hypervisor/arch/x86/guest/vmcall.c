@@ -12,7 +12,7 @@
  * This function should always return 0 since we shouldn't
  * deal with hypercall error in hypervisor.
  */
-int vmcall_vmexit_handler(struct vcpu *vcpu)
+int vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int32_t ret = -EACCES;
 	struct vm *vm = vcpu->vm;

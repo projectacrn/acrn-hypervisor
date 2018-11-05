@@ -49,7 +49,7 @@ static const uint16_t exception_type[32] = {
 	[31] = VMX_INT_TYPE_HW_EXP
 };
 
-static bool is_guest_irq_enabled(struct vcpu *vcpu)
+static bool is_guest_irq_enabled(struct acrn_vcpu *vcpu)
 {
 	uint64_t guest_rflags, guest_state;
 	bool status = false;
@@ -70,7 +70,7 @@ static bool is_guest_irq_enabled(struct vcpu *vcpu)
 	return status;
 }
 
-static bool vcpu_pending_request(struct vcpu *vcpu)
+static bool vcpu_pending_request(struct acrn_vcpu *vcpu)
 {
 	struct acrn_vlapic *vlapic;
 	uint32_t vector = 0U;
@@ -91,7 +91,7 @@ static bool vcpu_pending_request(struct vcpu *vcpu)
 	return vcpu->arch_vcpu.pending_req != 0UL;
 }
 
-void vcpu_make_request(struct vcpu *vcpu, uint16_t eventid)
+void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid)
 {
 	bitmap_set_lock(eventid, &vcpu->arch_vcpu.pending_req);
 	/*
@@ -108,7 +108,7 @@ void vcpu_make_request(struct vcpu *vcpu, uint16_t eventid)
 	}
 }
 
-static int vcpu_inject_vlapic_int(struct vcpu *vcpu)
+static int vcpu_inject_vlapic_int(struct acrn_vcpu *vcpu)
 {
 	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
 	uint32_t vector = 0U;
@@ -148,10 +148,10 @@ static int vcpu_inject_vlapic_int(struct vcpu *vcpu)
 	return 0;
 }
 
-static int vcpu_do_pending_extint(const struct vcpu *vcpu)
+static int vcpu_do_pending_extint(const struct acrn_vcpu *vcpu)
 {
 	struct vm *vm;
-	struct vcpu *primary;
+	struct acrn_vcpu *primary;
 	uint32_t vector;
 
 	vm = vcpu->vm;
@@ -205,7 +205,7 @@ static int get_excep_class(uint32_t vector)
 	}
 }
 
-int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector, uint32_t err_code)
+int vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector, uint32_t err_code)
 {
 	struct vcpu_arch *arch_vcpu = &vcpu->arch_vcpu;
 	/* VECTOR_INVALID is also greater than 32 */
@@ -250,7 +250,7 @@ int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector, uint32_t err_code)
 	return 0;
 }
 
-static void vcpu_inject_exception(struct vcpu *vcpu, uint32_t vector)
+static void vcpu_inject_exception(struct acrn_vcpu *vcpu, uint32_t vector)
 {
 	if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U) {
 		exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE,
@@ -266,7 +266,7 @@ static void vcpu_inject_exception(struct vcpu *vcpu, uint32_t vector)
 	vcpu_retain_rip(vcpu);
 }
 
-static int vcpu_inject_hi_exception(struct vcpu *vcpu)
+static int vcpu_inject_hi_exception(struct acrn_vcpu *vcpu)
 {
 	uint32_t vector = vcpu->arch_vcpu.exception_info.exception;
 
@@ -278,7 +278,7 @@ static int vcpu_inject_hi_exception(struct vcpu *vcpu)
 	return 0;
 }
 
-static int vcpu_inject_lo_exception(struct vcpu *vcpu)
+static int vcpu_inject_lo_exception(struct acrn_vcpu *vcpu)
 {
 	uint32_t vector = vcpu->arch_vcpu.exception_info.exception;
 
@@ -292,26 +292,26 @@ static int vcpu_inject_lo_exception(struct vcpu *vcpu)
 }
 
 /* Inject external interrupt to guest */
-void vcpu_inject_extint(struct vcpu *vcpu)
+void vcpu_inject_extint(struct acrn_vcpu *vcpu)
 {
 	vcpu_make_request(vcpu, ACRN_REQUEST_EXTINT);
 }
 
 /* Inject NMI to guest */
-void vcpu_inject_nmi(struct vcpu *vcpu)
+void vcpu_inject_nmi(struct acrn_vcpu *vcpu)
 {
 	vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
 }
 
 /* Inject general protection exception(#GP) to guest */
-void vcpu_inject_gp(struct vcpu *vcpu, uint32_t err_code)
+void vcpu_inject_gp(struct acrn_vcpu *vcpu, uint32_t err_code)
 {
 	(void)vcpu_queue_exception(vcpu, IDT_GP, err_code);
 	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
 }
 
 /* Inject page fault exception(#PF) to guest */
-void vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code)
+void vcpu_inject_pf(struct acrn_vcpu *vcpu, uint64_t addr, uint32_t err_code)
 {
 	vcpu_set_cr2(vcpu, addr);
 	(void)vcpu_queue_exception(vcpu, IDT_PF, err_code);
@@ -319,27 +319,27 @@ void vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code)
 }
 
 /* Inject invalid opcode exception(#UD) to guest */
-void vcpu_inject_ud(struct vcpu *vcpu)
+void vcpu_inject_ud(struct acrn_vcpu *vcpu)
 {
 	(void)vcpu_queue_exception(vcpu, IDT_UD, 0);
 	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
 }
 
 /* Inject alignment check exception(#AC) to guest */
-void vcpu_inject_ac(struct vcpu *vcpu)
+void vcpu_inject_ac(struct acrn_vcpu *vcpu)
 {
 	(void)vcpu_queue_exception(vcpu, IDT_AC, 0);
 	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
 }
 
 /* Inject stack fault exception(#SS) to guest */
-void vcpu_inject_ss(struct vcpu *vcpu)
+void vcpu_inject_ss(struct acrn_vcpu *vcpu)
 {
 	(void)vcpu_queue_exception(vcpu, IDT_SS, 0);
 	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
 }
 
-int interrupt_window_vmexit_handler(struct vcpu *vcpu)
+int interrupt_window_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	uint32_t value32;
 
@@ -357,7 +357,7 @@ int interrupt_window_vmexit_handler(struct vcpu *vcpu)
 	return 0;
 }
 
-int external_interrupt_vmexit_handler(struct vcpu *vcpu)
+int external_interrupt_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	uint32_t intr_info;
 	struct intr_excp_ctx ctx;
@@ -389,7 +389,7 @@ int external_interrupt_vmexit_handler(struct vcpu *vcpu)
 	return 0;
 }
 
-int acrn_handle_pending_request(struct vcpu *vcpu)
+int acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 {
 	int ret = 0;
 	uint32_t tmp;
@@ -544,7 +544,7 @@ INTR_WIN:
 	return ret;
 }
 
-void cancel_event_injection(struct vcpu *vcpu)
+void cancel_event_injection(struct acrn_vcpu *vcpu)
 {
 	uint32_t intinfo;
 
@@ -572,7 +572,7 @@ void cancel_event_injection(struct vcpu *vcpu)
 /*
  * @pre vcpu != NULL
  */
-int exception_vmexit_handler(struct vcpu *vcpu)
+int exception_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	uint32_t intinfo, int_err_code = 0U;
 	uint32_t exception_vector = VECTOR_INVALID;

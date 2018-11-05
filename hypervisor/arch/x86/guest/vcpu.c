@@ -10,7 +10,7 @@
 
 vm_sw_loader_t vm_sw_loader;
 
-inline uint64_t vcpu_get_gpreg(const struct vcpu *vcpu, uint32_t reg)
+inline uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)
 {
 	const struct run_context *ctx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx;
@@ -18,7 +18,7 @@ inline uint64_t vcpu_get_gpreg(const struct vcpu *vcpu, uint32_t reg)
 	return ctx->guest_cpu_regs.longs[reg];
 }
 
-inline void vcpu_set_gpreg(struct vcpu *vcpu, uint32_t reg, uint64_t val)
+inline void vcpu_set_gpreg(struct acrn_vcpu *vcpu, uint32_t reg, uint64_t val)
 {
 	struct run_context *ctx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx;
@@ -26,7 +26,7 @@ inline void vcpu_set_gpreg(struct vcpu *vcpu, uint32_t reg, uint64_t val)
 	ctx->guest_cpu_regs.longs[reg] = val;
 }
 
-inline uint64_t vcpu_get_rip(struct vcpu *vcpu)
+inline uint64_t vcpu_get_rip(struct acrn_vcpu *vcpu)
 {
 	struct run_context *ctx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx;
@@ -37,13 +37,13 @@ inline uint64_t vcpu_get_rip(struct vcpu *vcpu)
 	return ctx->rip;
 }
 
-inline void vcpu_set_rip(struct vcpu *vcpu, uint64_t val)
+inline void vcpu_set_rip(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx.rip = val;
 	bitmap_set_lock(CPU_REG_RIP, &vcpu->reg_updated);
 }
 
-inline uint64_t vcpu_get_rsp(struct vcpu *vcpu)
+inline uint64_t vcpu_get_rsp(struct acrn_vcpu *vcpu)
 {
 	struct run_context *ctx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx;
@@ -51,7 +51,7 @@ inline uint64_t vcpu_get_rsp(struct vcpu *vcpu)
 	return ctx->guest_cpu_regs.regs.rsp;
 }
 
-inline void vcpu_set_rsp(struct vcpu *vcpu, uint64_t val)
+inline void vcpu_set_rsp(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	struct run_context *ctx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx;
@@ -60,7 +60,7 @@ inline void vcpu_set_rsp(struct vcpu *vcpu, uint64_t val)
 	bitmap_set_lock(CPU_REG_RSP, &vcpu->reg_updated);
 }
 
-inline uint64_t vcpu_get_efer(struct vcpu *vcpu)
+inline uint64_t vcpu_get_efer(struct acrn_vcpu *vcpu)
 {
 	struct run_context *ctx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx;
@@ -71,14 +71,14 @@ inline uint64_t vcpu_get_efer(struct vcpu *vcpu)
 	return ctx->ia32_efer;
 }
 
-inline void vcpu_set_efer(struct vcpu *vcpu, uint64_t val)
+inline void vcpu_set_efer(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx.ia32_efer
 		= val;
 	bitmap_set_lock(CPU_REG_EFER, &vcpu->reg_updated);
 }
 
-inline uint64_t vcpu_get_rflags(struct vcpu *vcpu)
+inline uint64_t vcpu_get_rflags(struct acrn_vcpu *vcpu)
 {
 	struct run_context *ctx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx;
@@ -90,14 +90,14 @@ inline uint64_t vcpu_get_rflags(struct vcpu *vcpu)
 	return ctx->rflags;
 }
 
-inline void vcpu_set_rflags(struct vcpu *vcpu, uint64_t val)
+inline void vcpu_set_rflags(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx.rflags =
 		val;
 	bitmap_set_lock(CPU_REG_RFLAGS, &vcpu->reg_updated);
 }
 
-inline uint64_t vcpu_get_cr0(struct vcpu *vcpu)
+inline uint64_t vcpu_get_cr0(struct acrn_vcpu *vcpu)
 {
 	uint64_t mask;
 	struct run_context *ctx =
@@ -111,23 +111,23 @@ inline uint64_t vcpu_get_cr0(struct vcpu *vcpu)
 	return ctx->cr0;
 }
 
-inline void vcpu_set_cr0(struct vcpu *vcpu, uint64_t val)
+inline void vcpu_set_cr0(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vmx_write_cr0(vcpu, val);
 }
 
-inline uint64_t vcpu_get_cr2(struct vcpu *vcpu)
+inline uint64_t vcpu_get_cr2(struct acrn_vcpu *vcpu)
 {
 	return vcpu->
 		arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx.cr2;
 }
 
-inline void vcpu_set_cr2(struct vcpu *vcpu, uint64_t val)
+inline void vcpu_set_cr2(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].run_ctx.cr2 = val;
 }
 
-inline uint64_t vcpu_get_cr4(struct vcpu *vcpu)
+inline uint64_t vcpu_get_cr4(struct acrn_vcpu *vcpu)
 {
 	uint64_t mask;
 	struct run_context *ctx =
@@ -141,29 +141,29 @@ inline uint64_t vcpu_get_cr4(struct vcpu *vcpu)
 	return ctx->cr4;
 }
 
-inline void vcpu_set_cr4(struct vcpu *vcpu, uint64_t val)
+inline void vcpu_set_cr4(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vmx_write_cr4(vcpu, val);
 }
 
-inline uint64_t vcpu_get_pat_ext(const struct vcpu *vcpu)
+inline uint64_t vcpu_get_pat_ext(const struct acrn_vcpu *vcpu)
 {
 	return vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].
 		ext_ctx.ia32_pat;
 }
 
-inline void vcpu_set_pat_ext(struct vcpu *vcpu, uint64_t val)
+inline void vcpu_set_pat_ext(struct acrn_vcpu *vcpu, uint64_t val)
 {
 	vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context].ext_ctx.ia32_pat
 		= val;
 }
 
-struct vcpu *get_ever_run_vcpu(uint16_t pcpu_id)
+struct acrn_vcpu *get_ever_run_vcpu(uint16_t pcpu_id)
 {
 	return per_cpu(ever_run_vcpu, pcpu_id);
 }
 
-static void set_vcpu_mode(struct vcpu *vcpu, uint32_t cs_attr, uint64_t ia32_efer,
+static void set_vcpu_mode(struct acrn_vcpu *vcpu, uint32_t cs_attr, uint64_t ia32_efer,
 		uint64_t cr0)
 {
 	if (ia32_efer & MSR_IA32_EFER_LMA_BIT) {
@@ -178,7 +178,7 @@ static void set_vcpu_mode(struct vcpu *vcpu, uint32_t cs_attr, uint64_t ia32_efe
 	}
 }
 
-void set_vcpu_regs(struct vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs)
+void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs)
 {
 	struct ext_context *ectx;
 	struct run_context *ctx;
@@ -280,12 +280,12 @@ static struct acrn_vcpu_regs realmode_init_regs = {
 	.cr4 = 0UL,
 };
 
-void reset_vcpu_regs(struct vcpu *vcpu)
+void reset_vcpu_regs(struct acrn_vcpu *vcpu)
 {
 	set_vcpu_regs(vcpu, &realmode_init_regs);
 }
 
-void set_ap_entry(struct vcpu *vcpu, uint64_t entry)
+void set_ap_entry(struct acrn_vcpu *vcpu, uint64_t entry)
 {
 	struct ext_context *ectx;
 
@@ -311,9 +311,9 @@ void set_ap_entry(struct vcpu *vcpu, uint64_t entry)
  *     for physical CPU 1 : vcpu->pcpu_id = 1, vcpu->vcpu_id = 1, vmid = 1;
  *
  ***********************************************************************/
-int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
+int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct acrn_vcpu **rtn_vcpu_handle)
 {
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 	uint16_t vcpu_id;
 
 	pr_info("Creating VCPU working on PCPU%hu", pcpu_id);
@@ -329,7 +329,7 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 	}
 	/* Allocate memory for VCPU */
 	vcpu = &(vm->hw.vcpu_array[vcpu_id]);
-	(void)memset((void *)vcpu, 0U, sizeof(struct vcpu));
+	(void)memset((void *)vcpu, 0U, sizeof(struct acrn_vcpu));
 
 	/* Initialize CPU ID for this VCPU */
 	vcpu->vcpu_id = vcpu_id;
@@ -387,7 +387,7 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle)
 /*
  *  @pre vcpu != NULL
  */
-int run_vcpu(struct vcpu *vcpu)
+int run_vcpu(struct acrn_vcpu *vcpu)
 {
 	uint32_t instlen, cs_attr;
 	uint64_t rip, ia32_efer, cr0;
@@ -487,7 +487,7 @@ int run_vcpu(struct vcpu *vcpu)
 	return status;
 }
 
-int shutdown_vcpu(__unused struct vcpu *vcpu)
+int shutdown_vcpu(__unused struct acrn_vcpu *vcpu)
 {
 	/* TODO : Implement VCPU shutdown sequence */
 
@@ -497,7 +497,7 @@ int shutdown_vcpu(__unused struct vcpu *vcpu)
 /*
  *  @pre vcpu != NULL
  */
-void offline_vcpu(struct vcpu *vcpu)
+void offline_vcpu(struct acrn_vcpu *vcpu)
 {
 	vlapic_free(vcpu);
 	per_cpu(ever_run_vcpu, vcpu->pcpu_id) = NULL;
@@ -508,7 +508,7 @@ void offline_vcpu(struct vcpu *vcpu)
 /* NOTE:
  * vcpu should be paused before call this function.
  */
-void reset_vcpu(struct vcpu *vcpu)
+void reset_vcpu(struct acrn_vcpu *vcpu)
 {
 	int i;
 	struct acrn_vlapic *vlapic;
@@ -546,7 +546,7 @@ void reset_vcpu(struct vcpu *vcpu)
 	reset_vcpu_regs(vcpu);
 }
 
-void pause_vcpu(struct vcpu *vcpu, enum vcpu_state new_state)
+void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 {
 	uint16_t pcpu_id = get_cpu_id();
 
@@ -572,7 +572,7 @@ void pause_vcpu(struct vcpu *vcpu, enum vcpu_state new_state)
 	}
 }
 
-void resume_vcpu(struct vcpu *vcpu)
+void resume_vcpu(struct acrn_vcpu *vcpu)
 {
 	pr_dbg("vcpu%hu resumed", vcpu->vcpu_id);
 
@@ -586,7 +586,7 @@ void resume_vcpu(struct vcpu *vcpu)
 	release_schedule_lock(vcpu->pcpu_id);
 }
 
-void schedule_vcpu(struct vcpu *vcpu)
+void schedule_vcpu(struct acrn_vcpu *vcpu)
 {
 	vcpu->state = VCPU_RUNNING;
 	pr_dbg("vcpu%hu scheduled", vcpu->vcpu_id);
@@ -601,7 +601,7 @@ void schedule_vcpu(struct vcpu *vcpu)
 int prepare_vcpu(struct vm *vm, uint16_t pcpu_id)
 {
 	int ret = 0;
-	struct vcpu *vcpu = NULL;
+	struct acrn_vcpu *vcpu = NULL;
 
 	ret = create_vcpu(pcpu_id, vm, &vcpu);
 	if (ret != 0) {
@@ -619,7 +619,7 @@ int prepare_vcpu(struct vm *vm, uint16_t pcpu_id)
 	return ret;
 }
 
-void request_vcpu_pre_work(struct vcpu *vcpu, uint16_t pre_work_id)
+void request_vcpu_pre_work(struct acrn_vcpu *vcpu, uint16_t pre_work_id)
 {
 	bitmap_set_lock(pre_work_id, &vcpu->pending_pre_work);
 }
@@ -633,7 +633,7 @@ void vcpu_dumpreg(void *data)
 	uint64_t i, fault_addr, tmp[DUMPREG_SP_SIZE];
 	uint32_t err_code = 0;
 	struct vcpu_dump *dump = data;
-	struct vcpu *vcpu = dump->vcpu;
+	struct acrn_vcpu *vcpu = dump->vcpu;
 	char *str = dump->str;
 	size_t len, size = dump->str_max;
 

@@ -16,7 +16,7 @@ static void fire_vhm_interrupt(void)
 	 * otherwise, send IPI hardcoded to BOOT_CPU_ID
 	 */
 	struct vm *vm0;
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 
 	vm0 = get_vm_from_vmid(0U);
 
@@ -63,7 +63,7 @@ static void acrn_print_request(uint16_t vcpu_id, const struct vhm_request *req)
  *
  * @pre vcpu != NULL && io_req != NULL
  */
-int32_t acrn_insert_request_wait(struct vcpu *vcpu, const struct io_request *io_req)
+int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request *io_req)
 {
 	union vhm_request_buffer *req_buf = NULL;
 	struct vhm_request *vhm_req;

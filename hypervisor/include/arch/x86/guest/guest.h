@@ -112,9 +112,9 @@ enum vm_paging_mode {
  */
 uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask);
 
-int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa, uint32_t *err_code);
+int gva2gpa(struct acrn_vcpu *vcpu, uint64_t gva, uint64_t *gpa, uint32_t *err_code);
 
-enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu);
+enum vm_paging_mode get_vcpu_paging_mode(struct acrn_vcpu *vcpu);
 
 void init_e820(void);
 void obtain_e820_mem_info(void);
@@ -135,9 +135,9 @@ extern const struct e820_entry e820_default_entries[NUM_E820_ENTRIES];
 extern uint32_t boot_regs[2];
 extern struct e820_mem_params e820_mem;
 
-int rdmsr_vmexit_handler(struct vcpu *vcpu);
-int wrmsr_vmexit_handler(struct vcpu *vcpu);
-void init_msr_emulation(struct vcpu *vcpu);
+int rdmsr_vmexit_handler(struct acrn_vcpu *vcpu);
+int wrmsr_vmexit_handler(struct acrn_vcpu *vcpu);
+void init_msr_emulation(struct acrn_vcpu *vcpu);
 
 struct run_context;
 int vmx_vmrun(struct run_context *context, int ops, int ibrs);
@@ -203,7 +203,7 @@ int copy_to_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
  * @param[out] err_code The page fault flags
  * @param[out] fault_addr The GVA address that causes a page fault
  */
-int copy_from_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
+int copy_from_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
 	uint32_t size, uint32_t *err_code, uint64_t *fault_addr);
 /**
  * @brief Copy data from HV address space to VM GVA space
@@ -218,7 +218,7 @@ int copy_from_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
  * @param[out] err_code The page fault flags
  * @param[out] fault_addr The GVA address that causes a page fault
  */
-int copy_to_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
+int copy_to_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
 	uint32_t size, uint32_t *err_code, uint64_t *fault_addr);
 extern struct acrn_vcpu_regs vm0_boot_context;
 /**

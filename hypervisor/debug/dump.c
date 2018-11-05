@@ -54,7 +54,7 @@ static const char *const excp_names[32] = {
  */
 struct intr_excp_ctx *crash_ctx;
 
-static void dump_guest_reg(struct vcpu *vcpu)
+static void dump_guest_reg(struct acrn_vcpu *vcpu)
 {
 	printf("\n\n================================================");
 	printf("================================\n\n");
@@ -101,7 +101,7 @@ static void dump_guest_reg(struct vcpu *vcpu)
 	printf("\r\n");
 }
 
-static void dump_guest_stack(struct vcpu *vcpu)
+static void dump_guest_stack(struct acrn_vcpu *vcpu)
 {
 	uint32_t i;
 	uint64_t tmp[DUMP_STACK_SIZE], fault_addr;
@@ -126,7 +126,7 @@ static void dump_guest_stack(struct vcpu *vcpu)
 	printf("\r\n");
 }
 
-static void show_guest_call_trace(struct vcpu *vcpu)
+static void show_guest_call_trace(struct acrn_vcpu *vcpu)
 {
 	uint64_t bp;
 	uint64_t count = 0UL;
@@ -170,7 +170,7 @@ static void show_guest_call_trace(struct vcpu *vcpu)
 
 static void dump_guest_context(uint16_t pcpu_id)
 {
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 
 	vcpu = per_cpu(vcpu, pcpu_id);
 	if (vcpu != NULL) {

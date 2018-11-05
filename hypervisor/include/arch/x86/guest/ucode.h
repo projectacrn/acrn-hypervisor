@@ -20,7 +20,7 @@ struct ucode_header {
 	uint32_t	reserved[3];
 };
 
-void acrn_update_ucode(struct vcpu *vcpu, uint64_t v);
+void acrn_update_ucode(struct acrn_vcpu *vcpu, uint64_t v);
 uint64_t get_microcode_version(void);
 
 #endif /* UCODE_H */

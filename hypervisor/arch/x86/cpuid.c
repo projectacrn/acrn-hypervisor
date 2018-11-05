@@ -6,7 +6,7 @@
 
 #include <hypervisor.h>
 
-static inline struct vcpuid_entry *find_vcpuid_entry(const struct vcpu *vcpu,
+static inline struct vcpuid_entry *find_vcpuid_entry(const struct acrn_vcpu *vcpu,
 					uint32_t leaf_arg, uint32_t subleaf)
 {
 	uint32_t i = 0U, nr, half;
@@ -293,7 +293,7 @@ int set_vcpuid_entries(struct vm *vm)
 	return 0;
 }
 
-void guest_cpuid(struct vcpu *vcpu,
+void guest_cpuid(struct acrn_vcpu *vcpu,
 		uint32_t *eax, uint32_t *ebx,
 		uint32_t *ecx, uint32_t *edx)
 {

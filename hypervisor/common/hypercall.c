@@ -30,7 +30,7 @@ bool is_hypercall_from_ring0(void)
  */
 int32_t hcall_sos_offline_cpu(struct vm *vm, uint64_t lapicid)
 {
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 	int i;
 
 	pr_info("sos offline cpu with lapicid %lld", lapicid);
@@ -198,7 +198,7 @@ int32_t hcall_set_vcpu_regs(struct vm *vm, uint16_t vmid, uint64_t param)
 {
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 	struct acrn_set_vcpu_regs vcpu_regs;
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 
 	if ((target_vm == NULL) || (param == 0U) || is_vm0(target_vm)) {
 		return -1;
@@ -326,7 +326,7 @@ int32_t hcall_set_ioreq_buffer(struct vm *vm, uint16_t vmid, uint64_t param)
 
 int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 {
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 	struct vm *target_vm = get_vm_from_vmid(vmid);
 
 	/* make sure we have set req_buf */

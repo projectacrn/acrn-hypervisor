@@ -405,7 +405,7 @@ int32_t hcall_vm_intr_monitor(struct vm *vm, uint16_t vmid, uint64_t param);
  * @return 0 on success, non-zero on error.
  */
 
-int32_t hcall_world_switch(struct vcpu *vcpu);
+int32_t hcall_world_switch(struct acrn_vcpu *vcpu);
 
 /**
  * @brief Initialize environment for Trusty-OS on a vCPU.
@@ -421,7 +421,7 @@ int32_t hcall_world_switch(struct vcpu *vcpu);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param);
+int32_t hcall_initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param);
 
 /**
  * @brief Save/Restore Context of Secure World.
@@ -430,7 +430,7 @@ int32_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int64_t hcall_save_restore_sworld_ctx(struct vcpu *vcpu);
+int64_t hcall_save_restore_sworld_ctx(struct acrn_vcpu *vcpu);
 
 /**
  * @}

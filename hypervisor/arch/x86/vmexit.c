@@ -12,8 +12,8 @@
  */
 #define NR_VMX_EXIT_REASONS	65U
 
-static int unhandled_vmexit_handler(struct vcpu *vcpu);
-static int xsetbv_vmexit_handler(struct vcpu *vcpu);
+static int unhandled_vmexit_handler(struct acrn_vcpu *vcpu);
+static int xsetbv_vmexit_handler(struct acrn_vcpu *vcpu);
 
 /* VM Dispatch table for Exit condition handling */
 static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
@@ -151,7 +151,7 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 		.handler = unhandled_vmexit_handler}
 };
 
-int vmexit_handler(struct vcpu *vcpu)
+int vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	struct vm_exit_dispatch *dispatch = NULL;
 	uint16_t basic_exit_reason;
@@ -227,7 +227,7 @@ int vmexit_handler(struct vcpu *vcpu)
 	return ret;
 }
 
-static int unhandled_vmexit_handler(struct vcpu *vcpu)
+static int unhandled_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	pr_fatal("Error: Unhandled VM exit condition from guest at 0x%016llx ",
 			exec_vmread(VMX_GUEST_RIP));
@@ -242,7 +242,7 @@ static int unhandled_vmexit_handler(struct vcpu *vcpu)
 	return 0;
 }
 
-int cpuid_vmexit_handler(struct vcpu *vcpu)
+int cpuid_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	uint64_t rax, rbx, rcx, rdx;
 
@@ -262,7 +262,7 @@ int cpuid_vmexit_handler(struct vcpu *vcpu)
 	return 0;
 }
 
-int cr_access_vmexit_handler(struct vcpu *vcpu)
+int cr_access_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	uint64_t reg;
 	uint32_t idx;
@@ -317,7 +317,7 @@ int cr_access_vmexit_handler(struct vcpu *vcpu)
  * XSETBV instruction set's the XCR0 that is used to tell for which
  * components states can be saved on a context switch using xsave.
  */
-static int xsetbv_vmexit_handler(struct vcpu *vcpu)
+static int xsetbv_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int idx;
 	uint64_t val64;

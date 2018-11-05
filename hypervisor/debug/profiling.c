@@ -842,7 +842,7 @@ int32_t profiling_msr_ops_all_cpus(struct vm *vm, uint64_t addr)
 int32_t profiling_vm_list_info(struct vm *vm, uint64_t addr)
 {
 	struct vm *tmp_vm;
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 	int32_t vm_idx;
 	uint16_t i, j;
 	struct profiling_vm_info_list vm_info_list;
@@ -1291,7 +1291,7 @@ void profiling_ipi_handler(__unused void *data)
 /*
  * Save the VCPU info on vmenter
  */
-void profiling_vmenter_handler(__unused struct vcpu *vcpu)
+void profiling_vmenter_handler(__unused struct acrn_vcpu *vcpu)
 {
 	if (((get_cpu_var(profiling_info.sep_state).pmu_state == PMU_RUNNING) &&
 			((sep_collection_switch &
@@ -1307,7 +1307,7 @@ void profiling_vmenter_handler(__unused struct vcpu *vcpu)
 /*
  * Save the VCPU info on vmexit
  */
-void profiling_vmexit_handler(struct vcpu *vcpu, uint64_t exit_reason)
+void profiling_vmexit_handler(struct acrn_vcpu *vcpu, uint64_t exit_reason)
 {
 	per_cpu(profiling_info.sep_state, vcpu->pcpu_id).total_vmexit_count++;
 

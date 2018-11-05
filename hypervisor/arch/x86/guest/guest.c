@@ -36,7 +36,7 @@ uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask)
 {
 	uint16_t vcpu_id;
 	uint64_t dmask = 0UL;
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 
 	for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
 		if (vdmask & (1U << vcpu_id)) {
@@ -48,7 +48,7 @@ uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask)
 	return dmask;
 }
 
-enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
+enum vm_paging_mode get_vcpu_paging_mode(struct acrn_vcpu *vcpu)
 {
 	enum vm_cpu_mode cpu_mode;
 
@@ -72,7 +72,7 @@ enum vm_paging_mode get_vcpu_paging_mode(struct vcpu *vcpu)
 
 /* TODO: Add code to check for Revserved bits, SMAP and PKE when do translation
  * during page walk */
-static int local_gva2gpa_common(struct vcpu *vcpu, const struct page_walk_info *pw_info,
+static int local_gva2gpa_common(struct acrn_vcpu *vcpu, const struct page_walk_info *pw_info,
 	uint64_t gva, uint64_t *gpa, uint32_t *err_code)
 {
 	uint32_t i;
@@ -219,7 +219,7 @@ out:
 	return ret;
 }
 
-static int local_gva2gpa_pae(struct vcpu *vcpu, struct page_walk_info *pw_info,
+static int local_gva2gpa_pae(struct acrn_vcpu *vcpu, struct page_walk_info *pw_info,
 	uint64_t gva, uint64_t *gpa, uint32_t *err_code)
 {
 	int index;
@@ -269,7 +269,7 @@ out:
  * - Return -EFAULT for paging fault, and refer to err_code for paging fault
  *   error code.
  */
-int gva2gpa(struct vcpu *vcpu, uint64_t gva, uint64_t *gpa,
+int gva2gpa(struct acrn_vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	uint32_t *err_code)
 {
 	enum vm_paging_mode pm = get_vcpu_paging_mode(vcpu);
@@ -385,7 +385,7 @@ static inline int copy_gpa(struct vm *vm, void *h_ptr_arg, uint64_t gpa_arg,
 /*
  * @pre vcpu != NULL && err_code != NULL
  */
-static inline int copy_gva(struct vcpu *vcpu, void *h_ptr_arg, uint64_t gva_arg,
+static inline int copy_gva(struct acrn_vcpu *vcpu, void *h_ptr_arg, uint64_t gva_arg,
 	uint32_t size_arg, uint32_t *err_code, uint64_t *fault_addr,
 	bool cp_from_vm)
 {
@@ -443,13 +443,13 @@ int copy_to_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
 	return copy_gpa(vm, h_ptr, gpa, size, 0);
 }
 
-int copy_from_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
+int copy_from_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
 	uint32_t size, uint32_t *err_code, uint64_t *fault_addr)
 {
 	return copy_gva(vcpu, h_ptr, gva, size, err_code, fault_addr, 1);
 }
 
-int copy_to_gva(struct vcpu *vcpu, void *h_ptr, uint64_t gva,
+int copy_to_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
 	uint32_t size, uint32_t *err_code, uint64_t *fault_addr)
 {
 	return copy_gva(vcpu, h_ptr, gva, size, err_code, fault_addr, 0);

@@ -28,7 +28,7 @@ uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 	uint64_t hpa = INVALID_HPA;
 	uint64_t *pgentry, pg_size = 0UL;
 	void *eptp;
-	struct vcpu *vcpu = vcpu_from_pid(vm, get_cpu_id());
+	struct acrn_vcpu *vcpu = vcpu_from_pid(vm, get_cpu_id());
 
 	if ((vcpu != NULL) && (vcpu->arch_vcpu.cur_context == SECURE_WORLD)) {
 		eptp = vm->arch_vm.sworld_eptp;
@@ -71,7 +71,7 @@ uint64_t vm0_hpa2gpa(uint64_t hpa)
 	return hpa;
 }
 
-int ept_violation_vmexit_handler(struct vcpu *vcpu)
+int ept_violation_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int status = -EINVAL, ret;
 	uint64_t exit_qual;
@@ -158,7 +158,7 @@ out:
 	return status;
 }
 
-int ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu)
+int ept_misconfig_vmexit_handler(__unused struct acrn_vcpu *vcpu)
 {
 	int status;
 
@@ -182,7 +182,7 @@ void ept_mr_add(struct vm *vm, uint64_t *pml4_page,
 	uint64_t hpa, uint64_t gpa, uint64_t size, uint64_t prot_orig)
 {
 	uint16_t i;
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 	uint64_t prot = prot_orig;
 
 	dev_dbg(ACRN_DBG_EPT, "%s, vm[%d] hpa: 0x%016llx gpa: 0x%016llx size: 0x%016llx prot: 0x%016x\n",
@@ -207,7 +207,7 @@ void ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
 		uint64_t gpa, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr)
 {
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 	uint16_t i;
 
 	dev_dbg(ACRN_DBG_EPT, "%s,vm[%d] gpa 0x%llx size 0x%llx\n", __func__, vm->vm_id, gpa, size);
@@ -223,7 +223,7 @@ void ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
  */
 void ept_mr_del(struct vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t size)
 {
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 	uint16_t i;
 
 	dev_dbg(ACRN_DBG_EPT, "%s,vm[%d] gpa 0x%llx size 0x%llx\n", __func__, vm->vm_id, gpa, size);

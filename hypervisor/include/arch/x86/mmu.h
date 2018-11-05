@@ -149,7 +149,7 @@ void flush_vpid_global(void);
  *
  * @return None
  */
-void invept(const struct vcpu *vcpu);
+void invept(const struct acrn_vcpu *vcpu);
 /**
  * @brief Host-physical address continous checking
  *
@@ -302,7 +302,7 @@ void ept_mr_del(struct vm *vm, uint64_t *pml4_page, uint64_t gpa,
  * @return -EINVAL - fail to handle the EPT violation
  * @return 0 - Success to handle the EPT violation
  */
-int ept_violation_vmexit_handler(struct vcpu *vcpu);
+int ept_violation_vmexit_handler(struct acrn_vcpu *vcpu);
 /**
  * @brief EPT misconfiguration handling
  *
@@ -311,7 +311,7 @@ int ept_violation_vmexit_handler(struct vcpu *vcpu);
  * @return -EINVAL - fail to handle the EPT misconfig
  * @return 0 - Success to handle the EPT misconfig
  */
-int ept_misconfig_vmexit_handler(__unused struct vcpu *vcpu);
+int ept_misconfig_vmexit_handler(__unused struct acrn_vcpu *vcpu);
 
 /**
  * @}

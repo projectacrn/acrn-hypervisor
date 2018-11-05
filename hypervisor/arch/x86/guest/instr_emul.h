@@ -190,10 +190,10 @@ struct vm_guest_paging {
 struct instr_emul_ctxt {
 	struct instr_emul_vie vie;
 	struct vm_guest_paging paging;
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 };
 
-int emulate_instruction(const struct vcpu *vcpu);
-int decode_instruction(struct vcpu *vcpu);
+int emulate_instruction(const struct acrn_vcpu *vcpu);
+int decode_instruction(struct acrn_vcpu *vcpu);
 
 #endif
