@@ -211,9 +211,6 @@ int shutdown_vm(struct acrn_vm *vm)
 	/* Free EPT allocated resources assigned to VM */
 	destroy_ept(vm);
 
-	/* TODO: De-initialize I/O Emulation */
-	free_io_emulation_resource(vm);
-
 	/* Free iommu */
 	if (vm->iommu != NULL) {
 		destroy_iommu_domain(vm->iommu);

@@ -131,7 +131,7 @@ void vpci_init(struct acrn_vm *vm)
 #endif
 
 	if ((vpci->ops->init != NULL) && (vpci->ops->init(vm) == 0)) {
-		register_io_emulation_handler(vm, &pci_cfg_range,
+		register_io_emulation_handler(vm, PCI_PIO_IDX, &pci_cfg_range,
 			&pci_cfg_io_read, &pci_cfg_io_write);
 		/* This is a tmp solution to avoid sos reboot failure, it need pass-thru IO port CF9 for Reset Control
 		 * register.

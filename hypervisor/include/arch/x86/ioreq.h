@@ -47,7 +47,7 @@ struct vm_io_range {
 	uint32_t flags;		/**< IO port attributes */
 };
 
-struct vm_io_handler;
+struct vm_io_handler_desc;
 struct acrn_vm;
 struct acrn_vcpu;
 
@@ -108,10 +108,6 @@ struct vm_io_handler_desc {
 	io_write_fn_t io_write;
 };
 
-struct vm_io_handler {
-	struct vm_io_handler *next;
-	struct vm_io_handler_desc desc;
-};
 
 #define IO_ATTR_R               0U
 #define IO_ATTR_RW              1U
@@ -188,13 +184,6 @@ int32_t pio_instr_vmexit_handler(struct acrn_vcpu *vcpu);
 void   setup_io_bitmap(struct acrn_vm *vm);
 
 /**
- * @brief Free I/O bitmaps and port I/O handlers of \p vm
- *
- * @param vm The VM whose I/O bitmaps and handlers are to be freed
- */
-void   free_io_emulation_resource(struct acrn_vm *vm);
-
-/**
  * @brief Allow a VM to access a port I/O range
  *
  * This API enables direct access from the given \p vm to the port I/O space
@@ -210,14 +199,15 @@ void   allow_guest_pio_access(struct acrn_vm *vm, uint16_t port_address,
 /**
  * @brief Register a port I/O handler
  *
- * @param vm The VM to which the port I/O handlers are registered
- * @param range The port I/O range that the given handlers can emulate
+ * @param vm      The VM to which the port I/O handlers are registered
+ * @param pio_idx The emulated port io index
+ * @param range   The emulated port io range
  * @param io_read_fn_ptr The handler for emulating reads from the given range
  * @param io_write_fn_ptr The handler for emulating writes to the given range
+ * @pre pio_idx < EMUL_PIO_IDX_MAX
  */
-void   register_io_emulation_handler(struct acrn_vm *vm, const struct vm_io_range *range,
-		io_read_fn_t io_read_fn_ptr,
-		io_write_fn_t io_write_fn_ptr);
+void   register_io_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
+		const struct vm_io_range *range, io_read_fn_t io_read_fn_ptr, io_write_fn_t io_write_fn_ptr);
 
 /**
  * @brief Register a MMIO handler

@@ -103,15 +103,7 @@ struct vm_arch {
 	void *tmp_pg_array;	/* Page array for tmp guest paging struct */
 	struct acrn_vioapic vioapic;	/* Virtual IOAPIC base address */
 	struct acrn_vpic vpic;      /* Virtual PIC */
-	/**
-	 * A link to the IO handler of this VM.
-	 * We only register io handle to this link
-	 * when create VM on sequences and ungister it when
-	 * destory VM. So there no need lock to prevent preempt.
-	 * Besides, there only a few io handlers now, we don't
-	 * need binary search temporary.
-	 */
-	struct vm_io_handler *io_handler;
+	struct vm_io_handler_desc emul_pio[EMUL_PIO_IDX_MAX];
 
 	/* reference to virtual platform to come here (as needed) */
 } __aligned(CPU_PAGE_SIZE);

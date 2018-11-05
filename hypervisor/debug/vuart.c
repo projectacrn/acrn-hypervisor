@@ -327,7 +327,7 @@ static void vuart_register_io_handler(struct acrn_vm *vm)
 		.len = 8U
 	};
 
-	register_io_emulation_handler(vm, &range, vuart_read, vuart_write);
+	register_io_emulation_handler(vm, UART_PIO_IDX, &range, vuart_read, vuart_write);
 }
 
 /**

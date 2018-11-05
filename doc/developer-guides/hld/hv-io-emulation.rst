@@ -316,9 +316,6 @@ I/O bitmaps and register or unregister I/O handlers:
 .. doxygenfunction:: allow_guest_pio_access
    :project: Project ACRN
 
-.. doxygenfunction:: free_io_emulation_resource
-   :project: Project ACRN
-
 .. doxygenfunction:: register_io_emulation_handler
    :project: Project ACRN
 
