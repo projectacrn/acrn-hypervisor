@@ -189,7 +189,7 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 		 */
 		i8259->intr_raised = true;
 		if (vpic->vm->wire_mode == VPIC_WIRE_INTR) {
-			struct vcpu *vcpu = vcpu_from_vid(vpic->vm, 0U);
+			struct acrn_vcpu *vcpu = vcpu_from_vid(vpic->vm, 0U);
 			vcpu_inject_extint(vcpu);
 		} else {
 			vlapic_set_local_intr(vpic->vm, BROADCAST_CPU_ID, APIC_LVT_LINT0);

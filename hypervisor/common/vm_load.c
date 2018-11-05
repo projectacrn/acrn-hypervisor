@@ -111,7 +111,7 @@ int general_sw_loader(struct vm *vm)
 	struct zero_page *zeropage;
 	struct sw_linux *sw_linux = &(vm->sw.linux_info);
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
-	struct vcpu *vcpu = get_primary_vcpu(vm);
+	struct acrn_vcpu *vcpu = get_primary_vcpu(vm);
 
 	pr_dbg("Loading guest to run-time location");
 

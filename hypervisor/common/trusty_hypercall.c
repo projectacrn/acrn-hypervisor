@@ -12,7 +12,7 @@
 /* this hcall is only come from trusty enabled vcpu itself, and cannot be
  * called from other vcpus
  */
-int32_t hcall_world_switch(struct vcpu *vcpu)
+int32_t hcall_world_switch(struct acrn_vcpu *vcpu)
 {
 	int32_t next_world_id = !(vcpu->arch_vcpu.cur_context);
 
@@ -42,7 +42,7 @@ int32_t hcall_world_switch(struct vcpu *vcpu)
 /* this hcall is only come from trusty enabled vcpu itself, and cannot be
  * called from other vcpus
  */
-int32_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param)
+int32_t hcall_initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param)
 {
 	if (vcpu->vm->sworld_control.flag.supported == 0UL) {
 		dev_dbg(ACRN_DBG_TRUSTY_HYCALL,
@@ -72,7 +72,7 @@ int32_t hcall_initialize_trusty(struct vcpu *vcpu, uint64_t param)
 	return 0;
 }
 
-int64_t hcall_save_restore_sworld_ctx(struct vcpu *vcpu)
+int64_t hcall_save_restore_sworld_ctx(struct acrn_vcpu *vcpu)
 {
 	struct vm *vm = vcpu->vm;
 

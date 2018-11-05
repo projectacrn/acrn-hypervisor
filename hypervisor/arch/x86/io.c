@@ -24,7 +24,7 @@ static void complete_ioreq(struct vhm_request *vhm_req)
  * request having transferred to the COMPLETE state.
  */
 static void
-emulate_pio_post(struct vcpu *vcpu, const struct io_request *io_req)
+emulate_pio_post(struct acrn_vcpu *vcpu, const struct io_request *io_req)
 {
 	const struct pio_request *pio_req = &io_req->reqs.pio;
 	uint64_t mask = 0xFFFFFFFFUL >> (32UL - 8UL * pio_req->size);
@@ -46,7 +46,7 @@ emulate_pio_post(struct vcpu *vcpu, const struct io_request *io_req)
  * @remark This function must be called after the VHM request corresponding to
  * \p vcpu being transferred to the COMPLETE state.
  */
-void dm_emulate_pio_post(struct vcpu *vcpu)
+void dm_emulate_pio_post(struct acrn_vcpu *vcpu)
 {
 	uint16_t cur = vcpu->vcpu_id;
 	union vhm_request_buffer *req_buf = NULL;
@@ -77,7 +77,7 @@ void dm_emulate_pio_post(struct vcpu *vcpu)
  * either a previous call to emulate_io() returning 0 or the corresponding VHM
  * request transferring to the COMPLETE state.
  */
-void emulate_mmio_post(const struct vcpu *vcpu, const struct io_request *io_req)
+void emulate_mmio_post(const struct acrn_vcpu *vcpu, const struct io_request *io_req)
 {
 	const struct mmio_request *mmio_req = &io_req->reqs.mmio;
 
@@ -97,7 +97,7 @@ void emulate_mmio_post(const struct vcpu *vcpu, const struct io_request *io_req)
  * @remark This function must be called after the VHM request corresponding to
  * \p vcpu being transferred to the COMPLETE state.
  */
-void dm_emulate_mmio_post(struct vcpu *vcpu)
+void dm_emulate_mmio_post(struct acrn_vcpu *vcpu)
 {
 	uint16_t cur = vcpu->vcpu_id;
 	struct io_request *io_req = &vcpu->req;
@@ -132,7 +132,7 @@ static void io_instr_dest_handler(struct io_request *io_req)
  *
  * @param vcpu The virtual CPU that triggers the MMIO access
  */
-void emulate_io_post(struct vcpu *vcpu)
+void emulate_io_post(struct acrn_vcpu *vcpu)
 {
 	union vhm_request_buffer *req_buf;
 	struct vhm_request *vhm_req;
@@ -191,7 +191,7 @@ void emulate_io_post(struct vcpu *vcpu)
  * @return -EIO    - The request spans multiple devices and cannot be emulated.
  */
 int32_t
-hv_emulate_pio(const struct vcpu *vcpu, struct io_request *io_req)
+hv_emulate_pio(const struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
 	int32_t status = -ENODEV;
 	uint16_t port, size;
@@ -249,7 +249,7 @@ hv_emulate_pio(const struct vcpu *vcpu, struct io_request *io_req)
  * @return -EIO    - The request spans multiple devices and cannot be emulated.
  */
 static int32_t
-hv_emulate_mmio(struct vcpu *vcpu, struct io_request *io_req)
+hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
 	int status = -ENODEV;
 	uint64_t address, size;
@@ -299,7 +299,7 @@ hv_emulate_mmio(struct vcpu *vcpu, struct io_request *io_req)
  * @return Negative on other errors during emulation.
  */
 int32_t
-emulate_io(struct vcpu *vcpu, struct io_request *io_req)
+emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
 	int32_t status;
 
@@ -357,7 +357,7 @@ emulate_io(struct vcpu *vcpu, struct io_request *io_req)
  *
  * @param vcpu The virtual CPU which triggers the VM exit on I/O instruction
  */
-int32_t pio_instr_vmexit_handler(struct vcpu *vcpu)
+int32_t pio_instr_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int32_t status;
 	uint64_t exit_qual;

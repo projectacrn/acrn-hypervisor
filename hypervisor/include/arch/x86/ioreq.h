@@ -49,7 +49,7 @@ struct vm_io_range {
 
 struct vm_io_handler;
 struct vm;
-struct vcpu;
+struct acrn_vcpu;
 
 typedef
 uint32_t (*io_read_fn_t)(struct vm *vm, uint16_t port, size_t size);
@@ -178,7 +178,7 @@ struct mem_io_node {
  *
  * @param vcpu The virtual CPU which triggers the VM exit on I/O instruction
  */
-int32_t pio_instr_vmexit_handler(struct vcpu *vcpu);
+int32_t pio_instr_vmexit_handler(struct acrn_vcpu *vcpu);
 
 /**
  * @brief Initialize the I/O bitmap for \p vm
@@ -259,7 +259,7 @@ void unregister_mmio_emulation_handler(struct vm *vm, uint64_t start,
  * either a previous call to emulate_io() returning 0 or the corresponding VHM
  * request transferring to the COMPLETE state.
  */
-void emulate_mmio_post(const struct vcpu *vcpu, const struct io_request *io_req);
+void emulate_mmio_post(const struct acrn_vcpu *vcpu, const struct io_request *io_req);
 
 /**
  * @brief Post-work of VHM requests for MMIO emulation
@@ -271,7 +271,7 @@ void emulate_mmio_post(const struct vcpu *vcpu, const struct io_request *io_req)
  * @remark This function must be called after the VHM request corresponding to
  * \p vcpu being transferred to the COMPLETE state.
  */
-void dm_emulate_mmio_post(struct vcpu *vcpu);
+void dm_emulate_mmio_post(struct acrn_vcpu *vcpu);
 
 /**
  * @brief Emulate \p io_req for \p vcpu
@@ -288,14 +288,14 @@ void dm_emulate_mmio_post(struct vcpu *vcpu);
  * @return -EINVAL - \p io_req has an invalid type.
  * @return Negative on other errors during emulation.
  */
-int32_t emulate_io(struct vcpu *vcpu, struct io_request *io_req);
+int32_t emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req);
 
 /**
  * @brief General post-work for all kinds of VHM requests for I/O emulation
  *
  * @param vcpu The virtual CPU that triggers the MMIO access
  */
-void emulate_io_post(struct vcpu *vcpu);
+void emulate_io_post(struct acrn_vcpu *vcpu);
 
 /**
  * @brief Deliver \p io_req to SOS and suspend \p vcpu till its completion
@@ -305,7 +305,7 @@ void emulate_io_post(struct vcpu *vcpu);
  *
  * @pre vcpu != NULL && io_req != NULL
  */
-int32_t acrn_insert_request_wait(struct vcpu *vcpu, const struct io_request *io_req);
+int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request *io_req);
 
 /**
  * @}

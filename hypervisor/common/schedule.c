@@ -60,7 +60,7 @@ void free_pcpu(uint16_t pcpu_id)
 	bitmap_clear_lock(pcpu_id, &pcpu_used_bitmap);
 }
 
-void add_vcpu_to_runqueue(struct vcpu *vcpu)
+void add_vcpu_to_runqueue(struct acrn_vcpu *vcpu)
 {
 	uint16_t pcpu_id = vcpu->pcpu_id;
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
@@ -72,7 +72,7 @@ void add_vcpu_to_runqueue(struct vcpu *vcpu)
 	spinlock_release(&ctx->runqueue_lock);
 }
 
-void remove_vcpu_from_runqueue(struct vcpu *vcpu)
+void remove_vcpu_from_runqueue(struct acrn_vcpu *vcpu)
 {
 	uint16_t pcpu_id = vcpu->pcpu_id;
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
@@ -82,21 +82,21 @@ void remove_vcpu_from_runqueue(struct vcpu *vcpu)
 	spinlock_release(&ctx->runqueue_lock);
 }
 
-static struct vcpu *select_next_vcpu(uint16_t pcpu_id)
+static struct acrn_vcpu *select_next_vcpu(uint16_t pcpu_id)
 {
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
-	struct vcpu *vcpu = NULL;
+	struct acrn_vcpu *vcpu = NULL;
 
 	spinlock_obtain(&ctx->runqueue_lock);
 	if (!list_empty(&ctx->runqueue)) {
-		vcpu = get_first_item(&ctx->runqueue, struct vcpu, run_list);
+		vcpu = get_first_item(&ctx->runqueue, struct acrn_vcpu, run_list);
 	}
 	spinlock_release(&ctx->runqueue_lock);
 
 	return vcpu;
 }
 
-void make_reschedule_request(const struct vcpu *vcpu)
+void make_reschedule_request(const struct acrn_vcpu *vcpu)
 {
 	struct sched_context *ctx = &per_cpu(sched_ctx, vcpu->pcpu_id);
 
@@ -113,7 +113,7 @@ int need_reschedule(uint16_t pcpu_id)
 	return bitmap_test_and_clear_lock(NEED_RESCHEDULE, &ctx->flags);
 }
 
-static void context_switch_out(struct vcpu *vcpu)
+static void context_switch_out(struct acrn_vcpu *vcpu)
 {
 	/* if it's idle thread, no action for switch out */
 	if (vcpu == NULL) {
@@ -131,7 +131,7 @@ static void context_switch_out(struct vcpu *vcpu)
 	 */
 }
 
-static void context_switch_in(struct vcpu *vcpu)
+static void context_switch_in(struct acrn_vcpu *vcpu)
 {
 	/* update current_vcpu */
 	get_cpu_var(sched_ctx).curr_vcpu = vcpu;
@@ -184,7 +184,7 @@ void default_idle(void)
 	}
 }
 
-static void switch_to(struct vcpu *curr)
+static void switch_to(struct acrn_vcpu *curr)
 {
 	/*
 	 * reset stack pointer here. Otherwise, schedule
@@ -224,8 +224,8 @@ static void switch_to(struct vcpu *curr)
 void schedule(void)
 {
 	uint16_t pcpu_id = get_cpu_id();
-	struct vcpu *next = NULL;
-	struct vcpu *prev = per_cpu(sched_ctx, pcpu_id).curr_vcpu;
+	struct acrn_vcpu *next = NULL;
+	struct acrn_vcpu *prev = per_cpu(sched_ctx, pcpu_id).curr_vcpu;
 
 	get_schedule_lock(pcpu_id);
 	next = select_next_vcpu(pcpu_id);

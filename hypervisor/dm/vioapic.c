@@ -183,7 +183,7 @@ vioapic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation)
  * configuration.
  */
 void
-vioapic_update_tmr(struct vcpu *vcpu)
+vioapic_update_tmr(struct acrn_vcpu *vcpu)
 {
 	struct acrn_vioapic *vioapic;
 	struct acrn_vlapic *vlapic;
@@ -370,7 +370,7 @@ vioapic_indirect_write(struct acrn_vioapic *vioapic, uint32_t addr,
 		 */
 		if ((changed & NEED_TMR_UPDATE) != 0UL) {
 			uint16_t i;
-			struct vcpu *vcpu;
+			struct acrn_vcpu *vcpu;
 
 			dev_dbg(ACRN_DBG_IOAPIC,
 			"ioapic pin%hhu: recalculate vlapic trigger-mode reg",

@@ -322,7 +322,7 @@ static uint32_t get_vmcs_field(enum cpu_reg_name ident)
  * @pre ((reg <= CPU_REG_LAST) && (reg >= CPU_REG_FIRST))
  * @pre ((reg != CPU_REG_CR2) && (reg != CPU_REG_IDTR) && (reg != CPU_REG_GDTR))
  */
-static uint64_t vm_get_register(const struct vcpu *vcpu, enum cpu_reg_name reg)
+static uint64_t vm_get_register(const struct acrn_vcpu *vcpu, enum cpu_reg_name reg)
 {
 	uint64_t reg_val = 0UL;
 	
@@ -349,7 +349,7 @@ static uint64_t vm_get_register(const struct vcpu *vcpu, enum cpu_reg_name reg)
  * @pre ((reg <= CPU_REG_LAST) && (reg >= CPU_REG_FIRST))
  * @pre ((reg != CPU_REG_CR2) && (reg != CPU_REG_IDTR) && (reg != CPU_REG_GDTR))
  */
-static void vm_set_register(struct vcpu *vcpu, enum cpu_reg_name reg,
+static void vm_set_register(struct acrn_vcpu *vcpu, enum cpu_reg_name reg,
 								uint64_t val)
 {
 
@@ -387,7 +387,7 @@ static void vm_get_seg_desc(enum cpu_reg_name seg, struct seg_desc *desc)
 	desc->access = exec_vmread32(tdesc.access_field);
 }
 
-static void get_guest_paging_info(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt,
+static void get_guest_paging_info(struct acrn_vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt,
 						uint32_t csar)
 {
 	uint8_t cpl;
@@ -492,7 +492,7 @@ static int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	return 0;
 }
 
-static int mmio_read(const struct vcpu *vcpu, uint64_t *rval)
+static int mmio_read(const struct acrn_vcpu *vcpu, uint64_t *rval)
 {
 	if (vcpu == NULL) {
 		return -EINVAL;
@@ -502,7 +502,7 @@ static int mmio_read(const struct vcpu *vcpu, uint64_t *rval)
 	return 0;
 }
 
-static int mmio_write(struct vcpu *vcpu, uint64_t wval)
+static int mmio_write(struct acrn_vcpu *vcpu, uint64_t wval)
 {
 	if (vcpu == NULL) {
 		return -EINVAL;
@@ -538,7 +538,7 @@ static void vie_calc_bytereg(const struct instr_emul_vie *vie,
 	}
 }
 
-static uint8_t vie_read_bytereg(const struct vcpu *vcpu, const struct instr_emul_vie *vie)
+static uint8_t vie_read_bytereg(const struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int lhbr;
 	uint64_t val;
@@ -561,7 +561,7 @@ static uint8_t vie_read_bytereg(const struct vcpu *vcpu, const struct instr_emul
 	return reg_val;
 }
 
-static void vie_write_bytereg(struct vcpu *vcpu, const struct instr_emul_vie *vie,
+static void vie_write_bytereg(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie,
 								uint8_t byte)
 {
 	uint64_t origval, val, mask;
@@ -591,7 +591,7 @@ static void vie_write_bytereg(struct vcpu *vcpu, const struct instr_emul_vie *vi
  * @pre ((reg <= CPU_REG_LAST) && (reg >= CPU_REG_FIRST))
  * @pre ((reg != CPU_REG_CR2) && (reg != CPU_REG_IDTR) && (reg != CPU_REG_GDTR))
  */
-static void vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
+static void vie_update_register(struct acrn_vcpu *vcpu, enum cpu_reg_name reg,
 					uint64_t val_arg, uint8_t size)
 {
 	uint64_t origval;
@@ -616,7 +616,7 @@ static void vie_update_register(struct vcpu *vcpu, enum cpu_reg_name reg,
 
 #define	RFLAGS_STATUS_BITS    (PSL_C | PSL_PF | PSL_AF | PSL_Z | PSL_N | PSL_V)
 
-static void vie_update_rflags(struct vcpu *vcpu, uint64_t rflags2, uint64_t psl)
+static void vie_update_rflags(struct acrn_vcpu *vcpu, uint64_t rflags2, uint64_t psl)
 {
 	uint8_t size;
 	uint64_t rflags;
@@ -664,7 +664,7 @@ static uint64_t getcc(uint8_t opsize, uint64_t x, uint64_t y)
 	}
 }
 
-static int emulate_mov(struct vcpu *vcpu, const struct instr_emul_vie *vie)
+static int emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -780,7 +780,7 @@ static int emulate_mov(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 	return error;
 }
 
-static int emulate_movx(struct vcpu *vcpu, const struct instr_emul_vie *vie)
+static int emulate_movx(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -883,7 +883,7 @@ static int emulate_movx(struct vcpu *vcpu, const struct instr_emul_vie *vie)
  *
  * It's only used by MOVS/STO
  */
-static void get_gva_si_nocheck(const struct vcpu *vcpu, uint8_t addrsize,
+static void get_gva_si_nocheck(const struct acrn_vcpu *vcpu, uint8_t addrsize,
 		enum cpu_reg_name seg, uint64_t *gva)
 {
 	uint64_t val;
@@ -907,7 +907,7 @@ static void get_gva_si_nocheck(const struct vcpu *vcpu, uint8_t addrsize,
  *
  * It's only used by MOVS/STO
  */
-static int get_gva_di_check(struct vcpu *vcpu, struct instr_emul_vie *vie,
+static int get_gva_di_check(struct acrn_vcpu *vcpu, struct instr_emul_vie *vie,
 		uint8_t addrsize, uint64_t *gva)
 {
 	int ret;
@@ -980,7 +980,7 @@ exception_inject:
  * For MOVs instruction, we always check RDI during instruction decoding phase.
  * And access RSI without any check during instruction emulation phase.
  */
-static int emulate_movs(struct vcpu *vcpu, const struct instr_emul_vie *vie)
+static int emulate_movs(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	uint64_t src_gva, gpa, val = 0UL;
 	uint64_t *dst_hva, *src_hva;
@@ -1067,7 +1067,7 @@ done:
 	return error;
 }
 
-static int emulate_stos(struct vcpu *vcpu, const struct instr_emul_vie *vie)
+static int emulate_stos(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error, repeat;
 	uint8_t opsize = vie->opsize;
@@ -1121,7 +1121,7 @@ static int emulate_stos(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 	return 0;
 }
 
-static int emulate_test(struct vcpu *vcpu, const struct instr_emul_vie *vie)
+static int emulate_test(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -1187,7 +1187,7 @@ static int emulate_test(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 	return error;
 }
 
-static int emulate_and(struct vcpu *vcpu, const struct instr_emul_vie *vie)
+static int emulate_and(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -1275,7 +1275,7 @@ static int emulate_and(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 	return error;
 }
 
-static int emulate_or(struct vcpu *vcpu, const struct instr_emul_vie *vie)
+static int emulate_or(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -1366,7 +1366,7 @@ static int emulate_or(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 	return error;
 }
 
-static int emulate_cmp(struct vcpu *vcpu, const struct instr_emul_vie *vie)
+static int emulate_cmp(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -1458,7 +1458,7 @@ static int emulate_cmp(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 	return error;
 }
 
-static int emulate_sub(struct vcpu *vcpu, const struct instr_emul_vie *vie)
+static int emulate_sub(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error;
 	uint8_t size;
@@ -1512,7 +1512,7 @@ static int emulate_sub(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 	return error;
 }
 
-static int emulate_group1(struct vcpu *vcpu, const struct instr_emul_vie *vie)
+static int emulate_group1(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	int error;
 
@@ -1534,7 +1534,7 @@ static int emulate_group1(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 	return error;
 }
 
-static int emulate_bittest(struct vcpu *vcpu, const struct instr_emul_vie *vie)
+static int emulate_bittest(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	uint64_t val, rflags, bitmask;
 	int error;
@@ -1580,7 +1580,7 @@ static int emulate_bittest(struct vcpu *vcpu, const struct instr_emul_vie *vie)
 static int vmm_emulate_instruction(struct instr_emul_ctxt *ctxt)
 {
 	struct instr_emul_vie *vie = &ctxt->vie;
-	struct vcpu *vcpu = ctxt->vcpu;
+	struct acrn_vcpu *vcpu = ctxt->vcpu;
 	int error;
 
 	if (vie->decoded == 0U) {
@@ -1628,7 +1628,7 @@ static int vmm_emulate_instruction(struct instr_emul_ctxt *ctxt)
 	return error;
 }
 
-static int vie_init(struct instr_emul_vie *vie, struct vcpu *vcpu)
+static int vie_init(struct instr_emul_vie *vie, struct acrn_vcpu *vcpu)
 {
 	uint64_t guest_rip_gva = vcpu_get_rip(vcpu);
 	uint32_t inst_len = vcpu->arch_vcpu.inst_len;
@@ -2182,7 +2182,7 @@ static int local_decode_instruction(enum vm_cpu_mode cpu_mode,
 }
 
 /* for instruction MOVS/STO, check the gva gotten from DI/SI. */
-static int instr_check_di(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt)
+static int instr_check_di(struct acrn_vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt)
 {
 	int ret;
 	struct instr_emul_vie *vie = &emul_ctxt->vie;
@@ -2197,7 +2197,7 @@ static int instr_check_di(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt)
 	return 0;
 }
 
-static int instr_check_gva(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt,
+static int instr_check_gva(struct acrn_vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt,
 		enum vm_cpu_mode cpu_mode)
 {
 	int ret;
@@ -2283,7 +2283,7 @@ static int instr_check_gva(struct vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt,
 	return 0;
 }
 
-int decode_instruction(struct vcpu *vcpu)
+int decode_instruction(struct acrn_vcpu *vcpu)
 {
 	struct instr_emul_ctxt *emul_ctxt;
 	uint32_t csar;
@@ -2343,7 +2343,7 @@ int decode_instruction(struct vcpu *vcpu)
 	return (int)(emul_ctxt->vie.opsize);
 }
 
-int emulate_instruction(const struct vcpu *vcpu)
+int emulate_instruction(const struct acrn_vcpu *vcpu)
 {
 	struct instr_emul_ctxt *ctxt = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
 

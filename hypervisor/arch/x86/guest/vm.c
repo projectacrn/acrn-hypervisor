@@ -189,7 +189,7 @@ int shutdown_vm(struct vm *vm)
 {
 	int status = 0;
 	uint16_t i;
-	struct vcpu *vcpu = NULL;
+	struct acrn_vcpu *vcpu = NULL;
 
 	pause_vm(vm);
 
@@ -235,7 +235,7 @@ int shutdown_vm(struct vm *vm)
  */
 int start_vm(struct vm *vm)
 {
-	struct vcpu *vcpu = NULL;
+	struct acrn_vcpu *vcpu = NULL;
 
 	vm->state = VM_STARTED;
 
@@ -252,7 +252,7 @@ int start_vm(struct vm *vm)
 int reset_vm(struct vm *vm)
 {
 	int i;
-	struct vcpu *vcpu = NULL;
+	struct acrn_vcpu *vcpu = NULL;
 
 	if (vm->state != VM_PAUSED) {
 		return -1;
@@ -279,7 +279,7 @@ int reset_vm(struct vm *vm)
 void pause_vm(struct vm *vm)
 {
 	uint16_t i;
-	struct vcpu *vcpu = NULL;
+	struct acrn_vcpu *vcpu = NULL;
 
 	if (vm->state == VM_PAUSED) {
 		return;
@@ -298,7 +298,7 @@ void pause_vm(struct vm *vm)
 void resume_vm(struct vm *vm)
 {
 	uint16_t i;
-	struct vcpu *vcpu = NULL;
+	struct acrn_vcpu *vcpu = NULL;
 
 	foreach_vcpu(i, vm, vcpu) {
 		resume_vcpu(vcpu);
@@ -323,7 +323,7 @@ void resume_vm(struct vm *vm)
  */
 void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec)
 {
-	struct vcpu *bsp = vcpu_from_vid(vm, 0U);
+	struct acrn_vcpu *bsp = vcpu_from_vid(vm, 0U);
 
 	vm->state = VM_STARTED;
 

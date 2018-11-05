@@ -14,7 +14,7 @@ struct sched_context {
 	spinlock_t runqueue_lock;
 	struct list_head runqueue;
 	uint64_t flags;
-	struct vcpu *curr_vcpu;
+	struct acrn_vcpu *curr_vcpu;
 	spinlock_t scheduler_lock;
 };
 
@@ -26,18 +26,18 @@ void set_pcpu_used(uint16_t pcpu_id);
 uint16_t allocate_pcpu(void);
 void free_pcpu(uint16_t pcpu_id);
 
-void add_vcpu_to_runqueue(struct vcpu *vcpu);
-void remove_vcpu_from_runqueue(struct vcpu *vcpu);
+void add_vcpu_to_runqueue(struct acrn_vcpu *vcpu);
+void remove_vcpu_from_runqueue(struct acrn_vcpu *vcpu);
 
 void default_idle(void);
 
-void make_reschedule_request(const struct vcpu *vcpu);
+void make_reschedule_request(const struct acrn_vcpu *vcpu);
 int need_reschedule(uint16_t pcpu_id);
 void make_pcpu_offline(uint16_t pcpu_id);
 int need_offline(uint16_t pcpu_id);
 
 void schedule(void);
 
-void vcpu_thread(struct vcpu *vcpu);
+void vcpu_thread(struct acrn_vcpu *vcpu);
 #endif /* SCHEDULE_H */
 

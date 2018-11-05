@@ -384,7 +384,7 @@ void dispatch_exception(struct intr_excp_ctx *ctx)
 void partition_mode_dispatch_interrupt(struct intr_excp_ctx *ctx)
 {
 	uint8_t vr = ctx->vector;
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 
 	/*
 	 * There is no vector and APIC ID remapping for VMs in

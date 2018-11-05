@@ -451,22 +451,22 @@ void exec_vmwrite32(uint32_t field, uint32_t value);
 void exec_vmwrite64(uint32_t field_full, uint64_t value);
 #define exec_vmwrite exec_vmwrite64
 
-void init_vmcs(struct vcpu *vcpu);
+void init_vmcs(struct acrn_vcpu *vcpu);
 
 void vmx_off(uint16_t pcpu_id);
 
 void exec_vmclear(void *addr);
 void exec_vmptrld(void *addr);
 
-uint64_t vmx_rdmsr_pat(const struct vcpu *vcpu);
-int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value);
+uint64_t vmx_rdmsr_pat(const struct acrn_vcpu *vcpu);
+int vmx_wrmsr_pat(struct acrn_vcpu *vcpu, uint64_t value);
 
-void vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0);
-void vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4);
+void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0);
+void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4);
 bool is_vmx_disabled(void);
-void switch_apicv_mode_x2apic(struct vcpu *vcpu);
+void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu);
 
-static inline enum vm_cpu_mode get_vcpu_mode(const struct vcpu *vcpu)
+static inline enum vm_cpu_mode get_vcpu_mode(const struct acrn_vcpu *vcpu)
 {
 	return vcpu->arch_vcpu.cpu_mode;
 }

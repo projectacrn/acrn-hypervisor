@@ -62,7 +62,7 @@ struct mtrr_state {
  *
  * @return None
  */
-void mtrr_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t value);
+void mtrr_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t value);
 /**
  * @brief Virtual MTRR MSR read
  *
@@ -71,7 +71,7 @@ void mtrr_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t value);
  *
  * @return unsigned long integer - The specified virtual MTRR MSR value
  */
-uint64_t mtrr_rdmsr(const struct vcpu *vcpu, uint32_t msr);
+uint64_t mtrr_rdmsr(const struct acrn_vcpu *vcpu, uint32_t msr);
 /**
  * @brief Virtual MTRR initialization
  *
@@ -79,7 +79,7 @@ uint64_t mtrr_rdmsr(const struct vcpu *vcpu, uint32_t msr);
  *
  * @return None
  */
-void init_mtrr(struct vcpu *vcpu);
+void init_mtrr(struct acrn_vcpu *vcpu);
 /**
  * @}
  */

@@ -141,7 +141,7 @@ uint32_t irq_to_vector(uint32_t irq);
  *
  * @pre vcpu != NULL
  */
-int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector, uint32_t err_code);
+int vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector, uint32_t err_code);
 
 /**
  * @brief Inject external interrupt to guest.
@@ -152,7 +152,7 @@ int vcpu_queue_exception(struct vcpu *vcpu, uint32_t vector, uint32_t err_code);
  *
  * @pre vcpu != NULL
  */
-void vcpu_inject_extint(struct vcpu *vcpu);
+void vcpu_inject_extint(struct acrn_vcpu *vcpu);
 
 /**
  * @brief Inject NMI to guest.
@@ -163,7 +163,7 @@ void vcpu_inject_extint(struct vcpu *vcpu);
  *
  * @pre vcpu != NULL
  */
-void vcpu_inject_nmi(struct vcpu *vcpu);
+void vcpu_inject_nmi(struct acrn_vcpu *vcpu);
 
 /**
  * @brief Inject general protection exeception(GP) to guest.
@@ -175,7 +175,7 @@ void vcpu_inject_nmi(struct vcpu *vcpu);
  *
  * @pre vcpu != NULL
  */
-void vcpu_inject_gp(struct vcpu *vcpu, uint32_t err_code);
+void vcpu_inject_gp(struct acrn_vcpu *vcpu, uint32_t err_code);
 
 /**
  * @brief Inject page fault exeception(PF) to guest.
@@ -188,7 +188,7 @@ void vcpu_inject_gp(struct vcpu *vcpu, uint32_t err_code);
  *
  * @pre vcpu != NULL
  */
-void vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code);
+void vcpu_inject_pf(struct acrn_vcpu *vcpu, uint64_t addr, uint32_t err_code);
 
 /**
  * @brief Inject invalid opcode exeception(UD) to guest.
@@ -199,7 +199,7 @@ void vcpu_inject_pf(struct vcpu *vcpu, uint64_t addr, uint32_t err_code);
  *
  * @pre vcpu != NULL
  */
-void vcpu_inject_ud(struct vcpu *vcpu);
+void vcpu_inject_ud(struct acrn_vcpu *vcpu);
 
 /**
  * @brief Inject alignment check exeception(AC) to guest.
@@ -210,7 +210,7 @@ void vcpu_inject_ud(struct vcpu *vcpu);
  *
  * @pre vcpu != NULL
  */
-void vcpu_inject_ac(struct vcpu *vcpu);
+void vcpu_inject_ac(struct acrn_vcpu *vcpu);
 
 /**
  * @brief Inject stack fault exeception(SS) to guest.
@@ -221,16 +221,16 @@ void vcpu_inject_ac(struct vcpu *vcpu);
  *
  * @pre vcpu != NULL
  */
-void vcpu_inject_ss(struct vcpu *vcpu);
-void vcpu_make_request(struct vcpu *vcpu, uint16_t eventid);
+void vcpu_inject_ss(struct acrn_vcpu *vcpu);
+void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid);
 
 /*
  * @pre vcpu != NULL
  */
-int exception_vmexit_handler(struct vcpu *vcpu);
-int interrupt_window_vmexit_handler(struct vcpu *vcpu);
-int external_interrupt_vmexit_handler(struct vcpu *vcpu);
-int acrn_handle_pending_request(struct vcpu *vcpu);
+int exception_vmexit_handler(struct acrn_vcpu *vcpu);
+int interrupt_window_vmexit_handler(struct acrn_vcpu *vcpu);
+int external_interrupt_vmexit_handler(struct acrn_vcpu *vcpu);
+int acrn_handle_pending_request(struct acrn_vcpu *vcpu);
 
 /**
  * @brief Initialize the interrupt
@@ -241,7 +241,7 @@ int acrn_handle_pending_request(struct vcpu *vcpu);
  */
 void interrupt_init(uint16_t pcpu_id);
 
-void cancel_event_injection(struct vcpu *vcpu);
+void cancel_event_injection(struct acrn_vcpu *vcpu);
 
 #ifdef HV_DEBUG
 /**

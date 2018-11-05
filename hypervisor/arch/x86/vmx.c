@@ -26,8 +26,8 @@ static uint64_t cr4_host_mask;
 static uint64_t cr4_always_on_mask;
 static uint64_t cr4_always_off_mask;
 
-void update_msr_bitmap_x2apic_apicv(struct vcpu *vcpu);
-void update_msr_bitmap_x2apic_passthru(struct vcpu *vcpu);
+void update_msr_bitmap_x2apic_apicv(struct acrn_vcpu *vcpu);
+void update_msr_bitmap_x2apic_passthru(struct acrn_vcpu *vcpu);
 
 bool is_vmx_disabled(void)
 {
@@ -86,7 +86,7 @@ void exec_vmxon_instr(uint16_t pcpu_id)
 	uint32_t tmp32;
 	void *vmxon_region_va = (void *)per_cpu(vmxon_region, pcpu_id);
 	uint64_t vmxon_region_pa;
-	struct vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
+	struct acrn_vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
 
 	/* Initialize vmxon page with revision id from IA32 VMX BASIC MSR */
 	tmp32 = (uint32_t)msr_read(MSR_IA32_VMX_BASIC);
@@ -109,7 +109,7 @@ void exec_vmxon_instr(uint16_t pcpu_id)
 void vmx_off(uint16_t pcpu_id)
 {
 
-	struct vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
+	struct acrn_vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
 	uint64_t vmcs_pa;
 
 	vmcs_pa = hva2hpa(vcpu->arch_vcpu.vmcs);
@@ -253,7 +253,7 @@ static void init_cr0_cr4_host_mask(void)
 	pr_dbg("CR4 mask value: 0x%016llx", cr4_host_mask);
 }
 
-uint64_t vmx_rdmsr_pat(const struct vcpu *vcpu)
+uint64_t vmx_rdmsr_pat(const struct acrn_vcpu *vcpu)
 {
 	/*
 	 * note: if context->cr0.CD is set, the actual value in guest's
@@ -263,7 +263,7 @@ uint64_t vmx_rdmsr_pat(const struct vcpu *vcpu)
 	return vcpu_get_pat_ext(vcpu);
 }
 
-int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value)
+int vmx_wrmsr_pat(struct acrn_vcpu *vcpu, uint64_t value)
 {
 	uint32_t i;
 	uint64_t field;
@@ -291,7 +291,7 @@ int vmx_wrmsr_pat(struct vcpu *vcpu, uint64_t value)
 	return 0;
 }
 
-static void load_pdptrs(const struct vcpu *vcpu)
+static void load_pdptrs(const struct acrn_vcpu *vcpu)
 {
 	uint64_t guest_cr3 = exec_vmread(VMX_GUEST_CR3);
 	/* TODO: check whether guest cr3 is valid */
@@ -303,7 +303,7 @@ static void load_pdptrs(const struct vcpu *vcpu)
 	exec_vmwrite64(VMX_GUEST_PDPTE3_FULL, get_pgentry(guest_cr3_hva + 3UL));
 }
 
-static bool is_cr0_write_valid(struct vcpu *vcpu, uint64_t cr0)
+static bool is_cr0_write_valid(struct acrn_vcpu *vcpu, uint64_t cr0)
 {
 	/* Shouldn't set always off bit */
 	if ((cr0 & cr0_always_off_mask) != 0UL) {
@@ -359,7 +359,7 @@ static bool is_cr0_write_valid(struct vcpu *vcpu, uint64_t cr0)
  *   - PG (31) Trapped to track cpu/paging mode.
  *             Set the value according to the value from guest.
  */
-void vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
+void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0)
 {
 	uint64_t cr0_vmx;
 	uint32_t entry_ctrls;
@@ -450,7 +450,7 @@ void vmx_write_cr0(struct vcpu *vcpu, uint64_t cr0)
 		cr0, cr0_vmx);
 }
 
-static bool is_cr4_write_valid(struct vcpu *vcpu, uint64_t cr4)
+static bool is_cr4_write_valid(struct acrn_vcpu *vcpu, uint64_t cr4)
 {
 	/* Check if guest try to set fixed to 0 bits or reserved bits */
 	if ((cr4 & cr4_always_off_mask) != 0U) {
@@ -511,7 +511,7 @@ static bool is_cr4_write_valid(struct vcpu *vcpu, uint64_t cr4)
  *   - SMAP (21) Flexible to guest
  *   - PKE (22) Flexible to guest
  */
-void vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
+void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 {
 	uint64_t cr4_vmx;
 	uint64_t old_cr4 = vcpu_get_cr4(vcpu);
@@ -545,7 +545,7 @@ void vmx_write_cr4(struct vcpu *vcpu, uint64_t cr4)
 }
 
 /* rip, rsp, ia32_efer and rflags are written to VMCS in start_vcpu */
-static void init_guest_vmx(struct vcpu *vcpu, uint64_t cr0, uint64_t cr3,
+static void init_guest_vmx(struct acrn_vcpu *vcpu, uint64_t cr0, uint64_t cr3,
 	uint64_t cr4)
 {
 	struct cpu_context *ctx =
@@ -590,7 +590,7 @@ static void init_guest_vmx(struct vcpu *vcpu, uint64_t cr0, uint64_t cr3,
 	exec_vmwrite(VMX_GUEST_DR7, DR7_INIT_VALUE);
 }
 
-static void init_guest_state(struct vcpu *vcpu)
+static void init_guest_state(struct acrn_vcpu *vcpu)
 {
 	struct cpu_context *ctx =
 		&vcpu->arch_vcpu.contexts[vcpu->arch_vcpu.cur_context];
@@ -758,7 +758,7 @@ static uint32_t check_vmx_ctrl(uint32_t msr, uint32_t ctrl_req)
 
 }
 
-static void init_exec_ctrl(struct vcpu *vcpu)
+static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 {
 	uint32_t value32;
 	uint64_t value64;
@@ -948,7 +948,7 @@ static void init_exec_ctrl(struct vcpu *vcpu)
 	exec_vmwrite(VMX_CR3_TARGET_3, 0UL);
 }
 
-static void init_entry_ctrl(__unused const struct vcpu *vcpu)
+static void init_entry_ctrl(__unused const struct acrn_vcpu *vcpu)
 {
 	uint32_t value32;
 
@@ -1028,7 +1028,7 @@ static void init_exit_ctrl(void)
 /**
  * @pre vcpu != NULL
  */
-void init_vmcs(struct vcpu *vcpu)
+void init_vmcs(struct acrn_vcpu *vcpu)
 {
 	uint64_t vmx_rev_id;
 	uint64_t vmcs_pa;
@@ -1057,7 +1057,7 @@ void init_vmcs(struct vcpu *vcpu)
 }
 
 #ifndef CONFIG_PARTITION_MODE
-void switch_apicv_mode_x2apic(struct vcpu *vcpu)
+void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 {
 	uint32_t value32;
 	value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS2);
@@ -1067,7 +1067,7 @@ void switch_apicv_mode_x2apic(struct vcpu *vcpu)
 	update_msr_bitmap_x2apic_apicv(vcpu);
 }
 #else
-void switch_apicv_mode_x2apic(struct vcpu *vcpu)
+void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 {
 	uint32_t value32;
 	if(vcpu->vm->vm_desc->lapic_pt) {

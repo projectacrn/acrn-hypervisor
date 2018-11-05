@@ -132,7 +132,7 @@ static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg, enum rw_mode mode)
 	}
 }
 
-void init_msr_emulation(struct vcpu *vcpu)
+void init_msr_emulation(struct acrn_vcpu *vcpu)
 {
 	uint32_t i;
 	uint32_t msrs_count =  ARRAY_SIZE(emulated_msrs);
@@ -184,7 +184,7 @@ void init_msr_emulation(struct vcpu *vcpu)
 	pr_dbg("VMX_MSR_BITMAP: 0x%016llx ", value64);
 }
 
-int rdmsr_vmexit_handler(struct vcpu *vcpu)
+int rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int err = 0;
 	uint32_t msr;
@@ -297,7 +297,7 @@ int rdmsr_vmexit_handler(struct vcpu *vcpu)
 	return err;
 }
 
-int wrmsr_vmexit_handler(struct vcpu *vcpu)
+int wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int err = 0;
 	uint32_t msr;
@@ -428,7 +428,7 @@ int wrmsr_vmexit_handler(struct vcpu *vcpu)
 	return err;
 }
 
-void update_msr_bitmap_x2apic_apicv(struct vcpu *vcpu)
+void update_msr_bitmap_x2apic_apicv(struct acrn_vcpu *vcpu)
 {
 	uint8_t *msr_bitmap;
 
@@ -447,7 +447,7 @@ void update_msr_bitmap_x2apic_apicv(struct vcpu *vcpu)
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_SELF_IPI, READ);
 }
 
-void update_msr_bitmap_x2apic_passthru(struct vcpu *vcpu)
+void update_msr_bitmap_x2apic_passthru(struct acrn_vcpu *vcpu)
 {
 	uint32_t msr;
 	uint8_t *msr_bitmap;

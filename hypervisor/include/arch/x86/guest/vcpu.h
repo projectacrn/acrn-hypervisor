@@ -220,7 +220,7 @@ struct vcpu_arch {
 } __aligned(CPU_PAGE_SIZE);
 
 struct vm;
-struct vcpu {
+struct acrn_vcpu {
 	/* Architecture specific definitions for this VCPU */
 	struct vcpu_arch arch_vcpu;
 	uint16_t pcpu_id;	/* Physical CPU ID of this VCPU */
@@ -259,24 +259,24 @@ struct vcpu {
 } __aligned(CPU_PAGE_SIZE);
 
 struct vcpu_dump {
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 	char *str;
 	uint32_t str_max;
 };
 
-static inline bool is_vcpu_bsp(const struct vcpu *vcpu)
+static inline bool is_vcpu_bsp(const struct acrn_vcpu *vcpu)
 {
 	return (vcpu->vcpu_id == BOOT_CPU_ID);
 }
 
 /* do not update Guest RIP for next VM Enter */
-static inline void vcpu_retain_rip(struct vcpu *vcpu)
+static inline void vcpu_retain_rip(struct acrn_vcpu *vcpu)
 {
 	(vcpu)->arch_vcpu.inst_len = 0U;
 }
 
 static inline struct acrn_vlapic *
-vcpu_vlapic(struct vcpu *vcpu)
+vcpu_vlapic(struct acrn_vcpu *vcpu)
 {
 	return &(vcpu->arch_vcpu.vlapic);
 }
@@ -293,7 +293,7 @@ vcpu_vlapic(struct vcpu *vcpu)
  *
  * @return the value of the register.
  */
-uint64_t vcpu_get_gpreg(const struct vcpu *vcpu, uint32_t reg);
+uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg);
 
 /**
  * @brief set vcpu register value
@@ -304,7 +304,7 @@ uint64_t vcpu_get_gpreg(const struct vcpu *vcpu, uint32_t reg);
  * @param[in] reg register of the vcpu
  * @param[in] val the value set the register of the vcpu
  */
-void vcpu_set_gpreg(struct vcpu *vcpu, uint32_t reg, uint64_t val);
+void vcpu_set_gpreg(struct acrn_vcpu *vcpu, uint32_t reg, uint64_t val);
 
 /**
  * @brief get vcpu RIP value
@@ -315,7 +315,7 @@ void vcpu_set_gpreg(struct vcpu *vcpu, uint32_t reg, uint64_t val);
  *
  * @return the value of RIP.
  */
-uint64_t vcpu_get_rip(struct vcpu *vcpu);
+uint64_t vcpu_get_rip(struct acrn_vcpu *vcpu);
 
 /**
  * @brief set vcpu RIP value
@@ -325,7 +325,7 @@ uint64_t vcpu_get_rip(struct vcpu *vcpu);
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] val the value set RIP
  */
-void vcpu_set_rip(struct vcpu *vcpu, uint64_t val);
+void vcpu_set_rip(struct acrn_vcpu *vcpu, uint64_t val);
 
 /**
  * @brief get vcpu RSP value
@@ -336,7 +336,7 @@ void vcpu_set_rip(struct vcpu *vcpu, uint64_t val);
  *
  * @return the value of RSP.
  */
-uint64_t vcpu_get_rsp(struct vcpu *vcpu);
+uint64_t vcpu_get_rsp(struct acrn_vcpu *vcpu);
 
 /**
  * @brief set vcpu RSP value
@@ -346,7 +346,7 @@ uint64_t vcpu_get_rsp(struct vcpu *vcpu);
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] val the value set RSP
  */
-void vcpu_set_rsp(struct vcpu *vcpu, uint64_t val);
+void vcpu_set_rsp(struct acrn_vcpu *vcpu, uint64_t val);
 
 /**
  * @brief get vcpu EFER value
@@ -357,7 +357,7 @@ void vcpu_set_rsp(struct vcpu *vcpu, uint64_t val);
  *
  * @return the value of EFER.
  */
-uint64_t vcpu_get_efer(struct vcpu *vcpu);
+uint64_t vcpu_get_efer(struct acrn_vcpu *vcpu);
 
 /**
  * @brief set vcpu EFER value
@@ -367,7 +367,7 @@ uint64_t vcpu_get_efer(struct vcpu *vcpu);
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] val the value set EFER
  */
-void vcpu_set_efer(struct vcpu *vcpu, uint64_t val);
+void vcpu_set_efer(struct acrn_vcpu *vcpu, uint64_t val);
 
 /**
  * @brief get vcpu RFLAG value
@@ -378,7 +378,7 @@ void vcpu_set_efer(struct vcpu *vcpu, uint64_t val);
  *
  * @return the value of RFLAGS.
  */
-uint64_t vcpu_get_rflags(struct vcpu *vcpu);
+uint64_t vcpu_get_rflags(struct acrn_vcpu *vcpu);
 
 /**
  * @brief set vcpu RFLAGS value
@@ -388,7 +388,7 @@ uint64_t vcpu_get_rflags(struct vcpu *vcpu);
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] val the value set RFLAGS
  */
-void vcpu_set_rflags(struct vcpu *vcpu, uint64_t val);
+void vcpu_set_rflags(struct acrn_vcpu *vcpu, uint64_t val);
 
 /**
  * @brief get vcpu CR0 value
@@ -399,7 +399,7 @@ void vcpu_set_rflags(struct vcpu *vcpu, uint64_t val);
  *
  * @return the value of CR0.
  */
-uint64_t vcpu_get_cr0(struct vcpu *vcpu);
+uint64_t vcpu_get_cr0(struct acrn_vcpu *vcpu);
 
 /**
  * @brief set vcpu CR0 value
@@ -409,7 +409,7 @@ uint64_t vcpu_get_cr0(struct vcpu *vcpu);
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] val the value set CR0
  */
-void vcpu_set_cr0(struct vcpu *vcpu, uint64_t val);
+void vcpu_set_cr0(struct acrn_vcpu *vcpu, uint64_t val);
 
 /**
  * @brief get vcpu CR2 value
@@ -420,7 +420,7 @@ void vcpu_set_cr0(struct vcpu *vcpu, uint64_t val);
  *
  * @return the value of CR2.
  */
-uint64_t vcpu_get_cr2(struct vcpu *vcpu);
+uint64_t vcpu_get_cr2(struct acrn_vcpu *vcpu);
 
 /**
  * @brief set vcpu CR2 value
@@ -430,7 +430,7 @@ uint64_t vcpu_get_cr2(struct vcpu *vcpu);
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] val the value set CR2
  */
-void vcpu_set_cr2(struct vcpu *vcpu, uint64_t val);
+void vcpu_set_cr2(struct acrn_vcpu *vcpu, uint64_t val);
 
 /**
  * @brief get vcpu CR4 value
@@ -441,7 +441,7 @@ void vcpu_set_cr2(struct vcpu *vcpu, uint64_t val);
  *
  * @return the value of CR4.
  */
-uint64_t vcpu_get_cr4(struct vcpu *vcpu);
+uint64_t vcpu_get_cr4(struct acrn_vcpu *vcpu);
 
 /**
  * @brief set vcpu CR4 value
@@ -451,10 +451,10 @@ uint64_t vcpu_get_cr4(struct vcpu *vcpu);
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] val the value set CR4
  */
-void vcpu_set_cr4(struct vcpu *vcpu, uint64_t val);
+void vcpu_set_cr4(struct acrn_vcpu *vcpu, uint64_t val);
 
-uint64_t vcpu_get_pat_ext(const struct vcpu *vcpu);
-void vcpu_set_pat_ext(struct vcpu *vcpu, uint64_t val);
+uint64_t vcpu_get_pat_ext(const struct acrn_vcpu *vcpu);
+void vcpu_set_pat_ext(struct acrn_vcpu *vcpu, uint64_t val);
 
 /**
  * @brief set all the vcpu registers
@@ -464,7 +464,7 @@ void vcpu_set_pat_ext(struct vcpu *vcpu, uint64_t val);
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] vcpu_regs all the registers' value
  */
-void set_vcpu_regs(struct vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs);
+void set_vcpu_regs(struct acrn_vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs);
 
 /**
  * @brief reset all the vcpu registers
@@ -473,7 +473,7 @@ void set_vcpu_regs(struct vcpu *vcpu, struct acrn_vcpu_regs *vcpu_regs);
  *
  * @param[inout] vcpu pointer to vcpu data structure
  */
-void reset_vcpu_regs(struct vcpu *vcpu);
+void reset_vcpu_regs(struct acrn_vcpu *vcpu);
 
 /**
  * @brief set the vcpu AP entry
@@ -483,24 +483,24 @@ void reset_vcpu_regs(struct vcpu *vcpu);
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] entry the entry value for AP
  */
-void set_ap_entry(struct vcpu *vcpu, uint64_t entry);
+void set_ap_entry(struct acrn_vcpu *vcpu, uint64_t entry);
 
-static inline bool is_long_mode(struct vcpu *vcpu)
+static inline bool is_long_mode(struct acrn_vcpu *vcpu)
 {
 	return (vcpu_get_efer(vcpu) & MSR_IA32_EFER_LMA_BIT) != 0UL;
 }
 
-static inline bool is_paging_enabled(struct vcpu *vcpu)
+static inline bool is_paging_enabled(struct acrn_vcpu *vcpu)
 {
 	return (vcpu_get_cr0(vcpu) & CR0_PG) != 0UL;
 }
 
-static inline bool is_pae(struct vcpu *vcpu)
+static inline bool is_pae(struct acrn_vcpu *vcpu)
 {
 	return (vcpu_get_cr4(vcpu) & CR4_PAE) != 0UL;
 }
 
-struct vcpu* get_ever_run_vcpu(uint16_t pcpu_id);
+struct acrn_vcpu* get_ever_run_vcpu(uint16_t pcpu_id);
 
 /**
  * @brief create a vcpu for the target vm
@@ -514,7 +514,7 @@ struct vcpu* get_ever_run_vcpu(uint16_t pcpu_id);
  *
  * @return 0: vcpu created successfully, other values failed.
  */
-int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle);
+int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct acrn_vcpu **rtn_vcpu_handle);
 
 /**
  * @brief run into non-root mode based on vcpu setting
@@ -527,9 +527,9 @@ int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct vcpu **rtn_vcpu_handle);
  *
  * @return 0: vcpu run successfully, other values failed.
  */
-int run_vcpu(struct vcpu *vcpu);
+int run_vcpu(struct acrn_vcpu *vcpu);
 
-int shutdown_vcpu(struct vcpu *vcpu);
+int shutdown_vcpu(struct acrn_vcpu *vcpu);
 
 /**
  * @brief unmap the vcpu with pcpu and free its vlapic
@@ -539,7 +539,7 @@ int shutdown_vcpu(struct vcpu *vcpu);
  * @param[inout] vcpu pointer to vcpu data structure
  * @pre vcpu != NULL
  */
-void offline_vcpu(struct vcpu *vcpu);
+void offline_vcpu(struct acrn_vcpu *vcpu);
 
 /**
  * @brief reset vcpu state and values
@@ -548,7 +548,7 @@ void offline_vcpu(struct vcpu *vcpu);
  *
  * @param[inout] vcpu pointer to vcpu data structure
  */
-void reset_vcpu(struct vcpu *vcpu);
+void reset_vcpu(struct acrn_vcpu *vcpu);
 
 /**
  * @brief pause the vcpu and set new state
@@ -558,7 +558,7 @@ void reset_vcpu(struct vcpu *vcpu);
  * @param[inout] vcpu pointer to vcpu data structure
  * @param[in] new_state the state to set vcpu
  */
-void pause_vcpu(struct vcpu *vcpu, enum vcpu_state new_state);
+void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state);
 
 /**
  * @brief resume the vcpu
@@ -567,7 +567,7 @@ void pause_vcpu(struct vcpu *vcpu, enum vcpu_state new_state);
  *
  * @param[inout] vcpu pointer to vcpu data structure
  */
-void resume_vcpu(struct vcpu *vcpu);
+void resume_vcpu(struct acrn_vcpu *vcpu);
 
 /**
  * @brief set the vcpu to running state, then it will be scheculed.
@@ -576,7 +576,7 @@ void resume_vcpu(struct vcpu *vcpu);
  *
  * @param[inout] vcpu pointer to vcpu data structure
  */
-void schedule_vcpu(struct vcpu *vcpu);
+void schedule_vcpu(struct acrn_vcpu *vcpu);
 
 /**
  * @brief create a vcpu for the vm and mapped to the pcpu.
@@ -588,7 +588,7 @@ void schedule_vcpu(struct vcpu *vcpu);
  */
 int prepare_vcpu(struct vm *vm, uint16_t pcpu_id);
 
-void request_vcpu_pre_work(struct vcpu *vcpu, uint16_t pre_work_id);
+void request_vcpu_pre_work(struct acrn_vcpu *vcpu, uint16_t pre_work_id);
 
 void vcpu_dumpreg(void *data);
 

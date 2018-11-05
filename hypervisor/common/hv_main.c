@@ -8,7 +8,7 @@
 #include <schedule.h>
 #include <softirq.h>
 
-static void run_vcpu_pre_work(struct vcpu *vcpu)
+static void run_vcpu_pre_work(struct acrn_vcpu *vcpu)
 {
 	uint64_t *pending_pre_work = &vcpu->pending_pre_work;
 
@@ -17,7 +17,7 @@ static void run_vcpu_pre_work(struct vcpu *vcpu)
 	}
 }
 
-void vcpu_thread(struct vcpu *vcpu)
+void vcpu_thread(struct acrn_vcpu *vcpu)
 {
 #ifdef HV_DEBUG
 	uint64_t vmexit_begin = 0UL, vmexit_end = 0UL;

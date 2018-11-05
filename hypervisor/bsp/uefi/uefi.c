@@ -17,7 +17,7 @@ static int efi_initialized;
 
 void efi_spurious_handler(int vector)
 {
-	struct vcpu* vcpu;
+	struct acrn_vcpu* vcpu;
 	int ret;
 
 	if (get_cpu_id() != 0)
@@ -39,7 +39,7 @@ void efi_spurious_handler(int vector)
 int uefi_sw_loader(struct vm *vm)
 {
 	int ret = 0;
-	struct vcpu *vcpu = get_primary_vcpu(vm);
+	struct acrn_vcpu *vcpu = get_primary_vcpu(vm);
 	struct acrn_vcpu_regs *vcpu_regs = &vm0_boot_context;
 
 	ASSERT(vm != NULL, "Incorrect argument");

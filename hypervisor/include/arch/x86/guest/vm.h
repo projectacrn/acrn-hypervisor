@@ -23,7 +23,7 @@ enum vm_privilege_level {
 
 struct vm_hw_info {
 	/* vcpu array of this VM */
-	struct vcpu vcpu_array[CONFIG_MAX_VCPUS_PER_VM];
+	struct acrn_vcpu vcpu_array[CONFIG_MAX_VCPUS_PER_VM];
 	uint16_t created_vcpus;	/* Number of created vcpus */
 	uint64_t gpa_lowtop;    /* top lowmem gpa of this VM */
 } __aligned(CPU_PAGE_SIZE);
@@ -205,10 +205,10 @@ static inline bool is_vm0(const struct vm *vm)
 /*
  * @pre vcpu_id < CONFIG_MAX_VCPUS_PER_VM
  */
-static inline struct vcpu *vcpu_from_vid(struct vm *vm, uint16_t vcpu_id)
+static inline struct acrn_vcpu *vcpu_from_vid(struct vm *vm, uint16_t vcpu_id)
 {
 	uint16_t i;
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
 		if (vcpu->vcpu_id == vcpu_id) {
@@ -218,10 +218,10 @@ static inline struct vcpu *vcpu_from_vid(struct vm *vm, uint16_t vcpu_id)
 	return vcpu;
 }
 
-static inline struct vcpu *vcpu_from_pid(struct vm *vm, uint16_t pcpu_id)
+static inline struct acrn_vcpu *vcpu_from_pid(struct vm *vm, uint16_t pcpu_id)
 {
 	uint16_t i;
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
 		if (vcpu->pcpu_id == pcpu_id) {
@@ -232,10 +232,10 @@ static inline struct vcpu *vcpu_from_pid(struct vm *vm, uint16_t pcpu_id)
 	return NULL;
 }
 
-static inline struct vcpu *get_primary_vcpu(struct vm *vm)
+static inline struct acrn_vcpu *get_primary_vcpu(struct vm *vm)
 {
 	uint16_t i;
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
 		if (is_vcpu_bsp(vcpu)) {

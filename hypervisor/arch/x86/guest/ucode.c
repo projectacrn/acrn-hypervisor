@@ -32,7 +32,7 @@ static inline size_t get_ucode_data_size(const struct ucode_header *uhdr)
 	return ((uhdr->data_size != 0U) ? uhdr->data_size : 2000U);
 }
 
-void acrn_update_ucode(struct vcpu *vcpu, uint64_t v)
+void acrn_update_ucode(struct acrn_vcpu *vcpu, uint64_t v)
 {
 	uint64_t gva, fault_addr;
 	struct ucode_header uhdr;

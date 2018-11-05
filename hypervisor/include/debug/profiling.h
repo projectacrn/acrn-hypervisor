@@ -11,14 +11,14 @@
 
 #include <profiling_internal.h>
 
-void profiling_vmenter_handler(struct vcpu *vcpu);
-void profiling_vmexit_handler(struct vcpu *vcpu, uint64_t exit_reason);
+void profiling_vmenter_handler(struct acrn_vcpu *vcpu);
+void profiling_vmexit_handler(struct acrn_vcpu *vcpu, uint64_t exit_reason);
 void profiling_setup(void);
 
 #else
 
-static inline void profiling_vmenter_handler(__unused struct vcpu *vcpu) {}
-static inline void profiling_vmexit_handler(__unused struct vcpu *vcpu,
+static inline void profiling_vmenter_handler(__unused struct acrn_vcpu *vcpu) {}
+static inline void profiling_vmexit_handler(__unused struct acrn_vcpu *vcpu,
 	__unused uint64_t exit_reason) {}
 static inline void profiling_setup(void) {}
 

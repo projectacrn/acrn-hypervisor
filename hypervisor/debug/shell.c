@@ -569,7 +569,7 @@ static int shell_list_vcpu(__unused int argc, __unused char **argv)
 {
 	char temp_str[MAX_STR_SIZE];
 	struct vm *vm;
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 	char state[32];
 	uint16_t i;
 	uint16_t idx;
@@ -624,7 +624,7 @@ static int shell_vcpu_dumpreg(int argc, char **argv)
 	uint16_t vm_id;
 	uint16_t vcpu_id;
 	struct vm *vm;
-	struct vcpu *vcpu;
+	struct acrn_vcpu *vcpu;
 	uint64_t mask = 0UL;
 	struct vcpu_dump dump;
 

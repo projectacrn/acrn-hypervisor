@@ -70,7 +70,7 @@ struct acrn_vlapic {
 	struct vlapic_pir_desc	pir_desc;
 
 	struct vm		*vm;
-	struct vcpu		*vcpu;
+	struct acrn_vcpu		*vcpu;
 
 	uint32_t		esr_pending;
 	int			esr_firing;
@@ -177,16 +177,16 @@ void vlapic_post_intr(uint16_t dest_pcpu_id);
  *
  * @pre vcpu != NULL
  */
-uint64_t apicv_get_pir_desc_paddr(struct vcpu *vcpu);
+uint64_t apicv_get_pir_desc_paddr(struct acrn_vcpu *vcpu);
 
-int vlapic_rdmsr(struct vcpu *vcpu, uint32_t msr, uint64_t *rval);
-int vlapic_wrmsr(struct vcpu *vcpu, uint32_t msr, uint64_t wval);
+int vlapic_rdmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *rval);
+int vlapic_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t wval);
 
 /*
  * Signals to the LAPIC that an interrupt at 'vector' needs to be generated
  * to the 'cpu', the state is recorded in IRR.
  */
-int vlapic_set_intr(struct vcpu *vcpu, uint32_t vector, bool level);
+int vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level);
 
 #define	LAPIC_TRIG_LEVEL	true
 #define	LAPIC_TRIG_EDGE		false
@@ -200,7 +200,7 @@ int vlapic_set_intr(struct vcpu *vcpu, uint32_t vector, bool level);
  * @return -EINVAL on error that vector is invalid or vcpu is NULL.
  */
 static inline int
-vlapic_intr_level(struct vcpu *vcpu, uint32_t vector)
+vlapic_intr_level(struct acrn_vcpu *vcpu, uint32_t vector)
 {
 	return vlapic_set_intr(vcpu, vector, LAPIC_TRIG_LEVEL);
 }
@@ -215,7 +215,7 @@ vlapic_intr_level(struct vcpu *vcpu, uint32_t vector)
  * @return -EINVAL on error that vector is invalid or vcpu is NULL.
  */
 static inline int
-vlapic_intr_edge(struct vcpu *vcpu, uint32_t vector)
+vlapic_intr_edge(struct acrn_vcpu *vcpu, uint32_t vector)
 {
 	return vlapic_set_intr(vcpu, vector, LAPIC_TRIG_EDGE);
 }
@@ -265,11 +265,11 @@ void vlapic_set_tmr_one_vec(struct acrn_vlapic *vlapic, uint32_t delmode,
 
 void vlapic_apicv_batch_set_tmr(struct acrn_vlapic *vlapic);
 uint32_t vlapic_get_apicid(struct acrn_vlapic *vlapic);
-int vlapic_create(struct vcpu *vcpu);
+int vlapic_create(struct acrn_vcpu *vcpu);
 /*
  *  @pre vcpu != NULL
  */
-void vlapic_free(struct vcpu *vcpu);
+void vlapic_free(struct acrn_vcpu *vcpu);
 void vlapic_init(struct acrn_vlapic *vlapic);
 void vlapic_reset(struct acrn_vlapic *vlapic);
 void vlapic_restore(struct acrn_vlapic *vlapic, const struct lapic_regs *regs);
@@ -277,10 +277,10 @@ bool vlapic_enabled(const struct acrn_vlapic *vlapic);
 uint64_t vlapic_apicv_get_apic_access_addr(void);
 uint64_t vlapic_apicv_get_apic_page_addr(struct acrn_vlapic *vlapic);
 void vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic);
-int apic_access_vmexit_handler(struct vcpu *vcpu);
-int apic_write_vmexit_handler(struct vcpu *vcpu);
-int veoi_vmexit_handler(struct vcpu *vcpu);
-int tpr_below_threshold_vmexit_handler(__unused struct vcpu *vcpu);
+int apic_access_vmexit_handler(struct acrn_vcpu *vcpu);
+int apic_write_vmexit_handler(struct acrn_vcpu *vcpu);
+int veoi_vmexit_handler(struct acrn_vcpu *vcpu);
+int tpr_below_threshold_vmexit_handler(__unused struct acrn_vcpu *vcpu);
 void calcvdest(struct vm *vm, uint64_t *dmask, uint32_t dest, bool phys);
 
 /**
