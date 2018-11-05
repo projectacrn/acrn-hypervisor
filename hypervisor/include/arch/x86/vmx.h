@@ -468,7 +468,7 @@ void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu);
 
 static inline enum vm_cpu_mode get_vcpu_mode(const struct acrn_vcpu *vcpu)
 {
-	return vcpu->arch_vcpu.cpu_mode;
+	return vcpu->arch.cpu_mode;
 }
 
 static inline bool cpu_has_vmx_unrestricted_guest_cap(void)

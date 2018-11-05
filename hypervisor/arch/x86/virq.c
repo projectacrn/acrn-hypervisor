@@ -88,12 +88,12 @@ static bool vcpu_pending_request(struct acrn_vcpu *vcpu)
 		vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 	}
 
-	return vcpu->arch_vcpu.pending_req != 0UL;
+	return vcpu->arch.pending_req != 0UL;
 }
 
 void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid)
 {
-	bitmap_set_lock(eventid, &vcpu->arch_vcpu.pending_req);
+	bitmap_set_lock(eventid, &vcpu->arch.pending_req);
 	/*
 	 * if current hostcpu is not the target vcpu's hostcpu, we need
 	 * to invoke IPI to wake up target vcpu
@@ -207,7 +207,7 @@ static int get_excep_class(uint32_t vector)
 
 int vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector, uint32_t err_code)
 {
-	struct vcpu_arch *arch_vcpu = &vcpu->arch_vcpu;
+	struct acrn_vcpu_arch *arch = &vcpu->arch;
 	/* VECTOR_INVALID is also greater than 32 */
 	if (vector >= 32U) {
 		pr_err("invalid exception vector %d", vector);
@@ -215,7 +215,7 @@ int vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector, uint32_t err_c
 	}
 
 	uint32_t prev_vector =
-		arch_vcpu->exception_info.exception;
+		arch->exception_info.exception;
 	int32_t new_class, prev_class;
 
 	/* SDM vol3 - 6.15, Table 6-5 - conditions for generating a
@@ -239,12 +239,12 @@ int vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector, uint32_t err_c
 		 * double/triple fault. */
 	}
 
-	arch_vcpu->exception_info.exception = vector;
+	arch->exception_info.exception = vector;
 
 	if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U) {
-		arch_vcpu->exception_info.error = err_code;
+		arch->exception_info.error = err_code;
 	} else {
-		arch_vcpu->exception_info.error = 0U;
+		arch->exception_info.error = 0U;
 	}
 
 	return 0;
@@ -254,13 +254,13 @@ static void vcpu_inject_exception(struct acrn_vcpu *vcpu, uint32_t vector)
 {
 	if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U) {
 		exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE,
-				vcpu->arch_vcpu.exception_info.error);
+				vcpu->arch.exception_info.error);
 	}
 
 	exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
 			(exception_type[vector] << 8U) | (vector & 0xFFU));
 
-	vcpu->arch_vcpu.exception_info.exception = VECTOR_INVALID;
+	vcpu->arch.exception_info.exception = VECTOR_INVALID;
 
 	/* retain rip for exception injection */
 	vcpu_retain_rip(vcpu);
@@ -268,7 +268,7 @@ static void vcpu_inject_exception(struct acrn_vcpu *vcpu, uint32_t vector)
 
 static int vcpu_inject_hi_exception(struct acrn_vcpu *vcpu)
 {
-	uint32_t vector = vcpu->arch_vcpu.exception_info.exception;
+	uint32_t vector = vcpu->arch.exception_info.exception;
 
 	if (vector == IDT_MC || vector == IDT_BP || vector == IDT_DB) {
 		vcpu_inject_exception(vcpu, vector);
@@ -280,7 +280,7 @@ static int vcpu_inject_hi_exception(struct acrn_vcpu *vcpu)
 
 static int vcpu_inject_lo_exception(struct acrn_vcpu *vcpu)
 {
-	uint32_t vector = vcpu->arch_vcpu.exception_info.exception;
+	uint32_t vector = vcpu->arch.exception_info.exception;
 
 	/* high priority exception already be injected */
 	if (vector <= NR_MAX_VECTOR) {
@@ -348,7 +348,7 @@ int interrupt_window_vmexit_handler(struct acrn_vcpu *vcpu)
 	/* Disable interrupt-window exiting first.
 	 * acrn_handle_pending_request will continue handle for this vcpu
 	 */
-	vcpu->arch_vcpu.irq_window_enabled = 0U;
+	vcpu->arch.irq_window_enabled = 0U;
 	value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
 	value32 &= ~(VMX_PROCBASED_CTLS_IRQ_WIN);
 	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, value32);
@@ -395,8 +395,8 @@ int acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 	uint32_t tmp;
 	uint32_t intr_info;
 	uint32_t error_code;
-	struct vcpu_arch * arch_vcpu = &vcpu->arch_vcpu;
-	uint64_t *pending_req_bits = &arch_vcpu->pending_req;
+	struct acrn_vcpu_arch * arch = &vcpu->arch;
+	uint64_t *pending_req_bits = &arch->pending_req;
 	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
 
 	if (bitmap_test_and_clear_lock(ACRN_REQUEST_TRP_FAULT,
@@ -412,7 +412,7 @@ int acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 
 	if (bitmap_test_and_clear_lock(ACRN_REQUEST_VPID_FLUSH,
 						pending_req_bits)) {
-		flush_vpid_single(arch_vcpu->vpid);
+		flush_vpid_single(arch->vpid);
 	}
 
 	if (bitmap_test_and_clear_lock(ACRN_REQUEST_TMR_UPDATE,
@@ -421,18 +421,18 @@ int acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 	}
 
 	/* handling cancelled event injection when vcpu is switched out */
-	if (arch_vcpu->inject_event_pending) {
-		if ((arch_vcpu->inject_info.intr_info &
+	if (arch->inject_event_pending) {
+		if ((arch->inject_info.intr_info &
 		     (EXCEPTION_ERROR_CODE_VALID << 8U)) != 0U) {
-			error_code = arch_vcpu->inject_info.error_code;
+			error_code = arch->inject_info.error_code;
 			exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE,
 			        error_code);
 		}
 
-		intr_info = arch_vcpu->inject_info.intr_info;
+		intr_info = arch->inject_info.intr_info;
 		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, intr_info);
 
-		arch_vcpu->inject_event_pending = false;
+		arch->inject_event_pending = false;
 		goto INTR_WIN;
 	}
 
@@ -477,9 +477,9 @@ int acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 	 * - external interrupt, if IF clear, will keep in IDT_VEC_INFO_FIELD
 	 *   at next vm exit?
 	 */
-	if ((arch_vcpu->idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
+	if ((arch->idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
 		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
-				arch_vcpu->idt_vectoring_info);
+				arch->idt_vectoring_info);
 		goto INTR_WIN;
 	}
 
@@ -525,7 +525,7 @@ INTR_WIN:
 	 * an ExtInt or there is lapic interrupt and virtual interrupt
 	 * deliver is disabled.
 	 */
-	if (arch_vcpu->irq_window_enabled == 1U) {
+	if (arch->irq_window_enabled == 1U) {
 		return ret;
 	}
 
@@ -539,7 +539,7 @@ INTR_WIN:
 	tmp = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
 	tmp |= VMX_PROCBASED_CTLS_IRQ_WIN;
 	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, tmp);
-	arch_vcpu->irq_window_enabled = 1U;
+	arch->irq_window_enabled = 1U;
 
 	return ret;
 }
@@ -557,14 +557,14 @@ void cancel_event_injection(struct acrn_vcpu *vcpu)
 	 * call.
 	 */
 	if ((intinfo & VMX_INT_INFO_VALID) != 0U) {
-		vcpu->arch_vcpu.inject_event_pending = true;
+		vcpu->arch.inject_event_pending = true;
 
 		if ((intinfo & (EXCEPTION_ERROR_CODE_VALID << 8U)) != 0U) {
-			vcpu->arch_vcpu.inject_info.error_code =
+			vcpu->arch.inject_info.error_code =
 				exec_vmread32(VMX_ENTRY_EXCEPTION_ERROR_CODE);
 		}
 
-		vcpu->arch_vcpu.inject_info.intr_info = intinfo;
+		vcpu->arch.inject_info.intr_info = intinfo;
 		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, 0U);
 	}
 }

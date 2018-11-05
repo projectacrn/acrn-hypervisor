@@ -361,11 +361,11 @@ int32_t pio_instr_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int32_t status;
 	uint64_t exit_qual;
-	int32_t cur_context_idx = vcpu->arch_vcpu.cur_context;
+	int32_t cur_context_idx = vcpu->arch.cur_context;
 	struct io_request *io_req = &vcpu->req;
 	struct pio_request *pio_req = &io_req->reqs.pio;
 
-	exit_qual = vcpu->arch_vcpu.exit_qualification;
+	exit_qual = vcpu->arch.exit_qualification;
 
 	io_req->type = REQ_PORTIO;
 	pio_req->size = vm_exit_io_instruction_size(exit_qual) + 1UL;
