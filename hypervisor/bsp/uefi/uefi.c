@@ -36,7 +36,7 @@ void efi_spurious_handler(int vector)
 	return;
 }
 
-int uefi_sw_loader(struct vm *vm)
+int uefi_sw_loader(struct acrn_vm *vm)
 {
 	int ret = 0;
 	struct acrn_vcpu *vcpu = get_primary_vcpu(vm);

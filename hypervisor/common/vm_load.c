@@ -38,7 +38,7 @@ static uint32_t create_e820_table(struct e820_entry *param_e820)
 }
 #endif
 
-static void prepare_bsp_gdt(struct vm *vm)
+static void prepare_bsp_gdt(struct acrn_vm *vm)
 {
 	size_t gdt_len;
 	uint64_t gdt_base_hpa;
@@ -57,7 +57,7 @@ static void prepare_bsp_gdt(struct vm *vm)
 	return;
 }
 
-static uint64_t create_zero_page(struct vm *vm)
+static uint64_t create_zero_page(struct acrn_vm *vm)
 {
 	struct zero_page *zeropage;
 	struct sw_linux *sw_linux = &(vm->sw.linux_info);
@@ -102,7 +102,7 @@ static uint64_t create_zero_page(struct vm *vm)
 	return gpa;
 }
 
-int general_sw_loader(struct vm *vm)
+int general_sw_loader(struct acrn_vm *vm)
 {
 	int32_t ret = 0;
 	void *hva;

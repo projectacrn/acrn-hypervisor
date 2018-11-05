@@ -219,13 +219,13 @@ struct acrn_vcpu_arch {
 
 } __aligned(CPU_PAGE_SIZE);
 
-struct vm;
+struct acrn_vm;
 struct acrn_vcpu {
 	/* Architecture specific definitions for this VCPU */
 	struct acrn_vcpu_arch arch;
 	uint16_t pcpu_id;	/* Physical CPU ID of this VCPU */
 	uint16_t vcpu_id;	/* virtual identifier for VCPU */
-	struct vm *vm;		/* Reference to the VM this VCPU belongs to */
+	struct acrn_vm *vm;		/* Reference to the VM this VCPU belongs to */
 
 	/* State of this VCPU before suspend */
 	volatile enum vcpu_state prev_state;
@@ -514,7 +514,7 @@ struct acrn_vcpu* get_ever_run_vcpu(uint16_t pcpu_id);
  *
  * @return 0: vcpu created successfully, other values failed.
  */
-int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct acrn_vcpu **rtn_vcpu_handle);
+int create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn_vcpu_handle);
 
 /**
  * @brief run into non-root mode based on vcpu setting
@@ -586,7 +586,7 @@ void schedule_vcpu(struct acrn_vcpu *vcpu);
  * @param[inout] vm pointer to vm data structure
  * @param[in] pcpu_id which the vcpu will be mapped 
  */
-int prepare_vcpu(struct vm *vm, uint16_t pcpu_id);
+int prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id);
 
 void request_vcpu_pre_work(struct acrn_vcpu *vcpu, uint16_t pre_work_id);
 

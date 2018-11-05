@@ -1240,7 +1240,7 @@ int init_iommu(void)
 	return ret;
 }
 
-void init_iommu_vm0_domain(struct vm *vm0)
+void init_iommu_vm0_domain(struct acrn_vm *vm0)
 {
 	uint16_t bus;
 	uint16_t devfun;

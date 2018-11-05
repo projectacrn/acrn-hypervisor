@@ -87,7 +87,7 @@ struct e820_mem_params {
 	uint64_t max_ram_blk_size;
 };
 
-int prepare_vm0_memmap_and_e820(struct vm *vm);
+int prepare_vm0_memmap_and_e820(struct acrn_vm *vm);
 uint64_t e820_alloc_low_memory(uint32_t size_arg);
 
 /* Definition for a mem map lookup */
@@ -110,7 +110,7 @@ enum vm_paging_mode {
 /*
  * VM related APIs
  */
-uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask);
+uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask);
 
 int gva2gpa(struct acrn_vcpu *vcpu, uint64_t gva, uint64_t *gpa, uint32_t *err_code);
 
@@ -142,9 +142,9 @@ void init_msr_emulation(struct acrn_vcpu *vcpu);
 struct run_context;
 int vmx_vmrun(struct run_context *context, int ops, int ibrs);
 
-int general_sw_loader(struct vm *vm);
+int general_sw_loader(struct acrn_vm *vm);
 
-typedef int (*vm_sw_loader_t)(struct vm *vm);
+typedef int (*vm_sw_loader_t)(struct acrn_vm *vm);
 extern vm_sw_loader_t vm_sw_loader;
 /**
  * @brief Data transfering between hypervisor and VM
@@ -170,7 +170,7 @@ extern vm_sw_loader_t vm_sw_loader;
  *   continuous
  * @pre Pointer vm is non-NULL
  */
-int copy_from_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
+int copy_from_gpa(struct acrn_vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
 /**
  * @brief Copy data from HV address space to VM GPA space
  *
@@ -189,7 +189,7 @@ int copy_from_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
  *   continuous
  * @pre Pointer vm is non-NULL
  */
-int copy_to_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
+int copy_to_gpa(struct acrn_vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
 /**
  * @brief Copy data from VM GVA space to HV address space
  *

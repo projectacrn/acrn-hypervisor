@@ -45,7 +45,7 @@ static void ptdev_intr_delay_callback(void *data)
 }
 
 struct ptdev_remapping_info*
-ptdev_dequeue_softirq(struct vm *vm)
+ptdev_dequeue_softirq(struct acrn_vm *vm)
 {
 	uint64_t rflags;
 	struct ptdev_remapping_info *entry = NULL;
@@ -75,7 +75,7 @@ ptdev_dequeue_softirq(struct vm *vm)
 
 /* require ptdev_lock protect */
 struct ptdev_remapping_info *
-alloc_entry(struct vm *vm, uint32_t intr_type)
+alloc_entry(struct acrn_vm *vm, uint32_t intr_type)
 {
 	struct ptdev_remapping_info *entry;
 
@@ -120,7 +120,7 @@ release_entry(struct ptdev_remapping_info *entry)
 
 /* require ptdev_lock protect */
 static void
-release_all_entries(const struct vm *vm)
+release_all_entries(const struct acrn_vm *vm)
 {
 	struct ptdev_remapping_info *entry;
 	struct list_head *pos, *tmp;
@@ -204,7 +204,7 @@ void ptdev_init(void)
 	register_softirq(SOFTIRQ_PTDEV, ptdev_softirq);
 }
 
-void ptdev_release_all_entries(const struct vm *vm)
+void ptdev_release_all_entries(const struct acrn_vm *vm)
 {
 	/* VM already down */
 	spinlock_obtain(&ptdev_lock);
@@ -212,7 +212,7 @@ void ptdev_release_all_entries(const struct vm *vm)
 	spinlock_release(&ptdev_lock);
 }
 
-uint32_t get_vm_ptdev_intr_data(const struct vm *target_vm, uint64_t *buffer,
+uint32_t get_vm_ptdev_intr_data(const struct acrn_vm *target_vm, uint64_t *buffer,
 	uint32_t buffer_cnt)
 {
 	uint32_t index = 0U;

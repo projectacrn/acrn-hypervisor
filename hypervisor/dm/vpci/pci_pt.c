@@ -56,7 +56,7 @@ static int vdev_pt_init_validate(struct pci_vdev *vdev)
 static int vdev_pt_init(struct pci_vdev *vdev)
 {
 	int ret;
-	struct vm *vm = vdev->vpci->vm;
+	struct acrn_vm *vm = vdev->vpci->vm;
 	uint16_t pci_command;
 
 	ret = vdev_pt_init_validate(vdev);
@@ -89,7 +89,7 @@ static int vdev_pt_init(struct pci_vdev *vdev)
 static int vdev_pt_deinit(struct pci_vdev *vdev)
 {
 	int ret;
-	struct vm *vm = vdev->vpci->vm;
+	struct acrn_vm *vm = vdev->vpci->vm;
 
 	ret = unassign_iommu_device(vm->iommu, vdev->pdev.bdf.bits.b,
 		(uint8_t)(vdev->pdev.bdf.value & 0xFFU));
@@ -119,7 +119,7 @@ static int vdev_pt_cfgread(struct pci_vdev *vdev, uint32_t offset,
 static void vdev_pt_remap_bar(struct pci_vdev *vdev, uint32_t idx,
 	uint32_t new_base)
 {
-	struct vm *vm = vdev->vpci->vm;
+	struct acrn_vm *vm = vdev->vpci->vm;
 
 	if (vdev->bar[idx].base != 0UL) {
 		ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp,

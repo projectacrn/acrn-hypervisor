@@ -292,14 +292,14 @@ struct profiling_info_wrapper {
 	struct sw_msr_op_info	sw_msr_op_info;
 } __aligned(8);
 
-int32_t profiling_get_version_info(struct vm *vm, uint64_t addr);
-int32_t profiling_get_pcpu_id(struct vm *vm, uint64_t addr);
-int32_t profiling_msr_ops_all_cpus(struct vm *vm, uint64_t addr);
-int32_t profiling_vm_list_info(struct vm *vm, uint64_t addr);
-int32_t profiling_get_control(struct vm *vm, uint64_t addr);
-int32_t profiling_set_control(struct vm *vm, uint64_t addr);
-int32_t profiling_configure_pmi(struct vm *vm, uint64_t addr);
-int32_t profiling_configure_vmsw(struct vm *vm, uint64_t addr);
+int32_t profiling_get_version_info(struct acrn_vm *vm, uint64_t addr);
+int32_t profiling_get_pcpu_id(struct acrn_vm *vm, uint64_t addr);
+int32_t profiling_msr_ops_all_cpus(struct acrn_vm *vm, uint64_t addr);
+int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr);
+int32_t profiling_get_control(struct acrn_vm *vm, uint64_t addr);
+int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr);
+int32_t profiling_configure_pmi(struct acrn_vm *vm, uint64_t addr);
+int32_t profiling_configure_vmsw(struct acrn_vm *vm, uint64_t addr);
 void profiling_ipi_handler(void *data);
 
 #endif

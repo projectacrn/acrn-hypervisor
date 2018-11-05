@@ -87,7 +87,7 @@ static uint32_t acpi_gas_read(const struct acpi_generic_address *gas)
 	return ret;
 }
 
-void do_acpi_s3(struct vm *vm, uint32_t pm1a_cnt_val,
+void do_acpi_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val,
 	uint32_t pm1b_cnt_val)
 {
 	uint32_t s1, s2;
@@ -123,7 +123,7 @@ void do_acpi_s3(struct vm *vm, uint32_t pm1a_cnt_val,
 	}
 }
 
-int enter_s3(struct vm *vm, uint32_t pm1a_cnt_val,
+int enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val,
 	uint32_t pm1b_cnt_val)
 {
 	uint64_t pmain_entry_saved;

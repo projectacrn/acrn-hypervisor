@@ -121,12 +121,12 @@ struct i8259_reg_state {
 };
 
 struct acrn_vpic {
-	struct vm		*vm;
+	struct acrn_vm		*vm;
 	spinlock_t	lock;
 	struct i8259_reg_state	i8259[2];
 };
 
-void vpic_init(struct vm *vm);
+void vpic_init(struct acrn_vm *vm);
 
 /**
  * @brief virtual PIC
@@ -145,7 +145,7 @@ void vpic_init(struct vm *vm);
  *
  * @return void
  */
-void vpic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation);
+void vpic_set_irq(struct acrn_vm *vm, uint32_t irq, uint32_t operation);
 
 /**
  * @brief Get pending virtual interrupts for vPIC.
@@ -156,7 +156,7 @@ void vpic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation);
  *
  * @return void.
  */
-void vpic_pending_intr(struct vm *vm, uint32_t *vecptr);
+void vpic_pending_intr(struct acrn_vm *vm, uint32_t *vecptr);
 
 /**
  * @brief Accept virtual interrupt for vPIC.
@@ -168,8 +168,8 @@ void vpic_pending_intr(struct vm *vm, uint32_t *vecptr);
  *
  * @pre vm != NULL
  */
-void vpic_intr_accepted(struct vm *vm, uint32_t vector);
-void vpic_get_irq_trigger(struct vm *vm, uint32_t irq,
+void vpic_intr_accepted(struct acrn_vm *vm, uint32_t vector);
+void vpic_get_irq_trigger(struct acrn_vm *vm, uint32_t irq,
 	enum vpic_trigger *trigger);
 uint32_t vpic_pincount(void);
 

@@ -130,7 +130,7 @@ struct vcpuid_entry {
 	uint32_t padding;
 };
 
-struct vm {
+struct acrn_vm {
 	struct vm_arch arch_vm; /* Reference to this VM's arch information */
 	struct vm_hw_info hw;	/* Reference to this VM's HW information */
 	struct vm_sw_info sw;	/* Reference to SW associated with this VM */
@@ -197,7 +197,7 @@ struct vm_description {
 #endif
 };
 
-static inline bool is_vm0(const struct vm *vm)
+static inline bool is_vm0(const struct acrn_vm *vm)
 {
 	return (vm->vm_id) == 0U;
 }
@@ -205,7 +205,7 @@ static inline bool is_vm0(const struct vm *vm)
 /*
  * @pre vcpu_id < CONFIG_MAX_VCPUS_PER_VM
  */
-static inline struct acrn_vcpu *vcpu_from_vid(struct vm *vm, uint16_t vcpu_id)
+static inline struct acrn_vcpu *vcpu_from_vid(struct acrn_vm *vm, uint16_t vcpu_id)
 {
 	uint16_t i;
 	struct acrn_vcpu *vcpu;
@@ -218,7 +218,7 @@ static inline struct acrn_vcpu *vcpu_from_vid(struct vm *vm, uint16_t vcpu_id)
 	return vcpu;
 }
 
-static inline struct acrn_vcpu *vcpu_from_pid(struct vm *vm, uint16_t pcpu_id)
+static inline struct acrn_vcpu *vcpu_from_pid(struct acrn_vm *vm, uint16_t pcpu_id)
 {
 	uint16_t i;
 	struct acrn_vcpu *vcpu;
@@ -232,7 +232,7 @@ static inline struct acrn_vcpu *vcpu_from_pid(struct vm *vm, uint16_t pcpu_id)
 	return NULL;
 }
 
-static inline struct acrn_vcpu *get_primary_vcpu(struct vm *vm)
+static inline struct acrn_vcpu *get_primary_vcpu(struct acrn_vm *vm)
 {
 	uint16_t i;
 	struct acrn_vcpu *vcpu;
@@ -247,37 +247,37 @@ static inline struct acrn_vcpu *get_primary_vcpu(struct vm *vm)
 }
 
 static inline struct acrn_vuart*
-vm_vuart(struct vm *vm)
+vm_vuart(struct acrn_vm *vm)
 {
 	return &(vm->vuart);
 }
 
 static inline struct acrn_vpic *
-vm_pic(struct vm *vm)
+vm_pic(struct acrn_vm *vm)
 {
 	return (struct acrn_vpic *)&(vm->arch_vm.vpic);
 }
 
 static inline struct acrn_vioapic *
-vm_ioapic(struct vm *vm)
+vm_ioapic(struct acrn_vm *vm)
 {
 	return (struct acrn_vioapic *)&(vm->arch_vm.vioapic);
 }
 
-int shutdown_vm(struct vm *vm);
-void pause_vm(struct vm *vm);
-void resume_vm(struct vm *vm);
-void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec);
-int start_vm(struct vm *vm);
-int reset_vm(struct vm *vm);
-int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm);
+int shutdown_vm(struct acrn_vm *vm);
+void pause_vm(struct acrn_vm *vm);
+void resume_vm(struct acrn_vm *vm);
+void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec);
+int start_vm(struct acrn_vm *vm);
+int reset_vm(struct acrn_vm *vm);
+int create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm);
 int prepare_vm(uint16_t pcpu_id);
 
 #ifdef CONFIG_PARTITION_MODE
 const struct vm_description_array *get_vm_desc_base(void);
 #endif
 
-struct vm *get_vm_from_vmid(uint16_t vm_id);
+struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
 
 #ifdef CONFIG_PARTITION_MODE
 struct vm_description_array {
@@ -291,6 +291,6 @@ struct pcpu_vm_desc_mapping {
 };
 extern const struct pcpu_vm_desc_mapping pcpu_vm_desc_map[];
 
-void vrtc_init(struct vm *vm);
+void vrtc_init(struct acrn_vm *vm);
 #endif
 #endif /* VM_H_ */

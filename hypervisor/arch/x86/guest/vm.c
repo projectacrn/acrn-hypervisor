@@ -11,7 +11,7 @@
 
 /* Local variables */
 
-static struct vm vm_array[CONFIG_MAX_VM_NUM] __aligned(CPU_PAGE_SIZE);
+static struct acrn_vm vm_array[CONFIG_MAX_VM_NUM] __aligned(CPU_PAGE_SIZE);
 
 static uint64_t vmid_bitmap;
 
@@ -30,7 +30,7 @@ static inline uint16_t alloc_vm_id(void)
 	return INVALID_VM_ID;
 }
 
-static inline void free_vm_id(const struct vm *vm)
+static inline void free_vm_id(const struct acrn_vm *vm)
 {
 	bitmap_clear_lock(vm->vm_id, &vmid_bitmap);
 }
@@ -43,7 +43,7 @@ static inline bool is_vm_valid(uint16_t vm_id)
 /* return a pointer to the virtual machine structure associated with
  * this VM ID
  */
-struct vm *get_vm_from_vmid(uint16_t vm_id)
+struct acrn_vm *get_vm_from_vmid(uint16_t vm_id)
 {
 	if (is_vm_valid(vm_id)) {
 		return &vm_array[vm_id];
@@ -55,9 +55,9 @@ struct vm *get_vm_from_vmid(uint16_t vm_id)
 /**
  * @pre vm_desc != NULL && rtn_vm != NULL
  */
-int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
+int create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 {
-	struct vm *vm;
+	struct acrn_vm *vm;
 	int status;
 	uint16_t vm_id;
 
@@ -74,7 +74,7 @@ int create_vm(struct vm_description *vm_desc, struct vm **rtn_vm)
 
 	/* Allocate memory for virtual machine */
 	vm = &vm_array[vm_id];
-	(void)memset((void *)vm, 0U, sizeof(struct vm));
+	(void)memset((void *)vm, 0U, sizeof(struct acrn_vm));
 	vm->vm_id = vm_id;
 #ifdef CONFIG_PARTITION_MODE
 	/* Map Virtual Machine to its VM Description */
@@ -185,7 +185,7 @@ err:
 /*
  * @pre vm != NULL
  */
-int shutdown_vm(struct vm *vm)
+int shutdown_vm(struct acrn_vm *vm)
 {
 	int status = 0;
 	uint16_t i;
@@ -233,7 +233,7 @@ int shutdown_vm(struct vm *vm)
 /**
  *  * @pre vm != NULL
  */
-int start_vm(struct vm *vm)
+int start_vm(struct acrn_vm *vm)
 {
 	struct acrn_vcpu *vcpu = NULL;
 
@@ -249,7 +249,7 @@ int start_vm(struct vm *vm)
 /**
  *  * @pre vm != NULL
  */
-int reset_vm(struct vm *vm)
+int reset_vm(struct acrn_vm *vm)
 {
 	int i;
 	struct acrn_vcpu *vcpu = NULL;
@@ -276,7 +276,7 @@ int reset_vm(struct vm *vm)
 /**
  *  * @pre vm != NULL
  */
-void pause_vm(struct vm *vm)
+void pause_vm(struct acrn_vm *vm)
 {
 	uint16_t i;
 	struct acrn_vcpu *vcpu = NULL;
@@ -295,7 +295,7 @@ void pause_vm(struct vm *vm)
 /**
  *  * @pre vm != NULL
  */
-void resume_vm(struct vm *vm)
+void resume_vm(struct acrn_vm *vm)
 {
 	uint16_t i;
 	struct acrn_vcpu *vcpu = NULL;
@@ -321,7 +321,7 @@ void resume_vm(struct vm *vm)
  *
  * @pre vm != NULL
  */
-void resume_vm_from_s3(struct vm *vm, uint32_t wakeup_vec)
+void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 {
 	struct acrn_vcpu *bsp = vcpu_from_vid(vm, 0U);
 
@@ -344,7 +344,7 @@ int prepare_vm(uint16_t pcpu_id)
 {
 	int ret = 0;
 	uint16_t i;
-	struct vm *vm = NULL;
+	struct acrn_vm *vm = NULL;
 	struct vm_description *vm_desc = NULL;
 	bool is_vm_bsp;
 
@@ -385,7 +385,7 @@ int prepare_vm0(void)
 {
 	int err;
 	uint16_t i;
-	struct vm *vm = NULL;
+	struct acrn_vm *vm = NULL;
 	struct vm_description vm0_desc;
 
 	(void)memset((void *)&vm0_desc, 0U, sizeof(vm0_desc));

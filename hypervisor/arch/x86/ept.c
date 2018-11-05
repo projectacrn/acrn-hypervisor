@@ -10,7 +10,7 @@
 
 #define ACRN_DBG_EPT	6U
 
-void destroy_ept(struct vm *vm)
+void destroy_ept(struct acrn_vm *vm)
 {
 	/* Destroy secure world */
 	if (vm->sworld_control.flag.active != 0UL) {
@@ -23,7 +23,7 @@ void destroy_ept(struct vm *vm)
 }
 
 /* using return value INVALID_HPA as error code */
-uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
+uint64_t local_gpa2hpa(struct acrn_vm *vm, uint64_t gpa, uint32_t *size)
 {
 	uint64_t hpa = INVALID_HPA;
 	uint64_t *pgentry, pg_size = 0UL;
@@ -58,7 +58,7 @@ uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size)
 }
 
 /* using return value INVALID_HPA as error code */
-uint64_t gpa2hpa(struct vm *vm, uint64_t gpa)
+uint64_t gpa2hpa(struct acrn_vm *vm, uint64_t gpa)
 {
 	return local_gpa2hpa(vm, gpa, NULL);
 }
@@ -178,7 +178,7 @@ int ept_misconfig_vmexit_handler(__unused struct acrn_vcpu *vcpu)
 	return status;
 }
 
-void ept_mr_add(struct vm *vm, uint64_t *pml4_page,
+void ept_mr_add(struct acrn_vm *vm, uint64_t *pml4_page,
 	uint64_t hpa, uint64_t gpa, uint64_t size, uint64_t prot_orig)
 {
 	uint16_t i;
@@ -203,7 +203,7 @@ void ept_mr_add(struct vm *vm, uint64_t *pml4_page,
 	}
 }
 
-void ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
+void ept_mr_modify(struct acrn_vm *vm, uint64_t *pml4_page,
 		uint64_t gpa, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr)
 {
@@ -221,7 +221,7 @@ void ept_mr_modify(struct vm *vm, uint64_t *pml4_page,
 /**
  * @pre [gpa,gpa+size) has been mapped into host physical memory region
  */
-void ept_mr_del(struct vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t size)
+void ept_mr_del(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa, uint64_t size)
 {
 	struct acrn_vcpu *vcpu;
 	uint16_t i;

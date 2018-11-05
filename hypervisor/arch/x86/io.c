@@ -196,7 +196,7 @@ hv_emulate_pio(const struct acrn_vcpu *vcpu, struct io_request *io_req)
 	int32_t status = -ENODEV;
 	uint16_t port, size;
 	uint32_t mask;
-	struct vm *vm = vcpu->vm;
+	struct acrn_vm *vm = vcpu->vm;
 	struct pio_request *pio_req = &io_req->reqs.pio;
 	struct vm_io_handler *handler;
 
@@ -394,7 +394,7 @@ int32_t pio_instr_vmexit_handler(struct acrn_vcpu *vcpu)
 	return status;
 }
 
-static void register_io_handler(struct vm *vm, struct vm_io_handler *hdlr)
+static void register_io_handler(struct acrn_vm *vm, struct vm_io_handler *hdlr)
 {
 	if (vm->arch_vm.io_handler != NULL) {
 		hdlr->next = vm->arch_vm.io_handler;
@@ -403,7 +403,7 @@ static void register_io_handler(struct vm *vm, struct vm_io_handler *hdlr)
 	vm->arch_vm.io_handler = hdlr;
 }
 
-static void empty_io_handler_list(struct vm *vm)
+static void empty_io_handler_list(struct acrn_vm *vm)
 {
 	struct vm_io_handler *handler = vm->arch_vm.io_handler;
 	struct vm_io_handler *tmp;
@@ -421,7 +421,7 @@ static void empty_io_handler_list(struct vm *vm)
  *
  * @param vm The VM whose I/O bitmaps and handlers are to be freed
  */
-void free_io_emulation_resource(struct vm *vm)
+void free_io_emulation_resource(struct acrn_vm *vm)
 {
 	empty_io_handler_list(vm);
 }
@@ -436,7 +436,7 @@ void free_io_emulation_resource(struct vm *vm)
  * @param port_address The start address of the port I/O range
  * @param nbytes The size of the range, in bytes
  */
-void allow_guest_pio_access(struct vm *vm, uint16_t port_address,
+void allow_guest_pio_access(struct acrn_vm *vm, uint16_t port_address,
 		uint32_t nbytes)
 {
 	uint16_t address = port_address;
@@ -450,7 +450,7 @@ void allow_guest_pio_access(struct vm *vm, uint16_t port_address,
 	}
 }
 
-static void deny_guest_pio_access(struct vm *vm, uint16_t port_address,
+static void deny_guest_pio_access(struct acrn_vm *vm, uint16_t port_address,
 		uint32_t nbytes)
 {
 	uint16_t address = port_address;
@@ -490,7 +490,7 @@ static struct vm_io_handler *create_io_handler(uint32_t port, uint32_t len,
  *
  * @param vm The VM whose I/O bitmap is to be initialized
  */
-void setup_io_bitmap(struct vm *vm)
+void setup_io_bitmap(struct acrn_vm *vm)
 {
 	if (is_vm0(vm)) {
 		(void)memset(vm->arch_vm.io_bitmap, 0x00U, CPU_PAGE_SIZE * 2);
@@ -508,7 +508,7 @@ void setup_io_bitmap(struct vm *vm)
  * @param io_read_fn_ptr The handler for emulating reads from the given range
  * @param io_write_fn_ptr The handler for emulating writes to the given range
  */
-void register_io_emulation_handler(struct vm *vm, const struct vm_io_range *range,
+void register_io_emulation_handler(struct acrn_vm *vm, const struct vm_io_range *range,
 		io_read_fn_t io_read_fn_ptr,
 		io_write_fn_t io_write_fn_ptr)
 {
@@ -543,7 +543,7 @@ void register_io_emulation_handler(struct vm *vm, const struct vm_io_range *rang
  * @return 0 - Registration succeeds
  * @return -EINVAL - \p read_write is NULL, \p end is not larger than \p start or \p vm has been launched
  */
-int register_mmio_emulation_handler(struct vm *vm,
+int register_mmio_emulation_handler(struct acrn_vm *vm,
 	hv_mem_io_handler_t read_write, uint64_t start,
 	uint64_t end, void *handler_private_data)
 {
@@ -600,7 +600,7 @@ int register_mmio_emulation_handler(struct vm *vm,
  * @param start The base address of the range the to-be-unregistered handler is for
  * @param end The end of the range (exclusive) the to-be-unregistered handler is for
  */
-void unregister_mmio_emulation_handler(struct vm *vm, uint64_t start,
+void unregister_mmio_emulation_handler(struct acrn_vm *vm, uint64_t start,
 	uint64_t end)
 {
 	struct list_head *pos, *tmp;

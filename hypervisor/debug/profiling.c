@@ -806,7 +806,7 @@ void profiling_stop_pmu(void)
 /*
  * Performs MSR operations on all the CPU's
  */
-int32_t profiling_msr_ops_all_cpus(struct vm *vm, uint64_t addr)
+int32_t profiling_msr_ops_all_cpus(struct acrn_vm *vm, uint64_t addr)
 {
 	uint16_t i;
 	struct profiling_msr_ops_list msr_list[phys_cpu_num];
@@ -839,9 +839,9 @@ int32_t profiling_msr_ops_all_cpus(struct vm *vm, uint64_t addr)
 /*
  * Generate VM info list
  */
-int32_t profiling_vm_list_info(struct vm *vm, uint64_t addr)
+int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr)
 {
-	struct vm *tmp_vm;
+	struct acrn_vm *tmp_vm;
 	struct acrn_vcpu *vcpu;
 	int32_t vm_idx;
 	uint16_t i, j;
@@ -905,7 +905,7 @@ int32_t profiling_vm_list_info(struct vm *vm, uint64_t addr)
 /*
  * Sep/socwatch profiling version
  */
-int32_t profiling_get_version_info(struct vm *vm, uint64_t addr)
+int32_t profiling_get_version_info(struct acrn_vm *vm, uint64_t addr)
 {
 	struct profiling_version_info ver_info;
 
@@ -939,7 +939,7 @@ int32_t profiling_get_version_info(struct vm *vm, uint64_t addr)
 /*
  * Gets type of profiling - sep/socwatch
  */
-int32_t profiling_get_control(struct vm *vm, uint64_t addr)
+int32_t profiling_get_control(struct acrn_vm *vm, uint64_t addr)
 {
 	struct profiling_control prof_control;
 
@@ -977,7 +977,7 @@ int32_t profiling_get_control(struct vm *vm, uint64_t addr)
 /*
  * Update the profiling type based on control switch
  */
-int32_t profiling_set_control(struct vm *vm, uint64_t addr)
+int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 {
 	uint64_t old_switch;
 	uint64_t new_switch;
@@ -1092,7 +1092,7 @@ int32_t profiling_set_control(struct vm *vm, uint64_t addr)
 /*
  * Configure PMI on all cpus
  */
-int32_t profiling_configure_pmi(struct vm *vm, uint64_t addr)
+int32_t profiling_configure_pmi(struct acrn_vm *vm, uint64_t addr)
 {
 	uint16_t i;
 	struct profiling_pmi_config pmi_config;
@@ -1169,7 +1169,7 @@ int32_t profiling_configure_pmi(struct vm *vm, uint64_t addr)
 /*
  * Configure for VM-switch data on all cpus
  */
-int32_t profiling_configure_vmsw(struct vm *vm, uint64_t addr)
+int32_t profiling_configure_vmsw(struct acrn_vm *vm, uint64_t addr)
 {
 	uint16_t i;
 	int32_t ret = 0;
@@ -1233,7 +1233,7 @@ int32_t profiling_configure_vmsw(struct vm *vm, uint64_t addr)
 /*
  * Get the physical cpu id
  */
-int32_t profiling_get_pcpu_id(struct vm *vm, uint64_t addr)
+int32_t profiling_get_pcpu_id(struct acrn_vm *vm, uint64_t addr)
 {
 	struct profiling_pcpuid pcpuid;
 

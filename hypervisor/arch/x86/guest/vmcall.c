@@ -15,7 +15,7 @@
 int vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int32_t ret = -EACCES;
-	struct vm *vm = vcpu->vm;
+	struct acrn_vm *vm = vcpu->vm;
 	/* hypercall ID from guest*/
 	uint64_t hypcall_id = vcpu_get_gpreg(vcpu, CPU_REG_R8);
 	/* hypercall param1 from guest*/

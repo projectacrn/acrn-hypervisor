@@ -57,7 +57,7 @@ static struct trusty_key_info g_key_info = {
  * @param gpa_rebased gpa rebased to offset xxx (511G_OFFSET)
  *
  */
-static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
+static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 		uint64_t size, uint64_t gpa_rebased)
 {
 	uint64_t nworld_pml4e;
@@ -68,7 +68,7 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	uint64_t table_present = EPT_RWX;
 	uint64_t pdpte, *dest_pdpte_p, *src_pdpte_p;
 	void *sub_table_addr, *pml4_base;
-	struct vm *vm0 = get_vm_from_vmid(0U);
+	struct acrn_vm *vm0 = get_vm_from_vmid(0U);
 	uint16_t i;
 
 	if ((vm->sworld_control.flag.supported == 0UL)
@@ -148,9 +148,9 @@ static void create_secure_world_ept(struct vm *vm, uint64_t gpa_orig,
 	vm->sworld_control.sworld_memory.length = size;
 }
 
-void  destroy_secure_world(struct vm *vm, bool need_clr_mem)
+void  destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
 {
-	struct vm *vm0 = get_vm_from_vmid(0U);
+	struct acrn_vm *vm0 = get_vm_from_vmid(0U);
 	uint64_t hpa = vm->sworld_control.sworld_memory.base_hpa;
 	uint64_t gpa_sos = vm->sworld_control.sworld_memory.base_gpa_in_sos;
 	uint64_t gpa_uos = vm->sworld_control.sworld_memory.base_gpa_in_uos;
@@ -402,7 +402,7 @@ bool initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param)
 {
 	uint64_t trusty_entry_gpa, trusty_base_gpa, trusty_base_hpa;
 	uint32_t trusty_mem_size;
-	struct vm *vm = vcpu->vm;
+	struct acrn_vm *vm = vcpu->vm;
 	struct trusty_boot_param boot_param;
 
 	(void)memset(&boot_param, 0U, sizeof(boot_param));

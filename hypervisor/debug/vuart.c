@@ -154,7 +154,7 @@ static void vuart_toggle_intr(const struct acrn_vuart *vu)
 	vioapic_set_irq(vu->vm, COM1_IRQ, operation);
 }
 
-static void vuart_write(struct vm *vm, uint16_t offset_arg,
+static void vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
 			__unused size_t width, uint32_t value)
 {
 	uint16_t offset = offset_arg;
@@ -240,7 +240,7 @@ done:
 	vuart_unlock(vu);
 }
 
-static uint32_t vuart_read(struct vm *vm, uint16_t offset_arg,
+static uint32_t vuart_read(struct acrn_vm *vm, uint16_t offset_arg,
 			__unused size_t width)
 {
 	uint16_t offset = offset_arg;
@@ -319,7 +319,7 @@ done:
 	return (uint32_t)reg;
 }
 
-static void vuart_register_io_handler(struct vm *vm)
+static void vuart_register_io_handler(struct acrn_vm *vm)
 {
 	struct vm_io_range range = {
 		.flags = IO_ATTR_RW,
@@ -370,7 +370,7 @@ void vuart_console_rx_chars(struct acrn_vuart *vu)
 struct acrn_vuart *vuart_console_active(void)
 {
 #ifdef CONFIG_PARTITION_MODE
-	struct vm *vm;
+	struct acrn_vm *vm;
 
 	if (vuart_vmid == -1) {
 		return NULL;
@@ -378,7 +378,7 @@ struct acrn_vuart *vuart_console_active(void)
 
 	vm = get_vm_from_vmid(vuart_vmid);
 #else
-	struct vm *vm = get_vm_from_vmid(0U);
+	struct acrn_vm *vm = get_vm_from_vmid(0U);
 #endif
 
 	if (vm != NULL) {
@@ -391,7 +391,7 @@ struct acrn_vuart *vuart_console_active(void)
 	return NULL;
 }
 
-void vuart_init(struct vm *vm)
+void vuart_init(struct acrn_vm *vm)
 {
 	uint32_t divisor;
 	struct acrn_vuart *vu = vm_vuart(vm);

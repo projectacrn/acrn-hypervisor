@@ -46,7 +46,7 @@
 #define STATE_BITMAP_SIZE	INT_DIV_ROUNDUP(REDIR_ENTRIES_HW, 64U)
 
 struct acrn_vioapic {
-	struct vm	*vm;
+	struct acrn_vm	*vm;
 	spinlock_t	mtx;
 	uint32_t	id;
 	uint32_t	ioregsel;
@@ -55,7 +55,7 @@ struct acrn_vioapic {
 	uint64_t pin_state[STATE_BITMAP_SIZE];
 };
 
-void    vioapic_init(struct vm *vm);
+void    vioapic_init(struct acrn_vm *vm);
 void	vioapic_cleanup(const struct acrn_vioapic *vioapic);
 void	vioapic_reset(struct acrn_vioapic *vioapic);
 
@@ -79,7 +79,7 @@ void	vioapic_reset(struct acrn_vioapic *vioapic);
  *
  * @return void
  */
-void	vioapic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation);
+void	vioapic_set_irq(struct acrn_vm *vm, uint32_t irq, uint32_t operation);
 
 /**
  * @brief Set vIOAPIC IRQ line status.
@@ -95,12 +95,12 @@ void	vioapic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation);
  * @pre irq < vioapic_pincount(vm)
  * @return void
  */
-void	vioapic_set_irq_nolock(struct vm *vm, uint32_t irq, uint32_t operation);
+void	vioapic_set_irq_nolock(struct acrn_vm *vm, uint32_t irq, uint32_t operation);
 void	vioapic_update_tmr(struct acrn_vcpu *vcpu);
 
-uint32_t	vioapic_pincount(const struct vm *vm);
-void	vioapic_process_eoi(struct vm *vm, uint32_t vector);
-void	vioapic_get_rte(struct vm *vm, uint32_t pin, union ioapic_rte *rte);
+uint32_t	vioapic_pincount(const struct acrn_vm *vm);
+void	vioapic_process_eoi(struct acrn_vm *vm, uint32_t vector);
+void	vioapic_get_rte(struct acrn_vm *vm, uint32_t pin, union ioapic_rte *rte);
 int		vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private_data);
 
 #ifdef HV_DEBUG

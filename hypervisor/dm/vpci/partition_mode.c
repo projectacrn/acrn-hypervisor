@@ -49,7 +49,7 @@ static struct pci_vdev *partition_mode_find_vdev(struct vpci *vpci, union pci_bd
 	return NULL;
 }
 
-static int partition_mode_vpci_init(struct vm *vm)
+static int partition_mode_vpci_init(struct acrn_vm *vm)
 {
 	struct vpci_vdev_array *vdev_array;
 	struct vpci *vpci = &vm->vpci;
@@ -73,7 +73,7 @@ static int partition_mode_vpci_init(struct vm *vm)
 	return 0;
 }
 
-static void partition_mode_vpci_deinit(struct vm *vm)
+static void partition_mode_vpci_deinit(struct acrn_vm *vm)
 {
 	struct vpci_vdev_array *vdev_array;
 	struct pci_vdev *vdev;

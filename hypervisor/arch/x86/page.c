@@ -135,7 +135,7 @@ static inline struct page *ept_get_pt_page(const union pgtable_pages_info *info,
 	return page;
 }
 
-void init_ept_mem_ops(struct vm *vm)
+void init_ept_mem_ops(struct acrn_vm *vm)
 {
 	uint16_t vm_id = vm->vm_id;
 	if (vm_id != 0U) {

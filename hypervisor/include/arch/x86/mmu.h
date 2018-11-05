@@ -160,7 +160,7 @@ void invept(const struct acrn_vcpu *vcpu);
  * @return true - The HPA of the guest memory region is continuous
  * @return false - The HPA of the guest memory region is non-continuous
  */
-bool check_continuous_hpa(struct vm *vm, uint64_t gpa_arg, uint64_t size_arg);
+bool check_continuous_hpa(struct acrn_vm *vm, uint64_t gpa_arg, uint64_t size_arg);
 /**
  *@pre (pml4_page != NULL) && (pg_size != NULL)
  */
@@ -214,7 +214,7 @@ static inline void clflush(volatile void *p)
  *
  * @return None
  */
-void destroy_ept(struct vm *vm);
+void destroy_ept(struct acrn_vm *vm);
 /**
  * @brief Translating from guest-physical address to host-physcial address
  *
@@ -224,7 +224,7 @@ void destroy_ept(struct vm *vm);
  * @return INVALID_HPA - the HPA of parameter gpa is unmapping
  * @return hpa - the HPA of parameter gpa is hpa
  */
-uint64_t gpa2hpa(struct vm *vm, uint64_t gpa);
+uint64_t gpa2hpa(struct acrn_vm *vm, uint64_t gpa);
 /**
  * @brief Translating from guest-physical address to host-physcial address
  *
@@ -236,7 +236,7 @@ uint64_t gpa2hpa(struct vm *vm, uint64_t gpa);
  * @return INVALID_HPA - the HPA of parameter gpa is unmapping
  * @return hpa - the HPA of parameter gpa is hpa
  */
-uint64_t local_gpa2hpa(struct vm *vm, uint64_t gpa, uint32_t *size);
+uint64_t local_gpa2hpa(struct acrn_vm *vm, uint64_t gpa, uint32_t *size);
 /**
  * @brief Translating from host-physical address to guest-physical address for VM0
  *
@@ -260,7 +260,7 @@ uint64_t vm0_hpa2gpa(uint64_t hpa);
  *
  * @return None
  */
-void ept_mr_add(struct vm *vm, uint64_t *pml4_page, uint64_t hpa,
+void ept_mr_add(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t hpa,
 		uint64_t gpa, uint64_t size, uint64_t prot_orig);
 /**
  * @brief Guest-physical memory page access right or memory type updating
@@ -277,7 +277,7 @@ void ept_mr_add(struct vm *vm, uint64_t *pml4_page, uint64_t hpa,
  *
  * @return None
  */
-void ept_mr_modify(struct vm *vm, uint64_t *pml4_page, uint64_t gpa,
+void ept_mr_modify(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
 		uint64_t size, uint64_t prot_set, uint64_t prot_clr);
 /**
  * @brief Guest-physical memory region unmapping
@@ -292,7 +292,7 @@ void ept_mr_modify(struct vm *vm, uint64_t *pml4_page, uint64_t gpa,
  *
  * @pre [gpa,gpa+size) has been mapped into host physical memory region
  */
-void ept_mr_del(struct vm *vm, uint64_t *pml4_page, uint64_t gpa,
+void ept_mr_del(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
 		uint64_t size);
 /**
  * @brief EPT violation handling

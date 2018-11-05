@@ -150,7 +150,7 @@ static int vcpu_inject_vlapic_int(struct acrn_vcpu *vcpu)
 
 static int vcpu_do_pending_extint(const struct acrn_vcpu *vcpu)
 {
-	struct vm *vm;
+	struct acrn_vm *vm;
 	struct acrn_vcpu *primary;
 	uint32_t vector;
 

@@ -6,7 +6,7 @@
 
 #include <hypervisor.h>
 
-int validate_pstate(const struct vm *vm, uint64_t perf_ctl)
+int validate_pstate(const struct acrn_vm *vm, uint64_t perf_ctl)
 {
 	const struct cpu_px_data *px_data;
 	int i, px_cnt;
@@ -31,7 +31,7 @@ int validate_pstate(const struct vm *vm, uint64_t perf_ctl)
 	return -1;
 }
 
-static void vm_setup_cpu_px(struct vm *vm)
+static void vm_setup_cpu_px(struct acrn_vm *vm)
 {
 	uint32_t px_data_size;
 
@@ -56,7 +56,7 @@ static void vm_setup_cpu_px(struct vm *vm)
 
 }
 
-static void vm_setup_cpu_cx(struct vm *vm)
+static void vm_setup_cpu_cx(struct acrn_vm *vm)
 {
 	uint32_t cx_data_size;
 
@@ -84,7 +84,7 @@ static void vm_setup_cpu_cx(struct vm *vm)
 
 }
 
-static inline void init_cx_port(struct vm *vm)
+static inline void init_cx_port(struct acrn_vm *vm)
 {
 	uint8_t cx_idx;
 
@@ -99,7 +99,7 @@ static inline void init_cx_port(struct vm *vm)
 	}
 }
 
-void vm_setup_cpu_state(struct vm *vm)
+void vm_setup_cpu_state(struct acrn_vm *vm)
 {
 	vm_setup_cpu_px(vm);
 	vm_setup_cpu_cx(vm);
@@ -109,7 +109,7 @@ void vm_setup_cpu_state(struct vm *vm)
 /* This function is for power management Sx state implementation,
  * VM need to load the Sx state data to implement S3/S5.
  */
-int vm_load_pm_s_state(struct vm *vm)
+int vm_load_pm_s_state(struct acrn_vm *vm)
 {
 #ifdef ACPI_INFO_VALIDATED
 	vm->pm.sx_state_data = (struct pm_s_state_data *)&host_pm_s_state;
@@ -132,7 +132,7 @@ static inline uint8_t get_slp_typx(uint32_t pm1_cnt)
 	return (uint8_t)((pm1_cnt & 0x1fffU) >> BIT_SLP_TYPx);
 }
 
-static uint32_t pm1ab_io_read(__unused struct vm *vm, uint16_t addr,
+static uint32_t pm1ab_io_read(__unused struct acrn_vm *vm, uint16_t addr,
 			size_t width)
 {
 	uint32_t val = pio_read(addr, width);
@@ -148,7 +148,7 @@ static uint32_t pm1ab_io_read(__unused struct vm *vm, uint16_t addr,
 	return val;
 }
 
-static void pm1ab_io_write(__unused struct vm *vm, uint16_t addr, size_t width,
+static void pm1ab_io_write(__unused struct acrn_vm *vm, uint16_t addr, size_t width,
 			uint32_t v)
 {
 	static uint32_t pm1a_cnt_ready = 0U;
@@ -187,7 +187,7 @@ static void pm1ab_io_write(__unused struct vm *vm, uint16_t addr, size_t width,
 }
 
 static void
-register_gas_io_handler(struct vm *vm, const struct acpi_generic_address *gas)
+register_gas_io_handler(struct acrn_vm *vm, const struct acpi_generic_address *gas)
 {
 	uint8_t io_len[5] = {0, 1, 2, 4, 8};
 	struct vm_io_range gas_io;
@@ -210,7 +210,7 @@ register_gas_io_handler(struct vm *vm, const struct acpi_generic_address *gas)
 			vm->vm_id, gas_io.base, gas_io.len);
 }
 
-void register_pm1ab_handler(struct vm *vm)
+void register_pm1ab_handler(struct acrn_vm *vm)
 {
 	struct pm_s_state_data *sx_data = vm->pm.sx_state_data;
 
