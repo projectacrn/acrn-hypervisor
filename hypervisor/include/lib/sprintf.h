@@ -13,14 +13,24 @@
 /* Command for the emit function: fill output with first character. */
 #define PRINT_CMD_FILL			0x00000001U
 
+/** Structure used to call back emit lived in print_param */
+struct snprint_param {
+	/** The destination buffer. */
+	char *dst;
+	/** The size of the destination buffer. */
+	uint32_t sz;
+	/** Counter for written chars. */
+	uint32_t wrtn;
+};
+
 /* Structure used to parse parameters and variables to subroutines. */
 struct print_param {
 	/* A pointer to the function that is used to emit characters. */
-	void (*emit)(size_t, const char *, uint32_t, void *);
-	/* An opaque pointer that is passed as third argument to the emit
+	void (*emit)(size_t, const char *, uint32_t, struct snprint_param *);
+	/* An opaque pointer that is passed as forth argument to the emit
 	 * function.
 	 */
-	void *data;
+        struct snprint_param *data;
 	/* Contains variables which are recalculated for each argument. */
 	struct {
 		/* A bitfield with the parsed format flags. */

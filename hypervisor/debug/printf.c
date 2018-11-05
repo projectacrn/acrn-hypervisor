@@ -6,12 +6,13 @@
 
 #include <hypervisor.h>
 
-static void charout(size_t cmd, const char *s_arg, uint32_t sz_arg, void *hnd)
+static void
+charout(size_t cmd, const char *s_arg, uint32_t sz_arg, struct snprint_param *param)
 {
 	const char *s = s_arg;
 	uint32_t sz = sz_arg;
 	/* pointer to an integer to store the number of characters */
-	size_t *nchars = (size_t *)hnd;
+	size_t nchars = param->wrtn;
 	/* working pointer */
 	const char *p = s;
 	size_t len;
@@ -23,30 +24,29 @@ static void charout(size_t cmd, const char *s_arg, uint32_t sz_arg, void *hnd)
 			s += len;
 		}
 
-		*nchars += (s - p);
+		nchars += (s - p);
 	} else {
 		/* fill mode */
-		*nchars += sz;
+		nchars += sz;
 		while (sz != 0U) {
 			console_putc(s);
 			sz--;
 		}
 	}
-
+	param->wrtn = nchars;
 }
 
 void vprintf(const char *fmt, va_list args)
 {
 	/* struct to store all necessary parameters */
 	struct print_param param;
-
-	/* argument fo charout() */
-	size_t nchars = 0;
+	struct snprint_param snparam;
 
 	/* initialize parameters */
+	(void)memset(&snparam, 0U, sizeof(snparam));
 	(void)memset(&param, 0U, sizeof(param));
 	param.emit = charout;
-	param.data = &nchars;
+	param.data = &snparam;
 
 	/* execute the printf() */
 	do_print(fmt, &param, args);
