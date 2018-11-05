@@ -134,6 +134,12 @@ void vpci_init(struct vm *vm)
 	if ((vpci->ops->init != NULL) && (vpci->ops->init(vm) == 0)) {
 		register_io_emulation_handler(vm, &pci_cfg_range,
 			&pci_cfg_io_read, &pci_cfg_io_write);
+		/* This is a tmp solution to avoid sos reboot failure, it need pass-thru IO port CF9 for Reset Control
+		 * register.
+		 */
+		if (is_vm0(vm)) {
+			allow_guest_pio_access(vm, 0xCF9U, 1);
+		}
 	}
 }
 
