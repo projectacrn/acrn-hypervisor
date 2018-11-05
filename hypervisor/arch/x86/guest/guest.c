@@ -32,7 +32,7 @@ struct page_walk_info {
 	bool is_smep_on;
 };
 
-uint64_t vcpumask2pcpumask(struct vm *vm, uint64_t vdmask)
+uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask)
 {
 	uint16_t vcpu_id;
 	uint64_t dmask = 0UL;
@@ -327,7 +327,7 @@ int gva2gpa(struct acrn_vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	return ret;
 }
 
-static inline uint32_t local_copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
+static inline uint32_t local_copy_gpa(struct acrn_vm *vm, void *h_ptr, uint64_t gpa,
 	uint32_t size, uint32_t fix_pg_size, bool cp_from_vm)
 {
 	uint64_t hpa;
@@ -360,7 +360,7 @@ static inline uint32_t local_copy_gpa(struct vm *vm, void *h_ptr, uint64_t gpa,
 	return len;
 }
 
-static inline int copy_gpa(struct vm *vm, void *h_ptr_arg, uint64_t gpa_arg,
+static inline int copy_gpa(struct acrn_vm *vm, void *h_ptr_arg, uint64_t gpa_arg,
 	uint32_t size_arg, bool cp_from_vm)
 {
 	void *h_ptr = h_ptr_arg;
@@ -427,7 +427,7 @@ static inline int copy_gva(struct acrn_vcpu *vcpu, void *h_ptr_arg, uint64_t gva
  *   continuous
  * @pre Pointer vm is non-NULL
  */
-int copy_from_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
+int copy_from_gpa(struct acrn_vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
 {
 	return copy_gpa(vm, h_ptr, gpa, size, 1);
 }
@@ -438,7 +438,7 @@ int copy_from_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
  *   continuous
  * @pre Pointer vm is non-NULL
  */
-int copy_to_gpa(struct vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
+int copy_to_gpa(struct acrn_vm *vm, void *h_ptr, uint64_t gpa, uint32_t size)
 {
 	return copy_gpa(vm, h_ptr, gpa, size, 0);
 }
@@ -606,7 +606,7 @@ static void rebuild_vm0_e820(void)
  * @pre vm != NULL
  * @pre is_vm0(vm) == true
  */
-int prepare_vm0_memmap_and_e820(struct vm *vm)
+int prepare_vm0_memmap_and_e820(struct acrn_vm *vm)
 {
 	uint32_t i;
 	uint64_t attr_uc = (EPT_RWX | EPT_UNCACHED);

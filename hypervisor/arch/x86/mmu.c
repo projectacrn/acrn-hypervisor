@@ -291,7 +291,7 @@ void init_paging(void)
 	sanitize_pte((uint64_t *)sanitized_page);
 }
 
-bool check_continuous_hpa(struct vm *vm, uint64_t gpa_arg, uint64_t size_arg)
+bool check_continuous_hpa(struct acrn_vm *vm, uint64_t gpa_arg, uint64_t size_arg)
 {
 	uint64_t curr_hpa;
 	uint64_t next_hpa;

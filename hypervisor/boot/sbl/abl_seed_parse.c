@@ -105,7 +105,7 @@ fail:
  * return value:
  *    true if parse successfully, otherwise false.
  */
-bool abl_seed_parse(struct vm *vm, char *cmdline, char *out_arg, uint32_t out_len)
+bool abl_seed_parse(struct acrn_vm *vm, char *cmdline, char *out_arg, uint32_t out_len)
 {
 	char *arg, *arg_end;
 	char *param;

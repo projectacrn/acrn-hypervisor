@@ -448,7 +448,7 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin,
  *
  * @return void
  */
-void vpic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation)
+void vpic_set_irq(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
 {
 	struct acrn_vpic *vpic;
 	struct i8259_reg_state *i8259;
@@ -501,7 +501,7 @@ vpic_pincount(void)
  * @pre vm->vpic != NULL
  * @pre irq < NR_VPIC_PINS_TOTAL
  */
-void vpic_get_irq_trigger(struct vm *vm, uint32_t irq,
+void vpic_get_irq_trigger(struct acrn_vm *vm, uint32_t irq,
 		enum vpic_trigger *trigger)
 {
 	struct acrn_vpic *vpic;
@@ -524,7 +524,7 @@ void vpic_get_irq_trigger(struct vm *vm, uint32_t irq,
  *
  * @return void.
  */
-void vpic_pending_intr(struct vm *vm, uint32_t *vecptr)
+void vpic_pending_intr(struct acrn_vm *vm, uint32_t *vecptr)
 {
 	struct acrn_vpic *vpic;
 	struct i8259_reg_state *i8259;
@@ -587,7 +587,7 @@ static void vpic_pin_accepted(struct i8259_reg_state *i8259, uint8_t pin)
  *
  * @pre vm != NULL
  */
-void vpic_intr_accepted(struct vm *vm, uint32_t vector)
+void vpic_intr_accepted(struct acrn_vm *vm, uint32_t vector)
 {
 	struct acrn_vpic *vpic;
 	uint8_t pin;
@@ -699,7 +699,7 @@ static int vpic_write(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
 	return error;
 }
 
-static int vpic_master_handler(struct vm *vm, bool in, uint16_t port,
+static int vpic_master_handler(struct acrn_vm *vm, bool in, uint16_t port,
 		size_t bytes, uint32_t *eax)
 {
 	struct acrn_vpic *vpic;
@@ -719,7 +719,7 @@ static int vpic_master_handler(struct vm *vm, bool in, uint16_t port,
 	return vpic_write(vpic, i8259, port, eax);
 }
 
-static uint32_t vpic_master_io_read(struct vm *vm, uint16_t addr, size_t width)
+static uint32_t vpic_master_io_read(struct acrn_vm *vm, uint16_t addr, size_t width)
 {
 	uint32_t val = 0U;
 
@@ -730,7 +730,7 @@ static uint32_t vpic_master_io_read(struct vm *vm, uint16_t addr, size_t width)
 	return val;
 }
 
-static void vpic_master_io_write(struct vm *vm, uint16_t addr, size_t width,
+static void vpic_master_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
 				uint32_t v)
 {
 	uint32_t val = v;
@@ -741,7 +741,7 @@ static void vpic_master_io_write(struct vm *vm, uint16_t addr, size_t width,
 	}
 }
 
-static int vpic_slave_handler(struct vm *vm, bool in, uint16_t port,
+static int vpic_slave_handler(struct acrn_vm *vm, bool in, uint16_t port,
 		size_t bytes, uint32_t *eax)
 {
 	struct acrn_vpic *vpic;
@@ -761,7 +761,7 @@ static int vpic_slave_handler(struct vm *vm, bool in, uint16_t port,
 	return vpic_write(vpic, i8259, port, eax);
 }
 
-static uint32_t vpic_slave_io_read(struct vm *vm, uint16_t addr, size_t width)
+static uint32_t vpic_slave_io_read(struct acrn_vm *vm, uint16_t addr, size_t width)
 {
 	uint32_t val = 0U;
 
@@ -772,7 +772,7 @@ static uint32_t vpic_slave_io_read(struct vm *vm, uint16_t addr, size_t width)
 	return val;
 }
 
-static void vpic_slave_io_write(struct vm *vm, uint16_t addr, size_t width,
+static void vpic_slave_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
 				uint32_t v)
 {
 	uint32_t val = v;
@@ -783,7 +783,7 @@ static void vpic_slave_io_write(struct vm *vm, uint16_t addr, size_t width,
 	}
 }
 
-static int vpic_elc_handler(struct vm *vm, bool in, uint16_t port, size_t bytes,
+static int vpic_elc_handler(struct acrn_vm *vm, bool in, uint16_t port, size_t bytes,
 		uint32_t *eax)
 {
 	struct acrn_vpic *vpic;
@@ -827,7 +827,7 @@ static int vpic_elc_handler(struct vm *vm, bool in, uint16_t port, size_t bytes,
 	return 0;
 }
 
-static uint32_t vpic_elc_io_read(struct vm *vm, uint16_t addr, size_t width)
+static uint32_t vpic_elc_io_read(struct acrn_vm *vm, uint16_t addr, size_t width)
 {
 	uint32_t val = 0U;
 
@@ -837,7 +837,7 @@ static uint32_t vpic_elc_io_read(struct vm *vm, uint16_t addr, size_t width)
 	return val;
 }
 
-static void vpic_elc_io_write(struct vm *vm, uint16_t addr, size_t width,
+static void vpic_elc_io_write(struct acrn_vm *vm, uint16_t addr, size_t width,
 				uint32_t v)
 {
 	uint32_t val = v;
@@ -848,7 +848,7 @@ static void vpic_elc_io_write(struct vm *vm, uint16_t addr, size_t width,
 	}
 }
 
-static void vpic_register_io_handler(struct vm *vm)
+static void vpic_register_io_handler(struct acrn_vm *vm)
 {
 	struct vm_io_range master_range = {
 		.flags = IO_ATTR_RW,
@@ -874,7 +874,7 @@ static void vpic_register_io_handler(struct vm *vm)
 			&vpic_elc_io_read, &vpic_elc_io_write);
 }
 
-void vpic_init(struct vm *vm)
+void vpic_init(struct acrn_vm *vm)
 {
 	struct acrn_vpic *vpic = vm_pic(vm);
 	vpic_register_io_handler(vm);

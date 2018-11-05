@@ -124,8 +124,8 @@ struct pci_addr_info {
 };
 
 struct vpci_ops {
-	int (*init)(struct vm *vm);
-	void (*deinit)(struct vm *vm);
+	int (*init)(struct acrn_vm *vm);
+	void (*deinit)(struct acrn_vm *vm);
 	void (*cfgread)(struct vpci *vpci, union pci_bdf vbdf, uint32_t offset,
 		uint32_t bytes, uint32_t *val);
 	void (*cfgwrite)(struct vpci *vpci, union pci_bdf vbdf, uint32_t offset,
@@ -134,7 +134,7 @@ struct vpci_ops {
 
 
 struct vpci {
-	struct vm *vm;
+	struct acrn_vm *vm;
 	struct pci_addr_info addr_info;
 	struct vpci_ops *ops;
 };
@@ -142,9 +142,9 @@ struct vpci {
 extern struct pci_vdev_ops pci_ops_vdev_hostbridge;
 extern struct pci_vdev_ops pci_ops_vdev_pt;
 
-void vpci_init(struct vm *vm);
-void vpci_cleanup(struct vm *vm);
-void vpci_set_ptdev_intr_info(struct vm *target_vm, uint16_t vbdf, uint16_t pbdf);
-void vpci_reset_ptdev_intr_info(struct vm *target_vm, uint16_t vbdf, uint16_t pbdf);
+void vpci_init(struct acrn_vm *vm);
+void vpci_cleanup(struct acrn_vm *vm);
+void vpci_set_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf);
+void vpci_reset_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf);
 
 #endif /* VPCI_H_ */

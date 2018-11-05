@@ -610,7 +610,7 @@ int init_iommu(void);
  * @remark to reduce boot time & memory cost, a config IOMMU_INIT_BUS_LIMIT, which limit the bus number.
  *
  */
-void init_iommu_vm0_domain(struct vm *vm0);
+void init_iommu_vm0_domain(struct acrn_vm *vm0);
 
 /**
   * @}

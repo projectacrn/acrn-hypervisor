@@ -11,7 +11,7 @@ static inline struct vcpuid_entry *find_vcpuid_entry(const struct acrn_vcpu *vcp
 {
 	uint32_t i = 0U, nr, half;
 	struct vcpuid_entry *entry = NULL;
-	struct vm *vm = vcpu->vm;
+	struct acrn_vm *vm = vcpu->vm;
 	uint32_t leaf = leaf_arg;
 
 	nr = vm->vcpuid_entry_nr;
@@ -63,7 +63,7 @@ static inline struct vcpuid_entry *find_vcpuid_entry(const struct acrn_vcpu *vcp
 	return entry;
 }
 
-static inline int set_vcpuid_entry(struct vm *vm,
+static inline int set_vcpuid_entry(struct acrn_vm *vm,
 				const struct vcpuid_entry *entry)
 {
 	struct vcpuid_entry *tmp;
@@ -170,7 +170,7 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 	}
 }
 
-int set_vcpuid_entries(struct vm *vm)
+int set_vcpuid_entries(struct acrn_vm *vm)
 {
 	int result;
 	struct vcpuid_entry entry;

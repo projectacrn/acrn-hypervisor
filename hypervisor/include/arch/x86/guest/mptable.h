@@ -26,6 +26,6 @@ struct mptable_info;
 extern struct mptable_info mptable_vm1;
 extern struct mptable_info mptable_vm2;
 
-int mptable_build(struct vm *vm);
+int mptable_build(struct acrn_vm *vm);
 
 #endif /* MPTABLE_H */

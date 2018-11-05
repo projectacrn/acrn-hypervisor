@@ -48,7 +48,7 @@ static void pci_cfg_clear_cache(struct pci_addr_info *pi)
 	pi->cached_enable = 0U;
 }
 
-static uint32_t pci_cfg_io_read(struct vm *vm, uint16_t addr, size_t bytes)
+static uint32_t pci_cfg_io_read(struct acrn_vm *vm, uint16_t addr, size_t bytes)
 {
 	uint32_t val = 0xFFFFFFFFU;
 	struct vpci *vpci = &vm->vpci;
@@ -82,7 +82,7 @@ static uint32_t pci_cfg_io_read(struct vm *vm, uint16_t addr, size_t bytes)
 	return val;
 }
 
-static void pci_cfg_io_write(struct vm *vm, uint16_t addr, size_t bytes,
+static void pci_cfg_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes,
 			uint32_t val)
 {
 	struct vpci *vpci = &vm->vpci;
@@ -114,7 +114,7 @@ static void pci_cfg_io_write(struct vm *vm, uint16_t addr, size_t bytes,
 	}
 }
 
-void vpci_init(struct vm *vm)
+void vpci_init(struct acrn_vm *vm)
 {
 	struct vpci *vpci = &vm->vpci;
 	struct vm_io_range pci_cfg_range = {
@@ -143,7 +143,7 @@ void vpci_init(struct vm *vm)
 	}
 }
 
-void vpci_cleanup(struct vm *vm)
+void vpci_cleanup(struct acrn_vm *vm)
 {
 	struct vpci *vpci = &vm->vpci;
 

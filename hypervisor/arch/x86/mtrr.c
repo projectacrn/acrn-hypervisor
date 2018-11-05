@@ -125,7 +125,7 @@ void init_mtrr(struct acrn_vcpu *vcpu)
 	}
 }
 
-static uint32_t update_ept(struct vm *vm, uint64_t start,
+static uint32_t update_ept(struct acrn_vm *vm, uint64_t start,
 	uint64_t size, uint8_t type)
 {
 	uint64_t attr;

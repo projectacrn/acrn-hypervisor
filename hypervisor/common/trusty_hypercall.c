@@ -74,7 +74,7 @@ int32_t hcall_initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param)
 
 int64_t hcall_save_restore_sworld_ctx(struct acrn_vcpu *vcpu)
 {
-	struct vm *vm = vcpu->vm;
+	struct acrn_vm *vm = vcpu->vm;
 
 	if (vm->sworld_control.flag.supported == 0UL) {
 		dev_dbg(ACRN_DBG_TRUSTY_HYCALL,

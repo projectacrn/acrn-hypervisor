@@ -22,7 +22,7 @@ static inline void profiling_vmexit_handler(__unused struct acrn_vcpu *vcpu,
 	__unused uint64_t exit_reason) {}
 static inline void profiling_setup(void) {}
 
-static inline int32_t hcall_profiling_ops(__unused struct vm *vm,
+static inline int32_t hcall_profiling_ops(__unused struct acrn_vm *vm,
 	__unused uint64_t cmd, __unused uint64_t param)
 {
 	return -ENODEV;

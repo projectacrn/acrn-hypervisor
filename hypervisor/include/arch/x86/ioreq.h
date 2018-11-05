@@ -48,14 +48,14 @@ struct vm_io_range {
 };
 
 struct vm_io_handler;
-struct vm;
+struct acrn_vm;
 struct acrn_vcpu;
 
 typedef
-uint32_t (*io_read_fn_t)(struct vm *vm, uint16_t port, size_t size);
+uint32_t (*io_read_fn_t)(struct acrn_vm *vm, uint16_t port, size_t size);
 
 typedef
-void (*io_write_fn_t)(struct vm *vm, uint16_t port, size_t size, uint32_t val);
+void (*io_write_fn_t)(struct acrn_vm *vm, uint16_t port, size_t size, uint32_t val);
 
 /**
  * @brief Describes a single IO handler description entry.
@@ -185,14 +185,14 @@ int32_t pio_instr_vmexit_handler(struct acrn_vcpu *vcpu);
  *
  * @param vm The VM whose I/O bitmaps are to be initialized
  */
-void   setup_io_bitmap(struct vm *vm);
+void   setup_io_bitmap(struct acrn_vm *vm);
 
 /**
  * @brief Free I/O bitmaps and port I/O handlers of \p vm
  *
  * @param vm The VM whose I/O bitmaps and handlers are to be freed
  */
-void   free_io_emulation_resource(struct vm *vm);
+void   free_io_emulation_resource(struct acrn_vm *vm);
 
 /**
  * @brief Allow a VM to access a port I/O range
@@ -204,7 +204,7 @@ void   free_io_emulation_resource(struct vm *vm);
  * @param port_address The start address of the port I/O range
  * @param nbytes The size of the range, in bytes
  */
-void   allow_guest_pio_access(struct vm *vm, uint16_t port_address,
+void   allow_guest_pio_access(struct acrn_vm *vm, uint16_t port_address,
 		uint32_t nbytes);
 
 /**
@@ -215,7 +215,7 @@ void   allow_guest_pio_access(struct vm *vm, uint16_t port_address,
  * @param io_read_fn_ptr The handler for emulating reads from the given range
  * @param io_write_fn_ptr The handler for emulating writes to the given range
  */
-void   register_io_emulation_handler(struct vm *vm, const struct vm_io_range *range,
+void   register_io_emulation_handler(struct acrn_vm *vm, const struct vm_io_range *range,
 		io_read_fn_t io_read_fn_ptr,
 		io_write_fn_t io_write_fn_ptr);
 
@@ -233,7 +233,7 @@ void   register_io_emulation_handler(struct vm *vm, const struct vm_io_range *ra
  * @return 0 - Registration succeeds
  * @return -EINVAL - \p read_write is NULL, \p end is not larger than \p start or \p vm has been launched
  */
-int register_mmio_emulation_handler(struct vm *vm,
+int register_mmio_emulation_handler(struct acrn_vm *vm,
 	hv_mem_io_handler_t read_write, uint64_t start,
 	uint64_t end, void *handler_private_data);
 
@@ -244,7 +244,7 @@ int register_mmio_emulation_handler(struct vm *vm,
  * @param start The base address of the range the to-be-unregistered handler is for
  * @param end The end of the range (exclusive) the to-be-unregistered handler is for
  */
-void unregister_mmio_emulation_handler(struct vm *vm, uint64_t start,
+void unregister_mmio_emulation_handler(struct acrn_vm *vm, uint64_t start,
         uint64_t end);
 
 /**

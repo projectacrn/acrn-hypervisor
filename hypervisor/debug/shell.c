@@ -526,7 +526,7 @@ static int shell_cmd_help(__unused int argc, __unused char **argv)
 static int shell_list_vm(__unused int argc, __unused char **argv)
 {
 	char temp_str[MAX_STR_SIZE];
-	struct vm *vm;
+	struct acrn_vm *vm;
 	uint16_t idx;
 	char state[32];
 
@@ -568,7 +568,7 @@ static int shell_list_vm(__unused int argc, __unused char **argv)
 static int shell_list_vcpu(__unused int argc, __unused char **argv)
 {
 	char temp_str[MAX_STR_SIZE];
-	struct vm *vm;
+	struct acrn_vm *vm;
 	struct acrn_vcpu *vcpu;
 	char state[32];
 	uint16_t i;
@@ -623,7 +623,7 @@ static int shell_vcpu_dumpreg(int argc, char **argv)
 	int status = 0;
 	uint16_t vm_id;
 	uint16_t vcpu_id;
-	struct vm *vm;
+	struct acrn_vm *vm;
 	struct acrn_vcpu *vcpu;
 	uint64_t mask = 0UL;
 	struct vcpu_dump dump;
@@ -722,7 +722,7 @@ static int shell_to_sos_console(__unused int argc, __unused char **argv)
 	char temp_str[TEMP_STR_SIZE];
 	uint16_t guest_no = 0U;
 
-	struct vm *vm;
+	struct acrn_vm *vm;
 	struct acrn_vuart *vu;
 #ifdef CONFIG_PARTITION_MODE
 	struct vm_description *vm_desc;

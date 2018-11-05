@@ -55,7 +55,7 @@ struct ptdev_remapping_info {
 	uint32_t intr_type;
 	union source_id phys_sid;
 	union source_id virt_sid;
-	struct vm *vm;
+	struct acrn_vm *vm;
 	uint32_t active;	/* 1=active, 0=inactive and to free*/
 	uint32_t allocated_pirq;
 	uint32_t polarity; /* 0=active high, 1=active low*/
@@ -72,10 +72,10 @@ extern spinlock_t ptdev_lock;
 
 void ptdev_softirq(uint16_t pcpu_id);
 void ptdev_init(void);
-void ptdev_release_all_entries(const struct vm *vm);
+void ptdev_release_all_entries(const struct acrn_vm *vm);
 
-struct ptdev_remapping_info *ptdev_dequeue_softirq(struct vm *vm);
-struct ptdev_remapping_info *alloc_entry(struct vm *vm,
+struct ptdev_remapping_info *ptdev_dequeue_softirq(struct acrn_vm *vm);
+struct ptdev_remapping_info *alloc_entry(struct acrn_vm *vm,
 		uint32_t intr_type);
 void release_entry(struct ptdev_remapping_info *entry);
 void ptdev_activate_entry(
@@ -87,7 +87,7 @@ void ptdev_deactivate_entry(struct ptdev_remapping_info *entry);
 void get_ptdev_info(char *str_arg, size_t str_max);
 #endif /* HV_DEBUG */
 
-uint32_t get_vm_ptdev_intr_data(const struct vm *target_vm, uint64_t *buffer,
+uint32_t get_vm_ptdev_intr_data(const struct acrn_vm *target_vm, uint64_t *buffer,
 	uint32_t buffer_cnt);
 
 #endif /* PTDEV_H */

@@ -126,7 +126,7 @@ vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint16_t pin, uint32_t level)
  * @return void
  */
 void
-vioapic_set_irq_nolock(struct vm *vm, uint32_t irq, uint32_t operation)
+vioapic_set_irq_nolock(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
 {
 	struct acrn_vioapic *vioapic;
 	uint16_t pin = (uint16_t)irq;
@@ -169,7 +169,7 @@ vioapic_set_irq_nolock(struct vm *vm, uint32_t irq, uint32_t operation)
  * @return void
  */
 void
-vioapic_set_irq(struct vm *vm, uint32_t irq, uint32_t operation)
+vioapic_set_irq(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
 {
 	struct acrn_vioapic *vioapic = vm_ioapic(vm);
 
@@ -448,7 +448,7 @@ vioapic_mmio_rw(struct acrn_vioapic *vioapic, uint64_t gpa,
 }
 
 void
-vioapic_process_eoi(struct vm *vm, uint32_t vector)
+vioapic_process_eoi(struct acrn_vm *vm, uint32_t vector)
 {
 	struct acrn_vioapic *vioapic;
 	uint32_t pin, pincount = vioapic_pincount(vm);
@@ -509,7 +509,7 @@ vioapic_reset(struct acrn_vioapic *vioapic)
 }
 
 void
-vioapic_init(struct vm *vm)
+vioapic_init(struct acrn_vm *vm)
 {
 	vm->arch_vm.vioapic.vm = vm;
 	spinlock_init(&(vm->arch_vm.vioapic.mtx));
@@ -532,7 +532,7 @@ vioapic_cleanup(const struct acrn_vioapic *vioapic)
 }
 
 uint32_t
-vioapic_pincount(const struct vm *vm)
+vioapic_pincount(const struct acrn_vm *vm)
 {
 	if (is_vm0(vm)) {
 		return REDIR_ENTRIES_HW;
@@ -543,7 +543,7 @@ vioapic_pincount(const struct vm *vm)
 
 int vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
 {
-	struct vm *vm = (struct vm *)handler_private_data;
+	struct acrn_vm *vm = (struct acrn_vm *)handler_private_data;
 	struct acrn_vioapic *vioapic;
 	struct mmio_request *mmio = &io_req->reqs.mmio;
 	uint64_t gpa = mmio->address;
@@ -575,7 +575,7 @@ int vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private
  * @pre vm->arch_vm.vioapic != NULL
  * @pre rte != NULL
  */
-void vioapic_get_rte(struct vm *vm, uint32_t pin, union ioapic_rte *rte)
+void vioapic_get_rte(struct acrn_vm *vm, uint32_t pin, union ioapic_rte *rte)
 {
 	struct acrn_vioapic *vioapic;
 
@@ -591,7 +591,7 @@ void get_vioapic_info(char *str_arg, size_t str_max, uint16_t vmid)
 	union ioapic_rte rte;
 	uint32_t delmode, vector, dest;
 	bool level, phys, remote_irr, mask;
-	struct vm *vm = get_vm_from_vmid(vmid);
+	struct acrn_vm *vm = get_vm_from_vmid(vmid);
 	uint32_t pin, pincount;
 
 	if (vm == NULL) {

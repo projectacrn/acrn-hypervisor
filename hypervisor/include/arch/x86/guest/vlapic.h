@@ -69,7 +69,7 @@ struct acrn_vlapic {
 	struct lapic_regs	apic_page;
 	struct vlapic_pir_desc	pir_desc;
 
-	struct vm		*vm;
+	struct acrn_vm		*vm;
 	struct acrn_vcpu		*vcpu;
 
 	uint32_t		esr_pending;
@@ -233,7 +233,7 @@ vlapic_intr_edge(struct acrn_vcpu *vcpu, uint32_t vector)
  *
  * @pre vm != NULL
  */
-int vlapic_set_local_intr(struct vm *vm, uint16_t vcpu_id_arg, uint32_t vector);
+int vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t vector);
 
 /**
  * @brief Inject MSI to target VM.
@@ -247,9 +247,9 @@ int vlapic_set_local_intr(struct vm *vm, uint16_t vcpu_id_arg, uint32_t vector);
  *
  * @pre vm != NULL
  */
-int vlapic_intr_msi(struct vm *vm, uint64_t addr, uint64_t msg);
+int vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg);
 
-void vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest,
+void vlapic_deliver_intr(struct acrn_vm *vm, bool level, uint32_t dest,
 		bool phys, uint32_t delmode, uint32_t vec, bool rh);
 
 /* Reset the trigger-mode bits for all vectors to be edge-triggered */
@@ -281,7 +281,7 @@ int apic_access_vmexit_handler(struct acrn_vcpu *vcpu);
 int apic_write_vmexit_handler(struct acrn_vcpu *vcpu);
 int veoi_vmexit_handler(struct acrn_vcpu *vcpu);
 int tpr_below_threshold_vmexit_handler(__unused struct acrn_vcpu *vcpu);
-void calcvdest(struct vm *vm, uint64_t *dmask, uint32_t dest, bool phys);
+void calcvdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys);
 
 /**
  * @}

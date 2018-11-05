@@ -17,7 +17,7 @@
 #define MAX_BOOT_PARAMS_LEN 64U
 
 #ifdef CONFIG_PARTITION_MODE
-int init_vm_boot_info(struct vm *vm)
+int init_vm_boot_info(struct acrn_vm *vm)
 {
 	struct multiboot_module *mods = NULL;
 	struct multiboot_info *mbi = NULL;
@@ -72,7 +72,7 @@ int init_vm_boot_info(struct vm *vm)
 static char kernel_cmdline[MEM_2K];
 
 /* now modules support: FIRMWARE & RAMDISK & SeedList */
-static void parse_other_modules(struct vm *vm,
+static void parse_other_modules(struct acrn_vm *vm,
 	const struct multiboot_module *mods, uint32_t mods_count)
 {
 	uint32_t i;
@@ -164,7 +164,7 @@ static void *get_kernel_load_addr(void *kernel_src_addr)
  * @pre vm != NULL
  * @pre is_vm0(vm) == true
  */
-int init_vm_boot_info(struct vm *vm)
+int init_vm_boot_info(struct acrn_vm *vm)
 {
 	struct multiboot_module *mods = NULL;
 	struct multiboot_info *mbi = NULL;

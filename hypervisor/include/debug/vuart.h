@@ -62,7 +62,7 @@ struct acrn_vuart {
 #endif
 	bool thre_int_pending;	/* THRE interrupt pending */
 	bool active;
-	struct vm *vm;
+	struct acrn_vm *vm;
 	spinlock_t lock;	/* protects all softc elements */
 };
 #ifdef CONFIG_PARTITION_MODE
@@ -70,13 +70,13 @@ extern int8_t vuart_vmid;
 #endif
 #ifdef HV_DEBUG
 #define COM1_IRQ		6U
-void vuart_init(struct vm *vm);
+void vuart_init(struct acrn_vm *vm);
 struct acrn_vuart *vuart_console_active(void);
 void vuart_console_tx_chars(struct acrn_vuart *vu);
 void vuart_console_rx_chars(struct acrn_vuart *vu);
 #else
 #define COM1_IRQ		0xFFU
-static inline void vuart_init(__unused struct vm *vm)
+static inline void vuart_init(__unused struct acrn_vm *vm)
 {
 }
 static inline struct acrn_vuart *vuart_console_active(void)

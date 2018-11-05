@@ -35,7 +35,7 @@ bool is_hypercall_from_ring0(void);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_sos_offline_cpu(struct vm *vm, uint64_t lapicid);
+int32_t hcall_sos_offline_cpu(struct acrn_vm *vm, uint64_t lapicid);
 
 /**
  * @brief Get hypervisor api version
@@ -49,7 +49,7 @@ int32_t hcall_sos_offline_cpu(struct vm *vm, uint64_t lapicid);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_get_api_version(struct vm *vm, uint64_t param);
+int32_t hcall_get_api_version(struct acrn_vm *vm, uint64_t param);
 
 /**
  * @brief create virtual machine
@@ -65,7 +65,7 @@ int32_t hcall_get_api_version(struct vm *vm, uint64_t param);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_create_vm(struct vm *vm, uint64_t param);
+int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param);
 
 /**
  * @brief destroy virtual machine
@@ -134,7 +134,7 @@ int32_t hcall_pause_vm(uint16_t vmid);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_create_vcpu(struct vm *vm, uint16_t vmid, uint64_t param);
+int32_t hcall_create_vcpu(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief set vcpu regs
@@ -150,7 +150,7 @@ int32_t hcall_create_vcpu(struct vm *vm, uint16_t vmid, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_vcpu_regs(struct vm *vm, uint16_t vmid, uint64_t param);
+int32_t hcall_set_vcpu_regs(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief set or clear IRQ line
@@ -166,7 +166,7 @@ int32_t hcall_set_vcpu_regs(struct vm *vm, uint16_t vmid, uint64_t param);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_irqline(const struct vm *vm, uint16_t vmid,
+int32_t hcall_set_irqline(const struct acrn_vm *vm, uint16_t vmid,
 				const struct acrn_irqline_ops *ops);
 /**
  * @brief inject MSI interrupt
@@ -181,7 +181,7 @@ int32_t hcall_set_irqline(const struct vm *vm, uint16_t vmid,
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_inject_msi(struct vm *vm, uint16_t vmid, uint64_t param);
+int32_t hcall_inject_msi(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief set ioreq shared buffer
@@ -197,7 +197,7 @@ int32_t hcall_inject_msi(struct vm *vm, uint16_t vmid, uint64_t param);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_ioreq_buffer(struct vm *vm, uint16_t vmid, uint64_t param);
+int32_t hcall_set_ioreq_buffer(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief notify request done
@@ -223,7 +223,7 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_vm_memory_region(struct vm *vm, uint16_t vmid, uint64_t param);
+int32_t hcall_set_vm_memory_region(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief setup ept memory mapping for multi regions
@@ -235,7 +235,7 @@ int32_t hcall_set_vm_memory_region(struct vm *vm, uint16_t vmid, uint64_t param)
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param);
+int32_t hcall_set_vm_memory_regions(struct acrn_vm *vm, uint64_t param);
 
 /**
  * @brief change guest memory page write permission
@@ -248,7 +248,7 @@ int32_t hcall_set_vm_memory_regions(struct vm *vm, uint64_t param);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_write_protect_page(struct vm *vm, uint16_t vmid, uint64_t wp_gpa);
+int32_t hcall_write_protect_page(struct acrn_vm *vm, uint16_t vmid, uint64_t wp_gpa);
 
 /**
  * @brief translate guest physical address to host physical address
@@ -263,7 +263,7 @@ int32_t hcall_write_protect_page(struct vm *vm, uint16_t vmid, uint64_t wp_gpa);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_gpa_to_hpa(struct vm *vm, uint16_t vmid, uint64_t param);
+int32_t hcall_gpa_to_hpa(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief Assign one passthrough dev to VM.
@@ -276,7 +276,7 @@ int32_t hcall_gpa_to_hpa(struct vm *vm, uint16_t vmid, uint64_t param);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_assign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param);
+int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief Deassign one passthrough dev from VM.
@@ -289,7 +289,7 @@ int32_t hcall_assign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_deassign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param);
+int32_t hcall_deassign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief Set interrupt mapping info of ptdev.
@@ -302,7 +302,7 @@ int32_t hcall_deassign_ptdev(struct vm *vm, uint16_t vmid, uint64_t param);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param);
+int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @brief Clear interrupt mapping info of ptdev.
@@ -315,7 +315,7 @@ int32_t hcall_set_ptdev_intr_info(struct vm *vm, uint16_t vmid, uint64_t param);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_reset_ptdev_intr_info(struct vm *vm, uint16_t vmid,
+int32_t hcall_reset_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid,
 	uint64_t param);
 
 /**
@@ -328,7 +328,7 @@ int32_t hcall_reset_ptdev_intr_info(struct vm *vm, uint16_t vmid,
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_setup_sbuf(struct vm *vm, uint64_t param);
+int32_t hcall_setup_sbuf(struct acrn_vm *vm, uint64_t param);
 
 /**
   * @brief Setup the hypervisor NPK log.
@@ -340,7 +340,7 @@ int32_t hcall_setup_sbuf(struct vm *vm, uint64_t param);
   * @pre Pointer vm shall point to VM0
   * @return 0 on success, non-zero on error.
   */
-int32_t hcall_setup_hv_npk_log(struct vm *vm, uint64_t param);
+int32_t hcall_setup_hv_npk_log(struct acrn_vm *vm, uint64_t param);
 
 /**
  * @brief Execute profiling operation
@@ -353,7 +353,7 @@ int32_t hcall_setup_hv_npk_log(struct vm *vm, uint64_t param);
  *
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_profiling_ops(struct vm *vm, uint64_t cmd, uint64_t param);
+int32_t hcall_profiling_ops(struct acrn_vm *vm, uint64_t cmd, uint64_t param);
 
 /**
  * @brief Get VCPU Power state.
@@ -366,7 +366,7 @@ int32_t hcall_profiling_ops(struct vm *vm, uint64_t cmd, uint64_t param);
  * @return 0 on success, non-zero on error.
  */
 
-int32_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param);
+int32_t hcall_get_cpu_pm_state(struct acrn_vm *vm, uint64_t cmd, uint64_t param);
 
 /**
  * @brief Get VCPU a VM's interrupt count data.
@@ -379,7 +379,7 @@ int32_t hcall_get_cpu_pm_state(struct vm *vm, uint64_t cmd, uint64_t param);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_vm_intr_monitor(struct vm *vm, uint16_t vmid, uint64_t param);
+int32_t hcall_vm_intr_monitor(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
 
 /**
  * @defgroup trusty_hypercall Trusty Hypercalls
@@ -450,7 +450,7 @@ int64_t hcall_save_restore_sworld_ctx(struct acrn_vcpu *vcpu);
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
  */
-int32_t hcall_set_callback_vector(const struct vm *vm, uint64_t param);
+int32_t hcall_set_callback_vector(const struct acrn_vm *vm, uint64_t param);
 
 /**
  * @}

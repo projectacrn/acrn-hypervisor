@@ -14,7 +14,7 @@
 /**
  *@pre Pointer vm shall point to VM0
  */
-int32_t hcall_profiling_ops(struct vm *vm, uint64_t cmd, uint64_t param)
+int32_t hcall_profiling_ops(struct acrn_vm *vm, uint64_t cmd, uint64_t param)
 {
 	int32_t ret;
 	switch (cmd) {

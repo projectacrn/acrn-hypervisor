@@ -60,6 +60,6 @@ struct memory_ops {
 };
 
 extern const struct memory_ops ppt_mem_ops;
-void init_ept_mem_ops(struct vm *vm);
+void init_ept_mem_ops(struct acrn_vm *vm);
 
 #endif /* PAGE_H */

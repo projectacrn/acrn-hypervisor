@@ -107,7 +107,7 @@ static void vlapic_timer_expired(void *data);
 static inline bool is_x2apic_enabled(const struct acrn_vlapic *vlapic);
 
 static struct acrn_vlapic *
-vm_lapic_from_vcpu_id(struct vm *vm, uint16_t vcpu_id)
+vm_lapic_from_vcpu_id(struct acrn_vm *vm, uint16_t vcpu_id)
 {
 	struct acrn_vcpu *vcpu;
 
@@ -116,7 +116,7 @@ vm_lapic_from_vcpu_id(struct vm *vm, uint16_t vcpu_id)
 	return vcpu_vlapic(vcpu);
 }
 
-static uint16_t vm_apicid2vcpu_id(struct vm *vm, uint8_t lapicid)
+static uint16_t vm_apicid2vcpu_id(struct acrn_vm *vm, uint8_t lapicid)
 {
 	uint16_t i;
 	struct acrn_vcpu *vcpu;
@@ -134,7 +134,7 @@ static uint16_t vm_apicid2vcpu_id(struct vm *vm, uint8_t lapicid)
 }
 
 static uint64_t
-vm_active_cpus(const struct vm *vm)
+vm_active_cpus(const struct acrn_vm *vm)
 {
 	uint64_t dmask = 0UL;
 	uint16_t i;
@@ -1004,7 +1004,7 @@ vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t vector)
  * addressing specified by the (dest, phys, lowprio) tuple.
  */
 static void
-vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
+vlapic_calcdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest,
 		bool phys, bool lowprio)
 {
 	struct acrn_vlapic *vlapic;
@@ -1118,7 +1118,7 @@ vlapic_calcdest(struct vm *vm, uint64_t *dmask, uint32_t dest,
 }
 
 	void
-calcvdest(struct vm *vm, uint64_t *dmask, uint32_t dest, bool phys)
+calcvdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys)
 {
 	vlapic_calcdest(vm, dmask, dest, phys, false);
 }
@@ -1797,7 +1797,7 @@ vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new)
 }
 
 void
-vlapic_deliver_intr(struct vm *vm, bool level, uint32_t dest, bool phys,
+vlapic_deliver_intr(struct acrn_vm *vm, bool level, uint32_t dest, bool phys,
 		uint32_t delmode, uint32_t vec, bool rh)
 {
 	bool lowprio;
@@ -1968,7 +1968,7 @@ vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level)
  * @pre vm != NULL
  */
 int
-vlapic_set_local_intr(struct vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
+vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
 {
 	struct acrn_vlapic *vlapic;
 	uint64_t dmask = 0UL;
@@ -2011,7 +2011,7 @@ vlapic_set_local_intr(struct vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
  * @pre vm != NULL
  */
 int
-vlapic_intr_msi(struct vm *vm, uint64_t addr, uint64_t msg)
+vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg)
 {
 	uint32_t delmode, vec;
 	uint32_t dest;
@@ -2095,7 +2095,7 @@ static inline  uint32_t x2apic_msr_to_regoff(uint32_t msr)
  */
 
 static int
-vlapic_x2apic_pt_icr_access(struct vm *vm, uint64_t val)
+vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 {
 	uint64_t apic_id = (uint32_t) (val >> 32U);
 	uint32_t icr_low = val;

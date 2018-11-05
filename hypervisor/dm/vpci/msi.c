@@ -43,7 +43,7 @@ static int vmsi_remap(struct pci_vdev *vdev, bool enable)
 {
 	struct ptdev_msi_info info;
 	union pci_bdf pbdf = vdev->pdev.bdf;
-	struct vm *vm = vdev->vpci->vm;
+	struct acrn_vm *vm = vdev->vpci->vm;
 	uint32_t capoff = vdev->msi.capoff;
 	uint32_t msgctrl, msgdata;
 	uint32_t addrlo, addrhi;

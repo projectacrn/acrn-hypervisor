@@ -104,7 +104,7 @@ static void sharing_mode_cfgwrite(__unused struct vpci *vpci, union pci_bdf bdf,
 	}
 }
 
-static struct pci_vdev *alloc_pci_vdev(struct vm *vm, union pci_bdf bdf)
+static struct pci_vdev *alloc_pci_vdev(struct acrn_vm *vm, union pci_bdf bdf)
 {
 	struct pci_vdev *vdev;
 
@@ -124,7 +124,7 @@ static struct pci_vdev *alloc_pci_vdev(struct vm *vm, union pci_bdf bdf)
 
 static void enumerate_pci_dev(uint16_t pbdf, void *cb_data)
 {
-	struct vm *vm = (struct vm *)cb_data;
+	struct acrn_vm *vm = (struct acrn_vm *)cb_data;
 	struct pci_vdev *vdev;
 
 	vdev = alloc_pci_vdev(vm, (union pci_bdf)pbdf);
@@ -133,7 +133,7 @@ static void enumerate_pci_dev(uint16_t pbdf, void *cb_data)
 	}
 }
 
-static int sharing_mode_vpci_init(struct vm *vm)
+static int sharing_mode_vpci_init(struct acrn_vm *vm)
 {
 	struct pci_vdev *vdev;
 	uint32_t i, j;
@@ -165,7 +165,7 @@ static int sharing_mode_vpci_init(struct vm *vm)
 	return 0;
 }
 
-static void sharing_mode_vpci_deinit(__unused struct vm *vm)
+static void sharing_mode_vpci_deinit(__unused struct acrn_vm *vm)
 {
 	struct pci_vdev *vdev;
 	uint32_t i, j;
@@ -201,7 +201,7 @@ struct vpci_ops sharing_mode_vpci_ops = {
 	.cfgwrite = sharing_mode_cfgwrite,
 };
 
-void vpci_set_ptdev_intr_info(struct vm *target_vm, uint16_t vbdf, uint16_t pbdf)
+void vpci_set_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
 {
 	struct pci_vdev *vdev;
 
@@ -218,10 +218,10 @@ void vpci_set_ptdev_intr_info(struct vm *target_vm, uint16_t vbdf, uint16_t pbdf
 	vdev->pdev.bdf.value = pbdf;
 }
 
-void vpci_reset_ptdev_intr_info(struct vm *target_vm, uint16_t vbdf, uint16_t pbdf)
+void vpci_reset_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
 {
 	struct pci_vdev *vdev;
-	struct vm *vm;
+	struct acrn_vm *vm;
 
 	vdev = sharing_mode_find_vdev((union pci_bdf)pbdf);
 	if (vdev == NULL) {

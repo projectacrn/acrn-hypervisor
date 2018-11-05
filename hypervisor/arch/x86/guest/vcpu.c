@@ -311,7 +311,7 @@ void set_ap_entry(struct acrn_vcpu *vcpu, uint64_t entry)
  *     for physical CPU 1 : vcpu->pcpu_id = 1, vcpu->vcpu_id = 1, vmid = 1;
  *
  ***********************************************************************/
-int create_vcpu(uint16_t pcpu_id, struct vm *vm, struct acrn_vcpu **rtn_vcpu_handle)
+int create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn_vcpu_handle)
 {
 	struct acrn_vcpu *vcpu;
 	uint16_t vcpu_id;
@@ -598,7 +598,7 @@ void schedule_vcpu(struct acrn_vcpu *vcpu)
 }
 
 /* help function for vcpu create */
-int prepare_vcpu(struct vm *vm, uint16_t pcpu_id)
+int prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 {
 	int ret = 0;
 	struct acrn_vcpu *vcpu = NULL;
