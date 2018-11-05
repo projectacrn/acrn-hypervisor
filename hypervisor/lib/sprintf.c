@@ -47,16 +47,6 @@
 /** The value is interpreted as unsigned. */
 #define PRINT_FLAG_UINT32		0x00000400U
 
-/** Structure used to save (v)snprintf() specific values */
-struct snprint_param {
-	/** The destination buffer. */
-	char *dst;
-	/** The size of the destination buffer. */
-	uint32_t sz;
-	/** Counter for written chars. */
-	uint32_t wrtn;
-};
-
 /** The characters to use for upper case hexadecimal conversion.
  *
  *  Note that this array is 17 bytes long. The first 16 characters
@@ -551,11 +541,10 @@ void do_print(const char *fmt_arg, struct print_param *param,
 
 }
 
-static void charmem(size_t cmd, const char *s_arg, uint32_t sz, void *hnd)
+static void
+charmem(size_t cmd, const char *s_arg, uint32_t sz, struct snprint_param *param)
 {
 	const char *s = s_arg;
-	/* pointer to the snprint parameter list */
-	struct snprint_param *param = (struct snprint_param *) hnd;
 	/* pointer to the destination */
 	char *p = param->dst + param->wrtn;
 	/* characters actually written */
