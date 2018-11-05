@@ -187,7 +187,7 @@ static void pm1ab_io_write(__unused struct acrn_vm *vm, uint16_t addr, size_t wi
 }
 
 static void
-register_gas_io_handler(struct acrn_vm *vm, const struct acpi_generic_address *gas)
+register_gas_io_handler(struct acrn_vm *vm, uint32_t pio_idx, const struct acpi_generic_address *gas)
 {
 	uint8_t io_len[5] = {0, 1, 2, 4, 8};
 	struct vm_io_range gas_io;
@@ -203,7 +203,7 @@ register_gas_io_handler(struct acrn_vm *vm, const struct acpi_generic_address *g
 	gas_io.base = (uint16_t)gas->address;
 	gas_io.len = io_len[gas->access_size];
 
-	register_io_emulation_handler(vm, &gas_io,
+	register_io_emulation_handler(vm, pio_idx, &gas_io,
 			&pm1ab_io_read, &pm1ab_io_write);
 
 	pr_dbg("Enable PM1A trap for VM %d, port 0x%x, size %d\n",
@@ -214,8 +214,8 @@ void register_pm1ab_handler(struct acrn_vm *vm)
 {
 	struct pm_s_state_data *sx_data = vm->pm.sx_state_data;
 
-	register_gas_io_handler(vm, &(sx_data->pm1a_evt));
-	register_gas_io_handler(vm, &(sx_data->pm1b_evt));
-	register_gas_io_handler(vm, &(sx_data->pm1a_cnt));
-	register_gas_io_handler(vm, &(sx_data->pm1b_cnt));
+	register_gas_io_handler(vm, PM1A_EVT_PIO_IDX, &(sx_data->pm1a_evt));
+	register_gas_io_handler(vm, PM1B_EVT_PIO_IDX, &(sx_data->pm1b_evt));
+	register_gas_io_handler(vm, PM1A_CNT_PIO_IDX, &(sx_data->pm1a_cnt));
+	register_gas_io_handler(vm, PM1B_CNT_PIO_IDX, &(sx_data->pm1b_cnt));
 }

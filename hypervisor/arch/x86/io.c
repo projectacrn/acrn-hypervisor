@@ -196,39 +196,40 @@ hv_emulate_pio(const struct acrn_vcpu *vcpu, struct io_request *io_req)
 	int32_t status = -ENODEV;
 	uint16_t port, size;
 	uint32_t mask;
+	uint32_t idx;
 	struct acrn_vm *vm = vcpu->vm;
 	struct pio_request *pio_req = &io_req->reqs.pio;
-	struct vm_io_handler *handler;
+	struct vm_io_handler_desc *handler;
 
 	port = (uint16_t)pio_req->address;
 	size = (uint16_t)pio_req->size;
 	mask = 0xFFFFFFFFU >> (32U - 8U * size);
 
-	for (handler = vm->arch_vm.io_handler;
-		handler != NULL; handler = handler->next) {
-		uint16_t base = handler->desc.addr;
-		uint16_t end = base + (uint16_t)handler->desc.len;
+	for (idx = 0U; idx < EMUL_PIO_IDX_MAX; idx++) {
+		handler = &(vm->arch_vm.emul_pio[idx]);
+		if (handler->len == 0U) {
+			continue;
+		}
+		uint16_t base = handler->addr;
+		uint16_t end = base + (uint16_t)handler->len;
 
 		if ((port >= end) || (port + size <= base)) {
 			continue;
 		} else if (!((port >= base) && ((port + size) <= end))) {
-			pr_fatal("Err:IO, port 0x%04x, size=%hu spans devices",
-					port, size);
+			pr_fatal("Err:IO, port 0x%04x, size=%hu spans devices", port, size);
 			status = -EIO;
 			break;
 		} else {
 			if (pio_req->direction == REQUEST_WRITE) {
-				handler->desc.io_write(vm, port, size,
-							pio_req->value & mask);
-
-				pr_dbg("IO write on port %04x, data %08x", port,
-					pio_req->value & mask);
+				if (handler->io_write) {
+					handler->io_write(vm, port, size, pio_req->value & mask);
+				}
+				pr_dbg("IO write on port %04x, data %08x", port, pio_req->value & mask);
 			} else {
-				pio_req->value = handler->desc.io_read(vm, port,
-									size);
-
-				pr_dbg("IO read on port %04x, data %08x",
-					port, pio_req->value);
+				if (handler->io_read) {
+					pio_req->value = handler->io_read(vm, port, size);
+				}
+				pr_dbg("IO read on port %04x, data %08x", port, pio_req->value);
 			}
 			status = 0;
 			break;
@@ -394,37 +395,6 @@ int32_t pio_instr_vmexit_handler(struct acrn_vcpu *vcpu)
 	return status;
 }
 
-static void register_io_handler(struct acrn_vm *vm, struct vm_io_handler *hdlr)
-{
-	if (vm->arch_vm.io_handler != NULL) {
-		hdlr->next = vm->arch_vm.io_handler;
-	}
-
-	vm->arch_vm.io_handler = hdlr;
-}
-
-static void empty_io_handler_list(struct acrn_vm *vm)
-{
-	struct vm_io_handler *handler = vm->arch_vm.io_handler;
-	struct vm_io_handler *tmp;
-
-	while (handler != NULL) {
-		tmp = handler;
-		handler = tmp->next;
-		free(tmp);
-	}
-	vm->arch_vm.io_handler = NULL;
-}
-
-/**
- * @brief Free I/O bitmaps and port I/O handlers of \p vm
- *
- * @param vm The VM whose I/O bitmaps and handlers are to be freed
- */
-void free_io_emulation_resource(struct acrn_vm *vm)
-{
-	empty_io_handler_list(vm);
-}
 
 /**
  * @brief Allow a VM to access a port I/O range
@@ -464,27 +434,6 @@ static void deny_guest_pio_access(struct acrn_vm *vm, uint16_t port_address,
 	}
 }
 
-static struct vm_io_handler *create_io_handler(uint32_t port, uint32_t len,
-				io_read_fn_t io_read_fn_ptr,
-				io_write_fn_t io_write_fn_ptr)
-{
-
-	struct vm_io_handler *handler;
-
-	handler = calloc(1U, sizeof(struct vm_io_handler));
-
-	if (handler != NULL) {
-		handler->desc.addr = port;
-		handler->desc.len = len;
-		handler->desc.io_read = io_read_fn_ptr;
-		handler->desc.io_write = io_write_fn_ptr;
-	} else {
-		pr_err("Error: out of memory");
-	}
-
-	return handler;
-}
-
 /**
  * @brief Initialize the I/O bitmap for \p vm
  *
@@ -503,30 +452,23 @@ void setup_io_bitmap(struct acrn_vm *vm)
 /**
  * @brief Register a port I/O handler
  *
- * @param vm The VM to which the port I/O handlers are registered
- * @param range The port I/O range that the given handlers can emulate
+ * @param vm      The VM to which the port I/O handlers are registered
+ * @param pio_idx The emulated port io index
+ * @param range   The emulated port io range
  * @param io_read_fn_ptr The handler for emulating reads from the given range
  * @param io_write_fn_ptr The handler for emulating writes to the given range
+ * @pre pio_idx < EMUL_PIO_IDX_MAX
  */
-void register_io_emulation_handler(struct acrn_vm *vm, const struct vm_io_range *range,
-		io_read_fn_t io_read_fn_ptr,
-		io_write_fn_t io_write_fn_ptr)
+void register_io_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
+		const struct vm_io_range *range, io_read_fn_t io_read_fn_ptr, io_write_fn_t io_write_fn_ptr)
 {
-	struct vm_io_handler *handler = NULL;
-
-	if ((io_read_fn_ptr == NULL) || (io_write_fn_ptr == NULL)) {
-		pr_err("Invalid IO handler.");
-		return;
-	}
-
 	if (is_vm0(vm)) {
 		deny_guest_pio_access(vm, range->base, range->len);
 	}
-
-	handler = create_io_handler(range->base,
-			range->len, io_read_fn_ptr, io_write_fn_ptr);
-
-	register_io_handler(vm, handler);
+	vm->arch_vm.emul_pio[pio_idx].addr = range->base;
+	vm->arch_vm.emul_pio[pio_idx].len = range->len;
+	vm->arch_vm.emul_pio[pio_idx].io_read = io_read_fn_ptr;
+	vm->arch_vm.emul_pio[pio_idx].io_write = io_write_fn_ptr;
 }
 
 /**
