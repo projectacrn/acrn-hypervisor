@@ -198,7 +198,7 @@ static int vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 struct pci_vdev_ops pci_ops_vdev_pt = {
 	.init = vdev_pt_init,
 	.deinit = vdev_pt_deinit,
-	.cfgread = vdev_pt_cfgread,
 	.cfgwrite = vdev_pt_cfgwrite,
+	.cfgread = vdev_pt_cfgread,
 };
 
