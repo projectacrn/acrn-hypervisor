@@ -264,6 +264,11 @@ extern spinlock_t trampoline_spinlock;
  */
 #define BROADCAST_CPU_ID 0xfffeU
 
+struct descriptor_table {
+	uint16_t limit;
+	uint64_t base;
+} __attribute__((packed));
+
 /* CPU states defined */
 enum pcpu_boot_state {
 	PCPU_STATE_RESET = 0U,
@@ -326,6 +331,11 @@ void stop_cpus(void);
 void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
 void cpu_l1d_flush(void);
 
+#define CPU_SEG_WRITE(seg, value16)						\
+{										\
+	asm volatile ("mov %%" STRINGIFY(seg) ", %%ax": "=a" (value16));	\
+}
+
 /* Read control register */
 #define CPU_CR_READ(cr, result_ptr)				\
 {								\
@@ -339,6 +349,20 @@ void cpu_l1d_flush(void);
 	asm volatile ("mov %0, %%" STRINGIFY(cr)		\
 			: /* No output */			\
 			: "r"(value));				\
+}
+
+static inline uint64_t sgdt(void)
+{
+	struct descriptor_table gdtb = {0U, 0UL};
+	asm volatile ("sgdt %0":"=m"(gdtb)::"memory");
+	return gdtb.base;
+}
+
+static inline uint64_t sidt(void)
+{
+	struct descriptor_table idtb = {0U, 0UL};
+	asm volatile ("sidt %0":"=m"(idtb)::"memory");
+	return idtb.base;
 }
 
 /* Read MSR */
@@ -358,6 +382,16 @@ static inline void cpu_msr_write(uint32_t reg, uint64_t msr_val)
 	msrl = (uint32_t)msr_val;
 	msrh = (uint32_t)(msr_val >> 32U);
 	asm volatile (" wrmsr " : : "c" (reg), "a" (msrl), "d" (msrh));
+}
+
+static inline void pause_cpu(void)
+{
+	asm volatile ("pause" ::: "memory");
+}
+
+static inline void hlt_cpu(void)
+{
+	asm volatile ("hlt");
 }
 
 #ifdef CONFIG_PARTITION_MODE
@@ -388,22 +422,10 @@ static inline void cpu_sp_write(uint64_t *stack_ptr)
 	asm volatile ("movq %0, %%rsp" : : "r"(rsp));
 }
 
-/* Synchronizes all read accesses from memory */
-#define CPU_MEMORY_READ_BARRIER()                           \
-{                                                           \
-	asm volatile ("lfence\n" : : : "memory");           \
-}
-
-/* Synchronizes all write accesses to memory */
-#define CPU_MEMORY_WRITE_BARRIER()                          \
-{                                                           \
-	asm volatile ("sfence\n" : : : "memory");           \
-}
-
 /* Synchronizes all read and write accesses to/from memory */
-#define CPU_MEMORY_BARRIER()                                \
-{                                                           \
-	asm volatile ("mfence\n" : : : "memory");           \
+static inline void cpu_memory_barrier(void)
+{
+	asm volatile ("mfence\n" : : : "memory");
 }
 
 /* Write the task register */

@@ -264,7 +264,7 @@ dmar_wait_completion(const struct dmar_drhd_rt *dmar_uint, uint32_t offset,
 		}
 		ASSERT(((rdtsc() - start) < CYCLES_PER_MS),
 			"DMAR OP Timeout!");
-		asm volatile ("pause" ::: "memory");
+		pause_cpu();
 	}
 }
 

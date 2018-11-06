@@ -477,10 +477,6 @@ static inline bool cpu_has_vmx_unrestricted_guest_cap(void)
 									!= 0UL);
 }
 
-typedef struct _descriptor_table_{
-	uint16_t limit;
-	uint64_t base;
-}__attribute__((packed)) descriptor_table;
 #endif /* ASSEMBLER */
 
 #endif /* VMX_H_ */

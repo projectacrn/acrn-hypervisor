@@ -243,7 +243,7 @@ void asm_assert(int32_t line, const char *file, const char *txt)
 	show_host_call_trace(rsp, rbp, pcpu_id);
 	dump_guest_context(pcpu_id);
 	do {
-		asm volatile ("pause" ::: "memory");
+		pause_cpu();
 	} while (1);
 }
 
