@@ -75,10 +75,10 @@ static int vdev_pt_init(struct pci_vdev *vdev)
 			hva2hpa(vm->arch_vm.nworld_eptp), 48U);
 	}
 
-	ret = assign_iommu_device(vm->iommu, vdev->pdev.bdf.bits.b,
+	ret = assign_iommu_device(vm->iommu, (uint8_t)vdev->pdev.bdf.bits.b,
 		(uint8_t)(vdev->pdev.bdf.value & 0xFFU));
 
-	pci_command = pci_pdev_read_cfg(vdev->pdev.bdf, PCIR_COMMAND, 2U);
+	pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev.bdf, PCIR_COMMAND, 2U);
 	/* Disable INTX */
 	pci_command |= 0x400U;
 	pci_pdev_write_cfg(vdev->pdev.bdf, PCIR_COMMAND, 2U, pci_command);
@@ -91,7 +91,7 @@ static int vdev_pt_deinit(struct pci_vdev *vdev)
 	int ret;
 	struct acrn_vm *vm = vdev->vpci->vm;
 
-	ret = unassign_iommu_device(vm->iommu, vdev->pdev.bdf.bits.b,
+	ret = unassign_iommu_device(vm->iommu, (uint8_t)vdev->pdev.bdf.bits.b,
 		(uint8_t)(vdev->pdev.bdf.value & 0xFFU));
 
 	return ret;
