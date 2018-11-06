@@ -56,7 +56,6 @@ struct acrn_vioapic {
 };
 
 void    vioapic_init(struct acrn_vm *vm);
-void	vioapic_cleanup(const struct acrn_vioapic *vioapic);
 void	vioapic_reset(struct acrn_vioapic *vioapic);
 
 

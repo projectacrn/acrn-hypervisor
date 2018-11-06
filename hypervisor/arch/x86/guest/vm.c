@@ -80,9 +80,8 @@ int create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 	/* Map Virtual Machine to its VM Description */
 	vm->vm_desc = vm_desc;
 #endif
-	/* Init mmio list */
-	INIT_LIST_HEAD(&vm->mmio_list);
 	vm->hw.created_vcpus = 0U;
+	vm->emul_mmio_regions = 0U;
 
 	/* gpa_lowtop are used for system start up */
 	vm->hw.gpa_lowtop = 0UL;
@@ -173,8 +172,6 @@ int create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 
 err:
 
-	vioapic_cleanup(vm_ioapic(vm));
-
 	if (vm->arch_vm.nworld_eptp != NULL) {
 		(void)memset(vm->arch_vm.nworld_eptp, 0U, CPU_PAGE_SIZE);
 	}
@@ -204,9 +201,6 @@ int shutdown_vm(struct acrn_vm *vm)
 	}
 
 	ptdev_release_all_entries(vm);
-
-	/* cleanup vioapic */
-	vioapic_cleanup(vm_ioapic(vm));
 
 	/* Free EPT allocated resources assigned to VM */
 	destroy_ept(vm);

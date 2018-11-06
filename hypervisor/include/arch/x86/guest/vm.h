@@ -134,9 +134,8 @@ struct acrn_vm {
 	struct iommu_domain *iommu;	/* iommu domain of this VM */
 	spinlock_t spinlock;	/* Spin-lock used to protect VM modifications */
 
-	struct list_head mmio_list; /* list for mmio. This list is not updated
-				     * when vm is active. So no lock needed
-				     */
+	uint16_t emul_mmio_regions; /* Number of emulated mmio regions */
+	struct mem_io_node emul_mmio[CONFIG_MAX_EMULATED_MMIO_REGIONS];
 
 	unsigned char GUID[16];
 	struct secure_world_control sworld_control;

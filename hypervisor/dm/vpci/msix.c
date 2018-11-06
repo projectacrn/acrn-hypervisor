@@ -387,11 +387,7 @@ static int vmsix_init(struct pci_vdev *vdev)
 
 static int vmsix_deinit(struct pci_vdev *vdev)
 {
-	if (vdev->msix.intercepted_size != 0UL) {
-		unregister_mmio_emulation_handler(vdev->vpci->vm, vdev->msix.intercepted_gpa,
-			vdev->msix.intercepted_gpa + vdev->msix.intercepted_size);
-		vdev->msix.intercepted_size = 0U;
-	}
+	vdev->msix.intercepted_size = 0U;
 
 	if (vdev->msix.table_count != 0U) {
 		ptdev_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, vdev->msix.table_count);

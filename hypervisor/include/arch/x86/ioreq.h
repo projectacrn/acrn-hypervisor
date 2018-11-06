@@ -228,16 +228,6 @@ int register_mmio_emulation_handler(struct acrn_vm *vm,
 	uint64_t end, void *handler_private_data);
 
 /**
- * @brief Unregister a MMIO handler
- *
- * @param vm The VM from which MMIO handlers are unregistered
- * @param start The base address of the range the to-be-unregistered handler is for
- * @param end The end of the range (exclusive) the to-be-unregistered handler is for
- */
-void unregister_mmio_emulation_handler(struct acrn_vm *vm, uint64_t start,
-        uint64_t end);
-
-/**
  * @brief General post-work for MMIO emulation
  *
  * @param vcpu The virtual CPU that triggers the MMIO access
