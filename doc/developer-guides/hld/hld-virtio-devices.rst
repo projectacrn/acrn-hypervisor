@@ -265,35 +265,138 @@ virtqueue through the user-level vring service API helpers.
 Kernel-Land Virtio Framework
 ============================
 
-The architecture of ACRN kernel-land virtio framework (VBS-K) is shown
-in :numref:`virtio-kernelland`.
+ACRN supports two kernel-land virtio frameworks: VBS-K, designed from
+scratch for ACRN, the other called Vhost, compatible with Linux Vhost.
 
-VBS-K provides acceleration for performance critical devices emulated by
-VBS-U modules by handling the "data plane" of the devices directly in
-the kernel. When VBS-K is enabled for certain device, the kernel-land
-vring service API helpers are used to access the virtqueues shared by
-the FE driver. Compared to VBS-U, this eliminates the overhead of
-copying data back-and-forth between user-land and kernel-land within the
-service OS, but pays with the extra implementation complexity of the BE
-drivers.
+VBS-K framework
+---------------
+
+The architecture of ACRN VBS-K is shown in
+:numref:`kernel-virtio-framework` below.
+
+Generally VBS-K provides acceleration towards performance critical
+devices emulated by VBS-U modules by handling the “data plane” of the
+devices directly in the kernel. When VBS-K is enabled for certain
+devices, the kernel-land vring service API helpers, instead of the
+user-land helpers, are used to access the virtqueues shared by the FE
+driver.  Compared to VBS-U, this eliminates the overhead of copying data
+back-and-forth between user-land and kernel-land within service OS, but
+pays with the extra implementation complexity of the BE drivers.
 
 Except for the differences mentioned above, VBS-K still relies on VBS-U
 for feature negotiations between FE and BE drivers. This means the
 "control plane" of the virtio device still remains in VBS-U. When
 feature negotiation is done, which is determined by FE driver setting up
-an indicative flag, VBS-K module will be initialized by VBS-U, after
-which all request handling will be offloaded to the VBS-K in kernel.
+an indicative flag, VBS-K module will be initialized by VBS-U.
+Afterwards, all request handling will be offloaded to the VBS-K in
+kernel.
 
-The FE driver is not aware of how the BE driver is implemented, either
-in the VBS-U or VBS-K model. This saves engineering effort regarding FE
+Finally the FE driver is not aware of how the BE driver is implemented,
+either in VBS-U or VBS-K. This saves engineering effort regarding FE
 driver development.
 
-.. figure:: images/virtio-hld-image6.png
-   :width: 900px
+.. figure:: images/virtio-hld-image54.png
    :align: center
-   :name: virtio-kernelland
+   :name: kernel-virtio-framework
 
-   ACRN Kernel-Land Virtio Framework
+   ACRN Kernel Land Virtio Framework
+
+Vhost framework
+---------------
+
+Vhost is similar to VBS-K. Vhost is a common solution upstreamed in the
+Linux kernel, with several kernel mediators based on it.
+
+Architecture
+~~~~~~~~~~~~
+
+Vhost/virtio is a semi-virtualized device abstraction interface
+specification that has been widely applied in various virtualization
+solutions. Vhost is a specific kind of virtio where the data plane is
+put into host kernel space to reduce the context switch while processing
+the IO request. It is usually called "virtio" when used as a front-end
+driver in a guest operating system or "vhost" when used as a back-end
+driver in a host. Compared with a pure virtio solution on a host, vhost
+uses the same frontend driver as virtio solution and can achieve better
+performance. :numref:`vhost-arch` shows the vhost architecture on ACRN.
+
+.. figure:: images/virtio-hld-image71.png
+   :align: center
+   :name: vhost-arch
+
+   Vhost Architecture on ACRN
+
+Compared with a userspace virtio solution, vhost decomposes data plane
+from user space to kernel space. The vhost general data plane workflow
+can be described as:
+
+1. vhost proxy creates two eventfds per virtqueue, one is for kick,
+   (an ioeventfd), the other is for call, (an irqfd).
+2. vhost proxy registers the two eventfds to VHM through VHM character
+   device:
+
+   a) Ioevenftd is bound with a PIO/MMIO range. If it is a PIO, it is
+      registered with (fd, port, len, value). If it is a MMIO, it is
+      registered with (fd, addr, len).
+   b) Irqfd is registered with MSI vector.
+
+3. vhost proxy sets the two fds to vhost kernel through ioctl of vhost
+   device.
+4. vhost starts polling the kick fd and wakes up when guest kicks a
+   virtqueue, which results a event_signal on kick fd by VHM ioeventfd.
+5. vhost device in kernel signals on the irqfd to notify the guest.
+
+Ioeventfd implementation
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Ioeventfd module is implemented in VHM, and can enhance a registered
+eventfd to listen to IO requests (PIO/MMIO) from vhm ioreq module and
+signal the eventfd when needed. :numref:`ioeventfd-workflow`  shows the
+general workflow of ioeventfd.
+
+.. figure:: images/virtio-hld-image58.png
+   :align: center
+   :name: ioeventfd-workflow
+
+   ioeventfd general work flow
+
+The workflow can be summarized as:
+
+1. vhost device init. Vhost proxy create two eventfd for ioeventfd and
+   irqfd.
+2. pass ioeventfd to vhost kernel driver.
+3. pass ioevent fd to vhm driver
+4. UOS FE driver triggers ioreq and forwarded to SOS by hypervisor
+5. ioreq is dispatched by vhm driver to related vhm client.
+6. ioeventfd vhm client traverse the io_range list and find
+   corresponding eventfd.
+7. trigger the signal to related eventfd.
+
+Irqfd implementation
+~~~~~~~~~~~~~~~~~~~~
+
+The irqfd module is implemented in VHM, and can enhance an registered
+eventfd to inject an interrupt to a guest OS when the eventfd gets
+signalled. :numref:`irqfd-workflow` shows the general flow for irqfd.
+
+.. figure:: images/virtio-hld-image60.png
+   :align: center
+   :name: irqfd-workflow
+
+   irqfd general flow
+
+The workflow can be summarized as:
+
+1. vhost device init. Vhost proxy create two eventfd for ioeventfd and
+   irqfd.
+2. pass irqfd to vhost kernel driver.
+3. pass irq fd to vhm driver
+4. vhost device driver triggers irq eventfd signal once related native
+   transfer is completed.
+5. irqfd related logic traverses the irqfd list to retrieve related irq
+   information.
+6. irqfd related logic inject an interrupt through vhm interrupt API.
+7. interrupt is delivered to UOS FE driver through hypervisor.
 
 Virtio APIs
 ***********
@@ -664,5 +767,6 @@ supported in ACRN.
 
    virtio-blk
    virtio-net
+   virtio-input
    virtio-console
    virtio-rnd
