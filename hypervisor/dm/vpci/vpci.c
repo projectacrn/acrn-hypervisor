@@ -64,19 +64,21 @@ static uint32_t pci_cfg_io_read(struct acrn_vm *vm, uint16_t addr, size_t bytes)
 				val |= PCI_CFG_ENABLE;
 			}
 		}
-	} else if (is_cfg_data(addr)) {
-		if (pi->cached_enable) {
-			uint16_t offset = addr - PCI_CONFIG_DATA;
-
-			if ((vpci->ops != NULL) && (vpci->ops->cfgread != NULL)) {
-				vpci->ops->cfgread(vpci, pi->cached_bdf,
-					pi->cached_reg + offset, bytes, &val);
-			}
-
-			pci_cfg_clear_cache(pi);
-		}
 	} else {
-		val = 0xFFFFFFFFU;
+		if (is_cfg_data(addr)) {
+			if (pi->cached_enable) {
+				uint16_t offset = addr - PCI_CONFIG_DATA;
+
+				if ((vpci->ops != NULL) && (vpci->ops->cfgread != NULL)) {
+					vpci->ops->cfgread(vpci, pi->cached_bdf,
+						pi->cached_reg + offset, bytes, &val);
+				}
+
+				pci_cfg_clear_cache(pi);
+			}
+		} else {
+			val = 0xFFFFFFFFU;
+		}
 	}
 
 	return val;
@@ -95,18 +97,20 @@ static void pci_cfg_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes,
 			pi->cached_reg = val & PCI_REGMAX;
 			pi->cached_enable = ((val & PCI_CFG_ENABLE) == PCI_CFG_ENABLE);
 		}
-	} else if (is_cfg_data(addr)) {
-		if (pi->cached_enable) {
-			uint16_t offset = addr - PCI_CONFIG_DATA;
-
-			if ((vpci->ops != NULL) && (vpci->ops->cfgwrite != NULL)) {
-				vpci->ops->cfgwrite(vpci, pi->cached_bdf,
-					pi->cached_reg + offset, bytes, val);
-			}
-			pci_cfg_clear_cache(pi);
-		}
 	} else {
-		pr_err("Not PCI cfg data/addr port access!");
+		if (is_cfg_data(addr)) {
+			if (pi->cached_enable) {
+				uint16_t offset = addr - PCI_CONFIG_DATA;
+
+				if ((vpci->ops != NULL) && (vpci->ops->cfgwrite != NULL)) {
+					vpci->ops->cfgwrite(vpci, pi->cached_bdf,
+						pi->cached_reg + offset, bytes, val);
+				}
+				pci_cfg_clear_cache(pi);
+			}
+		} else {
+			pr_err("Not PCI cfg data/addr port access!");
+		}
 	}
 }
 
