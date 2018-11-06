@@ -30,12 +30,29 @@ The virtio-console architecture diagram in ACRN is shown below.
    Virtio-console architecture diagram
 
 
-Virtio-console is implemented as a virtio legacy device in the ACRN device
-model (DM), and is registered as a PCI virtio device to the guest OS. No changes
-are required in the frontend Linux virtio-console except that the guest
-(UOS) kernel should be built with ``CONFIG_VIRTIO_CONSOLE=y``.
+Virtio-console is implemented as a virtio legacy device in the ACRN
+device model (DM), and is registered as a PCI virtio device to the guest
+OS. No changes are required in the frontend Linux virtio-console except
+that the guest (UOS) kernel should be built with
+``CONFIG_VIRTIO_CONSOLE=y``.
 
-Currently the feature bits supported by the BE device are:
+The virtio console FE driver registers a HVC console to the kernel if
+the port is configured as console. Otherwise it registers a char device
+named ``/dev/vportXpY`` to the kernel, and can be read and written from
+the user space. There are two virtqueues for a port, one is for
+transmitting and the other is for receiving. The FE driver places empty
+buffers onto the receiving virtqueue for incoming data, and enqueues
+outgoing characters onto the transmitting virtqueue.
+
+The virtio console BE driver copies data from the FE's transmitting
+virtqueue when it receives a kick on the virtqueue (implemented as a
+vmexit).  The BE driver then writes the data to the backend,  and can be
+implemented as PTY, TTY, STDIO, and a regular file. BE driver uses
+mevent to poll the available data from the backend file descriptor. When
+new data is available, the BE driver reads it to the receiving virtqueue
+of the FE, followed by an interrupt injection.
+
+The feature bits currently supported by the BE device are:
 
 .. list-table:: Feature bits supported by BE drivers
    :widths: 30 50
@@ -181,4 +198,3 @@ The File backend only supports console output to a file (no input).
 #. Add the console parameter to the guest OS kernel command line::
 
       console=hvc0
-
