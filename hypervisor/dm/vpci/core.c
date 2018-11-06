@@ -53,10 +53,10 @@ inline void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t 
 {
 	switch (bytes) {
 	case 1U:
-		pci_vdev_write_cfg_u8(vdev, offset, val);
+		pci_vdev_write_cfg_u8(vdev, offset, (uint8_t)val);
 		break;
 	case 2U:
-		pci_vdev_write_cfg_u16(vdev, offset, val);
+		pci_vdev_write_cfg_u16(vdev, offset, (uint16_t)val);
 		break;
 	default:
 		pci_vdev_write_cfg_u32(vdev, offset, val);

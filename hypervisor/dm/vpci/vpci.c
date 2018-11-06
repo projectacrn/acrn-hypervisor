@@ -137,7 +137,7 @@ void vpci_init(struct acrn_vm *vm)
 		 * register.
 		 */
 		if (is_vm0(vm)) {
-			allow_guest_pio_access(vm, 0xCF9U, 1);
+			allow_guest_pio_access(vm, (uint16_t)0xCF9U, 1U);
 		}
 	}
 }
