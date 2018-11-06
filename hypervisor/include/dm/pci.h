@@ -49,10 +49,6 @@
 #define PCI_BAR_COUNT         0x6U
 #define PCI_REGMAX            0xFFU
 
-#define PCI_BUS(bdf)          (((bdf) >> 8U) & 0xFFU)
-#define PCI_SLOT(bdf)         (((bdf) & 0xFFU) >> 3U)
-#define PCI_FUNC(bdf)         ((bdf) & 0x7U)
-
 /* I/O ports */
 #define PCI_CONFIG_ADDR       0xCF8U
 #define PCI_CONFIG_DATA       0xCFCU
@@ -157,6 +153,21 @@ static inline bool pci_bar_access(uint32_t offset)
 	} else {
 		return false;
 	}
+}
+
+static inline uint8_t pci_bus(uint16_t bdf)
+{
+	return (uint8_t)((bdf >> 8U) & 0xFFU);
+}
+
+static inline uint8_t pci_slot(uint16_t bdf)
+{
+	return (uint8_t)((bdf >> 3U) & 0x1FU);
+}
+
+static inline uint8_t pci_func(uint16_t bdf)
+{
+	return (uint8_t)(bdf & 0x7U);
 }
 
 uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes);

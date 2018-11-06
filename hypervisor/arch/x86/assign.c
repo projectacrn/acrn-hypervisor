@@ -579,7 +579,7 @@ int ptdev_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,
 	entry->msi = *info;
 
 	dev_dbg(ACRN_DBG_IRQ, "PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
-		PCI_BUS(virt_bdf), PCI_SLOT(virt_bdf), PCI_FUNC(virt_bdf), entry_nr,
+		pci_bus(virt_bdf), pci_slot(virt_bdf), pci_func(virt_bdf), entry_nr,
 		info->vmsi_data & 0xFFU, irq_to_vector(entry->allocated_pirq), entry->vm->vm_id);
 END:
 	return 0;
