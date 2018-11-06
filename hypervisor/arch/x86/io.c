@@ -253,31 +253,32 @@ static int32_t
 hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
 	int status = -ENODEV;
+	uint16_t idx;
 	uint64_t address, size;
-	struct list_head *pos;
 	struct mmio_request *mmio_req = &io_req->reqs.mmio;
 	struct mem_io_node *mmio_handler = NULL;
 
 	address = mmio_req->address;
 	size = mmio_req->size;
 
-	list_for_each(pos, &vcpu->vm->mmio_list) {
+	for (idx = 0U; idx < vcpu->vm->emul_mmio_regions; idx++) {
 		uint64_t base, end;
 
-		mmio_handler = list_entry(pos, struct mem_io_node, list);
+		mmio_handler = &(vcpu->vm->emul_mmio[idx]);
 		base = mmio_handler->range_start;
 		end = mmio_handler->range_end;
 
 		if ((address + size <= base) || (address >= end)) {
 			continue;
 		} else if (!((address >= base) && (address + size <= end))) {
-			pr_fatal("Err MMIO, address:0x%llx, size:%x",
-				 address, size);
+			pr_fatal("Err MMIO, address:0x%llx, size:%x", address, size);
 			return -EIO;
 		} else {
 			/* Handle this MMIO operation */
-			status = mmio_handler->read_write(io_req, mmio_handler->handler_private_data);
-			break;
+			if (mmio_handler->read_write) {
+				status = mmio_handler->read_write(io_req, mmio_handler->handler_private_data);
+				break;
+			}
 		}
 	}
 
@@ -499,64 +500,35 @@ int register_mmio_emulation_handler(struct acrn_vm *vm,
 
 	/* Ensure both a read/write handler and range check function exist */
 	if ((read_write != NULL) && (end > start)) {
-		/* Allocate memory for node */
-		mmio_node =
-		(struct mem_io_node *)calloc(1U, sizeof(struct mem_io_node));
 
-		/* Ensure memory successfully allocated */
-		if (mmio_node != NULL) {
-			/* Fill in information for this node */
-			mmio_node->read_write = read_write;
-			mmio_node->handler_private_data = handler_private_data;
-
-			INIT_LIST_HEAD(&mmio_node->list);
-			list_add(&mmio_node->list, &vm->mmio_list);
-
-			mmio_node->range_start = start;
-			mmio_node->range_end = end;
-
-			/*
-			 * SOS would map all its memory at beginning, so we
-			 * should unmap it. But UOS will not, so we shouldn't
-			 * need to unmap it.
-			 */
-			if (is_vm0(vm)) {
-				ept_mr_del(vm,
-					(uint64_t *)vm->arch_vm.nworld_eptp,
-					start, end - start);
-			}
-
-			/* Return success */
-			status = 0;
+		if (vm->emul_mmio_regions >= CONFIG_MAX_EMULATED_MMIO_REGIONS) {
+			pr_err("the emulated mmio region is out of range");
+			return status;
 		}
+		mmio_node = &(vm->emul_mmio[vm->emul_mmio_regions]);
+		/* Fill in information for this node */
+		mmio_node->read_write = read_write;
+		mmio_node->handler_private_data = handler_private_data;
+		mmio_node->range_start = start;
+		mmio_node->range_end = end;
+
+		(vm->emul_mmio_regions)++;
+
+		/*
+		 * SOS would map all its memory at beginning, so we
+		 * should unmap it. But UOS will not, so we shouldn't
+		 * need to unmap it.
+		 */
+		if (is_vm0(vm)) {
+			ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+				start, end - start);
+		}
+
+		/* Return success */
+		status = 0;
+
 	}
 
 	/* Return status to caller */
 	return status;
-}
-
-/**
- * @brief Unregister a MMIO handler
- *
- * @param vm The VM from which MMIO handlers are unregistered
- * @param start The base address of the range the to-be-unregistered handler is for
- * @param end The end of the range (exclusive) the to-be-unregistered handler is for
- */
-void unregister_mmio_emulation_handler(struct acrn_vm *vm, uint64_t start,
-	uint64_t end)
-{
-	struct list_head *pos, *tmp;
-	struct mem_io_node *mmio_node;
-
-	list_for_each_safe(pos, tmp, &vm->mmio_list) {
-		mmio_node = list_entry(pos, struct mem_io_node, list);
-
-		if ((mmio_node->range_start == start) &&
-			(mmio_node->range_end == end)) {
-			/* assume only one entry found in mmio_list */
-			list_del_init(&mmio_node->list);
-			free(mmio_node);
-			break;
-		}
-	}
 }

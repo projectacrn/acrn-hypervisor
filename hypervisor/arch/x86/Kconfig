@@ -86,6 +86,11 @@ config MAX_PCPU_NUM
 	range 1 8
 	default 8
 
+config MAX_EMULATED_MMIO_REGIONS
+	int "Maximum number of emulated mmio regions"
+	range 0 128
+	default 16
+
 config MAX_IOMMU_NUM
 	int "Maximum number of IOMMU devices"
 	range 1 2

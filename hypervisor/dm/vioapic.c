@@ -523,14 +523,6 @@ vioapic_init(struct acrn_vm *vm)
 			vm);
 }
 
-void
-vioapic_cleanup(const struct acrn_vioapic *vioapic)
-{
-	unregister_mmio_emulation_handler(vioapic->vm,
-		(uint64_t)VIOAPIC_BASE,
-		(uint64_t)VIOAPIC_BASE + VIOAPIC_SIZE);
-}
-
 uint32_t
 vioapic_pincount(const struct acrn_vm *vm)
 {

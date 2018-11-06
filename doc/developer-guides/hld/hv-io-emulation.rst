@@ -322,9 +322,6 @@ I/O bitmaps and register or unregister I/O handlers:
 .. doxygenfunction:: register_mmio_emulation_handler
    :project: Project ACRN
 
-.. doxygenfunction:: unregister_mmio_emulation_handler
-   :project: Project ACRN
-
 I/O Emulation
 =============
 
