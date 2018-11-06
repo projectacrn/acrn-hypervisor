@@ -652,14 +652,14 @@ cbc_process_wakeup_reason(struct cbc_pkt *pkt)
 		/* Unset RTC bit if UOS sends active heartbeat */
 		reason &= ~CBC_WK_RSN_RTC;
 	} else {
-		reason &= ~CBC_WK_RSN_SOC;
-
 		/*
-		 * Set RTC bit when bootup or resuming reason is
-		 * RTC wakeup reason, and hold the bit until UOS
-		 * sends active heartbeat.
+		 * If UOS is inactive, indicate the acrnd boot reason
+		 * as UOS periodic wakeup reason.
 		 */
-		reason |= pkt->ioc->boot_reason & CBC_WK_RSN_RTC;
+		reason = pkt->ioc->boot_reason;
+
+		/* Unset SoC bit */
+		reason &= ~CBC_WK_RSN_SOC;
 	}
 
 	/* Update periodic wakeup reason */
@@ -949,7 +949,8 @@ cbc_tx_handler(struct cbc_pkt *pkt)
 		/* Heartbeat init also indicates UOS enter active state */
 		pkt->uos_active = true;
 	} else if (pkt->req->rtype == CBC_REQ_T_UOS_ACTIVE) {
-		cbc_update_wakeup_reason(pkt, pkt->reason | CBC_WK_RSN_SOC);
+		cbc_update_wakeup_reason(pkt, pkt->ioc->boot_reason |
+				CBC_WK_RSN_SOC);
 		cbc_send_pkt(pkt);
 
 		/* Enable UOS active flag */
