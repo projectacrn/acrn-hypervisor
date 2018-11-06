@@ -50,7 +50,7 @@
 #define PCI_REGMAX            0xFFU
 
 #define PCI_BUS(bdf)          (((bdf) >> 8U) & 0xFFU)
-#define PCI_SLOT(bdf)         (((bdf) >> 3U) & 0x1FU)
+#define PCI_SLOT(bdf)         (((bdf) & 0xFFU) >> 3U)
 #define PCI_FUNC(bdf)         ((bdf) & 0x7U)
 
 /* I/O ports */

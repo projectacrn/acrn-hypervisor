@@ -812,7 +812,7 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 
 	}
 	ret = assign_iommu_device(target_vm->iommu,
-			(uint8_t)(bdf >> 8), (uint8_t)(bdf & 0xffU));
+			(uint8_t)(bdf >> 8U), (uint8_t)(bdf & 0xffU));
 
 	return ret;
 }
@@ -843,7 +843,7 @@ int32_t hcall_deassign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 		return -1;
 	}
 	ret = unassign_iommu_device(target_vm->iommu,
-			(uint8_t)(bdf >> 8), (uint8_t)(bdf & 0xffU));
+			(uint8_t)(bdf >> 8U), (uint8_t)(bdf & 0xffU));
 
 	return ret;
 }

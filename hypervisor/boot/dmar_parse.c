@@ -198,8 +198,8 @@ handle_dmar_devscope(struct dmar_dev_scope *dev_scope,
 			sizeof(struct acpi_dmar_pci_path);
 
 	bdf = dmar_path_bdf(path_len, apci_devscope->bus, path);
-	dev_scope->bus = (bdf >> 8) & 0xff;
-	dev_scope->devfun = bdf & 0xff;
+	dev_scope->bus = (bdf >> 8U) & 0xffU;
+	dev_scope->devfun = bdf & 0xffU;
 
 	return apci_devscope->length;
 }

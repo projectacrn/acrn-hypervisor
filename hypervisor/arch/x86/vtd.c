@@ -1037,7 +1037,7 @@ static int add_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 	lower = dmar_set_bitslice(lower,
 		  CTX_ENTRY_LOWER_SLPTPTR_MASK,
 		  CTX_ENTRY_LOWER_SLPTPTR_POS,
-		  domain->trans_table_ptr >> 12U);
+		  domain->trans_table_ptr >> CPU_PAGE_SHIFT);
 	lower = dmar_set_bitslice(lower,
 		  CTX_ENTRY_LOWER_P_MASK,
 		  CTX_ENTRY_LOWER_P_POS,
