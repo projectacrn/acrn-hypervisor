@@ -430,9 +430,9 @@ static inline bool dma_frcd_up_priv(uint64_t up_priv)
 	return (((up_priv >> 29U) & 1UL) == 1UL);
 }
 
-static inline uint32_t dma_frcd_up_sid(uint64_t up_sid)
+static inline uint16_t dma_frcd_up_sid(uint64_t up_sid)
 {
-	return ((uint32_t)up_sid & 0xffffU);
+	return ((uint16_t)up_sid & 0xffffU);
 }
 
 #define DMAR_CONTEXT_TRANSLATION_TYPE_TRANSLATED 0x00U

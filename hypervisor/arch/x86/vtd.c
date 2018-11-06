@@ -748,9 +748,9 @@ static void fault_record_analysis(__unused uint64_t low, uint64_t high)
 	pr_info("%s, Reason: 0x%x, SID: %x.%x.%x @0x%llx",
 		(dma_frcd_up_t(high) != 0U) ? "Read/Atomic" : "Write",
 		dma_frcd_up_fr(high),
-		dma_frcd_up_sid(high) >> 8U,
-		(dma_frcd_up_sid(high) >> 3U) & 0x1fUL,
-		dma_frcd_up_sid(high) & 0x7UL,
+		pci_bus(dma_frcd_up_sid(high)),
+		pci_slot(dma_frcd_up_sid(high)),
+		pci_func(dma_frcd_up_sid(high)),
 		low);
 #if DBG_IOMMU
 	if (iommu_ecap_dt(dmar_uint->ecap)i != 0U) {
@@ -930,13 +930,13 @@ static int add_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 	dmar_uint = device_to_dmaru(segment, bus, devfun);
 	if (dmar_uint == NULL) {
 		pr_err("no dmar unit found for device:0x%x:%x.%x",
-			bus, devfun >> 3U, devfun & 0x7U);
+			bus, pci_slot(devfun), pci_func(devfun));
 		return 1;
 	}
 
 	if (dmar_uint->drhd->ignore) {
 		dev_dbg(ACRN_DBG_IOMMU, "device is ignored :0x%x:%x.%x",
-			bus, devfun >> 3U, devfun & 0x7U);
+			bus, pci_slot(devfun), pci_func(devfun));
 		return 0;
 	}
 
@@ -992,7 +992,7 @@ static int add_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 		pr_err("%s: context entry@0x%llx (Lower:%x) ",
 				__func__, context_entry, context_entry->lower);
 		pr_err("already present for %x:%x.%x",
-				bus, devfun >> 3U, devfun & 0x7U);
+				bus, pci_slot(devfun), pci_func(devfun));
 		return 1;
 	}
 
