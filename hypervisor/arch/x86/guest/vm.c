@@ -82,7 +82,7 @@ int create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 #endif
 	/* Init mmio list */
 	INIT_LIST_HEAD(&vm->mmio_list);
-	atomic_store16(&vm->hw.created_vcpus, 0U);
+	vm->hw.created_vcpus = 0U;
 
 	/* gpa_lowtop are used for system start up */
 	vm->hw.gpa_lowtop = 0UL;
