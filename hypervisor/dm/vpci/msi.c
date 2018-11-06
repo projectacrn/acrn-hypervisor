@@ -223,7 +223,6 @@ static int vmsi_deinit(struct pci_vdev *vdev)
 }
 
 struct pci_vdev_ops pci_ops_vdev_msi = {
-	.init = NULL,
 	.deinit = vmsi_deinit,
 	.cfgwrite = vmsi_cfgwrite,
 	.cfgread = vmsi_cfgread,
