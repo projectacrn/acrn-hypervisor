@@ -294,7 +294,7 @@ int gva2gpa(struct acrn_vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	 * So we use DPL of SS access rights field for guest DPL.
 	 */
 	pw_info.is_user_mode_access =
-		(((exec_vmread32(VMX_GUEST_SS_ATTR)>>5) & 0x3U) == 3U);
+		(((exec_vmread32(VMX_GUEST_SS_ATTR) >> 5U) & 0x3U) == 3U);
 	pw_info.pse = true;
 	pw_info.nxe = ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_NXE_BIT) != 0UL);
 	pw_info.wp = ((vcpu_get_cr0(vcpu) & CR0_WP) != 0UL);

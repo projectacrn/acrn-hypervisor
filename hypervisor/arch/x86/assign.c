@@ -97,7 +97,7 @@ static void ptdev_build_physical_msi(struct acrn_vm *vm, struct ptdev_msi_info *
 	/* update physical dest mode & dest field */
 	info->pmsi_addr = info->vmsi_addr;
 	info->pmsi_addr &= ~0xFF00CU;
-	info->pmsi_addr |= (dest_mask << 12U) |	MSI_ADDR_RH | MSI_ADDR_LOG;
+	info->pmsi_addr |= (dest_mask << CPU_PAGE_SHIFT) | MSI_ADDR_RH | MSI_ADDR_LOG;
 
 	dev_dbg(ACRN_DBG_IRQ, "MSI addr:data = 0x%llx:%x(V) -> 0x%llx:%x(P)",
 		info->vmsi_addr, info->vmsi_data,
@@ -578,13 +578,9 @@ int ptdev_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,
 	ptdev_build_physical_msi(vm, info, irq_to_vector(entry->allocated_pirq));
 	entry->msi = *info;
 
-	dev_dbg(ACRN_DBG_IRQ,
-		"PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
-		(virt_bdf >> 8) & 0xFFU, (virt_bdf >> 3) & 0x1FU,
-		(virt_bdf) & 0x7U, entry_nr,
-		info->vmsi_data & 0xFFU,
-		irq_to_vector(entry->allocated_pirq),
-		entry->vm->vm_id);
+	dev_dbg(ACRN_DBG_IRQ, "PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
+		PCI_BUS(virt_bdf), PCI_SLOT(virt_bdf), PCI_FUNC(virt_bdf), entry_nr,
+		info->vmsi_data & 0xFFU, irq_to_vector(entry->allocated_pirq), entry->vm->vm_id);
 END:
 	return 0;
 }

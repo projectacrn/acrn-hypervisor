@@ -167,10 +167,12 @@ static void set_vcpu_mode(struct acrn_vcpu *vcpu, uint32_t cs_attr, uint64_t ia3
 		uint64_t cr0)
 {
 	if (ia32_efer & MSR_IA32_EFER_LMA_BIT) {
-		if (cs_attr & 0x2000)		/* CS.L = 1 */
+		if (cs_attr & 0x2000U) {
+			/* CS.L = 1 */
 			vcpu->arch.cpu_mode = CPU_MODE_64BIT;
-		else
+		} else {
 			vcpu->arch.cpu_mode = CPU_MODE_COMPATIBILITY;
+		}
 	} else if (cr0 & CR0_PE) {
 		vcpu->arch.cpu_mode = CPU_MODE_PROTECTED;
 	} else {

@@ -176,7 +176,7 @@ static void update_trampoline_code_refs(uint64_t dest_pa)
 	val = dest_pa + trampoline_relo_addr(&trampoline_fixup_target);
 
 	ptr = hpa2hva(dest_pa + trampoline_relo_addr(&trampoline_fixup_cs));
-	*(uint16_t *)(ptr) = (uint16_t)((val >> 4) & 0xFFFFU);
+	*(uint16_t *)(ptr) = (uint16_t)((val >> 4U) & 0xFFFFU);
 
 	ptr = hpa2hva(dest_pa + trampoline_relo_addr(&trampoline_fixup_ip));
 	*(uint16_t *)(ptr) = (uint16_t)(val & 0xfU);

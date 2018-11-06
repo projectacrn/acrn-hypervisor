@@ -168,7 +168,7 @@ int general_sw_loader(struct acrn_vm *vm)
 		/* add "cma=XXXXM@0xXXXXXXXX" to cmdline*/
 		if (is_vm0(vm) && (e820_mem.max_ram_blk_size > 0)) {
 			snprintf(dyn_bootargs, 100U, " cma=%dM@0x%llx",
-					(e820_mem.max_ram_blk_size >> 20),
+					(e820_mem.max_ram_blk_size >> 20U),
 					e820_mem.max_ram_blk_base);
 			(void)strcpy_s((char *)hva
 					+ sw_linux->bootargs_size,
@@ -183,10 +183,10 @@ int general_sw_loader(struct acrn_vm *vm)
 			int32_t reserving_1g_pages;
 
 #ifdef CONFIG_REMAIN_1G_PAGES
-			reserving_1g_pages = (e820_mem.total_mem_size >> 30) -
+			reserving_1g_pages = (e820_mem.total_mem_size >> 30U) -
 						CONFIG_REMAIN_1G_PAGES;
 #else
-			reserving_1g_pages = (e820_mem.total_mem_size >> 30) -
+			reserving_1g_pages = (e820_mem.total_mem_size >> 30U) -
 						3;
 #endif
 			if (reserving_1g_pages > 0) {
