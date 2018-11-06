@@ -181,6 +181,17 @@ void  destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
 
 }
 
+static inline void save_fxstore_guest_area(struct ext_context *ext_ctx)
+{
+	asm volatile("fxsave (%0)"
+			: : "r" (ext_ctx->fxstore_guest_area) : "memory");
+}
+
+static inline void rstor_fxstore_guest_area(const struct ext_context *ext_ctx)
+{
+	asm volatile("fxrstor (%0)" : : "r" (ext_ctx->fxstore_guest_area));
+}
+
 static void save_world_ctx(struct acrn_vcpu *vcpu, struct ext_context *ext_ctx)
 {
 	/* cache on-demand run_context for efer/rflags/rsp/rip */
@@ -231,8 +242,7 @@ static void save_world_ctx(struct acrn_vcpu *vcpu, struct ext_context *ext_ctx)
 	ext_ctx->ia32_kernel_gs_base = msr_read(MSR_IA32_KERNEL_GS_BASE);
 
 	/* FX area */
-	asm volatile("fxsave (%0)"
-			: : "r" (ext_ctx->fxstore_guest_area) : "memory");
+	save_fxstore_guest_area(ext_ctx);
 }
 
 static void load_world_ctx(struct acrn_vcpu *vcpu, const struct ext_context *ext_ctx)
@@ -279,7 +289,7 @@ static void load_world_ctx(struct acrn_vcpu *vcpu, const struct ext_context *ext
 	msr_write(MSR_IA32_KERNEL_GS_BASE, ext_ctx->ia32_kernel_gs_base);
 
 	/* FX area */
-	asm volatile("fxrstor (%0)" : : "r" (ext_ctx->fxstore_guest_area));
+	rstor_fxstore_guest_area(ext_ctx);
 }
 
 static void copy_smc_param(const struct run_context *prev_ctx,

@@ -724,7 +724,7 @@ void cpu_dead(uint16_t pcpu_id)
 
 	/* Halt the CPU */
 	do {
-		asm volatile ("hlt");
+		hlt_cpu();
 	} while (halt != 0);
 }
 

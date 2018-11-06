@@ -23,6 +23,11 @@ static void set_tss_desc(struct tss_64_descriptor *desc,
 	desc->high32_value = u2 | (type << 8U) | 0x8000U | u3;
 }
 
+static inline void load_gdt(struct host_gdt_descriptor *gdtr)
+{
+	asm volatile ("lgdt %0" ::"m"(*gdtr));
+}
+
 void load_gdtr_and_tr(void)
 {
 	struct host_gdt *gdt = &get_cpu_var(gdt);
@@ -48,7 +53,7 @@ void load_gdtr_and_tr(void)
 	gdtr.len = sizeof(struct host_gdt) - 1U;
 	gdtr.gdt = gdt;
 
-	asm volatile ("lgdt %0" ::"m"(gdtr));
+	load_gdt(&gdtr);
 
 	CPU_LTR_EXECUTE(HOST_GDT_RING0_CPU_TSS_SEL);
 }

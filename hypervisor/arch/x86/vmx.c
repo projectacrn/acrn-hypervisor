@@ -6,6 +6,7 @@
 
 #include <hypervisor.h>
 #include <vm0_boot.h>
+#include <cpu.h>
 #ifdef CONFIG_EFI_STUB
 extern struct efi_context* efi_ctx;
 #endif
@@ -51,19 +52,6 @@ bool is_vmx_disabled(void)
  */
 static inline void exec_vmxon(void *addr)
 {
-	uint64_t tmp64;
-
-	/* Read Feature ControL MSR */
-	tmp64 = msr_read(MSR_IA32_FEATURE_CONTROL);
-
-	/* Check if feature control is locked */
-	if ((tmp64 & MSR_IA32_FEATURE_CONTROL_LOCK) == 0U) {
-		/* Lock and enable VMX support */
-		tmp64 |= (MSR_IA32_FEATURE_CONTROL_LOCK |
-			  MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX);
-		msr_write(MSR_IA32_FEATURE_CONTROL, tmp64);
-	}
-
 	/* Turn VMX on, pre-conditions can avoid VMfailInvalid
 	 * here no need check RFLAGS since it will generate #GP or #UD
 	 * except VMsuccess. SDM 30.3
@@ -98,12 +86,28 @@ void exec_vmxon_instr(uint16_t pcpu_id)
 	CPU_CR_READ(cr4, &tmp64);
 	CPU_CR_WRITE(cr4, tmp64 | CR4_VMXE);
 
+	/* Read Feature ControL MSR */
+	tmp64 = msr_read(MSR_IA32_FEATURE_CONTROL);
+
+	/* Check if feature control is locked */
+	if ((tmp64 & MSR_IA32_FEATURE_CONTROL_LOCK) == 0U) {
+		/* Lock and enable VMX support */
+		tmp64 |= (MSR_IA32_FEATURE_CONTROL_LOCK |
+			  MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX);
+		msr_write(MSR_IA32_FEATURE_CONTROL, tmp64);
+	}
+
 	/* Turn ON VMX */
 	vmxon_region_pa = hva2hpa(vmxon_region_va);
 	exec_vmxon(&vmxon_region_pa);
 
 	vmcs_pa = hva2hpa(vcpu->arch.vmcs);
 	exec_vmptrld(&vmcs_pa);
+}
+
+static inline void exec_vmxoff(void)
+{
+	asm volatile ("vmxoff" : : : "memory");
 }
 
 void vmx_off(uint16_t pcpu_id)
@@ -115,7 +119,7 @@ void vmx_off(uint16_t pcpu_id)
 	vmcs_pa = hva2hpa(vcpu->arch.vmcs);
 	exec_vmclear((void *)&vmcs_pa);
 
-	asm volatile ("vmxoff" : : : "memory");
+	exec_vmxoff();
 }
 
 /**
@@ -605,8 +609,8 @@ static void init_host_state(void)
 	uint64_t value64;
 	uint64_t value;
 	uint64_t tss_addr;
-	descriptor_table gdtb = {0U, 0UL};
-	descriptor_table idtb = {0U, 0UL};
+	uint64_t gdt_base;
+	uint64_t idt_base;
 
 	pr_dbg("*********************");
 	pr_dbg("Initialize host state");
@@ -619,27 +623,27 @@ static void init_host_state(void)
 	 * GS), * Task Register (TR), * Local Descriptor Table Register (LDTR)
 	 *
 	 ***************************************************/
-	asm volatile ("movw %%es, %%ax":"=a" (value16));
+	CPU_SEG_WRITE(es, value16);
 	exec_vmwrite16(VMX_HOST_ES_SEL, value16);
 	pr_dbg("VMX_HOST_ES_SEL: 0x%hu ", value16);
 
-	asm volatile ("movw %%cs, %%ax":"=a" (value16));
+	CPU_SEG_WRITE(cs, value16);
 	exec_vmwrite16(VMX_HOST_CS_SEL, value16);
 	pr_dbg("VMX_HOST_CS_SEL: 0x%hu ", value16);
 
-	asm volatile ("movw %%ss, %%ax":"=a" (value16));
+	CPU_SEG_WRITE(ss, value16);
 	exec_vmwrite16(VMX_HOST_SS_SEL, value16);
 	pr_dbg("VMX_HOST_SS_SEL: 0x%hu ", value16);
 
-	asm volatile ("movw %%ds, %%ax":"=a" (value16));
+	CPU_SEG_WRITE(ds, value16);
 	exec_vmwrite16(VMX_HOST_DS_SEL, value16);
 	pr_dbg("VMX_HOST_DS_SEL: 0x%hu ", value16);
 
-	asm volatile ("movw %%fs, %%ax":"=a" (value16));
+	CPU_SEG_WRITE(fs, value16);
 	exec_vmwrite16(VMX_HOST_FS_SEL, value16);
 	pr_dbg("VMX_HOST_FS_SEL: 0x%hu ", value16);
 
-	asm volatile ("movw %%gs, %%ax":"=a" (value16));
+	CPU_SEG_WRITE(gs, value16);
 	exec_vmwrite16(VMX_HOST_GS_SEL, value16);
 	pr_dbg("VMX_HOST_GS_SEL: 0x%hu ", value16);
 
@@ -654,15 +658,15 @@ static void init_host_state(void)
 
 	/* TODO: Should guest GDTB point to host GDTB ? */
 	/* Obtain the current global descriptor table base */
-	asm volatile ("sgdt %0":"=m"(gdtb)::"memory");
+	gdt_base = sgdt();
 
-	if (((gdtb.base >> 47U) & 0x1UL) != 0UL) {
-		gdtb.base |= 0xffff000000000000UL;
+	if (((gdt_base >> 47U) & 0x1UL) != 0UL) {
+	        gdt_base |= 0xffff000000000000UL;
 	}
 
 	/* Set up the guest and host GDTB base fields with current GDTB base */
-	exec_vmwrite(VMX_HOST_GDTR_BASE, gdtb.base);
-	pr_dbg("VMX_HOST_GDTR_BASE: 0x%x ", gdtb.base);
+	exec_vmwrite(VMX_HOST_GDTR_BASE, gdt_base);
+	pr_dbg("VMX_HOST_GDTR_BASE: 0x%x ", gdt_base);
 
 	tss_addr = hva2hpa((void *)&get_cpu_var(tss));
 	/* Set up host TR base fields */
@@ -670,14 +674,14 @@ static void init_host_state(void)
 	pr_dbg("VMX_HOST_TR_BASE: 0x%016llx ", tss_addr);
 
 	/* Obtain the current interrupt descriptor table base */
-	asm volatile ("sidt %0":"=m"(idtb)::"memory");
+	idt_base = sidt();
 	/* base */
-	if (((idtb.base >> 47U) & 0x1UL) != 0UL) {
-		idtb.base |= 0xffff000000000000UL;
+	if (((idt_base >> 47U) & 0x1UL) != 0UL) {
+		idt_base |= 0xffff000000000000UL;
 	}
 
-	exec_vmwrite(VMX_HOST_IDTR_BASE, idtb.base);
-	pr_dbg("VMX_HOST_IDTR_BASE: 0x%x ", idtb.base);
+	exec_vmwrite(VMX_HOST_IDTR_BASE, idt_base);
+	pr_dbg("VMX_HOST_IDTR_BASE: 0x%x ", idt_base);
 
 	/**************************************************/
 	/* 64-bit fields */
