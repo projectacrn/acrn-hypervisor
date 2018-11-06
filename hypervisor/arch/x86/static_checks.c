@@ -6,7 +6,8 @@
 #include <hypervisor.h>
 #include <vm0_boot.h>
 
-#define CAT_(A,B) A ## B
+#define CAT__(A,B) A ## B
+#define CAT_(A,B) CAT__(A,B)
 #define CTASSERT(expr) \
 typedef int CAT_(CTA_DummyType,__LINE__)[(expr) ? 1 : -1]
 
