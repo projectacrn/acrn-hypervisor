@@ -157,7 +157,7 @@ static struct dmar_drhd_rt dmar_drhd_units[CONFIG_MAX_IOMMU_NUM];
 static struct iommu_domain *vm0_domain;
 
 /* Domain id 0 is reserved in some cases per VT-d */
-#define MAX_DOMAIN_NUM (CONFIG_MAX_IOMMU_NUM + 1)
+#define MAX_DOMAIN_NUM (CONFIG_MAX_VM_NUM + 1)
 static struct iommu_domain iommu_domains[MAX_DOMAIN_NUM];
 
 static inline uint16_t vmid_to_domainid(uint16_t vm_id)
