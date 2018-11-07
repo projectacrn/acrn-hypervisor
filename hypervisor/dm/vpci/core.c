@@ -30,7 +30,7 @@
 #include <hypervisor.h>
 #include "pci_priv.h"
 
-inline uint32_t pci_vdev_read_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes)
+uint32_t pci_vdev_read_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes)
 {
 	uint32_t val;
 
@@ -49,7 +49,7 @@ inline uint32_t pci_vdev_read_cfg(struct pci_vdev *vdev, uint32_t offset, uint32
 	return val;
 }
 
-inline void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
+void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	switch (bytes) {
 	case 1U:

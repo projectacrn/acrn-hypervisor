@@ -91,10 +91,7 @@ static void pci_cfg_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes,
 	if (is_cfg_addr(addr)) {
 		/* TODO: handling the non 4 bytes access */
 		if (bytes == 4U) {
-			pi->cached_bdf.bits.b = (uint8_t)(val >> 16U) & PCI_BUSMAX;
-			pi->cached_bdf.bits.d = (uint8_t)(val >> 11U) & PCI_SLOTMAX;
-			pi->cached_bdf.bits.f = (uint8_t)(val >> 8U) & PCI_FUNCMAX;
-
+			pi->cached_bdf.value = (uint16_t)(val >> 8U);
 			pi->cached_reg = val & PCI_REGMAX;
 			pi->cached_enable = ((val & PCI_CFG_ENABLE) == PCI_CFG_ENABLE);
 		}
