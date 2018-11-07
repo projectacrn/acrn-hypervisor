@@ -120,7 +120,8 @@ struct pci_vdev {
 
 struct pci_addr_info {
 	union pci_bdf cached_bdf;
-	uint32_t cached_reg, cached_enable;
+	uint32_t cached_reg;
+	bool cached_enable;
 };
 
 struct vpci_ops {

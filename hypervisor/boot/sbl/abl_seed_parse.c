@@ -142,7 +142,7 @@ bool abl_seed_parse(struct acrn_vm *vm, char *cmdline, char *out_arg, uint32_t o
 	(void)memset((void *)arg, ' ', len);
 
 	/* Convert the param_addr to SOS GPA and copy to caller */
-	if (out_arg) {
+	if (out_arg != NULL) {
 		snprintf(out_arg, out_len, "%s0x%X ",
 			dev_sec_info_arg, hva2gpa(vm, param_addr));
 	}

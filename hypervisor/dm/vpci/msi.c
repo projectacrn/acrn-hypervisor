@@ -57,7 +57,7 @@ static int vmsi_remap(struct pci_vdev *vdev, bool enable)
 
 	/* Read the MSI capability structure from virtual device */
 	addrlo = pci_vdev_read_cfg_u32(vdev, capoff + PCIR_MSI_ADDR);
-	if (msgctrl & PCIM_MSICTRL_64BIT) {
+	if ((msgctrl & PCIM_MSICTRL_64BIT) != 0U) {
 		msgdata = pci_vdev_read_cfg_u16(vdev, capoff + PCIR_MSI_DATA_64BIT);
 		addrhi = pci_vdev_read_cfg_u32(vdev, capoff + PCIR_MSI_ADDR_HIGH);
 	} else {
@@ -82,7 +82,7 @@ static int vmsi_remap(struct pci_vdev *vdev, bool enable)
 
 	/* Update MSI Capability structure to physical device */
 	pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR, 0x4U, (uint32_t)info.pmsi_addr);
-	if (msgctrl & PCIM_MSICTRL_64BIT) {
+	if ((msgctrl & PCIM_MSICTRL_64BIT) != 0U) {
 		pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR_HIGH, 0x4U,	(uint32_t)(info.pmsi_addr >> 32U));
 		pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_DATA_64BIT, 0x2U, (uint16_t)info.pmsi_data);
 	} else {
@@ -130,7 +130,8 @@ static int vmsi_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
 		pci_vdev_write_cfg(vdev, offset, bytes, val);
 
 		/* Do remap if MSI Enable bit is being changed */
-		if (((offset - vdev->msi.capoff) == PCIR_MSI_CTRL) && ((msgctrl ^ val) & PCIM_MSICTRL_MSI_ENABLE)) {
+		if (((offset - vdev->msi.capoff) == PCIR_MSI_CTRL) &&
+			(((msgctrl ^ val) & PCIM_MSICTRL_MSI_ENABLE) != 0U)) {
 			enable = ((val & PCIM_MSICTRL_MSI_ENABLE) != 0U);
 			(void)vmsi_remap(vdev, enable);
 		} else {
@@ -173,7 +174,7 @@ void populate_msi_struct(struct pci_vdev *vdev)
 				 * (msgctrl & PCIM_MSICTRL_VECTOR).
 				 * We'll let the guest manipulate them directly.
 				 */
-				len = (msgctrl & PCIM_MSICTRL_64BIT) ? 14U : 10U;
+				len = ((msgctrl & PCIM_MSICTRL_64BIT) != 0U) ? 14U : 10U;
 				vdev->msi.caplen = len;
 
 				/* Assign MSI handler for configuration read and write */

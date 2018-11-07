@@ -169,7 +169,7 @@ static int vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes
 		/* Writing Message Control field? */
 		if ((offset - vdev->msix.capoff) == PCIR_MSIX_CTRL) {
 			if (((msgctrl ^ val) & PCIM_MSIXCTRL_MSIX_ENABLE) != 0U) {
-				if (val & PCIM_MSIXCTRL_MSIX_ENABLE) {
+				if ((val & PCIM_MSIXCTRL_MSIX_ENABLE) != 0U) {
 					(void)vmsix_remap(vdev, true);
 				} else {
 					(void)vmsix_remap(vdev, false);
