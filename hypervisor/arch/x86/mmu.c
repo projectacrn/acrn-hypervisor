@@ -247,8 +247,8 @@ void init_paging(void)
 	/* align to 2MB */
 	high64_max_ram = (e820_mem.mem_top + PDE_SIZE - 1UL) & PDE_MASK;
 
-	if (high64_max_ram > (CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE) ||
-			high64_max_ram < (1UL << 32U)) {
+	if ((high64_max_ram > (CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)) ||
+			(high64_max_ram < (1UL << 32U))) {
 		panic("Please configure HV_ADDRESS_SPACE correctly!\n");
 	}
 
@@ -262,7 +262,7 @@ void init_paging(void)
 		if (entry->type == E820_TYPE_RAM) {
 			if (entry->baseaddr < (1UL << 32U)) {
 				uint64_t end = entry->baseaddr + entry->length;
-				if (end < (1UL << 32U) && (end > low32_max_ram)) {
+				if ((end < (1UL << 32U)) && (end > low32_max_ram)) {
 					low32_max_ram = end;
 				}
 			}

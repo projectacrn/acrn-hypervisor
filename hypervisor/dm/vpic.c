@@ -411,7 +411,7 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin,
 
 	i8259 = &vpic->i8259[pin >> 3U];
 	old_lvl = i8259->pin_state[pin & 0x7U];
-	if (level) {
+	if (level != 0U) {
 		i8259->pin_state[pin & 0x7U] = 1U;
 	} else {
 		i8259->pin_state[pin & 0x7U] = 0U;
@@ -432,7 +432,7 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin,
 		}
 	} else {
 		dev_dbg(ACRN_DBG_PIC, "pic pin%hhu: %s, ignored\n",
-			pin, level ? "asserted" : "deasserted");
+			pin, (level != 0U) ? "asserted" : "deasserted");
 	}
 
 	vpic_notify_intr(vpic);

@@ -982,7 +982,7 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 {
 	uint64_t old_switch;
 	uint64_t new_switch;
-	uint64_t i;
+	uint16_t i;
 
 	struct profiling_control prof_control;
 
@@ -1005,12 +1005,12 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 			" old_switch: %llu sep_collection_switch: %llu!",
 			   old_switch, sep_collection_switch);
 
-		for (i = 0U; i < (uint64_t)MAX_SEP_FEATURE_ID; i++) {
-			if ((new_switch ^ old_switch) & (0x1U << i)) {
+		for (i = 0U; i < (uint16_t)MAX_SEP_FEATURE_ID; i++) {
+			if (((new_switch ^ old_switch) & (0x1UL << i)) != 0UL) {
 				switch (i) {
 				case CORE_PMU_SAMPLING:
 				case CORE_PMU_COUNTING:
-					if (new_switch & (0x1U << i)) {
+					if ((new_switch & (0x1UL << i)) != 0UL) {
 						profiling_start_pmu();
 					} else {
 						profiling_stop_pmu();
@@ -1042,8 +1042,8 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 		if (socwatch_collection_switch != 0UL) {
 			dev_dbg(ACRN_DBG_PROFILING,
 			"%s: socwatch start collection invoked!", __func__);
-			for (i = 0U; i < (uint64_t)MAX_SOCWATCH_FEATURE_ID; i++) {
-				if (socwatch_collection_switch & (0x1U << i)) {
+			for (i = 0U; i < (uint16_t)MAX_SOCWATCH_FEATURE_ID; i++) {
+				if ((socwatch_collection_switch & (0x1UL << i)) != 0UL) {
 					switch (i) {
 					case SOCWATCH_COMMAND:
 						break;

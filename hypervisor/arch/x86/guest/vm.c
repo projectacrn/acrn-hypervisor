@@ -363,7 +363,7 @@ int prepare_vm(uint16_t pcpu_id)
 		for (i = 1U; i < vm_desc->vm_hw_num_cores; i++)
 			prepare_vcpu(vm, vm_desc->vm_pcpu_ids[i]);
 
-		if (!vm_sw_loader) {
+		if (vm_sw_loader == NULL) {
 			vm_sw_loader = general_sw_loader;
 		}
 
@@ -404,7 +404,7 @@ int prepare_vm0(void)
 		}
 	}
 
-	if (!vm_sw_loader) {
+	if (vm_sw_loader == NULL) {
 		vm_sw_loader = general_sw_loader;
 	}
 

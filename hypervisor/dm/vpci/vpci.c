@@ -45,7 +45,7 @@ static void pci_cfg_clear_cache(struct pci_addr_info *pi)
 {
 	pi->cached_bdf.value = 0xFFFFU;
 	pi->cached_reg = 0U;
-	pi->cached_enable = 0U;
+	pi->cached_enable = false;
 }
 
 static uint32_t pci_cfg_io_read(struct acrn_vm *vm, uint16_t addr, size_t bytes)
@@ -96,8 +96,7 @@ static void pci_cfg_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes,
 			pi->cached_bdf.bits.f = (uint8_t)(val >> 8U) & PCI_FUNCMAX;
 
 			pi->cached_reg = val & PCI_REGMAX;
-			pi->cached_enable =
-			(val & PCI_CFG_ENABLE) == PCI_CFG_ENABLE;
+			pi->cached_enable = ((val & PCI_CFG_ENABLE) == PCI_CFG_ENABLE);
 		}
 	} else if (is_cfg_data(addr)) {
 		if (pi->cached_enable) {

@@ -1039,7 +1039,7 @@ vlapic_calcdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest,
 		*dmask = 0UL;
 		amask = vm_active_cpus(vm);
 		for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
-			if (amask & (1U << vcpu_id)) {
+			if ((amask & (1UL << vcpu_id)) != 0UL) {
 				vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
 
 				if (is_x2apic_enabled(vlapic)){
@@ -1281,7 +1281,7 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 	}
 
 	for (vcpu_id = 0U; vcpu_id < vlapic->vm->hw.created_vcpus; vcpu_id++) {
-		if (dmask & (1U << vcpu_id)) {
+		if ((dmask & (1UL << vcpu_id)) != 0UL) {
 			target_vcpu = vcpu_from_vid(vlapic->vm, vcpu_id);
 
 			if (mode == APIC_DELMODE_FIXED) {
@@ -1823,7 +1823,7 @@ vlapic_deliver_intr(struct acrn_vm *vm, bool level, uint32_t dest, bool phys,
 
 	for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
 		struct acrn_vlapic *vlapic;
-		if (dmask & (1U << vcpu_id)) {
+		if ((dmask & (1UL << vcpu_id)) != 0UL) {
 			target_vcpu = vcpu_from_vid(vm, vcpu_id);
 
 			/* only make request when vlapic enabled */
@@ -1986,7 +1986,7 @@ vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
 	}
 	error = 0;
 	for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
-		if (dmask & (1U << vcpu_id)) {
+		if ((dmask & (1UL << vcpu_id)) != 0UL) {
 			vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
 			error = vlapic_trigger_lvt(vlapic, vector);
 			if (error != 0) {

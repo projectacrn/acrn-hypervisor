@@ -392,7 +392,7 @@ static void ptdev_intr_handle_irq(struct acrn_vm *vm,
 		}
 
 		if (trigger_lvl) {
-			if (entry->polarity) {
+			if (entry->polarity != 0U) {
 				vioapic_set_irq(vm, virt_sid->intx_id.pin,
 						GSI_SET_LOW);
 			} else {
@@ -400,7 +400,7 @@ static void ptdev_intr_handle_irq(struct acrn_vm *vm,
 						GSI_SET_HIGH);
 			}
 		} else {
-			if (entry->polarity) {
+			if (entry->polarity != 0U) {
 				vioapic_set_irq(vm, virt_sid->intx_id.pin,
 						GSI_FALLING_PULSE);
 			} else {
@@ -503,7 +503,7 @@ void ptdev_intx_ack(struct acrn_vm *vm, uint8_t virt_pin,
 	 */
 	switch (vpin_src) {
 	case PTDEV_VPIN_IOAPIC:
-		if (entry->polarity) {
+		if (entry->polarity != 0U) {
 			vioapic_set_irq(vm, virt_pin, GSI_SET_HIGH);
 		} else {
 			vioapic_set_irq(vm, virt_pin, GSI_SET_LOW);
