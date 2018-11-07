@@ -318,6 +318,7 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t pa
 int32_t hcall_reset_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid,
 	uint64_t param);
 
+#ifdef HV_DEBUG
 /**
  * @brief Setup a share buffer for a VM.
  *
@@ -341,6 +342,7 @@ int32_t hcall_setup_sbuf(struct acrn_vm *vm, uint64_t param);
   * @return 0 on success, non-zero on error.
   */
 int32_t hcall_setup_hv_npk_log(struct acrn_vm *vm, uint64_t param);
+#endif
 
 /**
  * @brief Execute profiling operation
