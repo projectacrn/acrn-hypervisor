@@ -2862,8 +2862,9 @@ retry:
 	}
 
 	err = USB_TO_XHCI_ERR(err);
-	if ((err == XHCI_TRB_ERROR_SUCCESS) ||
-	    (err == XHCI_TRB_ERROR_SHORT_PKT)) {
+	if (err == XHCI_TRB_ERROR_SUCCESS ||
+			err == XHCI_TRB_ERROR_SHORT_PKT ||
+			err == XHCI_TRB_ERROR_STALL) {
 		err = pci_xhci_xfer_complete(xdev, xfer, slot, epid, &do_intr);
 		if (err != XHCI_TRB_ERROR_SUCCESS)
 			do_retry = 0;
