@@ -773,8 +773,9 @@ int32_t hcall_gpa_to_hpa(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
  *
  * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
- * @param param guest physical address. This gpa points to
- *              physical BDF of the assigning ptdev
+ * @param param the physical BDF of the assigning ptdev
+ *              For the compatibility it still can be the guest physical address that
+ *              points to the physical BDF of the assigning ptdev.(Depreciated)
  *
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
@@ -790,10 +791,14 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 		return -EINVAL;
 	}
 
-	if (copy_from_gpa(vm, &bdf, param, sizeof(bdf)) != 0) {
-		pr_err("%s: Unable copy param from vm %d\n",
+	if (param < 0x10000UL) {
+		bdf = (uint16_t) param;
+	} else {
+		if (copy_from_gpa(vm, &bdf, param, sizeof(bdf)) != 0) {
+			pr_err("%s: Unable copy param from vm %d\n",
 			__func__, vm->vm_id);
-		return -EIO;
+			return -EIO;
+		}
 	}
 
 	/* create a iommu domain for target VM if not created */
@@ -822,8 +827,9 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
  *
  * @param vm Pointer to VM data structure
  * @param vmid ID of the VM
- * @param param guest physical address. This gpa points to
- *              physical BDF of the deassigning ptdev
+ * @param param the physical BDF of the deassigning ptdev
+ *              To keep the compatibility it still can be the guest physical address that
+ *              points to the physical BDF of the deassigning ptdev.(Depreciated)
  *
  * @pre Pointer vm shall point to VM0
  * @return 0 on success, non-zero on error.
@@ -838,9 +844,13 @@ int32_t hcall_deassign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 		return -1;
 	}
 
-	if (copy_from_gpa(vm, &bdf, param, sizeof(bdf)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
+	if (param < 0x10000UL) {
+		bdf = (uint16_t) param;
+	} else {
+		if (copy_from_gpa(vm, &bdf, param, sizeof(bdf)) != 0) {
+			pr_err("%s: Unable copy param to vm\n", __func__);
+			return -1;
+		}
 	}
 	ret = unassign_iommu_device(target_vm->iommu,
 			(uint8_t)(bdf >> 8U), (uint8_t)(bdf & 0xffU));
