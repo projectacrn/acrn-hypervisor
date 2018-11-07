@@ -140,6 +140,7 @@ static struct npk_reg_default_val regs_default_val[] = {
 		sizeof(struct npk_reg_default_val))
 
 static int npk_in_use;
+static uint64_t sw_bar_base;
 
 /* get the pointer to the register based on the offset */
 static inline uint32_t *offset2reg(uint64_t offset)
@@ -183,7 +184,6 @@ static int pci_npk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	char name[PATH_MAX];
 	uint8_t h_cfg[PCI_REGMAX + 1];
 	uint32_t m_off, m_num;
-	uint64_t sw_bar_base;
 	struct npk_reg_default_val *d;
 
 	if (npk_in_use) {
@@ -314,6 +314,8 @@ static int pci_npk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 static void pci_npk_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
+	vm_unmap_ptdev_mmio(ctx, dev->bus, dev->slot, dev->func,
+			dev->bar[2].addr, dev->bar[2].size, sw_bar_base);
 	npk_in_use = 0;
 }
 
