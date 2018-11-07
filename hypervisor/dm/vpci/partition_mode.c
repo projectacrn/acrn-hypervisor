@@ -63,7 +63,7 @@ static int partition_mode_vpci_init(struct acrn_vm *vm)
 		vdev->vpci = vpci;
 
 		if ((vdev->ops != NULL) && (vdev->ops->init != NULL)) {
-			if (vdev->ops->init(vdev) != 0U) {
+			if (vdev->ops->init(vdev) != 0) {
 				pr_err("%s() failed at PCI device (bdf %x)!", __func__,
 					vdev->vbdf);
 			}
@@ -84,7 +84,7 @@ static void partition_mode_vpci_deinit(struct acrn_vm *vm)
 	for (i = 0; i < vdev_array->num_pci_vdev; i++) {
 		vdev = &vdev_array->vpci_vdev_list[i];
 		if ((vdev->ops != NULL) && (vdev->ops->deinit != NULL)) {
-			if (vdev->ops->deinit(vdev) != 0U) {
+			if (vdev->ops->deinit(vdev) != 0) {
 				pr_err("vdev->ops->deinit failed!");
 			}
 		}

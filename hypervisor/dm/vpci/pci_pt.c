@@ -41,7 +41,7 @@ static int vdev_pt_init_validate(struct pci_vdev *vdev)
 {
 	uint32_t idx;
 
-	for (idx = 0; idx < (uint32_t)PCI_BAR_COUNT; idx++) {
+	for (idx = 0U; idx < PCI_BAR_COUNT; idx++) {
 		if ((vdev->bar[idx].base != 0x0UL)
 			|| ((vdev->bar[idx].size & 0xFFFUL) != 0x0UL)
 			|| ((vdev->bar[idx].type != PCIBAR_MEM32)

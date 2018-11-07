@@ -216,7 +216,7 @@ void populate_msi_struct(struct pci_vdev *vdev)
 static int vmsi_deinit(struct pci_vdev *vdev)
 {
 	if (vdev->msi.capoff != 0U) {
-		ptdev_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, 1);
+		ptdev_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, 1U);
 	}
 
 	return 0;
