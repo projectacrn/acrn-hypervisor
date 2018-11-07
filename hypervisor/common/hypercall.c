@@ -981,18 +981,6 @@ int32_t hcall_setup_sbuf(struct acrn_vm *vm, uint64_t param)
 
 	return sbuf_share_setup(ssp.pcpu_id, ssp.sbuf_id, hva);
 }
-#else
-/**
- * @brief Setup a share buffer for a VM.
- *
- * @param vm Pointer to VM data structure
- * @param param guest physical address. This gpa points to
- *              struct sbuf_setup_param
- *
- * @pre Pointer vm shall point to VM0
- * @return 0 on success, non-zero on error.
- */
-int32_t hcall_setup_sbuf(__unused struct acrn_vm *vm, __unused uint64_t param)
 #endif
 
 #ifdef HV_DEBUG
@@ -1025,21 +1013,6 @@ int32_t hcall_setup_hv_npk_log(struct acrn_vm *vm, uint64_t param)
 	}
 
 	return 0;
-}
-#else
-/**
-  * @brief Setup the hypervisor NPK log.
-  *
-  * @param vm Pointer to VM data structure
-  * @param param guest physical address. This gpa points to
-  *              struct hv_npk_log_param
-  *
-  * @pre Pointer vm shall point to VM0
-  * @return 0 on success, non-zero on error.
-  */
-int32_t hcall_setup_hv_npk_log(__unused struct acrn_vm *vm, __unused uint64_t param)
-{
-	return -ENODEV;
 }
 #endif
 
