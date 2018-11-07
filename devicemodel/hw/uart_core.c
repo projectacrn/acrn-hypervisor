@@ -88,7 +88,8 @@ struct fifo {
 
 struct ttyfd {
 	bool	opened;
-	int	fd;		/* tty device file descriptor */
+	int	fd_in;		/* tty device file descriptor */
+	int	fd_out;		/* stdin=0 stdout=1 should be different, when use stdio*/
 	struct termios tio_orig, tio_new;    /* I/O Terminals */
 };
 
@@ -128,14 +129,14 @@ ttyclose(void)
 static void
 ttyopen(struct ttyfd *tf)
 {
-	tcgetattr(tf->fd, &tf->tio_orig);
+	tcgetattr(tf->fd_in, &tf->tio_orig);
 
 	tf->tio_new = tf->tio_orig;
 	cfmakeraw(&tf->tio_new);
 	tf->tio_new.c_cflag |= CLOCAL;
-	tcsetattr(tf->fd, TCSANOW, &tf->tio_new);
+	tcsetattr(tf->fd_in, TCSANOW, &tf->tio_new);
 
-	if (tf->fd == STDIN_FILENO) {
+	if (tf->fd_in == STDIN_FILENO) {
 		tio_stdio_orig = tf->tio_orig;
 		atexit(ttyclose);
 	}
@@ -146,7 +147,7 @@ ttyread(struct ttyfd *tf)
 {
 	unsigned char rb;
 
-	if (read(tf->fd, &rb, 1) > 0)
+	if (read(tf->fd_in, &rb, 1) > 0)
 		return rb;
 
 	return -1;
@@ -155,8 +156,7 @@ ttyread(struct ttyfd *tf)
 static int
 ttywrite(struct ttyfd *tf, unsigned char wb)
 {
-
-	if (write(tf->fd, &wb, 1) > 0)
+	if (write(tf->fd_out, &wb, 1) > 0)
 		return 1;
 
 	return -1;
@@ -179,7 +179,7 @@ rxfifo_reset(struct uart_vdev *uart, int size)
 		 * Flush any unread input from the tty buffer.
 		 */
 		while (1) {
-			nread = read(uart->tty.fd, flushbuf, sizeof(flushbuf));
+			nread = read(uart->tty.fd_in, flushbuf, sizeof(flushbuf));
 			if (nread != sizeof(flushbuf))
 				break;
 		}
@@ -188,7 +188,7 @@ rxfifo_reset(struct uart_vdev *uart, int size)
 		 * Enable mevent to trigger when new characters are available
 		 * on the tty fd.
 		 */
-		if (isatty(uart->tty.fd)) {
+		if (isatty(uart->tty.fd_in)) {
 			error = mevent_enable(uart->mev);
 			assert(error == 0);
 		}
@@ -221,7 +221,7 @@ rxfifo_putchar(struct uart_vdev *uart, uint8_t ch)
 				/*
 				 * Disable mevent callback if the FIFO is full.
 				 */
-				if (isatty(uart->tty.fd)) {
+				if (isatty(uart->tty.fd_in)) {
 					error = mevent_disable(uart->mev);
 					assert(error == 0);
 				}
@@ -247,7 +247,7 @@ rxfifo_getchar(struct uart_vdev *uart)
 		fifo->rindex = (fifo->rindex + 1) % fifo->size;
 		fifo->num--;
 		if (wasfull) {
-			if (uart->tty.opened && isatty(uart->tty.fd)) {
+			if (uart->tty.opened && isatty(uart->tty.fd_in)) {
 				error = mevent_enable(uart->mev);
 				assert(error == 0);
 			}
@@ -269,8 +269,8 @@ static void
 uart_opentty(struct uart_vdev *uart)
 {
 	ttyopen(&uart->tty);
-	if (isatty(uart->tty.fd)) {
-		uart->mev = mevent_add(uart->tty.fd, EVF_READ,
+	if (isatty(uart->tty.fd_in)) {
+		uart->mev = mevent_add(uart->tty.fd_in, EVF_READ,
 			uart_drain, uart);
 		assert(uart->mev != NULL);
 	}
@@ -279,8 +279,8 @@ uart_opentty(struct uart_vdev *uart)
 static void
 uart_closetty(struct uart_vdev *uart)
 {
-	if (isatty(uart->tty.fd)) {
-		if (uart->tty.fd != STDIN_FILENO)
+	if (isatty(uart->tty.fd_in)) {
+		if (uart->tty.fd_in != STDIN_FILENO)
 			mevent_delete_close(uart->mev);
 		else
 			mevent_delete(uart->mev);
@@ -384,7 +384,7 @@ uart_drain(int fd, enum ev_type ev, void *arg)
 
 	uart = arg;
 
-	assert(fd == uart->tty.fd);
+	assert(fd == uart->tty.fd_in);
 	assert(ev == EVF_READ);
 
 	/*
@@ -653,7 +653,7 @@ void
 uart_deinit(struct uart_vdev *uart)
 {
 	if (uart) {
-		if (uart->tty.opened && uart->tty.fd == STDIN_FILENO) {
+		if (uart->tty.opened && uart->tty.fd_in == STDIN_FILENO) {
 			ttyclose();
 			stdio_in_use = false;
 		}
@@ -671,7 +671,8 @@ uart_tty_backend(struct uart_vdev *uart, const char *opts)
 
 	fd = open(opts, O_RDWR | O_NONBLOCK);
 	if (fd > 0 && isatty(fd)) {
-		uart->tty.fd = fd;
+		uart->tty.fd_in = fd;
+		uart->tty.fd_out = fd;
 		uart->tty.opened = true;
 		retval = 0;
 	}
@@ -691,7 +692,8 @@ uart_set_backend(struct uart_vdev *uart, const char *opts)
 
 	if (strcmp("stdio", opts) == 0) {
 		if (!stdio_in_use) {
-			uart->tty.fd = STDIN_FILENO;
+			uart->tty.fd_in = STDIN_FILENO;
+			uart->tty.fd_out = STDOUT_FILENO;
 			uart->tty.opened = true;
 			stdio_in_use = true;
 			retval = 0;
@@ -705,7 +707,7 @@ uart_set_backend(struct uart_vdev *uart, const char *opts)
 
 	/* Make the backend file descriptor non-blocking */
 	if (retval == 0)
-		retval = fcntl(uart->tty.fd, F_SETFL, O_NONBLOCK);
+		retval = fcntl(uart->tty.fd_in, F_SETFL, O_NONBLOCK);
 
 	if (retval == 0)
 		uart_opentty(uart);
@@ -733,8 +735,9 @@ uart_release_backend(struct uart_vdev *uart, const char *opts)
 	if (strcmp("stdio", opts) == 0) {
 		stdio_in_use = false;
 	} else
-		close(uart->tty.fd);
+		close(uart->tty.fd_in);
 
-	uart->tty.fd = 0;
+	uart->tty.fd_in = -1;
+	uart->tty.fd_out = -1;
 	uart->tty.opened = false;
 }
