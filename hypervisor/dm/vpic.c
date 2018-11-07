@@ -434,8 +434,6 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin,
 		dev_dbg(ACRN_DBG_PIC, "pic pin%hhu: %s, ignored\n",
 			pin, (level != 0U) ? "asserted" : "deasserted");
 	}
-
-	vpic_notify_intr(vpic);
 }
 
 /**
@@ -488,6 +486,7 @@ void vpic_set_irq(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
 		 */
 		break;
 	}
+	vpic_notify_intr(vpic);
 	spinlock_release(&(vpic->lock));
 }
 
