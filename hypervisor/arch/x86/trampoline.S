@@ -100,7 +100,7 @@ trampoline_fixup_target:
 
     /* Set CR3 to PML4 table address */
 
-    movl    $CPU_Boot_Page_Tables_ptr, %ebx
+    movl    $cpu_boot_page_tables_ptr, %ebx
     mov     (%ebx), %eax
     mov     %eax, %cr3
 
@@ -195,14 +195,14 @@ trampoline_gdt_ptr:
 
 /* PML4, PDPT, and PD tables initialized to map first 4 GBytes of memory */
     .align  4
-    .global CPU_Boot_Page_Tables_ptr
-CPU_Boot_Page_Tables_ptr:
-    .long CPU_Boot_Page_Tables_Start
+    .global cpu_boot_page_tables_ptr
+cpu_boot_page_tables_ptr:
+    .long cpu_boot_page_tables_start
 
     /*0x1000 = CPU_PAGE_SIZE*/
     .align  0x1000
-    .global CPU_Boot_Page_Tables_Start
-CPU_Boot_Page_Tables_Start:
+    .global cpu_boot_page_tables_start
+cpu_boot_page_tables_start:
     /* 0x3 = (PAGE_PRESENT | PAGE_RW) */
     .quad   trampoline_pdpt_addr + 0x3
     /*0x1000 = CPU_PAGE_SIZE*/

@@ -182,12 +182,10 @@ static void update_trampoline_code_refs(uint64_t dest_pa)
 	*(uint16_t *)(ptr) = (uint16_t)(val & 0xfU);
 
 	/* Update temporary page tables */
-	ptr = hpa2hva(dest_pa +
-			trampoline_relo_addr(&CPU_Boot_Page_Tables_ptr));
+	ptr = hpa2hva(dest_pa + trampoline_relo_addr(&cpu_boot_page_tables_ptr));
 	*(uint32_t *)(ptr) += (uint32_t)dest_pa;
 
-	ptr = hpa2hva(dest_pa +
-			trampoline_relo_addr(&CPU_Boot_Page_Tables_Start));
+	ptr = hpa2hva(dest_pa + trampoline_relo_addr(&cpu_boot_page_tables_start));
 	*(uint64_t *)(ptr) += dest_pa;
 
 	ptr = hpa2hva(dest_pa + trampoline_relo_addr(&trampoline_pdpt_addr));
