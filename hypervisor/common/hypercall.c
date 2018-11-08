@@ -491,7 +491,7 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 /**
  *@pre Pointer vm shall point to VM0
  */
-static int32_t local_set_vm_memory_region(struct acrn_vm *vm,
+static int32_t set_vm_memory_region(struct acrn_vm *vm,
 	struct acrn_vm *target_vm, const struct vm_memory_region *region)
 {
 	uint64_t hpa, base_paddr, gpa_end;
@@ -569,42 +569,6 @@ static int32_t local_set_vm_memory_region(struct acrn_vm *vm,
 }
 
 /**
- * @brief setup ept memory mapping
- *
- * @param vm Pointer to VM data structure
- * @param vmid ID of the VM
- * @param param guest physical address. This gpa points to
- *              struct vm_set_memmap
- *
- * @pre Pointer vm shall point to VM0
- * @return 0 on success, non-zero on error.
- */
-int32_t hcall_set_vm_memory_region(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
-{
-	struct vm_memory_region region;
-	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
-
-	if (target_vm == NULL) {
-		return -EINVAL;
-	}
-
-	(void)memset((void *)&region, 0U, sizeof(region));
-
-	if (copy_from_gpa(vm, &region, param, sizeof(region)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -EFAULT;
-	}
-
-
-	if (is_vm0(target_vm)) {
-		pr_err("%s: Targeting to service vm", __func__);
-		return -EPERM;
-	}
-
-	return local_set_vm_memory_region(vm, target_vm, &region);
-}
-
-/**
  * @brief setup ept memory mapping for multi regions
  *
  * @param vm Pointer to VM data structure
@@ -646,7 +610,7 @@ int32_t hcall_set_vm_memory_regions(struct acrn_vm *vm, uint64_t param)
 		/* the force pointer change below is for back compatible
 		 * to struct vm_memory_region, it will be removed in the future
 		 */
-		int ret = local_set_vm_memory_region(vm, target_vm, &regions[idx]);
+		int ret = set_vm_memory_region(vm, target_vm, &regions[idx]);
 		if (ret < 0) {
 			return ret;
 		}

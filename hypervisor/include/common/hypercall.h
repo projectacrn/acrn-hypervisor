@@ -213,19 +213,6 @@ int32_t hcall_set_ioreq_buffer(struct acrn_vm *vm, uint16_t vmid, uint64_t param
 int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id);
 
 /**
- * @brief setup ept memory mapping
- *
- * @param vm Pointer to VM data structure
- * @param vmid ID of the VM
- * @param param guest physical address. This gpa points to
- *              struct vm_set_memmap
- *
- * @pre Pointer vm shall point to VM0
- * @return 0 on success, non-zero on error.
- */
-int32_t hcall_set_vm_memory_region(struct acrn_vm *vm, uint16_t vmid, uint64_t param);
-
-/**
  * @brief setup ept memory mapping for multi regions
  *
  * @param vm Pointer to VM data structure
