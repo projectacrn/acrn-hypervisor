@@ -1,3 +1,8 @@
+config DEFCONFIG_LIST
+	string
+	option defconfig_list
+	default "apl-mrb/vm1/configs/default.config"
+
 menuconfig MRB_VM1
 	bool "Build-in VM1 configuration for MRB"
 	default n
