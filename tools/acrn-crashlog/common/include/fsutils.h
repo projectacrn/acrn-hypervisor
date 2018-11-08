@@ -40,7 +40,7 @@ struct mm_file_t {
 	char *path;
 	int fd;
 	char *begin;
-	int size;
+	ssize_t size;
 };
 
 struct ac_filter_data {
@@ -62,7 +62,7 @@ static inline int directory_exists(const char *path)
 	return (stat(path, &info) == 0 && S_ISDIR(info.st_mode));
 }
 
-static inline int get_file_size(const char *filepath)
+static inline ssize_t get_file_size(const char *filepath)
 {
 	struct stat info;
 
@@ -114,6 +114,7 @@ int dir_contains(const char *dir, const char *filename, size_t flen, int exact);
 int lsdir(const char *dir, char *fullname[], int limit);
 int find_file(const char *dir, size_t dlen, const char *target_file,
 		size_t tflen, int depth, char *path[], int limit);
+int dir_size(const char *dir, size_t dlen, size_t *size);
 int read_file(const char *path, unsigned long *size, void **data);
 int is_ac_filefmt(const char *file_fmt);
 int config_fmt_to_files(const char *file_fmt, char ***out);

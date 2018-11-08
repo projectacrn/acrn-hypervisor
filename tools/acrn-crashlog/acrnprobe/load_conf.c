@@ -36,6 +36,7 @@ static void print(void)
 		print_id_item(maxcrashdirs, sender, id);
 		print_id_item(maxlines, sender, id);
 		print_id_item(spacequota, sender, id);
+		print_id_item(foldersize, sender, id);
 
 		if (sender->uptime) {
 			print_id_item(uptime->name, sender, id);
@@ -678,6 +679,8 @@ static int parse_sender(xmlNodePtr cur, struct sender_t *sender)
 			res = load_cur_content(cur, sender, maxlines);
 		else if (name_is(cur, "spacequota"))
 			res = load_cur_content(cur, sender, spacequota);
+		else if (name_is(cur, "foldersize"))
+			res = load_cur_content(cur, sender, foldersize);
 		else if (name_is(cur, "uptime"))
 			res = parse_uptime(cur, sender);
 
