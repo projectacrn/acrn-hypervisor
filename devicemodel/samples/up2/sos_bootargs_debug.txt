@@ -1,0 +1,22 @@
+module_blacklist=dwc3_pci
+no_timer_check
+console=tty0
+console=ttyS0
+loglevel=7
+consoleblank=0
+root=/dev/mmcblk0p1 rw rootwait
+i915.nuclear_pageflip=1
+i915.enable_initial_modeset=1
+i915.avail_planes_per_pipe=0x01010F
+i915.domain_plane_owners=0x011111110000
+i915.enable_gvt=1
+i915.enable_guc=0x02
+video=DP-1:d
+video=DP-2:d
+hvlog=2M@0x6de00000
+cma=64M@0-
+memmap=0x400000$0x6da00000
+ramoops.mem_address=0x6da00000
+ramoops.mem_size=0x400000
+ramoops.console_size=0x200000
+reboot_panic=p,w
