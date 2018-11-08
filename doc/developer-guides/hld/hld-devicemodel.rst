@@ -54,7 +54,7 @@ options:
    acrn-dm [-abehuwxACHPSTWY] [-c vcpus] [-g <gdb port>] [-l <lpc>]
                [-m mem] [-p vcpu:hostcpu] [-s <pci>] [-U uuid]
                [--vsbl vsbl_file_name] [--part_info part_info_name]
-               [--enable_trusty] <vm>
+               [--enable_trusty] [--intr_monitor param_setting] <vm>
 
        -a: local apic is in xAPIC mode (deprecated)
        -A: create ACPI tables
@@ -87,7 +87,8 @@ options:
        --part_info: guest partition info file path
        --enable_trusty: enable trusty for guest
        --ptdev_no_reset: disable reset check for ptdev
-
+       --intr_monitor: enable interrupt storm monitor, params:
+       		threshold/s,probe-period(s),delay_time(ms),delay_duration(ms)
 
 Here's an example showing how to run a VM with:
 
@@ -105,6 +106,7 @@ Here's an example showing how to run a VM with:
      -s 5,virtio-console,@pty:pty_port \
      -s 3,virtio-blk,b,/data/clearlinux/clearlinux.img \
      -s 4,virtio-net,tap_LaaG --vsbl /usr/share/acrn/bios/VSBL.bin \
+     --intr_monitor 10000,10,1,100 \
      -B "root=/dev/vda2 rw rootwait maxcpus=3 nohpet console=hvc0 \
      console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
      consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=0x070F00 \
