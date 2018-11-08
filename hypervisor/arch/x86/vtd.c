@@ -357,16 +357,16 @@ static bool dmar_unit_support_aw(const struct dmar_drhd_rt *dmar_unit, uint32_t 
 
 static void dmar_enable_translation(struct dmar_drhd_rt *dmar_unit)
 {
-	uint32_t status;
+	uint32_t status = 0;
 
 	spinlock_obtain(&(dmar_unit->lock));
-	dmar_unit->gcmd |= DMA_GCMD_TE;
-	iommu_write32(dmar_unit, DMAR_GCMD_REG, dmar_unit->gcmd);
-
-	/* 32-bit register */
-	dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_TES, false, &status);
-
-	status = iommu_read32(dmar_unit, DMAR_GSTS_REG);
+	if ((dmar_unit->gcmd & DMA_GCMD_TE) == 0U) {
+		dmar_unit->gcmd |= DMA_GCMD_TE;
+		iommu_write32(dmar_unit, DMAR_GCMD_REG, dmar_unit->gcmd);
+		/* 32-bit register */
+		dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_TES, false, &status);
+		status = iommu_read32(dmar_unit, DMAR_GSTS_REG);
+	}
 
 	spinlock_release(&(dmar_unit->lock));
 
@@ -378,11 +378,12 @@ static void dmar_disable_translation(struct dmar_drhd_rt *dmar_unit)
 	uint32_t status;
 
 	spinlock_obtain(&(dmar_unit->lock));
-	dmar_unit->gcmd &= ~DMA_GCMD_TE;
-	iommu_write32(dmar_unit, DMAR_GCMD_REG, dmar_unit->gcmd);
-
-	/* 32-bit register */
-	dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_TES, true, &status);
+	if ((dmar_unit->gcmd & DMA_GCMD_TE) != 0U) {
+		dmar_unit->gcmd &= ~DMA_GCMD_TE;
+		iommu_write32(dmar_unit, DMAR_GCMD_REG, dmar_unit->gcmd);
+		/* 32-bit register */
+		dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_TES, true, &status);
+	}
 
 	spinlock_release(&(dmar_unit->lock));
 }
@@ -433,9 +434,7 @@ static int dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 		dev_dbg(ACRN_DBG_IOMMU, "dmar uint doesn't support snoop control!");
 	}
 
-	if ((dmar_unit->gcmd & DMA_GCMD_TE) != 0U) {
-		dmar_disable_translation(dmar_unit);
-	}
+	dmar_disable_translation(dmar_unit);
 
 	return 0;
 }
@@ -789,10 +788,7 @@ static void dmar_enable(struct dmar_drhd_rt *dmar_unit)
 
 static void dmar_disable(struct dmar_drhd_rt *dmar_unit)
 {
-	if ((dmar_unit->gcmd & DMA_GCMD_TE) != 0U) {
-		dmar_disable_translation(dmar_unit);
-	}
-
+	dmar_disable_translation(dmar_unit);
 	dmar_fault_event_mask(dmar_unit);
 }
 
