@@ -58,7 +58,7 @@ static uint64_t start_tsc __attribute__((__section__(".bss_noinit")));
 {                                                                       \
 	asm volatile ("movq %0, %%rsp\n"                                \
 			"pushq %1\n"                                    \
-			"call %2\n"                                     \
+			"call *%2\n"                                    \
 			 :                                              \
 			 : "r"(rsp), "rm"(SP_BOTTOM_MAGIC), "a"(to));   \
 }

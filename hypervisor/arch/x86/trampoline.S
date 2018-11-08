@@ -165,7 +165,7 @@ trampoline_start64:
 
     /* Jump to C entry */
     movq    main_entry(%rip), %rax
-    jmp     %rax
+    jmp     *%rax
 
 
 /* main entry */
