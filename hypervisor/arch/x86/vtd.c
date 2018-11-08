@@ -796,51 +796,6 @@ static void dmar_disable(struct dmar_drhd_rt *dmar_unit)
 	dmar_fault_event_mask(dmar_unit);
 }
 
-struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_table, uint32_t addr_width)
-{
-	struct iommu_domain *domain;
-
-	/* TODO: check if a domain with the vm_id exists */
-
-	if (translation_table == 0UL) {
-		pr_err("translation table is NULL");
-		return NULL;
-	}
-
-	/*
-	 * A hypercall is called to create an iommu domain for a valid VM,
-	 * and hv code limit the VM number to CONFIG_MAX_VM_NUM.
-	 * So the array iommu_domains will not be accessed out of range.
-	 */
-	domain = &iommu_domains[vmid_to_domainid(vm_id)];
-
-	domain->is_host = false;
-	domain->vm_id = vm_id;
-	domain->trans_table_ptr = translation_table;
-	domain->addr_width = addr_width;
-	domain->is_tt_ept = true;
-	domain->iommu_snoop = true;
-
-	dev_dbg(ACRN_DBG_IOMMU, "create domain [%d]: vm_id = %hu, ept@0x%x",
-		vmid_to_domainid(domain->vm_id), domain->vm_id, domain->trans_table_ptr);
-
-	return domain;
-}
-
-/**
- * @pre domain != NULL
- */
-void destroy_iommu_domain(struct iommu_domain *domain)
-{
-	/* currently only support ept */
-	if (!domain->is_tt_ept) {
-		ASSERT(false, "translation_table is not EPT!");
-	}
-
-	/* TODO: check if any device assigned to this domain */
-	(void)memset(domain, 0U, sizeof(*domain));
-}
-
 static int add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_unit;
@@ -992,6 +947,50 @@ static int remove_iommu_device(const struct iommu_domain *domain, uint16_t segme
 	dmar_invalid_iotlb_global(dmar_unit);
 	/* } */
 	return 0;
+}
+
+struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_table, uint32_t addr_width)
+{
+	struct iommu_domain *domain;
+
+	/* TODO: check if a domain with the vm_id exists */
+
+	if (translation_table == 0UL) {
+		pr_err("translation table is NULL");
+		return NULL;
+	}
+
+	/*
+	 * A hypercall is called to create an iommu domain for a valid VM,
+	 * and hv code limit the VM number to CONFIG_MAX_VM_NUM.
+	 * So the array iommu_domains will not be accessed out of range.
+	 */
+	domain = &iommu_domains[vmid_to_domainid(vm_id)];
+
+	domain->is_host = false;
+	domain->vm_id = vm_id;
+	domain->trans_table_ptr = translation_table;
+	domain->addr_width = addr_width;
+	domain->is_tt_ept = true;
+
+	dev_dbg(ACRN_DBG_IOMMU, "create domain [%d]: vm_id = %hu, ept@0x%x",
+		vmid_to_domainid(domain->vm_id), domain->vm_id, domain->trans_table_ptr);
+
+	return domain;
+}
+
+/**
+ * @pre domain != NULL
+ */
+void destroy_iommu_domain(struct iommu_domain *domain)
+{
+	/* currently only support ept */
+	if (!domain->is_tt_ept) {
+		ASSERT(false, "translation_table is not EPT!");
+	}
+
+	/* TODO: check if any device assigned to this domain */
+	(void)memset(domain, 0U, sizeof(*domain));
 }
 
 int assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
