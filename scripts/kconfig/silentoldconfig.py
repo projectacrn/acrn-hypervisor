@@ -52,42 +52,39 @@ def main():
     # the defconfig will be used as the base config. Otherwise the existing
     # .config is used as the base.
     #
-    # Note that the BOARD given by the environment variable may be different
-    # from what is specified in the corresponding defconfig. Thus we get the
-    # target_board by loading the defconfig first.
-    #
-    # To be backward compatible, do not look for any defconfig in the Kconfig if
-    # such BOARD is not given. Simply use the .config or all default values
-    # (when no .config exists) as the base.
+    # If .config does not exist, it is required that Kconfig specifies an
+    # existing defconfig, otherwise this script will refuse to generate a
+    # .config.
     config_path = sys.argv[2]
-    target_board = None
-    if 'BOARD' in os.environ:
-        defconfig_path = kconfig.defconfig_filename
-        if defconfig_path and os.path.isfile(defconfig_path):
-            kconfig.load_config(defconfig_path)
-            target_board = kconfig.syms['BOARD'].str_value
+    defconfig_path = kconfig.defconfig_filename
+    if defconfig_path and os.path.isfile(defconfig_path):
+        kdefconfig = kconfiglib.Kconfig(kconfig_path)
+        kdefconfig.load_config(defconfig_path)
+    else:
+        kdefconfig = None
 
     need_update = False
     if os.path.isfile(config_path):
         kconfig.load_config(config_path)
-        if target_board and kconfig.syms['BOARD'].str_value != target_board:
-            kconfig.load_config(defconfig_path)
+        # The BOARD given by the environment variable may be different from what
+        # is specified in the corresponding defconfig. So compare the value of
+        # CONFIG_BOARD directly. This is applicable only when CONFIG_BOARD
+        # exists in the Kconfig.
+        if kdefconfig and 'BOARD' in kconfig.syms and \
+           kconfig.syms['BOARD'].str_value != kdefconfig.syms['BOARD'].str_value:
+            kconfig = kdefconfig
             sys.stdout.write("Overwrite with default configuration based on %s.\n" % defconfig_path)
             need_update = True
     else:
-        # create a default configuration
-        if target_board:
-            # target_board is not None if and only if a BOARD is specified and the
-            # corresponding defconfig has been loaded.
+        # base on a default configuration
+        if kdefconfig:
+            kconfig = kdefconfig
             sys.stdout.write("Default configuration based on %s.\n" % defconfig_path)
+            need_update = True
         else:
-            # If no known defconfig exists, either report an error if a
-            # BOARD is specified in the environment, or use the default values in
-            # Kconfig.
-            if 'BOARD' in os.environ:
-                sys.stderr.write("No defconfig found for board %s.\n" % target_board)
-                sys.exit(1)
-        need_update = True
+            # report an error if no known defconfig exists
+            sys.stderr.write(".config does not exist and no defconfig available.\n")
+            sys.exit(1)
 
     # Update the old .config with those specified on cmdline
     #
