@@ -796,6 +796,43 @@ static void dmar_disable(struct dmar_drhd_rt *dmar_unit)
 	dmar_fault_event_mask(dmar_unit);
 }
 
+static void dmar_suspend(struct dmar_drhd_rt *dmar_unit)
+{
+	uint32_t i;
+
+	/* flush */
+	dmar_write_buffer_flush(dmar_unit);
+	dmar_invalid_context_cache_global(dmar_unit);
+	dmar_invalid_iotlb_global(dmar_unit);
+
+	/* save IOMMU fault register state */
+	for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++) {
+		dmar_unit->fault_state[i] =  iommu_read32(dmar_unit, DMAR_FECTL_REG + (i * IOMMU_FAULT_REGISTER_SIZE));
+	}
+	/* disable translation */
+	dmar_disable_translation(dmar_unit);
+}
+
+static void dmar_resume(struct dmar_drhd_rt *dmar_unit)
+{
+	uint32_t i;
+
+	/* set root table */
+	dmar_set_root_table(dmar_unit);
+
+	/* flush */
+	dmar_write_buffer_flush(dmar_unit);
+	dmar_invalid_context_cache_global(dmar_unit);
+	dmar_invalid_iotlb_global(dmar_unit);
+
+	/* restore IOMMU fault register state */
+	for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++) {
+		iommu_write32(dmar_unit, DMAR_FECTL_REG + (i * IOMMU_FAULT_REGISTER_SIZE), dmar_unit->fault_state[i]);
+	}
+	/* enable translation */
+	dmar_enable_translation(dmar_unit);
+}
+
 static int add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_unit;
@@ -949,6 +986,25 @@ static int remove_iommu_device(const struct iommu_domain *domain, uint16_t segme
 	return 0;
 }
 
+static void do_action_for_iommus(void (*action)(struct dmar_drhd_rt *))
+{
+	struct dmar_info *info = get_dmar_info();
+	struct dmar_drhd_rt *dmar_unit;
+	uint32_t i;
+
+	if (action == NULL)
+		return;
+
+	for (i = 0U; i < info->drhd_count; i++) {
+		dmar_unit = &dmar_drhd_units[i];
+		if (!dmar_unit->drhd->ignore) {
+			action(dmar_unit);
+		} else {
+			dev_dbg(ACRN_DBG_IOMMU, "ignore dmar_unit @0x%x", dmar_unit->drhd->reg_base_addr);
+		}
+	}
+}
+
 struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_table, uint32_t addr_width)
 {
 	struct iommu_domain *domain;
@@ -1021,92 +1077,22 @@ int unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus, uint8_
 
 void enable_iommu(void)
 {
-	struct dmar_info *info = get_dmar_info();
-	struct dmar_drhd_rt *dmar_unit;
-	uint32_t j;
-
-	for (j = 0U; j < info->drhd_count; j++) {
-		dmar_unit = &dmar_drhd_units[j];
-		if (!dmar_unit->drhd->ignore) {
-			dmar_enable(dmar_unit);
-		}
-		else {
-			dev_dbg(ACRN_DBG_IOMMU, "ignore dmar_unit @0x%x", dmar_unit->drhd->reg_base_addr);
-		}
-	}
+	do_action_for_iommus(dmar_enable);
 }
 
 void disable_iommu(void)
 {
-	struct dmar_info *info = get_dmar_info();
-	struct dmar_drhd_rt *dmar_unit;
-	uint32_t j;
-
-	for (j = 0U; j < info->drhd_count; j++) {
-		dmar_unit = &dmar_drhd_units[j];
-		dmar_disable(dmar_unit);
-	}
+	do_action_for_iommus(dmar_disable);
 }
 
 void suspend_iommu(void)
 {
-	struct dmar_info *info = get_dmar_info();
-	struct dmar_drhd_rt *dmar_unit;
-	uint32_t i, j;
-
-	for (j = 0U; j < info->drhd_count; j++) {
-		dmar_unit = &dmar_drhd_units[j];
-
-		if (dmar_unit->drhd->ignore) {
-			continue;
-		}
-
-		/* flush */
-		dmar_write_buffer_flush(dmar_unit);
-		dmar_invalid_context_cache_global(dmar_unit);
-		dmar_invalid_iotlb_global(dmar_unit);
-
-		/* save IOMMU fault register state */
-		for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++) {
-			dmar_unit->fault_state[i] =  iommu_read32(dmar_unit,
-				DMAR_FECTL_REG + (i * IOMMU_FAULT_REGISTER_SIZE));
-
-		}
-		/* disable translation */
-		dmar_disable_translation(dmar_unit);
-	}
+	do_action_for_iommus(dmar_suspend);
 }
 
 void resume_iommu(void)
 {
-	struct dmar_drhd_rt *dmar_unit;
-	struct dmar_info *info = get_dmar_info();
-	uint32_t i, j;
-
-	/* restore IOMMU fault register state */
-	for (j = 0U; j < info->drhd_count; j++) {
-		dmar_unit = &dmar_drhd_units[j];
-
-		if (dmar_unit->drhd->ignore) {
-			continue;
-		}
-
-		/* set root table */
-		dmar_set_root_table(dmar_unit);
-
-		/* flush */
-		dmar_write_buffer_flush(dmar_unit);
-		dmar_invalid_context_cache_global(dmar_unit);
-		dmar_invalid_iotlb_global(dmar_unit);
-
-		/* restore IOMMU fault register state */
-		for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++) {
-			iommu_write32(dmar_unit, DMAR_FECTL_REG + (i * IOMMU_FAULT_REGISTER_SIZE),
-				dmar_unit->fault_state[i]);
-		}
-		/* enable translation */
-		dmar_enable_translation(dmar_unit);
-	}
+	do_action_for_iommus(dmar_resume);
 }
 
 int init_iommu(void)
