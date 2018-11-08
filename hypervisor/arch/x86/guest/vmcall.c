@@ -106,11 +106,6 @@ int vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 			(uint16_t)param2);
 		break;
 
-	case HC_VM_SET_MEMORY_REGION:
-		/* param1: vmid */
-		ret = hcall_set_vm_memory_region(vm, (uint16_t)param1, param2);
-		break;
-
 	case HC_VM_SET_MEMORY_REGIONS:
 		ret = hcall_set_vm_memory_regions(vm, param1);
 		break;

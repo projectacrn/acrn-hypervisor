@@ -52,7 +52,6 @@
 
 /* Guest memory management */
 #define HC_ID_MEM_BASE              0x40UL
-#define HC_VM_SET_MEMORY_REGION     BASE_HC_ID(HC_ID, HC_ID_MEM_BASE + 0x00UL)
 #define HC_VM_GPA2HPA               BASE_HC_ID(HC_ID, HC_ID_MEM_BASE + 0x01UL)
 #define HC_VM_SET_MEMORY_REGIONS    BASE_HC_ID(HC_ID, HC_ID_MEM_BASE + 0x02UL)
 #define HC_VM_WRITE_PROTECT_PAGE    BASE_HC_ID(HC_ID, HC_ID_MEM_BASE + 0x03UL)
