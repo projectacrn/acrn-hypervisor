@@ -29,33 +29,24 @@
 #define	IOMMU_FAULT_REGISTER_SIZE	4U
 
 #define CTX_ENTRY_UPPER_AW_POS          (0U)
-#define CTX_ENTRY_UPPER_AW_MASK         \
-		(0x7UL << CTX_ENTRY_UPPER_AW_POS)
+#define CTX_ENTRY_UPPER_AW_MASK         (0x7UL << CTX_ENTRY_UPPER_AW_POS)
 #define CTX_ENTRY_UPPER_DID_POS         (8U)
-#define CTX_ENTRY_UPPER_DID_MASK        \
-		(0x3FUL << CTX_ENTRY_UPPER_DID_POS)
+#define CTX_ENTRY_UPPER_DID_MASK        (0x3FUL << CTX_ENTRY_UPPER_DID_POS)
 #define CTX_ENTRY_LOWER_P_POS           (0U)
-#define CTX_ENTRY_LOWER_P_MASK          \
-		(0x1UL << CTX_ENTRY_LOWER_P_POS)
+#define CTX_ENTRY_LOWER_P_MASK          (0x1UL << CTX_ENTRY_LOWER_P_POS)
 #define CTX_ENTRY_LOWER_FPD_POS         (1U)
-#define CTX_ENTRY_LOWER_FPD_MASK        \
-		(0x1UL << CTX_ENTRY_LOWER_FPD_POS)
+#define CTX_ENTRY_LOWER_FPD_MASK        (0x1UL << CTX_ENTRY_LOWER_FPD_POS)
 #define CTX_ENTRY_LOWER_TT_POS          (2U)
-#define CTX_ENTRY_LOWER_TT_MASK         \
-		(0x3UL << CTX_ENTRY_LOWER_TT_POS)
+#define CTX_ENTRY_LOWER_TT_MASK         (0x3UL << CTX_ENTRY_LOWER_TT_POS)
 #define CTX_ENTRY_LOWER_SLPTPTR_POS     (12U)
-#define CTX_ENTRY_LOWER_SLPTPTR_MASK    \
-		(0xFFFFFFFFFFFFFUL <<  CTX_ENTRY_LOWER_SLPTPTR_POS)
+#define CTX_ENTRY_LOWER_SLPTPTR_MASK    (0xFFFFFFFFFFFFFUL <<  CTX_ENTRY_LOWER_SLPTPTR_POS)
 
-static inline uint64_t
-dmar_get_bitslice(uint64_t var, uint64_t mask, uint32_t pos)
+static inline uint64_t dmar_get_bitslice(uint64_t var, uint64_t mask, uint32_t pos)
 {
 	return ((var & mask) >> pos);
 }
 
-static inline uint64_t
-dmar_set_bitslice(uint64_t var, uint64_t mask,
-		  uint32_t pos, uint64_t val)
+static inline uint64_t dmar_set_bitslice(uint64_t var, uint64_t mask, uint32_t pos, uint64_t val)
 {
 	return ((var & ~mask) | ((val << pos) & mask));
 }
@@ -141,14 +132,12 @@ struct context_table {
 static struct page root_tables[CONFIG_MAX_IOMMU_NUM] __aligned(CPU_PAGE_SIZE);
 static struct context_table ctx_tables[CONFIG_MAX_IOMMU_NUM] __aligned(CPU_PAGE_SIZE);
 
-static inline uint8_t*
-get_root_table(uint32_t dmar_index)
+static inline uint8_t* get_root_table(uint32_t dmar_index)
 {
 	return root_tables[dmar_index].contents;
 }
 
-static inline uint8_t*
-get_ctx_table(uint32_t dmar_index, uint8_t bus_no)
+static inline uint8_t* get_ctx_table(uint32_t dmar_index, uint8_t bus_no)
 {
 	return ctx_tables[dmar_index].buses[bus_no].contents;
 }
@@ -176,8 +165,7 @@ static inline uint16_t vmid_to_domainid(uint16_t vm_id)
 }
 
 static int dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit);
-static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus,
-					   uint8_t devfun);
+static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus, uint8_t devfun);
 static int register_hrhd_units(void)
 {
 	struct dmar_info *info = get_dmar_info();
@@ -219,23 +207,19 @@ static uint64_t iommu_read64(const struct dmar_drhd_rt *dmar_unit, uint32_t offs
 {
 	uint64_t value;
 
-	value = mmio_read32(hpa2hva(dmar_unit->drhd->reg_base_addr + offset +
-									4U));
+	value = mmio_read32(hpa2hva(dmar_unit->drhd->reg_base_addr + offset + 4U));
 	value = value << 32U;
-	value = value | mmio_read32(hpa2hva(dmar_unit->drhd->reg_base_addr +
-					offset));
+	value = value | mmio_read32(hpa2hva(dmar_unit->drhd->reg_base_addr + offset));
 
 	return value;
 }
 
-static void iommu_write32(const struct dmar_drhd_rt *dmar_unit, uint32_t offset,
-			  uint32_t value)
+static void iommu_write32(const struct dmar_drhd_rt *dmar_unit, uint32_t offset, uint32_t value)
 {
 	mmio_write32(value, hpa2hva(dmar_unit->drhd->reg_base_addr + offset));
 }
 
-static void iommu_write64(const struct dmar_drhd_rt *dmar_unit, uint32_t offset,
-			  uint64_t value)
+static void iommu_write64(const struct dmar_drhd_rt *dmar_unit, uint32_t offset, uint64_t value)
 {
 	uint32_t temp;
 
@@ -243,12 +227,10 @@ static void iommu_write64(const struct dmar_drhd_rt *dmar_unit, uint32_t offset,
 	mmio_write32(temp, hpa2hva(dmar_unit->drhd->reg_base_addr + offset));
 
 	temp = (uint32_t)(value >> 32U);
-	mmio_write32(temp,
-		hpa2hva(dmar_unit->drhd->reg_base_addr + offset + 4U));
+	mmio_write32(temp, hpa2hva(dmar_unit->drhd->reg_base_addr + offset + 4U));
 }
 
-static inline void
-dmar_wait_completion(const struct dmar_drhd_rt *dmar_unit, uint32_t offset,
+static inline void dmar_wait_completion(const struct dmar_drhd_rt *dmar_unit, uint32_t offset,
 	uint32_t mask, bool pre_condition, uint32_t *status)
 {
 	/* variable start isn't used when built as release version */
@@ -298,56 +280,31 @@ static void iommu_flush_cache(const struct dmar_drhd_rt *dmar_unit,
 static void dmar_unit_show_capability(struct dmar_drhd_rt *dmar_unit)
 {
 	pr_info("dmar unit[0x%x]", dmar_unit->drhd->reg_base_addr);
-	pr_info("\tNumDomain:%d",
-		iommu_cap_ndoms(dmar_unit->cap));
-	pr_info("\tAdvancedFaultLogging:%d",
-		iommu_cap_afl(dmar_unit->cap));
-	pr_info("\tRequiredWBFlush:%d",
-		iommu_cap_rwbf(dmar_unit->cap));
-	pr_info("\tProtectedLowMemRegion:%d",
-		iommu_cap_plmr(dmar_unit->cap));
-	pr_info("\tProtectedHighMemRegion:%d",
-		iommu_cap_phmr(dmar_unit->cap));
-	pr_info("\tCachingMode:%d",
-		iommu_cap_caching_mode(dmar_unit->cap));
-	pr_info("\tSAGAW:0x%x",
-		iommu_cap_sagaw(dmar_unit->cap));
-	pr_info("\tMGAW:%d",
-		iommu_cap_mgaw(dmar_unit->cap));
-	pr_info("\tZeroLenRead:%d",
-		iommu_cap_zlr(dmar_unit->cap));
-	pr_info("\tLargePageSupport:0x%x",
-		iommu_cap_super_page_val(dmar_unit->cap));
-	pr_info("\tPageSelectiveInvalidation:%d",
-		iommu_cap_pgsel_inv(dmar_unit->cap));
-	pr_info("\tPageSelectInvalidation:%d",
-		iommu_cap_pgsel_inv(dmar_unit->cap));
-	pr_info("\tNumOfFaultRecordingReg:%d",
-		iommu_cap_num_fault_regs(dmar_unit->cap));
-	pr_info("\tMAMV:0x%x",
-		iommu_cap_max_amask_val(dmar_unit->cap));
-	pr_info("\tWriteDraining:%d",
-		iommu_cap_write_drain(dmar_unit->cap));
-	pr_info("\tReadDraining:%d",
-		iommu_cap_read_drain(dmar_unit->cap));
-	pr_info("\tPostInterrupts:%d\n",
-		iommu_cap_pi(dmar_unit->cap));
-	pr_info("\tPage-walk Coherency:%d",
-		iommu_ecap_c(dmar_unit->ecap));
-	pr_info("\tQueuedInvalidation:%d",
-		iommu_ecap_qi(dmar_unit->ecap));
-	pr_info("\tDeviceTLB:%d",
-		iommu_ecap_dt(dmar_unit->ecap));
-	pr_info("\tInterruptRemapping:%d",
-		iommu_ecap_ir(dmar_unit->ecap));
-	pr_info("\tExtendedInterruptMode:%d",
-		iommu_ecap_eim(dmar_unit->ecap));
-	pr_info("\tPassThrough:%d",
-		iommu_ecap_pt(dmar_unit->ecap));
-	pr_info("\tSnoopControl:%d",
-		iommu_ecap_sc(dmar_unit->ecap));
-	pr_info("\tIOTLB RegOffset:0x%x",
-		iommu_ecap_iro(dmar_unit->ecap));
+	pr_info("\tNumDomain:%d", iommu_cap_ndoms(dmar_unit->cap));
+	pr_info("\tAdvancedFaultLogging:%d", iommu_cap_afl(dmar_unit->cap));
+	pr_info("\tRequiredWBFlush:%d", iommu_cap_rwbf(dmar_unit->cap));
+	pr_info("\tProtectedLowMemRegion:%d", iommu_cap_plmr(dmar_unit->cap));
+	pr_info("\tProtectedHighMemRegion:%d", iommu_cap_phmr(dmar_unit->cap));
+	pr_info("\tCachingMode:%d", iommu_cap_caching_mode(dmar_unit->cap));
+	pr_info("\tSAGAW:0x%x", iommu_cap_sagaw(dmar_unit->cap));
+	pr_info("\tMGAW:%d", iommu_cap_mgaw(dmar_unit->cap));
+	pr_info("\tZeroLenRead:%d", iommu_cap_zlr(dmar_unit->cap));
+	pr_info("\tLargePageSupport:0x%x", iommu_cap_super_page_val(dmar_unit->cap));
+	pr_info("\tPageSelectiveInvalidation:%d", iommu_cap_pgsel_inv(dmar_unit->cap));
+	pr_info("\tPageSelectInvalidation:%d", iommu_cap_pgsel_inv(dmar_unit->cap));
+	pr_info("\tNumOfFaultRecordingReg:%d", iommu_cap_num_fault_regs(dmar_unit->cap));
+	pr_info("\tMAMV:0x%x", iommu_cap_max_amask_val(dmar_unit->cap));
+	pr_info("\tWriteDraining:%d", iommu_cap_write_drain(dmar_unit->cap));
+	pr_info("\tReadDraining:%d", iommu_cap_read_drain(dmar_unit->cap));
+	pr_info("\tPostInterrupts:%d\n", iommu_cap_pi(dmar_unit->cap));
+	pr_info("\tPage-walk Coherency:%d", iommu_ecap_c(dmar_unit->ecap));
+	pr_info("\tQueuedInvalidation:%d", iommu_ecap_qi(dmar_unit->ecap));
+	pr_info("\tDeviceTLB:%d", iommu_ecap_dt(dmar_unit->ecap));
+	pr_info("\tInterruptRemapping:%d", iommu_ecap_ir(dmar_unit->ecap));
+	pr_info("\tExtendedInterruptMode:%d", iommu_ecap_eim(dmar_unit->ecap));
+	pr_info("\tPassThrough:%d", iommu_ecap_pt(dmar_unit->ecap));
+	pr_info("\tSnoopControl:%d", iommu_ecap_sc(dmar_unit->ecap));
+	pr_info("\tIOTLB RegOffset:0x%x", iommu_ecap_iro(dmar_unit->ecap));
 	pr_info("\tMHMV:0x%x", iommu_ecap_mhmv(dmar_unit->ecap));
 	pr_info("\tECS:%d", iommu_ecap_ecs(dmar_unit->ecap));
 	pr_info("\tMTS:%d", iommu_ecap_mts(dmar_unit->ecap));
@@ -389,8 +346,7 @@ static uint8_t dmar_unit_get_msagw(const struct dmar_drhd_rt *dmar_unit)
 	return i;
 }
 
-static bool
-dmar_unit_support_aw(const struct dmar_drhd_rt *dmar_unit, uint32_t addr_width)
+static bool dmar_unit_support_aw(const struct dmar_drhd_rt *dmar_unit, uint32_t addr_width)
 {
 	uint8_t aw;
 
@@ -408,8 +364,7 @@ static void dmar_enable_translation(struct dmar_drhd_rt *dmar_unit)
 	iommu_write32(dmar_unit, DMAR_GCMD_REG, dmar_unit->gcmd);
 
 	/* 32-bit register */
-	dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_TES, false,
-				&status);
+	dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_TES, false, &status);
 
 	status = iommu_read32(dmar_unit, DMAR_GSTS_REG);
 
@@ -427,17 +382,14 @@ static void dmar_disable_translation(struct dmar_drhd_rt *dmar_unit)
 	iommu_write32(dmar_unit, DMAR_GCMD_REG, dmar_unit->gcmd);
 
 	/* 32-bit register */
-	dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_TES, true,
-				&status);
+	dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_TES, true, &status);
 
 	spinlock_release(&(dmar_unit->lock));
 }
 
 static int dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 {
-	dev_dbg(ACRN_DBG_IOMMU, "Register dmar uint [%d] @0x%llx",
-			dmar_unit->index,
-			dmar_unit->drhd->reg_base_addr);
+	dev_dbg(ACRN_DBG_IOMMU, "Register dmar uint [%d] @0x%llx", dmar_unit->index, dmar_unit->drhd->reg_base_addr);
 
 	spinlock_init(&dmar_unit->lock);
 
@@ -447,21 +399,15 @@ static int dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 
 	dmar_unit->cap_msagaw = dmar_unit_get_msagw(dmar_unit);
 
-	dmar_unit->cap_num_fault_regs =
-		iommu_cap_num_fault_regs(dmar_unit->cap);
-	dmar_unit->cap_fault_reg_offset =
-		iommu_cap_fault_reg_offset(dmar_unit->cap);
+	dmar_unit->cap_num_fault_regs = iommu_cap_num_fault_regs(dmar_unit->cap);
+	dmar_unit->cap_fault_reg_offset = iommu_cap_fault_reg_offset(dmar_unit->cap);
 	dmar_unit->ecap_iotlb_offset = iommu_ecap_iro(dmar_unit->ecap) * 16U;
 
 #if DBG_IOMMU
 	pr_info("version:0x%x, cap:0x%llx, ecap:0x%llx",
-		iommu_read32(dmar_unit, DMAR_VER_REG),
-		dmar_unit->cap,
-		dmar_unit->ecap);
+		iommu_read32(dmar_unit, DMAR_VER_REG), dmar_unit->cap, dmar_unit->ecap);
 	pr_info("sagaw:0x%x, msagaw:0x%x, iotlb offset 0x%x",
-		iommu_cap_sagaw(dmar_unit->cap),
-		dmar_unit->cap_msagaw,
-		dmar_unit->ecap_iotlb_offset);
+		iommu_cap_sagaw(dmar_unit->cap), dmar_unit->cap_msagaw, dmar_unit->ecap_iotlb_offset);
 
 	dmar_unit_show_capability(dmar_unit);
 #endif
@@ -484,8 +430,7 @@ static int dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 	 * translation paging structures?
 	 */
 	if (iommu_ecap_sc(dmar_unit->ecap) == 0U) {
-		dev_dbg(ACRN_DBG_IOMMU,
-			"dmar uint doesn't support snoop control!");
+		dev_dbg(ACRN_DBG_IOMMU, "dmar uint doesn't support snoop control!");
 	}
 
 	if ((dmar_unit->gcmd & DMA_GCMD_TE) != 0U) {
@@ -495,8 +440,7 @@ static int dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 	return 0;
 }
 
-static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus,
-					   uint8_t devfun)
+static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_info *info = get_dmar_info();
 	struct dmar_drhd_rt *dmar_unit;
@@ -516,9 +460,7 @@ static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus,
 			}
 		}
 
-		/* has the same segment number and
-		 * the dmar unit has INCLUDE_PCI_ALL set
-		 */
+		/* has the same segment number and the dmar unit has INCLUDE_PCI_ALL set */
 		if ((dmar_unit->drhd->flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK) != 0U) {
 			return dmar_unit;
 		}
@@ -536,12 +478,10 @@ static void dmar_write_buffer_flush(struct dmar_drhd_rt *dmar_unit)
 	}
 
 	spinlock_obtain(&(dmar_unit->lock));
-	iommu_write32(dmar_unit, DMAR_GCMD_REG,
-			  dmar_unit->gcmd | DMA_GCMD_WBF);
+	iommu_write32(dmar_unit, DMAR_GCMD_REG, dmar_unit->gcmd | DMA_GCMD_WBF);
 
 	/* read lower 32 bits to check */
-	dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_WBFS, true,
-				&status);
+	dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_WBFS, true, &status);
 	spinlock_release(&(dmar_unit->lock));
 }
 
@@ -565,8 +505,7 @@ static void dmar_invalid_context_cache(struct dmar_drhd_rt *dmar_unit,
 		cmd |= DMA_CCMD_DOMAIN_INVL | dma_ccmd_did(did);
 		break;
 	case DMAR_CIRG_DEVICE:
-		cmd |= DMA_CCMD_DEVICE_INVL | dma_ccmd_did(did) |
-			   dma_ccmd_sid(sid) | dma_ccmd_fm(fm);
+		cmd |= DMA_CCMD_DEVICE_INVL | dma_ccmd_did(did) | dma_ccmd_sid(sid) | dma_ccmd_fm(fm);
 		break;
 	default:
 		pr_err("unknown CIRG type");
@@ -576,13 +515,11 @@ static void dmar_invalid_context_cache(struct dmar_drhd_rt *dmar_unit,
 	spinlock_obtain(&(dmar_unit->lock));
 	iommu_write64(dmar_unit, DMAR_CCMD_REG, cmd);
 	/* read upper 32bits to check */
-	dmar_wait_completion(dmar_unit, DMAR_CCMD_REG + 4U, DMA_CCMD_ICC_32,
-				true, &status);
+	dmar_wait_completion(dmar_unit, DMAR_CCMD_REG + 4U, DMA_CCMD_ICC_32, true, &status);
 
 	spinlock_release(&(dmar_unit->lock));
 
-	dev_dbg(ACRN_DBG_IOMMU, "cc invalidation granularity %d",
-		dma_ccmd_get_caig_32(status));
+	dev_dbg(ACRN_DBG_IOMMU, "cc invalidation granularity %d", dma_ccmd_get_caig_32(status));
 }
 
 static void dmar_invalid_context_cache_global(struct dmar_drhd_rt *dmar_unit)
@@ -590,9 +527,8 @@ static void dmar_invalid_context_cache_global(struct dmar_drhd_rt *dmar_unit)
 	dmar_invalid_context_cache(dmar_unit, 0U, 0U, 0U, DMAR_CIRG_GLOBAL);
 }
 
-static void dmar_invalid_iotlb(struct dmar_drhd_rt *dmar_unit,
-				   uint16_t did, uint64_t address, uint8_t am,
-				   bool hint, enum dmar_iirg_type iirg)
+static void dmar_invalid_iotlb(struct dmar_drhd_rt *dmar_unit, uint16_t did, uint64_t address, uint8_t am,
+			       bool hint, enum dmar_iirg_type iirg)
 {
 	/* set Drain Reads & Drain Writes,
 	 * if hardware doesn't support it, will be ignored by hardware
@@ -626,13 +562,11 @@ static void dmar_invalid_iotlb(struct dmar_drhd_rt *dmar_unit,
 
 	iommu_write64(dmar_unit, dmar_unit->ecap_iotlb_offset + 8U, cmd);
 	/* read upper 32bits to check */
-	dmar_wait_completion(dmar_unit, dmar_unit->ecap_iotlb_offset + 12U,
-				DMA_IOTLB_IVT_32, true, &status);
+	dmar_wait_completion(dmar_unit, dmar_unit->ecap_iotlb_offset + 12U, DMA_IOTLB_IVT_32, true, &status);
 	spinlock_release(&(dmar_unit->lock));
 
 	if (dma_iotlb_get_iaig_32(status) == 0U) {
-		pr_err("fail to invalidate IOTLB!, 0x%x, 0x%x",
-			status, iommu_read32(dmar_unit, DMAR_FSTS_REG));
+		pr_err("fail to invalidate IOTLB!, 0x%x, 0x%x", status, iommu_read32(dmar_unit, DMAR_FSTS_REG));
 	}
 }
 
@@ -669,12 +603,10 @@ static void dmar_set_root_table(struct dmar_drhd_rt *dmar_unit)
 
 	iommu_write64(dmar_unit, DMAR_RTADDR_REG, address);
 
-	iommu_write32(dmar_unit, DMAR_GCMD_REG,
-			dmar_unit->gcmd | DMA_GCMD_SRTP);
+	iommu_write32(dmar_unit, DMAR_GCMD_REG, dmar_unit->gcmd | DMA_GCMD_SRTP);
 
 	/* 32-bit register */
-	dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_RTPS, false,
-				&status);
+	dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_RTPS, false, &status);
 	spinlock_release(&(dmar_unit->lock));
 }
 
@@ -756,16 +688,11 @@ static void fault_record_analysis(__unused uint64_t low, uint64_t high)
 
 	/* currently skip PASID related parsing */
 	pr_info("%s, Reason: 0x%x, SID: %x.%x.%x @0x%llx",
-		(dma_frcd_up_t(high) != 0U) ? "Read/Atomic" : "Write",
-		dma_frcd_up_fr(high),
-		pci_bus(dma_frcd_up_sid(high)),
-		pci_slot(dma_frcd_up_sid(high)),
-		pci_func(dma_frcd_up_sid(high)),
-		low);
+		(dma_frcd_up_t(high) != 0U) ? "Read/Atomic" : "Write", dma_frcd_up_fr(high),
+		pci_bus(dma_frcd_up_sid(high)), pci_slot(dma_frcd_up_sid(high)), pci_func(dma_frcd_up_sid(high)), low);
 #if DBG_IOMMU
 	if (iommu_ecap_dt(dmar_unit->ecap) != 0U) {
-		pr_info("Address Type: 0x%x",
-				dma_frcd_up_at(high));
+		pr_info("Address Type: 0x%x", dma_frcd_up_at(high));
 	}
 #endif
 }
@@ -790,11 +717,9 @@ static void dmar_fault_handler(uint32_t irq, void *data)
 	while (dma_fsts_ppf(fsr)) {
 		loop++;
 		index = dma_fsts_fri(fsr);
-		record_reg_offset = (uint32_t)dmar_unit->cap_fault_reg_offset
-				+ (index * 16U);
+		record_reg_offset = (uint32_t)dmar_unit->cap_fault_reg_offset + (index * 16U);
 		if (index >= dmar_unit->cap_num_fault_regs) {
-			dev_dbg(ACRN_DBG_IOMMU, "%s: invalid FR Index",
-					__func__);
+			dev_dbg(ACRN_DBG_IOMMU, "%s: invalid FR Index", __func__);
 			break;
 		}
 
@@ -803,8 +728,7 @@ static void dmar_fault_handler(uint32_t irq, void *data)
 		record[1] = iommu_read64(dmar_unit, record_reg_offset + 8U);
 
 		dev_dbg(ACRN_DBG_IOMMU, "%s: record[%d] @0x%x:  0x%llx, 0x%llx",
-			__func__, index, record_reg_offset,
-			record[0], record[1]);
+			__func__, index, record_reg_offset, record[0], record[1]);
 
 		fault_record_analysis(record[0], record[1]);
 
@@ -814,8 +738,7 @@ static void dmar_fault_handler(uint32_t irq, void *data)
 
 #ifdef DMAR_FAULT_LOOP_MAX
 		if (loop > DMAR_FAULT_LOOP_MAX) {
-			dev_dbg(ACRN_DBG_IOMMU, "%s: loop more than %d times",
-				__func__, DMAR_FAULT_LOOP_MAX);
+			dev_dbg(ACRN_DBG_IOMMU, "%s: loop more than %d times", __func__, DMAR_FAULT_LOOP_MAX);
 			break;
 		}
 #endif
@@ -834,10 +757,7 @@ static int dmar_setup_interrupt(struct dmar_drhd_rt *dmar_unit)
 		return 0;
 	}
 
-	retval = request_irq(IRQ_INVALID,
-			     dmar_fault_handler,
-			     dmar_unit,
-			     IRQF_NONE);
+	retval = request_irq(IRQ_INVALID, dmar_fault_handler, dmar_unit, IRQF_NONE);
 
 	if (retval < 0 ) {
 		pr_err("%s: fail to setup interrupt", __func__);
@@ -848,8 +768,7 @@ static int dmar_setup_interrupt(struct dmar_drhd_rt *dmar_unit)
 
 	vector = irq_to_vector(dmar_unit->dmar_irq);
 
-	dev_dbg(ACRN_DBG_IOMMU, "alloc irq#%d vector#%d for dmar_unit",
-			dmar_unit->dmar_irq, vector);
+	dev_dbg(ACRN_DBG_IOMMU, "alloc irq#%d vector#%d for dmar_unit", dmar_unit->dmar_irq, vector);
 
 	dmar_fault_msi_write(dmar_unit, vector);
 	dmar_fault_event_unmask(dmar_unit);
@@ -859,8 +778,7 @@ static int dmar_setup_interrupt(struct dmar_drhd_rt *dmar_unit)
 
 static void dmar_enable(struct dmar_drhd_rt *dmar_unit)
 {
-	dev_dbg(ACRN_DBG_IOMMU, "enable dmar uint [0x%x]",
-		dmar_unit->drhd->reg_base_addr);
+	dev_dbg(ACRN_DBG_IOMMU, "enable dmar uint [0x%x]", dmar_unit->drhd->reg_base_addr);
 	dmar_setup_interrupt(dmar_unit);
 	dmar_write_buffer_flush(dmar_unit);
 	dmar_set_root_table(dmar_unit);
@@ -878,8 +796,7 @@ static void dmar_disable(struct dmar_drhd_rt *dmar_unit)
 	dmar_fault_event_mask(dmar_unit);
 }
 
-struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_table,
-		uint32_t addr_width)
+struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_table, uint32_t addr_width)
 {
 	struct iommu_domain *domain;
 
@@ -905,9 +822,7 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_ta
 	domain->iommu_snoop = true;
 
 	dev_dbg(ACRN_DBG_IOMMU, "create domain [%d]: vm_id = %hu, ept@0x%x",
-		vmid_to_domainid(domain->vm_id),
-		domain->vm_id,
-		domain->trans_table_ptr);
+		vmid_to_domainid(domain->vm_id), domain->vm_id, domain->trans_table_ptr);
 
 	return domain;
 }
@@ -926,8 +841,7 @@ void destroy_iommu_domain(struct iommu_domain *domain)
 	(void)memset(domain, 0U, sizeof(*domain));
 }
 
-static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
-		uint8_t bus, uint8_t devfun)
+static int add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_unit;
 	struct dmar_root_entry *root_table;
@@ -940,33 +854,28 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 
 	dmar_unit = device_to_dmaru(segment, bus, devfun);
 	if (dmar_unit == NULL) {
-		pr_err("no dmar unit found for device:0x%x:%x.%x",
-			bus, pci_slot(devfun), pci_func(devfun));
+		pr_err("no dmar unit found for device:0x%x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
 		return 1;
 	}
 
 	if (dmar_unit->drhd->ignore) {
-		dev_dbg(ACRN_DBG_IOMMU, "device is ignored :0x%x:%x.%x",
-			bus, pci_slot(devfun), pci_func(devfun));
+		dev_dbg(ACRN_DBG_IOMMU, "device is ignored :0x%x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
 		return 0;
 	}
 
 	if (!dmar_unit_support_aw(dmar_unit, domain->addr_width)) {
-		pr_err("dmar doesn't support addr width %d",
-			domain->addr_width);
+		pr_err("dmar doesn't support addr width %d", domain->addr_width);
 		return 1;
 	}
 
 	if (iommu_ecap_sc(dmar_unit->ecap) == 0U) {
 		domain->iommu_snoop = false;
-		dev_dbg(ACRN_DBG_IOMMU, "vm=%d add %x:%x no snoop control!",
-			domain->vm_id, bus, devfun);
+		dev_dbg(ACRN_DBG_IOMMU, "vm=%d add %x:%x no snoop control!", domain->vm_id, bus, devfun);
 	}
 
 	ASSERT(dmar_unit->root_table_addr != 0UL, "root table is not setup");
 
-	root_table =
-		(struct dmar_root_entry *)hpa2hva(dmar_unit->root_table_addr);
+	root_table = (struct dmar_root_entry *)hpa2hva(dmar_unit->root_table_addr);
 
 	root_entry = root_table + bus;
 
@@ -979,37 +888,27 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 		context_table_addr = context_table_addr >> CPU_PAGE_SHIFT;
 
 		lower = dmar_set_bitslice(lower,
-				ROOT_ENTRY_LOWER_CTP_MASK,
-				ROOT_ENTRY_LOWER_CTP_POS,
-				context_table_addr);
+				ROOT_ENTRY_LOWER_CTP_MASK, ROOT_ENTRY_LOWER_CTP_POS, context_table_addr);
 		lower = dmar_set_bitslice(lower,
-				ROOT_ENTRY_LOWER_PRESENT_MASK,
-				ROOT_ENTRY_LOWER_PRESENT_POS, 1UL);
+				ROOT_ENTRY_LOWER_PRESENT_MASK, ROOT_ENTRY_LOWER_PRESENT_POS, 1UL);
 
 		root_entry->upper = 0UL;
 		root_entry->lower = lower;
-		iommu_flush_cache(dmar_unit, root_entry,
-				sizeof(struct dmar_root_entry));
+		iommu_flush_cache(dmar_unit, root_entry, sizeof(struct dmar_root_entry));
 	} else {
 		context_table_addr = dmar_get_bitslice(root_entry->lower,
-				ROOT_ENTRY_LOWER_CTP_MASK,
-			        ROOT_ENTRY_LOWER_CTP_POS);
+				ROOT_ENTRY_LOWER_CTP_MASK, ROOT_ENTRY_LOWER_CTP_POS);
 	}
 
 	context_table_addr = context_table_addr << CPU_PAGE_SHIFT;
 
-	context_table =
-		(struct dmar_context_entry *)hpa2hva(context_table_addr);
+	context_table = (struct dmar_context_entry *)hpa2hva(context_table_addr);
 	context_entry = context_table + devfun;
 
 	/* the context entry should not be present */
-	if (dmar_get_bitslice(context_entry->lower,
-	        CTX_ENTRY_LOWER_P_MASK,
-		CTX_ENTRY_LOWER_P_POS) != 0UL) {
-		pr_err("%s: context entry@0x%llx (Lower:%x) ",
-				__func__, context_entry, context_entry->lower);
-		pr_err("already present for %x:%x.%x",
-				bus, pci_slot(devfun), pci_func(devfun));
+	if (dmar_get_bitslice(context_entry->lower, CTX_ENTRY_LOWER_P_MASK, CTX_ENTRY_LOWER_P_POS) != 0UL) {
+		pr_err("%s: context entry@0x%llx (Lower:%x) ", __func__, context_entry, context_entry->lower);
+		pr_err("already present for %x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
 		return 1;
 	}
 
@@ -1024,53 +923,34 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 			 * supported by hardware.
 			 */
 			upper = dmar_set_bitslice(upper,
-				  CTX_ENTRY_UPPER_AW_MASK,
-				  CTX_ENTRY_UPPER_AW_POS,
-				  dmar_unit->cap_msagaw);
+				  CTX_ENTRY_UPPER_AW_MASK, CTX_ENTRY_UPPER_AW_POS, dmar_unit->cap_msagaw);
 			lower = dmar_set_bitslice(lower,
-				  CTX_ENTRY_LOWER_TT_MASK,
-				  CTX_ENTRY_LOWER_TT_POS,
-			          DMAR_CTX_TT_PASSTHROUGH);
+				  CTX_ENTRY_LOWER_TT_MASK, CTX_ENTRY_LOWER_TT_POS, DMAR_CTX_TT_PASSTHROUGH);
 		} else {
-			ASSERT(false,
-				  "dmaru doesn't support trans passthrough");
+			ASSERT(false, "dmaru doesn't support trans passthrough");
 		}
 	} else {
 		/* TODO: add Device TLB support */
 		upper = dmar_set_bitslice(upper,
-		          CTX_ENTRY_UPPER_AW_MASK,
-		          CTX_ENTRY_UPPER_AW_POS,
-			  (uint64_t)width_to_agaw(domain->addr_width));
+		          CTX_ENTRY_UPPER_AW_MASK, CTX_ENTRY_UPPER_AW_POS, (uint64_t)width_to_agaw(domain->addr_width));
 		lower = dmar_set_bitslice(lower,
-		          CTX_ENTRY_LOWER_TT_MASK,
-			  CTX_ENTRY_LOWER_TT_POS,
-			  DMAR_CTX_TT_UNTRANSLATED);
+		          CTX_ENTRY_LOWER_TT_MASK, CTX_ENTRY_LOWER_TT_POS, DMAR_CTX_TT_UNTRANSLATED);
 	}
 
 	upper = dmar_set_bitslice(upper,
-	          CTX_ENTRY_UPPER_DID_MASK,
-		  CTX_ENTRY_UPPER_DID_POS,
-		  (uint64_t)vmid_to_domainid(domain->vm_id));
+	          CTX_ENTRY_UPPER_DID_MASK, CTX_ENTRY_UPPER_DID_POS, (uint64_t)vmid_to_domainid(domain->vm_id));
 	lower = dmar_set_bitslice(lower,
-		  CTX_ENTRY_LOWER_SLPTPTR_MASK,
-		  CTX_ENTRY_LOWER_SLPTPTR_POS,
-		  domain->trans_table_ptr >> CPU_PAGE_SHIFT);
-	lower = dmar_set_bitslice(lower,
-		  CTX_ENTRY_LOWER_P_MASK,
-		  CTX_ENTRY_LOWER_P_POS,
-		  1UL);
+		  CTX_ENTRY_LOWER_SLPTPTR_MASK, CTX_ENTRY_LOWER_SLPTPTR_POS, domain->trans_table_ptr >> CPU_PAGE_SHIFT);
+	lower = dmar_set_bitslice(lower, CTX_ENTRY_LOWER_P_MASK, CTX_ENTRY_LOWER_P_POS, 1UL);
 
 	context_entry->upper = upper;
 	context_entry->lower = lower;
-	iommu_flush_cache(dmar_unit, context_entry,
-			sizeof(struct dmar_context_entry));
+	iommu_flush_cache(dmar_unit, context_entry, sizeof(struct dmar_context_entry));
 
 	return 0;
 }
 
-static int
-remove_iommu_device(const struct iommu_domain *domain, uint16_t segment,
-		uint8_t bus, uint8_t devfun)
+static int remove_iommu_device(const struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_unit;
 	struct dmar_root_entry *root_table;
@@ -1082,26 +962,20 @@ remove_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 
 	dmar_unit = device_to_dmaru(segment, bus, devfun);
 	if (dmar_unit == NULL) {
-		pr_err("no dmar unit found for device:0x%x:%x",
-				bus, devfun);
+		pr_err("no dmar unit found for device:0x%x:%x", bus, devfun);
 		return 1;
 	}
 
-	root_table =
-		(struct dmar_root_entry *)hpa2hva(dmar_unit->root_table_addr);
+	root_table = (struct dmar_root_entry *)hpa2hva(dmar_unit->root_table_addr);
 	root_entry = root_table + bus;
 
-	context_table_addr = dmar_get_bitslice(root_entry->lower,
-					       ROOT_ENTRY_LOWER_CTP_MASK,
-					       ROOT_ENTRY_LOWER_CTP_POS);
+	context_table_addr = dmar_get_bitslice(root_entry->lower,  ROOT_ENTRY_LOWER_CTP_MASK, ROOT_ENTRY_LOWER_CTP_POS);
 	context_table_addr = context_table_addr << CPU_PAGE_SHIFT;
-	context_table =
-		(struct dmar_context_entry *)hpa2hva(context_table_addr);
+	context_table = (struct dmar_context_entry *)hpa2hva(context_table_addr);
 
 	context_entry = context_table + devfun;
 
-	dom_id = (uint16_t)dmar_get_bitslice(context_entry->upper,
-		        CTX_ENTRY_UPPER_DID_MASK, CTX_ENTRY_UPPER_DID_POS);
+	dom_id = (uint16_t)dmar_get_bitslice(context_entry->upper, CTX_ENTRY_UPPER_DID_MASK, CTX_ENTRY_UPPER_DID_POS);
 	if (dom_id != vmid_to_domainid(domain->vm_id)) {
 		pr_err("%s: domain id mismatch", __func__);
 		return 1;
@@ -1110,8 +984,7 @@ remove_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 	/* clear the present bit first */
 	context_entry->lower = 0UL;
 	context_entry->upper = 0UL;
-	iommu_flush_cache(dmar_unit, context_entry,
-			sizeof(struct dmar_context_entry));
+	iommu_flush_cache(dmar_unit, context_entry, sizeof(struct dmar_context_entry));
 
 	/* if caching mode is present, need to invalidate translation cache */
 	/* if(cap_caching_mode(dmar_unit->cap)) { */
@@ -1121,8 +994,7 @@ remove_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 	return 0;
 }
 
-int assign_iommu_device(struct iommu_domain *domain, uint8_t bus,
-				uint8_t devfun)
+int assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
 	/* TODO: check if the device assigned */
 
@@ -1133,8 +1005,7 @@ int assign_iommu_device(struct iommu_domain *domain, uint8_t bus,
 	return add_iommu_device(domain, 0U, bus, devfun);
 }
 
-int unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus,
-				uint8_t devfun)
+int unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
 	/* TODO: check if the device assigned */
 
@@ -1161,8 +1032,7 @@ void enable_iommu(void)
 			dmar_enable(dmar_unit);
 		}
 		else {
-			dev_dbg(ACRN_DBG_IOMMU, "ignore dmar_unit @0x%x",
-				dmar_unit->drhd->reg_base_addr);
+			dev_dbg(ACRN_DBG_IOMMU, "ignore dmar_unit @0x%x", dmar_unit->drhd->reg_base_addr);
 		}
 	}
 }
@@ -1232,8 +1102,7 @@ void resume_iommu(void)
 
 		/* restore IOMMU fault register state */
 		for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++) {
-			iommu_write32(dmar_unit, DMAR_FECTL_REG +
-				(i * IOMMU_FAULT_REGISTER_SIZE),
+			iommu_write32(dmar_unit, DMAR_FECTL_REG + (i * IOMMU_FAULT_REGISTER_SIZE),
 				dmar_unit->fault_state[i]);
 		}
 		/* enable translation */
@@ -1262,15 +1131,13 @@ void init_iommu_vm0_domain(struct acrn_vm *vm0)
 	uint16_t bus;
 	uint16_t devfun;
 
-	vm0->iommu = create_iommu_domain(vm0->vm_id,
-		hva2hpa(vm0->arch_vm.nworld_eptp), 48U);
+	vm0->iommu = create_iommu_domain(vm0->vm_id, hva2hpa(vm0->arch_vm.nworld_eptp), 48U);
 
 	vm0_domain = (struct iommu_domain *) vm0->iommu;
 
 	for (bus = 0U; bus < CONFIG_IOMMU_BUS_NUM; bus++) {
 		for (devfun = 0U; devfun <= 255U; devfun++) {
-			add_iommu_device(vm0_domain, 0U,
-				(uint8_t)bus, (uint8_t)devfun);
+			add_iommu_device(vm0_domain, 0U, (uint8_t)bus, (uint8_t)devfun);
 		}
 	}
 	cache_flush_invalidate_all();

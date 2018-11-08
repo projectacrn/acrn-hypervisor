@@ -502,8 +502,7 @@ struct iommu_domain;
  * @pre domain != NULL
  *
  */
-int assign_iommu_device(struct iommu_domain *domain,
-	uint8_t bus, uint8_t devfun);
+int assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun);
 
 /**
  * @brief Unassign a device specified by bus & devfun from a iommu domain .
@@ -520,8 +519,7 @@ int assign_iommu_device(struct iommu_domain *domain,
  * @pre domain != NULL
  *
  */
-int unassign_iommu_device(const struct iommu_domain *domain,
-	uint8_t bus, uint8_t devfun);
+int unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun);
 
 /**
  * @brief Create a iommu domain for a VM specified by vm_id.
@@ -539,8 +537,7 @@ int unassign_iommu_device(const struct iommu_domain *domain,
  * @pre translation_table != 0
  *
  */
-struct iommu_domain *create_iommu_domain(uint16_t vm_id,
-	uint64_t translation_table, uint32_t addr_width);
+struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_table, uint32_t addr_width);
 
 /**
  * @brief Destroy the specific iommu domain.
