@@ -751,23 +751,19 @@ static int dmar_setup_interrupt(struct dmar_drhd_rt *dmar_unit)
 	uint32_t vector;
 	int32_t retval;
 
-	if (dmar_unit->dmar_irq != IRQ_INVALID) {
-		dev_dbg(ACRN_DBG_IOMMU, "%s: irq already setup", __func__);
-		return 0;
-	}
+	if (dmar_unit->dmar_irq == IRQ_INVALID) {
+		retval = request_irq(IRQ_INVALID, dmar_fault_handler, dmar_unit, IRQF_NONE);
 
-	retval = request_irq(IRQ_INVALID, dmar_fault_handler, dmar_unit, IRQF_NONE);
-
-	if (retval < 0 ) {
-		pr_err("%s: fail to setup interrupt", __func__);
-		return retval;
-	} else {
-		dmar_unit->dmar_irq = (uint32_t)retval;
+		if (retval < 0 ) {
+			pr_err("%s: fail to setup interrupt", __func__);
+			return retval;
+		} else {
+			dmar_unit->dmar_irq = (uint32_t)retval;
+		}
 	}
 
 	vector = irq_to_vector(dmar_unit->dmar_irq);
-
-	dev_dbg(ACRN_DBG_IOMMU, "alloc irq#%d vector#%d for dmar_unit", dmar_unit->dmar_irq, vector);
+	dev_dbg(ACRN_DBG_IOMMU, "irq#%d vector#%d for dmar_unit", dmar_unit->dmar_irq, vector);
 
 	dmar_fault_msi_write(dmar_unit, vector);
 	dmar_fault_event_unmask(dmar_unit);
@@ -801,32 +797,23 @@ static void dmar_suspend(struct dmar_drhd_rt *dmar_unit)
 	dmar_invalid_context_cache_global(dmar_unit);
 	dmar_invalid_iotlb_global(dmar_unit);
 
+	dmar_disable(dmar_unit);
+
 	/* save IOMMU fault register state */
 	for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++) {
 		dmar_unit->fault_state[i] =  iommu_read32(dmar_unit, DMAR_FECTL_REG + (i * IOMMU_FAULT_REGISTER_SIZE));
 	}
-	/* disable translation */
-	dmar_disable_translation(dmar_unit);
 }
 
 static void dmar_resume(struct dmar_drhd_rt *dmar_unit)
 {
 	uint32_t i;
 
-	/* set root table */
-	dmar_set_root_table(dmar_unit);
-
-	/* flush */
-	dmar_write_buffer_flush(dmar_unit);
-	dmar_invalid_context_cache_global(dmar_unit);
-	dmar_invalid_iotlb_global(dmar_unit);
-
 	/* restore IOMMU fault register state */
 	for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++) {
 		iommu_write32(dmar_unit, DMAR_FECTL_REG + (i * IOMMU_FAULT_REGISTER_SIZE), dmar_unit->fault_state[i]);
 	}
-	/* enable translation */
-	dmar_enable_translation(dmar_unit);
+	dmar_enable(dmar_unit);
 }
 
 static int add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun)
