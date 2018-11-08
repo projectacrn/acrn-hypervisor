@@ -906,36 +906,33 @@ free_list:
 	return count;
 }
 
-/**
- * Find target file in specified dir.
- *
- * @param dir Where to start search.
- * @param dlen Length of dir.
- * @param target_file Target file to search.
- * @param tflen The length of target_file.
- * @param depth Descend at most depth of directories below the starting dir.
- * @param path[out] Searched file path in given dir.
- * @param limit The number of files uplayer want to get.
- *
- * @return the count of searched files on success, or -1 on error.
- */
-int find_file(const char *dir, size_t dlen, const char *target_file,
-		size_t tflen, int depth, char *path[], int limit)
+#define DIR_SUCCESS (0)
+#define DIR_ABORT (-1)
+#define DIR_ERROR (-2)
+static int dir_recursive(const char *path, size_t plen, int depth,
+			int fn(const char *pdir, struct dirent *, void *arg),
+			void *arg)
 {
 	int wdepth = 0;
-	int found = 0;
+	int ret = DIR_SUCCESS;
 	char wdir[PATH_MAX];
 	DIR **dp;
 
-	if (!dir || !target_file || !tflen || !path || limit <= 0)
-		return -1;
-	if (dlen >= PATH_MAX)
-		return -1;
-	*(char *)mempcpy(wdir, dir, dlen) = '\0';
+	if (!path)
+		return DIR_ERROR;
+	if (plen >= PATH_MAX)
+		return DIR_ERROR;
+	if (depth < -1)
+		return DIR_ERROR;
+
+	if (depth == -1)
+		depth = 1024;
+
+	*(char *)mempcpy(wdir, path, plen) = '\0';
 	dp = calloc(depth + 1, sizeof(DIR *));
 	if (!dp) {
 		LOGE("out of memory\n");
-		return -1;
+		return DIR_ERROR;
 	}
 
 	while (wdepth >= 0) {
@@ -947,6 +944,7 @@ int find_file(const char *dir, size_t dlen, const char *target_file,
 			if (!dp[wdepth]) {
 				LOGE("failed to opendir (%s), error (%s)\n",
 				     wdir, strerror(errno));
+				ret = DIR_ERROR;
 				goto fail_open;
 			}
 		}
@@ -956,15 +954,11 @@ int find_file(const char *dir, size_t dlen, const char *target_file,
 			    !strcmp(dirp->d_name, ".."))
 				continue;
 
-			if (!strcmp(dirp->d_name, target_file)) {
-				if (asprintf(&path[found], "%s/%s", wdir,
-				    dirp->d_name) == -1) {
-					LOGE("out of memory\n");
-					goto fail_read;
-				}
-				if (++found == limit)
-					goto end;
-			}
+			ret = fn(wdir, dirp, arg);
+			if (ret == DIR_ABORT)
+				goto end;
+			if (ret == DIR_ERROR)
+				goto fail_read;
 
 			if (dirp->d_type == DT_DIR && wdepth < depth) {
 				/* search in subdir */
@@ -990,6 +984,7 @@ int find_file(const char *dir, size_t dlen, const char *target_file,
 			} else {
 				LOGE("failed to readdir, (%s)\n",
 				     strerror(errno));
+				ret = DIR_ERROR;
 				goto fail_read;
 			}
 		}
@@ -998,7 +993,7 @@ end:
 	while (wdepth >= 0)
 		closedir(dp[wdepth--]);
 	free(dp);
-	return found;
+	return ret;
 
 fail_read:
 	LOGE("failed to search in dir %s\n", wdir);
@@ -1006,10 +1001,110 @@ fail_read:
 fail_open:
 	while (wdepth)
 		closedir(dp[--wdepth]);
-	while (found)
-		free(path[--found]);
 	free(dp);
+	return ret;
+
+}
+
+struct find_file_data {
+	const char *target;
+	size_t tlen;
+	int limit;
+	char **path;
+	int found;
+};
+
+static int _get_file_path(const char *pdir, struct dirent *dirp, void *arg)
+{
+	struct find_file_data *d = (struct find_file_data *)arg;
+
+	if (!strcmp(dirp->d_name, d->target)) {
+		if (asprintf(&d->path[d->found], "%s/%s", pdir,
+		    dirp->d_name) == -1) {
+			LOGE("out of memory\n");
+			return DIR_ERROR;
+		}
+		if (++(d->found) == d->limit)
+			return DIR_ABORT;
+	}
+
+	return DIR_SUCCESS;
+}
+
+/**
+ * Find target file in specified dir.
+ *
+ * @param dir Where to start search.
+ * @param dlen Length of dir.
+ * @param target_file Target file to search.
+ * @param tflen The length of target_file.
+ * @param depth Descend at most depth of directories below the starting dir.
+ * @param path[out] Searched file path in given dir.
+ * @param limit The number of files uplayer want to get.
+ *
+ * @return the count of searched files on success, or -1 on error.
+ */
+int find_file(const char *dir, size_t dlen, const char *target_file,
+		size_t tflen, int depth, char *path[], int limit)
+{
+	int res;
+	struct find_file_data data = {
+		.target = target_file,
+		.tlen = tflen,
+		.limit = limit,
+		.path = path,
+		.found = 0,
+	};
+
+	if (!dir || !target_file || !tflen || !path || limit <= 0)
+		return -1;
+
+	res = dir_recursive(dir, dlen, depth, _get_file_path, (void *)&data);
+	if (res == DIR_ABORT || res == DIR_SUCCESS)
+		return data.found;
+
+	if (res == DIR_ERROR) {
+		while (data.found)
+			free(path[--data.found]);
+	}
 	return -1;
+}
+
+static int _count_file_size(const char *pdir, struct dirent *dirp, void *arg)
+{
+	char file[PATH_MAX];
+	int res;
+	ssize_t fsize;
+
+	if (dirp->d_type != DT_REG && dirp->d_type != DT_DIR)
+		return DIR_SUCCESS;
+
+	res = snprintf(file, sizeof(file), "%s/%s", pdir, dirp->d_name);
+	if (s_not_expect(res, sizeof(file)))
+		return DIR_ERROR;
+
+	fsize = get_file_size(file);
+	if (fsize < 0)
+		return DIR_ERROR;
+
+	*(size_t *)arg += fsize;
+
+	return DIR_SUCCESS;
+}
+
+int dir_size(const char *dir, size_t dlen, size_t *size)
+{
+	if (!dir || !dlen || !size)
+		return -1;
+
+	*size = 0;
+	if (dir_recursive(dir, dlen, -1, _count_file_size,
+			  (void *)size) != DIR_SUCCESS) {
+		LOGE("failed to recursive dir (%s)\n", dir);
+		return -1;
+	}
+
+	return 0;
 }
 
 int read_file(const char *path, unsigned long *size, void **data)

@@ -123,11 +123,14 @@ struct sender_t {
 	size_t		maxlines_len;
 	const char	*spacequota;
 	size_t		spacequota_len;
+	const char	*foldersize;
+	size_t		foldersize_len;
 	struct uptime_t *uptime;
 
 	void (*send)(struct event_t *);
 	char		*log_vmrecordid;
 	int		sw_updated; /* each sender has their own record */
+	int		suspending; /* drop all events while suspending */
 };
 
 struct conf_t {
