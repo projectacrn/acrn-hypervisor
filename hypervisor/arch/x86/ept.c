@@ -45,7 +45,7 @@ uint64_t local_gpa2hpa(struct acrn_vm *vm, uint64_t gpa, uint32_t *size)
 		pr_err("VM %d GPA2HPA: failed for gpa 0x%llx",
 				vm->vm_id, gpa);
 	}
-	/** 
+	/**
 	 * If specified parameter size is not NULL and
 	 * the HPA of parameter gpa is found, pg_size shall
 	 * be returned through parameter size.
@@ -211,6 +211,10 @@ void ept_mr_modify(struct acrn_vm *vm, uint64_t *pml4_page,
 	uint16_t i;
 
 	dev_dbg(ACRN_DBG_EPT, "%s,vm[%d] gpa 0x%llx size 0x%llx\n", __func__, vm->vm_id, gpa, size);
+
+	if ((prot_set & EPT_MT_MASK) != EPT_UNCACHED) {
+		prot_set |= EPT_SNOOP_CTRL;
+	}
 
 	mmu_modify_or_del(pml4_page, gpa, size, prot_set, prot_clr, &vm->arch_vm.ept_mem_ops, MR_MODIFY);
 
