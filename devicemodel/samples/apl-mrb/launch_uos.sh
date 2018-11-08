@@ -6,7 +6,7 @@ kernel_version=$(uname -r | awk -F. '{ printf("%d.%d", $1,$2) }')
 ipu_passthrough=0
 
 # Check the device file of /dev/vbs_ipu to determine the IPU mode
-if [ ! -f "/dev/vbs_ipu" ]; then
+if [ ! -e "/dev/vbs_ipu" ]; then
 ipu_passthrough=1
 fi
 
