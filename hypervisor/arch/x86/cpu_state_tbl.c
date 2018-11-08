@@ -64,6 +64,15 @@ static const struct cpu_px_data px_j3455[] = {
 	{0x320UL, 0UL, 0xAUL, 0xAUL, 0x0800UL, 0x0800UL}  /* P8 */
 };
 
+/* The table includes cpu px info of Intel N3350 SoC */
+static const struct cpu_px_data px_n3350[] = {
+	{0x44DUL, 0UL, 0xAUL, 0xAUL, 0x1800UL, 0x1800UL}, /* P0 */
+	{0x44CUL, 0UL, 0xAUL, 0xAUL, 0x0B00UL, 0x0B00UL}, /* P1 */
+	{0x3E8UL, 0UL, 0xAUL, 0xAUL, 0x0A00UL, 0x0A00UL}, /* P2 */
+	{0x384UL, 0UL, 0xAUL, 0xAUL, 0x0900UL, 0x0900UL}, /* P3 */
+	{0x320UL, 0UL, 0xAUL, 0xAUL, 0x0800UL, 0x0800UL}  /* P4 */
+};
+
 /* The table includes cpu cx info of Intel J3455 SoC */
 static const struct cpu_cx_data cx_j3455[] = {
 	{{SPACE_FFixedHW, 0x1U, 0x2U, 0x1U, 0x01UL}, 0x1U, 0x1U, 0x3E8UL}, /* C1 */
@@ -86,6 +95,10 @@ static const struct cpu_state_table {
 	{"Intel(R) Celeron(R) CPU J3455 @ 1.50GHz",
 		{(uint8_t)ARRAY_SIZE(px_j3455), px_j3455,
 		 (uint8_t)ARRAY_SIZE(cx_j3455), cx_j3455}
+	},
+	{"Intel(R) Celeron(R) CPU N3350 @ 1.10GHz",
+		{(uint8_t)ARRAY_SIZE(px_n3350), px_n3350,
+		 (uint8_t)ARRAY_SIZE(cx_a3960), cx_a3960} /* Cx is same as A3960 */
 	}
 };
 
