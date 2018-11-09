@@ -63,14 +63,14 @@ void (*io_write_fn_t)(struct acrn_vm *vm, uint16_t port, size_t size, uint32_t v
 struct vm_io_handler_desc {
 
 	/**
-	 * @brief The base address of the IO range for this description.
+	 * @brief The base port number of the IO range for this description.
 	 */
-	uint16_t addr;
+	uint16_t port_start;
 
 	/**
-	 * @brief The number of bytes covered by this description.
+	 * @brief The last port number of the IO range for this description (non-inclusive).
 	 */
-	size_t len;
+	uint16_t port_end;
 
 	/**
 	 * @brief A pointer to the "read" function.
