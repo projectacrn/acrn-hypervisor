@@ -198,9 +198,8 @@ static void update_trampoline_code_refs(uint64_t dest_pa)
 	*(uint64_t *)(ptr + 2) += dest_pa;
 
 	/* update trampoline jump pointer with relocated offset */
-	ptr = hpa2hva(dest_pa +
-			trampoline_relo_addr(&trampoline_start64_fixup));
-	*(uint32_t *)ptr += dest_pa;
+	ptr = hpa2hva(dest_pa + trampoline_relo_addr(&trampoline_start64_fixup));
+	*(uint32_t *)ptr += (uint32_t)dest_pa;
 
 	/* update trampoline's main entry pointer */
 	ptr = hpa2hva(dest_pa + trampoline_relo_addr(main_entry));

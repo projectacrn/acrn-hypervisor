@@ -125,7 +125,7 @@ void init_mtrr(struct acrn_vcpu *vcpu)
 	}
 }
 
-static uint32_t update_ept(struct acrn_vm *vm, uint64_t start,
+static void update_ept(struct acrn_vm *vm, uint64_t start,
 	uint64_t size, uint8_t type)
 {
 	uint64_t attr;
@@ -149,9 +149,7 @@ static uint32_t update_ept(struct acrn_vm *vm, uint64_t start,
 		break;
 	}
 
-	ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-			start, size, attr, EPT_MT_MASK);
-	return attr;
+	ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp, start, size, attr, EPT_MT_MASK);
 }
 
 static void update_ept_mem_type(const struct acrn_vcpu *vcpu)
@@ -166,8 +164,7 @@ static void update_ept_mem_type(const struct acrn_vcpu *vcpu)
 	 * - when def_type.FE is clear, MTRRdefType.type is applied
 	 */
 	if (!is_mtrr_enabled(vcpu) || !is_fixed_range_mtrr_enabled(vcpu)) {
-		(void)update_ept(vcpu->vm, 0U, MAX_FIXED_RANGE_ADDR,
-			get_default_memory_type(vcpu));
+		update_ept(vcpu->vm, 0U, MAX_FIXED_RANGE_ADDR, get_default_memory_type(vcpu));
 		return;
 	}
 
@@ -182,14 +179,14 @@ static void update_ept_mem_type(const struct acrn_vcpu *vcpu)
 			if (type == vcpu->mtrr.fixed_range[i].type[j]) {
 				size += get_subrange_size_of_fixed_mtrr(i);
 			} else {
-			  (void)update_ept(vcpu->vm, start, size, type);
+				update_ept(vcpu->vm, start, size, type);
 				type = vcpu->mtrr.fixed_range[i].type[j];
 				start = get_subrange_start_of_fixed_mtrr(i, j);
 				size = get_subrange_size_of_fixed_mtrr(i);
 			}
 		}
 
-		(void)update_ept(vcpu->vm, start, size, type);
+		update_ept(vcpu->vm, start, size, type);
 	}
 }
 

@@ -28,9 +28,9 @@
 
 #if defined(HV_DEBUG)
 
-extern uint32_t console_loglevel;
-extern uint32_t mem_loglevel;
-extern uint32_t npk_loglevel;
+extern uint16_t console_loglevel;
+extern uint16_t mem_loglevel;
+extern uint16_t npk_loglevel;
 void init_logmsg(uint32_t flags);
 void print_logmsg_buffer(uint16_t pcpu_id);
 void do_logmsg(uint32_t severity, const char *fmt, ...);

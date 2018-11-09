@@ -191,7 +191,7 @@ int rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	uint64_t v = 0UL;
 
 	/* Read the msr value */
-	msr = vcpu_get_gpreg(vcpu, CPU_REG_RCX);
+	msr = (uint32_t)vcpu_get_gpreg(vcpu, CPU_REG_RCX);
 
 	/* Do the required processing for each msr case */
 	switch (msr) {

@@ -129,9 +129,9 @@ static struct shell_cmd shell_cmds[] = {
 };
 
 /* The initial log level*/
-uint32_t console_loglevel = CONFIG_CONSOLE_LOGLEVEL_DEFAULT;
-uint32_t mem_loglevel = CONFIG_MEM_LOGLEVEL_DEFAULT;
-uint32_t npk_loglevel = CONFIG_NPK_LOGLEVEL_DEFAULT;
+uint16_t console_loglevel = CONFIG_CONSOLE_LOGLEVEL_DEFAULT;
+uint16_t mem_loglevel = CONFIG_MEM_LOGLEVEL_DEFAULT;
+uint16_t npk_loglevel = CONFIG_NPK_LOGLEVEL_DEFAULT;
 
 static struct shell hv_shell;
 static struct shell *p_shell = &hv_shell;
@@ -448,10 +448,10 @@ void shell_init(void)
 }
 
 #define SHELL_ROWS	10
-#define MAX_INDENT_LEN	16
+#define MAX_INDENT_LEN	16U
 static int shell_cmd_help(__unused int argc, __unused char **argv)
 {
-	int spaces;
+	uint16_t spaces;
 	struct shell_cmd *p_cmd = NULL;
 	char space_buf[MAX_INDENT_LEN + 1];
 
@@ -497,8 +497,7 @@ static int shell_cmd_help(__unused int argc, __unused char **argv)
 			shell_puts(p_cmd->str);
 
 			/* Calculate spaces needed for alignment */
-			spaces = MAX_INDENT_LEN - strnlen_s(p_cmd->str,
-					MAX_INDENT_LEN - 1);
+			spaces = MAX_INDENT_LEN - strnlen_s(p_cmd->str, MAX_INDENT_LEN - 1);
 
 			space_buf[spaces] = '\0';
 			shell_puts(space_buf);
@@ -533,23 +532,23 @@ static int shell_list_vm(__unused int argc, __unused char **argv)
 	shell_puts("\r\nVM NAME                  VM ID            VM STATE"
 		"\r\n=======                  =====            ========\r\n");
 
-	for (idx = 0; idx < CONFIG_MAX_VM_NUM; idx++) {
+	for (idx = 0U; idx < CONFIG_MAX_VM_NUM; idx++) {
 		vm = get_vm_from_vmid(idx);
 		if (vm == NULL) {
 			continue;
 		}
 		switch (vm->state) {
 		case VM_CREATED:
-			(void)strcpy_s(state, 32, "Created");
+			(void)strcpy_s(state, 32U, "Created");
 			break;
 		case VM_STARTED:
-			(void)strcpy_s(state, 32, "Started");
+			(void)strcpy_s(state, 32U, "Started");
 			break;
 		case VM_PAUSED:
-			(void)strcpy_s(state, 32, "Paused");
+			(void)strcpy_s(state, 32U, "Paused");
 			break;
 		default:
-			(void)strcpy_s(state, 32, "Unknown");
+			(void)strcpy_s(state, 32U, "Unknown");
 			break;
 		}
 		/* Create output string consisting of VM name and VM id
@@ -577,7 +576,7 @@ static int shell_list_vcpu(__unused int argc, __unused char **argv)
 	shell_puts("\r\nVM ID    PCPU ID    VCPU ID    VCPU ROLE    VCPU STATE"
 		"\r\n=====    =======    =======    =========    ==========\r\n");
 
-	for (idx = 0; idx < CONFIG_MAX_VM_NUM; idx++) {
+	for (idx = 0U; idx < CONFIG_MAX_VM_NUM; idx++) {
 		vm = get_vm_from_vmid(idx);
 		if (vm == NULL) {
 			continue;
@@ -585,19 +584,19 @@ static int shell_list_vcpu(__unused int argc, __unused char **argv)
 		foreach_vcpu(i, vm, vcpu) {
 			switch (vcpu->state) {
 			case VCPU_INIT:
-				(void)strcpy_s(state, 32, "Init");
+				(void)strcpy_s(state, 32U, "Init");
 				break;
 			case VCPU_PAUSED:
-				(void)strcpy_s(state, 32, "Paused");
+				(void)strcpy_s(state, 32U, "Paused");
 				break;
 			case VCPU_RUNNING:
-				(void)strcpy_s(state, 32, "Running");
+				(void)strcpy_s(state, 32U, "Running");
 				break;
 			case VCPU_ZOMBIE:
-				(void)strcpy_s(state, 32, "Zombie");
+				(void)strcpy_s(state, 32U, "Zombie");
 				break;
 			default:
-				(void)strcpy_s(state, 32, "Unknown");
+				(void)strcpy_s(state, 32U, "Unknown");
 			}
 			/* Create output string consisting of VM name
 			 * and VM id
@@ -672,7 +671,7 @@ out:
 	return status;
 }
 
-#define MAX_MEMDUMP_LEN		(32U*8U)
+#define MAX_MEMDUMP_LEN		(32U * 8U)
 static int shell_dumpmem(int argc, char **argv)
 {
 	uint64_t addr;
@@ -686,7 +685,7 @@ static int shell_dumpmem(int argc, char **argv)
 	}
 
 	addr = strtoul_hex(argv[1]);
-	length = atoi(argv[2]);
+	length = (uint32_t)atoi(argv[2]);
 	if (length > MAX_MEMDUMP_LEN) {
 		shell_puts("over max length, round back\r\n");
 		length = MAX_MEMDUMP_LEN;
@@ -701,16 +700,16 @@ static int shell_dumpmem(int argc, char **argv)
 	for (i = 0U; i < (length >> 5U); i++) {
 		snprintf(temp_str, MAX_STR_SIZE,
 			"=  0x%016llx  0x%016llx  0x%016llx  0x%016llx\r\n",
-			*(ptr + (i*4)), *(ptr + ((i*4)+1)),
-			*(ptr + ((i*4)+2)), *(ptr + ((i*4)+3)));
+			*(ptr + (i * 4U)), *(ptr + ((i * 4U) + 1U)),
+			*(ptr + ((i * 4U) + 2U)), *(ptr + ((i * 4U) + 3U)));
 		shell_puts(temp_str);
 	}
 
-	if ((length & 0x1fU) != 0) {
+	if ((length & 0x1fU) != 0U) {
 		snprintf(temp_str, MAX_STR_SIZE,
 			"=  0x%016llx  0x%016llx  0x%016llx 0x%016llx\r\n",
-			*(ptr + (i*4)), *(ptr + ((i*4)+1)),
-			*(ptr + ((i*4)+2)), *(ptr + ((i*4)+3)));
+			*(ptr + (i * 4U)), *(ptr + ((i * 4U) + 1U)),
+			*(ptr + ((i * 4U) + 2U)), *(ptr + ((i * 4U) + 3U)));
 		shell_puts(temp_str);
 	}
 
@@ -839,13 +838,13 @@ static int shell_loglevel(int argc, char **argv)
 
 	switch (argc) {
 	case 4:
-		npk_loglevel = atoi(argv[3]);
+		npk_loglevel = (uint16_t)atoi(argv[3]);
 		/* falls through */
 	case 3:
-		mem_loglevel = atoi(argv[2]);
+		mem_loglevel = (uint16_t)atoi(argv[2]);
 		/* falls through */
 	case 2:
-		console_loglevel = atoi(argv[1]);
+		console_loglevel = (uint16_t)atoi(argv[1]);
 		break;
 	case 1:
 		snprintf(str, MAX_STR_SIZE, "console_loglevel: %u, "
@@ -867,10 +866,10 @@ static int shell_cpuid(int argc, char **argv)
 	uint32_t eax, ebx, ecx, edx;
 
 	if (argc == 2) {
-		leaf = strtoul_hex(argv[1]);
+		leaf = (uint32_t)strtoul_hex(argv[1]);
 	} else if (argc == 3) {
-		leaf = strtoul_hex(argv[1]);
-		subleaf = strtoul_hex(argv[2]);
+		leaf = (uint32_t)strtoul_hex(argv[1]);
+		subleaf = (uint32_t)strtoul_hex(argv[2]);
 	} else {
 		shell_puts("Please enter correct cmd with "
 			"cpuid <leaf> [subleaf]\r\n");

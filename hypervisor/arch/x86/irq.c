@@ -46,7 +46,7 @@ uint32_t alloc_irq_num(uint32_t req_irq)
 	spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
 	if (irq == IRQ_INVALID) {
 		/* if no valid irq num given, find a free one */
-		irq = ffz64_ex(irq_alloc_bitmap, NR_IRQS);
+		irq = (uint32_t)ffz64_ex(irq_alloc_bitmap, NR_IRQS);
 	}
 
 	if (irq >= NR_IRQS) {
