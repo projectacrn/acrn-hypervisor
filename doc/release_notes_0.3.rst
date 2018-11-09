@@ -34,139 +34,108 @@ https://projectacrn.github.io/0.3/.  Documentation for the latest
 Version 0.3 new features
 ************************
 
-:acrn-1179	- RPMB key passing
 
-:acrn-1180	- vFastboot release version 0.9
-
-:acrn-1181	- Integrate enabling Crash OS feature as default in VSBL debug Version
-
-:acrn-1182	- vSBL to support ACPI customization
-
-:acrn-1284	- [DeviceModel]Enable NHLT table in DM for audio passthrough
-
-:acrn-1240	- [APL][IO Mediator] Enable VHOST_NET & VHOST to accelerate guest networking with virtio_net.
-
-:acrn-1364	- [APL][IO Mediator]  virtio code reshuffle
-
-:acrn-1616	- remove unused parameters for acrn-dm
-
-:acrn-1420	- Update contributing doc with Tracked-On requirement for commits
-
-:acrn-1230	- fix the %l format given to print API only print 32bit
-
-:acrn-1231	- VM loader reshuffle
-
-:acrn-1343	- Enable -Werror for ACRN hypervisor
-
-:acrn-887	- Security xD support
-
-:acrn-1672	- L1TF mitigation
-
-:acrn-1124	- MMU code reshuffle
-
-:acrn-1213	- IOC Mediator added RTC Timer feature
-
-:acrn-1401	- IOC mediator reshuffle
-
-:acrn-866	- Security Interrupt Storm Mitigation
-
-:acrn-1369	- allocate more RAM to UOS on MRB.
-
-:acrn-1711	- msix.c use MMIO read/write APIs to access MMIO registers
-
-:acrn-1328	- [APL][IO Mediator] change trace_printk to pr_debug for vhm ioctl
-
-:acrn-1329	- ioeventfd and irqfd implementation to support vhost on ACRN
-
-:acrn-1313	- [APL][IO Mediator] Remove unused netmap/vale in virtio-net
-
-:acrn-1701	- MISRA C compliance Naming Convention
-
-:acrn-878	- Virtualization HLD
-
-:acrn-1122	- Security Enable compiler and linker setting-flags to harden software
-
-:acrn-944	- CSME (and subcomponent) Sharing
-
-:acrn-946	- CS(M)E Mediator Definition
-
-:acrn-951	- Device CS(M)E support
+- :acrn-issue:`866` - Security Interrupt Storm Mitigation
+- :acrn-issue:`878` - Virtualization HLD
+- :acrn-issue:`887` - Security xD support
+- :acrn-issue:`944` - CSME (and subcomponent) Sharing
+- :acrn-issue:`946` - CS(M)E Mediator Definition
+- :acrn-issue:`951` - Device CS(M)E support
+- :acrn-issue:`1122` - Security Enable compiler and linker setting-flags to harden software
+- :acrn-issue:`1124` - MMU code reshuffle
+- :acrn-issue:`1179` - RPMB key passing
+- :acrn-issue:`1180` - vFastboot release version 0.9
+- :acrn-issue:`1181` - Integrate enabling Crash OS feature as default in VSBL debug Version
+- :acrn-issue:`1182` - vSBL to support ACPI customization
+- :acrn-issue:`1213` - IOC Mediator added RTC Timer feature
+- :acrn-issue:`1230` - fix the %l format given to print API only print 32bit
+- :acrn-issue:`1231` - VM loader reshuffle
+- :acrn-issue:`1240` - [APL][IO Mediator] Enable VHOST_NET & VHOST to accelerate guest networking with virtio_net.
+- :acrn-issue:`1284` - [DeviceModel]Enable NHLT table in DM for audio passthrough
+- :acrn-issue:`1313` - [APL][IO Mediator] Remove unused netmap/vale in virtio-net
+- :acrn-issue:`1328` - [APL][IO Mediator] change trace_printk to pr_debug for vhm ioctl
+- :acrn-issue:`1329` - ioeventfd and irqfd implementation to support vhost on ACRN
+- :acrn-issue:`1343` - Enable -Werror for ACRN hypervisor
+- :acrn-issue:`1364` - [APL][IO Mediator]  virtio code reshuffle
+- :acrn-issue:`1369` - allocate more RAM to UOS on MRB.
+- :acrn-issue:`1401` - IOC mediator reshuffle
+- :acrn-issue:`1420` - Update contributing doc with Tracked-On requirement for commits
+- :acrn-issue:`1616` - remove unused parameters for acrn-dm
+- :acrn-issue:`1672` - L1TF mitigation
+- :acrn-issue:`1701` - MISRA C compliance Naming Convention
+- :acrn-issue:`1711` - msix.c use MMIO read/write APIs to access MMIO registers
 
 Fixed Issues
 ************
 
-:acrn-issue:`1209` - specific PCI device failed to passthrough to UOS
-
-:acrn-issue:`1268` - GPU hangs when running GfxBench Car Chase in SOS and UOS.
-
-:acrn-issue:`1270` - SOS and UOS play video but don't display video animation output on monitor.
-
-:acrn-issue:`1339` - SOS failed to boot with SSD+NVMe boot devices on KBL NUC
-
-:acrn-issue:`1432` - SOS failed boot
+- :acrn-issue:`1209` - specific PCI device failed to passthrough to UOS
+- :acrn-issue:`1268` - GPU hangs when running GfxBench Car Chase in SOS and UOS.
+- :acrn-issue:`1270` - SOS and UOS play video but don't display video animation output on monitor.
+- :acrn-issue:`1339` - SOS failed to boot with SSD+NVMe boot devices on KBL NUC
+- :acrn-issue:`1432` - SOS failed boot
 
 Known Issues
 ************
 
+:acrn-issue:`677` - SSD Disk ID is not consistent between SOS/UOS
+   The SSD disk ID in the UOS is not the same as in the SOS when the SSD
+   device is passed-through to the UOS (it should be). The ID is also
+   changing after a reboot (it shouldn't). **Impact:** There is no impact
+   to functionality. **Workaround:** None. The issues will be fixed in the
+   next release.
+
+:acrn-issue:`1319` - SD card pass-through: UOS can't see SD card after UOS reboot.
+   SD card could not be found after UOS reboot in pass-through mode.
+   **Impact:** There is no SD card after UOS reboot.
+   **Workaround:** None. The issue will be fixed in the next release.
+
 :acrn-issue:`1773` - USB Mediator: Can't find all devices when multiple usb devices connected[Reproduce rate:60%]
-   After booting UOS with multiple USB devices plugged in, sometimes there 
-   are one or more devices cannot be discovered. The reproduce rate is ~60%. 
-   **Impact:** Cannot use multiple usb devices at same time. 
+   After booting UOS with multiple USB devices plugged in, sometimes there
+   are one or more devices cannot be discovered. The reproduce rate is ~60%.
+   **Impact:** Cannot use multiple usb devices at same time.
    **Workaround:** Plug-out and plug-in the unrecognized device again.
 
-:acrn-issue:`1774` - UOS can’t stop by command: acrnctl stop [vm name] in SOS
-   After launching UOS in SOS by “acrnctl start” command, UOS VM failed 
-   to be stopped by “acrnctl stop” command. 
-   **Impact:** Can’t stop UOS in SOS. 
+:acrn-issue:`1774` - UOS can't stop by command: acrnctl stop [vm name] in SOS
+   After launching UOS in SOS by "acrnctl start" command, UOS VM failed
+   to be stopped by "acrnctl stop" command.
+   **Impact:** Can't stop UOS in SOS.
    **Workaround:** None. The issue will be fixed in the next release.
 
 :acrn-issue:`1775` - [APL UP2]ACRN debugging tool - acrntrace cannot be used in SOS
-   There are no acrntrace devices “acrn_trace*” under SOS /dev. 
-   **Impact:** acrntrace cannot be used in SOS. 
+   There are no acrntrace devices "acrn_trace*" under SOS /dev.
+   **Impact:** acrntrace cannot be used in SOS.
    **Workaround:** None. The issue will be fixed in the next release.
 
 :acrn-issue:`1776` - [APL UP2]ACRN debugging tool - acrnlog cannot be used in SOS
-   There are no acrnlog devices “acrn_hvlog*” under SOS /dev. 
-   **Impact:** acrnlog cannot be used in SOS. 
+   There are no acrnlog devices "acrn_hvlog*" under SOS /dev.
+   **Impact:** acrnlog cannot be used in SOS.
    **Workaround:** None. The issue will be fixed in the next release.
 
 :acrn-issue:`1777` - After UOS plays video for several minutes, the UOS image will be stagnant
-   After UOS plays video for several minutes, the UOS image will be stagnant. 
-   **Impact:** UOS cannot play video image smoothing all the time. 
+   After UOS plays video for several minutes, the UOS image will be stagnant.
+   **Impact:** UOS cannot play video image smoothly all the time.
    **Workaround:** None. The issues will be fixed in the next release.
 
 :acrn-issue:`1779` - gfxbench cannot run in SOS&UOS
-   Failed to run gfxbench in SOS&UOS. 
-   **Impact:** Cannot run gfxbench in SOS&UOS. 
+   Failed to run gfxbench in SOS or UOS.
+   **Impact:** Cannot run gfxbench in SOS or UOS.
    **Workaround:** None. The issues will be fixed in the next release.
 
 :acrn-issue:`1780` - Some video formats cannot be played in SOS
-   There are several formats of videos cannot be played in SOS: 
-   H265_10bits, VP8, VP9, VP9_10bits, H265.720p. 
-   **Impact:** Cannot play those formats of videos in SOS. 
+   There are several formats of videos that cannot be played in SOS:
+   H265_10bits, VP8, VP9, VP9_10bits, H265.720p.
+   **Impact:** Cannot play those formats of videos in SOS.
    **Workaround:** None. The issues will be fixed in the next release.
 
 :acrn-issue:`1781` - Can not recognize the SD card in the SOS
-   The SD Card cannot be recognized in SOS. 
-   **Impact:** Cannot use SD card in SOS. 
+   The SD Card cannot be recognized in SOS.
+   **Impact:** Cannot use SD card in SOS.
    **Workaround:** None. The issues will be fixed in the next release.
 
 :acrn-issue:`1782` - UOS failed to get IP address with the pass-through network card
-   After network card is pass-through to UOS, it fails to get IP address in UOS. 
-   **Impact:** Cannot use network in UOS. 
+   After network card is pass-through to UOS, it fails to get IP address in UOS.
+   **Impact:** Cannot use network in UOS.
    **Workaround:** None. The issues will be fixed in the next release.
-
-:acrn-issue:`677` - SSD Disk ID is not consistent between SOS/UOS
-   The SSD disk ID in the UOS is not the same as in the SOS when the SSD 
-   device is passed-through to the UOS (it should be). The ID is also 
-   changing after a reboot (it shouldn't). **Impact:** There is no impact 
-   to functionality. **Workaround:** None. The issues will be fixed in the 
-   next release.
-
-:acrn-issue:`1319` - SD card pass-through: UOS can’t see SD card after UOS reboot.
-   SD card could not be found after UOS reboot in pass-through mode. 
-   **Impact:** There is no SD card after UOS reboot. 
-   **Workaround:** None. The issue will be fixed in the next release.
 
 
 .. comment
