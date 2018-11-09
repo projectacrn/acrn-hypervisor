@@ -326,6 +326,7 @@ int create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn_vcp
 	 */
 	vcpu_id = atomic_xadd16(&vm->hw.created_vcpus, 1U);
 	if (vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
+		vm->hw.created_vcpus--;
 		pr_err("%s, vcpu id is invalid!\n", __func__);
 		return -EINVAL;
 	}
