@@ -164,8 +164,7 @@ static inline uint32_t
 vlapic_build_id(const struct acrn_vlapic *vlapic)
 {
 	const struct acrn_vcpu *vcpu = vlapic->vcpu;
-	uint8_t vlapic_id;
-	uint32_t lapic_regs_id;
+	uint32_t vlapic_id, lapic_regs_id;
 
 #ifdef CONFIG_PARTITION_MODE
 	/*
@@ -179,14 +178,14 @@ vlapic_build_id(const struct acrn_vlapic *vlapic)
 		/* Get APIC ID sequence format from cpu_storage */
 		vlapic_id = per_cpu(lapic_id, vcpu->vcpu_id);
 	} else {
-		vlapic_id = (uint8_t)vcpu->vcpu_id;
+		vlapic_id = (uint32_t)vcpu->vcpu_id;
 	}
 #endif
 
 	if (is_x2apic_enabled(vlapic)) {
 		lapic_regs_id = vlapic_id;
 	} else {
-		lapic_regs_id = (uint32_t)vlapic_id << APIC_ID_SHIFT;
+		lapic_regs_id = vlapic_id << APIC_ID_SHIFT;
 	}
 
 	dev_dbg(ACRN_DBG_LAPIC, "vlapic APIC PAGE ID : 0x%08x", lapic_regs_id);

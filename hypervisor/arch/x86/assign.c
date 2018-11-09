@@ -598,7 +598,7 @@ static void activate_physical_ioapic(struct acrn_vm *vm,
 
 	/* build physical IOAPIC RTE */
 	rte = ptdev_build_physical_rte(vm, entry);
-	intr_mask = (rte.full & IOAPIC_RTE_INTMASK);
+	intr_mask = (uint32_t)(rte.full & IOAPIC_RTE_INTMASK);
 
 	/* update irq trigger mode according to info in guest */
 	if ((rte.full & IOAPIC_RTE_TRGRMOD) == IOAPIC_RTE_TRGRLVL) {

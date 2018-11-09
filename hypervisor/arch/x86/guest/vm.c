@@ -242,7 +242,7 @@ int start_vm(struct acrn_vm *vm)
  */
 int reset_vm(struct acrn_vm *vm)
 {
-	int i;
+	uint16_t i;
 	struct acrn_vcpu *vcpu = NULL;
 
 	if (vm->state != VM_PAUSED) {

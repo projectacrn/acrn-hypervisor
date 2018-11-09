@@ -2213,7 +2213,7 @@ static int instr_check_gva(struct acrn_vcpu *vcpu, struct instr_emul_ctxt *emul_
 		segbase = desc.base;
 	}
 
-	gva = segbase + base + vie->scale * idx + vie->displacement;
+	gva = segbase + base + (uint64_t)vie->scale * idx + (uint64_t)vie->displacement;
 
 	if (vie_canonical_check(cpu_mode, gva) != 0) {
 		if (seg == CPU_REG_SS) {

@@ -39,7 +39,7 @@ bool is_hypercall_from_ring0(void)
 int32_t hcall_sos_offline_cpu(struct acrn_vm *vm, uint64_t lapicid)
 {
 	struct acrn_vcpu *vcpu;
-	int i;
+	uint16_t i;
 
 	pr_info("sos offline cpu with lapicid %lld", lapicid);
 
@@ -1173,7 +1173,7 @@ int32_t hcall_set_callback_vector(const struct acrn_vm *vm, uint64_t param)
 		return -EINVAL;
 	}
 
-	acrn_vhm_vector = param;
+	acrn_vhm_vector = (uint32_t)param;
 
 	return 0;
 }

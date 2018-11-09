@@ -37,7 +37,7 @@
  */
 
 enum {
-	ACRN_TRACE,
+	ACRN_TRACE = 0U,
 	ACRN_HVLOG,
 	ACRN_SEP,
 	ACRN_SOCWATCH,
@@ -51,7 +51,8 @@ struct shared_buf {
 	uint32_t ele_size;	/* sizeof of elements */
 	uint32_t head;		/* offset from base, to read */
 	uint32_t tail;		/* offset from base, to write */
-	uint64_t flags;
+	uint32_t flags;
+	uint32_t reserved;
 	uint32_t overrun_cnt;	/* count of overrun */
 	uint32_t size;		/* ele_num * ele_size */
 	uint32_t padding[6];
@@ -59,17 +60,17 @@ struct shared_buf {
 
 #ifdef HV_DEBUG
 
-static inline void sbuf_clear_flags(struct shared_buf *sbuf, uint64_t flags)
+static inline void sbuf_clear_flags(struct shared_buf *sbuf, uint32_t flags)
 {
 	sbuf->flags &= ~flags;
 }
 
-static inline void sbuf_set_flags(struct shared_buf *sbuf, uint64_t flags)
+static inline void sbuf_set_flags(struct shared_buf *sbuf, uint32_t flags)
 {
 	sbuf->flags = flags;
 }
 
-static inline void sbuf_add_flags(struct shared_buf *sbuf, uint64_t flags)
+static inline void sbuf_add_flags(struct shared_buf *sbuf, uint32_t flags)
 {
 	sbuf->flags |= flags;
 }
@@ -91,19 +92,19 @@ uint32_t sbuf_next_ptr(uint32_t pos, uint32_t span, uint32_t scope);
 
 static inline void sbuf_clear_flags(
 		__unused struct shared_buf *sbuf,
-		__unused uint64_t flags)
+		__unused uint32_t flags)
 {
 }
 
 static inline void sbuf_set_flags(
 		__unused struct shared_buf *sbuf,
-		__unused uint64_t flags)
+		__unused uint32_t flags)
 {
 }
 
 static inline void sbuf_add_flags(
 		__unused struct shared_buf *sbuf,
-		__unused uint64_t flags)
+		__unused uint32_t flags)
 {
 }
 
