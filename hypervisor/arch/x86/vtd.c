@@ -152,7 +152,7 @@ bool iommu_snoop_supported(struct acrn_vm *vm)
 }
 
 static struct dmar_drhd_rt dmar_drhd_units[CONFIG_MAX_IOMMU_NUM];
-
+static bool iommu_page_walk_coherent = true;
 static struct iommu_domain *vm0_domain;
 
 /* Domain id 0 is reserved in some cases per VT-d */
@@ -422,6 +422,10 @@ static int dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 	if ((iommu_cap_super_page_val(dmar_unit->cap) & 0x2U) == 0U) {
 		pr_fatal("%s: dmar uint doesn't support 1GB page!\n", __func__);
 		return -ENODEV;
+	}
+
+	if ((iommu_ecap_c(dmar_unit->ecap) == 0U) && (dmar_unit->drhd->ignore != 0U)) {
+		iommu_page_walk_coherent = false;
 	}
 
 	/* when the hardware support snoop control,
@@ -771,12 +775,17 @@ static int dmar_setup_interrupt(struct dmar_drhd_rt *dmar_unit)
 	return 0;
 }
 
-static void dmar_enable(struct dmar_drhd_rt *dmar_unit)
+static void dmar_prepare(struct dmar_drhd_rt *dmar_unit)
 {
 	dev_dbg(ACRN_DBG_IOMMU, "enable dmar uint [0x%x]", dmar_unit->drhd->reg_base_addr);
 	dmar_setup_interrupt(dmar_unit);
-	dmar_write_buffer_flush(dmar_unit);
 	dmar_set_root_table(dmar_unit);
+}
+
+static void dmar_enable(struct dmar_drhd_rt *dmar_unit)
+{
+	dev_dbg(ACRN_DBG_IOMMU, "enable dmar uint [0x%x]", dmar_unit->drhd->reg_base_addr);
+	dmar_write_buffer_flush(dmar_unit);
 	dmar_invalid_context_cache_global(dmar_unit);
 	dmar_invalid_iotlb_global(dmar_unit);
 	dmar_enable_translation(dmar_unit);
@@ -813,6 +822,7 @@ static void dmar_resume(struct dmar_drhd_rt *dmar_unit)
 	for (i = 0U; i < IOMMU_FAULT_REGISTER_STATE_NUM; i++) {
 		iommu_write32(dmar_unit, DMAR_FECTL_REG + (i * IOMMU_FAULT_REGISTER_SIZE), dmar_unit->fault_state[i]);
 	}
+	dmar_prepare(dmar_unit);
 	dmar_enable(dmar_unit);
 }
 
@@ -1060,6 +1070,9 @@ int unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus, uint8_
 
 void enable_iommu(void)
 {
+	if (!iommu_page_walk_coherent) {
+		cache_flush_invalidate_all();
+	}
 	do_action_for_iommus(dmar_enable);
 }
 
@@ -1087,9 +1100,7 @@ int init_iommu(void)
 		return ret;
 	}
 
-	enable_iommu();
-
-	cache_flush_invalidate_all();
+	do_action_for_iommus(dmar_prepare);
 
 	return ret;
 }
@@ -1108,5 +1119,4 @@ void init_iommu_vm0_domain(struct acrn_vm *vm0)
 			add_iommu_device(vm0_domain, 0U, (uint8_t)bus, (uint8_t)devfun);
 		}
 	}
-	cache_flush_invalidate_all();
 }

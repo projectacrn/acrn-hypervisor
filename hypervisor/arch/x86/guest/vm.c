@@ -119,6 +119,8 @@ int create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 #endif
 	}
 
+	enable_iommu();
+
 	INIT_LIST_HEAD(&vm->softirq_dev_entry_list);
 	spinlock_init(&vm->softirq_dev_lock);
 	vm->intr_inject_delay_delta = 0UL;
