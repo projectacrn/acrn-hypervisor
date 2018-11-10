@@ -43,7 +43,7 @@ complete this setup.
    number of Clear Linux you are using.
 
 #. Download the compressed Clear installer image from
-   https://download.clearlinux.org/releases/261200/clear/clear-26120-installer.img.xz
+   https://download.clearlinux.org/releases/26120/clear/clear-26120-installer.img.xz
    and follow the `Clear Linux installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
    as a starting point for installing Clear Linux onto your platform.  Follow the recommended
