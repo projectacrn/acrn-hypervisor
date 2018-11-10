@@ -37,13 +37,13 @@ complete this setup.
 
 .. note::
 
-   ACRN v0.2 (and the current master branch) requires Clear Linux
-   version 25130 or newer.  If you use a newer version of Clear Linux,
+   ACRN v0.3 (and the current master branch) requires Clear Linux
+   version 26120 or newer.  If you use a newer version of Clear Linux,
    you'll need to adjust the instructions below to reference the version
    number of Clear Linux you are using.
 
 #. Download the compressed Clear installer image from
-   https://download.clearlinux.org/releases/25130/clear/clear-25130-installer.img.xz
+   https://download.clearlinux.org/releases/261200/clear/clear-26120-installer.img.xz
    and follow the `Clear Linux installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
    as a starting point for installing Clear Linux onto your platform.  Follow the recommended
@@ -65,22 +65,22 @@ complete this setup.
    .. note::
       The Clear Linux installer will automatically check for updates and install the
       latest version available on your system. If you wish to use a specific version
-      (such as 25130), you can achieve that after the installation has completed using
-      ``swupd verify --fix --picky -m 25130``
+      (such as 26120), you can achieve that after the installation has completed using
+      ``swupd verify --fix --picky -m 26120``
 
 #. If you have an older version of Clear Linux already installed
    on your hardware, use this command to upgrade Clear Linux
-   to version 25130 (or newer):
+   to version 26120 (or newer):
 
    .. code-block:: none
 
-      # swupd update -m 25130     # or newer version
+      # swupd update -m 26120     # or newer version
 
 #. Use the ``swupd bundle-add`` command and add these Clear Linux bundles:
 
    .. code-block:: none
 
-      # swupd bundle-add vim sudo network-basic service-os kernel-pk \
+      # swupd bundle-add vim sudo network-basic service-os kernel-iot-lts2018 \
           openssh-server software-defined-cockpit
 
    .. table:: Clear Linux bundles
@@ -99,8 +99,8 @@ complete this setup.
       | service-os         | Add the acrn hypervisor, the acrn devicemodel and |
       |                    | Service OS kernel                                 |
       +--------------------+---------------------------------------------------+
-      | kernel-pk          | Run the Intel "PK" kernel(product kernel source)  |
-      |                    | and enterprise-style kernel with backports        |
+      | kernel-iot-lts2018 | Run the Intel kernel"kernel-iot-lts2018"          |
+      |                    | which is enterprise-style kernel with backports   |
       +--------------------+---------------------------------------------------+
       | openssh-server     | Server-side support for secure connectivity and   |
       |                    | remote login using the SSH protocol               |
@@ -124,15 +124,14 @@ partition. Follow these steps:
 
       # ls -1 /mnt/EFI/org.clearlinux
       bootloaderx64.efi
-      kernel-org.clearlinux.native.4.18.9-635
-      kernel-org.clearlinux.pk414-sos.4.14.68-99
-      kernel-org.clearlinux.pk414-standard.4.14.68-99
+      kernel-org.clearlinux.native.4.18.16-650
+      kernel-org.clearlinux.iot-lts2018-sos.4.19.0-16
+      kernel-org.clearlinux.iot-lts2018.4.19.0-16
       loaderx64.efi
 
    .. note::
       The Clear Linux project releases updates often, sometimes
-      twice a day, so make note of the specific kernel versions (``*-sos``
-      and ``*-standard``) listed on your system,
+      twice a day, so make note of the specific kernel versions (*iot-lts2018 and *iot-lts2018-sos*) listed on your system,
       as you will need them later.
 
    .. note::
@@ -261,11 +260,11 @@ partition. Follow these steps:
    .. code-block:: console
       :emphasize-lines: 1
       :caption: ACRN Service OS Boot Menu
-
+     
       => The ACRN Service OS
-      Clear Linux OS for Intel Architecture (Clear-linux-native-4.18.9-635)
-      Clear Linux OS for Intel Architecture (Clear-linux-pk414-sos-4.14.68-99)
-      Clear Linux OS for Intel Architecture (Clear-linux-pk414-standard-4.14.68-99)
+      Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-4.19.0-16)
+      Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-sos-4.19.0-16)
+      Clear Linux OS for Intel Architecture (Clear-linux-native.4.18.16-650)
       EFI Default Loader
       Reboot Into Firmware Interface
 
@@ -310,12 +309,12 @@ Set up Reference UOS
 ====================
 
 #. On your platform, download the pre-built reference Clear Linux UOS
-   image version 25130 (or newer) into your (root) home directory:
+   image version 26120 (or newer) into your (root) home directory:
 
    .. code-block:: none
 
       # cd ~
-      # curl -O https://download.clearlinux.org/releases/25130/clear/clear-25130-kvm.img.xz
+      # curl -O https://download.clearlinux.org/releases/26120/clear/clear-26120-kvm.img.xz
 
    .. note::
       In case you want to use or try out a newer version of Clear Linux as the UOS, you can
@@ -326,7 +325,7 @@ Set up Reference UOS
 
    .. code-block:: none
 
-      # unxz clear-25130-kvm.img.xz
+      # unxz clear-26120-kvm.img.xz
 
 #. Deploy the UOS kernel modules to UOS virtual disk image (note: you'll need to use
    the same **standard** image version number noted in step 1 above):
@@ -335,7 +334,7 @@ Set up Reference UOS
 
       # losetup -f -P --show /root/clear-25130-kvm.img
       # mount /dev/loop0p3 /mnt
-      # cp -r /usr/lib/modules/4.14.68-99.pk414-standard /mnt/lib/modules/
+      # cp -r /usr/lib/modules/4.19.0-16.iot-lts2018 /mnt/lib/modules/
       # umount /mnt
       # sync
 
