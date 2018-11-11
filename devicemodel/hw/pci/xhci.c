@@ -1262,8 +1262,15 @@ pci_xhci_portregs_write(struct pci_xhci_vdev *xdev,
 		case 3: /* U3 */
 			if (oldpls != newpls) {
 				p->portsc &= ~XHCI_PS_PLS_MASK;
-				p->portsc |= XHCI_PS_PLS_SET(newpls) |
-					     XHCI_PS_PLC;
+				p->portsc |= XHCI_PS_PLS_SET(newpls);
+
+				/*
+				 * TODO:
+				 * Should check if this is exactly
+				 * consistent with xHCI spec.
+				 */
+				if (newpls == 0)
+					p->portsc |= XHCI_PS_PLC;
 
 				if (oldpls != 0 && newpls == 0) {
 					pci_xhci_set_evtrb(&evtrb, port,
