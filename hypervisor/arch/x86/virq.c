@@ -372,7 +372,6 @@ int32_t external_interrupt_vmexit_handler(struct acrn_vcpu *vcpu)
 #else
 		dispatch_interrupt(&ctx);
 #endif
-
 		vcpu_retain_rip(vcpu);
 
 		TRACE_2L(TRACE_VMEXIT_EXTERNAL_INTERRUPT, ctx.vector, 0UL);

@@ -20,11 +20,13 @@ void vcpu_thread(struct sched_object *obj)
 			init_vmcs(vcpu);
 		}
 
-		/* handle pending softirq when irq enable*/
-		do_softirq();
-		CPU_IRQ_DISABLE();
-		/* handle risk softirq when disabling irq*/
-		do_softirq();
+		if (!is_lapic_pt(vcpu->vm)) {
+			/* handle pending softirq when irq enable*/
+			do_softirq();
+			CPU_IRQ_DISABLE();
+			/* handle risk softirq when disabling irq*/
+			do_softirq();
+		}
 
 		/* Check and process pending requests(including interrupt) */
 		ret = acrn_handle_pending_request(vcpu);
@@ -55,7 +57,9 @@ void vcpu_thread(struct sched_object *obj)
 
 		profiling_pre_vmexit_handler(vcpu);
 
-		CPU_IRQ_ENABLE();
+		if (!is_lapic_pt(vcpu->vm)) {
+			CPU_IRQ_ENABLE();
+		}
 		/* Dispatch handler */
 		ret = vmexit_handler(vcpu);
 		if (ret < 0) {

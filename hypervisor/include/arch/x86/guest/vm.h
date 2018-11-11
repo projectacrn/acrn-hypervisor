@@ -176,6 +176,11 @@ struct vpci_vdev_array {
 #define MAX_BOOTARGS_SIZE	1024U
 #define MAX_CONFIG_NAME_SIZE	32U
 
+/*
+ * PRE_LAUNCHED_VM is launched by ACRN hypervisor, with LAPIC_PT;
+ * SOS_VM is launched by ACRN hypervisor, without LAPIC_PT;
+ * NORMAL_VM is launched by ACRN devicemodel, with/without LAPIC_PT depends on usecases.
+ */
 enum acrn_vm_type {
 	UNDEFINED_VM = 0,
 	PRE_LAUNCHED_VM,
@@ -330,6 +335,11 @@ static inline struct acrn_vm_config *get_vm_config(uint16_t vm_id)
 #else
 	return &vm_configs[vm_id];
 #endif
+}
+
+static inline bool is_lapic_pt(const struct acrn_vm *vm)
+{
+	return ((vm_configs[vm->vm_id].guest_flags & LAPIC_PASSTHROUGH) != 0U);
 }
 
 #endif /* VM_H_ */

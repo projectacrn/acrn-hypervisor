@@ -2013,7 +2013,6 @@ static inline  uint32_t x2apic_msr_to_regoff(uint32_t msr)
 	return (((msr - 0x800U) & 0x3FFU) << 4U);
 }
 
-#ifdef CONFIG_PARTITION_MODE
 /*
  * If x2apic is pass-thru to guests, we have to special case the following
  * 1. INIT Delivery mode
@@ -2061,7 +2060,6 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 	}
 	return 0;
 }
-#endif
 
 static int32_t vlapic_x2apic_access(struct acrn_vcpu *vcpu, uint32_t msr, bool write,
 								uint64_t *val)
@@ -2076,24 +2074,32 @@ static int32_t vlapic_x2apic_access(struct acrn_vcpu *vcpu, uint32_t msr, bool w
 	 */
 	vlapic = vcpu_vlapic(vcpu);
 	if (is_x2apic_enabled(vlapic)) {
-#ifdef CONFIG_PARTITION_MODE
-		struct acrn_vm_config *vm_config = get_vm_config(vcpu->vm->vm_id);
-
-		if((vm_config->guest_flags & LAPIC_PASSTHROUGH) != 0U ) {
-			if (msr == MSR_IA32_EXT_APIC_ICR) {
-				error = vlapic_x2apic_pt_icr_access(vcpu->vm, *val);
-			}
-			return error;
-		}
-#endif
-		offset = x2apic_msr_to_regoff(msr);
-		if (write) {
-			if (!is_x2apic_read_only_msr(msr)) {
-				error = vlapic_write(vlapic, offset, *val);
+		if (is_lapic_pt(vcpu->vm)) {
+			switch (msr) {
+				case MSR_IA32_EXT_APIC_ICR:
+					error = vlapic_x2apic_pt_icr_access(vcpu->vm, *val);
+					break;
+				case MSR_IA32_EXT_APIC_LDR:
+				case MSR_IA32_EXT_XAPICID:
+					if (!write) {
+						offset = x2apic_msr_to_regoff(msr);
+						error = vlapic_read(vlapic, offset, val);
+					}
+					break;
+				default:
+					pr_err("%s: unexpected MSR[0x%x] access with lapic_pt", __func__, msr);
+					break;
 			}
 		} else {
-			if (!is_x2apic_write_only_msr(msr)) {
-				error = vlapic_read(vlapic, offset, val);
+			offset = x2apic_msr_to_regoff(msr);
+			if (write) {
+				if (!is_x2apic_read_only_msr(msr)) {
+					error = vlapic_write(vlapic, offset, *val);
+				}
+			} else {
+				if (!is_x2apic_write_only_msr(msr)) {
+					error = vlapic_read(vlapic, offset, val);
+				}
 			}
 		}
 	}
