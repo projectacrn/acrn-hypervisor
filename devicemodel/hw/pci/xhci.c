@@ -477,6 +477,7 @@ static inline int pci_xhci_is_valid_portnum(int n);
 static int pci_xhci_parse_tablet(struct pci_xhci_vdev *xdev, char *opts);
 static int pci_xhci_parse_log_level(struct pci_xhci_vdev *xdev, char *opts);
 static int pci_xhci_parse_extcap(struct pci_xhci_vdev *xdev, char *opts);
+static int pci_xhci_convert_speed(int lspeed);
 
 static struct pci_xhci_option_elem xhci_option_table[] = {
 	{"tablet", pci_xhci_parse_tablet},
@@ -687,9 +688,9 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	struct pci_xhci_vdev *xdev;
 	struct usb_native_devinfo *di;
 	int vport;
-	int need_intr = 1;
 	int index;
 	int rc;
+	int speed;
 
 	xdev = hci_data;
 
@@ -740,11 +741,17 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 			usb_dev_path(&di->path), vport);
 
 	/* TODO: should revisit in deeper level */
-	if (vm_get_suspend_mode() != VM_SUSPEND_NONE || xhci_in_use == 0)
-		need_intr = 0;
+	if (XHCI_PS_PLS_GET(XHCI_PORTREG_PTR(xdev, vport)->portsc) ==
+			UPS_PORT_LS_U3) {
+		speed = pci_xhci_convert_speed(di->speed);
+		XHCI_PORTREG_PTR(xdev, vport)->portsc |= (XHCI_PS_CCS |
+				XHCI_PS_PP | XHCI_PS_CSC |
+				XHCI_PS_SPEED_SET(speed));
+		return 0;
+	}
 
 	/* Trigger port change event for the arriving device */
-	if (pci_xhci_connect_port(xdev, vport, di->speed, need_intr))
+	if (pci_xhci_connect_port(xdev, vport, di->speed, 1))
 		UPRINTF(LFTL, "fail to report port event\n");
 
 	return 0;
@@ -820,8 +827,10 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 	xdev->native_ports[index].state = VPORT_ASSIGNED;
 	xdev->native_ports[index].vport = 0;
 
-	/* TODO: should revisit this in deeper level */
-	if (vm_get_suspend_mode() != VM_SUSPEND_NONE) {
+	/* TODO: should revisit in deeper level */
+	if (XHCI_PS_PLS_GET(XHCI_PORTREG_PTR(xdev, vport)->portsc) ==
+			UPS_PORT_LS_U3) {
+
 		XHCI_PORTREG_PTR(xdev, vport)->portsc &= ~(XHCI_PS_CSC |
 				XHCI_PS_CCS | XHCI_PS_PED | XHCI_PS_PP);
 		edev->dev_slotstate = XHCI_ST_DISABLED;
@@ -829,6 +838,7 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 		xdev->slots[slot] = NULL;
 		pci_xhci_dev_destroy(edev);
 		need_intr = 0;
+		return 0;
 	}
 
 	UPRINTF(LDBG, "report virtual port %d status %d\r\n", vport, state);
