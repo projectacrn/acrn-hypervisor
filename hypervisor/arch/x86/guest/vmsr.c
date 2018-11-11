@@ -628,6 +628,12 @@ void update_msr_bitmap_x2apic_apicv(const struct acrn_vcpu *vcpu)
 	}
 }
 
+/*
+ * After switch to x2apic mode, most MSRs are passthrough to guest, but vlapic is still valid
+ * for virtualization of some MSRs for security consideration:
+ * - XAPICID/LDR: Read to XAPICID/LDR need to be trapped to guarantee guest always see right vlapic_id.
+ * - ICR: Write to ICR need to be trapped to avoid milicious IPI.
+ */
 void update_msr_bitmap_x2apic_passthru(const struct acrn_vcpu *vcpu)
 {
 	uint32_t msr;
@@ -638,6 +644,8 @@ void update_msr_bitmap_x2apic_passthru(const struct acrn_vcpu *vcpu)
 			msr <= MSR_IA32_EXT_APIC_SELF_IPI; msr++) {
 		enable_msr_interception(msr_bitmap, msr, INTERCEPT_DISABLE);
 	}
+	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_XAPICID, INTERCEPT_READ);
+	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_LDR, INTERCEPT_READ);
 	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_ICR, INTERCEPT_WRITE);
 	enable_msr_interception(msr_bitmap, MSR_IA32_TSC_DEADLINE, INTERCEPT_DISABLE);
 }

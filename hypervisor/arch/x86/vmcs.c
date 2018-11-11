@@ -560,23 +560,10 @@ void init_vmcs(struct acrn_vcpu *vcpu)
 	init_exit_ctrl(vcpu);
 }
 
-#ifndef CONFIG_PARTITION_MODE
 void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 {
 	uint32_t value32;
-	value32 = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS2);
-	value32 &= ~VMX_PROCBASED_CTLS2_VAPIC;
-	value32 |= VMX_PROCBASED_CTLS2_VX2APIC;
-	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS2, value32);
-	update_msr_bitmap_x2apic_apicv(vcpu);
-}
-#else
-void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
-{
-	uint32_t value32;
-	struct acrn_vm_config *vm_config = get_vm_config(vcpu->vm->vm_id);
-
-	if((vm_config->guest_flags & LAPIC_PASSTHROUGH) != 0U ) {
+	if(is_lapic_pt(vcpu->vm)) {
 		/*
 		 * Disable external interrupt exiting and irq ack
 		 * Disable posted interrupt processing
@@ -620,4 +607,3 @@ void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 		update_msr_bitmap_x2apic_apicv(vcpu);
 	}
 }
-#endif
