@@ -834,6 +834,7 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 		edev->dev_slotstate = XHCI_ST_DISABLED;
 		xdev->devices[vport] = NULL;
 		xdev->slots[slot] = NULL;
+		xdev->slot_allocated[slot] = false;
 		pci_xhci_dev_destroy(edev);
 		need_intr = 0;
 		return 0;
