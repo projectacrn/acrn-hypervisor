@@ -56,6 +56,9 @@ html: doxy content kconfig
 	-$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b html -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> doc.log 2>&1
 	$(Q)./scripts/filter-doc-log.sh doc.log
 
+singlehtml: doxy content kconfig
+	-$(Q)$(SPHINXBUILD) -t $(DOC_TAG) -b singlehtml -d $(BUILDDIR)/doctrees $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(OPTS) >> doc.log 2>&1
+	$(Q)./scripts/filter-doc-log.sh doc.log
 
 # Remove generated content (Sphinx and doxygen)
 
