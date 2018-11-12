@@ -60,7 +60,9 @@ Version 0.3 new features
 - :acrn-issue:`1369` - allocate more RAM to UOS on MRB.
 - :acrn-issue:`1401` - IOC mediator reshuffle
 - :acrn-issue:`1420` - Update contributing doc with Tracked-On requirement for commits
+- :acrn-issue:`1455` - x2apic support for acrn
 - :acrn-issue:`1616` - remove unused parameters for acrn-dm
+- :acrn-issue:`1626` - support x2APIC mode for ACRN guests
 - :acrn-issue:`1672` - L1TF mitigation
 - :acrn-issue:`1701` - MISRA C compliance Naming Convention
 - :acrn-issue:`1711` - msix.c use MMIO read/write APIs to access MMIO registers
@@ -127,15 +129,27 @@ Known Issues
    **Impact:** Cannot play those formats of videos in SOS.
    **Workaround:** None. The issues will be fixed in the next release.
 
-:acrn-issue:`1781` - Can not recognize the SD card in the SOS
-   The SD Card cannot be recognized in SOS.
-   **Impact:** Cannot use SD card in SOS.
-   **Workaround:** None. The issues will be fixed in the next release.
-
 :acrn-issue:`1782` - UOS failed to get IP address with the pass-through network card
    After network card is pass-through to UOS, it fails to get IP address in UOS.
    **Impact:** Cannot use network in UOS.
    **Workaround:** None. The issues will be fixed in the next release.
+
+:acrn-issue:`1794` - After SOS boots up, there’s no output on SOS screen
+   After SOS boots up with both “desktop” and “soft-defined-cockpit” bundles installed
+   or without any, there’s no output on SOS screen.
+   **Impact:** Cannot access SOS.
+   **Workaround:** Only install “desktop” bundle and enable&start weston in Native ClearLinux,
+   and then reboot to SOS. The issues will be fixed in the next release.
+
+:acrn-issue:`1795` - [KBL NUC] SOS fails to get IP address
+   On KBL NUC hardware platform, SOS fails to get IP address after SOS boot.
+   **Impact:** Cannot use network in SOS.
+   **Workaround:** None. The issues will be fixed in the next release.
+
+:acrn-issue:`1796` - APL NUC fails to reboot sometimes
+   After APL NUC boot to SOS, type "reboot" to reboot SOS, it fails to reboot sometimes.
+   **Impact:** Cannot reboot SOS.
+   **Workaround:** Power off and boot again. The issues will be fixed in the next release.
 
 
 .. comment
