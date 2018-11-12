@@ -118,7 +118,7 @@ Known Issues
    **Impact:** UOS cannot play video image smoothly all the time.
    **Workaround:** None. The issues will be fixed in the next release.
 
-:acrn-issue:`1779` - gfxbench cannot run in SOS&UOS
+:acrn-issue:`1779` - gfxbench cannot run in SOS or UOS
    Failed to run gfxbench in SOS or UOS.
    **Impact:** Cannot run gfxbench in SOS or UOS.
    **Workaround:** None. The issues will be fixed in the next release.
@@ -134,11 +134,11 @@ Known Issues
    **Impact:** Cannot use network in UOS.
    **Workaround:** None. The issues will be fixed in the next release.
 
-:acrn-issue:`1794` - After SOS boots up, there’s no output on SOS screen
-   After SOS boots up with both “desktop” and “soft-defined-cockpit” bundles installed
-   or without any, there’s no output on SOS screen.
+:acrn-issue:`1794` - After SOS boots up, there's no output on SOS screen
+   After SOS boots up with both "desktop" and "soft-defined-cockpit" bundles installed
+   or without any, there's no output on SOS screen.
    **Impact:** Cannot access SOS.
-   **Workaround:** Only install “desktop” bundle and enable&start weston in Native ClearLinux,
+   **Workaround:** Only install "desktop" bundle, then enable and start weston in Native Clear Linux,
    and then reboot to SOS. The issues will be fixed in the next release.
 
 :acrn-issue:`1795` - [KBL NUC] SOS fails to get IP address
@@ -193,7 +193,7 @@ release in Sep 2018 (click on the CommitID link to see details):
 - :acrn-commit:`b430b00a` hv: fix 'Expression is not Boolean'
 - :acrn-commit:`121454c4` hv: fix a minor bug of static checks
 - :acrn-commit:`0800624f` hv: vtd: use pre-defined function for bdf calculation
-- :acrn-commit:`039a1c0f` hv: pci: replace fucntion like macro with inline func
+- :acrn-commit:`039a1c0f` hv: pci: replace function like macro with inline func
 - :acrn-commit:`36aaaa1c` DM NPK: unmap the MMIO in pci_npk_deinit
 - :acrn-commit:`ef974d1a` hv:Remove atomic operation to set initial value for 'created_vcpu'
 - :acrn-commit:`0fc47b5a` hv: fix release build issue
@@ -222,8 +222,8 @@ release in Sep 2018 (click on the CommitID link to see details):
 - :acrn-commit:`e8229879` hv: use MMIO read/write APIs to access MMIO registers
 - :acrn-commit:`313941e8` tools: acrn-manager: remove unsafe api sscanf
 - :acrn-commit:`e24464a0` tools: acrnlog: remove usage of banned APIs
-- :acrn-commit:`1d96ce5f` doc: add doyxgen alias for easy reST inclusion
-- :acrn-commit:`d2d0cbc6` hv:doc:use doxyen-generated API docs in HDL for vIRQ
+- :acrn-commit:`1d96ce5f` doc: add doxygen alias for easy reST inclusion
+- :acrn-commit:`d2d0cbc6` hv:doc:use doxygen-generated API docs in HDL for vIRQ
 - :acrn-commit:`cbe03135` hv: revise interfaces description in virq
 - :acrn-commit:`f23606a4` hv: revise interfaces description in vioapic
 - :acrn-commit:`7c20cb0c` hv: revise interfaces description in vpic
@@ -305,7 +305,7 @@ release in Sep 2018 (click on the CommitID link to see details):
 - :acrn-commit:`5f41d4a8` dm: mei: check return value of vmei_host_client_to_vmei()
 - :acrn-commit:`b4fbef46` dm: mei: destroy mutex attribute on error path
 - :acrn-commit:`8abc9317` dm: mei: set addresses in the hbm disconnect reply
-- :acrn-commit:`6bb3d048` hv: remove deprecated functions declartion
+- :acrn-commit:`6bb3d048` hv: remove deprecated functions declaration
 - :acrn-commit:`a0ace725` DM USB: xHCI: fix process logic of TRB which has zero data length
 - :acrn-commit:`6266dd01` DM: correct memory allocation size for UOS
 - :acrn-commit:`ac5b46eb` doc: update rest of hypervisor HLD sections
