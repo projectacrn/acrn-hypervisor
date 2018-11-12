@@ -176,7 +176,7 @@ is set up correctly by using:
    git config --global user.name "David Developer"
    git config --global user.email "david.developer@company.com"
 
-Tracked-on
+Tracked-On
 ==========
 
 All commits must be mapped to a GitHub issue for a feature or bug. Add a
