@@ -332,7 +332,7 @@ Set up Reference UOS
 
    .. code-block:: none
 
-      # losetup -f -P --show /root/clear-25130-kvm.img
+      # losetup -f -P --show /root/clear-26120-kvm.img
       # mount /dev/loop0p3 /mnt
       # cp -r /usr/lib/modules/4.19.0-16.iot-lts2018 /mnt/lib/modules/
       # umount /mnt
@@ -353,7 +353,7 @@ Set up Reference UOS
 
    .. note::
       In case you have downloaded a different Clear Linux image than the one above
-      (``clear-25130-kvm.img.xz``), you will need to modify the Clear Linux file name
+      (``clear-26120-kvm.img.xz``), you will need to modify the Clear Linux file name
       and version number highlighted above (the ``-s 3,virtio-blk`` argument) to match
       what you have downloaded above. Likewise, you may need to adjust the kernel file
       name on the second line highlighted (check the exact name to be used using:
