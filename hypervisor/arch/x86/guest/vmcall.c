@@ -7,6 +7,10 @@
 #include <hypervisor.h>
 #include <hypercall.h>
 
+static spinlock_t vmm_hypercall_lock = {
+	.head = 0U,
+	.tail = 0U,
+};
 /*
  * Pass return value to SOS by register rax.
  * This function should always return 0 since we shouldn't
@@ -38,7 +42,9 @@ int vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 	/* Dispatch the hypercall handler */
 	switch (hypcall_id) {
 	case HC_SOS_OFFLINE_CPU:
+		spinlock_obtain(&vmm_hypercall_lock);
 		ret = hcall_sos_offline_cpu(vm, param1);
+		spinlock_release(&vmm_hypercall_lock);
 		break;
 	case HC_GET_API_VERSION:
 		ret = hcall_get_api_version(vm, param1);
@@ -50,37 +56,51 @@ int vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 		break;
 
 	case HC_CREATE_VM:
+		spinlock_obtain(&vmm_hypercall_lock);
 		ret = hcall_create_vm(vm, param1);
+		spinlock_release(&vmm_hypercall_lock);
 		break;
 
 	case HC_DESTROY_VM:
 		/* param1: vmid */
+		spinlock_obtain(&vmm_hypercall_lock);
 		ret = hcall_destroy_vm((uint16_t)param1);
+		spinlock_release(&vmm_hypercall_lock);
 		break;
 
 	case HC_START_VM:
 		/* param1: vmid */
+		spinlock_obtain(&vmm_hypercall_lock);
 		ret = hcall_start_vm((uint16_t)param1);
+		spinlock_release(&vmm_hypercall_lock);
 		break;
 
 	case HC_RESET_VM:
 		/* param1: vmid */
+		spinlock_obtain(&vmm_hypercall_lock);
 		ret = hcall_reset_vm((uint16_t)param1);
+		spinlock_release(&vmm_hypercall_lock);
 		break;
 
 	case HC_PAUSE_VM:
 		/* param1: vmid */
+		spinlock_obtain(&vmm_hypercall_lock);
 		ret = hcall_pause_vm((uint16_t)param1);
+		spinlock_release(&vmm_hypercall_lock);
 		break;
 
 	case HC_CREATE_VCPU:
 		/* param1: vmid */
+		spinlock_obtain(&vmm_hypercall_lock);
 		ret = hcall_create_vcpu(vm, (uint16_t)param1, param2);
+		spinlock_release(&vmm_hypercall_lock);
 		break;
 
 	case HC_SET_VCPU_REGS:
 		/* param1: vmid */
+		spinlock_obtain(&vmm_hypercall_lock);
 		ret = hcall_set_vcpu_regs(vm, (uint16_t)param1, param2);
+		spinlock_release(&vmm_hypercall_lock);
 		break;
 
 	case HC_SET_IRQLINE:
@@ -96,7 +116,9 @@ int vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 
 	case HC_SET_IOREQ_BUFFER:
 		/* param1: vmid */
+		spinlock_obtain(&vmm_hypercall_lock);
 		ret = hcall_set_ioreq_buffer(vm, (uint16_t)param1, param2);
+		spinlock_release(&vmm_hypercall_lock);
 		break;
 
 	case HC_NOTIFY_REQUEST_FINISH:
