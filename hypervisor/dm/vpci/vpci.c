@@ -105,7 +105,7 @@ void vpci_init(struct acrn_vm *vm)
 	struct vm_io_range pci_cfgaddr_range = {
 		.flags = IO_ATTR_RW,
 		.base = PCI_CONFIG_ADDR,
-		.len = 4U
+		.len = 1U
 	};
 
 	struct vm_io_range pci_cfgdata_range = {
@@ -123,18 +123,17 @@ void vpci_init(struct acrn_vm *vm)
 #endif
 
 	if ((vpci->ops->init != NULL) && (vpci->ops->init(vm) == 0)) {
+		/*
+		 * SOS: intercep port CF8 only.
+		 * UOS or partition mode: register handler for CF8 only and I/O requests to CF9/CFA/CFB are
+		 *      not handled by vpci.
+		 */
 		register_io_emulation_handler(vm, PCI_CFGADDR_PIO_IDX, &pci_cfgaddr_range,
 			pci_cfgaddr_io_read, pci_cfgaddr_io_write);
 
+		/* Intercept and handle I/O ports CFC -- CFF */
 		register_io_emulation_handler(vm, PCI_CFGDATA_PIO_IDX, &pci_cfgdata_range,
 			pci_cfgdata_io_read, pci_cfgdata_io_write);
-
-		/* This is a tmp solution to avoid sos reboot failure, it need pass-thru IO port CF9 for Reset Control
-		 * register.
-		 */
-		if (is_vm0(vm)) {
-			allow_guest_pio_access(vm, (uint16_t)0xCF9U, 1U);
-		}
 	}
 }
 
