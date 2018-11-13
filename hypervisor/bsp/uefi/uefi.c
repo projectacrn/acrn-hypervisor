@@ -18,17 +18,13 @@ static int efi_initialized;
 void efi_spurious_handler(int vector)
 {
 	struct acrn_vcpu* vcpu;
-	int ret;
 
 	if (get_cpu_id() != 0)
 		return;
 
 	vcpu = per_cpu(vcpu, 0);
 	if (vcpu != NULL) {
-		ret = vlapic_set_intr(vcpu, vector, 0);
-		if (ret != 0)
-			pr_err("%s vlapic set intr fail, interrupt lost\n",
-				__func__);
+		vlapic_set_intr(vcpu, vector, 0);
 	} else
 		pr_err("%s vcpu or vlapic is not ready, interrupt lost\n",
 			__func__);

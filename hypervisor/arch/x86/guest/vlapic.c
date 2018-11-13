@@ -1285,8 +1285,7 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 			target_vcpu = vcpu_from_vid(vlapic->vm, vcpu_id);
 
 			if (mode == APIC_DELMODE_FIXED) {
-				vlapic_set_intr(target_vcpu, vec,
-					LAPIC_TRIG_EDGE);
+				vlapic_set_intr(target_vcpu, vec, LAPIC_TRIG_EDGE);
 				dev_dbg(ACRN_DBG_LAPIC,
 					"vlapic sending ipi %u to vcpu_id %hu",
 					vec, vcpu_id);
@@ -1926,32 +1925,26 @@ vlapic_set_tmr_one_vec(struct acrn_vlapic *vlapic, uint32_t delmode,
 	vlapic_set_tmr(vlapic, vector, level);
 }
 
-int
+/*
+ *  @pre vcpu != NULL
+ *  @pre vector <= 255U
+ */
+void
 vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level)
 {
 	struct acrn_vlapic *vlapic;
-
-	/*
-	 * According to section "Maskable Hardware Interrupts" in Intel SDM
-	 * vectors 16 through 255 can be delivered through the local APIC.
-	 */
-	if ((vcpu == NULL) || (vector > 255U)) {
-		return -EINVAL;
-	}
 
 	vlapic = vcpu_vlapic(vcpu);
 	if (vector < 16U) {
 		vlapic_set_error(vlapic, APIC_ESR_RECEIVE_ILLEGAL_VECTOR);
 		dev_dbg(ACRN_DBG_LAPIC,
 		    "vlapic ignoring interrupt to vector %u", vector);
-		return 0;
+		return;
 	}
 
 	if (vlapic_set_intr_ready(vlapic, vector, level) != 0) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 	}
-
-	return 0;
 }
 
 /**
@@ -2061,8 +2054,7 @@ static void vlapic_timer_expired(void *data)
 
 	/* inject vcpu timer interrupt if not masked */
 	if (!vlapic_lvtt_masked(vlapic)) {
-		vlapic_intr_edge(vcpu,
-			lapic->lvt[APIC_LVT_TIMER].v & APIC_LVTT_VECTOR);
+		vlapic_intr_edge(vcpu, lapic->lvt[APIC_LVT_TIMER].v & APIC_LVTT_VECTOR);
 	}
 
 	if (!vlapic_lvtt_period(vlapic)) {
