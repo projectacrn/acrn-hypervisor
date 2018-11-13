@@ -134,7 +134,7 @@ struct iommu_domain {
 };
 
 struct context_table {
-	struct page buses[CONFIG_IOMMU_INIT_BUS_LIMIT];
+	struct page buses[CONFIG_IOMMU_BUS_NUM];
 };
 
 static struct page root_tables[CONFIG_MAX_IOMMU_NUM] __aligned(CPU_PAGE_SIZE);
@@ -1250,7 +1250,7 @@ void init_iommu_vm0_domain(struct acrn_vm *vm0)
 
 	vm0_domain = (struct iommu_domain *) vm0->iommu;
 
-	for (bus = 0U; bus <= CONFIG_IOMMU_INIT_BUS_LIMIT; bus++) {
+	for (bus = 0U; bus < CONFIG_IOMMU_BUS_NUM; bus++) {
 		for (devfun = 0U; devfun <= 255U; devfun++) {
 			add_iommu_device(vm0_domain, 0U,
 				(uint8_t)bus, (uint8_t)devfun);
