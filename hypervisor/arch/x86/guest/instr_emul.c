@@ -492,24 +492,20 @@ static int vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
 	return 0;
 }
 
-static int mmio_read(const struct acrn_vcpu *vcpu, uint64_t *rval)
+/*
+ * @pre vcpu != NULL
+ */
+static inline void vie_mmio_read(const struct acrn_vcpu *vcpu, uint64_t *rval)
 {
-	if (vcpu == NULL) {
-		return -EINVAL;
-	}
-
 	*rval = vcpu->req.reqs.mmio.value;
-	return 0;
 }
 
-static int mmio_write(struct acrn_vcpu *vcpu, uint64_t wval)
+/*
+ * @pre vcpu != NULL
+ */
+static inline void vie_mmio_write(struct acrn_vcpu *vcpu, uint64_t wval)
 {
-	if (vcpu == NULL) {
-		return -EINVAL;
-	}
-
 	vcpu->req.reqs.mmio.value = wval;
-	return 0;
 }
 
 static void vie_calc_bytereg(const struct instr_emul_vie *vie,
@@ -673,7 +669,7 @@ static int emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 	uint64_t val;
 
 	size = vie->opsize;
-	error = -EINVAL;
+	error = 0;
 	switch (vie->opcode) {
 	case 0x88U:
 	/*
@@ -683,7 +679,7 @@ static int emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 	 */
 		size = 1U;	/* override for byte operation */
 		byte = vie_read_bytereg(vcpu, vie);
-		error = mmio_write(vcpu, byte);
+		vie_mmio_write(vcpu, byte);
 		break;
 	case 0x89U:
 		/*
@@ -696,7 +692,7 @@ static int emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		reg = vie->reg;
 		val = vm_get_register(vcpu, reg);
 		val &= size2mask[size];
-		error = mmio_write(vcpu, val);
+		vie_mmio_write(vcpu, val);
 		break;
 	case 0x8AU:
 		/*
@@ -705,10 +701,8 @@ static int emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 * REX + 8A/r:	mov r8, r/m8
 		 */
 		size = 1U;	/* override for byte operation */
-		error = mmio_read(vcpu, &val);
-		if (error == 0) {
-			vie_write_bytereg(vcpu, vie, (uint8_t)val);
-		}
+		vie_mmio_read(vcpu, &val);
+		vie_write_bytereg(vcpu, vie, (uint8_t)val);
 		break;
 	case 0x8BU:
 		/*
@@ -717,11 +711,9 @@ static int emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 * 8B/r:	mov r32, r/m32
 		 * REX.W 8B/r:	mov r64, r/m64
 		 */
-		error = mmio_read(vcpu, &val);
-		if (error == 0) {
-			reg = vie->reg;
-			vie_update_register(vcpu, reg, val, size);
-		}
+		vie_mmio_read(vcpu, &val);
+		reg = vie->reg;
+		vie_update_register(vcpu, reg, val, size);
 		break;
 	case 0xA1U:
 		/*
@@ -730,11 +722,9 @@ static int emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 * A1:		mov EAX, moffs32
 		 * REX.W + A1:	mov RAX, moffs64
 		 */
-		error = mmio_read(vcpu, &val);
-		if (error == 0) {
-			reg = CPU_REG_RAX;
-			vie_update_register(vcpu, reg, val, size);
-		}
+		vie_mmio_read(vcpu, &val);
+		reg = CPU_REG_RAX;
+		vie_update_register(vcpu, reg, val, size);
 		break;
 	case 0xA3U:
 		/*
@@ -745,7 +735,7 @@ static int emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 */
 		val = vm_get_register(vcpu, CPU_REG_RAX);
 		val &= size2mask[size];
-		error = mmio_write(vcpu, val);
+		vie_mmio_write(vcpu, val);
 		break;
 	case 0xC6U:
 		/*
@@ -754,7 +744,7 @@ static int emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 * REX + C6/0	mov r/m8, imm8
 		 */
 		size = 1U;	/* override for byte operation */
-		error = mmio_write(vcpu, (uint64_t)vie->immediate);
+		vie_mmio_write(vcpu, (uint64_t)vie->immediate);
 		break;
 	case 0xC7U:
 		/*
@@ -765,7 +755,7 @@ static int emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 *		(sign-extended to 64-bits)
 		 */
 		val = (uint64_t)vie->immediate & size2mask[size];
-		error = mmio_write(vcpu, val);
+		vie_mmio_write(vcpu, val);
 		break;
 	default:
 		/*
@@ -774,6 +764,7 @@ static int emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 * Gracefully return this error code if prior case clauses have
 		 * not been met.
 		 */
+		error = -EINVAL;
 		break;
 	}
 
@@ -788,7 +779,7 @@ static int emulate_movx(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 	uint64_t val;
 
 	size = vie->opsize;
-	error = -EINVAL;
+	error = 0;
 
 	switch (vie->opcode) {
 	case 0xB6U:
@@ -802,10 +793,7 @@ static int emulate_movx(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 		 */
 
 		/* get the first operand */
-		error = mmio_read(vcpu, &val);
-		if (error != 0) {
-			break;
-		}
+		vie_mmio_read(vcpu, &val);
 
 		/* get the second operand */
 		reg = vie->reg;
@@ -824,10 +812,7 @@ static int emulate_movx(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 		 * 0F B7/r		movzx r32, r/m16
 		 * REX.W + 0F B7/r	movzx r64, r/m16
 		 */
-		error = mmio_read(vcpu, &val);
-		if (error != 0) {
-			return error;
-		}
+		vie_mmio_read(vcpu, &val);
 
 		reg = vie->reg;
 
@@ -847,10 +832,7 @@ static int emulate_movx(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 		 */
 
 		/* get the first operand */
-		error = mmio_read(vcpu, &val);
-		if (error != 0) {
-			break;
-		}
+		vie_mmio_read(vcpu, &val);
 
 		/* get the second operand */
 		reg = vie->reg;
@@ -868,6 +850,7 @@ static int emulate_movx(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 		 * Gracefully return this error code if prior case clauses have
 		 * not been met.
 		 */
+		error = -EINVAL;
 		break;
 	}
 	return error;
@@ -1026,9 +1009,9 @@ static int emulate_movs(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 		src_hva = gpa2hva(vcpu->vm, gpa);
 		(void)memcpy_s(&val, opsize, src_hva, opsize);
 
-		mmio_write(vcpu, val);
+		vie_mmio_write(vcpu, val);
 	} else {
-		mmio_read(vcpu, &val);
+		vie_mmio_read(vcpu, &val);
 
 		/* The dest gpa is saved during dst check instruction
 		 * decoding.
@@ -1069,7 +1052,7 @@ done:
 
 static int emulate_stos(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
-	int error, repeat;
+	int repeat;
 	uint8_t opsize = vie->opsize;
 	uint64_t val;
 	uint64_t rcx, rdi, rflags;
@@ -1090,10 +1073,7 @@ static int emulate_stos(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 
 	val = vm_get_register(vcpu, CPU_REG_RAX);
 
-	error = mmio_write(vcpu, val);
-	if (error != 0) {
-		return error;
-	}
+	vie_mmio_write(vcpu, val);
 
 	rdi = vm_get_register(vcpu, CPU_REG_RDI);
 	rflags = vm_get_register(vcpu, CPU_REG_RFLAGS);
@@ -1129,7 +1109,7 @@ static int emulate_test(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 	uint64_t result, rflags2, val1, val2;
 
 	size = vie->opsize;
-	error = -EINVAL;
+	error = 0;
 
 	switch (vie->opcode) {
 	case 0x84U:
@@ -1154,10 +1134,7 @@ static int emulate_test(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 		val1 = vm_get_register(vcpu, reg);
 
 		/* get the second operand */
-		error = mmio_read(vcpu, &val2);
-		if (error != 0) {
-			break;
-		}
+		vie_mmio_read(vcpu, &val2);
 
 		/* perform the operation and write the result */
 		result = val1 & val2;
@@ -1169,6 +1146,7 @@ static int emulate_test(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 		 * Gracefully return this error code if prior case clauses have
 		 * not been met.
 		 */
+		error = -EINVAL;
 		break;
 	}
 
@@ -1195,7 +1173,7 @@ static int emulate_and(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 	uint64_t result, rflags2, val1, val2;
 
 	size = vie->opsize;
-	error = -EINVAL;
+	error = 0;
 
 	switch (vie->opcode) {
 	case 0x23U:
@@ -1213,10 +1191,7 @@ static int emulate_and(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		val1 = vm_get_register(vcpu, reg);
 
 		/* get the second operand */
-		error = mmio_read(vcpu, &val2);
-		if (error != 0) {
-			break;
-		}
+		vie_mmio_read(vcpu, &val2);
 
 		/* perform the operation and write the result */
 		result = val1 & val2;
@@ -1238,17 +1213,14 @@ static int emulate_and(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 */
 
 		/* get the first operand */
-		error = mmio_read(vcpu, &val1);
-		if (error != 0) {
-			break;
-		}
+		vie_mmio_read(vcpu, &val1);
 
 		/*
 		 * perform the operation with the pre-fetched immediate
 		 * operand and write the result
 		 */
 		result = val1 & vie->immediate;
-		error = mmio_write(vcpu, result);
+		vie_mmio_write(vcpu, result);
 		break;
 	default:
 		/*
@@ -1257,6 +1229,7 @@ static int emulate_and(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 * Gracefully return this error code if prior case clauses have
 		 * not been met.
 		 */
+		error = -EINVAL;
 		break;
 	}
 
@@ -1283,7 +1256,7 @@ static int emulate_or(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 	uint64_t val1, val2, result, rflags2;
 
 	size = vie->opsize;
-	error = -EINVAL;
+	error = 0;
 
 	switch (vie->opcode) {
 	case 0x81U:
@@ -1306,17 +1279,14 @@ static int emulate_or(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 */
 
 		/* get the first operand */
-		error = mmio_read(vcpu, &val1);
-		if (error != 0) {
-			break;
-		}
+		vie_mmio_read(vcpu, &val1);
 
 		/*
 		 * perform the operation with the pre-fetched immediate
 		 * operand and write the result
 		 */
 		result = val1 | (uint64_t)vie->immediate;
-		error = mmio_write(vcpu, result);
+		vie_mmio_write(vcpu, result);
 		break;
 	case 0x09U:
 		/*
@@ -1327,10 +1297,7 @@ static int emulate_or(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 */
 
 		/* get the first operand */
-		error = mmio_read(vcpu, &val1);
-		if (error != 0) {
-			break;
-		}
+		vie_mmio_read(vcpu, &val1);
 
 		/* get the second operand */
 		reg = vie->reg;
@@ -1340,7 +1307,7 @@ static int emulate_or(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		result = val1 | val2;
 		result &= size2mask[size];
 
-		error = mmio_write(vcpu, result);
+		vie_mmio_write(vcpu, result);
 		break;
 	default:
 		/*
@@ -1349,6 +1316,7 @@ static int emulate_or(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 * Gracefully return this error code if prior case clauses have
 		 * not been met.
 		 */
+		error = -EINVAL;
 		break;
 	}
 	if (error == 0) {
@@ -1397,10 +1365,7 @@ static int emulate_cmp(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		regop = vm_get_register(vcpu, reg);
 
 		/* Get the memory operand */
-		error = mmio_read(vcpu, &memop);
-		if (error != 0) {
-			return error;
-		}
+		vie_mmio_read(vcpu, &memop);
 
 		if (vie->opcode == 0x3BU) {
 			op1 = regop;
@@ -1442,10 +1407,7 @@ static int emulate_cmp(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		}
 
 		/* get the first operand */
-		error = mmio_read(vcpu, &op1);
-		if (error != 0) {
-			return error;
-		}
+		vie_mmio_read(vcpu, &op1);
 
 		rflags2 = getcc(size, op1, (uint64_t)vie->immediate);
 		break;
@@ -1466,7 +1428,7 @@ static int emulate_sub(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 	enum cpu_reg_name reg;
 
 	size = vie->opsize;
-	error = -EINVAL;
+	error = 0;
 
 	switch (vie->opcode) {
 	case 0x2BU:
@@ -1483,10 +1445,7 @@ static int emulate_sub(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		val1 = vm_get_register(vcpu, reg);
 
 		/* get the second operand */
-		error = mmio_read(vcpu, &val2);
-		if (error != 0) {
-			break;
-		}
+		vie_mmio_read(vcpu, &val2);
 
 		/* perform the operation and write the result */
 		nval = val1 - val2;
@@ -1499,6 +1458,7 @@ static int emulate_sub(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 * Gracefully return this error code if prior case clauses have
 		 * not been met.
 		 */
+		error = -EINVAL;
 		break;
 	}
 
@@ -1537,7 +1497,6 @@ static int emulate_group1(struct acrn_vcpu *vcpu, const struct instr_emul_vie *v
 static int emulate_bittest(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	uint64_t val, rflags, bitmask;
-	int error;
 	uint64_t bitoff;
 	uint8_t size;
 
@@ -1553,10 +1512,7 @@ static int emulate_bittest(struct acrn_vcpu *vcpu, const struct instr_emul_vie *
 
 	rflags = vm_get_register(vcpu, CPU_REG_RFLAGS);
 
-	error = mmio_read(vcpu, &val);
-	if (error != 0) {
-		return error;
-	}
+	vie_mmio_read(vcpu, &val);
 
 	/*
 	 * Intel SDM, Vol 2, Table 3-2:
