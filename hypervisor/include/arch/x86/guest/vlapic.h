@@ -185,8 +185,10 @@ int vlapic_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t wval);
 /*
  * Signals to the LAPIC that an interrupt at 'vector' needs to be generated
  * to the 'cpu', the state is recorded in IRR.
+ *  @pre vcpu != NULL
+ *  @pre vector <= 255U
  */
-int vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level);
+void vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level);
 
 #define	LAPIC_TRIG_LEVEL	true
 #define	LAPIC_TRIG_EDGE		false
@@ -196,13 +198,11 @@ int vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level);
  * @param[in] vcpu    Pointer to target vCPU data structure
  * @param[in] vector  Vector to be injected.
  *
- * @return 0 on success.
- * @return -EINVAL on error that vector is invalid or vcpu is NULL.
  */
-static inline int
+static inline void
 vlapic_intr_level(struct acrn_vcpu *vcpu, uint32_t vector)
 {
-	return vlapic_set_intr(vcpu, vector, LAPIC_TRIG_LEVEL);
+	vlapic_set_intr(vcpu, vector, LAPIC_TRIG_LEVEL);
 }
 
 /**
@@ -211,13 +211,11 @@ vlapic_intr_level(struct acrn_vcpu *vcpu, uint32_t vector)
  * @param[in] vcpu    Pointer to target vCPU data structure
  * @param[in] vector  Vector to be injected.
  *
- * @return 0 on success.
- * @return -EINVAL on error that vector is invalid or vcpu is NULL.
  */
-static inline int
+static inline void
 vlapic_intr_edge(struct acrn_vcpu *vcpu, uint32_t vector)
 {
-	return vlapic_set_intr(vcpu, vector, LAPIC_TRIG_EDGE);
+	vlapic_set_intr(vcpu, vector, LAPIC_TRIG_EDGE);
 }
 
 /**
