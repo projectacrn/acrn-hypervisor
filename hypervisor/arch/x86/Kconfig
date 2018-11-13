@@ -304,12 +304,12 @@ config RELOC
 	  wherever appropriate. Without relocation the bootloader must put the
 	  image to RAM_START, otherwise the hypervisor will not start up.
 
-config IOMMU_INIT_BUS_LIMIT
+config IOMMU_BUS_NUM
 	hex "Limit of PCI bus on IOMMU initialization"
-	default 0xf if PLATFORM_SBL
-	default 0xff if PLATFORM_UEFI
+	default 0x10 if PLATFORM_SBL
+	default 0x100 if PLATFORM_UEFI
 	help
-	  Any BDF with a bus ID smaller than or equal to this limit is mapped to
+	  Any BDF with a bus ID smaller than this number is mapped to
 	  the IOMMU domain of the first VM.
 
 config MAX_PCI_DEV_NUM
