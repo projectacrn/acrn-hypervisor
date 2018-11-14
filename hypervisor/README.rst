@@ -1,25 +1,23 @@
-Embedded-Hypervisor
-###################
+ACRN Hypervisor
+###############
 
-This open source embedded hypervisor defines a software architecture for
-running multiple software subsystems managed securely on a consolidated
-system (by means of a virtual machine manager), and defines a reference
-framework Device Model implementation for devices emulation
+The open source `Project ACRN`_ defines a device hypervisor reference stack and
+an architecture for running multiple software subsystems, managed securely, on
+a consolidated system by means of a virtual machine manager. It also defines a
+reference framework implementation for virtual device emulation, called the
+“ACRN Device Model”.
 
-This embedded hypervisor is type-1 reference hypervisor, running
-directly on the system hardware. It can be used for building software
-defined cockpit (SDC) or In-Vehicle Experience (IVE) solutions running
-on Intel Architecture Apollo Lake platforms. As a reference
-implementation, it provides the basis for embedded hypervisor vendors to
-build solutions with an open source reference I/O mediation solution,
-and provides auto makers a reference software stack for SDC usage.
+The ACRN Hypervisor is a Type 1 reference hypervisor stack, running directly on
+the bare-metal hardware, and is suitable for a variety of IoT and embedded
+device solutions. The ACRN hypervisor addresses the gap that currently exists
+between datacenter hypervisors, and hard partitioning hypervisors. The ACRN
+hypervisor architecture partitions the system into different functional
+domains, with carefully selected guest OS sharing optimizations for IoT and
+embedded devices.
 
-This embedded hypervisor is able to support both Linux* and Android* as
-a Guest OS, managed by the hypervisor, where applications can run.
+You can find out more about Project ACRN on the `Project ACRN documentation`_
+website.
 
-This embedded hypervisor is a partitioning hypervisor reference stack,
-also suitable for non-automotive IoT & embedded device solutions. It
-will be addressing the gap that currently exists between datacenter
-hypervisors, hard partitioning hypervisors, and select industrial
-applications.  Extending the scope of this open source embedded
-hypervisor relies on the involvement of community developers like you!
+.. _`Project ACRN`: https://projectacrn.org
+.. _`ACRN Hypervisor`: https://github.com/projectacrn/acrn-hypervisor
+.. _`Project ACRN documentation`: https://projectacrn.github.io/
