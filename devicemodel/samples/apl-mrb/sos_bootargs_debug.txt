@@ -1,4 +1,3 @@
-pci_devices_ignore=(0:18:2)
 module_blacklist=dwc3_pci
 no_timer_check
 console=tty0
