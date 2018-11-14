@@ -83,7 +83,7 @@ void emulate_mmio_post(const struct acrn_vcpu *vcpu, const struct io_request *io
 
 	if (mmio_req->direction == REQUEST_READ) {
 		/* Emulate instruction and update vcpu register set */
-		emulate_instruction(vcpu);
+		(void)emulate_instruction(vcpu);
 	}
 }
 

@@ -401,7 +401,7 @@ vioapic_indirect_write(struct acrn_vioapic *vioapic, uint32_t addr,
 				((last.full & IOAPIC_RTE_INTMASK) == 0UL)) {
 			/* VM enable intr */
 			/* NOTE: only support max 256 pin */
-			ptdev_intx_pin_remap(vioapic->vm,
+			(void)ptdev_intx_pin_remap(vioapic->vm,
 					(uint8_t)pin, PTDEV_VPIN_IOAPIC);
 		}
 	}
@@ -516,7 +516,7 @@ vioapic_init(struct acrn_vm *vm)
 
 	vioapic_reset(vm_ioapic(vm));
 
-	register_mmio_emulation_handler(vm,
+	(void)register_mmio_emulation_handler(vm,
 			vioapic_mmio_access_handler,
 			(uint64_t)VIOAPIC_BASE,
 			(uint64_t)VIOAPIC_BASE + VIOAPIC_SIZE,

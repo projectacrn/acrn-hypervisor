@@ -123,8 +123,7 @@ void do_acpi_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val,
 	}
 }
 
-int enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val,
-	uint32_t pm1b_cnt_val)
+void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
 	uint64_t pmain_entry_saved;
 	uint32_t guest_wakeup_vec32;
@@ -135,7 +134,7 @@ int enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val,
 	if (vm->pm.sx_state_data == NULL) {
 		pr_err("No Sx state info avaiable. No Sx support");
 		host_enter_s3_success = 0U;
-		return -1;
+		return;
 	}
 
 	pause_vm(vm);	/* pause vm0 before suspend system */
@@ -193,5 +192,5 @@ int enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val,
 	/* jump back to vm */
 	resume_vm_from_s3(vm, guest_wakeup_vec32);
 
-	return 0;
+	return;
 }
