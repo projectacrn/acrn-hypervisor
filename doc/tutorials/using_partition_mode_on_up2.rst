@@ -14,7 +14,7 @@ Build kernel and modules for partition mode guest
 
      git clone https://github.com/projectacrn/acrn-kernel.git
      cd ~/acrn-kernel
-     cp kernel_config_partition_os .config
+     cp kernel_config_uos .config
      make oldconfig
      make
 
