@@ -1014,7 +1014,7 @@ fail_open:
 
 int read_file(const char *path, unsigned long *size, void **data)
 {
-	char tmp[1024] = "\0";
+	char tmp[1024];
 	int len = 0;
 	int fd = 0;
 	int memsize = 1; /* for '\0' */
