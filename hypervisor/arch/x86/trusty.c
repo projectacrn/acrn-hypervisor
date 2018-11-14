@@ -5,7 +5,7 @@
  */
 
 #include <hypervisor.h>
-#include <hkdf_wrap.h>
+#include <crypto_api.h>
 
 #define ACRN_DBG_TRUSTY 6U
 
@@ -334,6 +334,54 @@ void switch_world(struct acrn_vcpu *vcpu, int next_world)
 	arch->cur_context = next_world;
 }
 
+static int32_t get_max_svn_index(void)
+{
+	uint32_t i, max_svn_idx = 0U;
+
+	if ((g_key_info.num_seeds == 0U) ||
+			(g_key_info.num_seeds > BOOTLOADER_SEED_MAX_ENTRIES)) {
+		return -1;
+	}
+
+	for (i = 1U; i < g_key_info.num_seeds; i++) {
+		if (g_key_info.dseed_list[i].cse_svn >
+				g_key_info.dseed_list[i-1].cse_svn) {
+			max_svn_idx = i;
+		}
+	}
+
+	return max_svn_idx;
+}
+
+static bool derive_aek(uint8_t *attkb_key)
+{
+	const int8_t salt[] = "Attestation Keybox Encryption Key";
+	const uint8_t *ikm;
+	uint32_t ikm_len;
+	int32_t max_svn_idx;
+
+	if (!attkb_key) {
+		return false;
+	}
+
+	max_svn_idx = get_max_svn_index();
+	if (max_svn_idx < 0) {
+		return false;
+	}
+
+	ikm = g_key_info.dseed_list[max_svn_idx].seed;
+	/* only the low 32 bits of seed are valid */
+	ikm_len = 32;
+
+	if (hmac_sha256(attkb_key, ikm, ikm_len,
+			(const uint8_t *)salt, sizeof(salt)) != 1) {
+		pr_err("%s: failed to derive key!\n", __func__);
+		return false;
+	}
+
+	return true;
+}
+
 /* Put key_info and trusty_startup_param in the first Page of Trusty
  * runtime memory
  */
@@ -366,6 +414,13 @@ static bool setup_trusty_info(struct acrn_vcpu *vcpu,
 			return false;
 		}
 		key_info->dseed_list[i].cse_svn = g_key_info.dseed_list[i].cse_svn;
+	}
+
+	/* Derive decryption key of attestation keybox from dseed */
+	if (!derive_aek(key_info->attkb_enc_key)) {
+		(void)memset(key_info, 0U, sizeof(struct trusty_key_info));
+		pr_err("%s: derive key of att keybox failed!", __func__);
+		return false;
 	}
 
 	/* Prepare trusty startup param */
