@@ -423,7 +423,9 @@ void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0)
 				 * disabled behavior
 				 */
 				exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, PAT_ALL_UC_VALUE);
-				cache_flush_invalidate_all();
+				if(!iommu_snoop_supported(vcpu->vm)) {
+					cache_flush_invalidate_all();
+				}
 			} else {
 				/* Restore IA32_PAT to enable cache again */
 				exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL,
@@ -853,6 +855,8 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 		exec_vmwrite64(VMX_XSS_EXITING_BITMAP_FULL, 0UL);
 		value32 |= VMX_PROCBASED_CTLS2_XSVE_XRSTR;
 	}
+
+	value32 |= VMX_PROCBASED_CTLS2_WBINVD;
 
 	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS2, value32);
 	pr_dbg("VMX_PROC_VM_EXEC_CONTROLS2: 0x%x ", value32);

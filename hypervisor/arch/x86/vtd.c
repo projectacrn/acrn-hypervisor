@@ -131,6 +131,7 @@ struct iommu_domain {
 	uint16_t vm_id;
 	uint32_t addr_width;   /* address width of the domain */
 	uint64_t trans_table_ptr;
+	bool iommu_snoop;
 };
 
 struct context_table {
@@ -150,6 +151,15 @@ static inline uint8_t*
 get_ctx_table(uint32_t dmar_index, uint8_t bus_no)
 {
 	return ctx_tables[dmar_index].buses[bus_no].contents;
+}
+
+bool iommu_snoop_supported(struct acrn_vm *vm)
+{
+	if (vm->iommu == NULL || vm->iommu->iommu_snoop) {
+		return true;
+	}
+
+	return false;
 }
 
 static struct dmar_drhd_rt dmar_drhd_units[CONFIG_MAX_IOMMU_NUM];
@@ -892,6 +902,7 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_ta
 	domain->trans_table_ptr = translation_table;
 	domain->addr_width = addr_width;
 	domain->is_tt_ept = true;
+	domain->iommu_snoop = true;
 
 	dev_dbg(ACRN_DBG_IOMMU, "create domain [%d]: vm_id = %hu, ept@0x%x",
 		vmid_to_domainid(domain->vm_id),
@@ -915,7 +926,7 @@ void destroy_iommu_domain(struct iommu_domain *domain)
 	(void)memset(domain, 0U, sizeof(*domain));
 }
 
-static int add_iommu_device(const struct iommu_domain *domain, uint16_t segment,
+static int add_iommu_device(struct iommu_domain *domain, uint16_t segment,
 		uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_uint;
@@ -944,6 +955,12 @@ static int add_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 		pr_err("dmar doesn't support addr width %d",
 			domain->addr_width);
 		return 1;
+	}
+
+	if (iommu_ecap_sc(dmar_uint->ecap) == 0U) {
+		domain->iommu_snoop = false;
+		dev_dbg(ACRN_DBG_IOMMU, "vm=%d add %x:%x no snoop control!",
+			domain->vm_id, bus, devfun);
 	}
 
 	ASSERT(dmar_uint->root_table_addr != 0UL, "root table is not setup");
@@ -1104,7 +1121,7 @@ remove_iommu_device(const struct iommu_domain *domain, uint16_t segment,
 	return 0;
 }
 
-int assign_iommu_device(const struct iommu_domain *domain, uint8_t bus,
+int assign_iommu_device(struct iommu_domain *domain, uint8_t bus,
 				uint8_t devfun)
 {
 	/* TODO: check if the device assigned */

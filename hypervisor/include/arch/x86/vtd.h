@@ -502,7 +502,7 @@ struct iommu_domain;
  * @pre domain != NULL
  *
  */
-int assign_iommu_device(const struct iommu_domain *domain,
+int assign_iommu_device(struct iommu_domain *domain,
 	uint8_t bus, uint8_t devfun);
 
 /**
@@ -611,6 +611,17 @@ int init_iommu(void);
  *
  */
 void init_iommu_vm0_domain(struct acrn_vm *vm0);
+
+/**
+ * @brief check the iommu if support cache snoop.
+ *
+ * @param[in] vm pointer to VM to check
+ *
+ * @return true - support
+ * @return false - not support
+ *
+ */
+bool iommu_snoop_supported(struct acrn_vm *vm);
 
 /**
   * @}
