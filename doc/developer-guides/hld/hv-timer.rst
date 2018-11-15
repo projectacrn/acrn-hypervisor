@@ -24,37 +24,27 @@ tsc-deadline timer mode by writing the local APIC LVT register.
 Data Structures and APIs
 ************************
 
-.. note:: API link to hv_timer and per_cpu_timer structs in include/arch/x86/timer.h
-   And to the function APIs there too.
+Interfaces Design
+=================
 
-Before adding a timer, we must initialize the timer with
-*initialize_timer*.  The processor generates a timer interrupt when the
-value of timer-stamp counter is greater than or equal to the *fire_tsc*
-field. If you want to add a periodic timer, you should also pass the
-period (unit in tsc cycles), otherwise, period_in_cycle will be ignored.
-When the timer interrupt is generated, it will call the callback
-function *func* with parameter *priv_data*.
+.. doxygenfunction:: initialize_timer
+   :project: Project ACRN
 
-The *initialize_timer* function only initialize the timer data
-structure; it will not program the ``IA32_TSC_DEADLINE_MSR`` to generate
-the timer interrupt. If you want to generate a timer interrupt, you must
-call *add_timer* to add the timer to the *per_cpu_timer* timer_list. In
-return, we will chose the nearest expired timer on the timer_list and
-program ``IA32_TSC_DEADLINE_MSR`` by writing its value to fire_ts. Then
-when the fire_tsc expires, it raises the interrupt whose callback raises
-a softirq. We will handle the software interrupt before the VM reenters
-the guest. (Currently, the hypervisor only uses the timer for the
-console).
+.. doxygenfunction:: timer_expired
+   :project: Project ACRN
 
-The timer softirq handler will check each expired timer on its
-timer_list.  Before calling the expired timer callback handler, it will
-remove the timer from its logical cpu timer_list. After calling the
-timer callback handler, it will re-add the timer to the timer_list if
-it's a periodic timer. If you want to modify a timer before it expires,
-you should call del_timer to remove the timer from the timer_list, then
-call add_timer again after updating the timer fields.
+.. doxygenfunction:: add_timer
+   :project: Project ACRN
 
-.. note::
+.. doxygenfunction:: del_timer
+   :project: Project ACRN
 
-   Only call initialize_timer only once for each timer.
-   Don't call add_timer or del_timer in the timer callback function.
+.. doxygenfunction:: timer_init
+   :project: Project ACRN
+
+.. doxygenfunction:: check_tsc
+   :project: Project ACRN
+
+.. doxygenfunction:: calibrate_tsc
+   :project: Project ACRN
+
