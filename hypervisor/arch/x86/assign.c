@@ -532,8 +532,6 @@ void ptdev_intx_ack(struct acrn_vm *vm, uint8_t virt_pin,
  * We use entry_nr to indicate coming vectors
  * entry_nr = 0 means first vector
  * user must provide bdf and entry_nr
- *
- * This function is called by SOS pci MSI config routine through hcall
  */
 int ptdev_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,
 		uint16_t entry_nr, struct ptdev_msi_info *info)
