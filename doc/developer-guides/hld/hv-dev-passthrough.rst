@@ -231,45 +231,31 @@ in scope of hypervisor.
 Data structures and interfaces
 ******************************
 
-.. note:: replace with reference to API docs
-
 The following APIs are provided to initialize interrupt remapping for
 SOS:
 
--  int ptdev_intx_pin_remap(struct vm \*vm, uint8_t virt_pin, enum
-   ptdev_vpin_source vpin_src);
+.. doxygenfunction:: ptdev_intx_pin_remap
+   :project: Project ACRN
 
-   Set up the remapping of the given virtual pin for the given vm.
-
--  int ptdev_msix_remap(struct vm \*vm, uint16_t virt_bdf, uint16_t
-   entry_nr, struct ptdev_msi_info \*info);
+.. doxygenfunction:: ptdev_msix_remap
+   :project: Project ACRN
 
 The following APIs are provided to manipulate the interrupt remapping
 for UOS.
 
--  int ptdev_add_intx_remapping(struct vm \*vm, uint16_t virt_bdf,
-   uint16_t phys_bdf, uint8_t virt_pin, uint8_t phys_pin, bool
-   pic_pin);
+.. doxygenfunction:: ptdev_add_intx_remapping
+   :project: Project ACRN
 
-   Add mapping between the given virtual and physical pin for the
-   given vm.
+.. doxygenfunction:: ptdev_remove_intx_remapping
+   :project: Project ACRN
 
--  void ptdev_remove_intx_remapping(struct vm \*vm, uint8_t
-   virt_pin, bool pic_pin);
+.. doxygenfunction:: ptdev_add_msix_remapping
+   :project: Project ACRN
 
-   Remove mapping of the given virtual pin for the given vm.
-
--  int ptdev_add_msix_remapping(struct vm \*vm, uint16_t virt_bdf,
-   uint16_t phys_bdf, uint32_t vector_count);
-
-   Add mapping of the given number of vectors between the given
-   physical and virtual BDF for the given vm.
-
--  void ptdev_remove_msix_remapping(struct vm \*vm, uint16_t
-   virt_bdf, uint32_t vector_count);
-
-   Remove the mapping of given number of vectors of the given virtual
-   BDF for the given vm.
+.. doxygenfunction:: ptdev_remove_msix_remapping
+   :project: Project ACRN
 
 The following APIs are provided to acknowledge a virtual interrupt.
 
+.. doxygenfunction:: ptdev_intx_ack
+   :project: Project ACRN
