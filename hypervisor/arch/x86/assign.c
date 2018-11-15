@@ -43,15 +43,17 @@ is_entry_active(const struct ptdev_remapping_info *entry)
 	return atomic_load32(&entry->active) == ACTIVE_FLAG;
 }
 
+#ifdef HV_DEBUG
 static bool ptdev_hv_owned_intx(const struct acrn_vm *vm, const union source_id *virt_sid)
 {
 	/* vm0 vuart pin is owned by hypervisor under debug version */
-	if (is_vm0(vm) && (virt_sid->intx_id.pin == COM1_IRQ)) {
+	if (is_vm0(vm) && (virt_sid->intx_id.pin == CONFIG_COM_IRQ)) {
 		return true;
 	} else {
 		return false;
 	}
 }
+#endif
 
 static uint64_t calculate_logical_dest_mask(uint64_t pdmask)
 {
@@ -637,9 +639,11 @@ int ptdev_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin,
 	 */
 
 	/* no remap for hypervisor owned intx */
+#ifdef HV_DEBUG
 	if (ptdev_hv_owned_intx(vm, &virt_sid)) {
 		goto END;
 	}
+#endif
 
 	/* query if we have virt to phys mapping */
 	spinlock_obtain(&ptdev_lock);

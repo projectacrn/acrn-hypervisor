@@ -165,6 +165,20 @@ config SERIAL_PIO_BASE
 	  The base address of the UART ports. This is logically 16-bit but used
 	  as a 64-bit integer.
 
+config COM_BASE
+	hex "Base address of the vuart port"
+	depends on !RELEASE
+	default 0x3f8
+	help
+	  Base address of the vuart port.
+
+config COM_IRQ
+	hex "IRQ of the vuart port"
+	depends on !RELEASE
+	default 4
+	help
+	  IRQ of the vuart port.
+
 config MALLOC_ALIGN
 	int "Block size in the heap for malloc()"
 	range 8 32
