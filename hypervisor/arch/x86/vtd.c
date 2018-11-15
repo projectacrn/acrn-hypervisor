@@ -750,20 +750,20 @@ static void dmar_fault_handler(uint32_t irq, void *data)
 	}
 }
 
-static int dmar_setup_interrupt(struct dmar_drhd_rt *dmar_unit)
+static void dmar_setup_interrupt(struct dmar_drhd_rt *dmar_unit)
 {
 	uint32_t vector;
-	int32_t retval;
+	int32_t retval = 0;
 
+	spinlock_obtain(&(dmar_unit->lock));
 	if (dmar_unit->dmar_irq == IRQ_INVALID) {
 		retval = request_irq(IRQ_INVALID, dmar_fault_handler, dmar_unit, IRQF_NONE);
-
-		if (retval < 0 ) {
-			pr_err("%s: fail to setup interrupt", __func__);
-			return retval;
-		} else {
-			dmar_unit->dmar_irq = (uint32_t)retval;
-		}
+		dmar_unit->dmar_irq = (uint32_t)retval;
+	}
+	spinlock_release(&(dmar_unit->lock));
+	/* the panic will only happen before any VM starts running */
+	if (retval < 0 ) {
+		panic("dmar[%d] fail to setup interrupt", dmar_unit->index);
 	}
 
 	vector = irq_to_vector(dmar_unit->dmar_irq);
@@ -771,8 +771,6 @@ static int dmar_setup_interrupt(struct dmar_drhd_rt *dmar_unit)
 
 	dmar_fault_msi_write(dmar_unit, vector);
 	dmar_fault_event_unmask(dmar_unit);
-
-	return 0;
 }
 
 static void dmar_prepare(struct dmar_drhd_rt *dmar_unit)
@@ -839,8 +837,8 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8
 
 	dmar_unit = device_to_dmaru(segment, bus, devfun);
 	if (dmar_unit == NULL) {
-		pr_err("no dmar unit found for device:0x%x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
-		return 1;
+		pr_err("no dmar unit found for device: %x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
+		return -EINVAL;
 	}
 
 	if (dmar_unit->drhd->ignore) {
@@ -850,7 +848,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8
 
 	if (!dmar_unit_support_aw(dmar_unit, domain->addr_width)) {
 		pr_err("dmar doesn't support addr width %d", domain->addr_width);
-		return 1;
+		return -EINVAL;
 	}
 
 	if (iommu_ecap_sc(dmar_unit->ecap) == 0U) {
@@ -858,7 +856,10 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8
 		dev_dbg(ACRN_DBG_IOMMU, "vm=%d add %x:%x no snoop control!", domain->vm_id, bus, devfun);
 	}
 
-	ASSERT(dmar_unit->root_table_addr != 0UL, "root table is not setup");
+	if (dmar_unit->root_table_addr == 0UL){
+		pr_err("dmar root table address invalid");
+		return -EINVAL;
+	}
 
 	root_table = (struct dmar_root_entry *)hpa2hva(dmar_unit->root_table_addr);
 
@@ -894,7 +895,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8
 	if (dmar_get_bitslice(context_entry->lower, CTX_ENTRY_LOWER_P_MASK, CTX_ENTRY_LOWER_P_POS) != 0UL) {
 		pr_err("%s: context entry@0x%llx (Lower:%x) ", __func__, context_entry, context_entry->lower);
 		pr_err("already present for %x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
-		return 1;
+		return -EBUSY;
 	}
 
 	/* setup context entry for the devfun */
@@ -912,7 +913,8 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8
 			lower = dmar_set_bitslice(lower,
 				  CTX_ENTRY_LOWER_TT_MASK, CTX_ENTRY_LOWER_TT_POS, DMAR_CTX_TT_PASSTHROUGH);
 		} else {
-			ASSERT(false, "dmaru doesn't support trans passthrough");
+			pr_err("dmaru[%d] doesn't support trans passthrough", dmar_unit->index);
+			return -ENODEV;
 		}
 	} else {
 		/* TODO: add Device TLB support */
@@ -947,8 +949,8 @@ static int remove_iommu_device(const struct iommu_domain *domain, uint16_t segme
 
 	dmar_unit = device_to_dmaru(segment, bus, devfun);
 	if (dmar_unit == NULL) {
-		pr_err("no dmar unit found for device:0x%x:%x", bus, devfun);
-		return 1;
+		pr_err("no dmar unit found for device: %x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
+		return -EINVAL;
 	}
 
 	root_table = (struct dmar_root_entry *)hpa2hva(dmar_unit->root_table_addr);
@@ -963,7 +965,7 @@ static int remove_iommu_device(const struct iommu_domain *domain, uint16_t segme
 	dom_id = (uint16_t)dmar_get_bitslice(context_entry->upper, CTX_ENTRY_UPPER_DID_MASK, CTX_ENTRY_UPPER_DID_POS);
 	if (dom_id != vmid_to_domainid(domain->vm_id)) {
 		pr_err("%s: domain id mismatch", __func__);
-		return 1;
+		return -EPERM;
 	}
 
 	/* clear the present bit first */
@@ -979,14 +981,15 @@ static int remove_iommu_device(const struct iommu_domain *domain, uint16_t segme
 	return 0;
 }
 
+/*
+ * @pre action != NULL
+ * As an internal API, VT-d code can guarantee action is not NULL.
+ */
 static void do_action_for_iommus(void (*action)(struct dmar_drhd_rt *))
 {
 	struct dmar_info *info = get_dmar_info();
 	struct dmar_drhd_rt *dmar_unit;
 	uint32_t i;
-
-	if (action == NULL)
-		return;
 
 	for (i = 0U; i < info->drhd_count; i++) {
 		dmar_unit = &dmar_drhd_units[i];
@@ -1044,10 +1047,15 @@ void destroy_iommu_domain(struct iommu_domain *domain)
 
 int assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
+	int status = 0;
+
 	/* TODO: check if the device assigned */
 
-	if ((vm0_domain != NULL) && (remove_iommu_device(vm0_domain, 0U, bus, devfun) == 1)) {
-		return 1;
+	if (vm0_domain != NULL) {
+		status = remove_iommu_device(vm0_domain, 0U, bus, devfun);
+		if (status != 0) {
+			return status;
+		}
 	}
 
 	return add_iommu_device(domain, 0U, bus, devfun);
@@ -1055,14 +1063,16 @@ int assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun
 
 int unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
-	/* TODO: check if the device assigned */
+	int status = 0;
 
-	if (remove_iommu_device(domain, 0U, bus, devfun) == 1) {
-		return 1;
+	/* TODO: check if the device assigned */
+	status = remove_iommu_device(domain, 0U, bus, devfun);
+	if (status != 0) {
+		return status;
 	}
 
-	if ((vm0_domain != NULL) && (add_iommu_device(vm0_domain, 0U, bus, devfun) == 1)) {
-		return 1;
+	if (vm0_domain != NULL) {
+		return add_iommu_device(vm0_domain, 0U, bus, devfun);
 	}
 
 	return 0;
@@ -1116,7 +1126,10 @@ void init_iommu_vm0_domain(struct acrn_vm *vm0)
 
 	for (bus = 0U; bus < CONFIG_IOMMU_BUS_NUM; bus++) {
 		for (devfun = 0U; devfun <= 255U; devfun++) {
-			add_iommu_device(vm0_domain, 0U, (uint8_t)bus, (uint8_t)devfun);
+			if (add_iommu_device(vm0_domain, 0U, (uint8_t)bus, (uint8_t)devfun) != 0) {
+				/* the panic only occurs before VM0 starts running in sharing mode */
+				panic("Failed to add %x:%x.%x to VM0 domain", bus, pci_slot(devfun), pci_func(devfun));
+			}
 		}
 	}
 }
