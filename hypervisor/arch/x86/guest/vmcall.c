@@ -169,20 +169,6 @@ int vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 		ret = hcall_reset_ptdev_intr_info(vm, (uint16_t)param1, param2);
 		break;
 
-#ifdef HV_DEBUG
-	case HC_SETUP_SBUF:
-		ret = hcall_setup_sbuf(vm, param1);
-		break;
-
-	case HC_SETUP_HV_NPK_LOG:
-		ret = hcall_setup_hv_npk_log(vm, param1);
-		break;
-
-	case HC_PROFILING_OPS:
-		ret = hcall_profiling_ops(vm, param1, param2);
-		break;
-#endif
-
 	case HC_WORLD_SWITCH:
 		ret = hcall_world_switch(vcpu);
 		break;
@@ -204,8 +190,7 @@ int vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 		break;
 
 	default:
-		pr_err("op %d: Invalid hypercall\n", hypcall_id);
-		ret = -EPERM;
+		ret = hcall_debug(vm, param1, param2, hypcall_id);
 		break;
 	}
 

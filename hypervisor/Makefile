@@ -111,6 +111,8 @@ LD ?= ld
 OBJCOPY ?= objcopy
 
 D_SRCS += $(wildcard debug/*.c)
+R_SRCS += $(wildcard release/*.c)
+
 C_SRCS += boot/acpi.c
 C_SRCS += boot/dmar_parse.c
 C_SRCS += boot/reloc.c
@@ -225,6 +227,8 @@ C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(C_SRCS))
 ifneq ($(CONFIG_RELEASE),y)
 C_OBJS += $(patsubst %.c,$(HV_OBJDIR)/%.o,$(D_SRCS))
 CFLAGS += -DHV_DEBUG -DPROFILING_ON
+else
+C_OBJS += $(patsubst %.c,$(HV_OBJDIR)/%.o,$(R_SRCS))
 endif
 S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(S_SRCS))
 
