@@ -11,7 +11,7 @@
 #define ACRNCTL_OPT_ROOT        "/opt/acrn/conf"
 #define ACRN_DM_SOCK_ROOT       "/run/acrn/mngr"
 
-#define MAX_NAME_LEN            (16)
+#define MAX_NAME_LEN            (32)
 
 enum vm_state {
 	VM_STATE_UNKNOWN = 0,
