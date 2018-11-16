@@ -19,9 +19,6 @@ static void run_vcpu_pre_work(struct acrn_vcpu *vcpu)
 
 void vcpu_thread(struct acrn_vcpu *vcpu)
 {
-#ifdef HV_DEBUG
-	uint64_t vmexit_begin = 0UL, vmexit_end = 0UL;
-#endif
 	uint32_t basic_exit_reason = 0U;
 	uint64_t tsc_aux_hyp_cpu = (uint64_t) vcpu->pcpu_id;
 	int32_t ret = 0;
@@ -61,13 +58,6 @@ void vcpu_thread(struct acrn_vcpu *vcpu)
 			continue;
 		}
 
-#ifdef HV_DEBUG
-		vmexit_end = rdtsc();
-		if (vmexit_begin != 0UL) {
-			per_cpu(vmexit_time, vcpu->pcpu_id)[basic_exit_reason]
-				+= (vmexit_end - vmexit_begin);
-		}
-#endif
 		TRACE_2L(TRACE_VM_ENTER, 0UL, 0UL);
 
 		profiling_vmenter_handler(vcpu);
@@ -84,10 +74,6 @@ void vcpu_thread(struct acrn_vcpu *vcpu)
 			pause_vcpu(vcpu, VCPU_ZOMBIE);
 			continue;
 		}
-
-#ifdef HV_DEBUG
-		vmexit_begin = rdtsc();
-#endif
 
 		vcpu->arch.nrexits++;
 		/* Save guest TSC_AUX */
@@ -106,68 +92,8 @@ void vcpu_thread(struct acrn_vcpu *vcpu)
 			continue;
 		}
 
-#ifdef HV_DEBUG
-		per_cpu(vmexit_cnt, vcpu->pcpu_id)[basic_exit_reason]++;
-#endif
-
 		TRACE_2L(TRACE_VM_EXIT, basic_exit_reason, vcpu_get_rip(vcpu));
 
 		profiling_vmexit_handler(vcpu, basic_exit_reason);
 	} while (1);
 }
-
-#ifdef HV_DEBUG
-void get_vmexit_profile(char *str_arg, size_t str_max)
-{
-	char *str = str_arg;
-	uint16_t cpu, i;
-	size_t len, size = str_max;
-
-	len = snprintf(str, size, "\r\nNow(us) = %16lld\r\n", ticks_to_us(rdtsc()));
-	if (len >= size) {
-		goto overflow;
-	}
-	size -= len;
-	str += len;
-
-	len = snprintf(str, size, "\r\nREASON");
-	if (len >= size) {
-		goto overflow;
-	}
-	size -= len;
-	str += len;
-
-	for (cpu = 0U; cpu < phys_cpu_num; cpu++) {
-		len = snprintf(str, size, "\t      CPU%hu\t        US", cpu);
-		if (len >= size) {
-			goto overflow;
-		}
-		size -= len;
-		str += len;
-	}
-
-	for (i = 0U; i < 64U; i++) {
-		len = snprintf(str, size, "\r\n0x%x", i);
-		if (len >= size) {
-			goto overflow;
-		}
-		size -= len;
-		str += len;
-		for (cpu = 0U; cpu < phys_cpu_num; cpu++) {
-			len = snprintf(str, size, "\t%10lld\t%10lld", per_cpu(vmexit_cnt, cpu)[i],
-				ticks_to_us(per_cpu(vmexit_time, cpu)[i]));
-			if (len >= size) {
-				goto overflow;
-			}
-
-			size -= len;
-			str += len;
-		}
-	}
-	snprintf(str, size, "\r\n");
-	return;
-
-overflow:
-	printf("buffer size could not be enough! please check!\n");
-}
-#endif /* HV_DEBUG */

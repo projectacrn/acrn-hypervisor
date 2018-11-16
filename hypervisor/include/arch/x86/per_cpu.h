@@ -27,8 +27,6 @@ struct per_cpu_region {
 	char logbuf[LOG_MESSAGE_MAX_SIZE];
 	bool is_early_logbuf;
 	char early_logbuf[CONFIG_LOG_BUF_SIZE];
-	uint64_t vmexit_cnt[64];
-	uint64_t vmexit_time[64];
 	uint32_t npk_log_ref;
 #endif
 	uint64_t irq_count[NR_IRQS];
