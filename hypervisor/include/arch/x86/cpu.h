@@ -331,9 +331,9 @@ void stop_cpus(void);
 void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
 void cpu_l1d_flush(void);
 
-#define CPU_SEG_WRITE(seg, value16)						\
+#define CPU_SEG_READ(seg, result_ptr)						\
 {										\
-	asm volatile ("mov %%" STRINGIFY(seg) ", %%ax": "=a" (value16));	\
+	asm volatile ("mov %%" STRINGIFY(seg) ", %0": "=r" (*(result_ptr)));	\
 }
 
 /* Read control register */
