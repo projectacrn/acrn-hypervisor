@@ -766,12 +766,13 @@ static int mei_sysfs_read_properties(char *devpath, size_t size, size_t offset,
 
 	return 0;
 }
+
 static bool is_prefix(const char *prfx, const char *str, size_t maxlen)
 {
-	if (!prfx || !str || prfx[0] == '\0')
+	if (!prfx || !str)
 		return false;
 
-	return strncmp(prfx, str, maxlen);
+	return strncmp(prfx, str, strnlen(prfx, maxlen)) == 0;
 }
 
 static int vmei_me_client_scan_list(struct virtio_mei *vmei)
