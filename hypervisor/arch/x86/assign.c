@@ -195,12 +195,10 @@ static struct ptdev_remapping_info *add_msix_remapping(struct acrn_vm *vm,
 	DEFINE_MSI_SID(phys_sid, phys_bdf, entry_nr);
 	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
 
-	spinlock_obtain(&ptdev_lock);
 	entry = ptdev_lookup_entry_by_sid(PTDEV_INTR_MSI, &phys_sid, NULL);
 	if (entry == NULL) {
 		if (ptdev_lookup_entry_by_sid(PTDEV_INTR_MSI, &virt_sid, vm) != NULL) {
 			pr_err("MSIX re-add vbdf%x", virt_bdf);
-			spinlock_release(&ptdev_lock);
 			return NULL;
 		}
 
@@ -233,7 +231,6 @@ static struct ptdev_remapping_info *add_msix_remapping(struct acrn_vm *vm,
 		 * required. */
 	}
 
-	spinlock_release(&ptdev_lock);
 	dev_dbg(ACRN_DBG_IRQ, "VM%d MSIX add vector mapping vbdf%x:pbdf%x idx=%d",
 		vm->vm_id, virt_bdf, phys_bdf, entry_nr);
 
@@ -247,10 +244,9 @@ remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t entr
 	struct ptdev_remapping_info *entry;
 	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
 
-	spinlock_obtain(&ptdev_lock);
 	entry = ptdev_lookup_entry_by_sid(PTDEV_INTR_MSI, &virt_sid, vm);
 	if (entry == NULL) {
-		goto END;
+		return;
 	}
 
 	if (is_entry_active(entry)) {
@@ -264,9 +260,6 @@ remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t entr
 		entry->phys_sid.msi_id.bdf, entry_nr);
 
 	release_entry(entry);
-
-END:
-	spinlock_release(&ptdev_lock);
 
 }
 
@@ -289,12 +282,10 @@ static struct ptdev_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint8
 		return NULL;
 	}
 
-	spinlock_obtain(&ptdev_lock);
 	entry = ptdev_lookup_entry_by_sid(PTDEV_INTR_INTX, &phys_sid, NULL);
 	if (entry == NULL) {
 		if (ptdev_lookup_entry_by_sid(PTDEV_INTR_INTX, &virt_sid, vm) != NULL) {
 			pr_err("INTX re-add vpin %d", virt_pin);
-			spinlock_release(&ptdev_lock);
 			return NULL;
 		}
 		entry = alloc_entry(vm, PTDEV_INTR_INTX);
@@ -323,7 +314,6 @@ static struct ptdev_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint8
 		 * required. */
 	}
 
-	spinlock_release(&ptdev_lock);
 	dev_dbg(ACRN_DBG_IRQ, "VM%d INTX add pin mapping vpin%d:ppin%d", vm->vm_id, virt_pin, phys_pin);
 
 	return entry;
@@ -338,10 +328,10 @@ static void remove_intx_remapping(const struct acrn_vm *vm, uint8_t virt_pin, bo
 		pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
 	DEFINE_IOAPIC_SID(virt_sid, virt_pin, vpin_src);
 
-	spinlock_obtain(&ptdev_lock);
+
 	entry = ptdev_lookup_entry_by_sid(PTDEV_INTR_INTX, &virt_sid, vm);
 	if (entry == NULL) {
-		goto END;
+		return;
 	}
 
 	if (is_entry_active(entry)) {
@@ -360,9 +350,6 @@ static void remove_intx_remapping(const struct acrn_vm *vm, uint8_t virt_pin, bo
 	}
 
 	release_entry(entry);
-
-END:
-	spinlock_release(&ptdev_lock);
 }
 
 static void ptdev_intr_handle_irq(struct acrn_vm *vm,
@@ -479,9 +466,7 @@ void ptdev_intx_ack(struct acrn_vm *vm, uint8_t virt_pin,
 	struct ptdev_remapping_info *entry;
 	DEFINE_IOAPIC_SID(virt_sid, virt_pin, vpin_src);
 
-	spinlock_obtain(&ptdev_lock);
 	entry = ptdev_lookup_entry_by_sid(PTDEV_INTR_INTX, &virt_sid, vm);
-	spinlock_release(&ptdev_lock);
 	if (entry == NULL) {
 		return;
 	}
@@ -536,7 +521,6 @@ int ptdev_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,
 	 */
 	spinlock_obtain(&ptdev_lock);
 	entry = ptdev_lookup_entry_by_sid(PTDEV_INTR_MSI, &virt_sid, vm);
-	spinlock_release(&ptdev_lock);
 	if (entry == NULL) {
 		/* VM0 we add mapping dynamically */
 		if (is_vm0(vm)) {
@@ -544,6 +528,7 @@ int ptdev_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,
 					virt_bdf, virt_bdf, entry_nr);
 			if (entry == NULL) {
 				pr_err("dev-assign: msi entry exist in others");
+				spinlock_release(&ptdev_lock);
 				return -ENODEV;
 			}
 		} else {
@@ -552,9 +537,12 @@ int ptdev_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,
 			 * the caller.
 			 */
 			pr_err("dev-assign: msi entry not exist");
+			spinlock_release(&ptdev_lock);
 			return -ENODEV;
 		}
 	}
+
+	spinlock_release(&ptdev_lock);
 
 	/* handle destroy case */
 	if (is_entry_active(entry) && (info->vmsi_data == 0U)) {
@@ -630,11 +618,9 @@ int ptdev_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin,
 		goto END;
 	}
 #endif
-
 	/* query if we have virt to phys mapping */
 	spinlock_obtain(&ptdev_lock);
 	entry = ptdev_lookup_entry_by_sid(PTDEV_INTR_INTX, &virt_sid, vm);
-	spinlock_release(&ptdev_lock);
 	if (entry == NULL) {
 		if (is_vm0(vm)) {
 			bool pic_pin = (vpin_src == PTDEV_VPIN_PIC);
@@ -651,10 +637,8 @@ int ptdev_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin,
 					pic_ioapic_pin_map[virt_pin],
 					pic_pin ? PTDEV_VPIN_IOAPIC :
 					PTDEV_VPIN_PIC);
-				spinlock_obtain(&ptdev_lock);
 				entry = ptdev_lookup_entry_by_sid(
 					PTDEV_INTR_INTX, &tmp_vsid, vm);
-				spinlock_release(&ptdev_lock);
 				if (entry != NULL) {
 					need_switch_vpin_src = true;
 				}
@@ -673,6 +657,7 @@ int ptdev_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin,
 				if (entry == NULL) {
 					pr_err("%s, add intx remapping failed",
 						__func__);
+					spinlock_release(&ptdev_lock);
 					return -ENODEV;
 				}
 			}
@@ -681,6 +666,7 @@ int ptdev_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin,
 			 * everytime a pin get unmask, here filter out pins
 			 * not get mapped.
 			 */
+			 spinlock_release(&ptdev_lock);
 			goto END;
 		}
 	}
@@ -696,6 +682,7 @@ int ptdev_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin,
 			virt_pin, entry->vm->vm_id);
 	        entry->virt_sid.value = virt_sid.value;
 	}
+	spinlock_release(&ptdev_lock);
 
 	activate_physical_ioapic(vm, entry);
 	dev_dbg(ACRN_DBG_IRQ,
@@ -726,7 +713,9 @@ int ptdev_add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, uint8_t phys_
 		return -EINVAL;
 	}
 
+	spinlock_obtain(&ptdev_lock);
 	entry = add_intx_remapping(vm, virt_pin, phys_pin, pic_pin);
+	spinlock_release(&ptdev_lock);
 
 	return (entry != NULL) ? 0 : -ENODEV;
 }
@@ -736,7 +725,9 @@ int ptdev_add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, uint8_t phys_
  */
 void ptdev_remove_intx_remapping(const struct acrn_vm *vm, uint8_t virt_pin, bool pic_pin)
 {
+	spinlock_obtain(&ptdev_lock);
 	remove_intx_remapping(vm, virt_pin, pic_pin);
+	spinlock_release(&ptdev_lock);
 }
 
 /* except vm0, Device Model should call this function to pre-hold ptdev msi
@@ -751,7 +742,9 @@ int ptdev_add_msix_remapping(struct acrn_vm *vm, uint16_t virt_bdf,
 	uint32_t i;
 
 	for (i = 0U; i < vector_count; i++) {
+		spinlock_obtain(&ptdev_lock);
 		entry = add_msix_remapping(vm, virt_bdf, phys_bdf, i);
+		spinlock_release(&ptdev_lock);
 		if (entry == NULL) {
 			return -ENODEV;
 		}
@@ -769,7 +762,9 @@ void ptdev_remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf,
 	uint32_t i;
 
 	for (i = 0U; i < vector_count; i++) {
+		spinlock_obtain(&ptdev_lock);
 		remove_msix_remapping(vm, virt_bdf, i);
+		spinlock_release(&ptdev_lock);
 	}
 }
 
@@ -848,7 +843,6 @@ void get_ptdev_info(char *str_arg, size_t str_max)
 	size -= len;
 	str += len;
 
-	spinlock_obtain(&ptdev_lock);
 	for (idx = 0U; idx < CONFIG_MAX_PT_IRQ_ENTRIES; idx++) {
 		entry = &ptdev_irq_entries[idx];
 		if (is_entry_active(entry)) {
@@ -858,7 +852,6 @@ void get_ptdev_info(char *str_arg, size_t str_max)
 			len = snprintf(str, size, "\r\n%d\t%s\t%d\t0x%X\t0x%X",
 					entry->vm->vm_id, type, irq, vector, dest);
 			if (len >= size) {
-				spinlock_release(&ptdev_lock);
 				goto overflow;
 			}
 			size -= len;
@@ -871,14 +864,12 @@ void get_ptdev_info(char *str_arg, size_t str_max)
 					(vbdf & 0xff00U) >> 8U,
 					(vbdf & 0xf8U) >> 3U, vbdf & 0x7U);
 			if (len >= size) {
-				spinlock_release(&ptdev_lock);
 				goto overflow;
 			}
 			size -= len;
 			str += len;
 		}
 	}
-	spinlock_release(&ptdev_lock);
 
 	snprintf(str, size, "\r\n");
 	return;
