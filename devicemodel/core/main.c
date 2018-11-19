@@ -96,8 +96,6 @@ static cpuset_t cpumask;
 
 static void vm_loop(struct vmctx *ctx);
 
-static int quit_vm_loop;
-
 static char vhm_request_page[4096] __attribute__ ((aligned(4096)));
 
 static struct vhm_request *vhm_req_buf =
@@ -286,11 +284,8 @@ delete_cpu(struct vmctx *ctx, int vcpu)
 		exit(1);
 	}
 
-	/* wait for vm_loop cleanup */
-	quit_vm_loop = 1;
+	pthread_join(mt_vmm_info[0].mt_thr, NULL);
 	vm_destroy_ioreq_client(ctx);
-	while (quit_vm_loop)
-		usleep(10000);
 
 	CPU_CLR_ATOMIC(vcpu, &cpumask);
 	return CPU_EMPTY(&cpumask);
@@ -666,6 +661,11 @@ vm_loop(struct vmctx *ctx)
 				handle_vmexit(ctx, vhm_req, vcpu_id);
 		}
 
+		if (VM_SUSPEND_FULL_RESET == vm_get_suspend_mode() ||
+		    VM_SUSPEND_POWEROFF == vm_get_suspend_mode()) {
+			break;
+		}
+
 		if (VM_SUSPEND_SYSTEM_RESET == vm_get_suspend_mode()) {
 			vm_system_reset(ctx);
 		}
@@ -674,7 +674,6 @@ vm_loop(struct vmctx *ctx)
 			vm_suspend_resume(ctx);
 		}
 	}
-	quit_vm_loop = 0;
 	printf("VM loop exit\n");
 }
 
@@ -756,7 +755,6 @@ dm_run(int argc, char *argv[])
 	guest_ncpus = 1;
 	memsize = 256 * MB;
 	mptgen = 1;
-	quit_vm_loop = 0;
 
 	if (signal(SIGHUP, sig_handler_term) == SIG_ERR)
 		fprintf(stderr, "cannot register handler for SIGHUP\n");
