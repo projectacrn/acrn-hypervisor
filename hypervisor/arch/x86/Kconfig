@@ -1,8 +1,8 @@
 choice
-	prompt "Platform"
+	prompt "Type of boot firmware (BIOS) on the target platform"
 	default PLATFORM_SBL
 	help
-	  The BIOS used on the target board.
+	  The boot firmware (BIOS) used on the target board.
 
 config PLATFORM_UEFI
 	bool "UEFI"
@@ -61,11 +61,6 @@ config IOREQ_POLLING
 	  status and finish the post work.
 
 endchoice
-
-config PLATFORM
-	string "The type of boot firmware (BIOS) on the target platform"
-	default "uefi" if PLATFORM_UEFI
-	default "sbl" if PLATFORM_SBL
 
 config BOARD
 	string "Target board"

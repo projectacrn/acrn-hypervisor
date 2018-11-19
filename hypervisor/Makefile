@@ -207,15 +207,17 @@ C_SRCS += dm/vpci/msi.c
 C_SRCS += dm/vpci/msix.c
 endif
 
-C_SRCS += bsp/$(CONFIG_PLATFORM)/$(CONFIG_PLATFORM).c
-
-ifeq ($(CONFIG_PLATFORM),uefi)
-C_SRCS += bsp/$(CONFIG_PLATFORM)/cmdline.c
+ifeq ($(CONFIG_PLATFORM_UEFI),y)
+C_SRCS += bsp/uefi/uefi.c
+C_SRCS += bsp/uefi/cmdline.c
+TEMPLATE_ACPI_INFO_HEADER := bsp/include/uefi/platform_acpi_info.h
 else
-ifeq ($(CONFIG_PLATFORM), sbl)
+ifeq ($(CONFIG_PLATFORM_SBL),y)
+C_SRCS += bsp/sbl/sbl.c
 C_SRCS += boot/sbl/multiboot.c
 C_SRCS += boot/sbl/sbl_seed_parse.c
 C_SRCS += boot/sbl/abl_seed_parse.c
+TEMPLATE_ACPI_INFO_HEADER := bsp/include/sbl/platform_acpi_info.h
 endif
 endif
 
@@ -243,7 +245,6 @@ VERSION := $(HV_OBJDIR)/include/version.h
 
 # Create platform_acpi_info.h
 SOURCE_ACPI_INFO_HEADER := bsp/include/$(CONFIG_BOARD)_acpi_info.h
-TEMPLATE_ACPI_INFO_HEADER := bsp/include/$(CONFIG_PLATFORM)/platform_acpi_info.h
 TARGET_ACPI_INFO_HEADER := $(HV_OBJDIR)/include/platform_acpi_info.h
 
 $(TARGET_ACPI_INFO_HEADER): $(HV_OBJDIR)/$(HV_CONFIG)
@@ -272,7 +273,7 @@ endif
 .PHONY: all
 all: lib $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
-ifeq ($(CONFIG_PLATFORM), uefi)
+ifeq ($(CONFIG_PLATFORM_UEFI),y)
 all: efi
 .PHONY: efi
 efi: $(HV_OBJDIR)/$(HV_FILE).bin
@@ -283,7 +284,7 @@ install: efi
 	make -C bsp/uefi/efi HV_OBJDIR=$(HV_OBJDIR) install
 endif
 
-ifeq ($(CONFIG_PLATFORM), sbl)
+ifeq ($(CONFIG_PLATFORM_SBL),y)
 install: $(HV_OBJDIR)/$(HV_FILE).32.out
 	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).sbl
 endif
