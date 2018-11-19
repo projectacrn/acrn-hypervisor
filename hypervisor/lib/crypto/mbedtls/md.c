@@ -59,18 +59,8 @@ void mbedtls_md_init( mbedtls_md_context_t *ctx )
 
 void mbedtls_md_free( mbedtls_md_context_t *ctx )
 {
-    if( ctx == NULL || ctx->md_info == NULL )
+    if( ctx == NULL )
         return;
-
-    if( ctx->md_ctx != NULL )
-        ctx->md_info->ctx_free_func( ctx->md_ctx );
-
-    if( ctx->hmac_ctx != NULL )
-    {
-        mbedtls_platform_zeroize( ctx->hmac_ctx,
-                                  2 * ctx->md_info->block_size );
-        mbedtls_free( ctx->hmac_ctx );
-    }
 
     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_md_context_t ) );
 }
@@ -90,23 +80,10 @@ int mbedtls_md_clone( mbedtls_md_context_t *dst,
     return( 0 );
 }
 
-int mbedtls_md_setup( mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info, int hmac )
+int mbedtls_md_setup( mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info )
 {
     if( md_info == NULL || ctx == NULL )
         return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
-
-    if( ( ctx->md_ctx = md_info->ctx_alloc_func() ) == NULL )
-        return( MBEDTLS_ERR_MD_ALLOC_FAILED );
-
-    if( hmac != 0 )
-    {
-        ctx->hmac_ctx = mbedtls_calloc( 2, md_info->block_size );
-        if( ctx->hmac_ctx == NULL )
-        {
-            md_info->ctx_free_func( ctx->md_ctx );
-            return( MBEDTLS_ERR_MD_ALLOC_FAILED );
-        }
-    }
 
     ctx->md_info = md_info;
 
@@ -254,7 +231,7 @@ int mbedtls_md_hmac( const mbedtls_md_info_t *md_info,
 
     mbedtls_md_init( &ctx );
 
-    if( ( ret = mbedtls_md_setup( &ctx, md_info, 1 ) ) != 0 )
+    if( ( ret = mbedtls_md_setup( &ctx, md_info ) ) != 0 )
         goto cleanup;
 
     if( ( ret = mbedtls_md_hmac_starts( &ctx, key, keylen ) ) != 0 )
