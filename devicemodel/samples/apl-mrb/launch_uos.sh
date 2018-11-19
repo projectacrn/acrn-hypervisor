@@ -93,7 +93,7 @@ if [ $cse_passthrough == 1 ]; then
     echo "0000:00:0f.0" > /sys/bus/pci/drivers/pci-stub/bind
     boot_cse_option="$boot_cse_option"" -s 15,passthru,0/0f/0 "
 else
-    boot_cse_option="$boot_cse_option"" -s 15,virtio-heci,d1 "
+    boot_cse_option="$boot_cse_option"" -s 15,virtio-heci,0/0f/0 "
 fi
 
 # for sd card passthrough - SDXC/MMC Host Controller 00:1b.0
@@ -272,7 +272,7 @@ if [ $cse_passthrough == 1 ]; then
     echo "0000:00:0f.0" > /sys/bus/pci/drivers/pci-stub/bind
     boot_cse_option="$boot_cse_option"" -s 15,passthru,0/0f/0 "
 else
-    boot_cse_option="$boot_cse_option"" -s 15,virtio-heci,d1 "
+    boot_cse_option="$boot_cse_option"" -s 15,virtio-heci,0/0f/0 "
 fi
 
 #for memsize setting, total 8GB(>7.5GB) uos->6GB, 4GB(>3.5GB) uos->2GB
