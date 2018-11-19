@@ -11,7 +11,6 @@
 #define PTDEV_BITMAP_ARRAY_SIZE	INT_DIV_ROUNDUP(CONFIG_MAX_PT_IRQ_ENTRIES, 64U)
 struct ptdev_remapping_info ptdev_irq_entries[CONFIG_MAX_PT_IRQ_ENTRIES];
 static uint64_t ptdev_entry_bitmaps[PTDEV_BITMAP_ARRAY_SIZE];
-
 spinlock_t ptdev_lock;
 
 bool is_entry_active(const struct ptdev_remapping_info *entry)
@@ -86,7 +85,6 @@ ptdev_dequeue_softirq(struct acrn_vm *vm)
 	return entry;
 }
 
-/* require ptdev_lock protect */
 struct ptdev_remapping_info *
 alloc_entry(struct acrn_vm *vm, uint32_t intr_type)
 {
@@ -115,14 +113,13 @@ alloc_entry(struct acrn_vm *vm, uint32_t intr_type)
 	return entry;
 }
 
-/* require ptdev_lock protect */
 void
 release_entry(struct ptdev_remapping_info *entry)
 {
 	uint64_t rflags;
 
 	/*
-	 * remove entry from softirq list.the ptdev_lock
+	 * remove entry from softirq list
 	 * is required before calling release_entry.
 	 */
 	spinlock_irqsave_obtain(&entry->vm->softirq_dev_lock, &rflags);
@@ -132,7 +129,6 @@ release_entry(struct ptdev_remapping_info *entry)
 	bitmap_clear_nolock((entry->ptdev_entry_id) & 0x3FU, &ptdev_entry_bitmaps[(entry->ptdev_entry_id) >> 6U]);
 }
 
-/* require ptdev_lock protect */
 static void
 release_all_entries(const struct acrn_vm *vm)
 {
@@ -214,7 +210,6 @@ void ptdev_init(void)
 	}
 
 	spinlock_init(&ptdev_lock);
-
 	register_softirq(SOFTIRQ_PTDEV, ptdev_softirq);
 }
 
