@@ -62,12 +62,6 @@ struct mbedtls_md_info_t
     int (*digest_func)( const unsigned char *input, size_t ilen,
                         unsigned char *output );
 
-    /** Allocate a new context */
-    void * (*ctx_alloc_func)( void );
-
-    /** Free the given context */
-    void (*ctx_free_func)( void *ctx );
-
     /** Clone state from a context */
     void (*clone_func)( void *dst, const void *src );
 

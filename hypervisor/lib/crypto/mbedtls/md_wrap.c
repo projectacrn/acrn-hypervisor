@@ -45,22 +45,6 @@ static int sha256_finish_wrap( void *ctx, unsigned char *output )
                                        output ) );
 }
 
-static void *sha256_ctx_alloc( void )
-{
-    void *ctx = mbedtls_calloc( 1, sizeof( mbedtls_sha256_context ) );
-
-    if( ctx != NULL )
-        mbedtls_sha256_init( (mbedtls_sha256_context *) ctx );
-
-    return( ctx );
-}
-
-static void sha256_ctx_free( void *ctx )
-{
-    mbedtls_sha256_free( (mbedtls_sha256_context *) ctx );
-    mbedtls_free( ctx );
-}
-
 static void sha256_clone_wrap( void *dst, const void *src )
 {
     mbedtls_sha256_clone( (mbedtls_sha256_context *) dst,
@@ -93,8 +77,6 @@ const mbedtls_md_info_t mbedtls_sha256_info = {
     sha256_update_wrap,
     sha256_finish_wrap,
     sha256_wrap,
-    sha256_ctx_alloc,
-    sha256_ctx_free,
     sha256_clone_wrap,
     sha256_process_wrap,
 };

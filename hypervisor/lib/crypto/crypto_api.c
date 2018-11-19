@@ -52,8 +52,8 @@ int hmac_sha256(uint8_t *out_key,
 	}
 
 	if (mbedtls_md_hmac(md,
-			salt, salt_len,
 			secret, secret_len,
+			salt, salt_len,
 			out_key) != 0) {
 		return 0;
 	}
