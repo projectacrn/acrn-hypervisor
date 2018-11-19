@@ -12,6 +12,8 @@
 #define PTDEV_INTR_MSI		(1U << 0U)
 #define PTDEV_INTR_INTX		(1U << 1U)
 
+#define INVALID_PTDEV_ENTRY_ID 0xffffU
+
 enum ptdev_vpin_source {
 	PTDEV_VPIN_IOAPIC,
 	PTDEV_VPIN_PIC,
@@ -51,6 +53,7 @@ struct ptdev_msi_info {
  * with interrupt handler and softirq.
  */
 struct ptdev_remapping_info {
+	uint16_t ptdev_entry_id;
 	uint32_t intr_type;
 	union source_id phys_sid;
 	union source_id virt_sid;
@@ -59,16 +62,16 @@ struct ptdev_remapping_info {
 	uint32_t allocated_pirq;
 	uint32_t polarity; /* 0=active high, 1=active low*/
 	struct list_head softirq_node;
-	struct list_head entry_node;
 	struct ptdev_msi_info msi;
 
 	uint64_t intr_count;
 	struct hv_timer intr_delay_timer; /* used for delay intr injection */
 };
 
-extern struct list_head ptdev_list;
+extern struct ptdev_remapping_info ptdev_irq_entries[];
 extern spinlock_t ptdev_lock;
 
+bool is_entry_active(const struct ptdev_remapping_info *entry);
 void ptdev_softirq(uint16_t pcpu_id);
 void ptdev_init(void);
 void ptdev_release_all_entries(const struct acrn_vm *vm);

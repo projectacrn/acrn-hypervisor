@@ -8,17 +8,30 @@
 #include <softirq.h>
 #include <ptdev.h>
 
-/* passthrough device link */
-struct list_head ptdev_list;
+#define PTDEV_BITMAP_ARRAY_SIZE	INT_DIV_ROUNDUP(CONFIG_MAX_PT_IRQ_ENTRIES, 64U)
+struct ptdev_remapping_info ptdev_irq_entries[CONFIG_MAX_PT_IRQ_ENTRIES];
+static uint64_t ptdev_entry_bitmaps[PTDEV_BITMAP_ARRAY_SIZE];
+
 spinlock_t ptdev_lock;
 
-/*
- * entry could both be in ptdev_list and vm->softirq_dev_entry_list.
- * When release entry, we need make sure entry deleted from both
- * lists. We have to require two locks and the lock sequence is:
- *   ptdev_lock
- *     vm->softirq_dev_lock
- */
+bool is_entry_active(const struct ptdev_remapping_info *entry)
+{
+	return atomic_load32(&entry->active) == ACTIVE_FLAG;
+}
+
+static inline uint16_t alloc_ptdev_entry_id(void)
+{
+	uint16_t id = (uint16_t)ffz64_ex(ptdev_entry_bitmaps, CONFIG_MAX_PT_IRQ_ENTRIES);
+
+	while (id < CONFIG_MAX_PT_IRQ_ENTRIES) {
+		if (!bitmap_test_and_set_lock((id & 0x3FU), &ptdev_entry_bitmaps[id >> 6U])) {
+			return id;
+		}
+		id = (uint16_t)ffz64_ex(ptdev_entry_bitmaps, CONFIG_MAX_PT_IRQ_ENTRIES);
+	}
+
+	return INVALID_PTDEV_ENTRY_ID;
+}
 
 static void ptdev_enqueue_softirq(struct ptdev_remapping_info *entry)
 {
@@ -78,22 +91,26 @@ struct ptdev_remapping_info *
 alloc_entry(struct acrn_vm *vm, uint32_t intr_type)
 {
 	struct ptdev_remapping_info *entry;
+	uint16_t ptdev_id = alloc_ptdev_entry_id();
 
-	/* allocate */
-	entry = calloc(1U, sizeof(*entry));
-	ASSERT(entry != NULL, "alloc memory failed");
+	if (ptdev_id >= CONFIG_MAX_PT_IRQ_ENTRIES) {
+		pr_err("Alloc ptdev irq entry failed");
+		return NULL;
+	}
+
+	entry = &ptdev_irq_entries[ptdev_id];
+	(void)memset((void *)entry, 0U, sizeof(struct ptdev_remapping_info));
+	entry->ptdev_entry_id = ptdev_id;
 	entry->intr_type = intr_type;
 	entry->vm = vm;
+	entry->intr_count = 0UL;
 
 	INIT_LIST_HEAD(&entry->softirq_node);
-	INIT_LIST_HEAD(&entry->entry_node);
 
-	entry->intr_count = 0UL;
 	initialize_timer(&entry->intr_delay_timer, ptdev_intr_delay_callback,
 		entry, 0UL, 0, 0UL);
 
 	atomic_clear32(&entry->active, ACTIVE_FLAG);
-	list_add(&entry->entry_node, &ptdev_list);
 
 	return entry;
 }
@@ -104,9 +121,6 @@ release_entry(struct ptdev_remapping_info *entry)
 {
 	uint64_t rflags;
 
-	/* remove entry from ptdev_list */
-	list_del_init(&entry->entry_node);
-
 	/*
 	 * remove entry from softirq list.the ptdev_lock
 	 * is required before calling release_entry.
@@ -114,8 +128,8 @@ release_entry(struct ptdev_remapping_info *entry)
 	spinlock_irqsave_obtain(&entry->vm->softirq_dev_lock, &rflags);
 	list_del_init(&entry->softirq_node);
 	spinlock_irqrestore_release(&entry->vm->softirq_dev_lock, rflags);
-
-	free(entry);
+	atomic_clear32(&entry->active, ACTIVE_FLAG);
+	bitmap_clear_nolock((entry->ptdev_entry_id) & 0x3FU, &ptdev_entry_bitmaps[(entry->ptdev_entry_id) >> 6U]);
 }
 
 /* require ptdev_lock protect */
@@ -123,11 +137,10 @@ static void
 release_all_entries(const struct acrn_vm *vm)
 {
 	struct ptdev_remapping_info *entry;
-	struct list_head *pos, *tmp;
+	uint16_t idx;
 
-	list_for_each_safe(pos, tmp, &ptdev_list) {
-		entry = list_entry(pos, struct ptdev_remapping_info,
-				entry_node);
+	for (idx = 0U; idx < CONFIG_MAX_PT_IRQ_ENTRIES; idx++) {
+		entry = &ptdev_irq_entries[idx];
 		if (entry->vm == vm) {
 			release_entry(entry);
 		}
@@ -200,7 +213,6 @@ void ptdev_init(void)
 		return;
 	}
 
-	INIT_LIST_HEAD(&ptdev_list);
 	spinlock_init(&ptdev_lock);
 
 	register_softirq(SOFTIRQ_PTDEV, ptdev_softirq);
@@ -218,12 +230,14 @@ uint32_t get_vm_ptdev_intr_data(const struct acrn_vm *target_vm, uint64_t *buffe
 	uint32_t buffer_cnt)
 {
 	uint32_t index = 0U;
+	uint16_t i;
 	struct ptdev_remapping_info *entry;
-	struct list_head *pos, *tmp;
 
-	list_for_each_safe(pos, tmp, &ptdev_list) {
-		entry = list_entry(pos, struct ptdev_remapping_info,
-				entry_node);
+	for (i = 0U; i < CONFIG_MAX_PT_IRQ_ENTRIES; i++) {
+		entry = &ptdev_irq_entries[i];
+		if (!is_entry_active(entry)) {
+			continue;
+		}
 		if (entry->vm == target_vm) {
 			buffer[index] = entry->allocated_pirq;
 			buffer[index + 1U] = entry->intr_count;

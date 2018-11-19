@@ -19,12 +19,14 @@ static inline struct ptdev_remapping_info *
 ptdev_lookup_entry_by_sid(uint32_t intr_type,
 		const union source_id *sid,const struct acrn_vm *vm)
 {
+	uint16_t idx;
 	struct ptdev_remapping_info *entry;
-	struct list_head *pos;
 
-	list_for_each(pos, &ptdev_list) {
-		entry = list_entry(pos, struct ptdev_remapping_info,
-				entry_node);
+	for (idx = 0U; idx < CONFIG_MAX_PT_IRQ_ENTRIES; idx++) {
+		entry = &ptdev_irq_entries[idx];
+		if (!is_entry_active(entry)) {
+			continue;
+		}
 		if ((intr_type == entry->intr_type) &&
 			((vm == NULL) ?
 			(sid->value == entry->phys_sid.value) :
@@ -35,12 +37,6 @@ ptdev_lookup_entry_by_sid(uint32_t intr_type,
 	}
 
 	return NULL;
-}
-
-static inline bool
-is_entry_active(const struct ptdev_remapping_info *entry)
-{
-	return atomic_load32(&entry->active) == ACTIVE_FLAG;
 }
 
 #ifdef HV_DEBUG
@@ -209,6 +205,9 @@ static struct ptdev_remapping_info *add_msix_remapping(struct acrn_vm *vm,
 		}
 
 		entry = alloc_entry(vm, PTDEV_INTR_MSI);
+		if (entry == NULL) {
+			return NULL;
+		}
 		entry->phys_sid.value = phys_sid.value;
 		entry->virt_sid.value = virt_sid.value;
 
@@ -299,6 +298,9 @@ static struct ptdev_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint8
 			return NULL;
 		}
 		entry = alloc_entry(vm, PTDEV_INTR_INTX);
+		if (entry == NULL) {
+			return NULL;
+		}
 		entry->phys_sid.value = phys_sid.value;
 		entry->virt_sid.value = virt_sid.value;
 
@@ -830,6 +832,7 @@ void get_ptdev_info(char *str_arg, size_t str_max)
 {
 	char *str = str_arg;
 	struct ptdev_remapping_info *entry;
+	uint16_t idx;
 	size_t len, size = str_max;
 	uint32_t irq, vector;
 	char type[16];
@@ -837,7 +840,6 @@ void get_ptdev_info(char *str_arg, size_t str_max)
 	bool lvl_tm;
 	uint8_t pin, vpin;
 	uint32_t bdf, vbdf;
-	struct list_head *pos;
 
 	len = snprintf(str, size, "\r\nVM\tTYPE\tIRQ\tVEC\tDEST\tTM\tPIN\tVPIN\tBDF\tVBDF");
 	if (len >= size) {
@@ -847,9 +849,8 @@ void get_ptdev_info(char *str_arg, size_t str_max)
 	str += len;
 
 	spinlock_obtain(&ptdev_lock);
-	list_for_each(pos, &ptdev_list) {
-		entry = list_entry(pos, struct ptdev_remapping_info,
-				entry_node);
+	for (idx = 0U; idx < CONFIG_MAX_PT_IRQ_ENTRIES; idx++) {
+		entry = &ptdev_irq_entries[idx];
 		if (is_entry_active(entry)) {
 			get_entry_info(entry, type, &irq, &vector,
 					&dest, &lvl_tm, &pin, &vpin,
