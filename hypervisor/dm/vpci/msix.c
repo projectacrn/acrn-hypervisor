@@ -350,7 +350,9 @@ static int vmsix_init(struct pci_vdev *vdev)
 
 	/* Mask all table entries */
 	for (i = 0U; i < msix->table_count; i++) {
-		msix->tables[i].vector_control |= PCIM_MSIX_VCTRL_MASK;
+		msix->tables[i].vector_control = PCIM_MSIX_VCTRL_MASK;
+		msix->tables[i].addr = 0U;
+		msix->tables[i].data = 0U;
 	}
 
 	decode_msix_table_bar(vdev);
