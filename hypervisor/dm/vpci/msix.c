@@ -217,10 +217,22 @@ static void vmsix_table_rw(struct pci_vdev *vdev, struct mmio_request *mmio, uin
 		/* Save for comparison */
 		vector_control = entry->vector_control;
 
-		/* Writing different value to Message Data/Addr? */
-		if (((offsetof(struct msix_table_entry, addr) == entry_offset) && (entry->addr != mmio->value)) ||
-			((offsetof(struct msix_table_entry, data) == entry_offset) && (entry->data != (uint32_t)mmio->value))) {
-			message_changed = true;
+		/*
+		 * Writing different value to Message Data/Addr?
+		 * PCI Spec: Software is permitted to fill in MSI-X Table entry DWORD fields individually
+		 * with DWORD writes, or software in certain cases is permitted to fill in appropriate pairs
+		 * of DWORDs with a single QWORD write
+		 */
+		if (entry_offset < offsetof(struct msix_table_entry, data)) {
+			uint64_t qword_mask = ~0UL;
+			if (mmio->size == 4U) {
+				qword_mask = (entry_offset == 0U) ? 0x00000000FFFFFFFFUL : 0xFFFFFFFF00000000UL;
+			}
+			message_changed = ((entry->addr & qword_mask) != (mmio->value & qword_mask));
+		} else {
+			if (entry_offset == offsetof(struct msix_table_entry, data)) {
+				message_changed = (entry->data != (uint32_t)mmio->value);
+			}
 		}
 
 		/* Write to pci_vdev */
