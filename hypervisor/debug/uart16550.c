@@ -16,7 +16,6 @@ static bool serial_port_mapped;
 static bool uart_enabled = true;
 #define UART_BASE_ADDRESS		CONFIG_SERIAL_MMIO_BASE
 #else
-#warning  "no uart base configure, please check!"
 static bool serial_port_mapped;
 static bool uart_enabled;
 #define UART_BASE_ADDRESS		0UL
