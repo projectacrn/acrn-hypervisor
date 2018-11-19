@@ -113,6 +113,11 @@ config MAX_EMULATED_MMIO_REGIONS
 	range 0 128
 	default 16
 
+config MAX_PT_IRQ_ENTRIES
+	int "Maximum number of interrupt source for PT devices"
+	range 0 128
+	default 64
+
 config MAX_IOMMU_NUM
 	int "Maximum number of IOMMU devices"
 	range 1 2
