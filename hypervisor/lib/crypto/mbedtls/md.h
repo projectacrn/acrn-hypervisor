@@ -29,6 +29,7 @@
 #define MBEDTLS_MD_H
 
 #include <rtl.h>
+#include "sha256.h"
 #define MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE                -0x5080  /**< The selected feature is not available. */
 #define MBEDTLS_ERR_MD_BAD_INPUT_DATA                     -0x5100  /**< Bad input parameters to function. */
 #define MBEDTLS_ERR_MD_ALLOC_FAILED                       -0x5180  /**< Failed to allocate memory. */
@@ -36,8 +37,6 @@
 #define MBEDTLS_ERR_MD_HW_ACCEL_FAILED                    -0x5280  /**< MD hardware accelerator failed. */
 
 #define mbedtls_platform_zeroize(buf, len) memset(buf, 0, len)
-#define mbedtls_calloc    calloc
-#define mbedtls_free      free
 
 /**
  * \brief     Supported message digests.
@@ -62,11 +61,19 @@ typedef struct {
     /** Information about the associated message digest. */
     const mbedtls_md_info_t *md_info;
 
-    /** The digest-specific context. */
-    void *md_ctx;
+    /** The digest-specific context. Use array here to avoid dynamic memory
+     *  allocation. The size of the array size is determined by this line
+     *  in md_wrap.c
+     *  void *ctx = mbedtls_calloc(1, sizeof( mbedtls_sha256_context ));
+     */
+    unsigned char md_ctx[sizeof( mbedtls_sha256_context )];
 
-    /** The HMAC part of the context. */
-    void *hmac_ctx;
+    /** The HMAC part of the context. Use array here to avoid dynamic memory
+     *  allocation. The hardcode value 128 is determined by 2 parts:
+     *  1. In md.c ctx->hmac_ctx=mbedtls_calloc(2, md_info->block_size);
+     *  2. block_size is 64 in md_wrap.c
+     */
+    unsigned char hmac_ctx[128];
 } mbedtls_md_context_t;
 
 /**
@@ -127,15 +134,13 @@ void mbedtls_md_free( mbedtls_md_context_t *ctx );
  * \param ctx       The context to set up.
  * \param md_info   The information structure of the message-digest algorithm
  *                  to use.
- * \param hmac      Defines if HMAC is used. 0: HMAC is not used (saves some memory),
- *                  or non-zero: HMAC is used with this context.
  *
  * \return          \c 0 on success.
  * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
  *                  failure.
  * \return          #MBEDTLS_ERR_MD_ALLOC_FAILED on memory-allocation failure.
  */
-int mbedtls_md_setup( mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info, int hmac );
+int mbedtls_md_setup( mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info );
 
 /**
  * \brief           This function clones the state of an message-digest
