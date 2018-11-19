@@ -318,6 +318,7 @@ struct virtio_mei {
 	pthread_mutex_t mutex;
 
 	struct mevent                   *reset_mevp;
+	bool				dev_state_first;
 
 	struct mei_virtio_cfg           *config;
 
@@ -1979,7 +1980,6 @@ vmei_stop(struct virtio_mei *vmei)
 static void
 vmei_reset_callback(int fd, enum ev_type type, void *param)
 {
-	static bool first_time = true;
 	struct virtio_mei *vmei = param;
 	char buf[MEI_DEV_STATE_LEN] = {0};
 	int sz;
@@ -1989,8 +1989,12 @@ vmei_reset_callback(int fd, enum ev_type type, void *param)
 
 	lseek(fd, 0, SEEK_SET);
 	sz = read(fd, buf, 12);
-	if (first_time) {
-		first_time = false;
+	/*
+	 * edge mevent is hit immediately after add
+	 * as the file is not empty, this has to be ignored
+	 */
+	if (vmei->dev_state_first) {
+		vmei->dev_state_first = false;
 		return;
 	}
 
@@ -2017,6 +2021,7 @@ static int vmei_add_reset_event(struct virtio_mei *vmei)
 	if (dev_state_fd < 0)
 		return -errno;
 
+	vmei->dev_state_first = true;
 	vmei->reset_mevp = mevent_add(dev_state_fd, EVF_READ_ET,
 				      vmei_reset_callback, vmei);
 	if (!vmei->reset_mevp) {
