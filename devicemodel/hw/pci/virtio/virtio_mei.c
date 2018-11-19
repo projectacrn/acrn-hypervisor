@@ -806,6 +806,7 @@ static int vmei_me_client_scan_list(struct virtio_mei *vmei)
 			struct mei_client_properties props;
 
 			memset(&props, 0, sizeof(props));
+			devpath[d_offset] = '\0';
 
 			DPRINTF("found client %s %s\n", ent->d_name, devpath);
 
