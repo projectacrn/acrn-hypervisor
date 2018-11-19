@@ -119,7 +119,7 @@ int ptdev_add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, uint8_t phys_
  * @pre vm != NULL
  *
  */
-void ptdev_remove_intx_remapping(const struct acrn_vm *vm, uint8_t virt_pin, bool pic_pin);
+void ptdev_remove_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, bool pic_pin);
 
 /**
  * @brief Add interrupt remapping entry/entries for MSI/MSI-x as pre-hold mapping.

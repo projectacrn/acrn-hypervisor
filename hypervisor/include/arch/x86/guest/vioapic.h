@@ -41,6 +41,7 @@
 
 #define	VIOAPIC_BASE	0xFEC00000UL
 #define	VIOAPIC_SIZE	4096UL
+#define	VIOAPIC_MAX_PIN	 256U
 
 #define REDIR_ENTRIES_HW	120U /* SOS align with native ioapic */
 #define STATE_BITMAP_SIZE	INT_DIV_ROUNDUP(REDIR_ENTRIES_HW, 64U)
@@ -53,6 +54,7 @@ struct acrn_vioapic {
 	union ioapic_rte rtbl[REDIR_ENTRIES_HW];
 	/* pin_state status bitmap: 1 - high, 0 - low */
 	uint64_t pin_state[STATE_BITMAP_SIZE];
+	struct ptdev_remapping_info *vpin_to_pt_entry[VIOAPIC_MAX_PIN];
 };
 
 void    vioapic_init(struct acrn_vm *vm);

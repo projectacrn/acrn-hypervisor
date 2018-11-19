@@ -92,6 +92,10 @@
 #define	IO_ELCR1	0x4d0U
 #define	IO_ELCR2	0x4d1U
 
+#define NR_VPIC_PINS_PER_CHIP	8U
+#define NR_VPIC_PINS_TOTAL	16U
+#define VPIC_INVALID_PIN	0xffU
+
 enum vpic_trigger {
 	EDGE_TRIGGER,
 	LEVEL_TRIGGER
@@ -124,6 +128,7 @@ struct acrn_vpic {
 	struct acrn_vm		*vm;
 	spinlock_t	lock;
 	struct i8259_reg_state	i8259[2];
+	struct ptdev_remapping_info *vpin_to_pt_entry[NR_VPIC_PINS_TOTAL];
 };
 
 void vpic_init(struct acrn_vm *vm);

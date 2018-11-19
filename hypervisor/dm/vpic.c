@@ -31,10 +31,6 @@
 
 #define ACRN_DBG_PIC	6U
 
-#define NR_VPIC_PINS_PER_CHIP	8U
-#define NR_VPIC_PINS_TOTAL	16U
-#define VPIC_INVALID_PIN	0xffU
-
 static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin, uint8_t level);
 
 static inline bool master_pic(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259)
