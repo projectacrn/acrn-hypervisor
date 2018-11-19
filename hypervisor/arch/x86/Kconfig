@@ -154,13 +154,15 @@ config CPU_UP_TIMEOUT
 	  for secondary CPUs to start up.
 
 choice
-	prompt "serial IO type"
+	prompt "Serial IO type"
 	depends on !RELEASE
-	default SERIAL_MMIO if PLATFORM_SBL
-	default SERIAL_PIO  if PLATFORM_UEFI
+	optional
 	help
-	  Whether the physical serial port shall be accessed via memory-mapped
-	  registers or I/O ports.
+	  If selected, this configures whether the physical serial port shall
+	  be accessed via memory-mapped registers or I/O ports.
+
+	  If this is not selected, the serial port is disabled. This is the
+	  default.
 
 config SERIAL_MMIO
 	bool "MMIO"
