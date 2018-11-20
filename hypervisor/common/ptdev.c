@@ -160,19 +160,21 @@ static void ptdev_interrupt_handler(__unused uint32_t irq, void *data)
 }
 
 /* active intr with irq registering */
-void
-ptdev_activate_entry(struct ptdev_remapping_info *entry, uint32_t phys_irq)
+int32_t ptdev_activate_entry(struct ptdev_remapping_info *entry, uint32_t phys_irq)
 {
 	int32_t retval;
 
 	/* register and allocate host vector/irq */
-	retval = request_irq(phys_irq, ptdev_interrupt_handler,
-		             (void *)entry, IRQF_PT);
+	retval = request_irq(phys_irq, ptdev_interrupt_handler, (void *)entry, IRQF_PT);
 
-	ASSERT(retval >= 0, "dev register failed");
-	entry->allocated_pirq = (uint32_t)retval;
+	if (retval < 0) {
+		pr_err("request irq failed, please check!, phys-irq=%d", phys_irq);
+	} else {
+		entry->allocated_pirq = (uint32_t)retval;
+		atomic_set32(&entry->active, ACTIVE_FLAG);
+	}
 
-	atomic_set32(&entry->active, ACTIVE_FLAG);
+	return retval;
 }
 
 void

@@ -77,9 +77,7 @@ struct ptdev_remapping_info *ptdev_dequeue_softirq(struct acrn_vm *vm);
 struct ptdev_remapping_info *alloc_entry(struct acrn_vm *vm,
 		uint32_t intr_type);
 void release_entry(struct ptdev_remapping_info *entry);
-void ptdev_activate_entry(
-		struct ptdev_remapping_info *entry,
-		uint32_t phys_irq);
+int32_t ptdev_activate_entry(struct ptdev_remapping_info *entry, uint32_t phys_irq);
 void ptdev_deactivate_entry(struct ptdev_remapping_info *entry);
 
 #ifdef HV_DEBUG
