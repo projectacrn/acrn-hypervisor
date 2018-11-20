@@ -278,7 +278,7 @@ config CONSTANT_ACPI
 	  built-in tables after parsing the real ACPI tables at runtime.
 
 config DMAR_PARSE_ENABLED
-	bool
+	bool "Enable DMAR parsing"
 	default n if PLATFORM_SBL
 	default y if PLATFORM_UEFI
 	help
