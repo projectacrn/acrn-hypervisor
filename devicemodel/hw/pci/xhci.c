@@ -485,6 +485,24 @@ static struct pci_xhci_option_elem xhci_option_table[] = {
 	{"cap", pci_xhci_parse_extcap}
 };
 
+void
+wait_for_xhci_resume()
+{
+	/* The reason of waiting for resuming is USB virtualization
+	 * needs do TWO PASS SEQUENTIAL enumerations: one for SOS and
+	 * the other for UOS after SOS USB resuming work is completely
+	 * done. So, theoretically, virtual USB resuming MUST use more
+	 * time than its native counterpart.
+	 */
+
+	/* FIXME: will substitute it by dynamic way. The thought is
+	 * waiting time is calculated by the number of USB devices
+	 * attached. More devices, more waiting time, no device no
+	 * waiting.
+	 */
+	sleep(5);
+}
+
 static int
 pci_xhci_get_free_vport(struct pci_xhci_vdev *xdev,
 		struct usb_native_devinfo *di)
