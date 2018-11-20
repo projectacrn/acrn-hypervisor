@@ -183,7 +183,8 @@ C_SRCS += dm/hw/pci.c
 C_SRCS += dm/vpci/core.c
 C_SRCS += dm/vpci/vpci.c
 ifeq ($(CONFIG_PARTITION_MODE),y)
-C_SRCS += $(wildcard partition/*.c)
+C_SRCS += partition/$(CONFIG_BOARD)/mptable.c
+C_SRCS += partition/$(CONFIG_BOARD)/vm_description.c
 C_SRCS += dm/vpci/partition_mode.c
 C_SRCS += dm/vpci/hostbridge.c
 C_SRCS += dm/vpci/pci_pt.c
@@ -204,10 +205,6 @@ C_SRCS += boot/sbl/multiboot.c
 C_SRCS += boot/sbl/sbl_seed_parse.c
 C_SRCS += boot/sbl/abl_seed_parse.c
 endif
-endif
-
-ifeq ($(CONFIG_PARTITION_MODE), y)
-C_SRCS += arch/x86/guest/mptable.c
 endif
 
 # retpoline support
