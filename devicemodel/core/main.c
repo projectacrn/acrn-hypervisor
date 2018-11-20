@@ -66,6 +66,8 @@
 #include "vmcfg.h"
 #include "tpm.h"
 #include "virtio.h"
+#include "usb.h"
+#include "xhci.h"
 
 #define GUEST_NIO_PORT		0x488	/* guest upcalls via i/o port */
 
@@ -631,6 +633,7 @@ vm_suspend_resume(struct vmctx *ctx)
 
 	vm_stop_watchdog(ctx);
 	wait_for_resume(ctx);
+	wait_for_xhci_resume();
 
 	pm_backto_wakeup(ctx);
 	vm_reset_watchdog(ctx);
