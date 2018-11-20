@@ -41,7 +41,7 @@ union lapic_base_msr {
 };
 
 static struct lapic_regs saved_lapic_regs;
-static union lapic_base_msr lapic_base_msr;
+static union lapic_base_msr saved_lapic_base_msr;
 
 static void clear_lapic_isr(void)
 {
@@ -63,8 +63,10 @@ static void clear_lapic_isr(void)
 
 void early_init_lapic(void)
 {
+	union lapic_base_msr base;
+
 	/* Get local APIC base address */
-	lapic_base_msr.value = msr_read(MSR_IA32_APIC_BASE);
+	base.value = msr_read(MSR_IA32_APIC_BASE);
 
 	/* Enable LAPIC in x2APIC mode*/
 	/* The following sequence of msr writes to enable x2APIC
@@ -72,11 +74,11 @@ void early_init_lapic(void)
 	 * left by BIOS
 	 */
 	/* Step1: Enable LAPIC in xAPIC mode */
-	lapic_base_msr.fields.xAPIC_enable = 1U;
-	msr_write(MSR_IA32_APIC_BASE, lapic_base_msr.value);
+	base.fields.xAPIC_enable = 1U;
+	msr_write(MSR_IA32_APIC_BASE, base.value);
 	/* Step2: Enable LAPIC in x2APIC mode */
-	lapic_base_msr.fields.x2APIC_enable = 1U;
-	msr_write(MSR_IA32_APIC_BASE, lapic_base_msr.value);
+	base.fields.x2APIC_enable = 1U;
+	msr_write(MSR_IA32_APIC_BASE, base.value);
 }
 
 /**
@@ -152,6 +154,7 @@ void suspend_lapic(void)
 {
 	uint32_t val;
 
+	saved_lapic_base_msr.value = msr_read(MSR_IA32_APIC_BASE);
 	save_lapic(&saved_lapic_regs);
 
 	/* disable APIC with software flag */
@@ -162,7 +165,7 @@ void suspend_lapic(void)
 
 void resume_lapic(void)
 {
-	msr_write(MSR_IA32_APIC_BASE, lapic_base_msr.value);
+	msr_write(MSR_IA32_APIC_BASE, saved_lapic_base_msr.value);
 
 	/* ACPI software flag will be restored also */
 	restore_lapic(&saved_lapic_regs);
