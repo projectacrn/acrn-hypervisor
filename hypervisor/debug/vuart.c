@@ -32,7 +32,6 @@
 
 #include "uart16550.h"
 
-#define COM1_BASE		0x3E8U
 
 #ifndef CONFIG_PARTITION_MODE
 static char vuart_rx_buf[RX_BUF_SIZE];
@@ -132,10 +131,10 @@ static void vuart_toggle_intr(const struct acrn_vuart *vu)
 	uint32_t operation;
 
 	intr_reason = vuart_intr_reason(vu);
-	vioapic_get_rte(vu->vm, COM1_IRQ, &rte);
+	vioapic_get_rte(vu->vm, CONFIG_COM_IRQ, &rte);
 
 	/* TODO:
-	 * Here should assert vuart irq according to COM1_IRQ polarity.
+	 * Here should assert vuart irq according to CONFIG_COM_IRQ polarity.
 	 * The best way is to get the polarity info from ACIP table.
 	 * Here we just get the info from vioapic configuration.
 	 * based on this, we can still have irq storm during guest
@@ -150,8 +149,8 @@ static void vuart_toggle_intr(const struct acrn_vuart *vu)
 				GSI_SET_HIGH : GSI_SET_LOW;
 	}
 
-	vpic_set_irq(vu->vm, COM1_IRQ, operation);
-	vioapic_set_irq(vu->vm, COM1_IRQ, operation);
+	vpic_set_irq(vu->vm, CONFIG_COM_IRQ, operation);
+	vioapic_set_irq(vu->vm, CONFIG_COM_IRQ, operation);
 }
 
 static void vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
@@ -323,7 +322,7 @@ static void vuart_register_io_handler(struct acrn_vm *vm)
 {
 	struct vm_io_range range = {
 		.flags = IO_ATTR_RW,
-		.base = COM1_BASE,
+		.base = CONFIG_COM_BASE,
 		.len = 8U
 	};
 
@@ -402,7 +401,7 @@ void vuart_init(struct acrn_vm *vm)
 	vm->vuart.dlh = (uint8_t)(divisor >> 8U);
 
 	vm->vuart.active = false;
-	vm->vuart.base = COM1_BASE;
+	vm->vuart.base = CONFIG_COM_BASE;
 	vm->vuart.vm = vm;
 	vuart_fifo_init(vu);
 	vuart_lock_init(vu);

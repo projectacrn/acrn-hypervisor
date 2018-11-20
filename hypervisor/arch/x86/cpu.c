@@ -513,7 +513,7 @@ static void bsp_boot_post(void)
 
 	exec_vmxon_instr(BOOT_CPU_ID);
 
-	prepare_vm(BOOT_CPU_ID);
+	(void)prepare_vm(BOOT_CPU_ID);
 
 	default_idle();
 
@@ -583,7 +583,7 @@ static void cpu_secondary_post(void)
 	exec_vmxon_instr(get_cpu_id());
 
 #ifdef CONFIG_PARTITION_MODE
-	prepare_vm(get_cpu_id());
+	(void)prepare_vm(get_cpu_id());
 #endif
 
 	default_idle();

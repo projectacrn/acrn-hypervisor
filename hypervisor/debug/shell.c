@@ -29,7 +29,6 @@ static int shell_show_cpu_int(__unused int argc, __unused char **argv);
 static int shell_show_ptdev_info(__unused int argc, __unused char **argv);
 static int shell_show_vioapic_info(int argc, char **argv);
 static int shell_show_ioapic_info(__unused int argc, __unused char **argv);
-static int shell_show_vmexit_profile(__unused int argc, __unused char **argv);
 static int shell_dump_logbuf(int argc, char **argv);
 static int shell_loglevel(int argc, char **argv);
 static int shell_cpuid(int argc, char **argv);
@@ -95,12 +94,6 @@ static struct shell_cmd shell_cmds[] = {
 		.cmd_param	= SHELL_CMD_IOAPIC_PARAM,
 		.help_str	= SHELL_CMD_IOAPIC_HELP,
 		.fcn		= shell_show_ioapic_info,
-	},
-	{
-		.str		= SHELL_CMD_VMEXIT,
-		.cmd_param	= SHELL_CMD_VMEXIT_PARAM,
-		.help_str	= SHELL_CMD_VMEXIT_HELP,
-		.fcn		= shell_show_vmexit_profile,
 	},
 	{
 		.str		= SHELL_CMD_LOGDUMP,
@@ -805,14 +798,6 @@ static int shell_show_ioapic_info(__unused int argc, __unused char **argv)
 	shell_puts(shell_log_buf);
 
 	return err;
-}
-
-static int shell_show_vmexit_profile(__unused int argc, __unused char **argv)
-{
-	get_vmexit_profile(shell_log_buf, SHELL_LOG_BUF_SIZE);
-	shell_puts(shell_log_buf);
-
-	return 0;
 }
 
 static int shell_dump_logbuf(int argc, char **argv)

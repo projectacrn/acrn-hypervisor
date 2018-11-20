@@ -192,7 +192,11 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 			struct acrn_vcpu *vcpu = vcpu_from_vid(vpic->vm, 0U);
 			vcpu_inject_extint(vcpu);
 		} else {
-			vlapic_set_local_intr(vpic->vm, BROADCAST_CPU_ID, APIC_LVT_LINT0);
+			/*
+			 * The input parameters here guarantee the return value of vlapic_set_local_intr is 0, means
+			 * success.
+			 */
+			(void)vlapic_set_local_intr(vpic->vm, BROADCAST_CPU_ID, APIC_LVT_LINT0);
 			/* notify vioapic pin0 if existing
 			 * For vPIC + vIOAPIC mode, vpic master irq connected
 			 * to vioapic pin0 (irq2)
@@ -321,7 +325,7 @@ static int vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259
 
 			virt_pin = (master_pic(vpic, i8259)) ?
 					pin : (pin + 8U);
-			ptdev_intx_pin_remap(vpic->vm,
+			(void)ptdev_intx_pin_remap(vpic->vm,
 					virt_pin, PTDEV_VPIN_PIC);
 		}
 		pin = (pin + 1U) & 0x7U;

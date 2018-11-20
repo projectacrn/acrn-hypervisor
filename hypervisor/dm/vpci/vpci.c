@@ -30,17 +30,6 @@
 #include <hypervisor.h>
 #include "pci_priv.h"
 
-
-static bool is_cfg_addr(uint16_t addr)
-{
-	return (addr >= PCI_CONFIG_ADDR) && (addr < (PCI_CONFIG_ADDR + 4U));
-}
-
-static bool is_cfg_data(uint16_t addr)
-{
-	return (addr >= PCI_CONFIG_DATA) && (addr < (PCI_CONFIG_DATA + 4U));
-}
-
 static void pci_cfg_clear_cache(struct pci_addr_info *pi)
 {
 	pi->cached_bdf.value = 0xFFFFU;
@@ -48,79 +37,81 @@ static void pci_cfg_clear_cache(struct pci_addr_info *pi)
 	pi->cached_enable = false;
 }
 
-static uint32_t pci_cfg_io_read(struct acrn_vm *vm, uint16_t addr, size_t bytes)
+static uint32_t pci_cfgaddr_io_read(struct acrn_vm *vm, uint16_t addr, size_t bytes)
 {
-	uint32_t val = 0xFFFFFFFFU;
+	uint32_t val = ~0U;
 	struct vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
 
-	if (is_cfg_addr(addr)) {
-		/* TODO: handling the non 4 bytes access */
-		if (bytes == 4U) {
-			val = (uint32_t)pi->cached_bdf.value;
-			val <<= 8U;
-			val |= pi->cached_reg;
-			if (pi->cached_enable) {
-				val |= PCI_CFG_ENABLE;
-			}
-		}
-	} else {
-		if (is_cfg_data(addr)) {
-			if (pi->cached_enable) {
-				uint16_t offset = addr - PCI_CONFIG_DATA;
-
-				if ((vpci->ops != NULL) && (vpci->ops->cfgread != NULL)) {
-					vpci->ops->cfgread(vpci, pi->cached_bdf,
-						pi->cached_reg + offset, bytes, &val);
-				}
-
-				pci_cfg_clear_cache(pi);
-			}
-		} else {
-			val = 0xFFFFFFFFU;
+	if ((addr == (uint16_t)PCI_CONFIG_ADDR) && (bytes == 4U)) {
+		val = (uint32_t)pi->cached_bdf.value;
+		val <<= 8U;
+		val |= pi->cached_reg;
+		if (pi->cached_enable) {
+			val |= PCI_CFG_ENABLE;
 		}
 	}
 
 	return val;
 }
 
-static void pci_cfg_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes,
-			uint32_t val)
+static void pci_cfgaddr_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
 {
 	struct vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
 
-	if (is_cfg_addr(addr)) {
-		/* TODO: handling the non 4 bytes access */
-		if (bytes == 4U) {
-			pi->cached_bdf.value = (uint16_t)(val >> 8U);
-			pi->cached_reg = val & PCI_REGMAX;
-			pi->cached_enable = ((val & PCI_CFG_ENABLE) == PCI_CFG_ENABLE);
-		}
-	} else {
-		if (is_cfg_data(addr)) {
-			if (pi->cached_enable) {
-				uint16_t offset = addr - PCI_CONFIG_DATA;
+	if ((addr == (uint16_t)PCI_CONFIG_ADDR) && (bytes == 4U)) {
+		pi->cached_bdf.value = (uint16_t)(val >> 8U);
+		pi->cached_reg = val & PCI_REGMAX;
+		pi->cached_enable = ((val & PCI_CFG_ENABLE) == PCI_CFG_ENABLE);
+	}
+}
 
-				if ((vpci->ops != NULL) && (vpci->ops->cfgwrite != NULL)) {
-					vpci->ops->cfgwrite(vpci, pi->cached_bdf,
-						pi->cached_reg + offset, bytes, val);
-				}
-				pci_cfg_clear_cache(pi);
-			}
-		} else {
-			pr_err("Not PCI cfg data/addr port access!");
+static uint32_t pci_cfgdata_io_read(struct acrn_vm *vm, uint16_t addr, size_t bytes)
+{
+	struct vpci *vpci = &vm->vpci;
+	struct pci_addr_info *pi = &vpci->addr_info;
+	uint16_t offset = addr - PCI_CONFIG_DATA;
+	uint32_t val = ~0U;
+
+	if (pi->cached_enable) {
+		if ((vpci->ops != NULL) && (vpci->ops->cfgread != NULL)) {
+			vpci->ops->cfgread(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, &val);
 		}
+		pci_cfg_clear_cache(pi);
+	}
+
+	return val;
+}
+
+static void pci_cfgdata_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
+{
+	struct vpci *vpci = &vm->vpci;
+	struct pci_addr_info *pi = &vpci->addr_info;
+	uint16_t offset = addr - PCI_CONFIG_DATA;
+
+	if (pi->cached_enable) {
+		if ((vpci->ops != NULL) && (vpci->ops->cfgwrite != NULL)) {
+			vpci->ops->cfgwrite(vpci, pi->cached_bdf, pi->cached_reg + offset, bytes, val);
+		}
+		pci_cfg_clear_cache(pi);
 	}
 }
 
 void vpci_init(struct acrn_vm *vm)
 {
 	struct vpci *vpci = &vm->vpci;
-	struct vm_io_range pci_cfg_range = {
+
+	struct vm_io_range pci_cfgaddr_range = {
 		.flags = IO_ATTR_RW,
 		.base = PCI_CONFIG_ADDR,
-		.len = 8U
+		.len = 1U
+	};
+
+	struct vm_io_range pci_cfgdata_range = {
+		.flags = IO_ATTR_RW,
+		.base = PCI_CONFIG_DATA,
+		.len = 4U
 	};
 
 	vpci->vm = vm;
@@ -132,13 +123,17 @@ void vpci_init(struct acrn_vm *vm)
 #endif
 
 	if ((vpci->ops->init != NULL) && (vpci->ops->init(vm) == 0)) {
-		register_io_emulation_handler(vm, PCI_PIO_IDX, &pci_cfg_range, pci_cfg_io_read, pci_cfg_io_write);
-		/* This is a tmp solution to avoid sos reboot failure, it need pass-thru IO port CF9 for Reset Control
-		 * register.
+		/*
+		 * SOS: intercep port CF8 only.
+		 * UOS or partition mode: register handler for CF8 only and I/O requests to CF9/CFA/CFB are
+		 *      not handled by vpci.
 		 */
-		if (is_vm0(vm)) {
-			allow_guest_pio_access(vm, (uint16_t)0xCF9U, 1U);
-		}
+		register_io_emulation_handler(vm, PCI_CFGADDR_PIO_IDX, &pci_cfgaddr_range,
+			pci_cfgaddr_io_read, pci_cfgaddr_io_write);
+
+		/* Intercept and handle I/O ports CFC -- CFF */
+		register_io_emulation_handler(vm, PCI_CFGDATA_PIO_IDX, &pci_cfgdata_range,
+			pci_cfgdata_io_read, pci_cfgdata_io_write);
 	}
 }
 

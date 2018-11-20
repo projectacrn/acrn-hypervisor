@@ -78,10 +78,6 @@ struct shell {
 #define SHELL_CMD_VIOAPIC_PARAM		"<vm id>"
 #define SHELL_CMD_VIOAPIC_HELP		"show vioapic info"
 
-#define SHELL_CMD_VMEXIT		"vmexit"
-#define SHELL_CMD_VMEXIT_PARAM		NULL
-#define SHELL_CMD_VMEXIT_HELP		"show vmexit profiling"
-
 #define SHELL_CMD_LOGDUMP		"logdump"
 #define SHELL_CMD_LOGDUMP_PARAM		"<pcpu id>"
 #define SHELL_CMD_LOGDUMP_HELP		"log buffer dump"

@@ -69,13 +69,11 @@ struct acrn_vuart {
 extern int8_t vuart_vmid;
 #endif
 #ifdef HV_DEBUG
-#define COM1_IRQ		6U
 void vuart_init(struct acrn_vm *vm);
 struct acrn_vuart *vuart_console_active(void);
 void vuart_console_tx_chars(struct acrn_vuart *vu);
 void vuart_console_rx_chars(struct acrn_vuart *vu);
 #else
-#define COM1_IRQ		0xFFU
 static inline void vuart_init(__unused struct acrn_vm *vm)
 {
 }

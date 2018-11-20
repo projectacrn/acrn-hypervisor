@@ -83,7 +83,7 @@ void emulate_mmio_post(const struct acrn_vcpu *vcpu, const struct io_request *io
 
 	if (mmio_req->direction == REQUEST_READ) {
 		/* Emulate instruction and update vcpu register set */
-		emulate_instruction(vcpu);
+		(void)emulate_instruction(vcpu);
 	}
 }
 
@@ -207,33 +207,24 @@ hv_emulate_pio(const struct acrn_vcpu *vcpu, struct io_request *io_req)
 
 	for (idx = 0U; idx < EMUL_PIO_IDX_MAX; idx++) {
 		handler = &(vm->arch_vm.emul_pio[idx]);
-		if (handler->len == 0U) {
-			continue;
-		}
-		uint16_t base = handler->addr;
-		uint16_t end = base + (uint16_t)handler->len;
 
-		if ((port >= end) || (port + size <= base)) {
+		if ((port < handler->port_start) || (port >= handler->port_end)) {
 			continue;
-		} else if (!((port >= base) && ((port + size) <= end))) {
-			pr_fatal("Err:IO, port 0x%04x, size=%hu spans devices", port, size);
-			status = -EIO;
-			break;
-		} else {
-			if (pio_req->direction == REQUEST_WRITE) {
-				if (handler->io_write) {
-					handler->io_write(vm, port, size, pio_req->value & mask);
-				}
-				pr_dbg("IO write on port %04x, data %08x", port, pio_req->value & mask);
-			} else {
-				if (handler->io_read) {
-					pio_req->value = handler->io_read(vm, port, size);
-				}
-				pr_dbg("IO read on port %04x, data %08x", port, pio_req->value);
-			}
-			status = 0;
-			break;
 		}
+
+		if (pio_req->direction == REQUEST_WRITE) {
+			if (handler->io_write) {
+				handler->io_write(vm, port, size, pio_req->value & mask);
+			}
+			pr_dbg("IO write on port %04x, data %08x", port, pio_req->value & mask);
+		} else {
+			if (handler->io_read) {
+				pio_req->value = handler->io_read(vm, port, size);
+			}
+			pr_dbg("IO read on port %04x, data %08x", port, pio_req->value);
+		}
+		status = 0;
+		break;
 	}
 
 	return status;
@@ -466,8 +457,8 @@ void register_io_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
 	if (is_vm0(vm)) {
 		deny_guest_pio_access(vm, range->base, range->len);
 	}
-	vm->arch_vm.emul_pio[pio_idx].addr = range->base;
-	vm->arch_vm.emul_pio[pio_idx].len = range->len;
+	vm->arch_vm.emul_pio[pio_idx].port_start = range->base;
+	vm->arch_vm.emul_pio[pio_idx].port_end = range->base + range->len;
 	vm->arch_vm.emul_pio[pio_idx].io_read = io_read_fn_ptr;
 	vm->arch_vm.emul_pio[pio_idx].io_write = io_write_fn_ptr;
 }

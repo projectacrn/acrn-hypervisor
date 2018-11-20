@@ -14,6 +14,7 @@
 
 static int unhandled_vmexit_handler(struct acrn_vcpu *vcpu);
 static int xsetbv_vmexit_handler(struct acrn_vcpu *vcpu);
+static int wbinvd_vmexit_handler(struct acrn_vcpu *vcpu);
 
 /* VM Dispatch table for Exit condition handling */
 static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
@@ -127,7 +128,7 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_INVVPID] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_WBINVD] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = wbinvd_vmexit_handler},
 	[VMX_EXIT_REASON_XSETBV] = {
 		.handler = xsetbv_vmexit_handler},
 	[VMX_EXIT_REASON_APIC_WRITE] = {
@@ -358,5 +359,14 @@ static int xsetbv_vmexit_handler(struct acrn_vcpu *vcpu)
 	}
 
 	write_xcr(0, val64);
+	return 0;
+}
+
+static int wbinvd_vmexit_handler(struct acrn_vcpu *vcpu)
+{
+	if (!iommu_snoop_supported(vcpu->vm)) {
+		cache_flush_invalidate_all();
+	}
+
 	return 0;
 }

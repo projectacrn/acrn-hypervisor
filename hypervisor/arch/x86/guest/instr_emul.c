@@ -2293,7 +2293,10 @@ int decode_instruction(struct acrn_vcpu *vcpu)
 			return retval;
 		}
 	} else {
-		instr_check_gva(vcpu, emul_ctxt, cpu_mode);
+		retval = instr_check_gva(vcpu, emul_ctxt, cpu_mode);
+		if (retval < 0) {
+			return retval;
+		}
 	}
 
 	return (int)(emul_ctxt->vie.opsize);
