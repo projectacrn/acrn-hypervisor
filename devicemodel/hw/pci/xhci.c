@@ -2929,6 +2929,9 @@ pci_xhci_device_doorbell(struct pci_xhci_vdev *xdev,
 	}
 
 	dev = XHCI_SLOTDEV_PTR(xdev, slot);
+	if (!dev)
+		return;
+
 	devep = &dev->eps[epid];
 	dev_ctx = pci_xhci_get_dev_ctx(xdev, slot);
 	if (!dev_ctx)
