@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include <unistd.h>
 #include "usb.h"
 #include "usbdi.h"
 #include "usb_pmapper.h"
@@ -1112,10 +1113,16 @@ static void *
 usb_dev_sys_thread(void *arg)
 {
 	struct timeval t = {1, 0};
+	int rc = 0;
 
-	while (g_ctx.thread_exit == 0 &&
-		libusb_handle_events_timeout(g_ctx.libusb_ctx, &t) >= 0)
-		; /* nothing */
+	while (g_ctx.thread_exit == 0) {
+		rc = libusb_handle_events_timeout(g_ctx.libusb_ctx, &t);
+		if (rc < 0)
+			/* TODO: maybe one second as interval is too long which
+			 * may result of slower USB enumeration process.
+			 */
+			sleep(1);
+	}
 
 	UPRINTF(LINF, "poll thread exit\n\r");
 	return NULL;
