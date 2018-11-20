@@ -192,9 +192,8 @@ ptdev_build_physical_rte(struct acrn_vm *vm,
  * - if the entry already be added by vm0, then change the owner to current vm
  * - if the entry already be added by other vm, return NULL
  */
-static struct ptdev_remapping_info *
-add_msix_remapping(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
-		uint32_t entry_nr)
+static struct ptdev_remapping_info *add_msix_remapping(struct acrn_vm *vm,
+	uint16_t virt_bdf, uint16_t phys_bdf, uint32_t entry_nr)
 {
 	struct ptdev_remapping_info *entry;
 	DEFINE_MSI_SID(phys_sid, phys_bdf, entry_nr);
@@ -203,45 +202,41 @@ add_msix_remapping(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t phys_bdf,
 	spinlock_obtain(&ptdev_lock);
 	entry = ptdev_lookup_entry_by_sid(PTDEV_INTR_MSI, &phys_sid, NULL);
 	if (entry == NULL) {
-		if (ptdev_lookup_entry_by_sid(PTDEV_INTR_MSI,
-				&virt_sid, vm) != NULL) {
+		if (ptdev_lookup_entry_by_sid(PTDEV_INTR_MSI, &virt_sid, vm) != NULL) {
 			pr_err("MSIX re-add vbdf%x", virt_bdf);
-
 			spinlock_release(&ptdev_lock);
 			return NULL;
 		}
+
 		entry = alloc_entry(vm, PTDEV_INTR_MSI);
 		entry->phys_sid.value = phys_sid.value;
 		entry->virt_sid.value = virt_sid.value;
 
 		/* update msi source and active entry */
-		ptdev_activate_entry(entry, IRQ_INVALID);
+		if (ptdev_activate_entry(entry, IRQ_INVALID) < 0) {
+			release_entry(entry);
+			entry = NULL;
+		}
 	} else if (entry->vm != vm) {
 		if (is_vm0(entry->vm)) {
 			entry->vm = vm;
 			entry->virt_sid.msi_id.bdf = virt_bdf;
 		} else {
-			pr_err("MSIX pbdf%x idx=%d already in vm%d with vbdf%x,"
-				" not able to add into vm%d with vbdf%x",
-				entry->phys_sid.msi_id.bdf,
-				entry->phys_sid.msi_id.entry_nr,
-				entry->vm->vm_id, entry->virt_sid.msi_id.bdf,
-				vm->vm_id, virt_bdf);
-			ASSERT(false, "msix entry pbdf%x idx%d already in vm%d",
-			       phys_bdf, entry_nr, entry->vm->vm_id);
+			pr_err("MSIX pbdf%x idx=%d already in vm%d with vbdf%x, not able to add into vm%d with vbdf%x",
+				entry->phys_sid.msi_id.bdf, entry->phys_sid.msi_id.entry_nr, entry->vm->vm_id,
+				entry->virt_sid.msi_id.bdf, vm->vm_id, virt_bdf);
 
-			spinlock_release(&ptdev_lock);
-			return NULL;
+			pr_err("msix entry pbdf%x idx%d already in vm%d", phys_bdf, entry_nr, entry->vm->vm_id);
+			entry = NULL;
 		}
 	} else {
 		/* The mapping has already been added to the VM. No action
 		 * required. */
 	}
-	spinlock_release(&ptdev_lock);
 
-	dev_dbg(ACRN_DBG_IRQ,
-		"VM%d MSIX add vector mapping vbdf%x:pbdf%x idx=%d",
-		entry->vm->vm_id, virt_bdf, phys_bdf, entry_nr);
+	spinlock_release(&ptdev_lock);
+	dev_dbg(ACRN_DBG_IRQ, "VM%d MSIX add vector mapping vbdf%x:pbdf%x idx=%d",
+		vm->vm_id, virt_bdf, phys_bdf, entry_nr);
 
 	return entry;
 }
@@ -281,28 +276,24 @@ END:
  * - if the entry already be added by vm0, then change the owner to current vm
  * - if the entry already be added by other vm, return NULL
  */
-static struct ptdev_remapping_info *
-add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin,
+static struct ptdev_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin,
 		uint8_t phys_pin, bool pic_pin)
 {
 	struct ptdev_remapping_info *entry;
-	enum ptdev_vpin_source vpin_src =
-		pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
+	enum ptdev_vpin_source vpin_src = pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
 	DEFINE_IOAPIC_SID(phys_sid, phys_pin, 0);
 	DEFINE_IOAPIC_SID(virt_sid, virt_pin, vpin_src);
 	uint32_t phys_irq = pin_to_irq(phys_pin);
 
 	if (!irq_is_gsi(phys_irq)) {
-		pr_err("%s, invalid phys_pin: %d <-> irq: 0x%x is not a GSI\n",
-			__func__, phys_pin, phys_irq);
+		pr_err("%s, invalid phys_pin: %d <-> irq: 0x%x is not a GSI\n", __func__, phys_pin, phys_irq);
 		return NULL;
 	}
 
 	spinlock_obtain(&ptdev_lock);
 	entry = ptdev_lookup_entry_by_sid(PTDEV_INTR_INTX, &phys_sid, NULL);
 	if (entry == NULL) {
-		if (ptdev_lookup_entry_by_sid(PTDEV_INTR_INTX,
-				&virt_sid, vm) != NULL) {
+		if (ptdev_lookup_entry_by_sid(PTDEV_INTR_INTX, &virt_sid, vm) != NULL) {
 			pr_err("INTX re-add vpin %d", virt_pin);
 			spinlock_release(&ptdev_lock);
 			return NULL;
@@ -312,20 +303,18 @@ add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin,
 		entry->virt_sid.value = virt_sid.value;
 
 		/* activate entry */
-		ptdev_activate_entry(entry, phys_irq);
+		if (ptdev_activate_entry(entry, phys_irq) < 0) {
+			release_entry(entry);
+			entry = NULL;
+		}
 	} else if (entry->vm != vm) {
 		if (is_vm0(entry->vm)) {
 			entry->vm = vm;
 			entry->virt_sid.value = virt_sid.value;
 		} else {
-			pr_err("INTX pin%d already in vm%d with vpin%d,"
-				" not able to add into vm%d with vpin%d",
-				phys_pin, entry->vm->vm_id,
-				entry->virt_sid.intx_id.pin,
-				vm->vm_id, virt_pin);
-
-			spinlock_release(&ptdev_lock);
-			return NULL;
+			pr_err("INTX pin%d already in vm%d with vpin%d, not able to add into vm%d with vpin%d",
+				phys_pin, entry->vm->vm_id, entry->virt_sid.intx_id.pin, vm->vm_id, virt_pin);
+			entry = NULL;
 		}
 	} else {
 		/* The mapping has already been added to the VM. No action
@@ -333,10 +322,7 @@ add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin,
 	}
 
 	spinlock_release(&ptdev_lock);
-
-	dev_dbg(ACRN_DBG_IRQ,
-		"VM%d INTX add pin mapping vpin%d:ppin%d",
-		entry->vm->vm_id, virt_pin, phys_pin);
+	dev_dbg(ACRN_DBG_IRQ, "VM%d INTX add pin mapping vpin%d:ppin%d", vm->vm_id, virt_pin, phys_pin);
 
 	return entry;
 }
