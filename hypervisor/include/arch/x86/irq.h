@@ -148,7 +148,7 @@ int vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector, uint32_t err_c
  *
  * @param[in] vcpu Pointer to vCPU.
  *
- * @return void
+ * @return None
  *
  * @pre vcpu != NULL
  */
@@ -159,7 +159,7 @@ void vcpu_inject_extint(struct acrn_vcpu *vcpu);
  *
  * @param[in] vcpu Pointer to vCPU.
  *
- * @return void
+ * @return None
  *
  * @pre vcpu != NULL
  */
@@ -171,7 +171,7 @@ void vcpu_inject_nmi(struct acrn_vcpu *vcpu);
  * @param[in] vcpu     Pointer to vCPU.
  * @param[in] err_code Error Code to be injected.
  *
- * @return void
+ * @return None
  *
  * @pre vcpu != NULL
  */
@@ -184,7 +184,7 @@ void vcpu_inject_gp(struct acrn_vcpu *vcpu, uint32_t err_code);
  * @param[in] addr     Address that result in PF.
  * @param[in] err_code Error Code to be injected.
  *
- * @return void
+ * @return None
  *
  * @pre vcpu != NULL
  */
@@ -195,7 +195,7 @@ void vcpu_inject_pf(struct acrn_vcpu *vcpu, uint64_t addr, uint32_t err_code);
  *
  * @param[in] vcpu Pointer to vCPU.
  *
- * @return void
+ * @return None
  *
  * @pre vcpu != NULL
  */
@@ -206,7 +206,7 @@ void vcpu_inject_ud(struct acrn_vcpu *vcpu);
  *
  * @param[in] vcpu Pointer to vCPU.
  *
- * @return void
+ * @return None
  *
  * @pre vcpu != NULL
  */
@@ -217,7 +217,7 @@ void vcpu_inject_ac(struct acrn_vcpu *vcpu);
  *
  * @param[in] vcpu Pointer to vCPU.
  *
- * @return void
+ * @return None
  *
  * @pre vcpu != NULL
  */

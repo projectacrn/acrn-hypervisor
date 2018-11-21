@@ -55,7 +55,7 @@
  * @param dev Pointer to struct pci_vdev which emulates a PCI device.
  * @param queues Pointer to struct virtio_vq_info, normally an array.
  *
- * @return NULL
+ * @return None
  */
 void
 virtio_linkup(struct virtio_base *base, struct virtio_ops *vops,
@@ -89,7 +89,7 @@ virtio_linkup(struct virtio_base *base, struct virtio_ops *vops,
  *
  * @param base Pointer to struct virtio_base.
  *
- * @return N/A
+ * @return None
  */
 void
 virtio_reset_dev(struct virtio_base *base)
@@ -133,7 +133,7 @@ virtio_reset_dev(struct virtio_base *base)
  * @param base Pointer to struct virtio_base.
  * @param barnum Which BAR[0..5] to use.
  *
- * @return N/A
+ * @return None
  */
 void
 virtio_set_io_bar(struct virtio_base *base, int barnum)
@@ -1078,7 +1078,7 @@ virtio_set_modern_bar(struct virtio_base *base, bool use_notify_pio)
  *
  * @param base Pointer to struct virtio_base.
  *
- * @return N/A
+ * @return None
  */
 void
 virtio_dev_error(struct virtio_base *base)
@@ -1716,7 +1716,7 @@ virtio_pci_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
  * @param size Access range in bytes.
  * @param value Data value to be written into register.
  *
- * @return N/A
+ * @return None
  */
 void
 virtio_pci_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,

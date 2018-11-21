@@ -76,7 +76,7 @@ void	vioapic_reset(struct acrn_vioapic *vioapic);
  *
  * @pre irq < vioapic_pincount(vm)
  *
- * @return void
+ * @return None
  */
 void	vioapic_set_irq(struct acrn_vm *vm, uint32_t irq, uint32_t operation);
 
@@ -92,7 +92,7 @@ void	vioapic_set_irq(struct acrn_vm *vm, uint32_t irq, uint32_t operation);
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
  * @pre irq < vioapic_pincount(vm)
- * @return void
+ * @return None
  */
 void	vioapic_set_irq_nolock(struct acrn_vm *vm, uint32_t irq, uint32_t operation);
 void	vioapic_update_tmr(struct acrn_vcpu *vcpu);

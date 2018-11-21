@@ -60,7 +60,7 @@ static void acrn_print_request(uint16_t vcpu_id, const struct vhm_request *req)
  *
  * @param vm The VM whose IO requests to be reset
  *
- * @return N/A
+ * @return None
  */
 void reset_vm_ioreqs(struct acrn_vm *vm)
 {
@@ -100,7 +100,7 @@ static bool has_complete_ioreq(struct acrn_vcpu *vcpu)
  *
  * @param pcpu_id The physical cpu id of vcpu whose IO request to be checked
  *
- * @return N/A
+ * @return None
  */
 void handle_complete_ioreq(uint16_t pcpu_id)
 {
