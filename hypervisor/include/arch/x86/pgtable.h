@@ -82,7 +82,7 @@
  *
  * @param[in] x The specified host-physical address
  *
- * @return void pointer - The host-virtual address
+ * @return The translated host-virtual address
  */
 static inline void *hpa2hva(uint64_t x)
 {
@@ -93,7 +93,7 @@ static inline void *hpa2hva(uint64_t x)
  *
  * @param[in] x The specified host-virtual address
  *
- * @return unsigned long integer - The host-physical address
+ * @return The translated host-physical address
  */
 static inline uint64_t hva2hpa(void *x)
 {

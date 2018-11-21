@@ -16,8 +16,8 @@
  * @param base Base: 8, 10, 16...
  * @param val Long integer convert from string.
  *
- * @return -1 error.
- * @return 0  no error.
+ * @retval -1 error.
+ * @retval 0  no error.
  */
 
 int dm_strtol(const char *s, char **end, unsigned int base, long *val);
@@ -30,8 +30,8 @@ int dm_strtol(const char *s, char **end, unsigned int base, long *val);
  * @param base Base: 8, 10, 16...
  * @param val Integer convert from string.
  *
- * @return -1 error.
- * @return 0  no error.
+ * @retval -1 error.
+ * @retval 0  no error.
  */
 
 int dm_strtoi(const char *s, char **end, unsigned int base, int *val);
@@ -44,8 +44,8 @@ int dm_strtoi(const char *s, char **end, unsigned int base, int *val);
  * @param base Base: 8, 10, 16...
  * @param val Unsigned long integer convert from string.
  *
- * @return -1 error.
- * @return 0  no error.
+ * @retval -1 error.
+ * @retval 0  no error.
  */
 
 int dm_strtoul(const char *s, char **end, unsigned int base, unsigned long *val);
@@ -58,8 +58,8 @@ int dm_strtoul(const char *s, char **end, unsigned int base, unsigned long *val)
  * @param base Base: 8, 10, 16...
  * @param val Unsigned integer convert from string.
  *
- * @return -1 error.
- * @return 0  no error.
+ * @retval -1 error.
+ * @retval 0  no error.
  */
 
 int dm_strtoui(const char *s, char **end, unsigned int base, unsigned int *val);

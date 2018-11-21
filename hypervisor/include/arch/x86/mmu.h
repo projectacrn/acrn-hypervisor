@@ -117,15 +117,15 @@ void mmu_modify_or_del(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
 /**
  * @brief EPT and VPID capability checking
  *
- * @return 0 - on success
- * @return -ENODEV - Don't support EPT or VPID capability
+ * @retval 0 on success
+ * @retval -ENODEV Don't support EPT or VPID capability
  */
 int check_vmx_mmu_cap(void);
 /**
  * @brief VPID allocation
  *
- * @return 0 - VPID overflow
- * @return more than 0 - the valid VPID
+ * @retval 0 VPID overflow
+ * @retval >0 the valid VPID
  */
 uint16_t allocate_vpid(void);
 /**
@@ -157,8 +157,8 @@ void invept(const struct acrn_vcpu *vcpu);
  * @param[in] gpa_arg the start GPA address of the guest memory region
  * @param[in] size_arg the size of the guest memory region
  *
- * @return true - The HPA of the guest memory region is continuous
- * @return false - The HPA of the guest memory region is non-continuous
+ * @retval true The HPA of the guest memory region is continuous
+ * @retval false The HPA of the guest memory region is non-continuous
  */
 bool check_continuous_hpa(struct acrn_vm *vm, uint64_t gpa_arg, uint64_t size_arg);
 /**
@@ -221,8 +221,8 @@ void destroy_ept(struct acrn_vm *vm);
  * @param[in] vm the pointer that points to VM data structure
  * @param[in] gpa the specified guest-physical address
  *
- * @return INVALID_HPA - the HPA of parameter gpa is unmapping
- * @return hpa - the HPA of parameter gpa is hpa
+ * @retval hpa the host physical address mapping to the \p gpa
+ * @retval INVALID_HPA the HPA of parameter gpa is unmapping
  */
 uint64_t gpa2hpa(struct acrn_vm *vm, uint64_t gpa);
 /**
@@ -233,8 +233,8 @@ uint64_t gpa2hpa(struct acrn_vm *vm, uint64_t gpa);
  * @param[out] size the pointer that returns the page size of
  *                  the page in which the gpa is
  *
- * @return INVALID_HPA - the HPA of parameter gpa is unmapping
- * @return hpa - the HPA of parameter gpa is hpa
+ * @retval hpa the host physical address mapping to the \p gpa
+ * @retval INVALID_HPA the HPA of parameter gpa is unmapping
  */
 uint64_t local_gpa2hpa(struct acrn_vm *vm, uint64_t gpa, uint32_t *size);
 /**
@@ -299,8 +299,8 @@ void ept_mr_del(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
  *
  * @param[in] vcpu the pointer that points to vcpu data structure
  *
- * @return -EINVAL - fail to handle the EPT violation
- * @return 0 - Success to handle the EPT violation
+ * @retval -EINVAL fail to handle the EPT violation
+ * @retval 0 Success to handle the EPT violation
  */
 int ept_violation_vmexit_handler(struct acrn_vcpu *vcpu);
 /**
@@ -308,8 +308,8 @@ int ept_violation_vmexit_handler(struct acrn_vcpu *vcpu);
  *
  * @param[in] vcpu the pointer that points to vcpu data structure
  *
- * @return -EINVAL - fail to handle the EPT misconfig
- * @return 0 - Success to handle the EPT misconfig
+ * @retval -EINVAL fail to handle the EPT misconfig
+ * @retval 0 Success to handle the EPT misconfig
  */
 int ept_misconfig_vmexit_handler(__unused struct acrn_vcpu *vcpu);
 

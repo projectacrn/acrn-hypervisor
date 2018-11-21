@@ -158,8 +158,8 @@ static void *get_kernel_load_addr(void *kernel_src_addr)
 /**
  * @param[inout] vm pointer to a vm descriptor
  *
- * @return 0		- on success
- * @return -EINVAL	- on invalid parameters
+ * @retval 0 on success
+ * @retval -EINVAL on invalid parameters
  *
  * @pre vm != NULL
  * @pre is_vm0(vm) == true

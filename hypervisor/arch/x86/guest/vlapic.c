@@ -1314,8 +1314,8 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
  * @param[inout] vecptr Pointer to vector buffer and will be filled
  *               with eligible vector if any.
  *
- * @return 0 - There is no eligible pending vector.
- * @return 1 - There is pending vector.
+ * @retval 0 There is no eligible pending vector.
+ * @retval 1 There is pending vector.
  *
  * @remark The vector does not automatically transition to the ISR as a
  *	   result of calling this function.
@@ -1954,8 +1954,8 @@ vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level)
  *			   interrupt to all vCPUs.
  * @param[in] vector       Vector to be fired.
  *
- * @return 0 on success.
- * @return -EINVAL on error that vcpu_id_arg or vector is invalid.
+ * @retval 0 on success.
+ * @retval -EINVAL on error that vcpu_id_arg or vector is invalid.
  *
  * @pre vm != NULL
  */
@@ -1997,8 +1997,8 @@ vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
  * @param[in] addr MSI address.
  * @param[in] msg  MSI data.
  *
- * @return 0 on success.
- * @return non-zero on error that addr is invalid.
+ * @retval 0 on success.
+ * @retval -1 on error that addr is invalid.
  *
  * @pre vm != NULL
  */

@@ -50,8 +50,8 @@ struct irq_desc {
  *			IRQF_LEVEL - 1: level trigger; 0: edge trigger;
  *    			IRQF_PT    - 1: for passthrough dev
  *
- * @return valid irq num - on success
- * @return IRQ_INVALID - on failure
+ * @retval >=0 on success
+ * @retval IRQ_INVALID on failure
  */
 int32_t request_irq(uint32_t req_irq, irq_action_t action_fn, void *priv_data,
 			uint32_t flags);

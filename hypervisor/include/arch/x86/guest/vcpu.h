@@ -512,7 +512,7 @@ struct acrn_vcpu* get_ever_run_vcpu(uint16_t pcpu_id);
  * @param[in] vm pointer to vm data structure, this vcpu will owned by this vm.
  * @param[out] rtn_vcpu_handle pointer to the created vcpu
  *
- * @return 0: vcpu created successfully, other values failed.
+ * @retval 0 vcpu created successfully, other values failed.
  */
 int create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn_vcpu_handle);
 
@@ -525,7 +525,7 @@ int create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn_vcp
  * @param[inout] vcpu pointer to vcpu data structure
  * @pre vcpu != NULL
  *
- * @return 0: vcpu run successfully, other values failed.
+ * @retval 0 vcpu run successfully, other values failed.
  */
 int run_vcpu(struct acrn_vcpu *vcpu);
 
@@ -584,7 +584,7 @@ void schedule_vcpu(struct acrn_vcpu *vcpu);
  * Create a vcpu for the vm, and mapped to the pcpu.
  *
  * @param[inout] vm pointer to vm data structure
- * @param[in] pcpu_id which the vcpu will be mapped 
+ * @param[in] pcpu_id which the vcpu will be mapped
  */
 int prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id);
 
