@@ -1644,7 +1644,7 @@ pci_msix_enabled(struct pci_vdev *dev)
  * @param dev Pointer to struct pci_vdev representing virtual PCI device.
  * @param index MSIx table entry index.
  *
- * @return N/A
+ * @return None
  */
 void
 pci_generate_msix(struct pci_vdev *dev, int index)
@@ -1673,7 +1673,7 @@ pci_generate_msix(struct pci_vdev *dev, int index)
  * @param dev Pointer to struct pci_vdev representing virtual PCI device.
  * @param index Message data index.
  *
- * @return N/A
+ * @return None
  */
 void
 pci_generate_msi(struct pci_vdev *dev, int index)
@@ -1781,7 +1781,7 @@ pci_lintr_route(struct pci_vdev *dev)
  *
  * @param dev Pointer to struct pci_vdev representing virtual PCI device.
  *
- * @return N/A
+ * @return None
  */
 void
 pci_lintr_assert(struct pci_vdev *dev)
@@ -1804,7 +1804,7 @@ pci_lintr_assert(struct pci_vdev *dev)
  *
  * @param dev Pointer to struct pci_vdev representing virtual PCI device.
  *
- * @return N/A
+ * @return None
  */
 void
 pci_lintr_deassert(struct pci_vdev *dev)

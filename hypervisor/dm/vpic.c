@@ -449,7 +449,7 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin,
  * @param[in] operation action options:GSI_SET_HIGH/GSI_SET_LOW/
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
- * @return void
+ * @return None
  */
 void vpic_set_irq(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
 {
@@ -526,7 +526,7 @@ void vpic_get_irq_trigger(struct acrn_vm *vm, uint32_t irq,
  * @param[inout] vecptr Pointer to vector buffer and will be filled
  *			with eligible vector if any.
  *
- * @return void.
+ * @return None
  */
 void vpic_pending_intr(struct acrn_vm *vm, uint32_t *vecptr)
 {
@@ -585,7 +585,7 @@ static void vpic_pin_accepted(struct i8259_reg_state *i8259, uint8_t pin)
  * @param[in] vm     Pointer to target VM
  * @param[in] vector Target virtual interrupt vector
  *
- * @return void
+ * @return None
  *
  * @pre vm != NULL
  */

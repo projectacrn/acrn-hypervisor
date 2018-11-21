@@ -148,7 +148,7 @@ void vpic_init(struct acrn_vm *vm);
  * @param[in] operation action options:GSI_SET_HIGH/GSI_SET_LOW/
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
- * @return void
+ * @return None
  */
 void vpic_set_irq(struct acrn_vm *vm, uint32_t irq, uint32_t operation);
 
@@ -159,7 +159,7 @@ void vpic_set_irq(struct acrn_vm *vm, uint32_t irq, uint32_t operation);
  * @param[inout] vecptr Pointer to vector buffer and will be filled
  *			with eligible vector if any.
  *
- * @return void.
+ * @return None
  */
 void vpic_pending_intr(struct acrn_vm *vm, uint32_t *vecptr);
 
@@ -169,7 +169,7 @@ void vpic_pending_intr(struct acrn_vm *vm, uint32_t *vecptr);
  * @param[in] vm     Pointer to target VM
  * @param[in] vector Target virtual interrupt vector
  *
- * @return void
+ * @return None
  *
  * @pre vm != NULL
  */

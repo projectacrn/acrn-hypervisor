@@ -540,7 +540,7 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
  *
  * @param[in] dest_pcpu_id Target CPU ID.
  *
- * @return void
+ * @return None
  */
 void vlapic_post_intr(uint16_t dest_pcpu_id)
 {
@@ -1361,7 +1361,7 @@ vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr)
  * @param[in] vlapic Pointer to target vLAPIC data structure
  * @param[in] vector Target virtual interrupt vector
  *
- * @return void
+ * @return None
  *
  * @pre vlapic != NULL
  */

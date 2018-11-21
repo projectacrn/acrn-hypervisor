@@ -120,7 +120,7 @@ vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint16_t pin, uint32_t level)
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
  * @pre irq < vioapic_pincount(vm)
- * @return void
+ * @return None
  */
 void
 vioapic_set_irq_nolock(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
@@ -163,7 +163,7 @@ vioapic_set_irq_nolock(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
  *
  * @pre irq < vioapic_pincount(vm)
  *
- * @return void
+ * @return None
  */
 void
 vioapic_set_irq(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
