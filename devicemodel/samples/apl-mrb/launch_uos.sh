@@ -10,6 +10,13 @@ if [ ! -e "/dev/vbs_ipu" ]; then
 ipu_passthrough=1
 fi
 
+audio_passthrough=0
+
+# Check the device file of /dev/vbs_k_audio to determine the audio mode
+if [ ! -e "/dev/vbs_k_audio" ]; then
+audio_passthrough=1
+fi
+
 cse_passthrough=0
 hbm_ver=`cat /sys/class/mei/mei0/hbm_ver`
 major_ver=`echo $hbm_ver | cut -d '.' -f1`
@@ -207,14 +214,21 @@ echo "0000:00:15.1" > /sys/bus/pci/devices/0000:00:15.1/driver/unbind
 echo "0000:00:15.1" > /sys/bus/pci/drivers/pci-stub/bind
 
 #for audio device
-echo "8086 5a98" > /sys/bus/pci/drivers/pci-stub/new_id
-echo "0000:00:0e.0" > /sys/bus/pci/devices/0000:00:0e.0/driver/unbind
-echo "0000:00:0e.0" > /sys/bus/pci/drivers/pci-stub/bind
+boot_audio_option=""
+if [ $audio_passthrough == 1 ]; then
+    echo "8086 5a98" > /sys/bus/pci/drivers/pci-stub/new_id
+    echo "0000:00:0e.0" > /sys/bus/pci/devices/0000:00:0e.0/driver/unbind
+    echo "0000:00:0e.0" > /sys/bus/pci/drivers/pci-stub/bind
 
-#for audio codec
-echo "8086 5ab4" > /sys/bus/pci/drivers/pci-stub/new_id
-echo "0000:00:17.0" > /sys/bus/pci/devices/0000:00:17.0/driver/unbind
-echo "0000:00:17.0" > /sys/bus/pci/drivers/pci-stub/bind
+    #for audio codec
+    echo "8086 5ab4" > /sys/bus/pci/drivers/pci-stub/new_id
+    echo "0000:00:17.0" > /sys/bus/pci/devices/0000:00:17.0/driver/unbind
+    echo "0000:00:17.0" > /sys/bus/pci/drivers/pci-stub/bind
+
+    boot_audio_option="-s 14,passthru,0/e/0,keep_gsi -s 23,passthru,0/17/0"
+else
+    boot_audio_option="-s 14,virtio-audio"
+fi
 
 # for sd card passthrough - SDXC/MMC Host Controller 00:1b.0
 echo "8086 5aca" > /sys/bus/pci/drivers/pci-stub/new_id
@@ -336,8 +350,7 @@ fi
    -s 13,virtio-rpmb \
    -s 10,virtio-hyper_dmabuf \
    -s 11,wdt-i6300esb \
-   -s 14,passthru,0/e/0,keep_gsi  \
-   -s 23,passthru,0/17/0 \
+   $boot_audio_option \
    $boot_cse_option \
    -s 27,passthru,0/1b/0 \
    -s 24,passthru,0/18/0 \
