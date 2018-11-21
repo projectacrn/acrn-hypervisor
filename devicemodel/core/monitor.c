@@ -183,7 +183,10 @@ static void start_intr_storm_monitor(struct vmctx *ctx)
 static void stop_intr_storm_monitor(void)
 {
 	if (intr_storm_monitor_pid) {
+		void *ret;
+
 		pthread_cancel(intr_storm_monitor_pid);
+		pthread_join(intr_storm_monitor_pid, &ret);
 		intr_storm_monitor_pid = 0;
 	}
 }
