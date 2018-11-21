@@ -69,7 +69,7 @@ complete this setup.
 
    .. code-block:: none
 
-      # sudo swupd autoupdate --disable
+      $ sudo swupd autoupdate --disable
 
    .. note::
       The Clear Linux installer will automatically check for updates and install the
@@ -83,13 +83,13 @@ complete this setup.
 
    .. code-block:: none
 
-      # sudo swupd update -m 26200     # or newer version
+      $ sudo swupd update -m 26200     # or newer version
 
 #. Use the ``sudo swupd bundle-add`` command and add these Clear Linux bundles:
 
    .. code-block:: none
 
-      # sudo swupd bundle-add service-os kernel-iot-lts2018 \
+      $ sudo swupd bundle-add service-os kernel-iot-lts2018 \
           openssh-server
 
    .. table:: Clear Linux bundles
@@ -120,9 +120,9 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # sudo mount /dev/sda1 /mnt
+      $ sudo mount /dev/sda1 /mnt
 
-      # sudo ls -1 /mnt/EFI/org.clearlinux
+      $ sudo ls -1 /mnt/EFI/org.clearlinux
       bootloaderx64.efi
       kernel-org.clearlinux.native.4.19.1-654
       kernel-org.clearlinux.iot-lts2018-sos.4.19.0-19
@@ -147,8 +147,8 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # sudo mkdir /mnt/EFI/acrn
-      # sudo cp /usr/lib/acrn/acrn.efi /mnt/EFI/acrn/
+      $ sudo mkdir /mnt/EFI/acrn
+      $ sudo cp /usr/lib/acrn/acrn.efi /mnt/EFI/acrn/
 
 #. Configure the EFI firmware to boot the ACRN hypervisor by default
 
@@ -159,7 +159,7 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN"
+      $ sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN"
 
    .. note::
 
@@ -190,7 +190,7 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN NUC Hypervisor" \
+      $ sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN NUC Hypervisor" \
             -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=disabled"
 
 #. Create a boot entry for the ACRN Service OS by copying a provided ``acrn.conf``
@@ -220,7 +220,7 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # sudo cp /usr/share/acrn/samples/nuc/acrn.conf /mnt/loader/entries/
+      $ sudo cp /usr/share/acrn/samples/nuc/acrn.conf /mnt/loader/entries/
 
    You will need to edit this file to adjust the kernel version (``linux`` section),
    insert the ``PARTUUID`` of your ``/dev/sda3`` partition
@@ -237,15 +237,15 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # sudo clr-boot-manager set-timeout 20
-      # sudo clr-boot-manager update
+      $ sudo clr-boot-manager set-timeout 20
+      $ sudo clr-boot-manager update
 
 #. Enable and start the ssh server, so you can login remotely using an ssh client:
 
    .. code-block:: none
 
-      # sudo systemctl enable sshd
-      # sudo systemctl start sshd
+      $ sudo systemctl enable sshd
+      $ sudo systemctl start sshd
 
 #. Reboot and select "The ACRN Service OS" to boot, as shown below:
 
@@ -263,27 +263,23 @@ partition. Follow these steps:
 
 #. After booting up the ACRN hypervisor, the Service OS will be launched
    automatically by default, and the Clear Linux desktop will be showing with user "clear",
-   , or you can login with "ssh" client.
+   (or you can login remotely with an "ssh" client).
 
-#. From ssh client, you login as user "clear" using the password you set previously when
+#. From ssh client, login as user "clear" using the password you set previously when
    you installed Clear Linux.
 
 #. After rebooting the system, check that the ACRN hypervisor is running properly with: 
   
   .. code-block:: none
 
-      # dmesg | grep ACRN
-  
-  The log info as below, it means the ACRN hypervisor is running properly, then you can start deploying a User OS
-  otherwise. you need to check EFI boot option and SOS kernel and acrn.conf again to guarantee ACRN hypervisor and SOS kernel 
-  are loaded and run correctly.
-  
-  .. code-block:: none
-       
-      # dmesg | grep ACRN
-      #[    0.000000] Hypervisor detected: ACRN
-      #[    1.687128] ACRNTrace: acrn_trace_init, cpu_num 4
-      #[    1.693129] ACRN HVLog: acrn_hvlog_init
+   $ dmesg | grep ACRN
+   [    0.000000] Hypervisor detected: ACRN
+   [    1.687128] ACRNTrace: acrn_trace_init, cpu_num 4
+   [    1.693129] ACRN HVLog: acrn_hvlog_init
+
+If you see log information similar to this, the ACRN hypervisor is running properly
+and you can start deploying a User OS.  If not, verify the EFI boot options, SOS
+kernel, and ``acrn.conf`` settings are correct (as described above).
     
 
 ACRN Network Bridge
@@ -302,10 +298,10 @@ Set up Reference UOS
 
    .. code-block:: none
 
-      # cd ~
-      # mkdir uos
-      # cd uos
-      # curl -O https://download.clearlinux.org/releases/26200/clear/clear-26200-kvm.img.xz
+      $ cd ~
+      $ mkdir uos
+      $ cd uos
+      $ curl -O https://download.clearlinux.org/releases/26200/clear/clear-26200-kvm.img.xz
 
    .. note::
       In case you want to use or try out a newer version of Clear Linux as the UOS, you can
@@ -316,18 +312,18 @@ Set up Reference UOS
 
    .. code-block:: none
 
-      # unxz clear-26200-kvm.img.xz
+      $ unxz clear-26200-kvm.img.xz
 
 #. Deploy the UOS kernel modules to UOS virtual disk image (note: you'll need to use
    the same **iot-lts2018** image version number noted in step 1 above):
 
    .. code-block:: none
 
-      # sudo losetup -f -P --show clear-26200-kvm.img
-      # sudo mount /dev/loop0p3 /mnt
-      # sudo cp -r /usr/lib/modules/4.19.0-19.iot-lts2018 /mnt/lib/modules/
-      # sudo umount /mnt
-      # sync
+      $ sudo losetup -f -P --show clear-26200-kvm.img
+      $ sudo mount /dev/loop0p3 /mnt
+      $ sudo cp -r /usr/lib/modules/4.19.0-19.iot-lts2018 /mnt/lib/modules/
+      $ sudo umount /mnt
+      $ sync
 
 #. Edit and Run the ``launch_uos.sh`` script to launch the UOS.
 
@@ -355,8 +351,8 @@ Set up Reference UOS
 
    .. code-block:: none
 
-      # cd /usr/share/acrn/samples/nuc/
-      # sudo ./launch_uos.sh
+      $ cd /usr/share/acrn/samples/nuc/
+      $ sudo ./launch_uos.sh
 
 #. At this point, you've successfully booted the ACRN hypervisor,
    SOS, and UOS:
