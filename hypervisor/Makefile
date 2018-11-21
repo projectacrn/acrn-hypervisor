@@ -17,11 +17,16 @@ STACK_PROTECTOR := 1
 BASEDIR := $(shell pwd)
 HV_OBJDIR ?= $(CURDIR)/build
 HV_FILE := acrn
+SUB_MAKEFILES := $(wildcard */Makefile)
+
+LIB_DEBUG = $(HV_OBJDIR)/debug/libdebug.a
+LIB_RELEASE = $(HV_OBJDIR)/release/librelease.a
 
 # initialize the flags we used
 CFLAGS :=
 ASFLAGS :=
 LDFLAGS :=
+ARFLAGS :=
 ARCH_CFLAGS :=
 ARCH_ASFLAGS :=
 ARCH_ARFLAGS :=
@@ -36,6 +41,8 @@ include scripts/kconfig/kconfig.mk
 
 LD_IN_TOOL = scripts/genld.sh
 BASH = $(shell which bash)
+
+ARFLAGS += crs
 
 CFLAGS += -Wall -W
 CFLAGS += -ffunction-sections -fdata-sections
@@ -110,8 +117,10 @@ AR ?= ar
 LD ?= ld
 OBJCOPY ?= objcopy
 
-D_SRCS += $(wildcard debug/*.c)
-R_SRCS += $(wildcard release/*.c)
+export CC AS AR LD OBJCOPY
+export CFLAGS ASFLAGS ARFLAGS LDFLAGS ARCH_CFLAGS ARCH_ASFLAGS ARCH_ARFLAGS ARCH_LDFLAGS
+export HV_OBJDIR CONFIG_RELEASE INCLUDE_PATH
+export LIB_DEBUG LIB_RELEASE
 
 C_SRCS += boot/acpi.c
 C_SRCS += boot/dmar_parse.c
@@ -222,10 +231,7 @@ endif
 
 C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(C_SRCS))
 ifneq ($(CONFIG_RELEASE),y)
-C_OBJS += $(patsubst %.c,$(HV_OBJDIR)/%.o,$(D_SRCS))
 CFLAGS += -DHV_DEBUG -DPROFILING_ON
-else
-C_OBJS += $(patsubst %.c,$(HV_OBJDIR)/%.o,$(R_SRCS))
 endif
 S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(S_SRCS))
 
@@ -261,7 +267,7 @@ else
 endif
 
 .PHONY: all
-all: $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
+all: lib $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
 ifeq ($(CONFIG_PLATFORM), uefi)
 all: efi
@@ -279,6 +285,24 @@ install: $(HV_OBJDIR)/$(HV_FILE).32.out
 	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).sbl
 endif
 
+.PHONY: header
+header: $(VERSION) $(HV_OBJDIR)/$(HV_CONFIG_H) $(TARGET_ACPI_INFO_HEADER)
+
+.PHONY: lib
+lib: $(SUB_MAKEFILES)
+
+.PHONY: $(SUB_MAKEFILES)
+$(SUB_MAKEFILES): header
+	for Makefile in $(SUB_MAKEFILES); do \
+		$(MAKE) -f $$Makefile MKFL_NAME=$$Makefile; \
+	done
+
+ifneq ($(CONFIG_RELEASE),y)
+LIB_FLAGS += $(LIB_DEBUG)
+else
+LIB_FLAGS += $(LIB_RELEASE)
+endif
+
 $(HV_OBJDIR)/$(HV_FILE).32.out: $(HV_OBJDIR)/$(HV_FILE).out
 	$(OBJCOPY) -S --section-alignment=0x1000 -O elf32-i386 $< $@
 
@@ -287,7 +311,7 @@ $(HV_OBJDIR)/$(HV_FILE).bin: $(HV_OBJDIR)/$(HV_FILE).out
 
 $(HV_OBJDIR)/$(HV_FILE).out: $(C_OBJS) $(S_OBJS)
 	${BASH} ${LD_IN_TOOL} $(ARCH_LDSCRIPT_IN) $(ARCH_LDSCRIPT) ${HV_OBJDIR}/.config
-	$(CC) -Wl,-Map=$(HV_OBJDIR)/$(HV_FILE).map -o $@ $(LDFLAGS) $(ARCH_LDFLAGS) -T$(ARCH_LDSCRIPT) $^
+	$(CC) -Wl,-Map=$(HV_OBJDIR)/$(HV_FILE).map -o $@ $(LDFLAGS) $(ARCH_LDFLAGS) -T$(ARCH_LDSCRIPT) $^ $(LIB_FLAGS)
 
 .PHONY: clean
 clean:
