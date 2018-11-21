@@ -633,6 +633,7 @@ static struct wlist_signal wlist_tx_signal_table[] = {
 	{(uint16_t)CBC_SIG_ID_HVSSTT,	DEFAULT_WLIST_NODE},
 	{(uint16_t)CBC_SIG_ID_HRCAT,	DEFAULT_WLIST_NODE},
 	{(uint16_t)CBC_SIG_ID_HRASTT,	DEFAULT_WLIST_NODE},
+	{(uint16_t)CBC_SIG_ID_VSWA,	DEFAULT_WLIST_NODE},
 };
 
 static struct wlist_group wlist_rx_group_table[] = {
