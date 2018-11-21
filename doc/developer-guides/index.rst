@@ -11,6 +11,7 @@ Developer Guides
    GVT-g-porting
    trusty
    l1tf
+   modularity
    ../api/index
    ../reference/kconfig/index
 
