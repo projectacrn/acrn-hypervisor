@@ -184,9 +184,9 @@ void emulate_io_post(struct acrn_vcpu *vcpu)
  *
  * @pre io_req->type == REQ_PORTIO
  *
- * @return 0       - Successfully emulated by registered handlers.
- * @return -ENODEV - No proper handler found.
- * @return -EIO    - The request spans multiple devices and cannot be emulated.
+ * @retval 0 Successfully emulated by registered handlers.
+ * @retval -ENODEV No proper handler found.
+ * @retval -EIO The request spans multiple devices and cannot be emulated.
  */
 int32_t
 hv_emulate_pio(const struct acrn_vcpu *vcpu, struct io_request *io_req)
@@ -234,9 +234,9 @@ hv_emulate_pio(const struct acrn_vcpu *vcpu, struct io_request *io_req)
  *
  * @pre io_req->type == REQ_MMIO
  *
- * @return 0       - Successfully emulated by registered handlers.
- * @return -ENODEV - No proper handler found.
- * @return -EIO    - The request spans multiple devices and cannot be emulated.
+ * @retval 0 Successfully emulated by registered handlers.
+ * @retval -ENODEV No proper handler found.
+ * @retval -EIO The request spans multiple devices and cannot be emulated.
  */
 static int32_t
 hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
@@ -283,11 +283,11 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
  * @param vcpu The virtual CPU that triggers the MMIO access
  * @param io_req The I/O request holding the details of the MMIO access
  *
- * @return 0       - Successfully emulated by registered handlers.
- * @return IOREQ_PENDING - The I/O request is delivered to VHM.
- * @return -EIO    - The request spans multiple devices and cannot be emulated.
- * @return -EINVAL - \p io_req has an invalid type.
- * @return Negative on other errors during emulation.
+ * @retval 0 Successfully emulated by registered handlers.
+ * @retval IOREQ_PENDING The I/O request is delivered to VHM.
+ * @retval -EIO The request spans multiple devices and cannot be emulated.
+ * @retval -EINVAL \p io_req has an invalid type.
+ * @retval <0 on other errors during emulation.
  */
 int32_t
 emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
@@ -472,8 +472,8 @@ void register_io_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
  * @param end The end of the range (exclusive) \p read_write can emulate
  * @param handler_private_data Handler-specific data which will be passed to \p read_write when called
  *
- * @return 0 - Registration succeeds
- * @return -EINVAL - \p read_write is NULL, \p end is not larger than \p start or \p vm has been launched
+ * @retval 0 Registration succeeds
+ * @retval -EINVAL \p read_write is NULL, \p end is not larger than \p start or \p vm has been launched
  */
 int register_mmio_emulation_handler(struct acrn_vm *vm,
 	hv_mem_io_handler_t read_write, uint64_t start,

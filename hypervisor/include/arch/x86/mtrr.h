@@ -69,7 +69,7 @@ void mtrr_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t value);
  * @param[in] vcpu The pointer that points VCPU data structure
  * @param[in] msr Virtual MTRR MSR Address
  *
- * @return unsigned long integer - The specified virtual MTRR MSR value
+ * @return The specified virtual MTRR MSR value
  */
 uint64_t mtrr_rdmsr(const struct acrn_vcpu *vcpu, uint32_t msr);
 /**

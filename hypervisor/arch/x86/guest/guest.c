@@ -601,7 +601,7 @@ static void rebuild_vm0_e820(void)
 /**
  * @param[inout] vm pointer to a vm descriptor
  *
- * @return 0 - on success
+ * @retval 0 on success
  *
  * @pre vm != NULL
  * @pre is_vm0(vm) == true

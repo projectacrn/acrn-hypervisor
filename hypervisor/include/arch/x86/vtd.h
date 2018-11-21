@@ -496,8 +496,8 @@ struct iommu_domain;
  * @param[in]    bus the 8-bit bus number of the device
  * @param[in]    devfun the 8-bit device(5-bit):function(3-bit) of the device
  *
- * @return 0 - on success.
- * @return 1 - fail to unassign the device
+ * @retval 0 on success.
+ * @retval 1 fail to unassign the device
  *
  * @pre domain != NULL
  *
@@ -513,8 +513,8 @@ int assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun
  * @param[in]    bus the 8-bit bus number of the device
  * @param[in]    devfun the 8-bit device(5-bit):function(3-bit) of the device
  *
- * @return 0 - on success.
- * @return 1 - fail to unassign the device
+ * @retval 0 on success.
+ * @retval 1 fail to unassign the device
  *
  * @pre domain != NULL
  *
@@ -530,8 +530,10 @@ int unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus, uint8_
  * @param[in] translation_table the physcial address of EPT table of the VM specified by the vm_id
  * @param[in] addr_width address width of the VM
  *
- * @return Pointer pointer to iommu_domain
- * @return NULL if translation_table is 0
+ * @return Pointer to the created iommu_domain
+ *
+ * @retval NULL when \p translation_table is 0
+ * @retval !NULL when \p translation_table is not 0
  *
  * @pre vm_id is valid
  * @pre translation_table != 0
@@ -586,10 +588,12 @@ void resume_iommu(void);
 /**
  * @brief Init IOMMUs.
  *
- * Register DMAR units on the platform according to the pre-parsed information or DMAR table.
+ * Register DMAR units on the platform according to the pre-parsed information
+ * or DMAR table. IOMMU is a must have feature, if init_iommu failed, the system
+ * should not continue booting.
  *
- * @return 0 - on success
- * @return non-zero - iommu is a must have feature, if init_iommu failed, the system should not continue booting
+ * @retval 0 on success
+ * @retval <0 on failure
  *
  */
 int init_iommu(void);
@@ -614,8 +618,8 @@ void init_iommu_vm0_domain(struct acrn_vm *vm0);
  *
  * @param[in] vm pointer to VM to check
  *
- * @return true - support
- * @return false - not support
+ * @retval true support
+ * @retval false not support
  *
  */
 bool iommu_snoop_supported(struct acrn_vm *vm);

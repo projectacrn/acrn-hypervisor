@@ -138,8 +138,8 @@ uint32_t irq_to_vector(uint32_t irq);
  * @param[in] vector   Vector of the exeception.
  * @param[in] err_code Error Code to be injected.
  *
- * @return 0 on success
- * @return -EINVAL on error that vector is invalid.
+ * @retval 0 on success
+ * @retval -EINVAL on error that vector is invalid.
  *
  * @pre vcpu != NULL
  */
