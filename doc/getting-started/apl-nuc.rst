@@ -269,7 +269,6 @@ partition. Follow these steps:
    you installed Clear Linux.
 
 #. After rebooting the system, check that the ACRN hypervisor is running properly with: 
-   checking way is:
   
   .. code-block:: none
 
