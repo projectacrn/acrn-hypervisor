@@ -268,7 +268,7 @@ partition. Follow these steps:
 #. From ssh client, you login as user "clear" using the password you set previously when
    you installed Clear Linux.
 
-#. After reboot system, you need to check and make sure the ACRN hypervisor is running properly, 
+#. After rebooting the system, check that the ACRN hypervisor is running properly with: 
    checking way is:
   
   .. code-block:: none
