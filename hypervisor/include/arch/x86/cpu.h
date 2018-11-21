@@ -127,9 +127,6 @@
 /* Boot CPU ID */
 #define BOOT_CPU_ID             0U
 
-/* hypervisor stack bottom magic('intl') */
-#define SP_BOTTOM_MAGIC    0x696e746cUL
-
 /* type of speculation control
  * 0 - no speculation control support
  * 1 - raw IBRS + IPBP support
@@ -313,8 +310,8 @@ bool is_apicv_posted_intr_supported(void);
 bool is_ept_supported(void);
 bool cpu_has_cap(uint32_t bit);
 void load_cpu_state_data(void);
-void bsp_boot_init(void);
-void cpu_secondary_init(void);
+void init_cpu_pre(uint16_t pcpu_id);
+void init_cpu_post(uint16_t pcpu_id);
 void start_cpus(void);
 void stop_cpus(void);
 void wait_sync_change(uint64_t *sync, uint64_t wake_sync);

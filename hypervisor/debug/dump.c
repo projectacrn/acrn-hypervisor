@@ -5,6 +5,7 @@
  */
 
 #include <hypervisor.h>
+#include <init.h>
 
 #define CALL_TRACE_HIERARCHY_MAX    20U
 #define DUMP_STACK_SIZE 0x200U
