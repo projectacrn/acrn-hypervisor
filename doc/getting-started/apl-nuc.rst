@@ -262,7 +262,7 @@ partition. Follow these steps:
       Reboot Into Firmware Interface
 
 #. After booting up the ACRN hypervisor, the Service OS will be launched
-   automatically by default, and Clear Linux desktop will be showing with user "clear"
+   automatically by default, and the Clear Linux desktop will be showing with user "clear",
    , or you can login with "ssh" client.
 
 #. From ssh client, you login as user "clear" using the password you set previously when
