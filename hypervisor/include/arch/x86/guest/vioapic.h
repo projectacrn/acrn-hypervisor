@@ -46,6 +46,8 @@
 #define REDIR_ENTRIES_HW	120U /* SOS align with native ioapic */
 #define STATE_BITMAP_SIZE	INT_DIV_ROUNDUP(REDIR_ENTRIES_HW, 64U)
 
+#define IOAPIC_RTE_LOW_INTVEC	((uint32_t)IOAPIC_RTE_INTVEC)
+
 struct acrn_vioapic {
 	struct acrn_vm	*vm;
 	spinlock_t	mtx;
@@ -103,10 +105,6 @@ uint32_t	vioapic_pincount(const struct acrn_vm *vm);
 void	vioapic_process_eoi(struct acrn_vm *vm, uint32_t vector);
 void	vioapic_get_rte(struct acrn_vm *vm, uint32_t pin, union ioapic_rte *rte);
 int		vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private_data);
-
-#ifdef HV_DEBUG
-void get_vioapic_info(char *str_arg, size_t str_max, uint16_t vmid);
-#endif /* HV_DEBUG */
 
 /**
  * @}
