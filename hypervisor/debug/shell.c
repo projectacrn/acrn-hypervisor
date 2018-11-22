@@ -790,6 +790,76 @@ static int shell_show_vioapic_info(int argc, char **argv)
 	return -EINVAL;
 }
 
+static void get_rte_info(union ioapic_rte rte, bool *mask, bool *irr,
+	bool *phys, uint32_t *delmode, bool *level, uint32_t *vector, uint32_t *dest)
+{
+	*mask = ((rte.full & IOAPIC_RTE_INTMASK) == IOAPIC_RTE_INTMSET);
+	*irr = ((rte.full & IOAPIC_RTE_REM_IRR) == IOAPIC_RTE_REM_IRR);
+	*phys = ((rte.full & IOAPIC_RTE_DESTMOD) == IOAPIC_RTE_DESTPHY);
+	*delmode = (uint32_t)(rte.full & IOAPIC_RTE_DELMOD);
+	*level = ((rte.full & IOAPIC_RTE_TRGRLVL) != 0UL);
+	*vector = (uint32_t)(rte.full & IOAPIC_RTE_INTVEC);
+	*dest = (uint32_t)(rte.full >> APIC_ID_SHIFT);
+}
+
+/**
+ * @brief Get information of ioapic
+ *
+ * It's for debug only.
+ *
+ * @param[in]	str_max_len	The max size of the string containing
+ *				interrupt info
+ * @param[inout]	str_arg	Pointer to the output information
+ */
+static int get_ioapic_info(char *str_arg, size_t str_max_len)
+{
+	char *str = str_arg;
+	uint32_t irq;
+	size_t len, size = str_max_len;
+
+	len = snprintf(str, size, "\r\nIRQ\tPIN\tRTE.HI32\tRTE.LO32\tVEC\tDST\tDM\tTM\tDELM\tIRR\tMASK");
+	if (len >= size) {
+		goto overflow;
+	}
+	size -= len;
+	str += len;
+
+	for (irq = 0U; irq < nr_gsi; irq++) {
+		void *addr = gsi_table[irq].addr;
+		uint8_t pin = gsi_table[irq].pin;
+		union ioapic_rte rte;
+
+		bool irr, phys, level, mask;
+		uint32_t delmode, vector, dest;
+
+		ioapic_get_rte_entry(addr, pin, &rte);
+
+		get_rte_info(rte, &mask, &irr, &phys, &delmode, &level, &vector, &dest);
+
+		len = snprintf(str, size, "\r\n%03d\t%03hhu\t0x%08X\t0x%08X\t", irq, pin, rte.u.hi_32, rte.u.lo_32);
+		if (len >= size) {
+			goto overflow;
+		}
+		size -= len;
+		str += len;
+
+		len = snprintf(str, size, "0x%02X\t0x%02X\t%s\t%s\t%u\t%d\t%d",
+			vector, dest, phys ? "phys" : "logic", level ? "level" : "edge", delmode >> 8, irr, mask);
+		if (len >= size) {
+			goto overflow;
+		}
+		size -= len;
+		str += len;
+	}
+
+	snprintf(str, size, "\r\n");
+	return 0;
+
+overflow:
+	printf("buffer size could not be enough! please check!\n");
+	return 0;
+}
+
 static int shell_show_ioapic_info(__unused int argc, __unused char **argv)
 {
 	int err = 0;

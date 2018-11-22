@@ -7,6 +7,8 @@
 #ifndef IOAPIC_H
 #define IOAPIC_H
 
+#include <bsp_extern.h>
+
 /*
  * IOAPIC_MAX_LINES is architecturally defined.
  * The usable RTEs may be a subset of the total on a per IO APIC basis.
@@ -56,19 +58,16 @@ void resume_ioapic(void);
 void gsi_mask_irq(uint32_t irq);
 void gsi_unmask_irq(uint32_t irq);
 
-extern uint8_t pic_ioapic_pin_map[NR_LEGACY_PIN];
+void ioapic_get_rte_entry(void *ioapic_addr, uint8_t pin, union ioapic_rte *rte);
 
-#ifdef HV_DEBUG
-/**
- * @brief Get information of ioapic
- *
- * It's for debug only.
- *
- * @param[in]	str_max_len	The max size of the string containing
- * 				interrupt info
- * @param[inout]	str_arg	Pointer to the output information
- */
-int get_ioapic_info(char *str_arg, size_t str_max_len);
-#endif /* HV_DEBUG */
+struct gsi_table {
+	uint8_t ioapic_id;
+	uint8_t pin;
+	void  *addr;
+};
+
+extern struct gsi_table gsi_table[NR_MAX_GSI];
+extern uint32_t nr_gsi;
+extern uint8_t pic_ioapic_pin_map[NR_LEGACY_PIN];
 
 #endif /* IOAPIC_H */
