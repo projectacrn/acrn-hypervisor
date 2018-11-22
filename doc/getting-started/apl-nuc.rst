@@ -232,6 +232,12 @@ partition. Follow these steps:
    .. note::
       It is also possible to use the device name directly, e.g. ``root=/dev/sda3``
 
+   After finished modification, don't forget running "umount" to umount EFI partition:
+   
+   .. code-block:: none
+
+      $ sudo umount /mnt
+   
 #. Add a timeout period for Systemd-Boot to wait, otherwise it will not
    present the boot menu and will always boot the base Clear Linux
 
