@@ -581,7 +581,7 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 int32_t hcall_set_vm_memory_regions(struct acrn_vm *vm, uint64_t param)
 {
 	struct set_regions set_regions;
-	struct vm_memory_region *regions;
+	struct vm_memory_region region;
 	struct acrn_vm *target_vm;
 	uint32_t idx;
 
@@ -604,13 +604,17 @@ int32_t hcall_set_vm_memory_regions(struct acrn_vm *vm, uint64_t param)
 	}
 
 	idx = 0U;
-	/*TODO: use copy_from_gpa for this buffer page */
-	regions = gpa2hva(vm, set_regions.regions_gpa);
 	while (idx < set_regions.mr_num) {
-		/* the force pointer change below is for back compatible
-		 * to struct vm_memory_region, it will be removed in the future
-		 */
-		int ret = set_vm_memory_region(vm, target_vm, &regions[idx]);
+		int ret;
+
+		if (copy_from_gpa(vm, &region,
+			set_regions.regions_gpa + idx * sizeof(region),
+			sizeof(region)) != 0) {
+			pr_err("%s: Copy region entry fail from vm\n", __func__);
+			return -EFAULT;
+		}
+
+		ret = set_vm_memory_region(vm, target_vm, &region);
 		if (ret < 0) {
 			return ret;
 		}
