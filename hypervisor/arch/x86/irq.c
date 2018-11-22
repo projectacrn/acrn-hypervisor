@@ -10,8 +10,7 @@
 static spinlock_t exception_spinlock = { .head = 0U, .tail = 0U, };
 static spinlock_t irq_alloc_spinlock = { .head = 0U, .tail = 0U, };
 
-#define IRQ_ALLOC_BITMAP_SIZE	INT_DIV_ROUNDUP(NR_IRQS, 64U)
-static uint64_t irq_alloc_bitmap[IRQ_ALLOC_BITMAP_SIZE];
+uint64_t irq_alloc_bitmap[IRQ_ALLOC_BITMAP_SIZE];
 struct irq_desc irq_desc_array[NR_IRQS];
 static uint32_t vector_to_irq[NR_MAX_VECTOR + 1];
 
@@ -401,60 +400,6 @@ void partition_mode_dispatch_interrupt(struct intr_excp_ctx *ctx)
 	}
 }
 #endif
-
-#ifdef HV_DEBUG
-void get_cpu_interrupt_info(char *str_arg, size_t str_max)
-{
-	char *str = str_arg;
-	uint16_t pcpu_id;
-	uint32_t irq, vector;
-	size_t len, size = str_max;
-
-	len = snprintf(str, size, "\r\nIRQ\tVECTOR");
-	if (len >= size) {
-		goto overflow;
-	}
-	size -= len;
-	str += len;
-
-	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
-		len = snprintf(str, size, "\tCPU%d", pcpu_id);
-		if (len >= size) {
-			goto overflow;
-		}
-		size -= len;
-		str += len;
-	}
-
-	for (irq = 0U; irq < NR_IRQS; irq++) {
-		vector = irq_to_vector(irq);
-		if (bitmap_test((uint16_t)(irq & 0x3FU),
-			irq_alloc_bitmap + (irq >> 6U))
-			&& (vector != VECTOR_INVALID)) {
-			len = snprintf(str, size, "\r\n%d\t0x%X", irq, vector);
-			if (len >= size) {
-				goto overflow;
-			}
-			size -= len;
-			str += len;
-
-			for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
-				len = snprintf(str, size, "\t%d", per_cpu(irq_count, pcpu_id)[irq]);
-				if (len >= size) {
-					goto overflow;
-				}
-				size -= len;
-				str += len;
-			}
-		}
-	}
-	snprintf(str, size, "\r\n");
-	return;
-
-overflow:
-	printf("buffer size could not be enough! please check!\n");
-}
-#endif /* HV_DEBUG */
 
 static void init_irq_descs(void)
 {

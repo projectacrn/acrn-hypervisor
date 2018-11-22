@@ -841,6 +841,66 @@ static int shell_to_sos_console(__unused int argc, __unused char **argv)
 	return 0;
 }
 
+/**
+ * @brief Get the interrupt statistics
+ *
+ * It's for debug only.
+ *
+ * @param[in]	str_max	The max size of the string containing interrupt info
+ * @param[inout]	str_arg	Pointer to the output interrupt info
+ */
+static void get_cpu_interrupt_info(char *str_arg, size_t str_max)
+{
+	char *str = str_arg;
+	uint16_t pcpu_id;
+	uint32_t irq, vector;
+	size_t len, size = str_max;
+
+	len = snprintf(str, size, "\r\nIRQ\tVECTOR");
+	if (len >= size) {
+		goto overflow;
+	}
+	size -= len;
+	str += len;
+
+	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
+		len = snprintf(str, size, "\tCPU%d", pcpu_id);
+		if (len >= size) {
+			goto overflow;
+		}
+		size -= len;
+		str += len;
+	}
+
+	for (irq = 0U; irq < NR_IRQS; irq++) {
+		vector = irq_to_vector(irq);
+		if (bitmap_test((uint16_t)(irq & 0x3FU),
+			irq_alloc_bitmap + (irq >> 6U))
+			&& (vector != VECTOR_INVALID)) {
+			len = snprintf(str, size, "\r\n%d\t0x%X", irq, vector);
+			if (len >= size) {
+				goto overflow;
+			}
+			size -= len;
+			str += len;
+
+			for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
+				len = snprintf(str, size, "\t%d", per_cpu(irq_count, pcpu_id)[irq]);
+				if (len >= size) {
+					goto overflow;
+				}
+				size -= len;
+				str += len;
+			}
+		}
+	}
+	snprintf(str, size, "\r\n");
+	return;
+
+overflow:
+	printf("buffer size could not be enough! please check!\n");
+}
+
 static int shell_show_cpu_int(__unused int argc, __unused char **argv)
 {
 	get_cpu_interrupt_info(shell_log_buf, SHELL_LOG_BUF_SIZE);
