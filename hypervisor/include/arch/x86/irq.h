@@ -52,6 +52,8 @@
 #define DEFAULT_DELIVERY_MODE	IOAPIC_RTE_DELLOPRI
 #define ALL_CPUS_MASK		((1U << phys_cpu_num) - 1U)
 
+#define IRQ_ALLOC_BITMAP_SIZE	INT_DIV_ROUNDUP(NR_IRQS, 64U)
+
 /*
  * Definition of the stack frame layout
  */
@@ -243,19 +245,8 @@ void interrupt_init(uint16_t pcpu_id);
 
 void cancel_event_injection(struct acrn_vcpu *vcpu);
 
-#ifdef HV_DEBUG
-/**
- * @brief Get the interupt statistics
- *
- * It's for debug only.
- *
- * @param[in]	str_max	The max size of the string containing interrupt info
- * @param[inout]	str_arg	Pointer to the output interrupt info
- */
-void get_cpu_interrupt_info(char *str_arg, size_t str_max);
-#endif /* HV_DEBUG */
-
 extern uint32_t acrn_vhm_vector;
+extern uint64_t irq_alloc_bitmap[IRQ_ALLOC_BITMAP_SIZE];
 
 /**
  * @}
