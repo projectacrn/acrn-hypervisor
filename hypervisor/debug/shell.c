@@ -610,6 +610,92 @@ static int shell_list_vcpu(__unused int argc, __unused char **argv)
 	return 0;
 }
 
+#define DUMPREG_SP_SIZE	32
+/* the input 'data' must != NULL and indicate a vcpu structure pointer */
+static void vcpu_dumpreg(void *data)
+{
+	int status;
+	uint64_t i, fault_addr, tmp[DUMPREG_SP_SIZE];
+	uint32_t err_code = 0;
+	struct vcpu_dump *dump = data;
+	struct acrn_vcpu *vcpu = dump->vcpu;
+	char *str = dump->str;
+	size_t len, size = dump->str_max;
+
+	len = snprintf(str, size,
+		"=  VM ID %d ==== CPU ID %hu========================\r\n"
+		"=  RIP=0x%016llx  RSP=0x%016llx RFLAGS=0x%016llx\r\n"
+		"=  CR0=0x%016llx  CR2=0x%016llx\r\n"
+		"=  CR3=0x%016llx  CR4=0x%016llx\r\n"
+		"=  RAX=0x%016llx  RBX=0x%016llx RCX=0x%016llx\r\n"
+		"=  RDX=0x%016llx  RDI=0x%016llx RSI=0x%016llx\r\n"
+		"=  RBP=0x%016llx  R8=0x%016llx R9=0x%016llx\r\n"
+		"=  R10=0x%016llx  R11=0x%016llx R12=0x%016llx\r\n"
+		"=  R13=0x%016llx  R14=0x%016llx  R15=0x%016llx\r\n",
+		vcpu->vm->vm_id, vcpu->vcpu_id,
+		vcpu_get_rip(vcpu),
+		vcpu_get_gpreg(vcpu, CPU_REG_RSP),
+		vcpu_get_rflags(vcpu),
+		vcpu_get_cr0(vcpu), vcpu_get_cr2(vcpu),
+		exec_vmread(VMX_GUEST_CR3), vcpu_get_cr4(vcpu),
+		vcpu_get_gpreg(vcpu, CPU_REG_RAX),
+		vcpu_get_gpreg(vcpu, CPU_REG_RBX),
+		vcpu_get_gpreg(vcpu, CPU_REG_RCX),
+		vcpu_get_gpreg(vcpu, CPU_REG_RDX),
+		vcpu_get_gpreg(vcpu, CPU_REG_RDI),
+		vcpu_get_gpreg(vcpu, CPU_REG_RSI),
+		vcpu_get_gpreg(vcpu, CPU_REG_RBP),
+		vcpu_get_gpreg(vcpu, CPU_REG_R8),
+		vcpu_get_gpreg(vcpu, CPU_REG_R9),
+		vcpu_get_gpreg(vcpu, CPU_REG_R10),
+		vcpu_get_gpreg(vcpu, CPU_REG_R11),
+		vcpu_get_gpreg(vcpu, CPU_REG_R12),
+		vcpu_get_gpreg(vcpu, CPU_REG_R13),
+		vcpu_get_gpreg(vcpu, CPU_REG_R14),
+		vcpu_get_gpreg(vcpu, CPU_REG_R15));
+	if (len >= size) {
+		goto overflow;
+	}
+	size -= len;
+	str += len;
+
+	/* dump sp */
+	status = copy_from_gva(vcpu, tmp, vcpu_get_gpreg(vcpu, CPU_REG_RSP),
+			DUMPREG_SP_SIZE*sizeof(uint64_t), &err_code,
+			&fault_addr);
+	if (status < 0) {
+		/* copy_from_gva fail */
+		len = snprintf(str, size, "Cannot handle user gva yet!\r\n");
+		if (len >= size) {
+			goto overflow;
+		}
+		size -= len;
+		str += len;
+	} else {
+		len = snprintf(str, size, "\r\nDump RSP for vm %hu, from gva 0x%016llx\r\n",
+			vcpu->vm->vm_id, vcpu_get_gpreg(vcpu, CPU_REG_RSP));
+		if (len >= size) {
+			goto overflow;
+		}
+		size -= len;
+		str += len;
+
+		for (i = 0UL; i < 8UL; i++) {
+			len = snprintf(str, size, "=  0x%016llx  0x%016llx 0x%016llx  0x%016llx\r\n",
+					tmp[i*4UL], tmp[(i*4UL)+1UL], tmp[(i*4UL)+2UL], tmp[(i*4UL)+3UL]);
+			if (len >= size) {
+				goto overflow;
+			}
+			size -= len;
+			str += len;
+		}
+	}
+	return;
+
+overflow:
+	printf("buffer size could not be enough! please check!\n");
+}
+
 static int shell_vcpu_dumpreg(int argc, char **argv)
 {
 	int status = 0;

@@ -590,8 +590,6 @@ int prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id);
 
 void request_vcpu_pre_work(struct acrn_vcpu *vcpu, uint16_t pre_work_id);
 
-void vcpu_dumpreg(void *data);
-
 /**
  * @}
  */
