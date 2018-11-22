@@ -45,20 +45,23 @@ static union lapic_base_msr saved_lapic_base_msr;
 
 static void clear_lapic_isr(void)
 {
-	uint32_t isr_reg = MSR_IA32_EXT_APIC_ISR0;
+	uint32_t i;
+	uint32_t isr_reg;
 
 	/* This is a Intel recommended procedure and assures that the processor
 	 * does not get hung up due to already set "in-service" interrupts left
 	 * over from the boot loader environment. This actually occurs in real
 	 * life, therefore we will ensure all the in-service bits are clear.
 	 */
-	do {
-		if (msr_read(isr_reg) != 0U) {
-			msr_write(MSR_IA32_EXT_APIC_EOI, 0U);
-			continue;
+	for (isr_reg = MSR_IA32_EXT_APIC_ISR7; isr_reg >= MSR_IA32_EXT_APIC_ISR0; isr_reg--) {
+		for (i = 0U; i < 32U; i++) {
+			if (msr_read(isr_reg) != 0U) {
+				msr_write(MSR_IA32_EXT_APIC_EOI, 0U);
+			} else {
+				break;
+			}
 		}
-		isr_reg += 0x1U;
-	} while (isr_reg <= MSR_IA32_EXT_APIC_ISR7);
+	}
 }
 
 void early_init_lapic(void)
@@ -98,8 +101,7 @@ void init_lapic(uint16_t pcpu_id)
 
 	/* Enable Local APIC */
 	/* TODO: add spurious-interrupt handler */
-	msr_write(MSR_IA32_EXT_APIC_SIVR,
-		       LAPIC_SVR_APIC_ENABLE_MASK | LAPIC_SVR_VECTOR);
+	msr_write(MSR_IA32_EXT_APIC_SIVR, LAPIC_SVR_APIC_ENABLE_MASK | LAPIC_SVR_VECTOR);
 
 	/* Ensure there are no ISR bits set. */
 	clear_lapic_isr();
