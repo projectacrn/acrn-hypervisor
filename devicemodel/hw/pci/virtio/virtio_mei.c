@@ -140,16 +140,43 @@ struct refcnt {
 	int count;
 };
 
-static inline void
+static inline int atomic_read(const struct refcnt *ref)
+{
+	return *(volatile int *)&ref->count;
+}
+
+static inline int
 refcnt_get(const struct refcnt *ref)
 {
-	__sync_add_and_fetch((int *)&ref->count, 1);
+	int new, val;
+
+	do {
+		val = atomic_read(ref);
+		if (val == 0)
+			return 0;
+
+		new = val + 1;
+		/* check for overflow */
+		assert(new > 0);
+
+	} while (!__sync_bool_compare_and_swap((int *)&ref->count, val, new));
+
+	return new;
 }
 
 static inline void
 refcnt_put(const struct refcnt *ref)
 {
-	if (__sync_sub_and_fetch((int *)&ref->count, 1) == 0)
+	int new, val;
+
+	do {
+		val = atomic_read(ref);
+		if (val == 0)
+			return;
+		new = val - 1;
+	} while (!__sync_bool_compare_and_swap((int *)&ref->count, val, new));
+
+	if (new == 0)
 		ref->destroy(ref);
 }
 
@@ -432,8 +459,7 @@ fail:
 static struct vmei_host_client*
 vmei_host_client_get(struct vmei_host_client *hclient)
 {
-	refcnt_get(&hclient->ref);
-	return hclient;
+	return refcnt_get(&hclient->ref) > 0 ? hclient : NULL;
 }
 
 static void
@@ -803,7 +829,6 @@ static int vmei_me_client_scan_list(struct virtio_mei *vmei)
 
 		if (ent->d_type == DT_DIR &&
 		    is_prefix("mei::", ent->d_name, DEV_NAME_SIZE)) {
-
 			struct mei_client_properties props;
 
 			memset(&props, 0, sizeof(props));
