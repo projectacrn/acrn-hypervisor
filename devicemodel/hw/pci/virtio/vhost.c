@@ -283,7 +283,7 @@ vhost_vq_register_eventfd(struct vhost_dev *vdev,
 		 */
 		if (is_register) {
 			vq->mevp = mevent_add(vq->call_fd, EVF_READ,
-				vhost_vq_notify, vq);
+				vhost_vq_notify, vq, NULL, NULL);
 			if (!vq->mevp) {
 				WPRINTF("mevent_add failed\n");
 				rc = -1;

@@ -634,7 +634,7 @@ virtio_input_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		goto fail;
 	}
 
-	vi->mevp = mevent_add(vi->fd, EVF_READ, virtio_input_read_event, vi);
+	vi->mevp = mevent_add(vi->fd, EVF_READ, virtio_input_read_event, vi, NULL, NULL);
 	if (vi->mevp == NULL) {
 		WPRINTF(("vtinput: could not register event\n"));
 		goto fail;

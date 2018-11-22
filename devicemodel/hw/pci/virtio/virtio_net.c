@@ -707,7 +707,7 @@ virtio_net_tap_setup(struct virtio_net *net, char *devname)
 
 	if (vhost_fd < 0) {
 		net->mevp = mevent_add(net->tapfd, EVF_READ,
-				       virtio_net_rx_callback, net);
+				       virtio_net_rx_callback, net, NULL, NULL);
 		if (net->mevp == NULL) {
 			WPRINTF(("Could not register event\n"));
 			close(net->tapfd);

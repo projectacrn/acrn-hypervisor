@@ -1017,7 +1017,7 @@ vmei_host_client_native_connect(struct vmei_host_client *hclient)
 
 	/* add READ event into mevent */
 	hclient->rx_mevp = mevent_add(hclient->client_fd, EVF_READ,
-				      vmei_rx_callback, hclient);
+				      vmei_rx_callback, hclient, NULL, NULL);
 	if (!hclient->rx_mevp)
 		return MEI_HBM_REJECTED;
 
@@ -1951,7 +1951,7 @@ vmei_start(struct virtio_mei *vmei, bool do_rescan)
 
 	hclient->client_fd = pipefd[0];
 	hclient->rx_mevp = mevent_add(hclient->client_fd, EVF_READ,
-				      vmei_rx_callback, hclient);
+				      vmei_rx_callback, hclient, NULL, NULL);
 	vmei->hbm_fd = pipefd[1];
 
 	if (do_rescan) {
@@ -2051,7 +2051,7 @@ static int vmei_add_reset_event(struct virtio_mei *vmei)
 
 	vmei->dev_state_first = true;
 	vmei->reset_mevp = mevent_add(dev_state_fd, EVF_READ_ET,
-				      vmei_reset_callback, vmei);
+		vmei_reset_callback, vmei, NULL, NULL);
 	if (!vmei->reset_mevp) {
 		close(dev_state_fd);
 		return -ENOMEM;

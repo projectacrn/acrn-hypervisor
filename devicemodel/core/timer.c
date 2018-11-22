@@ -71,7 +71,7 @@ acrn_timer_init(struct acrn_timer *timer, void (*cb)(void *), void *param)
 		return -1;
 	}
 
-	timer->mevp = mevent_add(timer->fd, EVF_READ, timer_handler, timer);
+	timer->mevp = mevent_add(timer->fd, EVF_READ, timer_handler, timer, NULL, NULL);
 	if (timer->mevp == NULL) {
 		close(timer->fd);
 		perror("acrn_timer mevent add failed.\n");

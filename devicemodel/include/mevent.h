@@ -41,8 +41,8 @@ enum ev_type {
 struct mevent;
 
 struct mevent *mevent_add(int fd, enum ev_type type,
-			  void (*func)(int, enum ev_type, void *),
-			  void *param);
+			  void (*run)(int, enum ev_type, void *), void *param,
+			  void (*teardown)(void *), void *teardown_param);
 int	mevent_enable(struct mevent *evp);
 int	mevent_disable(struct mevent *evp);
 int	mevent_delete(struct mevent *evp);

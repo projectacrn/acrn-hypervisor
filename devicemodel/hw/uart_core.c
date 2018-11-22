@@ -270,8 +270,7 @@ uart_opentty(struct uart_vdev *uart)
 {
 	ttyopen(&uart->tty);
 	if (isatty(uart->tty.fd_in)) {
-		uart->mev = mevent_add(uart->tty.fd_in, EVF_READ,
-			uart_drain, uart);
+		uart->mev = mevent_add(uart->tty.fd_in, EVF_READ, uart_drain, uart, NULL, NULL);
 		assert(uart->mev != NULL);
 	}
 }
