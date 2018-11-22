@@ -40,7 +40,6 @@
 
 #define IOAPIC_ID_MASK		0x0f000000U
 #define MASK_ALL_INTERRUPTS   0x0001000000010000UL
-#define IOAPIC_RTE_LOW_INTVEC    ((uint32_t)IOAPIC_RTE_INTVEC)
 
 /**
  * @pre pin < vioapic_pincount(vm)
@@ -574,61 +573,3 @@ void vioapic_get_rte(struct acrn_vm *vm, uint32_t pin, union ioapic_rte *rte)
 	vioapic = vm_ioapic(vm);
 	*rte = vioapic->rtbl[pin];
 }
-
-#ifdef HV_DEBUG
-void get_vioapic_info(char *str_arg, size_t str_max, uint16_t vmid)
-{
-	char *str = str_arg;
-	size_t len, size = str_max;
-	union ioapic_rte rte;
-	uint32_t delmode, vector, dest;
-	bool level, phys, remote_irr, mask;
-	struct acrn_vm *vm = get_vm_from_vmid(vmid);
-	uint32_t pin, pincount;
-
-	if (vm == NULL) {
-		len = snprintf(str, size, "\r\nvm is not exist for vmid %hu", vmid);
-		if (len >= size) {
-			goto overflow;
-		}
-		size -= len;
-		str += len;
-		goto END;
-	}
-
-	len = snprintf(str, size, "\r\nPIN\tVEC\tDM\tDEST\tTM\tDELM\tIRR\tMASK");
-	if (len >= size) {
-		goto overflow;
-	}
-	size -= len;
-	str += len;
-
-	pincount = vioapic_pincount(vm);
-	rte.full = 0UL;
-	for (pin = 0U; pin < pincount; pin++) {
-		vioapic_get_rte(vm, pin, &rte);
-		mask = ((rte.full & IOAPIC_RTE_INTMASK) == IOAPIC_RTE_INTMSET);
-		remote_irr = ((rte.full & IOAPIC_RTE_REM_IRR) == IOAPIC_RTE_REM_IRR);
-		phys = ((rte.full & IOAPIC_RTE_DESTMOD) == IOAPIC_RTE_DESTPHY);
-		delmode = (uint32_t)(rte.full & IOAPIC_RTE_DELMOD);
-		level = ((rte.full & IOAPIC_RTE_TRGRLVL) != 0UL);
-		vector = rte.u.lo_32 & IOAPIC_RTE_LOW_INTVEC;
-		dest = (uint32_t)(rte.full >> IOAPIC_RTE_DEST_SHIFT);
-
-		len = snprintf(str, size, "\r\n%hhu\t0x%X\t%s\t0x%X\t%s\t%u\t%d\t%d",
-				pin, vector, phys ? "phys" : "logic", dest, level ? "level" : "edge",
-				delmode >> 8U, remote_irr, mask);
-		if (len >= size) {
-			goto overflow;
-		}
-		size -= len;
-		str += len;
-	}
-END:
-	snprintf(str, size, "\r\n");
-	return;
-
-overflow:
-	printf("buffer size could not be enough! please check!\n");
-}
-#endif /* HV_DEBUG */
