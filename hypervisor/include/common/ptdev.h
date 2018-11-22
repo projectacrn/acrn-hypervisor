@@ -77,17 +77,11 @@ void ptdev_init(void);
 void ptdev_release_all_entries(const struct acrn_vm *vm);
 
 struct ptdev_remapping_info *ptdev_dequeue_softirq(struct acrn_vm *vm);
-struct ptdev_remapping_info *alloc_entry(struct acrn_vm *vm,
-		uint32_t intr_type);
+struct ptdev_remapping_info *alloc_entry(struct acrn_vm *vm, uint32_t intr_type);
 void release_entry(struct ptdev_remapping_info *entry);
 int32_t ptdev_activate_entry(struct ptdev_remapping_info *entry, uint32_t phys_irq);
 void ptdev_deactivate_entry(struct ptdev_remapping_info *entry);
 
-#ifdef HV_DEBUG
-void get_ptdev_info(char *str_arg, size_t str_max);
-#endif /* HV_DEBUG */
-
-uint32_t get_vm_ptdev_intr_data(const struct acrn_vm *target_vm, uint64_t *buffer,
-	uint32_t buffer_cnt);
+uint32_t get_vm_ptdev_intr_data(const struct acrn_vm *target_vm, uint64_t *buffer, uint32_t buffer_cnt);
 
 #endif /* PTDEV_H */
