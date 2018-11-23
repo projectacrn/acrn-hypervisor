@@ -18,6 +18,7 @@ enum vm_state {
 	VM_CREATED,		/* VM created / awaiting start (boot) */
 	VM_STARTED,		/* VM started (booted) */
 	VM_PAUSED,		/* VM paused */
+	VM_SUSPENDED,		/* VM suspended */
 	VM_UNTRACKED,		/* VM not created by acrnctl, or its launch script can change vm name */
 };
 

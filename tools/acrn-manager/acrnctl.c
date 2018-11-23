@@ -574,7 +574,7 @@ static int acrnctl_do_resume(int argc, char *argv[])
 		printf("No wake up reason, use 0x%x\n", reason);
 
 	switch (s->state) {
-		case VM_PAUSED:
+		case VM_SUSPENDED:
 			resume_vm(argv[1], reason);
 			printf("resume %s reason(0x%x\n", argv[1], reason);
 			break;
@@ -627,7 +627,7 @@ static int acrnctl_do_reset(int argc, char *argv[])
 				start_vm(argv[i]);
 				break;
 			case VM_STARTED:
-			case VM_PAUSED:
+			case VM_SUSPENDED:
 				stop_vm(argv[i]);
 				if (wait_vm_stop(argv[i], STOP_TIMEOUT)) {
 					printf("Failed to stop %s in %u sec\n",
