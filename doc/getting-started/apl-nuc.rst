@@ -47,7 +47,7 @@ complete this setup.
    and follow the `Clear Linux installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
    as a starting point for installing Clear Linux onto your platform.  Follow the recommended
-   options for choosing an **Manual** installation type, and using the platform's
+   options for choosing an **Manual (Advanced)** installation type, and using the platform's
    storage as the target device for installation (overwriting the existing data
    and creating three partitions on the platform's storage drive).
    
