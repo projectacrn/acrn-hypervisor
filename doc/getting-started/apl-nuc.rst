@@ -53,7 +53,7 @@ complete this setup.
    
    High-level steps should be: 
    
-   #.  Install Clear on a NUC Use the "Manual" option.
+   #.  Install Clear on a NUC using the "Manual (Advanced)" option.
    #.  Use default partition scheme for storage
    #.  Name the host "clr-sos-guest"
    #.  Add an administrative user "clear" with "sudoers" privilege
