@@ -78,10 +78,6 @@ struct shell {
 #define SHELL_CMD_VIOAPIC_PARAM		"<vm id>"
 #define SHELL_CMD_VIOAPIC_HELP		"show vioapic info"
 
-#define SHELL_CMD_LOGDUMP		"logdump"
-#define SHELL_CMD_LOGDUMP_PARAM		"<pcpu id>"
-#define SHELL_CMD_LOGDUMP_HELP		"log buffer dump"
-
 #define SHELL_CMD_LOG_LVL		"loglevel"
 #define SHELL_CMD_LOG_LVL_PARAM		"[<console_loglevel> [<mem_loglevel> " \
 					"[npk_loglevel]]]"

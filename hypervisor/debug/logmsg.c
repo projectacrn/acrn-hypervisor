@@ -19,57 +19,10 @@ struct logmsg {
 
 static struct logmsg logmsg;
 
-static inline void init_earlylog_sbuf(uint16_t pcpu_id)
-{
-	struct shared_buf *sbuf = (struct shared_buf *)per_cpu(early_logbuf, pcpu_id);
-	uint32_t ele_size = LOG_ENTRY_SIZE;
-	uint32_t ele_num = ((CONFIG_LOG_BUF_SIZE - SBUF_HEAD_SIZE) / ele_size);
-
-	sbuf->ele_num = ele_num;
-	sbuf->ele_size = ele_size;
-	sbuf->size = ele_num * ele_size;
-	sbuf->magic = SBUF_MAGIC;
-}
-
-static void do_copy_earlylog(struct shared_buf *dst_sbuf,
-			    const struct shared_buf *src_sbuf)
-{
-	uint32_t buf_size, valid_size;
-	uint32_t cur_tail;
-	uint64_t rflags;
-
-	if ((src_sbuf->ele_size != dst_sbuf->ele_size)
-		&& (src_sbuf->ele_num != dst_sbuf->ele_num)) {
-		spinlock_irqsave_obtain(&(logmsg.lock), &rflags);
-		printf("Error to copy early hvlog: size mismatch\n");
-		spinlock_irqrestore_release(&(logmsg.lock), rflags);
-		return;
-	}
-
-	cur_tail = src_sbuf->tail;
-	buf_size = SBUF_HEAD_SIZE + dst_sbuf->size;
-	valid_size = SBUF_HEAD_SIZE + cur_tail;
-
-	(void)memcpy_s((void *)dst_sbuf, buf_size,
-			(void *)src_sbuf, valid_size);
-	if (dst_sbuf->tail != cur_tail) {
-		/* there is chance to lose new log from certain pcpu */
-		dst_sbuf->tail = cur_tail;
-	}
-}
-
 void init_logmsg(uint32_t flags)
 {
-	uint16_t pcpu_id;
-
 	logmsg.flags = flags;
 	logmsg.seq = 0;
-
-	/* allocate sbuf for log before sos booting */
-	for (pcpu_id = 0U; (pcpu_id < phys_cpu_num) && (pcpu_id < CONFIG_MAX_PCPU_NUM); pcpu_id++) {
-		init_earlylog_sbuf(pcpu_id);
-		per_cpu(is_early_logbuf, pcpu_id) = true;
-	}
 }
 
 void do_logmsg(uint32_t severity, const char *fmt, ...)
@@ -135,21 +88,9 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 	/* Check if flags specify to output to memory */
 	if (do_mem_log) {
 		unsigned int i, msg_len;
-		struct shared_buf *sbuf = (struct shared_buf *)
-					per_cpu(sbuf, pcpu_id)[ACRN_HVLOG];
-		struct shared_buf *early_sbuf = (struct shared_buf *)per_cpu(early_logbuf, pcpu_id);
+		struct shared_buf *sbuf = (struct shared_buf *)per_cpu(sbuf, pcpu_id)[ACRN_HVLOG];
 
-		if (per_cpu(is_early_logbuf, pcpu_id)) {
-			if (sbuf != NULL) {
-				/* switch to sbuf from sos */
-				do_copy_earlylog(sbuf, early_sbuf);
-				per_cpu(is_early_logbuf, pcpu_id) = false;
-			} else {
-				/* use earlylog sbuf if no sbuf from sos */
-				sbuf = early_sbuf;
-			}
-		}
-
+		/* If sbuf is not ready, we just drop the massage */
 		if (sbuf != NULL) {
 			msg_len = strnlen_s(buffer, LOG_MESSAGE_MAX_SIZE);
 
@@ -160,47 +101,4 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 			}
 		}
 	}
-}
-
-void print_logmsg_buffer(uint16_t pcpu_id)
-{
-	char buffer[LOG_ENTRY_SIZE + 1];
-	uint32_t read_cnt;
-	struct shared_buf *sbuf;
-	int is_earlylog = 0;
-	uint64_t rflags;
-
-	if (pcpu_id >= phys_cpu_num) {
-		return;
-	}
-
-	sbuf = (struct shared_buf *)per_cpu(early_logbuf, pcpu_id);
-	is_earlylog = 1;
-
-	spinlock_irqsave_obtain(&(logmsg.lock), &rflags);
-
-	printf("CPU%hu: head: 0x%x, tail: 0x%x %s\n\r",
-		pcpu_id, (sbuf)->head, (sbuf)->tail,
-		(is_earlylog != 0) ? "[earlylog]" : "");
-
-	spinlock_irqrestore_release(&(logmsg.lock), rflags);
-
-	do {
-		uint32_t idx;
-		(void)memset(buffer, 0U, LOG_ENTRY_SIZE + 1U);
-
-		read_cnt = sbuf_get(sbuf, (uint8_t *)buffer);
-
-		if (read_cnt == 0U) {
-			return;
-		}
-
-		idx = ((uint32_t)read_cnt < LOG_ENTRY_SIZE) ?
-				(uint32_t)read_cnt : LOG_ENTRY_SIZE;
-		buffer[idx] = '\0';
-
-		spinlock_irqsave_obtain(&(logmsg.lock), &rflags);
-		printf("%s\n\r", buffer);
-		spinlock_irqrestore_release(&(logmsg.lock), rflags);
-	} while (read_cnt > 0U);
 }

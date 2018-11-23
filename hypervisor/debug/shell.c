@@ -29,7 +29,6 @@ static int shell_show_cpu_int(__unused int argc, __unused char **argv);
 static int shell_show_ptdev_info(__unused int argc, __unused char **argv);
 static int shell_show_vioapic_info(int argc, char **argv);
 static int shell_show_ioapic_info(__unused int argc, __unused char **argv);
-static int shell_dump_logbuf(int argc, char **argv);
 static int shell_loglevel(int argc, char **argv);
 static int shell_cpuid(int argc, char **argv);
 static int shell_trigger_crash(int argc, char **argv);
@@ -94,12 +93,6 @@ static struct shell_cmd shell_cmds[] = {
 		.cmd_param	= SHELL_CMD_IOAPIC_PARAM,
 		.help_str	= SHELL_CMD_IOAPIC_HELP,
 		.fcn		= shell_show_ioapic_info,
-	},
-	{
-		.str		= SHELL_CMD_LOGDUMP,
-		.cmd_param	= SHELL_CMD_LOGDUMP_PARAM,
-		.help_str	= SHELL_CMD_LOGDUMP_HELP,
-		.fcn		= shell_dump_logbuf,
 	},
 	{
 		.str		= SHELL_CMD_LOG_LVL,
@@ -1179,23 +1172,6 @@ static int shell_show_ioapic_info(__unused int argc, __unused char **argv)
 	shell_puts(shell_log_buf);
 
 	return err;
-}
-
-static int shell_dump_logbuf(int argc, char **argv)
-{
-	uint16_t pcpu_id;
-	int val;
-
-	if (argc == 2) {
-		val = atoi(argv[1]);
-		if (val >= 0) {
-			pcpu_id = (uint16_t)val;
-			print_logmsg_buffer(pcpu_id);
-			return 0;
-		}
-	}
-
-	return -EINVAL;
 }
 
 static int shell_loglevel(int argc, char **argv)
