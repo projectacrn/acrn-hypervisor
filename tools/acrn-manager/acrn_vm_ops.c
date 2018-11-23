@@ -23,6 +23,7 @@ const char *state_str[] = {
 	[VM_CREATED] = "stopped",
 	[VM_STARTED] = "started",
 	[VM_PAUSED] = "paused",
+	[VM_SUSPENDED] = "suspended",
 	[VM_UNTRACKED] = "untracked",
 };
 
@@ -174,7 +175,7 @@ static void _scan_alive_vm(void)
 				vm->state = VM_STARTED;
 				break;
 			case VM_SUSPEND_SUSPEND:
-				vm->state = VM_PAUSED;
+				vm->state = VM_SUSPENDED;
 				break;
 			default:
 				vm->state = VM_STATE_UNKNOWN;

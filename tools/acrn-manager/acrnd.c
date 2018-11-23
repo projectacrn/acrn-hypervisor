@@ -135,7 +135,7 @@ void acrnd_vm_timer_func(struct work_arg *arg)
 	case VM_CREATED:
 		acrnd_run_vm(arg->name);
 		break;
-	case VM_PAUSED:
+	case VM_SUSPENDED:
 		resume_vm(arg->name, CBC_WK_RSN_RTC);
 		break;
 	default:
@@ -251,7 +251,7 @@ static int active_all_vms(void)
 			if (!pid)
 				acrnd_run_vm(vm->name);
 			break;
-		case VM_PAUSED:
+		case VM_SUSPENDED:
 			reason = get_sos_wakeup_reason();
 			ret += resume_vm(vm->name, reason);
 			break;
@@ -288,7 +288,7 @@ static int wakeup_suspended_vms(unsigned wakeup_reason)
 	vmmngr_update();
 
 	LIST_FOREACH(vm, &vmmngr_head, list) {
-		if (vm->state == VM_PAUSED)
+		if (vm->state == VM_SUSPENDED)
 			ret += resume_vm(vm->name, wakeup_reason);
 	}
 
@@ -466,7 +466,7 @@ static int wait_for_stop(unsigned int timeout)
 			return SHUTDOWN;
 		}
 
-		if (check_vms_status(VM_PAUSED) == 0) {
+		if (check_vms_status(VM_SUSPENDED) == 0) {
 			printf("All vms have entered S3 state successfully\n");
 			return SUSPEND;
 		}
