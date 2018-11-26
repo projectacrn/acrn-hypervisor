@@ -11,18 +11,18 @@
  * bsp/uefi/clearlinux/acrn.conf: hvlog=2M@0x1FE00000
  */
 
-struct logmsg {
+struct acrn_logmsg_ctl {
 	uint32_t flags;
 	int32_t seq;
 	spinlock_t lock;
 };
 
-static struct logmsg logmsg;
+static struct acrn_logmsg_ctl logmsg_ctl;
 
 void init_logmsg(uint32_t flags)
 {
-	logmsg.flags = flags;
-	logmsg.seq = 0;
+	logmsg_ctl.flags = flags;
+	logmsg_ctl.seq = 0;
 }
 
 void do_logmsg(uint32_t severity, const char *fmt, ...)
@@ -35,12 +35,9 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 	bool do_npk_log;
 	char *buffer;
 
-	do_console_log = (((logmsg.flags & LOG_FLAG_STDOUT) != 0U) &&
-					(severity <= console_loglevel));
-	do_mem_log = (((logmsg.flags & LOG_FLAG_MEMORY) != 0U) &&
-					(severity <= mem_loglevel));
-	do_npk_log = ((logmsg.flags & LOG_FLAG_NPK) != 0U &&
-					(severity <= npk_loglevel));
+	do_console_log = (((logmsg_ctl.flags & LOG_FLAG_STDOUT) != 0U) && (severity <= console_loglevel));
+	do_mem_log = (((logmsg_ctl.flags & LOG_FLAG_MEMORY) != 0U) && (severity <= mem_loglevel));
+	do_npk_log = ((logmsg_ctl.flags & LOG_FLAG_NPK) != 0U && (severity <= npk_loglevel));
 
 	if (!do_console_log && !do_mem_log && !do_npk_log) {
 		return;
@@ -58,10 +55,8 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 
 	(void)memset(buffer, 0U, LOG_MESSAGE_MAX_SIZE);
 	/* Put time-stamp, CPU ID and severity into buffer */
-	snprintf(buffer, LOG_MESSAGE_MAX_SIZE,
-			"[%lluus][cpu=%hu][sev=%u][seq=%u]:",
-			timestamp, pcpu_id, severity,
-			atomic_inc_return(&logmsg.seq));
+	snprintf(buffer, LOG_MESSAGE_MAX_SIZE, "[%lluus][cpu=%hu][sev=%u][seq=%u]:",
+			timestamp, pcpu_id, severity, atomic_inc_return(&logmsg_ctl.seq));
 
 	/* Put message into remaining portion of local buffer */
 	va_start(args, fmt);
@@ -77,12 +72,12 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 
 	/* Check if flags specify to output to stdout */
 	if (do_console_log) {
-		spinlock_irqsave_obtain(&(logmsg.lock), &rflags);
+		spinlock_irqsave_obtain(&(logmsg_ctl.lock), &rflags);
 
 		/* Send buffer to stdout */
 		printf("%s\n\r", buffer);
 
-		spinlock_irqrestore_release(&(logmsg.lock), rflags);
+		spinlock_irqrestore_release(&(logmsg_ctl.lock), rflags);
 	}
 
 	/* Check if flags specify to output to memory */
