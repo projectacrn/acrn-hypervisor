@@ -36,7 +36,7 @@ Ubuntu 16.04.4 LTS was used throughout this document, other versions such as
      sudo service ssh start
 
 Install build tools and dependencies
-*************************
+************************************
 
 Install development tools for ARCN development:
 
