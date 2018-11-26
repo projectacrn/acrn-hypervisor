@@ -15,14 +15,17 @@
 bool is_hypercall_from_ring0(void)
 {
 	uint16_t cs_sel;
+	bool ret;
 
 	cs_sel = exec_vmread16(VMX_GUEST_CS_SEL);
 	/* cs_selector[1:0] is CPL */
 	if ((cs_sel & 0x3U) == 0U) {
-		return true;
+	        ret = true;
+	} else {
+		ret = false;
 	}
 
-	return false;
+	return ret;
 }
 
 /**
@@ -76,13 +79,16 @@ int32_t hcall_get_api_version(struct acrn_vm *vm, uint64_t param)
 
 	version.major_version = HV_API_MAJOR_VERSION;
 	version.minor_version = HV_API_MINOR_VERSION;
+	int32_t ret;
 
 	if (copy_to_gpa(vm, &version, param, sizeof(version)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
+		ret = -1;
+	} else {
+		ret = 0;
 	}
 
-	return 0;
+	return ret;
 }
 
 /**
