@@ -157,10 +157,11 @@ int32_t hcall_destroy_vm(uint16_t vmid)
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	if (target_vm == NULL) {
-		return -1;
+		ret = -1;
+	} else {
+		ret = shutdown_vm(target_vm);
 	}
 
-	ret = shutdown_vm(target_vm);
 	return ret;
 }
 
@@ -181,9 +182,8 @@ int32_t hcall_start_vm(uint16_t vmid)
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	if (target_vm == NULL) {
-		return -1;
-	}
-	if (target_vm->sw.io_shared_page == NULL) {
+		ret = -1;
+	} else if (target_vm->sw.io_shared_page == NULL) {
 		ret = -1;
 	} else {
 		ret = start_vm(target_vm);
@@ -206,14 +206,16 @@ int32_t hcall_start_vm(uint16_t vmid)
 int32_t hcall_pause_vm(uint16_t vmid)
 {
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
+	int32_t ret;
 
 	if (target_vm == NULL) {
-		return -1;
+	        ret = -1;
+	} else {
+		pause_vm(target_vm);
+		ret = 0;
 	}
 
-	pause_vm(target_vm);
-
-	return 0;
+	return ret;
 }
 
 /**
@@ -273,12 +275,14 @@ int32_t hcall_create_vcpu(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 int32_t hcall_reset_vm(uint16_t vmid)
 {
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
+	int32_t ret;
 
 	if ((target_vm == NULL) || is_vm0(target_vm)) {
-		return -1;
+	        ret = -1;
+	} else {
+	        ret = reset_vm(target_vm);
 	}
-
-	return reset_vm(target_vm);
+	return ret;
 }
 
 /**
