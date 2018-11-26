@@ -13,11 +13,11 @@ Install Ubuntu (natively)
 *************************
 
 Ubuntu 16.04.4 LTS was used throughout this document, other versions such as
-18.04 may work too.
+18.04 works too.
 
 * Download Ubuntu 16.04 from the `Ubuntu 16.04.4 LTS (Xenial Xerus) page
-  <https://www.ubuntu.com/download/desktop>`_ and select the `ubuntu-16.04.4-desktop-amd64.iso
-  <http://releases.ubuntu.com/16.04/ubuntu-16.04.4-desktop-amd64.iso>`_ image.
+  <http://old-releases.ubuntu.com/releases/16.04.4/>`_ and select the `ubuntu-16.04.4-desktop-amd64.iso
+  <http://old-releases.ubuntu.com/releases/16.04.4/ubuntu-16.04.4-desktop-amd64.iso>`_ image.
 
 * Follow Ubuntu's `online instructions <https://tutorials.ubuntu.com/tutorial/tutorial-install-ubuntu-desktop?_ga=2.114179015.1954550575.1530817291-1278304647.1523530035>`_
   to install it on your device.
@@ -35,6 +35,34 @@ Ubuntu 16.04.4 LTS was used throughout this document, other versions such as
      sudo service ssh status
      sudo service ssh start
 
+Install build tools and dependencies
+*************************
+
+Install development tools for ARCN development:
+* On a Ubuntu development system:
+
+.. note::
+   You need to use gcc version 7.3.* or higher else you will run into issue #1396. Follow these instructions to install the gcc-7 package on Ubuntu 16.04:
+
+  .. code-block:: none
+
+     sudo apt install gcc \
+     git \
+     make \
+     gnu-efi \
+     libssl-dev \
+     libpciaccess-dev \
+     uuid-dev \
+     libsystemd-dev \
+     libevent-dev \
+     libxml2-dev \
+     libusb-1.0-0-dev \
+     python3 \
+     python3-pip \
+     libblkid-dev \
+     e2fslibs-dev \
+     sudo pip3 install kconfiglib
+     
 Install ACRN
 ************
 
@@ -137,11 +165,11 @@ You can download latest Service OS kernel from
 1. The latest Service OS kernel from the latest Clear Linux release
    from this area:
    https://download.clearlinux.org/releases/current/clear/x86_64/os/Packages.  Look for an
-   ``.rpm`` file named ``linux-pk414-sos-<kernel-version>-<build-version>.x86_64.rpm``.
+   ``.rpm`` file named ``linux-iot-lts2018-sos-<kernel-version>-<build-version>.x86_64.rpm``.
 
    While we recommend using the "current" (latest) release of Clear Linux, you can download
    a specific Clear Linux release from an area with that release number, e.g.: 
-   https://download.clearlinux.org/releases/24040/clear/x86_64/os/linux-pk414-sos-4.14.57-69.x86_64.rpm
+   https://download.clearlinux.org/releases/26440/clear/x86_64/os/Packages/linux-iot-lts2018-sos-4.19.0-22.x86_64.rpm
 
 #. Download and extract the latest Service OS kernel(this guide is based on 24040 as the current example)
 
@@ -149,16 +177,17 @@ You can download latest Service OS kernel from
 
       mkdir ~/kernel-build
       cd ~/kernel-build
-      wget  https://download.clearlinux.org/releases/24040/clear/x86_64/os/Packages/linux-pk414-sos-4.14.57-69.x86_64.rpm
+      wget https://download.clearlinux.org/releases/26440/clear/x86_64/os/Packages/linux-iot-lts2018-sos-4.19.0-22.x86_64.rpm
       sudo apt-get install rpm2cpio
-      rpm2cpio linux-pk414-sos-4.14.57-69.x86_64.rpm | cpio -idmv
+      rpm2cpio linux-iot-lts2018-sos-4.19.0-22.x86_64.rpm | cpio -idmv
 
 #. Install the SOS kernel and its drivers (modules)
 
    .. code-block:: none
 
-      sudo cp -r ~/kernel-build/usr/lib/modules/4.14.57-69.pk414-sos/ /lib/modules/
-      sudo cp ~/kernel-build/usr/lib/kernel/org.clearlinux.pk414-sos.4.14.57-69 /boot/acrn/
+      sudo cp -r ~/kernel-build/usr/lib/modules/4.19.0-22.iot-lts2018-sos/ /lib/modules/
+      mkdir /boot/acrn/
+      sudo cp ~/kernel-build/usr/lib/kernel/org.clearlinux.iot-lts2018-sos.4.19.0-22  /boot/acrn/
 
 #. Configure Grub to load the Service OS kernel
 
@@ -173,7 +202,7 @@ You can download latest Service OS kernel from
                 insmod gzio
                 insmod part_gpt
                 insmod ext2
-                linux  /EFI/org.clearlinux/kernel-org.clearlinux.pk414-sos.4.14.57-69 pci_devices_ignore=(0:18:1)  console=tty0 console=ttyS0 i915.nuclear_pageflip=1 root=PARTUUID=<UUID of rootfs partition> rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.tsd_init=7 i915.tsd_delay=2000 i915.avail_planes_per_pipe=0x01010F i915.domain_plane_owners=0x011111110000 i915.enable_guc_loading=0 i915.enable_guc_submission=0 i915.enable_preemption=1 i915.context_priority_mode=2 i915.enable_gvt=1 i915.enable_initial_modeset=1 hvlog=2M@0x1FE00000
+                linux  /boot/acrn/org.clearlinux.iot-lts2018-sos.4.19.0-22  pci_devices_ignore=(0:18:1)  console=tty0 console=ttyS0 i915.nuclear_pageflip=1 root=PARTUUID=<UUID of rootfs partition> rw rootwait ignore_loglevel no_timer_check consoleblank=0 i915.tsd_init=7 i915.tsd_delay=2000 i915.avail_planes_per_pipe=0x01010F i915.domain_plane_owners=0x011111110000 i915.enable_guc_loading=0 i915.enable_guc_submission=0 i915.enable_preemption=1 i915.context_priority_mode=2 i915.enable_gvt=1 i915.enable_initial_modeset=1 hvlog=2M@0x1FE00000
         }
 
    .. note::
@@ -236,23 +265,23 @@ For the User OS, we are using the same `Clear Linux`_ release version as the Ser
   .. code-block:: none
 
      cd ~
-     wget https://download.clearlinux.org/releases/24040/clear/clear-24040-kvm.img.xz
-     unxz clear-24040-kvm.img.xz
+     wget https://download.clearlinux.org/releases/26440/clear/clear-26440-kvm.img.xz
+     unxz clear-26440-kvm.img.xz
 
 * Download the Production Kernel (PK) kernel
 
   .. code-block:: none
 
-     wget https://download.clearlinux.org/releases/24040/clear/x86_64/os/Packages/linux-pk414-standard-4.14.57-69.x86_64.rpm
-     rpm2cpio linux-pk414-standard-4.14.57-69.x86_64.rpm | cpio -idmv
+     wget https://download.clearlinux.org/releases/26440/clear/x86_64/os/Packages/linux-iot-lts2018-4.19.0-22.x86_64.rpm
+     rpm2cpio linux-iot-lts2018-4.19.0-22.x86_64.rpm | cpio -idmv
 
 * Update the UOS kernel modules
 
   .. code-block:: none
 
-     sudo losetup -f -P --show /root/clear-24040-kvm.img
+     sudo losetup -f -P --show /root/clear-26440-kvm.img
      sudo mount /dev/loop0p3 /mnt
-     sudo cp -r /root/usr/lib/modules/4.14.57-69.pk414-standard /mnt/lib/modules/
+     sudo cp -r /root/usr/lib/modules/4.19.0-22.iot-lts2018/ /mnt/lib/modules/
      sudo cp -r /root/usr/lib/kernel /lib/modules/
      sudo umount /mnt
      sync
@@ -277,8 +306,8 @@ For the User OS, we are using the same `Clear Linux`_ release version as the Ser
 
   .. code-block:: none
 
-     -s 3,virtio-blk,/root/clear-24040-kvm.img
-     -k /lib/modules/kernel/org.clearlinux.pk414-standard.4.14.57-69
+     -s 3,virtio-blk,/root/clear-26440-kvm.img
+     -k /lib/modules/kernel/default-iot-lts2018
 
 Start the User OS (UOS)
 ***********************
@@ -312,12 +341,12 @@ script example shows how to set this up (verified in Ubuntu 14.04 and 16.04 as t
   
     # if bridge not existed
     if [ "$br"x != "acrn-br0"x ]; then
-    #setup bridge for uos network
-    brctl addbr acrn-br0
-    brctl addif acrn-br0 enp3s0
-    ifconfig enp3s0 0
-    dhclient acrn-br0
-    # add existing tap devices under the bridge
+    	#setup bridge for uos network
+      brctl addbr acrn-br0
+      brctl addif acrn-br0 enp3s0
+      ifconfig enp3s0 0
+      dhclient acrn-br0
+      # add existing tap devices under the bridge
       for tap in $taps; do
         ip tuntap add dev acrn_$tap mode tap
         brctl addif acrn-br0 $tap
