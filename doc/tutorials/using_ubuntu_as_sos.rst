@@ -39,10 +39,8 @@ Install build tools and dependencies
 *************************
 
 Install development tools for ARCN development:
-* On a Ubuntu development system:
 
-.. note::
-   You need to use gcc version 7.3.* or higher else you will run into issue #1396. Follow these instructions to install the gcc-7 package on Ubuntu 16.04:
+* On a Ubuntu development system:
 
   .. code-block:: none
 
@@ -62,6 +60,19 @@ Install development tools for ARCN development:
      libblkid-dev \
      e2fslibs-dev \
      sudo pip3 install kconfiglib
+   
+.. note::
+   You need to use gcc version 7.3.* or higher else you will run into issue #1396. Follow these instructions to install the gcc-7 package on Ubuntu 16.04:
+   
+  .. code-block:: none
+
+     sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+     sudo apt update
+     sudo apt install g++-7 -y
+     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 \
+                     --slave /usr/bin/g++ g++ /usr/bin/g++-7
+
+     
      
 Install ACRN
 ************
