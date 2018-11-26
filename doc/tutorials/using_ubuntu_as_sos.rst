@@ -61,9 +61,8 @@ Install development tools for ARCN development:
      e2fslibs-dev \
      sudo pip3 install kconfiglib
    
-   
 .. note::
-   You need to use gcc version 7.3.* or higher else you will run into issue #1396. Follow these instructions to install the gcc-7 package on Ubuntu 16.04:
+   You need to use gcc version 7.3.* or higher else you will run into issue `#1396 <https://github.com/projectacrn/acrn-hypervisor/issues/1396>`_. Follow these instructions to install the gcc-7 package on Ubuntu 16.04:
    
    
   .. code-block:: none
