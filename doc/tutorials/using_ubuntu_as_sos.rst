@@ -61,8 +61,10 @@ Install development tools for ARCN development:
      e2fslibs-dev \
      sudo pip3 install kconfiglib
    
+   
 .. note::
    You need to use gcc version 7.3.* or higher else you will run into issue #1396. Follow these instructions to install the gcc-7 package on Ubuntu 16.04:
+   
    
   .. code-block:: none
 
@@ -82,7 +84,7 @@ the source code, build it, and install it on your device.
 
 1. Install the build tools and dependencies
 
-   Follow the instructions found in the :ref:`getting-started-apl-nuc` to
+   Follow the instructions found in the  `Getting started guide for Intel NUC <https://projectacrn.github.io/latest/getting-started/apl-nuc.html#getting-started-apl-nuc>`_ to
    install all the build tools and dependencies on your system.
 
 #. Clone the `Project ACRN <https://github.com/projectacrn/acrn-hypervisor>`_
@@ -109,7 +111,7 @@ the source code, build it, and install it on your device.
       make PLATFORM=uefi
       sudo make install
 
-   For more details, please refer to the :ref:`getting-started-apl-nuc`.
+   For more details, please refer to the `Getting started guide for Intel NUC <https://projectacrn.github.io/latest/getting-started/apl-nuc.html#getting-started-apl-nuc>`_ .
 
 #. Install the hypervisor
 
@@ -155,12 +157,12 @@ the source code, build it, and install it on your device.
          
          sudo efibootmgr -v
 
-   #. You can change the boot order at any time using ``efibootmgr
-      -o XXX,XXX,XXX``
+   #. You can change the boot order at any time using ``efibootmgr -o XXX,XXX,XXX``
       
      .. code-block:: none   
          
         sudo efibootmgr -o xxx,xxx,xxx 
+
 
    .. note::
       By default, the “ACRN Hypervisor” you have just added should be
@@ -182,7 +184,7 @@ You can download latest Service OS kernel from
    a specific Clear Linux release from an area with that release number, e.g.: 
    https://download.clearlinux.org/releases/26440/clear/x86_64/os/Packages/linux-iot-lts2018-sos-4.19.0-22.x86_64.rpm
 
-#. Download and extract the latest Service OS kernel(this guide is based on 24040 as the current example)
+#. Download and extract the latest Service OS kernel(this guide is based on 26440 as the current example)
 
    .. code-block:: none
 
