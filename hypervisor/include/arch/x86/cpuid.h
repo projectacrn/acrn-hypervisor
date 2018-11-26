@@ -72,6 +72,10 @@
 #define CPUID_EDX_PBE           (1U<<31U)
 /* CPUID.07H:EBX.TSC_ADJUST*/
 #define CPUID_EBX_TSC_ADJ       (1U<<1U)
+/* CPUID.07H:EBX.SGX */
+#define CPUID_EBX_SGX           (1U<<2U)
+/* CPUID.07H:ECX.SGX_LC*/
+#define CPUID_ECX_SGX_LC        (1U<<30U)
 /* CPUID.07H:EDX.IBRS_IBPB*/
 #define CPUID_EDX_IBRS_IBPB     (1U<<26U)
 /* CPUID.07H:EDX.STIBP*/
