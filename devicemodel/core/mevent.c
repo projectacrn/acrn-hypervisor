@@ -254,8 +254,6 @@ mevent_add(int tfd, enum ev_type type,
 
 		return mevp;
 	} else {
-		if (mevp->teardown)
-			mevp->teardown(mevp->teardown_param);
 		free(mevp);
 		return NULL;
 	}
@@ -347,6 +345,9 @@ mevent_delete_event(struct mevent *evp, int closefd)
 		if (evp->closefd) {
 			close(evp->me_fd);
 		}
+
+		if (evp->teardown)
+			evp->teardown(evp->teardown_param);
 		free(evp);
 	}
 	return 0;

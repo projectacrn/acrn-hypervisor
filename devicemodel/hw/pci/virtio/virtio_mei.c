@@ -378,7 +378,6 @@ vmei_host_client_destroy(const struct refcnt *ref)
 {
 	struct vmei_host_client *hclient;
 	struct vmei_me_client *mclient;
-	unsigned int i;
 
 	hclient = container_of(ref, struct vmei_host_client, ref);
 
@@ -390,6 +389,14 @@ vmei_host_client_destroy(const struct refcnt *ref)
 
 	if (hclient->rx_mevp)
 		mevent_delete(hclient->rx_mevp);
+}
+
+static void
+vmei_rx_teardown(void *param)
+{
+	unsigned int i;
+	struct vmei_host_client *hclient = param;
+
 	if (hclient->client_fd > -1)
 		close(hclient->client_fd);
 	for (i = 0; i < VMEI_IOBUFS_MAX; i++)
@@ -955,12 +962,21 @@ vmei_reset(void *vth)
 	virtio_reset_dev(&vmei->base);
 }
 
+static void
+vmei_reset_teardown(void *param)
+{
+	struct virtio_mei *vmei = param;
+	vmei->reset_mevp = NULL;
+
+	pthread_mutex_destroy(&vmei->mutex);
+	free(vmei->config);
+	free(vmei);
+}
+
 static void vmei_del_reset_event(struct virtio_mei *vmei)
 {
 	if (vmei->reset_mevp)
 		mevent_delete_close(vmei->reset_mevp);
-
-	vmei->reset_mevp = NULL;
 }
 
 static void vmei_rx_callback(int fd, enum ev_type type, void *param);
@@ -1017,7 +1033,7 @@ vmei_host_client_native_connect(struct vmei_host_client *hclient)
 
 	/* add READ event into mevent */
 	hclient->rx_mevp = mevent_add(hclient->client_fd, EVF_READ,
-				      vmei_rx_callback, hclient, NULL, NULL);
+			vmei_rx_callback, hclient, vmei_rx_teardown, hclient);
 	if (!hclient->rx_mevp)
 		return MEI_HBM_REJECTED;
 
@@ -1951,7 +1967,7 @@ vmei_start(struct virtio_mei *vmei, bool do_rescan)
 
 	hclient->client_fd = pipefd[0];
 	hclient->rx_mevp = mevent_add(hclient->client_fd, EVF_READ,
-				      vmei_rx_callback, hclient, NULL, NULL);
+		      vmei_rx_callback, hclient, vmei_rx_teardown, hclient);
 	vmei->hbm_fd = pipefd[1];
 
 	if (do_rescan) {
@@ -2051,7 +2067,7 @@ static int vmei_add_reset_event(struct virtio_mei *vmei)
 
 	vmei->dev_state_first = true;
 	vmei->reset_mevp = mevent_add(dev_state_fd, EVF_READ_ET,
-		vmei_reset_callback, vmei, NULL, NULL);
+		vmei_reset_callback, vmei, vmei_reset_teardown, vmei);
 	if (!vmei->reset_mevp) {
 		close(dev_state_fd);
 		return -ENOMEM;
@@ -2336,12 +2352,8 @@ vmei_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (!vmei)
 		return;
 
-	vmei_del_reset_event(vmei);
 	vmei_stop(vmei);
-
-	pthread_mutex_destroy(&vmei->mutex);
-	free(vmei->config);
-	free(vmei);
+	vmei_del_reset_event(vmei);
 }
 
 const struct pci_vdev_ops pci_ops_vmei = {
