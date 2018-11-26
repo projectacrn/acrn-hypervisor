@@ -8,21 +8,23 @@
 #include <reloc.h>
 #include <vm0_boot.h>
 
-struct Elf64_Dyn {
-	uint64_t d_tag;
-	uint64_t d_ptr;
-};
-
+#ifdef CONFIG_RELOC
 #define DT_NULL		0	/* end of .dynamic section */
 #define DT_RELA		7	/* relocation table */
 #define DT_RELASZ	8	/* size of reloc table */
 #define DT_RELAENT	9	/* size of one entry */
+
+struct Elf64_Dyn {
+	uint64_t d_tag;
+	uint64_t d_ptr;
+};
 
 struct Elf64_Rel {
 	uint64_t r_offset;
 	uint64_t r_info;
 	uint64_t reserved;
 };
+#endif
 
 static inline uint64_t elf64_r_type(uint64_t i)
 {
