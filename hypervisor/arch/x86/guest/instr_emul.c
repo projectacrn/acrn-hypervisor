@@ -1874,6 +1874,9 @@ static int decode_modrm(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode)
 			}
 		}
 		break;
+	default:
+		/* VIE_MOD_DIRECT */
+		break;
 	}
 
 done:
