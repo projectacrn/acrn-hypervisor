@@ -345,32 +345,32 @@ script example shows how to set this up (verified in Ubuntu 16.04 and 18.04 as t
 
  .. code-block:: none
   
-     # !/bin/bash
-     # setup bridge for uos network
-     br=$(brctl show | grep acrn-br0)
-     br=${br-:0:6}
-     ip tuntap add dev acrn_tap0 mode tap
-     
-     taps=$(ifconfig | grep acrn_ | awk '{print $1}')
-     
-     # if bridge not existed
-     if [ "$br"x != "acrn-br0"x ]; then
-	    # setup bridge for uos network
-     	brctl addbr acrn-br0
-	    brctl addif acrn-br0 enp3s0
-	    ifconfig enp3s0 0
-	    dhclient acrn-br0
-	    # add existing tap devices under the bridge
-	    for tap in $taps; do
-			ip tuntap add dev acrn_$tap mode tap
-			brctl addif acrn-br0 $tap
-	     	ip link set dev $tap down
-	     	ip link set dev $tap up
-	     done
-     fi
-
-     brctl addif acrn-br0 acrn_tap0
-     ip link set dev acrn_tap0 up
+    #!/bin/bash
+    #setup bridge for uos network
+    br=$(brctl show | grep acrn-br0)
+    br=${br-:0:6}
+    ip tuntap add dev acrn_tap0 mode tap
+    
+    taps=$(ifconfig | grep acrn_ | awk '{print $1}')
+  
+    # if bridge not existed
+    if [ "$br"x != "acrn-br0"x ]; then
+    #setup bridge for uos network
+    brctl addbr acrn-br0
+    brctl addif acrn-br0 enp3s0
+    ifconfig enp3s0 0
+    dhclient acrn-br0
+    # add existing tap devices under the bridge
+      for tap in $taps; do
+        ip tuntap add dev acrn_$tap mode tap
+        brctl addif acrn-br0 $tap
+        ip link set dev $tap down
+        ip link set dev $tap up
+      done
+    fi
+  
+    brctl addif acrn-br0 acrn_tap0
+    ip link set dev acrn_tap0 up
 
 .. note::
    The SOS network interface is called ``enp3s0`` in the script above. You will need
