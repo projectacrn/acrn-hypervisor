@@ -44,21 +44,9 @@ Install development tools for ARCN development:
 
   .. code-block:: none
 
-     sudo apt install gcc
-     git
-     make
-     gnu-efi
-     libssl-dev
-     libpciaccess-dev
-     uuid-dev
-     libsystemd-dev
-     libevent-dev
-     libxml2-dev
-     libusb-1.0-0-dev
-     python3
-     python3-pip
-     libblkid-dev
-     e2fslibs-dev
+     sudo apt install gcc git make gnu-efi libssl-dev libpciaccess-dev \ 
+       uuid-dev libsystemd-dev libevent-dev libxml2-dev libusb-1.0-0-dev \
+       python3 python3-pip libblkid-dev e2fslibs-dev
      sudo pip3 install kconfiglib
    
 .. note::
