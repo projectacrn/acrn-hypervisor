@@ -152,7 +152,6 @@ the source code, build it, and install it on your device.
          
         sudo efibootmgr -o xxx,xxx,xxx 
 
-
    .. note::
       By default, the “ACRN Hypervisor” you have just added should be
       the first one to boot. Verify this by using ``efibootmgr -v`` or
