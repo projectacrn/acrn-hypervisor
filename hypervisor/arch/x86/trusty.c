@@ -334,14 +334,9 @@ void switch_world(struct acrn_vcpu *vcpu, int next_world)
 	arch->cur_context = next_world;
 }
 
-static int32_t get_max_svn_index(void)
+static inline uint32_t get_max_svn_index(void)
 {
 	uint32_t i, max_svn_idx = 0U;
-
-	if ((g_key_info.num_seeds == 0U) ||
-			(g_key_info.num_seeds > BOOTLOADER_SEED_MAX_ENTRIES)) {
-		return -1;
-	}
 
 	for (i = 1U; i < g_key_info.num_seeds; i++) {
 		if (g_key_info.dseed_list[i].cse_svn >
@@ -358,17 +353,14 @@ static bool derive_aek(uint8_t *attkb_key)
 	const int8_t salt[] = "Attestation Keybox Encryption Key";
 	const uint8_t *ikm;
 	uint32_t ikm_len;
-	int32_t max_svn_idx;
+	uint32_t max_svn_idx;
 
-	if (!attkb_key) {
+	if ((!attkb_key) || (g_key_info.num_seeds == 0U) ||
+			(g_key_info.num_seeds > BOOTLOADER_SEED_MAX_ENTRIES)) {
 		return false;
 	}
 
 	max_svn_idx = get_max_svn_index();
-	if (max_svn_idx < 0) {
-		return false;
-	}
-
 	ikm = g_key_info.dseed_list[max_svn_idx].seed;
 	/* only the low 32 bits of seed are valid */
 	ikm_len = 32;
