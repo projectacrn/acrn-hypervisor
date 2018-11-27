@@ -65,24 +65,14 @@ struct acrn_vuart {
 	struct acrn_vm *vm;
 	spinlock_t lock;	/* protects all softc elements */
 };
+
 #ifdef CONFIG_PARTITION_MODE
 extern int8_t vuart_vmid;
-#endif
-#ifdef HV_DEBUG
+#endif /* CONFIG_PARTITION_MODE */
+
 void vuart_init(struct acrn_vm *vm);
 struct acrn_vuart *vuart_console_active(void);
 void vuart_console_tx_chars(struct acrn_vuart *vu);
 void vuart_console_rx_chars(struct acrn_vuart *vu);
-#else
-static inline void vuart_init(__unused struct acrn_vm *vm)
-{
-}
-static inline struct acrn_vuart *vuart_console_active(void)
-{
-	return NULL;
-}
-static inline void vuart_console_tx_chars(__unused struct acrn_vuart *vu) {}
-static inline void vuart_console_rx_chars(__unused struct acrn_vuart *vu) {}
-#endif /* HV_DEBUG */
 
 #endif /* VUART_H */
