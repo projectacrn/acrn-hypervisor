@@ -12,12 +12,12 @@ In the following instructions we'll build on material in the
 Install Ubuntu (natively)
 *************************
 
-Ubuntu 16.04.4 LTS was used throughout this document, other versions such as
-18.04 works too.
+Ubuntu 18.04.1 LTS was used throughout this document, other versions such as
+16.04 works too.
 
-* Download Ubuntu 16.04 from the `Ubuntu 16.04.4 LTS (Xenial Xerus) page
-  <http://old-releases.ubuntu.com/releases/16.04.4/>`_ and select the `ubuntu-16.04.4-desktop-amd64.iso
-  <http://old-releases.ubuntu.com/releases/16.04.4/ubuntu-16.04.4-desktop-amd64.iso>`_ image.
+* Download Ubuntu 18.04 from the `Ubuntu 18.04.1 LTS (Bionic Beaver) page
+  <http://releases.ubuntu.com/18.04.1/>`_ and select the `ubuntu-18.04.1-desktop-amd64.iso 
+  <http://releases.ubuntu.com/18.04.1/ubuntu-18.04.1-desktop-amd64.iso>`_ image.
 
 * Follow Ubuntu's `online instructions <https://tutorials.ubuntu.com/tutorial/tutorial-install-ubuntu-desktop?_ga=2.114179015.1954550575.1530817291-1278304647.1523530035>`_
   to install it on your device.
@@ -62,7 +62,9 @@ Install development tools for ARCN development:
      sudo pip3 install kconfiglib
    
 .. note::
-   You need to use gcc version 7.3.* or higher else you will run into issue `#1396 <https://github.com/projectacrn/acrn-hypervisor/issues/1396>`_. Follow these instructions to install the gcc-7 package on Ubuntu 16.04:
+   You need to use gcc version 7.3.* or higher else you will run into issue `#1396 <https://github.com/projectacrn/acrn-hypervisor/issues/1396>`_. 
+   
+   Follow these instructions to install the gcc-7 package on Ubuntu 18.04:
    
    
   .. code-block:: none
@@ -338,7 +340,7 @@ Enabling network sharing
 
 After booting up the SOS and UOS, network sharing must be enabled to give network
 access to the UOS by enabling the TAP and networking bridge in the SOS.  The following
-script example shows how to set this up (verified in Ubuntu 14.04 and 16.04 as the SOS).
+script example shows how to set this up (verified in Ubuntu 16.04 and 18.04 as the SOS).
 
 
  .. code-block:: none
