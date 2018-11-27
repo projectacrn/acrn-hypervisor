@@ -32,11 +32,15 @@
 
 static inline bool msixcap_access(struct pci_vdev *vdev, uint32_t offset)
 {
+	bool ret;
+
 	if (vdev->msix.capoff == 0U) {
-		return 0;
+		ret = false;
+	} else {
+		ret = in_range(offset, vdev->msix.capoff, vdev->msix.caplen);
 	}
 
-	return in_range(offset, vdev->msix.capoff, vdev->msix.caplen);
+	return ret;
 }
 
 static inline bool msixtable_access(struct pci_vdev *vdev, uint32_t offset)
@@ -56,24 +60,22 @@ static int vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
 	info.vmsi_data = (enable) ? vdev->msix.tables[index].data : 0U;
 
 	ret = ptdev_msix_remap(vdev->vpci->vm, vdev->vbdf.value, (uint16_t)index, &info);
-	if (ret != 0) {
-		return ret;
+	if (ret == 0) {
+		/* Write the table entry to the physical structure */
+		hva = vdev->msix.mmio_hva + vdev->msix.table_offset;
+		pentry = (struct msix_table_entry *)hva + index;
+
+		/*
+		 * PCI 3.0 Spec allows writing to Message Address and Message Upper Address
+		 * fields with a single QWORD write, but some hardware can accept 32 bits
+		 * write only
+		 */
+		mmio_write32((uint32_t)(info.pmsi_addr), (const void *)&(pentry->addr));
+		mmio_write32((uint32_t)(info.pmsi_addr >> 32U), (const void *)((char *)&(pentry->addr) + 4U));
+
+		mmio_write32(info.pmsi_data, (const void *)&(pentry->data));
+		mmio_write32(vdev->msix.tables[index].vector_control, (const void *)&(pentry->vector_control));
 	}
-
-	/* Write the table entry to the physical structure */
-	hva = vdev->msix.mmio_hva + vdev->msix.table_offset;
-	pentry = (struct msix_table_entry *)hva + index;
-
-	/*
-	 * PCI 3.0 Spec allows writing to Message Address and Message Upper Address
-	 * fields with a single QWORD write, but some hardware can accept 32 bits
-	 * write only
-	 */
-	mmio_write32((uint32_t)(info.pmsi_addr), (const void *)&(pentry->addr));
-	mmio_write32((uint32_t)(info.pmsi_addr >> 32U), (const void *)((char *)&(pentry->addr) + 4U));
-
-	mmio_write32(info.pmsi_data, (const void *)&(pentry->data));
-	mmio_write32(vdev->msix.tables[index].vector_control, (const void *)&(pentry->vector_control));
 
 	return ret;
 }
@@ -126,19 +128,17 @@ static int vmsix_remap_one_entry(struct pci_vdev *vdev, uint32_t index, bool ena
 	enable_disable_msix(vdev, false);
 
 	ret = vmsix_remap_entry(vdev, index, enable);
-	if (ret != 0) {
-		return ret;
-	}
+	if (ret == 0) {
+		/* If MSI Enable is being set, make sure INTxDIS bit is set */
+		if (enable) {
+			enable_disable_pci_intx(vdev->pdev.bdf, false);
+		}
 
-	/* If MSI Enable is being set, make sure INTxDIS bit is set */
-	if (enable) {
-		enable_disable_pci_intx(vdev->pdev.bdf, false);
-	}
-
-	/* Restore MSI-X Enable bit */
-	msgctrl = pci_vdev_read_cfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
-	if ((msgctrl & PCIM_MSIXCTRL_MSIX_ENABLE) == PCIM_MSIXCTRL_MSIX_ENABLE) {
-		pci_pdev_write_cfg(vdev->pdev.bdf, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U, msgctrl);
+		/* Restore MSI-X Enable bit */
+		msgctrl = pci_vdev_read_cfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
+		if ((msgctrl & PCIM_MSIXCTRL_MSIX_ENABLE) == PCIM_MSIXCTRL_MSIX_ENABLE) {
+			pci_pdev_write_cfg(vdev->pdev.bdf, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U, msgctrl);
+		}
 	}
 
 	return ret;
@@ -146,18 +146,23 @@ static int vmsix_remap_one_entry(struct pci_vdev *vdev, uint32_t index, bool ena
 
 static int vmsix_cfgread(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
+	int32_t ret;
 	/* For PIO access, we emulate Capability Structures only */
+
 	if (msixcap_access(vdev, offset)) {
 		*val = pci_vdev_read_cfg(vdev, offset, bytes);
-		return 0;
+	        ret = 0;
+	} else {
+		ret = -ENODEV;
 	}
 
-	return -ENODEV;
+	return ret;
 }
 
 static int vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	uint32_t msgctrl;
+	int32_t ret;
 
 	/* Writing MSI-X Capability Structure */
 	if (msixcap_access(vdev, offset)) {
@@ -181,10 +186,12 @@ static int vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes
 			}
 		}
 
-		return 0;
+	        ret = 0;
+	} else {
+		ret = -ENODEV;
 	}
 
-	return -ENODEV;
+	return ret;
 }
 
 static void vmsix_table_rw(struct pci_vdev *vdev, struct mmio_request *mmio, uint32_t offset)
@@ -300,41 +307,40 @@ static void decode_msix_table_bar(struct pci_vdev *vdev)
 	uint32_t bar_lo, bar_hi, val32;
 
 	bar_lo = pci_pdev_read_cfg(pbdf, pci_bar_offset(bir), 4U);
-	if ((bar_lo & PCIM_BAR_SPACE) == PCIM_BAR_IO_SPACE) {
+	if ((bar_lo & PCIM_BAR_SPACE) != PCIM_BAR_IO_SPACE) {
+		/* Get the base address */
+		base = (uint64_t)bar_lo & PCIM_BAR_MEM_BASE;
+		if ((bar_lo & PCIM_BAR_MEM_TYPE) == PCIM_BAR_MEM_64) {
+			bar_hi = pci_pdev_read_cfg(pbdf, pci_bar_offset(bir + 1U), 4U);
+			base |= ((uint64_t)bar_hi << 32U);
+		}
+
+		vdev->msix.mmio_hva = (uint64_t)hpa2hva(base);
+		vdev->msix.mmio_gpa = vm0_hpa2gpa(base);
+
+		/* Sizing the BAR */
+		size = 0U;
+		if (((bar_lo & PCIM_BAR_MEM_TYPE) == PCIM_BAR_MEM_64) && (bir < (PCI_BAR_COUNT - 1U))) {
+			pci_pdev_write_cfg(pbdf, pci_bar_offset(bir + 1U), 4U, ~0U);
+			size = (uint64_t)pci_pdev_read_cfg(pbdf, pci_bar_offset(bir + 1U), 4U);
+			size <<= 32U;
+		}
+
+		pci_pdev_write_cfg(pbdf, pci_bar_offset(bir), 4U, ~0U);
+		val32 = pci_pdev_read_cfg(pbdf, pci_bar_offset(bir), 4U);
+		size |= ((uint64_t)val32 & PCIM_BAR_MEM_BASE);
+
+		vdev->msix.mmio_size = size & ~(size - 1U);
+
+		/* Restore the BAR */
+		pci_pdev_write_cfg(pbdf, pci_bar_offset(bir), 4U, bar_lo);
+
+		if ((bar_lo & PCIM_BAR_MEM_TYPE) == PCIM_BAR_MEM_64) {
+			pci_pdev_write_cfg(pbdf, pci_bar_offset(bir + 1U), 4U, bar_hi);
+		}
+	} else {
 		/* I/O bar, should never happen */
 		pr_err("PCI device (%x) has MSI-X Table at IO BAR", vdev->vbdf.value);
-		return;
-	}
-
-	/* Get the base address */
-	base = (uint64_t)bar_lo & PCIM_BAR_MEM_BASE;
-	if ((bar_lo & PCIM_BAR_MEM_TYPE) == PCIM_BAR_MEM_64) {
-		bar_hi = pci_pdev_read_cfg(pbdf, pci_bar_offset(bir + 1U), 4U);
-		base |= ((uint64_t)bar_hi << 32U);
-	}
-
-	vdev->msix.mmio_hva = (uint64_t)hpa2hva(base);
-	vdev->msix.mmio_gpa = vm0_hpa2gpa(base);
-
-	/* Sizing the BAR */
-	size = 0U;
-	if (((bar_lo & PCIM_BAR_MEM_TYPE) == PCIM_BAR_MEM_64) && (bir < (PCI_BAR_COUNT - 1U))) {
-		pci_pdev_write_cfg(pbdf, pci_bar_offset(bir + 1U), 4U, ~0U);
-		size = (uint64_t)pci_pdev_read_cfg(pbdf, pci_bar_offset(bir + 1U), 4U);
-		size <<= 32U;
-	}
-
-	pci_pdev_write_cfg(pbdf, pci_bar_offset(bir), 4U, ~0U);
-	val32 = pci_pdev_read_cfg(pbdf, pci_bar_offset(bir), 4U);
-	size |= ((uint64_t)val32 & PCIM_BAR_MEM_BASE);
-
-	vdev->msix.mmio_size = size & ~(size - 1U);
-
-	/* Restore the BAR */
-	pci_pdev_write_cfg(pbdf, pci_bar_offset(bir), 4U, bar_lo);
-
-	if ((bar_lo & PCIM_BAR_MEM_TYPE) == PCIM_BAR_MEM_64) {
-		pci_pdev_write_cfg(pbdf, pci_bar_offset(bir + 1U), 4U, bar_hi);
 	}
 }
 
@@ -344,6 +350,7 @@ static int vmsix_init(struct pci_vdev *vdev)
 	uint32_t table_info, i;
 	uint64_t addr_hi, addr_lo;
 	struct msix *msix = &vdev->msix;
+	int32_t ret;
 
 	msgctrl = pci_pdev_read_cfg(vdev->pdev.bdf, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
 
@@ -354,49 +361,50 @@ static int vmsix_init(struct pci_vdev *vdev)
 	msix->table_offset = table_info & ~PCIM_MSIX_BIR_MASK;
 	msix->table_count = (msgctrl & PCIM_MSIXCTRL_TABLE_SIZE) + 1U;
 
-	if (msix->table_bar >= (PCI_BAR_COUNT - 1U)) {
+	if (msix->table_bar < (PCI_BAR_COUNT - 1U)) {
+		/* Mask all table entries */
+		for (i = 0U; i < msix->table_count; i++) {
+			msix->tables[i].vector_control = PCIM_MSIX_VCTRL_MASK;
+			msix->tables[i].addr = 0U;
+			msix->tables[i].data = 0U;
+		}
+
+		decode_msix_table_bar(vdev);
+
+		if (msix->mmio_gpa != 0U) {
+			/*
+			 * PCI Spec: a BAR may also map other usable address space that is not associated
+			 * with MSI-X structures, but it must not share any naturally aligned 4 KB
+			 * address range with one where either MSI-X structure resides.
+			 * The MSI-X Table and MSI-X PBA are permitted to co-reside within a naturally
+			 * aligned 4 KB address range.
+			 *
+			 * If PBA or others reside in the same BAR with MSI-X Table, devicemodel could
+			 * emulate them and maps these memory range at the 4KB boundary. Here, we should
+			 * make sure only intercept the minimum number of 4K pages needed for MSI-X table.
+			 */
+
+			/* The higher boundary of the 4KB aligned address range for MSI-X table */
+			addr_hi = msix->mmio_gpa + msix->table_offset + msix->table_count * MSIX_TABLE_ENTRY_SIZE;
+			addr_hi = round_page_up(addr_hi);
+
+			/* The lower boundary of the 4KB aligned address range for MSI-X table */
+			addr_lo = round_page_down(msix->mmio_gpa + msix->table_offset);
+
+			msix->intercepted_gpa = addr_lo;
+			msix->intercepted_size = addr_hi - addr_lo;
+
+			(void)register_mmio_emulation_handler(vdev->vpci->vm, vmsix_table_mmio_access_handler,
+				msix->intercepted_gpa, msix->intercepted_gpa + msix->intercepted_size, vdev);
+		}
+		ret = 0;
+	} else {
 		pr_err("%s, MSI-X device (%x) invalid table BIR %d", __func__, vdev->pdev.bdf.value, msix->table_bar);
 		vdev->msix.capoff = 0U;
-		return -EIO;
+	        ret = -EIO;
 	}
 
-	/* Mask all table entries */
-	for (i = 0U; i < msix->table_count; i++) {
-		msix->tables[i].vector_control = PCIM_MSIX_VCTRL_MASK;
-		msix->tables[i].addr = 0U;
-		msix->tables[i].data = 0U;
-	}
-
-	decode_msix_table_bar(vdev);
-
-	if (msix->mmio_gpa != 0U) {
-		/*
-		 * PCI Spec: a BAR may also map other usable address space that is not associated
-		 * with MSI-X structures, but it must not share any naturally aligned 4 KB
-		 * address range with one where either MSI-X structure resides.
-		 * The MSI-X Table and MSI-X PBA are permitted to co-reside within a naturally
-		 * aligned 4 KB address range.
-		 *
-		 * If PBA or others reside in the same BAR with MSI-X Table, devicemodel could
-		 * emulate them and maps these memory range at the 4KB boundary. Here, we should
-		 * make sure only intercept the minimum number of 4K pages needed for MSI-X table.
-		 */
-
-		/* The higher boundary of the 4KB aligned address range for MSI-X table */
-		addr_hi = msix->mmio_gpa + msix->table_offset + msix->table_count * MSIX_TABLE_ENTRY_SIZE;
-		addr_hi = round_page_up(addr_hi);
-
-		/* The lower boundary of the 4KB aligned address range for MSI-X table */
-		addr_lo = round_page_down(msix->mmio_gpa + msix->table_offset);
-
-		msix->intercepted_gpa = addr_lo;
-		msix->intercepted_size = addr_hi - addr_lo;
-
-		(void)register_mmio_emulation_handler(vdev->vpci->vm, vmsix_table_mmio_access_handler,
-			msix->intercepted_gpa, msix->intercepted_gpa + msix->intercepted_size, vdev);
-	}
-
-	return 0;
+	return ret;
 }
 
 static int vmsix_deinit(struct pci_vdev *vdev)
