@@ -8,7 +8,7 @@ reference framework implementation for virtual device emulation, called the
 “ACRN Device Model”.
 
 This folder holds the source to a number of tools that facilitate the
-management, debugging, profiling, and logging of a mutli-OS systems based on
+management, debugging, profiling, and logging of multi-OS systems based on
 ACRN.
 
 You can find out more about Project ACRN and its set of tools on the
