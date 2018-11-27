@@ -12,7 +12,7 @@ In the following instructions we'll build on material in the
 Install Ubuntu (natively)
 *************************
 
-Ubuntu 18.04.1 LTS was used throughout this document, other versions such as
+Ubuntu 18.04.1 LTS was used throughout this document, other older versions such as
 16.04 works too.
 
 * Download Ubuntu 18.04 from the `Ubuntu 18.04.1 LTS (Bionic Beaver) page
@@ -44,21 +44,21 @@ Install development tools for ARCN development:
 
   .. code-block:: none
 
-     sudo apt install gcc \
-     git \
-     make \
-     gnu-efi \
-     libssl-dev \
-     libpciaccess-dev \
-     uuid-dev \
-     libsystemd-dev \
-     libevent-dev \
-     libxml2-dev \
-     libusb-1.0-0-dev \
-     python3 \
-     python3-pip \
-     libblkid-dev \
-     e2fslibs-dev \
+     sudo apt install gcc
+     git
+     make
+     gnu-efi
+     libssl-dev
+     libpciaccess-dev
+     uuid-dev
+     libsystemd-dev
+     libevent-dev
+     libxml2-dev
+     libusb-1.0-0-dev
+     python3
+     python3-pip
+     libblkid-dev
+     e2fslibs-dev
      sudo pip3 install kconfiglib
    
 .. note::
@@ -345,8 +345,8 @@ script example shows how to set this up (verified in Ubuntu 16.04 and 18.04 as t
 
  .. code-block:: none
   
-    #!/bin/bash
-    #setup bridge for uos network
+    # !/bin/bash
+    # setup bridge for uos network
     br=$(brctl show | grep acrn-br0)
     br=${br-:0:6}
     ip tuntap add dev acrn_tap0 mode tap
@@ -355,7 +355,7 @@ script example shows how to set this up (verified in Ubuntu 16.04 and 18.04 as t
   
     # if bridge not existed
     if [ "$br"x != "acrn-br0"x ]; then
-    	#setup bridge for uos network
+      # setup bridge for uos network
       brctl addbr acrn-br0
       brctl addif acrn-br0 enp3s0
       ifconfig enp3s0 0
