@@ -259,9 +259,9 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 		base = mmio_handler->range_start;
 		end = mmio_handler->range_end;
 
-		if ((address + size <= base) || (address >= end)) {
+		if (((address + size) <= base) || (address >= end)) {
 			continue;
-		} else if (!((address >= base) && (address + size <= end))) {
+		} else if (!((address >= base) && ((address + size) <= end))) {
 			pr_fatal("Err MMIO, address:0x%llx, size:%x", address, size);
 			return -EIO;
 		} else {
