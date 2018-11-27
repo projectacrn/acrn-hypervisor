@@ -308,24 +308,25 @@ set_expiration(struct acrn_vlapic *vlapic)
 	struct vlapic_timer *vtimer;
 	struct hv_timer *timer;
 	uint32_t tmicr, divisor_shift;
+	bool ret;
 
 	vtimer = &vlapic->vtimer;
 	tmicr = vtimer->tmicr;
 	divisor_shift = vtimer->divisor_shift;
 
 	if ((tmicr == 0U) || (divisor_shift > 8U)) {
-		return false;
+		ret = false;
+	} else {
+		delta = tmicr << divisor_shift;
+		timer = &vtimer->timer;
+
+		if (vlapic_lvtt_period(vlapic)) {
+			timer->period_in_cycle = delta;
+		}
+		timer->fire_tsc = now + delta;
+		ret = true;
 	}
-
-	delta = tmicr << divisor_shift;
-	timer = &vtimer->timer;
-
-	if (vlapic_lvtt_period(vlapic)) {
-		timer->period_in_cycle = delta;
-	}
-	timer->fire_tsc = now + delta;
-
-	return true;
+	return ret;
 }
 
 static void vlapic_update_lvtt(struct acrn_vlapic *vlapic,
@@ -390,32 +391,33 @@ static void vlapic_icrtmr_write_handler(struct acrn_vlapic *vlapic)
 	struct lapic_regs *lapic;
 	struct vlapic_timer *vtimer;
 
-	if (vlapic_lvtt_tsc_deadline(vlapic)) {
-		return;
-	}
+	if (!vlapic_lvtt_tsc_deadline(vlapic)) {
+		lapic = &(vlapic->apic_page);
+		vtimer = &vlapic->vtimer;
+		vtimer->tmicr = lapic->icr_timer.v;
 
-	lapic = &(vlapic->apic_page);
-	vtimer = &vlapic->vtimer;
-	vtimer->tmicr = lapic->icr_timer.v;
-
-	del_timer(&vtimer->timer);
-	if (set_expiration(vlapic)) {
-		/* vlapic_init_timer has been called,
-		 * and timer->fire_tsc is not 0, here
-		 * add_timer should not return error
-		 */
-		(void)add_timer(&vtimer->timer);
+		del_timer(&vtimer->timer);
+		if (set_expiration(vlapic)) {
+			/* vlapic_init_timer has been called,
+			 * and timer->fire_tsc is not 0, here
+			 * add_timer should not return error
+			 */
+			(void)add_timer(&vtimer->timer);
+		}
 	}
 }
 
 static uint64_t vlapic_get_tsc_deadline_msr(const struct acrn_vlapic *vlapic)
 {
+	uint64_t ret;
 	if (!vlapic_lvtt_tsc_deadline(vlapic)) {
-		return 0;
+		ret = 0UL;
+	} else {
+		ret = (vlapic->vtimer.timer.fire_tsc == 0UL) ? 0UL :
+			vlapic->vcpu->guest_msrs[IDX_TSC_DEADLINE];
 	}
 
-	return (vlapic->vtimer.timer.fire_tsc == 0UL) ? 0UL :
-			vlapic->vcpu->guest_msrs[IDX_TSC_DEADLINE];
+	return ret;
 
 }
 
@@ -425,26 +427,24 @@ static void vlapic_set_tsc_deadline_msr(struct acrn_vlapic *vlapic,
 	struct hv_timer *timer;
 	uint64_t val = val_arg;
 
-	if (!vlapic_lvtt_tsc_deadline(vlapic)) {
-		return;
-	}
+	if (vlapic_lvtt_tsc_deadline(vlapic)) {
+		vlapic->vcpu->guest_msrs[IDX_TSC_DEADLINE] = val;
 
-	vlapic->vcpu->guest_msrs[IDX_TSC_DEADLINE] = val;
+		timer = &vlapic->vtimer.timer;
+		del_timer(timer);
 
-	timer = &vlapic->vtimer.timer;
-	del_timer(timer);
-
-	if (val != 0UL) {
-		/* transfer guest tsc to host tsc */
-		val -= exec_vmread64(VMX_TSC_OFFSET_FULL);
-		timer->fire_tsc = val;
-		/* vlapic_init_timer has been called,
-		 * and timer->fire_tsc is not 0,here
-		 * add_timer should not return error
-		 */
-		(void)add_timer(timer);
-	} else {
-		timer->fire_tsc = 0UL;
+		if (val != 0UL) {
+			/* transfer guest tsc to host tsc */
+			val -= exec_vmread64(VMX_TSC_OFFSET_FULL);
+			timer->fire_tsc = val;
+			/* vlapic_init_timer has been called,
+			 * and timer->fire_tsc is not 0,here
+			 * add_timer should not return error
+			 */
+			(void)add_timer(timer);
+		} else {
+			timer->fire_tsc = 0UL;
+		}
 	}
 }
 
@@ -920,15 +920,14 @@ vlapic_set_error(struct acrn_vlapic *vlapic, uint32_t mask)
 	uint32_t lvt;
 
 	vlapic->esr_pending |= mask;
-	if (vlapic->esr_firing != 0) {
-		return;
-	}
-	vlapic->esr_firing = 1;
+	if (vlapic->esr_firing == 0) {
+		vlapic->esr_firing = 1;
 
-	/* The error LVT always uses the fixed delivery mode. */
-	lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_ERROR_LVT);
-	vlapic_fire_lvt(vlapic, lvt | APIC_LVT_DM_FIXED);
-	vlapic->esr_firing = 0;
+		/* The error LVT always uses the fixed delivery mode. */
+		lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_ERROR_LVT);
+		vlapic_fire_lvt(vlapic, lvt | APIC_LVT_DM_FIXED);
+		vlapic->esr_firing = 0;
+	}
 }
 /*
  * @pre vector <= 255
@@ -1151,12 +1150,11 @@ vlapic_set_cr8(struct acrn_vlapic *vlapic, uint64_t val)
 	if ((val & ~0xfUL) != 0U) {
 		struct acrn_vcpu *vcpu = vlapic->vcpu;
 		vcpu_inject_gp(vcpu, 0U);
-		return;
+	} else {
+		/* It is safe to narrow val as the higher 60 bits are 0s. */
+		tpr = (uint32_t)val << 4U;
+		vlapic_set_tpr(vlapic, tpr);
 	}
-
-	/* It is safe to narrow val as the higher 60 bits are 0s. */
-	tpr = (uint32_t)val << 4U;
-	vlapic_set_tpr(vlapic, tpr);
 }
 
 uint64_t
@@ -1589,89 +1587,87 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset,
 	dev_dbg(ACRN_DBG_LAPIC, "vlapic write offset %#x, data %#lx",
 		offset, data);
 
-	if (offset > sizeof(*lapic)) {
-		return 0;
-	}
-
 	retval = 0;
-	switch (offset) {
-	case APIC_OFFSET_ID:
-		/* Force APIC ID as read only */
-		break;
-	case APIC_OFFSET_TPR:
-		vlapic_set_tpr(vlapic, data32 & 0xffU);
-		break;
-	case APIC_OFFSET_EOI:
-		vlapic_process_eoi(vlapic);
-		break;
-	case APIC_OFFSET_LDR:
-		lapic->ldr.v = data32;
-		vlapic_ldr_write_handler(vlapic);
-		break;
-	case APIC_OFFSET_DFR:
-		lapic->dfr.v = data32;
-		vlapic_dfr_write_handler(vlapic);
-		break;
-	case APIC_OFFSET_SVR:
-		lapic->svr.v = data32;
-		vlapic_svr_write_handler(vlapic);
-		break;
-	case APIC_OFFSET_ICR_LOW:
-		if (is_x2apic_enabled(vlapic)) {
-			lapic->icr_hi.v = (uint32_t)(data >> 32U);
-			lapic->icr_lo.v = data32;
-		} else {
-			lapic->icr_lo.v = data32;
-		}
-		retval = vlapic_icrlo_write_handler(vlapic);
-		break;
-	case APIC_OFFSET_ICR_HI:
-		lapic->icr_hi.v = data32;
-		break;
-	case APIC_OFFSET_CMCI_LVT:
-	case APIC_OFFSET_TIMER_LVT:
-	case APIC_OFFSET_THERM_LVT:
-	case APIC_OFFSET_PERF_LVT:
-	case APIC_OFFSET_LINT0_LVT:
-	case APIC_OFFSET_LINT1_LVT:
-	case APIC_OFFSET_ERROR_LVT:
-		regptr = vlapic_get_lvtptr(vlapic, offset);
-		*regptr = data32;
-		vlapic_lvt_write_handler(vlapic, offset);
-		break;
-	case APIC_OFFSET_TIMER_ICR:
-		/* if TSCDEADLINE mode ignore icr_timer */
-		if (vlapic_lvtt_tsc_deadline(vlapic)) {
+	if (offset <= sizeof(*lapic)) {
+		switch (offset) {
+		case APIC_OFFSET_ID:
+			/* Force APIC ID as read only */
+			break;
+		case APIC_OFFSET_TPR:
+			vlapic_set_tpr(vlapic, data32 & 0xffU);
+			break;
+		case APIC_OFFSET_EOI:
+			vlapic_process_eoi(vlapic);
+			break;
+		case APIC_OFFSET_LDR:
+			lapic->ldr.v = data32;
+			vlapic_ldr_write_handler(vlapic);
+			break;
+		case APIC_OFFSET_DFR:
+			lapic->dfr.v = data32;
+			vlapic_dfr_write_handler(vlapic);
+			break;
+		case APIC_OFFSET_SVR:
+			lapic->svr.v = data32;
+			vlapic_svr_write_handler(vlapic);
+			break;
+		case APIC_OFFSET_ICR_LOW:
+			if (is_x2apic_enabled(vlapic)) {
+				lapic->icr_hi.v = (uint32_t)(data >> 32U);
+				lapic->icr_lo.v = data32;
+			} else {
+				lapic->icr_lo.v = data32;
+			}
+			retval = vlapic_icrlo_write_handler(vlapic);
+			break;
+		case APIC_OFFSET_ICR_HI:
+			lapic->icr_hi.v = data32;
+			break;
+		case APIC_OFFSET_CMCI_LVT:
+		case APIC_OFFSET_TIMER_LVT:
+		case APIC_OFFSET_THERM_LVT:
+		case APIC_OFFSET_PERF_LVT:
+		case APIC_OFFSET_LINT0_LVT:
+		case APIC_OFFSET_LINT1_LVT:
+		case APIC_OFFSET_ERROR_LVT:
+			regptr = vlapic_get_lvtptr(vlapic, offset);
+			*regptr = data32;
+			vlapic_lvt_write_handler(vlapic, offset);
+			break;
+		case APIC_OFFSET_TIMER_ICR:
+			/* if TSCDEADLINE mode ignore icr_timer */
+			if (vlapic_lvtt_tsc_deadline(vlapic)) {
+				break;
+			}
+			lapic->icr_timer.v = data32;
+			vlapic_icrtmr_write_handler(vlapic);
+			break;
+
+		case APIC_OFFSET_TIMER_DCR:
+			lapic->dcr_timer.v = data32;
+			vlapic_dcr_write_handler(vlapic);
+			break;
+
+		case APIC_OFFSET_ESR:
+			vlapic_esr_write_handler(vlapic);
+			break;
+
+		case APIC_OFFSET_VER:
+		case APIC_OFFSET_APR:
+		case APIC_OFFSET_PPR:
+		case APIC_OFFSET_RRR:
+			break;
+	/*The following cases fall to the default one:
+	 *	APIC_OFFSET_ISR0 ... APIC_OFFSET_ISR7
+	 *	APIC_OFFSET_TMR0 ... APIC_OFFSET_TMR7
+	 *	APIC_OFFSET_IRR0 ... APIC_OFFSET_IRR7
+	 */
+		case APIC_OFFSET_TIMER_CCR:
+			break;
+		default:
+			/* Read only */
 			break;
 		}
-		lapic->icr_timer.v = data32;
-		vlapic_icrtmr_write_handler(vlapic);
-		break;
-
-	case APIC_OFFSET_TIMER_DCR:
-		lapic->dcr_timer.v = data32;
-		vlapic_dcr_write_handler(vlapic);
-		break;
-
-	case APIC_OFFSET_ESR:
-		vlapic_esr_write_handler(vlapic);
-		break;
-
-	case APIC_OFFSET_VER:
-	case APIC_OFFSET_APR:
-	case APIC_OFFSET_PPR:
-	case APIC_OFFSET_RRR:
-		break;
-/*The following cases fall to the default one:
- *	APIC_OFFSET_ISR0 ... APIC_OFFSET_ISR7
- *	APIC_OFFSET_TMR0 ... APIC_OFFSET_TMR7
- *	APIC_OFFSET_IRR0 ... APIC_OFFSET_IRR7
- */
-	case APIC_OFFSET_TIMER_CCR:
-		break;
-	default:
-		/* Read only */
-		break;
 	}
 
 	return retval;
@@ -1808,29 +1804,29 @@ vlapic_deliver_intr(struct acrn_vm *vm, bool level, uint32_t dest, bool phys,
 			(delmode != IOAPIC_RTE_DELEXINT)) {
 		dev_dbg(ACRN_DBG_LAPIC,
 			"vlapic intr invalid delmode %#x", delmode);
-		return;
-	}
-	lowprio = (delmode == IOAPIC_RTE_DELLOPRI) || rh;
+	} else {
+		lowprio = (delmode == IOAPIC_RTE_DELLOPRI) || rh;
 
-	/*
-	 * We don't provide any virtual interrupt redirection hardware so
-	 * all interrupts originating from the ioapic or MSI specify the
-	 * 'dest' in the legacy xAPIC format.
-	 */
-	vlapic_calcdest(vm, &dmask, dest, phys, lowprio);
+		/*
+		 * We don't provide any virtual interrupt redirection hardware so
+		 * all interrupts originating from the ioapic or MSI specify the
+		 * 'dest' in the legacy xAPIC format.
+		 */
+		vlapic_calcdest(vm, &dmask, dest, phys, lowprio);
 
-	for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
-		struct acrn_vlapic *vlapic;
-		if ((dmask & (1UL << vcpu_id)) != 0UL) {
-			target_vcpu = vcpu_from_vid(vm, vcpu_id);
+		for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
+			struct acrn_vlapic *vlapic;
+			if ((dmask & (1UL << vcpu_id)) != 0UL) {
+				target_vcpu = vcpu_from_vid(vm, vcpu_id);
 
-			/* only make request when vlapic enabled */
-			vlapic = vcpu_vlapic(target_vcpu);
-			if (vlapic_enabled(vlapic)) {
-				if (delmode == IOAPIC_RTE_DELEXINT) {
-					vcpu_inject_extint(target_vcpu);
-				} else {
-					vlapic_set_intr(target_vcpu, vec, level);
+				/* only make request when vlapic enabled */
+				vlapic = vcpu_vlapic(target_vcpu);
+				if (vlapic_enabled(vlapic)) {
+					if (delmode == IOAPIC_RTE_DELEXINT) {
+						vcpu_inject_extint(target_vcpu);
+					} else {
+						vlapic_set_intr(target_vcpu, vec, level);
+					}
 				}
 			}
 		}
@@ -1840,14 +1836,17 @@ vlapic_deliver_intr(struct acrn_vm *vm, bool level, uint32_t dest, bool phys,
 bool
 vlapic_enabled(const struct acrn_vlapic *vlapic)
 {
+	bool ret;
 	const struct lapic_regs *lapic = &(vlapic->apic_page);
 
 	if (((vlapic->msr_apicbase & APICBASE_ENABLED) != 0UL) &&
 			((lapic->svr.v & APIC_SVR_ENABLE) != 0U)) {
-		return true;
+		ret = true;
 	} else {
-		return false;
+	        ret = false;
 	}
+
+	return ret;
 }
 
 static void
@@ -1910,18 +1909,17 @@ vlapic_set_tmr_one_vec(struct acrn_vlapic *vlapic, uint32_t delmode,
 		dev_dbg(ACRN_DBG_LAPIC,
 			"Ignoring level trigger-mode for delivery-mode %u",
 			delmode);
-		return;
+	} else {
+		/* NOTE
+		 * We don't check whether the vcpu is in the dest here. That means
+		 * all vcpus of vm will do tmr update.
+		 *
+		 * If there is new caller to this function, need to refine this
+		 * part of work.
+		 */
+		dev_dbg(ACRN_DBG_LAPIC, "vector %u set to level-triggered", vector);
+		vlapic_set_tmr(vlapic, vector, level);
 	}
-
-	/* NOTE
-	 * We don't check whether the vcpu is in the dest here. That means
-	 * all vcpus of vm will do tmr update.
-	 *
-	 * If there is new caller to this function, need to refine this
-	 * part of work.
-	 */
-	dev_dbg(ACRN_DBG_LAPIC, "vector %u set to level-triggered", vector);
-	vlapic_set_tmr(vlapic, vector, level);
 }
 
 /*
@@ -1938,11 +1936,10 @@ vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level)
 		vlapic_set_error(vlapic, APIC_ESR_RECEIVE_ILLEGAL_VECTOR);
 		dev_dbg(ACRN_DBG_LAPIC,
 		    "vlapic ignoring interrupt to vector %u", vector);
-		return;
-	}
-
-	if (vlapic_set_intr_ready(vlapic, vector, level) != 0) {
-		vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
+	} else {
+		if (vlapic_set_intr_ready(vlapic, vector, level) != 0) {
+			vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
+		}
 	}
 }
 
@@ -1959,7 +1956,7 @@ vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level)
  *
  * @pre vm != NULL
  */
-int
+int32_t
 vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
 {
 	struct acrn_vlapic *vlapic;
@@ -1968,21 +1965,21 @@ vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
 	uint16_t vcpu_id = vcpu_id_arg;
 
 	if ((vcpu_id != BROADCAST_CPU_ID) && (vcpu_id >= vm->hw.created_vcpus)) {
-		return -EINVAL;
-	}
-
-	if (vcpu_id == BROADCAST_CPU_ID) {
-		dmask = vm_active_cpus(vm);
+	        error = -EINVAL;
 	} else {
-		bitmap_set_lock(vcpu_id, &dmask);
-	}
-	error = 0;
-	for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
-		if ((dmask & (1UL << vcpu_id)) != 0UL) {
-			vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
-			error = vlapic_trigger_lvt(vlapic, vector);
-			if (error != 0) {
-				break;
+		if (vcpu_id == BROADCAST_CPU_ID) {
+			dmask = vm_active_cpus(vm);
+		} else {
+			bitmap_set_lock(vcpu_id, &dmask);
+		}
+		error = 0;
+		for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
+			if ((dmask & (1UL << vcpu_id)) != 0UL) {
+				vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
+				error = vlapic_trigger_lvt(vlapic, vector);
+				if (error != 0) {
+					break;
+				}
 			}
 		}
 	}
@@ -2002,43 +1999,46 @@ vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
  *
  * @pre vm != NULL
  */
-int
+int32_t
 vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg)
 {
 	uint32_t delmode, vec;
 	uint32_t dest;
 	bool phys, rh;
+	int32_t ret;
 
 	dev_dbg(ACRN_DBG_LAPIC, "lapic MSI addr: %#lx msg: %#lx", addr, msg);
 
-	if ((addr & MSI_ADDR_MASK) != MSI_ADDR_BASE) {
+	if ((addr & MSI_ADDR_MASK) == MSI_ADDR_BASE) {
+		/*
+		 * Extract the x86-specific fields from the MSI addr/msg
+		 * params according to the Intel Arch spec, Vol3 Ch 10.
+		 *
+		 * The PCI specification does not support level triggered
+		 * MSI/MSI-X so ignore trigger level in 'msg'.
+		 *
+		 * The 'dest' is interpreted as a logical APIC ID if both
+		 * the Redirection Hint and Destination Mode are '1' and
+		 * physical otherwise.
+		 */
+		dest = (uint32_t)(addr >> 12U) & 0xffU;
+		phys = ((addr & MSI_ADDR_LOG) != MSI_ADDR_LOG);
+		rh = ((addr & MSI_ADDR_RH) == MSI_ADDR_RH);
+
+		delmode = (uint32_t)msg & APIC_DELMODE_MASK;
+		vec = (uint32_t)msg & 0xffU;
+
+		dev_dbg(ACRN_DBG_LAPIC, "lapic MSI %s dest %#x, vec %u",
+			phys ? "physical" : "logical", dest, vec);
+
+		vlapic_deliver_intr(vm, LAPIC_TRIG_EDGE, dest, phys, delmode, vec, rh);
+		ret = 0;
+	} else {
 		dev_dbg(ACRN_DBG_LAPIC, "lapic MSI invalid addr %#lx", addr);
-		return -1;
+	        ret = -1;
 	}
 
-	/*
-	 * Extract the x86-specific fields from the MSI addr/msg
-	 * params according to the Intel Arch spec, Vol3 Ch 10.
-	 *
-	 * The PCI specification does not support level triggered
-	 * MSI/MSI-X so ignore trigger level in 'msg'.
-	 *
-	 * The 'dest' is interpreted as a logical APIC ID if both
-	 * the Redirection Hint and Destination Mode are '1' and
-	 * physical otherwise.
-	 */
-	dest = (uint32_t)(addr >> 12U) & 0xffU;
-	phys = ((addr & MSI_ADDR_LOG) != MSI_ADDR_LOG);
-	rh = ((addr & MSI_ADDR_RH) == MSI_ADDR_RH);
-
-	delmode = (uint32_t)msg & APIC_DELMODE_MASK;
-	vec = (uint32_t)msg & 0xffU;
-
-	dev_dbg(ACRN_DBG_LAPIC, "lapic MSI %s dest %#x, vec %u",
-		phys ? "physical" : "logical", dest, vec);
-
-	vlapic_deliver_intr(vm, LAPIC_TRIG_EDGE, dest, phys, delmode, vec, rh);
-	return 0;
+	return ret;
 }
 
 /* interrupt context */
@@ -2063,11 +2063,14 @@ static void vlapic_timer_expired(void *data)
 
 static inline bool is_x2apic_enabled(const struct acrn_vlapic *vlapic)
 {
+	bool ret;
 	if ((vlapic_get_apicbase(vlapic) & APICBASE_X2APIC) == 0UL) {
-		return false;
+		ret = false;
 	} else {
-		return true;
+	        ret = true;
 	}
+
+	return ret;
 }
 
 static inline  uint32_t x2apic_msr_to_regoff(uint32_t msr)
@@ -2379,56 +2382,54 @@ vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
 	struct lapic_reg *irr = NULL;
 
 	pir_desc = &(vlapic->pir_desc);
-	if (atomic_cmpxchg64(&pir_desc->pending, 1UL, 0UL) != 1UL) {
-		return;
-	}
+	if (atomic_cmpxchg64(&pir_desc->pending, 1UL, 0UL) == 1UL) {
+		pirval = 0UL;
+		lapic = &(vlapic->apic_page);
+		irr = &lapic->irr[0];
 
-	pirval = 0UL;
-	lapic = &(vlapic->apic_page);
-	irr = &lapic->irr[0];
+		for (i = 0U; i < 4U; i++) {
+			val = atomic_readandclear64(&pir_desc->pir[i]);
+			if (val != 0UL) {
+				irr[i * 2U].v |= (uint32_t)val;
+				irr[(i * 2U) + 1U].v |= (uint32_t)(val >> 32U);
 
-	for (i = 0U; i < 4U; i++) {
-		val = atomic_readandclear64(&pir_desc->pir[i]);
-		if (val != 0UL) {
-			irr[i * 2U].v |= (uint32_t)val;
-			irr[(i * 2U) + 1U].v |= (uint32_t)(val >> 32U);
-
-			pirbase = 64U*i;
-			pirval = val;
+				pirbase = 64U*i;
+				pirval = val;
+			}
 		}
-	}
 
-	/*
-	 * Update RVI so the processor can evaluate pending virtual
-	 * interrupts on VM-entry.
-	 *
-	 * It is possible for pirval to be 0 here, even though the
-	 * pending bit has been set. The scenario is:
-	 * CPU-Y is sending a posted interrupt to CPU-X, which
-	 * is running a guest and processing posted interrupts in h/w.
-	 * CPU-X will eventually exit and the state seen in s/w is
-	 * the pending bit set, but no PIR bits set.
-	 *
-	 *      CPU-X                      CPU-Y
-	 *   (vm running)                (host running)
-	 *   rx posted interrupt
-	 *   CLEAR pending bit
-	 *				 SET PIR bit
-	 *   READ/CLEAR PIR bits
-	 *				 SET pending bit
-	 *   (vm exit)
-	 *   pending bit set, PIR 0
-	 */
-	if (pirval != 0UL) {
-		rvi = pirbase + fls64(pirval);
+		/*
+		 * Update RVI so the processor can evaluate pending virtual
+		 * interrupts on VM-entry.
+		 *
+		 * It is possible for pirval to be 0 here, even though the
+		 * pending bit has been set. The scenario is:
+		 * CPU-Y is sending a posted interrupt to CPU-X, which
+		 * is running a guest and processing posted interrupts in h/w.
+		 * CPU-X will eventually exit and the state seen in s/w is
+		 * the pending bit set, but no PIR bits set.
+		 *
+		 *      CPU-X                      CPU-Y
+		 *   (vm running)                (host running)
+		 *   rx posted interrupt
+		 *   CLEAR pending bit
+		 *				 SET PIR bit
+		 *   READ/CLEAR PIR bits
+		 *				 SET pending bit
+		 *   (vm exit)
+		 *   pending bit set, PIR 0
+		 */
+		if (pirval != 0UL) {
+			rvi = pirbase + fls64(pirval);
 
-		intr_status_old = 0xFFFFU &
-				exec_vmread16(VMX_GUEST_INTR_STATUS);
+			intr_status_old = 0xFFFFU &
+					exec_vmread16(VMX_GUEST_INTR_STATUS);
 
-		intr_status_new = (intr_status_old & 0xFF00U) | rvi;
-		if (intr_status_new > intr_status_old) {
-			exec_vmwrite16(VMX_GUEST_INTR_STATUS,
-					intr_status_new);
+			intr_status_new = (intr_status_old & 0xFF00U) | rvi;
+			if (intr_status_new > intr_status_old) {
+				exec_vmwrite16(VMX_GUEST_INTR_STATUS,
+						intr_status_new);
+			}
 		}
 	}
 }

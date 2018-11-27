@@ -231,7 +231,7 @@ vlapic_intr_edge(struct acrn_vcpu *vcpu, uint32_t vector)
  *
  * @pre vm != NULL
  */
-int vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t vector);
+int32_t vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t vector);
 
 /**
  * @brief Inject MSI to target VM.
@@ -245,7 +245,7 @@ int vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t vec
  *
  * @pre vm != NULL
  */
-int vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg);
+int32_t vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg);
 
 void vlapic_deliver_intr(struct acrn_vm *vm, bool level, uint32_t dest,
 		bool phys, uint32_t delmode, uint32_t vec, bool rh);
