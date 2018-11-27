@@ -63,3 +63,13 @@ void console_setup_timer(void)
 		pr_err("Failed to add console kick timer");
 	}
 }
+
+void suspend_console(void)
+{
+	del_timer(&console_timer);
+}
+
+void resume_console(void)
+{
+	console_setup_timer();
+}
