@@ -567,7 +567,7 @@ charmem(size_t cmd, const char *s_arg, uint32_t sz, struct snprint_param *param)
 	}
 	/* fill mode */
 	else {
-		n = (sz < param->sz - param->wrtn) ? sz : 0U;
+		n = (sz < (param->sz - param->wrtn)) ? sz : 0U;
 		param->wrtn += sz;
 		(void)memset(p, (uint8_t)*s, n);
 	}

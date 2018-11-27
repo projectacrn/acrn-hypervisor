@@ -652,9 +652,9 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 			vm->vm_id, wp->gpa, hpa);
 
 	base_paddr = get_hv_image_base();
-	if (((hpa <= base_paddr) && (hpa + CPU_PAGE_SIZE > base_paddr)) ||
+	if (((hpa <= base_paddr) && ((hpa + CPU_PAGE_SIZE) > base_paddr)) ||
 			((hpa >= base_paddr) &&
-			(hpa < base_paddr + CONFIG_HV_RAM_SIZE))) {
+			(hpa < (base_paddr + CONFIG_HV_RAM_SIZE)))) {
 		pr_err("%s: overlap the HV memory region.", __func__);
 		return -EINVAL;
 	}

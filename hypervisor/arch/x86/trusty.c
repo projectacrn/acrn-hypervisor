@@ -118,7 +118,7 @@ static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 	 */
 	dest_pdpte_p = pml4e_page_vaddr(sworld_pml4e);
 	src_pdpte_p = pml4e_page_vaddr(nworld_pml4e);
-	for (i = 0U; i < PTRS_PER_PDPTE - 1; i++) {
+	for (i = 0U; i < (PTRS_PER_PDPTE - 1UL); i++) {
 		pdpte = get_pgentry(src_pdpte_p);
 		if ((pdpte & table_present) != 0UL) {
 			pdpte &= ~EPT_EXE;

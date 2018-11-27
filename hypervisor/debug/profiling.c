@@ -278,7 +278,7 @@ static int profiling_sbuf_put_variable(struct shared_buf *sbuf,
 		/* 2nd part */
 		to = (void *)sbuf + SBUF_HEAD_SIZE;
 
-		if (size - offset > 0U) {
+		if ((size - offset) > 0U) {
 			(void)memcpy_s(to, size - offset,
 				data + offset, size - offset);
 		}
@@ -372,12 +372,12 @@ static int profiling_generate_data(int32_t collector, uint32_t type)
 				return 0;
 			}
 
-			for (i = 0U; i < ((DATA_HEADER_SIZE - 1U) / SEP_BUF_ENTRY_SIZE + 1U); i++) {
+			for (i = 0U; i < (((DATA_HEADER_SIZE - 1U) / SEP_BUF_ENTRY_SIZE) + 1U); i++) {
 				(void)sbuf_put((struct shared_buf *)sbuf,
 					(uint8_t *)&pkt_header + i * SEP_BUF_ENTRY_SIZE);
 			}
 
-			for (i = 0U; i < ((payload_size - 1U) / SEP_BUF_ENTRY_SIZE + 1U); i++) {
+			for (i = 0U; i < (((payload_size - 1U) / SEP_BUF_ENTRY_SIZE) + 1U); i++) {
 				(void)sbuf_put((struct shared_buf *)sbuf,
 					(uint8_t *)payload + i * SEP_BUF_ENTRY_SIZE);
 			}
