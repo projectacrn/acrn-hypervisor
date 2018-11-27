@@ -52,7 +52,7 @@ ptdev_lookup_entry_by_vpin(struct acrn_vm *vm, uint8_t virt_pin, bool pic_pin)
 	return entry;
 }
 
-#ifdef HV_DEBUG
+#ifdef CONFIG_COM_IRQ
 static bool ptdev_hv_owned_intx(const struct acrn_vm *vm, const union source_id *virt_sid)
 {
 	/* vm0 vuart pin is owned by hypervisor under debug version */
@@ -62,7 +62,7 @@ static bool ptdev_hv_owned_intx(const struct acrn_vm *vm, const union source_id 
 		return false;
 	}
 }
-#endif
+#endif /* CONFIG_COM_IRQ */
 
 static uint64_t calculate_logical_dest_mask(uint64_t pdmask)
 {
@@ -645,11 +645,12 @@ int ptdev_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin,
 	 */
 
 	/* no remap for hypervisor owned intx */
-#ifdef HV_DEBUG
+#ifdef CONFIG_COM_IRQ
 	if (ptdev_hv_owned_intx(vm, &virt_sid)) {
 		goto END;
 	}
-#endif
+#endif /* CONFIG_COM_IRQ */
+
 	/* query if we have virt to phys mapping */
 	spinlock_obtain(&ptdev_lock);
 	entry = ptdev_lookup_entry_by_vpin(vm, virt_pin, pic_pin);
