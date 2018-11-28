@@ -69,7 +69,6 @@ void reset_vm_ioreqs(struct acrn_vm *vm)
 
 	req_buf = vm->sw.io_shared_page;
 	for (i = 0U; i < VHM_REQUEST_MAX; i++) {
-		req_buf->req_queue[i].valid = 0U;
 		atomic_store32(&req_buf->req_queue[i].processed, REQ_STATE_FREE);
 	}
 }
@@ -84,11 +83,8 @@ static bool has_complete_ioreq(struct acrn_vcpu *vcpu)
 	req_buf = (union vhm_request_buffer *)vm->sw.io_shared_page;
 	if (req_buf != NULL) {
 		vhm_req = &req_buf->req_queue[vcpu->vcpu_id];
-		if (vhm_req->valid &&
-			atomic_load32(&vhm_req->processed)
-				== REQ_STATE_COMPLETE) {
+		if (atomic_load32(&vhm_req->processed) == REQ_STATE_COMPLETE) {
 			return true;
-
 		}
 	}
 
@@ -153,7 +149,7 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 
 	/* pause vcpu, wait for VHM to handle the MMIO request.
 	 * TODO: when pause_vcpu changed to switch vcpu out directlly, we
-	 * should fix the race issue between req.valid = true and vcpu pause
+	 * should fix the race issue between req.processed update and vcpu pause
 	 */
 	pause_vcpu(vcpu, VCPU_PAUSED);
 
@@ -162,7 +158,6 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 	 * before we perform upcall.
 	 * because VHM can work in pulling mode without wait for upcall
 	 */
-	vhm_req->valid = 1;
 	atomic_store32(&vhm_req->processed, REQ_STATE_PENDING);
 
 	acrn_print_request(vcpu->vcpu_id, vhm_req);
