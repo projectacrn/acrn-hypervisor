@@ -46,6 +46,7 @@ union pgtable_pages_info {
 		struct page *nworld_pd_base;
 		struct page *nworld_pt_base;
 		struct page *sworld_pgtable_base;
+		struct page *sworld_memory_base;
 	} ept;
 };
 
@@ -57,9 +58,11 @@ struct memory_ops {
 	struct page *(*get_pdpt_page)(const union pgtable_pages_info *info, uint64_t gpa);
 	struct page *(*get_pd_page)(const union pgtable_pages_info *info, uint64_t gpa);
 	struct page *(*get_pt_page)(const union pgtable_pages_info *info, uint64_t gpa);
+	void *(*get_sworld_memory_base)(const union pgtable_pages_info *info);
 };
 
 extern const struct memory_ops ppt_mem_ops;
 void init_ept_mem_ops(struct acrn_vm *vm);
+void *get_reserve_sworld_memory_base(void);
 
 #endif /* PAGE_H */

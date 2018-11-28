@@ -275,14 +275,19 @@ void init_paging(void)
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (1UL << 32U), high64_max_ram - (1UL << 32U),
 			PAGE_CACHE_WB, PAGE_CACHE_MASK, &ppt_mem_ops, MR_MODIFY);
 
-	/* set the paging-structure entries' U/S flag
-	 * to supervisor-mode for hypervisor owned memroy.
+	/*
+	 * set the paging-structure entries' U/S flag to supervisor-mode for hypervisor owned memroy.
+	 * (exclude the memory reserve for trusty)
 	 */
 	hv_hpa = get_hv_image_base();
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, hv_hpa & PDE_MASK,
-		CONFIG_HV_RAM_SIZE + (((hv_hpa & (PDE_SIZE - 1UL)) != 0UL) ? PDE_SIZE : 0UL),
+			CONFIG_HV_RAM_SIZE + (((hv_hpa & (PDE_SIZE - 1UL)) != 0UL) ? PDE_SIZE : 0UL),
 			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER,
 			&ppt_mem_ops, MR_MODIFY);
+
+	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (uint64_t)get_reserve_sworld_memory_base(),
+			TRUSTY_RAM_SIZE * (CONFIG_MAX_VM_NUM - 1U),
+			PAGE_USER, 0UL, &ppt_mem_ops, MR_MODIFY);
 
 	/* Enable paging */
 	enable_paging();

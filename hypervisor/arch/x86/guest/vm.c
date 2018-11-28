@@ -110,11 +110,16 @@ int create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 		init_iommu_vm0_domain(vm);
 	} else {
 		/* populate UOS vm fields according to vm_desc */
-		vm->sworld_control.flag.supported =
-			vm_desc->sworld_supported;
+		vm->sworld_control.flag.supported = vm_desc->sworld_supported;
+		if (vm->sworld_control.flag.supported != 0UL) {
+			struct memory_ops *ept_mem_ops = &vm->arch_vm.ept_mem_ops;
+			ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+				hva2hpa(ept_mem_ops->get_sworld_memory_base(ept_mem_ops->info)),
+				TRUSTY_EPT_REBASE_GPA, TRUSTY_RAM_SIZE, EPT_WB | EPT_RWX);
+		}
+
 		(void)memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
-					&vm_desc->GUID[0],
-					sizeof(vm_desc->GUID));
+					&vm_desc->GUID[0], sizeof(vm_desc->GUID));
 #ifdef CONFIG_PARTITION_MODE
 		ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
 				vm_desc->start_hpa, 0UL, vm_desc->mem_size,
