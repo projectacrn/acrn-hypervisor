@@ -267,8 +267,8 @@ config HV_RAM_START
 
 config HV_RAM_SIZE
 	hex "Size of the RAM region used by the hypervisor"
-	default 0x04800000 if PLATFORM_SBL
-	default 0x08000000 if PLATFORM_UEFI
+	default 0x07800000 if PLATFORM_SBL
+	default 0x0b000000 if PLATFORM_UEFI
 	help
 	  A 64-bit integer indicating the size of RAM used by the hypervisor.
 	  It is ensured at link time that the footprint of the hypervisor

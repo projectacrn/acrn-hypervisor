@@ -119,8 +119,7 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 	}
 
 	(void)memset(&vm_desc, 0U, sizeof(vm_desc));
-	vm_desc.sworld_supported =
-		((cv.vm_flag & (SECURE_WORLD_ENABLED)) != 0U);
+	vm_desc.sworld_supported = ((cv.vm_flag & (SECURE_WORLD_ENABLED)) != 0U);
 	(void)memcpy_s(&vm_desc.GUID[0], 16U, &cv.GUID[0], 16U);
 	ret = create_vm(&vm_desc, &target_vm);
 
@@ -515,11 +514,10 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 	}
 
 	gpa_end = region->gpa + region->size;
-	if ((gpa_end > vm->arch_vm.ept_mem_ops.info->ept.top_address_space) &&
-		(region->gpa < TRUSTY_EPT_REBASE_GPA)) {
+	if (gpa_end > vm->arch_vm.ept_mem_ops.info->ept.top_address_space) {
 			pr_err("%s, invalid gpa: 0x%llx, size: 0x%llx, top_address_space: 0x%llx", __func__,
 				region->gpa, region->size, vm->arch_vm.ept_mem_ops.info->ept.top_address_space);
-			return -EINVAL;
+			return 0;
 	}
 
 	dev_dbg(ACRN_DBG_HYCALL,
