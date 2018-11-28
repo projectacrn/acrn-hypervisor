@@ -22,7 +22,7 @@ acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 6,virtio-hyper_dmabuf \
   -s 3,virtio-blk,/root/clear-26200-kvm.img \
   -s 4,virtio-net,tap0 \
-  -k /usr/lib/kernel/org.clearlinux.iot-lts2018.4.19.0-19 \
+  -k /usr/lib/kernel/default-iot-lts2018 \
   -B "root=/dev/vda3 rw rootwait maxcpus=$2 nohpet console=tty0 console=hvc0 \
   console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
   consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=$4 \
