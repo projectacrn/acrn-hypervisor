@@ -141,6 +141,7 @@ the source code, build it, and install it on your device.
    #. Configure the EFI firmware to boot the ACRN hypervisor by default
 
       .. code-block:: none
+      
          # For SATA
          sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 \
                 -L "ACRN Hypervisor" -u "bootloader=\EFI\ubuntu\grubx64.efi"
