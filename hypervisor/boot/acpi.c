@@ -162,17 +162,20 @@ static void *get_rsdp(void)
 	return rsdp;
 }
 
-static int
+static bool
 probe_table(uint64_t address, const char *sig)
 {
 	void *va =  hpa2hva(address);
 	struct acpi_table_header *table = (struct acpi_table_header *)va;
+	bool ret;
 
 	if (strncmp(table->signature, sig, ACPI_NAME_SIZE) != 0) {
-		return 0;
+	        ret = false;
+	} else {
+		ret = true;
 	}
 
-	return 1;
+	return ret;
 }
 
 static void *get_acpi_tbl(const char *sig)
@@ -198,7 +201,7 @@ static void *get_acpi_tbl(const char *sig)
 		    sizeof(uint64_t);
 
 		for (i = 0U; i < count; i++) {
-			if (probe_table(xsdt->table_offset_entry[i], sig) != 0) {
+			if (probe_table(xsdt->table_offset_entry[i], sig)) {
 				addr = xsdt->table_offset_entry[i];
 				break;
 			}
@@ -212,7 +215,7 @@ static void *get_acpi_tbl(const char *sig)
 			sizeof(uint32_t);
 
 		for (i = 0U; i < count; i++) {
-			if (probe_table(rsdt->table_offset_entry[i], sig) != 0) {
+			if (probe_table(rsdt->table_offset_entry[i], sig)) {
 				addr = rsdt->table_offset_entry[i];
 				break;
 			}
