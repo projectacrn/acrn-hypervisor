@@ -59,20 +59,19 @@ static void sharing_mode_cfgread(__unused struct vpci *vpci, union pci_bdf bdf,
 	/* vdev == NULL: Could be hit for PCI enumeration from guests */
 	if ((vdev == NULL) || ((bytes != 1U) && (bytes != 2U) && (bytes != 4U))) {
 		*val = ~0U;
-		return;
-	}
-
-	for (i = 0U; (i < vdev->nr_ops) && !handled; i++) {
-		if (vdev->ops[i].cfgread != NULL) {
-			if (vdev->ops[i].cfgread(vdev, offset, bytes, val) == 0) {
-				handled = true;
+	} else {
+		for (i = 0U; (i < vdev->nr_ops) && !handled; i++) {
+			if (vdev->ops[i].cfgread != NULL) {
+				if (vdev->ops[i].cfgread(vdev, offset, bytes, val) == 0) {
+					handled = true;
+				}
 			}
 		}
-	}
 
-	/* Not handled by any handlers. Passthru to physical device */
-	if (!handled) {
-		*val = pci_pdev_read_cfg(vdev->pdev.bdf, offset, bytes);
+		/* Not handled by any handlers. Passthru to physical device */
+		if (!handled) {
+			*val = pci_pdev_read_cfg(vdev->pdev.bdf, offset, bytes);
+		}
 	}
 }
 
@@ -83,23 +82,21 @@ static void sharing_mode_cfgwrite(__unused struct vpci *vpci, union pci_bdf bdf,
 	bool handled = false;
 	uint32_t i;
 
-	if ((bytes != 1U) && (bytes != 2U) && (bytes != 4U)) {
-		return;
-	}
-
-	vdev = sharing_mode_find_vdev(bdf);
-	if (vdev != NULL) {
-		for (i = 0U; (i < vdev->nr_ops) && !handled; i++) {
-			if (vdev->ops[i].cfgwrite != NULL) {
-				if (vdev->ops[i].cfgwrite(vdev, offset, bytes, val) == 0) {
-					handled = true;
+	if ((bytes == 1U) || (bytes == 2U) || (bytes == 4U)) {
+		vdev = sharing_mode_find_vdev(bdf);
+		if (vdev != NULL) {
+			for (i = 0U; (i < vdev->nr_ops) && !handled; i++) {
+				if (vdev->ops[i].cfgwrite != NULL) {
+					if (vdev->ops[i].cfgwrite(vdev, offset, bytes, val) == 0) {
+						handled = true;
+					}
 				}
 			}
-		}
 
-		/* Not handled by any handlers. Passthru to physical device */
-		if (!handled) {
-			pci_pdev_write_cfg(vdev->pdev.bdf, offset, bytes, val);
+			/* Not handled by any handlers. Passthru to physical device */
+			if (!handled) {
+				pci_pdev_write_cfg(vdev->pdev.bdf, offset, bytes, val);
+			}
 		}
 	}
 }
@@ -108,16 +105,16 @@ static struct pci_vdev *alloc_pci_vdev(struct acrn_vm *vm, union pci_bdf bdf)
 {
 	struct pci_vdev *vdev;
 
-	if (num_pci_vdev >= CONFIG_MAX_PCI_DEV_NUM) {
-		return NULL;
+	if (num_pci_vdev < CONFIG_MAX_PCI_DEV_NUM) {
+		vdev = &sharing_mode_vdev_array[num_pci_vdev++];
+
+		/* vbdf equals to pbdf otherwise remapped */
+		vdev->vbdf = bdf;
+		vdev->vpci = &vm->vpci;
+		vdev->pdev.bdf = bdf;
+	} else {
+		vdev = NULL;
 	}
-
-	vdev = &sharing_mode_vdev_array[num_pci_vdev++];
-
-	/* vbdf equals to pbdf otherwise remapped */
-	vdev->vbdf = bdf;
-	vdev->vpci = &vm->vpci;
-	vdev->pdev.bdf = bdf;
 
 	return vdev;
 }
@@ -133,36 +130,38 @@ static void enumerate_pci_dev(uint16_t pbdf, void *cb_data)
 	}
 }
 
-static int sharing_mode_vpci_init(struct acrn_vm *vm)
+static int32_t sharing_mode_vpci_init(struct acrn_vm *vm)
 {
 	struct pci_vdev *vdev;
 	uint32_t i, j;
+	int32_t ret;
 
 	/*
 	 * Only setup IO bitmap for SOS.
 	 * IO/MMIO requests from non-vm0 guests will be injected to device model.
 	 */
 	if (!is_vm0(vm)) {
-		return -ENODEV;
-	}
+	        ret = -ENODEV;
+	} else {
+		/* Initialize PCI vdev array */
+		num_pci_vdev = 0U;
+		(void)memset((void *)sharing_mode_vdev_array, 0U, sizeof(sharing_mode_vdev_array));
 
-	/* Initialize PCI vdev array */
-	num_pci_vdev = 0U;
-	(void)memset((void *)sharing_mode_vdev_array, 0U, sizeof(sharing_mode_vdev_array));
+		/* build up vdev array for vm0 */
+		pci_scan_bus(enumerate_pci_dev, (void *)vm);
 
-	/* build up vdev array for vm0 */
-	pci_scan_bus(enumerate_pci_dev, (void *)vm);
-
-	for (i = 0U; i < num_pci_vdev; i++) {
-		vdev = &sharing_mode_vdev_array[i];
-		for (j = 0U; j < vdev->nr_ops; j++) {
-			if (vdev->ops[j].init != NULL) {
-				(void)vdev->ops[j].init(vdev);
+		for (i = 0U; i < num_pci_vdev; i++) {
+			vdev = &sharing_mode_vdev_array[i];
+			for (j = 0U; j < vdev->nr_ops; j++) {
+				if (vdev->ops[j].init != NULL) {
+					(void)vdev->ops[j].init(vdev);
+				}
 			}
 		}
+		ret = 0;
 	}
 
-	return 0;
+	return ret;
 }
 
 static void sharing_mode_vpci_deinit(__unused struct acrn_vm *vm)
@@ -170,15 +169,13 @@ static void sharing_mode_vpci_deinit(__unused struct acrn_vm *vm)
 	struct pci_vdev *vdev;
 	uint32_t i, j;
 
-	if (!is_vm0(vm)) {
-		return;
-	}
-
-	for (i = 0U; i < num_pci_vdev; i++) {
-		vdev = &sharing_mode_vdev_array[i];
-		for (j = 0U; j < vdev->nr_ops; j++) {
-			if (vdev->ops[j].deinit != NULL) {
-				(void)vdev->ops[j].deinit(vdev);
+	if (is_vm0(vm)) {
+		for (i = 0U; i < num_pci_vdev; i++) {
+			vdev = &sharing_mode_vdev_array[i];
+			for (j = 0U; j < vdev->nr_ops; j++) {
+				if (vdev->ops[j].deinit != NULL) {
+					(void)vdev->ops[j].deinit(vdev);
+				}
 			}
 		}
 	}
@@ -188,10 +185,9 @@ void add_vdev_handler(struct pci_vdev *vdev, struct pci_vdev_ops *ops)
 {
 	if (vdev->nr_ops >= (MAX_VPCI_DEV_OPS - 1U)) {
 		pr_err("%s, adding too many handlers", __func__);
-		return;
+	} else {
+		vdev->ops[vdev->nr_ops++] = *ops;
 	}
-
-	vdev->ops[vdev->nr_ops++] = *ops;
 }
 
 struct vpci_ops sharing_mode_vpci_ops = {
@@ -209,13 +205,12 @@ void vpci_set_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t
 	if (vdev == NULL) {
 		pr_err("%s, can't find PCI device for vm%d, vbdf (0x%x) pbdf (0x%x)", __func__,
 			target_vm->vm_id, vbdf, pbdf);
-		return;
+	} else {
+		/* UOS may do BDF mapping */
+		vdev->vpci = &target_vm->vpci;
+		vdev->vbdf.value = vbdf;
+		vdev->pdev.bdf.value = pbdf;
 	}
-
-	/* UOS may do BDF mapping */
-	vdev->vpci = &target_vm->vpci;
-	vdev->vbdf.value = vbdf;
-	vdev->pdev.bdf.value = pbdf;
 }
 
 void vpci_reset_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
@@ -227,12 +222,11 @@ void vpci_reset_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16
 	if (vdev == NULL) {
 		pr_err("%s, can't find PCI device for vm%d, vbdf (0x%x) pbdf (0x%x)", __func__,
 			target_vm->vm_id, vbdf, pbdf);
-		return;
-	}
-
-	/* Return this PCI device to SOS */
-	if (vdev->vpci->vm == target_vm) {
-		vm = get_vm_from_vmid(0U);
-		vdev->vpci = &vm->vpci;
+	} else {
+		/* Return this PCI device to SOS */
+		if (vdev->vpci->vm == target_vm) {
+			vm = get_vm_from_vmid(0U);
+			vdev->vpci = &vm->vpci;
+		}
 	}
 }

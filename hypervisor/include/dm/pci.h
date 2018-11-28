@@ -147,12 +147,16 @@ static inline uint32_t pci_bar_offset(uint32_t idx)
 
 static inline bool pci_bar_access(uint32_t offset)
 {
+	bool ret;
+
 	if ((offset >= pci_bar_offset(0U))
 		&& (offset < pci_bar_offset(PCI_BAR_COUNT))) {
-		return true;
+		ret = true;
 	} else {
-		return false;
+	        ret = false;
 	}
+
+	return ret;
 }
 
 static inline uint8_t pci_bus(uint16_t bdf)
