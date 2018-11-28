@@ -10,7 +10,6 @@
 
 static void complete_ioreq(struct vhm_request *vhm_req)
 {
-	vhm_req->valid = 0;
 	atomic_store32(&vhm_req->processed, REQ_STATE_FREE);
 }
 
@@ -140,8 +139,7 @@ void emulate_io_post(struct acrn_vcpu *vcpu)
 	req_buf = (union vhm_request_buffer *)vcpu->vm->sw.io_shared_page;
 	vhm_req = &req_buf->req_queue[vcpu->vcpu_id];
 
-	if ((vhm_req->valid == 0) ||
-		(atomic_load32(&vhm_req->processed) != REQ_STATE_COMPLETE)) {
+	if (atomic_load32(&vhm_req->processed) != REQ_STATE_COMPLETE) {
 		return;
 	}
 

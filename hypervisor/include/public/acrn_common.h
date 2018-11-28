@@ -261,7 +261,7 @@ union vhm_io_request {
  */
 struct vhm_request {
 	/**
-	 * Type of this request.
+	 * @brief Type of this request.
 	 *
 	 * Byte offset: 0.
 	 */
@@ -275,14 +275,16 @@ struct vhm_request {
 	uint32_t completion_polling;
 
 	/**
-	 * Reserved.
+	 * @brief Reserved.
 	 *
 	 * Byte offset: 8.
 	 */
 	uint32_t reserved0[14];
 
 	/**
-	 * Details about this request. For REQ_PORTIO, this has type
+	 * @brief Details about this request.
+	 *
+	 * For REQ_PORTIO, this has type
 	 * pio_request. For REQ_MMIO and REQ_WP, this has type mmio_request. For
 	 * REQ_PCICFG, this has type pci_request.
 	 *
@@ -291,25 +293,25 @@ struct vhm_request {
 	union vhm_io_request reqs;
 
 	/**
-	 * Whether this request is valid for processing. ACRN write, VHM read
-	 * only.
-	 *
-	 * Warning; this field is obsolete and will be removed soon.
+	 * @brief Reserved.
 	 *
 	 * Byte offset: 128.
 	 */
-	int32_t valid;
+	uint32_t reserved1;
 
 	/**
-	 * The client which is distributed to handle this request. Accessed by
-	 * VHM only.
+	 * @brief The client which is distributed to handle this request.
+	 *
+	 * Accessed by VHM only.
 	 *
 	 * Byte offset: 132.
 	 */
 	int32_t client;
 
 	/**
-	 * The status of this request, taking REQ_STATE_xxx as values.
+	 * @brief The status of this request.
+	 *
+	 * Taking REQ_STATE_xxx as values.
 	 *
 	 * Byte offset: 136.
 	 */
