@@ -45,11 +45,15 @@ static inline bool is_vm_valid(uint16_t vm_id)
  */
 struct acrn_vm *get_vm_from_vmid(uint16_t vm_id)
 {
+	struct acrn_vm *ret;
+
 	if (is_vm_valid(vm_id)) {
-		return &vm_array[vm_id];
+	        ret = &vm_array[vm_id];
 	} else {
-		return NULL;
+	        ret = NULL;
 	}
+
+	return ret;
 }
 
 /**
@@ -188,41 +192,42 @@ err:
 /*
  * @pre vm != NULL
  */
-int shutdown_vm(struct acrn_vm *vm)
+int32_t shutdown_vm(struct acrn_vm *vm)
 {
-	int status = 0;
 	uint16_t i;
 	struct acrn_vcpu *vcpu = NULL;
+	int32_t ret;
 
 	pause_vm(vm);
 
 	/* Only allow shutdown paused vm */
-	if (vm->state != VM_PAUSED) {
-		return -EINVAL;
+	if (vm->state == VM_PAUSED) {
+		foreach_vcpu(i, vm, vcpu) {
+			reset_vcpu(vcpu);
+			offline_vcpu(vcpu);
+		}
+
+		ptdev_release_all_entries(vm);
+
+		/* Free EPT allocated resources assigned to VM */
+		destroy_ept(vm);
+
+		/* Free iommu */
+		if (vm->iommu != NULL) {
+			destroy_iommu_domain(vm->iommu);
+		}
+
+		/* Free vm id */
+		free_vm_id(vm);
+
+		vpci_cleanup(vm);
+		ret = 0;
+	} else {
+	        ret = -EINVAL;
 	}
-
-	foreach_vcpu(i, vm, vcpu) {
-		reset_vcpu(vcpu);
-		offline_vcpu(vcpu);
-	}
-
-	ptdev_release_all_entries(vm);
-
-	/* Free EPT allocated resources assigned to VM */
-	destroy_ept(vm);
-
-	/* Free iommu */
-	if (vm->iommu != NULL) {
-		destroy_iommu_domain(vm->iommu);
-	}
-
-	/* Free vm id */
-	free_vm_id(vm);
-
-	vpci_cleanup(vm);
 
 	/* Return status to caller */
-	return status;
+	return ret;
 }
 
 /**
@@ -244,29 +249,31 @@ int start_vm(struct acrn_vm *vm)
 /**
  *  * @pre vm != NULL
  */
-int reset_vm(struct acrn_vm *vm)
+int32_t reset_vm(struct acrn_vm *vm)
 {
 	uint16_t i;
 	struct acrn_vcpu *vcpu = NULL;
+	int32_t ret;
 
-	if (vm->state != VM_PAUSED) {
-		return -1;
+	if (vm->state == VM_PAUSED) {
+		foreach_vcpu(i, vm, vcpu) {
+			reset_vcpu(vcpu);
+		}
+
+		if (is_vm0(vm)) {
+			(void )vm_sw_loader(vm);
+		}
+
+		reset_vm_ioreqs(vm);
+		vioapic_reset(vm_ioapic(vm));
+		destroy_secure_world(vm, false);
+		vm->sworld_control.flag.active = 0UL;
+		ret = 0;
+	} else {
+		ret = -1;
 	}
 
-	foreach_vcpu(i, vm, vcpu) {
-		reset_vcpu(vcpu);
-	}
-
-	if (is_vm0(vm)) {
-		(void )vm_sw_loader(vm);
-	}
-
-	reset_vm_ioreqs(vm);
-	vioapic_reset(vm_ioapic(vm));
-	destroy_secure_world(vm, false);
-	vm->sworld_control.flag.active = 0UL;
-
-	return 0;
+	return ret;
 }
 
 /**
@@ -277,14 +284,12 @@ void pause_vm(struct acrn_vm *vm)
 	uint16_t i;
 	struct acrn_vcpu *vcpu = NULL;
 
-	if (vm->state == VM_PAUSED) {
-		return;
-	}
+	if (vm->state != VM_PAUSED) {
+		vm->state = VM_PAUSED;
 
-	vm->state = VM_PAUSED;
-
-	foreach_vcpu(i, vm, vcpu) {
-		pause_vcpu(vcpu, VCPU_ZOMBIE);
+		foreach_vcpu(i, vm, vcpu) {
+			pause_vcpu(vcpu, VCPU_ZOMBIE);
+		}
 	}
 }
 

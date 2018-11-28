@@ -39,21 +39,18 @@ static void vm_setup_cpu_px(struct acrn_vm *vm)
 	(void)memset(vm->pm.px_data, 0U,
 			MAX_PSTATE * sizeof(struct cpu_px_data));
 
-	if ((boot_cpu_data.state_info.px_cnt == 0U)
-		|| (boot_cpu_data.state_info.px_data == NULL)) {
-		return;
+	if ((boot_cpu_data.state_info.px_cnt != 0U)
+		&& (boot_cpu_data.state_info.px_data != NULL)) {
+		ASSERT ((boot_cpu_data.state_info.px_cnt <= MAX_PSTATE),
+			"failed to setup cpu px");
+
+		vm->pm.px_cnt = boot_cpu_data.state_info.px_cnt;
+
+		px_data_size = ((uint32_t)vm->pm.px_cnt) * sizeof(struct cpu_px_data);
+
+		(void)memcpy_s(vm->pm.px_data, px_data_size,
+				boot_cpu_data.state_info.px_data, px_data_size);
 	}
-
-	ASSERT ((boot_cpu_data.state_info.px_cnt <= MAX_PSTATE),
-		"failed to setup cpu px");
-
-	vm->pm.px_cnt = boot_cpu_data.state_info.px_cnt;
-
-	px_data_size = ((uint32_t)vm->pm.px_cnt) * sizeof(struct cpu_px_data);
-
-	(void)memcpy_s(vm->pm.px_data, px_data_size,
-			boot_cpu_data.state_info.px_data, px_data_size);
-
 }
 
 static void vm_setup_cpu_cx(struct acrn_vm *vm)
@@ -64,24 +61,21 @@ static void vm_setup_cpu_cx(struct acrn_vm *vm)
 	(void)memset(vm->pm.cx_data, 0U,
 			MAX_CSTATE * sizeof(struct cpu_cx_data));
 
-	if ((boot_cpu_data.state_info.cx_cnt == 0U)
-		|| (boot_cpu_data.state_info.cx_data == NULL)) {
-		return;
+	if ((boot_cpu_data.state_info.cx_cnt != 0U)
+		&& (boot_cpu_data.state_info.cx_data != NULL)) {
+		ASSERT ((boot_cpu_data.state_info.cx_cnt <= MAX_CX_ENTRY),
+			"failed to setup cpu cx");
+
+		vm->pm.cx_cnt = boot_cpu_data.state_info.cx_cnt;
+
+		cx_data_size = ((uint32_t)vm->pm.cx_cnt) * sizeof(struct cpu_cx_data);
+
+		/* please note pm.cx_data[0] is a empty space holder,
+		 * pm.cx_data[1...MAX_CX_ENTRY] would be used to store cx entry datas.
+		 */
+		(void)memcpy_s(vm->pm.cx_data + 1, cx_data_size,
+				boot_cpu_data.state_info.cx_data, cx_data_size);
 	}
-
-	ASSERT ((boot_cpu_data.state_info.cx_cnt <= MAX_CX_ENTRY),
-		"failed to setup cpu cx");
-
-	vm->pm.cx_cnt = boot_cpu_data.state_info.cx_cnt;
-
-	cx_data_size = ((uint32_t)vm->pm.cx_cnt) * sizeof(struct cpu_cx_data);
-
-	/* please note pm.cx_data[0] is a empty space holder,
-	 * pm.cx_data[1...MAX_CX_ENTRY] would be used to store cx entry datas.
-	 */
-	(void)memcpy_s(vm->pm.cx_data + 1, cx_data_size,
-			boot_cpu_data.state_info.cx_data, cx_data_size);
-
 }
 
 static inline void init_cx_port(struct acrn_vm *vm)
@@ -192,22 +186,20 @@ register_gas_io_handler(struct acrn_vm *vm, uint32_t pio_idx, const struct acpi_
 	uint8_t io_len[5] = {0, 1, 2, 4, 8};
 	struct vm_io_range gas_io;
 
-	if ((gas->address == 0UL)
-			|| (gas->space_id != SPACE_SYSTEM_IO)
-			|| (gas->access_size == 0U)
-			|| (gas->access_size > 4U)) {
-		return;
+	if ((gas->address != 0UL)
+			&& (gas->space_id == SPACE_SYSTEM_IO)
+			&& (gas->access_size != 0U)
+			&& (gas->access_size <= 4U)) {
+		gas_io.flags = IO_ATTR_RW;
+		gas_io.base = (uint16_t)gas->address;
+		gas_io.len = io_len[gas->access_size];
+
+		register_io_emulation_handler(vm, pio_idx, &gas_io,
+				&pm1ab_io_read, &pm1ab_io_write);
+
+		pr_dbg("Enable PM1A trap for VM %d, port 0x%x, size %d\n",
+				vm->vm_id, gas_io.base, gas_io.len);
 	}
-
-	gas_io.flags = IO_ATTR_RW;
-	gas_io.base = (uint16_t)gas->address;
-	gas_io.len = io_len[gas->access_size];
-
-	register_io_emulation_handler(vm, pio_idx, &gas_io,
-			&pm1ab_io_read, &pm1ab_io_write);
-
-	pr_dbg("Enable PM1A trap for VM %d, port 0x%x, size %d\n",
-			vm->vm_id, gas_io.base, gas_io.len);
 }
 
 void register_pm1ab_handler(struct acrn_vm *vm)
