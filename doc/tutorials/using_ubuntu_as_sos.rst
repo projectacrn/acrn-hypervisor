@@ -117,7 +117,12 @@ the source code, build it, and install it on your device.
 
          sudo umount /boot/efi
          sudo lsblk
+         
+         # For SATA
          sudo mount /dev/sda1 /mnt
+         # For NVMe
+         sudo mount /dev/nvme0n1p1 /mnt
+         
          ls /mnt/EFI/ubuntu
 
       You should see the following output:
@@ -136,9 +141,12 @@ the source code, build it, and install it on your device.
    #. Configure the EFI firmware to boot the ACRN hypervisor by default
 
       .. code-block:: none
-
+         # For SATA
          sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 \
                 -L "ACRN Hypervisor" -u "bootloader=\EFI\ubuntu\grubx64.efi"
+         # For NVMe
+         sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/nvme0n1 -p 1 \
+                -L "ACRN Hypervisor" -u "bootloader=\EFI\ubuntu\grubx64.efi"        
          
    #. Verify that the "ACRN Hypervisor" is added and make sure it will be booted first
       
@@ -222,7 +230,8 @@ You can download latest Service OS kernel from
      There are a couple of lines to be modified, as shown below.
 
      .. code-block:: none
-
+        
+        #GRUB_TIMEOUT_STYLE=hidden
         #GRUB_HIDDEN_TIMEOUT=0
         GRUB_HIDDEN_TIMEOUT_QUIET=false
 
