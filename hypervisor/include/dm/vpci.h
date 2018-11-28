@@ -34,14 +34,14 @@
 
 struct pci_vdev;
 struct pci_vdev_ops {
-	int (*init)(struct pci_vdev *vdev);
+	int32_t (*init)(struct pci_vdev *vdev);
 
-	int (*deinit)(struct pci_vdev *vdev);
+	int32_t (*deinit)(struct pci_vdev *vdev);
 
 	int (*cfgwrite)(struct pci_vdev *vdev, uint32_t offset,
 		uint32_t bytes, uint32_t val);
 
-	int (*cfgread)(struct pci_vdev *vdev, uint32_t offset,
+	int32_t (*cfgread)(struct pci_vdev *vdev, uint32_t offset,
 		uint32_t bytes, uint32_t *val);
 };
 
@@ -125,7 +125,7 @@ struct pci_addr_info {
 };
 
 struct vpci_ops {
-	int (*init)(struct acrn_vm *vm);
+	int32_t (*init)(struct acrn_vm *vm);
 	void (*deinit)(struct acrn_vm *vm);
 	void (*cfgread)(struct vpci *vpci, union pci_bdf vbdf, uint32_t offset,
 		uint32_t bytes, uint32_t *val);
