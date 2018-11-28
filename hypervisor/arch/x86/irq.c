@@ -36,26 +36,28 @@ uint32_t alloc_irq_num(uint32_t req_irq)
 {
 	uint32_t irq = req_irq;
 	uint64_t rflags;
+	uint32_t ret;
 
 	if ((irq >= NR_IRQS) && (irq != IRQ_INVALID)) {
 		pr_err("[%s] invalid req_irq %u", __func__, req_irq);
-		return IRQ_INVALID;
-	}
-
-	spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
-	if (irq == IRQ_INVALID) {
-		/* if no valid irq num given, find a free one */
-		irq = (uint32_t)ffz64_ex(irq_alloc_bitmap, NR_IRQS);
-	}
-
-	if (irq >= NR_IRQS) {
-		irq = IRQ_INVALID;
+	        ret = IRQ_INVALID;
 	} else {
-		bitmap_set_nolock((uint16_t)(irq & 0x3FU),
-				irq_alloc_bitmap + (irq >> 6U));
+		spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
+		if (irq == IRQ_INVALID) {
+			/* if no valid irq num given, find a free one */
+			irq = (uint32_t)ffz64_ex(irq_alloc_bitmap, NR_IRQS);
+		}
+
+		if (irq >= NR_IRQS) {
+			irq = IRQ_INVALID;
+		} else {
+			bitmap_set_nolock((uint16_t)(irq & 0x3FU),
+					irq_alloc_bitmap + (irq >> 6U));
+		}
+		spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);
+		ret = irq;
 	}
-	spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);
-	return irq;
+	return ret;
 }
 
 /*
@@ -66,15 +68,13 @@ void free_irq_num(uint32_t irq)
 {
 	uint64_t rflags;
 
-	if (irq >= NR_IRQS) {
-		return;
-	}
-
-	if (irq_is_gsi(irq) == false) {
-		spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
-		(void)bitmap_test_and_clear_nolock((uint16_t)(irq & 0x3FU),
-					     irq_alloc_bitmap + (irq >> 6U));
-		spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);
+	if (irq < NR_IRQS) {
+		if (!irq_is_gsi(irq)) {
+			spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
+			(void)bitmap_test_and_clear_nolock((uint16_t)(irq & 0x3FU),
+						     irq_alloc_bitmap + (irq >> 6U));
+			spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);
+		}
 	}
 }
 
@@ -89,43 +89,44 @@ uint32_t alloc_irq_vector(uint32_t irq)
 	uint32_t vr;
 	struct irq_desc *desc;
 	uint64_t rflags;
+	uint32_t ret;
 
-	if (irq >= NR_IRQS) {
-		pr_err("invalid irq[%u] to alloc vector", irq);
-		return VECTOR_INVALID;
-	}
+	if (irq < NR_IRQS) {
+		desc = &irq_desc_array[irq];
 
-	desc = &irq_desc_array[irq];
-
-	if (desc->vector != VECTOR_INVALID) {
-		if (vector_to_irq[desc->vector] == irq) {
-			/* statically binded */
-			vr = desc->vector;
-		} else {
-			pr_err("[%s] irq[%u]:vector[%u] mismatch",
-				__func__, irq, desc->vector);
-			vr = VECTOR_INVALID;
-		}
-	} else {
-		/* alloc a vector between:
-		 *   VECTOR_DYNAMIC_START ~ VECTOR_DYNAMC_END
-		 */
-		spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
-
-		for (vr = VECTOR_DYNAMIC_START;
-			vr <= VECTOR_DYNAMIC_END; vr++) {
-			if (vector_to_irq[vr] == IRQ_INVALID) {
-				desc->vector = vr;
-				vector_to_irq[vr] = irq;
-				break;
+		if (desc->vector != VECTOR_INVALID) {
+			if (vector_to_irq[desc->vector] == irq) {
+				/* statically binded */
+				vr = desc->vector;
+			} else {
+				pr_err("[%s] irq[%u]:vector[%u] mismatch",
+					__func__, irq, desc->vector);
+				vr = VECTOR_INVALID;
 			}
+		} else {
+			/* alloc a vector between:
+			 *   VECTOR_DYNAMIC_START ~ VECTOR_DYNAMC_END
+			 */
+			spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
+
+			for (vr = VECTOR_DYNAMIC_START;
+				vr <= VECTOR_DYNAMIC_END; vr++) {
+				if (vector_to_irq[vr] == IRQ_INVALID) {
+					desc->vector = vr;
+					vector_to_irq[vr] = irq;
+					break;
+				}
+			}
+			vr = (vr > VECTOR_DYNAMIC_END) ? VECTOR_INVALID : vr;
+
+			spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);
 		}
-		vr = (vr > VECTOR_DYNAMIC_END) ? VECTOR_INVALID : vr;
-
-		spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);
+		ret = vr;
+	} else {
+		pr_err("invalid irq[%u] to alloc vector", irq);
+	        ret = VECTOR_INVALID;
 	}
-
-	return vr;
+	return ret;
 }
 
 /* free the vector allocated via alloc_irq_vector() */
@@ -226,22 +227,20 @@ void free_irq(uint32_t irq)
 	uint64_t rflags;
 	struct irq_desc *desc;
 
-	if (irq >= NR_IRQS) {
-		return;
+	if (irq < NR_IRQS) {
+		desc = &irq_desc_array[irq];
+		dev_dbg(ACRN_DBG_IRQ, "[%s] irq%d vr:0x%x",
+			__func__, irq, irq_to_vector(irq));
+
+		free_irq_vector(irq);
+		free_irq_num(irq);
+
+		spinlock_irqsave_obtain(&desc->lock, &rflags);
+		desc->action = NULL;
+		desc->priv_data = NULL;
+		desc->flags = IRQF_NONE;
+		spinlock_irqrestore_release(&desc->lock, rflags);
 	}
-
-	desc = &irq_desc_array[irq];
-	dev_dbg(ACRN_DBG_IRQ, "[%s] irq%d vr:0x%x",
-		__func__, irq, irq_to_vector(irq));
-
-	free_irq_vector(irq);
-	free_irq_num(irq);
-
-	spinlock_irqsave_obtain(&desc->lock, &rflags);
-	desc->action = NULL;
-	desc->priv_data = NULL;
-	desc->flags = IRQF_NONE;
-	spinlock_irqrestore_release(&desc->lock, rflags);
 }
 
 void set_irq_trigger_mode(uint32_t irq, bool is_level_triggered)
@@ -249,27 +248,28 @@ void set_irq_trigger_mode(uint32_t irq, bool is_level_triggered)
 	uint64_t rflags;
 	struct irq_desc *desc;
 
-	if (irq >= NR_IRQS) {
-		return;
+	if (irq < NR_IRQS) {
+		desc = &irq_desc_array[irq];
+		spinlock_irqsave_obtain(&desc->lock, &rflags);
+		if (is_level_triggered == true) {
+			desc->flags |= IRQF_LEVEL;
+		} else {
+			desc->flags &= ~IRQF_LEVEL;
+		}
+		spinlock_irqrestore_release(&desc->lock, rflags);
 	}
-
-	desc = &irq_desc_array[irq];
-	spinlock_irqsave_obtain(&desc->lock, &rflags);
-	if (is_level_triggered == true) {
-		desc->flags |= IRQF_LEVEL;
-	} else {
-		desc->flags &= ~IRQF_LEVEL;
-	}
-	spinlock_irqrestore_release(&desc->lock, rflags);
 }
 
 uint32_t irq_to_vector(uint32_t irq)
 {
+	uint32_t ret;
 	if (irq < NR_IRQS) {
-		return irq_desc_array[irq].vector;
+		ret = irq_desc_array[irq].vector;
 	} else {
-		return VECTOR_INVALID;
+	        ret = VECTOR_INVALID;
 	}
+
+	return ret;
 }
 
 static void handle_spurious_interrupt(uint32_t vector)
@@ -435,16 +435,14 @@ static void disable_pic_irqs(void)
 
 void init_default_irqs(uint16_t cpu_id)
 {
-	if (cpu_id != BOOT_CPU_ID) {
-		return;
+	if (cpu_id == BOOT_CPU_ID) {
+		init_irq_descs();
+
+		/* we use ioapic only, disable legacy PIC */
+		disable_pic_irqs();
+		setup_ioapic_irqs();
+		init_softirq();
 	}
-
-	init_irq_descs();
-
-	/* we use ioapic only, disable legacy PIC */
-	disable_pic_irqs();
-	setup_ioapic_irqs();
-	init_softirq();
 }
 
 void interrupt_init(uint16_t pcpu_id)

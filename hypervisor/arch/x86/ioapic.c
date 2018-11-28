@@ -176,21 +176,21 @@ create_rte_for_gsi_irq(uint32_t irq, uint32_t vr)
 	union ioapic_rte rte;
 
 	if (irq < NR_LEGACY_IRQ) {
-		return create_rte_for_legacy_irq(irq, vr);
+		rte = create_rte_for_legacy_irq(irq, vr);
+	} else {
+		/* irq default masked, level trig */
+		rte.full  = IOAPIC_RTE_INTMSET;
+		rte.full |= IOAPIC_RTE_TRGRLVL;
+		rte.full |= DEFAULT_DEST_MODE;
+		rte.full |= DEFAULT_DELIVERY_MODE;
+		rte.full |= (IOAPIC_RTE_INTVEC & (uint64_t)vr);
+
+		/* Fixed to active high */
+		rte.full |= IOAPIC_RTE_INTAHI;
+
+		/* Dest field */
+		rte.full |= ((uint64_t)ALL_CPUS_MASK << IOAPIC_RTE_DEST_SHIFT);
 	}
-
-	/* irq default masked, level trig */
-	rte.full  = IOAPIC_RTE_INTMSET;
-	rte.full |= IOAPIC_RTE_TRGRLVL;
-	rte.full |= DEFAULT_DEST_MODE;
-	rte.full |= DEFAULT_DELIVERY_MODE;
-	rte.full |= (IOAPIC_RTE_INTVEC & (uint64_t)vr);
-
-	/* Fixed to active high */
-	rte.full |= IOAPIC_RTE_INTAHI;
-
-	/* Dest field */
-	rte.full |= ((uint64_t)ALL_CPUS_MASK << IOAPIC_RTE_DEST_SHIFT);
 
 	return rte;
 }
@@ -222,28 +222,24 @@ void ioapic_get_rte(uint32_t irq, union ioapic_rte *rte)
 {
 	void *addr;
 
-	if (!irq_is_gsi(irq)) {
-		return;
+	if (irq_is_gsi(irq)) {
+		addr = gsi_table[irq].addr;
+		ioapic_get_rte_entry(addr, gsi_table[irq].pin, rte);
 	}
-
-	addr = gsi_table[irq].addr;
-	ioapic_get_rte_entry(addr, gsi_table[irq].pin, rte);
 }
 
 void ioapic_set_rte(uint32_t irq, union ioapic_rte rte)
 {
 	void *addr;
 
-	if (!irq_is_gsi(irq)) {
-		return;
+	if (irq_is_gsi(irq)) {
+		addr = gsi_table[irq].addr;
+		ioapic_set_rte_entry(addr, gsi_table[irq].pin, rte);
+
+		dev_dbg(ACRN_DBG_IRQ, "GSI: irq:%d pin:%hhu rte:%lx",
+			irq, gsi_table[irq].pin,
+			rte.full);
 	}
-
-	addr = gsi_table[irq].addr;
-	ioapic_set_rte_entry(addr, gsi_table[irq].pin, rte);
-
-	dev_dbg(ACRN_DBG_IRQ, "GSI: irq:%d pin:%hhu rte:%lx",
-		irq, gsi_table[irq].pin,
-		rte.full);
 }
 
 bool irq_is_gsi(uint32_t irq)
@@ -253,11 +249,15 @@ bool irq_is_gsi(uint32_t irq)
 
 uint8_t irq_to_pin(uint32_t irq)
 {
+	uint8_t ret;
+
 	if (irq_is_gsi(irq)) {
-		return gsi_table[irq].pin;
+		ret = gsi_table[irq].pin;
 	} else {
-		return IOAPIC_INVALID_PIN;
+	        ret = IOAPIC_INVALID_PIN;
 	}
+
+	return ret;
 }
 
 uint32_t pin_to_irq(uint8_t pin)
@@ -279,22 +279,20 @@ irq_gsi_mask_unmask(uint32_t irq, bool mask)
 	uint8_t pin;
 	union ioapic_rte rte;
 
-	if (!irq_is_gsi(irq)) {
-		return;
-	}
+	if (irq_is_gsi(irq)) {
+		addr = gsi_table[irq].addr;
+		pin = gsi_table[irq].pin;
 
-	addr = gsi_table[irq].addr;
-	pin = gsi_table[irq].pin;
-
-	ioapic_get_rte_entry(addr, pin, &rte);
-	if (mask) {
-		rte.full |= IOAPIC_RTE_INTMSET;
-	} else {
-		rte.full &= ~IOAPIC_RTE_INTMASK;
+		ioapic_get_rte_entry(addr, pin, &rte);
+		if (mask) {
+			rte.full |= IOAPIC_RTE_INTMSET;
+		} else {
+			rte.full &= ~IOAPIC_RTE_INTMASK;
+		}
+		ioapic_set_rte_entry(addr, pin, rte);
+		dev_dbg(ACRN_DBG_PTIRQ, "update: irq:%d pin:%hhu rte:%lx",
+			irq, pin, rte.full);
 	}
-	ioapic_set_rte_entry(addr, pin, rte);
-	dev_dbg(ACRN_DBG_PTIRQ, "update: irq:%d pin:%hhu rte:%lx",
-		irq, pin, rte.full);
 }
 
 void gsi_mask_irq(uint32_t irq)
