@@ -445,9 +445,6 @@ Address Space Translation
 .. doxygenfunction:: vm0_hpa2gpa
    :project: Project ACRN
 
-.. doxygenfunction:: check_continuous_hpa
-   :project: Project ACRN
-
 EPT
 ---
 
