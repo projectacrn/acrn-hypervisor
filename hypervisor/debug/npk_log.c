@@ -9,6 +9,39 @@ static int32_t npk_log_setup_ref;
 static bool npk_log_enabled;
 static uint64_t base;
 
+#define HV_NPK_LOG_REF_SHIFT  2U
+#define HV_NPK_LOG_REF_MASK   ((1U << HV_NPK_LOG_REF_SHIFT) - 1U)
+
+#define HV_NPK_LOG_MAX 1024U
+#define HV_NPK_LOG_HDR 0x01000242U
+
+enum {
+	HV_NPK_LOG_CMD_INVALID = 0U,
+	HV_NPK_LOG_CMD_CONF,
+	HV_NPK_LOG_CMD_ENABLE,
+	HV_NPK_LOG_CMD_DISABLE,
+	HV_NPK_LOG_CMD_QUERY,
+};
+
+#define	HV_NPK_LOG_RES_INVALID	0x0U
+#define	HV_NPK_LOG_RES_OK	0x1U
+#define	HV_NPK_LOG_RES_KO	0x2U
+#define	HV_NPK_LOG_RES_ENABLED	0x3U
+#define	HV_NPK_LOG_RES_DISABLED	0x4U
+
+struct npk_chan {
+	uint64_t Dn;
+	uint64_t DnM;
+	uint64_t DnTS;
+	uint64_t DnMTS;
+	uint64_t USER;
+	uint64_t USER_TS;
+	uint32_t FLAG;
+	uint32_t FLAG_TS;
+	uint32_t MERR;
+	uint32_t unused;
+} __packed;
+
 static inline int npk_write(const char *value, void *addr, size_t sz)
 {
 	int ret = -1;
