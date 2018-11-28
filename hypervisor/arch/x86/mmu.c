@@ -295,27 +295,3 @@ void init_paging(void)
 	/* set ptep in sanitized_page point to itself */
 	sanitize_pte((uint64_t *)sanitized_page);
 }
-
-bool check_continuous_hpa(struct acrn_vm *vm, uint64_t gpa_arg, uint64_t size_arg)
-{
-	uint64_t curr_hpa;
-	uint64_t next_hpa;
-	uint64_t gpa = gpa_arg;
-	uint64_t size = size_arg;
-
-	/* if size <= PAGE_SIZE_4K, it is continuous,no need check
-	 * if size > PAGE_SIZE_4K, need to fetch next page
-	 */
-	while (size > PAGE_SIZE_4K) {
-		curr_hpa = gpa2hpa(vm, gpa);
-		gpa += PAGE_SIZE_4K;
-		next_hpa = gpa2hpa(vm, gpa);
-		if ((curr_hpa == INVALID_HPA) || (next_hpa == INVALID_HPA)
-			|| (next_hpa != (curr_hpa + PAGE_SIZE_4K))) {
-			return false;
-		}
-		size -= PAGE_SIZE_4K;
-	}
-	return true;
-
-}

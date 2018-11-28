@@ -94,8 +94,6 @@ struct trusty_key_info {
 };
 
 struct secure_world_memory {
-	/* The secure world base address of GPA in SOS */
-	uint64_t base_gpa_in_sos;
 	/* The original secure world base address allocated by bootloader */
 	uint64_t base_gpa_in_uos;
 	/* The secure world base address of HPA */

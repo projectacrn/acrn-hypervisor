@@ -151,17 +151,6 @@ void flush_vpid_global(void);
  */
 void invept(const struct acrn_vcpu *vcpu);
 /**
- * @brief Host-physical address continous checking
- *
- * @param[in] vm the pointer that points the VM data structure
- * @param[in] gpa_arg the start GPA address of the guest memory region
- * @param[in] size_arg the size of the guest memory region
- *
- * @retval true The HPA of the guest memory region is continuous
- * @retval false The HPA of the guest memory region is non-continuous
- */
-bool check_continuous_hpa(struct acrn_vm *vm, uint64_t gpa_arg, uint64_t size_arg);
-/**
  *@pre (pml4_page != NULL) && (pg_size != NULL)
  */
 uint64_t *lookup_address(uint64_t *pml4_page, uint64_t addr,
