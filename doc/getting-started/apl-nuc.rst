@@ -359,6 +359,12 @@ Set up Reference UOS
       name on the second line highlighted (check the exact name to be used using:
       ``ls /usr/lib/kernel/org.clearlinux*-standard*``).
 
+   .. note::
+      The script uses ``/usr/lib/kernel/default-iot-lts2018`` which is a symlink
+      to the latest ``*-iot-lts2018`` installed on the system. This provides a
+      sane default but double-check the version in case things do not work as
+      expected.
+
    By default, the script is located in the ``/usr/share/acrn/samples/nuc/``
    directory. You can edit it there, and then run it to launch the User OS:
 
