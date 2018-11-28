@@ -193,7 +193,7 @@ struct instr_emul_ctxt {
 	struct acrn_vcpu *vcpu;
 };
 
-int emulate_instruction(const struct acrn_vcpu *vcpu);
+int32_t emulate_instruction(const struct acrn_vcpu *vcpu);
 int decode_instruction(struct acrn_vcpu *vcpu);
 
 #endif
