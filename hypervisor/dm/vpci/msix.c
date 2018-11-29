@@ -59,7 +59,7 @@ static int vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
 	info.vmsi_addr = vdev->msix.tables[index].addr;
 	info.vmsi_data = (enable) ? vdev->msix.tables[index].data : 0U;
 
-	ret = ptdev_msix_remap(vdev->vpci->vm, vdev->vbdf.value, (uint16_t)index, &info);
+	ret = ptirq_msix_remap(vdev->vpci->vm, vdev->vbdf.value, (uint16_t)index, &info);
 	if (ret == 0) {
 		/* Write the table entry to the physical structure */
 		hva = vdev->msix.mmio_hva + vdev->msix.table_offset;
@@ -412,7 +412,7 @@ static int vmsix_deinit(struct pci_vdev *vdev)
 	vdev->msix.intercepted_size = 0U;
 
 	if (vdev->msix.table_count != 0U) {
-		ptdev_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, vdev->msix.table_count);
+		ptirq_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, vdev->msix.table_count);
 	}
 
 	return 0;

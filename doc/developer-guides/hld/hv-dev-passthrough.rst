@@ -136,7 +136,7 @@ Interrupt Remapping
 
 When the physical interrupt of a passthrough device happens, hypervisor has
 to distribute it to the relevant VM according to interrupt remapping
-relationships. The structure ``ptdev_remapping_info`` is used to define
+relationships. The structure ``ptirq_remapping_info`` is used to define
 the subordination relation between physical interrupt and VM, the
 virtual destination, etc. See the following figure for details:
 
@@ -186,7 +186,7 @@ the following steps:
 -  VM exit happens and the trapped vCPU is the target where the interrupt
    will be injected.
 -  Hypervisor will handle the interrupt and translate the vector
-   according to ptdev_remapping_info.
+   according to ptirq_remapping_info.
 -  Hypervisor delivers the interrupt to UOS.
 
 When the SOS needs to use the physical device, the passthrough is also
@@ -198,7 +198,7 @@ active because the SOS is the first VM. The detail steps are:
 -  When physical interrupt is trapped, an exception will happen after VMCS
    has been set.
 -  Hypervisor will handle the vm exit issue according to
-   ptdev_remapping_info and translates the vector.
+   ptirq_remapping_info and translates the vector.
 -  The interrupt will be injected the same as a virtual interrupt.
 
 ACPI Virtualization
@@ -234,28 +234,28 @@ Data structures and interfaces
 The following APIs are provided to initialize interrupt remapping for
 SOS:
 
-.. doxygenfunction:: ptdev_intx_pin_remap
+.. doxygenfunction:: ptirq_intx_pin_remap
    :project: Project ACRN
 
-.. doxygenfunction:: ptdev_msix_remap
+.. doxygenfunction:: ptirq_msix_remap
    :project: Project ACRN
 
 The following APIs are provided to manipulate the interrupt remapping
 for UOS.
 
-.. doxygenfunction:: ptdev_add_intx_remapping
+.. doxygenfunction:: ptirq_add_intx_remapping
    :project: Project ACRN
 
-.. doxygenfunction:: ptdev_remove_intx_remapping
+.. doxygenfunction:: ptirq_remove_intx_remapping
    :project: Project ACRN
 
-.. doxygenfunction:: ptdev_add_msix_remapping
+.. doxygenfunction:: ptirq_add_msix_remapping
    :project: Project ACRN
 
-.. doxygenfunction:: ptdev_remove_msix_remapping
+.. doxygenfunction:: ptirq_remove_msix_remapping
    :project: Project ACRN
 
 The following APIs are provided to acknowledge a virtual interrupt.
 
-.. doxygenfunction:: ptdev_intx_ack
+.. doxygenfunction:: ptirq_intx_ack
    :project: Project ACRN

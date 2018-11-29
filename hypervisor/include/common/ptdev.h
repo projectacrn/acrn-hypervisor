@@ -72,16 +72,16 @@ extern struct ptirq_remapping_info ptirq_entries[];
 extern spinlock_t ptdev_lock;
 
 bool is_entry_active(const struct ptirq_remapping_info *entry);
-void ptdev_softirq(uint16_t pcpu_id);
+void ptirq_softirq(uint16_t pcpu_id);
 void ptdev_init(void);
 void ptdev_release_all_entries(const struct acrn_vm *vm);
 
-struct ptirq_remapping_info *ptdev_dequeue_softirq(struct acrn_vm *vm);
-struct ptirq_remapping_info *alloc_entry(struct acrn_vm *vm, uint32_t intr_type);
-void release_entry(struct ptirq_remapping_info *entry);
-int32_t ptdev_activate_entry(struct ptirq_remapping_info *entry, uint32_t phys_irq);
-void ptdev_deactivate_entry(struct ptirq_remapping_info *entry);
+struct ptirq_remapping_info *ptirq_dequeue_softirq(struct acrn_vm *vm);
+struct ptirq_remapping_info *ptirq_alloc_entry(struct acrn_vm *vm, uint32_t intr_type);
+void ptirq_release_entry(struct ptirq_remapping_info *entry);
+int32_t ptirq_activate_entry(struct ptirq_remapping_info *entry, uint32_t phys_irq);
+void ptirq_deactivate_entry(struct ptirq_remapping_info *entry);
 
-uint32_t get_vm_ptdev_intr_data(const struct acrn_vm *target_vm, uint64_t *buffer, uint32_t buffer_cnt);
+uint32_t ptirq_get_intr_data(const struct acrn_vm *target_vm, uint64_t *buffer, uint32_t buffer_cnt);
 
 #endif /* PTDEV_H */

@@ -36,7 +36,7 @@
  * @pre vm != NULL
  *
  */
-void ptdev_intx_ack(struct acrn_vm *vm, uint8_t virt_pin, enum ptirq_vpin_source vpin_src);
+void ptirq_intx_ack(struct acrn_vm *vm, uint8_t virt_pin, enum ptirq_vpin_source vpin_src);
 
 /**
  * @brief MSI/MSI-x remapping for passthrough device.
@@ -59,7 +59,7 @@ void ptdev_intx_ack(struct acrn_vm *vm, uint8_t virt_pin, enum ptirq_vpin_source
  * @pre info != NULL
  *
  */
-int ptdev_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t entry_nr, struct ptirq_msi_info *info);
+int ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t entry_nr, struct ptirq_msi_info *info);
 
 
 /**
@@ -81,7 +81,7 @@ int ptdev_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t entry_nr, s
  * @pre vm != NULL
  *
  */
-int ptdev_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin, enum ptirq_vpin_source vpin_src);
+int ptirq_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin, enum ptirq_vpin_source vpin_src);
 
 /**
  * @brief Add an interrupt remapping entry for INTx as pre-hold mapping.
@@ -103,7 +103,7 @@ int ptdev_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin, enum ptirq_vpin_s
  * @pre vm != NULL
  *
  */
-int ptdev_add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, uint8_t phys_pin, bool pic_pin);
+int ptirq_add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, uint8_t phys_pin, bool pic_pin);
 
 /**
  * @brief Remove an interrupt remapping entry for INTx.
@@ -119,7 +119,7 @@ int ptdev_add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, uint8_t phys_
  * @pre vm != NULL
  *
  */
-void ptdev_remove_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, bool pic_pin);
+void ptirq_remove_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, bool pic_pin);
 
 /**
  * @brief Add interrupt remapping entry/entries for MSI/MSI-x as pre-hold mapping.
@@ -140,7 +140,7 @@ void ptdev_remove_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, bool pic_
  * @pre vm != NULL
  *
  */
-int ptdev_add_msix_remapping(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t phys_bdf, uint32_t vector_count);
+int ptirq_add_msix_remapping(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t phys_bdf, uint32_t vector_count);
 
 /**
  * @brief Remove interrupt remapping entry/entries for MSI/MSI-x.
@@ -156,7 +156,7 @@ int ptdev_add_msix_remapping(struct acrn_vm *vm, uint16_t virt_bdf, uint16_t phy
  * @pre vm != NULL
  *
  */
-void ptdev_remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t vector_count);
+void ptirq_remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t vector_count);
 
 /**
   * @}
