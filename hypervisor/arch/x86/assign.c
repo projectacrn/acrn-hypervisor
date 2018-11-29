@@ -55,12 +55,16 @@ ptirq_lookup_entry_by_vpin(struct acrn_vm *vm, uint8_t virt_pin, bool pic_pin)
 #ifdef CONFIG_COM_IRQ
 static bool ptdev_hv_owned_intx(const struct acrn_vm *vm, const union source_id *virt_sid)
 {
+	bool ret;
+
 	/* vm0 vuart pin is owned by hypervisor under debug version */
 	if (is_vm0(vm) && (virt_sid->intx_id.pin == CONFIG_COM_IRQ)) {
-		return true;
+		ret = true;
 	} else {
-		return false;
+	        ret = false;
 	}
+
+	return ret;
 }
 #endif /* CONFIG_COM_IRQ */
 
@@ -496,37 +500,35 @@ void ptirq_intx_ack(struct acrn_vm *vm, uint8_t virt_pin,
 	bool pic_pin = (vpin_src == PTDEV_VPIN_PIC);
 
 	entry = ptirq_lookup_entry_by_vpin(vm, virt_pin, pic_pin);
-	if (entry == NULL) {
-		return;
-	}
+	if (entry != NULL) {
+		phys_irq = entry->allocated_pirq;
 
-	phys_irq = entry->allocated_pirq;
-
-	/* NOTE: only Level trigger will process EOI/ACK and if we got here
-	 * means we have this vioapic or vpic or both enabled
-	 */
-	switch (vpin_src) {
-	case PTDEV_VPIN_IOAPIC:
-		if (entry->polarity != 0U) {
-			vioapic_set_irq(vm, virt_pin, GSI_SET_HIGH);
-		} else {
-			vioapic_set_irq(vm, virt_pin, GSI_SET_LOW);
-		}
-		break;
-	case PTDEV_VPIN_PIC:
-		vpic_set_irq(vm, virt_pin, GSI_SET_LOW);
-	default:
-		/*
-		 * In this switch statement, vpin_src shall either be
-		 * PTDEV_VPIN_IOAPIC or PTDEV_VPIN_PIC.
-		 * Gracefully return if prior case clauses have not been met.
+		/* NOTE: only Level trigger will process EOI/ACK and if we got here
+		 * means we have this vioapic or vpic or both enabled
 		 */
-		break;
-	}
+		switch (vpin_src) {
+		case PTDEV_VPIN_IOAPIC:
+			if (entry->polarity != 0U) {
+				vioapic_set_irq(vm, virt_pin, GSI_SET_HIGH);
+			} else {
+				vioapic_set_irq(vm, virt_pin, GSI_SET_LOW);
+			}
+			break;
+		case PTDEV_VPIN_PIC:
+			vpic_set_irq(vm, virt_pin, GSI_SET_LOW);
+		default:
+			/*
+			 * In this switch statement, vpin_src shall either be
+			 * PTDEV_VPIN_IOAPIC or PTDEV_VPIN_PIC.
+			 * Gracefully return if prior case clauses have not been met.
+			 */
+			break;
+		}
 
-	dev_dbg(ACRN_DBG_PTIRQ, "dev-assign: irq=0x%x acked vr: 0x%x",
-			phys_irq, irq_to_vector(phys_irq));
-	gsi_unmask_irq(phys_irq);
+		dev_dbg(ACRN_DBG_PTIRQ, "dev-assign: irq=0x%x acked vr: 0x%x",
+				phys_irq, irq_to_vector(phys_irq));
+		gsi_unmask_irq(phys_irq);
+	}
 }
 
 /* Main entry for PCI device assignment with MSI and MSI-X

@@ -266,29 +266,35 @@ static void vcpu_inject_exception(struct acrn_vcpu *vcpu, uint32_t vector)
 	vcpu_retain_rip(vcpu);
 }
 
-static int vcpu_inject_hi_exception(struct acrn_vcpu *vcpu)
+static int32_t vcpu_inject_hi_exception(struct acrn_vcpu *vcpu)
 {
 	uint32_t vector = vcpu->arch.exception_info.exception;
+	int32_t ret;
 
 	if (vector == IDT_MC || vector == IDT_BP || vector == IDT_DB) {
 		vcpu_inject_exception(vcpu, vector);
-		return 1;
+		ret = 1;
+	} else {
+		ret = 0;
 	}
 
-	return 0;
+	return ret;
 }
 
-static int vcpu_inject_lo_exception(struct acrn_vcpu *vcpu)
+static int32_t vcpu_inject_lo_exception(struct acrn_vcpu *vcpu)
 {
 	uint32_t vector = vcpu->arch.exception_info.exception;
+	int32_t ret;
 
 	/* high priority exception already be injected */
 	if (vector <= NR_MAX_VECTOR) {
 		vcpu_inject_exception(vcpu, vector);
-		return 1;
+	        ret = 1;
+	} else {
+		ret = 0;
 	}
 
-	return 0;
+	return ret;
 }
 
 /* Inject external interrupt to guest */
@@ -357,10 +363,11 @@ int interrupt_window_vmexit_handler(struct acrn_vcpu *vcpu)
 	return 0;
 }
 
-int external_interrupt_vmexit_handler(struct acrn_vcpu *vcpu)
+int32_t external_interrupt_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	uint32_t intr_info;
 	struct intr_excp_ctx ctx;
+	int32_t ret;
 
 	intr_info = exec_vmread32(VMX_EXIT_INT_INFO);
 	if (((intr_info & VMX_INT_INFO_VALID) == 0U) ||
@@ -368,25 +375,26 @@ int external_interrupt_vmexit_handler(struct acrn_vcpu *vcpu)
 		!= VMX_INT_TYPE_EXT_INT)) {
 		pr_err("Invalid VM exit interrupt info:%x", intr_info);
 		vcpu_retain_rip(vcpu);
-		return -EINVAL;
-	}
-
-	ctx.vector = intr_info & 0xFFU;
-	ctx.rip    = vcpu_get_rip(vcpu);
-	ctx.rflags = vcpu_get_rflags(vcpu);
-	ctx.cs     = exec_vmread32(VMX_GUEST_CS_SEL);
+		ret = -EINVAL;
+	} else {
+		ctx.vector = intr_info & 0xFFU;
+		ctx.rip    = vcpu_get_rip(vcpu);
+		ctx.rflags = vcpu_get_rflags(vcpu);
+		ctx.cs     = exec_vmread32(VMX_GUEST_CS_SEL);
 
 #ifdef CONFIG_PARTITION_MODE
-	partition_mode_dispatch_interrupt(&ctx);
+		partition_mode_dispatch_interrupt(&ctx);
 #else
-	dispatch_interrupt(&ctx);
+		dispatch_interrupt(&ctx);
 #endif
 
-	vcpu_retain_rip(vcpu);
+		vcpu_retain_rip(vcpu);
 
-	TRACE_2L(TRACE_VMEXIT_EXTERNAL_INTERRUPT, ctx.vector, 0UL);
+		TRACE_2L(TRACE_VMEXIT_EXTERNAL_INTERRUPT, ctx.vector, 0UL);
+		ret = 0;
+	}
 
-	return 0;
+	return ret;
 }
 
 int acrn_handle_pending_request(struct acrn_vcpu *vcpu)
