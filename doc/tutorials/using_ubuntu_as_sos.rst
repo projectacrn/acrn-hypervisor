@@ -86,7 +86,7 @@ the source code, build it, and install it on your device.
       git checkout <known-good-tag/release>
 
    .. note::
-      We clone the git repository below but it is also possible to download the
+      We clone the git repository above but it is also possible to download the
       tarball for any specific tag or release from the `Project ACRN Github
       release page <https://github.com/projectacrn/acrn-hypervisor/releases>`_
 
@@ -110,20 +110,11 @@ the source code, build it, and install it on your device.
    boot it automatically. Follow the steps below to perform these operations
    and complete the ACRN installation.
 
-   #. Mount the EFI System Partition (ESP) and add the ACRN hypervisor and
-      Service OS kernel to it (as ``root``)
+   #. Add the ACRN hypervisor and Service OS kernel to it (as ``root``)
 
       .. code-block:: none
-
-         sudo umount /boot/efi
-         sudo lsblk
          
-         # For SATA
-         sudo mount /dev/sda1 /mnt
-         # For NVMe
-         sudo mount /dev/nvme0n1p1 /mnt
-         
-         ls /mnt/EFI/ubuntu
+         ls /boot/efi/EFI/ubuntu/
 
       You should see the following output:
 
@@ -135,8 +126,8 @@ the source code, build it, and install it on your device.
 
       .. code-block:: none
 
-         sudo mkdir /mnt/EFI/acrn/
-         sudo cp ~/acrn-hypervisor/build/hypervisor/acrn.efi /mnt/EFI/acrn
+         sudo mkdir /boot/efi/EFI/acrn/
+         sudo cp ~/acrn-hypervisor/build/hypervisor/acrn.efi /boot/efi/EFI/acrn/
 
    #. Configure the EFI firmware to boot the ACRN hypervisor by default
 
@@ -185,8 +176,8 @@ You can download latest Service OS kernel from
 
    .. code-block:: none
 
-      mkdir ~/kernel-build
-      cd ~/kernel-build
+      mkdir ~/sos-kernel-build
+      cd ~/sos-kernel-build
       wget https://download.clearlinux.org/releases/26440/clear/x86_64/os/Packages/linux-iot-lts2018-sos-4.19.0-22.x86_64.rpm
       sudo apt-get install rpm2cpio
       rpm2cpio linux-iot-lts2018-sos-4.19.0-22.x86_64.rpm | cpio -idmv
@@ -195,9 +186,9 @@ You can download latest Service OS kernel from
 
    .. code-block:: none
 
-      sudo cp -r ~/kernel-build/usr/lib/modules/4.19.0-22.iot-lts2018-sos/ /lib/modules/
+      sudo cp -r ~/sos-kernel-build/usr/lib/modules/4.19.0-22.iot-lts2018-sos/ /lib/modules/
       mkdir /boot/acrn/
-      sudo cp ~/kernel-build/usr/lib/kernel/org.clearlinux.iot-lts2018-sos.4.19.0-22  /boot/acrn/
+      sudo cp ~/sos-kernel-build/usr/lib/kernel/org.clearlinux.iot-lts2018-sos.4.19.0-22  /boot/acrn/
 
 #. Configure Grub to load the Service OS kernel
 
@@ -275,14 +266,16 @@ For the User OS, we are using the same `Clear Linux`_ release version as the Ser
 
   .. code-block:: none
 
-     cd ~
+     cd /root/
      wget https://download.clearlinux.org/releases/26440/clear/clear-26440-kvm.img.xz
      unxz clear-26440-kvm.img.xz
 
-* Download the Production Kernel (PK) kernel
+* Download the "kernel-iot-lts2018" kernel
 
   .. code-block:: none
-
+  
+     mkdir ~/uos-kernel-build
+     cd ~/uos-kernel-build
      wget https://download.clearlinux.org/releases/26440/clear/x86_64/os/Packages/linux-iot-lts2018-4.19.0-22.x86_64.rpm
      rpm2cpio linux-iot-lts2018-4.19.0-22.x86_64.rpm | cpio -idmv
 
@@ -290,10 +283,10 @@ For the User OS, we are using the same `Clear Linux`_ release version as the Ser
 
   .. code-block:: none
 
-     sudo losetup -f -P --show /root/clear-26440-kvm.img
+     sudo losetup -f -P --show ~/clear-26440-kvm.img
      sudo mount /dev/loop0p3 /mnt
-     sudo cp -r /root/usr/lib/modules/4.19.0-22.iot-lts2018/ /mnt/lib/modules/
-     sudo cp -r /root/usr/lib/kernel /lib/modules/
+     sudo cp -r ~/uos-kernel-build/usr/lib/modules/4.19.0-22.iot-lts2018/ /mnt/lib/modules/
+     sudo cp -r ~/uos-kernel-build/usr/lib/kernel /lib/modules/
      sudo umount /mnt
      sync
 
