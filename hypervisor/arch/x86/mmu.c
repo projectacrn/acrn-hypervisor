@@ -156,11 +156,9 @@ uint16_t allocate_vpid(void)
 
 void flush_vpid_single(uint16_t vpid)
 {
-	if (vpid == 0U) {
-		return;
+	if (vpid != 0U) {
+		local_invvpid(VMX_VPID_TYPE_SINGLE_CONTEXT, vpid, 0UL);
 	}
-
-	local_invvpid(VMX_VPID_TYPE_SINGLE_CONTEXT, vpid, 0UL);
 }
 
 void flush_vpid_global(void)
