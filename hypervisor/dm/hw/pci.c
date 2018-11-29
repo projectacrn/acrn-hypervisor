@@ -155,6 +155,12 @@ void pci_scan_bus(pci_enumeration_cb cb_func, void *cb_data)
 					continue;
 				}
 
+				/* if it is debug uart, hide it from SOS */
+				if (is_pci_dbg_uart(pbdf)) {
+					pr_info("hide pci uart dev: (%x:%x:%x)", pbdf.bits.b, pbdf.bits.d, pbdf.bits.f);
+					continue;
+				}
+
 				if (cb_func != NULL) {
 					cb_func(pbdf.value, cb_data);
 				}
