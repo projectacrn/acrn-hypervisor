@@ -89,8 +89,7 @@ complete this setup.
 
    .. code-block:: none
 
-      $ sudo swupd bundle-add service-os kernel-iot-lts2018 \
-          openssh-server
+      $ sudo swupd bundle-add service-os kernel-iot-lts2018 
 
    .. table:: Clear Linux bundles
       :widths: auto
@@ -105,10 +104,7 @@ complete this setup.
       | kernel-iot-lts2018 | Run the Intel kernel"kernel-iot-lts2018"          |
       |                    | which is enterprise-style kernel with backports   |
       +--------------------+---------------------------------------------------+
-      | openssh-server     | Server-side support for secure connectivity and   |
-      |                    | remote login using the SSH protocol               |
-      +--------------------+---------------------------------------------------+
-     
+
 
 Add the ACRN hypervisor to the EFI Partition
 ============================================
@@ -120,8 +116,6 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      $ sudo mount /dev/sda1 /mnt
-
       $ sudo ls -1 /boot/EFI/org.clearlinux
       bootloaderx64.efi
       kernel-org.clearlinux.native.4.19.1-654
@@ -131,6 +125,7 @@ partition. Follow these steps:
       loaderx64.efi
 
    .. note::
+      On Clear Linux, the EFI(/dev/sda1) partion is mounted to /boot by default
       The Clear Linux project releases updates often, sometimes
       twice a day, so make note of the specific kernel versions (*iot-lts2018 and *iot-lts2018-sos*) listed on your system,
       as you will need them later.
@@ -243,11 +238,6 @@ partition. Follow these steps:
       $ sudo clr-boot-manager set-timeout 20
       $ sudo clr-boot-manager update
 
-
-   .. code-block:: none
-
-      $ sudo systemctl enable sshd
-      $ sudo systemctl start sshd
 
 #. Reboot and select "The ACRN Service OS" to boot, as shown below:
 
