@@ -874,7 +874,7 @@ next:
 	if (ncq && first)
 		ahci_write_fis_d2h_ncq(p, slot);
 
-	err = blockif_delete(p->bctx, breq);
+	err = blockif_discard(p->bctx, breq);
 	assert(err == 0);
 }
 
@@ -943,7 +943,7 @@ ahci_handle_read_log(struct ahci_port *p, int slot, uint8_t *cfis)
 		memcpy(buf8, p->err_cfis, sizeof(p->err_cfis));
 		ahci_checksum(buf8, sizeof(buf));
 	} else if (cfis[4] == 0x13) {	/* SATA NCQ Send and Receive Log */
-		if (blockif_candelete(p->bctx) && !blockif_is_ro(p->bctx)) {
+		if (blockif_candiscard(p->bctx) && !blockif_is_ro(p->bctx)) {
 			buf[0x00] = 1;	/* SFQ DSM supported */
 			buf[0x01] = 1;	/* SFQ DSM TRIM supported */
 		}
@@ -971,12 +971,12 @@ handle_identify(struct ahci_port *p, int slot, uint8_t *cfis)
 	} else {
 		uint16_t buf[256];
 		uint64_t sectors;
-		int sectsz, psectsz, psectoff, candelete, ro;
+		int sectsz, psectsz, psectoff, candiscard, ro;
 		uint16_t cyl;
 		uint8_t sech, heads;
 
 		ro = blockif_is_ro(p->bctx);
-		candelete = blockif_candelete(p->bctx);
+		candiscard = blockif_candiscard(p->bctx);
 		sectsz = blockif_sectsz(p->bctx);
 		sectors = blockif_size(p->bctx) / sectsz;
 		blockif_chs(p->bctx, &cyl, &heads, &sech);
@@ -1036,7 +1036,7 @@ handle_identify(struct ahci_port *p, int slot, uint8_t *cfis)
 		buf[101] = (sectors >> 16);
 		buf[102] = (sectors >> 32);
 		buf[103] = (sectors >> 48);
-		if (candelete && !ro) {
+		if (candiscard && !ro) {
 			buf[69] |= ATA_SUPPORT_RZAT | ATA_SUPPORT_DRAT;
 			buf[105] = 1;
 			buf[169] = ATA_SUPPORT_DSM_TRIM;
