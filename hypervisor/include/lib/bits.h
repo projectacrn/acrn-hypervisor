@@ -78,11 +78,12 @@ static inline uint16_t fls64(uint64_t value)
 {
 	uint64_t ret = 0UL;
 	if (value == 0UL) {
-		return (INVALID_BIT_INDEX);
-	}
-	asm volatile("bsrq %1,%0"
+	        ret = (INVALID_BIT_INDEX);
+	} else {
+		asm volatile("bsrq %1,%0"
 			: "=r" (ret)
 			: "rm" (value));
+	}
 	return (uint16_t)ret;
 }
 
