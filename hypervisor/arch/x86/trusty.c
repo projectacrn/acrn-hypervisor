@@ -134,23 +134,22 @@ void destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
 	uint64_t gpa_uos = vm->sworld_control.sworld_memory.base_gpa_in_uos;
 	uint64_t size = vm->sworld_control.sworld_memory.length;
 
-	if (vm->arch_vm.sworld_eptp == NULL) {
+	if (vm->arch_vm.sworld_eptp != NULL) {
+		if (need_clr_mem) {
+			/* clear trusty memory space */
+			(void)memset(hpa2hva(hpa), 0U, (size_t)size);
+		}
+
+		ept_mr_del(vm, vm->arch_vm.sworld_eptp, gpa_uos, size);
+		/* sanitize trusty ept page-structures */
+		sanitize_pte((uint64_t *)vm->arch_vm.sworld_eptp);
+		vm->arch_vm.sworld_eptp = NULL;
+
+		/* Restore memory to guest normal world */
+		ept_mr_add(vm, vm->arch_vm.nworld_eptp, hpa, gpa_uos, size, EPT_RWX | EPT_WB);
+	} else {
 		pr_err("sworld eptp is NULL, it's not created");
-		return;
 	}
-
-	if (need_clr_mem) {
-		/* clear trusty memory space */
-		(void)memset(hpa2hva(hpa), 0U, (size_t)size);
-	}
-
-	ept_mr_del(vm, vm->arch_vm.sworld_eptp, gpa_uos, size);
-	/* sanitize trusty ept page-structures */
-	sanitize_pte((uint64_t *)vm->arch_vm.sworld_eptp);
-	vm->arch_vm.sworld_eptp = NULL;
-
-	/* Restore memory to guest normal world */
-	ept_mr_add(vm, vm->arch_vm.nworld_eptp, hpa, gpa_uos, size, EPT_RWX | EPT_WB);
 }
 
 static inline void save_fxstore_guest_area(struct ext_context *ext_ctx)
@@ -497,13 +496,12 @@ void trusty_set_dseed(const void *dseed, uint8_t dseed_num)
 		g_key_info.num_seeds = 1U;
 		(void)memset(g_key_info.dseed_list[0].seed, 0xA5U,
 			sizeof(g_key_info.dseed_list[0].seed));
-		return;
+	} else {
+		g_key_info.num_seeds = dseed_num;
+		(void)memcpy_s(&g_key_info.dseed_list,
+				sizeof(struct seed_info) * dseed_num,
+				dseed, sizeof(struct seed_info) * dseed_num);
 	}
-
-	g_key_info.num_seeds = dseed_num;
-	(void)memcpy_s(&g_key_info.dseed_list,
-			sizeof(struct seed_info) * dseed_num,
-			dseed, sizeof(struct seed_info) * dseed_num);
 }
 
 void save_sworld_context(struct acrn_vcpu *vcpu)

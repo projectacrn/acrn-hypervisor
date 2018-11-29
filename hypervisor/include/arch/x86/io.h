@@ -81,13 +81,15 @@ static inline void pio_write(uint32_t v, uint16_t addr, size_t sz)
 
 static inline uint32_t pio_read(uint16_t addr, size_t sz)
 {
+	uint32_t ret;
 	if (sz == 1U) {
-		return pio_read8(addr);
+		ret = pio_read8(addr);
+	} else if (sz == 2U) {
+		ret = pio_read16(addr);
+	} else {
+		ret = pio_read32(addr);
 	}
-	if (sz == 2U) {
-		return pio_read16(addr);
-	}
-	return pio_read32(addr);
+	return ret;
 }
 
 /** Writes a 64 bit value to a memory mapped IO device.

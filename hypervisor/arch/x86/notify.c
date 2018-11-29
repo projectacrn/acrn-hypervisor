@@ -111,6 +111,5 @@ void setup_posted_intr_notification(void)
 			posted_intr_notification,
 			NULL, IRQF_NONE) < 0) {
 		pr_err("Failed to setup posted-intr notification");
-		return;
 	}
 }
