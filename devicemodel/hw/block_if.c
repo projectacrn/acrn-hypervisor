@@ -75,7 +75,7 @@ enum blockop {
 	BOP_READ,
 	BOP_WRITE,
 	BOP_FLUSH,
-	BOP_DELETE
+	BOP_DISCARD
 };
 
 enum blockstat {
@@ -99,7 +99,7 @@ struct blockif_ctxt {
 	int			magic;
 	int			fd;
 	int			isblk;
-	int			candelete;
+	int			candiscard;
 	int			rdonly;
 	off_t			size;
 	int			sub_file_assign;
@@ -165,7 +165,7 @@ blockif_enqueue(struct blockif_ctxt *bc, struct blockif_req *breq,
 	switch (op) {
 	case BOP_READ:
 	case BOP_WRITE:
-	case BOP_DELETE:
+	case BOP_DISCARD:
 		off = breq->offset;
 		for (i = 0; i < breq->iovcnt; i++)
 			off += breq->iov[i].iov_len;
@@ -270,9 +270,9 @@ blockif_proc(struct blockif_ctxt *bc, struct blockif_elem *be)
 		if (fsync(bc->fd))
 			err = errno;
 		break;
-	case BOP_DELETE:
+	case BOP_DISCARD:
 		/* only used by AHCI */
-		if (!bc->candelete)
+		if (!bc->candiscard)
 			err = EOPNOTSUPP;
 		else if (bc->rdonly)
 			err = EROFS;
@@ -419,7 +419,7 @@ blockif_open(const char *optstr, const char *ident)
 	/* struct diocgattr_arg arg; */
 	off_t size, psectsz, psectoff;
 	int fd, i, sectsz;
-	int writeback, ro, candelete, ssopt, pssopt;
+	int writeback, ro, candiscard, ssopt, pssopt;
 	long sz;
 	long long b;
 	int err_code = -1;
@@ -517,7 +517,7 @@ blockif_open(const char *optstr, const char *ident)
 	size = sbuf.st_size;
 	sectsz = DEV_BSIZE;
 	psectsz = psectoff = 0;
-	candelete = 0;
+	candiscard = 0;
 
 	if (S_ISBLK(sbuf.st_mode)) {
 		/* get size */
@@ -612,7 +612,7 @@ blockif_open(const char *optstr, const char *ident)
 	bc->magic = BLOCKIF_SIG;
 	bc->fd = fd;
 	bc->isblk = S_ISBLK(sbuf.st_mode);
-	bc->candelete = candelete;
+	bc->candiscard = candiscard;
 	bc->rdonly = ro;
 	bc->size = size;
 	bc->sectsz = sectsz;
@@ -697,10 +697,10 @@ blockif_flush(struct blockif_ctxt *bc, struct blockif_req *breq)
 }
 
 int
-blockif_delete(struct blockif_ctxt *bc, struct blockif_req *breq)
+blockif_discard(struct blockif_ctxt *bc, struct blockif_req *breq)
 {
 	assert(bc->magic == BLOCKIF_SIG);
-	return blockif_request(bc, breq, BOP_DELETE);
+	return blockif_request(bc, breq, BOP_DISCARD);
 }
 
 int
@@ -900,10 +900,10 @@ blockif_is_ro(struct blockif_ctxt *bc)
 }
 
 int
-blockif_candelete(struct blockif_ctxt *bc)
+blockif_candiscard(struct blockif_ctxt *bc)
 {
 	assert(bc->magic == BLOCKIF_SIG);
-	return bc->candelete;
+	return bc->candiscard;
 }
 
 uint8_t
