@@ -170,48 +170,46 @@ static void profiling_disable_pmu(void)
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering cpu%d",
 		__func__,  get_cpu_id());
 
-	if (ss == NULL) {
-		dev_dbg(ACRN_ERR_PROFILING, "%s: exiting cpu%d",
-			__func__, get_cpu_id());
-		return;
-	}
+	if (ss != NULL) {
+		if (ss->vmexit_msr_cnt == 1) {
+			/* Set the VM Exit MSR Load in VMCS */
+			exec_vmwrite(VMX_EXIT_MSR_LOAD_COUNT, 0x0U);
+				exec_vmwrite64(VMX_GUEST_IA32_DEBUGCTL_FULL,
+				ss->saved_debugctl_value);
 
-	if (ss->vmexit_msr_cnt == 1) {
-		/* Set the VM Exit MSR Load in VMCS */
-		exec_vmwrite(VMX_EXIT_MSR_LOAD_COUNT, 0x0U);
-		exec_vmwrite64(VMX_GUEST_IA32_DEBUGCTL_FULL,
-			ss->saved_debugctl_value);
+			ss->vmexit_msr_cnt = 0;
+		}
 
-		ss->vmexit_msr_cnt = 0;
-	}
-
-	group_id = ss->current_pmi_group_id;
-	for (i = 0U; i < MAX_MSR_LIST_NUM; i++) {
-		msrop = &(ss->pmi_stop_msr_list[group_id][i]);
-		if (msrop != NULL) {
-			if (msrop->msr_id == (uint32_t)-1) {
-				break;
-			}
-			if (msrop->msr_op_type == (uint8_t)MSR_OP_WRITE) {
-				msr_write(msrop->msr_id, msrop->value);
-				dev_dbg(ACRN_DBG_PROFILING,
-				"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%llx",
-				__func__, get_cpu_id(), msrop->msr_id, msrop->value);
+		group_id = ss->current_pmi_group_id;
+		for (i = 0U; i < MAX_MSR_LIST_NUM; i++) {
+			msrop = &(ss->pmi_stop_msr_list[group_id][i]);
+			if (msrop != NULL) {
+				if (msrop->msr_id == (uint32_t)-1) {
+					break;
+				}
+				if (msrop->msr_op_type == (uint8_t)MSR_OP_WRITE) {
+					msr_write(msrop->msr_id, msrop->value);
+					dev_dbg(ACRN_DBG_PROFILING,
+					"%s: MSRWRITE cpu%d, msr_id=0x%x, msr_val=0x%llx",
+					__func__, get_cpu_id(), msrop->msr_id, msrop->value);
+				}
 			}
 		}
+
+		/* Mask LAPIC LVT entry for PMC register */
+		lvt_perf_ctr = (uint32_t) msr_read(MSR_IA32_EXT_APIC_LVT_PMI);
+
+		lvt_perf_ctr |= LVT_PERFCTR_BIT_MASK;
+		msr_write(MSR_IA32_EXT_APIC_LVT_PMI, lvt_perf_ctr);
+
+		ss->pmu_state = PMU_SETUP;
+
+		dev_dbg(ACRN_DBG_PROFILING, "%s: exiting cpu%d",
+			__func__,  get_cpu_id());
+	} else {
+		dev_dbg(ACRN_ERR_PROFILING, "%s: exiting cpu%d",
+			__func__, get_cpu_id());
 	}
-
-	/* Mask LAPIC LVT entry for PMC register */
-	lvt_perf_ctr = (uint32_t) msr_read(MSR_IA32_EXT_APIC_LVT_PMI);
-
-	lvt_perf_ctr |= LVT_PERFCTR_BIT_MASK;
-	msr_write(MSR_IA32_EXT_APIC_LVT_PMI, lvt_perf_ctr);
-
-
-	ss->pmu_state = PMU_SETUP;
-
-	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting cpu%d",
-		__func__,  get_cpu_id());
 }
 
 /*
@@ -759,48 +757,47 @@ void profiling_stop_pmu(void)
 
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
 
-	if (!in_pmu_profiling) {
-		return;
-	}
+	if (in_pmu_profiling) {
+		for (i = 0U; i < phys_cpu_num; i++) {
+			per_cpu(profiling_info.ipi_cmd, i) = IPI_PMU_STOP;
+			if (per_cpu(profiling_info.sep_state, i).pmu_state == PMU_RUNNING) {
+				per_cpu(profiling_info.sep_state, i).pmu_state = PMU_SETUP;
+			}
 
-	for (i = 0U; i < phys_cpu_num; i++) {
-		per_cpu(profiling_info.ipi_cmd, i) = IPI_PMU_STOP;
-		if (per_cpu(profiling_info.sep_state, i).pmu_state == PMU_RUNNING) {
-			per_cpu(profiling_info.sep_state, i).pmu_state = PMU_SETUP;
+			dev_dbg(ACRN_DBG_PROFILING,
+			"%s: pmi_cnt[%d] = total:%u valid=%u, vmexit_cnt=%u",
+			__func__, i, per_cpu(profiling_info.sep_state, i).total_pmi_count,
+			per_cpu(profiling_info.sep_state, i).valid_pmi_count,
+			per_cpu(profiling_info.sep_state, i).total_vmexit_count);
+
+			dev_dbg(ACRN_DBG_PROFILING,
+			"%s: cpu%d frozen well:%u frozen delayed=%u, nofrozen_pmi=%u",
+			__func__, i, per_cpu(profiling_info.sep_state, i).frozen_well,
+			per_cpu(profiling_info.sep_state, i).frozen_delayed,
+			per_cpu(profiling_info.sep_state, i).nofrozen_pmi);
+
+			dev_dbg(ACRN_DBG_PROFILING,
+			"%s: cpu%d samples captured:%u samples dropped=%u",
+			__func__, i, per_cpu(profiling_info.sep_state, i).samples_logged,
+			per_cpu(profiling_info.sep_state, i).samples_dropped);
+
+			per_cpu(profiling_info.sep_state, i).samples_logged = 0U;
+			per_cpu(profiling_info.sep_state, i).samples_dropped = 0U;
+			per_cpu(profiling_info.sep_state, i).valid_pmi_count = 0U;
+			per_cpu(profiling_info.sep_state, i).total_pmi_count = 0U;
+			per_cpu(profiling_info.sep_state, i).total_vmexit_count = 0U;
+			per_cpu(profiling_info.sep_state, i).frozen_well = 0U;
+			per_cpu(profiling_info.sep_state, i).frozen_delayed = 0U;
+			per_cpu(profiling_info.sep_state, i).nofrozen_pmi = 0U;
 		}
 
-		dev_dbg(ACRN_DBG_PROFILING,
-		"%s: pmi_cnt[%d] = total:%u valid=%u, vmexit_cnt=%u",
-		__func__, i, per_cpu(profiling_info.sep_state, i).total_pmi_count,
-		per_cpu(profiling_info.sep_state, i).valid_pmi_count,
-		per_cpu(profiling_info.sep_state, i).total_vmexit_count);
+		smp_call_function(pcpu_active_bitmap, profiling_ipi_handler, NULL);
 
-		dev_dbg(ACRN_DBG_PROFILING,
-		"%s: cpu%d frozen well:%u frozen delayed=%u, nofrozen_pmi=%u",
-		__func__, i, per_cpu(profiling_info.sep_state, i).frozen_well,
-		per_cpu(profiling_info.sep_state, i).frozen_delayed,
-		per_cpu(profiling_info.sep_state, i).nofrozen_pmi);
+		in_pmu_profiling = false;
 
-		dev_dbg(ACRN_DBG_PROFILING,
-		"%s: cpu%d samples captured:%u samples dropped=%u",
-		__func__, i, per_cpu(profiling_info.sep_state, i).samples_logged,
-		per_cpu(profiling_info.sep_state, i).samples_dropped);
-
-		per_cpu(profiling_info.sep_state, i).samples_logged = 0U;
-		per_cpu(profiling_info.sep_state, i).samples_dropped = 0U;
-		per_cpu(profiling_info.sep_state, i).valid_pmi_count = 0U;
-		per_cpu(profiling_info.sep_state, i).total_pmi_count = 0U;
-		per_cpu(profiling_info.sep_state, i).total_vmexit_count = 0U;
-		per_cpu(profiling_info.sep_state, i).frozen_well = 0U;
-		per_cpu(profiling_info.sep_state, i).frozen_delayed = 0U;
-		per_cpu(profiling_info.sep_state, i).nofrozen_pmi = 0U;
+		dev_dbg(ACRN_DBG_PROFILING, "%s: done.", __func__);
 	}
 
-	smp_call_function(pcpu_active_bitmap, profiling_ipi_handler, NULL);
-
-	in_pmu_profiling = false;
-
-	dev_dbg(ACRN_DBG_PROFILING, "%s: done.", __func__);
 }
 
 
