@@ -103,6 +103,7 @@ INCLUDE_PATH += include/lib
 INCLUDE_PATH += include/lib/crypto
 INCLUDE_PATH += include/common
 INCLUDE_PATH += include/arch/x86
+INCLUDE_PATH += include/arch/x86/boot
 INCLUDE_PATH += include/arch/x86/guest
 INCLUDE_PATH += include/debug
 INCLUDE_PATH += include/public
@@ -122,12 +123,17 @@ export CFLAGS ASFLAGS ARFLAGS LDFLAGS ARCH_CFLAGS ARCH_ASFLAGS ARCH_ARFLAGS ARCH
 export HV_OBJDIR CONFIG_RELEASE INCLUDE_PATH
 export LIB_DEBUG LIB_RELEASE
 
+# boot component
+S_SRCS += arch/x86/boot/cpu_primary.S
+S_SRCS += arch/x86/boot/cpu_save_boot_ctx.S
+S_SRCS += arch/x86/boot/trampoline.S
+S_SRCS += arch/x86/boot/idt.S
+C_SRCS += boot/reloc.c
+
 C_SRCS += boot/acpi.c
 C_SRCS += boot/dmar_parse.c
-C_SRCS += boot/reloc.c
 C_SRCS += arch/x86/ioapic.c
 C_SRCS += arch/x86/lapic.c
-S_SRCS += arch/x86/trampoline.S
 C_SRCS += arch/x86/cpu.c
 C_SRCS += arch/x86/cpuid.c
 C_SRCS += arch/x86/mmu.c
@@ -136,9 +142,6 @@ C_SRCS += arch/x86/page.c
 C_SRCS += arch/x86/notify.c
 C_SRCS += arch/x86/vtd.c
 C_SRCS += arch/x86/gdt.c
-S_SRCS += arch/x86/cpu_primary.S
-S_SRCS += arch/x86/cpu_save_boot_ctx.S
-S_SRCS += arch/x86/idt.S
 C_SRCS += arch/x86/irq.c
 C_SRCS += arch/x86/timer.c
 C_SRCS += arch/x86/ept.c
