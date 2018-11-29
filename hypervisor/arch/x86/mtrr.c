@@ -165,28 +165,27 @@ static void update_ept_mem_type(const struct acrn_vcpu *vcpu)
 	 */
 	if (!is_mtrr_enabled(vcpu) || !is_fixed_range_mtrr_enabled(vcpu)) {
 		update_ept(vcpu->vm, 0U, MAX_FIXED_RANGE_ADDR, get_default_memory_type(vcpu));
-		return;
-	}
+	} else {
+		/* Deal with fixed-range MTRRs only */
+		for (i = 0U; i < FIXED_RANGE_MTRR_NUM; i++) {
+			type = vcpu->mtrr.fixed_range[i].type[0];
+			start = get_subrange_start_of_fixed_mtrr(i, 0U);
+			size = get_subrange_size_of_fixed_mtrr(i);
 
-	/* Deal with fixed-range MTRRs only */
-	for (i = 0U; i < FIXED_RANGE_MTRR_NUM; i++) {
-		type = vcpu->mtrr.fixed_range[i].type[0];
-		start = get_subrange_start_of_fixed_mtrr(i, 0U);
-		size = get_subrange_size_of_fixed_mtrr(i);
-
-		for (j = 1U; j < MTRR_SUB_RANGE_NUM; j++) {
-			/* If it's same type, combine the subrange together */
-			if (type == vcpu->mtrr.fixed_range[i].type[j]) {
-				size += get_subrange_size_of_fixed_mtrr(i);
-			} else {
-				update_ept(vcpu->vm, start, size, type);
-				type = vcpu->mtrr.fixed_range[i].type[j];
-				start = get_subrange_start_of_fixed_mtrr(i, j);
-				size = get_subrange_size_of_fixed_mtrr(i);
+			for (j = 1U; j < MTRR_SUB_RANGE_NUM; j++) {
+				/* If it's same type, combine the subrange together */
+				if (type == vcpu->mtrr.fixed_range[i].type[j]) {
+					size += get_subrange_size_of_fixed_mtrr(i);
+				} else {
+					update_ept(vcpu->vm, start, size, type);
+					type = vcpu->mtrr.fixed_range[i].type[j];
+					start = get_subrange_start_of_fixed_mtrr(i, j);
+					size = get_subrange_size_of_fixed_mtrr(i);
+				}
 			}
-		}
 
-		update_ept(vcpu->vm, start, size, type);
+			update_ept(vcpu->vm, start, size, type);
+		}
 	}
 }
 
