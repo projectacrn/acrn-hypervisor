@@ -355,6 +355,17 @@ pci_msix_pba_bar(struct pci_vdev *dev)
 		return -1;
 }
 
+static inline uint64_t
+bar_value(int size, uint64_t val)
+{
+	uint64_t mask;
+
+	assert(size == 1 || size == 2 || size == 4 || size == 8);
+	mask = (size < 8 ? 1UL << (size * 8) : 0UL) - 1;
+
+	return val & mask;
+}
+
 static int
 pci_emul_io_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		    uint32_t *eax, void *arg)
@@ -369,12 +380,13 @@ pci_emul_io_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		    port >= pdi->bar[i].addr &&
 		    port + bytes <= pdi->bar[i].addr + pdi->bar[i].size) {
 			offset = port - pdi->bar[i].addr;
-			if (in)
+			if (in) {
 				*eax = (*ops->vdev_barread)(ctx, vcpu, pdi, i,
-							 offset, bytes);
-			else
+				                            offset, bytes);
+				*eax = bar_value(bytes, *eax);
+			} else
 				(*ops->vdev_barwrite)(ctx, vcpu, pdi, i, offset,
-						   bytes, *eax);
+				                      bytes, bar_value(bytes, *eax));
 			return 0;
 		}
 	}
@@ -406,17 +418,24 @@ pci_emul_mem_handler(struct vmctx *ctx, int vcpu, int dir, uint64_t addr,
 					   4, *val >> 32);
 		} else {
 			(*ops->vdev_barwrite)(ctx, vcpu, pdi, bidx, offset,
-					   size, *val);
+					   size, bar_value(size, *val));
 		}
 	} else {
 		if (size == 8) {
-			*val = (*ops->vdev_barread)(ctx, vcpu, pdi, bidx,
-						 offset, 4);
-			*val |= (*ops->vdev_barread)(ctx, vcpu, pdi, bidx,
-						  offset + 4, 4) << 32;
+			uint64_t val_lo, val_hi;
+
+			val_lo = (*ops->vdev_barread)(ctx, vcpu, pdi, bidx,
+			                              offset, 4);
+			val_lo = bar_value(4, val_lo);
+
+			val_hi = (*ops->vdev_barread)(ctx, vcpu, pdi, bidx,
+			                              offset + 4, 4);
+
+			*val = val_lo | (val_hi << 32);
 		} else {
 			*val = (*ops->vdev_barread)(ctx, vcpu, pdi, bidx,
-						 offset, size);
+			                            offset, size);
+			*val = bar_value(size, *val);
 		}
 	}
 
