@@ -67,12 +67,15 @@ bool cpu_has_cap(uint32_t bit)
 {
 	uint32_t feat_idx = bit >> 5U;
 	uint32_t feat_bit = bit & 0x1fU;
+	bool ret;
 
 	if (feat_idx >= FEATURE_WORDS) {
-		return false;
+		ret = false;
+	} else {
+		ret = ((boot_cpu_data.cpuid_leaves[feat_idx] & (1U << feat_bit)) != 0U);
 	}
 
-	return ((boot_cpu_data.cpuid_leaves[feat_idx] & (1U << feat_bit)) != 0U);
+	return ret;
 }
 
 static inline bool get_monitor_cap(void)
@@ -710,22 +713,21 @@ void cpu_dead(uint16_t pcpu_id)
 	 */
 	int halt = 1;
 
-	if (bitmap_test_and_clear_lock(pcpu_id, &pcpu_active_bitmap) == false) {
+	if (bitmap_test_and_clear_lock(pcpu_id, &pcpu_active_bitmap)) {
+		/* clean up native stuff */
+		vmx_off(pcpu_id);
+		cache_flush_invalidate_all();
+
+		/* Set state to show CPU is dead */
+		cpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);
+
+		/* Halt the CPU */
+		do {
+			hlt_cpu();
+		} while (halt != 0);
+	} else {
 		pr_err("pcpu%hu already dead", pcpu_id);
-		return;
 	}
-
-	/* clean up native stuff */
-	vmx_off(pcpu_id);
-	cache_flush_invalidate_all();
-
-	/* Set state to show CPU is dead */
-	cpu_set_current_state(pcpu_id, PCPU_STATE_DEAD);
-
-	/* Halt the CPU */
-	do {
-		hlt_cpu();
-	} while (halt != 0);
 }
 
 static void set_current_cpu_id(uint16_t pcpu_id)
@@ -804,15 +806,13 @@ static void ept_cap_detect(void)
 	msr_val = msr_val >> 32U;
 
 	/* Check if secondary processor based VM control is available. */
-	if ((msr_val & VMX_PROCBASED_CTLS_SECONDARY) == 0UL) {
-		return;
-	}
+	if ((msr_val & VMX_PROCBASED_CTLS_SECONDARY) != 0UL) {
+		/* Read secondary processor based VM control. */
+		msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
 
-	/* Read secondary processor based VM control. */
-	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
-
-	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_EPT)) {
-		cpu_caps.ept_features = 1U;
+		if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_EPT)) {
+			cpu_caps.ept_features = 1U;
+		}
 	}
 }
 

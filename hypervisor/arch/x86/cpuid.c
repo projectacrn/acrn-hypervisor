@@ -63,22 +63,24 @@ static inline struct vcpuid_entry *find_vcpuid_entry(const struct acrn_vcpu *vcp
 	return entry;
 }
 
-static inline int set_vcpuid_entry(struct acrn_vm *vm,
+static inline int32_t set_vcpuid_entry(struct acrn_vm *vm,
 				const struct vcpuid_entry *entry)
 {
 	struct vcpuid_entry *tmp;
 	size_t entry_size = sizeof(struct vcpuid_entry);
+	int32_t ret;
 
 	if (vm->vcpuid_entry_nr == MAX_VM_VCPUID_ENTRIES) {
 		pr_err("%s, vcpuid entry over MAX_VM_VCPUID_ENTRIES(%u)\n",
 				__func__, MAX_VM_VCPUID_ENTRIES);
-		return -ENOMEM;
+	        ret = -ENOMEM;
+	} else {
+		tmp = &vm->vcpuid_entries[vm->vcpuid_entry_nr];
+		vm->vcpuid_entry_nr++;
+		(void)memcpy_s(tmp, entry_size, entry, entry_size);
+		ret = 0;
 	}
-
-	tmp = &vm->vcpuid_entries[vm->vcpuid_entry_nr];
-	vm->vcpuid_entry_nr++;
-	(void)memcpy_s(tmp, entry_size, entry, entry_size);
-	return 0;
+	return ret;
 }
 
 /**
@@ -320,102 +322,100 @@ void guest_cpuid(struct acrn_vcpu *vcpu,
 			*ecx = 0U;
 			*edx = 0U;
 		}
-
-		return;
-	}
-
-	/* percpu related */
-	switch (leaf) {
-	case 0x01U:
-	{
-		cpuid(leaf, eax, ebx, ecx, edx);
-		uint32_t apicid = vlapic_get_apicid(vcpu_vlapic(vcpu));
-		/* Patching initial APIC ID */
-		*ebx &= ~APIC_ID_MASK;
-		*ebx |= (apicid <<  APIC_ID_SHIFT);
+	} else {
+		/* percpu related */
+		switch (leaf) {
+		case 0x01U:
+		{
+			cpuid(leaf, eax, ebx, ecx, edx);
+			uint32_t apicid = vlapic_get_apicid(vcpu_vlapic(vcpu));
+			/* Patching initial APIC ID */
+			*ebx &= ~APIC_ID_MASK;
+			*ebx |= (apicid <<  APIC_ID_SHIFT);
 
 #ifndef CONFIG_MTRR_ENABLED
-		/* mask mtrr */
-		*edx &= ~CPUID_EDX_MTRR;
+			/* mask mtrr */
+			*edx &= ~CPUID_EDX_MTRR;
 #endif
 
-		/* mask pcid */
-		*ecx &= ~CPUID_ECX_PCID;
+			/* mask pcid */
+			*ecx &= ~CPUID_ECX_PCID;
 
-		/*mask vmx to guest os */
-		*ecx &= ~CPUID_ECX_VMX;
+			/*mask vmx to guest os */
+			*ecx &= ~CPUID_ECX_VMX;
 
-		/*no xsave support for guest if it is not enabled on host*/
-		if ((*ecx & CPUID_ECX_OSXSAVE) == 0U) {
-			*ecx &= ~CPUID_ECX_XSAVE;
-		}
-
-		*ecx &= ~CPUID_ECX_OSXSAVE;
-		if ((*ecx & CPUID_ECX_XSAVE) != 0U) {
-			uint64_t cr4;
-			/*read guest CR4*/
-			cr4 = exec_vmread(VMX_GUEST_CR4);
-			if ((cr4 & CR4_OSXSAVE) != 0UL) {
-				*ecx |= CPUID_ECX_OSXSAVE;
+			/*no xsave support for guest if it is not enabled on host*/
+			if ((*ecx & CPUID_ECX_OSXSAVE) == 0U) {
+				*ecx &= ~CPUID_ECX_XSAVE;
 			}
-		}
-		break;
-	}
 
-	case 0x0bU:
-		/* Patching X2APIC */
-#ifdef CONFIG_PARTITION_MODE
-		cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
-#else
-		if (is_vm0(vcpu->vm)) {
-			cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
-		} else {
-			*ecx = subleaf & 0xFFU;
-			*edx = vlapic_get_apicid(vcpu_vlapic(vcpu));
-			/* No HT emulation for UOS */
-			switch (subleaf) {
-			case 0U:
-				*eax = 0U;
-				*ebx = 1U;
-				*ecx |= (1U << 8U);
-			break;
-			case 1U:
-				if (vcpu->vm->hw.created_vcpus == 1U) {
-					*eax = 0U;
-				} else {
-					*eax = (uint32_t)fls32(vcpu->vm->hw.created_vcpus - 1U) + 1U;
+			*ecx &= ~CPUID_ECX_OSXSAVE;
+			if ((*ecx & CPUID_ECX_XSAVE) != 0U) {
+				uint64_t cr4;
+				/*read guest CR4*/
+				cr4 = exec_vmread(VMX_GUEST_CR4);
+				if ((cr4 & CR4_OSXSAVE) != 0UL) {
+					*ecx |= CPUID_ECX_OSXSAVE;
 				}
-				*ebx = vcpu->vm->hw.created_vcpus;
-				*ecx |= (2U << 8U);
+			}
 			break;
-			default:
+		}
+
+		case 0x0bU:
+			/* Patching X2APIC */
+#ifdef CONFIG_PARTITION_MODE
+			cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
+#else
+			if (is_vm0(vcpu->vm)) {
+				cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
+			} else {
+				*ecx = subleaf & 0xFFU;
+				*edx = vlapic_get_apicid(vcpu_vlapic(vcpu));
+				/* No HT emulation for UOS */
+				switch (subleaf) {
+				case 0U:
+					*eax = 0U;
+					*ebx = 1U;
+					*ecx |= (1U << 8U);
+				break;
+				case 1U:
+					if (vcpu->vm->hw.created_vcpus == 1U) {
+						*eax = 0U;
+					} else {
+						*eax = (uint32_t)fls32(vcpu->vm->hw.created_vcpus - 1U) + 1U;
+					}
+					*ebx = vcpu->vm->hw.created_vcpus;
+					*ecx |= (2U << 8U);
+				break;
+				default:
+					*eax = 0U;
+					*ebx = 0U;
+					*ecx |= (0U << 8U);
+				break;
+				}
+			}
+#endif
+			break;
+
+		case 0x0dU:
+			if (!cpu_has_cap(X86_FEATURE_OSXSAVE)) {
 				*eax = 0U;
 				*ebx = 0U;
-				*ecx |= (0U << 8U);
-			break;
+				*ecx = 0U;
+				*edx = 0U;
+			} else {
+				cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
 			}
-		}
-#endif
-		break;
+			break;
 
-	case 0x0dU:
-		if (!cpu_has_cap(X86_FEATURE_OSXSAVE)) {
-			*eax = 0U;
-			*ebx = 0U;
-			*ecx = 0U;
-			*edx = 0U;
-		} else {
-			cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
+		default:
+			/*
+			 * In this switch statement, leaf shall either be 0x01U or 0x0bU
+			 * or 0x0dU. All the other cases have been handled properly
+			 * before this switch statement.
+			 * Gracefully return if prior case clauses have not been met.
+			 */
+			break;
 		}
-		break;
-
-	default:
-		/*
-		 * In this switch statement, leaf shall either be 0x01U or 0x0bU
-		 * or 0x0dU. All the other cases have been handled properly
-		 * before this switch statement.
-		 * Gracefully return if prior case clauses have not been met.
-		 */
-		break;
 	}
 }
