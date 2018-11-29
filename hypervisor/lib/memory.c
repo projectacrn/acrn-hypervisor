@@ -372,26 +372,28 @@ void *memset(void *base, uint8_t v, size_t n)
 	uint8_t *dest_p;
 	size_t n_q;
 	size_t count;
+	void *ret;
 
 	dest_p = (uint8_t *)base;
 
 	if ((dest_p == NULL) || (n == 0U)) {
-		return NULL;
-	}
+		ret = NULL;
+	} else {
+		/* do the few bytes to get uint64_t alignment */
+		count = n;
+		for (; (count != 0U) && (((uint64_t)dest_p & 7UL) != 0UL); count--) {
+			*dest_p = v;
+			dest_p++;
+		}
 
-	/* do the few bytes to get uint64_t alignment */
-	count = n;
-	for (; (count != 0U) && (((uint64_t)dest_p & 7UL) != 0UL); count--) {
-		*dest_p = v;
-		dest_p++;
-	}
+		/* 64-bit mode */
+		n_q = count >> 3U;
+		asm volatile("cld ; rep ; stosq ; movl %3,%%ecx ; rep ; stosb"
+					: "+c"(n_q), "+D"(dest_p)
+					: "a" (v * 0x0101010101010101U),
+					"r"((unsigned int)count  & 7U));
+		ret = (void *)dest_p;
+        }
 
-	/* 64-bit mode */
-	n_q = count >> 3U;
-	asm volatile("cld ; rep ; stosq ; movl %3,%%ecx ; rep ; stosb"
-				: "+c"(n_q), "+D"(dest_p)
-				: "a" (v * 0x0101010101010101U),
-				"r"((unsigned int)count  & 7U));
-
-	return (void *)dest_p;
+	return ret;
 }
