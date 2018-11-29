@@ -44,7 +44,7 @@ static inline bool msicap_access(struct pci_vdev *vdev, uint32_t offset)
 
 static int32_t vmsi_remap(struct pci_vdev *vdev, bool enable)
 {
-	struct ptdev_msi_info info;
+	struct ptirq_msi_info info;
 	union pci_bdf pbdf = vdev->pdev.bdf;
 	struct acrn_vm *vm = vdev->vpci->vm;
 	uint32_t capoff = vdev->msi.capoff;

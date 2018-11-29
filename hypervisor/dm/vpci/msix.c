@@ -51,7 +51,7 @@ static inline bool msixtable_access(struct pci_vdev *vdev, uint32_t offset)
 static int vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
 {
 	struct msix_table_entry *pentry;
-	struct ptdev_msi_info info;
+	struct ptirq_msi_info info;
 	uint64_t hva;
 	int ret;
 

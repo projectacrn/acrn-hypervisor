@@ -128,7 +128,7 @@ struct acrn_vpic {
 	struct acrn_vm		*vm;
 	spinlock_t	lock;
 	struct i8259_reg_state	i8259[2];
-	struct ptdev_remapping_info *vpin_to_pt_entry[NR_VPIC_PINS_TOTAL];
+	struct ptirq_remapping_info *vpin_to_pt_entry[NR_VPIC_PINS_TOTAL];
 };
 
 void vpic_init(struct acrn_vm *vm);

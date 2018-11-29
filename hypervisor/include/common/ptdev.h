@@ -14,7 +14,7 @@
 
 #define INVALID_PTDEV_ENTRY_ID 0xffffU
 
-enum ptdev_vpin_source {
+enum ptirq_vpin_source {
 	PTDEV_VPIN_IOAPIC,
 	PTDEV_VPIN_PIC,
 };
@@ -39,7 +39,7 @@ union source_id {
 };
 
 /* entry per guest virt vector */
-struct ptdev_msi_info {
+struct ptirq_msi_info {
 	uint64_t vmsi_addr; /* virt msi_addr */
 	uint32_t vmsi_data; /* virt msi_data */
 	uint64_t pmsi_addr; /* phys msi_addr */
@@ -52,7 +52,7 @@ struct ptdev_msi_info {
  * information related with its vm and msi/intx mapping & interaction nodes
  * with interrupt handler and softirq.
  */
-struct ptdev_remapping_info {
+struct ptirq_remapping_info {
 	uint16_t ptdev_entry_id;
 	uint32_t intr_type;
 	union source_id phys_sid;
@@ -62,25 +62,25 @@ struct ptdev_remapping_info {
 	uint32_t allocated_pirq;
 	uint32_t polarity; /* 0=active high, 1=active low*/
 	struct list_head softirq_node;
-	struct ptdev_msi_info msi;
+	struct ptirq_msi_info msi;
 
 	uint64_t intr_count;
 	struct hv_timer intr_delay_timer; /* used for delay intr injection */
 };
 
-extern struct ptdev_remapping_info ptdev_irq_entries[];
+extern struct ptirq_remapping_info ptirq_entries[];
 extern spinlock_t ptdev_lock;
 
-bool is_entry_active(const struct ptdev_remapping_info *entry);
+bool is_entry_active(const struct ptirq_remapping_info *entry);
 void ptdev_softirq(uint16_t pcpu_id);
 void ptdev_init(void);
 void ptdev_release_all_entries(const struct acrn_vm *vm);
 
-struct ptdev_remapping_info *ptdev_dequeue_softirq(struct acrn_vm *vm);
-struct ptdev_remapping_info *alloc_entry(struct acrn_vm *vm, uint32_t intr_type);
-void release_entry(struct ptdev_remapping_info *entry);
-int32_t ptdev_activate_entry(struct ptdev_remapping_info *entry, uint32_t phys_irq);
-void ptdev_deactivate_entry(struct ptdev_remapping_info *entry);
+struct ptirq_remapping_info *ptdev_dequeue_softirq(struct acrn_vm *vm);
+struct ptirq_remapping_info *alloc_entry(struct acrn_vm *vm, uint32_t intr_type);
+void release_entry(struct ptirq_remapping_info *entry);
+int32_t ptdev_activate_entry(struct ptirq_remapping_info *entry, uint32_t phys_irq);
+void ptdev_deactivate_entry(struct ptirq_remapping_info *entry);
 
 uint32_t get_vm_ptdev_intr_data(const struct acrn_vm *target_vm, uint64_t *buffer, uint32_t buffer_cnt);
 
