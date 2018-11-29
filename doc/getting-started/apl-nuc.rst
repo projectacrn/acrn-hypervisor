@@ -232,7 +232,6 @@ partition. Follow these steps:
    .. note::
       It is also possible to use the device name directly, e.g. ``root=/dev/sda3``
 
-   After finished modification, don't forget running "umount" to umount EFI partition:
    
    .. code-block:: none
 
