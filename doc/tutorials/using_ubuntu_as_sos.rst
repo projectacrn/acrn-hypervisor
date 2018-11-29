@@ -35,34 +35,6 @@ Ubuntu 18.04.1 LTS was used throughout this document, other older versions such 
      sudo service ssh status
      sudo service ssh start
 
-Install build tools and dependencies
-************************************
-
-Install development tools for ARCN development:
-
-* On a Ubuntu development system:
-
-  .. code-block:: none
-
-     sudo apt install gcc git make gnu-efi libssl-dev libpciaccess-dev \ 
-       uuid-dev libsystemd-dev libevent-dev libxml2-dev libusb-1.0-0-dev \
-       python3 python3-pip libblkid-dev e2fslibs-dev
-     sudo pip3 install kconfiglib
-   
-.. note::
-   You need to use gcc version 7.3.* or higher else you will run into issue `#1396 <https://github.com/projectacrn/acrn-hypervisor/issues/1396>`_. 
-   
-   Follow these instructions to install the gcc-7 package on Ubuntu 18.04:
-   
-   
-  .. code-block:: none
-
-     sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-     sudo apt update
-     sudo apt install g++-7 -y
-     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 \
-                     --slave /usr/bin/g++ g++ /usr/bin/g++-7
-     
 Install ACRN
 ************
 
