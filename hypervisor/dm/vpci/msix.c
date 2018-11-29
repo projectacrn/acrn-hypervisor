@@ -265,7 +265,7 @@ static int vmsix_table_mmio_access_handler(struct io_request *io_req, void *hand
 	uint64_t hva;
 
 	vdev = (struct pci_vdev *)handler_private_data;
-	offset = mmio->address - vdev->msix.intercepted_gpa;
+	offset = mmio->address - vdev->msix.mmio_gpa;
 
 	if (msixtable_access(vdev, (uint32_t)offset)) {
 		vmsix_table_rw(vdev, mmio, (uint32_t)offset);
