@@ -220,7 +220,7 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      $ sudo cp /usr/share/acrn/samples/nuc/acrn.conf /mnt/loader/entries/
+      $ sudo cp /usr/share/acrn/samples/nuc/acrn.conf /boot/loader/entries/
 
    You will need to edit this file to adjust the kernel version (``linux`` section),
    insert the ``PARTUUID`` of your ``/dev/sda3`` partition
