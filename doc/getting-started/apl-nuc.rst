@@ -243,7 +243,6 @@ partition. Follow these steps:
       $ sudo clr-boot-manager set-timeout 20
       $ sudo clr-boot-manager update
 
-#. Enable and start the ssh server, so you can login remotely using an ssh client:
 
    .. code-block:: none
 
