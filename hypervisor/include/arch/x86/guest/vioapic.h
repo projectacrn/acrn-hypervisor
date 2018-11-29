@@ -56,7 +56,7 @@ struct acrn_vioapic {
 	union ioapic_rte rtbl[REDIR_ENTRIES_HW];
 	/* pin_state status bitmap: 1 - high, 0 - low */
 	uint64_t pin_state[STATE_BITMAP_SIZE];
-	struct ptdev_remapping_info *vpin_to_pt_entry[VIOAPIC_MAX_PIN];
+	struct ptirq_remapping_info *vpin_to_pt_entry[VIOAPIC_MAX_PIN];
 };
 
 void    vioapic_init(struct acrn_vm *vm);

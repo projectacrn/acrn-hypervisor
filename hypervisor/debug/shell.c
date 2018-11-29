@@ -902,7 +902,7 @@ static int shell_show_cpu_int(__unused int argc, __unused char **argv)
 }
 
 #define PTDEV_INVALID_PIN 0xffU
-static void get_entry_info(const struct ptdev_remapping_info *entry, char *type,
+static void get_entry_info(const struct ptirq_remapping_info *entry, char *type,
 		uint32_t *irq, uint32_t *vector, uint64_t *dest, bool *lvl_tm,
 		uint8_t *pin, uint8_t *vpin, uint32_t *bdf, uint32_t *vbdf)
 {
@@ -958,7 +958,7 @@ static void get_entry_info(const struct ptdev_remapping_info *entry, char *type,
 static void get_ptdev_info(char *str_arg, size_t str_max)
 {
 	char *str = str_arg;
-	struct ptdev_remapping_info *entry;
+	struct ptirq_remapping_info *entry;
 	uint16_t idx;
 	size_t len, size = str_max;
 	uint32_t irq, vector;
@@ -976,7 +976,7 @@ static void get_ptdev_info(char *str_arg, size_t str_max)
 	str += len;
 
 	for (idx = 0U; idx < CONFIG_MAX_PT_IRQ_ENTRIES; idx++) {
-		entry = &ptdev_irq_entries[idx];
+		entry = &ptirq_entries[idx];
 		if (is_entry_active(entry)) {
 			get_entry_info(entry, type, &irq, &vector,
 					&dest, &lvl_tm, &pin, &vpin,

@@ -15,15 +15,15 @@
  * @pre: vm must be NULL when lookup by physical sid, otherwise,
  * vm must not be NULL when lookup by virtual sid.
  */
-static inline struct ptdev_remapping_info *
+static inline struct ptirq_remapping_info *
 ptdev_lookup_entry_by_sid(uint32_t intr_type,
 		const union source_id *sid,const struct acrn_vm *vm)
 {
 	uint16_t idx;
-	struct ptdev_remapping_info *entry;
+	struct ptirq_remapping_info *entry;
 
 	for (idx = 0U; idx < CONFIG_MAX_PT_IRQ_ENTRIES; idx++) {
-		entry = &ptdev_irq_entries[idx];
+		entry = &ptirq_entries[idx];
 		if (!is_entry_active(entry)) {
 			continue;
 		}
@@ -39,10 +39,10 @@ ptdev_lookup_entry_by_sid(uint32_t intr_type,
 	return NULL;
 }
 
-static inline struct ptdev_remapping_info *
+static inline struct ptirq_remapping_info *
 ptdev_lookup_entry_by_vpin(struct acrn_vm *vm, uint8_t virt_pin, bool pic_pin)
 {
-	struct ptdev_remapping_info *entry;
+	struct ptirq_remapping_info *entry;
 
 	if (pic_pin) {
 		entry = vm->arch_vm.vpic.vpin_to_pt_entry[virt_pin];
@@ -79,7 +79,7 @@ static uint64_t calculate_logical_dest_mask(uint64_t pdmask)
 	return dest_mask;
 }
 
-static void ptdev_build_physical_msi(struct acrn_vm *vm, struct ptdev_msi_info *info,
+static void ptdev_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *info,
 		uint32_t vector)
 {
 	uint64_t vdmask, pdmask, dest_mask;
@@ -116,7 +116,7 @@ static void ptdev_build_physical_msi(struct acrn_vm *vm, struct ptdev_msi_info *
 }
 
 static union ioapic_rte
-ptdev_build_physical_rte(struct acrn_vm *vm, struct ptdev_remapping_info *entry)
+ptdev_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 {
 	union ioapic_rte rte;
 	uint32_t phys_irq = entry->allocated_pirq;
@@ -199,10 +199,10 @@ ptdev_build_physical_rte(struct acrn_vm *vm, struct ptdev_remapping_info *entry)
  * - if the entry already be added by vm0, then change the owner to current vm
  * - if the entry already be added by other vm, return NULL
  */
-static struct ptdev_remapping_info *add_msix_remapping(struct acrn_vm *vm,
+static struct ptirq_remapping_info *add_msix_remapping(struct acrn_vm *vm,
 	uint16_t virt_bdf, uint16_t phys_bdf, uint32_t entry_nr)
 {
-	struct ptdev_remapping_info *entry;
+	struct ptirq_remapping_info *entry;
 	DEFINE_MSI_SID(phys_sid, phys_bdf, entry_nr);
 	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
 
@@ -252,7 +252,7 @@ static struct ptdev_remapping_info *add_msix_remapping(struct acrn_vm *vm,
 static void
 remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t entry_nr)
 {
-	struct ptdev_remapping_info *entry;
+	struct ptirq_remapping_info *entry;
 	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
 
 	entry = ptdev_lookup_entry_by_sid(PTDEV_INTR_MSI, &virt_sid, vm);
@@ -279,11 +279,11 @@ remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t entr
  * - if the entry already be added by vm0, then change the owner to current vm
  * - if the entry already be added by other vm, return NULL
  */
-static struct ptdev_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin,
+static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin,
 		uint8_t phys_pin, bool pic_pin)
 {
-	struct ptdev_remapping_info *entry;
-	enum ptdev_vpin_source vpin_src = pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
+	struct ptirq_remapping_info *entry;
+	enum ptirq_vpin_source vpin_src = pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
 	DEFINE_IOAPIC_SID(phys_sid, phys_pin, 0);
 	DEFINE_IOAPIC_SID(virt_sid, virt_pin, vpin_src);
 	uint32_t phys_irq = pin_to_irq(phys_pin);
@@ -346,7 +346,7 @@ static struct ptdev_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint8
 static void remove_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, bool pic_pin)
 {
 	uint32_t phys_irq;
-	struct ptdev_remapping_info *entry;
+	struct ptirq_remapping_info *entry;
 
 	if ((!pic_pin && virt_pin >= vioapic_pincount(vm))
 			|| (pic_pin && virt_pin >= vpic_pincount())) {
@@ -382,7 +382,7 @@ static void remove_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, bool pic
 }
 
 static void ptdev_intr_handle_irq(struct acrn_vm *vm,
-		const struct ptdev_remapping_info *entry)
+		const struct ptirq_remapping_info *entry)
 {
 	const union source_id *virt_sid = &entry->virt_sid;
 	switch (virt_sid->intx_id.src) {
@@ -452,8 +452,8 @@ void ptdev_softirq(uint16_t pcpu_id)
 	struct acrn_vm *vm = vcpu->vm;
 
 	while (1) {
-		struct ptdev_remapping_info *entry = ptdev_dequeue_softirq(vm);
-		struct ptdev_msi_info *msi;
+		struct ptirq_remapping_info *entry = ptdev_dequeue_softirq(vm);
+		struct ptirq_msi_info *msi;
 
 		if (entry == NULL) {
 			break;
@@ -489,10 +489,10 @@ void ptdev_softirq(uint16_t pcpu_id)
 }
 
 void ptdev_intx_ack(struct acrn_vm *vm, uint8_t virt_pin,
-		enum ptdev_vpin_source vpin_src)
+		enum ptirq_vpin_source vpin_src)
 {
 	uint32_t phys_irq;
-	struct ptdev_remapping_info *entry;
+	struct ptirq_remapping_info *entry;
 	bool pic_pin = (vpin_src == PTDEV_VPIN_PIC);
 
 	entry = ptdev_lookup_entry_by_vpin(vm, virt_pin, pic_pin);
@@ -536,9 +536,9 @@ void ptdev_intx_ack(struct acrn_vm *vm, uint8_t virt_pin,
  * user must provide bdf and entry_nr
  */
 int ptdev_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,
-		uint16_t entry_nr, struct ptdev_msi_info *info)
+		uint16_t entry_nr, struct ptirq_msi_info *info)
 {
-	struct ptdev_remapping_info *entry;
+	struct ptirq_remapping_info *entry;
 	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
 
 	/*
@@ -591,7 +591,7 @@ END:
 }
 
 static void activate_physical_ioapic(struct acrn_vm *vm,
-		struct ptdev_remapping_info *entry)
+		struct ptirq_remapping_info *entry)
 {
 	union ioapic_rte rte;
 	uint32_t phys_irq = entry->allocated_pirq;
@@ -624,9 +624,9 @@ static void activate_physical_ioapic(struct acrn_vm *vm,
  * or vPIC
  */
 int ptdev_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin,
-		enum ptdev_vpin_source vpin_src)
+		enum ptirq_vpin_source vpin_src)
 {
-	struct ptdev_remapping_info *entry;
+	struct ptirq_remapping_info *entry;
 	bool need_switch_vpin_src = false;
 	DEFINE_IOAPIC_SID(virt_sid, virt_pin, vpin_src);
 	bool pic_pin = (vpin_src == PTDEV_VPIN_PIC);
@@ -732,7 +732,7 @@ END:
 int ptdev_add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, uint8_t phys_pin,
 				bool pic_pin)
 {
-	struct ptdev_remapping_info *entry;
+	struct ptirq_remapping_info *entry;
 
 	spinlock_obtain(&ptdev_lock);
 	entry = add_intx_remapping(vm, virt_pin, phys_pin, pic_pin);
@@ -759,7 +759,7 @@ void ptdev_remove_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, bool pic_
 int ptdev_add_msix_remapping(struct acrn_vm *vm, uint16_t virt_bdf,
 		uint16_t phys_bdf, uint32_t vector_count)
 {
-	struct ptdev_remapping_info *entry;
+	struct ptirq_remapping_info *entry;
 	uint32_t i;
 
 	for (i = 0U; i < vector_count; i++) {
