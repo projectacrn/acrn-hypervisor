@@ -159,34 +159,39 @@ choice
 	  If this is not selected, the serial port is disabled. This is the
 	  default.
 
-config SERIAL_MMIO
-	bool "Access serial port via MMIO"
+
+config SERIAL_PCI
+	bool "PCI"
 	help
-	  Select this if the serial port shall be accessed via memory-mapped
+	  Select this if the serial port shall be accessed via PCI memory-mapped
 	  registers.
 
-config SERIAL_PIO
-	bool "Access serial port via PIO"
+
+config SERIAL_LEGACY
+	bool "Legacy"
 	help
-	  Select this if the serial port shall be accessed via in/out
+	  Select this if the serial port shall be accessed via legacy port in/out
 	  instructions.
 
 endchoice
 
-config SERIAL_MMIO_BASE
-	hex "Base address of serial port MMIO region"
-	depends on SERIAL_MMIO
-	default 0xfc000000
+
+config SERIAL_PCI_BDF
+	hex "BDF value of serial PCI device"
+	depends on SERIAL_PCI
+	default 0x00C2
 	help
-	  A 64-bit integer indicating the base physical address of the
-	  memory-mapped UART registers.
+	  A 16-bit integer encoding bus, device and function of the serial PCI device.
+	  This integer consists of 8-bit bus ID, 5-bit device ID and 3-bit function ID.
+	  As an example,for PCI device 00:18.2, this BDF would be (0 << 8) | (0x18 << 3)
+	  | (2 << 0), it's 0x00C2.
 
 config SERIAL_PIO_BASE
-	hex "Base address of serial port PIO region"
-	depends on SERIAL_PIO
+	hex "Base address of serial PIO region"
+	depends on SERIAL_LEGACY
 	default 0x3f8
 	help
-	  The base address of the UART ports. This is logically 16-bit but used
+	  The base address of the serial ports. This is logically 16-bit but used
 	  as a 64-bit integer.
 
 config COM_BASE
