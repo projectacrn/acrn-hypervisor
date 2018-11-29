@@ -122,7 +122,7 @@ partition. Follow these steps:
 
       $ sudo mount /dev/sda1 /mnt
 
-      $ sudo ls -1 /mnt/EFI/org.clearlinux
+      $ sudo ls -1 /boot/EFI/org.clearlinux
       bootloaderx64.efi
       kernel-org.clearlinux.native.4.19.1-654
       kernel-org.clearlinux.iot-lts2018-sos.4.19.0-19
