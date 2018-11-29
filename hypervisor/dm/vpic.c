@@ -328,7 +328,7 @@ static int vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259
 
 			virt_pin = (master_pic(vpic, i8259)) ?
 					pin : (pin + 8U);
-			(void)ptdev_intx_pin_remap(vpic->vm,
+			(void)ptirq_intx_pin_remap(vpic->vm,
 					virt_pin, PTDEV_VPIN_PIC);
 		}
 		pin = (pin + 1U) & 0x7U;
@@ -365,7 +365,7 @@ static int vpic_ocw2(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint
 
 		/* if level ack PTDEV */
 		if ((i8259->elc & (1U << (isr_bit & 0x7U))) != 0U) {
-			ptdev_intx_ack(vpic->vm,
+			ptirq_intx_ack(vpic->vm,
 				(master_pic(vpic, i8259) ? isr_bit : isr_bit + 8U),
 				PTDEV_VPIN_PIC);
 		}

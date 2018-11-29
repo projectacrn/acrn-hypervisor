@@ -78,7 +78,7 @@ static int32_t vmsi_remap(struct pci_vdev *vdev, bool enable)
 		info.vmsi_data = 0U;
 	}
 
-	ret = ptdev_msix_remap(vm, vdev->vbdf.value, 0U, &info);
+	ret = ptirq_msix_remap(vm, vdev->vbdf.value, 0U, &info);
 	if (ret == 0) {
 		/* Update MSI Capability structure to physical device */
 		pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR, 0x4U, (uint32_t)info.pmsi_addr);
@@ -220,7 +220,7 @@ void populate_msi_struct(struct pci_vdev *vdev)
 static int32_t vmsi_deinit(struct pci_vdev *vdev)
 {
 	if (vdev->msi.capoff != 0U) {
-		ptdev_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, 1U);
+		ptirq_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, 1U);
 	}
 
 	return 0;
