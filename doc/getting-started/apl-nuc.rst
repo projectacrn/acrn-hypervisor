@@ -232,7 +232,6 @@ partition. Follow these steps:
    .. note::
       It is also possible to use the device name directly, e.g. ``root=/dev/sda3``
 
-   
    .. code-block:: none
 
       $ sudo umount /mnt
