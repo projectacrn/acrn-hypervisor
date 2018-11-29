@@ -64,11 +64,11 @@ static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 	uint64_t sworld_pml4e;
 	uint64_t gpa;
 	/* Check the HPA of parameter gpa_orig when invoking check_continuos_hpa */
-	uint64_t hpa = gpa2hpa(vm, gpa_orig);
+	uint64_t hpa;
 	uint64_t table_present = EPT_RWX;
 	uint64_t pdpte, *dest_pdpte_p, *src_pdpte_p;
 	void *sub_table_addr, *pml4_base;
-	struct acrn_vm *vm0 = get_vm_from_vmid(0U);
+	struct acrn_vm *vm0;
 	uint16_t i;
 
 	if ((vm->sworld_control.flag.supported == 0UL)
@@ -86,9 +86,10 @@ static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 		return;
 	}
 
+	hpa = gpa2hpa(vm, gpa_orig);
+
 	/* Unmap gpa_orig~gpa_orig+size from guest normal world ept mapping */
-	ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-			gpa_orig, size);
+	ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp, gpa_orig, size);
 
 	/* Copy PDPT entries from Normal world to Secure world
 	 * Secure world can access Normal World's memory,
@@ -105,7 +106,8 @@ static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 	/* The trusty memory is remapped to guest physical address
 	 * of gpa_rebased to gpa_rebased + size
 	 */
-	sub_table_addr = vm->arch_vm.ept_mem_ops.info->ept.sworld_pgtable_base + TRUSTY_PML4_PAGE_NUM(TRUSTY_EPT_REBASE_GPA);
+	sub_table_addr = vm->arch_vm.ept_mem_ops.info->ept.sworld_pgtable_base +
+									TRUSTY_PML4_PAGE_NUM(TRUSTY_EPT_REBASE_GPA);
 	(void)memset(sub_table_addr, 0U, CPU_PAGE_SIZE);
 	sworld_pml4e = hva2hpa(sub_table_addr) | table_present;
 	set_pgentry((uint64_t *)pml4_base, sworld_pml4e);
@@ -128,29 +130,26 @@ static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 		dest_pdpte_p++;
 	}
 
-	/* Map [gpa_rebased, gpa_rebased + size) to secure ept mapping
-	 */
-	ept_mr_add(vm, (uint64_t *)vm->arch_vm.sworld_eptp,
-			hpa, gpa_rebased, size, EPT_RWX | EPT_WB);
+	/* Map [gpa_rebased, gpa_rebased + size) to secure ept mapping */
+	ept_mr_add(vm, (uint64_t *)vm->arch_vm.sworld_eptp, hpa, gpa_rebased, size, EPT_RWX | EPT_WB);
 
 	/* Get the gpa address in SOS */
 	gpa = vm0_hpa2gpa(hpa);
 
 	/* Unmap trusty memory space from sos ept mapping*/
-	ept_mr_del(vm0, (uint64_t *)vm0->arch_vm.nworld_eptp,
-			gpa, size);
+	vm0 = get_vm_from_vmid(0U);
+	ept_mr_del(vm0, (uint64_t *)vm0->arch_vm.nworld_eptp, gpa, size);
 
-	/* Backup secure world info, will be used when
-	 * destroy secure world and suspend UOS */
+	/* Backup secure world info, will be used when destroy secure world and suspend UOS */
 	vm->sworld_control.sworld_memory.base_gpa_in_sos = gpa;
 	vm->sworld_control.sworld_memory.base_gpa_in_uos = gpa_orig;
 	vm->sworld_control.sworld_memory.base_hpa = hpa;
 	vm->sworld_control.sworld_memory.length = size;
 }
 
-void  destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
+void destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
 {
-	struct acrn_vm *vm0 = get_vm_from_vmid(0U);
+	struct acrn_vm *vm0;
 	uint64_t hpa = vm->sworld_control.sworld_memory.base_hpa;
 	uint64_t gpa_sos = vm->sworld_control.sworld_memory.base_gpa_in_sos;
 	uint64_t gpa_uos = vm->sworld_control.sworld_memory.base_gpa_in_uos;
@@ -172,12 +171,11 @@ void  destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
 	vm->arch_vm.sworld_eptp = NULL;
 
 	/* restore memory to SOS ept mapping */
-	ept_mr_add(vm0, vm0->arch_vm.nworld_eptp,
-			hpa, gpa_sos, size, EPT_RWX | EPT_WB);
+	vm0 = get_vm_from_vmid(0U);
+	ept_mr_add(vm0, vm0->arch_vm.nworld_eptp, hpa, gpa_sos, size, EPT_RWX | EPT_WB);
 
 	/* Restore memory to guest normal world */
-	ept_mr_add(vm, vm->arch_vm.nworld_eptp,
-			hpa, gpa_uos, size, EPT_RWX | EPT_WB);
+	ept_mr_add(vm, vm->arch_vm.nworld_eptp, hpa, gpa_uos, size, EPT_RWX | EPT_WB);
 
 }
 

@@ -116,16 +116,14 @@ static void ptdev_build_physical_msi(struct acrn_vm *vm, struct ptdev_msi_info *
 }
 
 static union ioapic_rte
-ptdev_build_physical_rte(struct acrn_vm *vm,
-		struct ptdev_remapping_info *entry)
+ptdev_build_physical_rte(struct acrn_vm *vm, struct ptdev_remapping_info *entry)
 {
 	union ioapic_rte rte;
 	uint32_t phys_irq = entry->allocated_pirq;
-	uint32_t vector = irq_to_vector(phys_irq);
 	union source_id *virt_sid = &entry->virt_sid;
 
 	if (virt_sid->intx_id.src == PTDEV_VPIN_IOAPIC) {
-		uint64_t vdmask, pdmask, delmode, dest_mask;
+		uint64_t vdmask, pdmask, delmode, dest_mask, vector;
 		uint32_t dest;
 		union ioapic_rte virt_rte;
 		bool phys;
@@ -164,9 +162,9 @@ ptdev_build_physical_rte(struct acrn_vm *vm,
 		}
 
 		/* update physical delivery mode, dest mode(logical) & vector */
-		rte.full &= ~(IOAPIC_RTE_DESTMOD |
-			IOAPIC_RTE_DELMOD | IOAPIC_RTE_INTVEC);
-		rte.full |= IOAPIC_RTE_DESTLOG | delmode | (uint64_t)vector;
+		vector = (uint64_t)irq_to_vector(phys_irq);
+		rte.full &= ~(IOAPIC_RTE_DESTMOD | IOAPIC_RTE_DELMOD | IOAPIC_RTE_INTVEC);
+		rte.full |= IOAPIC_RTE_DESTLOG | delmode | vector;
 
 		dest_mask = calculate_logical_dest_mask(pdmask);
 		/* update physical dest field */

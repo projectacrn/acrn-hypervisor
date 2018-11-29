@@ -899,7 +899,6 @@ static int get_gva_di_check(struct acrn_vcpu *vcpu, struct instr_emul_vie *vie,
 	enum vm_cpu_mode cpu_mode;
 	uint64_t val, gpa;
 
-	val = vm_get_register(vcpu, CPU_REG_RDI);
 	vm_get_seg_desc(CPU_REG_ES, &desc);
 	cpu_mode = get_vcpu_mode(vcpu);
 
@@ -917,8 +916,8 @@ static int get_gva_di_check(struct acrn_vcpu *vcpu, struct instr_emul_vie *vie,
 		}
 	}
 
-	if (vie_calculate_gla(cpu_mode, CPU_REG_ES, &desc, val, addrsize, gva)
-			!= 0) {
+	val = vm_get_register(vcpu, CPU_REG_RDI);
+	if (vie_calculate_gla(cpu_mode, CPU_REG_ES, &desc, val, addrsize, gva) != 0) {
 		goto exception_inject;
 	}
 

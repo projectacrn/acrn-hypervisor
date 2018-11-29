@@ -365,7 +365,9 @@ static void dmar_enable_translation(struct dmar_drhd_rt *dmar_unit)
 		iommu_write32(dmar_unit, DMAR_GCMD_REG, dmar_unit->gcmd);
 		/* 32-bit register */
 		dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_TES, false, &status);
+#if DBG_IOMMU
 		status = iommu_read32(dmar_unit, DMAR_GSTS_REG);
+#endif
 	}
 
 	spinlock_release(&(dmar_unit->lock));

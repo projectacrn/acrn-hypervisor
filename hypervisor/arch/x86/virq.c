@@ -397,7 +397,7 @@ int acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 	uint32_t error_code;
 	struct acrn_vcpu_arch * arch = &vcpu->arch;
 	uint64_t *pending_req_bits = &arch->pending_req;
-	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
+	struct acrn_vlapic *vlapic;
 
 	if (bitmap_test_and_clear_lock(ACRN_REQUEST_TRP_FAULT,
 						pending_req_bits)) {
@@ -450,8 +450,8 @@ int acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 	 * needed. And then try to handle vmcs event injection.
 	 */
 	if (is_apicv_intr_delivery_supported() &&
-		bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT,
-			pending_req_bits)) {
+		bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT, pending_req_bits)) {
+		vlapic = vcpu_vlapic(vcpu);
 		vlapic_apicv_inject_pir(vlapic);
 	}
 

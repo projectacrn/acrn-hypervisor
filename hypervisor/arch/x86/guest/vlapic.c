@@ -664,7 +664,6 @@ vlapic_lvt_write_handler(struct acrn_vlapic *vlapic, uint32_t offset)
 	lapic = &(vlapic->apic_page);
 	lvtptr = vlapic_get_lvtptr(vlapic, offset);
 	val = *lvtptr;
-	idx = lvt_off_to_idx(offset);
 
 	if ((lapic->svr.v & APIC_SVR_ENABLE) == 0U) {
 		val |= APIC_LVT_M;
@@ -719,6 +718,7 @@ vlapic_lvt_write_handler(struct acrn_vlapic *vlapic, uint32_t offset)
 	}
 
 	*lvtptr = val;
+	idx = lvt_off_to_idx(offset);
 	atomic_store32(&vlapic->lvt_last[idx], val);
 }
 
