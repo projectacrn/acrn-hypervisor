@@ -144,11 +144,15 @@ static inline uint8_t* get_ctx_table(uint32_t dmar_index, uint8_t bus_no)
 
 bool iommu_snoop_supported(struct acrn_vm *vm)
 {
+	bool ret;
+
 	if (vm->iommu == NULL || vm->iommu->iommu_snoop) {
-		return true;
+		ret =  true;
+	} else {
+		ret = false;
 	}
 
-	return false;
+	return ret;
 }
 
 static struct dmar_drhd_rt dmar_drhd_units[CONFIG_MAX_IOMMU_NUM];
@@ -267,12 +271,10 @@ static void iommu_flush_cache(const struct dmar_drhd_rt *dmar_unit,
 	uint32_t i;
 
 	/* if vtd support page-walk coherency, no need to flush cacheline */
-	if (iommu_ecap_c(dmar_unit->ecap) != 0U) {
-		return;
-	}
-
-	for (i = 0U; i < size; i += CACHE_LINE_SIZE) {
-		clflush((char *)p + i);
+	if (iommu_ecap_c(dmar_unit->ecap) == 0U) {
+		for (i = 0U; i < size; i += CACHE_LINE_SIZE) {
+			clflush((char *)p + i);
+		}
 	}
 }
 
@@ -478,16 +480,14 @@ static void dmar_write_buffer_flush(struct dmar_drhd_rt *dmar_unit)
 {
 	uint32_t status;
 
-	if (iommu_cap_rwbf(dmar_unit->cap) == 0U) {
-		return;
+	if (iommu_cap_rwbf(dmar_unit->cap) != 0U) {
+		spinlock_obtain(&(dmar_unit->lock));
+		iommu_write32(dmar_unit, DMAR_GCMD_REG, dmar_unit->gcmd | DMA_GCMD_WBF);
+
+		/* read lower 32 bits to check */
+		dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_WBFS, true, &status);
+		spinlock_release(&(dmar_unit->lock));
 	}
-
-	spinlock_obtain(&(dmar_unit->lock));
-	iommu_write32(dmar_unit, DMAR_GCMD_REG, dmar_unit->gcmd | DMA_GCMD_WBF);
-
-	/* read lower 32 bits to check */
-	dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_WBFS, true, &status);
-	spinlock_release(&(dmar_unit->lock));
 }
 
 /*
@@ -687,19 +687,17 @@ static void fault_status_analysis(uint32_t status)
 
 static void fault_record_analysis(__unused uint64_t low, uint64_t high)
 {
-	if (dma_frcd_up_f(high)) {
-		return;
-	}
-
-	/* currently skip PASID related parsing */
-	pr_info("%s, Reason: 0x%x, SID: %x.%x.%x @0x%llx",
-		(dma_frcd_up_t(high) != 0U) ? "Read/Atomic" : "Write", dma_frcd_up_fr(high),
-		pci_bus(dma_frcd_up_sid(high)), pci_slot(dma_frcd_up_sid(high)), pci_func(dma_frcd_up_sid(high)), low);
+	if (!dma_frcd_up_f(high)) {
+		/* currently skip PASID related parsing */
+		pr_info("%s, Reason: 0x%x, SID: %x.%x.%x @0x%llx",
+			(dma_frcd_up_t(high) != 0U) ? "Read/Atomic" : "Write", dma_frcd_up_fr(high),
+			pci_bus(dma_frcd_up_sid(high)), pci_slot(dma_frcd_up_sid(high)), pci_func(dma_frcd_up_sid(high)), low);
 #if DBG_IOMMU
-	if (iommu_ecap_dt(dmar_unit->ecap) != 0U) {
-		pr_info("Address Type: 0x%x", dma_frcd_up_at(high));
-	}
+		if (iommu_ecap_dt(dmar_unit->ecap) != 0U) {
+			pr_info("Address Type: 0x%x", dma_frcd_up_at(high));
+		}
 #endif
+	}
 }
 
 static void dmar_fault_handler(uint32_t irq, void *data)
@@ -1011,24 +1009,24 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_ta
 
 	if (translation_table == 0UL) {
 		pr_err("translation table is NULL");
-		return NULL;
+	        domain =  NULL;
+	} else {
+		/*
+		 * A hypercall is called to create an iommu domain for a valid VM,
+		 * and hv code limit the VM number to CONFIG_MAX_VM_NUM.
+		 * So the array iommu_domains will not be accessed out of range.
+		 */
+		domain = &iommu_domains[vmid_to_domainid(vm_id)];
+
+		domain->is_host = false;
+		domain->vm_id = vm_id;
+		domain->trans_table_ptr = translation_table;
+		domain->addr_width = addr_width;
+		domain->is_tt_ept = true;
+
+		dev_dbg(ACRN_DBG_IOMMU, "create domain [%d]: vm_id = %hu, ept@0x%x",
+			vmid_to_domainid(domain->vm_id), domain->vm_id, domain->trans_table_ptr);
 	}
-
-	/*
-	 * A hypercall is called to create an iommu domain for a valid VM,
-	 * and hv code limit the VM number to CONFIG_MAX_VM_NUM.
-	 * So the array iommu_domains will not be accessed out of range.
-	 */
-	domain = &iommu_domains[vmid_to_domainid(vm_id)];
-
-	domain->is_host = false;
-	domain->vm_id = vm_id;
-	domain->trans_table_ptr = translation_table;
-	domain->addr_width = addr_width;
-	domain->is_tt_ept = true;
-
-	dev_dbg(ACRN_DBG_IOMMU, "create domain [%d]: vm_id = %hu, ept@0x%x",
-		vmid_to_domainid(domain->vm_id), domain->vm_id, domain->trans_table_ptr);
 
 	return domain;
 }
@@ -1105,14 +1103,15 @@ void resume_iommu(void)
 
 int init_iommu(void)
 {
-	int ret = 0;
+	int ret;
 
 	ret = register_hrhd_units();
 	if (ret != 0) {
 		return ret;
+	} else {
+		do_action_for_iommus(dmar_prepare);
+		ret = 0;
 	}
-
-	do_action_for_iommus(dmar_prepare);
 
 	return ret;
 }
