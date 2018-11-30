@@ -6,6 +6,7 @@
 
 #include <hypervisor.h>
 #include <zeropage.h>
+#include <boot_context.h>
 
 #ifdef CONFIG_PARTITION_MODE
 static uint32_t create_e820_table(struct e820_entry *param_e820)
@@ -44,14 +45,14 @@ static void prepare_bsp_gdt(struct acrn_vm *vm)
 	uint64_t gdt_base_hpa;
 	void *gdt_base_hva;
 
-	gdt_base_hpa = gpa2hpa(vm, vm0_boot_context.gdt.base);
-	if (vm0_boot_context.gdt.base == gdt_base_hpa) {
+	gdt_base_hpa = gpa2hpa(vm, boot_context.gdt.base);
+	if (boot_context.gdt.base == gdt_base_hpa) {
 		return;
 	} else {
 		gdt_base_hva = hpa2hva(gdt_base_hpa);
-		gdt_len = ((size_t)vm0_boot_context.gdt.limit + 1U)/sizeof(uint8_t);
+		gdt_len = ((size_t)boot_context.gdt.limit + 1U)/sizeof(uint8_t);
 
-		(void )memcpy_s(gdt_base_hva, gdt_len, hpa2hva(vm0_boot_context.gdt.base), gdt_len);
+		(void )memcpy_s(gdt_base_hva, gdt_len, hpa2hva(boot_context.gdt.base), gdt_len);
 	}
 
 	return;
@@ -116,7 +117,7 @@ int general_sw_loader(struct acrn_vm *vm)
 	pr_dbg("Loading guest to run-time location");
 
 	prepare_bsp_gdt(vm);
-	set_vcpu_regs(vcpu, &vm0_boot_context);
+	set_vcpu_regs(vcpu, &boot_context);
 
 	/* calculate the kernel entry point */
 	zeropage = (struct zero_page *)sw_kernel->kernel_src_addr;

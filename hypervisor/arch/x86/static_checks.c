@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <hypervisor.h>
-#include <vm0_boot.h>
+#include <boot_context.h>
 
 #define CAT__(A,B) A ## B
 #define CAT_(A,B) CAT__(A,B)
