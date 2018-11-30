@@ -445,6 +445,14 @@ void init_default_irqs(uint16_t cpu_id)
 	}
 }
 
+static void set_idt(struct host_idt_descriptor *idtd)
+{
+
+	asm volatile ("   lidtq %[idtd]\n" :	/* no output parameters */
+		      :		/* input parameters */
+		      [idtd] "m"(*idtd));
+}
+
 void interrupt_init(uint16_t pcpu_id)
 {
 	struct host_idt_descriptor *idtd = &HOST_IDTR;
