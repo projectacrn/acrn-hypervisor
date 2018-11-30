@@ -1669,9 +1669,9 @@ static bool segment_override(uint8_t x, enum cpu_reg_name *seg)
 static int decode_prefixes(struct instr_emul_vie *vie,
 					enum vm_cpu_mode cpu_mode, bool cs_d)
 {
-	uint8_t x;
+	uint8_t x, i;
 
-	while (1) {
+	for (i = 0U; i < VIE_PREFIX_SIZE; i++) {
 		if (vie_peek(vie, &x) != 0) {
 			return -1;
 		}

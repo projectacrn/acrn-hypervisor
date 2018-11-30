@@ -14,6 +14,21 @@ static inline bool is_space(char c)
 	return ((c == ' ') || (c == '\t'));
 }
 
+static inline char hex_digit_value (char ch)
+{
+	char c;
+	if ('0' <= ch && ch <= '9') {
+		c = ch - '0';
+	} else if ('a' <= ch && ch <= 'f') {
+		c = ch - 'a' + 10;
+	} else if ('A' <= ch && ch <= 'F') {
+		c = ch - 'A' + 10;
+	} else {
+		c = -1;
+	}
+	return c;
+}
+
 /*
  * Convert a string to a long integer - decimal support only.
  */
@@ -99,7 +114,7 @@ long strtol_deci(const char *nptr)
 uint64_t strtoul_hex(const char *nptr)
 {
 	const char *s = nptr;
-	char c;
+	char c, digit;
 	uint64_t acc, cutoff, cutlim;
 	uint64_t base = 16UL;
 	int any;
@@ -121,29 +136,20 @@ uint64_t strtoul_hex(const char *nptr)
 	cutlim = ULONG_MAX % base;
 	acc = 0UL;
 	any = 0;
-	do {
-		if ((c >= '0') && (c <= '9')) {
-			c -= '0';
-		} else if ((c >= 'A') && (c <= 'F')) {
-			c -= 'A' - 10;
-		} else if ((c >= 'a') && (c <= 'f')) {
-			c -= 'a' - 10;
-		} else {
-			break;
-		}
-
-		if ((acc > cutoff) ||
-			((acc == cutoff) && ((uint64_t)c > cutlim))) {
+	digit = hex_digit_value(c);
+	while (digit >= 0) {
+		if ((acc > cutoff) || ((acc == cutoff) && ((uint64_t)digit > cutlim))) {
 			any = -1;
 			break;
 		} else {
 			acc *= base;
-			acc += c;
+			acc += digit;
 		}
 
 		c = *s;
 		s++;
-	} while (true);
+		digit = hex_digit_value(c);
+	}
 
 	if (any < 0) {
 		acc = ULONG_MAX;
