@@ -87,7 +87,8 @@ struct instr_emul_vie_op {
 	uint16_t	op_flags;
 };
 
-#define	VIE_INST_SIZE	15U
+#define VIE_PREFIX_SIZE	4U
+#define VIE_INST_SIZE	15U
 struct instr_emul_vie {
 	uint8_t		inst[VIE_INST_SIZE];	/* instruction bytes */
 	uint8_t		num_valid;		/* size of the instruction */

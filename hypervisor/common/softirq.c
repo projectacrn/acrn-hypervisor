@@ -32,18 +32,14 @@ void fire_softirq(uint16_t nr)
 
 void do_softirq(void)
 {
-	uint16_t nr;
 	uint16_t cpu_id = get_cpu_id();
 	volatile uint64_t *softirq_pending_bitmap =
 			&per_cpu(softirq_pending, cpu_id);
+	uint16_t nr = ffs64(*softirq_pending_bitmap);
 
-	while (true) {
-		nr = ffs64(*softirq_pending_bitmap);
-		if (nr >= NR_SOFTIRQS) {
-			break;
-		}
-
+	while (nr < NR_SOFTIRQS) {
 		bitmap_clear_lock(nr, softirq_pending_bitmap);
 		(*softirq_handlers[nr])(cpu_id);
+		nr = ffs64(*softirq_pending_bitmap);
 	}
 }

@@ -99,7 +99,7 @@ void do_acpi_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val,
 		acpi_gas_write(&(sx_data->pm1b_cnt), pm1b_cnt_val);
 	}
 
-	while (1) {
+	do {
 		/* polling PM1 state register to detect wether
 		 * the Sx state enter is interrupted by wakeup event.
 		 */
@@ -117,10 +117,7 @@ void do_acpi_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val,
 		 * WAK_STS(bit 15) is set if system will transition to working
 		 * state.
 		 */
-		if ((s1 & (1U << BIT_WAK_STS)) != 0U) {
-			break;
-		}
-	}
+	} while ((s1 & (1U << BIT_WAK_STS)) == 0U);
 }
 
 void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
