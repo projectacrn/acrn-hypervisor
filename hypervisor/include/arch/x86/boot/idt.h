@@ -74,14 +74,6 @@ struct host_idt_descriptor {
 extern struct host_idt HOST_IDT;
 extern struct host_idt_descriptor HOST_IDTR;
 
-static inline void set_idt(struct host_idt_descriptor *idtd)
-{
-
-	asm volatile ("   lidtq %[idtd]\n" :	/* no output parameters */
-		      :		/* input parameters */
-		      [idtd] "m"(*idtd));
-}
-
 #endif /* end #ifndef ASSEMBLER */
 
 #endif /* IDT_H */
