@@ -70,11 +70,11 @@ static int vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
 		 * fields with a single QWORD write, but some hardware can accept 32 bits
 		 * write only
 		 */
-		mmio_write32((uint32_t)(info.pmsi_addr), (const void *)&(pentry->addr));
-		mmio_write32((uint32_t)(info.pmsi_addr >> 32U), (const void *)((char *)&(pentry->addr) + 4U));
+		mmio_write32((uint32_t)(info.pmsi_addr), (void *)&(pentry->addr));
+		mmio_write32((uint32_t)(info.pmsi_addr >> 32U), (void *)((char *)&(pentry->addr) + 4U));
 
-		mmio_write32(info.pmsi_data, (const void *)&(pentry->data));
-		mmio_write32(vdev->msix.tables[index].vector_control, (const void *)&(pentry->vector_control));
+		mmio_write32(info.pmsi_data, (void *)&(pentry->data));
+		mmio_write32(vdev->msix.tables[index].vector_control, (void *)&(pentry->vector_control));
 	}
 
 	return ret;
@@ -289,9 +289,9 @@ static int vmsix_table_mmio_access_handler(struct io_request *io_req, void *hand
 		} else {
 			/* mmio->size is either 4U or 8U */
 			if (mmio->size == 4U) {
-				mmio_write32((uint32_t)(mmio->value), (const void *)hva);
+				mmio_write32((uint32_t)(mmio->value), (void *)hva);
 			} else {
-				mmio_write64(mmio->value, (const void *)hva);
+				mmio_write64(mmio->value, (void *)hva);
 			}
 		}
 	}

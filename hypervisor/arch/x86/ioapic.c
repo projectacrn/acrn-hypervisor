@@ -85,7 +85,7 @@ static void *map_ioapic(uint64_t ioapic_paddr)
 }
 
 static inline uint32_t
-ioapic_read_reg32(const void *ioapic_base, const uint32_t offset)
+ioapic_read_reg32(void *ioapic_base, const uint32_t offset)
 {
 	uint32_t v;
 	uint64_t rflags;
@@ -102,8 +102,7 @@ ioapic_read_reg32(const void *ioapic_base, const uint32_t offset)
 }
 
 static inline void
-ioapic_write_reg32(const void *ioapic_base,
-		const uint32_t offset, const uint32_t value)
+ioapic_write_reg32(void *ioapic_base, const uint32_t offset, const uint32_t value)
 {
 	uint64_t rflags;
 
