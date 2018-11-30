@@ -267,8 +267,7 @@ vlapic_lvtt_tsc_deadline(const struct acrn_vlapic *vlapic)
 static inline bool
 vlapic_lvtt_masked(const struct acrn_vlapic *vlapic)
 {
-	return ((vlapic->apic_page.lvt[APIC_LVT_TIMER].v) & APIC_LVTT_M)
-				!= 0U;
+	return (((vlapic->apic_page.lvt[APIC_LVT_TIMER].v) & APIC_LVTT_M) != 0U);
 }
 
 /**
