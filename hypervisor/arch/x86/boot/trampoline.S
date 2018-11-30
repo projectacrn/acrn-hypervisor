@@ -15,10 +15,6 @@
  */
 
 #include        <spinlock.h>
-#include        <gdt.h>
-#include        <cpu.h>
-#include        <mmu.h>
-#include        <msr.h>
 
 /* NOTE:
  *
@@ -38,8 +34,6 @@
  */
 
     .extern     cpu_secondary_init
-    .extern     ld_bss_end
-    .extern     HOST_GDTR
 
     .section     .trampoline_reset,"ax"
 

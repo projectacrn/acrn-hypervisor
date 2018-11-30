@@ -4,11 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include        <cpu.h>
-#include        <mmu.h>
-#include        <gdt.h>
 #include        <idt.h>
-#include        <msr.h>
 
 /* NOTE:
  *

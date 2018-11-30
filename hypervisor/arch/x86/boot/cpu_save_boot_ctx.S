@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <vm0_boot.h>
+#include <boot_context.h>
 
     .section    entry, "ax"
     .align      8
@@ -13,7 +13,7 @@
     .global     cpu_primary_save_32
 cpu_primary_save_32:
     /* save context from 32bit mode */
-    lea     vm0_boot_context, %eax
+    lea     boot_context, %eax
     sgdt    BOOT_CTX_GDT_OFFSET(%eax)
     sidt    BOOT_CTX_IDT_OFFSET(%eax)
     str     BOOT_CTX_TR_SEL_OFFSET(%eax)
@@ -50,7 +50,7 @@ cpu_primary_save_32:
     .global     cpu_primary_save_64
 cpu_primary_save_64:
     /* save context from 64bit mode */
-    lea     vm0_boot_context(%rip), %r8
+    lea     boot_context(%rip), %r8
     sgdt    BOOT_CTX_GDT_OFFSET(%r8)
     sidt    BOOT_CTX_IDT_OFFSET(%r8)
     str     BOOT_CTX_TR_SEL_OFFSET(%r8)
@@ -90,8 +90,8 @@ cpu_primary_save_64:
 
     .text
     .align  8
-    .global vm0_boot_context
-vm0_boot_context:
+    .global boot_context
+boot_context:
     .rept   SIZE_OF_BOOT_CTX
     .byte 0x00
     .endr
