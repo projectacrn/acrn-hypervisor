@@ -125,7 +125,7 @@ partition. Follow these steps:
       loaderx64.efi
 
    .. note::
-      On Clear Linux, the EFI(/dev/sda1) partion is mounted to /boot by default
+      On Clear Linux, the EFI System Partion (e.g.: ``/dev/sda1``) is mounted under ``/boot`` by default
       The Clear Linux project releases updates often, sometimes
       twice a day, so make note of the specific kernel versions (*iot-lts2018 and *iot-lts2018-sos*) listed on your system,
       as you will need them later.
