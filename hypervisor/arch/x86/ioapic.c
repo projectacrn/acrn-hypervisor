@@ -189,7 +189,7 @@ create_rte_for_gsi_irq(uint32_t irq, uint32_t vr)
 		rte.full |= IOAPIC_RTE_INTAHI;
 
 		/* Dest field */
-		rte.full |= ((uint64_t)ALL_CPUS_MASK << IOAPIC_RTE_DEST_SHIFT);
+		rte.full |= (ALL_CPUS_MASK << IOAPIC_RTE_DEST_SHIFT);
 	}
 
 	return rte;

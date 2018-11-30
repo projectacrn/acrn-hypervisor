@@ -120,7 +120,7 @@ static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 	 */
 	dest_pdpte_p = pml4e_page_vaddr(sworld_pml4e);
 	src_pdpte_p = pml4e_page_vaddr(nworld_pml4e);
-	for (i = 0U; i < (PTRS_PER_PDPTE - 1UL); i++) {
+	for (i = 0U; i < (uint16_t)(PTRS_PER_PDPTE - 1UL); i++) {
 		pdpte = get_pgentry(src_pdpte_p);
 		if ((pdpte & table_present) != 0UL) {
 			pdpte &= ~EPT_EXE;
@@ -162,7 +162,7 @@ void destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
 
 	if (need_clr_mem) {
 		/* clear trusty memory space */
-		(void)memset(hpa2hva(hpa), 0U, size);
+		(void)memset(hpa2hva(hpa), 0U, (size_t)size);
 	}
 
 	ept_mr_del(vm, vm->arch_vm.sworld_eptp, gpa_uos, size);
@@ -361,7 +361,7 @@ static bool derive_aek(uint8_t *attkb_key)
 	max_svn_idx = get_max_svn_index();
 	ikm = g_key_info.dseed_list[max_svn_idx].seed;
 	/* only the low 32 bits of seed are valid */
-	ikm_len = 32;
+	ikm_len = 32U;
 
 	if (hmac_sha256(attkb_key, ikm, ikm_len,
 			(const uint8_t *)salt, sizeof(salt)) != 1) {

@@ -317,7 +317,7 @@ set_expiration(struct acrn_vlapic *vlapic)
 	if ((tmicr == 0U) || (divisor_shift > 8U)) {
 		ret = false;
 	} else {
-		delta = tmicr << divisor_shift;
+		delta = (uint64_t)tmicr << divisor_shift;
 		timer = &vtimer->timer;
 
 		if (vlapic_lvtt_period(vlapic)) {
@@ -1163,7 +1163,7 @@ vlapic_get_cr8(const struct acrn_vlapic *vlapic)
 	uint32_t tpr;
 
 	tpr = vlapic_get_tpr(vlapic);
-	return (uint64_t)(tpr >> 4U);
+	return ((uint64_t)tpr >> 4UL);
 }
 
 static void
