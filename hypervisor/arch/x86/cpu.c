@@ -7,7 +7,7 @@
 #include <hypervisor.h>
 #include <schedule.h>
 #include <version.h>
-#include <reloc.h>
+#include <trampoline.h>
 
 spinlock_t trampoline_spinlock = {
 	.head = 0U,

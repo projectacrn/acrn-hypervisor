@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <hypervisor.h>
-#include <reloc.h>
+#include <trampoline.h>
 
 struct cpu_context cpu_ctx;
 
