@@ -512,7 +512,7 @@ static void vie_calc_bytereg(const struct instr_emul_vie *vie,
 					enum cpu_reg_name *reg, int *lhbr)
 {
 	*lhbr = 0;
-	*reg = vie->reg;
+	*reg = (enum cpu_reg_name)(vie->reg);
 
 	/*
 	 * 64-bit mode imposes limitations on accessing legacy high byte
@@ -529,7 +529,7 @@ static void vie_calc_bytereg(const struct instr_emul_vie *vie,
 	if (vie->rex_present == 0U) {
 		if ((vie->reg & 0x4U) != 0U) {
 			*lhbr = 1;
-			*reg = vie->reg & 0x3U;
+			*reg = (enum cpu_reg_name)(vie->reg & 0x3U);
 		}
 	}
 }
@@ -689,7 +689,7 @@ static int emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 * REX.W + 89/r	mov r/m64, r64
 		 */
 
-		reg = vie->reg;
+		reg = (enum cpu_reg_name)(vie->reg);
 		val = vm_get_register(vcpu, reg);
 		val &= size2mask[size];
 		vie_mmio_write(vcpu, val);
@@ -712,7 +712,7 @@ static int emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 * REX.W 8B/r:	mov r64, r/m64
 		 */
 		vie_mmio_read(vcpu, &val);
-		reg = vie->reg;
+		reg = (enum cpu_reg_name)(vie->reg);
 		vie_update_register(vcpu, reg, val, size);
 		break;
 	case 0xA1U:
@@ -796,7 +796,7 @@ static int emulate_movx(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 		vie_mmio_read(vcpu, &val);
 
 		/* get the second operand */
-		reg = vie->reg;
+		reg = (enum cpu_reg_name)(vie->reg);
 
 		/* zero-extend byte */
 		val = (uint8_t)val;
@@ -814,7 +814,7 @@ static int emulate_movx(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 		 */
 		vie_mmio_read(vcpu, &val);
 
-		reg = vie->reg;
+		reg = (enum cpu_reg_name)(vie->reg);
 
 		/* zero-extend word */
 		val = (uint16_t)val;
@@ -835,7 +835,7 @@ static int emulate_movx(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 		vie_mmio_read(vcpu, &val);
 
 		/* get the second operand */
-		reg = vie->reg;
+		reg = (enum cpu_reg_name)(vie->reg);
 
 		/* sign extend byte */
 		val = (int8_t)val;
@@ -969,8 +969,8 @@ static int emulate_movs(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 	uint64_t rcx, rdi, rsi, rflags;
 	uint32_t err_code;
 	enum cpu_reg_name seg;
-	int error, repeat;
-	uint8_t opsize = vie->opsize;
+	int error;
+	uint8_t repeat, opsize = vie->opsize;
 	bool is_mmio_write;
 
 	error = 0;
@@ -985,7 +985,7 @@ static int emulate_movs(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 	 */
 	repeat = vie->repz_present | vie->repnz_present;
 
-	if (repeat != 0) {
+	if (repeat != 0U) {
 		rcx = vm_get_register(vcpu, CPU_REG_RCX);
 
 		/*
@@ -1034,7 +1034,7 @@ static int emulate_movs(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 	vie_update_register(vcpu, CPU_REG_RSI, rsi, vie->addrsize);
 	vie_update_register(vcpu, CPU_REG_RDI, rdi, vie->addrsize);
 
-	if (repeat != 0) {
+	if (repeat != 0U) {
 		rcx = rcx - 1;
 		vie_update_register(vcpu, CPU_REG_RCX, rcx, vie->addrsize);
 
@@ -1051,14 +1051,13 @@ done:
 
 static int emulate_stos(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
-	int repeat;
-	uint8_t opsize = vie->opsize;
+	uint8_t repeat, opsize = vie->opsize;
 	uint64_t val;
 	uint64_t rcx, rdi, rflags;
 
 	repeat = vie->repz_present | vie->repnz_present;
 
-	if (repeat != 0) {
+	if (repeat != 0U) {
 		rcx = vm_get_register(vcpu, CPU_REG_RCX);
 
 		/*
@@ -1085,7 +1084,7 @@ static int emulate_stos(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 
 	vie_update_register(vcpu, CPU_REG_RDI, rdi, vie->addrsize);
 
-	if (repeat != 0) {
+	if (repeat != 0U) {
 		rcx = rcx - 1;
 		vie_update_register(vcpu, CPU_REG_RCX, rcx, vie->addrsize);
 
@@ -1129,7 +1128,7 @@ static int emulate_test(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 		 */
 
 		/* get the first operand */
-		reg = vie->reg;
+		reg = (enum cpu_reg_name)(vie->reg);
 		val1 = vm_get_register(vcpu, reg);
 
 		/* get the second operand */
@@ -1186,7 +1185,7 @@ static int emulate_and(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 */
 
 		/* get the first operand */
-		reg = vie->reg;
+		reg = (enum cpu_reg_name)(vie->reg);
 		val1 = vm_get_register(vcpu, reg);
 
 		/* get the second operand */
@@ -1299,7 +1298,7 @@ static int emulate_or(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		vie_mmio_read(vcpu, &val1);
 
 		/* get the second operand */
-		reg = vie->reg;
+		reg = (enum cpu_reg_name)(vie->reg);
 		val2 = vm_get_register(vcpu, reg);
 
 		/* perform the operation and write the result */
@@ -1360,7 +1359,7 @@ static int emulate_cmp(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 */
 
 		/* Get the register operand */
-		reg = vie->reg;
+		reg = (enum cpu_reg_name)(vie->reg);
 		regop = vm_get_register(vcpu, reg);
 
 		/* Get the memory operand */
@@ -1440,7 +1439,7 @@ static int emulate_sub(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 		 */
 
 		/* get the first operand */
-		reg = vie->reg;
+		reg = (enum cpu_reg_name)(vie->reg);
 		val1 = vm_get_register(vcpu, reg);
 
 		/* get the second operand */
@@ -1847,7 +1846,7 @@ static int decode_modrm(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode)
 		goto done;
 	}
 
-	vie->base_register = vie->rm;
+	vie->base_register = (enum cpu_reg_name)vie->rm;
 
 	switch (vie->mod) {
 	case VIE_MOD_INDIRECT_DISP8:
@@ -1942,7 +1941,7 @@ static int decode_sib(struct instr_emul_vie *vie)
 		 */
 		vie->disp_bytes = 4U;
 	} else {
-		vie->base_register = vie->base;
+		vie->base_register = (enum cpu_reg_name)vie->base;
 	}
 
 	/*
@@ -1953,7 +1952,7 @@ static int decode_sib(struct instr_emul_vie *vie)
 	 * Table 2-5: Special Cases of REX Encodings
 	 */
 	if (vie->index != 4U) {
-		vie->index_register = vie->index;
+		vie->index_register = (enum cpu_reg_name)vie->index;
 	}
 
 	/* 'scale' makes sense only in the context of an index register */
@@ -1968,8 +1967,7 @@ static int decode_sib(struct instr_emul_vie *vie)
 
 static int decode_displacement(struct instr_emul_vie *vie)
 {
-	int n, i;
-	uint8_t x;
+	uint8_t n, i, x;
 
 	union {
 		uint8_t	buf[4];
@@ -1978,17 +1976,17 @@ static int decode_displacement(struct instr_emul_vie *vie)
 	} u;
 
 	n = vie->disp_bytes;
-	if (n == 0) {
+	if (n == 0U) {
 		return 0;
 	}
 
-	if ((n != 1) && (n != 4)) {
+	if ((n != 1U) && (n != 4U)) {
 		pr_err("%s: decode_displacement: invalid disp_bytes %d",
 			__func__, n);
 		return -EINVAL;
 	}
 
-	for (i = 0; i < n; i++) {
+	for (i = 0U; i < n; i++) {
 		if (vie_peek(vie, &x) != 0) {
 			return -1;
 		}
@@ -1997,7 +1995,7 @@ static int decode_displacement(struct instr_emul_vie *vie)
 		vie_advance(vie);
 	}
 
-	if (n == 1) {
+	if (n == 1U) {
 		vie->displacement = u.signed8;		/* sign-extended */
 	} else {
 		vie->displacement = u.signed32;		/* sign-extended */
@@ -2008,8 +2006,7 @@ static int decode_displacement(struct instr_emul_vie *vie)
 
 static int decode_immediate(struct instr_emul_vie *vie)
 {
-	int i, n;
-	uint8_t x;
+	uint8_t i, n, x;
 	union {
 		uint8_t	buf[4];
 		int8_t	signed8;
@@ -2039,17 +2036,17 @@ static int decode_immediate(struct instr_emul_vie *vie)
 	}
 
 	n = vie->imm_bytes;
-	if (n == 0) {
+	if (n == 0U) {
 		return 0;
 	}
 
-	if ((n != 1) && (n != 2) && (n != 4)) {
+	if ((n != 1U) && (n != 2U) && (n != 4U)) {
 		pr_err("%s: invalid number of immediate bytes: %d",
 			__func__, n);
 		return -EINVAL;
 	}
 
-	for (i = 0; i < n; i++) {
+	for (i = 0U; i < n; i++) {
 		if (vie_peek(vie, &x) != 0) {
 			return -1;
 		}
@@ -2059,9 +2056,9 @@ static int decode_immediate(struct instr_emul_vie *vie)
 	}
 
 	/* sign-extend the immediate value before use */
-	if (n == 1) {
+	if (n == 1U) {
 		vie->immediate = u.signed8;
-	} else if (n == 2) {
+	} else if (n == 2U) {
 		vie->immediate = u.signed16;
 	} else {
 		vie->immediate = u.signed32;
@@ -2317,7 +2314,7 @@ int32_t emulate_instruction(const struct acrn_vcpu *vcpu)
 		pr_err("%s: Failed to get instr_emul_ctxt", __func__);
 		ret = -1;
 	} else {
-		ret = vmm_emulate_instruction(ctxt); 
+		ret = vmm_emulate_instruction(ctxt);
 	}
 
 	return ret;

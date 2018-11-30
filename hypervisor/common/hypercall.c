@@ -973,7 +973,7 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vm *vm, uint64_t cmd, uint64_t param)
 		return 0;
 	}
 	case PMCMD_GET_PX_DATA: {
-		int32_t pn;
+		uint8_t pn;
 		struct cpu_px_data *px_data;
 
 		/* For now we put px data as per-vm,
@@ -984,7 +984,7 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vm *vm, uint64_t cmd, uint64_t param)
 			return -1;
 		}
 
-		pn = (cmd & PMCMD_STATE_NUM_MASK) >> PMCMD_STATE_NUM_SHIFT;
+		pn = (uint8_t)((cmd & PMCMD_STATE_NUM_MASK) >> PMCMD_STATE_NUM_SHIFT);
 		if (pn >= target_vm->pm.px_cnt) {
 			return -1;
 		}
