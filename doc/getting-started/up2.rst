@@ -19,16 +19,30 @@ SoCs. Both have been confirmed to work with ACRN.
 Connecting to the serial port
 =============================
 
-The UP2 board has two serial ports. Please refer to the `UP2
-specifications <http://www.up-board.org/upsquared/specifications-up2/>`_
-for more information.  We'll access the serial port through the I/O pins
-in the 40-pin HAT connector using a `USB TTL serial cable
-<http://www.ftdichip.com/Products/USBTTLSerial.htm>`_. Connect pin 6
-(``GND``), pin 8 (``TX``) and pin 10 (``RX``) of the HAT connector to
-respectively the ``GND``, ``RX`` and ``TX`` pins of your USB serial
-cable. Plug the USB TTL serial cable into your PC and use a console
-emulation tool such as ``minicom`` or ``putty`` to communicate with the
-UP2 board for debugging.
+The UP2 board has two serial ports. The following figure shows the UP2 board's 
+40-pin HAT connector we'll be using as documented in the  `UP2 Datasheet
+<https://up-board.org/wp-content/uploads/datasheets/UP-Square-DatasheetV0.5.pdf>`_.
+
+.. image:: images/the-bottom-side-of-UP2-board.png
+   :align: center
+   
+We'll access the serial port through the I/O pins in the 
+40-pin HAT connector using a `USB TTL serial cable
+<http://www.ftdichip.com/Products/USBTTLSerial.htm>`_, 
+and show how to connect a serial port with 
+``PL2303TA USB to TTL serial cable`` for example: 
+
+.. image:: images/USB-to-TTL-serial-cable.png
+   :align: center
+
+Connect pin 6 (``Ground``), pin 8 (``UART_TXD``) and pin 10 (``UART_RXD``) of the HAT 
+connector to respectively the ``GND``, ``RX`` and ``TX`` pins of your 
+USB serial cable. Plug the USB TTL serial cable into your PC and use a 
+console emulation tool such as ``minicom`` or ``putty`` to communicate 
+with the UP2 board for debugging.
+
+.. image:: images/the-connection-of-serial-port.png
+   :align: center
 
 Software setup
 **************
