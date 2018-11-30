@@ -291,7 +291,7 @@ static inline uint8_t iommu_ecap_pds(uint64_t ecap)
 #define DMA_CCMD_DEVICE_INVL (3UL << 61U)
 static inline uint64_t dma_ccmd_fm(uint8_t fm)
 {
-	return (((uint64_t)(fm & 0x3U)) << 32U);
+	return (((uint64_t)fm & 0x3UL) << 32UL);
 }
 
 #define DMA_CCMD_MASK_NOBIT 0UL
@@ -300,7 +300,7 @@ static inline uint64_t dma_ccmd_fm(uint8_t fm)
 #define DMA_CCMD_MASK_3BIT 3UL
 static inline uint64_t dma_ccmd_sid(uint16_t sid)
 {
-	return (((uint64_t)(sid & 0xffffU)) << 16U);
+	return (((uint64_t)sid & 0xffffUL) << 16UL);
 }
 
 static inline uint16_t dma_ccmd_did(uint16_t did)
@@ -324,7 +324,7 @@ static inline uint8_t dma_ccmd_get_caig_32(uint32_t gaig)
 #define DMA_IOTLB_DW				(((uint64_t)1UL) << 48U)
 static inline uint64_t dma_iotlb_did(uint16_t did)
 {
-	return (((uint64_t)(did & 0xffffU)) << 32U);
+	return (((uint64_t)did & 0xffffUL) << 32UL);
 }
 
 static inline uint8_t dma_iotlb_get_iaig_32(uint32_t iai)

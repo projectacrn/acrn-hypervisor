@@ -8,7 +8,7 @@
 #define PAGE_H
 
 #define PAGE_SHIFT	12U
-#define PAGE_SIZE	(1UL << PAGE_SHIFT)
+#define PAGE_SIZE	(1U << PAGE_SHIFT)
 
 /* size of the low MMIO address space: 2GB */
 #define PLATFORM_LO_MMIO_SIZE	0x80000000UL

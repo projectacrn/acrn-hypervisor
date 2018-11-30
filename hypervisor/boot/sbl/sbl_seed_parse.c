@@ -94,7 +94,7 @@ static void parse_seed_list_sbl(struct seed_list_hob *seed_hob)
 			dseed_index++;
 
 			/* erase original seed in seed entry */
-			(void)memset(entry->seed, 0U, sizeof(struct seed_info));
+			(void)memset((void *)entry->seed, 0U, sizeof(struct seed_info));
 		}
 
 		entry = (struct seed_entry *)((uint8_t *)entry +
