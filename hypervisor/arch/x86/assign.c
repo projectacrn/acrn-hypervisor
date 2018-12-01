@@ -541,7 +541,13 @@ int32_t ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,
 			info->pmsi_data.full = 0U;
 		} else {
 			/* build physical config MSI, update to info->pmsi_xxx */
-			ptirq_build_physical_msi(vm, info, irq_to_vector(entry->allocated_pirq));
+			if (is_lapic_pt(vm)) {
+				/* for vm with lapic-pt, keep vector from guest */
+				ptirq_build_physical_msi(vm, info, info->vmsi_data.bits.vector);
+			} else {
+				ptirq_build_physical_msi(vm, info, irq_to_vector(entry->allocated_pirq));
+			}
+
 			entry->msi = *info;
 			dev_dbg(ACRN_DBG_IRQ, "PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
 				pci_bus(virt_bdf), pci_slot(virt_bdf), pci_func(virt_bdf), entry_nr,
