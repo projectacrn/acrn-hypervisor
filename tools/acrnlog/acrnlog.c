@@ -19,13 +19,12 @@
 
 #define LOG_ELEMENT_SIZE        80
 #define LOG_MSG_SIZE		480
-#define PCPU_NUM		4
 #define DEFAULT_POLL_INTERVAL	100000
 #define LOG_INCOMPLETE_WARNING	"WARNING: logs missing here! "\
 				"Try reducing polling interval"
 
-/* num of physical cpu, not the cpu num seen on SOS */
-static unsigned int pcpu_num = PCPU_NUM;
+/* Count of /dev/acrn_hvlog_cur_xxx */
+static unsigned int dev_cnt;
 static unsigned long interval = DEFAULT_POLL_INTERVAL;
 
 /* this is for log file */
@@ -84,14 +83,11 @@ struct hvlog_dev {
 
 size_t write_log_file(struct hvlog_file * log, const char *buf, size_t len);
 
-/*
- * get pcpu_num, which is equal to num of acrnlog dev
- */
-static int get_cpu_num(void)
+static int get_dev_cnt(void)
 {
 	char prefix[32] = "acrn_hvlog_cur_"; /* acrnlog dev prefix */
 	struct dirent *pdir;
-	int cpu_num = 0;
+	int cnt = 0;
 	char *ret;
 	DIR *dir;
 
@@ -104,12 +100,12 @@ static int get_cpu_num(void)
 	while ((pdir = readdir(dir)) != NULL) {
 		ret = strstr(pdir->d_name, prefix);
 		if (ret)
-			cpu_num++;
+			cnt++;
 	}
 
 	closedir(dir);
 
-	return cpu_num;
+	return cnt;
 }
 
 /*
@@ -358,8 +354,8 @@ static void *cur_read_func(void *arg)
 	char warn_msg[LOG_MSG_SIZE] = {0};
 
 	while (1) {
-		hvlog_dev_read_msg(cur, pcpu_num);
-		msg = get_min_seq_msg(cur, pcpu_num);
+		hvlog_dev_read_msg(cur, dev_cnt);
+		msg = get_min_seq_msg(cur, dev_cnt);
 		if (!msg) {
 			usleep(interval);
 			continue;
@@ -506,14 +502,19 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	pcpu_num = get_cpu_num();
-	cur = calloc(pcpu_num, sizeof(struct hvlog_data));
+	dev_cnt = get_dev_cnt();
+	if (dev_cnt == 0) {
+		printf("Failed to find acrn hvlog devices, please check whether module acrn_hvlog is inserted\n");
+		return -1;
+	}
+
+	cur = calloc(dev_cnt, sizeof(struct hvlog_data));
 	if (!cur) {
 		printf("Failed to allocate buf for cur log buf\n");
 		return -1;
 	}
 
-	last = calloc(pcpu_num, sizeof(struct hvlog_data));
+	last = calloc(dev_cnt, sizeof(struct hvlog_data));
 	if (!last) {
 		printf("Failed to allocate buf for last log buf\n");
 		free(cur);
@@ -521,7 +522,7 @@ int main(int argc, char *argv[])
 	}
 
 	num_cur = 0;
-	for (i = 0; i < pcpu_num; i++) {
+	for (i = 0; i < dev_cnt; i++) {
 		if (snprintf(name, sizeof(name), "/dev/acrn_hvlog_cur_%d", i) >= sizeof(name)) {
 			printf("ERROR: cur hvlog path is truncated\n");
 			return -1;
@@ -535,7 +536,7 @@ int main(int argc, char *argv[])
 	}
 
 	num_last = 0;
-	for (i = 0; i < pcpu_num; i++) {
+	for (i = 0; i < dev_cnt; i++) {
 		if (snprintf(name, sizeof(name), "/dev/acrn_hvlog_last_%d", i) >= sizeof(name)) {
 			printf("ERROR: last hvlog path is truncated\n");
 			return -1;
@@ -561,8 +562,8 @@ int main(int argc, char *argv[])
 
 	if (num_last) {
 		while (1) {
-			hvlog_dev_read_msg(last, pcpu_num);
-			msg = get_min_seq_msg(last, pcpu_num);
+			hvlog_dev_read_msg(last, dev_cnt);
+			msg = get_min_seq_msg(last, dev_cnt);
 			if (!msg)
 				break;
 			write_log_file(&last_log, msg->raw, msg->len);
@@ -572,7 +573,7 @@ int main(int argc, char *argv[])
 	if (cur_thread)
 		pthread_join(cur_thread, NULL);
 
-	for (i = 0; i < pcpu_num; i++) {
+	for (i = 0; i < dev_cnt; i++) {
 		hvlog_close_dev(cur[i].dev);
 		hvlog_close_dev(last[i].dev);
 	}
