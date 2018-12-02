@@ -60,21 +60,6 @@ struct shared_buf {
 
 #ifdef HV_DEBUG
 
-static inline void sbuf_clear_flags(struct shared_buf *sbuf, uint32_t flags)
-{
-	sbuf->flags &= ~flags;
-}
-
-static inline void sbuf_set_flags(struct shared_buf *sbuf, uint32_t flags)
-{
-	sbuf->flags = flags;
-}
-
-static inline void sbuf_add_flags(struct shared_buf *sbuf, uint32_t flags)
-{
-	sbuf->flags |= flags;
-}
-
 /**
  *@pre sbuf != NULL
  *@pre data != NULL
@@ -89,24 +74,6 @@ int sbuf_share_setup(uint16_t pcpu_id, uint32_t sbuf_id, uint64_t *hva);
 uint32_t sbuf_next_ptr(uint32_t pos, uint32_t span, uint32_t scope);
 
 #else /* HV_DEBUG */
-
-static inline void sbuf_clear_flags(
-		__unused struct shared_buf *sbuf,
-		__unused uint32_t flags)
-{
-}
-
-static inline void sbuf_set_flags(
-		__unused struct shared_buf *sbuf,
-		__unused uint32_t flags)
-{
-}
-
-static inline void sbuf_add_flags(
-		__unused struct shared_buf *sbuf,
-		__unused uint32_t flags)
-{
-}
 
 static inline int sbuf_get(
 		__unused struct shared_buf *sbuf,
