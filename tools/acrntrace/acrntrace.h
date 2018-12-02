@@ -42,8 +42,8 @@
 #define FLAG_TO_REL		(1UL << 0)
 #define FLAG_CLEAR_BUF		(1UL << 1)
 
-#define foreach_cpu(cpu)                                       \
-        for ((cpu) = 0; (cpu) < (pcpu_num); (cpu)++)
+#define foreach_dev(dev_id)                                       \
+        for ((dev_id) = 0; (dev_id) < (dev_cnt); (dev_id)++)
 
 typedef unsigned char uint8_t;
 typedef unsigned int uint32_t;
@@ -71,7 +71,7 @@ typedef struct {
 } trace_ev_t;
 
 typedef struct {
-	uint32_t cpuid;
+	uint32_t devid;
 	int exit_flag;
 	int trace_fd;
 	shared_buf_t *sbuf;
