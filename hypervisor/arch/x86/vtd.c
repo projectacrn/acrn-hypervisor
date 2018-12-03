@@ -871,7 +871,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8
 		/* create context table for the bus if not present */
 		context_table_addr = hva2hpa(get_ctx_table(dmar_unit->index, bus));
 
-		context_table_addr = context_table_addr >> CPU_PAGE_SHIFT;
+		context_table_addr = context_table_addr >> PAGE_SHIFT;
 
 		lower = dmar_set_bitslice(lower,
 				ROOT_ENTRY_LOWER_CTP_MASK, ROOT_ENTRY_LOWER_CTP_POS, context_table_addr);
@@ -886,7 +886,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8
 				ROOT_ENTRY_LOWER_CTP_MASK, ROOT_ENTRY_LOWER_CTP_POS);
 	}
 
-	context_table_addr = context_table_addr << CPU_PAGE_SHIFT;
+	context_table_addr = context_table_addr << PAGE_SHIFT;
 
 	context_table = (struct dmar_context_entry *)hpa2hva(context_table_addr);
 	context_entry = context_table + devfun;
@@ -927,7 +927,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8
 	upper = dmar_set_bitslice(upper,
 	          CTX_ENTRY_UPPER_DID_MASK, CTX_ENTRY_UPPER_DID_POS, (uint64_t)vmid_to_domainid(domain->vm_id));
 	lower = dmar_set_bitslice(lower,
-		  CTX_ENTRY_LOWER_SLPTPTR_MASK, CTX_ENTRY_LOWER_SLPTPTR_POS, domain->trans_table_ptr >> CPU_PAGE_SHIFT);
+		  CTX_ENTRY_LOWER_SLPTPTR_MASK, CTX_ENTRY_LOWER_SLPTPTR_POS, domain->trans_table_ptr >> PAGE_SHIFT);
 	lower = dmar_set_bitslice(lower, CTX_ENTRY_LOWER_P_MASK, CTX_ENTRY_LOWER_P_POS, 1UL);
 
 	context_entry->upper = upper;
@@ -957,7 +957,7 @@ static int remove_iommu_device(const struct iommu_domain *domain, uint16_t segme
 	root_entry = root_table + bus;
 
 	context_table_addr = dmar_get_bitslice(root_entry->lower,  ROOT_ENTRY_LOWER_CTP_MASK, ROOT_ENTRY_LOWER_CTP_POS);
-	context_table_addr = context_table_addr << CPU_PAGE_SHIFT;
+	context_table_addr = context_table_addr << PAGE_SHIFT;
 	context_table = (struct dmar_context_entry *)hpa2hva(context_table_addr);
 
 	context_entry = context_table + devfun;
