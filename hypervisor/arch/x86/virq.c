@@ -175,23 +175,6 @@ static int vcpu_do_pending_extint(const struct acrn_vcpu *vcpu)
 	return 0;
 }
 
-/* please keep this for interrupt debug:
- * 1. Timer alive or not
- * 2. native LAPIC interrupt pending/EOI status
- * 3. CPU stuck or not
- */
-static void dump_lapic(void)
-{
-	dev_dbg(ACRN_DBG_INTR,
-		"LAPIC: TIME %08x, init=0x%x cur=0x%x ISR=0x%x IRR=0x%x",
-		msr_read(MSR_IA32_EXT_APIC_LVT_TIMER),
-		msr_read(MSR_IA32_EXT_APIC_INIT_COUNT),
-		msr_read(MSR_IA32_EXT_APIC_CUR_COUNT),
-		msr_read(MSR_IA32_EXT_APIC_ISR7),
-		msr_read(MSR_IA32_EXT_APIC_IRR7)
-		);
-}
-
 /* SDM Vol3 -6.15, Table 6-4 - interrupt and exception classes */
 static int get_excep_class(uint32_t vector)
 {
