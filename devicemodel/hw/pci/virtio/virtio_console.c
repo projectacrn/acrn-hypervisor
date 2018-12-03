@@ -828,7 +828,7 @@ virtio_console_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 					"error %d!\n", rc));
 
 	virtio_linkup(&console->base, &virtio_console_ops, console, dev,
-		console->queues);
+		console->queues, BACKEND_VBSU);
 	console->base.mtx = &console->mtx;
 	console->base.device_caps = VIRTIO_CONSOLE_S_HOSTCAPS;
 

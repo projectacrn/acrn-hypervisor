@@ -316,7 +316,8 @@ virtio_audio_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		      &virtio_audio_ops_k,
 		      virt_audio,
 		      dev,
-		      virt_audio->vq);
+		      virt_audio->vq,
+		      BACKEND_VBSK);
 
 	rc = virtio_audio_kernel_init(virt_audio);
 	if (rc < 0) {

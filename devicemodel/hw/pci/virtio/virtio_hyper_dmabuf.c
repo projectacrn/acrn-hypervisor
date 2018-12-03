@@ -299,7 +299,8 @@ virtio_hyper_dmabuf_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		      &virtio_hyper_dmabuf_ops_k,
 		      hyper_dmabuf,
 		      dev,
-		      hyper_dmabuf->vq);
+		      hyper_dmabuf->vq,
+		      BACKEND_VBSK);
 
 	rc = virtio_hyper_dmabuf_k_init();
 	if (rc < 0) {

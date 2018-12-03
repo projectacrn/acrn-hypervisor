@@ -320,7 +320,8 @@ virtio_ipu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		      &virtio_ipu_ops_k,
 		      ipu,
 		      dev,
-		      ipu->vq);
+		      ipu->vq,
+		      BACKEND_VBSK);
 
 	rc = virtio_ipu_k_init(ipu);
 	if (rc < 0) {

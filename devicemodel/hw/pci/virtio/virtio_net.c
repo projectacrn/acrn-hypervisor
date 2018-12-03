@@ -555,7 +555,7 @@ virtio_net_tx_thread(void *param)
 	for (;;) {
 		/* note - tx mutex is locked here */
 		while (net->resetting || !vq_has_descs(vq)) {
-			vq->used->flags &= ~ACRN_VRING_USED_F_NO_NOTIFY;
+			vq_clear_used_ring_flags(&net->base, vq);
 			/* memory barrier */
 			mb();
 			if (!net->resetting && vq_has_descs(vq))
@@ -724,7 +724,7 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	char nstr[80];
 	char tname[MAXCOMLEN + 1];
 	struct virtio_net *net;
-	char *devname;
+	char *devname = NULL;
 	char *vtopts;
 	char *opt;
 	int mac_provided;
@@ -751,25 +751,10 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		DPRINTF(("virtio_net: pthread_mutex_init failed with "
 			"error %d!\n", rc));
 
-	virtio_linkup(&net->base, &virtio_net_ops, net, dev, net->queues);
-	net->base.mtx = &net->mtx;
-	net->base.device_caps = VIRTIO_NET_S_HOSTCAPS;
-
-	net->queues[VIRTIO_NET_RXQ].qsize = VIRTIO_NET_RINGSZ;
-	net->queues[VIRTIO_NET_RXQ].notify = virtio_net_ping_rxq;
-	net->queues[VIRTIO_NET_TXQ].qsize = VIRTIO_NET_RINGSZ;
-	net->queues[VIRTIO_NET_TXQ].notify = virtio_net_ping_txq;
-#ifdef notyet
-	net->queues[VIRTIO_NET_CTLQ].qsize = VIRTIO_NET_RINGSZ;
-	net->queues[VIRTIO_NET_CTLQ].notify = virtio_net_ping_ctlq;
-#endif
-
 	/*
-	 * Attempt to open the tap device and read the MAC address
-	 * if specified
+	 * Read the MAC address if specified
 	 */
 	mac_provided = 0;
-	net->tapfd = -1;
 	net->vhost_net = NULL;
 	if (opts != NULL) {
 		int err;
@@ -795,13 +780,37 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 				mac_provided = 1;
 			}
 		}
-
-		if (strncmp(devname, "tap", 3) == 0 ||
-		    strncmp(devname, "vmnet", 5) == 0)
-			virtio_net_tap_setup(net, devname);
-
-		free(devname);
 	}
+
+	virtio_linkup(&net->base, &virtio_net_ops, net, dev, net->queues,
+		      net->use_vhost ? BACKEND_VHOST : BACKEND_VBSU);
+	net->base.mtx = &net->mtx;
+	net->base.device_caps = VIRTIO_NET_S_HOSTCAPS;
+
+	net->queues[VIRTIO_NET_RXQ].qsize = VIRTIO_NET_RINGSZ;
+	net->queues[VIRTIO_NET_RXQ].notify = virtio_net_ping_rxq;
+	net->queues[VIRTIO_NET_TXQ].qsize = VIRTIO_NET_RINGSZ;
+	net->queues[VIRTIO_NET_TXQ].notify = virtio_net_ping_txq;
+#ifdef notyet
+	net->queues[VIRTIO_NET_CTLQ].qsize = VIRTIO_NET_RINGSZ;
+	net->queues[VIRTIO_NET_CTLQ].notify = virtio_net_ping_ctlq;
+#endif
+
+	/*
+	 * Attempt to open the tap device
+	 */
+	net->tapfd = -1;
+
+	if (!devname) {
+		WPRINTF(("virtio_net: devname NULL\n"));
+		return -1;
+	}
+
+	if (strncmp(devname, "tap", 3) == 0 ||
+	    strncmp(devname, "vmnet", 5) == 0)
+		virtio_net_tap_setup(net, devname);
+
+	free(devname);
 
 	/*
 	 * The default MAC address is the standard NetApp OUI of 00-a0-98,

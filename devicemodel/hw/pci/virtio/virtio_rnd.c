@@ -404,7 +404,7 @@ virtio_rnd_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (rnd->vbs_k.status == VIRTIO_DEV_PRE_INIT) {
 		DPRINTF(("%s: VBS-K option detected!\n", __func__));
 		virtio_linkup(&rnd->base, &virtio_rnd_ops_k,
-			      rnd, dev, &rnd->vq);
+			      rnd, dev, &rnd->vq, BACKEND_VBSK);
 		rc = virtio_rnd_kernel_init(rnd);
 		if (rc < 0) {
 			WPRINTF(("virtio_rnd: VBS-K init failed,error %d!\n",
@@ -417,7 +417,7 @@ virtio_rnd_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	if (rnd->vbs_k.status == VIRTIO_DEV_INITIAL ||
 	    rnd->vbs_k.status != VIRTIO_DEV_INIT_SUCCESS) {
 		DPRINTF(("%s: fallback to VBS-U...\n", __func__));
-		virtio_linkup(&rnd->base, &virtio_rnd_ops, rnd, dev, &rnd->vq);
+		virtio_linkup(&rnd->base, &virtio_rnd_ops, rnd, dev, &rnd->vq, BACKEND_VBSU);
 	}
 
 	rnd->base.mtx = &rnd->mtx;

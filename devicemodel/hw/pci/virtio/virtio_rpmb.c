@@ -512,7 +512,7 @@ virtio_rpmb_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		goto out;
 	}
 
-	virtio_linkup(&rpmb->base, &virtio_rpmb_ops, rpmb, dev, &rpmb->vq);
+	virtio_linkup(&rpmb->base, &virtio_rpmb_ops, rpmb, dev, &rpmb->vq, BACKEND_VBSU);
 
 	rpmb->base.mtx = &rpmb->mtx;
 	rpmb->vq.qsize = VIRTIO_RPMB_RINGSZ;
