@@ -326,7 +326,7 @@ static bool derive_aek(uint8_t *attkb_key)
 	uint32_t ikm_len;
 	uint32_t max_svn_idx;
 
-	if ((!attkb_key) || (g_key_info.num_seeds == 0U) ||
+	if ((attkb_key == NULL) || (g_key_info.num_seeds == 0U) ||
 			(g_key_info.num_seeds > BOOTLOADER_SEED_MAX_ENTRIES)) {
 		return false;
 	}
