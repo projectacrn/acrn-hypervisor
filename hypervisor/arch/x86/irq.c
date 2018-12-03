@@ -64,7 +64,7 @@ uint32_t alloc_irq_num(uint32_t req_irq)
  * @pre: irq is not in irq_static_mappings
  * free irq num allocated via alloc_irq_num()
  */
-void free_irq_num(uint32_t irq)
+static void free_irq_num(uint32_t irq)
 {
 	uint64_t rflags;
 
@@ -130,7 +130,7 @@ uint32_t alloc_irq_vector(uint32_t irq)
 }
 
 /* free the vector allocated via alloc_irq_vector() */
-void free_irq_vector(uint32_t irq)
+static void free_irq_vector(uint32_t irq)
 {
 	struct irq_desc *desc;
 	uint32_t vr;
