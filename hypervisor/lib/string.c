@@ -90,7 +90,7 @@ long strtol_deci(const char *nptr)
 			break;
 		} else {
 			acc *= base;
-			acc += c;
+			acc += (uint64_t)c;
 		}
 
 		c = *s;
@@ -143,7 +143,7 @@ uint64_t strtoul_hex(const char *nptr)
 			break;
 		} else {
 			acc *= base;
-			acc += digit;
+			acc += (uint64_t)digit;
 		}
 
 		c = *s;
