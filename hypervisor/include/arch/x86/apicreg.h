@@ -29,6 +29,8 @@
 #ifndef APICREG_H
 #define APICREG_H
 
+#include <page.h>
+
 /*
  * Local && I/O APIC definitions.
  */
@@ -76,7 +78,7 @@ struct lapic_regs {			 /*OFFSET(Hex)*/
 
 	/*roundup sizeof current struct to 4KB*/
 	struct lapic_reg	rsv5[192]; /*400 -- FF0*/
-} __aligned(CPU_PAGE_SIZE);
+} __aligned(PAGE_SIZE);
 
 enum LAPIC_REGISTERS {
 	LAPIC_ID	= 0x2,

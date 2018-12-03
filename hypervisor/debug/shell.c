@@ -11,7 +11,7 @@
 #define MAX_STR_SIZE		256U
 #define SHELL_PROMPT_STR	"ACRN:\\>"
 
-#define SHELL_LOG_BUF_SIZE		(CPU_PAGE_SIZE * CONFIG_MAX_PCPU_NUM / 2U)
+#define SHELL_LOG_BUF_SIZE		(PAGE_SIZE * CONFIG_MAX_PCPU_NUM / 2U)
 static char shell_log_buf[SHELL_LOG_BUF_SIZE];
 
 /* Input Line Other - Switch to the "other" input line (there are only two

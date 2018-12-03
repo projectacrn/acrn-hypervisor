@@ -129,8 +129,8 @@ struct context_table {
 	struct page buses[CONFIG_IOMMU_BUS_NUM];
 };
 
-static struct page root_tables[CONFIG_MAX_IOMMU_NUM] __aligned(CPU_PAGE_SIZE);
-static struct context_table ctx_tables[CONFIG_MAX_IOMMU_NUM] __aligned(CPU_PAGE_SIZE);
+static struct page root_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
+static struct context_table ctx_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
 
 static inline uint8_t* get_root_table(uint32_t dmar_index)
 {

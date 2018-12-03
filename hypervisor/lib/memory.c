@@ -210,15 +210,15 @@ static void deallocate_mem(struct mem_pool *pool, const void *ptr)
 }
 
 /*
- * The return address will be CPU_PAGE_SIZE aligned if 'num_bytes' is greater
- * than CPU_PAGE_SIZE.
+ * The return address will be PAGE_SIZE aligned if 'num_bytes' is greater
+ * than PAGE_SIZE.
  */
 void *malloc(unsigned int num_bytes)
 {
 	void *memory = NULL;
 
 	/* Check if bytes requested extend page-size */
-	if (num_bytes < CPU_PAGE_SIZE) {
+	if (num_bytes < PAGE_SIZE) {
 		/*
 		 * Request memory allocation from smaller segmented memory pool
 		 */

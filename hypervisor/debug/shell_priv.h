@@ -10,7 +10,7 @@
 #include <spinlock.h>
 
 #define SHELL_CMD_MAX_LEN		100U
-#define SHELL_STRING_MAX_LEN		(CPU_PAGE_SIZE << 2U)
+#define SHELL_STRING_MAX_LEN		(PAGE_SIZE << 2U)
 
 /* Shell Command Function */
 typedef int (*shell_cmd_fn_t)(int argc, char **argv);

@@ -84,7 +84,7 @@ vlapic_dump_isr(__unused struct acrn_vlapic *vlapic, __unused char *msg) {}
 #endif
 
 /*APIC-v APIC-access address */
-static uint8_t apicv_apic_access_addr[CPU_PAGE_SIZE] __aligned(CPU_PAGE_SIZE);
+static uint8_t apicv_apic_access_addr[PAGE_SIZE] __aligned(PAGE_SIZE);
 
 static int
 apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector);
@@ -1581,7 +1581,7 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset,
 	uint32_t data32 = (uint32_t)data;
 	int retval;
 
-	ASSERT(((offset & 0xfU) == 0U) && (offset < CPU_PAGE_SIZE),
+	ASSERT(((offset & 0xfU) == 0U) && (offset < PAGE_SIZE),
 		"%s: invalid offset %#x", __func__, offset);
 
 	dev_dbg(ACRN_DBG_LAPIC, "vlapic write offset %#x, data %#lx",
@@ -2241,12 +2241,12 @@ int vlapic_create(struct acrn_vcpu *vcpu)
 		/* only need unmap it from SOS as UOS never mapped it */
 		if (is_vm0(vcpu->vm)) {
 			ept_mr_del(vcpu->vm, pml4_page,
-				DEFAULT_APIC_BASE, CPU_PAGE_SIZE);
+				DEFAULT_APIC_BASE, PAGE_SIZE);
 		}
 
 		ept_mr_add(vcpu->vm, pml4_page,
 			vlapic_apicv_get_apic_access_addr(),
-			DEFAULT_APIC_BASE, CPU_PAGE_SIZE,
+			DEFAULT_APIC_BASE, PAGE_SIZE,
 			EPT_WR | EPT_RD | EPT_UNCACHED);
 	}
 

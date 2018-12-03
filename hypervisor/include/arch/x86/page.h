@@ -28,6 +28,8 @@
 #define TRUSTY_PGTABLE_PAGE_NUM(size)	\
 (TRUSTY_PML4_PAGE_NUM(size) + TRUSTY_PDPT_PAGE_NUM(size) + TRUSTY_PD_PAGE_NUM(size) + TRUSTY_PT_PAGE_NUM(size))
 
+struct acrn_vm;
+
 struct page {
 	uint8_t contents[PAGE_SIZE];
 } __aligned(PAGE_SIZE);

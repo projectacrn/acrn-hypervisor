@@ -128,7 +128,7 @@ primary_start_long_mode:
 
     /* Initialize temporary stack pointer */
     lea     ld_bss_end(%rip), %rsp
-    /*0x1000 = CPU_PAGE_SIZE*/
+    /*0x1000 = PAGE_SIZE*/
     add     $0x1000,%rsp
     /* 16 = CPU_STACK_ALIGN */
     and     $(~(16 - 1)),%rsp
@@ -217,23 +217,23 @@ cpu_primary32_gdt_ptr:
     .quad   cpu_primary32_gdt
 
 /* PML4, PDPT, and PD tables initialized to map first 4 GBytes of memory */
-    /*0x1000 = CPU_PAGE_SIZE*/
+    /*0x1000 = PAGE_SIZE*/
     .align  0x1000
     .global cpu_boot32_page_tables_start
 cpu_boot32_page_tables_start:
     /* 0x3 = (PAGE_PRESENT | PAGE_RW) */
     .quad   cpu_primary32_pdpt_addr + 0x3
-    /*0x1000 = CPU_PAGE_SIZE*/
+    /*0x1000 = PAGE_SIZE*/
     .align  0x1000
 cpu_primary32_pdpt_addr:
     address = 0
     .rept   4
     /* 0x3 = (PAGE_PRESENT | PAGE_RW) */
     .quad   cpu_primary32_pdt_addr + address + 0x3
-    /*0x1000 = CPU_PAGE_SIZE*/
+    /*0x1000 = PAGE_SIZE*/
     address = address + 0x1000
     .endr
-    /*0x1000 = CPU_PAGE_SIZE*/
+    /*0x1000 = PAGE_SIZE*/
     .align  0x1000
 cpu_primary32_pdt_addr:
     address = 0

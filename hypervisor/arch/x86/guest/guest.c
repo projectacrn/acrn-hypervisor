@@ -664,7 +664,7 @@ uint64_t e820_alloc_low_memory(uint32_t size_arg)
 	struct e820_entry *entry, *new_entry;
 
 	/* We want memory in page boundary and integral multiple of pages */
-	size = (((size + CPU_PAGE_SIZE) - 1U) >> CPU_PAGE_SHIFT)
+	size = (((size + PAGE_SIZE) - 1U) >> CPU_PAGE_SHIFT)
 		<< CPU_PAGE_SHIFT;
 
 	for (i = 0U; i < e820_entries; i++) {
