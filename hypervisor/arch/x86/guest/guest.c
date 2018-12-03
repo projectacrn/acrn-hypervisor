@@ -229,7 +229,7 @@ static int local_gva2gpa_pae(struct acrn_vcpu *vcpu, struct page_walk_info *pw_i
 	int ret;
 
 	addr = pw_info->top_entry & 0xFFFFFFF0U;
-	base = gpa2hva(vcpu->vm, addr);
+	base = (uint64_t *)gpa2hva(vcpu->vm, addr);
 	if (base == NULL) {
 		ret = -EFAULT;
 		goto out;
@@ -282,7 +282,7 @@ int gva2gpa(struct acrn_vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	*gpa = 0UL;
 
 	pw_info.top_entry = exec_vmread(VMX_GUEST_CR3);
-	pw_info.level = pm;
+	pw_info.level = (uint32_t)pm;
 	pw_info.is_write_access = ((*err_code & PAGE_FAULT_WR_FLAG) != 0U);
 	pw_info.is_inst_fetch = ((*err_code & PAGE_FAULT_ID_FLAG) != 0U);
 

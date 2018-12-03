@@ -308,8 +308,8 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen_arg)
 		ASSERT(false);
 	}
 
-	if (((d > s) && (d <= ((s + slen) - 1U)))
-			|| ((d < s) && (s <= ((d + dmax) - 1U)))) {
+	if ((((d) > (s)) && ((d) <= ((s + slen) - 1U)))
+			|| (((d) < (s)) && ((s) <= ((d + dmax) - 1U)))) {
 		ASSERT(false);
 	}
 

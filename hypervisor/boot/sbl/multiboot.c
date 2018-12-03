@@ -79,7 +79,7 @@ static void parse_other_modules(struct acrn_vm *vm,
 
 	for (i = 0U; i < mods_count; i++) {
 		uint32_t type_len;
-		const char *start = hpa2hva((uint64_t)mods[i].mm_string);
+		const char *start = (char *)hpa2hva((uint64_t)mods[i].mm_string);
 		const char *end;
 		void *mod_addr = hpa2hva((uint64_t)mods[i].mm_mod_start);
 		uint32_t mod_size = mods[i].mm_mod_end - mods[i].mm_mod_start;
@@ -174,7 +174,7 @@ int init_vm_boot_info(struct acrn_vm *vm)
 		return -EINVAL;
 	}
 
-	mbi = hpa2hva((uint64_t)boot_regs[1]);
+	mbi = (struct multiboot_info *)hpa2hva((uint64_t)boot_regs[1]);
 
 	dev_dbg(ACRN_DBG_BOOT, "Multiboot detected, flag=0x%x", mbi->mi_flags);
 	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
@@ -211,7 +211,7 @@ int init_vm_boot_info(struct acrn_vm *vm)
 		char buf[MAX_BOOT_PARAMS_LEN];
 
 		cmd_dst = kernel_cmdline;
-		cmd_src = hpa2hva((uint64_t)mbi->mi_cmdline);
+		cmd_src = (char *)hpa2hva((uint64_t)mbi->mi_cmdline);
 
 		(void)memset(buf, 0U, sizeof(buf));
 		/*
@@ -241,7 +241,7 @@ int init_vm_boot_info(struct acrn_vm *vm)
 		off += 1U;
 
 		cmd_dst += off;
-		cmd_src = hpa2hva((uint64_t)mods[0].mm_string);
+		cmd_src = (char *)hpa2hva((uint64_t)mods[0].mm_string);
 		(void)strncpy_s(cmd_dst, MEM_2K - off, cmd_src,
 				strnlen_s(cmd_src, MEM_2K - off));
 

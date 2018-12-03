@@ -235,8 +235,7 @@ local_parse_madt(void *madt, uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 	uint16_t pcpu_num = 0U;
 	struct acpi_madt_local_apic *processor;
 	struct acpi_table_madt *madt_ptr;
-	void *first;
-	void *end;
+	void *first, *end, *iterator;
 	struct acpi_subtable_header *entry;
 
 	madt_ptr = (struct acpi_table_madt *)madt;
@@ -244,13 +243,14 @@ local_parse_madt(void *madt, uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 	first = madt_ptr + 1;
 	end = (char *)madt_ptr + madt_ptr->header.length;
 
-	for (entry = first; (void *)entry < end; ) {
+	for (iterator = first; (iterator) < (end); iterator += entry->length) {
+		entry = (struct acpi_subtable_header *)iterator;
 		if (entry->length < sizeof(struct acpi_subtable_header)) {
 			break;
 		}
 
 		if (entry->type == ACPI_MADT_TYPE_LOCAL_APIC) {
-			processor = (struct acpi_madt_local_apic *)entry;
+			processor = (struct acpi_madt_local_apic *)iterator;
 			if ((processor->lapic_flags & ACPI_MADT_ENABLED) != 0U) {
 				if (pcpu_num < CONFIG_MAX_PCPU_NUM) {
 					lapic_id_array[pcpu_num] = processor->id;
@@ -258,9 +258,6 @@ local_parse_madt(void *madt, uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 				pcpu_num++;
 			}
 		}
-
-		entry = (struct acpi_subtable_header *)
-				(((uint64_t)entry) + entry->length);
 	}
 
 	return pcpu_num;
@@ -369,16 +366,11 @@ static void *get_facs_table(void)
 /* put all ACPI fix up code here */
 void acpi_fixup(void)
 {
-	uint8_t *facs_addr;
-
-	facs_addr = get_facs_table();
+	void *facs_addr = get_facs_table();
 
 	if (facs_addr != NULL) {
-		host_pm_s_state.wake_vector_32 =
-			(uint32_t *)(facs_addr + OFFSET_WAKE_VECTOR_32);
-		host_pm_s_state.wake_vector_64 =
-			(uint64_t *)(facs_addr + OFFSET_WAKE_VECTOR_64);
+		host_pm_s_state.wake_vector_32 = (uint32_t *)(facs_addr + OFFSET_WAKE_VECTOR_32);
+		host_pm_s_state.wake_vector_64 = (uint64_t *)(facs_addr + OFFSET_WAKE_VECTOR_64);
 	}
 }
-
 #endif

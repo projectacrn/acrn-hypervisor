@@ -68,14 +68,14 @@ static uint64_t create_zero_page(struct acrn_vm *vm)
 
 	/* Set zeropage in Linux Guest RAM region just past boot args */
 	gpa = (uint64_t)sw_linux->bootargs_load_addr + MEM_4K;
-	hva = gpa2hva(vm, gpa);
+	hva = (struct zero_page *)gpa2hva(vm, gpa);
 	zeropage = hva;
 
 	/* clear the zeropage */
 	(void)memset(zeropage, 0U, MEM_2K);
 
 	/* copy part of the header into the zero page */
-	hva = gpa2hva(vm, (uint64_t)sw_kernel->kernel_load_addr);
+	hva = (struct zero_page *)gpa2hva(vm, (uint64_t)sw_kernel->kernel_load_addr);
 	(void)memcpy_s(&(zeropage->hdr), sizeof(zeropage->hdr),
 				&(hva->hdr), sizeof(hva->hdr));
 

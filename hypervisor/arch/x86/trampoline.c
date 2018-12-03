@@ -27,17 +27,13 @@ static uint64_t trampoline_relo_addr(const void *addr)
 
 uint64_t read_trampoline_sym(const void *sym)
 {
-	uint64_t *hva;
-
-	hva = hpa2hva(trampoline_start16_paddr) + trampoline_relo_addr(sym);
+	uint64_t *hva = (uint64_t *)(hpa2hva(trampoline_start16_paddr) + trampoline_relo_addr(sym));
 	return *hva;
 }
 
 void write_trampoline_sym(const void *sym, uint64_t val)
 {
-	uint64_t *hva;
-
-	hva = hpa2hva(trampoline_start16_paddr) + trampoline_relo_addr(sym);
+	uint64_t *hva = (uint64_t *)(hpa2hva(trampoline_start16_paddr) + trampoline_relo_addr(sym));
 	*hva = val;
 	clflush(hva);
 }

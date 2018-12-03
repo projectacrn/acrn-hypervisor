@@ -1005,7 +1005,7 @@ static int emulate_movs(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 
 		/* we are sure it will success */
 		(void)gva2gpa(vcpu, src_gva, &gpa, &err_code);
-		src_hva = gpa2hva(vcpu->vm, gpa);
+		src_hva = (uint64_t *)gpa2hva(vcpu->vm, gpa);
 		(void)memcpy_s(&val, opsize, src_hva, opsize);
 
 		vie_mmio_write(vcpu, val);
@@ -1015,7 +1015,7 @@ static int emulate_movs(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie
 		/* The dest gpa is saved during dst check instruction
 		 * decoding.
 		 */
-		dst_hva = gpa2hva(vcpu->vm, vie->dst_gpa);
+		dst_hva = (uint64_t *)gpa2hva(vcpu->vm, vie->dst_gpa);
 		(void)memcpy_s(dst_hva, opsize, &val, opsize);
 	}
 
