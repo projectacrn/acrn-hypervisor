@@ -909,7 +909,7 @@ static void get_entry_info(const struct ptirq_remapping_info *entry, char *type,
 	if (is_entry_active(entry)) {
 		if (entry->intr_type == PTDEV_INTR_MSI) {
 			(void)strcpy_s(type, 16U, "MSI");
-			*dest = (entry->msi.pmsi_addr & 0xFF000U) >> CPU_PAGE_SHIFT;
+			*dest = (entry->msi.pmsi_addr & 0xFF000U) >> PAGE_SHIFT;
 			if ((entry->msi.pmsi_data & APIC_TRIGMOD_LEVEL) != 0U) {
 				*lvl_tm = true;
 			} else {

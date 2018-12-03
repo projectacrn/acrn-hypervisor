@@ -39,11 +39,7 @@
 #define CPU_H
 
 /* Define page size */
-#define CPU_PAGE_SHIFT          12U
 #define CPU_PAGE_MASK           0xFFFFFFFFFFFFF000UL
-
-#define MMU_PTE_PAGE_SHIFT	CPU_PAGE_SHIFT
-#define MMU_PDE_PAGE_SHIFT	21U
 
 /* Define CPU stack alignment */
 #define CPU_STACK_ALIGN         16UL
