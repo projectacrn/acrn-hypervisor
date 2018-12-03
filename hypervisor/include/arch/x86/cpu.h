@@ -38,9 +38,6 @@
 #ifndef CPU_H
 #define CPU_H
 
-/* Define page size */
-#define CPU_PAGE_MASK           0xFFFFFFFFFFFFF000UL
-
 /* Define CPU stack alignment */
 #define CPU_STACK_ALIGN         16UL
 

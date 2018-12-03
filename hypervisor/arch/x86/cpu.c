@@ -95,7 +95,7 @@ static inline bool get_monitor_cap(void)
 
 static uint64_t get_address_mask(uint8_t limit)
 {
-	return ((1UL << limit) - 1UL) & CPU_PAGE_MASK;
+	return ((1UL << limit) - 1UL) & PAGE_MASK;
 }
 
 static void get_cpu_capabilities(void)
