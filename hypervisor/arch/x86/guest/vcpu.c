@@ -535,7 +535,7 @@ void reset_vcpu(struct acrn_vcpu *vcpu)
 	vcpu->arch.cur_context = NORMAL_WORLD;
 	vcpu->arch.irq_window_enabled = 0;
 	vcpu->arch.inject_event_pending = false;
-	(void)memset(vcpu->arch.vmcs, 0U, CPU_PAGE_SIZE);
+	(void)memset(vcpu->arch.vmcs, 0U, PAGE_SIZE);
 
 	for (i = 0; i < NR_WORLD; i++) {
 		(void)memset(&vcpu->arch.contexts[i], 0U,

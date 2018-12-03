@@ -432,10 +432,10 @@ static void deny_guest_pio_access(struct acrn_vm *vm, uint16_t port_address,
 void setup_io_bitmap(struct acrn_vm *vm)
 {
 	if (is_vm0(vm)) {
-		(void)memset(vm->arch_vm.io_bitmap, 0x00U, CPU_PAGE_SIZE * 2U);
+		(void)memset(vm->arch_vm.io_bitmap, 0x00U, PAGE_SIZE * 2U);
 	} else {
 		/* block all IO port access from Guest */
-		(void)memset(vm->arch_vm.io_bitmap, 0xFFU, CPU_PAGE_SIZE * 2U);
+		(void)memset(vm->arch_vm.io_bitmap, 0xFFU, PAGE_SIZE * 2U);
 	}
 }
 

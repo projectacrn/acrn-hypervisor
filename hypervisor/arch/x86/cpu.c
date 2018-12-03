@@ -14,7 +14,7 @@ spinlock_t trampoline_spinlock = {
 	.tail = 0U
 };
 
-struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(CPU_PAGE_SIZE);
+struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(PAGE_SIZE);
 uint16_t phys_cpu_num = 0U;
 static uint64_t pcpu_sync = 0UL;
 static uint16_t up_count = 0U;

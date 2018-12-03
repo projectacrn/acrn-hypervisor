@@ -195,7 +195,7 @@ struct msr_store_area {
 
 struct acrn_vcpu_arch {
 	/* vmcs region for this vcpu, MUST be 4KB-aligned */
-	uint8_t vmcs[CPU_PAGE_SIZE];
+	uint8_t vmcs[PAGE_SIZE];
 	/* per vcpu lapic */
 	struct acrn_vlapic vlapic;
 	int cur_context;
@@ -233,7 +233,7 @@ struct acrn_vcpu_arch {
 
 	/* List of MSRS to be stored and loaded on VM exits or VM entries */
 	struct msr_store_area msr_area;
-} __aligned(CPU_PAGE_SIZE);
+} __aligned(PAGE_SIZE);
 
 struct acrn_vm;
 struct acrn_vcpu {
@@ -264,7 +264,7 @@ struct acrn_vcpu {
 #endif /* CONFIG_MTRR_ENABLED */
 	uint64_t reg_cached;
 	uint64_t reg_updated;
-} __aligned(CPU_PAGE_SIZE);
+} __aligned(PAGE_SIZE);
 
 struct vcpu_dump {
 	struct acrn_vcpu *vcpu;

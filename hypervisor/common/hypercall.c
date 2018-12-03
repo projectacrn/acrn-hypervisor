@@ -507,7 +507,7 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
 	uint64_t prot;
 	uint64_t *pml4_page;
 
-	if ((region->size & (CPU_PAGE_SIZE - 1UL)) != 0UL) {
+	if ((region->size & (PAGE_SIZE - 1UL)) != 0UL) {
 		pr_err("%s: [vm%d] map size 0x%x is not page aligned",
 			__func__, target_vm->vm_id, region->size);
 		return -EINVAL;
@@ -650,7 +650,7 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 			vm->vm_id, wp->gpa, hpa);
 
 	base_paddr = get_hv_image_base();
-	if (((hpa <= base_paddr) && ((hpa + CPU_PAGE_SIZE) > base_paddr)) ||
+	if (((hpa <= base_paddr) && ((hpa + PAGE_SIZE) > base_paddr)) ||
 			((hpa >= base_paddr) &&
 			(hpa < (base_paddr + CONFIG_HV_RAM_SIZE)))) {
 		pr_err("%s: overlap the HV memory region.", __func__);
@@ -661,7 +661,7 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 	prot_clr = (wp->set != 0U) ? EPT_WR : 0UL;
 
 	ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-		wp->gpa, CPU_PAGE_SIZE, prot_set, prot_clr);
+		wp->gpa, PAGE_SIZE, prot_set, prot_clr);
 
 	return 0;
 }

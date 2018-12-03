@@ -21,7 +21,7 @@
 
 struct per_cpu_region {
 	/* vmxon_region MUST be 4KB-aligned */
-	uint8_t vmxon_region[CPU_PAGE_SIZE];
+	uint8_t vmxon_region[PAGE_SIZE];
 #ifdef HV_DEBUG
 	uint64_t *sbuf[ACRN_SBUF_ID_MAX];
 	char logbuf[LOG_MESSAGE_MAX_SIZE];
@@ -51,7 +51,7 @@ struct per_cpu_region {
 #ifdef PROFILING_ON
 	struct profiling_info_wrapper profiling_info;
 #endif
-} __aligned(CPU_PAGE_SIZE); /* per_cpu_region size aligned with CPU_PAGE_SIZE */
+} __aligned(PAGE_SIZE); /* per_cpu_region size aligned with PAGE_SIZE */
 
 extern struct per_cpu_region per_cpu_data[];
 extern uint16_t phys_cpu_num;

@@ -193,13 +193,13 @@ trampoline_gdt_ptr:
 cpu_boot_page_tables_ptr:
     .long cpu_boot_page_tables_start
 
-    /*0x1000 = CPU_PAGE_SIZE*/
+    /*0x1000 = PAGE_SIZE*/
     .align  0x1000
     .global cpu_boot_page_tables_start
 cpu_boot_page_tables_start:
     /* 0x3 = (PAGE_PRESENT | PAGE_RW) */
     .quad   trampoline_pdpt_addr + 0x3
-    /*0x1000 = CPU_PAGE_SIZE*/
+    /*0x1000 = PAGE_SIZE*/
     .align  0x1000
     .global trampoline_pdpt_addr
 trampoline_pdpt_addr:
@@ -207,10 +207,10 @@ trampoline_pdpt_addr:
     .rept   4
     /* 0x3 = (PAGE_PRESENT | PAGE_RW) */
     .quad   trampoline_pdt_addr + address + 0x3
-    /*0x1000 = CPU_PAGE_SIZE*/
+    /*0x1000 = PAGE_SIZE*/
     address = address + 0x1000
     .endr
-    /*0x1000 = CPU_PAGE_SIZE*/
+    /*0x1000 = PAGE_SIZE*/
     .align  0x1000
 trampoline_pdt_addr:
     address = 0

@@ -21,7 +21,7 @@ struct trusty_mem {
 			struct trusty_key_info key_info;
 			struct trusty_startup_param startup_param;
 		} data;
-		uint8_t page[CPU_PAGE_SIZE];
+		uint8_t page[PAGE_SIZE];
 	} first_page;
 
 	/* The left memory is for trusty's code/data/heap/stack
@@ -88,7 +88,7 @@ static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 	 * and Normal World's EPT
 	 */
 	pml4_base = vm->arch_vm.ept_mem_ops.info->ept.sworld_pgtable_base;
-	(void)memset(pml4_base, 0U, CPU_PAGE_SIZE);
+	(void)memset(pml4_base, 0U, PAGE_SIZE);
 	vm->arch_vm.sworld_eptp = pml4_base;
 	sanitize_pte((uint64_t *)vm->arch_vm.sworld_eptp);
 
@@ -97,7 +97,7 @@ static void create_secure_world_ept(struct acrn_vm *vm, uint64_t gpa_orig,
 	 */
 	sub_table_addr = vm->arch_vm.ept_mem_ops.info->ept.sworld_pgtable_base +
 									TRUSTY_PML4_PAGE_NUM(TRUSTY_EPT_REBASE_GPA);
-	(void)memset(sub_table_addr, 0U, CPU_PAGE_SIZE);
+	(void)memset(sub_table_addr, 0U, PAGE_SIZE);
 	sworld_pml4e = hva2hpa(sub_table_addr) | table_present;
 	set_pgentry((uint64_t *)pml4_base, sworld_pml4e);
 

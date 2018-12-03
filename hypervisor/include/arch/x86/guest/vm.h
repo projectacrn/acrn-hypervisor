@@ -26,7 +26,7 @@ struct vm_hw_info {
 	struct acrn_vcpu vcpu_array[CONFIG_MAX_VCPUS_PER_VM];
 	uint16_t created_vcpus;	/* Number of created vcpus */
 	uint64_t gpa_lowtop;    /* top lowmem gpa of this VM */
-} __aligned(CPU_PAGE_SIZE);
+} __aligned(PAGE_SIZE);
 
 struct sw_linux {
 	void *ramdisk_src_addr;		/* HVA */
@@ -88,9 +88,9 @@ enum vm_state {
 
 struct vm_arch {
 	/* I/O bitmaps A and B for this VM, MUST be 4-Kbyte aligned */
-	uint8_t io_bitmap[CPU_PAGE_SIZE*2];
+	uint8_t io_bitmap[PAGE_SIZE*2];
 	/* MSR bitmap region for this VM, MUST be 4-Kbyte aligned */
-	uint8_t msr_bitmap[CPU_PAGE_SIZE];
+	uint8_t msr_bitmap[PAGE_SIZE];
 
 	uint64_t guest_init_pml4;/* Guest init pml4 */
 	/* EPT hierarchy for Normal World */
@@ -108,7 +108,7 @@ struct vm_arch {
 	struct vm_io_handler_desc emul_pio[EMUL_PIO_IDX_MAX];
 
 	/* reference to virtual platform to come here (as needed) */
-} __aligned(CPU_PAGE_SIZE);
+} __aligned(PAGE_SIZE);
 
 
 #define CPUID_CHECK_SUBLEAF	(1U << 0U)
@@ -160,7 +160,7 @@ struct acrn_vm {
 	spinlock_t softirq_dev_lock;
 	struct list_head softirq_dev_entry_list;
 	uint64_t intr_inject_delay_delta; /* delay of intr injection */
-} __aligned(CPU_PAGE_SIZE);
+} __aligned(PAGE_SIZE);
 
 #ifdef CONFIG_PARTITION_MODE
 struct vpci_vdev_array {

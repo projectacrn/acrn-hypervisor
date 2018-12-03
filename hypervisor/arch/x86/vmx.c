@@ -924,7 +924,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	value64 = hva2hpa(vm->arch_vm.io_bitmap);
 	exec_vmwrite64(VMX_IO_BITMAP_A_FULL, value64);
 	pr_dbg("VMX_IO_BITMAP_A: 0x%016llx ", value64);
-	value64 = hva2hpa((void *)&(vm->arch_vm.io_bitmap[CPU_PAGE_SIZE]));
+	value64 = hva2hpa((void *)&(vm->arch_vm.io_bitmap[PAGE_SIZE]));
 	exec_vmwrite64(VMX_IO_BITMAP_B_FULL, value64);
 	pr_dbg("VMX_IO_BITMAP_B: 0x%016llx ", value64);
 

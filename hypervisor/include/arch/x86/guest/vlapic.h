@@ -30,6 +30,8 @@
 #ifndef VLAPIC_H
 #define VLAPIC_H
 
+#include <page.h>
+
 
 /**
  * @file vlapic.h
@@ -104,7 +106,7 @@ struct acrn_vlapic {
 	 */
 	uint32_t	svr_last;
 	uint32_t	lvt_last[VLAPIC_MAXLVT_INDEX + 1];
-} __aligned(CPU_PAGE_SIZE);
+} __aligned(PAGE_SIZE);
 
 
 /* APIC write handlers */

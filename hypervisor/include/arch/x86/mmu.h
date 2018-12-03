@@ -55,7 +55,7 @@
 
 static inline uint64_t round_page_up(uint64_t addr)
 {
-	return (((addr + (uint64_t)CPU_PAGE_SIZE) - 1UL) & CPU_PAGE_MASK);
+	return (((addr + (uint64_t)PAGE_SIZE) - 1UL) & CPU_PAGE_MASK);
 }
 
 static inline uint64_t round_page_down(uint64_t addr)

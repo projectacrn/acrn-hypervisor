@@ -18,7 +18,7 @@ void destroy_ept(struct acrn_vm *vm)
 	}
 
 	if (vm->arch_vm.nworld_eptp != NULL) {
-		(void)memset(vm->arch_vm.nworld_eptp, 0U, CPU_PAGE_SIZE);
+		(void)memset(vm->arch_vm.nworld_eptp, 0U, PAGE_SIZE);
 	}
 }
 

@@ -11,7 +11,7 @@
 
 /* Local variables */
 
-static struct acrn_vm vm_array[CONFIG_MAX_VM_NUM] __aligned(CPU_PAGE_SIZE);
+static struct acrn_vm vm_array[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE);
 
 static uint64_t vmid_bitmap;
 
@@ -188,7 +188,7 @@ int create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 err:
 
 	if (vm->arch_vm.nworld_eptp != NULL) {
-		(void)memset(vm->arch_vm.nworld_eptp, 0U, CPU_PAGE_SIZE);
+		(void)memset(vm->arch_vm.nworld_eptp, 0U, PAGE_SIZE);
 	}
 
 	return status;
