@@ -127,6 +127,7 @@
  */
 
 #include "types.h"
+#include "timer.h"
 
 /**
  * @brief virtio API
@@ -170,6 +171,14 @@ struct virtio_vring_used {
 				/* size N */
 /*	uint16_t	avail_event;	-- after N ring entries */
 } __attribute__((packed));
+
+enum {
+	BACKEND_UNKNOWN = 0,
+	BACKEND_VBSU,
+	BACKEND_VBSK,
+	BACKEND_VHOST,
+	BACKEND_MAX
+};
 
 /*
  * The address of any given virtual queue is determined by a single
@@ -520,6 +529,9 @@ struct virtio_base {
 	uint32_t device_feature_select;	/**< current selected device feature */
 	uint32_t driver_feature_select;	/**< current selected guest feature */
 	int cfg_coff;			/**< PCI cfg access capability offset */
+	int backend_type;               /**< VBSU, VBSK or VHOST */
+	struct acrn_timer polling_timer; /**< timer for polling mode */
+	int polling_in_progress;        /**< The polling status */
 };
 
 #define	VIRTIO_BASE_LOCK(vb)					\
@@ -703,12 +715,23 @@ struct iovec;
  * @param pci_virtio_dev Pointer to instance of certain virtio device.
  * @param dev Pointer to struct pci_vdev which emulates a PCI device.
  * @param queues Pointer to struct virtio_vq_info, normally an array.
+ * @param backend_type can be VBSU, VBSK or VHOST
  *
  * @return None
  */
 void virtio_linkup(struct virtio_base *base, struct virtio_ops *vops,
 		   void *pci_virtio_dev, struct pci_vdev *dev,
-		   struct virtio_vq_info *queues);
+		   struct virtio_vq_info *queues,
+		   int backend_type);
+
+/**
+ * @brief Get the virtio poll parameters
+ *
+ * @param optarg Pointer to parameters string.
+ *
+ * @return fail -1 success 0
+ */
+int acrn_parse_virtio_poll_interval(const char *optarg);
 
 /**
  * @brief Initialize MSI-X vector capabilities if we're to use MSI-X,
@@ -815,6 +838,20 @@ void vq_relchain(struct virtio_vq_info *vq, uint16_t idx, uint32_t iolen);
  * @return None
  */
 void vq_endchains(struct virtio_vq_info *vq, int used_all_avail);
+
+/**
+ * @brief Helper function for clearing used ring flags.
+ *
+ * Driver should always use this helper function to clear used ring flags.
+ * For virtio poll mode, in order to avoid trap, we should never really
+ * clear used ring flags.
+ *
+ * @param base Pointer to struct virtio_base.
+ * @param vq Pointer to struct virtio_vq_info.
+ *
+ * @return None
+ */
+void vq_clear_used_ring_flags(struct virtio_base *base, struct virtio_vq_info *vq);
 
 /**
  * @brief Handle PCI configuration space reads.

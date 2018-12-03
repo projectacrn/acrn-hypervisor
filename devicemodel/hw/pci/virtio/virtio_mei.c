@@ -1577,7 +1577,7 @@ vmei_notify_tx(void *data, struct virtio_vq_info *vq)
 
 	pthread_mutex_lock(&vmei->tx_mutex);
 	DPRINTF("TX: New OUT buffer available!\n");
-	vq->used->flags &= ~ACRN_VRING_USED_F_NO_NOTIFY;
+	vq_clear_used_ring_flags(&vmei->base, vq);
 	pthread_mutex_unlock(&vmei->tx_mutex);
 }
 
@@ -1870,7 +1870,7 @@ static void *vmei_rx_thread(void *param)
 	while (vmei->status != VMEI_STST_DEINIT) {
 		/* note - rx mutex is locked here */
 		while (vq_ring_ready(vq)) {
-			vq->used->flags &= ~ACRN_VRING_USED_F_NO_NOTIFY;
+			vq_clear_used_ring_flags(&vmei->base, vq);
 			mb();
 			if (vq_has_descs(vq) &&
 			    vmei->rx_need_sched &&
@@ -2255,7 +2255,7 @@ init:
 		goto fail;
 	}
 
-	virtio_linkup(&vmei->base, &virtio_mei_ops, vmei, dev, vmei->vqs);
+	virtio_linkup(&vmei->base, &virtio_mei_ops, vmei, dev, vmei->vqs, BACKEND_VBSU);
 	vmei->base.mtx = &vmei->mutex;
 
 	for (i = 0; i < VMEI_VQ_NUM; i++)

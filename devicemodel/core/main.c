@@ -65,6 +65,7 @@
 #include "vmcfg_config.h"
 #include "vmcfg.h"
 #include "tpm.h"
+#include "virtio.h"
 
 #define GUEST_NIO_PORT		0x488	/* guest upcalls via i/o port */
 
@@ -703,6 +704,7 @@ enum {
 	CMD_OPT_VSBL = 1000,
 	CMD_OPT_PART_INFO,
 	CMD_OPT_TRUSTY_ENABLE,
+	CMD_OPT_VIRTIO_POLL_ENABLE,
 	CMD_OPT_PTDEV_NO_RESET,
 	CMD_OPT_DEBUGEXIT,
 	CMD_OPT_VMCFG,
@@ -739,6 +741,7 @@ static struct option long_options[] = {
 	{"part_info",		required_argument,	0, CMD_OPT_PART_INFO},
 	{"enable_trusty",	no_argument,		0,
 					CMD_OPT_TRUSTY_ENABLE},
+	{"virtio_poll",		required_argument,	0, CMD_OPT_VIRTIO_POLL_ENABLE},
 	{"ptdev_no_reset",	no_argument,		0,
 		CMD_OPT_PTDEV_NO_RESET},
 	{"debugexit",		no_argument,		0, CMD_OPT_DEBUGEXIT},
@@ -861,6 +864,14 @@ dm_run(int argc, char *argv[])
 			break;
 		case CMD_OPT_TRUSTY_ENABLE:
 			trusty_enabled = 1;
+			break;
+		case CMD_OPT_VIRTIO_POLL_ENABLE:
+			if (acrn_parse_virtio_poll_interval(optarg) != 0) {
+				errx(EX_USAGE,
+					"invalid virtio poll interval %s",
+					optarg);
+				exit(1);
+			}
 			break;
 		case CMD_OPT_PTDEV_NO_RESET:
 			ptdev_no_reset(true);

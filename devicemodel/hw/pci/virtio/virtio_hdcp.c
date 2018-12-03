@@ -413,7 +413,7 @@ virtio_hdcp_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	DPRINTF(("vhdcp init: using VBS-U...\n"));
 	virtio_linkup(&vhdcp->base, &virtio_hdcp_ops,
-			vhdcp, dev, vhdcp->queues);
+			vhdcp, dev, vhdcp->queues, BACKEND_VBSU);
 	vhdcp->base.mtx = &vhdcp->mtx;
 
 	vhdcp->queues[0].qsize  = VIRTIO_HDCP_RINGSZ;

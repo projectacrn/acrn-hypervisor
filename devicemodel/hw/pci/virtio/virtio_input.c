@@ -640,7 +640,7 @@ virtio_input_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		goto fail;
 	}
 
-	virtio_linkup(&vi->base, &virtio_input_ops, vi, dev, vi->queues);
+	virtio_linkup(&vi->base, &virtio_input_ops, vi, dev, vi->queues, BACKEND_VBSU);
 	vi->base.mtx = &vi->mtx;
 	vi->base.device_caps = VIRTIO_INPUT_S_HOSTCAPS;
 

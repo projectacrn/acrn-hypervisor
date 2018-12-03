@@ -281,7 +281,7 @@ virtio_coreu_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	DPRINTF(("vcoreu init: using VBS-U...\n"));
 	virtio_linkup(&vcoreu->base, &virtio_coreu_ops,
-			vcoreu, dev, vcoreu->queues);
+			vcoreu, dev, vcoreu->queues, BACKEND_VBSU);
 	vcoreu->base.mtx = &vcoreu->mtx;
 
 	vcoreu->queues[0].qsize  = VIRTIO_COREU_RINGSZ;

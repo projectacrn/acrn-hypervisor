@@ -384,7 +384,7 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 					"error %d!\n", rc));
 
 	/* init virtio struct and virtqueues */
-	virtio_linkup(&blk->base, &virtio_blk_ops, blk, dev, &blk->vq);
+	virtio_linkup(&blk->base, &virtio_blk_ops, blk, dev, &blk->vq, BACKEND_VBSU);
 	blk->base.mtx = &blk->mtx;
 
 	blk->vq.qsize = VIRTIO_BLK_RINGSZ;

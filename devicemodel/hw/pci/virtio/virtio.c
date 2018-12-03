@@ -28,10 +28,13 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <pthread.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "dm.h"
 #include "pci_core.h"
 #include "virtio.h"
+#include "timer.h"
 
 /*
  * Functions for dealing with generalized "virtual devices" as
@@ -44,6 +47,61 @@
  * this to convert.
  */
 #define DEV_STRUCT(vs) ((void *)(vs))
+
+static uint8_t virtio_poll_enabled;
+static size_t virtio_poll_interval;
+
+static void
+virtio_start_timer(struct acrn_timer *timer, time_t sec, time_t nsec)
+{
+	struct itimerspec ts;
+
+	/* setting the interval time */
+	ts.it_interval.tv_sec = 0;
+	ts.it_interval.tv_nsec = 0;
+	/* set the delay time it will be started when timer_setting */
+	ts.it_value.tv_sec = sec;
+	ts.it_value.tv_nsec = nsec;
+	assert(acrn_timer_settime(timer, &ts) == 0);
+}
+
+static void
+virtio_poll_timer(void *arg)
+{
+	struct virtio_base *base;
+	struct virtio_ops *vops;
+	struct virtio_vq_info *vq;
+	const char *name;
+	int i;
+
+	base = arg;
+	vops = base->vops;
+	name = vops->name;
+
+	if (base->mtx)
+		pthread_mutex_lock(base->mtx);
+
+	base->polling_in_progress = 1;
+
+	for (i = 0; i < base->vops->nvq; i++) {
+		vq = &base->queues[i];
+		vq->used->flags |= ACRN_VRING_USED_F_NO_NOTIFY;
+		/* TODO: call notify when necessary */
+		if (vq->notify)
+			(*vq->notify)(DEV_STRUCT(base), vq);
+		else if (vops->qnotify)
+			(*vops->qnotify)(DEV_STRUCT(base), vq);
+		else
+			fprintf(stderr,
+				"%s: qnotify queue %d: missing vq/vops notify\r\n",
+				name, i);
+	}
+
+	if (base->mtx)
+		pthread_mutex_unlock(base->mtx);
+
+	virtio_start_timer(&base->polling_timer, 0, virtio_poll_interval);
+}
 
 /**
  * @brief Link a virtio_base to its constants, the virtio device,
@@ -60,7 +118,8 @@
 void
 virtio_linkup(struct virtio_base *base, struct virtio_ops *vops,
 	      void *pci_virtio_dev, struct pci_vdev *dev,
-	      struct virtio_vq_info *queues)
+	      struct virtio_vq_info *queues,
+	      int backend_type)
 {
 	int i;
 
@@ -69,6 +128,7 @@ virtio_linkup(struct virtio_base *base, struct virtio_ops *vops,
 	base->vops = vops;
 	base->dev = dev;
 	dev->arg = base;
+	base->backend_type = backend_type;
 
 	base->queues = queues;
 	for (i = 0; i < vops->nvq; i++) {
@@ -99,6 +159,9 @@ virtio_reset_dev(struct virtio_base *base)
 
 /* if (base->mtx) */
 /* assert(pthread_mutex_isowned_np(base->mtx)); */
+
+	acrn_timer_deinit(&base->polling_timer);
+	base->polling_in_progress = 0;
 
 	nvq = base->vops->nvq;
 	for (vq = base->queues, i = 0; i < nvq; vq++, i++) {
@@ -570,6 +633,30 @@ vq_endchains(struct virtio_vq_info *vq, int used_all_avail)
 		vq_interrupt(base, vq);
 }
 
+/**
+ * @brief Helper function for clearing used ring flags.
+ *
+ * Driver should always use this helper function to clear used ring flags.
+ * For virtio poll mode, in order to avoid trap, we should never really
+ * clear used ring flags.
+ *
+ * @param base Pointer to struct virtio_base.
+ * @param vq Pointer to struct virtio_vq_info.
+ *
+ * @return None
+ */
+void vq_clear_used_ring_flags(struct virtio_base *base, struct virtio_vq_info *vq)
+{
+	int backend_type = base->backend_type;
+	int polling_in_progress = base->polling_in_progress;
+
+	/* we should never unmask notification in polling mode */
+	if (virtio_poll_enabled && backend_type == BACKEND_VBSU && polling_in_progress == 1)
+		return;
+
+	vq->used->flags &= ~ACRN_VRING_USED_F_NO_NOTIFY;
+}
+
 struct config_reg {
 	uint16_t	offset;	/* register offset */
 	uint8_t		size;	/* size (bytes) */
@@ -877,6 +964,17 @@ bad:
 			(*vops->set_status)(DEV_STRUCT(base), value);
 		if (value == 0)
 			(*vops->reset)(DEV_STRUCT(base));
+		if ((value & VIRTIO_CR_STATUS_DRIVER_OK) &&
+		     base->backend_type == BACKEND_VBSU &&
+		     virtio_poll_enabled) {
+			base->polling_timer.clockid = CLOCK_MONOTONIC;
+			acrn_timer_init(&base->polling_timer, virtio_poll_timer, base);
+			/* wait 5s to start virtio poll mode
+			 * skip vsbl and make sure device initialization completed
+			 * FIXME: Need optimization in the future
+			 */
+			virtio_start_timer(&base->polling_timer, 5, 0);
+		}
 		break;
 	case VIRTIO_CR_CFGVEC:
 		base->msix_cfg_idx = value;
@@ -1302,6 +1400,7 @@ virtio_common_cfg_write(struct pci_vdev *dev, uint64_t offset, int size,
 			(*vops->set_status)(DEV_STRUCT(base), value);
 		if (base->status == 0)
 			(*vops->reset)(DEV_STRUCT(base));
+		/* TODO: virtio poll mode for modern devices */
 		break;
 	case VIRTIO_COMMON_Q_SELECT:
 		/*
@@ -1877,4 +1976,27 @@ virtio_pci_modern_cfgwrite(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	}
 
 	return -1;
+}
+
+/**
+ * @brief Get the virtio poll parameters
+ *
+ * @param optarg Pointer to parameters string.
+ *
+ * @return fail -1 success 0
+ */
+int
+acrn_parse_virtio_poll_interval(const char *optarg)
+{
+	char *ptr;
+
+	virtio_poll_interval = strtoul(optarg, &ptr, 0);
+
+	/* poll interval is limited from 1us to 10ms */
+	if (virtio_poll_interval < 1 || virtio_poll_interval > 10000000)
+		return -1;
+
+	virtio_poll_enabled = 1;
+
+	return 0;
 }
