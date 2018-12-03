@@ -710,7 +710,7 @@ reconfig:
 /*
  * Initialize sep state and enable PMU counters
  */
-void profiling_start_pmu(void)
+static void profiling_start_pmu(void)
 {
 	uint16_t i;
 
@@ -751,7 +751,7 @@ void profiling_start_pmu(void)
 /*
  * Reset sep state and Disable all the PMU counters
  */
-void profiling_stop_pmu(void)
+static void profiling_stop_pmu(void)
 {
 	uint16_t i;
 

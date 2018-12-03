@@ -387,7 +387,7 @@ int prepare_vm(uint16_t pcpu_id)
 #else
 
 /* Create vm/vcpu for vm0 */
-int prepare_vm0(void)
+static int prepare_vm0(void)
 {
 	int err;
 	uint16_t i;

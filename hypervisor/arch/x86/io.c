@@ -45,7 +45,7 @@ emulate_pio_post(struct acrn_vcpu *vcpu, const struct io_request *io_req)
  * @remark This function must be called after the VHM request corresponding to
  * \p vcpu being transferred to the COMPLETE state.
  */
-void dm_emulate_pio_post(struct acrn_vcpu *vcpu)
+static void dm_emulate_pio_post(struct acrn_vcpu *vcpu)
 {
 	uint16_t cur = vcpu->vcpu_id;
 	union vhm_request_buffer *req_buf = NULL;
@@ -188,7 +188,7 @@ void emulate_io_post(struct acrn_vcpu *vcpu)
  * @retval -ENODEV No proper handler found.
  * @retval -EIO The request spans multiple devices and cannot be emulated.
  */
-int32_t
+static int32_t
 hv_emulate_pio(const struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
 	int32_t status = -ENODEV;

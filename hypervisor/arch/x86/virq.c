@@ -180,7 +180,7 @@ static int vcpu_do_pending_extint(const struct acrn_vcpu *vcpu)
  * 2. native LAPIC interrupt pending/EOI status
  * 3. CPU stuck or not
  */
-void dump_lapic(void)
+static void dump_lapic(void)
 {
 	dev_dbg(ACRN_DBG_INTR,
 		"LAPIC: TIME %08x, init=0x%x cur=0x%x ISR=0x%x IRR=0x%x",
