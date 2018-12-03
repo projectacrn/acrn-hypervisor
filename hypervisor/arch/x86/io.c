@@ -211,12 +211,12 @@ hv_emulate_pio(const struct acrn_vcpu *vcpu, struct io_request *io_req)
 		}
 
 		if (pio_req->direction == REQUEST_WRITE) {
-			if (handler->io_write) {
+			if (handler->io_write != NULL) {
 				handler->io_write(vm, port, size, pio_req->value & mask);
 			}
 			pr_dbg("IO write on port %04x, data %08x", port, pio_req->value & mask);
 		} else {
-			if (handler->io_read) {
+			if (handler->io_read != NULL) {
 				pio_req->value = handler->io_read(vm, port, size);
 			}
 			pr_dbg("IO read on port %04x, data %08x", port, pio_req->value);
@@ -264,7 +264,7 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 			return -EIO;
 		} else {
 			/* Handle this MMIO operation */
-			if (mmio_handler->read_write) {
+			if (mmio_handler->read_write != NULL) {
 				status = mmio_handler->read_write(io_req, mmio_handler->handler_private_data);
 				break;
 			}
