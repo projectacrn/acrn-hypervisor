@@ -267,8 +267,7 @@ static void print_pow2(struct print_param *param,
 	mask = (1UL << shift) - 1UL;
 
 	/* determine digit translation table */
-	digits = ((param->vars.flags & PRINT_FLAG_UPPER) != 0U) ?
-			&upper_hex_digits : &lower_hex_digits;
+	digits = ((param->vars.flags & PRINT_FLAG_UPPER) != 0U) ? &upper_hex_digits : &lower_hex_digits;
 
 	/* apply mask for short/char */
 	v &= param->vars.mask;

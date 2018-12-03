@@ -22,7 +22,7 @@ struct dev_sec_info {
 	struct abl_seed_info seed_list[ABL_SEED_LIST_MAX];
 };
 
-static const char *dev_sec_info_arg= "dev_sec_info.param_addr=";
+static const char *dev_sec_info_arg = "dev_sec_info.param_addr=";
 
 static void parse_seed_list_abl(void *param_addr)
 {

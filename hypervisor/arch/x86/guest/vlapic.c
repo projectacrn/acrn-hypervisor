@@ -2339,9 +2339,9 @@ apicv_batch_set_tmr(const struct acrn_vlapic *vlapic)
 	e = 256U;
 
 	while (s < e) {
-		val = ptr[(s/TMR_STEP_LEN) + 1].v;
+		val = ptr[(s / TMR_STEP_LEN) + 1].v;
 		val <<= TMR_STEP_LEN;
-		val |= ptr[s/TMR_STEP_LEN].v;
+		val |= ptr[s / TMR_STEP_LEN].v;
 		exec_vmwrite64(vmx_eoi_exit(s), val);
 
 		s += EOI_STEP_LEN;
@@ -2393,7 +2393,7 @@ vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
 				irr[i * 2U].v |= (uint32_t)val;
 				irr[(i * 2U) + 1U].v |= (uint32_t)(val >> 32U);
 
-				pirbase = 64U*i;
+				pirbase = 64U * i;
 				pirval = val;
 			}
 		}

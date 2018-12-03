@@ -310,8 +310,7 @@ static inline uint32_t get_max_svn_index(void)
 	uint32_t i, max_svn_idx = 0U;
 
 	for (i = 1U; i < g_key_info.num_seeds; i++) {
-		if (g_key_info.dseed_list[i].cse_svn >
-				g_key_info.dseed_list[i-1].cse_svn) {
+		if (g_key_info.dseed_list[i].cse_svn > g_key_info.dseed_list[i - 1U].cse_svn) {
 			max_svn_idx = i;
 		}
 	}
