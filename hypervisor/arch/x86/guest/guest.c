@@ -468,8 +468,7 @@ void init_e820(void)
 			struct multiboot_mmap *mmap =
 				(struct multiboot_mmap *)
 				hpa2hva((uint64_t)mbi->mi_mmap_addr);
-			e820_entries = mbi->mi_mmap_length/
-				sizeof(struct multiboot_mmap);
+			e820_entries = mbi->mi_mmap_length / sizeof(struct multiboot_mmap);
 			if (e820_entries > E820_MAX_ENTRIES) {
 				pr_err("Too many E820 entries %d\n",
 					e820_entries);

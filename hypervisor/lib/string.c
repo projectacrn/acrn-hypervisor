@@ -417,8 +417,7 @@ int strncmp(const char *s1_arg, const char *s2_arg, size_t n_arg)
  *     Pointer to the first occurrence of str2 in str1,
  *     or return null if not found.
  */
-char *strstr_s (const char *str1, size_t maxlen1,
-			const char *str2, size_t maxlen2)
+char *strstr_s(const char *str1, size_t maxlen1, const char *str2, size_t maxlen2)
 {
 	size_t len1, len2;
 	size_t i;
@@ -447,7 +446,7 @@ char *strstr_s (const char *str1, size_t maxlen1,
 	}
 
 	while (len1 >= len2) {
-		for (i=0U; i<len2; i++) {
+		for (i = 0U; i < len2; i++) {
 			if (str1[i] != str2[i]) {
 				break;
 			}

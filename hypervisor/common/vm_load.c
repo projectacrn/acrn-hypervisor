@@ -50,7 +50,7 @@ static void prepare_bsp_gdt(struct acrn_vm *vm)
 		return;
 	} else {
 		gdt_base_hva = hpa2hva(gdt_base_hpa);
-		gdt_len = ((size_t)boot_context.gdt.limit + 1U)/sizeof(uint8_t);
+		gdt_len = ((size_t)boot_context.gdt.limit + 1U) / sizeof(uint8_t);
 
 		(void )memcpy_s(gdt_base_hva, gdt_len, hpa2hva(boot_context.gdt.base), gdt_len);
 	}
