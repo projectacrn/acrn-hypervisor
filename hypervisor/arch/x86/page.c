@@ -28,7 +28,7 @@ static inline uint64_t ppt_pgentry_present(uint64_t pte)
 	return pte & PAGE_PRESENT;
 }
 
-static inline struct page *ppt_get_pml4_page(const union pgtable_pages_info *info, __unused uint64_t gpa)
+static inline struct page *ppt_get_pml4_page(const union pgtable_pages_info *info)
 {
 	struct page *page = info->ppt.pml4_base;
 	(void)memset(page, 0U, PAGE_SIZE);
@@ -101,7 +101,7 @@ static inline uint64_t ept_pgentry_present(uint64_t pte)
 	return pte & EPT_RWX;
 }
 
-static inline struct page *ept_get_pml4_page(const union pgtable_pages_info *info, __unused uint64_t gpa)
+static inline struct page *ept_get_pml4_page(const union pgtable_pages_info *info)
 {
 	struct page *page = info->ept.nworld_pml4_base;
 	(void)memset(page, 0U, PAGE_SIZE);

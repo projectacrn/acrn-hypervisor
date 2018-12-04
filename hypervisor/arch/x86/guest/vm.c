@@ -91,7 +91,7 @@ int create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 	vm->hw.gpa_lowtop = 0UL;
 
 	init_ept_mem_ops(vm);
-	vm->arch_vm.nworld_eptp = vm->arch_vm.ept_mem_ops.get_pml4_page(vm->arch_vm.ept_mem_ops.info, 0UL);
+	vm->arch_vm.nworld_eptp = vm->arch_vm.ept_mem_ops.get_pml4_page(vm->arch_vm.ept_mem_ops.info);
 	sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp);
 
 	/* Only for SOS: Configure VM software information */

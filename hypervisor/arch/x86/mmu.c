@@ -237,7 +237,7 @@ void init_paging(void)
 	pr_dbg("HV MMU Initialization");
 
 	/* Allocate memory for Hypervisor PML4 table */
-	ppt_mmu_pml4_addr = ppt_mem_ops.get_pml4_page(ppt_mem_ops.info, 0UL);
+	ppt_mmu_pml4_addr = ppt_mem_ops.get_pml4_page(ppt_mem_ops.info);
 
 	init_e820();
 	obtain_e820_mem_info();
