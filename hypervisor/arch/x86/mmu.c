@@ -209,11 +209,20 @@ void enable_paging(void)
 {
 	uint64_t tmp64 = 0UL;
 
+	/*
+	 * Enable MSR IA32_EFER.NXE bit,to prevent
+	 * instruction fetching from pages with XD bit set.
+	 */
+	tmp64 = msr_read(MSR_IA32_EFER);
+	tmp64 |= MSR_IA32_EFER_NXE_BIT;
+	msr_write(MSR_IA32_EFER, tmp64);
+
 	/* Enable Write Protect, inhibiting writing to read-only pages */
 	CPU_CR_READ(cr0, &tmp64);
 	CPU_CR_WRITE(cr0, tmp64 | CR0_WP);
 
 	CPU_CR_WRITE(cr3, hva2hpa(ppt_mmu_pml4_addr));
+
 }
 
 void enable_smep(void)
@@ -225,14 +234,13 @@ void enable_smep(void)
 	CPU_CR_WRITE(cr4, val64 | CR4_SMEP);
 }
 
-
 void init_paging(void)
 {
-	uint64_t hv_hpa;
+	uint64_t hv_hpa, text_end, size;
 	uint32_t i;
 	uint64_t low32_max_ram = 0UL;
 	uint64_t high64_max_ram;
-	uint64_t attr_uc = (PAGE_PRESENT | PAGE_RW | PAGE_USER | PAGE_CACHE_UC);
+	uint64_t attr_uc = (PAGE_PRESENT | PAGE_RW | PAGE_USER | PAGE_CACHE_UC | PAGE_NX);
 
 	const struct e820_entry *entry;
 	uint32_t entries_count = get_e820_entries_count();
@@ -281,6 +289,17 @@ void init_paging(void)
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, hv_hpa & PDE_MASK,
 			CONFIG_HV_RAM_SIZE + (((hv_hpa & (PDE_SIZE - 1UL)) != 0UL) ? PDE_SIZE : 0UL),
 			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER, &ppt_mem_ops, MR_MODIFY);
+
+	size = ((uint64_t)&ld_text_end - CONFIG_HV_RAM_START);
+	text_end = hv_hpa + size;
+	/*round up 'text_end' to 2MB aligned.*/
+	text_end = (text_end + PDE_SIZE - 1UL) & PDE_MASK;
+	/*
+	 * remove 'NX' bit for pages that contain hv code section, as by default XD bit is set for
+	 * all pages, including pages for guests.
+	 */
+	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, hv_hpa & PDE_MASK,
+			text_end - (hv_hpa & PDE_MASK), 0UL, PAGE_NX, &ppt_mem_ops, MR_MODIFY);
 
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (uint64_t)get_reserve_sworld_memory_base(),
 			TRUSTY_RAM_SIZE * (CONFIG_MAX_VM_NUM - 1U), PAGE_USER, 0UL, &ppt_mem_ops, MR_MODIFY);
