@@ -348,17 +348,17 @@ static void print_decimal(struct print_param *param, int64_t value)
 		v.qword = v.qword / 10UL;
 	}
 
+	nv.dwords.low = v.dwords.low;
 	/* process 32 bit (or reduced 64 bit) value */
 	do {
 		/* determine digits from right to left. The compiler should be
 		 * able to handle a division and multiplication by the constant
 		 * 10.
 		 */
-		nv.dwords.low = v.dwords.low / 10U;
 		pos--;
-		*pos = (v.dwords.low - (10U * nv.dwords.low)) + '0';
-		v.dwords.low = nv.dwords.low;
-	} while (v.dwords.low != 0U);
+		*pos = (char)(nv.dwords.low % 10U) + '0';
+		nv.dwords.low = nv.dwords.low / 10U;
+	} while (nv.dwords.low != 0U);
 
 	/* assign parameter and apply width and precision */
 	param->vars.value = pos;
