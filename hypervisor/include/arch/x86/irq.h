@@ -74,12 +74,6 @@ struct smp_call_info_data {
 };
 
 void smp_call_function(uint64_t mask, smp_call_func_t func, void *data);
-int handle_level_interrupt_common(struct irq_desc *desc,
-	__unused void *handler_data);
-int common_handler_edge(struct irq_desc *desc, __unused void *handler_data);
-int common_dev_handler_level(struct irq_desc *desc,
-	__unused void *handler_data);
-int quick_handler_nolock(struct irq_desc *desc, __unused void *handler_data);
 
 void init_default_irqs(uint16_t cpu_id);
 
