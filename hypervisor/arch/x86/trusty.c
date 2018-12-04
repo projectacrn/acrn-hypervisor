@@ -13,21 +13,14 @@
 #define TRUSTY_VERSION_2 2U
 
 struct trusty_mem {
-	/* The first page of trusty memory is reserved for key_info and
-	 * trusty_startup_param.
-	 */
-	union {
-		struct {
-			struct trusty_key_info key_info;
-			struct trusty_startup_param startup_param;
-		} data;
-		uint8_t page[PAGE_SIZE];
+	/* The first page of trusty memory is reserved for key_info and trusty_startup_param. */
+	struct {
+		struct trusty_key_info key_info;
+		struct trusty_startup_param startup_param;
 	} first_page;
 
-	/* The left memory is for trusty's code/data/heap/stack
-	 */
-	uint8_t left_mem[0];
-};
+	/* The left memory is for trusty's code/data/heap/stack */
+} __aligned(PAGE_SIZE);
 
 static struct trusty_key_info g_key_info = {
 	.size_of_this_struct = sizeof(g_key_info),
@@ -357,13 +350,13 @@ static bool setup_trusty_info(struct acrn_vcpu *vcpu,
 	mem = (struct trusty_mem *)(hpa2hva(mem_base_hpa));
 
 	/* copy key_info to the first page of trusty memory */
-	(void)memcpy_s(&mem->first_page.data.key_info, sizeof(g_key_info),
+	(void)memcpy_s(&mem->first_page.key_info, sizeof(g_key_info),
 			&g_key_info, sizeof(g_key_info));
 
-	(void)memset(mem->first_page.data.key_info.dseed_list, 0U,
-			sizeof(mem->first_page.data.key_info.dseed_list));
+	(void)memset(mem->first_page.key_info.dseed_list, 0U,
+			sizeof(mem->first_page.key_info.dseed_list));
 	/* Derive dvseed from dseed for Trusty */
-	key_info = &mem->first_page.data.key_info;
+	key_info = &mem->first_page.key_info;
 	for (i = 0U; i < g_key_info.num_seeds; i++) {
 		if (hkdf_sha256(key_info->dseed_list[i].seed,
 				BUP_MKHI_BOOTLOADER_SEED_LEN,
@@ -386,12 +379,10 @@ static bool setup_trusty_info(struct acrn_vcpu *vcpu,
 	}
 
 	/* Prepare trusty startup param */
-	mem->first_page.data.startup_param.size_of_this_struct =
-			sizeof(struct trusty_startup_param);
-	mem->first_page.data.startup_param.mem_size = mem_size;
-	mem->first_page.data.startup_param.tsc_per_ms = CYCLES_PER_MS;
-	mem->first_page.data.startup_param.trusty_mem_base =
-			TRUSTY_EPT_REBASE_GPA;
+	mem->first_page.startup_param.size_of_this_struct = sizeof(struct trusty_startup_param);
+	mem->first_page.startup_param.mem_size = mem_size;
+	mem->first_page.startup_param.tsc_per_ms = CYCLES_PER_MS;
+	mem->first_page.startup_param.trusty_mem_base = TRUSTY_EPT_REBASE_GPA;
 
 	/* According to trusty boot protocol, it will use RDI as the
 	 * address(GPA) of startup_param on boot. Currently, the startup_param
