@@ -22,8 +22,8 @@ include:
   safety standards.
 * **Meet functional safety requirements** Functional safety standards explicitly
   require a hierarchical structure of modules in software architectural
-  design. This applies to any safety integrity level defined in IEC 61508
-  [IEC_61508-3]_ and ISO 26262 [ISO_26262-6]_.
+  design. This applies to any safety integrity level defined in
+  [IEC_61508-3]_ and [ISO_26262-6]_.
 
 Principles
 **********
