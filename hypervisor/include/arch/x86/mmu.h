@@ -145,7 +145,7 @@ void flush_vpid_global(void);
 /**
  * @brief Guest-physical mappings and combined mappings invalidation
  *
- * @param[in] vcpu the pointer that points the vcpu data structure
+ * @param[in] vcpu_ERROR the pointer that points the vcpu data structure
  *
  * @return None
  */
