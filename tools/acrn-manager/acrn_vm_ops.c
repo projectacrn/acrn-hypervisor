@@ -223,6 +223,9 @@ static void _scan_added_vm(void)
 	char suffix[128];
 	int ret;
 
+	if (check_dir("/opt") || check_dir("/opt/acrn"))
+		return;
+
 	ret = check_dir(ACRNCTL_OPT_ROOT);
 	if (ret) {
 		pdebug();
