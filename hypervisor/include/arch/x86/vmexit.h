@@ -84,8 +84,4 @@ static inline uint64_t vm_exit_io_instruction_port_number(uint64_t exit_qual)
 	return (vm_exit_qualification_bit_mask(exit_qual, 31U, 16U) >> 16U);
 }
 
-#ifdef HV_DEBUG
-void get_vmexit_profile(char *str_arg, size_t str_max);
-#endif /* HV_DEBUG */
-
 #endif /* VMEXIT_H_ */

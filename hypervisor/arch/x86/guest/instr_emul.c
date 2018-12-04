@@ -1335,7 +1335,7 @@ static int emulate_or(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 
 static int emulate_cmp(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
-	int error;
+	int error = 0;
 	uint8_t size;
 	uint64_t regop, memop, op1, op2, rflags2;
 	enum cpu_reg_name reg;

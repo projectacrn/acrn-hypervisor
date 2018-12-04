@@ -48,7 +48,6 @@ void asm_assert(int32_t line, const char *file, const char *txt);
 #endif /* HV_DEBUG */
 
 void init_logmsg(uint32_t flags);
-void print_logmsg_buffer(uint16_t pcpu_id);
 void do_logmsg(uint32_t severity, const char *fmt, ...);
 
 /** The well known printf() function.
