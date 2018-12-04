@@ -1,4 +1,4 @@
-.. _acrn_doc:
+.. _using_agl_as_uos:
 
 Using AGL as the User OS
 ########################
