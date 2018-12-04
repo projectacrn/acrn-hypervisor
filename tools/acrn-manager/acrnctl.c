@@ -280,7 +280,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 	}
 	system(cmd);
 
-	if (snprintf(cmd, sizeof(cmd), "bash %s%s >./%s.result", argv[1],
+	if (snprintf(cmd, sizeof(cmd), "bash %s%s > %s.result", argv[1],
 			args, argv[1]) >= sizeof(cmd)) {
 		printf("ERROR: cmd is truncated\n");
 		ret = -1 ;
@@ -290,7 +290,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 	if (ret < 0)
 		goto get_vmname;
 
-	if (snprintf(cmd, sizeof(cmd), "grep -a \"acrnctl: \" ./%s.result",
+	if (snprintf(cmd, sizeof(cmd), "grep -a \"acrnctl: \" %s.result",
 			argv[1]) >= sizeof(cmd)) {
 		printf("ERROR: cmd is truncated\n");
 		ret = -1;
@@ -308,7 +308,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 	ret = _get_vmname(cmd_out, vmname, sizeof(vmname));
 	if (ret < 0) {
 		/* failed to get vmname */
-		if (snprintf(cmd, sizeof(cmd), "cat ./%s.result", argv[1]) >= sizeof(cmd)) {
+		if (snprintf(cmd, sizeof(cmd), "cat %s.result", argv[1]) >= sizeof(cmd)) {
 			printf("ERROR: cmd is truncated\n");
 			goto get_vmname;
 		}
@@ -365,7 +365,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 
  vm_exist:
  get_vmname:
-	if (snprintf(cmd, sizeof(cmd), "rm -f ./%s.result", argv[1]) >= sizeof(cmd)) {
+	if (snprintf(cmd, sizeof(cmd), "rm -f %s.result", argv[1]) >= sizeof(cmd)) {
 		printf("WARN: cmd is truncated\n");
 	} else
 		system(cmd);
