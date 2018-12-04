@@ -236,7 +236,7 @@ For the User OS, we are using the same `Clear Linux`_ release version as the Ser
 
   .. code-block:: none
 
-     cd /root/
+     cd ~
      wget https://download.clearlinux.org/releases/26440/clear/clear-26440-kvm.img.xz
      unxz clear-26440-kvm.img.xz
 
@@ -280,11 +280,11 @@ For the User OS, we are using the same `Clear Linux`_ release version as the Ser
 
   .. code-block:: none
 
-     -s 3,virtio-blk,/root/clear-26440-kvm.img
+     -s 3,virtio-blk,~/clear-26440-kvm.img
      -k /lib/modules/kernel/default-iot-lts2018
         
   .. note::
-      The image of UOS can be stored in other directories instead of ``/root/``, 
+      The image of UOS can be stored in other directories instead of ``~/``, 
       and please remember to modify the directory of image in ``launch_uos.sh`` too.
 
 Start the User OS (UOS)
