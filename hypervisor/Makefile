@@ -51,7 +51,6 @@ CFLAGS += -fsigned-char
 CFLAGS += -m64 -mno-mmx -mno-sse -mno-sse2 -mno-80387 -mno-fp-ret-in-387
 CFLAGS += -mno-red-zone
 CFLAGS += -nostdinc -nostdlib -fno-common
-CFLAGS += -O2 -D_FORTIFY_SOURCE=2
 CFLAGS += -Wformat -Wformat-security -Werror
 ifeq (y, $(CONFIG_RELOC))
 CFLAGS += -fpie
