@@ -107,6 +107,13 @@ trampoline_fixup_target:
     orl     $0x00000100, %eax
     wrmsr
 
+    /* 0xc0000080 = MSR_IA32_EFER */
+    movl    $0xc0000080, %ecx
+    rdmsr
+    /* 0x00000800 = MSR_IA32_EFER_NXE_BIT */
+    orl     $0x00000800, %eax
+    wrmsr
+
     /* Enable paging, protection, numeric error and co-processor
        monitoring in CR0 to enter long mode */
 

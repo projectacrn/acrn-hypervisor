@@ -31,6 +31,10 @@ SECTIONS
         *(.retpoline_thunk)
     } > ram
 
+     /*Align text top boundary to 2MBytes.*/
+     . = ALIGN(0x200000);
+     ld_text_end = . ;
+
     .rodata :
     {
         *(.rodata*) ;
