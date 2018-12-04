@@ -311,6 +311,7 @@ extern struct cpuinfo_x86 boot_cpu_data;
 void cpu_do_idle(void);
 void cpu_dead(uint16_t pcpu_id);
 void trampoline_start16(void);
+bool is_apicv_reg_virtualization_supported(void);
 bool is_apicv_intr_delivery_supported(void);
 bool is_apicv_posted_intr_supported(void);
 bool is_ept_supported(void);
