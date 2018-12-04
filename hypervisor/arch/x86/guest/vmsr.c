@@ -469,18 +469,28 @@ void update_msr_bitmap_x2apic_apicv(struct acrn_vcpu *vcpu)
 	uint8_t *msr_bitmap;
 
 	msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
-	intercept_x2apic_msrs(msr_bitmap, WRITE);
-	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_CUR_COUNT, READ);
 	/*
-	 * Open read-only interception for write-only
-	 * registers to inject gp on reads. EOI and Self-IPI
-	 * Writes are disabled for EOI, TPR and Self-IPI as
-	 * writes to them are virtualized with Register Virtualization
-	 * Refer to Section 29.1 in Intel SDM Vol. 3
+	 * For platforms that do not support register virtualization
+	 * all x2APIC MSRs need to intercepted. So no need to update
+	 * the MSR bitmap.
+	 *
+	 * TPR is virtualized even when register virtualization is not
+	 * supported
 	 */
-	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_TPR, DISABLE);
-	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_EOI, READ);
-	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_SELF_IPI, READ);
+	if (is_apicv_reg_virtualization_supported()) {
+		intercept_x2apic_msrs(msr_bitmap, WRITE);
+		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_CUR_COUNT, READ);
+		/*
+		 * Open read-only interception for write-only
+		 * registers to inject gp on reads. EOI and Self-IPI
+		 * Writes are disabled for EOI, TPR and Self-IPI as
+		 * writes to them are virtualized with Register Virtualization
+		 * Refer to Section 29.1 in Intel SDM Vol. 3
+		 */
+		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_TPR, DISABLE);
+		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_EOI, READ);
+		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_SELF_IPI, READ);
+	}
 }
 
 void update_msr_bitmap_x2apic_passthru(struct acrn_vcpu *vcpu)

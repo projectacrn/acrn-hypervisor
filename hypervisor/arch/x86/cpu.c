@@ -869,6 +869,11 @@ bool is_ept_supported(void)
 	return (cpu_caps.ept_features != 0U);
 }
 
+bool is_apicv_reg_virtualization_supported(void)
+{
+	return ((cpu_caps.apicv_features & VAPIC_FEATURE_VIRT_REG) != 0U);
+}
+
 bool is_apicv_intr_delivery_supported(void)
 {
 	return ((cpu_caps.apicv_features & VAPIC_FEATURE_INTR_DELIVERY) != 0U);
