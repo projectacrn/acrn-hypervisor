@@ -76,12 +76,13 @@ SECTIONS
 
     .bss (NOLOAD):
     {
-        . = ALIGN(4) ;
+	/*2Mbytes alignment */
+        . = ALIGN(0x200000) ;
         ld_bss_start = . ;
         *(.bss) ;
         *(.bss*) ;
         *(COMMON) ;
-        . = ALIGN(4) ;
+        . = ALIGN(0x200000) ;
         ld_bss_end = . ;
     } > ram
 

@@ -213,6 +213,11 @@ void enable_paging(void)
 	CPU_CR_WRITE(cr0, tmp64 | CR0_WP);
 
 	CPU_CR_WRITE(cr3, hva2hpa(ppt_mmu_pml4_addr));
+
+	/*enable NX bit*/
+	tmp64 = msr_read(MSR_IA32_EFER);
+	tmp64 |= MSR_IA32_EFER_NXE_BIT;
+	msr_write(MSR_IA32_EFER, tmp64);
 }
 
 void enable_smep(void)
@@ -228,7 +233,8 @@ void enable_smep(void)
 void init_paging(void)
 {
 	struct e820_entry *entry;
-	uint64_t hv_hpa;
+	uint64_t hv_hpa, relo_delta;
+	uint64_t bss_start, bss_end;
 	uint32_t i;
 	uint64_t low32_max_ram = 0UL;
 	uint64_t high64_max_ram;
@@ -286,6 +292,17 @@ void init_paging(void)
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (uint64_t)get_reserve_sworld_memory_base(),
 			TRUSTY_RAM_SIZE * (CONFIG_MAX_VM_NUM - 1U),
 			PAGE_USER, 0UL, &ppt_mem_ops, MR_MODIFY);
+
+
+	/*
+	 * align bss boundaries to 2MB for relocation case,
+	 * roundup 'start' address and rounddown 'end' address.
+	 */
+	relo_delta = get_hv_image_delta();
+	bss_start =  ((uint64_t)&ld_bss_start + relo_delta + PDE_SIZE - 1UL) & PDE_MASK;
+	bss_end = ((uint64_t)&ld_bss_end + relo_delta) & PDE_MASK;
+	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, bss_start, (bss_end - bss_start),
+			PAGE_NX, 0UL, &ppt_mem_ops, MR_MODIFY);
 
 	/* Enable paging */
 	enable_paging();
