@@ -1,0 +1,120 @@
+.. _acrn_doc:
+
+Using AGL as the User OS
+########################
+
+This tutorial describes the steps to run Automotive Grade Linux (AGL) 
+as the User OS on ACRN hypervisor and the problems we got at current stage. 
+We hope the steps documented in this article could help us to reproduce the 
+problem much easier and provide some information for further debugging.
+
+.. image:: images/The-overview-of-AGL-as-UOS.png
+   :align: center
+
+Introduction of AGL
+*******************
+
+Automotive Grade Linux (AGL) is an open source project of The Linux Foundation 
+that is building a Linux-based, open software platform for automotive application.
+For more information about AGL, please visit AGL’s official website:
+https://www.automotivelinux.org/.
+
+Steps for using AGL as the UOS
+******************************
+
+#. Hardware preparation
+
+   The regulatory model of NUC we used is `NUC6CAYH 
+   <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc6cayh.html>`_
+   and this kind of NUC has two display ports: 1x HDMI and 1x VGA.
+   So two displays needed for NUC, one for SOS and one for UOS, 
+   and connect these two displays to NUC.
+
+#. Prepare the Service OS (SOS)
+
+   Follow the instructions found in the Getting started guide for Intel NUC 
+   to setup SOS :ref:`getting-started-apl-nuc`.
+
+#. Prepare the User OS (UOS)
+
+   Download the release of AGL from https://download.automotivelinux.org/AGL/release/eel/, 
+   and we will use ``eel_5.1.0`` release for example.
+    
+   .. code-block:: none 
+   
+      cd ~
+      wget https://download.automotivelinux.org/AGL/release/eel/5.1.0/intel-corei7-64/deploy/images/intel-corei7-64/agl-demo-platform-crosssdk-intel-corei7-64.wic.xz
+      unxz agl-demo-platform-crosssdk-intel-corei7-64.wic.xz
+        
+        
+   You need to adjust the ``/usr/share/acrn/samples/nuc/launch_uos.sh`` script to match your installation.
+   These are the couple of lines you need to modify:
+    
+   .. code-block:: none 
+   
+      -s 3,virtio-blk,/root/agl-demo-platform-crosssdk-intel-corei7-64.wic \
+      -k /usr/lib/kernel/default-iot-lts2018 \
+      -B "root=/dev/vda2 
+     
+   .. note::
+      In case you have downloaded a different AGL image or store the image in other directory, 
+      you will need to modify the AGL file name or directory (the ``-s 3,virtio-blk`` argument) 
+      to match what you have downloaded above. 
+      Likewise, you may need to adjust the kernel file name to ``default-iot-lts2018``.
+      
+#. Start the User OS (UOS)
+
+   You are now all set to start the User OS (UOS).
+    
+   .. code-block:: none   
+
+      sudo /usr/share/acrn/samples/nuc/launch_uos.sh
+       
+   **Congratulations**, you are now watching the User OS booting up!
+
+   And you should be able to see the console of AGL:
+
+   .. image:: images/The-console-of-AGL.png
+      :align: center
+     
+   When you see the output of the console above, that means AGL has been loaded 
+   and now you could operate on the console. 
+
+Enable the display of AGL
+*************************
+
+But following the setup steps before, you will get black screen in AGL. 
+Please don't worry about it, and we will give the solutions to the black screen issue in AGL.
+By debugging, we identified the problem as an issue of ``ivi-shell.so`` library, it seems that 
+this library is not well supported. But we can light the screen with the GUI of weston like figure below.
+
+.. image:: images/The-GUI-of-weston.png
+   :align: center
+   
+To enable weston in AGL, We need to modify ``weston.ini``, which is the configuration file of weston.
+
+.. code-block:: none
+   
+   vim /etc/xdg/weston/weston.ini
+   
+The changes of ``weston.ini``:
+
+#. Comment ``ivi-shell.so`` out
+
+#. Check the name of output is ``HDMI-A-2``
+
+After that, there are still some steps need to do to launch weston in AGL:
+
+.. code-block:: none
+
+   export XDG_RUNTIME_DIR=/run/platform/display
+   systemctl restart weston
+
+And you will be able to see the GUI of weston in AGL now.
+
+Follow up
+*********
+ACRN Hypervisor is trying to support more kinds of operating systems all the time, 
+and AGL is an example of them. We are still debugging the “ivi-shell.so” issue, 
+and we are also investigating the problem why AGL GUI not got launched, 
+currently it may either be a configuration issue or a real bug, more experiment will be done.
