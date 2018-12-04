@@ -146,7 +146,7 @@ You can download latest Service OS kernel from
 
    .. code-block:: none
 
-      mkdir ~/sos-kernel-build
+      sudo mkdir ~/sos-kernel-build
       cd ~/sos-kernel-build
       wget https://download.clearlinux.org/releases/26440/clear/x86_64/os/Packages/linux-iot-lts2018-sos-4.19.0-22.x86_64.rpm
       sudo apt-get install rpm2cpio
@@ -157,7 +157,7 @@ You can download latest Service OS kernel from
    .. code-block:: none
 
       sudo cp -r ~/sos-kernel-build/usr/lib/modules/4.19.0-22.iot-lts2018-sos/ /lib/modules/
-      mkdir /boot/acrn/
+      sudo mkdir /boot/acrn/
       sudo cp ~/sos-kernel-build/usr/lib/kernel/org.clearlinux.iot-lts2018-sos.4.19.0-22  /boot/acrn/
 
 #. Configure Grub to load the Service OS kernel
@@ -244,7 +244,7 @@ For the User OS, we are using the same `Clear Linux`_ release version as the Ser
 
   .. code-block:: none
   
-     mkdir ~/uos-kernel-build
+     sudo mkdir ~/uos-kernel-build
      cd ~/uos-kernel-build
      wget https://download.clearlinux.org/releases/26440/clear/x86_64/os/Packages/linux-iot-lts2018-4.19.0-22.x86_64.rpm
      rpm2cpio linux-iot-lts2018-4.19.0-22.x86_64.rpm | cpio -idmv
