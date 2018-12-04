@@ -61,17 +61,12 @@ typedef struct {
     /** Information about the associated message digest. */
     const mbedtls_md_info_t *md_info;
 
-    /** The digest-specific context. Use array here to avoid dynamic memory
-     *  allocation. The size of the array size is determined by this line
-     *  in md_wrap.c
-     *  void *ctx = mbedtls_calloc(1, sizeof( mbedtls_sha256_context ));
-     */
+    /** The digest-specific context. */
     unsigned char md_ctx[sizeof( mbedtls_sha256_context )];
 
     /** The HMAC part of the context. Use array here to avoid dynamic memory
-     *  allocation. The hardcode value 128 is determined by 2 parts:
-     *  1. In md.c ctx->hmac_ctx=mbedtls_calloc(2, md_info->block_size);
-     *  2. block_size is 64 in md_wrap.c
+     *  allocation. The hardcode value 128 is 2 times of block_size which
+     *  is 64 in md_wrap.c
      */
     unsigned char hmac_ctx[128];
 } mbedtls_md_context_t;
