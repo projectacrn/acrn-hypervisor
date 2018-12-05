@@ -33,7 +33,7 @@ struct zero_page {
 	} __packed hdr;
 
 	uint8_t pad3[0x68];	/* 0x268 */
-	struct e820_entry e820[0x80];	/* 0x2d0 */
+	struct e820_entry entries[0x80];	/* 0x2d0 */
 	uint8_t pad4[0x330];	/* 0xcd0 */
 } __packed;
 

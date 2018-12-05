@@ -353,22 +353,22 @@ int32_t hcall_set_irqline(const struct acrn_vm *vm, uint16_t vmid,
 		return -EINVAL;
 	}
 
-	if (ops->nr_gsi >= vioapic_pincount(vm)) {
+	if (ops->gsi >= vioapic_pincount(vm)) {
 		return -EINVAL;
 	}
 
-	if (ops->nr_gsi < vpic_pincount()) {
+	if (ops->gsi < vpic_pincount()) {
 		/*
 		 * IRQ line for 8254 timer is connected to
 		 * I/O APIC pin #2 but PIC pin #0,route GSI
 		 * number #2 to PIC IRQ #0.
 		 */
-		irq_pic = (ops->nr_gsi == 2U) ? 0U : ops->nr_gsi;
+		irq_pic = (ops->gsi == 2U) ? 0U : ops->gsi;
 		vpic_set_irq(target_vm, irq_pic, ops->op);
 	}
 
 	/* handle IOAPIC irqline */
-	vioapic_set_irq(target_vm, ops->nr_gsi, ops->op);
+	vioapic_set_irq(target_vm, ops->gsi, ops->op);
 
 	return 0;
 }
@@ -588,20 +588,20 @@ static int32_t set_vm_memory_region(struct acrn_vm *vm,
  */
 int32_t hcall_set_vm_memory_regions(struct acrn_vm *vm, uint64_t param)
 {
-	struct set_regions set_regions;
-	struct vm_memory_region region;
+	struct set_regions regions;
+	struct vm_memory_region mr;
 	struct acrn_vm *target_vm;
 	uint32_t idx;
 
 
-	(void)memset((void *)&set_regions, 0U, sizeof(set_regions));
+	(void)memset((void *)&regions, 0U, sizeof(regions));
 
-	if (copy_from_gpa(vm, &set_regions, param, sizeof(set_regions)) != 0) {
+	if (copy_from_gpa(vm, &regions, param, sizeof(regions)) != 0) {
 		pr_err("%s: Unable copy param from vm\n", __func__);
 		return -EFAULT;
 	}
 
-	target_vm = get_vm_from_vmid(set_regions.vmid);
+	target_vm = get_vm_from_vmid(regions.vmid);
 	if (target_vm == NULL) {
 		return -EINVAL;
 	}
@@ -612,17 +612,15 @@ int32_t hcall_set_vm_memory_regions(struct acrn_vm *vm, uint64_t param)
 	}
 
 	idx = 0U;
-	while (idx < set_regions.mr_num) {
+	while (idx < regions.mr_num) {
 		int ret;
 
-		if (copy_from_gpa(vm, &region,
-			set_regions.regions_gpa + idx * sizeof(region),
-			sizeof(region)) != 0) {
-			pr_err("%s: Copy region entry fail from vm\n", __func__);
+		if (copy_from_gpa(vm, &mr, regions.regions_gpa + idx * sizeof(mr), sizeof(mr)) != 0) {
+			pr_err("%s: Copy mr entry fail from vm\n", __func__);
 			return -EFAULT;
 		}
 
-		ret = set_vm_memory_region(vm, target_vm, &region);
+		ret = set_vm_memory_region(vm, target_vm, &mr);
 		if (ret < 0) {
 			return ret;
 		}

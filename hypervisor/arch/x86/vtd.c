@@ -829,7 +829,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8
 	struct dmar_drhd_rt *dmar_unit;
 	struct dmar_root_entry *root_table;
 	uint64_t context_table_addr;
-	struct dmar_context_entry *context_table;
+	struct dmar_context_entry *context;
 	struct dmar_root_entry *root_entry;
 	struct dmar_context_entry *context_entry;
 	uint64_t upper;
@@ -888,8 +888,8 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8
 
 	context_table_addr = context_table_addr << PAGE_SHIFT;
 
-	context_table = (struct dmar_context_entry *)hpa2hva(context_table_addr);
-	context_entry = context_table + devfun;
+	context = (struct dmar_context_entry *)hpa2hva(context_table_addr);
+	context_entry = context + devfun;
 
 	/* the context entry should not be present */
 	if (dmar_get_bitslice(context_entry->lower, CTX_ENTRY_LOWER_P_MASK, CTX_ENTRY_LOWER_P_POS) != 0UL) {
@@ -942,7 +942,7 @@ static int remove_iommu_device(const struct iommu_domain *domain, uint16_t segme
 	struct dmar_drhd_rt *dmar_unit;
 	struct dmar_root_entry *root_table;
 	uint64_t context_table_addr;
-	struct dmar_context_entry *context_table;
+	struct dmar_context_entry *context;
 	struct dmar_root_entry *root_entry;
 	struct dmar_context_entry *context_entry;
 	uint16_t dom_id;
@@ -958,9 +958,9 @@ static int remove_iommu_device(const struct iommu_domain *domain, uint16_t segme
 
 	context_table_addr = dmar_get_bitslice(root_entry->lower,  ROOT_ENTRY_LOWER_CTP_MASK, ROOT_ENTRY_LOWER_CTP_POS);
 	context_table_addr = context_table_addr << PAGE_SHIFT;
-	context_table = (struct dmar_context_entry *)hpa2hva(context_table_addr);
+	context = (struct dmar_context_entry *)hpa2hva(context_table_addr);
 
-	context_entry = context_table + devfun;
+	context_entry = context + devfun;
 
 	dom_id = (uint16_t)dmar_get_bitslice(context_entry->upper, CTX_ENTRY_UPPER_DID_MASK, CTX_ENTRY_UPPER_DID_POS);
 	if (dom_id != vmid_to_domainid(domain->vm_id)) {

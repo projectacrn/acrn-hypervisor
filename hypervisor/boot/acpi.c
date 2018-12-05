@@ -163,14 +163,13 @@ static void *get_rsdp(void)
 	return rsdp;
 }
 
-static bool
-probe_table(uint64_t address, const char *sig)
+static bool probe_table(uint64_t address, const char *signature)
 {
 	void *va =  hpa2hva(address);
 	struct acpi_table_header *table = (struct acpi_table_header *)va;
 	bool ret;
 
-	if (strncmp(table->signature, sig, ACPI_NAME_SIZE) != 0) {
+	if (strncmp(table->signature, signature, ACPI_NAME_SIZE) != 0) {
 	        ret = false;
 	} else {
 		ret = true;
@@ -179,7 +178,7 @@ probe_table(uint64_t address, const char *sig)
 	return ret;
 }
 
-static void *get_acpi_tbl(const char *sig)
+static void *get_acpi_tbl(const char *signature)
 {
 	struct acpi_table_rsdp *rsdp;
 	struct acpi_table_rsdt *rsdt;
@@ -202,7 +201,7 @@ static void *get_acpi_tbl(const char *sig)
 		    sizeof(uint64_t);
 
 		for (i = 0U; i < count; i++) {
-			if (probe_table(xsdt->table_offset_entry[i], sig)) {
+			if (probe_table(xsdt->table_offset_entry[i], signature)) {
 				addr = xsdt->table_offset_entry[i];
 				break;
 			}
@@ -216,7 +215,7 @@ static void *get_acpi_tbl(const char *sig)
 			sizeof(uint32_t);
 
 		for (i = 0U; i < count; i++) {
-			if (probe_table(rsdt->table_offset_entry[i], sig)) {
+			if (probe_table(rsdt->table_offset_entry[i], signature)) {
 				addr = rsdt->table_offset_entry[i];
 				break;
 			}
