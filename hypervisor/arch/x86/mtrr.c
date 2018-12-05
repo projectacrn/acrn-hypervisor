@@ -23,7 +23,7 @@ struct fixed_range_mtrr_maps {
 };
 
 #define MAX_FIXED_RANGE_ADDR	0x100000UL
-#define FIXED_MTRR_INVALID_INDEX	-1U
+#define FIXED_MTRR_INVALID_INDEX	~0U
 static struct fixed_range_mtrr_maps fixed_mtrr_map[FIXED_RANGE_MTRR_NUM] = {
 	{ MSR_IA32_MTRR_FIX64K_00000, 0x0U, 0x10000U },
 	{ MSR_IA32_MTRR_FIX16K_80000, 0x80000U, 0x4000U },
