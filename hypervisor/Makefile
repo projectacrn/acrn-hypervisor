@@ -237,7 +237,7 @@ endif
 
 C_OBJS := $(patsubst %.c,$(HV_OBJDIR)/%.o,$(C_SRCS))
 ifneq ($(CONFIG_RELEASE),y)
-CFLAGS += -DHV_DEBUG -DPROFILING_ON
+CFLAGS += -DHV_DEBUG -DPROFILING_ON -fno-omit-frame-pointer
 endif
 S_OBJS := $(patsubst %.S,$(HV_OBJDIR)/%.o,$(S_SRCS))
 
