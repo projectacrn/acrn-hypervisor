@@ -47,12 +47,21 @@ complete this setup.
    and follow the `Clear Linux installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
    as a starting point for installing Clear Linux onto your platform.  Follow the recommended
-   options for choosing an **Automatic** installation type, and using the platform's
+   options for choosing an **Manual (Advanced)** installation type, and using the platform's
    storage as the target device for installation (overwriting the existing data
    and creating three partitions on the platform's storage drive).
+   
+   High-level steps should be: 
+   
+   #.  Install Clear on a NUC using the "Manual (Advanced)" option.
+   #.  Use default partition scheme for storage
+   #.  Name the host "clr-sos-guest"
+   #.  Add an administrative user "clear" with "sudoers" privilege
+   #.  Add these additional bundles "editors", "user-basic", "desktop-autostart", "network-basic"
+   #.  For network, choose “DHCP”
 
 #. After installation is complete, boot into Clear Linux, login as
-   **root**, and set a password.
+   **clear**, and set a password.
 
 #. Clear Linux is set to automatically update itself. We recommend that you disable
    this feature to have more control over when the updates happen. Use this command
@@ -60,28 +69,27 @@ complete this setup.
 
    .. code-block:: none
 
-      # swupd autoupdate --disable
+      $ sudo swupd autoupdate --disable
 
    .. note::
       The Clear Linux installer will automatically check for updates and install the
       latest version available on your system. If you wish to use a specific version
       (such as 26200), you can achieve that after the installation has completed using
-      ``swupd verify --fix --picky -m 26200``
-
+      ``sudo swupd verify --fix --picky -m 26200``
+       
 #. If you have an older version of Clear Linux already installed
    on your hardware, use this command to upgrade Clear Linux
    to version 26200 (or newer):
 
    .. code-block:: none
 
-      # swupd update -m 26200     # or newer version
+      $ sudo swupd update -m 26200     # or newer version
 
-#. Use the ``swupd bundle-add`` command and add these Clear Linux bundles:
+#. Use the ``sudo swupd bundle-add`` command and add these Clear Linux bundles:
 
    .. code-block:: none
 
-      # swupd bundle-add vim sudo network-basic service-os kernel-iot-lts2018 \
-          openssh-server software-defined-cockpit
+      $ sudo swupd bundle-add service-os kernel-iot-lts2018 
 
    .. table:: Clear Linux bundles
       :widths: auto
@@ -90,25 +98,13 @@ complete this setup.
       +--------------------+---------------------------------------------------+
       | Bundle             | Description                                       |
       +====================+===================================================+
-      | vim                | vim text editor                                   |
-      +--------------------+---------------------------------------------------+
-      | sudo               | sudo command                                      |
-      +--------------------+---------------------------------------------------+
-      | network-basic      | Run network utilities and modify network settings |
-      +--------------------+---------------------------------------------------+
       | service-os         | Add the acrn hypervisor, the acrn devicemodel and |
       |                    | Service OS kernel                                 |
       +--------------------+---------------------------------------------------+
       | kernel-iot-lts2018 | Run the Intel kernel"kernel-iot-lts2018"          |
       |                    | which is enterprise-style kernel with backports   |
       +--------------------+---------------------------------------------------+
-      | openssh-server     | Server-side support for secure connectivity and   |
-      |                    | remote login using the SSH protocol               |
-      +--------------------+---------------------------------------------------+
-      | software-defined   | Run the automotive software defined cockpit       |
-      | -cockpit           | which has graphic, media, sound and connectivity  |
-      |                    |                                                   |
-      +--------------------+---------------------------------------------------+
+
 
 Add the ACRN hypervisor to the EFI Partition
 ============================================
@@ -120,16 +116,16 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # mount /dev/sda1 /mnt
-
-      # ls -1 /mnt/EFI/org.clearlinux
+      $ sudo ls -1 /boot/EFI/org.clearlinux
       bootloaderx64.efi
       kernel-org.clearlinux.native.4.19.1-654
       kernel-org.clearlinux.iot-lts2018-sos.4.19.0-19
       kernel-org.clearlinux.iot-lts2018.4.19.0-19
+      kernel-org.clearlinux.pk414-sos.4.14.74-115
       loaderx64.efi
 
    .. note::
+      On Clear Linux, the EFI System Partion (e.g.: ``/dev/sda1``) is mounted under ``/boot`` by default
       The Clear Linux project releases updates often, sometimes
       twice a day, so make note of the specific kernel versions (*iot-lts2018 and *iot-lts2018-sos*) listed on your system,
       as you will need them later.
@@ -146,8 +142,8 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # mkdir /mnt/EFI/acrn
-      # cp /usr/lib/acrn/acrn.efi /mnt/EFI/acrn/
+      $ sudo mkdir /boot/EFI/acrn
+      $ sudo cp /usr/lib/acrn/acrn.efi /boot/EFI/acrn/
 
 #. Configure the EFI firmware to boot the ACRN hypervisor by default
 
@@ -158,7 +154,7 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN"
+      $ sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN"
 
    .. note::
 
@@ -189,7 +185,7 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN NUC Hypervisor" \
+      $ sudo efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/sda -p 1 -L "ACRN NUC Hypervisor" \
             -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=disabled"
 
 #. Create a boot entry for the ACRN Service OS by copying a provided ``acrn.conf``
@@ -219,7 +215,7 @@ partition. Follow these steps:
 
    .. code-block:: none
 
-      # cp /usr/share/acrn/samples/nuc/acrn.conf /mnt/loader/entries/
+      $ sudo cp /usr/share/acrn/samples/nuc/acrn.conf /boot/loader/entries/
 
    You will need to edit this file to adjust the kernel version (``linux`` section),
    insert the ``PARTUUID`` of your ``/dev/sda3`` partition
@@ -231,28 +227,17 @@ partition. Follow these steps:
    .. note::
       It is also possible to use the device name directly, e.g. ``root=/dev/sda3``
 
+   .. code-block:: none
+
+   
 #. Add a timeout period for Systemd-Boot to wait, otherwise it will not
    present the boot menu and will always boot the base Clear Linux
 
    .. code-block:: none
 
-      # clr-boot-manager set-timeout 20
-      # clr-boot-manager update
+      $ sudo clr-boot-manager set-timeout 20
+      $ sudo clr-boot-manager update
 
-#. Add new user
-
-   .. code-block:: none
-
-      # useradd cl_sos
-      # passwd cl_sos
-      # usermod -G wheel -a cl_sos
-
-#. Enable weston service
-
-   .. code-block:: none
-
-      # systemctl enable weston@cl_sos
-      # systemctl start weston@cl_sos
 
 #. Reboot and select "The ACRN Service OS" to boot, as shown below:
 
@@ -269,33 +254,27 @@ partition. Follow these steps:
       Reboot Into Firmware Interface
 
 #. After booting up the ACRN hypervisor, the Service OS will be launched
-   automatically by default, as shown here:
+   automatically by default, and the Clear Linux desktop will be showing with user "clear",
+   (or you can login remotely with an "ssh" client).
+   If there is any issue which makes the GNOME desktop doens't show succesfully, then the system will go to 
+   shell console.
 
-   .. code-block:: console
-      :caption: Service OS Console
-
-      clr-7259a7c5bbdd4bcaa9a59d5841b4ace login: root
-      You are required to change your password immediately (administrator enforced)
-      New password:
-      Retype new password:
-      root@clr-7259a7c5bbdd4bcaa9a59d5841b4ace ~ # _
-
-   ..  note:: You may need to hit ``Enter`` to get a clean login prompt
-
-#. From here you can login as root using the password you set previously when
+#. From ssh client, login as user "clear" using the password you set previously when
    you installed Clear Linux.
 
-#. (**Optional**) The ``software-defined-cockpit`` bundle installs the
-   ``ioc-cbc-tools`` on the system and activates three ``systemd`` services.
-   Those services do not work on off-the-shelf platforms such as NUCs, UP2.
-   You can disable them as shown here:
+#. After rebooting the system, check that the ACRN hypervisor is running properly with: 
+  
+  .. code-block:: none
 
-   .. code-block:: none
+   $ dmesg | grep ACRN
+   [    0.000000] Hypervisor detected: ACRN
+   [    1.687128] ACRNTrace: acrn_trace_init, cpu_num 4
+   [    1.693129] ACRN HVLog: acrn_hvlog_init
 
-      # systemctl mask cbc_attach
-      # systemctl mask cbc_lifecycle
-      # systemctl mask cbc_thermald
-
+If you see log information similar to this, the ACRN hypervisor is running properly
+and you can start deploying a User OS.  If not, verify the EFI boot options, SOS
+kernel, and ``acrn.conf`` settings are correct (as described above).
+    
 
 ACRN Network Bridge
 ===================
@@ -313,8 +292,10 @@ Set up Reference UOS
 
    .. code-block:: none
 
-      # cd ~
-      # curl -O https://download.clearlinux.org/releases/26200/clear/clear-26200-kvm.img.xz
+      $ cd ~
+      $ mkdir uos
+      $ cd uos
+      $ curl -O https://download.clearlinux.org/releases/26200/clear/clear-26200-kvm.img.xz
 
    .. note::
       In case you want to use or try out a newer version of Clear Linux as the UOS, you can
@@ -325,18 +306,18 @@ Set up Reference UOS
 
    .. code-block:: none
 
-      # unxz clear-26200-kvm.img.xz
+      $ unxz clear-26200-kvm.img.xz
 
 #. Deploy the UOS kernel modules to UOS virtual disk image (note: you'll need to use
-   the same **standard** image version number noted in step 1 above):
+   the same **iot-lts2018** image version number noted in step 1 above):
 
    .. code-block:: none
 
-      # losetup -f -P --show /root/clear-26200-kvm.img
-      # mount /dev/loop0p3 /mnt
-      # cp -r /usr/lib/modules/4.19.0-19.iot-lts2018 /mnt/lib/modules/
-      # umount /mnt
-      # sync
+      $ sudo losetup -f -P --show clear-26200-kvm.img
+      $ sudo mount /dev/loop0p3 /mnt
+      $ sudo cp -r /usr/lib/modules/4.19.0-19.iot-lts2018 /mnt/lib/modules/
+      $ sudo umount /mnt
+      $ sync
 
 #. Edit and Run the ``launch_uos.sh`` script to launch the UOS.
 
@@ -355,23 +336,17 @@ Set up Reference UOS
       In case you have downloaded a different Clear Linux image than the one above
       (``clear-26200-kvm.img.xz``), you will need to modify the Clear Linux file name
       and version number highlighted above (the ``-s 3,virtio-blk`` argument) to match
-      what you have downloaded above. Likewise, you may need to adjust the kernel file
+      what you have downloaded above. Otherwise, you may need to adjust the kernel file
       name on the second line highlighted (check the exact name to be used using:
-      ``ls /usr/lib/kernel/org.clearlinux*-standard*``).
-
-   .. note::
-      The script uses ``/usr/lib/kernel/default-iot-lts2018`` which is a symlink
-      to the latest ``*-iot-lts2018`` installed on the system. This provides a
-      sane default but double-check the version in case things do not work as
-      expected.
+      ``ls /usr/lib/kernel/org.clearlinux.iot-lts2018*``).
 
    By default, the script is located in the ``/usr/share/acrn/samples/nuc/``
    directory. You can edit it there, and then run it to launch the User OS:
 
    .. code-block:: none
 
-      # cd /usr/share/acrn/samples/nuc/
-      # ./launch_uos.sh
+      $ cd /usr/share/acrn/samples/nuc/
+      $ sudo ./launch_uos.sh
 
 #. At this point, you've successfully booted the ACRN hypervisor,
    SOS, and UOS:
@@ -380,30 +355,6 @@ Set up Reference UOS
       :align: center
       :name: gsg-successful-boot
 
-
-Device Manager memory allocation mechanism
-==========================================
-
-The ACRN Device Manager (DM) virtual memory allocation uses the HugeTLB mechanism.
-(You can read more about `HugeTLB in the linux kernel <https://linuxgazette.net/155/krishnakumar.html>`_
-for more information about how this mechanism works.)
-
-For hugeTLB to work, you'll need to reserve huge pages:
-
-  - For a (large) 1GB huge page reservation, add ``hugepagesz=1G hugepages=reserved_pg_num``
-    (for example, ``hugepagesz=1G hugepages=4``) to the SOS cmdline in
-    ``acrn.conf`` (for EFI)
-
-  - For a (smaller) 2MB huge page reservation, after the SOS starts up, run the
-    command::
-
-       echo reserved_pg_num > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-
-  .. note::
-     You can use 2M reserving method to do reservation for 1G page size, but it
-     may fail.  For an EFI platform, you may skip 1G page reservation
-     by using a 2M page, but make sure your huge page reservation size is
-     large enough for your usage.
 
 Build ACRN from Source
 **********************
@@ -649,3 +600,4 @@ example above) to 'BOARD=':
    .. code-block:: none
 
       $ make defconfig BOARD=xxx
+      
