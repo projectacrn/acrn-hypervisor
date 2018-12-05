@@ -881,6 +881,7 @@ dm_run(int argc, char *argv[])
 			break;
 		case CMD_OPT_DEBUGEXIT:
 			debugexit_enabled = true;
+			break;
 		case CMD_OPT_VTPM2:
 			if (acrn_parse_vtpm2(optarg) != 0) {
 				errx(EX_USAGE, "invalid vtpm2 param %s", optarg);
