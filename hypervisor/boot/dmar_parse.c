@@ -8,7 +8,7 @@
 #include <hypervisor.h>
 #include "pci.h"
 #include "vtd.h"
-#include "acpi.h"
+#include "acpi_priv.h"
 
 enum acpi_dmar_type {
 	ACPI_DMAR_TYPE_HARDWARE_UNIT        = 0,

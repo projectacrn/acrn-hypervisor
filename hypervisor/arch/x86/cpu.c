@@ -5,6 +5,7 @@
  */
 
 #include <hypervisor.h>
+#include <acpi.h>
 #include <schedule.h>
 #include <version.h>
 #include <trampoline.h>
@@ -269,18 +270,6 @@ static int hardware_detect_support(void)
 
 	pr_acrnlog("hardware support HV");
 	return 0;
-}
-
-uint16_t __attribute__((weak)) parse_madt(uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
-{
-	static const uint32_t lapic_id[] = {0U, 2U, 4U, 6U};
-	uint32_t i;
-
-	for (i = 0U; i < ARRAY_SIZE(lapic_id); i++) {
-		lapic_id_array[i] = lapic_id[i];
-	}
-
-	return ((uint16_t)ARRAY_SIZE(lapic_id));
 }
 
 static void init_percpu_lapic_id(void)
