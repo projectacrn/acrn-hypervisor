@@ -28,6 +28,7 @@
  */
 
 #include <hypervisor.h>
+#include "acpi_priv.h"
 #include "acpi.h"
 #include <vm0_boot.h>
 
