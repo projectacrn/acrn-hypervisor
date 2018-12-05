@@ -336,7 +336,7 @@ Set up Reference UOS
       In case you have downloaded a different Clear Linux image than the one above
       (``clear-26200-kvm.img.xz``), you will need to modify the Clear Linux file name
       and version number highlighted above (the ``-s 3,virtio-blk`` argument) to match
-      what you have downloaded above. Otherwise, you may need to adjust the kernel file
+      what you have downloaded above. Likewise, you may need to adjust the kernel file
       name on the second line highlighted (check the exact name to be used using:
       ``ls /usr/lib/kernel/org.clearlinux.iot-lts2018*``).
 
