@@ -1,7 +1,7 @@
 .. _build UOS from Clearlinux:
 
 Building UOS from Clear Linux
-##############################
+#############################
 
 This document builds on the :ref:`getting_started`, 
 and explains how to build UOS from Clear Linux.
@@ -14,7 +14,7 @@ please follow these steps in Clear Linux native:
 
 #. In Clear Linxu native, please install ``ister`` at first, 
    ``ister`` is a template based installer for linux, 
-   which is inclued in the package ``os-installer`` in Clear Linux.
+   which is inclued in the bundle ``os-installer`` in Clear Linux.
    For more information about ``ister``, 
    please visit https://github.com/bryteise/ister.
 
@@ -80,7 +80,7 @@ please follow these steps in Clear Linux native:
    .. note::
       To generate the image with a specified version, 
       please modify with the ``"Version"`` argument, 
-      and ``"Version": 26550`` for example.
+      and we can set ``"Version": 26550`` for example.
 
    Here we will use ``"Version": 26550`` for example, 
    and the image of UOS called ``uos.img`` will be generated 
