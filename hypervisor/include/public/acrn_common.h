@@ -468,7 +468,7 @@ struct acrn_set_ioreq_buffer {
  * the parameter for HC_SET_IRQLINE hypercall
  */
 struct acrn_irqline_ops {
-	uint32_t nr_gsi;
+	uint32_t gsi;
 	uint32_t op;
 } __aligned(8);
 

@@ -30,23 +30,23 @@ static inline uint64_t ppt_pgentry_present(uint64_t pte)
 
 static inline struct page *ppt_get_pml4_page(const union pgtable_pages_info *info)
 {
-	struct page *page = info->ppt.pml4_base;
-	(void)memset(page, 0U, PAGE_SIZE);
-	return page;
+	struct page *pml4_page = info->ppt.pml4_base;
+	(void)memset(pml4_page, 0U, PAGE_SIZE);
+	return pml4_page;
 }
 
 static inline struct page *ppt_get_pdpt_page(const union pgtable_pages_info *info, uint64_t gpa)
 {
-	struct page *page = info->ppt.pdpt_base + (gpa >> PML4E_SHIFT);
-	(void)memset(page, 0U, PAGE_SIZE);
-	return page;
+	struct page *pdpt_page = info->ppt.pdpt_base + (gpa >> PML4E_SHIFT);
+	(void)memset(pdpt_page, 0U, PAGE_SIZE);
+	return pdpt_page;
 }
 
 static inline struct page *ppt_get_pd_page(const union pgtable_pages_info *info, uint64_t gpa)
 {
-	struct page *page = info->ppt.pd_base + (gpa >> PDPTE_SHIFT);
-	(void)memset(page, 0U, PAGE_SIZE);
-	return page;
+	struct page *pd_page = info->ppt.pd_base + (gpa >> PDPTE_SHIFT);
+	(void)memset(pd_page, 0U, PAGE_SIZE);
+	return pd_page;
 }
 
 const struct memory_ops ppt_mem_ops = {
@@ -103,43 +103,43 @@ static inline uint64_t ept_pgentry_present(uint64_t pte)
 
 static inline struct page *ept_get_pml4_page(const union pgtable_pages_info *info)
 {
-	struct page *page = info->ept.nworld_pml4_base;
-	(void)memset(page, 0U, PAGE_SIZE);
-	return page;
+	struct page *pml4_page = info->ept.nworld_pml4_base;
+	(void)memset(pml4_page, 0U, PAGE_SIZE);
+	return pml4_page;
 }
 
 static inline struct page *ept_get_pdpt_page(const union pgtable_pages_info *info, uint64_t gpa)
 {
-	struct page *page = info->ept.nworld_pdpt_base + (gpa >> PML4E_SHIFT);
-	(void)memset(page, 0U, PAGE_SIZE);
-	return page;
+	struct page *pdpt_page = info->ept.nworld_pdpt_base + (gpa >> PML4E_SHIFT);
+	(void)memset(pdpt_page, 0U, PAGE_SIZE);
+	return pdpt_page;
 }
 
 static inline struct page *ept_get_pd_page(const union pgtable_pages_info *info, uint64_t gpa)
 {
-	struct page *page;
+	struct page *pd_page;
 	if (gpa < TRUSTY_EPT_REBASE_GPA) {
-		page = info->ept.nworld_pd_base + (gpa >> PDPTE_SHIFT);
+		pd_page = info->ept.nworld_pd_base + (gpa >> PDPTE_SHIFT);
 	} else {
-		page = info->ept.sworld_pgtable_base + TRUSTY_PML4_PAGE_NUM(TRUSTY_EPT_REBASE_GPA) +
+		pd_page = info->ept.sworld_pgtable_base + TRUSTY_PML4_PAGE_NUM(TRUSTY_EPT_REBASE_GPA) +
 			TRUSTY_PDPT_PAGE_NUM(TRUSTY_EPT_REBASE_GPA) + ((gpa - TRUSTY_EPT_REBASE_GPA) >> PDPTE_SHIFT);
 	}
-	(void)memset(page, 0U, PAGE_SIZE);
-	return page;
+	(void)memset(pd_page, 0U, PAGE_SIZE);
+	return pd_page;
 }
 
 static inline struct page *ept_get_pt_page(const union pgtable_pages_info *info, uint64_t gpa)
 {
-	struct page *page;
+	struct page *pt_page;
 	if (gpa < TRUSTY_EPT_REBASE_GPA) {
-		page = info->ept.nworld_pt_base + (gpa >> PDE_SHIFT);
+		pt_page = info->ept.nworld_pt_base + (gpa >> PDE_SHIFT);
 	} else {
-		page = info->ept.sworld_pgtable_base + TRUSTY_PML4_PAGE_NUM(TRUSTY_EPT_REBASE_GPA) +
+		pt_page = info->ept.sworld_pgtable_base + TRUSTY_PML4_PAGE_NUM(TRUSTY_EPT_REBASE_GPA) +
 			TRUSTY_PDPT_PAGE_NUM(TRUSTY_EPT_REBASE_GPA) + TRUSTY_PD_PAGE_NUM(TRUSTY_EPT_REBASE_GPA) +
 			((gpa - TRUSTY_EPT_REBASE_GPA) >> PDE_SHIFT);
 	}
-	(void)memset(page, 0U, PAGE_SIZE);
-	return page;
+	(void)memset(pt_page, 0U, PAGE_SIZE);
+	return pt_page;
 }
 
 static inline void *ept_get_sworld_memory_base(const union pgtable_pages_info *info)
