@@ -145,7 +145,8 @@ static const uint32_t emulated_msrs[NUM_EMULATED_MSR] = {
 	/* MSR 0xC90 ... 0xD8F, not in this array */
 };
 
-static const uint32_t x2apic_msrs[] = {
+#define NUM_X2APIC_MSR	44U
+static const uint32_t x2apic_msrs[NUM_X2APIC_MSR] = {
 	MSR_IA32_EXT_XAPICID,
 	MSR_IA32_EXT_APIC_VERSION,
 	MSR_IA32_EXT_APIC_TPR,
@@ -240,7 +241,7 @@ static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg, enum rw_mode mode)
 	uint8_t *msr_bitmap = msr_bitmap_arg;
 	uint32_t i;
 
-	for (i = 0U; i < ARRAY_SIZE(x2apic_msrs); i++) {
+	for (i = 0U; i < NUM_X2APIC_MSR; i++) {
 		enable_msr_interception(msr_bitmap, x2apic_msrs[i], mode);
 	}
 }
