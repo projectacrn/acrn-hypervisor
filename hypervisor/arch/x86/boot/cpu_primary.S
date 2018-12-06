@@ -163,31 +163,6 @@ after:
     mov     %eax,%fs  // Was 32bit POC Data
     mov     %eax,%gs  // Was 32bit POC CLS
 
-    /*
-     * Fix up the IDT desciptors
-     * The relocation delta in IDT tables has been fixed in relocate()
-     */
-    movl   %eax, %edx
-    leal   HOST_IDT(%rip), %edx
-    movl   $HOST_IDT_ENTRIES, %ecx
-
-.fixup_idt_entries:
-    xorl    %eax, %eax
-    xchgl   %eax, 12(%edx)              /* Set rsvd bits to 0; eax now has
-                                           high 32 of entry point */
-    xchgl   %eax,  8(%edx)              /* Set bits 63..32 of entry point;
-                                           eax now has low 32 of entry point */
-    movw    %ax,    (%edx)              /* Set bits  0-15 of procedure entry
-                                           point */
-    shr     $16, %eax
-    movw    %ax,   6(%edx)              /* Set bits 16-31 of entry point */
-    addl    $X64_IDT_DESC_SIZE,%edx
-    loop    .fixup_idt_entries
-
-    /* Load IDT */
-    lea    HOST_IDTR(%rip), %rbx
-    lidtq   (%rbx)
-
    /* continue with chipset level initialization */
    call     bsp_boot_init
 
