@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include        <idt.h>
-
 /* NOTE:
  *
  * MISRA C requires that all unsigned constants should have the suffix 'U'
