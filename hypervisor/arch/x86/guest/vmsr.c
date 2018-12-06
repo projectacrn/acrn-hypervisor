@@ -358,7 +358,7 @@ int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_MTRR_FIX4K_F8000:
 	{
 #ifdef CONFIG_MTRR_ENABLED
-		v = mtrr_rdmsr(vcpu, msr);
+		v = read_vmtrr(vcpu, msr);
 #else
 		err = -EACCES;
 #endif
@@ -495,7 +495,7 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	case MSR_IA32_MTRR_FIX4K_F8000:
 	{
 #ifdef CONFIG_MTRR_ENABLED
-		mtrr_wrmsr(vcpu, msr, v);
+		write_vmtrr(vcpu, msr, v);
 #else
 		err = -EACCES;
 #endif

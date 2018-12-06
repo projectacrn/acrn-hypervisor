@@ -377,7 +377,7 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 	vlapic_create(vcpu);
 
 #ifdef CONFIG_MTRR_ENABLED
-	init_mtrr(vcpu);
+	init_vmtrr(vcpu);
 #endif
 
 	/* Populate the return handle */

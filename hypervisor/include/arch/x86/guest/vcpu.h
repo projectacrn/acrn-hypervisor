@@ -204,6 +204,11 @@ struct acrn_vcpu_arch {
 	uint8_t vmcs[PAGE_SIZE];
 	/* per vcpu lapic */
 	struct acrn_vlapic vlapic;
+
+#ifdef CONFIG_MTRR_ENABLED
+	struct acrn_vmtrr vmtrr;
+#endif
+
 	int32_t cur_context;
 	struct cpu_context contexts[NR_WORLD];
 
@@ -267,9 +272,6 @@ struct acrn_vcpu {
 
 	struct io_request req; /* used by io/ept emulation */
 
-#ifdef CONFIG_MTRR_ENABLED
-	struct mtrr_state mtrr;
-#endif /* CONFIG_MTRR_ENABLED */
 	uint64_t reg_cached;
 	uint64_t reg_updated;
 } __aligned(PAGE_SIZE);

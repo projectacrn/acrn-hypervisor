@@ -47,8 +47,9 @@ union mtrr_fixed_range_reg {
 	uint8_t type[MTRR_SUB_RANGE_NUM];
 };
 
-struct mtrr_state {
-	union mtrr_cap_reg			cap;
+struct acrn_vmtrr {
+	struct acrn_vcpu		*vcpu;
+	union mtrr_cap_reg		cap;
 	union mtrr_def_type_reg		def_type;
 	union mtrr_fixed_range_reg	fixed_range[FIXED_RANGE_MTRR_NUM];
 };
@@ -62,7 +63,7 @@ struct mtrr_state {
  *
  * @return None
  */
-void mtrr_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t value);
+void write_vmtrr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t value);
 /**
  * @brief Virtual MTRR MSR read
  *
@@ -71,7 +72,7 @@ void mtrr_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t value);
  *
  * @return The specified virtual MTRR MSR value
  */
-uint64_t mtrr_rdmsr(const struct acrn_vcpu *vcpu, uint32_t msr);
+uint64_t read_vmtrr(const struct acrn_vcpu *vcpu, uint32_t msr);
 /**
  * @brief Virtual MTRR initialization
  *
@@ -79,7 +80,7 @@ uint64_t mtrr_rdmsr(const struct acrn_vcpu *vcpu, uint32_t msr);
  *
  * @return None
  */
-void init_mtrr(struct acrn_vcpu *vcpu);
+void init_vmtrr(struct acrn_vcpu *vcpu);
 /**
  * @}
  */

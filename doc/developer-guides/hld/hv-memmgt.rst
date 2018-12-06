@@ -472,13 +472,13 @@ EPT
 Virtual MTRR
 ------------
 
-.. doxygenfunction:: init_mtrr
+.. doxygenfunction:: init_vmtrr
    :project: Project ACRN
 
-.. doxygenfunction:: mtrr_wrmsr
+.. doxygenfunction:: write_vmtrr
    :project: Project ACRN
 
-.. doxygenfunction:: mtrr_rdmsr
+.. doxygenfunction:: read_vmtrr
    :project: Project ACRN
 
 VPID

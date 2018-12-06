@@ -63,37 +63,41 @@ get_subrange_start_of_fixed_mtrr(uint32_t index, uint32_t subrange_id)
 		get_subrange_size_of_fixed_mtrr(index));
 }
 
-static inline bool is_mtrr_enabled(const struct acrn_vcpu *vcpu)
+static inline bool is_mtrr_enabled(const struct acrn_vmtrr *vmtrr)
 {
-	return (vcpu->mtrr.def_type.bits.enable != 0U);
+	return (vmtrr->def_type.bits.enable != 0U);
 }
 
-static inline bool is_fixed_range_mtrr_enabled(const struct acrn_vcpu *vcpu)
+static inline bool is_fixed_range_mtrr_enabled(const struct acrn_vmtrr *vmtrr)
 {
-	return ((vcpu->mtrr.cap.bits.fix != 0U) &&
-		(vcpu->mtrr.def_type.bits.fixed_enable != 0U));
+	return ((vmtrr->cap.bits.fix != 0U) &&
+		(vmtrr->def_type.bits.fixed_enable != 0U));
 }
 
-static inline uint8_t get_default_memory_type(const struct acrn_vcpu *vcpu)
+static inline uint8_t get_default_memory_type(const struct acrn_vmtrr *vmtrr)
 {
-	return (uint8_t)(vcpu->mtrr.def_type.bits.type);
+	return (uint8_t)(vmtrr->def_type.bits.type);
 }
 
-void init_mtrr(struct acrn_vcpu *vcpu)
+/* initialize virtual MTRR for particular vcpu */
+void init_vmtrr(struct acrn_vcpu *vcpu)
 {
+	struct acrn_vmtrr *vmtrr = &vcpu->arch.vmtrr;
 	union mtrr_cap_reg cap = {0};
 	uint32_t i;
+
+	vmtrr->vcpu = vcpu;
 
 	/*
 	 * We emulate fixed range MTRRs only
 	 * And expecting the guests won't write variable MTRRs
 	 * since MTRRCap.vcnt is 0
 	 */
-	vcpu->mtrr.cap.bits.vcnt = 0U;
-	vcpu->mtrr.cap.bits.fix = 1U;
-	vcpu->mtrr.def_type.bits.enable = 1U;
-	vcpu->mtrr.def_type.bits.fixed_enable = 1U;
-	vcpu->mtrr.def_type.bits.type = MTRR_MEM_TYPE_UC;
+	vmtrr->cap.bits.vcnt = 0U;
+	vmtrr->cap.bits.fix = 1U;
+	vmtrr->def_type.bits.enable = 1U;
+	vmtrr->def_type.bits.fixed_enable = 1U;
+	vmtrr->def_type.bits.type = MTRR_MEM_TYPE_UC;
 
 	if (is_vm0(vcpu->vm)) {
 		cap.value = msr_read(MSR_IA32_MTRR_CAP);
@@ -108,20 +112,18 @@ void init_mtrr(struct acrn_vcpu *vcpu)
 			 * hardware registers), so we need to configure EPT
 			 * according to the content of physical MTRRs.
 			 */
-			vcpu->mtrr.fixed_range[i].value =
-						msr_read(fixed_mtrr_map[i].msr);
+			vmtrr->fixed_range[i].value = msr_read(fixed_mtrr_map[i].msr);
 		} else {
 			/*
 			 * For non-vm0 EPT, all memory is setup with WB type in
 			 * EPT, so we setup fixed range MTRRs accordingly.
 			 */
-			vcpu->mtrr.fixed_range[i].value =
-							MTRR_FIXED_RANGE_ALL_WB;
+			vmtrr->fixed_range[i].value = MTRR_FIXED_RANGE_ALL_WB;
 		}
 
 		pr_dbg("vm%d vcpu%hu fixed-range MTRR[%u]: %16llx",
 			vcpu->vm->vm_id, vcpu->vcpu_id, i,
-			vcpu->mtrr.fixed_range[i].value);
+			vmtrr->fixed_range[i].value);
 	}
 }
 
@@ -152,7 +154,7 @@ static void update_ept(struct acrn_vm *vm, uint64_t start,
 	ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp, start, size, attr, EPT_MT_MASK);
 }
 
-static void update_ept_mem_type(const struct acrn_vcpu *vcpu)
+static void update_ept_mem_type(const struct acrn_vmtrr *vmtrr)
 {
 	uint8_t type;
 	uint64_t start, size;
@@ -163,39 +165,41 @@ static void update_ept_mem_type(const struct acrn_vcpu *vcpu)
 	 * - when def_type.E is clear, UC memory type is applied
 	 * - when def_type.FE is clear, MTRRdefType.type is applied
 	 */
-	if (!is_mtrr_enabled(vcpu) || !is_fixed_range_mtrr_enabled(vcpu)) {
-		update_ept(vcpu->vm, 0U, MAX_FIXED_RANGE_ADDR, get_default_memory_type(vcpu));
+	if (!is_mtrr_enabled(vmtrr) || !is_fixed_range_mtrr_enabled(vmtrr)) {
+		update_ept(vmtrr->vcpu->vm, 0U, MAX_FIXED_RANGE_ADDR, get_default_memory_type(vmtrr));
 	} else {
 		/* Deal with fixed-range MTRRs only */
 		for (i = 0U; i < FIXED_RANGE_MTRR_NUM; i++) {
-			type = vcpu->mtrr.fixed_range[i].type[0];
+			type = vmtrr->fixed_range[i].type[0];
 			start = get_subrange_start_of_fixed_mtrr(i, 0U);
 			size = get_subrange_size_of_fixed_mtrr(i);
 
 			for (j = 1U; j < MTRR_SUB_RANGE_NUM; j++) {
 				/* If it's same type, combine the subrange together */
-				if (type == vcpu->mtrr.fixed_range[i].type[j]) {
+				if (type == vmtrr->fixed_range[i].type[j]) {
 					size += get_subrange_size_of_fixed_mtrr(i);
 				} else {
-					update_ept(vcpu->vm, start, size, type);
-					type = vcpu->mtrr.fixed_range[i].type[j];
+					update_ept(vmtrr->vcpu->vm, start, size, type);
+					type = vmtrr->fixed_range[i].type[j];
 					start = get_subrange_start_of_fixed_mtrr(i, j);
 					size = get_subrange_size_of_fixed_mtrr(i);
 				}
 			}
 
-			update_ept(vcpu->vm, start, size, type);
+			update_ept(vmtrr->vcpu->vm, start, size, type);
 		}
 	}
 }
 
-void mtrr_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t value)
+/* virtual MTRR MSR write API */
+void write_vmtrr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t value)
 {
+	struct acrn_vmtrr *vmtrr = &vcpu->arch.vmtrr;
 	uint32_t index;
 
 	if (msr == MSR_IA32_MTRR_DEF_TYPE) {
-		if (vcpu->mtrr.def_type.value != value) {
-			vcpu->mtrr.def_type.value = value;
+		if (vmtrr->def_type.value != value) {
+			vmtrr->def_type.value = value;
 
 			/*
 			 * Guests follow this guide line to update MTRRs:
@@ -220,32 +224,33 @@ void mtrr_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t value)
 			 * we don't have to update EPT in step 9
 			 * but in step 8 and 10 only
 			 */
-			update_ept_mem_type(vcpu);
+			update_ept_mem_type(vmtrr);
 		}
 	} else {
 		index = get_index_of_fixed_mtrr(msr);
 		if (index != FIXED_MTRR_INVALID_INDEX) {
-			vcpu->mtrr.fixed_range[index].value = value;
+			vmtrr->fixed_range[index].value = value;
 		} else {
 			pr_err("Write to unexpected MSR: 0x%x", msr);
 		}
 	}
 }
 
-uint64_t mtrr_rdmsr(const struct acrn_vcpu *vcpu, uint32_t msr)
+/* virtual MTRR MSR read API */
+uint64_t read_vmtrr(const struct acrn_vcpu *vcpu, uint32_t msr)
 {
-	const struct mtrr_state *mtrr = &vcpu->mtrr;
+	const struct acrn_vmtrr *vmtrr = &vcpu->arch.vmtrr;
 	uint64_t ret = 0UL;
 	uint32_t index;
 
 	if (msr == MSR_IA32_MTRR_CAP) {
-		ret = mtrr->cap.value;
+		ret = vmtrr->cap.value;
 	} else if (msr == MSR_IA32_MTRR_DEF_TYPE) {
-		ret = mtrr->def_type.value;
+		ret = vmtrr->def_type.value;
 	} else {
 		index = get_index_of_fixed_mtrr(msr);
 		if (index != FIXED_MTRR_INVALID_INDEX) {
-			ret = mtrr->fixed_range[index].value;
+			ret = vmtrr->fixed_range[index].value;
 		} else {
 			pr_err("read unexpected MSR: 0x%x", msr);
 		}
