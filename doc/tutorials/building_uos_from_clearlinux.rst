@@ -12,15 +12,15 @@ Build UOS image in Clear Linux native
 In order to build out the image of UOS, 
 please follow these steps in Clear Linux native:
 
-#. In Clear Linxu native, please install ``ister`` at first, 
-   ``ister`` is a template based installer for linux, 
-   which is inclued in the bundle ``os-installer`` in Clear Linux.
+#. In Clear Linux native, install ``ister`` (a template-based
+   installer for Linux) inclued in the Clear Linux bundle 
+   ``os-installer``.
    For more information about ``ister``, 
    please visit https://github.com/bryteise/ister.
 
    .. code-block:: none
 
-      # sudo swupd bundle-add os-installer
+      $ sudo swupd bundle-add os-installer
    
 #. After installation is complete, use ``ister.py`` to 
    generate the image for UOS with the configuration in 
@@ -28,8 +28,8 @@ please follow these steps in Clear Linux native:
 
    .. code-block:: none
    
-      # cd ~   
-      # sudo ister.py -t uos-image.json
+      $ cd ~   
+      $ sudo ister.py -t uos-image.json
       
    An example of the configuration file ``uos-image.json`` 
    is shown as below:
@@ -81,6 +81,8 @@ please follow these steps in Clear Linux native:
       To generate the image with a specified version, 
       please modify with the ``"Version"`` argument, 
       and we can set ``"Version": 26550`` for example.
+      If you want to build out the latest, please 
+      set ``"Version": "latest"`` here.
 
    Here we will use ``"Version": 26550`` for example, 
    and the image of UOS called ``uos.img`` will be generated 
@@ -138,7 +140,7 @@ Start the User OS (UOS)
       install.d
       org.clearlinux.iot-lts2018.4.19.0-26
    
-#. And you need to adjust the ``/usr/share/acrn/samples/nuc/launch_uos.sh`` 
+#. Adjust the ``/usr/share/acrn/samples/nuc/launch_uos.sh`` 
    script to match your installation. 
    These are the couple of lines you need to modify:
 
@@ -148,13 +150,13 @@ Start the User OS (UOS)
       -k /mnt/usr/lib/kernel/default-iot-lts2018  \
 
    .. note::
-      UOS image ``uos.img`` stored in the directory ``~/``
-      and UOS kernel ``default-iot-lts2018`` stored ``/mnt/usr/lib/kernel/``.
+      UOS image ``uos.img`` is in the directory ``~/``
+      and UOS kernel ``default-iot-lts2018`` is in ``/mnt/usr/lib/kernel/``.
    
 #. You are now all set to start the User OS (UOS):
 
    .. code-block:: none
    
-      sudo /usr/share/acrn/samples/nuc/launch_uos.sh
+      $ sudo /usr/share/acrn/samples/nuc/launch_uos.sh
       
    You are now watching the User OS booting up!
