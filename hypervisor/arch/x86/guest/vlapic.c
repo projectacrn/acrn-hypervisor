@@ -55,32 +55,27 @@ static inline uint32_t prio(uint32_t x)
 #define ACRN_DBG_LAPIC		6U
 
 #if VLAPIC_VERBOS
-static inline void vlapic_dump_irr(struct acrn_vlapic *vlapic, char *msg)
+static inline void vlapic_dump_irr(const struct acrn_vlapic *vlapic, const char *msg)
 {
-	uint32_t i;
-	struct lapic_reg *irrptr = &(vlapic->apic_page.irr[0]);
+	const struct lapic_reg *irrptr = &(vlapic->apic_page.irr[0]);
 
-	for (i = 0U; i < 8U; i++)
-		dev_dbg(ACRN_DBG_LAPIC, "%s irr%u 0x%08x",
-				msg, i, irrptr[i].v);
+	for (uint8_t i = 0U; i < 8U; i++) {
+		dev_dbg(ACRN_DBG_LAPIC, "%s irr%u 0x%08x", msg, i, irrptr[i].v);
+	}
 }
 
-static inline void vlapic_dump_isr(struct acrn_vlapic *vlapic, char *msg)
+static inline void vlapic_dump_isr(const struct acrn_vlapic *vlapic, const char *msg)
 {
-	uint32_t i;
-	struct lapic_reg *isrptr = &(vlapic->apic_page.isr[0]);
+	const struct lapic_reg *isrptr = &(vlapic->apic_page.isr[0]);
 
-	for (i = 0U; i < 8U; i++) {
-		dev_dbg(ACRN_DBG_LAPIC, "%s isr%u 0x%08x",
-				msg, i, isrptr[0].v);
+	for (uint8_t i = 0U; i < 8U; i++) {
+		dev_dbg(ACRN_DBG_LAPIC, "%s isr%u 0x%08x", msg, i, isrptr[0].v);
 	}
 }
 #else
-static inline void
-vlapic_dump_irr(__unused struct acrn_vlapic *vlapic, __unused char *msg) {}
+static inline void vlapic_dump_irr(__unused const struct acrn_vlapic *vlapic, __unused const char *msg) {}
 
-static inline void
-vlapic_dump_isr(__unused struct acrn_vlapic *vlapic, __unused char *msg) {}
+static inline void vlapic_dump_isr(__unused const struct acrn_vlapic *vlapic, __unused const char *msg) {}
 #endif
 
 /*APIC-v APIC-access address */
