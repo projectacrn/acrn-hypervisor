@@ -107,7 +107,7 @@ To enable weston in AGL, We need to modify ``weston.ini``, which is the configur
 
 .. code-block:: none
    
-   vim /etc/xdg/weston/weston.ini
+   $ vim /etc/xdg/weston/weston.ini
    
 The changes of ``weston.ini``:
 
