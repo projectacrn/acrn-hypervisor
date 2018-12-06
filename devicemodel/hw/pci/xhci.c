@@ -1433,7 +1433,8 @@ pci_xhci_get_dev_ctx(struct pci_xhci_vdev *xdev, uint32_t slot)
 	uint64_t devctx_addr;
 	struct xhci_dev_ctx *devctx;
 
-	assert(slot > 0 && slot <= xdev->ndevices);
+	assert(slot > 0 && slot <= XHCI_MAX_SLOTS &&
+			xdev->slot_allocated[slot]);
 	assert(xdev->opregs.dcbaa_p != NULL);
 
 	devctx_addr = xdev->opregs.dcbaa_p->dcba[slot];
@@ -2949,7 +2950,7 @@ pci_xhci_device_doorbell(struct pci_xhci_vdev *xdev,
 	UPRINTF(LDBG, "doorbell slot %u epid %u stream %u\r\n",
 		slot, epid, streamid);
 
-	if (slot == 0 || slot > xdev->ndevices) {
+	if (slot <= 0 || slot > XHCI_MAX_SLOTS || !xdev->slot_allocated[slot]) {
 		UPRINTF(LWRN, "invalid doorbell slot %u\r\n", slot);
 		return;
 	}
