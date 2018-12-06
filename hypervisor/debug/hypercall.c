@@ -123,6 +123,34 @@ static int32_t hcall_setup_hv_npk_log(struct acrn_vm *vm, uint64_t param)
 }
 
 /**
+ * @brief Get hardware related info
+ *
+ * @param vm Pointer to vm data structure
+ * @param param Guest physical address pointing to struct acrn_hw_info
+ *
+ * @pre vm shall point to VM0
+ * @pre param shall be a valid physical address
+ *
+ * @retval 0 on success
+ * @retval -1 in case of error
+ */
+static int32_t hcall_get_hw_info(struct acrn_vm *vm, uint64_t param)
+{
+	int32_t ret = 0;
+	struct acrn_hw_info hw_info;
+
+	(void)memset((void *)&hw_info, 0U, sizeof(hw_info));
+
+	hw_info.cpu_num = phys_cpu_num;
+	ret = copy_to_gpa(vm, &hw_info, param, sizeof(hw_info));
+	if (ret != 0) {
+		pr_err("%s: Unable to copy param to vm", __func__);
+	}
+
+	return ret;
+}
+
+/**
   * @brief Setup hypervisor debug infrastructure, such as share buffer, NPK log and profiling.
   *
   * @param vm Pointer to VM data structure
@@ -149,6 +177,10 @@ int32_t hcall_debug(struct acrn_vm *vm, uint64_t param1, uint64_t param2, uint64
 
 	case HC_PROFILING_OPS:
 		ret = hcall_profiling_ops(vm, param1, param2);
+		break;
+
+	case HC_GET_HW_INFO:
+		ret = hcall_get_hw_info(vm, param1);
 		break;
 
 	default:
