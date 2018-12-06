@@ -47,5 +47,8 @@
 #define SIZE_OF_BOOT_CTX            296U
 struct acrn_vcpu_regs;
 extern struct acrn_vcpu_regs boot_context;
+extern spinlock_t trampoline_spinlock;
+extern uint8_t		ld_bss_start;
+extern uint8_t		ld_bss_end;
 #endif /* ASSEMBLER */
 #endif /* BOOT_H */

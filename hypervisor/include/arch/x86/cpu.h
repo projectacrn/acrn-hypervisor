@@ -205,14 +205,10 @@ enum cpu_reg_name {
 /**********************************/
 /* EXTERNAL VARIABLES             */
 /**********************************/
-extern uint8_t		ld_bss_start;
-extern uint8_t		ld_bss_end;
-
 /* In trampoline range, hold the jump target which trampline will jump to */
 extern uint64_t               main_entry[1];
 
 extern int ibrs_type;
-extern spinlock_t trampoline_spinlock;
 
 /*
  * To support per_cpu access, we use a special struct "per_cpu_region" to hold

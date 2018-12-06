@@ -6,7 +6,7 @@
 
 #include <hypervisor.h>
 #include <zeropage.h>
-#include <boot_context.h>
+#include <boot.h>
 
 #ifdef CONFIG_PARTITION_MODE
 static uint32_t create_e820_table(struct e820_entry *param_e820)

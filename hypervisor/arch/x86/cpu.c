@@ -7,12 +7,8 @@
 #include <hypervisor.h>
 #include <schedule.h>
 #include <version.h>
+#include <boot.h>
 #include <trampoline.h>
-
-spinlock_t trampoline_spinlock = {
-	.head = 0U,
-	.tail = 0U
-};
 
 struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(PAGE_SIZE);
 uint16_t phys_cpu_num = 0U;

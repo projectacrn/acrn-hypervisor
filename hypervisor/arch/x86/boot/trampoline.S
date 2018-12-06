@@ -33,6 +33,14 @@
  * the macros involved are changed.
  */
 
+    .data
+/* spinlock_t trampoline_spinlock*/
+    .align  8
+    .global trampoline_spinlock
+trampoline_spinlock:
+    .long   0
+    .long   0
+
     .extern     cpu_secondary_init
 
     .section     .trampoline_reset,"ax"

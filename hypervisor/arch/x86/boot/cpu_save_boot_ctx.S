@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <boot_context.h>
+#include <boot.h>
 
     .section    entry, "ax"
     .align      8

@@ -4,6 +4,7 @@
  */
 #include <hypervisor.h>
 #include <trampoline.h>
+#include <boot.h>
 
 struct cpu_context cpu_ctx;
 

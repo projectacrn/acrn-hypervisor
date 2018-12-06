@@ -4,6 +4,7 @@
  */
 #include <vcpu.h>
 #include <spinlock.h>
+#include <boot.h>
 
 /* NOTE:
  *
