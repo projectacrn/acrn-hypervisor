@@ -51,7 +51,7 @@ Steps for using AGL as the UOS
       Here we download the kernel from ``current`` Clear Linux version.
       
 #. Deploy the UOS kernel modules to UOS virtual disk image 
-   (note: you’ll need to use the same iot-lts2018 image version number noted in step 1 above):
+   (note: you’ll need to use the same iot-lts2018 image version number noted in step 2 above):
 
    .. code-block:: none
 
