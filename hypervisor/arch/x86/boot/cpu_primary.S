@@ -155,21 +155,19 @@ jmpbuf: .quad 0
         .word 0x0008
 .text
 after:
-    // load all selector registers with appropriate values
-    xor     %edx, %edx
-    lldt    %dx
     /* 0x10 = HOST_GDT_RING0_DATA_SEL*/
     movl    $0x10,%eax
     mov     %eax,%ss  // Was 32bit POC Stack
     mov     %eax,%ds  // Was 32bit POC Data
     mov     %eax,%es  // Was 32bit POC Data
-    mov     %edx,%fs  // Was 32bit POC Data
-    mov     %edx,%gs  // Was 32bit POC CLS
+    mov     %eax,%fs  // Was 32bit POC Data
+    mov     %eax,%gs  // Was 32bit POC CLS
 
     /*
      * Fix up the IDT desciptors
      * The relocation delta in IDT tables has been fixed in relocate()
      */
+    movl   %eax, %edx
     leal   HOST_IDT(%rip), %edx
     movl   $HOST_IDT_ENTRIES, %ecx
 
