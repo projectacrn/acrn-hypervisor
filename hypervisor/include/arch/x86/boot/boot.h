@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef BOOT_CTX_H
-#define BOOT_CTX_H
+#ifndef BOOT_H
+#define BOOT_H
 
 #ifdef ASSEMBLER
 #define BOOT_CTX_CR0_OFFSET         176
@@ -48,4 +48,4 @@
 struct acrn_vcpu_regs;
 extern struct acrn_vcpu_regs boot_context;
 #endif /* ASSEMBLER */
-#endif /* BOOT_CTX_H */
+#endif /* BOOT_H */
