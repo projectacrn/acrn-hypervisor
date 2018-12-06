@@ -427,6 +427,7 @@ char *strstr_s(const char *str1, size_t maxlen1, const char *str2, size_t maxlen
 {
 	size_t len1, len2;
 	size_t i;
+	const char *pstr;
 
 	if ((str1 == NULL) || (str2 == NULL)) {
 		return NULL;
@@ -439,28 +440,26 @@ char *strstr_s(const char *str1, size_t maxlen1, const char *str2, size_t maxlen
 	len1 = strnlen_s(str1, maxlen1);
 	len2 = strnlen_s(str2, maxlen2);
 
-	if (len1 == 0U) {
+	if (len1 < len2) {
 		return NULL;
 	}
 
-	/*
-	 * str2 points to a string with zero length, or
-	 * str2 equals str1, return str1
-	 */
-	if (len2 == 0U || str1 == str2) {
+	/* return str1 if str2 equals to str1 or str2 points to a string with zero length*/
+	if ((str1 == str2) || (len2 == 0U)) {
 		return (char *)str1;
 	}
 
+	pstr = str1;
 	while (len1 >= len2) {
 		for (i = 0U; i < len2; i++) {
-			if (str1[i] != str2[i]) {
+			if (pstr[i] != str2[i]) {
 				break;
 			}
 		}
 		if (i == len2) {
-			return (char *)str1;
+			return (char *)pstr;
 		}
-		str1++;
+		pstr++;
 		len1--;
 	}
 
