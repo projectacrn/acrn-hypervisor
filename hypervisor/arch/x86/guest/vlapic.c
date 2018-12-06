@@ -408,7 +408,7 @@ static uint64_t vlapic_get_tsc_deadline_msr(const struct acrn_vlapic *vlapic)
 		ret = 0UL;
 	} else {
 		ret = (vlapic->vtimer.timer.fire_tsc == 0UL) ? 0UL :
-			vlapic->vcpu->guest_msrs[IDX_TSC_DEADLINE];
+			vcpu_get_guest_msr(vlapic->vcpu, MSR_IA32_TSC_DEADLINE);
 	}
 
 	return ret;
@@ -422,7 +422,7 @@ static void vlapic_set_tsc_deadline_msr(struct acrn_vlapic *vlapic,
 	uint64_t val = val_arg;
 
 	if (vlapic_lvtt_tsc_deadline(vlapic)) {
-		vlapic->vcpu->guest_msrs[IDX_TSC_DEADLINE] = val;
+		vcpu_set_guest_msr(vlapic->vcpu, MSR_IA32_TSC_DEADLINE, val);
 
 		timer = &vlapic->vtimer.timer;
 		del_timer(timer);

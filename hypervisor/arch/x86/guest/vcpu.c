@@ -158,6 +158,27 @@ inline void vcpu_set_pat_ext(struct acrn_vcpu *vcpu, uint64_t val)
 		= val;
 }
 
+uint64_t vcpu_get_guest_msr(const struct acrn_vcpu *vcpu, uint32_t msr)
+{
+	uint32_t index = vmsr_get_guest_msr_index(msr);
+	uint64_t val = 0UL;
+
+	if (index < NUM_GUEST_MSRS) {
+		val = vcpu->arch.guest_msrs[index];
+	}
+
+	return val;
+}
+
+void vcpu_set_guest_msr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t val)
+{
+	uint32_t index = vmsr_get_guest_msr_index(msr);
+
+	if (index < NUM_GUEST_MSRS) {
+		vcpu->arch.guest_msrs[index] = val;
+	}
+}
+
 struct acrn_vcpu *get_ever_run_vcpu(uint16_t pcpu_id)
 {
 	return per_cpu(ever_run_vcpu, pcpu_id);

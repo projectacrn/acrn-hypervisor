@@ -28,15 +28,6 @@
 		(idx)++, vcpu = &(vm->hw.vcpu_array[(idx)])) \
 		if (vcpu->state != VCPU_OFFLINE)
 
-/* the index is matched with emulated msrs array*/
-#define IDX_TSC_DEADLINE		0U
-#define IDX_BIOS_UPDT_TRIG		(IDX_TSC_DEADLINE + 1U)
-#define IDX_BIOS_SIGN_ID		(IDX_BIOS_UPDT_TRIG + 1U)
-#define IDX_TSC		(IDX_BIOS_SIGN_ID + 1U)
-#define IDX_PAT		(IDX_TSC + 1U)
-#define IDX_APIC_BASE	(IDX_PAT + 1U)
-#define IDX_MAX_MSR	(IDX_APIC_BASE + 1U)
-
 /*
  * VCPU related APIs
  */
@@ -138,6 +129,8 @@ extern struct e820_mem_params e820_mem;
 int rdmsr_vmexit_handler(struct acrn_vcpu *vcpu);
 int wrmsr_vmexit_handler(struct acrn_vcpu *vcpu);
 void init_msr_emulation(struct acrn_vcpu *vcpu);
+
+uint32_t vmsr_get_guest_msr_index(uint32_t msr);
 
 struct run_context;
 int vmx_vmrun(struct run_context *context, int ops, int ibrs);
