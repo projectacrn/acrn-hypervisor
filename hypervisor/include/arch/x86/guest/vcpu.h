@@ -268,7 +268,6 @@ struct acrn_vcpu {
 
 	struct io_request req; /* used by io/ept emulation */
 
-	uint64_t guest_msrs[IDX_MAX_MSR];
 #ifdef CONFIG_MTRR_ENABLED
 	struct mtrr_state mtrr;
 #endif /* CONFIG_MTRR_ENABLED */
@@ -473,6 +472,30 @@ void vcpu_set_cr4(struct acrn_vcpu *vcpu, uint64_t val);
 
 uint64_t vcpu_get_pat_ext(const struct acrn_vcpu *vcpu);
 void vcpu_set_pat_ext(struct acrn_vcpu *vcpu, uint64_t val);
+
+/**
+ * @brief get guest emulated MSR
+ *
+ * Get the content of emulated guest MSR
+ *
+ * @param[in] vcpu pointer to vcpu data structure
+ * @param[in] msr the guest MSR
+ *
+ * @return the value of emulated MSR.
+ */
+uint64_t vcpu_get_guest_msr(const struct acrn_vcpu *vcpu, uint32_t msr);
+
+/**
+ * @brief set guest emulated MSR
+ *
+ * Update the content of emulated guest MSR
+ *
+ * @param[in] vcpu pointer to vcpu data structure
+ * @param[in] msr the guest MSR
+ * @param[in] val the value to set the target MSR
+ *
+ */
+void vcpu_set_guest_msr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t val);
 
 /**
  * @brief set all the vcpu registers

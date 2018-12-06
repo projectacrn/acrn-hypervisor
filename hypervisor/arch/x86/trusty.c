@@ -158,6 +158,8 @@ static inline void rstor_fxstore_guest_area(const struct ext_context *ext_ctx)
 
 static void save_world_ctx(struct acrn_vcpu *vcpu, struct ext_context *ext_ctx)
 {
+	uint32_t i;
+
 	/* cache on-demand run_context for efer/rflags/rsp/rip */
 	(void)vcpu_get_efer(vcpu);
 	(void)vcpu_get_rflags(vcpu);
@@ -207,10 +209,17 @@ static void save_world_ctx(struct acrn_vcpu *vcpu, struct ext_context *ext_ctx)
 
 	/* FX area */
 	save_fxstore_guest_area(ext_ctx);
+
+	/* For MSRs need isolation between worlds */
+	for (i = 0U; i < NUM_WORLD_MSRS; i++) {
+		vcpu->arch.contexts[vcpu->arch.cur_context].world_msrs[i] = vcpu->arch.guest_msrs[i];
+	}
 }
 
 static void load_world_ctx(struct acrn_vcpu *vcpu, const struct ext_context *ext_ctx)
 {
+	uint32_t i;
+
 	/* mark to update on-demand run_context for efer/rflags/rsp */
 	bitmap_set_lock(CPU_REG_EFER, &vcpu->reg_updated);
 	bitmap_set_lock(CPU_REG_RFLAGS, &vcpu->reg_updated);
@@ -254,6 +263,11 @@ static void load_world_ctx(struct acrn_vcpu *vcpu, const struct ext_context *ext
 
 	/* FX area */
 	rstor_fxstore_guest_area(ext_ctx);
+
+	/* For MSRs need isolation between worlds */
+	for (i = 0U; i < NUM_WORLD_MSRS; i++) {
+		vcpu->arch.guest_msrs[i] = vcpu->arch.contexts[!vcpu->arch.cur_context].world_msrs[i];
+	}
 }
 
 static void copy_smc_param(const struct run_context *prev_ctx,
@@ -404,6 +418,8 @@ static bool init_secure_world_env(struct acrn_vcpu *vcpu,
 				uint64_t base_hpa,
 				uint32_t size)
 {
+	uint32_t i;
+
 	vcpu->arch.inst_len = 0U;
 	vcpu->arch.contexts[SECURE_WORLD].run_ctx.rip = entry_gpa;
 	vcpu->arch.contexts[SECURE_WORLD].run_ctx.guest_cpu_regs.regs.rsp =
@@ -412,6 +428,12 @@ static bool init_secure_world_env(struct acrn_vcpu *vcpu,
 	vcpu->arch.contexts[SECURE_WORLD].ext_ctx.tsc_offset = 0UL;
 	vcpu->arch.contexts[SECURE_WORLD].ext_ctx.ia32_pat =
 		vcpu->arch.contexts[NORMAL_WORLD].ext_ctx.ia32_pat;
+
+	/* Init per world MSRs */
+	for (i = 0U; i < NUM_WORLD_MSRS; i++) {
+		vcpu->arch.contexts[NORMAL_WORLD].world_msrs[i] = vcpu->arch.guest_msrs[i];
+		vcpu->arch.contexts[SECURE_WORLD].world_msrs[i] = vcpu->arch.guest_msrs[i];
+	}
 
 	return setup_trusty_info(vcpu, size, base_hpa);
 }

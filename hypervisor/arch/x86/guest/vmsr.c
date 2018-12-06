@@ -201,6 +201,24 @@ static const uint32_t x2apic_msrs[NUM_X2APIC_MSRS] = {
 	MSR_IA32_EXT_APIC_SELF_IPI,
 };
 
+/* emulated_guest_msrs[] shares same indexes with array vcpu->arch->guest_msrs[] */
+uint32_t vmsr_get_guest_msr_index(uint32_t msr)
+{
+	uint32_t index;
+
+	for (index = 0U; index < NUM_GUEST_MSRS; index++) {
+		if (emulated_guest_msrs[index] == msr) {
+			break;
+		}
+	}
+
+	if (index == NUM_GUEST_MSRS) {
+		pr_err("%s, MSR %x is not defined in array emulated_guest_msrs[]", __func__, msr);
+	}
+
+	return index;
+}
+
 static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg, enum rw_mode mode)
 {
 	uint8_t *read_map;
