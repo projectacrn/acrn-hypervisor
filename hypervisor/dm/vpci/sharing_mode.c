@@ -106,7 +106,8 @@ static struct pci_vdev *alloc_pci_vdev(struct acrn_vm *vm, union pci_bdf bdf)
 	struct pci_vdev *vdev;
 
 	if (num_pci_vdev < CONFIG_MAX_PCI_DEV_NUM) {
-		vdev = &sharing_mode_vdev_array[num_pci_vdev++];
+		vdev = &sharing_mode_vdev_array[num_pci_vdev];
+		num_pci_vdev++;
 
 		/* vbdf equals to pbdf otherwise remapped */
 		vdev->vbdf = bdf;
@@ -186,7 +187,8 @@ void add_vdev_handler(struct pci_vdev *vdev, struct pci_vdev_ops *ops)
 	if (vdev->nr_ops >= (MAX_VPCI_DEV_OPS - 1U)) {
 		pr_err("%s, adding too many handlers", __func__);
 	} else {
-		vdev->ops[vdev->nr_ops++] = *ops;
+		vdev->ops[vdev->nr_ops] = *ops;
+		vdev->nr_ops++;
 	}
 }
 
