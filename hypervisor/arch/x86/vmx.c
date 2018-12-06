@@ -395,6 +395,7 @@ void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0)
 			/* enabled PAE from paging disabled */
 			load_pdptrs(vcpu);
 		} else {
+			/* do nothing */
 		}
 	} else if (old_paging_enabled && ((cr0 & CR0_PG) == 0UL)) {
 		if ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL) {
@@ -406,8 +407,9 @@ void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0)
 
 			vcpu_set_efer(vcpu,
 				vcpu_get_efer(vcpu) & ~MSR_IA32_EFER_LMA_BIT);
-		} else {
 		}
+	} else {
+		/* do nothing */
 	}
 
 	/* If CR0.CD or CR0.NW get cr0_changed_bits */
@@ -422,7 +424,7 @@ void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0)
 				 * disabled behavior
 				 */
 				exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, PAT_ALL_UC_VALUE);
-				if(!iommu_snoop_supported(vcpu->vm)) {
+				if (!iommu_snoop_supported(vcpu->vm)) {
 					cache_flush_invalidate_all();
 				}
 			} else {
