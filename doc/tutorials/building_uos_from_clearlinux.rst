@@ -73,7 +73,6 @@ please follow these steps in Clear Linux native:
                       "os-core-update",
                       "os-core",
                       "openssh-server",
-                      "software-defined-cockpit",
                       "sysadmin-basic"]
        }
 
