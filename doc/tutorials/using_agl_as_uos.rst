@@ -11,24 +11,25 @@ problem much easier and provide some information for further debugging.
 .. image:: images/The-overview-of-AGL-as-UOS.png
    :align: center
 
-Introduction of AGL
+Introduction to AGL
 *******************
 
-Automotive Grade Linux (AGL) is an open source project of The Linux Foundation 
-that is building a Linux-based, open software platform for automotive application.
+Automotive Grade Linux is a collaborative open source project that is 
+bringing together automakers, suppliers and technology companies to 
+accelerate the development and adoption of a fully open software stack 
+for the connected car. With Linux at its core, AGL is developing an open 
+platform from the ground up that can serve as the de facto industry 
+standard to enable rapid development of new features and technologies.
 For more information about AGL, please visit AGL’s official website:
 https://www.automotivelinux.org/.
 
 Steps for using AGL as the UOS
 ******************************
 
-#. Hardware preparation
+The regulatory model of NUC we used is `NUC6CAYH 
+<https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc6cayh.html>`_
+and other platforms may work too.
 
-   The regulatory model of NUC we used is `NUC6CAYH 
-   <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc6cayh.html>`_
-   and this kind of NUC has two display ports: 1x HDMI and 1x VGA.
-   So two displays needed for NUC, one for SOS and one for UOS, 
-   and connect these two displays to NUC.
 
 #. Prepare the Service OS (SOS)
 
