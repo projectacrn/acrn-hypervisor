@@ -60,7 +60,7 @@ Build kernel and modules for partition mode UOS
    `this Ubuntu tutorial <https://tutorials.ubuntu.com/tutorial/tutorial-install-ubuntu-desktop>`_.
    The Ubuntu installer creates 3 disk partitions on the on-board eMMC memory.
    By default, the GRUB bootloader is installed on the ESP (EFI System Partition)
-   partition, which will be used to bootstrap the partiton mode ACRN hypervisor.
+   partition, which will be used to bootstrap the partition mode ACRN hypervisor.
 
 #. After installing the Ubuntu OS, power off the UP2 board, attach the SATA disk
    and the USB flash disk to the board. Power on the board and make sure 

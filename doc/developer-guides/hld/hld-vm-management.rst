@@ -102,7 +102,7 @@ IOC to keep doing this power cycle method, or change to another power
 cycle method. SOS-LCS heartbeat can also set RTC timer to IOC.
 
 SOS-LCS handles SHUTDOWN, SUSPEND, and REBOOT acrn-manager messages
-request from Acrnd. When these messages are received, SOS-LCS switchs IOC
+request from Acrnd. When these messages are received, SOS-LCS switches IOC
 power cycle method to shutdown, suspend, and reboot, respectively.
 
 SOS-LCS handles WAKEUP_REASON acrn-manager messages request from Acrnd.

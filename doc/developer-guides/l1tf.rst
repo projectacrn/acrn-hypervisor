@@ -61,7 +61,7 @@ There are mainly three attack scenarios considered in ACRN:
 - Normal_world -> secure_world attack (Android specific)
 
 Malicious user space is not a concern to ACRN hypervisor, because
-every guest runs in VMX non-root. It is reponsibility of guest kernel
+every guest runs in VMX non-root. It is responsibility of guest kernel
 to protect itself from malicious user space attack.
 
 Intel® SGX/SMM related attacks are mitigated by using latest microcode.
@@ -197,7 +197,7 @@ guests and then put these virtual seeds into uncached memory,
 at the same time flush & erase physical seed.
 
 If all security data are identified and put in uncached
-meomry in a specific deployment, then it is not necessary to
+memory in a specific deployment, then it is not necessary to
 prevent guest -> hypervisor attack, since there is nothing
 useful to be attacked.
 
@@ -223,7 +223,7 @@ Core-based scheduling
 
 If Hyper-Threading is enabled, it's important to avoid running
 sensitive context (if containing security data which a given VM
-has no premission to access) on the same physical core that runs
+has no permission to access) on the same physical core that runs
 said VM. It requires scheduler enhancement to enable core-based
 scheduling policy, so all threads on the same core are always
 scheduled to the same VM. Also there are some further actions
