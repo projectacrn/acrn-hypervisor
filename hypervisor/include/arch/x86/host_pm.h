@@ -4,6 +4,7 @@
  */
 
 #ifndef	HOST_PM_H
+#define	HOST_PM_H
 
 #define	BIT_SLP_TYPx	10U
 #define	BIT_SLP_EN	13U

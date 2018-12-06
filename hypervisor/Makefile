@@ -347,6 +347,8 @@ $(VERSION):
 	sed 's/^/ * /' ../LICENSE >> $(VERSION); \
 	echo " */" >> $(VERSION); \
 	echo "" >> $(VERSION); \
+	echo "#ifndef VERSION_H" >> $(VERSION); \
+	echo "#define VERSION_H" >> $(VERSION); \
 	echo "#define HV_MAJOR_VERSION $(MAJOR_VERSION)" >> $(VERSION);\
 	echo "#define HV_MINOR_VERSION $(MINOR_VERSION)" >> $(VERSION);\
 	echo "#define HV_EXTRA_VERSION "\"$(EXTRA_VERSION)\""" >> $(VERSION);\
@@ -357,7 +359,8 @@ $(VERSION):
 	echo "#define HV_BUILD_VERSION "\""$$PATCH"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_TYPE "\""$$BUILD_TYPE"\""" >> $(VERSION);\
 	echo "#define HV_BUILD_TIME "\""$$TIME"\""" >> $(VERSION);\
-	echo "#define HV_BUILD_USER "\""$$USER"\""" >> $(VERSION)
+	echo "#define HV_BUILD_USER "\""$$USER"\""" >> $(VERSION);\
+	echo "#endif" >> $(VERSION)
 
 -include $(C_OBJS:.o=.d)
 -include $(S_OBJS:.o=.d)
