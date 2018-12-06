@@ -445,9 +445,24 @@ void init_default_irqs(uint16_t cpu_id)
 	}
 }
 
-static void set_idt(struct host_idt_descriptor *idtd)
+static inline void fixup_idt(struct host_idt_descriptor *idtd)
 {
+	int i;
+	union idt_64_descriptor *idt_desc = (union idt_64_descriptor *)idtd->idt;
+	uint32_t entry_hi_32, entry_lo_32;
 
+	for (i = 0; i < HOST_IDT_ENTRIES; i++) {
+		entry_lo_32 = idt_desc[i].fields.offset_63_32;
+		entry_hi_32 = idt_desc[i].fields.rsvd;
+		idt_desc[i].fields.rsvd = 0U;
+		idt_desc[i].fields.offset_63_32 = entry_hi_32;
+		idt_desc[i].fields.high32.bits.offset_31_16 = entry_lo_32 >> 16U;
+		idt_desc[i].fields.low32.bits.offset_15_0 = entry_lo_32 & 0xffffUL;
+	}
+}
+
+static inline void set_idt(struct host_idt_descriptor *idtd)
+{
 	asm volatile ("   lidtq %[idtd]\n" :	/* no output parameters */
 		      :		/* input parameters */
 		      [idtd] "m"(*idtd));
@@ -457,6 +472,9 @@ void interrupt_init(uint16_t pcpu_id)
 {
 	struct host_idt_descriptor *idtd = &HOST_IDTR;
 
+	if (pcpu_id == BOOT_CPU_ID) {
+		fixup_idt(idtd);
+	}
 	set_idt(idtd);
 	init_lapic(pcpu_id);
 	init_default_irqs(pcpu_id);
