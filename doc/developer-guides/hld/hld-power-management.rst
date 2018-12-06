@@ -86,7 +86,7 @@ Intercept Policy
 ================
 
 Hypervisor should be able to restrict guest's
-P/C-state request, with a user-customized poligy.
+P/C-state request, with a user-customized policy.
 
 Hypervisor should intercept guest P-state request and validate whether
 it is a valid P-state. Any invalid P-state (e.g. doesn't exist in CPU state

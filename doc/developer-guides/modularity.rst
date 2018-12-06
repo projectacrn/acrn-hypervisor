@@ -58,7 +58,7 @@ Measuring Complexity
 ====================
 
 ACRN uses the number of functions and the cyclomatic complexity [CC]_ of each
-function to measure the complexity of a module. Concrete criterias on complexity
+function to measure the complexity of a module. Concrete criteria on complexity
 will be determined while enhancing the modularity of the hypervisor. The current
 recommendation is to limit the cyclomatic complexity of a function under 20.
 

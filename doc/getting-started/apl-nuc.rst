@@ -256,7 +256,7 @@ partition. Follow these steps:
 #. After booting up the ACRN hypervisor, the Service OS will be launched
    automatically by default, and the Clear Linux desktop will be showing with user "clear",
    (or you can login remotely with an "ssh" client).
-   If there is any issue which makes the GNOME desktop doens't show succesfully, then the system will go to 
+   If there is any issue which makes the GNOME desktop doesn't show successfully, then the system will go to 
    shell console.
 
 #. From ssh client, login as user "clear" using the password you set previously when
@@ -493,7 +493,7 @@ The build results are found in the ``build`` directory.
    artefacts, set the ``O`` (that is capital letter 'O') to the
    desired value. Example: ``make O=build-nuc BOARD=nuc6cayh``.
 
-Generating the documentation is decribed in details in the :ref:`acrn_doc`
+Generating the documentation is described in details in the :ref:`acrn_doc`
 tutorial.
 
 You can also build these components individually. The following

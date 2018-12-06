@@ -51,7 +51,7 @@ writethrough is set as the default mode, as it can make sure every write
 operation queued to the virtio-blk FE driver layer is submitted to
 hardware storage.
 
-During initialization, virito-blk will allocate 64 ioreq buffers in a
+During initialization, virtio-blk will allocate 64 ioreq buffers in a
 shared ring used to store the I/O requests.  The freeq, busyq, and pendq
 shown in :numref:`virtio-blk-be` are used to manage requests. Each
 virtio-blk device starts 8 worker threads to process request

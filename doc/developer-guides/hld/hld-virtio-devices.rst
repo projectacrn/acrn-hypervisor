@@ -377,7 +377,7 @@ Irqfd implementation
 
 The irqfd module is implemented in VHM, and can enhance an registered
 eventfd to inject an interrupt to a guest OS when the eventfd gets
-signalled. :numref:`irqfd-workflow` shows the general flow for irqfd.
+signaled. :numref:`irqfd-workflow` shows the general flow for irqfd.
 
 .. figure:: images/virtio-hld-image60.png
    :align: center
