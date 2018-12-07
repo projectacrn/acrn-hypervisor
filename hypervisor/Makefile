@@ -136,6 +136,7 @@ C_SRCS += arch/x86/lapic.c
 C_SRCS += arch/x86/cpu.c
 C_SRCS += arch/x86/cpuid.c
 C_SRCS += arch/x86/mmu.c
+C_SRCS += arch/x86/e820.c
 C_SRCS += arch/x86/pagetable.c
 C_SRCS += arch/x86/page.c
 C_SRCS += arch/x86/notify.c

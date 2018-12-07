@@ -9,6 +9,7 @@
 #include <schedule.h>
 #include <version.h>
 #include <trampoline.h>
+#include <e820.h>
 
 spinlock_t trampoline_spinlock = {
 	.head = 0U,
