@@ -70,17 +70,7 @@
 #define LDTR_AR                         (0x0082U) /* LDT, type must be 2, refer to SDM Vol3 26.3.1.2 */
 #define TR_AR                           (0x008bU) /* TSS (busy), refer to SDM Vol3 26.3.1.2 */
 
-struct e820_mem_params {
-	uint64_t mem_bottom;
-	uint64_t mem_top;
-	uint64_t total_mem_size;
-	uint64_t max_ram_blk_base; /* used for the start address of UOS */
-	uint64_t max_ram_blk_size;
-};
-
 int prepare_vm0_memmap_and_e820(struct acrn_vm *vm);
-uint64_t e820_alloc_low_memory(uint32_t size_arg);
-
 /* Definition for a mem map lookup */
 struct vm_lu_mem_map {
 	struct list_head list;                 /* EPT mem map lookup list*/
@@ -106,25 +96,6 @@ uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask);
 int gva2gpa(struct acrn_vcpu *vcpu, uint64_t gva, uint64_t *gpa, uint32_t *err_code);
 
 enum vm_paging_mode get_vcpu_paging_mode(struct acrn_vcpu *vcpu);
-
-void init_e820(void);
-void obtain_e820_mem_info(void);
-extern uint32_t e820_entries;
-extern struct e820_entry e820[E820_MAX_ENTRIES];
-
-#ifdef CONFIG_PARTITION_MODE
-/*
- * Default e820 mem map:
- *
- * Assumption is every VM launched by ACRN in partition mode uses 2G of RAM.
- * there is reserved memory of 64K for MPtable and PCI hole of 512MB
- */
-#define NUM_E820_ENTRIES        5U
-extern const struct e820_entry e820_default_entries[NUM_E820_ENTRIES];
-#endif
-
-extern uint32_t boot_regs[2];
-extern struct e820_mem_params e820_mem;
 
 int rdmsr_vmexit_handler(struct acrn_vcpu *vcpu);
 int wrmsr_vmexit_handler(struct acrn_vcpu *vcpu);

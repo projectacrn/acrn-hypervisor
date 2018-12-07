@@ -5,6 +5,7 @@
  */
 
 #include <hypervisor.h>
+#include <e820.h>
 
 #define NUM_USER_VMS    2U
 

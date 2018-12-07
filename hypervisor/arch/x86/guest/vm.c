@@ -7,6 +7,7 @@
 #include <hypervisor.h>
 #include <bsp_extern.h>
 #include <multiboot.h>
+#include <e820.h>
 #include <vtd.h>
 
 /* Local variables */

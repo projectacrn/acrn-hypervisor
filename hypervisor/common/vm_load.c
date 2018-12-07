@@ -7,37 +7,7 @@
 #include <hypervisor.h>
 #include <zeropage.h>
 #include <boot_context.h>
-
-#ifdef CONFIG_PARTITION_MODE
-static uint32_t create_e820_table(struct e820_entry *param_e820)
-{
-	uint32_t i;
-
-	for (i = 0U; i < NUM_E820_ENTRIES; i++) {
-		param_e820[i].baseaddr = e820_default_entries[i].baseaddr;
-		param_e820[i].length = e820_default_entries[i].length;
-		param_e820[i].type = e820_default_entries[i].type;
-	}
-
-	return NUM_E820_ENTRIES;
-}
-#else
-static uint32_t create_e820_table(struct e820_entry *param_e820)
-{
-	uint32_t i;
-
-	ASSERT(e820_entries > 0U,
-			"e820 should be inited");
-
-	for (i = 0U; i < e820_entries; i++) {
-		param_e820[i].baseaddr = e820[i].baseaddr;
-		param_e820[i].length = e820[i].length;
-		param_e820[i].type = e820[i].type;
-	}
-
-	return e820_entries;
-}
-#endif
+#include <e820.h>
 
 static void prepare_bsp_gdt(struct acrn_vm *vm)
 {
