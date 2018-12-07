@@ -34,9 +34,9 @@ if [ ! -f "/data/$5/$5.img" ]; then
 fi
 
 #vm-name used to generate uos-mac address
-mac=$(cat /sys/class/net/en*/address)
+mac=$(cat /sys/class/net/e*/address)
 vm_name=vm$1
-vm_name=${vm_name}-${mac:9:8}
+mac_seed=${mac:9:8}-${vm_name}
 
 # create a unique tap device for each VM
 tap=tap_$6
@@ -152,6 +152,7 @@ acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:
   -s 7,xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \
   -s 9,passthru,0/15/1 \
   $boot_cse_option \
+  --mac_seed $mac_seed \
   -s 27,passthru,0/1b/0 \
   $intr_storm_monitor \
   $boot_ipu_option      \
@@ -172,9 +173,9 @@ if [ ! -f "/data/$5/$5.img" ]; then
 fi
 
 #vm-name used to generate uos-mac address
-mac=$(cat /sys/class/net/en*/address)
+mac=$(cat /sys/class/net/e*/address)
 vm_name=vm$1
-vm_name=${vm_name}-${mac:9:8}
+mac_seed=${mac:9:8}-${vm_name}
 
 # create a unique tap device for each VM
 tap=tap_$6
@@ -352,6 +353,7 @@ fi
    -s 11,wdt-i6300esb \
    $boot_audio_option \
    $boot_cse_option \
+   --mac_seed $mac_seed \
    -s 27,passthru,0/1b/0 \
    -s 24,passthru,0/18/0 \
    -s 18,passthru,3/0/0,keep_gsi \

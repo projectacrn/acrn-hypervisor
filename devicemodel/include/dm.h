@@ -42,6 +42,7 @@ extern char *kernel_file_name;
 extern char *elf_file_name;
 extern char *vmname;
 extern bool stdio_in_use;
+extern char *mac_seed;
 
 int vmexit_task_switch(struct vmctx *ctx, struct vhm_request *vhm_req,
 		       int *vcpu);
