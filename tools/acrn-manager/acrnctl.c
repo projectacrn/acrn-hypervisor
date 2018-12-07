@@ -40,7 +40,7 @@
 #define RESUME_DESC    "Resume virtual machine from suspend state"
 #define RESET_DESC     "Stop and then start virtual machine VM_NAME"
 
-#define STOP_TIMEOUT	10U
+#define STOP_TIMEOUT	30U
 
 struct acrnctl_cmd {
 	const char *cmd;
@@ -600,8 +600,10 @@ static int wait_vm_stop(const char * vmname, unsigned int timeout)
 			printf("%s: vm %s not found\n", __func__, vmname);
 			return -1;
 		} else {
-			if (s->state == VM_CREATED)
+			if (s->state == VM_CREATED) {
+				sleep(2);
 				return 0;
+			}
 		}
 
 		sleep(1);
@@ -623,16 +625,13 @@ static int acrnctl_do_reset(int argc, char *argv[])
 		}
 
 		switch(s->state) {
-			case VM_CREATED:
-				start_vm(argv[i]);
-				break;
 			case VM_STARTED:
 			case VM_SUSPENDED:
 				stop_vm(argv[i]);
 				if (wait_vm_stop(argv[i], STOP_TIMEOUT)) {
-					printf("Failed to stop %s in %u sec\n",
+					printf("Failed to stop %s in %u sec, reset failed\n",
 						argv[i], STOP_TIMEOUT);
-					break;
+					return -1;
 				}
 				start_vm(argv[i]);
 				break;
