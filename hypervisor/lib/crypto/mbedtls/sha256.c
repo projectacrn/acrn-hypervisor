@@ -158,7 +158,7 @@ int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
 {
     uint32_t temp1, temp2, W[64];
     uint32_t A[8];
-    unsigned int i;
+    uint32_t i;
 
     for( i = 0; i < 8; i++ )
         A[i] = ctx->state[i];

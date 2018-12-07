@@ -80,7 +80,7 @@ build_atomic_dec(atomic_dec32, "l", uint32_t)
 build_atomic_dec(atomic_dec64, "q", uint64_t)
 
 /**
- *  #define atomic_set32(P, V)		(*(unsigned int *)(P) |= (V))
+ *  #define atomic_set32(P, V)		(*(uint32_t *)(P) |= (V))
  * 
  *  Parameters:
  *  uint32_t*	p	A pointer to memory area that stores source

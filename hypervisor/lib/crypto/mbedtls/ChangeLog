@@ -738,7 +738,7 @@ Bugfix
 Security
    * Add checks to prevent signature forgeries for very large messages while
      using RSA through the PK module in 64-bit systems. The issue was caused by
-     some data loss when casting a size_t to an unsigned int value in the
+     some data loss when casting a size_t to an uint32_t value in the
      functions rsa_verify_wrap(), rsa_sign_wrap(), rsa_alt_sign_wrap() and
      mbedtls_pk_sign(). Found by Jean-Philippe Aumasson.
    * Fixed potential livelock during the parsing of a CRL in PEM format in
@@ -1266,7 +1266,7 @@ Semi-API changes (technically public, morally private)
    * Changed pk_info_t into an opaque structure.
    * Changed cipher_base_t into an opaque structure.
    * Removed sig_oid2 and rename sig_oid1 to sig_oid in x509_crt and x509_crl.
-   * x509_crt.key_usage changed from uint8_t to unsigned int.
+   * x509_crt.key_usage changed from uint8_t to uint32_t.
    * Removed r and s from ecdsa_context
    * Removed mode from des_context and des3_context
 

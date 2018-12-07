@@ -560,7 +560,7 @@ static void profiling_handle_msrops(void)
 /*
  * Interrupt handler for performance monitoring interrupts
  */
-static void profiling_pmi_handler(unsigned int irq, __unused void *data)
+static void profiling_pmi_handler(uint32_t irq, __unused void *data)
 {
 	uint64_t perf_ovf_status;
 	uint32_t lvt_perf_ctr;

@@ -124,7 +124,7 @@ again:
 	 */
 	for (i = 0, j = 0; i < map_size / desc_size; i++) {
 		EFI_MEMORY_DESCRIPTOR *d;
-		unsigned int e820_type = 0;
+		uint32_t e820_type = 0;
 
 		d = (EFI_MEMORY_DESCRIPTOR *)((unsigned long)map_buf + (i * desc_size));
 		switch(d->Type) {
