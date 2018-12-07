@@ -86,10 +86,12 @@ char *vsbl_file_name;
 char *kernel_file_name;
 char *elf_file_name;
 uint8_t trusty_enabled;
+char *mac_seed;
 bool stdio_in_use;
 
 static int virtio_msix = 1;
 static bool debugexit_enabled;
+static char mac_seed_str[50];
 
 static int acpi;
 
@@ -708,6 +710,7 @@ enum {
 	CMD_OPT_PART_INFO,
 	CMD_OPT_TRUSTY_ENABLE,
 	CMD_OPT_VIRTIO_POLL_ENABLE,
+	CMD_OPT_MAC_SEED,
 	CMD_OPT_PTDEV_NO_RESET,
 	CMD_OPT_DEBUGEXIT,
 	CMD_OPT_VMCFG,
@@ -745,6 +748,7 @@ static struct option long_options[] = {
 	{"enable_trusty",	no_argument,		0,
 					CMD_OPT_TRUSTY_ENABLE},
 	{"virtio_poll",		required_argument,	0, CMD_OPT_VIRTIO_POLL_ENABLE},
+	{"mac_seed",		required_argument,	0, CMD_OPT_MAC_SEED},
 	{"ptdev_no_reset",	no_argument,		0,
 		CMD_OPT_PTDEV_NO_RESET},
 	{"debugexit",		no_argument,		0, CMD_OPT_DEBUGEXIT},
@@ -875,6 +879,11 @@ dm_run(int argc, char *argv[])
 					optarg);
 				exit(1);
 			}
+			break;
+		case CMD_OPT_MAC_SEED:
+			strncpy(mac_seed_str, optarg, sizeof(mac_seed_str));
+			mac_seed_str[sizeof(mac_seed_str) - 1] = '\0';
+			mac_seed = mac_seed_str;
 			break;
 		case CMD_OPT_PTDEV_NO_RESET:
 			ptdev_no_reset(true);

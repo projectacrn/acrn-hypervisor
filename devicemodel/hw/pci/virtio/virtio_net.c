@@ -818,7 +818,7 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 */
 	if (!mac_provided) {
 		snprintf(nstr, sizeof(nstr), "%d-%d-%s", dev->slot,
-		    dev->func, vmname);
+		    dev->func, mac_seed);
 
 		MD5_Init(&mdctx);
 		MD5_Update(&mdctx, nstr, strlen(nstr));
