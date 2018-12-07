@@ -53,20 +53,20 @@ struct mbedtls_md_info_t
     int (*starts_func)( void *ctx );
 
     /** Digest update function */
-    int (*update_func)( void *ctx, const unsigned char *input, size_t ilen );
+    int (*update_func)( void *ctx, const uint8_t *input, size_t ilen );
 
     /** Digest finalisation function */
-    int (*finish_func)( void *ctx, unsigned char *output );
+    int (*finish_func)( void *ctx, uint8_t *output );
 
     /** Generic digest function */
-    int (*digest_func)( const unsigned char *input, size_t ilen,
-                        unsigned char *output );
+    int (*digest_func)( const uint8_t *input, size_t ilen,
+                        uint8_t *output );
 
     /** Clone state from a context */
     void (*clone_func)( void *dst, const void *src );
 
     /** Internal use only */
-    int (*process_func)( void *ctx, const unsigned char *input );
+    int (*process_func)( void *ctx, const uint8_t *input );
 };
 
 extern const mbedtls_md_info_t mbedtls_sha256_info;

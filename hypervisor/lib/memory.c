@@ -261,9 +261,9 @@ void free(const void *ptr)
 
 void *memchr(const void *void_s, int c, size_t n)
 {
-	unsigned char val = (unsigned char)c;
-	unsigned char *ptr = (unsigned char *)void_s;
-	unsigned char *end = ptr + n;
+	uint8_t val = (uint8_t)c;
+	uint8_t *ptr = (uint8_t *)void_s;
+	uint8_t *end = ptr + n;
 
 	while (ptr < end) {
 		if (*ptr == val) {

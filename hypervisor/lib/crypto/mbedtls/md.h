@@ -62,13 +62,13 @@ typedef struct {
     const mbedtls_md_info_t *md_info;
 
     /** The digest-specific context. */
-    unsigned char md_ctx[sizeof( mbedtls_sha256_context )];
+    uint8_t md_ctx[sizeof( mbedtls_sha256_context )];
 
     /** The HMAC part of the context. Use array here to avoid dynamic memory
      *  allocation. The hardcode value 128 is 2 times of block_size which
      *  is 64 in md_wrap.c
      */
-    unsigned char hmac_ctx[128];
+    uint8_t hmac_ctx[128];
 } mbedtls_md_context_t;
 
 /**
@@ -168,7 +168,7 @@ int mbedtls_md_clone( mbedtls_md_context_t *dst,
  *
  * \return          The size of the message-digest output in Bytes.
  */
-unsigned char mbedtls_md_get_size( const mbedtls_md_info_t *md_info );
+uint8_t mbedtls_md_get_size( const mbedtls_md_info_t *md_info );
 
 /**
  * \brief           This function extracts the message-digest type from the
@@ -212,7 +212,7 @@ int mbedtls_md_starts( mbedtls_md_context_t *ctx );
  * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
  *                  failure.
  */
-int mbedtls_md_update( mbedtls_md_context_t *ctx, const unsigned char *input, size_t ilen );
+int mbedtls_md_update( mbedtls_md_context_t *ctx, const uint8_t *input, size_t ilen );
 
 /**
  * \brief           This function finishes the digest operation,
@@ -232,7 +232,7 @@ int mbedtls_md_update( mbedtls_md_context_t *ctx, const unsigned char *input, si
  * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
  *                  failure.
  */
-int mbedtls_md_finish( mbedtls_md_context_t *ctx, unsigned char *output );
+int mbedtls_md_finish( mbedtls_md_context_t *ctx, uint8_t *output );
 
 /**
  * \brief          This function calculates the message-digest of a buffer,
@@ -252,8 +252,8 @@ int mbedtls_md_finish( mbedtls_md_context_t *ctx, unsigned char *output );
  * \return         #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
  *                 failure.
  */
-int mbedtls_md( const mbedtls_md_info_t *md_info, const unsigned char *input, size_t ilen,
-        unsigned char *output );
+int mbedtls_md( const mbedtls_md_info_t *md_info, const uint8_t *input, size_t ilen,
+        uint8_t *output );
 
 /**
  * \brief           This function sets the HMAC key and prepares to
@@ -273,7 +273,7 @@ int mbedtls_md( const mbedtls_md_info_t *md_info, const unsigned char *input, si
  * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
  *                  failure.
  */
-int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const unsigned char *key,
+int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const uint8_t *key,
                     size_t keylen );
 
 /**
@@ -295,7 +295,7 @@ int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const unsigned char *key,
  * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
  *                  failure.
  */
-int mbedtls_md_hmac_update( mbedtls_md_context_t *ctx, const unsigned char *input,
+int mbedtls_md_hmac_update( mbedtls_md_context_t *ctx, const uint8_t *input,
                     size_t ilen );
 
 /**
@@ -316,7 +316,7 @@ int mbedtls_md_hmac_update( mbedtls_md_context_t *ctx, const unsigned char *inpu
  * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
  *                  failure.
  */
-int mbedtls_md_hmac_finish( mbedtls_md_context_t *ctx, unsigned char *output);
+int mbedtls_md_hmac_finish( mbedtls_md_context_t *ctx, uint8_t *output);
 
 /**
  * \brief           This function prepares to authenticate a new message with
@@ -357,11 +357,11 @@ int mbedtls_md_hmac_reset( mbedtls_md_context_t *ctx );
  * \return         #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
  *                 failure.
  */
-int mbedtls_md_hmac( const mbedtls_md_info_t *md_info, const unsigned char *key, size_t keylen,
-                const unsigned char *input, size_t ilen,
-                unsigned char *output );
+int mbedtls_md_hmac( const mbedtls_md_info_t *md_info, const uint8_t *key, size_t keylen,
+                const uint8_t *input, size_t ilen,
+                uint8_t *output );
 
 /* Internal use */
-int mbedtls_md_process( mbedtls_md_context_t *ctx, const unsigned char *data );
+int mbedtls_md_process( mbedtls_md_context_t *ctx, const uint8_t *data );
 
 #endif /* MBEDTLS_MD_H */

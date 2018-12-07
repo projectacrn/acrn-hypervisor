@@ -139,7 +139,7 @@ struct acrn_vm {
 	uint16_t emul_mmio_regions; /* Number of emulated mmio regions */
 	struct mem_io_node emul_mmio[CONFIG_MAX_EMULATED_MMIO_REGIONS];
 
-	unsigned char GUID[16];
+	uint8_t GUID[16];
 	struct secure_world_control sworld_control;
 
 	/* Secure World's snapshot
@@ -174,7 +174,7 @@ struct vm_description {
 	 * will be the VM's BSP
 	 */
 	uint16_t               *vm_pcpu_ids;
-	unsigned char          GUID[16]; /* GUID of the vm will be created */
+	uint8_t          GUID[16]; /* GUID of the vm will be created */
 	uint16_t               vm_hw_num_cores;   /* Number of virtual cores */
 	/* Whether secure world is supported for current VM. */
 	bool                   sworld_supported;

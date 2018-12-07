@@ -280,7 +280,7 @@ out:
 
 static inline EFI_STATUS isspace(CHAR8 ch)
 {
-    return ((unsigned char)ch <= ' ');
+    return ((uint8_t)ch <= ' ');
 }
 
 /**
