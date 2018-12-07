@@ -177,7 +177,8 @@ partition. Follow these steps:
       whether it should be disabled. There are three forms for this parameter:
 
       #. ``uart=disabled``: this disables the serial port completely
-      #. ``uart=mmio@<MMIO address>``: this sets the serial port MMIO address
+      #. ``uart=bdf@<BDF value>``:  this sets the PCI serial port based on its BDF.
+         For example, use ``bdf@0:18.2`` for a BDF of 0:18.2 ttyS2.
       #. ``uart=port@<port address>``: this sets the serial port address
 
    Here is a more complete example of how to configure the EFI firmware to load the ACRN

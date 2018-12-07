@@ -106,11 +106,11 @@ Enable partition mode in ACRN hypervisor
    .. code-block:: none
      :emphasize-lines: 1
 
-     $ dmesg | grep ttyS
-     [   10.552369] dw-apb-uart.8: ttyS4 at MMIO 0x91524000 (irq = 4, base_baud = 115200) is a 16550A
-     [   10.552568] serial serial0: tty port ttyS4 registered
-     [   10.572344] dw-apb-uart.9: ttyS5 at MMIO 0x91522000 (irq = 5, base_baud = 115200) is a 16550A
-     [   10.572545] serial serial1: tty port ttyS5 registered
+     $ sudo lspci | grep UART
+     00:18.0 . Series HSUART Controller #1 (rev 0b)
+     00:18.1 . Series HSUART Controller #2 (rev 0b)
+
+     The second with ``00:18.1`` is the one on the 40-pin expansion connector.
 
    The following command prints detailed information about all PCI buses
    and devices in the system. Look up the PCI BAR addresses of the SATA
@@ -153,7 +153,7 @@ Enable partition mode in ACRN hypervisor
      $ make menuconfig
 
    Set the ``Hypervisor mode`` option to ``Partition mode``, and depending
-   on the serial port you are using, enter its MMIO address to the configuration
+   on the serial port you are using, enter its BDF to the configuration
    menu as shown in this screenshot. Finally, save the configuration.
 
    .. figure:: images/menuconfig-partition-mode.png
@@ -347,8 +347,8 @@ Switch between privileged VMs
 *****************************
 
 Connect the serial port on the UP2 board to the development workstation.
-If you set the MMIO address of the serial port right while building the
-ACRN hypervisor, you should see the output from the ACRN serial console as below.
+If you set the BDF of the serial port right while building the ACRN hypervisor,
+you should see the output from the ACRN serial console as below.
 You could then log in to the privileged VMs by ``sos_console`` command,
 and press :kbd:`CTRL+Space` keys to return to the ACRN serial console.
 
