@@ -14,7 +14,7 @@
  * and hide HV memory from VM0...
  */
 
-static uint32_t e820_entries;
+static uint32_t e820_entries_count;
 static struct e820_entry e820[E820_MAX_ENTRIES];
 static struct e820_mem_params e820_mem;
 
@@ -31,7 +31,7 @@ static void obtain_e820_mem_info(void)
 	e820_mem.max_ram_blk_base = 0UL;
 	e820_mem.max_ram_blk_size = 0UL;
 
-	for (i = 0U; i < e820_entries; i++) {
+	for (i = 0U; i < e820_entries_count; i++) {
 		entry = &e820[i];
 		if (e820_mem.mem_bottom > entry->baseaddr) {
 			e820_mem.mem_bottom = entry->baseaddr;
@@ -64,7 +64,7 @@ void rebuild_vm0_e820(void)
 	/* hypervisor mem need be filter out from e820 table
 	 * it's hv itself + other hv reserved mem like vgt etc
 	 */
-	for (i = 0U; i < e820_entries; i++) {
+	for (i = 0U; i < e820_entries_count; i++) {
 		entry = &e820[i];
 		entry_start = entry->baseaddr;
 		entry_end = entry->baseaddr + entry->length;
@@ -105,9 +105,9 @@ void rebuild_vm0_e820(void)
 	}
 
 	if (new_entry.length > 0UL) {
-		e820_entries++;
-		ASSERT(e820_entries <= E820_MAX_ENTRIES, "e820 entry overflow");
-		entry = &e820[e820_entries - 1];
+		e820_entries_count++;
+		ASSERT(e820_entries_count <= E820_MAX_ENTRIES, "e820 entry overflow");
+		entry = &e820[e820_entries_count - 1];
 		entry->baseaddr = new_entry.baseaddr;
 		entry->length = new_entry.length;
 		entry->type = new_entry.type;
@@ -126,7 +126,7 @@ uint64_t e820_alloc_low_memory(uint32_t size_arg)
 	/* We want memory in page boundary and integral multiple of pages */
 	size = (((size + PAGE_SIZE) - 1U) >> PAGE_SHIFT) << PAGE_SHIFT;
 
-	for (i = 0U; i < e820_entries; i++) {
+	for (i = 0U; i < e820_entries_count; i++) {
 		entry = &e820[i];
 		uint64_t start, end, length;
 
@@ -151,7 +151,7 @@ uint64_t e820_alloc_low_memory(uint32_t size_arg)
 		 * found entry with available memory larger than requested
 		 * allocate memory from the end of this entry at page boundary
 		 */
-		new_entry = &e820[e820_entries];
+		new_entry = &e820[e820_entries_count];
 		new_entry->type = E820_TYPE_RESERVED;
 		new_entry->baseaddr = end - size;
 		new_entry->length = (entry->baseaddr + entry->length) - new_entry->baseaddr;
@@ -159,7 +159,7 @@ uint64_t e820_alloc_low_memory(uint32_t size_arg)
 		/* Shrink the existing entry and total available memory */
 		entry->length -= new_entry->length;
 		e820_mem.total_mem_size -= new_entry->length;
-		e820_entries++;
+		e820_entries_count++;
 
 		return new_entry->baseaddr;
 	}
@@ -180,16 +180,16 @@ void init_e820(void)
 		if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MMAP) != 0U) {
 			struct multiboot_mmap *mmap = (struct multiboot_mmap *)hpa2hva((uint64_t)mbi->mi_mmap_addr);
 
-			e820_entries = mbi->mi_mmap_length / sizeof(struct multiboot_mmap);
-			if (e820_entries > E820_MAX_ENTRIES) {
-				pr_err("Too many E820 entries %d\n", e820_entries);
-				e820_entries = E820_MAX_ENTRIES;
+			e820_entries_count = mbi->mi_mmap_length / sizeof(struct multiboot_mmap);
+			if (e820_entries_count > E820_MAX_ENTRIES) {
+				pr_err("Too many E820 entries %d\n", e820_entries_count);
+				e820_entries_count = E820_MAX_ENTRIES;
 			}
 
 			dev_dbg(ACRN_DBG_E820, "mmap length 0x%x addr 0x%x entries %d\n",
-				mbi->mi_mmap_length, mbi->mi_mmap_addr, e820_entries);
+				mbi->mi_mmap_length, mbi->mi_mmap_addr, e820_entries_count);
 
-			for (i = 0U; i < e820_entries; i++) {
+			for (i = 0U; i < e820_entries_count; i++) {
 				e820[i].baseaddr = mmap[i].baseaddr;
 				e820[i].length = mmap[i].length;
 				e820[i].type = mmap[i].type;
@@ -208,7 +208,7 @@ void init_e820(void)
 
 uint32_t get_e820_entries_count(void)
 {
-	return e820_entries;
+	return e820_entries_count;
 }
 
 const struct e820_entry *get_e820_entry(void)
@@ -239,14 +239,14 @@ uint32_t create_e820_table(struct e820_entry *param_e820)
 {
 	uint32_t i;
 
-	ASSERT(e820_entries > 0U, "e820 should be inited");
+	ASSERT(e820_entries_count > 0U, "e820 should be inited");
 
-	for (i = 0U; i < e820_entries; i++) {
+	for (i = 0U; i < e820_entries_count; i++) {
 		param_e820[i].baseaddr = e820[i].baseaddr;
 		param_e820[i].length = e820[i].length;
 		param_e820[i].type = e820[i].type;
 	}
 
-	return e820_entries;
+	return e820_entries_count;
 }
 #endif
