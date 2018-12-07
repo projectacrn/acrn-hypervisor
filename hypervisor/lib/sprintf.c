@@ -252,7 +252,7 @@ static void print_pow2(struct print_param *param,
 		uint64_t v_arg, uint32_t shift)
 {
 	uint64_t v = v_arg;
-	/* max buffer required for octal representation of unsigned long long */
+	/* max buffer required for octal representation of uint64_t long */
 	char digitbuff[22];
 	/* Insert position for the next character+1 */
 	char *pos = digitbuff + sizeof(digitbuff);
@@ -305,7 +305,7 @@ static void print_pow2(struct print_param *param,
 
 static void print_decimal(struct print_param *param, int64_t value)
 {
-	/* max. required buffer for unsigned long long in decimal format */
+	/* max. required buffer for uint64_t long in decimal format */
 	char digitbuff[20];
 	/* pointer to the next character position (+1) */
 	char *pos = digitbuff + sizeof(digitbuff);

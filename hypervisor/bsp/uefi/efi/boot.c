@@ -126,7 +126,7 @@ again:
 		EFI_MEMORY_DESCRIPTOR *d;
 		uint32_t e820_type = 0;
 
-		d = (EFI_MEMORY_DESCRIPTOR *)((unsigned long)map_buf + (i * desc_size));
+		d = (EFI_MEMORY_DESCRIPTOR *)((uint64_t)map_buf + (i * desc_size));
 		switch(d->Type) {
 		case EfiReservedMemoryType:
 		case EfiRuntimeServicesCode:
