@@ -31,7 +31,7 @@ static struct mem_pool Memory_Pool = {
 	.contiguity_bitmap = Malloc_Heap_Contiguity_Bitmap
 };
 
-static void *allocate_mem(struct mem_pool *pool, unsigned int num_bytes)
+static void *allocate_mem(struct mem_pool *pool, uint32_t num_bytes)
 {
 
 	void *memory = NULL;
@@ -213,7 +213,7 @@ static void deallocate_mem(struct mem_pool *pool, const void *ptr)
  * The return address will be PAGE_SIZE aligned if 'num_bytes' is greater
  * than PAGE_SIZE.
  */
-void *malloc(unsigned int num_bytes)
+void *malloc(uint32_t num_bytes)
 {
 	void *memory = NULL;
 
@@ -234,7 +234,7 @@ void *malloc(unsigned int num_bytes)
 	return memory;
 }
 
-void *calloc(unsigned int num_elements, unsigned int element_size)
+void *calloc(uint32_t num_elements, uint32_t element_size)
 {
 	void *memory = malloc(num_elements * element_size);
 
@@ -391,7 +391,7 @@ void *memset(void *base, uint8_t v, size_t n)
 		asm volatile("cld ; rep ; stosq ; movl %3,%%ecx ; rep ; stosb"
 					: "+c"(n_q), "+D"(dest_p)
 					: "a" (v * 0x0101010101010101U),
-					"r"((unsigned int)count  & 7U));
+					"r"((uint32_t)count  & 7U));
 		ret = (void *)dest_p;
         }
 

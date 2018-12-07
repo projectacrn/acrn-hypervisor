@@ -22,8 +22,8 @@ struct mem_pool {
 };
 
 /* APIs exposing memory allocation/deallocation abstractions */
-void *malloc(unsigned int num_bytes);
-void *calloc(unsigned int num_elements, unsigned int element_size);
+void *malloc(uint32_t num_bytes);
+void *calloc(uint32_t num_elements, uint32_t element_size);
 void free(const void *ptr);
 
 #endif /* MEM_MGT_H */

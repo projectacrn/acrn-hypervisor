@@ -82,7 +82,7 @@ void do_logmsg(uint32_t severity, const char *fmt, ...)
 
 	/* Check if flags specify to output to memory */
 	if (do_mem_log) {
-		unsigned int i, msg_len;
+		uint32_t i, msg_len;
 		struct shared_buf *sbuf = (struct shared_buf *)per_cpu(sbuf, pcpu_id)[ACRN_HVLOG];
 
 		/* If sbuf is not ready, we just drop the massage */
