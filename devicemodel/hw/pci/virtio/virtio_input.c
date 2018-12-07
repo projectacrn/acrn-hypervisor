@@ -214,23 +214,19 @@ virtio_input_ignore_event(struct virtio_input_event *event)
 	if (!event)
 		return true;
 
-	/* kernel commit 29cc309d8bf19a36c5196bf626662319af6e3c0b
-	 * (HID: hid-multitouch: forward MSC_TIMESTAMP)
-	 * since kernel 4.15
-	 * (EV_MSC, MSC_TIMESTAMP) is added to each frame just before
-	 * the SYN event. EV_MSC is configured as INPUT_PASS_TO_ALL.
-	 * In the use case of virtio-input, there is a loop as follows:
-	 * - A mt frame with (EV_MSC, MSC_TIMESTAMP) is passed to FE.
-	 * - FE will call virtinput_status to pass (EV_MSC, MSC_TIMESTAMP)
-	 *   back to BE.
-	 * - BE writes this event to evdev. Because (EV_MSC, MSC_TIMESTAMP)
+	/*
+	 * EV_MSC is configured as INPUT_PASS_TO_ALL. In the use case of
+	 * virtio-input, there is a loop as follows:
+	 * - A mt frame with (EV_MSC,*,*) is passed to FE.
+	 * - FE will call virtinput_status to pass (EV_MSC,*,*) back to BE.
+	 * - BE writes this event to evdev. Because (EV_MSC,*,*)
 	 *   is configured as INPUT_PASS_TO_ALL, it will be written into
 	 *   the event buffer of evdev then be read out by BE without
 	 *   SYN followed.
-	 * - Each mt frame will introduce one (EV_MSC, MSC_TIMESTAMP).
+	 * - Each mt frame will introduce one (EV_MSC,*,*).
 	 *   Later the frame becomes larger and larger...
 	 */
-	if ((event->type == EV_MSC) && (event->code == MSC_TIMESTAMP))
+	if (event->type == EV_MSC)
 		return true;
 	return false;
 }
