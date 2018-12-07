@@ -214,7 +214,13 @@ void uart16550_set_property(bool enabled, bool port_mapped, uint64_t base_addr)
 {
 	uart_enabled = enabled;
 	serial_port_mapped = port_mapped;
-	uart_base_address = base_addr;
+
+	if (port_mapped) {
+		uart_base_address = base_addr;
+	} else {
+		const char *bdf = (const char *)base_addr;
+		strncpy_s(pci_bdf_info, MAX_BDF_LEN, bdf, MAX_BDF_LEN);
+	}
 }
 
 bool is_pci_dbg_uart(union pci_bdf bdf_value)
