@@ -32,14 +32,14 @@
  * Wrappers for generic message digests
  */
 
-static int sha256_update_wrap( void *ctx, const uint8_t *input,
+static int32_t sha256_update_wrap( void *ctx, const uint8_t *input,
                                 size_t ilen )
 {
     return( mbedtls_sha256_update_ret( (mbedtls_sha256_context *) ctx,
                                        input, ilen ) );
 }
 
-static int sha256_finish_wrap( void *ctx, uint8_t *output )
+static int32_t sha256_finish_wrap( void *ctx, uint8_t *output )
 {
     return( mbedtls_sha256_finish_ret( (mbedtls_sha256_context *) ctx,
                                        output ) );
@@ -51,18 +51,18 @@ static void sha256_clone_wrap( void *dst, const void *src )
                     (const mbedtls_sha256_context *) src );
 }
 
-static int sha256_process_wrap( void *ctx, const uint8_t *data )
+static int32_t sha256_process_wrap( void *ctx, const uint8_t *data )
 {
     return( mbedtls_internal_sha256_process( (mbedtls_sha256_context *) ctx,
                                              data ) );
 }
 
-static int sha256_starts_wrap( void *ctx )
+static int32_t sha256_starts_wrap( void *ctx )
 {
     return( mbedtls_sha256_starts_ret( (mbedtls_sha256_context *) ctx, 0 ) );
 }
 
-static int sha256_wrap( const uint8_t *input, size_t ilen,
+static int32_t sha256_wrap( const uint8_t *input, size_t ilen,
                         uint8_t *output )
 {
     return( mbedtls_sha256_ret( input, ilen, output, 0 ) );

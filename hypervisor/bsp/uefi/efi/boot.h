@@ -67,7 +67,7 @@
 }
 
 EFI_STATUS get_pe_section(CHAR8 *base, char *section, UINTN *vaddr, UINTN *size);
-typedef void(*hv_func)(int, struct multiboot_info*);
+typedef void(*hv_func)(int32_t, struct multiboot_info*);
 
 /*
  * We allocate memory for the following struct together with hyperivosr itself

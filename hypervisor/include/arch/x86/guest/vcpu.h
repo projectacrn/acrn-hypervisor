@@ -204,7 +204,7 @@ struct acrn_vcpu_arch {
 	uint8_t vmcs[PAGE_SIZE];
 	/* per vcpu lapic */
 	struct acrn_vlapic vlapic;
-	int cur_context;
+	int32_t cur_context;
 	struct cpu_context contexts[NR_WORLD];
 
 	/* common MSRs, world_msrs[] is a subset of it */
@@ -551,7 +551,7 @@ struct acrn_vcpu* get_ever_run_vcpu(uint16_t pcpu_id);
  *
  * @retval 0 vcpu created successfully, other values failed.
  */
-int create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn_vcpu_handle);
+int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn_vcpu_handle);
 
 /**
  * @brief run into non-root mode based on vcpu setting
@@ -564,9 +564,9 @@ int create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn_vcp
  *
  * @retval 0 vcpu run successfully, other values failed.
  */
-int run_vcpu(struct acrn_vcpu *vcpu);
+int32_t run_vcpu(struct acrn_vcpu *vcpu);
 
-int shutdown_vcpu(struct acrn_vcpu *vcpu);
+int32_t shutdown_vcpu(struct acrn_vcpu *vcpu);
 
 /**
  * @brief unmap the vcpu with pcpu and free its vlapic
@@ -623,7 +623,7 @@ void schedule_vcpu(struct acrn_vcpu *vcpu);
  * @param[inout] vm pointer to vm data structure
  * @param[in] pcpu_id which the vcpu will be mapped
  */
-int prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id);
+int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id);
 
 void request_vcpu_pre_work(struct acrn_vcpu *vcpu, uint16_t pre_work_id);
 

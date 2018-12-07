@@ -37,7 +37,7 @@ void acrn_update_ucode(struct acrn_vcpu *vcpu, uint64_t v)
 	uint64_t gva, fault_addr;
 	struct ucode_header uhdr;
 	size_t data_size;
-	int err;
+	int32_t err;
 	uint32_t err_code;
 
 	spinlock_obtain(&micro_code_lock);

@@ -75,7 +75,7 @@ struct acrn_vlapic {
 	struct acrn_vcpu		*vcpu;
 
 	uint32_t		esr_pending;
-	int			esr_firing;
+	int32_t			esr_firing;
 
 	struct vlapic_timer	vtimer;
 
@@ -134,7 +134,7 @@ uint64_t vlapic_get_cr8(const struct acrn_vlapic *vlapic);
  * @remark The vector does not automatically transition to the ISR as a
  *	   result of calling this function.
  */
-int vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr);
+int32_t vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr);
 
 /**
  * @brief Accept virtual interrupt.
@@ -181,8 +181,8 @@ void vlapic_post_intr(uint16_t dest_pcpu_id);
  */
 uint64_t apicv_get_pir_desc_paddr(struct acrn_vcpu *vcpu);
 
-int vlapic_rdmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *rval);
-int vlapic_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t wval);
+int32_t vlapic_rdmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *rval);
+int32_t vlapic_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t wval);
 
 /*
  * Signals to the LAPIC that an interrupt at 'vector' needs to be generated
@@ -265,7 +265,7 @@ void vlapic_set_tmr_one_vec(struct acrn_vlapic *vlapic, uint32_t delmode,
 
 void vlapic_apicv_batch_set_tmr(struct acrn_vlapic *vlapic);
 uint32_t vlapic_get_apicid(struct acrn_vlapic *vlapic);
-int vlapic_create(struct acrn_vcpu *vcpu);
+int32_t vlapic_create(struct acrn_vcpu *vcpu);
 /*
  *  @pre vcpu != NULL
  */
@@ -277,10 +277,10 @@ bool vlapic_enabled(const struct acrn_vlapic *vlapic);
 uint64_t vlapic_apicv_get_apic_access_addr(void);
 uint64_t vlapic_apicv_get_apic_page_addr(struct acrn_vlapic *vlapic);
 void vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic);
-int apic_access_vmexit_handler(struct acrn_vcpu *vcpu);
-int apic_write_vmexit_handler(struct acrn_vcpu *vcpu);
-int veoi_vmexit_handler(struct acrn_vcpu *vcpu);
-int tpr_below_threshold_vmexit_handler(__unused struct acrn_vcpu *vcpu);
+int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t apic_write_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t veoi_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t tpr_below_threshold_vmexit_handler(__unused struct acrn_vcpu *vcpu);
 void calcvdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys);
 
 /**

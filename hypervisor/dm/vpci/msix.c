@@ -48,12 +48,12 @@ static inline bool msixtable_access(struct pci_vdev *vdev, uint32_t offset)
 	return in_range(offset, vdev->msix.table_offset, vdev->msix.table_count * MSIX_TABLE_ENTRY_SIZE);
 }
 
-static int vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
+static int32_t vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
 {
 	struct msix_table_entry *pentry;
 	struct ptirq_msi_info info;
 	uint64_t hva;
-	int ret;
+	int32_t ret;
 
 	info.is_msix = 1;
 	info.vmsi_addr = vdev->msix.tables[index].addr;
@@ -94,10 +94,10 @@ static inline void enable_disable_msix(struct pci_vdev *vdev, bool enable)
 }
 
 /* Do MSI-X remap for all MSI-X table entries in the target device */
-static int vmsix_remap(struct pci_vdev *vdev, bool enable)
+static int32_t vmsix_remap(struct pci_vdev *vdev, bool enable)
 {
 	uint32_t index;
-	int ret;
+	int32_t ret;
 
 	/* disable MSI-X during configuration */
 	enable_disable_msix(vdev, false);
@@ -119,10 +119,10 @@ static int vmsix_remap(struct pci_vdev *vdev, bool enable)
 }
 
 /* Do MSI-X remap for one MSI-X table entry only */
-static int vmsix_remap_one_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
+static int32_t vmsix_remap_one_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
 {
 	uint32_t msgctrl;
-	int ret;
+	int32_t ret;
 
 	/* disable MSI-X during configuration */
 	enable_disable_msix(vdev, false);
@@ -144,7 +144,7 @@ static int vmsix_remap_one_entry(struct pci_vdev *vdev, uint32_t index, bool ena
 	return ret;
 }
 
-static int vmsix_cfgread(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
+static int32_t vmsix_cfgread(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	int32_t ret;
 	/* For PIO access, we emulate Capability Structures only */
@@ -159,7 +159,7 @@ static int vmsix_cfgread(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes,
 	return ret;
 }
 
-static int vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
+static int32_t vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	uint32_t msgctrl;
 	int32_t ret;
@@ -257,7 +257,7 @@ static void vmsix_table_rw(struct pci_vdev *vdev, struct mmio_request *mmio, uin
 	}
 }
 
-static int vmsix_table_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
+static int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
 {
 	struct mmio_request *mmio = &io_req->reqs.mmio;
 	struct pci_vdev *vdev;
@@ -344,7 +344,7 @@ static void decode_msix_table_bar(struct pci_vdev *vdev)
 	}
 }
 
-static int vmsix_init(struct pci_vdev *vdev)
+static int32_t vmsix_init(struct pci_vdev *vdev)
 {
 	uint32_t msgctrl;
 	uint32_t table_info, i;
@@ -407,7 +407,7 @@ static int vmsix_init(struct pci_vdev *vdev)
 	return ret;
 }
 
-static int vmsix_deinit(struct pci_vdev *vdev)
+static int32_t vmsix_deinit(struct pci_vdev *vdev)
 {
 	vdev->msix.intercepted_size = 0U;
 

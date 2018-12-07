@@ -48,7 +48,7 @@
 static inline void memset(void *dstv, char ch, UINTN size)
 {
 	char *dst = dstv;
-	int i;
+	int32_t i;
 
 	for (i = 0; i < size; i++)
 		dst[i] = ch;
@@ -56,15 +56,15 @@ static inline void memset(void *dstv, char ch, UINTN size)
 
 static inline void memcpy(char *dst, const char *src, UINTN size)
 {
-	int i;
+	int32_t i;
 
 	for (i = 0; i < size; i++)
 		*dst++ = *src++;
 }
 
-static inline int strlen(const char *str)
+static inline int32_t strlen(const char *str)
 {
-	int len;
+	int32_t len;
 
 	len = 0;
 	while (*str++)

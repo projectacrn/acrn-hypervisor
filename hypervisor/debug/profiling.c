@@ -215,7 +215,7 @@ static void profiling_disable_pmu(void)
 /*
  * Writes specified size of data into sbuf
  */
-static int profiling_sbuf_put_variable(struct shared_buf *sbuf,
+static int32_t profiling_sbuf_put_variable(struct shared_buf *sbuf,
 					uint8_t *data, uint32_t size)
 {
 	uint32_t remaining_space, offset, next_tail;
@@ -287,18 +287,18 @@ static int profiling_sbuf_put_variable(struct shared_buf *sbuf,
 
 	sbuf->tail = next_tail;
 
-	return (int)size;
+	return (int32_t)size;
 }
 
 /*
  * Read profiling data and transferred to SOS
  * Drop transfer of profiling data if sbuf is full/insufficient and log it
  */
-static int profiling_generate_data(int32_t collector, uint32_t type)
+static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 {
 	uint64_t i;
 	uint32_t remaining_space = 0U;
-	int 	ret = 0;
+	int32_t 	ret = 0;
 	struct data_header pkt_header;
 	uint64_t payload_size = 0UL;
 	void *payload = NULL;

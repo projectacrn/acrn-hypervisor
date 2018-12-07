@@ -73,7 +73,7 @@ static uint64_t create_zero_page(struct acrn_vm *vm)
 	return gpa;
 }
 
-int general_sw_loader(struct acrn_vm *vm)
+int32_t general_sw_loader(struct acrn_vm *vm)
 {
 	int32_t ret = 0;
 	void *hva;

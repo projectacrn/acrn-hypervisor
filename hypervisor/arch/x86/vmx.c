@@ -267,7 +267,7 @@ uint64_t vmx_rdmsr_pat(const struct acrn_vcpu *vcpu)
 	return vcpu_get_guest_msr(vcpu, MSR_IA32_PAT);
 }
 
-int vmx_wrmsr_pat(struct acrn_vcpu *vcpu, uint64_t value)
+int32_t vmx_wrmsr_pat(struct acrn_vcpu *vcpu, uint64_t value)
 {
 	uint32_t i;
 	uint64_t field;

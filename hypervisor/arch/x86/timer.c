@@ -70,7 +70,7 @@ static void local_add_timer(struct per_cpu_timers *cpu_timer,
 	}
 }
 
-int add_timer(struct hv_timer *timer)
+int32_t add_timer(struct hv_timer *timer)
 {
 	struct per_cpu_timers *cpu_timer;
 	uint16_t pcpu_id;
@@ -134,7 +134,7 @@ static void timer_softirq(uint16_t pcpu_id)
 	struct per_cpu_timers *cpu_timer;
 	struct hv_timer *timer;
 	struct list_head *pos, *n;
-	int tries = MAX_TIMER_ACTIONS;
+	int32_t tries = MAX_TIMER_ACTIONS;
 	uint64_t current_tsc = rdtsc();
 
 	/* handle passed timer */

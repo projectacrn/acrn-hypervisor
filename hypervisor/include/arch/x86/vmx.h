@@ -459,7 +459,7 @@ void exec_vmclear(void *addr);
 void exec_vmptrld(void *addr);
 
 uint64_t vmx_rdmsr_pat(const struct acrn_vcpu *vcpu);
-int vmx_wrmsr_pat(struct acrn_vcpu *vcpu, uint64_t value);
+int32_t vmx_wrmsr_pat(struct acrn_vcpu *vcpu, uint64_t value);
 
 void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0);
 void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4);

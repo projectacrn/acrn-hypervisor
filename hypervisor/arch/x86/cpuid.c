@@ -176,9 +176,9 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 	}
 }
 
-int set_vcpuid_entries(struct acrn_vm *vm)
+int32_t set_vcpuid_entries(struct acrn_vm *vm)
 {
-	int result;
+	int32_t result;
 	struct vcpuid_entry entry;
 	uint32_t limit;
 	uint32_t i, j;

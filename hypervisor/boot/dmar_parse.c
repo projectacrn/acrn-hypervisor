@@ -55,7 +55,7 @@ struct acpi_dmar_hardware_unit {
 };
 
 struct find_iter_args {
-	int i;
+	int32_t i;
 	struct acpi_dmar_hardware_unit *res;
 };
 
@@ -72,10 +72,10 @@ struct acpi_dmar_device_scope {
 	uint8_t                   bus;
 };
 
-typedef int (*dmar_iter_t)(struct acpi_dmar_header*, void*);
+typedef int32_t (*dmar_iter_t)(struct acpi_dmar_header*, void*);
 
 static struct dmar_info dmar_info_parsed;
-static int dmar_unit_cnt;
+static int32_t dmar_unit_cnt;
 
 static void
 dmar_iterate_tbl(dmar_iter_t iter, void *arg)
@@ -105,7 +105,7 @@ dmar_iterate_tbl(dmar_iter_t iter, void *arg)
 	}
 }
 
-static int
+static int32_t
 drhd_count_iter(struct acpi_dmar_header *dmar_header, __unused void *arg)
 {
 	if (dmar_header->type == ACPI_DMAR_TYPE_HARDWARE_UNIT)
@@ -113,7 +113,7 @@ drhd_count_iter(struct acpi_dmar_header *dmar_header, __unused void *arg)
 	return 1;
 }
 
-static int
+static int32_t
 drhd_find_iter(struct acpi_dmar_header *dmar_header, void *arg)
 {
 	struct find_iter_args *args;
@@ -131,7 +131,7 @@ drhd_find_iter(struct acpi_dmar_header *dmar_header, void *arg)
 }
 
 static struct acpi_dmar_hardware_unit *
-drhd_find_by_index(int idx)
+drhd_find_by_index(int32_t idx)
 {
 	struct find_iter_args args;
 
@@ -154,10 +154,10 @@ static uint8_t get_secondary_bus(uint8_t bus, uint8_t dev, uint8_t func)
 }
 
 static uint16_t
-dmar_path_bdf(int path_len, int busno,
+dmar_path_bdf(int32_t path_len, int32_t busno,
 	const struct acpi_dmar_pci_path *path)
 {
-	int i;
+	int32_t i;
 	uint8_t bus;
 	uint8_t dev;
 	uint8_t fun;
@@ -177,16 +177,16 @@ dmar_path_bdf(int path_len, int busno,
 }
 
 
-static int
+static int32_t
 handle_dmar_devscope(struct dmar_dev_scope *dev_scope,
-	void *addr, int remaining)
+	void *addr, int32_t remaining)
 {
-	int path_len;
+	int32_t path_len;
 	uint16_t bdf;
 	struct acpi_dmar_pci_path *path;
 	struct acpi_dmar_device_scope *apci_devscope = addr;
 
-	if (remaining < (int)sizeof(struct acpi_dmar_device_scope))
+	if (remaining < (int32_t)sizeof(struct acpi_dmar_device_scope))
 		return -1;
 
 	if (remaining < apci_devscope->length)
@@ -226,13 +226,13 @@ get_drhd_dev_scope_cnt(struct acpi_dmar_hardware_unit *drhd)
 	return count;
 }
 
-static int
+static int32_t
 handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd,
 		struct dmar_drhd *drhd)
 {
 	struct dmar_dev_scope *dev_scope;
 	struct acpi_dmar_device_scope *ads;
-	int remaining, consumed;
+	int32_t remaining, consumed;
 	char *cp;
 	uint32_t dev_count;
 
@@ -291,9 +291,9 @@ handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd,
 	return 0;
 }
 
-int parse_dmar_table(void)
+int32_t parse_dmar_table(void)
 {
-	int i;
+	int32_t i;
 	struct acpi_dmar_hardware_unit *acpi_drhd;
 
 	/* find out how many dmar units */

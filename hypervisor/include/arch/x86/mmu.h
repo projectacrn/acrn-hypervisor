@@ -122,7 +122,7 @@ void mmu_modify_or_del(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
  * @retval 0 on success
  * @retval -ENODEV Don't support EPT or VPID capability
  */
-int check_vmx_mmu_cap(void);
+int32_t check_vmx_mmu_cap(void);
 /**
  * @brief VPID allocation
  *
@@ -293,7 +293,7 @@ void ept_mr_del(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
  * @retval -EINVAL fail to handle the EPT violation
  * @retval 0 Success to handle the EPT violation
  */
-int ept_violation_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t ept_violation_vmexit_handler(struct acrn_vcpu *vcpu);
 /**
  * @brief EPT misconfiguration handling
  *
@@ -302,7 +302,7 @@ int ept_violation_vmexit_handler(struct acrn_vcpu *vcpu);
  * @retval -EINVAL fail to handle the EPT misconfig
  * @retval 0 Success to handle the EPT misconfig
  */
-int ept_misconfig_vmexit_handler(__unused struct acrn_vcpu *vcpu);
+int32_t ept_misconfig_vmexit_handler(__unused struct acrn_vcpu *vcpu);
 
 /**
  * @}

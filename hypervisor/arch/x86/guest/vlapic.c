@@ -81,10 +81,10 @@ static inline void vlapic_dump_isr(__unused const struct acrn_vlapic *vlapic, __
 /*APIC-v APIC-access address */
 static uint8_t apicv_apic_access_addr[PAGE_SIZE] __aligned(PAGE_SIZE);
 
-static int
+static int32_t
 apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector);
 
-static int
+static int32_t
 apicv_pending_intr(const struct acrn_vlapic *vlapic);
 
 static void
@@ -456,14 +456,14 @@ vlapic_esr_write_handler(struct acrn_vlapic *vlapic)
  * Returns 1 if the vcpu needs to be notified of the interrupt and 0 otherwise.
  * @pre vector >= 16
  */
-static int
+static int32_t
 vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 {
 	struct lapic_regs *lapic;
 	struct lapic_reg *irrptr, *tmrptr;
 	uint32_t mask;
 	uint32_t idx;
-	int pending_intr;
+	int32_t pending_intr;
 
 	ASSERT(vector <= NR_MAX_VECTOR,
 		"invalid vector %u", vector);
@@ -926,7 +926,7 @@ vlapic_set_error(struct acrn_vlapic *vlapic, uint32_t mask)
 /*
  * @pre vector <= 255
  */
-static int
+static int32_t
 vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t vector)
 {
 	uint32_t lvt;
@@ -1206,7 +1206,7 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode,
 	}
 }
 
-static int
+static int32_t
 vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 {
 	uint16_t vcpu_id;
@@ -1312,7 +1312,7 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
  * @remark The vector does not automatically transition to the ISR as a
  *	   result of calling this function.
  */
-int
+int32_t
 vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr)
 {
 	const struct lapic_regs *lapic = &(vlapic->apic_page);
@@ -1442,7 +1442,7 @@ vlapic_svr_write_handler(struct acrn_vlapic *vlapic)
 	}
 }
 
-static int
+static int32_t
 vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg,
 		uint64_t *data)
 {
@@ -1566,14 +1566,14 @@ done:
 	return 0;
 }
 
-static int
+static int32_t
 vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset,
 		uint64_t data)
 {
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 	uint32_t *regptr;
 	uint32_t data32 = (uint32_t)data;
-	int retval;
+	int32_t retval;
 
 	ASSERT(((offset & 0xfU) == 0U) && (offset < PAGE_SIZE),
 		"%s: invalid offset %#x", __func__, offset);
@@ -1728,7 +1728,7 @@ vlapic_init(struct acrn_vlapic *vlapic)
 void vlapic_restore(struct acrn_vlapic *vlapic, const struct lapic_regs *regs)
 {
 	struct lapic_regs *lapic;
-	int i;
+	int32_t i;
 
 	lapic = &(vlapic->apic_page);
 
@@ -1758,7 +1758,7 @@ vlapic_get_apicbase(const struct acrn_vlapic *vlapic)
 	return vlapic->msr_apicbase;
 }
 
-static int
+static int32_t
 vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new)
 {
 
@@ -1955,7 +1955,7 @@ vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
 {
 	struct acrn_vlapic *vlapic;
 	uint64_t dmask = 0UL;
-	int error;
+	int32_t error;
 	uint16_t vcpu_id = vcpu_id_arg;
 
 	if ((vcpu_id != BROADCAST_CPU_ID) && (vcpu_id >= vm->hw.created_vcpus)) {
@@ -2082,7 +2082,7 @@ static inline  uint32_t x2apic_msr_to_regoff(uint32_t msr)
  * No shorthand and Physical destination mode are only supported.
  */
 
-static int
+static int32_t
 vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 {
 	uint64_t apic_id = (uint32_t) (val >> 32U);
@@ -2123,12 +2123,12 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 }
 #endif
 
-static int vlapic_x2apic_access(struct acrn_vcpu *vcpu, uint32_t msr, bool write,
+static int32_t vlapic_x2apic_access(struct acrn_vcpu *vcpu, uint32_t msr, bool write,
 								uint64_t *val)
 {
 	struct acrn_vlapic *vlapic;
 	uint32_t offset;
-	int error = -1;
+	int32_t error = -1;
 
 	/*
 	 * If vLAPIC is in xAPIC mode and guest tries to access x2APIC MSRs
@@ -2159,10 +2159,10 @@ static int vlapic_x2apic_access(struct acrn_vcpu *vcpu, uint32_t msr, bool write
 	return error;
 }
 
-int
+int32_t
 vlapic_rdmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *rval)
 {
-	int error = 0;
+	int32_t error = 0;
 	struct acrn_vlapic *vlapic;
 
 	dev_dbg(ACRN_DBG_LAPIC, "cpu[%hu] rdmsr: %x", vcpu->vcpu_id, msr);
@@ -2191,10 +2191,10 @@ vlapic_rdmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t *rval)
 	return error;
 }
 
-int
+int32_t
 vlapic_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t wval)
 {
-	int error = 0;
+	int32_t error = 0;
 	struct acrn_vlapic *vlapic;
 
 	vlapic = vcpu_vlapic(vcpu);
@@ -2224,7 +2224,7 @@ vlapic_wrmsr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t wval)
 	return error;
 }
 
-int vlapic_create(struct acrn_vcpu *vcpu)
+int32_t vlapic_create(struct acrn_vcpu *vcpu)
 {
 	vcpu->arch.vlapic.vm = vcpu->vm;
 	vcpu->arch.vlapic.vcpu = vcpu;
@@ -2264,7 +2264,7 @@ void vlapic_free(struct acrn_vcpu *vcpu)
 /**
  * APIC-v functions
  * **/
-static int
+static int32_t
 apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector)
 {
 	struct vlapic_pir_desc *pir_desc;
@@ -2282,7 +2282,7 @@ apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector)
 	return notify;
 }
 
-static int
+static int32_t
 apicv_pending_intr(const struct acrn_vlapic *vlapic)
 {
 	const struct vlapic_pir_desc *pir_desc;
@@ -2428,9 +2428,9 @@ vlapic_apicv_inject_pir(struct acrn_vlapic *vlapic)
 	}
 }
 
-int apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
+int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	int err = 0;
+	int32_t err = 0;
 	uint32_t offset = 0U;
 	uint64_t qual, access_type;
 	struct acrn_vlapic *vlapic;
@@ -2473,7 +2473,7 @@ int apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
 	return err;
 }
 
-int veoi_vmexit_handler(struct acrn_vcpu *vcpu)
+int32_t veoi_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	struct acrn_vlapic *vlapic = NULL;
 
@@ -2514,10 +2514,10 @@ static void vlapic_x2apic_self_ipi_handler(struct acrn_vlapic *vlapic)
 	vlapic_set_intr(target_vcpu, vector, LAPIC_TRIG_EDGE);
 }
 
-int apic_write_vmexit_handler(struct acrn_vcpu *vcpu)
+int32_t apic_write_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	uint64_t qual;
-	int error, handled;
+	int32_t error, handled;
 	uint32_t offset;
 	struct acrn_vlapic *vlapic = NULL;
 
@@ -2584,7 +2584,7 @@ int apic_write_vmexit_handler(struct acrn_vcpu *vcpu)
 	return handled;
 }
 
-int tpr_below_threshold_vmexit_handler(__unused struct acrn_vcpu *vcpu)
+int32_t tpr_below_threshold_vmexit_handler(__unused struct acrn_vcpu *vcpu)
 {
 	pr_err("Unhandled %s.", __func__);
 	return 0;

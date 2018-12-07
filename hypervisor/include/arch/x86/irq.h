@@ -137,7 +137,7 @@ uint32_t irq_to_vector(uint32_t irq);
  *
  * @pre vcpu != NULL
  */
-int vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector, uint32_t err_code);
+int32_t vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector, uint32_t err_code);
 
 /**
  * @brief Inject external interrupt to guest.
@@ -223,10 +223,10 @@ void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid);
 /*
  * @pre vcpu != NULL
  */
-int exception_vmexit_handler(struct acrn_vcpu *vcpu);
-int interrupt_window_vmexit_handler(struct acrn_vcpu *vcpu);
-int external_interrupt_vmexit_handler(struct acrn_vcpu *vcpu);
-int acrn_handle_pending_request(struct acrn_vcpu *vcpu);
+int32_t exception_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t interrupt_window_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t external_interrupt_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu);
 
 /**
  * @brief Initialize the interrupt

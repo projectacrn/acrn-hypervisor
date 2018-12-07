@@ -241,7 +241,7 @@ hv_emulate_pio(const struct acrn_vcpu *vcpu, struct io_request *io_req)
 static int32_t
 hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
-	int status = -ENODEV;
+	int32_t status = -ENODEV;
 	uint16_t idx;
 	uint64_t address, size;
 	struct mmio_request *mmio_req = &io_req->reqs.mmio;
@@ -475,11 +475,11 @@ void register_io_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
  * @retval 0 Registration succeeds
  * @retval -EINVAL \p read_write is NULL, \p end is not larger than \p start or \p vm has been launched
  */
-int register_mmio_emulation_handler(struct acrn_vm *vm,
+int32_t register_mmio_emulation_handler(struct acrn_vm *vm,
 	hv_mem_io_handler_t read_write, uint64_t start,
 	uint64_t end, void *handler_private_data)
 {
-	int status = -EINVAL;
+	int32_t status = -EINVAL;
 	struct mem_io_node *mmio_node;
 
 	if ((vm->hw.created_vcpus > 0U) && vm->hw.vcpu_array[0].launched) {

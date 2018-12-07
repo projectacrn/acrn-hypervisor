@@ -115,7 +115,7 @@ struct vm_io_handler_desc {
 
 /* Typedef for MMIO handler and range check routine */
 struct mmio_request;
-typedef int (*hv_mem_io_handler_t)(struct io_request *io_req, void *handler_private_data);
+typedef int32_t (*hv_mem_io_handler_t)(struct io_request *io_req, void *handler_private_data);
 
 /**
  * @brief Structure for MMIO handler node
@@ -223,7 +223,7 @@ void   register_io_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
  * @retval 0 Registration succeeds
  * @retval -EINVAL \p read_write is NULL, \p end is not larger than \p start or \p vm has been launched
  */
-int register_mmio_emulation_handler(struct acrn_vm *vm,
+int32_t register_mmio_emulation_handler(struct acrn_vm *vm,
 	hv_mem_io_handler_t read_write, uint64_t start,
 	uint64_t end, void *handler_private_data);
 

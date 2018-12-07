@@ -42,9 +42,9 @@ struct npk_chan {
 	uint32_t unused;
 } __packed;
 
-static inline int npk_write(const char *value, void *addr, size_t sz)
+static inline int32_t npk_write(const char *value, void *addr, size_t sz)
 {
-	int ret = -1;
+	int32_t ret = -1;
 
 	if (sz >= 8U) {
 		mmio_write64(*(uint64_t *)value, addr);
@@ -123,7 +123,7 @@ void npk_log_write(const char *buf, size_t buf_len)
 	uint32_t cpu_id = get_cpu_id();
 	struct npk_chan *channel = (struct npk_chan *)base;
 	const char *p = buf;
-	int sz;
+	int32_t sz;
 	uint32_t ref;
 	uint16_t len;
 

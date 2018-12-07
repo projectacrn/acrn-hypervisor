@@ -279,7 +279,7 @@ static void copy_smc_param(const struct run_context *prev_ctx,
 	next_ctx->guest_cpu_regs.regs.rbx = prev_ctx->guest_cpu_regs.regs.rbx;
 }
 
-void switch_world(struct acrn_vcpu *vcpu, int next_world)
+void switch_world(struct acrn_vcpu *vcpu, int32_t next_world)
 {
 	struct acrn_vcpu_arch *arch = &vcpu->arch;
 

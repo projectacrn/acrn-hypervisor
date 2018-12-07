@@ -44,7 +44,7 @@ struct ptirq_msi_info {
 	uint32_t vmsi_data; /* virt msi_data */
 	uint64_t pmsi_addr; /* phys msi_addr */
 	uint32_t pmsi_data; /* phys msi_data */
-	int is_msix;	/* 0-MSI, 1-MSIX */
+	int32_t is_msix;	/* 0-MSI, 1-MSIX */
 };
 
 /* entry per each allocated irq/vector

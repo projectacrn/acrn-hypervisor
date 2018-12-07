@@ -71,9 +71,9 @@ uint64_t vm0_hpa2gpa(uint64_t hpa)
 	return hpa;
 }
 
-int ept_violation_vmexit_handler(struct acrn_vcpu *vcpu)
+int32_t ept_violation_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	int status = -EINVAL, ret;
+	int32_t status = -EINVAL, ret;
 	uint64_t exit_qual;
 	uint64_t gpa;
 	struct io_request *io_req = &vcpu->req;
@@ -158,9 +158,9 @@ out:
 	return status;
 }
 
-int ept_misconfig_vmexit_handler(__unused struct acrn_vcpu *vcpu)
+int32_t ept_misconfig_vmexit_handler(__unused struct acrn_vcpu *vcpu)
 {
-	int status;
+	int32_t status;
 
 	status = -EINVAL;
 

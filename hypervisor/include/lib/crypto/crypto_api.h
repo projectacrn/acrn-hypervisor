@@ -32,9 +32,9 @@
  *                     optional. Ignored if info == NULL or a zero-length string
  * @param   info_len:  The length of the info, ignored if info is NULL
  *
- * @return int 1 - Success  0 - Failure
+ * @return int32_t 1 - Success  0 - Failure
  */
-int hkdf_sha256(uint8_t *out_key, size_t out_len,
+int32_t hkdf_sha256(uint8_t *out_key, size_t out_len,
 		const uint8_t *secret, size_t secret_len,
 		const uint8_t *salt, size_t salt_len,
 		const uint8_t *info, size_t info_len);
@@ -55,9 +55,9 @@ int hkdf_sha256(uint8_t *out_key, size_t out_len,
  * @param   salt        The buffer holding the input data
  * @param   salt_len    The length of the input data
  *
- * @return int 1 - Success  0 - Failure
+ * @return int32_t 1 - Success  0 - Failure
  */
-int hmac_sha256(uint8_t *out_key,
+int32_t hmac_sha256(uint8_t *out_key,
 		const uint8_t *secret, size_t secret_len,
 		const uint8_t *salt, size_t salt_len);
 

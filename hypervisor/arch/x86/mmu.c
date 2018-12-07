@@ -66,7 +66,7 @@ struct invept_desc {
 
 static inline void local_invvpid(uint64_t type, uint16_t vpid, uint64_t gva)
 {
-	int error = 0;
+	int32_t error = 0;
 
 	struct {
 		uint32_t vpid : 16;
@@ -86,7 +86,7 @@ static inline void local_invvpid(uint64_t type, uint16_t vpid, uint64_t gva)
 
 static inline void local_invept(uint64_t type, struct invept_desc desc)
 {
-	int error = 0;
+	int32_t error = 0;
 
 	asm volatile ("invept %1, %2\n"
 			VMFAIL_INVALID_EPT_VPID
@@ -107,7 +107,7 @@ static inline bool cpu_has_vmx_vpid_cap(uint32_t bit_mask)
 	return ((vmx_caps.vpid & bit_mask) != 0U);
 }
 
-int check_vmx_mmu_cap(void)
+int32_t check_vmx_mmu_cap(void)
 {
 	uint64_t val;
 

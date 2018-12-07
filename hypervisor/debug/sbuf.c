@@ -92,7 +92,7 @@ uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 	return sbuf->ele_size;
 }
 
-int sbuf_share_setup(uint16_t pcpu_id, uint32_t sbuf_id, uint64_t *hva)
+int32_t sbuf_share_setup(uint16_t pcpu_id, uint32_t sbuf_id, uint64_t *hva)
 {
 	if ((pcpu_id >= phys_cpu_num) ||
 			(sbuf_id >= ACRN_SBUF_ID_MAX)) {

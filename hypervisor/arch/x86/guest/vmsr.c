@@ -318,9 +318,9 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 	init_msr_area(vcpu);
 }
 
-int rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
+int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	int err = 0;
+	int32_t err = 0;
 	uint32_t msr;
 	uint64_t v = 0UL;
 
@@ -405,9 +405,9 @@ int rdmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	return err;
 }
 
-int wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
+int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	int err = 0;
+	int32_t err = 0;
 	uint32_t msr;
 	uint64_t v;
 

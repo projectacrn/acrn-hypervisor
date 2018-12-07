@@ -17,7 +17,7 @@
 #define MAX_BOOT_PARAMS_LEN 64U
 
 #ifdef CONFIG_PARTITION_MODE
-int init_vm_boot_info(struct acrn_vm *vm)
+int32_t init_vm_boot_info(struct acrn_vm *vm)
 {
 	struct multiboot_module *mods = NULL;
 	struct multiboot_info *mbi = NULL;
@@ -104,7 +104,7 @@ static void parse_other_modules(struct acrn_vm *vm,
 			void *load_addr = gpa2hva(vm,
 				(uint64_t)vm->sw.linux_info.bootargs_load_addr);
 			uint32_t args_size = vm->sw.linux_info.bootargs_size;
-			static int copy_once = 1;
+			static int32_t copy_once = 1;
 
 			start = end + 1; /*it is fw name for boot args */
 			snprintf(dyn_bootargs, 100U, " %s=0x%x@0x%x ",
@@ -164,7 +164,7 @@ static void *get_kernel_load_addr(void *kernel_src_addr)
  * @pre vm != NULL
  * @pre is_vm0(vm) == true
  */
-int init_vm_boot_info(struct acrn_vm *vm)
+int32_t init_vm_boot_info(struct acrn_vm *vm)
 {
 	struct multiboot_module *mods = NULL;
 	struct multiboot_info *mbi = NULL;

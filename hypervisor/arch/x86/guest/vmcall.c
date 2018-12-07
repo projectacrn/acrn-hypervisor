@@ -16,7 +16,7 @@ static spinlock_t vmm_hypercall_lock = {
  * This function should always return 0 since we shouldn't
  * deal with hypercall error in hypervisor.
  */
-int vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
+int32_t vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int32_t ret = -EACCES;
 	struct acrn_vm *vm = vcpu->vm;

@@ -6,7 +6,7 @@
 
 #include <hypervisor.h>
 
-int validate_pstate(const struct acrn_vm *vm, uint64_t perf_ctl)
+int32_t validate_pstate(const struct acrn_vm *vm, uint64_t perf_ctl)
 {
 	const struct cpu_px_data *px_data;
 	uint8_t i, px_cnt;
@@ -103,7 +103,7 @@ void vm_setup_cpu_state(struct acrn_vm *vm)
 /* This function is for power management Sx state implementation,
  * VM need to load the Sx state data to implement S3/S5.
  */
-int vm_load_pm_s_state(struct acrn_vm *vm)
+int32_t vm_load_pm_s_state(struct acrn_vm *vm)
 {
 #ifdef ACPI_INFO_VALIDATED
 	vm->pm.sx_state_data = (struct pm_s_state_data *)&host_pm_s_state;

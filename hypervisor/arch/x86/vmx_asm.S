@@ -30,7 +30,7 @@
 
     .text
 
-/*int vmx_vmrun(struct run_context *context, int launch, int ibrs_type) */
+/*int vmx_vmrun(struct run_context *context, int32_t launch, int32_t ibrs_type) */
    .code64
    .align       8
    .global      vmx_vmrun

@@ -451,7 +451,7 @@ API Changes
      implementations of the RSA interface declared in rsa.h.
    * The following functions in the message digest modules (MD2, MD4, MD5,
      SHA1, SHA256, SHA512) have been deprecated and replaced as shown below.
-     The new functions change the return type from void to int to allow
+     The new functions change the return type from void to int32_t to allow
      returning error codes when using MBEDTLS_<MODULE>_ALT.
      mbedtls_<MODULE>_starts() -> mbedtls_<MODULE>_starts_ret()
      mbedtls_<MODULE>_update() -> mbedtls_<MODULE>_update_ret()
@@ -718,7 +718,7 @@ Features
 API Changes
    * The following functions in the AES module have been deprecated and replaced
      by the functions shown below. The new functions change the return type from
-     void to int to allow returning error codes when using MBEDTLS_AES_ALT,
+     void to int32_t to allow returning error codes when using MBEDTLS_AES_ALT,
      MBEDTLS_AES_DECRYPT_ALT or MBEDTLS_AES_ENCRYPT_ALT.
      mbedtls_aes_decrypt() -> mbedtls_internal_aes_decrypt()
      mbedtls_aes_encrypt() -> mbedtls_internal_aes_encrypt()
@@ -1213,7 +1213,7 @@ API Changes
      ecdsa_write_signature_det() was deprecated.
    * pk_sign() no longer accepts md_alg == POLARSSL_MD_NONE with ECDSA.
    * Last argument of x509_crt_check_key_usage() and
-     mbedtls_x509write_crt_set_key_usage() changed from int to unsigned.
+     mbedtls_x509write_crt_set_key_usage() changed from int32_t to unsigned.
    * test_ca_list (from certs.h) is renamed to test_cas_pem and is only
      available if POLARSSL_PEM_PARSE_C is defined (it never worked without).
    * Test certificates in certs.c are no longer guaranteed to be nul-terminated
@@ -1788,7 +1788,7 @@ Changes
    * Removed POLARSSL_THREADING_DUMMY
 
 Bugfix
-   * Fixed bug in mpi_set_bit() on platforms where t_uint is wider than int
+   * Fixed bug in mpi_set_bit() on platforms where t_uint is wider than int32_t
    * Fixed X.509 hostname comparison (with non-regular characters)
    * SSL now gracefully handles missing RNG
    * Missing defines / cases for RSA_PSK key exchange
@@ -2472,7 +2472,7 @@ Features
 
 Changes
    * Major argument / variable rewrite. Introduced use of size_t
-     instead of int for buffer lengths and loop variables for
+     instead of int32_t for buffer lengths and loop variables for
      better unsigned / signed use. Renamed internal bigint types
      t_int and t_dbl to t_uint and t_udbl in the process
    * mpi_init() and mpi_free() now only accept a single MPI
@@ -2618,7 +2618,7 @@ Changes
    * X509 signature algorithm determination is now
      in a function to allow easy future expansion
    * Changed symmetric cipher functions to
-     identical interface (returning int result values)
+     identical interface (returning int32_t result values)
    * Changed ARC4 to use separate input/output buffer
    * Added reset function for HMAC context as speed-up
      for specific use-cases

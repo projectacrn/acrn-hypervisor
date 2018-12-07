@@ -73,7 +73,7 @@ void mbedtls_sha256_clone( mbedtls_sha256_context *dst,
 /*
  * SHA-256 context setup
  */
-int mbedtls_sha256_starts_ret( mbedtls_sha256_context *ctx, int is224 )
+int32_t mbedtls_sha256_starts_ret( mbedtls_sha256_context *ctx, int32_t is224 )
 {
     ctx->total[0] = 0;
     ctx->total[1] = 0;
@@ -153,7 +153,7 @@ static const uint32_t K[] =
     d += temp1; h = temp1 + temp2;              \
 }
 
-int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
+int32_t mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
                                 const uint8_t data[64] )
 {
     uint32_t temp1, temp2, W[64];
@@ -199,11 +199,11 @@ int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
 /*
  * SHA-256 process buffer
  */
-int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
+int32_t mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
                                const uint8_t *input,
                                size_t ilen )
 {
-    int ret;
+    int32_t ret;
     size_t fill;
     uint32_t left;
 
@@ -249,10 +249,10 @@ int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
 /*
  * SHA-256 final digest
  */
-int mbedtls_sha256_finish_ret( mbedtls_sha256_context *ctx,
+int32_t mbedtls_sha256_finish_ret( mbedtls_sha256_context *ctx,
                                uint8_t output[32] )
 {
-    int ret;
+    int32_t ret;
     uint32_t used;
     uint32_t high, low;
 
@@ -312,12 +312,12 @@ int mbedtls_sha256_finish_ret( mbedtls_sha256_context *ctx,
 /*
  * output = SHA-256( input buffer )
  */
-int mbedtls_sha256_ret( const uint8_t *input,
+int32_t mbedtls_sha256_ret( const uint8_t *input,
                         size_t ilen,
                         uint8_t output[32],
-                        int is224 )
+                        int32_t is224 )
 {
-    int ret;
+    int32_t ret;
     mbedtls_sha256_context ctx;
 
     mbedtls_sha256_init( &ctx );

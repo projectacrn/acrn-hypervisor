@@ -104,7 +104,7 @@ void	vioapic_update_tmr(struct acrn_vcpu *vcpu);
 uint32_t	vioapic_pincount(const struct acrn_vm *vm);
 void	vioapic_process_eoi(struct acrn_vm *vm, uint32_t vector);
 void	vioapic_get_rte(struct acrn_vm *vm, uint32_t pin, union ioapic_rte *rte);
-int		vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private_data);
+int32_t	vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private_data);
 
 /**
  * @}
