@@ -44,10 +44,10 @@ do {                                                    \
 #ifndef PUT_UINT32_BE
 #define PUT_UINT32_BE(n,b,i)                            \
 do {                                                    \
-    (b)[(i)    ] = (unsigned char) ( (n) >> 24 );       \
-    (b)[(i) + 1] = (unsigned char) ( (n) >> 16 );       \
-    (b)[(i) + 2] = (unsigned char) ( (n) >>  8 );       \
-    (b)[(i) + 3] = (unsigned char) ( (n)       );       \
+    (b)[(i)    ] = (uint8_t) ( (n) >> 24 );       \
+    (b)[(i) + 1] = (uint8_t) ( (n) >> 16 );       \
+    (b)[(i) + 2] = (uint8_t) ( (n) >>  8 );       \
+    (b)[(i) + 3] = (uint8_t) ( (n)       );       \
 } while( 0 )
 #endif
 
@@ -154,7 +154,7 @@ static const uint32_t K[] =
 }
 
 int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
-                                const unsigned char data[64] )
+                                const uint8_t data[64] )
 {
     uint32_t temp1, temp2, W[64];
     uint32_t A[8];
@@ -200,7 +200,7 @@ int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
  * SHA-256 process buffer
  */
 int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
-                               const unsigned char *input,
+                               const uint8_t *input,
                                size_t ilen )
 {
     int ret;
@@ -250,7 +250,7 @@ int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
  * SHA-256 final digest
  */
 int mbedtls_sha256_finish_ret( mbedtls_sha256_context *ctx,
-                               unsigned char output[32] )
+                               uint8_t output[32] )
 {
     int ret;
     uint32_t used;
@@ -312,9 +312,9 @@ int mbedtls_sha256_finish_ret( mbedtls_sha256_context *ctx,
 /*
  * output = SHA-256( input buffer )
  */
-int mbedtls_sha256_ret( const unsigned char *input,
+int mbedtls_sha256_ret( const uint8_t *input,
                         size_t ilen,
-                        unsigned char output[32],
+                        uint8_t output[32],
                         int is224 )
 {
     int ret;

@@ -21,13 +21,13 @@
 
 #include "hkdf.h"
 
-int mbedtls_hkdf( const mbedtls_md_info_t *md, const unsigned char *salt,
-                  size_t salt_len, const unsigned char *ikm, size_t ikm_len,
-                  const unsigned char *info, size_t info_len,
-                  unsigned char *okm, size_t okm_len )
+int mbedtls_hkdf( const mbedtls_md_info_t *md, const uint8_t *salt,
+                  size_t salt_len, const uint8_t *ikm, size_t ikm_len,
+                  const uint8_t *info, size_t info_len,
+                  uint8_t *okm, size_t okm_len )
 {
     int ret;
-    unsigned char prk[MBEDTLS_MD_MAX_SIZE];
+    uint8_t prk[MBEDTLS_MD_MAX_SIZE];
 
     ret = mbedtls_hkdf_extract( md, salt, salt_len, ikm, ikm_len, prk );
 
@@ -43,11 +43,11 @@ int mbedtls_hkdf( const mbedtls_md_info_t *md, const unsigned char *salt,
 }
 
 int mbedtls_hkdf_extract( const mbedtls_md_info_t *md,
-                          const unsigned char *salt, size_t salt_len,
-                          const unsigned char *ikm, size_t ikm_len,
-                          unsigned char *prk )
+                          const uint8_t *salt, size_t salt_len,
+                          const uint8_t *ikm, size_t ikm_len,
+                          uint8_t *prk )
 {
-    unsigned char null_salt[MBEDTLS_MD_MAX_SIZE] = { '\0' };
+    uint8_t null_salt[MBEDTLS_MD_MAX_SIZE] = { '\0' };
 
     if( salt == NULL )
     {
@@ -72,9 +72,9 @@ int mbedtls_hkdf_extract( const mbedtls_md_info_t *md,
     return( mbedtls_md_hmac( md, salt, salt_len, ikm, ikm_len, prk ) );
 }
 
-int mbedtls_hkdf_expand( const mbedtls_md_info_t *md, const unsigned char *prk,
-                         size_t prk_len, const unsigned char *info,
-                         size_t info_len, unsigned char *okm, size_t okm_len )
+int mbedtls_hkdf_expand( const mbedtls_md_info_t *md, const uint8_t *prk,
+                         size_t prk_len, const uint8_t *info,
+                         size_t info_len, uint8_t *okm, size_t okm_len )
 {
     size_t hash_len;
     size_t where = 0;
@@ -83,7 +83,7 @@ int mbedtls_hkdf_expand( const mbedtls_md_info_t *md, const unsigned char *prk,
     size_t i;
     int ret = 0;
     mbedtls_md_context_t ctx;
-    unsigned char t[MBEDTLS_MD_MAX_SIZE];
+    uint8_t t[MBEDTLS_MD_MAX_SIZE];
 
     if( okm == NULL )
     {
@@ -99,7 +99,7 @@ int mbedtls_hkdf_expand( const mbedtls_md_info_t *md, const unsigned char *prk,
 
     if( info == NULL )
     {
-        info = (const unsigned char *) "";
+        info = (const uint8_t *) "";
         info_len = 0;
     }
 
@@ -133,7 +133,7 @@ int mbedtls_hkdf_expand( const mbedtls_md_info_t *md, const unsigned char *prk,
     for( i = 1; i <= n; i++ )
     {
         size_t num_to_copy;
-        unsigned char c = i & 0xff;
+        uint8_t c = i & 0xff;
 
         ret = mbedtls_md_hmac_starts( &ctx, prk, prk_len );
         if( ret != 0 )
