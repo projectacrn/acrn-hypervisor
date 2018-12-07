@@ -459,46 +459,42 @@ int copy_to_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
  * @pre vm != NULL
  * @pre is_vm0(vm) == true
  */
-int prepare_vm0_memmap_and_e820(struct acrn_vm *vm)
+int prepare_vm0_memmap(struct acrn_vm *vm)
 {
 	uint32_t i;
 	uint64_t attr_uc = (EPT_RWX | EPT_UNCACHED);
-	struct e820_entry *entry;
 	uint64_t hv_hpa;
 	uint64_t *pml4_page = (uint64_t *)vm->arch_vm.nworld_eptp;
 
-	rebuild_vm0_e820();
-	dev_dbg(ACRN_DBG_GUEST,
-		"vm0: bottom memory - 0x%llx, top memory - 0x%llx\n",
-		e820_mem.mem_bottom, e820_mem.mem_top);
+	const struct e820_entry *entry;
+	uint32_t entries_count = get_e820_entries_count();
+	const struct e820_entry *p_e820 = get_e820_entry();
+	const struct e820_mem_params *p_e820_mem_info = get_e820_mem_info();
 
-	if (e820_mem.mem_top > EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE)) {
+	dev_dbg(ACRN_DBG_GUEST, "vm0: bottom memory - 0x%llx, top memory - 0x%llx\n",
+		p_e820_mem_info->mem_bottom, p_e820_mem_info->mem_top);
+
+	if (p_e820_mem_info->mem_top > EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE)) {
 		panic("Please configure VM0_ADDRESS_SPACE correctly!\n");
 	}
 
 	/* create real ept map for all ranges with UC */
-	ept_mr_add(vm, pml4_page,
-			e820_mem.mem_bottom, e820_mem.mem_bottom,
-			(e820_mem.mem_top - e820_mem.mem_bottom),
-			attr_uc);
+	ept_mr_add(vm, pml4_page, p_e820_mem_info->mem_bottom, p_e820_mem_info->mem_bottom,
+			(p_e820_mem_info->mem_top - p_e820_mem_info->mem_bottom), attr_uc);
 
 	/* update ram entries to WB attr */
-	for (i = 0U; i < e820_entries; i++) {
-		entry = &e820[i];
+	for (i = 0U; i < entries_count; i++) {
+		entry = p_e820 + i;
 		if (entry->type == E820_TYPE_RAM) {
-			ept_mr_modify(vm, pml4_page,
-					entry->baseaddr, entry->length,
-					EPT_WB, EPT_MT_MASK);
+			ept_mr_modify(vm, pml4_page, entry->baseaddr, entry->length, EPT_WB, EPT_MT_MASK);
 		}
 	}
 
 	dev_dbg(ACRN_DBG_GUEST, "VM0 e820 layout:\n");
-	for (i = 0U; i < e820_entries; i++) {
-		entry = &e820[i];
-		dev_dbg(ACRN_DBG_GUEST,
-			"e820 table: %d type: 0x%x", i, entry->type);
-		dev_dbg(ACRN_DBG_GUEST,
-			"BaseAddress: 0x%016llx length: 0x%016llx\n",
+	for (i = 0U; i < entries_count; i++) {
+		entry = p_e820 + i;
+		dev_dbg(ACRN_DBG_GUEST, "e820 table: %d type: 0x%x", i, entry->type);
+		dev_dbg(ACRN_DBG_GUEST, "BaseAddress: 0x%016llx length: 0x%016llx\n",
 			entry->baseaddr, entry->length);
 	}
 

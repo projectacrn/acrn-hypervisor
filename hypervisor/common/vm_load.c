@@ -83,6 +83,7 @@ int general_sw_loader(struct acrn_vm *vm)
 	struct sw_linux *linux_info = &(vm->sw.linux_info);
 	struct sw_kernel_info *sw_kernel = &(vm->sw.kernel_info);
 	struct acrn_vcpu *vcpu = get_primary_vcpu(vm);
+	const struct e820_mem_params *p_e820_mem_info = get_e820_mem_info();
 
 	pr_dbg("Loading guest to run-time location");
 
@@ -97,14 +98,11 @@ int general_sw_loader(struct acrn_vm *vm)
 		kernel_entry_offset += 512U;
 	}
 
-	sw_kernel->kernel_entry_addr =
-		(void *)((uint64_t)sw_kernel->kernel_load_addr
-			+ kernel_entry_offset);
+	sw_kernel->kernel_entry_addr = (void *)((uint64_t)sw_kernel->kernel_load_addr + kernel_entry_offset);
 	if (is_vcpu_bsp(vcpu)) {
 		/* Set VCPU entry point to kernel entry */
 		vcpu_set_rip(vcpu, (uint64_t)sw_kernel->kernel_entry_addr);
-		pr_info("%s, VM %hu VCPU %hu Entry: 0x%016llx ",
-			__func__, vm->vm_id, vcpu->vcpu_id,
+		pr_info("%s, VM %hu VCPU %hu Entry: 0x%016llx ", __func__, vm->vm_id, vcpu->vcpu_id,
 			sw_kernel->kernel_entry_addr);
 	}
 
@@ -112,9 +110,7 @@ int general_sw_loader(struct acrn_vm *vm)
 	hva = gpa2hva(vm, (uint64_t)sw_kernel->kernel_load_addr);
 
 	/* Copy the guest kernel image to its run-time location */
-	(void)memcpy_s((void *)hva, sw_kernel->kernel_size,
-				sw_kernel->kernel_src_addr,
-				sw_kernel->kernel_size);
+	(void)memcpy_s((void *)hva, sw_kernel->kernel_size, sw_kernel->kernel_src_addr, sw_kernel->kernel_size);
 
 	/* See if guest is a Linux guest */
 	if (vm->sw.kernel_type == VM_LINUX_GUEST) {
@@ -128,24 +124,11 @@ int general_sw_loader(struct acrn_vm *vm)
 		}
 
 		/* Get host-physical address for guest bootargs */
-		hva = gpa2hva(vm,
-			(uint64_t)linux_info->bootargs_load_addr);
+		hva = gpa2hva(vm, (uint64_t)linux_info->bootargs_load_addr);
 
 		/* Copy Guest OS bootargs to its load location */
-		(void)strcpy_s((char *)hva, MEM_2K,
-				linux_info->bootargs_src_addr);
+		(void)strcpy_s((char *)hva, MEM_2K, linux_info->bootargs_src_addr);
 
-#ifdef CONFIG_CMA
-		/* add "cma=XXXXM@0xXXXXXXXX" to cmdline*/
-		if (is_vm0(vm) && (e820_mem.max_ram_blk_size > 0)) {
-			snprintf(dyn_bootargs, 100U, " cma=%dM@0x%llx",
-					(e820_mem.max_ram_blk_size >> 20U),
-					e820_mem.max_ram_blk_base);
-			(void)strcpy_s((char *)hva
-					+ linux_info->bootargs_size,
-					100U, dyn_bootargs);
-		}
-#else
 		/* add "hugepagesz=1G hugepages=x" to cmdline for 1G hugepage
 		 * reserving. Current strategy is "total_mem_size in Giga -
 		 * remained 1G pages" for reserving.
@@ -154,34 +137,24 @@ int general_sw_loader(struct acrn_vm *vm)
 			int32_t reserving_1g_pages;
 
 #ifdef CONFIG_REMAIN_1G_PAGES
-			reserving_1g_pages = (e820_mem.total_mem_size >> 30U) -
-						CONFIG_REMAIN_1G_PAGES;
+			reserving_1g_pages = (p_e820_mem_info->total_mem_size >> 30U) - CONFIG_REMAIN_1G_PAGES;
 #else
-			reserving_1g_pages = (e820_mem.total_mem_size >> 30U) -
-						3;
+			reserving_1g_pages = (p_e820_mem_info->total_mem_size >> 30U) - 3;
 #endif
 			if (reserving_1g_pages > 0) {
-				snprintf(dyn_bootargs, 100U,
-					" hugepagesz=1G hugepages=%d",
-					reserving_1g_pages);
-				(void)strcpy_s((char *)hva
-					+ linux_info->bootargs_size,
-					100U, dyn_bootargs);
+				snprintf(dyn_bootargs, 100U, " hugepagesz=1G hugepages=%d", reserving_1g_pages);
+				(void)strcpy_s((char *)hva + linux_info->bootargs_size, 100U, dyn_bootargs);
 			}
 		}
-#endif
 
 		/* Check if a RAM disk is present with Linux guest */
 		if (linux_info->ramdisk_src_addr != NULL) {
 			/* Get host-physical address for guest RAM disk */
-			hva = gpa2hva(vm,
-				(uint64_t)linux_info->ramdisk_load_addr);
+			hva = gpa2hva(vm, (uint64_t)linux_info->ramdisk_load_addr);
 
 			/* Copy RAM disk to its load location */
-			(void)memcpy_s((void *)hva,
-					linux_info->ramdisk_size,
-					linux_info->ramdisk_src_addr,
-					linux_info->ramdisk_size);
+			(void)memcpy_s((void *)hva, linux_info->ramdisk_size,
+					linux_info->ramdisk_src_addr, linux_info->ramdisk_size);
 
 		}
 
@@ -191,8 +164,7 @@ int general_sw_loader(struct acrn_vm *vm)
 		vcpu_set_gpreg(vcpu, CPU_REG_RSI, create_zero_page(vm));
 
 		pr_info("%s, RSI pointing to zero page for VM %d at GPA %X",
-				__func__, vm->vm_id,
-				vcpu_get_gpreg(vcpu, CPU_REG_RSI));
+				__func__, vm->vm_id, vcpu_get_gpreg(vcpu, CPU_REG_RSI));
 
 	} else {
 		pr_err("%s, Loading VM SW failed", __func__);

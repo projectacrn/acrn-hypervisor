@@ -70,7 +70,7 @@
 #define LDTR_AR                         (0x0082U) /* LDT, type must be 2, refer to SDM Vol3 26.3.1.2 */
 #define TR_AR                           (0x008bU) /* TSS (busy), refer to SDM Vol3 26.3.1.2 */
 
-int prepare_vm0_memmap_and_e820(struct acrn_vm *vm);
+int prepare_vm0_memmap(struct acrn_vm *vm);
 /* Definition for a mem map lookup */
 struct vm_lu_mem_map {
 	struct list_head list;                 /* EPT mem map lookup list*/
