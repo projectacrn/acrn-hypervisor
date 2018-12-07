@@ -382,6 +382,7 @@ void bsp_boot_init(void)
 	load_cpu_state_data();
 
 	/* Initialize the hypervisor paging */
+	init_e820();
 	init_paging();
 
 	if (!cpu_has_cap(X86_FEATURE_X2APIC)) {

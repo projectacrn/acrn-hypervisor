@@ -98,7 +98,8 @@ int create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 	/* Only for SOS: Configure VM software information */
 	/* For UOS: This VM software information is configure in DM */
 	if (is_vm0(vm)) {
-		status = prepare_vm0_memmap_and_e820(vm);
+		rebuild_vm0_e820();
+		status = prepare_vm0_memmap(vm);
 		if (status != 0) {
 			goto err;
 		}

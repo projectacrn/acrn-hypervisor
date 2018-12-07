@@ -9,14 +9,18 @@
 #include <multiboot.h>
 #include <e820.h>
 
-/* for VM0 e820 */
-uint32_t e820_entries;
-struct e820_entry e820[E820_MAX_ENTRIES];
-struct e820_mem_params e820_mem;
+/*
+ * e820.c contains the related e820 operations; like HV to get memory info for its MMU setup;
+ * and hide HV memory from VM0...
+ */
+
+static uint32_t e820_entries;
+static struct e820_entry e820[E820_MAX_ENTRIES];
+static struct e820_mem_params e820_mem;
 
 #define ACRN_DBG_E820	6U
 
-void obtain_e820_mem_info(void)
+static void obtain_e820_mem_info(void)
 {
 	uint32_t i;
 	struct e820_entry *entry;
@@ -47,6 +51,7 @@ void obtain_e820_mem_info(void)
 	}
 }
 
+/* before boot vm0(service OS), call it to hide the HV RAM entry in e820 table from vm0 */
 void rebuild_vm0_e820(void)
 {
 	uint32_t i;
@@ -111,6 +116,7 @@ void rebuild_vm0_e820(void)
 	e820_mem.total_mem_size -= CONFIG_HV_RAM_SIZE;
 }
 
+/* get some RAM below 1MB in e820 entries, hide it from vm0, return its start address */
 uint64_t e820_alloc_low_memory(uint32_t size_arg)
 {
 	uint32_t i;
@@ -162,6 +168,7 @@ uint64_t e820_alloc_low_memory(uint32_t size_arg)
 	return ACRN_INVALID_HPA;
 }
 
+/* HV read multiboot header to get e820 entries info and calc total RAM info */
 void init_e820(void)
 {
 	uint32_t i;
@@ -193,9 +200,25 @@ void init_e820(void)
 			}
 		}
 
+		obtain_e820_mem_info();
 	} else {
 		panic("no multiboot info found");
 	}
+}
+
+uint32_t get_e820_entries_count(void)
+{
+	return e820_entries;
+}
+
+const struct e820_entry *get_e820_entry(void)
+{
+	return e820;
+}
+
+const struct e820_mem_params *get_e820_mem_info(void)
+{
+	return &e820_mem;
 }
 
 #ifdef CONFIG_PARTITION_MODE

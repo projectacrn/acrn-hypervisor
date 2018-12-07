@@ -228,36 +228,35 @@ void enable_smep(void)
 
 void init_paging(void)
 {
-	struct e820_entry *entry;
 	uint64_t hv_hpa;
 	uint32_t i;
 	uint64_t low32_max_ram = 0UL;
 	uint64_t high64_max_ram;
 	uint64_t attr_uc = (PAGE_PRESENT | PAGE_RW | PAGE_USER | PAGE_CACHE_UC);
 
+	const struct e820_entry *entry;
+	uint32_t entries_count = get_e820_entries_count();
+	const struct e820_entry *p_e820 = get_e820_entry();
+	const struct e820_mem_params *p_e820_mem_info = get_e820_mem_info();
+
 	pr_dbg("HV MMU Initialization");
 
-	/* Allocate memory for Hypervisor PML4 table */
-	ppt_mmu_pml4_addr = ppt_mem_ops.get_pml4_page(ppt_mem_ops.info);
-
-	init_e820();
-	obtain_e820_mem_info();
-
 	/* align to 2MB */
-	high64_max_ram = (e820_mem.mem_top + PDE_SIZE - 1UL) & PDE_MASK;
-
+	high64_max_ram = (p_e820_mem_info->mem_top + PDE_SIZE - 1UL) & PDE_MASK;
 	if ((high64_max_ram > (CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)) ||
 			(high64_max_ram < (1UL << 32U))) {
 		panic("Please configure HV_ADDRESS_SPACE correctly!\n");
 	}
 
+	/* Allocate memory for Hypervisor PML4 table */
+	ppt_mmu_pml4_addr = ppt_mem_ops.get_pml4_page(ppt_mem_ops.info);
+
 	/* Map all memory regions to UC attribute */
-	mmu_add((uint64_t *)ppt_mmu_pml4_addr, 0UL, 0UL,
-		high64_max_ram - 0UL, attr_uc, &ppt_mem_ops);
+	mmu_add((uint64_t *)ppt_mmu_pml4_addr, 0UL, 0UL, high64_max_ram - 0UL, attr_uc, &ppt_mem_ops);
 
 	/* Modify WB attribute for E820_TYPE_RAM */
-	for (i = 0U; i < e820_entries; i++) {
-		entry = &e820[i];
+	for (i = 0U; i < entries_count; i++) {
+		entry = p_e820 + i;
 		if (entry->type == E820_TYPE_RAM) {
 			if (entry->baseaddr < (1UL << 32U)) {
 				uint64_t end = entry->baseaddr + entry->length;
@@ -281,12 +280,10 @@ void init_paging(void)
 	hv_hpa = get_hv_image_base();
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, hv_hpa & PDE_MASK,
 			CONFIG_HV_RAM_SIZE + (((hv_hpa & (PDE_SIZE - 1UL)) != 0UL) ? PDE_SIZE : 0UL),
-			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER,
-			&ppt_mem_ops, MR_MODIFY);
+			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER, &ppt_mem_ops, MR_MODIFY);
 
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (uint64_t)get_reserve_sworld_memory_base(),
-			TRUSTY_RAM_SIZE * (CONFIG_MAX_VM_NUM - 1U),
-			PAGE_USER, 0UL, &ppt_mem_ops, MR_MODIFY);
+			TRUSTY_RAM_SIZE * (CONFIG_MAX_VM_NUM - 1U), PAGE_USER, 0UL, &ppt_mem_ops, MR_MODIFY);
 
 	/* Enable paging */
 	enable_paging();

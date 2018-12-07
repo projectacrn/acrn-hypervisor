@@ -12,16 +12,26 @@ struct e820_mem_params {
 	uint64_t max_ram_blk_size;
 };
 
+/* HV read multiboot header to get e820 entries info and calc total RAM info */
 void init_e820(void);
-void obtain_e820_mem_info(void);
+
+/* before boot vm0(service OS), call it to hide the HV RAM entry in e820 table from vm0 */
 void rebuild_vm0_e820(void);
+
+/* get some RAM below 1MB in e820 entries, hide it from vm0, return its start address */
 uint64_t e820_alloc_low_memory(uint32_t size_arg);
 
-extern uint32_t e820_entries;
-extern struct e820_entry e820[E820_MAX_ENTRIES];
-extern struct e820_mem_params e820_mem;
-
+/* copy the original e820 entries info to param_e820 */
 uint32_t create_e820_table(struct e820_entry *param_e820);
+
+/* get total number of the e820 entries */
+uint32_t get_e820_entries_count(void);
+
+/* get the e802 entiries */
+const struct e820_entry *get_e820_entry(void);
+
+/* get the e820 total memory info */
+const struct e820_mem_params *get_e820_mem_info(void);
 
 #ifdef CONFIG_PARTITION_MODE
 /*
