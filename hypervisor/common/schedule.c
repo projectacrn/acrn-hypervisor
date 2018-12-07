@@ -7,7 +7,7 @@
 #include <hypervisor.h>
 #include <schedule.h>
 
-static unsigned long pcpu_used_bitmap;
+static uint64_t pcpu_used_bitmap;
 
 void init_scheduler(void)
 {

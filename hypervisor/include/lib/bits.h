@@ -105,7 +105,7 @@ static inline uint16_t fls64(uint64_t value)
  *	ffs64 (0x8000000000000001) = 0
  *	ffs64 (0xf000000000000000) = 60
  *
- * @param value: 'unsigned long' type value
+ * @param value: 'uint64_t' type value
  *
  * @return value: zero-based bit index, INVALID_BIT_INDEX means
  * when 'value' was zero, bit operations function can't find bit
