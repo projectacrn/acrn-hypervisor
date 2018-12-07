@@ -133,7 +133,7 @@ static void show_guest_call_trace(struct acrn_vcpu *vcpu)
 {
 	uint64_t bp;
 	uint64_t count = 0UL;
-	int err;
+	int32_t err;
 	uint32_t err_code;
 
 	bp = vcpu_get_gpreg(vcpu, CPU_REG_RBP);

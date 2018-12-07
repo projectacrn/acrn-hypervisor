@@ -241,7 +241,7 @@ static int32_t vpic_icw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 	return ret;
 }
 
-static int vpic_icw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
+static int32_t vpic_icw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 icw2 0x%x\n",
 		vpic->vm, val);
@@ -253,7 +253,7 @@ static int vpic_icw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259
 	return 0;
 }
 
-static int vpic_icw3(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
+static int32_t vpic_icw3(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 icw3 0x%x\n",
 		vpic->vm, val);
@@ -297,7 +297,7 @@ static int32_t vpic_icw4(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 	return ret;
 }
 
-static int vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
+static int32_t vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
 	uint8_t pin, i, bit;
 	uint8_t old = i8259->mask;
@@ -337,7 +337,7 @@ static int vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259
 	return 0;
 }
 
-static int vpic_ocw2(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
+static int32_t vpic_ocw2(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 ocw2 0x%x\n",
 		vpic->vm, val);
@@ -379,7 +379,7 @@ static int vpic_ocw2(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint
 	return 0;
 }
 
-static int vpic_ocw3(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
+static int32_t vpic_ocw3(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 ocw3 0x%x\n",
 		vpic->vm, val);
@@ -616,7 +616,7 @@ void vpic_intr_accepted(struct acrn_vm *vm, uint32_t vector)
 	spinlock_release(&(vpic->lock));
 }
 
-static int vpic_read(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
+static int32_t vpic_read(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
 		uint16_t port, uint32_t *eax)
 {
 	uint8_t pin;
@@ -652,10 +652,10 @@ static int vpic_read(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
 	return 0;
 }
 
-static int vpic_write(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
+static int32_t vpic_write(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
 		uint16_t port, uint32_t *eax)
 {
-	int error;
+	int32_t error;
 	uint8_t val;
 
 	error = 0;

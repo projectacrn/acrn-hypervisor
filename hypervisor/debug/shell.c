@@ -19,19 +19,19 @@ static char shell_log_buf[SHELL_LOG_BUF_SIZE];
  */
 #define SHELL_INPUT_LINE_OTHER(v)	(((v) + 1U) & 0x1U)
 
-static int shell_cmd_help(__unused int argc, __unused char **argv);
-static int shell_list_vm(__unused int argc, __unused char **argv);
-static int shell_list_vcpu(__unused int argc, __unused char **argv);
-static int shell_vcpu_dumpreg(int argc, char **argv);
-static int shell_dumpmem(int argc, char **argv);
-static int shell_to_sos_console(int argc, char **argv);
-static int shell_show_cpu_int(__unused int argc, __unused char **argv);
-static int shell_show_ptdev_info(__unused int argc, __unused char **argv);
-static int shell_show_vioapic_info(int argc, char **argv);
-static int shell_show_ioapic_info(__unused int argc, __unused char **argv);
-static int shell_loglevel(int argc, char **argv);
-static int shell_cpuid(int argc, char **argv);
-static int shell_trigger_crash(int argc, char **argv);
+static int32_t shell_cmd_help(__unused int32_t argc, __unused char **argv);
+static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv);
+static int32_t shell_list_vcpu(__unused int32_t argc, __unused char **argv);
+static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv);
+static int32_t shell_dumpmem(int32_t argc, char **argv);
+static int32_t shell_to_sos_console(int32_t argc, char **argv);
+static int32_t shell_show_cpu_int(__unused int32_t argc, __unused char **argv);
+static int32_t shell_show_ptdev_info(__unused int32_t argc, __unused char **argv);
+static int32_t shell_show_vioapic_info(int32_t argc, char **argv);
+static int32_t shell_show_ioapic_info(__unused int32_t argc, __unused char **argv);
+static int32_t shell_loglevel(int32_t argc, char **argv);
+static int32_t shell_cpuid(int32_t argc, char **argv);
+static int32_t shell_trigger_crash(int32_t argc, char **argv);
 
 static struct shell_cmd shell_cmds[] = {
 	{
@@ -122,7 +122,7 @@ uint16_t npk_loglevel = CONFIG_NPK_LOGLEVEL_DEFAULT;
 static struct shell hv_shell;
 static struct shell *p_shell = &hv_shell;
 
-static int string_to_argv(char *argv_str, void *p_argv_mem,
+static int32_t string_to_argv(char *argv_str, void *p_argv_mem,
 		__unused uint32_t argv_mem_size,
 		uint32_t *p_argc, char ***p_argv)
 {
@@ -316,13 +316,13 @@ static bool shell_input_line(void)
 	return done;
 }
 
-static int shell_process_cmd(const char *p_input_line)
+static int32_t shell_process_cmd(const char *p_input_line)
 {
-	int status = -EINVAL;
+	int32_t status = -EINVAL;
 	struct shell_cmd *p_cmd;
 	char cmd_argv_str[SHELL_CMD_MAX_LEN + 1U];
-	int cmd_argv_mem[sizeof(char *) * ((SHELL_CMD_MAX_LEN + 1U) >> 1U)];
-	int cmd_argc;
+	int32_t cmd_argv_mem[sizeof(char *) * ((SHELL_CMD_MAX_LEN + 1U) >> 1U)];
+	int32_t cmd_argc;
 	char **cmd_argv;
 
 	/* Copy the input line INTo an argument string to become part of the
@@ -361,9 +361,9 @@ static int shell_process_cmd(const char *p_input_line)
 	return status;
 }
 
-static int shell_process(void)
+static int32_t shell_process(void)
 {
-	int status;
+	int32_t status;
 	char *p_input_line;
 
 	/* Check for the repeat command character in active input line.
@@ -435,7 +435,7 @@ void shell_init(void)
 
 #define SHELL_ROWS	10
 #define MAX_INDENT_LEN	16U
-static int shell_cmd_help(__unused int argc, __unused char **argv)
+static int32_t shell_cmd_help(__unused int32_t argc, __unused char **argv)
 {
 	uint16_t spaces;
 	struct shell_cmd *p_cmd = NULL;
@@ -508,7 +508,7 @@ static int shell_cmd_help(__unused int argc, __unused char **argv)
 	return 0;
 }
 
-static int shell_list_vm(__unused int argc, __unused char **argv)
+static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv)
 {
 	char temp_str[MAX_STR_SIZE];
 	struct acrn_vm *vm;
@@ -550,7 +550,7 @@ static int shell_list_vm(__unused int argc, __unused char **argv)
 	return 0;
 }
 
-static int shell_list_vcpu(__unused int argc, __unused char **argv)
+static int32_t shell_list_vcpu(__unused int32_t argc, __unused char **argv)
 {
 	char temp_str[MAX_STR_SIZE];
 	struct acrn_vm *vm;
@@ -607,7 +607,7 @@ static int shell_list_vcpu(__unused int argc, __unused char **argv)
 /* the input 'data' must != NULL and indicate a vcpu structure pointer */
 static void vcpu_dumpreg(void *data)
 {
-	int status;
+	int32_t status;
 	uint64_t i, fault_addr, tmp[DUMPREG_SP_SIZE];
 	uint32_t err_code = 0;
 	struct vcpu_dump *dump = data;
@@ -689,9 +689,9 @@ overflow:
 	printf("buffer size could not be enough! please check!\n");
 }
 
-static int shell_vcpu_dumpreg(int argc, char **argv)
+static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv)
 {
-	int status = 0;
+	int32_t status = 0;
 	uint16_t vm_id;
 	uint16_t vcpu_id;
 	struct acrn_vm *vm;
@@ -744,7 +744,7 @@ out:
 }
 
 #define MAX_MEMDUMP_LEN		(32U * 8U)
-static int shell_dumpmem(int argc, char **argv)
+static int32_t shell_dumpmem(int32_t argc, char **argv)
 {
 	uint64_t addr;
 	uint64_t *ptr;
@@ -788,7 +788,7 @@ static int shell_dumpmem(int argc, char **argv)
 	return 0;
 }
 
-static int shell_to_sos_console(__unused int argc, __unused char **argv)
+static int32_t shell_to_sos_console(__unused int32_t argc, __unused char **argv)
 {
 	char temp_str[TEMP_STR_SIZE];
 	uint16_t guest_no = 0U;
@@ -894,7 +894,7 @@ overflow:
 	printf("buffer size could not be enough! please check!\n");
 }
 
-static int shell_show_cpu_int(__unused int argc, __unused char **argv)
+static int32_t shell_show_cpu_int(__unused int32_t argc, __unused char **argv)
 {
 	get_cpu_interrupt_info(shell_log_buf, SHELL_LOG_BUF_SIZE);
 	shell_puts(shell_log_buf);
@@ -1010,7 +1010,7 @@ overflow:
 	printf("buffer size could not be enough! please check!\n");
 }
 
-static int shell_show_ptdev_info(__unused int argc, __unused char **argv)
+static int32_t shell_show_ptdev_info(__unused int32_t argc, __unused char **argv)
 {
 	get_ptdev_info(shell_log_buf, SHELL_LOG_BUF_SIZE);
 	shell_puts(shell_log_buf);
@@ -1074,7 +1074,7 @@ overflow:
 	printf("buffer size could not be enough! please check!\n");
 }
 
-static int shell_show_vioapic_info(int argc, char **argv)
+static int32_t shell_show_vioapic_info(int32_t argc, char **argv)
 {
 	uint16_t vmid;
 	int32_t ret;
@@ -1115,7 +1115,7 @@ static void get_rte_info(union ioapic_rte rte, bool *mask, bool *irr,
  *				interrupt info
  * @param[inout]	str_arg	Pointer to the output information
  */
-static int get_ioapic_info(char *str_arg, size_t str_max_len)
+static int32_t get_ioapic_info(char *str_arg, size_t str_max_len)
 {
 	char *str = str_arg;
 	uint32_t irq;
@@ -1164,9 +1164,9 @@ overflow:
 	return 0;
 }
 
-static int shell_show_ioapic_info(__unused int argc, __unused char **argv)
+static int32_t shell_show_ioapic_info(__unused int32_t argc, __unused char **argv)
 {
-	int err = 0;
+	int32_t err = 0;
 
 	err = get_ioapic_info(shell_log_buf, SHELL_LOG_BUF_SIZE);
 	shell_puts(shell_log_buf);
@@ -1174,7 +1174,7 @@ static int shell_show_ioapic_info(__unused int argc, __unused char **argv)
 	return err;
 }
 
-static int shell_loglevel(int argc, char **argv)
+static int32_t shell_loglevel(int32_t argc, char **argv)
 {
 	char str[MAX_STR_SIZE] = {0};
 
@@ -1201,7 +1201,7 @@ static int shell_loglevel(int argc, char **argv)
 	return 0;
 }
 
-static int shell_cpuid(int argc, char **argv)
+static int32_t shell_cpuid(int32_t argc, char **argv)
 {
 	char str[MAX_STR_SIZE] = {0};
 	uint32_t leaf, subleaf = 0;
@@ -1228,7 +1228,7 @@ static int shell_cpuid(int argc, char **argv)
 	return 0;
 }
 
-static int shell_trigger_crash(int argc, char **argv)
+static int32_t shell_trigger_crash(int32_t argc, char **argv)
 {
 	char str[MAX_STR_SIZE] = {0};
 

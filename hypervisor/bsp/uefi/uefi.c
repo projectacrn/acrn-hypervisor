@@ -14,9 +14,9 @@ static void efi_init(void);
 
 struct efi_context* efi_ctx = NULL;
 struct lapic_regs uefi_lapic_regs;
-static int efi_initialized;
+static int32_t efi_initialized;
 
-void efi_spurious_handler(int vector)
+void efi_spurious_handler(int32_t vector)
 {
 	struct acrn_vcpu* vcpu;
 
@@ -33,9 +33,9 @@ void efi_spurious_handler(int vector)
 	return;
 }
 
-int uefi_sw_loader(struct acrn_vm *vm)
+int32_t uefi_sw_loader(struct acrn_vm *vm)
 {
-	int ret = 0;
+	int32_t ret = 0;
 	struct acrn_vcpu *vcpu = get_primary_vcpu(vm);
 	struct acrn_vcpu_regs *vcpu_regs = &boot_context;
 

@@ -135,7 +135,7 @@ static inline void cpuid_subleaf(uint32_t leaf, uint32_t subleaf,
 	asm_cpuid(eax, ebx, ecx, edx);
 }
 
-int set_vcpuid_entries(struct acrn_vm *vm);
+int32_t set_vcpuid_entries(struct acrn_vm *vm);
 void guest_cpuid(struct acrn_vcpu *vcpu,
 			uint32_t *eax, uint32_t *ebx,
 			uint32_t *ecx, uint32_t *edx);

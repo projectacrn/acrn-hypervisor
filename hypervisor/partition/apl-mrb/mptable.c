@@ -288,7 +288,7 @@ static uint8_t mpt_compute_checksum(void *base, size_t len)
 	return (256U - sum);
 }
 
-int mptable_build(struct acrn_vm *vm)
+int32_t mptable_build(struct acrn_vm *vm)
 {
 	char                    *startaddr;
 	char                    *curraddr;

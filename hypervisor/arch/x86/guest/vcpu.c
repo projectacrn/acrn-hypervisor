@@ -322,7 +322,7 @@ void set_ap_entry(struct acrn_vcpu *vcpu, uint64_t entry)
  *     for physical CPU 1 : vcpu->pcpu_id = 1, vcpu->vcpu_id = 1, vmid = 1;
  *
  ***********************************************************************/
-int create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn_vcpu_handle)
+int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn_vcpu_handle)
 {
 	struct acrn_vcpu *vcpu;
 	uint16_t vcpu_id;
@@ -399,7 +399,7 @@ int create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn_vcp
 /*
  *  @pre vcpu != NULL
  */
-int run_vcpu(struct acrn_vcpu *vcpu)
+int32_t run_vcpu(struct acrn_vcpu *vcpu)
 {
 	uint32_t instlen, cs_attr;
 	uint64_t rip, ia32_efer, cr0;
@@ -499,7 +499,7 @@ int run_vcpu(struct acrn_vcpu *vcpu)
 	return status;
 }
 
-int shutdown_vcpu(__unused struct acrn_vcpu *vcpu)
+int32_t shutdown_vcpu(__unused struct acrn_vcpu *vcpu)
 {
 	/* TODO : Implement VCPU shutdown sequence */
 
@@ -522,7 +522,7 @@ void offline_vcpu(struct acrn_vcpu *vcpu)
  */
 void reset_vcpu(struct acrn_vcpu *vcpu)
 {
-	int i;
+	int32_t i;
 	struct acrn_vlapic *vlapic;
 
 	pr_dbg("vcpu%hu reset", vcpu->vcpu_id);
@@ -610,9 +610,9 @@ void schedule_vcpu(struct acrn_vcpu *vcpu)
 }
 
 /* help function for vcpu create */
-int prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
+int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 {
-	int ret = 0;
+	int32_t ret = 0;
 	struct acrn_vcpu *vcpu = NULL;
 
 	ret = create_vcpu(pcpu_id, vm, &vcpu);

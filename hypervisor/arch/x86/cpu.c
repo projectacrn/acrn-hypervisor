@@ -52,7 +52,7 @@ static void cpu_xsave_init(void);
 static void set_current_cpu_id(uint16_t pcpu_id);
 static void print_hv_banner(void);
 static uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id);
-int ibrs_type;
+int32_t ibrs_type;
 static uint64_t start_tsc __attribute__((__section__(".bss_noinit")));
 
 /* Push sp magic to top of stack for call trace */
@@ -184,9 +184,9 @@ static void get_cpu_capabilities(void)
  * we should supplement which feature/capability we must support
  * here later.
  */
-static int hardware_detect_support(void)
+static int32_t hardware_detect_support(void)
 {
-	int ret;
+	int32_t ret;
 
 	/* Long Mode (x86-64, 64-bit support) */
 	if (!cpu_has_cap(X86_FEATURE_LM)) {
@@ -702,7 +702,7 @@ void cpu_dead(uint16_t pcpu_id)
 	/* For debug purposes, using a stack variable in the while loop enables
 	 * us to modify the value using a JTAG probe and resume if needed.
 	 */
-	int halt = 1;
+	int32_t halt = 1;
 
 	if (bitmap_test_and_clear_lock(pcpu_id, &pcpu_active_bitmap)) {
 		/* clean up native stuff */

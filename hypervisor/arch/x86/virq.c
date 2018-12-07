@@ -74,7 +74,7 @@ static bool vcpu_pending_request(struct acrn_vcpu *vcpu)
 {
 	struct acrn_vlapic *vlapic;
 	uint32_t vector = 0U;
-	int ret = 0;
+	int32_t ret = 0;
 
 	/* Query vLapic to get vector to inject */
 	vlapic = vcpu_vlapic(vcpu);
@@ -108,11 +108,11 @@ void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid)
 	}
 }
 
-static int vcpu_inject_vlapic_int(struct acrn_vcpu *vcpu)
+static int32_t vcpu_inject_vlapic_int(struct acrn_vcpu *vcpu)
 {
 	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
 	uint32_t vector = 0U;
-	int ret = 0;
+	int32_t ret = 0;
 
 	/*
 	 * This function used for inject virtual interrupt
@@ -148,7 +148,7 @@ static int vcpu_inject_vlapic_int(struct acrn_vcpu *vcpu)
 	return 0;
 }
 
-static int vcpu_do_pending_extint(const struct acrn_vcpu *vcpu)
+static int32_t vcpu_do_pending_extint(const struct acrn_vcpu *vcpu)
 {
 	struct acrn_vm *vm;
 	struct acrn_vcpu *primary;
@@ -176,7 +176,7 @@ static int vcpu_do_pending_extint(const struct acrn_vcpu *vcpu)
 }
 
 /* SDM Vol3 -6.15, Table 6-4 - interrupt and exception classes */
-static int get_excep_class(uint32_t vector)
+static int32_t get_excep_class(uint32_t vector)
 {
 	if ((vector == IDT_DE) || (vector == IDT_TS) || (vector == IDT_NP) ||
 		(vector == IDT_SS) || (vector == IDT_GP)) {
@@ -188,7 +188,7 @@ static int get_excep_class(uint32_t vector)
 	}
 }
 
-int vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector, uint32_t err_code)
+int32_t vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector, uint32_t err_code)
 {
 	struct acrn_vcpu_arch *arch = &vcpu->arch;
 	/* VECTOR_INVALID is also greater than 32 */
@@ -328,7 +328,7 @@ void vcpu_inject_ss(struct acrn_vcpu *vcpu)
 	vcpu_make_request(vcpu, ACRN_REQUEST_EXCP);
 }
 
-int interrupt_window_vmexit_handler(struct acrn_vcpu *vcpu)
+int32_t interrupt_window_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	uint32_t value32;
 
@@ -380,9 +380,9 @@ int32_t external_interrupt_vmexit_handler(struct acrn_vcpu *vcpu)
 	return ret;
 }
 
-int acrn_handle_pending_request(struct acrn_vcpu *vcpu)
+int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 {
-	int ret = 0;
+	int32_t ret = 0;
 	uint32_t tmp;
 	uint32_t intr_info;
 	uint32_t error_code;
@@ -563,12 +563,12 @@ void cancel_event_injection(struct acrn_vcpu *vcpu)
 /*
  * @pre vcpu != NULL
  */
-int exception_vmexit_handler(struct acrn_vcpu *vcpu)
+int32_t exception_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	uint32_t intinfo, int_err_code = 0U;
 	uint32_t exception_vector = VECTOR_INVALID;
 	uint32_t cpl;
-	int status = 0;
+	int32_t status = 0;
 
 	pr_dbg(" Handling guest exception");
 

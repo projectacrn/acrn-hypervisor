@@ -126,7 +126,7 @@ struct trusty_startup_param {
 	uint8_t padding[4];
 };
 
-void switch_world(struct acrn_vcpu *vcpu, int next_world);
+void switch_world(struct acrn_vcpu *vcpu, int32_t next_world);
 bool initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param);
 void destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem);
 void save_sworld_context(struct acrn_vcpu *vcpu);

@@ -37,7 +37,7 @@ long strtol_deci(const char *nptr)
 	const char *s = nptr;
 	char c;
 	uint64_t acc, cutoff, cutlim;
-	int neg = 0, any;
+	int32_t neg = 0, any;
 	uint64_t base = 10UL;
 
 	/*
@@ -117,7 +117,7 @@ uint64_t strtoul_hex(const char *nptr)
 	char c, digit;
 	uint64_t acc, cutoff, cutlim;
 	uint64_t base = 16UL;
-	int any;
+	int32_t any;
 
 	/*
 	 * See strtol for comments as to the logic used.
@@ -157,9 +157,9 @@ uint64_t strtoul_hex(const char *nptr)
 	return acc;
 }
 
-int atoi(const char *str)
+int32_t atoi(const char *str)
 {
-	return (int)strtol_deci(str);
+	return (int32_t)strtol_deci(str);
 }
 
 char *strchr(char *s_arg, char ch)
@@ -377,7 +377,7 @@ size_t strnlen_s(const char *str_arg, size_t maxlen_arg)
 	return count;
 }
 
-int strcmp(const char *s1_arg, const char *s2_arg)
+int32_t strcmp(const char *s1_arg, const char *s2_arg)
 {
 	const char *s1 = s1_arg;
 	const char *s2 = s2_arg;
@@ -389,7 +389,7 @@ int strcmp(const char *s1_arg, const char *s2_arg)
 	return *s1 - *s2;
 }
 
-int strncmp(const char *s1_arg, const char *s2_arg, size_t n_arg)
+int32_t strncmp(const char *s1_arg, const char *s2_arg, size_t n_arg)
 {
 	const char *s1 = s1_arg;
 	const char *s2 = s2_arg;

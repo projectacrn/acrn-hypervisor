@@ -78,8 +78,8 @@ struct multiboot_module {
 	uint32_t	mm_reserved;
 };
 
-int parse_hv_cmdline(void);
-int init_vm_boot_info(struct acrn_vm *vm);
+int32_t parse_hv_cmdline(void);
+int32_t init_vm_boot_info(struct acrn_vm *vm);
 
 /* boot_regs store the multiboot header address */
 extern uint32_t boot_regs[2];

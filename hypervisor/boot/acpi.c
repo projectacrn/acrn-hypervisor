@@ -103,11 +103,11 @@ struct acpi_madt_local_apic {
 static void *global_rsdp;
 
 static struct acpi_table_rsdp*
-biosacpi_search_rsdp(char *base, int length)
+biosacpi_search_rsdp(char *base, int32_t length)
 {
 	struct acpi_table_rsdp *rsdp;
 	uint8_t *cp, sum;
-	int ofs, idx;
+	int32_t ofs, idx;
 
 	/* search on 16-byte boundaries */
 	for (ofs = 0; ofs < length; ofs += 16) {

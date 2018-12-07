@@ -60,7 +60,7 @@
  *  \return An MBEDTLS_ERR_MD_* error for errors returned from the underlying
  *          MD layer.
  */
-int mbedtls_hkdf( const mbedtls_md_info_t *md, const uint8_t *salt,
+int32_t mbedtls_hkdf( const mbedtls_md_info_t *md, const uint8_t *salt,
                   size_t salt_len, const uint8_t *ikm, size_t ikm_len,
                   const uint8_t *info, size_t info_len,
                   uint8_t *okm, size_t okm_len );
@@ -84,7 +84,7 @@ int mbedtls_hkdf( const mbedtls_md_info_t *md, const uint8_t *salt,
  *  \return An MBEDTLS_ERR_MD_* error for errors returned from the underlying
  *          MD layer.
  */
-int mbedtls_hkdf_extract( const mbedtls_md_info_t *md,
+int32_t mbedtls_hkdf_extract( const mbedtls_md_info_t *md,
                           const uint8_t *salt, size_t salt_len,
                           const uint8_t *ikm, size_t ikm_len,
                           uint8_t *prk );
@@ -110,7 +110,7 @@ int mbedtls_hkdf_extract( const mbedtls_md_info_t *md,
  *  \return An MBEDTLS_ERR_MD_* error for errors returned from the underlying
  *          MD layer.
  */
-int mbedtls_hkdf_expand( const mbedtls_md_info_t *md, const uint8_t *prk,
+int32_t mbedtls_hkdf_expand( const mbedtls_md_info_t *md, const uint8_t *prk,
                          size_t prk_len, const uint8_t *info,
                          size_t info_len, uint8_t *okm, size_t okm_len );
 

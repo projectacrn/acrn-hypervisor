@@ -536,13 +536,13 @@ vioapic_pincount(const struct acrn_vm *vm)
 	return ret;
 }
 
-int vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
+int32_t vioapic_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
 {
 	struct acrn_vm *vm = (struct acrn_vm *)handler_private_data;
 	struct acrn_vioapic *vioapic;
 	struct mmio_request *mmio = &io_req->reqs.mmio;
 	uint64_t gpa = mmio->address;
-	int ret = 0;
+	int32_t ret = 0;
 
 	vioapic = vm_ioapic(vm);
 

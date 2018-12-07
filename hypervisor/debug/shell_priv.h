@@ -13,7 +13,7 @@
 #define SHELL_STRING_MAX_LEN		(PAGE_SIZE << 2U)
 
 /* Shell Command Function */
-typedef int (*shell_cmd_fn_t)(int argc, char **argv);
+typedef int32_t (*shell_cmd_fn_t)(int32_t argc, char **argv);
 
 /* Shell Command */
 struct shell_cmd {

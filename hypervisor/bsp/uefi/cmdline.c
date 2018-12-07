@@ -28,12 +28,12 @@ enum IDX_CMD {
 	IDX_MAX_CMD,
 };
 
-static void handle_cmd(const char *cmd, int len)
+static void handle_cmd(const char *cmd, int32_t len)
 {
-	int i;
+	int32_t i;
 
 	for (i = 0; i < IDX_MAX_CMD; i++) {
-		int tmp = strnlen_s(cmd_list[i], MAX_CMD_LEN);
+		int32_t tmp = strnlen_s(cmd_list[i], MAX_CMD_LEN);
 
 		/*cmd prefix should be same with one in cmd_list */
 		if (len < tmp)
@@ -62,7 +62,7 @@ static void handle_cmd(const char *cmd, int len)
 	}
 }
 
-int parse_hv_cmdline(void)
+int32_t parse_hv_cmdline(void)
 {
 	const char *start;
 	const char *end;

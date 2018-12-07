@@ -102,10 +102,10 @@ static const struct cpu_state_table {
 	}
 };
 
-static int get_state_tbl_idx(const char *cpuname)
+static int32_t get_state_tbl_idx(const char *cpuname)
 {
-	int i;
-	int count = ARRAY_SIZE(cpu_state_tbl);
+	int32_t i;
+	int32_t count = ARRAY_SIZE(cpu_state_tbl);
 
 	if (cpuname == NULL) {
 		return -1;
@@ -123,7 +123,7 @@ static int get_state_tbl_idx(const char *cpuname)
 
 void load_cpu_state_data(void)
 {
-	int tbl_idx;
+	int32_t tbl_idx;
 	const struct cpu_state_info *state_info;
 
 	(void)memset(&boot_cpu_data.state_info, 0U,

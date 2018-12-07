@@ -62,7 +62,7 @@ struct hv_timer {
  */
 static inline void initialize_timer(struct hv_timer *timer,
 				timer_handle_t func, void *priv_data,
-				uint64_t fire_tsc, int mode, uint64_t period_in_cycle)
+				uint64_t fire_tsc, int32_t mode, uint64_t period_in_cycle)
 {
 	if (timer != NULL) {
 		timer->func = func;
@@ -96,7 +96,7 @@ static inline bool timer_expired(const struct hv_timer *timer)
  *
  * @remark Don't call it in the timer callback function or interrupt content.
  */
-int add_timer(struct hv_timer *timer);
+int32_t add_timer(struct hv_timer *timer);
 
 /**
  * @brief Delete a timer.

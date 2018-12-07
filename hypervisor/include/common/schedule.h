@@ -32,9 +32,9 @@ void remove_vcpu_from_runqueue(struct acrn_vcpu *vcpu);
 void default_idle(void);
 
 void make_reschedule_request(const struct acrn_vcpu *vcpu);
-int need_reschedule(uint16_t pcpu_id);
+int32_t need_reschedule(uint16_t pcpu_id);
 void make_pcpu_offline(uint16_t pcpu_id);
-int need_offline(uint16_t pcpu_id);
+int32_t need_offline(uint16_t pcpu_id);
 
 void schedule(void);
 

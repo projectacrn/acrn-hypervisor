@@ -55,7 +55,7 @@ void smp_call_function(uint64_t mask, smp_call_func_t func, void *data)
 	wait_sync_change(&smp_call_mask, 0UL);
 }
 
-static int request_notification_irq(irq_action_t func, void *data)
+static int32_t request_notification_irq(irq_action_t func, void *data)
 {
 	int32_t retval;
 

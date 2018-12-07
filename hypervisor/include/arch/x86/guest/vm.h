@@ -48,7 +48,7 @@ struct sw_kernel_info {
 };
 
 struct vm_sw_info {
-	int kernel_type;	/* Guest kernel type */
+	int32_t kernel_type;	/* Guest kernel type */
 	/* Kernel information (common for all guest types) */
 	struct sw_kernel_info kernel_info;
 	/* Additional information specific to Linux guests */
@@ -164,7 +164,7 @@ struct acrn_vm {
 
 #ifdef CONFIG_PARTITION_MODE
 struct vpci_vdev_array {
-	int num_pci_vdev;
+	int32_t num_pci_vdev;
 	struct pci_vdev vpci_vdev_list[];
 };
 #endif
@@ -257,14 +257,14 @@ vm_ioapic(struct acrn_vm *vm)
 	return (struct acrn_vioapic *)&(vm->arch_vm.vioapic);
 }
 
-int shutdown_vm(struct acrn_vm *vm);
+int32_t shutdown_vm(struct acrn_vm *vm);
 void pause_vm(struct acrn_vm *vm);
 void resume_vm(struct acrn_vm *vm);
 void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec);
-int start_vm(struct acrn_vm *vm);
-int reset_vm(struct acrn_vm *vm);
-int create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm);
-int prepare_vm(uint16_t pcpu_id);
+int32_t start_vm(struct acrn_vm *vm);
+int32_t reset_vm(struct acrn_vm *vm);
+int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm);
+int32_t prepare_vm(uint16_t pcpu_id);
 
 #ifdef CONFIG_PARTITION_MODE
 const struct vm_description_array *get_vm_desc_base(void);
@@ -274,7 +274,7 @@ struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
 
 #ifdef CONFIG_PARTITION_MODE
 struct vm_description_array {
-	int                     num_vm_desc;
+	int32_t                     num_vm_desc;
 	struct vm_description   vm_desc_array[];
 };
 

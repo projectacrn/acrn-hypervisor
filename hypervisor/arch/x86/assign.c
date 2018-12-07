@@ -537,7 +537,7 @@ void ptirq_intx_ack(struct acrn_vm *vm, uint8_t virt_pin,
  * entry_nr = 0 means first vector
  * user must provide bdf and entry_nr
  */
-int ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,
+int32_t ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,
 		uint16_t entry_nr, struct ptirq_msi_info *info)
 {
 	struct ptirq_remapping_info *entry;
@@ -625,7 +625,7 @@ static void activate_physical_ioapic(struct acrn_vm *vm,
 /* Main entry for PCI/Legacy device assignment with INTx, calling from vIOAPIC
  * or vPIC
  */
-int ptirq_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin,
+int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin,
 		enum ptirq_vpin_source vpin_src)
 {
 	struct ptirq_remapping_info *entry;
@@ -731,7 +731,7 @@ END:
  * - currently, one phys_pin can only be held by one pin source (vPIC or
  *   vIOAPIC)
  */
-int ptirq_add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, uint8_t phys_pin,
+int32_t ptirq_add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, uint8_t phys_pin,
 				bool pic_pin)
 {
 	struct ptirq_remapping_info *entry;
@@ -758,7 +758,7 @@ void ptirq_remove_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, bool pic_
  * - the entry is identified by phys_bdf:msi_idx:
  *   one entry vs. one phys_bdf:msi_idx
  */
-int ptirq_add_msix_remapping(struct acrn_vm *vm, uint16_t virt_bdf,
+int32_t ptirq_add_msix_remapping(struct acrn_vm *vm, uint16_t virt_bdf,
 		uint16_t phys_bdf, uint32_t vector_count)
 {
 	struct ptirq_remapping_info *entry;

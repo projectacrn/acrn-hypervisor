@@ -43,7 +43,7 @@ static void update_trampoline_code_refs(uint64_t dest_pa)
 {
 	void *ptr;
 	uint64_t val;
-	int i;
+	int32_t i;
 
 	/*
 	 * calculate the fixup CS:IP according to fixup target address

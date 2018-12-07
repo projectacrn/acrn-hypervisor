@@ -70,7 +70,8 @@
 #define LDTR_AR                         (0x0082U) /* LDT, type must be 2, refer to SDM Vol3 26.3.1.2 */
 #define TR_AR                           (0x008bU) /* TSS (busy), refer to SDM Vol3 26.3.1.2 */
 
-int prepare_vm0_memmap(struct acrn_vm *vm);
+int32_t prepare_vm0_memmap(struct acrn_vm *vm);
+
 /* Definition for a mem map lookup */
 struct vm_lu_mem_map {
 	struct list_head list;                 /* EPT mem map lookup list*/
@@ -93,22 +94,22 @@ enum vm_paging_mode {
  */
 uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask);
 
-int gva2gpa(struct acrn_vcpu *vcpu, uint64_t gva, uint64_t *gpa, uint32_t *err_code);
+int32_t gva2gpa(struct acrn_vcpu *vcpu, uint64_t gva, uint64_t *gpa, uint32_t *err_code);
 
 enum vm_paging_mode get_vcpu_paging_mode(struct acrn_vcpu *vcpu);
 
-int rdmsr_vmexit_handler(struct acrn_vcpu *vcpu);
-int wrmsr_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu);
 void init_msr_emulation(struct acrn_vcpu *vcpu);
 
 uint32_t vmsr_get_guest_msr_index(uint32_t msr);
 
 struct run_context;
-int vmx_vmrun(struct run_context *context, int ops, int ibrs);
+int32_t vmx_vmrun(struct run_context *context, int32_t ops, int32_t ibrs);
 
-int general_sw_loader(struct acrn_vm *vm);
+int32_t general_sw_loader(struct acrn_vm *vm);
 
-typedef int (*vm_sw_loader_t)(struct acrn_vm *vm);
+typedef int32_t (*vm_sw_loader_t)(struct acrn_vm *vm);
 extern vm_sw_loader_t vm_sw_loader;
 /**
  * @brief Data transfering between hypervisor and VM
@@ -134,7 +135,7 @@ extern vm_sw_loader_t vm_sw_loader;
  *   continuous
  * @pre Pointer vm is non-NULL
  */
-int copy_from_gpa(struct acrn_vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
+int32_t copy_from_gpa(struct acrn_vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
 /**
  * @brief Copy data from HV address space to VM GPA space
  *
@@ -153,7 +154,7 @@ int copy_from_gpa(struct acrn_vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
  *   continuous
  * @pre Pointer vm is non-NULL
  */
-int copy_to_gpa(struct acrn_vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
+int32_t copy_to_gpa(struct acrn_vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
 /**
  * @brief Copy data from VM GVA space to HV address space
  *
@@ -167,7 +168,7 @@ int copy_to_gpa(struct acrn_vm *vm, void *h_ptr, uint64_t gpa, uint32_t size);
  * @param[out] err_code The page fault flags
  * @param[out] fault_addr The GVA address that causes a page fault
  */
-int copy_from_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
+int32_t copy_from_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
 	uint32_t size, uint32_t *err_code, uint64_t *fault_addr);
 /**
  * @brief Copy data from HV address space to VM GVA space
@@ -182,7 +183,7 @@ int copy_from_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
  * @param[out] err_code The page fault flags
  * @param[out] fault_addr The GVA address that causes a page fault
  */
-int copy_to_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
+int32_t copy_to_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
 	uint32_t size, uint32_t *err_code, uint64_t *fault_addr);
 /**
  * @}

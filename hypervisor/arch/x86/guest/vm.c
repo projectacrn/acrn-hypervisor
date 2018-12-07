@@ -60,10 +60,10 @@ struct acrn_vm *get_vm_from_vmid(uint16_t vm_id)
 /**
  * @pre vm_desc != NULL && rtn_vm != NULL
  */
-int create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
+int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 {
 	struct acrn_vm *vm;
-	int status;
+	int32_t status;
 	uint16_t vm_id;
 
 #ifdef CONFIG_PARTITION_MODE
@@ -240,7 +240,7 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 /**
  *  * @pre vm != NULL
  */
-int start_vm(struct acrn_vm *vm)
+int32_t start_vm(struct acrn_vm *vm)
 {
 	struct acrn_vcpu *vcpu = NULL;
 
@@ -348,9 +348,9 @@ void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 
 #ifdef CONFIG_PARTITION_MODE
 /* Create vm/vcpu for vm */
-int prepare_vm(uint16_t pcpu_id)
+int32_t prepare_vm(uint16_t pcpu_id)
 {
-	int ret = 0;
+	int32_t ret = 0;
 	uint16_t i;
 	struct acrn_vm *vm = NULL;
 	struct vm_description *vm_desc = NULL;
@@ -389,9 +389,9 @@ int prepare_vm(uint16_t pcpu_id)
 #else
 
 /* Create vm/vcpu for vm0 */
-static int prepare_vm0(void)
+static int32_t prepare_vm0(void)
 {
-	int err;
+	int32_t err;
 	uint16_t i;
 	struct acrn_vm *vm = NULL;
 	struct vm_description vm0_desc;
@@ -428,9 +428,9 @@ static int prepare_vm0(void)
 	return err;
 }
 
-int prepare_vm(uint16_t pcpu_id)
+int32_t prepare_vm(uint16_t pcpu_id)
 {
-	int err = 0;
+	int32_t err = 0;
 
 	/* prepare vm0 if pcpu_id is BOOT_CPU_ID */
 	if (pcpu_id == BOOT_CPU_ID) {

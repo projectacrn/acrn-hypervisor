@@ -77,7 +77,7 @@ EFI_STATUS construct_mbi(EFI_PHYSICAL_ADDRESS hv_hpa)
 	struct multiboot_info *mbi;
 	struct multiboot_mmap *mmap;
 	struct efi_context *efi_ctx;
-	int i, j;
+	int32_t i, j;
 
 	mbi = MBOOT_INFO_PTR(hv_hpa);
 	mmap = MBOOT_MMAP_PTR(hv_hpa);
@@ -202,7 +202,7 @@ switch_to_guest_mode(EFI_HANDLE image, EFI_PHYSICAL_ADDRESS hv_hpa)
 	struct multiboot_info *mbi;
 	struct efi_context *efi_ctx;
 	struct acpi_table_rsdp *rsdp = NULL;
-	int i;
+	int32_t i;
 	EFI_CONFIGURATION_TABLE *config_table;
 
 	mbi = MBOOT_INFO_PTR(hv_hpa);

@@ -8,7 +8,7 @@
 #include "mbedtls/hkdf.h"
 #include "mbedtls/md.h"
 
-int hkdf_sha256(uint8_t *out_key, size_t out_len,
+int32_t hkdf_sha256(uint8_t *out_key, size_t out_len,
 		const uint8_t *secret, size_t secret_len,
 		const uint8_t *salt, size_t salt_len,
 		const uint8_t *info, size_t info_len)
@@ -36,7 +36,7 @@ int hkdf_sha256(uint8_t *out_key, size_t out_len,
 	return 1;
 }
 
-int hmac_sha256(uint8_t *out_key,
+int32_t hmac_sha256(uint8_t *out_key,
 		const uint8_t *secret, size_t secret_len,
 		const uint8_t *salt, size_t salt_len)
 {

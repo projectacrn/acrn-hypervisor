@@ -168,14 +168,14 @@ static inline uint16_t vmid_to_domainid(uint16_t vm_id)
 	return vm_id + 1U;
 }
 
-static int dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit);
+static int32_t dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit);
 static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus, uint8_t devfun);
-static int register_hrhd_units(void)
+static int32_t register_hrhd_units(void)
 {
 	struct dmar_info *info = get_dmar_info();
 	struct dmar_drhd_rt *drhd_rt;
 	uint32_t i;
-	int ret = 0;
+	int32_t ret = 0;
 
 	if (info == NULL || info->drhd_count == 0U) {
 		pr_fatal("%s: can't find dmar info\n", __func__);
@@ -392,7 +392,7 @@ static void dmar_disable_translation(struct dmar_drhd_rt *dmar_unit)
 	spinlock_release(&(dmar_unit->lock));
 }
 
-static int dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
+static int32_t dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 {
 	dev_dbg(ACRN_DBG_IOMMU, "Register dmar uint [%d] @0x%llx", dmar_unit->index, dmar_unit->drhd->reg_base_addr);
 
@@ -707,7 +707,7 @@ static void dmar_fault_handler(uint32_t irq, void *data)
 	uint32_t index;
 	uint32_t record_reg_offset;
 	uint64_t record[2];
-	int loop = 0;
+	int32_t loop = 0;
 
 	dev_dbg(ACRN_DBG_IOMMU, "%s: irq = %d", __func__, irq);
 
@@ -824,7 +824,7 @@ static void dmar_resume(struct dmar_drhd_rt *dmar_unit)
 	dmar_enable(dmar_unit);
 }
 
-static int add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun)
+static int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_unit;
 	struct dmar_root_entry *root_table;
@@ -937,7 +937,7 @@ static int add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8
 	return 0;
 }
 
-static int remove_iommu_device(const struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun)
+static int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_unit;
 	struct dmar_root_entry *root_table;
@@ -1045,9 +1045,9 @@ void destroy_iommu_domain(struct iommu_domain *domain)
 	(void)memset(domain, 0U, sizeof(*domain));
 }
 
-int assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
+int32_t assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
-	int status = 0;
+	int32_t status = 0;
 
 	/* TODO: check if the device assigned */
 
@@ -1061,9 +1061,9 @@ int assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t devfun
 	return add_iommu_device(domain, 0U, bus, devfun);
 }
 
-int unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
+int32_t unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus, uint8_t devfun)
 {
-	int status = 0;
+	int32_t status = 0;
 
 	/* TODO: check if the device assigned */
 	status = remove_iommu_device(domain, 0U, bus, devfun);
@@ -1101,9 +1101,9 @@ void resume_iommu(void)
 	do_action_for_iommus(dmar_resume);
 }
 
-int init_iommu(void)
+int32_t init_iommu(void)
 {
-	int ret;
+	int32_t ret;
 
 	ret = register_hrhd_units();
 	if (ret != 0) {

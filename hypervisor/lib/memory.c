@@ -259,7 +259,7 @@ void free(const void *ptr)
 	}
 }
 
-void *memchr(const void *void_s, int c, size_t n)
+void *memchr(const void *void_s, int32_t c, size_t n)
 {
 	uint8_t val = (uint8_t)c;
 	uint8_t *ptr = (uint8_t *)void_s;
