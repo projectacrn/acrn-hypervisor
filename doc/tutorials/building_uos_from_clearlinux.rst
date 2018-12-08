@@ -44,7 +44,7 @@ please follow these steps in Clear Linux native:
                                   "type" : "EFI" },
                                 { "disk" : "uos.img",
                                   "partition" : 2,
-                                  "size" : "32M",
+                                  "size" : "1G",
                                   "type" : "swap" },
                                 { "disk" : "uos.img",
                                   "partition" : 3,
