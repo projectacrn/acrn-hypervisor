@@ -29,40 +29,36 @@ https://www.automotivelinux.org/.
 Steps for using AGL as the UOS
 ******************************
 
-#. Download the release of AGL from https://download.automotivelinux.org/AGL/release/eel/, 
-   and we will use ``eel_5.1.0`` release for example.
+#. Follow the instructions found in the :ref:`getting-started-apl-nuc` to
+   boot "The ACRN Service OS"
+   
+#. In SOS, download the release of AGL from https://download.automotivelinux.org/AGL/release/eel/, 
+   and we will use ``eel_5.1.0`` release for example
     
    .. code-block:: none 
    
       $ cd ~
       $ wget https://download.automotivelinux.org/AGL/release/eel/5.1.0/intel-corei7-64/deploy/images/intel-corei7-64/agl-demo-platform-crosssdk-intel-corei7-64.wic.xz
       $ unxz agl-demo-platform-crosssdk-intel-corei7-64.wic.xz      
-
-#. Download the "kernel-iot-lts2018" kernel:
-
-   .. code-block:: none
   
-      $ sudo mkdir ~/uos-kernel-build
-      $ cd ~/uos-kernel-build
-      $ wget https://download.clearlinux.org/releases/current/clear/x86_64/os/Packages/linux-iot-lts2018-4.19.0-27.x86_64.rpm
-      $ rpm2cpio linux-iot-lts2018-4.19.0-27.x86_64.rpm | cpio -idmv
-   
-   .. note::
-      Here we download the kernel from ``current`` Clear Linux version.
-      
-#. Deploy the UOS kernel modules to UOS virtual disk image 
-   (note: you’ll need to use the same iot-lts2018 image version number noted in step 2 above):
-
+#. Deploy the UOS kernel modules to UOS virtual disk image
+         
    .. code-block:: none
 
       $ sudo losetup -f -P --show ~/agl-demo-platform-crosssdk-intel-corei7-64.wic
       $ sudo mount /dev/loop0p2 /mnt
-      $ sudo cp -r ~/uos-kernel-build/usr/lib/modules/4.19.0-27.iot-lts2018/ /mnt/lib/modules/
+      $ sudo cp -r /usr/lib/modules/4.19.0-27.iot-lts2018 /mnt/lib/modules/
       $ sudo umount /mnt
       $ sync
 
-#. You need to adjust the ``/usr/share/acrn/samples/nuc/launch_uos.sh`` script to match your installation.
-   These are the couple of lines you need to modify:
+   .. note::
+      Follow the instructions in :ref:`getting-started-apl-nuc`,
+      the ``linux-iot-lts2018`` kernels and modules will be installed 
+      by default after adding the bundle ``kernel-iot-lts2018``. 
+      Here the version of kernel is ``4.19.0-27.iot-lts2018``.
+
+#. Adjust the ``/usr/share/acrn/samples/nuc/launch_uos.sh`` script to match your installation.
+   These are the couple of lines you need to modify
     
    .. code-block:: none 
    
@@ -76,7 +72,7 @@ Steps for using AGL as the UOS
       to match what you have downloaded above. 
       Likewise, you may need to adjust the kernel file name to ``default-iot-lts2018``.
       
-#. Start the User OS (UOS):
+#. Start the User OS (UOS)
     
    .. code-block:: none   
 
