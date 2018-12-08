@@ -55,7 +55,7 @@ Steps for using AGL as the UOS
       Follow the instructions in :ref:`getting-started-apl-nuc`,
       the ``linux-iot-lts2018`` kernels and modules will be installed 
       by default after adding the bundle ``kernel-iot-lts2018``. 
-      Here the version of kernel is ``4.19.0-27.iot-lts2018``.
+      Here the version of modules is ``4.19.0-27.iot-lts2018``.
 
 #. Adjust the ``/usr/share/acrn/samples/nuc/launch_uos.sh`` script to match your installation.
    These are the couple of lines you need to modify
