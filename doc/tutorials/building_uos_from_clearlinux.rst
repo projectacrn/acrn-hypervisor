@@ -31,8 +31,7 @@ please follow these steps in Clear Linux native:
       $ cd ~   
       $ sudo ister.py -t uos-image.json
       
-   An example of the configuration file ``uos-image.json`` 
-   is shown as below:
+   An example of the configuration file ``uos-image.json``:
 
    .. code-block:: none
    
@@ -78,14 +77,13 @@ please follow these steps in Clear Linux native:
 
    .. note::
       To generate the image with a specified version, 
-      please modify with the ``"Version"`` argument, 
-      and we can set ``"Version": 26550`` for example.
-      If you want to build out the latest, please 
-      set ``"Version": "latest"`` here.
-
+      please modify the ``"Version"`` argument, 
+      and we can set ``"Version": 26550`` instead of 
+      ``"Version: latest"`` for example.
+      
    Here we will use ``"Version": 26550`` for example, 
    and the image of UOS called ``uos.img`` will be generated 
-   after successful installation. It will output log as shown as below:
+   after successful installation. An example output log is:
    
    .. code-block:: none
    
