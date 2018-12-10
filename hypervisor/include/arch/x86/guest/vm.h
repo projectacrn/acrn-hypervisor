@@ -9,6 +9,7 @@
 #include <bsp_extern.h>
 #include <vpci.h>
 #include <page.h>
+#include <cpu_caps.h>
 
 #ifdef CONFIG_PARTITION_MODE
 #include <mptable.h>

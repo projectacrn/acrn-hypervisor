@@ -34,11 +34,6 @@
 static void *ppt_mmu_pml4_addr;
 static uint8_t sanitized_page[PAGE_SIZE] __aligned(PAGE_SIZE);
 
-static struct vmx_capability {
-	uint32_t ept;
-	uint32_t vpid;
-} vmx_caps;
-
 /*
  * If the logical processor is in VMX non-root operation and
  * the "enable VPID" VM-execution control is 1, the current VPID
@@ -95,45 +90,6 @@ static inline void local_invept(uint64_t type, struct invept_desc desc)
 			: "memory");
 
 	ASSERT(error == 0, "invept error");
-}
-
-static inline bool cpu_has_vmx_ept_cap(uint32_t bit_mask)
-{
-	return ((vmx_caps.ept & bit_mask) != 0U);
-}
-
-static inline bool cpu_has_vmx_vpid_cap(uint32_t bit_mask)
-{
-	return ((vmx_caps.vpid & bit_mask) != 0U);
-}
-
-int32_t check_vmx_mmu_cap(void)
-{
-	uint64_t val;
-
-	/* Read the MSR register of EPT and VPID Capability -  SDM A.10 */
-	val = msr_read(MSR_IA32_VMX_EPT_VPID_CAP);
-	vmx_caps.ept = (uint32_t) val;
-	vmx_caps.vpid = (uint32_t) (val >> 32U);
-
-	if (!cpu_has_vmx_ept_cap(VMX_EPT_INVEPT)) {
-		pr_fatal("%s, invept not supported\n", __func__);
-		return -ENODEV;
-	}
-
-	if (!cpu_has_vmx_vpid_cap(VMX_VPID_INVVPID) ||
-		!cpu_has_vmx_vpid_cap(VMX_VPID_INVVPID_SINGLE_CONTEXT) ||
-		!cpu_has_vmx_vpid_cap(VMX_VPID_INVVPID_GLOBAL_CONTEXT)) {
-		pr_fatal("%s, invvpid not supported\n", __func__);
-		return -ENODEV;
-	}
-
-	if (!cpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE)) {
-		pr_fatal("%s, ept not support 1GB large page\n", __func__);
-		return -ENODEV;
-	}
-
-	return 0;
 }
 
 uint16_t allocate_vpid(void)
