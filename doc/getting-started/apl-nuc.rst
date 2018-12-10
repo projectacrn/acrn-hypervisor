@@ -205,11 +205,11 @@ partition. Follow these steps:
 
    A starter acrn.conf configuration file is included in the Clear Linux release and is
    also available in the acrn-hypervisor/hypervisor GitHub repo as `acrn.conf
-   <https://github.com/projectacrn/acrn-hypervisor/blob/master/hypervisor/bsp/uefi/clearlinux/acrn.conf>`__
+   <https://github.com/projectacrn/acrn-hypervisor/blob/master/efi-stub/clearlinux/acrn.conf>`__
    as shown here:
 
-   .. literalinclude:: ../../hypervisor/bsp/uefi/clearlinux/acrn.conf
-      :caption: hypervisor/bsp/uefi/clearlinux/acrn.conf
+   .. literalinclude:: ../../efi-stub/clearlinux/acrn.conf
+      :caption: efi-stub/clearlinux/acrn.conf
 
    On the platform, copy the ``acrn.conf`` file to the EFI partition we mounted earlier:
 

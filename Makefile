@@ -33,6 +33,7 @@ RELEASE ?= 0
 O ?= build
 ROOT_OUT := $(shell mkdir -p $(O);cd $(O);pwd)
 HV_OUT := $(ROOT_OUT)/hypervisor
+EFI_OUT := $(ROOT_OUT)/efi-stub
 DM_OUT := $(ROOT_OUT)/devicemodel
 TOOLS_OUT := $(ROOT_OUT)/tools
 DOC_OUT := $(ROOT_OUT)/doc
@@ -46,6 +47,10 @@ all: hypervisor devicemodel tools
 hypervisor:
 	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) clean
 	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)
+ifeq ($(PLATFORM),uefi)
+	echo "building hypervisor as EFI executable..."
+	make -C $(T)/efi-stub HV_OBJDIR=$(HV_OUT) EFI_OBJDIR=$(EFI_OUT)
+endif
 
 sbl-hypervisor:
 	@mkdir -p $(HV_OUT)-sbl
@@ -73,7 +78,13 @@ clean:
 install: hypervisor-install devicemodel-install tools-install
 
 hypervisor-install:
+ifeq ($(PLATFORM),sbl)
 	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) install
+endif
+ifeq ($(PLATFORM),uefi)
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)
+	make -C $(T)/efi-stub HV_OBJDIR=$(HV_OUT) EFI_OBJDIR=$(EFI_OUT) all install
+endif
 
 sbl-hypervisor-install:
 	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) install

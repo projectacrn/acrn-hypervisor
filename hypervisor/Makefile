@@ -276,19 +276,8 @@ endif
 .PHONY: all
 all: lib $(HV_OBJDIR)/$(HV_FILE).32.out $(HV_OBJDIR)/$(HV_FILE).bin
 
-ifeq ($(CONFIG_PLATFORM_UEFI),y)
-all: efi
-.PHONY: efi
-efi: $(HV_OBJDIR)/$(HV_FILE).bin
-	echo "building hypervisor as EFI executable..."
-	make -C bsp/uefi/efi HV_OBJDIR=$(HV_OBJDIR)
-
-install: efi
-	make -C bsp/uefi/efi HV_OBJDIR=$(HV_OBJDIR) install
-endif
-
 ifeq ($(CONFIG_PLATFORM_SBL),y)
-install: $(HV_OBJDIR)/$(HV_FILE).32.out
+install: lib $(HV_OBJDIR)/$(HV_FILE).32.out
 	install -D $(HV_OBJDIR)/$(HV_FILE).32.out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).sbl
 endif
 

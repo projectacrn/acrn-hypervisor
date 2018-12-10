@@ -32,7 +32,6 @@
 
 HV_OBJDIR:=build
 HV_FILE:=acrn
-EFI_OBJDIR:=$(HV_OBJDIR)/bsp/uefi/efi
 C_SRCS = boot.c pe.c malloc.c
 ACRN_OBJS := $(patsubst %.c,$(EFI_OBJDIR)/%.o,$(C_SRCS))
 INCLUDE_PATH += $(HV_OBJDIR)/include
@@ -60,8 +59,8 @@ LDSCRIPT := $(GNUEFI_DIR)/elf_$(ARCH)_efi.lds
 
 INCDIR := $(SYSROOT)/usr/include
 
-CFLAGS=-I. -I.. -I../../../include/arch/x86/guest -I$(INCDIR)/efi -I$(INCDIR)/efi/$(ARCH) \
-		-I../../../include/public -I../../../include/lib \
+CFLAGS=-I. -I.. -I../hypervisor/include/arch/x86/guest -I$(INCDIR)/efi -I$(INCDIR)/efi/$(ARCH) \
+		-I../hypervisor/include/public -I../hypervisor/include/lib \
 		-DEFI_FUNCTION_WRAPPER -fPIC -fshort-wchar -ffreestanding \
 		-Wall -I../fs/ -D$(ARCH) -O2 \
 		-include config.h
@@ -82,7 +81,7 @@ LDFLAGS=-T $(LDSCRIPT) -Bsymbolic -shared -nostdlib -znocombreloc \
 EFIBIN=$(HV_OBJDIR)/$(HV_FILE).efi
 BOOT=$(EFI_OBJDIR)/boot.efi
 
-CONF_FILE=$(CURDIR)/../clearlinux/acrn.conf
+CONF_FILE=$(CURDIR)/clearlinux/acrn.conf
 
 all: $(EFIBIN)
 	$(OBJCOPY)  --add-section .hv="$(HV_OBJDIR)/$(HV_FILE).bin"  --change-section-vma .hv=0x6e000 --set-section-flags .hv=alloc,data,contents,load  --section-alignment 0x1000 $(EFI_OBJDIR)/boot.efi  $(EFIBIN)
