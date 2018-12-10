@@ -418,9 +418,6 @@ Here is a list of major memory related APIs in HV:
 EPT/VPID Capability Checking
 ----------------------------
 
-.. doxygenfunction:: check_vmx_mmu_cap
-   :project: Project ACRN
-
 Data Transferring between hypervisor and VM
 -------------------------------------------
 

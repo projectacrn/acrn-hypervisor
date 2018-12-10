@@ -9,6 +9,7 @@
 #include <guest.h>
 #include <vcpu.h>
 #include <cpu.h>
+#include <cpu_caps.h>
 #include <types.h>
 
 /* NOTE:

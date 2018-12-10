@@ -127,13 +127,6 @@ void mmu_modify_or_del(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
 void hv_access_memory_region_update(uint64_t base, uint64_t size);
 
 /**
- * @brief EPT and VPID capability checking
- *
- * @retval 0 on success
- * @retval -ENODEV Don't support EPT or VPID capability
- */
-int32_t check_vmx_mmu_cap(void);
-/**
  * @brief VPID allocation
  *
  * @retval 0 VPID overflow

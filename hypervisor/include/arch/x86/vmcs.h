@@ -66,18 +66,11 @@ int32_t vmx_wrmsr_pat(struct acrn_vcpu *vcpu, uint64_t value);
 
 void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0);
 void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4);
-bool is_vmx_disabled(void);
 void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu);
 
 static inline enum vm_cpu_mode get_vcpu_mode(const struct acrn_vcpu *vcpu)
 {
 	return vcpu->arch.cpu_mode;
-}
-
-static inline bool cpu_has_vmx_unrestricted_guest_cap(void)
-{
-	return ((msr_read(MSR_IA32_VMX_MISC) & VMX_SUPPORT_UNRESTRICTED_GUEST)
-									!= 0UL);
 }
 
 #endif /* ASSEMBLER */

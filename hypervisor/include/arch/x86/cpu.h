@@ -127,15 +127,6 @@
 /* Boot CPU ID */
 #define BOOT_CPU_ID             0U
 
-/* type of speculation control
- * 0 - no speculation control support
- * 1 - raw IBRS + IPBP support
- * 2 - with STIBP optimization support
- */
-#define IBRS_NONE	0
-#define IBRS_RAW	1
-#define IBRS_OPT	2
-
 #ifndef ASSEMBLER
 
 #define	BUS_LOCK	"lock ; "
@@ -209,8 +200,6 @@ extern uint8_t		ld_bss_end;
 extern uint64_t               main_entry[1];
 extern uint64_t               secondary_cpu_stack[1];
 
-extern int32_t ibrs_type;
-
 /*
  * To support per_cpu access, we use a special struct "per_cpu_region" to hold
  * the pattern of per CPU data. And we allocate memory for per CPU data
@@ -229,16 +218,6 @@ extern int32_t ibrs_type;
  * to locate the per cpu data.
  */
 
-/* CPUID feature words */
-#define	FEAT_1_ECX		0U     /* CPUID[1].ECX */
-#define	FEAT_1_EDX		1U     /* CPUID[1].EDX */
-#define	FEAT_7_0_EBX		2U     /* CPUID[EAX=7,ECX=0].EBX */
-#define	FEAT_7_0_ECX		3U     /* CPUID[EAX=7,ECX=0].ECX */
-#define	FEAT_7_0_EDX		4U     /* CPUID[EAX=7,ECX=0].EDX */
-#define	FEAT_8000_0001_ECX	5U     /* CPUID[8000_0001].ECX */
-#define	FEAT_8000_0001_EDX	6U     /* CPUID[8000_0001].EDX */
-#define	FEAT_8000_0008_EBX	7U     /* CPUID[8000_0008].EAX */
-#define	FEATURE_WORDS		8U
 /**
  *The invalid cpu_id (INVALID_CPU_ID) is error
  *code for error handling, this means that
@@ -267,24 +246,6 @@ enum pcpu_boot_state {
 	PCPU_STATE_DEAD,
 };
 
-struct cpu_state_info {
-	uint8_t			 px_cnt;	/* count of all Px states */
-	const struct cpu_px_data *px_data;
-	uint8_t			 cx_cnt;	/* count of all Cx entries */
-	const struct cpu_cx_data *cx_data;
-};
-
-struct cpuinfo_x86 {
-	uint8_t family, model;
-	uint8_t virt_bits;
-	uint8_t phys_bits;
-	uint32_t cpuid_level;
-	uint32_t extended_cpuid_level;
-	uint64_t physical_address_mask;
-	uint32_t cpuid_leaves[FEATURE_WORDS];
-	char model_name[64];
-	struct cpu_state_info state_info;
-};
 #ifdef STACK_PROTECTOR
 struct stack_canary {
 	/* Gcc generates extra code, using [fs:40] to access canary */
@@ -294,32 +255,16 @@ struct stack_canary {
 void __stack_chk_fail(void);
 #endif
 
-extern struct cpuinfo_x86 boot_cpu_data;
-
-#define MAX_PSTATE	20U	/* max num of supported Px count */
-#define MAX_CSTATE	8U	/* max num of supported Cx count */
-
-/* We support MAX_CSTATE num of Cx, means have (MAX_CSTATE - 1) Cx entries,
- * i.e. supported Cx entry index range from 1 to MAX_CX_ENTRY.
- */
-#define MAX_CX_ENTRY	(MAX_CSTATE - 1U)
-
 /* Function prototypes */
 void cpu_do_idle(void);
 void cpu_dead(void);
 void trampoline_start16(void);
-bool is_apicv_reg_virtualization_supported(void);
-bool is_apicv_intr_delivery_supported(void);
-bool is_apicv_posted_intr_supported(void);
-bool is_ept_supported(void);
-bool cpu_has_cap(uint32_t bit);
 void load_cpu_state_data(void);
 void init_cpu_pre(uint16_t pcpu_id);
 void init_cpu_post(uint16_t pcpu_id);
 void start_cpus(void);
 void stop_cpus(void);
 void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
-void cpu_l1d_flush(void);
 
 #define CPU_SEG_READ(seg, result_ptr)						\
 {										\
