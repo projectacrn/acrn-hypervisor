@@ -26,16 +26,13 @@
 #define VAPIC_FEATURE_POST_INTR			(1U << 4U)
 #define VAPIC_FEATURE_VX2APIC_MODE		(1U << 5U)
 
-static struct vmx_capability {
-	uint32_t ept;
-	uint32_t vpid;
-} vmx_caps;
-
 struct cpu_capability {
 	uint8_t apicv_features;
 	uint8_t ept_features;
-};
-static struct cpu_capability cpu_caps;
+
+	uint32_t vmx_ept;
+	uint32_t vmx_vpid;
+} cpu_caps;
 
 struct cpuinfo_x86 boot_cpu_data;
 
@@ -261,10 +258,21 @@ static void apicv_cap_detect(void)
 	cpu_caps.apicv_features = features;
 }
 
+static void vmx_mmu_cap_detect(void)
+{
+	uint64_t val;
+
+	/* Read the MSR register of EPT and VPID Capability -  SDM A.10 */
+	val = msr_read(MSR_IA32_VMX_EPT_VPID_CAP);
+	cpu_caps.vmx_ept = (uint32_t) val;
+	cpu_caps.vmx_vpid = (uint32_t) (val >> 32U);
+}
+
 void cpu_cap_detect(void)
 {
 	apicv_cap_detect();
 	ept_cap_detect();
+	vmx_mmu_cap_detect();
 }
 
 bool is_ept_supported(void)
@@ -285,6 +293,16 @@ bool is_apicv_intr_delivery_supported(void)
 bool is_apicv_posted_intr_supported(void)
 {
 	return ((cpu_caps.apicv_features & VAPIC_FEATURE_POST_INTR) != 0U);
+}
+
+bool cpu_has_vmx_ept_cap(uint32_t bit_mask)
+{
+	return ((cpu_caps.vmx_ept & bit_mask) != 0U);
+}
+
+bool cpu_has_vmx_vpid_cap(uint32_t bit_mask)
+{
+	return ((cpu_caps.vmx_vpid & bit_mask) != 0U);
 }
 
 void get_cpu_name(void)
@@ -366,25 +384,8 @@ static inline bool cpu_has_vmx_unrestricted_guest_cap(void)
 									!= 0UL);
 }
 
-bool cpu_has_vmx_ept_cap(uint32_t bit_mask)
-{
-	return ((vmx_caps.ept & bit_mask) != 0U);
-}
-
-bool cpu_has_vmx_vpid_cap(uint32_t bit_mask)
-{
-	return ((vmx_caps.vpid & bit_mask) != 0U);
-}
-
 static int32_t check_vmx_mmu_cap(void)
 {
-	uint64_t val;
-
-	/* Read the MSR register of EPT and VPID Capability -  SDM A.10 */
-	val = msr_read(MSR_IA32_VMX_EPT_VPID_CAP);
-	vmx_caps.ept = (uint32_t) val;
-	vmx_caps.vpid = (uint32_t) (val >> 32U);
-
 	if (!cpu_has_vmx_ept_cap(VMX_EPT_INVEPT)) {
 		pr_fatal("%s, invept not supported\n", __func__);
 		return -ENODEV;
