@@ -55,7 +55,7 @@ bool cpu_has_cap(uint32_t bit)
 	return ret;
 }
 
-bool get_monitor_cap(void)
+bool has_monitor_cap(void)
 {
 	if (cpu_has_cap(X86_FEATURE_MONITOR)) {
 		/* don't use monitor for CPU (family: 0x6 model: 0x5c)

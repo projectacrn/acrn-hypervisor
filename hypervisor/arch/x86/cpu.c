@@ -367,7 +367,7 @@ static void print_hv_banner(void)
 /* wait until *sync == wake_sync */
 void wait_sync_change(uint64_t *sync, uint64_t wake_sync)
 {
-	if (get_monitor_cap()) {
+	if (has_monitor_cap()) {
 		/* Wait for the event to be set using monitor/mwait */
 		asm volatile ("1: cmpq      %%rbx,(%%rax)\n"
 			      "   je        2f\n"
