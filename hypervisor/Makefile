@@ -127,6 +127,9 @@ S_SRCS += arch/x86/boot/cpu_save_boot_ctx.S
 S_SRCS += arch/x86/boot/trampoline.S
 C_SRCS += boot/reloc.c
 
+# initilization component
+C_SRCS += arch/x86/init.c
+
 C_SRCS += boot/acpi.c
 C_SRCS += boot/dmar_parse.c
 S_SRCS += arch/x86/idt.S
