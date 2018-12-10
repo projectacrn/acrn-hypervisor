@@ -357,50 +357,6 @@ static void get_cpu_name(void)
 	boot_cpu_data.model_name[48] = '\0';
 }
 
-/* NOTE: this function is using temp stack, and after SWITCH_TO(runtime_sp, to)
- * it will switch to runtime stack.
- */
-void bsp_boot_init(void)
-{
-	uint64_t rsp;
-
-	start_tsc = rdtsc();
-
-	/* Clear BSS */
-	(void)memset(&ld_bss_start, 0U,
-			(size_t)(&ld_bss_end - &ld_bss_start));
-
-	bitmap_set_nolock(BOOT_CPU_ID, &pcpu_active_bitmap);
-
-	/* Get CPU capabilities thru CPUID, including the physical address bit
-	 * limit which is required for initializing paging.
-	 */
-	get_cpu_capabilities();
-
-	get_cpu_name();
-
-	load_cpu_state_data();
-
-	/* Initialize the hypervisor paging */
-	init_e820();
-	init_paging();
-
-	if (!cpu_has_cap(X86_FEATURE_X2APIC)) {
-		panic("x2APIC is not present!");
-	}
-
-	early_init_lapic();
-
-	init_percpu_lapic_id();
-
-	load_gdtr_and_tr();
-
-	/* Switch to run-time stack */
-	rsp = (uint64_t)(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
-	rsp &= ~(CPU_STACK_ALIGN - 1UL);
-	SWITCH_TO(rsp, bsp_boot_post);
-}
-
 static bool check_cpu_security_config(void)
 {
 	if (cpu_has_cap(X86_FEATURE_ARCH_CAP)) {
@@ -423,96 +379,229 @@ static bool check_cpu_security_config(void)
 	return true;
 }
 
-static void bsp_boot_post(void)
+/*TODO: move into debug module */
+static void init_debug_pre(void)
 {
-#ifdef STACK_PROTECTOR
-	set_fs_base();
-#endif
-
-	cpu_cap_detect();
-
-	cpu_xsave_init();
-
-	/* Set state for this CPU to initializing */
-	cpu_set_current_state(BOOT_CPU_ID, PCPU_STATE_INITIALIZING);
-
-	/* Perform any necessary BSP initialization */
-	init_bsp();
-
 	/* Initialize console */
 	console_init();
 
-	/* Print Hypervisor Banner */
-	print_hv_banner();
-
-	/* Make sure rdtsc is enabled */
-	check_tsc();
-
-	/* Calibrate TSC Frequency */
-	calibrate_tsc();
-
 	/* Enable logging */
 	init_logmsg(CONFIG_LOG_DESTINATION);
+}
 
-	pr_acrnlog("HV version %s-%s-%s %s (daily tag:%s) build by %s, start time %lluus",
-			HV_FULL_VERSION,
-			HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_TYPE,
-			HV_DAILY_TAG,
-			HV_BUILD_USER, ticks_to_us(start_tsc));
-
-	pr_acrnlog("API version %u.%u",
-			HV_API_MAJOR_VERSION, HV_API_MINOR_VERSION);
-
-	pr_acrnlog("Detect processor: %s", boot_cpu_data.model_name);
-
-	pr_dbg("Core %hu is up", BOOT_CPU_ID);
-
-	if (hardware_detect_support() != 0) {
-		panic("hardware not support!");
+/*TODO: move into debug module */
+static void init_debug_post(uint16_t pcpu_id)
+{
+	if (pcpu_id == BOOT_CPU_ID) {
+		/* Initialize the shell */
+		shell_init();
+		console_setup_timer();
 	}
 
-	/* Warn for security feature not ready */
-	if (!check_cpu_security_config()) {
-		pr_fatal("SECURITY WARNING!!!!!!");
-		pr_fatal("Please apply the latest CPU uCode patch!");
-	}
+	profiling_setup();
+}
 
-	enable_smep();
-
-	/* Initialize the shell */
-	shell_init();
-
-	/* Initialize interrupts */
-	interrupt_init(BOOT_CPU_ID);
-
+/*TODO: move into pass-thru module */
+static void init_passthru(void)
+{
 	if (init_iommu() != 0) {
 		panic("failed to initialize iommu!");
 	}
 
-	timer_init();
-	profiling_setup();
-	setup_notification();
-	setup_posted_intr_notification();
 	ptdev_init();
+}
 
+/*TODO: move into guest-vcpu module */
+static void init_guest(void)
+{
 	init_scheduler();
+}
 
-	/* Start all secondary cores */
-	startup_paddr = prepare_trampoline();
-	start_cpus();
+/*TODO: move into guest-vcpu module */
+static void enter_guest_mode(uint16_t pcpu_id)
+{
+	exec_vmxon_instr(pcpu_id);
 
-	ASSERT(get_cpu_id() == BOOT_CPU_ID, "");
-
-	console_setup_timer();
-
-	exec_vmxon_instr(BOOT_CPU_ID);
-
-	(void)prepare_vm(BOOT_CPU_ID);
+#ifdef CONFIG_PARTITION_MODE
+	(void)prepare_vm(pcpu_id);
+#else
+	if (pcpu_id == BOOT_CPU_ID) {
+		(void)prepare_vm(pcpu_id);
+	}
+#endif
 
 	default_idle();
 
 	/* Control should not come here */
-	cpu_dead(BOOT_CPU_ID);
+	cpu_dead(pcpu_id);
+}
+
+void init_cpu_pre(uint16_t pcpu_id)
+{
+	if (pcpu_id == BOOT_CPU_ID) {
+		start_tsc = rdtsc();
+
+		/* Clear BSS */
+		(void)memset(&ld_bss_start, 0U,
+				(size_t)(&ld_bss_end - &ld_bss_start));
+
+		/* Get CPU capabilities thru CPUID, including the physical address bit
+		 * limit which is required for initializing paging.
+		 */
+		get_cpu_capabilities();
+
+		get_cpu_name();
+
+		load_cpu_state_data();
+
+		/* Initialize the hypervisor paging */
+		init_e820();
+		init_paging();
+
+		if (!cpu_has_cap(X86_FEATURE_X2APIC)) {
+			panic("x2APIC is not present!");
+		}
+
+		cpu_cap_detect();
+
+		early_init_lapic();
+
+		init_percpu_lapic_id();
+	} else {
+		/* Switch this CPU to use the same page tables set-up by the
+		 * primary/boot CPU
+		 */
+		enable_paging();
+
+		early_init_lapic();
+
+		pcpu_id = get_cpu_id_from_lapic_id(get_cur_lapic_id());
+	}
+
+	bitmap_set_nolock(pcpu_id, &pcpu_active_bitmap);
+
+	/* Set state for this CPU to initializing */
+	cpu_set_current_state(pcpu_id, PCPU_STATE_INITIALIZING);
+}
+
+void init_cpu_post(uint16_t pcpu_id)
+{
+#ifdef STACK_PROTECTOR
+	set_fs_base();
+#endif
+	load_gdtr_and_tr();
+
+	enable_smep();
+
+	/* Make sure rdtsc is enabled */
+	check_tsc();
+
+	cpu_xsave_init();
+
+	if (pcpu_id == BOOT_CPU_ID) {
+		/* Print Hypervisor Banner */
+		print_hv_banner();
+
+		/* Calibrate TSC Frequency */
+		calibrate_tsc();
+
+		pr_acrnlog("HV version %s-%s-%s %s (daily tag:%s) build by %s, start time %lluus",
+				HV_FULL_VERSION,
+				HV_BUILD_TIME, HV_BUILD_VERSION, HV_BUILD_TYPE,
+				HV_DAILY_TAG,
+				HV_BUILD_USER, ticks_to_us(start_tsc));
+
+		pr_acrnlog("API version %u.%u",
+				HV_API_MAJOR_VERSION, HV_API_MINOR_VERSION);
+
+		pr_acrnlog("Detect processor: %s", boot_cpu_data.model_name);
+
+		pr_dbg("Core %hu is up", BOOT_CPU_ID);
+
+		if (hardware_detect_support() != 0) {
+			panic("hardware not support!");
+		}
+
+		/* Warn for security feature not ready */
+		if (!check_cpu_security_config()) {
+			pr_fatal("SECURITY WARNING!!!!!!");
+			pr_fatal("Please apply the latest CPU uCode patch!");
+		}
+
+		/* Initialize interrupts */
+		interrupt_init(BOOT_CPU_ID);
+
+		timer_init();
+		setup_notification();
+		setup_posted_intr_notification();
+
+		/* Start all secondary cores */
+		startup_paddr = prepare_trampoline();
+		start_cpus();
+
+		ASSERT(get_cpu_id() == BOOT_CPU_ID, "");
+	} else {
+		pr_dbg("Core %hu is up", pcpu_id);
+
+		/* Initialize secondary processor interrupts. */
+		interrupt_init(pcpu_id);
+
+		timer_init();
+
+		/* Wait for boot processor to signal all secondary cores to continue */
+		wait_sync_change(&pcpu_sync, 0UL);
+	}
+}
+
+static void bsp_boot_post(void)
+{
+	/* Perform any necessary BSP initialization */
+	init_bsp();
+
+	init_debug_pre();
+
+	init_guest();
+
+	init_cpu_post(BOOT_CPU_ID);
+
+	init_debug_post(BOOT_CPU_ID);
+
+	init_passthru();
+
+	enter_guest_mode(BOOT_CPU_ID);
+}
+
+/* NOTE: this function is using temp stack, and after SWITCH_TO(runtime_sp, to)
+ * it will switch to runtime stack.
+ */
+void bsp_boot_init(void)
+{
+	uint64_t rsp;
+
+	init_cpu_pre(BOOT_CPU_ID);
+
+	/* Switch to run-time stack */
+	rsp = (uint64_t)(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
+	rsp &= ~(CPU_STACK_ALIGN - 1UL);
+	SWITCH_TO(rsp, bsp_boot_post);
+}
+
+static void cpu_secondary_post(void)
+{
+	uint16_t pcpu_id;
+
+	/* Release secondary boot spin-lock to allow one of the next CPU(s) to
+	 * perform this common initialization
+	 */
+	spinlock_release(&trampoline_spinlock);
+
+	pcpu_id = get_cpu_id();
+
+	init_cpu_post(pcpu_id);
+
+	init_debug_post(pcpu_id);
+
+	enter_guest_mode(pcpu_id);
 }
 
 /* NOTE: this function is using temp stack, and after SWITCH_TO(runtime_sp, to)
@@ -522,70 +611,12 @@ void cpu_secondary_init(void)
 {
 	uint64_t rsp;
 
-	/* Switch this CPU to use the same page tables set-up by the
-	 * primary/boot CPU
-	 */
-	enable_paging();
-
-	enable_smep();
-
-	early_init_lapic();
-
-	/* Find the logical ID of this CPU given the LAPIC ID
-	 * and Set state for this CPU to initializing
-	 */
-	cpu_set_current_state(get_cpu_id_from_lapic_id(get_cur_lapic_id()),
-			      PCPU_STATE_INITIALIZING);
-
-	bitmap_set_nolock(get_cpu_id(), &pcpu_active_bitmap);
+	init_cpu_pre(INVALID_CPU_ID);
 
 	/* Switch to run-time stack */
 	rsp = (uint64_t)(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
 	rsp &= ~(CPU_STACK_ALIGN - 1UL);
 	SWITCH_TO(rsp, cpu_secondary_post);
-}
-
-static void cpu_secondary_post(void)
-{
-
-	/* Release secondary boot spin-lock to allow one of the next CPU(s) to
-	 * perform this common initialization
-	 */
-	spinlock_release(&trampoline_spinlock);
-
-#ifdef STACK_PROTECTOR
-	set_fs_base();
-#endif
-
-	load_gdtr_and_tr();
-
-	/* Make sure rdtsc is enabled */
-	check_tsc();
-
-	pr_dbg("Core %hu is up", get_cpu_id());
-
-	cpu_xsave_init();
-
-	/* Initialize secondary processor interrupts. */
-	interrupt_init(get_cpu_id());
-
-	timer_init();
-	profiling_setup();
-	/* Wait for boot processor to signal all secondary cores to continue */
-	wait_sync_change(&pcpu_sync, 0UL);
-
-	exec_vmxon_instr(get_cpu_id());
-
-#ifdef CONFIG_PARTITION_MODE
-	(void)prepare_vm(get_cpu_id());
-#endif
-
-	default_idle();
-
-	/* Control will only come here for secondary
-	 * CPUs not configured for use.
-	 */
-	cpu_dead(get_cpu_id());
 }
 
 static uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id)
