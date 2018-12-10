@@ -1,0 +1,98 @@
+{
+	"ociVersion": "1.0.1-dev",
+	"process": {
+		"terminal": false,
+		"user": {
+			"uid": 0,
+			"gid": 0
+		},
+		"args": [
+			"/usr/share/acrn/samples/apl-mrb/launch_uos.sh",
+			"-V",
+			"2"
+		],
+		"env": [
+			"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+			"TERM=xterm"
+		],
+		"cwd": "/",
+		"capabilities": {
+			"bounding": [
+				"CAP_SYS_ADMIN",
+				"CAP_SYS_RESOURCE",
+				"CAP_WAKE_ALARM",
+				"CAP_SYS_MODULE"
+
+			],
+			"effective": [
+				"CAP_SYS_ADMIN",
+				"CAP_SYS_RESOURCE",
+				"CAP_WAKE_ALARM",
+				"CAP_SYS_MODULE"
+			],
+			"inheritable": [
+				"CAP_SYS_ADMIN",
+				"CAP_SYS_RESOURCE",
+				"CAP_WAKE_ALARM",
+				"CAP_SYS_MODULE"
+			],
+			"permitted": [
+				"CAP_SYS_ADMIN",
+				"CAP_SYS_RESOURCE",
+				"CAP_WAKE_ALARM",
+				"CAP_SYS_MODULE"
+			],
+			"ambient": [
+				"CAP_SYS_ADMIN",
+				"CAP_SYS_RESOURCE",
+				"CAP_WAKE_ALARM",
+				"CAP_SYS_MODULE"
+			]
+		}
+	},
+	"root": {
+		"path": "rootfs",
+		"readonly": false
+	},
+	"hostname": "runc",
+	"mounts": [
+		{
+			"destination": "/",
+			"type": "none",
+			"source": "/",
+			"options": ["rbind","rw"]
+		}
+	],
+	"linux": {
+		"resources": {
+			"devices": [
+				{
+					"allow": true,
+					"access": "rwm"
+				}
+			]
+		},
+		"uidMappings": [
+			{
+				"hostID": 0,
+				"containerID": 0,
+				"size": 1
+			}
+		],
+		"gidMappings": [
+			{
+				"hostID": 0,
+				"containerID": 0,
+				"size": 1
+			}
+		],
+		"namespaces": [
+			{
+				"type": "pid"
+			},
+			{
+				"type": "uts"
+			}
+		]
+	}
+}
