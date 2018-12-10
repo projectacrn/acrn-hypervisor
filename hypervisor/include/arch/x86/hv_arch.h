@@ -16,7 +16,7 @@
 #include <msr.h>
 #include <io.h>
 #include <ioreq.h>
-#include <mtrr.h>
+#include <vmtrr.h>
 #include <timer.h>
 #include <vlapic.h>
 #include <vcpu.h>
