@@ -28,6 +28,7 @@
 #include <vioapic.h>
 #include <vm.h>
 #include <cpuid.h>
+#include <vcpuid.h>
 #include <page.h>
 #include <mmu.h>
 #include <pgtable.h>
