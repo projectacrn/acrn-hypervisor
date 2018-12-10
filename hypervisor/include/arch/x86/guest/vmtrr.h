@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 /**
- * @file mtrr.h
+ * @file vmtrr.h
  *
  * @brief MTRR Virtualization
  */
-#ifndef MTRR_H
-#define MTRR_H
+#ifndef VMTRR_H
+#define VMTRR_H
 /**
  * @brief MTRR Virtualization
  *
@@ -83,4 +83,4 @@ void init_mtrr(struct acrn_vcpu *vcpu);
 /**
  * @}
  */
-#endif /* MTRR_H */
+#endif /* VMTRR_H */
