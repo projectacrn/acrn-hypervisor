@@ -59,7 +59,7 @@ struct cpuinfo_x86 {
 
 extern struct cpuinfo_x86 boot_cpu_data;
 
-bool get_monitor_cap(void);
+bool has_monitor_cap(void);
 bool is_apicv_reg_virtualization_supported(void);
 bool is_apicv_intr_delivery_supported(void);
 bool is_apicv_posted_intr_supported(void);
