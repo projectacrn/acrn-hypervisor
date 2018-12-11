@@ -28,7 +28,6 @@
    .extern    cpu_ctx
    .extern    load_gdtr_and_tr
    .extern    do_acpi_s3
-   .extern    trampoline_spinlock
 
    .global    asm_enter_s3
 asm_enter_s3:
@@ -98,14 +97,6 @@ asm_enter_s3:
 	movq 0x30 + cpu_ctx(%rip), %rsi  /* pm1a_cnt_val */
 
 	call do_acpi_s3
-
-	/* if do_acpi_s3 returns, which means ACRN can't enter S3 state.
-	 * Then trampoline will not be executed and we need to acquire
-	 * trampoline_spinlock here to match release in enter_sleep
-	 */
-	mov $trampoline_spinlock, %rdi
-	spinlock_obtain(%rdi)
-
 
 /*
  * When system resume from S3, trampoline_start64 will

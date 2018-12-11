@@ -11,11 +11,6 @@
 #include <trampoline.h>
 #include <e820.h>
 
-spinlock_t trampoline_spinlock = {
-	.head = 0U,
-	.tail = 0U
-};
-
 struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(PAGE_SIZE);
 uint16_t phys_cpu_num = 0U;
 static uint64_t pcpu_sync = 0UL;
@@ -499,34 +494,22 @@ static uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id)
 	return INVALID_CPU_ID;
 }
 
-/*
- * Start all secondary CPUs.
- */
-void start_cpus(void)
+static void start_cpu(uint16_t pcpu_id)
 {
 	uint32_t timeout;
-	uint16_t expected_up;
 
-	/* secondary cpu start up will wait for pcpu_sync -> 0UL */
-	atomic_store64(&pcpu_sync, 1UL);
+	/* Update the stack for pcpu */
+	stac();
+	write_trampoline_stack_sym(pcpu_id);
+	clac();
 
-	/* Set flag showing number of CPUs expected to be up to all
-	 * cpus
-	 */
-	expected_up = phys_cpu_num;
+	send_startup_ipi(INTR_CPU_STARTUP_USE_DEST, pcpu_id, startup_paddr);
 
-	/* Broadcast IPIs to all other CPUs,
-	 * In this case, INTR_CPU_STARTUP_ALL_EX_SELF decides broadcasting
-	 * IPIs, INVALID_CPU_ID is parameter value to destination pcpu_id.
-	 */
-	send_startup_ipi(INTR_CPU_STARTUP_ALL_EX_SELF,
-			INVALID_CPU_ID, startup_paddr);
-
-	/* Wait until global count is equal to expected CPU up count or
+	/* Wait until the pcpu with pcpu_id is running and set the active bitmap or
 	 * configured time-out has expired
 	 */
 	timeout = (uint32_t)CONFIG_CPU_UP_TIMEOUT * 1000U;
-	while ((atomic_load16(&up_count) != expected_up) && (timeout != 0U)) {
+	while ((bitmap_test(pcpu_id, &pcpu_active_bitmap) == false) && (timeout != 0U)) {
 		/* Delay 10us */
 		udelay(10U);
 
@@ -534,14 +517,30 @@ void start_cpus(void)
 		timeout -= 10U;
 	}
 
-	/* Check to see if all expected CPUs are actually up */
-	if (atomic_load16(&up_count) != expected_up) {
+	/* Check to see if expected CPU is actually up */
+	if (bitmap_test(pcpu_id, &pcpu_active_bitmap) == false) {
 		/* Print error */
 		pr_fatal("Secondary CPUs failed to come up");
 
 		/* Error condition - loop endlessly for now */
 		do {
 		} while (1);
+	}
+}
+
+void start_cpus(void)
+{
+	uint16_t i;
+
+	/* secondary cpu start up will wait for pcpu_sync -> 0UL */
+	atomic_store64(&pcpu_sync, 1UL);
+
+	for (i = 0U; i < phys_cpu_num; i++) {
+		if (get_cpu_id() == i) {
+			continue;
+		}
+
+		start_cpu(i);
 	}
 
 	/* Trigger event to allow secondary CPUs to continue */

@@ -168,9 +168,6 @@ void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 
 		asm_enter_s3(vm, pm1a_cnt_val, pm1b_cnt_val);
 
-		/* release the lock aquired in trampoline code */
-		spinlock_release(&trampoline_spinlock);
-
 		resume_lapic();
 		resume_iommu();
 		resume_ioapic();

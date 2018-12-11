@@ -108,14 +108,11 @@ void bsp_boot_init(void)
 	SWITCH_TO(rsp, bsp_boot_post);
 }
 
-static void cpu_secondary_post(void)
+void init_secondary_cpu(void)
 {
 	uint16_t pcpu_id;
 
-	/* Release secondary boot spin-lock to allow one of the next CPU(s) to
-	 * perform this common initialization
-	 */
-	spinlock_release(&trampoline_spinlock);
+	init_cpu_pre(INVALID_CPU_ID);
 
 	pcpu_id = get_cpu_id();
 
@@ -124,19 +121,4 @@ static void cpu_secondary_post(void)
 	init_debug_post(pcpu_id);
 
 	enter_guest_mode(pcpu_id);
-}
-
-/* NOTE: this function is using temp stack, and after SWITCH_TO(runtime_sp, to)
- * it will switch to runtime stack.
- */
-void cpu_secondary_init(void)
-{
-	uint64_t rsp;
-
-	init_cpu_pre(INVALID_CPU_ID);
-
-	/* Switch to run-time stack */
-	rsp = (uint64_t)(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
-	rsp &= ~(CPU_STACK_ALIGN - 1UL);
-	SWITCH_TO(rsp, cpu_secondary_post);
 }
