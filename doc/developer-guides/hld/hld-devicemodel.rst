@@ -297,7 +297,7 @@ G, gvtargs <GVT_args>
    ACRN implements GVT-g for graphics virtualization (aka AcrnGT). This
    option allows you to set some of its parameters.
 
-   GVT_args format: "gvt_high_gm_sz gvt_low_gm_sz gvt_fence_sz"
+   GVT_args format: ``gvt_high_gm_sz gvt_low_gm_sz gvt_fence_sz``
 
    Where:
 
