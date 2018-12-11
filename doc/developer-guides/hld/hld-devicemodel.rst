@@ -164,7 +164,7 @@ B, bootargs <bootargs>
    Set the UOS kernel command-line arguments. The maximum length is 1023.
    The bootargs string will be passed to the kernel as its cmdline.
 
-   Example: -B "loglevel=7": it specifies the kernel log level at 7
+   Example: ``-B "loglevel=7"``: it specifies the kernel log level at 7
 
 c, ncpus <cpus>
    Set number of CPUs for UOS. This number is an integer and must not be
