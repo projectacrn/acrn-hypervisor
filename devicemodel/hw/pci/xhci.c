@@ -92,6 +92,7 @@
 #include "xhci.h"
 #include "usb_pmapper.h"
 #include "vmmapi.h"
+#include "dm_string.h"
 
 #undef LOG_TAG
 #define LOG_TAG			"xHCI: "
@@ -3704,18 +3705,24 @@ errout:
 static int
 pci_xhci_parse_bus_port(struct pci_xhci_vdev *xdev, char *opts)
 {
-	int rc = 0, cnt;
-	uint32_t port, bus, index;
+	int rc = 0;
+	char *tstr;
+	int port, bus, index;
 	struct usb_devpath path;
 	struct usb_native_devinfo di;
 
 	assert(xdev);
 	assert(opts);
 
+	tstr = opts;
 	/* 'bus-port' format */
-	cnt = sscanf(opts, "%u-%u", &bus, &port);
-	if (cnt == EOF || cnt < 2 || bus >= USB_NATIVE_NUM_BUS ||
-			port >= USB_NATIVE_NUM_PORT) {
+	if (!tstr || dm_strtoi(tstr, &tstr, 10, &bus) || *tstr != '-' ||
+			dm_strtoi(tstr + 1, &tstr, 10, &port)) {
+		rc = -1;
+		goto errout;
+	}
+
+	if (bus >= USB_NATIVE_NUM_BUS || port >= USB_NATIVE_NUM_PORT) {
 		rc = -1;
 		goto errout;
 	}
@@ -3873,7 +3880,7 @@ errout:
 static int
 pci_xhci_parse_opts(struct pci_xhci_vdev *xdev, char *opts)
 {
-	char *s, *t, *n;
+	char *s, *t, *n, *tptr;
 	int i, rc = 0;
 	struct pci_xhci_option_elem *elem;
 	int (*f)(struct pci_xhci_vdev *, char *);
@@ -3900,7 +3907,7 @@ pci_xhci_parse_opts(struct pci_xhci_vdev *xdev, char *opts)
 	elem = xhci_option_table;
 	elem_cnt = sizeof(xhci_option_table) / sizeof(*elem);
 
-	for (t = strtok(s, ",:"); t; t = strtok(NULL, ",:")) {
+	for (t = strtok_r(s, ",:", &tptr); t; t = strtok_r(NULL, ",:", &tptr)) {
 		if (isdigit(t[0])) { /* bus-port */
 			if (pci_xhci_parse_bus_port(xdev, t)) {
 				rc = -3;
