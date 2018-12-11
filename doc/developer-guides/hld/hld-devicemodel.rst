@@ -190,7 +190,7 @@ s, pci_slot <slot_config>
    Where:
 
    - ``slot`` is 0..31
-   - func is 0..7
+   - ``func`` is 0..7
    - emul is a string describing the type of PCI device e.g. virtio-net
    - config is an optional device-dependent string, used for
      configuration.
