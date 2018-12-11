@@ -264,7 +264,7 @@ l, lpc <lpc_device_configuration>
      - CBC_WK_RSN_BTN(bit 5): ignition button.
      - CBC_WK_RSN_RTC(bit 9): RTC timer.
      - CBC_WK_RSN_DOR(bit 11): Car door.
-     - CBC_WK_RSN_SOC(bit 23): SoC active/inactive.
+     - ``CBC_WK_RSN_SOC``(bit 23): SoC active/inactive.
 
    As an example, the following commands are used to enable IOC feature, the
    initial wakeup reason is ignition button, and cbc_attach uses ttyS1 for
