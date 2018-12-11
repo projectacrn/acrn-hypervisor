@@ -1,7 +1,33 @@
 
 # global helper variables
 T := $(CURDIR)
+
+# PLATFORM is now deprecated, just reserve for compatability
+ifdef PLATFORM
+$(warning PLATFORM is deprecated, pls use BOARD instead)
+endif
 PLATFORM ?= uefi
+
+# Backward-compatibility for PLATFORM=(sbl|uefi)
+# * PLATFORM=sbl is equivalent to BOARD=apl-mrb
+# * PLATFORM=uefi is equivalent to BOARD=apl-nuc (i.e. NUC6CAYH)
+ifeq ($(PLATFORM),sbl)
+BOARD ?= apl-mrb
+else ifeq ($(PLATFORM),uefi)
+BOARD ?= apl-nuc
+endif
+
+ifndef BOARD
+$(error BOARD must be set (apl-mrb, apl-nuc, cb2_dnv, nuc6cayh)
+endif
+
+ifeq ($(BOARD),apl-nuc)
+FIRMWARE ?= uefi
+else ifeq ($(BOARD),nuc6cayh)
+FIRMWARE ?= uefi
+endif
+FIRMWARE ?= sbl
+
 RELEASE ?= 0
 
 O ?= build
@@ -18,13 +44,13 @@ export TOOLS_OUT
 all: hypervisor devicemodel tools
 
 hypervisor:
-	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLATFORM) RELEASE=$(RELEASE) clean
-	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLATFORM) RELEASE=$(RELEASE)
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) clean
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)
 
 sbl-hypervisor:
 	@mkdir -p $(HV_OUT)-sbl
-	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl PLATFORM=sbl RELEASE=$(RELEASE) clean
-	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl PLATFORM=sbl RELEASE=$(RELEASE)
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl BOARD=apl-mrb FIRMWARE=sbl RELEASE=$(RELEASE) clean
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl BOARD=apl-mrb FIRMWARE=sbl RELEASE=$(RELEASE)
 
 devicemodel: tools
 	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) clean
@@ -47,10 +73,10 @@ clean:
 install: hypervisor-install devicemodel-install tools-install
 
 hypervisor-install:
-	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) PLATFORM=$(PLATFORM) RELEASE=$(RELEASE) install
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) install
 
 sbl-hypervisor-install:
-	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl PLATFORM=sbl RELEASE=$(RELEASE) install
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) install
 
 devicemodel-install:
 	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) install

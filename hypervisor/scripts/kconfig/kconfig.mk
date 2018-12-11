@@ -29,23 +29,19 @@ override RELEASE := n
 endif
 endif
 
+OVERWRITTEN := ""
+ifeq ($(FIRMWARE),sbl)
+OVERWRITTEN += "PLATFORM_SBL=y"
+else ifeq ($(FIRMWARE),uefi)
+OVERWRITTEN += "PLATFORM_UEFI=y"
+endif
+
 -include $(HV_OBJDIR)/$(HV_CONFIG_MK)
 ifeq ($(shell [ $(HV_OBJDIR)/$(HV_CONFIG) -nt $(HV_OBJDIR)/$(HV_CONFIG_MK) ] && echo 1),1)
 # config.mk may be outdated if .config has been overwritten. To update config.mk
 # in such cases, we include .config again to get the new configurations. This
 # only happens when GNU make checks the prerequisites.
 -include $(HV_OBJDIR)/$(HV_CONFIG)
-endif
-
-# Backward-compatibility for PLATFORM=(sbl|uefi)
-# * PLATFORM=sbl is equivalent to BOARD=apl-mrb
-# * PLATFORM=uefi is equivalent to BOARD=apl-nuc (i.e. NUC6CAYH)
-ifndef BOARD
-ifeq ($(PLATFORM),sbl)
-BOARD=apl-mrb
-else ifeq ($(PLATFORM),uefi)
-BOARD=apl-nuc
-endif
 endif
 
 $(eval $(call override_config,BOARD,apl-mrb))
@@ -97,7 +93,7 @@ oldconfig: $(KCONFIG_DEPS)
 	@BOARD=$(TARGET_BOARD) \
 	 python3 $(KCONFIG_DIR)/silentoldconfig.py Kconfig \
 		$(HV_OBJDIR)/$(HV_CONFIG) \
-		RELEASE=$(RELEASE)
+		RELEASE=$(RELEASE) $(OVERWRITTEN)
 
 # Minimize the current .config. This target can be used to generate a defconfig
 # for future use.
