@@ -152,7 +152,7 @@ k, kernel <kernel_image_path>
    Set the kernel (full path) for the UOS kernel. The maximum length is
    1023. The DM handles bzImage image format.
 
-   usage: -k /path/to/your/kernel_image
+   usage: ``-k /path/to/your/kernel_image``
 
 r, ramdisk <ramdisk_image_path>
    Set the ramdisk (full path) for the UOS. The maximum length is 1023.
