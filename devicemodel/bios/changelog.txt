@@ -1,3 +1,8 @@
+vSBL Version 1.1
+- Change:
+	Update vFastboot to v1.1
+	Pass vrpmb key to vFastboot.
+
 vSBL Version 1.0.1
 - Bug fix:
 	Fix AaaG user build boot failure when AaaG with memory size > 2GB and flash unlocked.
