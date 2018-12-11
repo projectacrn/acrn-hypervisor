@@ -4,12 +4,12 @@ Using AGL as the User OS
 ########################
 
 This tutorial describes the steps to run Automotive Grade Linux (AGL) 
-as the User OS on ACRN hypervisor and the problems we got at current stage. 
-We hope the steps documented in this article could help us to reproduce the 
-problem much easier and provide some information for further debugging.
-The regulatory model of APL NUC we used is `NUC6CAYH 
+as the User OS on ACRN hypervisor and the existing issues we still have.
+We hope the steps documented in this article will help others reproduce the
+issues we're seeing, and provide information for further debugging.
+We're using an Apollo Lake-based NUC model `NUC6CAYH 
 <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc6cayh.html>`_
-and other platforms may work too.
+and other platforms may be used as well.
 
 .. image:: images/The-overview-of-AGL-as-UOS.png
    :align: center
@@ -18,13 +18,13 @@ Introduction to AGL
 *******************
 
 Automotive Grade Linux is a collaborative open source project that is 
-bringing together automakers, suppliers and technology companies to 
+bringing together automakers, suppliers, and technology companies to 
 accelerate the development and adoption of a fully open software stack 
 for the connected car. With Linux at its core, AGL is developing an open 
 platform from the ground up that can serve as the de facto industry 
 standard to enable rapid development of new features and technologies.
-For more information about AGL, please visit AGL’s official website:
-https://www.automotivelinux.org/.
+For more information about AGL, please visit `AGL’s official website
+<https://www.automotivelinux.org/>`_.
 
 Steps for using AGL as the UOS
 ******************************
@@ -32,8 +32,8 @@ Steps for using AGL as the UOS
 #. Follow the instructions found in the :ref:`getting-started-apl-nuc` to
    boot "The ACRN Service OS"
    
-#. In SOS, download the release of AGL from https://download.automotivelinux.org/AGL/release/eel/, 
-   and we will use ``eel_5.1.0`` release for example
+#. In SOS, download the release of AGL from https://download.automotivelinux.org/AGL/release/eel/.
+   We're using release ``eel_5.1.0`` for our example:
     
    .. code-block:: none 
    
@@ -67,7 +67,7 @@ Steps for using AGL as the UOS
       -B "root=/dev/vda2 ...
      
    .. note::
-      In case you have downloaded a different AGL image or store the image in other directory, 
+      In case you have downloaded a different AGL image or stored the image in another directory, 
       you will need to modify the AGL file name or directory (the ``-s 3,virtio-blk`` argument) 
       to match what you have downloaded above. 
       Likewise, you may need to adjust the kernel file name to ``default-iot-lts2018``.
@@ -85,44 +85,43 @@ Steps for using AGL as the UOS
    .. image:: images/The-console-of-AGL.png
       :align: center
       
-   When you see the output of the console above, that means AGL has been loaded 
-   and now you could operate on the console. 
+   When you see this output on the console, AGL has been successfully loaded 
+   and now you can operate on the console. 
 
-Enable the display of AGL
+Enable the AGL display
 *************************
 
-But following the setup steps before, you will get black screen in AGL. 
+By following these setup steps, you will get a black screen in AGL. 
 Please don't worry about it, and we will give the solutions to the black screen issue in AGL.
-By debugging, we identified the problem as an issue of ``ivi-shell.so`` library, it seems that 
-this library is not well supported. But we can light the screen with the GUI of weston like figure below.
+By debugging, we identified the problem as an issue with the (not well supported) ``ivi-shell.so`` library.
+We can light the screen with the weston GUI, as shown below.
 
 .. image:: images/The-GUI-of-weston.png
    :align: center
    
-To enable weston in AGL, We need to modify ``weston.ini``, which is the configuration file of weston.
+To enable weston in AGL, we need to modify weston's ``weston.ini`` configuration file.
 
 .. code-block:: none
    
    $ vim /etc/xdg/weston/weston.ini
    
-The changes of ``weston.ini``:
+Make these changes to ``weston.ini``:
 
 #. Comment ``ivi-shell.so`` out
 
 #. Check the name of output is ``HDMI-A-2``
 
-After that, there are still some steps need to do to launch weston in AGL:
+After that, set up an environment variable and restart the weston service:
 
 .. code-block:: none
 
    $ export XDG_RUNTIME_DIR=/run/platform/display
    $ systemctl restart weston
 
-And you will be able to see the GUI of weston in AGL now.
+You should now see the weston GUI in AGL.
 
 Follow up
 *********
-ACRN Hypervisor is trying to support more kinds of operating systems all the time, 
-and AGL is an example of them. We are still debugging the “ivi-shell.so” issue, 
-and we are also investigating the problem why AGL GUI not got launched, 
-currently it may either be a configuration issue or a real bug, more experiment will be done.
+ACRN Hypervisor is expanding support for more operating systems, 
+and AGL is an example of this effort. We continue to debug the ``ivi-shell.so`` issue, 
+and investigating why the AGL GUI is not launching as expected. 
