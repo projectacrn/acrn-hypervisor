@@ -289,8 +289,8 @@ delete_cpu(struct vmctx *ctx, int vcpu)
 		exit(1);
 	}
 
-	pthread_join(mt_vmm_info[0].mt_thr, NULL);
 	vm_destroy_ioreq_client(ctx);
+	pthread_join(mt_vmm_info[0].mt_thr, NULL);
 
 	CPU_CLR_ATOMIC(vcpu, &cpumask);
 	return CPU_EMPTY(&cpumask);
