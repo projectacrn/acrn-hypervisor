@@ -457,7 +457,7 @@ smi_cmd_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 		return -1;
 
 	pthread_mutex_lock(&pm_lock);
-	switch (*eax) {
+	switch (*eax & 0xFF) {
 	case ACPI_ENABLE:
 		pm1_control |= VIRTUAL_PM1A_SCI_EN;
 		/*
