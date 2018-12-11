@@ -82,7 +82,7 @@ follow these steps to build a UOS image from Clear Linux:
       ``"Version": "latest"`` for example.
       
    Here we will use ``"Version": 26550`` for example, 
-   and the image of UOS called ``uos.img`` will be generated 
+   and the UOS image called ``uos.img`` will be generated 
    after successful installation. An example output log is:
    
    .. code-block:: none
