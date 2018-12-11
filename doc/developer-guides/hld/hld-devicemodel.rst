@@ -254,7 +254,7 @@ l, lpc <lpc_device_configuration>
 
    - ``ioc_channel_path`` is an absolute path for communication between IOC
      mediator and UART DM.
-   - "lpc_port" is com1 or com2. IOC mediator needs one unassigned lpc
+   - ``lpc_port`` is com1 or com2. IOC mediator needs one unassigned lpc
      port for data transfer between User OS and Service OS.
    - "wakeup_reason" is IOC mediator boot up reason, where each bit represents
      one wakeup reason.
