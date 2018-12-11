@@ -252,7 +252,7 @@ l, lpc <lpc_device_configuration>
       -i,[ioc_channel_path],[wakeup_reason]
       -l,[lpc_port],[ioc_channel_path]
 
-   - "ioc_channel_path" is an absolute path for communication between IOC
+   - ``ioc_channel_path`` is an absolute path for communication between IOC
      mediator and UART DM.
    - "lpc_port" is com1 or com2. IOC mediator needs one unassigned lpc
      port for data transfer between User OS and Service OS.
