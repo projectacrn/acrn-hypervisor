@@ -10,10 +10,10 @@ Build UOS image in Clear Linux native
 *************************************
 
 In order to build out the image of UOS, 
-please follow these steps in Clear Linux native:
+follow these steps to build a UOS image from Clear Linux:
 
 #. In Clear Linux native, install ``ister`` (a template-based
-   installer for Linux) inclued in the Clear Linux bundle 
+   installer for Linux) included in the Clear Linux bundle 
    ``os-installer``.
    For more information about ``ister``, 
    please visit https://github.com/bryteise/ister.
@@ -79,7 +79,7 @@ please follow these steps in Clear Linux native:
       To generate the image with a specified version, 
       please modify the ``"Version"`` argument, 
       and we can set ``"Version": 26550`` instead of 
-      ``"Version: latest"`` for example.
+      ``"Version": "latest"`` for example.
       
    Here we will use ``"Version": 26550`` for example, 
    and the image of UOS called ``uos.img`` will be generated 
@@ -106,7 +106,7 @@ please follow these steps in Clear Linux native:
       Cleaning up
       Successful installation
       
-#. Reboot and select "The ACRN Service OS" to boot, as shown below:
+#. On your target device, boot the system and select "The ACRN Service OS", as shown below:
 
    .. code-block:: console
       :emphasize-lines: 1
