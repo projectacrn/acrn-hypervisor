@@ -33,7 +33,7 @@
  * the macros involved are changed.
  */
 
-    .extern     cpu_secondary_init
+    .extern     init_secondary_cpu
 
     .section     .trampoline_reset,"ax"
 
@@ -149,20 +149,7 @@ trampoline_start64:
     mov     %eax, %fs
     mov     %eax, %gs
 
-    /* Obtain CPU spin-lock to serialize trampoline for different APs */
-    movq    trampoline_spinlock_ptr(%rip), %rdi
-    spinlock_obtain(%rdi)
-
-    /* Initialize temporary stack pointer
-       NOTE:  Using the PML4 memory (PDPT address is top of memory
-              for the PML4 page) for the temporary stack
-              as we are only using the very first entry in
-              this page and the stack is growing down from
-              the top of this page.  This stack is only
-              used for a VERY short period of time, so
-              this reuse of PML4 memory should be acceptable. */
-
-    lea     trampoline_pdpt_addr(%rip), %rsp
+    movq    secondary_cpu_stack(%rip), %rsp
 
     /* Jump to C entry */
     movq    main_entry(%rip), %rax
@@ -173,11 +160,11 @@ trampoline_start64:
     .align  8
     .global main_entry
 main_entry:
-    .quad   cpu_secondary_init /* default entry is AP start entry */
+    .quad   init_secondary_cpu /* default entry is AP start entry */
 
-    .global trampoline_spinlock_ptr
-trampoline_spinlock_ptr:
-    .quad   trampoline_spinlock
+    .global secondary_cpu_stack
+secondary_cpu_stack:
+    .quad   0
 
 /* GDT table */
     .align  4
