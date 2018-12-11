@@ -165,6 +165,19 @@ Known Issues
 
    **Workaround:** None.
 
+:acrn-issue:`2030` - UP2 fails to boot with uart=disabled for hypervisor
+   SOS boots up fail following GSG document guide.
+
+   **Impact:** SOS boots up fail on APL UP2
+
+   **Workaround:** A step-by-step workaround has been updated in Github issue.
+
+:acrn-issue:`2031` - UP2 serial port has no output with uart=mmio@0x91622000 for hypervisor
+   After SOS starts, there's no display on the screen. Though ssh connection is successful, the serial port has no output.
+
+   **Impact:** UP2 serial port has no output
+
+   **Workaround:** A step-by-step workaround has been updated in Github issue.
 
 .. comment
    Use the syntax:
