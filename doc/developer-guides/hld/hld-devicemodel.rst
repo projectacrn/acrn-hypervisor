@@ -261,7 +261,7 @@ l, lpc <lpc_device_configuration>
 
      Currently the wakeup reason bits supported by IOC firmware are:
 
-     - CBC_WK_RSN_BTN(bit 5): ignition button.
+     - ``CBC_WK_RSN_BTN``(bit 5): ignition button.
      - CBC_WK_RSN_RTC(bit 9): RTC timer.
      - CBC_WK_RSN_DOR(bit 11): Car door.
      - ``CBC_WK_RSN_SOC``(bit 23): SoC active/inactive.
