@@ -177,7 +177,7 @@ p, pincpu <vcpu:hostcpu>
    - vcpu is the ID of the CPU seen by the UOS, and
    - hostcpu is the physical CPU ID on the system.
 
-   Example: -p  "1:2" means pin the 2nd physical cpu to 1st vcpu in UOS
+   Example: ``-p  "1:2"`` means pin the 2nd physical cpu to 1st vcpu in UOS
 
 s, pci_slot <slot_config>
    Setup PCI device configuration
