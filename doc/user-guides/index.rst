@@ -5,6 +5,6 @@ User Guides
 
 .. toctree::
    :maxdepth: 2
+   :glob:
 
-   acrn-shell.rst
-   tools.rst
+   *
