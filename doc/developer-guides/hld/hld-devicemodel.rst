@@ -303,7 +303,7 @@ G, gvtargs <GVT_args>
 
    - ``gvt_high_gm_sz``: GVT-g aperture size, unit is MB
    - ``gvt_low_gm_sz``: GVT-g hidden gfx memory size, unit is MB
-   - gvt_fence_sz: the number of fence registers
+   - ``gvt_fence_sz``: the number of fence registers
 
    Example::
 
