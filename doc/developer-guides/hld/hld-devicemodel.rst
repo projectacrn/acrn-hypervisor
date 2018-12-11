@@ -158,7 +158,7 @@ r, ramdisk <ramdisk_image_path>
    Set the ramdisk (full path) for the UOS. The maximum length is 1023.
    The supported ramdisk format depends on your UOS kernel configuration.
 
-   usage: -r /path/to/your/ramdisk_image
+   usage: ``-r /path/to/your/ramdisk_image``
 
 B, bootargs <bootargs>
    Set the UOS kernel command-line arguments. The maximum length is 1023.
