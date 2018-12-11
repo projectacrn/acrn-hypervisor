@@ -218,7 +218,7 @@ m, memsize <memory_size>
    memory_size format is: "<size>{K/k, B/b, M/m, G/g}", and size is an
    integer.
 
-   usage: -m 4g: set uos memory to 4 gigabytes.
+   usage: ``-m 4g``: set UOS memory to 4 gigabytes.
 
 U, uuid <uuid>
    Set UUID for a VM
