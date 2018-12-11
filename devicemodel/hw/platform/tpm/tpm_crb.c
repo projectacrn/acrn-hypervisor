@@ -504,6 +504,7 @@ int init_tpm_crb(struct vmctx *ctx)
 		WPRINTF("Failed init request thread!\n");
 		goto fail_thread;
 	}
+	pthread_setname_np(tpm_vdev->request_thread, "tpm_crb_deli");
 
 	return 0;
 

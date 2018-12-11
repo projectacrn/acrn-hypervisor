@@ -340,6 +340,7 @@ static int create_new_server(const char *name)
 		pdebug();
 		goto listen_err;
 	}
+	pthread_setname_np(mfd->listen_thread, "mngr_listen");
 
 	/* create a poll_thread */
 	mfd->polling = 1;
@@ -348,6 +349,7 @@ static int create_new_server(const char *name)
 		pdebug();
 		goto poll_err;
 	}
+	pthread_setname_np(mfd->poll_thread, "mngr_pull");
 
 	mfd->desc = mfd->fd;
 	/* add this to mngr_fd_head */

@@ -1250,6 +1250,8 @@ usb_dev_sys_init(usb_dev_sys_cb conn_cb, usb_dev_sys_cb disconn_cb,
 				native_disconn_handle);
 		goto errout;
 	}
+	pthread_setname_np(g_ctx.thread, "usb_dev_sys");
+
 	return 0;
 
 errout:

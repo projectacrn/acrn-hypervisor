@@ -175,6 +175,7 @@ static void start_intr_storm_monitor(struct vmctx *ctx)
 			printf("failed %s %d\n", __func__, __LINE__);
 			intr_storm_monitor_pid = 0;
 		}
+		pthread_setname_np(intr_storm_monitor_pid, "storm_monitor");
 
 		printf("start monitor interrupt data...\n");
 	}
