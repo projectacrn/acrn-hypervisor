@@ -15,7 +15,6 @@
 #define __VHOST_H__
 
 #include "virtio.h"
-#include "mevent.h"
 
 /**
  * @brief vhost APIs
@@ -28,7 +27,6 @@ struct vhost_vq {
 	int kick_fd;		/**< fd of kick eventfd */
 	int call_fd;		/**< fd of call eventfd */
 	int idx;		/**< index of this vq in vhost dev */
-	struct mevent *mevp;	/**< mevent for call eventfd */
 	struct vhost_dev *dev;	/**< pointer to vhost_dev */
 };
 

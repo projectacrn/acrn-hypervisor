@@ -179,20 +179,6 @@ vhost_eventfd_test_and_clear(int fd)
 	return rc > 0 ? 1 : 0;
 }
 
-static void
-vhost_vq_notify(int fd __attribute__((unused)),
-		enum ev_type t __attribute__((unused)),
-		void *arg)
-{
-	struct vhost_vq *vq = arg;
-	struct virtio_vq_info *vqi;
-	struct vhost_dev *vdev;
-
-	vdev = vq->dev;
-	vqi = &vdev->base->queues[vdev->vq_idx + vq->idx];
-	vq_interrupt(vdev->base, vqi);
-}
-
 static int
 vhost_vq_register_eventfd(struct vhost_dev *vdev,
 			  int idx, bool is_register)
@@ -203,6 +189,8 @@ vhost_vq_register_eventfd(struct vhost_dev *vdev,
 	struct vhost_vq *vq;
 	struct virtio_vq_info *vqi;
 	struct pcibar *bar;
+	struct msix_table_entry *mte;
+	struct acrn_msi_entry msi;
 	int rc = -1;
 
 	/* this interface is called only by vhost_vq_start,
@@ -263,37 +251,15 @@ vhost_vq_register_eventfd(struct vhost_dev *vdev,
 		return -1;
 	}
 
-	if (pci_msix_enabled(base->dev)) {
-		/* register irqfd for notify */
-		struct msix_table_entry *mte;
-		struct acrn_msi_entry msi;
-
-		mte = &vdev->base->dev->msix.table[vqi->msix_idx];
-		msi.msi_addr = mte->addr;
-		msi.msi_data = mte->msg_data;
-		irqfd.fd = vq->call_fd;
-		/* no additional flag bit should be set */
-		irqfd.msi = msi;
-		DPRINTF("[irqfd: %d][MSIX: %d]\n", irqfd.fd, vqi->msix_idx);
-		rc = vm_irqfd(vdev->base->dev->vmctx, &irqfd);
-	} else {
-		/*
-		 * irqfd only supports MSIx now. For non-MSIx, call_fd is polled
-		 * by dm then inject interrupts to guest
-		 */
-		if (is_register) {
-			vq->mevp = mevent_add(vq->call_fd, EVF_READ,
-				vhost_vq_notify, vq, NULL, NULL);
-			if (!vq->mevp) {
-				WPRINTF("mevent_add failed\n");
-				rc = -1;
-			}
-		} else if (vq->mevp) {
-			mevent_delete(vq->mevp);
-			vq->mevp = NULL;
-		}
-	}
-
+	/* register irqfd for notify */
+	mte = &vdev->base->dev->msix.table[vqi->msix_idx];
+	msi.msi_addr = mte->addr;
+	msi.msi_data = mte->msg_data;
+	irqfd.fd = vq->call_fd;
+	/* no additional flag bit should be set */
+	irqfd.msi = msi;
+	DPRINTF("[irqfd: %d][MSIX: %d]\n", irqfd.fd, vqi->msix_idx);
+	rc = vm_irqfd(vdev->base->dev->vmctx, &irqfd);
 	if (rc < 0) {
 		WPRINTF("vm_irqfd failed rc = %d, errno = %d\n", rc, errno);
 		/* unregister ioeventfd */
@@ -713,6 +679,12 @@ vhost_dev_start(struct vhost_dev *vdev)
 
 	if ((vdev->base->status & VIRTIO_CR_STATUS_DRIVER_OK) == 0) {
 		WPRINTF("status error 0x%x\n", vdev->base->status);
+		goto fail;
+	}
+
+	/* only msix is supported now */
+	if (!pci_msix_enabled(vdev->base->dev)) {
+		WPRINTF("only msix is supported\n");
 		goto fail;
 	}
 
