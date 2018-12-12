@@ -12,6 +12,9 @@ A ``scripts`` directory includes scripts to analyze the trace data.
 Usage
 *****
 
+acrntrace
+=========
+
 The ``acrntrace`` tool runs on the Service OS (SOS) to capture trace data and
 output to trace file under ``./acrntrace`` with raw (binary) data format.
 
@@ -21,6 +24,9 @@ Options:
 -i period               specify polling interval in milliseconds [1-999]
 -t max_time             max time to capture trace data (in second)
 -c                      clear the buffered old data
+
+acrntrace_format.py
+===================
 
 The ``acrntrace_format.py`` is a offline tool for parsing trace data (as output
 by acrntrace) to human-readable formats based on given format.
@@ -53,17 +59,33 @@ There can be only one such rule for each type of event.
 An example *formats_file* is available in the acrn_hypervisor repo in
 ``hypervisor/tools/acrntrace/scripts/formats``.
 
+acrnalyze.py
+============
+
 The ``acrnalyze.py`` is a offline tool to analyze trace data (as output by
 acrntrace) based on given analyzer, such as ``vm_exit`` or ``irq``.
 
 Options:
 
--h                               print this message
--i, --ifile=string               input file name
--o, --ofile=string               output filename
--f, --frequency=unsigned_int     TSC frequency in MHz
---vm_exit                        generate a vm_exit report
---irq                            generate an IRQ-related report
+.. list-table::
+
+   * - :kbd:`-h`
+     - print this message
+
+   * - :kbd:`-i, --ifile=string`
+     - input file name
+
+   * - :kbd:`-o, --ofile=string`
+     - output filename
+
+   * - :kbd:`-f, --frequency=unsigned_int`
+     - TSC frequency in MHz
+
+   * - :kbd:`--vm_exit`
+     - generate a vm_exit report
+
+   * - :kbd:`--irq`
+     - generate an IRQ-related report
 
 .. note:: We depend on TSC frequency to do time-based analysis. Please configure
    the right TSC frequency that acrn runs on. TSC frequency can be obtained
@@ -73,6 +95,9 @@ Options:
    occur during normal operation (aka CPU throttling) on the processor which
    doesn't support for invariant TSC. The results may therefore not be
    completely accurate in that regard.
+
+Typical use example
+===================
 
 Here's a typical use of ``acrntrace`` to capture trace data from the SOS,
 converting the binary data to human-readable form, copying the processed trace
