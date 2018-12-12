@@ -203,63 +203,68 @@ char *strncpy_s(char *d_arg, size_t dmax, const char *s_arg, size_t slen_arg)
 {
 	const char *s = s_arg;
 	char *d = d_arg;
-	char *dest_base;
+	char *pret;
 	size_t dest_avail;
 	uint64_t overlap_guard;
 	size_t slen = slen_arg;
 
 	if ((d == NULL) || (s == NULL)) {
 		pr_err("%s: invlaid src or dest buffer", __func__);
-		return NULL;
+		pret = NULL;
+	} else {
+		pret = d_arg;
 	}
 
-	if ((dmax == 0U) || (slen == 0U)) {
-		pr_err("%s: invlaid length of src or dest buffer", __func__);
-		return NULL;
+	if (pret != NULL) {
+		if ((dmax == 0U) || (slen == 0U)) {
+			pr_err("%s: invlaid length of src or dest buffer", __func__);
+			pret =  NULL;
+		}
 	}
 
-	if (d == s) {
-		return d;
-	}
+	/* if d equal to s, just return d; else execute the below code */
+	if ((pret != NULL) && (d != s)) {
+		overlap_guard = (uint64_t)((d > s) ? (d - s - 1) : (s - d - 1));
+		dest_avail = dmax;
 
-	overlap_guard = (uint64_t)((d > s) ? (d - s - 1) : (s - d - 1));
+		while (dest_avail > 0U) {
+			if (overlap_guard == 0U) {
+				pr_err("%s: overlap happened.", __func__);
+				d--;
+				*d = '\0';
+				/* break out to return */
+				pret = NULL;
+				break;
+			}
 
-	dest_base = d;
-	dest_avail = dmax;
+			if (slen == 0U) {
+				*d = '\0';
+				/* break out to return */
+				break;
+			}
 
-	while (dest_avail > 0U) {
-		if (overlap_guard == 0U) {
-			pr_err("%s: overlap happened.", __func__);
-			d--;
-			*d = '\0';
-			return NULL;
+			*d = *s;
+			if (*d == '\0') {
+				/* break out to return */
+				break;
+			}
+
+			d++;
+			s++;
+			slen--;
+			dest_avail--;
+			overlap_guard--;
 		}
 
-		if (slen == 0U) {
-			*d = '\0';
-			return dest_base;
-		}
+		if (dest_avail == 0U) {
+			pr_err("%s: dest buffer has no enough space.", __func__);
 
-		*d = *s;
-		if (*d == '\0') {
-			return dest_base;
+			/* to avoid a string that is not null-terminated in dest buffer */
+			pret[dmax - 1] = '\0';
 		}
-
-		d++;
-		s++;
-		slen--;
-		dest_avail--;
-		overlap_guard--;
 	}
 
-	pr_err("%s: dest buffer has no enough space.", __func__);
-
-	/*
-	 * to avoid a string that is not
-	 * null-terminated in dest buffer
-	 */
-	dest_base[dmax - 1] = '\0';
-	return NULL;
+	return pret;
 }
 
 /**
