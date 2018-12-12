@@ -96,10 +96,11 @@ int
 acrn_parse_elf(char *arg)
 {
 	size_t len = strnlen(arg, STR_LEN);
+	size_t elfsz;
 
 	if (len < STR_LEN) {
 		strncpy(elf_path, arg, len + 1);
-		assert(check_image(elf_path) == 0);
+		assert(check_image(elf_path, 0, &elfsz) == 0);
 
 		elf_file_name = elf_path;
 

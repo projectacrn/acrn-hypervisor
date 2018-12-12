@@ -65,7 +65,7 @@ int acrn_parse_guest_part_info(char *arg);
 char *get_bootargs(void);
 void vsbl_set_bdf(int bnum, int snum, int fnum);
 
-int check_image(char *path);
+int check_image(char *path, size_t size_limit, size_t *size);
 uint32_t acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820);
 int add_e820_entry(struct e820_entry *e820, int len, uint64_t start,
 	uint64_t size, uint32_t type);

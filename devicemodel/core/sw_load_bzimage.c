@@ -97,8 +97,8 @@ static char ramdisk_path[STR_LEN];
 static char kernel_path[STR_LEN];
 static int with_ramdisk;
 static int with_kernel;
-static int ramdisk_size;
-static int kernel_size;
+static size_t ramdisk_size;
+static size_t kernel_size;
 
 static int
 acrn_get_bzimage_setup_size(struct vmctx *ctx)
@@ -133,7 +133,7 @@ acrn_parse_kernel(char *arg)
 
 	if (len < STR_LEN) {
 		strncpy(kernel_path, arg, len + 1);
-		if (check_image(kernel_path) != 0){
+		if (check_image(kernel_path, 0, &kernel_size) != 0){
 			fprintf(stderr, "SW_LOAD: check_image failed for '%s'\n",
 				kernel_path);
 			exit(10); /* Non-zero */
@@ -154,7 +154,7 @@ acrn_parse_ramdisk(char *arg)
 
 	if (len < STR_LEN) {
 		strncpy(ramdisk_path, arg, len + 1);
-		if (check_image(ramdisk_path) != 0){
+		if (check_image(ramdisk_path, 0, &ramdisk_size) != 0){
 			fprintf(stderr, "SW_LOAD: check_image failed for '%s'\n",
 				ramdisk_path);
 			exit(11); /* Non-zero */
@@ -171,7 +171,8 @@ static int
 acrn_prepare_ramdisk(struct vmctx *ctx)
 {
 	FILE *fp;
-	int len, read;
+	long len;
+	size_t read;
 
 	fp = fopen(ramdisk_path, "r");
 	if (fp == NULL) {
@@ -182,26 +183,33 @@ acrn_prepare_ramdisk(struct vmctx *ctx)
 
 	fseek(fp, 0, SEEK_END);
 	len = ftell(fp);
+
+	if (len != ramdisk_size) {
+		fprintf(stderr,
+			"SW_LOAD ERR: ramdisk file changed\n");
+		fclose(fp);
+		return -1;
+	}
+
 	if (len > (BOOTARGS_LOAD_OFF(ctx) - RAMDISK_LOAD_OFF(ctx))) {
 		printf("SW_LOAD ERR: the size of ramdisk file is too big"
-				" file len=0x%x, limit is 0x%lx\n", len,
+				" file len=0x%lx, limit is 0x%lx\n", len,
 				BOOTARGS_LOAD_OFF(ctx) - RAMDISK_LOAD_OFF(ctx));
 		fclose(fp);
 		return -1;
 	}
-	ramdisk_size = len;
 
 	fseek(fp, 0, SEEK_SET);
 	read = fread(ctx->baseaddr + RAMDISK_LOAD_OFF(ctx),
 			sizeof(char), len, fp);
 	if (read < len) {
 		printf("SW_LOAD ERR: could not read the whole ramdisk file,"
-				" file len=%d, read %d\n", len, read);
+				" file len=%ld, read %lu\n", len, read);
 		fclose(fp);
 		return -1;
 	}
 	fclose(fp);
-	printf("SW_LOAD: ramdisk %s size %d copied to guest 0x%lx\n",
+	printf("SW_LOAD: ramdisk %s size %lu copied to guest 0x%lx\n",
 			ramdisk_path, ramdisk_size, RAMDISK_LOAD_OFF(ctx));
 
 	return 0;
@@ -211,7 +219,8 @@ static int
 acrn_prepare_kernel(struct vmctx *ctx)
 {
 	FILE *fp;
-	int len, read;
+	long len;
+	size_t read;
 
 	fp = fopen(kernel_path, "r");
 	if (fp == NULL) {
@@ -222,24 +231,31 @@ acrn_prepare_kernel(struct vmctx *ctx)
 
 	fseek(fp, 0, SEEK_END);
 	len = ftell(fp);
+
+	if (len != kernel_size) {
+		fprintf(stderr,
+			"SW_LOAD ERR: kernel file changed\n");
+		fclose(fp);
+		return -1;
+	}
+
 	if ((len + KERNEL_LOAD_OFF(ctx)) > RAMDISK_LOAD_OFF(ctx)) {
 		printf("SW_LOAD ERR: need big system memory to fit image\n");
 		fclose(fp);
 		return -1;
 	}
-	kernel_size = len;
 
 	fseek(fp, 0, SEEK_SET);
 	read = fread(ctx->baseaddr + KERNEL_LOAD_OFF(ctx),
 			sizeof(char), len, fp);
 	if (read < len) {
 		printf("SW_LOAD ERR: could not read the whole kernel file,"
-				" file len=%d, read %d\n", len, read);
+				" file len=%ld, read %lu\n", len, read);
 		fclose(fp);
 		return -1;
 	}
 	fclose(fp);
-	printf("SW_LOAD: kernel %s size %d copied to guest 0x%lx\n",
+	printf("SW_LOAD: kernel %s size %lu copied to guest 0x%lx\n",
 			kernel_path, kernel_size, KERNEL_LOAD_OFF(ctx));
 
 	return 0;
