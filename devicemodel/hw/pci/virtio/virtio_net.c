@@ -180,6 +180,7 @@ static int virtio_net_cfgwrite(void *vdev, int offset, int size,
 	uint32_t value);
 static void virtio_net_neg_features(void *vdev, uint64_t negotiated_features);
 static void virtio_net_set_status(void *vdev, uint64_t status);
+static void virtio_net_teardown(void *param);
 static struct vhost_net *vhost_net_init(struct virtio_base *base, int vhostfd,
 	int tapfd, int vq_idx);
 static int vhost_net_deinit(struct vhost_net *vhost_net);
@@ -707,7 +708,8 @@ virtio_net_tap_setup(struct virtio_net *net, char *devname)
 
 	if (vhost_fd < 0) {
 		net->mevp = mevent_add(net->tapfd, EVF_READ,
-				       virtio_net_rx_callback, net, NULL, NULL);
+				       virtio_net_rx_callback, net,
+				       virtio_net_teardown, net);
 		if (net->mevp == NULL) {
 			WPRINTF(("Could not register event\n"));
 			close(net->tapfd);
@@ -934,10 +936,8 @@ virtio_net_set_status(void *vdev, uint64_t status)
 
 	if (!net->vhost_net->vhost_started &&
 		(status & VIRTIO_CR_STATUS_DRIVER_OK)) {
-		if (net->mevp) {
-			mevent_delete(net->mevp);
-			net->mevp = NULL;
-		}
+		if (net->mevp)
+			mevent_disable(net->mevp);
 
 		rc = vhost_net_start(net->vhost_net);
 		if (rc < 0) {
@@ -950,6 +950,24 @@ virtio_net_set_status(void *vdev, uint64_t status)
 		if (rc < 0)
 			WPRINTF(("vhost_net_stop failed\n"));
 	}
+}
+
+static void
+virtio_net_teardown(void *param)
+{
+	struct virtio_net *net;
+
+	net = (struct virtio_net *)param;
+	if (!net)
+		return;
+
+	if (net->tapfd >= 0) {
+		close(net->tapfd);
+		net->tapfd = -1;
+	} else
+		fprintf(stderr, "net->tapfd is -1!\n");
+
+	free(net);
 }
 
 static void
@@ -969,16 +987,10 @@ virtio_net_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			net->vhost_net = NULL;
 		}
 
-		if (net->tapfd >= 0) {
-			close(net->tapfd);
-			net->tapfd = -1;
-		} else
-			fprintf(stderr, "net->tapfd is -1!\n");
-
 		if (net->mevp != NULL)
 			mevent_delete(net->mevp);
-
-		free(net);
+		else
+			virtio_net_teardown(net);
 
 		DPRINTF(("%s: done\n", __func__));
 	} else
