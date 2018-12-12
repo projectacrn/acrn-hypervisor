@@ -873,6 +873,7 @@ void init_vmcs(struct acrn_vcpu *vcpu)
 {
 	uint64_t vmx_rev_id;
 	uint64_t vmcs_pa;
+	void **vmcs_ptr = &get_cpu_var(vmcs_run);
 
 	/* Log message */
 	pr_dbg("Initializing VMCS");
@@ -881,12 +882,16 @@ void init_vmcs(struct acrn_vcpu *vcpu)
 	vmx_rev_id = msr_read(MSR_IA32_VMX_BASIC);
 	(void)memcpy_s(vcpu->arch.vmcs, 4U, (void *)&vmx_rev_id, 4U);
 
-	/* Execute VMCLEAR on current VMCS */
-	vmcs_pa = hva2hpa(vcpu->arch.vmcs);
-	exec_vmclear((void *)&vmcs_pa);
+	/* Execute VMCLEAR on previous un-clear VMCS */
+	if (*vmcs_ptr != NULL) {
+		vmcs_pa = hva2hpa(*vmcs_ptr);
+		exec_vmclear((void *)&vmcs_pa);
+	}
 
 	/* Load VMCS pointer */
+	vmcs_pa = hva2hpa(vcpu->arch.vmcs);
 	exec_vmptrld((void *)&vmcs_pa);
+	*vmcs_ptr = (void *)vcpu->arch.vmcs;
 
 	/* Initialize the Virtual Machine Control Structure (VMCS) */
 	init_host_state();

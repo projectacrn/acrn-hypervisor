@@ -378,9 +378,8 @@
 #define VMX_INT_TYPE_SW_EXP		6U
 
 /* External Interfaces */
-void exec_vmxon_instr(uint16_t pcpu_id);
-
-void vmx_off(uint16_t pcpu_id);
+void vmx_on(void);
+void vmx_off(void);
 
 /**
  * Read field from VMCS.

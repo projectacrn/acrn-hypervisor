@@ -59,7 +59,7 @@ static void init_guest(void)
 /*TODO: move into guest-vcpu module */
 static void enter_guest_mode(uint16_t pcpu_id)
 {
-	exec_vmxon_instr(pcpu_id);
+	vmx_on();
 
 #ifdef CONFIG_PARTITION_MODE
 	(void)prepare_vm(pcpu_id);

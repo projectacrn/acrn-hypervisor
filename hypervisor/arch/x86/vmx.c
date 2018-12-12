@@ -32,14 +32,14 @@ static inline void exec_vmxon(void *addr)
 /* Per cpu data to hold the vmxon_region for each pcpu.
  * It will be used again when we start a pcpu after the pcpu was down.
  * S3 enter/exit will use it.
+ * Only run on current pcpu.
  */
-void exec_vmxon_instr(uint16_t pcpu_id)
+void vmx_on(void)
 {
-	uint64_t tmp64, vmcs_pa;
+	uint64_t tmp64;
 	uint32_t tmp32;
-	void *vmxon_region_va = (void *)per_cpu(vmxon_region, pcpu_id);
+	void *vmxon_region_va = (void *)get_cpu_var(vmxon_region);
 	uint64_t vmxon_region_pa;
-	struct acrn_vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
 
 	/* Initialize vmxon page with revision id from IA32 VMX BASIC MSR */
 	tmp32 = (uint32_t)msr_read(MSR_IA32_VMX_BASIC);
@@ -65,26 +65,11 @@ void exec_vmxon_instr(uint16_t pcpu_id)
 	/* Turn ON VMX */
 	vmxon_region_pa = hva2hpa(vmxon_region_va);
 	exec_vmxon(&vmxon_region_pa);
-
-	vmcs_pa = hva2hpa(vcpu->arch.vmcs);
-	exec_vmptrld(&vmcs_pa);
 }
 
 static inline void exec_vmxoff(void)
 {
 	asm volatile ("vmxoff" : : : "memory");
-}
-
-void vmx_off(uint16_t pcpu_id)
-{
-
-	struct acrn_vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
-	uint64_t vmcs_pa;
-
-	vmcs_pa = hva2hpa(vcpu->arch.vmcs);
-	exec_vmclear((void *)&vmcs_pa);
-
-	exec_vmxoff();
 }
 
 /**
@@ -120,6 +105,24 @@ void exec_vmptrld(void *addr)
 		:
 		: "a"(addr)
 		: "cc", "memory");
+}
+
+/**
+ * only run on current pcpu
+ */
+void vmx_off(void)
+{
+	void **vmcs_ptr = &get_cpu_var(vmcs_run);
+
+	if (*vmcs_ptr != NULL) {
+		uint64_t vmcs_pa;
+
+		vmcs_pa = hva2hpa(*vmcs_ptr);
+		exec_vmclear((void *)&vmcs_pa);
+		*vmcs_ptr = NULL;
+	}
+
+	exec_vmxoff();
 }
 
 uint64_t exec_vmread64(uint32_t field_full)

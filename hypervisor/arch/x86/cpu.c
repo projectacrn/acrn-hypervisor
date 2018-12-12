@@ -607,7 +607,7 @@ void cpu_dead(uint16_t pcpu_id)
 
 	if (bitmap_test_and_clear_lock(pcpu_id, &pcpu_active_bitmap)) {
 		/* clean up native stuff */
-		vmx_off(pcpu_id);
+		vmx_off();
 		cache_flush_invalidate_all();
 
 		/* Set state to show CPU is dead */
