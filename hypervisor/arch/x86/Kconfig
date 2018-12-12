@@ -159,13 +159,11 @@ choice
 	  If this is not selected, the serial port is disabled. This is the
 	  default.
 
-
 config SERIAL_PCI
 	bool "PCI"
 	help
 	  Select this if the serial port shall be accessed via PCI memory-mapped
 	  registers.
-
 
 config SERIAL_LEGACY
 	bool "Legacy"
@@ -175,16 +173,13 @@ config SERIAL_LEGACY
 
 endchoice
 
-
 config SERIAL_PCI_BDF
-	hex "BDF value of serial PCI device"
+	string "BDF of serial PCI device"
 	depends on SERIAL_PCI
-	default 0x00C2
+	default "0:18.2"
 	help
-	  A 16-bit integer encoding bus, device and function of the serial PCI device.
-	  This integer consists of 8-bit bus ID, 5-bit device ID and 3-bit function ID.
-	  As an example,for PCI device 00:18.2, this BDF would be (0 << 8) | (0x18 << 3)
-	  | (2 << 0), it's 0x00C2.
+	  BDF: bus, device and function of the serial PCI device; for an example,
+	  PCI device ttyS2: 0:18.2.
 
 config SERIAL_PIO_BASE
 	hex "Base address of serial PIO region"
