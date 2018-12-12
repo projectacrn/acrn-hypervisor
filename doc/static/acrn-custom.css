@@ -109,9 +109,12 @@ table.hlist {
     width: 95% !important;
 }
 
-/*  override rtd theme white-space no-wrap in table heading and content  */
+/*  override rtd theme white-space no-wrap in table heading and content
+ *  and top align for content too (not middle)
+ */
 th,td {
     white-space: normal !important;
+    vertical-align: top !important;
 }
 
 /* dbk tweak for doxygen-generated API headings (for RTD theme) */
