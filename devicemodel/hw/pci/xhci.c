@@ -1107,50 +1107,10 @@ pci_xhci_reset(struct pci_xhci_vdev *xdev)
 static uint32_t
 pci_xhci_usbcmd_write(struct pci_xhci_vdev *xdev, uint32_t cmd)
 {
-	int do_intr = 0;
-	int i;
-
 	if (cmd & XHCI_CMD_RS) {
-		do_intr = (xdev->opregs.usbcmd & XHCI_CMD_RS) == 0;
-
 		xdev->opregs.usbcmd |= XHCI_CMD_RS;
 		xdev->opregs.usbsts &= ~XHCI_STS_HCH;
 		xdev->opregs.usbsts |= XHCI_STS_PCD;
-
-		/* Queue port change event on controller run from stop */
-		if (do_intr)
-			for (i = 1; i <= XHCI_MAX_DEVS; i++) {
-				struct pci_xhci_dev_emu *dev;
-				struct pci_xhci_portregs *port;
-				struct xhci_trb		evtrb;
-
-				dev = XHCI_DEVINST_PTR(xdev, i);
-				if (dev == NULL)
-					continue;
-
-				port = XHCI_PORTREG_PTR(xdev, i);
-				port->portsc |= XHCI_PS_CSC | XHCI_PS_CCS;
-				port->portsc &= ~XHCI_PS_PLS_MASK;
-
-				/*
-				 * XHCI 4.19.3 USB2 RxDetect->Polling,
-				 *             USB3 Polling->U0
-				 */
-				if (dev->dev_ue->ue_usbver == 2)
-					port->portsc |=
-					    XHCI_PS_PLS_SET(UPS_PORT_LS_POLL);
-				else
-					port->portsc |=
-					    XHCI_PS_PLS_SET(UPS_PORT_LS_U0);
-
-				pci_xhci_set_evtrb(&evtrb, i,
-				    XHCI_TRB_ERROR_SUCCESS,
-				    XHCI_TRB_EVENT_PORT_STS_CHANGE);
-
-				if (pci_xhci_insert_event(xdev, &evtrb, 0) !=
-				    XHCI_TRB_ERROR_SUCCESS)
-					break;
-			}
 	} else {
 		xdev->opregs.usbcmd &= ~XHCI_CMD_RS;
 		xdev->opregs.usbsts |= XHCI_STS_HCH;
@@ -1167,10 +1127,6 @@ pci_xhci_usbcmd_write(struct pci_xhci_vdev *xdev, uint32_t cmd)
 	}
 
 	cmd &= ~(XHCI_CMD_CSS | XHCI_CMD_CRS);
-
-	if (do_intr)
-		pci_xhci_assert_interrupt(xdev);
-
 	return cmd;
 }
 
