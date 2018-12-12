@@ -126,7 +126,7 @@ Start the User OS (UOS)
 
    .. code-block:: none
 
-      # losetup -f -P --show ~/uos.img
+      # losetup -r -f -P --show ~/uos.img
       # mount /dev/loop0p3 /mnt
 
       # ls -l /mnt/usr/lib/kernel/
