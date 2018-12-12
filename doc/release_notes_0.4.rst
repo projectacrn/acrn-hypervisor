@@ -211,7 +211,7 @@ release in Nov 2018 (click on the CommitID link to see details):
 - :acrn-commit:`eec3a342` dm: fix the race issue in mevent_del
 - :acrn-commit:`87e7bdb9` DM: updating launch_uos.sh
 - :acrn-commit:`9e0562f4` hv: add obvious comment for empty else clause following else if
-- :acrn-commit:`d36b44f2` hv: avoid to use "++" or "--" operators in an expression
+- :acrn-commit:`d36b44f2` hv: avoid to use ``++`` or ``--`` operators in an expression
 - :acrn-commit:`f33edc67` hv: fix reference parameter to procedure is reassigned
 - :acrn-commit:`36be890e` hv: fix included file not protected with #define
 - :acrn-commit:`ae9d4361` hv: minimize the case of "identifier reuse"

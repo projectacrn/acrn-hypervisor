@@ -430,8 +430,8 @@ release in Sep 2018 (click on the CommitID link to see details):
 - :acrn-commit:`49b476bb` hv: vm_load: set zeropage just past boot args
 - :acrn-commit:`9368373f` tools: acrn-crashlog: check the pointer after getting sender
 - :acrn-commit:`2973db78` DM: VMcfg: generated example header
-- :acrn-commit:`c86da003` DM: VMcfg: support --dump options
-- :acrn-commit:`67d72920` DM: VMcfg: support --vmcfg options
+- :acrn-commit:`c86da003` DM: VMcfg: support ``--dump`` options
+- :acrn-commit:`67d72920` DM: VMcfg: support ``--vmcfg`` options
 - :acrn-commit:`321021eb` DM: VMcfg: mrb-env-setup.sh
 - :acrn-commit:`d2ed9955` DM: VMcfg: support VM1 on MRB
 - :acrn-commit:`ae5b32dc` DM: VMcfg: build-in vm configurations
