@@ -7,27 +7,56 @@
 #include <hypervisor.h>
 #include "uart16550.h"
 
+#define MAX_BDF_LEN 8
+
 #if defined(CONFIG_SERIAL_PIO_BASE)
 static bool serial_port_mapped = true;
 static bool uart_enabled = true;
 static uint64_t uart_base_address = CONFIG_SERIAL_PIO_BASE;
-static union pci_bdf serial_pci_bdf;
+static char pci_bdf_info[MAX_BDF_LEN];
 #elif defined(CONFIG_SERIAL_PCI_BDF)
 static bool serial_port_mapped;
 static bool uart_enabled = true;
 static uint64_t uart_base_address;
-static union pci_bdf serial_pci_bdf = (union pci_bdf)(uint16_t)CONFIG_SERIAL_PCI_BDF;
+static char pci_bdf_info[MAX_BDF_LEN] = CONFIG_SERIAL_PCI_BDF;
 #else
 static bool serial_port_mapped;
 static bool uart_enabled;
 static uint64_t uart_base_address;
-static union pci_bdf serial_pci_bdf;
+static char pci_bdf_info[MAX_BDF_LEN];
 #endif
 
 typedef uint32_t uart_reg_t;
 
 static spinlock_t uart_rx_lock;
 static spinlock_t uart_tx_lock;
+static union pci_bdf serial_pci_bdf;
+
+/* PCI BDF must follow format: bus:dev.func, for example 0:18.2 */
+static uint16_t get_pci_bdf_value(char *bdf)
+{
+	char *pos;
+	char *start = bdf;
+	char dst[3][4];
+	uint64_t value= 0UL;
+	
+	pos = strchr(start, ':');
+	if (pos != NULL) {
+		strncpy_s(dst[0], 3, start, pos -start);
+		start = pos + 1;
+
+		pos = strchr(start, '.');
+		if (pos != NULL) {
+			strncpy_s(dst[1], 3, start, pos -start);
+			start = pos + 1;
+
+			strncpy_s(dst[2], 2, start, 1);
+			value= (strtoul_hex(dst[0]) << 8) | (strtoul_hex(dst[1]) << 3) | strtoul_hex(dst[2]);
+		}
+	}
+
+	return (uint16_t)value;
+}
 
 /**
  * @pre uart_enabled == true
@@ -96,7 +125,8 @@ void uart16550_init(void)
 	}
 
 	/* if configure serial PCI BDF, get its base MMIO address */
-	if (!serial_port_mapped && (uart_base_address == 0UL) && (serial_pci_bdf.value != 0U)) {
+	if (!serial_port_mapped) {
+		serial_pci_bdf.value = get_pci_bdf_value(pci_bdf_info);
 		uart_base_address = pci_pdev_read_cfg(serial_pci_bdf, pci_bar_offset(0), 4U) & PCIM_BAR_MEM_BASE;
 	}
 
