@@ -1305,15 +1305,18 @@ void profiling_vmenter_handler(__unused struct acrn_vcpu *vcpu)
 /*
  * Save the VCPU info on vmexit
  */
-void profiling_vmexit_handler(struct acrn_vcpu *vcpu, uint64_t exit_reason)
+void profiling_pre_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	per_cpu(profiling_info.sep_state, vcpu->pcpu_id).total_vmexit_count++;
+	uint64_t exit_reason = 0UL;
+
+	exit_reason = vcpu->arch.exit_reason & 0xFFFFUL;
 
 	if ((get_cpu_var(profiling_info.sep_state).pmu_state == PMU_RUNNING) ||
 		(get_cpu_var(profiling_info.soc_state) == SW_RUNNING)) {
 
 		get_cpu_var(profiling_info.vm_info).vmexit_tsc = rdtsc();
-		get_cpu_var(profiling_info.vm_info).vmexit_reason = exit_reason;
+		get_cpu_var(profiling_info.vm_info).vmexit_reason
+			= exit_reason;
 		if (exit_reason == VMX_EXIT_REASON_EXTERNAL_INTERRUPT) {
 			get_cpu_var(profiling_info.vm_info).external_vector
 				= (int32_t)(exec_vmread(VMX_EXIT_INT_INFO) & 0xFFUL);
@@ -1330,6 +1333,18 @@ void profiling_vmexit_handler(struct acrn_vcpu *vcpu, uint64_t exit_reason)
 			= exec_vmread64(VMX_GUEST_CS_SEL);
 
 		get_cpu_var(profiling_info.vm_info).guest_vm_id = (int32_t)vcpu->vm->vm_id;
+	}
+}
+
+/*
+ * Generate vmexit data
+ */
+void profiling_post_vmexit_handler(struct acrn_vcpu *vcpu)
+{
+	per_cpu(profiling_info.sep_state, vcpu->pcpu_id).total_vmexit_count++;
+
+	if ((get_cpu_var(profiling_info.sep_state).pmu_state == PMU_RUNNING) ||
+		(get_cpu_var(profiling_info.soc_state) == SW_RUNNING)) {
 
 		/* Generate vmswitch sample */
 		if (((sep_collection_switch &
@@ -1343,7 +1358,7 @@ void profiling_vmexit_handler(struct acrn_vcpu *vcpu, uint64_t exit_reason)
 			get_cpu_var(profiling_info.vm_switch_trace).vm_exit_tsc
 				= get_cpu_var(profiling_info.vm_info).vmexit_tsc;
 			get_cpu_var(profiling_info.vm_switch_trace).vm_exit_reason
-				= exit_reason;
+				= get_cpu_var(profiling_info.vm_info).vmexit_reason;
 
 			if ((sep_collection_switch &
 					(1UL << (uint64_t)VM_SWITCH_TRACING)) > 0UL) {

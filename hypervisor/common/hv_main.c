@@ -70,6 +70,8 @@ void vcpu_thread(struct acrn_vcpu *vcpu)
 
 		vcpu->arch.nrexits++;
 
+		profiling_pre_vmexit_handler(vcpu);
+
 		CPU_IRQ_ENABLE();
 		/* Dispatch handler */
 		ret = vmexit_handler(vcpu);
@@ -83,6 +85,6 @@ void vcpu_thread(struct acrn_vcpu *vcpu)
 
 		TRACE_2L(TRACE_VM_EXIT, basic_exit_reason, vcpu_get_rip(vcpu));
 
-		profiling_vmexit_handler(vcpu, basic_exit_reason);
+		profiling_post_vmexit_handler(vcpu);
 	} while (1);
 }
