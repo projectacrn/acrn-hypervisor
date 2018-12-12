@@ -316,6 +316,8 @@ void	update_pt_info(uint16_t phys_bdf);
 int	check_gsi_sharing_violation(void);
 int	pciaccess_init(void);
 void	pciaccess_cleanup(void);
+int	parse_bdf(char *s, int *bus, int *dev, int *func, int base);
+
 
 /**
  * @brief Set virtual PCI device's configuration space in 1 byte width

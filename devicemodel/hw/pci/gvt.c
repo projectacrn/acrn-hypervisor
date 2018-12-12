@@ -52,8 +52,8 @@ int guest_domid = 1;
 int
 acrn_parse_gvtargs(char *arg)
 {
-	if (sscanf(arg, " %d %d %d", &gvt_low_gm_sz,
-			&gvt_high_gm_sz, &gvt_fence_sz) != 3) {
+	if (parse_bdf(arg, &gvt_low_gm_sz, &gvt_high_gm_sz,
+				&gvt_fence_sz, 10) != 0) {
 		return -1;
 	}
 	printf("passed gvt-g optargs low_gm %d, high_gm %d, fence %d\n",

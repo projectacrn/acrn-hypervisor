@@ -84,7 +84,7 @@ check_msi_capability(char *dev_name)
 	struct pci_device *phys_dev;
 
 	/* only check the MSI/MSI-x capability for PCI device */
-	if (sscanf(dev_name, "%x:%x.%x", &bus, &slot, &func) != 3)
+	if (parse_bdf(dev_name, &bus, &slot, &func, 16) != 0)
 		return 0;
 
 	phys_dev = pci_device_find_by_slot(0, bus, slot, func);
@@ -168,7 +168,7 @@ update_pt_info(uint16_t phys_bdf)
 	LIST_FOREACH(group, &gsg_head, gsg_list) {
 		for (i = 0; i < (group->shared_dev_num); i++) {
 			name = group->dev[i].dev_name;
-			if (sscanf(name, "%x:%x.%x", &bus, &slot, &func) != 3)
+			if (parse_bdf(name, &bus, &slot, &func, 16) != 0)
 				continue;
 
 			if (phys_bdf == (PCI_BDF(bus, slot, func)))

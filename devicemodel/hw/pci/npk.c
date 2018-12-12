@@ -89,6 +89,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <string.h>
 
 #include "dm.h"
 #include "vmmapi.h"
@@ -226,7 +227,9 @@ static int pci_npk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	/* traverse the driver folder, and try to find the NPK BDF# */
 	while ((dent = readdir(dir)) != NULL) {
-		if (sscanf(dent->d_name, "0000:%x:%x.%x", &b, &s, &f) != 3)
+		if (strncmp(dent->d_name, "0000:", 5) != 0 ||
+				parse_bdf((dent->d_name + 5),
+					&b, &s, &f, 10) != 0)
 			continue;
 		else
 			break;
