@@ -153,6 +153,46 @@ pci_parse_slot_usage(char *aopt)
 }
 
 int
+parse_bdf(char *s, int *bus, int *dev, int *func, int base)
+{
+	int i;
+	int nums[3] = {-1, -1, -1};
+	char *str;
+
+	if (bus) *bus = 0;
+	if (dev) *dev = 0;
+	if (func) *func = 0;
+	str = s;
+	for (i = 0, errno = 0; i < 3; i++) {
+		nums[i] = (int)strtol(str, &str, base);
+		if (errno == ERANGE || *str == '\0' || s == str)
+			break;
+		str++;
+	}
+
+	if (s == str || errno == ERANGE)
+	{
+		printf("%s: parse_bdf error!\n", __func__);
+		return -1;
+	}
+	switch (i) {
+	case 0:
+		if (dev) *dev = nums[0];
+		break;
+	case 1:
+		if (dev) *dev = nums[0];
+		if (func) *func = nums[1];
+		break;
+	case 2:
+		if (bus) *bus = nums[0];
+		if (dev) *dev = nums[1];
+		if (func) *func = nums[2];
+		break;
+	}
+	return 0;
+}
+
+int
 pci_parse_slot(char *opt)
 {
 	struct businfo *bi;
@@ -193,15 +233,9 @@ pci_parse_slot(char *opt)
 	}
 
 	/* <bus>:<slot>:<func> */
-	if (sscanf(str, "%d:%d:%d", &bnum, &snum, &fnum) != 3) {
-		bnum = 0;
-		/* <slot>:<func> */
-		if (sscanf(str, "%d:%d", &snum, &fnum) != 2) {
-			fnum = 0;
-			/* <slot> */
-			if (sscanf(str, "%d", &snum) != 1)
-				snum = -1;
-		}
+	if (parse_bdf(str, &bnum, &snum, &fnum, 10) != 0) {
+		fprintf(stderr, "pci bdf parse fail\n");
+		snum = -1;
 	}
 
 	if (bnum < 0 || bnum >= MAXBUSES || snum < 0 || snum >= MAXSLOTS ||

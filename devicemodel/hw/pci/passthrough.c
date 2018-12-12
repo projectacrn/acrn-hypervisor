@@ -1003,7 +1003,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	opt = strsep(&opts, ",");
-	if (sscanf(opt, "%x/%x/%x", &bus, &slot, &func) != 3) {
+	if (parse_bdf(opt, &bus, &slot, &func, 16) != 0) {
 		warnx("Invalid passthru BDF options:%s", opt);
 		return -EINVAL;
 	}

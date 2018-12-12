@@ -2182,7 +2182,7 @@ vmei_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	int i, rc;
 	char *endptr = NULL;
 	char *opt;
-	unsigned int bus = 0, slot = 0, func = 0;
+	int bus = 0, slot = 0, func = 0;
 	char name[DEV_NAME_SIZE + 1];
 
 	vmei_debug = 0;
@@ -2191,7 +2191,7 @@ vmei_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		goto init;
 
 	while ((opt = strsep(&opts, ",")) != NULL) {
-		if (sscanf(opt, "%x/%x/%x", &bus, &slot, &func) == 3)
+		if (parse_bdf(opt, &bus, &slot, &func, 16) == 0)
 			continue;
 		if (!strncmp(opt, "d", 1)) {
 			vmei_debug = strtoul(opt + 1, &endptr, 10);
