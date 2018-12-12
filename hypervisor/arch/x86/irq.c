@@ -376,7 +376,7 @@ void dispatch_exception(struct intr_excp_ctx *ctx)
 	spinlock_release(&exception_spinlock);
 
 	/* Halt the CPU */
-	cpu_dead(pcpu_id);
+	cpu_dead();
 }
 
 #ifdef CONFIG_PARTITION_MODE

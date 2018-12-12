@@ -175,7 +175,7 @@ void default_idle(void)
 		if (need_reschedule(pcpu_id) != 0) {
 			schedule();
 		} else if (need_offline(pcpu_id) != 0) {
-			cpu_dead(pcpu_id);
+			cpu_dead();
 		} else {
 			CPU_IRQ_ENABLE();
 			handle_complete_ioreq(pcpu_id);

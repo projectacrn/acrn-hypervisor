@@ -598,12 +598,16 @@ void cpu_do_idle(void)
 	__asm __volatile("pause" ::: "memory");
 }
 
-void cpu_dead(uint16_t pcpu_id)
+/**
+ * only run on current pcpu
+ */
+void cpu_dead(void)
 {
 	/* For debug purposes, using a stack variable in the while loop enables
 	 * us to modify the value using a JTAG probe and resume if needed.
 	 */
 	int32_t halt = 1;
+	uint16_t pcpu_id = get_cpu_id();
 
 	if (bitmap_test_and_clear_lock(pcpu_id, &pcpu_active_bitmap)) {
 		/* clean up native stuff */
