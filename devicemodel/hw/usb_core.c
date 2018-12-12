@@ -272,6 +272,16 @@ usb_dev_path(struct usb_devpath *path)
 	return output;
 }
 
+bool
+usb_dev_path_cmp(struct usb_devpath *p1, struct usb_devpath *p2)
+{
+	if (!p1 || !p2)
+		return false;
+
+	return (p1->bus == p2->bus && p1->depth == p2->depth &&
+				memcmp(p1->path, p2->path, p1->depth) == 0);
+}
+
 int
 usb_get_hub_port_num(struct usb_devpath *path)
 {
