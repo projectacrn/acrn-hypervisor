@@ -1006,7 +1006,7 @@ basl_make_templates(void)
 			tmpdir = _PATH_TMP;
 	}
 
-	len = strlen(tmpdir);
+	len = strnlen(tmpdir, MAXPATHLEN);
 
 	if ((len + sizeof(ASL_TEMPLATE) + 1) < MAXPATHLEN) {
 		strncpy(basl_template, tmpdir, len + 1);

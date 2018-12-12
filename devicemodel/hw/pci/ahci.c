@@ -2315,6 +2315,7 @@ pci_ahci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts, int atapi)
 
 	ret = 0;
 
+#define MAX_OPTS_LEN 256
 #ifdef AHCI_DEBUG
 	dbg = fopen("/tmp/log", "w+");
 #endif
@@ -2376,7 +2377,7 @@ pci_ahci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts, int atapi)
 		 * Use parts of the md5 sum of the filename
 		 */
 		MD5_Init(&mdctx);
-		MD5_Update(&mdctx, opts, strlen(opts));
+		MD5_Update(&mdctx, opts, strnlen(opts, MAX_OPTS_LEN));
 		MD5_Final(digest, &mdctx);
 		rc = snprintf(ahci_dev->port[p].ident,
 			sizeof(ahci_dev->port[p].ident),
