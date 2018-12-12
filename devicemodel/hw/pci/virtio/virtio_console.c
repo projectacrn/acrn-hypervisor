@@ -124,6 +124,7 @@ struct virtio_console {
 	struct virtio_console_port	control_port;
 	struct virtio_console_port	ports[VIRTIO_CONSOLE_MAXPORTS];
 	struct virtio_console_config	*config;
+	int				ref_count;
 };
 
 struct virtio_console_config {
@@ -153,6 +154,7 @@ static void virtio_console_control_send(struct virtio_console *,
 	struct virtio_console_control *, const void *, size_t);
 static void virtio_console_announce_port(struct virtio_console_port *);
 static void virtio_console_open_port(struct virtio_console_port *, bool);
+static void virtio_console_teardown_backend(void *);
 
 static struct virtio_ops virtio_console_ops = {
 	"vtcon",			/* our name */
@@ -413,17 +415,10 @@ virtio_console_reset_backend(struct virtio_console_backend *be)
 	if (!be)
 		return;
 
+	if (be->evp)
+		mevent_disable(be->evp);
 	if (be->fd != STDIN_FILENO)
-		mevent_delete_close(be->evp);
-	else
-		mevent_delete(be->evp);
-
-	if (be->be_type == VIRTIO_CONSOLE_BE_PTY && be->pts_fd > 0) {
-		close(be->pts_fd);
-		be->pts_fd = -1;
-	}
-
-	be->evp = NULL;
+		close(be->fd);
 	be->fd = -1;
 	be->open = false;
 }
@@ -679,12 +674,14 @@ virtio_console_add_backend(struct virtio_console *console,
 	if (virtio_console_backend_can_read(be_type)) {
 		if (isatty(fd)) {
 			be->evp = mevent_add(fd, EVF_READ,
-				virtio_console_backend_read, be, NULL, NULL);
+					virtio_console_backend_read, be,
+					virtio_console_teardown_backend, be);
 			if (be->evp == NULL) {
 				WPRINTF(("vtcon: mevent_add failed\n"));
 				error = -1;
 				goto out;
 			}
+			console->ref_count++;
 		}
 	}
 
@@ -694,8 +691,6 @@ virtio_console_add_backend(struct virtio_console *console,
 out:
 	if (error != 0) {
 		if (be) {
-			if (be->evp)
-				mevent_delete(be->evp);
 			if (be->port) {
 				be->port->enabled = false;
 				be->port->arg = NULL;
@@ -732,17 +727,70 @@ virtio_console_close_backend(struct virtio_console_backend *be)
 		break;
 	}
 
-	be->fd = -1;
-	be->open = false;
+	if (be->be_type != VIRTIO_CONSOLE_BE_STDIO && be->fd > 0) {
+		close(be->fd);
+		be->fd = -1;
+	}
+
 	memset(be->port, 0, sizeof(*be->port));
+	free(be);
 }
 
 static void
+virtio_console_destroy(struct virtio_console *console)
+{
+	if (console) {
+		if (console->config)
+			free(console->config);
+		free(console);
+		console = NULL;
+	}
+}
+
+static void
+virtio_console_teardown_backend(void *param)
+{
+	struct virtio_console *console = NULL;
+	struct virtio_console_backend *be;
+
+	be = (struct virtio_console_backend *)param;
+	if (!be)
+		return;
+
+	if (be->port)
+		console = be->port->console;
+
+	virtio_console_close_backend(be);
+
+	if (console) {
+		console->ref_count--;
+		/* free virtio_console if this is the last backend */
+		if (console->ref_count == 0)
+			virtio_console_destroy(console);
+	}
+}
+
+static int
 virtio_console_close_all(struct virtio_console *console)
 {
-	int i;
+	int i, rc = 0;
 	struct virtio_console_port *port;
 	struct virtio_console_backend *be;
+
+	/*
+	 * we should close ports without mevent first.
+	 * port->enabled is reset to false when a backend is closed.
+	 */
+	for (i = 0; i < console->nports; i++) {
+		port = &console->ports[i];
+
+		if (!port->enabled)
+			continue;
+
+		be = (struct virtio_console_backend *)port->arg;
+		if (be && !be->evp)
+			virtio_console_close_backend(be);
+	}
 
 	for (i = 0; i < console->nports; i++) {
 		port = &console->ports[i];
@@ -751,18 +799,14 @@ virtio_console_close_all(struct virtio_console *console)
 			continue;
 
 		be = (struct virtio_console_backend *)port->arg;
-		if (be) {
-			if (be->evp) {
-				if (be->fd != STDIN_FILENO)
-					mevent_delete_close(be->evp);
-				else
-					mevent_delete(be->evp);
-			}
-
-			virtio_console_close_backend(be);
-			free(be);
+		if (be && be->evp) {
+			/* resources will be freed in the teardown callback */
+			mevent_delete(be->evp);
+			rc = 1;
 		}
 	}
+
+	return rc;
 }
 
 static enum virtio_console_be_type
@@ -914,13 +958,18 @@ static void
 virtio_console_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
 	struct virtio_console *console;
+	int rc;
 
 	console = (struct virtio_console *)dev->arg;
 	if (console) {
-		virtio_console_close_all(console);
-		if (console->config)
-			free(console->config);
-		free(console);
+		rc = virtio_console_close_all(console);
+		/*
+		 * if all the ports are without mevent attached,
+		 * no teardown will be called, we should destroy
+		 * console here explicitly.
+		 */
+		if (!rc)
+			virtio_console_destroy(console);
 	}
 }
 
