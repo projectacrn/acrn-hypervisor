@@ -83,6 +83,7 @@ char *vmname;
 int guest_ncpus;
 char *guest_uuid_str;
 char *vsbl_file_name;
+char *ovmf_file_name;
 char *kernel_file_name;
 char *elf_file_name;
 uint8_t trusty_enabled;
@@ -158,6 +159,7 @@ usage(int code)
 		"       --dump: show build-in VM configurations\n"
 #endif
 		"       --vsbl: vsbl file path\n"
+		"       --ovmf: ovmf file path\n"
 		"       --part_info: guest partition info file path\n"
 		"       --enable_trusty: enable trusty for guest\n"
 		"       --ptdev_no_reset: disable reset check for ptdev\n"
@@ -241,6 +243,9 @@ size_t
 high_bios_size(void)
 {
 	size_t size = 0;
+
+	if (ovmf_file_name)
+		size = ovmf_image_size();
 
 	return roundup2(size, 2 * MB);
 }
@@ -715,6 +720,7 @@ sig_handler_term(int signo)
 
 enum {
 	CMD_OPT_VSBL = 1000,
+	CMD_OPT_OVMF,
 	CMD_OPT_PART_INFO,
 	CMD_OPT_TRUSTY_ENABLE,
 	CMD_OPT_VIRTIO_POLL_ENABLE,
@@ -752,6 +758,7 @@ static struct option long_options[] = {
 	{"dump",		required_argument,	0, CMD_OPT_DUMP},
 #endif
 	{"vsbl",		required_argument,	0, CMD_OPT_VSBL},
+	{"ovmf",		required_argument,	0, CMD_OPT_OVMF},
 	{"part_info",		required_argument,	0, CMD_OPT_PART_INFO},
 	{"enable_trusty",	no_argument,		0,
 					CMD_OPT_TRUSTY_ENABLE},
@@ -864,8 +871,14 @@ dm_run(int argc, char *argv[])
 			print_version();
 			break;
 		case CMD_OPT_VSBL:
-			if (acrn_parse_vsbl(optarg) != 0) {
+			if (high_bios_size() == 0 && acrn_parse_vsbl(optarg) != 0) {
 				errx(EX_USAGE, "invalid vsbl param %s", optarg);
+				exit(1);
+			}
+			break;
+		case CMD_OPT_OVMF:
+			if (!vsbl_file_name && acrn_parse_ovmf(optarg) != 0) {
+				errx(EX_USAGE, "invalid ovmf param %s", optarg);
 				exit(1);
 			}
 			break;

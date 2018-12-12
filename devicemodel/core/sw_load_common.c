@@ -239,6 +239,8 @@ acrn_sw_load(struct vmctx *ctx)
 {
 	if (vsbl_file_name)
 		return acrn_sw_load_vsbl(ctx);
+	else if (ovmf_file_name)
+		return acrn_sw_load_ovmf(ctx);
 	else if (kernel_file_name)
 		return acrn_sw_load_bzimage(ctx);
 	else if (elf_file_name)
