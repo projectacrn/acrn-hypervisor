@@ -104,11 +104,11 @@ struct vsbl_para {
 };
 
 static char guest_part_info_path[STR_LEN];
-static int guest_part_info_size;
+static size_t guest_part_info_size;
 static bool with_guest_part_info;
 
 static char vsbl_path[STR_LEN];
-static int vsbl_size;
+static size_t vsbl_size;
 
 static int boot_blk_bdf;
 
@@ -125,11 +125,13 @@ vsbl_set_bdf(int bnum, int snum, int fnum)
 int
 acrn_parse_guest_part_info(char *arg)
 {
+	int error;
 	size_t len = strlen(arg);
 
 	if (len < STR_LEN) {
 		strncpy(guest_part_info_path, arg, len + 1);
-		assert(check_image(guest_part_info_path) == 0);
+		error = check_image(guest_part_info_path, 0, &guest_part_info_size);
+		assert(!error);
 
 		with_guest_part_info = true;
 
@@ -144,7 +146,8 @@ static int
 acrn_prepare_guest_part_info(struct vmctx *ctx)
 {
 	FILE *fp;
-	int len, read;
+	long len;
+	size_t read;
 
 	fp = fopen(guest_part_info_path, "r");
 	if (fp == NULL) {
@@ -156,14 +159,20 @@ acrn_prepare_guest_part_info(struct vmctx *ctx)
 
 	fseek(fp, 0, SEEK_END);
 	len = ftell(fp);
+
+	if (len != guest_part_info_size) {
+		fprintf(stderr,
+			"SW_LOAD ERR: partition blob changed\n");
+		fclose(fp);
+		return -1;
+	}
+
 	if ((len + GUEST_PART_INFO_OFF(ctx)) > BOOTARGS_OFF(ctx)) {
 		fprintf(stderr,
 			"SW_LOAD ERR: too large partition blob\n");
 		fclose(fp);
 		return -1;
 	}
-
-	guest_part_info_size = len;
 
 	fseek(fp, 0, SEEK_SET);
 	read = fread(ctx->baseaddr + GUEST_PART_INFO_OFF(ctx),
@@ -175,7 +184,7 @@ acrn_prepare_guest_part_info(struct vmctx *ctx)
 		return -1;
 	}
 	fclose(fp);
-	printf("SW_LOAD: partition blob %s size %d copy to guest 0x%lx\n",
+	printf("SW_LOAD: partition blob %s size %lu copy to guest 0x%lx\n",
 		guest_part_info_path, guest_part_info_size,
 		GUEST_PART_INFO_OFF(ctx));
 
@@ -185,11 +194,13 @@ acrn_prepare_guest_part_info(struct vmctx *ctx)
 int
 acrn_parse_vsbl(char *arg)
 {
+	int error;
 	size_t len = strlen(arg);
 
 	if (len < STR_LEN) {
 		strncpy(vsbl_path, arg, len + 1);
-		assert(check_image(vsbl_path) == 0);
+		error = check_image(vsbl_path, 8 * MB, &vsbl_size);
+		assert(!error);
 
 		vsbl_file_name = vsbl_path;
 
@@ -204,7 +215,7 @@ static int
 acrn_prepare_vsbl(struct vmctx *ctx)
 {
 	FILE *fp;
-	int len, read;
+	size_t read;
 
 	fp = fopen(vsbl_path, "r");
 	if (fp == NULL) {
@@ -215,27 +226,25 @@ acrn_prepare_vsbl(struct vmctx *ctx)
 	}
 
 	fseek(fp, 0, SEEK_END);
-	len = ftell(fp);
-	if (len > (8*MB)) {
+
+	if (ftell(fp) != vsbl_size) {
 		fprintf(stderr,
-			"SW_LOAD ERR: too large vsbl file\n");
+			"SW_LOAD ERR: vsbl file changed\n");
 		fclose(fp);
 		return -1;
 	}
 
-	vsbl_size = len;
-
 	fseek(fp, 0, SEEK_SET);
 	read = fread(ctx->baseaddr + VSBL_TOP(ctx) - vsbl_size,
-		sizeof(char), len, fp);
-	if (read < len) {
+		sizeof(char), vsbl_size, fp);
+	if (read < vsbl_size) {
 		fprintf(stderr,
 			"SW_LOAD ERR: could not read whole partition blob\n");
 		fclose(fp);
 		return -1;
 	}
 	fclose(fp);
-	printf("SW_LOAD: partition blob %s size %d copy to guest 0x%lx\n",
+	printf("SW_LOAD: partition blob %s size %lu copy to guest 0x%lx\n",
 		vsbl_path, vsbl_size, VSBL_TOP(ctx) - vsbl_size);
 
 	return 0;

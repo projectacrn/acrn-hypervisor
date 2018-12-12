@@ -117,15 +117,32 @@ get_bootargs(void)
 }
 
 int
-check_image(char *path)
+check_image(char *path, size_t size_limit, size_t *size)
 {
 	FILE *fp;
+	long len;
 
 	fp = fopen(path, "r");
-	if (fp == NULL)
+
+	if (fp == NULL) {
+		fprintf(stderr,
+			"SW_LOAD ERR: image file failed to open\n");
 		return -1;
+	}
+
+	fseek(fp, 0, SEEK_END);
+	len = ftell(fp);
+
+	if (len == 0 || (size_limit && len > size_limit)) {
+		fprintf(stderr,
+			"SW_LOAD ERR: file is %s\n",
+			len ? "too large" : "empty");
+		fclose(fp);
+		return -1;
+	}
 
 	fclose(fp);
+	*size = len;
 	return 0;
 }
 
