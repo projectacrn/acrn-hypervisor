@@ -178,7 +178,7 @@ static inline int valid_param(uint32_t m_off, uint32_t m_num)
  */
 static int pci_npk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
-	int i, b, s, f, fd, ret, error = -1;
+	int i, b, s, f, fd, ret, rc, error = -1;
 	DIR *dir;
 	struct dirent *dent;
 	char name[PATH_MAX];
@@ -239,7 +239,10 @@ static int pci_npk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	/* read the host NPK configuration space */
-	sprintf(name, "%s/%s/config", NPK_DRV_SYSFS_PATH, dent->d_name);
+	rc = snprintf(name, PATH_MAX, "%s/%s/config", NPK_DRV_SYSFS_PATH,
+			dent->d_name);
+	if (rc > PATH_MAX)
+		WPRINTF(("NPK device name too long\n"));
 	fd = open(name, O_RDONLY);
 	if (fd == -1) {
 		WPRINTF(("Cannot open host NPK config\n"));
