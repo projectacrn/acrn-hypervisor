@@ -43,9 +43,11 @@ static inline void update_physical_timer(struct per_cpu_timers *cpu_timer)
 	}
 }
 
-static void local_add_timer(struct per_cpu_timers *cpu_timer,
-			struct hv_timer *timer,
-			bool *need_update)
+/*
+ * return true if we add the timer on the timer_list head
+ */
+static bool local_add_timer(struct per_cpu_timers *cpu_timer,
+			struct hv_timer *timer)
 {
 	struct list_head *pos, *prev;
 	struct hv_timer *tmp;
@@ -64,40 +66,37 @@ static void local_add_timer(struct per_cpu_timers *cpu_timer,
 
 	list_add(&timer->node, prev);
 
-	if (need_update != NULL) {
-		/* update the physical timer if we're on the timer_list head */
-		*need_update = (prev == &cpu_timer->timer_list);
-	}
+	return (prev == &cpu_timer->timer_list);
 }
 
 int32_t add_timer(struct hv_timer *timer)
 {
 	struct per_cpu_timers *cpu_timer;
 	uint16_t pcpu_id;
-	bool need_update;
+	int32_t ret = 0;
 
 	if ((timer == NULL) || (timer->func == NULL) || (timer->fire_tsc == 0UL)) {
-		return -EINVAL;
+		ret = -EINVAL;
+	} else {
+		ASSERT(list_empty(&timer->node), "add timer again!\n");
+
+		/* limit minimal periodic timer cycle period */
+		if (timer->mode == TICK_MODE_PERIODIC) {
+			timer->period_in_cycle = max(timer->period_in_cycle, us_to_ticks(MIN_TIMER_PERIOD_US));
+		}
+
+		pcpu_id  = get_cpu_id();
+		cpu_timer = &per_cpu(cpu_timers, pcpu_id);
+
+		/* update the physical timer if we're on the timer_list head */
+		if (local_add_timer(cpu_timer, timer)) {
+			update_physical_timer(cpu_timer);
+		}
+
+		TRACE_2L(TRACE_TIMER_ACTION_ADDED, timer->fire_tsc, 0UL);
 	}
 
-	ASSERT(list_empty(&timer->node), "add timer again!\n");
-
-	/* limit minimal periodic timer cycle period */
-	if (timer->mode == TICK_MODE_PERIODIC) {
-		timer->period_in_cycle = max(timer->period_in_cycle,
-				us_to_ticks(MIN_TIMER_PERIOD_US));
-	}
-
-	pcpu_id  = get_cpu_id();
-	cpu_timer = &per_cpu(cpu_timers, pcpu_id);
-	local_add_timer(cpu_timer, timer, &need_update);
-
-	if (need_update) {
-		update_physical_timer(cpu_timer);
-	}
-
-	TRACE_2L(TRACE_TIMER_ACTION_ADDED, timer->fire_tsc, 0UL);
-	return 0;
+	return ret;
 
 }
 
@@ -158,7 +157,7 @@ static void timer_softirq(uint16_t pcpu_id)
 			if (timer->mode == TICK_MODE_PERIODIC) {
 				/* update periodic timer fire tsc */
 				timer->fire_tsc += timer->period_in_cycle;
-				local_add_timer(cpu_timer, timer, NULL);
+				(void)local_add_timer(cpu_timer, timer);
 			}
 		} else {
 			break;
@@ -172,22 +171,22 @@ static void timer_softirq(uint16_t pcpu_id)
 void timer_init(void)
 {
 	uint16_t pcpu_id = get_cpu_id();
-	int32_t retval;
+	int32_t retval = 0;
 
 	init_percpu_timer(pcpu_id);
 
 	if (pcpu_id == BOOT_CPU_ID) {
 		register_softirq(SOFTIRQ_TIMER, timer_softirq);
 
-		retval = request_irq(TIMER_IRQ, (irq_action_t)tsc_deadline_handler,
-				     NULL, IRQF_NONE);
+		retval = request_irq(TIMER_IRQ, (irq_action_t)tsc_deadline_handler, NULL, IRQF_NONE);
 		if (retval < 0) {
 			pr_err("Timer setup failed");
-			return;
 		}
 	}
 
-	init_tsc_deadline_timer();
+	if (retval >= 0) {
+		init_tsc_deadline_timer();
+	}
 }
 
 void check_tsc(void)
