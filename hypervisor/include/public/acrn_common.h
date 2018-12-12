@@ -196,46 +196,46 @@ union vhm_io_request {
  * +-----------------------+-------------------------+----------------------+
  * | SOS vCPU 0            | SOS vCPU x              | UOS vCPU y           |
  * +=======================+=========================+======================+
- * |                       |                         | **Hypervisor**:      |
+ * |                       |                         | Hypervisor:          |
  * |                       |                         |                      |
  * |                       |                         | - Fill in type,      |
  * |                       |                         |   addr, etc.         |
  * |                       |                         | - Pause UOS vCPU y   |
  * |                       |                         | - Set state to       |
- * |                       |                         |   PENDING **(a)**    |
+ * |                       |                         |   PENDING (a)        |
  * |                       |                         | - Fire upcall to     |
  * |                       |                         |   SOS vCPU 0         |
  * |                       |                         |                      |
  * +-----------------------+-------------------------+----------------------+
- * | **VHM**:              |                         |                      |
+ * | VHM:                  |                         |                      |
  * |                       |                         |                      |
  * | - Scan for pending    |                         |                      |
  * |   requests            |                         |                      |
  * | - Set state to        |                         |                      |
- * |   PROCESSING **(b)**  |                         |                      |
+ * |   PROCESSING (b)      |                         |                      |
  * | - Assign requests to  |                         |                      |
- * |   clients **(c)**     |                         |                      |
+ * |   clients (c)         |                         |                      |
  * |                       |                         |                      |
  * +-----------------------+-------------------------+----------------------+
- * |                       | **Client**:             |                      |
+ * |                       | Client:                 |                      |
  * |                       |                         |                      |
  * |                       | - Scan for assigned     |                      |
  * |                       |   requests              |                      |
  * |                       | - Handle the            |                      |
- * |                       |   requests **(d)**      |                      |
+ * |                       |   requests (d)          |                      |
  * |                       | - Set state to COMPLETE |                      |
  * |                       | - Notify the hypervisor |                      |
  * |                       |                         |                      |
  * +-----------------------+-------------------------+----------------------+
- * |                       | **Hypervisor**:         |                      |
+ * |                       | Hypervisor:             |                      |
  * |                       |                         |                      |
  * |                       | - resume UOS vCPU y     |                      |
- * |                       |   **(e)**               |                      |
+ * |                       |   (e)                   |                      |
  * |                       |                         |                      |
  * +-----------------------+-------------------------+----------------------+
- * |                       |                         | **Hypervisor**:      |
+ * |                       |                         | Hypervisor:          |
  * |                       |                         |                      |
- * |                       |                         | - Post-work **(f)**  |
+ * |                       |                         | - Post-work (f)      |
  * |                       |                         | - set state to FREE  |
  * |                       |                         |                      |
  * +-----------------------+-------------------------+----------------------+
