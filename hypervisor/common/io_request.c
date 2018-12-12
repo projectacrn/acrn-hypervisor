@@ -65,30 +65,15 @@ static void acrn_print_request(uint16_t vcpu_id, const struct vhm_request *req)
 void reset_vm_ioreqs(struct acrn_vm *vm)
 {
 	uint16_t i;
-	union vhm_request_buffer *req_buf;
 
-	req_buf = vm->sw.io_shared_page;
 	for (i = 0U; i < VHM_REQUEST_MAX; i++) {
-		atomic_store32(&req_buf->req_queue[i].processed, REQ_STATE_FREE);
+		set_vhm_req_state(vm, i, REQ_STATE_FREE);
 	}
 }
 
-static bool has_complete_ioreq(struct acrn_vcpu *vcpu)
+static inline bool has_complete_ioreq(struct acrn_vcpu *vcpu)
 {
-	union vhm_request_buffer *req_buf = NULL;
-	struct vhm_request *vhm_req;
-	struct acrn_vm *vm;
-
-	vm = vcpu->vm;
-	req_buf = (union vhm_request_buffer *)vm->sw.io_shared_page;
-	if (req_buf != NULL) {
-		vhm_req = &req_buf->req_queue[vcpu->vcpu_id];
-		if (atomic_load32(&vhm_req->processed) == REQ_STATE_COMPLETE) {
-			return true;
-		}
-	}
-
-	return false;
+	return (get_vhm_req_state(vcpu->vm, vcpu->vcpu_id) == REQ_STATE_COMPLETE);
 }
 
 /**
@@ -132,12 +117,12 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 		return -EINVAL;
 	}
 
+	ASSERT(get_vhm_req_state(vcpu->vm, vcpu->vcpu_id) == REQ_STATE_FREE,
+		"VHM request buffer is busy");
+
 	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
 	cur = vcpu->vcpu_id;
 	vhm_req = &req_buf->req_queue[cur];
-
-	ASSERT(atomic_load32(&vhm_req->processed) == REQ_STATE_FREE,
-		"VHM request buffer is busy");
 
 	/* ACRN insert request to VHM and inject upcall */
 	vhm_req->type = io_req->type;
@@ -158,7 +143,7 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 	 * before we perform upcall.
 	 * because VHM can work in pulling mode without wait for upcall
 	 */
-	atomic_store32(&vhm_req->processed, REQ_STATE_PENDING);
+	set_vhm_req_state(vcpu->vm, vcpu->vcpu_id, REQ_STATE_PENDING);
 
 	acrn_print_request(vcpu->vcpu_id, vhm_req);
 
@@ -166,4 +151,35 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 	fire_vhm_interrupt();
 
 	return 0;
+}
+
+uint32_t get_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id)
+{
+	uint32_t state;
+	union vhm_request_buffer *req_buf = NULL;
+	struct vhm_request *vhm_req;
+
+	req_buf = (union vhm_request_buffer *)vm->sw.io_shared_page;
+	if (req_buf == NULL) {
+		return (uint32_t)-1;
+	}
+
+	vhm_req = &req_buf->req_queue[vhm_req_id];
+	state = atomic_load32(&vhm_req->processed);
+
+	return state;
+}
+
+void set_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id, uint32_t state)
+{
+	union vhm_request_buffer *req_buf = NULL;
+	struct vhm_request *vhm_req;
+
+	req_buf = (union vhm_request_buffer *)vm->sw.io_shared_page;
+	if (req_buf == NULL) {
+		return;
+	}
+
+	vhm_req = &req_buf->req_queue[vhm_req_id];
+	atomic_store32(&vhm_req->processed, state);
 }

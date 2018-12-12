@@ -306,6 +306,26 @@ void reset_vm_ioreqs(struct acrn_vm *vm);
 void handle_complete_ioreq(uint16_t pcpu_id);
 
 /**
+ * @brief Get the state of VHM request
+ *
+ * @param vm Target VM context
+ * @param vhm_req_id VHM Request ID
+ *
+ * @return State of the IO Request.
+ */
+uint32_t get_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id);
+
+/**
+ * @brief Set the state of VHM request
+ *
+ * @param vm Target VM context
+ * @param vhm_req_id VHM Request ID
+ * @param state  State to be set
+ * @return None
+ */
+void set_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id, uint32_t state);
+
+/**
  * @}
  */
 

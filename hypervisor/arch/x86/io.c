@@ -8,8 +8,27 @@
 
 #include "guest/instr_emul.h"
 
-static void complete_ioreq(struct vhm_request *vhm_req)
+static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
+	union vhm_request_buffer *req_buf = NULL;
+	struct vhm_request *vhm_req;
+
+	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
+	vhm_req = &req_buf->req_queue[vcpu->vcpu_id];
+	if (io_req != NULL) {
+		switch (vcpu->req.type) {
+		case REQ_PORTIO:
+			io_req->reqs.pio.value = vhm_req->reqs.pio.value;
+			break;
+
+		case REQ_MMIO:
+			io_req->reqs.mmio.value = vhm_req->reqs.mmio.value;
+			break;
+
+		default:
+			break;
+		}
+	}
 	atomic_store32(&vhm_req->processed, REQ_STATE_FREE);
 }
 
@@ -47,19 +66,9 @@ emulate_pio_post(struct acrn_vcpu *vcpu, const struct io_request *io_req)
  */
 static void dm_emulate_pio_post(struct acrn_vcpu *vcpu)
 {
-	uint16_t cur = vcpu->vcpu_id;
-	union vhm_request_buffer *req_buf = NULL;
 	struct io_request *io_req = &vcpu->req;
-	struct pio_request *pio_req = &io_req->reqs.pio;
-	struct vhm_request *vhm_req;
 
-	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
-	vhm_req = &req_buf->req_queue[cur];
-
-	pio_req->value = vhm_req->reqs.pio.value;
-
-	/* VHM emulation data already copy to req, mark to free slot now */
-	complete_ioreq(vhm_req);
+	complete_ioreq(vcpu, io_req);
 
 	emulate_pio_post(vcpu, io_req);
 }
@@ -98,19 +107,9 @@ void emulate_mmio_post(const struct acrn_vcpu *vcpu, const struct io_request *io
  */
 void dm_emulate_mmio_post(struct acrn_vcpu *vcpu)
 {
-	uint16_t cur = vcpu->vcpu_id;
 	struct io_request *io_req = &vcpu->req;
-	struct mmio_request *mmio_req = &io_req->reqs.mmio;
-	union vhm_request_buffer *req_buf;
-	struct vhm_request *vhm_req;
 
-	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
-	vhm_req = &req_buf->req_queue[cur];
-
-	mmio_req->value = vhm_req->reqs.mmio.value;
-
-	/* VHM emulation data already copy to req, mark to free slot now */
-	complete_ioreq(vhm_req);
+	complete_ioreq(vcpu, io_req);
 
 	emulate_mmio_post(vcpu, io_req);
 }
@@ -133,13 +132,8 @@ static void io_instr_dest_handler(struct io_request *io_req)
  */
 void emulate_io_post(struct acrn_vcpu *vcpu)
 {
-	union vhm_request_buffer *req_buf;
-	struct vhm_request *vhm_req;
-
-	req_buf = (union vhm_request_buffer *)vcpu->vm->sw.io_shared_page;
-	vhm_req = &req_buf->req_queue[vcpu->vcpu_id];
-
-	if (atomic_load32(&vhm_req->processed) != REQ_STATE_COMPLETE) {
+	if (get_vhm_req_state(vcpu->vm, vcpu->vcpu_id)
+		!= REQ_STATE_COMPLETE) {
 		return;
 	}
 
@@ -148,7 +142,7 @@ void emulate_io_post(struct acrn_vcpu *vcpu)
 	 * mark ioreq done and don't resume vcpu.
 	 */
 	if (vcpu->state == VCPU_ZOMBIE) {
-		complete_ioreq(vhm_req);
+		complete_ioreq(vcpu, NULL);
 		return;
 	}
 
@@ -171,7 +165,7 @@ void emulate_io_post(struct acrn_vcpu *vcpu)
 	default:
 		/* REQ_WP can only be triggered on writes which do not need
 		 * post-work. Just mark the ioreq done. */
-		complete_ioreq(vhm_req);
+		complete_ioreq(vcpu, NULL);
 		break;
 	}
 
