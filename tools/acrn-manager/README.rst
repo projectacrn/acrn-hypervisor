@@ -102,7 +102,7 @@ The ``acrnd`` daemon process provides a way for launching or resuming a UOS
 should the UOS shut down, either planned or unexpected. A UOS can ask ``acrnd``
 to set up a timer to make sure the UOS is running, even if the SOS is
 suspended or stopped.
-The ``acrnd`` daemon stores pending UOS work to ``/opt/acrn/conf/timer_list``
+The ``acrnd`` daemon stores pending UOS work to ``/usr/share/acrn/conf/timer_list``
 and sets an RTC timer to wake up the SOS or bring the SOS back up again.
 When ``acrnd`` daemon is restarted, it restores the previously saved timer
 list and launches the UOSs at the right time.

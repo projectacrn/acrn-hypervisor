@@ -23,8 +23,6 @@
 #include "acrnctl.h"
 #include "ioc.h"
 
-#define ACRNCTL_OPT_ROOT	"/opt/acrn/conf"
-
 #define ACMD(CMD,FUNC,DESC, VALID_ARGS) \
 {.cmd = CMD, .func = FUNC, .desc = DESC, .valid_args = VALID_ARGS}
 
@@ -330,7 +328,7 @@ static int acrnctl_do_add(int argc, char *argv[])
 		goto get_vmname;
 	}
 
-	if (snprintf(cmd, sizeof(cmd), "mkdir -p %s/add", ACRNCTL_OPT_ROOT)
+	if (snprintf(cmd, sizeof(cmd), "mkdir -p %s", ACRN_CONF_PATH_ADD)
 			>= sizeof(cmd)) {
 		printf("ERROR: cmd is truncated\n");
 		ret = -1;
@@ -346,16 +344,16 @@ static int acrnctl_do_add(int argc, char *argv[])
 		goto vm_exist;
 	}
 
-	if (snprintf(cmd, sizeof(cmd), "cp %s.back %s/add/%s.sh", argv[1],
-		 ACRNCTL_OPT_ROOT, vmname) >= sizeof(cmd)) {
+	if (snprintf(cmd, sizeof(cmd), "cp %s.back %s/%s.sh", argv[1],
+		 ACRN_CONF_PATH_ADD, vmname) >= sizeof(cmd)) {
 		printf("ERROR: cmd is truncated\n");
 		ret = -1;
 		goto vm_exist;
 	}
 	system(cmd);
 
-	if (snprintf(cmd, sizeof(cmd), "echo %s >%s/add/%s.args", args,
-		 ACRNCTL_OPT_ROOT, vmname) >= sizeof(cmd)) {
+	if (snprintf(cmd, sizeof(cmd), "echo %s >%s/%s.args", args,
+		 ACRN_CONF_PATH_ADD, vmname) >= sizeof(cmd)) {
 		printf("ERROR: cmd is truncated\n");
 		ret = -1;
 		goto vm_exist;
@@ -438,14 +436,14 @@ static int acrnctl_do_del(int argc, char *argv[])
 			       state_str[s->state]);
 			continue;
 		}
-		if (snprintf(cmd, sizeof(cmd), "rm -f %s/add/%s.sh",
-			 ACRNCTL_OPT_ROOT, argv[i]) >= sizeof(cmd)) {
+		if (snprintf(cmd, sizeof(cmd), "rm -f %s/%s.sh",
+			 ACRN_CONF_PATH_ADD, argv[i]) >= sizeof(cmd)) {
 			printf("WARN: cmd is truncated\n");
 			return -1;
 		}
 		system(cmd);
-		if (snprintf(cmd, sizeof(cmd), "rm -f %s/add/%s.args",
-			 ACRNCTL_OPT_ROOT, argv[i]) >= sizeof(cmd)) {
+		if (snprintf(cmd, sizeof(cmd), "rm -f %s/%s.args",
+			 ACRN_CONF_PATH_ADD, argv[i]) >= sizeof(cmd)) {
 			printf("WARN: cmd is truncated\n");
 			return -1;
 		}
