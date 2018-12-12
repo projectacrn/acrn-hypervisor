@@ -124,14 +124,11 @@ void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 {
 	uint64_t pmain_entry_saved;
 	uint32_t guest_wakeup_vec32;
-	uint16_t pcpu_id;
 
 	/* We assume enter s3 success by default */
 	host_enter_s3_success = 1U;
 	if (vm->pm.sx_state_data != NULL) {
 		pause_vm(vm);	/* pause vm0 before suspend system */
-
-		pcpu_id = get_cpu_id();
 
 		stac();
 		/* Save the wakeup vec set by guest. Will return to guest
@@ -159,7 +156,7 @@ void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 		clac();
 
 		CPU_IRQ_DISABLE();
-		vmx_off(pcpu_id);
+		vmx_off();
 
 		suspend_console();
 		suspend_ioapic();
@@ -173,7 +170,7 @@ void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 		resume_ioapic();
 		resume_console();
 
-		exec_vmxon_instr(pcpu_id);
+		vmx_on();
 		CPU_IRQ_ENABLE();
 
 		/* restore the default main entry */
