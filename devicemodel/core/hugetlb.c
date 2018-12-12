@@ -36,6 +36,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "vmmapi.h"
 
@@ -80,6 +81,7 @@ struct hugetlb_info {
 	int fd;
 	int pg_size;
 	size_t lowmem;
+	size_t biosmem;
 	size_t highmem;
 
 	int pages_delta;
@@ -95,6 +97,7 @@ static struct hugetlb_info hugetlb_priv[HUGETLB_LV_MAX] = {
 		.fd = -1,
 		.pg_size = 0,
 		.lowmem = 0,
+		.biosmem = 0,
 		.highmem = 0,
 
 		.pages_delta = 0,
@@ -108,6 +111,7 @@ static struct hugetlb_info hugetlb_priv[HUGETLB_LV_MAX] = {
 		.fd = -1,
 		.pg_size = 0,
 		.lowmem = 0,
+		.biosmem = 0,
 		.highmem = 0,
 
 		.pages_delta = 0,
@@ -205,7 +209,8 @@ static bool should_enable_hugetlb_level(int level)
 	}
 
 	return (hugetlb_priv[level].lowmem > 0 ||
-		hugetlb_priv[level].highmem > 0);
+	        hugetlb_priv[level].biosmem > 0 ||
+	        hugetlb_priv[level].highmem > 0);
 }
 
 /*
@@ -214,7 +219,7 @@ static bool should_enable_hugetlb_level(int level)
  * offset : region start offset from ctx->baseaddr
  * skip   : skip offset in different level hugetlbfs fd
  */
-static int mmap_hugetlbfs(struct vmctx *ctx, int level, size_t len,
+static int mmap_hugetlbfs_from_level(struct vmctx *ctx, int level, size_t len,
 		size_t offset, size_t skip)
 {
 	char *addr;
@@ -247,59 +252,87 @@ static int mmap_hugetlbfs(struct vmctx *ctx, int level, size_t len,
 	return 0;
 }
 
-static int mmap_hugetlbfs_lowmem(struct vmctx *ctx)
+static int mmap_hugetlbfs(struct vmctx *ctx, size_t offset,
+		void (*get_param)(struct hugetlb_info *, size_t *, size_t *),
+		size_t (*adj_param)(struct hugetlb_info *, struct hugetlb_info *, int))
 {
-	size_t len, offset, skip;
+	size_t len, skip;
 	int level, ret = 0, pg_size;
 
-	offset = skip = 0;
 	for (level = hugetlb_lv_max - 1; level >= HUGETLB_LV1; level--) {
-		len = hugetlb_priv[level].lowmem;
+		get_param(&hugetlb_priv[level], &len, &skip);
 		pg_size = hugetlb_priv[level].pg_size;
+
 		while (len > 0) {
-			ret = mmap_hugetlbfs(ctx, level, len, offset, skip);
+			assert((offset & (pg_size - 1)) == 0);
+			ret = mmap_hugetlbfs_from_level(ctx, level, len, offset, skip);
+
 			if (ret < 0 && level > HUGETLB_LV1) {
-				len -= pg_size;
-				hugetlb_priv[level].lowmem = len;
-				hugetlb_priv[level-1].lowmem += pg_size;
-			} else if (ret < 0 && level == HUGETLB_LV1)
-				return ret;
-			else {
+				len = adj_param(
+						&hugetlb_priv[level], &hugetlb_priv[level-1],
+						pg_size);
+			} else if (ret < 0 && level == HUGETLB_LV1) {
+				goto done;
+			} else {
 				offset += len;
 				break;
 			}
 		}
 	}
 
-	return 0;
+done:
+	return ret;
 }
 
-static int mmap_hugetlbfs_highmem(struct vmctx *ctx)
+static void get_lowmem_param(struct hugetlb_info *htlb,
+		size_t *len, size_t *skip)
 {
-	size_t len, offset, skip;
-	int level, ret = 0, pg_size;
+	*len = htlb->lowmem;
+	*skip = 0; /* nothing to skip as lowmen is mmap'ed first */
+}
 
-	offset = 4 * GB;
-	for (level = hugetlb_lv_max - 1; level >= HUGETLB_LV1; level--) {
-		skip = hugetlb_priv[level].lowmem;
-		len = hugetlb_priv[level].highmem;
-		pg_size = hugetlb_priv[level].pg_size;
-		while (len > 0) {
-			ret = mmap_hugetlbfs(ctx, level, len, offset, skip);
-			if (ret < 0 && level > HUGETLB_LV1) {
-				len -= pg_size;
-				hugetlb_priv[level].highmem = len;
-				hugetlb_priv[level-1].highmem += pg_size;
-			} else if (ret < 0 && level == HUGETLB_LV1)
-				return ret;
-			else {
-				offset += len;
-				break;
-			}
-		}
-	}
+static size_t adj_lowmem_param(struct hugetlb_info *htlb,
+		struct hugetlb_info *htlb_prev, int adj_size)
+{
+	assert(htlb->lowmem >= adj_size);
+	htlb->lowmem -= adj_size;
+	htlb_prev->lowmem += adj_size;
 
-	return 0;
+	return htlb->lowmem;
+}
+
+static void get_highmem_param(struct hugetlb_info *htlb,
+		size_t *len, size_t *skip)
+{
+	*len = htlb->highmem;
+	*skip = htlb->lowmem;
+}
+
+static size_t adj_highmem_param(struct hugetlb_info *htlb,
+		struct hugetlb_info *htlb_prev, int adj_size)
+{
+	assert(htlb->highmem >= adj_size);
+	htlb->highmem -= adj_size;
+	htlb_prev->highmem += adj_size;
+
+	return htlb->highmem;
+}
+
+static void get_biosmem_param(struct hugetlb_info *htlb,
+		size_t *len, size_t *skip)
+{
+	*len = htlb->biosmem;
+	*skip = htlb->lowmem + htlb->highmem;
+}
+
+static size_t adj_biosmem_param(struct hugetlb_info *htlb,
+		struct hugetlb_info *htlb_prev, int adj_size)
+{
+	assert(htlb->biosmem >= adj_size);
+	htlb->biosmem -= adj_size;
+	htlb_prev->biosmem += adj_size;
+
+	return htlb->biosmem;
 }
 
 static int create_hugetlb_dirs(int level)
@@ -410,7 +443,7 @@ static bool hugetlb_check_memgap(void)
 
 	for (lvl = HUGETLB_LV1; lvl < hugetlb_lv_max; lvl++) {
 		free_pages = read_sys_info(hugetlb_priv[lvl].free_pages_path);
-		need_pages = (hugetlb_priv[lvl].lowmem +
+		need_pages = (hugetlb_priv[lvl].lowmem + hugetlb_priv[lvl].biosmem +
 			hugetlb_priv[lvl].highmem) / hugetlb_priv[lvl].pg_size;
 
 		hugetlb_priv[lvl].pages_delta = need_pages - free_pages;
@@ -518,7 +551,7 @@ static bool hugetlb_reserve_pages(void)
 		reserve_more_pages(level);
 
 		/* check if reserved enough pages */
-		if (hugetlb_priv[level].pages_delta  == 0)
+		if (hugetlb_priv[level].pages_delta <= 0)
 			continue;
 
 		/* probably system allocates fewer pages than needed
@@ -530,7 +563,7 @@ static bool hugetlb_reserve_pages(void)
 			left_gap = hugetlb_priv[level].pages_delta;
 			pg_size = hugetlb_priv[level].pg_size;
 			hugetlb_priv[level - 1].pages_delta += (size_t)left_gap
-				* pg_size / hugetlb_priv[level - 1].pg_size;
+				* (pg_size / hugetlb_priv[level - 1].pg_size);
 			continue;
 		}
 
@@ -584,8 +617,13 @@ bool check_hugetlb_support(void)
 int hugetlb_setup_memory(struct vmctx *ctx)
 {
 	int level;
-	size_t lowmem, highmem;
+	size_t lowmem, biosmem, highmem;
 	bool has_gap;
+
+	if (ctx->lowmem == 0) {
+		perror("vm requests 0 memory");
+		goto err;
+	}
 
 	/* for first time DM start UOS, hugetlbfs is already mounted by
 	 * check_hugetlb_support; but for reboot, here need re-mount
@@ -604,34 +642,42 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 		}
 	}
 
-	/* all memory should be at least align with
+	/* all memory should be at least aligned with
 	 * hugetlb_priv[HUGETLB_LV1].pg_size */
 	ctx->lowmem =
 		ALIGN_DOWN(ctx->lowmem, hugetlb_priv[HUGETLB_LV1].pg_size);
+	ctx->biosmem =
+		ALIGN_DOWN(ctx->biosmem, hugetlb_priv[HUGETLB_LV1].pg_size);
 	ctx->highmem =
 		ALIGN_DOWN(ctx->highmem, hugetlb_priv[HUGETLB_LV1].pg_size);
 
-	if (ctx->highmem > 0)
+	/*
+	 * High BIOS resides right below 4GB.
+	 * Therefore, at least 4GB of memory space is needed.
+	 */
+	if (ctx->biosmem > 0 || ctx->highmem > 0)
 		total_size = 4 * GB + ctx->highmem;
 	else
 		total_size = ctx->lowmem;
 
-	if (total_size == 0) {
-		perror("vm request 0 memory");
-		goto err;
-	}
-
-	/* check & set hugetlb level memory size for lowmem & highmem */
-	highmem = ctx->highmem;
+	/* check & set hugetlb level memory size for lowmem/biosmem/highmem */
 	lowmem = ctx->lowmem;
+	biosmem = ctx->biosmem;
+	highmem = ctx->highmem;
+
 	for (level = hugetlb_lv_max - 1; level >= HUGETLB_LV1; level--) {
 		hugetlb_priv[level].lowmem =
 			ALIGN_DOWN(lowmem, hugetlb_priv[level].pg_size);
+		hugetlb_priv[level].biosmem =
+			ALIGN_DOWN(biosmem, hugetlb_priv[level].pg_size);
 		hugetlb_priv[level].highmem =
 			ALIGN_DOWN(highmem, hugetlb_priv[level].pg_size);
+
 		if (level > HUGETLB_LV1) {
 			hugetlb_priv[level-1].lowmem = lowmem =
 				lowmem - hugetlb_priv[level].lowmem;
+			hugetlb_priv[level-1].biosmem = biosmem =
+				biosmem - hugetlb_priv[level].biosmem;
 			hugetlb_priv[level-1].highmem = highmem =
 				highmem - hugetlb_priv[level].highmem;
 		}
@@ -655,8 +701,10 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 	/* dump hugepage trying to setup */
 	printf("\ntry to setup hugepage with:\n");
 	for (level = HUGETLB_LV1; level < hugetlb_lv_max; level++) {
-		printf("\tlevel %d - lowmem 0x%lx, highmem 0x%lx\n", level,
+		printf("\tlevel %d - lowmem 0x%lx, biosmem 0x%lx, highmem 0x%lx\n",
+			level,
 			hugetlb_priv[level].lowmem,
+			hugetlb_priv[level].biosmem,
 			hugetlb_priv[level].highmem);
 	}
 	printf("total_size 0x%lx\n\n", total_size);
@@ -680,28 +728,48 @@ int hugetlb_setup_memory(struct vmctx *ctx)
 	printf("mmap ptr 0x%p -> baseaddr 0x%p\n", ptr, ctx->baseaddr);
 
 	/* mmap lowmem */
-	if (mmap_hugetlbfs_lowmem(ctx) < 0)
+	if (mmap_hugetlbfs(ctx, 0, get_lowmem_param, adj_lowmem_param) < 0) {
+		perror("lowmem mmap failed");
 		goto err;
+	}
 
 	/* mmap highmem */
-	if (mmap_hugetlbfs_highmem(ctx) < 0)
+	if (mmap_hugetlbfs(ctx, 4 * GB, get_highmem_param, adj_highmem_param) < 0) {
+		perror("highmem mmap failed");
 		goto err;
+	}
+
+	/* mmap biosmem */
+	if (mmap_hugetlbfs(ctx, 4 * GB - ctx->biosmem,
+				get_biosmem_param, adj_biosmem_param) < 0) {
+		perror("biosmem mmap failed");
+		goto err;
+	}
 
 	/* dump hugepage really setup */
 	printf("\nreally setup hugepage with:\n");
 	for (level = HUGETLB_LV1; level < hugetlb_lv_max; level++) {
-		printf("\tlevel %d - lowmem 0x%lx, highmem 0x%lx\n", level,
+		printf("\tlevel %d - lowmem 0x%lx, biosmem 0x%lx, highmem 0x%lx\n",
+			level,
 			hugetlb_priv[level].lowmem,
+			hugetlb_priv[level].biosmem,
 			hugetlb_priv[level].highmem);
 	}
-	printf("total_size 0x%lx\n\n", total_size);
 
-	/* map ept for lowmem*/
+	/* map ept for lowmem */
 	if (vm_map_memseg_vma(ctx, ctx->lowmem, 0,
 		(uint64_t)ctx->baseaddr, PROT_ALL) < 0)
 		goto err;
 
-	/* map ept for highmem*/
+	/* map ept for biosmem */
+	if (ctx->biosmem > 0) {
+		if (vm_map_memseg_vma(ctx, ctx->biosmem, 4 * GB - ctx->biosmem,
+			(uint64_t)(ctx->baseaddr + 4 * GB - ctx->biosmem),
+			PROT_READ | PROT_EXEC) < 0)
+		goto err;
+	}
+
+	/* map ept for highmem */
 	if (ctx->highmem > 0) {
 		if (vm_map_memseg_vma(ctx, ctx->highmem, 4 * GB,
 			(uint64_t)(ctx->baseaddr + 4 * GB), PROT_ALL) < 0)

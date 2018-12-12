@@ -53,10 +53,11 @@ struct vmctx {
 	int     ioreq_client;
 	uint32_t lowmem_limit;
 	size_t  lowmem;
+	size_t  biosmem;
 	size_t  highmem;
 	char    *baseaddr;
 	char    *name;
-	uuid_t	vm_uuid;
+	uuid_t  vm_uuid;
 
 	/* fields to track virtual devices */
 	void *atkbdc_base;

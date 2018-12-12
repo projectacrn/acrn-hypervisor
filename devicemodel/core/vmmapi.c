@@ -292,6 +292,8 @@ vm_setup_memory(struct vmctx *ctx, size_t memsize)
 		ctx->highmem = 0;
 	}
 
+	ctx->biosmem = high_bios_size();
+
 	return hugetlb_setup_memory(ctx);
 }
 

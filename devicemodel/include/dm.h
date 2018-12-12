@@ -58,6 +58,7 @@ int vmexit_task_switch(struct vmctx *ctx, struct vhm_request *vhm_req,
  */
 void *paddr_guest2host(struct vmctx *ctx, uintptr_t gaddr, size_t len);
 int  virtio_uses_msix(void);
+size_t high_bios_size(void);
 void ptdev_no_reset(bool enable);
 void init_debugexit(void);
 void deinit_debugexit(void);

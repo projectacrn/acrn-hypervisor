@@ -237,6 +237,14 @@ virtio_uses_msix(void)
 	return virtio_msix;
 }
 
+size_t
+high_bios_size(void)
+{
+	size_t size = 0;
+
+	return roundup2(size, 2 * MB);
+}
+
 static void *
 start_thread(void *param)
 {
