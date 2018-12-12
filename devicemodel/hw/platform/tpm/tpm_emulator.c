@@ -531,7 +531,7 @@ static int swtpm_ctrlchan_create(const char *arg_path)
  */
 static int swtpm_cmdchan_create(void)
 {
-	ptm_res res;
+	ptm_res res = 0;
 	int sv[2] = {-1, -1};
 
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) < 0)
@@ -584,7 +584,7 @@ err_exit:
 
 static int swtpm_stop(void)
 {
-	ptm_res res;
+	ptm_res res = 0;
 
 	if (swtpm_ctrlcmd(tpm_context.ctrl_chan_fd, CMD_STOP, &res, 0, sizeof(res), NULL, 0) < 0) {
 		printf("swtpm: Could not stop TPM: %s", strerror(errno));
@@ -663,7 +663,7 @@ static int swtpm_startup_tpm(size_t buffersize,
 
 static void swtpm_shutdown(void)
 {
-	ptm_res res;
+	ptm_res res = 0;
 
 	if (swtpm_ctrlcmd(tpm_context.ctrl_chan_fd, CMD_SHUTDOWN,
 				&res, 0, sizeof(res), NULL, 0) < 0) {
@@ -789,7 +789,7 @@ int swtpm_reset_tpm_established_flag(void)
 
 void swtpm_cancel_cmd(void)
 {
-	ptm_res res;
+	ptm_res res = 0;
 
 	if (swtpm_ctrlcmd(tpm_context.ctrl_chan_fd, CMD_CANCEL_TPM_CMD, &res, 0,
 				sizeof(res), NULL, 0) < 0) {
