@@ -2307,7 +2307,7 @@ pci_ahci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts, int atapi)
 	char bident[16];
 	struct blockif_ctxt *bctxt;
 	struct pci_ahci_vdev *ahci_dev;
-	int ret, slots;
+	int ret, slots, rc;
 	uint8_t p;
 	MD5_CTX mdctx;
 	u_char digest[16];
@@ -2378,9 +2378,12 @@ pci_ahci_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts, int atapi)
 		MD5_Init(&mdctx);
 		MD5_Update(&mdctx, opts, strlen(opts));
 		MD5_Final(digest, &mdctx);
-		sprintf(ahci_dev->port[p].ident,
+		rc = snprintf(ahci_dev->port[p].ident,
+			sizeof(ahci_dev->port[p].ident),
 			"ACRN--%02X%02X-%02X%02X-%02X%02X", digest[0],
 			digest[1], digest[2], digest[3], digest[4], digest[5]);
+		if (rc > sizeof(ahci_dev->port[p].ident))
+			WPRINTF("%s: digest is longer than ident\n", __func__);
 
 		/*
 		 * Allocate blockif request structures and add them
