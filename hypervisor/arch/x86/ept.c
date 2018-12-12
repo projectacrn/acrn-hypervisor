@@ -115,46 +115,41 @@ int32_t ept_violation_vmexit_handler(struct acrn_vcpu *vcpu)
 	ret = decode_instruction(vcpu);
 	if (ret > 0) {
 		mmio_req->size = (uint64_t)ret;
-	} else if (ret == -EFAULT) {
-		pr_info("page fault happen during decode_instruction");
-		status = 0;
-		goto out;
+		/*
+		 * For MMIO write, ask DM to run MMIO emulation after
+		 * instruction emulation. For MMIO read, ask DM to run MMIO
+		 * emulation at first.
+		 */
+
+		/* Determine value being written. */
+		if (mmio_req->direction == REQUEST_WRITE) {
+			status = emulate_instruction(vcpu);
+			if (status != 0) {
+				ret = -EFAULT;;
+			}
+		}
+
+		if (ret > 0) {
+			status = emulate_io(vcpu, io_req);
+			if (status == 0) {
+				emulate_mmio_post(vcpu, io_req);
+			} else {
+				if (status == IOREQ_PENDING) {
+					status = 0;
+				}
+			}
+		}
 	} else {
-		goto out;
-	}
-
-
-	/*
-	 * For MMIO write, ask DM to run MMIO emulation after
-	 * instruction emulation. For MMIO read, ask DM to run MMIO
-	 * emulation at first.
-	 */
-
-	/* Determine value being written. */
-	if (mmio_req->direction == REQUEST_WRITE) {
-		status = emulate_instruction(vcpu);
-		if (status != 0) {
-			goto out;
+		if (ret == -EFAULT) {
+			pr_info("page fault happen during decode_instruction");
+			status = 0;
 		}
 	}
 
-	status = emulate_io(vcpu, io_req);
-
-	if (status == 0) {
-		emulate_mmio_post(vcpu, io_req);
-	} else if (status == IOREQ_PENDING) {
-		status = 0;
+	if (ret <= 0) {
+		pr_acrnlog("Guest Linear Address: 0x%016llx", exec_vmread(VMX_GUEST_LINEAR_ADDR));
+		pr_acrnlog("Guest Physical Address address: 0x%016llx", gpa);
 	}
-
-	return status;
-
-out:
-	pr_acrnlog("Guest Linear Address: 0x%016llx",
-			exec_vmread(VMX_GUEST_LINEAR_ADDR));
-
-	pr_acrnlog("Guest Physical Address address: 0x%016llx",
-			gpa);
-
 	return status;
 }
 
