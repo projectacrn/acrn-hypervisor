@@ -92,7 +92,7 @@ Enable the AGL display
 *************************
 
 By following these setup steps, you will get a black screen in AGL. 
-Please don't worry about it, and we will give the solutions to the black screen issue in AGL.
+We provide a workaround for this black screen in the steps below.
 By debugging, we identified the problem as an issue with the (not well supported) ``ivi-shell.so`` library.
 We can light the screen with the weston GUI, as shown below.
 
