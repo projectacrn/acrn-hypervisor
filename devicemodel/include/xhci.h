@@ -377,6 +377,4 @@ struct xhci_event_ring_seg {
 	volatile uint32_t	dwEvrsReserved;
 };
 
-void wait_for_xhci_resume();
-
 #endif /* _XHCI_H_ */
