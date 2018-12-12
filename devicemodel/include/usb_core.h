@@ -257,4 +257,5 @@ struct usb_data_xfer_block *usb_data_xfer_append(struct usb_data_xfer *xfer,
 						 int ccs);
 int usb_get_hub_port_num(struct usb_devpath *path);
 char *usb_dev_path(struct usb_devpath *path);
+bool usb_dev_path_cmp(struct usb_devpath *p1, struct usb_devpath *p2);
 #endif /* _USB_CORE_H_ */

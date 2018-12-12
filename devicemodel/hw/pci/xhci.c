@@ -542,23 +542,13 @@ pci_xhci_get_native_port_index_by_path(struct pci_xhci_vdev *xdev,
 		struct usb_devpath *path)
 {
 	int i;
-	struct usb_devpath *p;
 
 	assert(xdev);
 	assert(path);
 
-	for (i = 0; i < XHCI_MAX_VIRT_PORTS; i++) {
-		p = &xdev->native_ports[i].info.path;
-
-		if (p->bus != path->bus)
-			continue;
-
-		if (p->depth != path->depth)
-			continue;
-
-		if (memcmp(p->path, path->path, path->depth) == 0)
+	for (i = 0; i < XHCI_MAX_VIRT_PORTS; i++)
+		if (usb_dev_path_cmp(&xdev->native_ports[i].info.path, path))
 			return i;
-	}
 	return -1;
 }
 
