@@ -328,7 +328,7 @@ static int32_t shell_process_cmd(const char *p_input_line)
 	/* Copy the input line INTo an argument string to become part of the
 	 * argument vector.
 	 */
-	(void)strcpy_s(&cmd_argv_str[0], SHELL_CMD_MAX_LEN, p_input_line);
+	(void)strncpy_s(&cmd_argv_str[0], SHELL_CMD_MAX_LEN, p_input_line, SHELL_CMD_MAX_LEN);
 	cmd_argv_str[SHELL_CMD_MAX_LEN] = 0;
 
 	/* Build the argv vector from the string. The first argument in the
@@ -525,16 +525,16 @@ static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv)
 		}
 		switch (vm->state) {
 		case VM_CREATED:
-			(void)strcpy_s(state, 32U, "Created");
+			(void)strncpy_s(state, 32U, "Created", 32U);
 			break;
 		case VM_STARTED:
-			(void)strcpy_s(state, 32U, "Started");
+			(void)strncpy_s(state, 32U, "Started", 32U);
 			break;
 		case VM_PAUSED:
-			(void)strcpy_s(state, 32U, "Paused");
+			(void)strncpy_s(state, 32U, "Paused", 32U);
 			break;
 		default:
-			(void)strcpy_s(state, 32U, "Unknown");
+			(void)strncpy_s(state, 32U, "Unknown", 32U);
 			break;
 		}
 		/* Create output string consisting of VM name and VM id
@@ -570,19 +570,19 @@ static int32_t shell_list_vcpu(__unused int32_t argc, __unused char **argv)
 		foreach_vcpu(i, vm, vcpu) {
 			switch (vcpu->state) {
 			case VCPU_INIT:
-				(void)strcpy_s(state, 32U, "Init");
+				(void)strncpy_s(state, 32U, "Init", 32U);
 				break;
 			case VCPU_PAUSED:
-				(void)strcpy_s(state, 32U, "Paused");
+				(void)strncpy_s(state, 32U, "Paused", 32U);
 				break;
 			case VCPU_RUNNING:
-				(void)strcpy_s(state, 32U, "Running");
+				(void)strncpy_s(state, 32U, "Running", 32U);
 				break;
 			case VCPU_ZOMBIE:
-				(void)strcpy_s(state, 32U, "Zombie");
+				(void)strncpy_s(state, 32U, "Zombie", 32U);
 				break;
 			default:
-				(void)strcpy_s(state, 32U, "Unknown");
+				(void)strncpy_s(state, 32U, "Unknown", 32U);
 			}
 			/* Create output string consisting of VM name
 			 * and VM id
@@ -908,7 +908,7 @@ static void get_entry_info(const struct ptirq_remapping_info *entry, char *type,
 {
 	if (is_entry_active(entry)) {
 		if (entry->intr_type == PTDEV_INTR_MSI) {
-			(void)strcpy_s(type, 16U, "MSI");
+			(void)strncpy_s(type, 16U, "MSI", 16U);
 			*dest = (entry->msi.pmsi_addr & 0xFF000U) >> PAGE_SHIFT;
 			if ((entry->msi.pmsi_data & APIC_TRIGMOD_LEVEL) != 0U) {
 				*lvl_tm = true;
@@ -924,9 +924,9 @@ static void get_entry_info(const struct ptirq_remapping_info *entry, char *type,
 			union ioapic_rte rte;
 
 			if (entry->virt_sid.intx_id.src == PTDEV_VPIN_IOAPIC) {
-				(void)strcpy_s(type, 16U, "IOAPIC");
+				(void)strncpy_s(type, 16U, "IOAPIC", 16U);
 			} else {
-				(void)strcpy_s(type, 16U, "PIC");
+				(void)strncpy_s(type, 16U, "PIC", 16U);
 			}
 			ioapic_get_rte(phys_irq, &rte);
 			*dest = rte.full >> IOAPIC_RTE_DEST_SHIFT;
@@ -943,7 +943,7 @@ static void get_entry_info(const struct ptirq_remapping_info *entry, char *type,
 		*irq = entry->allocated_pirq;
 		*vector = irq_to_vector(entry->allocated_pirq);
 	} else {
-		(void)strcpy_s(type, 16U, "NONE");
+		(void)strncpy_s(type, 16U, "NONE", 16U);
 		*irq = IRQ_INVALID;
 		*vector = 0U;
 		*dest = 0UL;

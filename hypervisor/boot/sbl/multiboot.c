@@ -114,13 +114,12 @@ static void parse_other_modules(struct acrn_vm *vm,
 			/*copy boot args to load addr, set src=load addr*/
 			if (copy_once != 0) {
 				copy_once = 0;
-				(void)strcpy_s(load_addr, MEM_2K, (const
-				char *)vm->sw.linux_info.bootargs_src_addr);
+				(void)strncpy_s(load_addr, MEM_2K, (const char *)vm->sw.linux_info.bootargs_src_addr,
+						vm->sw.linux_info.bootargs_size);
 				vm->sw.linux_info.bootargs_src_addr = load_addr;
 			}
 
-			(void)strcpy_s(load_addr + args_size,
-				100U, dyn_bootargs);
+			(void)strncpy_s(load_addr + args_size, 100U, dyn_bootargs, 100U);
 			vm->sw.linux_info.bootargs_size =
 				strnlen_s(load_addr, MEM_2K);
 

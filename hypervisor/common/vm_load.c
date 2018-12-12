@@ -127,7 +127,7 @@ int32_t general_sw_loader(struct acrn_vm *vm)
 		hva = gpa2hva(vm, (uint64_t)linux_info->bootargs_load_addr);
 
 		/* Copy Guest OS bootargs to its load location */
-		(void)strcpy_s((char *)hva, MEM_2K, linux_info->bootargs_src_addr);
+		(void)strncpy_s((char *)hva, MEM_2K, linux_info->bootargs_src_addr, linux_info->bootargs_size);
 
 		/* add "hugepagesz=1G hugepages=x" to cmdline for 1G hugepage
 		 * reserving. Current strategy is "total_mem_size in Giga -
@@ -143,7 +143,7 @@ int32_t general_sw_loader(struct acrn_vm *vm)
 #endif
 			if (reserving_1g_pages > 0) {
 				snprintf(dyn_bootargs, 100U, " hugepagesz=1G hugepages=%d", reserving_1g_pages);
-				(void)strcpy_s((char *)hva + linux_info->bootargs_size, 100U, dyn_bootargs);
+				(void)strncpy_s((char *)hva + linux_info->bootargs_size, 100U, dyn_bootargs, 100U);
 			}
 		}
 
