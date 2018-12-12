@@ -288,22 +288,19 @@ char *strncpy_s(char *d_arg, size_t dmax, const char *s_arg, size_t slen_arg)
 size_t strnlen_s(const char *str_arg, size_t maxlen_arg)
 {
 	const char *str = str_arg;
-	size_t maxlen = maxlen_arg;
-	size_t count;
+	size_t count = 0U;
 
-	if (str == NULL) {
-		return 0;
-	}
+	if (str != NULL) {
+		size_t maxlen = maxlen_arg;
+		while ((*str) != '\0') {
+			if (maxlen == 0U) {
+				break;
+			}
 
-	count = 0U;
-	while ((*str) != '\0') {
-		if (maxlen == 0U) {
-			break;
+			count++;
+			maxlen--;
+			str++;
 		}
-
-		count++;
-		maxlen--;
-		str++;
 	}
 
 	return count;
@@ -359,44 +356,39 @@ char *strstr_s(const char *str1, size_t maxlen1, const char *str2, size_t maxlen
 {
 	size_t len1, len2;
 	size_t i;
-	const char *pstr;
+	const char *pstr, *pret;
 
 	if ((str1 == NULL) || (str2 == NULL)) {
-		return NULL;
-	}
+		pret = NULL;
+	} else if ((maxlen1 == 0U) || (maxlen2 == 0U)) {
+		pret = NULL;
+	} else {
+		len1 = strnlen_s(str1, maxlen1);
+		len2 = strnlen_s(str2, maxlen2);
 
-	if ((maxlen1 == 0U) || (maxlen2 == 0U)) {
-		return NULL;
-	}
-
-	len1 = strnlen_s(str1, maxlen1);
-	len2 = strnlen_s(str2, maxlen2);
-
-	if (len1 < len2) {
-		return NULL;
-	}
-
-	/* return str1 if str2 equals to str1 or str2 points to a string with zero length*/
-	if ((str1 == str2) || (len2 == 0U)) {
-		return (char *)str1;
-	}
-
-	pstr = str1;
-	while (len1 >= len2) {
-		for (i = 0U; i < len2; i++) {
-			if (pstr[i] != str2[i]) {
-				break;
+		if (len1 < len2) {
+			pret = NULL;
+		} else if ((str1 == str2) || (len2 == 0U)) {
+			/* return str1 if str2 equals to str1 or str2 points to a string with zero length*/
+			pret = str1;
+		} else {
+			pret = NULL;
+			pstr = str1;
+			while (len1 >= len2) {
+				for (i = 0U; i < len2; i++) {
+					if (pstr[i] != str2[i]) {
+						break;
+					}
+				}
+				if (i == len2) {
+					pret = pstr;
+					break;
+				}
+				pstr++;
+				len1--;
 			}
 		}
-		if (i == len2) {
-			return (char *)pstr;
-		}
-		pstr++;
-		len1--;
 	}
 
-	/*
-	 * substring was not found, return NULL
-	 */
-	return NULL;
+	return (char *)pret;
 }
