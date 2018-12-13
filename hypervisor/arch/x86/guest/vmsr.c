@@ -53,7 +53,7 @@ static const uint32_t mtrr_msrs[NUM_MTRR_MSRS] = {
 };
 
 /* Following MSRs are intercepted, but it throws GPs for any guest accesses */
-#define NUM_UNSUPPORTED_MSRS	95U
+#define NUM_UNSUPPORTED_MSRS	96U
 static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	/* Variable MTRRs are not supported */
 	MSR_IA32_MTRR_PHYSBASE_0,
@@ -173,6 +173,9 @@ static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	MSR_IA32_RTIT_ADDR2_B,
 	MSR_IA32_RTIT_ADDR3_A,
 	MSR_IA32_RTIT_ADDR3_B,
+
+	/* SMM Monitor Configuration: CPUID.01H.ECX[5] and CPUID.01H.ECX[6] */
+	MSR_IA32_SMM_MONITOR_CTL,
 };
 
 #define NUM_X2APIC_MSRS	44U
