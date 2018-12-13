@@ -88,6 +88,7 @@ static int32_t local_gva2gpa_common(struct acrn_vcpu *vcpu, const struct page_wa
 
 	addr = pw_info->top_entry;
 	i = pw_info->level;
+	stac();
 	while (i != 0U) {
 		i--;
 
@@ -208,6 +209,7 @@ static int32_t local_gva2gpa_common(struct acrn_vcpu *vcpu, const struct page_wa
 	*gpa = entry | (gva & (page_size - 1UL));
 out:
 
+	clac();
 	if (fault != 0) {
 		ret = -EFAULT;
 		*err_code |= PAGE_FAULT_P_FLAG;
@@ -347,11 +349,13 @@ static inline uint32_t local_copy_gpa(struct acrn_vm *vm, void *h_ptr, uint64_t 
 
 	g_ptr = hpa2hva(hpa);
 
+	stac();
 	if (cp_from_vm) {
 		(void)memcpy_s(h_ptr, len, g_ptr, len);
 	} else {
 		(void)memcpy_s(g_ptr, len, h_ptr, len);
 	}
+	clac();
 
 	return len;
 }

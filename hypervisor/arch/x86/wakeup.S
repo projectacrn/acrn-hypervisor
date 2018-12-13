@@ -137,7 +137,9 @@ restore_s3_context:
 	pushq 0xa0 + cpu_ctx(%rip)
 	popfq
 
+	stac
 	call load_gdtr_and_tr
+	clac
 	call restore_msrs
 
 	/*

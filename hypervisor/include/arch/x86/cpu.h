@@ -531,6 +531,17 @@ write_xcr(int32_t reg, uint64_t val)
 	high = (uint32_t)(val >> 32U);
 	asm volatile("xsetbv" : : "c" (reg), "a" (low), "d" (high));
 }
+
+static inline void stac(void)
+{
+	asm volatile ("stac" : : : "memory");
+}
+
+static inline void clac(void)
+{
+	asm volatile ("clac" : : : "memory");
+}
+
 #else /* ASSEMBLER defined */
 
 #endif /* ASSEMBLER defined */

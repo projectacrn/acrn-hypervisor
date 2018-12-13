@@ -296,22 +296,25 @@ int32_t mptable_build(struct acrn_vm *vm)
 	struct mpfps            *mpfp;
 	size_t			mptable_length, table_length;
 
-	startaddr = (char *)gpa2hva(vm, MPTABLE_BASE);
-
 	table_length = vm->vm_desc->mptable->mpch.base_table_length;
 	mptable_length = sizeof(struct mpfps) + table_length;
-	/* Copy mptable info into guest memory */
-	(void)memcpy_s((void *)startaddr, MPTABLE_MAX_LENGTH,
-				(void *)vm->vm_desc->mptable,
-				mptable_length);
+	if (mptable_length > MPTABLE_MAX_LENGTH) {
+		return -1;
+	}
 
+	/* Copy mptable info into guest memory */
+	copy_to_gpa(vm, (void *)vm->vm_desc->mptable, MPTABLE_BASE, mptable_length);
+
+	startaddr = (char *)gpa2hva(vm, MPTABLE_BASE);
 	curraddr = startaddr;
+	stac();
 	mpfp = (struct mpfps *)curraddr;
 	mpfp->checksum = mpt_compute_checksum(mpfp, sizeof(struct mpfps));
 	curraddr += sizeof(struct mpfps);
 
 	mpch = (struct mpcth *)curraddr;
 	mpch->checksum = mpt_compute_checksum(mpch, mpch->base_table_length);
+	clac();
 
 	return 0U;
 }

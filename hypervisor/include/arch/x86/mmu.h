@@ -106,6 +106,14 @@ void enable_paging(void);
  * @return None
  */
 void enable_smep(void);
+
+/**
+ * @brief Supervisor-mode Access Prevention (SMAP) enable
+ *
+ * @return None
+ */
+void enable_smap(void);
+
 /**
  * @brief MMU page tables initialization
  *
@@ -116,6 +124,8 @@ void mmu_add(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_base,
 		uint64_t size, uint64_t prot, const struct memory_ops *mem_ops);
 void mmu_modify_or_del(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
 		uint64_t prot_set, uint64_t prot_clr, const struct memory_ops *mem_ops, uint32_t type);
+void hv_access_memory_region_update(uint64_t base, uint64_t size);
+
 /**
  * @brief EPT and VPID capability checking
  *

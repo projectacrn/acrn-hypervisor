@@ -100,6 +100,10 @@ void uart16550_init(void)
 		uart_base_address = pci_pdev_read_cfg(serial_pci_bdf, pci_bar_offset(0), 4U) & PCIM_BAR_MEM_BASE;
 	}
 
+	if (!serial_port_mapped) {
+		hv_access_memory_region_update(uart_base_address, PDE_SIZE);
+	}
+
 	spinlock_init(&uart_rx_lock);
 	spinlock_init(&uart_tx_lock);
 	/* Enable TX and RX FIFOs */

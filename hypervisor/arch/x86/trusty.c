@@ -130,7 +130,9 @@ void destroy_secure_world(struct acrn_vm *vm, bool need_clr_mem)
 	if (vm->arch_vm.sworld_eptp != NULL) {
 		if (need_clr_mem) {
 			/* clear trusty memory space */
+			stac();
 			(void)memset(hpa2hva(hpa), 0U, (size_t)size);
+			clac();
 		}
 
 		ept_mr_del(vm, vm->arch_vm.sworld_eptp, gpa_uos, size);
@@ -363,6 +365,7 @@ static bool setup_trusty_info(struct acrn_vcpu *vcpu,
 
 	mem = (struct trusty_mem *)(hpa2hva(mem_base_hpa));
 
+	stac();
 	/* copy key_info to the first page of trusty memory */
 	(void)memcpy_s(&mem->first_page.key_info, sizeof(g_key_info),
 			&g_key_info, sizeof(g_key_info));
@@ -380,6 +383,7 @@ static bool setup_trusty_info(struct acrn_vcpu *vcpu,
 				vcpu->vm->GUID, sizeof(vcpu->vm->GUID)) == 0) {
 			(void)memset(key_info, 0U, sizeof(struct trusty_key_info));
 			pr_err("%s: derive dvseed failed!", __func__);
+			clac();
 			return false;
 		}
 		key_info->dseed_list[i].cse_svn = g_key_info.dseed_list[i].cse_svn;
@@ -397,6 +401,7 @@ static bool setup_trusty_info(struct acrn_vcpu *vcpu,
 	mem->first_page.startup_param.mem_size = mem_size;
 	mem->first_page.startup_param.tsc_per_ms = CYCLES_PER_MS;
 	mem->first_page.startup_param.trusty_mem_base = TRUSTY_EPT_REBASE_GPA;
+	clac();
 
 	/* According to trusty boot protocol, it will use RDI as the
 	 * address(GPA) of startup_param on boot. Currently, the startup_param

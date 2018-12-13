@@ -1067,6 +1067,7 @@ int32_t hcall_vm_intr_monitor(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 
 	intr_hdr = (struct acrn_intr_monitor *)hpa2hva(hpa);
 
+	stac();
 	switch (intr_hdr->cmd) {
 	case INTR_CMD_GET_DATA:
 		intr_hdr->buf_cnt = ptirq_get_intr_data(target_vm,
@@ -1085,6 +1086,7 @@ int32_t hcall_vm_intr_monitor(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	}
 
 	pr_dbg("intr monitor:%d, cnt=%d", intr_hdr->cmd, intr_hdr->buf_cnt);
+	clac();
 
 	return 0;
 }

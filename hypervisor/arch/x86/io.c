@@ -14,6 +14,8 @@ static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	struct vhm_request *vhm_req;
 
 	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
+
+	stac();
 	vhm_req = &req_buf->req_queue[vcpu->vcpu_id];
 	if (io_req != NULL) {
 		switch (vcpu->req.type) {
@@ -26,10 +28,12 @@ static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
 			break;
 
 		default:
+			/*no actions are required for other cases.*/
 			break;
 		}
 	}
 	atomic_store32(&vhm_req->processed, REQ_STATE_FREE);
+	clac();
 }
 
 /**

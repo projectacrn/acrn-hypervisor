@@ -424,6 +424,8 @@ void init_cpu_post(uint16_t pcpu_id)
 
 	enable_smep();
 
+	enable_smap();
+
 	/* Make sure rdtsc is enabled */
 	check_tsc();
 
