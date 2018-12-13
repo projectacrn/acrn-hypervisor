@@ -82,9 +82,6 @@ pci_uart_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 static int
 pci_uart_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 {
-	struct uart_vdev *uart;
-	int ret;
-
 	pci_emul_alloc_bar(dev, 0, PCIBAR_IO, UART_IO_BAR_SIZE);
 	pci_lintr_request(dev);
 
@@ -93,11 +90,8 @@ pci_uart_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_set_cfgdata16(dev, PCIR_VENDOR, COM_VENDOR);
 	pci_set_cfgdata8(dev, PCIR_CLASS, PCIC_SIMPLECOMM);
 
-	uart = uart_init(pci_uart_intr_assert, pci_uart_intr_deassert, dev);
-	dev->arg = uart;
-
-	ret = uart_set_backend(uart, opts);
-	if (ret && ret != -EINVAL) {
+	dev->arg = uart_set_backend(pci_uart_intr_assert, pci_uart_intr_deassert, dev, opts);
+	if (dev->arg == NULL) {
 		fprintf(stderr, "Unable to initialize backend '%s' for "
 		    "pci uart at %d:%d\n", opts, dev->slot, dev->func);
 		return -1;
@@ -115,7 +109,6 @@ pci_uart_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		return;
 
 	uart_release_backend(uart, opts);
-	uart_deinit(uart);
 }
 
 struct pci_vdev_ops pci_ops_com = {
