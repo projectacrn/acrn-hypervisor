@@ -27,5 +27,6 @@ project.
    :maxdepth: 1
 
    contribute_guidelines
+   coding_guidelines
    doc_guidelines
    graphviz
