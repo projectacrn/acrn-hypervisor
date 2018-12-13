@@ -629,7 +629,7 @@ uart_legacy_dealloc(int which)
 	uart_lres[which].inuse = false;
 }
 
-struct uart_vdev *
+static struct uart_vdev *
 uart_init(uart_intr_func_t intr_assert, uart_intr_func_t intr_deassert,
 	void *arg)
 {
@@ -650,7 +650,7 @@ uart_init(uart_intr_func_t intr_assert, uart_intr_func_t intr_deassert,
 	return uart;
 }
 
-void
+static void
 uart_deinit(struct uart_vdev *uart)
 {
 	if (uart) {
@@ -681,15 +681,19 @@ uart_tty_backend(struct uart_vdev *uart, const char *opts)
 	return retval;
 }
 
-int
-uart_set_backend(struct uart_vdev *uart, const char *opts)
+struct uart_vdev *
+uart_set_backend(uart_intr_func_t intr_assert, uart_intr_func_t intr_deassert,
+	void *arg, const char *opts)
 {
-	int retval;
+	int retval = -1;
+	struct uart_vdev *uart;
 
-	retval = -1;
+	uart = uart_init(intr_assert, intr_deassert, arg);
+	if (!uart)
+		return NULL;
 
 	if (opts == NULL)
-		return -EINVAL;
+		return uart;
 
 	if (strcmp("stdio", opts) == 0) {
 		if (!stdio_in_use) {
@@ -703,17 +707,29 @@ uart_set_backend(struct uart_vdev *uart, const char *opts)
 		retval = 0;
 	}
 
-	if (retval)
-		return -EINVAL;
+	if (retval) {
+		uart_deinit(uart);
+		return NULL;
+	}
 
 	/* Make the backend file descriptor non-blocking */
-	if (retval == 0)
-		retval = fcntl(uart->tty.fd_in, F_SETFL, O_NONBLOCK);
+	retval = fcntl(uart->tty.fd_in, F_SETFL, O_NONBLOCK);
+	if (retval != 0)
+		goto fail_tty_backend;
 
-	if (retval == 0)
-		uart_opentty(uart);
+	uart_opentty(uart);
 
-	return retval;
+	return uart;
+
+fail_tty_backend:
+	if (uart->tty.fd_in) {
+		close(uart->tty.fd_in);
+		uart->tty.fd_in = -1;
+		uart->tty.fd_out = -1;
+		uart->tty.opened = false;
+	}
+	uart_deinit(uart);
+	return NULL;
 }
 
 void
@@ -741,4 +757,6 @@ uart_release_backend(struct uart_vdev *uart, const char *opts)
 	uart->tty.fd_in = -1;
 	uart->tty.fd_out = -1;
 	uart->tty.opened = false;
+
+	uart_deinit(uart);
 }
