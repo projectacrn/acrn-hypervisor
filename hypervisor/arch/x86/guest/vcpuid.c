@@ -315,6 +315,9 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 			*edx &= ~CPUID_EDX_MTRR;
 #endif
 
+			/* mask Safer Mode Extension */
+			*ecx &= ~CPUID_ECX_SMX;
+
 			/* mask pcid */
 			*ecx &= ~CPUID_ECX_PCID;
 

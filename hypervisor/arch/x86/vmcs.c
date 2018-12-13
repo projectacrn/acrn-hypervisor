@@ -281,8 +281,8 @@ static bool is_cr4_write_valid(struct acrn_vcpu *vcpu, uint64_t cr4)
 	if ((cr4 & cr4_always_off_mask) != 0U) {
 		ret = false;
 	} else {
-		/* Do NOT support nested guest */
-		if ((cr4 & CR4_VMXE) != 0UL) {
+		/* Do NOT support nested guest, nor SMX */
+		if (((cr4 & CR4_VMXE) != 0UL) || ((cr4 & CR4_SMXE) != 0UL)) {
 			ret = false;
 		} else {
 			/* Do NOT support PCID in guest */
@@ -417,7 +417,7 @@ static void init_guest_state(struct acrn_vcpu *vcpu)
 		&vcpu->arch.contexts[vcpu->arch.cur_context];
 
 	init_guest_vmx(vcpu, ctx->run_ctx.cr0, ctx->ext_ctx.cr3,
-			ctx->run_ctx.cr4 & ~CR4_VMXE);
+			ctx->run_ctx.cr4 & ~(CR4_VMXE | CR4_SMXE));
 }
 
 static void init_host_state(void)
