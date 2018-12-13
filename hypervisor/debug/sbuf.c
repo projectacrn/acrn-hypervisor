@@ -28,8 +28,11 @@ uint32_t sbuf_next_ptr(uint32_t pos_arg,
 uint32_t sbuf_get(struct shared_buf *sbuf, uint8_t *data)
 {
 	const void *from;
+	uint32_t ele_size;
 
+	stac();
 	if (sbuf_is_empty(sbuf)) {
+		clac();
 		/* no data available */
 		return 0;
 	}
@@ -40,7 +43,10 @@ uint32_t sbuf_get(struct shared_buf *sbuf, uint8_t *data)
 
 	sbuf->head = sbuf_next_ptr(sbuf->head, sbuf->ele_size, sbuf->size);
 
-	return sbuf->ele_size;
+	ele_size = sbuf->ele_size;
+	clac();
+
+	return ele_size;
 }
 
 /**
@@ -65,8 +71,10 @@ uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 {
 	void *to;
 	uint32_t next_tail;
+	uint32_t ele_size;
 	bool trigger_overwrite = false;
 
+	stac();
 	next_tail = sbuf_next_ptr(sbuf->tail, sbuf->ele_size, sbuf->size);
 	/* if this write would trigger overrun */
 	if (next_tail == sbuf->head) {
@@ -74,6 +82,7 @@ uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 		sbuf->overrun_cnt += sbuf->flags & OVERRUN_CNT_EN;
 		if ((sbuf->flags & OVERWRITE_EN) == 0U) {
 			/* if not enable over write, return here. */
+			clac();
 			return 0;
 		}
 		trigger_overwrite = true;
@@ -89,7 +98,10 @@ uint32_t sbuf_put(struct shared_buf *sbuf, uint8_t *data)
 	}
 	sbuf->tail = next_tail;
 
-	return sbuf->ele_size;
+	ele_size = sbuf->ele_size;
+	clac();
+
+	return ele_size;
 }
 
 int32_t sbuf_share_setup(uint16_t pcpu_id, uint32_t sbuf_id, uint64_t *hva)

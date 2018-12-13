@@ -965,7 +965,6 @@ exception_inject:
 static int32_t emulate_movs(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	uint64_t src_gva, gpa, val = 0UL;
-	uint64_t *dst_hva, *src_hva;
 	uint64_t rcx, rdi, rsi, rflags;
 	uint32_t err_code;
 	enum cpu_reg_name seg;
@@ -1005,9 +1004,7 @@ static int32_t emulate_movs(struct acrn_vcpu *vcpu, const struct instr_emul_vie 
 
 		/* we are sure it will success */
 		(void)gva2gpa(vcpu, src_gva, &gpa, &err_code);
-		src_hva = (uint64_t *)gpa2hva(vcpu->vm, gpa);
-		(void)memcpy_s(&val, opsize, src_hva, opsize);
-
+		(void)copy_from_gpa(vcpu->vm, &val, gpa, opsize);
 		vie_mmio_write(vcpu, val);
 	} else {
 		vie_mmio_read(vcpu, &val);
@@ -1015,8 +1012,7 @@ static int32_t emulate_movs(struct acrn_vcpu *vcpu, const struct instr_emul_vie 
 		/* The dest gpa is saved during dst check instruction
 		 * decoding.
 		 */
-		dst_hva = (uint64_t *)gpa2hva(vcpu->vm, vie->dst_gpa);
-		(void)memcpy_s(dst_hva, opsize, &val, opsize);
+		(void)copy_to_gpa(vcpu->vm, &val, vie->dst_gpa, opsize);
 	}
 
 	rsi = vm_get_register(vcpu, CPU_REG_RSI);

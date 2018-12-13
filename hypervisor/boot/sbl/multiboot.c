@@ -29,8 +29,10 @@ int32_t init_vm_boot_info(struct acrn_vm *vm)
 
 	mbi = hpa2hva((uint64_t)boot_regs[1]);
 
+	stac();
 	dev_dbg(ACRN_DBG_BOOT, "Multiboot detected, flag=0x%x", mbi->mi_flags);
 	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
+		clac();
 		ASSERT(false, "no kernel info found");
 		return -EINVAL;
 	}
@@ -59,6 +61,7 @@ int32_t init_vm_boot_info(struct acrn_vm *vm)
 			strnlen_s(vm->vm_desc->bootargs, MEM_2K);
 
 	vm->sw.linux_info.bootargs_load_addr = (void *)(vm->vm_desc->mem_size -  8*1024UL);
+	clac();
 
 	return 0;
 }
@@ -175,9 +178,11 @@ int32_t init_vm_boot_info(struct acrn_vm *vm)
 
 	mbi = (struct multiboot_info *)hpa2hva((uint64_t)boot_regs[1]);
 
+	stac();
 	dev_dbg(ACRN_DBG_BOOT, "Multiboot detected, flag=0x%x", mbi->mi_flags);
 	if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
 		ASSERT(false, "no sos kernel info found");
+		clac();
 		return -EINVAL;
 	}
 
@@ -261,6 +266,7 @@ int32_t init_vm_boot_info(struct acrn_vm *vm)
 		/*parse other modules, like firmware /ramdisk */
 		parse_other_modules(vm, mods + 1, mbi->mi_mods_count - 1);
 	}
+	clac();
 	return 0;
 }
 #endif

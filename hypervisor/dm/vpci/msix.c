@@ -70,11 +70,13 @@ static int32_t vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool ena
 		 * fields with a single QWORD write, but some hardware can accept 32 bits
 		 * write only
 		 */
+		stac();
 		mmio_write32((uint32_t)(info.pmsi_addr), (void *)&(pentry->addr));
 		mmio_write32((uint32_t)(info.pmsi_addr >> 32U), (void *)((char *)&(pentry->addr) + 4U));
 
 		mmio_write32(info.pmsi_data, (void *)&(pentry->data));
 		mmio_write32(vdev->msix.tables[index].vector_control, (void *)&(pentry->vector_control));
+		clac();
 	}
 
 	return ret;
@@ -278,6 +280,7 @@ static int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *
 			return -EINVAL;
 		}
 
+		stac();
 		/* MSI-X PBA and Capability Table could be in the same range */
 		if (mmio->direction == REQUEST_READ) {
 			/* mmio->size is either 4U or 8U */
@@ -294,6 +297,7 @@ static int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *
 				mmio_write64(mmio->value, (void *)hva);
 			}
 		}
+		clac();
 	}
 
 	return 0;

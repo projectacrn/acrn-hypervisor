@@ -234,6 +234,25 @@ void enable_smep(void)
 	CPU_CR_WRITE(cr4, val64 | CR4_SMEP);
 }
 
+void enable_smap(void)
+{
+	uint64_t val64 = 0UL;
+
+	/* Enable CR4.SMAP*/
+	CPU_CR_READ(cr4, &val64);
+	CPU_CR_WRITE(cr4, val64 | CR4_SMAP);
+}
+
+/*
+ * Update memory pages to be owned by hypervisor.
+ */
+void hv_access_memory_region_update(uint64_t base, uint64_t size)
+{
+	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (base & PDE_MASK),
+		((size + PDE_SIZE - 1UL) & PDE_MASK), 0UL, PAGE_USER,
+		&ppt_mem_ops, MR_MODIFY);
+}
+
 void init_paging(void)
 {
 	uint64_t hv_hpa, text_end, size;
@@ -304,6 +323,15 @@ void init_paging(void)
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (uint64_t)get_reserve_sworld_memory_base(),
 			TRUSTY_RAM_SIZE * (CONFIG_MAX_VM_NUM - 1U), PAGE_USER, 0UL, &ppt_mem_ops, MR_MODIFY);
 
+#ifdef CONFIG_EFI_STUB
+	/*Hypvervisor need access below memory region on UEFI platform.*/
+	for (i = 0U; i < entries_count; i++) {
+		entry = p_e820 + i;
+		if (entry->type == E820_TYPE_ACPI_RECLAIM) {
+			hv_access_memory_region_update(entry->baseaddr, entry->length);
+		}
+	}
+#endif
 	/* Enable paging */
 	enable_paging();
 

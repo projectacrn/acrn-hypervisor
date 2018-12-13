@@ -339,6 +339,8 @@ void setup_ioapic_irqs(void)
 		uint8_t pin, nr_pins;
 
 		addr = map_ioapic(get_ioapic_base(ioapic_id));
+		hv_access_memory_region_update((uint64_t)addr, PAGE_SIZE);
+
 		nr_pins = ioapic_nr_pins(addr);
 		for (pin = 0U; pin < nr_pins; pin++) {
 			gsi_table[gsi].ioapic_id = ioapic_id;

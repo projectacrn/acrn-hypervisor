@@ -25,6 +25,7 @@ static void fire_vhm_interrupt(void)
 	vlapic_intr_edge(vcpu, acrn_vhm_vector);
 }
 
+#if defined(HV_DEBUG)
 static void acrn_print_request(uint16_t vcpu_id, const struct vhm_request *req)
 {
 	switch (req->type) {
@@ -54,6 +55,7 @@ static void acrn_print_request(uint16_t vcpu_id, const struct vhm_request *req)
 		break;
 	}
 }
+#endif
 
 /**
  * @brief Reset all IO requests status of the VM
@@ -122,8 +124,9 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 
 	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
 	cur = vcpu->vcpu_id;
-	vhm_req = &req_buf->req_queue[cur];
 
+	stac();
+	vhm_req = &req_buf->req_queue[cur];
 	/* ACRN insert request to VHM and inject upcall */
 	vhm_req->type = io_req->type;
 	(void)memcpy_s(&vhm_req->reqs, sizeof(union vhm_io_request),
@@ -131,6 +134,7 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 	if (vcpu->vm->sw.is_completion_polling) {
 		vhm_req->completion_polling = 1U;
 	}
+	clac();
 
 	/* pause vcpu, wait for VHM to handle the MMIO request.
 	 * TODO: when pause_vcpu changed to switch vcpu out directlly, we
@@ -145,7 +149,11 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 	 */
 	set_vhm_req_state(vcpu->vm, vcpu->vcpu_id, REQ_STATE_PENDING);
 
+#if defined(HV_DEBUG)
+	stac();
 	acrn_print_request(vcpu->vcpu_id, vhm_req);
+	clac();
+#endif
 
 	/* signal VHM */
 	fire_vhm_interrupt();
@@ -164,8 +172,10 @@ uint32_t get_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id)
 		return (uint32_t)-1;
 	}
 
+	stac();
 	vhm_req = &req_buf->req_queue[vhm_req_id];
 	state = atomic_load32(&vhm_req->processed);
+	clac();
 
 	return state;
 }
@@ -180,6 +190,8 @@ void set_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id, uint32_t state)
 		return;
 	}
 
+	stac();
 	vhm_req = &req_buf->req_queue[vhm_req_id];
 	atomic_store32(&vhm_req->processed, state);
+	clac();
 }

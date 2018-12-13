@@ -300,10 +300,12 @@ static void load_pdptrs(const struct acrn_vcpu *vcpu)
 	/* TODO: check whether guest cr3 is valid */
 	uint64_t *guest_cr3_hva = (uint64_t *)gpa2hva(vcpu->vm, guest_cr3);
 
+	stac();
 	exec_vmwrite64(VMX_GUEST_PDPTE0_FULL, get_pgentry(guest_cr3_hva + 0UL));
 	exec_vmwrite64(VMX_GUEST_PDPTE1_FULL, get_pgentry(guest_cr3_hva + 1UL));
 	exec_vmwrite64(VMX_GUEST_PDPTE2_FULL, get_pgentry(guest_cr3_hva + 2UL));
 	exec_vmwrite64(VMX_GUEST_PDPTE3_FULL, get_pgentry(guest_cr3_hva + 3UL));
+	clac();
 }
 
 static bool is_cr0_write_valid(struct acrn_vcpu *vcpu, uint64_t cr0)

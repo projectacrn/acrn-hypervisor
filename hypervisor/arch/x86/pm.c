@@ -133,6 +133,7 @@ void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 
 		pcpu_id = get_cpu_id();
 
+		stac();
 		/* Save the wakeup vec set by guest. Will return to guest
 		 * with this wakeup vec as entry.
 		 */
@@ -142,9 +143,11 @@ void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 		*vm->pm.sx_state_data->wake_vector_32 =
 			(uint32_t) trampoline_start16_paddr;
 
+		clac();
 		/* offline all APs */
 		stop_cpus();
 
+		stac();
 		/* Save default main entry and we will restore it after
 		 * back from S3. So the AP online could jmp to correct
 		 * main entry.
@@ -153,6 +156,7 @@ void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 
 		/* Set the main entry for resume from S3 state */
 		write_trampoline_sym(main_entry, (uint64_t)restore_s3_context);
+		clac();
 
 		CPU_IRQ_DISABLE();
 		vmx_off(pcpu_id);
@@ -176,7 +180,9 @@ void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
 		CPU_IRQ_ENABLE();
 
 		/* restore the default main entry */
+		stac();
 		write_trampoline_sym(main_entry, pmain_entry_saved);
+		clac();
 
 		/* online all APs again */
 		start_cpus();
