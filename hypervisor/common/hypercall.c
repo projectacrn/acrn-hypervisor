@@ -1049,46 +1049,44 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vm *vm, uint64_t cmd, uint64_t param)
  */
 int32_t hcall_vm_intr_monitor(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 {
+	int32_t status = -EINVAL;
 	struct acrn_intr_monitor *intr_hdr;
 	uint64_t hpa;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (target_vm == NULL) {
-		return -1;
+	if (target_vm != NULL) {
+
+		/* the param for this hypercall is page aligned */
+		hpa = gpa2hpa(vm, param);
+		if (hpa != INVALID_HPA) {
+			intr_hdr = (struct acrn_intr_monitor *)hpa2hva(hpa);
+			stac();
+			if (intr_hdr->buf_cnt <= (MAX_PTDEV_NUM * 2U)) {
+				switch (intr_hdr->cmd) {
+				case INTR_CMD_GET_DATA:
+					intr_hdr->buf_cnt = ptirq_get_intr_data(target_vm,
+						intr_hdr->buffer, intr_hdr->buf_cnt);
+					break;
+
+				case INTR_CMD_DELAY_INT:
+					/* buffer[0] is the delay time (in MS), if 0 to cancel delay */
+					target_vm->intr_inject_delay_delta =
+						intr_hdr->buffer[0] * CYCLES_PER_MS;
+					break;
+
+				default:
+					/* if cmd wrong it goes here should not happen */
+					break;
+				}
+
+				status = 0;
+				pr_dbg("intr monitor:%d, cnt=%d", intr_hdr->cmd, intr_hdr->buf_cnt);
+			}
+			clac();
+		}
 	}
 
-	/* the param for this hypercall is page aligned */
-	hpa = gpa2hpa(vm, param);
-	if (hpa == INVALID_HPA) {
-		pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
-			__func__, vm->vm_id, param);
-		return -EINVAL;
-	}
-
-	intr_hdr = (struct acrn_intr_monitor *)hpa2hva(hpa);
-
-	stac();
-	switch (intr_hdr->cmd) {
-	case INTR_CMD_GET_DATA:
-		intr_hdr->buf_cnt = ptirq_get_intr_data(target_vm,
-			intr_hdr->buffer, intr_hdr->buf_cnt);
-		break;
-
-	case INTR_CMD_DELAY_INT:
-		/* buffer[0] is the delay time (in MS), if 0 to cancel delay */
-		target_vm->intr_inject_delay_delta =
-			intr_hdr->buffer[0] * CYCLES_PER_MS;
-		break;
-
-	default:
-		/* if cmd wrong it goes here should not happen */
-		break;
-	}
-
-	pr_dbg("intr monitor:%d, cnt=%d", intr_hdr->cmd, intr_hdr->buf_cnt);
-	clac();
-
-	return 0;
+	return status;
 }
 
 /**

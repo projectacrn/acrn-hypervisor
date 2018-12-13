@@ -626,7 +626,7 @@ enum pm_cmd_type {
  *
  * the parameter for HC_VM_INTR_MONITOR hypercall
  */
-#define MAX_PTDEV_NUM 24
+#define MAX_PTDEV_NUM 24U
 struct acrn_intr_monitor {
 	/** sub command for intr monitor */
 	uint32_t cmd;
