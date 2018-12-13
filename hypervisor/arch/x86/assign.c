@@ -628,7 +628,8 @@ static void activate_physical_ioapic(struct acrn_vm *vm,
 int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin,
 		enum ptirq_vpin_source vpin_src)
 {
-	struct ptirq_remapping_info *entry;
+	int32_t status = 0;
+	struct ptirq_remapping_info *entry = NULL;
 	bool need_switch_vpin_src = false;
 	DEFINE_IOAPIC_SID(virt_sid, virt_pin, vpin_src);
 	bool pic_pin = (vpin_src == PTDEV_VPIN_PIC);
@@ -647,80 +648,80 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin,
 	/* no remap for hypervisor owned intx */
 #ifdef CONFIG_COM_IRQ
 	if (ptdev_hv_owned_intx(vm, &virt_sid)) {
-		goto END;
+		status = -ENODEV;
 	}
 #endif /* CONFIG_COM_IRQ */
 
-	/* query if we have virt to phys mapping */
-	spinlock_obtain(&ptdev_lock);
-	entry = ptirq_lookup_entry_by_vpin(vm, virt_pin, pic_pin);
-	if (entry == NULL) {
-		if (is_vm0(vm)) {
+	if (status || (pic_pin && (virt_pin >= NR_VPIC_PINS_TOTAL))) {
+		status = -EINVAL;
+	} else {
+		/* query if we have virt to phys mapping */
+		spinlock_obtain(&ptdev_lock);
+		entry = ptirq_lookup_entry_by_vpin(vm, virt_pin, pic_pin);
+		if (entry == NULL) {
+			if (is_vm0(vm)) {
 
-			/* for vm0, there is chance of vpin source switch
-			 * between vPIC & vIOAPIC for one legacy phys_pin.
-			 *
-			 * here checks if there is already mapping entry from
-			 * the other vpin source for legacy pin. If yes, then
-			 * switch vpin source is needed
-			 */
-			if (virt_pin < NR_LEGACY_PIN) {
-				uint8_t vpin = pic_ioapic_pin_map[virt_pin];
+				/* for vm0, there is chance of vpin source switch
+				 * between vPIC & vIOAPIC for one legacy phys_pin.
+				 *
+				 * here checks if there is already mapping entry from
+				 * the other vpin source for legacy pin. If yes, then
+				 * switch vpin source is needed
+				 */
+				if (virt_pin < NR_LEGACY_PIN) {
+					uint8_t vpin = pic_ioapic_pin_map[virt_pin];
 
-				entry = ptirq_lookup_entry_by_vpin(vm, vpin, !pic_pin);
-				if (entry != NULL) {
-					need_switch_vpin_src = true;
+					entry = ptirq_lookup_entry_by_vpin(vm, vpin, !pic_pin);
+					if (entry != NULL) {
+						need_switch_vpin_src = true;
+					}
 				}
-			}
 
-			/* entry could be updated by above switch check */
-			if (entry == NULL) {
-				uint8_t phys_pin = virt_pin;
-
-				/* fix vPIC pin to correct native IOAPIC pin */
-				if (pic_pin) {
-					phys_pin = pic_ioapic_pin_map[virt_pin];
-				}
-				entry = add_intx_remapping(vm,
-						virt_pin, phys_pin, pic_pin);
+				/* entry could be updated by above switch check */
 				if (entry == NULL) {
-					pr_err("%s, add intx remapping failed",
-						__func__);
-					spinlock_release(&ptdev_lock);
-					return -ENODEV;
+					uint8_t phys_pin = virt_pin;
+
+					/* fix vPIC pin to correct native IOAPIC pin */
+					if (pic_pin) {
+						phys_pin = pic_ioapic_pin_map[virt_pin];
+					}
+					entry = add_intx_remapping(vm,
+							virt_pin, phys_pin, pic_pin);
+					if (entry == NULL) {
+						pr_err("%s, add intx remapping failed",
+								__func__);
+						status = -ENODEV;
+					}
 				}
+			} else {
+				/* ptirq_intx_pin_remap is triggered by vPIC/vIOAPIC
+				 * everytime a pin get unmask, here filter out pins
+				 * not get mapped.
+				 */
+				status = -ENODEV;
 			}
-		} else {
-			/* ptirq_intx_pin_remap is triggered by vPIC/vIOAPIC
-			 * everytime a pin get unmask, here filter out pins
-			 * not get mapped.
-			 */
-			 spinlock_release(&ptdev_lock);
-			goto END;
 		}
+		spinlock_release(&ptdev_lock);
 	}
 
-	/* if vpin source need switch */
-	if (need_switch_vpin_src) {
-		dev_dbg(ACRN_DBG_IRQ,
-			"IOAPIC pin=%hhu pirq=%u vpin=%d switch from %s to %s "
-			"vpin=%d for vm%d", entry->phys_sid.intx_id.pin,
-			entry->allocated_pirq, entry->virt_sid.intx_id.pin,
-			(vpin_src == 0)? "vPIC" : "vIOAPIC",
-			(vpin_src == 0)? "vIOPIC" : "vPIC",
-			virt_pin, entry->vm->vm_id);
-	        entry->virt_sid.value = virt_sid.value;
+	if (!status) {
+		spinlock_obtain(&ptdev_lock);
+		/* if vpin source need switch */
+		if ((need_switch_vpin_src) && (entry != NULL)) {
+			dev_dbg(ACRN_DBG_IRQ,
+				"IOAPIC pin=%hhu pirq=%u vpin=%d switch from %s to %s vpin=%d for vm%d",
+				entry->phys_sid.intx_id.pin,
+				entry->allocated_pirq, entry->virt_sid.intx_id.pin,
+				(vpin_src == 0) ? "vPIC" : "vIOAPIC",
+				(vpin_src == 0) ? "vIOPIC" : "vPIC",
+				virt_pin, entry->vm->vm_id);
+			entry->virt_sid.value = virt_sid.value;
+		}
+		spinlock_release(&ptdev_lock);
+		activate_physical_ioapic(vm, entry);
 	}
-	spinlock_release(&ptdev_lock);
 
-	activate_physical_ioapic(vm, entry);
-	dev_dbg(ACRN_DBG_IRQ,
-			"IOAPIC pin=%hhu pirq=%u assigned to vm%d %s vpin=%d",
-			entry->phys_sid.intx_id.pin, entry->allocated_pirq,
-			entry->vm->vm_id, vpin_src == PTDEV_VPIN_PIC ?
-			"vPIC" : "vIOAPIC", virt_pin);
-END:
-	return 0;
+	return status;
 }
 
 /* @pre vm != NULL

@@ -123,7 +123,8 @@ void ptirq_release_entry(struct ptirq_remapping_info *entry)
 	list_del_init(&entry->softirq_node);
 	spinlock_irqrestore_release(&entry->vm->softirq_dev_lock, rflags);
 	atomic_clear32(&entry->active, ACTIVE_FLAG);
-	bitmap_clear_nolock((entry->ptdev_entry_id) & 0x3FU, &ptirq_entry_bitmaps[(entry->ptdev_entry_id) >> 6U]);
+	bitmap_clear_nolock((entry->ptdev_entry_id) & 0x3FU,
+		&ptirq_entry_bitmaps[((entry->ptdev_entry_id) & 0x3FU) >> 6U]);
 }
 
 /* interrupt context */

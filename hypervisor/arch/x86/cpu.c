@@ -407,6 +407,9 @@ void init_cpu_pre(uint16_t pcpu_id)
 		early_init_lapic();
 
 		pcpu_id = get_cpu_id_from_lapic_id(get_cur_lapic_id());
+		if (pcpu_id >= CONFIG_MAX_PCPU_NUM) {
+			panic("Invalid pCPU ID!");
+		}
 	}
 
 	bitmap_set_nolock(pcpu_id, &pcpu_active_bitmap);
