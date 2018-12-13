@@ -175,7 +175,6 @@ lpc_deinit(struct vmctx *ctx)
 		unregister_inout(&iop);
 
 		uart_release_backend(lpc_uart->uart, lpc_uart->opts);
-		uart_deinit(lpc_uart->uart);
 		uart_legacy_dealloc(unit);
 		lpc_uart->uart = NULL;
 		lpc_uart->enabled = 0;
@@ -205,23 +204,9 @@ lpc_init(struct vmctx *ctx)
 		}
 		pci_irq_reserve(lpc_uart->irq);
 
-		lpc_uart->uart = uart_init(lpc_uart_intr_assert,
-				    lpc_uart_intr_deassert, lpc_uart);
-
-		if (lpc_uart->uart < 0) {
-			uart_legacy_dealloc(unit);
-			goto init_failed;
-		}
-
-		error = uart_set_backend(lpc_uart->uart, lpc_uart->opts);
-		/*
-		 * Continue to initialize LPC UART device if opts is invalid,
-		 * and the data will be dropped by uart_write in UART DM.
-		 */
-		if (error && error != -EINVAL) {
-			fprintf(stderr, "Unable to initialize backend '%s' "
-			    "for LPC device %s\n", lpc_uart->opts, name);
-			uart_deinit(lpc_uart->uart);
+		lpc_uart->uart = uart_set_backend(lpc_uart_intr_assert, lpc_uart_intr_deassert,
+			lpc_uart, lpc_uart->opts);
+		if (lpc_uart->uart == NULL) {
 			uart_legacy_dealloc(unit);
 			goto init_failed;
 		}

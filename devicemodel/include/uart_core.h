@@ -35,14 +35,12 @@
 struct uart_vdev;
 
 typedef void (*uart_intr_func_t)(void *arg);
-struct uart_vdev *uart_init(uart_intr_func_t intr_assert,
-			    uart_intr_func_t intr_deassert, void *arg);
-void uart_deinit(struct uart_vdev *uart);
-
 int	uart_legacy_alloc(int unit, int *ioaddr, int *irq);
 void	uart_legacy_dealloc(int which);
 uint8_t	uart_read(struct uart_vdev *uart, int offset);
 void	uart_write(struct uart_vdev *uart, int offset, uint8_t value);
-int	uart_set_backend(struct uart_vdev *uart, const char *opt);
+struct	uart_vdev*
+	uart_set_backend(uart_intr_func_t intr_assert, uart_intr_func_t intr_deassert,
+		void *arg, const char *opts);
 void	uart_release_backend(struct uart_vdev *uart, const char *opts);
 #endif
