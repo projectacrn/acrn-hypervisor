@@ -213,6 +213,19 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
        uses ``/usr/share/acrn/bios/VSBL.bin`` as the vSBL image
 
+   * - :kbd:`--ovmf <ovmf_file_path>`
+     - Open Virtual Machine Firmware (OVMF) is an EDK II based project to enable
+       UEFI support for Virtual Machines.
+
+       ACRN currently does not support off-the-shelf OVMF builds targeted for
+       QEMU and KVM. This feature is still under development.
+
+       usage::
+
+          --ovmf <path to OVMF.fd>
+
+       uses ``OVMF.fd`` as the OVMF image
+
    * - :kbd:`-W, --virtio_msix`
      - This option forces virtio to use single-vector MSI.
        By default, any virtio-based devices will use MSI-X as its interrupt
