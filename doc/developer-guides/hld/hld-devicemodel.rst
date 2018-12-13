@@ -53,7 +53,8 @@ options:
 
    acrn-dm [-abehuwxACHPSTWY] [-c vcpus] [-g <gdb port>] [-l <lpc>]
                [-m mem] [-p vcpu:hostcpu] [-s <pci>] [-U uuid]
-               [--vsbl vsbl_file_name] [--part_info part_info_name]
+               [--vsbl vsbl_file_path] [--ovmf ovmf_file_path]
+               [--part_info part_info_name]
                [--enable_trusty] [--intr_monitor param_setting] <vm>
 
        -a: local apic is in xAPIC mode (deprecated)
@@ -84,6 +85,7 @@ options:
        -v: version
        -i: ioc boot parameters
        --vsbl: vsbl file path
+       --ovmf: ovmf file path
        --part_info: guest partition info file path
        --enable_trusty: enable trusty for guest
        --ptdev_no_reset: disable reset check for ptdev
@@ -96,6 +98,7 @@ configuration options.
 Here's an example showing how to run a VM with:
 
 -  Build ACPI table
+-  vSBL as the boot ROM
 -  UART device on PCI 00:01.0
 -  GPU device on PCI 00:02.0
 -  Virtio-block device on PCI 00:03.0
