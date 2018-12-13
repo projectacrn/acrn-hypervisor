@@ -101,6 +101,8 @@ initial states, including IDT and physical PICs.
 After BSP detects that all APs are up, BSP will start creating the first
 VM, i.e. SOS, as explained in the next section.
 
+.. _vm-startup:
+
 VM Startup
 **********
 

@@ -1,7 +1,9 @@
-.. _hv-console:
+.. _hv-console-shell-uart:
 
 Hypervisor console, hypervisor shell, and virtual UART
 ######################################################
+
+.. _hv-console:
 
 Hypervisor console
 ******************
