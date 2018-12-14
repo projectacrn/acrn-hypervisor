@@ -37,17 +37,17 @@ static inline bool in_range(uint32_t value, uint32_t lower, uint32_t len)
 	return ((value >= lower) && (value < (lower + len)));
 }
 
-static inline uint8_t pci_vdev_read_cfg_u8(struct pci_vdev *vdev, uint32_t offset)
+static inline uint8_t pci_vdev_read_cfg_u8(const struct pci_vdev *vdev, uint32_t offset)
 {
 	return vdev->cfgdata.data_8[offset];
 }
 
-static inline uint16_t pci_vdev_read_cfg_u16(struct pci_vdev *vdev, uint32_t offset)
+static inline uint16_t pci_vdev_read_cfg_u16(const struct pci_vdev *vdev, uint32_t offset)
 {
 	return vdev->cfgdata.data_16[offset >> 1U];
 }
 
-static inline uint32_t pci_vdev_read_cfg_u32(struct pci_vdev *vdev, uint32_t offset)
+static inline uint32_t pci_vdev_read_cfg_u32(const struct pci_vdev *vdev, uint32_t offset)
 {
 	return vdev->cfgdata.data_32[offset >> 2U];
 }
@@ -72,7 +72,7 @@ extern struct vpci_ops sharing_mode_vpci_ops;
 extern struct pci_vdev_ops pci_ops_vdev_msi;
 extern struct pci_vdev_ops pci_ops_vdev_msix;
 
-uint32_t pci_vdev_read_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes);
+uint32_t pci_vdev_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes);
 void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
 
 void populate_msi_struct(struct pci_vdev *vdev);

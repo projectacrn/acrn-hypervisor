@@ -41,7 +41,7 @@ struct pci_vdev_ops {
 	int32_t (*cfgwrite)(struct pci_vdev *vdev, uint32_t offset,
 		uint32_t bytes, uint32_t val);
 
-	int32_t (*cfgread)(struct pci_vdev *vdev, uint32_t offset,
+	int32_t (*cfgread)(const struct pci_vdev *vdev, uint32_t offset,
 		uint32_t bytes, uint32_t *val);
 };
 
@@ -145,7 +145,7 @@ extern struct pci_vdev_ops pci_ops_vdev_pt;
 
 void vpci_init(struct acrn_vm *vm);
 void vpci_cleanup(struct acrn_vm *vm);
-void vpci_set_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf);
-void vpci_reset_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf);
+void vpci_set_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf);
+void vpci_reset_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf);
 
 #endif /* VPCI_H_ */

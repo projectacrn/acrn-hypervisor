@@ -89,7 +89,7 @@ static int32_t vdev_hostbridge_deinit(__unused struct pci_vdev *vdev)
 	return 0;
 }
 
-static int32_t vdev_hostbridge_cfgread(struct pci_vdev *vdev, uint32_t offset,
+static int32_t vdev_hostbridge_cfgread(const struct pci_vdev *vdev, uint32_t offset,
 	uint32_t bytes, uint32_t *val)
 {
 	/* Assumption: access needed to be aligned on 1/2/4 bytes */

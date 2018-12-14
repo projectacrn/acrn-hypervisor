@@ -30,7 +30,7 @@
 #include <hypervisor.h>
 #include "pci_priv.h"
 
-static inline bool msixcap_access(struct pci_vdev *vdev, uint32_t offset)
+static inline bool msixcap_access(const struct pci_vdev *vdev, uint32_t offset)
 {
 	bool ret;
 
@@ -43,12 +43,12 @@ static inline bool msixcap_access(struct pci_vdev *vdev, uint32_t offset)
 	return ret;
 }
 
-static inline bool msixtable_access(struct pci_vdev *vdev, uint32_t offset)
+static inline bool msixtable_access(const struct pci_vdev *vdev, uint32_t offset)
 {
 	return in_range(offset, vdev->msix.table_offset, vdev->msix.table_count * MSIX_TABLE_ENTRY_SIZE);
 }
 
-static int32_t vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
+static int32_t vmsix_remap_entry(const struct pci_vdev *vdev, uint32_t index, bool enable)
 {
 	struct msix_table_entry *pentry;
 	struct ptirq_msi_info info;
@@ -82,7 +82,7 @@ static int32_t vmsix_remap_entry(struct pci_vdev *vdev, uint32_t index, bool ena
 	return ret;
 }
 
-static inline void enable_disable_msix(struct pci_vdev *vdev, bool enable)
+static inline void enable_disable_msix(const struct pci_vdev *vdev, bool enable)
 {
 	uint32_t msgctrl;
 
@@ -96,7 +96,7 @@ static inline void enable_disable_msix(struct pci_vdev *vdev, bool enable)
 }
 
 /* Do MSI-X remap for all MSI-X table entries in the target device */
-static int32_t vmsix_remap(struct pci_vdev *vdev, bool enable)
+static int32_t vmsix_remap(const struct pci_vdev *vdev, bool enable)
 {
 	uint32_t index;
 	int32_t ret = 0;
@@ -123,7 +123,7 @@ static int32_t vmsix_remap(struct pci_vdev *vdev, bool enable)
 }
 
 /* Do MSI-X remap for one MSI-X table entry only */
-static int32_t vmsix_remap_one_entry(struct pci_vdev *vdev, uint32_t index, bool enable)
+static int32_t vmsix_remap_one_entry(const struct pci_vdev *vdev, uint32_t index, bool enable)
 {
 	uint32_t msgctrl;
 	int32_t ret;
@@ -148,7 +148,7 @@ static int32_t vmsix_remap_one_entry(struct pci_vdev *vdev, uint32_t index, bool
 	return ret;
 }
 
-static int32_t vmsix_cfgread(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
+static int32_t vmsix_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	int32_t ret;
 	/* For PIO access, we emulate Capability Structures only */
