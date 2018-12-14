@@ -1802,8 +1802,6 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 			goto done;
 		}
 
-		pci_xhci_dev_destroy(dev);
-
 		for (j = 0; j < XHCI_MAX_VIRT_PORTS; ++j) {
 			path = &xdev->vbdp_devs[j].path;
 
@@ -1818,6 +1816,9 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 		}
 		UPRINTF(LINF, "disable slot %d for native device %d-%s\r\n",
 				slot, di->path.bus, usb_dev_path(&di->path));
+
+		/* release all the resource allocated for virtual device */
+		pci_xhci_dev_destroy(dev);
 	} else
 		UPRINTF(LWRN, "invalid slot %d\r\n", slot);
 
