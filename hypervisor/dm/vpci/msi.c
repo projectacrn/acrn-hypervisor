@@ -30,7 +30,7 @@
 #include <hypervisor.h>
 #include "pci_priv.h"
 
-static inline bool msicap_access(struct pci_vdev *vdev, uint32_t offset)
+static inline bool msicap_access(const struct pci_vdev *vdev, uint32_t offset)
 {
 	bool ret;
 	if (vdev->msi.capoff == 0U) {
@@ -42,7 +42,7 @@ static inline bool msicap_access(struct pci_vdev *vdev, uint32_t offset)
 	return ret;
 }
 
-static int32_t vmsi_remap(struct pci_vdev *vdev, bool enable)
+static int32_t vmsi_remap(const struct pci_vdev *vdev, bool enable)
 {
 	struct ptirq_msi_info info;
 	union pci_bdf pbdf = vdev->pdev.bdf;
@@ -99,7 +99,7 @@ static int32_t vmsi_remap(struct pci_vdev *vdev, bool enable)
 	return ret;
 }
 
-static int32_t vmsi_cfgread(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
+static int32_t vmsi_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	int32_t ret;
 	/* For PIO access, we emulate Capability Structures only */

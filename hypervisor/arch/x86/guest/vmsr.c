@@ -547,7 +547,7 @@ int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu)
 	return err;
 }
 
-void update_msr_bitmap_x2apic_apicv(struct acrn_vcpu *vcpu)
+void update_msr_bitmap_x2apic_apicv(const struct acrn_vcpu *vcpu)
 {
 	uint8_t *msr_bitmap;
 
@@ -576,7 +576,7 @@ void update_msr_bitmap_x2apic_apicv(struct acrn_vcpu *vcpu)
 	}
 }
 
-void update_msr_bitmap_x2apic_passthru(struct acrn_vcpu *vcpu)
+void update_msr_bitmap_x2apic_passthru(const struct acrn_vcpu *vcpu)
 {
 	uint32_t msr;
 	uint8_t *msr_bitmap;

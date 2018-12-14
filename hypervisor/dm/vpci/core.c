@@ -30,7 +30,7 @@
 #include <hypervisor.h>
 #include "pci_priv.h"
 
-uint32_t pci_vdev_read_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes)
+uint32_t pci_vdev_read_cfg(const struct pci_vdev *vdev, uint32_t offset, uint32_t bytes)
 {
 	uint32_t val;
 

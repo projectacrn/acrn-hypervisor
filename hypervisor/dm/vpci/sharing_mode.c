@@ -200,7 +200,7 @@ const struct vpci_ops sharing_mode_vpci_ops = {
 	.cfgwrite = sharing_mode_cfgwrite,
 };
 
-void vpci_set_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
+void vpci_set_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
 {
 	struct pci_vdev *vdev;
 
@@ -210,13 +210,13 @@ void vpci_set_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t
 			target_vm->vm_id, vbdf, pbdf);
 	} else {
 		/* UOS may do BDF mapping */
-		vdev->vpci = &target_vm->vpci;
+		vdev->vpci = (struct acrn_vpci *)&(target_vm->vpci);
 		vdev->vbdf.value = vbdf;
 		vdev->pdev.bdf.value = pbdf;
 	}
 }
 
-void vpci_reset_ptdev_intr_info(struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
+void vpci_reset_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
 {
 	struct pci_vdev *vdev;
 	struct acrn_vm *vm;
