@@ -37,13 +37,13 @@ complete this setup.
 
 .. note::
 
-   ACRN v0.3 (and the current master branch) requires Clear Linux
-   version 26200 or newer.  If you use a newer version of Clear Linux,
+   ACRN v0.4 (and the current master branch) requires Clear Linux
+   version 26770 or newer.  If you use a newer version of Clear Linux,
    you'll need to adjust the instructions below to reference the version
    number of Clear Linux you are using.
 
 #. Download the compressed Clear installer image from
-   https://download.clearlinux.org/releases/26200/clear/clear-26200-installer.img.xz
+   https://download.clearlinux.org/releases/26770/clear/clear-26770-installer.img.xz
    and follow the `Clear Linux installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`__
    as a starting point for installing Clear Linux onto your platform.  Follow the recommended
@@ -74,16 +74,16 @@ complete this setup.
    .. note::
       The Clear Linux installer will automatically check for updates and install the
       latest version available on your system. If you wish to use a specific version
-      (such as 26200), you can achieve that after the installation has completed using
-      ``sudo swupd verify --fix --picky -m 26200``
+      (such as 26770), you can achieve that after the installation has completed using
+      ``sudo swupd verify --fix --picky -m 26770``
        
 #. If you have an older version of Clear Linux already installed
    on your hardware, use this command to upgrade Clear Linux
-   to version 26200 (or newer):
+   to version 26770 (or newer):
 
    .. code-block:: none
 
-      $ sudo swupd update -m 26200     # or newer version
+      $ sudo swupd update -m 26770     # or newer version
 
 #. Use the ``sudo swupd bundle-add`` command and add these Clear Linux bundles:
 
@@ -118,9 +118,9 @@ partition. Follow these steps:
 
       $ sudo ls -1 /boot/EFI/org.clearlinux
       bootloaderx64.efi
-      kernel-org.clearlinux.native.4.19.1-654
-      kernel-org.clearlinux.iot-lts2018-sos.4.19.0-19
-      kernel-org.clearlinux.iot-lts2018.4.19.0-19
+      kernel-org.clearlinux.native.4.19.8-670
+      kernel-org.clearlinux.iot-lts2018-sos.4.19.5-29
+      kernel-org.clearlinux.iot-lts2018.4.19.5-29
       kernel-org.clearlinux.pk414-sos.4.14.74-115
       loaderx64.efi
 
@@ -247,9 +247,9 @@ partition. Follow these steps:
       :caption: ACRN Service OS Boot Menu
      
       => The ACRN Service OS
-      Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-4.19.0-19)
-      Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-sos-4.19.0-19)
-      Clear Linux OS for Intel Architecture (Clear-linux-native.4.19.1-654)
+      Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-4.19.5-29)
+      Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-sos-4.19.5-29)
+      Clear Linux OS for Intel Architecture (Clear-linux-native.4.19.8-670)
       EFI Default Loader
       Reboot Into Firmware Interface
 
@@ -288,14 +288,14 @@ Set up Reference UOS
 ====================
 
 #. On your platform, download the pre-built reference Clear Linux UOS
-   image version 26200 (or newer) into your (root) home directory:
+   image version 26770 (or newer) into your (root) home directory:
 
    .. code-block:: none
 
       $ cd ~
       $ mkdir uos
       $ cd uos
-      $ curl -O https://download.clearlinux.org/releases/26200/clear/clear-26200-kvm.img.xz
+      $ curl -O https://download.clearlinux.org/releases/26770/clear/clear-26770-kvm.img.xz
 
    .. note::
       In case you want to use or try out a newer version of Clear Linux as the UOS, you can
@@ -306,16 +306,16 @@ Set up Reference UOS
 
    .. code-block:: none
 
-      $ unxz clear-26200-kvm.img.xz
+      $ unxz clear-26770-kvm.img.xz
 
 #. Deploy the UOS kernel modules to UOS virtual disk image (note: you'll need to use
    the same **iot-lts2018** image version number noted in step 1 above):
 
    .. code-block:: none
 
-      $ sudo losetup -f -P --show clear-26200-kvm.img
+      $ sudo losetup -f -P --show clear-26770-kvm.img
       $ sudo mount /dev/loop0p3 /mnt
-      $ sudo cp -r /usr/lib/modules/4.19.0-19.iot-lts2018 /mnt/lib/modules/
+      $ sudo cp -r /usr/lib/modules/4.19.5-29.iot-lts2018 /mnt/lib/modules/
       $ sudo umount /mnt
       $ sync
 
@@ -334,7 +334,7 @@ Set up Reference UOS
 
    .. note::
       In case you have downloaded a different Clear Linux image than the one above
-      (``clear-26200-kvm.img.xz``), you will need to modify the Clear Linux file name
+      (``clear-26770-kvm.img.xz``), you will need to modify the Clear Linux file name
       and version number highlighted above (the ``-s 3,virtio-blk`` argument) to match
       what you have downloaded above. Likewise, you may need to adjust the kernel file
       name on the second line highlighted (check the exact name to be used using:
