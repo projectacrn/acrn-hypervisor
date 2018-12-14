@@ -92,7 +92,7 @@ asm_enter_s3:
 	/*16U=0x10=CPU_CONTEXT_OFFSET_RDX*/
 	movq 0x10 + cpu_ctx(%rip), %rdx  /* pm1b_cnt_val */
 	/*56U=0x38=CPU_CONTEXT_OFFSET_RDI*/
-	movq 0x38 + cpu_ctx(%rip), %rdi  /* *vm */
+	movq 0x38 + cpu_ctx(%rip), %rdi  /* pm sstate_data */
 	/*48U=0x30=CPU_CONTEXT_OFFSET_RSI*/
 	movq 0x30 + cpu_ctx(%rip), %rsi  /* pm1a_cnt_val */
 

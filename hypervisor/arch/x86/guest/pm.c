@@ -106,7 +106,7 @@ void vm_setup_cpu_state(struct acrn_vm *vm)
 int32_t vm_load_pm_s_state(struct acrn_vm *vm)
 {
 #ifdef ACPI_INFO_VALIDATED
-	vm->pm.sx_state_data = (struct pm_s_state_data *)&host_pm_s_state;
+	vm->pm.sx_state_data = get_host_sstate_data();
 	pr_info("System S3/S5 is supported.");
 	return 0;
 #else
@@ -126,24 +126,28 @@ static inline uint8_t get_slp_typx(uint32_t pm1_cnt)
 	return (uint8_t)((pm1_cnt & 0x1fffU) >> BIT_SLP_TYPx);
 }
 
-static uint32_t pm1ab_io_read(__unused struct acrn_vm *vm, uint16_t addr,
-			size_t width)
+static uint32_t pm1ab_io_read(__unused struct acrn_vm *vm, uint16_t addr, size_t width)
 {
-	uint32_t val = pio_read(addr, width);
-
-	if (host_enter_s3_success == 0U) {
-		/* If host S3 enter failes, we should set BIT_WAK_STS
-		 * bit for vm0 and let vm0 back from S3 failure path.
-		 */
-		if (addr == vm->pm.sx_state_data->pm1a_evt.address) {
-			val |= (1U << BIT_WAK_STS);
-		}
-	}
-	return val;
+	return pio_read(addr, width);
 }
 
-static void pm1ab_io_write(__unused struct acrn_vm *vm, uint16_t addr, size_t width,
-			uint32_t v)
+static inline void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t pm1b_cnt_val)
+{
+	uint32_t guest_wakeup_vec32;
+
+	/* Save the wakeup vec set by guest OS. Will return to guest
+	 * with this wakeup vec as entry.
+	 */
+	stac();
+	guest_wakeup_vec32 = *(vm->pm.sx_state_data->wake_vector_32);
+	clac();
+
+	pause_vm(vm);	/* pause vm0 before suspend system */
+	host_enter_s3(vm->pm.sx_state_data, pm1a_cnt_val, pm1b_cnt_val);
+	resume_vm_from_s3(vm, guest_wakeup_vec32);	/* jump back to vm */
+}
+
+static void pm1ab_io_write(struct acrn_vm *vm, uint16_t addr, size_t width, uint32_t v)
 {
 	static uint32_t pm1a_cnt_ready = 0U;
 
