@@ -758,12 +758,12 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	di = dev_data;
 
 	/* print physical information about new device */
-	UPRINTF(LDBG, "%04x:%04x %d-%s connecting.\r\n", di->vid, di->pid,
+	UPRINTF(LINF, "%04x:%04x %d-%s connecting.\r\n", di->vid, di->pid,
 			di->path.bus, usb_dev_path(&di->path));
 
 	index = pci_xhci_get_native_port_index_by_path(xdev, &di->path);
 	if (index < 0) {
-		UPRINTF(LDBG, "%04x:%04x %d-%s doesn't belong to this"
+		UPRINTF(LINF, "%04x:%04x %d-%s doesn't belong to this"
 				" vm, bye.\r\n", di->vid, di->pid,
 				di->path.bus, usb_dev_path(&di->path));
 		return 0;
@@ -808,7 +808,7 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 	xdev->native_ports[index].info = *di;
 	xdev->native_ports[index].state = VPORT_CONNECTED;
 
-	UPRINTF(LDBG, "%04X:%04X %d-%s is attached to virtual port %d.\r\n",
+	UPRINTF(LINF, "%04X:%04X %d-%s is attached to virtual port %d.\r\n",
 			di->vid, di->pid, di->path.bus,
 			usb_dev_path(&di->path), vport);
 
@@ -910,7 +910,8 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 	xdev->native_ports[index].state = VPORT_ASSIGNED;
 	xdev->native_ports[index].vport = 0;
 
-	UPRINTF(LDBG, "report virtual port %d status %d\r\n", vport, state);
+	UPRINTF(LINF, "disconnect device %d-%s on vport %d with state %d\r\n",
+			di->path.bus, usb_dev_path(&di->path), vport, state);
 	if (pci_xhci_disconnect_port(xdev, vport, need_intr)) {
 		UPRINTF(LFTL, "fail to report event\r\n");
 		return -1;
@@ -1732,7 +1733,7 @@ pci_xhci_cmd_enable_slot(struct pci_xhci_vdev *xdev, uint32_t *slot)
 		*slot = i;
 	}
 
-	UPRINTF(LDBG, "enable slot (error=%d) return slot %u\r\n",
+	UPRINTF(LINF, "enable slot (error=%d) return slot %u\r\n",
 			cmderr != XHCI_TRB_ERROR_SUCCESS, *slot);
 	return cmderr;
 }
@@ -1747,7 +1748,7 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 	uint32_t cmderr;
 	int i, j, index;
 
-	UPRINTF(LDBG, "pci_xhci disable slot %u\r\n", slot);
+	UPRINTF(LINF, "pci_xhci disable slot %u\r\n", slot);
 
 	cmderr = XHCI_TRB_ERROR_NO_SLOTS;
 	if (xdev->portregs == NULL)
@@ -1768,7 +1769,7 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 			/* TODO: reset events and endpoints */
 		}
 	} else {
-		UPRINTF(LDBG, "disable NULL device, slot %d\r\n", slot);
+		UPRINTF(LINF, "disable NULL device, slot %d\r\n", slot);
 		goto done;
 	}
 
@@ -1815,9 +1816,8 @@ pci_xhci_cmd_disable_slot(struct pci_xhci_vdev *xdev, uint32_t slot)
 			UPRINTF(LINF, "signal device %d-%s to connect\r\n",
 					di->path.bus, usb_dev_path(&di->path));
 		}
-		UPRINTF(LINF, "disable slot %d for native device %d-%s"
-				"\r\n", slot, di->path.bus,
-				usb_dev_path(&di->path));
+		UPRINTF(LINF, "disable slot %d for native device %d-%s\r\n",
+				slot, di->path.bus, usb_dev_path(&di->path));
 	} else
 		UPRINTF(LWRN, "invalid slot %d\r\n", slot);
 
@@ -1899,7 +1899,7 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 
 	cmderr = XHCI_TRB_ERROR_SUCCESS;
 
-	UPRINTF(LDBG, "address device, input ctl: D 0x%08x A 0x%08x,\r\n"
+	UPRINTF(LINF, "address device, input ctl: D 0x%08x A 0x%08x,\r\n"
 		 "          slot %08x %08x %08x %08x\r\n"
 		 "          ep0  %08x %08x %016lx %08x\r\n",
 		input_ctx->ctx_input.dwInCtx0, input_ctx->ctx_input.dwInCtx1,
@@ -1911,14 +1911,14 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 	/* when setting address: drop-ctx=0, add-ctx=slot+ep0 */
 	if ((input_ctx->ctx_input.dwInCtx0 != 0) ||
 	    (input_ctx->ctx_input.dwInCtx1 & 0x03) != 0x03) {
-		UPRINTF(LDBG, "address device, input ctl invalid\r\n");
+		UPRINTF(LWRN, "address device, input ctl invalid\r\n");
 		cmderr = XHCI_TRB_ERROR_TRB;
 		goto done;
 	}
 
 	if (slot <= 0 || slot > XHCI_MAX_SLOTS ||
 			xdev->slot_allocated[slot] == false) {
-		UPRINTF(LDBG, "address device, invalid slot %d\r\n", slot);
+		UPRINTF(LWRN, "address device, invalid slot %d\r\n", slot);
 		cmderr = XHCI_TRB_ERROR_SLOT_NOT_ON;
 		goto done;
 	}
@@ -1936,7 +1936,7 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 		}
 
 		di = &xdev->native_ports[index].info;
-		UPRINTF(LDBG, "create virtual device for %d-%s on virtual "
+		UPRINTF(LINF, "create virtual device for %d-%s on virtual "
 				"port %d\r\n", di->path.bus,
 				usb_dev_path(&di->path), rh_port);
 
@@ -1996,7 +1996,7 @@ pci_xhci_cmd_address_device(struct pci_xhci_vdev *xdev,
 
 	dev->dev_slotstate = XHCI_ST_ADDRESSED;
 
-	UPRINTF(LDBG, "address device, output ctx\r\n"
+	UPRINTF(LINF, "address device, output ctx\r\n"
 		 "      slot %08x %08x %08x %08x\r\n"
 		 "      ep0  %08x %08x %016lx %08x\r\n",
 		dev_ctx->ctx_slot.dwSctx0, dev_ctx->ctx_slot.dwSctx1,
@@ -3606,7 +3606,7 @@ pci_xhci_reset_port(struct pci_xhci_vdev *xdev, int portn, int warm)
 
 	assert(portn <= XHCI_MAX_DEVS);
 
-	UPRINTF(LDBG, "reset port %d\r\n", portn);
+	UPRINTF(LINF, "reset port %d\r\n", portn);
 
 	port = XHCI_PORTREG_PTR(xdev, portn);
 	index = pci_xhci_get_native_port_index_by_vport(xdev, portn);
