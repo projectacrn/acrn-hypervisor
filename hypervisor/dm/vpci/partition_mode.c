@@ -32,7 +32,7 @@
 #include <hypervisor.h>
 #include "pci_priv.h"
 
-static struct pci_vdev *partition_mode_find_vdev(struct vpci *vpci, union pci_bdf vbdf)
+static struct pci_vdev *partition_mode_find_vdev(struct acrn_vpci *vpci, union pci_bdf vbdf)
 {
 	struct vpci_vdev_array *vdev_array;
 	struct pci_vdev *vdev;
@@ -52,7 +52,7 @@ static struct pci_vdev *partition_mode_find_vdev(struct vpci *vpci, union pci_bd
 static int32_t partition_mode_vpci_init(struct acrn_vm *vm)
 {
 	struct vpci_vdev_array *vdev_array;
-	struct vpci *vpci = &vm->vpci;
+	struct acrn_vpci *vpci = &vm->vpci;
 	struct pci_vdev *vdev;
 	int32_t i;
 
@@ -91,7 +91,7 @@ static void partition_mode_vpci_deinit(struct acrn_vm *vm)
 	}
 }
 
-static void partition_mode_cfgread(struct vpci *vpci, union pci_bdf vbdf,
+static void partition_mode_cfgread(struct acrn_vpci *vpci, union pci_bdf vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	struct pci_vdev *vdev = partition_mode_find_vdev(vpci, vbdf);
@@ -101,7 +101,7 @@ static void partition_mode_cfgread(struct vpci *vpci, union pci_bdf vbdf,
 	}
 }
 
-static void partition_mode_cfgwrite(struct vpci *vpci, union pci_bdf vbdf,
+static void partition_mode_cfgwrite(struct acrn_vpci *vpci, union pci_bdf vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	struct pci_vdev *vdev = partition_mode_find_vdev(vpci, vbdf);

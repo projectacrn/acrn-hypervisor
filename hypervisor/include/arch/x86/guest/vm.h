@@ -151,7 +151,7 @@ struct acrn_vm {
 
 	uint32_t vcpuid_entry_nr, vcpuid_level, vcpuid_xlevel;
 	struct vcpuid_entry vcpuid_entries[MAX_VM_VCPUID_ENTRIES];
-	struct vpci vpci;
+	struct acrn_vpci vpci;
 #ifdef CONFIG_PARTITION_MODE
 	struct vm_description	*vm_desc;
 	uint8_t vrtc_offset;

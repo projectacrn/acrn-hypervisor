@@ -40,7 +40,7 @@ static void pci_cfg_clear_cache(struct pci_addr_info *pi)
 static uint32_t pci_cfgaddr_io_read(struct acrn_vm *vm, uint16_t addr, size_t bytes)
 {
 	uint32_t val = ~0U;
-	struct vpci *vpci = &vm->vpci;
+	struct acrn_vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
 
 	if ((addr == (uint16_t)PCI_CONFIG_ADDR) && (bytes == 4U)) {
@@ -57,7 +57,7 @@ static uint32_t pci_cfgaddr_io_read(struct acrn_vm *vm, uint16_t addr, size_t by
 
 static void pci_cfgaddr_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
 {
-	struct vpci *vpci = &vm->vpci;
+	struct acrn_vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
 
 	if ((addr == (uint16_t)PCI_CONFIG_ADDR) && (bytes == 4U)) {
@@ -69,7 +69,7 @@ static void pci_cfgaddr_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes
 
 static uint32_t pci_cfgdata_io_read(struct acrn_vm *vm, uint16_t addr, size_t bytes)
 {
-	struct vpci *vpci = &vm->vpci;
+	struct acrn_vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
 	uint16_t offset = addr - PCI_CONFIG_DATA;
 	uint32_t val = ~0U;
@@ -86,7 +86,7 @@ static uint32_t pci_cfgdata_io_read(struct acrn_vm *vm, uint16_t addr, size_t by
 
 static void pci_cfgdata_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes, uint32_t val)
 {
-	struct vpci *vpci = &vm->vpci;
+	struct acrn_vpci *vpci = &vm->vpci;
 	struct pci_addr_info *pi = &vpci->addr_info;
 	uint16_t offset = addr - PCI_CONFIG_DATA;
 
@@ -100,7 +100,7 @@ static void pci_cfgdata_io_write(struct acrn_vm *vm, uint16_t addr, size_t bytes
 
 void vpci_init(struct acrn_vm *vm)
 {
-	struct vpci *vpci = &vm->vpci;
+	struct acrn_vpci *vpci = &vm->vpci;
 
 	struct vm_io_range pci_cfgaddr_range = {
 		.flags = IO_ATTR_RW,
@@ -139,7 +139,7 @@ void vpci_init(struct acrn_vm *vm)
 
 void vpci_cleanup(struct acrn_vm *vm)
 {
-	struct vpci *vpci = &vm->vpci;
+	struct acrn_vpci *vpci = &vm->vpci;
 
 	if ((vpci->ops != NULL) && (vpci->ops->deinit != NULL)) {
 		vpci->ops->deinit(vm);

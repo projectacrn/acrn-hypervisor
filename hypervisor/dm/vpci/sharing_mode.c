@@ -47,7 +47,7 @@ struct pci_vdev *sharing_mode_find_vdev(union pci_bdf pbdf)
 	return NULL;
 }
 
-static void sharing_mode_cfgread(__unused struct vpci *vpci, union pci_bdf bdf,
+static void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	struct pci_vdev *vdev;
@@ -75,7 +75,7 @@ static void sharing_mode_cfgread(__unused struct vpci *vpci, union pci_bdf bdf,
 	}
 }
 
-static void sharing_mode_cfgwrite(__unused struct vpci *vpci, union pci_bdf bdf,
+static void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	struct pci_vdev *vdev;
