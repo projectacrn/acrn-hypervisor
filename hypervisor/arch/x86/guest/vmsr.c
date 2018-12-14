@@ -7,12 +7,10 @@
 #include <hypervisor.h>
 #include <ucode.h>
 
-enum rw_mode {
-	DISABLE = 0U,
-	READ,
-	WRITE,
-	READ_WRITE
-};
+#define INTERCEPT_DISABLE		(0U)
+#define INTERCEPT_READ			(1U << 0U)
+#define INTERCEPT_WRITE			(1U << 1U)
+#define INTERCEPT_READ_WRITE		(INTERCEPT_READ | INTERCEPT_WRITE)
 
 static const uint32_t emulated_guest_msrs[NUM_GUEST_MSRS] = {
 	/*
@@ -220,7 +218,7 @@ uint32_t vmsr_get_guest_msr_index(uint32_t msr)
 	return index;
 }
 
-static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg, enum rw_mode mode)
+static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg, uint32_t mode)
 {
 	uint8_t *read_map;
 	uint8_t *write_map;
@@ -243,13 +241,13 @@ static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg, enum rw_m
 	msr_bit = 1U << (msr & 0x7U);
 	msr_index = msr >> 3U;
 
-	if ((mode & READ) == READ) {
+	if ((mode & INTERCEPT_READ) == INTERCEPT_READ) {
 		read_map[msr_index] |= msr_bit;
 	} else {
 		read_map[msr_index] &= ~msr_bit;
 	}
 
-	if ((mode & WRITE) == WRITE) {
+	if ((mode & INTERCEPT_WRITE) == INTERCEPT_WRITE) {
 		write_map[msr_index] |= msr_bit;
 	} else {
 		write_map[msr_index] &= ~msr_bit;
@@ -263,7 +261,7 @@ static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg, enum rw_m
  * 0x802 and 0x83F, are not intercepted
  */
 
-static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg, enum rw_mode mode)
+static void intercept_x2apic_msrs(uint8_t *msr_bitmap_arg, uint32_t mode)
 {
 	uint8_t *msr_bitmap = msr_bitmap_arg;
 	uint32_t i;
@@ -291,26 +289,26 @@ void init_msr_emulation(struct acrn_vcpu *vcpu)
 		msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
 
 		for (i = 0U; i < NUM_GUEST_MSRS; i++) {
-			enable_msr_interception(msr_bitmap, emulated_guest_msrs[i], READ_WRITE);
+			enable_msr_interception(msr_bitmap, emulated_guest_msrs[i], INTERCEPT_READ_WRITE);
 		}
 
 		for (i = 0U; i < NUM_MTRR_MSRS; i++) {
-			enable_msr_interception(msr_bitmap, mtrr_msrs[i], READ_WRITE);
+			enable_msr_interception(msr_bitmap, mtrr_msrs[i], INTERCEPT_READ_WRITE);
 		}
 
-		intercept_x2apic_msrs(msr_bitmap, READ_WRITE);
+		intercept_x2apic_msrs(msr_bitmap, INTERCEPT_READ_WRITE);
 
 		for (i = 0U; i < NUM_UNSUPPORTED_MSRS; i++) {
-			enable_msr_interception(msr_bitmap, unsupported_msrs[i], READ_WRITE);
+			enable_msr_interception(msr_bitmap, unsupported_msrs[i], INTERCEPT_READ_WRITE);
 		}
 
 		/* RDT-A disabled: CPUID.07H.EBX[12], CPUID.10H */
 		for (msr = MSR_IA32_L3_MASK_0; msr < MSR_IA32_BNDCFGS; msr++) {
-			enable_msr_interception(msr_bitmap, msr, READ_WRITE);
+			enable_msr_interception(msr_bitmap, msr, INTERCEPT_READ_WRITE);
 		}
 
 		/* don't need to intercept rdmsr for these MSRs */
-		enable_msr_interception(msr_bitmap, MSR_IA32_TIME_STAMP_COUNTER, WRITE);
+		enable_msr_interception(msr_bitmap, MSR_IA32_TIME_STAMP_COUNTER, INTERCEPT_WRITE);
 	}
 
 	/* Setup MSR bitmap - Intel SDM Vol3 24.6.9 */
@@ -563,8 +561,8 @@ void update_msr_bitmap_x2apic_apicv(struct acrn_vcpu *vcpu)
 	 * supported
 	 */
 	if (is_apicv_reg_virtualization_supported()) {
-		intercept_x2apic_msrs(msr_bitmap, WRITE);
-		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_CUR_COUNT, READ);
+		intercept_x2apic_msrs(msr_bitmap, INTERCEPT_WRITE);
+		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_CUR_COUNT, INTERCEPT_READ);
 		/*
 		 * Open read-only interception for write-only
 		 * registers to inject gp on reads. EOI and Self-IPI
@@ -572,9 +570,9 @@ void update_msr_bitmap_x2apic_apicv(struct acrn_vcpu *vcpu)
 		 * writes to them are virtualized with Register Virtualization
 		 * Refer to Section 29.1 in Intel SDM Vol. 3
 		 */
-		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_TPR, DISABLE);
-		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_EOI, READ);
-		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_SELF_IPI, READ);
+		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_TPR, INTERCEPT_DISABLE);
+		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_EOI, INTERCEPT_READ);
+		enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_SELF_IPI, INTERCEPT_READ);
 	}
 }
 
@@ -586,8 +584,8 @@ void update_msr_bitmap_x2apic_passthru(struct acrn_vcpu *vcpu)
 	msr_bitmap = vcpu->vm->arch_vm.msr_bitmap;
 	for (msr = MSR_IA32_EXT_XAPICID;
 			msr <= MSR_IA32_EXT_APIC_SELF_IPI; msr++) {
-		enable_msr_interception(msr_bitmap, msr, DISABLE);
+		enable_msr_interception(msr_bitmap, msr, INTERCEPT_DISABLE);
 	}
-	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_ICR, WRITE);
-	enable_msr_interception(msr_bitmap, MSR_IA32_TSC_DEADLINE, DISABLE);
+	enable_msr_interception(msr_bitmap, MSR_IA32_EXT_APIC_ICR, INTERCEPT_WRITE);
+	enable_msr_interception(msr_bitmap, MSR_IA32_TSC_DEADLINE, INTERCEPT_DISABLE);
 }

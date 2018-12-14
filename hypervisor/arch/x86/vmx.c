@@ -27,9 +27,6 @@ static uint64_t cr4_host_mask;
 static uint64_t cr4_always_on_mask;
 static uint64_t cr4_always_off_mask;
 
-void update_msr_bitmap_x2apic_apicv(struct acrn_vcpu *vcpu);
-void update_msr_bitmap_x2apic_passthru(struct acrn_vcpu *vcpu);
-
 bool is_vmx_disabled(void)
 {
 	uint64_t msr_val;
