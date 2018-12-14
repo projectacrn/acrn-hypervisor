@@ -58,6 +58,8 @@
 /* Device can toggle its cache between writeback and writethrough modes */
 #define	VIRTIO_BLK_F_CONFIG_WCE	(1 << 11)
 
+#define	VIRTIO_BLK_F_DISCARD	(1 << 13)
+
 /*
  * Basic device capabilities
  */
@@ -94,6 +96,15 @@ struct virtio_blk_config {
 		uint32_t opt_io_size;
 	} topology;
 	uint8_t	writeback;
+	uint8_t unused;
+	/* Reserve for num_queues when VIRTIO_BLK_F_MQ is support*/
+	uint16_t reserve;
+	/* The maximum discard sectors (in 512-byte sectors) for one segment */
+	uint32_t max_discard_sectors;
+	/* The maximum number of discard segments */
+	uint32_t max_discard_seg;
+	/* Discard commands must be aligned to this number of sectors. */
+	uint32_t discard_sector_alignment;
 } __attribute__((packed));
 
 /*
@@ -105,6 +116,7 @@ struct virtio_blk_hdr {
 #define	VBH_OP_FLUSH		4
 #define	VBH_OP_FLUSH_OUT	5
 #define	VBH_OP_IDENT		8
+#define	VBH_OP_DISCARD		11
 #define	VBH_FLAG_BARRIER	0x80000000	/* OR'ed into type */
 	uint32_t type;
 	uint32_t ioprio;
@@ -234,12 +246,13 @@ virtio_blk_proc(struct virtio_blk *blk, struct virtio_vq_info *vq)
 	 * we don't advertise the capability.
 	 */
 	type = vbh->type & ~VBH_FLAG_BARRIER;
-	writeop = (type == VBH_OP_WRITE);
+	writeop = ((type == VBH_OP_WRITE) ||
+			(type == VBH_OP_DISCARD));
 
 	iolen = 0;
 	for (i = 1; i < n; i++) {
 		/*
-		 * - write op implies read-only descriptor,
+		 * - write/discard op implies read-only descriptor,
 		 * - read/ident op implies write-only descriptor,
 		 * therefore test the inverse of the descriptor bit
 		 * to the op.
@@ -250,7 +263,7 @@ virtio_blk_proc(struct virtio_blk *blk, struct virtio_vq_info *vq)
 	io->req.resid = iolen;
 
 	DPRINTF(("virtio_blk: %s op, %zd bytes, %d segs, offset %ld\n\r",
-		 writeop ? "write" : "read/ident", iolen, i - 1,
+		 writeop ? "write/discard" : "read/ident", iolen, i - 1,
 		 io->req.offset));
 
 	switch (type) {
@@ -278,6 +291,9 @@ virtio_blk_proc(struct virtio_blk *blk, struct virtio_vq_info *vq)
 
 		err = ((type == VBH_OP_READ) ? blockif_read : blockif_write)
 				(blk->bc, &io->req);
+		break;
+	case VBH_OP_DISCARD:
+		err = blockif_discard(blk->bc, &io->req);
 		break;
 	case VBH_OP_FLUSH:
 	case VBH_OP_FLUSH_OUT:
@@ -315,6 +331,10 @@ virtio_blk_get_caps(struct virtio_blk *blk, bool wb)
 	caps = VIRTIO_BLK_S_HOSTCAPS;
 	if (wb)
 		caps |= VIRTIO_BLK_F_WB_BITS;
+
+	if (blockif_candiscard(blk->bc))
+		caps |= VIRTIO_BLK_F_DISCARD;
+
 	return caps;
 }
 
@@ -420,6 +440,11 @@ virtio_blk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	blk->cfg.topology.opt_io_size = 0;
 	blk->cfg.writeback = blockif_get_wce(blk->bc);
 	blk->original_wce = blk->cfg.writeback; /* save for reset */
+	if (blockif_candiscard(blk->bc)) {
+		blk->cfg.max_discard_sectors = blockif_max_discard_sectors(blk->bc);
+		blk->cfg.max_discard_seg = blockif_max_discard_seg(blk->bc);
+		blk->cfg.discard_sector_alignment = blockif_discard_sector_alignment(blk->bc);
+	}
 	blk->base.device_caps =
 		virtio_blk_get_caps(blk, !!blk->cfg.writeback);
 
