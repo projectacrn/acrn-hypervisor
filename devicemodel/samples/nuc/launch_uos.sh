@@ -21,7 +21,7 @@ acrn-dm -A -m $mem_size -c $2 -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio \
   -s 2,pci-gvt -G "$3" \
   -s 5,virtio-console,@pty:pty_port \
   -s 6,virtio-hyper_dmabuf \
-  -s 3,virtio-blk,/home/clear/uos/clear-26200-kvm.img \
+  -s 3,virtio-blk,/home/clear/uos/clear-26770-kvm.img \
   -s 4,virtio-net,tap0 \
   --mac_seed $mac_seed \
   -k /usr/lib/kernel/default-iot-lts2018 \
