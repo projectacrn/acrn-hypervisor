@@ -77,7 +77,7 @@ void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, 
 
 void populate_msi_struct(struct pci_vdev *vdev);
 
-struct pci_vdev *sharing_mode_find_vdev(union pci_bdf vbdf);
+struct pci_vdev *sharing_mode_find_vdev(union pci_bdf pbdf);
 void add_vdev_handler(struct pci_vdev *vdev, struct pci_vdev_ops *ops);
 
 #endif /* PCI_PRIV_H_ */
