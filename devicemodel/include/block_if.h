@@ -69,5 +69,8 @@ int	blockif_close(struct blockif_ctxt *bc);
 uint8_t	blockif_get_wce(struct blockif_ctxt *bc);
 void	blockif_set_wce(struct blockif_ctxt *bc, uint8_t wce);
 int	blockif_flush_all(struct blockif_ctxt *bc);
+int	blockif_max_discard_sectors(struct blockif_ctxt *bc);
+int	blockif_max_discard_seg(struct blockif_ctxt *bc);
+int	blockif_discard_sector_alignment(struct blockif_ctxt *bc);
 
 #endif /* _BLOCK_IF_H_ */
