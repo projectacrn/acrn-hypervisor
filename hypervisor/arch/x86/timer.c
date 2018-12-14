@@ -189,15 +189,6 @@ void timer_init(void)
 	}
 }
 
-void check_tsc(void)
-{
-	uint64_t temp64;
-
-	/* Ensure time-stamp timer is turned on for each CPU */
-	CPU_CR_READ(cr4, &temp64);
-	CPU_CR_WRITE(cr4, (temp64 & ~CR4_TSD));
-}
-
 static uint64_t pit_calibrate_tsc(uint32_t cal_ms_arg)
 {
 #define PIT_TICK_RATE	1193182U
