@@ -117,11 +117,6 @@ void del_timer(struct hv_timer *timer);
 void timer_init(void);
 
 /**
- * @brief Check tsc to make sure rdtsc is enabled.
- */
-void check_tsc(void);
-
-/**
  * @brief Calibrate tsc.
  *
  * @return None

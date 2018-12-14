@@ -429,9 +429,6 @@ void init_cpu_post(uint16_t pcpu_id)
 
 	enable_smap();
 
-	/* Make sure rdtsc is enabled */
-	check_tsc();
-
 	cpu_xsave_init();
 
 	if (pcpu_id == BOOT_CPU_ID) {

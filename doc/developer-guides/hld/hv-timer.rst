@@ -42,9 +42,6 @@ Interfaces Design
 .. doxygenfunction:: timer_init
    :project: Project ACRN
 
-.. doxygenfunction:: check_tsc
-   :project: Project ACRN
-
 .. doxygenfunction:: calibrate_tsc
    :project: Project ACRN
 
