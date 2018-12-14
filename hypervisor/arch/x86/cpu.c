@@ -102,9 +102,9 @@ void init_cpu_pre(uint16_t pcpu_id)
 		/* Get CPU capabilities thru CPUID, including the physical address bit
 		 * limit which is required for initializing paging.
 		 */
-		get_cpu_capabilities();
+		init_cpu_capabilities();
 
-		get_cpu_name();
+		init_cpu_model_name();
 
 		load_cpu_state_data();
 
@@ -116,7 +116,7 @@ void init_cpu_pre(uint16_t pcpu_id)
 			panic("x2APIC is not present!");
 		}
 
-		cpu_cap_detect();
+		detect_cpu_cap();
 
 		early_init_lapic();
 
@@ -174,12 +174,12 @@ void init_cpu_post(uint16_t pcpu_id)
 
 		pr_dbg("Core %hu is up", BOOT_CPU_ID);
 
-		if (hardware_detect_support() != 0) {
+		if (detect_hardware_support() != 0) {
 			panic("hardware not support!");
 		}
 
 		/* Warn for security feature not ready */
-		if (!check_cpu_security_config()) {
+		if (!check_cpu_security_cap()) {
 			pr_fatal("SECURITY WARNING!!!!!!");
 			pr_fatal("Please apply the latest CPU uCode patch!");
 		}
