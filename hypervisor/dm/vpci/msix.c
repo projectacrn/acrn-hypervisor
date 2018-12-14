@@ -353,7 +353,7 @@ static int32_t vmsix_init(struct pci_vdev *vdev)
 	uint32_t msgctrl;
 	uint32_t table_info, i;
 	uint64_t addr_hi, addr_lo;
-	struct msix *msix = &vdev->msix;
+	struct pci_msix *msix = &vdev->msix;
 	int32_t ret;
 
 	msgctrl = pci_pdev_read_cfg(vdev->pdev.bdf, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
