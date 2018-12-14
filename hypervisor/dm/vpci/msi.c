@@ -151,6 +151,21 @@ static int32_t vmsi_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t by
 	return ret;
 }
 
+static int32_t vmsi_deinit(struct pci_vdev *vdev)
+{
+	if (vdev->msi.capoff != 0U) {
+		ptirq_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, 1U);
+	}
+
+	return 0;
+}
+
+static const struct pci_vdev_ops pci_ops_vdev_msi = {
+	.deinit = vmsi_deinit,
+	.cfgwrite = vmsi_cfgwrite,
+	.cfgread = vmsi_cfgread,
+};
+
 void populate_msi_struct(struct pci_vdev *vdev)
 {
 	uint8_t ptr, cap;
@@ -216,17 +231,3 @@ void populate_msi_struct(struct pci_vdev *vdev)
 	}
 }
 
-static int32_t vmsi_deinit(struct pci_vdev *vdev)
-{
-	if (vdev->msi.capoff != 0U) {
-		ptirq_remove_msix_remapping(vdev->vpci->vm, vdev->vbdf.value, 1U);
-	}
-
-	return 0;
-}
-
-struct pci_vdev_ops pci_ops_vdev_msi = {
-	.deinit = vmsi_deinit,
-	.cfgwrite = vmsi_cfgwrite,
-	.cfgread = vmsi_cfgread,
-};

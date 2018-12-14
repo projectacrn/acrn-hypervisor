@@ -118,7 +118,7 @@ static int32_t vdev_hostbridge_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 	return 0;
 }
 
-struct pci_vdev_ops pci_ops_vdev_hostbridge = {
+const struct pci_vdev_ops pci_ops_vdev_hostbridge = {
 	.init = vdev_hostbridge_init,
 	.deinit = vdev_hostbridge_deinit,
 	.cfgwrite = vdev_hostbridge_cfgwrite,
