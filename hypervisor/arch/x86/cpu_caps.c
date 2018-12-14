@@ -93,7 +93,7 @@ static uint64_t get_address_mask(uint8_t limit)
 	return ((1UL << limit) - 1UL) & PAGE_MASK;
 }
 
-void get_cpu_capabilities(void)
+void init_cpu_capabilities(void)
 {
 	uint32_t eax, unused;
 	uint32_t family, model;
@@ -184,7 +184,7 @@ static bool is_ctrl_setting_allowed(uint64_t msr_val, uint32_t ctrl)
 	return ((((uint32_t)(msr_val >> 32UL)) & ctrl) == ctrl);
 }
 
-static void ept_cap_detect(void)
+static void detect_ept_cap(void)
 {
 	uint64_t msr_val;
 
@@ -216,25 +216,22 @@ static void ept_cap_detect(void)
 	}
 }
 
-static void apicv_cap_detect(void)
+static void detect_apicv_cap(void)
 {
 	uint8_t features;
 	uint64_t msr_val;
 
 	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
 	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS_TPR_SHADOW)) {
-		pr_fatal("APICv: No APIC TPR virtualization support.");
 		return;
 	}
 
 	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
 	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC)) {
-		pr_fatal("APICv: No APIC-access virtualization support.");
 		return;
 	}
 
 	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC_REGS)) {
-		pr_fatal("APICv: No APIC-register virtualization support.");
 		return;
 	}
 
@@ -258,7 +255,7 @@ static void apicv_cap_detect(void)
 	cpu_caps.apicv_features = features;
 }
 
-static void vmx_mmu_cap_detect(void)
+static void detect_vmx_mmu_cap(void)
 {
 	uint64_t val;
 
@@ -268,16 +265,21 @@ static void vmx_mmu_cap_detect(void)
 	cpu_caps.vmx_vpid = (uint32_t) (val >> 32U);
 }
 
-void cpu_cap_detect(void)
+void detect_cpu_cap(void)
 {
-	apicv_cap_detect();
-	ept_cap_detect();
-	vmx_mmu_cap_detect();
+	detect_apicv_cap();
+	detect_ept_cap();
+	detect_vmx_mmu_cap();
 }
 
-bool is_ept_supported(void)
+static bool is_ept_supported(void)
 {
 	return (cpu_caps.ept_features != 0U);
+}
+
+static bool is_apicv_supported(void)
+{
+	return (cpu_caps.apicv_features != 0U);
 }
 
 bool is_apicv_reg_virtualization_supported(void)
@@ -305,7 +307,7 @@ bool cpu_has_vmx_vpid_cap(uint32_t bit_mask)
 	return ((cpu_caps.vmx_vpid & bit_mask) != 0U);
 }
 
-void get_cpu_name(void)
+void init_cpu_model_name(void)
 {
 	cpuid(CPUID_EXTEND_FUNCTION_2,
 		(uint32_t *)(boot_cpu_data.model_name),
@@ -326,7 +328,7 @@ void get_cpu_name(void)
 	boot_cpu_data.model_name[48] = '\0';
 }
 
-bool check_cpu_security_config(void)
+bool check_cpu_security_cap(void)
 {
 	if (cpu_has_cap(X86_FEATURE_ARCH_CAP)) {
 		x86_arch_capabilities = msr_read(MSR_IA32_ARCH_CAPABILITIES);
@@ -412,7 +414,7 @@ static int32_t check_vmx_mmu_cap(void)
  * we should supplement which feature/capability we must support
  * here later.
  */
-int32_t hardware_detect_support(void)
+int32_t detect_hardware_support(void)
 {
 	int32_t ret;
 
@@ -479,6 +481,10 @@ int32_t hardware_detect_support(void)
 	if (!is_ept_supported()) {
 		pr_fatal("%s, EPT not supported\n", __func__);
 		return -ENODEV;
+	}
+
+	if (!is_apicv_supported()) {
+		pr_fatal("%s, APICV not supported\n", __func__);
 	}
 
 	if (boot_cpu_data.cpuid_level < 0x15U) {

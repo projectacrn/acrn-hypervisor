@@ -63,16 +63,15 @@ bool has_monitor_cap(void);
 bool is_apicv_reg_virtualization_supported(void);
 bool is_apicv_intr_delivery_supported(void);
 bool is_apicv_posted_intr_supported(void);
-bool is_ept_supported(void);
 bool cpu_has_cap(uint32_t bit);
 bool cpu_has_vmx_ept_cap(uint32_t bit_mask);
 bool cpu_has_vmx_vpid_cap(uint32_t bit_mask);
-void get_cpu_capabilities(void);
-void get_cpu_name(void);
-void cpu_cap_detect(void);
-bool check_cpu_security_config(void);
+void init_cpu_capabilities(void);
+void init_cpu_model_name(void);
+void detect_cpu_cap(void);
+bool check_cpu_security_cap(void);
 void cpu_l1d_flush(void);
-int hardware_detect_support(void);
+int detect_hardware_support(void);
 
 #endif /* ASSEMBLER */
 
