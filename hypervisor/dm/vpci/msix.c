@@ -199,20 +199,20 @@ static int32_t vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t b
 static void vmsix_table_rw(struct pci_vdev *vdev, struct mmio_request *mmio, uint32_t offset)
 {
 	struct msix_table_entry *entry;
-	uint32_t vector_control, entry_offset, index;
+	uint32_t vector_control, entry_offset, table_offset, index;
 	bool message_changed = false;
 	bool unmasked;
 
 	/* Find out which entry it's accessing */
-	offset -= vdev->msix.table_offset;
-	index = offset / MSIX_TABLE_ENTRY_SIZE;
+	table_offset = offset - vdev->msix.table_offset;
+	index = table_offset / MSIX_TABLE_ENTRY_SIZE;
 	if (index >= vdev->msix.table_count) {
 		pr_err("%s, invalid arguments %llx - %llx", __func__, mmio->value, mmio->address);
 		return;
 	}
 
 	entry = &vdev->msix.tables[index];
-	entry_offset = offset % MSIX_TABLE_ENTRY_SIZE;
+	entry_offset = table_offset % MSIX_TABLE_ENTRY_SIZE;
 
 	if (mmio->direction == REQUEST_READ) {
 		(void)memcpy_s(&mmio->value, (size_t)mmio->size, (void *)entry + entry_offset, (size_t)mmio->size);
