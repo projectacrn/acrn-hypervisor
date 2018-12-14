@@ -98,7 +98,7 @@ struct pci_vdev {
 	struct pci_vdev_ops ops[MAX_VPCI_DEV_OPS];
 	uint32_t nr_ops;
 #else
-	struct pci_vdev_ops *ops;
+	const struct pci_vdev_ops *ops;
 #endif
 
 	struct acrn_vpci *vpci;
@@ -137,11 +137,13 @@ struct vpci_ops {
 struct acrn_vpci {
 	struct acrn_vm *vm;
 	struct pci_addr_info addr_info;
-	struct vpci_ops *ops;
+	const struct vpci_ops *ops;
 };
 
-extern struct pci_vdev_ops pci_ops_vdev_hostbridge;
-extern struct pci_vdev_ops pci_ops_vdev_pt;
+#ifdef CONFIG_PARTITION_MODE
+extern const struct pci_vdev_ops pci_ops_vdev_hostbridge;
+extern const struct pci_vdev_ops pci_ops_vdev_pt;
+#endif
 
 void vpci_init(struct acrn_vm *vm);
 void vpci_cleanup(struct acrn_vm *vm);

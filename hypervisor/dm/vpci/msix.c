@@ -425,7 +425,7 @@ static int32_t vmsix_deinit(struct pci_vdev *vdev)
 	return 0;
 }
 
-struct pci_vdev_ops pci_ops_vdev_msix = {
+const struct pci_vdev_ops pci_ops_vdev_msix = {
 	.init = vmsix_init,
 	.deinit = vmsix_deinit,
 	.cfgwrite = vmsix_cfgwrite,

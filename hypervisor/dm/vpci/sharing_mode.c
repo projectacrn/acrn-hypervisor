@@ -183,7 +183,7 @@ static void sharing_mode_vpci_deinit(__unused struct acrn_vm *vm)
 	}
 }
 
-void add_vdev_handler(struct pci_vdev *vdev, struct pci_vdev_ops *ops)
+void add_vdev_handler(struct pci_vdev *vdev, const struct pci_vdev_ops *ops)
 {
 	if (vdev->nr_ops >= (MAX_VPCI_DEV_OPS - 1U)) {
 		pr_err("%s, adding too many handlers", __func__);
@@ -193,7 +193,7 @@ void add_vdev_handler(struct pci_vdev *vdev, struct pci_vdev_ops *ops)
 	}
 }
 
-struct vpci_ops sharing_mode_vpci_ops = {
+const struct vpci_ops sharing_mode_vpci_ops = {
 	.init = sharing_mode_vpci_init,
 	.deinit = sharing_mode_vpci_deinit,
 	.cfgread = sharing_mode_cfgread,

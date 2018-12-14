@@ -67,10 +67,12 @@ static inline void pci_vdev_write_cfg_u32(struct pci_vdev *vdev, uint32_t offset
 	vdev->cfgdata.data_32[offset >> 2U] = val;
 }
 
-extern struct vpci_ops partition_mode_vpci_ops;
-extern struct vpci_ops sharing_mode_vpci_ops;
-extern struct pci_vdev_ops pci_ops_vdev_msi;
-extern struct pci_vdev_ops pci_ops_vdev_msix;
+#ifdef CONFIG_PARTITION_MODE
+extern const struct vpci_ops partition_mode_vpci_ops;
+#else
+extern const struct vpci_ops sharing_mode_vpci_ops;
+extern const struct pci_vdev_ops pci_ops_vdev_msix;
+#endif
 
 uint32_t pci_vdev_read_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes);
 void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, uint32_t val);
@@ -78,6 +80,6 @@ void pci_vdev_write_cfg(struct pci_vdev *vdev, uint32_t offset, uint32_t bytes, 
 void populate_msi_struct(struct pci_vdev *vdev);
 
 struct pci_vdev *sharing_mode_find_vdev(union pci_bdf pbdf);
-void add_vdev_handler(struct pci_vdev *vdev, struct pci_vdev_ops *ops);
+void add_vdev_handler(struct pci_vdev *vdev, const struct pci_vdev_ops *ops);
 
 #endif /* PCI_PRIV_H_ */

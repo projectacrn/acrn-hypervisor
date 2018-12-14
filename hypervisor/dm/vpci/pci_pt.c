@@ -195,7 +195,7 @@ static int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 	return 0;
 }
 
-struct pci_vdev_ops pci_ops_vdev_pt = {
+const struct pci_vdev_ops pci_ops_vdev_pt = {
 	.init = vdev_pt_init,
 	.deinit = vdev_pt_deinit,
 	.cfgwrite = vdev_pt_cfgwrite,
