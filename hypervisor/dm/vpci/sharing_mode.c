@@ -35,16 +35,17 @@ static struct pci_vdev sharing_mode_vdev_array[CONFIG_MAX_PCI_DEV_NUM];
 
 struct pci_vdev *sharing_mode_find_vdev(union pci_bdf pbdf)
 {
+	struct pci_vdev *vdev = NULL;
 	uint32_t i;
 
 	/* in VM0, it uses phys BDF */
 	for (i = 0U; i < num_pci_vdev; i++) {
 		if (sharing_mode_vdev_array[i].pdev.bdf.value == pbdf.value) {
-			return &sharing_mode_vdev_array[i];
+			vdev = &sharing_mode_vdev_array[i];
 		}
 	}
 
-	return NULL;
+	return vdev;
 }
 
 static void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
