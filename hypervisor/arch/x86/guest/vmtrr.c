@@ -44,10 +44,11 @@ static uint32_t get_index_of_fixed_mtrr(uint32_t msr)
 
 	for (i = 0U; i < FIXED_RANGE_MTRR_NUM; i++) {
 		if (fixed_mtrr_map[i].msr == msr) {
-			return i;
+			break;
 		}
 	}
-	return FIXED_MTRR_INVALID_INDEX;
+
+	return (i < FIXED_RANGE_MTRR_NUM) ? i : FIXED_MTRR_INVALID_INDEX;
 }
 
 static uint32_t
