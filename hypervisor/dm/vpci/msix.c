@@ -99,7 +99,7 @@ static inline void enable_disable_msix(struct pci_vdev *vdev, bool enable)
 static int32_t vmsix_remap(struct pci_vdev *vdev, bool enable)
 {
 	uint32_t index;
-	int32_t ret;
+	int32_t ret = 0;
 
 	/* disable MSI-X during configuration */
 	enable_disable_msix(vdev, false);
@@ -107,17 +107,19 @@ static int32_t vmsix_remap(struct pci_vdev *vdev, bool enable)
 	for (index = 0U; index < vdev->msix.table_count; index++) {
 		ret = vmsix_remap_entry(vdev, index, enable);
 		if (ret != 0) {
-			return ret;
+			break;
 		}
 	}
 
 	/* If MSI Enable is being set, make sure INTxDIS bit is set */
-	if (enable) {
-		enable_disable_pci_intx(vdev->pdev.bdf, false);
+	if (ret == 0) {
+		if (enable) {
+			enable_disable_pci_intx(vdev->pdev.bdf, false);
+		}
+		enable_disable_msix(vdev, enable);
 	}
-	enable_disable_msix(vdev, enable);
 
-	return 0;
+	return ret;
 }
 
 /* Do MSI-X remap for one MSI-X table entry only */
@@ -263,6 +265,7 @@ static int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *
 {
 	struct mmio_request *mmio = &io_req->reqs.mmio;
 	struct pci_vdev *vdev;
+	int32_t ret = 0;
 	uint64_t offset;
 	uint64_t hva;
 
@@ -277,30 +280,30 @@ static int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *
 		/* Only DWORD and QWORD are permitted */
 		if ((mmio->size != 4U) && (mmio->size != 8U)) {
 			pr_err("%s, Only DWORD and QWORD are permitted", __func__);
-			return -EINVAL;
-		}
-
-		stac();
-		/* MSI-X PBA and Capability Table could be in the same range */
-		if (mmio->direction == REQUEST_READ) {
-			/* mmio->size is either 4U or 8U */
-			if (mmio->size == 4U) {
-				mmio->value = (uint64_t)mmio_read32((const void *)hva);
-			} else {
-				mmio->value = mmio_read64((const void *)hva);
-			}
+			ret = -EINVAL;
 		} else {
-			/* mmio->size is either 4U or 8U */
-			if (mmio->size == 4U) {
-				mmio_write32((uint32_t)(mmio->value), (void *)hva);
+			stac();
+			/* MSI-X PBA and Capability Table could be in the same range */
+			if (mmio->direction == REQUEST_READ) {
+				/* mmio->size is either 4U or 8U */
+				if (mmio->size == 4U) {
+					mmio->value = (uint64_t)mmio_read32((const void *)hva);
+				} else {
+					mmio->value = mmio_read64((const void *)hva);
+				}
 			} else {
-				mmio_write64(mmio->value, (void *)hva);
+				/* mmio->size is either 4U or 8U */
+				if (mmio->size == 4U) {
+					mmio_write32((uint32_t)(mmio->value), (void *)hva);
+				} else {
+					mmio_write64(mmio->value, (void *)hva);
+				}
 			}
+			clac();
 		}
-		clac();
 	}
 
-	return 0;
+	return ret;
 }
 
 static void decode_msix_table_bar(struct pci_vdev *vdev)
