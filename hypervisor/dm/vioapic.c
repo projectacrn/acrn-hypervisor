@@ -55,26 +55,23 @@ vioapic_send_intr(struct acrn_vioapic *vioapic, uint32_t pin)
 
 	if ((rte.full & IOAPIC_RTE_INTMASK) == IOAPIC_RTE_INTMSET) {
 		dev_dbg(ACRN_DBG_IOAPIC, "ioapic pin%hhu: masked", pin);
-		return;
-	}
+	} else {
+		phys = ((rte.full & IOAPIC_RTE_DESTMOD) == IOAPIC_RTE_DESTPHY);
+		delmode = (uint32_t)(rte.full & IOAPIC_RTE_DELMOD);
+		level = ((rte.full & IOAPIC_RTE_TRGRLVL) != 0UL);
 
-	phys = ((rte.full & IOAPIC_RTE_DESTMOD) == IOAPIC_RTE_DESTPHY);
-	delmode = (uint32_t)(rte.full & IOAPIC_RTE_DELMOD);
-	level = ((rte.full & IOAPIC_RTE_TRGRLVL) != 0UL);
-	/* For level trigger irq, avoid send intr if
-	 * previous one hasn't received EOI
-	 */
-	if (level) {
-		if ((vioapic->rtbl[pin].full & IOAPIC_RTE_REM_IRR) != 0UL) {
-			return;
+		/* For level trigger irq, avoid send intr if
+		 * previous one hasn't received EOI
+		 */
+		if (!level || ((vioapic->rtbl[pin].full & IOAPIC_RTE_REM_IRR) == 0UL)) {
+			if (level) {
+				vioapic->rtbl[pin].full |= IOAPIC_RTE_REM_IRR;
+			}
+			vector = rte.u.lo_32 & IOAPIC_RTE_LOW_INTVEC;
+			dest = (uint32_t)(rte.full >> IOAPIC_RTE_DEST_SHIFT);
+			vlapic_deliver_intr(vioapic->vm, level, dest, phys, delmode, vector, false);
 		}
-		vioapic->rtbl[pin].full |= IOAPIC_RTE_REM_IRR;
 	}
-
-	vector = rte.u.lo_32 & IOAPIC_RTE_LOW_INTVEC;
-	dest = (uint32_t)(rte.full >> IOAPIC_RTE_DEST_SHIFT);
-	vlapic_deliver_intr(vioapic->vm, level, dest, phys,
-							delmode, vector, false);
 }
 
 /**
@@ -216,18 +213,20 @@ vioapic_update_tmr(struct acrn_vcpu *vcpu)
 static uint32_t
 vioapic_indirect_read(const struct acrn_vioapic *vioapic, uint32_t addr)
 {
-	uint32_t regnum;
+	uint32_t regnum, ret = 0U;
 	uint32_t pin, pincount = vioapic_pincount(vioapic->vm);
 
 	regnum = addr & 0xffU;
 	switch (regnum) {
 	case IOAPIC_ID:
-		return vioapic->id;
+		ret = vioapic->id;
+		break;
 	case IOAPIC_VER:
-		return (((uint32_t)pincount - 1U) << MAX_RTE_SHIFT) |
-						ACRN_IOAPIC_VERSION;
+		ret = (((uint32_t)pincount - 1U) << MAX_RTE_SHIFT) | ACRN_IOAPIC_VERSION;
+		break;
 	case IOAPIC_ARB:
-		return vioapic->id;
+		ret = vioapic->id;
+		break;
 	default:
 		/*
 		 * In this switch statement, regnum shall either be IOAPIC_ID or
@@ -245,13 +244,13 @@ vioapic_indirect_read(const struct acrn_vioapic *vioapic, uint32_t addr)
 		uint32_t rte_offset = addr_offset >> 1U;
 		pin = rte_offset;
 		if ((addr_offset & 0x1U) != 0U) {
-			return vioapic->rtbl[pin].u.hi_32;
+			ret = vioapic->rtbl[pin].u.hi_32;
 		} else {
-			return vioapic->rtbl[pin].u.lo_32;
+			ret = vioapic->rtbl[pin].u.lo_32;
 		}
 	}
 
-	return 0;
+	return ret;
 }
 
 static inline bool vioapic_need_intr(const struct acrn_vioapic *vioapic, uint16_t pin)

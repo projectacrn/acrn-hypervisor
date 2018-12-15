@@ -49,6 +49,7 @@ static inline bool master_pic(const struct acrn_vpic *vpic, struct i8259_reg_sta
 static inline uint8_t vpic_get_highest_isrpin(const struct i8259_reg_state *i8259)
 {
 	uint8_t bit, pin, i;
+	uint8_t found_pin = VPIC_INVALID_PIN;
 
 	pin = (i8259->lowprio + 1U) & 0x7U;
 
@@ -64,18 +65,20 @@ static inline uint8_t vpic_get_highest_isrpin(const struct i8259_reg_state *i825
 				pin = (pin + 1U) & 0x7U;
 				continue;
 			} else {
-				return pin;
+				found_pin = pin;
+				break;
 			}
 		}
 		pin = (pin + 1U) & 0x7U;
 	}
 
-	return VPIC_INVALID_PIN;
+	return found_pin;
 }
 
 static inline uint8_t vpic_get_highest_irrpin(const struct i8259_reg_state *i8259)
 {
 	uint8_t serviced, bit, pin, tmp;
+	uint8_t found_pin = VPIC_INVALID_PIN;
 
 	/*
 	 * In 'Special Fully-Nested Mode' when an interrupt request from
@@ -115,13 +118,14 @@ static inline uint8_t vpic_get_highest_irrpin(const struct i8259_reg_state *i825
 		 * the corresponding 'pin' to the caller.
 		 */
 		if (((i8259->request & bit) != 0) && ((i8259->mask & bit) == 0)) {
-			return pin;
+			found_pin = pin;
+			break;
 		}
 
 		pin = (pin + 1U) & 0x7U;
 	}
 
-	return VPIC_INVALID_PIN;
+	return found_pin;
 }
 
 static void vpic_notify_intr(struct acrn_vpic *vpic)
@@ -457,42 +461,38 @@ void vpic_set_irq(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
 	struct i8259_reg_state *i8259;
 	uint8_t pin;
 
-	if (irq >= NR_VPIC_PINS_TOTAL) {
-		return;
-	}
+	if (irq < NR_VPIC_PINS_TOTAL) {
+		vpic = vm_pic(vm);
+		i8259 = &vpic->i8259[irq >> 3U];
+		pin = (uint8_t)irq;
 
-	vpic = vm_pic(vm);
-	i8259 = &vpic->i8259[irq >> 3U];
-	pin = (uint8_t)irq;
-
-	if (i8259->ready == false) {
-		return;
+		if (i8259->ready) {
+			spinlock_obtain(&(vpic->lock));
+			switch (operation) {
+			case GSI_SET_HIGH:
+				vpic_set_pinstate(vpic, pin, 1U);
+				break;
+			case GSI_SET_LOW:
+				vpic_set_pinstate(vpic, pin, 0U);
+				break;
+			case GSI_RAISING_PULSE:
+				vpic_set_pinstate(vpic, pin, 1U);
+				vpic_set_pinstate(vpic, pin, 0U);
+				break;
+			case GSI_FALLING_PULSE:
+				vpic_set_pinstate(vpic, pin, 0U);
+				vpic_set_pinstate(vpic, pin, 1U);
+				break;
+			default:
+				/*
+				 * The function caller could guarantee the pre condition.
+				 */
+				break;
+			}
+			vpic_notify_intr(vpic);
+			spinlock_release(&(vpic->lock));
+		}
 	}
-
-	spinlock_obtain(&(vpic->lock));
-	switch (operation) {
-	case GSI_SET_HIGH:
-		vpic_set_pinstate(vpic, pin, 1U);
-		break;
-	case GSI_SET_LOW:
-		vpic_set_pinstate(vpic, pin, 0U);
-		break;
-	case GSI_RAISING_PULSE:
-		vpic_set_pinstate(vpic, pin, 1U);
-		vpic_set_pinstate(vpic, pin, 0U);
-		break;
-	case GSI_FALLING_PULSE:
-		vpic_set_pinstate(vpic, pin, 0U);
-		vpic_set_pinstate(vpic, pin, 1U);
-		break;
-	default:
-		/*
-		 * The function caller could guarantee the pre condition.
-		 */
-		break;
-	}
-	vpic_notify_intr(vpic);
-	spinlock_release(&(vpic->lock));
 }
 
 uint32_t
