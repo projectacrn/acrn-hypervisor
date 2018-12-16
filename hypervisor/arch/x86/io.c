@@ -191,7 +191,6 @@ hv_emulate_pio(const struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
 	int32_t status = -ENODEV;
 	uint16_t port, size;
-	uint32_t mask;
 	uint32_t idx;
 	struct acrn_vm *vm = vcpu->vm;
 	struct pio_request *pio_req = &io_req->reqs.pio;
@@ -199,7 +198,6 @@ hv_emulate_pio(const struct acrn_vcpu *vcpu, struct io_request *io_req)
 
 	port = (uint16_t)pio_req->address;
 	size = (uint16_t)pio_req->size;
-	mask = 0xFFFFFFFFU >> (32U - 8U * size);
 
 	for (idx = 0U; idx < EMUL_PIO_IDX_MAX; idx++) {
 		handler = &(vm->arch_vm.emul_pio[idx]);
@@ -210,9 +208,9 @@ hv_emulate_pio(const struct acrn_vcpu *vcpu, struct io_request *io_req)
 
 		if (pio_req->direction == REQUEST_WRITE) {
 			if (handler->io_write != NULL) {
-				handler->io_write(vm, port, size, pio_req->value & mask);
+				handler->io_write(vm, port, size, pio_req->value);
 			}
-			pr_dbg("IO write on port %04x, data %08x", port, pio_req->value & mask);
+			pr_dbg("IO write on port %04x, data %08x", port, pio_req->value);
 		} else {
 			if (handler->io_read != NULL) {
 				pio_req->value = handler->io_read(vm, port, size);
@@ -350,6 +348,7 @@ int32_t pio_instr_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int32_t status;
 	uint64_t exit_qual;
+	uint32_t mask;
 	int32_t cur_context_idx = vcpu->arch.cur_context;
 	struct io_request *io_req = &vcpu->req;
 	struct pio_request *pio_req = &io_req->reqs.pio;
@@ -360,8 +359,9 @@ int32_t pio_instr_vmexit_handler(struct acrn_vcpu *vcpu)
 	pio_req->size = vm_exit_io_instruction_size(exit_qual) + 1UL;
 	pio_req->address = vm_exit_io_instruction_port_number(exit_qual);
 	if (vm_exit_io_instruction_access_direction(exit_qual) == 0UL) {
+		mask = 0xFFFFFFFFU >> (32U - (8U * pio_req->size));
 		pio_req->direction = REQUEST_WRITE;
-		pio_req->value = (uint32_t)vcpu_get_gpreg(vcpu, CPU_REG_RAX);
+		pio_req->value = (uint32_t)vcpu_get_gpreg(vcpu, CPU_REG_RAX) & mask;
 	} else {
 		pio_req->direction = REQUEST_READ;
 	}
