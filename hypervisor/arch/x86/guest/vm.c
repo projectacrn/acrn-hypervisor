@@ -87,6 +87,7 @@ int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 #endif
 	vm->hw.created_vcpus = 0U;
 	vm->emul_mmio_regions = 0U;
+	vm->snoopy_mem = true;
 
 	/* gpa_lowtop are used for system start up */
 	vm->hw.gpa_lowtop = 0UL;
@@ -98,6 +99,7 @@ int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 	/* Only for SOS: Configure VM software information */
 	/* For UOS: This VM software information is configure in DM */
 	if (is_vm0(vm)) {
+		vm->snoopy_mem = false;
 		rebuild_vm0_e820();
 		status = prepare_vm0_memmap(vm);
 		if (status != 0) {
