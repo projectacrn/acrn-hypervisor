@@ -259,21 +259,6 @@ void free(const void *ptr)
 	}
 }
 
-void *memchr(const void *void_s, int32_t c, size_t n)
-{
-	uint8_t val = (uint8_t)c;
-	uint8_t *ptr = (uint8_t *)void_s;
-	uint8_t *end = ptr + n;
-
-	while (ptr < end) {
-		if (*ptr == val) {
-			return ((void *)ptr);
-		}
-		ptr++;
-	}
-	return NULL;
-}
-
 static inline void memcpy_erms(void *d, const void *s, size_t slen)
 {
 	asm volatile ("rep; movsb"
