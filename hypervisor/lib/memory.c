@@ -5,35 +5,32 @@
 
 #include <hypervisor.h>
 
-/************************************************************************/
-/*  Memory pool declaration (block size = CONFIG_MALLOC_ALIGN)   */
-/************************************************************************/
+/*
+ * Memory pool declaration (block size = CONFIG_MALLOC_ALIGN)
+ */
 #define __bss_noinit __attribute__((__section__(".bss_noinit")))
 
-static uint8_t __bss_noinit
-Malloc_Heap[CONFIG_HEAP_SIZE] __aligned(CONFIG_MALLOC_ALIGN);
+static uint8_t __bss_noinit malloc_heap[CONFIG_HEAP_SIZE] __aligned(CONFIG_MALLOC_ALIGN);
 
-#define MALLOC_HEAP_BUFF_SIZE      CONFIG_MALLOC_ALIGN
-#define MALLOC_HEAP_TOTAL_BUFF     (CONFIG_HEAP_SIZE/MALLOC_HEAP_BUFF_SIZE)
-#define MALLOC_HEAP_BITMAP_SIZE \
-	INT_DIV_ROUNDUP(MALLOC_HEAP_TOTAL_BUFF, BITMAP_WORD_SIZE)
-static uint32_t Malloc_Heap_Bitmap[MALLOC_HEAP_BITMAP_SIZE];
-static uint32_t Malloc_Heap_Contiguity_Bitmap[MALLOC_HEAP_BITMAP_SIZE];
+#define MALLOC_HEAP_BUFF_SIZE	CONFIG_MALLOC_ALIGN
+#define MALLOC_HEAP_TOTAL_BUFF	(CONFIG_HEAP_SIZE/MALLOC_HEAP_BUFF_SIZE)
+#define MALLOC_HEAP_BITMAP_SIZE	INT_DIV_ROUNDUP(MALLOC_HEAP_TOTAL_BUFF, BITMAP_WORD_SIZE)
+static uint32_t malloc_heap_bitmap[MALLOC_HEAP_BITMAP_SIZE];
+static uint32_t malloc_heap_contiguity_bitmap[MALLOC_HEAP_BITMAP_SIZE];
 
-static struct mem_pool Memory_Pool = {
-	.start_addr = Malloc_Heap,
+static struct mem_pool memory_pool = {
+	.start_addr = malloc_heap,
 	.spinlock = {.head = 0U, .tail = 0U},
 	.size = CONFIG_HEAP_SIZE,
 	.buff_size = MALLOC_HEAP_BUFF_SIZE,
 	.total_buffs = MALLOC_HEAP_TOTAL_BUFF,
 	.bmp_size = MALLOC_HEAP_BITMAP_SIZE,
-	.bitmap = Malloc_Heap_Bitmap,
-	.contiguity_bitmap = Malloc_Heap_Contiguity_Bitmap
+	.bitmap = malloc_heap_bitmap,
+	.contiguity_bitmap = malloc_heap_contiguity_bitmap
 };
 
 static void *allocate_mem(struct mem_pool *pool, uint32_t num_bytes)
 {
-
 	void *memory = NULL;
 	uint32_t idx;
 	uint16_t bit_idx;
@@ -54,16 +51,13 @@ static void *allocate_mem(struct mem_pool *pool, uint32_t num_bytes)
 		/* Find the first occurrence of requested_buffs number of free
 		 * buffers. The 0th bit in bitmap represents a free buffer.
 		 */
-		for (bit_idx = ffz64(pool->bitmap[idx]);
-					bit_idx < BITMAP_WORD_SIZE; bit_idx++) {
+		for (bit_idx = ffz64(pool->bitmap[idx]); bit_idx < BITMAP_WORD_SIZE; bit_idx++) {
 			/* Check if selected buffer is free */
 			if ((pool->bitmap[idx] & (1U << bit_idx)) != 0U) {
 				continue;
 			}
 
-			/* Declare temporary variables to be used locally in
-			 * this block
-			 */
+			/* Declare temporary variables to be used locally in this block */
 			uint32_t i;
 			uint16_t tmp_bit_idx = bit_idx;
 			uint32_t tmp_idx = idx;
@@ -87,8 +81,7 @@ static void *allocate_mem(struct mem_pool *pool, uint32_t num_bytes)
 				}
 
 				/* Break if selected buffer is not free */
-				if ((pool->bitmap[tmp_idx]
-					& (1U << tmp_bit_idx)) != 0U) {
+				if ((pool->bitmap[tmp_idx] & (1U << tmp_bit_idx)) != 0U) {
 					break;
 				}
 			}
@@ -101,10 +94,7 @@ static void *allocate_mem(struct mem_pool *pool, uint32_t num_bytes)
 				 * selected free contiguous buffer in the
 				 * memory pool
 				 */
-				memory = (char *)pool->start_addr +
-					(pool->buff_size *
-					((idx * BITMAP_WORD_SIZE) +
-							bit_idx));
+				memory = pool->start_addr + pool->buff_size * (idx * BITMAP_WORD_SIZE + bit_idx);
 
 				/* Update allocation bitmaps information for
 				 * selected buffers
@@ -118,22 +108,20 @@ static void *allocate_mem(struct mem_pool *pool, uint32_t num_bytes)
 					/* Set contiguity information for this
 					 * buffer in contiguity-bitmap
 					 */
-					if (i < (requested_buffs - 1)) {
+					if (i < (requested_buffs - 1U)) {
 						/* Set contiguity bit to 1 if
 						 * this buffer is not the last
 						 * of selected contiguous
 						 * buffers array
 						 */
-						pool->contiguity_bitmap[idx] |=
-							(1U << bit_idx);
+						pool->contiguity_bitmap[idx] |= (1U << bit_idx);
 					} else {
 						/* Set contiguity bit to 0 if
 						 * this buffer is not the last
 						 * of selected contiguous
 						 * buffers array
 						 */
-						pool->contiguity_bitmap[idx] &=
-							~(1U << bit_idx);
+						pool->contiguity_bitmap[idx] &= ~(1U << bit_idx);
 					}
 
 					/* Check if bit_idx is out-of-range */
@@ -173,8 +161,7 @@ static void deallocate_mem(struct mem_pool *pool, const void *ptr)
 		spinlock_obtain(&pool->spinlock);
 
 		/* Map the buffer address to its index. */
-		buff_idx = ((char *)ptr - (char *)pool->start_addr) /
-			pool->buff_size;
+		buff_idx = (ptr - pool->start_addr) / pool->buff_size;
 
 		/* De-allocate all allocated contiguous memory buffers */
 		while (buff_idx < pool->total_buffs) {
@@ -222,7 +209,7 @@ void *malloc(uint32_t num_bytes)
 		/*
 		 * Request memory allocation from smaller segmented memory pool
 		 */
-		memory = allocate_mem(&Memory_Pool, num_bytes);
+		memory = allocate_mem(&memory_pool, num_bytes);
 	}
 
 	/* Check if memory allocation is successful */
@@ -251,11 +238,10 @@ void *calloc(uint32_t num_elements, uint32_t element_size)
 void free(const void *ptr)
 {
 	/* Check if ptr belongs to 16-Bytes aligned Memory Pool */
-	if ((Memory_Pool.start_addr < ptr) &&
-		(ptr < (Memory_Pool.start_addr +
-			(Memory_Pool.total_buffs * Memory_Pool.buff_size)))) {
+	if ((memory_pool.start_addr < ptr) &&
+		(ptr < (memory_pool.start_addr + memory_pool.total_buffs * memory_pool.buff_size))) {
 		/* Free buffer in 16-Bytes aligned Memory Pool */
-		deallocate_mem(&Memory_Pool, ptr);
+		deallocate_mem(&memory_pool, ptr);
 	}
 }
 
