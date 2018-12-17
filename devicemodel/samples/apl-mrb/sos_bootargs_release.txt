@@ -14,3 +14,4 @@ i915.enable_guc=0x02
 video=DP-1:d
 video=DP-2:d
 cma=64M@0-
+panic_print=0x1f
