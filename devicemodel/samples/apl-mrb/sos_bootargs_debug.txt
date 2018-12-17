@@ -20,3 +20,4 @@ ramoops.mem_address=0x6da00000
 ramoops.mem_size=0x400000
 ramoops.console_size=0x200000
 reboot_panic=p,w
+panic_print=0x1f
