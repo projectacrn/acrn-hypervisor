@@ -151,6 +151,7 @@ C_SRCS += arch/x86/io.c
 C_SRCS += arch/x86/virq.c
 C_SRCS += arch/x86/vmexit.c
 C_SRCS += arch/x86/vmx.c
+C_SRCS += arch/x86/vmcs.c
 C_SRCS += arch/x86/assign.c
 C_SRCS += arch/x86/trusty.c
 C_SRCS += arch/x86/cpu_state_tbl.c
