@@ -34,6 +34,7 @@
 #include <pgtable.h>
 #include <irq.h>
 #include <vmx.h>
+#include <vmcs.h>
 #include <assign.h>
 #include <vtd.h>
 
