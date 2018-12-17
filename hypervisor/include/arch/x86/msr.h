@@ -402,6 +402,9 @@
 #define PAT_MEM_TYPE_WB				0x06UL	/* writeback */
 #define PAT_MEM_TYPE_UCM			0x07UL	/* uncached minus */
 
+/* MISC_ENABLE bits: architectural */
+#define MSR_IA32_MISC_ENABLE_FAST_STRING	(1U << 0U)
+
 #ifndef ASSEMBLER
 static inline bool pat_mem_type_invalid(uint64_t x)
 {

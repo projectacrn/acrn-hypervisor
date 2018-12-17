@@ -78,6 +78,24 @@ static inline bool get_monitor_cap(void)
 	return false;
 }
 
+static inline bool is_fast_string_erms_supported_and_enabled(void)
+{
+	bool ret = false;
+	uint32_t misc_enable = (uint32_t)msr_read(MSR_IA32_MISC_ENABLE);
+
+	if ((misc_enable & MSR_IA32_MISC_ENABLE_FAST_STRING) == 0U) {
+		pr_fatal("%s, fast string is not enabled\n", __func__);
+	} else {
+		if (!cpu_has_cap(X86_FEATURE_ERMS)) {
+			pr_fatal("%s, enhanced rep movsb/stosb not supported\n", __func__);
+		} else {
+			ret = true;
+		}
+	}
+
+	return ret;
+}
+
 static uint64_t get_address_mask(uint8_t limit)
 {
 	return ((1UL << limit) - 1UL) & PAGE_MASK;
@@ -221,6 +239,11 @@ static int32_t hardware_detect_support(void)
 		pr_fatal("%s, vmx not supported\n", __func__);
 		return -ENODEV;
 	}
+
+	if (!is_fast_string_erms_supported_and_enabled()) {
+		return -ENODEV;
+	}
+
 
 	if (!cpu_has_vmx_unrestricted_guest_cap()) {
 		pr_fatal("%s, unrestricted guest not supported\n", __func__);
