@@ -274,96 +274,36 @@ void *memchr(const void *void_s, int32_t c, size_t n)
 	return NULL;
 }
 
-/***********************************************************************
- *
- *   FUNCTION
- *
- *       memcpy_s
- *
- *   DESCRIPTION
- *
- *       Copies at most slen bytes from src address to dest address,
- *       up to dmax.
+static inline void memcpy_erms(void *d, const void *s, size_t slen)
+{
+	asm volatile ("rep; movsb"
+		: "=&D"(d), "=&S"(s)
+		: "c"(slen), "0" (d), "1" (s)
+		: "memory");
+}
+
+/*
+ * @brief  Copies at most slen bytes from src address to dest address, up to dmax.
  *
  *   INPUTS
  *
- *       d                  pointer to Destination address
- *       dmax               maximum  length of dest
- *       s                  pointer to Source address
- *       slen               maximum number of bytes of src to copy
+ * @param[in] d        pointer to Destination address
+ * @param[in] dmax     maximum  length of dest
+ * @param[in] s        pointer to Source address
+ * @param[in] slen     maximum number of bytes of src to copy
  *
- *   OUTPUTS
+ * @return pointer to destination address.
  *
- *       void *             pointer to destination address if successful,
- *                          or else return null.
- *
- ***********************************************************************/
-void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen_arg)
+ * @pre d and s will not overlap.
+ */
+void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen)
 {
-	uint8_t *dest8;
-	uint8_t *src8;
-	size_t slen = slen_arg;
-
-	if ((slen == 0U) || (dmax == 0U) || (dmax < slen)) {
-		ASSERT(false);
-	}
-
-	if ((((d) > (s)) && ((d) <= ((s + slen) - 1U)))
-			|| (((d) < (s)) && ((s) <= ((d + dmax) - 1U)))) {
-		ASSERT(false);
-	}
-
-	/* same memory block, no need to copy */
-	if (d == s) {
-		return d;
-	}
-
-	dest8 = (uint8_t *)d;
-	src8 = (uint8_t *)s;
-
-	/* small data block */
-	if (slen < 8U) {
-		while (slen != 0U) {
-			*dest8 = *src8;
-			dest8++;
-			src8++;
-			slen--;
-		}
-
-		return d;
-	}
-
-	/* make sure 8bytes-aligned for at least one addr. */
-	if ((!mem_aligned_check((uint64_t)src8, 8UL)) &&
-			(!mem_aligned_check((uint64_t)dest8, 8UL))) {
-		for (; (slen != 0U) && ((((uint64_t)src8) & 7UL) != 0UL);
-				slen--) {
-			*dest8 = *src8;
-			dest8++;
-			src8++;
+	if ((slen != 0U) && (dmax != 0U) && (dmax >= slen)) {
+		/* same memory block, no need to copy */
+		if (d != s) {
+			memcpy_erms(d, s, slen);
 		}
 	}
-
-	/* copy main data blocks, with rep prefix */
-	if (slen > 8U) {
-		uint32_t ecx;
-
-		asm volatile ("cld; rep; movsq"
-				: "=&c"(ecx), "=&D"(dest8), "=&S"(src8)
-				: "0" (slen >> 3), "1" (dest8), "2" (src8)
-				: "memory");
-
-		slen = slen & 0x7U;
-	}
-
-	/* tail bytes */
-	while (slen != 0U) {
-		*dest8 = *src8;
-		dest8++;
-		src8++;
-		slen--;
-	}
-
 	return d;
 }
 
