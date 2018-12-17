@@ -218,26 +218,31 @@ static void detect_ept_cap(void)
 
 static void detect_apicv_cap(void)
 {
-	uint8_t features;
+	uint8_t features = 0U;
 	uint64_t msr_val;
 
 	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
-	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS_TPR_SHADOW)) {
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS_TPR_SHADOW)) {
+		features |= VAPIC_FEATURE_TPR_SHADOW;
+	} else {
+		/* must support TPR shadow */
 		return;
 	}
 
 	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
-	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC)) {
+	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC)) {
+		features |= VAPIC_FEATURE_VIRT_ACCESS;
+		if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC_REGS)) {
+			features |= VAPIC_FEATURE_VIRT_REG;
+		} else {
+			/* platform may only support APICV access */
+			cpu_caps.apicv_features = features;
+			return;
+		}
+	} else {
+		/* must support APICV access */
 		return;
 	}
-
-	if (!is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC_REGS)) {
-		return;
-	}
-
-	features = (VAPIC_FEATURE_TPR_SHADOW
-			| VAPIC_FEATURE_VIRT_ACCESS
-			| VAPIC_FEATURE_VIRT_REG);
 
 	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VX2APIC)) {
 		features |= VAPIC_FEATURE_VX2APIC_MODE;
@@ -485,6 +490,7 @@ int32_t detect_hardware_support(void)
 
 	if (!is_apicv_supported()) {
 		pr_fatal("%s, APICV not supported\n", __func__);
+		return -ENODEV;
 	}
 
 	if (boot_cpu_data.cpuid_level < 0x15U) {
