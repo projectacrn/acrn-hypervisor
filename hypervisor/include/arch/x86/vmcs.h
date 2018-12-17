@@ -10,9 +10,9 @@
 #define VM_SUCCESS	0
 #define VM_FAIL		-1
 
-#define VMX_VMENTRY_FAIL	0x80000000U
-
 #ifndef ASSEMBLER
+
+#define VMX_VMENTRY_FAIL	0x80000000U
 
 static inline uint32_t vmx_eoi_exit(uint32_t vector)
 {
