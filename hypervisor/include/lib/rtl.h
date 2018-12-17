@@ -28,7 +28,7 @@ char *strncpy_s(char *d_arg, size_t dmax, const char *s_arg, size_t slen_arg);
 char *strchr(char *s_arg, char ch);
 size_t strnlen_s(const char *str_arg, size_t maxlen_arg);
 void *memset(void *base, uint8_t v, size_t n);
-void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen_arg);
+void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen);
 int32_t atoi(const char *str);
 long strtol_deci(const char *nptr);
 uint64_t strtoul_hex(const char *nptr);
