@@ -34,7 +34,7 @@ static inline size_t get_ucode_data_size(const struct ucode_header *uhdr)
 
 void acrn_update_ucode(struct acrn_vcpu *vcpu, uint64_t v)
 {
-	uint64_t gva, fault_addr;
+	uint64_t gva, fault_addr = 0UL;
 	struct ucode_header uhdr;
 	size_t data_size;
 	int32_t err;
@@ -50,31 +50,25 @@ void acrn_update_ucode(struct acrn_vcpu *vcpu, uint64_t v)
 		if (err == -EFAULT) {
 			vcpu_inject_pf(vcpu, fault_addr, err_code);
 		}
-		spinlock_release(&micro_code_lock);
-		return;
-	}
-
-	data_size = get_ucode_data_size(&uhdr) + sizeof(struct ucode_header);
-	if (data_size > MICRO_CODE_SIZE_MAX) {
-		pr_err("The size of microcode is greater than 0x%x",
-				MICRO_CODE_SIZE_MAX);
-		spinlock_release(&micro_code_lock);
-		return;
-	}
-
-	err_code = 0U;
-	err = copy_from_gva(vcpu, micro_code, gva, data_size, &err_code,
-			&fault_addr);
-	if (err < 0) {
-		if (err == -EFAULT) {
-			vcpu_inject_pf(vcpu, fault_addr, err_code);
+	} else {
+		data_size = get_ucode_data_size(&uhdr) + sizeof(struct ucode_header);
+		if (data_size > MICRO_CODE_SIZE_MAX) {
+			pr_err("The size of microcode is greater than 0x%x",
+					MICRO_CODE_SIZE_MAX);
+		} else {
+			err_code = 0U;
+			err = copy_from_gva(vcpu, micro_code, gva, data_size, &err_code,
+					&fault_addr);
+			if (err < 0) {
+				if (err == -EFAULT) {
+					vcpu_inject_pf(vcpu, fault_addr, err_code);
+				}
+			} else {
+				msr_write(MSR_IA32_BIOS_UPDT_TRIG,
+					(uint64_t)micro_code + sizeof(struct ucode_header));
+				(void)get_microcode_version();
+			}
 		}
-		spinlock_release(&micro_code_lock);
-		return;
 	}
-
-	msr_write(MSR_IA32_BIOS_UPDT_TRIG,
-			(uint64_t)micro_code + sizeof(struct ucode_header));
-	(void)get_microcode_version();
 	spinlock_release(&micro_code_lock);
 }
