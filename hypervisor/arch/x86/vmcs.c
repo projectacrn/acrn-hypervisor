@@ -7,20 +7,9 @@
  */
 
 #include <hypervisor.h>
-#include <vm0_boot.h>
 #include <cpu.h>
-#ifdef CONFIG_EFI_STUB
-extern struct efi_context* efi_ctx;
-#endif
 
-#define REAL_MODE_BSP_INIT_CODE_SEL	(0xf000U)
-#define REAL_MODE_DATA_SEG_AR		(0x0093U)
-#define REAL_MODE_CODE_SEG_AR		(0x009fU)
-#define PROTECTED_MODE_DATA_SEG_AR	(0xc093U)
-#define PROTECTED_MODE_CODE_SEG_AR	(0xc09bU)
 #define DR7_INIT_VALUE			(0x400UL)
-#define LDTR_AR				(0x0082U) /* LDT, type must be 2, refer to SDM Vol3 26.3.1.2 */
-#define TR_AR				(0x008bU) /* TSS (busy), refer to SDM Vol3 26.3.1.2 */
 
 static uint64_t cr0_host_mask;
 static uint64_t cr0_always_on_mask;
