@@ -367,33 +367,22 @@ void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen_arg)
 	return d;
 }
 
+static inline void memset_erms(void *base, uint8_t v, size_t n)
+{
+	asm volatile("rep ; stosb"
+			: "+D"(base)
+			: "a" (v), "c"(n));
+}
+
 void *memset(void *base, uint8_t v, size_t n)
 {
-	uint8_t *dest_p;
-	size_t n_q;
-	size_t count;
-	void *ret;
-
-	dest_p = (uint8_t *)base;
-
-	if ((dest_p == NULL) || (n == 0U)) {
-		ret = NULL;
-	} else {
-		/* do the few bytes to get uint64_t alignment */
-		count = n;
-		for (; (count != 0U) && (((uint64_t)dest_p & 7UL) != 0UL); count--) {
-			*dest_p = v;
-			dest_p++;
-		}
-
-		/* 64-bit mode */
-		n_q = count >> 3U;
-		asm volatile("cld ; rep ; stosq ; movl %3,%%ecx ; rep ; stosb"
-					: "+c"(n_q), "+D"(dest_p)
-					: "a" (v * 0x0101010101010101U),
-					"r"((uint32_t)count  & 7U));
-		ret = (void *)dest_p;
+	/*
+	 * Some CPUs support enhanced REP MOVSB/STOSB feature. It is recommended
+	 * to use it when possible.
+	 */
+	if ((base != NULL) && (n != 0U)) {
+		memset_erms(base, v, n);
         }
 
-	return ret;
+	return base;
 }
