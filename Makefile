@@ -16,6 +16,7 @@ BOARD ?= apl-mrb
 else ifeq ($(PLATFORM),uefi)
 BOARD ?= apl-nuc
 endif
+undefine PLATFORM
 
 ifndef BOARD
 $(error BOARD must be set (apl-mrb, apl-nuc, cb2_dnv, nuc6cayh)
@@ -47,7 +48,7 @@ all: hypervisor devicemodel tools
 hypervisor:
 	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) clean
 	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)
-ifeq ($(PLATFORM),uefi)
+ifeq ($(FIRMWARE),uefi)
 	echo "building hypervisor as EFI executable..."
 	make -C $(T)/efi-stub HV_OBJDIR=$(HV_OUT) EFI_OBJDIR=$(EFI_OUT)
 endif
@@ -78,10 +79,10 @@ clean:
 install: hypervisor-install devicemodel-install tools-install
 
 hypervisor-install:
-ifeq ($(PLATFORM),sbl)
+ifeq ($(FIRMWARE),sbl)
 	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) install
 endif
-ifeq ($(PLATFORM),uefi)
+ifeq ($(FIRMWARE),uefi)
 	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT) BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE)
 	make -C $(T)/efi-stub HV_OBJDIR=$(HV_OUT) EFI_OBJDIR=$(EFI_OUT) all install
 endif
