@@ -16,19 +16,19 @@ static struct acrn_vm vm_array[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE);
 
 static uint64_t vmid_bitmap;
 
-/* used for vmid allocation. And this means the max vm number is 64 */
 static inline uint16_t alloc_vm_id(void)
 {
 	uint16_t id = ffz64(vmid_bitmap);
 
-	while (id < (size_t)(sizeof(vmid_bitmap) * 8U)) {
+	while (id < CONFIG_MAX_VM_NUM) {
 		if (!bitmap_test_and_set_lock(id, &vmid_bitmap)) {
-			return id;
+			break;
 		}
 		id = ffz64(vmid_bitmap);
 	}
 
-	return INVALID_VM_ID;
+	id = (id >= CONFIG_MAX_VM_NUM) ? INVALID_VM_ID : id;
+	return id;
 }
 
 static inline void free_vm_id(const struct acrn_vm *vm)
