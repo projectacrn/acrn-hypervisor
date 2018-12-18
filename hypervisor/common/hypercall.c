@@ -177,7 +177,7 @@ int32_t hcall_destroy_vm(uint16_t vmid)
  */
 int32_t hcall_start_vm(uint16_t vmid)
 {
-	int32_t ret;
+	int32_t ret = 0;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	if (target_vm == NULL) {
@@ -185,7 +185,7 @@ int32_t hcall_start_vm(uint16_t vmid)
 	} else if (target_vm->sw.io_shared_page == NULL) {
 		ret = -1;
 	} else {
-		ret = start_vm(target_vm);
+		start_vm(target_vm);
 	}
 
 	return ret;
