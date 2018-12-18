@@ -14,9 +14,9 @@
 /* Interrupt Descriptor Table (LDT) selectors are 16 bytes on x86-64 instead of
  * 8 bytes.
  */
-#define     X64_IDT_DESC_SIZE   (0x10)
+#define     X64_IDT_DESC_SIZE   (0x10U)
 /* Number of the HOST IDT entries */
-#define     HOST_IDT_ENTRIES    (0x100)
+#define     HOST_IDT_ENTRIES    (0x100U)
 /* Size of the IDT */
 #define     HOST_IDT_SIZE       (HOST_IDT_ENTRIES * X64_IDT_DESC_SIZE)
 
