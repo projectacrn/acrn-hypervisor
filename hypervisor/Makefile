@@ -137,6 +137,7 @@ C_SRCS += arch/x86/ioapic.c
 C_SRCS += arch/x86/lapic.c
 C_SRCS += arch/x86/cpu.c
 C_SRCS += arch/x86/cpu_caps.c
+C_SRCS += arch/x86/security.c
 C_SRCS += arch/x86/mmu.c
 C_SRCS += arch/x86/e820.c
 C_SRCS += arch/x86/pagetable.c

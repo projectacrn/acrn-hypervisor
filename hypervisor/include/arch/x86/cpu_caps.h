@@ -7,19 +7,6 @@
 #ifndef CPUINFO_H
 #define CPUINFO_H
 
-/* type of speculation control
- * 0 - no speculation control support
- * 1 - raw IBRS + IPBP support
- * 2 - with STIBP optimization support
- */
-#define IBRS_NONE	0
-#define IBRS_RAW	1
-#define IBRS_OPT	2
-
-#ifndef ASSEMBLER
-
-extern int32_t ibrs_type;
-
 struct cpu_state_info {
 	uint8_t			 px_cnt;	/* count of all Px states */
 	const struct cpu_px_data *px_data;
@@ -71,7 +58,5 @@ void init_cpu_model_name(void);
 bool check_cpu_security_cap(void);
 void cpu_l1d_flush(void);
 int detect_hardware_support(void);
-
-#endif /* ASSEMBLER */
 
 #endif /* CPUINFO_H */

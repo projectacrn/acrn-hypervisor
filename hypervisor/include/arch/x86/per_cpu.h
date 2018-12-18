@@ -18,6 +18,7 @@
 #include <logmsg.h>
 #include "arch/x86/guest/instr_emul.h"
 #include <profiling.h>
+#include <security.h>
 
 struct per_cpu_region {
 	/* vmxon_region MUST be 4KB-aligned */
