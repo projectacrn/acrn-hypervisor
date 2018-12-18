@@ -17,7 +17,7 @@
 #define IBRS_OPT	2
 
 #ifndef ASSEMBLER
-extern int32_t ibrs_type;
+int32_t get_ibrs_type(void);
 void cpu_l1d_flush(void);
 bool check_cpu_security_cap(void);
 

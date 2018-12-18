@@ -407,6 +407,7 @@ int32_t run_vcpu(struct acrn_vcpu *vcpu)
 	struct run_context *ctx =
 		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 	int64_t status = 0;
+	int32_t ibrs_type = get_ibrs_type();
 
 	if (bitmap_test_and_clear_lock(CPU_REG_RIP, &vcpu->reg_updated))
 		exec_vmwrite(VMX_GUEST_RIP, ctx->rip);
