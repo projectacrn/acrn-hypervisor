@@ -46,50 +46,72 @@ static uint16_t vmx_vpid_nr = VMX_MIN_NR_VPID;
 #define INVEPT_TYPE_ALL_CONTEXTS        2UL
 #define VMFAIL_INVALID_EPT_VPID				\
 	"       jnc 1f\n"				\
-	"       mov $1, %0\n"      /* CF: error = 1 */	\
+	"       movl $1, (%0)\n"    /* CF: error = 1 */	\
 	"       jmp 3f\n"				\
 	"1:     jnz 2f\n"				\
-	"       mov $2, %0\n"      /* ZF: error = 2 */	\
+	"       movl $2, (%0)\n"    /* ZF: error = 2 */	\
 	"       jmp 3f\n"				\
-	"2:     mov $0, %0\n"				\
+	"2:     movl $0, (%0)\n"			\
 	"3:"
+
+struct invvpid_operand {
+	uint32_t vpid : 16;
+	uint32_t rsvd1 : 16;
+	uint32_t rsvd2 : 32;
+	uint64_t gva;
+};
 
 struct invept_desc {
 	uint64_t eptp;
 	uint64_t res;
 };
 
+static inline void asm_invvpid(const struct invvpid_operand operand, uint64_t type, int32_t *error)
+{
+	asm volatile ("invvpid %1, %2\n"
+			VMFAIL_INVALID_EPT_VPID
+			: "+r" (error)
+			: "m" (operand), "r" (type)
+			: "memory");
+}
+
+/*
+ * @pre: the combined type and vpid is correct
+ */
 static inline void local_invvpid(uint64_t type, uint16_t vpid, uint64_t gva)
 {
 	int32_t error = 0;
 
-	struct {
-		uint32_t vpid : 16;
-		uint32_t rsvd1 : 16;
-		uint32_t rsvd2 : 32;
-		uint64_t gva;
-	} operand = { vpid, 0U, 0U, gva };
+	const struct invvpid_operand operand = { vpid, 0U, 0U, gva };
 
-	asm volatile ("invvpid %1, %2\n"
-			VMFAIL_INVALID_EPT_VPID
-			: "=r" (error)
-			: "m" (operand), "r" (type)
-			: "memory");
+	asm_invvpid(operand, type, &error);
 
-	ASSERT(error == 0, "invvpid error");
+	if (error != 0) {
+		pr_dbg("%s, failed. type = %llu, vpid = %u", __func__, type, vpid);
+	}
 }
 
+static inline void asm_invept(uint64_t type, struct invept_desc desc, int32_t *error)
+{
+	asm volatile ("invept %1, %2\n"
+			VMFAIL_INVALID_EPT_VPID
+			: "+r" (error)
+			: "m" (desc), "r" (type)
+			: "memory");
+}
+
+/*
+ * @pre: the combined type and EPTP is correct
+ */
 static inline void local_invept(uint64_t type, struct invept_desc desc)
 {
 	int32_t error = 0;
 
-	asm volatile ("invept %1, %2\n"
-			VMFAIL_INVALID_EPT_VPID
-			: "=r" (error)
-			: "m" (desc), "r" (type)
-			: "memory");
+	asm_invept(type, desc, &error);
 
-	ASSERT(error == 0, "invept error");
+	if (error != 0) {
+		pr_dbg("%s, failed. type = %llu, eptp = 0x%llx", __func__, type, desc.eptp);
+	}
 }
 
 uint16_t allocate_vpid(void)
