@@ -329,24 +329,22 @@ static inline bool cpu_has_vmx_unrestricted_guest_cap(void)
 
 static int32_t check_vmx_mmu_cap(void)
 {
+	int32_t ret = 0;
+
 	if (!cpu_has_vmx_ept_cap(VMX_EPT_INVEPT)) {
 		pr_fatal("%s, invept not supported\n", __func__);
-		return -ENODEV;
-	}
-
-	if (!cpu_has_vmx_vpid_cap(VMX_VPID_INVVPID) ||
+		ret = -ENODEV;
+	} else if (!cpu_has_vmx_vpid_cap(VMX_VPID_INVVPID) ||
 		!cpu_has_vmx_vpid_cap(VMX_VPID_INVVPID_SINGLE_CONTEXT) ||
 		!cpu_has_vmx_vpid_cap(VMX_VPID_INVVPID_GLOBAL_CONTEXT)) {
 		pr_fatal("%s, invvpid not supported\n", __func__);
-		return -ENODEV;
-	}
-
-	if (!cpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE)) {
+		ret = -ENODEV;
+	} else if (!cpu_has_vmx_ept_cap(VMX_EPT_1GB_PAGE)) {
 		pr_fatal("%s, ept not support 1GB large page\n", __func__);
-		return -ENODEV;
+		ret = -ENODEV;
 	}
 
-	return 0;
+	return ret;
 }
 
 
