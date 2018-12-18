@@ -814,7 +814,7 @@ static void init_entry_ctrl(const struct acrn_vcpu *vcpu)
 	exec_vmwrite32(VMX_ENTRY_INSTR_LENGTH, 0U);
 }
 
-static void init_exit_ctrl(struct acrn_vcpu *vcpu)
+static void init_exit_ctrl(const struct acrn_vcpu *vcpu)
 {
 	uint32_t value32;
 
