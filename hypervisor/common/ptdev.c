@@ -229,7 +229,7 @@ uint32_t ptirq_get_intr_data(const struct acrn_vm *target_vm, uint64_t *buffer, 
 			buffer[index + 1U] = entry->intr_count;
 
 			index += 2U;
-			if (index >= buffer_cnt) {
+			if (index > (buffer_cnt - 2U)) {
 				break;
 			}
 		}
