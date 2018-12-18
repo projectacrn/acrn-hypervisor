@@ -88,91 +88,6 @@ static inline bool is_fast_string_erms_supported_and_enabled(void)
 	return ret;
 }
 
-static uint64_t get_address_mask(uint8_t limit)
-{
-	return ((1UL << limit) - 1UL) & PAGE_MASK;
-}
-
-void init_cpu_capabilities(void)
-{
-	uint32_t eax, unused;
-	uint32_t family, model;
-
-	cpuid(CPUID_VENDORSTRING,
-		&boot_cpu_data.cpuid_level,
-		&unused, &unused, &unused);
-
-	cpuid(CPUID_FEATURES, &eax, &unused,
-		&boot_cpu_data.cpuid_leaves[FEAT_1_ECX],
-		&boot_cpu_data.cpuid_leaves[FEAT_1_EDX]);
-	family = (eax >> 8U) & 0xffU;
-	if (family == 0xFU) {
-		family += (eax >> 20U) & 0xffU;
-	}
-	boot_cpu_data.family = (uint8_t)family;
-
-	model = (eax >> 4U) & 0xfU;
-	if (family >= 0x06U) {
-		model += ((eax >> 16U) & 0xfU) << 4U;
-	}
-	boot_cpu_data.model = (uint8_t)model;
-
-
-	cpuid(CPUID_EXTEND_FEATURE, &unused,
-		&boot_cpu_data.cpuid_leaves[FEAT_7_0_EBX],
-		&boot_cpu_data.cpuid_leaves[FEAT_7_0_ECX],
-		&boot_cpu_data.cpuid_leaves[FEAT_7_0_EDX]);
-
-	cpuid(CPUID_MAX_EXTENDED_FUNCTION,
-		&boot_cpu_data.extended_cpuid_level,
-		&unused, &unused, &unused);
-
-	if (boot_cpu_data.extended_cpuid_level >= CPUID_EXTEND_FUNCTION_1) {
-		cpuid(CPUID_EXTEND_FUNCTION_1, &unused, &unused,
-			&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_ECX],
-			&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_EDX]);
-	}
-
-	if (boot_cpu_data.extended_cpuid_level >= CPUID_EXTEND_ADDRESS_SIZE) {
-		cpuid(CPUID_EXTEND_ADDRESS_SIZE, &eax,
-			&boot_cpu_data.cpuid_leaves[FEAT_8000_0008_EBX],
-			&unused, &unused);
-
-			/* EAX bits 07-00: #Physical Address Bits
-			 *     bits 15-08: #Linear Address Bits
-			 */
-			boot_cpu_data.virt_bits = (uint8_t)((eax >> 8U) & 0xffU);
-			boot_cpu_data.phys_bits = (uint8_t)(eax & 0xffU);
-			boot_cpu_data.physical_address_mask =
-				get_address_mask(boot_cpu_data.phys_bits);
-	}
-
-	/* For speculation defence.
-	 * The default way is to set IBRS at vmexit and then do IBPB at vcpu
-	 * context switch(ibrs_type == IBRS_RAW).
-	 * Now provide an optimized way (ibrs_type == IBRS_OPT) which set
-	 * STIBP and do IBPB at vmexit,since having STIBP always set has less
-	 * impact than having IBRS always set. Also since IBPB is already done
-	 * at vmexit, it is no necessary to do so at vcpu context switch then.
-	 */
-	ibrs_type = IBRS_NONE;
-
-	/* Currently for APL, if we enabled retpoline, then IBRS should not
-	 * take effect
-	 * TODO: add IA32_ARCH_CAPABILITIES[1] check, if this bit is set, IBRS
-	 * should be set all the time instead of relying on retpoline
-	 */
-#ifndef CONFIG_RETPOLINE
-	if (cpu_has_cap(X86_FEATURE_IBRS_IBPB)) {
-		ibrs_type = IBRS_RAW;
-		if (cpu_has_cap(X86_FEATURE_STIBP)) {
-			ibrs_type = IBRS_OPT;
-		}
-	}
-#endif
-}
-
-
 /*check allowed ONEs setting in vmx control*/
 static bool is_ctrl_setting_allowed(uint64_t msr_val, uint32_t ctrl)
 {
@@ -270,11 +185,97 @@ static void detect_vmx_mmu_cap(void)
 	cpu_caps.vmx_vpid = (uint32_t) (val >> 32U);
 }
 
-void detect_cpu_cap(void)
+static void detect_cpu_cap(void)
 {
 	detect_apicv_cap();
 	detect_ept_cap();
 	detect_vmx_mmu_cap();
+}
+
+static uint64_t get_address_mask(uint8_t limit)
+{
+	return ((1UL << limit) - 1UL) & PAGE_MASK;
+}
+
+void init_cpu_capabilities(void)
+{
+	uint32_t eax, unused;
+	uint32_t family, model;
+
+	cpuid(CPUID_VENDORSTRING,
+		&boot_cpu_data.cpuid_level,
+		&unused, &unused, &unused);
+
+	cpuid(CPUID_FEATURES, &eax, &unused,
+		&boot_cpu_data.cpuid_leaves[FEAT_1_ECX],
+		&boot_cpu_data.cpuid_leaves[FEAT_1_EDX]);
+	family = (eax >> 8U) & 0xffU;
+	if (family == 0xFU) {
+		family += (eax >> 20U) & 0xffU;
+	}
+	boot_cpu_data.family = (uint8_t)family;
+
+	model = (eax >> 4U) & 0xfU;
+	if (family >= 0x06U) {
+		model += ((eax >> 16U) & 0xfU) << 4U;
+	}
+	boot_cpu_data.model = (uint8_t)model;
+
+
+	cpuid(CPUID_EXTEND_FEATURE, &unused,
+		&boot_cpu_data.cpuid_leaves[FEAT_7_0_EBX],
+		&boot_cpu_data.cpuid_leaves[FEAT_7_0_ECX],
+		&boot_cpu_data.cpuid_leaves[FEAT_7_0_EDX]);
+
+	cpuid(CPUID_MAX_EXTENDED_FUNCTION,
+		&boot_cpu_data.extended_cpuid_level,
+		&unused, &unused, &unused);
+
+	if (boot_cpu_data.extended_cpuid_level >= CPUID_EXTEND_FUNCTION_1) {
+		cpuid(CPUID_EXTEND_FUNCTION_1, &unused, &unused,
+			&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_ECX],
+			&boot_cpu_data.cpuid_leaves[FEAT_8000_0001_EDX]);
+	}
+
+	if (boot_cpu_data.extended_cpuid_level >= CPUID_EXTEND_ADDRESS_SIZE) {
+		cpuid(CPUID_EXTEND_ADDRESS_SIZE, &eax,
+			&boot_cpu_data.cpuid_leaves[FEAT_8000_0008_EBX],
+			&unused, &unused);
+
+			/* EAX bits 07-00: #Physical Address Bits
+			 *     bits 15-08: #Linear Address Bits
+			 */
+			boot_cpu_data.virt_bits = (uint8_t)((eax >> 8U) & 0xffU);
+			boot_cpu_data.phys_bits = (uint8_t)(eax & 0xffU);
+			boot_cpu_data.physical_address_mask =
+				get_address_mask(boot_cpu_data.phys_bits);
+	}
+
+	detect_cpu_cap();
+
+	/* For speculation defence.
+	 * The default way is to set IBRS at vmexit and then do IBPB at vcpu
+	 * context switch(ibrs_type == IBRS_RAW).
+	 * Now provide an optimized way (ibrs_type == IBRS_OPT) which set
+	 * STIBP and do IBPB at vmexit,since having STIBP always set has less
+	 * impact than having IBRS always set. Also since IBPB is already done
+	 * at vmexit, it is no necessary to do so at vcpu context switch then.
+	 */
+	ibrs_type = IBRS_NONE;
+
+	/* Currently for APL, if we enabled retpoline, then IBRS should not
+	 * take effect
+	 * TODO: add IA32_ARCH_CAPABILITIES[1] check, if this bit is set, IBRS
+	 * should be set all the time instead of relying on retpoline
+	 */
+#ifndef CONFIG_RETPOLINE
+	if (cpu_has_cap(X86_FEATURE_IBRS_IBPB)) {
+		ibrs_type = IBRS_RAW;
+		if (cpu_has_cap(X86_FEATURE_STIBP)) {
+			ibrs_type = IBRS_OPT;
+		}
+	}
+#endif
 }
 
 static bool is_ept_supported(void)
