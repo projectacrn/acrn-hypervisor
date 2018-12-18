@@ -102,6 +102,7 @@ struct passthru_dev {
 		int		table_size;		/* page aligned size */
 		void		*table_pages;
 		int		table_offset;		/* page aligned */
+		bool		ptirq_allocated;
 	} msix;
 	bool pcie_cap;
 	struct pcisel sel;
@@ -465,7 +466,13 @@ init_msix_table(struct vmctx *ctx, struct passthru_dev *ptdev, uint64_t base)
 	ptirq.msix.vector_cnt = dev->msix.table_count;
 	ptirq.msix.table_paddr = 0;
 	ptirq.msix.table_size = 0;
-	vm_set_ptdev_msix_info(ctx, &ptirq);
+	error = vm_set_ptdev_msix_info(ctx, &ptirq);
+	if (error) {
+		warnx("Failed to alloc ptirq entry on %x/%x/%x", b,s,f);
+		return error;
+	}
+	ptdev->msix.ptirq_allocated = true;
+
 
 	/* Skip the MSI-X table */
 	base += table_size;
@@ -492,15 +499,18 @@ init_msix_table(struct vmctx *ctx, struct passthru_dev *ptdev, uint64_t base)
 }
 
 static void
-deinit_msix_table(struct vmctx *ctx, struct pci_vdev *dev)
+deinit_msix_table(struct vmctx *ctx, struct passthru_dev *ptdev)
 {
-	struct passthru_dev *ptdev = (struct passthru_dev *) dev->arg;;
+	struct pci_vdev *dev = ptdev->dev;
 	uint16_t virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
 	int vector_cnt = dev->msix.table_count;
 
-	printf("ptdev reset msix: 0x%x-%x, vector_cnt=%d.\n",
-			virt_bdf, ptdev->phys_bdf, vector_cnt);
-	vm_reset_ptdev_msix_info(ctx, virt_bdf, vector_cnt);
+	if (ptdev->msix.ptirq_allocated) {
+		printf("ptdev reset msix: 0x%x-%x, vector_cnt=%d.\n",
+				virt_bdf, ptdev->phys_bdf, vector_cnt);
+		vm_reset_ptdev_msix_info(ctx, virt_bdf, vector_cnt);
+		ptdev->msix.ptirq_allocated = false;
+	}
 
 	if (ptdev->msix.table_pages) {
 		pci_device_unmap_range(ptdev->phys_dev, ptdev->msix.table_pages, ptdev->msix.table_size);
@@ -589,8 +599,10 @@ cfginitbar(struct vmctx *ctx, struct passthru_dev *ptdev)
 		/* The MSI-X table needs special handling */
 		if (i == ptdev_msix_table_bar(ptdev)) {
 			error = init_msix_table(ctx, ptdev, base);
-			if (error)
+			if (error) {
+				deinit_msix_table(ctx, ptdev);
 				return -1;
+			}
 		} else if (bartype != PCIBAR_IO) {
 			/* Map the physical BAR in the guest MMIO space */
 			error = vm_map_ptdev_mmio(ctx, ptdev->sel.bus,
@@ -890,7 +902,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	func = ptdev->phys_bdf & 0x7;
 
 	if (ptdev->msix.capoff != 0)
-		deinit_msix_table(ctx, dev);
+		deinit_msix_table(ctx, ptdev);
 	else if(ptdev->msi.capoff != 0) {
 		/* Currently only support 1 vector */
 		printf("ptdev reset msi: 0x%x-%x\n", virt_bdf, ptdev->phys_bdf);
