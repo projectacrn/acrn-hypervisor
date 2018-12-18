@@ -263,7 +263,7 @@ int32_t shutdown_vm(struct acrn_vm *vm);
 void pause_vm(struct acrn_vm *vm);
 void resume_vm(struct acrn_vm *vm);
 void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec);
-int32_t start_vm(struct acrn_vm *vm);
+void start_vm(struct acrn_vm *vm);
 int32_t reset_vm(struct acrn_vm *vm);
 int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm);
 int32_t prepare_vm(uint16_t pcpu_id);

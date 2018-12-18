@@ -242,7 +242,7 @@ int32_t shutdown_vm(struct acrn_vm *vm)
 /**
  *  * @pre vm != NULL
  */
-int32_t start_vm(struct acrn_vm *vm)
+void start_vm(struct acrn_vm *vm)
 {
 	struct acrn_vcpu *vcpu = NULL;
 
@@ -251,8 +251,6 @@ int32_t start_vm(struct acrn_vm *vm)
 	/* Only start BSP (vid = 0) and let BSP start other APs */
 	vcpu = vcpu_from_vid(vm, 0U);
 	schedule_vcpu(vcpu);
-
-	return 0;
 }
 
 /**
@@ -402,30 +400,32 @@ static int32_t prepare_vm0(void)
 	vm0_desc.vm_hw_num_cores = phys_cpu_num;
 
 	err = create_vm(&vm0_desc, &vm);
-	if (err != 0) {
-		return err;
-	}
 
-	/* Allocate all cpus to vm0 at the beginning */
-	for (i = 0U; i < vm0_desc.vm_hw_num_cores; i++) {
-		err = prepare_vcpu(vm, i);
-		if (err != 0) {
-			return err;
+	if (err == 0) {
+		/* Allocate all cpus to vm0 at the beginning */
+		for (i = 0U; i < vm0_desc.vm_hw_num_cores; i++) {
+			err = prepare_vcpu(vm, i);
+			if (err != 0) {
+				break;
+			}
+		}
+
+		if (err == 0) {
+
+			if (vm_sw_loader == NULL) {
+				vm_sw_loader = general_sw_loader;
+			}
+
+			if (is_vm0(vm)) {
+				(void)vm_sw_loader(vm);
+			}
+
+			/* start vm0 BSP automatically */
+			start_vm(vm);
+
+			pr_acrnlog("Start VM0");
 		}
 	}
-
-	if (vm_sw_loader == NULL) {
-		vm_sw_loader = general_sw_loader;
-	}
-
-	if (is_vm0(vm)) {
-		(void )vm_sw_loader(vm);
-	}
-
-	/* start vm0 BSP automatically */
-	err = start_vm(vm);
-
-	pr_acrnlog("Start VM0");
 
 	return err;
 }
