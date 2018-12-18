@@ -6,6 +6,7 @@
 
 #include <hypervisor.h>
 #include <crypto_api.h>
+#include <security.h>
 
 #define ACRN_DBG_TRUSTY 6U
 

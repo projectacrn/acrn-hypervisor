@@ -11,6 +11,7 @@
 #include <trampoline.h>
 #include <e820.h>
 #include <cpu_caps.h>
+#include <security.h>
 
 struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(PAGE_SIZE);
 uint16_t phys_cpu_num = 0U;
@@ -66,29 +67,6 @@ static void cpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state)
 	/* Set state for the specified CPU */
 	per_cpu(boot_state, pcpu_id) = state;
 }
-
-#ifdef STACK_PROTECTOR
-static uint64_t get_random_value(void)
-{
-	uint64_t random = 0UL;
-
-	asm volatile ("1: rdrand %%rax\n"
-			"jnc 1b\n"
-			"mov %%rax, %0\n"
-			: "=r"(random)
-			:
-			:"%rax");
-	return random;
-}
-
-static void set_fs_base(void)
-{
-	struct stack_canary *psc = &get_cpu_var(stk_canary);
-
-	psc->canary = get_random_value();
-	msr_write(MSR_IA32_FS_BASE, (uint64_t)psc);
-}
-#endif
 
 void init_cpu_pre(uint16_t pcpu_id)
 {

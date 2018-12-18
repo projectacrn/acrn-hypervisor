@@ -7,6 +7,7 @@
 #include <hypervisor.h>
 #include <schedule.h>
 #include <vm0_boot.h>
+#include <security.h>
 
 vm_sw_loader_t vm_sw_loader;
 
