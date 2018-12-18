@@ -24,12 +24,12 @@ static inline uint16_t ptirq_alloc_entry_id(void)
 
 	while (id < CONFIG_MAX_PT_IRQ_ENTRIES) {
 		if (!bitmap_test_and_set_lock((id & 0x3FU), &ptirq_entry_bitmaps[id >> 6U])) {
-			return id;
+			break;
 		}
 		id = (uint16_t)ffz64_ex(ptirq_entry_bitmaps, CONFIG_MAX_PT_IRQ_ENTRIES);
 	}
 
-	return INVALID_PTDEV_ENTRY_ID;
+	return (id < CONFIG_MAX_PT_IRQ_ENTRIES) ? id: INVALID_PTDEV_ENTRY_ID;
 }
 
 static void ptirq_enqueue_softirq(struct ptirq_remapping_info *entry)
@@ -86,27 +86,26 @@ struct ptirq_remapping_info *ptirq_dequeue_softirq(struct acrn_vm *vm)
 
 struct ptirq_remapping_info *ptirq_alloc_entry(struct acrn_vm *vm, uint32_t intr_type)
 {
-	struct ptirq_remapping_info *entry;
+	struct ptirq_remapping_info *entry = NULL;
 	uint16_t ptirq_id = ptirq_alloc_entry_id();
 
-	if (ptirq_id >= CONFIG_MAX_PT_IRQ_ENTRIES) {
+	if (ptirq_id < CONFIG_MAX_PT_IRQ_ENTRIES) {
+		entry = &ptirq_entries[ptirq_id];
+		(void)memset((void *)entry, 0U, sizeof(struct ptirq_remapping_info));
+		entry->ptdev_entry_id = ptirq_id;
+		entry->intr_type = intr_type;
+		entry->vm = vm;
+		entry->intr_count = 0UL;
+
+		INIT_LIST_HEAD(&entry->softirq_node);
+
+		initialize_timer(&entry->intr_delay_timer, ptirq_intr_delay_callback,
+			entry, 0UL, 0, 0UL);
+
+		atomic_clear32(&entry->active, ACTIVE_FLAG);
+	} else {
 		pr_err("Alloc ptdev irq entry failed");
-		return NULL;
 	}
-
-	entry = &ptirq_entries[ptirq_id];
-	(void)memset((void *)entry, 0U, sizeof(struct ptirq_remapping_info));
-	entry->ptdev_entry_id = ptirq_id;
-	entry->intr_type = intr_type;
-	entry->vm = vm;
-	entry->intr_count = 0UL;
-
-	INIT_LIST_HEAD(&entry->softirq_node);
-
-	initialize_timer(&entry->intr_delay_timer, ptirq_intr_delay_callback,
-		entry, 0UL, 0, 0UL);
-
-	atomic_clear32(&entry->active, ACTIVE_FLAG);
 
 	return entry;
 }
@@ -188,12 +187,11 @@ void ptirq_deactivate_entry(struct ptirq_remapping_info *entry)
 
 void ptdev_init(void)
 {
-	if (get_cpu_id() != BOOT_CPU_ID) {
-		return;
-	}
+	if (get_cpu_id() == BOOT_CPU_ID) {
 
-	spinlock_init(&ptdev_lock);
-	register_softirq(SOFTIRQ_PTDEV, ptirq_softirq);
+		spinlock_init(&ptdev_lock);
+		register_softirq(SOFTIRQ_PTDEV, ptirq_softirq);
+	}
 }
 
 void ptdev_release_all_entries(const struct acrn_vm *vm)
