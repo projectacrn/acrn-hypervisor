@@ -262,13 +262,15 @@ uint8_t irq_to_pin(uint32_t irq)
 uint32_t pin_to_irq(uint8_t pin)
 {
 	uint32_t i;
+	uint32_t irq = IRQ_INVALID;
 
 	for (i = 0U; i < nr_gsi; i++) {
 		if (gsi_table[i].pin == pin) {
-			return i;
+			irq = i;
+			break;
 		}
 	}
-	return IRQ_INVALID;
+	return irq;
 }
 
 static void
