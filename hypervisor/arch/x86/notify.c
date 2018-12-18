@@ -60,35 +60,30 @@ static int32_t request_notification_irq(irq_action_t func, void *data)
 	int32_t retval;
 
 	if (notification_irq != IRQ_INVALID) {
-		pr_info("%s, Notification vector already allocated on this CPU",
-				__func__);
-		return -EBUSY;
+		pr_info("%s, Notification vector already allocated on this CPU", __func__);
+		retval = -EBUSY;
+	} else {
+		/* all cpu register the same notification vector */
+		retval = request_irq(NOTIFY_IRQ, func, data, IRQF_NONE);
+		if (retval < 0) {
+			pr_err("Failed to add notify isr");
+			retval = -ENODEV;
+		} else {
+			notification_irq = (uint32_t)retval;
+		}
 	}
 
-	/* all cpu register the same notification vector */
-	retval = request_irq(NOTIFY_IRQ, func, data, IRQF_NONE);
-	if (retval < 0) {
-		pr_err("Failed to add notify isr");
-		return -ENODEV;
-	}
-
-	notification_irq = (uint32_t)retval;
-
-	return 0;
+	return retval;
 }
 
+/*
+ * @pre be called only by BSP initialization process
+ */
 void setup_notification(void)
 {
-	uint16_t cpu = get_cpu_id();
-
-	if (cpu > 0U) {
-		return;
-	}
-
 	/* support IPI notification, VM0 will register all CPU */
 	if (request_notification_irq(kick_notification, NULL) < 0) {
 		pr_err("Failed to setup notification");
-		return;
 	}
 
 	dev_dbg(ACRN_DBG_PTIRQ, "NOTIFY: irq[%d] setup vector %x",
