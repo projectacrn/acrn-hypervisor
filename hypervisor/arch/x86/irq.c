@@ -136,26 +136,23 @@ static void free_irq_vector(uint32_t irq)
 	uint32_t vr;
 	uint64_t rflags;
 
-	if (irq >= NR_IRQS) {
-		return;
+	if (irq < NR_IRQS) {
+		desc = &irq_desc_array[irq];
+
+		if ((irq >= NR_LEGACY_IRQ) && (desc->vector < VECTOR_FIXED_START)) {
+			/* do nothing for LEGACY_IRQ and static allocated ones */
+
+			spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
+			vr = desc->vector;
+			desc->vector = VECTOR_INVALID;
+
+			vr &= NR_MAX_VECTOR;
+			if (vector_to_irq[vr] == irq) {
+				vector_to_irq[vr] = IRQ_INVALID;
+			}
+			spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);
+		}
 	}
-
-	desc = &irq_desc_array[irq];
-
-	if ((irq < NR_LEGACY_IRQ) || (desc->vector >= VECTOR_FIXED_START)) {
-		/* do nothing for LEGACY_IRQ and static allocated ones */
-		return;
-	}
-
-	spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
-	vr = desc->vector;
-	desc->vector = VECTOR_INVALID;
-
-	vr &= NR_MAX_VECTOR;
-	if (vector_to_irq[vr] == irq) {
-		vector_to_irq[vr] = IRQ_INVALID;
-	}
-	spinlock_irqrestore_release(&irq_alloc_spinlock, rflags);
 }
 
 /*
@@ -186,40 +183,42 @@ int32_t request_irq(uint32_t req_irq, irq_action_t action_fn, void *priv_data,
 	struct irq_desc *desc;
 	uint32_t irq, vector;
 	uint64_t rflags;
+	int32_t ret;
 
 	irq = alloc_irq_num(req_irq);
 	if (irq == IRQ_INVALID) {
 		pr_err("[%s] invalid irq num", __func__);
-		return -EINVAL;
-	}
-
-	vector = alloc_irq_vector(irq);
-	if (vector == VECTOR_INVALID) {
-		pr_err("[%s] failed to alloc vector for irq %u",
-			__func__, irq);
-		free_irq_num(irq);
-		return -EINVAL;
-	}
-
-	desc = &irq_desc_array[irq];
-	spinlock_irqsave_obtain(&desc->lock, &rflags);
-	if (desc->action == NULL) {
-		desc->flags = flags;
-		desc->priv_data = priv_data;
-		desc->action = action_fn;
-		spinlock_irqrestore_release(&desc->lock, rflags);
+		ret = -EINVAL;
 	} else {
-		spinlock_irqrestore_release(&desc->lock, rflags);
-		pr_err("%s: request irq(%u) vr(%u) failed,\
-			already requested", __func__,
-			irq, irq_to_vector(irq));
-		return -EBUSY;
+		vector = alloc_irq_vector(irq);
+
+		if (vector == VECTOR_INVALID) {
+			pr_err("[%s] failed to alloc vector for irq %u",
+				__func__, irq);
+			free_irq_num(irq);
+			ret = -EINVAL;
+		} else {
+			desc = &irq_desc_array[irq];
+			spinlock_irqsave_obtain(&desc->lock, &rflags);
+			if (desc->action == NULL) {
+				desc->flags = flags;
+				desc->priv_data = priv_data;
+				desc->action = action_fn;
+				spinlock_irqrestore_release(&desc->lock, rflags);
+
+				ret = (int32_t)irq;
+				dev_dbg(ACRN_DBG_IRQ, "[%s] irq%d vr:0x%x", __func__, irq, desc->vector);
+			} else {
+				spinlock_irqrestore_release(&desc->lock, rflags);
+
+				ret = -EBUSY;
+				pr_err("%s: request irq(%u) vr(%u) failed, already requested", __func__,
+						irq, irq_to_vector(irq));
+			}
+		}
 	}
 
-	dev_dbg(ACRN_DBG_IRQ, "[%s] irq%d vr:0x%x",
-		__func__, irq, desc->vector);
-
-	return (int32_t)irq;
+	return ret;
 }
 
 void free_irq(uint32_t irq)
@@ -333,33 +332,23 @@ void dispatch_interrupt(const struct intr_excp_ctx *ctx)
 	 * < NR_IRQS, which is the irq number it bound with;
 	 * Any other value means there is something wrong.
 	 */
-	if (irq == IRQ_INVALID || irq >= NR_IRQS) {
-		goto ERR;
-	}
+	if (irq < NR_IRQS) {
+		desc = &irq_desc_array[irq];
+		per_cpu(irq_count, get_cpu_id())[irq]++;
 
-	desc = &irq_desc_array[irq];
-	per_cpu(irq_count, get_cpu_id())[irq]++;
-
-	if (vr != desc->vector) {
-		goto ERR;
-	}
-
-	if (bitmap_test((uint16_t)(irq & 0x3FU),
-		irq_alloc_bitmap + (irq >> 6U)) == 0U) {
-		/* mask irq if possible */
-		goto ERR;
-	}
+		if (vr == desc->vector &&
+			bitmap_test((uint16_t)(irq & 0x3FU), irq_alloc_bitmap + (irq >> 6U)) != 0U) {
 #ifdef PROFILING_ON
-	/* Saves ctx info into irq_desc */
-	desc->ctx_rip = ctx->rip;
-	desc->ctx_rflags = ctx->rflags;
-	desc->ctx_cs = ctx->cs;
+			/* Saves ctx info into irq_desc */
+			desc->ctx_rip = ctx->rip;
+			desc->ctx_rflags = ctx->rflags;
+			desc->ctx_cs = ctx->cs;
 #endif
-	handle_irq(desc);
-	return;
-ERR:
-	handle_spurious_interrupt(vr);
-	return;
+			handle_irq(desc);
+		}
+	} else {
+		handle_spurious_interrupt(vr);
+	}
 }
 
 void dispatch_exception(struct intr_excp_ctx *ctx)
@@ -445,13 +434,13 @@ void init_default_irqs(uint16_t cpu_id)
 	}
 }
 
-static inline void fixup_idt(struct host_idt_descriptor *idtd)
+static inline void fixup_idt(const struct host_idt_descriptor *idtd)
 {
-	int i;
+	uint32_t i;
 	union idt_64_descriptor *idt_desc = (union idt_64_descriptor *)idtd->idt;
 	uint32_t entry_hi_32, entry_lo_32;
 
-	for (i = 0; i < HOST_IDT_ENTRIES; i++) {
+	for (i = 0U; i < HOST_IDT_ENTRIES; i++) {
 		entry_lo_32 = idt_desc[i].fields.offset_63_32;
 		entry_hi_32 = idt_desc[i].fields.rsvd;
 		idt_desc[i].fields.rsvd = 0U;
