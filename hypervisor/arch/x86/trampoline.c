@@ -9,7 +9,7 @@
 #include <vm0_boot.h>
 #include <e820.h>
 
-uint64_t trampoline_start16_paddr;
+static uint64_t trampoline_start16_paddr;
 
 /*
  * Because trampoline code is relocated in different way, if HV code
@@ -48,6 +48,11 @@ void write_trampoline_stack_sym(uint16_t pcpu_id)
 	*hva = stack_sym_addr + get_hv_image_delta();
 
 	clflush(hva);
+}
+
+uint64_t get_trampoline_start16_paddr(void)
+{
+	return trampoline_start16_paddr;
 }
 
 static void update_trampoline_code_refs(uint64_t dest_pa)

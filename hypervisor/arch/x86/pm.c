@@ -131,7 +131,7 @@ void host_enter_s3(struct pm_s_state_data *sstate_data, uint32_t pm1a_cnt_val, u
 	stac();
 
 	/* set ACRN wakeup vec instead */
-	*(sstate_data->wake_vector_32) = (uint32_t)trampoline_start16_paddr;
+	*(sstate_data->wake_vector_32) = (uint32_t)get_trampoline_start16_paddr();
 
 	clac();
 	/* offline all APs */
