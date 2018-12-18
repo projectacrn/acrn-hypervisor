@@ -15,7 +15,6 @@
 #include <logmsg.h>
 
 static bool skip_l1dfl_vmentry;
-static uint64_t x86_arch_capabilities;
 int32_t ibrs_type;
 
 static void detect_ibrs(void)
@@ -47,6 +46,8 @@ static void detect_ibrs(void)
 
 bool check_cpu_security_cap(void)
 {
+	uint64_t x86_arch_capabilities;
+
 	detect_ibrs();
 
 	if (cpu_has_cap(X86_FEATURE_ARCH_CAP)) {
@@ -61,8 +62,8 @@ bool check_cpu_security_cap(void)
 		return false;
 	}
 
-	if (!cpu_has_cap(X86_FEATURE_IBRS_IBPB) &&
-		!cpu_has_cap(X86_FEATURE_STIBP)) {
+	if ((!cpu_has_cap(X86_FEATURE_IBRS_IBPB)) &&
+		(!cpu_has_cap(X86_FEATURE_STIBP))) {
 		return false;
 	}
 
