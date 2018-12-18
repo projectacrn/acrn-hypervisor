@@ -945,95 +945,108 @@ int32_t hcall_get_cpu_pm_state(struct acrn_vm *vm, uint64_t cmd, uint64_t param)
 {
 	uint16_t target_vm_id;
 	struct acrn_vm *target_vm;
+	int32_t ret;
 
 	target_vm_id = (uint16_t)((cmd & PMCMD_VMID_MASK) >> PMCMD_VMID_SHIFT);
 	target_vm = get_vm_from_vmid(target_vm_id);
 
 	if (target_vm == NULL) {
-		return -1;
+	        ret = -1;
+	} else {
+
+		switch (cmd & PMCMD_TYPE_MASK) {
+		case PMCMD_GET_PX_CNT: {
+
+			if (target_vm->pm.px_cnt == 0U) {
+			        ret = -1;
+			} else if (copy_to_gpa(vm, &(target_vm->pm.px_cnt), param,
+						sizeof(target_vm->pm.px_cnt)) != 0) {
+				pr_err("%s: Unable copy param to vm\n", __func__);
+			        ret = -1;
+			} else {
+				ret = 0;
+			}
+			break;
+		}
+		case PMCMD_GET_PX_DATA: {
+			uint8_t pn;
+			struct cpu_px_data *px_data;
+
+			/* For now we put px data as per-vm,
+			 * If it is stored as per-cpu in the future,
+			 * we need to check PMCMD_VCPUID_MASK in cmd.
+			 */
+			if (target_vm->pm.px_cnt == 0U) {
+			        ret = -1;
+				break;
+			}
+
+			pn = (uint8_t)((cmd & PMCMD_STATE_NUM_MASK) >> PMCMD_STATE_NUM_SHIFT);
+			if (pn >= target_vm->pm.px_cnt) {
+			        ret = -1;
+				break;
+			}
+
+			px_data = target_vm->pm.px_data + pn;
+			if (copy_to_gpa(vm, px_data, param,
+							sizeof(struct cpu_px_data)) != 0) {
+				pr_err("%s: Unable copy param to vm\n", __func__);
+			        ret = -1;
+				break;
+			}
+
+		        ret = 0;
+			break;
+		}
+		case PMCMD_GET_CX_CNT: {
+
+			if (target_vm->pm.cx_cnt == 0U) {
+			        ret = -1;
+			} else if (copy_to_gpa(vm, &(target_vm->pm.cx_cnt), param,
+						sizeof(target_vm->pm.cx_cnt)) != 0) {
+				pr_err("%s: Unable copy param to vm\n", __func__);
+				ret = -1;
+			} else {
+				ret = 0;
+			}
+			break;
+		}
+		case PMCMD_GET_CX_DATA: {
+			uint8_t cx_idx;
+			struct cpu_cx_data *cx_data;
+
+			if (target_vm->pm.cx_cnt == 0U) {
+			        ret = -1;
+				break;
+			}
+
+			cx_idx = (uint8_t)
+				((cmd & PMCMD_STATE_NUM_MASK) >> PMCMD_STATE_NUM_SHIFT);
+			if ((cx_idx == 0U) || (cx_idx > target_vm->pm.cx_cnt)) {
+			        ret = -1;
+				break;
+			}
+
+			cx_data = target_vm->pm.cx_data + cx_idx;
+
+			if (copy_to_gpa(vm, cx_data, param,
+							sizeof(struct cpu_cx_data)) != 0) {
+				pr_err("%s: Unable copy param to vm\n", __func__);
+			        ret = -1;
+				break;
+			}
+
+		        ret = 0;
+			break;
+		}
+		default:
+		        ret = -1;
+			break;
+
+		}
 	}
 
-	switch (cmd & PMCMD_TYPE_MASK) {
-	case PMCMD_GET_PX_CNT: {
-
-		if (target_vm->pm.px_cnt == 0U) {
-			return -1;
-		}
-
-		if (copy_to_gpa(vm, &(target_vm->pm.px_cnt), param,
-					sizeof(target_vm->pm.px_cnt)) != 0) {
-			pr_err("%s: Unable copy param to vm\n", __func__);
-			return -1;
-		}
-		return 0;
-	}
-	case PMCMD_GET_PX_DATA: {
-		uint8_t pn;
-		struct cpu_px_data *px_data;
-
-		/* For now we put px data as per-vm,
-		 * If it is stored as per-cpu in the future,
-		 * we need to check PMCMD_VCPUID_MASK in cmd.
-		 */
-		if (target_vm->pm.px_cnt == 0U) {
-			return -1;
-		}
-
-		pn = (uint8_t)((cmd & PMCMD_STATE_NUM_MASK) >> PMCMD_STATE_NUM_SHIFT);
-		if (pn >= target_vm->pm.px_cnt) {
-			return -1;
-		}
-
-		px_data = target_vm->pm.px_data + pn;
-		if (copy_to_gpa(vm, px_data, param,
-						sizeof(struct cpu_px_data)) != 0) {
-			pr_err("%s: Unable copy param to vm\n", __func__);
-			return -1;
-		}
-
-		return 0;
-	}
-	case PMCMD_GET_CX_CNT: {
-
-		if (target_vm->pm.cx_cnt == 0U) {
-			return -1;
-		}
-
-		if (copy_to_gpa(vm, &(target_vm->pm.cx_cnt), param,
-					sizeof(target_vm->pm.cx_cnt)) != 0) {
-			pr_err("%s: Unable copy param to vm\n", __func__);
-			return -1;
-		}
-		return 0;
-	}
-	case PMCMD_GET_CX_DATA: {
-		uint8_t cx_idx;
-		struct cpu_cx_data *cx_data;
-
-		if (target_vm->pm.cx_cnt == 0U) {
-			return -1;
-		}
-
-		cx_idx = (uint8_t)
-			((cmd & PMCMD_STATE_NUM_MASK) >> PMCMD_STATE_NUM_SHIFT);
-		if ((cx_idx == 0U) || (cx_idx > target_vm->pm.cx_cnt)) {
-			return -1;
-		}
-
-		cx_data = target_vm->pm.cx_data + cx_idx;
-
-		if (copy_to_gpa(vm, cx_data, param,
-						sizeof(struct cpu_cx_data)) != 0) {
-			pr_err("%s: Unable copy param to vm\n", __func__);
-			return -1;
-		}
-
-		return 0;
-	}
-	default:
-		return -1;
-
-	}
+	return ret;
 }
 
 /**
