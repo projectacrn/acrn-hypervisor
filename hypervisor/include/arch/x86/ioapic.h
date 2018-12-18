@@ -68,6 +68,6 @@ struct gsi_table {
 
 extern struct gsi_table gsi_table[NR_MAX_GSI];
 extern uint32_t nr_gsi;
-extern uint8_t pic_ioapic_pin_map[NR_LEGACY_PIN];
+extern const uint8_t pic_ioapic_pin_map[NR_LEGACY_PIN];
 
 #endif /* IOAPIC_H */

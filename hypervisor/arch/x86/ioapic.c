@@ -57,7 +57,7 @@ static uint64_t legacy_irq_trigger_mode[NR_LEGACY_IRQ] = {
 	IOAPIC_RTE_TRGREDG, /* IRQ15*/
 };
 
-uint8_t pic_ioapic_pin_map[NR_LEGACY_PIN] = {
+const uint8_t pic_ioapic_pin_map[NR_LEGACY_PIN] = {
 	2U, /* pin0*/
 	1U, /* pin1*/
 	0U, /* pin2*/
