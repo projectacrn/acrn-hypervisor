@@ -15,7 +15,7 @@
 #include <logmsg.h>
 
 static bool skip_l1dfl_vmentry;
-int32_t ibrs_type;
+static int32_t ibrs_type;
 
 static void detect_ibrs(void)
 {
@@ -42,6 +42,11 @@ static void detect_ibrs(void)
 		}
 	}
 #endif
+}
+
+int32_t get_ibrs_type(void)
+{
+	return ibrs_type;
 }
 
 bool check_cpu_security_cap(void)
