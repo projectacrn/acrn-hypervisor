@@ -116,8 +116,6 @@ void init_cpu_pre(uint16_t pcpu_id)
 			panic("x2APIC is not present!");
 		}
 
-		detect_cpu_cap();
-
 		early_init_lapic();
 
 		init_percpu_lapic_id();
