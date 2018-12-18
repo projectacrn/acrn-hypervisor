@@ -75,7 +75,7 @@ static void enter_guest_mode(uint16_t pcpu_id)
 	cpu_dead();
 }
 
-static void bsp_boot_post(void)
+static void init_primary_cpu_post(void)
 {
 	/* Perform any necessary BSP initialization */
 	init_bsp();
@@ -96,7 +96,7 @@ static void bsp_boot_post(void)
 /* NOTE: this function is using temp stack, and after SWITCH_TO(runtime_sp, to)
  * it will switch to runtime stack.
  */
-void bsp_boot_init(void)
+void init_primary_cpu(void)
 {
 	uint64_t rsp;
 
@@ -105,7 +105,7 @@ void bsp_boot_init(void)
 	/* Switch to run-time stack */
 	rsp = (uint64_t)(&get_cpu_var(stack)[CONFIG_STACK_SIZE - 1]);
 	rsp &= ~(CPU_STACK_ALIGN - 1UL);
-	SWITCH_TO(rsp, bsp_boot_post);
+	SWITCH_TO(rsp, init_primary_cpu_post);
 }
 
 void init_secondary_cpu(void)
