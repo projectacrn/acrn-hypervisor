@@ -154,15 +154,15 @@ static void restore_lapic(const struct lapic_regs *regs)
 
 void suspend_lapic(void)
 {
-	uint32_t val;
+	uint64_t val;
 
 	saved_lapic_base_msr.value = msr_read(MSR_IA32_APIC_BASE);
 	save_lapic(&saved_lapic_regs);
 
 	/* disable APIC with software flag */
-	val = (uint32_t) msr_read(MSR_IA32_EXT_APIC_SIVR);
-	val = (~LAPIC_SVR_APIC_ENABLE_MASK) & val;
-	msr_write(MSR_IA32_EXT_APIC_SIVR, (uint64_t) val);
+	val = msr_read(MSR_IA32_EXT_APIC_SIVR);
+	val = (~(uint64_t)LAPIC_SVR_APIC_ENABLE_MASK) & val;
+	msr_write(MSR_IA32_EXT_APIC_SIVR, val);
 }
 
 void resume_lapic(void)
