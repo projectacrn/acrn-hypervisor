@@ -26,7 +26,7 @@
 #define VAPIC_FEATURE_POST_INTR			(1U << 4U)
 #define VAPIC_FEATURE_VX2APIC_MODE		(1U << 5U)
 
-struct cpu_capability {
+static struct cpu_capability {
 	uint8_t apicv_features;
 	uint8_t ept_features;
 
@@ -314,8 +314,8 @@ static inline bool is_vmx_disabled(void)
 	msr_val = msr_read(MSR_IA32_FEATURE_CONTROL);
 
 	/* Check if feature control is locked and vmx cannot be enabled */
-	if ((msr_val & MSR_IA32_FEATURE_CONTROL_LOCK) != 0U &&
-		(msr_val & MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX) == 0U) {
+	if (((msr_val & MSR_IA32_FEATURE_CONTROL_LOCK) != 0U) &&
+		((msr_val & MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX) == 0U)) {
 		return true;
 	}
 	return false;
