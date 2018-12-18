@@ -17,7 +17,7 @@
  */
 static inline struct ptirq_remapping_info *
 ptirq_lookup_entry_by_sid(uint32_t intr_type,
-		const union source_id *sid,const struct acrn_vm *vm)
+		const union source_id *sid, const struct acrn_vm *vm)
 {
 	uint16_t idx;
 	struct ptirq_remapping_info *entry;
@@ -470,19 +470,17 @@ void ptirq_softirq(uint16_t pcpu_id)
 		if (entry->intr_type == PTDEV_INTR_INTX) {
 			ptirq_handle_intx(vm, entry);
 		} else {
-			/* TODO: msi destmode check required */
-			(void)vlapic_intr_msi(vm,
+			if (msi != NULL) {
+				/* TODO: msi destmode check required */
+				(void)vlapic_intr_msi(vm, msi->vmsi_addr, msi->vmsi_data);
+				dev_dbg(ACRN_DBG_PTIRQ, "dev-assign: irq=0x%x MSI VR: 0x%x-0x%x",
+					entry->allocated_pirq,
+					msi->vmsi_data & 0xFFU,
+					irq_to_vector(entry->allocated_pirq));
+				dev_dbg(ACRN_DBG_PTIRQ, " vmsi_addr: 0x%llx vmsi_data: 0x%x",
 				        msi->vmsi_addr,
 				        msi->vmsi_data);
-			dev_dbg(ACRN_DBG_PTIRQ,
-				"dev-assign: irq=0x%x MSI VR: 0x%x-0x%x",
-				entry->allocated_pirq,
-				msi->vmsi_data & 0xFFU,
-				irq_to_vector(entry->allocated_pirq));
-			dev_dbg(ACRN_DBG_PTIRQ,
-				" vmsi_addr: 0x%llx vmsi_data: 0x%x",
-			        msi->vmsi_addr,
-			        msi->vmsi_data);
+			}
 		}
 	}
 }
@@ -511,6 +509,7 @@ void ptirq_intx_ack(struct acrn_vm *vm, uint8_t virt_pin,
 			break;
 		case PTDEV_VPIN_PIC:
 			vpic_set_irq(vm, virt_pin, GSI_SET_LOW);
+			break;
 		default:
 			/*
 			 * In this switch statement, vpin_src shall either be
