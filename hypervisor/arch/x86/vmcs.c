@@ -9,8 +9,6 @@
 #include <hypervisor.h>
 #include <cpu.h>
 
-#define DR7_INIT_VALUE			(0x400UL)
-
 static uint64_t cr0_host_mask;
 static uint64_t cr0_always_on_mask;
 static uint64_t cr0_always_off_mask;
@@ -26,8 +24,8 @@ bool is_vmx_disabled(void)
 	msr_val = msr_read(MSR_IA32_FEATURE_CONTROL);
 
 	/* Check if feature control is locked and vmx cannot be enabled */
-	if ((msr_val & MSR_IA32_FEATURE_CONTROL_LOCK) != 0U &&
-		(msr_val & MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX) == 0U) {
+	if (((msr_val & MSR_IA32_FEATURE_CONTROL_LOCK) != 0U) &&
+		((msr_val & MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX) == 0U)) {
 		return true;
 	}
 	return false;
@@ -149,8 +147,7 @@ static bool is_cr0_write_valid(struct acrn_vcpu *vcpu, uint64_t cr0)
 	 * CR0.PG = 1, CR4.PAE = 0 and IA32_EFER.LME = 1 is invalid.
 	 * CR0.PE = 0 and CR0.PG = 1 is invalid.
 	 */
-	if (((cr0 & CR0_PG) != 0UL) && !is_pae(vcpu)
-		&& ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL)) {
+	if (((cr0 & CR0_PG) != 0UL) && (!is_pae(vcpu)) && ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_LME_BIT) != 0UL)) {
 		return false;
 	}
 
@@ -358,10 +355,8 @@ void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 		return;
 	}
 
-	if (((cr4 ^ old_cr4) & (CR4_PGE | CR4_PSE | CR4_PAE |
-			CR4_SMEP | CR4_SMAP | CR4_PKE)) != 0UL) {
-		if (((cr4 & CR4_PAE) != 0UL) && is_paging_enabled(vcpu) &&
-				(is_long_mode(vcpu))) {
+	if (((cr4 ^ old_cr4) & (CR4_PGE | CR4_PSE | CR4_PAE | CR4_SMEP | CR4_SMAP | CR4_PKE)) != 0UL) {
+		if (((cr4 & CR4_PAE) != 0UL) && (is_paging_enabled(vcpu)) && (is_long_mode(vcpu))) {
 			load_pdptrs(vcpu);
 		}
 
@@ -609,8 +604,7 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	 * interrupts preemption timer - pg 2899 24.6.1
 	 */
 	/* enable external interrupt VM Exit */
-	value32 = check_vmx_ctrl(MSR_IA32_VMX_PINBASED_CTLS,
-			VMX_PINBASED_CTLS_IRQ_EXIT);
+	value32 = check_vmx_ctrl(MSR_IA32_VMX_PINBASED_CTLS, VMX_PINBASED_CTLS_IRQ_EXIT);
 
 	if (is_apicv_posted_intr_supported()) {
 		value32 |= VMX_PINBASED_CTLS_POST_IRQ;
@@ -631,16 +625,12 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	 * the IA32_VMX_PROCBASED_CTRLS MSR are always read as 1 --- A.3.2
 	 */
 	value32 = check_vmx_ctrl(MSR_IA32_VMX_PROCBASED_CTLS,
-			VMX_PROCBASED_CTLS_TSC_OFF |
-			/* VMX_PROCBASED_CTLS_RDTSC | */
-			VMX_PROCBASED_CTLS_TPR_SHADOW |
-			VMX_PROCBASED_CTLS_IO_BITMAP |
-			VMX_PROCBASED_CTLS_MSR_BITMAP |
-			VMX_PROCBASED_CTLS_SECONDARY);
+			 VMX_PROCBASED_CTLS_TSC_OFF | VMX_PROCBASED_CTLS_TPR_SHADOW |
+			 VMX_PROCBASED_CTLS_IO_BITMAP | VMX_PROCBASED_CTLS_MSR_BITMAP |
+			 VMX_PROCBASED_CTLS_SECONDARY);
 
 	/*Disable VM_EXIT for CR3 access*/
-	value32 &= ~(VMX_PROCBASED_CTLS_CR3_LOAD |
-			VMX_PROCBASED_CTLS_CR3_STORE);
+	value32 &= ~(VMX_PROCBASED_CTLS_CR3_LOAD | VMX_PROCBASED_CTLS_CR3_STORE);
 
 	/*
 	 * Disable VM_EXIT for invlpg execution.
@@ -655,11 +645,9 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 	 * guest (optional)
 	 */
 	value32 = check_vmx_ctrl(MSR_IA32_VMX_PROCBASED_CTLS2,
-			VMX_PROCBASED_CTLS2_VAPIC |
-			VMX_PROCBASED_CTLS2_EPT |
-			VMX_PROCBASED_CTLS2_RDTSCP |
-			VMX_PROCBASED_CTLS2_UNRESTRICT|
-			VMX_PROCBASED_CTLS2_VAPIC_REGS);
+			 VMX_PROCBASED_CTLS2_VAPIC | VMX_PROCBASED_CTLS2_EPT |
+			 VMX_PROCBASED_CTLS2_RDTSCP | VMX_PROCBASED_CTLS2_UNRESTRICT |
+			 VMX_PROCBASED_CTLS2_VAPIC_REGS);
 
 	if (vcpu->arch.vpid != 0U) {
 		value32 |= VMX_PROCBASED_CTLS2_VPID;
@@ -710,10 +698,8 @@ static void init_exec_ctrl(struct acrn_vcpu *vcpu)
 
 		exec_vmwrite16(VMX_GUEST_INTR_STATUS, 0U);
 		if (is_apicv_posted_intr_supported()) {
-			exec_vmwrite16(VMX_POSTED_INTR_VECTOR,
-					VECTOR_POSTED_INTR);
-			exec_vmwrite64(VMX_PIR_DESC_ADDR_FULL,
-					apicv_get_pir_desc_paddr(vcpu));
+			exec_vmwrite16(VMX_POSTED_INTR_VECTOR, VECTOR_POSTED_INTR);
+			exec_vmwrite64(VMX_PIR_DESC_ADDR_FULL, apicv_get_pir_desc_paddr(vcpu));
 		}
 	}
 
@@ -845,12 +831,9 @@ static void init_exit_ctrl(struct acrn_vcpu *vcpu)
 	 * saving of pre-emption timer on VMEXIT
 	 */
 	value32 = check_vmx_ctrl(MSR_IA32_VMX_EXIT_CTLS,
-			VMX_EXIT_CTLS_ACK_IRQ |
-			VMX_EXIT_CTLS_SAVE_PAT |
-			VMX_EXIT_CTLS_LOAD_PAT |
-			VMX_EXIT_CTLS_LOAD_EFER |
-			VMX_EXIT_CTLS_SAVE_EFER |
-			VMX_EXIT_CTLS_HOST_ADDR64);
+			 VMX_EXIT_CTLS_ACK_IRQ | VMX_EXIT_CTLS_SAVE_PAT |
+			 VMX_EXIT_CTLS_LOAD_PAT | VMX_EXIT_CTLS_LOAD_EFER |
+			 VMX_EXIT_CTLS_SAVE_EFER | VMX_EXIT_CTLS_HOST_ADDR64);
 
 	exec_vmwrite32(VMX_EXIT_CONTROLS, value32);
 	pr_dbg("VMX_EXIT_CONTROL: 0x%x ", value32);
