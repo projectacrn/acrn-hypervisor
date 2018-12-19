@@ -374,6 +374,20 @@ vmei_set_status(struct virtio_mei *vmei, enum vmei_status status)
 }
 
 static void
+vmei_rx_teardown(void *param)
+{
+	unsigned int i;
+	struct vmei_host_client *hclient = param;
+
+	if (hclient->client_fd > -1)
+		close(hclient->client_fd);
+	for (i = 0; i < VMEI_IOBUFS_MAX; i++)
+		free(hclient->send_bufs.bufs[i].iov_base);
+	free(hclient->recv_buf);
+	free(hclient);
+}
+
+static void
 vmei_host_client_destroy(const struct refcnt *ref)
 {
 	struct vmei_host_client *hclient;
@@ -389,20 +403,8 @@ vmei_host_client_destroy(const struct refcnt *ref)
 
 	if (hclient->rx_mevp)
 		mevent_delete(hclient->rx_mevp);
-}
-
-static void
-vmei_rx_teardown(void *param)
-{
-	unsigned int i;
-	struct vmei_host_client *hclient = param;
-
-	if (hclient->client_fd > -1)
-		close(hclient->client_fd);
-	for (i = 0; i < VMEI_IOBUFS_MAX; i++)
-		free(hclient->send_bufs.bufs[i].iov_base);
-	free(hclient->recv_buf);
-	free(hclient);
+	else
+		vmei_rx_teardown(hclient);
 }
 
 static struct vmei_host_client *
@@ -977,6 +979,8 @@ static void vmei_del_reset_event(struct virtio_mei *vmei)
 {
 	if (vmei->reset_mevp)
 		mevent_delete_close(vmei->reset_mevp);
+	else
+		vmei_reset_teardown(vmei);
 }
 
 static void vmei_rx_callback(int fd, enum ev_type type, void *param);
