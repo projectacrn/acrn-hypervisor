@@ -150,7 +150,7 @@ struct set_regions {
 	 * the max buffer size is one page.
 	 */
 	uint64_t regions_gpa;
-} __attribute__((aligned(8)));
+} __aligned(8);
 
 /**
  * @brief Info to change guest one page write protect permission
