@@ -34,7 +34,7 @@ struct trace_entry {
 		} fields_64;
 		char str[16];
 	} payload;
-} __attribute__((aligned(8)));
+} __aligned(8);
 
 static inline bool trace_check(uint16_t cpu_id)
 {

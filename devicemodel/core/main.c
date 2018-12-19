@@ -101,7 +101,7 @@ static cpuset_t cpumask;
 
 static void vm_loop(struct vmctx *ctx);
 
-static char vhm_request_page[4096] __attribute__ ((aligned(4096)));
+static char vhm_request_page[4096] __aligned(4096);
 
 static struct vhm_request *vhm_req_buf =
 				(struct vhm_request *)&vhm_request_page;

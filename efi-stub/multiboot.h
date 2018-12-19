@@ -38,6 +38,7 @@
 #define _MULTIBOOT_H
 
 #include <stdint.h>
+#include <types.h>
 
 struct multiboot_info;
 extern struct multiboot_info mbi;
@@ -144,7 +145,7 @@ struct multiboot_info {
 	uint32_t		unused_mi_vbe_interface_seg;
 	uint32_t		unused_mi_vbe_interface_off;
 	uint32_t	unused_mi_vbe_interface_len;
-}__attribute__((aligned(8)));
+}__aligned(8);
 
 
 /*
