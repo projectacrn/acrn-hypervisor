@@ -443,65 +443,58 @@ static bool init_secure_world_env(struct acrn_vcpu *vcpu,
 	return setup_trusty_info(vcpu, size, base_hpa);
 }
 
-bool initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param)
+bool initialize_trusty(struct acrn_vcpu *vcpu, const struct trusty_boot_param *boot_param)
 {
+	bool ret = true;
 	uint64_t trusty_entry_gpa, trusty_base_gpa, trusty_base_hpa;
 	uint32_t trusty_mem_size;
 	struct acrn_vm *vm = vcpu->vm;
-	struct trusty_boot_param boot_param;
 
-	(void)memset(&boot_param, 0U, sizeof(boot_param));
-	if (copy_from_gpa(vcpu->vm, &boot_param, param, sizeof(boot_param))
-									!= 0) {
-		pr_err("%s: Unable to copy trusty_boot_param\n", __func__);
-		return false;
-	}
-
-	switch (boot_param.version) {
+	switch (boot_param->version) {
 	case TRUSTY_VERSION_2:
-		trusty_entry_gpa = ((uint64_t)boot_param.entry_point) |
-			(((uint64_t)boot_param.entry_point_high) << 32U);
-		trusty_base_gpa = ((uint64_t)boot_param.base_addr) |
-			(((uint64_t)boot_param.base_addr_high) << 32U);
+		trusty_entry_gpa = ((uint64_t)boot_param->entry_point) |
+			(((uint64_t)boot_param->entry_point_high) << 32U);
+		trusty_base_gpa = ((uint64_t)boot_param->base_addr) |
+			(((uint64_t)boot_param->base_addr_high) << 32U);
 
 		/* copy rpmb_key from OSloader */
-		(void)memcpy_s(&g_key_info.rpmb_key[0][0], 64U,
-				&boot_param.rpmb_key[0], 64U);
-		(void)memset(&boot_param.rpmb_key[0], 0U, 64U);
+		(void)memcpy_s(&g_key_info.rpmb_key[0][0], 64U, &boot_param->rpmb_key[0], 64U);
 		break;
 	case TRUSTY_VERSION:
-		trusty_entry_gpa = (uint64_t)boot_param.entry_point;
-		trusty_base_gpa = (uint64_t)boot_param.base_addr;
+		trusty_entry_gpa = (uint64_t)boot_param->entry_point;
+		trusty_base_gpa = (uint64_t)boot_param->base_addr;
 		break;
 	default:
-		dev_dbg(ACRN_DBG_TRUSTY, "%s: Version(%u) not supported!\n",
-				__func__, boot_param.version);
-		return false;
+		pr_err("%s: Version(%u) not supported!\n", __func__, boot_param->version);
+		ret = false;
+		break;
 	}
 
-	trusty_mem_size = boot_param.mem_size;
+	if (ret == true) {
+		trusty_mem_size = boot_param->mem_size;
+		create_secure_world_ept(vm, trusty_base_gpa, trusty_mem_size,
+							TRUSTY_EPT_REBASE_GPA);
+		trusty_base_hpa = vm->sworld_control.sworld_memory.base_hpa;
 
-	create_secure_world_ept(vm, trusty_base_gpa, trusty_mem_size,
-						TRUSTY_EPT_REBASE_GPA);
-	trusty_base_hpa = vm->sworld_control.sworld_memory.base_hpa;
+		exec_vmwrite64(VMX_EPT_POINTER_FULL,
+				hva2hpa(vm->arch_vm.sworld_eptp) | (3UL << 3U) | 0x6UL);
 
-	exec_vmwrite64(VMX_EPT_POINTER_FULL,
-			hva2hpa(vm->arch_vm.sworld_eptp) | (3UL << 3U) | 0x6UL);
+		/* save Normal World context */
+		save_world_ctx(vcpu, &vcpu->arch.contexts[NORMAL_WORLD].ext_ctx);
 
-	/* save Normal World context */
-	save_world_ctx(vcpu, &vcpu->arch.contexts[NORMAL_WORLD].ext_ctx);
+		/* init secure world environment */
+		if (init_secure_world_env(vcpu,
+			(trusty_entry_gpa - trusty_base_gpa) + TRUSTY_EPT_REBASE_GPA,
+			trusty_base_hpa, trusty_mem_size)) {
 
-	/* init secure world environment */
-	if (init_secure_world_env(vcpu,
-		(trusty_entry_gpa - trusty_base_gpa) + TRUSTY_EPT_REBASE_GPA,
-		trusty_base_hpa, trusty_mem_size)) {
-
-		/* switch to Secure World */
-		vcpu->arch.cur_context = SECURE_WORLD;
-		return true;
+			/* switch to Secure World */
+			vcpu->arch.cur_context = SECURE_WORLD;
+		} else {
+			ret = false;
+		}
 	}
 
-	return false;
+	return ret;
 }
 
 void trusty_set_dseed(const void *dseed, uint8_t dseed_num)

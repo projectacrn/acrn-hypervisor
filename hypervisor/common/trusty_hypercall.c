@@ -67,6 +67,7 @@ int32_t hcall_world_switch(struct acrn_vcpu *vcpu)
 int32_t hcall_initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param)
 {
 	int32_t ret = 0;
+	struct trusty_boot_param boot_param;
 
 	if (vcpu->vm->sworld_control.flag.supported == 0UL) {
 		pr_err("Secure World is not supported!\n");
@@ -78,7 +79,11 @@ int32_t hcall_initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param)
 		pr_err("%s, must initialize Trusty from Normal World!\n", __func__);
 		ret = -EPERM;
 	} else {
-		if (!initialize_trusty(vcpu, param)) {
+		(void)memset(&boot_param, 0U, sizeof(boot_param));
+		if (copy_from_gpa(vcpu->vm, &boot_param, param, sizeof(boot_param)) != 0) {
+			pr_err("%s: Unable to copy trusty_boot_param\n", __func__);
+			ret = -EFAULT;
+		} else if (!initialize_trusty(vcpu, &boot_param)) {
 			ret = -ENODEV;
 		} else {
 			vcpu->vm->sworld_control.flag.active = 1UL;
