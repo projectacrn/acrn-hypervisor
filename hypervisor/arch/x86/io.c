@@ -378,6 +378,8 @@ int32_t pio_instr_vmexit_handler(struct acrn_vcpu *vcpu)
 		emulate_pio_post(vcpu, io_req);
 	} else if (status == IOREQ_PENDING) {
 		status = 0;
+	} else {
+		/* do nothing */
 	}
 
 	return status;
@@ -480,7 +482,7 @@ int32_t register_mmio_emulation_handler(struct acrn_vm *vm,
 	int32_t status = -EINVAL;
 	struct mem_io_node *mmio_node;
 
-	if ((vm->hw.created_vcpus > 0U) && vm->hw.vcpu_array[0].launched) {
+	if ((vm->hw.created_vcpus > 0U) && (vm->hw.vcpu_array[0].launched)) {
 		ASSERT(false, "register mmio handler after vm launched");
 		return status;
 	}
