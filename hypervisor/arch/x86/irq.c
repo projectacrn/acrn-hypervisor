@@ -6,6 +6,7 @@
 
 #include <hypervisor.h>
 #include <softirq.h>
+#include <ioapic.h>
 
 static spinlock_t exception_spinlock = { .head = 0U, .tail = 0U, };
 static spinlock_t irq_alloc_spinlock = { .head = 0U, .tail = 0U, };
@@ -69,7 +70,7 @@ static void free_irq_num(uint32_t irq)
 	uint64_t rflags;
 
 	if (irq < NR_IRQS) {
-		if (!irq_is_gsi(irq)) {
+		if (!ioapic_irq_is_gsi(irq)) {
 			spinlock_irqsave_obtain(&irq_alloc_spinlock, &rflags);
 			(void)bitmap_test_and_clear_nolock((uint16_t)(irq & 0x3FU),
 						     irq_alloc_bitmap + (irq >> 6U));
@@ -289,7 +290,7 @@ static inline bool irq_need_mask(const struct irq_desc *desc)
 {
 	/* level triggered gsi should be masked */
 	return (((desc->flags & IRQF_LEVEL) != 0U)
-		&& irq_is_gsi(desc->irq));
+		&& ioapic_irq_is_gsi(desc->irq));
 }
 
 static inline bool irq_need_unmask(const struct irq_desc *desc)
@@ -297,7 +298,7 @@ static inline bool irq_need_unmask(const struct irq_desc *desc)
 	/* level triggered gsi for non-ptdev should be unmasked */
 	return (((desc->flags & IRQF_LEVEL) != 0U)
 		&& ((desc->flags & IRQF_PT) == 0U)
-		&& irq_is_gsi(desc->irq));
+		&& ioapic_irq_is_gsi(desc->irq));
 }
 
 static inline void handle_irq(const struct irq_desc *desc)
@@ -305,7 +306,7 @@ static inline void handle_irq(const struct irq_desc *desc)
 	irq_action_t action = desc->action;
 
 	if (irq_need_mask(desc))  {
-		gsi_mask_irq(desc->irq);
+		ioapic_gsi_mask_irq(desc->irq);
 	}
 
 	/* Send EOI to LAPIC/IOAPIC IRR */
@@ -316,7 +317,7 @@ static inline void handle_irq(const struct irq_desc *desc)
 	}
 
 	if (irq_need_unmask(desc)) {
-		gsi_unmask_irq(desc->irq);
+		ioapic_gsi_unmask_irq(desc->irq);
 	}
 }
 
@@ -440,7 +441,7 @@ void init_default_irqs(uint16_t cpu_id)
 
 		/* we use ioapic only, disable legacy PIC */
 		disable_pic_irqs();
-		setup_ioapic_irqs();
+		ioapic_setup_irqs();
 		init_softirq();
 	}
 }

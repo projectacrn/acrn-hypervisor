@@ -11,7 +11,6 @@
 #include <gdt.h>
 #include <idt.h>
 #include <apicreg.h>
-#include <ioapic.h>
 #include <lapic.h>
 #include <msr.h>
 #include <io.h>

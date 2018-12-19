@@ -5,6 +5,7 @@
  */
 
 #include <hypervisor.h>
+#include <ioapic.h>
 #include "shell_priv.h"
 
 #define TEMP_STR_SIZE		60U
@@ -1120,6 +1121,7 @@ static int32_t get_ioapic_info(char *str_arg, size_t str_max_len)
 	char *str = str_arg;
 	uint32_t irq;
 	size_t len, size = str_max_len;
+	uint32_t ioapic_nr_gsi = 0U;
 
 	len = snprintf(str, size, "\r\nIRQ\tPIN\tRTE.HI32\tRTE.LO32\tVEC\tDST\tDM\tTM\tDELM\tIRR\tMASK");
 	if (len >= size) {
@@ -1128,13 +1130,19 @@ static int32_t get_ioapic_info(char *str_arg, size_t str_max_len)
 	size -= len;
 	str += len;
 
-	for (irq = 0U; irq < nr_gsi; irq++) {
-		void *addr = gsi_table[irq].addr;
-		uint8_t pin = gsi_table[irq].pin;
+	ioapic_nr_gsi = ioapic_get_nr_gsi ();
+	for (irq = 0U; irq < ioapic_nr_gsi; irq++) {
+		void *addr = ioapic_get_gsi_irq_addr (irq);
+		uint8_t pin = ioapic_irq_to_pin (irq);
 		union ioapic_rte rte;
 
 		bool irr, phys, level, mask;
 		uint32_t delmode, vector, dest;
+
+		/* Add NULL check for addr, INVALID_PIN check for pin */
+		if ((addr == NULL) || (!ioapic_is_pin_valid(pin))) {
+			goto overflow;
+		}
 
 		ioapic_get_rte_entry(addr, pin, &rte);
 
