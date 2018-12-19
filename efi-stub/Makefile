@@ -89,6 +89,10 @@ all: $(EFIBIN)
 install: $(EFIBIN) install-conf
 	install -D $(EFIBIN) $(DESTDIR)/usr/lib/acrn/$(HV_FILE).efi
 
+install-debug: $(HV_OBJDIR)/$(HV_FILE).map $(HV_OBJDIR)/$(HV_FILE).out
+	install -D $(HV_OBJDIR)/$(HV_FILE).out $(DESTDIR)/usr/lib/acrn/$(HV_FILE).efi.out
+	install -D $(HV_OBJDIR)/$(HV_FILE).map $(DESTDIR)/usr/lib/acrn/$(HV_FILE).efi.map
+
 $(EFIBIN): $(BOOT)
 
 $(EFI_OBJDIR)/boot.efi: $(EFI_OBJDIR)/boot.so
