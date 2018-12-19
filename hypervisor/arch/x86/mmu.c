@@ -222,9 +222,14 @@ void enable_smap(void)
  */
 void hv_access_memory_region_update(uint64_t base, uint64_t size)
 {
-	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (base & PDE_MASK),
-		((size + PDE_SIZE - 1UL) & PDE_MASK), 0UL, PAGE_USER,
-		&ppt_mem_ops, MR_MODIFY);
+	uint64_t region_end = base + size;
+
+	/*rounddown base to 2MBytes aligned.*/
+	base = round_pde_down(base);
+	size = region_end - base;
+
+	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, base, round_pde_up(size),
+		0UL, PAGE_USER,	&ppt_mem_ops, MR_MODIFY);
 }
 
 void init_paging(void)
@@ -243,7 +248,7 @@ void init_paging(void)
 	pr_dbg("HV MMU Initialization");
 
 	/* align to 2MB */
-	high64_max_ram = (p_e820_mem_info->mem_top + PDE_SIZE - 1UL) & PDE_MASK;
+	high64_max_ram = round_pde_up(p_e820_mem_info->mem_top);
 	if ((high64_max_ram > (CONFIG_PLATFORM_RAM_SIZE + PLATFORM_LO_MMIO_SIZE)) ||
 			(high64_max_ram < (1UL << 32U))) {
 		panic("Please configure HV_ADDRESS_SPACE correctly!\n");
@@ -268,7 +273,7 @@ void init_paging(void)
 		}
 	}
 
-	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, 0UL, (low32_max_ram + PDE_SIZE - 1UL) & PDE_MASK,
+	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, 0UL, round_pde_up(low32_max_ram),
 			PAGE_CACHE_WB, PAGE_CACHE_MASK, &ppt_mem_ops, MR_MODIFY);
 
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (1UL << 32U), high64_max_ram - (1UL << 32U),
@@ -285,20 +290,18 @@ void init_paging(void)
 
 	size = ((uint64_t)&ld_text_end - CONFIG_HV_RAM_START);
 	text_end = hv_hpa + size;
-	/*round up 'text_end' to 2MB aligned.*/
-	text_end = (text_end + PDE_SIZE - 1UL) & PDE_MASK;
 	/*
 	 * remove 'NX' bit for pages that contain hv code section, as by default XD bit is set for
 	 * all pages, including pages for guests.
 	 */
-	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, hv_hpa & PDE_MASK,
-			text_end - (hv_hpa & PDE_MASK), 0UL, PAGE_NX, &ppt_mem_ops, MR_MODIFY);
+	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, round_pde_down(hv_hpa),
+			round_pde_up(text_end) - round_pde_down(hv_hpa), 0UL,
+			PAGE_NX, &ppt_mem_ops, MR_MODIFY);
 
 	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, (uint64_t)get_reserve_sworld_memory_base(),
 			TRUSTY_RAM_SIZE * (CONFIG_MAX_VM_NUM - 1U), PAGE_USER, 0UL, &ppt_mem_ops, MR_MODIFY);
 
-#ifdef CONFIG_EFI_STUB
-	/*Hypvervisor need access below memory region on UEFI platform.*/
+#ifdef CONFIG_DMAR_PARSE_ENABLED
 	for (i = 0U; i < entries_count; i++) {
 		entry = p_e820 + i;
 		if (entry->type == E820_TYPE_ACPI_RECLAIM) {
