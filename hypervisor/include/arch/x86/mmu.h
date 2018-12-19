@@ -45,6 +45,7 @@
 
 #include <cpu.h>
 #include <page.h>
+#include <pgtable.h>
 
 /* Define cache line size (in bytes) */
 #define CACHE_LINE_SIZE		64U
@@ -63,6 +64,16 @@ static inline uint64_t round_page_up(uint64_t addr)
 static inline uint64_t round_page_down(uint64_t addr)
 {
 	return (addr & PAGE_MASK);
+}
+
+static inline uint64_t round_pde_up(uint64_t val)
+{
+	return (((val + (uint64_t)PDE_SIZE) - 1UL) & PDE_MASK);
+}
+
+static inline uint64_t round_pde_down(uint64_t val)
+{
+	return (val & PDE_MASK);
 }
 
 /**
