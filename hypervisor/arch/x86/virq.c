@@ -119,33 +119,32 @@ static int32_t vcpu_inject_vlapic_int(struct acrn_vcpu *vcpu)
 	 * through vmcs.
 	 */
 	if (is_apicv_intr_delivery_supported()) {
-		return -1;
+		ret = -1;
+	} else {
+		/* Query vLapic to get vector to inject */
+		ret = vlapic_pending_intr(vlapic, &vector);
+		if (ret != 0) {
+			/*
+			 * From the Intel SDM, Volume 3, 6.3.2 Section "Maskable
+			 * Hardware Interrupts":
+			 * - maskable interrupt vectors [16,255] can be delivered
+			 *   through the local APIC.
+			 */
+
+			if (!(vector >= 16U && vector <= 255U)) {
+				dev_dbg(ACRN_DBG_INTR, "invalid vector %d from local APIC", vector);
+				ret = -1;
+			} else {
+				exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
+					(vector & 0xFFU));
+
+				vlapic_intr_accepted(vlapic, vector);
+				ret = 0;
+			}
+		}
 	}
 
-	/* Query vLapic to get vector to inject */
-	ret = vlapic_pending_intr(vlapic, &vector);
-
-	/*
-	 * From the Intel SDM, Volume 3, 6.3.2 Section "Maskable
-	 * Hardware Interrupts":
-	 * - maskable interrupt vectors [16,255] can be delivered
-	 *   through the local APIC.
-	 */
-	if (ret == 0) {
-		return 0;
-	}
-
-	if (!(vector >= 16U && vector <= 255U)) {
-		dev_dbg(ACRN_DBG_INTR, "invalid vector %d from local APIC",
-				vector);
-		return -1;
-	}
-
-	exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
-		(vector & 0xFFU));
-
-	vlapic_intr_accepted(vlapic, vector);
-	return 0;
+	return ret;
 }
 
 static int32_t vcpu_do_pending_extint(const struct acrn_vcpu *vcpu)
