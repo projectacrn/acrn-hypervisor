@@ -136,44 +136,43 @@ static void io_instr_dest_handler(struct io_request *io_req)
  */
 void emulate_io_post(struct acrn_vcpu *vcpu)
 {
-	if (get_vhm_req_state(vcpu->vm, vcpu->vcpu_id)
-		!= REQ_STATE_COMPLETE) {
-		return;
-	}
-
-	/*
-	 * If vcpu is in Zombie state and will be destroyed soon. Just
-	 * mark ioreq done and don't resume vcpu.
-	 */
-	if (vcpu->state == VCPU_ZOMBIE) {
-		complete_ioreq(vcpu, NULL);
-		return;
-	}
-
-	switch (vcpu->req.type) {
-	case REQ_MMIO:
-		request_vcpu_pre_work(vcpu, ACRN_VCPU_MMIO_COMPLETE);
-		break;
-
-	case REQ_PORTIO:
-	case REQ_PCICFG:
-		/* REQ_PORTIO on 0xcf8 & 0xcfc may switch to REQ_PCICFG in some
-		 * cases. It works to apply the post-work for REQ_PORTIO on
-		 * REQ_PCICFG because the format of the first 28 bytes of
-		 * REQ_PORTIO & REQ_PCICFG requests are exactly the same and
-		 * post-work is mainly interested in the read value.
+	if (get_vhm_req_state(vcpu->vm, vcpu->vcpu_id) == REQ_STATE_COMPLETE) {
+		/*
+		 * If vcpu is in Zombie state and will be destroyed soon. Just
+		 * mark ioreq done and don't resume vcpu.
 		 */
-		dm_emulate_pio_post(vcpu);
-		break;
+		if (vcpu->state == VCPU_ZOMBIE) {
+			complete_ioreq(vcpu, NULL);
+		} else {
+			switch (vcpu->req.type) {
+			case REQ_MMIO:
+				request_vcpu_pre_work(vcpu, ACRN_VCPU_MMIO_COMPLETE);
+				break;
 
-	default:
-		/* REQ_WP can only be triggered on writes which do not need
-		 * post-work. Just mark the ioreq done. */
-		complete_ioreq(vcpu, NULL);
-		break;
+			case REQ_PORTIO:
+			case REQ_PCICFG:
+				/*
+				 * REQ_PORTIO on 0xcf8 & 0xcfc may switch to REQ_PCICFG in some
+				 * cases. It works to apply the post-work for REQ_PORTIO on
+				 * REQ_PCICFG because the format of the first 28 bytes of
+				 * REQ_PORTIO & REQ_PCICFG requests are exactly the same and
+				 * post-work is mainly interested in the read value.
+				 */
+				dm_emulate_pio_post(vcpu);
+				break;
+
+			default:
+				/*
+				 * REQ_WP can only be triggered on writes which do not need
+				 * post-work. Just mark the ioreq done.
+				 */
+				complete_ioreq(vcpu, NULL);
+				break;
+			}
+
+			resume_vcpu(vcpu);
+		}
 	}
-
-	resume_vcpu(vcpu);
 }
 
 /**
@@ -257,7 +256,8 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 			continue;
 		} else if (!((address >= base) && ((address + size) <= end))) {
 			pr_fatal("Err MMIO, address:0x%llx, size:%x", address, size);
-			return -EIO;
+			status = -EIO;
+			break;
 		} else {
 			/* Handle this MMIO operation */
 			if (mmio_handler->read_write != NULL) {
@@ -483,39 +483,35 @@ int32_t register_mmio_emulation_handler(struct acrn_vm *vm,
 	struct mem_io_node *mmio_node;
 
 	if ((vm->hw.created_vcpus > 0U) && (vm->hw.vcpu_array[0].launched)) {
-		ASSERT(false, "register mmio handler after vm launched");
-		return status;
-	}
+		pr_err("register mmio handler after vm launched");
+	} else {
+		/* Ensure both a read/write handler and range check function exist */
+		if ((read_write != NULL) && (end > start)) {
+			if (vm->emul_mmio_regions >= CONFIG_MAX_EMULATED_MMIO_REGIONS) {
+				pr_err("the emulated mmio region is out of range");
+			} else {
+				mmio_node = &(vm->emul_mmio[vm->emul_mmio_regions]);
+				/* Fill in information for this node */
+				mmio_node->read_write = read_write;
+				mmio_node->handler_private_data = handler_private_data;
+				mmio_node->range_start = start;
+				mmio_node->range_end = end;
 
-	/* Ensure both a read/write handler and range check function exist */
-	if ((read_write != NULL) && (end > start)) {
+				(vm->emul_mmio_regions)++;
 
-		if (vm->emul_mmio_regions >= CONFIG_MAX_EMULATED_MMIO_REGIONS) {
-			pr_err("the emulated mmio region is out of range");
-			return status;
+				/*
+				 * SOS would map all its memory at beginning, so we
+				 * should unmap it. But UOS will not, so we shouldn't
+				 * need to unmap it.
+				 */
+				if (is_vm0(vm)) {
+					ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp, start, end - start);
+				}
+
+				/* Return success */
+				status = 0;
+			}
 		}
-		mmio_node = &(vm->emul_mmio[vm->emul_mmio_regions]);
-		/* Fill in information for this node */
-		mmio_node->read_write = read_write;
-		mmio_node->handler_private_data = handler_private_data;
-		mmio_node->range_start = start;
-		mmio_node->range_end = end;
-
-		(vm->emul_mmio_regions)++;
-
-		/*
-		 * SOS would map all its memory at beginning, so we
-		 * should unmap it. But UOS will not, so we shouldn't
-		 * need to unmap it.
-		 */
-		if (is_vm0(vm)) {
-			ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-				start, end - start);
-		}
-
-		/* Return success */
-		status = 0;
-
 	}
 
 	/* Return status to caller */
