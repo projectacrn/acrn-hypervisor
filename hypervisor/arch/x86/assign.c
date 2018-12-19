@@ -755,6 +755,10 @@ int32_t ptirq_add_msix_remapping(struct acrn_vm *vm, uint16_t virt_bdf,
 		vector_added++;
 	}
 
+	if (vector_added != vector_count) {
+		ptirq_remove_msix_remapping(vm, virt_bdf, vector_added);
+	}
+
 	return (vector_added == vector_count) ? 0 : -ENODEV;
 }
 
