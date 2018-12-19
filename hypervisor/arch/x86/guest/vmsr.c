@@ -220,37 +220,35 @@ uint32_t vmsr_get_guest_msr_index(uint32_t msr)
 
 static void enable_msr_interception(uint8_t *bitmap, uint32_t msr_arg, uint32_t mode)
 {
-	uint8_t *read_map;
-	uint8_t *write_map;
+	uint8_t *read_map = bitmap;
+	uint8_t *write_map = bitmap + 2048;
 	uint32_t msr = msr_arg;
 	uint8_t msr_bit;
 	uint32_t msr_index;
-	/* low MSR */
-	if (msr < 0x1FFFU) {
-		read_map = bitmap;
-		write_map = bitmap + 2048;
-	} else if ((msr >= 0xc0000000U) && (msr <= 0xc0001fffU)) {
-		read_map = bitmap + 1024;
-		write_map = bitmap + 3072;
-	} else {
-		pr_err("Invalid MSR");
-		return;
-	}
 
-	msr &= 0x1FFFU;
-	msr_bit = 1U << (msr & 0x7U);
-	msr_index = msr >> 3U;
+	if ((msr <= 0x1FFFU) || ((msr >= 0xc0000000U) && (msr <= 0xc0001fffU))) {
+		if ((msr & 0xc0000000U) != 0U) {
+			read_map = read_map + 1024;
+			write_map = write_map + 1024;
+		}
 
-	if ((mode & INTERCEPT_READ) == INTERCEPT_READ) {
-		read_map[msr_index] |= msr_bit;
-	} else {
-		read_map[msr_index] &= ~msr_bit;
-	}
+		msr &= 0x1FFFU;
+		msr_bit = 1U << (msr & 0x7U);
+		msr_index = msr >> 3U;
 
-	if ((mode & INTERCEPT_WRITE) == INTERCEPT_WRITE) {
-		write_map[msr_index] |= msr_bit;
+		if ((mode & INTERCEPT_READ) == INTERCEPT_READ) {
+			read_map[msr_index] |= msr_bit;
+		} else {
+			read_map[msr_index] &= ~msr_bit;
+		}
+
+		if ((mode & INTERCEPT_WRITE) == INTERCEPT_WRITE) {
+			write_map[msr_index] |= msr_bit;
+		} else {
+			write_map[msr_index] &= ~msr_bit;
+		}
 	} else {
-		write_map[msr_index] &= ~msr_bit;
+		pr_err("%s, Invalid MSR: 0x%x", __func__, msr);
 	}
 }
 
