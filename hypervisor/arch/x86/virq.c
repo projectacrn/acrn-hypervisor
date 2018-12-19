@@ -253,7 +253,7 @@ static int32_t vcpu_inject_hi_exception(struct acrn_vcpu *vcpu)
 	uint32_t vector = vcpu->arch.exception_info.exception;
 	int32_t ret;
 
-	if (vector == IDT_MC || vector == IDT_BP || vector == IDT_DB) {
+	if ((vector == IDT_MC) || (vector == IDT_BP) || (vector == IDT_DB)) {
 		vcpu_inject_exception(vcpu, vector);
 		ret = 1;
 	} else {
