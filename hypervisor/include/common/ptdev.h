@@ -14,10 +14,8 @@
 
 #define INVALID_PTDEV_ENTRY_ID 0xffffU
 
-enum ptirq_vpin_source {
-	PTDEV_VPIN_IOAPIC,
-	PTDEV_VPIN_PIC,
-};
+#define PTDEV_VPIN_IOAPIC	0x0U
+#define	PTDEV_VPIN_PIC		0x1U
 
 #define DEFINE_MSI_SID(name, a, b)	\
 union source_id (name) = {.msi_id = {.bdf = (a), .entry_nr = (b)} }
