@@ -73,7 +73,7 @@ void reset_vm_ioreqs(struct acrn_vm *vm)
 	}
 }
 
-static inline bool has_complete_ioreq(struct acrn_vcpu *vcpu)
+static inline bool has_complete_ioreq(const struct acrn_vcpu *vcpu)
 {
 	return (get_vhm_req_state(vcpu->vm, vcpu->vcpu_id) == REQ_STATE_COMPLETE);
 }
@@ -169,13 +169,13 @@ uint32_t get_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id)
 
 	req_buf = (union vhm_request_buffer *)vm->sw.io_shared_page;
 	if (req_buf == NULL) {
-		return (uint32_t)-1;
+	        state =  0xffffffffU;
+	} else {
+		stac();
+		vhm_req = &req_buf->req_queue[vhm_req_id];
+		state = atomic_load32(&vhm_req->processed);
+		clac();
 	}
-
-	stac();
-	vhm_req = &req_buf->req_queue[vhm_req_id];
-	state = atomic_load32(&vhm_req->processed);
-	clac();
 
 	return state;
 }
@@ -186,12 +186,10 @@ void set_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id, uint32_t state)
 	struct vhm_request *vhm_req;
 
 	req_buf = (union vhm_request_buffer *)vm->sw.io_shared_page;
-	if (req_buf == NULL) {
-		return;
+	if (req_buf != NULL) {
+		stac();
+		vhm_req = &req_buf->req_queue[vhm_req_id];
+		atomic_store32(&vhm_req->processed, state);
+		clac();
 	}
-
-	stac();
-	vhm_req = &req_buf->req_queue[vhm_req_id];
-	atomic_store32(&vhm_req->processed, state);
-	clac();
 }
