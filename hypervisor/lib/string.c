@@ -17,11 +17,11 @@ static inline bool is_space(char c)
 static inline char hex_digit_value (char ch)
 {
 	char c;
-	if ('0' <= ch && ch <= '9') {
+	if (('0' <= ch) && (ch <= '9')) {
 		c = ch - '0';
-	} else if ('a' <= ch && ch <= 'f') {
+	} else if (('a' <= ch) && (ch <= 'f')) {
 		c = ch - 'a' + 10;
-	} else if ('A' <= ch && ch <= 'F') {
+	} else if (('A' <= ch) && (ch <= 'F')) {
 		c = ch - 'A' + 10;
 	} else {
 		c = -1;
@@ -32,7 +32,7 @@ static inline char hex_digit_value (char ch)
 /*
  * Convert a string to a long integer - decimal support only.
  */
-long strtol_deci(const char *nptr)
+int64_t strtol_deci(const char *nptr)
 {
 	const char *s = nptr;
 	char c;
@@ -105,7 +105,7 @@ long strtol_deci(const char *nptr)
 		/* There is no overflow and no leading '-' exists. In such case
 		 * acc already holds the right number. No action required. */
 	}
-	return (long)acc;
+	return (int64_t)acc;
 }
 
 /*
