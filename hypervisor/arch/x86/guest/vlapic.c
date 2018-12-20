@@ -124,6 +124,9 @@ static uint16_t vm_apicid2vcpu_id(struct acrn_vm *vm, uint8_t lapicid)
 	return phys_cpu_num;
 }
 
+/*
+ * @pre vm != NULL
+ */
 static uint64_t
 vm_active_cpus(const struct acrn_vm *vm)
 {
@@ -138,6 +141,9 @@ vm_active_cpus(const struct acrn_vm *vm)
 	return dmask;
 }
 
+/*
+ * @pre vlapic != NULL
+ */
 uint32_t
 vlapic_get_apicid(const struct acrn_vlapic *vlapic)
 {
@@ -151,6 +157,9 @@ vlapic_get_apicid(const struct acrn_vlapic *vlapic)
 	return apicid;
 }
 
+/*
+ * @pre vlapic != NULL
+ */
 static inline uint32_t
 vlapic_build_id(const struct acrn_vlapic *vlapic)
 {
@@ -350,7 +359,7 @@ static uint32_t vlapic_get_ccr(const struct acrn_vlapic *vlapic)
 
 	vtimer = &vlapic->vtimer;
 
-	if ((vtimer->tmicr != 0U) && !vlapic_lvtt_tsc_deadline(vlapic)) {
+	if ((vtimer->tmicr != 0U) && (!vlapic_lvtt_tsc_deadline(vlapic))) {
 		uint64_t fire_tsc = vtimer->timer.fire_tsc;
 
 		if (now < fire_tsc) {
@@ -2051,6 +2060,9 @@ static void vlapic_timer_expired(void *data)
 	}
 }
 
+/*
+ * @pre vm != NULL
+ */
 static inline bool is_x2apic_enabled(const struct acrn_vlapic *vlapic)
 {
 	bool ret;
