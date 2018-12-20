@@ -264,7 +264,7 @@ void vlapic_set_tmr_one_vec(struct acrn_vlapic *vlapic, uint32_t delmode,
 		uint32_t vector, bool level);
 
 void vlapic_apicv_batch_set_tmr(struct acrn_vlapic *vlapic);
-uint32_t vlapic_get_apicid(struct acrn_vlapic *vlapic);
+uint32_t vlapic_get_apicid(const struct acrn_vlapic *vlapic);
 int32_t vlapic_create(struct acrn_vcpu *vcpu);
 /*
  *  @pre vcpu != NULL
