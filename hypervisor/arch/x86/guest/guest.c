@@ -75,85 +75,85 @@ static int32_t local_gva2gpa_common(struct acrn_vcpu *vcpu, const struct page_wa
 {
 	uint32_t i;
 	uint64_t index;
-	uint32_t shift;
+	uint32_t shift = 12U;
 	void *base;
-	uint64_t entry;
-	uint64_t addr, page_size;
+	uint64_t entry = 0;
+	uint64_t addr;
+	uint64_t page_size = PAGE_SIZE_4K;
 	int32_t ret = 0;
 	int32_t fault = 0;
 	bool is_user_mode_addr = true;
 	bool is_page_rw_flags_on = true;
 
 	if (pw_info->level < 1U) {
-		return -EINVAL;
+		fault = 1;
+	} else {
+		addr = pw_info->top_entry;
+		i = pw_info->level;
+		stac();
 	}
 
-	addr = pw_info->top_entry;
-	i = pw_info->level;
-	stac();
-	while (i != 0U) {
+	while ((i != 0U) && (fault == 0)) {
 		i--;
 
 		addr = addr & IA32E_REF_MASK;
 		base = gpa2hva(vcpu->vm, addr);
-		if (base == NULL) {
-			ret = -EFAULT;
-			goto out;
-		}
+		if (base != NULL) {
+			shift = (i * pw_info->width) + 12U;
+			index = (gva >> shift) & ((1UL << pw_info->width) - 1UL);
+			page_size = 1UL << shift;
 
-		shift = (i * pw_info->width) + 12U;
-		index = (gva >> shift) & ((1UL << pw_info->width) - 1UL);
-		page_size = 1UL << shift;
+			if (pw_info->width == 10U) {
+				uint32_t *base32 = (uint32_t *)base;
+				/* 32bit entry */
+				entry = (uint64_t)(*(base32 + index));
+			} else {
+				uint64_t *base64 = (uint64_t *)base;
+				entry = *(base64 + index);
+			}
 
-		if (pw_info->width == 10U) {
-			uint32_t *base32 = (uint32_t *)base;
-			/* 32bit entry */
-			entry = (uint64_t)(*(base32 + index));
-		} else {
-			uint64_t *base64 = (uint64_t *)base;
-			entry = *(base64 + index);
-		}
+			/* check if the entry present */
+			if ((entry & PAGE_PRESENT) == 0U) {
+				fault = 1;
+			} else {
 
-		/* check if the entry present */
-		if ((entry & PAGE_PRESENT) == 0U) {
-			ret = -EFAULT;
-			goto out;
-		}
-
-		/* check for R/W */
-		if ((entry & PAGE_RW) == 0U) {
-			if (pw_info->is_write_access) {
-				/* Case1: Supermode and wp is 1
-				 * Case2: Usermode */
-				if (pw_info->is_user_mode_access ||
-						pw_info->wp) {
-					fault = 1;
-					goto out;
+				/* check for R/W */
+				if ((entry & PAGE_RW) == 0U) {
+					if ((pw_info->is_write_access)  &&
+					    (pw_info->is_user_mode_access || pw_info->wp)) {
+						/* Case1: Supermode and wp is 1
+						 * Case2: Usermode */
+						fault = 1;
+					}
+					is_page_rw_flags_on = false;
 				}
 			}
-			is_page_rw_flags_on = false;
-		}
-
-		/* check for nx, since for 32-bit paing, the XD bit is
-		 * reserved(0), use the same logic as PAE/4-level paging */
-		if (pw_info->is_inst_fetch && pw_info->nxe &&
-		    ((entry & PAGE_NX) != 0U)) {
+		} else {
 			fault = 1;
-			goto out;
 		}
 
-		/* check for U/S */
-		if ((entry & PAGE_USER) == 0U) {
-			is_user_mode_addr = false;
-
-			if (pw_info->is_user_mode_access) {
+		if (fault == 0) {
+			/* check for nx, since for 32-bit paing, the XD bit is
+			 * reserved(0), use the same logic as PAE/4-level paging */
+			if (pw_info->is_inst_fetch && pw_info->nxe &&
+			    ((entry & PAGE_NX) != 0U)) {
 				fault = 1;
-				goto out;
 			}
+
+			/* check for U/S */
+			if ((entry & PAGE_USER) == 0U) {
+				is_user_mode_addr = false;
+
+				if (pw_info->is_user_mode_access) {
+					fault = 1;
+				}
+			}
+
 		}
 
-		if (pw_info->pse && ((i > 0U) && ((entry & PAGE_PSE) != 0U))) {
-			break;
+		if ((fault == 0) && pw_info->pse &&
+			((i > 0U) && ((entry & PAGE_PSE) != 0U))) {
+				break;
 		}
 		addr = entry;
 	}
@@ -163,22 +163,19 @@ static int32_t local_gva2gpa_common(struct acrn_vcpu *vcpu, const struct page_wa
 	 * Also SMAP/SMEP only impact the supervisor-mode access.
 	 */
 	/* if smap is enabled and supervisor-mode access */
-	if (pw_info->is_smap_on && !pw_info->is_user_mode_access &&
+	if (!fault && pw_info->is_smap_on && !pw_info->is_user_mode_access &&
 			is_user_mode_addr) {
 		bool rflags_ac = ((vcpu_get_rflags(vcpu) & RFLAGS_AC) != 0UL);
 
 		/* read from user mode address, eflags.ac = 0 */
 		if (!pw_info->is_write_access && !rflags_ac) {
 			fault = 1;
-			goto out;
-		}
+		} else if (pw_info->is_write_access) {
+			/* write to user mode address */
 
-		/* write to user mode address */
-		if (pw_info->is_write_access) {
 			/* cr0.wp = 0, eflags.ac = 0 */
 			if (!pw_info->wp && !rflags_ac) {
 				fault = 1;
-				goto out;
 			}
 
 			/* cr0.wp = 1, eflags.ac = 1, r/w flag is 0
@@ -186,30 +183,28 @@ static int32_t local_gva2gpa_common(struct acrn_vcpu *vcpu, const struct page_wa
 			 */
 			if (pw_info->wp && rflags_ac && !is_page_rw_flags_on) {
 				fault = 1;
-				goto out;
 			}
 
 			/* cr0.wp = 1, eflags.ac = 0 */
 			if (pw_info->wp && !rflags_ac) {
 				fault = 1;
-				goto out;
 			}
 		}
 	}
 
 	/* instruction fetch from user-mode address, smep on */
-	if (pw_info->is_smep_on && !pw_info->is_user_mode_access &&
+	if (!fault && pw_info->is_smep_on && !pw_info->is_user_mode_access &&
 			is_user_mode_addr && pw_info->is_inst_fetch) {
 		fault = 1;
-		goto out;
 	}
 
-	entry >>= shift;
-	/* shift left 12bit more and back to clear XD/Prot Key/Ignored bits */
-	entry <<= (shift + 12U);
-	entry >>= 12U;
-	*gpa = entry | (gva & (page_size - 1UL));
-out:
+	if (fault == 0) {
+		entry >>= shift;
+		/* shift left 12bit more and back to clear XD/Prot Key/Ignored bits */
+		entry <<= (shift + 12U);
+		entry >>= 12U;
+		*gpa = entry | (gva & (page_size - 1UL));
+	}
 
 	clac();
 	if (fault != 0) {
@@ -226,28 +221,21 @@ static int32_t local_gva2gpa_pae(struct acrn_vcpu *vcpu, struct page_walk_info *
 	uint64_t *base;
 	uint64_t entry;
 	uint64_t addr;
-	int32_t ret;
+	int32_t ret = -EFAULT;
 
 	addr = pw_info->top_entry & 0xFFFFFFF0U;
 	base = (uint64_t *)gpa2hva(vcpu->vm, addr);
-	if (base == NULL) {
-		ret = -EFAULT;
-		goto out;
+	if (base != NULL) {
+		index = (gva >> 30U) & 0x3UL;
+		entry = base[index];
+
+		if (entry & PAGE_PRESENT) {
+			pw_info->level = 2U;
+			pw_info->top_entry = entry;
+			ret = local_gva2gpa_common(vcpu, pw_info, gva, gpa, err_code);
+		}
 	}
 
-	index = (gva >> 30U) & 0x3UL;
-	entry = base[index];
-
-	if ((entry & PAGE_PRESENT) == 0U) {
-		ret = -EFAULT;
-		goto out;
-	}
-
-	pw_info->level = 2U;
-	pw_info->top_entry = entry;
-	ret = local_gva2gpa_common(vcpu, pw_info, gva, gpa, err_code);
-
-out:
 	return ret;
 }
 
