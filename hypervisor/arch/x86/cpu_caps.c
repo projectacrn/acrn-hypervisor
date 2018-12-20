@@ -53,17 +53,19 @@ bool cpu_has_cap(uint32_t bit)
 
 bool has_monitor_cap(void)
 {
+	bool ret = false;
+
 	if (cpu_has_cap(X86_FEATURE_MONITOR)) {
 		/* don't use monitor for CPU (family: 0x6 model: 0x5c)
 		 * in hypervisor, but still expose it to the guests and
 		 * let them handle it correctly
 		 */
 		if ((boot_cpu_data.family != 0x6U) || (boot_cpu_data.model != 0x5cU)) {
-			return true;
+			ret = true;
 		}
 	}
 
-	return false;
+	return ret;
 }
 
 static inline bool is_fast_string_erms_supported_and_enabled(void)
@@ -133,42 +135,36 @@ static void detect_apicv_cap(void)
 	uint64_t msr_val;
 
 	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS);
+	/* must support TPR shadow */
 	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS_TPR_SHADOW)) {
 		features |= VAPIC_FEATURE_TPR_SHADOW;
-	} else {
-		/* must support TPR shadow */
-		return;
-	}
 
-	msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
-	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC)) {
-		features |= VAPIC_FEATURE_VIRT_ACCESS;
-		if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC_REGS)) {
-			features |= VAPIC_FEATURE_VIRT_REG;
-		} else {
-			/* platform may only support APICV access */
-			cpu_caps.apicv_features = features;
-			return;
-		}
-	} else {
+		msr_val = msr_read(MSR_IA32_VMX_PROCBASED_CTLS2);
 		/* must support APICV access */
-		return;
-	}
+		if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC)) {
+			features |= VAPIC_FEATURE_VIRT_ACCESS;
+			if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VAPIC_REGS)) {
+				features |= VAPIC_FEATURE_VIRT_REG;
 
-	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VX2APIC)) {
-		features |= VAPIC_FEATURE_VX2APIC_MODE;
-	}
+				if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VX2APIC)) {
+					features |= VAPIC_FEATURE_VX2APIC_MODE;
+				}
 
-	if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VIRQ)) {
-		features |= VAPIC_FEATURE_INTR_DELIVERY;
+				if (is_ctrl_setting_allowed(msr_val, VMX_PROCBASED_CTLS2_VIRQ)) {
+					features |= VAPIC_FEATURE_INTR_DELIVERY;
 
-		msr_val = msr_read(MSR_IA32_VMX_PINBASED_CTLS);
-		if (is_ctrl_setting_allowed(msr_val,
-						VMX_PINBASED_CTLS_POST_IRQ)) {
-			features |= VAPIC_FEATURE_POST_INTR;
+					msr_val = msr_read(MSR_IA32_VMX_PINBASED_CTLS);
+					if (is_ctrl_setting_allowed(msr_val, VMX_PINBASED_CTLS_POST_IRQ)) {
+						features |= VAPIC_FEATURE_POST_INTR;
+					}
+				}
+				cpu_caps.apicv_features = features;
+			} else {
+				/* platform may only support APICV access */
+				cpu_caps.apicv_features = features;
+			}
 		}
 	}
-	cpu_caps.apicv_features = features;
 }
 
 static void detect_vmx_mmu_cap(void)
@@ -360,93 +356,62 @@ int32_t detect_hardware_support(void)
 	/* Long Mode (x86-64, 64-bit support) */
 	if (!cpu_has_cap(X86_FEATURE_LM)) {
 		pr_fatal("%s, LM not supported\n", __func__);
-		return -ENODEV;
-	}
-	if ((boot_cpu_data.phys_bits == 0U) ||
+		ret = -ENODEV;
+	} else if ((boot_cpu_data.phys_bits == 0U) ||
 		(boot_cpu_data.virt_bits == 0U)) {
-		pr_fatal("%s, can't detect Linear/Physical Address size\n",
-			__func__);
-		return -ENODEV;
-	}
-
-	/* lapic TSC deadline timer */
-	if (!cpu_has_cap(X86_FEATURE_TSC_DEADLINE)) {
+		pr_fatal("%s, can't detect Linear/Physical Address size\n", __func__);
+		ret = -ENODEV;
+	} else if (!cpu_has_cap(X86_FEATURE_TSC_DEADLINE)) {
+		/* lapic TSC deadline timer */
 		pr_fatal("%s, TSC deadline not supported\n", __func__);
-		return -ENODEV;
-	}
-
-	/* Execute Disable */
-	if (!cpu_has_cap(X86_FEATURE_NX)) {
+		ret = -ENODEV;
+	} else if (!cpu_has_cap(X86_FEATURE_NX)) {
+		/* Execute Disable */
 		pr_fatal("%s, NX not supported\n", __func__);
-		return -ENODEV;
-	}
-
-	/* Supervisor-Mode Execution Prevention */
-	if (!cpu_has_cap(X86_FEATURE_SMEP)) {
+		ret = -ENODEV;
+	} else if (!cpu_has_cap(X86_FEATURE_SMEP)) {
+		/* Supervisor-Mode Execution Prevention */
 		pr_fatal("%s, SMEP not supported\n", __func__);
-		return -ENODEV;
-	}
-
-	/* Supervisor-Mode Access Prevention */
-	if (!cpu_has_cap(X86_FEATURE_SMAP)) {
+		ret = -ENODEV;
+	} else if (!cpu_has_cap(X86_FEATURE_SMAP)) {
+		/* Supervisor-Mode Access Prevention */
 		pr_fatal("%s, SMAP not supported\n", __func__);
-		return -ENODEV;
-	}
-
-	if (!cpu_has_cap(X86_FEATURE_MTRR)) {
+		ret = -ENODEV;
+	} else if (!cpu_has_cap(X86_FEATURE_MTRR)) {
 		pr_fatal("%s, MTRR not supported\n", __func__);
-		return -ENODEV;
-	}
-
-	if (!cpu_has_cap(X86_FEATURE_PAGE1GB)) {
+		ret = -ENODEV;
+	} else if (!cpu_has_cap(X86_FEATURE_PAGE1GB)) {
 		pr_fatal("%s, not support 1GB page\n", __func__);
-		return -ENODEV;
-	}
-
-	if (!cpu_has_cap(X86_FEATURE_VMX)) {
+		ret = -ENODEV;
+	} else if (!cpu_has_cap(X86_FEATURE_VMX)) {
 		pr_fatal("%s, vmx not supported\n", __func__);
-		return -ENODEV;
-	}
-
-	if (!is_fast_string_erms_supported_and_enabled()) {
-		return -ENODEV;
-	}
-
-	if (!cpu_has_vmx_unrestricted_guest_cap()) {
+		ret = -ENODEV;
+	} else if (!is_fast_string_erms_supported_and_enabled()) {
+		ret = -ENODEV;
+	} else if (!cpu_has_vmx_unrestricted_guest_cap()) {
 		pr_fatal("%s, unrestricted guest not supported\n", __func__);
-		return -ENODEV;
-	}
-
-	if (!is_ept_supported()) {
+		ret = -ENODEV;
+	} else if (!is_ept_supported()) {
 		pr_fatal("%s, EPT not supported\n", __func__);
-		return -ENODEV;
-	}
-
-	if (!is_apicv_supported()) {
+		ret = -ENODEV;
+	} else if (!is_apicv_supported()) {
 		pr_fatal("%s, APICV not supported\n", __func__);
-		return -ENODEV;
-	}
-
-	if (boot_cpu_data.cpuid_level < 0x15U) {
+		ret = -ENODEV;
+	} else if (boot_cpu_data.cpuid_level < 0x15U) {
 		pr_fatal("%s, required CPU feature not supported\n", __func__);
-		return -ENODEV;
-	}
-
-	if (is_vmx_disabled()) {
+		ret = -ENODEV;
+	} else if (is_vmx_disabled()) {
 		pr_fatal("%s, VMX can not be enabled\n", __func__);
-		return -ENODEV;
-	}
-
-	if (phys_cpu_num > CONFIG_MAX_PCPU_NUM) {
+		ret = -ENODEV;
+	} else if (phys_cpu_num > CONFIG_MAX_PCPU_NUM) {
 		pr_fatal("%s, pcpu number(%d) is out of range\n", __func__, phys_cpu_num);
-		return -ENODEV;
+		ret = -ENODEV;
+	} else {
+		ret = check_vmx_mmu_cap();
+		if (ret == 0) {
+			pr_acrnlog("hardware support HV");
+		}
 	}
 
-	ret = check_vmx_mmu_cap();
-	if (ret != 0) {
-		return ret;
-	}
-
-	pr_acrnlog("hardware support HV");
-	return 0;
+	return ret;
 }
