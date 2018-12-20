@@ -99,7 +99,10 @@ struct passthru_dev {
 	} msi;
 	struct {
 		int		capoff;
-		int		table_size;
+		int		table_size;		/* page aligned size */
+		void		*table_pages;
+		int		table_offset;		/* page aligned */
+		bool		ptirq_allocated;
 	} msix;
 	bool pcie_cap;
 	struct pcisel sel;
@@ -188,130 +191,6 @@ write_config(struct pci_device *phys_dev, long reg, int width, uint32_t data)
 	return temp;
 }
 
-static int
-ptdev_msi_remap(struct vmctx *ctx, struct passthru_dev *ptdev,
-		uint64_t addr, uint16_t msg, int maxmsgnum)
-{
-	uint16_t msgctl;
-	struct acrn_vm_pci_msix_remap msi_remap;
-	int msi_capoff;
-	uint16_t pci_command, new_command;
-	int ret = 0;
-	struct pci_device *phys_dev = ptdev->phys_dev;
-	uint16_t virt_bdf = PCI_BDF(ptdev->dev->bus, ptdev->dev->slot,
-		ptdev->dev->func);
-
-	(void)maxmsgnum;
-
-	if (ptdev->msi.capoff == 0)
-		return -1;
-
-	msi_capoff = ptdev->msi.capoff;
-
-	/* disable MSI during configuration */
-	msgctl = read_config(phys_dev, msi_capoff + PCIR_MSI_CTRL, 2);
-	msgctl &= ~PCIM_MSICTRL_MSI_ENABLE;
-	write_config(phys_dev, msi_capoff + PCIR_MSI_CTRL, 2, msgctl);
-
-	msi_remap.phys_bdf = ptdev->phys_bdf;
-	msi_remap.virt_bdf = virt_bdf;
-	msi_remap.msi_data = msg;
-	msi_remap.msi_addr = addr;
-	msi_remap.msix = 0;
-	msi_remap.msix_entry_index = 0;
-
-	if (vm_setup_ptdev_msi(ctx, &msi_remap))
-		return -1;
-
-	write_config(phys_dev, msi_capoff + PCIR_MSI_ADDR, 4,
-		(uint32_t)msi_remap.msi_addr);
-
-	if (msgctl & PCIM_MSICTRL_64BIT) {
-		write_config(phys_dev, msi_capoff + PCIR_MSI_ADDR_HIGH, 4,
-			(uint32_t)(msi_remap.msi_addr >> 32));
-		write_config(phys_dev, msi_capoff + PCIR_MSI_DATA_64BIT, 2,
-			msi_remap.msi_data);
-	} else {
-		write_config(phys_dev, msi_capoff + PCIR_MSI_DATA, 2,
-			msi_remap.msi_data);
-	}
-
-	if (!msg) {
-		/* disable MSI */
-		msgctl &= ~PCIM_MSICTRL_MSI_ENABLE;
-		write_config(phys_dev, msi_capoff + PCIR_MSI_CTRL, 2, msgctl);
-
-		/* enable INTx */
-		pci_command = read_config(phys_dev, PCIR_COMMAND, 2);
-		new_command = pci_command & (~PCI_COMMAND_INTX_DISABLE);
-		if (new_command != pci_command)
-			write_config(phys_dev, PCIR_COMMAND, 2, new_command);
-	} else {
-		/* disable INTx */
-		pci_command = read_config(phys_dev, PCIR_COMMAND, 2);
-		new_command = pci_command | PCI_COMMAND_INTX_DISABLE;
-		if (new_command != pci_command)
-			write_config(phys_dev, PCIR_COMMAND, 2, new_command);
-
-		/* enalbe MSI */
-		msgctl |= PCIM_MSICTRL_MSI_ENABLE;
-		write_config(phys_dev, msi_capoff + PCIR_MSI_CTRL, 2, msgctl);
-	}
-
-	return ret;
-}
-
-static int
-ptdev_msix_remap(struct vmctx *ctx, const struct passthru_dev *ptdev,
-		 int index, uint64_t addr, uint32_t msg,
-		 uint32_t vector_control)
-{
-	struct pci_device *phys_dev = ptdev->phys_dev;
-	struct pci_vdev *dev = ptdev->dev;
-	uint16_t msgctl;
-	struct acrn_vm_pci_msix_remap msix_remap;
-	int msix_capoff;
-	uint16_t pci_command, new_command;
-	uint16_t virt_bdf = PCI_BDF(ptdev->dev->bus, ptdev->dev->slot,
-		ptdev->dev->func);
-
-	if (!ptdev->msix.capoff)
-		return -1;
-
-	msix_capoff = ptdev->msix.capoff;
-
-	/* disable MSI-X during configuration */
-	msgctl = read_config(phys_dev, msix_capoff + PCIR_MSIX_CTRL, 2);
-	msgctl &= ~PCIM_MSIXCTRL_MSIX_ENABLE;
-	msgctl |= PCIM_MSIXCTRL_FUNCTION_MASK;
-	write_config(phys_dev, msix_capoff + PCIR_MSIX_CTRL, 2, msgctl);
-
-	if (!dev->msix.enabled)
-		return 0;
-
-	msix_remap.phys_bdf = ptdev->phys_bdf;
-	msix_remap.virt_bdf = virt_bdf;
-	msix_remap.msi_data = msg;
-	msix_remap.msi_addr = addr;
-	msix_remap.msix = 1;
-	msix_remap.msix_entry_index = index;
-
-	if (vm_setup_ptdev_msi(ctx, &msix_remap))
-		return -1;
-
-	/* disable INTx */
-	pci_command = read_config(phys_dev, PCIR_COMMAND, 2);
-	new_command = pci_command | PCI_COMMAND_INTX_DISABLE;
-	if (new_command != pci_command)
-		write_config(phys_dev, PCIR_COMMAND, 2, new_command);
-
-	/* Enable MSI-X & unmask function */
-	msgctl &= ~PCIM_MSIXCTRL_FUNCTION_MASK;
-	msgctl |= PCIM_MSIXCTRL_MSIX_ENABLE;
-	write_config(phys_dev, msix_capoff + PCIR_MSIX_CTRL, 2, msgctl);
-
-	return 0;
-}
 
 #ifdef FORCE_MSI_SINGLE_VECTOR
 /* Temporarily set mmc & mme to 0.
@@ -328,7 +207,7 @@ clear_mmc_mme(uint32_t *val)
 static int
 cfginit_cap(struct vmctx *ctx, struct passthru_dev *ptdev)
 {
-	int i, ptr, capptr, cap, sts, caplen, table_size;
+	int ptr, capptr, cap, sts, caplen;
 	uint32_t u32;
 	struct pci_vdev *dev;
 	struct pci_device *phys_dev = ptdev->phys_dev;
@@ -408,6 +287,8 @@ cfginit_cap(struct vmctx *ctx, struct passthru_dev *ptdev)
 		}
 	}
 
+	dev->msix.table_bar = -1;
+	dev->msix.pba_bar = -1;
 	if (ptdev->msix.capoff != 0) {
 		capptr = ptdev->msix.capoff;
 
@@ -422,20 +303,6 @@ cfginit_cap(struct vmctx *ctx, struct passthru_dev *ptdev)
 		msgctrl = pci_get_cfgdata16(dev, capptr + 2);
 		dev->msix.table_count = MSIX_TABLE_COUNT(msgctrl);
 		dev->msix.pba_size = PBA_SIZE(dev->msix.table_count);
-
-		/* Allocate the emulated MSI-X table array */
-		table_size = dev->msix.table_count * MSIX_TABLE_ENTRY_SIZE;
-		dev->msix.table = calloc(1, table_size);
-		if (dev->msix.table == NULL) {
-			warnx("%s: calloc FAIL!", __func__);
-			return -1;
-		}
-
-		/* Mask all table entries */
-		for (i = 0; i < dev->msix.table_count; i++) {
-			dev->msix.table[i].vector_control |=
-						PCIM_MSIX_VCTRL_MASK;
-		}
 	} else if (ptdev->msi.capoff != 0) {
 		struct ic_ptdev_irq ptirq;
 
@@ -455,155 +322,74 @@ cfginit_cap(struct vmctx *ctx, struct passthru_dev *ptdev)
 static uint64_t
 msix_table_read(struct passthru_dev *ptdev, uint64_t offset, int size)
 {
-	struct pci_vdev *dev;
-	struct msix_table_entry *entry;
 	uint8_t *src8;
 	uint16_t *src16;
 	uint32_t *src32;
 	uint64_t *src64;
 	uint64_t data;
-	size_t entry_offset;
-	int index;
-
-	dev = ptdev->dev;
-	if (dev->msix.pba_bar == dev->msix.table_bar &&
-	    offset >= dev->msix.pba_offset &&
-	    offset < dev->msix.pba_offset + dev->msix.pba_size) {
-		switch (size) {
-		case 1:
-			src8 = (uint8_t *)(dev->msix.pba_page + offset -
-			    dev->msix.pba_page_offset);
-			data = *src8;
-			break;
-		case 2:
-			src16 = (uint16_t *)(dev->msix.pba_page + offset -
-			    dev->msix.pba_page_offset);
-			data = *src16;
-			break;
-		case 4:
-			src32 = (uint32_t *)(dev->msix.pba_page + offset -
-			    dev->msix.pba_page_offset);
-			data = *src32;
-			break;
-		case 8:
-			src64 = (uint64_t *)(dev->msix.pba_page + offset -
-			    dev->msix.pba_page_offset);
-			data = *src64;
-			break;
-		default:
-			return -1;
-		}
-		return data;
-	}
-
-	if (offset < dev->msix.table_offset)
-		return -1;
-
-	offset -= dev->msix.table_offset;
-	index = offset / MSIX_TABLE_ENTRY_SIZE;
-	if (index >= dev->msix.table_count)
-		return -1;
-
-	entry = &dev->msix.table[index];
-	entry_offset = offset % MSIX_TABLE_ENTRY_SIZE;
 
 	switch (size) {
 	case 1:
-		src8 = (uint8_t *)((void *)entry + entry_offset);
+		src8 = (uint8_t *)(ptdev->msix.table_pages + offset - ptdev->msix.table_offset);
 		data = *src8;
 		break;
 	case 2:
-		src16 = (uint16_t *)((void *)entry + entry_offset);
+		src16 = (uint16_t *)(ptdev->msix.table_pages + offset - ptdev->msix.table_offset);
 		data = *src16;
 		break;
 	case 4:
-		src32 = (uint32_t *)((void *)entry + entry_offset);
+		src32 = (uint32_t *)(ptdev->msix.table_pages + offset - ptdev->msix.table_offset);
 		data = *src32;
 		break;
 	case 8:
-		src64 = (uint64_t *)((void *)entry + entry_offset);
+		src64 = (uint64_t *)(ptdev->msix.table_pages + offset - ptdev->msix.table_offset);
 		data = *src64;
 		break;
 	default:
 		return -1;
-	}
 
+	}
 	return data;
 }
 
 static void
-msix_table_write(struct vmctx *ctx, int vcpu, struct passthru_dev *ptdev,
-		 uint64_t offset, int size, uint64_t data)
+msix_table_write(struct passthru_dev *ptdev, uint64_t offset, int size, uint64_t data)
 {
-	struct pci_vdev *dev;
-	struct msix_table_entry *entry;
 	uint8_t *dest8;
 	uint16_t *dest16;
 	uint32_t *dest32;
 	uint64_t *dest64;
-	size_t entry_offset;
-	uint32_t vector_control;
-	int index;
 
-	dev = ptdev->dev;
-	if (dev->msix.pba_bar == dev->msix.table_bar &&
-	    offset >= dev->msix.pba_offset &&
-	    offset < dev->msix.pba_offset + dev->msix.pba_size) {
-		switch (size) {
-		case 1:
-			dest8 = (uint8_t *)(dev->msix.pba_page + offset -
-			    dev->msix.pba_page_offset);
-			*dest8 = data;
-			break;
-		case 2:
-			dest16 = (uint16_t *)(dev->msix.pba_page + offset -
-			    dev->msix.pba_page_offset);
-			*dest16 = data;
-			break;
-		case 4:
-			dest32 = (uint32_t *)(dev->msix.pba_page + offset -
-			    dev->msix.pba_page_offset);
-			*dest32 = data;
-			break;
-		case 8:
-			dest64 = (uint64_t *)(dev->msix.pba_page + offset -
-			    dev->msix.pba_page_offset);
-			*dest64 = data;
-			break;
-		default:
-			break;
-		}
-		return;
+	switch (size) {
+	case 1:
+		dest8 = (uint8_t *)(ptdev->msix.table_pages + offset - ptdev->msix.table_offset);
+		*dest8 = data;
+		break;
+	case 2:
+		dest16 = (uint16_t *)(ptdev->msix.table_pages + offset - ptdev->msix.table_offset);
+		*dest16 = data;
+		break;
+	case 4:
+		dest32 = (uint32_t *)(ptdev->msix.table_pages + offset - ptdev->msix.table_offset);
+		*dest32 = data;
+		break;
+	case 8:
+		dest64 = (uint64_t *)(ptdev->msix.table_pages + offset - ptdev->msix.table_offset);
+		*dest64 = data;
+		break;
+	default:
+		break;
 	}
+}
 
-	if (offset < dev->msix.table_offset)
-		return;
+static inline int ptdev_msix_table_bar(struct passthru_dev *ptdev)
+{
+	return ptdev->dev->msix.table_bar;
+}
 
-	offset -= dev->msix.table_offset;
-	index = offset / MSIX_TABLE_ENTRY_SIZE;
-	if (index >= dev->msix.table_count)
-		return;
-
-	entry = &dev->msix.table[index];
-	entry_offset = offset % MSIX_TABLE_ENTRY_SIZE;
-
-	/* Only 4 byte naturally-aligned writes are supported */
-	assert(size == 4);
-	assert(entry_offset % 4 == 0);
-
-	vector_control = entry->vector_control;
-	dest32 = (uint32_t *)((void *)entry + entry_offset);
-	*dest32 = data;
-	/* If MSI-X hasn't been enabled, do nothing */
-	if (dev->msix.enabled) {
-		/* If the entry is masked, don't set it up */
-		if ((entry->vector_control & PCIM_MSIX_VCTRL_MASK) == 0 ||
-		    (vector_control & PCIM_MSIX_VCTRL_MASK) == 0) {
-			(void)ptdev_msix_remap(ctx, ptdev, index,
-				entry->addr, entry->msg_data,
-				entry->vector_control);
-		}
-	}
+static inline int ptdev_msix_pba_bar(struct passthru_dev *ptdev)
+{
+	return ptdev->dev->msix.pba_bar;
 }
 
 static int
@@ -613,13 +399,12 @@ init_msix_table(struct vmctx *ctx, struct passthru_dev *ptdev, uint64_t base)
 	int error, idx;
 	size_t len, remaining;
 	uint32_t table_size, table_offset;
-	uint32_t pba_size, pba_offset;
 	vm_paddr_t start;
 	struct pci_vdev *dev = ptdev->dev;
 	uint16_t virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
 	struct ic_ptdev_irq ptirq;
 
-	assert(pci_msix_table_bar(dev) >= 0 && pci_msix_pba_bar(dev) >= 0);
+	assert(ptdev_msix_table_bar(ptdev) >= 0 && ptdev_msix_pba_bar(ptdev) >= 0);
 
 	b = ptdev->sel.bus;
 	s = ptdev->sel.dev;
@@ -641,40 +426,6 @@ init_msix_table(struct vmctx *ctx, struct passthru_dev *ptdev, uint64_t base)
 	start = dev->bar[idx].addr;
 	remaining = dev->bar[idx].size;
 
-	if (dev->msix.pba_bar == dev->msix.table_bar) {
-		pba_offset = dev->msix.pba_offset;
-		pba_size = dev->msix.pba_size;
-		if (pba_offset >= table_offset + table_size ||
-		    table_offset >= pba_offset + pba_size) {
-			/*
-			 * If the PBA does not share a page with the MSI-x
-			 * tables, no PBA emulation is required.
-			 */
-			dev->msix.pba_page = NULL;
-			dev->msix.pba_page_offset = 0;
-		} else {
-			/*
-			 * The PBA overlaps with either the first or last
-			 * page of the MSI-X table region.  Map the
-			 * appropriate page.
-			 */
-			if (pba_offset <= table_offset)
-				dev->msix.pba_page_offset = table_offset;
-			else
-				dev->msix.pba_page_offset = table_offset +
-				    table_size - 4096;
-			error = pci_device_map_range(ptdev->phys_dev,
-				base + dev->msix.pba_page_offset, 4096,
-				PCI_DEV_MAP_FLAG_WRITABLE, &dev->msix.pba_page);
-			if (error) {
-				warnx(
-				"Failed to map PBA page for MSI-X on %x/%x/%x.",
-					b, s, f);
-				return error;
-			}
-		}
-	}
-
 	/* Map everything before the MSI-X table */
 	if (table_offset > 0) {
 		len = table_offset;
@@ -695,19 +446,33 @@ init_msix_table(struct vmctx *ctx, struct passthru_dev *ptdev, uint64_t base)
 		remaining -= len;
 	}
 
-	/* Handle MSI-X vectors and table:
-	 * request to alloc vector entries of MSI-X,
-	 * Map the MSI-X table to memory space of SOS
+	/* remap real msix table (page-aligned) to user space */
+	error = pci_device_map_range(ptdev->phys_dev, base, table_size,
+		PCI_DEV_MAP_FLAG_WRITABLE, &ptdev->msix.table_pages);
+	if (error) {
+		warnx("Failed to map MSI-X table pages on %x/%x/%x", b,s,f);
+		return error;
+	}
+	ptdev->msix.table_offset = table_offset;
+	ptdev->msix.table_size = table_size;
+
+	/* Handle MSI-X vectors:
+	 * request to alloc vector entries of MSI-X.
+	 * Set table_paddr/table_size to 0 to skip ioremap in sos kernel.
 	 */
 	ptirq.type = IRQ_MSIX;
 	ptirq.virt_bdf = virt_bdf;
 	ptirq.phys_bdf = ptdev->phys_bdf;
 	ptirq.msix.vector_cnt = dev->msix.table_count;
-	ptirq.msix.table_paddr = ptdev->bar[idx].addr +
-		dev->msix.table_offset;
-	ptirq.msix.table_size = table_size;
-	vm_set_ptdev_msix_info(ctx, &ptirq);
-	ptdev->msix.table_size = table_size;
+	ptirq.msix.table_paddr = 0;
+	ptirq.msix.table_size = 0;
+	error = vm_set_ptdev_msix_info(ctx, &ptirq);
+	if (error) {
+		warnx("Failed to alloc ptirq entry on %x/%x/%x", b,s,f);
+		return error;
+	}
+	ptdev->msix.ptirq_allocated = true;
+
 
 	/* Skip the MSI-X table */
 	base += table_size;
@@ -734,22 +499,22 @@ init_msix_table(struct vmctx *ctx, struct passthru_dev *ptdev, uint64_t base)
 }
 
 static void
-deinit_msix_table(struct vmctx *ctx, struct pci_vdev *dev)
+deinit_msix_table(struct vmctx *ctx, struct passthru_dev *ptdev)
 {
-	struct passthru_dev *ptdev = (struct passthru_dev *) dev->arg;;
+	struct pci_vdev *dev = ptdev->dev;
 	uint16_t virt_bdf = PCI_BDF(dev->bus, dev->slot, dev->func);
 	int vector_cnt = dev->msix.table_count;
 
-	printf("ptdev reset msix: 0x%x-%x, vector_cnt=%d.\n",
-			virt_bdf, ptdev->phys_bdf, vector_cnt);
-	vm_reset_ptdev_msix_info(ctx, virt_bdf, vector_cnt);
-	free(dev->msix.table);
+	if (ptdev->msix.ptirq_allocated) {
+		printf("ptdev reset msix: 0x%x-%x, vector_cnt=%d.\n",
+				virt_bdf, ptdev->phys_bdf, vector_cnt);
+		vm_reset_ptdev_msix_info(ctx, virt_bdf, vector_cnt);
+		ptdev->msix.ptirq_allocated = false;
+	}
 
-	if (dev->msix.pba_page != NULL) {
-		if (pci_device_unmap_range(ptdev->phys_dev,
-					   dev->msix.pba_page, 4096))
-			warnx("Failed to unmap pba page.");
-		dev->msix.pba_page = NULL;
+	if (ptdev->msix.table_pages) {
+		pci_device_unmap_range(ptdev->phys_dev, ptdev->msix.table_pages, ptdev->msix.table_size);
+		ptdev->msix.table_pages = NULL;
 	}
 
 	/* We passthrough the pages not overlap with MSI-X table to guest,
@@ -832,10 +597,12 @@ cfginitbar(struct vmctx *ctx, struct passthru_dev *ptdev)
 			return -1;
 
 		/* The MSI-X table needs special handling */
-		if (i == pci_msix_table_bar(dev)) {
+		if (i == ptdev_msix_table_bar(ptdev)) {
 			error = init_msix_table(ctx, ptdev, base);
-			if (error)
+			if (error) {
+				deinit_msix_table(ctx, ptdev);
 				return -1;
+			}
 		} else if (bartype != PCIBAR_IO) {
 			/* Map the physical BAR in the guest MMIO space */
 			error = vm_map_ptdev_mmio(ctx, ptdev->sel.bus,
@@ -1135,7 +902,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	func = ptdev->phys_bdf & 0x7;
 
 	if (ptdev->msix.capoff != 0)
-		deinit_msix_table(ctx, dev);
+		deinit_msix_table(ctx, ptdev);
 	else if(ptdev->msi.capoff != 0) {
 		/* Currently only support 1 vector */
 		printf("ptdev reset msi: 0x%x-%x\n", virt_bdf, ptdev->phys_bdf);
@@ -1150,7 +917,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	for (i = 0; i <= PCI_BARMAX; i++) {
 
 		if (ptdev->bar[i].size == 0 ||
-			i == pci_msix_table_bar(dev) ||
+			i == ptdev_msix_table_bar(ptdev) ||
 			ptdev->bar[i].type == PCIBAR_IO)
 			continue;
 
@@ -1198,32 +965,6 @@ bar_access(int coff)
 }
 
 static int
-msicap_access(struct passthru_dev *ptdev, int coff)
-{
-	int caplen;
-
-	if (ptdev->msi.capoff == 0)
-		return 0;
-
-	caplen = msi_caplen(ptdev->msi.msgctrl);
-
-	if (coff >= ptdev->msi.capoff && coff < ptdev->msi.capoff + caplen)
-		return 1;
-	else
-		return 0;
-}
-
-static int
-msixcap_access(struct passthru_dev *ptdev, int coff)
-{
-	if (ptdev->msix.capoff == 0)
-		return 0;
-
-	return (coff >= ptdev->msix.capoff &&
-		coff < ptdev->msix.capoff + MSIX_CAPLEN);
-}
-
-static int
 passthru_cfgread(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		 int coff, int bytes, uint32_t *rv)
 {
@@ -1234,7 +975,7 @@ passthru_cfgread(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	/*
 	 * PCI BARs and MSI capability is emulated.
 	 */
-	if (bar_access(coff) || msicap_access(ptdev, coff))
+	if (bar_access(coff))
 		return -1;
 
 	/* INTLINE/INTPIN/MINGNT/MAXLAT need to be hacked */
@@ -1260,11 +1001,9 @@ static int
 passthru_cfgwrite(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 		  int coff, int bytes, uint32_t val)
 {
-	int error, msix_table_entries, i;
 	struct passthru_dev *ptdev;
 
 	ptdev = dev->arg;
-	error = 1;
 
 	/*
 	 * PCI BARs are emulated
@@ -1275,51 +1014,6 @@ passthru_cfgwrite(struct vmctx *ctx, int vcpu, struct pci_vdev *dev,
 	/* INTLINE/INTPIN/MINGNT/MAXLAT need to be hacked */
 	if (coff >= PCIR_INTLINE && coff <= PCIR_MAXLAT)
 		return -1;
-
-	/*
-	 * MSI capability is emulated
-	 */
-	if (msicap_access(ptdev, coff)) {
-		msicap_cfgwrite(dev, ptdev->msi.capoff, coff, bytes, val);
-
-		if ((coff - ptdev->msi.capoff) == 2) {
-
-			/* currently not support multiple vectors for MSI */
-			if (dev->msi.maxmsgnum > 1)
-				warnx("only one vector supported for MSI");
-
-			if (val & PCIM_MSICTRL_MSI_ENABLE) {
-				error = ptdev_msi_remap(ctx, ptdev,
-					dev->msi.addr, dev->msi.msg_data,
-					dev->msi.maxmsgnum);
-			} else {
-				error = ptdev_msi_remap(ctx, ptdev,
-					dev->msi.addr, 0,
-					dev->msi.maxmsgnum);
-			}
-
-			if (error != 0)
-				err(1, "ptdev_msi_remap");
-		}
-		return 0;
-	}
-
-	if (msixcap_access(ptdev, coff)) {
-		msixcap_cfgwrite(dev, ptdev->msix.capoff, coff, bytes, val);
-		if (dev->msix.enabled) {
-			msix_table_entries = dev->msix.table_count;
-			for (i = 0; i < msix_table_entries; i++) {
-				error = ptdev_msix_remap(ctx, ptdev, i,
-					dev->msix.table[i].addr,
-					dev->msix.table[i].msg_data,
-					dev->msix.table[i].vector_control);
-
-				if (error)
-					err(1, "ptdev_msix_remap");
-			}
-		}
-		return 0;
-	}
 
 	write_config(ptdev->phys_dev, coff, bytes, val);
 
@@ -1335,8 +1029,8 @@ passthru_write(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 
 	ptdev = dev->arg;
 
-	if (baridx == pci_msix_table_bar(dev)) {
-		msix_table_write(ctx, vcpu, ptdev, offset, size, value);
+	if (baridx == ptdev_msix_table_bar(ptdev)) {
+		msix_table_write(ptdev, offset, size, value);
 	} else {
 		assert(dev->bar[baridx].type == PCIBAR_IO);
 		bzero(&pio, sizeof(struct iodev_pio_req));
@@ -1359,7 +1053,7 @@ passthru_read(struct vmctx *ctx, int vcpu, struct pci_vdev *dev, int baridx,
 
 	ptdev = dev->arg;
 
-	if (baridx == pci_msix_table_bar(dev)) {
+	if (baridx == ptdev_msix_table_bar(ptdev)) {
 		val = msix_table_read(ptdev, offset, size);
 	} else {
 		assert(dev->bar[baridx].type == PCIBAR_IO);

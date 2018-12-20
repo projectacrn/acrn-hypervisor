@@ -5,107 +5,19 @@
 
 #include <hypervisor.h>
 
-#define ULONG_MAX       ((uint64_t)(~0UL))              /* 0xFFFFFFFF */
-#define LONG_MAX        (ULONG_MAX >> 1U)        /* 0x7FFFFFFF */
-#define LONG_MIN        (~LONG_MAX)             /* 0x80000000 */
-
-static inline bool is_space(char c)
-{
-	return ((c == ' ') || (c == '\t'));
-}
-
-static inline char hex_digit_value (char ch)
+static inline char hex_digit_value(char ch)
 {
 	char c;
-	if ('0' <= ch && ch <= '9') {
+	if (('0' <= ch) && (ch <= '9')) {
 		c = ch - '0';
-	} else if ('a' <= ch && ch <= 'f') {
+	} else if (('a' <= ch) && (ch <= 'f')) {
 		c = ch - 'a' + 10;
-	} else if ('A' <= ch && ch <= 'F') {
+	} else if (('A' <= ch) && (ch <= 'F')) {
 		c = ch - 'A' + 10;
 	} else {
 		c = -1;
 	}
 	return c;
-}
-
-/*
- * Convert a string to a long integer - decimal support only.
- */
-long strtol_deci(const char *nptr)
-{
-	const char *s = nptr;
-	char c;
-	uint64_t acc, cutoff, cutlim;
-	int32_t neg = 0, any;
-	uint64_t base = 10UL;
-
-	/*
-	 * Skip white space and pick up leading +/- sign if any.
-	 */
-	do {
-		c = *s;
-		s++;
-	} while (is_space(c));
-
-	if (c == '-') {
-		neg = 1;
-		c = *s;
-		s++;
-	} else if (c == '+') {
-		c = *s;
-		s++;
-	} else {
-		/* No sign character. */
-	}
-
-	/*
-	 * Compute the cutoff value between legal numbers and illegal
-	 * numbers.  That is the largest legal value, divided by the
-	 * base.  An input number that is greater than this value, if
-	 * followed by a legal input character, is too big.  One that
-	 * is equal to this value may be valid or not; the limit
-	 * between valid and invalid numbers is then based on the last
-	 * digit.  For instance, if the range for longs is
-	 * [-2147483648..2147483647] and the input base is 10,
-	 * cutoff will be set to 214748364 and cutlim to either
-	 * 7 (neg==0) or 8 (neg==1), meaning that if we have accumulated
-	 * a value > 214748364, or equal but the next digit is > 7 (or 8),
-	 * the number is too big, and we will return a range error.
-	 *
-	 * Set any if any `digits' consumed; make it negative to indicate
-	 * overflow.
-	 */
-	cutoff = (neg != 0) ? LONG_MIN : LONG_MAX;
-	cutlim = cutoff % base;
-	cutoff /= base;
-	acc = 0UL;
-	any = 0;
-
-	while ((c >= '0') && (c <= '9')) {
-		c -= '0';
-		if ((acc > cutoff) ||
-			((acc == cutoff) && ((uint64_t)c > cutlim))) {
-			any = -1;
-			break;
-		} else {
-			acc *= base;
-			acc += (uint64_t)c;
-		}
-
-		c = *s;
-		s++;
-	}
-
-	if (any < 0) {
-		acc = (neg != 0) ? LONG_MIN : LONG_MAX;
-	} else if (neg != 0) {
-		acc = ~acc + 1UL;
-	} else {
-		/* There is no overflow and no leading '-' exists. In such case
-		 * acc already holds the right number. No action required. */
-	}
-	return (long)acc;
 }
 
 /*
@@ -155,11 +67,6 @@ uint64_t strtoul_hex(const char *nptr)
 		acc = ULONG_MAX;
 	}
 	return acc;
-}
-
-int32_t atoi(const char *str)
-{
-	return (int32_t)strtol_deci(str);
 }
 
 char *strchr(char *s_arg, char ch)
@@ -228,32 +135,38 @@ char *strncpy_s(char *d_arg, size_t dmax, const char *s_arg, size_t slen_arg)
 		dest_avail = dmax;
 
 		while (dest_avail > 0U) {
+			bool complete = false;
+
 			if (overlap_guard == 0U) {
 				pr_err("%s: overlap happened.", __func__);
 				d--;
 				*d = '\0';
-				/* break out to return */
 				pret = NULL;
-				break;
+				/* copy complete */
+				complete = true;
+			} else {
+				if (slen == 0U) {
+					*d = '\0';
+					/* copy complete */
+					complete = true;
+				} else {
+					*d = *s;
+					if (*d == '\0') {
+						/* copy complete */
+						complete = true;
+					} else {
+						d++;
+						s++;
+						slen--;
+						dest_avail--;
+						overlap_guard--;
+					}
+				}
 			}
 
-			if (slen == 0U) {
-				*d = '\0';
-				/* break out to return */
+			if (complete) {
 				break;
 			}
-
-			*d = *s;
-			if (*d == '\0') {
-				/* break out to return */
-				break;
-			}
-
-			d++;
-			s++;
-			slen--;
-			dest_avail--;
-			overlap_guard--;
 		}
 
 		if (dest_avail == 0U) {

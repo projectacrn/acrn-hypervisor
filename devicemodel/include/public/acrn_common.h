@@ -346,7 +346,7 @@ struct acrn_set_vcpu_regs {
 
 	/** the structure to hold vcpu state */
 	struct acrn_vcpu_regs vcpu_regs;
-} __attribute__((aligned(8)));
+} __aligned(8);
 
 /**
  * @brief Info to set ioreq buffer for a created VM
@@ -477,14 +477,14 @@ struct acpi_generic_address {
 	uint8_t 	bit_offset;
 	uint8_t 	access_size;
 	uint64_t	address;
-} __attribute__((aligned(8)));
+} __aligned(8);
 
 struct cpu_cx_data {
 	struct acpi_generic_address cx_reg;
 	uint8_t 	type;
 	uint32_t	latency;
 	uint64_t	power;
-} __attribute__((aligned(8)));
+} __aligned(8);
 
 struct cpu_px_data {
 	uint64_t core_frequency;	/* megahertz */
@@ -493,7 +493,7 @@ struct cpu_px_data {
 	uint64_t bus_master_latency;	/* microseconds */
 	uint64_t control;		/* control value */
 	uint64_t status;		/* success indicator */
-} __attribute__((aligned(8)));
+} __aligned(8);
 
 /**
  * @brief Info PM command from DM/VHM.

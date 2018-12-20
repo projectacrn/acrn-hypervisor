@@ -14,10 +14,8 @@
 
 #define INVALID_PTDEV_ENTRY_ID 0xffffU
 
-enum ptirq_vpin_source {
-	PTDEV_VPIN_IOAPIC,
-	PTDEV_VPIN_PIC,
-};
+#define PTDEV_VPIN_IOAPIC	0x0U
+#define	PTDEV_VPIN_PIC		0x1U
 
 #define DEFINE_MSI_SID(name, a, b)	\
 union source_id (name) = {.msi_id = {.bdf = (a), .entry_nr = (b)} }
@@ -68,7 +66,7 @@ struct ptirq_remapping_info {
 	struct hv_timer intr_delay_timer; /* used for delay intr injection */
 };
 
-extern struct ptirq_remapping_info ptirq_entries[];
+extern struct ptirq_remapping_info ptirq_entries[CONFIG_MAX_PT_IRQ_ENTRIES];
 extern spinlock_t ptdev_lock;
 
 bool is_entry_active(const struct ptirq_remapping_info *entry);

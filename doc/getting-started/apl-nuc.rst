@@ -50,9 +50,9 @@ complete this setup.
    options for choosing an **Manual (Advanced)** installation type, and using the platform's
    storage as the target device for installation (overwriting the existing data
    and creating three partitions on the platform's storage drive).
-   
-   High-level steps should be: 
-   
+
+   High-level steps should be:
+
    #.  Install Clear on a NUC using the "Manual (Advanced)" option.
    #.  Use default partition scheme for storage
    #.  Name the host "clr-sos-guest"
@@ -76,7 +76,7 @@ complete this setup.
       latest version available on your system. If you wish to use a specific version
       (such as 26770), you can achieve that after the installation has completed using
       ``sudo swupd verify --fix --picky -m 26770``
-       
+
 #. If you have an older version of Clear Linux already installed
    on your hardware, use this command to upgrade Clear Linux
    to version 26770 (or newer):
@@ -89,7 +89,7 @@ complete this setup.
 
    .. code-block:: none
 
-      $ sudo swupd bundle-add service-os kernel-iot-lts2018 
+      $ sudo swupd bundle-add service-os kernel-iot-lts2018
 
    .. table:: Clear Linux bundles
       :widths: auto
@@ -177,7 +177,8 @@ partition. Follow these steps:
       whether it should be disabled. There are three forms for this parameter:
 
       #. ``uart=disabled``: this disables the serial port completely
-      #. ``uart=mmio@<MMIO address>``: this sets the serial port MMIO address
+      #. ``uart=bdf@<BDF value>``:  this sets the PCI serial port based on its BDF.
+         For example, use ``bdf@0:18.2`` for a BDF of 0:18.2 ttyS2.
       #. ``uart=port@<port address>``: this sets the serial port address
 
    Here is a more complete example of how to configure the EFI firmware to load the ACRN
@@ -227,9 +228,6 @@ partition. Follow these steps:
    .. note::
       It is also possible to use the device name directly, e.g. ``root=/dev/sda3``
 
-   .. code-block:: none
-
-   
 #. Add a timeout period for Systemd-Boot to wait, otherwise it will not
    present the boot menu and will always boot the base Clear Linux
 
@@ -245,7 +243,7 @@ partition. Follow these steps:
    .. code-block:: console
       :emphasize-lines: 1
       :caption: ACRN Service OS Boot Menu
-     
+
       => The ACRN Service OS
       Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-4.19.5-29)
       Clear Linux OS for Intel Architecture (Clear-linux-iot-lts2018-sos-4.19.5-29)
@@ -256,14 +254,14 @@ partition. Follow these steps:
 #. After booting up the ACRN hypervisor, the Service OS will be launched
    automatically by default, and the Clear Linux desktop will be showing with user "clear",
    (or you can login remotely with an "ssh" client).
-   If there is any issue which makes the GNOME desktop doesn't show successfully, then the system will go to 
+   If there is any issue which makes the GNOME desktop doesn't show successfully, then the system will go to
    shell console.
 
 #. From ssh client, login as user "clear" using the password you set previously when
    you installed Clear Linux.
 
-#. After rebooting the system, check that the ACRN hypervisor is running properly with: 
-  
+#. After rebooting the system, check that the ACRN hypervisor is running properly with:
+
   .. code-block:: none
 
    $ dmesg | grep ACRN
@@ -274,7 +272,7 @@ partition. Follow these steps:
 If you see log information similar to this, the ACRN hypervisor is running properly
 and you can start deploying a User OS.  If not, verify the EFI boot options, SOS
 kernel, and ``acrn.conf`` settings are correct (as described above).
-    
+
 
 ACRN Network Bridge
 ===================
@@ -600,4 +598,4 @@ example above) to 'BOARD=':
    .. code-block:: none
 
       $ make defconfig BOARD=xxx
-      
+

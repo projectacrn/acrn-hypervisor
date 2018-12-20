@@ -8,27 +8,26 @@
 
 int32_t validate_pstate(const struct acrn_vm *vm, uint64_t perf_ctl)
 {
-	const struct cpu_px_data *px_data;
-	uint8_t i, px_cnt;
+	int32_t ret = -1;
 
 	if (is_vm0(vm)) {
-		return 0;
-	}
+		ret = 0;
+	} else {
+		uint8_t i;
+		uint8_t px_cnt = vm->pm.px_cnt;
+		const struct cpu_px_data *px_data = vm->pm.px_data;
 
-	px_cnt = vm->pm.px_cnt;
-	px_data = vm->pm.px_data;
-
-	if ((px_cnt == 0U) || (px_data == NULL)) {
-		return -1;
-	}
-
-	for (i = 0U; i < px_cnt; i++) {
-		if ((px_data + i)->control == (perf_ctl & 0xffffUL)) {
-			return 0;
+		if ((px_cnt != 0U) && (px_data != NULL)) {
+			for (i = 0U; i < px_cnt; i++) {
+				if ((px_data + i)->control == (perf_ctl & 0xffffUL)) {
+					ret = 0;
+					break;
+				}
+			}
 		}
 	}
 
-	return -1;
+	return ret;
 }
 
 static void vm_setup_cpu_px(struct acrn_vm *vm)
@@ -36,20 +35,14 @@ static void vm_setup_cpu_px(struct acrn_vm *vm)
 	uint32_t px_data_size;
 
 	vm->pm.px_cnt = 0U;
-	(void)memset(vm->pm.px_data, 0U,
-			MAX_PSTATE * sizeof(struct cpu_px_data));
+	(void)memset(vm->pm.px_data, 0U, MAX_PSTATE * sizeof(struct cpu_px_data));
 
-	if ((boot_cpu_data.state_info.px_cnt != 0U)
-		&& (boot_cpu_data.state_info.px_data != NULL)) {
-		ASSERT ((boot_cpu_data.state_info.px_cnt <= MAX_PSTATE),
-			"failed to setup cpu px");
+	if ((boot_cpu_data.state_info.px_cnt != 0U) && (boot_cpu_data.state_info.px_data != NULL)) {
+		ASSERT((boot_cpu_data.state_info.px_cnt <= MAX_PSTATE), "failed to setup cpu px");
 
 		vm->pm.px_cnt = boot_cpu_data.state_info.px_cnt;
-
 		px_data_size = ((uint32_t)vm->pm.px_cnt) * sizeof(struct cpu_px_data);
-
-		(void)memcpy_s(vm->pm.px_data, px_data_size,
-				boot_cpu_data.state_info.px_data, px_data_size);
+		(void)memcpy_s(vm->pm.px_data, px_data_size, boot_cpu_data.state_info.px_data, px_data_size);
 	}
 }
 
@@ -58,23 +51,18 @@ static void vm_setup_cpu_cx(struct acrn_vm *vm)
 	uint32_t cx_data_size;
 
 	vm->pm.cx_cnt = 0U;
-	(void)memset(vm->pm.cx_data, 0U,
-			MAX_CSTATE * sizeof(struct cpu_cx_data));
+	(void)memset(vm->pm.cx_data, 0U, MAX_CSTATE * sizeof(struct cpu_cx_data));
 
-	if ((boot_cpu_data.state_info.cx_cnt != 0U)
-		&& (boot_cpu_data.state_info.cx_data != NULL)) {
-		ASSERT ((boot_cpu_data.state_info.cx_cnt <= MAX_CX_ENTRY),
-			"failed to setup cpu cx");
+	if ((boot_cpu_data.state_info.cx_cnt != 0U) && (boot_cpu_data.state_info.cx_data != NULL)) {
+		ASSERT((boot_cpu_data.state_info.cx_cnt <= MAX_CX_ENTRY), "failed to setup cpu cx");
 
 		vm->pm.cx_cnt = boot_cpu_data.state_info.cx_cnt;
-
 		cx_data_size = ((uint32_t)vm->pm.cx_cnt) * sizeof(struct cpu_cx_data);
 
 		/* please note pm.cx_data[0] is a empty space holder,
 		 * pm.cx_data[1...MAX_CX_ENTRY] would be used to store cx entry datas.
 		 */
-		(void)memcpy_s(vm->pm.cx_data + 1, cx_data_size,
-				boot_cpu_data.state_info.cx_data, cx_data_size);
+		(void)memcpy_s(vm->pm.cx_data + 1, cx_data_size, boot_cpu_data.state_info.cx_data, cx_data_size);
 	}
 }
 
@@ -150,25 +138,24 @@ static inline void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t 
 static void pm1ab_io_write(struct acrn_vm *vm, uint16_t addr, size_t width, uint32_t v)
 {
 	static uint32_t pm1a_cnt_ready = 0U;
+	bool to_write = true;
 
 	if (width == 2U) {
 		uint8_t val = get_slp_typx(v);
 
 		if ((addr == vm->pm.sx_state_data->pm1a_cnt.address)
-			&& (val == vm->pm.sx_state_data->s3_pkg.val_pm1a)
-			&& (s3_enabled(v) != 0U)) {
+			&& (val == vm->pm.sx_state_data->s3_pkg.val_pm1a) && (s3_enabled(v) != 0U)) {
 
 			if (vm->pm.sx_state_data->pm1b_cnt.address != 0UL) {
 				pm1a_cnt_ready = v;
 			} else {
 				enter_s3(vm, v, 0U);
 			}
-			return;
-		}
 
-		if ((addr == vm->pm.sx_state_data->pm1b_cnt.address)
-			&& (val == vm->pm.sx_state_data->s3_pkg.val_pm1b)
-			&& (s3_enabled(v) != 0U)) {
+			to_write = false;
+
+		} else if ((addr == vm->pm.sx_state_data->pm1b_cnt.address)
+			&& (val == vm->pm.sx_state_data->s3_pkg.val_pm1b) && (s3_enabled(v) != 0U)) {
 
 			if (pm1a_cnt_ready != 0U) {
 				enter_s3(vm, pm1a_cnt_ready, v);
@@ -177,32 +164,30 @@ static void pm1ab_io_write(struct acrn_vm *vm, uint16_t addr, size_t width, uint
 				/* the case broke ACPI spec */
 				pr_err("PM1B_CNT write error!");
 			}
-			return;
+
+			to_write = false;
 		}
 	}
 
-	pio_write(v, addr, width);
+	if (to_write) {
+		pio_write(v, addr, width);
+	}
 }
 
-static void
-register_gas_io_handler(struct acrn_vm *vm, uint32_t pio_idx, const struct acpi_generic_address *gas)
+static void register_gas_io_handler(struct acrn_vm *vm, uint32_t pio_idx, const struct acpi_generic_address *gas)
 {
-	uint8_t io_len[5] = {0, 1, 2, 4, 8};
+	uint8_t io_len[5] = {0U, 1U, 2U, 4U, 8U};
 	struct vm_io_range gas_io;
 
-	if ((gas->address != 0UL)
-			&& (gas->space_id == SPACE_SYSTEM_IO)
-			&& (gas->access_size != 0U)
-			&& (gas->access_size <= 4U)) {
+	if ((gas->address != 0UL) && (gas->space_id == SPACE_SYSTEM_IO)
+			&& (gas->access_size != 0U) && (gas->access_size <= 4U)) {
 		gas_io.flags = IO_ATTR_RW;
 		gas_io.base = (uint16_t)gas->address;
 		gas_io.len = io_len[gas->access_size];
 
-		register_io_emulation_handler(vm, pio_idx, &gas_io,
-				&pm1ab_io_read, &pm1ab_io_write);
+		register_io_emulation_handler(vm, pio_idx, &gas_io, &pm1ab_io_read, &pm1ab_io_write);
 
-		pr_dbg("Enable PM1A trap for VM %d, port 0x%x, size %d\n",
-				vm->vm_id, gas_io.base, gas_io.len);
+		pr_dbg("Enable PM1A trap for VM %d, port 0x%x, size %d\n", vm->vm_id, gas_io.base, gas_io.len);
 	}
 }
 

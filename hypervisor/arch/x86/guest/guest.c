@@ -463,7 +463,7 @@ int32_t copy_to_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
  * @pre vm != NULL
  * @pre is_vm0(vm) == true
  */
-int32_t prepare_vm0_memmap(struct acrn_vm *vm)
+void prepare_vm0_memmap(struct acrn_vm *vm)
 {
 	uint32_t i;
 	uint64_t attr_uc = (EPT_RWX | EPT_UNCACHED);
@@ -507,5 +507,4 @@ int32_t prepare_vm0_memmap(struct acrn_vm *vm)
 	 */
 	hv_hpa = get_hv_image_base();
 	ept_mr_del(vm, pml4_page, hv_hpa, CONFIG_HV_RAM_SIZE);
-	return 0;
 }

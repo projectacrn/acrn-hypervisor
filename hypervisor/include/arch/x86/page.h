@@ -20,7 +20,7 @@
 #define PT_PAGE_NUM(size)	(((size) + PDE_SIZE - 1UL) >> PDE_SHIFT)
 
 /* The size of the guest physical address space, covered by the EPT page table of a VM */
-#define EPT_ADDRESS_SPACE(size)	((size != 0UL) ? (size + PLATFORM_LO_MMIO_SIZE) : 0UL)
+#define EPT_ADDRESS_SPACE(size)	(((size) != 0UL) ? ((size) + PLATFORM_LO_MMIO_SIZE) : 0UL)
 
 #define TRUSTY_PML4_PAGE_NUM(size)	(1UL)
 #define TRUSTY_PDPT_PAGE_NUM(size)	(1UL)

@@ -160,69 +160,61 @@ int32_t vmexit_handler(struct acrn_vcpu *vcpu)
 
 	if (get_cpu_id() != vcpu->pcpu_id) {
 		pr_fatal("vcpu is not running on its pcpu!");
-		return -EINVAL;
-	}
-
-	/* Obtain interrupt info */
-	vcpu->arch.idt_vectoring_info =
-	    exec_vmread32(VMX_IDT_VEC_INFO_FIELD);
-	/* Filter out HW exception & NMI */
-	if ((vcpu->arch.idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
-		uint32_t vector_info = vcpu->arch.idt_vectoring_info;
-		uint32_t vector = vector_info & 0xffU;
-		uint32_t type = (vector_info & VMX_INT_TYPE_MASK) >> 8U;
-		uint32_t err_code = 0U;
-
-		if (type == VMX_INT_TYPE_HW_EXP) {
-			if ((vector_info & VMX_INT_INFO_ERR_CODE_VALID) != 0U) {
-				err_code = exec_vmread32(VMX_IDT_VEC_ERROR_CODE);
-			}
-			(void)vcpu_queue_exception(vcpu, vector, err_code);
-			vcpu->arch.idt_vectoring_info = 0U;
-		} else if (type == VMX_INT_TYPE_NMI) {
-			vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
-			vcpu->arch.idt_vectoring_info = 0U;
-		} else {
-			/* No action on EXT_INT or SW exception. */
-		}
-	}
-
-	/* Calculate basic exit reason (low 16-bits) */
-	basic_exit_reason = (uint16_t)(vcpu->arch.exit_reason & 0xFFFFU);
-
-	/* Log details for exit */
-	pr_dbg("Exit Reason: 0x%016llx ", vcpu->arch.exit_reason);
-
-	/* Ensure exit reason is within dispatch table */
-	if (basic_exit_reason >= ARRAY_SIZE(dispatch_table)) {
-		pr_err("Invalid Exit Reason: 0x%016llx ",
-				vcpu->arch.exit_reason);
-		return -EINVAL;
-	}
-
-	/* Calculate dispatch table entry */
-	dispatch = (struct vm_exit_dispatch *)
-		(dispatch_table + basic_exit_reason);
-
-	/* See if an exit qualification is necessary for this exit
-	 * handler
-	 */
-	if (dispatch->need_exit_qualification != 0U) {
-		/* Get exit qualification */
-		vcpu->arch.exit_qualification =
-		    exec_vmread(VMX_EXIT_QUALIFICATION);
-	}
-
-	/* exit dispatch handling */
-	if (basic_exit_reason == VMX_EXIT_REASON_EXTERNAL_INTERRUPT) {
-		/* Handling external_interrupt
-		 * should disable intr
-		 */
-		CPU_IRQ_DISABLE();
-		ret = dispatch->handler(vcpu);
-		CPU_IRQ_ENABLE();
+		ret = -EINVAL;
 	} else {
-		ret = dispatch->handler(vcpu);
+		/* Obtain interrupt info */
+		vcpu->arch.idt_vectoring_info = exec_vmread32(VMX_IDT_VEC_INFO_FIELD);
+		/* Filter out HW exception & NMI */
+		if ((vcpu->arch.idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
+			uint32_t vector_info = vcpu->arch.idt_vectoring_info;
+			uint32_t vector = vector_info & 0xffU;
+			uint32_t type = (vector_info & VMX_INT_TYPE_MASK) >> 8U;
+			uint32_t err_code = 0U;
+
+			if (type == VMX_INT_TYPE_HW_EXP) {
+				if ((vector_info & VMX_INT_INFO_ERR_CODE_VALID) != 0U) {
+					err_code = exec_vmread32(VMX_IDT_VEC_ERROR_CODE);
+				}
+				(void)vcpu_queue_exception(vcpu, vector, err_code);
+				vcpu->arch.idt_vectoring_info = 0U;
+			} else if (type == VMX_INT_TYPE_NMI) {
+				vcpu_make_request(vcpu, ACRN_REQUEST_NMI);
+				vcpu->arch.idt_vectoring_info = 0U;
+			} else {
+				/* No action on EXT_INT or SW exception. */
+			}
+		}
+
+		/* Calculate basic exit reason (low 16-bits) */
+		basic_exit_reason = (uint16_t)(vcpu->arch.exit_reason & 0xFFFFU);
+
+		/* Log details for exit */
+		pr_dbg("Exit Reason: 0x%016llx ", vcpu->arch.exit_reason);
+
+		/* Ensure exit reason is within dispatch table */
+		if (basic_exit_reason >= ARRAY_SIZE(dispatch_table)) {
+			pr_err("Invalid Exit Reason: 0x%016llx ", vcpu->arch.exit_reason);
+			ret = -EINVAL;
+		} else {
+			/* Calculate dispatch table entry */
+			dispatch = (struct vm_exit_dispatch *)(dispatch_table + basic_exit_reason);
+
+			/* See if an exit qualification is necessary for this exit handler */
+			if (dispatch->need_exit_qualification != 0U) {
+				/* Get exit qualification */
+				vcpu->arch.exit_qualification = exec_vmread(VMX_EXIT_QUALIFICATION);
+			}
+
+			/* exit dispatch handling */
+			if (basic_exit_reason == VMX_EXIT_REASON_EXTERNAL_INTERRUPT) {
+				/* Handling external_interrupt should disable intr */
+				CPU_IRQ_DISABLE();
+				ret = dispatch->handler(vcpu);
+				CPU_IRQ_ENABLE();
+			} else {
+				ret = dispatch->handler(vcpu);
+			}
+		}
 	}
 
 	return ret;
@@ -268,6 +260,7 @@ int32_t cr_access_vmexit_handler(struct acrn_vcpu *vcpu)
 	uint64_t reg;
 	uint32_t idx;
 	uint64_t exit_qual;
+	int32_t ret = 0;
 
 	exit_qual = vcpu->arch.exit_qualification;
 	idx = (uint32_t)vm_exit_cr_access_reg_idx(exit_qual);
@@ -305,13 +298,14 @@ int32_t cr_access_vmexit_handler(struct acrn_vcpu *vcpu)
 		break;
 	default:
 		panic("Unhandled CR access");
-		return -EINVAL;
+		ret = -EINVAL;
+		break;
 	}
 
 	TRACE_2L(TRACE_VMEXIT_CR_ACCESS, vm_exit_cr_access_type(exit_qual),
 			vm_exit_cr_access_cr_num(exit_qual));
 
-	return 0;
+	return ret;
 }
 
 /*
@@ -322,44 +316,43 @@ static int32_t xsetbv_vmexit_handler(struct acrn_vcpu *vcpu)
 {
 	int32_t idx;
 	uint64_t val64;
+	int32_t ret = 0;
 
 	val64 = exec_vmread(VMX_GUEST_CR4);
 	if ((val64 & CR4_OSXSAVE) == 0UL) {
 		vcpu_inject_gp(vcpu, 0U);
-		return 0;
+	} else {
+		idx = vcpu->arch.cur_context;
+		if (idx >= NR_WORLD) {
+			ret = -1;
+		} else {
+			/* to access XCR0,'rcx' should be 0 */
+			if (vcpu_get_gpreg(vcpu, CPU_REG_RCX) != 0UL) {
+				vcpu_inject_gp(vcpu, 0U);
+			} else {
+				val64 = (vcpu_get_gpreg(vcpu, CPU_REG_RAX) & 0xffffffffUL) |
+						(vcpu_get_gpreg(vcpu, CPU_REG_RDX) << 32U);
+
+				/* bit 0(x87 state) of XCR0 can't be cleared */
+				if ((val64 & 0x01UL) == 0UL) {
+					vcpu_inject_gp(vcpu, 0U);
+				} else {
+					/*
+					 * XCR0[2:1] (SSE state & AVX state) can't not be
+					 * set to 10b as it is necessary to set both bits
+					 * to use AVX instructions.
+					 */
+					if (((val64 >> 1U) & 0x3UL) == 0x2UL) {
+						vcpu_inject_gp(vcpu, 0U);
+					} else {
+						write_xcr(0, val64);
+					}
+				}
+			}
+		}
 	}
 
-	idx = vcpu->arch.cur_context;
-	if (idx >= NR_WORLD) {
-		return -1;
-	}
-
-	/*to access XCR0,'rcx' should be 0*/
-	if (vcpu_get_gpreg(vcpu, CPU_REG_RCX) != 0UL) {
-		vcpu_inject_gp(vcpu, 0U);
-		return 0;
-	}
-
-	val64 = (vcpu_get_gpreg(vcpu, CPU_REG_RAX) & 0xffffffffUL) |
-			(vcpu_get_gpreg(vcpu, CPU_REG_RDX) << 32U);
-
-	/*bit 0(x87 state) of XCR0 can't be cleared*/
-	if ((val64 & 0x01UL) == 0UL) {
-		vcpu_inject_gp(vcpu, 0U);
-		return 0;
-	}
-
-	/*XCR0[2:1] (SSE state & AVX state) can't not be
-	 *set to 10b as it is necessary to set both bits
-	 *to use AVX instructions.
-	 **/
-	if (((val64 >> 1U) & 0x3UL) == 0x2UL) {
-		vcpu_inject_gp(vcpu, 0U);
-		return 0;
-	}
-
-	write_xcr(0, val64);
-	return 0;
+	return ret;
 }
 
 static int32_t wbinvd_vmexit_handler(struct acrn_vcpu *vcpu)
