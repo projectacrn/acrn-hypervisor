@@ -19,6 +19,16 @@ union u_qword {
 
 };
 
+/* MACRO related to string */
+#define ULONG_MAX	((uint64_t)(~0UL))	/* 0xFFFFFFFF */
+#define LONG_MAX	(ULONG_MAX >> 1U)	/* 0x7FFFFFFF */
+#define LONG_MIN	(~LONG_MAX)		/* 0x80000000 */
+
+static inline bool is_space(char c)
+{
+	return ((c == ' ') || (c == '\t'));
+}
+
 /* Function prototypes */
 void udelay(uint32_t us);
 int32_t strcmp(const char *s1_arg, const char *s2_arg);
