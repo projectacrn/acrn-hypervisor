@@ -88,7 +88,7 @@ ifeq ($(FIRMWARE),uefi)
 endif
 
 sbl-hypervisor-install:
-	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl BOARD=$(BOARD) FIRMWARE=$(FIRMWARE) RELEASE=$(RELEASE) install
+	make -C $(T)/hypervisor HV_OBJDIR=$(HV_OUT)-sbl BOARD=apl-mrb FIRMWARE=sbl RELEASE=$(RELEASE) install
 
 devicemodel-install:
 	make -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) install
