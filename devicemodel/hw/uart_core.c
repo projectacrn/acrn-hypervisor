@@ -134,6 +134,7 @@ ttyopen(struct ttyfd *tf)
 	tf->tio_new = tf->tio_orig;
 	cfmakeraw(&tf->tio_new);
 	tf->tio_new.c_cflag |= CLOCAL;
+	tcflush(tf->fd_in, TCIOFLUSH);
 	tcsetattr(tf->fd_in, TCSANOW, &tf->tio_new);
 
 	if (tf->fd_in == STDIN_FILENO) {
@@ -396,9 +397,10 @@ uart_drain(int fd, enum ev_type ev, void *arg)
 	if ((uart->mcr & MCR_LOOPBACK) != 0) {
 		(void) ttyread(&uart->tty);
 	} else {
-		while ((ch = ttyread(&uart->tty)) != -1)
+		/* only read tty when rxfifo available to make sure no data lost */
+		while (rxfifo_available(uart) && (ch = ttyread(&uart->tty)) != -1) {
 			rxfifo_putchar(uart, ch);
-
+		}
 		uart_toggle_intr(uart);
 	}
 
