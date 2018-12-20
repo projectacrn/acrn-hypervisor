@@ -42,6 +42,7 @@
 
 /* All dynamic table entry no. */
 #define NHLT_ENTRY_NO		8
+#define PSDS_ENTRY_NO		10
 
 void acpi_table_enable(int num);
 uint32_t get_acpi_base(void);
