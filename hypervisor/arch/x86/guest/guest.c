@@ -47,23 +47,25 @@ uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask)
 enum vm_paging_mode get_vcpu_paging_mode(struct acrn_vcpu *vcpu)
 {
 	enum vm_cpu_mode cpu_mode;
+	enum vm_paging_mode ret;
 
 	cpu_mode = get_vcpu_mode(vcpu);
 
 	if (cpu_mode == CPU_MODE_REAL) {
-		return PAGING_MODE_0_LEVEL;
-	}
-	else if (cpu_mode == CPU_MODE_PROTECTED) {
-		if (is_pae(vcpu)) {
-			return PAGING_MODE_3_LEVEL;
-		}
-		else if (is_paging_enabled(vcpu)) {
-			return PAGING_MODE_2_LEVEL;
-		}
-		return PAGING_MODE_0_LEVEL;
+		ret = PAGING_MODE_0_LEVEL;
+
+	} else if (cpu_mode == CPU_MODE_PROTECTED) {
+		if (is_pae(vcpu))
+			ret = PAGING_MODE_3_LEVEL;
+		else if (is_paging_enabled(vcpu))
+			ret = PAGING_MODE_2_LEVEL;
+		else
+			ret = PAGING_MODE_0_LEVEL;
 	} else {	/* compatibility or 64bit mode */
-		return PAGING_MODE_4_LEVEL;
+		ret = PAGING_MODE_4_LEVEL;
 	}
+
+	return ret;
 }
 
 /* TODO: Add code to check for Revserved bits, SMAP and PKE when do translation
