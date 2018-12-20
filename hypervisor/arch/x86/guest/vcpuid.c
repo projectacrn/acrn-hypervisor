@@ -190,113 +190,121 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 		entry.eax = 0x16U;
 	}
 	result = set_vcpuid_entry(vm, &entry);
-	if (result != 0) {
-		return result;
-	}
-	limit = entry.eax;
-	vm->vcpuid_level = limit;
+	if (result == 0) {
+		limit = entry.eax;
+		vm->vcpuid_level = limit;
 
-	for (i = 1U; i <= limit; i++) {
-		/* cpuid 1/0xb is percpu related */
-		if ((i == 1U) || (i == 0xbU)) {
-			continue;
-		}
-
-		switch (i) {
-		case 0x02U:
-		{
-			uint32_t times;
-
-			init_vcpuid_entry(i, 0U, CPUID_CHECK_SUBLEAF, &entry);
-			result = set_vcpuid_entry(vm, &entry);
-			if (result != 0) {
-				return result;
+		for (i = 1U; i <= limit; i++) {
+			/* cpuid 1/0xb is percpu related */
+			if ((i == 1U) || (i == 0xbU)) {
+				continue;
 			}
 
-			times = entry.eax & 0xffUL;
-			for (j = 1U; j < times; j++) {
-				init_vcpuid_entry(i, j, CPUID_CHECK_SUBLEAF,
-						&entry);
+			switch (i) {
+			case 0x02U:
+			{
+				uint32_t times;
+
+				init_vcpuid_entry(i, 0U, CPUID_CHECK_SUBLEAF, &entry);
+				result = set_vcpuid_entry(vm, &entry);
+				if (result == 0) {
+					times = entry.eax & 0xffUL;
+					for (j = 1U; j < times; j++) {
+						init_vcpuid_entry(i, j, CPUID_CHECK_SUBLEAF, &entry);
+						result = set_vcpuid_entry(vm, &entry);
+						if (result != 0) {
+							/* wants to break out of switch */
+							break;
+						}
+					}
+				}
+				break;
+			}
+
+			case 0x04U:
+				for (j = 0U; ; j++) {
+					init_vcpuid_entry(i, j, CPUID_CHECK_SUBLEAF, &entry);
+					if (entry.eax == 0U) {
+						break;
+					}
+					result = set_vcpuid_entry(vm, &entry);
+					if (result != 0) {
+						/* wants to break out of switch */
+						break;
+					}
+				}
+				break;
+
+			case 0x0dU:
+				for (j = 0U; j < 64U; j++) {
+					init_vcpuid_entry(i, j, CPUID_CHECK_SUBLEAF, &entry);
+					if (entry.eax == 0U) {
+						continue;
+					}
+					result = set_vcpuid_entry(vm, &entry);
+					if (result != 0) {
+						/* wants to break out of switch */
+						break;
+					}
+				}
+				break;
+
+			/* These features are disabled */
+			/* PMU is not supported */
+			case 0x0aU:
+			/* Intel RDT */
+			case 0x0fU:
+			case 0x10U:
+			/* Intel SGX */
+			case 0x12U:
+			/* Intel Processor Trace */
+			case 0x14U:
+				break;
+			default:
+				init_vcpuid_entry(i, 0U, 0U, &entry);
 				result = set_vcpuid_entry(vm, &entry);
 				if (result != 0) {
-					return result;
-				}
-			}
-			break;
-		}
-
-		case 0x04U:
-		case 0x0dU:
-			for (j = 0U; ; j++) {
-				if ((i == 0x0dU) && (j == 64U)) {
+					/* break out of switch */
 					break;
 				}
-
-				init_vcpuid_entry(i, j, CPUID_CHECK_SUBLEAF,
-						&entry);
-				if ((i == 0x04U) && (entry.eax == 0U)) {
-					break;
-				}
-				if ((i == 0x0dU) && (entry.eax == 0U)) {
-					continue;
-				}
-				result = set_vcpuid_entry(vm, &entry);
-				if (result != 0) {
-					return result;
-				}
+				break;
 			}
-			break;
 
-		/* These features are disabled */
-		/* PMU is not supported */
-		case 0x0aU:
-		/* Intel RDT */
-		case 0x0fU:
-		case 0x10U:
-		/* Intel SGX */
-		case 0x12U:
-		/* Intel Processor Trace */
-		case 0x14U:
-			break;
-		default:
-			init_vcpuid_entry(i, 0U, 0U, &entry);
-			result = set_vcpuid_entry(vm, &entry);
+			/* WARNING: do nothing between break out of switch and before this check */
 			if (result != 0) {
-				return result;
+				/* break out of for */
+				break;
 			}
-			break;
+		}
+
+		if (result == 0) {
+			init_vcpuid_entry(0x40000000U, 0U, 0U, &entry);
+			result = set_vcpuid_entry(vm, &entry);
+			if (result == 0) {
+				init_vcpuid_entry(0x40000010U, 0U, 0U, &entry);
+				result = set_vcpuid_entry(vm, &entry);
+			}
+
+			if (result == 0) {
+				init_vcpuid_entry(0x80000000U, 0U, 0U, &entry);
+				result = set_vcpuid_entry(vm, &entry);
+			}
+
+			if (result == 0) {
+				limit = entry.eax;
+				vm->vcpuid_xlevel = limit;
+				for (i = 0x80000001U; i <= limit; i++) {
+					init_vcpuid_entry(i, 0U, 0U, &entry);
+					result = set_vcpuid_entry(vm, &entry);
+					if (result != 0) {
+						break;
+					}
+				}
+			}
 		}
 	}
 
-	init_vcpuid_entry(0x40000000U, 0U, 0U, &entry);
-	result = set_vcpuid_entry(vm, &entry);
-	if (result != 0) {
-		return result;
-	}
-
-	init_vcpuid_entry(0x40000010U, 0U, 0U, &entry);
-	result = set_vcpuid_entry(vm, &entry);
-	if (result != 0) {
-		return result;
-	}
-
-	init_vcpuid_entry(0x80000000U, 0U, 0U, &entry);
-	result = set_vcpuid_entry(vm, &entry);
-	if (result != 0) {
-		return result;
-	}
-
-	limit = entry.eax;
-	vm->vcpuid_xlevel = limit;
-	for (i = 0x80000001U; i <= limit; i++) {
-		init_vcpuid_entry(i, 0U, 0U, &entry);
-		result = set_vcpuid_entry(vm, &entry);
-		if (result != 0) {
-			return result;
-		}
-	}
-
-	return 0;
+	return result;
 }
 
 void guest_cpuid(struct acrn_vcpu *vcpu,
