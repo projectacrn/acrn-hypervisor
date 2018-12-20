@@ -18,6 +18,7 @@
 #include <vmtrr.h>
 #include <timer.h>
 #include <vlapic.h>
+#include <schedule.h>
 #include <vcpu.h>
 #include <trusty.h>
 #include <guest_pm.h>

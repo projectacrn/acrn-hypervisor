@@ -264,7 +264,7 @@ struct acrn_vcpu {
 	volatile enum vcpu_state dbg_req_state;
 	uint64_t sync;	/*hold the bit events*/
 
-	struct list_head run_list; /* inserted to schedule runqueue */
+	struct sched_object sched_obj;
 	uint64_t pending_pre_work; /* any pre work pending? */
 	bool launched; /* Whether the vcpu is launched on target pcpu */
 	uint32_t paused_cnt; /* how many times vcpu is paused */
