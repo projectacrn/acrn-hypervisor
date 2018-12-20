@@ -977,11 +977,8 @@ static int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t s
 	context_entry->upper = 0UL;
 	iommu_flush_cache(dmar_unit, context_entry, sizeof(struct dmar_context_entry));
 
-	/* if caching mode is present, need to invalidate translation cache */
-	/* if(cap_caching_mode(dmar_unit->cap)) { */
 	dmar_invalid_context_cache_global(dmar_unit);
 	dmar_invalid_iotlb_global(dmar_unit);
-	/* } */
 	return 0;
 }
 
