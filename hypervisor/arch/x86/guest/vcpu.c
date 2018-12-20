@@ -572,7 +572,7 @@ void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 	vcpu->state = new_state;
 
 	if (atomic_load32(&vcpu->running) == 1U) {
-		remove_vcpu_from_runqueue(vcpu);
+		remove_from_cpu_runqueue(&vcpu->sched_obj, vcpu->pcpu_id);
 		make_reschedule_request(vcpu);
 		release_schedule_lock(vcpu->pcpu_id);
 
@@ -581,7 +581,7 @@ void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 				__asm__ __volatile("pause" ::: "memory");
 		}
 	} else {
-		remove_vcpu_from_runqueue(vcpu);
+		remove_from_cpu_runqueue(&vcpu->sched_obj, vcpu->pcpu_id);
 		release_schedule_lock(vcpu->pcpu_id);
 	}
 }
@@ -594,7 +594,7 @@ void resume_vcpu(struct acrn_vcpu *vcpu)
 	vcpu->state = vcpu->prev_state;
 
 	if (vcpu->state == VCPU_RUNNING) {
-		add_vcpu_to_runqueue(vcpu);
+		add_to_cpu_runqueue(&vcpu->sched_obj, vcpu->pcpu_id);
 		make_reschedule_request(vcpu);
 	}
 	release_schedule_lock(vcpu->pcpu_id);
@@ -606,7 +606,7 @@ void schedule_vcpu(struct acrn_vcpu *vcpu)
 	pr_dbg("vcpu%hu scheduled", vcpu->vcpu_id);
 
 	get_schedule_lock(vcpu->pcpu_id);
-	add_vcpu_to_runqueue(vcpu);
+	add_to_cpu_runqueue(&vcpu->sched_obj, vcpu->pcpu_id);
 	make_reschedule_request(vcpu);
 	release_schedule_lock(vcpu->pcpu_id);
 }
@@ -624,7 +624,7 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 
 	set_pcpu_used(pcpu_id);
 
-	INIT_LIST_HEAD(&vcpu->run_list);
+	INIT_LIST_HEAD(&vcpu->sched_obj.run_list);
 
 	return ret;
 }

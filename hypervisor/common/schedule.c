@@ -60,38 +60,48 @@ void free_pcpu(uint16_t pcpu_id)
 	bitmap_clear_lock(pcpu_id, &pcpu_used_bitmap);
 }
 
-void add_vcpu_to_runqueue(struct acrn_vcpu *vcpu)
+void add_to_cpu_runqueue(struct sched_object *obj, uint16_t pcpu_id)
 {
-	uint16_t pcpu_id = vcpu->pcpu_id;
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 
 	spinlock_obtain(&ctx->runqueue_lock);
-	if (list_empty(&vcpu->run_list)) {
-		list_add_tail(&vcpu->run_list, &ctx->runqueue);
+	if (list_empty(&obj->run_list)) {
+		list_add_tail(&obj->run_list, &ctx->runqueue);
 	}
 	spinlock_release(&ctx->runqueue_lock);
 }
 
-void remove_vcpu_from_runqueue(struct acrn_vcpu *vcpu)
+void remove_from_cpu_runqueue(struct sched_object *obj, uint16_t pcpu_id)
 {
-	uint16_t pcpu_id = vcpu->pcpu_id;
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 
 	spinlock_obtain(&ctx->runqueue_lock);
-	list_del_init(&vcpu->run_list);
+	list_del_init(&obj->run_list);
 	spinlock_release(&ctx->runqueue_lock);
+}
+
+static struct sched_object *get_next_sched_obj(uint16_t pcpu_id)
+{
+	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
+	struct sched_object *obj = NULL;
+
+	spinlock_obtain(&ctx->runqueue_lock);
+	if (!list_empty(&ctx->runqueue)) {
+		obj = get_first_item(&ctx->runqueue, struct sched_object, run_list);
+	}
+	spinlock_release(&ctx->runqueue_lock);
+
+	return obj;
 }
 
 static struct acrn_vcpu *select_next_vcpu(uint16_t pcpu_id)
 {
-	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 	struct acrn_vcpu *vcpu = NULL;
+	struct sched_object *obj = get_next_sched_obj(pcpu_id);
 
-	spinlock_obtain(&ctx->runqueue_lock);
-	if (!list_empty(&ctx->runqueue)) {
-		vcpu = get_first_item(&ctx->runqueue, struct acrn_vcpu, run_list);
+	if (obj != NULL) {
+		vcpu = list_entry(obj, struct acrn_vcpu, sched_obj);
 	}
-	spinlock_release(&ctx->runqueue_lock);
 
 	return vcpu;
 }

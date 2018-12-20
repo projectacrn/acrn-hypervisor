@@ -10,6 +10,10 @@
 #define	NEED_RESCHEDULE		(1U)
 #define	NEED_OFFLINE		(2U)
 
+struct sched_object {
+	struct list_head run_list;
+};
+
 struct sched_context {
 	spinlock_t runqueue_lock;
 	struct list_head runqueue;
@@ -26,8 +30,8 @@ void set_pcpu_used(uint16_t pcpu_id);
 uint16_t allocate_pcpu(void);
 void free_pcpu(uint16_t pcpu_id);
 
-void add_vcpu_to_runqueue(struct acrn_vcpu *vcpu);
-void remove_vcpu_from_runqueue(struct acrn_vcpu *vcpu);
+void add_to_cpu_runqueue(struct sched_object *obj, uint16_t pcpu_id);
+void remove_from_cpu_runqueue(struct sched_object *obj, uint16_t pcpu_id);
 
 void default_idle(void);
 
