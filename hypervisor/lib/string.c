@@ -228,32 +228,38 @@ char *strncpy_s(char *d_arg, size_t dmax, const char *s_arg, size_t slen_arg)
 		dest_avail = dmax;
 
 		while (dest_avail > 0U) {
+			bool complete = false;
+
 			if (overlap_guard == 0U) {
 				pr_err("%s: overlap happened.", __func__);
 				d--;
 				*d = '\0';
-				/* break out to return */
 				pret = NULL;
-				break;
+				/* copy complete */
+				complete = true;
+			} else {
+				if (slen == 0U) {
+					*d = '\0';
+					/* copy complete */
+					complete = true;
+				} else {
+					*d = *s;
+					if (*d == '\0') {
+						/* copy complete */
+						complete = true;
+					} else {
+						d++;
+						s++;
+						slen--;
+						dest_avail--;
+						overlap_guard--;
+					}
+				}
 			}
 
-			if (slen == 0U) {
-				*d = '\0';
-				/* break out to return */
+			if (complete) {
 				break;
 			}
-
-			*d = *s;
-			if (*d == '\0') {
-				/* break out to return */
-				break;
-			}
-
-			d++;
-			s++;
-			slen--;
-			dest_avail--;
-			overlap_guard--;
 		}
 
 		if (dest_avail == 0U) {
