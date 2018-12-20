@@ -31,7 +31,7 @@ static uint64_t start_tsc __attribute__((__section__(".bss_noinit")));
 static void init_percpu_lapic_id(void)
 {
 	uint16_t i;
-	uint16_t pcpu_num = 0U;
+	uint16_t pcpu_num;
 	uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM];
 
 	/* Save all lapic_id detected via parse_mdt in lapic_id_array */
@@ -68,8 +68,10 @@ static void cpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state)
 	per_cpu(boot_state, pcpu_id) = state;
 }
 
-void init_cpu_pre(uint16_t pcpu_id)
+void init_cpu_pre(uint16_t pcpu_id_args)
 {
+	uint16_t pcpu_id = pcpu_id_args;
+
 	if (pcpu_id == BOOT_CPU_ID) {
 		start_tsc = rdtsc();
 
@@ -188,14 +190,16 @@ void init_cpu_post(uint16_t pcpu_id)
 static uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id)
 {
 	uint16_t i;
+	uint16_t pcpu_id = INVALID_CPU_ID;
 
 	for (i = 0U; (i < phys_cpu_num) && (i < CONFIG_MAX_PCPU_NUM); i++) {
 		if (per_cpu(lapic_id, i) == lapic_id) {
-			return i;
+			pcpu_id = i;
+			break;
 		}
 	}
 
-	return INVALID_CPU_ID;
+	return pcpu_id;
 }
 
 static void start_cpu(uint16_t pcpu_id)
