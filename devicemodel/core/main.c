@@ -185,8 +185,10 @@ static int
 pincpu_parse(const char *opt)
 {
 	int vcpu, pcpu;
+	char *cp;
 
-	if (sscanf(opt, "%d:%d", &vcpu, &pcpu) != 2) {
+	if (dm_strtoi(opt, &cp, 10, &vcpu) || *cp != ':' ||
+		dm_strtoi(cp + 1, &cp, 10, &pcpu)) {
 		fprintf(stderr, "invalid format: %s\n", opt);
 		return -1;
 	}
@@ -804,7 +806,7 @@ dm_run(int argc, char *argv[])
 			}
 			break;
 		case 'c':
-			guest_ncpus = atoi(optarg);
+			dm_strtoi(optarg, NULL, 0, &guest_ncpus);
 			break;
 		case 'E':
 			if (acrn_parse_elf(optarg) != 0)
@@ -1060,10 +1062,10 @@ int main(int argc, char *argv[])
 		switch (c) {
 		case CMD_OPT_VMCFG:
 			vmcfg = 1;
-			index = atoi(optarg);
+			dm_strtoi(optarg, NULL, 0, &index);
 			break;
 		case CMD_OPT_DUMP:
-			index = atoi(optarg);
+			dm_strtoi(optarg, NULL, 0, &index);
 			vmcfg_dump(index, long_options, optstr);
 			return 0;
 		default:

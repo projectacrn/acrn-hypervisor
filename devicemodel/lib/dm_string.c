@@ -8,23 +8,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 #include "dm_string.h"
 
 int
 dm_strtol(const char *s, char **end, unsigned int base, long *val)
 {
 	if (!s)
-		goto err;
+		return -1;
 
 	*val = strtol(s, end, base);
-	if (*end == s) {
-		printf("ERROR! nothing covert for: %s!\n", s);
-		goto err;
-	}
+	if ((end && *end == s) || errno == ERANGE)
+		return -1;
 	return 0;
-
-err:
-	return -1;
 }
 
 int
@@ -35,7 +31,8 @@ dm_strtoi(const char *s, char **end, unsigned int base, int *val)
 
 	l_val = 0;
 	ret = dm_strtol(s, end, base, &l_val);
-	*val = (int)l_val;
+	if (ret == 0)
+		*val = (int)l_val;
 	return ret;
 }
 
@@ -43,17 +40,12 @@ int
 dm_strtoul(const char *s, char **end, unsigned int base, unsigned long *val)
 {
 	if (!s)
-		goto err;
+		return -1;
 
 	*val = strtoul(s, end, base);
-	if (*end == s) {
-		printf("ERROR! nothing covert for: %s!\n", s);
-		goto err;
-	}
+	if ((end && *end == s) || errno == ERANGE)
+		return -1;
 	return 0;
-
-err:
-	return -1;
 }
 
 int
@@ -64,6 +56,7 @@ dm_strtoui(const char *s, char **end, unsigned int base, unsigned int *val)
 
 	l_val = 0;
 	ret = dm_strtoul(s, end, base, &l_val);
-	*val = (unsigned int)l_val;
+	if (ret == 0)
+		*val = (unsigned int)l_val;
 	return ret;
 }
