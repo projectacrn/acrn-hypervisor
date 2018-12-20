@@ -137,8 +137,6 @@ struct host_gdt_descriptor {
 	struct host_gdt *gdt;
 } __packed;
 
-extern struct host_gdt HOST_GDT;
-extern struct host_gdt_descriptor HOST_GDTR;
 void load_gdtr_and_tr(void);
 
 #endif /* end #ifndef ASSEMBLER */
