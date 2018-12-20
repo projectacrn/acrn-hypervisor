@@ -121,6 +121,7 @@ uint64_t e820_alloc_low_memory(uint32_t size_arg)
 {
 	uint32_t i;
 	uint32_t size = size_arg;
+	uint64_t ret = ACRN_INVALID_HPA;
 	struct e820_entry *entry, *new_entry;
 
 	/* We want memory in page boundary and integral multiple of pages */
@@ -144,7 +145,8 @@ uint64_t e820_alloc_low_memory(uint32_t size_arg)
 		if (length == size) {
 			entry->type = E820_TYPE_RESERVED;
 			e820_mem.total_mem_size -= size;
-			return start;
+			ret = start;
+			break;
 		}
 
 		/*
@@ -161,11 +163,14 @@ uint64_t e820_alloc_low_memory(uint32_t size_arg)
 		e820_mem.total_mem_size -= new_entry->length;
 		e820_entries_count++;
 
-		return new_entry->baseaddr;
+	        ret = new_entry->baseaddr;
+		break;
 	}
 
-	pr_fatal("Can't allocate memory under 1M from E820\n");
-	return ACRN_INVALID_HPA;
+	if (ret == ACRN_INVALID_HPA) {
+		pr_fatal("Can't allocate memory under 1M from E820\n");
+	}
+	return ret;
 }
 
 /* HV read multiboot header to get e820 entries info and calc total RAM info */
