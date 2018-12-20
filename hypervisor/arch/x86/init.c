@@ -51,12 +51,6 @@ static void init_passthru(void)
 }
 
 /*TODO: move into guest-vcpu module */
-static void init_guest(void)
-{
-	init_scheduler();
-}
-
-/*TODO: move into guest-vcpu module */
 static void enter_guest_mode(uint16_t pcpu_id)
 {
 	vmx_on();
@@ -81,8 +75,6 @@ static void init_primary_cpu_post(void)
 	init_bsp();
 
 	init_debug_pre();
-
-	init_guest();
 
 	init_cpu_post(BOOT_CPU_ID);
 
