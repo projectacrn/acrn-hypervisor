@@ -35,6 +35,7 @@
 #include <assert.h>
 #include <stdbool.h>
 
+#include "dm.h"
 #include "vmmapi.h"
 #include "acpi.h"
 #include "inout.h"
@@ -155,41 +156,34 @@ pci_parse_slot_usage(char *aopt)
 int
 parse_bdf(char *s, int *bus, int *dev, int *func, int base)
 {
-	int i;
-	int nums[3] = {-1, -1, -1};
-	char *str;
+	char *s_bus, *s_dev, *s_func;
+	char *str, *cp;
+	int ret = 0;
 
-	if (bus) *bus = 0;
-	if (dev) *dev = 0;
-	if (func) *func = 0;
-	str = s;
-	for (i = 0, errno = 0; i < 3; i++) {
-		nums[i] = (int)strtol(str, &str, base);
-		if (errno == ERANGE || *str == '\0' || s == str)
-			break;
-		str++;
+	str = cp = strdup(s);
+	bus ? *bus = 0 : 0;
+	dev ? *dev = 0 : 0;
+	func ? *func = 0 : 0;
+	s_bus = s_dev = s_func = NULL;
+	s_dev = strsep(&cp, ":/.");
+	if (cp) {
+		s_func = strsep(&cp, ":/.");
+		if (cp) {
+			s_bus = s_dev;
+			s_dev = s_func;
+			s_func = strsep(&cp, ":/.");
+		}
 	}
 
-	if (s == str || errno == ERANGE)
-	{
-		printf("%s: parse_bdf error!\n", __func__);
-		return -1;
-	}
-	switch (i) {
-	case 0:
-		if (dev) *dev = nums[0];
-		break;
-	case 1:
-		if (dev) *dev = nums[0];
-		if (func) *func = nums[1];
-		break;
-	case 2:
-		if (bus) *bus = nums[0];
-		if (dev) *dev = nums[1];
-		if (func) *func = nums[2];
-		break;
-	}
-	return 0;
+	if (s_dev && dev)
+		ret |= dm_strtoi(s_dev, &s_dev, base, dev);
+	if (s_func && func)
+		ret |= dm_strtoi(s_func, &s_func, base, func);
+	if (s_bus && bus)
+		ret |= dm_strtoi(s_bus, &s_bus, base, bus);
+	free(str);
+
+	return ret;
 }
 
 int
@@ -208,35 +202,22 @@ pci_parse_slot(char *opt)
 	}
 
 	emul = config = NULL;
-	cp = strchr(str, ',');
-	if (cp != NULL) {
-		*cp = '\0';
-		emul = cp + 1;
-		cp = strchr(emul, ',');
-		if (cp != NULL) {
-			*cp = '\0';
-			config = cp + 1;
-			if (*config == 'b') {
-				b = config;
-				cp = config + 1;
-				if (*cp == ',') {
-					*cp = '\0';
-					config = cp + 1;
-				} else {
-					b = NULL;
-				}
-			}
-		}
+	cp = str;
+	str = strsep(&cp, ",");
+	if (cp) {
+		emul = strsep(&cp, ",");
+		/* for boot device */
+		if (cp && *cp == 'b' && *(cp+1) == ',')
+			b = strsep(&cp, ",");
+		config = cp;
 	} else {
 		pci_parse_slot_usage(opt);
 		goto done;
 	}
 
 	/* <bus>:<slot>:<func> */
-	if (parse_bdf(str, &bnum, &snum, &fnum, 10) != 0) {
-		fprintf(stderr, "pci bdf parse fail\n");
+	if (parse_bdf(str, &bnum, &snum, &fnum, 10) != 0)
 		snum = -1;
-	}
 
 	if (bnum < 0 || bnum >= MAXBUSES || snum < 0 || snum >= MAXSLOTS ||
 	    fnum < 0 || fnum >= MAXFUNCS) {

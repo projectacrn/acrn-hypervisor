@@ -208,7 +208,7 @@ connect_coreu_daemon()
 
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	strncpy(addr.sun_path, COREU_SERVICE_NAME, sizeof(&COREU_SERVICE_NAME));
+	strncpy(addr.sun_path, COREU_SERVICE_NAME, sizeof(addr.sun_path));
 
 	ret = connect(fd, &addr, sizeof(struct sockaddr_un));
 	if (ret < 0) {

@@ -186,6 +186,7 @@ static int pci_npk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	uint8_t h_cfg[PCI_REGMAX + 1];
 	uint32_t m_off, m_num;
 	struct npk_reg_default_val *d;
+	char *cp;
 
 	if (npk_in_use) {
 		WPRINTF(("NPK is already in use\n"));
@@ -212,8 +213,8 @@ static int pci_npk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	 */
 
 	/* get the master offset and the number for this guest */
-	if ((opts == NULL) || (sscanf(opts, "%u/%u", &m_off, &m_num) != 2)
-				|| !valid_param(m_off, m_num)) {
+	if ((opts == NULL) || dm_strtoui(opts, &cp, 10, &m_off) || *cp != '/' ||
+			dm_strtoui(cp + 1, &cp, 10, &m_num) || !valid_param(m_off, m_num)) {
 		m_off = 256;
 		m_num = 256;
 	}
@@ -228,8 +229,7 @@ static int pci_npk_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	/* traverse the driver folder, and try to find the NPK BDF# */
 	while ((dent = readdir(dir)) != NULL) {
 		if (strncmp(dent->d_name, "0000:", 5) != 0 ||
-				parse_bdf((dent->d_name + 5),
-					&b, &s, &f, 10) != 0)
+			parse_bdf((dent->d_name + 5), &b, &s, &f, 16) != 0)
 			continue;
 		else
 			break;

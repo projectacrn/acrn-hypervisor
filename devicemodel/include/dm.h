@@ -32,6 +32,7 @@
 #include <stdbool.h>
 #include "types.h"
 #include "vmm.h"
+#include "dm_string.h"
 
 struct vmctx;
 extern int guest_ncpus;
