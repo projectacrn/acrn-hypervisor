@@ -6,13 +6,12 @@
 
 #include <hypervisor.h>
 
-static inline struct vcpuid_entry *find_vcpuid_entry(const struct acrn_vcpu *vcpu,
-					uint32_t leaf_arg, uint32_t subleaf)
+static inline struct vcpuid_entry *local_find_vcpuid_entry(const struct acrn_vcpu *vcpu,
+					uint32_t leaf, uint32_t subleaf)
 {
 	uint32_t i = 0U, nr, half;
 	struct vcpuid_entry *entry = NULL;
 	struct acrn_vm *vm = vcpu->vm;
-	uint32_t leaf = leaf_arg;
 
 	nr = vm->vcpuid_entry_nr;
 	half = nr >> 1U;
@@ -38,8 +37,19 @@ static inline struct vcpuid_entry *find_vcpuid_entry(const struct acrn_vcpu *vcp
 		}
 	}
 
+	return entry;
+}
+
+static inline struct vcpuid_entry *find_vcpuid_entry(const struct acrn_vcpu *vcpu,
+					uint32_t leaf_arg, uint32_t subleaf)
+{
+	struct vcpuid_entry *entry;
+	uint32_t leaf = leaf_arg;
+
+	entry = local_find_vcpuid_entry(vcpu, leaf, subleaf);
 	if (entry == NULL) {
 		uint32_t limit;
+		struct acrn_vm *vm = vcpu->vm;
 
 		if ((leaf & 0x80000000U) != 0U) {
 			limit = vm->vcpuid_xlevel;
@@ -55,7 +65,7 @@ static inline struct vcpuid_entry *find_vcpuid_entry(const struct acrn_vcpu *vcp
 			 * CPUID)
 			 */
 			leaf = vm->vcpuid_level;
-			return find_vcpuid_entry(vcpu, leaf, subleaf);
+			entry = local_find_vcpuid_entry(vcpu, leaf, subleaf);
 		}
 
 	}
