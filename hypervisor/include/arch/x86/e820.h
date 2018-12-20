@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#ifndef E820_H
+#define E820_H
+
 struct e820_mem_params {
 	uint64_t mem_bottom;
 	uint64_t mem_top;
@@ -42,4 +45,6 @@ const struct e820_mem_params *get_e820_mem_info(void);
  */
 #define NUM_E820_ENTRIES        5U
 extern const struct e820_entry e820_default_entries[NUM_E820_ENTRIES];
+#endif
+
 #endif

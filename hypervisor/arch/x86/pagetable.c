@@ -125,7 +125,7 @@ static void modify_or_del_pde(const uint64_t *pdpte, uint64_t vaddr_start, uint6
 			panic("invalid op, pde not present");
 		}
 		if (pde_large(*pde) != 0UL) {
-			if (vaddr_next > vaddr_end || !mem_aligned_check(vaddr, PDE_SIZE)) {
+			if ((vaddr_next > vaddr_end) || (!mem_aligned_check(vaddr, PDE_SIZE))) {
 				split_large_page(pde, IA32E_PD, vaddr, mem_ops);
 			} else {
 				local_modify_or_del_pte(pde, prot_set, prot_clr, type);
@@ -167,8 +167,8 @@ static void modify_or_del_pdpte(const uint64_t *pml4e, uint64_t vaddr_start, uin
 			panic("invalid op, pdpte not present");
 		}
 		if (pdpte_large(*pdpte) != 0UL) {
-			if (vaddr_next > vaddr_end ||
-					!mem_aligned_check(vaddr, PDPTE_SIZE)) {
+			if ((vaddr_next > vaddr_end) ||
+					(!mem_aligned_check(vaddr, PDPTE_SIZE))) {
 				split_large_page(pdpte, IA32E_PDPT, vaddr, mem_ops);
 			} else {
 				local_modify_or_del_pte(pdpte, prot_set, prot_clr, type);
@@ -376,34 +376,43 @@ void mmu_add(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_base, uint
  */
 uint64_t *lookup_address(uint64_t *pml4_page, uint64_t addr, uint64_t *pg_size, const struct memory_ops *mem_ops)
 {
+	uint64_t *pret = NULL;
+	bool present = true;
 	uint64_t *pml4e, *pdpte, *pde, *pte;
 
 	pml4e = pml4e_offset(pml4_page, addr);
-	if (mem_ops->pgentry_present(*pml4e) == 0UL) {
-		return NULL;
+	present = (mem_ops->pgentry_present(*pml4e) != 0UL);
+
+	if (present) {
+		pdpte = pdpte_offset(pml4e, addr);
+		present = (mem_ops->pgentry_present(*pdpte) != 0UL);
+		if (present) {
+			if (pdpte_large(*pdpte) != 0UL) {
+				*pg_size = PDPTE_SIZE;
+				pret = pdpte;
+			}
+		}
 	}
 
-	pdpte = pdpte_offset(pml4e, addr);
-	if (mem_ops->pgentry_present(*pdpte) == 0UL) {
-		return NULL;
-	} else if (pdpte_large(*pdpte) != 0UL) {
-		*pg_size = PDPTE_SIZE;
-		return pdpte;
+	if (present && (pret == NULL)) {
+		pde = pde_offset(pdpte, addr);
+		present = (mem_ops->pgentry_present(*pde) != 0UL);
+		if (present) {
+			if (pde_large(*pde) != 0UL) {
+				*pg_size = PDE_SIZE;
+				pret = pde;
+			}
+		}
 	}
 
-	pde = pde_offset(pdpte, addr);
-	if (mem_ops->pgentry_present(*pde) == 0UL) {
-		return NULL;
-	} else if (pde_large(*pde) != 0UL) {
-		*pg_size = PDE_SIZE;
-		return pde;
+	if (present && (pret == NULL)) {
+		pte = pte_offset(pde, addr);
+		present = (mem_ops->pgentry_present(*pte) != 0UL);
+		if (present) {
+			*pg_size = PTE_SIZE;
+			pret = pte;
+		}
 	}
 
-	pte = pte_offset(pde, addr);
-	if (mem_ops->pgentry_present(*pte) == 0UL) {
-		return NULL;
-	} else {
-		*pg_size = PTE_SIZE;
-		return pte;
-	}
+	return pret;
 }

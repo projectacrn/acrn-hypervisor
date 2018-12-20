@@ -69,6 +69,7 @@
 #define HC_SETUP_SBUF               BASE_HC_ID(HC_ID, HC_ID_DBG_BASE + 0x00UL)
 #define HC_SETUP_HV_NPK_LOG         BASE_HC_ID(HC_ID, HC_ID_DBG_BASE + 0x01UL)
 #define HC_PROFILING_OPS            BASE_HC_ID(HC_ID, HC_ID_DBG_BASE + 0x02UL)
+#define HC_GET_HW_INFO              BASE_HC_ID(HC_ID, HC_ID_DBG_BASE + 0x03UL)
 
 /* Trusty */
 #define HC_ID_TRUSTY_BASE           0x70UL
@@ -150,7 +151,7 @@ struct set_regions {
 	 * the max buffer size is one page.
 	 */
 	uint64_t regions_gpa;
-} __attribute__((aligned(8)));
+} __aligned(8);
 
 /**
  * @brief Info to change guest one page write protect permission
@@ -207,6 +208,14 @@ struct hv_npk_log_param {
 
 	/** the MMIO address for the hypervisor NPK log */
 	uint64_t mmio_addr;
+} __aligned(8);
+
+/**
+ * the parameter for HC_GET_HW_INFO hypercall
+ */
+struct acrn_hw_info {
+	uint16_t cpu_num; /* Physical CPU number */
+	uint16_t reserved[3];
 } __aligned(8);
 
 /**

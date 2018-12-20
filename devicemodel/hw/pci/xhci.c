@@ -777,7 +777,7 @@ pci_xhci_native_usb_dev_conn_cb(void *hci_data, void *dev_data)
 		return 0;
 	}
 
-	UPRINTF(LDBG, "%04x:%04x %d-%s belong to this vm.\r\n", di->vid,
+	UPRINTF(LINF, "%04x:%04x %d-%s belong to this vm.\r\n", di->vid,
 			di->pid, di->path.bus, usb_dev_path(&di->path));
 
 	for (i = 0; xdev->vbdp_dev_num && i < XHCI_MAX_VIRT_PORTS; ++i) {
@@ -903,6 +903,9 @@ pci_xhci_native_usb_dev_disconn_cb(void *hci_data, void *dev_data)
 		 * we do nothing here for device that is in the middle of
 		 * S3 resuming process.
 		 */
+		UPRINTF(LINF, "disconnect device %d-%s on vport %d with "
+				"state %d and return.\r\n", di->path.bus,
+				usb_dev_path(&di->path), vport, state);
 		return 0;
 	}
 

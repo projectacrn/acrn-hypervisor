@@ -17,13 +17,13 @@
 static const char * const cmd_list[] = {
 	"uart=disabled",	/* to disable uart */
 	"uart=port@",		/* like uart=port@0x3F8 */
-	"uart=mmio@",	/*like: uart=mmio@0xFC000000 */
+	"uart=bdf@",	/*like: uart=bdf@0:18.2, it is for ttyS2 */
 };
 
 enum IDX_CMD {
 	IDX_DISABLE_UART,
 	IDX_PORT_UART,
-	IDX_MMIO_UART,
+	IDX_PCI_UART,
 
 	IDX_MAX_CMD,
 };
@@ -45,19 +45,16 @@ static void handle_cmd(const char *cmd, int32_t len)
 		if (i == IDX_DISABLE_UART) {
 			/* set uart disabled*/
 			uart16550_set_property(false, false, 0UL);
-		} else if ((i == IDX_PORT_UART) || (i == IDX_MMIO_UART)) {
+		} else if (i == IDX_PORT_UART) {
 			uint64_t addr = strtoul_hex(cmd + tmp);
-
-			dev_dbg(ACRN_DBG_PARSE, "uart addr=0x%llx", addr);
-
-			if (i == IDX_PORT_UART) {
-				if (addr > MAX_PORT)
-					addr = DEFAULT_UART_PORT;
-
-				uart16550_set_property(true, true, addr);
-			} else {
-				uart16550_set_property(true, false, addr);
+			if (addr > MAX_PORT) {
+				addr = DEFAULT_UART_PORT;
 			}
+
+			uart16550_set_property(true, true, addr);
+
+		} else if (i == IDX_PCI_UART) {
+			uart16550_set_property(true, false, (uint64_t)(cmd+tmp));
 		}
 	}
 }
