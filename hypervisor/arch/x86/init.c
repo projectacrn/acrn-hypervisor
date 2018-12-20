@@ -69,7 +69,7 @@ static void enter_guest_mode(uint16_t pcpu_id)
 	}
 #endif
 
-	default_idle();
+	switch_to_idle(default_idle);
 
 	/* Control should not come here */
 	cpu_dead();

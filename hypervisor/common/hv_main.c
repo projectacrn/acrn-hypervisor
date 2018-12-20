@@ -17,8 +17,9 @@ static void run_vcpu_pre_work(struct acrn_vcpu *vcpu)
 	}
 }
 
-void vcpu_thread(struct acrn_vcpu *vcpu)
+void vcpu_thread(struct sched_object *obj)
 {
+	struct acrn_vcpu *vcpu = list_entry(obj, struct acrn_vcpu, sched_obj);
 	uint32_t basic_exit_reason = 0U;
 	int32_t ret = 0;
 
@@ -87,4 +88,22 @@ void vcpu_thread(struct acrn_vcpu *vcpu)
 
 		profiling_post_vmexit_handler(vcpu);
 	} while (1);
+}
+
+void default_idle(__unused struct sched_object *obj)
+{
+	uint16_t pcpu_id = get_cpu_id();
+
+	while (1) {
+		if (need_reschedule(pcpu_id) != 0) {
+			schedule();
+		} else if (need_offline(pcpu_id) != 0) {
+			cpu_dead();
+		} else {
+			CPU_IRQ_ENABLE();
+			handle_complete_ioreq(pcpu_id);
+			cpu_do_idle();
+			CPU_IRQ_DISABLE();
+		}
+	}
 }
