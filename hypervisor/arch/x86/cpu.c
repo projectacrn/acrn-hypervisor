@@ -160,6 +160,8 @@ void init_cpu_post(uint16_t pcpu_id)
 			pr_fatal("Please apply the latest CPU uCode patch!");
 		}
 
+		init_scheduler();
+
 		/* Initialize interrupts */
 		interrupt_init(BOOT_CPU_ID);
 
