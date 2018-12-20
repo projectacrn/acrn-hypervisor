@@ -622,7 +622,7 @@ void init_iommu_vm0_domain(struct acrn_vm *vm0);
  * @retval false not support
  *
  */
-bool iommu_snoop_supported(struct acrn_vm *vm);
+bool iommu_snoop_supported(const struct acrn_vm *vm);
 
 /**
   * @}
