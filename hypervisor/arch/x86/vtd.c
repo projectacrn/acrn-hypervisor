@@ -145,7 +145,7 @@ bool iommu_snoop_supported(const struct acrn_vm *vm)
 {
 	bool ret;
 
-	if (vm->iommu == NULL || vm->iommu->iommu_snoop) {
+	if ((vm->iommu == NULL) || (vm->iommu->iommu_snoop)) {
 		ret =  true;
 	} else {
 		ret = false;
@@ -175,7 +175,7 @@ static int32_t register_hrhd_units(void)
 	uint32_t i;
 	int32_t ret = 0;
 
-	if (info == NULL || info->drhd_count == 0U) {
+	if ((info == NULL) || (info->drhd_count == 0U)) {
 		pr_fatal("%s: can't find dmar info\n", __func__);
 		return -ENODEV;
 	}
