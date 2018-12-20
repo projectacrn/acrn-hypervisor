@@ -129,16 +129,15 @@ struct context_table {
 	struct page buses[CONFIG_IOMMU_BUS_NUM];
 };
 
-static struct page root_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
-static struct context_table ctx_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
-
 static inline uint8_t* get_root_table(uint32_t dmar_index)
 {
+	static struct page root_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
 	return root_tables[dmar_index].contents;
 }
 
 static inline uint8_t* get_ctx_table(uint32_t dmar_index, uint8_t bus_no)
 {
+	static struct context_table ctx_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
 	return ctx_tables[dmar_index].buses[bus_no].contents;
 }
 
@@ -161,7 +160,6 @@ static struct iommu_domain *vm0_domain;
 
 /* Domain id 0 is reserved in some cases per VT-d */
 #define MAX_DOMAIN_NUM (CONFIG_MAX_VM_NUM + 1)
-static struct iommu_domain iommu_domains[MAX_DOMAIN_NUM];
 
 static inline uint16_t vmid_to_domainid(uint16_t vm_id)
 {
@@ -1009,6 +1007,7 @@ static void do_action_for_iommus(void (*action)(struct dmar_drhd_rt *))
 
 struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_table, uint32_t addr_width)
 {
+	static struct iommu_domain iommu_domains[MAX_DOMAIN_NUM];
 	struct iommu_domain *domain;
 
 	/* TODO: check if a domain with the vm_id exists */
