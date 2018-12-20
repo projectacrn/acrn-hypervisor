@@ -113,7 +113,7 @@ static uint16_t vm_apicid2vcpu_id(struct acrn_vm *vm, uint8_t lapicid)
 	struct acrn_vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
-		struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
+		const struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
 		if (vlapic_get_apicid(vlapic) == lapicid) {
 			return vcpu->vcpu_id;
 		}
@@ -139,7 +139,7 @@ vm_active_cpus(const struct acrn_vm *vm)
 }
 
 uint32_t
-vlapic_get_apicid(struct acrn_vlapic *vlapic)
+vlapic_get_apicid(const struct acrn_vlapic *vlapic)
 {
 	uint32_t apicid;
 	if (is_x2apic_enabled(vlapic)) {
