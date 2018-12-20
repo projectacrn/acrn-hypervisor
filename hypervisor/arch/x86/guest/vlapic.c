@@ -111,17 +111,21 @@ static uint16_t vm_apicid2vcpu_id(struct acrn_vm *vm, uint8_t lapicid)
 {
 	uint16_t i;
 	struct acrn_vcpu *vcpu;
+	uint16_t cpuid = 0xFFFFU;
 
 	foreach_vcpu(i, vm, vcpu) {
 		const struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
 		if (vlapic_get_apicid(vlapic) == lapicid) {
-			return vcpu->vcpu_id;
+			cpuid = vcpu->vcpu_id;
 		}
 	}
 
-	pr_err("%s: bad lapicid %hhu", __func__, lapicid);
+	if (cpuid == 0xFFFFU) {
+		cpuid = phys_cpu_num;
+		pr_err("%s: bad lapicid %hhu", __func__, lapicid);
+	}
 
-	return phys_cpu_num;
+	return cpuid;
 }
 
 /*
@@ -629,10 +633,12 @@ vlapic_get_lvtptr(struct acrn_vlapic *vlapic, uint32_t offset)
 {
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 	uint32_t i;
+	uint32_t *lvt;
 
 	switch (offset) {
 	case APIC_OFFSET_CMCI_LVT:
-		return &lapic->lvt_cmci.v;
+		lvt = &lapic->lvt_cmci.v;
+		break;
 	default:
 		/*
 		 * The function caller could guarantee the pre condition.
@@ -640,8 +646,10 @@ vlapic_get_lvtptr(struct acrn_vlapic *vlapic, uint32_t offset)
 		 * could be handled here.
 		 */
 		i = lvt_off_to_idx(offset);
-		return &(lapic->lvt[i].v);
+		lvt = &(lapic->lvt[i].v);
+		break;
 	}
+	return lvt;
 }
 
 static inline uint32_t
@@ -659,6 +667,7 @@ vlapic_lvt_write_handler(struct acrn_vlapic *vlapic, uint32_t offset)
 {
 	uint32_t *lvtptr, mask, val, idx;
 	struct lapic_regs *lapic;
+	int error = 0;
 
 	lapic = &(vlapic->apic_page);
 	lvtptr = vlapic_get_lvtptr(vlapic, offset);
@@ -698,7 +707,7 @@ vlapic_lvt_write_handler(struct acrn_vlapic *vlapic, uint32_t offset)
 					"vpic wire mode -> LAPIC");
 			} else {
 				pr_err("WARNING:invalid vpic wire mode change");
-				return;
+				error = 1;
 			}
 		/* unmask -> mask: only from the vlapic LINT0-ExtINT enabled */
 		} else if (((last & APIC_LVT_M) == 0U) && ((val & APIC_LVT_M) != 0U)) {
@@ -716,9 +725,11 @@ vlapic_lvt_write_handler(struct acrn_vlapic *vlapic, uint32_t offset)
 		/* No action required. */
 	}
 
-	*lvtptr = val;
-	idx = lvt_off_to_idx(offset);
-	atomic_store32(&vlapic->lvt_last[idx], val);
+	if (error == 0) {
+		*lvtptr = val;
+		idx = lvt_off_to_idx(offset);
+		atomic_store32(&vlapic->lvt_last[idx], val);
+	}
 }
 
 static void
@@ -757,29 +768,28 @@ vlapic_fire_lvt(struct acrn_vlapic *vlapic, uint32_t lvt)
 	uint32_t vec, mode;
 	struct acrn_vcpu *vcpu = vlapic->vcpu;
 
-	if ((lvt & APIC_LVT_M) != 0U) {
-		return;
-	}
+	if ((lvt & APIC_LVT_M) == 0U) {
 
-	vec = lvt & APIC_LVT_VECTOR;
-	mode = lvt & APIC_LVT_DM;
+		vec = lvt & APIC_LVT_VECTOR;
+		mode = lvt & APIC_LVT_DM;
 
-	switch (mode) {
-	case APIC_LVT_DM_FIXED:
-		if (vlapic_set_intr_ready(vlapic, vec, false) != 0) {
-			vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
+		switch (mode) {
+		case APIC_LVT_DM_FIXED:
+			if (vlapic_set_intr_ready(vlapic, vec, false) != 0) {
+				vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
+			}
+			break;
+		case APIC_LVT_DM_NMI:
+			vcpu_inject_nmi(vcpu);
+			break;
+		case APIC_LVT_DM_EXTINT:
+			vcpu_inject_extint(vcpu);
+			break;
+		default:
+			/* Other modes ignored */
+			pr_warn("func:%s other mode is not support\n",__func__);
+			break;
 		}
-		break;
-	case APIC_LVT_DM_NMI:
-		vcpu_inject_nmi(vcpu);
-		break;
-	case APIC_LVT_DM_EXTINT:
-		vcpu_inject_extint(vcpu);
-		break;
-	default:
-		/* Other modes ignored */
-		pr_warn("func:%s other mode is not support\n",__func__);
-		return;
 	}
 	return;
 }
@@ -906,7 +916,7 @@ vlapic_process_eoi(struct acrn_vlapic *vlapic)
 				/* hook to vIOAPIC */
 				vioapic_process_eoi(vlapic->vm, vector);
 			}
-			return;
+			break;
 		}
 	}
 
@@ -935,6 +945,7 @@ static int32_t
 vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t vector)
 {
 	uint32_t lvt;
+	uint32_t ret = 0;
 	struct acrn_vcpu *vcpu = vlapic->vcpu;
 
 	if (vlapic_enabled(vlapic) == false) {
@@ -958,42 +969,46 @@ vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t vector)
 			 */
 			break;
 		}
-		return 0;
-	}
-
-	switch (vector) {
-	case APIC_LVT_LINT0:
-		lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_LINT0_LVT);
-		break;
-	case APIC_LVT_LINT1:
-		lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_LINT1_LVT);
-		break;
-	case APIC_LVT_TIMER:
-		lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_TIMER_LVT);
-		lvt |= APIC_LVT_DM_FIXED;
-		break;
-	case APIC_LVT_ERROR:
-		lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_ERROR_LVT);
-		lvt |= APIC_LVT_DM_FIXED;
-		break;
-	case APIC_LVT_PMC:
-		lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_PERF_LVT);
-		break;
-	case APIC_LVT_THERMAL:
-		lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_THERM_LVT);
-		break;
-	case APIC_LVT_CMCI:
-		lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_CMCI_LVT);
-		break;
-	default:
-		return -EINVAL;
-	}
-	if (vector < 16U) {
-		vlapic_set_error(vlapic, APIC_ESR_RECEIVE_ILLEGAL_VECTOR);
 	} else {
-		vlapic_fire_lvt(vlapic, lvt);
+
+		switch (vector) {
+		case APIC_LVT_LINT0:
+			lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_LINT0_LVT);
+			break;
+		case APIC_LVT_LINT1:
+			lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_LINT1_LVT);
+			break;
+		case APIC_LVT_TIMER:
+			lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_TIMER_LVT);
+			lvt |= APIC_LVT_DM_FIXED;
+			break;
+		case APIC_LVT_ERROR:
+			lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_ERROR_LVT);
+			lvt |= APIC_LVT_DM_FIXED;
+			break;
+		case APIC_LVT_PMC:
+			lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_PERF_LVT);
+			break;
+		case APIC_LVT_THERMAL:
+			lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_THERM_LVT);
+			break;
+		case APIC_LVT_CMCI:
+			lvt = vlapic_get_lvt(vlapic, APIC_OFFSET_CMCI_LVT);
+			break;
+		default:
+			ret =  -EINVAL;
+			break;
+		}
+
+		if (ret == 0) {
+			if (vector < 16U) {
+				vlapic_set_error(vlapic, APIC_ESR_RECEIVE_ILLEGAL_VECTOR);
+			} else {
+				vlapic_fire_lvt(vlapic, lvt);
+			}
+		}
 	}
-	return 0;
+	return ret;
 }
 
 /*
@@ -1170,45 +1185,43 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode,
 				uint32_t icr_low, uint16_t vcpu_id)
 {
 	if (mode == APIC_DELMODE_INIT) {
-		if ((icr_low & APIC_LEVEL_MASK) == APIC_LEVEL_DEASSERT) {
-			return;
-		}
+		if ((icr_low & APIC_LEVEL_MASK) != APIC_LEVEL_DEASSERT) {
 
-		dev_dbg(ACRN_DBG_LAPIC,
+			dev_dbg(ACRN_DBG_LAPIC,
 				"Sending INIT from VCPU %hu to %hu",
 				target_vcpu->vcpu_id, vcpu_id);
 
-		/* put target vcpu to INIT state and wait for SIPI */
-		pause_vcpu(target_vcpu, VCPU_PAUSED);
-		reset_vcpu(target_vcpu);
-		/* new cpu model only need one SIPI to kick AP run,
-		 * the second SIPI will be ignored as it move out of
-		 * wait-for-SIPI state.
-		*/
-		target_vcpu->arch.nr_sipi = 1U;
+			/* put target vcpu to INIT state and wait for SIPI */
+			pause_vcpu(target_vcpu, VCPU_PAUSED);
+			reset_vcpu(target_vcpu);
+			/* new cpu model only need one SIPI to kick AP run,
+			 * the second SIPI will be ignored as it move out of
+			 * wait-for-SIPI state.
+			*/
+			target_vcpu->arch.nr_sipi = 1U;
+		}
 	} else if (mode == APIC_DELMODE_STARTUP) {
 		/* Ignore SIPIs in any state other than wait-for-SIPI */
-		if ((target_vcpu->state != VCPU_INIT) ||
-			(target_vcpu->arch.nr_sipi == 0U)) {
-				return;
-		}
+		if ((target_vcpu->state == VCPU_INIT) &&
+			(target_vcpu->arch.nr_sipi != 0U)) {
 
-		dev_dbg(ACRN_DBG_LAPIC,
+			dev_dbg(ACRN_DBG_LAPIC,
 				"Sending SIPI from VCPU %hu to %hu with vector %u",
 				target_vcpu->vcpu_id, vcpu_id,
 				(icr_low & APIC_VECTOR_MASK));
 
-		target_vcpu->arch.nr_sipi--;
-		if (target_vcpu->arch.nr_sipi > 0U) {
-			return;
-		}
+			target_vcpu->arch.nr_sipi--;
+			if (target_vcpu->arch.nr_sipi <= 0U) {
 
-		pr_err("Start Secondary VCPU%hu for VM[%d]...",
-				target_vcpu->vcpu_id,
-				target_vcpu->vm->vm_id);
-		set_ap_entry(target_vcpu, (icr_low & APIC_VECTOR_MASK) << 12U);
-		schedule_vcpu(target_vcpu);
+				pr_err("Start Secondary VCPU%hu for VM[%d]...",
+					target_vcpu->vcpu_id,
+					target_vcpu->vm->vm_id);
+				set_ap_entry(target_vcpu, (icr_low & APIC_VECTOR_MASK) << 12U);
+				schedule_vcpu(target_vcpu);
+			}
+		}
 	}
+	return;
 }
 
 static int32_t
@@ -1327,30 +1340,32 @@ vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr)
 	const struct lapic_regs *lapic = &(vlapic->apic_page);
 	uint32_t i, vector, val, bitpos;
 	const struct lapic_reg *irrptr;
+	int32_t	ret = 0;
 
 	if (is_apicv_intr_delivery_supported()) {
-		return apicv_pending_intr(vlapic);
-	}
+		ret = apicv_pending_intr(vlapic);
+	} else {
 
-	irrptr = &lapic->irr[0];
+		irrptr = &lapic->irr[0];
 
-	/* i ranges effectively from 7 to 0 */
-	for (i = 8U; i > 0U; ) {
-		i--;
-		val = atomic_load32(&irrptr[i].v);
-		bitpos = (uint32_t)fls32(val);
-		if (bitpos != INVALID_BIT_INDEX) {
-			vector = (i * 32U) + bitpos;
-			if (prio(vector) > prio(lapic->ppr.v)) {
-				if (vecptr != NULL) {
-					*vecptr = vector;
+		/* i ranges effectively from 7 to 0 */
+		for (i = 8U; i > 0U; ) {
+			i--;
+			val = atomic_load32(&irrptr[i].v);
+			bitpos = (uint32_t)fls32(val);
+			if (bitpos != INVALID_BIT_INDEX) {
+				vector = (i * 32U) + bitpos;
+				if (prio(vector) > prio(lapic->ppr.v)) {
+					if (vecptr != NULL) {
+						*vecptr = vector;
+					}
+					ret = 1;
 				}
-				return 1;
+				break;
 			}
-			break;
 		}
 	}
-	return 0;
+	return ret;
 }
 
 /**
