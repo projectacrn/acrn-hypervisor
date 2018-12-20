@@ -600,6 +600,34 @@ void resume_vcpu(struct acrn_vcpu *vcpu)
 	release_schedule_lock(vcpu->pcpu_id);
 }
 
+static void context_switch_out(struct sched_object *prev)
+{
+	struct acrn_vcpu *vcpu = list_entry(prev, struct acrn_vcpu, sched_obj);
+
+	/* cancel event(int, gp, nmi and exception) injection */
+	cancel_event_injection(vcpu);
+
+	atomic_store32(&vcpu->running, 0U);
+	/* do prev vcpu context switch out */
+	/* For now, we don't need to invalid ept.
+	 * But if we have more than one vcpu on one pcpu,
+	 * we need add ept invalid operation here.
+	 */
+}
+
+static void context_switch_in(struct sched_object *next)
+{
+	struct acrn_vcpu *vcpu = list_entry(next, struct acrn_vcpu, sched_obj);
+
+	atomic_store32(&vcpu->running, 1U);
+	/* FIXME:
+	 * Now, we don't need to load new vcpu VMCS because
+	 * we only do switch between vcpu loop and idle loop.
+	 * If we have more than one vcpu on on pcpu, need to
+	 * add VMCS load operation here.
+	 */
+}
+
 void schedule_vcpu(struct acrn_vcpu *vcpu)
 {
 	vcpu->state = VCPU_RUNNING;
@@ -625,6 +653,9 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 	set_pcpu_used(pcpu_id);
 
 	INIT_LIST_HEAD(&vcpu->sched_obj.run_list);
+	vcpu->sched_obj.thread = vcpu_thread;
+	vcpu->sched_obj.prepare_switch_out = context_switch_out;
+	vcpu->sched_obj.prepare_switch_in = context_switch_in;
 
 	return ret;
 }

@@ -8,6 +8,7 @@
 #include <schedule.h>
 
 static uint64_t pcpu_used_bitmap;
+static struct sched_object idle;
 
 void init_scheduler(void)
 {
@@ -21,7 +22,7 @@ void init_scheduler(void)
 		spinlock_init(&ctx->scheduler_lock);
 		INIT_LIST_HEAD(&ctx->runqueue);
 		ctx->flags = 0UL;
-		ctx->curr_vcpu = NULL;
+		ctx->curr_obj = NULL;
 	}
 }
 
@@ -94,18 +95,6 @@ static struct sched_object *get_next_sched_obj(uint16_t pcpu_id)
 	return obj;
 }
 
-static struct acrn_vcpu *select_next_vcpu(uint16_t pcpu_id)
-{
-	struct acrn_vcpu *vcpu = NULL;
-	struct sched_object *obj = get_next_sched_obj(pcpu_id);
-
-	if (obj != NULL) {
-		vcpu = list_entry(obj, struct acrn_vcpu, sched_obj);
-	}
-
-	return vcpu;
-}
-
 void make_reschedule_request(uint16_t pcpu_id)
 {
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
@@ -121,43 +110,6 @@ int32_t need_reschedule(uint16_t pcpu_id)
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 
 	return bitmap_test_and_clear_lock(NEED_RESCHEDULE, &ctx->flags);
-}
-
-static void context_switch_out(struct acrn_vcpu *vcpu)
-{
-	/* if it's idle thread, no action for switch out */
-	if (vcpu == NULL) {
-		return;
-	}
-
-	/* cancel event(int, gp, nmi and exception) injection */
-	cancel_event_injection(vcpu);
-
-	atomic_store32(&vcpu->running, 0U);
-	/* do prev vcpu context switch out */
-	/* For now, we don't need to invalid ept.
-	 * But if we have more than one vcpu on one pcpu,
-	 * we need add ept invalid operation here.
-	 */
-}
-
-static void context_switch_in(struct acrn_vcpu *vcpu)
-{
-	/* update current_vcpu */
-	get_cpu_var(sched_ctx).curr_vcpu = vcpu;
-
-	/* if it's idle thread, no action for switch out */
-	if (vcpu == NULL) {
-		return;
-	}
-
-	atomic_store32(&vcpu->running, 1U);
-	/* FIXME:
-	 * Now, we don't need to load new vcpu VMCS because
-	 * we only do switch between vcpu loop and idle loop.
-	 * If we have more than one vcpu on on pcpu, need to
-	 * add VMCS load operation here.
-	 */
 }
 
 void make_pcpu_offline(uint16_t pcpu_id)
@@ -177,25 +129,23 @@ int32_t need_offline(uint16_t pcpu_id)
 	return bitmap_test_and_clear_lock(NEED_OFFLINE, &ctx->flags);
 }
 
-void default_idle(void)
+static void switch_to_asm(struct sched_object *next, uint64_t cur_sp)
 {
-	uint16_t pcpu_id = get_cpu_id();
-
-	while (1) {
-		if (need_reschedule(pcpu_id) != 0) {
-			schedule();
-		} else if (need_offline(pcpu_id) != 0) {
-			cpu_dead();
-		} else {
-			CPU_IRQ_ENABLE();
-			handle_complete_ioreq(pcpu_id);
-			cpu_do_idle();
-			CPU_IRQ_DISABLE();
-		}
-	}
+	asm volatile ("movq %2, %%rsp\n"
+			"movq %0, %%rdi\n"
+			"call 22f\n"
+			"11: \n"
+			"pause\n"
+			"jmp 11b\n"
+			"22:\n"
+			"mov %1, (%%rsp)\n"
+			"ret\n"
+			:
+			: "c"(next), "a"(next->thread), "r"(cur_sp)
+			: "memory");
 }
 
-static void switch_to(struct acrn_vcpu *curr)
+static void switch_to(struct sched_object *next)
 {
 	/*
 	 * reset stack pointer here. Otherwise, schedule
@@ -203,54 +153,60 @@ static void switch_to(struct acrn_vcpu *curr)
 	 */
 	uint64_t cur_sp = (uint64_t)&get_cpu_var(stack)[CONFIG_STACK_SIZE];
 
-	if (curr == NULL) {
-		asm volatile ("movq %1, %%rsp\n"
-				"movq $0, %%rdi\n"
-				"call 22f\n"
-				"11: \n"
-				"pause\n"
-				"jmp 11b\n"
-				"22:\n"
-				"mov %0, (%%rsp)\n"
-				"ret\n"
-				:
-				: "a"(default_idle), "r"(cur_sp)
-				: "memory");
-	} else {
-		asm volatile ("movq %2, %%rsp\n"
-				"movq %0, %%rdi\n"
-				"call 44f\n"
-				"33: \n"
-				"pause\n"
-				"jmp 33b\n"
-				"44:\n"
-				"mov %1, (%%rsp)\n"
-				"ret\n"
-				:
-				: "c"(curr), "a"(vcpu_thread), "r"(cur_sp)
-				: "memory");
+	switch_to_asm(next, cur_sp);
+}
+
+static void prepare_switch(struct sched_object *prev, struct sched_object *next)
+{
+	if ((prev != NULL) && (prev->prepare_switch_out != NULL)) {
+		prev->prepare_switch_out(prev);
+	}
+
+	/* update current object */
+	get_cpu_var(sched_ctx).curr_obj = next;
+
+	if ((next != NULL) && (next->prepare_switch_in != NULL)) {
+		next->prepare_switch_in(next);
 	}
 }
 
 void schedule(void)
 {
 	uint16_t pcpu_id = get_cpu_id();
-	struct acrn_vcpu *next = NULL;
-	struct acrn_vcpu *prev = per_cpu(sched_ctx, pcpu_id).curr_vcpu;
+	struct sched_object *next = NULL;
+	struct sched_object *prev = per_cpu(sched_ctx, pcpu_id).curr_obj;
 
 	get_schedule_lock(pcpu_id);
-	next = select_next_vcpu(pcpu_id);
+	next = get_next_sched_obj(pcpu_id);
 
 	if (prev == next) {
 		release_schedule_lock(pcpu_id);
 		return;
 	}
 
-	context_switch_out(prev);
-	context_switch_in(next);
+	prepare_switch(prev, next);
 	release_schedule_lock(pcpu_id);
+
+	if (next == NULL) {
+		next = &idle;
+	}
 
 	switch_to(next);
 
 	ASSERT(false, "Shouldn't go here");
+}
+
+void switch_to_idle(run_thread_t idle_thread)
+{
+	uint16_t pcpu_id = get_cpu_id();
+
+	if (pcpu_id == BOOT_CPU_ID) {
+		idle.thread = idle_thread;
+		idle.prepare_switch_out = NULL;
+		idle.prepare_switch_in = NULL;
+	}
+
+	if (idle_thread != NULL) {
+		idle_thread(&idle);
+	}
 }
