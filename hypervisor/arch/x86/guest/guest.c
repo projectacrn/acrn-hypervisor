@@ -391,33 +391,29 @@ static inline int32_t copy_gva(struct acrn_vcpu *vcpu, void *h_ptr_arg, uint64_t
 {
 	void *h_ptr = h_ptr_arg;
 	uint64_t gpa = 0UL;
-	int32_t ret;
+	int32_t ret = 0;
 	uint32_t len;
 	uint64_t gva = gva_arg;
 	uint32_t size = size_arg;
 
-	while (size > 0U) {
+	while ((size > 0U) && (ret == 0)) {
 		ret = gva2gpa(vcpu, gva, &gpa, err_code);
-		if (ret < 0) {
+		if (ret >= 0) {
+			len = local_copy_gpa(vcpu->vm, h_ptr, gpa, size, PAGE_SIZE_4K, cp_from_vm);
+			if (len != 0U) {
+				gva += len;
+				h_ptr += len;
+				size -= len;
+			} else {
+				ret =  -EINVAL;
+			}
+		} else {
 			*fault_addr = gva;
-			pr_err("error[%d] in GVA2GPA, err_code=0x%x",
-					ret, *err_code);
-			return ret;
+			pr_err("error[%d] in GVA2GPA, err_code=0x%x", ret, *err_code);
 		}
-
-		len = local_copy_gpa(vcpu->vm, h_ptr, gpa, size,
-			PAGE_SIZE_4K, cp_from_vm);
-
-		if (len == 0U) {
-			return -EINVAL;
-		}
-
-		gva += len;
-		h_ptr += len;
-		size -= len;
 	}
 
-	return 0;
+	return ret;
 }
 
 /* @pre Caller(Guest) should make sure gpa is continuous.
