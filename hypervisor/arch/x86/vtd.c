@@ -141,7 +141,7 @@ static inline uint8_t* get_ctx_table(uint32_t dmar_index, uint8_t bus_no)
 	return ctx_tables[dmar_index].buses[bus_no].contents;
 }
 
-bool iommu_snoop_supported(struct acrn_vm *vm)
+bool iommu_snoop_supported(const struct acrn_vm *vm)
 {
 	bool ret;
 
