@@ -101,7 +101,6 @@ void default_idle(__unused struct sched_object *obj)
 			cpu_dead();
 		} else {
 			CPU_IRQ_ENABLE();
-			handle_complete_ioreq(pcpu_id);
 			cpu_do_idle();
 			CPU_IRQ_DISABLE();
 		}

@@ -146,7 +146,18 @@ void emulate_io_post(struct acrn_vcpu *vcpu)
 		} else {
 			switch (vcpu->req.type) {
 			case REQ_MMIO:
-				request_vcpu_pre_work(vcpu, ACRN_VCPU_MMIO_COMPLETE);
+				/*
+				 * In IO completion polling mode, the post work of IO emulation will
+				 * be running on its own pcpu, then we can do MMIO post work directly;
+				 * While in notification mode, the post work of IO emulation will be
+				 * running on SOS pcpu, then we need request_vcpu_pre_work and let
+				 * its own pcpu get scheduled and finish the MMIO post work.
+				 */
+				if (!vcpu->vm->sw.is_completion_polling) {
+					request_vcpu_pre_work(vcpu, ACRN_VCPU_MMIO_COMPLETE);
+				} else {
+					dm_emulate_mmio_post(vcpu);
+				}
 				break;
 
 			case REQ_PORTIO:
@@ -170,7 +181,9 @@ void emulate_io_post(struct acrn_vcpu *vcpu)
 				break;
 			}
 
-			resume_vcpu(vcpu);
+			if (!vcpu->vm->sw.is_completion_polling) {
+				resume_vcpu(vcpu);
+			}
 		}
 	}
 }
