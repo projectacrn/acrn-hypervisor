@@ -78,12 +78,12 @@
 
 #define VIRTIO_NET_S_HOSTCAPS      \
 	(VIRTIO_NET_F_MAC | VIRTIO_NET_F_MRG_RXBUF | VIRTIO_NET_F_STATUS | \
-	ACRN_VIRTIO_F_NOTIFY_ON_EMPTY | ACRN_VIRTIO_RING_F_INDIRECT_DESC)
+	(1 << VIRTIO_F_NOTIFY_ON_EMPTY) | (1 << VIRTIO_RING_F_INDIRECT_DESC))
 
 #define VIRTIO_NET_S_VHOSTCAPS      \
-	(ACRN_VIRTIO_F_NOTIFY_ON_EMPTY | ACRN_VIRTIO_RING_F_INDIRECT_DESC | \
-	ACRN_VIRTIO_RING_F_EVENT_IDX | VIRTIO_NET_F_MRG_RXBUF | \
-	ACRN_VIRTIO_F_VERSION_1)
+	((1 << VIRTIO_F_NOTIFY_ON_EMPTY) | (1 << VIRTIO_RING_F_INDIRECT_DESC) | \
+	(1 << VIRTIO_RING_F_EVENT_IDX) | VIRTIO_NET_F_MRG_RXBUF | \
+	(1UL << VIRTIO_F_VERSION_1))
 
 /* is address mcast/bcast? */
 #define ETHER_IS_MULTICAST(addr) (*(addr) & 0x01)
@@ -476,7 +476,7 @@ virtio_net_ping_rxq(void *vdev, struct virtio_vq_info *vq)
 	 */
 	if (net->rx_ready == 0) {
 		net->rx_ready = 1;
-		vq->used->flags |= ACRN_VRING_USED_F_NO_NOTIFY;
+		vq->used->flags |= VRING_USED_F_NO_NOTIFY;
 	}
 }
 
@@ -522,7 +522,7 @@ virtio_net_ping_txq(void *vdev, struct virtio_vq_info *vq)
 
 	/* Signal the tx thread for processing */
 	pthread_mutex_lock(&net->tx_mtx);
-	vq->used->flags |= ACRN_VRING_USED_F_NO_NOTIFY;
+	vq->used->flags |= VRING_USED_F_NO_NOTIFY;
 	if (net->tx_in_progress == 0)
 		pthread_cond_signal(&net->tx_cond);
 	pthread_mutex_unlock(&net->tx_mtx);
@@ -571,7 +571,7 @@ virtio_net_tx_thread(void *param)
 				return NULL;
 			}
 		}
-		vq->used->flags |= ACRN_VRING_USED_F_NO_NOTIFY;
+		vq->used->flags |= VRING_USED_F_NO_NOTIFY;
 		net->tx_in_progress = 1;
 		pthread_mutex_unlock(&net->tx_mtx);
 
@@ -935,7 +935,7 @@ virtio_net_set_status(void *vdev, uint64_t status)
 		return;
 
 	if (!net->vhost_net->vhost_started &&
-		(status & VIRTIO_CR_STATUS_DRIVER_OK)) {
+		(status & VIRTIO_CONFIG_S_DRIVER_OK)) {
 		if (net->mevp)
 			mevent_disable(net->mevp);
 
@@ -945,7 +945,7 @@ virtio_net_set_status(void *vdev, uint64_t status)
 			return;
 		}
 	} else if (net->vhost_net->vhost_started &&
-		((status & VIRTIO_CR_STATUS_DRIVER_OK) == 0)) {
+		((status & VIRTIO_CONFIG_S_DRIVER_OK) == 0)) {
 		rc = vhost_net_stop(net->vhost_net);
 		if (rc < 0)
 			WPRINTF(("vhost_net_stop failed\n"));

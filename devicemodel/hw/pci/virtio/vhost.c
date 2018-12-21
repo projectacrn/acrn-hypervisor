@@ -206,7 +206,7 @@ vhost_vq_register_eventfd(struct vhost_dev *vdev,
 	}
 
 	/* register ioeventfd for kick */
-	if (base->device_caps & ACRN_VIRTIO_F_VERSION_1) {
+	if (base->device_caps & (1UL << VIRTIO_F_VERSION_1)) {
 		/*
 		 * in the current implementation, if virtio 1.0 with pio
 		 * notity, its bar idx should be set to non-zero
@@ -234,7 +234,7 @@ vhost_vq_register_eventfd(struct vhost_dev *vdev,
 	} else {
 		bar = &vdev->base->dev->bar[base->legacy_pio_bar_idx];
 		ioeventfd.data = vdev->vq_idx + idx;
-		ioeventfd.addr = bar->addr + VIRTIO_CR_QNOTIFY;
+		ioeventfd.addr = bar->addr + VIRTIO_PCI_QUEUE_NOTIFY;
 		ioeventfd.len = 2;
 		ioeventfd.flags |= (ACRN_IOEVENTFD_FLAG_DATAMATCH |
 			ACRN_IOEVENTFD_FLAG_PIO);
@@ -677,7 +677,7 @@ vhost_dev_start(struct vhost_dev *vdev)
 		goto fail;
 	}
 
-	if ((vdev->base->status & VIRTIO_CR_STATUS_DRIVER_OK) == 0) {
+	if ((vdev->base->status & VIRTIO_CONFIG_S_DRIVER_OK) == 0) {
 		WPRINTF("status error 0x%x\n", vdev->base->status);
 		goto fail;
 	}
