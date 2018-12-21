@@ -110,7 +110,7 @@ Enable partition mode in ACRN hypervisor
      00:18.0 . Series HSUART Controller #1 (rev 0b)
      00:18.1 . Series HSUART Controller #2 (rev 0b)
 
-     The second with ``00:18.1`` is the one on the 40-pin expansion connector.
+   The second with ``00:18.1`` is the one on the 40-pin expansion connector.
 
    The following command prints detailed information about all PCI buses
    and devices in the system. Look up the PCI BAR addresses of the SATA
