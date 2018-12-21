@@ -9,26 +9,19 @@
 
 #include <bsp_extern.h>
 
-/*
- * IOAPIC_MAX_LINES is architecturally defined.
- * The usable RTEs may be a subset of the total on a per IO APIC basis.
- */
-#define IOAPIC_MAX_LINES	120U
 #define NR_LEGACY_IRQ		16U
 #define NR_LEGACY_PIN		NR_LEGACY_IRQ
-#define NR_MAX_GSI		(NR_IOAPICS * IOAPIC_MAX_LINES)
+void ioapic_setup_irqs(void);
 
-void setup_ioapic_irqs(void);
-
-bool irq_is_gsi(uint32_t irq);
-uint8_t irq_to_pin(uint32_t irq);
+bool ioapic_irq_is_gsi(uint32_t irq);
+uint8_t ioapic_irq_to_pin(uint32_t irq);
 
 /**
  * @brief Get irq num from pin num
  *
  * @param[in]	pin The pin number
  */
-uint32_t pin_to_irq(uint8_t pin);
+uint32_t ioapic_pin_to_irq(uint8_t pin);
 
 /**
  * @brief Set the redirection table entry
@@ -55,8 +48,8 @@ void ioapic_get_rte(uint32_t irq, union ioapic_rte *rte);
 void suspend_ioapic(void);
 void resume_ioapic(void);
 
-void gsi_mask_irq(uint32_t irq);
-void gsi_unmask_irq(uint32_t irq);
+void ioapic_gsi_mask_irq(uint32_t irq);
+void ioapic_gsi_unmask_irq(uint32_t irq);
 
 void ioapic_get_rte_entry(void *ioapic_addr, uint8_t pin, union ioapic_rte *rte);
 
@@ -66,8 +59,9 @@ struct gsi_table {
 	void  *addr;
 };
 
-extern struct gsi_table gsi_table[NR_MAX_GSI];
-extern uint32_t nr_gsi;
-extern const uint8_t pic_ioapic_pin_map[NR_LEGACY_PIN];
+void *ioapic_get_gsi_irq_addr(uint32_t irq_num);
+uint32_t ioapic_get_nr_gsi(void);
+uint8_t get_pic_pin_from_ioapic_pin(uint8_t pin_index);
+bool ioapic_is_pin_valid(uint8_t pin);
 
 #endif /* IOAPIC_H */

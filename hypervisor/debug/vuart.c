@@ -29,6 +29,7 @@
  */
 
 #include <hypervisor.h>
+#include <ioapic.h>
 
 #include "uart16550.h"
 
