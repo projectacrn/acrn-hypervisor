@@ -45,7 +45,6 @@ static inline uint32_t prio(uint32_t x)
 
 #define VLAPIC_VERSION		(16U)
 
-#define	APICBASE_RESERVED	0x000002ffU
 #define	APICBASE_BSP		0x00000100UL
 #define	APICBASE_X2APIC		0x00000400U
 #define	APICBASE_ENABLED	0x00000800UL
