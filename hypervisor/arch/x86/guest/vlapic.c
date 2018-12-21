@@ -1232,6 +1232,7 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 {
 	uint16_t vcpu_id;
 	bool phys;
+	int32_t ret = 0;
 	uint64_t dmask = 0UL;
 	uint32_t icr_low, icr_high, dest;
 	uint32_t vec, mode, shorthand;
@@ -1256,68 +1257,69 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 	if ((mode == APIC_DELMODE_FIXED) && (vec < 16U)) {
 		vlapic_set_error(vlapic, APIC_ESR_SEND_ILLEGAL_VECTOR);
 		dev_dbg(ACRN_DBG_LAPIC, "Ignoring invalid IPI %u", vec);
-		return 0;
-	}
+	} else if (((shorthand == APIC_DEST_SELF) || (shorthand == APIC_DEST_ALLISELF))
+			&& ((mode == APIC_DELMODE_NMI) || (mode == APIC_DELMODE_INIT)
+			|| (mode == APIC_DELMODE_STARTUP))) {
+			dev_dbg(ACRN_DBG_LAPIC, "Invalid ICR value");
+	} else {
 
-	dev_dbg(ACRN_DBG_LAPIC,
-		"icrlo 0x%08x icrhi 0x%08x triggered ipi %u",
-			icr_low, icr_high, vec);
+		dev_dbg(ACRN_DBG_LAPIC,
+			"icrlo 0x%08x icrhi 0x%08x triggered ipi %u",
+				icr_low, icr_high, vec);
 
-	if (((shorthand == APIC_DEST_SELF) || (shorthand == APIC_DEST_ALLISELF))
-		&& ((mode == APIC_DELMODE_NMI) || (mode == APIC_DELMODE_INIT)
-		|| (mode == APIC_DELMODE_STARTUP))) {
-		dev_dbg(ACRN_DBG_LAPIC, "Invalid ICR value");
-		return 0;
-	}
+		switch (shorthand) {
+		case APIC_DEST_DESTFLD:
+			vlapic_calcdest(vlapic->vm, &dmask, dest, phys, false);
+			break;
+		case APIC_DEST_SELF:
+			bitmap_set_lock(vlapic->vcpu->vcpu_id, &dmask);
+			break;
+		case APIC_DEST_ALLISELF:
+			dmask = vm_active_cpus(vlapic->vm);
+			break;
+		case APIC_DEST_ALLESELF:
+			dmask = vm_active_cpus(vlapic->vm);
+			bitmap_clear_lock(vlapic->vcpu->vcpu_id, &dmask);
+			break;
+		default:
+			/*
+			 * All possible values of 'shorthand' has been handled in prior
+			 * case clauses.
+			 */
+			break;
+		}
 
-	switch (shorthand) {
-	case APIC_DEST_DESTFLD:
-		vlapic_calcdest(vlapic->vm, &dmask, dest, phys, false);
-		break;
-	case APIC_DEST_SELF:
-		bitmap_set_lock(vlapic->vcpu->vcpu_id, &dmask);
-		break;
-	case APIC_DEST_ALLISELF:
-		dmask = vm_active_cpus(vlapic->vm);
-		break;
-	case APIC_DEST_ALLESELF:
-		dmask = vm_active_cpus(vlapic->vm);
-		bitmap_clear_lock(vlapic->vcpu->vcpu_id, &dmask);
-		break;
-	default:
-		/*
-		 * All possible values of 'shorthand' has been handled in prior
-		 * case clauses.
-		 */
-		break;
-	}
+		for (vcpu_id = 0U; vcpu_id < vlapic->vm->hw.created_vcpus; vcpu_id++) {
+			if ((dmask & (1UL << vcpu_id)) != 0UL) {
+				target_vcpu = vcpu_from_vid(vlapic->vm, vcpu_id);
+				if (target_vcpu == NULL) {
+					ret = -ENODEV;
+					break;
+				}
 
-	for (vcpu_id = 0U; vcpu_id < vlapic->vm->hw.created_vcpus; vcpu_id++) {
-		if ((dmask & (1UL << vcpu_id)) != 0UL) {
-			target_vcpu = vcpu_from_vid(vlapic->vm, vcpu_id);
-
-			if (mode == APIC_DELMODE_FIXED) {
-				vlapic_set_intr(target_vcpu, vec, LAPIC_TRIG_EDGE);
-				dev_dbg(ACRN_DBG_LAPIC,
-					"vlapic sending ipi %u to vcpu_id %hu",
-					vec, vcpu_id);
-			} else if (mode == APIC_DELMODE_NMI) {
-				vcpu_inject_nmi(target_vcpu);
-				dev_dbg(ACRN_DBG_LAPIC,
-					"vlapic send ipi nmi to vcpu_id %hu", vcpu_id);
-			} else if (mode == APIC_DELMODE_INIT) {
-				vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
-			} else if (mode == APIC_DELMODE_STARTUP) {
-				vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
-			} else if (mode == APIC_DELMODE_SMI) {
-				pr_info("vlapic: SMI IPI do not support\n");
-			} else {
-				pr_err("Unhandled icrlo write with mode %u\n", mode);
+				if (mode == APIC_DELMODE_FIXED) {
+					vlapic_set_intr(target_vcpu, vec, LAPIC_TRIG_EDGE);
+					dev_dbg(ACRN_DBG_LAPIC,
+						"vlapic sending ipi %u to vcpu_id %hu",
+						vec, vcpu_id);
+				} else if (mode == APIC_DELMODE_NMI) {
+					vcpu_inject_nmi(target_vcpu);
+					dev_dbg(ACRN_DBG_LAPIC,
+						"vlapic send ipi nmi to vcpu_id %hu", vcpu_id);
+				} else if (mode == APIC_DELMODE_INIT) {
+					vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
+				} else if (mode == APIC_DELMODE_STARTUP) {
+					vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
+				} else if (mode == APIC_DELMODE_SMI) {
+					pr_info("vlapic: SMI IPI do not support\n");
+				} else {
+					pr_err("Unhandled icrlo write with mode %u\n", mode);
+				}
 			}
 		}
 	}
 
-	return 0;	/* handled completely in the kernel */
+	return ret;	/* handled completely in the kernel */
 }
 
 /**
