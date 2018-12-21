@@ -159,6 +159,11 @@ Enable partition mode in ACRN hypervisor
    .. figure:: images/menuconfig-partition-mode.png
       :align: center
 
+   .. note::
+
+      Refer to the :ref:`getting-started-building` for more information on how
+      to install all the ACRN build dependencies.
+
 #. Configure the PCI device info for each VM
 
    PCI devices that are available to the privileged VMs
