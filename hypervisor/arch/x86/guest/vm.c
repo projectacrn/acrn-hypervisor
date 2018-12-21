@@ -58,7 +58,7 @@ struct acrn_vm *get_vm_from_vmid(uint16_t vm_id)
 /**
  * @pre vm_desc != NULL && rtn_vm != NULL
  */
-int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
+int32_t create_vm(const struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 {
 	struct acrn_vm *vm = NULL;
 	int32_t status = 0;
