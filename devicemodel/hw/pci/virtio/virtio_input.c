@@ -47,7 +47,7 @@ static int virtio_input_debug;
 /*
  * Host capabilities
  */
-#define VIRTIO_INPUT_S_HOSTCAPS		(ACRN_VIRTIO_F_VERSION_1)
+#define VIRTIO_INPUT_S_HOSTCAPS		(1UL << VIRTIO_F_VERSION_1)
 
 enum virtio_input_config_select {
 	VIRTIO_INPUT_CFG_UNSET		= 0x00,
@@ -170,7 +170,7 @@ virtio_input_set_status(void *vdev, uint64_t status)
 {
 	struct virtio_input *vi = vdev;
 
-	if (status & VIRTIO_CR_STATUS_DRIVER_OK) {
+	if (status & VIRTIO_CONFIG_S_DRIVER_OK) {
 		if (!vi->ready)
 			vi->ready = true;
 	}
