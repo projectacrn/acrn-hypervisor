@@ -1270,6 +1270,10 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 	for (vcpu_id = 0U; vcpu_id < vlapic->vm->hw.created_vcpus; vcpu_id++) {
 		if ((dmask & (1UL << vcpu_id)) != 0UL) {
 			target_vcpu = vcpu_from_vid(vlapic->vm, vcpu_id);
+			if (target_vcpu == NULL) {
+				return -ENODEV;
+			}
+
 
 			if (mode == APIC_DELMODE_FIXED) {
 				vlapic_set_intr(target_vcpu, vec, LAPIC_TRIG_EDGE);
