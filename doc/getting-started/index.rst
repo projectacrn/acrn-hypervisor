@@ -19,3 +19,4 @@ described in :ref:`hardware`. Follow the setup guides listed here:
 
    apl-nuc.rst
    up2.rst
+   building-from-source.rst

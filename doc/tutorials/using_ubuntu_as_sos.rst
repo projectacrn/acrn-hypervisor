@@ -43,7 +43,7 @@ the source code, build it, and install it on your device.
 
 1. Install the build tools and dependencies
 
-   Follow the instructions found in the :ref:`getting-started-apl-nuc` to
+   Follow the instructions found in the :ref:`getting-started-building` to
    install all the build tools and dependencies on your system.
 
 #. Clone the `Project ACRN <https://github.com/projectacrn/acrn-hypervisor>`_
@@ -70,7 +70,7 @@ the source code, build it, and install it on your device.
       make PLATFORM=uefi
       sudo make install
 
-   For more details, please refer to the :ref:`getting-started-apl-nuc`.
+   For more details, please refer to the :ref:`getting-started-building`.
 
 #. Install the hypervisor
 
