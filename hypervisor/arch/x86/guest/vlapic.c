@@ -77,9 +77,6 @@ static inline void vlapic_dump_irr(__unused const struct acrn_vlapic *vlapic, __
 static inline void vlapic_dump_isr(__unused const struct acrn_vlapic *vlapic, __unused const char *msg) {}
 #endif
 
-/*APIC-v APIC-access address */
-static uint8_t apicv_apic_access_addr[PAGE_SIZE] __aligned(PAGE_SIZE);
-
 static int32_t
 apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector);
 
@@ -2345,6 +2342,9 @@ apicv_batch_set_tmr(const struct acrn_vlapic *vlapic)
 uint64_t
 vlapic_apicv_get_apic_access_addr(void)
 {
+	/*APIC-v APIC-access address */
+	static uint8_t apicv_apic_access_addr[PAGE_SIZE] __aligned(PAGE_SIZE);
+
 	return hva2hpa(apicv_apic_access_addr);
 }
 
