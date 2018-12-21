@@ -125,7 +125,7 @@ int32_t ept_violation_vmexit_handler(struct acrn_vcpu *vcpu)
 		if (mmio_req->direction == REQUEST_WRITE) {
 			status = emulate_instruction(vcpu);
 			if (status != 0) {
-				ret = -EFAULT;;
+				ret = -EFAULT;
 			}
 		}
 
@@ -204,14 +204,15 @@ void ept_mr_modify(struct acrn_vm *vm, uint64_t *pml4_page,
 {
 	struct acrn_vcpu *vcpu;
 	uint16_t i;
+	uint64_t local_prot = prot_set;
 
 	dev_dbg(ACRN_DBG_EPT, "%s,vm[%d] gpa 0x%llx size 0x%llx\n", __func__, vm->vm_id, gpa, size);
 
-	if (((prot_set & EPT_MT_MASK) != EPT_UNCACHED) && vm->snoopy_mem) {
-		prot_set |= EPT_SNOOP_CTRL;
+	if (((local_prot & EPT_MT_MASK) != EPT_UNCACHED) && vm->snoopy_mem) {
+		local_prot |= EPT_SNOOP_CTRL;
 	}
 
-	mmu_modify_or_del(pml4_page, gpa, size, prot_set, prot_clr, &vm->arch_vm.ept_mem_ops, MR_MODIFY);
+	mmu_modify_or_del(pml4_page, gpa, size, local_prot, prot_clr, &(vm->arch_vm.ept_mem_ops), MR_MODIFY);
 
 	foreach_vcpu(i, vm, vcpu) {
 		vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
