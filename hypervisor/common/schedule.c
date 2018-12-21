@@ -178,7 +178,6 @@ void default_idle(void)
 			cpu_dead();
 		} else {
 			CPU_IRQ_ENABLE();
-			handle_complete_ioreq(pcpu_id);
 			cpu_do_idle();
 			CPU_IRQ_DISABLE();
 		}

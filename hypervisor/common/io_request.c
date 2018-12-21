@@ -79,29 +79,6 @@ static inline bool has_complete_ioreq(struct acrn_vcpu *vcpu)
 }
 
 /**
- * @brief Handle completed ioreq if any one pending
- *
- * @param pcpu_id The physical cpu id of vcpu whose IO request to be checked
- *
- * @return None
- */
-void handle_complete_ioreq(uint16_t pcpu_id)
-{
-	struct acrn_vcpu *vcpu = get_ever_run_vcpu(pcpu_id);
-	struct acrn_vm *vm;
-
-	if (vcpu != NULL) {
-		vm = vcpu->vm;
-		if (vm->sw.is_completion_polling) {
-			if (has_complete_ioreq(vcpu)) {
-				/* we have completed ioreq pending */
-				emulate_io_post(vcpu);
-			}
-		}
-	}
-}
-
-/**
  * @brief Deliver \p io_req to SOS and suspend \p vcpu till its completion
  *
  * @param vcpu The virtual CPU that triggers the MMIO access
@@ -113,6 +90,7 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 {
 	union vhm_request_buffer *req_buf = NULL;
 	struct vhm_request *vhm_req;
+	bool is_polling = false;
 	uint16_t cur;
 
 	if (vcpu->vm->sw.io_shared_page == NULL) {
@@ -133,14 +111,17 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 		&io_req->reqs, sizeof(union vhm_io_request));
 	if (vcpu->vm->sw.is_completion_polling) {
 		vhm_req->completion_polling = 1U;
+		is_polling = true;
 	}
 	clac();
 
-	/* pause vcpu, wait for VHM to handle the MMIO request.
+	/* pause vcpu in notification mode , wait for VHM to handle the MMIO request.
 	 * TODO: when pause_vcpu changed to switch vcpu out directlly, we
 	 * should fix the race issue between req.processed update and vcpu pause
 	 */
-	pause_vcpu(vcpu, VCPU_PAUSED);
+	if (!is_polling) {
+		pause_vcpu(vcpu, VCPU_PAUSED);
+	}
 
 	/* Must clear the signal before we mark req as pending
 	 * Once we mark it pending, VHM may process req and signal us
@@ -157,6 +138,24 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 
 	/* signal VHM */
 	fire_vhm_interrupt();
+
+	/* Polling completion of the request in polling mode */
+	if (is_polling) {
+		/*
+		 * Now, we only have one case that will schedule out this vcpu
+		 * from IO completion polling status, it's pause_vcpu to VCPU_ZOMBIE.
+		 * In this case, we cannot come back to polling status again. Currently,
+		 * it's OK as we needn't handle IO completion in zombie status.
+		 */
+		while (!need_reschedule(vcpu->pcpu_id)) {
+			if (has_complete_ioreq(vcpu)) {
+				/* we have completed ioreq pending */
+				emulate_io_post(vcpu);
+				break;
+			}
+			__asm __volatile("pause" ::: "memory");
+		}
+	}
 
 	return 0;
 }
