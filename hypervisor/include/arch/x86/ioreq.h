@@ -297,15 +297,6 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 void reset_vm_ioreqs(struct acrn_vm *vm);
 
 /**
- * @brief Handle completed ioreq if any one pending
- *
- * @param pcpu_id The physical cpu id of vcpu whose IO request to be checked
- *
- * @return None
- */
-void handle_complete_ioreq(uint16_t pcpu_id);
-
-/**
  * @brief Get the state of VHM request
  *
  * @param vm Target VM context
