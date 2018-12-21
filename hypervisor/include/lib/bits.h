@@ -133,15 +133,17 @@ static inline uint16_t ffz64(uint64_t value)
  */
 static inline uint64_t ffz64_ex(const uint64_t *addr, uint64_t size)
 {
+	uint64_t ret = size;
 	uint64_t idx;
 
 	for (idx = 0UL; (idx << 6U) < size; idx++) {
 		if (addr[idx] != ~0UL) {
-			return (idx << 6U) + ffz64(addr[idx]);
+			ret = (idx << 6U) + ffz64(addr[idx]);
+			break;
 		}
 	}
 
-	return size;
+	return ret;
 }
 /*
  * Counts leading zeros.
@@ -160,11 +162,7 @@ static inline uint64_t ffz64_ex(const uint64_t *addr, uint64_t size)
  */
 static inline uint16_t clz(uint32_t value)
 {
-	if (value == 0U) {
-		return 32U;
-	} else {
-		return (31U - fls32(value));
-	}
+	return ((value != 0U) ? (31U - fls32(value)) : 32U);
 }
 
 /*
@@ -176,11 +174,7 @@ static inline uint16_t clz(uint32_t value)
  */
 static inline uint16_t clz64(uint64_t value)
 {
-	if (value == 0UL) {
-		return 64U;
-	} else {
-		return (63U - fls64(value));
-	}
+	return ((value != 0UL) ? (63U - fls64(value)) : 64U);
 }
 
 /*
