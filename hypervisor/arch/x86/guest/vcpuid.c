@@ -253,10 +253,6 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 			default:
 				init_vcpuid_entry(i, 0U, 0U, &entry);
 				result = set_vcpuid_entry(vm, &entry);
-				if (result != 0) {
-					/* break out of switch */
-					break;
-				}
 				break;
 			}
 
