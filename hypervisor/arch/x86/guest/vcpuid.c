@@ -211,26 +211,6 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 			}
 
 			switch (i) {
-			case 0x02U:
-			{
-				uint32_t times;
-
-				init_vcpuid_entry(i, 0U, CPUID_CHECK_SUBLEAF, &entry);
-				result = set_vcpuid_entry(vm, &entry);
-				if (result == 0) {
-					times = entry.eax & 0xffUL;
-					for (j = 1U; j < times; j++) {
-						init_vcpuid_entry(i, j, CPUID_CHECK_SUBLEAF, &entry);
-						result = set_vcpuid_entry(vm, &entry);
-						if (result != 0) {
-							/* wants to break out of switch */
-							break;
-						}
-					}
-				}
-				break;
-			}
-
 			case 0x04U:
 				for (j = 0U; ; j++) {
 					init_vcpuid_entry(i, j, CPUID_CHECK_SUBLEAF, &entry);
