@@ -1583,7 +1583,7 @@ vmei_notify_tx(void *data, struct virtio_vq_info *vq)
 
 	pthread_mutex_lock(&vmei->tx_mutex);
 	DPRINTF("TX: New OUT buffer available!\n");
-	vq->used->flags |= ACRN_VRING_USED_F_NO_NOTIFY;
+	vq->used->flags |= VRING_USED_F_NO_NOTIFY;
 	pthread_mutex_unlock(&vmei->tx_mutex);
 
 	while (vq_has_descs(vq))
@@ -1899,7 +1899,7 @@ static void *vmei_rx_thread(void *param)
 			if (err || vmei->status == VMEI_STST_DEINIT)
 				goto out;
 		}
-		vq->used->flags |= ACRN_VRING_USED_F_NO_NOTIFY;
+		vq->used->flags |= VRING_USED_F_NO_NOTIFY;
 
 		do {
 			vmei->rx_need_sched = vmei_proc_rx(vmei, vq);
@@ -1926,7 +1926,7 @@ vmei_notify_rx(void *data, struct virtio_vq_info *vq)
 	/* Signal the rx thread for processing */
 	pthread_mutex_lock(&vmei->rx_mutex);
 	DPRINTF("RX: New IN buffer available!\n");
-	vq->used->flags |= ACRN_VRING_USED_F_NO_NOTIFY;
+	vq->used->flags |= VRING_USED_F_NO_NOTIFY;
 	pthread_cond_signal(&vmei->rx_cond);
 	pthread_mutex_unlock(&vmei->rx_mutex);
 }
