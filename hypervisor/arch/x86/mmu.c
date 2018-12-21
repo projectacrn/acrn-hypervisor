@@ -46,12 +46,12 @@ static uint16_t vmx_vpid_nr = VMX_MIN_NR_VPID;
 #define INVEPT_TYPE_ALL_CONTEXTS        2UL
 #define VMFAIL_INVALID_EPT_VPID				\
 	"       jnc 1f\n"				\
-	"       movl $1, (%0)\n"    /* CF: error = 1 */	\
+	"       mov $1, %0\n"    /* CF: error = 1 */	\
 	"       jmp 3f\n"				\
 	"1:     jnz 2f\n"				\
-	"       movl $2, (%0)\n"    /* ZF: error = 2 */	\
+	"       mov $2, %0\n"    /* ZF: error = 2 */	\
 	"       jmp 3f\n"				\
-	"2:     movl $0, (%0)\n"			\
+	"2:     mov $0, %0\n"				\
 	"3:"
 
 struct invvpid_operand {
@@ -66,13 +66,15 @@ struct invept_desc {
 	uint64_t res;
 };
 
-static inline void asm_invvpid(const struct invvpid_operand operand, uint64_t type, int32_t *error)
+static inline int32_t asm_invvpid(const struct invvpid_operand operand, uint64_t type)
 {
+	int32_t error;
 	asm volatile ("invvpid %1, %2\n"
 			VMFAIL_INVALID_EPT_VPID
-			: "+r" (error)
+			: "=r" (error)
 			: "m" (operand), "r" (type)
 			: "memory");
+	return error;
 }
 
 /*
@@ -80,24 +82,22 @@ static inline void asm_invvpid(const struct invvpid_operand operand, uint64_t ty
  */
 static inline void local_invvpid(uint64_t type, uint16_t vpid, uint64_t gva)
 {
-	int32_t error = 0;
-
 	const struct invvpid_operand operand = { vpid, 0U, 0U, gva };
 
-	asm_invvpid(operand, type, &error);
-
-	if (error != 0) {
+	if (asm_invvpid(operand, type) != 0) {
 		pr_dbg("%s, failed. type = %llu, vpid = %u", __func__, type, vpid);
 	}
 }
 
-static inline void asm_invept(uint64_t type, struct invept_desc desc, int32_t *error)
+static inline int32_t asm_invept(uint64_t type, struct invept_desc desc)
 {
+	int32_t error;
 	asm volatile ("invept %1, %2\n"
 			VMFAIL_INVALID_EPT_VPID
-			: "+r" (error)
+			: "=r" (error)
 			: "m" (desc), "r" (type)
 			: "memory");
+	return error;
 }
 
 /*
@@ -105,11 +105,7 @@ static inline void asm_invept(uint64_t type, struct invept_desc desc, int32_t *e
  */
 static inline void local_invept(uint64_t type, struct invept_desc desc)
 {
-	int32_t error = 0;
-
-	asm_invept(type, desc, &error);
-
-	if (error != 0) {
+	if (asm_invept(type, desc) != 0) {
 		pr_dbg("%s, failed. type = %llu, eptp = 0x%llx", __func__, type, desc.eptp);
 	}
 }

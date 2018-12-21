@@ -292,22 +292,18 @@ static inline uint64_t sidt(void)
 }
 
 /* Read MSR */
-static inline void cpu_msr_read(uint32_t reg, uint64_t *msr_val_ptr)
+static inline uint64_t cpu_msr_read(uint32_t reg)
 {
 	uint32_t  msrl, msrh;
 
 	asm volatile (" rdmsr ":"=a"(msrl), "=d"(msrh) : "c" (reg));
-	*msr_val_ptr = ((uint64_t)msrh << 32U) | msrl;
+	return (((uint64_t)msrh << 32U) | msrl);
 }
 
 /* Write MSR */
 static inline void cpu_msr_write(uint32_t reg, uint64_t msr_val)
 {
-	uint32_t msrl, msrh;
-
-	msrl = (uint32_t)msr_val;
-	msrh = (uint32_t)(msr_val >> 32U);
-	asm volatile (" wrmsr " : : "c" (reg), "a" (msrl), "d" (msrh));
+	asm volatile (" wrmsr " : : "c" (reg), "a" ((uint32_t)msr_val), "d" ((uint32_t)(msr_val >> 32U)));
 }
 
 static inline void pause_cpu(void)
@@ -429,8 +425,7 @@ static inline uint64_t cpu_rsp_get(void)
 {
 	uint64_t ret;
 
-	asm volatile("movq %%rsp, %0"
-			:  "=r"(ret));
+	asm volatile("movq %%rsp, %0" :  "=r"(ret));
 	return ret;
 }
 
@@ -438,34 +433,23 @@ static inline uint64_t cpu_rbp_get(void)
 {
 	uint64_t ret;
 
-	asm volatile("movq %%rbp, %0"
-			:  "=r"(ret));
+	asm volatile("movq %%rbp, %0" :  "=r"(ret));
 	return ret;
 }
 
-static inline uint64_t
-msr_read(uint32_t reg_num)
+static inline uint64_t msr_read(uint32_t reg_num)
 {
-	uint64_t msr_val;
-
-	cpu_msr_read(reg_num, &msr_val);
-	return msr_val;
+	return cpu_msr_read(reg_num);
 }
 
-static inline void
-msr_write(uint32_t reg_num, uint64_t value64)
+static inline void msr_write(uint32_t reg_num, uint64_t value64)
 {
 	cpu_msr_write(reg_num, value64);
 }
 
-static inline void
-write_xcr(int32_t reg, uint64_t val)
+static inline void write_xcr(int32_t reg, uint64_t val)
 {
-	uint32_t low, high;
-
-	low = (uint32_t)val;
-	high = (uint32_t)(val >> 32U);
-	asm volatile("xsetbv" : : "c" (reg), "a" (low), "d" (high));
+	asm volatile("xsetbv" : : "c" (reg), "a" ((uint32_t)val), "d" ((uint32_t)(val >> 32U)));
 }
 
 static inline void stac(void)
