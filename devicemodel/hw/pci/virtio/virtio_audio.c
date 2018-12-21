@@ -224,7 +224,7 @@ virtio_audio_k_set_status(void *base, uint64_t status)
 	nvq = virt_audio->base.vops->nvq;
 
 	if (virt_audio->vbs_k.kstatus == VIRTIO_DEV_INIT_SUCCESS &&
-	    (status & VIRTIO_CR_STATUS_DRIVER_OK)) {
+	    (status & VIRTIO_CONFIG_S_DRIVER_OK)) {
 		/* time to kickoff VBS-K side */
 		/* init vdev first */
 		rc = virtio_audio_kernel_dev_set(

@@ -405,7 +405,7 @@ virtio_console_notify_rx(void *vdev, struct virtio_vq_info *vq)
 
 	if (!port->rx_ready) {
 		port->rx_ready = 1;
-		vq->used->flags |= ACRN_VRING_USED_F_NO_NOTIFY;
+		vq->used->flags |= VRING_USED_F_NO_NOTIFY;
 	}
 }
 

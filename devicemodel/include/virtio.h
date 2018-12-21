@@ -116,7 +116,7 @@
  * The two event fields, <used_event> and <avail_event>, in the
  * avail and used rings (respectively -- note the reversal!), are
  * always provided, but are used only if the virtual device
- * negotiates the ACRN_VIRTIO_RING_F_EVENT_IDX feature during feature
+ * negotiates the VIRTIO_RING_F_EVENT_IDX feature during feature
  * negotiation.  Similarly, both rings provide a flag --
  * ACRN_VRING_AVAIL_F_NO_INTERRUPT and ACRN_VRING_USED_F_NO_NOTIFY -- in
  * their <flags> field, indicating that the guest does not need an
@@ -125,6 +125,10 @@
  * (These are provided only for interrupt optimization and need
  * not be implemented.)
  */
+
+#include <linux/virtio_ring.h>
+#include <linux/virtio_config.h>
+#include <linux/virtio_pci.h>
 
 #include "types.h"
 #include "timer.h"
@@ -135,42 +139,6 @@
  * @defgroup acrn_virtio virtio API
  * @{
  */
-
-#define VRING_ALIGN	4096
-
-#define ACRN_VRING_DESC_F_NEXT		(1 << 0)
-#define ACRN_VRING_DESC_F_WRITE		(1 << 1)
-#define ACRN_VRING_DESC_F_INDIRECT	(1 << 2)
-
-struct virtio_desc {		/* AKA vring_desc */
-	uint64_t	addr;	/* guest physical address */
-	uint32_t	len;	/* length of scatter/gather seg */
-	uint16_t	flags;	/* VRING_F_DESC_* */
-	uint16_t	next;	/* next desc if F_NEXT */
-} __attribute__((packed));
-
-struct virtio_used {		/* AKA vring_used_elem */
-	uint32_t	idx;	/* head of used descriptor chain */
-	uint32_t	tlen;	/* length written-to */
-} __attribute__((packed));
-
-#define ACRN_VRING_AVAIL_F_NO_INTERRUPT	1
-
-struct virtio_vring_avail {
-	uint16_t	flags;	/* VRING_AVAIL_F_* */
-	uint16_t	idx;	/* counts to 65535, then cycles */
-	uint16_t	ring[];	/* size N, reported in QNUM value */
-/*	uint16_t	used_event;	-- after N ring entries */
-} __attribute__((packed));
-
-#define	ACRN_VRING_USED_F_NO_NOTIFY	1
-struct virtio_vring_used {
-	uint16_t	flags;	/* VRING_USED_F_* */
-	uint16_t	idx;	/* counts to 65535, then cycles */
-	struct virtio_used ring[];
-				/* size N */
-/*	uint16_t	avail_event;	-- after N ring entries */
-} __attribute__((packed));
 
 enum {
 	BACKEND_UNKNOWN = 0,
@@ -262,94 +230,12 @@ enum {
 #define	VIRTIO_DEV_COREU	0x8608
 
 /*
- * PCI config space constants.
- *
- * If MSI-X is enabled, the ISR register is generally not used,
- * and the configuration vector and queue vector appear at offsets
- * 20 and 22 with the remaining configuration registers at 24.
- * If MSI-X is not enabled, those two registers disappear and
- * the remaining configuration registers start at offset 20.
- */
-#define VIRTIO_CR_HOSTCAP	0
-#define VIRTIO_CR_GUESTCAP	4
-#define VIRTIO_CR_PFN		8
-#define VIRTIO_CR_QNUM		12
-#define VIRTIO_CR_QSEL		14
-#define VIRTIO_CR_QNOTIFY	16
-#define VIRTIO_CR_STATUS	18
-#define VIRTIO_CR_ISR		19
-#define VIRTIO_CR_CFGVEC	20
-#define VIRTIO_CR_QVEC		22
-#define VIRTIO_CR_CFG0		20	/* No MSI-X */
-#define VIRTIO_CR_CFG1		24	/* With MSI-X */
-#define VIRTIO_CR_MSIX		20
-
-/*
- * Bits in VIRTIO_CR_STATUS.  Guests need not actually set any of these,
- * but a guest writing 0 to this register means "please reset".
- */
-#define	VIRTIO_CR_STATUS_ACK		0x01
-				/* guest OS has acknowledged dev */
-#define	VIRTIO_CR_STATUS_DRIVER		0x02
-				/* guest OS driver is loaded */
-#define	VIRTIO_CR_STATUS_DRIVER_OK	0x04
-				/* guest OS driver ready */
-#define	VIRTIO_CR_STATUS_FEATURES_OK	0x08
-				/* features negotiation complete */
-#define	VIRTIO_CR_STATUS_NEEDS_RESET	0x40
-				/* device experienced an error and cannot
-				 * recover, guest driver must reset it
-				 */
-#define	VIRTIO_CR_STATUS_FAILED		0x80
-				/* guest has given up on this dev */
-
-/*
- * Bits in VIRTIO_CR_ISR.  These apply only if not using MSI-X.
+ * Bits in VIRTIO_PCI_ISR.  These apply only if not using MSI-X.
  *
  * (We don't [yet?] ever use CONF_CHANGED.)
  */
-#define	VIRTIO_CR_ISR_QUEUES		0x01
+#define	VIRTIO_PCI_ISR_QUEUES		0x01
 				/* re-scan queues */
-#define	VIRTIO_CR_ISR_CONF_CHANGED	0x02
-				/* configuration changed */
-
-#define VIRTIO_MSI_NO_VECTOR	0xFFFF
-
-/*
- * Feature flags.
- * Note: bits 0 through 23 are reserved to each device type.
- */
-#define	ACRN_VIRTIO_F_NOTIFY_ON_EMPTY		(1 << 24)
-#define	ACRN_VIRTIO_RING_F_INDIRECT_DESC	(1 << 28)
-#define	ACRN_VIRTIO_RING_F_EVENT_IDX		(1 << 29)
-
-/* v1.0 compliant. */
-#define ACRN_VIRTIO_F_VERSION_1		(1UL << 32)
-
-/* From section 2.3, "Virtqueue Configuration", of the virtio specification */
-/**
- * @brief Calculate size of a virtual ring, this interface is only valid for
- * legacy virtio.
- *
- * @param qsz Size of raw data in a certain virtqueue.
- *
- * @return size of a certain virtqueue, in bytes.
- */
-static inline size_t
-virtio_vring_size(u_int qsz)
-{
-	size_t size;
-
-	/* constant 3 below = flags, va_idx, va_used_event */
-	size = sizeof(struct virtio_desc) * qsz + sizeof(uint16_t) * (3 + qsz);
-	size = roundup2(size, VRING_ALIGN);
-
-	/* constant 3 below = flags, idx, avail_event */
-	size += sizeof(uint16_t) * 3 + sizeof(struct virtio_used) * qsz;
-	size = roundup2(size, VRING_ALIGN);
-
-	return size;
-}
 
 struct vmctx;
 struct pci_vdev;
@@ -436,76 +322,6 @@ struct virtio_vq_info;
 #define VIRTIO_PCI_CAP_DEVICE_CFG	4
 /* PCI configuration access */
 #define VIRTIO_PCI_CAP_PCI_CFG		5
-
-#define VIRTIO_COMMON_DFSELECT		0
-#define VIRTIO_COMMON_DF		4
-#define VIRTIO_COMMON_GFSELECT		8
-#define VIRTIO_COMMON_GF		12
-#define VIRTIO_COMMON_MSIX		16
-#define VIRTIO_COMMON_NUMQ		18
-#define VIRTIO_COMMON_STATUS		20
-#define VIRTIO_COMMON_CFGGENERATION	21
-#define VIRTIO_COMMON_Q_SELECT		22
-#define VIRTIO_COMMON_Q_SIZE		24
-#define VIRTIO_COMMON_Q_MSIX		26
-#define VIRTIO_COMMON_Q_ENABLE		28
-#define VIRTIO_COMMON_Q_NOFF		30
-#define VIRTIO_COMMON_Q_DESCLO		32
-#define VIRTIO_COMMON_Q_DESCHI		36
-#define VIRTIO_COMMON_Q_AVAILLO		40
-#define VIRTIO_COMMON_Q_AVAILHI		44
-#define VIRTIO_COMMON_Q_USEDLO		48
-#define VIRTIO_COMMON_Q_USEDHI		52
-
-/* Fields in VIRTIO_PCI_CAP_COMMON_CFG: */
-struct virtio_pci_common_cfg {
-	/* About the whole device. */
-	uint32_t device_feature_select;	/* read-write */
-	uint32_t device_feature;	/* read-only */
-	uint32_t guest_feature_select;	/* read-write */
-	uint32_t guest_feature;		/* read-write */
-	uint16_t msix_config;		/* read-write */
-	uint16_t num_queues;		/* read-only */
-	uint8_t device_status;		/* read-write */
-	uint8_t config_generation;	/* read-only */
-
-	/* About a specific virtqueue. */
-	uint16_t queue_select;		/* read-write */
-	uint16_t queue_size;		/* read-write, power of 2. */
-	uint16_t queue_msix_vector;	/* read-write */
-	uint16_t queue_enable;		/* read-write */
-	uint16_t queue_notify_off;	/* read-only */
-	uint32_t queue_desc_lo;		/* read-write */
-	uint32_t queue_desc_hi;		/* read-write */
-	uint32_t queue_avail_lo;	/* read-write */
-	uint32_t queue_avail_hi;	/* read-write */
-	uint32_t queue_used_lo;		/* read-write */
-	uint32_t queue_used_hi;		/* read-write */
-};
-
-/* PCI capability header: */
-struct virtio_pci_cap {
-	uint8_t cap_vndr;	/* Generic PCI field: PCI_CAP_ID_VNDR */
-	uint8_t cap_next;	/* Generic PCI field: next ptr. */
-	uint8_t cap_len;	/* Generic PCI field: capability length */
-	uint8_t cfg_type;	/* Identifies the structure. */
-	uint8_t bar;		/* Where to find it. */
-	uint8_t padding[3];	/* Pad to full dword. */
-	uint32_t offset;	/* Offset within bar. */
-	uint32_t length;	/* Length of the structure, in bytes. */
-};
-
-/* Fields in VIRTIO_PCI_CAP_NOTIFY_CFG: */
-struct virtio_pci_notify_cap {
-	struct virtio_pci_cap cap;
-	uint32_t notify_off_multiplier;	/* Multiplier for queue_notify_off. */
-};
-
-/* Fields in VIRTIO_PCI_CAP_PCI_CFG: */
-struct virtio_pci_cfg_cap {
-	struct virtio_pci_cap cap;
-	uint8_t pci_cfg_data[4]; /* Data for BAR access. */
-};
 
 /**
  * @brief Base component to any virtio device
@@ -604,11 +420,11 @@ struct virtio_vq_info {
 
 	uint32_t pfn;		/**< PFN of virt queue (not shifted!) */
 
-	volatile struct virtio_desc *desc;
+	volatile struct vring_desc *desc;
 				/**< descriptor array */
-	volatile struct virtio_vring_avail *avail;
+	volatile struct vring_avail *avail;
 				/**< the "avail" ring */
-	volatile struct virtio_vring_used *used;
+	volatile struct vring_used *used;
 				/**< the "used" ring */
 
 	uint32_t gpa_desc[2];	/**< gpa of descriptors */
@@ -669,7 +485,7 @@ vq_interrupt(struct virtio_base *vb, struct virtio_vq_info *vq)
 		pci_generate_msix(vb->dev, vq->msix_idx);
 	else {
 		VIRTIO_BASE_LOCK(vb);
-		vb->isr |= VIRTIO_CR_ISR_QUEUES;
+		vb->isr |= VIRTIO_PCI_ISR_QUEUES;
 		pci_generate_msi(vb->dev, 0);
 		pci_lintr_assert(vb->dev);
 		VIRTIO_BASE_UNLOCK(vb);
@@ -688,7 +504,7 @@ vq_interrupt(struct virtio_base *vb, struct virtio_vq_info *vq)
 static inline void
 virtio_config_changed(struct virtio_base *vb)
 {
-	if (!(vb->status & VIRTIO_CR_STATUS_DRIVER_OK))
+	if (!(vb->status & VIRTIO_CONFIG_S_DRIVER_OK))
 		return;
 
 	vb->config_generation++;
@@ -697,7 +513,7 @@ virtio_config_changed(struct virtio_base *vb)
 		pci_generate_msix(vb->dev, vb->msix_cfg_idx);
 	else {
 		VIRTIO_BASE_LOCK(vb);
-		vb->isr |= VIRTIO_CR_ISR_CONF_CHANGED;
+		vb->isr |= VIRTIO_PCI_ISR_CONFIG;
 		pci_generate_msi(vb->dev, 0);
 		pci_lintr_assert(vb->dev);
 		VIRTIO_BASE_UNLOCK(vb);

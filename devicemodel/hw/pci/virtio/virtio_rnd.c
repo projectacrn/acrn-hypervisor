@@ -141,7 +141,7 @@ virtio_rnd_k_set_status(void *base, uint64_t status)
 	nvq = rnd->base.vops->nvq;
 
 	if (rnd->vbs_k.status == VIRTIO_DEV_INIT_SUCCESS &&
-	    (status & VIRTIO_CR_STATUS_DRIVER_OK)) {
+	    (status & VIRTIO_CONFIG_S_DRIVER_OK)) {
 		/* time to kickoff VBS-K side */
 		/* init vdev first */
 		rc = virtio_rnd_kernel_dev_set(&rnd->vbs_k.dev,
