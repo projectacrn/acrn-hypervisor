@@ -216,29 +216,31 @@ static inline struct acrn_vcpu *vcpu_from_vid(struct acrn_vm *vm, uint16_t vcpu_
 static inline struct acrn_vcpu *vcpu_from_pid(struct acrn_vm *vm, uint16_t pcpu_id)
 {
 	uint16_t i;
-	struct acrn_vcpu *vcpu;
+	struct acrn_vcpu *vcpu, *target_vcpu = NULL;
 
 	foreach_vcpu(i, vm, vcpu) {
 		if (vcpu->pcpu_id == pcpu_id) {
-			return vcpu;
+			target_vcpu = vcpu;
+			break;
 		}
 	}
 
-	return NULL;
+	return target_vcpu;
 }
 
 static inline struct acrn_vcpu *get_primary_vcpu(struct acrn_vm *vm)
 {
 	uint16_t i;
-	struct acrn_vcpu *vcpu;
+	struct acrn_vcpu *vcpu, *target_vcpu = NULL;
 
 	foreach_vcpu(i, vm, vcpu) {
 		if (is_vcpu_bsp(vcpu)) {
-			return vcpu;
+			target_vcpu = vcpu;
+			break;
 		}
 	}
 
-	return NULL;
+	return target_vcpu;
 }
 
 static inline struct acrn_vuart*
