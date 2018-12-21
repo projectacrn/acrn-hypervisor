@@ -106,19 +106,18 @@ static int32_t get_state_tbl_idx(const char *cpuname)
 {
 	int32_t i;
 	int32_t count = ARRAY_SIZE(cpu_state_tbl);
+	int32_t ret = -1;
 
-	if (cpuname == NULL) {
-		return -1;
-	}
-
-	for (i = 0; i < count; i++) {
-		if (strcmp((cpu_state_tbl[i].model_name),
-				cpuname) == 0) {
-			return i;
+	if (cpuname != NULL) {
+		for (i = 0; i < count; i++) {
+			if (strcmp((cpu_state_tbl[i].model_name), cpuname) == 0) {
+				ret = i;
+				break;
+			}
 		}
 	}
 
-	return -1;
+	return ret;
 }
 
 void load_cpu_state_data(void)
@@ -126,35 +125,33 @@ void load_cpu_state_data(void)
 	int32_t tbl_idx;
 	const struct cpu_state_info *state_info;
 
-	(void)memset(&boot_cpu_data.state_info, 0U,
-			sizeof(struct cpu_state_info));
+	(void)memset(&boot_cpu_data.state_info, 0U, sizeof(struct cpu_state_info));
 
 	tbl_idx = get_state_tbl_idx(boot_cpu_data.model_name);
-	if (tbl_idx < 0) {
-		/* The state table is not found. */
-		return;
-	}
 
-	state_info = &(cpu_state_tbl + tbl_idx)->state_info;
+	if (tbl_idx >= 0) {
+		/* The state table is found. */
 
-	if ((state_info->px_cnt != 0U) && (state_info->px_data != NULL)) {
-		if (state_info->px_cnt > MAX_PSTATE) {
-			boot_cpu_data.state_info.px_cnt = MAX_PSTATE;
-		} else {
-			boot_cpu_data.state_info.px_cnt = state_info->px_cnt;
+		state_info = &(cpu_state_tbl + tbl_idx)->state_info;
+
+		if ((state_info->px_cnt != 0U) && (state_info->px_data != NULL)) {
+			if (state_info->px_cnt > MAX_PSTATE) {
+				boot_cpu_data.state_info.px_cnt = MAX_PSTATE;
+			} else {
+				boot_cpu_data.state_info.px_cnt = state_info->px_cnt;
+			}
+
+			boot_cpu_data.state_info.px_data = state_info->px_data;
 		}
 
-		boot_cpu_data.state_info.px_data = state_info->px_data;
-	}
+		if ((state_info->cx_cnt != 0U) && (state_info->cx_data != NULL)) {
+			if (state_info->cx_cnt > MAX_CX_ENTRY) {
+				boot_cpu_data.state_info.cx_cnt = MAX_CX_ENTRY;
+			} else {
+				boot_cpu_data.state_info.cx_cnt = state_info->cx_cnt;
+			}
 
-	if ((state_info->cx_cnt != 0U) && (state_info->cx_data != NULL)) {
-		if (state_info->cx_cnt > MAX_CX_ENTRY) {
-			boot_cpu_data.state_info.cx_cnt = MAX_CX_ENTRY;
-		} else {
-			boot_cpu_data.state_info.cx_cnt = state_info->cx_cnt;
+			boot_cpu_data.state_info.cx_data = state_info->cx_data;
 		}
-
-		boot_cpu_data.state_info.cx_data = state_info->cx_data;
 	}
-
 }
