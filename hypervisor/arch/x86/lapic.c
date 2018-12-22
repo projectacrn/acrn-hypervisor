@@ -6,27 +6,6 @@
 
 #include <hypervisor.h>
 
-/* x2APIC Interrupt Command Register (ICR) structure */
-union apic_icr {
-	uint64_t value;
-	struct {
-		uint32_t lo_32;
-		uint32_t hi_32;
-	} value_32;
-	struct {
-		uint32_t vector:8;
-		uint32_t delivery_mode:3;
-		uint32_t destination_mode:1;
-		uint32_t rsvd_1:2;
-		uint32_t level:1;
-		uint32_t trigger_mode:1;
-		uint32_t rsvd_2:2;
-		uint32_t shorthand:2;
-		uint32_t rsvd_3:12;
-		uint32_t dest_field:32;
-	} bits;
-};
-
 union lapic_base_msr {
 	uint64_t value;
 	struct {

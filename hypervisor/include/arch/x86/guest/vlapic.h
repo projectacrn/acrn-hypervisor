@@ -249,6 +249,7 @@ int32_t apic_write_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t veoi_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t tpr_below_threshold_vmexit_handler(__unused struct acrn_vcpu *vcpu);
 void vlapic_calcdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys, bool lowprio);
+void vlapic_calcdest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys);
 
 /**
  * @}
