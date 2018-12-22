@@ -379,6 +379,8 @@ int32_t external_interrupt_vmexit_handler(struct acrn_vcpu *vcpu)
 	return ret;
 }
 
+static inline int32_t acrn_inject_pending_vector(struct acrn_vcpu *vcpu, uint64_t *pending_req_bits);
+
 int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 {
 	int32_t ret = 0;
@@ -423,85 +425,40 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, intr_info);
 
 		arch->inject_event_pending = false;
-		goto INTR_WIN;
-	}
-
-	/*
-	 * From SDM Vol3 26.3.2.5:
-	 * Once the virtual interrupt is recognized, it will be delivered
-	 * in VMX non-root operation immediately after VM entry(including
-	 * any specified event injection) completes.
-	 *
-	 * So the hardware can handle vmcs event injection and
-	 * evaluation/delivery of apicv virtual interrupts in one time
-	 * vm-entry.
-	 *
-	 * Here to sync the pending interrupts to irr and update rvi if
-	 * needed. And then try to handle vmcs event injection.
-	 */
-	if (is_apicv_intr_delivery_supported() &&
-		bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT, pending_req_bits)) {
-		vlapic = vcpu_vlapic(vcpu);
-		vlapic_apicv_inject_pir(vlapic);
-	}
-
-	/* SDM Vol 3 - table 6-2, inject high priority exception before
-	 * maskable hardware interrupt */
-	if (vcpu_inject_hi_exception(vcpu) != 0) {
-		goto INTR_WIN;
-	}
-
-	/* inject NMI before maskable hardware interrupt */
-	if (bitmap_test_and_clear_lock(ACRN_REQUEST_NMI, pending_req_bits)) {
-		/* Inject NMI vector = 2 */
-		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
-			VMX_INT_INFO_VALID | (VMX_INT_TYPE_NMI << 8U) | IDT_NMI);
-
-		goto INTR_WIN;
-	}
-
-	/* handling pending vector injection:
-	 * there are many reason inject failed, we need re-inject again
-	 * here should take care
-	 * - SW exception (not maskable by IF)
-	 * - external interrupt, if IF clear, will keep in IDT_VEC_INFO_FIELD
-	 *   at next vm exit?
-	 */
-	if ((arch->idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
-		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
-				arch->idt_vectoring_info);
-		goto INTR_WIN;
-	}
-
-	/* Guest interruptable or not */
-	if (is_guest_irq_enabled(vcpu)) {
-		/* Inject external interrupt first */
-		if (bitmap_test_and_clear_lock(ACRN_REQUEST_EXTINT,
-			pending_req_bits)) {
-			/* has pending external interrupts */
-			ret = vcpu_do_pending_extint(vcpu);
-			goto INTR_WIN;
-		}
-
+	} else {
 		/*
-		 * For "virtual-interrupt delivery" disabled case, if
-		 * the virtual interrupt injection conditions are satified,
-		 * then inject through vmcs.
+		 * From SDM Vol3 26.3.2.5:
+		 * Once the virtual interrupt is recognized, it will be delivered
+		 * in VMX non-root operation immediately after VM entry(including
+		 * any specified event injection) completes.
+		 *
+		 * So the hardware can handle vmcs event injection and
+		 * evaluation/delivery of apicv virtual interrupts in one time
+		 * vm-entry.
+		 *
+		 * Here to sync the pending interrupts to irr and update rvi if
+		 * needed. And then try to handle vmcs event injection.
 		 */
-		if (!is_apicv_intr_delivery_supported() &&
-			bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT,
-						pending_req_bits)) {
-			ret = vcpu_inject_vlapic_int(vcpu);
-			goto INTR_WIN;
+		if (is_apicv_intr_delivery_supported() &&
+			bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT, pending_req_bits)) {
+			vlapic = vcpu_vlapic(vcpu);
+			vlapic_apicv_inject_pir(vlapic);
+		}
+
+		/* SDM Vol 3 - table 6-2, inject high priority exception before
+		 * maskable hardware interrupt */
+		if (vcpu_inject_hi_exception(vcpu) == 0) {
+			/* inject NMI before maskable hardware interrupt */
+			if (bitmap_test_and_clear_lock(ACRN_REQUEST_NMI, pending_req_bits)) {
+				/* Inject NMI vector = 2 */
+				exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
+					VMX_INT_INFO_VALID | (VMX_INT_TYPE_NMI << 8U) | IDT_NMI);
+			} else {
+				ret = acrn_inject_pending_vector(vcpu, pending_req_bits);
+			}
 		}
 	}
 
-	/* SDM Vol3 table 6-2, inject lowpri exception */
-	if (vcpu_inject_lo_exception(vcpu) != 0) {
-		goto INTR_WIN;
-	}
-
-INTR_WIN:
 	/*
 	 * If "virtual-interrupt delivered" is enabled, CPU will evaluate
 	 * and automatic inject the virtual interrupts in appropriate time.
@@ -530,6 +487,53 @@ INTR_WIN:
 	tmp |= VMX_PROCBASED_CTLS_IRQ_WIN;
 	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, tmp);
 	arch->irq_window_enabled = 1U;
+
+	return ret;
+}
+
+static inline int32_t acrn_inject_pending_vector(struct acrn_vcpu *vcpu, uint64_t *pending_req_bits)
+{
+	int32_t ret = 0;
+	struct acrn_vcpu_arch * arch = &vcpu->arch;
+
+	/* handling pending vector injection:
+	 * there are many reason inject failed, we need re-inject again
+	 * here should take care
+	 * - SW exception (not maskable by IF)
+	 * - external interrupt, if IF clear, will keep in IDT_VEC_INFO_FIELD
+	 *   at next vm exit?
+	 */
+	if ((arch->idt_vectoring_info & VMX_INT_INFO_VALID) != 0U) {
+		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
+				arch->idt_vectoring_info);
+	} else {
+
+		/* Guest interruptable or not */
+		if (is_guest_irq_enabled(vcpu)) {
+			/* Inject external interrupt first */
+			if (bitmap_test_and_clear_lock(ACRN_REQUEST_EXTINT, pending_req_bits)) {
+				/* has pending external interrupts */
+				ret = vcpu_do_pending_extint(vcpu);
+			} else {
+				/*
+				 * For "virtual-interrupt delivery" disabled case, if
+				 * the virtual interrupt injection conditions are satified,
+				 * then inject through vmcs.
+				 */
+				if ((!is_apicv_intr_delivery_supported()) &&
+					(bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT,
+								pending_req_bits))) {
+					ret = vcpu_inject_vlapic_int(vcpu);
+				}
+			}
+		} else {
+			/* SDM Vol3 table 6-2, inject lowpri exception */
+			ret = vcpu_inject_lo_exception(vcpu);
+			if (ret != 0) {
+				ret = 0;
+			}
+		}
+	}
 
 	return ret;
 }
