@@ -106,7 +106,7 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 	switch (leaf) {
 	case 0x07U:
 		if (subleaf == 0U) {
-			cpuid(leaf,
+			cpuid_subleaf(leaf, subleaf,
 				&entry->eax, &entry->ebx,
 				&entry->ecx, &entry->edx);
 			/* mask invpcid */
@@ -117,6 +117,9 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 			/* mask SGX and SGX_LC */
 			entry->ebx &= ~CPUID_EBX_SGX;
 			entry->ecx &= ~CPUID_ECX_SGX_LC;
+
+			/* mask Intel Processor Trace, since 14h is disabled */
+			entry->ebx &= ~CPUID_EBX_PROC_TRC;
 		} else {
 			entry->eax = 0U;
 			entry->ebx = 0U;
@@ -223,6 +226,14 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 						break;
 					}
 				}
+				break;
+			case 0x07U:
+				init_vcpuid_entry(i, 0U, CPUID_CHECK_SUBLEAF, &entry);
+				if (entry.eax != 0U) {
+					pr_warn("vcpuid: only support subleaf 0 for cpu leaf 07h");
+					entry.eax = 0U;
+				}
+				result = set_vcpuid_entry(vm, &entry);
 				break;
 
 			/* These features are disabled */

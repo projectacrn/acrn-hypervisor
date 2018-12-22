@@ -88,6 +88,8 @@
 #define CPUID_EBX_PQM           (1U<<12U)
 /* CPUID.07H:EBX.PQE */
 #define CPUID_EBX_PQE           (1U<<15U)
+/* CPUID.07H:EBX.INTEL_PROCESSOR_TRACE */
+#define CPUID_EBX_PROC_TRC      (1U<<25U)
 /* CPUID.01H:ECX.PCID*/
 #define CPUID_ECX_PCID          (1U<<17U)
 
