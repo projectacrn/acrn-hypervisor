@@ -230,6 +230,14 @@ enum {
 #define	VIRTIO_DEV_COREU	0x8608
 
 /*
+ * VIRTIO_CONFIG_S_NEEDS_RESET is not defined
+ * in some environments's virtio_config.h
+ */
+#ifndef VIRTIO_CONFIG_S_NEEDS_RESET
+#define VIRTIO_CONFIG_S_NEEDS_RESET	0x40
+#endif
+
+/*
  * Bits in VIRTIO_PCI_ISR.  These apply only if not using MSI-X.
  *
  * (We don't [yet?] ever use CONF_CHANGED.)
