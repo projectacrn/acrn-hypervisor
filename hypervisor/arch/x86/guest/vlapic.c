@@ -101,7 +101,7 @@ vm_lapic_from_vcpu_id(struct acrn_vm *vm, uint16_t vcpu_id)
 	return vcpu_vlapic(vcpu);
 }
 
-static uint16_t vm_apicid2vcpu_id(struct acrn_vm *vm, uint8_t lapicid)
+static uint16_t vm_apicid2vcpu_id(struct acrn_vm *vm, uint32_t lapicid)
 {
 	uint16_t i;
 	struct acrn_vcpu *vcpu;
@@ -117,7 +117,7 @@ static uint16_t vm_apicid2vcpu_id(struct acrn_vm *vm, uint8_t lapicid)
 
 	if (cpu_id == INVALID_CPU_ID) {
 		cpu_id = get_pcpu_nums();
-		pr_err("%s: bad lapicid %hhu", __func__, lapicid);
+		pr_err("%s: bad lapicid %lu", __func__, lapicid);
 	}
 
 	return cpu_id;
@@ -1045,7 +1045,7 @@ vlapic_calcdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys, b
 		 * Physical mode: destination is LAPIC ID.
 		 */
 		*dmask = 0UL;
-		vcpu_id = vm_apicid2vcpu_id(vm, (uint8_t)dest);
+		vcpu_id = vm_apicid2vcpu_id(vm, dest);
 		if (vcpu_id < vm->hw.created_vcpus) {
 			bitmap_set_lock(vcpu_id, dmask);
 		}
@@ -1132,6 +1132,57 @@ vlapic_calcdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys, b
 		if (lowprio && (target != NULL)) {
 			bitmap_set_lock(target->vcpu->vcpu_id, dmask);
 		}
+	}
+}
+
+/*
+ * This function populates 'dmask' with the set of vcpus that is the possible destination
+ * when lapic is passthru.
+ */
+void
+vlapic_calcdest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys)
+{
+	struct acrn_vlapic *vlapic;
+	struct acrn_vcpu *vcpu;
+	uint32_t ldr, logical_id, dest_logical_id, dest_cluster_id;
+	uint16_t vcpu_id;
+
+	if (dest == 0xffU) {
+		/*
+		 * Broadcast in both logical and physical modes.
+		 */
+		*dmask = vm_active_cpus(vm);
+	} else if (phys) {
+		/*
+		 * Physical mode: destination is LAPIC ID.
+		 */
+		*dmask = 0UL;
+		vcpu_id = vm_apicid2vcpu_id(vm, dest);
+		if (vcpu_id < vm->hw.created_vcpus) {
+			bitmap_set_lock(vcpu_id, dmask);
+		}
+		dev_dbg(ACRN_DBG_LAPICPT, "%s: phys destmod, dmask: 0x%016llx", __func__, *dmask);
+	} else {
+		/*
+		 * Logical mode: match each APIC that has a bit set
+		 * in its LDR that matches a bit in the ldest.
+		 */
+		foreach_vcpu(vcpu_id, vm, vcpu) {
+			vlapic = vm_lapic_from_vcpu_id(vm, vcpu_id);
+
+			ldr = vlapic->apic_page.ldr.v;
+			logical_id = ldr & 0xFFFFU;
+
+			dest_cluster_id = (dest >> 16U) & 0xFFFFU;
+			dest_logical_id = dest & 0xFFFFU;
+			if (dest_cluster_id != ((ldr >> 16U) & 0xFFFFU)) {
+				continue;
+			}
+			if ((dest_logical_id & logical_id) != 0U) {
+				bitmap_set_lock(vcpu_id, dmask);
+			}
+		}
+		dev_dbg(ACRN_DBG_LAPICPT, "%s: logical destmod, dmask: 0x%016llx", __func__, *dmask);
 	}
 }
 

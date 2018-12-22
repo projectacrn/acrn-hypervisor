@@ -375,6 +375,53 @@ int32_t hcall_set_irqline(const struct acrn_vm *vm, uint16_t vmid,
 	return ret;
 }
 
+static void inject_msi_lapic_pt(struct acrn_vm *vm, const struct acrn_msi_entry *vmsi)
+{
+	union apic_icr icr;
+	struct acrn_vcpu *vcpu;
+	union msi_addr_reg vmsi_addr;
+	union msi_data_reg vmsi_data;
+	uint64_t vdmask = 0UL;
+	uint32_t vdest, dest = 0U;
+	uint16_t vcpu_id;
+	bool phys;
+
+	vmsi_addr.full = vmsi->msi_addr;
+	vmsi_data.full = (uint32_t)vmsi->msi_data;
+
+	dev_dbg(ACRN_DBG_LAPICPT, "%s: msi_addr 0x%016llx, msi_data 0x%016llx",
+		__func__, vmsi->msi_addr, vmsi->msi_data);
+
+	if (vmsi_addr.bits.addr_base == MSI_ADDR_BASE) {
+		vdest = vmsi_addr.bits.dest_field;
+		phys = (vmsi_addr.bits.dest_mode == MSI_ADDR_DESTMODE_PHYS);
+		/*
+		 * calculate all reachable destination vcpu.
+		 * the delivery mode of vmsi will be forwarded to ICR delievry field
+		 * and handled by hardware.
+		 */
+		vlapic_calcdest_lapic_pt(vm, &vdmask, vdest, phys);
+		dev_dbg(ACRN_DBG_LAPICPT, "%s: vcpu destination mask 0x%016llx", __func__, vdmask);
+
+		vcpu_id = ffs64(vdmask);
+		while (vcpu_id != INVALID_BIT_INDEX) {
+			bitmap_clear_nolock(vcpu_id, &vdmask);
+			vcpu = vcpu_from_vid(vm, vcpu_id);
+			dest |= per_cpu(lapic_ldr, vcpu->pcpu_id);
+			vcpu_id = ffs64(vdmask);
+		}
+
+		icr.value = 0UL;
+		icr.bits.dest_field = dest;
+		icr.bits.vector = vmsi_data.bits.vector;
+		icr.bits.delivery_mode = vmsi_data.bits.delivery_mode;
+		icr.bits.destination_mode = MSI_ADDR_DESTMODE_LOGICAL; 
+
+		msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);
+		dev_dbg(ACRN_DBG_LAPICPT, "%s: icr.value 0x%016llx", __func__, icr.value);
+	}
+}
+
 /**
  * @brief inject MSI interrupt
  *
@@ -390,7 +437,7 @@ int32_t hcall_set_irqline(const struct acrn_vm *vm, uint16_t vmid,
  */
 int32_t hcall_inject_msi(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 {
-	int32_t ret;
+	int32_t ret = -1;
 	struct acrn_msi_entry msi;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
@@ -400,10 +447,14 @@ int32_t hcall_inject_msi(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 			pr_err("%s: Unable copy param to vm\n", __func__);
 			ret = -1;
 		} else {
-			ret = vlapic_intr_msi(target_vm, msi.msi_addr, msi.msi_data);
+			/* For target cpu with lapic pt, send ipi instead of injection via vlapic */
+			if (is_lapic_pt(target_vm)) {
+				inject_msi_lapic_pt(target_vm, &msi);
+				ret = 0;
+			} else {
+				ret = vlapic_intr_msi(target_vm, msi.msi_addr, msi.msi_data);
+			}
 		}
-	} else {
-		ret = -1;
 	}
 
 	return ret;
