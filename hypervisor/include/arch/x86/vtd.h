@@ -129,11 +129,6 @@ static inline uint8_t iommu_cap_plmr(uint64_t cap)
 	return ((uint8_t)(cap >> 5U) & 1U);
 }
 
-static inline uint8_t iommu_cap_rwbf(uint64_t cap)
-{
-	return ((uint8_t)(cap >> 4U) & 1U);
-}
-
 static inline uint8_t iommu_cap_afl(uint64_t cap)
 {
 	return ((uint8_t)(cap >> 3U) & 1U);
