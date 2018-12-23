@@ -335,16 +335,19 @@ mptable_build(struct vmctx *ctx, int ncpu)
 	curraddr += sizeof(*mpeb) * MPE_NUM_BUSES;
 	mpch->entry_count += MPE_NUM_BUSES;
 
-	mpei = (io_apic_entry_ptr)curraddr;
-	mpt_build_ioapic_entries(mpei, 0);
-	curraddr += sizeof(*mpei);
-	mpch->entry_count++;
+	/* Don't generate io_apic entry for VM with lapic pt */
+	if (!lapic_pt) {
+		mpei = (io_apic_entry_ptr)curraddr;
+		mpt_build_ioapic_entries(mpei, 0);
+		curraddr += sizeof(*mpei);
+		mpch->entry_count++;
 
-	mpie = (int_entry_ptr) curraddr;
-	ioints = mpt_count_ioint_entries();
-	mpt_build_ioint_entries(mpie, 0);
-	curraddr += sizeof(*mpie) * ioints;
-	mpch->entry_count += ioints;
+		mpie = (int_entry_ptr) curraddr;
+		ioints = mpt_count_ioint_entries();
+		mpt_build_ioint_entries(mpie, 0);
+		curraddr += sizeof(*mpie) * ioints;
+		mpch->entry_count += ioints;
+	}
 
 	mpie = (int_entry_ptr)curraddr;
 	mpt_build_localint_entries(mpie);
