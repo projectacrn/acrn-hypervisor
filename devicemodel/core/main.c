@@ -88,6 +88,7 @@ char *elf_file_name;
 uint8_t trusty_enabled;
 char *mac_seed;
 bool stdio_in_use;
+bool lapic_pt;
 
 static int virtio_msix = 1;
 static bool debugexit_enabled;
