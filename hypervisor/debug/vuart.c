@@ -408,3 +408,8 @@ void vuart_init(struct acrn_vm *vm)
 	vuart_lock_init(vu);
 	vuart_register_io_handler(vm);
 }
+
+bool hv_used_dbg_intx(uint8_t intx_pin)
+{
+	return is_dbg_uart_enabled() && (intx_pin == CONFIG_COM_IRQ);
+}

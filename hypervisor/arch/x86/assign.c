@@ -54,22 +54,6 @@ ptirq_lookup_entry_by_vpin(const struct acrn_vm *vm, uint8_t virt_pin, bool pic_
 	return entry;
 }
 
-#ifdef CONFIG_COM_IRQ
-static bool ptdev_hv_owned_intx(const struct acrn_vm *vm, const union source_id *virt_sid)
-{
-	bool ret;
-
-	/* vm0 vuart pin is owned by hypervisor under debug version */
-	if (is_vm0(vm) && (virt_sid->intx_id.pin == CONFIG_COM_IRQ)) {
-		ret = true;
-	} else {
-	        ret = false;
-	}
-
-	return ret;
-}
-#endif /* CONFIG_COM_IRQ */
-
 static uint64_t calculate_logical_dest_mask(uint64_t pdmask)
 {
 	uint64_t dest_mask = 0UL;
@@ -625,11 +609,9 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin, uint8_t vpin_
 	 */
 
 	/* no remap for hypervisor owned intx */
-#ifdef CONFIG_COM_IRQ
-	if (ptdev_hv_owned_intx(vm, &virt_sid)) {
+	if (is_vm0(vm) && hv_used_dbg_intx(virt_sid.intx_id.pin)) {
 		status = -ENODEV;
 	}
-#endif /* CONFIG_COM_IRQ */
 
 	if ((status != 0) || (pic_pin && (virt_pin >= NR_VPIC_PINS_TOTAL))) {
 		status = -EINVAL;

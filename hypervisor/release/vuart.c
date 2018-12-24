@@ -15,3 +15,8 @@ struct acrn_vuart *vuart_console_active(void)
 
 void vuart_console_tx_chars(__unused struct acrn_vuart *vu) {}
 void vuart_console_rx_chars(__unused struct acrn_vuart *vu) {}
+
+bool hv_used_dbg_intx(__unused uint8_t intx_pin)
+{
+	return false;
+}
