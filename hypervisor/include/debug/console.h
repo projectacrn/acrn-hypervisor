@@ -38,6 +38,7 @@ char console_getc(void);
 void console_setup_timer(void);
 void uart16550_set_property(bool enabled, bool port_mapped, uint64_t base_addr);
 bool is_pci_dbg_uart(union pci_bdf bdf_value);
+bool is_dbg_uart_enabled(void);
 
 void shell_init(void);
 void shell_kick(void);

@@ -149,14 +149,16 @@ int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 					register_pm1ab_handler(vm);
 				}
 
-				/* Create virtual uart */
-				vuart_init(vm);
+				/* Create virtual uart; just when uart enabled, vuart can work */
+				if (is_dbg_uart_enabled()) {
+					vuart_init(vm);
+				}
 			}
 			vpic_init(vm);
 
 #ifdef CONFIG_PARTITION_MODE
-			/* Create virtual uart */
-			if (vm_desc->vm_vuart) {
+			/* Create virtual uart; just when uart enabled, vuart can work */
+			if (vm_desc->vm_vuart && is_dbg_uart_enabled()) {
 				vuart_init(vm);
 			}
 			vrtc_init(vm);
