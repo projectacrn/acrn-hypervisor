@@ -156,6 +156,7 @@ PROGRAM := acrn-dm
 
 SAMPLES_NUC := $(wildcard samples/nuc/*)
 SAMPLES_MRB := $(wildcard samples/apl-mrb/*)
+SAMPLES_UP2 := $(wildcard samples/up2/*)
 
 BIOS_BIN := $(wildcard bios/*)
 
@@ -209,6 +210,9 @@ $(DM_OBJDIR)/%.o: %.c $(HEADERS)
 
 install: $(DM_OBJDIR)/$(PROGRAM) install-samples-nuc install-samples-mrb install-bios install-vmcfg
 	install -D --mode=0755 $(DM_OBJDIR)/$(PROGRAM) $(DESTDIR)/usr/bin/$(PROGRAM)
+
+install-samples-up2: $(SAMPLES_UP2)
+	install -D -t $(DESTDIR)/usr/share/acrn/samples/up2 $^
 
 install-samples-nuc: $(SAMPLES_NUC)
 	install -D -t $(DESTDIR)/usr/share/acrn/samples/nuc $^
