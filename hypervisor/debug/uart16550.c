@@ -235,3 +235,8 @@ bool is_pci_dbg_uart(union pci_bdf bdf_value)
 
 	return ret;
 }
+
+bool is_dbg_uart_enabled(void)
+{
+	return uart_enabled;
+}
