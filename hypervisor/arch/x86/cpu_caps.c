@@ -305,6 +305,7 @@ void init_cpu_model_name(void)
 static inline bool is_vmx_disabled(void)
 {
 	uint64_t msr_val;
+	bool ret = false;
 
 	/* Read Feature ControL MSR */
 	msr_val = msr_read(MSR_IA32_FEATURE_CONTROL);
@@ -312,9 +313,10 @@ static inline bool is_vmx_disabled(void)
 	/* Check if feature control is locked and vmx cannot be enabled */
 	if (((msr_val & MSR_IA32_FEATURE_CONTROL_LOCK) != 0U) &&
 		((msr_val & MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX) == 0U)) {
-		return true;
+		ret = true;
 	}
-	return false;
+
+	return ret;
 }
 
 static inline bool cpu_has_vmx_unrestricted_guest_cap(void)
