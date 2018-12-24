@@ -14,23 +14,6 @@ static uint64_t cr0_always_off_mask;
 static uint64_t cr4_always_on_mask;
 static uint64_t cr4_always_off_mask;
 
-bool is_vmx_disabled(void)
-{
-	uint64_t msr_val;
-	bool ret = false;
-
-	/* Read Feature ControL MSR */
-	msr_val = msr_read(MSR_IA32_FEATURE_CONTROL);
-
-	/* Check if feature control is locked and vmx cannot be enabled */
-	if (((msr_val & MSR_IA32_FEATURE_CONTROL_LOCK) != 0U) &&
-		((msr_val & MSR_IA32_FEATURE_CONTROL_VMX_NO_SMX) == 0U)) {
-		ret = true;
-	}
-
-	return ret;
-}
-
 static void init_cr0_cr4_host_mask(void)
 {
 	static bool inited = false;
