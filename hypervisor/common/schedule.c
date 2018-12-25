@@ -81,9 +81,8 @@ void remove_from_cpu_runqueue(struct sched_object *obj, uint16_t pcpu_id)
 	spinlock_release(&ctx->runqueue_lock);
 }
 
-static struct sched_object *get_next_sched_obj(uint16_t pcpu_id)
+static struct sched_object *get_next_sched_obj(struct sched_context *ctx)
 {
-	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 	struct sched_object *obj = NULL;
 
 	spinlock_obtain(&ctx->runqueue_lock);
@@ -105,11 +104,11 @@ void make_reschedule_request(uint16_t pcpu_id)
 	}
 }
 
-int32_t need_reschedule(uint16_t pcpu_id)
+bool need_reschedule(uint16_t pcpu_id)
 {
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 
-	return bitmap_test_and_clear_lock(NEED_RESCHEDULE, &ctx->flags);
+	return bitmap_test(NEED_RESCHEDULE, &ctx->flags);
 }
 
 void make_pcpu_offline(uint16_t pcpu_id)
@@ -173,11 +172,13 @@ static void prepare_switch(struct sched_object *prev, struct sched_object *next)
 void schedule(void)
 {
 	uint16_t pcpu_id = get_cpu_id();
+	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 	struct sched_object *next = NULL;
-	struct sched_object *prev = per_cpu(sched_ctx, pcpu_id).curr_obj;
+	struct sched_object *prev = ctx->curr_obj;
 
 	get_schedule_lock(pcpu_id);
-	next = get_next_sched_obj(pcpu_id);
+	next = get_next_sched_obj(ctx);
+	bitmap_clear_lock(NEED_RESCHEDULE, &ctx->flags);
 
 	if (prev == next) {
 		release_schedule_lock(pcpu_id);

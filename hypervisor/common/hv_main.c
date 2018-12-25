@@ -45,7 +45,7 @@ void vcpu_thread(struct sched_object *obj)
 			continue;
 		}
 
-		if (need_reschedule(vcpu->pcpu_id) != 0) {
+		if (need_reschedule(vcpu->pcpu_id)) {
 			/*
 			 * In extrem case, schedule() could return. Which
 			 * means the vcpu resume happens before schedule()
@@ -95,7 +95,7 @@ void default_idle(__unused struct sched_object *obj)
 	uint16_t pcpu_id = get_cpu_id();
 
 	while (1) {
-		if (need_reschedule(pcpu_id) != 0) {
+		if (need_reschedule(pcpu_id)) {
 			schedule();
 		} else if (need_offline(pcpu_id) != 0) {
 			cpu_dead();
