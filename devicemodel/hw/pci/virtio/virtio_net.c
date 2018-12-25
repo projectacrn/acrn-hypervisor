@@ -823,7 +823,7 @@ virtio_net_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		    dev->func, mac_seed);
 
 		MD5_Init(&mdctx);
-		MD5_Update(&mdctx, nstr, strlen(nstr));
+		MD5_Update(&mdctx, nstr, strnlen(nstr, sizeof(nstr)));
 		MD5_Final(digest, &mdctx);
 
 		net->config.mac[0] = 0x00;

@@ -217,7 +217,7 @@ static int ctrl_chan_conn(const char *servername)
 		return -1;
 	}
 
-	if (strlen(servername) > (sizeof(servaddr.sun_path) -1)) {
+	if (strnlen(servername, sizeof(servaddr.sun_path)) == (sizeof(servaddr.sun_path))) {
 		printf("%s error, length of servername is too long\n", __func__);
 		return -1;
 	}

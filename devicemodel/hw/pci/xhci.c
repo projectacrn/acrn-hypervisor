@@ -501,6 +501,7 @@ static int pci_xhci_parse_log_level(struct pci_xhci_vdev *xdev, char *opts);
 static int pci_xhci_parse_extcap(struct pci_xhci_vdev *xdev, char *opts);
 static int pci_xhci_convert_speed(int lspeed);
 
+#define XHCI_OPT_MAX_LEN 32
 static struct pci_xhci_option_elem xhci_option_table[] = {
 	{"tablet", pci_xhci_parse_tablet},
 	{"log", pci_xhci_parse_log_level},
@@ -3985,7 +3986,7 @@ pci_xhci_parse_opts(struct pci_xhci_vdev *xdev, char *opts)
 				if (!n || !f)
 					continue;
 
-				if (!strncmp(t, n, strlen(n))) {
+				if (!strncmp(t, n, strnlen(n, XHCI_OPT_MAX_LEN))) {
 					f(xdev, t);
 					break;
 				}

@@ -205,7 +205,7 @@ static int rpmb_check_frame(const char *cmd_str, int *err,
 		return -1;
 	}
 
-	len = strlen(cmd_str) + 1;
+	len = strnlen(cmd_str, sizeof(WRITE_DATA_STR)) + 1;
 	if (len > sizeof(WRITE_DATA_STR))
 		len = sizeof(WRITE_DATA_STR);
 

@@ -70,7 +70,7 @@ int
 acrn_parse_ovmf(char *arg)
 {
 	int error;
-	size_t len = strlen(arg);
+	size_t len = strnlen(arg, STR_LEN);
 
 	if (len < STR_LEN) {
 		strncpy(ovmf_path, arg, len + 1);
