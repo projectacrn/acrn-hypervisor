@@ -99,7 +99,7 @@ const struct e820_entry e820_default_entries[NUM_E820_ENTRIES] = {
 int
 acrn_parse_bootargs(char *arg)
 {
-	size_t len = strlen(arg);
+	size_t len = strnlen(arg, STR_LEN);
 
 	if (len < STR_LEN) {
 		strncpy(bootargs, arg, len + 1);

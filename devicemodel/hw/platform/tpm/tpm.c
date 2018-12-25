@@ -37,9 +37,9 @@ char *const token[] = {
 int acrn_parse_vtpm2(char *arg)
 {
 	char *value;
-	size_t len = strlen(arg);
+	size_t len = strnlen(arg, STR_MAX_LEN);
 
-	if (len > STR_MAX_LEN)
+	if (len == STR_MAX_LEN)
 		return -1;
 
 	if (SOCK_PATH_OPT == getsubopt(&arg, token, &value)) {
