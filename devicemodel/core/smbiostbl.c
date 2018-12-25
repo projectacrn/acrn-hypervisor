@@ -636,7 +636,7 @@ smbios_type4_initializer(struct smbios_structure *template_entry,
 			if (*p++ == '\0')
 				nstrings++;
 		}
-		len = sprintf(*endaddr - 1, "CPU #%d", i) + 1;
+		len = snprintf(*endaddr - 1, 16, "CPU #%d", i) + 1;
 		*endaddr += len - 1;
 		*(*endaddr) = '\0';
 		(*endaddr)++;
