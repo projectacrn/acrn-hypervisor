@@ -15,9 +15,7 @@ static void prepare_bsp_gdt(struct acrn_vm *vm)
 	uint64_t gdt_base_hpa;
 
 	gdt_base_hpa = gpa2hpa(vm, boot_context.gdt.base);
-	if (boot_context.gdt.base == gdt_base_hpa) {
-		return;
-	} else {
+	if (boot_context.gdt.base != gdt_base_hpa) {
 		gdt_len = ((size_t)boot_context.gdt.limit + 1U) / sizeof(uint8_t);
 		(void)copy_to_gpa(vm, hpa2hva(boot_context.gdt.base), boot_context.gdt.base, gdt_len);
 	}
