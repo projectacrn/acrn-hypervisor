@@ -247,6 +247,7 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 
 	for (idx = 0U; idx < vcpu->vm->emul_mmio_regions; idx++) {
 		uint64_t base, end;
+		bool emulation_done = false;
 
 		mmio_handler = &(vcpu->vm->emul_mmio[idx]);
 		base = mmio_handler->range_start;
@@ -257,13 +258,17 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
 		} else if (!((address >= base) && ((address + size) <= end))) {
 			pr_fatal("Err MMIO, address:0x%llx, size:%x", address, size);
 			status = -EIO;
-			break;
+			emulation_done = true;
 		} else {
 			/* Handle this MMIO operation */
 			if (mmio_handler->read_write != NULL) {
 				status = mmio_handler->read_write(io_req, mmio_handler->handler_private_data);
-				break;
+				emulation_done = true;
 			}
+		}
+
+		if (emulation_done) {
+			break;
 		}
 	}
 
