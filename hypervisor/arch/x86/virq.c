@@ -394,99 +394,88 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 	if (bitmap_test_and_clear_lock(ACRN_REQUEST_TRP_FAULT,
 						pending_req_bits)) {
 		pr_fatal("Triple fault happen -> shutdown!");
-		return -EFAULT;
-	}
-
-	if (bitmap_test_and_clear_lock(ACRN_REQUEST_EPT_FLUSH,
-						pending_req_bits)) {
-		invept(vcpu);
-	}
-
-	if (bitmap_test_and_clear_lock(ACRN_REQUEST_VPID_FLUSH,
-						pending_req_bits)) {
-		flush_vpid_single(arch->vpid);
-	}
-
-	if (bitmap_test_and_clear_lock(ACRN_REQUEST_TMR_UPDATE,
-						pending_req_bits)) {
-		vioapic_update_tmr(vcpu);
-	}
-
-	/* handling cancelled event injection when vcpu is switched out */
-	if (arch->inject_event_pending) {
-		if ((arch->inject_info.intr_info &
-		     (EXCEPTION_ERROR_CODE_VALID << 8U)) != 0U) {
-			error_code = arch->inject_info.error_code;
-			exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE,
-			        error_code);
-		}
-
-		intr_info = arch->inject_info.intr_info;
-		exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, intr_info);
-
-		arch->inject_event_pending = false;
+		ret = -EFAULT;
 	} else {
-		/*
-		 * From SDM Vol3 26.3.2.5:
-		 * Once the virtual interrupt is recognized, it will be delivered
-		 * in VMX non-root operation immediately after VM entry(including
-		 * any specified event injection) completes.
-		 *
-		 * So the hardware can handle vmcs event injection and
-		 * evaluation/delivery of apicv virtual interrupts in one time
-		 * vm-entry.
-		 *
-		 * Here to sync the pending interrupts to irr and update rvi if
-		 * needed. And then try to handle vmcs event injection.
-		 */
-		if (is_apicv_intr_delivery_supported() &&
-			bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT, pending_req_bits)) {
-			vlapic = vcpu_vlapic(vcpu);
-			vlapic_apicv_inject_pir(vlapic);
+
+		if (bitmap_test_and_clear_lock(ACRN_REQUEST_EPT_FLUSH, pending_req_bits)) {
+			invept(vcpu);
 		}
 
-		/* SDM Vol 3 - table 6-2, inject high priority exception before
-		 * maskable hardware interrupt */
-		if (vcpu_inject_hi_exception(vcpu) == 0) {
-			/* inject NMI before maskable hardware interrupt */
-			if (bitmap_test_and_clear_lock(ACRN_REQUEST_NMI, pending_req_bits)) {
-				/* Inject NMI vector = 2 */
-				exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
-					VMX_INT_INFO_VALID | (VMX_INT_TYPE_NMI << 8U) | IDT_NMI);
-			} else {
-				ret = acrn_inject_pending_vector(vcpu, pending_req_bits);
+		if (bitmap_test_and_clear_lock(ACRN_REQUEST_VPID_FLUSH,	pending_req_bits)) {
+			flush_vpid_single(arch->vpid);
+		}
+
+		if (bitmap_test_and_clear_lock(ACRN_REQUEST_TMR_UPDATE,	pending_req_bits)) {				vioapic_update_tmr(vcpu);
+		}
+
+		/* handling cancelled event injection when vcpu is switched out */
+		if (arch->inject_event_pending) {
+			if ((arch->inject_info.intr_info & (EXCEPTION_ERROR_CODE_VALID << 8U)) != 0U) {
+				error_code = arch->inject_info.error_code;
+				exec_vmwrite32(VMX_ENTRY_EXCEPTION_ERROR_CODE, error_code);
+			}
+
+			intr_info = arch->inject_info.intr_info;
+			exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, intr_info);
+
+			arch->inject_event_pending = false;
+		} else {
+			/*
+			 * From SDM Vol3 26.3.2.5:
+			 * Once the virtual interrupt is recognized, it will be delivered
+			 * in VMX non-root operation immediately after VM entry(including
+			 * any specified event injection) completes.
+			 *
+			 * So the hardware can handle vmcs event injection and
+			 * evaluation/delivery of apicv virtual interrupts in one time
+			 * vm-entry.
+			 *
+			 * Here to sync the pending interrupts to irr and update rvi if
+			 * needed. And then try to handle vmcs event injection.
+			 */
+			if (is_apicv_intr_delivery_supported() &&
+				bitmap_test_and_clear_lock(ACRN_REQUEST_EVENT, pending_req_bits)) {
+				vlapic = vcpu_vlapic(vcpu);
+				vlapic_apicv_inject_pir(vlapic);
+			}
+
+			/* SDM Vol 3 - table 6-2, inject high priority exception before
+			 * maskable hardware interrupt */
+			if (vcpu_inject_hi_exception(vcpu) == 0) {
+				/* inject NMI before maskable hardware interrupt */
+				if (bitmap_test_and_clear_lock(ACRN_REQUEST_NMI, pending_req_bits)) {
+					/* Inject NMI vector = 2 */
+					exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD,
+						VMX_INT_INFO_VALID | (VMX_INT_TYPE_NMI << 8U) | IDT_NMI);
+				} else {
+					ret = acrn_inject_pending_vector(vcpu, pending_req_bits);
+				}
+			}
+		}
+
+		/*
+		 * If "virtual-interrupt delivered" is enabled, CPU will evaluate
+		 * and automatic inject the virtual interrupts in appropriate time.
+		 * And from SDM Vol3 29.2.1, the apicv only trigger evaluation of
+		 * pending virtual interrupts when "interrupt-window exiting" is 0.
+		 *
+		 * External interrupt(from vpic) can't be delivered by "virtual-
+		 * interrupt delivery", it only deliver interrupt from vlapic.
+		 *
+		 * So need to enable "interrupt-window exiting", when there is
+		 * an ExtInt or there is lapic interrupt and virtual interrupt
+		 * deliver is disabled.
+		 */
+		if (arch->irq_window_enabled != 1U) {
+			if (bitmap_test(ACRN_REQUEST_EXTINT, pending_req_bits) ||
+				(!is_apicv_intr_delivery_supported() && vcpu_pending_request(vcpu))) {
+				tmp = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
+				tmp |= VMX_PROCBASED_CTLS_IRQ_WIN;
+				exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, tmp);
+				arch->irq_window_enabled = 1U;
 			}
 		}
 	}
-
-	/*
-	 * If "virtual-interrupt delivered" is enabled, CPU will evaluate
-	 * and automatic inject the virtual interrupts in appropriate time.
-	 * And from SDM Vol3 29.2.1, the apicv only trigger evaluation of
-	 * pending virtual interrupts when "interrupt-window exiting" is 0.
-	 *
-	 * External interrupt(from vpic) can't be delivered by "virtual-
-	 * interrupt delivery", it only deliver interrupt from vlapic.
-	 *
-	 * So need to enable "interrupt-window exiting", when there is
-	 * an ExtInt or there is lapic interrupt and virtual interrupt
-	 * deliver is disabled.
-	 */
-	if (arch->irq_window_enabled == 1U) {
-		return ret;
-	}
-
-	if (!bitmap_test(ACRN_REQUEST_EXTINT,
-						pending_req_bits) &&
-		(is_apicv_intr_delivery_supported() ||
-		!vcpu_pending_request(vcpu))) {
-		return ret;
-	}
-
-	tmp = exec_vmread32(VMX_PROC_VM_EXEC_CONTROLS);
-	tmp |= VMX_PROCBASED_CTLS_IRQ_WIN;
-	exec_vmwrite32(VMX_PROC_VM_EXEC_CONTROLS, tmp);
-	arch->irq_window_enabled = 1U;
 
 	return ret;
 }
