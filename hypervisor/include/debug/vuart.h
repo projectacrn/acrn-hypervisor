@@ -76,4 +76,5 @@ void vuart_console_tx_chars(struct acrn_vuart *vu);
 void vuart_console_rx_chars(struct acrn_vuart *vu);
 
 bool hv_used_dbg_intx(uint8_t intx_pin);
+void vuart_set_property(const char *vuart_info);
 #endif /* VUART_H */
