@@ -41,7 +41,7 @@ void add_to_cpu_runqueue(struct sched_object *obj, uint16_t pcpu_id);
 void remove_from_cpu_runqueue(struct sched_object *obj, uint16_t pcpu_id);
 
 void make_reschedule_request(uint16_t pcpu_id);
-int32_t need_reschedule(uint16_t pcpu_id);
+bool need_reschedule(uint16_t pcpu_id);
 void make_pcpu_offline(uint16_t pcpu_id);
 int32_t need_offline(uint16_t pcpu_id);
 
