@@ -206,7 +206,7 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 
 		for (i = 1U; i <= limit; i++) {
 			/* cpuid 1/0xb is percpu related */
-			if ((i == 1U) || (i == 0xbU)) {
+			if ((i == 1U) || (i == 0xbU) || (i == 0xdU)) {
 				continue;
 			}
 
@@ -216,20 +216,6 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 					init_vcpuid_entry(i, j, CPUID_CHECK_SUBLEAF, &entry);
 					if (entry.eax == 0U) {
 						break;
-					}
-					result = set_vcpuid_entry(vm, &entry);
-					if (result != 0) {
-						/* wants to break out of switch */
-						break;
-					}
-				}
-				break;
-
-			case 0x0dU:
-				for (j = 0U; j < 64U; j++) {
-					init_vcpuid_entry(i, j, CPUID_CHECK_SUBLEAF, &entry);
-					if (entry.eax == 0U) {
-						continue;
 					}
 					result = set_vcpuid_entry(vm, &entry);
 					if (result != 0) {
