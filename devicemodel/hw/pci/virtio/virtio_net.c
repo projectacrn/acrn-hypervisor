@@ -653,19 +653,19 @@ virtio_net_tap_open(char *devname)
 		return -1;
 	}
 
-	strcpy(devname, ifr.ifr_name);
+	strncpy(devname, ifr.ifr_name, IFNAMSIZ);
 	return tunfd;
 }
 
 static void
 virtio_net_tap_setup(struct virtio_net *net, char *devname)
 {
-	char tbuf[80 + 5];	/* room for "acrn_" prefix */
+	char tbuf[IFNAMSIZ];
 	int vhost_fd = -1;
 	int rc;
 
-	rc = snprintf(tbuf, strnlen(devname, 79) + 6, "acrn_%s", devname);
-	if (rc < 0 || rc >= 85)	/* give warning if error or truncation happens */
+	rc = snprintf(tbuf, IFNAMSIZ, "acrn_%s", devname);
+	if (rc < 0 || rc >= IFNAMSIZ) /* give warning if error or truncation happens */
 		WPRINTF(("Fail to set tap device name %s\n", tbuf));
 
 	net->virtio_net_rx = virtio_net_tap_rx;

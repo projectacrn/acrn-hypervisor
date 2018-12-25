@@ -50,7 +50,7 @@ int acrn_parse_vtpm2(char *arg)
 		sock_path = calloc(len + 1, 1);
 		if (!sock_path)
 			return -1;
-		strcpy(sock_path, value);
+		strncpy(sock_path, value, len + 1);
 	}
 
 	return 0;
