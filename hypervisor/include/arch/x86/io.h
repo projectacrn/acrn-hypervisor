@@ -144,7 +144,7 @@ static inline void mmio_write8(uint8_t value, void *addr)
  */
 static inline uint64_t mmio_read64(const void *addr)
 {
-	return *((volatile uint64_t *)addr);
+	return *((volatile const uint64_t *)addr);
 }
 
 /** Reads a 32 bit value from a memory mapped IO device.
@@ -155,7 +155,7 @@ static inline uint64_t mmio_read64(const void *addr)
  */
 static inline uint32_t mmio_read32(const void *addr)
 {
-	return *((volatile uint32_t *)addr);
+	return *((volatile const uint32_t *)addr);
 }
 
 /** Reads a 16 bit value from a memory mapped IO device.
@@ -166,7 +166,7 @@ static inline uint32_t mmio_read32(const void *addr)
  */
 static inline uint16_t mmio_read16(const void *addr)
 {
-	return *((volatile uint16_t *)addr);
+	return *((volatile const uint16_t *)addr);
 }
 
 /** Reads an 8 bit value from a memory mapped IO device.
@@ -177,7 +177,7 @@ static inline uint16_t mmio_read16(const void *addr)
  */
 static inline uint8_t mmio_read8(const void *addr)
 {
-	return *((volatile uint8_t *)addr);
+	return *((volatile const uint8_t *)addr);
 }
 
 /** Reads a 64 Bit memory mapped IO register, mask it and write it back into
