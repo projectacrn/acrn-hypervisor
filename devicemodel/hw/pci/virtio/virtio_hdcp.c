@@ -347,7 +347,7 @@ connect_hdcp_daemon()
 
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	strcpy(addr.sun_path, HDCP_SDK_SOCKET_PATH);
+	strncpy(addr.sun_path, HDCP_SDK_SOCKET_PATH, sizeof(addr.sun_path));
 
 	ret = connect(fd, &addr, sizeof(struct sockaddr_un));
 	if (ret < 0) {
