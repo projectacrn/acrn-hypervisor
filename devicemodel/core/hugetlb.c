@@ -149,8 +149,9 @@ static int open_hugetlbfs(struct vmctx *ctx, int level)
 	}
 
 	uuid_copy(UUID, ctx->vm_uuid);
-	sprintf(uuid_str, "%02X%02X%02X%02X%02X%02X%02X%02X"
-		"%02X%02X%02X%02X%02X%02X%02X%02X\n",
+	snprintf(uuid_str, sizeof(uuid_str),
+		"%02X%02X%02X%02X%02X%02X%02X%02X"
+		"%02X%02X%02X%02X%02X%02X%02X%02X",
 		UUID[0], UUID[1], UUID[2], UUID[3],
 		UUID[4], UUID[5], UUID[6], UUID[7],
 		UUID[8], UUID[9], UUID[10], UUID[11],
