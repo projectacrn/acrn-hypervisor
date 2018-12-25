@@ -39,6 +39,8 @@
 #include "rtc.h"
 #include "mevent.h"
 #include "timer.h"
+#include "acpi.h"
+#include "lpc.h"
 
 /* #define DEBUG_RTC */
 #ifdef DEBUG_RTC
@@ -1178,3 +1180,27 @@ vrtc_deinit(struct vmctx *ctx)
 	free(vrtc);
 	ctx->vrtc = NULL;
 }
+
+static void
+rtc_dsdt(void)
+{
+	dsdt_line("");
+	dsdt_line("Device (RTC)");
+	dsdt_line("{");
+	dsdt_line("  Name (_HID, EisaId (\"PNP0B00\"))");
+	dsdt_line("  Name (_CRS, ResourceTemplate ()");
+	dsdt_line("  {");
+	dsdt_indent(2);
+	dsdt_fixed_ioport(IO_RTC, 2);
+	dsdt_fixed_irq(8);
+	dsdt_unindent(2);
+	dsdt_line("  })");
+	dsdt_line("}");
+}
+LPC_DSDT(rtc_dsdt);
+
+/*
+ * Reserve the extended RTC I/O ports although they are not emulated at this
+ * time.
+ */
+SYSRES_IO(0x72, 6);
