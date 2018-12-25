@@ -411,3 +411,19 @@ bool hv_used_dbg_intx(uint8_t intx_pin)
 {
 	return is_dbg_uart_enabled() && (intx_pin == vuart_com_irq);
 }
+
+/* vuart=ttySx@irqN, like vuart=ttyS1@irq6 head "vuart=ttyS" is parsed */
+void vuart_set_property(const char *vuart_info)
+{
+	const uint16_t com_map[4] = {0x3f8, 0x2F8, 0x3E8, 0x2E8}; /* map to ttyS0-ttyS3 */
+	uint8_t com_idx;
+
+	com_idx = (uint8_t)(vuart_info[0] - '0');
+	if (com_idx < 4) {
+		vuart_com_base = com_map[com_idx];
+	}
+
+	if (strncmp(vuart_info + 1, "@irq", 4) == 0) {
+		vuart_com_irq = (uint8_t)strtol_deci(vuart_info + 5);
+	}
+}
