@@ -106,11 +106,11 @@ void make_reschedule_request(const struct acrn_vcpu *vcpu)
 	}
 }
 
-int32_t need_reschedule(uint16_t pcpu_id)
+bool need_reschedule(uint16_t pcpu_id)
 {
 	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 
-	return bitmap_test_and_clear_lock(NEED_RESCHEDULE, &ctx->flags);
+	return bitmap_test(NEED_RESCHEDULE, &ctx->flags);
 }
 
 static void context_switch_out(struct acrn_vcpu *vcpu)
@@ -172,7 +172,7 @@ void default_idle(void)
 	uint16_t pcpu_id = get_cpu_id();
 
 	while (1) {
-		if (need_reschedule(pcpu_id) != 0) {
+		if (need_reschedule(pcpu_id)) {
 			schedule();
 		} else if (need_offline(pcpu_id) != 0) {
 			cpu_dead();
@@ -225,11 +225,13 @@ static void switch_to(struct acrn_vcpu *curr)
 void schedule(void)
 {
 	uint16_t pcpu_id = get_cpu_id();
+	struct sched_context *ctx = &per_cpu(sched_ctx, pcpu_id);
 	struct acrn_vcpu *next = NULL;
-	struct acrn_vcpu *prev = per_cpu(sched_ctx, pcpu_id).curr_vcpu;
+	struct acrn_vcpu *prev = ctx->curr_vcpu;
 
 	get_schedule_lock(pcpu_id);
 	next = select_next_vcpu(pcpu_id);
+	bitmap_clear_lock(NEED_RESCHEDULE, &ctx->flags);
 
 	if (prev == next) {
 		release_schedule_lock(pcpu_id);
