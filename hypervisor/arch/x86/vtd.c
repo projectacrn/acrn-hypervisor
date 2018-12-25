@@ -466,13 +466,8 @@ static struct dmar_drhd_rt *device_to_dmaru(uint16_t segment, uint8_t bus, uint8
 				}
 			}
 
-			/* find exact one */
-			if (i != dmar_unit->drhd->dev_cnt) {
-				break;
-			}
-
-			/* has the same segment number and the dmar unit has INCLUDE_PCI_ALL set */
-			if ((dmar_unit->drhd->flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK) != 0U) {
+			/* found exact one or the one which has the same segment number with INCLUDE_PCI_ALL set */
+			if ((i != dmar_unit->drhd->dev_cnt) || ((dmar_unit->drhd->flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK) != 0U)) {
 				break;
 			}
 		}
@@ -859,7 +854,7 @@ static int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, u
 		ret = -EINVAL;
 	} else if (dmar_unit->drhd->ignore) {
 		dev_dbg(ACRN_DBG_IOMMU, "device is ignored :0x%x:%x.%x", bus, pci_slot(devfun), pci_func(devfun));
-	} else if (!dmar_unit_support_aw(dmar_unit, domain->addr_width) || (dmar_unit->root_table_addr == 0UL)) {
+	} else if ((!dmar_unit_support_aw(dmar_unit, domain->addr_width)) || (dmar_unit->root_table_addr == 0UL)) {
 		pr_err("invalid dmar unit");
 		ret = -EINVAL;
 	} else {
@@ -868,7 +863,7 @@ static int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, u
 			if (vm != NULL) {
 				vm->snoopy_mem = false;
 			}
-			// TODO: remove iommu_snoop from iommu_domain
+			/* TODO: remove iommu_snoop from iommu_domain */
 			domain->iommu_snoop = false;
 			dev_dbg(ACRN_DBG_IOMMU, "vm=%d add %x:%x no snoop control!", domain->vm_id, bus, devfun);
 		}
