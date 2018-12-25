@@ -122,7 +122,7 @@ vm_create(const char *name, uint64_t req_buf)
 	ctx->fd = devfd;
 	ctx->lowmem_limit = 2 * GB;
 	ctx->name = (char *)(ctx + 1);
-	strcpy(ctx->name, name);
+	strncpy(ctx->name, name, strnlen(name, PATH_MAX) + 1);
 
 	/* Set trusty enable flag */
 	if (trusty_enabled)

@@ -318,7 +318,7 @@ acrn_sw_load_bzimage(struct vmctx *ctx)
 	ctx->bsp_regs.vcpu_id = 0;
 
 	if (with_bootargs) {
-		strcpy(ctx->baseaddr + BOOTARGS_LOAD_OFF(ctx), get_bootargs());
+		strncpy(ctx->baseaddr + BOOTARGS_LOAD_OFF(ctx), get_bootargs(), STR_LEN);
 		printf("SW_LOAD: bootargs copied to guest 0x%lx\n",
 				BOOTARGS_LOAD_OFF(ctx));
 	}
