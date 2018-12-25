@@ -274,7 +274,7 @@ acrn_sw_load_vsbl(struct vmctx *ctx)
 	vsbl_para->acpi_table_size = get_acpi_table_length();
 
 	if (with_bootargs) {
-		strcpy(ctx->baseaddr + BOOTARGS_OFF(ctx), get_bootargs());
+		strncpy(ctx->baseaddr + BOOTARGS_OFF(ctx), get_bootargs(), STR_LEN);
 		vsbl_para->bootargs_address = BOOTARGS_OFF(ctx);
 	} else {
 		vsbl_para->bootargs_address = 0;
