@@ -43,6 +43,7 @@ int32_t hcall_sos_offline_cpu(struct acrn_vm *vm, uint64_t lapicid)
 {
 	struct acrn_vcpu *vcpu;
 	uint16_t i;
+	int32_t ret = 0;
 
 	pr_info("sos offline cpu with lapicid %lld", lapicid);
 
@@ -50,7 +51,8 @@ int32_t hcall_sos_offline_cpu(struct acrn_vm *vm, uint64_t lapicid)
 		if (vlapic_get_apicid(vcpu_vlapic(vcpu)) == lapicid) {
 			/* should not offline BSP */
 			if (vcpu->vcpu_id == BOOT_CPU_ID) {
-				return -1;
+				ret = -1;
+				break;
 			}
 			pause_vcpu(vcpu, VCPU_ZOMBIE);
 			reset_vcpu(vcpu);
@@ -58,7 +60,7 @@ int32_t hcall_sos_offline_cpu(struct acrn_vm *vm, uint64_t lapicid)
 		}
 	}
 
-	return 0;
+	return ret;
 }
 
 /**
@@ -113,28 +115,28 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 	struct vm_description vm_desc;
 
 	(void)memset((void *)&cv, 0U, sizeof(cv));
-	if (copy_from_gpa(vm, &cv, param, sizeof(cv)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
-	}
+	if (copy_from_gpa(vm, &cv, param, sizeof(cv)) == 0) {
+		(void)memset(&vm_desc, 0U, sizeof(vm_desc));
+		vm_desc.sworld_supported = ((cv.vm_flag & (SECURE_WORLD_ENABLED)) != 0U);
+		(void)memcpy_s(&vm_desc.GUID[0], 16U, &cv.GUID[0], 16U);
 
-	(void)memset(&vm_desc, 0U, sizeof(vm_desc));
-	vm_desc.sworld_supported = ((cv.vm_flag & (SECURE_WORLD_ENABLED)) != 0U);
-	(void)memcpy_s(&vm_desc.GUID[0], 16U, &cv.GUID[0], 16U);
-	ret = create_vm(&vm_desc, &target_vm);
+		ret = create_vm(&vm_desc, &target_vm);
+		if (ret != 0) {
+			dev_dbg(ACRN_DBG_HYCALL, "HCALL: Create VM failed");
+			cv.vmid = ACRN_INVALID_VMID;
+			ret = -1;
+		} else {
+			cv.vmid = target_vm->vm_id;
+			ret = 0;
+		}
 
-	if (ret != 0) {
-		dev_dbg(ACRN_DBG_HYCALL, "HCALL: Create VM failed");
-		cv.vmid = ACRN_INVALID_VMID;
-		ret = -1;
+		if (copy_to_gpa(vm, &cv.vmid, param, sizeof(cv.vmid)) != 0) {
+			pr_err("%s: Unable copy param to vm\n", __func__);
+			ret = -1;
+		}
 	} else {
-		cv.vmid = target_vm->vm_id;
-		ret = 0;
-	}
-
-	if (copy_to_gpa(vm, &cv.vmid, param, sizeof(cv.vmid)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
+	        ret = -1;
 	}
 
 	return ret;
@@ -240,21 +242,19 @@ int32_t hcall_create_vcpu(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	if ((target_vm == NULL) || (param == 0U)) {
-		return -1;
-	}
-
-	if (copy_from_gpa(vm, &cv, param, sizeof(cv)) != 0) {
+	        ret = -1;
+	} else if (copy_from_gpa(vm, &cv, param, sizeof(cv)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
+	        ret = -1;
+	} else {
+		pcpu_id = allocate_pcpu();
+		if (pcpu_id == INVALID_CPU_ID) {
+			pr_err("%s: No physical available\n", __func__);
+			ret = -1;
+		} else {
+			ret = prepare_vcpu(target_vm, pcpu_id);
+		}
 	}
-
-	pcpu_id = allocate_pcpu();
-	if (pcpu_id == INVALID_CPU_ID) {
-		pr_err("%s: No physical available\n", __func__);
-		return -1;
-	}
-
-	ret = prepare_vcpu(target_vm, pcpu_id);
 
 	return ret;
 }
@@ -303,30 +303,24 @@ int32_t hcall_set_vcpu_regs(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	struct acrn_set_vcpu_regs vcpu_regs;
 	struct acrn_vcpu *vcpu;
+	int32_t ret;
 
-	if ((target_vm == NULL) || (param == 0U) || is_vm0(target_vm)) {
-		return -1;
-	}
-
-	/* Only allow setup init ctx while target_vm is inactive */
-	if (target_vm->state == VM_STARTED) {
-		return -1;
-	}
-
-	if (copy_from_gpa(vm, &vcpu_regs, param, sizeof(vcpu_regs)) != 0) {
+	if ((target_vm == NULL) || (param == 0U) || is_vm0(target_vm) || (target_vm->state == VM_STARTED)) {
+		/* Only allow setup init ctx while target_vm is inactive */
+	        ret = -1;
+	} else if (copy_from_gpa(vm, &vcpu_regs, param, sizeof(vcpu_regs)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
-	}
-
-	if (vcpu_regs.vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
+	        ret = -1;
+	} else if (vcpu_regs.vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
 		pr_err("%s: invalid vcpu_id for set_vcpu_regs\n", __func__);
-		return -1;
+		ret = -1;
+	} else {
+		vcpu = vcpu_from_vid(target_vm, vcpu_regs.vcpu_id);
+		set_vcpu_regs(vcpu, &(vcpu_regs.vcpu_regs));
+		ret = 0;
 	}
 
-	vcpu = vcpu_from_vid(target_vm, vcpu_regs.vcpu_id);
-	set_vcpu_regs(vcpu, &(vcpu_regs.vcpu_regs));
-
-	return 0;
+	return ret;
 }
 
 /**
@@ -348,29 +342,29 @@ int32_t hcall_set_irqline(const struct acrn_vm *vm, uint16_t vmid,
 {
 	uint32_t irq_pic;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
+	int32_t ret;
 
 	if (target_vm == NULL) {
-		return -EINVAL;
+	        ret = -EINVAL;
+	} else if (ops->gsi >= vioapic_pincount(vm)) {
+	        ret = -EINVAL;
+	} else {
+		if (ops->gsi < vpic_pincount()) {
+			/*
+			 * IRQ line for 8254 timer is connected to
+			 * I/O APIC pin #2 but PIC pin #0,route GSI
+			 * number #2 to PIC IRQ #0.
+			 */
+			irq_pic = (ops->gsi == 2U) ? 0U : ops->gsi;
+			vpic_set_irq(target_vm, irq_pic, ops->op);
+	        }
+
+		/* handle IOAPIC irqline */
+		vioapic_set_irq(target_vm, ops->gsi, ops->op);
+		ret = 0;
 	}
 
-	if (ops->gsi >= vioapic_pincount(vm)) {
-		return -EINVAL;
-	}
-
-	if (ops->gsi < vpic_pincount()) {
-		/*
-		 * IRQ line for 8254 timer is connected to
-		 * I/O APIC pin #2 but PIC pin #0,route GSI
-		 * number #2 to PIC IRQ #0.
-		 */
-		irq_pic = (ops->gsi == 2U) ? 0U : ops->gsi;
-		vpic_set_irq(target_vm, irq_pic, ops->op);
-	}
-
-	/* handle IOAPIC irqline */
-	vioapic_set_irq(target_vm, ops->gsi, ops->op);
-
-	return 0;
+	return ret;
 }
 
 /**
