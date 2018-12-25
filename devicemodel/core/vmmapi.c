@@ -93,7 +93,7 @@ vm_create(const char *name, uint64_t req_buf)
 	uuid_t vm_uuid;
 
 	memset(&create_vm, 0, sizeof(struct acrn_create_vm));
-	ctx = calloc(1, sizeof(struct vmctx) + strlen(name) + 1);
+	ctx = calloc(1, sizeof(struct vmctx) + strnlen(name, PATH_MAX) + 1);
 	assert(ctx != NULL);
 	assert(devfd == -1);
 

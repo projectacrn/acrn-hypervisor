@@ -157,7 +157,7 @@ static int open_hugetlbfs(struct vmctx *ctx, int level)
 		UUID[12], UUID[13], UUID[14], UUID[15]);
 
 	*(path + len) = '\0';
-	strncat(path, uuid_str, strlen(uuid_str));
+	strncat(path, uuid_str, strnlen(uuid_str, sizeof(uuid_str)));
 
 	printf("open hugetlbfs file %s\n", path);
 
@@ -347,19 +347,19 @@ static int create_hugetlb_dirs(int level)
 	}
 
 	path = hugetlb_priv[level].mount_path;
-	len = strlen(path);
-	if (len >= MAX_PATH_LEN || len == 0) {
+	len = strnlen(path, MAX_PATH_LEN);
+	if (len == MAX_PATH_LEN || len == 0) {
 		perror("invalid path len");
 		return -EINVAL;
 	}
 
 	memset(tmp_path, '\0', MAX_PATH_LEN);
-	strncpy(tmp_path, path, MAX_PATH_LEN - 1);
+	strncpy(tmp_path, path, MAX_PATH_LEN);
 
-	if ((tmp_path[len - 1] != '/') && (strlen(tmp_path) < MAX_PATH_LEN - 1))
-		strcat(tmp_path, "/");
+	if ((tmp_path[len - 1] != '/') && (len < MAX_PATH_LEN - 1))
+		tmp_path[len] = '/';
 
-	len = strlen(tmp_path);
+	len = strnlen(tmp_path, MAX_PATH_LEN);
 	for (i = 1; i < len; i++) {
 		if (tmp_path[i] == '/') {
 			tmp_path[i] = 0;
