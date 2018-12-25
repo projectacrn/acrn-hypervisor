@@ -126,7 +126,7 @@ int
 acrn_parse_guest_part_info(char *arg)
 {
 	int error;
-	size_t len = strlen(arg);
+	size_t len = strnlen(arg, STR_LEN);
 
 	if (len < STR_LEN) {
 		strncpy(guest_part_info_path, arg, len + 1);
@@ -195,7 +195,7 @@ int
 acrn_parse_vsbl(char *arg)
 {
 	int error;
-	size_t len = strlen(arg);
+	size_t len = strnlen(arg, STR_LEN);
 
 	if (len < STR_LEN) {
 		strncpy(vsbl_path, arg, len + 1);
