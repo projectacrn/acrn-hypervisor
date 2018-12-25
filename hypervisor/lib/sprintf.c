@@ -86,7 +86,7 @@ static const char *get_param(const char *s_arg, uint32_t *x)
 	/* parse uint32_teger */
 	while ((*s >= '0') && (*s <= '9')) {
 		char delta = *s - '0';
-		*x = *x * 10U + (uint32_t)delta;
+		*x = ((*x) * 10U) + (uint32_t)delta;
 		s++;
 	}
 
@@ -97,7 +97,7 @@ static const char *get_flags(const char *s_arg, uint32_t *flags)
 {
 	const char *s = s_arg;
 	/* contains the flag characters */
-	static const char flagchars[] = "#0- +";
+	static const char flagchars[5] = "#0- +";
 	/* contains the numeric flags for the characters above */
 	static const uint32_t fl[sizeof(flagchars)] = {
 		PRINT_FLAG_ALTERNATE_FORM,	/* # */

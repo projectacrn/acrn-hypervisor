@@ -889,37 +889,35 @@ hcall_reset_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	struct hc_ptdev_irq irq;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (target_vm == NULL) {
-		return -1;
-	}
+	if (target_vm != NULL) {
+		(void)memset((void *)&irq, 0U, sizeof(irq));
 
-	(void)memset((void *)&irq, 0U, sizeof(irq));
+		if (copy_from_gpa(vm, &irq, param, sizeof(irq)) != 0) {
+			pr_err("%s: Unable copy param to vm\n", __func__);
+			ret = -1;
+		} else if (irq.type == IRQ_INTX) {
+			ptirq_remove_intx_remapping(target_vm,
+					irq.is.intx.virt_pin,
+					irq.is.intx.pic_pin);
+		} else if ((irq.type == IRQ_MSI) || (irq.type == IRQ_MSIX)) {
 
-	if (copy_from_gpa(vm, &irq, param, sizeof(irq)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
-	}
-
-	if (irq.type == IRQ_INTX) {
-		ptirq_remove_intx_remapping(target_vm,
-				irq.is.intx.virt_pin,
-				irq.is.intx.pic_pin);
-	} else if ((irq.type == IRQ_MSI) || (irq.type == IRQ_MSIX)) {
-
-		/*
-		 * Inform vPCI about the interupt info changes
-		 * TODO: Need to add bdf info for IRQ_INTX type in devicemodel
-		 */
+			/*
+			 * Inform vPCI about the interupt info changes
+			 * TODO: Need to add bdf info for IRQ_INTX type in devicemodel
+			 */
 #ifndef CONFIG_PARTITION_MODE
-		vpci_reset_ptdev_intr_info(target_vm, irq.virt_bdf, irq.phys_bdf);
+			vpci_reset_ptdev_intr_info(target_vm, irq.virt_bdf, irq.phys_bdf);
 #endif
 
-		ptirq_remove_msix_remapping(target_vm,
-				irq.virt_bdf,
-				irq.is.msix.vector_cnt);
+			ptirq_remove_msix_remapping(target_vm,
+					irq.virt_bdf,
+					irq.is.msix.vector_cnt);
+		} else {
+			pr_err("%s: Invalid irq type: %u\n", __func__, irq.type);
+			ret = -1;
+		}
 	} else {
-		pr_err("%s: Invalid irq type: %u\n", __func__, irq.type);
-		ret = -1;
+	        ret = -1;
 	}
 
 	return ret;
@@ -1111,17 +1109,18 @@ int32_t hcall_vm_intr_monitor(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
  */
 int32_t hcall_set_callback_vector(const struct acrn_vm *vm, uint64_t param)
 {
+	int32_t ret;
+
 	if (!is_vm0(vm)) {
 		pr_err("%s: Targeting to service vm", __func__);
-		return -EPERM;
-	}
-
-	if ((param > NR_MAX_VECTOR) || (param < VECTOR_DYNAMIC_START)) {
+	        ret = -EPERM;
+	} else if ((param > NR_MAX_VECTOR) || (param < VECTOR_DYNAMIC_START)) {
 		pr_err("%s: Invalid passed vector\n");
-		return -EINVAL;
+		ret = -EINVAL;
+	} else {
+		acrn_vhm_vector = (uint32_t)param;
+		ret = 0;
 	}
 
-	acrn_vhm_vector = (uint32_t)param;
-
-	return 0;
+	return ret;
 }
