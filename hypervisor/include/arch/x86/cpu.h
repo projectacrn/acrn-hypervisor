@@ -306,12 +306,12 @@ static inline void cpu_msr_write(uint32_t reg, uint64_t msr_val)
 	asm volatile (" wrmsr " : : "c" (reg), "a" ((uint32_t)msr_val), "d" ((uint32_t)(msr_val >> 32U)));
 }
 
-static inline void pause_cpu(void)
+static inline void asm_pause(void)
 {
 	asm volatile ("pause" ::: "memory");
 }
 
-static inline void hlt_cpu(void)
+static inline void asm_hlt(void)
 {
 	asm volatile ("hlt");
 }

@@ -6,6 +6,7 @@
 
 #ifndef LOGMSG_H
 #define LOGMSG_H
+#include <cpu.h>
 
 /* Logging severity levels */
 #define LOG_FATAL		1U
@@ -116,6 +117,6 @@ void vprintf(const char *fmt, va_list args);
 #define panic(...) 							\
 	do { pr_fatal("PANIC: %s line: %d\n", __func__, __LINE__);	\
 		pr_fatal(__VA_ARGS__); 					\
-		while (1) { asm volatile ("pause" ::: "memory"); }; } while (0)
+		while (1) { asm_pause(); }; } while (0)
 
 #endif /* LOGMSG_H */

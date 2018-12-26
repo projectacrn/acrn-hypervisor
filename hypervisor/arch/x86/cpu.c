@@ -301,7 +301,7 @@ void stop_cpus(void)
 
 void cpu_do_idle(void)
 {
-	__asm __volatile("pause" ::: "memory");
+	asm_pause();
 }
 
 /**
@@ -325,7 +325,7 @@ void cpu_dead(void)
 
 		/* Halt the CPU */
 		do {
-			hlt_cpu();
+			asm_hlt();
 		} while (halt != 0);
 	} else {
 		pr_err("pcpu%hu already dead", pcpu_id);
