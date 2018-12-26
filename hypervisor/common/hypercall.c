@@ -386,16 +386,17 @@ int32_t hcall_inject_msi(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	struct acrn_msi_entry msi;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (target_vm == NULL) {
-		return -1;
+	if (target_vm != NULL) {
+		(void)memset((void *)&msi, 0U, sizeof(msi));
+		if (copy_from_gpa(vm, &msi, param, sizeof(msi)) != 0) {
+			pr_err("%s: Unable copy param to vm\n", __func__);
+			ret = -1;
+		} else {
+			ret = vlapic_intr_msi(target_vm, msi.msi_addr, msi.msi_data);
+		}
+	} else {
+		ret = -1;
 	}
-
-	(void)memset((void *)&msi, 0U, sizeof(msi));
-	if (copy_from_gpa(vm, &msi, param, sizeof(msi)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
-	}
-	ret = vlapic_intr_msi(target_vm, msi.msi_addr, msi.msi_data);
 
 	return ret;
 }
@@ -420,35 +421,33 @@ int32_t hcall_set_ioreq_buffer(struct acrn_vm *vm, uint16_t vmid, uint64_t param
 	struct acrn_set_ioreq_buffer iobuf;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 	uint16_t i;
-
-	if (target_vm == NULL) {
-		return -1;
-	}
+	int32_t ret;
 
 	(void)memset((void *)&iobuf, 0U, sizeof(iobuf));
+	if ((target_vm == NULL) || (copy_from_gpa(vm, &iobuf, param, sizeof(iobuf)) != 0)) {
+		pr_err("%p %s: target_vm is not valid or Unable copy param to vm\n", target_vm, __func__);
+	        ret = -1;
+        } else {
+		dev_dbg(ACRN_DBG_HYCALL, "[%d] SET BUFFER=0x%p",
+				vmid, iobuf.req_buf);
 
-	if (copy_from_gpa(vm, &iobuf, param, sizeof(iobuf)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
+		hpa = gpa2hpa(vm, iobuf.req_buf);
+		if (hpa == INVALID_HPA) {
+			pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
+				__func__, vm->vm_id, iobuf.req_buf);
+			target_vm->sw.io_shared_page = NULL;
+		        ret = -EINVAL;
+		} else {
+			target_vm->sw.io_shared_page = hpa2hva(hpa);
+			for (i = 0U; i < VHM_REQUEST_MAX; i++) {
+				set_vhm_req_state(target_vm, i, REQ_STATE_FREE);
+			}
+
+			ret = 0;
+		}
 	}
 
-	dev_dbg(ACRN_DBG_HYCALL, "[%d] SET BUFFER=0x%p",
-			vmid, iobuf.req_buf);
-
-	hpa = gpa2hpa(vm, iobuf.req_buf);
-	if (hpa == INVALID_HPA) {
-		pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
-			__func__, vm->vm_id, iobuf.req_buf);
-		target_vm->sw.io_shared_page = NULL;
-		return -EINVAL;
-	}
-
-	target_vm->sw.io_shared_page = hpa2hva(hpa);
-	for (i = 0U; i < VHM_REQUEST_MAX; i++) {
-		set_vhm_req_state(target_vm, i, REQ_STATE_FREE);
-	}
-
-	return 0;
+	return ret;
 }
 
 /**
@@ -466,26 +465,28 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 {
 	struct acrn_vcpu *vcpu;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
+	int32_t ret;
 
 	/* make sure we have set req_buf */
 	if ((target_vm == NULL) || (target_vm->sw.io_shared_page == NULL)) {
 		pr_err("%s, invalid parameter\n", __func__);
-		return -EINVAL;
-	}
-
-	dev_dbg(ACRN_DBG_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
+	        ret = -EINVAL;
+	} else {
+		dev_dbg(ACRN_DBG_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
 			vmid, vcpu_id);
 
-	if (vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
-		pr_err("%s, failed to get VCPU %d context from VM %d\n",
-			__func__, vcpu_id, target_vm->vm_id);
-		return -EINVAL;
+		if (vcpu_id >= CONFIG_MAX_VCPUS_PER_VM) {
+			pr_err("%s, failed to get VCPU %d context from VM %d\n",
+				__func__, vcpu_id, target_vm->vm_id);
+			ret = -EINVAL;
+		} else {
+			vcpu = vcpu_from_vid(target_vm, vcpu_id);
+			emulate_io_post(vcpu);
+			ret = 0;
+		}
 	}
 
-	vcpu = vcpu_from_vid(target_vm, vcpu_id);
-	emulate_io_post(vcpu);
-
-	return 0;
+	return ret;
 }
 
 /**
@@ -628,31 +629,34 @@ static int32_t write_protect_page(struct acrn_vm *vm,const struct wp_data *wp)
 	uint64_t hpa, base_paddr;
 	uint64_t prot_set;
 	uint64_t prot_clr;
+	int32_t ret;
 
 	hpa = gpa2hpa(vm, wp->gpa);
 	if (hpa == INVALID_HPA) {
 		pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
 			__func__, vm->vm_id, wp->gpa);
-		return -EINVAL;
+		ret = -EINVAL;
+	} else {
+		dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x",
+				vm->vm_id, wp->gpa, hpa);
+
+		base_paddr = get_hv_image_base();
+		if (((hpa <= base_paddr) && ((hpa + PAGE_SIZE) > base_paddr)) ||
+				((hpa >= base_paddr) &&
+				(hpa < (base_paddr + CONFIG_HV_RAM_SIZE)))) {
+			pr_err("%s: overlap the HV memory region.", __func__);
+			ret = -EINVAL;
+		} else {
+			prot_set = (wp->set != 0U) ? 0UL : EPT_WR;
+			prot_clr = (wp->set != 0U) ? EPT_WR : 0UL;
+
+			ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+				wp->gpa, PAGE_SIZE, prot_set, prot_clr);
+			ret = 0;
+		}
 	}
-	dev_dbg(ACRN_DBG_HYCALL, "[vm%d] gpa=0x%x hpa=0x%x",
-			vm->vm_id, wp->gpa, hpa);
 
-	base_paddr = get_hv_image_base();
-	if (((hpa <= base_paddr) && ((hpa + PAGE_SIZE) > base_paddr)) ||
-			((hpa >= base_paddr) &&
-			(hpa < (base_paddr + CONFIG_HV_RAM_SIZE)))) {
-		pr_err("%s: overlap the HV memory region.", __func__);
-		return -EINVAL;
-	}
-
-	prot_set = (wp->set != 0U) ? 0UL : EPT_WR;
-	prot_clr = (wp->set != 0U) ? EPT_WR : 0UL;
-
-	ept_mr_modify(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-		wp->gpa, PAGE_SIZE, prot_set, prot_clr);
-
-	return 0;
+	return ret;
 }
 
 /**
@@ -670,24 +674,23 @@ int32_t hcall_write_protect_page(struct acrn_vm *vm, uint16_t vmid, uint64_t wp_
 {
 	struct wp_data wp;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
+	int32_t ret;
 
-	if (target_vm == NULL) {
-		return -EINVAL;
+	if ((target_vm == NULL) || is_vm0(target_vm)) {
+		pr_err("%p %s: target_vm is invalid or Targeting to service vm", target_vm, __func__);
+	        ret = -EINVAL;
+	} else {
+		(void)memset((void *)&wp, 0U, sizeof(wp));
+
+		if (copy_from_gpa(vm, &wp, wp_gpa, sizeof(wp)) != 0) {
+			pr_err("%s: Unable copy param to vm\n", __func__);
+			ret = -EFAULT;
+		} else {
+			ret = write_protect_page(target_vm, &wp);
+		}
 	}
 
-	if (is_vm0(target_vm)) {
-		pr_err("%s: Targeting to service vm", __func__);
-		return -EINVAL;
-	}
-
-	(void)memset((void *)&wp, 0U, sizeof(wp));
-
-	if (copy_from_gpa(vm, &wp, wp_gpa, sizeof(wp)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -EFAULT;
-	}
-
-	return write_protect_page(target_vm, &wp);
+	return ret;
 }
 
 /**
