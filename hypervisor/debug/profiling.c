@@ -747,7 +747,7 @@ static void profiling_start_pmu(void)
 		per_cpu(profiling_info.sep_state, i).pmu_state = PMU_RUNNING;
 	}
 
-	smp_call_function(pcpu_active_bitmap, profiling_ipi_handler, NULL);
+	smp_call_function(get_active_pcpu_bitmap(), profiling_ipi_handler, NULL);
 
 	in_pmu_profiling = true;
 
@@ -798,7 +798,7 @@ static void profiling_stop_pmu(void)
 			per_cpu(profiling_info.sep_state, i).nofrozen_pmi = 0U;
 		}
 
-		smp_call_function(pcpu_active_bitmap, profiling_ipi_handler, NULL);
+		smp_call_function(get_active_pcpu_bitmap(), profiling_ipi_handler, NULL);
 
 		in_pmu_profiling = false;
 
@@ -831,7 +831,7 @@ int32_t profiling_msr_ops_all_cpus(struct acrn_vm *vm, uint64_t addr)
 		per_cpu(profiling_info.msr_node, i) = &(msr_list[i]);
 	}
 
-	smp_call_function(pcpu_active_bitmap, profiling_ipi_handler, NULL);
+	smp_call_function(get_active_pcpu_bitmap(), profiling_ipi_handler, NULL);
 
 	if (copy_to_gpa(vm, &msr_list, addr, sizeof(msr_list)) != 0) {
 		pr_err("%s: Unable to copy addr from vm\n", __func__);
@@ -1163,7 +1163,7 @@ int32_t profiling_configure_pmi(struct acrn_vm *vm, uint64_t addr)
 		sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM*MAX_GROUP_NUM);
 	}
 
-	smp_call_function(pcpu_active_bitmap, profiling_ipi_handler, NULL);
+	smp_call_function(get_active_pcpu_bitmap(), profiling_ipi_handler, NULL);
 
 	if (copy_to_gpa(vm, &pmi_config, addr, sizeof(pmi_config)) != 0) {
 		pr_err("%s: Unable to copy addr to vm\n", __func__);
@@ -1217,7 +1217,7 @@ int32_t profiling_configure_vmsw(struct acrn_vm *vm, uint64_t addr)
 			sizeof(struct profiling_msr_op)*MAX_MSR_LIST_NUM);
 		}
 
-		smp_call_function(pcpu_active_bitmap, profiling_ipi_handler, NULL);
+		smp_call_function(get_active_pcpu_bitmap(), profiling_ipi_handler, NULL);
 
 		break;
 	case COLLECT_POWER_DATA:
