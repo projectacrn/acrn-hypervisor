@@ -26,28 +26,26 @@
 int32_t hcall_world_switch(struct acrn_vcpu *vcpu)
 {
 	int32_t next_world_id = !(vcpu->arch.cur_context);
+	int32_t ret;
 
 	if (next_world_id >= NR_WORLD) {
 		dev_dbg(ACRN_DBG_TRUSTY_HYCALL,
 			"%s world_id %d exceed max number of Worlds\n",
 			__func__, next_world_id);
-		return -EINVAL;
-	}
-
-	if (vcpu->vm->sworld_control.flag.supported == 0UL) {
+	        ret = -EINVAL;
+	} else if (vcpu->vm->sworld_control.flag.supported == 0UL) {
 		dev_dbg(ACRN_DBG_TRUSTY_HYCALL,
 			"Secure World is not supported!\n");
-		return -EPERM;
-	}
-
-	if (vcpu->vm->sworld_control.flag.active == 0UL) {
+	        ret = -EPERM;
+	} else if (vcpu->vm->sworld_control.flag.active == 0UL) {
 		dev_dbg(ACRN_DBG_TRUSTY_HYCALL,
 			"Trusty is not initialized!\n");
-		return -EPERM;
+	        ret = -EPERM;
+	} else {
+		switch_world(vcpu, next_world_id);
+		ret = 0;
 	}
-
-	switch_world(vcpu, next_world_id);
-	return 0;
+	return ret;
 }
 
 /**
@@ -103,30 +101,29 @@ int32_t hcall_initialize_trusty(struct acrn_vcpu *vcpu, uint64_t param)
 int32_t hcall_save_restore_sworld_ctx(struct acrn_vcpu *vcpu)
 {
 	struct acrn_vm *vm = vcpu->vm;
+	int32_t ret = 0;
 
 	if (vm->sworld_control.flag.supported == 0UL) {
 		dev_dbg(ACRN_DBG_TRUSTY_HYCALL,
 			"Secure World is not supported!\n");
-		return -EPERM;
-	}
-
-	/* Currently, Secure World is only running on vCPU0 */
-	if (!is_vcpu_bsp(vcpu)) {
+		ret = -EPERM;
+	} else if (!is_vcpu_bsp(vcpu)) {
+		/* Currently, Secure World is only running on vCPU0 */
 		dev_dbg(ACRN_DBG_TRUSTY_HYCALL,
 			"This hypercall is only allowed from vcpu0!");
-		return -EPERM;
-	}
-
-	if (vm->sworld_control.flag.active != 0UL) {
-		save_sworld_context(vcpu);
-		vm->sworld_control.flag.ctx_saved = 1UL;
+	        ret = -EPERM;
 	} else {
-		if (vm->sworld_control.flag.ctx_saved != 0UL) {
-			restore_sworld_context(vcpu);
-			vm->sworld_control.flag.ctx_saved = 0UL;
-			vm->sworld_control.flag.active = 1UL;
+		if (vm->sworld_control.flag.active != 0UL) {
+			save_sworld_context(vcpu);
+			vm->sworld_control.flag.ctx_saved = 1UL;
+		} else {
+			if (vm->sworld_control.flag.ctx_saved != 0UL) {
+				restore_sworld_context(vcpu);
+				vm->sworld_control.flag.ctx_saved = 0UL;
+				vm->sworld_control.flag.active = 1UL;
+			}
 		}
 	}
 
-	return 0;
+	return ret;
 }
