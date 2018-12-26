@@ -21,161 +21,148 @@
 
 #include "hkdf.h"
 
-int32_t mbedtls_hkdf( const mbedtls_md_info_t *md, const uint8_t *salt,
+int32_t mbedtls_hkdf(const mbedtls_md_info_t *md, const uint8_t *salt,
                   size_t salt_len, const uint8_t *ikm, size_t ikm_len,
                   const uint8_t *info, size_t info_len,
-                  uint8_t *okm, size_t okm_len )
+                  uint8_t *okm, size_t okm_len)
 {
     int32_t ret;
     uint8_t prk[MBEDTLS_MD_MAX_SIZE];
 
-    ret = mbedtls_hkdf_extract( md, salt, salt_len, ikm, ikm_len, prk );
+    ret = mbedtls_hkdf_extract(md, salt, salt_len, ikm, ikm_len, prk);
 
-    if( ret == 0 )
-    {
-        ret = mbedtls_hkdf_expand( md, prk, mbedtls_md_get_size( md ),
-                                   info, info_len, okm, okm_len );
+    if (ret == 0) {
+        ret = mbedtls_hkdf_expand(md, prk, (size_t)mbedtls_md_get_size(md),
+                                   info, info_len, okm, okm_len);
     }
 
-    mbedtls_platform_zeroize( prk, sizeof( prk ) );
+    (void)mbedtls_platform_zeroize(prk, sizeof(prk));
 
-    return( ret );
+    return ret;
 }
 
-int32_t mbedtls_hkdf_extract( const mbedtls_md_info_t *md,
+int32_t mbedtls_hkdf_extract(const mbedtls_md_info_t *md,
                           const uint8_t *salt, size_t salt_len,
                           const uint8_t *ikm, size_t ikm_len,
-                          uint8_t *prk )
+                          uint8_t *prk)
 {
-    uint8_t null_salt[MBEDTLS_MD_MAX_SIZE] = { '\0' };
+    int32_t ret = 0;
+    size_t tmp_salt_len = salt_len;
+    const uint8_t *tmp_salt = salt;
+    uint8_t null_salt[MBEDTLS_MD_MAX_SIZE] = { 0U };
 
-    if( salt == NULL )
-    {
+    if (tmp_salt == NULL) {
         size_t hash_len;
 
-        if( salt_len != 0 )
-        {
-            return MBEDTLS_ERR_HKDF_BAD_INPUT_DATA;
+        if (tmp_salt_len != 0U) {
+            ret =  MBEDTLS_ERR_HKDF_BAD_INPUT_DATA;
+        } else {
+
+            hash_len = mbedtls_md_get_size(md);
+
+            if (hash_len == 0U) {
+                ret = MBEDTLS_ERR_HKDF_BAD_INPUT_DATA;
+            } else {
+                tmp_salt = null_salt;
+                tmp_salt_len = hash_len;
+            }
         }
-
-        hash_len = mbedtls_md_get_size( md );
-
-        if( hash_len == 0 )
-        {
-            return MBEDTLS_ERR_HKDF_BAD_INPUT_DATA;
-        }
-
-        salt = null_salt;
-        salt_len = hash_len;
     }
 
-    return( mbedtls_md_hmac( md, salt, salt_len, ikm, ikm_len, prk ) );
+    if (ret == 0) {
+        ret = mbedtls_md_hmac(md, tmp_salt, tmp_salt_len, ikm, ikm_len, prk);
+    }
+
+    return ret;
 }
 
-int32_t mbedtls_hkdf_expand( const mbedtls_md_info_t *md, const uint8_t *prk,
+int32_t mbedtls_hkdf_expand(const mbedtls_md_info_t *md, const uint8_t *prk,
                          size_t prk_len, const uint8_t *info,
-                         size_t info_len, uint8_t *okm, size_t okm_len )
+                         size_t info_len, uint8_t *okm, size_t okm_len)
 {
     size_t hash_len;
     size_t where = 0;
     size_t n;
     size_t t_len = 0;
+    size_t tmp_info_len = info_len;
+    const uint8_t *tmp_info = info;
     size_t i;
     int32_t ret = 0;
     mbedtls_md_context_t ctx;
     uint8_t t[MBEDTLS_MD_MAX_SIZE];
 
-    if( okm == NULL )
-    {
-        return( MBEDTLS_ERR_HKDF_BAD_INPUT_DATA );
-    }
+    hash_len = mbedtls_md_get_size(md);
 
-    hash_len = mbedtls_md_get_size( md );
+    if ((okm == NULL) || (prk_len < hash_len) || (hash_len == 0U)) {
+        ret = MBEDTLS_ERR_HKDF_BAD_INPUT_DATA;
+    } else {
 
-    if( prk_len < hash_len || hash_len == 0 )
-    {
-        return( MBEDTLS_ERR_HKDF_BAD_INPUT_DATA );
-    }
-
-    if( info == NULL )
-    {
-        info = (const uint8_t *) "";
-        info_len = 0;
-    }
-
-    n = okm_len / hash_len;
-
-    if( (okm_len % hash_len) != 0 )
-    {
-        n++;
-    }
-
-    /*
-     * Per RFC 5869 Section 2.3, okm_len must not exceed
-     * 255 times the hash length
-     */
-    if( n > 255 )
-    {
-        return( MBEDTLS_ERR_HKDF_BAD_INPUT_DATA );
-    }
-
-    mbedtls_md_init( &ctx );
-
-    if( (ret = mbedtls_md_setup( &ctx, md) ) != 0 )
-    {
-        goto exit;
-    }
-
-    /*
-     * Compute T = T(1) | T(2) | T(3) | ... | T(N)
-     * Where T(N) is defined in RFC 5869 Section 2.3
-     */
-    for( i = 1; i <= n; i++ )
-    {
-        size_t num_to_copy;
-        uint8_t c = i & 0xff;
-
-        ret = mbedtls_md_hmac_starts( &ctx, prk, prk_len );
-        if( ret != 0 )
-        {
-            goto exit;
+        if (tmp_info == NULL) {
+            tmp_info = (const uint8_t *) "";
+            tmp_info_len = 0U;
         }
 
-        ret = mbedtls_md_hmac_update( &ctx, t, t_len );
-        if( ret != 0 )
-        {
-            goto exit;
+        n = okm_len / hash_len;
+
+        if ((okm_len % hash_len) != 0U) {
+            n++;
         }
 
-        ret = mbedtls_md_hmac_update( &ctx, info, info_len );
-        if( ret != 0 )
-        {
-            goto exit;
-        }
+        /*
+         * Per RFC 5869 Section 2.3, okm_len must not exceed
+         * 255 times the hash length
+         */
+        if (n > 255U) {
+            ret = MBEDTLS_ERR_HKDF_BAD_INPUT_DATA;
+        } else {
+            mbedtls_md_init(&ctx);
 
-        /* The constant concatenated to the end of each T(n) is a single octet.
-         * */
-        ret = mbedtls_md_hmac_update( &ctx, &c, 1 );
-        if( ret != 0 )
-        {
-            goto exit;
-        }
+            ret = mbedtls_md_setup(&ctx, md);
+            if (ret == 0) {
 
-        ret = mbedtls_md_hmac_finish( &ctx, t );
-        if( ret != 0 )
-        {
-            goto exit;
-        }
+                /*
+                 * Compute T = T(1) | T(2) | T(3) | ... | T(N)
+                 * Where T(N) is defined in RFC 5869 Section 2.3
+                 */
+                for (i = 1U; i <= n; i++) {
+                    size_t num_to_copy;
+                    uint8_t c = (uint8_t)(i & 0xffU);
 
-        num_to_copy = (i != n) ? hash_len : (okm_len - where);
-        memcpy_s( okm + where, num_to_copy, t, num_to_copy );
-        where += hash_len;
-        t_len = hash_len;
+                    ret = mbedtls_md_hmac_starts(&ctx, prk, prk_len);
+                    if (ret == 0) {
+                        ret = mbedtls_md_hmac_update(&ctx, t, t_len);
+                    }
+
+                    if (ret == 0) {
+                        ret = mbedtls_md_hmac_update(&ctx, tmp_info, tmp_info_len);
+                    }
+
+                    /* The constant concatenated to the end of each T(n) is a single octet.
+                     * */
+                    if (ret == 0) {
+                        ret = mbedtls_md_hmac_update(&ctx, &c, 1);
+                    }
+
+                    if (ret == 0) {
+                        ret = mbedtls_md_hmac_finish(&ctx, t);
+                    }
+
+                    if (ret != 0) {
+                        break;
+                    }
+
+                    num_to_copy = (i != n) ? hash_len : (okm_len - where);
+                    (void)memcpy_s(okm + where, num_to_copy, t, num_to_copy);
+                    where += hash_len;
+                    t_len = hash_len;
+                }
+            }
+
+             mbedtls_md_free(&ctx);
+        }
     }
 
-exit:
-    mbedtls_md_free( &ctx );
-    mbedtls_platform_zeroize( t, sizeof( t ) );
+    (void)mbedtls_platform_zeroize(t, sizeof(t));
 
-    return( ret );
+    return ret;
 }
