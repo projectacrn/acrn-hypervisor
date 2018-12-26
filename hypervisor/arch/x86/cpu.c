@@ -14,7 +14,7 @@
 #include <security.h>
 
 struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(PAGE_SIZE);
-uint16_t phys_cpu_num = 0U;
+static uint16_t phys_cpu_num = 0U;
 static uint64_t pcpu_sync = 0UL;
 static uint16_t up_count = 0U;
 static uint64_t startup_paddr = 0UL;
@@ -68,6 +68,15 @@ static void cpu_set_current_state(uint16_t pcpu_id, enum pcpu_boot_state state)
 	per_cpu(boot_state, pcpu_id) = state;
 }
 
+uint16_t get_pcpu_nums(void)
+{
+	return phys_cpu_num;
+}
+
+bool is_pcpu_active(uint16_t pcpu_id)
+{
+	return bitmap_test(pcpu_id, &pcpu_active_bitmap);
+}
 void init_cpu_pre(uint16_t pcpu_id_args)
 {
 	uint16_t pcpu_id = pcpu_id_args;
@@ -219,7 +228,7 @@ static void start_cpu(uint16_t pcpu_id)
 	 * configured time-out has expired
 	 */
 	timeout = (uint32_t)CONFIG_CPU_UP_TIMEOUT * 1000U;
-	while ((bitmap_test(pcpu_id, &pcpu_active_bitmap) == false) && (timeout != 0U)) {
+	while (!is_pcpu_active(pcpu_id) && (timeout != 0U)) {
 		/* Delay 10us */
 		udelay(10U);
 
@@ -228,7 +237,7 @@ static void start_cpu(uint16_t pcpu_id)
 	}
 
 	/* Check to see if expected CPU is actually up */
-	if (bitmap_test(pcpu_id, &pcpu_active_bitmap) == false) {
+	if (!is_pcpu_active(pcpu_id)) {
 		/* Print error */
 		pr_fatal("Secondary CPUs failed to come up");
 

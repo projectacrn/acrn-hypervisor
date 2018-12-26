@@ -256,7 +256,7 @@ void send_dest_ipi_mask(uint32_t dest_mask, uint32_t vector)
 
 	while (pcpu_id != INVALID_BIT_INDEX) {
 		bitmap32_clear_nolock(pcpu_id, &mask);
-		if (bitmap_test(pcpu_id, &pcpu_active_bitmap)) {
+		if (is_pcpu_active(pcpu_id)) {
 			icr.value_32.hi_32 = per_cpu(lapic_id, pcpu_id);
 			msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);
 		} else {
@@ -270,7 +270,7 @@ void send_single_ipi(uint16_t pcpu_id, uint32_t vector)
 {
 	union apic_icr icr;
 
-	if (bitmap_test(pcpu_id, &pcpu_active_bitmap)) {
+	if (is_pcpu_active(pcpu_id)) {
 		/* Set the destination field to the target processor. */
 		icr.value_32.hi_32 = per_cpu(lapic_id, pcpu_id);
 

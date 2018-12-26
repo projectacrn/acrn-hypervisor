@@ -718,6 +718,7 @@ reconfig:
 static void profiling_start_pmu(void)
 {
 	uint16_t i;
+	uint16_t pcpu_nums = get_pcpu_nums();
 
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
 
@@ -725,7 +726,7 @@ static void profiling_start_pmu(void)
 		return;
 	}
 
-	for (i = 0U; i < phys_cpu_num; i++) {
+	for (i = 0U; i < pcpu_nums; i++) {
 		if (per_cpu(profiling_info.sep_state, i).pmu_state != PMU_SETUP) {
 			pr_err("%s: invalid pmu_state %u on cpu%d",
 			__func__, get_cpu_var(profiling_info.sep_state).pmu_state, i);
@@ -733,7 +734,7 @@ static void profiling_start_pmu(void)
 		}
 	}
 
-	for (i = 0U; i < phys_cpu_num; i++) {
+	for (i = 0U; i < pcpu_nums; i++) {
 		per_cpu(profiling_info.ipi_cmd, i) = IPI_PMU_START;
 		per_cpu(profiling_info.sep_state, i).samples_logged = 0U;
 		per_cpu(profiling_info.sep_state, i).samples_dropped = 0U;
@@ -759,11 +760,12 @@ static void profiling_start_pmu(void)
 static void profiling_stop_pmu(void)
 {
 	uint16_t i;
+	uint16_t pcpu_nums = get_pcpu_nums();
 
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
 
 	if (in_pmu_profiling) {
-		for (i = 0U; i < phys_cpu_num; i++) {
+		for (i = 0U; i < pcpu_nums; i++) {
 			per_cpu(profiling_info.ipi_cmd, i) = IPI_PMU_STOP;
 			if (per_cpu(profiling_info.sep_state, i).pmu_state == PMU_RUNNING) {
 				per_cpu(profiling_info.sep_state, i).pmu_state = PMU_SETUP;
@@ -812,7 +814,8 @@ static void profiling_stop_pmu(void)
 int32_t profiling_msr_ops_all_cpus(struct acrn_vm *vm, uint64_t addr)
 {
 	uint16_t i;
-	struct profiling_msr_ops_list msr_list[phys_cpu_num];
+	uint16_t pcpu_nums = get_pcpu_nums();
+	struct profiling_msr_ops_list msr_list[pcpu_nums];
 
 	(void)memset((void *)&msr_list, 0U, sizeof(msr_list));
 
@@ -823,7 +826,7 @@ int32_t profiling_msr_ops_all_cpus(struct acrn_vm *vm, uint64_t addr)
 		return -EINVAL;
 	}
 
-	for (i = 0U; i < phys_cpu_num; i++) {
+	for (i = 0U; i < pcpu_nums; i++) {
 		per_cpu(profiling_info.ipi_cmd, i) = IPI_MSR_OP;
 		per_cpu(profiling_info.msr_node, i) = &(msr_list[i]);
 	}
@@ -849,6 +852,7 @@ int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr)
 	int32_t vm_idx;
 	uint16_t i, j;
 	struct profiling_vm_info_list vm_info_list;
+	uint16_t pcpu_nums = get_pcpu_nums();
 
 	(void)memset((void *)&vm_info_list, 0U, sizeof(vm_info_list));
 
@@ -862,7 +866,7 @@ int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr)
 	vm_idx = 0;
 	vm_info_list.vm_list[vm_idx].vm_id_num = -1;
 	(void)memcpy_s((void *)vm_info_list.vm_list[vm_idx].vm_name, 4U, "VMM\0", 4U);
-	for (i = 0U; i < phys_cpu_num; i++) {
+	for (i = 0U; i < pcpu_nums; i++) {
 		vm_info_list.vm_list[vm_idx].cpu_map[i].vcpu_id = (int32_t)i;
 		vm_info_list.vm_list[vm_idx].cpu_map[i].pcpu_id = (int32_t)i;
 		vm_info_list.vm_list[vm_idx].cpu_map[i].apic_id
@@ -985,7 +989,7 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 	uint64_t old_switch;
 	uint64_t new_switch;
 	uint16_t i;
-
+	uint16_t pcpu_nums = get_pcpu_nums();
 	struct profiling_control prof_control;
 
 	(void)memset((void *)&prof_control, 0U, sizeof(prof_control));
@@ -1062,7 +1066,7 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 					}
 				}
 			}
-			for (i = 0U; i < phys_cpu_num; i++) {
+			for (i = 0U; i < pcpu_nums ; i++) {
 				per_cpu(profiling_info.soc_state, i)
 					= SW_RUNNING;
 			}
@@ -1070,7 +1074,7 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr)
 			dev_dbg(ACRN_DBG_PROFILING,
 			"%s: socwatch stop collection invoked or collection switch not set!",
 			__func__);
-			for (i = 0U; i < phys_cpu_num; i++) {
+			for (i = 0U; i < pcpu_nums ; i++) {
 				per_cpu(profiling_info.soc_state, i)
 					= SW_STOPPED;
 			}
@@ -1099,6 +1103,7 @@ int32_t profiling_configure_pmi(struct acrn_vm *vm, uint64_t addr)
 {
 	uint16_t i;
 	struct profiling_pmi_config pmi_config;
+	uint16_t pcpu_nums = get_pcpu_nums();
 
 	(void)memset((void *)&pmi_config, 0U, sizeof(pmi_config));
 
@@ -1109,7 +1114,7 @@ int32_t profiling_configure_pmi(struct acrn_vm *vm, uint64_t addr)
 		return -EINVAL;
 	}
 
-	for (i = 0U; i < phys_cpu_num; i++) {
+	for (i = 0U; i < pcpu_nums; i++) {
 		if (!((per_cpu(profiling_info.sep_state, i).pmu_state ==
 				PMU_INITIALIZED) ||
 			(per_cpu(profiling_info.sep_state, i).pmu_state ==
@@ -1127,7 +1132,7 @@ int32_t profiling_configure_pmi(struct acrn_vm *vm, uint64_t addr)
 		return -EINVAL;
 	}
 
-	for (i = 0U; i < phys_cpu_num; i++) {
+	for (i = 0U; i < pcpu_nums; i++) {
 		per_cpu(profiling_info.ipi_cmd, i) = IPI_PMU_CONFIG;
 		per_cpu(profiling_info.sep_state, i).num_pmi_groups
 			= pmi_config.num_groups;
@@ -1177,6 +1182,7 @@ int32_t profiling_configure_vmsw(struct acrn_vm *vm, uint64_t addr)
 	uint16_t i;
 	int32_t ret = 0;
 	struct profiling_vmsw_config vmsw_config;
+	uint16_t pcpu_nums = get_pcpu_nums();
 
 	(void)memset((void *)&vmsw_config, 0U, sizeof(vmsw_config));
 
@@ -1189,7 +1195,7 @@ int32_t profiling_configure_vmsw(struct acrn_vm *vm, uint64_t addr)
 
 	switch (vmsw_config.collector_id) {
 	case COLLECT_PROFILE_DATA:
-		for (i = 0U; i < phys_cpu_num; i++) {
+		for (i = 0U; i < pcpu_nums; i++) {
 			per_cpu(profiling_info.ipi_cmd, i) = IPI_VMSW_CONFIG;
 
 			(void)memcpy_s(

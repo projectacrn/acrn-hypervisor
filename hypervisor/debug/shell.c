@@ -849,6 +849,7 @@ static void get_cpu_interrupt_info(char *str_arg, size_t str_max)
 	uint16_t pcpu_id;
 	uint32_t irq, vector;
 	size_t len, size = str_max;
+	uint16_t pcpu_nums = get_pcpu_nums();
 
 	len = snprintf(str, size, "\r\nIRQ\tVECTOR");
 	if (len >= size) {
@@ -857,7 +858,7 @@ static void get_cpu_interrupt_info(char *str_arg, size_t str_max)
 	size -= len;
 	str += len;
 
-	for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
+	for (pcpu_id = 0U; pcpu_id < pcpu_nums; pcpu_id++) {
 		len = snprintf(str, size, "\tCPU%d", pcpu_id);
 		if (len >= size) {
 			goto overflow;
@@ -878,7 +879,7 @@ static void get_cpu_interrupt_info(char *str_arg, size_t str_max)
 			size -= len;
 			str += len;
 
-			for (pcpu_id = 0U; pcpu_id < phys_cpu_num; pcpu_id++) {
+			for (pcpu_id = 0U; pcpu_id < pcpu_nums; pcpu_id++) {
 				len = snprintf(str, size, "\t%d", per_cpu(irq_count, pcpu_id)[irq]);
 				if (len >= size) {
 					goto overflow;

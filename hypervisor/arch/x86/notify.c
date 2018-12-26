@@ -39,7 +39,7 @@ void smp_call_function(uint64_t mask, smp_call_func_t func, void *data)
 	pcpu_id = ffs64(mask);
 	while (pcpu_id != INVALID_BIT_INDEX) {
 		bitmap_clear_nolock(pcpu_id, &mask);
-		if (bitmap_test(pcpu_id, &pcpu_active_bitmap)) {
+		if (is_pcpu_active(pcpu_id)) {
 			smp_call = &per_cpu(smp_call_info, pcpu_id);
 			smp_call->func = func;
 			smp_call->data = data;

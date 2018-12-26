@@ -66,6 +66,7 @@ static inline int32_t npk_write(const char *value, void *addr, size_t sz)
 void npk_log_setup(struct hv_npk_log_param *param)
 {
 	uint16_t i;
+	uint16_t pcpu_nums;
 
 	pr_info("HV_NPK_LOG: cmd %d param 0x%llx\n", param->cmd,
 			param->mmio_addr);
@@ -90,7 +91,8 @@ void npk_log_setup(struct hv_npk_log_param *param)
 		}
 		if ((base != 0UL) && (param->cmd == HV_NPK_LOG_CMD_ENABLE)) {
 			if (!npk_log_enabled) {
-				for (i = 0U; i < phys_cpu_num; i++) {
+				pcpu_nums = get_pcpu_nums();
+				for (i = 0U; i < pcpu_nums; i++) {
 					per_cpu(npk_log_ref, i) = 0U;
 				}
 			}

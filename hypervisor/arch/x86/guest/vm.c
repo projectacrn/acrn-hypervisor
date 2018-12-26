@@ -398,7 +398,7 @@ static int32_t prepare_vm0(void)
 	struct vm_description vm0_desc;
 
 	(void)memset((void *)&vm0_desc, 0U, sizeof(vm0_desc));
-	vm0_desc.vm_hw_num_cores = phys_cpu_num;
+	vm0_desc.vm_hw_num_cores = get_pcpu_nums();
 
 	err = create_vm(&vm0_desc, &vm);
 

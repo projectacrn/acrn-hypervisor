@@ -56,7 +56,6 @@ struct per_cpu_region {
 } __aligned(PAGE_SIZE); /* per_cpu_region size aligned with PAGE_SIZE */
 
 extern struct per_cpu_region per_cpu_data[];
-extern uint16_t phys_cpu_num;
 extern uint64_t pcpu_active_bitmap;
 /*
  * get percpu data for pcpu_id.

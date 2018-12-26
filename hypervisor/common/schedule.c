@@ -14,8 +14,9 @@ void init_scheduler(void)
 {
 	struct sched_context *ctx;
 	uint32_t i;
+	uint16_t pcpu_nums = get_pcpu_nums();
 
-	for (i = 0U; i < phys_cpu_num; i++) {
+	for (i = 0U; i < pcpu_nums; i++) {
 		ctx = &per_cpu(sched_ctx, i);
 
 		spinlock_init(&ctx->runqueue_lock);
@@ -42,8 +43,9 @@ uint16_t allocate_pcpu(void)
 {
 	uint16_t i;
 	uint16_t ret = INVALID_CPU_ID;
+	uint16_t pcpu_nums = get_pcpu_nums();
 
-	for (i = 0U; i < phys_cpu_num; i++) {
+	for (i = 0U; i < pcpu_nums; i++) {
 		if (bitmap_test_and_set_lock(i, &pcpu_used_bitmap) == 0) {
 			ret = i;
 			break;
