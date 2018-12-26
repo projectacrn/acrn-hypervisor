@@ -61,6 +61,10 @@ div.rst-other-versions dl {
     color: #000000;
 }
 
+div.non-compliant-code div.highlight {
+   background: #f7d7d7;
+}
+
 /* Make the version number more visible */
 .wy-side-nav-search>div.version {
     color: rgba(255,255,255,1);
