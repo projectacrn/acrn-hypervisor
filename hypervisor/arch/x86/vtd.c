@@ -256,7 +256,7 @@ static inline void dmar_wait_completion(const struct dmar_drhd_rt *dmar_unit, ui
 		}
 		ASSERT(((rdtsc() - start) < CYCLES_PER_MS),
 			"DMAR OP Timeout!");
-		pause_cpu();
+		asm_pause();
 	}
 }
 

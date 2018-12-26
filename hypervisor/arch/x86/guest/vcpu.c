@@ -578,7 +578,7 @@ void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 
 		if (vcpu->pcpu_id != pcpu_id) {
 			while (atomic_load32(&vcpu->running) == 1U)
-				__asm__ __volatile("pause" ::: "memory");
+				asm_pause();
 		}
 	} else {
 		remove_from_cpu_runqueue(&vcpu->sched_obj, vcpu->pcpu_id);
