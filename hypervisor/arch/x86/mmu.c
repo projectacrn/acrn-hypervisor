@@ -222,14 +222,16 @@ void enable_smap(void)
  */
 void hv_access_memory_region_update(uint64_t base, uint64_t size)
 {
+	uint64_t base_aligned;
+	uint64_t size_aligned;
 	uint64_t region_end = base + size;
 
 	/*rounddown base to 2MBytes aligned.*/
-	base = round_pde_down(base);
-	size = region_end - base;
+	base_aligned = round_pde_down(base);
+	size_aligned = region_end - base_aligned;
 
-	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, base, round_pde_up(size),
-		0UL, PAGE_USER,	&ppt_mem_ops, MR_MODIFY);
+	mmu_modify_or_del((uint64_t *)ppt_mmu_pml4_addr, base_aligned,
+		round_pde_up(size_aligned), 0UL, PAGE_USER, &ppt_mem_ops, MR_MODIFY);
 }
 
 void init_paging(void)
