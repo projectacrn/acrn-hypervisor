@@ -469,7 +469,7 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 
 	/* make sure we have set req_buf */
 	if ((target_vm == NULL) || (target_vm->sw.io_shared_page == NULL)) {
-		pr_err("%s, invalid parameter\n", __func__);
+		pr_err("%p %s, invalid parameter\n", target_vm, __func__);
 	        ret = -EINVAL;
 	} else {
 		dev_dbg(ACRN_DBG_HYCALL, "[%d] NOTIFY_FINISH for vcpu %d",
@@ -584,41 +584,38 @@ int32_t hcall_set_vm_memory_regions(struct acrn_vm *vm, uint64_t param)
 	struct vm_memory_region mr;
 	struct acrn_vm *target_vm;
 	uint32_t idx;
+	int32_t ret = 0;
 
 
 	(void)memset((void *)&regions, 0U, sizeof(regions));
 
 	if (copy_from_gpa(vm, &regions, param, sizeof(regions)) != 0) {
 		pr_err("%s: Unable copy param from vm\n", __func__);
-		return -EFAULT;
-	}
+	        ret = -EFAULT;
+	} else {
+		target_vm = get_vm_from_vmid(regions.vmid);
+		if ((target_vm == NULL) || is_vm0(target_vm)) {
+			pr_err("%p %s:target_vm is invalid or Targeting to service vm", target_vm, __func__);
+		        ret = -EFAULT;
+		} else {
+			idx = 0U;
+			while (idx < regions.mr_num) {
+				if (copy_from_gpa(vm, &mr, regions.regions_gpa + idx * sizeof(mr), sizeof(mr)) != 0) {
+					pr_err("%s: Copy mr entry fail from vm\n", __func__);
+				        ret = -EFAULT;
+					break;
+				}
 
-	target_vm = get_vm_from_vmid(regions.vmid);
-	if (target_vm == NULL) {
-		return -EINVAL;
-	}
-
-	if (is_vm0(target_vm)) {
-		pr_err("%s: Targeting to service vm", __func__);
-		return -EFAULT;
-	}
-
-	idx = 0U;
-	while (idx < regions.mr_num) {
-		int32_t ret;
-
-		if (copy_from_gpa(vm, &mr, regions.regions_gpa + idx * sizeof(mr), sizeof(mr)) != 0) {
-			pr_err("%s: Copy mr entry fail from vm\n", __func__);
-			return -EFAULT;
+				ret = set_vm_memory_region(vm, target_vm, &mr);
+				if (ret < 0) {
+					break;
+				}
+				idx++;
+			}
 		}
-
-		ret = set_vm_memory_region(vm, target_vm, &mr);
-		if (ret < 0) {
-			return ret;
-		}
-		idx++;
 	}
-	return 0;
+
+	return ret;
 }
 
 /**
@@ -708,29 +705,26 @@ int32_t hcall_write_protect_page(struct acrn_vm *vm, uint16_t vmid, uint64_t wp_
  */
 int32_t hcall_gpa_to_hpa(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 {
-	int32_t ret = 0;
+	int32_t ret;
 	struct vm_gpa2hpa v_gpa2hpa;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (target_vm == NULL) {
-		return -1;
-	}
-
 	(void)memset((void *)&v_gpa2hpa, 0U, sizeof(v_gpa2hpa));
-
-	if (copy_from_gpa(vm, &v_gpa2hpa, param, sizeof(v_gpa2hpa)) != 0) {
-		pr_err("HCALL gpa2hpa: Unable copy param from vm\n");
-		return -1;
-	}
-	v_gpa2hpa.hpa = gpa2hpa(target_vm, v_gpa2hpa.gpa);
-	if (v_gpa2hpa.hpa == INVALID_HPA) {
-		pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
-			__func__, target_vm->vm_id, v_gpa2hpa.gpa);
-		return -EINVAL;
-	}
-	if (copy_to_gpa(vm, &v_gpa2hpa, param, sizeof(v_gpa2hpa)) != 0) {
-		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
+	if ((target_vm == NULL) || copy_from_gpa(vm, &v_gpa2hpa, param, sizeof(v_gpa2hpa)) != 0) {
+		pr_err("target_vm is invalid or HCALL gpa2hpa: Unable copy param from vm\n");
+	        ret = -1;
+	} else {
+		v_gpa2hpa.hpa = gpa2hpa(target_vm, v_gpa2hpa.gpa);
+		if (v_gpa2hpa.hpa == INVALID_HPA) {
+			pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
+				__func__, target_vm->vm_id, v_gpa2hpa.gpa);
+			ret = -EINVAL;
+		} else if (copy_to_gpa(vm, &v_gpa2hpa, param, sizeof(v_gpa2hpa)) != 0) {
+			pr_err("%s: Unable copy param to vm\n", __func__);
+		        ret = -1;
+		} else {
+			ret = 0;
+		}
 	}
 
 	return ret;
@@ -753,39 +747,46 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	int32_t ret;
 	uint16_t bdf;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
+	bool bdf_valid = true;
+	bool iommu_valid = true;
 
-	if (target_vm == NULL) {
-		pr_err("%s, vm is null\n", __func__);
-		return -EINVAL;
-	}
+	if (target_vm != NULL) {
+		if (param < 0x10000UL) {
+			bdf = (uint16_t) param;
+		} else {
+			if (copy_from_gpa(vm, &bdf, param, sizeof(bdf)) != 0) {
+				pr_err("%s: Unable copy param from vm %d\n",
+				__func__, vm->vm_id);
+				bdf_valid = false;
+			        ret = -EIO;
+		        }
+	        }
 
-	if (param < 0x10000UL) {
-		bdf = (uint16_t) param;
+		/* create a iommu domain for target VM if not created */
+		if (bdf_valid && target_vm->iommu == NULL) {
+			if (target_vm->arch_vm.nworld_eptp == NULL) {
+				pr_err("%s, EPT of VM not set!\n",
+					__func__, target_vm->vm_id);
+				iommu_valid = false;
+			        ret = -EPERM;
+			} else {
+				/* TODO: how to get vm's address width? */
+				target_vm->iommu = create_iommu_domain(vmid,
+						hva2hpa(target_vm->arch_vm.nworld_eptp), 48U);
+				if (target_vm->iommu == NULL) {
+					iommu_valid = false;
+					ret = -ENODEV;
+				}
+			}
+		}
+		if (bdf_valid && iommu_valid) {
+			ret = assign_iommu_device(target_vm->iommu,
+				(uint8_t)(bdf >> 8U), (uint8_t)(bdf & 0xffU));
+		}
 	} else {
-		if (copy_from_gpa(vm, &bdf, param, sizeof(bdf)) != 0) {
-			pr_err("%s: Unable copy param from vm %d\n",
-			__func__, vm->vm_id);
-			return -EIO;
-		}
+		pr_err("%s, vm is null\n", __func__);
+		ret = -EINVAL;
 	}
-
-	/* create a iommu domain for target VM if not created */
-	if (target_vm->iommu == NULL) {
-		if (target_vm->arch_vm.nworld_eptp == NULL) {
-			pr_err("%s, EPT of VM not set!\n",
-				__func__, target_vm->vm_id);
-			return -EPERM;
-		}
-		/* TODO: how to get vm's address width? */
-		target_vm->iommu = create_iommu_domain(vmid,
-				hva2hpa(target_vm->arch_vm.nworld_eptp), 48U);
-		if (target_vm->iommu == NULL) {
-			return -ENODEV;
-		}
-
-	}
-	ret = assign_iommu_device(target_vm->iommu,
-			(uint8_t)(bdf >> 8U), (uint8_t)(bdf & 0xffU));
 
 	return ret;
 }
@@ -806,22 +807,27 @@ int32_t hcall_deassign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 {
 	int32_t ret = 0;
 	uint16_t bdf;
+	bool bdf_valid = true;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	if (target_vm == NULL) {
-		return -1;
-	}
-
-	if (param < 0x10000UL) {
-		bdf = (uint16_t) param;
+	        ret = -1;
 	} else {
-		if (copy_from_gpa(vm, &bdf, param, sizeof(bdf)) != 0) {
-			pr_err("%s: Unable copy param to vm\n", __func__);
-			return -1;
+		if (param < 0x10000UL) {
+			bdf = (uint16_t) param;
+		} else {
+			if (copy_from_gpa(vm, &bdf, param, sizeof(bdf)) != 0) {
+				pr_err("%s: Unable copy param to vm\n", __func__);
+				bdf_valid = false;
+			        ret = -1;
+			}
+		}
+
+		if (bdf_valid) {
+			ret = unassign_iommu_device(target_vm->iommu,
+				(uint8_t)(bdf >> 8U), (uint8_t)(bdf & 0xffU));
 		}
 	}
-	ret = unassign_iommu_device(target_vm->iommu,
-			(uint8_t)(bdf >> 8U), (uint8_t)(bdf & 0xffU));
 
 	return ret;
 }
@@ -843,32 +849,29 @@ int32_t hcall_set_ptdev_intr_info(struct acrn_vm *vm, uint16_t vmid, uint64_t pa
 	struct hc_ptdev_irq irq;
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
-	if (target_vm == NULL) {
-		return -1;
-	}
-
 	(void)memset((void *)&irq, 0U, sizeof(irq));
-
-	if (copy_from_gpa(vm, &irq, param, sizeof(irq)) != 0) {
+	if (target_vm == NULL) {
+	        ret = -1;
+	} else if (copy_from_gpa(vm, &irq, param, sizeof(irq)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
-		return -1;
-	}
-
-	/* Inform vPCI about the interupt info changes */
+	        ret = -1;
+	} else {
+		/* Inform vPCI about the interupt info changes */
 #ifndef CONFIG_PARTITION_MODE
-	vpci_set_ptdev_intr_info(target_vm, irq.virt_bdf, irq.phys_bdf);
+		vpci_set_ptdev_intr_info(target_vm, irq.virt_bdf, irq.phys_bdf);
 #endif
 
-	if (irq.type == IRQ_INTX) {
-		ret = ptirq_add_intx_remapping(target_vm, irq.is.intx.virt_pin,
-				irq.is.intx.phys_pin, irq.is.intx.pic_pin);
-	} else if ((irq.type == IRQ_MSI) || (irq.type == IRQ_MSIX)) {
-		ret = ptirq_add_msix_remapping(target_vm,
-				irq.virt_bdf, irq.phys_bdf,
-				irq.is.msix.vector_cnt);
-	} else {
-		pr_err("%s: Invalid irq type: %u\n", __func__, irq.type);
-		ret = -1;
+		if (irq.type == IRQ_INTX) {
+			ret = ptirq_add_intx_remapping(target_vm, irq.is.intx.virt_pin,
+					irq.is.intx.phys_pin, irq.is.intx.pic_pin);
+		} else if ((irq.type == IRQ_MSI) || (irq.type == IRQ_MSIX)) {
+			ret = ptirq_add_msix_remapping(target_vm,
+					irq.virt_bdf, irq.phys_bdf,
+					irq.is.msix.vector_cnt);
+		} else {
+			pr_err("%s: Invalid irq type: %u\n", __func__, irq.type);
+			ret = -1;
+		}
 	}
 
 	return ret;
