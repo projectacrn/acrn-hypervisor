@@ -20,7 +20,7 @@ static uint16_t up_count = 0U;
 static uint64_t startup_paddr = 0UL;
 
 /* physical cpu active bitmap, support up to 64 cpus */
-uint64_t pcpu_active_bitmap = 0UL;
+static uint64_t pcpu_active_bitmap = 0UL;
 
 static void cpu_xsave_init(void);
 static void set_current_cpu_id(uint16_t pcpu_id);
@@ -77,6 +77,12 @@ bool is_pcpu_active(uint16_t pcpu_id)
 {
 	return bitmap_test(pcpu_id, &pcpu_active_bitmap);
 }
+
+uint64_t get_active_pcpu_bitmap(void)
+{
+	return pcpu_active_bitmap;
+}
+
 void init_cpu_pre(uint16_t pcpu_id_args)
 {
 	uint16_t pcpu_id = pcpu_id_args;
