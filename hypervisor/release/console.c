@@ -24,7 +24,7 @@ void console_setup_timer(void) {}
 void suspend_console(void) {}
 void resume_console(void) {}
 
-void uart16550_set_property(__unused bool enabled, __unused bool port_mapped, __unused uint64_t base_addr) {}
+bool handle_dbg_cmd(__unused const char *cmd, __unused int32_t len) { return false; }
 bool is_pci_dbg_uart(__unused union pci_bdf bdf_value) { return false; }
 bool is_dbg_uart_enabled(void) { return false; }
 

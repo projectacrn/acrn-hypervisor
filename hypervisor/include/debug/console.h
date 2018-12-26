@@ -46,4 +46,5 @@ void shell_kick(void);
 void suspend_console(void);
 void resume_console(void);
 
+bool handle_dbg_cmd(const char *cmd, int32_t len);
 #endif /* CONSOLE_H */
