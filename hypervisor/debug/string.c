@@ -84,8 +84,3 @@ int64_t strtol_deci(const char *nptr)
 	}
 	return (long)acc;
 }
-
-int32_t atoi(const char *str)
-{
-	return (int32_t)strtol_deci(str);
-}

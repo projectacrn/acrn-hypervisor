@@ -38,7 +38,6 @@ char *strchr(char *s_arg, char ch);
 size_t strnlen_s(const char *str_arg, size_t maxlen_arg);
 void *memset(void *base, uint8_t v, size_t n);
 void *memcpy_s(void *d, size_t dmax, const void *s, size_t slen);
-int32_t atoi(const char *str);
 int64_t strtol_deci(const char *nptr);
 uint64_t strtoul_hex(const char *nptr);
 char *strstr_s(const char *str1, size_t maxlen1,
