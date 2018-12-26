@@ -706,12 +706,12 @@ static int32_t shell_vcpu_dumpreg(int32_t argc, char **argv)
 		goto out;
 	}
 
-	status = atoi(argv[1]);
+	status = strtol_deci(argv[1]);
 	if (status < 0) {
 		goto out;
 	}
 	vm_id = (uint16_t)status;
-	vcpu_id = (uint16_t)atoi(argv[2]);
+	vcpu_id = (uint16_t)strtol_deci(argv[2]);
 
 	vm = get_vm_from_vmid(vm_id);
 	if (vm == NULL) {
@@ -757,7 +757,7 @@ static int32_t shell_dumpmem(int32_t argc, char **argv)
 	}
 
 	addr = strtoul_hex(argv[1]);
-	length = (uint32_t)atoi(argv[2]);
+	length = (uint32_t)strtol_deci(argv[2]);
 	if (length > MAX_MEMDUMP_LEN) {
 		shell_puts("over max length, round back\r\n");
 		length = MAX_MEMDUMP_LEN;
@@ -799,7 +799,7 @@ static int32_t shell_to_sos_console(__unused int32_t argc, __unused char **argv)
 	struct vm_description *vm_desc;
 
 	if (argc == 2U) {
-		guest_no = atoi(argv[1]);
+		guest_no = strtol_deci(argv[1]);
 	}
 
 	vuart_vmid = guest_no;
@@ -1083,7 +1083,7 @@ static int32_t shell_show_vioapic_info(int32_t argc, char **argv)
 	if (argc != 2) {
 		return -EINVAL;
 	}
-	ret = atoi(argv[1]);
+	ret = strtol_deci(argv[1]);
 	if (ret >= 0) {
 		vmid = (uint16_t) ret;
 		get_vioapic_info(shell_log_buf, SHELL_LOG_BUF_SIZE, vmid);
@@ -1180,13 +1180,13 @@ static int32_t shell_loglevel(int32_t argc, char **argv)
 
 	switch (argc) {
 	case 4:
-		npk_loglevel = (uint16_t)atoi(argv[3]);
+		npk_loglevel = (uint16_t)strtol_deci(argv[3]);
 		/* falls through */
 	case 3:
-		mem_loglevel = (uint16_t)atoi(argv[2]);
+		mem_loglevel = (uint16_t)strtol_deci(argv[2]);
 		/* falls through */
 	case 2:
-		console_loglevel = (uint16_t)atoi(argv[1]);
+		console_loglevel = (uint16_t)strtol_deci(argv[1]);
 		break;
 	case 1:
 		snprintf(str, MAX_STR_SIZE, "console_loglevel: %u, "
