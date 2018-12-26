@@ -141,7 +141,7 @@ static int32_t hcall_get_hw_info(struct acrn_vm *vm, uint64_t param)
 
 	(void)memset((void *)&hw_info, 0U, sizeof(hw_info));
 
-	hw_info.cpu_num = phys_cpu_num;
+	hw_info.cpu_num = get_pcpu_nums();
 	ret = copy_to_gpa(vm, &hw_info, param, sizeof(hw_info));
 	if (ret != 0) {
 		pr_err("%s: Unable to copy param to vm", __func__);

@@ -125,7 +125,7 @@ static uint16_t vm_apicid2vcpu_id(struct acrn_vm *vm, uint8_t lapicid)
 
 	pr_err("%s: bad lapicid %hhu", __func__, lapicid);
 
-	return phys_cpu_num;
+	return get_pcpu_nums();
 }
 
 static uint64_t
@@ -1713,13 +1713,11 @@ vlapic_reset(struct acrn_vlapic *vlapic)
 
 /**
  * @pre vlapic->vm != NULL
+ * @pre vlapic->vcpu->vcpu_id < CONFIG_MAX_VCPUS_PER_VM
  */
 void
 vlapic_init(struct acrn_vlapic *vlapic)
 {
-	ASSERT(vlapic->vcpu->vcpu_id < phys_cpu_num,
-		"%s: vcpu_id is not initialized", __func__);
-
 	vlapic_init_timer(vlapic);
 
 	vlapic_reset(vlapic);

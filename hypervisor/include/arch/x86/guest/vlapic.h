@@ -270,6 +270,10 @@ int32_t vlapic_create(struct acrn_vcpu *vcpu);
  *  @pre vcpu != NULL
  */
 void vlapic_free(struct acrn_vcpu *vcpu);
+/**
+ * @pre vlapic->vm != NULL
+ * @pre vlapic->vcpu->vcpu_id < CONFIG_MAX_VCPUS_PER_VM
+ */
 void vlapic_init(struct acrn_vlapic *vlapic);
 void vlapic_reset(struct acrn_vlapic *vlapic);
 void vlapic_restore(struct acrn_vlapic *vlapic, const struct lapic_regs *regs);

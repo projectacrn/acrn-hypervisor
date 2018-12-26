@@ -50,7 +50,7 @@
 
 #define DEFAULT_DEST_MODE	IOAPIC_RTE_DESTLOG
 #define DEFAULT_DELIVERY_MODE	IOAPIC_RTE_DELLOPRI
-#define ALL_CPUS_MASK		((1UL << (uint64_t)phys_cpu_num) - 1UL)
+#define ALL_CPUS_MASK		((1UL << (uint64_t)get_pcpu_nums()) - 1UL)
 
 #define IRQ_ALLOC_BITMAP_SIZE	INT_DIV_ROUNDUP(NR_IRQS, 64U)
 

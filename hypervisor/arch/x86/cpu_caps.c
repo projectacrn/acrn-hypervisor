@@ -405,8 +405,8 @@ int32_t detect_hardware_support(void)
 	} else if (is_vmx_disabled()) {
 		pr_fatal("%s, VMX can not be enabled\n", __func__);
 		ret = -ENODEV;
-	} else if (phys_cpu_num > CONFIG_MAX_PCPU_NUM) {
-		pr_fatal("%s, pcpu number(%d) is out of range\n", __func__, phys_cpu_num);
+	} else if (get_pcpu_nums() > CONFIG_MAX_PCPU_NUM) {
+		pr_fatal("%s, pcpu number(%d) is out of range\n", __func__, get_pcpu_nums());
 		ret = -ENODEV;
 	} else {
 		ret = check_vmx_mmu_cap();
