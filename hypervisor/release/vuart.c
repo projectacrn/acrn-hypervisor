@@ -20,5 +20,3 @@ bool hv_used_dbg_intx(__unused uint8_t intx_pin)
 {
 	return false;
 }
-
-void vuart_set_property(__unused const char *vuart_info) {}
