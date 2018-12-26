@@ -41,14 +41,16 @@ void release_schedule_lock(uint16_t pcpu_id)
 uint16_t allocate_pcpu(void)
 {
 	uint16_t i;
+	uint16_t ret = INVALID_CPU_ID;
 
 	for (i = 0U; i < phys_cpu_num; i++) {
 		if (bitmap_test_and_set_lock(i, &pcpu_used_bitmap) == 0) {
-			return i;
+			ret = i;
+			break;
 		}
 	}
 
-	return INVALID_CPU_ID;
+	return ret;
 }
 
 void set_pcpu_used(uint16_t pcpu_id)
@@ -183,18 +185,18 @@ void schedule(void)
 	if (prev == next) {
 		release_schedule_lock(pcpu_id);
 		return;
+	} else {
+		prepare_switch(prev, next);
+		release_schedule_lock(pcpu_id);
+
+		if (next == NULL) {
+			next = &idle;
+		}
+
+		switch_to(next);
+
+		ASSERT(false, "Shouldn't go here");
 	}
-
-	prepare_switch(prev, next);
-	release_schedule_lock(pcpu_id);
-
-	if (next == NULL) {
-		next = &idle;
-	}
-
-	switch_to(next);
-
-	ASSERT(false, "Shouldn't go here");
 }
 
 void switch_to_idle(run_thread_t idle_thread)
