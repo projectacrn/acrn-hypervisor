@@ -489,83 +489,97 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 	return ret;
 }
 
+
+static int32_t add_vm_memory_region(struct acrn_vm *vm, struct acrn_vm *target_vm,
+				    const struct vm_memory_region *region,uint64_t *pml4_page)
+{
+	int32_t ret;
+	uint64_t prot;
+	uint64_t hpa, base_paddr;
+
+	hpa = gpa2hpa(vm, region->vm0_gpa);
+	if (hpa == INVALID_HPA) {
+		pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
+			__func__, vm->vm_id, region->vm0_gpa);
+		ret = -EINVAL;
+	} else {
+		base_paddr = get_hv_image_base();
+		if (((hpa <= base_paddr) && ((hpa + region->size) > base_paddr)) ||
+				((hpa >= base_paddr) && (hpa < (base_paddr + CONFIG_HV_RAM_SIZE)))) {
+			pr_err("%s: overlap the HV memory region.", __func__);
+			ret = -EFAULT;
+		} else {
+			prot = 0UL;
+			/* access right */
+			if ((region->prot & MEM_ACCESS_READ) != 0U) {
+				prot |= EPT_RD;
+			}
+			if ((region->prot & MEM_ACCESS_WRITE) != 0U) {
+				prot |= EPT_WR;
+			}
+			if ((region->prot & MEM_ACCESS_EXEC) != 0U) {
+				prot |= EPT_EXE;
+			}
+			/* memory type */
+			if ((region->prot & MEM_TYPE_WB) != 0U) {
+				prot |= EPT_WB;
+			} else if ((region->prot & MEM_TYPE_WT) != 0U) {
+				prot |= EPT_WT;
+			} else if ((region->prot & MEM_TYPE_WC) != 0U) {
+				prot |= EPT_WC;
+			} else if ((region->prot & MEM_TYPE_WP) != 0U) {
+				prot |= EPT_WP;
+			} else {
+				prot |= EPT_UNCACHED;
+			}
+			/* create gpa to hpa EPT mapping */
+			ept_mr_add(target_vm, pml4_page, hpa,
+					region->gpa, region->size, prot);
+			ret = 0;
+		}
+	}
+
+	return ret;
+}
+
 /**
  *@pre Pointer vm shall point to VM0
  */
 static int32_t set_vm_memory_region(struct acrn_vm *vm,
 	struct acrn_vm *target_vm, const struct vm_memory_region *region)
 {
-	uint64_t hpa, base_paddr, gpa_end;
-	uint64_t prot;
+	uint64_t gpa_end;
 	uint64_t *pml4_page;
+	int32_t ret;
 
 	if ((region->size & (PAGE_SIZE - 1UL)) != 0UL) {
 		pr_err("%s: [vm%d] map size 0x%x is not page aligned",
 			__func__, target_vm->vm_id, region->size);
-		return -EINVAL;
-	}
-
-	gpa_end = region->gpa + region->size;
-	if (gpa_end > vm->arch_vm.ept_mem_ops.info->ept.top_address_space) {
-			pr_err("%s, invalid gpa: 0x%llx, size: 0x%llx, top_address_space: 0x%llx", __func__,
-				region->gpa, region->size, vm->arch_vm.ept_mem_ops.info->ept.top_address_space);
-			return 0;
-	}
-
-	dev_dbg(ACRN_DBG_HYCALL,
-		"[vm%d] type=%d gpa=0x%x vm0_gpa=0x%x size=0x%x",
-		target_vm->vm_id, region->type, region->gpa,
-		region->vm0_gpa, region->size);
-
-	pml4_page = (uint64_t *)target_vm->arch_vm.nworld_eptp;
-	if (region->type != MR_DEL) {
-		hpa = gpa2hpa(vm, region->vm0_gpa);
-		if (hpa == INVALID_HPA) {
-			pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping.",
-				__func__, vm->vm_id, region->vm0_gpa);
-			return -EINVAL;
-		}
-		base_paddr = get_hv_image_base();
-		if (((hpa <= base_paddr) &&
-				((hpa + region->size) > base_paddr)) ||
-				((hpa >= base_paddr) &&
-				 (hpa < (base_paddr + CONFIG_HV_RAM_SIZE)))) {
-			pr_err("%s: overlap the HV memory region.", __func__);
-			return -EFAULT;
-		}
-
-		prot = 0UL;
-		/* access right */
-		if ((region->prot & MEM_ACCESS_READ) != 0U) {
-			prot |= EPT_RD;
-		}
-		if ((region->prot & MEM_ACCESS_WRITE) != 0U) {
-			prot |= EPT_WR;
-		}
-		if ((region->prot & MEM_ACCESS_EXEC) != 0U) {
-			prot |= EPT_EXE;
-		}
-		/* memory type */
-		if ((region->prot & MEM_TYPE_WB) != 0U) {
-			prot |= EPT_WB;
-		} else if ((region->prot & MEM_TYPE_WT) != 0U) {
-			prot |= EPT_WT;
-		} else if ((region->prot & MEM_TYPE_WC) != 0U) {
-			prot |= EPT_WC;
-		} else if ((region->prot & MEM_TYPE_WP) != 0U) {
-			prot |= EPT_WP;
-		} else {
-			prot |= EPT_UNCACHED;
-		}
-		/* create gpa to hpa EPT mapping */
-		ept_mr_add(target_vm, pml4_page, hpa,
-				region->gpa, region->size, prot);
+	        ret = -EINVAL;
 	} else {
-		ept_mr_del(target_vm, pml4_page,
-				region->gpa, region->size);
+		gpa_end = region->gpa + region->size;
+		if (gpa_end > vm->arch_vm.ept_mem_ops.info->ept.top_address_space) {
+				pr_err("%s, invalid gpa: 0x%llx, size: 0x%llx, top_address_space: 0x%llx", __func__,
+					region->gpa, region->size, vm->arch_vm.ept_mem_ops.info->ept.top_address_space);
+				ret = 0;
+		} else {
+			dev_dbg(ACRN_DBG_HYCALL,
+				"[vm%d] type=%d gpa=0x%x vm0_gpa=0x%x size=0x%x",
+				target_vm->vm_id, region->type, region->gpa,
+				region->vm0_gpa, region->size);
+
+			pml4_page = (uint64_t *)target_vm->arch_vm.nworld_eptp;
+			if (region->type != MR_DEL) {
+				ret = add_vm_memory_region(vm, target_vm, region, pml4_page);
+			} else {
+				ept_mr_del(target_vm, pml4_page,
+						region->gpa, region->size);
+				ret = 0;
+			}
+		}
 	}
 
-	return 0;
+	return ret;
 }
 
 /**
@@ -710,7 +724,7 @@ int32_t hcall_gpa_to_hpa(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	struct acrn_vm *target_vm = get_vm_from_vmid(vmid);
 
 	(void)memset((void *)&v_gpa2hpa, 0U, sizeof(v_gpa2hpa));
-	if ((target_vm == NULL) || copy_from_gpa(vm, &v_gpa2hpa, param, sizeof(v_gpa2hpa)) != 0) {
+	if ((target_vm == NULL) || (copy_from_gpa(vm, &v_gpa2hpa, param, sizeof(v_gpa2hpa)) != 0)) {
 		pr_err("target_vm is invalid or HCALL gpa2hpa: Unable copy param from vm\n");
 	        ret = -1;
 	} else {
@@ -763,7 +777,7 @@ int32_t hcall_assign_ptdev(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 	        }
 
 		/* create a iommu domain for target VM if not created */
-		if (bdf_valid && target_vm->iommu == NULL) {
+		if (bdf_valid && (target_vm->iommu == NULL)) {
 			if (target_vm->arch_vm.nworld_eptp == NULL) {
 				pr_err("%s, EPT of VM not set!\n",
 					__func__, target_vm->vm_id);
