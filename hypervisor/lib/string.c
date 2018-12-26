@@ -157,11 +157,6 @@ uint64_t strtoul_hex(const char *nptr)
 	return acc;
 }
 
-int32_t atoi(const char *str)
-{
-	return (int32_t)strtol_deci(str);
-}
-
 char *strchr(char *s_arg, char ch)
 {
 	char *s = s_arg;
