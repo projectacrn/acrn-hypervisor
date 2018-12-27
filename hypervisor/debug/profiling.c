@@ -235,14 +235,14 @@ static int32_t profiling_sbuf_put_variable(struct shared_buf *sbuf,
 	 * 5. return number of bytes of data put in buffer
 	 */
 
+	stac();
 	if ((sbuf == NULL) || (data == NULL)) {
-		dev_dbg(ACRN_DBG_PROFILING, "buffer or data not initialized!");
+		clac();
 		return -EINVAL;
 	}
 
 	if (size == 0U) {
-		dev_dbg(ACRN_DBG_PROFILING,
-			"0 bytes reqeusted to be put in buffer!");
+		clac();
 		return 0;
 	}
 
@@ -257,19 +257,15 @@ static int32_t profiling_sbuf_put_variable(struct shared_buf *sbuf,
 		 * Since if the next_tail equals head, then it is assumed
 		 * that buffer is empty, not full
 		 */
-		dev_dbg(ACRN_DBG_PROFILING,
-		"Not enough space to write data! Returning without writing");
+		clac();
 		return 0;
 	}
 
 	next_tail = sbuf_next_ptr(sbuf->tail, size, sbuf->size);
-	dev_dbg(ACRN_DBG_PROFILING, "sbuf->tail: %llu, next_tail: %llu",
-		sbuf->tail, next_tail);
 
 	to = (void *)sbuf + SBUF_HEAD_SIZE + sbuf->tail;
 
 	if (next_tail < sbuf->tail) { /* wrap-around */
-		dev_dbg(ACRN_DBG_PROFILING, "wrap-around condition!");
 		offset = sbuf->size - sbuf->tail;
 		(void)memcpy_s(to, offset, data, offset);
 
@@ -281,11 +277,11 @@ static int32_t profiling_sbuf_put_variable(struct shared_buf *sbuf,
 				data + offset, size - offset);
 		}
 	} else {
-		dev_dbg(ACRN_DBG_PROFILING, "non-wrap-around!");
 		(void)memcpy_s(to, size, data, size);
 	}
 
 	sbuf->tail = next_tail;
+	clac();
 
 	return (int32_t)size;
 }
@@ -306,6 +302,8 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 	struct sep_state *ss = &(get_cpu_var(profiling_info.sep_state));
 	struct sw_msr_op_info *sw_msrop
 		= &(get_cpu_var(profiling_info.sw_msr_op_info));
+	uint64_t rflags;
+	spinlock_t *sw_lock = NULL;
 
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering cpu%d",
 		__func__,  get_cpu_id());
@@ -322,12 +320,14 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 		}
 
 		if (ss->pmu_state == PMU_RUNNING) {
+			stac();
 			if (sbuf->tail >= sbuf->head) {
 				remaining_space = sbuf->size
 						- (sbuf->tail - sbuf->head);
 			} else {
 				remaining_space = sbuf->head - sbuf->tail;
 			}
+			clac();
 
 			/* populate the data header */
 			pkt_header.tsc = rdtsc();
@@ -393,12 +393,16 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 			return 0;
 		}
 
+		sw_lock = &(get_cpu_var(profiling_info.sw_lock));
+		spinlock_irqsave_obtain(sw_lock, &rflags);
+		stac();
 		if (sbuf->tail >= sbuf->head) {
 			remaining_space
 				= sbuf->size - (sbuf->tail - sbuf->head);
 		} else {
 			remaining_space = sbuf->head - sbuf->tail;
 		}
+		clac();
 
 		/* populate the data header */
 		pkt_header.tsc = rdtsc();
@@ -448,6 +452,7 @@ static int32_t profiling_generate_data(int32_t collector, uint32_t type)
 		(void)profiling_sbuf_put_variable((struct shared_buf *)sbuf,
 			(uint8_t *)payload, (uint32_t)payload_size);
 
+		spinlock_irqrestore_release(sw_lock, rflags);
 	} else {
 		dev_dbg(ACRN_ERR_PROFILING,
 			"%s: Unknown collector type", __func__);
