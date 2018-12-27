@@ -13,6 +13,8 @@
 #define DT_RELASZ	8	/* size of reloc table */
 #define DT_RELAENT	9	/* size of one entry */
 
+#define R_X86_64_RELATIVE	8UL
+
 struct Elf64_Dyn {
 	uint64_t d_tag;
 	uint64_t d_ptr;
@@ -29,8 +31,6 @@ static inline uint64_t elf64_r_type(uint64_t i)
 {
 	return (i & 0xffffffffUL);
 }
-
-#define R_X86_64_RELATIVE	8UL
 
 /* get the delta between CONFIG_HV_RAM_START and the actual load address */
 uint64_t get_hv_image_delta(void)
