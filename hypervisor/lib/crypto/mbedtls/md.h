@@ -36,14 +36,14 @@
 #define MBEDTLS_ERR_MD_FILE_IO_ERROR                      -0x5200  /**< Opening or reading of file failed. */
 #define MBEDTLS_ERR_MD_HW_ACCEL_FAILED                    -0x5280  /**< MD hardware accelerator failed. */
 
-#define mbedtls_platform_zeroize(buf, len) memset(buf, 0, len)
+#define mbedtls_platform_zeroize(buf, len) memset((buf), 0U, (len))
 
 /**
  * \brief     Supported message digests.
  *
  */
 typedef enum {
-    MBEDTLS_MD_NONE=0,    /**< None. */
+    MBEDTLS_MD_NONE = 0,    /**< None. */
     MBEDTLS_MD_SHA256,    /**< The SHA-256 message digest. */
 } mbedtls_md_type_t;
 
@@ -62,7 +62,7 @@ typedef struct {
     const mbedtls_md_info_t *md_info;
 
     /** The digest-specific context. */
-    uint8_t md_ctx[sizeof( mbedtls_sha256_context )];
+    uint8_t md_ctx[sizeof(mbedtls_sha256_context)];
 
     /** The HMAC part of the context. Use array here to avoid dynamic memory
      *  allocation. The hardcode value 128 is 2 times of block_size which
@@ -70,17 +70,6 @@ typedef struct {
      */
     uint8_t hmac_ctx[128];
 } mbedtls_md_context_t;
-
-/**
- * \brief           This function returns the list of digests supported by the
- *                  generic digest module.
- *
- * \return          A statically allocated array of digests. Each element
- *                  in the returned list is an integer belonging to the
- *                  message-digest enumeration #mbedtls_md_type_t.
- *                  The last entry is 0.
- */
-const int32_t *mbedtls_md_list( void );
 
 /**
  * \brief           This function returns the message-digest information
@@ -91,7 +80,7 @@ const int32_t *mbedtls_md_list( void );
  * \return          The message-digest information associated with \p md_type.
  * \return          NULL if the associated message-digest information is not found.
  */
-const mbedtls_md_info_t *mbedtls_md_info_from_type( mbedtls_md_type_t md_type );
+const mbedtls_md_info_t *mbedtls_md_info_from_type(mbedtls_md_type_t md_type);
 
 /**
  * \brief           This function initializes a message-digest context without
@@ -101,7 +90,7 @@ const mbedtls_md_info_t *mbedtls_md_info_from_type( mbedtls_md_type_t md_type );
  *                  context for mbedtls_md_setup() for binding it to a
  *                  message-digest algorithm.
  */
-void mbedtls_md_init( mbedtls_md_context_t *ctx );
+void mbedtls_md_init(mbedtls_md_context_t *ctx);
 
 /**
  * \brief           This function clears the internal structure of \p ctx and
@@ -116,7 +105,7 @@ void mbedtls_md_init( mbedtls_md_context_t *ctx );
  *                  You must not call this function if you have not called
  *                  mbedtls_md_init().
  */
-void mbedtls_md_free( mbedtls_md_context_t *ctx );
+void mbedtls_md_free(mbedtls_md_context_t *ctx);
 
 /**
  * \brief           This function selects the message digest algorithm to use,
@@ -135,29 +124,7 @@ void mbedtls_md_free( mbedtls_md_context_t *ctx );
  *                  failure.
  * \return          #MBEDTLS_ERR_MD_ALLOC_FAILED on memory-allocation failure.
  */
-int32_t mbedtls_md_setup( mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info );
-
-/**
- * \brief           This function clones the state of an message-digest
- *                  context.
- *
- * \note            You must call mbedtls_md_setup() on \c dst before calling
- *                  this function.
- *
- * \note            The two contexts must have the same type,
- *                  for example, both are SHA-256.
- *
- * \warning         This function clones the message-digest state, not the
- *                  HMAC state.
- *
- * \param dst       The destination context.
- * \param src       The context to be cloned.
- *
- * \return          \c 0 on success.
- * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification failure.
- */
-int32_t mbedtls_md_clone( mbedtls_md_context_t *dst,
-                      const mbedtls_md_context_t *src );
+int32_t mbedtls_md_setup(mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_info);
 
 /**
  * \brief           This function extracts the message-digest size from the
@@ -168,92 +135,7 @@ int32_t mbedtls_md_clone( mbedtls_md_context_t *dst,
  *
  * \return          The size of the message-digest output in Bytes.
  */
-uint8_t mbedtls_md_get_size( const mbedtls_md_info_t *md_info );
-
-/**
- * \brief           This function extracts the message-digest type from the
- *                  message-digest information structure.
- *
- * \param md_info   The information structure of the message-digest algorithm
- *                  to use.
- *
- * \return          The type of the message digest.
- */
-mbedtls_md_type_t mbedtls_md_get_type( const mbedtls_md_info_t *md_info );
-
-/**
- * \brief           This function starts a message-digest computation.
- *
- *                  You must call this function after setting up the context
- *                  with mbedtls_md_setup(), and before passing data with
- *                  mbedtls_md_update().
- *
- * \param ctx       The generic message-digest context.
- *
- * \return          \c 0 on success.
- * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
- *                  failure.
- */
-int32_t mbedtls_md_starts( mbedtls_md_context_t *ctx );
-
-/**
- * \brief           This function feeds an input buffer into an ongoing
- *                  message-digest computation.
- *
- *                  You must call mbedtls_md_starts() before calling this
- *                  function. You may call this function multiple times.
- *                  Afterwards, call mbedtls_md_finish().
- *
- * \param ctx       The generic message-digest context.
- * \param input     The buffer holding the input data.
- * \param ilen      The length of the input data.
- *
- * \return          \c 0 on success.
- * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
- *                  failure.
- */
-int32_t mbedtls_md_update( mbedtls_md_context_t *ctx, const uint8_t *input, size_t ilen );
-
-/**
- * \brief           This function finishes the digest operation,
- *                  and writes the result to the output buffer.
- *
- *                  Call this function after a call to mbedtls_md_starts(),
- *                  followed by any number of calls to mbedtls_md_update().
- *                  Afterwards, you may either clear the context with
- *                  mbedtls_md_free(), or call mbedtls_md_starts() to reuse
- *                  the context for another digest operation with the same
- *                  algorithm.
- *
- * \param ctx       The generic message-digest context.
- * \param output    The buffer for the generic message-digest checksum result.
- *
- * \return          \c 0 on success.
- * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
- *                  failure.
- */
-int32_t mbedtls_md_finish( mbedtls_md_context_t *ctx, uint8_t *output );
-
-/**
- * \brief          This function calculates the message-digest of a buffer,
- *                 with respect to a configurable message-digest algorithm
- *                 in a single call.
- *
- *                 The result is calculated as
- *                 Output = message_digest(input buffer).
- *
- * \param md_info  The information structure of the message-digest algorithm
- *                 to use.
- * \param input    The buffer holding the data.
- * \param ilen     The length of the input data.
- * \param output   The generic message-digest checksum result.
- *
- * \return         \c 0 on success.
- * \return         #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
- *                 failure.
- */
-int32_t mbedtls_md( const mbedtls_md_info_t *md_info, const uint8_t *input, size_t ilen,
-        uint8_t *output );
+uint8_t mbedtls_md_get_size(const mbedtls_md_info_t *md_info);
 
 /**
  * \brief           This function sets the HMAC key and prepares to
@@ -273,8 +155,7 @@ int32_t mbedtls_md( const mbedtls_md_info_t *md_info, const uint8_t *input, size
  * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
  *                  failure.
  */
-int32_t mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const uint8_t *key,
-                    size_t keylen );
+int32_t mbedtls_md_hmac_starts(mbedtls_md_context_t *ctx, const uint8_t *key, size_t keylen);
 
 /**
  * \brief           This function feeds an input buffer into an ongoing HMAC
@@ -295,8 +176,7 @@ int32_t mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const uint8_t *key,
  * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
  *                  failure.
  */
-int32_t mbedtls_md_hmac_update( mbedtls_md_context_t *ctx, const uint8_t *input,
-                    size_t ilen );
+int32_t mbedtls_md_hmac_update(mbedtls_md_context_t *ctx, const uint8_t *input, size_t ilen);
 
 /**
  * \brief           This function finishes the HMAC operation, and writes
@@ -316,24 +196,7 @@ int32_t mbedtls_md_hmac_update( mbedtls_md_context_t *ctx, const uint8_t *input,
  * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
  *                  failure.
  */
-int32_t mbedtls_md_hmac_finish( mbedtls_md_context_t *ctx, uint8_t *output);
-
-/**
- * \brief           This function prepares to authenticate a new message with
- *                  the same key as the previous HMAC operation.
- *
- *                  You may call this function after mbedtls_md_hmac_finish().
- *                  Afterwards call mbedtls_md_hmac_update() to pass the new
- *                  input.
- *
- * \param ctx       The message digest context containing an embedded HMAC
- *                  context.
- *
- * \return          \c 0 on success.
- * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
- *                  failure.
- */
-int32_t mbedtls_md_hmac_reset( mbedtls_md_context_t *ctx );
+int32_t mbedtls_md_hmac_finish(mbedtls_md_context_t *ctx, uint8_t *output);
 
 /**
  * \brief          This function calculates the full generic HMAC
@@ -357,11 +220,7 @@ int32_t mbedtls_md_hmac_reset( mbedtls_md_context_t *ctx );
  * \return         #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
  *                 failure.
  */
-int32_t mbedtls_md_hmac( const mbedtls_md_info_t *md_info, const uint8_t *key, size_t keylen,
-                const uint8_t *input, size_t ilen,
-                uint8_t *output );
-
-/* Internal use */
-int32_t mbedtls_md_process( mbedtls_md_context_t *ctx, const uint8_t *data );
+int32_t mbedtls_md_hmac(const mbedtls_md_info_t *md_info, const uint8_t *key, size_t keylen,
+                const uint8_t *input, size_t ilen, uint8_t *output);
 
 #endif /* MBEDTLS_MD_H */

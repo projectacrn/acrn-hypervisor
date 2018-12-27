@@ -47,7 +47,7 @@ struct mbedtls_md_info_t
     int32_t size;
 
     /** Block length of the digest function in bytes */
-    int32_t block_size;
+    size_t block_size;
 
     /** Digest initialisation function */
     int32_t (*starts_func)( void *ctx );
