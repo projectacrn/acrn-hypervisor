@@ -8,9 +8,9 @@
 #include <sbl_seed_parse.h>
 
 #define SEED_ENTRY_TYPE_SVNSEED         0x1U
-#define SEED_ENTRY_TYPE_RPMBSEED        0x2U
+/* #define SEED_ENTRY_TYPE_RPMBSEED        0x2U */
 
-#define SEED_ENTRY_USAGE_USEED          0x1U
+/* #define SEED_ENTRY_USAGE_USEED          0x1U */
 #define SEED_ENTRY_USAGE_DSEED          0x2U
 
 struct seed_list_hob {
@@ -57,56 +57,53 @@ static void parse_seed_list_sbl(struct seed_list_hob *seed_hob)
 	uint8_t dseed_index = 0U;
 	struct seed_entry *entry;
 	struct seed_info dseed_list[BOOTLOADER_SEED_MAX_ENTRIES];
+	bool parse_success = false;
 
-	if (seed_hob == NULL) {
-		goto fail;
-	}
+	if ((seed_hob != NULL) && (seed_hob->total_seed_count != 0U)) {
+		parse_success = true;
 
-	if (seed_hob->total_seed_count == 0U) {
-		goto fail;
-	}
+		entry = (struct seed_entry *)((uint8_t *)seed_hob + sizeof(struct seed_list_hob));
 
-	entry = (struct seed_entry *)((uint8_t *)seed_hob +
-					sizeof(struct seed_list_hob));
+		for (i = 0U; i < seed_hob->total_seed_count; i++) {
+			if (entry == NULL) {
+				break;
+			}
+			/* retrieve dseed */
+			if ((SEED_ENTRY_TYPE_SVNSEED == entry->type) &&	(SEED_ENTRY_USAGE_DSEED == entry->usage)) {
 
-	for (i = 0U; i < seed_hob->total_seed_count; i++) {
-		/* retrieve dseed */
-		if ((SEED_ENTRY_TYPE_SVNSEED == entry->type) &&
-			(SEED_ENTRY_USAGE_DSEED == entry->usage)) {
+				/* The seed_entry with same type/usage are always
+				 * arranged by index in order of 0~3.
+				 */
+				if (entry->index != dseed_index) {
+					pr_warn("Index mismatch. Use fake seed!");
+					parse_success = false;
+					break;
+				}
 
-			/* The seed_entry with same type/usage are always
-			 * arranged by index in order of 0~3.
-			 */
-			if (entry->index != dseed_index) {
-				pr_warn("Index mismatch. Use fake seed!");
-				goto fail;
+				if (entry->index >= BOOTLOADER_SEED_MAX_ENTRIES) {
+					pr_warn("Index exceed max number!");
+					parse_success = false;
+					break;
+				}
+
+				(void)memcpy_s((void *)&dseed_list[dseed_index], sizeof(struct seed_info),
+						(void *)entry->seed, sizeof(struct seed_info));
+				dseed_index++;
+
+				/* erase original seed in seed entry */
+				(void)memset((void *)entry->seed, 0U, sizeof(struct seed_info));
 			}
 
-			if (entry->index >= BOOTLOADER_SEED_MAX_ENTRIES) {
-				pr_warn("Index exceed max number!");
-				goto fail;
-			}
-
-			(void)memcpy_s((void *)&dseed_list[dseed_index],
-					sizeof(struct seed_info),
-					(void *)entry->seed,
-					sizeof(struct seed_info));
-			dseed_index++;
-
-			/* erase original seed in seed entry */
-			(void)memset((void *)entry->seed, 0U, sizeof(struct seed_info));
+			entry = (struct seed_entry *)((uint8_t *)entry + entry->seed_entry_size);
 		}
-
-		entry = (struct seed_entry *)((uint8_t *)entry +
-						entry->seed_entry_size);
 	}
 
-	trusty_set_dseed((void *)dseed_list, dseed_index);
-	(void)memset((void *)dseed_list, 0U, sizeof(dseed_list));
-	return;
+	if (parse_success) {
+		trusty_set_dseed((void *)dseed_list, dseed_index);
+	} else {
+		trusty_set_dseed(NULL, 0U);
+	}
 
-fail:
-	trusty_set_dseed(NULL, 0U);
 	(void)memset((void *)dseed_list, 0U, sizeof(dseed_list));
 }
 
@@ -139,54 +136,49 @@ bool sbl_seed_parse(struct acrn_vm *vm, char *cmdline, char *out_arg, uint32_t o
 	void *param_addr;
 	struct image_boot_params *boot_params;
 	uint32_t len;
+	bool parse_success = false;
 
-	if (!is_vm0(vm) || (cmdline == NULL)) {
-		goto fail;
+	if (is_vm0(vm) && (cmdline != NULL)) {
+		len = strnlen_s(boot_params_arg, MEM_1K);
+		arg = strstr_s((const char *)cmdline, MEM_2K, boot_params_arg, len);
+
+		if (arg != NULL) {
+			param = arg + len;
+			param_addr = (void *)hpa2hva(strtoul_hex(param));
+			if (param_addr != NULL) {
+				boot_params = (struct image_boot_params *)param_addr;
+				parse_seed_list_sbl((struct seed_list_hob *)hpa2hva(boot_params->p_seed_list));
+
+				/*
+				 * Convert the addresses to SOS GPA since this structure will
+				 * be used in SOS.
+				 */
+				boot_params->p_seed_list = vm0_hpa2gpa(boot_params->p_seed_list);
+				boot_params->p_platform_info = vm0_hpa2gpa(boot_params->p_platform_info);
+
+				/*
+				 * Replace original arguments with spaces since SOS's GPA is not
+				 * identity mapped to HPA. The argument will be appended later when
+				 * compose cmdline for SOS.
+				 */
+				arg_end = strchr(arg, ' ');
+				len = (arg_end != NULL) ? (uint32_t)(arg_end - arg) : strnlen_s(arg, MEM_2K);
+				(void)memset((void *)arg, ' ', len);
+
+				/* Convert the param_addr to SOS GPA and copy to caller */
+				if (out_arg != NULL) {
+					snprintf(out_arg, out_len, "%s0x%X ",
+						boot_params_arg, hva2gpa(vm, param_addr));
+				}
+
+				parse_success = true;
+			}
+		}
 	}
 
-	len = strnlen_s(boot_params_arg, MEM_1K);
-	arg = strstr_s(cmdline, MEM_2K, boot_params_arg, len);
-
-	if (arg == NULL) {
-		goto fail;
+	if (!parse_success) {
+		parse_seed_list_sbl(NULL);
 	}
 
-	param = arg + len;
-	param_addr = (void *)hpa2hva(strtoul_hex(param));
-	if (param_addr == NULL) {
-		goto fail;
-	}
-
-	boot_params = (struct image_boot_params *)param_addr;
-	parse_seed_list_sbl((struct seed_list_hob *)hpa2hva(
-			boot_params->p_seed_list));
-
-	/*
-	 * Convert the addresses to SOS GPA since this structure will
-	 * be used in SOS.
-	 */
-	boot_params->p_seed_list = vm0_hpa2gpa(boot_params->p_seed_list);
-	boot_params->p_platform_info = vm0_hpa2gpa(boot_params->p_platform_info);
-
-	/*
-	 * Replace original arguments with spaces since SOS's GPA is not
-	 * identity mapped to HPA. The argument will be appended later when
-	 * compose cmdline for SOS.
-	 */
-	arg_end = strchr(arg, ' ');
-	len = (arg_end != NULL) ? (uint32_t)(arg_end - arg) :
-							strnlen_s(arg, MEM_2K);
-	(void)memset((void *)arg, ' ', len);
-
-	/* Convert the param_addr to SOS GPA and copy to caller */
-	if (out_arg != NULL) {
-		snprintf(out_arg, out_len, "%s0x%X ",
-			boot_params_arg, hva2gpa(vm, param_addr));
-	}
-
-	return true;
-
-fail:
-	parse_seed_list_sbl(NULL);
-	return false;
+	return parse_success;
 }
