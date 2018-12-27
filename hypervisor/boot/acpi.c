@@ -103,9 +103,9 @@ struct acpi_madt_local_apic {
 static void *global_rsdp;
 
 static struct acpi_table_rsdp*
-biosacpi_search_rsdp(char *base, int32_t length)
+found_rsdp(char *base, int32_t length)
 {
-	struct acpi_table_rsdp *rsdp;
+	struct acpi_table_rsdp *rsdp, *ret = NULL;
 	uint8_t *cp, sum;
 	int32_t ofs, idx;
 
@@ -114,8 +114,7 @@ biosacpi_search_rsdp(char *base, int32_t length)
 		rsdp = (struct acpi_table_rsdp *)(base + ofs);
 
 		/* compare signature, validate checksum */
-		if (strncmp(rsdp->signature, ACPI_SIG_RSDP,
-				strnlen_s(ACPI_SIG_RSDP, 8U)) == 0) {
+		if (strncmp(rsdp->signature, ACPI_SIG_RSDP, strnlen_s(ACPI_SIG_RSDP, 8U)) == 0) {
 			cp = (uint8_t *)rsdp;
 			sum = 0U;
 			for (idx = 0; idx < RSDP_CHECKSUM_LENGTH; idx++) {
@@ -126,11 +125,12 @@ biosacpi_search_rsdp(char *base, int32_t length)
 				continue;
 			}
 
-			return rsdp;
+			ret = rsdp;
+			break;
 		}
 	}
 
-	return NULL;
+	return ret;
 }
 
 static void *get_rsdp(void)
@@ -140,26 +140,17 @@ static void *get_rsdp(void)
 
 #ifdef CONFIG_EFI_STUB
 	rsdp = get_rsdp_from_uefi();
-	if (rsdp) {
-		return rsdp;
-	}
 #endif
+	if (rsdp == NULL) {
+		/* EBDA is addressed by the 16 bit pointer at 0x40E */
+		addr = (uint16_t *)hpa2hva(0x40eUL);
 
-	/* EBDA is addressed by the 16 bit pointer at 0x40E */
-	addr = (uint16_t *)hpa2hva(0x40eUL);
-
-	rsdp = biosacpi_search_rsdp((char *)hpa2hva((uint64_t)(*addr) << 4U),
-									0x400);
-	if (rsdp != NULL) {
-		return rsdp;
+		rsdp = found_rsdp((char *)hpa2hva((uint64_t)(*addr) << 4U), 0x400);
+		if (rsdp == NULL) {
+			/* Check the upper memory BIOS space, 0xe0000 - 0xfffff. */
+			rsdp = found_rsdp((char *)hpa2hva(0xe0000UL), 0x20000);
+		}
 	}
-
-	/* Check the upper memory BIOS space, 0xe0000 - 0xfffff. */
-	rsdp = biosacpi_search_rsdp((char *)hpa2hva(0xe0000UL), 0x20000);
-	if (rsdp != NULL) {
-		return rsdp;
-	}
-
 	return rsdp;
 }
 
@@ -194,11 +185,8 @@ static void *get_acpi_tbl(const char *signature)
 		 * the version 1.0 portion of the RSDP.  Version 2.0 has
 		 * an additional checksum that we verify first.
 		 */
-		xsdt = (struct acpi_table_xsdt *)
-					hpa2hva(rsdp->xsdt_physical_address);
-		count = (xsdt->header.length -
-				sizeof(struct acpi_table_header)) /
-		    sizeof(uint64_t);
+		xsdt = (struct acpi_table_xsdt *)hpa2hva(rsdp->xsdt_physical_address);
+		count = (xsdt->header.length - sizeof(struct acpi_table_header)) / sizeof(uint64_t);
 
 		for (i = 0U; i < count; i++) {
 			if (probe_table(xsdt->table_offset_entry[i], signature)) {
@@ -208,11 +196,8 @@ static void *get_acpi_tbl(const char *signature)
 		}
 	} else {
 		/* Root table is an RSDT (32-bit physical addresses) */
-		rsdt = (struct acpi_table_rsdt *)
-				hpa2hva((uint64_t)rsdp->rsdt_physical_address);
-		count = (rsdt->header.length -
-				sizeof(struct acpi_table_header)) /
-			sizeof(uint32_t);
+		rsdt = (struct acpi_table_rsdt *)hpa2hva((uint64_t)rsdp->rsdt_physical_address);
+		count = (rsdt->header.length - sizeof(struct acpi_table_header)) / sizeof(uint32_t);
 
 		for (i = 0U; i < count; i++) {
 			if (probe_table(rsdt->table_offset_entry[i], signature)) {
@@ -331,35 +316,30 @@ static void *get_facs_table(void)
 	facp_addr = (uint8_t *)get_acpi_tbl(ACPI_SIG_FADT);
 
 	if (facp_addr == NULL) {
-		return NULL;
+		facs_addr = NULL;
+	} else {
+		facs_addr = (uint8_t *)(uint64_t)get_acpi_dt_dword(facp_addr, OFFSET_FACS_ADDR);
+
+		facs_x_addr = (uint8_t *)get_acpi_dt_qword(facp_addr, OFFSET_FACS_X_ADDR);
+
+		if (facs_x_addr != NULL) {
+			facs_addr = facs_x_addr;
+		}
+
+		if (facs_addr != NULL) {
+			signature = get_acpi_dt_dword(facs_addr, OFFSET_FACS_SIGNATURE);
+
+			if (signature != ACPI_SIG_FACS) {
+				facs_addr = NULL;
+			} else {
+				length = get_acpi_dt_dword(facs_addr, OFFSET_FACS_LENGTH);
+
+				if (length < 64U) {
+					facs_addr = NULL;
+				}
+			}
+		}
 	}
-
-	facs_addr = (uint8_t *)(uint64_t)get_acpi_dt_dword(facp_addr,
-						OFFSET_FACS_ADDR);
-
-	facs_x_addr = (uint8_t *)get_acpi_dt_qword(facp_addr,
-						OFFSET_FACS_X_ADDR);
-
-	if (facs_x_addr != NULL) {
-		facs_addr = facs_x_addr;
-	}
-
-	if (facs_addr == NULL) {
-		return NULL;
-	}
-
-	signature = get_acpi_dt_dword(facs_addr, OFFSET_FACS_SIGNATURE);
-
-	if (signature != ACPI_SIG_FACS) {
-		return NULL;
-	}
-
-	length = get_acpi_dt_dword(facs_addr, OFFSET_FACS_LENGTH);
-
-	if (length < 64U) {
-		return NULL;
-	}
-
 	return facs_addr;
 }
 
