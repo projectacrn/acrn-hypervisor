@@ -93,7 +93,7 @@ static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *
 	bool phys;
 
 	/* get physical destination cpu mask */
-	dest = (uint32_t)(info->vmsi_addr >> PAGE_SHIFT) & 0xffU;
+	dest = (uint32_t)(info->vmsi_addr & MSI_ADDR_DEST) >> MSI_ADDR_DEST_SHIFT;
 	phys = ((info->vmsi_addr & MSI_ADDR_LOG) != MSI_ADDR_LOG);
 
 	calcvdest(vm, &vdmask, dest, phys);
@@ -114,7 +114,7 @@ static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *
 	/* update physical dest mode & dest field */
 	info->pmsi_addr = info->vmsi_addr;
 	info->pmsi_addr &= ~0xFF00CU;
-	info->pmsi_addr |= (dest_mask << PAGE_SHIFT) | MSI_ADDR_RH | MSI_ADDR_LOG;
+	info->pmsi_addr |= (dest_mask << MSI_ADDR_DEST_SHIFT) | MSI_ADDR_RH | MSI_ADDR_LOG;
 
 	dev_dbg(ACRN_DBG_IRQ, "MSI addr:data = 0x%llx:%x(V) -> 0x%llx:%x(P)",
 		info->vmsi_addr, info->vmsi_data,

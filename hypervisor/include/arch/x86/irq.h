@@ -107,6 +107,9 @@ uint32_t irq_to_vector(uint32_t irq);
 #define	MSI_ADDR_BASE	0xfee00000UL
 #define	MSI_ADDR_RH	0x00000008UL	/* Redirection Hint */
 #define	MSI_ADDR_LOG	0x00000004UL	/* Destination Mode */
+#define	MSI_ADDR_DEST	0x000FF000UL	/* Destination Field */
+
+#define	MSI_ADDR_DEST_SHIFT	(12U)
 
 /* RFLAGS */
 #define HV_ARCH_VCPU_RFLAGS_IF              (1UL<<9U)
