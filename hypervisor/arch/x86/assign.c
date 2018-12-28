@@ -42,7 +42,7 @@ ptirq_lookup_entry_by_sid(uint32_t intr_type,
 }
 
 static inline struct ptirq_remapping_info *
-ptirq_lookup_entry_by_vpin(struct acrn_vm *vm, uint8_t virt_pin, bool pic_pin)
+ptirq_lookup_entry_by_vpin(const struct acrn_vm *vm, uint8_t virt_pin, bool pic_pin)
 {
 	struct ptirq_remapping_info *entry;
 
@@ -285,11 +285,11 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint8
 {
 	struct ptirq_remapping_info *entry = NULL;
 	uint8_t vpin_src = pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
-	DEFINE_IOAPIC_SID(phys_sid, phys_pin, 0);
+	DEFINE_IOAPIC_SID(phys_sid, phys_pin, 0U);
 	DEFINE_IOAPIC_SID(virt_sid, virt_pin, vpin_src);
 	uint32_t phys_irq = ioapic_pin_to_irq(phys_pin);
 
-	if ((!pic_pin && (virt_pin >= vioapic_pincount(vm))) || (pic_pin && (virt_pin >= vpic_pincount()))) {
+	if (((!pic_pin) && (virt_pin >= vioapic_pincount(vm))) || (pic_pin && (virt_pin >= vpic_pincount()))) {
 		pr_err("ptirq_add_intx_remapping fails!\n");
 	} else if (!ioapic_irq_is_gsi(phys_irq)) {
 		pr_err("%s, invalid phys_pin: %d <-> irq: 0x%x is not a GSI\n", __func__, phys_pin, phys_irq);
@@ -345,7 +345,7 @@ static void remove_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, bool pic
 	uint32_t phys_irq;
 	struct ptirq_remapping_info *entry;
 
-	if ((!pic_pin && (virt_pin >= vioapic_pincount(vm))) || (pic_pin && (virt_pin >= vpic_pincount()))) {
+	if (((!pic_pin) && (virt_pin >= vioapic_pincount(vm))) || (pic_pin && (virt_pin >= vpic_pincount()))) {
 		pr_err("virtual irq pin is invalid!\n");
 	} else {
 		entry = ptirq_lookup_entry_by_vpin(vm, virt_pin, pic_pin);
@@ -631,7 +631,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin, uint8_t vpin_
 	}
 #endif /* CONFIG_COM_IRQ */
 
-	if (status || (pic_pin && (virt_pin >= NR_VPIC_PINS_TOTAL))) {
+	if ((status != 0) || (pic_pin && (virt_pin >= NR_VPIC_PINS_TOTAL))) {
 		status = -EINVAL;
 	} else {
 		/* query if we have virt to phys mapping */
@@ -683,7 +683,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin, uint8_t vpin_
 		spinlock_release(&ptdev_lock);
 	}
 
-	if (!status) {
+	if (status == 0) {
 		spinlock_obtain(&ptdev_lock);
 		/* if vpin source need switch */
 		if ((need_switch_vpin_src) && (entry != NULL)) {
