@@ -72,7 +72,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Project ACRN™'
-copyright = u'2018, Project ACRN'
+copyright = u'2019, Project ACRN'
 author = u'Project ARCN developers'
 
 # The version info for the project you're documenting, acts as replacement for
