@@ -160,6 +160,7 @@ struct usb_data_xfer_block {
 };
 
 struct usb_data_xfer {
+	uint64_t magic;
 	struct usb_data_xfer_block data[USB_MAX_XFER_BLOCKS];
 	struct usb_device_request *ureq;	/* setup ctl request */
 	int	ndata;				/* # of data items */
@@ -241,6 +242,8 @@ enum USB_ERRCODE {
 #define NATIVE_USB3_SPEED "5000"
 #define USB_NATIVE_NUM_PORT 20
 #define USB_NATIVE_NUM_BUS 4
+
+#define USB_DROPPED_XFER_MAGIC	0xaaaaaaaa55555555
 
 extern int usb_log_level;
 static inline int usb_get_log_level(void)		{ return usb_log_level; }
