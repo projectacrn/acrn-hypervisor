@@ -195,7 +195,17 @@ vioapic_update_tmr(struct acrn_vcpu *vcpu)
 	spinlock_obtain(&(vioapic->mtx));
 	pincount = vioapic_pincount(vcpu->vm);
 	for (pin = 0U; pin < pincount; pin++) {
+		uint64_t mask;
+		uint32_t dest;
+		bool phys;
+
 		rte = vioapic->rtbl[pin];
+		dest = rte.full >> IOAPIC_RTE_DEST_SHIFT;
+		phys = ((rte.full & IOAPIC_RTE_DESTLOG) == 0UL);
+
+		calcvdest(vcpu->vm, &mask, dest, phys);
+		if ((mask & (1 << vcpu->vcpu_id)) == 0)
+			continue;
 
 		level = ((rte.full & IOAPIC_RTE_TRGRLVL) != 0UL);
 
