@@ -55,7 +55,7 @@ struct per_cpu_region {
 #endif
 } __aligned(PAGE_SIZE); /* per_cpu_region size aligned with PAGE_SIZE */
 
-extern struct per_cpu_region per_cpu_data[];
+extern struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM];
 /*
  * get percpu data for pcpu_id.
  */

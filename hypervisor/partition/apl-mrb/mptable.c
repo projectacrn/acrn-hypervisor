@@ -80,7 +80,7 @@ struct mpfps {
 	uint8_t	mpfb3;
 	uint8_t	mpfb4;
 	uint8_t	mpfb5;
-} __attribute__((packed));
+} __packed;
 
 /* MP Configuration Table Header */
 struct mpcth {
@@ -97,7 +97,7 @@ struct mpcth {
 	uint16_t extended_table_length;
 	uint8_t	extended_table_checksum;
 	uint8_t	reserved;
-} __attribute__((packed));
+} __packed;
 
 struct proc_entry {
 	uint8_t	type;
@@ -108,13 +108,13 @@ struct proc_entry {
 	uint32_t feature_flags;
 	uint32_t reserved1;
 	uint32_t reserved2;
-} __attribute__((packed));
+} __packed;
 
 struct bus_entry {
 	uint8_t	type;
 	uint8_t	bus_id;
 	uint8_t	bus_type[6];
-} __attribute__((packed));
+} __packed;
 
 struct int_entry {
 	uint8_t	type;
@@ -124,7 +124,7 @@ struct int_entry {
 	uint8_t	src_bus_irq;
 	uint8_t	dst_apic_id;
 	uint8_t	dst_apic_int;
-} __attribute__((packed));
+} __packed;
 
 struct mptable_info {
 	struct mpfps		mpfp;

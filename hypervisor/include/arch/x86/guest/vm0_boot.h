@@ -12,7 +12,7 @@ struct efi_context {
 	struct acrn_vcpu_regs vcpu_regs;
 	void *rsdp;
 	void *ap_trampoline_buf;
-}__attribute__((packed));
+} __packed;
 
 void *get_rsdp_from_uefi(void);
 void *get_ap_trampoline_buf(void);

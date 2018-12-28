@@ -394,7 +394,7 @@ struct acrn_descriptor_ptr {
 	uint16_t limit;
 	uint64_t base;
 	uint16_t reserved[3];   /* align struct size to 64bit */
-} __attribute__((packed));
+} __packed;
 
 /**
  * @brief registers info for vcpu.
