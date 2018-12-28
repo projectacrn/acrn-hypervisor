@@ -1633,6 +1633,7 @@ pci_xhci_init_ep(struct pci_xhci_dev_emu *dev, int epid)
 			USB_DATA_XFER_INIT(devep->ep_xfer);
 			devep->ep_xfer->dev = (void *)dev;
 			devep->ep_xfer->epid = epid;
+			devep->ep_xfer->magic = USB_DROPPED_XFER_MAGIC;
 		} else
 			return -1;
 	}
@@ -1658,6 +1659,7 @@ pci_xhci_disable_ep(struct pci_xhci_dev_emu *dev, int epid)
 		free(devep->ep_sctx_trbs);
 
 	if (devep->ep_xfer != NULL) {
+		memset(devep->ep_xfer, 0, sizeof(*devep->ep_xfer));
 		free(devep->ep_xfer);
 		devep->ep_xfer = NULL;
 	}

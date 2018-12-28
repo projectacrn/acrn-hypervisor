@@ -189,6 +189,15 @@ usb_dev_comp_req(struct libusb_transfer *libusb_xfer)
 
 	/* async transfer */
 	xfer = req->xfer;
+	if (xfer->magic != USB_DROPPED_XFER_MAGIC)
+		/* FIXME: if magic is not what we expected, which means it is
+		 * reset by Disable Endpoint command, hence this xfer from
+		 * callback function should be discarded. This is a workaround
+		 * and a formal implementation for Disable Endpoint command
+		 * will replace this WA.
+		 */
+		goto out;
+
 	assert(xfer);
 	assert(xfer->dev);
 
