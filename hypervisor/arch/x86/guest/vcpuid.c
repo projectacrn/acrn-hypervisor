@@ -6,11 +6,11 @@
 
 #include <hypervisor.h>
 
-static inline struct vcpuid_entry *local_find_vcpuid_entry(const struct acrn_vcpu *vcpu,
+static inline const struct vcpuid_entry *local_find_vcpuid_entry(const struct acrn_vcpu *vcpu,
 					uint32_t leaf, uint32_t subleaf)
 {
 	uint32_t i = 0U, nr, half;
-	struct vcpuid_entry *entry = NULL;
+	const struct vcpuid_entry *found_entry = NULL;
 	struct acrn_vm *vm = vcpu->vm;
 
 	nr = vm->vcpuid_entry_nr;
@@ -20,16 +20,15 @@ static inline struct vcpuid_entry *local_find_vcpuid_entry(const struct acrn_vcp
 	}
 
 	for (; i < nr; i++) {
-		struct vcpuid_entry *tmp = &vm->vcpuid_entries[i];
+		const struct vcpuid_entry *tmp = (const struct vcpuid_entry *)(&vm->vcpuid_entries[i]);
 
 		if (tmp->leaf < leaf) {
 			continue;
 		} else if (tmp->leaf == leaf) {
-			if (((tmp->flags & CPUID_CHECK_SUBLEAF) != 0U) &&
-				(tmp->subleaf != subleaf)) {
+			if (((tmp->flags & CPUID_CHECK_SUBLEAF) != 0U) && (tmp->subleaf != subleaf)) {
 				continue;
 			}
-			entry = tmp;
+			found_entry = tmp;
 			break;
 		} else {
 			/* tmp->leaf > leaf */
@@ -37,13 +36,13 @@ static inline struct vcpuid_entry *local_find_vcpuid_entry(const struct acrn_vcp
 		}
 	}
 
-	return entry;
+	return found_entry;
 }
 
-static inline struct vcpuid_entry *find_vcpuid_entry(const struct acrn_vcpu *vcpu,
+static inline const struct vcpuid_entry *find_vcpuid_entry(const struct acrn_vcpu *vcpu,
 					uint32_t leaf_arg, uint32_t subleaf)
 {
-	struct vcpuid_entry *entry;
+	const struct vcpuid_entry *entry;
 	uint32_t leaf = leaf_arg;
 
 	entry = local_find_vcpuid_entry(vcpu, leaf, subleaf);
@@ -81,8 +80,7 @@ static inline int32_t set_vcpuid_entry(struct acrn_vm *vm,
 	int32_t ret;
 
 	if (vm->vcpuid_entry_nr == MAX_VM_VCPUID_ENTRIES) {
-		pr_err("%s, vcpuid entry over MAX_VM_VCPUID_ENTRIES(%u)\n",
-				__func__, MAX_VM_VCPUID_ENTRIES);
+		pr_err("%s, vcpuid entry over MAX_VM_VCPUID_ENTRIES(%u)\n", __func__, MAX_VM_VCPUID_ENTRIES);
 	        ret = -ENOMEM;
 	} else {
 		tmp = &vm->vcpuid_entries[vm->vcpuid_entry_nr];
@@ -106,13 +104,9 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 	switch (leaf) {
 	case 0x07U:
 		if (subleaf == 0U) {
-			cpuid_subleaf(leaf, subleaf,
-				&entry->eax, &entry->ebx,
-				&entry->ecx, &entry->edx);
+			cpuid_subleaf(leaf, subleaf, &entry->eax, &entry->ebx, &entry->ecx, &entry->edx);
 			/* mask invpcid */
-			entry->ebx &= ~(CPUID_EBX_INVPCID |
-					CPUID_EBX_PQM |
-					CPUID_EBX_PQE);
+			entry->ebx &= ~(CPUID_EBX_INVPCID | CPUID_EBX_PQM | CPUID_EBX_PQE);
 
 			/* mask SGX and SGX_LC */
 			entry->ebx &= ~CPUID_EBX_SGX;
@@ -131,9 +125,7 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 	case 0x16U:
 		if (boot_cpu_data.cpuid_level >= 0x16U) {
 			/* call the cpuid when 0x16 is supported */
-			cpuid_subleaf(leaf, subleaf,
-				&entry->eax, &entry->ebx,
-				&entry->ecx, &entry->edx);
+			cpuid_subleaf(leaf, subleaf, &entry->eax, &entry->ebx, &entry->ecx, &entry->edx);
 		} else {
 			/* Use the tsc to derive the emulated 0x16U cpuid. */
 			entry->eax = (uint32_t) (tsc_khz / 1000U);
@@ -182,9 +174,7 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 		break;
 
 	default:
-		cpuid_subleaf(leaf, subleaf,
-				&entry->eax, &entry->ebx,
-				&entry->ecx, &entry->edx);
+		cpuid_subleaf(leaf, subleaf, &entry->eax, &entry->ebx, &entry->ecx, &entry->edx);
 		break;
 	}
 }
@@ -198,8 +188,7 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 
 	init_vcpuid_entry(0U, 0U, 0U, &entry);
 	if (boot_cpu_data.cpuid_level < 0x16U) {
-		/* The cpuid with zero leaf returns the max level.
-		 * Emulate that the 0x16U is supported */
+		/* The cpuid with zero leaf returns the max level. Emulate that the 0x16U is supported */
 		entry.eax = 0x16U;
 	}
 	result = set_vcpuid_entry(vm, &entry);
@@ -290,17 +279,14 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 	return result;
 }
 
-void guest_cpuid(struct acrn_vcpu *vcpu,
-		uint32_t *eax, uint32_t *ebx,
-		uint32_t *ecx, uint32_t *edx)
+void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx)
 {
 	uint32_t leaf = *eax;
 	uint32_t subleaf = *ecx;
 
 	/* vm related */
 	if ((leaf != 0x1U) && (leaf != 0xbU) && (leaf != 0xdU)) {
-		struct vcpuid_entry *entry =
-			find_vcpuid_entry(vcpu, leaf, subleaf);
+		const struct vcpuid_entry *entry = find_vcpuid_entry(vcpu, leaf, subleaf);
 
 		if (entry != NULL) {
 			*eax = entry->eax;

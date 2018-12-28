@@ -26,7 +26,8 @@ void destroy_ept(struct acrn_vm *vm)
 uint64_t local_gpa2hpa(struct acrn_vm *vm, uint64_t gpa, uint32_t *size)
 {
 	uint64_t hpa = INVALID_HPA;
-	uint64_t *pgentry, pg_size = 0UL;
+	const uint64_t *pgentry;
+	uint64_t pg_size = 0UL;
 	void *eptp;
 	struct acrn_vcpu *vcpu = vcpu_from_pid(vm, get_cpu_id());
 

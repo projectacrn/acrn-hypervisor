@@ -169,7 +169,7 @@ void invept(const struct acrn_vcpu *vcpu);
 /**
  *@pre (pml4_page != NULL) && (pg_size != NULL)
  */
-uint64_t *lookup_address(uint64_t *pml4_page, uint64_t addr,
+const uint64_t *lookup_address(uint64_t *pml4_page, uint64_t addr,
 		uint64_t *pg_size, const struct memory_ops *mem_ops);
 
 /** Defines a single entry in an E820 memory map. */

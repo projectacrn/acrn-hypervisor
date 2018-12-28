@@ -8,8 +8,6 @@
 #include <crypto_api.h>
 #include <security.h>
 
-#define ACRN_DBG_TRUSTY 6U
-
 #define TRUSTY_VERSION   1U
 #define TRUSTY_VERSION_2 2U
 

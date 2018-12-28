@@ -374,9 +374,9 @@ void mmu_add(uint64_t *pml4_page, uint64_t paddr_base, uint64_t vaddr_base, uint
 /**
  * @pre (pml4_page != NULL) && (pg_size != NULL)
  */
-uint64_t *lookup_address(uint64_t *pml4_page, uint64_t addr, uint64_t *pg_size, const struct memory_ops *mem_ops)
+const uint64_t *lookup_address(uint64_t *pml4_page, uint64_t addr, uint64_t *pg_size, const struct memory_ops *mem_ops)
 {
-	uint64_t *pret = NULL;
+	const uint64_t *pret = NULL;
 	bool present = true;
 	uint64_t *pml4e, *pdpte, *pde, *pte;
 
@@ -390,27 +390,23 @@ uint64_t *lookup_address(uint64_t *pml4_page, uint64_t addr, uint64_t *pg_size, 
 			if (pdpte_large(*pdpte) != 0UL) {
 				*pg_size = PDPTE_SIZE;
 				pret = pdpte;
+			} else {
+				pde = pde_offset(pdpte, addr);
+				present = (mem_ops->pgentry_present(*pde) != 0UL);
+				if (present) {
+					if (pde_large(*pde) != 0UL) {
+						*pg_size = PDE_SIZE;
+						pret = pde;
+					} else {
+						pte = pte_offset(pde, addr);
+						present = (mem_ops->pgentry_present(*pte) != 0UL);
+						if (present) {
+							*pg_size = PTE_SIZE;
+							pret = pte;
+						}
+					}
+				}
 			}
-		}
-	}
-
-	if (present && (pret == NULL)) {
-		pde = pde_offset(pdpte, addr);
-		present = (mem_ops->pgentry_present(*pde) != 0UL);
-		if (present) {
-			if (pde_large(*pde) != 0UL) {
-				*pg_size = PDE_SIZE;
-				pret = pde;
-			}
-		}
-	}
-
-	if (present && (pret == NULL)) {
-		pte = pte_offset(pde, addr);
-		present = (mem_ops->pgentry_present(*pte) != 0UL);
-		if (present) {
-			*pg_size = PTE_SIZE;
-			pret = pte;
 		}
 	}
 
