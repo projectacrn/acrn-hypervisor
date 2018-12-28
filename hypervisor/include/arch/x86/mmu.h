@@ -172,8 +172,6 @@ void invept(const struct acrn_vcpu *vcpu);
 uint64_t *lookup_address(uint64_t *pml4_page, uint64_t addr,
 		uint64_t *pg_size, const struct memory_ops *mem_ops);
 
-#pragma pack(1)
-
 /** Defines a single entry in an E820 memory map. */
 struct e820_entry {
    /** The base address of the memory range. */
@@ -182,9 +180,7 @@ struct e820_entry {
 	uint64_t length;
    /** The type of memory region. */
 	uint32_t type;
-};
-
-#pragma pack()
+} __packed;
 
 /* E820 memory types */
 #define E820_TYPE_RAM		1U	/* EFI 1, 2, 3, 4, 5, 6, 7 */

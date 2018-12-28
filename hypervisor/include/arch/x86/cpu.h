@@ -235,7 +235,7 @@ extern uint64_t               secondary_cpu_stack[1];
 struct descriptor_table {
 	uint16_t limit;
 	uint64_t base;
-} __attribute__((packed));
+} __packed;
 
 /* CPU states defined */
 enum pcpu_boot_state {
