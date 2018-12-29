@@ -131,7 +131,7 @@ static int32_t vcpu_inject_vlapic_int(struct acrn_vcpu *vcpu)
 			 *   through the local APIC.
 			 */
 
-			if (!(vector >= 16U && vector <= 255U)) {
+			if (!((vector >= 16U) && (vector <= 255U))) {
 				dev_dbg(ACRN_DBG_INTR, "invalid vector %d from local APIC", vector);
 				ret = -1;
 			} else {
@@ -204,15 +204,12 @@ int32_t vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector, uint32_t e
 	 * double fault */
 	prev_class = get_excep_class(prev_vector);
 	new_class = get_excep_class(vector);
-	if (prev_vector == IDT_DF &&
-		new_class != EXCEPTION_CLASS_BENIGN) {
+	if ((prev_vector == IDT_DF) && (new_class != EXCEPTION_CLASS_BENIGN)) {
 		/* triple fault happen - shutdwon mode */
 		vcpu_make_request(vcpu, ACRN_REQUEST_TRP_FAULT);
 		return 0;
-	} else if ((prev_class == EXCEPTION_CLASS_CONT &&
-			new_class == EXCEPTION_CLASS_CONT) ||
-			(prev_class == EXCEPTION_CLASS_PF &&
-			 new_class != EXCEPTION_CLASS_BENIGN)) {
+	} else if (((prev_class == EXCEPTION_CLASS_CONT) && (new_class == EXCEPTION_CLASS_CONT)) ||
+		((prev_class == EXCEPTION_CLASS_PF) && (new_class != EXCEPTION_CLASS_BENIGN))) {
 		/* generate double fault */
 		vector = IDT_DF;
 		err_code = 0U;
