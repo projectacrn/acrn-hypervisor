@@ -75,13 +75,15 @@ You will need to keep these in mind in a few places:
   .. code-block:: none
 
      # efibootmgr -c -l "\EFI\acrn\acrn.efi" -d /dev/mmcblk0 -p 1 -L "ACRN Hypervisor" \
-         -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=bdf@0:18.1"
+         -u "bootloader=\EFI\org.clearlinux\bootloaderx64.efi uart=bdf@0:18.1 vuart=ttyS1@irq5"
 
 UP2 serial port setting
 =======================
 
-The serial port in the 40-pin HAT connector is located at ``serial PCI BDF 0:18.1``.
+The serial port (ttyS1) in the 40-pin HAT connector is located at ``serial PCI BDF 0:18.1``.
 You can check this from the ``lspci`` output from the initial Clearlinux installation.
+Also you can use ``dmesg | grep tty`` to get its IRQ infomation for vuart setting; and update
+SOS bootargs ``console=ttyS1`` in acrn.conf to match with vuart setting.
 
 .. code-block:: none
 
@@ -89,7 +91,11 @@ You can check this from the ``lspci`` output from the initial Clearlinux install
    00:18.0 . Series HSUART Controller #1 (rev 0b)
    00:18.1 . Series HSUART Controller #2 (rev 0b)
 
-The second entry associated with ``00:18.1`` is the one on the 40-pin HAT connector.
+   # dmesg | grep tty
+   dw-apb-uart.8: ttyS0 at MMIO 0x91524000 (irq = 4, base_baud = 115200) is a 16550A
+   dw-apb-uart.9: ttyS1 at MMIO 0x91522000 (irq = 5, base_baud = 115200) is a 16550A
+
+The second entry associated with ``00:18.1 @irq5`` is the one on the 40-pin HAT connector.
 
 UP2 block device
 ================

@@ -166,7 +166,7 @@ partition. Follow these steps:
       double-check the platform boot order using ``efibootmgr -v`` and
       modify it if needed.
 
-   The ACRN hypervisor (``acrn.efi``) accepts two command-line parameters that
+   The ACRN hypervisor (``acrn.efi``) accepts three command-line parameters that
    tweak its behaviour:
 
    1. ``bootloader=``: this sets the EFI executable to be loaded once the hypervisor
@@ -178,8 +178,13 @@ partition. Follow these steps:
 
       #. ``uart=disabled``: this disables the serial port completely
       #. ``uart=bdf@<BDF value>``:  this sets the PCI serial port based on its BDF.
-         For example, use ``bdf@0:18.2`` for a BDF of 0:18.2 ttyS2.
+         For example, use ``bdf@0:18.1`` for a BDF of 0:18.1 ttyS1.
       #. ``uart=port@<port address>``: this sets the serial port address
+   #. ``vuart=ttySn@irqN``: this tells the hypervisor which virtual serial device SOS
+      will use and its IRQ number. This is used to avoid conflict with SOS passthrough  
+      devices' interrupt. If UART is set to ttyS1, and its native IRQ is 5, you'd better
+      set ``vuart=ttyS1@irq5`` (Use 'dmesg | grep tty' to get IRQ information).
+      Also set ``console=ttyS1`` in ``acrn.conf`` to match the SOS boot args.
 
    Here is a more complete example of how to configure the EFI firmware to load the ACRN
    hypervisor and set these parameters.
