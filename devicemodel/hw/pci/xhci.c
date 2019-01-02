@@ -508,6 +508,35 @@ static struct pci_xhci_option_elem xhci_option_table[] = {
 	{"cap", pci_xhci_parse_extcap}
 };
 
+
+static void pci_xhci_reset_role(void)
+{
+	int fd, rc;
+
+	fd = open(XHCI_NATIVE_DRD_SWITCH_PATH, O_WRONLY);
+	if (fd < 0) {
+		UPRINTF(LFTL, "drd native interface open failed\r\n");
+		return;
+	}
+
+	UPRINTF(LWRN, "write device in the CRS trap\r\n");
+	rc = write(fd, "host", 4);
+	if (rc != 4)
+		UPRINTF(LFTL, "drd 1 native interface write failure %d\r\n", rc);
+
+	rc = fsync(fd);
+	if (rc)
+		UPRINTF(LFTL, "drd 2 native interface write failure %d\r\n", rc);
+
+	usleep(100000);
+
+	rc = write(fd, "device", 6);
+	if (rc != 6)
+		UPRINTF(LFTL, "drd 3 native interface write failure %d\r\n", rc);
+
+	close(fd);
+}
+
 static int
 pci_xhci_get_free_vport(struct pci_xhci_vdev *xdev,
 		struct usb_native_devinfo *di)
@@ -1245,6 +1274,18 @@ pci_xhci_usbcmd_write(struct pci_xhci_vdev *xdev, uint32_t cmd)
 		}
 	}
 
+	if (cmd & XHCI_CMD_CRS)
+		if (xdev->pid == XHCI_PCI_DEVICE_ID_INTEL_APL &&
+				xdev->vid == XHCI_PCI_VENDOR_ID_INTEL)
+			/* This is a workaround for xDCI passthru. The DRD
+			 * role switching is the precondition for the xDCI
+			 * to work properly. And theoritically, this reset
+			 * operation is not neccessary. But currently, due
+			 * to some unknown reason, this operation could help
+			 * xDCI works better.
+			 */
+			pci_xhci_reset_role();
+
 	cmd &= ~(XHCI_CMD_CSS | XHCI_CMD_CRS);
 	return cmd;
 }
@@ -1402,7 +1443,7 @@ pci_xhci_apl_drdregs_write(struct pci_xhci_vdev *xdev, uint64_t offset,
 		excap++;
 
 	if (!excap || !excap->data || excap->start != XHCI_APL_DRDCAP_BASE) {
-		UPRINTF(LWRN, "drd extended capability can't be found\r\n");
+		UPRINTF(LFTL, "drd extended capability can't be found\r\n");
 		return -1;
 	}
 
@@ -1410,15 +1451,14 @@ pci_xhci_apl_drdregs_write(struct pci_xhci_vdev *xdev, uint64_t offset,
 
 	offset -= XHCI_APL_DRDREGS_BASE;
 	if (offset != XHCI_DRD_MUX_CFG0) {
-		UPRINTF(LWRN, "drd configuration register access failed.\r\n");
+		UPRINTF(LFTL, "drd configuration register access failed.\r\n");
 		return -1;
 	}
 
 	if (excap_drd->drdcfg0 == value) {
-		UPRINTF(LDBG, "No mode switch action. Current drd: %s mode\r\n",
+		UPRINTF(LFTL, "No mode switch action. Current drd: %s mode\r\n",
 			excap_drd->drdcfg1 & XHCI_DRD_CFG1_HOST_MODE ?
 			"host" : "device");
-		return 0;
 	}
 
 	excap_drd->drdcfg0 = value;
@@ -1438,16 +1478,17 @@ pci_xhci_apl_drdregs_write(struct pci_xhci_vdev *xdev, uint64_t offset,
 
 	fd = open(XHCI_NATIVE_DRD_SWITCH_PATH, O_WRONLY);
 	if (fd < 0) {
-		UPRINTF(LWRN, "drd native interface open failed\r\n");
+		UPRINTF(LFTL, "drd native interface open failed\r\n");
 		return -1;
 	}
 
 	rc = write(fd, mstr, msz);
 	close(fd);
+	UPRINTF(LWRN, "drd write native interface: rc %d\r\n", rc);
 	if (rc == msz)
 		excap_drd->drdcfg1 = drdcfg1;
 	else {
-		UPRINTF(LWRN, "drd native interface write "
+		UPRINTF(LFTL, "drd native interface write "
 			"%s mode failed, drdcfg0: 0x%x, "
 			"drdcfg1: 0x%x.\r\n",
 			value & XHCI_DRD_CFG0_IDPIN ? "device" : "host",
@@ -1468,10 +1509,10 @@ pci_xhci_excap_write(struct pci_xhci_vdev *xdev, uint64_t offset,
 	if (xdev->excap_ptr && xdev->excap_write)
 		rc = xdev->excap_write(xdev, offset, value);
 	else
-		UPRINTF(LWRN, "write invalid offset 0x%lx\r\n", offset);
+		UPRINTF(LWRN, "drd write invalid offset 0x%lx\r\n", offset);
 
 	if (rc)
-		UPRINTF(LWRN, "something wrong for xhci excap offset "
+		UPRINTF(LWRN, "drd something wrong for xhci excap offset "
 				"0x%lx write \r\n", offset);
 }
 
@@ -3540,6 +3581,7 @@ pci_xhci_excap_read(struct pci_xhci_vdev *xdev, uint64_t offset)
 		excap++;
 	}
 
+	UPRINTF(LWRN, "drd read offset 0x%lx\r\n", offset);
 	if (!excap || excap->start == EXCAP_GROUP_END) {
 		UPRINTF(LWRN, "extended capability 0x%lx can't be found\r\n",
 				offset);
@@ -3552,6 +3594,7 @@ pci_xhci_excap_read(struct pci_xhci_vdev *xdev, uint64_t offset)
 				sizeof(uint32_t));
 	}
 
+	UPRINTF(LWRN, "drd read offset 0x%lx, value: %u\r\n", offset, value);
 	return value;
 }
 
@@ -4204,6 +4247,9 @@ pci_xhci_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	free(xdev->portregs);
 
 	usb_dev_sys_deinit();
+
+	excap_drd_apl.drdcfg0 = 0;
+	excap_drd_apl.drdcfg1 = 0;
 
 	xdev->vbdp_polling = false;
 	sem_post(&xdev->vbdp_sem);
