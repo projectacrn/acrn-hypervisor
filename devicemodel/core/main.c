@@ -292,7 +292,6 @@ add_cpu(struct vmctx *ctx, int guest_ncpus)
 
 	error = pthread_create(&mt_vmm_info[0].mt_thr, NULL,
 	    start_thread, &mt_vmm_info[0]);
-
 	return error;
 }
 
@@ -902,6 +901,7 @@ dm_run(int argc, char *argv[])
 	vmname = argv[0];
 
 	for (;;) {
+		write_kmsg("%s vm_create begin---\n", KMSG_FMT);
 		ctx = vm_create(vmname, (unsigned long)vhm_req_buf);
 		if (!ctx) {
 			perror("vm_open");
@@ -913,6 +913,7 @@ dm_run(int argc, char *argv[])
 				guest_ncpus);
 			goto fail;
 		}
+		write_kmsg("%s vm_create end---\n", KMSG_FMT);
 
 		max_vcpus = num_vcpus_allowed(ctx);
 		if (guest_ncpus > max_vcpus) {
@@ -920,12 +921,14 @@ dm_run(int argc, char *argv[])
 				guest_ncpus, max_vcpus);
 			goto fail;
 		}
+		write_kmsg("%s num_vpcpu_allowed end---\n", KMSG_FMT);
 
 		err = vm_setup_memory(ctx, memsize);
 		if (err) {
 			fprintf(stderr, "Unable to setup memory (%d)\n", errno);
 			goto fail;
 		}
+		write_kmsg("%s vm_setup_memory end---\n", KMSG_FMT);
 
 		err = mevent_init();
 		if (err) {
@@ -933,11 +936,13 @@ dm_run(int argc, char *argv[])
 				errno);
 			goto mevent_fail;
 		}
+		write_kmsg("%s mevent_init end---\n", KMSG_FMT);
 
 		if (vm_init_vdevs(ctx) < 0) {
 			fprintf(stderr, "Unable to init vdev (%d)\n", errno);
 			goto dev_fail;
 		}
+		write_kmsg("%s vm_init_vdevs end---\n", KMSG_FMT);
 
 		/*
 		 * build the guest tables, MP etc.
@@ -948,20 +953,25 @@ dm_run(int argc, char *argv[])
 				goto vm_fail;
 			}
 		}
+		write_kmsg("%s mptable_build end---\n", KMSG_FMT);
 
 		error = smbios_build(ctx);
 		if (error)
 			goto vm_fail;
+
+		write_kmsg("%s smbios_build end---\n", KMSG_FMT);
 
 		if (acpi) {
 			error = acpi_build(ctx, guest_ncpus);
 			if (error)
 				goto vm_fail;
 		}
+		write_kmsg("%s acpi_build end---\n", KMSG_FMT);
 
 		error = acrn_sw_load(ctx);
 		if (error)
 			goto vm_fail;
+		write_kmsg("%s acrn_sw_load end---\n", KMSG_FMT);
 
 		/*
 		 * Change the proc title to include the VM name.
@@ -971,10 +981,11 @@ dm_run(int argc, char *argv[])
 		/*
 		 * Add CPU 0
 		 */
+		write_kmsg("%s add_cpu begin---\n", KMSG_FMT);
 		error = add_cpu(ctx, guest_ncpus);
 		if (error)
 			goto vm_fail;
-
+		write_kmsg("%s add_cpu end---\n", KMSG_FMT);
 		/* Make a copy for ctx */
 		_ctx = ctx;
 
