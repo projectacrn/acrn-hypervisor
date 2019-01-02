@@ -9,8 +9,6 @@
 #include <vm0_boot.h>
 #include <security.h>
 
-vm_sw_loader_t vm_sw_loader;
-
 inline uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)
 {
 	const struct run_context *ctx =

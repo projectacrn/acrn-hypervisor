@@ -14,8 +14,7 @@ struct efi_context {
 	void *ap_trampoline_buf;
 } __packed;
 
-void *get_rsdp_from_uefi(void);
-void *get_ap_trampoline_buf(void);
+int32_t efi_boot_init(void);
 #endif
 
 #endif /* VM0_BOOT_H */
