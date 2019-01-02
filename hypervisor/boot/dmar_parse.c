@@ -291,7 +291,7 @@ handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd,
 	return 0;
 }
 
-int32_t parse_dmar_table(void)
+static int32_t parse_dmar_table(void)
 {
 	int32_t i;
 	struct acpi_dmar_hardware_unit *acpi_drhd;

@@ -9,6 +9,9 @@
 #include <multiboot.h>
 #include <e820.h>
 #include <vtd.h>
+#include <vm0_boot.h>
+
+vm_sw_loader_t vm_sw_loader;
 
 /* Local variables */
 
@@ -101,6 +104,8 @@ int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 
 #ifndef CONFIG_EFI_STUB
 			status = init_vm_boot_info(vm);
+#else
+			status = efi_boot_init();
 #endif
 			if (status == 0) {
 				init_iommu_vm0_domain(vm);

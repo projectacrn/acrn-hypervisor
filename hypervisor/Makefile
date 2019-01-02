@@ -216,6 +216,7 @@ endif
 ifeq ($(CONFIG_PLATFORM_UEFI),y)
 C_SRCS += bsp/uefi/uefi.c
 C_SRCS += bsp/uefi/cmdline.c
+C_SRCS += boot/uefi/uefi_boot.c
 TEMPLATE_ACPI_INFO_HEADER := bsp/include/uefi/platform_acpi_info.h
 else
 ifeq ($(CONFIG_PLATFORM_SBL),y)

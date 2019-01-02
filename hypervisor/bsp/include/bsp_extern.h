@@ -40,4 +40,12 @@ void init_bsp(void);
 void acpi_fixup(void);
 #endif
 
+#ifdef CONFIG_EFI_STUB
+
+void *get_rsdp_from_uefi(void);
+void *get_ap_trampoline_buf(void);
+const struct efi_context *get_efi_ctx(void);
+const struct lapic_regs *get_efi_lapic_regs(void);
+#endif
+
 #endif /* BSP_EXTERN_H */
