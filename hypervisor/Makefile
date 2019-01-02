@@ -221,6 +221,7 @@ TEMPLATE_ACPI_INFO_HEADER := bsp/include/uefi/platform_acpi_info.h
 else
 ifeq ($(CONFIG_PLATFORM_SBL),y)
 C_SRCS += bsp/sbl/sbl.c
+C_SRCS += bsp/sbl/const_dmar.c
 C_SRCS += boot/sbl/multiboot.c
 C_SRCS += boot/sbl/sbl_seed_parse.c
 C_SRCS += boot/sbl/abl_seed_parse.c
