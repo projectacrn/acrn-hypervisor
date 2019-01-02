@@ -464,7 +464,7 @@ vlapic_esr_write_handler(struct acrn_vlapic *vlapic)
  * Returns 1 if the vcpu needs to be notified of the interrupt and 0 otherwise.
  * @pre vector >= 16
  */
-static int32_t
+static bool
 vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 {
 	struct lapic_regs *lapic;
@@ -472,23 +472,18 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 	uint32_t mask;
 	uint32_t idx;
 	int32_t pending_intr;
+	bool ret = true;
 
 	ASSERT(vector <= NR_MAX_VECTOR,
 		"invalid vector %u", vector);
 
 	lapic = &(vlapic->apic_page);
 	if ((lapic->svr.v & APIC_SVR_ENABLE) == 0U) {
-		dev_dbg(ACRN_DBG_LAPIC,
-			"vlapic is software disabled, ignoring interrupt %u",
-			vector);
-		return 0;
-	}
-
-	if (is_apicv_intr_delivery_supported()) {
+		dev_dbg(ACRN_DBG_LAPIC, "vlapic is software disabled, ignoring interrupt %u", vector);
+		ret = false;
+	} else if (is_apicv_intr_delivery_supported()) {
 		pending_intr = apicv_set_intr_ready(vlapic, vector);
-		if ((pending_intr != 0)
-			&& is_apicv_posted_intr_supported()
-			&& (get_cpu_id() != vlapic->vcpu->pcpu_id)) {
+		if ((pending_intr != 0) && (is_apicv_posted_intr_supported()) && (get_cpu_id() != vlapic->vcpu->pcpu_id)) {
 			/*
 			 * Send interrupt to vCPU via posted interrupt way:
 			 * 1. If target vCPU is in non-root mode(running),
@@ -499,37 +494,36 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 			 *    will pick up the interrupt from PIR and inject
 			 *    it to vCPU in next vmentry.
 			 */
-			bitmap_set_lock(ACRN_REQUEST_EVENT,
-				&vlapic->vcpu->arch.pending_req);
+			bitmap_set_lock(ACRN_REQUEST_EVENT, &vlapic->vcpu->arch.pending_req);
 			vlapic_post_intr(vlapic->vcpu->pcpu_id);
-			return 0;
+			ret = false;
+		} else {
+			ret = (pending_intr != 0);
 		}
-		return pending_intr;
+	} else {
+		idx = vector >> 5U;
+		mask = 1U << (vector & 0x1fU);
+
+		irrptr = &lapic->irr[0];
+		/* If the interrupt is set, don't try to do it again */
+		if (bitmap32_test_and_set_lock((uint16_t)(vector & 0x1fU), &irrptr[idx].v)) {
+			ret = false;
+		} else {
+			/*
+			 * Verify that the trigger-mode of the interrupt matches with
+			 * the vlapic TMR registers.
+			 */
+			tmrptr = &lapic->tmr[0];
+			if ((tmrptr[idx].v & mask) != (level ? mask : 0U)) {
+				dev_dbg(ACRN_DBG_LAPIC, "vlapic TMR[%u] is 0x%08x but interrupt is %s-triggered",
+				      	idx, tmrptr[idx].v, level ? "level" : "edge");
+			}
+
+			vlapic_dump_irr(vlapic, "vlapic_set_intr_ready");
+		}
 	}
 
-	idx = vector >> 5U;
-	mask = 1U << (vector & 0x1fU);
-
-	irrptr = &lapic->irr[0];
-	/* If the interrupt is set, don't try to do it again */
-	if (bitmap32_test_and_set_lock((uint16_t)(vector & 0x1fU),
-							&irrptr[idx].v)) {
-		return 0;
-	}
-
-	/*
-	 * Verify that the trigger-mode of the interrupt matches with
-	 * the vlapic TMR registers.
-	 */
-	tmrptr = &lapic->tmr[0];
-	if ((tmrptr[idx].v & mask) != (level ? mask : 0U)) {
-		dev_dbg(ACRN_DBG_LAPIC,
-		"vlapic TMR[%u] is 0x%08x but interrupt is %s-triggered",
-		idx, tmrptr[idx].v, level ? "level" : "edge");
-	}
-
-	vlapic_dump_irr(vlapic, "vlapic_set_intr_ready");
-	return 1;
+	return ret;
 }
 
 /**
@@ -774,7 +768,7 @@ vlapic_fire_lvt(struct acrn_vlapic *vlapic, uint32_t lvt)
 
 		switch (mode) {
 		case APIC_LVT_DM_FIXED:
-			if (vlapic_set_intr_ready(vlapic, vec, false) != 0) {
+			if (vlapic_set_intr_ready(vlapic, vec, false)) {
 				vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 			}
 			break;
@@ -1947,7 +1941,7 @@ vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level)
 		dev_dbg(ACRN_DBG_LAPIC,
 		    "vlapic ignoring interrupt to vector %u", vector);
 	} else {
-		if (vlapic_set_intr_ready(vlapic, vector, level) != 0) {
+		if (vlapic_set_intr_ready(vlapic, vector, level)) {
 			vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 		}
 	}
