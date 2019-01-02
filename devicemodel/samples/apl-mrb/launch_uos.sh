@@ -181,6 +181,7 @@ mac=$(cat /sys/class/net/e*/address)
 vm_name=vm$1
 mac_seed=${mac:9:8}-${vm_name}
 
+echo "dm_run: before tap preparing" > /dev/kmsg
 # create a unique tap device for each VM
 tap=tap_$6
 tap_exist=$(ip a | grep acrn_"$tap" | awk '{print $1}')
@@ -198,6 +199,7 @@ if [ "$br_exist"x != "x" -a "$tap_exist"x = "x" ]; then
   ip link set dev acrn_"$tap" down
   ip link set dev acrn_"$tap" up
 fi
+echo "dm_run: after tap preparing" > /dev/kmsg
 
 #Use MMC name + serial for ADB serial no., same as native android
 mmc_name=`cat /sys/block/mmcblk1/device/name`
@@ -212,6 +214,7 @@ if [[ "$result" != "" ]]; then
   exit
 fi
 
+echo "dm_run: before passthru dev preparing" > /dev/kmsg
 #for VT-d device setting
 modprobe pci_stub
 echo "8086 5aaa" > /sys/bus/pci/drivers/pci-stub/new_id
@@ -346,6 +349,7 @@ else
   boot_GVT_option=''
   GVT_args=''
 fi
+echo "dm_run: after passthru dev preparing" > /dev/kmsg
 
  acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:0,lpc -l com1,stdio $npk_virt\
    -s 9,virtio-net,$tap \
@@ -435,6 +439,7 @@ if [ $launch_type == 6 ]; then
 	fi
 fi
 
+echo "dm_run: before offline cpu" > /dev/kmsg
 # offline SOS CPUs except BSP before launch UOS
 for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
         online=`cat $i/online`
@@ -452,6 +457,7 @@ for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
                 echo $idx > /sys/class/vhm/acrn_vhm/offline_cpu
         fi
 done
+echo "dm_run: after offline cpu" > /dev/kmsg
 
 case $launch_type in
 	1) echo "Launch clearlinux UOS"

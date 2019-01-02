@@ -59,6 +59,7 @@ LIBS += -lacrn-mngr
 
 # lib
 SRCS += lib/dm_string.c
+SRCS += lib/dm_kmsg.c
 
 # hw
 SRCS += hw/block_if.c
