@@ -164,7 +164,7 @@ usage(int code)
 		"       --debugexit: enable debug exit function\n"
 		"       --intr_monitor: enable interrupt storm monitor\n"
 		"       --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET\n"
-		"............its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms)\n",
+		"            its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms)\n",
 		progname, (int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "");
 
