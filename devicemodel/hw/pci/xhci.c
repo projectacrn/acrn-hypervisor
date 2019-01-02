@@ -721,6 +721,9 @@ xhci_vbdp_thread(void *data)
 				break;
 			}
 
+		if (i >= XHCI_MAX_VIRT_PORTS)
+			continue;
+
 		j = pci_xhci_get_native_port_index_by_path(xdev,
 				&xdev->vbdp_devs[i].path);
 		if (j < 0)
