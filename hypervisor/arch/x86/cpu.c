@@ -163,7 +163,7 @@ void init_cpu_post(uint16_t pcpu_id)
 		pr_acrnlog("API version %u.%u",
 				HV_API_MAJOR_VERSION, HV_API_MINOR_VERSION);
 
-		pr_acrnlog("Detect processor: %s", boot_cpu_data.model_name);
+		pr_acrnlog("Detect processor: %s", (get_cpu_info())->model_name);
 
 		pr_dbg("Core %hu is up", BOOT_CPU_ID);
 
@@ -393,6 +393,7 @@ void wait_sync_change(uint64_t *sync, uint64_t wake_sync)
 static void cpu_xsave_init(void)
 {
 	uint64_t val64;
+	struct cpuinfo_x86 *cpu_info;
 
 	if (cpu_has_cap(X86_FEATURE_XSAVE)) {
 		CPU_CR_READ(cr4, &val64);
@@ -405,8 +406,8 @@ static void cpu_xsave_init(void)
 
 			/* if set, update it */
 			if ((ecx & CPUID_ECX_OSXSAVE) != 0U) {
-				boot_cpu_data.cpuid_leaves[FEAT_1_ECX] |=
-						CPUID_ECX_OSXSAVE;
+				cpu_info = get_cpu_info();
+				cpu_info->cpuid_leaves[FEAT_1_ECX] |= CPUID_ECX_OSXSAVE;
 			}
 		}
 	}

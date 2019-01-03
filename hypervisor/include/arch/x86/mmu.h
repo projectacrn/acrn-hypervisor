@@ -51,8 +51,7 @@
 #define CACHE_LINE_SIZE		64U
 
 /* IA32E Paging constants */
-#define IA32E_REF_MASK		\
-		(boot_cpu_data.physical_address_mask)
+#define IA32E_REF_MASK	((get_cpu_info())->physical_address_mask)
 
 extern uint8_t ld_text_end;
 

@@ -131,10 +131,11 @@ void load_cpu_state_data(void)
 {
 	int32_t tbl_idx;
 	const struct cpu_state_info *state_info;
+	struct cpuinfo_x86 *cpu_info = get_cpu_info();
 
 	(void)memset(&cpu_pm_state_info, 0U, sizeof(struct cpu_state_info));
 
-	tbl_idx = get_state_tbl_idx(boot_cpu_data.model_name);
+	tbl_idx = get_state_tbl_idx(cpu_info->model_name);
 
 	if (tbl_idx >= 0) {
 		/* The state table is found. */
