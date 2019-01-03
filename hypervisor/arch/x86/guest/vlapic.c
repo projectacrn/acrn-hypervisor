@@ -1767,26 +1767,23 @@ static int32_t
 vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new)
 {
 
+	int32_t ret = 0;
 	uint64_t changed;
 	changed = vlapic->msr_apicbase ^ new;
 
-	if (changed == APICBASE_X2APIC) {
-		if ((new & APICBASE_X2APIC) == APICBASE_X2APIC) {
+	if ((changed == APICBASE_X2APIC) && ((new & APICBASE_X2APIC) == APICBASE_X2APIC)) {
 			vlapic->msr_apicbase = new;
 			vlapic_build_x2apic_id(vlapic);
 			switch_apicv_mode_x2apic(vlapic->vcpu);
-			return 0;
-		}
-	}
-
-	if (vlapic->msr_apicbase != new) {
+			ret = 0;
+	} else if (vlapic->msr_apicbase != new) {
 		dev_dbg(ACRN_DBG_LAPIC,
 			"NOT support to change APIC_BASE MSR from %#lx to %#lx",
 			vlapic->msr_apicbase, new);
-		return (-1);
+		ret = -1;
 	}
 
-	return 0;
+	return ret;
 }
 
 void
@@ -2461,26 +2458,24 @@ int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu)
 	/* apic access should already fetched instruction, decode_instruction
 	 * will not trigger #PF, so if it failed, just return error_no
 	 */
-	if (err < 0) {
-		return err;
+	if (err >= 0) {
+		if (access_type == 1UL) {
+			if (emulate_instruction(vcpu) == 0) {
+				err = vlapic_write(vlapic, offset, mmio->value);
+			}
+		} else if (access_type == 0UL) {
+			err = vlapic_read(vlapic, offset, &mmio->value);
+			if (err >= 0) {
+				err = emulate_instruction(vcpu);
+			}
+
+		} else {
+			pr_err("Unhandled APIC access type: %lu\n", access_type);
+			err = -EINVAL;
+		}
+		TRACE_2L(TRACE_VMEXIT_APICV_ACCESS, qual, (uint64_t)vlapic);
 	}
 
-	if (access_type == 1UL) {
-		if (emulate_instruction(vcpu) == 0) {
-			err = vlapic_write(vlapic, offset, mmio->value);
-		}
-	} else if (access_type == 0UL) {
-		err = vlapic_read(vlapic, offset, &mmio->value);
-		if (err < 0) {
-			return err;
-		}
-		err = emulate_instruction(vcpu);
-	} else {
-		pr_err("Unhandled APIC access type: %lu\n", access_type);
-		err = -EINVAL;
-	}
-
-	TRACE_2L(TRACE_VMEXIT_APICV_ACCESS, qual, (uint64_t)vlapic);
 	return err;
 }
 
