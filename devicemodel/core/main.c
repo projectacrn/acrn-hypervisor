@@ -131,27 +131,31 @@ static void
 usage(int code)
 {
 	fprintf(stderr,
-		"Usage: %s [-hAEWY] [-c vcpus] [-l <lpc>]\n"
-		"       %*s [-m mem] [-p vcpu:hostcpu] [-s <pci>] [-U uuid] \n"
-		"       %*s [--vsbl vsbl_file_name] [--part_info part_info_name]\n"
-		"       %*s [--enable_trusty] [--debugexit] <vm>\n"
+		"Usage: %s [-hAWYv] [-B bootargs] [-c vcpus] [-E elf_image_path]\n"
+		"       %*s [-G GVT_args] [-i ioc_mediator_parameters] [-k kernel_image_path]\n"
+		"       %*s [-l lpc] [-m mem] [-p vcpu:hostcpu] [-r ramdisk_image_path]\n"
+		"       %*s [-s pci] [-U uuid] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]\n"
+		"       %*s [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]\n"
+		"       %*s [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]\n"
+		"       %*s [--vmcfg sub_options] [--dump vm_idx] [--ptdev_no_reset] [--debugexit] <vm>\n"
 		"       -A: create ACPI tables\n"
+		"       -B: bootargs for kernel\n"
 		"       -c: # cpus (default 1)\n"
 		"       -E: elf image path\n"
+		"       -G: GVT args: low_gm_size, high_gm_size, fence_sz\n"
 		"       -h: help\n"
+		"       -i: ioc boot parameters\n"
+		"       -k: kernel image path\n"
 		"       -l: LPC device configuration\n"
 		"       -m: memory size in MB\n"
 		"       -p: pin 'vcpu' to 'hostcpu'\n"
+		"       -r: ramdisk image path\n"
 		"       -s: <slot,driver,configinfo> PCI slot config\n"
 		"       -U: uuid\n"
+		"       -v: version\n"
 		"       -W: force virtio to use single-vector MSI\n"
 		"       -Y: disable MPtable generation\n"
-		"       -k: kernel image path\n"
-		"       -r: ramdisk image path\n"
-		"       -B: bootargs for kernel\n"
-		"       -G: GVT args: low_gm_size, high_gm_size, fence_sz\n"
-		"       -v: version\n"
-		"       -i: ioc boot parameters\n"
+		"       --mac_seed: set a platform unique string as a seed for generate mac address\n"
 #ifdef CONFIG_VM_CFG
 		"       --vmcfg: build-in VM configurations\n"
 		"       --dump: show build-in VM configurations\n"
@@ -163,10 +167,12 @@ usage(int code)
 		"       --ptdev_no_reset: disable reset check for ptdev\n"
 		"       --debugexit: enable debug exit function\n"
 		"       --intr_monitor: enable interrupt storm monitor\n"
-		"       --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET\n"
-		"            its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms)\n",
+		"            its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms)\n"
+		"       --virtio_poll: enable virtio poll mode with poll interval with ns\n"
+		"       --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET\n",
 		progname, (int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
-		(int)strnlen(progname, PATH_MAX), "");
+		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
+		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "");
 
 	exit(code);
 }

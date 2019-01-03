@@ -51,46 +51,43 @@ options:
 
 .. code-block:: none
 
-   acrn-dm [-abehuwxACHPSTWY] [-c vcpus] [-g <gdb port>] [-l <lpc>]
-               [-m mem] [-p vcpu:hostcpu] [-s <pci>] [-U uuid]
-               [--vsbl vsbl_file_path] [--ovmf ovmf_file_path]
-               [--part_info part_info_name]
-               [--enable_trusty] [--intr_monitor param_setting] <vm>
-
-       -a: local apic is in xAPIC mode (deprecated)
+  acrn-dm [-hAWYv] [-B bootargs] [-c vcpus] [-E elf_image_path]
+               [-G GVT_args] [-i ioc_mediator_parameters] [-k kernel_image_path]
+               [-l lpc] [-m mem] [-p vcpu:hostcpu] [-r ramdisk_image_path]
+               [-s pci] [-U uuid] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]
+               [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]
+               [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]
+               [--vmcfg sub_options] [--dump vm_idx] [--ptdev_no_reset] [--debugexit] <vm>
        -A: create ACPI tables
-       -b: enable bvmcons
+       -B: bootargs for kernel
        -c: # cpus (default 1)
-       -C: include guest memory in core file
-       -e: exit on unhandled I/O access
-       -g: gdb port
+       -E: elf image path
+       -G: GVT args: low_gm_size, high_gm_size, fence_sz
        -h: help
-       -H: vmexit from the guest on hlt
+       -i: ioc boot parameters
+       -k: kernel image path
        -l: LPC device configuration
        -m: memory size in MB
        -p: pin 'vcpu' to 'hostcpu'
-       -P: vmexit from the guest on pause
-       -s: <slot,driver,configinfo> PCI slot config
-       -S: guest memory cannot be swapped
-       -u: RTC keeps UTC time
-       -U: uuid
-       -w: ignore unimplemented MSRs
-       -W: force virtio to use single-vector MSI
-       -x: local apic is in x2APIC mode
-       -Y: disable MPtable generation
-       -k: kernel image path
        -r: ramdisk image path
-       -B: bootargs for kernel
-       -G: GVT args: low_gm_size, high_gm_size, fence_sz
+       -s: <slot,driver,configinfo> PCI slot config
+       -U: uuid
        -v: version
-       -i: ioc boot parameters
+       -W: force virtio to use single-vector MSI
+       -Y: disable MPtable generation
+       --mac_seed: set a platform unique string as a seed for generate mac address
+       --vmcfg: build-in VM configurations
+       --dump: show build-in VM configurations
        --vsbl: vsbl file path
        --ovmf: ovmf file path
        --part_info: guest partition info file path
        --enable_trusty: enable trusty for guest
        --ptdev_no_reset: disable reset check for ptdev
-       --intr_monitor: enable interrupt storm monitor, params:
-       		threshold/s,probe-period(s),delay_time(ms),delay_duration(ms)
+       --debugexit: enable debug exit function
+       --intr_monitor: enable interrupt storm monitor
+            its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms),
+       --virtio_poll: enable virtio poll mode with poll interval with ns
+       --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET
 
 See :ref:`acrn-dm_parameters` for more detailed descriptions of these
 configuration options.
