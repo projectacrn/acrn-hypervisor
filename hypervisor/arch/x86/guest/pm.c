@@ -33,36 +33,38 @@ int32_t validate_pstate(const struct acrn_vm *vm, uint64_t perf_ctl)
 static void vm_setup_cpu_px(struct acrn_vm *vm)
 {
 	uint32_t px_data_size;
+	struct cpu_state_info *pm_state_info = get_cpu_pm_state_info();
 
 	vm->pm.px_cnt = 0U;
 	(void)memset(vm->pm.px_data, 0U, MAX_PSTATE * sizeof(struct cpu_px_data));
 
-	if ((boot_cpu_data.state_info.px_cnt != 0U) && (boot_cpu_data.state_info.px_data != NULL)) {
-		ASSERT((boot_cpu_data.state_info.px_cnt <= MAX_PSTATE), "failed to setup cpu px");
+	if ((pm_state_info->px_cnt != 0U) && (pm_state_info->px_data != NULL)) {
+		ASSERT((pm_state_info->px_cnt <= MAX_PSTATE), "failed to setup cpu px");
 
-		vm->pm.px_cnt = boot_cpu_data.state_info.px_cnt;
+		vm->pm.px_cnt = pm_state_info->px_cnt;
 		px_data_size = ((uint32_t)vm->pm.px_cnt) * sizeof(struct cpu_px_data);
-		(void)memcpy_s(vm->pm.px_data, px_data_size, boot_cpu_data.state_info.px_data, px_data_size);
+		(void)memcpy_s(vm->pm.px_data, px_data_size, pm_state_info->px_data, px_data_size);
 	}
 }
 
 static void vm_setup_cpu_cx(struct acrn_vm *vm)
 {
 	uint32_t cx_data_size;
+	struct cpu_state_info *pm_state_info = get_cpu_pm_state_info();
 
 	vm->pm.cx_cnt = 0U;
 	(void)memset(vm->pm.cx_data, 0U, MAX_CSTATE * sizeof(struct cpu_cx_data));
 
-	if ((boot_cpu_data.state_info.cx_cnt != 0U) && (boot_cpu_data.state_info.cx_data != NULL)) {
-		ASSERT((boot_cpu_data.state_info.cx_cnt <= MAX_CX_ENTRY), "failed to setup cpu cx");
+	if ((pm_state_info->cx_cnt != 0U) && (pm_state_info->cx_data != NULL)) {
+		ASSERT((pm_state_info->cx_cnt <= MAX_CX_ENTRY), "failed to setup cpu cx");
 
-		vm->pm.cx_cnt = boot_cpu_data.state_info.cx_cnt;
+		vm->pm.cx_cnt = pm_state_info->cx_cnt;
 		cx_data_size = ((uint32_t)vm->pm.cx_cnt) * sizeof(struct cpu_cx_data);
 
 		/* please note pm.cx_data[0] is a empty space holder,
 		 * pm.cx_data[1...MAX_CX_ENTRY] would be used to store cx entry datas.
 		 */
-		(void)memcpy_s(vm->pm.cx_data + 1, cx_data_size, boot_cpu_data.state_info.cx_data, cx_data_size);
+		(void)memcpy_s(vm->pm.cx_data + 1, cx_data_size, pm_state_info->cx_data, cx_data_size);
 	}
 }
 
