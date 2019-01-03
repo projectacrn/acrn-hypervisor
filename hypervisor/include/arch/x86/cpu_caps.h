@@ -7,13 +7,6 @@
 #ifndef CPUINFO_H
 #define CPUINFO_H
 
-struct cpu_state_info {
-	uint8_t			 px_cnt;	/* count of all Px states */
-	const struct cpu_px_data *px_data;
-	uint8_t			 cx_cnt;	/* count of all Cx entries */
-	const struct cpu_cx_data *cx_data;
-};
-
 #define MAX_PSTATE	20U	/* max num of supported Px count */
 #define MAX_CSTATE	8U	/* max num of supported Cx count */
 /* We support MAX_CSTATE num of Cx, means have (MAX_CSTATE - 1) Cx entries,
@@ -41,7 +34,6 @@ struct cpuinfo_x86 {
 	uint64_t physical_address_mask;
 	uint32_t cpuid_leaves[FEATURE_WORDS];
 	char model_name[64];
-	struct cpu_state_info state_info;
 };
 
 extern struct cpuinfo_x86 boot_cpu_data;

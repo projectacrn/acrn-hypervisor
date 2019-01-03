@@ -102,6 +102,8 @@ static const struct cpu_state_table {
 	}
 };
 
+static struct cpu_state_info cpu_pm_state_info;
+
 static int32_t get_state_tbl_idx(const char *cpuname)
 {
 	int32_t i;
@@ -120,12 +122,17 @@ static int32_t get_state_tbl_idx(const char *cpuname)
 	return ret;
 }
 
+struct cpu_state_info *get_cpu_pm_state_info(void)
+{
+	return &cpu_pm_state_info;
+}
+
 void load_cpu_state_data(void)
 {
 	int32_t tbl_idx;
 	const struct cpu_state_info *state_info;
 
-	(void)memset(&boot_cpu_data.state_info, 0U, sizeof(struct cpu_state_info));
+	(void)memset(&cpu_pm_state_info, 0U, sizeof(struct cpu_state_info));
 
 	tbl_idx = get_state_tbl_idx(boot_cpu_data.model_name);
 
@@ -136,22 +143,22 @@ void load_cpu_state_data(void)
 
 		if ((state_info->px_cnt != 0U) && (state_info->px_data != NULL)) {
 			if (state_info->px_cnt > MAX_PSTATE) {
-				boot_cpu_data.state_info.px_cnt = MAX_PSTATE;
+				cpu_pm_state_info.px_cnt = MAX_PSTATE;
 			} else {
-				boot_cpu_data.state_info.px_cnt = state_info->px_cnt;
+				cpu_pm_state_info.px_cnt = state_info->px_cnt;
 			}
 
-			boot_cpu_data.state_info.px_data = state_info->px_data;
+			cpu_pm_state_info.px_data = state_info->px_data;
 		}
 
 		if ((state_info->cx_cnt != 0U) && (state_info->cx_data != NULL)) {
 			if (state_info->cx_cnt > MAX_CX_ENTRY) {
-				boot_cpu_data.state_info.cx_cnt = MAX_CX_ENTRY;
+				cpu_pm_state_info.cx_cnt = MAX_CX_ENTRY;
 			} else {
-				boot_cpu_data.state_info.cx_cnt = state_info->cx_cnt;
+				cpu_pm_state_info.cx_cnt = state_info->cx_cnt;
 			}
 
-			boot_cpu_data.state_info.cx_data = state_info->cx_data;
+			cpu_pm_state_info.cx_data = state_info->cx_data;
 		}
 	}
 }
