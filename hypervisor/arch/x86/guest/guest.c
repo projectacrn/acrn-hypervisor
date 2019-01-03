@@ -263,50 +263,50 @@ int32_t gva2gpa(struct acrn_vcpu *vcpu, uint64_t gva, uint64_t *gpa,
 	int32_t ret = 0;
 
 	if ((gpa == NULL) || (err_code == NULL)) {
-		return -EINVAL;
-	}
-	*gpa = 0UL;
-
-	pw_info.top_entry = exec_vmread(VMX_GUEST_CR3);
-	pw_info.level = (uint32_t)pm;
-	pw_info.is_write_access = ((*err_code & PAGE_FAULT_WR_FLAG) != 0U);
-	pw_info.is_inst_fetch = ((*err_code & PAGE_FAULT_ID_FLAG) != 0U);
-
-	/* SDM vol3 27.3.2
-	 * If the segment register was unusable, the base, select and some
-	 * bits of access rights are undefined. With the exception of
-	 * DPL of SS
-	 * and others.
-	 * So we use DPL of SS access rights field for guest DPL.
-	 */
-	pw_info.is_user_mode_access =
-		(((exec_vmread32(VMX_GUEST_SS_ATTR) >> 5U) & 0x3U) == 3U);
-	pw_info.pse = true;
-	pw_info.nxe = ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_NXE_BIT) != 0UL);
-	pw_info.wp = ((vcpu_get_cr0(vcpu) & CR0_WP) != 0UL);
-	pw_info.is_smap_on = ((vcpu_get_cr4(vcpu) & CR4_SMAP) != 0UL);
-	pw_info.is_smep_on = ((vcpu_get_cr4(vcpu) & CR4_SMEP) != 0UL);
-
-	*err_code &=  ~PAGE_FAULT_P_FLAG;
-
-	if (pm == PAGING_MODE_4_LEVEL) {
-		pw_info.width = 9U;
-		ret = local_gva2gpa_common(vcpu, &pw_info, gva, gpa, err_code);
-	} else if (pm == PAGING_MODE_3_LEVEL) {
-		pw_info.width = 9U;
-		ret = local_gva2gpa_pae(vcpu, &pw_info, gva, gpa, err_code);
-	} else if (pm == PAGING_MODE_2_LEVEL) {
-		pw_info.width = 10U;
-		pw_info.pse = ((vcpu_get_cr4(vcpu) & CR4_PSE) != 0UL);
-		pw_info.nxe = false;
-		ret = local_gva2gpa_common(vcpu, &pw_info, gva, gpa, err_code);
+		ret = -EINVAL;
 	} else {
-		*gpa = gva;
-	}
+		*gpa = 0UL;
 
-	if (ret == -EFAULT) {
-		if (pw_info.is_user_mode_access) {
-			*err_code |= PAGE_FAULT_US_FLAG;
+		pw_info.top_entry = exec_vmread(VMX_GUEST_CR3);
+		pw_info.level = (uint32_t)pm;
+		pw_info.is_write_access = ((*err_code & PAGE_FAULT_WR_FLAG) != 0U);
+		pw_info.is_inst_fetch = ((*err_code & PAGE_FAULT_ID_FLAG) != 0U);
+
+		/* SDM vol3 27.3.2
+		 * If the segment register was unusable, the base, select and some
+		 * bits of access rights are undefined. With the exception of
+		 * DPL of SS
+		 * and others.
+		 * So we use DPL of SS access rights field for guest DPL.
+		 */
+		pw_info.is_user_mode_access = (((exec_vmread32(VMX_GUEST_SS_ATTR) >> 5U) & 0x3U) == 3U);
+		pw_info.pse = true;
+		pw_info.nxe = ((vcpu_get_efer(vcpu) & MSR_IA32_EFER_NXE_BIT) != 0UL);
+		pw_info.wp = ((vcpu_get_cr0(vcpu) & CR0_WP) != 0UL);
+		pw_info.is_smap_on = ((vcpu_get_cr4(vcpu) & CR4_SMAP) != 0UL);
+		pw_info.is_smep_on = ((vcpu_get_cr4(vcpu) & CR4_SMEP) != 0UL);
+
+		*err_code &=  ~PAGE_FAULT_P_FLAG;
+
+		if (pm == PAGING_MODE_4_LEVEL) {
+			pw_info.width = 9U;
+			ret = local_gva2gpa_common(vcpu, &pw_info, gva, gpa, err_code);
+		} else if (pm == PAGING_MODE_3_LEVEL) {
+			pw_info.width = 9U;
+			ret = local_gva2gpa_pae(vcpu, &pw_info, gva, gpa, err_code);
+		} else if (pm == PAGING_MODE_2_LEVEL) {
+			pw_info.width = 10U;
+			pw_info.pse = ((vcpu_get_cr4(vcpu) & CR4_PSE) != 0UL);
+			pw_info.nxe = false;
+			ret = local_gva2gpa_common(vcpu, &pw_info, gva, gpa, err_code);
+		} else {
+			*gpa = gva;
+		}
+
+		if (ret == -EFAULT) {
+			if (pw_info.is_user_mode_access) {
+				*err_code |= PAGE_FAULT_US_FLAG;
+			}
 		}
 	}
 
@@ -324,26 +324,26 @@ static inline uint32_t local_copy_gpa(struct acrn_vm *vm, void *h_ptr, uint64_t 
 	if (hpa == INVALID_HPA) {
 		pr_err("%s,vm[%hu] gpa 0x%llx,GPA is unmapping",
 			__func__, vm->vm_id, gpa);
-		return 0U;
-	}
-
-	if (fix_pg_size != 0U) {
-		pg_size = fix_pg_size;
-	}
-
-	offset_in_pg = (uint32_t)gpa & (pg_size - 1U);
-	len = (size > (pg_size - offset_in_pg)) ?
-		(pg_size - offset_in_pg) : size;
-
-	g_ptr = hpa2hva(hpa);
-
-	stac();
-	if (cp_from_vm) {
-		(void)memcpy_s(h_ptr, len, g_ptr, len);
+		len = 0U;
 	} else {
-		(void)memcpy_s(g_ptr, len, h_ptr, len);
+
+		if (fix_pg_size != 0U) {
+			pg_size = fix_pg_size;
+		}
+
+		offset_in_pg = (uint32_t)gpa & (pg_size - 1U);
+		len = (size > (pg_size - offset_in_pg)) ? (pg_size - offset_in_pg) : size;
+
+		g_ptr = hpa2hva(hpa);
+
+		stac();
+		if (cp_from_vm) {
+			(void)memcpy_s(h_ptr, len, g_ptr, len);
+		} else {
+			(void)memcpy_s(g_ptr, len, h_ptr, len);
+		}
+		clac();
 	}
-	clac();
 
 	return len;
 }
@@ -355,11 +355,13 @@ static inline int32_t copy_gpa(struct acrn_vm *vm, void *h_ptr_arg, uint64_t gpa
 	uint32_t len;
 	uint64_t gpa = gpa_arg;
 	uint32_t size = size_arg;
+	int32_t err = 0;
 
 	while (size > 0U) {
 		len = local_copy_gpa(vm, h_ptr, gpa, size, 0U, cp_from_vm);
 		if (len == 0U) {
-			return -EINVAL;
+			err = -EINVAL;
+			break;
 		}
 
 		gpa += len;
@@ -367,7 +369,7 @@ static inline int32_t copy_gpa(struct acrn_vm *vm, void *h_ptr_arg, uint64_t gpa
 		size -= len;
 	}
 
-	return 0;
+	return err;
 }
 
 /*
