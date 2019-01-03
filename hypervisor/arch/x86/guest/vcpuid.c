@@ -97,6 +97,8 @@ static inline int32_t set_vcpuid_entry(struct acrn_vm *vm,
 static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 			uint32_t flags, struct vcpuid_entry *entry)
 {
+	struct cpuinfo_x86 *cpu_info;
+
 	entry->leaf = leaf;
 	entry->subleaf = subleaf;
 	entry->flags = flags;
@@ -123,7 +125,8 @@ static void init_vcpuid_entry(uint32_t leaf, uint32_t subleaf,
 		break;
 
 	case 0x16U:
-		if (boot_cpu_data.cpuid_level >= 0x16U) {
+		cpu_info = get_cpu_info();
+		if (cpu_info->cpuid_level >= 0x16U) {
 			/* call the cpuid when 0x16 is supported */
 			cpuid_subleaf(leaf, subleaf, &entry->eax, &entry->ebx, &entry->ecx, &entry->edx);
 		} else {
@@ -185,9 +188,10 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 	struct vcpuid_entry entry;
 	uint32_t limit;
 	uint32_t i, j;
+	struct cpuinfo_x86 *cpu_info = get_cpu_info();
 
 	init_vcpuid_entry(0U, 0U, 0U, &entry);
-	if (boot_cpu_data.cpuid_level < 0x16U) {
+	if (cpu_info->cpuid_level < 0x16U) {
 		/* The cpuid with zero leaf returns the max level. Emulate that the 0x16U is supported */
 		entry.eax = 0x16U;
 	}

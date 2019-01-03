@@ -196,6 +196,7 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 {
 	union apic_icr icr;
 	uint8_t shorthand;
+	struct cpuinfo_x86 *cpu_info = get_cpu_info();
 
 	icr.value = 0U;
 	icr.bits.destination_mode = INTR_LAPIC_ICR_PHYSICAL;
@@ -218,7 +219,7 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	/* Give 10ms for INIT sequence to complete for old processors.
 	 * Modern processors (family == 6) don't need to wait here.
 	 */
-	if (boot_cpu_data.family != 6U) {
+	if (cpu_info->family != 6U) {
 		/* delay 10ms */
 		udelay(10000U);
 	}
@@ -234,7 +235,7 @@ send_startup_ipi(enum intr_cpu_startup_shorthand cpu_startup_shorthand,
 	icr.bits.vector = (uint8_t)(cpu_startup_start_address >> 12U);
 	msr_write(MSR_IA32_EXT_APIC_ICR, icr.value);
 
-	if (boot_cpu_data.family == 6U) {
+	if (cpu_info->family == 6U) {
 		udelay(10U); /* 10us is enough for Modern processors */
 	} else {
 		udelay(200U); /* 200us for old processors */

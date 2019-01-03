@@ -34,7 +34,7 @@ static struct cpu_capability {
 	uint32_t vmx_vpid;
 } cpu_caps;
 
-struct cpuinfo_x86 boot_cpu_data;
+static struct cpuinfo_x86 boot_cpu_data;
 
 bool cpu_has_cap(uint32_t bit)
 {
@@ -416,4 +416,9 @@ int32_t detect_hardware_support(void)
 	}
 
 	return ret;
+}
+
+struct cpuinfo_x86 *get_cpu_info(void)
+{
+	return &boot_cpu_data;
 }

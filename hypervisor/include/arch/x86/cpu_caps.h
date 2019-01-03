@@ -36,8 +36,6 @@ struct cpuinfo_x86 {
 	char model_name[64];
 };
 
-extern struct cpuinfo_x86 boot_cpu_data;
-
 bool has_monitor_cap(void);
 bool is_apicv_reg_virtualization_supported(void);
 bool is_apicv_intr_delivery_supported(void);
@@ -50,5 +48,6 @@ void init_cpu_model_name(void);
 bool check_cpu_security_cap(void);
 void cpu_l1d_flush(void);
 int detect_hardware_support(void);
+struct cpuinfo_x86 *get_cpu_info(void);
 
 #endif /* CPUINFO_H */
