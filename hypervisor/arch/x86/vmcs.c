@@ -320,7 +320,7 @@ static bool is_cr4_write_valid(struct acrn_vcpu *vcpu, uint64_t cr4)
  *             Set the value according to the value from guest.
  *   - PAE (5) Trapped to track paging mode.
  *             Set the value according to the value from guest.
- *   - MCE (6) Flexible to guest
+ *   - MCE (6) Trapped to hide from guest
  *   - PGE (7) Flexible to guest
  *   - PCE (8) Flexible to guest
  *   - OSFXSR (9) Flexible to guest
@@ -338,7 +338,7 @@ static bool is_cr4_write_valid(struct acrn_vcpu *vcpu, uint64_t cr4)
  */
 void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 {
-	uint64_t cr4_vmx;
+	uint64_t cr4_vmx, cr4_shadow;
 	uint64_t old_cr4 = vcpu_get_cr4(vcpu);
 
 	if (!is_cr4_write_valid(vcpu, cr4)) {
@@ -353,10 +353,12 @@ void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 			vcpu_make_request(vcpu, ACRN_REQUEST_EPT_FLUSH);
 		}
 
-		/* Aways off bits and reserved bits has been filtered above */
-		cr4_vmx = cr4_always_on_mask | cr4;
+		/* Clear forced off bits */
+		cr4_shadow = cr4 & ~CR4_MCE;
+
+		cr4_vmx = cr4_always_on_mask | cr4_shadow;
 		exec_vmwrite(VMX_GUEST_CR4, cr4_vmx & 0xFFFFFFFFUL);
-		exec_vmwrite(VMX_CR4_READ_SHADOW, cr4 & 0xFFFFFFFFUL);
+		exec_vmwrite(VMX_CR4_READ_SHADOW, cr4_shadow & 0xFFFFFFFFUL);
 
 		/* clear read cache, next time read should from VMCS */
 		bitmap_clear_lock(CPU_REG_CR4, &vcpu->reg_cached);
@@ -417,7 +419,7 @@ static void init_guest_state(struct acrn_vcpu *vcpu)
 		&vcpu->arch.contexts[vcpu->arch.cur_context];
 
 	init_guest_vmx(vcpu, ctx->run_ctx.cr0, ctx->ext_ctx.cr3,
-			ctx->run_ctx.cr4 & ~(CR4_VMXE | CR4_SMXE));
+			ctx->run_ctx.cr4 & ~(CR4_VMXE | CR4_SMXE | CR4_MCE));
 }
 
 static void init_host_state(void)

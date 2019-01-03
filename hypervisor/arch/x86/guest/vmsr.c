@@ -53,7 +53,7 @@ static const uint32_t mtrr_msrs[NUM_MTRR_MSRS] = {
 };
 
 /* Following MSRs are intercepted, but it throws GPs for any guest accesses */
-#define NUM_UNSUPPORTED_MSRS	96U
+#define NUM_UNSUPPORTED_MSRS	103U
 static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	/* Variable MTRRs are not supported */
 	MSR_IA32_MTRR_PHYSBASE_0,
@@ -176,6 +176,23 @@ static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 
 	/* SMM Monitor Configuration: CPUID.01H.ECX[5] and CPUID.01H.ECX[6] */
 	MSR_IA32_SMM_MONITOR_CTL,
+
+	/* Silicon Debug Feature: CPUID.01H.ECX[11] (X86_FEATURE_SDBG) */
+	MSR_IA32_DEBUG_INTERFACE,
+
+	/* Performance Monitoring: CPUID.01H.ECX[15] X86_FEATURE_PDCM */
+	MSR_IA32_PERF_CAPABILITIES,
+
+	/* Debug Store disabled: CPUID.01H.EDX[21] X86_FEATURE_DTES */
+	MSR_IA32_DS_AREA,
+
+	/* Machine Check Exception: CPUID.01H.EDX[5] (X86_FEATURE_MCE) */
+	MSR_IA32_MCG_CAP,
+	MSR_IA32_MCG_STATUS,
+	MSR_IA32_MCG_CTL,
+	MSR_IA32_MCG_EXT_CTL,
+	/* MSR 0x280 ... 0x29F, not in this array */
+	/* MSR 0x400 ... 0x473, not in this array */
 };
 
 #define NUM_X2APIC_MSRS	44U
