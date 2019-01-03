@@ -26,6 +26,7 @@
 #define CPUID_ECX_TM2           (1U<<8U)
 #define CPUID_ECX_SSSE3         (1U<<9U)
 #define CPUID_ECX_CID           (1U<<10U)
+#define CPUID_ECX_SDBG          (1U<<11U)
 #define CPUID_ECX_FMA           (1U<<12U)
 #define CPUID_ECX_CX16          (1U<<13U)
 #define CPUID_ECX_ETPRD         (1U<<14U)

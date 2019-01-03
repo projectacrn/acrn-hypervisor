@@ -319,8 +319,17 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 			*edx &= ~CPUID_EDX_MTRR;
 #endif
 
+			/* mask Debug Store feature */
+			*ecx &= ~(CPUID_ECX_DTES64 | CPUID_ECX_DS_CPL);
+
 			/* mask Safer Mode Extension */
 			*ecx &= ~CPUID_ECX_SMX;
+
+			/* mask PDCM: Perfmon and Debug Capability */
+			*ecx &= ~CPUID_ECX_PDCM;
+
+			/* mask SDBG for silicon debug */
+			*ecx &= ~CPUID_ECX_SDBG;
 
 			/* mask pcid */
 			*ecx &= ~CPUID_ECX_PCID;
@@ -342,9 +351,15 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 					*ecx |= CPUID_ECX_OSXSAVE;
 				}
 			}
+
+			/* mask Machine Check Exception */
+			*edx &= ~CPUID_EDX_MCE;
+
+			/* mask Debug Store feature */
+			*edx &= ~CPUID_EDX_DTES;
+
 			break;
 		}
-
 		case 0x0bU:
 			/* Patching X2APIC */
 #ifdef CONFIG_PARTITION_MODE
