@@ -1025,10 +1025,7 @@ vlapic_calcdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest,
 		 * Broadcast in both logical and physical modes.
 		 */
 		*dmask = vm_active_cpus(vm);
-		return;
-	}
-
-	if (phys) {
+	} else if (phys) {
 		/*
 		 * Physical mode: destination is LAPIC ID.
 		 */
@@ -1464,115 +1461,113 @@ vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg,
 
 	if (offset > sizeof(*lapic)) {
 		*data = 0UL;
-		goto done;
+	} else {
+
+		offset &= ~0x3UL;
+		switch (offset) {
+		case APIC_OFFSET_ID:
+			*data = lapic->id.v;
+			break;
+		case APIC_OFFSET_VER:
+			*data = lapic->version.v;
+			break;
+		case APIC_OFFSET_TPR:
+			*data = vlapic_get_tpr(vlapic);
+		break;
+		case APIC_OFFSET_APR:
+			*data = lapic->apr.v;
+			break;
+		case APIC_OFFSET_PPR:
+			*data = lapic->ppr.v;
+			break;
+		case APIC_OFFSET_EOI:
+			*data = lapic->eoi.v;
+			break;
+		case APIC_OFFSET_LDR:
+			*data = lapic->ldr.v;
+			break;
+		case APIC_OFFSET_DFR:
+			*data = lapic->dfr.v;
+			break;
+		case APIC_OFFSET_SVR:
+			*data = lapic->svr.v;
+			break;
+		case APIC_OFFSET_ISR0:
+		case APIC_OFFSET_ISR1:
+		case APIC_OFFSET_ISR2:
+		case APIC_OFFSET_ISR3:
+		case APIC_OFFSET_ISR4:
+		case APIC_OFFSET_ISR5:
+		case APIC_OFFSET_ISR6:
+		case APIC_OFFSET_ISR7:
+			i = (offset - APIC_OFFSET_ISR0) >> 4U;
+			*data = lapic->isr[i].v;
+			break;
+		case APIC_OFFSET_TMR0:
+		case APIC_OFFSET_TMR1:
+		case APIC_OFFSET_TMR2:
+		case APIC_OFFSET_TMR3:
+		case APIC_OFFSET_TMR4:
+		case APIC_OFFSET_TMR5:
+		case APIC_OFFSET_TMR6:
+		case APIC_OFFSET_TMR7:
+			i = (offset - APIC_OFFSET_TMR0) >> 4U;
+			*data = lapic->tmr[i].v;
+			break;
+		case APIC_OFFSET_IRR0:
+		case APIC_OFFSET_IRR1:
+		case APIC_OFFSET_IRR2:
+		case APIC_OFFSET_IRR3:
+		case APIC_OFFSET_IRR4:
+		case APIC_OFFSET_IRR5:
+		case APIC_OFFSET_IRR6:
+		case APIC_OFFSET_IRR7:
+			i = (offset - APIC_OFFSET_IRR0) >> 4U;
+			*data = lapic->irr[i].v;
+			break;
+		case APIC_OFFSET_ESR:
+			*data = lapic->esr.v;
+			break;
+		case APIC_OFFSET_ICR_LOW:
+			*data = lapic->icr_lo.v;
+			break;
+		case APIC_OFFSET_ICR_HI:
+			*data = lapic->icr_hi.v;
+			break;
+		case APIC_OFFSET_CMCI_LVT:
+		case APIC_OFFSET_TIMER_LVT:
+		case APIC_OFFSET_THERM_LVT:
+		case APIC_OFFSET_PERF_LVT:
+		case APIC_OFFSET_LINT0_LVT:
+		case APIC_OFFSET_LINT1_LVT:
+		case APIC_OFFSET_ERROR_LVT:
+			*data = vlapic_get_lvt(vlapic, offset);
+#ifdef INVARIANTS
+			reg = vlapic_get_lvtptr(vlapic, offset);
+			ASSERT(*data == *reg, "inconsistent lvt value at offset %#x: %#lx/%#x", offset, *data, *reg);
+#endif
+			break;
+		case APIC_OFFSET_TIMER_ICR:
+			/* if TSCDEADLINE mode always return 0*/
+			if (vlapic_lvtt_tsc_deadline(vlapic)) {
+				*data = 0UL;
+			} else {
+				*data = lapic->icr_timer.v;
+			}
+			break;
+		case APIC_OFFSET_TIMER_CCR:
+			*data = vlapic_get_ccr(vlapic);
+			break;
+		case APIC_OFFSET_TIMER_DCR:
+			*data = lapic->dcr_timer.v;
+			break;
+		case APIC_OFFSET_RRR:
+		default:
+			*data = 0UL;
+			break;
+		}
 	}
 
-	offset &= ~0x3UL;
-	switch (offset) {
-	case APIC_OFFSET_ID:
-		*data = lapic->id.v;
-		break;
-	case APIC_OFFSET_VER:
-		*data = lapic->version.v;
-		break;
-	case APIC_OFFSET_TPR:
-		*data = vlapic_get_tpr(vlapic);
-		break;
-	case APIC_OFFSET_APR:
-		*data = lapic->apr.v;
-		break;
-	case APIC_OFFSET_PPR:
-		*data = lapic->ppr.v;
-		break;
-	case APIC_OFFSET_EOI:
-		*data = lapic->eoi.v;
-		break;
-	case APIC_OFFSET_LDR:
-		*data = lapic->ldr.v;
-		break;
-	case APIC_OFFSET_DFR:
-		*data = lapic->dfr.v;
-		break;
-	case APIC_OFFSET_SVR:
-		*data = lapic->svr.v;
-		break;
-	case APIC_OFFSET_ISR0:
-	case APIC_OFFSET_ISR1:
-	case APIC_OFFSET_ISR2:
-	case APIC_OFFSET_ISR3:
-	case APIC_OFFSET_ISR4:
-	case APIC_OFFSET_ISR5:
-	case APIC_OFFSET_ISR6:
-	case APIC_OFFSET_ISR7:
-		i = (offset - APIC_OFFSET_ISR0) >> 4U;
-		*data = lapic->isr[i].v;
-		break;
-	case APIC_OFFSET_TMR0:
-	case APIC_OFFSET_TMR1:
-	case APIC_OFFSET_TMR2:
-	case APIC_OFFSET_TMR3:
-	case APIC_OFFSET_TMR4:
-	case APIC_OFFSET_TMR5:
-	case APIC_OFFSET_TMR6:
-	case APIC_OFFSET_TMR7:
-		i = (offset - APIC_OFFSET_TMR0) >> 4U;
-		*data = lapic->tmr[i].v;
-		break;
-	case APIC_OFFSET_IRR0:
-	case APIC_OFFSET_IRR1:
-	case APIC_OFFSET_IRR2:
-	case APIC_OFFSET_IRR3:
-	case APIC_OFFSET_IRR4:
-	case APIC_OFFSET_IRR5:
-	case APIC_OFFSET_IRR6:
-	case APIC_OFFSET_IRR7:
-		i = (offset - APIC_OFFSET_IRR0) >> 4U;
-		*data = lapic->irr[i].v;
-		break;
-	case APIC_OFFSET_ESR:
-		*data = lapic->esr.v;
-		break;
-	case APIC_OFFSET_ICR_LOW:
-		*data = lapic->icr_lo.v;
-		break;
-	case APIC_OFFSET_ICR_HI:
-		*data = lapic->icr_hi.v;
-		break;
-	case APIC_OFFSET_CMCI_LVT:
-	case APIC_OFFSET_TIMER_LVT:
-	case APIC_OFFSET_THERM_LVT:
-	case APIC_OFFSET_PERF_LVT:
-	case APIC_OFFSET_LINT0_LVT:
-	case APIC_OFFSET_LINT1_LVT:
-	case APIC_OFFSET_ERROR_LVT:
-		*data = vlapic_get_lvt(vlapic, offset);
-#ifdef INVARIANTS
-		reg = vlapic_get_lvtptr(vlapic, offset);
-		ASSERT(*data == *reg,
-			"inconsistent lvt value at offset %#x: %#lx/%#x",
-			offset, *data, *reg);
-#endif
-		break;
-	case APIC_OFFSET_TIMER_ICR:
-		/* if TSCDEADLINE mode always return 0*/
-		if (vlapic_lvtt_tsc_deadline(vlapic)) {
-			*data = 0UL;
-		} else {
-			*data = lapic->icr_timer.v;
-		}
-		break;
-	case APIC_OFFSET_TIMER_CCR:
-		*data = vlapic_get_ccr(vlapic);
-		break;
-	case APIC_OFFSET_TIMER_DCR:
-		*data = lapic->dcr_timer.v;
-		break;
-	case APIC_OFFSET_RRR:
-	default:
-		*data = 0UL;
-		break;
-	}
-done:
 	dev_dbg(ACRN_DBG_LAPIC,
 			"vlapic read offset %#x, data %#lx", offset, *data);
 	return 0;
