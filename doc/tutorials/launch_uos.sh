@@ -1,3 +1,6 @@
+# Copyright (C) 2018 Intel Corporation.
+# SPDX-License-Identifier: BSD-3-Clause
+
 #!/bin/bash
 
 
@@ -363,23 +366,15 @@ fi
    -B "$kernel_cmdline" $vm_name
 }
 
-function launch_alios()
-{
-#AliOS is not Android, only has same configuration currently, reuse launch function
-
-launch_android "$@"
-}
-
 function help()
 {
-echo "Use luanch_uos.sh like that ./launch_uos.sh -V <#>"
+echo "Use launch_uos.sh like that ./launch_uos.sh -V <#>"
 echo "The option -V means the UOSs group to be launched by vsbl as below"
 echo "-V 1 means just launching 1 clearlinux UOS"
 echo "-V 2 means just launching 1 android UOS"
 echo "-V 3 means launching 1 clearlinux UOS + 1 android UOS"
 echo "-V 4 means launching 2 clearlinux UOSs"
-echo "-V 5 means just launching 1 alios UOS"
-echo "-V 6 means auto check android/linux/alios UOS; if exist, launch it"
+echo "-V 5 means auto check android/linux UOS; if exist, launch it"
 }
 
 launch_type=1
@@ -413,9 +408,7 @@ mount /dev/mmcblk0p3 /data
 
 if [ $launch_type == 6 ]; then
 	if [ -f "/data/android/android.img" ]; then
-	  launch_type=2;
-	elif [ -f "/data/alios/alios.img" ]; then
-	  launch_type=5;
+	  launch_type=2
 	else
 	  launch_type=1;
 	fi
@@ -455,9 +448,6 @@ case $launch_type in
 		launch_clearlinux 1 1 "64 448 4" 0x00000C clearlinux "L1aaG" $debug &
 		sleep 5
 		launch_clearlinux 2 1 "64 448 4" 0x070F00 clearlinux_dup "L2aaG" $debug
-		;;
-	5) echo "Launch alios UOS"
-		launch_alios 1 3 "64 448 8" 0x070F00 alios "AliaaG" $debug
 		;;
 esac
 
