@@ -6,6 +6,11 @@ Using SBL on UP2 Borad
 This document builds on the :ref:`getting-started-up2`, and explains how to use
 SBL instead of UEFI to boot UP2 board.
 
+Slim Bootloader is an open-source boot firmware solution,
+built from the ground up to be secure, lightweight, and highly
+optimized while leveraging robust tools and libraries from
+the EDK II framework.
+
 .. image:: images/sbl_boot_flow_UP2.png
    :align: center
    
@@ -13,7 +18,7 @@ We show a verified Boot Sequence with SBL on an Intel® Architecture platform UP
 and the boot process proceeds as follows:
 
 #. SBL verifies and boots the ACRN hypervisor and Service OS kernel
-#. Service OS kernel verifies and loads ACRN Device Model and vSBL through ``dm-verity``
+#. Service OS kernel verifies and loads ACRN Device Model and vSBL
 #. vSBL starts the User-side verified boot process
 
 
@@ -35,11 +40,6 @@ The following hardware and software are required to use SBL on an UP2 board:
 Build SBL
 *********
 
-Slim Bootloader is an open-source boot firmware solution, 
-built from the ground up to be secure, lightweight, and highly 
-optimized while leveraging robust tools and libraries from 
-the EDK II framework.
-
 Follow the steps of `Building <https://slimbootloader.github.io/supported-hardware/up2.html#building>`_
 and `Stitching <https://slimbootloader.github.io/supported-hardware/up2.html#stitching>`_ 
 from `<https://slimbootloader.github.io/supported-hardware/up2.html>`_ to generate the 
@@ -54,22 +54,15 @@ Flash SBL on the UP2
 #. Put the empty USB flash drive in your PC and format it as FAT32.
 #. Decompress the BIOS zip file into the formatted drive. 
 #. Attach the USB disk and keyboard to the board and power it on.
-#. During boot, press :kbd:`F7` on the usb keyboard to enter the UEFI BIOS boot menu.
-#. Navigate through the following menus and select ``Build-in EFI shell``.
+#. During boot, press :kbd:`F7` on the keyboard to enter the UEFI BIOS boot menu.
+#. Navigate through the following menus and select ``Built-in EFI shell``.
 #. Please take note of which filesystem number ``fs*`` your USB drive is mapped to.
-#. Switch to that filesystem, e.g. ``fs1:``.
+#. Switch to that filesystem, e.g. ``fs1:``.  (Don't forget the colon.)
 #. Navigate to the path where you decompressed the update (the ``cd`` and ``ls`` commands are available here, as if in an Unix shell).
   
    .. code-block:: none
-  
+
       Fpt_3.1.50.2222.efi -f <SBL_IFWI_IMAGE> -y
-
-.. note::
-   Note the trailing colon on the command ``fs*`` and ``fs1:`` for example.
-
-.. note::
-   The current version of UP Board UEFI BIOS is ``R1.5``, 
-   and the programming software version is ``Fpt_3.1.50.2222.efi``.
 
 
 Build ACRN for UP2
@@ -98,7 +91,7 @@ An example of the configuration file ``uos.json``:
 
 .. note::
    To generate the image with a specified version, please modify 
-   the "Version" argument, and we can set ``"Version": 26000`` instead 
+   the "Version" argument, ``"Version": 26000`` instead 
    of ``"Version": 26880`` for example.
 
 Clone the source code of ``acrn-hypervisor`` and build SOS and LaaG image:
@@ -107,7 +100,8 @@ Clone the source code of ``acrn-hypervisor`` and build SOS and LaaG image:
    
    cd ~
    git clone https://github.com/projectacrn/acrn-hypervisor
-   sudo ./acrn-hypervisor/devicemodel/samples/up2/create-up2-images.sh --images-type all --clearlinux-version 26880 --laag-json uos.json --acrn-code-path ~/acrn-hypervisor/
+   sudo ./acrn-hypervisor/devicemodel/samples/up2/create-up2-images.sh --images-type all \
+      --clearlinux-version 26880 --laag-json uos.json --acrn-code-path ~/acrn-hypervisor/
 
 
 This step will generate the images of SOS and LaaG:

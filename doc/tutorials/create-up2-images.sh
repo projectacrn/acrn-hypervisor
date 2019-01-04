@@ -1,20 +1,22 @@
-#!/bin/bash
+# Copyright (C) 2018 Intel Corporation.
+# SPDX-License-Identifier: BSD-3-Clause
 
+#!/bin/bash
 
 usage() {
     echo "Usage: $0 [options]"
-    echo "This script build images for SBL based platforms"
+    echo "This script builds images for Slim Boot Loader (SBL) based platforms"
     echo "options:"
     echo "--mirror-url default: 'https://cdn.download.clearlinux.org/releases/', for swupd"
-    echo "--acrn-code-path: Specify acrn_hypervisor code path for acrn sbl build. If acrn-sbl-path is provided, acrn-code-path will be ignored"
-    echo "--acrn-sbl-path: Specify acrn sbl binary path. If acrn-sbl-path isn't provided, acrn_code_path will be must option"
-    echo "--clearlinux-version: mandatory option for sos images build"
-    echo "--images-type: Specify the type of OS image to build (sos/laag/all, default vaule is all)"
+    echo "--acrn-code-path: Specify acrn-hypervisor code path for ACRN SBL build. If acrn-sbl-path is provided, acrn-code-path will be ignored"
+    echo "--acrn-sbl-path: Specify ACRN SBL binary path. If acrn-sbl-path isn't provided, acrn_code_path will be must option"
+    echo "--clearlinux-version: mandatory option for sos image build"
+    echo "--images-type: Specify the type of OS image to build (sos/laag/all, default value is all)"
     echo "--sign-key: Specify the debug key for signing, default value provided"
-    echo "--sos-rootfs-size: Specify the sos_rootfs image size, default value is 3584M"
-    echo "--laag-image-size: Specify the laag image size, default value is 10240M"
-    echo "--sos-bundle-append: Specify more sos bundles need to be add"
-    echo "--laag-json: mandatory option for uos image build, used for ister.py"
+    echo "--sos-rootfs-size: Specify the sos_rootfs image size in MB, default value is 3584"
+    echo "--laag-image-size: Specify the laag image size in MB, default value is 10240"
+    echo "--sos-bundle-append: Specify additional bundles to be installed in the sos"
+    echo "--laag-json: mandatory option, used by ister.py to build the uos"
 }
 
     
@@ -50,7 +52,7 @@ create_sos_images() {
         if [ ${ACRN_HV_CODE_PATH} ]
         then
             make -C ${ACRN_HV_CODE_PATH} clean || return 1
-            make -C ${ACRN_HV_CODE_PATH} hypervisor PLATFORM=sbl BOARD=up2 FIRMWARE=sbl || return 1
+            make -C ${ACRN_HV_CODE_PATH} hypervisor BOARD=up2 FIRMWARE=sbl || return 1
             ACRN_SBL=${ACRN_HV_CODE_PATH}/build/hypervisor/acrn.32.out
         else
             echo "Need to provide acrn.sbl or acrn-hypervisor source code path"
@@ -283,3 +285,4 @@ then
 fi
 
 exit 0
+
