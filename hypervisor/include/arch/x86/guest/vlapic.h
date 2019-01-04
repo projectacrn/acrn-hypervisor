@@ -227,9 +227,6 @@ int32_t vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg);
 void vlapic_deliver_intr(struct acrn_vm *vm, bool level, uint32_t dest,
 		bool phys, uint32_t delmode, uint32_t vec, bool rh);
 
-/* Reset the trigger-mode bits for all vectors to be edge-triggered */
-void vlapic_reset_tmr(struct acrn_vlapic *vlapic);
-
 /*
  * Set the trigger-mode bit associated with 'vector' to level-triggered if
  * the (dest,phys,delmode) tuple resolves to an interrupt being delivered to

@@ -460,6 +460,36 @@ vlapic_esr_write_handler(struct acrn_vlapic *vlapic)
 	vlapic->esr_pending = 0U;
 }
 
+static void
+vlapic_set_tmr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
+{
+	struct lapic_regs *lapic;
+	struct lapic_reg *tmrptr;
+
+	lapic = &(vlapic->apic_page);
+	tmrptr = &lapic->tmr[0];
+	if (level) {
+		bitmap32_set_lock((uint16_t)(vector & 0x1fU), &tmrptr[vector >> 5U].v);
+	} else {
+		bitmap32_clear_lock((uint16_t)(vector & 0x1fU), &tmrptr[vector >> 5U].v);
+	}
+}
+
+static void
+vlapic_reset_tmr(struct acrn_vlapic *vlapic)
+{
+	int16_t i;
+	struct lapic_regs *lapic;
+
+	dev_dbg(ACRN_DBG_LAPIC,
+			"vlapic resetting all vectors to edge-triggered");
+
+	lapic = &(vlapic->apic_page);
+	for (i = 0; i < 8; i++) {
+		lapic->tmr[i].v = 0U;
+	}
+}
+
 /*
  * Returns 1 if the vcpu needs to be notified of the interrupt and 0 otherwise.
  * @pre vector >= 16
@@ -468,8 +498,7 @@ static bool
 vlapic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 {
 	struct lapic_regs *lapic;
-	struct lapic_reg *irrptr, *tmrptr;
-	uint32_t mask;
+	struct lapic_reg *irrptr;
 	uint32_t idx;
 	int32_t pending_intr;
 	bool ret = true;
@@ -483,6 +512,9 @@ vlapic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 		ret = false;
 	} else if (is_apicv_intr_delivery_supported()) {
 		pending_intr = apicv_set_intr_ready(vlapic, vector);
+
+		vlapic_set_tmr(vlapic, vector, level);
+
 		if ((pending_intr != 0) && (is_apicv_posted_intr_supported()) && (get_cpu_id() != vlapic->vcpu->pcpu_id)) {
 			/*
 			 * Send interrupt to vCPU via posted interrupt way:
@@ -502,24 +534,14 @@ vlapic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 		}
 	} else {
 		idx = vector >> 5U;
-		mask = 1U << (vector & 0x1fU);
 
 		irrptr = &lapic->irr[0];
 		/* If the interrupt is set, don't try to do it again */
 		if (bitmap32_test_and_set_lock((uint16_t)(vector & 0x1fU), &irrptr[idx].v)) {
 			ret = false;
 		} else {
-			/*
-			 * Verify that the trigger-mode of the interrupt matches with
-			 * the vlapic TMR registers.
-			 */
-			tmrptr = &lapic->tmr[0];
-			if ((tmrptr[idx].v & mask) != (level ? mask : 0U)) {
-				dev_dbg(ACRN_DBG_LAPIC, "vlapic TMR[%u] is 0x%08x but interrupt is %s-triggered",
-				      	idx, tmrptr[idx].v, level ? "level" : "edge");
-			}
-
-			vlapic_dump_irr(vlapic, "vlapic_accept_intr");
+			/* set tmr if corresponding irr bit changes from 0 to 1 */
+			vlapic_set_tmr(vlapic, vector, level);
 		}
 	}
 
@@ -1844,24 +1866,6 @@ vlapic_enabled(const struct acrn_vlapic *vlapic)
 	return ret;
 }
 
-static void
-vlapic_set_tmr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
-{
-	struct lapic_regs *lapic;
-	struct lapic_reg *tmrptr;
-	uint32_t mask, idx;
-
-	lapic = &(vlapic->apic_page);
-	tmrptr = &lapic->tmr[0];
-	idx = vector >> 5U;
-	mask = 1U << (vector & 0x1fU);
-	if (level) {
-		tmrptr[idx].v |= mask;
-	} else {
-		tmrptr[idx].v &= ~mask;
-	}
-}
-
 /*
  * APICv batch set tmr will try to set multi vec at the same time
  * to avoid unnecessary VMCS read/update.
@@ -1872,22 +1876,6 @@ vlapic_apicv_batch_set_tmr(struct acrn_vlapic *vlapic)
 	if (is_apicv_intr_delivery_supported()) {
 		apicv_batch_set_tmr(vlapic);
 	}
-}
-
-void
-vlapic_reset_tmr(struct acrn_vlapic *vlapic)
-{
-	struct acrn_vcpu *vcpu = vlapic->vcpu;
-	uint32_t vector;
-
-	dev_dbg(ACRN_DBG_LAPIC,
-			"vlapic resetting all vectors to edge-triggered");
-
-	for (vector = 0U; vector <= 255U; vector++) {
-		vlapic_set_tmr(vlapic, vector, false);
-	}
-
-	vcpu_make_request(vcpu, ACRN_REQUEST_TMR_UPDATE);
 }
 
 void
