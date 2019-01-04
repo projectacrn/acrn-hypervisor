@@ -154,8 +154,6 @@ acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:
   $boot_cse_option \
   $intr_storm_monitor \
   $boot_ipu_option      \
-  -i /run/acrn/ioc_$vm_name,0x20 \
-  -l com2,/run/acrn/ioc_$vm_name \
   --mac_seed $mac_seed \
   -B "root=/dev/vda2 rw rootwait maxcpus=$2 nohpet console=hvc0 \
   console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
@@ -344,8 +342,6 @@ fi
    $intr_storm_monitor \
    $boot_ipu_option      \
    --mac_seed $mac_seed \
-   -i /run/acrn/ioc_$vm_name,0x20 \
-   -l com2,/run/acrn/ioc_$vm_name \
    $boot_image_option \
    --enable_trusty \
    -B "$kernel_cmdline" $vm_name
