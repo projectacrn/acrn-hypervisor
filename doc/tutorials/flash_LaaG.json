@@ -1,0 +1,297 @@
+{
+    "flash": {
+        "commands": [
+        {
+            "args": "flashing unlock",
+            "description": "Set device state to unlocked",
+            "mandatory": true,
+            "restrict": [
+                "acrn",
+                "SOS",
+                "SOS_and_LaaG"
+                ],
+            "retry": 1,
+            "timeout": 60000,
+            "tool": "fastboot"
+        },
+        {
+            "args": "flash gpt ${gpt}",
+            "description": "Initialize the partition table",
+            "mandatory": true,
+            "restrict": [
+                "acrn",
+                "SOS",
+                "SOS_and_LaaG"
+                ],
+            "retry": 1,
+            "timeout": 60000,
+            "tool": "fastboot"
+        },
+        {
+            "args": "erase sos_boot",
+            "description": "Erase sos_boot partition",
+            "mandatory": true,
+            "restrict": [
+                "acrn",
+                "SOS",
+                "SOS_and_LaaG"
+                ],
+            "retry": 1,
+            "timeout": 60000,
+            "tool": "fastboot"
+        },
+        {
+            "args": "erase sos_rootfs",
+            "description": "Erase sos_rootfs partition",
+            "mandatory": true,
+            "restrict": [
+                "acrn",
+                "SOS",
+                "SOS_and_LaaG"
+                ],
+            "retry": 1,
+            "timeout": 60000,
+            "tool": "fastboot"
+        },
+        {
+            "args": "format sos_boot",
+            "description": "Format sos_boot partition",
+            "mandatory": true,
+            "restrict": [
+                "acrn",
+                "SOS",
+                "SOS_and_LaaG"
+                ],
+            "retry": 1,
+            "timeout": 60000,
+            "tool": "fastboot"
+        },
+        {
+            "args": "format sos_rootfs",
+            "block_scan": true,
+            "description": "Format sos_rootfs partition",
+            "mandatory": true,
+            "restrict": [
+                "acrn",
+                "SOS",
+                "SOS_and_LaaG"
+                ],
+            "retry": 1,
+            "timeout": 6000000,
+            "tool": "fastboot"
+        },
+        {
+            "args": "flash sos_boot ${sos_boot}",
+            "description": "Flash sos_boot partition",
+            "mandatory": true,
+            "restrict": [
+                "acrn",
+                "SOS",
+                "SOS_and_LaaG"
+                ],
+            "retry": 1,
+            "timeout": 600000,
+            "tool": "fastboot"
+        },
+        {
+            "args": "flash sos_rootfs ${sos_rootfs}",
+            "description": "Flash sos_rootfs partition",
+            "mandatory": true,
+            "restrict": [
+                "SOS",
+                "SOS_and_LaaG"
+                ],
+            "retry": 1,
+            "timeout": 600000,
+            "tool": "fastboot"
+        },
+        {
+            "args": "flashing lock",
+            "description": "Set device state to locked",
+            "group": "lock-device",
+            "mandatory": true,
+            "restrict": [
+                "acrn",
+                "SOS"
+                ],
+            "retry": 1,
+            "timeout": 60000,
+            "tool": "fastboot"
+        },
+        {
+            "args": "continue",
+            "description": "Boot to main OS",
+            "mandatory": true,
+            "restrict": [
+                "acrn",
+                "SOS"
+                ],
+            "retry": 1,
+            "timeout": 60000,
+            "tool": "fastboot"
+        },
+        {
+            "args": "flashing unlock",
+            "description": "Set device state to unlocked",
+            "mandatory": true,
+            "restrict": [
+                "LaaG"
+                ],
+            "retry": 1,
+            "timeout": 60000,
+            "tool": "fastboot"
+        },
+        {
+            "args": "erase data_partition",
+            "description": "Erase LaaG partition",
+            "mandatory": true,
+            "restrict": [
+                "LaaG",
+                "SOS_and_LaaG"
+                ],
+            "retry": 1,
+            "timeout": 60000,
+            "tool": "fastboot"
+        },
+        {
+            "args": "format data_partition",
+            "block_scan": true,
+            "description": "Format LaaG partition",
+            "mandatory": true,
+            "restrict": [
+                "LaaG",
+                "SOS_and_LaaG"
+                ],
+            "retry": 1,
+            "timeout": 6000000,
+            "tool": "fastboot"
+        },
+        {
+            "args": "flash data_partition ${LaaG_data_partition}",
+            "description": "Flash LaaG partition",
+            "mandatory": true,
+            "restrict": [
+                "LaaG",
+                "SOS_and_LaaG"
+                ],
+            "retry": 1,
+            "timeout": 600000,
+            "tool": "fastboot"
+        },
+        {
+            "args": "flashing lock",
+            "description": "Set device state to locked",
+            "group": "lock-device",
+            "mandatory": true,
+            "restrict": [
+                "LaaG",
+                "SOS_and_LaaG"
+                ],
+            "retry": 1,
+            "timeout": 60000,
+            "tool": "fastboot"
+        },
+        {
+            "args": "continue",
+            "description": "Boot to main OS",
+            "mandatory": true,
+            "restrict": [
+                "LaaG",
+                "SOS_and_LaaG"
+                ],
+            "retry": 1,
+            "timeout": 60000,
+            "tool": "fastboot"
+        }
+        ],
+            "configurations": {
+                "SOS_and_LaaG": {
+                    "brief": "SOS_and_LaaG",
+                    "description": "flash SOS and LaaG images",
+                    "groupsState": {
+                        "lock-device": true
+                    },
+                    "name": "SOS_and_LaaG",
+                    "parameters": {
+                        "gpt": "gpt"
+                    },
+                    "startState": "pos"
+                },
+                "acrn": {
+                    "brief": "acrn",
+                    "description": "flash sos_boot",
+                    "groupsState": {
+                        "lock-device": true
+                    },
+                    "name": "acrn",
+                    "parameters": {
+                        "gpt": "gpt"
+                    },
+                    "startState": "pos"
+                },
+                "SOS": {
+                    "brief": "SOS",
+                    "description": "flash SOS images",
+                    "groupsState": {
+                        "lock-device": true
+                    },
+                    "name": "SOS",
+                    "parameters": {
+                        "gpt": "gpt"
+                    },
+                    "startState": "pos"
+                },
+                "LaaG": {
+                    "brief": "LaaG",
+                    "default": true,
+                    "description": "flash LaaG images",
+                    "groupsState": {
+                        "lock-device": true
+                    },
+                    "name": "LaaG",
+                    "parameters": {
+                        "gpt": "gpt"
+                    },
+                    "startState": "pos"
+                }
+            },
+            "groups": {
+                "lock-device": {
+                    "description": "Put the device in locked state at the end of the flash procedure.",
+                    "name": "Lock the device (it implies the userdata partition wipe)"
+                }
+            },
+        "osplatform": "ACRN",
+        "parameters": {
+            "gpt": {
+                "name": "gpt",
+                "options": {
+                    "gpt": {
+                        "description": "partition_desc.bin",
+                        "value": "partition_desc.bin"
+                    }
+                },
+                "type": "file"
+            },
+            "sos_boot": {
+                "description": "sos_boot.img",
+                "name": "sos_boot",
+                "type": "file",
+                "value": "sos_boot.img"
+            },
+            "sos_rootfs": {
+                "description": "sos_rootfs.img",
+                "name": "sos_rootfs",
+                "type": "file",
+                "value": "sos_rootfs.img"
+            },
+            "LaaG_data_partition": {
+                "description": "up2_laag.img",
+                "name": "LaaG_data_partition",
+                "type": "file",
+                "value": "up2_laag.img"
+            }
+        },
+        "version": "3.0"
+    }
+}
