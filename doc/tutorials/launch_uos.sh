@@ -34,9 +34,9 @@ if [ ! -f "/data/$5/$5.img" ]; then
 fi
 
 #vm-name used to generate uos-mac address
-mac=$(cat /sys/class/net/en*/address)
+mac=$(cat /sys/class/net/e*/address)
 vm_name=vm$1
-mac_seed=${mac:9:8}-${vm_name} 
+mac_seed=${mac:9:8}-${vm_name}
 
 # create a unique tap device for each VM
 tap=tap_$6
@@ -103,10 +103,10 @@ else
     boot_cse_option="$boot_cse_option"" -s 15,virtio-heci,0/0f/0 "
 fi
 
-# for sd card passthrough - SDXC/MMC Host Controller 00:1c.0
-# echo "8086 5acc" > /sys/bus/pci/drivers/pci-stub/new_id
-# echo "0000:00:1c.0" > /sys/bus/pci/devices/0000:00:1c.0/driver/unbind
-# echo "0000:00:1c.0" > /sys/bus/pci/drivers/pci-stub/bind
+# for sd card passthrough - SDXC/MMC Host Controller 00:1b.0
+#echo "8086 5aca" > /sys/bus/pci/drivers/pci-stub/new_id
+#echo "0000:00:1b.0" > /sys/bus/pci/devices/0000:00:1b.0/driver/unbind
+#echo "0000:00:1b.0" > /sys/bus/pci/drivers/pci-stub/bind
 
 #for memsize setting, total 8GB(>7.5GB) uos->6GB, 4GB(>3.5GB) uos->2GB
 memsize=`cat /proc/meminfo|head -n 1|awk '{print $2}'`
@@ -152,11 +152,9 @@ acrn-dm -A -m $mem_size -c $2$boot_GVT_option"$GVT_args" -s 0:0,hostbridge -s 1:
   -s 7,xhci,1-1:1-2:1-3:2-1:2-2:2-3:cap=apl \
   -s 9,passthru,0/15/1 \
   $boot_cse_option \
+  --mac_seed $mac_seed \
   $intr_storm_monitor \
   $boot_ipu_option      \
-  -i /run/acrn/ioc_$vm_name,0x20 \
-  -l com2,/run/acrn/ioc_$vm_name \
-  --mac_seed $mac_seed \
   -B "root=/dev/vda2 rw rootwait maxcpus=$2 nohpet console=hvc0 \
   console=ttyS0 no_timer_check ignore_loglevel log_buf_len=16M \
   consoleblank=0 tsc=reliable i915.avail_planes_per_pipe=$4 i915.enable_guc_loading=0 \
@@ -172,9 +170,9 @@ if [ ! -f "/data/$5/$5.img" ]; then
 fi
 
 #vm-name used to generate uos-mac address
-mac=$(cat /sys/class/net/en*/address)
+mac=$(cat /sys/class/net/e*/address)
 vm_name=vm$1
-mac_seed=${mac:9:8}-${vm_name} 
+mac_seed=${mac:9:8}-${vm_name}
 
 # create a unique tap device for each VM
 tap=tap_$6
@@ -229,10 +227,21 @@ if [ $audio_passthrough == 1 ]; then
 else
     boot_audio_option="-s 14,virtio-audio"
 fi
-# # for sd card passthrough - SDXC/MMC Host Controller 00:1b.0
-# echo "8086 5acc" > /sys/bus/pci/drivers/pci-stub/new_id
-# echo "0000:00:1c.0" > /sys/bus/pci/devices/0000:00:1c.0/driver/unbind
-# echo "0000:00:1c.0" > /sys/bus/pci/drivers/pci-stub/bind
+
+# for sd card passthrough - SDXC/MMC Host Controller 00:1b.0
+#echo "8086 5aca" > /sys/bus/pci/drivers/pci-stub/new_id
+#echo "0000:00:1c.0" > /sys/bus/pci/devices/0000:00:1c.0/driver/unbind
+#echo "0000:00:1c.0" > /sys/bus/pci/drivers/pci-stub/bind
+
+# WIFI
+echo "11ab 2b38" > /sys/bus/pci/drivers/pci-stub/new_id
+echo "0000:03:00.0" > /sys/bus/pci/devices/0000:03:00.0/driver/unbind
+echo "0000:03:00.0" > /sys/bus/pci/drivers/pci-stub/bind
+
+# Bluetooth passthrough depends on WIFI
+echo "8086 5abc" > /sys/bus/pci/drivers/pci-stub/new_id
+echo "0000:00:18.0" > /sys/bus/pci/devices/0000:00:18.0/driver/unbind
+echo "0000:00:18.0" > /sys/bus/pci/drivers/pci-stub/bind
 
 # Check if the NPK device/driver is present
 ls -d /sys/bus/pci/drivers/intel_th_pci/0000* 2>/dev/null 1>/dev/null
@@ -341,9 +350,12 @@ fi
    -s 11,wdt-i6300esb \
    $boot_audio_option \
    $boot_cse_option \
+   --mac_seed $mac_seed \
+   -s 27,passthru,0/1b/0 \
+   -s 24,passthru,0/18/0 \
+   -s 18,passthru,3/0/0,keep_gsi \
    $intr_storm_monitor \
    $boot_ipu_option      \
-   --mac_seed $mac_seed \
    -i /run/acrn/ioc_$vm_name,0x20 \
    -l com2,/run/acrn/ioc_$vm_name \
    $boot_image_option \
@@ -432,7 +444,7 @@ case $launch_type in
 		launch_clearlinux 1 1 "64 448 8" 0x070F00 clearlinux "LaaG" $debug
 		;;
 	2) echo "Launch android UOS"
-		launch_android 1 1 "64 448 8" 0x070F00 android "AaaG" $debug
+		launch_android 1 3 "64 448 8" 0x070F00 android "AaaG" $debug
 		;;
 	3) echo "Launch clearlinux UOS + android UOS"
 		launch_android 1 2 "64 448 4" 0x00000C android "AaaG" $debug &
