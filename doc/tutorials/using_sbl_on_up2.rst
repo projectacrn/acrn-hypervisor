@@ -9,7 +9,8 @@ SBL instead of UEFI to boot UP2 board.
 Slim Bootloader is an open-source boot firmware solution,
 built from the ground up to be secure, lightweight, and highly
 optimized while leveraging robust tools and libraries from
-the EDK II framework.
+the EDK II framework. For more information about booting ACRN with SBL,
+please visit `<https://slimbootloader.github.io/how-tos/boot-acrn.html>`_.
 
 .. image:: images/sbl_boot_flow_UP2.png
    :align: center
@@ -174,7 +175,7 @@ SOS and LaaG Installation
        ls /dev/ttyUSB*
        /dev/ttyUSB0
 
-#. Connect to board via ``minicom``, and use ``/dev/ttyUSB0`` for exmaple:
+#. Connect to board via ``minicom``, and use ``/dev/ttyUSB0`` for example:
 
    .. code-block:: none
 
@@ -257,7 +258,7 @@ SOS and LaaG Installation
        USB for fastboot transport layer selected
 
 
-#. When UP2 board is fastboot mode, you should be able 
+#. When UP2 board is in fastboot mode, you should be able 
    see the device in Platform Flash Tool. Select the 
    file ``flash_LaaG.json`` and modify ``Configuration``
    to ``SOS_and_LaaG``. Click ``Start to flash`` to flash images.
