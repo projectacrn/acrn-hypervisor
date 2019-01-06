@@ -1,7 +1,8 @@
+#!/bin/bash
+
 # Copyright (C) 2018 Intel Corporation.
 # SPDX-License-Identifier: BSD-3-Clause
 
-#!/bin/bash
 
 usage() {
     echo "Usage: $0 [options]"
@@ -9,7 +10,7 @@ usage() {
     echo "options:"
     echo "--mirror-url default: 'https://cdn.download.clearlinux.org/releases/', for swupd"
     echo "--acrn-code-path: Specify acrn-hypervisor code path for ACRN SBL build. If acrn-sbl-path is provided, acrn-code-path will be ignored"
-    echo "--acrn-sbl-path: Specify ACRN SBL binary path. If acrn-sbl-path isn't provided, acrn_code_path will be must option"
+    echo "--acrn-sbl-path: Specify ACRN SBL binary path. If acrn-sbl-path isn't provided, --acrn-code-path must be set"
     echo "--clearlinux-version: mandatory option for sos image build"
     echo "--images-type: Specify the type of OS image to build (sos/laag/all, default value is all)"
     echo "--sign-key: Specify the debug key for signing, default value provided"
