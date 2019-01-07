@@ -45,7 +45,7 @@
  * @pre pin < vioapic_pincount(vm)
  */
 static void
-vioapic_send_intr(struct acrn_vioapic *vioapic, uint32_t pin)
+vioapic_generate_intr(struct acrn_vioapic *vioapic, uint32_t pin)
 {
 	uint32_t vector, dest, delmode;
 	union ioapic_rte rte;
@@ -92,14 +92,14 @@ vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint16_t pin, uint32_t level)
 					&vioapic->pin_state[pin >> 6U]);
 			if (((rte.full & IOAPIC_RTE_INTPOL) != 0UL)
 				&& old_lvl != level) {
-				vioapic_send_intr(vioapic, pin);
+				vioapic_generate_intr(vioapic, pin);
 			}
 		} else {
 			/* set pin_state and deliver intrrupt according to polarity */
 			bitmap_set_nolock(pin & 0x3FU, &vioapic->pin_state[pin >> 6U]);
 			if (((rte.full & IOAPIC_RTE_INTPOL) == 0UL)
 				&& old_lvl != level) {
-				vioapic_send_intr(vioapic, pin);
+				vioapic_generate_intr(vioapic, pin);
 			}
 		}
 	}
@@ -108,7 +108,7 @@ vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint16_t pin, uint32_t level)
 /**
  * @brief Set vIOAPIC IRQ line status.
  *
- * Similar with vioapic_set_irq(),but would not make sure
+ * Similar with vioapic_set_irqline_lock(),but would not make sure
  * operation be done with ioapic lock.
  *
  * @param[in] vm        Pointer to target VM
@@ -120,7 +120,7 @@ vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint16_t pin, uint32_t level)
  * @return None
  */
 void
-vioapic_set_irq_nolock(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
+vioapic_set_irqline_nolock(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
 {
 	struct acrn_vioapic *vioapic;
 	uint16_t pin = (uint16_t)irq;
@@ -163,12 +163,12 @@ vioapic_set_irq_nolock(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
  * @return None
  */
 void
-vioapic_set_irq(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
+vioapic_set_irqline_lock(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
 {
 	struct acrn_vioapic *vioapic = vm_ioapic(vm);
 
 	spinlock_obtain(&(vioapic->mtx));
-	vioapic_set_irq_nolock(vm, irq, operation);
+	vioapic_set_irqline_nolock(vm, irq, operation);
 	spinlock_release(&(vioapic->mtx));
 }
 
@@ -391,7 +391,7 @@ vioapic_indirect_write(struct acrn_vioapic *vioapic, uint32_t addr,
 			&& vioapic_need_intr(vioapic, (uint16_t)pin)) {
 			dev_dbg(ACRN_DBG_IOAPIC,
 				"ioapic pin%hhu: asserted at rtbl write", pin);
-			vioapic_send_intr(vioapic, pin);
+			vioapic_generate_intr(vioapic, pin);
 		}
 
 		/* remap for ptdev */
@@ -486,7 +486,7 @@ vioapic_process_eoi(struct acrn_vm *vm, uint32_t vector)
 		if (vioapic_need_intr(vioapic, (uint16_t)pin)) {
 			dev_dbg(ACRN_DBG_IOAPIC,
 				"ioapic pin%hhu: asserted at eoi", pin);
-			vioapic_send_intr(vioapic, pin);
+			vioapic_generate_intr(vioapic, pin);
 		}
 	}
 	spinlock_release(&(vioapic->mtx));

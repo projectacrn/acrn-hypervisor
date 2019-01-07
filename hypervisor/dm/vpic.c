@@ -205,7 +205,7 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 			 * to vioapic pin0 (irq2)
 			 * From MPSpec session 5.1
 			 */
-			vioapic_set_irq(vpic->vm, 0U, GSI_RAISING_PULSE);
+			vioapic_set_irqline_lock(vpic->vm, 0U, GSI_RAISING_PULSE);
 		}
 	} else {
 		dev_dbg(ACRN_DBG_PIC,
@@ -455,7 +455,7 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin,
  *
  * @return None
  */
-void vpic_set_irq(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
+void vpic_set_irqline(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
 {
 	struct acrn_vpic *vpic;
 	struct i8259_reg_state *i8259;
@@ -505,7 +505,7 @@ vpic_pincount(void)
  * @pre vm->vpic != NULL
  * @pre irq < NR_VPIC_PINS_TOTAL
  */
-void vpic_get_irq_trigger(struct acrn_vm *vm, uint32_t irq,
+void vpic_get_irqline_trigger_mode(struct acrn_vm *vm, uint32_t irq,
 		enum vpic_trigger *trigger)
 {
 	struct acrn_vpic *vpic;

@@ -149,8 +149,8 @@ static void vuart_toggle_intr(const struct acrn_vuart *vu)
 		operation = (intr_reason != IIR_NOPEND) ? GSI_SET_HIGH : GSI_SET_LOW;
 	}
 
-	vpic_set_irq(vu->vm, vuart_com_irq, operation);
-	vioapic_set_irq(vu->vm, vuart_com_irq, operation);
+	vpic_set_irqline(vu->vm, vuart_com_irq, operation);
+	vioapic_set_irqline_lock(vu->vm, vuart_com_irq, operation);
 }
 
 static void vuart_write(struct acrn_vm *vm, uint16_t offset_arg,
