@@ -144,10 +144,10 @@ vLAPIC APIs.
 
 **Supported APIs:**
 
-.. doxygenfunction:: vioapic_set_irq
+.. doxygenfunction:: vioapic_set_irqline_lock
   :project: Project ACRN
 
-.. doxygenfunction:: vioapic_set_irq_nolock
+.. doxygenfunction:: vioapic_set_irqline_nolock
   :project: Project ACRN
 
 Virtual PIC
@@ -165,7 +165,7 @@ If an interrupt source from vPIC need to inject an interrupt, the
 following APIs need be called, which will finally make a request for
 *ACRN_REQUEST_EXTINT or ACRN_REQUEST_EVENT*:
 
-.. doxygenfunction:: vpic_set_irq
+.. doxygenfunction:: vpic_set_irqline
   :project: Project ACRN
 
 The following APIs are used to query the vector needed to be injected and ACK
