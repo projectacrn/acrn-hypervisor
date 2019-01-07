@@ -82,7 +82,7 @@ UP2 serial port setting
 
 The serial port (ttyS1) in the 40-pin HAT connector is located at ``serial PCI BDF 0:18.1``.
 You can check this from the ``lspci`` output from the initial Clearlinux installation.
-Also you can use ``dmesg | grep tty`` to get its IRQ infomation for vuart setting; and update
+Also you can use ``dmesg | grep tty`` to get its IRQ information for vuart setting; and update
 SOS bootargs ``console=ttyS1`` in acrn.conf to match with vuart setting.
 
 .. code-block:: none

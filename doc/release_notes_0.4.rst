@@ -207,7 +207,7 @@ release in Nov 2018 (click on the CommitID link to see details):
 - :acrn-commit:`b6aaf1b8` hv: MSRs may need isolation between normal and secure world
 - :acrn-commit:`92bbb545` hv: rearrange data structure for emulated MSRs
 - :acrn-commit:`7fce2462` dm: apply new mevent API to avoid race issue in mei
-- :acrn-commit:`64d9c59a` dm: enhence the mevent API
+- :acrn-commit:`64d9c59a` dm: enhance the mevent API
 - :acrn-commit:`eec3a342` dm: fix the race issue in mevent_del
 - :acrn-commit:`87e7bdb9` DM: updating launch_uos.sh
 - :acrn-commit:`9e0562f4` hv: add obvious comment for empty else clause following else if
@@ -403,7 +403,7 @@ release in Nov 2018 (click on the CommitID link to see details):
 - :acrn-commit:`efb24923` hv: vtd: merge lines for a statement if needed.
 - :acrn-commit:`e35a8e8c` hv: vtd: typo fix
 - :acrn-commit:`611944c0` dm: Fix race between ioreq client destroy and access
-- :acrn-commit:`3b24c34c` hv: msix: corrently determine when the guest is changing Message Data/Addr
+- :acrn-commit:`3b24c34c` hv: msix: correctly determine when the guest is changing Message Data/Addr
 - :acrn-commit:`c41c0dab` hv: properly initialize MSI-X table
 - :acrn-commit:`53971e19` hv: fix 2 bugs in msix.c
 - :acrn-commit:`119eccfe` hv: hypercall: clean up HV_DEBUG usage
