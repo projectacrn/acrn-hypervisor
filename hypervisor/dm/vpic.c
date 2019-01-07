@@ -31,7 +31,7 @@
 
 #define ACRN_DBG_PIC	6U
 
-static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin, uint8_t level);
+static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t level);
 
 static inline bool master_pic(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259)
 {
@@ -147,8 +147,8 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 		 * Cascade the request from the slave to the master.
 		 */
 		i8259->intr_raised = true;
-		vpic_set_pinstate(vpic, (uint8_t)2U, 1U);
-		vpic_set_pinstate(vpic, (uint8_t)2U, 0U);
+		vpic_set_pinstate(vpic, 2U, 1U);
+		vpic_set_pinstate(vpic, 2U, 0U);
 	} else {
 		dev_dbg(ACRN_DBG_PIC,
 		"pic slave no eligible interrupt (imr 0x%x irr 0x%x isr 0x%x)",
@@ -370,7 +370,7 @@ static int32_t vpic_ocw2(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, 
 		/* if level ack PTDEV */
 		if ((i8259->elc & (1U << (isr_bit & 0x7U))) != 0U) {
 			ptirq_intx_ack(vpic->vm,
-				(master_pic(vpic, i8259) ? isr_bit : isr_bit + 8U),
+				(uint32_t)(master_pic(vpic, i8259) ? isr_bit : isr_bit + 8U),
 				PTDEV_VPIN_PIC);
 		}
 	} else if (((val & OCW2_SL) != 0U) && i8259->rotate) {
@@ -409,7 +409,7 @@ static int32_t vpic_ocw3(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, 
 /**
  * @pre pin < NR_VPIC_PINS_TOTAL
  */
-static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin,
+static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin,
 		uint8_t level)
 {
 	struct i8259_reg_state *i8259;
@@ -449,22 +449,22 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin,
  * @brief Set vPIC IRQ line status.
  *
  * @param[in] vm        Pointer to target VM
- * @param[in] irq       Target IRQ number
+ * @param[in] irqline       Target IRQ number
  * @param[in] operation action options:GSI_SET_HIGH/GSI_SET_LOW/
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
  * @return None
  */
-void vpic_set_irqline(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
+void vpic_set_irqline(struct acrn_vm *vm, uint32_t irqline, uint32_t operation)
 {
 	struct acrn_vpic *vpic;
 	struct i8259_reg_state *i8259;
-	uint8_t pin;
+	uint32_t pin;
 
-	if (irq < NR_VPIC_PINS_TOTAL) {
+	if (irqline < NR_VPIC_PINS_TOTAL) {
 		vpic = vm_pic(vm);
-		i8259 = &vpic->i8259[irq >> 3U];
-		pin = (uint8_t)irq;
+		i8259 = &vpic->i8259[irqline >> 3U];
+		pin = irqline;
 
 		if (i8259->ready) {
 			spinlock_obtain(&(vpic->lock));
@@ -503,16 +503,16 @@ vpic_pincount(void)
 
 /**
  * @pre vm->vpic != NULL
- * @pre irq < NR_VPIC_PINS_TOTAL
+ * @pre irqline < NR_VPIC_PINS_TOTAL
  */
-void vpic_get_irqline_trigger_mode(struct acrn_vm *vm, uint32_t irq,
+void vpic_get_irqline_trigger_mode(struct acrn_vm *vm, uint32_t irqline,
 		enum vpic_trigger *trigger)
 {
 	struct acrn_vpic *vpic;
 
 	vpic = vm_pic(vm);
 
-	if ((vpic->i8259[irq >> 3U].elc & (1U << (irq & 0x7U))) != 0U) {
+	if ((vpic->i8259[irqline >> 3U].elc & (1U << (irqline & 0x7U))) != 0U) {
 		*trigger = LEVEL_TRIGGER;
 	} else {
 		*trigger = EDGE_TRIGGER;

@@ -36,7 +36,7 @@
  * @pre vm != NULL
  *
  */
-void ptirq_intx_ack(struct acrn_vm *vm, uint8_t virt_pin, uint8_t vpin_src);
+void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_pin, uint8_t vpin_src);
 
 /**
  * @brief MSI/MSI-x remapping for passthrough device.

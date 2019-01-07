@@ -124,16 +124,12 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 		/* init polarity & pin state */
 		if ((rte.full & IOAPIC_RTE_INTPOL) != 0UL) {
 			if (entry->polarity == 0U) {
-				vioapic_set_irqline_nolock(vm,
-					(uint32_t)virt_sid->intx_id.pin,
-					GSI_SET_HIGH);
+				vioapic_set_irqline_nolock(vm, virt_sid->intx_id.pin, GSI_SET_HIGH);
 			}
 			entry->polarity = 1U;
 		} else {
 			if (entry->polarity == 1U) {
-				vioapic_set_irqline_nolock(vm,
-					(uint32_t)virt_sid->intx_id.pin,
-					GSI_SET_LOW);
+				vioapic_set_irqline_nolock(vm, virt_sid->intx_id.pin, GSI_SET_LOW);
 			}
 			entry->polarity = 0U;
 		}
@@ -171,7 +167,7 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 		/* just update trigger mode */
 		ioapic_get_rte(phys_irq, &phys_rte);
 		rte.full = phys_rte.full & (~IOAPIC_RTE_TRGRMOD);
-		vpic_get_irqline_trigger_mode(vm, (uint32_t)virt_sid->intx_id.pin, &trigger);
+		vpic_get_irqline_trigger_mode(vm, virt_sid->intx_id.pin, &trigger);
 		if (trigger == LEVEL_TRIGGER) {
 			rte.full |= IOAPIC_RTE_TRGRLVL;
 		}
@@ -377,15 +373,15 @@ static void ptirq_handle_intx(struct acrn_vm *vm,
 
 		if (trigger_lvl) {
 			if (entry->polarity != 0U) {
-				vioapic_set_irqline_lock(vm, (uint32_t)virt_sid->intx_id.pin, GSI_SET_LOW);
+				vioapic_set_irqline_lock(vm, virt_sid->intx_id.pin, GSI_SET_LOW);
 			} else {
-				vioapic_set_irqline_lock(vm, (uint32_t)virt_sid->intx_id.pin, GSI_SET_HIGH);
+				vioapic_set_irqline_lock(vm, virt_sid->intx_id.pin, GSI_SET_HIGH);
 			}
 		} else {
 			if (entry->polarity != 0U) {
-				vioapic_set_irqline_lock(vm, (uint32_t)virt_sid->intx_id.pin, GSI_FALLING_PULSE);
+				vioapic_set_irqline_lock(vm, virt_sid->intx_id.pin, GSI_FALLING_PULSE);
 			} else {
-				vioapic_set_irqline_lock(vm, (uint32_t)virt_sid->intx_id.pin, GSI_RAISING_PULSE);
+				vioapic_set_irqline_lock(vm, virt_sid->intx_id.pin, GSI_RAISING_PULSE);
 			}
 		}
 
@@ -401,11 +397,11 @@ static void ptirq_handle_intx(struct acrn_vm *vm,
 		enum vpic_trigger trigger;
 
 		/* VPIN_PIC src means we have vpic enabled */
-		vpic_get_irqline_trigger_mode(vm, (uint32_t)virt_sid->intx_id.pin, &trigger);
+		vpic_get_irqline_trigger_mode(vm, virt_sid->intx_id.pin, &trigger);
 		if (trigger == LEVEL_TRIGGER) {
-			vpic_set_irqline(vm, (uint32_t)virt_sid->intx_id.pin, GSI_SET_HIGH);
+			vpic_set_irqline(vm, virt_sid->intx_id.pin, GSI_SET_HIGH);
 		} else {
-			vpic_set_irqline(vm, (uint32_t)virt_sid->intx_id.pin, GSI_RAISING_PULSE);
+			vpic_set_irqline(vm, virt_sid->intx_id.pin, GSI_RAISING_PULSE);
 		}
 		break;
 	}
@@ -459,7 +455,7 @@ void ptirq_softirq(uint16_t pcpu_id)
 	}
 }
 
-void ptirq_intx_ack(struct acrn_vm *vm, uint8_t virt_pin,
+void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_pin,
 		uint8_t vpin_src)
 {
 	uint32_t phys_irq;

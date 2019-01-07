@@ -78,7 +78,7 @@ vioapic_generate_intr(struct acrn_vioapic *vioapic, uint32_t pin)
  * @pre pin < vioapic_pincount(vm)
  */
 static void
-vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint16_t pin, uint32_t level)
+vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint32_t pin, uint32_t level)
 {
 	uint32_t old_lvl;
 	union ioapic_rte rte;
@@ -112,18 +112,18 @@ vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint16_t pin, uint32_t level)
  * operation be done with ioapic lock.
  *
  * @param[in] vm        Pointer to target VM
- * @param[in] irq       Target IRQ number
+ * @param[in] irqline   Target IRQ number
  * @param[in] operation Action options: GSI_SET_HIGH/GSI_SET_LOW/
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
- * @pre irq < vioapic_pincount(vm)
+ * @pre irqline < vioapic_pincount(vm)
  * @return None
  */
 void
-vioapic_set_irqline_nolock(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
+vioapic_set_irqline_nolock(struct acrn_vm *vm, uint32_t irqline, uint32_t operation)
 {
 	struct acrn_vioapic *vioapic;
-	uint16_t pin = (uint16_t)irq;
+	uint32_t pin = irqline;
 
 	vioapic = vm_ioapic(vm);
 
@@ -154,21 +154,21 @@ vioapic_set_irqline_nolock(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
  * @brief Set vIOAPIC IRQ line status.
  *
  * @param[in] vm        Pointer to target VM
- * @param[in] irq       Target IRQ number
+ * @param[in] irqline   Target IRQ number
  * @param[in] operation Action options: GSI_SET_HIGH/GSI_SET_LOW/
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
- * @pre irq < vioapic_pincount(vm)
+ * @pre irqline < vioapic_pincount(vm)
  *
  * @return None
  */
 void
-vioapic_set_irqline_lock(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
+vioapic_set_irqline_lock(struct acrn_vm *vm, uint32_t irqline, uint32_t operation)
 {
 	struct acrn_vioapic *vioapic = vm_ioapic(vm);
 
 	spinlock_obtain(&(vioapic->mtx));
-	vioapic_set_irqline_nolock(vm, irq, operation);
+	vioapic_set_irqline_nolock(vm, irqline, operation);
 	spinlock_release(&(vioapic->mtx));
 }
 
@@ -467,7 +467,7 @@ vioapic_process_eoi(struct acrn_vm *vm, uint32_t vector)
 			continue;
 		}
 
-		ptirq_intx_ack(vm, (uint8_t)pin, PTDEV_VPIN_IOAPIC);
+		ptirq_intx_ack(vm, pin, PTDEV_VPIN_IOAPIC);
 	}
 
 	/*

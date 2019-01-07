@@ -24,15 +24,16 @@ union source_id (name) = {.msi_id = {.bdf = (a), .entry_nr = (b)} }
 union source_id (name) = {.intx_id = {.pin = (a), .src = (b)} }
 
 union source_id {
-	uint32_t value;
+	uint64_t value;
 	struct {
 		uint16_t bdf;
 		uint16_t entry_nr;
+		uint32_t reserved;
 	} msi_id;
 	struct {
-		uint8_t pin;
+		uint32_t pin;
 		uint8_t src;
-		uint16_t reserved;
+		uint8_t reserved[3];
 	} intx_id;
 };
 
