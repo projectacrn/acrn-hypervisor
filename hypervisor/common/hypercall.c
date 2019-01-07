@@ -356,11 +356,11 @@ int32_t hcall_set_irqline(const struct acrn_vm *vm, uint16_t vmid,
 			 * number #2 to PIC IRQ #0.
 			 */
 			irq_pic = (ops->gsi == 2U) ? 0U : ops->gsi;
-			vpic_set_irq(target_vm, irq_pic, ops->op);
+			vpic_set_irqline(target_vm, irq_pic, ops->op);
 	        }
 
 		/* handle IOAPIC irqline */
-		vioapic_set_irq(target_vm, ops->gsi, ops->op);
+		vioapic_set_irqline_lock(target_vm, ops->gsi, ops->op);
 		ret = 0;
 	}
 
