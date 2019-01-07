@@ -13,8 +13,10 @@
 #include "load_conf.h"
 #include "channels.h"
 #include "fsutils.h"
+#include "cmdutils.h"
 #include "log_sys.h"
 #include "event_handler.h"
+#include "startupreason.h"
 
 /* Watchdog timeout in second*/
 #define WDT_TIMEOUT 300
@@ -196,14 +198,25 @@ static void *event_handle(void *unused __attribute__((unused)))
 				sender->send(e);
 		}
 
+		if (e->event_type == REBOOT) {
+			char reason[REBOOT_REASON_SIZE];
+
+			read_startupreason(reason, sizeof(reason));
+			if (!strcmp(reason, "WARM") ||
+			    !strcmp(reason, "WATCHDOG"))
+				if (exec_out2file(NULL, "reboot") == -1)
+					break;
+		}
+
 		if ((e->dir))
 			free(e->dir);
 		free(e);
 		event_processing = 0;
 		free(last_e);
+
 	}
 
-	LOGE("something goes error, %s exit\n", __func__);
+	LOGE("failed to reboot system, %s exit\n", __func__);
 	return NULL;
 }
 
