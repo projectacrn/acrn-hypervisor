@@ -1211,6 +1211,8 @@ vlapic_process_init_sipi(struct acrn_vcpu* target_vcpu, uint32_t mode,
 				schedule_vcpu(target_vcpu);
 			}
 		}
+	} else {
+		/* No other state currently, do nothing */
 	}
 	return;
 }
@@ -1452,8 +1454,7 @@ vlapic_svr_write_handler(struct acrn_vlapic *vlapic)
 }
 
 static int32_t
-vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg,
-		uint64_t *data)
+vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg, uint64_t *data)
 {
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 	uint32_t i;
@@ -1574,8 +1575,7 @@ vlapic_read(struct acrn_vlapic *vlapic, uint32_t offset_arg,
 }
 
 static int32_t
-vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset,
-		uint64_t data)
+vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset, uint64_t data)
 {
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 	uint32_t *regptr;
@@ -1585,8 +1585,7 @@ vlapic_write(struct acrn_vlapic *vlapic, uint32_t offset,
 	ASSERT(((offset & 0xfU) == 0U) && (offset < PAGE_SIZE),
 		"%s: invalid offset %#x", __func__, offset);
 
-	dev_dbg(ACRN_DBG_LAPIC, "vlapic write offset %#x, data %#lx",
-		offset, data);
+	dev_dbg(ACRN_DBG_LAPIC, "vlapic write offset %#x, data %#lx", offset, data);
 
 	retval = 0;
 	if (offset <= sizeof(*lapic)) {
@@ -2258,9 +2257,7 @@ int32_t vlapic_create(struct acrn_vcpu *vcpu)
  */
 void vlapic_free(struct acrn_vcpu *vcpu)
 {
-	struct acrn_vlapic *vlapic = NULL;
-
-	vlapic = vcpu_vlapic(vcpu);
+	struct acrn_vlapic *vlapic = vcpu_vlapic(vcpu);
 
 	del_timer(&vlapic->vtimer.timer);
 
