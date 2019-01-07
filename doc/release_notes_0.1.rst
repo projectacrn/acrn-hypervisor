@@ -390,7 +390,7 @@ initial release in March 2018 (click on the CommitID link to see details):
 - :acrn-commit:`a167f44` doc: add graphviz installation instructions
 - :acrn-commit:`2e3af9e` tools: acrn-crashlog: fix typo in Makefile
 - :acrn-commit:`d8c8403` hv: replace vlapic_init by vlapic_reset in vcpu_reset
-- :acrn-commit:`359b93f` HV: Remove misuesed __unused
+- :acrn-commit:`359b93f` HV: Remove misused __unused
 - :acrn-commit:`719e07f` HV: fix a print typo in create_vcpu
 - :acrn-commit:`74dfa42` hv: Add initialize pm.c
 - :acrn-commit:`feed38f` hv: add suspend/resume callback for console
@@ -415,7 +415,7 @@ initial release in March 2018 (click on the CommitID link to see details):
 - :acrn-commit:`5e2c83f` hv:replace unsigned long long with uint64_t
 - :acrn-commit:`f757d49` Merge pull request #322 from dbkinder/api-spell
 - :acrn-commit:`44293a4` doc: use graphviz for intro boot-flow diagram
-- :acrn-commit:`64515cf` Tools:acrn-manager Fix wrong descrition of mngr_send_msg()
+- :acrn-commit:`64515cf` Tools:acrn-manager Fix wrong description of mngr_send_msg()
 - :acrn-commit:`b7ad705` convert bridge creation to service
 - :acrn-commit:`48b0894` hv: relocate trampoline code to the dynamically allocated memory
 - :acrn-commit:`2a1a6ad` hv: Other preparation for trampoline code relocation
@@ -442,7 +442,7 @@ initial release in March 2018 (click on the CommitID link to see details):
 - :acrn-commit:`ce061d3` doc: add python and Kconfiglib as prerequisite development tools
 - :acrn-commit:`647aee6` scripts: introduce .config/config.h generators
 - :acrn-commit:`5e521e2` IOC mediator: Disable hardware flow control by default
-- :acrn-commit:`8379119` tools: acrnctl: Fix wrong descrition of mngr
+- :acrn-commit:`8379119` tools: acrnctl: Fix wrong description of mngr
 - :acrn-commit:`c34360b` DM USB: Fix potential crash issues.
 - :acrn-commit:`e334675` hv: add fixup to trampline code
 - :acrn-commit:`f3831cd` hv: don't combine the trampline code with AP start
@@ -585,12 +585,12 @@ initial release in March 2018 (click on the CommitID link to see details):
 - :acrn-commit:`11abe6e` tools: acrnctl: fix possibility of buffer overflow
 - :acrn-commit:`004d2e2` HV: treewide: give names to unnamed structs/unions
 - :acrn-commit:`ef3cb5b` treewide: remove unnecessary unnamed structs/unions
-- :acrn-commit:`b9660eb` refomatted GET_DATA_SIZE macro
+- :acrn-commit:`b9660eb` reformatted GET_DATA_SIZE macro
 - :acrn-commit:`4b4e1e1` DM: Add option of no check against ptdev reset
 - :acrn-commit:`b19d936` DM: refuse passthrough PCIe without reset support
 - :acrn-commit:`c3793e1` DM sample: update uos launch script for virtio rpmb
 - :acrn-commit:`9f56364` DM USB: xHCI: add log level switch
-- :acrn-commit:`be4406c` DM USB: xHCI: modify option parsing function to enable USB virtualiztion
+- :acrn-commit:`be4406c` DM USB: xHCI: modify option parsing function to enable USB virtualization
 - :acrn-commit:`6449950` DM USB: xHCI: add xHCI de-initialization support
 - :acrn-commit:`048b2c7` DM USB: xHCI: add port sharing feature
 - :acrn-commit:`8aef2cb` DM USB: Add some APIs for check native related configurations.
@@ -631,7 +631,7 @@ initial release in March 2018 (click on the CommitID link to see details):
 - :acrn-commit:`7811bdd` Makefile: add a target to build sbl hypervisor
 - :acrn-commit:`364b242` hypervisor: install acrn.32.out to /usr/lib/acrn/acrn.sbl
 - :acrn-commit:`977d48d` hypervisor: install acrn.efi to /usr/lib
-- :acrn-commit:`9563e24` samples: move samples to specifi platform diretory
+- :acrn-commit:`9563e24` samples: move samples to specify platform directory
 - :acrn-commit:`d3ef8ae` fix "warning ISO C forbids omitting the middle term of a?:expression"
 - :acrn-commit:`64d2efc` fix "obsolete use of designated initializer without '='"
 - :acrn-commit:`67dfec8` vmexit: refine vmexit loop
@@ -671,7 +671,7 @@ initial release in March 2018 (click on the CommitID link to see details):
 - :acrn-commit:`88ba420` tools: acrn-crashlog: command utils for acrn-crashlog
 - :acrn-commit:`780fefc` tools: acrn-crashlog: string utils for acrn-crashlog
 - :acrn-commit:`6f9dfa4` tools: acrn-crashlog: framework of acrn-crashlog
-- :acrn-commit:`7c9cc6b` hv:Merge dump_interrupt and dump_exception to a commond API
+- :acrn-commit:`7c9cc6b` hv:Merge dump_interrupt and dump_exception to a common API
 - :acrn-commit:`d88b968` hv: Remove nested check when dump exception
 - :acrn-commit:`8384ed2` hv:rename data structure intr_ctx
 - :acrn-commit:`88b8ce8` hv: move structure(intr_ctx) to irq.h
@@ -729,7 +729,7 @@ initial release in March 2018 (click on the CommitID link to see details):
 - :acrn-commit:`ace25dd` Makefile: implement make install
 - :acrn-commit:`f7a93d8` Makefile: use -C parameter for recursive invocation
 - :acrn-commit:`a6ff3a9` vm: allocated all pcpus to vm0 at the beginning
-- :acrn-commit:`d2a7a9c` uefi: remove warkaround for AP wakeup
+- :acrn-commit:`d2a7a9c` uefi: remove workaround for AP wakeup
 - :acrn-commit:`953f6b5` vlapic: kick AP for INIT-SIPI sequence
 - :acrn-commit:`2ea3b49` HV: refine copy_from_vm/copy_to_vm
 - :acrn-commit:`30549a5` DM: increase vioapic pin count
@@ -778,7 +778,7 @@ initial release in March 2018 (click on the CommitID link to see details):
 - :acrn-commit:`eebf5fe` HV: correct the handling of MU_MEM_ATTR_READ MMU flag
 - :acrn-commit:`4817134` DM: rename acrn_register to acpi_generic_address
 - :acrn-commit:`8a73718` doc: add use of GitHub issues
-- :acrn-commit:`260b37a` HV: Fix the missing list_head initializaiton
+- :acrn-commit:`260b37a` HV: Fix the missing list_head initialization
 - :acrn-commit:`e386a81` DM: bug fix in handling signal
 - :acrn-commit:`2550d71` Subject: DM: virtio-heci: process all available client each time
 - :acrn-commit:`5ed3dbf` Subject: DM: virtio-heci: Use atomic_xchange in client get/put
@@ -792,7 +792,7 @@ initial release in March 2018 (click on the CommitID link to see details):
 - :acrn-commit:`e8d5a49` refine external interrupt VM exit handler
 - :acrn-commit:`121d14a` rename 'req_buf' field in 'struct vm_sw_info'
 - :acrn-commit:`bf0d79b` Make the Service OS bootloader configurable
-- :acrn-commit:`7dd6476` doc: GSG formating fix, RTD theme tweak
+- :acrn-commit:`7dd6476` doc: GSG formatting fix, RTD theme tweak
 - :acrn-commit:`c3b1d0c` Getting Started Guide: update to reflect the new boot flow
 - :acrn-commit:`85716e8` security: fix issues reported by Klocwork
 - :acrn-commit:`b61e6af` hv: cpuid: don't reference the crossed array
@@ -855,9 +855,9 @@ initial release in March 2018 (click on the CommitID link to see details):
 - :acrn-commit:`a331624` dm: virtio-console: Fix the bug that ports cannot work
 - :acrn-commit:`51a76a9` hv: save early hv logmsg before sos booted
 - :acrn-commit:`c61559a` hv: remove spinlock_irq_obtain/spinlock_irq_release
-- :acrn-commit:`db4e3f8` bootparam: bug fix on address convertion
-- :acrn-commit:`2a37a4d` ACPI: bug fix on address convertion
-- :acrn-commit:`c5f860e` MMU: bug fix on operating va <=> pa convertion
+- :acrn-commit:`db4e3f8` bootparam: bug fix on address conversion
+- :acrn-commit:`2a37a4d` ACPI: bug fix on address conversion
+- :acrn-commit:`c5f860e` MMU: bug fix on operating va <=> pa conversion
 - :acrn-commit:`d02f4d4` refine: change the address arguments type of mmio access api
 - :acrn-commit:`11d0e59` revise type of 'exit_reason' and 'inst_len' in vcpu_arch
 - :acrn-commit:`96085d9` DM: release mem range allocated in init_pci
@@ -889,7 +889,7 @@ initial release in March 2018 (click on the CommitID link to see details):
 - :acrn-commit:`db46df9` DM: add init/deinit function for mevent
 - :acrn-commit:`c8116fc` spinlock: bug fix in spinlock code
 - :acrn-commit:`c5fabf5` sprintf: bug fix in sprintf implemented code
-- :acrn-commit:`9b37e14` add IO requrest 'req_buf' check before reference
+- :acrn-commit:`9b37e14` add IO request 'req_buf' check before reference
 - :acrn-commit:`3a3aeac` VMX: change PAT register default value
 - :acrn-commit:`52c020c` VMX: bug fix on operating vmx
 - :acrn-commit:`7ed446e` ptdev: bug fix on operating list
@@ -897,7 +897,7 @@ initial release in March 2018 (click on the CommitID link to see details):
 - :acrn-commit:`1e2c201` vtd: add page allocation check for root_table & context_table
 - :acrn-commit:`4ea7588` vtd: context_table_addr should be hpa
 - :acrn-commit:`403076e` vtd: dmar_uint->root_table_addr should be hpa
-- :acrn-commit:`3847a4d` hypercall: bug fix on the address convertion while hypercall
+- :acrn-commit:`3847a4d` hypercall: bug fix on the address conversion while hypercall
 - :acrn-commit:`ebba622` mmu: add mmu invlpg support
 - :acrn-commit:`2d6c754` mmu: refine the checking of entry present
 - :acrn-commit:`60425f9` mmu: add ept execution only capability check

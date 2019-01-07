@@ -205,7 +205,7 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`6085781` Replace __emalloc() with a call to uefi allocate_page()
 - :acrn-commit:`fea102e` Remove emalloc_for_low_mem() routine in EFI boot code of HV
 - :acrn-commit:`ccf5624` hv:irq: avoid out-of-range access to irq_alloc_bitmap[]
-- :acrn-commit:`4a038d1` dm: workaroud for DM crash when doing fastboot reboot
+- :acrn-commit:`4a038d1` dm: workaround for DM crash when doing fastboot reboot
 - :acrn-commit:`688cdda` DM USB: xHCI: enable USB xHCI emulation in LaaG and AaaG.
 - :acrn-commit:`d4afddc` Revert "hv: init_iommu rework to enable IOMMU for partition mode ACRN"
 - :acrn-commit:`40dfd3f` doc: edit 0.2 release notes
@@ -215,7 +215,7 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`2197f43` HV: Add acpi_fixup api to override acpi on needs
 - :acrn-commit:`0d5ad8a` HV: add simple parser for ACPI data table
 - :acrn-commit:`a1e9fdc` HV: add Kconfig of CONSTANT_ACPI
-- :acrn-commit:`eb8c4fb` hv:Fix Implict conversion:actual to formal param
+- :acrn-commit:`eb8c4fb` hv:Fix Implicit conversion:actual to formal param
 - :acrn-commit:`8f0cb56` HV: trusty: refine version checking when initializing trusty
 - :acrn-commit:`9d60220` hv: remove unused MACROs
 - :acrn-commit:`bb0a2bc` HV:Hypercall:Remove redundant error checking
@@ -288,7 +288,7 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`30b77ab` DM: unmap ptdev BAR when deinit
 - :acrn-commit:`1b334ec` hv: replace 'return' with 'panic' in bsp_boot_post
 - :acrn-commit:`bad8d81` IOC mediator: add new signal for VBUS control
-- :acrn-commit:`f2f719c` hv: fix 'Procedure is not called or referenced in code analysed'
+- :acrn-commit:`f2f719c` hv: fix 'Procedure is not called or referenced in code analyzed'
 - :acrn-commit:`3718177` hv:Replace dynamic allocation with static memory for shell
 - :acrn-commit:`c045442` DM: watchdog: correct 2 MACRO define
 - :acrn-commit:`198c6e9` DM: coding style: replace tab with space
@@ -435,7 +435,7 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`363b4da` DM USB: xHCI: refine xHCI PORTSC Register related functions
 - :acrn-commit:`b746377` DM USB: xHCI: fix an xHCI issue to enable UOS s3 feature
 - :acrn-commit:`b5a233d` HV: Enclose debug specific code with #ifdef HV_DEBUG
-- :acrn-commit:`b086162` dm: monotor: bugfix: update wakeup reason before call recume() callback
+- :acrn-commit:`b086162` dm: monitor: bugfix: update wakeup reason before call resume() callback
 - :acrn-commit:`a86a25f` tools: acrnd: Fixed get_sos_wakeup_reason()
 - :acrn-commit:`2d802d0` tools: vm_resume() requires wakeup reason
 - :acrn-commit:`64a9b2b` Revert "[REVERT-ME]: disable turbo mode"
@@ -451,7 +451,7 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`7d83abb` HV: Add the emulation of CPUID with 0x16 leaf
 - :acrn-commit:`e0eeb8a` HV: Limit the CPUID with >= 0x15 leaf
 - :acrn-commit:`d5d3d2d` tools: acrnlog: Add [-t interval] [-h] to usage
-- :acrn-commit:`a9a2f91` tools: acrntrace: Remove unused paramters "-r" related things
+- :acrn-commit:`a9a2f91` tools: acrntrace: Remove unused parameters "-r" related things
 - :acrn-commit:`76e43ac` HV: handle trusty on vm reset
 - :acrn-commit:`c55b696` HV: remove 'warm_reboot()'function and other minor cleanup
 - :acrn-commit:`77011ce` HV: Merge hypervisor debug header files
@@ -576,7 +576,7 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`ae8836d` hv:fix return value violation for vioapic_get_rte
 - :acrn-commit:`cd3a62f` HV: Refine invalid parameter handling in hypervisor shell
 - :acrn-commit:`61782d7` hv:Rename port/mmio read and write APIs
-- :acrn-commit:`7db4c0a` DM: Add funciton to update PM_WAK_STS
+- :acrn-commit:`7db4c0a` DM: Add function to update PM_WAK_STS
 - :acrn-commit:`a8a27d8` dm: add S3 support for UOS
 - :acrn-commit:`8ee4c0b` DM: add vm_stop/reset_watchdog
 - :acrn-commit:`a2241d9` DM: register pm ops to monitor
@@ -591,14 +591,14 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`64f6295` acrn-manager: create acrn-hypervisor-dev package
 - :acrn-commit:`51c75e9` hv: treewide: fix 'Function prototype/defn param type mismatch'
 - :acrn-commit:`cf8fd8c` Revert "HV: clear memory region used by UOS before it exit"
-- :acrn-commit:`9c24c5c` HV:Remame 'shell_internal.c' to 'shell.c'
+- :acrn-commit:`9c24c5c` HV:Rename 'shell_internal.c' to 'shell.c'
 - :acrn-commit:`3b06282` HV:Remove i/o session sw interface from hypervisor shell
 - :acrn-commit:`a8e9d83` samples: change WIFI BDF to 3:0:0
 - :acrn-commit:`00bfde3` HV: rename resume_vm to start_vm in hypercall api
 - :acrn-commit:`5e31e7c` IOC mediator: Add parking brake and Hvac signals
 - :acrn-commit:`457ecd6` hv: softirq: refine softirq
 - :acrn-commit:`073583c` hv: softirq: move softirq.c to common directory
-- :acrn-commit:`dec24a9` hv: add check to invalid CR8 writting from guest
+- :acrn-commit:`dec24a9` hv: add check to invalid CR8 writing from guest
 - :acrn-commit:`13a50c9` hv: Explicitly trap VMXE and PCIDE bit for CR4 write
 - :acrn-commit:`f0ef41c` hv: Extend the always off mask of CR0 and CR4
 - :acrn-commit:`d18642a` hv: Add function to check whether cr0 written operation is valid
@@ -619,7 +619,7 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`b21b172` HV: io: refactoring vmexit handler on EPT violation
 - :acrn-commit:`50e4bc1` HV: io: refactoring vmexit handler on I/O instruction
 - :acrn-commit:`d4d8a12` doc: tweak formatting for :kbd: role
-- :acrn-commit:`9c3d77e` doc: tweek known-issues pattern for hypercall API
+- :acrn-commit:`9c3d77e` doc: tweak known-issues pattern for hypercall API
 - :acrn-commit:`99ebd92` hv:Delete serial files
 - :acrn-commit:`ae30040` hv:Reshuffle console/uart code
 - :acrn-commit:`b743627` IOC mediator: fix IOC mediator blocks acrn-dm shutdown flow
@@ -630,7 +630,7 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`3446e84` HV:treewide:rename struct timer as struct hv_timer
 - :acrn-commit:`cf7a940` HV: clear memory region used by UOS before it exit
 - :acrn-commit:`a2fe964` HV: Rename functions beginning with "_"
-- :acrn-commit:`d40a6b9` DM: add service to support auot boot UOS
+- :acrn-commit:`d40a6b9` DM: add service to support auto boot UOS
 - :acrn-commit:`496e400` HV:treewide:fix rest of violations related parameter changed
 - :acrn-commit:`42c77e4` Documentation: add needed library for acrnprobe
 - :acrn-commit:`a4aed45` tools: acrn-crashlog: replace debugfs with api
@@ -675,7 +675,7 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`3d6ff0e` tools: acrntrace: save trace data file under current dir by default
 - :acrn-commit:`3abfdba` doc: add script for syncing acrn-kernel for API gen
 - :acrn-commit:`363a84c` DOC:GSG: Fix few mistakes about updating acrn.conf and efibootmgr options
-- :acrn-commit:`f18a02a` HV: misra cleanup for platform acpi info
+- :acrn-commit:`f18a02a` HV: MISRA cleanup for platform acpi info
 - :acrn-commit:`ee13110` HV: change wake vector address to accommodate sbl
 - :acrn-commit:`4344832` Revert "DM sample: force enabling HDMI1 and HDMI2 connectors"
 - :acrn-commit:`f7f04ba` hv: mmu: minor fix about hv mmu && ept modify
@@ -683,7 +683,7 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`27fbf9b` HV:treewide:Fixing pointer castings
 - :acrn-commit:`a368b57` hv: fix typo in relocation code
 - :acrn-commit:`b35e330` HV: make: check CONFIG_RELEASE=y for release build
-- :acrn-commit:`da0f28c` HV: Bracket for the same level of precendence
+- :acrn-commit:`da0f28c` HV: Bracket for the same level of precedence
 - :acrn-commit:`91337da` HV: logical and high level precedence expression needs brackets
 - :acrn-commit:`7aec679` HV: Clean up the unused or legacy code-like comment
 - :acrn-commit:`c776137` doc: fix doc error filter patterns
@@ -691,7 +691,7 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`af194bc` HV: fix bug of restore rsp context
 - :acrn-commit:`4fd870f` hv: efi: remove multiple defined struct efi_ctx & dt_addr_t
 - :acrn-commit:`d5be735` hv: correct the way to check if a MSR is a fixed MTRR register
-- :acrn-commit:`bd69799` fix assign.c interger violations
+- :acrn-commit:`bd69799` fix assign.c integer violations
 - :acrn-commit:`f0a3585` HV: common: cleanup of remaining integral-type issues
 - :acrn-commit:`112b5b8` HV: guest: cleanup of remaining integral type violations
 - :acrn-commit:`1a1ee93` HV: hypercall: make hypercall functions return int32_t
@@ -754,7 +754,7 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`8d12c06` dm: introduce system/full reset and suspend
 - :acrn-commit:`76662a6` loader: Update the memory address of GUEST_CFG_OFFSET
 - :acrn-commit:`a91952d` HV: per_cpu: drop dependency on version.h and add license header
-- :acrn-commit:`116038f` HV: make: consider header depenencies when rebuilding
+- :acrn-commit:`116038f` HV: make: consider header dependencies when rebuilding
 - :acrn-commit:`11239ae` update launch_uos.sh to align with ACRN v0.1
 - :acrn-commit:`b2e676a` update kernel-pk version to align with ACNR v0.1
 - :acrn-commit:`ea0bbd5` doc: reorganize doc tree
@@ -766,12 +766,12 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`ee9ec9d` tools: acrnd: the acrnd work list
 - :acrn-commit:`f5e9c76` tools: acrnd: handle resume request from SOS-LCS
 - :acrn-commit:`04ed916` tools: acrnd: handle stop request from SOS-LCS
-- :acrn-commit:`bcb101f` tools: acrnd: the deamon for acrn-manager
+- :acrn-commit:`bcb101f` tools: acrnd: the daemon for acrn-manager
 - :acrn-commit:`c4f9a2f` tools: rework on vm ops
 - :acrn-commit:`f0fe17d` hv: sprintf: fix 'Declaration does not specify an array'
 - :acrn-commit:`aa5027a` HV:misc:fix "signed/unsigned conversion with cast"
 - :acrn-commit:`619c600` hv: cpu state update should be moved just before halt.
-- :acrn-commit:`621425d` hv: further fix to configurable relocatoin
+- :acrn-commit:`621425d` hv: further fix to configurable relocation
 - :acrn-commit:`944776f` HV: Fix new MISRAC violations for brackets
 - :acrn-commit:`90b342b` HV: prototyping non-static function
 - :acrn-commit:`8925eb5` hv: set guest segment base to zero if VCPU does not start in real mode
@@ -804,7 +804,7 @@ release in July 2018 (click on the CommitID link to see details):
 - :acrn-commit:`b4fb261` hv: fix bug in some embedded assembly code in vmx
 - :acrn-commit:`8336101` DM: Fix potential buffer overflow and uninitialized variable
 - :acrn-commit:`194fd8b` hv: irq: fix 'Pointer arithmetic is not on array'
-- :acrn-commit:`401ffd1` HV: pm: cleanup for misra integral type violations
+- :acrn-commit:`401ffd1` HV: pm: cleanup for MISRA integral type violations
 - :acrn-commit:`202bc54` HV: trusty: revise trusty_boot_param structure
 - :acrn-commit:`b30ba3d` tools:acrn-crashlog: Detect and classify the crash in ACRN and kernel
 - :acrn-commit:`a5853d6` tools:acrn-crashlog: Improve the process of crash reclassify
