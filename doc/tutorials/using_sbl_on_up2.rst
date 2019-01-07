@@ -29,13 +29,20 @@ Prerequisites
 The following hardware and software are required to use SBL on an UP2 board:
 
 * UP2 kit (`Model N3350 <https://up-shop.org/up-boards/94-up-squared-celeron-duo-core-4gb-memory32gb-emmc.html>`_)
-* `USB 2.0 pin header cable <https://up-shop.org/up-peripherals/110-usb-20-pin-header-cable.html>`_ for debug UART output
-* USB to TTL serial cable (PL2303TA for example) for debug UART output
-* Micro USB OTG cable for flashing
+* `USB 2.0 Pin Header Cable <https://up-shop.org/up-peripherals/110-usb-20-pin-header-cable.html>`_ for debug UART output
+* USB to TTL Serial Cable (PL2303TA for example) for debug UART output
+* 3 Pin Male To Male Jumper Cable Dupont Wire for debug UART output
+* Micro USB OTG Cable for flashing
 * Linux host
 * Internet access
 
 .. image:: images/up2_sbl_connections.png
+   :align: center
+
+The connections between USB to TTL Serial Cable and USB 2.0 Pin Header 
+Cable shoule be:
+
+.. image:: images/up2_sbl_cables_connections.png
    :align: center
 
 Build SBL
