@@ -272,7 +272,7 @@ release in Sep 2018 (click on the CommitID link to see details):
 - :acrn-commit:`c1d2499e` hv: enable MSI remapping on vm0
 - :acrn-commit:`8c398f7d` hv: fix issues when msi-x shares same BAR with other data structures
 - :acrn-commit:`5cbe079e` hv: MSI-X Message Address write fix
-- :acrn-commit:`dbe156e9` hv: fix misrac violations in vcpi code
+- :acrn-commit:`dbe156e9` hv: fix MISRA-c violations in vcpi code
 - :acrn-commit:`5555a2f8` hv: fix bug in sizing MSI-X Table Base Address Register
 - :acrn-commit:`51977a6d` hv: Don't check multi-function flag in PCI enumeration
 - :acrn-commit:`e32bc9e3` hv: avoid hardcode cs.limit in set_vcpu_regs()
@@ -439,7 +439,7 @@ release in Sep 2018 (click on the CommitID link to see details):
 - :acrn-commit:`4ce80e5c` tools: acrn-manager: fix a potential compiler warning
 - :acrn-commit:`e8c86566` tools: acrn-manager: fix a potential NULL pointer dereference
 - :acrn-commit:`da3b0270` tools: acrnd: Ignore null line reading from timer_list
-- :acrn-commit:`a45d961b` tools: acrnd: check weakup reason first in init_vm
+- :acrn-commit:`a45d961b` tools: acrnd: check wakeup reason first in init_vm
 - :acrn-commit:`acc51877` doc: merge static core with cpu virt
 - :acrn-commit:`e01f4777` doc: HV startup and CPU virtualization sections
 - :acrn-commit:`8893a8c2` doc: update HLD overview chapter
@@ -457,7 +457,7 @@ release in Sep 2018 (click on the CommitID link to see details):
 - :acrn-commit:`f533a07a` DM USB: xHCI: support multiple hubs in single layer
 - :acrn-commit:`6886d3cd` DM USB: xHCI: change port mapping logic for multiple hub support
 - :acrn-commit:`540ce05f` DM USB: introduce function usb_get_native_devinfo
-- :acrn-commit:`e8f7b6fa` DM USB: introduce struct usb_devpath and releted functions
+- :acrn-commit:`e8f7b6fa` DM USB: introduce struct usb_devpath and related functions
 - :acrn-commit:`14bc961f` DM USB: xHCI: remove old hub support code.
 - :acrn-commit:`8b5d357f` HV: move default ACPI info to default_acpi_info.h
 - :acrn-commit:`bd042352` hv: fix potential buffer overflow in vpic_set_pinstate()
@@ -565,7 +565,7 @@ release in Sep 2018 (click on the CommitID link to see details):
 - :acrn-commit:`5b28b378` hv: Fix for PARTITION_MODE compilation
 - :acrn-commit:`eebccac2` hv: add suffix(U) in vmx.h to come up MISRA-C
 - :acrn-commit:`8787b65f` dm: fix the issue when guest tries to disable memory range access
-- :acrn-commit:`be0cde7d` Revert "dm: workaroud for DM crash when doing fastboot reboot"
+- :acrn-commit:`be0cde7d` Revert "dm: workaround for DM crash when doing fastboot reboot"
 - :acrn-commit:`b115546b` crashlog: deprecate acrnprobe_prepare and update Makefile
 - :acrn-commit:`f3fc857f` crashlog: introducing crashlogctl
 - :acrn-commit:`b1a05d17` crashlog: re-write usercrash-wrapper
@@ -649,7 +649,7 @@ release in Sep 2018 (click on the CommitID link to see details):
 - :acrn-commit:`270a8332` tools: acrnd: bugfix: service lack of prerequisition
 - :acrn-commit:`5affe53a` tools: acrn-crashlog: update Makefile flags
 - :acrn-commit:`726711e2` tools: acrn-crashlog: fix some compiler warnings
-- :acrn-commit:`4e17d207` hv: fix 'Static procedure is not explicitly called in code analysed'
+- :acrn-commit:`4e17d207` hv: fix 'Static procedure is not explicitly called in code analyzed'
 - :acrn-commit:`ac9ebc5e` update to support v0.2 release
 - :acrn-commit:`71b047cb` hv: fix 'Switch case not terminated with break'
 - :acrn-commit:`f3758850` dm: virtio_net: remove netmap/vale backend support
