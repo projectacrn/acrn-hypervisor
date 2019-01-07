@@ -111,10 +111,6 @@ static void channel_oneshot(struct channel_t *cnl)
 	if (!is_boot_id_changed())
 		return;
 
-	e = create_event(REBOOT, cname, NULL, 0, NULL, 0);
-	if (e)
-		event_enqueue(e);
-
 	for_each_crash(id, crash, conf) {
 		if (!crash || !is_root_crash(crash))
 			continue;
@@ -146,6 +142,10 @@ static void channel_oneshot(struct channel_t *cnl)
 			}
 		}
 	}
+
+	e = create_event(REBOOT, cname, NULL, 0, NULL, 0);
+	if (e)
+		event_enqueue(e);
 
 	for_each_info(id, info, conf) {
 		if (!info)
