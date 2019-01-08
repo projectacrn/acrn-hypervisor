@@ -23,9 +23,9 @@
 #include <mmu.h>
 
 #define foreach_vcpu(idx, vm, vcpu)				\
-	for ((idx) = 0U, vcpu = &(vm->hw.vcpu_array[(idx)]);	\
-		(idx) < vm->hw.created_vcpus;			\
-		(idx)++, vcpu = &(vm->hw.vcpu_array[(idx)])) \
+	for ((idx) = 0U, (vcpu) = &((vm)->hw.vcpu_array[(idx)]);	\
+		(idx) < (vm)->hw.created_vcpus;			\
+		(idx)++, (vcpu) = &((vm)->hw.vcpu_array[(idx)])) \
 		if (vcpu->state != VCPU_OFFLINE)
 
 /*
@@ -71,14 +71,6 @@
 #define TR_AR                           (0x008bU) /* TSS (busy), refer to SDM Vol3 26.3.1.2 */
 
 void prepare_vm0_memmap(struct acrn_vm *vm);
-
-/* Definition for a mem map lookup */
-struct vm_lu_mem_map {
-	struct list_head list;                 /* EPT mem map lookup list*/
-	void *hpa;	/* Host physical start address of the map*/
-	void *gpa;	/* Guest physical start address of the map */
-	uint64_t size;	/* Size of map */
-};
 
 /* Use # of paging level to identify paging mode */
 enum vm_paging_mode {
