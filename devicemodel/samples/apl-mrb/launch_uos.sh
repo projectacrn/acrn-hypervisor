@@ -10,6 +10,10 @@ if [ ! -e "/dev/vbs_ipu" ]; then
 ipu_passthrough=1
 fi
 
+# use the modprobe to force loading snd-soc-skl/sst_bxt_bdf8532
+modprobe -q snd-soc-skl
+modprobe -q snd-soc-sst_bxt_tdf8532
+
 audio_passthrough=0
 
 # Check the device file of /dev/vbs_k_audio to determine the audio mode
