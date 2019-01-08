@@ -195,9 +195,10 @@ ifdef STACK_PROTECTOR
 C_SRCS += common/stack_protector.c
 endif
 
+C_SRCS += hw/pci.c
+
 C_SRCS += dm/vpic.c
 C_SRCS += dm/vioapic.c
-C_SRCS += dm/hw/pci.c
 C_SRCS += dm/vpci/core.c
 C_SRCS += dm/vpci/vpci.c
 ifeq ($(CONFIG_PARTITION_MODE),y)
