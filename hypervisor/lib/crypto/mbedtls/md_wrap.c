@@ -72,7 +72,7 @@ const mbedtls_md_info_t mbedtls_sha256_info = {
     MBEDTLS_MD_SHA256,
     "SHA256",
     32,
-    64,
+    64U,
     sha256_starts_wrap,
     sha256_update_wrap,
     sha256_finish_wrap,

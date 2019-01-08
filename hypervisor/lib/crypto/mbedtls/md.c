@@ -111,9 +111,9 @@ int32_t mbedtls_md_hmac_starts(mbedtls_md_context_t *ctx, const uint8_t *key, si
             (void) memset(ipad, 0x36U, ctx->md_info->block_size);
             (void) memset(opad, 0x5CU, ctx->md_info->block_size);
 
-            for(i = 0U; i < keylen; i++) {
-                *(ipad + i) = (uint8_t) (*(ipad + i) ^ *(temp_key + i));
-                *(opad + i) = (uint8_t) (*(opad + i) ^ *(temp_key + i));
+            for (i = 0U; i < keylen; i++) {
+                *(ipad + i) = (uint8_t) (*(ipad + i) ^ (*(temp_key + i)));
+                *(opad + i) = (uint8_t) (*(opad + i) ^ (*(temp_key + i)));
             }
 
             ret = ctx->md_info->starts_func((void *) ctx->md_ctx);
