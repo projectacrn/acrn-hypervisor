@@ -171,19 +171,19 @@ static void _scan_alive_vm(void)
 
 		if (ret < 0)
 			/* unsupport query */
-			vm->state = VM_STARTED;
+			vm->state_tmp = VM_STARTED;
 		else
 			switch (ret) {
 			case VM_SUSPEND_NONE:
-				vm->state = VM_STARTED;
+				vm->state_tmp = VM_STARTED;
 				break;
 			case VM_SUSPEND_SUSPEND:
-				vm->state = VM_SUSPENDED;
+				vm->state_tmp = VM_SUSPENDED;
 				break;
 			default:
 				fprintf(stderr, "Warnning: unknow vm state:0x%lx\n",
 										vm->state);
-				vm->state = VM_STATE_UNKNOWN;
+				vm->state_tmp = VM_STATE_UNKNOWN;
 			}
 		vm->update = update_count;
 	}
@@ -271,7 +271,7 @@ static void _scan_added_vm(void)
 			LIST_INSERT_HEAD(&vmmngr_head, vm, list);
 		}
 
-		vm->state = VM_CREATED;
+		vm->state_tmp = VM_CREATED;
 		vm->update = update_count;
 	}
 
@@ -283,8 +283,10 @@ static void _remove_dead_vm(void)
 	struct vmmngr_struct *vm, *tvm;
 
 	list_foreach_safe(vm, &vmmngr_head, list, tvm) {
-		if (vm->update == update_count)
+		if (vm->update == update_count) {
+			vm->state = vm->state_tmp;
 			continue;
+		}
 		LIST_REMOVE(vm, list);
 		printf("%s: Removed dead %s\n", __func__, vm->name);
 		free(vm);

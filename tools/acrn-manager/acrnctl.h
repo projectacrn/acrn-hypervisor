@@ -38,6 +38,7 @@ struct vmmngr_struct *vmmngr_find(const char *vmname);
 struct vmmngr_struct {
 	char name[MAX_NAME_LEN];
 	unsigned long state;
+	unsigned long state_tmp;
 	unsigned long update;   /* update count, remove a vm if no update for it */
 	LIST_ENTRY(vmmngr_struct) list;
 };
