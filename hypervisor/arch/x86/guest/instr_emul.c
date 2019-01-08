@@ -426,56 +426,59 @@ static void get_guest_paging_info(struct acrn_vcpu *vcpu, struct instr_emul_ctxt
 
 static int32_t vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla)
 {
+	int32_t ret = 0;
 	uint64_t mask;
 
-	if (cpu_mode != CPU_MODE_64BIT) {
-		return 0;
+	if (cpu_mode == CPU_MODE_64BIT) {
+		/*
+		 * The value of the bit 47 in the 'gla' should be replicated in the
+		 * most significant 16 bits.
+		 */
+		mask = ~((1UL << 48U) - 1UL);
+		if ((gla & (1UL << 47U)) != 0U) {
+			ret = ((gla & mask) != mask) ? 1 : 0;
+		} else {
+			ret = ((gla & mask) != 0U) ? 1 : 0;
+		}
 	}
 
-	/*
-	 * The value of the bit 47 in the 'gla' should be replicated in the
-	 * most significant 16 bits.
-	 */
-	mask = ~((1UL << 48U) - 1UL);
-	if ((gla & (1UL << 47U)) != 0U) {
-		return ((gla & mask) != mask) ? 1 : 0;
-	} else {
-		return ((gla & mask) != 0U) ? 1 : 0;
-	}
+	return ret;
 }
 
 static bool is_desc_valid(struct seg_desc *desc, uint32_t prot)
 {
+	bool ret = true;
 	uint32_t type;
 
 	/* The descriptor type must indicate a code/data segment. */
 	type = seg_desc_type(desc->access);
-	if (type < 16U || type > 31U) {
-		return false;
-	}
 
-	if ((prot & PROT_READ) != 0U) {
-		/* #GP on a read access to a exec-only code segment */
-		if ((type & 0xAU) == 0x8U) {
-			return false;
+	if (type < 16U) {
+		ret = false;
+	} else {
+		if ((prot & PROT_READ) != 0U) {
+			/* #GP on a read access to a exec-only code segment */
+			if ((type & 0xAU) == 0x8U) {
+				ret = false;
+			}
+		}
+
+		if ((prot & PROT_WRITE) != 0U) {
+			/*
+			 * #GP on a write access to a code segment or a
+			 * read-only data segment.
+			 */
+			if ((type & 0x8U) != 0U) {	/* code segment */
+				ret = false;
+			}
+
+			if ((type & 0xAU) == 0U) {	/* read-only data seg */
+				ret = false;
+			}
 		}
 	}
 
-	if ((prot & PROT_WRITE) != 0U) {
-		/*
-		 * #GP on a write access to a code segment or a
-		 * read-only data segment.
-		 */
-		if ((type & 0x8U) != 0U) {	/* code segment */
-			return false;
-		}
-
-		if ((type & 0xAU) == 0U) {	/* read-only data seg */
-			return false;
-		}
-	}
-
-	return true;
+	return ret;
 }
 
 /*
@@ -673,16 +676,23 @@ build_getcc(getcc64, uint64_t)
  */
 static uint64_t getcc(uint8_t opsize, uint64_t x, uint64_t y)
 {
+	uint64_t rflags;
 	switch (opsize) {
 	case 1U:
-		return getcc8((uint8_t) x, (uint8_t) y);
+		rflags = getcc8((uint8_t) x, (uint8_t) y);
+		break;
 	case 2U:
-		return getcc16((uint16_t) x, (uint16_t) y);
+		rflags = getcc16((uint16_t) x, (uint16_t) y);
+		break;
 	case 4U:
-		return getcc32((uint32_t) x, (uint32_t) y);
+		rflags = getcc32((uint32_t) x, (uint32_t) y);
+		break;
 	default:	/* opsize == 8 */
-		return getcc64(x, y);
+		rflags = getcc64(x, y);
+		break;
 	}
+
+	return rflags;
 }
 
 static int32_t emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
@@ -918,7 +928,7 @@ static void get_gva_si_nocheck(const struct acrn_vcpu *vcpu, uint8_t addrsize,
 static int32_t get_gva_di_check(struct acrn_vcpu *vcpu, struct instr_emul_vie *vie,
 		uint8_t addrsize, uint64_t *gva)
 {
-	int32_t ret = 0;
+	int32_t ret = -EFAULT;
 	uint32_t err_code;
 	struct seg_desc desc;
 	enum vm_cpu_mode cpu_mode;
@@ -934,16 +944,18 @@ static int32_t get_gva_di_check(struct acrn_vcpu *vcpu, struct instr_emul_vie *v
 		}
 	} else {
 		if ((addrsize != 2U) && (addrsize != 4U)) {
-		        has_exception = true;
-		} else if (!is_desc_valid(&desc, PROT_WRITE)) {
-		        has_exception = true;
+			has_exception = true;
+		} else {
+			if (!is_desc_valid(&desc, PROT_WRITE)) {
+				has_exception = true;
+			}
 		}
 	}
 
 	if (!has_exception) {
 		val = vm_get_register(vcpu, CPU_REG_RDI);
 		if (vie_calculate_gla(cpu_mode, CPU_REG_ES, &desc, val, addrsize, gva) != 0) {
-		        has_exception = true;
+			has_exception = true;
 		} else if (vie_canonical_check(cpu_mode, *gva) != 0) {
 			has_exception = true;
 		} else {
@@ -954,18 +966,21 @@ static int32_t get_gva_di_check(struct acrn_vcpu *vcpu, struct instr_emul_vie *v
 					vcpu_inject_pf(vcpu, (uint64_t)gva, err_code);
 				}
 			} else {
+
 				/* If we are checking the dest operand for movs instruction,
 				 * we cache the gpa if check pass. It will be used during
 				 * movs instruction emulation.
 				 */
 				vie->dst_gpa = gpa;
+
+				ret = 0;
 			}
 		}
+
 	}
 
 	if (has_exception) {
 		vcpu_inject_gp(vcpu, 0U);
-		ret = -EFAULT;
 	}
 
 	return ret;
@@ -1071,9 +1086,10 @@ done:
 
 static int32_t emulate_stos(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
+	bool done = false;
 	uint8_t repeat, opsize = vie->opsize;
 	uint64_t val;
-	uint64_t rcx, rdi, rflags;
+	uint64_t rcx = 0U, rdi, rflags;
 
 	repeat = vie->repz_present | vie->repnz_present;
 
@@ -1085,34 +1101,36 @@ static int32_t emulate_stos(struct acrn_vcpu *vcpu, const struct instr_emul_vie 
 		 * address size of the instruction.
 		 */
 		if ((rcx & size2mask[vie->addrsize]) == 0UL) {
-			return 0;
+			done = true;
 		}
 	}
 
-	val = vm_get_register(vcpu, CPU_REG_RAX);
+	if (!done) {
+		val = vm_get_register(vcpu, CPU_REG_RAX);
 
-	vie_mmio_write(vcpu, val);
+		vie_mmio_write(vcpu, val);
 
-	rdi = vm_get_register(vcpu, CPU_REG_RDI);
-	rflags = vm_get_register(vcpu, CPU_REG_RFLAGS);
+		rdi = vm_get_register(vcpu, CPU_REG_RDI);
+		rflags = vm_get_register(vcpu, CPU_REG_RFLAGS);
 
-	if ((rflags & PSL_D) != 0U) {
-		rdi -= opsize;
-	} else {
-		rdi += opsize;
-	}
+		if ((rflags & PSL_D) != 0U) {
+			rdi -= opsize;
+		} else {
+			rdi += opsize;
+		}
 
-	vie_update_register(vcpu, CPU_REG_RDI, rdi, vie->addrsize);
+		vie_update_register(vcpu, CPU_REG_RDI, rdi, vie->addrsize);
 
-	if (repeat != 0U) {
-		rcx = rcx - 1;
-		vie_update_register(vcpu, CPU_REG_RCX, rcx, vie->addrsize);
+		if (repeat != 0U) {
+			rcx = rcx - 1;
+			vie_update_register(vcpu, CPU_REG_RCX, rcx, vie->addrsize);
 
-		/*
-		 * Repeat the instruction if the count register is not zero.
-		 */
-		if ((rcx & size2mask[vie->addrsize]) != 0UL) {
-			vcpu_retain_rip(vcpu);
+			/*
+			 * Repeat the instruction if the count register is not zero.
+			 */
+			if ((rcx & size2mask[vie->addrsize]) != 0UL) {
+				vcpu_retain_rip(vcpu);
+			}
 		}
 	}
 
@@ -1354,7 +1372,7 @@ static int32_t emulate_or(struct acrn_vcpu *vcpu, const struct instr_emul_vie *v
 
 static int32_t emulate_cmp(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
-	int32_t error = 0;
+	int32_t ret = 0;
 	uint8_t size;
 	uint64_t regop, memop, op1, op2, rflags2;
 	enum cpu_reg_name reg;
@@ -1392,7 +1410,6 @@ static int32_t emulate_cmp(struct acrn_vcpu *vcpu, const struct instr_emul_vie *
 			op1 = memop;
 			op2 = regop;
 		}
-		rflags2 = getcc(size, op1, op2);
 		break;
 	case 0x80U:
 	case 0x81U:
@@ -1426,16 +1443,18 @@ static int32_t emulate_cmp(struct acrn_vcpu *vcpu, const struct instr_emul_vie *
 
 		/* get the first operand */
 		vie_mmio_read(vcpu, &op1);
-
-		rflags2 = getcc(size, op1, (uint64_t)vie->immediate);
+		op2 = (uint64_t)vie->immediate;
 		break;
 	default:
-		return -EINVAL;
+		ret = -EINVAL;
+		break;
 	}
 
-	vie_update_rflags(vcpu, rflags2, RFLAGS_STATUS_BITS);
-
-	return error;
+	if (ret == 0) {
+		rflags2 = getcc(size, op1, op2);
+		vie_update_rflags(vcpu, rflags2, RFLAGS_STATUS_BITS);
+	}
+	return ret;
 }
 
 static int32_t emulate_sub(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
@@ -1613,42 +1632,41 @@ static int32_t vie_init(struct instr_emul_vie *vie, struct acrn_vcpu *vcpu)
 	int32_t ret;
 
 	if ((inst_len > VIE_INST_SIZE) || (inst_len == 0U)) {
-		pr_err("%s: invalid instruction length (%d)",
-			__func__, inst_len);
-		return -EINVAL;
-	}
+		pr_err("%s: invalid instruction length (%d)", __func__, inst_len);
+		ret = -EINVAL;
+	} else {
+		(void)memset(vie, 0U, sizeof(struct instr_emul_vie));
 
-	(void)memset(vie, 0U, sizeof(struct instr_emul_vie));
+		/* init register fields in vie. */
+		vie->base_register = CPU_REG_LAST;
+		vie->index_register = CPU_REG_LAST;
+		vie->segment_register = CPU_REG_LAST;
 
-	/* init register fields in vie. */
-	vie->base_register = CPU_REG_LAST;
-	vie->index_register = CPU_REG_LAST;
-	vie->segment_register = CPU_REG_LAST;
-
-	err_code = PAGE_FAULT_ID_FLAG;
-	ret = copy_from_gva(vcpu, vie->inst, guest_rip_gva,
-				inst_len, &err_code, &fault_addr);
-	if (ret < 0) {
-		if (ret == -EFAULT) {
-			vcpu_inject_pf(vcpu, fault_addr, err_code);
+		err_code = PAGE_FAULT_ID_FLAG;
+		ret = copy_from_gva(vcpu, vie->inst, guest_rip_gva, inst_len, &err_code, &fault_addr);
+		if (ret < 0) {
+			if (ret == -EFAULT) {
+				vcpu_inject_pf(vcpu, fault_addr, err_code);
+			}
+		} else {
+			vie->num_valid = (uint8_t)inst_len;
+			ret = 0;
 		}
-		return ret;
 	}
 
-	vie->num_valid = (uint8_t)inst_len;
-
-	return 0;
+	return ret;
 }
 
 static int32_t vie_peek(const struct instr_emul_vie *vie, uint8_t *x)
 {
-
+	int32_t ret;
 	if (vie->num_processed < vie->num_valid) {
 		*x = vie->inst[vie->num_processed];
-		return 0;
+		ret = 0;
 	} else {
-		return -1;
+		ret = -1;
 	}
+	return ret;
 }
 
 static void vie_advance(struct instr_emul_vie *vie)
@@ -1659,7 +1677,7 @@ static void vie_advance(struct instr_emul_vie *vie)
 
 static bool segment_override(uint8_t x, enum cpu_reg_name *seg)
 {
-
+	bool override = true;
 	switch (x) {
 	case 0x2EU:
 		*seg = CPU_REG_CS;
@@ -1680,9 +1698,10 @@ static bool segment_override(uint8_t x, enum cpu_reg_name *seg)
 		*seg = CPU_REG_GS;
 		break;
 	default:
-		return false;
+		override = false;
+		break;
 	}
-	return true;
+	return override;
 }
 
 static int32_t decode_prefixes(struct instr_emul_vie *vie,
@@ -1759,22 +1778,23 @@ static int32_t decode_prefixes(struct instr_emul_vie *vie,
 
 static int32_t decode_two_byte_opcode(struct instr_emul_vie *vie)
 {
+	int32_t ret = 0;
 	uint8_t x;
 
 	if (vie_peek(vie, &x) != 0) {
-		return -1;
+		ret = -1;
+	} else {
+		vie->opcode = x;
+		vie->op = two_byte_opcodes[x];
+
+		if (vie->op.op_type == VIE_OP_TYPE_NONE) {
+			ret = -1;
+		} else {
+			vie_advance(vie);
+		}
 	}
 
-	vie->opcode = x;
-	vie->op = two_byte_opcodes[x];
-
-	if (vie->op.op_type == VIE_OP_TYPE_NONE) {
-		return -1;
-	}
-
-	vie_advance(vie);
-
-	return 0;
+	return ret;
 }
 
 static int32_t decode_opcode(struct instr_emul_vie *vie)
@@ -1783,30 +1803,30 @@ static int32_t decode_opcode(struct instr_emul_vie *vie)
 	uint8_t x;
 
 	if (vie_peek(vie, &x) != 0) {
-		return -1;
-	}
+		ret = -1;
+	} else {
+		vie->opcode = x;
+		vie->op = one_byte_opcodes[x];
 
-	vie->opcode = x;
-	vie->op = one_byte_opcodes[x];
+		if (vie->op.op_type == VIE_OP_TYPE_NONE) {
+			ret = -1;
+		} else {
+			vie_advance(vie);
 
-	if (vie->op.op_type == VIE_OP_TYPE_NONE) {
-		return -1;
-	}
+			if (vie->op.op_type == VIE_OP_TYPE_TWO_BYTE) {
+				ret = decode_two_byte_opcode(vie);
+			}
 
-	vie_advance(vie);
-
-	if (vie->op.op_type == VIE_OP_TYPE_TWO_BYTE) {
-		ret = decode_two_byte_opcode(vie);
-	}
-
-	/* Fixup the opsize according to opcode w bit:
-	 * If w bit of opcode is 0, the operand size is 1 byte
-	 * If w bit of opcode is 1, the operand size is decided
-	 * by prefix and default operand size attribute (handled
-	 * in decode_prefixes).
-	 */
-	if ((ret == 0) && ((vie->opcode & 0x1U) == 0U)) {
-		vie->opsize = 1U;
+			/* Fixup the opsize according to opcode w bit:
+			 * If w bit of opcode is 0, the operand size is 1 byte
+			 * If w bit of opcode is 1, the operand size is decided
+			 * by prefix and default operand size attribute (handled
+			 * in decode_prefixes).
+			 */
+			if ((ret == 0) && ((vie->opcode & 0x1U) == 0U)) {
+				vie->opsize = 1U;
+			}
+		}
 	}
 
 	return ret;
@@ -1815,179 +1835,179 @@ static int32_t decode_opcode(struct instr_emul_vie *vie)
 static int32_t decode_modrm(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode)
 {
 	uint8_t x;
+	int32_t ret;
 
 	if ((vie->op.op_flags & VIE_OP_F_NO_MODRM) != 0U) {
-		return 0;
-	}
-
-	if (cpu_mode == CPU_MODE_REAL) {
-		return -1;
-	}
-
-	if (vie_peek(vie, &x) != 0) {
-		return -1;
-	}
-
-	vie->mod = (x >> 6U) & 0x3U;
-	vie->rm =  (x >> 0U) & 0x7U;
-	vie->reg = (x >> 3U) & 0x7U;
-
-	/*
-	 * A direct addressing mode makes no sense in the context of an EPT
-	 * fault. There has to be a memory access involved to cause the
-	 * EPT fault.
-	 */
-	if (vie->mod == VIE_MOD_DIRECT) {
-		return -1;
-	}
-
-	if (((vie->mod == VIE_MOD_INDIRECT) && (vie->rm == VIE_RM_DISP32)) ||
-			((vie->mod != VIE_MOD_DIRECT) && (vie->rm == VIE_RM_SIB))) {
-		/*
-		 * Table 2-5: Special Cases of REX Encodings
-		 *
-		 * mod=0, r/m=5 is used in the compatibility mode to
-		 * indicate a disp32 without a base register.
-		 *
-		 * mod!=3, r/m=4 is used in the compatibility mode to
-		 * indicate that the SIB byte is present.
-		 *
-		 * The 'b' bit in the REX prefix is don't care in
-		 * this case.
-		 */
+		ret = 0;
+	} else if (cpu_mode == CPU_MODE_REAL) {
+		ret = -1;
+	} else if (vie_peek(vie, &x) != 0) {
+		ret = -1;
 	} else {
-		vie->rm |= (vie->rex_b << 3U);
-	}
+		vie->mod = (x >> 6U) & 0x3U;
+		vie->rm =  (x >> 0U) & 0x7U;
+		vie->reg = (x >> 3U) & 0x7U;
 
-	vie->reg |= (vie->rex_r << 3U);
-
-	/* SIB */
-	if (vie->mod != VIE_MOD_DIRECT && vie->rm == VIE_RM_SIB) {
-		goto done;
-	}
-
-	vie->base_register = (enum cpu_reg_name)vie->rm;
-
-	switch (vie->mod) {
-	case VIE_MOD_INDIRECT_DISP8:
-		vie->disp_bytes = 1U;
-		break;
-	case VIE_MOD_INDIRECT_DISP32:
-		vie->disp_bytes = 4U;
-		break;
-	case VIE_MOD_INDIRECT:
-		if (vie->rm == VIE_RM_DISP32) {
-			vie->disp_bytes = 4U;
 		/*
-		 * Table 2-7. RIP-Relative Addressing
-		 *
-		 * In 64-bit mode mod=00 r/m=101 implies [rip] + disp32
-		 * whereas in compatibility mode it just implies disp32.
+		 * A direct addressing mode makes no sense in the context of an EPT
+		 * fault. There has to be a memory access involved to cause the
+		 * EPT fault.
 		 */
+		if (vie->mod == VIE_MOD_DIRECT) {
+			ret = -1;
+		} else {
+			if (((vie->mod == VIE_MOD_INDIRECT) && (vie->rm == VIE_RM_DISP32)) ||
+					((vie->mod != VIE_MOD_DIRECT) && (vie->rm == VIE_RM_SIB))) {
+				/*
+				 * Table 2-5: Special Cases of REX Encodings
+				 *
+				 * mod=0, r/m=5 is used in the compatibility mode to
+				 * indicate a disp32 without a base register.
+				 *
+				 * mod!=3, r/m=4 is used in the compatibility mode to
+				 * indicate that the SIB byte is present.
+				 *
+				 * The 'b' bit in the REX prefix is don't care in
+				 * this case.
+				 */
+			} else {
+				vie->rm |= (vie->rex_b << 3U);
+			}
 
-			if (cpu_mode == CPU_MODE_64BIT) {
-				vie->base_register = CPU_REG_RIP;
-				pr_err("VM exit with RIP as indirect access");
+			vie->reg |= (vie->rex_r << 3U);
+
+			/* SIB */
+			if ((vie->mod != VIE_MOD_DIRECT) && (vie->rm == VIE_RM_SIB)) {
+				/* done */
+			} else {
+				vie->base_register = (enum cpu_reg_name)vie->rm;
+
+				switch (vie->mod) {
+				case VIE_MOD_INDIRECT_DISP8:
+					vie->disp_bytes = 1U;
+					break;
+				case VIE_MOD_INDIRECT_DISP32:
+					vie->disp_bytes = 4U;
+					break;
+				case VIE_MOD_INDIRECT:
+					if (vie->rm == VIE_RM_DISP32) {
+						vie->disp_bytes = 4U;
+					/*
+					 * Table 2-7. RIP-Relative Addressing
+					 *
+					 * In 64-bit mode mod=00 r/m=101 implies [rip] + disp32
+					 * whereas in compatibility mode it just implies disp32.
+					 */
+
+						if (cpu_mode == CPU_MODE_64BIT) {
+							vie->base_register = CPU_REG_RIP;
+							pr_err("VM exit with RIP as indirect access");
+						}
+						else {
+							vie->base_register = CPU_REG_LAST;
+						}
+					}
+					break;
+				default:
+					/* VIE_MOD_DIRECT */
+					break;
+				}
+
 			}
-			else {
-				vie->base_register = CPU_REG_LAST;
-			}
+			vie_advance(vie);
+
+			ret = 0;
 		}
-		break;
-	default:
-		/* VIE_MOD_DIRECT */
-		break;
 	}
 
-done:
-	vie_advance(vie);
-
-	return 0;
+	return ret;
 }
 
 static int32_t decode_sib(struct instr_emul_vie *vie)
 {
 	uint8_t x;
+	int32_t ret;
 
 	/* Proceed only if SIB byte is present */
 	if ((vie->mod == VIE_MOD_DIRECT) || (vie->rm != VIE_RM_SIB)) {
-		return 0;
-	}
+		ret = 0;
+	} else if (vie_peek(vie, &x) != 0) {
+		ret = -1;
+	} else {
 
-	if (vie_peek(vie, &x) != 0) {
-		return -1;
-	}
+		/* De-construct the SIB byte */
+		vie->ss = (x >> 6U) & 0x3U;
+		vie->index = (x >> 3U) & 0x7U;
+		vie->base = (x >> 0U) & 0x7U;
 
-	/* De-construct the SIB byte */
-	vie->ss = (x >> 6U) & 0x3U;
-	vie->index = (x >> 3U) & 0x7U;
-	vie->base = (x >> 0U) & 0x7U;
+		/* Apply the REX prefix modifiers */
+		vie->index |= vie->rex_x << 3U;
+		vie->base |= vie->rex_b << 3U;
 
-	/* Apply the REX prefix modifiers */
-	vie->index |= vie->rex_x << 3U;
-	vie->base |= vie->rex_b << 3U;
+		switch (vie->mod) {
+		case VIE_MOD_INDIRECT_DISP8:
+			vie->disp_bytes = 1U;
+			break;
+		case VIE_MOD_INDIRECT_DISP32:
+			vie->disp_bytes = 4U;
+			break;
+		default:
+			/*
+			 * All possible values of 'vie->mod':
+			 * 1. VIE_MOD_DIRECT
+			 *    has been handled at the start of this function
+			 * 2. VIE_MOD_INDIRECT_DISP8
+			 *    has been handled in prior case clauses
+			 * 3. VIE_MOD_INDIRECT_DISP32
+			 *    has been handled in prior case clauses
+			 * 4. VIE_MOD_INDIRECT
+			 *    will be handled later after this switch statement
+			 */
+			break;
+		}
 
-	switch (vie->mod) {
-	case VIE_MOD_INDIRECT_DISP8:
-		vie->disp_bytes = 1U;
-		break;
-	case VIE_MOD_INDIRECT_DISP32:
-		vie->disp_bytes = 4U;
-		break;
-	default:
+		if ((vie->mod == VIE_MOD_INDIRECT) && ((vie->base == 5U) || (vie->base == 13U))) {
+			/*
+			 * Special case when base register is unused if mod = 0
+			 * and base = %rbp or %r13.
+			 *
+			 * Documented in:
+			 * Table 2-3: 32-bit Addressing Forms with the SIB Byte
+			 * Table 2-5: Special Cases of REX Encodings
+			 */
+			vie->disp_bytes = 4U;
+		} else {
+			vie->base_register = (enum cpu_reg_name)vie->base;
+		}
+
 		/*
-		 * All possible values of 'vie->mod':
-		 * 1. VIE_MOD_DIRECT
-		 *    has been handled at the start of this function
-		 * 2. VIE_MOD_INDIRECT_DISP8
-		 *    has been handled in prior case clauses
-		 * 3. VIE_MOD_INDIRECT_DISP32
-		 *    has been handled in prior case clauses
-		 * 4. VIE_MOD_INDIRECT
-		 *    will be handled later after this switch statement
-		 */
-		break;
-	}
-
-	if ((vie->mod == VIE_MOD_INDIRECT) &&
-			((vie->base == 5U) || (vie->base == 13U))) {
-		/*
-		 * Special case when base register is unused if mod = 0
-		 * and base = %rbp or %r13.
+		 * All encodings of 'index' are valid except for %rsp (4).
 		 *
 		 * Documented in:
 		 * Table 2-3: 32-bit Addressing Forms with the SIB Byte
 		 * Table 2-5: Special Cases of REX Encodings
 		 */
-		vie->disp_bytes = 4U;
-	} else {
-		vie->base_register = (enum cpu_reg_name)vie->base;
+		if (vie->index != 4U) {
+			vie->index_register = (enum cpu_reg_name)vie->index;
+		}
+
+		/* 'scale' makes sense only in the context of an index register */
+		if (vie->index_register < CPU_REG_LAST) {
+			vie->scale = 1U << vie->ss;
+		}
+
+		vie_advance(vie);
+
+		ret = 0;
 	}
 
-	/*
-	 * All encodings of 'index' are valid except for %rsp (4).
-	 *
-	 * Documented in:
-	 * Table 2-3: 32-bit Addressing Forms with the SIB Byte
-	 * Table 2-5: Special Cases of REX Encodings
-	 */
-	if (vie->index != 4U) {
-		vie->index_register = (enum cpu_reg_name)vie->index;
-	}
-
-	/* 'scale' makes sense only in the context of an index register */
-	if (vie->index_register < CPU_REG_LAST) {
-		vie->scale = 1U << vie->ss;
-	}
-
-	vie_advance(vie);
-
-	return 0;
+	return ret;
 }
 
 static int32_t decode_displacement(struct instr_emul_vie *vie)
 {
 	uint8_t n, i, x;
+	int32_t ret = 0;
 
 	union {
 		uint8_t	buf[4];
@@ -1996,37 +2016,39 @@ static int32_t decode_displacement(struct instr_emul_vie *vie)
 	} u;
 
 	n = vie->disp_bytes;
-	if (n == 0U) {
-		return 0;
-	}
+	if (n != 0U) {
+		if ((n != 1U) && (n != 4U)) {
+			pr_err("%s: decode_displacement: invalid disp_bytes %d", __func__, n);
+			ret = -EINVAL;
+		} else {
 
-	if ((n != 1U) && (n != 4U)) {
-		pr_err("%s: decode_displacement: invalid disp_bytes %d",
-			__func__, n);
-		return -EINVAL;
-	}
+			for (i = 0U; i < n; i++) {
+				if (vie_peek(vie, &x) != 0) {
+					ret = -1;
+					break;
+				}
 
-	for (i = 0U; i < n; i++) {
-		if (vie_peek(vie, &x) != 0) {
-			return -1;
+				u.buf[i] = x;
+				vie_advance(vie);
+			}
+
+			if (ret == 0) {
+				if (n == 1U) {
+					vie->displacement = u.signed8;		/* sign-extended */
+				} else {
+					vie->displacement = u.signed32;		/* sign-extended */
+				}
+			}
 		}
-
-		u.buf[i] = x;
-		vie_advance(vie);
 	}
 
-	if (n == 1U) {
-		vie->displacement = u.signed8;		/* sign-extended */
-	} else {
-		vie->displacement = u.signed32;		/* sign-extended */
-	}
-
-	return 0;
+	return ret;
 }
 
 static int32_t decode_immediate(struct instr_emul_vie *vie)
 {
 	uint8_t i, n, x;
+	int32_t ret = 0;
 	union {
 		uint8_t	buf[4];
 		int8_t	signed8;
@@ -2056,106 +2078,100 @@ static int32_t decode_immediate(struct instr_emul_vie *vie)
 	}
 
 	n = vie->imm_bytes;
-	if (n == 0U) {
-		return 0;
-	}
+	if (n != 0U) {
+		if ((n != 1U) && (n != 2U) && (n != 4U)) {
+			pr_err("%s: invalid number of immediate bytes: %d", __func__, n);
+			ret = -EINVAL;
+		} else {
+			for (i = 0U; i < n; i++) {
+				if (vie_peek(vie, &x) != 0) {
+					ret = -1;
+					break;
+				}
 
-	if ((n != 1U) && (n != 2U) && (n != 4U)) {
-		pr_err("%s: invalid number of immediate bytes: %d",
-			__func__, n);
-		return -EINVAL;
-	}
+				u.buf[i] = x;
+				vie_advance(vie);
+			}
 
-	for (i = 0U; i < n; i++) {
-		if (vie_peek(vie, &x) != 0) {
-			return -1;
+			if (ret == 0) {
+				/* sign-extend the immediate value before use */
+				if (n == 1U) {
+					vie->immediate = u.signed8;
+				} else if (n == 2U) {
+					vie->immediate = u.signed16;
+				} else {
+					vie->immediate = u.signed32;
+				}
+			}
 		}
-
-		u.buf[i] = x;
-		vie_advance(vie);
 	}
 
-	/* sign-extend the immediate value before use */
-	if (n == 1U) {
-		vie->immediate = u.signed8;
-	} else if (n == 2U) {
-		vie->immediate = u.signed16;
-	} else {
-		vie->immediate = u.signed32;
-	}
-
-	return 0;
+	return ret;
 }
 
 static int32_t decode_moffset(struct instr_emul_vie *vie)
 {
 	uint8_t i, n, x;
+	int32_t ret = 0;
 	union {
 		uint8_t  buf[8];
 		uint64_t u64;
 	} u;
 
-	if ((vie->op.op_flags & VIE_OP_F_MOFFSET) == 0U) {
-		return 0;
-	}
+	if ((vie->op.op_flags & VIE_OP_F_MOFFSET) != 0U) {
+		/*
+		 * Section 2.2.1.4, "Direct Memory-Offset MOVs", Intel SDM:
+		 * The memory offset size follows the address-size of the instruction.
+		 */
+		n = vie->addrsize;
+		if ((n != 2U) && (n != 4U) && (n != 8U)) {
+			pr_err("%s: invalid moffset bytes: %hhu", __func__, n);
+			ret = -EINVAL;
+		} else {
+			u.u64 = 0UL;
+			for (i = 0U; i < n; i++) {
+				if (vie_peek(vie, &x) != 0) {
+					ret = -1;
+					break;
+				}
 
-	/*
-	 * Section 2.2.1.4, "Direct Memory-Offset MOVs", Intel SDM:
-	 * The memory offset size follows the address-size of the instruction.
-	 */
-	n = vie->addrsize;
-	if ((n != 2U) && (n != 4U) && (n != 8U)) {
-		pr_err("%s: invalid moffset bytes: %hhu", __func__, n);
-		return -EINVAL;
-	}
-
-	u.u64 = 0UL;
-	for (i = 0U; i < n; i++) {
-		if (vie_peek(vie, &x) != 0) {
-			return -1;
+				u.buf[i] = x;
+				vie_advance(vie);
+			}
+			if (ret == 0) {
+				vie->displacement = (int64_t)u.u64;
+			}
 		}
-
-		u.buf[i] = x;
-		vie_advance(vie);
 	}
-	vie->displacement = (int64_t)u.u64;
-	return 0;
+
+	return ret;
 }
 
 static int32_t local_decode_instruction(enum vm_cpu_mode cpu_mode,
 				bool cs_d, struct instr_emul_vie *vie)
 {
+	int32_t ret;
+
 	if (decode_prefixes(vie, cpu_mode, cs_d) != 0) {
-		return -1;
+		ret = -1;
+	} else if (decode_opcode(vie) != 0) {
+		ret = -1;
+	} else if (decode_modrm(vie, cpu_mode) != 0) {
+		ret = -1;
+	} else if (decode_sib(vie) != 0) {
+		ret = -1;
+	} else if (decode_displacement(vie) != 0) {
+		ret = -1;
+	} else if (decode_immediate(vie) != 0) {
+		ret = -1;
+	} else if (decode_moffset(vie) != 0) {
+		ret = -1;
+	} else {
+		vie->decoded = 1U;	/* success */
+		ret = 0;
 	}
 
-	if (decode_opcode(vie) != 0) {
-		return -1;
-	}
-
-	if (decode_modrm(vie, cpu_mode) != 0) {
-		return -1;
-	}
-
-	if (decode_sib(vie) != 0) {
-		return -1;
-	}
-
-	if (decode_displacement(vie) != 0) {
-		return -1;
-	}
-
-	if (decode_immediate(vie) != 0) {
-		return -1;
-	}
-
-	if (decode_moffset(vie) != 0) {
-		return -1;
-	}
-
-	vie->decoded = 1U;	/* success */
-
-	return 0;
+	return ret;
 }
 
 /* for instruction MOVS/STO, check the gva gotten from DI/SI. */
@@ -2179,7 +2195,7 @@ static int32_t instr_check_di(struct acrn_vcpu *vcpu, struct instr_emul_ctxt *em
 static int32_t instr_check_gva(struct acrn_vcpu *vcpu, struct instr_emul_ctxt *emul_ctxt,
 		enum vm_cpu_mode cpu_mode)
 {
-	int32_t ret;
+	int32_t ret = 0;
 	uint64_t base, segbase, idx, gva, gpa;
 	uint32_t err_code;
 	enum cpu_reg_name seg;
@@ -2244,22 +2260,21 @@ static int32_t instr_check_gva(struct acrn_vcpu *vcpu, struct instr_emul_ctxt *e
 		} else {
 			vcpu_inject_gp(vcpu, 0U);
 		}
-		return -EFAULT;
-	}
+		ret = -EFAULT;
+	} else {
+		err_code = (vcpu->req.reqs.mmio.direction == REQUEST_WRITE) ? PAGE_FAULT_WR_FLAG : 0U;
 
-	err_code = (vcpu->req.reqs.mmio.direction == REQUEST_WRITE) ?
-	       PAGE_FAULT_WR_FLAG : 0U;
-
-	ret = gva2gpa(vcpu, gva, &gpa, &err_code);
-	if (ret < 0) {
-		if (ret == -EFAULT) {
-			vcpu_inject_pf(vcpu, gva,
-					err_code);
+		ret = gva2gpa(vcpu, gva, &gpa, &err_code);
+		if (ret < 0) {
+			if (ret == -EFAULT) {
+				vcpu_inject_pf(vcpu, gva, err_code);
+			}
+		} else {
+			ret = 0;
 		}
-		return ret;
 	}
 
-	return 0;
+	return ret;
 }
 
 int32_t decode_instruction(struct acrn_vcpu *vcpu)
@@ -2272,57 +2287,53 @@ int32_t decode_instruction(struct acrn_vcpu *vcpu)
 	emul_ctxt = &per_cpu(g_inst_ctxt, vcpu->pcpu_id);
 	if (emul_ctxt == NULL) {
 		pr_err("%s: Failed to get emul_ctxt", __func__);
-		return -1;
-	}
-	emul_ctxt->vcpu = vcpu;
-
-	retval = vie_init(&emul_ctxt->vie, vcpu);
-	if (retval < 0) {
-		if (retval != -EFAULT) {
-			pr_err("init vie failed @ 0x%016llx:",
-				vcpu_get_rip(vcpu));
-		}
-		return retval;
-	}
-
-	csar = exec_vmread32(VMX_GUEST_CS_ATTR);
-	get_guest_paging_info(vcpu, emul_ctxt, csar);
-	cpu_mode = get_vcpu_mode(vcpu);
-
-	retval = local_decode_instruction(cpu_mode, seg_desc_def32(csar),
-		&emul_ctxt->vie);
-
-	if (retval != 0) {
-		pr_err("decode instruction failed @ 0x%016llx:",
-			vcpu_get_rip(vcpu));
-		vcpu_inject_ud(vcpu);
-		return -EFAULT;
-	}
-
-	/*
-	 * We do operand check in instruction decode phase and
-	 * inject exception accordingly. In late instruction
-	 * emulation, it will always sucess.
-	 *
-	 * We only need to do dst check for movs. For other instructions,
-	 * they always has one register and one mmio which trigger EPT
-	 * by access mmio. With VMX enabled, the related check is done
-	 * by VMX itself before hit EPT violation.
-	 *
-	 */
-	if ((emul_ctxt->vie.op.op_flags & VIE_OP_F_CHECK_GVA_DI) != 0U) {
-		retval = instr_check_di(vcpu, emul_ctxt);
-		if (retval < 0) {
-			return retval;
-		}
+		retval = -1;
 	} else {
-		retval = instr_check_gva(vcpu, emul_ctxt, cpu_mode);
+		emul_ctxt->vcpu = vcpu;
+
+		retval = vie_init(&emul_ctxt->vie, vcpu);
 		if (retval < 0) {
-			return retval;
+			if (retval != -EFAULT) {
+				pr_err("init vie failed @ 0x%016llx:", vcpu_get_rip(vcpu));
+			}
+		} else {
+
+			csar = exec_vmread32(VMX_GUEST_CS_ATTR);
+			get_guest_paging_info(vcpu, emul_ctxt, csar);
+			cpu_mode = get_vcpu_mode(vcpu);
+
+			retval = local_decode_instruction(cpu_mode, seg_desc_def32(csar), &emul_ctxt->vie);
+
+			if (retval != 0) {
+				pr_err("decode instruction failed @ 0x%016llx:", vcpu_get_rip(vcpu));
+				vcpu_inject_ud(vcpu);
+				retval = -EFAULT;
+			} else {
+				/*
+				 * We do operand check in instruction decode phase and
+				 * inject exception accordingly. In late instruction
+				 * emulation, it will always sucess.
+				 *
+				 * We only need to do dst check for movs. For other instructions,
+				 * they always has one register and one mmio which trigger EPT
+				 * by access mmio. With VMX enabled, the related check is done
+				 * by VMX itself before hit EPT violation.
+				 *
+				 */
+				if ((emul_ctxt->vie.op.op_flags & VIE_OP_F_CHECK_GVA_DI) != 0U) {
+					retval = instr_check_di(vcpu, emul_ctxt);
+				} else {
+					retval = instr_check_gva(vcpu, emul_ctxt, cpu_mode);
+				}
+
+				if (retval >= 0) {
+					retval = (int32_t)(emul_ctxt->vie.opsize);
+				}
+			}
 		}
 	}
 
-	return (int32_t)(emul_ctxt->vie.opsize);
+	return retval;
 }
 
 int32_t emulate_instruction(const struct acrn_vcpu *vcpu)
