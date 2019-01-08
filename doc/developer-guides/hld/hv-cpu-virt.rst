@@ -1104,7 +1104,7 @@ APIs to register its IO/MMIO range:
    * - **API**
      - **Description**
 
-   * - register_io_emulation_handler
+   * - register_pio_emulation_handler
      - register an I/O emulation handler for a hypervisor emulated device
        by specific I/O range
 
