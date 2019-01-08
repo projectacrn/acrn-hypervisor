@@ -477,10 +477,10 @@ void do_print(const char *fmt_arg, struct print_param *param,
 				if ((param->vars.flags &
 					PRINT_FLAG_LONG_LONG) != 0U) {
 					print_decimal(param,
-						__builtin_va_arg(args, long));
+						__builtin_va_arg(args, int64_t));
 				} else {
 					print_decimal(param,
-						__builtin_va_arg(args, int));
+						__builtin_va_arg(args, int32_t));
 				}
 			}
 			/* unsigned decimal number */
@@ -526,7 +526,7 @@ void do_print(const char *fmt_arg, struct print_param *param,
 			else if (ch == 'c') {
 				char c[2];
 
-				c[0] = __builtin_va_arg(args, int);
+				c[0] = __builtin_va_arg(args, int32_t);
 				c[1] = 0;
 				print_string(param, c);
 			}
