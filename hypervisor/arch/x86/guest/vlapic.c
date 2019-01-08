@@ -2291,32 +2291,37 @@ apicv_pending_intr(const struct acrn_vlapic *vlapic)
 	const struct lapic_regs *lapic;
 	uint64_t pending, pirval;
 	uint32_t i, ppr, vpr;
+	int32_t ret = 0;
 
 	pir_desc = &(vlapic->pir_desc);
 
 	pending = atomic_load64(&pir_desc->pending);
-	if (pending == 0U) {
-		return 0;
-	}
+	if (pending != 0U) {
+		lapic = &(vlapic->apic_page);
+		ppr = lapic->ppr.v & 0xF0U;
 
-	lapic = &(vlapic->apic_page);
-	ppr = lapic->ppr.v & 0xF0U;
+		if (ppr == 0U) {
+			ret = 1;
+		} else {
 
-	if (ppr == 0U) {
-		return 1;
-	}
+			/* i ranges effectively from 3 to 0 */
+			i = 4U;
+			while (i > 0U) {
+				i --;
+				if (pir_desc->pir[i] != 0U) {
+					break;
+				}
+			}
 
-	/* i ranges effectively from 3 to 0 */
-	for (i = 4U; i > 0U; ) {
-		i--;
-		pirval = pir_desc->pir[i];
-		if (pirval != 0U) {
-			vpr = (((i * 64U) + (uint32_t)fls64(pirval)) & 0xF0U);
-			return (vpr > ppr) ? 1 : 0;
+			pirval = pir_desc->pir[i];
+			if (pirval != 0U) {
+				vpr = (((i * 64U) + (uint32_t)fls64(pirval)) & 0xF0U);
+				ret = ((vpr > ppr) ? 1 : 0);
+			}
 		}
 	}
 
-	return 0;
+	return ret;
 }
 
 /* Update the VMX_EOI_EXIT according to related tmr */
