@@ -271,50 +271,75 @@ static void encode_vmcs_seg_desc(enum cpu_reg_name seg,
  **/
 static uint32_t get_vmcs_field(enum cpu_reg_name ident)
 {
+	uint32_t ret;
+
 	switch (ident) {
 	case CPU_REG_CR0:
-		return VMX_GUEST_CR0;
+		ret = VMX_GUEST_CR0;
+		break;
 	case CPU_REG_CR3:
-		return VMX_GUEST_CR3;
+		ret = VMX_GUEST_CR3;
+		break;
 	case CPU_REG_CR4:
-		return VMX_GUEST_CR4;
+		ret = VMX_GUEST_CR4;
+		break;
 	case CPU_REG_DR7:
-		return VMX_GUEST_DR7;
+		ret = VMX_GUEST_DR7;
+		break;
 	case CPU_REG_RSP:
-		return VMX_GUEST_RSP;
+		ret = VMX_GUEST_RSP;
+		break;
 	case CPU_REG_RIP:
-		return VMX_GUEST_RIP;
+		ret = VMX_GUEST_RIP;
+		break;
 	case CPU_REG_RFLAGS:
-		return VMX_GUEST_RFLAGS;
+		ret = VMX_GUEST_RFLAGS;
+		break;
 	case CPU_REG_ES:
-		return VMX_GUEST_ES_SEL;
+		ret = VMX_GUEST_ES_SEL;
+		break;
 	case CPU_REG_CS:
-		return VMX_GUEST_CS_SEL;
+		ret = VMX_GUEST_CS_SEL;
+		break;
 	case CPU_REG_SS:
-		return VMX_GUEST_SS_SEL;
+		ret = VMX_GUEST_SS_SEL;
+		break;
 	case CPU_REG_DS:
-		return VMX_GUEST_DS_SEL;
+		ret = VMX_GUEST_DS_SEL;
+		break;
 	case CPU_REG_FS:
-		return VMX_GUEST_FS_SEL;
+		ret = VMX_GUEST_FS_SEL;
+		break;
 	case CPU_REG_GS:
-		return VMX_GUEST_GS_SEL;
+		ret = VMX_GUEST_GS_SEL;
+		break;
 	case CPU_REG_TR:
-		return VMX_GUEST_TR_SEL;
+		ret = VMX_GUEST_TR_SEL;
+		break;
 	case CPU_REG_LDTR:
-		return VMX_GUEST_LDTR_SEL;
+		ret = VMX_GUEST_LDTR_SEL;
+		break;
 	case CPU_REG_EFER:
-		return VMX_GUEST_IA32_EFER_FULL;
+		ret = VMX_GUEST_IA32_EFER_FULL;
+		break;
 	case CPU_REG_PDPTE0:
-		return VMX_GUEST_PDPTE0_FULL;
+		ret = VMX_GUEST_PDPTE0_FULL;
+		break;
 	case CPU_REG_PDPTE1:
-		return VMX_GUEST_PDPTE1_FULL;
+		ret = VMX_GUEST_PDPTE1_FULL;
+		break;
 	case CPU_REG_PDPTE2:
-		return VMX_GUEST_PDPTE2_FULL;
+		ret = VMX_GUEST_PDPTE2_FULL;
+		break;
 	case CPU_REG_PDPTE3:
-		return VMX_GUEST_PDPTE3_FULL;
+		ret = VMX_GUEST_PDPTE3_FULL;
+		break;
 	default: /* Never get here */
-		return VMX_INVALID_VMCS_FIELD;
+		ret = VMX_INVALID_VMCS_FIELD;
+		break;
 	}
+
+	return ret;
 }
 
 /**

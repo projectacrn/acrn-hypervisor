@@ -91,73 +91,76 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 	union vhm_request_buffer *req_buf = NULL;
 	struct vhm_request *vhm_req;
 	bool is_polling = false;
+	int32_t ret;
 	uint16_t cur;
 
-	if (vcpu->vm->sw.io_shared_page == NULL) {
-		return -EINVAL;
-	}
+	if (vcpu->vm->sw.io_shared_page != NULL) {
+		ASSERT(get_vhm_req_state(vcpu->vm, vcpu->vcpu_id) == REQ_STATE_FREE,
+			"VHM request buffer is busy");
 
-	ASSERT(get_vhm_req_state(vcpu->vm, vcpu->vcpu_id) == REQ_STATE_FREE,
-		"VHM request buffer is busy");
+		req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
+		cur = vcpu->vcpu_id;
 
-	req_buf = (union vhm_request_buffer *)(vcpu->vm->sw.io_shared_page);
-	cur = vcpu->vcpu_id;
+		stac();
+		vhm_req = &req_buf->req_queue[cur];
+		/* ACRN insert request to VHM and inject upcall */
+		vhm_req->type = io_req->type;
+		(void)memcpy_s(&vhm_req->reqs, sizeof(union vhm_io_request),
+			&io_req->reqs, sizeof(union vhm_io_request));
+		if (vcpu->vm->sw.is_completion_polling) {
+			vhm_req->completion_polling = 1U;
+			is_polling = true;
+		}
+		clac();
 
-	stac();
-	vhm_req = &req_buf->req_queue[cur];
-	/* ACRN insert request to VHM and inject upcall */
-	vhm_req->type = io_req->type;
-	(void)memcpy_s(&vhm_req->reqs, sizeof(union vhm_io_request),
-		&io_req->reqs, sizeof(union vhm_io_request));
-	if (vcpu->vm->sw.is_completion_polling) {
-		vhm_req->completion_polling = 1U;
-		is_polling = true;
-	}
-	clac();
+		/* pause vcpu in notification mode , wait for VHM to handle the MMIO request.
+		 * TODO: when pause_vcpu changed to switch vcpu out directlly, we
+		 * should fix the race issue between req.processed update and vcpu pause
+		 */
+		if (!is_polling) {
+			pause_vcpu(vcpu, VCPU_PAUSED);
+		}
 
-	/* pause vcpu in notification mode , wait for VHM to handle the MMIO request.
-	 * TODO: when pause_vcpu changed to switch vcpu out directlly, we
-	 * should fix the race issue between req.processed update and vcpu pause
-	 */
-	if (!is_polling) {
-		pause_vcpu(vcpu, VCPU_PAUSED);
-	}
-
-	/* Must clear the signal before we mark req as pending
-	 * Once we mark it pending, VHM may process req and signal us
-	 * before we perform upcall.
-	 * because VHM can work in pulling mode without wait for upcall
-	 */
-	set_vhm_req_state(vcpu->vm, vcpu->vcpu_id, REQ_STATE_PENDING);
+		/* Must clear the signal before we mark req as pending
+		 * Once we mark it pending, VHM may process req and signal us
+		 * before we perform upcall.
+		 * because VHM can work in pulling mode without wait for upcall
+		 */
+		set_vhm_req_state(vcpu->vm, vcpu->vcpu_id, REQ_STATE_PENDING);
 
 #if defined(HV_DEBUG)
-	stac();
-	acrn_print_request(vcpu->vcpu_id, vhm_req);
-	clac();
+		stac();
+		acrn_print_request(vcpu->vcpu_id, vhm_req);
+		clac();
 #endif
 
-	/* signal VHM */
-	fire_vhm_interrupt();
+		/* signal VHM */
+		fire_vhm_interrupt();
 
-	/* Polling completion of the request in polling mode */
-	if (is_polling) {
-		/*
-		 * Now, we only have one case that will schedule out this vcpu
-		 * from IO completion polling status, it's pause_vcpu to VCPU_ZOMBIE.
-		 * In this case, we cannot come back to polling status again. Currently,
-		 * it's OK as we needn't handle IO completion in zombie status.
-		 */
-		while (!need_reschedule(vcpu->pcpu_id)) {
-			if (has_complete_ioreq(vcpu)) {
-				/* we have completed ioreq pending */
-				emulate_io_post(vcpu);
-				break;
+		/* Polling completion of the request in polling mode */
+		if (is_polling) {
+			/*
+			 * Now, we only have one case that will schedule out this vcpu
+			 * from IO completion polling status, it's pause_vcpu to VCPU_ZOMBIE.
+			 * In this case, we cannot come back to polling status again. Currently,
+			 * it's OK as we needn't handle IO completion in zombie status.
+			 */
+			while (!need_reschedule(vcpu->pcpu_id)) {
+				if (has_complete_ioreq(vcpu)) {
+					/* we have completed ioreq pending */
+					emulate_io_post(vcpu);
+					break;
+				}
+				asm_pause();
 			}
-			asm_pause();
 		}
+		ret = 0;
+	} else {
+		ret = -EINVAL;
 	}
 
-	return 0;
+
+	return ret;
 }
 
 uint32_t get_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id)
