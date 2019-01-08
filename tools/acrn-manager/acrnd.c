@@ -122,6 +122,7 @@ unsigned get_sos_wakeup_reason(void);
 void acrnd_vm_timer_func(struct work_arg *arg)
 {
 	struct vmmngr_struct *vm;
+	pid_t pid;
 
 	if (!arg) {
 		pdebug();
@@ -137,7 +138,9 @@ void acrnd_vm_timer_func(struct work_arg *arg)
 
 	switch (vm->state) {
 	case VM_CREATED:
-		acrnd_run_vm(arg->name);
+		pid = fork();
+		if (!pid)
+			acrnd_run_vm(vm->name);
 		break;
 	case VM_SUSPENDED:
 		resume_vm(arg->name, CBC_WK_RSN_RTC);
