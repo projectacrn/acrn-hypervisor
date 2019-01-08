@@ -893,58 +893,57 @@ static void get_gva_si_nocheck(const struct acrn_vcpu *vcpu, uint8_t addrsize,
 static int32_t get_gva_di_check(struct acrn_vcpu *vcpu, struct instr_emul_vie *vie,
 		uint8_t addrsize, uint64_t *gva)
 {
-	int32_t ret;
+	int32_t ret = 0;
 	uint32_t err_code;
 	struct seg_desc desc;
 	enum vm_cpu_mode cpu_mode;
 	uint64_t val, gpa;
+	bool has_exception = false;
 
 	vm_get_seg_desc(CPU_REG_ES, &desc);
 	cpu_mode = get_vcpu_mode(vcpu);
 
 	if (cpu_mode == CPU_MODE_64BIT) {
 		if ((addrsize != 4U) && (addrsize != 8U)) {
-			goto exception_inject;
+			has_exception = true;
 		}
 	} else {
 		if ((addrsize != 2U) && (addrsize != 4U)) {
-			goto exception_inject;
-		}
-
-		if (!is_desc_valid(&desc, PROT_WRITE)) {
-			goto exception_inject;
+		        has_exception = true;
+		} else if (!is_desc_valid(&desc, PROT_WRITE)) {
+		        has_exception = true;
 		}
 	}
 
-	val = vm_get_register(vcpu, CPU_REG_RDI);
-	if (vie_calculate_gla(cpu_mode, CPU_REG_ES, &desc, val, addrsize, gva) != 0) {
-		goto exception_inject;
-	}
-
-	if (vie_canonical_check(cpu_mode, *gva) != 0) {
-		goto exception_inject;
-	}
-
-	err_code = PAGE_FAULT_WR_FLAG;
-	ret = gva2gpa(vcpu, *gva, &gpa, &err_code);
-	if (ret < 0) {
-		if (ret == -EFAULT) {
-			vcpu_inject_pf(vcpu, (uint64_t)gva, err_code);
+	if (!has_exception) {
+		val = vm_get_register(vcpu, CPU_REG_RDI);
+		if (vie_calculate_gla(cpu_mode, CPU_REG_ES, &desc, val, addrsize, gva) != 0) {
+		        has_exception = true;
+		} else if (vie_canonical_check(cpu_mode, *gva) != 0) {
+			has_exception = true;
+		} else {
+			err_code = PAGE_FAULT_WR_FLAG;
+			ret = gva2gpa(vcpu, *gva, &gpa, &err_code);
+			if (ret < 0) {
+				if (ret == -EFAULT) {
+					vcpu_inject_pf(vcpu, (uint64_t)gva, err_code);
+				}
+			} else {
+				/* If we are checking the dest operand for movs instruction,
+				 * we cache the gpa if check pass. It will be used during
+				 * movs instruction emulation.
+				 */
+				vie->dst_gpa = gpa;
+			}
 		}
-		return ret;
 	}
 
-	/* If we are checking the dest operand for movs instruction,
-	 * we cache the gpa if check pass. It will be used during
-	 * movs instruction emulation.
-	 */
-	vie->dst_gpa = gpa;
+	if (has_exception) {
+		vcpu_inject_gp(vcpu, 0U);
+		ret = -EFAULT;
+	}
 
-	return 0;
-
-exception_inject:
-	vcpu_inject_gp(vcpu, 0U);
-	return -EFAULT;
+	return ret;
 }
 
 /* MOVs gets the operands from RSI and RDI. Both operands could be memory.
