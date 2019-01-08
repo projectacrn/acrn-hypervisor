@@ -72,8 +72,9 @@
 		</log>
 		<log id='2' enable='true'>
 			<name>kmsg</name>
-			<type>cmd</type>
-			<path>dmesg</path>
+			<type>node</type>
+			<path>/dev/kmsg</path>
+			<sizelimit>2</sizelimit>
 		</log>
 		<log id='3' enable='true'>
 			<name>cmdline</name>

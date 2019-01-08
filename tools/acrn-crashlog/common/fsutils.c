@@ -528,44 +528,57 @@ int file_update_int(const char *filename, unsigned int current,
  *
  * @param src Path of source file.
  * @param dest Path of destin file.
+ * @param limitsize Bytes will copy from src at most.
  *
- * @return 0 if successful, or a negative value if not.
+ * @return 0 if successful, or -1 if not.
  */
-int do_copy_eof(const char *src, const char *des)
+int do_copy_limit(const char *src, const char *des, size_t limitsize)
 {
 	char buffer[CPBUFFERSIZE];
 	int rc = 0;
-	int fd1 = -1, fd2 = -1;
-	struct stat info;
-	int r_count, w_count = 0;
+	int fd1;
+	int fd2;
+	size_t dsize = 0;
+	size_t rbsize = CPBUFFERSIZE;
+	ssize_t r_count;
+	ssize_t w_count;
 
 	if (src == NULL || des == NULL)
-		return -EINVAL;
+		return -1;
 
-	if (stat(src, &info) < 0) {
-		LOGE("can not open file: %s\n", src);
-		return -errno;
+	fd1 = open(src, O_RDONLY | O_NONBLOCK);
+	if (fd1 < 0) {
+		LOGE("failed to open file: %s, err: %s\n", src,
+		     strerror(errno));
+		return -1;
 	}
-
-	fd1 = open(src, O_RDONLY);
-	if (fd1 < 0)
-		return -errno;
 
 	fd2 = open(des, O_WRONLY | O_CREAT | O_TRUNC, 0660);
 	if (fd2 < 0) {
-		LOGE("can not open file: %s\n", des);
+		LOGE("failed to open file: %s, err: %s\n", des,
+		     strerror(errno));
 		close(fd1);
-		return -errno;
+		return -1;
 	}
 
 	/* Start copy loop */
 	while (1) {
+		if (limitsize > 0) {
+		       if (dsize >= limitsize)
+				break;
+			rbsize = MIN(limitsize - dsize, CPBUFFERSIZE);
+		}
+
 		/* Read data from src */
-		r_count = read(fd1, buffer, CPBUFFERSIZE);
+		r_count = read(fd1, buffer, rbsize);
 		if (r_count < 0) {
-			LOGE("read failed, err:%s\n", strerror(errno));
-			rc = -1;
-			break;
+			if (errno == EAGAIN) {
+				break;
+			} else {
+				LOGE("read failed, err:%s\n", strerror(errno));
+				rc = -1;
+				break;
+			}
 		}
 
 		if (r_count == 0)
@@ -579,11 +592,13 @@ int do_copy_eof(const char *src, const char *des)
 			break;
 		}
 		if (r_count != w_count) {
-			LOGE("write failed, r_count:%d w_count:%d\n",
+			LOGE("write failed, r_count:%zd w_count:%zd\n",
 			     r_count, w_count);
 			rc = -1;
 			break;
 		}
+
+		dsize += w_count;
 	}
 
 	if (fd1 >= 0)

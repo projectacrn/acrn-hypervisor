@@ -57,6 +57,8 @@ struct log_t {
 	size_t		path_len;
 	const char	*lines;
 	size_t		lines_len;
+	const char	*sizelimit;
+	size_t		sizelimit_len;
 
 	void (*get)(struct log_t *, void *);
 };

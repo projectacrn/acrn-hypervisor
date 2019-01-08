@@ -92,7 +92,7 @@ void file_reset_init(const char *filename);
 int file_read_int(const char *filename, unsigned int *pcurrent);
 int file_update_int(const char *filename, unsigned int current,
 			unsigned int max);
-int do_copy_eof(const char *src, const char *des);
+int do_copy_limit(const char *src, const char *des, size_t limitsize);
 int space_available(const char *path, int quota);
 int count_lines_in_file(const char *filename);
 int read_full_binary_file(const char *path, unsigned long *size,
