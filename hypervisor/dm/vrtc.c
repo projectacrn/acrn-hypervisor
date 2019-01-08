@@ -77,5 +77,5 @@ void vrtc_init(struct acrn_vm *vm)
 	/* Initializing the CMOS RAM offset to 0U */
 	vm->vrtc_offset = 0U;
 
-	register_io_emulation_handler(vm, RTC_PIO_IDX, &range, vrtc_read, vrtc_write);
+	register_pio_emulation_handler(vm, RTC_PIO_IDX, &range, vrtc_read, vrtc_write);
 }

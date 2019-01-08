@@ -187,7 +187,7 @@ static void register_gas_io_handler(struct acrn_vm *vm, uint32_t pio_idx, const 
 		gas_io.base = (uint16_t)gas->address;
 		gas_io.len = io_len[gas->access_size];
 
-		register_io_emulation_handler(vm, pio_idx, &gas_io, &pm1ab_io_read, &pm1ab_io_write);
+		register_pio_emulation_handler(vm, pio_idx, &gas_io, &pm1ab_io_read, &pm1ab_io_write);
 
 		pr_dbg("Enable PM1A trap for VM %d, port 0x%x, size %d\n", vm->vm_id, gas_io.base, gas_io.len);
 	}
