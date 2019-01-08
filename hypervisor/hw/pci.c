@@ -49,9 +49,9 @@ uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes)
 	uint32_t addr;
 	uint32_t val;
 
-	spinlock_obtain(&pci_device_lock);
-
 	addr = pci_pdev_calc_address(bdf, offset);
+
+	spinlock_obtain(&pci_device_lock);
 
 	/* Write address to ADDRESS register */
 	pio_write32(addr, (uint16_t)PCI_CONFIG_ADDR);
@@ -73,7 +73,7 @@ uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes)
 	return val;
 }
 
-void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes,	uint32_t val)
+void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	uint32_t addr;
 
@@ -118,7 +118,7 @@ void enable_disable_pci_intx(union pci_bdf bdf, bool enable)
 }
 
 #define BUS_SCAN_SKIP		0U
-#define BUS_SCAN_PENDING  	1U
+#define BUS_SCAN_PENDING	1U
 #define BUS_SCAN_COMPLETE	2U
 void pci_scan_bus(pci_enumeration_cb cb_func, void *cb_data)
 {
@@ -171,7 +171,8 @@ void pci_scan_bus(pci_enumeration_cb cb_func, void *cb_data)
 					/* Secondary bus to be scanned */
 					secondary_bus = (uint8_t)pci_pdev_read_cfg(pbdf, PCIR_SECBUS_1, 1U);
 					if (bus_to_scan[secondary_bus] != BUS_SCAN_SKIP) {
-						pr_err("%s, bus %d may be downstream of different PCI bridges", secondary_bus);
+						pr_err("%s, bus %d may be downstream of different PCI bridges",
+							secondary_bus);
 					} else {
 						bus_to_scan[secondary_bus] = BUS_SCAN_PENDING;
 					}
