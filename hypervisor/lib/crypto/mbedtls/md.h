@@ -30,11 +30,8 @@
 
 #include <rtl.h>
 #include "sha256.h"
-#define MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE                -0x5080  /**< The selected feature is not available. */
+
 #define MBEDTLS_ERR_MD_BAD_INPUT_DATA                     -0x5100  /**< Bad input parameters to function. */
-#define MBEDTLS_ERR_MD_ALLOC_FAILED                       -0x5180  /**< Failed to allocate memory. */
-#define MBEDTLS_ERR_MD_FILE_IO_ERROR                      -0x5200  /**< Opening or reading of file failed. */
-#define MBEDTLS_ERR_MD_HW_ACCEL_FAILED                    -0x5280  /**< MD hardware accelerator failed. */
 
 #define mbedtls_platform_zeroize(buf, len) memset((buf), 0U, (len))
 
@@ -52,7 +49,7 @@ typedef enum {
 /**
  * Opaque struct defined in md_internal.h.
  */
-typedef struct mbedtls_md_info_t mbedtls_md_info_t;
+typedef struct mbedtls_md_info mbedtls_md_info_t;
 
 /**
  * The generic message-digest context.

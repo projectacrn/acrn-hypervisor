@@ -28,38 +28,124 @@
 #include "md.h"
 #include "sha256.h"
 
-/*
- * 32-bit integer manipulation macros (big endian)
- */
-#ifndef GET_UINT32_BE
-#define GET_UINT32_BE(n,b,i)                            \
-do {                                                    \
-    (n) = ((uint32_t) (b)[(i)    ] << 24)             \
-        | ((uint32_t) (b)[(i) + 1] << 16)             \
-        | ((uint32_t) (b)[(i) + 2] <<  8)             \
-        | ((uint32_t) (b)[(i) + 3]      );            \
-} while(0)
-#endif
+static const uint32_t k[] =
+{
+    0x428A2F98U, 0x71374491U, 0xB5C0FBCFU, 0xE9B5DBA5U,
+    0x3956C25BU, 0x59F111F1U, 0x923F82A4U, 0xAB1C5ED5U,
+    0xD807AA98U, 0x12835B01U, 0x243185BEU, 0x550C7DC3U,
+    0x72BE5D74U, 0x80DEB1FEU, 0x9BDC06A7U, 0xC19BF174U,
+    0xE49B69C1U, 0xEFBE4786U, 0x0FC19DC6U, 0x240CA1CCU,
+    0x2DE92C6FU, 0x4A7484AAU, 0x5CB0A9DCU, 0x76F988DAU,
+    0x983E5152U, 0xA831C66DU, 0xB00327C8U, 0xBF597FC7U,
+    0xC6E00BF3U, 0xD5A79147U, 0x06CA6351U, 0x14292967U,
+    0x27B70A85U, 0x2E1B2138U, 0x4D2C6DFCU, 0x53380D13U,
+    0x650A7354U, 0x766A0ABBU, 0x81C2C92EU, 0x92722C85U,
+    0xA2BFE8A1U, 0xA81A664BU, 0xC24B8B70U, 0xC76C51A3U,
+    0xD192E819U, 0xD6990624U, 0xF40E3585U, 0x106AA070U,
+    0x19A4C116U, 0x1E376C08U, 0x2748774CU, 0x34B0BCB5U,
+    0x391C0CB3U, 0x4ED8AA4AU, 0x5B9CCA4FU, 0x682E6FF3U,
+    0x748F82EEU, 0x78A5636FU, 0x84C87814U, 0x8CC70208U,
+    0x90BEFFFAU, 0xA4506CEBU, 0xBEF9A3F7U, 0xC67178F2U,
+};
 
-#ifndef PUT_UINT32_BE
-#define PUT_UINT32_BE(n,b,i)                            \
-do {                                                    \
-    (b)[(i)    ] = (uint8_t) ((n) >> 24);       \
-    (b)[(i) + 1] = (uint8_t) ((n) >> 16);       \
-    (b)[(i) + 2] = (uint8_t) ((n) >>  8);       \
-    (b)[(i) + 3] = (uint8_t) ((n)      );       \
-} while(0)
-#endif
+/**
+ * @brief get unsinged int value for big endian.
+ *
+ * @param[in] b pointer to data which is NON-NULL
+ */
+static inline uint32_t get_uint32_be(const uint8_t *b, uint32_t i)
+{
+    uint32_t n;
+
+    n = ((uint32_t) (*(b + i)) << 24)
+         | ((uint32_t) (*(b + i + 1U)) << 16)
+         | ((uint32_t) (*(b + i + 2U)) << 8)
+         | ((uint32_t) (*(b + i + 3U)));
+
+    return n;
+}
+
+/**
+ * @brief put unsinged int value for big endian.
+ * @param[inout] b pointer to data which is NON-NULL
+ */
+static inline void put_unint32_be(uint32_t n, uint8_t *b, uint32_t i)
+{
+    *(b + i) = (uint8_t) (n >> 24);
+    *(b + i + 1U) = (uint8_t) (n >> 16);
+    *(b + i + 2U) = (uint8_t) (n >> 8);
+    *(b + i + 3U) = (uint8_t) n;
+}
+
+static inline uint32_t shr(uint32_t x, uint8_t n)
+{
+    return ((x & 0xFFFFFFFFU) >> n);
+}
+
+static inline uint32_t port(uint32_t x, uint8_t n)
+{
+    return (shr(x, n) | (x << (32U - n)));
+}
+
+static inline uint32_t s0(uint32_t x)
+{
+    return (port(x, 7U) ^ port(x, 18U) ^  shr(x, 3U));
+}
+
+static inline uint32_t s1(uint32_t x)
+{
+    return (port(x, 17U) ^ port(x, 19U) ^  shr(x, 10U));
+}
+
+static inline uint32_t s2(uint32_t x)
+{
+    return (port(x, 2U) ^ port(x, 13U) ^ port(x, 22U));
+}
+
+static inline uint32_t s3(uint32_t x)
+{
+    return (port(x, 6U) ^ port(x, 11U) ^ port(x, 25U));
+}
+
+static inline uint32_t f0(uint32_t x, uint32_t y, uint32_t z)
+{
+    return ((x & y) | (z & (x | y)));
+}
+
+static inline uint32_t f1(uint32_t x, uint32_t y, uint32_t z)
+{
+    return (z ^ (x & (y ^ z)));
+}
+
+static inline void r(uint32_t *w, uint32_t i)
+{
+    *(w + i) = s1(*(w  + i - 2U)) + (*(w + i - 7U)) + s0(*(w + i - 15U)) + (*(w + i - 16U));
+}
+
+/**
+ * @brief Part of compress.
+ *
+ * @param[inout] d and h are NON-null pointer
+ */
+static inline void p( uint32_t a, uint32_t b, uint32_t c,
+        uint32_t *d, uint32_t e, uint32_t f, uint32_t g, uint32_t *h, uint32_t x, uint32_t j)
+{
+    uint32_t temp1, temp2;
+
+    temp1 = *h + s3(e) + f1(e, f, g) + j + x;
+    temp2 = s2(a) + f0(a, b, c);
+    *d += temp1; *h = temp1 + temp2;
+}
 
 void mbedtls_sha256_init(mbedtls_sha256_context *ctx)
 {
-    memset(ctx, 0U, sizeof(mbedtls_sha256_context));
+    (void)memset(ctx, 0U, sizeof(mbedtls_sha256_context));
 }
 
 void mbedtls_sha256_free(mbedtls_sha256_context *ctx)
 {
     if (ctx != NULL) {
-        mbedtls_platform_zeroize(ctx, sizeof(mbedtls_sha256_context));
+        (void)mbedtls_platform_zeroize(ctx, sizeof(mbedtls_sha256_context));
     }
 }
 
@@ -100,92 +186,62 @@ int32_t mbedtls_sha256_starts_ret(mbedtls_sha256_context *ctx, int32_t is224)
 
     ctx->is224 = is224;
 
-    return(0);
-}
-
-static const uint32_t K[] =
-{
-    0x428A2F98U, 0x71374491U, 0xB5C0FBCFU, 0xE9B5DBA5U,
-    0x3956C25BU, 0x59F111F1U, 0x923F82A4U, 0xAB1C5ED5U,
-    0xD807AA98U, 0x12835B01U, 0x243185BEU, 0x550C7DC3U,
-    0x72BE5D74U, 0x80DEB1FEU, 0x9BDC06A7U, 0xC19BF174U,
-    0xE49B69C1U, 0xEFBE4786U, 0x0FC19DC6U, 0x240CA1CCU,
-    0x2DE92C6FU, 0x4A7484AAU, 0x5CB0A9DCU, 0x76F988DAU,
-    0x983E5152U, 0xA831C66DU, 0xB00327C8U, 0xBF597FC7U,
-    0xC6E00BF3U, 0xD5A79147U, 0x06CA6351U, 0x14292967U,
-    0x27B70A85U, 0x2E1B2138U, 0x4D2C6DFCU, 0x53380D13U,
-    0x650A7354U, 0x766A0ABBU, 0x81C2C92EU, 0x92722C85U,
-    0xA2BFE8A1U, 0xA81A664BU, 0xC24B8B70U, 0xC76C51A3U,
-    0xD192E819U, 0xD6990624U, 0xF40E3585U, 0x106AA070U,
-    0x19A4C116U, 0x1E376C08U, 0x2748774CU, 0x34B0BCB5U,
-    0x391C0CB3U, 0x4ED8AA4AU, 0x5B9CCA4FU, 0x682E6FF3U,
-    0x748F82EEU, 0x78A5636FU, 0x84C87814U, 0x8CC70208U,
-    0x90BEFFFAU, 0xA4506CEBU, 0xBEF9A3F7U, 0xC67178F2U,
-};
-
-#define  SHR(x,n) (((x) & 0xFFFFFFFFU) >> (n))
-#define ROTR(x,n) (SHR((x),(n)) | ((x) << (32U - (n))))
-
-#define S0(x) (ROTR((x), 7U) ^ ROTR((x),18U) ^  SHR((x), 3U))
-#define S1(x) (ROTR((x),17U) ^ ROTR((x),19U) ^  SHR((x),10U))
-
-#define S2(x) (ROTR((x), 2U) ^ ROTR((x),13U) ^ ROTR((x),22U))
-#define S3(x) (ROTR((x), 6U) ^ ROTR((x),11U) ^ ROTR((x),25U))
-
-#define F0(x,y,z) (((x) & (y)) | ((z) & ((x) | (y))))
-#define F1(x,y,z) ((z) ^ ((x) & ((y) ^ (z))))
-
-#define R(t)                                    \
-(                                              \
-    W[(t)] = S1(W[(t) -  2]) + W[(t) -  7] +          \
-           S0(W[(t) - 15]) + W[(t) - 16]            \
-)
-
-#define P(a,b,c,d,e,f,g,h,x,K)                  \
-{                                               \
-    temp1 = (h) + S3(e) + F1((e),(f),(g)) + (K) + (x);      \
-    temp2 = S2(a) + F0((a),(b),(c));                  \
-    (d) += temp1; (h) = temp1 + temp2;              \
+    return 0;
 }
 
 int32_t mbedtls_internal_sha256_process(mbedtls_sha256_context *ctx, const uint8_t data[64])
 {
-    uint32_t temp1, temp2, W[64];
-    uint32_t A[8];
-    int32_t i;
+    uint32_t w[64];
+    uint32_t a[8];
+    uint32_t i;
 
-    for (i = 0; i < 8; i++) {
-        A[i] = ctx->state[i];
+    for (i = 0U; i < 8U; i++) {
+        a[i] = ctx->state[i];
     }
 
-    for (i = 0; i < 16; i++) {
-        GET_UINT32_BE(W[i], data, 4 * i);
+    for (i = 0U; i < 16U; i++) {
+        w[i] = get_uint32_be(data, 4 * i);
     }
 
-    for (i = 0; i < 16; i += 8) {
-        P(A[0], A[1], A[2], A[3], A[4], A[5], A[6], A[7], W[i+0], K[i+0]);
-        P(A[7], A[0], A[1], A[2], A[3], A[4], A[5], A[6], W[i+1], K[i+1]);
-        P(A[6], A[7], A[0], A[1], A[2], A[3], A[4], A[5], W[i+2], K[i+2]);
-        P(A[5], A[6], A[7], A[0], A[1], A[2], A[3], A[4], W[i+3], K[i+3]);
-        P(A[4], A[5], A[6], A[7], A[0], A[1], A[2], A[3], W[i+4], K[i+4]);
-        P(A[3], A[4], A[5], A[6], A[7], A[0], A[1], A[2], W[i+5], K[i+5]);
-        P(A[2], A[3], A[4], A[5], A[6], A[7], A[0], A[1], W[i+6], K[i+6]);
-        P(A[1], A[2], A[3], A[4], A[5], A[6], A[7], A[0], W[i+7], K[i+7]);
+    for (i = 0U; i < 16U; i += 8U) {
+        p(a[0], a[1], a[2], &a[3], a[4], a[5], a[6], &a[7], w[i + 0U], k[i + 0U]);
+        p(a[7], a[0], a[1], &a[2], a[3], a[4], a[5], &a[6], w[i + 1U], k[i + 1U]);
+        p(a[6], a[7], a[0], &a[1], a[2], a[3], a[4], &a[5], w[i + 2U], k[i + 2U]);
+        p(a[5], a[6], a[7], &a[0], a[1], a[2], a[3], &a[4], w[i + 3U], k[i + 3U]);
+        p(a[4], a[5], a[6], &a[7], a[0], a[1], a[2], &a[3], w[i + 4U], k[i + 4U]);
+        p(a[3], a[4], a[5], &a[6], a[7], a[0], a[1], &a[2], w[i + 5U], k[i + 5U]);
+        p(a[2], a[3], a[4], &a[5], a[6], a[7], a[0], &a[1], w[i + 6U], k[i + 6U]);
+        p(a[1], a[2], a[3], &a[4], a[5], a[6], a[7], &a[0], w[i + 7U], k[i + 7U]);
     }
 
-    for (i = 16; i < 64; i += 8) {
-        P(A[0], A[1], A[2], A[3], A[4], A[5], A[6], A[7], R(i+0), K[i+0]);
-        P(A[7], A[0], A[1], A[2], A[3], A[4], A[5], A[6], R(i+1), K[i+1]);
-        P(A[6], A[7], A[0], A[1], A[2], A[3], A[4], A[5], R(i+2), K[i+2]);
-        P(A[5], A[6], A[7], A[0], A[1], A[2], A[3], A[4], R(i+3), K[i+3]);
-        P(A[4], A[5], A[6], A[7], A[0], A[1], A[2], A[3], R(i+4), K[i+4]);
-        P(A[3], A[4], A[5], A[6], A[7], A[0], A[1], A[2], R(i+5), K[i+5]);
-        P(A[2], A[3], A[4], A[5], A[6], A[7], A[0], A[1], R(i+6), K[i+6]);
-        P(A[1], A[2], A[3], A[4], A[5], A[6], A[7], A[0], R(i+7), K[i+7]);
+    for (i = 16U; i < 64U; i += 8U) {
+        r(w, (i + 0U));
+        p(a[0], a[1], a[2], &a[3], a[4], a[5], a[6], &a[7], w[i + 0U], k[i + 0U]);
+
+        r(w, (i + 1U));
+        p(a[7], a[0], a[1], &a[2], a[3], a[4], a[5], &a[6], w[i + 1U], k[i + 1U]);
+
+        r(w, (i + 2U));
+        p(a[6], a[7], a[0], &a[1], a[2], a[3], a[4], &a[5], w[i + 2U], k[i + 2U]);
+
+        r(w, (i + 3U));
+        p(a[5], a[6], a[7], &a[0], a[1], a[2], a[3], &a[4], w[i + 3U], k[i + 3U]);
+
+        r(w, (i + 4U));
+        p(a[4], a[5], a[6], &a[7], a[0], a[1], a[2], &a[3], w[i + 4U], k[i + 4U]);
+
+        r(w, (i + 5U));
+        p(a[3], a[4], a[5], &a[6], a[7], a[0], a[1], &a[2], w[i + 5U], k[i + 5U]);
+
+        r(w, (i + 6U));
+        p(a[2], a[3], a[4], &a[5], a[6], a[7], a[0], &a[1], w[i + 6U], k[i + 6U]);
+
+        r(w, (i + 7U));
+        p(a[1], a[2], a[3], &a[4], a[5], a[6], a[7], &a[0], w[i + 7U], k[i + 7U]);
     }
 
-    for (i = 0; i < 8; i++) {
-        ctx->state[i] += A[i];
+    for (i = 0U; i < 8U; i++) {
+        ctx->state[i] += a[i];
     }
 
     return 0;
@@ -261,7 +317,7 @@ int32_t mbedtls_sha256_finish_ret(mbedtls_sha256_context *ctx, uint8_t output[32
 
     ctx->buffer[used] = 0x80U;
 
-    used ++;
+    used++;
 
     if (used <= 56U) {
         /* Enough room for padding + length in current block */
@@ -284,24 +340,24 @@ int32_t mbedtls_sha256_finish_ret(mbedtls_sha256_context *ctx, uint8_t output[32
             | (ctx->total[1] <<  3);
         low  = (ctx->total[0] <<  3);
 
-        PUT_UINT32_BE(high, ctx->buffer, 56);
-        PUT_UINT32_BE(low,  ctx->buffer, 60);
+        put_unint32_be(high, ctx->buffer, 56);
+        put_unint32_be(low,  ctx->buffer, 60);
 
         ret = mbedtls_internal_sha256_process(ctx, ctx->buffer);
         if (ret == 0) {
             /*
              * Output final state
              */
-            PUT_UINT32_BE(ctx->state[0], output,  0);
-            PUT_UINT32_BE(ctx->state[1], output,  4);
-            PUT_UINT32_BE(ctx->state[2], output,  8);
-            PUT_UINT32_BE(ctx->state[3], output, 12);
-            PUT_UINT32_BE(ctx->state[4], output, 16);
-            PUT_UINT32_BE(ctx->state[5], output, 20);
-            PUT_UINT32_BE(ctx->state[6], output, 24);
+            put_unint32_be(ctx->state[0], output,  0);
+            put_unint32_be(ctx->state[1], output,  4);
+            put_unint32_be(ctx->state[2], output,  8);
+            put_unint32_be(ctx->state[3], output, 12);
+            put_unint32_be(ctx->state[4], output, 16);
+            put_unint32_be(ctx->state[5], output, 20);
+            put_unint32_be(ctx->state[6], output, 24);
 
             if (ctx->is224 == 0) {
-                PUT_UINT32_BE(ctx->state[7], output, 28);
+                put_unint32_be(ctx->state[7], output, 28);
             }
         }
     }
