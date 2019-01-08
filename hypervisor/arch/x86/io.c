@@ -467,7 +467,7 @@ void setup_io_bitmap(struct acrn_vm *vm)
  * @param io_write_fn_ptr The handler for emulating writes to the given range
  * @pre pio_idx < EMUL_PIO_IDX_MAX
  */
-void register_io_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
+void register_pio_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
 		const struct vm_io_range *range, io_read_fn_t io_read_fn_ptr, io_write_fn_t io_write_fn_ptr)
 {
 	if (is_vm0(vm)) {

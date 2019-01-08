@@ -128,11 +128,11 @@ void vpci_init(struct acrn_vm *vm)
 		 * UOS or partition mode: register handler for CF8 only and I/O requests to CF9/CFA/CFB are
 		 *      not handled by vpci.
 		 */
-		register_io_emulation_handler(vm, PCI_CFGADDR_PIO_IDX, &pci_cfgaddr_range,
+		register_pio_emulation_handler(vm, PCI_CFGADDR_PIO_IDX, &pci_cfgaddr_range,
 			pci_cfgaddr_io_read, pci_cfgaddr_io_write);
 
 		/* Intercept and handle I/O ports CFC -- CFF */
-		register_io_emulation_handler(vm, PCI_CFGDATA_PIO_IDX, &pci_cfgdata_range,
+		register_pio_emulation_handler(vm, PCI_CFGDATA_PIO_IDX, &pci_cfgdata_range,
 			pci_cfgdata_io_read, pci_cfgdata_io_write);
 	}
 }
