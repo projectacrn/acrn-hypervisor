@@ -120,8 +120,8 @@ static int32_t local_gva2gpa_common(struct acrn_vcpu *vcpu, const struct page_wa
 				}
 
 					/* check for R/W */
-				if ((fault == 0) && (entry & PAGE_RW) == 0U) {
-					if ((pw_info->is_write_access)  &&
+				if ((fault == 0) && ((entry & PAGE_RW) == 0U)) {
+					if (pw_info->is_write_access  &&
 					    (pw_info->is_user_mode_access || pw_info->wp)) {
 						/* Case1: Supermode and wp is 1
 						 * Case2: Usermode */
@@ -139,7 +139,7 @@ static int32_t local_gva2gpa_common(struct acrn_vcpu *vcpu, const struct page_wa
 			}
 
 			/* check for U/S */
-			if ((fault == 0) && (entry & PAGE_USER) == 0U) {
+			if ((fault == 0) && ((entry & PAGE_USER) == 0U)) {
 				is_user_mode_addr = false;
 
 				if (pw_info->is_user_mode_access) {
@@ -160,37 +160,39 @@ static int32_t local_gva2gpa_common(struct acrn_vcpu *vcpu, const struct page_wa
 		 * Also SMAP/SMEP only impact the supervisor-mode access.
 		 */
 		/* if smap is enabled and supervisor-mode access */
-		if ((fault == 0) && pw_info->is_smap_on && !pw_info->is_user_mode_access &&
+		if ((fault == 0) && pw_info->is_smap_on && (!pw_info->is_user_mode_access) &&
 			is_user_mode_addr) {
-			bool rflags_ac = ((vcpu_get_rflags(vcpu) & RFLAGS_AC) != 0UL);
+			bool acflag = ((vcpu_get_rflags(vcpu) & RFLAGS_AC) != 0UL);
 
 			/* read from user mode address, eflags.ac = 0 */
-			if (!pw_info->is_write_access && !rflags_ac) {
+			if ((!pw_info->is_write_access) && (!acflag)) {
 				fault = 1;
 			} else if (pw_info->is_write_access) {
 				/* write to user mode address */
 
 				/* cr0.wp = 0, eflags.ac = 0 */
-				if (!pw_info->wp && !rflags_ac) {
+				if ((!pw_info->wp) && (!acflag)) {
 					fault = 1;
 				}
 
 				/* cr0.wp = 1, eflags.ac = 1, r/w flag is 0
 				 * on any paging structure entry
 				 */
-				if (pw_info->wp && rflags_ac && !is_page_rw_flags_on) {
+				if (pw_info->wp && acflag && (!is_page_rw_flags_on)) {
 					fault = 1;
 				}
 
 				/* cr0.wp = 1, eflags.ac = 0 */
-				if (pw_info->wp && !rflags_ac) {
+				if (pw_info->wp && (!acflag)) {
 					fault = 1;
 				}
+			} else {
+				/* do nothing */
 			}
 		}
 
 		/* instruction fetch from user-mode address, smep on */
-		if ((fault == 0) && pw_info->is_smep_on && !pw_info->is_user_mode_access &&
+		if ((fault == 0) && pw_info->is_smep_on && (!pw_info->is_user_mode_access) &&
 			is_user_mode_addr && pw_info->is_inst_fetch) {
 			fault = 1;
 		}
@@ -363,7 +365,6 @@ static inline int32_t copy_gpa(struct acrn_vm *vm, void *h_ptr_arg, uint64_t gpa
 			err = -EINVAL;
 			break;
 		}
-
 		gpa += len;
 		h_ptr += len;
 		size -= len;
@@ -373,7 +374,7 @@ static inline int32_t copy_gpa(struct acrn_vm *vm, void *h_ptr_arg, uint64_t gpa
 }
 
 /*
- * @pre vcpu != NULL && err_code != NULL
+ * @pre vcpu != NULL && err_code != NULL && h_ptr_arg != NULL
  */
 static inline int32_t copy_gva(struct acrn_vcpu *vcpu, void *h_ptr_arg, uint64_t gva_arg,
 	uint32_t size_arg, uint32_t *err_code, uint64_t *fault_addr,
