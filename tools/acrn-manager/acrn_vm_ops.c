@@ -75,11 +75,14 @@ static int query_state(const char *name)
 	req.timestamp = time(NULL);
 
 	ret = send_msg(name, &req, &ack);
-	if (ret)
-		return ret;
-
-	if (ack.data.state < 0)
+	if (ret) {
 		pdebug();
+		return ret;
+	}
+
+	if (ack.data.state < 0) {
+		fprintf(stderr, "%s ack.data.state:%d\n", __FUNCTION__, ack.data.state);
+	}
 
 	return ack.data.state;
 }
@@ -178,6 +181,8 @@ static void _scan_alive_vm(void)
 				vm->state = VM_SUSPENDED;
 				break;
 			default:
+				fprintf(stderr, "Warnning: unknow vm state:0x%lx\n",
+										vm->state);
 				vm->state = VM_STATE_UNKNOWN;
 			}
 		vm->update = update_count;
