@@ -186,7 +186,6 @@ void schedule(void)
 
 	if (prev == next) {
 		release_schedule_lock(pcpu_id);
-		return;
 	} else {
 		prepare_switch(prev, next);
 		release_schedule_lock(pcpu_id);
