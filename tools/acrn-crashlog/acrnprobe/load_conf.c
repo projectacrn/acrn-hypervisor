@@ -73,6 +73,7 @@ static void print(void)
 		print_id_item(type, log, id);
 		print_id_item(lines, log, id);
 		print_id_item(path, log, id);
+		print_id_item(sizelimit, log, id);
 	}
 
 	for_each_info(id, info, conf) {
@@ -466,6 +467,8 @@ static int parse_log(xmlNodePtr cur, struct log_t *log)
 			res = load_cur_content(cur, log, path);
 		else if (name_is(cur, "lines"))
 			res = load_cur_content(cur, log, lines);
+		else if (name_is(cur, "sizelimit"))
+			res = load_cur_content(cur, log, sizelimit);
 
 		if (res)
 			return -1;

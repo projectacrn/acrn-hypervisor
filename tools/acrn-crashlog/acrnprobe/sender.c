@@ -123,9 +123,10 @@ static void get_log_file(const char *despath, const char *srcpath,
 		get_log_file_complete(despath, srcpath);
 }
 
-static void get_log_node(const char *despath, const char *nodepath)
+static void get_log_node(const char *despath, const char *nodepath,
+			size_t sizelimit)
 {
-	const int res = do_copy_eof(nodepath, despath);
+	const int res = do_copy_limit(nodepath, despath, sizelimit);
 
 	if (res < 0) {
 		LOGE("copy (%s) failed, error (%s)\n", nodepath,
@@ -156,8 +157,17 @@ static void get_log_by_type(const char *despath, const struct log_t *log,
 			if (cfg_atoi(log->lines, log->lines_len, &lines) == -1)
 				return;
 		get_log_file(despath, srcpath, lines);
-	} else if (!strcmp("node", log->type))
-		get_log_node(despath, log->path);
+	} else if (!strcmp("node", log->type)) {
+		int size;
+
+		if (!log->sizelimit)
+			size = 0;
+		else
+			if (cfg_atoi(log->sizelimit, log->sizelimit_len,
+				     &size) == -1)
+				return;
+		get_log_node(despath, log->path, (size_t)(size * 1024 * 1024));
+	}
 	else if (!strcmp("cmd", log->type))
 		get_log_cmd(despath, log->path);
 }
