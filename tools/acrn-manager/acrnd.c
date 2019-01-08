@@ -81,6 +81,8 @@ int acrnd_add_work(void (*func) (struct work_arg *arg),
 	pthread_mutex_lock(&work_mutex);
 	LIST_INSERT_HEAD(&work_head, work, list);
 	pthread_mutex_unlock(&work_mutex);
+
+	printf("%s added, work->expire:%lx\n", __FUNCTION__, work->expire);
 	return 0;
 }
 
@@ -101,6 +103,8 @@ static void try_do_works(void)
 	pthread_mutex_lock(&work_mutex);
 	list_foreach_safe(work, &work_head, list, twork) {
 		if (current >= work->expire) {
+			printf("Run expired work(%lu), current time(%lu)\n",
+								work->expire, current);
 			work->func(&work->arg);
 			LIST_REMOVE(work, list);
 			free(work);
@@ -582,11 +586,13 @@ void handle_acrnd_resume(struct mngr_msg *msg, int client_fd, void *param)
 	wakeup_reason = get_sos_wakeup_reason();
 
 	if (wakeup_reason & CBC_WK_RSN_RTC) {
+		printf("Resumed UOS, by RTC timer, reason(%x)!\n", wakeup_reason);
 		/* wakeup by RTC timer */
 		if (!stat(ACRN_CONF_TIMER_LIST, &st)
 			&& S_ISREG(st.st_mode)) {
 			ack.data.err = load_timer_list();
 			if (ack.data.err == 0) {
+				printf("Resumed UOS by RTC timer, try do works!\n");
 				/* load timers successfully */
 				try_do_works();
 				goto reply_ack;
