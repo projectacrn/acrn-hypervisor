@@ -208,57 +208,62 @@ static void vmsix_table_rw(struct pci_vdev *vdev, struct mmio_request *mmio, uin
 	/* Find out which entry it's accessing */
 	table_offset = offset - vdev->msix.table_offset;
 	index = table_offset / MSIX_TABLE_ENTRY_SIZE;
-	if (index >= vdev->msix.table_count) {
-		pr_err("%s, invalid arguments %llx - %llx", __func__, mmio->value, mmio->address);
-		return;
-	}
 
-	entry = &vdev->msix.tables[index];
-	entry_offset = table_offset % MSIX_TABLE_ENTRY_SIZE;
+	if (index < vdev->msix.table_count) {
+		entry = &vdev->msix.tables[index];
+		entry_offset = table_offset % MSIX_TABLE_ENTRY_SIZE;
 
-	if (mmio->direction == REQUEST_READ) {
-		(void)memcpy_s(&mmio->value, (size_t)mmio->size, (void *)entry + entry_offset, (size_t)mmio->size);
-	} else {
-		/* Only DWORD and QWORD are permitted */
-		if ((mmio->size != 4U) && (mmio->size != 8U)) {
-			pr_err("%s, Only DWORD and QWORD are permitted", __func__);
-			return;
-		}
-
-		/* Save for comparison */
-		vector_control = entry->vector_control;
-
-		/*
-		 * Writing different value to Message Data/Addr?
-		 * PCI Spec: Software is permitted to fill in MSI-X Table entry DWORD fields individually
-		 * with DWORD writes, or software in certain cases is permitted to fill in appropriate pairs
-		 * of DWORDs with a single QWORD write
-		 */
-		if (entry_offset < offsetof(struct msix_table_entry, data)) {
-			uint64_t qword_mask = ~0UL;
-			if (mmio->size == 4U) {
-				qword_mask = (entry_offset == 0U) ? 0x00000000FFFFFFFFUL : 0xFFFFFFFF00000000UL;
-			}
-			message_changed = ((entry->addr & qword_mask) != (mmio->value & qword_mask));
+		if (mmio->direction == REQUEST_READ) {
+			(void)memcpy_s(&mmio->value, (size_t)mmio->size,
+					(void *)entry + entry_offset, (size_t)mmio->size);
 		} else {
-			if (entry_offset == offsetof(struct msix_table_entry, data)) {
-				message_changed = (entry->data != (uint32_t)mmio->value);
+			/* Only DWORD and QWORD are permitted */
+			if ((mmio->size == 4U) || (mmio->size == 8U)) {
+				/* Save for comparison */
+				vector_control = entry->vector_control;
+
+				/*
+				 * Writing different value to Message Data/Addr?
+				 * PCI Spec: Software is permitted to fill in MSI-X Table entry DWORD fields
+				 * individually with DWORD writes, or software in certain cases is permitted
+				 * to fill in appropriate pairs of DWORDs with a single QWORD write
+				 */
+				if (entry_offset < offsetof(struct msix_table_entry, data)) {
+					uint64_t qword_mask = ~0UL;
+					if (mmio->size == 4U) {
+						qword_mask = (entry_offset == 0U) ?
+								0x00000000FFFFFFFFUL : 0xFFFFFFFF00000000UL;
+					}
+					message_changed = ((entry->addr & qword_mask) != (mmio->value & qword_mask));
+				} else {
+					if (entry_offset == offsetof(struct msix_table_entry, data)) {
+						message_changed = (entry->data != (uint32_t)mmio->value);
+					}
+				}
+
+				/* Write to pci_vdev */
+				(void)memcpy_s((void *)entry + entry_offset, (size_t)mmio->size,
+						&mmio->value, (size_t)mmio->size);
+
+				/* If MSI-X hasn't been enabled, do nothing */
+				if ((pci_vdev_read_cfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U)
+						& PCIM_MSIXCTRL_MSIX_ENABLE) == PCIM_MSIXCTRL_MSIX_ENABLE) {
+
+					if ((((entry->vector_control ^ vector_control) & PCIM_MSIX_VCTRL_MASK) != 0U)
+							|| message_changed) {
+						unmasked = ((entry->vector_control & PCIM_MSIX_VCTRL_MASK) == 0U);
+						(void)vmsix_remap_one_entry(vdev, index, unmasked);
+					}
+				}
+			} else {
+				pr_err("%s, Only DWORD and QWORD are permitted", __func__);
 			}
+
 		}
-
-		/* Write to pci_vdev */
-		(void)memcpy_s((void *)entry + entry_offset, (size_t)mmio->size, &mmio->value, (size_t)mmio->size);
-
-		/* If MSI-X hasn't been enabled, do nothing */
-		if ((pci_vdev_read_cfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U) & PCIM_MSIXCTRL_MSIX_ENABLE)
-			== PCIM_MSIXCTRL_MSIX_ENABLE) {
-
-			if ((((entry->vector_control ^ vector_control) & PCIM_MSIX_VCTRL_MASK) != 0U) || message_changed) {
-				unmasked = ((entry->vector_control & PCIM_MSIX_VCTRL_MASK) == 0U);
-				(void)vmsix_remap_one_entry(vdev, index, unmasked);
-			}
-		}
+	} else {
+		pr_err("%s, invalid arguments %llx - %llx", __func__, mmio->value, mmio->address);
 	}
+
 }
 
 static int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *handler_private_data)
