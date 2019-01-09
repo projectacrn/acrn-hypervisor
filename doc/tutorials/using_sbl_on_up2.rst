@@ -53,8 +53,6 @@ and `Stitching <https://slimbootloader.github.io/supported-hardware/up2.html#sti
 from `<https://slimbootloader.github.io/supported-hardware/up2.html>`_ to generate the
 BIOS binary file ``<SBL_IFWI_IMAGE>``, which is the new IFWI image with SBL in BIOS region.
 
-
-
 Flash SBL on the UP2
 ********************
 
@@ -72,7 +70,6 @@ Flash SBL on the UP2
 
       Fpt_3.1.50.2222.efi -f <SBL_IFWI_IMAGE> -y
 
-
 Build ACRN for UP2
 ******************
 
@@ -89,51 +86,64 @@ An example of the configuration file ``uos.json``:
        "DestinationType" : "virtual",
        "PartitionLayout" : [ { "disk" : "clearlinux.img", "partition" : 1, "size" : "100M", "type" : "EFI" },
                              { "disk" : "clearlinux.img", "partition" : 2, "size" : "10G", "type" : "linux" } ],
-       "FilesystemTypes" : [ { "disk" : "clearlinux.img", "partition" : 1, "type" : "ext2" },
+       "FilesystemTypes" : [ { "disk" : "clearlinux.img", "partition" : 1, "type" : "vfat" },
                              { "disk" : "clearlinux.img", "partition" : 2, "type" : "ext4" } ],
        "PartitionMountPoints" : [ { "disk" : "clearlinux.img", "partition" : 1, "mount" : "/boot" },
            		          { "disk" : "clearlinux.img", "partition" : 2, "mount" : "/" } ],
-       "Version": 26880,
+       "Version": 27050,
        "Bundles": ["kernel-iot-lts2018", "openssh-server", "software-defined-cockpit", "os-core", "os-core-update"]
    }
 
 .. note::
    To generate the image with a specified version, please modify
    the "Version" argument, ``"Version": 26000`` instead
-   of ``"Version": 26880`` for example.
+   of ``"Version": 27050`` for example.
 
-Clone the source code of ``acrn-hypervisor`` and build SOS and LaaG image:
+Clone the source code of ``acrn-hypervisor`` for building:
 
 .. code-block:: none
+   
+   $ cd ~
+   $ git clone https://github.com/projectacrn/acrn-hypervisor
 
-   cd ~
-   git clone https://github.com/projectacrn/acrn-hypervisor
-   sudo ./acrn-hypervisor/devicemodel/samples/up2/create-up2-images.sh --images-type all \
-      --clearlinux-version 26880 --laag-json uos.json --acrn-code-path ~/acrn-hypervisor/
+Build SOS and LaaG image:
+   
+.. code-block:: none   
 
+   $ sudo -s 
+   # ./acrn-hypervisor/devicemodel/samples/up2/create-up2-images.sh --images-type all \
+      --clearlinux-version 27050 --laag-json uos.json --acrn-code-path ~/acrn-hypervisor/
 
+.. note::
+   Run ``create-up2-images.sh`` as root.
+
+.. note::
+   When building images, you can modify the ``--clearlinux-version`` argument 
+   to a specific version (such as 26800). To generate the images of SOS only, 
+   modify the ``--images-type`` argument to ``sos``.
+   
 This step will generate the images of SOS and LaaG:
 
 * sos_boot.img
 * sos_rootfs.img
 * up2_laag.img
 
-.. note::
-   When building images, you can modify the ``--clearlinux-version`` argument
-   to a specific version (such as 26800). To generate the images of SOS only,
-   modify the ``--images-type`` argument to ``sos``.
+Build the binary image ``partition_desc.bin`` for 
+GPT partitions, and change the partition layout 
+in ``partition_desc.ini`` if needed.
 
+.. code-block:: none
 
-We still need the binary image for GPT partitions and
-configuration file for flashing:
+   $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/gpt_ini2bin.py
+   $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/partition_desc.ini  
+   $ sudo -s
+   # python2 gpt_ini2bin.py partition_desc.ini>partition_desc.bin
 
-* partition_desc.bin
-* flash_LaaG.json
+We still need the configuration file for flashing:
 
-.. note::
-   ``partition_desc.bin`` and ``flash_LaaG.json`` are in the directory
-   ``~/acrn-hypervisor/doc/tutorials/``.
+.. code-block:: none
 
+   $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/flash_LaaG.json
 
 .. table::
       :widths: auto
@@ -167,11 +177,9 @@ Download and install flash tool
 #. Download Intel® Platform Flash Tool Lite from
    `<https://github.com/projectceladon/tools/tree/master/platform_flash_tool_lite/latest/>`_.
 
-
 #. For Ubuntu host, install `platformflashtoollite_5.8.9.0_linux_x86_64.deb
    <https://github.com/projectceladon/tools/blob/master/platform_flash_tool_lite/latest/platformflashtoollite_5.8.9.0_linux_x86_64.deb>`_
    for example.
-
 
 SOS and LaaG Installation
 *************************
@@ -182,14 +190,14 @@ SOS and LaaG Installation
 
    .. code-block:: none
 
-       ls /dev/ttyUSB*
+       $ ls /dev/ttyUSB*
        /dev/ttyUSB0
 
 #. Connect to board via ``minicom``, and use ``/dev/ttyUSB0`` for example:
 
    .. code-block:: none
 
-       sudo minicom -s /dev/ttyUSB0
+       $ sudo minicom -s /dev/ttyUSB0
 
    .. note::
       Please verify the minicom serial port settings are 115200 8N1 and
@@ -206,7 +214,6 @@ SOS and LaaG Installation
        Press any key within 2 second(s) to enter the command shell
 
        Shell>
-
 
 #. Swap the boot sequence of ``DevType: MEM`` to ``Idx:0``:
 
@@ -290,8 +297,8 @@ Run the ``launch_uos.sh`` script to launch the UOS:
 
 .. code-block:: none
 
-   cd ~
-   wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/launch_uos.sh
-   sudo ./launch_uos.sh -V 1
+   $ cd ~
+   $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/launch_uos.sh
+   $ sudo ./launch_uos.sh -V 1
 
 **Congratulations**, you are now watching the User OS booting up!
