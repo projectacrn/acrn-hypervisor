@@ -60,7 +60,7 @@ Please follow the :ref:`getting-started-apl-nuc`, with the following changes:
       $ git clone https://github.com/projectacrn/acrn-hypervisor
       $ cd acrn-hypervisor
       $ git checkout acrn-2018w39.6-140000p
-      $ tar xf ~/Downloads/skl-patches-for-acrn.tar
+      $ curl https://projectacrn.github.io/latest/_static/downloads/skl-patches-for-acrn.tar | tar x
       $ git am *.patch
       $ make
 
