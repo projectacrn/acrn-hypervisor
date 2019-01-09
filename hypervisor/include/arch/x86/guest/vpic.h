@@ -118,7 +118,7 @@ struct i8259_reg_state {
 	uint8_t		smm;		/* special mask mode */
 
 	uint8_t		pin_state[8];	/* pin state for level */
-	uint8_t		lowprio;	/* lowest priority irq */
+	uint32_t	lowprio;	/* lowest priority irq */
 
 	bool		intr_raised;
 	uint8_t		elc;
@@ -144,13 +144,13 @@ void vpic_init(struct acrn_vm *vm);
  * @brief Set vPIC IRQ line status.
  *
  * @param[in] vm        Pointer to target VM
- * @param[in] irq       Target IRQ number
+ * @param[in] irqline   Target IRQ number
  * @param[in] operation action options:GSI_SET_HIGH/GSI_SET_LOW/
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
  * @return None
  */
-void vpic_set_irqline(struct acrn_vm *vm, uint32_t irq, uint32_t operation);
+void vpic_set_irqline(struct acrn_vm *vm, uint32_t irqline, uint32_t operation);
 
 /**
  * @brief Get pending virtual interrupts for vPIC.
@@ -174,7 +174,7 @@ void vpic_pending_intr(struct acrn_vm *vm, uint32_t *vecptr);
  * @pre vm != NULL
  */
 void vpic_intr_accepted(struct acrn_vm *vm, uint32_t vector);
-void vpic_get_irqline_trigger_mode(struct acrn_vm *vm, uint32_t irq, enum vpic_trigger *trigger);
+void vpic_get_irqline_trigger_mode(struct acrn_vm *vm, uint32_t irqline, enum vpic_trigger *trigger);
 uint32_t vpic_pincount(void);
 
 /**
