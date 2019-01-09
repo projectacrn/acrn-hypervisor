@@ -29,8 +29,8 @@ overall graphics performance.
 The ``i915.enable_pvmmio`` option controls
 the optimization levels of the PVMMIO feature: each bit represents a
 sub-feature of the optimization. By default, all
-sub-features of PVMMIO are enabled but can also be selectively
-enabled as well.
+sub-features of PVMMIO are enabled. They can also be selectively
+enabled or disabled..
 
 The PVMMIO optimization levels are:
 
@@ -50,15 +50,21 @@ The PVMMIO optimization levels are:
 i915.gvt_workload_priority
 **************************
 
-acrnGT supports **Prioritized Rendering** as described in the
+AcrnGT supports **Prioritized Rendering** as described in the
 :ref:`GVT-g-prioritized-rendering` high-level design.  This
 configuration option controls the priority level of GVT-g guests.
 Priority levels range from -1023 to 1023.
 
-The default priority is 0, the same priority as the Service OS. If the
-level is negative, the guest's priority will be lower than the Service
-OS, so graphics preemption will work and the prioritized rendering
-feature will be enabled.  This is a Service OS only parameters, and does
+The default priority is zero, the same priority as the Service OS. If
+the level is less than zero, the guest's priority will be lower than the
+Service OS, so graphics preemption will work and the prioritized
+rendering feature will be enabled.  If the level is greater than zero,
+UOS graphics workloads will preempt most of the SOS graphics workloads,
+except for display updating related workloads that use a default highest
+priority (1023).
+
+Currently, all UOSes share the same priority.
+This is a Service OS only parameters, and does
 not work in the User OS.
 
 i915.enable_initial_modeset
@@ -81,6 +87,8 @@ High Level Design for more information about this feature.)
 In the current configuration, we will set
 ``i915.enable_initial_modeset=1`` in SOS and
 ``i915.enable_initial_modeset=0`` in UOS.
+
+This parmeter is not used on UEFI platforms.
 
 i915.avail_planes_per_pipe and i915.domain_plane_owners
 *******************************************************
