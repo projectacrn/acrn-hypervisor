@@ -333,7 +333,7 @@ Set up Reference UOS
    .. literalinclude:: ../../devicemodel/samples/nuc/launch_uos.sh
       :caption: devicemodel/samples/nuc/launch_uos.sh
       :language: bash
-      :emphasize-lines: 23,25
+      :emphasize-lines: 24,27
 
    .. note::
       In case you have downloaded a different Clear Linux image than the one above
