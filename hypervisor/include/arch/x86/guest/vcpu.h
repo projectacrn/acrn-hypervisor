@@ -166,7 +166,7 @@ struct ext_context {
 #define SECURE_WORLD	1
 
 #define NUM_WORLD_MSRS		2U
-#define NUM_COMMON_MSRS		6U
+#define NUM_COMMON_MSRS		7U
 #define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS)
 
 struct event_injection_info {
