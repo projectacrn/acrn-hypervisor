@@ -9,19 +9,17 @@
 
 #ifdef PROFILING_ON
 
-#define MAX_NR_VCPUS			8
-#define MAX_NR_VMS				6
-
-#define MAX_MSR_LIST_NUM		15U
-#define MAX_GROUP_NUM			1U
+#define MAX_MSR_LIST_NUM	15U
+#define MAX_GROUP_NUM		1U
 
 #define COLLECT_PROFILE_DATA	0
-#define COLLECT_POWER_DATA		1
+#define COLLECT_POWER_DATA	1
 
-#define SEP_BUF_ENTRY_SIZE 		32U
-#define SOCWATCH_MSR_OP			100U
+#define SEP_BUF_ENTRY_SIZE 	32U
+#define SOCWATCH_MSR_OP		100U
 
-#define MAGIC_NUMBER			0x99999988U
+#define MAGIC_NUMBER		0x99999988U
+
 enum MSR_CMD_STATUS {
 	MSR_OP_READY = 0,
 	MSR_OP_REQUESTED,
@@ -95,28 +93,28 @@ struct profiling_pcpuid {
 };
 
 struct profiling_control {
-	int32_t		collector_id;
-	int32_t		reserved;
-	uint64_t	switches;
+	int32_t	collector_id;
+	int32_t	reserved;
+	uint64_t switches;
 };
 
 struct profiling_vcpu_pcpu_map {
-	int32_t vcpu_id;
-	int32_t pcpu_id;
-	int32_t apic_id;
+	int16_t vcpu_id;
+	int16_t pcpu_id;
+	uint32_t apic_id;
 };
 
 struct profiling_vm_info {
-	int32_t		vm_id_num;
-	uint8_t	guid[16];
-	char		vm_name[16];
-	int32_t		num_vcpus;
-	struct profiling_vcpu_pcpu_map	cpu_map[MAX_NR_VCPUS];
+	uint16_t vm_id_num;
+	uint8_t guid[16];
+	char vm_name[16];
+	uint16_t num_vcpus;
+	struct profiling_vcpu_pcpu_map cpu_map[CONFIG_MAX_VCPUS_PER_VM];
 };
 
 struct profiling_vm_info_list {
-	int32_t num_vms;
-	struct profiling_vm_info vm_list[MAX_NR_VMS];
+	uint16_t num_vms;
+	struct profiling_vm_info vm_list[CONFIG_MAX_VM_NUM];
 };
 
 struct sw_msr_op_info {
@@ -128,19 +126,19 @@ struct sw_msr_op_info {
 
 struct profiling_msr_op {
 	/* value to write or location to write into */
-	uint64_t	value;
+	uint64_t value;
 	/* MSR address to read/write; last entry will have value of -1 */
-	uint32_t	msr_id;
+	uint32_t msr_id;
 	/* parameter; usage depends on operation */
-	uint16_t	param;
-	uint8_t		msr_op_type;
-	uint8_t		reg_type;
+	uint16_t param;
+	uint8_t	msr_op_type;
+	uint8_t	reg_type;
 };
 
 struct profiling_msr_ops_list {
-	int32_t		collector_id;
-	uint32_t	num_entries;
-	int32_t		msr_op_state;
+	int32_t	collector_id;
+	uint32_t num_entries;
+	int32_t	msr_op_state;
 	struct profiling_msr_op entries[MAX_MSR_LIST_NUM];
 };
 struct profiling_pmi_config {
@@ -167,14 +165,14 @@ struct vmexit_msr {
 };
 
 struct guest_vm_info {
-	uint64_t	vmenter_tsc;
-	uint64_t	vmexit_tsc;
-	uint64_t	vmexit_reason;
-	uint64_t	guest_rip;
-	uint64_t	guest_rflags;
-	uint64_t	guest_cs;
-	int32_t		guest_vm_id;
-	int32_t		external_vector;
+	uint64_t vmenter_tsc;
+	uint64_t vmexit_tsc;
+	uint64_t vmexit_reason;
+	uint64_t guest_rip;
+	uint64_t guest_rflags;
+	uint64_t guest_cs;
+	uint16_t guest_vm_id;
+	int32_t external_vector;
 };
 struct sep_state {
 	sep_pmu_state pmu_state;
@@ -230,23 +228,25 @@ struct data_header {
 #define DATA_HEADER_SIZE ((uint64_t)sizeof(struct data_header))
 struct core_pmu_sample {
 	/* context where PMI is triggered */
-	uint32_t	os_id;
+	uint16_t os_id;
+	/* reserved */
+	uint16_t reserved;
 	/* the task id */
-	uint32_t	task_id;
+	uint32_t task_id;
 	/* instruction pointer */
-	uint64_t	rip;
+	uint64_t rip;
 	/* the task name */
-	char		task[16];
+	char task[16];
 	/* physical cpu ID */
-	uint32_t	cpu_id;
+	uint32_t cpu_id;
 	/* the process id */
-	uint32_t	process_id;
+	uint32_t process_id;
 	/* perf global status msr value (for overflow status) */
-	uint64_t	overflow_status;
+	uint64_t overflow_status;
 	/* rflags */
-	uint32_t	rflags;
+	uint32_t rflags;
 	/* code segment */
-	uint32_t	cs;
+	uint32_t cs;
 } __aligned(SEP_BUF_ENTRY_SIZE);
 
 #define CORE_PMU_SAMPLE_SIZE ((uint64_t)sizeof(struct core_pmu_sample))
@@ -254,28 +254,29 @@ struct core_pmu_sample {
 
 struct lbr_pmu_sample {
 	/* LBR TOS */
-	uint64_t	lbr_tos;
+	uint64_t lbr_tos;
 	/* LBR FROM IP */
-	uint64_t	lbr_from_ip[NUM_LBR_ENTRY];
+	uint64_t lbr_from_ip[NUM_LBR_ENTRY];
 	/* LBR TO IP */
-	uint64_t	lbr_to_ip[NUM_LBR_ENTRY];
+	uint64_t lbr_to_ip[NUM_LBR_ENTRY];
 	/* LBR info */
-	uint64_t	lbr_info[NUM_LBR_ENTRY];
+	uint64_t lbr_info[NUM_LBR_ENTRY];
 } __aligned(SEP_BUF_ENTRY_SIZE);
 
 #define LBR_PMU_SAMPLE_SIZE ((uint64_t)sizeof(struct lbr_pmu_sample))
 struct pmu_sample {
 	/* core pmu sample */
-	struct core_pmu_sample	csample;
+	struct core_pmu_sample csample;
 	/* lbr pmu sample */
-	struct lbr_pmu_sample	lsample;
+	struct lbr_pmu_sample lsample;
 } __aligned(SEP_BUF_ENTRY_SIZE);
 
 struct vm_switch_trace {
 	uint64_t vm_enter_tsc;
 	uint64_t vm_exit_tsc;
 	uint64_t vm_exit_reason;
-	int32_t  os_id;
+	uint16_t os_id;
+	uint16_t reserved;
 }__aligned(SEP_BUF_ENTRY_SIZE);
 
 #define VM_SWITCH_TRACE_SIZE ((uint64_t)sizeof(struct vm_switch_trace))
@@ -283,15 +284,15 @@ struct vm_switch_trace {
  * Wrapper containing  SEP sampling/profiling related data structures
  */
 struct profiling_info_wrapper {
-	struct profiling_msr_ops_list	*msr_node;
-	struct sep_state		sep_state;
-	struct guest_vm_info	vm_info;
-	ipi_commands			ipi_cmd;
-	struct pmu_sample		pmu_sample;
-	struct vm_switch_trace	vm_switch_trace;
-	socwatch_state			soc_state;
-	struct sw_msr_op_info	sw_msr_op_info;
-	spinlock_t		sw_lock;
+	struct profiling_msr_ops_list *msr_node;
+	struct sep_state sep_state;
+	struct guest_vm_info vm_info;
+	ipi_commands ipi_cmd;
+	struct pmu_sample pmu_sample;
+	struct vm_switch_trace vm_switch_trace;
+	socwatch_state soc_state;
+	struct sw_msr_op_info sw_msr_op_info;
+	spinlock_t sw_lock;
 } __aligned(8);
 
 int32_t profiling_get_version_info(struct acrn_vm *vm, uint64_t addr);

@@ -13,15 +13,15 @@
 #define MAJOR_VERSION			1
 #define MINOR_VERSION			0
 
-#define LBR_NUM_REGISTERS			32U
-#define PERF_OVF_BIT_MASK			0xC0000070000000FULL
+#define LBR_NUM_REGISTERS		32U
+#define PERF_OVF_BIT_MASK		0xC0000070000000FULL
 #define LVT_PERFCTR_BIT_UNMASK		0xFFFEFFFFU
 #define LVT_PERFCTR_BIT_MASK		0x10000U
 #define VALID_DEBUGCTL_BIT_MASK		0x1801U
 
-static uint64_t	sep_collection_switch;
-static uint64_t	socwatch_collection_switch;
-static bool		in_pmu_profiling;
+static uint64_t sep_collection_switch;
+static uint64_t socwatch_collection_switch;
+static bool in_pmu_profiling;
 
 static uint32_t profiling_pmi_irq = IRQ_INVALID;
 
@@ -616,7 +616,7 @@ static void profiling_pmi_handler(uint32_t irq, __unused void *data)
 			((uint64_t)get_cpu_var(profiling_info.vm_info).external_vector
 			== VECTOR_PMI)) {
 		psample->csample.os_id
-		=(uint32_t) get_cpu_var(profiling_info.vm_info).guest_vm_id;
+			= get_cpu_var(profiling_info.vm_info).guest_vm_id;
 		(void)memset(psample->csample.task, 0U, 16);
 		psample->csample.cpu_id = get_cpu_id();
 		psample->csample.process_id = 0U;
@@ -631,7 +631,7 @@ static void profiling_pmi_handler(uint32_t irq, __unused void *data)
 		get_cpu_var(profiling_info.vm_info).external_vector = -1;
 	/* Attribute PMI to hypervisor context */
 	} else {
-		psample->csample.os_id = 0xFFFFFFFFU;
+		psample->csample.os_id = 0xFFFFU;
 		(void)memcpy_s(psample->csample.task, 16, "VMM\0", 4);
 		psample->csample.cpu_id = get_cpu_id();
 		psample->csample.process_id = 0U;
@@ -863,12 +863,12 @@ int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr)
 	vm_info_list.vm_list[vm_idx].vm_id_num = -1;
 	(void)memcpy_s((void *)vm_info_list.vm_list[vm_idx].vm_name, 4U, "VMM\0", 4U);
 	for (i = 0U; i < phys_cpu_num; i++) {
-		vm_info_list.vm_list[vm_idx].cpu_map[i].vcpu_id = (int32_t)i;
-		vm_info_list.vm_list[vm_idx].cpu_map[i].pcpu_id = (int32_t)i;
+		vm_info_list.vm_list[vm_idx].cpu_map[i].vcpu_id = i;
+		vm_info_list.vm_list[vm_idx].cpu_map[i].pcpu_id = i;
 		vm_info_list.vm_list[vm_idx].cpu_map[i].apic_id
-			= (int32_t)per_cpu(lapic_id, i);
+			= per_cpu(lapic_id, i);
 	}
-	vm_info_list.vm_list[vm_idx].num_vcpus = (int32_t)i;
+	vm_info_list.vm_list[vm_idx].num_vcpus = i;
 	vm_info_list.num_vms = 1;
 
 	for (j = 0U; j < CONFIG_MAX_VM_NUM; j++) {
@@ -879,7 +879,7 @@ int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr)
 		vm_info_list.num_vms++;
 		vm_idx++;
 
-		vm_info_list.vm_list[vm_idx].vm_id_num = (int32_t)tmp_vm->vm_id;
+		vm_info_list.vm_list[vm_idx].vm_id_num = tmp_vm->vm_id;
 		(void)memcpy_s((void *)vm_info_list.vm_list[vm_idx].guid,
 			16U, tmp_vm->GUID, 16U);
 		snprintf(vm_info_list.vm_list[vm_idx].vm_name, 16U, "vm_%d",
@@ -888,9 +888,9 @@ int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr)
 		i = 0U;
 		foreach_vcpu(i, tmp_vm, vcpu) {
 			vm_info_list.vm_list[vm_idx].cpu_map[i].vcpu_id
-					= (int32_t)vcpu->vcpu_id;
+				= vcpu->vcpu_id;
 			vm_info_list.vm_list[vm_idx].cpu_map[i].pcpu_id
-					= (int32_t)vcpu->pcpu_id;
+				= vcpu->pcpu_id;
 			vm_info_list.vm_list[vm_idx].cpu_map[i].apic_id = 0;
 			vm_info_list.vm_list[vm_idx].num_vcpus++;
 		}
@@ -1357,7 +1357,7 @@ void profiling_post_vmexit_handler(struct acrn_vcpu *vcpu)
 				((socwatch_collection_switch &
 					(1UL << (uint64_t)SOCWATCH_VM_SWITCH_TRACING)) > 0UL)) {
 			get_cpu_var(profiling_info.vm_switch_trace).os_id
-				= (int32_t)vcpu->vm->vm_id;
+				= vcpu->vm->vm_id;
 			get_cpu_var(profiling_info.vm_switch_trace).vm_enter_tsc
 				= get_cpu_var(profiling_info.vm_info).vmenter_tsc;
 			get_cpu_var(profiling_info.vm_switch_trace).vm_exit_tsc
