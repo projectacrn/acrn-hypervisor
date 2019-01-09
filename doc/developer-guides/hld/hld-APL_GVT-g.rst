@@ -655,6 +655,8 @@ For detailed information about this model, please refer to the `Linux
 HYPER_DMABUF Driver High Level Design
 <https://github.com/downor/linux_hyper_dmabuf/blob/hyper_dmabuf_integration_v4/Documentation/hyper-dmabuf-sharing.txt>`_.
 
+.. _plane_restriction:
+
 Plane-Based Domain Ownership
 ----------------------------
 
@@ -812,6 +814,8 @@ page tables at render context switches.
    :name: per-vm-shadow
 
    Per-VM Shadow PPGTT
+
+.. _GVT-g-prioritized-rendering:
 
 Prioritized Rendering and Preemption
 ====================================
