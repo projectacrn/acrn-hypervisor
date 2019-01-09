@@ -31,7 +31,7 @@
 
 #define ACRN_DBG_PIC	6U
 
-static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin, uint8_t level);
+static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t level);
 
 static inline bool master_pic(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259)
 {
@@ -46,15 +46,15 @@ static inline bool master_pic(const struct acrn_vpic *vpic, struct i8259_reg_sta
 	return ret;
 }
 
-static inline uint8_t vpic_get_highest_isrpin(const struct i8259_reg_state *i8259)
+static inline uint32_t vpic_get_highest_isrpin(const struct i8259_reg_state *i8259)
 {
-	uint8_t bit, pin, i;
-	uint8_t found_pin = VPIC_INVALID_PIN;
+	uint32_t bit, pin, i;
+	uint32_t found_pin = VPIC_INVALID_PIN;
 
 	pin = (i8259->lowprio + 1U) & 0x7U;
 
 	for (i = 0U; i < NR_VPIC_PINS_PER_CHIP; i++) {
-		bit = (uint8_t)(1U << pin);
+		bit = (1U << pin);
 
 		if ((i8259->service & bit) != 0U) {
 			/*
@@ -75,10 +75,11 @@ static inline uint8_t vpic_get_highest_isrpin(const struct i8259_reg_state *i825
 	return found_pin;
 }
 
-static inline uint8_t vpic_get_highest_irrpin(const struct i8259_reg_state *i8259)
+static inline uint32_t vpic_get_highest_irrpin(const struct i8259_reg_state *i8259)
 {
-	uint8_t serviced, bit, pin, tmp;
-	uint8_t found_pin = VPIC_INVALID_PIN;
+	uint8_t serviced;
+	uint32_t bit, pin, tmp;
+	uint32_t found_pin = VPIC_INVALID_PIN;
 
 	/*
 	 * In 'Special Fully-Nested Mode' when an interrupt request from
@@ -103,13 +104,13 @@ static inline uint8_t vpic_get_highest_irrpin(const struct i8259_reg_state *i825
 	pin = (i8259->lowprio + 1U) & 0x7U;
 
 	for (tmp = 0U; tmp < NR_VPIC_PINS_PER_CHIP; tmp++) {
-		bit = (uint8_t)(1U << pin);
+		bit = (1U << pin);
 
 		/*
 		 * If there is already an interrupt in service at the same
 		 * or higher priority then bail.
 		 */
-		if ((serviced & bit) != 0) {
+		if ((serviced & bit) != 0U) {
 			break;
 		}
 
@@ -117,7 +118,7 @@ static inline uint8_t vpic_get_highest_irrpin(const struct i8259_reg_state *i825
 		 * If an interrupt is asserted and not masked then return
 		 * the corresponding 'pin' to the caller.
 		 */
-		if (((i8259->request & bit) != 0) && ((i8259->mask & bit) == 0)) {
+		if (((i8259->request & bit) != 0U) && ((i8259->mask & bit) == 0U)) {
 			found_pin = pin;
 			break;
 		}
@@ -131,7 +132,7 @@ static inline uint8_t vpic_get_highest_irrpin(const struct i8259_reg_state *i825
 static void vpic_notify_intr(struct acrn_vpic *vpic)
 {
 	struct i8259_reg_state *i8259;
-	uint8_t pin;
+	uint32_t pin;
 
 	/*
 	 * First check the slave.
@@ -147,8 +148,8 @@ static void vpic_notify_intr(struct acrn_vpic *vpic)
 		 * Cascade the request from the slave to the master.
 		 */
 		i8259->intr_raised = true;
-		vpic_set_pinstate(vpic, (uint8_t)2U, 1U);
-		vpic_set_pinstate(vpic, (uint8_t)2U, 0U);
+		vpic_set_pinstate(vpic, 2U, 1U);
+		vpic_set_pinstate(vpic, 2U, 0U);
 	} else {
 		dev_dbg(ACRN_DBG_PIC,
 		"pic slave no eligible interrupt (imr 0x%x irr 0x%x isr 0x%x)",
@@ -303,7 +304,7 @@ static int32_t vpic_icw4(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 
 static int32_t vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
-	uint8_t pin, i, bit;
+	uint32_t pin, i, bit;
 	uint8_t old = i8259->mask;
 
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 ocw1 0x%x\n",
@@ -314,13 +315,13 @@ static int32_t vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 
 	/* query and setup if pin/irq is for passthrough device */
 	for (i = 0U; i < NR_VPIC_PINS_PER_CHIP; i++) {
-		bit = (uint8_t)(1U << pin);
+		bit = (1U << pin);
 
 		/* remap for active: interrupt mask -> unmask
 		 * remap for deactive: when vIOAPIC take it over
 		 */
 		if (((i8259->mask & bit) == 0U) && ((old & bit) != 0U)) {
-			uint8_t virt_pin;
+			uint32_t virt_pin;
 
 			/* master i8259 pin2 connect with slave i8259,
 			 * not device, so not need pt remap
@@ -332,8 +333,7 @@ static int32_t vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 
 			virt_pin = (master_pic(vpic, i8259)) ?
 					pin : (pin + 8U);
-			(void)ptirq_intx_pin_remap(vpic->vm,
-					virt_pin, PTDEV_VPIN_PIC);
+			(void)ptirq_intx_pin_remap(vpic->vm, virt_pin, PTDEV_VPIN_PIC);
 		}
 		pin = (pin + 1U) & 0x7U;
 	}
@@ -349,7 +349,7 @@ static int32_t vpic_ocw2(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, 
 	i8259->rotate = ((val & OCW2_R) != 0U);
 
 	if ((val & OCW2_EOI) != 0U) {
-		uint8_t isr_bit;
+		uint32_t isr_bit;
 
 		if ((val & OCW2_SL) != 0U) {
 			/* specific EOI */
@@ -369,9 +369,8 @@ static int32_t vpic_ocw2(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, 
 
 		/* if level ack PTDEV */
 		if ((i8259->elc & (1U << (isr_bit & 0x7U))) != 0U) {
-			ptirq_intx_ack(vpic->vm,
-				(master_pic(vpic, i8259) ? isr_bit : isr_bit + 8U),
-				PTDEV_VPIN_PIC);
+			ptirq_intx_ack(vpic->vm, (master_pic(vpic, i8259) ? isr_bit : isr_bit + 8U),
+					PTDEV_VPIN_PIC);
 		}
 	} else if (((val & OCW2_SL) != 0U) && i8259->rotate) {
 		/* specific priority */
@@ -409,8 +408,7 @@ static int32_t vpic_ocw3(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, 
 /**
  * @pre pin < NR_VPIC_PINS_TOTAL
  */
-static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin,
-		uint8_t level)
+static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t level)
 {
 	struct i8259_reg_state *i8259;
 	uint8_t old_lvl;
@@ -449,22 +447,22 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint8_t pin,
  * @brief Set vPIC IRQ line status.
  *
  * @param[in] vm        Pointer to target VM
- * @param[in] irq       Target IRQ number
+ * @param[in] irqline   Target IRQ number
  * @param[in] operation action options:GSI_SET_HIGH/GSI_SET_LOW/
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
  * @return None
  */
-void vpic_set_irqline(struct acrn_vm *vm, uint32_t irq, uint32_t operation)
+void vpic_set_irqline(struct acrn_vm *vm, uint32_t irqline, uint32_t operation)
 {
 	struct acrn_vpic *vpic;
 	struct i8259_reg_state *i8259;
-	uint8_t pin;
+	uint32_t pin;
 
-	if (irq < NR_VPIC_PINS_TOTAL) {
+	if (irqline < NR_VPIC_PINS_TOTAL) {
 		vpic = vm_pic(vm);
-		i8259 = &vpic->i8259[irq >> 3U];
-		pin = (uint8_t)irq;
+		i8259 = &vpic->i8259[irqline >> 3U];
+		pin = irqline;
 
 		if (i8259->ready) {
 			spinlock_obtain(&(vpic->lock));
@@ -503,16 +501,16 @@ vpic_pincount(void)
 
 /**
  * @pre vm->vpic != NULL
- * @pre irq < NR_VPIC_PINS_TOTAL
+ * @pre irqline < NR_VPIC_PINS_TOTAL
  */
-void vpic_get_irqline_trigger_mode(struct acrn_vm *vm, uint32_t irq,
+void vpic_get_irqline_trigger_mode(struct acrn_vm *vm, uint32_t irqline,
 		enum vpic_trigger *trigger)
 {
 	struct acrn_vpic *vpic;
 
 	vpic = vm_pic(vm);
 
-	if ((vpic->i8259[irq >> 3U].elc & (1U << (irq & 0x7U))) != 0U) {
+	if ((vpic->i8259[irqline >> 3U].elc & (1U << (irqline & 0x7U))) != 0U) {
 		*trigger = LEVEL_TRIGGER;
 	} else {
 		*trigger = EDGE_TRIGGER;
@@ -532,7 +530,7 @@ void vpic_pending_intr(struct acrn_vm *vm, uint32_t *vecptr)
 {
 	struct acrn_vpic *vpic;
 	struct i8259_reg_state *i8259;
-	uint8_t pin;
+	uint32_t pin;
 
 	vpic = vm_pic(vm);
 
@@ -561,7 +559,7 @@ void vpic_pending_intr(struct acrn_vm *vm, uint32_t *vecptr)
 	spinlock_release(&(vpic->lock));
 }
 
-static void vpic_pin_accepted(struct i8259_reg_state *i8259, uint8_t pin)
+static void vpic_pin_accepted(struct i8259_reg_state *i8259, uint32_t pin)
 {
 	i8259->intr_raised = false;
 
@@ -592,13 +590,13 @@ static void vpic_pin_accepted(struct i8259_reg_state *i8259, uint8_t pin)
 void vpic_intr_accepted(struct acrn_vm *vm, uint32_t vector)
 {
 	struct acrn_vpic *vpic;
-	uint8_t pin;
+	uint32_t pin;
 
 	vpic = vm_pic(vm);
 
 	spinlock_obtain(&(vpic->lock));
 
-	pin = (uint8_t)(vector & 0x7U);
+	pin = (vector & 0x7U);
 
 	if ((vector & ~0x7U) == vpic->i8259[1].irq_base) {
 		vpic_pin_accepted(&vpic->i8259[1], pin);
@@ -606,7 +604,7 @@ void vpic_intr_accepted(struct acrn_vm *vm, uint32_t vector)
 		 * If this vector originated from the slave,
 		 * accept the cascaded interrupt too.
 		 */
-		vpic_pin_accepted(&vpic->i8259[0], (uint8_t)2U);
+		vpic_pin_accepted(&vpic->i8259[0], 2U);
 	} else {
 		vpic_pin_accepted(&vpic->i8259[0], pin);
 	}
@@ -619,7 +617,7 @@ void vpic_intr_accepted(struct acrn_vm *vm, uint32_t vector)
 static int32_t vpic_read(struct acrn_vpic *vpic, struct i8259_reg_state *i8259,
 		uint16_t port, uint32_t *eax)
 {
-	uint8_t pin;
+	uint32_t pin;
 
 	spinlock_obtain(&(vpic->lock));
 
