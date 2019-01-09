@@ -11,7 +11,7 @@ i915.enable_gvt
 ***************
 
 This option enables support for Intel GVT-g graphics virtualization
-support in the host By default, it's not enabled, so we need to add
+support in the host. By default, it's not enabled, so we need to add
 ``i915.enable_gvt=1`` in the SOS kernel command line.  This is a Service
 OS only parameter, and cannot be enabled in the User OS.
 
