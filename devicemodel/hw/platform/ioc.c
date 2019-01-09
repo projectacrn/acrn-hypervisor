@@ -1166,6 +1166,7 @@ ioc_build_request(struct ioc_dev *ioc, int32_t link_len, int32_t srv_len)
 	}
 	req->srv_len = srv_len;
 	req->link_len = link_len;
+	req->rtype = CBC_REQ_T_PROT;
 	cbc_request_enqueue(ioc, req, CBC_QUEUE_T_RX, false);
 }
 
