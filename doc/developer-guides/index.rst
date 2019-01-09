@@ -9,6 +9,7 @@ Developer Guides
    hld/index
    primer
    GVT-g-porting
+   GVT-g-kernel-options
    trusty
    l1tf
    modularity
