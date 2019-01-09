@@ -379,8 +379,10 @@ vmei_rx_teardown(void *param)
 	unsigned int i;
 	struct vmei_host_client *hclient = param;
 
-	if (hclient->client_fd > -1)
+	if (hclient->client_fd > -1) {
 		close(hclient->client_fd);
+		hclient->client_fd = -1;
+	}
 	for (i = 0; i < VMEI_IOBUFS_MAX; i++)
 		free(hclient->send_bufs.bufs[i].iov_base);
 	free(hclient->recv_buf);
@@ -944,7 +946,10 @@ vmei_virtual_fw_reset(struct virtio_mei *vmei)
 
 	vmei_set_status(vmei, VMEI_STS_RESET);
 	vmei->config->hw_ready = 0;
-	close(vmei->hbm_fd);
+	if (vmei->hbm_fd > -1) {
+		close(vmei->hbm_fd);
+		vmei->hbm_fd = -1;
+	}
 
 	/* disconnect all */
 	pthread_mutex_lock(&vmei->list_mutex);
