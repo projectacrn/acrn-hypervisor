@@ -82,7 +82,7 @@ void	vioapic_reset(struct acrn_vioapic *vioapic);
  *
  * @return None
  */
-void	vioapic_set_irqline_lock(struct acrn_vm *vm, uint32_t irqline, uint32_t operation);
+void	vioapic_set_irqline_lock(const struct acrn_vm *vm, uint32_t irqline, uint32_t operation);
 
 /**
  * @brief Set vIOAPIC IRQ line status.
@@ -98,7 +98,7 @@ void	vioapic_set_irqline_lock(struct acrn_vm *vm, uint32_t irqline, uint32_t ope
  * @pre irqline < vioapic_pincount(vm)
  * @return None
  */
-void	vioapic_set_irqline_nolock(struct acrn_vm *vm, uint32_t irqline, uint32_t operation);
+void	vioapic_set_irqline_nolock(const struct acrn_vm *vm, uint32_t irqline, uint32_t operation);
 void	vioapic_update_tmr(struct acrn_vcpu *vcpu);
 
 uint32_t	vioapic_pincount(const struct acrn_vm *vm);

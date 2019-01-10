@@ -33,7 +33,7 @@
 
 static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t level);
 
-static inline bool master_pic(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259)
+static inline bool master_pic(const struct acrn_vpic *vpic, const struct i8259_reg_state *i8259)
 {
 	bool ret;
 
@@ -232,7 +232,7 @@ static int32_t vpic_icw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 	i8259->poll = false;
 	i8259->smm = 0U;
 
-	if ((val & ICW1_SNGL) != 0) {
+	if ((val & ICW1_SNGL) != 0U) {
 		dev_dbg(ACRN_DBG_PIC, "vpic cascade mode required\n");
 		ret = -1;
 	} else if ((val & ICW1_IC4) == 0U) {
@@ -341,7 +341,7 @@ static int32_t vpic_ocw1(const struct acrn_vpic *vpic, struct i8259_reg_state *i
 	return 0;
 }
 
-static int32_t vpic_ocw2(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
+static int32_t vpic_ocw2(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 ocw2 0x%x\n",
 		vpic->vm, val);
@@ -382,7 +382,7 @@ static int32_t vpic_ocw2(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, 
 	return 0;
 }
 
-static int32_t vpic_ocw3(struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
+static int32_t vpic_ocw3(const struct acrn_vpic *vpic, struct i8259_reg_state *i8259, uint8_t val)
 {
 	dev_dbg(ACRN_DBG_PIC, "vm 0x%x: i8259 ocw3 0x%x\n",
 		vpic->vm, val);
@@ -453,7 +453,7 @@ static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t leve
  *
  * @return None
  */
-void vpic_set_irqline(struct acrn_vm *vm, uint32_t irqline, uint32_t operation)
+void vpic_set_irqline(const struct acrn_vm *vm, uint32_t irqline, uint32_t operation)
 {
 	struct acrn_vpic *vpic;
 	struct i8259_reg_state *i8259;
@@ -503,7 +503,7 @@ vpic_pincount(void)
  * @pre vm->vpic != NULL
  * @pre irqline < NR_VPIC_PINS_TOTAL
  */
-void vpic_get_irqline_trigger_mode(struct acrn_vm *vm, uint32_t irqline,
+void vpic_get_irqline_trigger_mode(const struct acrn_vm *vm, uint32_t irqline,
 		enum vpic_trigger *trigger)
 {
 	struct acrn_vpic *vpic;

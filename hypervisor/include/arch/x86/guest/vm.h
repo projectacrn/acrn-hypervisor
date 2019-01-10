@@ -251,13 +251,13 @@ vm_vuart(struct acrn_vm *vm)
 }
 
 static inline struct acrn_vpic *
-vm_pic(struct acrn_vm *vm)
+vm_pic(const struct acrn_vm *vm)
 {
 	return (struct acrn_vpic *)&(vm->arch_vm.vpic);
 }
 
 static inline struct acrn_vioapic *
-vm_ioapic(struct acrn_vm *vm)
+vm_ioapic(const struct acrn_vm *vm)
 {
 	return (struct acrn_vioapic *)&(vm->arch_vm.vioapic);
 }
