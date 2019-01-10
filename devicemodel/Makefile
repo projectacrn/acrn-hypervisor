@@ -112,6 +112,7 @@ SRCS += hw/pci/virtio/virtio_mei.c
 SRCS += hw/pci/virtio/virtio_coreu.c
 SRCS += hw/pci/virtio/virtio_hdcp.c
 SRCS += hw/pci/virtio/virtio_rpmb.c
+SRCS += hw/pci/virtio/virtio_gpio.c
 SRCS += hw/pci/irq.c
 SRCS += hw/pci/uart.c
 SRCS += hw/pci/gvt.c
