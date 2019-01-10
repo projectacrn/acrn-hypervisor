@@ -102,7 +102,7 @@ static void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf
 	}
 }
 
-static struct pci_vdev *alloc_pci_vdev(struct acrn_vm *vm, union pci_bdf bdf)
+static struct pci_vdev *alloc_pci_vdev(const struct acrn_vm *vm, union pci_bdf bdf)
 {
 	struct pci_vdev *vdev;
 
@@ -121,9 +121,9 @@ static struct pci_vdev *alloc_pci_vdev(struct acrn_vm *vm, union pci_bdf bdf)
 	return vdev;
 }
 
-static void enumerate_pci_dev(uint16_t pbdf, void *cb_data)
+static void enumerate_pci_dev(uint16_t pbdf, const void *cb_data)
 {
-	struct acrn_vm *vm = (struct acrn_vm *)cb_data;
+	const struct acrn_vm *vm = (const struct acrn_vm *)cb_data;
 	struct pci_vdev *vdev;
 
 	vdev = alloc_pci_vdev(vm, (union pci_bdf)pbdf);
@@ -132,7 +132,7 @@ static void enumerate_pci_dev(uint16_t pbdf, void *cb_data)
 	}
 }
 
-static int32_t sharing_mode_vpci_init(struct acrn_vm *vm)
+static int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
 {
 	struct pci_vdev *vdev;
 	uint32_t i, j;
@@ -150,7 +150,7 @@ static int32_t sharing_mode_vpci_init(struct acrn_vm *vm)
 		(void)memset((void *)sharing_mode_vdev_array, 0U, sizeof(sharing_mode_vdev_array));
 
 		/* build up vdev array for vm0 */
-		pci_scan_bus(enumerate_pci_dev, (void *)vm);
+		pci_scan_bus(enumerate_pci_dev, vm);
 
 		for (i = 0U; i < num_pci_vdev; i++) {
 			vdev = &sharing_mode_vdev_array[i];
@@ -166,7 +166,7 @@ static int32_t sharing_mode_vpci_init(struct acrn_vm *vm)
 	return ret;
 }
 
-static void sharing_mode_vpci_deinit(__unused struct acrn_vm *vm)
+static void sharing_mode_vpci_deinit(__unused const struct acrn_vm *vm)
 {
 	struct pci_vdev *vdev;
 	uint32_t i, j;
@@ -229,7 +229,10 @@ void vpci_reset_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, 
 		/* Return this PCI device to SOS */
 		if (vdev->vpci->vm == target_vm) {
 			vm = get_vm_from_vmid(0U);
-			vdev->vpci = &vm->vpci;
+
+			if (vm != NULL) {
+				vdev->vpci = &vm->vpci;
+			}
 		}
 	}
 }

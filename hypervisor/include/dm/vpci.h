@@ -101,7 +101,7 @@ struct pci_vdev {
 	const struct pci_vdev_ops *ops;
 #endif
 
-	struct acrn_vpci *vpci;
+	const struct acrn_vpci *vpci;
 	/* The bus/device/function triple of the virtual PCI device. */
 	union pci_bdf vbdf;
 
@@ -125,8 +125,8 @@ struct pci_addr_info {
 };
 
 struct vpci_ops {
-	int32_t (*init)(struct acrn_vm *vm);
-	void (*deinit)(struct acrn_vm *vm);
+	int32_t (*init)(const struct acrn_vm *vm);
+	void (*deinit)(const struct acrn_vm *vm);
 	void (*cfgread)(struct acrn_vpci *vpci, union pci_bdf vbdf, uint32_t offset,
 		uint32_t bytes, uint32_t *val);
 	void (*cfgwrite)(struct acrn_vpci *vpci, union pci_bdf vbdf, uint32_t offset,
@@ -146,7 +146,7 @@ extern const struct pci_vdev_ops pci_ops_vdev_pt;
 #endif
 
 void vpci_init(struct acrn_vm *vm);
-void vpci_cleanup(struct acrn_vm *vm);
+void vpci_cleanup(const struct acrn_vm *vm);
 void vpci_set_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf);
 void vpci_reset_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf);
 

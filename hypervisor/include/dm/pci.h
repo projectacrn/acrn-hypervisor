@@ -138,7 +138,7 @@ enum pci_bar_type {
 	PCIBAR_MEM64,
 };
 
-typedef void (*pci_enumeration_cb)(uint16_t pbdf, void *data);
+typedef void (*pci_enumeration_cb)(uint16_t pbdf, const void *data);
 
 static inline uint32_t pci_bar_offset(uint32_t idx)
 {
@@ -178,6 +178,6 @@ uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes);
 void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 void enable_disable_pci_intx(union pci_bdf bdf, bool enable);
 
-void pci_scan_bus(pci_enumeration_cb cb, void *cb_data);
+void pci_scan_bus(pci_enumeration_cb cb, const void *cb_data);
 
 #endif /* PCI_H_ */

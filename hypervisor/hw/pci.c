@@ -120,7 +120,7 @@ void enable_disable_pci_intx(union pci_bdf bdf, bool enable)
 #define BUS_SCAN_SKIP		0U
 #define BUS_SCAN_PENDING	1U
 #define BUS_SCAN_COMPLETE	2U
-void pci_scan_bus(pci_enumeration_cb cb_func, void *cb_data)
+void pci_scan_bus(pci_enumeration_cb cb_func, const void *cb_data)
 {
 	union pci_bdf pbdf;
 	uint8_t hdr_type, secondary_bus, dev, func;
