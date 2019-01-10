@@ -74,15 +74,15 @@ void	vioapic_reset(struct acrn_vioapic *vioapic);
  * @brief Set vIOAPIC IRQ line status.
  *
  * @param[in] vm        Pointer to target VM
- * @param[in] irq       Target IRQ number
+ * @param[in] irqline   Target IRQ number
  * @param[in] operation Action options: GSI_SET_HIGH/GSI_SET_LOW/
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
- * @pre irq < vioapic_pincount(vm)
+ * @pre irqline < vioapic_pincount(vm)
  *
  * @return None
  */
-void	vioapic_set_irqline_lock(struct acrn_vm *vm, uint32_t irq, uint32_t operation);
+void	vioapic_set_irqline_lock(struct acrn_vm *vm, uint32_t irqline, uint32_t operation);
 
 /**
  * @brief Set vIOAPIC IRQ line status.
@@ -91,14 +91,14 @@ void	vioapic_set_irqline_lock(struct acrn_vm *vm, uint32_t irq, uint32_t operati
  * operation be done with ioapic lock.
  *
  * @param[in] vm        Pointer to target VM
- * @param[in] irq       Target IRQ number
+ * @param[in] irqline   Target IRQ number
  * @param[in] operation Action options: GSI_SET_HIGH/GSI_SET_LOW/
  *			GSI_RAISING_PULSE/GSI_FALLING_PULSE
  *
- * @pre irq < vioapic_pincount(vm)
+ * @pre irqline < vioapic_pincount(vm)
  * @return None
  */
-void	vioapic_set_irqline_nolock(struct acrn_vm *vm, uint32_t irq, uint32_t operation);
+void	vioapic_set_irqline_nolock(struct acrn_vm *vm, uint32_t irqline, uint32_t operation);
 void	vioapic_update_tmr(struct acrn_vcpu *vcpu);
 
 uint32_t	vioapic_pincount(const struct acrn_vm *vm);
