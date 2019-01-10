@@ -17,7 +17,7 @@ static void efi_spurious_handler(int32_t vector)
 		struct acrn_vcpu *vcpu = per_cpu(vcpu, BOOT_CPU_ID);
 
 		if (vcpu != NULL) {
-			vlapic_set_intr(vcpu, vector, 0);
+			vlapic_set_intr(vcpu, vector, LAPIC_TRIG_EDGE);
 		} else {
 			pr_err("%s vcpu or vlapic is not ready, interrupt lost\n", __func__);
 		}

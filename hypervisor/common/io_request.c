@@ -22,7 +22,7 @@ static void fire_vhm_interrupt(void)
 
 	vcpu = vcpu_from_vid(vm0, 0U);
 
-	vlapic_intr_edge(vcpu, acrn_vhm_vector);
+	vlapic_set_intr(vcpu, acrn_vhm_vector, LAPIC_TRIG_EDGE);
 }
 
 #if defined(HV_DEBUG)
