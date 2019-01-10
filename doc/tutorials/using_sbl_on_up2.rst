@@ -99,12 +99,18 @@ An example of the configuration file ``uos.json``:
    the "Version" argument, ``"Version": 26000`` instead
    of ``"Version": 27050`` for example.
 
-Clone the source code of ``acrn-hypervisor`` for building:
+Clone the source code of ``acrn-hypervisor`` for building and use 
+``v0.5`` release for example:
 
 .. code-block:: none
    
    $ cd ~
    $ git clone https://github.com/projectacrn/acrn-hypervisor
+   $ cd acrn-hypervisor
+   $ git checkout v0.5
+
+.. note::
+   You can switch to other release with the command ``git checkout v0.x`` if needed.
 
 Build SOS and LaaG image:
    
