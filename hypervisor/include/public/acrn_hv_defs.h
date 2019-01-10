@@ -246,30 +246,24 @@ struct hc_ptdev_irq {
 	/** physical BDF of the ptdev */
 	uint16_t phys_bdf;
 
-	union {
+	union irq_source {
 		/** INTX remapping info */
-		struct {
+		struct intx_info {
 			/** virtual IOAPIC/PIC pin */
-			uint8_t virt_pin;
-
-			/** Reserved */
-			uint32_t reserved0:24;
+			uint32_t virt_pin;
 
 			/** physical IOAPIC pin */
-			uint8_t phys_pin;
-
-			/** Reserved */
-			uint32_t reserved1:24;
+			uint32_t phys_pin;
 
 			/** is virtual pin from PIC */
 			bool pic_pin;
 
 			/** Reserved */
-			uint32_t reserved2:24;
+			uint8_t reserved[3];
 		} intx;
 
 		/** MSIx remapping info */
-		struct {
+		struct msix_info {
 			/** vector count of MSI/MSIX */
 			uint32_t vector_cnt;
 		} msix;
