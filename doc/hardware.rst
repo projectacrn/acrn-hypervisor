@@ -14,7 +14,7 @@ Intel Apollo Lake NUC
 
 * `Intel NUC Kit NUC6CAYH Reference
   <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc6cayh.html>`_
-* Intel |reg| Celeron |reg| Processor J3455
+  with Intel |reg| Celeron |reg| Processor J3455
 * Tested NUC with 8GB of RAM and using an 128GB SSD
 
 You can read a full `AnandTech review`_ of the NUC6CAYH NUC Kit and
@@ -33,6 +33,27 @@ up ACRN on the NUC.
 
 .. _SimplyNUC:
    https://www.simplynuc.com/?s=NUC6CAYH&post_type=product
+
+Intel Kaby Lake NUC
+*********************
+
+* `Intel NUC Kit NUC7i5BNH Reference
+  <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i5bnh.html>`_
+  with Intel |reg| Core |trade| i5 7260U
+* `Intel NUC Kit NUC7i7BNH Reference
+  <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i7bnh.html>`_
+  with Intel |reg| Core |trade| i5-7567U
+* `Intel NUC Kit NUC7i5DNHE Reference
+  <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i5dnhe.html>`_
+  with Intel |reg| Core |trade| i5-7300U
+* `Intel NUC Kit NUC7i7DNHE Reference
+  <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i7dnhe.html>`_
+  with Intel |reg| Core |trade| i7-8650U
+* Tested NUC with 8GB of RAM and using an 128GB SSD
+
+You can search online like APL NUC. Be sure to purchase
+the NUC with the recommended memory and storage options noted above.
+
 
 UP Squared board
 ****************
@@ -53,3 +74,4 @@ You can purchase this board directly online from `UP Shop
 
 Visit the :ref:`getting-started-up2` page for instructions on how to set
 up ACRN on the UP2 board.
+
