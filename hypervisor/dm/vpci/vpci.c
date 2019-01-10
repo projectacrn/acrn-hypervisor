@@ -137,9 +137,9 @@ void vpci_init(struct acrn_vm *vm)
 	}
 }
 
-void vpci_cleanup(struct acrn_vm *vm)
+void vpci_cleanup(const struct acrn_vm *vm)
 {
-	struct acrn_vpci *vpci = &vm->vpci;
+	const struct acrn_vpci *vpci = &vm->vpci;
 
 	if ((vpci->ops != NULL) && (vpci->ops->deinit != NULL)) {
 		vpci->ops->deinit(vm);
