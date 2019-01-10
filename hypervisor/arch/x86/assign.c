@@ -42,7 +42,7 @@ ptirq_lookup_entry_by_sid(uint32_t intr_type,
 }
 
 static inline struct ptirq_remapping_info *
-ptirq_lookup_entry_by_vpin(const struct acrn_vm *vm, uint8_t virt_pin, bool pic_pin)
+ptirq_lookup_entry_by_vpin(const struct acrn_vm *vm, uint32_t virt_pin, bool pic_pin)
 {
 	struct ptirq_remapping_info *entry;
 
@@ -118,18 +118,18 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 		union ioapic_rte virt_rte;
 		bool phys;
 
-		vioapic_get_rte(vm, (uint32_t)virt_sid->intx_id.pin, &virt_rte);
+		vioapic_get_rte(vm, virt_sid->intx_id.pin, &virt_rte);
 		rte = virt_rte;
 
 		/* init polarity & pin state */
 		if ((rte.full & IOAPIC_RTE_INTPOL) != 0UL) {
 			if (entry->polarity == 0U) {
-				vioapic_set_irqline_nolock(vm, (uint32_t)virt_sid->intx_id.pin, GSI_SET_HIGH);
+				vioapic_set_irqline_nolock(vm, virt_sid->intx_id.pin, GSI_SET_HIGH);
 			}
 			entry->polarity = 1U;
 		} else {
 			if (entry->polarity == 1U) {
-				vioapic_set_irqline_nolock(vm, (uint32_t)virt_sid->intx_id.pin, GSI_SET_LOW);
+				vioapic_set_irqline_nolock(vm, virt_sid->intx_id.pin, GSI_SET_LOW);
 			}
 			entry->polarity = 0U;
 		}
@@ -167,7 +167,7 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 		/* just update trigger mode */
 		ioapic_get_rte(phys_irq, &phys_rte);
 		rte.full = phys_rte.full & (~IOAPIC_RTE_TRGRMOD);
-		vpic_get_irqline_trigger_mode(vm, (uint32_t)virt_sid->intx_id.pin, &trigger);
+		vpic_get_irqline_trigger_mode(vm, virt_sid->intx_id.pin, &trigger);
 		if (trigger == LEVEL_TRIGGER) {
 			rte.full |= IOAPIC_RTE_TRGRLVL;
 		}
@@ -260,11 +260,11 @@ remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t entr
  * - if the entry already be added by vm0, then change the owner to current vm
  * - if the entry already be added by other vm, return NULL
  */
-static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin,
-		uint8_t phys_pin, bool pic_pin)
+static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin,
+		uint32_t phys_pin, bool pic_pin)
 {
 	struct ptirq_remapping_info *entry = NULL;
-	uint8_t vpin_src = pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
+	uint32_t vpin_src = pic_pin ? PTDEV_VPIN_PIC : PTDEV_VPIN_IOAPIC;
 	DEFINE_IOAPIC_SID(phys_sid, phys_pin, 0U);
 	DEFINE_IOAPIC_SID(virt_sid, virt_pin, vpin_src);
 	uint32_t phys_irq = ioapic_pin_to_irq(phys_pin);
@@ -320,7 +320,7 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint8
 }
 
 /* deactive & remove mapping entry of vpin for vm */
-static void remove_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, bool pic_pin)
+static void remove_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, bool pic_pin)
 {
 	uint32_t phys_irq;
 	struct ptirq_remapping_info *entry;
@@ -366,22 +366,22 @@ static void ptirq_handle_intx(struct acrn_vm *vm,
 		bool trigger_lvl = false;
 
 		/* VPIN_IOAPIC src means we have vioapic enabled */
-		vioapic_get_rte(vm, (uint32_t)virt_sid->intx_id.pin, &rte);
+		vioapic_get_rte(vm, virt_sid->intx_id.pin, &rte);
 		if ((rte.full & IOAPIC_RTE_TRGRMOD) == IOAPIC_RTE_TRGRLVL) {
 			trigger_lvl = true;
 		}
 
 		if (trigger_lvl) {
 			if (entry->polarity != 0U) {
-				vioapic_set_irqline_lock(vm, (uint32_t)virt_sid->intx_id.pin, GSI_SET_LOW);
+				vioapic_set_irqline_lock(vm, virt_sid->intx_id.pin, GSI_SET_LOW);
 			} else {
-				vioapic_set_irqline_lock(vm, (uint32_t)virt_sid->intx_id.pin, GSI_SET_HIGH);
+				vioapic_set_irqline_lock(vm, virt_sid->intx_id.pin, GSI_SET_HIGH);
 			}
 		} else {
 			if (entry->polarity != 0U) {
-				vioapic_set_irqline_lock(vm, (uint32_t)virt_sid->intx_id.pin, GSI_FALLING_PULSE);
+				vioapic_set_irqline_lock(vm, virt_sid->intx_id.pin, GSI_FALLING_PULSE);
 			} else {
-				vioapic_set_irqline_lock(vm, (uint32_t)virt_sid->intx_id.pin, GSI_RAISING_PULSE);
+				vioapic_set_irqline_lock(vm, virt_sid->intx_id.pin, GSI_RAISING_PULSE);
 			}
 		}
 
@@ -397,11 +397,11 @@ static void ptirq_handle_intx(struct acrn_vm *vm,
 		enum vpic_trigger trigger;
 
 		/* VPIN_PIC src means we have vpic enabled */
-		vpic_get_irqline_trigger_mode(vm, (uint32_t)virt_sid->intx_id.pin, &trigger);
+		vpic_get_irqline_trigger_mode(vm, virt_sid->intx_id.pin, &trigger);
 		if (trigger == LEVEL_TRIGGER) {
-			vpic_set_irqline(vm, (uint32_t)virt_sid->intx_id.pin, GSI_SET_HIGH);
+			vpic_set_irqline(vm, virt_sid->intx_id.pin, GSI_SET_HIGH);
 		} else {
-			vpic_set_irqline(vm, (uint32_t)virt_sid->intx_id.pin, GSI_RAISING_PULSE);
+			vpic_set_irqline(vm, virt_sid->intx_id.pin, GSI_RAISING_PULSE);
 		}
 		break;
 	}
@@ -455,8 +455,7 @@ void ptirq_softirq(uint16_t pcpu_id)
 	}
 }
 
-void ptirq_intx_ack(struct acrn_vm *vm, uint8_t virt_pin,
-		uint8_t vpin_src)
+void ptirq_intx_ack(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpin_src)
 {
 	uint32_t phys_irq;
 	struct ptirq_remapping_info *entry;
@@ -585,7 +584,7 @@ static void activate_physical_ioapic(struct acrn_vm *vm,
 /* Main entry for PCI/Legacy device assignment with INTx, calling from vIOAPIC
  * or vPIC
  */
-int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin, uint8_t vpin_src)
+int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpin_src)
 {
 	int32_t status = 0;
 	struct ptirq_remapping_info *entry = NULL;
@@ -626,7 +625,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin, uint8_t vpin_
 				 * switch vpin source is needed
 				 */
 				if (virt_pin < NR_LEGACY_PIN) {
-					uint8_t vpin = get_pic_pin_from_ioapic_pin(virt_pin);
+					uint32_t vpin = get_pic_pin_from_ioapic_pin(virt_pin);
 
 					entry = ptirq_lookup_entry_by_vpin(vm, vpin, !pic_pin);
 					if (entry != NULL) {
@@ -636,14 +635,13 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin, uint8_t vpin_
 
 				/* entry could be updated by above switch check */
 				if (entry == NULL) {
-					uint8_t phys_pin = virt_pin;
+					uint32_t phys_pin = virt_pin;
 
 					/* fix vPIC pin to correct native IOAPIC pin */
 					if (pic_pin) {
 						phys_pin = get_pic_pin_from_ioapic_pin(virt_pin);
 					}
-					entry = add_intx_remapping(vm,
-							virt_pin, phys_pin, pic_pin);
+					entry = add_intx_remapping(vm, virt_pin, phys_pin, pic_pin);
 					if (entry == NULL) {
 						pr_err("%s, add intx remapping failed",
 								__func__);
@@ -689,8 +687,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint8_t virt_pin, uint8_t vpin_
  * - currently, one phys_pin can only be held by one pin source (vPIC or
  *   vIOAPIC)
  */
-int32_t ptirq_add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, uint8_t phys_pin,
-				bool pic_pin)
+int32_t ptirq_add_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, uint32_t phys_pin, bool pic_pin)
 {
 	struct ptirq_remapping_info *entry;
 
@@ -704,7 +701,7 @@ int32_t ptirq_add_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, uint8_t p
 /*
  * @pre vm != NULL
  */
-void ptirq_remove_intx_remapping(struct acrn_vm *vm, uint8_t virt_pin, bool pic_pin)
+void ptirq_remove_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, bool pic_pin)
 {
 	spinlock_obtain(&ptdev_lock);
 	remove_intx_remapping(vm, virt_pin, pic_pin);
