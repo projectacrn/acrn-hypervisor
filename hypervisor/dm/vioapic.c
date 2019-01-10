@@ -119,7 +119,7 @@ vioapic_set_pinstate(struct acrn_vioapic *vioapic, uint32_t pin, uint32_t level)
  * @return None
  */
 void
-vioapic_set_irqline_nolock(struct acrn_vm *vm, uint32_t irqline, uint32_t operation)
+vioapic_set_irqline_nolock(const struct acrn_vm *vm, uint32_t irqline, uint32_t operation)
 {
 	struct acrn_vioapic *vioapic;
 	uint32_t pin = irqline;
@@ -162,7 +162,7 @@ vioapic_set_irqline_nolock(struct acrn_vm *vm, uint32_t irqline, uint32_t operat
  * @return None
  */
 void
-vioapic_set_irqline_lock(struct acrn_vm *vm, uint32_t irqline, uint32_t operation)
+vioapic_set_irqline_lock(const struct acrn_vm *vm, uint32_t irqline, uint32_t operation)
 {
 	struct acrn_vioapic *vioapic = vm_ioapic(vm);
 
