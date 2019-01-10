@@ -33,7 +33,7 @@
 
 #include "uart16550.h"
 
-static uint8_t vuart_com_irq =  CONFIG_COM_IRQ;
+static uint32_t vuart_com_irq =  CONFIG_COM_IRQ;
 static uint16_t vuart_com_base = CONFIG_COM_BASE;
 
 #ifndef CONFIG_PARTITION_MODE
@@ -407,7 +407,7 @@ void vuart_init(struct acrn_vm *vm)
 	vuart_register_io_handler(vm);
 }
 
-bool hv_used_dbg_intx(uint8_t intx_pin)
+bool hv_used_dbg_intx(uint32_t intx_pin)
 {
 	return is_dbg_uart_enabled() && (intx_pin == vuart_com_irq);
 }

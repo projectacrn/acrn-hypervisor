@@ -906,7 +906,7 @@ static int32_t shell_show_cpu_int(__unused int32_t argc, __unused char **argv)
 #define PTDEV_INVALID_PIN 0xffU
 static void get_entry_info(const struct ptirq_remapping_info *entry, char *type,
 		uint32_t *irq, uint32_t *vector, uint64_t *dest, bool *lvl_tm,
-		uint8_t *pin, uint8_t *vpin, uint32_t *bdf, uint32_t *vbdf)
+		uint32_t *pin, uint32_t *vpin, uint32_t *bdf, uint32_t *vbdf)
 {
 	if (is_entry_active(entry)) {
 		if (entry->intr_type == PTDEV_INTR_MSI) {
@@ -967,7 +967,7 @@ static void get_ptdev_info(char *str_arg, size_t str_max)
 	char type[16];
 	uint64_t dest;
 	bool lvl_tm;
-	uint8_t pin, vpin;
+	uint32_t pin, vpin;
 	uint32_t bdf, vbdf;
 
 	len = snprintf(str, size, "\r\nVM\tTYPE\tIRQ\tVEC\tDEST\tTM\tPIN\tVPIN\tBDF\tVBDF");
@@ -1133,8 +1133,8 @@ static int32_t get_ioapic_info(char *str_arg, size_t str_max_len)
 
 	ioapic_nr_gsi = ioapic_get_nr_gsi ();
 	for (irq = 0U; irq < ioapic_nr_gsi; irq++) {
-		void *addr = ioapic_get_gsi_irq_addr (irq);
-		uint8_t pin = ioapic_irq_to_pin (irq);
+		void *addr = ioapic_get_gsi_irq_addr(irq);
+		uint32_t pin = ioapic_irq_to_pin(irq);
 		union ioapic_rte rte;
 
 		bool irr, phys, level, mask;
