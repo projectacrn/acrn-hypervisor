@@ -384,7 +384,7 @@ void partition_mode_dispatch_interrupt(struct intr_excp_ctx *ctx)
 	vcpu = per_cpu(vcpu, get_cpu_id());
 	if (vr < VECTOR_FIXED_START) {
 		send_lapic_eoi();
-		vlapic_intr_edge(vcpu, vr);
+		vlapic_set_intr(vcpu, vr, LAPIC_TRIG_EDGE);
 	} else {
 		dispatch_interrupt(ctx);
 	}

@@ -465,7 +465,7 @@ vlapic_esr_write_handler(struct acrn_vlapic *vlapic)
  * @pre vector >= 16
  */
 static bool
-vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
+vlapic_accept_intr(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 {
 	struct lapic_regs *lapic;
 	struct lapic_reg *irrptr, *tmrptr;
@@ -519,7 +519,7 @@ vlapic_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector, bool level)
 				      	idx, tmrptr[idx].v, level ? "level" : "edge");
 			}
 
-			vlapic_dump_irr(vlapic, "vlapic_set_intr_ready");
+			vlapic_dump_irr(vlapic, "vlapic_accept_intr");
 		}
 	}
 
@@ -768,7 +768,7 @@ vlapic_fire_lvt(struct acrn_vlapic *vlapic, uint32_t lvt)
 
 		switch (mode) {
 		case APIC_LVT_DM_FIXED:
-			if (vlapic_set_intr_ready(vlapic, vec, false)) {
+			if (vlapic_accept_intr(vlapic, vec, false)) {
 				vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 			}
 			break;
@@ -1933,7 +1933,7 @@ vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level)
 		dev_dbg(ACRN_DBG_LAPIC,
 		    "vlapic ignoring interrupt to vector %u", vector);
 	} else {
-		if (vlapic_set_intr_ready(vlapic, vector, level)) {
+		if (vlapic_accept_intr(vlapic, vector, level)) {
 			vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 		}
 	}
@@ -2049,7 +2049,7 @@ static void vlapic_timer_expired(void *data)
 
 	/* inject vcpu timer interrupt if not masked */
 	if (!vlapic_lvtt_masked(vlapic)) {
-		vlapic_intr_edge(vcpu, lapic->lvt[APIC_LVT_TIMER].v & APIC_LVTT_VECTOR);
+		vlapic_set_intr(vcpu, lapic->lvt[APIC_LVT_TIMER].v & APIC_LVTT_VECTOR, LAPIC_TRIG_EDGE);
 	}
 
 	if (!vlapic_lvtt_period(vlapic)) {

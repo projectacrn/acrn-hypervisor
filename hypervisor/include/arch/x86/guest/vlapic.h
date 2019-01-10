@@ -194,31 +194,6 @@ void vlapic_set_intr(struct acrn_vcpu *vcpu, uint32_t vector, bool level);
 
 #define	LAPIC_TRIG_LEVEL	true
 #define	LAPIC_TRIG_EDGE		false
-/**
- * @brief Pend level-trigger mode virtual interrupt to vCPU.
- *
- * @param[in] vcpu    Pointer to target vCPU data structure
- * @param[in] vector  Vector to be injected.
- *
- */
-static inline void
-vlapic_intr_level(struct acrn_vcpu *vcpu, uint32_t vector)
-{
-	vlapic_set_intr(vcpu, vector, LAPIC_TRIG_LEVEL);
-}
-
-/**
- * @brief Pend edge-trigger mode virtual interrupt to vCPU.
- *
- * @param[in] vcpu    Pointer to target vCPU data structure
- * @param[in] vector  Vector to be injected.
- *
- */
-static inline void
-vlapic_intr_edge(struct acrn_vcpu *vcpu, uint32_t vector)
-{
-	vlapic_set_intr(vcpu, vector, LAPIC_TRIG_EDGE);
-}
 
 /**
  * @brief Triggers LAPIC local interrupt(LVT).
