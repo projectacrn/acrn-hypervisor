@@ -8,7 +8,6 @@
 #include <ioapic.h>
 
 #define	IOAPIC_MAX_PIN		240U
-#define IOAPIC_INVALID_PIN      0xffU
 
 /*
  * IOAPIC_MAX_LINES is architecturally defined.
@@ -86,7 +85,7 @@ static const uint32_t pic_ioapic_pin_map[NR_LEGACY_PIN] = {
 
 uint32_t get_pic_pin_from_ioapic_pin(uint32_t pin_index)
 {
-	uint32_t pin_id = IOAPIC_INVALID_PIN;
+	uint32_t pin_id = INVALID_INTERRUPT_PIN;
 	if (pin_index < NR_LEGACY_PIN) {
 		pin_id = pic_ioapic_pin_map[pin_index];
 	}
@@ -284,7 +283,7 @@ uint32_t ioapic_irq_to_pin(uint32_t irq)
 	if (ioapic_irq_is_gsi(irq)) {
 		ret = gsi_table_data[irq].pin;
 	} else {
-	        ret = IOAPIC_INVALID_PIN;
+		ret = INVALID_INTERRUPT_PIN;
 	}
 
 	return ret;
@@ -292,7 +291,7 @@ uint32_t ioapic_irq_to_pin(uint32_t irq)
 
 bool ioapic_is_pin_valid(uint32_t pin)
 {
-	return (pin != IOAPIC_INVALID_PIN);
+	return (pin != INVALID_INTERRUPT_PIN);
 }
 
 uint32_t ioapic_pin_to_irq(uint32_t pin)
