@@ -110,7 +110,7 @@ Clone the source code of ``acrn-hypervisor`` for building and use
    $ git checkout v0.5
 
 .. note::
-   You can switch to other release with the command ``git checkout v0.x`` if needed.
+   You can switch to other version with the command ``git checkout`` if needed.
 
 Build SOS and LaaG image:
    
