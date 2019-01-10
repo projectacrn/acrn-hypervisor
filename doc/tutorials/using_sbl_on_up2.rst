@@ -112,10 +112,14 @@ Build SOS and LaaG image:
 
    $ sudo -s 
    # ./acrn-hypervisor/devicemodel/samples/up2/create-up2-images.sh --images-type all \
-      --clearlinux-version 27050 --laag-json uos.json --acrn-code-path ~/acrn-hypervisor/
+      --clearlinux-version 27050 --laag-json uos.json --acrn-code-path /path/to/acrn-hypervisor/
 
 .. note::
-   Run ``create-up2-images.sh`` as root.
+   You must have root privileges to run ``create-up2-images.sh``.
+
+.. note::
+   Please modify the ``--acrn-code-path`` argument to the diretory 
+   of ``acrn-hypervisor``.
 
 .. note::
    When building images, you can modify the ``--clearlinux-version`` argument 
@@ -134,16 +138,12 @@ in ``partition_desc.ini`` if needed.
 
 .. code-block:: none
 
-   $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/gpt_ini2bin.py
-   $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/partition_desc.ini  
+   $ cd ~/acrn-hypervisor/doc/tutorials/doc/tutorials/
    $ sudo -s
    # python2 gpt_ini2bin.py partition_desc.ini>partition_desc.bin
 
-We still need the configuration file for flashing:
-
-.. code-block:: none
-
-   $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/flash_LaaG.json
+We still need the configuration file ``flash_LaaG.json`` for flashing, 
+which is also in the directory ``~/acrn-hypervisor/doc/tutorials/``.
 
 .. table::
       :widths: auto
