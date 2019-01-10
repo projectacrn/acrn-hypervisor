@@ -49,7 +49,7 @@ static inline bool master_pic(const struct acrn_vpic *vpic, struct i8259_reg_sta
 static inline uint32_t vpic_get_highest_isrpin(const struct i8259_reg_state *i8259)
 {
 	uint32_t bit, pin, i;
-	uint32_t found_pin = VPIC_INVALID_PIN;
+	uint32_t found_pin = INVALID_INTERRUPT_PIN;
 
 	pin = (i8259->lowprio + 1U) & 0x7U;
 
@@ -79,7 +79,7 @@ static inline uint32_t vpic_get_highest_irrpin(const struct i8259_reg_state *i82
 {
 	uint8_t serviced;
 	uint32_t bit, pin, tmp;
-	uint32_t found_pin = VPIC_INVALID_PIN;
+	uint32_t found_pin = INVALID_INTERRUPT_PIN;
 
 	/*
 	 * In 'Special Fully-Nested Mode' when an interrupt request from

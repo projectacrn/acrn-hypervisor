@@ -903,7 +903,6 @@ static int32_t shell_show_cpu_int(__unused int32_t argc, __unused char **argv)
 	return 0;
 }
 
-#define PTDEV_INVALID_PIN 0xffU
 static void get_entry_info(const struct ptirq_remapping_info *entry, char *type,
 		uint32_t *irq, uint32_t *vector, uint64_t *dest, bool *lvl_tm,
 		uint32_t *pin, uint32_t *vpin, uint32_t *bdf, uint32_t *vbdf)
@@ -917,8 +916,8 @@ static void get_entry_info(const struct ptirq_remapping_info *entry, char *type,
 			} else {
 				*lvl_tm = false;
 			}
-			*pin = PTDEV_INVALID_PIN;
-			*vpin = PTDEV_INVALID_PIN;
+			*pin = INVALID_INTERRUPT_PIN;
+			*vpin = INVALID_INTERRUPT_PIN;
 			*bdf = entry->phys_sid.msi_id.bdf;
 			*vbdf = entry->virt_sid.msi_id.bdf;
 		} else {

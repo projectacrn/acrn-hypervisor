@@ -54,6 +54,8 @@
 
 #define IRQ_ALLOC_BITMAP_SIZE	INT_DIV_ROUNDUP(NR_IRQS, 64U)
 
+#define INVALID_INTERRUPT_PIN	0xffffffffU
+
 /*
  * Definition of the stack frame layout
  */

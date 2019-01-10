@@ -94,7 +94,6 @@
 
 #define NR_VPIC_PINS_PER_CHIP	8U
 #define NR_VPIC_PINS_TOTAL	16U
-#define VPIC_INVALID_PIN	0xffU
 
 enum vpic_trigger {
 	EDGE_TRIGGER,
