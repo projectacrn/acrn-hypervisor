@@ -999,14 +999,12 @@ static int32_t get_gva_di_check(struct acrn_vcpu *vcpu, struct instr_emul_vie *v
 static int32_t emulate_movs(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
 {
 	uint64_t src_gva, gpa, val = 0UL;
-	uint64_t rcx, rdi, rsi, rflags;
+	uint64_t rcx = 0U, rdi, rsi, rflags;
 	uint32_t err_code;
 	enum cpu_reg_name seg;
-	int32_t error;
 	uint8_t repeat, opsize = vie->opsize;
-	bool is_mmio_write;
+	bool is_mmio_write, done = false;
 
-	error = 0;
 	is_mmio_write = (vcpu->req.reqs.mmio.direction == REQUEST_WRITE);
 
 	/*
@@ -1026,57 +1024,58 @@ static int32_t emulate_movs(struct acrn_vcpu *vcpu, const struct instr_emul_vie 
 		 * address size of the instruction.
 		 */
 		if ((rcx & size2mask[vie->addrsize]) == 0UL) {
-			error = 0;
-			goto done;
+			done = true;
 		}
 	}
 
-	seg = (vie->seg_override != 0U) ? (vie->segment_register) : CPU_REG_DS;
+	if (!done) {
+		seg = (vie->seg_override != 0U) ? (vie->segment_register) : CPU_REG_DS;
 
-	if (is_mmio_write) {
-		get_gva_si_nocheck(vcpu, vie->addrsize, seg, &src_gva);
+		if (is_mmio_write) {
+			get_gva_si_nocheck(vcpu, vie->addrsize, seg, &src_gva);
 
-		/* we are sure it will success */
-		(void)gva2gpa(vcpu, src_gva, &gpa, &err_code);
-		(void)copy_from_gpa(vcpu->vm, &val, gpa, opsize);
-		vie_mmio_write(vcpu, val);
-	} else {
-		vie_mmio_read(vcpu, &val);
+			/* we are sure it will success */
+			(void)gva2gpa(vcpu, src_gva, &gpa, &err_code);
+			(void)copy_from_gpa(vcpu->vm, &val, gpa, opsize);
+			vie_mmio_write(vcpu, val);
+		} else {
+			vie_mmio_read(vcpu, &val);
 
-		/* The dest gpa is saved during dst check instruction
-		 * decoding.
-		 */
-		(void)copy_to_gpa(vcpu->vm, &val, vie->dst_gpa, opsize);
-	}
+			/* The dest gpa is saved during dst check instruction
+			 * decoding.
+			 */
+			(void)copy_to_gpa(vcpu->vm, &val, vie->dst_gpa, opsize);
+		}
 
-	rsi = vm_get_register(vcpu, CPU_REG_RSI);
-	rdi = vm_get_register(vcpu, CPU_REG_RDI);
-	rflags = vm_get_register(vcpu, CPU_REG_RFLAGS);
+		rsi = vm_get_register(vcpu, CPU_REG_RSI);
+		rdi = vm_get_register(vcpu, CPU_REG_RDI);
+		rflags = vm_get_register(vcpu, CPU_REG_RFLAGS);
 
-	if ((rflags & PSL_D) != 0U) {
-		rsi -= opsize;
-		rdi -= opsize;
-	} else {
-		rsi += opsize;
-		rdi += opsize;
-	}
+		if ((rflags & PSL_D) != 0U) {
+			rsi -= opsize;
+			rdi -= opsize;
+		} else {
+			rsi += opsize;
+			rdi += opsize;
+		}
 
-	vie_update_register(vcpu, CPU_REG_RSI, rsi, vie->addrsize);
-	vie_update_register(vcpu, CPU_REG_RDI, rdi, vie->addrsize);
+		vie_update_register(vcpu, CPU_REG_RSI, rsi, vie->addrsize);
+		vie_update_register(vcpu, CPU_REG_RDI, rdi, vie->addrsize);
 
-	if (repeat != 0U) {
-		rcx = rcx - 1;
-		vie_update_register(vcpu, CPU_REG_RCX, rcx, vie->addrsize);
+		if (repeat != 0U) {
+			rcx = rcx - 1;
+			vie_update_register(vcpu, CPU_REG_RCX, rcx, vie->addrsize);
 
-		/*
-		 * Repeat the instruction if the count register is not zero.
-		 */
-		if ((rcx & size2mask[vie->addrsize]) != 0UL) {
-			vcpu_retain_rip(vcpu);
+			/*
+			 * Repeat the instruction if the count register is not zero.
+			 */
+			if ((rcx & size2mask[vie->addrsize]) != 0UL) {
+				vcpu_retain_rip(vcpu);
+			}
 		}
 	}
-done:
-	return error;
+
+	return 0;
 }
 
 static int32_t emulate_stos(struct acrn_vcpu *vcpu, const struct instr_emul_vie *vie)
