@@ -39,7 +39,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
        used by the SOS).
 
    * - :kbd:`--debugexit`
-     - Enable guest to write io port 0xf4 to exit guest. It's mainly used by 
+     - Enable guest to write io port 0xf4 to exit guest. It's mainly used by
        guest unit test.
 
    * - :kbd:`--dump <vm_idx>`
@@ -127,12 +127,12 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
        storm from the UOS.
 
        usage: ``--intr_monitor threshold/s probe-period(s) delay_time(ms) delay_duration(ms)``
-       
-       Example:: 
+
+       Example::
 
          --intr_monitor 10000,10,1,100
 
-       - ``10000``: interrupt rate larger than 10000/s will be treated as interrupt 
+       - ``10000``: interrupt rate larger than 10000/s will be treated as interrupt
          storm
        - ``10``: use the last 10s of interrupt data to detect an interrupt storm
        - ``1``: when interrupts are identified as a storm, the next interrupt will
@@ -275,7 +275,7 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
    * - :kbd:`--virtio_poll <poll_interval>`
      - Enable virtio poll mode with poll interval xxx ns.
 
-       usage::
+       Example::
 
           --virtio_poll 1000000
 
