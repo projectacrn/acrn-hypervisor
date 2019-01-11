@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <sys/epoll.h>
 #include <sys/queue.h>
@@ -96,7 +97,7 @@ static void
 mevent_pipe_read(int fd, enum ev_type type, void *param)
 {
 	char buf[MEVENT_MAX];
-	int status;
+	ssize_t status;
 
 	/*
 	 * Drain the pipe read side. The fd is non-blocking so this is
@@ -107,7 +108,7 @@ mevent_pipe_read(int fd, enum ev_type type, void *param)
 	} while (status == MEVENT_MAX);
 }
 
-/*On error, -1 is returned, else return zero*/
+/* On error, -1 is returned, else return zero */
 int
 mevent_notify(void)
 {
@@ -247,6 +248,7 @@ mevent_add(int tfd, enum ev_type type,
 	ee.events = mevent_kq_filter(mevp);
 	ee.data.ptr = mevp;
 	ret = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, mevp->me_fd, &ee);
+
 	if (ret == 0) {
 		mevent_qlock();
 		LIST_INSERT_HEAD(&global_head, mevp, me_list);
@@ -408,7 +410,7 @@ mevent_dispatch(void)
 	 * the blocking kqueue call to exit by writing to it. Set the
 	 * descriptor to non-blocking.
 	 */
-	ret = pipe(mevent_pipefd);
+	ret = pipe2(mevent_pipefd, O_NONBLOCK);
 	if (ret < 0) {
 		perror("pipe");
 		exit(0);
@@ -427,6 +429,7 @@ mevent_dispatch(void)
 		 * Block awaiting events
 		 */
 		ret = epoll_wait(epoll_fd, eventlist, MEVENT_MAX, -1);
+
 		if (ret == -1 && errno != EINTR)
 			perror("Error return from epoll_wait");
 
