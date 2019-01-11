@@ -784,7 +784,7 @@ static int32_t emulate_mov(struct acrn_vcpu *vcpu, const struct instr_emul_vie *
 		 * REX.W + C7/0	mov r/m64, imm32
 		 *		(sign-extended to 64-bits)
 		 */
-		val = (uint64_t)vie->immediate & size2mask[size];
+		val = (uint64_t)(vie->immediate) & size2mask[size];
 		vie_mmio_write(vcpu, val);
 		break;
 	default:
@@ -1546,7 +1546,7 @@ static int32_t emulate_bittest(struct acrn_vcpu *vcpu, const struct instr_emul_v
 		 * "Range of Bit Positions Specified by Bit Offset Operands"
 		 */
 		bitmask = ((uint64_t)vie->opsize * 8UL) - 1UL;
-		bitoff = (uint64_t)vie->immediate & bitmask;
+		bitoff = (uint64_t)(vie->immediate) & bitmask;
 
 		/* Copy the bit into the Carry flag in %rflags */
 		if ((val & (1UL << bitoff)) != 0U) {
