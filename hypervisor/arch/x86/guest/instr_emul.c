@@ -445,7 +445,7 @@ static int32_t vie_canonical_check(enum vm_cpu_mode cpu_mode, uint64_t gla)
 	return ret;
 }
 
-static bool is_desc_valid(struct seg_desc *desc, uint32_t prot)
+static bool is_desc_valid(const struct seg_desc *desc, uint32_t prot)
 {
 	bool ret = true;
 	uint32_t type;
@@ -487,7 +487,7 @@ static bool is_desc_valid(struct seg_desc *desc, uint32_t prot)
  *@pre prot must be PROT_READ or PROT_WRITE
  */
 static void vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
-	struct seg_desc *desc, uint64_t offset_arg, uint8_t addrsize, uint64_t *gla)
+	const struct seg_desc *desc, uint64_t offset_arg, uint8_t addrsize, uint64_t *gla)
 {
 	uint64_t firstoff, segbase;
 	uint64_t offset = offset_arg;
