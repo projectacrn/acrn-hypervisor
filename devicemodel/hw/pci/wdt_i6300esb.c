@@ -110,7 +110,7 @@ static void start_wdt_timer(void);
  * action to guest OS
  */
 static void
-wdt_expired_handler(void *arg)
+wdt_expired_handler(void *arg, uint64_t nexp)
 {
 	struct pci_vdev *dev = (struct pci_vdev *)arg;
 

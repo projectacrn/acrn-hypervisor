@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <errno.h>
+#include <assert.h>
 #include <sys/timerfd.h>
 
 #include "vmmapi.h"
@@ -28,8 +30,9 @@ timer_handler(int fd __attribute__((unused)),
 		  void *arg)
 {
 	struct acrn_timer *timer = arg;
-	uint64_t buf;
-	int32_t size;
+	uint64_t nexp;
+	ssize_t size;
+	void (*cb)(void *, uint64_t);
 
 	if (timer == NULL) {
 		return;
@@ -39,19 +42,25 @@ timer_handler(int fd __attribute__((unused)),
 	 * Here is a temporary solution, the processing could be moved to
 	 * mevent.c once EVF_TIMER is supported.
 	 */
-	size = read(timer->fd, &buf, sizeof(buf));
-	if (size < 1) {
-		fprintf(stderr, "acrn_timer read timerfd error!");
+	size = read(timer->fd, &nexp, sizeof(nexp));
+
+	if (size < 0) {
+		if (errno != EAGAIN) {
+			perror("acrn_timer read timerfd error");
+		}
 		return;
 	}
 
-	if (timer->callback != NULL) {
-		(*timer->callback)(timer->callback_param);
+	assert(size > 0 && nexp > 0);
+
+	if ((cb = timer->callback) != NULL) {
+		(*cb)(timer->callback_param, nexp);
 	}
 }
 
 int32_t
-acrn_timer_init(struct acrn_timer *timer, void (*cb)(void *), void *param)
+acrn_timer_init(struct acrn_timer *timer, void (*cb)(void *, uint64_t),
+		void *param)
 {
 	if ((timer == NULL) || (cb == NULL)) {
 		return -1;
