@@ -19,6 +19,44 @@ static struct acrn_vm vm_array[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE);
 
 static uint64_t vmid_bitmap;
 
+
+/**
+ * @brief Init VM0 domain of iommu.
+ *
+ * Create VM0 domain using the Normal World's EPT table of VM0 as address translation table.
+ * All PCI devices are added to the VM0 domain when creating it.
+ *
+ * @param[in] vm0 pointer to VM0
+ *
+ * @pre vm0 shall point to VM0
+ *
+ * @remark to reduce boot time & memory cost, a config IOMMU_INIT_BUS_LIMIT, which limit the bus number.
+ *
+ */
+static void init_iommu_vm0_domain(struct acrn_vm *vm0)
+{
+	uint16_t bus;
+	uint16_t devfun;
+	struct iommu_domain *vm0_domain;
+
+	vm0->iommu = create_iommu_domain(vm0->vm_id, hva2hpa(vm0->arch_vm.nworld_eptp), 48U);
+
+	vm0_domain = (struct iommu_domain *) vm0->iommu;
+
+	if (vm0_domain == NULL) {
+		pr_err("vm0 domain is NULL\n");
+	} else {
+		for (bus = 0U; bus < CONFIG_IOMMU_BUS_NUM; bus++) {
+			for (devfun = 0U; devfun <= 255U; devfun++) {
+				if (add_iommu_device(vm0_domain, 0U, (uint8_t)bus, (uint8_t)devfun) != 0) {
+					/* the panic only occurs before VM0 starts running in sharing mode */
+					panic("Failed to add %x:%x.%x to VM0 domain", bus, pci_slot(devfun), pci_func(devfun));
+				}
+			}
+		}
+	}
+}
+
 static inline uint16_t alloc_vm_id(void)
 {
 	uint16_t id = ffz64(vmid_bitmap);
@@ -86,7 +124,6 @@ int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 #endif
 		vm->hw.created_vcpus = 0U;
 		vm->emul_mmio_regions = 0U;
-		vm->snoopy_mem = true;
 
 		/* gpa_lowtop are used for system start up */
 		vm->hw.gpa_lowtop = 0UL;
@@ -98,7 +135,6 @@ int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 		/* Only for SOS: Configure VM software information */
 		/* For UOS: This VM software information is configure in DM */
 		if (is_vm0(vm)) {
-			vm->snoopy_mem = false;
 			rebuild_vm0_e820();
 			prepare_vm0_memmap(vm);
 

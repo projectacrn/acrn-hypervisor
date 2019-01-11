@@ -5,6 +5,7 @@
  */
 
 #include <hypervisor.h>
+#include <vtd.h>
 
 /*
  * According to "SDM APPENDIX C VMX BASIC EXIT REASONS",
@@ -357,7 +358,7 @@ static int32_t xsetbv_vmexit_handler(struct acrn_vcpu *vcpu)
 
 static int32_t wbinvd_vmexit_handler(struct acrn_vcpu *vcpu)
 {
-	if (!iommu_snoop_supported(vcpu->vm)) {
+	if (!iommu_snoop_supported(vcpu->vm->iommu)) {
 		cache_flush_invalidate_all();
 	}
 

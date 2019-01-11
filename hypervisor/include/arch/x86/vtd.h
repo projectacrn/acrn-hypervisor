@@ -35,6 +35,18 @@
 #define DMAR_ICS_REG    0x9cU    /* Invalidation complete status register */
 #define DMAR_IRTA_REG   0xb8U    /* Interrupt remapping table addr register */
 
+struct iommu_domain {
+	bool is_host;
+	bool is_tt_ept;     /* if reuse EPT of the domain */
+	uint16_t vm_id;
+	uint32_t addr_width;   /* address width of the domain */
+	uint64_t trans_table_ptr;
+	bool iommu_snoop;
+};
+
+int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun);
+int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun);
+
 static inline uint8_t dmar_ver_major(uint64_t version)
 {
 	return (((uint8_t)version & 0xf0U) >> 4U);
@@ -594,21 +606,6 @@ void resume_iommu(void);
 int32_t init_iommu(void);
 
 /**
- * @brief Init VM0 domain of iommu.
- *
- * Create VM0 domain using the Normal World's EPT table of VM0 as address translation table.
- * All PCI devices are added to the VM0 domain when creating it.
- *
- * @param[in] vm0 pointer to VM0
- *
- * @pre vm0 shall point to VM0
- *
- * @remark to reduce boot time & memory cost, a config IOMMU_INIT_BUS_LIMIT, which limit the bus number.
- *
- */
-void init_iommu_vm0_domain(struct acrn_vm *vm0);
-
-/**
  * @brief check the iommu if support cache snoop.
  *
  * @param[in] vm pointer to VM to check
@@ -617,7 +614,7 @@ void init_iommu_vm0_domain(struct acrn_vm *vm0);
  * @retval false not support
  *
  */
-bool iommu_snoop_supported(const struct acrn_vm *vm);
+bool iommu_snoop_supported(const struct iommu_domain *iommu);
 
 /**
   * @}
