@@ -299,7 +299,7 @@ vcpu_vlapic(struct acrn_vcpu *vcpu)
 	return &(vcpu->arch.vlapic);
 }
 
-void default_idle(struct sched_object *obj);
+void default_idle(__unused struct sched_object *obj);
 void vcpu_thread(struct sched_object *obj);
 
 /* External Interfaces */
