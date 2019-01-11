@@ -139,10 +139,10 @@ static void *get_kernel_load_addr(void *kernel_src_addr)
 	 */
 	zeropage = (struct zero_page *)kernel_src_addr;
 	if (zeropage->hdr.relocatable_kernel != 0U) {
-		zeropage = (void *)zeropage->hdr.pref_addr;
+		zeropage = (struct zero_page *)zeropage->hdr.pref_addr;
 	}
 
-	return zeropage;
+	return (void *)zeropage;
 }
 
 /**
