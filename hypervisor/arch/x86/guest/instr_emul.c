@@ -485,13 +485,9 @@ static bool is_desc_valid(struct seg_desc *desc, uint32_t prot)
  *@pre seg must be segment register index
  *@pre length_arg must be 1, 2, 4 or 8
  *@pre prot must be PROT_READ or PROT_WRITE
- *
- *return 0 - on success
- *return -1 - on failure
  */
-static int32_t vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
-	struct seg_desc *desc, uint64_t offset_arg, uint8_t addrsize,
-	uint64_t *gla)
+static void vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name seg,
+	struct seg_desc *desc, uint64_t offset_arg, uint8_t addrsize, uint64_t *gla)
 {
 	uint64_t firstoff, segbase;
 	uint64_t offset = offset_arg;
@@ -517,7 +513,6 @@ static int32_t vie_calculate_gla(enum vm_cpu_mode cpu_mode, enum cpu_reg_name se
 	 */
 	firstoff &= size2mask[addrsize];
 	*gla = (segbase + firstoff) & size2mask[glasize];
-	return 0;
 }
 
 /*
@@ -912,7 +907,7 @@ static void get_gva_si_nocheck(const struct acrn_vcpu *vcpu, uint8_t addrsize,
 	vm_get_seg_desc(seg, &desc);
 	cpu_mode = get_vcpu_mode(vcpu);
 
-	(void)vie_calculate_gla(cpu_mode, seg, &desc, val, addrsize, gva);
+	vie_calculate_gla(cpu_mode, seg, &desc, val, addrsize, gva);
 
 	return;
 }
@@ -954,9 +949,9 @@ static int32_t get_gva_di_check(struct acrn_vcpu *vcpu, struct instr_emul_vie *v
 
 	if (!has_exception) {
 		val = vm_get_register(vcpu, CPU_REG_RDI);
-		if (vie_calculate_gla(cpu_mode, CPU_REG_ES, &desc, val, addrsize, gva) != 0) {
-			has_exception = true;
-		} else if (vie_canonical_check(cpu_mode, *gva) != 0) {
+		vie_calculate_gla(cpu_mode, CPU_REG_ES, &desc, val, addrsize, gva);
+
+		if (vie_canonical_check(cpu_mode, *gva) != 0) {
 			has_exception = true;
 		} else {
 			err_code = PAGE_FAULT_WR_FLAG;
@@ -1564,7 +1559,7 @@ static int32_t emulate_bittest(struct acrn_vcpu *vcpu, const struct instr_emul_v
 		vie_update_register(vcpu, CPU_REG_RFLAGS, rflags, size);
 		ret = 0;
 	} else {
-	        ret = -EINVAL;
+		ret = -EINVAL;
 	}
 
 	return ret;
