@@ -66,7 +66,7 @@ virtio_start_timer(struct acrn_timer *timer, time_t sec, time_t nsec)
 }
 
 static void
-virtio_poll_timer(void *arg)
+virtio_poll_timer(void *arg, uint64_t nexp)
 {
 	struct virtio_base *base;
 	struct virtio_ops *vops;

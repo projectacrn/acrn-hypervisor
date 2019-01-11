@@ -10,12 +10,12 @@ struct acrn_timer {
 	int32_t fd;
 	int32_t clockid;
 	struct mevent *mevp;
-	void (*callback)(void *);
+	void (*callback)(void *, uint64_t);
 	void *callback_param;
 };
 
 int32_t
-acrn_timer_init(struct acrn_timer *timer, void (*cb)(void *), void *param);
+acrn_timer_init(struct acrn_timer *timer, void (*cb)(void *, uint64_t), void *param);
 void
 acrn_timer_deinit(struct acrn_timer *timer);
 int32_t

@@ -660,7 +660,7 @@ vrtc_time_update(struct vrtc *vrtc, time_t newtime, time_t newbase)
 }
 
 static void
-vrtc_periodic_timer(void *arg)
+vrtc_periodic_timer(void *arg, uint64_t nexp)
 {
 	struct vrtc *vrtc = arg;
 
@@ -673,13 +673,14 @@ vrtc_periodic_timer(void *arg)
 }
 
 static void
-vrtc_update_timer(void *arg)
+vrtc_update_timer(void *arg, uint64_t nexp)
 {
 	struct vrtc *vrtc = arg;
 	time_t basetime;
 	time_t curtime;
 
 	pthread_mutex_lock(&vrtc->mtx);
+
 	if (aintr_enabled(vrtc) || uintr_enabled(vrtc)) {
 		curtime = vrtc_curtime(vrtc, &basetime);
 		vrtc_time_update(vrtc, curtime, basetime);
