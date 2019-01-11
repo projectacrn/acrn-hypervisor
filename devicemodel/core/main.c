@@ -56,6 +56,7 @@
 #include "smbiostbl.h"
 #include "rtc.h"
 #include "pit.h"
+#include "hpet.h"
 #include "version.h"
 #include "sw_load.h"
 #include "monitor.h"
@@ -458,6 +459,10 @@ vm_init_vdevs(struct vmctx *ctx)
 	if (ret < 0)
 		goto vpit_fail;
 
+	ret = vhpet_init(ctx);
+	if (ret < 0)
+		goto vhpet_fail;
+
 	sci_init(ctx);
 
 	if (debugexit_enabled)
@@ -481,6 +486,8 @@ monitor_fail:
 	if (debugexit_enabled)
 		deinit_debugexit();
 
+	vhpet_deinit(ctx);
+vhpet_fail:
 	vpit_deinit(ctx);
 vpit_fail:
 	vrtc_deinit(ctx);
@@ -501,6 +508,7 @@ vm_deinit_vdevs(struct vmctx *ctx)
 	if (debugexit_enabled)
 		deinit_debugexit();
 
+	vhpet_deinit(ctx);
 	vpit_deinit(ctx);
 	vrtc_deinit(ctx);
 	ioc_deinit(ctx);
@@ -529,6 +537,7 @@ vm_reset_vdevs(struct vmctx *ctx)
 	if (debugexit_enabled)
 		deinit_debugexit();
 
+	vhpet_deinit(ctx);
 	vpit_deinit(ctx);
 	vrtc_deinit(ctx);
 
@@ -540,6 +549,7 @@ vm_reset_vdevs(struct vmctx *ctx)
 	atkbdc_init(ctx);
 	vrtc_init(ctx);
 	vpit_init(ctx);
+	vhpet_init(ctx);
 
 	if (debugexit_enabled)
 		init_debugexit();

@@ -32,10 +32,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
-#include <time.h>
 
 #include "vmmapi.h"
+#include "timer.h"
 #include "inout.h"
 #include "pit.h"
 
@@ -43,7 +42,6 @@
 
 #define	PIT_8254_FREQ		(1193182)
 #define	PIT_HZ_TO_TICKS(hz)	((PIT_8254_FREQ + (hz) / 2) / (hz))
-#define NS_PER_SEC	(1000000000ULL)
 
 #define PERIODIC_MODE(mode)	\
 	((mode) == TIMER_RATEGEN || (mode) == TIMER_SQWAVE)
@@ -61,6 +59,10 @@
 		err = pthread_mutex_unlock(&vpit_mtx);	\
 		assert(err == 0);						\
 	} while (0)
+
+#define vpit_ts_to_ticks(ts)	ts_to_ticks(PIT_8254_FREQ, ts)
+/* won't overflow since the max value of ticks is 65536 */
+#define vpit_ticks_to_ts(tk, ts)	ticks_to_ts(PIT_8254_FREQ, tk, ts)
 
 
 struct vpit_timer_arg {
@@ -92,31 +94,8 @@ struct vpit {
 
 
 /* one vPIT per VM */
-pthread_mutex_t vpit_mtx = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t vpit_mtx = PTHREAD_MUTEX_INITIALIZER;
 
-
-static inline uint64_t
-ts_to_ticks(const struct timespec *ts)
-{
-	uint64_t tv_sec_ticks, tv_nsec_ticks;
-
-	tv_sec_ticks = ts->tv_sec * PIT_8254_FREQ;
-	tv_nsec_ticks = howmany(ts->tv_nsec * PIT_8254_FREQ, NS_PER_SEC);
-
-	return tv_sec_ticks + tv_nsec_ticks;
-}
-
-static inline void
-ticks_to_ts(uint64_t ticks, struct timespec *ts)
-{
-	uint64_t ns;
-
-	/* won't overflow since the max value of ticks is 65536 */
-	ns = howmany(ticks * NS_PER_SEC, PIT_8254_FREQ);
-
-	ts->tv_sec = ns / NS_PER_SEC;
-	ts->tv_nsec = ns % NS_PER_SEC;
-}
 
 static uint64_t
 ticks_elapsed_since(const struct timespec *since)
@@ -132,7 +111,7 @@ ticks_elapsed_since(const struct timespec *since)
 	}
 
 	timespecsub(&ts, since);
-	return ts_to_ticks(&ts);
+	return vpit_ts_to_ticks(&ts);
 }
 
 static bool
@@ -313,7 +292,7 @@ pit_timer_start_cntr0(struct vpit *vpit)
 		assert(timespecisset(&ts.it_interval));
 
 		/* ts.it_value contains the remaining time until expiration */
-		ticks_to_ts(pit_cr_val(c->cr), &ts.it_interval);
+		vpit_ticks_to_ts(pit_cr_val(c->cr), &ts.it_interval);
 	} else {
 		/*
 		 * Aperiodic mode or no running periodic counter.
@@ -325,7 +304,7 @@ pit_timer_start_cntr0(struct vpit *vpit)
 
 		timer_ticks = (c->mode == TIMER_SWSTROBE) ?
 		              c->initial + 1 : c->initial;
-		ticks_to_ts(timer_ticks, &ts.it_value);
+		vpit_ticks_to_ts(timer_ticks, &ts.it_value);
 
 		/* make it periodic if required */
 		if (PERIODIC_MODE(c->mode)) {
