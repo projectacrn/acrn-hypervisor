@@ -67,6 +67,7 @@
 #include "pci_core.h"
 #include "tpm.h"
 #include "vmmapi.h"
+#include "hpet.h"
 
 /*
  * Define the base address of the ACPI tables, and the offsets to
@@ -563,7 +564,7 @@ basl_fwrite_hpet(FILE *fp, struct vmctx *ctx)
 	EFPRINTF(fp, "[0001]\t\tBit Offset : 00\n");
 	EFPRINTF(fp,
 		 "[0001]\t\tEncoded Access Width : 00 [Undefined/Legacy]\n");
-	EFPRINTF(fp, "[0008]\t\tAddress : 00000000FED00000\n");
+	EFPRINTF(fp, "[0008]\t\tAddress : %016X\n", VHPET_BASE);
 	EFPRINTF(fp, "\n");
 
 	EFPRINTF(fp, "[0001]\t\tHPET Number : 00\n");
@@ -944,7 +945,7 @@ basl_fwrite_dsdt(FILE *fp, struct vmctx *ctx)
 	dsdt_line("      Name (_CRS, ResourceTemplate ()");
 	dsdt_line("      {");
 	dsdt_indent(4);
-	dsdt_fixed_mem32(0xFED00000, 0x400);
+	dsdt_fixed_mem32(VHPET_BASE, VHPET_SIZE);
 	dsdt_unindent(4);
 	dsdt_line("      })");
 	dsdt_line("    }");
