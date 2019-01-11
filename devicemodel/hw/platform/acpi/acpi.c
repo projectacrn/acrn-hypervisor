@@ -556,7 +556,8 @@ basl_fwrite_hpet(FILE *fp, struct vmctx *ctx)
 	EFPRINTF(fp, "[0004]\t\tAsl Compiler Revision : 00000000\n");
 	EFPRINTF(fp, "\n");
 
-	EFPRINTF(fp, "[0004]\t\tTimer Block ID : 00000000\n");
+	EFPRINTF(fp, "[0004]\t\tTimer Block ID : %08X\n",
+	    (uint32_t)vhpet_capabilities());
 	EFPRINTF(fp,
 	    "[0012]\t\tTimer Block Register : [Generic Address Structure]\n");
 	EFPRINTF(fp, "[0001]\t\tSpace ID : 00 [SystemMemory]\n");

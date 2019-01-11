@@ -93,7 +93,6 @@ mmio_rb_lookup(struct mmio_rb_tree *rbt, uint64_t addr,
 	return -1;
 }
 
-__attribute__((unused))
 static int
 mmio_rb_add(struct mmio_rb_tree *rbt, struct mmio_rb_range *new)
 {
@@ -131,7 +130,6 @@ mmio_rb_dump(struct mmio_rb_tree *rbt)
 
 RB_GENERATE(mmio_rb_tree, mmio_rb_range, mr_link, mmio_rb_range_compare);
 
-__attribute__((unused))
 static int
 mem_read(void *ctx, int vcpu, uint64_t gpa, uint64_t *rval, int size, void *arg)
 {
@@ -143,7 +141,6 @@ mem_read(void *ctx, int vcpu, uint64_t gpa, uint64_t *rval, int size, void *arg)
 	return error;
 }
 
-__attribute__((unused))
 static int
 mem_write(void *ctx, int vcpu, uint64_t gpa, uint64_t wval, int size, void *arg)
 {
