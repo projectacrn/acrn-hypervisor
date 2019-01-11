@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef	INIT_H
+#ifndef INIT_H
+#define INIT_H
 
 /* hypervisor stack bottom magic('intl') */
 #define SP_BOTTOM_MAGIC    0x696e746cUL
