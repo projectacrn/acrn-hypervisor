@@ -1698,76 +1698,80 @@ static bool segment_override(uint8_t x, enum cpu_reg_name *seg)
 	return override;
 }
 
-static int32_t decode_prefixes(struct instr_emul_vie *vie,
-					enum vm_cpu_mode cpu_mode, bool cs_d)
+static int32_t decode_prefixes(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode, bool cs_d)
 {
 	uint8_t x, i;
+	int32_t ret  = 0;
 
 	for (i = 0U; i < VIE_PREFIX_SIZE; i++) {
 		if (vie_peek(vie, &x) != 0) {
-			return -1;
-		}
-
-		if (x == 0x66U) {
-			vie->opsize_override = 1U;
-		} else if (x == 0x67U) {
-			vie->addrsize_override = 1U;
-		} else if (x == 0xF3U) {
-			vie->repz_present = 1U;
-		} else if (x == 0xF2U) {
-			vie->repnz_present = 1U;
-		} else if (segment_override(x, &vie->segment_register)) {
-			vie->seg_override = 1U;
-		} else {
+			ret = -1;
 			break;
-		}
-
-		vie_advance(vie);
-	}
-
-	/*
-	 * From section 2.2.1, "REX Prefixes", Intel SDM Vol 2:
-	 * - Only one REX prefix is allowed per instruction.
-	 * - The REX prefix must immediately precede the opcode byte or the
-	 *   escape opcode byte.
-	 * - If an instruction has a mandatory prefix (0x66, 0xF2 or 0xF3)
-	 *   the mandatory prefix must come before the REX prefix.
-	 */
-	if ((cpu_mode == CPU_MODE_64BIT) && (x >= 0x40U) && (x <= 0x4FU)) {
-		vie->rex_present = 1U;
-		vie->rex_w = (x & 0x8U) != 0U ? 1U : 0U;
-		vie->rex_r = (x & 0x4U) != 0U ? 1U : 0U;
-		vie->rex_x = (x & 0x2U) != 0U ? 1U : 0U;
-		vie->rex_b = (x & 0x1U) != 0U ? 1U : 0U;
-		vie_advance(vie);
-	}
-
-	/*
-	 * Section "Operand-Size And Address-Size Attributes", Intel SDM, Vol 1
-	 */
-	if (cpu_mode == CPU_MODE_64BIT) {
-		/*
-		 * Default address size is 64-bits and default operand size
-		 * is 32-bits.
-		 */
-		vie->addrsize = (vie->addrsize_override != 0U)? 4U : 8U;
-		if (vie->rex_w != 0U) {
-			vie->opsize = 8U;
-		} else if (vie->opsize_override != 0U) {
-			vie->opsize = 2U;
 		} else {
-			vie->opsize = 4U;
+			if (x == 0x66U) {
+				vie->opsize_override = 1U;
+			} else if (x == 0x67U) {
+				vie->addrsize_override = 1U;
+			} else if (x == 0xF3U) {
+				vie->repz_present = 1U;
+			} else if (x == 0xF2U) {
+				vie->repnz_present = 1U;
+			} else if (segment_override(x, &vie->segment_register)) {
+				vie->seg_override = 1U;
+			} else {
+				break;
+			}
+
+			vie_advance(vie);
 		}
-	} else if (cs_d) {
-		/* Default address and operand sizes are 32-bits */
-		vie->addrsize = vie->addrsize_override != 0U ? 2U : 4U;
-		vie->opsize = vie->opsize_override != 0U ? 2U : 4U;
-	} else {
-		/* Default address and operand sizes are 16-bits */
-		vie->addrsize = vie->addrsize_override != 0U ? 4U : 2U;
-		vie->opsize = vie->opsize_override != 0U ? 4U : 2U;
 	}
-	return 0;
+
+	if (ret == 0) {
+		/*
+		 * From section 2.2.1, "REX Prefixes", Intel SDM Vol 2:
+		 * - Only one REX prefix is allowed per instruction.
+		 * - The REX prefix must immediately precede the opcode byte or the
+		 *   escape opcode byte.
+		 * - If an instruction has a mandatory prefix (0x66, 0xF2 or 0xF3)
+		 *   the mandatory prefix must come before the REX prefix.
+		 */
+		if ((cpu_mode == CPU_MODE_64BIT) && (x >= 0x40U) && (x <= 0x4FU)) {
+			vie->rex_present = 1U;
+			vie->rex_w = (x & 0x8U) != 0U ? 1U : 0U;
+			vie->rex_r = (x & 0x4U) != 0U ? 1U : 0U;
+			vie->rex_x = (x & 0x2U) != 0U ? 1U : 0U;
+			vie->rex_b = (x & 0x1U) != 0U ? 1U : 0U;
+			vie_advance(vie);
+		}
+
+		/*
+		 * Section "Operand-Size And Address-Size Attributes", Intel SDM, Vol 1
+		 */
+		if (cpu_mode == CPU_MODE_64BIT) {
+			/*
+			 * Default address size is 64-bits and default operand size
+			 * is 32-bits.
+			 */
+			vie->addrsize = (vie->addrsize_override != 0U)? 4U : 8U;
+			if (vie->rex_w != 0U) {
+				vie->opsize = 8U;
+			} else if (vie->opsize_override != 0U) {
+				vie->opsize = 2U;
+			} else {
+				vie->opsize = 4U;
+			}
+		} else if (cs_d) {
+			/* Default address and operand sizes are 32-bits */
+			vie->addrsize = vie->addrsize_override != 0U ? 2U : 4U;
+			vie->opsize = vie->opsize_override != 0U ? 2U : 4U;
+		} else {
+			/* Default address and operand sizes are 16-bits */
+			vie->addrsize = vie->addrsize_override != 0U ? 4U : 2U;
+			vie->opsize = vie->opsize_override != 0U ? 4U : 2U;
+		}
+	}
+
+	return ret;
 }
 
 static int32_t decode_two_byte_opcode(struct instr_emul_vie *vie)
