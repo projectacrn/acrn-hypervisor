@@ -134,15 +134,15 @@ uint32_t irq_to_vector(uint32_t irq);
  * depends on the exeception class.
  *
  * @param[in] vcpu     Pointer to vCPU.
- * @param[in] vector   Vector of the exeception.
- * @param[in] err_code Error Code to be injected.
+ * @param[in] vector_arg   Vector of the exeception.
+ * @param[in] err_code_arg Error Code to be injected.
  *
  * @retval 0 on success
  * @retval -EINVAL on error that vector is invalid.
  *
  * @pre vcpu != NULL
  */
-int32_t vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector, uint32_t err_code);
+int32_t vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector_arg, uint32_t err_code_arg);
 
 /**
  * @brief Inject external interrupt to guest.
