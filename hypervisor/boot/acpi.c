@@ -100,7 +100,7 @@ struct acpi_madt_local_apic {
 	uint32_t                       lapic_flags;
 };
 
-static void *global_rsdp;
+static struct acpi_table_rsdp *acpi_rsdp;
 
 static struct acpi_table_rsdp*
 found_rsdp(char *base, int32_t length)
@@ -133,13 +133,13 @@ found_rsdp(char *base, int32_t length)
 	return ret;
 }
 
-static void *get_rsdp(void)
+static struct acpi_table_rsdp *get_rsdp(void)
 {
 	struct acpi_table_rsdp *rsdp = NULL;
 	uint16_t *addr;
 
 #ifdef CONFIG_EFI_STUB
-	rsdp = get_rsdp_from_uefi();
+	rsdp = (struct acpi_table_rsdp *) get_rsdp_from_uefi();
 #endif
 	if (rsdp == NULL) {
 		/* EBDA is addressed by the 16 bit pointer at 0x40E */
@@ -177,7 +177,7 @@ static void *get_acpi_tbl(const char *signature)
 	uint64_t addr = 0UL;
 	uint32_t i, count;
 
-	rsdp = (struct acpi_table_rsdp *)global_rsdp;
+	rsdp = acpi_rsdp;
 
 	if ((rsdp->revision >= 2U) && (rsdp->xsdt_physical_address != 0UL)) {
 		/*
@@ -215,7 +215,7 @@ static void *get_acpi_tbl(const char *signature)
  * of Type 0
  */
 static uint16_t
-local_parse_madt(void *madt, uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
+local_parse_madt(struct acpi_table_madt *madt, uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 {
 	uint16_t pcpu_num = 0U;
 	struct acpi_madt_local_apic *processor;
@@ -223,10 +223,10 @@ local_parse_madt(void *madt, uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 	void *first, *end, *iterator;
 	struct acpi_subtable_header *entry;
 
-	madt_ptr = (struct acpi_table_madt *)madt;
+	madt_ptr = madt;
 
 	first = madt_ptr + 1;
-	end = (char *)madt_ptr + madt_ptr->header.length;
+	end = (void *)madt_ptr + madt_ptr->header.length;
 
 	for (iterator = first; (iterator) < (end); iterator += entry->length) {
 		entry = (struct acpi_subtable_header *)iterator;
@@ -251,12 +251,12 @@ local_parse_madt(void *madt, uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 /* The lapic_id info gotten from madt will be returned in lapic_id_array */
 uint16_t parse_madt(uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 {
-	void *madt;
+	struct acpi_table_madt *madt;
 
-	global_rsdp = get_rsdp();
-	ASSERT(global_rsdp != NULL, "fail to get rsdp");
+	acpi_rsdp = get_rsdp();
+	ASSERT(acpi_rsdp != NULL, "fail to get rsdp");
 
-	madt = get_acpi_tbl(ACPI_SIG_MADT);
+	madt = (struct acpi_table_madt *)get_acpi_tbl(ACPI_SIG_MADT);
 	ASSERT(madt != NULL, "fail to get madt");
 
 	return local_parse_madt(madt, lapic_id_array);
@@ -340,7 +340,7 @@ static void *get_facs_table(void)
 			}
 		}
 	}
-	return facs_addr;
+	return (void *)facs_addr;
 }
 
 /* put all ACPI fix up code here */
