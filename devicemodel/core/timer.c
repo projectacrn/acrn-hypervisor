@@ -102,13 +102,24 @@ acrn_timer_deinit(struct acrn_timer *timer)
 }
 
 int32_t
-acrn_timer_settime(struct acrn_timer *timer, struct itimerspec *new_value)
+acrn_timer_settime(struct acrn_timer *timer, const struct itimerspec *new_value)
 {
 	if (timer == NULL) {
 		return -1;
 	}
 
 	return timerfd_settime(timer->fd, 0, new_value, NULL);
+}
+
+int32_t
+acrn_timer_settime_abs(struct acrn_timer *timer,
+		const struct itimerspec *new_value)
+{
+	if (timer == NULL) {
+		return -1;
+	}
+
+	return timerfd_settime(timer->fd, TFD_TIMER_ABSTIME, new_value, NULL);
 }
 
 int32_t

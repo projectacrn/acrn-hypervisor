@@ -19,7 +19,10 @@ acrn_timer_init(struct acrn_timer *timer, void (*cb)(void *), void *param);
 void
 acrn_timer_deinit(struct acrn_timer *timer);
 int32_t
-acrn_timer_settime(struct acrn_timer *timer, struct itimerspec *new_value);
+acrn_timer_settime(struct acrn_timer *timer, const struct itimerspec *new_value);
+int32_t
+acrn_timer_settime_abs(struct acrn_timer *timer,
+		const struct itimerspec *new_value);
 int32_t
 acrn_timer_gettime(struct acrn_timer *timer, struct itimerspec *cur_value);
 
