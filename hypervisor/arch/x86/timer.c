@@ -133,7 +133,7 @@ static void timer_softirq(uint16_t pcpu_id)
 	struct per_cpu_timers *cpu_timer;
 	struct hv_timer *timer;
 	struct list_head *pos, *n;
-	int32_t tries = MAX_TIMER_ACTIONS;
+	uint32_t tries = MAX_TIMER_ACTIONS;
 	uint64_t current_tsc = rdtsc();
 
 	/* handle passed timer */
@@ -149,7 +149,7 @@ static void timer_softirq(uint16_t pcpu_id)
 		timer = list_entry(pos, struct hv_timer, node);
 		/* timer expried */
 		tries--;
-		if ((timer->fire_tsc <= current_tsc) && (tries > 0)) {
+		if ((timer->fire_tsc <= current_tsc) && (tries != 0U)) {
 			del_timer(timer);
 
 			run_timer(timer);
