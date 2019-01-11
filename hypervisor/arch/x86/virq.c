@@ -187,9 +187,10 @@ static int32_t get_excep_class(uint32_t vector)
 	}
 }
 
-int32_t vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector, uint32_t err_code)
+int32_t vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector, uint32_t err_code_arg)
 {
 	struct acrn_vcpu_arch *arch = &vcpu->arch;
+	uint32_t err_code = err_code_arg;
 	/* VECTOR_INVALID is also greater than 32 */
 	if (vector >= 32U) {
 		pr_err("invalid exception vector %d", vector);
