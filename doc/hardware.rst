@@ -39,20 +39,23 @@ Intel Kaby Lake NUC
 
 * `Intel NUC Kit NUC7i5BNH Reference
   <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i5bnh.html>`_
-  with Intel |reg| Core |trade| i5 7260U
+  with Intel |reg| Core |trade| i5-7260U
 * `Intel NUC Kit NUC7i7BNH Reference
   <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i7bnh.html>`_
-  with Intel |reg| Core |trade| i5-7567U
+  with Intel |reg| Core |trade| i7-7567U
 * `Intel NUC Kit NUC7i5DNHE Reference
   <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i5dnhe.html>`_
   with Intel |reg| Core |trade| i5-7300U
 * `Intel NUC Kit NUC7i7DNHE Reference
   <https://www.intel.com/content/www/us/en/products/boards-kits/nuc/kits/nuc7i7dnhe.html>`_
   with Intel |reg| Core |trade| i7-8650U
-* Tested NUC with 8GB of RAM and using an 128GB SSD
+* Tested NUC with 8GB/16GB of RAM and using an 128GB SSD
 
-You can search online like APL NUC. Be sure to purchase
-the NUC with the recommended memory and storage options noted above.
+For reviews and purchasing options, search online for "KBL NUC" and
+look for NUCs with the recommended memory and storage options.
+
+Setup and use instructions for APL NUCs, found in :ref:`getting-started-apl-nuc`,
+also apply to KBL NUCs.
 
 
 UP Squared board
