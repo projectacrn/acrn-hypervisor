@@ -306,7 +306,7 @@ void init_paging(void)
 #ifdef CONFIG_DMAR_PARSE_ENABLED
 	for (i = 0U; i < entries_count; i++) {
 		entry = p_e820 + i;
-		if (entry->type == E820_TYPE_ACPI_RECLAIM) {
+		if ((entry->type == E820_TYPE_ACPI_RECLAIM) || (entry->type == E820_TYPE_RESERVED)) {
 			hv_access_memory_region_update(entry->baseaddr, entry->length);
 		}
 	}
