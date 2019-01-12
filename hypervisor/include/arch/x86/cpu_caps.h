@@ -45,8 +45,6 @@ bool cpu_has_vmx_ept_cap(uint32_t bit_mask);
 bool cpu_has_vmx_vpid_cap(uint32_t bit_mask);
 void init_cpu_capabilities(void);
 void init_cpu_model_name(void);
-bool check_cpu_security_cap(void);
-void cpu_l1d_flush(void);
 int32_t detect_hardware_support(void);
 struct cpuinfo_x86 *get_cpu_info(void);
 
