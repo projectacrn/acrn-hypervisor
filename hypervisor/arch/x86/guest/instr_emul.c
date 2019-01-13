@@ -1737,10 +1737,10 @@ static int32_t decode_prefixes(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_
 		 */
 		if ((cpu_mode == CPU_MODE_64BIT) && (x >= 0x40U) && (x <= 0x4FU)) {
 			vie->rex_present = 1U;
-			vie->rex_w = (x & 0x8U) != 0U ? 1U : 0U;
-			vie->rex_r = (x & 0x4U) != 0U ? 1U : 0U;
-			vie->rex_x = (x & 0x2U) != 0U ? 1U : 0U;
-			vie->rex_b = (x & 0x1U) != 0U ? 1U : 0U;
+			vie->rex_w = (x >> 0x3U) & 1U;
+			vie->rex_r = (x >> 0x2U) & 1U;
+			vie->rex_x = (x >> 0x1U) & 1U;
+			vie->rex_b = (x >> 0x0U) & 1U;
 			vie_advance(vie);
 		}
 
