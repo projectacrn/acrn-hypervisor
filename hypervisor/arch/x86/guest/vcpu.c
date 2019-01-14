@@ -8,6 +8,7 @@
 #include <schedule.h>
 #include <vm0_boot.h>
 #include <security.h>
+#include <virtual_cr.h>
 
 inline uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)
 {
@@ -94,55 +95,6 @@ inline void vcpu_set_rflags(struct acrn_vcpu *vcpu, uint64_t val)
 	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.rflags =
 		val;
 	bitmap_set_lock(CPU_REG_RFLAGS, &vcpu->reg_updated);
-}
-
-inline uint64_t vcpu_get_cr0(struct acrn_vcpu *vcpu)
-{
-	uint64_t mask;
-	struct run_context *ctx =
-		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
-
-	if (bitmap_test_and_set_lock(CPU_REG_CR0, &vcpu->reg_cached) == 0) {
-		mask = exec_vmread(VMX_CR0_MASK);
-		ctx->cr0 = (exec_vmread(VMX_CR0_READ_SHADOW) & mask) |
-			(exec_vmread(VMX_GUEST_CR0) & (~mask));
-	}
-	return ctx->cr0;
-}
-
-inline void vcpu_set_cr0(struct acrn_vcpu *vcpu, uint64_t val)
-{
-	vmx_write_cr0(vcpu, val);
-}
-
-inline uint64_t vcpu_get_cr2(struct acrn_vcpu *vcpu)
-{
-	return vcpu->
-		arch.contexts[vcpu->arch.cur_context].run_ctx.cr2;
-}
-
-inline void vcpu_set_cr2(struct acrn_vcpu *vcpu, uint64_t val)
-{
-	vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx.cr2 = val;
-}
-
-inline uint64_t vcpu_get_cr4(struct acrn_vcpu *vcpu)
-{
-	uint64_t mask;
-	struct run_context *ctx =
-		&vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
-
-	if (bitmap_test_and_set_lock(CPU_REG_CR4, &vcpu->reg_cached) == 0) {
-		mask = exec_vmread(VMX_CR4_MASK);
-		ctx->cr4 = (exec_vmread(VMX_CR4_READ_SHADOW) & mask) |
-			(exec_vmread(VMX_GUEST_CR4) & (~mask));
-	}
-	return ctx->cr4;
-}
-
-inline void vcpu_set_cr4(struct acrn_vcpu *vcpu, uint64_t val)
-{
-	vmx_write_cr4(vcpu, val);
 }
 
 uint64_t vcpu_get_guest_msr(const struct acrn_vcpu *vcpu, uint32_t msr)

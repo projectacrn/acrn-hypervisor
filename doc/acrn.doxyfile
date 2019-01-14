@@ -808,6 +808,7 @@ INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/include/public/acrn_common.h \
                           ../hypervisor/include/public/acrn_hv_defs.h \
                           ../hypervisor/include/arch/x86/guest/vcpu.h \
+                          ../hypervisor/include/arch/x86/virtual_cr.h \
                           ../hypervisor/include/arch/x86/timer.h \
                           ../hypervisor/arch/x86/trusty.c \
                           ../devicemodel/include/virtio.h \
