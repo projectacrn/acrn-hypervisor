@@ -39,6 +39,7 @@
 #include <pciaccess.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <dm_string.h>
 
 #include "iodev.h"
 #include "vmmapi.h"
@@ -113,6 +114,7 @@ struct passthru_dev {
 	 *   need_reset - reset dev before passthrough
 	 */
 	bool need_reset;
+	int gpio_reset_pin;
 	/* The memory pages, which not overlap with MSI-X table will be
 	 * passed-through to guest, two potential ranges, before and after MSI-X
 	 * Table if any.
@@ -739,6 +741,40 @@ pciaccess_init(void)
 	return 0;	/* success */
 }
 
+static int
+passthru_gpio_reset(int gpio_pin)
+{
+	char s_gpio_path[40];
+	int fd;
+
+	if (gpio_pin < 0 || gpio_pin > 10000)
+		return -1;
+
+	/* reset the device via gpio */
+	snprintf(s_gpio_path, 40, "/sys/class/gpio/gpio%d/value", gpio_pin);
+	fd = open(s_gpio_path, O_WRONLY);
+	if (fd < 0)
+		return -1;
+
+	if(write(fd, "0", 1) < 0) {
+		warnx("failed to clear pin %d", gpio_pin);
+		close(fd);
+		return -1;
+	}
+
+	usleep(100);
+
+	if(write(fd, "1", 1) < 0) {
+		warnx("failed to set pin %d", gpio_pin);
+		close(fd);
+		return -1;
+	}
+
+	close(fd);
+
+	return 0;
+}
+
 /*
  * Passthrough device initialization function:
  * - initialize virtual config space
@@ -760,6 +796,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	char *opt;
 	bool keep_gsi = false;
 	bool need_reset = false;
+	int gpio_reset_pin = -1;
 
 	ptdev = NULL;
 	error = -EINVAL;
@@ -780,7 +817,11 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 			keep_gsi = true;
 		else if (!strncmp(opt, "reset", 5))
 			need_reset = true;
-		else
+		else if (!strncmp(opt, "gpio_rst", 8)) {
+			opt = strsep(&opts, ",");
+			if (opt)
+				dm_strtoi(opt, &opt, 10, &gpio_reset_pin);
+		} else
 			warnx("Invalid passthru options:%s", opt);
 	}
 
@@ -798,6 +839,7 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 
 	ptdev->phys_bdf = PCI_BDF(bus, slot, func);
 	ptdev->need_reset = need_reset;
+	ptdev->gpio_reset_pin = gpio_reset_pin;
 	update_pt_info(ptdev->phys_bdf);
 
 	error = pciaccess_init();
@@ -857,6 +899,16 @@ passthru_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	pci_lintr_request(dev);
 
 	ptdev->phys_pin = read_config(ptdev->phys_dev, PCIR_INTLINE, 1);
+
+	/* Somehow, after reset the gpio pin 460, the physical pin get will be 0xff,
+	 * hardcode the value for wifi device on apl-mrb as a workaround.
+	 */
+	if(ptdev->phys_pin == 0xff) {
+		if(read_config(ptdev->phys_dev, PCIR_VENDOR, 2) == 0x11ab &&
+			read_config(ptdev->phys_dev, PCIR_DEVICE, 2) ==0x2b38) {
+			ptdev->phys_pin = 21;
+		}
+	}
 
 	if (ptdev->phys_pin == -1 || ptdev->phys_pin > 256) {
 		warnx("ptdev %x/%x/%x has wrong phys_pin %d, likely fail!",
@@ -928,6 +980,14 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	}
 
 	pciaccess_cleanup();
+
+	if (ptdev->gpio_reset_pin >= 0) {
+		warnx("Do gpio reset for device %x/%x/%x", bus, slot, func);
+		if (passthru_gpio_reset(ptdev->gpio_reset_pin))
+			warnx("Failed to do gpio reset for device %x/%x/%x ", bus, slot, func);
+		usleep(10000);
+	}
+
 	free(ptdev);
 	vm_unassign_ptdev(ctx, bus, slot, func);
 }
