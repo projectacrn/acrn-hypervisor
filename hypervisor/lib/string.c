@@ -221,29 +221,30 @@ size_t strnlen_s(const char *str_arg, size_t maxlen_arg)
 
 int32_t strcmp(const char *s1_arg, const char *s2_arg)
 {
-	const char *s1 = s1_arg;
-	const char *s2 = s2_arg;
-	while (((*s1) != '\0') && ((*s2) != '\0') && ((*s1) == (*s2))) {
-		s1++;
-		s2++;
+	const char *str1 = s1_arg;
+	const char *str2 = s2_arg;
+
+	while (((*str1) != '\0') && ((*str2) != '\0') && ((*str1) == (*str2))) {
+		str1++;
+		str2++;
 	}
 
-	return *s1 - *s2;
+	return *str1 - *str2;
 }
 
 int32_t strncmp(const char *s1_arg, const char *s2_arg, size_t n_arg)
 {
-	const char *s1 = s1_arg;
-	const char *s2 = s2_arg;
+	const char *str1 = s1_arg;
+	const char *str2 = s2_arg;
 	size_t n = n_arg;
-	while (((n - 1) != 0U) && ((*s1) != '\0') && ((*s2) != '\0')
-		&& ((*s1) == (*s2))) {
-		s1++;
-		s2++;
+
+	while (((n - 1) != 0U) && ((*str1) != '\0') && ((*str2) != '\0') && ((*str1) == (*str2))) {
+		str1++;
+		str2++;
 		n--;
 	}
 
-	return *s1 - *s2;
+	return *str1 - *str2;
 }
 
 /*
