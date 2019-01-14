@@ -133,7 +133,7 @@ else
   boot_image_option="--vsbl /usr/share/acrn/bios/VSBL.bin"
 fi
 
-#interrupt storm monitor for pass-through devices, params order: 
+#interrupt storm monitor for pass-through devices, params order:
 #threshold/s,probe-period(s),intr-inject-delay-time(ms),delay-duration(ms)
 intr_storm_monitor="--intr_monitor 10000,10,1,100"
 
@@ -334,7 +334,7 @@ image, it should be kept using 3 as fixed value for Android Guest on Gordon_peak
 ACRN project
 '
 
-#interrupt storm monitor for pass-through devices, params order: 
+#interrupt storm monitor for pass-through devices, params order:
 #threshold/s,probe-period(s),intr-inject-delay-time(ms),delay-duration(ms)
 intr_storm_monitor="--intr_monitor 10000,10,1,100"
 
@@ -360,7 +360,7 @@ fi
    --mac_seed $mac_seed \
    -s 27,passthru,0/1b/0 \
    -s 24,passthru,0/18/0 \
-   -s 18,passthru,3/0/0,keep_gsi \
+   -s 18,passthru,3/0/0,keep_gsi,gpio_rst,460 \
    $intr_storm_monitor \
    $boot_ipu_option      \
    -i /run/acrn/ioc_$vm_name,0x20 \
@@ -409,6 +409,13 @@ do
 			;;
 	esac
 done
+
+if [ ! -f "/sys/class/gpio/gpio460" ]; then
+  echo "export gpio460"
+  echo 460 > /sys/class/gpio/export
+  echo out > /sys/class/gpio/gpio460/direction
+  echo 1 > /sys/class/gpio/gpio460/value
+fi
 
 if [ ! -b "/dev/mmcblk1p3" ]; then
   echo "no /dev/mmcblk1p3 data partition, exit"
