@@ -246,6 +246,13 @@ Known Issues
 
    **Workaround:** Unplug and plug-in the USB keyboard and mouse after exiting UOS.
 
+:acrn-issue:`2338` - [UP2]Lost 2G memory in SOS when using SBL as bootloader on UP2.
+       After using SBL as bootloader to boot UP2, SOS only has 2G memory with 4G physical memory bank.
+
+   **Impact:** lost 2G memory in SOS.
+
+   **Workaround:** None. The issue will be fixed in the next release.
+
 .. comment
    Use the syntax:
 
