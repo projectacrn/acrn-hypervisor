@@ -62,7 +62,7 @@ sbl-hypervisor:
 
 devicemodel: tools
 	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) clean
-	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) DM_BUILD_VERSION=$(BUILD_VERSION) DM_BUILD_TAG=$(BUILD_TAG)
+	$(MAKE) -C $(T)/devicemodel DM_OBJDIR=$(DM_OUT) DM_BUILD_VERSION=$(BUILD_VERSION) DM_BUILD_TAG=$(BUILD_TAG) DM_ASL_COMPILER=$(ASL_COMPILER)
 
 tools:
 	mkdir -p $(TOOLS_OUT)
