@@ -58,16 +58,17 @@ void vcpu_thread(struct sched_object *obj)
 			continue;
 		}
 
-		TRACE_2L(TRACE_VM_ENTER, 0UL, 0UL);
-
 		profiling_vmenter_handler(vcpu);
 
+		TRACE_2L(TRACE_VM_ENTER, 0UL, 0UL);
 		ret = run_vcpu(vcpu);
 		if (ret != 0) {
 			pr_fatal("vcpu resume failed");
 			pause_vcpu(vcpu, VCPU_ZOMBIE);
 			continue;
 		}
+		basic_exit_reason = vcpu->arch.exit_reason & 0xFFFFU;
+		TRACE_2L(TRACE_VM_EXIT, basic_exit_reason, vcpu_get_rip(vcpu));
 
 		vcpu->arch.nrexits++;
 
@@ -76,15 +77,12 @@ void vcpu_thread(struct sched_object *obj)
 		CPU_IRQ_ENABLE();
 		/* Dispatch handler */
 		ret = vmexit_handler(vcpu);
-		basic_exit_reason = vcpu->arch.exit_reason & 0xFFFFU;
 		if (ret < 0) {
 			pr_fatal("dispatch VM exit handler failed for reason"
 				" %d, ret = %d!", basic_exit_reason, ret);
 			vcpu_inject_gp(vcpu, 0U);
 			continue;
 		}
-
-		TRACE_2L(TRACE_VM_EXIT, basic_exit_reason, vcpu_get_rip(vcpu));
 
 		profiling_post_vmexit_handler(vcpu);
 	} while (1);
