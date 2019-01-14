@@ -31,17 +31,16 @@
 /*
  * VCPU related APIs
  */
-#define ACRN_REQUEST_EXCP      0U
-#define ACRN_REQUEST_EVENT    1U
-#define ACRN_REQUEST_EXTINT   2U
-#define ACRN_REQUEST_NMI        3U
-#define ACRN_REQUEST_TMR_UPDATE  4U
-#define ACRN_REQUEST_EPT_FLUSH      5U
-#define ACRN_REQUEST_TRP_FAULT      6U
-#define ACRN_REQUEST_VPID_FLUSH    7U /* flush vpid tlb */
-#define ACRN_REQUEST_EOI_EXIT_UPDATE  8U
+#define ACRN_REQUEST_EXCP		0U
+#define ACRN_REQUEST_EVENT		1U
+#define ACRN_REQUEST_EXTINT		2U
+#define ACRN_REQUEST_NMI		3U
+#define ACRN_REQUEST_EOI_EXIT_UPDATE	4U
+#define ACRN_REQUEST_EPT_FLUSH		5U
+#define ACRN_REQUEST_TRP_FAULT		6U
+#define ACRN_REQUEST_VPID_FLUSH		7U /* flush vpid tlb */
 
-#define E820_MAX_ENTRIES    32U
+#define E820_MAX_ENTRIES		32U
 
 #define save_segment(seg, SEG_NAME)				\
 {								\

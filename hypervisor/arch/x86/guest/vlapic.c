@@ -83,9 +83,6 @@ apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector);
 static int32_t
 apicv_pending_intr(const struct acrn_vlapic *vlapic);
 
-static void
-apicv_batch_set_tmr(const struct acrn_vlapic *vlapic);
-
 /*
  * Post an interrupt to the vcpu running on 'hostcpu'. This will use a
  * hardware assist if available (e.g. Posted Interrupt) or fall back to
@@ -1867,45 +1864,6 @@ vlapic_enabled(const struct acrn_vlapic *vlapic)
 }
 
 /*
- * APICv batch set tmr will try to set multi vec at the same time
- * to avoid unnecessary VMCS read/update.
- */
-void
-vlapic_apicv_batch_set_tmr(struct acrn_vlapic *vlapic)
-{
-	if (is_apicv_intr_delivery_supported()) {
-		apicv_batch_set_tmr(vlapic);
-	}
-}
-
-void
-vlapic_set_tmr_one_vec(struct acrn_vlapic *vlapic, uint32_t delmode,
-	uint32_t vector, bool level)
-{
-	ASSERT(vector <= NR_MAX_VECTOR,
-		"invalid vector %u", vector);
-
-	/*
-	 * A level trigger is valid only for fixed and lowprio delivery modes.
-	 */
-	if ((delmode != APIC_DELMODE_FIXED) && (delmode != APIC_DELMODE_LOWPRIO)) {
-		dev_dbg(ACRN_DBG_LAPIC,
-			"Ignoring level trigger-mode for delivery-mode %u",
-			delmode);
-	} else {
-		/* NOTE
-		 * We don't check whether the vcpu is in the dest here. That means
-		 * all vcpus of vm will do tmr update.
-		 *
-		 * If there is new caller to this function, need to refine this
-		 * part of work.
-		 */
-		dev_dbg(ACRN_DBG_LAPIC, "vector %u set to level-triggered", vector);
-		vlapic_set_tmr(vlapic, vector, level);
-	}
-}
-
-/*
  *  @pre vcpu != NULL
  *  @pre vector <= 255U
  */
@@ -2310,31 +2268,6 @@ apicv_pending_intr(const struct acrn_vlapic *vlapic)
 	}
 
 	return ret;
-}
-
-/* Update the VMX_EOI_EXIT according to related tmr */
-#define	EOI_STEP_LEN	(64U)
-#define	TMR_STEP_LEN	(32U)
-static void
-apicv_batch_set_tmr(const struct acrn_vlapic *vlapic)
-{
-	const struct lapic_regs *lapic = &(vlapic->apic_page);
-	uint64_t val;
-	const struct lapic_reg *ptr;
-	uint32_t s, e;
-
-	ptr = &lapic->tmr[0];
-	s = 0U;
-	e = 256U;
-
-	while (s < e) {
-		val = ptr[(s / TMR_STEP_LEN) + 1].v;
-		val <<= TMR_STEP_LEN;
-		val |= ptr[s / TMR_STEP_LEN].v;
-		exec_vmwrite64(vmx_eoi_exit(s), val);
-
-		s += EOI_STEP_LEN;
-	}
 }
 
 /**

@@ -227,15 +227,6 @@ int32_t vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg);
 void vlapic_deliver_intr(struct acrn_vm *vm, bool level, uint32_t dest,
 		bool phys, uint32_t delmode, uint32_t vec, bool rh);
 
-/*
- * Set the trigger-mode bit associated with 'vector' to level-triggered if
- * the (dest,phys,delmode) tuple resolves to an interrupt being delivered to
- * this 'vlapic'.
- */
-void vlapic_set_tmr_one_vec(struct acrn_vlapic *vlapic, uint32_t delmode,
-		uint32_t vector, bool level);
-
-void vlapic_apicv_batch_set_tmr(struct acrn_vlapic *vlapic);
 uint32_t vlapic_get_apicid(const struct acrn_vlapic *vlapic);
 int32_t vlapic_create(struct acrn_vcpu *vcpu);
 /*
