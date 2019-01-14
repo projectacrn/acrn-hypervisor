@@ -169,6 +169,8 @@ struct ext_context {
 #define NUM_COMMON_MSRS		7U
 #define NUM_GUEST_MSRS		(NUM_WORLD_MSRS + NUM_COMMON_MSRS)
 
+#define EOI_EXIT_BITMAP_SIZE	256U
+
 struct event_injection_info {
 	uint32_t intr_info;
 	uint32_t error_code;
@@ -247,6 +249,10 @@ struct acrn_vcpu_arch {
 
 	/* List of MSRS to be stored and loaded on VM exits or VM entries */
 	struct msr_store_area msr_area;
+
+	/* EOI_EXIT_BITMAP buffer, for the bitmap update */
+	uint64_t eoi_exit_bitmap[EOI_EXIT_BITMAP_SIZE >> 6U];
+	spinlock_t lock;
 } __aligned(PAGE_SIZE);
 
 struct acrn_vm;
@@ -498,6 +504,36 @@ uint64_t vcpu_get_guest_msr(const struct acrn_vcpu *vcpu, uint32_t msr);
  */
 void vcpu_set_guest_msr(struct acrn_vcpu *vcpu, uint32_t msr, uint64_t val);
 
+/**
+ * @brief write eoi_exit_bitmap to VMCS fields
+ *
+ * @param[in] vcpu pointer to vcpu data structure
+ *
+ * @return void
+ */
+void vcpu_set_vmcs_eoi_exit(struct acrn_vcpu *vcpu);
+
+/**
+ * @brief reset eoi_exit_bitmap
+ *
+ * @param[in] vcpu pointer to vcpu data structure
+ *
+ * @return void
+ */
+
+void vcpu_reset_eoi_exit_all(struct acrn_vcpu *vcpu);
+
+/**
+ * @brief set eoi_exit_bitmap bit
+ *
+ * Set corresponding bit of vector in eoi_exit_bitmap
+ *
+ * @param[in] vcpu pointer to vcpu data structure
+ * @param[in] vector
+ *
+ * @return void 
+ */
+void vcpu_set_eoi_exit(struct acrn_vcpu *vcpu, uint32_t vector);
 /**
  * @brief set all the vcpu registers
  *

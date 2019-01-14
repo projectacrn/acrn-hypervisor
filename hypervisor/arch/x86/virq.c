@@ -409,6 +409,10 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 			vioapic_update_tmr(vcpu);
 		}
 
+		if (bitmap_test_and_clear_lock(ACRN_REQUEST_EOI_EXIT_UPDATE, pending_req_bits)) {
+			vcpu_set_vmcs_eoi_exit(vcpu);
+		}
+
 		/* handling cancelled event injection when vcpu is switched out */
 		if (arch->inject_event_pending) {
 			if ((arch->inject_info.intr_info & (EXCEPTION_ERROR_CODE_VALID << 8U)) != 0U) {
