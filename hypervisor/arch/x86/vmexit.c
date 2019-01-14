@@ -5,6 +5,7 @@
  */
 
 #include <hypervisor.h>
+#include <virtual_cr.h>
 
 /*
  * According to "SDM APPENDIX C VMX BASIC EXIT REASONS",
@@ -253,59 +254,6 @@ int32_t cpuid_vmexit_handler(struct acrn_vcpu *vcpu)
 	TRACE_2L(TRACE_VMEXIT_CPUID, (uint64_t)vcpu->vcpu_id, 0UL);
 
 	return 0;
-}
-
-int32_t cr_access_vmexit_handler(struct acrn_vcpu *vcpu)
-{
-	uint64_t reg;
-	uint32_t idx;
-	uint64_t exit_qual;
-	int32_t ret = 0;
-
-	exit_qual = vcpu->arch.exit_qualification;
-	idx = (uint32_t)vm_exit_cr_access_reg_idx(exit_qual);
-
-	ASSERT((idx <= 15U), "index out of range");
-	reg = vcpu_get_gpreg(vcpu, idx);
-
-	switch ((vm_exit_cr_access_type(exit_qual) << 4U) |
-			vm_exit_cr_access_cr_num(exit_qual)) {
-	case 0x00UL:
-		/* mov to cr0 */
-		vcpu_set_cr0(vcpu, reg);
-		break;
-	case 0x04UL:
-		/* mov to cr4 */
-		vcpu_set_cr4(vcpu, reg);
-		break;
-	case 0x08UL:
-		/* mov to cr8 */
-		/* According to SDM 6.15 "Exception and interrupt Reference":
-		 *
-		 * set reserved bit in CR8 causes GP to guest
-		 */
-		if ((reg & ~0xFUL) != 0UL) {
-			pr_dbg("Invalid cr8 write operation from guest");
-			vcpu_inject_gp(vcpu, 0U);
-			break;
-		}
-		vlapic_set_cr8(vcpu_vlapic(vcpu), reg);
-		break;
-	case 0x18UL:
-		/* mov from cr8 */
-		reg = vlapic_get_cr8(vcpu_vlapic(vcpu));
-		vcpu_set_gpreg(vcpu, idx, reg);
-		break;
-	default:
-		panic("Unhandled CR access");
-		ret = -EINVAL;
-		break;
-	}
-
-	TRACE_2L(TRACE_VMEXIT_CR_ACCESS, vm_exit_cr_access_type(exit_qual),
-			vm_exit_cr_access_cr_num(exit_qual));
-
-	return ret;
 }
 
 /*
