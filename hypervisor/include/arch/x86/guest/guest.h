@@ -39,6 +39,7 @@
 #define ACRN_REQUEST_EPT_FLUSH      5U
 #define ACRN_REQUEST_TRP_FAULT      6U
 #define ACRN_REQUEST_VPID_FLUSH    7U /* flush vpid tlb */
+#define ACRN_REQUEST_EOI_EXIT_UPDATE  8U
 
 #define E820_MAX_ENTRIES    32U
 
