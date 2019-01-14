@@ -25,6 +25,10 @@ CFLAGS += -I$(BASEDIR)/include/public
 CFLAGS += -I$(DM_OBJDIR)/include
 CFLAGS += -I$(TOOLS_OUT)
 
+ifneq (, $(DM_ASL_COMPILER))
+CFLAGS += -DASL_COMPILER=\"$(DM_ASL_COMPILER)\"
+endif
+
 GCC_MAJOR=$(shell echo __GNUC__ | $(CC) -E -x c - | tail -n 1)
 GCC_MINOR=$(shell echo __GNUC_MINOR__ | $(CC) -E -x c - | tail -n 1)
 

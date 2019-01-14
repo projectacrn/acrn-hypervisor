@@ -89,7 +89,9 @@
 
 #define	ASL_TEMPLATE	"dm.XXXXXXX"
 #define ASL_SUFFIX	".aml"
+#ifndef ASL_COMPILER
 #define ASL_COMPILER	"/usr/sbin/iasl"
+#endif
 
 uint64_t audio_nhlt_len = 0;
 uint32_t csme_sec_cap = 0;
