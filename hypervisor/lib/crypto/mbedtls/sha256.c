@@ -82,44 +82,44 @@ static inline uint32_t shr(uint32_t x, uint8_t n)
     return ((x & 0xFFFFFFFFU) >> n);
 }
 
-static inline uint32_t port(uint32_t x, uint8_t n)
+static inline uint32_t rotr(uint32_t x, uint8_t n)
 {
     return (shr(x, n) | (x << (32U - n)));
 }
 
-static inline uint32_t s0(uint32_t x)
+static inline uint32_t sigma0(uint32_t x)
 {
-    return (port(x, 7U) ^ port(x, 18U) ^  shr(x, 3U));
+    return (rotr(x, 7U) ^ rotr(x, 18U) ^  shr(x, 3U));
 }
 
-static inline uint32_t s1(uint32_t x)
+static inline uint32_t sigma1(uint32_t x)
 {
-    return (port(x, 17U) ^ port(x, 19U) ^  shr(x, 10U));
+    return (rotr(x, 17U) ^ rotr(x, 19U) ^  shr(x, 10U));
 }
 
-static inline uint32_t s2(uint32_t x)
+static inline uint32_t sigma2(uint32_t x)
 {
-    return (port(x, 2U) ^ port(x, 13U) ^ port(x, 22U));
+    return (rotr(x, 2U) ^ rotr(x, 13U) ^ rotr(x, 22U));
 }
 
-static inline uint32_t s3(uint32_t x)
+static inline uint32_t sigma3(uint32_t x)
 {
-    return (port(x, 6U) ^ port(x, 11U) ^ port(x, 25U));
+    return (rotr(x, 6U) ^ rotr(x, 11U) ^ rotr(x, 25U));
 }
 
-static inline uint32_t f0(uint32_t x, uint32_t y, uint32_t z)
+static inline uint32_t majority(uint32_t x, uint32_t y, uint32_t z)
 {
     return ((x & y) | (z & (x | y)));
 }
 
-static inline uint32_t f1(uint32_t x, uint32_t y, uint32_t z)
+static inline uint32_t choice_alg(uint32_t x, uint32_t y, uint32_t z)
 {
     return (z ^ (x & (y ^ z)));
 }
 
-static inline void r(uint32_t *w, uint32_t i)
+static inline void decomposition(uint32_t *w, uint32_t i)
 {
-    *(w + i) = s1(*(w  + i - 2U)) + (*(w + i - 7U)) + s0(*(w + i - 15U)) + (*(w + i - 16U));
+    *(w + i) = sigma1(*(w + i - (2U))) + *(w + i - (7U)) + sigma0(*(w + i - (15U))) + *(w + i - (16U));
 }
 
 /**
@@ -127,14 +127,15 @@ static inline void r(uint32_t *w, uint32_t i)
  *
  * @param[inout] d and h are NON-null pointer
  */
-static inline void p( uint32_t a, uint32_t b, uint32_t c,
+static inline void hash_computation( uint32_t a, uint32_t b, uint32_t c,
         uint32_t *d, uint32_t e, uint32_t f, uint32_t g, uint32_t *h, uint32_t x, uint32_t j)
 {
     uint32_t temp1, temp2;
 
-    temp1 = *h + s3(e) + f1(e, f, g) + j + x;
-    temp2 = s2(a) + f0(a, b, c);
-    *d += temp1; *h = temp1 + temp2;
+    temp1 = *h + sigma3(e) + choice_alg(e, f, g) + j + x;
+    temp2 = sigma2(a) + majority(a, b, c);
+    *d += temp1;
+    *h = temp1 + temp2;
 }
 
 void mbedtls_sha256_init(mbedtls_sha256_context *ctx)
@@ -204,40 +205,40 @@ int32_t mbedtls_internal_sha256_process(mbedtls_sha256_context *ctx, const uint8
     }
 
     for (i = 0U; i < 16U; i += 8U) {
-        p(a[0], a[1], a[2], &a[3], a[4], a[5], a[6], &a[7], w[i + 0U], k[i + 0U]);
-        p(a[7], a[0], a[1], &a[2], a[3], a[4], a[5], &a[6], w[i + 1U], k[i + 1U]);
-        p(a[6], a[7], a[0], &a[1], a[2], a[3], a[4], &a[5], w[i + 2U], k[i + 2U]);
-        p(a[5], a[6], a[7], &a[0], a[1], a[2], a[3], &a[4], w[i + 3U], k[i + 3U]);
-        p(a[4], a[5], a[6], &a[7], a[0], a[1], a[2], &a[3], w[i + 4U], k[i + 4U]);
-        p(a[3], a[4], a[5], &a[6], a[7], a[0], a[1], &a[2], w[i + 5U], k[i + 5U]);
-        p(a[2], a[3], a[4], &a[5], a[6], a[7], a[0], &a[1], w[i + 6U], k[i + 6U]);
-        p(a[1], a[2], a[3], &a[4], a[5], a[6], a[7], &a[0], w[i + 7U], k[i + 7U]);
+        hash_computation(a[0], a[1], a[2], &a[3], a[4], a[5], a[6], &a[7], w[i + 0U], k[i + 0U]);
+        hash_computation(a[7], a[0], a[1], &a[2], a[3], a[4], a[5], &a[6], w[i + 1U], k[i + 1U]);
+        hash_computation(a[6], a[7], a[0], &a[1], a[2], a[3], a[4], &a[5], w[i + 2U], k[i + 2U]);
+        hash_computation(a[5], a[6], a[7], &a[0], a[1], a[2], a[3], &a[4], w[i + 3U], k[i + 3U]);
+        hash_computation(a[4], a[5], a[6], &a[7], a[0], a[1], a[2], &a[3], w[i + 4U], k[i + 4U]);
+        hash_computation(a[3], a[4], a[5], &a[6], a[7], a[0], a[1], &a[2], w[i + 5U], k[i + 5U]);
+        hash_computation(a[2], a[3], a[4], &a[5], a[6], a[7], a[0], &a[1], w[i + 6U], k[i + 6U]);
+        hash_computation(a[1], a[2], a[3], &a[4], a[5], a[6], a[7], &a[0], w[i + 7U], k[i + 7U]);
     }
 
     for (i = 16U; i < 64U; i += 8U) {
-        r(w, (i + 0U));
-        p(a[0], a[1], a[2], &a[3], a[4], a[5], a[6], &a[7], w[i + 0U], k[i + 0U]);
+        decomposition(w, (i + 0U));
+        hash_computation(a[0], a[1], a[2], &a[3], a[4], a[5], a[6], &a[7], w[i + 0U], k[i + 0U]);
 
-        r(w, (i + 1U));
-        p(a[7], a[0], a[1], &a[2], a[3], a[4], a[5], &a[6], w[i + 1U], k[i + 1U]);
+        decomposition(w, (i + 1U));
+        hash_computation(a[7], a[0], a[1], &a[2], a[3], a[4], a[5], &a[6], w[i + 1U], k[i + 1U]);
 
-        r(w, (i + 2U));
-        p(a[6], a[7], a[0], &a[1], a[2], a[3], a[4], &a[5], w[i + 2U], k[i + 2U]);
+        decomposition(w, (i + 2U));
+        hash_computation(a[6], a[7], a[0], &a[1], a[2], a[3], a[4], &a[5], w[i + 2U], k[i + 2U]);
 
-        r(w, (i + 3U));
-        p(a[5], a[6], a[7], &a[0], a[1], a[2], a[3], &a[4], w[i + 3U], k[i + 3U]);
+        decomposition(w, (i + 3U));
+        hash_computation(a[5], a[6], a[7], &a[0], a[1], a[2], a[3], &a[4], w[i + 3U], k[i + 3U]);
 
-        r(w, (i + 4U));
-        p(a[4], a[5], a[6], &a[7], a[0], a[1], a[2], &a[3], w[i + 4U], k[i + 4U]);
+        decomposition(w, (i + 4U));
+        hash_computation(a[4], a[5], a[6], &a[7], a[0], a[1], a[2], &a[3], w[i + 4U], k[i + 4U]);
 
-        r(w, (i + 5U));
-        p(a[3], a[4], a[5], &a[6], a[7], a[0], a[1], &a[2], w[i + 5U], k[i + 5U]);
+        decomposition(w, (i + 5U));
+        hash_computation(a[3], a[4], a[5], &a[6], a[7], a[0], a[1], &a[2], w[i + 5U], k[i + 5U]);
 
-        r(w, (i + 6U));
-        p(a[2], a[3], a[4], &a[5], a[6], a[7], a[0], &a[1], w[i + 6U], k[i + 6U]);
+        decomposition(w, (i + 6U));
+        hash_computation(a[2], a[3], a[4], &a[5], a[6], a[7], a[0], &a[1], w[i + 6U], k[i + 6U]);
 
-        r(w, (i + 7U));
-        p(a[1], a[2], a[3], &a[4], a[5], a[6], a[7], &a[0], w[i + 7U], k[i + 7U]);
+        decomposition(w, (i + 7U));
+        hash_computation(a[1], a[2], a[3], &a[4], a[5], a[6], a[7], &a[0], w[i + 7U], k[i + 7U]);
     }
 
     for (i = 0U; i < 8U; i++) {
