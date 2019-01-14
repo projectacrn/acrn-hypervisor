@@ -108,9 +108,9 @@ else
 fi
 
 # for sd card passthrough - SDXC/MMC Host Controller 00:1b.0
-echo "8086 5aca" > /sys/bus/pci/drivers/pci-stub/new_id
-echo "0000:00:1b.0" > /sys/bus/pci/devices/0000:00:1b.0/driver/unbind
-echo "0000:00:1b.0" > /sys/bus/pci/drivers/pci-stub/bind
+#echo "8086 5aca" > /sys/bus/pci/drivers/pci-stub/new_id
+#echo "0000:00:1b.0" > /sys/bus/pci/devices/0000:00:1b.0/driver/unbind
+#echo "0000:00:1b.0" > /sys/bus/pci/drivers/pci-stub/bind
 
 #for memsize setting, total 8GB(>7.5GB) uos->6GB, 4GB(>3.5GB) uos->2GB
 memsize=`cat /proc/meminfo|head -n 1|awk '{print $2}'`
@@ -236,9 +236,9 @@ else
 fi
 
 # for sd card passthrough - SDXC/MMC Host Controller 00:1b.0
-echo "8086 5aca" > /sys/bus/pci/drivers/pci-stub/new_id
-echo "0000:00:1b.0" > /sys/bus/pci/devices/0000:00:1b.0/driver/unbind
-echo "0000:00:1b.0" > /sys/bus/pci/drivers/pci-stub/bind
+#echo "8086 5aca" > /sys/bus/pci/drivers/pci-stub/new_id
+#echo "0000:00:1b.0" > /sys/bus/pci/devices/0000:00:1b.0/driver/unbind
+#echo "0000:00:1b.0" > /sys/bus/pci/drivers/pci-stub/bind
 
 # WIFI
 echo "11ab 2b38" > /sys/bus/pci/drivers/pci-stub/new_id
@@ -438,7 +438,7 @@ for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
 		online=`cat $i/online`
 		# during boot time, cpu hotplug may be disabled by pci_device_probe during a pci module insmod
 		while [ "$online" = "1" ]; do
-			sleep 1
+			sleep 0.1
 			echo 0 > $i/online
 			online=`cat $i/online`
 		done
