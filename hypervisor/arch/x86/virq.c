@@ -405,10 +405,6 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 			flush_vpid_single(arch->vpid);
 		}
 
-		if (bitmap_test_and_clear_lock(ACRN_REQUEST_TMR_UPDATE,	pending_req_bits)) {
-			vioapic_update_tmr(vcpu);
-		}
-
 		if (bitmap_test_and_clear_lock(ACRN_REQUEST_EOI_EXIT_UPDATE, pending_req_bits)) {
 			vcpu_set_vmcs_eoi_exit(vcpu);
 		}

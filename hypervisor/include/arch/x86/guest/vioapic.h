@@ -99,7 +99,6 @@ void	vioapic_set_irqline_lock(const struct acrn_vm *vm, uint32_t irqline, uint32
  * @return None
  */
 void	vioapic_set_irqline_nolock(const struct acrn_vm *vm, uint32_t irqline, uint32_t operation);
-void	vioapic_update_tmr(struct acrn_vcpu *vcpu);
 
 uint32_t	vioapic_pincount(const struct acrn_vm *vm);
 void	vioapic_process_eoi(struct acrn_vm *vm, uint32_t vector);

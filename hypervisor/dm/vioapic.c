@@ -231,44 +231,6 @@ vioapic_update_eoi_exit(const struct acrn_vioapic *vioapic)
 	}
 }
 
-/*
- * Reset the vlapic's trigger-mode register to reflect the ioapic pin
- * configuration.
- */
-void
-vioapic_update_tmr(struct acrn_vcpu *vcpu)
-{
-	struct acrn_vioapic *vioapic;
-	struct acrn_vlapic *vlapic;
-	union ioapic_rte rte;
-	uint32_t vector, delmode;
-	bool level;
-	uint32_t pin, pincount;
-
-	vlapic = vcpu_vlapic(vcpu);
-	vioapic = vm_ioapic(vcpu->vm);
-
-	spinlock_obtain(&(vioapic->mtx));
-	pincount = vioapic_pincount(vcpu->vm);
-	for (pin = 0U; pin < pincount; pin++) {
-		rte = vioapic->rtbl[pin];
-
-		level = ((rte.full & IOAPIC_RTE_TRGRLVL) != 0UL);
-
-		/*
-		 * For a level-triggered 'pin' let the vlapic figure out if
-		 * an assertion on this 'pin' would result in an interrupt
-		 * being delivered to it. If yes, then it will modify the
-		 * TMR bit associated with this vector to level-triggered.
-		 */
-		delmode = (uint32_t)(rte.full & IOAPIC_RTE_DELMOD);
-		vector = rte.u.lo_32 & IOAPIC_RTE_LOW_INTVEC;
-		vlapic_set_tmr_one_vec(vlapic, delmode, vector, level);
-	}
-	vlapic_apicv_batch_set_tmr(vlapic);
-	spinlock_release(&(vioapic->mtx));
-}
-
 static uint32_t
 vioapic_indirect_read(const struct acrn_vioapic *vioapic, uint32_t addr)
 {
