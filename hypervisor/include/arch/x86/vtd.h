@@ -347,6 +347,11 @@ static inline uint8_t dma_iotlb_invl_addr_am(uint8_t am)
 	return (am & 0x3fU);
 }
 
+static inline uint64_t dma_iec_index(uint16_t index, uint8_t index_mask)
+{
+	return ((((uint64_t)index & 0xFFFFU) << 32U) | (((uint64_t)index_mask & 0x1FU) << 27U));
+}
+
 #define DMA_IOTLB_INVL_ADDR_IH_UNMODIFIED	(((uint64_t)1UL) << 6U)
 
 /* FECTL_REG */
@@ -472,6 +477,31 @@ struct dmar_drhd {
 struct dmar_info {
 	uint32_t drhd_count;
 	struct dmar_drhd *drhd_units;
+};
+
+union dmar_ir_entry {
+	struct {
+		uint64_t lower;
+		uint64_t upper;
+	} entry;
+	struct {
+		uint64_t present:1;
+		uint64_t fpd:1;
+		uint64_t dest_mode:1;
+		uint64_t rh:1;
+		uint64_t trigger_mode:1;
+		uint64_t delivery_mode:3;
+		uint64_t sw_bits:4;
+		uint64_t rsvd_1:3;
+		uint64_t mode:1;
+		uint64_t vector:8;
+		uint64_t rsvd_2:8;
+		uint64_t dest:32;
+		uint64_t sid:16;
+		uint64_t sq:2;
+		uint64_t svt:2;
+		uint64_t rsvd_3:44;
+	} bits __packed;
 };
 
 extern struct dmar_info *get_dmar_info(void);
@@ -635,6 +665,27 @@ void init_iommu_sos_vm_domain(struct acrn_vm *sos_vm);
  */
 bool iommu_snoop_supported(const struct acrn_vm *vm);
 
+/**
+ * @brief Assign RTE for Interrupt Remapping Table.
+ *
+ * @param[in] intr_src filled with type of interrupt source and the source
+ * @param[in] irte filled with info about interrupt deliverymode, destination and destination mode
+ * @param[in] index into Interrupt Remapping Table
+ *
+ * @retval -EINVAL if corresponding DMAR is not present
+ * @retval 0 otherwise
+ *
+ */
+int32_t dmar_assign_irte(struct intr_source intr_src, union dmar_ir_entry irte, uint16_t index);
+
+/**
+ * @brief Free RTE for Interrupt Remapping Table.
+ *
+ * @param[in] intr_src filled with type of interrupt source and the source
+ * @param[in] index into Interrupt Remapping Table
+ *
+ */
+void dmar_free_irte(struct intr_source intr_src, uint16_t index);
 /**
   * @}
   */

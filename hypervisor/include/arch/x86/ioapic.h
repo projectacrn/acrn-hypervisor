@@ -21,6 +21,7 @@ void ioapic_setup_irqs(void);
 bool ioapic_irq_is_gsi(uint32_t irq);
 uint32_t ioapic_irq_to_pin(uint32_t irq);
 int32_t init_ioapic_id_info(void);
+uint8_t ioapic_irq_to_ioapic_id(uint32_t irq);
 
 /**
  * @brief Get irq num from pin num

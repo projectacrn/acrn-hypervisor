@@ -19,7 +19,6 @@ enum acpi_dmar_type {
 	ACPI_DMAR_TYPE_RESERVED             = 5
 };
 
-
 struct acpi_table_dmar {
 	/* Common ACPI table header */
 	struct acpi_table_header  header;
