@@ -225,7 +225,6 @@ struct acrn_vm_config {
 	bool                   sworld_supported;
 #ifdef CONFIG_PARTITION_MODE
 	uint8_t			vm_id;
-	struct mptable_info	*mptable;
 	uint64_t		start_hpa;
 	uint64_t		mem_size; /* UOS memory size in hex */
 	bool			vm_vuart;
