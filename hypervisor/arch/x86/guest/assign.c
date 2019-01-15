@@ -70,11 +70,15 @@ static uint32_t calculate_logical_dest_mask(uint64_t pdmask)
 }
 
 static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *info,
-		uint32_t vector)
+		const struct ptirq_remapping_info *entry, uint32_t vector)
 {
 	uint64_t vdmask, pdmask;
 	uint32_t dest, delmode, dest_mask;
 	bool phys;
+	union dmar_ir_entry irte;
+	union irte_index ir_index;
+	int32_t ret;
+	struct intr_source intr_src;
 
 	/* get physical destination cpu mask */
 	dest = info->vmsi_addr.bits.dest_field;
@@ -89,19 +93,51 @@ static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *
 		delmode = MSI_DATA_DELMODE_LOPRI;
 	}
 
-	/* update physical delivery mode & vector */
-	info->pmsi_data = info->vmsi_data;
-	info->pmsi_data.bits.delivery_mode = delmode;
-	info->pmsi_data.bits.vector = vector;
-
 	dest_mask = calculate_logical_dest_mask(pdmask);
-	/* update physical dest mode & dest field */
-	info->pmsi_addr = info->vmsi_addr;
-	info->pmsi_addr.bits.dest_mode = MSI_ADDR_DESTMODE_LOGICAL;
-	info->pmsi_addr.bits.rh = MSI_ADDR_RH;
-	info->pmsi_addr.bits.dest_field = dest_mask;
 
-	dev_dbg(ACRN_DBG_IRQ, "MSI addr:data = 0x%llx:%x(V) -> 0x%llx:%x(P)",
+	/* Using phys_irq as index in the corresponding IOMMU */
+	irte.entry.lower = 0UL;
+	irte.entry.upper = 0UL;
+	irte.bits.vector = vector;
+	irte.bits.delivery_mode = delmode;
+	irte.bits.dest_mode = MSI_ADDR_DESTMODE_LOGICAL;
+	irte.bits.rh = MSI_ADDR_RH;
+	irte.bits.dest = dest_mask;
+
+	intr_src.is_msi = true;
+	intr_src.src.msi.value = entry->phys_sid.msi_id.bdf;
+	ret = dmar_assign_irte(intr_src, irte, (uint16_t)entry->allocated_pirq);
+
+	if (ret == 0) {
+		/*
+		 * Update the MSI interrupt source to point to the IRTE
+		 * SHV is set to 0 as ACRN disables MMC (Multi-Message Capable
+		 * for MSI devices.
+		 */
+		info->pmsi_data.full = 0U;
+		ir_index.index = (uint16_t)entry->allocated_pirq;
+
+		info->pmsi_addr.full = 0UL;
+		info->pmsi_addr.ir_bits.intr_index_high = ir_index.bits.index_high;
+		info->pmsi_addr.ir_bits.shv = 0U;
+		info->pmsi_addr.ir_bits.intr_format = 0x1U;
+		info->pmsi_addr.ir_bits.intr_index_low = ir_index.bits.index_low;
+		info->pmsi_addr.ir_bits.constant = 0xFEEU;
+	} else {
+		/* In case there is no corresponding IOMMU, for example, if the
+		 * IOMMU is ignored, pass the MSI info in Compatibility Format
+		 */
+		info->pmsi_data = info->vmsi_data;
+		info->pmsi_data.bits.delivery_mode = delmode;
+		info->pmsi_data.bits.vector = vector;
+
+		info->pmsi_addr = info->vmsi_addr;
+		info->pmsi_addr.bits.dest_field = dest_mask;
+		info->pmsi_addr.bits.rh = MSI_ADDR_RH;
+		info->pmsi_addr.bits.dest_mode = MSI_ADDR_DESTMODE_LOGICAL;
+	}
+	dev_dbg(ACRN_DBG_IRQ, "MSI %s addr:data = 0x%llx:%x(V) -> 0x%llx:%x(P)",
+		(info->pmsi_addr.ir_bits.intr_format != 0U) ? " Remappable Format" : "Compatibility Format",
 		info->vmsi_addr.full, info->vmsi_data.full,
 		info->pmsi_addr.full, info->pmsi_data.full);
 }
@@ -112,6 +148,10 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 	union ioapic_rte rte;
 	uint32_t phys_irq = entry->allocated_pirq;
 	union source_id *virt_sid = &entry->virt_sid;
+	union irte_index ir_index;
+	union dmar_ir_entry irte;
+	struct intr_source intr_src;
+	int32_t ret;
 
 	if (virt_sid->intx_id.src == PTDEV_VPIN_IOAPIC) {
 		uint64_t vdmask, pdmask;
@@ -150,15 +190,36 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 
 		/* update physical delivery mode, dest mode(logical) & vector */
 		vector = irq_to_vector(phys_irq);
-		rte.bits.dest_mode = IOAPIC_RTE_DESTMODE_LOGICAL;
-		rte.bits.delivery_mode = delmode;
-		rte.bits.vector = vector;
-
 		dest_mask = calculate_logical_dest_mask(pdmask);
-		/* update physical dest field */
-		rte.bits.dest_field = dest_mask;
 
-		dev_dbg(ACRN_DBG_IRQ, "IOAPIC RTE = 0x%x:%x(V) -> 0x%x:%x(P)",
+		irte.entry.lower = 0UL;
+		irte.entry.upper = 0UL;
+		irte.bits.vector = vector;
+		irte.bits.delivery_mode = delmode;
+		irte.bits.dest_mode = IOAPIC_RTE_DESTMODE_LOGICAL;
+		irte.bits.dest = dest_mask;
+		irte.bits.trigger_mode = rte.bits.trigger_mode;
+
+		intr_src.is_msi = false;
+		intr_src.src.ioapic_id = ioapic_irq_to_ioapic_id(phys_irq);
+		ret = dmar_assign_irte(intr_src, irte, (uint16_t)phys_irq);
+
+		if (ret == 0) {
+			ir_index.index = (uint16_t)phys_irq;
+			rte.ir_bits.vector = vector;
+			rte.ir_bits.constant = 0U;
+			rte.ir_bits.intr_index_high = ir_index.bits.index_high;
+			rte.ir_bits.intr_format = 1U;
+			rte.ir_bits.intr_index_low = ir_index.bits.index_low;
+		} else {
+			rte.bits.dest_mode = IOAPIC_RTE_DESTMODE_LOGICAL;
+			rte.bits.delivery_mode = delmode;
+			rte.bits.vector = vector;
+			rte.bits.dest_field = dest_mask;
+		}
+
+		dev_dbg(ACRN_DBG_IRQ, "IOAPIC RTE %s = 0x%x:%x(V) -> 0x%x:%x(P)",
+			(rte.ir_bits.intr_format != 0U) ? "Remappable Format" : "Compatibility Format",
 			virt_rte.u.hi_32, virt_rte.u.lo_32,
 			rte.u.hi_32, rte.u.lo_32);
 	} else {
@@ -174,7 +235,8 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 			rte.bits.trigger_mode = IOAPIC_RTE_TRGRMODE_LEVEL;
 		}
 
-		dev_dbg(ACRN_DBG_IRQ, "IOAPIC RTE = 0x%x:%x(P) -> 0x%x:%x(P)",
+		dev_dbg(ACRN_DBG_IRQ, "IOAPIC RTE %s = 0x%x:%x(P) -> 0x%x:%x(P)",
+			(rte.ir_bits.intr_format != 0U) ? "Remappable Format" : "Compatibility Format",
 			phys_rte.u.hi_32, phys_rte.u.lo_32,
 			rte.u.hi_32, rte.u.lo_32);
 	}
@@ -239,6 +301,7 @@ remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t entr
 {
 	struct ptirq_remapping_info *entry;
 	DEFINE_MSI_SID(virt_sid, virt_bdf, entry_nr);
+	struct intr_source intr_src;
 
 	entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_MSI, &virt_sid, vm);
 	if (entry != NULL) {
@@ -246,6 +309,10 @@ remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t entr
 			/*TODO: disable MSIX device when HV can in future */
 			ptirq_deactivate_entry(entry);
 		}
+
+		intr_src.is_msi = true;
+		intr_src.src.msi.value = entry->phys_sid.msi_id.bdf;
+		dmar_free_irte(intr_src, (uint16_t)entry->allocated_pirq);
 
 		dev_dbg(ACRN_DBG_IRQ,
 			"VM%d MSIX remove vector mapping vbdf-pbdf:0x%x-0x%x idx=%d",
@@ -326,6 +393,7 @@ static void remove_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, bool pi
 {
 	uint32_t phys_irq;
 	struct ptirq_remapping_info *entry;
+	struct intr_source intr_src;
 
 	if (((!pic_pin) && (virt_pin >= vioapic_pincount(vm))) || (pic_pin && (virt_pin >= vpic_pincount()))) {
 		pr_err("virtual irq pin is invalid!\n");
@@ -338,6 +406,10 @@ static void remove_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, bool pi
 				ioapic_gsi_mask_irq(phys_irq);
 
 				ptirq_deactivate_entry(entry);
+				intr_src.is_msi = false;
+				intr_src.src.ioapic_id = ioapic_irq_to_ioapic_id(phys_irq);
+
+				dmar_free_irte(intr_src, (uint16_t)phys_irq);
 				dev_dbg(ACRN_DBG_IRQ,
 					"deactive %s intx entry:ppin=%d, pirq=%d ",
 					pic_pin ? "vPIC" : "vIOAPIC",
@@ -450,8 +522,8 @@ void ptirq_softirq(uint16_t pcpu_id)
 					msi->vmsi_data.bits.vector,
 					irq_to_vector(entry->allocated_pirq));
 				dev_dbg(ACRN_DBG_PTIRQ, " vmsi_addr: 0x%llx vmsi_data: 0x%x",
-				        msi->vmsi_addr.full,
-				        msi->vmsi_data.full);
+					msi->vmsi_addr.full,
+					msi->vmsi_data.full);
 			}
 		}
 	}
@@ -543,9 +615,9 @@ int32_t ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,
 			/* build physical config MSI, update to info->pmsi_xxx */
 			if (is_lapic_pt(vm)) {
 				/* for vm with lapic-pt, keep vector from guest */
-				ptirq_build_physical_msi(vm, info, info->vmsi_data.bits.vector);
+				ptirq_build_physical_msi(vm, info, entry, (uint32_t)info->vmsi_data.bits.vector);
 			} else {
-				ptirq_build_physical_msi(vm, info, irq_to_vector(entry->allocated_pirq));
+				ptirq_build_physical_msi(vm, info, entry, irq_to_vector(entry->allocated_pirq));
 			}
 
 			entry->msi = *info;

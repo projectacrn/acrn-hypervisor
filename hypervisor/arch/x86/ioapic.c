@@ -9,6 +9,7 @@
 #include <acpi.h>
 
 #define	IOAPIC_MAX_PIN		240U
+#define IOAPIC_INVALID_ID	0xFFU
 
 /*
  * IOAPIC_MAX_LINES is architecturally defined.
@@ -368,6 +369,19 @@ ioapic_nr_pins(void *ioapic_base)
 	ASSERT(nr_pins <= IOAPIC_MAX_PIN, "IOAPIC pins exceeding 240");
 
 	return nr_pins;
+}
+
+uint8_t ioapic_irq_to_ioapic_id(uint32_t irq)
+{
+	uint8_t ret;
+
+	if (ioapic_irq_is_gsi(irq)) {
+		ret = gsi_table_data[irq].ioapic_id;
+	} else {
+		ret = IOAPIC_INVALID_ID;
+	}
+
+	return ret;
 }
 
 int32_t init_ioapic_id_info(void)

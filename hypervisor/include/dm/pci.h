@@ -174,6 +174,11 @@ static inline uint8_t pci_func(uint16_t bdf)
 	return (uint8_t)(bdf & 0x7U);
 }
 
+static inline uint8_t pci_devfn(uint16_t bdf)
+{
+	return (uint8_t)(bdf & 0xFFU);
+}
+
 uint32_t pci_pdev_read_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes);
 void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint32_t val);
 void enable_disable_pci_intx(union pci_bdf bdf, bool enable);

@@ -209,6 +209,19 @@ union ioapic_rte {
 		uint64_t rsvd_1:39;
 		uint64_t dest_field:8;
 	} bits __packed;
+	struct {
+		uint32_t vector:8;
+		uint32_t constant:3;
+		uint32_t intr_index_high:1;
+		uint32_t intr_polarity:1;
+		uint32_t remote_irr:1;
+		uint32_t trigger_mode:1;
+		uint32_t intr_mask:1;
+		uint32_t rsvd_1:15;
+		uint32_t rsvd_2:16;
+		uint32_t intr_format:1;
+		uint32_t intr_index_low:15;
+	} ir_bits __packed;
 };
 
 /******************************************************************************
