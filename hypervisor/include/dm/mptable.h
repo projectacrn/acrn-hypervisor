@@ -146,9 +146,6 @@ struct mptable_info {
 	struct proc_entry	proc_entry_array[CONFIG_MAX_PCPU_NUM];
 };
 
-extern struct mptable_info mptable_vm1;
-extern struct mptable_info mptable_vm2;
-
 int32_t mptable_build(struct acrn_vm *vm);
 
 #endif /* MPTABLE_H */
