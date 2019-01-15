@@ -1273,10 +1273,15 @@ init_pci(struct vmctx *ctx)
 					continue;
 				ops = pci_emul_finddev(fi->fi_name);
 				assert(ops != NULL);
+				write_kmsg("%s before init ---\n", fi->fi_name);
 				error = pci_emul_init(ctx, ops, bus, slot,
 				    func, fi);
-				if (error)
+				if (error) {
+					write_kmsg("%s after init failure ---\n", fi->fi_name);
 					goto pci_emul_init_fail;
+				}
+
+				write_kmsg("%s after init ---\n", fi->fi_name);
 				success_cnt++;
 			}
 		}
@@ -1430,8 +1435,9 @@ deinit_pci(struct vmctx *ctx)
 					continue;
 				ops = pci_emul_finddev(fi->fi_name);
 				assert(ops != NULL);
-				pci_emul_deinit(ctx, ops, bus, slot,
-				    func, fi);
+				write_kmsg("%s before deinit ---\n", fi->fi_name);
+				pci_emul_deinit(ctx, ops, bus, slot, func, fi);
+				write_kmsg("%s after deinit ---\n", fi->fi_name);
 			}
 		}
 	}

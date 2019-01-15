@@ -41,6 +41,7 @@
 #include "mevent.h"
 #include "irq.h"
 #include "lpc.h"
+#include "dm.h"
 
 static pthread_mutex_t pm_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct mevent *power_button;
@@ -68,12 +69,14 @@ reset_handler(struct vmctx *ctx, int vcpu, int in, int port, int bytes,
 
 		if (*eax & 0x8) {
 			fprintf(stderr, "full reset\r\n");
+			write_kmsg("full reset\n");
 			error = vm_suspend(ctx, VM_SUSPEND_FULL_RESET);
 			assert(error ==0 || errno == EALREADY);
 			mevent_notify();
 			reset_control = 0;
 		} else if (*eax & 0x4) {
 			fprintf(stderr, "system reset\r\n");
+			write_kmsg("system reset\n");
 			error = vm_suspend(ctx, VM_SUSPEND_SYSTEM_RESET);
 			assert(error ==0 || errno == EALREADY);
 			mevent_notify();

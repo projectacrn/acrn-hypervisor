@@ -409,6 +409,7 @@ vm_get_suspend_mode(void)
 int
 vm_suspend(struct vmctx *ctx, enum vm_suspend_how how)
 {
+	write_kmsg("vm_suspend mode to: %d\n", how);
 	vm_set_suspend_mode(how);
 	mevent_notify();
 
