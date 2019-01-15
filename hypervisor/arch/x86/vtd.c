@@ -408,6 +408,25 @@ static bool dmar_unit_support_aw(const struct dmar_drhd_rt *dmar_unit, uint32_t 
 	return (((1U << aw) & iommu_cap_sagaw(dmar_unit->cap)) != 0U);
 }
 
+static void dmar_enable_intr_remapping(struct dmar_drhd_rt *dmar_unit)
+{
+	uint32_t status = 0;
+
+	spinlock_obtain(&(dmar_unit->lock));
+	if ((dmar_unit->gcmd & DMA_GCMD_IRE) == 0U) {
+		dmar_unit->gcmd |= DMA_GCMD_IRE;
+		iommu_write32(dmar_unit, DMAR_GCMD_REG, dmar_unit->gcmd);
+		/* 32-bit register */
+		dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_IRES, false, &status);
+#if DBG_IOMMU
+		status = iommu_read32(dmar_unit, DMAR_GSTS_REG);
+#endif
+	}
+
+	spinlock_release(&(dmar_unit->lock));
+	dev_dbg(ACRN_DBG_IOMMU, "%s: gsr:0x%x", __func__, status);
+}
+
 static void dmar_enable_translation(struct dmar_drhd_rt *dmar_unit)
 {
 	uint32_t status = 0;
@@ -426,6 +445,21 @@ static void dmar_enable_translation(struct dmar_drhd_rt *dmar_unit)
 	spinlock_release(&(dmar_unit->lock));
 
 	dev_dbg(ACRN_DBG_IOMMU, "%s: gsr:0x%x", __func__, status);
+}
+
+static void dmar_disable_intr_remapping(struct dmar_drhd_rt *dmar_unit)
+{
+	uint32_t status;
+
+	spinlock_obtain(&(dmar_unit->lock));
+	if ((dmar_unit->gcmd & DMA_GCMD_IRE) != 0U) {
+		dmar_unit->gcmd &= ~DMA_GCMD_IRE;
+		iommu_write32(dmar_unit, DMAR_GCMD_REG, dmar_unit->gcmd);
+		/* 32-bit register */
+		dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_IRES, true, &status);
+	}
+
+	spinlock_release(&(dmar_unit->lock));
 }
 
 static void dmar_disable_translation(struct dmar_drhd_rt *dmar_unit)
@@ -999,6 +1033,7 @@ static void dmar_disable(struct dmar_drhd_rt *dmar_unit)
 	dmar_disable_qi(dmar_unit);
 	dmar_disable_translation(dmar_unit);
 	dmar_fault_event_mask(dmar_unit);
+	dmar_disable_intr_remapping(dmar_unit);
 }
 
 static void dmar_suspend(struct dmar_drhd_rt *dmar_unit)
@@ -1026,6 +1061,7 @@ static void dmar_resume(struct dmar_drhd_rt *dmar_unit)
 	}
 	dmar_prepare(dmar_unit);
 	dmar_enable(dmar_unit);
+	dmar_enable_intr_remapping(dmar_unit);
 }
 
 static int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun)
@@ -1375,6 +1411,7 @@ int32_t dmar_assign_irte(struct intr_source intr_src, union dmar_ir_entry irte, 
 		pr_err("IR table is not set for dmar unit");
 		ret = -EINVAL;
 	} else {
+		dmar_enable_intr_remapping(dmar_unit);
 		irte.bits.svt = 0x1UL;
 		irte.bits.sq = 0x0UL;
 		irte.bits.sid = sid.value;
