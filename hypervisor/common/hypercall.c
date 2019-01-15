@@ -112,15 +112,15 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 	int32_t ret;
 	struct acrn_vm *target_vm = NULL;
 	struct acrn_create_vm cv;
-	struct vm_description vm_desc;
+	struct acrn_vm_config vm_config;
 
 	(void)memset((void *)&cv, 0U, sizeof(cv));
 	if (copy_from_gpa(vm, &cv, param, sizeof(cv)) == 0) {
-		(void)memset(&vm_desc, 0U, sizeof(vm_desc));
-		vm_desc.sworld_supported = ((cv.vm_flag & (SECURE_WORLD_ENABLED)) != 0U);
-		(void)memcpy_s(&vm_desc.GUID[0], 16U, &cv.GUID[0], 16U);
+		(void)memset(&vm_config, 0U, sizeof(vm_config));
+		vm_config.sworld_supported = ((cv.vm_flag & (SECURE_WORLD_ENABLED)) != 0U);
+		(void)memcpy_s(&vm_config.GUID[0], 16U, &cv.GUID[0], 16U);
 
-		ret = create_vm(&vm_desc, &target_vm);
+		ret = create_vm(&vm_config, &target_vm);
 		if (ret != 0) {
 			dev_dbg(ACRN_DBG_HYCALL, "HCALL: Create VM failed");
 			cv.vmid = ACRN_INVALID_VMID;

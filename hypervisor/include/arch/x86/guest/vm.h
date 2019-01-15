@@ -155,7 +155,7 @@ struct acrn_vm {
 	struct acrn_vpci vpci;
 #ifdef CONFIG_PARTITION_MODE
 	struct mptable_info mptable;
-	struct vm_description	*vm_desc;
+	struct acrn_vm_config	*vm_config;
 	uint8_t vrtc_offset;
 #endif
 
@@ -172,7 +172,7 @@ struct vpci_vdev_array {
 };
 #endif
 
-struct vm_description {
+struct acrn_vm_config {
 	/* The physical CPU IDs associated with this VM - The first CPU listed
 	 * will be the VM's BSP
 	 */
@@ -268,26 +268,26 @@ void resume_vm(struct acrn_vm *vm);
 void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec);
 void start_vm(struct acrn_vm *vm);
 int32_t reset_vm(struct acrn_vm *vm);
-int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm);
+int32_t create_vm(struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm);
 int32_t prepare_vm(uint16_t pcpu_id);
 
 #ifdef CONFIG_PARTITION_MODE
-const struct vm_description_array *get_vm_desc_base(void);
+const struct vm_config_arraies *get_vm_config_base(void);
 #endif
 
 struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
 
 #ifdef CONFIG_PARTITION_MODE
-struct vm_description_array {
-	int32_t                     num_vm_desc;
-	struct vm_description   vm_desc_array[];
+struct vm_config_arraies {
+	int32_t                     num_vm_config;
+	struct acrn_vm_config   vm_config_array[];
 };
 
-struct pcpu_vm_desc_mapping {
-	struct vm_description *vm_desc_ptr;
+struct pcpu_vm_config_mapping {
+	struct acrn_vm_config *vm_config_ptr;
 	bool is_bsp;
 };
-extern const struct pcpu_vm_desc_mapping pcpu_vm_desc_map[];
+extern const struct pcpu_vm_config_mapping pcpu_vm_config_map[];
 
 void vrtc_init(struct acrn_vm *vm);
 #endif

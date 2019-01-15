@@ -82,7 +82,7 @@ int32_t mptable_build(struct acrn_vm *vm)
 	struct mpfps	*mpfp;
 	size_t		mptable_length;
 	uint16_t	i;
-	uint16_t	vcpu_num = vm->vm_desc->vm_hw_num_cores;
+	uint16_t	vcpu_num = vm->vm_config->vm_hw_num_cores;
 	struct mptable_info *mptable = &vm->mptable;
 
 	(void *)memcpy_s((void *)mptable, sizeof(struct mptable_info),
@@ -100,7 +100,7 @@ int32_t mptable_build(struct acrn_vm *vm)
 	}
 
 	for (i = 0U; i < vcpu_num; i++) {
-		uint16_t pcpu_id = *(vm->vm_desc->vm_pcpu_ids + i);
+		uint16_t pcpu_id = *(vm->vm_config->vm_pcpu_ids + i);
 
 		(void *)memcpy_s((void *)(mptable->proc_entry_array + i), sizeof(struct proc_entry),
 			(const void *)&proc_entry_template, sizeof(struct proc_entry));

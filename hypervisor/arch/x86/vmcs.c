@@ -891,7 +891,7 @@ void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 {
 	uint32_t value32;
-	if(vcpu->vm->vm_desc->lapic_pt) {
+	if(vcpu->vm->vm_config->lapic_pt) {
 		/*
 		 * Disable external interrupt exiting and irq ack
 		 * Disable posted interrupt processing
