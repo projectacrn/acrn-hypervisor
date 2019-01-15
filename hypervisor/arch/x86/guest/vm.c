@@ -59,9 +59,9 @@ struct acrn_vm *get_vm_from_vmid(uint16_t vm_id)
 }
 
 /**
- * @pre vm_desc != NULL && rtn_vm != NULL
+ * @pre vm_config != NULL && rtn_vm != NULL
  */
-int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
+int32_t create_vm(struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm)
 {
 	struct acrn_vm *vm = NULL;
 	int32_t status = 0;
@@ -69,7 +69,7 @@ int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 	bool need_cleanup = false;
 
 #ifdef CONFIG_PARTITION_MODE
-	vm_id = vm_desc->vm_id;
+	vm_id = vm_config->vm_id;
 	bitmap_set_lock(vm_id, &vmid_bitmap);
 #else
 	vm_id = alloc_vm_id();
@@ -82,7 +82,7 @@ int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 		vm->vm_id = vm_id;
 #ifdef CONFIG_PARTITION_MODE
 		/* Map Virtual Machine to its VM Description */
-		vm->vm_desc = vm_desc;
+		vm->vm_config = vm_config;
 #endif
 		vm->hw.created_vcpus = 0U;
 		vm->emul_mmio_regions = 0U;
@@ -114,8 +114,8 @@ int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 			}
 
 		} else {
-			/* populate UOS vm fields according to vm_desc */
-			vm->sworld_control.flag.supported = vm_desc->sworld_supported;
+			/* populate UOS vm fields according to vm_config */
+			vm->sworld_control.flag.supported = vm_config->sworld_supported;
 			if (vm->sworld_control.flag.supported != 0UL) {
 				struct memory_ops *ept_mem_ops = &vm->arch_vm.ept_mem_ops;
 
@@ -125,10 +125,10 @@ int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 			}
 
 			(void)memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
-				&vm_desc->GUID[0], sizeof(vm_desc->GUID));
+				&vm_config->GUID[0], sizeof(vm_config->GUID));
 #ifdef CONFIG_PARTITION_MODE
 			ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-				vm_desc->start_hpa, 0UL, vm_desc->mem_size,
+				vm_config->start_hpa, 0UL, vm_config->mem_size,
 				EPT_RWX|EPT_WB);
 			init_vm_boot_info(vm);
 #endif
@@ -163,7 +163,7 @@ int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 
 #ifdef CONFIG_PARTITION_MODE
 			/* Create virtual uart; just when uart enabled, vuart can work */
-			if (vm_desc->vm_vuart && is_dbg_uart_enabled()) {
+			if (vm_config->vm_vuart && is_dbg_uart_enabled()) {
 				vuart_init(vm);
 			}
 			vrtc_init(vm);
@@ -361,23 +361,23 @@ int32_t prepare_vm(uint16_t pcpu_id)
 	int32_t ret = 0;
 	uint16_t i;
 	struct acrn_vm *vm = NULL;
-	struct vm_description *vm_desc = NULL;
+	struct acrn_vm_config *vm_config = NULL;
 	bool is_vm_bsp;
 
-	vm_desc = pcpu_vm_desc_map[pcpu_id].vm_desc_ptr;
-	is_vm_bsp = pcpu_vm_desc_map[pcpu_id].is_bsp;
+	vm_config = pcpu_vm_config_map[pcpu_id].vm_config_ptr;
+	is_vm_bsp = pcpu_vm_config_map[pcpu_id].is_bsp;
 
 	if (is_vm_bsp) {
-		ret = create_vm(vm_desc, &vm);
+		ret = create_vm(vm_config, &vm);
 		ASSERT(ret == 0, "VM creation failed!");
 
 		mptable_build(vm);
 
-		prepare_vcpu(vm, vm_desc->vm_pcpu_ids[0]);
+		prepare_vcpu(vm, vm_config->vm_pcpu_ids[0]);
 
 		/* Prepare the AP for vm */
-		for (i = 1U; i < vm_desc->vm_hw_num_cores; i++)
-			prepare_vcpu(vm, vm_desc->vm_pcpu_ids[i]);
+		for (i = 1U; i < vm_config->vm_hw_num_cores; i++)
+			prepare_vcpu(vm, vm_config->vm_pcpu_ids[i]);
 
 		if (vm_sw_loader == NULL) {
 			vm_sw_loader = general_sw_loader;
@@ -388,7 +388,7 @@ int32_t prepare_vm(uint16_t pcpu_id)
 		/* start vm BSP automatically */
 		start_vm(vm);
 
-		pr_acrnlog("Start VM%x", vm_desc->vm_id);
+		pr_acrnlog("Start VM%x", vm_config->vm_id);
 	}
 
 	return ret;
@@ -402,16 +402,16 @@ static int32_t prepare_vm0(void)
 	int32_t err;
 	uint16_t i;
 	struct acrn_vm *vm = NULL;
-	struct vm_description vm0_desc;
+	struct acrn_vm_config vm0_config;
 
-	(void)memset((void *)&vm0_desc, 0U, sizeof(vm0_desc));
-	vm0_desc.vm_hw_num_cores = get_pcpu_nums();
+	(void)memset((void *)&vm0_config, 0U, sizeof(vm0_config));
+	vm0_config.vm_hw_num_cores = get_pcpu_nums();
 
-	err = create_vm(&vm0_desc, &vm);
+	err = create_vm(&vm0_config, &vm);
 
 	if (err == 0) {
 		/* Allocate all cpus to vm0 at the beginning */
-		for (i = 0U; i < vm0_desc.vm_hw_num_cores; i++) {
+		for (i = 0U; i < vm0_config.vm_hw_num_cores; i++) {
 			err = prepare_vcpu(vm, i);
 			if (err != 0) {
 				break;

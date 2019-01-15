@@ -797,7 +797,7 @@ static int32_t shell_to_sos_console(__unused int32_t argc, __unused char **argv)
 	struct acrn_vm *vm;
 	struct acrn_vuart *vu;
 #ifdef CONFIG_PARTITION_MODE
-	struct vm_description *vm_desc;
+	struct acrn_vm_config *vm_config;
 
 	if (argc == 2U) {
 		guest_no = strtol_deci(argv[1]);
@@ -812,8 +812,8 @@ static int32_t shell_to_sos_console(__unused int32_t argc, __unused char **argv)
 	}
 
 #ifdef CONFIG_PARTITION_MODE
-	vm_desc = vm->vm_desc;
-	if (vm_desc != NULL && vm_desc->vm_vuart == false) {
+	vm_config = vm->vm_config;
+	if (vm_config != NULL && vm_config->vm_vuart == false) {
 		snprintf(temp_str, TEMP_STR_SIZE, "No vUART configured for vm%d\n", guest_no);
 		shell_puts(temp_str);
 		return 0;

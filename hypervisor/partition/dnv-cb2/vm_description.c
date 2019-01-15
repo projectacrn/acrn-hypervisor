@@ -184,12 +184,12 @@ static struct vpci_vdev_array vpci_vdev_array2 = {
 /*******************************/
 /* User Defined VM definitions */
 /*******************************/
-struct vm_description_array vm_desc_partition = {
+struct vm_config_arraies vm_config_partition = {
 		/* Number of user virtual machines */
-		.num_vm_desc = NUM_USER_VMS,
+		.num_vm_config = NUM_USER_VMS,
 
 		/* Virtual Machine descriptions */
-		.vm_desc_array = {
+		.vm_config_array = {
 			{
 				/* Internal variable, MUSTBE init to -1 */
 				.vm_hw_num_cores = VM1_NUM_CPUS,
@@ -222,37 +222,37 @@ struct vm_description_array vm_desc_partition = {
 		}
 };
 
-const struct pcpu_vm_desc_mapping pcpu_vm_desc_map[] = {
+const struct pcpu_vm_config_mapping pcpu_vm_config_map[] = {
 	{
-		.vm_desc_ptr = &vm_desc_partition.vm_desc_array[0],
+		.vm_config_ptr = &vm_config_partition.vm_config_array[0],
 		.is_bsp = true,
 	},
 	{
-		.vm_desc_ptr = &vm_desc_partition.vm_desc_array[1],
+		.vm_config_ptr = &vm_config_partition.vm_config_array[1],
 		.is_bsp = false,
 	},
 	{
-		.vm_desc_ptr = &vm_desc_partition.vm_desc_array[0],
+		.vm_config_ptr = &vm_config_partition.vm_config_array[0],
 		.is_bsp = false,
 	},
 	{
-		.vm_desc_ptr = &vm_desc_partition.vm_desc_array[1],
+		.vm_config_ptr = &vm_config_partition.vm_config_array[1],
 		.is_bsp = false,
 	},
 	{
-		.vm_desc_ptr = &vm_desc_partition.vm_desc_array[0],
+		.vm_config_ptr = &vm_config_partition.vm_config_array[0],
 		.is_bsp = false,
 	},
 	{
-		.vm_desc_ptr = &vm_desc_partition.vm_desc_array[1],
+		.vm_config_ptr = &vm_config_partition.vm_config_array[1],
 		.is_bsp = false,
 	},
 	{
-		.vm_desc_ptr = &vm_desc_partition.vm_desc_array[0],
+		.vm_config_ptr = &vm_config_partition.vm_config_array[0],
 		.is_bsp = false,
 	},
 	{
-		.vm_desc_ptr = &vm_desc_partition.vm_desc_array[1],
+		.vm_config_ptr = &vm_config_partition.vm_config_array[1],
 		.is_bsp = true,
 	},
 };
