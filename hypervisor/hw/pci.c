@@ -401,3 +401,17 @@ void pci_pdev_foreach(pci_pdev_enumeration_cb cb_func, const void *ctx)
 	}
 }
 
+struct pci_pdev *find_pci_pdev(union pci_bdf pbdf)
+{
+	struct pci_pdev *pdev = NULL;
+	uint32_t i;
+
+	for (i = 0U; i < num_pci_pdev; i++) {
+		if (pci_pdev_array[i].bdf.value == pbdf.value) {
+			pdev = &pci_pdev_array[i];
+			break;
+		}
+	}
+
+	return pdev;
+}

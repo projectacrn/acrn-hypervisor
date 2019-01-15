@@ -50,6 +50,49 @@ static struct pci_vdev *partition_mode_find_vdev(struct acrn_vpci *vpci, union p
 	return NULL;
 }
 
+static inline bool is_valid_bar_type(const struct pci_bar *bar)
+{
+	return (bar->type == PCIBAR_MEM32) || (bar->type == PCIBAR_MEM64);
+}
+
+static inline bool is_valid_bar_size(const struct pci_bar *bar)
+{
+	return (bar->size > 0UL) && (bar->size <= 0xffffffffU);
+}
+
+/* Only MMIO is supported and bar size cannot be greater than 4GB */
+static inline bool is_valid_bar(const struct pci_bar *bar)
+{
+	return (is_valid_bar_type(bar) && is_valid_bar_size(bar));
+}
+
+static void partition_mode_pdev_init(struct pci_vdev *vdev)
+{
+	struct pci_pdev *pdev_ref;
+	uint32_t idx;
+	struct pci_bar *pbar, *vbar;
+
+	pdev_ref = find_pci_pdev(vdev->pdev.bdf);
+	if (pdev_ref != NULL) {
+		(void)memcpy_s((void *)&vdev->pdev, sizeof(struct pci_pdev), (void *)pdev_ref, sizeof(struct pci_pdev));
+
+		/* Sanity checking for vbar */
+		for (idx = 0U; idx < (uint32_t)PCI_BAR_COUNT; idx++) {
+			pbar = &vdev->pdev.bar[idx];
+			vbar = &vdev->bar[idx];
+
+			if (is_valid_bar(pbar)) {
+				vbar->size = (pbar->size < 0x1000U) ? 0x1000U : pbar->size;
+				vbar->type = PCIBAR_MEM32;
+			} else {
+				/* Mark this vbar as invalid */
+				vbar->size = 0UL;
+				vbar->type = PCIBAR_NONE;
+			}
+		}
+	}
+}
+
 static int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
 {
 	struct vpci_vdev_array *vdev_array;
@@ -63,6 +106,11 @@ static int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
 	for (i = 0; i < vdev_array->num_pci_vdev; i++) {
 		vdev = &vdev_array->vpci_vdev_list[i];
 		vdev->vpci = vpci;
+
+		/* Exclude hostbridge */
+		if (vdev->vbdf.value != 0U) {
+			partition_mode_pdev_init(vdev);
+		}
 
 		if ((vdev->ops != NULL) && (vdev->ops->init != NULL)) {
 			if (vdev->ops->init(vdev) != 0) {
@@ -98,6 +146,7 @@ static void partition_mode_cfgread(struct acrn_vpci *vpci, union pci_bdf vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val)
 {
 	struct pci_vdev *vdev = partition_mode_find_vdev(vpci, vbdf);
+
 	if ((vdev != NULL) && (vdev->ops != NULL)
 			&& (vdev->ops->cfgread != NULL)) {
 		(void)vdev->ops->cfgread(vdev, offset, bytes, val);
@@ -108,6 +157,7 @@ static void partition_mode_cfgwrite(struct acrn_vpci *vpci, union pci_bdf vbdf,
 	uint32_t offset, uint32_t bytes, uint32_t val)
 {
 	struct pci_vdev *vdev = partition_mode_find_vdev(vpci, vbdf);
+
 	if ((vdev != NULL) && (vdev->ops != NULL)
 			&& (vdev->ops->cfgwrite != NULL)) {
 		(void)vdev->ops->cfgwrite(vdev, offset, bytes, val);
