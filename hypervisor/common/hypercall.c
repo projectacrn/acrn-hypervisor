@@ -1138,7 +1138,7 @@ int32_t hcall_set_callback_vector(const struct acrn_vm *vm, uint64_t param)
 		pr_err("%s: Invalid passed vector\n");
 		ret = -EINVAL;
 	} else {
-		acrn_vhm_vector = (uint32_t)param;
+		set_vhm_vector((uint32_t)param);
 		ret = 0;
 	}
 

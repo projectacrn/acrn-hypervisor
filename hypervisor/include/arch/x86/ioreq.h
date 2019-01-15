@@ -317,6 +317,14 @@ uint32_t get_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id);
 void set_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id, uint32_t state);
 
 /**
+ * @brief Set the vector for HV callback VHM
+ *
+ * @param vector vector for HV callback VHM
+ * @return None
+ */
+void set_vhm_vector(uint32_t vector);
+
+/**
  * @}
  */
 

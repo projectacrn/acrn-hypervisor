@@ -244,7 +244,6 @@ void interrupt_init(uint16_t pcpu_id);
 
 void cancel_event_injection(struct acrn_vcpu *vcpu);
 
-extern uint32_t acrn_vhm_vector;
 extern uint64_t irq_alloc_bitmap[IRQ_ALLOC_BITMAP_SIZE];
 
 /**

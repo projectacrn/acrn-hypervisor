@@ -7,7 +7,7 @@
 
 #define ACRN_DBG_IOREQUEST	6U
 
-uint32_t acrn_vhm_vector = VECTOR_VIRT_IRQ_VHM;
+static uint32_t acrn_vhm_vector = VECTOR_VIRT_IRQ_VHM;
 
 static void fire_vhm_interrupt(void)
 {
@@ -194,4 +194,9 @@ void set_vhm_req_state(struct acrn_vm *vm, uint16_t vhm_req_id, uint32_t state)
 		atomic_store32(&vhm_req->processed, state);
 		clac();
 	}
+}
+
+void set_vhm_vector(uint32_t vector)
+{
+	acrn_vhm_vector = vector;
 }
