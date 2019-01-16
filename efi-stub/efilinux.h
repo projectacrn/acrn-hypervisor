@@ -52,6 +52,9 @@
 extern EFI_SYSTEM_TABLE *sys_table;
 extern EFI_BOOT_SERVICES *boot;
 
+extern EFI_STATUS
+emalloc_reserved_aligned(EFI_PHYSICAL_ADDRESS *addr, UINTN size, UINTN align, EFI_PHYSICAL_ADDRESS maxaddr);
+
 /**
  * allocate_pages - Allocate memory pages from the system
  * @atype: type of allocation to perform
