@@ -103,7 +103,7 @@ create_uos_images() {
     echo mount laag_image >> .cleanup    
 
     mkdir -p laag_image/clearlinux
-    ister.py -t $LAAG_JSON -V $MIRRORURL -C $MIRRORURL || 
+    ister.py -t $LAAG_JSON --format=staging -V $MIRRORURL -C $MIRRORURL || 
     {
         echo "ister create clearlinux.img failed"
         return 1
