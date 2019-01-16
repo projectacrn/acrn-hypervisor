@@ -824,7 +824,6 @@ int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8_t 
 	struct dmar_context_entry *context_entry;
 	uint64_t upper;
 	uint64_t lower = 0UL;
-	struct acrn_vm *vm;
 	int32_t ret = 0;
 
 	dmar_unit = device_to_dmaru(segment, bus, devfun);
@@ -838,10 +837,6 @@ int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8_t 
 		ret = -EINVAL;
 	} else {
 		if (iommu_ecap_sc(dmar_unit->ecap) == 0U) {
-			vm = get_vm_from_vmid(domain->vm_id);
-			if (vm != NULL) {
-				vm->snoopy_mem = false;
-			}
 			/* TODO: remove iommu_snoop from iommu_domain */
 			domain->iommu_snoop = false;
 			dev_dbg(ACRN_DBG_IOMMU, "vm=%d add %x:%x no snoop control!", domain->vm_id, bus, devfun);
@@ -1024,6 +1019,7 @@ struct iommu_domain *create_iommu_domain(uint16_t vm_id, uint64_t translation_ta
 		domain->trans_table_ptr = translation_table;
 		domain->addr_width = addr_width;
 		domain->is_tt_ept = true;
+		domain->iommu_snoop = true;
 
 		dev_dbg(ACRN_DBG_IOMMU, "create domain [%d]: vm_id = %hu, ept@0x%x",
 			vmid_to_domainid(domain->vm_id), domain->vm_id, domain->trans_table_ptr);
