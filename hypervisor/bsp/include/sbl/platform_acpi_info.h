@@ -10,6 +10,7 @@
 #ifndef PLATFORM_ACPI_INFO_H
 #define PLATFORM_ACPI_INFO_H
 
+#include <vtd.h>
 #define ACPI_INFO_VALIDATED
 
 /* pm sstate data */

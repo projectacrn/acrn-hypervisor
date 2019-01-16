@@ -7,6 +7,7 @@
 #define pr_prefix		"iommu: "
 
 #include <hypervisor.h>
+#include <vtd.h>
 
 #define DBG_IOMMU 0
 
@@ -116,15 +117,6 @@ struct dmar_context_entry {
 	uint64_t upper;
 };
 
-struct iommu_domain {
-	bool is_host;
-	bool is_tt_ept;     /* if reuse EPT of the domain */
-	uint16_t vm_id;
-	uint32_t addr_width;   /* address width of the domain */
-	uint64_t trans_table_ptr;
-	bool iommu_snoop;
-};
-
 struct context_table {
 	struct page buses[CONFIG_IOMMU_BUS_NUM];
 };
@@ -141,16 +133,15 @@ static inline uint8_t* get_ctx_table(uint32_t dmar_index, uint8_t bus_no)
 	return ctx_tables[dmar_index].buses[bus_no].contents;
 }
 
-bool iommu_snoop_supported(const struct acrn_vm *vm)
+bool iommu_snoop_supported(const struct iommu_domain *iommu)
 {
 	bool ret;
 
-	if ((vm->iommu == NULL) || (vm->iommu->iommu_snoop)) {
+	if ((iommu == NULL) || (iommu->iommu_snoop)) {
 		ret =  true;
 	} else {
 		ret = false;
 	}
-
 	return ret;
 }
 
@@ -823,7 +814,7 @@ static void dmar_resume(struct dmar_drhd_rt *dmar_unit)
 	dmar_enable(dmar_unit);
 }
 
-static int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun)
+int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_unit;
 	struct dmar_root_entry *root_table;
@@ -938,7 +929,7 @@ static int32_t add_iommu_device(struct iommu_domain *domain, uint16_t segment, u
 	return ret;
 }
 
-static int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun)
+int32_t remove_iommu_device(const struct iommu_domain *domain, uint16_t segment, uint8_t bus, uint8_t devfun)
 {
 	struct dmar_drhd_rt *dmar_unit;
 	struct dmar_root_entry *root_table;
@@ -1119,26 +1110,4 @@ int32_t init_iommu(void)
 	}
 
 	return ret;
-}
-
-void init_iommu_vm0_domain(struct acrn_vm *vm0)
-{
-	uint16_t bus;
-	uint16_t devfun;
-
-	vm0->iommu = create_iommu_domain(vm0->vm_id, hva2hpa(vm0->arch_vm.nworld_eptp), 48U);
-
-	vm0_domain = (struct iommu_domain *) vm0->iommu;
-	if (vm0_domain == NULL) {
-		pr_err("vm0 domain is NULL\n");
-	} else {
-		for (bus = 0U; bus < CONFIG_IOMMU_BUS_NUM; bus++) {
-			for (devfun = 0U; devfun <= 255U; devfun++) {
-				if (add_iommu_device(vm0_domain, 0U, (uint8_t)bus, (uint8_t)devfun) != 0) {
-					/* the panic only occurs before VM0 starts running in sharing mode */
-					panic("Failed to add %x:%x.%x to VM0 domain", bus, pci_slot(devfun), pci_func(devfun));
-				}
-			}
-		}
-	}
 }

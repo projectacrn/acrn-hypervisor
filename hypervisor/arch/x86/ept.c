@@ -5,6 +5,7 @@
  */
 
 #include <hypervisor.h>
+#include <vtd.h>
 
 #include "guest/instr_emul.h"
 

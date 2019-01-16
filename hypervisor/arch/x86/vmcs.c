@@ -8,6 +8,7 @@
 
 #include <hypervisor.h>
 #include <cpu.h>
+#include <vtd.h>
 
 static uint64_t cr0_always_on_mask;
 static uint64_t cr0_always_off_mask;
@@ -240,7 +241,7 @@ void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0)
 					 * disabled behavior
 					 */
 					exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, PAT_ALL_UC_VALUE);
-					if (!iommu_snoop_supported(vcpu->vm)) {
+					if (!iommu_snoop_supported(vcpu->vm->iommu)) {
 						cache_flush_invalidate_all();
 					}
 				} else {
