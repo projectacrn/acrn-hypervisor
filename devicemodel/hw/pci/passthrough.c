@@ -762,7 +762,7 @@ passthru_gpio_reset(int gpio_pin)
 		return -1;
 	}
 
-	usleep(100);
+	usleep(1000);
 
 	if(write(fd, "1", 1) < 0) {
 		warnx("failed to set pin %d", gpio_pin);
@@ -985,7 +985,7 @@ passthru_deinit(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 		warnx("Do gpio reset for device %x/%x/%x", bus, slot, func);
 		if (passthru_gpio_reset(ptdev->gpio_reset_pin))
 			warnx("Failed to do gpio reset for device %x/%x/%x ", bus, slot, func);
-		usleep(10000);
+		usleep(200000);
 	}
 
 	free(ptdev);
