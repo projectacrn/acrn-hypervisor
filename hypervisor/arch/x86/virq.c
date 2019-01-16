@@ -177,14 +177,18 @@ static int32_t vcpu_do_pending_extint(const struct acrn_vcpu *vcpu)
 /* SDM Vol3 -6.15, Table 6-4 - interrupt and exception classes */
 static int32_t get_excep_class(uint32_t vector)
 {
+	int32_t ret;
+
 	if ((vector == IDT_DE) || (vector == IDT_TS) || (vector == IDT_NP) ||
 		(vector == IDT_SS) || (vector == IDT_GP)) {
-		return EXCEPTION_CLASS_CONT;
+		ret = EXCEPTION_CLASS_CONT;
 	} else if ((vector == IDT_PF) || (vector == IDT_VE)) {
-		return EXCEPTION_CLASS_PF;
+		ret = EXCEPTION_CLASS_PF;
 	} else {
-		return EXCEPTION_CLASS_BENIGN;
+		ret = EXCEPTION_CLASS_BENIGN;
 	}
+
+	return ret;
 }
 
 int32_t vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector_arg, uint32_t err_code_arg)
@@ -192,44 +196,46 @@ int32_t vcpu_queue_exception(struct acrn_vcpu *vcpu, uint32_t vector_arg, uint32
 	struct acrn_vcpu_arch *arch = &vcpu->arch;
 	uint32_t vector = vector_arg;
 	uint32_t err_code = err_code_arg;
+	int32_t ret = 0;
 
 	/* VECTOR_INVALID is also greater than 32 */
 	if (vector >= 32U) {
 		pr_err("invalid exception vector %d", vector);
-		return -EINVAL;
-	}
-
-	uint32_t prev_vector =
-		arch->exception_info.exception;
-	int32_t new_class, prev_class;
-
-	/* SDM vol3 - 6.15, Table 6-5 - conditions for generating a
-	 * double fault */
-	prev_class = get_excep_class(prev_vector);
-	new_class = get_excep_class(vector);
-	if ((prev_vector == IDT_DF) && (new_class != EXCEPTION_CLASS_BENIGN)) {
-		/* triple fault happen - shutdwon mode */
-		vcpu_make_request(vcpu, ACRN_REQUEST_TRP_FAULT);
-		return 0;
-	} else if (((prev_class == EXCEPTION_CLASS_CONT) && (new_class == EXCEPTION_CLASS_CONT)) ||
-		((prev_class == EXCEPTION_CLASS_PF) && (new_class != EXCEPTION_CLASS_BENIGN))) {
-		/* generate double fault */
-		vector = IDT_DF;
-		err_code = 0U;
+		ret = -EINVAL;
 	} else {
-		/* Trigger the given exception instead of override it with
-		 * double/triple fault. */
+
+		uint32_t prev_vector = arch->exception_info.exception;
+		int32_t new_class, prev_class;
+
+		/* SDM vol3 - 6.15, Table 6-5 - conditions for generating a
+		 * double fault */
+		prev_class = get_excep_class(prev_vector);
+		new_class = get_excep_class(vector);
+		if ((prev_vector == IDT_DF) && (new_class != EXCEPTION_CLASS_BENIGN)) {
+			/* triple fault happen - shutdwon mode */
+			vcpu_make_request(vcpu, ACRN_REQUEST_TRP_FAULT);
+		} else {
+			if (((prev_class == EXCEPTION_CLASS_CONT) && (new_class == EXCEPTION_CLASS_CONT)) ||
+				((prev_class == EXCEPTION_CLASS_PF) && (new_class != EXCEPTION_CLASS_BENIGN))) {
+				/* generate double fault */
+				vector = IDT_DF;
+				err_code = 0U;
+			} else {
+				/* Trigger the given exception instead of override it with
+				 * double/triple fault. */
+			}
+
+			arch->exception_info.exception = vector;
+
+			if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U) {
+				arch->exception_info.error = err_code;
+			} else {
+				arch->exception_info.error = 0U;
+			}
+		}
 	}
 
-	arch->exception_info.exception = vector;
-
-	if ((exception_type[vector] & EXCEPTION_ERROR_CODE_VALID) != 0U) {
-		arch->exception_info.error = err_code;
-	} else {
-		arch->exception_info.error = 0U;
-	}
-
-	return 0;
+	return ret;
 }
 
 static void vcpu_inject_exception(struct acrn_vcpu *vcpu, uint32_t vector)
