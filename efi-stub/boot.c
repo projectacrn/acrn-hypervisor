@@ -363,7 +363,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	 * instead.
 	 */
 #ifdef CONFIG_RELOC
-	err = emalloc_reserved_mem(&hv_hpa, HV_RUNTIME_MEM_SIZE, MEM_ADDR_4GB);
+	err = emalloc_reserved_aligned(&hv_hpa, HV_RUNTIME_MEM_SIZE, 1 << 21, MEM_ADDR_4GB);
 #else
 	err = emalloc_fixed_addr(&hv_hpa, HV_RUNTIME_MEM_SIZE, CONFIG_HV_RAM_START);
 #endif

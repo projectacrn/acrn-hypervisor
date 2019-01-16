@@ -94,6 +94,75 @@ failed:
 }
 
 
+EFI_STATUS
+emalloc_reserved_aligned(EFI_PHYSICAL_ADDRESS *addr, UINTN size, UINTN align,
+		EFI_PHYSICAL_ADDRESS maxaddr)
+{
+	UINTN msize, mkey, desc_sz, desc_addr, pages;
+	UINT32 desc_version;
+	EFI_MEMORY_DESCRIPTOR *mbuf;
+	EFI_STATUS err;
+
+	pages = EFI_SIZE_TO_PAGES(size);
+
+	err = memory_map(&mbuf, &msize, &mkey, &desc_sz, &desc_version);
+	if (err != EFI_SUCCESS) {
+		goto fail;
+	}
+
+	/* In most time, Memory map reported by BIOS is an ordering list from low to hight.
+	 * Scan it from high to low, so that allocate memory as high as possible
+	 */
+	for (desc_addr = (UINTN)mbuf + msize - desc_sz; desc_addr >= (UINTN)mbuf; desc_addr -= desc_sz) {
+		EFI_MEMORY_DESCRIPTOR *desc;
+		EFI_PHYSICAL_ADDRESS start, end;
+
+		desc = (EFI_MEMORY_DESCRIPTOR*)desc_addr;
+		if (desc->Type != EfiConventionalMemory)
+			continue;
+
+		start = desc->PhysicalStart;
+		end = start + (desc->NumberOfPages << EFI_PAGE_SHIFT);
+
+		/* 1MB low memory is allocated only if required/requested */
+		if ((end <= MEM_ADDR_1MB) && (maxaddr > MEM_ADDR_1MB))
+			continue;
+
+		/* starting allocation from 1M above unless requested */
+		if ((start < MEM_ADDR_1MB) && (maxaddr > MEM_ADDR_1MB)) {
+			start = MEM_ADDR_1MB;
+		}
+
+		/* zero page won't be allocated */
+		if (start < 4096) {
+			start = 4096;
+		}
+		start = (start + align - 1) & ~(align - 1);
+
+		 /* Since this routine is called during booting, memory block is large
+		  * enought, the reduction of memory size for memory alignment won't
+		  * impact allocation. It is true in most cases. if it is not true, loop
+		  * again
+		  */
+		if ((start + size <= end) && (start + size <= maxaddr)) {
+			err = allocate_pages(AllocateAddress, EfiReservedMemoryType, pages, &start);
+			if (err == EFI_SUCCESS) {
+				*addr = start;
+				break;
+			}
+		}
+
+	}
+	if (desc_addr < (UINTN)mbuf) {
+		err = EFI_OUT_OF_RESOURCES;
+	}
+
+	free_pool(mbuf);
+
+fail:
+	return err;
+}
+
 EFI_STATUS dump_e820(void)
 {
 	UINTN map_size, map_key, desc_size;
