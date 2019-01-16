@@ -165,7 +165,7 @@ all: $(DM_OBJDIR)/$(PROGRAM)
 	@echo -n ""
 
 $(VMCFG_CONFIG_H):
-	make -C $(BASEDIR)/vmcfg $@ BASEDIR=$(BASEDIR) DM_OBJDIR=$(DM_OBJDIR)
+	$(MAKE) -C $(BASEDIR)/vmcfg $@ BASEDIR=$(BASEDIR) DM_OBJDIR=$(DM_OBJDIR)
 
 $(DM_OBJDIR)/$(PROGRAM): $(OBJS)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LIBS)
@@ -228,4 +228,4 @@ install-bios: $(BIOS_BIN)
 	install -D --mode=0664 -t $(DESTDIR)/usr/share/acrn/bios $^
 
 install-vmcfg:
-	make -C $(BASEDIR)/vmcfg install DESTDIR=$(DESTDIR) BASEDIR=$(BASEDIR)
+	$(MAKE) -C $(BASEDIR)/vmcfg install DESTDIR=$(DESTDIR) BASEDIR=$(BASEDIR)
