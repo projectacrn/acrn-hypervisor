@@ -11,7 +11,7 @@
 
 #ifdef CONFIG_EFI_STUB
 
-static struct efi_context *efi_ctx = NULL;
+static struct efi_context efi_ctx;
 static struct lapic_regs uefi_lapic_regs;
 static int32_t efi_initialized;
 
@@ -28,14 +28,9 @@ static void efi_init(void)
 			pr_err("no multiboot drivers for uefi found");
 		} else {
 
-			efi_ctx = (struct efi_context *)hpa2hva((uint64_t)mbi->mi_drives_addr);
-			if (efi_ctx == NULL) {
-				pr_err("no uefi context found");
-			} else {
-
-				save_lapic(&uefi_lapic_regs);
-				efi_initialized = 1;
-			}
+			memcpy_s(&efi_ctx, sizeof(struct efi_context), hpa2hva((uint64_t)mbi->mi_drives_addr), sizeof(struct efi_context));
+			save_lapic(&uefi_lapic_regs);
+			efi_initialized = 1;
 		}
 	}
 }
@@ -46,17 +41,17 @@ void *get_rsdp_from_uefi(void)
 		efi_init();
 	}
 
-	return hpa2hva((uint64_t)efi_ctx->rsdp);
+	return hpa2hva((uint64_t)efi_ctx.rsdp);
 }
 
 void *get_ap_trampoline_buf(void)
 {
-	return efi_ctx->ap_trampoline_buf;
+	return efi_ctx.ap_trampoline_buf;
 }
 
 const struct efi_context *get_efi_ctx(void)
 {
-	return efi_ctx;
+	return (const struct efi_context *)&efi_ctx;
 }
 
 const struct lapic_regs *get_efi_lapic_regs(void)
