@@ -90,14 +90,14 @@ An example of the configuration file ``uos.json``:
                              { "disk" : "clearlinux.img", "partition" : 2, "type" : "ext4" } ],
        "PartitionMountPoints" : [ { "disk" : "clearlinux.img", "partition" : 1, "mount" : "/boot" },
            		          { "disk" : "clearlinux.img", "partition" : 2, "mount" : "/" } ],
-       "Version": 27050,
+       "Version": 27230,
        "Bundles": ["kernel-iot-lts2018", "openssh-server", "software-defined-cockpit", "os-core", "os-core-update"]
    }
 
 .. note::
    To generate the image with a specified version, please modify
-   the "Version" argument, ``"Version": 26000`` instead
-   of ``"Version": 27050`` for example.
+   the "Version" argument, ``"Version": 2****`` instead
+   of ``"Version": 27230`` for example.
 
 Clone the source code of ``acrn-hypervisor`` for building and use 
 ``v0.5`` release for example:
@@ -118,7 +118,7 @@ Build SOS and LaaG image:
 
    $ sudo -s 
    # ./acrn-hypervisor/devicemodel/samples/up2/create-up2-images.sh --images-type all \
-      --clearlinux-version 27050 --laag-json uos.json --acrn-code-path /path/to/acrn-hypervisor/
+      --clearlinux-version 27230 --laag-json uos.json --acrn-code-path /path/to/acrn-hypervisor/
 
 .. note::
    You must have root privileges to run ``create-up2-images.sh``.
