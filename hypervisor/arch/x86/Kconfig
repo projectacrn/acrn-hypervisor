@@ -249,9 +249,9 @@ config LOW_RAM_SIZE
 	  0x10000, starting from address 0x0.
 
 config HV_RAM_START
-	hex "Start physical address of the RAM region used by the hypervisor"
+	hex "2M-aligned Start physical address of the RAM region used by the hypervisor"
 	default 0x6e000000 if PLATFORM_SBL
-	default 0x00100000 if PLATFORM_UEFI
+	default 0x00400000 if PLATFORM_UEFI
 	help
 	  A 64-bit integer indicating the base physical address where the
 	  hypervisor should be loaded. If RELOC is disabled, the bootloader
@@ -260,6 +260,8 @@ config HV_RAM_START
 	  hypervisor may relocate its symbols to where it is placed,
 	  and thus the bootloader might not place the hypervisor at this
 	  specific address.
+	  Note that the addr demands 2M aligned, otherwise memory corruption
+          may occur.
 
 config HV_RAM_SIZE
 	hex "Size of the RAM region used by the hypervisor"
