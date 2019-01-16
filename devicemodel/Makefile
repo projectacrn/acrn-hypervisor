@@ -208,7 +208,7 @@ $(DM_OBJDIR)/%.o: %.c $(HEADERS)
 	[ ! -e $@ ] && mkdir -p $(dir $@); \
 	$(CC) $(CFLAGS) -c $< -o $@
 
-install: $(DM_OBJDIR)/$(PROGRAM) install-samples-nuc install-samples-mrb install-bios install-vmcfg
+install: $(DM_OBJDIR)/$(PROGRAM) install-samples-nuc install-samples-mrb install-bios install-vmcfg install-samples-up2
 	install -D --mode=0755 $(DM_OBJDIR)/$(PROGRAM) $(DESTDIR)/usr/bin/$(PROGRAM)
 
 install-samples-up2: $(SAMPLES_UP2)
