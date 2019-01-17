@@ -22,6 +22,8 @@ enum vm_privilege_level {
 
 #define INVALID_VM_ID 0xffffU
 
+#define PLUG_CPU(n)		(1U << n)
+
 struct vm_hw_info {
 	/* vcpu array of this VM */
 	struct acrn_vcpu vcpu_array[CONFIG_MAX_VCPUS_PER_VM];
@@ -172,12 +174,52 @@ struct vpci_vdev_array {
 };
 #endif
 
+#define MAX_BOOTARGS_SIZE	1024U
+#define MAX_CONFIG_NAME_SIZE	32U
+
+enum acrn_vm_type {
+	UNDEFINED_VM = 0,
+	PRE_LAUNCHED_VM,
+	SOS_VM,
+	NORMAL_VM,
+	/* PRIVILEGE_VM, */
+};
+
+struct acrn_vm_mem_config {
+	uint64_t start_hpa;	/* the start HPA of VM memory configuration, for pre-launched VMs only */
+	uint64_t size;		/* VM memory size configuration */
+};
+
+struct acrn_vm_os_config {
+	char name[MAX_CONFIG_NAME_SIZE];		/* OS name, useful for debug */
+	char bootargs[MAX_BOOTARGS_SIZE];		/* boot args/cmdline */
+} __aligned(8);
+
+struct acrn_vm_pci_ptdev_config {
+	union pci_bdf vbdf;				/* virtual BDF of PCI PT device */
+	union pci_bdf pbdf;				/* physical BDF of PCI PT device */
+} __aligned(8);
+
 struct acrn_vm_config {
+	enum acrn_vm_type type;				/* specify the type of VM */
+	char name[MAX_CONFIG_NAME_SIZE];		/* VM name identifier, useful for debug. */
+	uint8_t GUID[16];				/* GUID of the VM */
+	uint64_t pcpu_bitmap;				/* from pcpu bitmap, we could know VM core number */
+	uint64_t guest_flags;				/* VM flags that we want to configure for guest
+							 * Now we have two flags:
+							 *	SECURE_WORLD_ENABLED
+							 *	LAPIC_PASSTHROUGH
+							 * We could add more guest flags in future;
+							 */
+	struct acrn_vm_mem_config memory;		/* memory configuration of VM */
+	uint16_t pci_ptdev_num;				/* indicate how many PCI PT devices in VM */
+	struct acrn_vm_pci_ptdev_config *pci_ptdevs;	/* point to PCI PT devices BDF list */
+	struct acrn_vm_os_config os_config;		/* OS information the VM */
+
 	/* The physical CPU IDs associated with this VM - The first CPU listed
 	 * will be the VM's BSP
 	 */
 	uint16_t               *vm_pcpu_ids;
-	uint8_t          GUID[16]; /* GUID of the vm will be created */
 	uint16_t               vm_hw_num_cores;   /* Number of virtual cores */
 	/* Whether secure world is supported for current VM. */
 	bool                   sworld_supported;
@@ -191,7 +233,8 @@ struct acrn_vm_config {
 	struct vpci_vdev_array  *vpci_vdev_array;
 	bool	lapic_pt;
 #endif
-};
+
+} __aligned(8);
 
 static inline bool is_vm0(const struct acrn_vm *vm)
 {
@@ -270,6 +313,8 @@ void start_vm(struct acrn_vm *vm);
 int32_t reset_vm(struct acrn_vm *vm);
 int32_t create_vm(struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm);
 int32_t prepare_vm(uint16_t pcpu_id);
+
+extern struct acrn_vm_config vm_configs[];
 
 #ifdef CONFIG_PARTITION_MODE
 const struct vm_config_arraies *get_vm_config_base(void);
