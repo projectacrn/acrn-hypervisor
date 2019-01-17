@@ -417,8 +417,7 @@ done
 if [ ! -f "/sys/class/gpio/gpio460" ]; then
   echo "export gpio460"
   echo 460 > /sys/class/gpio/export
-  echo out > /sys/class/gpio/gpio460/direction
-  echo 1 > /sys/class/gpio/gpio460/value
+  echo 'high' > /sys/class/gpio/gpio460/direction
 fi
 
 if [ ! -b "/dev/mmcblk1p3" ]; then
