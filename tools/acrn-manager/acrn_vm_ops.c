@@ -76,7 +76,7 @@ static int query_state(const char *name)
 
 	ret = send_msg(name, &req, &ack);
 	if (ret) {
-		pdebug();
+		printf("%s: Error to quary %s state, err: %d\n", __func__, name, ret);
 		return ret;
 	}
 
@@ -133,13 +133,13 @@ static void _scan_alive_vm(void)
 
 	ret = check_dir(ACRN_DM_SOCK_PATH);
 	if (ret) {
-		pdebug();
+		printf("%s: Failed to check directory %s, err: %d\n", __func__, ACRN_DM_SOCK_PATH, ret);
 		return;
 	}
 
 	dir = opendir(ACRN_DM_SOCK_PATH);
 	if (!dir) {
-		pdebug();
+		printf("%s: Failed to open directory %s\n", __func__, ACRN_DM_SOCK_PATH);
 		return;
 	}
 
@@ -150,9 +150,9 @@ static void _scan_alive_vm(void)
 			continue;
 
 		if (name[sizeof(name) - 1]) {
-			pdebug();
 			/* truncate name and go a head */
 			name[sizeof(name) - 1] = 0;
+			printf("%s: Truncate name as %s\n", __func__, name);
 		}
 
 		vm = vmmngr_find(name);
@@ -160,7 +160,7 @@ static void _scan_alive_vm(void)
 		if (!vm) {
 			vm = calloc(1, sizeof(*vm));
 			if (!vm) {
-				pdebug();
+				printf("%s: Failed to alloc mem for %s\n", __func__, name);
 				continue;
 			}
 			memcpy(vm->name, name, sizeof(vm->name) - 1);
@@ -207,9 +207,9 @@ static inline int _get_vmname_suffix(const char *src,
 
 	strncpy(name, src, p - src);
 	if (p - src >= max_len_name) {
-		pdebug();
 		/* truncate name and go a head */
 		name[max_len_name - 1] = '\0';
+		printf("%s: Truncate name as %s\n", __func__, name);
 	}
 
 	strncpy(suffix, p + 1, max_len_suffix);
@@ -230,26 +230,25 @@ static void _scan_added_vm(void)
 
 	ret = check_dir(ACRN_CONF_PATH);
 	if (ret) {
-		pdebug();
+		printf("%s: Failed to check directory %s, err: %d\n", __func__, ACRN_CONF_PATH, ret);
 		return;
 	}
 
 	ret = check_dir(ACRN_CONF_PATH_ADD);
 	if (ret) {
-		pdebug();
+		printf("%s: Failed to check directory %s, err: %d\n", __func__, ACRN_CONF_PATH_ADD, ret);
 		return;
 	}
 
 	dir = opendir(ACRN_CONF_PATH_ADD);
 	if (!dir) {
-		pdebug();
+		printf("%s: Failed to open directory %s\n", __func__, ACRN_CONF_PATH_ADD);
 		return;
 	}
 
 	while ((entry = readdir(dir))) {
 		ret = strnlen(entry->d_name, sizeof(entry->d_name));
 		if (ret >= sizeof(name)) {
-			pdebug();
 			continue;
 		}
 
@@ -265,7 +264,7 @@ static void _scan_added_vm(void)
 		if (!vm) {
 			vm = calloc(1, sizeof(*vm));
 			if (!vm) {
-				pdebug();
+				printf("%s: Failed to alloc mem for %s\n", __func__, name);
 				continue;
 			}
 			memcpy(vm->name, name, sizeof(vm->name) - 1);
@@ -287,7 +286,7 @@ static void _remove_dead_vm(void)
 		if (vm->update == update_count)
 			continue;
 		LIST_REMOVE(vm, list);
-		pdebug();
+		printf("%s: Removed dead %s\n", __func__, vm->name);
 		free(vm);
 	}
 };

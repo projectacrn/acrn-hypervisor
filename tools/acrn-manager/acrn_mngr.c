@@ -34,7 +34,6 @@ static int check_dir(const char *path)
 	if (S_ISDIR(st.st_mode))
 		return 0;
 
-	pdebug();
 	return -1;
 }
 
@@ -95,13 +94,13 @@ static struct mngr_client *mngr_client_new(struct mngr_fd *mfd)
 
 	client = calloc(1, sizeof(*client));
 	if (!client) {
-		pdebug();
+		printf("%s: Failed to alloc mem for client\n", __func__);
 		goto alloc_client;
 	}
 
 	client->buf = calloc(1, CLIENT_BUF_LEN);
 	if (!client->buf) {
-		pdebug();
+		printf("%s: Failed to alloc mem for client buf\n", __func__);
 		goto alloc_buf;
 	}
 
@@ -110,7 +109,7 @@ static struct mngr_client *mngr_client_new(struct mngr_fd *mfd)
 	    accept(mfd->fd, (struct sockaddr *)&client->addr,
 		   &client->addr_len);
 	if (client->fd < 0) {
-		pdebug();
+		printf("%s: Failed to accept from fd %d, err: %s\n", __func__, mfd->fd, strerror(errno));
 		goto accept_con;
 	}
 
@@ -190,7 +189,7 @@ static int server_parse_buf(struct mngr_fd *mfd, struct mngr_client *client)
 
 		/* do we out-of-boundary? */
 		if (p + sizeof(struct mngr_msg) > client->len) {
-			pdebug();
+			printf("%s: Out of boundary, client len: %d, p: %lu\n", __func__, client->len, p);
 			break;
 		}
 
@@ -318,7 +317,7 @@ static int create_new_server(const char *name)
 	unlink(path);
 	mfd->fd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (mfd->fd < 0) {
-		pdebug();
+		printf("%s: Failed to call socket, err: %s\n", __func__, strerror(errno));
 		ret = mfd->fd;
 		goto sock_err;
 	}
@@ -327,7 +326,7 @@ static int create_new_server(const char *name)
 
 	ret = bind(mfd->fd, (struct sockaddr *)&mfd->addr, sizeof(mfd->addr));
 	if (ret < 0) {
-		pdebug();
+		printf("%s: Failed to bind fd %d, err: %s\n", __func__, mfd->fd, strerror(errno));
 		goto bind_err;
 	}
 	listen(mfd->fd, 1);
@@ -337,7 +336,7 @@ static int create_new_server(const char *name)
 	ret =
 	    pthread_create(&mfd->listen_thread, NULL, server_listen_func, mfd);
 	if (ret < 0) {
-		pdebug();
+		printf("%s: Failed to create listen_thread, err: %s\n", __func__, strerror(errno));
 		goto listen_err;
 	}
 	pthread_setname_np(mfd->listen_thread, "mngr_listen");
@@ -346,7 +345,7 @@ static int create_new_server(const char *name)
 	mfd->polling = 1;
 	ret = pthread_create(&mfd->poll_thread, NULL, server_poll_func, mfd);
 	if (ret < 0) {
-		pdebug();
+		printf("%s: Failed to create poll_thread, err: %s\n", __func__, strerror(errno));
 		goto poll_err;
 	}
 	pthread_setname_np(mfd->poll_thread, "mngr_pull");
@@ -415,7 +414,7 @@ static int connect_to_server(const char *name)
 
 	dir = opendir("/run/acrn/mngr");
 	if (!dir) {
-		pdebug();
+		printf("%s: Failed to open directory /run/acrn/mngr\n", __func__);
 		return -1;
 	}
 
@@ -433,7 +432,7 @@ static int connect_to_server(const char *name)
 	}
 
 	if (!s_name) {
-		pdebug();
+		printf("%s: Can't find %s\n", __func__, name);
 		closedir(dir);
 		return -1;
 	}
@@ -495,7 +494,7 @@ int mngr_open_un(const char *name, int flags)
 	check_dir("/run/acrn/mngr");
 
 	if (!name) {
-		pdebug();
+		printf("%s: No socket name configured\n", __func__);
 		return -1;
 	}
 
@@ -505,7 +504,7 @@ int mngr_open_un(const char *name, int flags)
 	case MNGR_CLIENT:
 		return connect_to_server(name);
 	default:
-		pdebug();
+		printf("%s: Unknow flag %d\n", __func__, flags);
 	}
 
 	return -1;
@@ -517,7 +516,7 @@ void mngr_close(int val)
 
 	mfd = desc_to_mfd(val);
 	if (!mfd) {
-		pdebug();
+		printf("%s: No mngr_fd binded to fd %d\n", __func__, val);
 		return;
 	}
 
@@ -533,7 +532,7 @@ void mngr_close(int val)
 		close_client(mfd);
 		break;
 	default:
-		pdebug();
+		printf("%s: Unknown mfd type %d\n", __func__, mfd->type);
 	}
 
 }
@@ -547,13 +546,13 @@ int mngr_add_handler(int server_fd, unsigned id,
 
 	mfd = desc_to_mfd(server_fd);
 	if (!mfd) {
-		pdebug();
+		printf("%s: No mngr_fd binded to fd %d\n", __func__, server_fd);
 		return -1;
 	}
 
 	handler = calloc(1, sizeof(*handler));
 	if (!handler) {
-		pdebug();
+		printf("%s: Failed to alloc mem for handler\n", __func__);
 		return -1;
 	}
 

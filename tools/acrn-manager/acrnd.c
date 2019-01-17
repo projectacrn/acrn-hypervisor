@@ -56,7 +56,7 @@ int acrnd_add_work(void (*func) (struct work_arg *arg),
 	time_t current;
 
 	if (!func) {
-		pdebug();
+		printf("%s: No worker function configured\n", __func__);
 		return -1;
 	}
 
@@ -124,14 +124,14 @@ void acrnd_vm_timer_func(struct work_arg *arg)
 	struct vmmngr_struct *vm;
 
 	if (!arg) {
-		pdebug();
+		printf("%s: No work argument configured\n", __func__);
 		return;
 	}
 
 	vmmngr_update();
 	vm = vmmngr_find(arg->name);
 	if (!vm) {
-		pdebug();
+		printf("%s: Can't find %s\n", __func__, arg->name);
 		return;
 	}
 
@@ -143,7 +143,7 @@ void acrnd_vm_timer_func(struct work_arg *arg)
 		resume_vm(arg->name, CBC_WK_RSN_RTC);
 		break;
 	default:
-		pdebug();
+		printf("%s: Unknown vm state %ld\n", __func__, vm->state);
 	}
 }
 
@@ -259,7 +259,7 @@ static int active_all_vms(void)
 			ret += resume_vm(vm->name, reason);
 			break;
 		default:
-			pdebug();
+			printf("%s: Unkown vm state %ld\n", __func__, vm->state);
 		}
 	}
 
@@ -343,7 +343,7 @@ static void handle_timer_req(struct mngr_msg *msg, int client_fd, void *param)
 	vmmngr_update();
 	vm = vmmngr_find(msg->data.acrnd_timer.name);
 	if (!vm) {
-		pdebug();
+		printf("%s: Can't find %s\n", __func__, msg->data.acrnd_timer.name);
 		goto reply_ack;
 	}
 
@@ -354,7 +354,7 @@ static void handle_timer_req(struct mngr_msg *msg, int client_fd, void *param)
 	}
 
 	if (acrnd_add_work(acrnd_vm_timer_func, &arg, msg->data.acrnd_timer.t)) {
-		pdebug();
+		printf("%s: Failed to add acrnd_vm_timer_func\n", __func__);
 		goto reply_ack;
 	}
 
@@ -673,12 +673,12 @@ int main(int argc, char *argv[])
 	/* create listening thread */
 	acrnd_fd = mngr_open_un(ACRND_NAME, MNGR_SERVER);
 	if (acrnd_fd < 0) {
-		pdebug();
+		printf("%s: Failed to open %s, err: %s\n", __func__, ACRND_NAME, strerror(errno));
 		return -1;
 	}
 
 	if (init_vm()) {
-		pdebug();
+		printf("%s: Failed to init_vm\n", __func__);
 		return -1;
 	}
 
