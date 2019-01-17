@@ -87,6 +87,18 @@ static inline bool timer_expired(const struct hv_timer *timer)
 }
 
 /**
+ * @brief Check a timer whether in timer list.
+ *
+ * @param[in] timer Pointer to timer.
+ *
+ * @retval true if the timer is in timer list, false otherwise.
+ */
+static inline bool timer_is_started(const struct hv_timer *timer)
+{
+	return (!list_empty(&timer->node));
+}
+
+/**
  * @brief Add a timer.
  *
  * @param[in] timer Pointer to timer.
