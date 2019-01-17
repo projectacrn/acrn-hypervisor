@@ -1698,6 +1698,35 @@ static bool segment_override(uint8_t x, enum cpu_reg_name *seg)
 	return override;
 }
 
+static void decode_op_and_addr_size(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode, bool cs_d)
+{
+	/*
+	 * Section "Operand-Size And Address-Size Attributes", Intel SDM, Vol 1
+	 */
+	if (cpu_mode == CPU_MODE_64BIT) {
+		/*
+		 * Default address size is 64-bits and default operand size
+		 * is 32-bits.
+		 */
+		vie->addrsize = ((vie->addrsize_override != 0U) ? 4U : 8U);
+		if (vie->rex_w != 0U) {
+			vie->opsize = 8U;
+		} else if (vie->opsize_override != 0U) {
+			vie->opsize = 2U;
+		} else {
+			vie->opsize = 4U;
+		}
+	} else if (cs_d) {
+		/* Default address and operand sizes are 32-bits */
+		vie->addrsize = ((vie->addrsize_override != 0U) ? 2U : 4U);
+		vie->opsize = ((vie->opsize_override != 0U) ? 2U : 4U);
+	} else {
+		/* Default address and operand sizes are 16-bits */
+		vie->addrsize = ((vie->addrsize_override != 0U) ? 4U : 2U);
+		vie->opsize = ((vie->opsize_override != 0U) ? 4U : 2U);
+	}
+
+}
 static int32_t decode_prefixes(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_mode, bool cs_d)
 {
 	uint8_t x, i;
@@ -1743,32 +1772,7 @@ static int32_t decode_prefixes(struct instr_emul_vie *vie, enum vm_cpu_mode cpu_
 			vie->rex_b = (x >> 0x0U) & 1U;
 			vie_advance(vie);
 		}
-
-		/*
-		 * Section "Operand-Size And Address-Size Attributes", Intel SDM, Vol 1
-		 */
-		if (cpu_mode == CPU_MODE_64BIT) {
-			/*
-			 * Default address size is 64-bits and default operand size
-			 * is 32-bits.
-			 */
-			vie->addrsize = (vie->addrsize_override != 0U)? 4U : 8U;
-			if (vie->rex_w != 0U) {
-				vie->opsize = 8U;
-			} else if (vie->opsize_override != 0U) {
-				vie->opsize = 2U;
-			} else {
-				vie->opsize = 4U;
-			}
-		} else if (cs_d) {
-			/* Default address and operand sizes are 32-bits */
-			vie->addrsize = vie->addrsize_override != 0U ? 2U : 4U;
-			vie->opsize = vie->opsize_override != 0U ? 2U : 4U;
-		} else {
-			/* Default address and operand sizes are 16-bits */
-			vie->addrsize = vie->addrsize_override != 0U ? 4U : 2U;
-			vie->opsize = vie->opsize_override != 0U ? 4U : 2U;
-		}
+		decode_op_and_addr_size(vie, cpu_mode, cs_d);
 	}
 
 	return ret;
