@@ -109,6 +109,7 @@ INCLUDE_PATH += include/dm
 INCLUDE_PATH += bsp/include
 INCLUDE_PATH += boot/include
 INCLUDE_PATH += $(HV_OBJDIR)/include
+INCLUDE_PATH += arch/x86/configs/$(CONFIG_BOARD)
 
 CC ?= gcc
 AS ?= as
@@ -129,6 +130,13 @@ C_SRCS += boot/reloc.c
 
 # initilization component
 C_SRCS += arch/x86/init.c
+
+# configuration component
+ifeq ($(CONFIG_SHARING_MODE),y)
+C_SRCS += arch/x86/configs/sharing_config.c
+else ifeq ($(CONFIG_PARTITION_MODE),y)
+C_SRCS += arch/x86/configs/partition_config.c
+endif
 
 C_SRCS += boot/acpi.c
 C_SRCS += boot/dmar_parse.c
