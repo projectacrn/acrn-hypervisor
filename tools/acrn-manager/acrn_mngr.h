@@ -6,12 +6,6 @@
 #ifndef ACRN_MANAGER_H
 #define ACRN_MANAGER_H
 
-#ifdef MNGR_DEBUG
-#define pdebug()        fprintf(stderr, "%s %d\n", __FUNCTION__, __LINE__)
-#else
-#define pdebug()        while(0){}
-#endif
-
 #include <stdlib.h>
 
 #define MNGR_MSG_MAGIC   0x67736d206d6d76	/* that is char[8] "mngr msg", on X86 */
