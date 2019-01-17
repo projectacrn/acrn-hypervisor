@@ -12,7 +12,6 @@ static struct vpci_vdev_array vpci_vdev_array1 = {
 	.vpci_vdev_list = {
 		{/*vdev 0: hostbridge */
 			.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x0U},
-			.ops = &pci_ops_vdev_hostbridge,
 			.pdev = {
 				.bdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x0U},
 			}
@@ -20,7 +19,6 @@ static struct vpci_vdev_array vpci_vdev_array1 = {
 
 		{/*vdev 1: Ethernet*/
 			.vbdf.bits = {.b = 0x00U, .d = 0x01U, .f = 0x0U},
-			.ops = &pci_ops_vdev_pt,
 			.pdev = {
 				.bdf.bits = {.b = 0x03U, .d = 0x00U, .f = 0x1U},
 			}
@@ -28,7 +26,6 @@ static struct vpci_vdev_array vpci_vdev_array1 = {
 
 		{/*vdev 2: USB*/
 			.vbdf.bits = {.b = 0x00U, .d = 0x02U, .f = 0x0U},
-			.ops = &pci_ops_vdev_pt,
 
 			.pdev = {
 				.bdf.bits = {.b = 0x00U, .d = 0x15U, .f = 0x0U},
@@ -43,7 +40,6 @@ static struct vpci_vdev_array vpci_vdev_array2 = {
 	.vpci_vdev_list = {
 		{/*vdev 0: hostbridge*/
 			.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x0U},
-			.ops = &pci_ops_vdev_hostbridge,
 			.pdev = {
 				.bdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x0U},
 			}
@@ -51,7 +47,6 @@ static struct vpci_vdev_array vpci_vdev_array2 = {
 
 		{/*vdev 1: SATA controller*/
 			.vbdf.bits = {.b = 0x00U, .d = 0x05U, .f = 0x0U},
-			.ops = &pci_ops_vdev_pt,
 			.pdev = {
 				.bdf.bits = {.b = 0x00U, .d = 0x14U, .f = 0x0U},
 			}
@@ -59,7 +54,6 @@ static struct vpci_vdev_array vpci_vdev_array2 = {
 
 		{/*vdev 2: Ethernet*/
 			.vbdf.bits = {.b = 0x00U, .d = 0x06U, .f = 0x0U},
-			.ops = &pci_ops_vdev_pt,
 
 			.pdev = {
 				.bdf.bits = {.b = 0x03U, .d = 0x00U, .f = 0x0U},
