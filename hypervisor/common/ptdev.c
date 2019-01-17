@@ -42,16 +42,14 @@ static void ptirq_enqueue_softirq(struct ptirq_remapping_info *entry)
 	/* avoid adding recursively */
 	list_del(&entry->softirq_node);
 	/* TODO: assert if entry already in list */
-	list_add_tail(&entry->softirq_node,
-			&entry->vm->softirq_dev_entry_list);
+	list_add_tail(&entry->softirq_node, &entry->vm->softirq_dev_entry_list);
 	spinlock_irqrestore_release(&entry->vm->softirq_dev_lock, rflags);
 	fire_softirq(SOFTIRQ_PTDEV);
 }
 
 static void ptirq_intr_delay_callback(void *data)
 {
-	struct ptirq_remapping_info *entry =
-		(struct ptirq_remapping_info *) data;
+	struct ptirq_remapping_info *entry = (struct ptirq_remapping_info *) data;
 
 	ptirq_enqueue_softirq(entry);
 }
@@ -64,14 +62,12 @@ struct ptirq_remapping_info *ptirq_dequeue_softirq(struct acrn_vm *vm)
 	spinlock_irqsave_obtain(&vm->softirq_dev_lock, &rflags);
 
 	while (!list_empty(&vm->softirq_dev_entry_list)) {
-		entry = get_first_item(&vm->softirq_dev_entry_list,
-			struct ptirq_remapping_info, softirq_node);
+		entry = get_first_item(&vm->softirq_dev_entry_list, struct ptirq_remapping_info, softirq_node);
 
 		list_del_init(&entry->softirq_node);
 
 		/* if vm0, just dequeue, if uos, check delay timer */
-		if (is_vm0(entry->vm) ||
-			timer_expired(&entry->intr_delay_timer)) {
+		if (is_vm0(entry->vm) || timer_expired(&entry->intr_delay_timer)) {
 			break;
 		} else {
 			/* add it into timer list; dequeue next one */
@@ -99,8 +95,7 @@ struct ptirq_remapping_info *ptirq_alloc_entry(struct acrn_vm *vm, uint32_t intr
 
 		INIT_LIST_HEAD(&entry->softirq_node);
 
-		initialize_timer(&entry->intr_delay_timer, ptirq_intr_delay_callback,
-			entry, 0UL, 0, 0UL);
+		initialize_timer(&entry->intr_delay_timer, ptirq_intr_delay_callback, entry, 0UL, 0, 0UL);
 
 		atomic_clear32(&entry->active, ACTIVE_FLAG);
 	} else {
@@ -129,8 +124,8 @@ void ptirq_release_entry(struct ptirq_remapping_info *entry)
 /* interrupt context */
 static void ptirq_interrupt_handler(__unused uint32_t irq, void *data)
 {
-	struct ptirq_remapping_info *entry =
-		(struct ptirq_remapping_info *) data;
+	struct ptirq_remapping_info *entry = (struct ptirq_remapping_info *) data;
+	bool to_enqueue = true;
 
 	/*
 	 * "interrupt storm" detection & delay intr injection just for UOS
@@ -141,14 +136,21 @@ static void ptirq_interrupt_handler(__unused uint32_t irq, void *data)
 
 		/* if delta > 0, set the delay TSC, dequeue to handle */
 		if (entry->vm->intr_inject_delay_delta > 0UL) {
-			entry->intr_delay_timer.fire_tsc = rdtsc() +
-				entry->vm->intr_inject_delay_delta;
+
+			/* if the timer started (entry is in timer-list), not need enqueue again */
+			if (timer_is_started(&entry->intr_delay_timer)) {
+				to_enqueue = false;
+			} else {
+				entry->intr_delay_timer.fire_tsc = rdtsc() + entry->vm->intr_inject_delay_delta;
+			}
 		} else {
 			entry->intr_delay_timer.fire_tsc = 0UL;
 		}
 	}
 
-	ptirq_enqueue_softirq(entry);
+	if (to_enqueue) {
+		ptirq_enqueue_softirq(entry);
+	}
 }
 
 /* active intr with irq registering */
