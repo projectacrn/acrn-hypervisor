@@ -314,7 +314,7 @@ void init_paging(void)
 			CONFIG_HV_RAM_SIZE + (((hv_hpa & (PDE_SIZE - 1UL)) != 0UL) ? PDE_SIZE : 0UL),
 			PAGE_CACHE_WB, PAGE_CACHE_MASK | PAGE_USER, &ppt_mem_ops, MR_MODIFY);
 
-	size = ((uint64_t)&ld_text_end - CONFIG_HV_RAM_START);
+	size = ((uint64_t)&ld_text_end - hv_hpa);
 	text_end = hv_hpa + size;
 	/*
 	 * remove 'NX' bit for pages that contain hv code section, as by default XD bit is set for
