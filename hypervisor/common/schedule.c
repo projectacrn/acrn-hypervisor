@@ -8,7 +8,6 @@
 #include <schedule.h>
 
 static uint64_t pcpu_used_bitmap;
-static struct sched_object idle;
 
 void init_scheduler(void)
 {
@@ -191,7 +190,7 @@ void schedule(void)
 		release_schedule_lock(pcpu_id);
 
 		if (next == NULL) {
-			next = &idle;
+			next = &get_cpu_var(idle);
 		}
 
 		switch_to(next);
@@ -202,15 +201,13 @@ void schedule(void)
 
 void switch_to_idle(run_thread_t idle_thread)
 {
-	uint16_t pcpu_id = get_cpu_id();
+	struct sched_object *idle = &get_cpu_var(idle);
 
-	if (pcpu_id == BOOT_CPU_ID) {
-		idle.thread = idle_thread;
-		idle.prepare_switch_out = NULL;
-		idle.prepare_switch_in = NULL;
-	}
+	idle->thread = idle_thread;
+	idle->prepare_switch_out = NULL;
+	idle->prepare_switch_in = NULL;
 
 	if (idle_thread != NULL) {
-		idle_thread(&idle);
+		idle_thread(idle);
 	}
 }
