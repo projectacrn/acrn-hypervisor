@@ -460,9 +460,6 @@ EPT
 .. doxygenfunction:: invept
    :project: Project ACRN
 
-.. doxygenfunction:: ept_violation_vmexit_handler
-   :project: Project ACRN
-
 .. doxygenfunction:: ept_misconfig_vmexit_handler
    :project: Project ACRN
 
