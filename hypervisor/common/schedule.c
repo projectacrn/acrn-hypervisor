@@ -91,6 +91,8 @@ static struct sched_object *get_next_sched_obj(struct sched_context *ctx)
 	spinlock_obtain(&ctx->runqueue_lock);
 	if (!list_empty(&ctx->runqueue)) {
 		obj = get_first_item(&ctx->runqueue, struct sched_object, run_list);
+	} else {
+		obj = &get_cpu_var(idle);
 	}
 	spinlock_release(&ctx->runqueue_lock);
 
@@ -131,33 +133,6 @@ int32_t need_offline(uint16_t pcpu_id)
 	return bitmap_test_and_clear_lock(NEED_OFFLINE, &ctx->flags);
 }
 
-static void switch_to_asm(struct sched_object *next, uint64_t cur_sp)
-{
-	asm volatile ("movq %2, %%rsp\n"
-			"movq %0, %%rdi\n"
-			"call 22f\n"
-			"11: \n"
-			"pause\n"
-			"jmp 11b\n"
-			"22:\n"
-			"mov %1, (%%rsp)\n"
-			"ret\n"
-			:
-			: "c"(next), "a"(next->thread), "r"(cur_sp)
-			: "memory");
-}
-
-static void switch_to(struct sched_object *next)
-{
-	/*
-	 * reset stack pointer here. Otherwise, schedule
-	 * is recursive call and stack will overflow finally.
-	 */
-	uint64_t cur_sp = (uint64_t)&get_cpu_var(stack)[CONFIG_STACK_SIZE];
-
-	switch_to_asm(next, cur_sp);
-}
-
 static void prepare_switch(struct sched_object *prev, struct sched_object *next)
 {
 	if ((prev != NULL) && (prev->prepare_switch_out != NULL)) {
@@ -189,25 +164,31 @@ void schedule(void)
 		prepare_switch(prev, next);
 		release_schedule_lock(pcpu_id);
 
-		if (next == NULL) {
-			next = &get_cpu_var(idle);
-		}
-
-		switch_to(next);
-
-		ASSERT(false, "Shouldn't go here");
+		arch_switch_to(prev, next);
 	}
+}
+
+void run_sched_thread(struct sched_object *obj)
+{
+	if (obj->thread != NULL) {
+		obj->thread(obj);
+	}
+
+	panic("Shouldn't go here, invalid thread!");
 }
 
 void switch_to_idle(run_thread_t idle_thread)
 {
-	struct sched_object *idle = &get_cpu_var(idle);
+	uint16_t pcpu_id = get_cpu_id();
+	struct sched_object *idle = &per_cpu(idle, pcpu_id);
+	char idle_name[16];
 
+	snprintf(idle_name, 16U, "idle%hu", pcpu_id);
+	(void)strncpy_s(idle->name, 16U, idle_name, 16U);
 	idle->thread = idle_thread;
 	idle->prepare_switch_out = NULL;
 	idle->prepare_switch_in = NULL;
+	get_cpu_var(sched_ctx).curr_obj = idle;
 
-	if (idle_thread != NULL) {
-		idle_thread(idle);
-	}
+	run_sched_thread(idle);
 }

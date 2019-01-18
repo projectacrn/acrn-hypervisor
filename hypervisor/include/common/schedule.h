@@ -14,7 +14,9 @@ struct sched_object;
 typedef void (*run_thread_t)(struct sched_object *obj);
 typedef void (*prepare_switch_t)(struct sched_object *obj);
 struct sched_object {
+	char name[16];
 	struct list_head run_list;
+	uint64_t host_sp;
 	run_thread_t thread;
 	prepare_switch_t prepare_switch_out;
 	prepare_switch_t prepare_switch_in;
@@ -46,5 +48,8 @@ void make_pcpu_offline(uint16_t pcpu_id);
 int32_t need_offline(uint16_t pcpu_id);
 
 void schedule(void);
+void run_sched_thread(struct sched_object *obj);
+
+void arch_switch_to(struct sched_object *prev, struct sched_object *next);
 #endif /* SCHEDULE_H */
 

@@ -634,11 +634,33 @@ void schedule_vcpu(struct acrn_vcpu *vcpu)
 	release_schedule_lock(vcpu->pcpu_id);
 }
 
+static uint64_t build_stack_frame(struct acrn_vcpu *vcpu)
+{
+	uint64_t rsp = (uint64_t)&vcpu->stack[CONFIG_STACK_SIZE - 1];
+	uint64_t *sp;
+
+	rsp &= ~(CPU_STACK_ALIGN - 1UL);
+	sp = (uint64_t *)rsp;
+
+	*sp-- = (uint64_t)run_sched_thread; /*return address*/
+	*sp-- = 0UL; /* flag */
+	*sp-- = 0UL; /* rbx */
+	*sp-- = 0UL; /* rbp */
+	*sp-- = 0UL; /* r12 */
+	*sp-- = 0UL; /* r13 */
+	*sp-- = 0UL; /* r14 */
+	*sp-- = 0UL; /* r15 */
+	*sp = (uint64_t)&vcpu->sched_obj; /*rdi*/
+
+	return (uint64_t)sp;
+}
+
 /* help function for vcpu create */
 int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 {
 	int32_t ret = 0;
 	struct acrn_vcpu *vcpu = NULL;
+	char thread_name[16];
 
 	ret = create_vcpu(pcpu_id, vm, &vcpu);
 	if (ret != 0) {
@@ -648,7 +670,10 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 	set_pcpu_used(pcpu_id);
 
 	INIT_LIST_HEAD(&vcpu->sched_obj.run_list);
+	snprintf(thread_name, 16U, "vm%hu:vcpu%hu", vm->vm_id, vcpu->vcpu_id);
+	(void)strncpy_s(vcpu->sched_obj.name, 16U, thread_name, 16U);
 	vcpu->sched_obj.thread = vcpu_thread;
+	vcpu->sched_obj.host_sp = build_stack_frame(vcpu);
 	vcpu->sched_obj.prepare_switch_out = context_switch_out;
 	vcpu->sched_obj.prepare_switch_in = context_switch_in;
 
