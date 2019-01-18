@@ -23,14 +23,14 @@ void vcpu_thread(struct sched_object *obj)
 	uint32_t basic_exit_reason = 0U;
 	int32_t ret = 0;
 
-	/* If vcpu is not launched, we need to do init_vmcs first */
-	if (!vcpu->launched) {
-		init_vmcs(vcpu);
-	}
-
 	run_vcpu_pre_work(vcpu);
 
 	do {
+		/* If vcpu is not launched, we need to do init_vmcs first */
+		if (!vcpu->launched) {
+			init_vmcs(vcpu);
+		}
+
 		/* handle pending softirq when irq enable*/
 		do_softirq();
 		CPU_IRQ_DISABLE();

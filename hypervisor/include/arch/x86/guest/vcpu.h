@@ -258,6 +258,8 @@ struct acrn_vcpu_arch {
 
 struct acrn_vm;
 struct acrn_vcpu {
+	uint8_t stack[CONFIG_STACK_SIZE] __aligned(16);
+
 	/* Architecture specific definitions for this VCPU */
 	struct acrn_vcpu_arch arch;
 	uint16_t pcpu_id;	/* Physical CPU ID of this VCPU */
