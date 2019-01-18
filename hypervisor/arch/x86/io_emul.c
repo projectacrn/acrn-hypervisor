@@ -6,7 +6,7 @@
 
 #include <hypervisor.h>
 
-#include "guest/instr_emul.h"
+#include <instr_emul.h>
 
 static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {

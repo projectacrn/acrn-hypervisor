@@ -29,8 +29,35 @@
  */
 
 #include <hypervisor.h>
+#include <instr_emul.h>
 
-#include "instr_emul.h"
+#define CPU_REG_FIRST			CPU_REG_RAX
+#define CPU_REG_LAST			CPU_REG_GDTR
+#define CPU_REG_GENERAL_FIRST		CPU_REG_RAX
+#define CPU_REG_GENERAL_LAST		CPU_REG_R15
+#define CPU_REG_NONGENERAL_FIRST	CPU_REG_CR0
+#define CPU_REG_NONGENERAL_LAST	CPU_REG_GDTR
+#define CPU_REG_NATURAL_FIRST		CPU_REG_CR0
+#define CPU_REG_NATURAL_LAST		CPU_REG_RFLAGS
+#define CPU_REG_64BIT_FIRST		CPU_REG_EFER
+#define CPU_REG_64BIT_LAST		CPU_REG_PDPTE3
+#define CPU_REG_SEG_FIRST		CPU_REG_ES
+#define CPU_REG_SEG_LAST		CPU_REG_GS
+
+#define	PSL_C		0x00000001U	/* carry bit */
+#define	PSL_PF		0x00000004U	/* parity bit */
+#define	PSL_AF		0x00000010U	/* bcd carry bit */
+#define	PSL_Z		0x00000040U	/* zero bit */
+#define	PSL_N		0x00000080U	/* negative bit */
+#define	PSL_D		0x00000400U	/* string instruction direction bit */
+#define	PSL_V		0x00000800U	/* overflow bit */
+#define	PSL_AC		0x00040000U	/* alignment checking */
+
+/*
+ * Protections are chosen from these bits, or-ed together
+ */
+#define	PROT_READ	0x01U	/* pages can be read */
+#define	PROT_WRITE	0x02U	/* pages can be written */
 
 /* struct vie_op.op_type */
 #define VIE_OP_TYPE_NONE	0U
@@ -191,6 +218,39 @@ struct vmcs_seg_field {
 	uint32_t	limit_field;
 	uint32_t	access_field;
 };
+
+/*
+ * The 'access' field has the format specified in Table 21-2 of the Intel
+ * Architecture Manual vol 3b.
+ *
+ * XXX The contents of the 'access' field are architecturally defined except
+ * bit 16 - Segment Unusable.
+ */
+struct seg_desc {
+	uint64_t	base;
+	uint32_t	limit;
+	uint32_t	access;
+};
+
+static inline uint32_t seg_desc_type(uint32_t access)
+{
+	return (access & 0x001fU);
+}
+
+static inline bool seg_desc_present(uint32_t access)
+{
+	return ((access & 0x0080U) != 0U);
+}
+
+static inline bool seg_desc_def32(uint32_t access)
+{
+	return ((access & 0x4000U) != 0U);
+}
+
+static inline bool seg_desc_unusable(uint32_t access)
+{
+	return ((access & 0x10000U) != 0U);
+}
 
 static void encode_vmcs_seg_desc(enum cpu_reg_name seg,
 	struct vmcs_seg_field *desc)

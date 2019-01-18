@@ -16,7 +16,7 @@
 #include <gdt.h>
 #include <timer.h>
 #include <logmsg.h>
-#include "arch/x86/guest/instr_emul.h"
+#include <instr_emul.h>
 #include <profiling.h>
 #include <security.h>
 
