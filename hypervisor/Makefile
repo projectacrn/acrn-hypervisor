@@ -157,7 +157,7 @@ C_SRCS += arch/x86/irq.c
 C_SRCS += arch/x86/timer.c
 C_SRCS += arch/x86/ept.c
 S_SRCS += arch/x86/vmx_asm.S
-C_SRCS += arch/x86/io.c
+C_SRCS += arch/x86/io_emul.c
 C_SRCS += arch/x86/virq.c
 C_SRCS += arch/x86/vmexit.c
 C_SRCS += arch/x86/vmx.c
@@ -196,7 +196,7 @@ C_SRCS += common/hypercall.c
 C_SRCS += common/trusty_hypercall.c
 C_SRCS += common/schedule.c
 C_SRCS += common/vm_load.c
-C_SRCS += common/io_request.c
+C_SRCS += common/io_req.c
 C_SRCS += common/ptdev.c
 C_SRCS += common/static_checks.c
 

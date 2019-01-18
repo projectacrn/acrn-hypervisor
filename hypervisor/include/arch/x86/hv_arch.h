@@ -14,7 +14,8 @@
 #include <lapic.h>
 #include <msr.h>
 #include <io.h>
-#include <ioreq.h>
+#include <io_req.h>
+#include <io_emul.h>
 #include <vmtrr.h>
 #include <timer.h>
 #include <vlapic.h>
