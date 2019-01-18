@@ -42,6 +42,21 @@ static inline bool is_vm_valid(uint16_t vm_id)
 	return bitmap_test(vm_id, &vmid_bitmap);
 }
 
+/**
+ * @brief Initialize the I/O bitmap for \p vm
+ *
+ * @param vm The VM whose I/O bitmap is to be initialized
+ */
+static void setup_io_bitmap(struct acrn_vm *vm)
+{
+	if (is_vm0(vm)) {
+		(void)memset(vm->arch_vm.io_bitmap, 0x00U, PAGE_SIZE * 2U);
+	} else {
+		/* block all IO port access from Guest */
+		(void)memset(vm->arch_vm.io_bitmap, 0xFFU, PAGE_SIZE * 2U);
+	}
+}
+
 /* return a pointer to the virtual machine structure associated with
  * this VM ID
  */

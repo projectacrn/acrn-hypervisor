@@ -443,21 +443,6 @@ static void deny_guest_pio_access(struct acrn_vm *vm, uint16_t port_address,
 }
 
 /**
- * @brief Initialize the I/O bitmap for \p vm
- *
- * @param vm The VM whose I/O bitmap is to be initialized
- */
-void setup_io_bitmap(struct acrn_vm *vm)
-{
-	if (is_vm0(vm)) {
-		(void)memset(vm->arch_vm.io_bitmap, 0x00U, PAGE_SIZE * 2U);
-	} else {
-		/* block all IO port access from Guest */
-		(void)memset(vm->arch_vm.io_bitmap, 0xFFU, PAGE_SIZE * 2U);
-	}
-}
-
-/**
  * @brief Register a port I/O handler
  *
  * @param vm      The VM to which the port I/O handlers are registered

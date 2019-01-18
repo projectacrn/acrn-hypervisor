@@ -92,13 +92,6 @@ int32_t pio_instr_vmexit_handler(struct acrn_vcpu *vcpu);
 void   allow_guest_pio_access(struct acrn_vm *vm, uint16_t port_address, uint32_t nbytes);
 
 /**
- * @brief Initialize the I/O bitmap for \p vm
- *
- * @param vm The VM whose I/O bitmap is to be initialized
- */
-void setup_io_bitmap(struct acrn_vm *vm);
-
-/**
  * @brief Register a port I/O handler
  *
  * @param vm      The VM to which the port I/O handlers are registered
