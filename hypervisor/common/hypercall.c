@@ -1118,7 +1118,7 @@ int32_t hcall_vm_intr_monitor(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
  * @brief set upcall notifier vector
  *
  * This is the API that helps to switch the notifer vecotr. If this API is
- * not called, the hypervisor will use the default notifier vector(0xF7)
+ * not called, the hypervisor will use the default notifier vector(0xF3)
  * to notify the SOS kernel.
  *
  * @param vm Pointer to VM data structure
