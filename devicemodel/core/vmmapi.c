@@ -37,7 +37,8 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <unistd.h>
-
+#include <sys/types.h>
+#include <sys/stat.h>
 
 
 #include "vmmapi.h"
@@ -91,13 +92,20 @@ vm_create(const char *name, uint64_t req_buf)
 	struct acrn_create_vm create_vm;
 	int error, retry = 10;
 	uuid_t vm_uuid;
+	struct stat tmp_st;
 
 	memset(&create_vm, 0, sizeof(struct acrn_create_vm));
 	ctx = calloc(1, sizeof(struct vmctx) + strnlen(name, PATH_MAX) + 1);
 	assert(ctx != NULL);
 	assert(devfd == -1);
 
-	devfd = open("/dev/acrn_vhm", O_RDWR|O_CLOEXEC);
+	if (stat("/dev/acrn_vhm", &tmp_st) == 0) {
+		devfd = open("/dev/acrn_vhm", O_RDWR|O_CLOEXEC);
+	} else if (stat("/dev/acrn_hsm", &tmp_st) == 0) {
+		devfd = open("/dev/acrn_hsm", O_RDWR|O_CLOEXEC);
+	} else {
+		devfd = -1;
+	}
 	if (devfd == -1) {
 		fprintf(stderr, "Could not open /dev/acrn_vhm\n");
 		goto err;
