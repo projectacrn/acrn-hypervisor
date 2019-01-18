@@ -1,5 +1,12 @@
 #!/bin/bash
 
+offline_path="/sys/class/vhm/acrn_vhm"
+
+# Check the device file of /dev/acrn_hsm to determine the offline_path
+if [ -e "/dev/acrn_hsm" ]; then
+offline_path="/sys/class/acrn/acrn_hsm"
+fi
+
 function launch_clear()
 {
 mac=$(cat /sys/class/net/e*/address)
@@ -45,7 +52,7 @@ for i in `ls -d /sys/devices/system/cpu/cpu[1-99]`; do
 			echo 0 > $i/online
 			online=`cat $i/online`
 		done
-                echo $idx > /sys/class/vhm/acrn_vhm/offline_cpu
+                echo $idx > ${offline_path}/offline_cpu
         fi
 done
 
