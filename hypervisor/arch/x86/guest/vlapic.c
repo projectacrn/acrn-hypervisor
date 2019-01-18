@@ -31,7 +31,7 @@
 
 #include <hypervisor.h>
 
-#include "instr_emul.h"
+#include <instr_emul.h>
 
 #include "vlapic_priv.h"
 #include "vlapic.h"
