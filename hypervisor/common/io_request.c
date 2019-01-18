@@ -7,7 +7,7 @@
 
 #define ACRN_DBG_IOREQUEST	6U
 
-static uint32_t acrn_vhm_vector = VECTOR_VIRT_IRQ_VHM;
+static uint32_t acrn_vhm_vector = VECTOR_HYPERVISOR_CALLBACK_VHM;
 
 static void fire_vhm_interrupt(void)
 {
