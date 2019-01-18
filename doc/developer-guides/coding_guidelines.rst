@@ -37,6 +37,51 @@ Compliant example::
        printf("%d \n", CONCAT(a, b, c));
 
 
+PP-02: Function-like MACRO shall be used with restrictions
+==========================================================
+
+Function-like MACRO shall be replaced with inline function if it is possible.
+
+Compliant example::
+
+    static inline uint32_t func_showcase(uint32_t a, uint32_t b)
+    {
+        return a + b;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       #define SHOWCASE(a, b) ((a) + (b))
+
+
+PP-03: Header file shall not be included multiple times
+=======================================================
+
+The content inside shall be protected with #ifndef, #if !defined, or #ifdef.
+
+Compliant example::
+
+    /* In `showcase.h`: */
+    #ifndef SHOWCASE_H
+    #define SHOWCASE_H
+    
+    /* header contents */
+    uint32_t func_showcase(uint32_t param);
+    
+    #endif /* SHOWCASE_H */
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       /* In `showcase.h`: */
+       
+       /* header contents without any protection */
+       uint32_t func_showcase(uint32_t param);
+
+
 
 Compilation Units
 *****************
@@ -348,6 +393,20 @@ Compliant example::
        }
 
 
+DI-07: An array shall be fully initialized
+==========================================
+
+Compliant example::
+
+    uint32_t showcase_array[5] = {0, 1, 2, 3, 4};
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t showcase_array[5] = {0, 1};
+
+
 
 Functions
 *********
@@ -532,6 +591,72 @@ Compliant example::
        uint32_t func_showcase(uint32_t param)
        {
            return param;
+       }
+
+
+FN-08: All static functions shall be used within the file they are declared
+===========================================================================
+
+Unlike global functions in C, access to a static function is restricted to the
+file where it is declared. Therefore, a static function shall be used in the
+file where it is declared, either called explicitly or indirectly via its
+address. Otherwise, the static function shall be removed.
+
+Compliant example::
+
+    static void func_showcase(uint32_t param)
+    {
+        printf("param %d \n", param);
+    }
+    
+    void main(void)
+    {
+        func_showcase(10U);
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       /* func_showcase is not called explicitly or accessed via the address */
+       static void func_showcase(uint32_t param)
+       {
+           printf("param %d \n", param);
+       }
+
+
+FN-09: The formal parameter name of a function shall be consistent
+==================================================================
+
+The formal parameter name of a function shall be the same between its
+declaration and definition.
+
+Compliant example::
+
+    /* In `showcase.h`: */
+    uint32_t func_showcase(uint32_t param);
+    
+    /* In `showcase.c`: */
+    #include "showcase.h"
+    
+    uint32_t func_showcase(uint32_t param)
+    {
+        return param;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       /* In `showcase.h`: */
+       uint32_t func_showcase(uint32_t param);
+       
+       /* In `showcase.c`: */
+       #include "showcase.h"
+       
+       uint32_t func_showcase(uint32_t param_1)
+       {
+           return param_1;
        }
 
 
@@ -915,6 +1040,190 @@ Compliant example::
        showcase=showcase*2U;
 
 
+ST-17: Infinite loop shall not exist
+====================================
+
+Every path in the iteration loop shall have the chance to exit.
+
+Compliant example::
+
+    uint32_t count = 10U;
+    bool showcase_flag = false;
+    
+    while (count > 5U)
+    {
+        if (showcase_flag) {
+            count--;
+        } else {
+            count = count - 2U;
+        }
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t count = 10U;
+       bool showcase_flag = false;
+       
+       while (count > 5U)
+       {
+           if (showcase_flag) {
+               count--;
+           }
+       }
+
+
+ST-18:  ++ or -- operation shall be used with restrictions
+==========================================================
+
+Only the following cases shall be allowed:
+
+a) ++ or -- operation shall be allowed if it is used alone in the expression;
+b) ++ or -- operation shall be allowed if it is used as the third expression of
+   a for loop.
+
+Compliant example::
+
+    uint32_t showcase = 0U;
+    
+    showcase++;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t showcase = 0U;
+       uint32_t showcase_test;
+       
+       showcase_test = showcase++;
+
+
+
+Expressions
+***********
+
+EP-01: The initialization expression of a for loop shall be simple
+==================================================================
+
+The initialization expression of a for loop shall only be used to initialize the
+loop counter. All other operations shall not be allowed.
+
+Compliant example::
+
+    uint32_t i;
+    
+    for (i = 0U; i < 5U; i++) {
+        printf("count: %d \n", i);
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t i;
+       uint32_t showcase = 0U;
+       
+       for (i = 0U, showcase = 10U; i < 5U; i++) {
+           printf("count: %d \n", i);
+       }
+
+
+EP-02: The controlling expression of a for loop shall not be empty
+==================================================================
+
+Compliant example::
+
+    uint32_t i;
+    
+    for (i = 0U; i < 5U; i++) {
+        printf("count: %d \n", i);
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t i;
+       
+       for (i = 0U; ; i++) {
+           printf("count: %d \n", i);
+           if (i > 4U) {
+               break;
+           }
+       }
+
+
+EP-03: The third expression of a for loop shall be simple
+=========================================================
+
+The third expression of a for loop shall only be used to increase or decrease
+the loop counter with the following operators, ++, --, +=, or -=. All other
+operations shall not be allowed.
+
+Compliant example::
+
+    uint32_t i;
+    
+    for (i = 0U; i < 5U; i++) {
+        printf("count: %d \n", i);
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t i;
+       uint32_t showcase = 0U;
+       
+       for (i = 0U; i < 5U; i++, showcase++) {
+           printf("count: %d \n", i);
+       }
+
+
+EP-04: The evaluation order of an expression shall not influence the result
+===========================================================================
+
+Compliant example::
+
+    uint32_t showcase = 0U;
+    uint32_t showcase_test = 10U;
+    
+    showcase++;
+    showcase_test = showcase_test + showcase;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t showcase = 0U;
+       uint32_t showcase_test = 10U;
+       
+       showcase_test = showcase_test + ++showcase;
+
+
+EP-05: Parentheses shall be used to set the operator precedence explicitly
+==========================================================================
+
+Compliant example::
+
+    uint32_t showcase_u32_1 = 0U;
+    uint32_t showcase_u32_2 = 0xFFU;
+    uint32_t showcase_u32_3;
+    
+    showcase_u32_3 = showcase_u32_1 * (showcase_u32_2 >> 4U);
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t showcase_u32_1 = 0U;
+       uint32_t showcase_u32_2 = 0xFU;
+       uint32_t showcase_u32_3;
+       
+       showcase_u32_3 = showcase_u32_1 * showcase_u32_2 >> 4U;
+
+
 
 Types
 *****
@@ -1121,6 +1430,272 @@ Compliant example::
        struct struct_showcase showcase = {32U, -1};
 
 
+TY-09: The type used in switch statement shall be consistent
+============================================================
+
+The type shall be consistent between the case expression and the controlling
+expression of switch statement.
+
+Compliant example::
+
+    enum enum_showcase {
+        ENUM_SHOWCASE_0,
+        ENUM_SHOWCASE_1,
+        ENUM_SHOWCASE_2
+    };
+    
+    enum enum_showcase showcase;
+    
+    switch (showcase) {
+    case ENUM_SHOWCASE_0:
+        /* showcase */
+        break;
+    case ENUM_SHOWCASE_1:
+        /* showcase */
+        break;
+    default:
+        /* showcase */
+        break;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       enum enum_showcase {
+           ENUM_SHOWCASE_0,
+           ENUM_SHOWCASE_1,
+           ENUM_SHOWCASE_2
+       };
+       
+       enum enum_showcase showcase;
+       
+       switch (showcase) {
+       case ENUM_SHOWCASE_0:
+           /* showcase */
+           break;
+       case 1U:
+           /* showcase */
+           break;
+       default:
+           /* showcase */
+           break;
+
+
+TY-10: const qualifier shall not be discarded in cast operation
+===============================================================
+
+Compliant example::
+
+    const uint32_t *showcase_const;
+    const uint32_t *showcase = showcase_const;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       const uint32_t *showcase_const;
+       uint32_t *showcase = (uint32_t *)showcase_const;
+
+
+TY-11: A variable shall be declared as static if it is only used in the file where it is declared
+=================================================================================================
+
+Compliant example::
+
+    /* In `showcase.c`: */
+    /* `showcase` is only in `showcase.c` */
+    static uint32_t showcase;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       /* In `showcase.c`: */
+       /* `showcase` is only in `showcase.c` */
+       uint32_t showcase;
+
+
+TY-12: All type conversions shall be explicit
+=============================================
+
+Implicit type conversions shall not be allowed.
+
+Compliant example::
+
+    uint32_t showcase_u32;
+    uint64_t showcase_u64 = 64UL;
+    
+    showcase_u32 = (uint32_t)showcase_u64;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t showcase_u32;
+       uint64_t showcase_u64 = 64UL;
+       
+       showcase_u32 = showcase_u64;
+
+
+TY-13: Cast shall be performed on operands rather than arithmetic expressions
+=============================================================================
+
+Compliant example::
+
+    uint32_t showcase_u32_1 = 10U;
+    uint32_t showcase_u32_2 = 10U;
+    uint64_t showcase_u64;
+    
+    showcase_u64 = (uint64_t)showcase_u32_1 + (uint64_t)showcase_u32_2;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t showcase_u32_1 = 10U;
+       uint32_t showcase_u32_2 = 10U;
+       uint64_t showcase_u64;
+       
+       showcase_u64 = (uint64_t)(showcase_u32_1 + showcase_u32_2);
+
+
+TY-14: A complex integer expression shall not be cast to types other than integer
+=================================================================================
+
+Compliant example::
+
+    /* 0x61 is 'a' in ASCII Table */
+    uint32_t showcase_u32;
+    char showcase_char;
+    
+    showcase_u32 = 0x61U + 1U;
+    showcase_char = (char)showcase_u32;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       /* 0x61 is 'a' in ASCII Table */
+       uint32_t showcase_u32;
+       char showcase_char;
+       
+       showcase_u32 = 0x61U;
+       showcase_char = (char)(showcase_u32 + 1U);
+
+
+TY-15: Integer shall not be used when a character is expected
+=============================================================
+
+Compliant example::
+
+    char showcase;
+    
+    switch (showcase) {
+    case 'a':
+        /* do something */
+        break;
+    case 'A':
+        /* do something */
+        break;
+    default:
+        break;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       char showcase;
+       
+       switch (showcase) {
+       /* 0x61 is 'a' in ASCII Table */
+       case 0x61:
+           /* do something */
+           break;
+       case 'A':
+           /* do something */
+           break;
+       default:
+           break;
+       }
+
+
+TY-16: A pointer shall not be cast to an integer
+================================================
+
+Compliant example::
+
+    uint64_t *showcase_ptr;
+    
+    uint64_t showcase = *showcase_ptr;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint64_t *showcase_ptr;
+       
+       uint64_t showcase = (uint64_t)showcase_ptr;
+
+
+TY-17: An integer shall not be cast to a pointer
+================================================
+
+Compliant example::
+
+    uint64_t showcase = 10UL;
+    
+    uint64_t *showcase_ptr = &showcase;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint64_t showcase = 10UL;
+       
+       uint64_t *showcase_ptr = (uint64_t *)showcase;
+
+
+TY-18: All types declared by typedef shall be used
+==================================================
+
+Typedefs that are not used shall be deleted.
+
+Compliant example::
+
+    typedef unsigned int uint32_t;
+    
+    uint32_t showcase;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       typedef unsigned int uint32_t;
+       /* uint32_t_backup is not being used anywhere */
+       typedef unsigned int uint32_t_backup;
+       
+       uint32_t showcase;
+
+
+TY-19: Array indexing shall only be performed on array type
+===========================================================
+
+Compliant example::
+
+    char showcase[4] = {'s', 'h', 'o', 'w'};
+    
+    char chr = showcase[1];
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       char *showcase = "show";
+       
+       char chr = showcase[1];
+
+
 
 Identifiers
 ***********
@@ -1286,5 +1861,43 @@ Compliant example::
        {
            /* main body */
        }
+
+
+ID-06: The typedef name shall be unique
+=======================================
+
+The typedef name shall be unique and not be used for any other purpose.
+
+Compliant example::
+
+    typedef unsigned int uint32_t;
+    
+    uint32_t showcase;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       typedef unsigned int uint32_t;
+       
+       uint32_t uint32_t;
+
+
+ID-07: Name defined by developers shall not start with underscore
+=================================================================
+
+All names starting with one or two underscores are reserved for use by the
+compiler and standard libraries to eliminate potential conflicts with user-
+defined names.
+
+Compliant example::
+
+    uint32_t showcase;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t __showcase;
 
 
