@@ -294,15 +294,7 @@ void ept_mr_modify(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
  */
 void ept_mr_del(struct acrn_vm *vm, uint64_t *pml4_page, uint64_t gpa,
 		uint64_t size);
-/**
- * @brief EPT violation handling
- *
- * @param[in] vcpu the pointer that points to vcpu data structure
- *
- * @retval -EINVAL fail to handle the EPT violation
- * @retval 0 Success to handle the EPT violation
- */
-int32_t ept_violation_vmexit_handler(struct acrn_vcpu *vcpu);
+
 /**
  * @brief EPT misconfiguration handling
  *

@@ -341,3 +341,6 @@ The following APIs are provided for I/O emulation at runtime:
 
 .. doxygenfunction:: pio_instr_vmexit_handler
    :project: Project ACRN
+
+.. doxygenfunction:: ept_violation_vmexit_handler
+   :project: Project ACRN
