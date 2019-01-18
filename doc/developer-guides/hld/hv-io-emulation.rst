@@ -310,9 +310,6 @@ The following structure represents a MMIO handler.
 The following APIs are provided to initialize, deinitialize or configure
 I/O bitmaps and register or unregister I/O handlers:
 
-.. doxygenfunction:: setup_io_bitmap
-   :project: Project ACRN
-
 .. doxygenfunction:: allow_guest_pio_access
    :project: Project ACRN
 
