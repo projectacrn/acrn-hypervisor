@@ -7,8 +7,6 @@
 #include <hypervisor.h>
 #include <e820.h>
 
-#define NUM_USER_VMS    2U
-
 /* Number of CPUs in VM1*/
 #define VM1_NUM_CPUS    4U
 
@@ -185,8 +183,6 @@ static struct vpci_vdev_array vpci_vdev_array2 = {
 /* User Defined VM definitions */
 /*******************************/
 struct vm_config_arraies vm_config_partition = {
-		/* Number of user virtual machines */
-		.num_vm_config = NUM_USER_VMS,
 
 		/* Virtual Machine descriptions */
 		.vm_config_array = {
