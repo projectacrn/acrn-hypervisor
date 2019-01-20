@@ -146,7 +146,7 @@ struct vm_config_arraies vm_config_partition = {
 				.memory.start_hpa = 0x100000000UL,
 				.memory.size = 0x20000000UL, /* uses contiguous memory from host */
 				.vm_vuart = true,
-				.bootargs = "root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
+				.os_config.bootargs = "root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
 						console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
 						consoleblank=0 tsc=reliable xapic_phys",
 				.vpci_vdev_array = &vpci_vdev_array1,
@@ -158,7 +158,7 @@ struct vm_config_arraies vm_config_partition = {
 				.memory.start_hpa = 0x120000000UL,
 				.memory.size = 0x20000000UL, /* uses contiguous memory from host */
 				.vm_vuart = true,
-				.bootargs = "root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
+				.os_config.bootargs = "root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
 						console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
 						consoleblank=0 tsc=reliable xapic_phys",
 				.vpci_vdev_array = &vpci_vdev_array2,
