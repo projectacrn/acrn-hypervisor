@@ -51,7 +51,7 @@ int32_t init_vm_boot_info(struct acrn_vm *vm)
 				vm->sw.kernel_info.kernel_load_addr = (void *)(16 * 1024 * 1024UL);
 				vm->sw.linux_info.bootargs_src_addr = (void *)vm_config->bootargs;
 				vm->sw.linux_info.bootargs_size = strnlen_s(vm_config->bootargs, MEM_2K);
-				vm->sw.linux_info.bootargs_load_addr = (void *)(vm_config->mem_size -  8*1024UL);
+				vm->sw.linux_info.bootargs_load_addr = (void *)(vm_config->memory.size - 8*1024UL);
 				clac();
 				ret = 0;
 			}
