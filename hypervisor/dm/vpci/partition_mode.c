@@ -36,9 +36,10 @@ static struct pci_vdev *partition_mode_find_vdev(struct acrn_vpci *vpci, union p
 {
 	struct vpci_vdev_array *vdev_array;
 	struct pci_vdev *vdev;
+	struct acrn_vm_config *vm_config = get_vm_config(vpci->vm->vm_id);
 	int32_t i;
 
-	vdev_array = vpci->vm->vm_config->vpci_vdev_array;
+	vdev_array = vm_config->vpci_vdev_array;
 	for (i = 0; i < vdev_array->num_pci_vdev; i++) {
 		vdev = &vdev_array->vpci_vdev_list[i];
 		if (vdev->vbdf.value == vbdf.value) {
@@ -54,9 +55,10 @@ static int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
 	struct vpci_vdev_array *vdev_array;
 	const struct acrn_vpci *vpci = &vm->vpci;
 	struct pci_vdev *vdev;
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	int32_t i;
 
-	vdev_array = vm->vm_config->vpci_vdev_array;
+	vdev_array = vm_config->vpci_vdev_array;
 
 	for (i = 0; i < vdev_array->num_pci_vdev; i++) {
 		vdev = &vdev_array->vpci_vdev_list[i];
@@ -77,9 +79,10 @@ static void partition_mode_vpci_deinit(const struct acrn_vm *vm)
 {
 	struct vpci_vdev_array *vdev_array;
 	struct pci_vdev *vdev;
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
 	int32_t i;
 
-	vdev_array = vm->vm_config->vpci_vdev_array;
+	vdev_array = vm_config->vpci_vdev_array;
 
 	for (i = 0; i < vdev_array->num_pci_vdev; i++) {
 		vdev = &vdev_array->vpci_vdev_list[i];

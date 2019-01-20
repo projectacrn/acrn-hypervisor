@@ -157,7 +157,6 @@ struct acrn_vm {
 	struct acrn_vpci vpci;
 #ifdef CONFIG_PARTITION_MODE
 	struct mptable_info mptable;
-	struct acrn_vm_config	*vm_config;
 	uint8_t vrtc_offset;
 #endif
 
