@@ -155,6 +155,7 @@ struct vm_config_arraies vm_config_partition = {
 			{
 				.type = PRE_LAUNCHED_VM,
 				.pcpu_bitmap = (PLUG_CPU(1) | PLUG_CPU(3)),
+				.guest_flags = LAPIC_PASSTHROUGH,
 				.memory.start_hpa = 0x120000000UL,
 				.memory.size = 0x20000000UL, /* uses contiguous memory from host */
 				.vm_vuart = true,
@@ -162,7 +163,6 @@ struct vm_config_arraies vm_config_partition = {
 						console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
 						consoleblank=0 tsc=reliable xapic_phys",
 				.vpci_vdev_array = &vpci_vdev_array2,
-				.lapic_pt = true,
 			},
 		}
 };
