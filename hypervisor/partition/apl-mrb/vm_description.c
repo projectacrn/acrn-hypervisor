@@ -143,8 +143,8 @@ struct vm_config_arraies vm_config_partition = {
 			{
 				.type = PRE_LAUNCHED_VM,
 				.pcpu_bitmap = (PLUG_CPU(0) | PLUG_CPU(2)),
-				.start_hpa = 0x100000000UL,
-				.mem_size = 0x20000000UL, /* uses contiguous memory from host */
+				.memory.start_hpa = 0x100000000UL,
+				.memory.size = 0x20000000UL, /* uses contiguous memory from host */
 				.vm_vuart = true,
 				.bootargs = "root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
 						console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
@@ -155,8 +155,8 @@ struct vm_config_arraies vm_config_partition = {
 			{
 				.type = PRE_LAUNCHED_VM,
 				.pcpu_bitmap = (PLUG_CPU(1) | PLUG_CPU(3)),
-				.start_hpa = 0x120000000UL,
-				.mem_size = 0x20000000UL, /* uses contiguous memory from host */
+				.memory.start_hpa = 0x120000000UL,
+				.memory.size = 0x20000000UL, /* uses contiguous memory from host */
 				.vm_vuart = true,
 				.bootargs = "root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
 						console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
