@@ -218,7 +218,6 @@ struct acrn_vm_config {
 #ifdef CONFIG_PARTITION_MODE
 	bool			vm_vuart;
 	struct vpci_vdev_array  *vpci_vdev_array;
-	bool	lapic_pt;
 #endif
 
 } __aligned(8);

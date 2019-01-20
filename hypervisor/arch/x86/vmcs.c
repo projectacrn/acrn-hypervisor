@@ -576,7 +576,7 @@ void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 	uint32_t value32;
 	struct acrn_vm_config *vm_config = get_vm_config(vcpu->vm->vm_id);
 
-	if(vm_config->lapic_pt) {
+	if((vm_config->guest_flags & LAPIC_PASSTHROUGH) != 0U ) {
 		/*
 		 * Disable external interrupt exiting and irq ack
 		 * Disable posted interrupt processing

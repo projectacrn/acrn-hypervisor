@@ -2089,7 +2089,7 @@ static int32_t vlapic_x2apic_access(struct acrn_vcpu *vcpu, uint32_t msr, bool w
 #ifdef CONFIG_PARTITION_MODE
 		struct acrn_vm_config *vm_config = get_vm_config(vcpu->vm->vm_id);
 
-		if (vm_config->lapic_pt) {
+		if((vm_config->guest_flags & LAPIC_PASSTHROUGH) != 0U ) {
 			if (msr == MSR_IA32_EXT_APIC_ICR) {
 				error = vlapic_x2apic_pt_icr_access(vcpu->vm, *val);
 			}
