@@ -221,8 +221,6 @@ struct acrn_vm_config {
 	 */
 	uint16_t               *vm_pcpu_ids;
 	uint16_t               vm_hw_num_cores;   /* Number of virtual cores */
-	/* Whether secure world is supported for current VM. */
-	bool                   sworld_supported;
 #ifdef CONFIG_PARTITION_MODE
 	uint8_t			vm_id;
 	uint64_t		start_hpa;
