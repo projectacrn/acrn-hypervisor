@@ -809,7 +809,7 @@ static int32_t shell_to_sos_console(__unused int32_t argc, __unused char **argv)
 	}
 
 #ifdef CONFIG_PARTITION_MODE
-	vm_config = vm->vm_config;
+	vm_config = get_vm_config(guest_no);
 	if (vm_config != NULL && vm_config->vm_vuart == false) {
 		snprintf(temp_str, TEMP_STR_SIZE, "No vUART configured for vm%d\n", guest_no);
 		shell_puts(temp_str);

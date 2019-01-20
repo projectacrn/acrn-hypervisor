@@ -124,10 +124,6 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 	vm = &vm_array[vm_id];
 	(void)memset((void *)vm, 0U, sizeof(struct acrn_vm));
 	vm->vm_id = vm_id;
-#ifdef CONFIG_PARTITION_MODE
-	/* Map Virtual Machine to its VM Description */
-	vm->vm_config = vm_config;
-#endif
 	vm->hw.created_vcpus = 0U;
 	vm->emul_mmio_regions = 0U;
 	vm->snoopy_mem = true;
