@@ -86,4 +86,12 @@ struct shell {
 #define SHELL_CMD_CPUID			"cpuid"
 #define SHELL_CMD_CPUID_PARAM		"<leaf> [subleaf]"
 #define SHELL_CMD_CPUID_HELP		"cpuid leaf [subleaf], in hexadecimal"
+
+#define SHELL_CMD_RDMSR			"rdmsr"
+#define SHELL_CMD_RDMSR_PARAM		"[-p<pcpu_id>]	<msr_index>"
+#define SHELL_CMD_RDMSR_HELP		"rdmsr -p<pcpu_id> <msr_index>, msr_index in hexadecimal"
+
+#define SHELL_CMD_WRMSR			"wrmsr"
+#define SHELL_CMD_WRMSR_PARAM		"[-p<pcpu_id>]	<msr_index> <value>"
+#define SHELL_CMD_WRMSR_HELP		"wrmsr -p<pcpu_id> <msr_index> <value>, msr_index and value in hexadecimal"
 #endif /* SHELL_PRIV_H */
