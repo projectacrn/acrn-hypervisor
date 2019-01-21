@@ -17,29 +17,34 @@ vm_sw_loader_t vm_sw_loader;
 
 static struct acrn_vm vm_array[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE);
 
-static uint64_t vmid_bitmap;
+static struct acrn_vm *sos_vm_ptr = NULL;
 
-static inline uint16_t alloc_vm_id(void)
+uint16_t find_free_vm_id(void)
 {
-	uint16_t id = ffz64(vmid_bitmap);
+	uint16_t id;
+	struct acrn_vm_config *vm_config;
 
-	while (id < CONFIG_MAX_VM_NUM) {
-		if (!bitmap_test_and_set_lock(id, &vmid_bitmap)) {
+	for (id = 0U; id < CONFIG_MAX_VM_NUM; id++) {
+		vm_config = get_vm_config(id);
+		if (vm_config->type == UNDEFINED_VM) {
 			break;
 		}
-		id = ffz64(vmid_bitmap);
 	}
-	return (id < CONFIG_MAX_VM_NUM) ? id : INVALID_VM_ID;
+	return (vm_config->type == UNDEFINED_VM) ? id : INVALID_VM_ID;
 }
 
 static inline void free_vm_id(const struct acrn_vm *vm)
 {
-	bitmap_clear_lock(vm->vm_id, &vmid_bitmap);
+	struct acrn_vm_config *vm_config = get_vm_config(vm->vm_id);
+
+	if (vm_config != NULL) {
+		vm_config->type = UNDEFINED_VM;
+	}
 }
 
-static inline bool is_vm_valid(uint16_t vm_id)
+bool is_sos_vm(const struct acrn_vm *vm)
 {
-	return bitmap_test(vm_id, &vmid_bitmap);
+	return (vm != NULL) && (vm == sos_vm_ptr);
 }
 
 /**
@@ -57,159 +62,152 @@ static void setup_io_bitmap(struct acrn_vm *vm)
 	}
 }
 
-/* return a pointer to the virtual machine structure associated with
+/**
+ * return a pointer to the virtual machine structure associated with
  * this VM ID
+ *
+ * @pre vm_id < CONFIG_MAX_VM_NUM
  */
 struct acrn_vm *get_vm_from_vmid(uint16_t vm_id)
 {
-	struct acrn_vm *ret;
-
-	if (is_vm_valid(vm_id)) {
-	        ret = &vm_array[vm_id];
-	} else {
-	        ret = NULL;
-	}
-
-	return ret;
+	return &vm_array[vm_id];
 }
 
 /**
- * @pre vm_config != NULL && rtn_vm != NULL
+ * @pre vm_config != NULL
  */
-int32_t create_vm(struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm)
+static inline uint16_t get_vm_bsp_pcpu_id(const struct acrn_vm_config *vm_config)
+{
+	uint16_t cpu_id = INVALID_CPU_ID;
+
+	cpu_id = ffs64(vm_config->pcpu_bitmap);
+
+	return (cpu_id < get_pcpu_nums()) ? cpu_id : INVALID_CPU_ID;
+}
+
+/**
+ * @pre vm_id < CONFIG_MAX_VM_NUM && vm_config != NULL && rtn_vm != NULL
+ */
+int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm)
 {
 	struct acrn_vm *vm = NULL;
 	int32_t status = 0;
-	uint16_t vm_id;
 	bool need_cleanup = false;
 
+	/* Allocate memory for virtual machine */
+	vm = &vm_array[vm_id];
+	(void)memset((void *)vm, 0U, sizeof(struct acrn_vm));
+	vm->vm_id = vm_id;
 #ifdef CONFIG_PARTITION_MODE
-	vm_id = vm_config->vm_id;
-	bitmap_set_lock(vm_id, &vmid_bitmap);
-#else
-	vm_id = alloc_vm_id();
+	/* Map Virtual Machine to its VM Description */
+	vm->vm_config = vm_config;
 #endif
+	vm->hw.created_vcpus = 0U;
+	vm->emul_mmio_regions = 0U;
+	vm->snoopy_mem = true;
 
-	if (vm_id < CONFIG_MAX_VM_NUM) {
-		/* Allocate memory for virtual machine */
-		vm = &vm_array[vm_id];
-		(void)memset((void *)vm, 0U, sizeof(struct acrn_vm));
-		vm->vm_id = vm_id;
-#ifdef CONFIG_PARTITION_MODE
-		/* Map Virtual Machine to its VM Description */
-		vm->vm_config = vm_config;
-#endif
-		vm->hw.created_vcpus = 0U;
-		vm->emul_mmio_regions = 0U;
-		vm->snoopy_mem = true;
+	/* gpa_lowtop are used for system start up */
+	vm->hw.gpa_lowtop = 0UL;
 
-		/* gpa_lowtop are used for system start up */
-		vm->hw.gpa_lowtop = 0UL;
+	init_ept_mem_ops(vm);
+	vm->arch_vm.nworld_eptp = vm->arch_vm.ept_mem_ops.get_pml4_page(vm->arch_vm.ept_mem_ops.info);
+	sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp);
 
-		init_ept_mem_ops(vm);
-		vm->arch_vm.nworld_eptp = vm->arch_vm.ept_mem_ops.get_pml4_page(vm->arch_vm.ept_mem_ops.info);
-		sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp);
-
-		/* Only for SOS: Configure VM software information */
-		/* For UOS: This VM software information is configure in DM */
-		if (is_sos_vm(vm)) {
-			vm->snoopy_mem = false;
-			rebuild_sos_vm_e820();
-			prepare_sos_vm_memmap(vm);
+	/* Only for SOS: Configure VM software information */
+	/* For UOS: This VM software information is configure in DM */
+	if (is_sos_vm(vm)) {
+		vm->snoopy_mem = false;
+		rebuild_sos_vm_e820();
+		prepare_sos_vm_memmap(vm);
 
 #ifndef CONFIG_EFI_STUB
-			status = init_vm_boot_info(vm);
+		status = init_vm_boot_info(vm);
 #else
-			status = efi_boot_init();
+		status = efi_boot_init();
 #endif
-			if (status == 0) {
-				init_iommu_sos_vm_domain(vm);
-			} else {
-				need_cleanup = true;
-			}
-
-		} else {
-			/* populate UOS vm fields according to vm_config */
-			vm->sworld_control.flag.supported = vm_config->sworld_supported;
-			if (vm->sworld_control.flag.supported != 0UL) {
-				struct memory_ops *ept_mem_ops = &vm->arch_vm.ept_mem_ops;
-
-				ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-					hva2hpa(ept_mem_ops->get_sworld_memory_base(ept_mem_ops->info)),
-					TRUSTY_EPT_REBASE_GPA, TRUSTY_RAM_SIZE, EPT_WB | EPT_RWX);
-			}
-
-			(void)memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
-				&vm_config->GUID[0], sizeof(vm_config->GUID));
-#ifdef CONFIG_PARTITION_MODE
-			ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-				vm_config->start_hpa, 0UL, vm_config->mem_size,
-				EPT_RWX|EPT_WB);
-			init_vm_boot_info(vm);
-#endif
-		}
-
 		if (status == 0) {
-			enable_iommu();
-
-			INIT_LIST_HEAD(&vm->softirq_dev_entry_list);
-			spinlock_init(&vm->softirq_dev_lock);
-			vm->intr_inject_delay_delta = 0UL;
-
-			/* Set up IO bit-mask such that VM exit occurs on
-			 * selected IO ranges
-			 */
-			setup_io_bitmap(vm);
-
-			vm_setup_cpu_state(vm);
-
-			if (is_sos_vm(vm)) {
-				/* Load pm S state data */
-				if (vm_load_pm_s_state(vm) == 0) {
-					register_pm1ab_handler(vm);
-				}
-
-				/* Create virtual uart; just when uart enabled, vuart can work */
-				if (is_dbg_uart_enabled()) {
-					vuart_init(vm);
-				}
-			}
-			vpic_init(vm);
-
-#ifdef CONFIG_PARTITION_MODE
-			/* Create virtual uart; just when uart enabled, vuart can work */
-			if (vm_config->vm_vuart && is_dbg_uart_enabled()) {
-				vuart_init(vm);
-			}
-			vrtc_init(vm);
-#endif
-
-			vpci_init(vm);
-
-			/* vpic wire_mode default is INTR */
-			vm->wire_mode = VPIC_WIRE_INTR;
-
-			/* Init full emulated vIOAPIC instance */
-			vioapic_init(vm);
-
-			/* Populate return VM handle */
-			*rtn_vm = vm;
-			vm->sw.io_shared_page = NULL;
-#ifdef CONFIG_IOREQ_POLLING
-			/* Now, enable IO completion polling mode for all VMs with CONFIG_IOREQ_POLLING. */
-			vm->sw.is_completion_polling = true;
-#endif
-			status = set_vcpuid_entries(vm);
-			if (status == 0) {
-				vm->state = VM_CREATED;
-			} else {
-				need_cleanup = true;
-			}
+			init_iommu_sos_vm_domain(vm);
+		} else {
+			need_cleanup = true;
 		}
 
 	} else {
-		pr_err("%s, vm id is invalid!\n", __func__);
-		status = -ENODEV;
+		/* populate UOS vm fields according to vm_config */
+		vm->sworld_control.flag.supported = vm_config->sworld_supported;
+		if (vm->sworld_control.flag.supported != 0UL) {
+			struct memory_ops *ept_mem_ops = &vm->arch_vm.ept_mem_ops;
+
+			ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+				hva2hpa(ept_mem_ops->get_sworld_memory_base(ept_mem_ops->info)),
+				TRUSTY_EPT_REBASE_GPA, TRUSTY_RAM_SIZE, EPT_WB | EPT_RWX);
+		}
+
+		(void)memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
+			&vm_config->GUID[0], sizeof(vm_config->GUID));
+#ifdef CONFIG_PARTITION_MODE
+		ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
+			vm_config->start_hpa, 0UL, vm_config->mem_size,
+			EPT_RWX|EPT_WB);
+		init_vm_boot_info(vm);
+#endif
+	}
+
+	if (status == 0) {
+		enable_iommu();
+
+		INIT_LIST_HEAD(&vm->softirq_dev_entry_list);
+		spinlock_init(&vm->softirq_dev_lock);
+		vm->intr_inject_delay_delta = 0UL;
+
+		/* Set up IO bit-mask such that VM exit occurs on
+		 * selected IO ranges
+		 */
+		setup_io_bitmap(vm);
+
+		vm_setup_cpu_state(vm);
+
+		if (is_sos_vm(vm)) {
+			/* Load pm S state data */
+			if (vm_load_pm_s_state(vm) == 0) {
+				register_pm1ab_handler(vm);
+			}
+
+			/* Create virtual uart; just when uart enabled, vuart can work */
+			if (is_dbg_uart_enabled()) {
+				vuart_init(vm);
+			}
+		}
+		vpic_init(vm);
+
+#ifdef CONFIG_PARTITION_MODE
+		/* Create virtual uart; just when uart enabled, vuart can work */
+		if (vm_config->vm_vuart && is_dbg_uart_enabled()) {
+			vuart_init(vm);
+		}
+		vrtc_init(vm);
+#endif
+
+		vpci_init(vm);
+
+		/* vpic wire_mode default is INTR */
+		vm->wire_mode = VPIC_WIRE_INTR;
+
+		/* Init full emulated vIOAPIC instance */
+		vioapic_init(vm);
+
+		/* Populate return VM handle */
+		*rtn_vm = vm;
+		vm->sw.io_shared_page = NULL;
+#ifdef CONFIG_IOREQ_POLLING
+		/* Now, enable IO completion polling mode for all VMs with CONFIG_IOREQ_POLLING. */
+		vm->sw.is_completion_polling = true;
+#endif
+		status = set_vcpuid_entries(vm);
+		if (status == 0) {
+			vm->state = VM_CREATED;
+		} else {
+			need_cleanup = true;
+		}
 	}
 
 	if (need_cleanup && (vm != NULL)) {
@@ -369,23 +367,21 @@ void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec)
 	schedule_vcpu(bsp);
 }
 
-#ifdef CONFIG_PARTITION_MODE
-/* Create vm/vcpu for vm */
-int32_t prepare_vm(uint16_t pcpu_id)
+/**
+ * Prepare to create vm/vcpu for vm
+ *
+ * @pre vm_id < CONFIG_MAX_VM_NUM && vm_config != NULL
+ */
+void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 {
-	int32_t ret = 0;
+	int32_t err = 0;
 	uint16_t i;
 	struct acrn_vm *vm = NULL;
-	struct acrn_vm_config *vm_config = NULL;
-	bool is_vm_bsp;
 
-	vm_config = pcpu_vm_config_map[pcpu_id].vm_config_ptr;
-	is_vm_bsp = pcpu_vm_config_map[pcpu_id].is_bsp;
+	err = create_vm(vm_id, vm_config, &vm);
 
-	if (is_vm_bsp) {
-		ret = create_vm(vm_config, &vm);
-		ASSERT(ret == 0, "VM creation failed!");
-
+	if (err == 0) {
+#ifdef CONFIG_PARTITION_MODE
 		mptable_build(vm);
 
 		prepare_vcpu(vm, vm_config->vm_pcpu_ids[0]);
@@ -393,7 +389,19 @@ int32_t prepare_vm(uint16_t pcpu_id)
 		/* Prepare the AP for vm */
 		for (i = 1U; i < vm_config->vm_hw_num_cores; i++)
 			prepare_vcpu(vm, vm_config->vm_pcpu_ids[i]);
+#else
+		for (i = 0U; i < get_pcpu_nums(); i++) {
+			if (bitmap_test(i, &vm_config->pcpu_bitmap)) {
+				err = prepare_vcpu(vm, i);
+				if (err != 0) {
+					break;
+				}
+			}
+		}
+#endif
+	}
 
+	if (err == 0) {
 		if (vm_sw_loader == NULL) {
 			vm_sw_loader = general_sw_loader;
 		}
@@ -403,65 +411,33 @@ int32_t prepare_vm(uint16_t pcpu_id)
 		/* start vm BSP automatically */
 		start_vm(vm);
 
-		pr_acrnlog("Start VM%x", vm_config->vm_id);
+		pr_acrnlog("Start VM%x", vm->vm_id);
 	}
-
-	return ret;
 }
 
+/**
+ * @pre vm_config != NULL
+ */
+void launch_vms(uint16_t pcpu_id)
+{
+	uint16_t vm_id, bsp_id;
+	struct acrn_vm_config *vm_config;
+
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		vm_config = get_vm_config(vm_id);
+		if ((vm_config->type == SOS_VM) || (vm_config->type == PRE_LAUNCHED_VM)) {
+			if (vm_config->type == SOS_VM) {
+				sos_vm_ptr = &vm_array[vm_id];
+			}
+
+#ifdef CONFIG_PARTITION_MODE
+			bsp_id = vm_config->vm_pcpu_ids[0];
 #else
-
-/* Create vm/vcpu for sos_vm */
-static int32_t prepare_sos_vm(void)
-{
-	int32_t err;
-	uint16_t i;
-	struct acrn_vm *vm = NULL;
-	struct acrn_vm_config sos_vm_config;
-
-	(void)memset((void *)&sos_vm_config, 0U, sizeof(sos_vm_config));
-	sos_vm_config.vm_hw_num_cores = get_pcpu_nums();
-
-	err = create_vm(&sos_vm_config, &vm);
-
-	if (err == 0) {
-		/* Allocate all cpus to sos_vm at the beginning */
-		for (i = 0U; i < sos_vm_config.vm_hw_num_cores; i++) {
-			err = prepare_vcpu(vm, i);
-			if (err != 0) {
-				break;
-			}
-		}
-
-		if (err == 0) {
-
-			if (vm_sw_loader == NULL) {
-				vm_sw_loader = general_sw_loader;
-			}
-
-			if (is_sos_vm(vm)) {
-				(void)vm_sw_loader(vm);
-			}
-
-			/* start sos_vm BSP automatically */
-			start_vm(vm);
-
-			pr_acrnlog("Start SOS_VM");
-		}
-	}
-
-	return err;
-}
-
-int32_t prepare_vm(uint16_t pcpu_id)
-{
-	int32_t err = 0;
-
-	/* prepare sos_vm if pcpu_id is BOOT_CPU_ID */
-	if (pcpu_id == BOOT_CPU_ID) {
-		err  = prepare_sos_vm();
-	}
-
-	return err;
-}
+			bsp_id = get_vm_bsp_pcpu_id(vm_config);
 #endif
+			if (pcpu_id == bsp_id) {
+				prepare_vm(vm_id, vm_config);
+			}
+		}
+	}
+}

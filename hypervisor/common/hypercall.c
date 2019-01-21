@@ -104,35 +104,44 @@ int32_t hcall_get_api_version(struct acrn_vm *vm, uint64_t param)
  * @param param guest physical memory address. This gpa points to
  *              struct acrn_create_vm
  *
- * @pre Pointer vm shall point to SOS_VM
+ * @pre Pointer vm shall point to SOS_VM, vm_config != NULL
  * @return 0 on success, non-zero on error.
  */
 int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 {
-	int32_t ret;
+	uint16_t vm_id;
+	int32_t ret = -1;
 	struct acrn_vm *target_vm = NULL;
 	struct acrn_create_vm cv;
-	struct acrn_vm_config vm_config;
+	struct acrn_vm_config* vm_config = NULL;
 
 	(void)memset((void *)&cv, 0U, sizeof(cv));
 	if (copy_from_gpa(vm, &cv, param, sizeof(cv)) == 0) {
-		(void)memset(&vm_config, 0U, sizeof(vm_config));
-		vm_config.sworld_supported = ((cv.vm_flag & (SECURE_WORLD_ENABLED)) != 0U);
-		(void)memcpy_s(&vm_config.GUID[0], 16U, &cv.GUID[0], 16U);
+		/* check whether there is a free vm id for use */
+		/* TODO: pass vm id from DM to make vm_id static */
+		vm_id = find_free_vm_id();
+		if (vm_id < CONFIG_MAX_VM_NUM) {
+			vm_config = get_vm_config(vm_id);
+			/* TODO: set by DM */
+			vm_config->type = NORMAL_VM;
+			vm_config->guest_flags |= cv.vm_flag;
+			vm_config->sworld_supported = ((cv.vm_flag & (SECURE_WORLD_ENABLED)) != 0U);
+			(void)memcpy_s(&vm_config->GUID[0], 16U, &cv.GUID[0], 16U);
 
-		ret = create_vm(&vm_config, &target_vm);
-		if (ret != 0) {
-			dev_dbg(ACRN_DBG_HYCALL, "HCALL: Create VM failed");
-			cv.vmid = ACRN_INVALID_VMID;
-			ret = -1;
-		} else {
-			cv.vmid = target_vm->vm_id;
-			ret = 0;
-		}
+			ret = create_vm(vm_id, vm_config, &target_vm);
+			if (ret != 0) {
+				dev_dbg(ACRN_DBG_HYCALL, "HCALL: Create VM failed");
+				cv.vmid = ACRN_INVALID_VMID;
+				ret = -1;
+			} else {
+				cv.vmid = target_vm->vm_id;
+				ret = 0;
+			}
 
-		if (copy_to_gpa(vm, &cv.vmid, param, sizeof(cv.vmid)) != 0) {
-			pr_err("%s: Unable copy param to vm\n", __func__);
-			ret = -1;
+			if (copy_to_gpa(vm, &cv.vmid, param, sizeof(cv.vmid)) != 0) {
+				pr_err("%s: Unable copy param to vm\n", __func__);
+				ret = -1;
+			}
 		}
 	} else {
 		pr_err("%s: Unable copy param to vm\n", __func__);

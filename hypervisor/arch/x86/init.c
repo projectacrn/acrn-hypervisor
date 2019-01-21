@@ -55,13 +55,7 @@ static void enter_guest_mode(uint16_t pcpu_id)
 {
 	vmx_on();
 
-#ifdef CONFIG_PARTITION_MODE
-	(void)prepare_vm(pcpu_id);
-#else
-	if (pcpu_id == BOOT_CPU_ID) {
-		(void)prepare_vm(pcpu_id);
-	}
-#endif
+	(void)launch_vms(pcpu_id);
 
 	switch_to_idle(default_idle);
 
