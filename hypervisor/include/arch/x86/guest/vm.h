@@ -83,10 +83,10 @@ enum vpic_wire_mode {
 
 /* Enumerated type for VM states */
 enum vm_state {
-	VM_CREATED = 0,	/* VM created / awaiting start (boot) */
+	VM_STATE_UNKNOWN = 0,
+	VM_CREATED,	/* VM created / awaiting start (boot) */
 	VM_STARTED,	/* VM started (booted) */
 	VM_PAUSED,	/* VM paused */
-	VM_STATE_UNKNOWN
 };
 
 struct vm_arch {
@@ -235,11 +235,6 @@ struct acrn_vm_config {
 
 } __aligned(8);
 
-static inline bool is_sos_vm(const struct acrn_vm *vm)
-{
-	return (vm->vm_id) == 0U;
-}
-
 /*
  * @pre vcpu_id < CONFIG_MAX_VCPUS_PER_VM
  */
@@ -310,21 +305,20 @@ void resume_vm(struct acrn_vm *vm);
 void resume_vm_from_s3(struct acrn_vm *vm, uint32_t wakeup_vec);
 void start_vm(struct acrn_vm *vm);
 int32_t reset_vm(struct acrn_vm *vm);
-int32_t create_vm(struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm);
-int32_t prepare_vm(uint16_t pcpu_id);
+int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm);
+void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config);
+void launch_vms(uint16_t pcpu_id);
 
 extern struct acrn_vm_config vm_configs[];
 
-#ifdef CONFIG_PARTITION_MODE
-const struct vm_config_arraies *get_vm_config_base(void);
-#endif
-
+bool is_sos_vm(const struct acrn_vm *vm);
+uint16_t find_free_vm_id(void);
 struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
 
 #ifdef CONFIG_PARTITION_MODE
 struct vm_config_arraies {
 	int32_t                     num_vm_config;
-	struct acrn_vm_config   vm_config_array[];
+	struct acrn_vm_config   vm_config_array[CONFIG_MAX_VM_NUM];
 };
 
 struct pcpu_vm_config_mapping {
@@ -332,7 +326,21 @@ struct pcpu_vm_config_mapping {
 	bool is_bsp;
 };
 extern const struct pcpu_vm_config_mapping pcpu_vm_config_map[];
+extern struct vm_config_arraies vm_config_partition;
 
 void vrtc_init(struct acrn_vm *vm);
 #endif
+
+/*
+ * @pre vm_id < CONFIG_MAX_VM_NUM
+ */
+static inline struct acrn_vm_config *get_vm_config(uint16_t vm_id)
+{
+#ifdef CONFIG_PARTITION_MODE
+	return &vm_config_partition.vm_config_array[vm_id];
+#else
+	return &vm_configs[vm_id];
+#endif
+}
+
 #endif /* VM_H_ */
