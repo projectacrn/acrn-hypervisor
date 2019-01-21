@@ -33,6 +33,8 @@ static int32_t shell_show_ioapic_info(__unused int32_t argc, __unused char **arg
 static int32_t shell_loglevel(int32_t argc, char **argv);
 static int32_t shell_cpuid(int32_t argc, char **argv);
 static int32_t shell_trigger_crash(int32_t argc, char **argv);
+static int32_t shell_rdmsr(int32_t argc, char **argv);
+static int32_t shell_wrmsr(int32_t argc, char **argv);
 
 static struct shell_cmd shell_cmds[] = {
 	{
@@ -112,6 +114,18 @@ static struct shell_cmd shell_cmds[] = {
 		.cmd_param	= SHELL_CMD_REBOOT_PARAM,
 		.help_str	= SHELL_CMD_REBOOT_HELP,
 		.fcn		= shell_trigger_crash,
+	},
+	{
+		.str		= SHELL_CMD_RDMSR,
+		.cmd_param	= SHELL_CMD_RDMSR_PARAM,
+		.help_str	= SHELL_CMD_RDMSR_HELP,
+		.fcn		= shell_rdmsr,
+	},
+	{
+		.str		= SHELL_CMD_WRMSR,
+		.cmd_param	= SHELL_CMD_WRMSR_PARAM,
+		.help_str	= SHELL_CMD_WRMSR_HELP,
+		.fcn		= shell_wrmsr,
 	},
 };
 
@@ -1232,4 +1246,77 @@ static int32_t shell_trigger_crash(int32_t argc, char **argv)
 	asm("idiv  %ecx");
 
 	return 0;
+}
+
+static int32_t shell_rdmsr(int32_t argc, char **argv)
+{
+	uint16_t pcpu_id = 0;
+	int32_t ret = 0;
+	uint32_t msr_index = 0;
+	uint64_t val = 0;
+	char str[MAX_STR_SIZE] = {0};
+
+	pcpu_id = get_cpu_id();
+
+	switch (argc) {
+	case 3:
+		/* rdrmsr -p<PCPU_ID> <MSR_INDEX>*/
+		 if ((argv[1][0] == '-') && (argv[1][1] == 'p')) {
+			pcpu_id = (uint16_t)strtol_deci(&(argv[1][2]));
+			msr_index = (uint32_t)strtoul_hex(argv[2]);
+		} else {
+			ret = -EINVAL;
+		}
+		break;
+	case 2:
+		/* rdmsr <MSR_INDEX> */
+		msr_index = (uint32_t)strtoul_hex(argv[1]);
+		break;
+	default:
+		ret = -EINVAL;
+	}
+
+	if (ret == 0) {
+		val = msr_read_pcpu(msr_index, pcpu_id);
+		snprintf(str, MAX_STR_SIZE, "rdmsr(0x%x):0x%llx\n", msr_index, val);
+		shell_puts(str);
+	}
+
+	return ret;
+}
+
+static int32_t shell_wrmsr(int32_t argc, char **argv)
+{
+	uint16_t pcpu_id = 0;
+	int32_t ret = 0;
+	uint32_t msr_index = 0;
+	uint64_t val = 0;
+
+	pcpu_id = get_cpu_id();
+
+	switch (argc) {
+	case 4:
+		/* wrmsr -p<PCPU_ID> <MSR_INDEX> <VALUE>*/
+		 if ((argv[1][0] == '-') && (argv[1][1] == 'p')) {
+			pcpu_id = (uint16_t)strtol_deci(&(argv[1][2]));
+			msr_index = (uint32_t)strtoul_hex(argv[2]);
+			val = strtoul_hex(argv[3]);
+		} else {
+			ret = -EINVAL;
+		}
+		break;
+	case 3:
+		/* wrmsr <MSR_INDEX> <VALUE>*/
+		msr_index = (uint32_t)strtoul_hex(argv[1]);
+		val = strtoul_hex(argv[2]);
+		break;
+	default:
+		ret = -EINVAL;
+	}
+
+	if (ret == 0) {
+		msr_write_pcpu(msr_index, val, pcpu_id);
+	}
+
+	return ret;
 }
