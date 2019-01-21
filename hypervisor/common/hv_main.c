@@ -8,22 +8,11 @@
 #include <schedule.h>
 #include <softirq.h>
 
-static void run_vcpu_pre_work(struct acrn_vcpu *vcpu)
-{
-	uint64_t *pending_pre_work = &vcpu->pending_pre_work;
-
-	if (bitmap_test_and_clear_lock(ACRN_VCPU_MMIO_COMPLETE, pending_pre_work)) {
-		dm_emulate_mmio_post(vcpu);
-	}
-}
-
 void vcpu_thread(struct sched_object *obj)
 {
 	struct acrn_vcpu *vcpu = list_entry(obj, struct acrn_vcpu, sched_obj);
 	uint32_t basic_exit_reason = 0U;
 	int32_t ret = 0;
-
-	run_vcpu_pre_work(vcpu);
 
 	do {
 		/* If vcpu is not launched, we need to do init_vmcs first */
@@ -46,15 +35,7 @@ void vcpu_thread(struct sched_object *obj)
 		}
 
 		if (need_reschedule(vcpu->pcpu_id)) {
-			/*
-			 * In extrem case, schedule() could return. Which
-			 * means the vcpu resume happens before schedule()
-			 * triggered by vcpu suspend. In this case, we need
-			 * to do pre work and continue vcpu loop after
-			 * schedule() is return.
-			 */
 			schedule();
-			run_vcpu_pre_work(vcpu);
 			continue;
 		}
 

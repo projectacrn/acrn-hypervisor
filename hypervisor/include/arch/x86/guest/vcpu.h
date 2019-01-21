@@ -13,8 +13,6 @@
 #ifndef VCPU_H
 #define VCPU_H
 
-#define	ACRN_VCPU_MMIO_COMPLETE		(0U)
-
 /* Number of GPRs saved / restored for guest in VCPU structure */
 #define NUM_GPRS                            16U
 #define GUEST_STATE_AREA_SIZE               512
@@ -274,7 +272,6 @@ struct acrn_vcpu {
 	uint64_t sync;	/*hold the bit events*/
 
 	struct sched_object sched_obj;
-	uint64_t pending_pre_work; /* any pre work pending? */
 	bool launched; /* Whether the vcpu is launched on target pcpu */
 	uint32_t paused_cnt; /* how many times vcpu is paused */
 	uint32_t running; /* vcpu is picked up and run? */
@@ -605,8 +602,6 @@ void schedule_vcpu(struct acrn_vcpu *vcpu);
  * @param[in] pcpu_id which the vcpu will be mapped
  */
 int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id);
-
-void request_vcpu_pre_work(struct acrn_vcpu *vcpu, uint16_t pre_work_id);
 
 /**
  * @}
