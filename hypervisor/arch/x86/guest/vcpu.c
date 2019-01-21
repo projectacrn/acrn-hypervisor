@@ -383,7 +383,6 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 	vcpu->paused_cnt = 0U;
 	vcpu->running = 0;
 	vcpu->arch.nr_sipi = 0;
-	vcpu->pending_pre_work = 0U;
 	vcpu->state = VCPU_INIT;
 
 	reset_vcpu_regs(vcpu);
@@ -535,7 +534,6 @@ void reset_vcpu(struct acrn_vcpu *vcpu)
 	vcpu->paused_cnt = 0U;
 	vcpu->running = 0;
 	vcpu->arch.nr_sipi = 0;
-	vcpu->pending_pre_work = 0U;
 
 	vcpu->arch.exception_info.exception = VECTOR_INVALID;
 	vcpu->arch.cur_context = NORMAL_WORLD;
@@ -678,9 +676,4 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 	vcpu->sched_obj.prepare_switch_in = context_switch_in;
 
 	return ret;
-}
-
-void request_vcpu_pre_work(struct acrn_vcpu *vcpu, uint16_t pre_work_id)
-{
-	bitmap_set_lock(pre_work_id, &vcpu->pending_pre_work);
 }

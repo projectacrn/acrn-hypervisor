@@ -154,6 +154,8 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 				}
 				asm_pause();
 			}
+		} else if (need_reschedule(vcpu->pcpu_id)) {
+			schedule();
 		}
 		ret = 0;
 	} else {
