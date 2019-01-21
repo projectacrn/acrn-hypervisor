@@ -412,7 +412,7 @@ do
 	esac
 done
 
-if [ ! -f "/sys/class/gpio/gpio460" ]; then
+if [ ! -d "/sys/class/gpio/gpio460" ]; then
   echo "export gpio460"
   echo 460 > /sys/class/gpio/export
   echo 'high' > /sys/class/gpio/gpio460/direction
