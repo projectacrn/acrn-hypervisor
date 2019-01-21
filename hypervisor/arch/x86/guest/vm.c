@@ -141,6 +141,10 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 				hva2hpa(ept_mem_ops->get_sworld_memory_base(ept_mem_ops->info)),
 				TRUSTY_EPT_REBASE_GPA, TRUSTY_RAM_SIZE, EPT_WB | EPT_RWX);
 		}
+		if (vm_config->name[0] == '\0') {
+			/* if VM name is not configured, specify with VM ID */
+			snprintf(vm_config->name, 16, "ACRN VM_%d", vm_id);
+		}
 
 		(void)memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
 			&vm_config->GUID[0], sizeof(vm_config->GUID));
@@ -411,7 +415,7 @@ void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config)
 		/* start vm BSP automatically */
 		start_vm(vm);
 
-		pr_acrnlog("Start VM%x", vm->vm_id);
+		pr_acrnlog("Start VM id: %x name: %s", vm_id, vm_config->name);
 	}
 }
 
