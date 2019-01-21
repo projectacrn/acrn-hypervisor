@@ -513,17 +513,15 @@ static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv)
 {
 	char temp_str[MAX_STR_SIZE];
 	struct acrn_vm *vm;
-	uint16_t idx;
+	struct acrn_vm_config *vm_config;
+	uint16_t vm_id;
 	char state[32];
 
-	shell_puts("\r\nVM NAME                  VM ID            VM STATE"
-		"\r\n=======                  =====            ========\r\n");
+	shell_puts("\r\nVM NAME\t\t\t\tVM ID\t\tVM STATE"
+		"\r\n=======\t\t\t\t=====\t\t========\r\n");
 
-	for (idx = 0U; idx < CONFIG_MAX_VM_NUM; idx++) {
-		vm = get_vm_from_vmid(idx);
-		if (vm == NULL) {
-			continue;
-		}
+	for (vm_id = 0U; vm_id < CONFIG_MAX_VM_NUM; vm_id++) {
+		vm = get_vm_from_vmid(vm_id);
 		switch (vm->state) {
 		case VM_CREATED:
 			(void)strncpy_s(state, 32U, "Created", 32U);
@@ -538,14 +536,13 @@ static int32_t shell_list_vm(__unused int32_t argc, __unused char **argv)
 			(void)strncpy_s(state, 32U, "Unknown", 32U);
 			break;
 		}
-		/* Create output string consisting of VM name and VM id
-		 */
-		snprintf(temp_str, MAX_STR_SIZE,
-				"vm_%-24d %-16d %-8s\r\n", vm->vm_id,
-				vm->vm_id, state);
+		vm_config = get_vm_config(vm_id);
+		if (vm_config->type != UNDEFINED_VM) {
+			snprintf(temp_str, MAX_STR_SIZE, "%-34s%-14d%-8s\r\n", vm_config->name, vm_id, state);
 
-		/* Output information for this task */
-		shell_puts(temp_str);
+			/* Output information for this task */
+			shell_puts(temp_str);
+		}
 	}
 
 	return 0;
