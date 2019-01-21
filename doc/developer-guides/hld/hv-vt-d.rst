@@ -306,7 +306,7 @@ deinitialization:
 .. doxygenfunction:: init_iommu
    :project: Project ACRN
 
-.. doxygenfunction:: init_iommu_vm0_domain
+.. doxygenfunction:: init_iommu_sos_vm_domain
    :project: Project ACRN
 
 runtime

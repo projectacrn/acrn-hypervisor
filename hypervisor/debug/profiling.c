@@ -1394,7 +1394,7 @@ void profiling_setup(void)
 	int32_t retval;
 	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
 	cpu = get_cpu_id();
-	/* support PMI notification, VM0 will register all CPU */
+	/* support PMI notification, SOS_VM will register all CPU */
 	if ((cpu == BOOT_CPU_ID) && (profiling_pmi_irq == IRQ_INVALID)) {
 		pr_info("%s: calling request_irq", __func__);
 		retval = request_irq(PMI_IRQ,

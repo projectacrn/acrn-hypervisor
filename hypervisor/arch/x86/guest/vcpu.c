@@ -308,7 +308,7 @@ void set_ap_entry(struct acrn_vcpu *vcpu, uint64_t entry)
  * vcpu_id/pcpu_id mapping table:
  *
  * if
- *     VM0_CPUS[2] = {0, 2} , VM1_CPUS[2] = {3, 1};
+ *     SOS_VM_CPUS[2] = {0, 2} , VM1_CPUS[2] = {3, 1};
  * then
  *     for physical CPU 0 : vcpu->pcpu_id = 0, vcpu->vcpu_id = 0, vmid = 0;
  *     for physical CPU 2 : vcpu->pcpu_id = 2, vcpu->vcpu_id = 1, vmid = 0;

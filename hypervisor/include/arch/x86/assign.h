@@ -86,7 +86,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpi
 /**
  * @brief Add an interrupt remapping entry for INTx as pre-hold mapping.
  *
- * Except vm0, Device Model should call this function to pre-hold ptdev intx
+ * Except sos_vm, Device Model should call this function to pre-hold ptdev intx
  * The entry is identified by phys_pin, one entry vs. one phys_pin.
  * Currently, one phys_pin can only be held by one pin source (vPIC or vIOAPIC).
  *
@@ -125,7 +125,7 @@ void ptirq_remove_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, bool pic
  * @brief Add interrupt remapping entry/entries for MSI/MSI-x as pre-hold mapping.
  *
  * Add pre-hold mapping of the given number of vectors between the given physical and virtual BDF for the given vm.
- * Except vm0, Device Model should call this function to pre-hold ptdev MSI/MSI-x.
+ * Except sos_vm, Device Model should call this function to pre-hold ptdev MSI/MSI-x.
  * The entry is identified by phys_bdf:msi_idx, one entry vs. one phys_bdf:msi_idx.
  *
  * @param[in] vm pointer to acrn_vm

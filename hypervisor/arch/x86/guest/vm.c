@@ -49,7 +49,7 @@ static inline bool is_vm_valid(uint16_t vm_id)
  */
 static void setup_io_bitmap(struct acrn_vm *vm)
 {
-	if (is_vm0(vm)) {
+	if (is_sos_vm(vm)) {
 		(void)memset(vm->arch_vm.io_bitmap, 0x00U, PAGE_SIZE * 2U);
 	} else {
 		/* block all IO port access from Guest */
@@ -112,10 +112,10 @@ int32_t create_vm(struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm)
 
 		/* Only for SOS: Configure VM software information */
 		/* For UOS: This VM software information is configure in DM */
-		if (is_vm0(vm)) {
+		if (is_sos_vm(vm)) {
 			vm->snoopy_mem = false;
-			rebuild_vm0_e820();
-			prepare_vm0_memmap(vm);
+			rebuild_sos_vm_e820();
+			prepare_sos_vm_memmap(vm);
 
 #ifndef CONFIG_EFI_STUB
 			status = init_vm_boot_info(vm);
@@ -123,7 +123,7 @@ int32_t create_vm(struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm)
 			status = efi_boot_init();
 #endif
 			if (status == 0) {
-				init_iommu_vm0_domain(vm);
+				init_iommu_sos_vm_domain(vm);
 			} else {
 				need_cleanup = true;
 			}
@@ -163,7 +163,7 @@ int32_t create_vm(struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm)
 
 			vm_setup_cpu_state(vm);
 
-			if (is_vm0(vm)) {
+			if (is_sos_vm(vm)) {
 				/* Load pm S state data */
 				if (vm_load_pm_s_state(vm) == 0) {
 					register_pm1ab_handler(vm);
@@ -290,7 +290,7 @@ int32_t reset_vm(struct acrn_vm *vm)
 			reset_vcpu(vcpu);
 		}
 
-		if (is_vm0(vm)) {
+		if (is_sos_vm(vm)) {
 			(void )vm_sw_loader(vm);
 		}
 
@@ -411,22 +411,22 @@ int32_t prepare_vm(uint16_t pcpu_id)
 
 #else
 
-/* Create vm/vcpu for vm0 */
-static int32_t prepare_vm0(void)
+/* Create vm/vcpu for sos_vm */
+static int32_t prepare_sos_vm(void)
 {
 	int32_t err;
 	uint16_t i;
 	struct acrn_vm *vm = NULL;
-	struct acrn_vm_config vm0_config;
+	struct acrn_vm_config sos_vm_config;
 
-	(void)memset((void *)&vm0_config, 0U, sizeof(vm0_config));
-	vm0_config.vm_hw_num_cores = get_pcpu_nums();
+	(void)memset((void *)&sos_vm_config, 0U, sizeof(sos_vm_config));
+	sos_vm_config.vm_hw_num_cores = get_pcpu_nums();
 
-	err = create_vm(&vm0_config, &vm);
+	err = create_vm(&sos_vm_config, &vm);
 
 	if (err == 0) {
-		/* Allocate all cpus to vm0 at the beginning */
-		for (i = 0U; i < vm0_config.vm_hw_num_cores; i++) {
+		/* Allocate all cpus to sos_vm at the beginning */
+		for (i = 0U; i < sos_vm_config.vm_hw_num_cores; i++) {
 			err = prepare_vcpu(vm, i);
 			if (err != 0) {
 				break;
@@ -439,14 +439,14 @@ static int32_t prepare_vm0(void)
 				vm_sw_loader = general_sw_loader;
 			}
 
-			if (is_vm0(vm)) {
+			if (is_sos_vm(vm)) {
 				(void)vm_sw_loader(vm);
 			}
 
-			/* start vm0 BSP automatically */
+			/* start sos_vm BSP automatically */
 			start_vm(vm);
 
-			pr_acrnlog("Start VM0");
+			pr_acrnlog("Start SOS_VM");
 		}
 	}
 
@@ -457,9 +457,9 @@ int32_t prepare_vm(uint16_t pcpu_id)
 {
 	int32_t err = 0;
 
-	/* prepare vm0 if pcpu_id is BOOT_CPU_ID */
+	/* prepare sos_vm if pcpu_id is BOOT_CPU_ID */
 	if (pcpu_id == BOOT_CPU_ID) {
-		err  = prepare_vm0();
+		err  = prepare_sos_vm();
 	}
 
 	return err;

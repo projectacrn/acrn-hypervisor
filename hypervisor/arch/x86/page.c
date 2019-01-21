@@ -58,10 +58,10 @@ const struct memory_ops ppt_mem_ops = {
 	.get_pd_page = ppt_get_pd_page,
 };
 
-static struct page vm0_pml4_pages[PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
-static struct page vm0_pdpt_pages[PDPT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
-static struct page vm0_pd_pages[PD_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
-static struct page vm0_pt_pages[PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
+static struct page sos_vm_pml4_pages[PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
+static struct page sos_vm_pdpt_pages[PDPT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
+static struct page sos_vm_pd_pages[PD_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
+static struct page sos_vm_pt_pages[PT_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE))];
 
 /* uos_nworld_pml4_pages[i] is ...... of UOS i (whose vm_id = i +1) */
 static struct page uos_nworld_pml4_pages[CONFIG_MAX_VM_NUM - 1U][PML4_PAGE_NUM(EPT_ADDRESS_SPACE(CONFIG_UOS_RAM_SIZE))];
@@ -78,10 +78,10 @@ static union pgtable_pages_info ept_pages_info[CONFIG_MAX_VM_NUM] = {
 	{
 		.ept = {
 			.top_address_space = EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE),
-			.nworld_pml4_base = vm0_pml4_pages,
-			.nworld_pdpt_base = vm0_pdpt_pages,
-			.nworld_pd_base = vm0_pd_pages,
-			.nworld_pt_base = vm0_pt_pages,
+			.nworld_pml4_base = sos_vm_pml4_pages,
+			.nworld_pdpt_base = sos_vm_pdpt_pages,
+			.nworld_pd_base = sos_vm_pd_pages,
+			.nworld_pt_base = sos_vm_pt_pages,
 		},
 	},
 };

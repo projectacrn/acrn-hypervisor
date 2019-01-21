@@ -182,7 +182,7 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 
 /* add msix entry for a vm, based on msi id (phys_bdf+msix_index)
  * - if the entry not be added by any vm, allocate it
- * - if the entry already be added by vm0, then change the owner to current vm
+ * - if the entry already be added by sos_vm, then change the owner to current vm
  * - if the entry already be added by other vm, return NULL
  */
 static struct ptirq_remapping_info *add_msix_remapping(struct acrn_vm *vm,
@@ -209,7 +209,7 @@ static struct ptirq_remapping_info *add_msix_remapping(struct acrn_vm *vm,
 			}
 		}
 	} else if (entry->vm != vm) {
-		if (is_vm0(entry->vm)) {
+		if (is_sos_vm(entry->vm)) {
 			entry->vm = vm;
 			entry->virt_sid.msi_id.bdf = virt_bdf;
 		} else {
@@ -257,7 +257,7 @@ remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf, uint32_t entr
 
 /* add intx entry for a vm, based on intx id (phys_pin)
  * - if the entry not be added by any vm, allocate it
- * - if the entry already be added by vm0, then change the owner to current vm
+ * - if the entry already be added by sos_vm, then change the owner to current vm
  * - if the entry already be added by other vm, return NULL
  */
 static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin,
@@ -292,7 +292,7 @@ static struct ptirq_remapping_info *add_intx_remapping(struct acrn_vm *vm, uint3
 				pr_err("INTX re-add vpin %d", virt_pin);
 			}
 		} else if (entry->vm != vm) {
-			if (is_vm0(entry->vm)) {
+			if (is_sos_vm(entry->vm)) {
 				entry->vm = vm;
 				entry->virt_sid.value = virt_sid.value;
 			} else {
@@ -511,14 +511,14 @@ int32_t ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,
 	 * Device Model should pre-hold the mapping entries by calling
 	 * ptirq_add_msix_remapping for UOS.
 	 *
-	 * For SOS(vm0), it adds the mapping entries at runtime, if the
+	 * For SOS(sos_vm), it adds the mapping entries at runtime, if the
 	 * entry already be held by others, return error.
 	 */
 	spinlock_obtain(&ptdev_lock);
 	entry = ptirq_lookup_entry_by_sid(PTDEV_INTR_MSI, &virt_sid, vm);
 	if (entry == NULL) {
-		/* VM0 we add mapping dynamically */
-		if (is_vm0(vm)) {
+		/* SOS_VM we add mapping dynamically */
+		if (is_sos_vm(vm)) {
 			entry = add_msix_remapping(vm, virt_bdf, virt_bdf, entry_nr);
 			if (entry == NULL) {
 				pr_err("dev-assign: msi entry exist in others");
@@ -599,12 +599,12 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpi
 	 * Device Model should pre-hold the mapping entries by calling
 	 * ptirq_add_intx_remapping for UOS.
 	 *
-	 * For SOS(vm0), it adds the mapping entries at runtime, if the
+	 * For SOS(sos_vm), it adds the mapping entries at runtime, if the
 	 * entry already be held by others, return error.
 	 */
 
 	/* no remap for hypervisor owned intx */
-	if (is_vm0(vm) && hv_used_dbg_intx(virt_sid.intx_id.pin)) {
+	if (is_sos_vm(vm) && hv_used_dbg_intx(virt_sid.intx_id.pin)) {
 		status = -ENODEV;
 	}
 
@@ -615,9 +615,9 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpi
 		spinlock_obtain(&ptdev_lock);
 		entry = ptirq_lookup_entry_by_vpin(vm, virt_pin, pic_pin);
 		if (entry == NULL) {
-			if (is_vm0(vm)) {
+			if (is_sos_vm(vm)) {
 
-				/* for vm0, there is chance of vpin source switch
+				/* for sos_vm, there is chance of vpin source switch
 				 * between vPIC & vIOAPIC for one legacy phys_pin.
 				 *
 				 * here checks if there is already mapping entry from
@@ -680,7 +680,7 @@ int32_t ptirq_intx_pin_remap(struct acrn_vm *vm, uint32_t virt_pin, uint32_t vpi
 }
 
 /* @pre vm != NULL
- * except vm0, Device Model should call this function to pre-hold ptdev intx
+ * except sos_vm, Device Model should call this function to pre-hold ptdev intx
  * entries:
  * - the entry is identified by phys_pin:
  *   one entry vs. one phys_pin
@@ -708,7 +708,7 @@ void ptirq_remove_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, bool pic
 	spinlock_release(&ptdev_lock);
 }
 
-/* except vm0, Device Model should call this function to pre-hold ptdev msi
+/* except sos_vm, Device Model should call this function to pre-hold ptdev msi
  * entries:
  * - the entry is identified by phys_bdf:msi_idx:
  *   one entry vs. one phys_bdf:msi_idx

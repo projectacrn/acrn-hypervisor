@@ -174,7 +174,7 @@ vlapic_build_id(const struct acrn_vlapic *vlapic)
 	 */
 	vlapic_id = per_cpu(lapic_id, vcpu->pcpu_id);
 #else
-	if (is_vm0(vcpu->vm)) {
+	if (is_sos_vm(vcpu->vm)) {
 		/* Get APIC ID sequence format from cpu_storage */
 		vlapic_id = per_cpu(lapic_id, vcpu->vcpu_id);
 	} else {
@@ -2183,7 +2183,7 @@ int32_t vlapic_create(struct acrn_vcpu *vcpu)
 		uint64_t *pml4_page =
 			(uint64_t *)vcpu->vm->arch_vm.nworld_eptp;
 		/* only need unmap it from SOS as UOS never mapped it */
-		if (is_vm0(vcpu->vm)) {
+		if (is_sos_vm(vcpu->vm)) {
 			ept_mr_del(vcpu->vm, pml4_page,
 				DEFAULT_APIC_BASE, PAGE_SIZE);
 		}

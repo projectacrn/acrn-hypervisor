@@ -81,7 +81,7 @@ static int32_t request_notification_irq(irq_action_t func, void *data)
  */
 void setup_notification(void)
 {
-	/* support IPI notification, VM0 will register all CPU */
+	/* support IPI notification, SOS_VM will register all CPU */
 	if (request_notification_irq(kick_notification, NULL) < 0) {
 		pr_err("Failed to setup notification");
 	}

@@ -45,7 +45,7 @@ static inline void *gpa2hva(struct acrn_vm *vm, uint64_t x)
 
 static inline uint64_t hva2gpa(struct acrn_vm *vm, void *x)
 {
-	return (is_vm0(vm)) ? vm0_hpa2gpa(hva2hpa(x)) : INVALID_GPA;
+	return (is_sos_vm(vm)) ? sos_vm_hpa2gpa(hva2hpa(x)) : INVALID_GPA;
 }
 
 #endif	/* !ASSEMBLER */

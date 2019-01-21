@@ -128,7 +128,7 @@ int32_t general_sw_loader(struct acrn_vm *vm)
 		 * reserving. Current strategy is "total_mem_size in Giga -
 		 * remained 1G pages" for reserving.
 		 */
-		if (is_vm0(vm)) {
+		if (is_sos_vm(vm)) {
 			int32_t reserving_1g_pages;
 
 #ifdef CONFIG_REMAIN_1G_PAGES

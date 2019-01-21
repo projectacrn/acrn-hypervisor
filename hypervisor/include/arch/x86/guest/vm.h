@@ -235,7 +235,7 @@ struct acrn_vm_config {
 
 } __aligned(8);
 
-static inline bool is_vm0(const struct acrn_vm *vm)
+static inline bool is_sos_vm(const struct acrn_vm *vm)
 {
 	return (vm->vm_id) == 0U;
 }

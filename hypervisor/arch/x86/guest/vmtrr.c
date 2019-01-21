@@ -100,14 +100,14 @@ void init_vmtrr(struct acrn_vcpu *vcpu)
 	vmtrr->def_type.bits.fixed_enable = 1U;
 	vmtrr->def_type.bits.type = MTRR_MEM_TYPE_UC;
 
-	if (is_vm0(vcpu->vm)) {
+	if (is_sos_vm(vcpu->vm)) {
 		cap.value = msr_read(MSR_IA32_MTRR_CAP);
 	}
 
 	for (i = 0U; i < FIXED_RANGE_MTRR_NUM; i++) {
 		if (cap.bits.fix != 0U) {
 			/*
-			 * The system firmware runs in VMX non-root mode on VM0.
+			 * The system firmware runs in VMX non-root mode on SOS_VM.
 			 * In some cases, the firmware needs particular mem type
 			 * at certain mmeory locations (e.g. UC for some
 			 * hardware registers), so we need to configure EPT
@@ -116,7 +116,7 @@ void init_vmtrr(struct acrn_vcpu *vcpu)
 			vmtrr->fixed_range[i].value = msr_read(fixed_mtrr_map[i].msr);
 		} else {
 			/*
-			 * For non-vm0 EPT, all memory is setup with WB type in
+			 * For non-sos_vm EPT, all memory is setup with WB type in
 			 * EPT, so we setup fixed range MTRRs accordingly.
 			 */
 			vmtrr->fixed_range[i].value = MTRR_FIXED_RANGE_ALL_WB;

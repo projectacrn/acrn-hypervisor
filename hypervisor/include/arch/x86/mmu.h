@@ -238,13 +238,13 @@ uint64_t gpa2hpa(struct acrn_vm *vm, uint64_t gpa);
  */
 uint64_t local_gpa2hpa(struct acrn_vm *vm, uint64_t gpa, uint32_t *size);
 /**
- * @brief Translating from host-physical address to guest-physical address for VM0
+ * @brief Translating from host-physical address to guest-physical address for SOS_VM
  *
  * @param[in] hpa the specified host-physical address
  *
  * @pre: the gpa and hpa are identical mapping in SOS.
  */
-uint64_t vm0_hpa2gpa(uint64_t hpa);
+uint64_t sos_vm_hpa2gpa(uint64_t hpa);
 /**
  * @brief Guest-physical memory region mapping
  *

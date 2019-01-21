@@ -439,7 +439,7 @@ Address Space Translation
 .. doxygenfunction:: gpa2hpa
    :project: Project ACRN
 
-.. doxygenfunction:: vm0_hpa2gpa
+.. doxygenfunction:: sos_vm_hpa2gpa
    :project: Project ACRN
 
 EPT

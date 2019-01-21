@@ -11,7 +11,7 @@
 
 /*
  * e820.c contains the related e820 operations; like HV to get memory info for its MMU setup;
- * and hide HV memory from VM0...
+ * and hide HV memory from SOS_VM...
  */
 
 static uint32_t e820_entries_count;
@@ -51,8 +51,8 @@ static void obtain_e820_mem_info(void)
 	}
 }
 
-/* before boot vm0(service OS), call it to hide the HV RAM entry in e820 table from vm0 */
-void rebuild_vm0_e820(void)
+/* before boot sos_vm(service OS), call it to hide the HV RAM entry in e820 table from sos_vm */
+void rebuild_sos_vm_e820(void)
 {
 	uint32_t i;
 	uint64_t entry_start;
@@ -116,7 +116,7 @@ void rebuild_vm0_e820(void)
 	e820_mem.total_mem_size -= CONFIG_HV_RAM_SIZE;
 }
 
-/* get some RAM below 1MB in e820 entries, hide it from vm0, return its start address */
+/* get some RAM below 1MB in e820 entries, hide it from sos_vm, return its start address */
 uint64_t e820_alloc_low_memory(uint32_t size_arg)
 {
 	uint32_t i;

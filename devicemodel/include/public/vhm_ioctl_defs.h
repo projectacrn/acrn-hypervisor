@@ -123,7 +123,7 @@
 struct vm_memmap {
 	/** memory mapping type */
 	uint32_t type;
-	/** using vma_base to get vm0_gpa,
+	/** using vma_base to get sos_vm_gpa,
 	 * only for type == VM_MEMMAP_SYSMEM
 	 */
 	uint32_t using_vma;
