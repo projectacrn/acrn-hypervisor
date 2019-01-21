@@ -365,7 +365,7 @@ void guest_cpuid(struct acrn_vcpu *vcpu, uint32_t *eax, uint32_t *ebx, uint32_t 
 #ifdef CONFIG_PARTITION_MODE
 			cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
 #else
-			if (is_vm0(vcpu->vm)) {
+			if (is_sos_vm(vcpu->vm)) {
 				cpuid_subleaf(leaf, subleaf, eax, ebx, ecx, edx);
 			} else {
 				*ecx = subleaf & 0xFFU;

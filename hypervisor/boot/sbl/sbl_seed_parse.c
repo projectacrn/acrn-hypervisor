@@ -138,7 +138,7 @@ bool sbl_seed_parse(struct acrn_vm *vm, char *cmdline, char *out_arg, uint32_t o
 	uint32_t len;
 	bool parse_success = false;
 
-	if (is_vm0(vm) && (cmdline != NULL)) {
+	if (is_sos_vm(vm) && (cmdline != NULL)) {
 		len = strnlen_s(boot_params_arg, MEM_1K);
 		arg = strstr_s((const char *)cmdline, MEM_2K, boot_params_arg, len);
 
@@ -153,8 +153,8 @@ bool sbl_seed_parse(struct acrn_vm *vm, char *cmdline, char *out_arg, uint32_t o
 				 * Convert the addresses to SOS GPA since this structure will
 				 * be used in SOS.
 				 */
-				boot_params->p_seed_list = vm0_hpa2gpa(boot_params->p_seed_list);
-				boot_params->p_platform_info = vm0_hpa2gpa(boot_params->p_platform_info);
+				boot_params->p_seed_list = sos_vm_hpa2gpa(boot_params->p_seed_list);
+				boot_params->p_platform_info = sos_vm_hpa2gpa(boot_params->p_platform_info);
 
 				/*
 				 * Replace original arguments with spaces since SOS's GPA is not

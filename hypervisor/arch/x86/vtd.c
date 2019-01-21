@@ -156,7 +156,7 @@ bool iommu_snoop_supported(const struct acrn_vm *vm)
 
 static struct dmar_drhd_rt dmar_drhd_units[CONFIG_MAX_IOMMU_NUM];
 static bool iommu_page_walk_coherent = true;
-static struct iommu_domain *vm0_domain;
+static struct iommu_domain *sos_vm_domain;
 
 /* Domain id 0 is reserved in some cases per VT-d */
 #define MAX_DOMAIN_NUM (CONFIG_MAX_VM_NUM + 1)
@@ -1061,8 +1061,8 @@ int32_t assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t de
 
 	/* TODO: check if the device assigned */
 
-	if (vm0_domain != NULL) {
-		status = remove_iommu_device(vm0_domain, 0U, bus, devfun);
+	if (sos_vm_domain != NULL) {
+		status = remove_iommu_device(sos_vm_domain, 0U, bus, devfun);
 	}
 
 	if (status == 0) {
@@ -1079,8 +1079,8 @@ int32_t unassign_iommu_device(const struct iommu_domain *domain, uint8_t bus, ui
 	/* TODO: check if the device assigned */
 	status = remove_iommu_device(domain, 0U, bus, devfun);
 
-	if ((status == 0) && (vm0_domain != NULL)) {
-		status = add_iommu_device(vm0_domain, 0U, bus, devfun);
+	if ((status == 0) && (sos_vm_domain != NULL)) {
+		status = add_iommu_device(sos_vm_domain, 0U, bus, devfun);
 	}
 
 	return status;
@@ -1121,22 +1121,22 @@ int32_t init_iommu(void)
 	return ret;
 }
 
-void init_iommu_vm0_domain(struct acrn_vm *vm0)
+void init_iommu_sos_vm_domain(struct acrn_vm *sos_vm)
 {
 	uint16_t bus;
 	uint16_t devfun;
 
-	vm0->iommu = create_iommu_domain(vm0->vm_id, hva2hpa(vm0->arch_vm.nworld_eptp), 48U);
+	sos_vm->iommu = create_iommu_domain(sos_vm->vm_id, hva2hpa(sos_vm->arch_vm.nworld_eptp), 48U);
 
-	vm0_domain = (struct iommu_domain *) vm0->iommu;
-	if (vm0_domain == NULL) {
-		pr_err("vm0 domain is NULL\n");
+	sos_vm_domain = (struct iommu_domain *) sos_vm->iommu;
+	if (sos_vm_domain == NULL) {
+		pr_err("sos_vm domain is NULL\n");
 	} else {
 		for (bus = 0U; bus < CONFIG_IOMMU_BUS_NUM; bus++) {
 			for (devfun = 0U; devfun <= 255U; devfun++) {
-				if (add_iommu_device(vm0_domain, 0U, (uint8_t)bus, (uint8_t)devfun) != 0) {
-					/* the panic only occurs before VM0 starts running in sharing mode */
-					panic("Failed to add %x:%x.%x to VM0 domain", bus, pci_slot(devfun), pci_func(devfun));
+				if (add_iommu_device(sos_vm_domain, 0U, (uint8_t)bus, (uint8_t)devfun) != 0) {
+					/* the panic only occurs before SOS_VM starts running in sharing mode */
+					panic("Failed to add %x:%x.%x to SOS_VM domain", bus, pci_slot(devfun), pci_func(devfun));
 				}
 			}
 		}

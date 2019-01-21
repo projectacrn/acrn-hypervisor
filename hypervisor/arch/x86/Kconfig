@@ -279,11 +279,11 @@ config PLATFORM_RAM_SIZE
 	  (MMIO not included).
 
 config SOS_RAM_SIZE
-	hex "Size of the vm0 (SOS) RAM"
+	hex "Size of the Service OS (SOS) RAM"
 	default 0x200000000 if PLATFORM_SBL
 	default 0x400000000 if PLATFORM_UEFI
 	help
-	  A 64-bit integer indicating the size of the vm0 (SOS) RAM (MMIO not
+	  A 64-bit integer indicating the size of the Service OS RAM (MMIO not
 	  included).
 
  config UOS_RAM_SIZE

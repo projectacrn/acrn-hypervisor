@@ -123,8 +123,8 @@ struct vm_memory_region {
 	/** the beginning guest physical address of the memory reion*/
 	uint64_t gpa;
 
-	/** VM0's guest physcial address which gpa will be mapped to */
-	uint64_t vm0_gpa;
+	/** SOS_VM's guest physcial address which gpa will be mapped to */
+	uint64_t sos_vm_gpa;
 
 	/** size of the memory region */
 	uint64_t size;

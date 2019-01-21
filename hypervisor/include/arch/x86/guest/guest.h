@@ -70,7 +70,7 @@
 #define LDTR_AR                         (0x0082U) /* LDT, type must be 2, refer to SDM Vol3 26.3.1.2 */
 #define TR_AR                           (0x008bU) /* TSS (busy), refer to SDM Vol3 26.3.1.2 */
 
-void prepare_vm0_memmap(struct acrn_vm *vm);
+void prepare_sos_vm_memmap(struct acrn_vm *vm);
 
 /* Use # of paging level to identify paging mode */
 enum vm_paging_mode {

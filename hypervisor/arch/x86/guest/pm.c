@@ -10,7 +10,7 @@ int32_t validate_pstate(const struct acrn_vm *vm, uint64_t perf_ctl)
 {
 	int32_t ret = -1;
 
-	if (is_vm0(vm)) {
+	if (is_sos_vm(vm)) {
 		ret = 0;
 	} else {
 		uint8_t i;
@@ -132,7 +132,7 @@ static inline void enter_s3(struct acrn_vm *vm, uint32_t pm1a_cnt_val, uint32_t 
 	guest_wakeup_vec32 = *(vm->pm.sx_state_data->wake_vector_32);
 	clac();
 
-	pause_vm(vm);	/* pause vm0 before suspend system */
+	pause_vm(vm);	/* pause sos_vm before suspend system */
 	host_enter_s3(vm->pm.sx_state_data, pm1a_cnt_val, pm1b_cnt_val);
 	resume_vm_from_s3(vm, guest_wakeup_vec32);	/* jump back to vm */
 }

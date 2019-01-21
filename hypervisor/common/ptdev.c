@@ -66,8 +66,8 @@ struct ptirq_remapping_info *ptirq_dequeue_softirq(struct acrn_vm *vm)
 
 		list_del_init(&entry->softirq_node);
 
-		/* if vm0, just dequeue, if uos, check delay timer */
-		if (is_vm0(entry->vm) || timer_expired(&entry->intr_delay_timer)) {
+		/* if sos vm, just dequeue, if uos, check delay timer */
+		if (is_sos_vm(entry->vm) || timer_expired(&entry->intr_delay_timer)) {
 			break;
 		} else {
 			/* add it into timer list; dequeue next one */
@@ -131,7 +131,7 @@ static void ptirq_interrupt_handler(__unused uint32_t irq, void *data)
 	 * "interrupt storm" detection & delay intr injection just for UOS
 	 * pass-thru devices, collect its data and delay injection if needed
 	 */
-	if (!is_vm0(entry->vm)) {
+	if (!is_sos_vm(entry->vm)) {
 		entry->intr_count++;
 
 		/* if delta > 0, set the delay TSC, dequeue to handle */

@@ -328,7 +328,7 @@ static void decode_msix_table_bar(struct pci_vdev *vdev)
 		}
 
 		vdev->msix.mmio_hva = (uint64_t)hpa2hva(base);
-		vdev->msix.mmio_gpa = vm0_hpa2gpa(base);
+		vdev->msix.mmio_gpa = sos_vm_hpa2gpa(base);
 
 		/* Sizing the BAR */
 		size = 0U;

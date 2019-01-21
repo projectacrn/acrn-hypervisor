@@ -529,7 +529,7 @@ vioapic_pincount(const struct acrn_vm *vm)
 {
 	uint32_t ret;
 
-	if (is_vm0(vm)) {
+	if (is_sos_vm(vm)) {
 	        ret = REDIR_ENTRIES_HW;
 	} else {
 		ret = VIOAPIC_RTE_NUM;

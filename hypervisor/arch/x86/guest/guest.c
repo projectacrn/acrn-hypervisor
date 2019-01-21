@@ -448,9 +448,9 @@ int32_t copy_to_gva(struct acrn_vcpu *vcpu, void *h_ptr, uint64_t gva,
  * @retval 0 on success
  *
  * @pre vm != NULL
- * @pre is_vm0(vm) == true
+ * @pre is_sos_vm(vm) == true
  */
-void prepare_vm0_memmap(struct acrn_vm *vm)
+void prepare_sos_vm_memmap(struct acrn_vm *vm)
 {
 	uint32_t i;
 	uint64_t attr_uc = (EPT_RWX | EPT_UNCACHED);
@@ -462,11 +462,11 @@ void prepare_vm0_memmap(struct acrn_vm *vm)
 	const struct e820_entry *p_e820 = get_e820_entry();
 	const struct e820_mem_params *p_e820_mem_info = get_e820_mem_info();
 
-	dev_dbg(ACRN_DBG_GUEST, "vm0: bottom memory - 0x%llx, top memory - 0x%llx\n",
+	dev_dbg(ACRN_DBG_GUEST, "sos_vm: bottom memory - 0x%llx, top memory - 0x%llx\n",
 		p_e820_mem_info->mem_bottom, p_e820_mem_info->mem_top);
 
 	if (p_e820_mem_info->mem_top > EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE)) {
-		panic("Please configure VM0_ADDRESS_SPACE correctly!\n");
+		panic("Please configure SOS_VM_ADDRESS_SPACE correctly!\n");
 	}
 
 	/* create real ept map for all ranges with UC */
@@ -481,7 +481,7 @@ void prepare_vm0_memmap(struct acrn_vm *vm)
 		}
 	}
 
-	dev_dbg(ACRN_DBG_GUEST, "VM0 e820 layout:\n");
+	dev_dbg(ACRN_DBG_GUEST, "SOS_VM e820 layout:\n");
 	for (i = 0U; i < entries_count; i++) {
 		entry = p_e820 + i;
 		dev_dbg(ACRN_DBG_GUEST, "e820 table: %d type: 0x%x", i, entry->type);

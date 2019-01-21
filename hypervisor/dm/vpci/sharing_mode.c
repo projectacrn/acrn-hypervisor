@@ -38,7 +38,7 @@ struct pci_vdev *sharing_mode_find_vdev(union pci_bdf pbdf)
 	struct pci_vdev *vdev = NULL;
 	uint32_t i;
 
-	/* in VM0, it uses phys BDF */
+	/* in SOS_VM, it uses phys BDF */
 	for (i = 0U; i < num_pci_vdev; i++) {
 		if (sharing_mode_vdev_array[i].pdev.bdf.value == pbdf.value) {
 			vdev = &sharing_mode_vdev_array[i];
@@ -140,16 +140,16 @@ static int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
 
 	/*
 	 * Only setup IO bitmap for SOS.
-	 * IO/MMIO requests from non-vm0 guests will be injected to device model.
+	 * IO/MMIO requests from non-sos_vm guests will be injected to device model.
 	 */
-	if (!is_vm0(vm)) {
+	if (!is_sos_vm(vm)) {
 	        ret = -ENODEV;
 	} else {
 		/* Initialize PCI vdev array */
 		num_pci_vdev = 0U;
 		(void)memset((void *)sharing_mode_vdev_array, 0U, sizeof(sharing_mode_vdev_array));
 
-		/* build up vdev array for vm0 */
+		/* build up vdev array for sos_vm */
 		pci_scan_bus(enumerate_pci_dev, vm);
 
 		for (i = 0U; i < num_pci_vdev; i++) {
@@ -171,7 +171,7 @@ static void sharing_mode_vpci_deinit(__unused const struct acrn_vm *vm)
 	struct pci_vdev *vdev;
 	uint32_t i, j;
 
-	if (is_vm0(vm)) {
+	if (is_sos_vm(vm)) {
 		for (i = 0U; i < num_pci_vdev; i++) {
 			vdev = &sharing_mode_vdev_array[i];
 			for (j = 0U; j < vdev->nr_ops; j++) {

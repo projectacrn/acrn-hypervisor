@@ -20,7 +20,7 @@
  * @param param guest physical address. This gpa points to
  *             data structure required by each command
  *
- * @pre Pointer vm shall point to VM0
+ * @pre Pointer vm shall point to SOS_VM
  * @return 0 on success, non-zero on error.
  */
 static int32_t hcall_profiling_ops(struct acrn_vm *vm, uint64_t cmd, uint64_t param)
@@ -67,7 +67,7 @@ static int32_t hcall_profiling_ops(struct acrn_vm *vm, uint64_t cmd, uint64_t pa
  * @param param guest physical address. This gpa points to
  *              struct sbuf_setup_param
  *
- * @pre Pointer vm shall point to VM0
+ * @pre Pointer vm shall point to SOS_VM
  * @return 0 on success, non-zero on error.
  */
 static int32_t hcall_setup_sbuf(struct acrn_vm *vm, uint64_t param)
@@ -98,7 +98,7 @@ static int32_t hcall_setup_sbuf(struct acrn_vm *vm, uint64_t param)
   * @param param guest physical address. This gpa points to
   *              struct hv_npk_log_param
   *
-  * @pre Pointer vm shall point to VM0
+  * @pre Pointer vm shall point to SOS_VM
   * @return 0 on success, non-zero on error.
   */
 static int32_t hcall_setup_hv_npk_log(struct acrn_vm *vm, uint64_t param)
@@ -128,7 +128,7 @@ static int32_t hcall_setup_hv_npk_log(struct acrn_vm *vm, uint64_t param)
  * @param vm Pointer to vm data structure
  * @param param Guest physical address pointing to struct acrn_hw_info
  *
- * @pre vm shall point to VM0
+ * @pre vm shall point to SOS_VM
  * @pre param shall be a valid physical address
  *
  * @retval 0 on success
@@ -158,7 +158,7 @@ static int32_t hcall_get_hw_info(struct acrn_vm *vm, uint64_t param)
   * @param param2 hypercall param2 from guest
   * @param hypcall_id hypercall ID from guest
   *
-  * @pre Pointer vm shall point to VM0
+  * @pre Pointer vm shall point to SOS_VM
   * @return 0 on success, non-zero on error.
   */
 int32_t hcall_debug(struct acrn_vm *vm, uint64_t param1, uint64_t param2, uint64_t hypcall_id)

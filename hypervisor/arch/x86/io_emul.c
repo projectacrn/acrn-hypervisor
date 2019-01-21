@@ -536,7 +536,7 @@ static void deny_guest_pio_access(struct acrn_vm *vm, uint16_t port_address,
 void register_pio_emulation_handler(struct acrn_vm *vm, uint32_t pio_idx,
 		const struct vm_io_range *range, io_read_fn_t io_read_fn_ptr, io_write_fn_t io_write_fn_ptr)
 {
-	if (is_vm0(vm)) {
+	if (is_sos_vm(vm)) {
 		deny_guest_pio_access(vm, range->base, range->len);
 	}
 	vm->arch_vm.emul_pio[pio_idx].port_start = range->base;
@@ -588,7 +588,7 @@ int32_t register_mmio_emulation_handler(struct acrn_vm *vm,
 				 * should unmap it. But UOS will not, so we shouldn't
 				 * need to unmap it.
 				 */
-				if (is_vm0(vm)) {
+				if (is_sos_vm(vm)) {
 					ept_mr_del(vm, (uint64_t *)vm->arch_vm.nworld_eptp, start, end - start);
 				}
 

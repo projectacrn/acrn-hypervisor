@@ -485,7 +485,7 @@ struct iommu_domain;
 /**
  * @brief Assign a device specified by bus & devfun to a iommu domain.
  *
- * Remove the device from the VM0 domain (if present), and add it to the specific domain.
+ * Remove the device from the SOS_VM domain (if present), and add it to the specific domain.
  *
  * @param[in]    domain iommu domain the device is assigned to
  * @param[in]    bus the 8-bit bus number of the device
@@ -502,7 +502,7 @@ int32_t assign_iommu_device(struct iommu_domain *domain, uint8_t bus, uint8_t de
 /**
  * @brief Unassign a device specified by bus & devfun from a iommu domain .
  *
- * Remove the device from the specific domain, and then add it to the VM0 domain (if present).
+ * Remove the device from the specific domain, and then add it to the SOS_VM domain (if present).
  *
  * @param[in]    domain iommu domain the device is assigned to
  * @param[in]    bus the 8-bit bus number of the device
@@ -594,19 +594,19 @@ void resume_iommu(void);
 int32_t init_iommu(void);
 
 /**
- * @brief Init VM0 domain of iommu.
+ * @brief Init SOS_VM domain of iommu.
  *
- * Create VM0 domain using the Normal World's EPT table of VM0 as address translation table.
- * All PCI devices are added to the VM0 domain when creating it.
+ * Create SOS_VM domain using the Normal World's EPT table of SOS_VM as address translation table.
+ * All PCI devices are added to the SOS_VM domain when creating it.
  *
- * @param[in] vm0 pointer to VM0
+ * @param[in] sos_vm pointer to SOS_VM
  *
- * @pre vm0 shall point to VM0
+ * @pre sos_vm shall point to SOS_VM
  *
  * @remark to reduce boot time & memory cost, a config IOMMU_INIT_BUS_LIMIT, which limit the bus number.
  *
  */
-void init_iommu_vm0_domain(struct acrn_vm *vm0);
+void init_iommu_sos_vm_domain(struct acrn_vm *sos_vm);
 
 /**
  * @brief check the iommu if support cache snoop.
