@@ -15,14 +15,15 @@ static void fire_vhm_interrupt(void)
 	 * use vLAPIC to inject vector to SOS vcpu 0 if vlapic is enabled
 	 * otherwise, send IPI hardcoded to BOOT_CPU_ID
 	 */
-	struct acrn_vm *vm0;
+	struct acrn_vm *sos_vm;
 	struct acrn_vcpu *vcpu;
 
-	vm0 = get_vm_from_vmid(0U);
+	sos_vm = get_sos_vm();
+	if (sos_vm != NULL) {
+		vcpu = vcpu_from_vid(sos_vm, BOOT_CPU_ID);
 
-	vcpu = vcpu_from_vid(vm0, 0U);
-
-	vlapic_set_intr(vcpu, acrn_vhm_vector, LAPIC_TRIG_EDGE);
+		vlapic_set_intr(vcpu, acrn_vhm_vector, LAPIC_TRIG_EDGE);
+	}
 }
 
 #if defined(HV_DEBUG)

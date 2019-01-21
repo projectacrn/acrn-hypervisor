@@ -376,7 +376,7 @@ struct acrn_vuart *vuart_console_active(void)
 
 	vm = get_vm_from_vmid(vuart_vmid);
 #else
-	struct acrn_vm *vm = get_vm_from_vmid(0U);
+	struct acrn_vm *vm = get_sos_vm();
 #endif
 
 	if (vm != NULL) {

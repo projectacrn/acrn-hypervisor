@@ -228,7 +228,7 @@ void vpci_reset_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, 
 	} else {
 		/* Return this PCI device to SOS */
 		if (vdev->vpci->vm == target_vm) {
-			vm = get_vm_from_vmid(0U);
+			vm = get_sos_vm();
 
 			if (vm != NULL) {
 				vdev->vpci = &vm->vpci;

@@ -314,6 +314,7 @@ extern struct acrn_vm_config vm_configs[];
 bool is_sos_vm(const struct acrn_vm *vm);
 uint16_t find_free_vm_id(void);
 struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
+struct acrn_vm *get_sos_vm(void);
 
 #ifdef CONFIG_PARTITION_MODE
 struct vm_config_arraies {
