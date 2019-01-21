@@ -216,13 +216,7 @@ struct acrn_vm_config {
 	struct acrn_vm_pci_ptdev_config *pci_ptdevs;	/* point to PCI PT devices BDF list */
 	struct acrn_vm_os_config os_config;		/* OS information the VM */
 
-	/* The physical CPU IDs associated with this VM - The first CPU listed
-	 * will be the VM's BSP
-	 */
-	uint16_t               *vm_pcpu_ids;
-	uint16_t               vm_hw_num_cores;   /* Number of virtual cores */
 #ifdef CONFIG_PARTITION_MODE
-	uint8_t			vm_id;
 	uint64_t		start_hpa;
 	uint64_t		mem_size; /* UOS memory size in hex */
 	bool			vm_vuart;
@@ -327,6 +321,7 @@ struct pcpu_vm_config_mapping {
 extern const struct pcpu_vm_config_mapping pcpu_vm_config_map[];
 extern struct vm_config_arraies vm_config_partition;
 
+uint16_t get_vm_pcpu_nums(struct acrn_vm_config *vm_config);
 void vrtc_init(struct acrn_vm *vm);
 #endif
 

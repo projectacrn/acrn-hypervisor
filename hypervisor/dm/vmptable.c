@@ -74,6 +74,9 @@ static uint8_t mpt_compute_checksum(void *base, size_t len)
 	return (256U - sum);
 }
 
+/**
+ * @pre vm_config != NULL
+ */
 int32_t mptable_build(struct acrn_vm *vm)
 {
 	char		*startaddr;
@@ -82,9 +85,14 @@ int32_t mptable_build(struct acrn_vm *vm)
 	struct mpfps	*mpfp;
 	size_t		mptable_length;
 	uint16_t	i;
-	uint16_t	vcpu_num = vm->vm_config->vm_hw_num_cores;
+	uint16_t	vcpu_num;
+	uint64_t	pcpu_bitmap = 0U;
 	struct mptable_info *mptable = &vm->mptable;
+	struct acrn_vm_config *vm_config;
 
+	vm_config = get_vm_config(vm->vm_id);
+	vcpu_num = get_vm_pcpu_nums(vm_config);
+	pcpu_bitmap = vm_config->pcpu_bitmap;
 	(void *)memcpy_s((void *)mptable, sizeof(struct mptable_info),
 		(const void *)&mptable_template, sizeof(struct mptable_info));
 
@@ -100,7 +108,7 @@ int32_t mptable_build(struct acrn_vm *vm)
 	}
 
 	for (i = 0U; i < vcpu_num; i++) {
-		uint16_t pcpu_id = *(vm->vm_config->vm_pcpu_ids + i);
+		uint16_t pcpu_id = ffs64(pcpu_bitmap);
 
 		(void *)memcpy_s((void *)(mptable->proc_entry_array + i), sizeof(struct proc_entry),
 			(const void *)&proc_entry_template, sizeof(struct proc_entry));
@@ -108,7 +116,7 @@ int32_t mptable_build(struct acrn_vm *vm)
 		if (i == 0) {
 			mptable->proc_entry_array[i].cpu_flags |= PROCENTRY_FLAG_BP;
 		}
-
+		bitmap_clear_lock(pcpu_id, &pcpu_bitmap);
 	}
 
 	/* Copy mptable info into guest memory */
