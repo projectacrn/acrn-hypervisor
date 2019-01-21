@@ -7,18 +7,6 @@
 #include <hypervisor.h>
 #include <e820.h>
 
-/* Number of CPUs in VM1 */
-#define VM1_NUM_CPUS    2U
-
-/* Logical CPU IDs assigned to this VM */
-uint16_t VM1_CPUS[VM1_NUM_CPUS] = {0U, 2U};
-
-/* Number of CPUs in VM2 */
-#define VM2_NUM_CPUS    2U
-
-/* Logical CPU IDs assigned with this VM */
-uint16_t VM2_CPUS[VM2_NUM_CPUS] = {3U, 1U};
-
 static struct vpci_vdev_array vpci_vdev_array1 = {
 	.num_pci_vdev = 2,
 
@@ -154,9 +142,7 @@ struct vm_config_arraies vm_config_partition = {
 		.vm_config_array = {
 			{
 				.type = PRE_LAUNCHED_VM,
-				/* Internal variable, MUSTBE init to -1 */
-				.vm_hw_num_cores = VM1_NUM_CPUS,
-				.vm_pcpu_ids = &VM1_CPUS[0],
+				.pcpu_bitmap = (PLUG_CPU(0) | PLUG_CPU(2)),
 				.start_hpa = 0x100000000UL,
 				.mem_size = 0x20000000UL, /* uses contiguous memory from host */
 				.vm_vuart = true,
@@ -168,9 +154,7 @@ struct vm_config_arraies vm_config_partition = {
 
 			{
 				.type = PRE_LAUNCHED_VM,
-				/* Internal variable, MUSTBE init to -1 */
-				.vm_hw_num_cores = VM2_NUM_CPUS,
-				.vm_pcpu_ids = &VM2_CPUS[0],
+				.pcpu_bitmap = (PLUG_CPU(1) | PLUG_CPU(3)),
 				.start_hpa = 0x120000000UL,
 				.mem_size = 0x20000000UL, /* uses contiguous memory from host */
 				.vm_vuart = true,
