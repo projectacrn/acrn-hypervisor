@@ -339,7 +339,7 @@ config MTRR_ENABLED
 
 config RELOC
 	bool "Enable hypervisor relocation"
-	default n
+	default y
 	help
 	  When selected, the hypervisor will relocate itself to where it is
 	  loaded. This allows the bootloader to put the hypervisor image to
