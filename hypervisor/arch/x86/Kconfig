@@ -40,28 +40,6 @@ config PARTITION_MODE
 
 endchoice
 
-choice
-	prompt "I/O emulation completion mode"
-	default IOREQ_NOTIFICATION
-	help
-	  Select the mode of I/O emulation completion
-
-config IOREQ_NOTIFICATION
-	bool "Notification mode"
-	help
-	  When I/O request is completed, SOS will mark the completion status and
-	  notify hypervisor via hypercall. Hypervisor will finish the post work
-	  when notification is received.
-
-config IOREQ_POLLING
-	bool "Polling mode"
-	help
-	  When I/O request is completed, SOS will only mark completion status
-	  without notifying hypervisor. Hypervisor will poll the completion
-	  status and finish the post work.
-
-endchoice
-
 config BOARD
 	string "Target board"
 	help
