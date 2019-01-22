@@ -138,6 +138,14 @@ vm_create(const char *name, uint64_t req_buf)
 	else
 		create_vm.vm_flag &= (~SECURE_WORLD_ENABLED);
 
+	if (lapic_pt) {
+		create_vm.vm_flag |= LAPIC_PASSTHROUGH;
+		create_vm.vm_flag |= IOREQ_COMPLETION_POLLING;
+	} else {
+		create_vm.vm_flag &= (~LAPIC_PASSTHROUGH);
+		create_vm.vm_flag &= (~IOREQ_COMPLETION_POLLING);
+	}
+
 	create_vm.req_buf = req_buf;
 	while (retry > 0) {
 		error = ioctl(ctx->fd, IC_CREATE_VM, &create_vm);
