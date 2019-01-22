@@ -171,7 +171,8 @@ usage(int code)
 		"       --intr_monitor: enable interrupt storm monitor\n"
 		"            its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms)\n"
 		"       --virtio_poll: enable virtio poll mode with poll interval with ns\n"
-		"       --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET\n",
+		"       --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET\n"
+		"       --lapic_pt: enable local apic passthrough\n",
 		progname, (int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "");
@@ -706,6 +707,7 @@ enum {
 	CMD_OPT_DUMP,
 	CMD_OPT_INTR_MONITOR,
 	CMD_OPT_VTPM2,
+	CMD_OPT_LAPIC_PT,
 };
 
 static struct option long_options[] = {
@@ -744,6 +746,7 @@ static struct option long_options[] = {
 	{"debugexit",		no_argument,		0, CMD_OPT_DEBUGEXIT},
 	{"intr_monitor",	required_argument,	0, CMD_OPT_INTR_MONITOR},
 	{"vtpm2",		required_argument,	0, CMD_OPT_VTPM2},
+	{"lapic_pt",		no_argument,		0, CMD_OPT_LAPIC_PT},
 	{0,			0,			0,  0  },
 };
 
@@ -886,6 +889,9 @@ dm_run(int argc, char *argv[])
 			break;
 		case CMD_OPT_DEBUGEXIT:
 			debugexit_enabled = true;
+			break;
+		case CMD_OPT_LAPIC_PT:
+			lapic_pt = true;
 			break;
 		case CMD_OPT_VTPM2:
 			if (acrn_parse_vtpm2(optarg) != 0) {
