@@ -37,7 +37,7 @@ static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
 }
 
 /**
- * @brief Post-work for port I/O emulation
+ * @brief General complete-work for port I/O emulation
  *
  * @pre io_req->type == REQ_PORTIO
  *
@@ -46,7 +46,7 @@ static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
  * request having transferred to the COMPLETE state.
  */
 static void
-emulate_pio_post(struct acrn_vcpu *vcpu, const struct io_request *io_req)
+emulate_pio_complete(struct acrn_vcpu *vcpu, const struct io_request *io_req)
 {
 	const struct pio_request *pio_req = &io_req->reqs.pio;
 	uint64_t mask = 0xFFFFFFFFUL >> (32UL - 8UL * pio_req->size);
@@ -61,24 +61,24 @@ emulate_pio_post(struct acrn_vcpu *vcpu, const struct io_request *io_req)
 }
 
 /**
- * @brief Post-work of VHM requests for port I/O emulation
+ * @brief Complete-work of VHM requests for port I/O emulation
  *
  * @pre vcpu->req.type == REQ_PORTIO
  *
  * @remark This function must be called after the VHM request corresponding to
  * \p vcpu being transferred to the COMPLETE state.
  */
-static void dm_emulate_pio_post(struct acrn_vcpu *vcpu)
+static void dm_emulate_pio_complete(struct acrn_vcpu *vcpu)
 {
 	struct io_request *io_req = &vcpu->req;
 
 	complete_ioreq(vcpu, io_req);
 
-	emulate_pio_post(vcpu, io_req);
+	emulate_pio_complete(vcpu, io_req);
 }
 
 /**
- * @brief General post-work for MMIO emulation
+ * @brief General complete-work for MMIO emulation
  *
  * @param vcpu The virtual CPU that triggers the MMIO access
  * @param io_req The I/O request holding the details of the MMIO access
@@ -89,7 +89,7 @@ static void dm_emulate_pio_post(struct acrn_vcpu *vcpu)
  * either a previous call to emulate_io() returning 0 or the corresponding VHM
  * request transferring to the COMPLETE state.
  */
-void emulate_mmio_post(const struct acrn_vcpu *vcpu, const struct io_request *io_req)
+static void emulate_mmio_complete(const struct acrn_vcpu *vcpu, const struct io_request *io_req)
 {
 	const struct mmio_request *mmio_req = &io_req->reqs.mmio;
 
@@ -100,7 +100,7 @@ void emulate_mmio_post(const struct acrn_vcpu *vcpu, const struct io_request *io
 }
 
 /**
- * @brief Post-work of VHM requests for MMIO emulation
+ * @brief Complete-work of VHM requests for MMIO emulation
  *
  * @param vcpu The virtual CPU that triggers the MMIO access
  *
@@ -109,13 +109,13 @@ void emulate_mmio_post(const struct acrn_vcpu *vcpu, const struct io_request *io
  * @remark This function must be called after the VHM request corresponding to
  * \p vcpu being transferred to the COMPLETE state.
  */
-void dm_emulate_mmio_post(struct acrn_vcpu *vcpu)
+static void dm_emulate_mmio_complete(struct acrn_vcpu *vcpu)
 {
 	struct io_request *io_req = &vcpu->req;
 
 	complete_ioreq(vcpu, io_req);
 
-	emulate_mmio_post(vcpu, io_req);
+	emulate_mmio_complete(vcpu, io_req);
 }
 
 #ifdef CONFIG_PARTITION_MODE
@@ -130,11 +130,11 @@ static void io_instr_dest_handler(struct io_request *io_req)
 #endif
 
 /**
- * @brief General post-work for all kinds of VHM requests for I/O emulation
+ * @brief General complete-work for all kinds of VHM requests for I/O emulation
  *
  * @param vcpu The virtual CPU that triggers the MMIO access
  */
-void emulate_io_post(struct acrn_vcpu *vcpu)
+static void dm_emulate_io_complete(struct acrn_vcpu *vcpu)
 {
 	if (get_vhm_req_state(vcpu->vm, vcpu->vcpu_id) == REQ_STATE_COMPLETE) {
 		/*
@@ -146,7 +146,7 @@ void emulate_io_post(struct acrn_vcpu *vcpu)
 		} else {
 			switch (vcpu->req.type) {
 			case REQ_MMIO:
-				dm_emulate_mmio_post(vcpu);
+				dm_emulate_mmio_complete(vcpu);
 				break;
 
 			case REQ_PORTIO:
@@ -158,7 +158,7 @@ void emulate_io_post(struct acrn_vcpu *vcpu)
 				 * REQ_PORTIO & REQ_PCICFG requests are exactly the same and
 				 * post-work is mainly interested in the read value.
 				 */
-				dm_emulate_pio_post(vcpu);
+				dm_emulate_pio_complete(vcpu);
 				break;
 
 			default:
@@ -170,9 +170,6 @@ void emulate_io_post(struct acrn_vcpu *vcpu)
 				break;
 			}
 
-			if (!vcpu->vm->sw.is_completion_polling) {
-				resume_vcpu(vcpu);
-			}
 		}
 	}
 }
@@ -292,7 +289,7 @@ hv_emulate_mmio(struct acrn_vcpu *vcpu, struct io_request *io_req)
  * @retval -EINVAL \p io_req has an invalid type.
  * @retval <0 on other errors during emulation.
  */
-int32_t
+static int32_t
 emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
 	int32_t status;
@@ -300,10 +297,16 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 	switch (io_req->type) {
 	case REQ_PORTIO:
 		status = hv_emulate_pio(vcpu, io_req);
+		if (status == 0) {
+			emulate_pio_complete(vcpu, io_req);
+		}
 		break;
 	case REQ_MMIO:
 	case REQ_WP:
 		status = hv_emulate_mmio(vcpu, io_req);
+		if (status == 0) {
+			emulate_mmio_complete(vcpu, io_req);
+		}
 		break;
 	default:
 		/* Unknown I/O request type */
@@ -326,9 +329,10 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 		 *
 		 * ACRN insert request to VHM and inject upcall.
 		 */
-		status = acrn_insert_request_wait(vcpu, io_req);
-
-		if (status != 0) {
+		status = acrn_insert_request(vcpu, io_req);
+		if (status == 0) {
+			dm_emulate_io_complete(vcpu);
+		} else {
 			/* here for both IO & MMIO, the direction, address,
 			 * size definition is same
 			 */
@@ -337,8 +341,6 @@ emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req)
 				"addr = 0x%llx, size=%lu", __func__,
 				pio_req->direction, io_req->type,
 				pio_req->address, pio_req->size);
-		} else {
-			status = IOREQ_PENDING;
 		}
 #endif
 	}
@@ -380,14 +382,6 @@ int32_t pio_instr_vmexit_handler(struct acrn_vcpu *vcpu)
 		(uint32_t)cur_context_idx);
 
 	status = emulate_io(vcpu, io_req);
-
-	if (status == 0) {
-		emulate_pio_post(vcpu, io_req);
-	} else if (status == IOREQ_PENDING) {
-		status = 0;
-	} else {
-		/* do nothing */
-	}
 
 	return status;
 }
@@ -452,13 +446,6 @@ int32_t ept_violation_vmexit_handler(struct acrn_vcpu *vcpu)
 
 		if (ret > 0) {
 			status = emulate_io(vcpu, io_req);
-			if (status == 0) {
-				emulate_mmio_post(vcpu, io_req);
-			} else {
-				if (status == IOREQ_PENDING) {
-					status = 0;
-				}
-			}
 		}
 	} else {
 		if (ret == -EFAULT) {

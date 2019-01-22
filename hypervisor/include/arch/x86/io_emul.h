@@ -23,56 +23,6 @@
 #define EMUL_PIO_IDX_MAX	(RTC_PIO_IDX + 1U)
 
 /**
- * @brief General post-work for MMIO emulation
- *
- * @param vcpu The virtual CPU that triggers the MMIO access
- * @param io_req The I/O request holding the details of the MMIO access
- *
- * @pre io_req->type == REQ_MMIO
- *
- * @remark This function must be called when \p io_req is completed, after
- * either a previous call to emulate_io() returning 0 or the corresponding VHM
- * request transferring to the COMPLETE state.
- */
-void emulate_mmio_post(const struct acrn_vcpu *vcpu, const struct io_request *io_req);
-
-/**
- * @brief Post-work of VHM requests for MMIO emulation
- *
- * @param vcpu The virtual CPU that triggers the MMIO access
- *
- * @pre vcpu->req.type == REQ_MMIO
- *
- * @remark This function must be called after the VHM request corresponding to
- * \p vcpu being transferred to the COMPLETE state.
- */
-void dm_emulate_mmio_post(struct acrn_vcpu *vcpu);
-
-/**
- * @brief General post-work for all kinds of VHM requests for I/O emulation
- *
- * @param vcpu The virtual CPU that triggers the MMIO access
- */
-void emulate_io_post(struct acrn_vcpu *vcpu);
-
-/**
- * @brief Emulate \p io_req for \p vcpu
- *
- * Handle an I/O request by either invoking a hypervisor-internal handler or
- * deliver to VHM.
- *
- * @param vcpu The virtual CPU that triggers the MMIO access
- * @param io_req The I/O request holding the details of the MMIO access
- *
- * @retval 0       Successfully emulated by registered handlers.
- * @retval IOREQ_PENDING The I/O request is delivered to VHM.
- * @retval -EIO    The request spans multiple devices and cannot be emulated.
- * @retval -EINVAL \p io_req has an invalid type.
- * @retval <0 on other errors during emulation.
- */
-int32_t emulate_io(struct acrn_vcpu *vcpu, struct io_request *io_req);
-
-/**
  * @brief The handler of VM exits on I/O instructions
  *
  * @param vcpu The virtual CPU which triggers the VM exit on I/O instruction
