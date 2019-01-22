@@ -75,6 +75,19 @@ def main():
             kconfig = kdefconfig
             sys.stdout.write("Overwrite with default configuration based on %s.\n" % defconfig_path)
             need_update = True
+        else:
+            # Use the existing .config as the base.
+            #
+            # Mark need_update if any visible symbol picks a different value
+            # from what is specified in .config.
+            for sym in [x for x in kconfig.unique_defined_syms if x.visibility]:
+                if sym.type in [kconfiglib.BOOL, kconfiglib.TRISTATE]:
+                    picked_value = sym.tri_value
+                else:
+                    picked_value = sym.str_value
+                need_update = (picked_value != sym.user_value)
+                if need_update:
+                    break
     else:
         # base on a default configuration
         if kdefconfig:
