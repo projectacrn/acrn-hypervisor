@@ -17,10 +17,6 @@
  * @{
  */
 
-/* The return value of emulate_io() indicating the I/O request is delivered to
- * VHM but not finished yet. */
-#define IOREQ_PENDING	1
-
 /**
  * @brief Internal representation of a I/O request.
  */
@@ -177,7 +173,7 @@ struct mem_io_node {
  *
  * @pre vcpu != NULL && io_req != NULL
  */
-int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request *io_req);
+int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_req);
 
 /**
  * @brief Reset all IO requests status of the VM

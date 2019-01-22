@@ -489,7 +489,9 @@ int32_t hcall_notify_ioreq_finish(uint16_t vmid, uint16_t vcpu_id)
 			ret = -EINVAL;
 		} else {
 			vcpu = vcpu_from_vid(target_vm, vcpu_id);
-			emulate_io_post(vcpu);
+			if (!vcpu->vm->sw.is_completion_polling) {
+				resume_vcpu(vcpu);
+			}
 			ret = 0;
 		}
 	}

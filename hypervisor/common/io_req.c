@@ -87,12 +87,12 @@ static inline bool has_complete_ioreq(const struct acrn_vcpu *vcpu)
  *
  * @pre vcpu != NULL && io_req != NULL
  */
-int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request *io_req)
+int32_t acrn_insert_request(struct acrn_vcpu *vcpu, const struct io_request *io_req)
 {
 	union vhm_request_buffer *req_buf = NULL;
 	struct vhm_request *vhm_req;
 	bool is_polling = false;
-	int32_t ret;
+	int32_t ret = 0;
 	uint16_t cur;
 
 	if (vcpu->vm->sw.io_shared_page != NULL) {
@@ -149,19 +149,18 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 			while (!need_reschedule(vcpu->pcpu_id)) {
 				if (has_complete_ioreq(vcpu)) {
 					/* we have completed ioreq pending */
-					emulate_io_post(vcpu);
 					break;
 				}
 				asm_pause();
 			}
 		} else if (need_reschedule(vcpu->pcpu_id)) {
 			schedule();
+		} else {
+			ret = -EINVAL;
 		}
-		ret = 0;
 	} else {
 		ret = -EINVAL;
 	}
-
 
 	return ret;
 }
