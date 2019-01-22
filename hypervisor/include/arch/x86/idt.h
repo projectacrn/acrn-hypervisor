@@ -11,16 +11,10 @@
  * IDT is defined in assembly so we handle exceptions as early as possible.
  */
 
-/* Interrupt Descriptor Table (LDT) selectors are 16 bytes on x86-64 instead of
- * 8 bytes.
- */
-#define     X64_IDT_DESC_SIZE   (0x10U)
+#ifndef ASSEMBLER
+
 /* Number of the HOST IDT entries */
 #define     HOST_IDT_ENTRIES    (0x100U)
-/* Size of the IDT */
-#define     HOST_IDT_SIZE       (HOST_IDT_ENTRIES * X64_IDT_DESC_SIZE)
-
-#ifndef ASSEMBLER
 
 /*
  * Definition of an 16 byte IDT selector.
@@ -73,6 +67,15 @@ struct host_idt_descriptor {
 
 extern struct host_idt HOST_IDT;
 extern struct host_idt_descriptor HOST_IDTR;
+
+#else /* ASSEMBLER */
+
+/* Interrupt Descriptor Table (LDT) selectors are 16 bytes on x86-64 instead of 8 bytes. */
+#define     X64_IDT_DESC_SIZE   (0x10)
+/* Number of the HOST IDT entries */
+#define     HOST_IDT_ENTRIES    (0x100)
+/* Size of the IDT */
+#define     HOST_IDT_SIZE       (HOST_IDT_ENTRIES * X64_IDT_DESC_SIZE)
 
 #endif /* end #ifndef ASSEMBLER */
 
