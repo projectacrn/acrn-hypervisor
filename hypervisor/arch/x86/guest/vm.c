@@ -226,10 +226,10 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		/* Populate return VM handle */
 		*rtn_vm = vm;
 		vm->sw.io_shared_page = NULL;
-#ifdef CONFIG_IOREQ_POLLING
-		/* Now, enable IO completion polling mode for all VMs with CONFIG_IOREQ_POLLING. */
-		vm->sw.is_completion_polling = true;
-#endif
+		if ((vm_config->guest_flags & IO_COMPLETION_POLLING) != 0U) {
+			/* enable IO completion polling mode per its guest flags in vm_config. */
+			vm->sw.is_completion_polling = true;
+		}
 		status = set_vcpuid_entries(vm);
 		if (status == 0) {
 			vm->state = VM_CREATED;

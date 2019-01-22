@@ -143,6 +143,7 @@ struct vm_config_arraies vm_config_partition = {
 			{
 				.type = PRE_LAUNCHED_VM,
 				.pcpu_bitmap = (PLUG_CPU(0) | PLUG_CPU(2)),
+				.guest_flags = IO_COMPLETION_POLLING,
 				.memory.start_hpa = 0x100000000UL,
 				.memory.size = 0x20000000UL, /* uses contiguous memory from host */
 				.vm_vuart = true,
@@ -155,7 +156,7 @@ struct vm_config_arraies vm_config_partition = {
 			{
 				.type = PRE_LAUNCHED_VM,
 				.pcpu_bitmap = (PLUG_CPU(1) | PLUG_CPU(3)),
-				.guest_flags = LAPIC_PASSTHROUGH,
+				.guest_flags = LAPIC_PASSTHROUGH | IO_COMPLETION_POLLING,
 				.memory.start_hpa = 0x120000000UL,
 				.memory.size = 0x20000000UL, /* uses contiguous memory from host */
 				.vm_vuart = true,
