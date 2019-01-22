@@ -613,8 +613,10 @@ int mngr_send_msg(int fd, struct mngr_msg *req, struct mngr_msg *ack,
 	else
 		select(socket_fd + 1, &rfd, NULL, NULL, NULL);
 
-	if (!FD_ISSET(socket_fd, &rfd))
-		return 0;
+	if (!FD_ISSET(socket_fd, &rfd)) {
+		printf("%s %d\n", __FUNCTION__, __LINE__);
+		return -1;
+	}
 
 	ret = read(socket_fd, ack, sizeof(struct mngr_msg));
 
