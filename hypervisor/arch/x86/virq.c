@@ -113,6 +113,10 @@ void vcpu_make_request(struct acrn_vcpu *vcpu, uint16_t eventid)
 
 /*
  * This function is only for case that APICv/VID is not supported.
+ *
+ * @retval 1 when INT is injected to guest.
+ * @retval 0 when there is no eligible pending vector.
+ * @retval -1 when there is a error.
  */
 static int32_t vcpu_inject_vlapic_int(struct acrn_vcpu *vcpu)
 {
@@ -137,18 +141,23 @@ static int32_t vcpu_inject_vlapic_int(struct acrn_vcpu *vcpu)
 				(vector & 0xFFU));
 
 			vlapic_intr_accepted(vlapic, vector);
-			ret = 0;
+			ret = 1;
 		}
 	}
 
 	return ret;
 }
 
+/*
+ * @retval 1 when INT is injected to guest.
+ * @retval 0 when otherwise
+ */
 static int32_t vcpu_do_pending_extint(const struct acrn_vcpu *vcpu)
 {
 	struct acrn_vm *vm;
 	struct acrn_vcpu *primary;
 	uint32_t vector;
+	int32_t ret = 0;
 
 	vm = vcpu->vm;
 
@@ -165,10 +174,11 @@ static int32_t vcpu_do_pending_extint(const struct acrn_vcpu *vcpu)
 					VMX_INT_INFO_VALID |
 					(vector & 0xFFU));
 			vpic_intr_accepted(vcpu->vm, vector);
+			ret = 1;
 		}
 	}
 
-	return 0;
+	return ret;
 }
 
 /* SDM Vol3 -6.15, Table 6-4 - interrupt and exception classes */
@@ -484,6 +494,11 @@ int32_t acrn_handle_pending_request(struct acrn_vcpu *vcpu)
 	return ret;
 }
 
+/*
+ * @retval 1 1 when INT is injected to guest.
+ * @retval 0 when there is no eligible pending vector.
+ * @retval -1 when there is a error.
+ */
 static inline int32_t acrn_inject_pending_vector(struct acrn_vcpu *vcpu, uint64_t *pending_req_bits)
 {
 	int32_t ret = 0;
@@ -519,12 +534,12 @@ static inline int32_t acrn_inject_pending_vector(struct acrn_vcpu *vcpu, uint64_
 					ret = vcpu_inject_vlapic_int(vcpu);
 				}
 			}
-		} else {
+		}
+
+		/* if there is no eligible vector before this point */
+		if (ret == 0) {
 			/* SDM Vol3 table 6-2, inject lowpri exception */
 			ret = vcpu_inject_lo_exception(vcpu);
-			if (ret != 0) {
-				ret = 0;
-			}
 		}
 	}
 
