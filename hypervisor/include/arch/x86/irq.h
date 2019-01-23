@@ -107,6 +107,7 @@ uint32_t irq_to_vector(uint32_t irq);
 
 /* RFLAGS */
 #define HV_ARCH_VCPU_RFLAGS_IF              (1UL<<9U)
+#define HV_ARCH_VCPU_RFLAGS_RF              (1UL<<16U)
 
 /* Interruptability State info */
 #define HV_ARCH_VCPU_BLOCKED_BY_MOVSS       (1UL<<1U)
