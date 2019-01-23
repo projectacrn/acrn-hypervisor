@@ -1,4 +1,5 @@
 /*-
+* Copyright (c) 1997, Stefan Esser <se@freebsd.org>
 * Copyright (c) 2011 NetApp, Inc.
 * Copyright (c) 2018 Intel Corporation
 * All rights reserved.
@@ -59,6 +60,8 @@
 #define PCIR_VENDOR           0x00U
 #define PCIR_DEVICE           0x02U
 #define PCIR_COMMAND          0x04U
+#define	PCIM_CMD_PORTEN       0x01U
+#define	PCIM_CMD_MEMEN        0x02U
 #define PCIM_CMD_INTxDIS      0x400U
 #define PCIR_STATUS           0x06U
 #define PCIM_STATUS_CAPPRESENT    0x0010U
@@ -69,6 +72,7 @@
 #define PCIM_HDRTYPE          0x7FU
 #define PCIM_HDRTYPE_NORMAL   0x00U
 #define PCIM_HDRTYPE_BRIDGE   0x01U
+#define	PCIM_HDRTYPE_CARDBUS  0x02U
 #define PCIM_MFDEV            0x80U
 #define PCIR_BARS             0x10U
 #define PCIM_BAR_SPACE        0x01U
@@ -120,6 +124,7 @@
 #define PCIM_MSIX_BIR_MASK    0x7U
 #define PCIM_MSIX_VCTRL_MASK  0x1U
 
+#define MSI_MAX_CAPLEN        14U
 #define MSIX_CAPLEN           12U
 #define MSIX_TABLE_ENTRY_SIZE 16U
 
@@ -134,6 +139,7 @@ union pci_bdf {
 
 enum pci_bar_type {
 	PCIBAR_NONE = 0,
+	PCIBAR_IO_SPACE,
 	PCIBAR_MEM32,
 	PCIBAR_MEM64,
 };
@@ -144,12 +150,33 @@ struct pci_bar {
 	enum pci_bar_type type;
 };
 
+/* Basic MSI capability info */
+struct pci_msi_cap {
+	uint32_t  capoff;
+	uint32_t  caplen;
+	uint8_t   cap[MSI_MAX_CAPLEN];
+};
+
+/* Basic MSIX capability info */
+struct pci_msix_cap {
+	uint32_t  capoff;
+	uint32_t  caplen;
+	uint8_t   table_bar;
+	uint32_t  table_offset;
+	uint32_t  table_count;
+	uint8_t   cap[MSIX_CAPLEN];
+};
+
 struct pci_pdev {
 	/* The bar info of the physical PCI device. */
 	struct pci_bar bar[PCI_BAR_COUNT];
 
 	/* The bus/device/function triple of the physical PCI device. */
 	union pci_bdf bdf;
+
+	struct pci_msi_cap msi;
+
+	struct pci_msix_cap msix;
 };
 
 
@@ -199,5 +226,7 @@ void pci_pdev_write_cfg(union pci_bdf bdf, uint32_t offset, uint32_t bytes, uint
 void enable_disable_pci_intx(union pci_bdf bdf, bool enable);
 
 void pci_scan_bus(pci_enumeration_cb cb, const void *cb_data);
+void init_pci_pdev_list(void);
+
 
 #endif /* PCI_H_ */
