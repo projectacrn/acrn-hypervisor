@@ -31,6 +31,7 @@ Sections
    developer-guides/index.rst
    tutorials/index.rst
    release_notes.rst
+   faq.rst
 
 Indices and Tables
 ******************
