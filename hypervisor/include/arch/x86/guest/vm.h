@@ -22,7 +22,7 @@ enum vm_privilege_level {
 
 #define INVALID_VM_ID 0xffffU
 
-#define PLUG_CPU(n)		(1U << n)
+#define PLUG_CPU(n)		(1U << (n))
 
 struct vm_hw_info {
 	/* vcpu array of this VM */
@@ -296,7 +296,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config);
 void launch_vms(uint16_t pcpu_id);
 
-extern struct acrn_vm_config vm_configs[];
+extern struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM];
 
 bool is_sos_vm(const struct acrn_vm *vm);
 uint16_t find_free_vm_id(void);
