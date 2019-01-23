@@ -198,6 +198,7 @@ int32_t vmcall_vmexit_handler(struct acrn_vcpu *vcpu)
 	} else if (!is_sos_vm(vm) && (hypcall_id != HC_WORLD_SWITCH) &&
 		(hypcall_id != HC_INITIALIZE_TRUSTY) &&
 		(hypcall_id != HC_SAVE_RESTORE_SWORLD_CTX)) {
+		vcpu_inject_ud(vcpu);
 		pr_err("hypercall %d is only allowed from SOS_VM!\n", hypcall_id);
 	        ret = -EACCES;
 	} else {

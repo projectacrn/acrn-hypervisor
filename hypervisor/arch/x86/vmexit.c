@@ -16,6 +16,7 @@
 static int32_t unhandled_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t xsetbv_vmexit_handler(struct acrn_vcpu *vcpu);
 static int32_t wbinvd_vmexit_handler(struct acrn_vcpu *vcpu);
+static int32_t undefined_vmexit_handler(struct acrn_vcpu *vcpu);
 
 /* VM Dispatch table for Exit condition handling */
 static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
@@ -58,23 +59,23 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_VMCALL] = {
 		.handler = vmcall_vmexit_handler},
 	[VMX_EXIT_REASON_VMCLEAR] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_VMLAUNCH] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_VMPTRLD] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_VMPTRST] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_VMREAD] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_VMRESUME] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_VMWRITE] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_VMXOFF] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_VMXON] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_CR_ACCESS] = {
 		.handler = cr_access_vmexit_handler,
 		.need_exit_qualification = 1},
@@ -127,7 +128,7 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_VMX_PREEMPTION_TIMER_EXPIRED] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_INVVPID] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_WBINVD] = {
 		.handler = wbinvd_vmexit_handler},
 	[VMX_EXIT_REASON_XSETBV] = {
@@ -140,7 +141,7 @@ static const struct vm_exit_dispatch dispatch_table[NR_VMX_EXIT_REASONS] = {
 	[VMX_EXIT_REASON_INVPCID] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_VMFUNC] = {
-		.handler = unhandled_vmexit_handler},
+		.handler = undefined_vmexit_handler},
 	[VMX_EXIT_REASON_ENCLS] = {
 		.handler = unhandled_vmexit_handler},
 	[VMX_EXIT_REASON_RDSEED] = {
@@ -309,5 +310,17 @@ static int32_t wbinvd_vmexit_handler(struct acrn_vcpu *vcpu)
 		cache_flush_invalidate_all();
 	}
 
+	return 0;
+}
+
+/* vmexit handler for just injecting a #UD exception
+ *
+ * ACRN doesn't support nested virtualization, the following VMExit will inject #UD
+ * VMCLEAR/VMLAUNCH/VMPTRST/VMREAD/VMRESUME/VMWRITE/VMXOFF/VMXON.
+ * ACRN doesn't enable VMFUNC, VMFUNC treated as undefined.
+ */
+static int32_t undefined_vmexit_handler(struct acrn_vcpu *vcpu)
+{
+	vcpu_inject_ud(vcpu);
 	return 0;
 }
