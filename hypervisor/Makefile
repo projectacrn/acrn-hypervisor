@@ -109,7 +109,16 @@ INCLUDE_PATH += include/dm
 INCLUDE_PATH += bsp/include
 INCLUDE_PATH += boot/include
 INCLUDE_PATH += $(HV_OBJDIR)/include
+
+BOARD_CONFIG_PATH := arch/x86/configs/$(CONFIG_BOARD)
+BOARD_SOS_VM_CONFIG := $(BOARD_CONFIG_PATH)/sos_vm.h
+ifeq ($(CONFIG_PARTITION_MODE),y)
 INCLUDE_PATH += arch/x86/configs/$(CONFIG_BOARD)
+else ifeq (, $(wildcard $(BOARD_SOS_VM_CONFIG)))
+INCLUDE_PATH += arch/x86/configs/default
+else
+INCLUDE_PATH += arch/x86/configs/$(CONFIG_BOARD)
+endif
 
 CC ?= gcc
 AS ?= as
