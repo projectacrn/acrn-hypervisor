@@ -180,8 +180,7 @@ enum acrn_vm_type {
 	UNDEFINED_VM = 0,
 	PRE_LAUNCHED_VM,
 	SOS_VM,
-	NORMAL_VM,
-	/* PRIVILEGE_VM, */
+	NORMAL_VM	/* Post-launched VM */
 };
 
 struct acrn_vm_mem_config {
