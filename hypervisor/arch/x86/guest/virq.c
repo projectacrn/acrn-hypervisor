@@ -14,6 +14,12 @@
 #define EXCEPTION_CLASS_CONT	2
 #define EXCEPTION_CLASS_PF	3
 
+/* Exception types */
+#define EXCEPTION_FAULT		0U
+#define EXCEPTION_TRAP		1U
+#define EXCEPTION_ABORT		2U
+#define EXCEPTION_INTERRUPT	3U
+
 static const uint16_t exception_type[32] = {
 	[0] = VMX_INT_TYPE_HW_EXP,
 	[1] = VMX_INT_TYPE_HW_EXP,
@@ -48,6 +54,24 @@ static const uint16_t exception_type[32] = {
 	[30] = VMX_INT_TYPE_HW_EXP,
 	[31] = VMX_INT_TYPE_HW_EXP
 };
+
+static uint8_t get_exception_type(uint32_t vector)
+{
+	uint8_t type;
+
+	/* Treat #DB as trap until decide to support Debug Registers */
+	if ((vector > 31U) || (vector == IDT_NMI)) {
+		type = EXCEPTION_INTERRUPT;
+	} else if ((vector == IDT_DB) || (vector == IDT_BP) || (vector ==  IDT_OF)) {
+		type = EXCEPTION_TRAP;
+	} else if ((vector == IDT_DF) || (vector == IDT_MC)) {
+		type = EXCEPTION_ABORT;
+	} else {
+		type = EXCEPTION_FAULT;
+	}
+
+	return type;
+}
 
 static bool is_guest_irq_enabled(struct acrn_vcpu *vcpu)
 {
@@ -254,6 +278,14 @@ static void vcpu_inject_exception(struct acrn_vcpu *vcpu, uint32_t vector)
 
 	/* retain rip for exception injection */
 	vcpu_retain_rip(vcpu);
+
+	/* SDM 17.3.1.1 For any fault-class exception except a debug exception generated in response to an
+	 * instruction breakpoint, the value pushed for RF is 1.
+	 * #DB is treated as Trap in get_exception_type, so RF will not be set for instruction breakpoint.
+	 */
+	if (get_exception_type(vector) == EXCEPTION_FAULT) {
+		vcpu_set_rflags(vcpu, vcpu_get_rflags(vcpu) | HV_ARCH_VCPU_RFLAGS_RF);
+	}
 }
 
 static int32_t vcpu_inject_hi_exception(struct acrn_vcpu *vcpu)
