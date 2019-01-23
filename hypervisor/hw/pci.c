@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 1997, Stefan Esser <se@freebsd.org>
+ * Copyright (c) 2000, Michael Smith <msmith@freebsd.org>
+ * Copyright (c) 2000, BSDi
  * Copyright (c) 2011 NetApp, Inc.
  * Copyright (c) 2018 Intel Corporation
  * All rights reserved.
@@ -30,10 +33,10 @@
 #include <hypervisor.h>
 #include <pci.h>
 
-static spinlock_t pci_device_lock = {
-	.head = 0U,
-	.tail = 0U
-};
+static spinlock_t pci_device_lock;
+static uint32_t num_pci_pdev;
+static struct pci_pdev pci_pdev_array[CONFIG_MAX_PCI_DEV_NUM];
+
 
 static uint32_t pci_pdev_calc_address(union pci_bdf bdf, uint32_t offset)
 {
@@ -180,4 +183,218 @@ void pci_scan_bus(pci_enumeration_cb cb_func, const void *cb_data)
 			}
 		}
 	}
+}
+
+static uint8_t pci_pdev_get_num_bars(uint8_t hdrtype)
+{
+	uint8_t num_bars = (uint8_t)0U;
+
+	switch (hdrtype & PCIM_HDRTYPE) {
+	case PCIM_HDRTYPE_NORMAL:
+		num_bars = (uint8_t)6U;
+		break;
+
+	case PCIM_HDRTYPE_BRIDGE:
+		num_bars = (uint8_t)2U;
+		break;
+
+	case PCIM_HDRTYPE_CARDBUS:
+		num_bars = (uint8_t)1U;
+		break;
+
+	default:
+		break;
+	}
+
+	return num_bars;
+}
+
+static enum pci_bar_type pci_pdev_read_bar_type(union pci_bdf bdf, uint8_t idx)
+{
+	uint32_t bar;
+	enum pci_bar_type type = PCIBAR_NONE;
+
+	bar = pci_pdev_read_cfg(bdf, pci_bar_offset(idx), 4U);
+	if ((bar & PCIM_BAR_SPACE) == PCIM_BAR_IO_SPACE) {
+		type = PCIBAR_IO_SPACE;
+	} else {
+		switch (bar & PCIM_BAR_MEM_TYPE) {
+		case PCIM_BAR_MEM_32:
+		case PCIM_BAR_MEM_1MB:
+			type = PCIBAR_MEM32;
+			break;
+
+		case PCIM_BAR_MEM_64:
+			type = PCIBAR_MEM64;
+			break;
+		}
+	}
+
+	return type;
+}
+
+static void pci_pdev_read_bar(union pci_bdf bdf, uint8_t idx, struct pci_bar *bar)
+{
+	uint64_t base, size;
+	enum pci_bar_type type;
+	uint32_t bar_lo, bar_hi, val32;
+	uint32_t orig_cmd;
+	uint32_t bar_base_mask;
+
+	base = 0UL;
+	size = 0UL;
+	type = pci_pdev_read_bar_type(bdf, idx);
+
+	if (type == PCIBAR_IO_SPACE) {
+		bar_base_mask = ~0x03U;
+	} else {
+		bar_base_mask = ~0x0fU;
+	}
+
+	if (type != PCIBAR_NONE) {
+		bar_lo = pci_pdev_read_cfg(bdf, pci_bar_offset(idx), 4U);
+
+		/* Get the base address */
+		base = (uint64_t)bar_lo & bar_base_mask;
+		if (type == PCIBAR_MEM64) {
+			bar_hi = pci_pdev_read_cfg(bdf, pci_bar_offset(idx + 1U), 4U);
+			base |= ((uint64_t)bar_hi << 32U);
+		}
+
+		orig_cmd = pci_pdev_read_cfg(bdf, PCIR_COMMAND, 2U);
+		pci_pdev_write_cfg(bdf, PCIR_COMMAND, 2U, orig_cmd & ~(PCIM_CMD_MEMEN | PCIM_CMD_PORTEN));
+
+		/* Sizing the BAR */
+		size = 0UL;
+		if ((type == PCIBAR_MEM64) && (idx < (PCI_BAR_COUNT - 1U))) {
+			pci_pdev_write_cfg(bdf, pci_bar_offset(idx + 1U), 4U, ~0U);
+			size = (uint64_t)pci_pdev_read_cfg(bdf, pci_bar_offset(idx + 1U), 4U);
+			size <<= 32U;
+		}
+
+		pci_pdev_write_cfg(bdf, pci_bar_offset(idx), 4U, ~0U);
+		val32 = pci_pdev_read_cfg(bdf, pci_bar_offset(idx), 4U);
+		size |= ((uint64_t)val32 & bar_base_mask);
+
+		if (size != 0UL) {
+			size = size & ~(size - 1U);
+		}
+
+		/* Restore the BAR */
+		pci_pdev_write_cfg(bdf, pci_bar_offset(idx), 4U, bar_lo);
+
+		if (type == PCIBAR_MEM64) {
+			pci_pdev_write_cfg(bdf, pci_bar_offset(idx + 1U), 4U, bar_hi);
+		}
+
+		/* Restore cmd reg */
+		pci_pdev_write_cfg(bdf, PCIR_COMMAND, 2U, orig_cmd);
+	}
+
+	bar->base = base;
+	bar->size = size;
+	bar->type = type;
+}
+
+static void pci_pdev_read_bars(union pci_bdf bdf, uint8_t nr_bars, struct pci_bar bar[PCI_BAR_COUNT])
+{
+	uint8_t	idx;
+
+	for (idx = 0U; idx < nr_bars; idx++) {
+		pci_pdev_read_bar(bdf, idx, &bar[idx]);
+
+		if (bar[idx].type == PCIBAR_MEM64) {
+			idx++;
+			bar[idx].type = PCIBAR_NONE;
+		}
+	}
+}
+
+static void pci_read_cap(struct pci_pdev *pdev)
+{
+	uint8_t ptr, cap;
+	uint32_t msgctrl;
+	uint32_t len, offset, idx;
+	uint32_t table_info;
+	uint8_t *dst;
+
+	ptr = (uint8_t)pci_pdev_read_cfg(pdev->bdf, PCIR_CAP_PTR, 1U);
+
+	while ((ptr != 0U) && (ptr != 0xFFU)) {
+		cap = (uint8_t)pci_pdev_read_cfg(pdev->bdf, ptr + PCICAP_ID, 1U);
+
+		/* Ignore all other Capability IDs for now */
+		if ((cap == PCIY_MSI) || (cap == PCIY_MSIX)) {
+			offset = ptr;
+			if (cap == PCIY_MSI) {
+				pdev->msi.capoff = offset;
+				msgctrl = pci_pdev_read_cfg(pdev->bdf, offset + PCIR_MSI_CTRL, 2U);
+				len = ((msgctrl & PCIM_MSICTRL_64BIT) != 0U) ? 14U : 10U;
+				pdev->msi.caplen = len;
+				dst = &pdev->msi.cap[0];
+			} else {
+				pdev->msix.capoff = offset;
+				pdev->msix.caplen = MSIX_CAPLEN;
+				len = pdev->msix.caplen;
+				dst = &pdev->msix.cap[0];
+
+				msgctrl = pci_pdev_read_cfg(pdev->bdf, pdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
+
+				/* Read Table Offset and Table BIR */
+				table_info = pci_pdev_read_cfg(pdev->bdf, pdev->msix.capoff + PCIR_MSIX_TABLE, 4U);
+
+				pdev->msix.table_bar = (uint8_t)(table_info & PCIM_MSIX_BIR_MASK);
+
+				pdev->msix.table_offset = table_info & ~PCIM_MSIX_BIR_MASK;
+				pdev->msix.table_count = (msgctrl & PCIM_MSIXCTRL_TABLE_SIZE) + 1U;
+			}
+
+			/* Copy MSI/MSI-X capability struct into buffer */
+			for (idx = 0U; idx < len; idx++) {
+				dst[idx] = (uint8_t)pci_pdev_read_cfg(pdev->bdf, offset + idx, 1U);
+			}
+		}
+
+		ptr = (uint8_t)pci_pdev_read_cfg(pdev->bdf, ptr + PCICAP_NEXTPTR, 1U);
+	}
+}
+
+static void fill_pdev(uint16_t pbdf, struct pci_pdev *pdev)
+{
+	uint8_t  nr_bars;
+
+	pdev->bdf.value = pbdf;
+
+	pdev->cfg.vendor = (uint16_t)pci_pdev_read_cfg(pdev->bdf, PCIR_VENDOR, 2U);
+	pdev->cfg.device = (uint16_t)pci_pdev_read_cfg(pdev->bdf, PCIR_DEVICE, 2U);
+	pdev->cfg.revid = (uint8_t)pci_pdev_read_cfg(pdev->bdf, PCIR_REVID, 1U);
+	pdev->cfg.hdrtype = (uint8_t)pci_pdev_read_cfg(pdev->bdf, PCIR_HDRTYPE, 1U);
+
+	nr_bars = pci_pdev_get_num_bars(pdev->cfg.hdrtype);
+
+	pci_pdev_read_bars(pdev->bdf, nr_bars, &pdev->bar[0]);
+
+	if ((pci_pdev_read_cfg(pdev->bdf, PCIR_STATUS, 2U) & PCIM_STATUS_CAPPRESENT) != 0U) {
+		pci_read_cap(pdev);
+	}
+}
+
+static void init_pdev(uint16_t pbdf, __unused const void *cb_data)
+{
+	static struct pci_pdev *pdev = NULL;
+
+	if (num_pci_pdev < CONFIG_MAX_PCI_DEV_NUM) {
+		pdev = &pci_pdev_array[num_pci_pdev];
+		num_pci_pdev++;
+
+		fill_pdev(pbdf, pdev);
+	} else {
+		pr_err("%s, failed to alloc pci_pdev!\n", __func__);
+	}
+}
+
+void init_pci_pdev_list(void)
+{
+	/* Build up pdev array */
+	pci_scan_bus(init_pdev, NULL);
 }
