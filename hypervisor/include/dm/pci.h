@@ -138,6 +138,21 @@ enum pci_bar_type {
 	PCIBAR_MEM64,
 };
 
+struct pci_bar {
+	uint64_t base;
+	uint64_t size;
+	enum pci_bar_type type;
+};
+
+struct pci_pdev {
+	/* The bar info of the physical PCI device. */
+	struct pci_bar bar[PCI_BAR_COUNT];
+
+	/* The bus/device/function triple of the physical PCI device. */
+	union pci_bdf bdf;
+};
+
+
 typedef void (*pci_enumeration_cb)(uint16_t pbdf, const void *data);
 
 static inline uint32_t pci_bar_offset(uint32_t idx)
