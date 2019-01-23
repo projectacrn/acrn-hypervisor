@@ -313,6 +313,8 @@ blockif_process_discard(struct blockif_ctxt *bc, struct blockif_req *br)
 			 */
 			err = fallocate(bc->fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE,
 				arg[i][0], arg[i][1]);
+			if (!err)
+				err = fdatasync(bc->fd);
 		}
 		if (err) {
 			WPRINTF(("Failed to discard offset=%ld nbytes=%ld err code: %d\n",
