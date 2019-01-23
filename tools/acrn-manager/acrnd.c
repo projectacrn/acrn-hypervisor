@@ -453,10 +453,8 @@ static int check_vms_status(unsigned int status)
 {
 	struct vmmngr_struct *s;
 
-	vmmngr_update();
-
 	LIST_FOREACH(s, &vmmngr_head, list)
-	    if (s->state != status && s->state != VM_CREATED)
+	    if (s->state != status)
 		return -1;
 
 	return 0;
@@ -470,6 +468,8 @@ static int wait_for_stop(unsigned int timeout)
 
 	/* list and update the vm status */
 	do {
+		vmmngr_update();
+
 		printf("Waiting %lu seconds for all vms enter S3/S5 state\n", t);
 
 		if (check_vms_status(VM_CREATED) == 0) {
