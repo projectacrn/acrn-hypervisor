@@ -8,6 +8,64 @@
 
 #include <instr_emul.h>
 
+/**
+ * @brief General complete-work for port I/O emulation
+ *
+ * @pre io_req->type == REQ_PORTIO
+ *
+ * @remark This function must be called when \p io_req is completed, after
+ * either a previous call to emulate_io() returning 0 or the corresponding VHM
+ * request having transferred to the COMPLETE state.
+ */
+static void
+emulate_pio_complete(struct acrn_vcpu *vcpu, const struct io_request *io_req)
+{
+	const struct pio_request *pio_req = &io_req->reqs.pio;
+	uint64_t mask = 0xFFFFFFFFUL >> (32UL - 8UL * pio_req->size);
+
+	if (pio_req->direction == REQUEST_READ) {
+		uint64_t value = (uint64_t)pio_req->value;
+		uint64_t rax = vcpu_get_gpreg(vcpu, CPU_REG_RAX);
+
+		rax = ((rax) & ~mask) | (value & mask);
+		vcpu_set_gpreg(vcpu, CPU_REG_RAX, rax);
+	}
+}
+
+/**
+ * @brief General complete-work for MMIO emulation
+ *
+ * @param vcpu The virtual CPU that triggers the MMIO access
+ * @param io_req The I/O request holding the details of the MMIO access
+ *
+ * @pre io_req->type == REQ_MMIO
+ *
+ * @remark This function must be called when \p io_req is completed, after
+ * either a previous call to emulate_io() returning 0 or the corresponding VHM
+ * request transferring to the COMPLETE state.
+ */
+static void emulate_mmio_complete(const struct acrn_vcpu *vcpu, const struct io_request *io_req)
+{
+	const struct mmio_request *mmio_req = &io_req->reqs.mmio;
+
+	if (mmio_req->direction == REQUEST_READ) {
+		/* Emulate instruction and update vcpu register set */
+		(void)emulate_instruction(vcpu);
+	}
+}
+
+#ifdef CONFIG_PARTITION_MODE
+static void io_instr_dest_handler(struct io_request *io_req)
+{
+	struct pio_request *pio_req = &io_req->reqs.pio;
+
+	if (pio_req->direction == REQUEST_READ) {
+		pio_req->value = 0xFFFFFFFFU;
+	}
+}
+
+#else
+
 static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
 {
 	union vhm_request_buffer *req_buf = NULL;
@@ -37,30 +95,6 @@ static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
 }
 
 /**
- * @brief General complete-work for port I/O emulation
- *
- * @pre io_req->type == REQ_PORTIO
- *
- * @remark This function must be called when \p io_req is completed, after
- * either a previous call to emulate_io() returning 0 or the corresponding VHM
- * request having transferred to the COMPLETE state.
- */
-static void
-emulate_pio_complete(struct acrn_vcpu *vcpu, const struct io_request *io_req)
-{
-	const struct pio_request *pio_req = &io_req->reqs.pio;
-	uint64_t mask = 0xFFFFFFFFUL >> (32UL - 8UL * pio_req->size);
-
-	if (pio_req->direction == REQUEST_READ) {
-		uint64_t value = (uint64_t)pio_req->value;
-		uint64_t rax = vcpu_get_gpreg(vcpu, CPU_REG_RAX);
-
-		rax = ((rax) & ~mask) | (value & mask);
-		vcpu_set_gpreg(vcpu, CPU_REG_RAX, rax);
-	}
-}
-
-/**
  * @brief Complete-work of VHM requests for port I/O emulation
  *
  * @pre vcpu->req.type == REQ_PORTIO
@@ -75,28 +109,6 @@ static void dm_emulate_pio_complete(struct acrn_vcpu *vcpu)
 	complete_ioreq(vcpu, io_req);
 
 	emulate_pio_complete(vcpu, io_req);
-}
-
-/**
- * @brief General complete-work for MMIO emulation
- *
- * @param vcpu The virtual CPU that triggers the MMIO access
- * @param io_req The I/O request holding the details of the MMIO access
- *
- * @pre io_req->type == REQ_MMIO
- *
- * @remark This function must be called when \p io_req is completed, after
- * either a previous call to emulate_io() returning 0 or the corresponding VHM
- * request transferring to the COMPLETE state.
- */
-static void emulate_mmio_complete(const struct acrn_vcpu *vcpu, const struct io_request *io_req)
-{
-	const struct mmio_request *mmio_req = &io_req->reqs.mmio;
-
-	if (mmio_req->direction == REQUEST_READ) {
-		/* Emulate instruction and update vcpu register set */
-		(void)emulate_instruction(vcpu);
-	}
 }
 
 /**
@@ -117,17 +129,6 @@ static void dm_emulate_mmio_complete(struct acrn_vcpu *vcpu)
 
 	emulate_mmio_complete(vcpu, io_req);
 }
-
-#ifdef CONFIG_PARTITION_MODE
-static void io_instr_dest_handler(struct io_request *io_req)
-{
-	struct pio_request *pio_req = &io_req->reqs.pio;
-
-	if (pio_req->direction == REQUEST_READ) {
-		pio_req->value = 0xFFFFFFFFU;
-	}
-}
-#endif
 
 /**
  * @brief General complete-work for all kinds of VHM requests for I/O emulation
@@ -173,6 +174,7 @@ static void dm_emulate_io_complete(struct acrn_vcpu *vcpu)
 		}
 	}
 }
+#endif
 
 /**
  * Try handling the given request by any port I/O handler registered in the
