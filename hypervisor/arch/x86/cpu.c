@@ -195,6 +195,7 @@ void init_cpu_post(uint16_t pcpu_id)
 		timer_init();
 		setup_notification();
 		setup_posted_intr_notification();
+		init_pci_pdev_list();
 
 		/* Start all secondary cores */
 		startup_paddr = prepare_trampoline();
