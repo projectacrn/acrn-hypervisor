@@ -1028,9 +1028,8 @@ vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t vector)
  * This function populates 'dmask' with the set of vcpus that match the
  * addressing specified by the (dest, phys, lowprio) tuple.
  */
-static void
-vlapic_calcdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest,
-		bool phys, bool lowprio)
+void
+vlapic_calcdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys, bool lowprio)
 {
 	struct acrn_vlapic *vlapic;
 	struct acrn_vlapic *target = NULL;
@@ -1137,12 +1136,6 @@ vlapic_calcdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest,
 			bitmap_set_lock(target->vcpu->vcpu_id, dmask);
 		}
 	}
-}
-
-	void
-calcvdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys)
-{
-	vlapic_calcdest(vm, dmask, dest, phys, false);
 }
 
 static void

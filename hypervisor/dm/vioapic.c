@@ -213,7 +213,7 @@ vioapic_update_eoi_exit(const struct acrn_vioapic *vioapic)
 			} else {
 				dest = (uint32_t)((rte.full) >> IOAPIC_RTE_DEST_SHIFT);
 				phys = ((rte.full & IOAPIC_RTE_DESTLOG) == 0UL);
-				calcvdest(vioapic->vm, &mask, dest, phys);
+				vlapic_calcdest(vioapic->vm, &mask, dest, phys, false);
 				
 				for (vcpu_id = ffs64(mask); vcpu_id != INVALID_BIT_INDEX; vcpu_id = ffs64(mask)) {
 					vcpu = vcpu_from_vid(vioapic->vm, vcpu_id);
