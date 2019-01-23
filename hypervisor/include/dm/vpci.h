@@ -45,24 +45,10 @@ struct pci_vdev_ops {
 		uint32_t bytes, uint32_t *val);
 };
 
-struct pci_bar {
-	uint64_t base;
-	uint64_t size;
-	enum pci_bar_type type;
-};
-
 struct msix_table_entry {
 	uint64_t	addr;
 	uint32_t	data;
 	uint32_t	vector_control;
-};
-
-struct pci_pdev {
-	/* The bar info of the physical PCI device. */
-	struct pci_bar bar[PCI_BAR_COUNT];
-
-	/* The bus/device/function triple of the physical PCI device. */
-	union pci_bdf bdf;
 };
 
 /* MSI capability structure */
