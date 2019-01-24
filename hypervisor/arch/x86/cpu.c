@@ -12,6 +12,7 @@
 #include <e820.h>
 #include <cpu_caps.h>
 #include <security.h>
+#include <ld_sym.h>
 
 struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(PAGE_SIZE);
 static uint16_t phys_cpu_num = 0U;
@@ -91,8 +92,7 @@ void init_cpu_pre(uint16_t pcpu_id_args)
 		start_tsc = rdtsc();
 
 		/* Clear BSS */
-		(void)memset(&ld_bss_start, 0U,
-				(size_t)(&ld_bss_end - &ld_bss_start));
+		(void)memset(&ld_bss_start, 0U, (size_t)(&ld_bss_end - &ld_bss_start));
 
 		/* Get CPU capabilities thru CPUID, including the physical address bit
 		 * limit which is required for initializing paging.

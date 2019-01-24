@@ -12,7 +12,6 @@ extern uint64_t get_hv_image_base(void);
 
 /* external symbols that are helpful for relocation */
 extern uint8_t		_DYNAMIC[1];
-extern uint8_t		ld_trampoline_end;
 
 extern uint8_t		cpu_primary_start_32;
 extern uint8_t		cpu_primary_start_64;

@@ -30,6 +30,7 @@
 #include <hypervisor.h>
 #include <reloc.h>
 #include <e820.h>
+#include <ld_sym.h>
 
 static void *ppt_mmu_pml4_addr;
 static uint8_t sanitized_page[PAGE_SIZE] __aligned(PAGE_SIZE);
