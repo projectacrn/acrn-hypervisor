@@ -267,13 +267,9 @@ struct acrn_vcpu {
 	/* State of this VCPU before suspend */
 	volatile enum vcpu_state prev_state;
 	volatile enum vcpu_state state;	/* State of this VCPU */
-	/* State of debug request for this VCPU */
-	volatile enum vcpu_state dbg_req_state;
-	uint64_t sync;	/*hold the bit events*/
 
 	struct sched_object sched_obj;
 	bool launched; /* Whether the vcpu is launched on target pcpu */
-	uint32_t paused_cnt; /* how many times vcpu is paused */
 	uint32_t running; /* vcpu is picked up and run? */
 
 	struct io_request req; /* used by io/ept emulation */
