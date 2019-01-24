@@ -380,7 +380,6 @@ int32_t create_vcpu(uint16_t pcpu_id, struct acrn_vm *vm, struct acrn_vcpu **rtn
 	*rtn_vcpu_handle = vcpu;
 
 	vcpu->launched = false;
-	vcpu->paused_cnt = 0U;
 	vcpu->running = 0;
 	vcpu->arch.nr_sipi = 0;
 	vcpu->state = VCPU_INIT;
@@ -531,7 +530,6 @@ void reset_vcpu(struct acrn_vcpu *vcpu)
 	vcpu->state = VCPU_INIT;
 
 	vcpu->launched = false;
-	vcpu->paused_cnt = 0U;
 	vcpu->running = 0;
 	vcpu->arch.nr_sipi = 0;
 
