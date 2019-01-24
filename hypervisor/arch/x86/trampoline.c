@@ -45,6 +45,7 @@ void write_trampoline_stack_sym(uint16_t pcpu_id)
 	hva = (uint64_t *)(hpa2hva(trampoline_start16_paddr) + trampoline_relo_addr(secondary_cpu_stack));
 
 	stack_sym_addr = (uint64_t)&per_cpu(stack, pcpu_id)[CONFIG_STACK_SIZE - 1];
+	stack_sym_addr &= ~(CPU_STACK_ALIGN - 1UL);
 	*hva = stack_sym_addr;
 
 	clflush(hva);
