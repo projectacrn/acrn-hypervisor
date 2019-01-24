@@ -145,7 +145,7 @@ void vcpu_set_eoi_exit(struct acrn_vcpu *vcpu, uint32_t vector)
 	pr_dbg("%s", __func__);
 
 	if (bitmap_test_and_set_nolock((uint16_t)(vector & 0x3fU),
-			&(vcpu->arch.eoi_exit_bitmap[vector >> 6U]))) {
+			&(vcpu->arch.eoi_exit_bitmap[(vector & 0xffU) >> 6U]))) {
 		pr_warn("Duplicated vector %u vcpu%u", vector, vcpu->vcpu_id);
 	}
 }
