@@ -114,7 +114,7 @@ struct profiling_vm_info {
 
 struct profiling_vm_info_list {
 	uint16_t num_vms;
-	struct profiling_vm_info vm_list[CONFIG_MAX_VM_NUM];
+	struct profiling_vm_info vm_list[CONFIG_MAX_VM_NUM+1];
 };
 
 struct sw_msr_op_info {
