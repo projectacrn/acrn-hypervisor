@@ -4,17 +4,16 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef VM0_BOOT_H
-#define VM0_BOOT_H
+#ifndef _UEFI_H_
+#define _UEFI_H_
 
-#ifdef CONFIG_EFI_STUB
 struct efi_context {
 	struct acrn_vcpu_regs vcpu_regs;
 	void *rsdp;
 	void *ap_trampoline_buf;
 } __packed;
 
-int32_t efi_boot_init(void);
-#endif
+const struct efi_context *get_efi_ctx(void);
+const struct lapic_regs *get_efi_lapic_regs(void);
 
-#endif /* VM0_BOOT_H */
+#endif

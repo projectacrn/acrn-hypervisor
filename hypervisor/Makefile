@@ -234,6 +234,7 @@ C_SRCS += dm/vpci/msix.c
 endif
 
 ifeq ($(CONFIG_PLATFORM_UEFI),y)
+INCLUDE_PATH += bsp/include/uefi
 C_SRCS += bsp/uefi/uefi.c
 C_SRCS += bsp/uefi/cmdline.c
 C_SRCS += boot/uefi/uefi_boot.c

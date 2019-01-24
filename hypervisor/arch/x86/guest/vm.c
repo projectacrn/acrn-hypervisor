@@ -9,7 +9,6 @@
 #include <multiboot.h>
 #include <e820.h>
 #include <vtd.h>
-#include <vm0_boot.h>
 
 vm_sw_loader_t vm_sw_loader;
 
@@ -142,11 +141,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		rebuild_sos_vm_e820();
 		prepare_sos_vm_memmap(vm);
 
-#ifndef CONFIG_EFI_STUB
 		status = init_vm_boot_info(vm);
-#else
-		status = efi_boot_init();
-#endif
 		if (status == 0) {
 			init_iommu_sos_vm_domain(vm);
 		} else {

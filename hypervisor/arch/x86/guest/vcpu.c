@@ -6,7 +6,6 @@
 
 #include <hypervisor.h>
 #include <schedule.h>
-#include <vm0_boot.h>
 #include <security.h>
 #include <virtual_cr.h>
 

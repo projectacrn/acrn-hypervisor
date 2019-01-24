@@ -37,7 +37,7 @@
 #include "stdlib.h"
 #include "boot.h"
 #include "acrn_common.h"
-#include "vm0_boot.h"
+#include "uefi.h"
 
 EFI_SYSTEM_TABLE *sys_table;
 EFI_BOOT_SERVICES *boot;

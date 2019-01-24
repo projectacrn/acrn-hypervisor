@@ -30,7 +30,6 @@
 #include <hypervisor.h>
 #include "acpi_priv.h"
 #include "acpi.h"
-#include <vm0_boot.h>
 
 #define ACPI_SIG_RSDP             "RSD PTR " /* Root System Description Ptr */
 #define ACPI_OEM_ID_SIZE           6
@@ -138,9 +137,7 @@ static struct acpi_table_rsdp *get_rsdp(void)
 	struct acpi_table_rsdp *rsdp = NULL;
 	uint16_t *addr;
 
-#ifdef CONFIG_EFI_STUB
-	rsdp = (struct acpi_table_rsdp *) get_rsdp_from_uefi();
-#endif
+	rsdp = (struct acpi_table_rsdp *)bsp_get_rsdp();
 	if (rsdp == NULL) {
 		/* EBDA is addressed by the 16 bit pointer at 0x40E */
 		addr = (uint16_t *)hpa2hva(0x40eUL);
