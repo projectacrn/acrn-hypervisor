@@ -171,6 +171,10 @@ void init_cpu_post(uint16_t pcpu_id)
 			panic("hardware not support!");
 		}
 
+		if (sanitize_vm_config() != 0) {
+			panic("VM Configuration Error!");
+		}
+
 		/* Warn for security feature not ready */
 		if (!check_cpu_security_cap()) {
 			pr_fatal("SECURITY WARNING!!!!!!");

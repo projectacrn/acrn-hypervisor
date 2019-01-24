@@ -11,7 +11,6 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE) = {
 	{
 		.type = SOS_VM,
 		.name = SOS_VM_CONFIG_NAME,
-		.pcpu_bitmap = SOS_VM_CONFIG_PCPU_BITMAP,
 		.guest_flags = SOS_VM_CONFIG_GUEST_FLAGS,
 		.memory = {
 			.start_hpa = 0x0UL,
