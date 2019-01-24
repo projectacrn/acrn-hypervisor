@@ -320,7 +320,9 @@ $(HV_OBJDIR)/$(HV_FILE).bin: $(HV_OBJDIR)/$(HV_FILE).out
 
 $(HV_OBJDIR)/$(HV_FILE).out: $(C_OBJS) $(S_OBJS) $(LIB_FLAGS)
 	${BASH} ${LD_IN_TOOL} $(ARCH_LDSCRIPT_IN) $(ARCH_LDSCRIPT) ${HV_OBJDIR}/.config
-	$(CC) -Wl,-Map=$(HV_OBJDIR)/$(HV_FILE).map -o $@ $(LDFLAGS) $(ARCH_LDFLAGS) -T$(ARCH_LDSCRIPT) $^ $(LIB_FLAGS)
+	$(CC) -Wl,-Map=$(HV_OBJDIR)/$(HV_FILE).map -o $@ $(LDFLAGS) $(ARCH_LDFLAGS) -T$(ARCH_LDSCRIPT) $^
+
+$(LIB_FLAGS): lib
 
 .PHONY: clean
 clean:
