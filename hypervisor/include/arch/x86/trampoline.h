@@ -13,9 +13,6 @@ extern uint64_t prepare_trampoline(void);
 extern uint64_t get_trampoline_start16_paddr(void);
 
 /* external symbols that are helpful for relocation */
-extern const uint8_t	ld_trampoline_load;
-extern uint8_t		ld_trampoline_start;
-
 extern uint8_t		trampoline_fixup_cs;
 extern uint8_t		trampoline_fixup_ip;
 extern uint8_t		trampoline_fixup_target;

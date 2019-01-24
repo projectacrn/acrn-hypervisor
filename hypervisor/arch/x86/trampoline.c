@@ -8,6 +8,7 @@
 #include <trampoline.h>
 #include <vm0_boot.h>
 #include <e820.h>
+#include <ld_sym.h>
 
 static uint64_t trampoline_start16_paddr;
 

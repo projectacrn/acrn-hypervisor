@@ -53,8 +53,6 @@
 /* IA32E Paging constants */
 #define IA32E_REF_MASK	((get_cpu_info())->physical_address_mask)
 
-extern uint8_t ld_text_end;
-
 static inline uint64_t round_page_up(uint64_t addr)
 {
 	return (((addr + (uint64_t)PAGE_SIZE) - 1UL) & PAGE_MASK);

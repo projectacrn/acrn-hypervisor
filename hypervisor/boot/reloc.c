@@ -6,6 +6,7 @@
 
 #include <types.h>
 #include <reloc.h>
+#include <ld_sym.h>
 
 #ifdef CONFIG_RELOC
 #define DT_NULL		0	/* end of .dynamic section */
