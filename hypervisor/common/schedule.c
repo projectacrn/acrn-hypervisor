@@ -164,7 +164,7 @@ void schedule(void)
 		prepare_switch(prev, next);
 		release_schedule_lock(pcpu_id);
 
-		arch_switch_to(prev, next);
+		arch_switch_to(&prev->host_sp, &next->host_sp);
 	}
 }
 
