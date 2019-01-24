@@ -7,9 +7,7 @@
 #include <hypervisor.h>
 #include <multiboot.h>
 #include <boot_context.h>
-#include <vm0_boot.h>
-
-#ifdef CONFIG_EFI_STUB
+#include <uefi.h>
 
 static struct efi_context efi_ctx;
 static struct lapic_regs uefi_lapic_regs;
@@ -28,14 +26,15 @@ static void efi_init(void)
 			pr_err("no multiboot drivers for uefi found");
 		} else {
 
-			memcpy_s(&efi_ctx, sizeof(struct efi_context), hpa2hva((uint64_t)mbi->mi_drives_addr), sizeof(struct efi_context));
+			memcpy_s(&efi_ctx, sizeof(struct efi_context), hpa2hva((uint64_t)mbi->mi_drives_addr),
+				sizeof(struct efi_context));
 			save_lapic(&uefi_lapic_regs);
 			efi_initialized = 1;
 		}
 	}
 }
 
-void *get_rsdp_from_uefi(void)
+void *bsp_get_rsdp(void)
 {
 	if (!efi_initialized) {
 		efi_init();
@@ -44,14 +43,14 @@ void *get_rsdp_from_uefi(void)
 	return hpa2hva((uint64_t)efi_ctx.rsdp);
 }
 
-void *get_ap_trampoline_buf(void)
+uint64_t bsp_get_ap_trampoline(void)
 {
-	return efi_ctx.ap_trampoline_buf;
+	return (uint64_t)efi_ctx.ap_trampoline_buf;
 }
 
 const struct efi_context *get_efi_ctx(void)
 {
-	return (const struct efi_context *)&efi_ctx;
+	return &efi_ctx;
 }
 
 const struct lapic_regs *get_efi_lapic_regs(void)
@@ -59,7 +58,9 @@ const struct lapic_regs *get_efi_lapic_regs(void)
 	return &uefi_lapic_regs;
 }
 
-#endif
+void bsp_init_irq(void)
+{
+}
 
 void init_bsp(void)
 {
@@ -68,8 +69,6 @@ void init_bsp(void)
 #endif
 	parse_hv_cmdline();
 
-#ifdef CONFIG_EFI_STUB
 	if (!efi_initialized)
 		efi_init();
-#endif
 }

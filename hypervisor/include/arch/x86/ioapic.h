@@ -7,8 +7,6 @@
 #ifndef IOAPIC_H
 #define IOAPIC_H
 
-#include <bsp_extern.h>
-
 #define NR_LEGACY_IRQ		16U
 #define NR_LEGACY_PIN		NR_LEGACY_IRQ
 void ioapic_setup_irqs(void);

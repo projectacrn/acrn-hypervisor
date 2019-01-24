@@ -5,7 +5,6 @@
  */
 
 #include <hypervisor.h>
-#include <bsp_extern.h>
 #include <multiboot.h>
 #include <reloc.h>
 #include <e820.h>

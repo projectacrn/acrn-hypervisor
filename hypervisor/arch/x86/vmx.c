@@ -7,7 +7,6 @@
  */
 
 #include <hypervisor.h>
-#include <vm0_boot.h>
 #include <cpu.h>
 
 /**

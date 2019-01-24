@@ -6,7 +6,6 @@
 #include <hypervisor.h>
 #include <reloc.h>
 #include <trampoline.h>
-#include <vm0_boot.h>
 #include <e820.h>
 #include <ld_sym.h>
 
@@ -108,11 +107,7 @@ uint64_t prepare_trampoline(void)
 	uint64_t size, dest_pa, i;
 
 	size = (uint64_t)(&ld_trampoline_end - &ld_trampoline_start);
-#ifndef CONFIG_EFI_STUB
-	dest_pa = e820_alloc_low_memory(CONFIG_LOW_RAM_SIZE);
-#else
-	dest_pa = (uint64_t)get_ap_trampoline_buf();
-#endif
+	dest_pa = bsp_get_ap_trampoline();
 
 	pr_dbg("trampoline code: %llx size %x", dest_pa, size);
 

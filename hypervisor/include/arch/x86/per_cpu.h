@@ -8,7 +8,6 @@
 #define PER_CPU_H
 
 #include <hypervisor.h>
-#include <bsp_extern.h>
 #include <schedule.h>
 #include <common/irq.h>
 #include <arch/x86/irq.h>

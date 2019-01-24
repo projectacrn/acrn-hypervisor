@@ -7,9 +7,7 @@
 #include <hypervisor.h>
 #include <multiboot.h>
 #include <boot_context.h>
-#include <vm0_boot.h>
-
-#ifdef CONFIG_EFI_STUB
+#include <uefi.h>
 
 static void efi_spurious_handler(int32_t vector)
 {
@@ -54,11 +52,10 @@ static int32_t uefi_sw_loader(struct acrn_vm *vm)
 	return ret;
 }
 
-int32_t efi_boot_init(void)
+int32_t init_vm_boot_info(__unused struct acrn_vm *vm)
 {
 	vm_sw_loader = uefi_sw_loader;
 	spurious_handler = (spurious_handler_t)efi_spurious_handler;
 
 	return 0;
 }
-#endif

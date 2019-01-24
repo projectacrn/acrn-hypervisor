@@ -468,7 +468,6 @@ void interrupt_init(uint16_t pcpu_id)
 	set_idt(idtd);
 	init_lapic(pcpu_id);
 	init_default_irqs(pcpu_id);
-#ifndef CONFIG_EFI_STUB
-	CPU_IRQ_ENABLE();
-#endif
+
+	bsp_init_irq();
 }
