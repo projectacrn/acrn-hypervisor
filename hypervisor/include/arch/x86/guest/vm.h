@@ -295,6 +295,7 @@ int32_t reset_vm(struct acrn_vm *vm);
 int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_vm **rtn_vm);
 void prepare_vm(uint16_t vm_id, struct acrn_vm_config *vm_config);
 void launch_vms(uint16_t pcpu_id);
+int32_t sanitize_vm_config(void);
 
 extern struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM];
 
