@@ -57,7 +57,8 @@ options:
                [-s pci] [-U uuid] [--vsbl vsbl_file_name] [--ovmf ovmf_file_path]
                [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]
                [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]
-               [--vmcfg sub_options] [--dump vm_idx] [--ptdev_no_reset] [--debugexit] <vm>
+               [--vmcfg sub_options] [--dump vm_idx] [--ptdev_no_reset] [--debugexit]
+               [--lapic_pt] <vm>
        -A: create ACPI tables
        -B: bootargs for kernel
        -c: # cpus (default 1)
@@ -88,6 +89,7 @@ options:
             its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms),
        --virtio_poll: enable virtio poll mode with poll interval with ns
        --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET
+       --lapic_pt: enable local apic passthrough
 
 See :ref:`acrn-dm_parameters` for more detailed descriptions of these
 configuration options.

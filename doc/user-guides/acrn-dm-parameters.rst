@@ -313,3 +313,10 @@ Here are descriptions for each of these ``acrn-dm`` command line parameters:
 
        By default, DM will create the MPtable for you. Use this option to
        disable it.
+
+   * - :kbd:`--lapic_pt`
+     - This option is to create a VM with lapic pass-through.
+       With this option, a VM is created with LAPIC_PASSTHROUGH and
+       IOREQ_COMPLETION_POLLING mode. This kind of VM is generally for realtime scenarios.
+
+       By default, DM will create VM without this option.

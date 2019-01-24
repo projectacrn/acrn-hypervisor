@@ -126,6 +126,21 @@ it clears the highest priority vector in ISR and TMR, and updates PPR
 status. vLAPIC will then notify vIOAPIC if the corresponding vector
 comes from vIOAPIC. This only occurs for the level triggered interrupts.
 
+LAPIC passthrough based on vLAPIC
+=================================
+
+LAPIC passthrough is supported based on vLAPIC, after switch to x2APIC
+mode. In case of LAPIC passthrough based on vLAPIC, the system will have the
+following characteristics.
+
+* IRQs received by the LAPIC can be handled by the Guest VM without ``vmexit``
+* Guest VM always see virtual LAPIC IDs for security reasons
+* most MSRs are directly accessible from Guest VM except for ``XAPICID``,
+  ``LDR`` and ``ICR``. Write operations to ``ICR`` will be trapped to avoid
+  malicious IPI. Read operations to ``XAPIC`` and ``LDR`` will be trapped in
+  order to make the Guest VM always see the virtual LAPIC IDs instead of the
+  physical ones.
+
 Virtual IOAPIC
 **************
 
