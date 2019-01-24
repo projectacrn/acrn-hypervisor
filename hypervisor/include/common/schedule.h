@@ -50,6 +50,6 @@ int32_t need_offline(uint16_t pcpu_id);
 void schedule(void);
 void run_sched_thread(struct sched_object *obj);
 
-void arch_switch_to(struct sched_object *prev, struct sched_object *next);
+void arch_switch_to(void *prev_sp, void *next_sp);
 #endif /* SCHEDULE_H */
 
