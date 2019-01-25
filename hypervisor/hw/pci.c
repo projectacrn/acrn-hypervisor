@@ -123,7 +123,7 @@ void enable_disable_pci_intx(union pci_bdf bdf, bool enable)
 #define BUS_SCAN_SKIP		0U
 #define BUS_SCAN_PENDING	1U
 #define BUS_SCAN_COMPLETE	2U
-void pci_scan_bus(pci_enumeration_cb cb_func, const void *cb_data)
+void pci_scan_bus(pci_enumeration_cb cb_func)
 {
 	union pci_bdf pbdf;
 	uint8_t hdr_type, secondary_bus, dev, func;
@@ -165,7 +165,7 @@ void pci_scan_bus(pci_enumeration_cb cb_func, const void *cb_data)
 				}
 
 				if (cb_func != NULL) {
-					cb_func(pbdf.value, cb_data);
+					cb_func(pbdf.value);
 				}
 
 				hdr_type = (uint8_t)pci_pdev_read_cfg(pbdf, PCIR_HDRTYPE, 1U);
@@ -379,7 +379,7 @@ static void fill_pdev(uint16_t pbdf, struct pci_pdev *pdev)
 	}
 }
 
-static void init_pdev(uint16_t pbdf, __unused const void *cb_data)
+static void init_pdev(uint16_t pbdf)
 {
 	static struct pci_pdev *pdev = NULL;
 
@@ -393,8 +393,21 @@ static void init_pdev(uint16_t pbdf, __unused const void *cb_data)
 	}
 }
 
+void pci_pdev_foreach(pci_pdev_enumeration_cb cb_func, const void *ctx)
+{
+	static struct pci_pdev *pdev = NULL;
+	uint32_t idx;
+
+	for (idx = 0U; idx < num_pci_pdev; idx++) {
+		pdev = &pci_pdev_array[idx];
+		if (cb_func != NULL) {
+			cb_func(pdev, ctx);
+		}
+	}
+}
+
 void init_pci_pdev_list(void)
 {
 	/* Build up pdev array */
-	pci_scan_bus(init_pdev, NULL);
+	pci_scan_bus(init_pdev);
 }
