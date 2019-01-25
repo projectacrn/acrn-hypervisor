@@ -179,7 +179,7 @@ struct pci_pdev {
 	struct pci_msix_cap msix;
 };
 
-typedef void (*pci_pdev_enumeration_cb)(const struct pci_pdev *pdev, const void *data);
+typedef void (*pci_pdev_enumeration_cb)(struct pci_pdev *pdev, const void *data);
 
 static inline uint32_t pci_bar_offset(uint32_t idx)
 {
