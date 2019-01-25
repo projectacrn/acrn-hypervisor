@@ -7,6 +7,7 @@
 #include <init.h>
 #include <hypervisor.h>
 #include <schedule.h>
+#include <vtd.h>
 
 /* Push sp magic to top of stack for call trace */
 #define SWITCH_TO(rsp, to)                                              \
