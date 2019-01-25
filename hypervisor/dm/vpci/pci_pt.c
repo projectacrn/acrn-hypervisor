@@ -30,6 +30,7 @@
 /* Passthrough PCI device related operations */
 
 #include <hypervisor.h>
+#include <vtd.h>
 #include "pci_priv.h"
 
 static inline uint32_t pci_bar_base(uint32_t bar)

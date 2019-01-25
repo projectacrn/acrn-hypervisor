@@ -38,7 +38,6 @@
 #include <vmx.h>
 #include <vmcs.h>
 #include <assign.h>
-#include <vtd.h>
 
 #include <guest_memory.h>
 #include <vmexit.h>

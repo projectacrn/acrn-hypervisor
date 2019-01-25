@@ -9,6 +9,7 @@
 #include <hypercall.h>
 #include <version.h>
 #include <reloc.h>
+#include <vtd.h>
 
 #define ACRN_DBG_HYCALL	6U
 
