@@ -33,6 +33,7 @@
 static inline bool msicap_access(const struct pci_vdev *vdev, uint32_t offset)
 {
 	bool ret;
+
 	if (vdev->msi.capoff == 0U) {
 		ret = 0;
 	} else {
@@ -83,7 +84,8 @@ static int32_t vmsi_remap(const struct pci_vdev *vdev, bool enable)
 		/* Update MSI Capability structure to physical device */
 		pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR, 0x4U, (uint32_t)info.pmsi_addr.full);
 		if ((msgctrl & PCIM_MSICTRL_64BIT) != 0U) {
-			pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR_HIGH, 0x4U, (uint32_t)(info.pmsi_addr.full >> 32U));
+			pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_ADDR_HIGH, 0x4U,
+				(uint32_t)(info.pmsi_addr.full >> 32U));
 			pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_DATA_64BIT, 0x2U, (uint16_t)info.pmsi_data.full);
 		} else {
 			pci_pdev_write_cfg(pbdf, capoff + PCIR_MSI_DATA, 0x2U, (uint16_t)info.pmsi_data.full);
@@ -105,7 +107,7 @@ static int32_t vmsi_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint32
 	/* For PIO access, we emulate Capability Structures only */
 	if (msicap_access(vdev, offset)) {
 		*val = pci_vdev_read_cfg(vdev, offset, bytes);
-	        ret = 0;
+	    ret = 0;
 	} else {
 		ret = -ENODEV;
 	}
@@ -166,68 +168,53 @@ static const struct pci_vdev_ops pci_ops_vdev_msi = {
 	.cfgread = vmsi_cfgread,
 };
 
+/* Read a uint32_t from buffer (little endian) */
+static uint32_t buf_read32(const uint8_t buf[])
+{
+	return buf[0] | ((uint32_t)buf[1] << 8U) | ((uint32_t)buf[2] << 16U) | ((uint32_t)buf[3] << 24U);
+}
+
+/* Write a uint32_t to buffer (little endian) */
+static void buf_write32(uint8_t buf[], uint32_t val)
+{
+	buf[0] = (uint8_t)(val & 0xFFU);
+	buf[1] = (uint8_t)((val >> 8U)  & 0xFFU);
+	buf[2] = (uint8_t)((val >> 16U) & 0xFFU);
+	buf[3] = (uint8_t)((val >> 24U) & 0xFFU);
+}
+
 void populate_msi_struct(struct pci_vdev *vdev)
 {
-	uint8_t ptr, cap;
-	uint32_t msgctrl;
-	uint32_t len, bytes, offset, val;
-	union pci_bdf pbdf = vdev->pdev.bdf;
+	struct pci_pdev *pdev = &vdev->pdev;
+	uint32_t val;
 
-	/* Has new Capabilities list? */
-	if ((pci_pdev_read_cfg(pbdf, PCIR_STATUS, 2U) & PCIM_STATUS_CAPPRESENT) != 0U) {
-		ptr = (uint8_t)pci_pdev_read_cfg(pbdf, PCIR_CAP_PTR, 1U);
-		while ((ptr != 0U) && (ptr != 0xFFU)) {
-			cap = (uint8_t)pci_pdev_read_cfg(pbdf, ptr + PCICAP_ID, 1U);
+	/* Copy MSI/MSI-X capability struct into virtual device */
+	if (pdev->msi.capoff != 0U) {
+		vdev->msi.capoff = pdev->msi.capoff;
+		vdev->msi.caplen = pdev->msi.caplen;
 
-			/* Ignore all other Capability IDs for now */
-			if ((cap == PCIY_MSI) || (cap == PCIY_MSIX)) {
-				offset = ptr;
-				if (cap == PCIY_MSI) {
-					vdev->msi.capoff = offset;
-					msgctrl = pci_pdev_read_cfg(pbdf, offset + PCIR_MSI_CTRL, 2U);
+		/* Assign MSI handler for configuration read and write */
+		add_vdev_handler(vdev, &pci_ops_vdev_msi);
 
-					/*
-					 * Ignore the 'mask' and 'pending' bits in the MSI capability
-					 * (msgctrl & PCIM_MSICTRL_VECTOR).
-					 * We'll let the guest manipulate them directly.
-					 */
-					len = ((msgctrl & PCIM_MSICTRL_64BIT) != 0U) ? 14U : 10U;
-					vdev->msi.caplen = len;
+		(void)memcpy_s((void *)&vdev->cfgdata.data_8[pdev->msi.capoff], pdev->msi.caplen,
+			(void *)&pdev->msi.cap[0U], pdev->msi.caplen);
 
-					/* Assign MSI handler for configuration read and write */
-					add_vdev_handler(vdev, &pci_ops_vdev_msi);
-				} else {
-					vdev->msix.capoff = offset;
-					vdev->msix.caplen = MSIX_CAPLEN;
-					len = vdev->msix.caplen;
+		val = buf_read32(&pdev->msi.cap[0U]);
+		val &= ~((uint32_t)PCIM_MSICTRL_MMC_MASK << 16U);
+		val &= ~((uint32_t)PCIM_MSICTRL_MME_MASK << 16U);
 
-					/* Assign MSI-X handler for configuration read and write */
-					add_vdev_handler(vdev, &pci_ops_vdev_msix);
-				}
+		buf_write32(&vdev->cfgdata.data_8[pdev->msi.capoff], val);
+	}
 
-				/* Copy MSI/MSI-X capability struct into virtual device */
-				while (len > 0U) {
-					bytes = (len >= 4U) ? 4U : len;
-					val = pci_pdev_read_cfg(pbdf, offset, bytes);
+	if (pdev->msix.capoff != 0U) {
+		vdev->msix.capoff = pdev->msix.capoff;
+		vdev->msix.caplen = pdev->msix.caplen;
 
-					if ((cap == PCIY_MSI) && (offset == vdev->msi.capoff)) {
-						/*
-						 * Don't support multiple vector for now,
-						 * Force Multiple Message Enable and Multiple Message
-						 * Capable to 0
-						 */
-						val &= ~((uint32_t)PCIM_MSICTRL_MMC_MASK << 16U);
-						val &= ~((uint32_t)PCIM_MSICTRL_MME_MASK << 16U);
-					}
+		/* Assign MSI-X handler for configuration read and write */
+		add_vdev_handler(vdev, &pci_ops_vdev_msix);
 
-					pci_vdev_write_cfg(vdev, offset, bytes, val);
-					len -= bytes;
-					offset += bytes;
-				}
-			}
-
-			ptr = (uint8_t)pci_pdev_read_cfg(pbdf, ptr + PCICAP_NEXTPTR, 1U);
-		}
+		(void)memcpy_s((void *)&vdev->cfgdata.data_8[pdev->msix.capoff], pdev->msix.caplen,
+			(void *)&pdev->msix.cap[0U], pdev->msix.caplen);
 	}
 }
 

@@ -102,31 +102,32 @@ static void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf
 	}
 }
 
-static struct pci_vdev *alloc_pci_vdev(const struct acrn_vm *vm, union pci_bdf bdf)
+static struct pci_vdev *alloc_pci_vdev(const struct acrn_vm *vm, const struct pci_pdev *pdev_ref)
 {
-	struct pci_vdev *vdev;
+	struct pci_vdev *vdev = NULL;
 
 	if (num_pci_vdev < CONFIG_MAX_PCI_DEV_NUM) {
 		vdev = &sharing_mode_vdev_array[num_pci_vdev];
 		num_pci_vdev++;
 
-		/* vbdf equals to pbdf otherwise remapped */
-		vdev->vbdf = bdf;
-		vdev->vpci = &vm->vpci;
-		vdev->pdev.bdf = bdf;
-	} else {
-		vdev = NULL;
+		if ((vm != NULL) && (vdev != NULL) && (pdev_ref != NULL)) {
+			vdev->vpci = &vm->vpci;
+			/* vbdf equals to pbdf otherwise remapped */
+			vdev->vbdf = pdev_ref->bdf;
+			(void)memcpy_s((void *)&vdev->pdev, sizeof(struct pci_pdev),
+				(const void *)pdev_ref, sizeof(struct pci_pdev));
+		}
 	}
 
 	return vdev;
 }
 
-static void enumerate_pci_dev(uint16_t pbdf, const void *cb_data)
+static void init_vdev_for_pdev(const struct pci_pdev *pdev, const void *cb_data)
 {
 	const struct acrn_vm *vm = (const struct acrn_vm *)cb_data;
 	struct pci_vdev *vdev;
 
-	vdev = alloc_pci_vdev(vm, (union pci_bdf)pbdf);
+	vdev = alloc_pci_vdev(vm, pdev);
 	if (vdev != NULL) {
 		populate_msi_struct(vdev);
 	}
@@ -143,14 +144,10 @@ static int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
 	 * IO/MMIO requests from non-sos_vm guests will be injected to device model.
 	 */
 	if (!is_sos_vm(vm)) {
-	        ret = -ENODEV;
+		ret = -ENODEV;
 	} else {
-		/* Initialize PCI vdev array */
-		num_pci_vdev = 0U;
-		(void)memset((void *)sharing_mode_vdev_array, 0U, sizeof(sharing_mode_vdev_array));
-
-		/* build up vdev array for sos_vm */
-		pci_scan_bus(enumerate_pci_dev, vm);
+		/* Build up vdev array for sos_vm */
+		pci_pdev_foreach(init_vdev_for_pdev, vm);
 
 		for (i = 0U; i < num_pci_vdev; i++) {
 			vdev = &sharing_mode_vdev_array[i];

@@ -155,7 +155,7 @@ static int32_t vmsix_cfgread(const struct pci_vdev *vdev, uint32_t offset, uint3
 
 	if (msixcap_access(vdev, offset)) {
 		*val = pci_vdev_read_cfg(vdev, offset, bytes);
-	        ret = 0;
+	    ret = 0;
 	} else {
 		ret = -ENODEV;
 	}
@@ -189,8 +189,7 @@ static int32_t vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t b
 				pci_pdev_write_cfg(vdev->pdev.bdf, offset, 2U, val);
 			}
 		}
-
-	        ret = 0;
+		ret = 0;
 	} else {
 		ret = -ENODEV;
 	}
@@ -230,6 +229,7 @@ static void vmsix_table_rw(struct pci_vdev *vdev, struct mmio_request *mmio, uin
 				 */
 				if (entry_offset < offsetof(struct msix_table_entry, data)) {
 					uint64_t qword_mask = ~0UL;
+
 					if (mmio->size == 4U) {
 						qword_mask = (entry_offset == 0U) ?
 								0x00000000FFFFFFFFUL : 0xFFFFFFFF00000000UL;
@@ -311,67 +311,18 @@ static int32_t vmsix_table_mmio_access_handler(struct io_request *io_req, void *
 	return ret;
 }
 
-static void decode_msix_table_bar(struct pci_vdev *vdev)
-{
-	uint32_t bir = vdev->msix.table_bar;
-	union pci_bdf pbdf = vdev->pdev.bdf;
-	uint64_t base, size;
-	uint32_t bar_lo, bar_hi, val32;
-
-	bar_lo = pci_pdev_read_cfg(pbdf, pci_bar_offset(bir), 4U);
-	if ((bar_lo & PCIM_BAR_SPACE) != PCIM_BAR_IO_SPACE) {
-		/* Get the base address */
-		base = (uint64_t)bar_lo & PCIM_BAR_MEM_BASE;
-		if ((bar_lo & PCIM_BAR_MEM_TYPE) == PCIM_BAR_MEM_64) {
-			bar_hi = pci_pdev_read_cfg(pbdf, pci_bar_offset(bir + 1U), 4U);
-			base |= ((uint64_t)bar_hi << 32U);
-		}
-
-		vdev->msix.mmio_hva = (uint64_t)hpa2hva(base);
-		vdev->msix.mmio_gpa = sos_vm_hpa2gpa(base);
-
-		/* Sizing the BAR */
-		size = 0U;
-		if (((bar_lo & PCIM_BAR_MEM_TYPE) == PCIM_BAR_MEM_64) && (bir < (PCI_BAR_COUNT - 1U))) {
-			pci_pdev_write_cfg(pbdf, pci_bar_offset(bir + 1U), 4U, ~0U);
-			size = (uint64_t)pci_pdev_read_cfg(pbdf, pci_bar_offset(bir + 1U), 4U);
-			size <<= 32U;
-		}
-
-		pci_pdev_write_cfg(pbdf, pci_bar_offset(bir), 4U, ~0U);
-		val32 = pci_pdev_read_cfg(pbdf, pci_bar_offset(bir), 4U);
-		size |= ((uint64_t)val32 & PCIM_BAR_MEM_BASE);
-
-		vdev->msix.mmio_size = size & ~(size - 1U);
-
-		/* Restore the BAR */
-		pci_pdev_write_cfg(pbdf, pci_bar_offset(bir), 4U, bar_lo);
-
-		if ((bar_lo & PCIM_BAR_MEM_TYPE) == PCIM_BAR_MEM_64) {
-			pci_pdev_write_cfg(pbdf, pci_bar_offset(bir + 1U), 4U, bar_hi);
-		}
-	} else {
-		/* I/O bar, should never happen */
-		pr_err("PCI device (%x) has MSI-X Table at IO BAR", vdev->vbdf.value);
-	}
-}
-
 static int32_t vmsix_init(struct pci_vdev *vdev)
 {
-	uint32_t msgctrl;
-	uint32_t table_info, i;
+	uint32_t i;
 	uint64_t addr_hi, addr_lo;
 	struct pci_msix *msix = &vdev->msix;
+	struct pci_pdev *pdev = &vdev->pdev;
+	struct pci_bar *bar;
 	int32_t ret;
 
-	msgctrl = pci_pdev_read_cfg(vdev->pdev.bdf, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
-
-	/* Read Table Offset and Table BIR */
-	table_info = pci_pdev_read_cfg(vdev->pdev.bdf, msix->capoff + PCIR_MSIX_TABLE, 4U);
-
-	msix->table_bar = table_info & PCIM_MSIX_BIR_MASK;
-	msix->table_offset = table_info & ~PCIM_MSIX_BIR_MASK;
-	msix->table_count = (msgctrl & PCIM_MSIXCTRL_TABLE_SIZE) + 1U;
+	msix->table_bar = pdev->msix.table_bar;
+	msix->table_offset = pdev->msix.table_offset;
+	msix->table_count = pdev->msix.table_count;
 
 	if (msix->table_bar < (PCI_BAR_COUNT - 1U)) {
 		/* Mask all table entries */
@@ -381,7 +332,12 @@ static int32_t vmsix_init(struct pci_vdev *vdev)
 			msix->tables[i].data = 0U;
 		}
 
-		decode_msix_table_bar(vdev);
+		bar = &pdev->bar[msix->table_bar];
+		if (bar != NULL) {
+			vdev->msix.mmio_hva = (uint64_t)hpa2hva(bar->base);
+			vdev->msix.mmio_gpa = sos_vm_hpa2gpa(bar->base);
+			vdev->msix.mmio_size = bar->size;
+		}
 
 		if (msix->mmio_gpa != 0U) {
 			/*
@@ -413,7 +369,7 @@ static int32_t vmsix_init(struct pci_vdev *vdev)
 	} else {
 		pr_err("%s, MSI-X device (%x) invalid table BIR %d", __func__, vdev->pdev.bdf.value, msix->table_bar);
 		vdev->msix.capoff = 0U;
-	        ret = -EIO;
+	    ret = -EIO;
 	}
 
 	return ret;

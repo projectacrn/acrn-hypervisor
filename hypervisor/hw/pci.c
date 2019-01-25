@@ -36,6 +36,8 @@ static spinlock_t pci_device_lock;
 static uint32_t num_pci_pdev;
 static struct pci_pdev pci_pdev_array[CONFIG_MAX_PCI_DEV_NUM];
 
+static void init_pdev(uint16_t pbdf);
+
 
 static uint32_t pci_pdev_calc_address(union pci_bdf bdf, uint32_t offset)
 {
@@ -122,7 +124,7 @@ void enable_disable_pci_intx(union pci_bdf bdf, bool enable)
 #define BUS_SCAN_SKIP		0U
 #define BUS_SCAN_PENDING	1U
 #define BUS_SCAN_COMPLETE	2U
-void pci_scan_bus(pci_enumeration_cb cb_func, const void *cb_data)
+void init_pci_pdev_list(void)
 {
 	union pci_bdf pbdf;
 	uint8_t hdr_type, secondary_bus, dev, func;
@@ -163,9 +165,7 @@ void pci_scan_bus(pci_enumeration_cb cb_func, const void *cb_data)
 					continue;
 				}
 
-				if (cb_func != NULL) {
-					cb_func(pbdf.value, cb_data);
-				}
+				init_pdev(pbdf.value);
 
 				hdr_type = (uint8_t)pci_pdev_read_cfg(pbdf, PCIR_HDRTYPE, 1U);
 				if ((hdr_type & PCIM_HDRTYPE) == PCIM_HDRTYPE_BRIDGE) {
@@ -274,16 +274,16 @@ static uint8_t pci_pdev_read_bar(union pci_bdf bdf, uint8_t idx, struct pci_bar 
 				size <<= 32U;
 			}
 
-		pci_pdev_write_cfg(bdf, pci_bar_offset(idx), 4U, ~0U);
-		val32 = pci_pdev_read_cfg(bdf, pci_bar_offset(idx), 4U);
-		size |= ((uint64_t)val32 & bar_base_mask);
+			pci_pdev_write_cfg(bdf, pci_bar_offset(idx), 4U, ~0U);
+			val32 = pci_pdev_read_cfg(bdf, pci_bar_offset(idx), 4U);
+			size |= ((uint64_t)val32 & bar_base_mask);
 
-		if (size != 0UL) {
-			size = size & ~(size - 1U);
-		}
+			if (size != 0UL) {
+				size = size & ~(size - 1U);
+			}
 
-		/* Restore the BAR */
-		pci_pdev_write_cfg(bdf, pci_bar_offset(idx), 4U, bar_lo);
+			/* Restore the BAR */
+			pci_pdev_write_cfg(bdf, pci_bar_offset(idx), 4U, bar_lo);
 
 			if (type == PCIBAR_MEM64) {
 				pci_pdev_write_cfg(bdf, pci_bar_offset(idx + 1U), 4U, bar_hi);
@@ -380,22 +380,24 @@ static void fill_pdev(uint16_t pbdf, struct pci_pdev *pdev)
 	}
 }
 
-static void init_pdev(uint16_t pbdf, __unused const void *cb_data)
+static void init_pdev(uint16_t pbdf)
 {
-	static struct pci_pdev *curpdev = NULL;
-
 	if (num_pci_pdev < CONFIG_MAX_PCI_DEV_NUM) {
-		curpdev = &pci_pdev_array[num_pci_pdev];
+		fill_pdev(pbdf, &pci_pdev_array[num_pci_pdev]);
 		num_pci_pdev++;
-
-		fill_pdev(pbdf, curpdev);
 	} else {
 		pr_err("%s, failed to alloc pci_pdev!\n", __func__);
 	}
 }
 
-void init_pci_pdev_list(void)
+void pci_pdev_foreach(pci_pdev_enumeration_cb cb_func, const void *ctx)
 {
-	/* Build up pdev array */
-	pci_scan_bus(init_pdev, NULL);
+	uint32_t idx;
+
+	for (idx = 0U; idx < num_pci_pdev; idx++) {
+		if (cb_func != NULL) {
+			cb_func(&pci_pdev_array[idx], ctx);
+		}
+	}
 }
+
