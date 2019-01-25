@@ -72,13 +72,13 @@ static void partition_mode_pdev_init(struct pci_vdev *vdev)
 	uint32_t idx;
 	struct pci_bar *pbar, *vbar;
 
-	pdev_ref = find_pci_pdev(vdev->pdev.bdf);
+	pdev_ref = find_pci_pdev(vdev->pbdf);
 	if (pdev_ref != NULL) {
-		(void)memcpy_s((void *)&vdev->pdev, sizeof(struct pci_pdev), (void *)pdev_ref, sizeof(struct pci_pdev));
+		vdev->pdev = pdev_ref;
 
 		/* Sanity checking for vbar */
 		for (idx = 0U; idx < (uint32_t)PCI_BAR_COUNT; idx++) {
-			pbar = &vdev->pdev.bar[idx];
+			pbar = &vdev->pdev->bar[idx];
 			vbar = &vdev->bar[idx];
 
 			if (is_valid_bar(pbar)) {
@@ -116,7 +116,7 @@ static int32_t partition_mode_vpci_init(const struct acrn_vm *vm)
 
 		if (vdev->ops->init != NULL) {
 			if (vdev->ops->init(vdev) != 0) {
-				pr_err("%s() failed at PCI device (bdf %x)!", __func__,
+				pr_err("%s() failed at PCI device (vbdf %x)!", __func__,
 					vdev->vbdf);
 			}
 		}

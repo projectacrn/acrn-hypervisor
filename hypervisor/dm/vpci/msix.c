@@ -92,7 +92,7 @@ static inline void enable_disable_msix(const struct pci_vdev *vdev, bool enable)
 	} else {
 		msgctrl &= ~PCIM_MSIXCTRL_MSIX_ENABLE;
 	}
-	pci_pdev_write_cfg(vdev->pdev.bdf, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U, msgctrl);
+	pci_pdev_write_cfg(vdev->pdev->bdf, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U, msgctrl);
 }
 
 /* Do MSI-X remap for all MSI-X table entries in the target device */
@@ -114,7 +114,7 @@ static int32_t vmsix_remap(const struct pci_vdev *vdev, bool enable)
 	/* If MSI Enable is being set, make sure INTxDIS bit is set */
 	if (ret == 0) {
 		if (enable) {
-			enable_disable_pci_intx(vdev->pdev.bdf, false);
+			enable_disable_pci_intx(vdev->pdev->bdf, false);
 		}
 		enable_disable_msix(vdev, enable);
 	}
@@ -135,13 +135,13 @@ static int32_t vmsix_remap_one_entry(const struct pci_vdev *vdev, uint32_t index
 	if (ret == 0) {
 		/* If MSI Enable is being set, make sure INTxDIS bit is set */
 		if (enable) {
-			enable_disable_pci_intx(vdev->pdev.bdf, false);
+			enable_disable_pci_intx(vdev->pdev->bdf, false);
 		}
 
 		/* Restore MSI-X Enable bit */
 		msgctrl = pci_vdev_read_cfg(vdev, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U);
 		if ((msgctrl & PCIM_MSIXCTRL_MSIX_ENABLE) == PCIM_MSIXCTRL_MSIX_ENABLE) {
-			pci_pdev_write_cfg(vdev->pdev.bdf, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U, msgctrl);
+			pci_pdev_write_cfg(vdev->pdev->bdf, vdev->msix.capoff + PCIR_MSIX_CTRL, 2U, msgctrl);
 		}
 	}
 
@@ -186,7 +186,7 @@ static int32_t vmsix_cfgwrite(struct pci_vdev *vdev, uint32_t offset, uint32_t b
 			}
 
 			if (((msgctrl ^ val) & PCIM_MSIXCTRL_FUNCTION_MASK) != 0U) {
-				pci_pdev_write_cfg(vdev->pdev.bdf, offset, 2U, val);
+				pci_pdev_write_cfg(vdev->pdev->bdf, offset, 2U, val);
 			}
 		}
 		ret = 0;
@@ -316,7 +316,7 @@ static int32_t vmsix_init(struct pci_vdev *vdev)
 	uint32_t i;
 	uint64_t addr_hi, addr_lo;
 	struct pci_msix *msix = &vdev->msix;
-	struct pci_pdev *pdev = &vdev->pdev;
+	struct pci_pdev *pdev = vdev->pdev;
 	struct pci_bar *bar;
 	int32_t ret;
 
@@ -367,7 +367,7 @@ static int32_t vmsix_init(struct pci_vdev *vdev)
 		}
 		ret = 0;
 	} else {
-		pr_err("%s, MSI-X device (%x) invalid table BIR %d", __func__, vdev->pdev.bdf.value, msix->table_bar);
+		pr_err("%s, MSI-X device (%x) invalid table BIR %d", __func__, vdev->pdev->bdf.value, msix->table_bar);
 		vdev->msix.capoff = 0U;
 	    ret = -EIO;
 	}

@@ -40,7 +40,7 @@ struct pci_vdev *sharing_mode_find_vdev(union pci_bdf pbdf)
 
 	/* in SOS_VM, it uses phys BDF */
 	for (i = 0U; i < num_pci_vdev; i++) {
-		if (sharing_mode_vdev_array[i].pdev.bdf.value == pbdf.value) {
+		if (sharing_mode_vdev_array[i].pdev->bdf.value == pbdf.value) {
 			vdev = &sharing_mode_vdev_array[i];
 		}
 	}
@@ -71,7 +71,7 @@ static void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf 
 
 		/* Not handled by any handlers. Passthru to physical device */
 		if (!handled) {
-			*val = pci_pdev_read_cfg(vdev->pdev.bdf, offset, bytes);
+			*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
 		}
 	}
 }
@@ -96,13 +96,13 @@ static void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf
 
 			/* Not handled by any handlers. Passthru to physical device */
 			if (!handled) {
-				pci_pdev_write_cfg(vdev->pdev.bdf, offset, bytes, val);
+				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
 			}
 		}
 	}
 }
 
-static struct pci_vdev *alloc_pci_vdev(const struct acrn_vm *vm, const struct pci_pdev *pdev_ref)
+static struct pci_vdev *alloc_pci_vdev(const struct acrn_vm *vm, struct pci_pdev *pdev_ref)
 {
 	struct pci_vdev *vdev = NULL;
 
@@ -114,15 +114,14 @@ static struct pci_vdev *alloc_pci_vdev(const struct acrn_vm *vm, const struct pc
 			vdev->vpci = &vm->vpci;
 			/* vbdf equals to pbdf otherwise remapped */
 			vdev->vbdf = pdev_ref->bdf;
-			(void)memcpy_s((void *)&vdev->pdev, sizeof(struct pci_pdev),
-				(const void *)pdev_ref, sizeof(struct pci_pdev));
+			vdev->pdev = pdev_ref;
 		}
 	}
 
 	return vdev;
 }
 
-static void init_vdev_for_pdev(const struct pci_pdev *pdev, const void *cb_data)
+static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *cb_data)
 {
 	const struct acrn_vm *vm = (const struct acrn_vm *)cb_data;
 	struct pci_vdev *vdev;
@@ -209,7 +208,7 @@ void vpci_set_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, ui
 		/* UOS may do BDF mapping */
 		vdev->vpci = (struct acrn_vpci *)&(target_vm->vpci);
 		vdev->vbdf.value = vbdf;
-		vdev->pdev.bdf.value = pbdf;
+		vdev->pdev->bdf.value = pbdf;
 	}
 }
 
