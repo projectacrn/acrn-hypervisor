@@ -8,10 +8,10 @@
 #include <reloc.h>
 
 #ifdef CONFIG_RELOC
-#define DT_NULL		0	/* end of .dynamic section */
-#define DT_RELA		7	/* relocation table */
-#define DT_RELASZ	8	/* size of reloc table */
-#define DT_RELAENT	9	/* size of one entry */
+#define DT_NULL		0U	/* end of .dynamic section */
+#define DT_RELA		7U	/* relocation table */
+#define DT_RELASZ	8U	/* size of reloc table */
+#define DT_RELAENT	9U	/* size of one entry */
 
 #define R_X86_64_RELATIVE	8UL
 
@@ -66,63 +66,60 @@ void relocate(void)
 
 	/* get the delta that needs to be patched */
 	delta = get_hv_image_delta();
-	if (delta == 0U) {
-		return;
-	}
+	if (delta != 0U) {
 
-	/* Look for the descriptoin of relocation sections */
-	for (dyn = (struct Elf64_Dyn *)_DYNAMIC; dyn->d_tag != DT_NULL; dyn++) {
-		switch (dyn->d_tag) {
-		case DT_RELA:
-			start = (struct Elf64_Rel *)(dyn->d_ptr + delta);
-			break;
-		case DT_RELASZ:
-			end = (struct Elf64_Rel *)start + dyn->d_ptr;
-			break;
-		case DT_RELAENT:
-			size = dyn->d_ptr;
-			break;
-		}
-	}
-
-	/* Sanity check */
-	if ((start == NULL) || (size == 0U)) {
-		return;
-	}
-
-	/*
-	 * Need to subtract the relocation delta to get the correct
-	 * absolute addresses
-	 */
-	trampoline_end = (uint64_t)(&ld_trampoline_end) - delta;
-	primary_32_start = (uint64_t)(&cpu_primary_start_32) - delta;
-	primary_32_end = (uint64_t)(&cpu_primary_start_64) - delta;
-
-	while (start < end) {
-		if ((elf64_r_type(start->r_info)) == R_X86_64_RELATIVE) {
-			addr = (uint64_t *)(delta + start->r_offset);
-
-			/*
-			 * we won't fixup any trampoline.S and cpu_primary.S here
-			 * for a number of reasons:
-			 *
-			 * - trampoline code itself takes another relocation,
-			 *   so any entries for trampoline symbols can't be fixed up
-			 *   through .rela sections
-			 * - In cpu_primary.S, the 32 bits code doesn't need relocation
-			 * - Linker option "-z noreloc-overflow" could force R_X86_32
-			 *   to R_X86_64 in the relocation sections, which could make
-			 *   the fixed up code dirty. Even if relocation for 32 bits
-			 *   is needed in the future, it's recommended to do it
-			 *   explicitly in the assembly code to avoid confusion.
-			 */
-			if ((start->r_offset > trampoline_end) &&
-					((start->r_offset < primary_32_start) ||
-					(start->r_offset > primary_32_end))) {
-				*addr += delta;
+		/* Look for the descriptoin of relocation sections */
+		for (dyn = (struct Elf64_Dyn *)_DYNAMIC; dyn->d_tag != DT_NULL; dyn++) {
+			switch (dyn->d_tag) {
+			case DT_RELA:
+				start = (struct Elf64_Rel *)(dyn->d_ptr + delta);
+				break;
+			case DT_RELASZ:
+				end = (struct Elf64_Rel *)start + dyn->d_ptr;
+				break;
+			case DT_RELAENT:
+				size = dyn->d_ptr;
+				break;
+			default:
+				/* if no RELA/RELASZ found, both start and end will be initialized to NULL, and later while loop won't be executed */
+				break;
 			}
 		}
-		start = (struct Elf64_Rel *)((char *)start + size);
+
+		/*
+		 * Need to subtract the relocation delta to get the correct
+		 * absolute addresses
+		 */
+		trampoline_end = (uint64_t)(&ld_trampoline_end) - delta;
+		primary_32_start = (uint64_t)(&cpu_primary_start_32) - delta;
+		primary_32_end = (uint64_t)(&cpu_primary_start_64) - delta;
+
+		while (start < end) {
+			if ((elf64_r_type(start->r_info)) == R_X86_64_RELATIVE) {
+				addr = (uint64_t *)(delta + start->r_offset);
+
+				/*
+				 * we won't fixup any trampoline.S and cpu_primary.S here
+				 * for a number of reasons:
+				 *
+				 * - trampoline code itself takes another relocation,
+				 *   so any entries for trampoline symbols can't be fixed up
+				 *   through .rela sections
+				 * - In cpu_primary.S, the 32 bits code doesn't need relocation
+				 * - Linker option "-z noreloc-overflow" could force R_X86_32
+				 *   to R_X86_64 in the relocation sections, which could make
+				 *   the fixed up code dirty. Even if relocation for 32 bits
+				 *   is needed in the future, it's recommended to do it
+				 *   explicitly in the assembly code to avoid confusion.
+				 */
+				if ((start->r_offset > trampoline_end) &&
+						((start->r_offset < primary_32_start) ||
+						(start->r_offset > primary_32_end))) {
+					*addr += delta;
+				}
+			}
+			start = (struct Elf64_Rel *)((char *)start + size);
+		}
 	}
 #endif
 }
