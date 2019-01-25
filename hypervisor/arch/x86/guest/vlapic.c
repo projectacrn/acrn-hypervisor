@@ -80,9 +80,6 @@ static inline void vlapic_dump_isr(__unused const struct acrn_vlapic *vlapic, __
 static int32_t
 apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector);
 
-static int32_t
-apicv_pending_intr(const struct acrn_vlapic *vlapic);
-
 /*
  * Post an interrupt to the vcpu running on 'hostcpu'. This will use a
  * hardware assist if available (e.g. Posted Interrupt) or fall back to
@@ -1332,6 +1329,7 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
  *
  * @remark The vector does not automatically transition to the ISR as a
  *	   result of calling this function.
+ *	   This function is only for case that APICv/VID is NOT supported.
  */
 int32_t
 vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr)
@@ -1341,27 +1339,22 @@ vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr)
 	const struct lapic_reg *irrptr;
 	int32_t	ret = 0;
 
-	if (is_apicv_intr_delivery_supported()) {
-		ret = apicv_pending_intr(vlapic);
-	} else {
+	irrptr = &lapic->irr[0];
 
-		irrptr = &lapic->irr[0];
-
-		/* i ranges effectively from 7 to 0 */
-		for (i = 8U; i > 0U; ) {
-			i--;
-			val = atomic_load32(&irrptr[i].v);
-			bitpos = (uint32_t)fls32(val);
-			if (bitpos != INVALID_BIT_INDEX) {
-				vector = (i * 32U) + bitpos;
-				if (prio(vector) > prio(lapic->ppr.v)) {
-					if (vecptr != NULL) {
-						*vecptr = vector;
-					}
-					ret = 1;
+	/* i ranges effectively from 7 to 0 */
+	for (i = 8U; i > 0U; ) {
+		i--;
+		val = atomic_load32(&irrptr[i].v);
+		bitpos = (uint32_t)fls32(val);
+		if (bitpos != INVALID_BIT_INDEX) {
+			vector = (i * 32U) + bitpos;
+			if (prio(vector) > prio(lapic->ppr.v)) {
+				if (vecptr != NULL) {
+					*vecptr = vector;
 				}
-				break;
+				ret = 1;
 			}
+			break;
 		}
 	}
 	return ret;
@@ -2227,46 +2220,6 @@ apicv_set_intr_ready(struct acrn_vlapic *vlapic, uint32_t vector)
 	atomic_set64(&pir_desc->pir[idx], mask);
 	notify = (atomic_cmpxchg64(&pir_desc->pending, 0UL, 1UL) == 0UL) ? 1 : 0;
 	return notify;
-}
-
-static int32_t
-apicv_pending_intr(const struct acrn_vlapic *vlapic)
-{
-	const struct vlapic_pir_desc *pir_desc;
-	const struct lapic_regs *lapic;
-	uint64_t pending, pirval;
-	uint32_t i, ppr, vpr;
-	int32_t ret = 0;
-
-	pir_desc = &(vlapic->pir_desc);
-
-	pending = atomic_load64(&pir_desc->pending);
-	if (pending != 0U) {
-		lapic = &(vlapic->apic_page);
-		ppr = lapic->ppr.v & 0xF0U;
-
-		if (ppr == 0U) {
-			ret = 1;
-		} else {
-
-			/* i ranges effectively from 3 to 0 */
-			i = 4U;
-			while (i > 0U) {
-				i --;
-				if (pir_desc->pir[i] != 0U) {
-					break;
-				}
-			}
-
-			pirval = pir_desc->pir[i];
-			if (pirval != 0U) {
-				vpr = (((i * 64U) + (uint32_t)fls64(pirval)) & 0xF0U);
-				ret = ((vpr > ppr) ? 1 : 0);
-			}
-		}
-	}
-
-	return ret;
 }
 
 /**
