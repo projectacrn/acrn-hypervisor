@@ -45,7 +45,7 @@ static inline bool msicap_access(const struct pci_vdev *vdev, uint32_t offset)
 static int32_t vmsi_remap(const struct pci_vdev *vdev, bool enable)
 {
 	struct ptirq_msi_info info;
-	union pci_bdf pbdf = vdev->pdev.bdf;
+	union pci_bdf pbdf = vdev->pdev->bdf;
 	struct acrn_vm *vm = vdev->vpci->vm;
 	uint32_t capoff = vdev->msi.capoff;
 	uint32_t msgctrl, msgdata;
@@ -183,7 +183,7 @@ static void buf_write32(uint8_t *buf, uint32_t val)
 
 void populate_msi_struct(struct pci_vdev *vdev)
 {
-	struct pci_pdev *pdev = &vdev->pdev;
+	struct pci_pdev *pdev = vdev->pdev;
 	uint32_t val;
 
 	/* Copy MSI/MSI-X capability struct into virtual device */

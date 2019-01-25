@@ -75,13 +75,13 @@ static int32_t vdev_pt_init(struct pci_vdev *vdev)
 			hva2hpa(vm->arch_vm.nworld_eptp), 48U);
 	}
 
-	ret = assign_iommu_device(vm->iommu, (uint8_t)vdev->pdev.bdf.bits.b,
-		(uint8_t)(vdev->pdev.bdf.value & 0xFFU));
+	ret = assign_iommu_device(vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
+		(uint8_t)(vdev->pdev->bdf.value & 0xFFU));
 
-	pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev.bdf, PCIR_COMMAND, 2U);
+	pci_command = (uint16_t)pci_pdev_read_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U);
 	/* Disable INTX */
 	pci_command |= 0x400U;
-	pci_pdev_write_cfg(vdev->pdev.bdf, PCIR_COMMAND, 2U, pci_command);
+	pci_pdev_write_cfg(vdev->pdev->bdf, PCIR_COMMAND, 2U, pci_command);
 
 	return ret;
 }
@@ -91,8 +91,8 @@ static int32_t vdev_pt_deinit(struct pci_vdev *vdev)
 	int32_t ret;
 	struct acrn_vm *vm = vdev->vpci->vm;
 
-	ret = unassign_iommu_device(vm->iommu, (uint8_t)vdev->pdev.bdf.bits.b,
-		(uint8_t)(vdev->pdev.bdf.value & 0xFFU));
+	ret = unassign_iommu_device(vm->iommu, (uint8_t)vdev->pdev->bdf.bits.b,
+		(uint8_t)(vdev->pdev->bdf.value & 0xFFU));
 
 	return ret;
 }
@@ -110,7 +110,7 @@ static int32_t vdev_pt_cfgread(const struct pci_vdev *vdev, uint32_t offset,
 	if (pci_bar_access(offset)) {
 		*val = pci_vdev_read_cfg(vdev, offset, bytes);
 	} else {
-		*val = pci_pdev_read_cfg(vdev->pdev.bdf, offset, bytes);
+		*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
 	}
 
 	return 0;
@@ -130,7 +130,7 @@ static void vdev_pt_remap_bar(struct pci_vdev *vdev, uint32_t idx,
 	if (new_base != 0U) {
 		/* Map the physical BAR in the guest MMIO space */
 		ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
-			vdev->pdev.bar[idx].base, /* HPA */
+			vdev->pdev->bar[idx].base, /* HPA */
 			new_base, /*GPA*/
 			vdev->bar[idx].size,
 			EPT_WR | EPT_RD | EPT_UNCACHED);
@@ -189,7 +189,7 @@ static int32_t vdev_pt_cfgwrite(struct pci_vdev *vdev, uint32_t offset,
 		vdev_pt_cfgwrite_bar(vdev, offset, bytes, val);
 	} else {
 		/* Write directly to physical device's config space */
-		pci_pdev_write_cfg(vdev->pdev.bdf, offset, bytes, val);
+		pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
 	}
 
 	return 0;
