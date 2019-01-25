@@ -5,6 +5,7 @@
 #include <hypervisor.h>
 #include <trampoline.h>
 #include <ioapic.h>
+#include <vtd.h>
 
 struct cpu_context cpu_ctx;
 

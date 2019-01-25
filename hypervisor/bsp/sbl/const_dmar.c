@@ -5,6 +5,7 @@
  */
 
 #include <hypervisor.h>
+#include <vtd.h>
 
 #ifndef CONFIG_DMAR_PARSE_ENABLED
 
