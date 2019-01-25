@@ -6,6 +6,7 @@
 
 #include <hypervisor.h>
 #include <ioapic.h>
+#include <vtd.h>
 
 /*
  * lookup a ptdev entry by sid

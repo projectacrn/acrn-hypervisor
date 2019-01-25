@@ -9,6 +9,7 @@
 #include <hypervisor.h>
 #include <cpu.h>
 #include <virtual_cr.h>
+#include <vtd.h>
 
 /* CR0 bits hv want to trap to track status change */
 #define CR0_TRAP_MASK (CR0_PE | CR0_PG | CR0_WP | CR0_CD | CR0_NW)
@@ -160,7 +161,7 @@ static void vmx_write_cr0(struct acrn_vcpu *vcpu, uint64_t cr0)
 					 * disabled behavior
 					 */
 					exec_vmwrite64(VMX_GUEST_IA32_PAT_FULL, PAT_ALL_UC_VALUE);
-					if (!iommu_snoop_supported(vcpu->vm)) {
+					if (!iommu_snoop_supported(vcpu->vm->iommu)) {
 						cache_flush_invalidate_all();
 					}
 				} else {

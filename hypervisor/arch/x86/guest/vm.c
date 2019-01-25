@@ -197,7 +197,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 
 		status = init_vm_boot_info(vm);
 		if (status == 0) {
-			init_iommu_sos_vm_domain(vm);
+			init_fallback_iommu_domain(vm->iommu, vm->vm_id, vm->arch_vm.nworld_eptp);
 		} else {
 			need_cleanup = true;
 		}
