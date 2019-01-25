@@ -660,6 +660,41 @@ Compliant example::
        }
 
 
+FN-10: The formal parameter type of a function shall be consistent
+==================================================================
+
+The formal parameter type of a function shall be the same between its
+declaration and definition.
+
+Compliant example::
+
+    /* In `showcase.h`: */
+    uint32_t func_showcase(uint32_t param);
+    
+    /* In `showcase.c`: */
+    #include "showcase.h"
+    
+    uint32_t func_showcase(uint32_t param)
+    {
+        return param;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       /* In `showcase.h`: */
+       uint32_t func_showcase(uint64_t param);
+       
+       /* In `showcase.c`: */
+       #include "showcase.h"
+       
+       uint32_t func_showcase(uint32_t param)
+       {
+           return param;
+       }
+
+
 
 Statements
 **********
@@ -1097,6 +1132,28 @@ Compliant example::
        uint32_t showcase_test;
        
        showcase_test = showcase++;
+
+
+ST-19: Array indexing shall be in-bounds
+========================================
+
+An array index value shall be between zero (for the first element) and the array
+size minus one (for the last element). Out-of-bound array references are an
+undefined behavior and shall be avoided.
+
+Compliant example::
+
+    char showcase_array[4] = {'s', 'h', 'o', 'w'};
+    
+    char showcase = showcase_array[0];
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       char showcase_array[4] = {'s', 'h', 'o', 'w'};
+       
+       char showcase = showcase_array[10];
 
 
 
@@ -1696,6 +1753,40 @@ Compliant example::
        char chr = showcase[1];
 
 
+TY-20: The actual parameter type shall be the same as the formal parameter type
+===============================================================================
+
+Compliant example::
+
+    void func_showcase(uint32_t formal_param)
+    {
+        printf("formal_param: %d \n", formal_param);
+    }
+    
+    void main(void)
+    {
+        uint32_t actual_param = 32U;
+    
+        func_showcase(actual_param);
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       void func_showcase(uint32_t formal_param)
+       {
+           printf("formal_param: %d \n", formal_param);
+       }
+       
+       void main(void)
+       {
+           uint64_t actual_param = 32UL;
+       
+           func_showcase(actual_param);
+       }
+
+
 
 Identifiers
 ***********
@@ -1766,8 +1857,12 @@ Compliant example::
        };
 
 
-ID-03: A global variable name shall not be the same as the name of struct, union, or enum
-=========================================================================================
+ID-03: A global variable name shall be unique
+=============================================
+
+A global variable name shall not be the same as the name of struct, union, enum,
+typedef, function, function parameter, macro, member, enum constant, local
+variable, or other global variables.
 
 Compliant example::
 
@@ -1838,7 +1933,8 @@ ID-05: The function name shall be unique
 ========================================
 
 The function name shall not be the same as the name of struct, union, enum,
-variable, or other functions.
+typedef, macro, member, enum constant, variable, function parameter, or other
+functions.
 
 Compliant example::
 
@@ -1899,5 +1995,31 @@ Compliant example::
    Non-compliant example::
 
        uint32_t __showcase;
+
+
+ID-08: A variable name shall not be the same as struct, union or enum
+=====================================================================
+
+Compliant example::
+
+    struct struct_showcase
+    {
+        char *str_source;
+        char *str_destination;
+    };
+    
+    uint32_t showcase;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       struct showcase
+       {
+           char *str_source;
+           char *str_destination;
+       };
+       
+       uint32_t showcase;
 
 
