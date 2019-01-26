@@ -35,6 +35,17 @@
 #define DMAR_ICS_REG    0x9cU    /* Invalidation complete status register */
 #define DMAR_IRTA_REG   0xb8U    /* Interrupt remapping table addr register */
 
+/* Values for entry_type in ACPI_DMAR_DEVICE_SCOPE - device types */
+enum acpi_dmar_scope_type {
+	ACPI_DMAR_SCOPE_TYPE_NOT_USED       = 0,
+	ACPI_DMAR_SCOPE_TYPE_ENDPOINT       = 1,
+	ACPI_DMAR_SCOPE_TYPE_BRIDGE         = 2,
+	ACPI_DMAR_SCOPE_TYPE_IOAPIC         = 3,
+	ACPI_DMAR_SCOPE_TYPE_HPET           = 4,
+	ACPI_DMAR_SCOPE_TYPE_NAMESPACE      = 5,
+	ACPI_DMAR_SCOPE_TYPE_RESERVED       = 6 /* 6 and greater are reserved */
+};
+
 static inline uint8_t dmar_ver_major(uint64_t version)
 {
 	return (((uint8_t)version & 0xf0U) >> 4U);
@@ -442,6 +453,8 @@ static inline uint16_t dma_frcd_up_sid(uint64_t up_sid)
 #define DEVFUN(dev, fun)            (((dev & 0x1FU) << 3U) | ((fun & 0x7U)))
 
 struct dmar_dev_scope {
+	enum acpi_dmar_scope_type type;
+	uint8_t id;
 	uint8_t bus;
 	uint8_t devfun;
 };

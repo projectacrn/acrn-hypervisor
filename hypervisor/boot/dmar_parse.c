@@ -19,16 +19,6 @@ enum acpi_dmar_type {
 	ACPI_DMAR_TYPE_RESERVED             = 5
 };
 
-/* Values for entry_type in ACPI_DMAR_DEVICE_SCOPE - device types */
-enum acpi_dmar_scope_type {
-	ACPI_DMAR_SCOPE_TYPE_NOT_USED       = 0,
-	ACPI_DMAR_SCOPE_TYPE_ENDPOINT       = 1,
-	ACPI_DMAR_SCOPE_TYPE_BRIDGE         = 2,
-	ACPI_DMAR_SCOPE_TYPE_IOAPIC         = 3,
-	ACPI_DMAR_SCOPE_TYPE_HPET           = 4,
-	ACPI_DMAR_SCOPE_TYPE_NAMESPACE      = 5,
-	ACPI_DMAR_SCOPE_TYPE_RESERVED       = 6 /* 6 and greater are reserved */
-};
 
 struct acpi_table_dmar {
 	/* Common ACPI table header */
@@ -198,6 +188,8 @@ handle_dmar_devscope(struct dmar_dev_scope *dev_scope,
 			sizeof(struct acpi_dmar_pci_path);
 
 	bdf = dmar_path_bdf(path_len, apci_devscope->bus, path);
+	dev_scope->id = apci_devscope->enumeration_id;
+	dev_scope->type = apci_devscope->entry_type;
 	dev_scope->bus = (bdf >> 8U) & 0xffU;
 	dev_scope->devfun = bdf & 0xffU;
 
@@ -217,9 +209,8 @@ get_drhd_dev_scope_cnt(struct acpi_dmar_hardware_unit *drhd)
 
 	while (start < end) {
 		scope = (struct acpi_dmar_device_scope *)start;
-		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_ENDPOINT ||
-			scope->entry_type == ACPI_DMAR_SCOPE_TYPE_BRIDGE ||
-			scope->entry_type == ACPI_DMAR_SCOPE_TYPE_NAMESPACE)
+		if ((scope->entry_type != ACPI_DMAR_SCOPE_TYPE_NOT_USED) &&
+			(scope->entry_type < ACPI_DMAR_SCOPE_TYPE_RESERVED))
 			count++;
 		start += scope->length;
 	}
@@ -239,12 +230,6 @@ handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd,
 	drhd->segment = acpi_drhd->segment;
 	drhd->flags = acpi_drhd->flags;
 	drhd->reg_base_addr = acpi_drhd->address;
-
-	if (drhd->flags & DRHD_FLAG_INCLUDE_PCI_ALL_MASK) {
-		drhd->dev_cnt = 0;
-		drhd->devices = NULL;
-		return 0;
-	}
 
 	dev_count = get_drhd_dev_scope_cnt(acpi_drhd);
 	drhd->dev_cnt = dev_count;
@@ -280,9 +265,10 @@ handle_one_drhd(struct acpi_dmar_hardware_unit *acpi_drhd,
 		remaining -= consumed;
 		/* skip IOAPIC & HPET */
 		ads = (struct acpi_dmar_device_scope *)cp;
-		if (ads->entry_type != ACPI_DMAR_SCOPE_TYPE_IOAPIC &&
-			ads->entry_type != ACPI_DMAR_SCOPE_TYPE_HPET)
+		if ((ads->entry_type != ACPI_DMAR_SCOPE_TYPE_NOT_USED) &&
+			(ads->entry_type < ACPI_DMAR_SCOPE_TYPE_RESERVED)) {
 			dev_scope++;
+		}
 		else
 			pr_dbg("drhd: skip dev_scope type %d",
 				ads->entry_type);
