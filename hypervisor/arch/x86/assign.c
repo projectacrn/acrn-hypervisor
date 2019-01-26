@@ -77,32 +77,33 @@ static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *
 	bool phys;
 
 	/* get physical destination cpu mask */
-	dest = (uint32_t)(info->vmsi_addr & MSI_ADDR_DEST) >> MSI_ADDR_DEST_SHIFT;
-	phys = ((info->vmsi_addr & MSI_ADDR_LOG) != MSI_ADDR_LOG);
+	dest = info->vmsi_addr.bits.dest_field;
+	phys = (info->vmsi_addr.bits.dest_mode == MSI_ADDR_DESTMODE_PHYS);
 
 	vlapic_calcdest(vm, &vdmask, dest, phys, false);
 	pdmask = vcpumask2pcpumask(vm, vdmask);
 
 	/* get physical delivery mode */
-	delmode = info->vmsi_data & APIC_DELMODE_MASK;
-	if ((delmode != APIC_DELMODE_FIXED) && (delmode != APIC_DELMODE_LOWPRIO)) {
-		delmode = APIC_DELMODE_LOWPRIO;
+	delmode = info->vmsi_data.bits.delivery_mode;
+	if ((delmode != MSI_DATA_DELMODE_FIXED) && (delmode != MSI_DATA_DELMODE_LOPRI)) {
+		delmode = MSI_DATA_DELMODE_LOPRI;
 	}
 
 	/* update physical delivery mode & vector */
 	info->pmsi_data = info->vmsi_data;
-	info->pmsi_data &= ~0x7FFU;
-	info->pmsi_data |= delmode | vector;
+	info->pmsi_data.bits.delivery_mode = delmode;
+	info->pmsi_data.bits.vector = vector;
 
 	dest_mask = calculate_logical_dest_mask(pdmask);
 	/* update physical dest mode & dest field */
 	info->pmsi_addr = info->vmsi_addr;
-	info->pmsi_addr &= ~0xFF00CU;
-	info->pmsi_addr |= (dest_mask << MSI_ADDR_DEST_SHIFT) | MSI_ADDR_RH | MSI_ADDR_LOG;
+	info->pmsi_addr.bits.dest_mode = MSI_ADDR_DESTMODE_LOGICAL;
+	info->pmsi_addr.bits.rh = MSI_ADDR_RH;
+	info->pmsi_addr.bits.dest_field = dest_mask;
 
 	dev_dbg(ACRN_DBG_IRQ, "MSI addr:data = 0x%llx:%x(V) -> 0x%llx:%x(P)",
-		info->vmsi_addr, info->vmsi_data,
-		info->pmsi_addr, info->pmsi_data);
+		info->vmsi_addr.full, info->vmsi_data.full,
+		info->pmsi_addr.full, info->pmsi_data.full);
 }
 
 static union ioapic_rte
@@ -442,14 +443,14 @@ void ptirq_softirq(uint16_t pcpu_id)
 		} else {
 			if (msi != NULL) {
 				/* TODO: msi destmode check required */
-				(void)vlapic_intr_msi(vm, msi->vmsi_addr, msi->vmsi_data);
+				(void)vlapic_intr_msi(vm, msi->vmsi_addr.full, msi->vmsi_data.full);
 				dev_dbg(ACRN_DBG_PTIRQ, "dev-assign: irq=0x%x MSI VR: 0x%x-0x%x",
 					entry->allocated_pirq,
-					msi->vmsi_data & 0xFFU,
+					msi->vmsi_data.bits.vector,
 					irq_to_vector(entry->allocated_pirq));
 				dev_dbg(ACRN_DBG_PTIRQ, " vmsi_addr: 0x%llx vmsi_data: 0x%x",
-				        msi->vmsi_addr,
-				        msi->vmsi_data);
+				        msi->vmsi_addr.full,
+				        msi->vmsi_data.full);
 			}
 		}
 	}
@@ -534,16 +535,16 @@ int32_t ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,
 	spinlock_release(&ptdev_lock);
 
 	if (entry != NULL) {
-		if (is_entry_active(entry) && (info->vmsi_data == 0U)) {
+		if (is_entry_active(entry) && (info->vmsi_data.full == 0U)) {
 			/* handle destroy case */
-			info->pmsi_data = 0U;
+			info->pmsi_data.full = 0U;
 		} else {
 			/* build physical config MSI, update to info->pmsi_xxx */
 			ptirq_build_physical_msi(vm, info, irq_to_vector(entry->allocated_pirq));
 			entry->msi = *info;
 			dev_dbg(ACRN_DBG_IRQ, "PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
 				pci_bus(virt_bdf), pci_slot(virt_bdf), pci_func(virt_bdf), entry_nr,
-				info->vmsi_data & 0xFFU, irq_to_vector(entry->allocated_pirq), entry->vm->vm_id);
+				info->vmsi_data.bits.vector, irq_to_vector(entry->allocated_pirq), entry->vm->vm_id);
 		}
 		ret = 0;
 	}
