@@ -36,12 +36,55 @@ union source_id {
 	} intx_id;
 };
 
+/*
+ * Macros for bits in union msi_addr_reg
+ */
+
+#define	MSI_ADDR_BASE			0xfeeUL	/* Base address for MSI messages */
+#define	MSI_ADDR_RH			0x1U	/* Redirection Hint */
+#define	MSI_ADDR_DESTMODE_LOGICAL	0x1U	/* Destination Mode: Logical*/
+#define	MSI_ADDR_DESTMODE_PHYS		0x0U	/* Destination Mode: Physical*/
+
+union msi_addr_reg {
+	uint64_t full;
+	struct {
+		uint32_t rsvd_1:2;
+		uint32_t dest_mode:1;
+		uint32_t rh:1;
+		uint32_t rsvd_2:8;
+		uint32_t dest_field:8;
+		uint32_t addr_base:12;
+		uint32_t hi_32;
+	} bits __packed;
+};
+
+/*
+ * Macros for bits in union msi_data_reg
+ */
+
+#define MSI_DATA_DELMODE_FIXED		0x0U	/* Delivery Mode: Fixed */
+#define MSI_DATA_DELMODE_LOPRI		0x1U	/* Delivery Mode: Low Priority */
+#define MSI_DATA_TRGRMODE_EDGE		0x0U	/* Trigger Mode: Edge */
+#define MSI_DATA_TRGRMODE_LEVEL		0x1U	/* Trigger Mode: Level */
+
+union msi_data_reg {
+	uint32_t full;
+	struct {
+		uint32_t vector:8;
+		uint32_t delivery_mode:3;
+		uint32_t rsvd_1:3;
+		uint32_t level:1;
+		uint32_t trigger_mode:1;
+		uint32_t rsvd_2:16;
+	} bits __packed;
+};
+
 /* entry per guest virt vector */
 struct ptirq_msi_info {
-	uint64_t vmsi_addr; /* virt msi_addr */
-	uint32_t vmsi_data; /* virt msi_data */
-	uint64_t pmsi_addr; /* phys msi_addr */
-	uint32_t pmsi_data; /* phys msi_data */
+	union msi_addr_reg vmsi_addr; /* virt msi_addr */
+	union msi_data_reg vmsi_data; /* virt msi_data */
+	union msi_addr_reg pmsi_addr; /* phys msi_addr */
+	union msi_data_reg pmsi_data; /* phys msi_data */
 	int32_t is_msix;	/* 0-MSI, 1-MSIX */
 };
 

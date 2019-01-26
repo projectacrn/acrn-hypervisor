@@ -1940,10 +1940,14 @@ vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg)
 	uint32_t dest;
 	bool phys, rh;
 	int32_t ret;
+	union msi_addr_reg address;
+	union msi_data_reg data;
 
-	dev_dbg(ACRN_DBG_LAPIC, "lapic MSI addr: %#lx msg: %#lx", addr, msg);
+	address.full = addr;
+	data.full = (uint32_t) msg;
+	dev_dbg(ACRN_DBG_LAPIC, "lapic MSI addr: %#lx msg: %#lx", address.full, data.full);
 
-	if ((addr & MSI_ADDR_MASK) == MSI_ADDR_BASE) {
+	if (address.bits.addr_base == MSI_ADDR_BASE) {
 		/*
 		 * Extract the x86-specific fields from the MSI addr/msg
 		 * params according to the Intel Arch spec, Vol3 Ch 10.
@@ -1955,12 +1959,12 @@ vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg)
 		 * the Redirection Hint and Destination Mode are '1' and
 		 * physical otherwise.
 		 */
-		dest = (uint32_t)(addr >> 12U) & 0xffU;
-		phys = ((addr & MSI_ADDR_LOG) != MSI_ADDR_LOG);
-		rh = ((addr & MSI_ADDR_RH) == MSI_ADDR_RH);
+		dest = address.bits.dest_field;
+		phys = (address.bits.dest_mode == MSI_ADDR_DESTMODE_PHYS);
+		rh = (address.bits.rh == MSI_ADDR_RH);
 
-		delmode = (uint32_t)msg & APIC_DELMODE_MASK;
-		vec = (uint32_t)msg & 0xffU;
+		delmode = data.bits.delivery_mode;
+		vec = data.bits.vector;
 
 		dev_dbg(ACRN_DBG_LAPIC, "lapic MSI %s dest %#x, vec %u",
 			phys ? "physical" : "logical", dest, vec);
@@ -1968,7 +1972,7 @@ vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg)
 		vlapic_deliver_intr(vm, LAPIC_TRIG_EDGE, dest, phys, delmode, vec, rh);
 		ret = 0;
 	} else {
-		dev_dbg(ACRN_DBG_LAPIC, "lapic MSI invalid addr %#lx", addr);
+		dev_dbg(ACRN_DBG_LAPIC, "lapic MSI invalid addr %#lx", address.full);
 	        ret = -1;
 	}
 
