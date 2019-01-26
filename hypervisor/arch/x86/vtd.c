@@ -71,6 +71,7 @@ static inline uint64_t dmar_set_bitslice(uint64_t var, uint64_t mask, uint32_t p
 
 #define DMAR_INVALIDATION_QUEUE_SIZE	4096U
 #define DMAR_QI_INV_ENTRY_SIZE		16U
+#define DMAR_NUM_IR_ENTRIES_PER_PAGE	256U
 
 #define DMAR_INV_STATUS_WRITE_SHIFT	5U
 #define DMAR_INV_CONTEXT_CACHE_DESC	0x01UL
@@ -82,6 +83,9 @@ static inline uint64_t dmar_set_bitslice(uint64_t var, uint64_t mask, uint32_t p
 #define DMAR_INV_STATUS_DATA_SHIFT	32U
 #define DMAR_INV_STATUS_DATA		(DMAR_INV_STATUS_COMPLETED << DMAR_INV_STATUS_DATA_SHIFT)
 #define DMAR_INV_WAIT_DESC_LOWER	(DMAR_INV_STATUS_WRITE | DMAR_INV_WAIT_DESC | DMAR_INV_STATUS_DATA)
+
+#define DMAR_IR_ENABLE_EIM_SHIFT	11UL
+#define DMAR_IR_ENABLE_EIM		(1UL << DMAR_IR_ENABLE_EIM_SHIFT)
 
 enum dmar_cirg_type {
 	DMAR_CIRG_RESERVED = 0,
@@ -105,6 +109,7 @@ struct dmar_drhd_rt {
 	struct dmar_drhd *drhd;
 
 	uint64_t root_table_addr;
+	uint64_t ir_table_addr;
 	uint64_t qi_queue;
 	uint16_t qi_tail;
 
@@ -150,6 +155,10 @@ struct context_table {
 	struct page buses[CONFIG_IOMMU_BUS_NUM];
 };
 
+struct intr_remap_table {
+	struct page tables[CONFIG_MAX_IR_ENTRIES/DMAR_NUM_IR_ENTRIES_PER_PAGE];
+};
+
 static inline uint8_t* get_root_table(uint32_t dmar_index)
 {
 	static struct page root_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
@@ -169,6 +178,12 @@ static inline uint8_t *get_qi_queue(uint32_t dmar_index)
 {
 	static struct page qi_queues[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
 	return qi_queues[dmar_index].contents;
+}
+
+static inline uint8_t *get_ir_table(uint32_t dmar_index)
+{
+	static struct intr_remap_table ir_tables[CONFIG_MAX_IOMMU_NUM] __aligned(PAGE_SIZE);
+	return ir_tables[dmar_index].tables[0].contents;
 }
 
 bool iommu_snoop_supported(const struct acrn_vm *vm)
@@ -461,6 +476,12 @@ static int32_t dmar_register_hrhd(struct dmar_drhd_rt *dmar_unit)
 	} else if (iommu_ecap_qi(dmar_unit->ecap) == 0U) {
 		pr_fatal("%s: dmar unit doesn't support Queued Invalidation!", __func__);
 		ret = -ENODEV;
+	} else if (iommu_ecap_ir(dmar_unit->ecap) == 0U) {
+		pr_fatal("%s: dmar unit doesn't support Interrupt Remapping!", __func__);
+		ret = -ENODEV;
+	} else if (iommu_ecap_eim(dmar_unit->ecap) == 0U) {
+		pr_fatal("%s: dmar unit doesn't support Extended Interrupt Mode!", __func__);
+		ret = -ENODEV;
 	} else {
 		if ((iommu_ecap_c(dmar_unit->ecap) == 0U) && (dmar_unit->drhd->ignore != 0U)) {
 			iommu_page_walk_coherent = false;
@@ -645,6 +666,33 @@ static void dmar_invalid_iotlb(struct dmar_drhd_rt *dmar_unit, uint16_t did, uin
 static void dmar_invalid_iotlb_global(struct dmar_drhd_rt *dmar_unit)
 {
 	dmar_invalid_iotlb(dmar_unit, 0U, 0UL, 0U, false, DMAR_IIRG_GLOBAL);
+}
+
+static void dmar_set_intr_remap_table(struct dmar_drhd_rt *dmar_unit)
+{
+	uint64_t address;
+	uint32_t status;
+	uint8_t size;
+
+	spinlock_obtain(&(dmar_unit->lock));
+
+	if (dmar_unit->ir_table_addr == 0UL) {
+		dmar_unit->ir_table_addr = hva2hpa(get_ir_table(dmar_unit->index));
+	}
+
+	address = dmar_unit->ir_table_addr | DMAR_IR_ENABLE_EIM;
+
+	/* Set number of bits needed to represent the entries minus 1 */
+	size = (uint8_t) fls32(CONFIG_MAX_IR_ENTRIES) - 1U;
+	address = address | size;
+
+	iommu_write64(dmar_unit, DMAR_IRTA_REG, address);
+
+	iommu_write32(dmar_unit, DMAR_GCMD_REG, dmar_unit->gcmd | DMA_GCMD_SIRTP);
+
+	dmar_wait_completion(dmar_unit, DMAR_GSTS_REG, DMA_GSTS_IRTPS, false, &status);
+
+	spinlock_release(&(dmar_unit->lock));
 }
 
 static void dmar_set_root_table(struct dmar_drhd_rt *dmar_unit)
@@ -868,6 +916,7 @@ static void dmar_prepare(struct dmar_drhd_rt *dmar_unit)
 	dmar_setup_interrupt(dmar_unit);
 	dmar_set_root_table(dmar_unit);
 	dmar_enable_qi(dmar_unit);
+	dmar_set_intr_remap_table(dmar_unit);
 }
 
 static void dmar_enable(struct dmar_drhd_rt *dmar_unit)
