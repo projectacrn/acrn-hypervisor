@@ -87,6 +87,7 @@ uint64_t get_active_pcpu_bitmap(void)
 void init_cpu_pre(uint16_t pcpu_id_args)
 {
 	uint16_t pcpu_id = pcpu_id_args;
+	int32_t ret;
 
 	if (pcpu_id == BOOT_CPU_ID) {
 		start_tsc = rdtsc();
@@ -114,6 +115,11 @@ void init_cpu_pre(uint16_t pcpu_id_args)
 		early_init_lapic();
 
 		init_percpu_lapic_id();
+
+		ret = init_ioapic_id_info();
+		if (ret != 0) {
+			panic("System IOAPIC info is incorrect!");
+		}
 	} else {
 		/* Switch this CPU to use the same page tables set-up by the
 		 * primary/boot CPU

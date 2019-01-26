@@ -16,6 +16,7 @@
 #include <io.h>
 #include <io_req.h>
 #include <io_emul.h>
+#include <ioapic.h>
 #include <vmtrr.h>
 #include <timer.h>
 #include <vlapic.h>

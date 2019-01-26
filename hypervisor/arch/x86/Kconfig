@@ -324,6 +324,11 @@ config RELOC
 	  wherever appropriate. Without relocation the bootloader must put the
 	  image to RAM_START, otherwise the hypervisor will not start up.
 
+config MAX_IOAPIC_NUM
+	int "Maximum number of IO-APICs"
+	range 1 8
+	default 1
+
 config IOMMU_BUS_NUM
 	hex "Highest PCI bus ID used during IOMMU initialization"
 	default 0x10 if PLATFORM_SBL
