@@ -32,6 +32,8 @@ static struct dmar_dev_scope drhd0_dev_scope[MAX_DRHD_DEVSCOPES] = {
 
 static struct dmar_dev_scope drhd1_dev_scope[MAX_DRHD_DEVSCOPES] = {
 	{
+		.type = ACPI_DMAR_SCOPE_TYPE_IOAPIC,
+		.id = DRHD1_IOAPIC_ID,
 		.bus = DRHD1_DEVSCOPE0_BUS,
 		.devfun = DRHD1_DEVSCOPE0_PATH
 	},
