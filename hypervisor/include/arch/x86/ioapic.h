@@ -9,10 +9,18 @@
 
 #define NR_LEGACY_IRQ		16U
 #define NR_LEGACY_PIN		NR_LEGACY_IRQ
+
+struct ioapic_info {
+	uint8_t id;
+	uint32_t addr;
+	uint32_t gsi_base;
+};
+
 void ioapic_setup_irqs(void);
 
 bool ioapic_irq_is_gsi(uint32_t irq);
 uint32_t ioapic_irq_to_pin(uint32_t irq);
+int32_t init_ioapic_id_info(void);
 
 /**
  * @brief Get irq num from pin num

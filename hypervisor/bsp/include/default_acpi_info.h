@@ -15,7 +15,6 @@
 /* APIC */
 #define LAPIC_BASE		0xFEE00000UL
 
-#define NR_IOAPICS		1U
 #define IOAPIC0_BASE		0xFEC00000UL
 #define IOAPIC1_BASE		0UL
 
