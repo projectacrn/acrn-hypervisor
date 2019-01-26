@@ -143,7 +143,7 @@ static void vuart_toggle_intr(const struct acrn_vuart *vu)
 	 * modify the vioapic setting, as it's only for debug uart,
 	 * we want to make it as an known issue.
 	 */
-	if ((rte.full & IOAPIC_RTE_INTPOL) != 0UL) {
+	if (rte.bits.intr_polarity == IOAPIC_RTE_INTPOL_ALO) {
 		operation = (intr_reason != IIR_NOPEND) ? GSI_SET_LOW : GSI_SET_HIGH;
 	} else {
 		operation = (intr_reason != IIR_NOPEND) ? GSI_SET_HIGH : GSI_SET_LOW;

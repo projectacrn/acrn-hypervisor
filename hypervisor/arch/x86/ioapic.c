@@ -45,23 +45,23 @@ static const uint32_t legacy_irq_to_pin[NR_LEGACY_IRQ] = {
 	15U, /* IRQ15*/
 };
 
-static const uint64_t legacy_irq_trigger_mode[NR_LEGACY_IRQ] = {
-	IOAPIC_RTE_TRGREDG, /* IRQ0*/
-	IOAPIC_RTE_TRGREDG, /* IRQ1*/
-	IOAPIC_RTE_TRGREDG, /* IRQ2*/
-	IOAPIC_RTE_TRGREDG, /* IRQ3*/
-	IOAPIC_RTE_TRGREDG, /* IRQ4*/
-	IOAPIC_RTE_TRGREDG, /* IRQ5*/
-	IOAPIC_RTE_TRGREDG, /* IRQ6*/
-	IOAPIC_RTE_TRGREDG, /* IRQ7*/
-	IOAPIC_RTE_TRGREDG, /* IRQ8*/
-	IOAPIC_RTE_TRGRLVL, /* IRQ9*/
-	IOAPIC_RTE_TRGREDG, /* IRQ10*/
-	IOAPIC_RTE_TRGREDG, /* IRQ11*/
-	IOAPIC_RTE_TRGREDG, /* IRQ12*/
-	IOAPIC_RTE_TRGREDG, /* IRQ13*/
-	IOAPIC_RTE_TRGREDG, /* IRQ14*/
-	IOAPIC_RTE_TRGREDG, /* IRQ15*/
+static const uint32_t legacy_irq_trigger_mode[NR_LEGACY_IRQ] = {
+	IOAPIC_RTE_TRGRMODE_EDGE, /* IRQ0*/
+	IOAPIC_RTE_TRGRMODE_EDGE, /* IRQ1*/
+	IOAPIC_RTE_TRGRMODE_EDGE, /* IRQ2*/
+	IOAPIC_RTE_TRGRMODE_EDGE, /* IRQ3*/
+	IOAPIC_RTE_TRGRMODE_EDGE, /* IRQ4*/
+	IOAPIC_RTE_TRGRMODE_EDGE, /* IRQ5*/
+	IOAPIC_RTE_TRGRMODE_EDGE, /* IRQ6*/
+	IOAPIC_RTE_TRGRMODE_EDGE, /* IRQ7*/
+	IOAPIC_RTE_TRGRMODE_EDGE, /* IRQ8*/
+	IOAPIC_RTE_TRGRMODE_LEVEL, /* IRQ9*/
+	IOAPIC_RTE_TRGRMODE_EDGE, /* IRQ10*/
+	IOAPIC_RTE_TRGRMODE_EDGE, /* IRQ11*/
+	IOAPIC_RTE_TRGRMODE_EDGE, /* IRQ12*/
+	IOAPIC_RTE_TRGRMODE_EDGE, /* IRQ13*/
+	IOAPIC_RTE_TRGRMODE_EDGE, /* IRQ14*/
+	IOAPIC_RTE_TRGRMODE_EDGE, /* IRQ15*/
 };
 
 static const uint32_t pic_ioapic_pin_map[NR_LEGACY_PIN] = {
@@ -184,17 +184,18 @@ create_rte_for_legacy_irq(uint32_t irq, uint32_t vr)
 	 * before we have ACPI table parsing in HV we use common hardcode
 	 */
 
-	rte.full  = IOAPIC_RTE_INTMSET;
-	rte.full |= legacy_irq_trigger_mode[irq];
-	rte.full |= DEFAULT_DEST_MODE;
-	rte.full |= DEFAULT_DELIVERY_MODE;
-	rte.full |= (IOAPIC_RTE_INTVEC & (uint64_t)vr);
+	rte.full = 0UL;
+	rte.bits.intr_mask  = IOAPIC_RTE_MASK_SET;
+	rte.bits.trigger_mode = legacy_irq_trigger_mode[irq];
+	rte.bits.dest_mode = DEFAULT_DEST_MODE;
+	rte.bits.delivery_mode = DEFAULT_DELIVERY_MODE;
+	rte.bits.vector = vr;
 
 	/* Fixed to active high */
-	rte.full |= IOAPIC_RTE_INTAHI;
+	rte.bits.intr_polarity = IOAPIC_RTE_INTPOL_AHI;
 
 	/* Dest field: legacy irq fixed to CPU0 */
-	rte.full |= (1UL << IOAPIC_RTE_DEST_SHIFT);
+	rte.bits.dest_field = 1U;
 
 	return rte;
 }
@@ -204,21 +205,23 @@ create_rte_for_gsi_irq(uint32_t irq, uint32_t vr)
 {
 	union ioapic_rte rte;
 
+	rte.full = 0UL;
+
 	if (irq < NR_LEGACY_IRQ) {
 		rte = create_rte_for_legacy_irq(irq, vr);
 	} else {
 		/* irq default masked, level trig */
-		rte.full  = IOAPIC_RTE_INTMSET;
-		rte.full |= IOAPIC_RTE_TRGRLVL;
-		rte.full |= DEFAULT_DEST_MODE;
-		rte.full |= DEFAULT_DELIVERY_MODE;
-		rte.full |= (IOAPIC_RTE_INTVEC & (uint64_t)vr);
+		rte.bits.intr_mask  = IOAPIC_RTE_MASK_SET;
+		rte.bits.trigger_mode = IOAPIC_RTE_TRGRMODE_LEVEL;
+		rte.bits.dest_mode = DEFAULT_DEST_MODE;
+		rte.bits.delivery_mode = DEFAULT_DELIVERY_MODE;
+		rte.bits.vector = vr;
 
 		/* Fixed to active high */
-		rte.full |= IOAPIC_RTE_INTAHI;
+		rte.bits.intr_polarity = IOAPIC_RTE_INTPOL_AHI;
 
 		/* Dest field */
-		rte.full |= (ALL_CPUS_MASK << IOAPIC_RTE_DEST_SHIFT);
+		rte.bits.dest_field = ALL_CPUS_MASK;
 	}
 
 	return rte;
@@ -233,7 +236,7 @@ static void ioapic_set_routing(uint32_t gsi, uint32_t vr)
 	rte = create_rte_for_gsi_irq(gsi, vr);
 	ioapic_set_rte_entry(addr, gsi_table_data[gsi].pin, rte);
 
-	if ((rte.full & IOAPIC_RTE_TRGRMOD) != 0UL) {
+	if (rte.bits.trigger_mode == IOAPIC_RTE_TRGRMODE_LEVEL) {
 		set_irq_trigger_mode(gsi, true);
 	} else {
 		set_irq_trigger_mode(gsi, false);
@@ -322,9 +325,9 @@ ioapic_irq_gsi_mask_unmask(uint32_t irq, bool mask)
 		if (addr != NULL) {
 			ioapic_get_rte_entry(addr, pin, &rte);
 			if (mask) {
-				rte.full |= IOAPIC_RTE_INTMSET;
+				rte.bits.intr_mask = IOAPIC_RTE_MASK_SET;
 			} else {
-				rte.full &= ~IOAPIC_RTE_INTMASK;
+				rte.bits.intr_mask = IOAPIC_RTE_MASK_CLR;
 			}
 			ioapic_set_rte_entry(addr, pin, rte);
 			dev_dbg(ACRN_DBG_PTIRQ, "update: irq:%d pin:%hhu rte:%lx",

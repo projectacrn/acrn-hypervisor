@@ -1806,13 +1806,13 @@ vlapic_deliver_intr(struct acrn_vm *vm, bool level, uint32_t dest, bool phys,
 	uint64_t dmask;
 	struct acrn_vcpu *target_vcpu;
 
-	if ((delmode != IOAPIC_RTE_DELFIXED) &&
-			(delmode != IOAPIC_RTE_DELLOPRI) &&
-			(delmode != IOAPIC_RTE_DELEXINT)) {
+	if ((delmode != IOAPIC_RTE_DELMODE_FIXED) &&
+			(delmode != IOAPIC_RTE_DELMODE_LOPRI) &&
+			(delmode != IOAPIC_RTE_DELMODE_EXINT)) {
 		dev_dbg(ACRN_DBG_LAPIC,
 			"vlapic intr invalid delmode %#x", delmode);
 	} else {
-		lowprio = (delmode == IOAPIC_RTE_DELLOPRI) || rh;
+		lowprio = (delmode == IOAPIC_RTE_DELMODE_LOPRI) || rh;
 
 		/*
 		 * We don't provide any virtual interrupt redirection hardware so
@@ -1829,7 +1829,7 @@ vlapic_deliver_intr(struct acrn_vm *vm, bool level, uint32_t dest, bool phys,
 				/* only make request when vlapic enabled */
 				vlapic = vcpu_vlapic(target_vcpu);
 				if (vlapic_enabled(vlapic)) {
-					if (delmode == IOAPIC_RTE_DELEXINT) {
+					if (delmode == IOAPIC_RTE_DELMODE_EXINT) {
 						vcpu_inject_extint(target_vcpu);
 					} else {
 						vlapic_set_intr(target_vcpu, vec, level);
