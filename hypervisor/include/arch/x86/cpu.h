@@ -445,6 +445,17 @@ static inline void msr_write(uint32_t reg_num, uint64_t value64)
 	cpu_msr_write(reg_num, value64);
 }
 
+
+/* wrmsr/rdmsr smp call data */
+struct msr_data_struct {
+	uint32_t msr_index;
+	uint64_t read_val;
+	uint64_t write_val;
+};
+
+void msr_write_pcpu(uint32_t msr_index, uint64_t value64, uint16_t pcpu_id);
+uint64_t msr_read_pcpu(uint32_t msr_index, uint16_t pcpu_id);
+
 static inline void write_xcr(int32_t reg, uint64_t val)
 {
 	asm volatile("xsetbv" : : "c" (reg), "a" ((uint32_t)val), "d" ((uint32_t)(val >> 32U)));
