@@ -40,6 +40,11 @@
 #define IOAPIC_ID_MASK		0x0f000000U
 #define MASK_ALL_INTERRUPTS   0x0001000000010000UL
 
+static inline struct acrn_vioapic *vm_ioapic(const struct acrn_vm *vm)
+{
+	return (struct acrn_vioapic *)&(vm->arch_vm.vioapic);
+}
+
 /**
  * @pre pin < vioapic_pincount(vm)
  */
@@ -495,12 +500,13 @@ vioapic_process_eoi(struct acrn_vm *vm, uint32_t vector)
 }
 
 void
-vioapic_reset(struct acrn_vioapic *vioapic)
+vioapic_reset(struct acrn_vm *vm)
 {
 	uint32_t pin, pincount;
+	struct acrn_vioapic *vioapic = vm_ioapic(vm);
 
 	/* Initialize all redirection entries to mask all interrupts */
-	pincount = vioapic_pincount(vioapic->vm);
+	pincount = vioapic_pincount(vm);
 	for (pin = 0U; pin < pincount; pin++) {
 		vioapic->rtbl[pin].full = MASK_ALL_INTERRUPTS;
 	}
@@ -514,7 +520,7 @@ vioapic_init(struct acrn_vm *vm)
 	vm->arch_vm.vioapic.vm = vm;
 	spinlock_init(&(vm->arch_vm.vioapic.mtx));
 
-	vioapic_reset(vm_ioapic(vm));
+	vioapic_reset(vm);
 
 	(void)register_mmio_emulation_handler(vm,
 			vioapic_mmio_access_handler,

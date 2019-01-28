@@ -122,6 +122,11 @@ static uint8_t vuart_intr_reason(const struct acrn_vuart *vu)
 	}
 }
 
+struct acrn_vuart *vm_vuart(struct acrn_vm *vm)
+{
+	return &(vm->vuart);
+}
+
 /*
  * Toggle the COM port's intr pin depending on whether or not we have an
  * interrupt condition to report to the processor.
