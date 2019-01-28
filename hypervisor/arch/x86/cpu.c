@@ -23,6 +23,7 @@
 #include <vm.h>
 #include <ld_sym.h>
 #include <logmsg.h>
+#include <cat.h>
 
 struct per_cpu_region per_cpu_data[CONFIG_MAX_PCPU_NUM] __aligned(PAGE_SIZE);
 static uint16_t phys_cpu_num = 0U;
@@ -130,6 +131,12 @@ void init_cpu_pre(uint16_t pcpu_id_args)
 		if (ret != 0) {
 			panic("System IOAPIC info is incorrect!");
 		}
+
+		ret = init_cat_cap_info();
+		if (ret != 0) {
+			panic("Platform CAT info is incorrect!");
+		}
+
 	} else {
 		/* Switch this CPU to use the same page tables set-up by the
 		 * primary/boot CPU

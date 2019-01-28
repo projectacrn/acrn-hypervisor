@@ -73,6 +73,7 @@
 #define X86_FEATURE_SMEP	((FEAT_7_0_EBX << 5U) +  7U)
 #define X86_FEATURE_ERMS	((FEAT_7_0_EBX << 5U) +  9U)
 #define X86_FEATURE_INVPCID	((FEAT_7_0_EBX << 5U) + 10U)
+#define X86_FEATURE_CAT        ((FEAT_7_0_EBX << 5U) + 15U)
 #define X86_FEATURE_SMAP	((FEAT_7_0_EBX << 5U) + 20U)
 
 /* Intel-defined CPU features, CPUID level 0x00000007 (EDX)*/
