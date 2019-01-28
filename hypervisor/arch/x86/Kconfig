@@ -93,7 +93,7 @@ config MAX_PT_IRQ_ENTRIES
 
 config MAX_IOMMU_NUM
 	int "Maximum number of IOMMU devices"
-	range 1 2
+	range 1 6
 	default 2
 	help
 	  The maximum number of physical IOMMUs the hypervisor can support.
