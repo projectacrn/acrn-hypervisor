@@ -57,7 +57,7 @@ Setup ``SOS_RAM_SIZE`` = 32G too (The SOS will have the whole resource)
 ::
 
   config SOS_RAM_SIZE
-        hex "Size of the vm0 (SOS) RAM"
+        hex "Size of the Service OS (SOS) RAM"
         default 0x200000000 if PLATFORM_SBL
         default 0x800000000 if PLATFORM_UEFI
 

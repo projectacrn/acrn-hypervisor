@@ -151,7 +151,7 @@ The main steps include:
 
    Hypervisor VM Startup Flow
 
-SW configuration for Service OS (VM0):
+SW configuration for Service OS (SOS_VM):
 
 -  **ACPI**: HV passes the entire ACPI table from bootloader to Service
    OS directly. Legacy mode is currently supported as the ACPI table
@@ -162,13 +162,13 @@ SW configuration for Service OS (VM0):
    filtered out.
 
 -  **Zero Page**: HV prepares the zero page at the high end of Service
-   OS memory which is determined by VM0 guest FIT binary build. The
+   OS memory which is determined by SOS_VM guest FIT binary build. The
    zero page includes configuration for ramdisk, bootargs and e820
    entries. The zero page address will be set to "Primary CPU" RSI
    register before VCPU gets run.
 
 -  **Entry address**: HV will copy Service OS kernel image to 0x1000000
-   as entry address for VM0's "Primary CPU". This entry address will
+   as entry address for SOS_VM's "Primary CPU". This entry address will
    be set to "Primary CPU" RIP register before VCPU gets run.
 
 SW configuration for User OS (VMx):

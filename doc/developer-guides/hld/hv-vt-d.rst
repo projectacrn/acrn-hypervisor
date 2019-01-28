@@ -147,14 +147,14 @@ there is a EPT table for Normal world, and there may be a EPT table for
 Secure World. Secure world can access Normal World's memory, but Normal
 world cannot access Secure World's memory.
 
-VM0 domain
-   VM0 domain is created when the hypervisor creates VM0 for the
+SOS_VM domain
+   SOS_VM domain is created when the hypervisor creates VM for the
    Service OS.
 
-   IOMMU uses the EPT table of Normal world of VM0 as the address
-   translation structures for the devices in VM0 domain. The Normal world's
-   EPT table of VM0 doesn't include the memory resource of the hypervisor
-   and Secure worlds if any. So the devices in VM0 domain can't access the
+   IOMMU uses the EPT table of Normal world of SOS_VM as the address
+   translation structures for the devices in SOS_VM domain. The Normal world's
+   EPT table of SOS_VM doesn't include the memory resource of the hypervisor
+   and Secure worlds if any. So the devices in SOS_VM domain can't access the
    memory belong to hypervisor or secure worlds.
 
 Other domains
@@ -252,24 +252,24 @@ be multiple DMAR units on the platform, ACRN allows some of the DMAR
 units to be ignored. If some DMAR unit(s) are marked as ignored, they
 would not be enabled.
 
-Hypervisor creates VM0 domain using the Normal World's EPT table of VM0
-as address translation table when creating VM0 as Service OS. And all
-PCI devices on the platform are added to VM0 domain. Then enable DMAR
+Hypervisor creates SOS_VM domain using the Normal World's EPT table of SOS_VM
+as address translation table when creating SOS_VM as Service OS. And all
+PCI devices on the platform are added to SOS_VM domain. Then enable DMAR
 translation for DMAR unit(s) if they are not marked as ignored.
 
 Device assignment
 *****************
 
-All devices are initially added to VM0 domain.
+All devices are initially added to SOS_VM domain.
 To assign a device means to assign the device to an User OS. The device
-is remove from VM0 domain and added to the VM domain related to the User
-OS, which changes the address translation table from EPT of VM0 to EPT
+is remove from SOS_VM domain and added to the VM domain related to the User
+OS, which changes the address translation table from EPT of SOS_VM to EPT
 of User OS for the device.
 
 To unassign a device means to unassign the device from an User OS. The
 device is remove from the VM domain related to the User OS, then added
-back to VM0 domain, which changes the address translation table from EPT
-of User OS to EPT of VM0 for the device.
+back to SOS_VM domain, which changes the address translation table from EPT
+of User OS to EPT of SOS_VM for the device.
 
 Power Management support for S3
 *******************************
