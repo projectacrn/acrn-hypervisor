@@ -75,7 +75,7 @@ EFI_STATUS construct_mbi(EFI_PHYSICAL_ADDRESS hv_hpa, struct multiboot_info *mbi
 	UINTN desc_size;
 	EFI_MEMORY_DESCRIPTOR *map_buf;
 	EFI_STATUS err = EFI_SUCCESS;
-	int32_t i, j;
+	int32_t i, j, mmap_entry_count;
 
 	/* We're just interested in the map's size for now */
 	map_size = 0;
@@ -111,10 +111,11 @@ again:
 		goto out;
 	}
 
+	mmap_entry_count = map_size / desc_size;
 	/*
 	 * Convert the EFI memory map to E820.
 	 */
-	for (i = 0, j = 0; i < map_size / desc_size; i++) {
+	for (i = 0, j = 0; i < mmap_entry_count && j < MBOOT_MMAP_NUMS - 1; i++) {
 		EFI_MEMORY_DESCRIPTOR *d;
 		uint32_t e820_type = 0;
 
@@ -163,6 +164,18 @@ again:
 			mmap[j].mm_type = e820_type;
 			j++;
 		}
+	}
+
+	/*
+	 * if we haven't gone through all the mmap table entries,
+	 * there must be a memory overwrite if we continue,
+	 * so just abort anyway.
+	 */
+	if (i < mmap_entry_count) {
+		Print(L": bios provides %d mmap entries which is beyond limitation[%d]\n",
+				mmap_entry_count, MBOOT_MMAP_NUMS-1);
+		err = EFI_INVALID_PARAMETER;
+		goto out;
 	}
 
 	/* switch hv memory region(0x20000000 ~ 0x22000000) to

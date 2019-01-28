@@ -73,7 +73,7 @@ typedef void(*hv_func)(int32_t, struct multiboot_info*);
  * We allocate memory for the following struct together with hyperivosr itself
  * memory allocation during boot.
  */
-#define MBOOT_MMAP_NUMS        128
+#define MBOOT_MMAP_NUMS        256
 #define MBOOT_MMAP_SIZE (sizeof(struct multiboot_mmap) * MBOOT_MMAP_NUMS)
 #define MBOOT_INFO_SIZE (sizeof(struct multiboot_info))
 #define BOOT_CTX_SIZE  (sizeof(struct efi_context))
