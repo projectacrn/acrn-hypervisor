@@ -981,8 +981,8 @@ potentially error-prone.
 ACPI Emulation
 --------------
 
-An alternative ACPI resource abstraction option is for the SOS (VM0) to
-own all devices and emulate a set of virtual devices for the UOS (VM1).
+An alternative ACPI resource abstraction option is for the SOS (SOS_VM) to
+own all devices and emulate a set of virtual devices for the UOS (NORMAL_VM).
 This is the most popular ACPI resource model for virtualization,
 as shown in the picture below. ACRN currently
 uses device emulation plus some device passthrough for UOS.

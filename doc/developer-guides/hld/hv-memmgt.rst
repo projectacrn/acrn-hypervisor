@@ -516,7 +516,7 @@ Host to Guest Mapping
 =====================
 
 ACRN hypervisor creates Service OS's host (HPA) to guest (GPA) mapping
-(EPT mapping) through the function ``prepare_vm0_memmap_and_e820()``
+(EPT mapping) through the function ``prepare_sos_vm_memmap()``
 when it creates the SOS VM. It follows these rules:
 
 -  Identical mapping

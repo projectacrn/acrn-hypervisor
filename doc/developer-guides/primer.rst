@@ -482,7 +482,7 @@ Device Assignment Management
 ACRN hypervisor provides major device assignment management. Since the
 hypervisor owns all native vectors and IRQs, there must be a mapping
 table to handle the Guest IRQ/Vector to Host IRQ/Vector. Currently we
-assign all devices to VM0 except the UART.
+assign all devices to SOS_VM except the UART.
 
 If a PCI device (with MSI/MSI-x) is assigned to Guest, the User OS will
 program the PCI config space and set the guest vector to this device. A
@@ -504,7 +504,7 @@ vector for the device:
   (vIOAPC) Redirection Table Entries (RTE).
 
 **Legacy**
-  Legacy devices are assigned to VM0.
+  Legacy devices are assigned to SOS_VM.
 
 User OS device assignment is similar to the above, except the User OS
 doesn't call hypercall. Instead, the Guest program PCI configuration
