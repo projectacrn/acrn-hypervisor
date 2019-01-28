@@ -2075,13 +2075,14 @@ static inline  uint32_t x2apic_msr_to_regoff(uint32_t msr)
 static int32_t
 vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 {
-	uint64_t apic_id = (uint32_t) (val >> 32U);
-	uint32_t icr_low = val;
+	uint32_t apic_id = (uint32_t)(val >> 32U);
+	uint32_t icr_low = (uint32_t)val;
 	uint32_t mode = icr_low & APIC_DELMODE_MASK;
 	uint16_t vcpu_id;
 	struct acrn_vcpu *target_vcpu;
 	bool phys;
 	uint32_t shorthand;
+	int32_t ret = 0;
 
 	phys = ((icr_low & APIC_DESTMODE_LOG) == 0UL);
 	shorthand = icr_low & APIC_DEST_MASK;
@@ -2089,27 +2090,26 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 	if ((phys == false) || (shorthand  != APIC_DEST_DESTFLD)) {
 		pr_err("Logical destination mode or shorthands \
 				not supported in ICR forpartition mode\n");
-		return -1;
-	}
+		ret = -1;
+	} else {
+		vcpu_id = vm_apicid2vcpu_id(vm, apic_id);
+		target_vcpu = vcpu_from_vid(vm, vcpu_id);
 
-	vcpu_id = vm_apicid2vcpu_id(vm, apic_id);
-	target_vcpu = vcpu_from_vid(vm, vcpu_id);
-
-	if (target_vcpu == NULL) {
-		return 0;
+		if (target_vcpu != NULL) {
+			switch (mode) {
+			case APIC_DELMODE_INIT:
+				vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
+			break;
+			case APIC_DELMODE_STARTUP:
+				vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
+			break;
+			default:
+				msr_write(MSR_IA32_EXT_APIC_ICR, (((uint64_t)apic_id) << 32U) | icr_low);
+			break;
+			}
+		}
 	}
-	switch (mode) {
-	case APIC_DELMODE_INIT:
-		vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
-	break;
-	case APIC_DELMODE_STARTUP:
-		vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
-	break;
-	default:
-		msr_write(MSR_IA32_EXT_APIC_ICR, (apic_id << 32U) | icr_low);
-	break;
-	}
-	return 0;
+	return ret;
 }
 
 static int32_t vlapic_x2apic_access(struct acrn_vcpu *vcpu, uint32_t msr, bool write,
