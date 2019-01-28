@@ -70,6 +70,7 @@ struct acrn_vuart {
 extern int8_t vuart_vmid;
 #endif /* CONFIG_PARTITION_MODE */
 
+struct acrn_vuart *vm_vuart(struct acrn_vm *vm);
 void vuart_init(struct acrn_vm *vm);
 struct acrn_vuart *vuart_console_active(void);
 void vuart_console_tx_chars(struct acrn_vuart *vu);

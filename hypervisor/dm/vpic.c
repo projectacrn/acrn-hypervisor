@@ -33,6 +33,11 @@
 
 static void vpic_set_pinstate(struct acrn_vpic *vpic, uint32_t pin, uint8_t level);
 
+static inline struct acrn_vpic *vm_pic(const struct acrn_vm *vm)
+{
+	return (struct acrn_vpic *)&(vm->arch_vm.vpic);
+}
+
 static inline bool master_pic(const struct acrn_vpic *vpic, const struct i8259_reg_state *i8259)
 {
 	bool ret;

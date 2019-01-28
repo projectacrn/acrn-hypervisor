@@ -272,24 +272,6 @@ static inline struct acrn_vcpu *get_primary_vcpu(struct acrn_vm *vm)
 	return target_vcpu;
 }
 
-static inline struct acrn_vuart*
-vm_vuart(struct acrn_vm *vm)
-{
-	return &(vm->vuart);
-}
-
-static inline struct acrn_vpic *
-vm_pic(const struct acrn_vm *vm)
-{
-	return (struct acrn_vpic *)&(vm->arch_vm.vpic);
-}
-
-static inline struct acrn_vioapic *
-vm_ioapic(const struct acrn_vm *vm)
-{
-	return (struct acrn_vioapic *)&(vm->arch_vm.vioapic);
-}
-
 int32_t shutdown_vm(struct acrn_vm *vm);
 void pause_vm(struct acrn_vm *vm);
 void resume_vm(struct acrn_vm *vm);

@@ -321,7 +321,7 @@ int32_t reset_vm(struct acrn_vm *vm)
 		}
 
 		reset_vm_ioreqs(vm);
-		vioapic_reset(vm_ioapic(vm));
+		vioapic_reset(vm);
 		destroy_secure_world(vm, false);
 		vm->sworld_control.flag.active = 0UL;
 		ret = 0;
