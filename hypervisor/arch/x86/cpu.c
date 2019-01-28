@@ -416,3 +416,51 @@ static void cpu_xsave_init(void)
 		}
 	}
 }
+
+
+static void smpcall_write_msr_func(void *data)
+{
+	struct msr_data_struct *msr = (struct msr_data_struct *)data;
+
+	msr_write(msr->msr_index, msr->write_val);
+}
+
+void msr_write_pcpu(uint32_t msr_index, uint64_t value64, uint16_t pcpu_id)
+{
+	struct msr_data_struct msr = {0};
+	uint64_t mask = 0UL;
+
+	if (pcpu_id == get_cpu_id()) {
+		msr_write(msr_index, value64);
+	} else {
+		msr.msr_index = msr_index;
+		msr.write_val = value64;
+		bitmap_set_nolock(pcpu_id, &mask);
+		smp_call_function(mask, smpcall_write_msr_func, &msr);
+	}
+}
+
+static void smpcall_read_msr_func(void *data)
+{
+	struct msr_data_struct *msr = (struct msr_data_struct *)data;
+
+	msr->read_val = msr_read(msr->msr_index);
+}
+
+uint64_t msr_read_pcpu(uint32_t msr_index, uint16_t pcpu_id)
+{
+	struct msr_data_struct msr = {0};
+	uint64_t mask = 0UL;
+	uint64_t ret = 0;
+
+	if (pcpu_id == get_cpu_id()) {
+		ret = msr_read(msr_index);
+	} else {
+		msr.msr_index = msr_index;
+		bitmap_set_nolock(pcpu_id, &mask);
+		smp_call_function(mask, smpcall_read_msr_func, &msr);
+		ret = msr.read_val;
+	}
+
+	return ret;
+}
