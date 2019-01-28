@@ -563,7 +563,7 @@ void init_vmcs(struct acrn_vcpu *vcpu)
 void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 {
 	uint32_t value32;
-	if(is_lapic_pt(vcpu->vm)) {
+	if (is_lapic_pt(vcpu->vm)) {
 		/*
 		 * Disable external interrupt exiting and irq ack
 		 * Disable posted interrupt processing
