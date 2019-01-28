@@ -186,6 +186,7 @@ C_SRCS += arch/x86/guest/vmcs.c
 C_SRCS += arch/x86/guest/vmexit.c
 S_SRCS += arch/x86/guest/vmx_asm.S
 C_SRCS += arch/x86/guest/trusty.c
+C_SRCS += arch/x86/cat.c
 C_SRCS += lib/misc.c
 C_SRCS += lib/string.c
 C_SRCS += lib/memory.c
