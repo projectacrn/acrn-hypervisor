@@ -90,13 +90,20 @@ static int hpet_debug;
 #define WPRINTF(params)	(printf params)
 
 
+static struct mem_range vhpet_mr = {
+	.name = "vhpet",
+	.base = VHPET_BASE,
+	.size = VHPET_SIZE,
+	.flags = MEM_F_RW
+};
+
 struct vhpet_timer_arg {
 	struct vhpet	*vhpet;
 	int	timer_num;
 	bool	running;
 };
 
-static struct vhpet {
+struct vhpet {
 	struct vmctx	*vm;
 	bool	inited;
 
@@ -117,7 +124,7 @@ static struct vhpet {
 		} tmrlst[3];
 		int	tmridx;
 	} timer[VHPET_NUM_TIMERS];
-} __vhpet;	/* one vHPET per VM */
+};
 
 
 /* one vHPET per VM */
@@ -126,9 +133,12 @@ static pthread_mutex_t vhpet_mtx = PTHREAD_MUTEX_INITIALIZER;
 static const struct itimerspec zero_ts = { 0 };
 
 
-static inline struct vhpet *
+/* one vHPET per VM */
+static struct vhpet *
 vhpet_instance(void)
 {
+	static struct vhpet __vhpet;
+
 	return &__vhpet;
 }
 
@@ -906,7 +916,6 @@ vhpet_init(struct vmctx *ctx)
 	uint64_t allowed_irqs;
 	struct vhpet_timer_arg *arg;
 	struct acrn_timer *tmr;
-	struct mem_range mr;
 
 	vhpet = vhpet_instance();
 
@@ -955,15 +964,11 @@ vhpet_init(struct vmctx *ctx)
 		}
 	}
 
-	mr.name = "vhpet";
-	mr.base = VHPET_BASE;
-	mr.size = VHPET_SIZE;
-	mr.flags = MEM_F_RW;
-	mr.handler = vhpet_handler;
-	mr.arg1 = vhpet;
-	mr.arg2 = 0;
+	vhpet_mr.handler = vhpet_handler;
+	vhpet_mr.arg1 = vhpet;
+	vhpet_mr.arg2 = 0;
 
-	error = register_mem(&mr);
+	error = register_mem(&vhpet_mr);
 
 	if (error) {
 		vhpet_deinit_timers(vhpet);
@@ -990,6 +995,8 @@ vhpet_deinit(struct vmctx *ctx)
 		goto done;
 
 	vhpet_deinit_timers(vhpet);
+	unregister_mem(&vhpet_mr);
+
 	vhpet->inited = false;
 
 done:
