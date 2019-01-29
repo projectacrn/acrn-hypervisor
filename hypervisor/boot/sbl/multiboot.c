@@ -6,6 +6,7 @@
 
 #include <hypervisor.h>
 #include <multiboot.h>
+#include <e820.h>
 #include <zeropage.h>
 #include <sbl_seed_parse.h>
 #include <abl_seed_parse.h>

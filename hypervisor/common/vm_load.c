@@ -5,9 +5,9 @@
  */
 
 #include <hypervisor.h>
+#include <e820.h>
 #include <zeropage.h>
 #include <boot_context.h>
-#include <e820.h>
 
 static void prepare_bsp_gdt(struct acrn_vm *vm)
 {
