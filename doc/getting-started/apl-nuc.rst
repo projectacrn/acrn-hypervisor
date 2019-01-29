@@ -37,10 +37,10 @@ complete this setup.
 
 .. note::
 
-   ACRN v0.5 (and the current master branch) requires Clear Linux
-   version 27230 or newer.  If you use a newer version of Clear Linux,
-   you'll need to adjust the instructions below to reference the version
-   number of Clear Linux you are using.
+   Please refer to Release Note for the Clear Linux version number, and
+   you will need to adjust the instruction below to reference the version
+   number of Clear Linux you are using. Below document will use version
+   27230 as example.
 
 #. Download the compressed Clear installer image from
    https://download.clearlinux.org/releases/27230/clear/clear-27230-installer.img.xz
@@ -83,7 +83,7 @@ complete this setup.
 
    .. code-block:: none
 
-      $ sudo swupd update -m 26770     # or newer version
+      $ sudo swupd update -m 27230     # or newer version
 
 #. Use the ``sudo swupd bundle-add`` command and add these Clear Linux bundles:
 
@@ -101,7 +101,7 @@ complete this setup.
       | service-os         | Add the acrn hypervisor, the acrn devicemodel and |
       |                    | Service OS kernel                                 |
       +--------------------+---------------------------------------------------+
-      | kernel-iot-lts2018 | Run the Intel kernel"kernel-iot-lts2018"          |
+      | kernel-iot-lts2018 | Run the Intel kernel "kernel-iot-lts2018"         |
       |                    | which is enterprise-style kernel with backports   |
       +--------------------+---------------------------------------------------+
 
@@ -298,7 +298,7 @@ Set up Reference UOS
       $ cd ~
       $ mkdir uos
       $ cd uos
-      $ curl -O https://download.clearlinux.org/releases/27230/clear/clear-27230-kvm.img.xz
+      $ curl https://download.clearlinux.org/releases/27230/clear/clear-27230-kvm.img.xz -o uos.img.xz
 
    .. note::
       In case you want to use or try out a newer version of Clear Linux as the UOS, you can
@@ -309,16 +309,16 @@ Set up Reference UOS
 
    .. code-block:: none
 
-      $ unxz clear-27230-kvm.img.xz
+      $ unxz uos.img.xz
 
 #. Deploy the UOS kernel modules to UOS virtual disk image (note: you'll need to use
    the same **iot-lts2018** image version number noted in step 1 above):
 
    .. code-block:: none
 
-      $ sudo losetup -f -P --show clear-27230-kvm.img
+      $ sudo losetup -f -P --show uos.img
       $ sudo mount /dev/loop0p3 /mnt
-      $ sudo cp -r /usr/lib/modules/4.19.13-1901141830.iot-lts2018 /mnt/lib/modules/
+      $ sudo cp -r /usr/lib/modules/"`readlink /usr/lib/kernel/default-iot-lts2018 | awk -F '2018.' '{print $2}'`.iot-lts2018" /mnt/lib/modules
       $ sudo umount /mnt
       $ sync
 
@@ -333,18 +333,9 @@ Set up Reference UOS
    .. literalinclude:: ../../devicemodel/samples/nuc/launch_uos.sh
       :caption: devicemodel/samples/nuc/launch_uos.sh
       :language: bash
-      :emphasize-lines: 24,27
-
-   .. note::
-      In case you have downloaded a different Clear Linux image than the one above
-      (``clear-27230-kvm.img.xz``), you will need to modify the Clear Linux file name
-      and version number highlighted above (the ``-s 3,virtio-blk`` argument) to match
-      what you have downloaded above. Likewise, you may need to adjust the kernel file
-      name on the second line highlighted (check the exact name to be used using:
-      ``ls /usr/lib/kernel/org.clearlinux.iot-lts2018*``).
 
    By default, the script is located in the ``/usr/share/acrn/samples/nuc/``
-   directory. You can edit it there, and then run it to launch the User OS:
+   directory. You can run it to launch the User OS:
 
    .. code-block:: none
 
