@@ -97,8 +97,8 @@ SYSRES_MEM(PCI_EMUL_ECFG_BASE, PCI_EMUL_ECFG_SIZE);
 
 #define	PCI_EMUL_MEMLIMIT32	PCI_EMUL_ECFG_BASE
 
-#define	PCI_EMUL_MEMBASE64	0x7000000000UL
-#define	PCI_EMUL_MEMLIMIT64	0x8D00000000UL
+#define	PCI_EMUL_MEMBASE64	0x100000000UL
+#define	PCI_EMUL_MEMLIMIT64	0x140000000UL
 
 static struct pci_vdev_ops *pci_emul_finddev(char *name);
 static void pci_lintr_route(struct pci_vdev *dev);
