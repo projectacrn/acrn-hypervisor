@@ -803,15 +803,15 @@ INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/include/dm/vioapic.h \
                           ../hypervisor/include/dm/vpic.h \
                           ../hypervisor/include/arch/x86/io_req.h \
-                          ../hypervisor/include/arch/x86/io_emul.h \
-                          ../hypervisor/include/arch/x86/assign.h \
+                          ../hypervisor/include/arch/x86/guest/io_emul.h \
+                          ../hypervisor/include/arch/x86/guest/assign.h \
                           ../hypervisor/include/common/hypercall.h \
                           ../hypervisor/include/public/acrn_common.h \
                           ../hypervisor/include/public/acrn_hv_defs.h \
                           ../hypervisor/include/arch/x86/guest/vcpu.h \
-                          ../hypervisor/include/arch/x86/virtual_cr.h \
+                          ../hypervisor/include/arch/x86/guest/virtual_cr.h \
                           ../hypervisor/include/arch/x86/timer.h \
-                          ../hypervisor/arch/x86/trusty.c \
+                          ../hypervisor/arch/x86/guest/trusty.c \
                           ../devicemodel/include/virtio.h \
                           ../hypervisor/include/arch/x86/ioapic.h \
                           ../hypervisor/include/arch/x86/irq.h \
