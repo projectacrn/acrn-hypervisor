@@ -186,7 +186,7 @@ static void dump_guest_context(uint16_t pcpu_id)
 
 static void show_host_call_trace(uint64_t rsp, uint64_t rbp_arg, uint16_t pcpu_id)
 {
-	uint64_t rbp = rbp_arg;
+	uint64_t rbp = rbp_arg, return_address;
 	uint32_t i = 0U;
 	uint32_t cb_hierarchy = 0U;
 	uint64_t *sp = (uint64_t *)rsp;
@@ -201,11 +201,6 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp_arg, uint16_t pcpu_i
 	printf("\r\n");
 
 	printf("Host Call Trace:\r\n");
-	if ((rsp >
-	(uint64_t)&per_cpu(stack, pcpu_id)[CONFIG_STACK_SIZE - 1])
-		|| (rsp < (uint64_t)&per_cpu(stack, pcpu_id)[0])) {
-		return;
-	}
 
 	/* if enable compiler option(no-omit-frame-pointer)  the stack layout
 	 * should be like this when call a function for x86_64
@@ -220,16 +215,13 @@ static void show_host_call_trace(uint64_t rsp, uint64_t rbp_arg, uint16_t pcpu_i
 	 *
 	 *  if the address is invalid, it will cause hv page fault
 	 *  then halt system */
-	while ((rbp <=
-	(uint64_t)&per_cpu(stack, pcpu_id)[CONFIG_STACK_SIZE - 1])
-		&& (rbp >= (uint64_t)&per_cpu(stack, pcpu_id)[0])
-		&& (cb_hierarchy < CALL_TRACE_HIERARCHY_MAX)) {
-		printf("----> 0x%016llx\r\n",
-				*(uint64_t *)(rbp + sizeof(uint64_t)));
-		if (*(uint64_t *)(rbp + (2U*sizeof(uint64_t)))
-				== SP_BOTTOM_MAGIC) {
+	while (cb_hierarchy < CALL_TRACE_HIERARCHY_MAX) {
+		return_address = *(uint64_t *)(rbp + sizeof(uint64_t));
+		if (return_address == SP_BOTTOM_MAGIC) {
 			break;
 		}
+		printf("----> 0x%016llx\r\n",
+				*(uint64_t *)(rbp + sizeof(uint64_t)));
 		rbp = *(uint64_t *)rbp;
 		cb_hierarchy++;
 	}
