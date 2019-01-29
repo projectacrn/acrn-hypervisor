@@ -7,6 +7,24 @@
 #ifndef E820_H
 #define E820_H
 
+/* E820 memory types */
+#define E820_TYPE_RAM		1U	/* EFI 1, 2, 3, 4, 5, 6, 7 */
+#define E820_TYPE_RESERVED	2U
+/* EFI 0, 11, 12, 13 (everything not used elsewhere) */
+#define E820_TYPE_ACPI_RECLAIM	3U	/* EFI 9 */
+#define E820_TYPE_ACPI_NVS	4U	/* EFI 10 */
+#define E820_TYPE_UNUSABLE	5U	/* EFI 8 */
+
+/** Defines a single entry in an E820 memory map. */
+struct e820_entry {
+   /** The base address of the memory range. */
+	uint64_t baseaddr;
+   /** The length of the memory range. */
+	uint64_t length;
+   /** The type of memory region. */
+	uint32_t type;
+} __packed;
+
 struct e820_mem_params {
 	uint64_t mem_bottom;
 	uint64_t mem_top;
