@@ -31,6 +31,7 @@
 #include <cpuid.h>
 #include <vcpuid.h>
 #include <page.h>
+#include <ept.h>
 #include <mmu.h>
 #include <pgtable.h>
 #include <irq.h>

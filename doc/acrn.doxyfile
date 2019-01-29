@@ -794,6 +794,7 @@ WARN_LOGFILE           =
 
 INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/include/arch/x86/guest/guest.h \
+                          ../hypervisor/include/arch/x86/guest/ept.h \
                           ../hypervisor/include/arch/x86/mmu.h \
                           ../hypervisor/include/arch/x86/pgtable.h \
                           ../hypervisor/include/arch/x86/vtd.h \

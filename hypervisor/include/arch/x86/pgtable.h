@@ -182,6 +182,12 @@ static inline uint64_t pdpte_large(uint64_t pdpte)
 }
 
 /**
+ *@pre (pml4_page != NULL) && (pg_size != NULL)
+ */
+const uint64_t *lookup_address(uint64_t *pml4_page, uint64_t addr,
+		uint64_t *pg_size, const struct memory_ops *mem_ops);
+
+/**
  * @}
  */
 #endif /* PGTABLE_H */
