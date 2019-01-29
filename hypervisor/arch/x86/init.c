@@ -13,7 +13,7 @@
 {                                                                       \
 	asm volatile ("movq %0, %%rsp\n"                                \
 			"pushq %1\n"                                    \
-			"call *%2\n"                                    \
+			"jmpq *%2\n"                                    \
 			 :                                              \
 			 : "r"(rsp), "rm"(SP_BOTTOM_MAGIC), "a"(to));   \
 }
