@@ -698,30 +698,16 @@ pci_emul_alloc_pbar(struct pci_vdev *pdi, int idx, uint64_t hostbase,
 		break;
 	case PCIBAR_MEM64:
 		/*
-		 * XXX
-		 * Some drivers do not work well if the 64-bit BAR is allocated
-		 * above 4GB. Allow for this by allocating small requests under
-		 * 4GB unless then allocation size is larger than some arbitrary
-		 * number (32MB currently).
+		 * XXX special case for device requiring peer-peer DMA
 		 */
-		if (size > 32 * 1024 * 1024) {
-			/*
-			 * XXX special case for device requiring peer-peer DMA
-			 */
-			if (size == 0x100000000UL)
-				baseptr = &hostbase;
-			else
-				baseptr = &pci_emul_membase64;
-			limit = PCI_EMUL_MEMLIMIT64;
-			mask = PCIM_BAR_MEM_BASE;
-			lobits = PCIM_BAR_MEM_SPACE | PCIM_BAR_MEM_64 |
-				 PCIM_BAR_MEM_PREFETCH;
-			break;
-		}
-		baseptr = &pci_emul_membase32;
-		limit = PCI_EMUL_MEMLIMIT32;
+		if (size == 0x100000000UL)
+			baseptr = &hostbase;
+		else
+			baseptr = &pci_emul_membase64;
+		limit = PCI_EMUL_MEMLIMIT64;
 		mask = PCIM_BAR_MEM_BASE;
-		lobits = PCIM_BAR_MEM_SPACE | PCIM_BAR_MEM_64;
+		lobits = PCIM_BAR_MEM_SPACE | PCIM_BAR_MEM_64 |
+			PCIM_BAR_MEM_PREFETCH;
 		break;
 	case PCIBAR_MEM32:
 		baseptr = &pci_emul_membase32;
