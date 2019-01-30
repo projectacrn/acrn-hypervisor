@@ -230,6 +230,8 @@ void init_cpu_post(uint16_t pcpu_id)
 		/* Wait for boot processor to signal all secondary cores to continue */
 		wait_sync_change(&pcpu_sync, 0UL);
 	}
+
+	setup_clos(pcpu_id);
 }
 
 static uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id)

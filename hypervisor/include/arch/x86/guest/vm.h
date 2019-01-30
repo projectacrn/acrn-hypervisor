@@ -209,6 +209,7 @@ struct acrn_vm_config {
 	bool			vm_vuart;
 #endif
 
+	uint16_t clos;		/* if guest_flags has CAT_ENABLED, then VM use this CLOS */
 } __aligned(8);
 
 /*

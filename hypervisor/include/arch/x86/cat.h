@@ -19,6 +19,7 @@ struct cat_hw_info {
 };
 
 extern struct cat_hw_info cat_cap_info;
+void setup_clos(uint16_t pcpu_id);
 
 #define CAT_RESID_L3   1U
 #define CAT_RESID_L2   2U
