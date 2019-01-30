@@ -39,7 +39,7 @@ static void init_percpu_lapic_id(void)
 	pcpu_num = parse_madt(lapic_id_array);
 	if (pcpu_num == 0U) {
 		/* failed to get the physcial cpu number */
-		ASSERT(false);
+		panic("failed to get the physcial cpu number");
 	}
 
 	phys_cpu_num = pcpu_num;
