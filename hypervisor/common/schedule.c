@@ -174,7 +174,7 @@ void run_sched_thread(struct sched_object *obj)
 		obj->thread(obj);
 	}
 
-	panic("Shouldn't go here, invalid thread!");
+	ASSERT(false, "Shouldn't go here, invalid thread!");
 }
 
 void switch_to_idle(run_thread_t idle_thread)
