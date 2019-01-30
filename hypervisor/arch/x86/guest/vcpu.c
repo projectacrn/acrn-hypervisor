@@ -8,6 +8,7 @@
 #include <schedule.h>
 #include <security.h>
 #include <virtual_cr.h>
+#include <init.h>
 
 inline uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)
 {
@@ -637,6 +638,7 @@ static uint64_t build_stack_frame(struct acrn_vcpu *vcpu)
 	rsp &= ~(CPU_STACK_ALIGN - 1UL);
 	sp = (uint64_t *)rsp;
 
+	*sp-- = SP_BOTTOM_MAGIC;
 	*sp-- = (uint64_t)run_sched_thread; /*return address*/
 	*sp-- = 0UL; /* flag */
 	*sp-- = 0UL; /* rbx */
