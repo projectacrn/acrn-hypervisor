@@ -21,6 +21,7 @@
 #include <pgtable.h>
 #include <mmu.h>
 #include <logmsg.h>
+#include <cat.h>
 
 vm_sw_loader_t vm_sw_loader;
 
@@ -621,6 +622,21 @@ int32_t sanitize_vm_config(void)
 			/* Nothing to do for a UNDEFINED_VM, break directly. */
 			break;
 		}
+
+		if ((vm_config->guest_flags & CLOS_REQUIRED) != 0U) {
+			if (cat_cap_info.support) {
+				if (vm_config->clos > cat_cap_info.clos_max) {
+					pr_err("%s CLOS exceed MAX CLOS\n", __func__);
+					ret = -EINVAL;
+				} else {
+					cat_cap_info.enabled = true;
+				}
+			} else {
+				pr_err("%s set CLOS but CAT is not supported\n", __func__);
+				ret = -EINVAL;
+			}
+		}
+
 		if (ret != 0) {
 			break;
 		}

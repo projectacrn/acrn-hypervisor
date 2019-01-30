@@ -50,6 +50,7 @@
 #define SECURE_WORLD_ENABLED    (1UL << 0U)	/* Whether secure world is enabled */
 #define LAPIC_PASSTHROUGH	(1UL << 1U)  	/* Whether LAPIC is passed through */
 #define IO_COMPLETION_POLLING	(1UL << 2U)  	/* Whether need hypervisor poll IO completion */
+#define CLOS_REQUIRED          (1UL << 3U)     /* Whether CLOS is required */
 
 /**
  * @brief Hypercall
