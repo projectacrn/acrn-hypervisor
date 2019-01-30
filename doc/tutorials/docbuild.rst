@@ -137,7 +137,7 @@ Our documentation processing has been tested to run with:
 
 Depending on your Linux version, install the needed tools:
 
-* For Clear Linux: follow the :ref:`getting-started-apl-nuc` to install
+* For Clear Linux OS: follow the :ref:`getting-started-apl-nuc` to install
   all the tools required
 
 * For Ubuntu use:

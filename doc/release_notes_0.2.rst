@@ -133,7 +133,7 @@ Fixed Issues
 * :acrn-issue:`721` - DM for IPU mediation
 * :acrn-issue:`707` - Issues found with instructions for using Ubuntu as SOS
 * :acrn-issue:`706` - Invisible mouse cursor in UOS
-* :acrn-issue:`424` - Clear Linux desktop GUI of SOS fails to launch
+* :acrn-issue:`424` - Clear Linux OS desktop GUI of SOS fails to launch
 
 
 Known Issues

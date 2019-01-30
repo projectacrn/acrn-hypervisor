@@ -17,8 +17,8 @@ What hardware does ACRN support?
 ACRN runs on Intel Apollo Lake and Kaby Lake boards, as documented in
 our :ref:`hardware` documentation.
 
-Clear Linux* fails to boot on my NUC
-************************************
+Clear Linux* OS fails to boot on my NUC
+***************************************
 
 If you're following the :ref:`getting_started` documentation and the NUC
 fails to boot, here are some options to try:

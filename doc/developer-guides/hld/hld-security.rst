@@ -184,7 +184,7 @@ securely.
 SOS Hardening
 -------------
 
-In project ACRN, the reference SOS is based on Clear Linux. Customers
+In project ACRN, the reference SOS is based on Clear Linux OS. Customers
 may choose to use different open source OSes or their own proprietary OS
 systems. To minimize the attack surfaces and achieve the goal of
 "defense in depth", there are many common guidelines to ensure the
