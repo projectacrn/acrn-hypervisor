@@ -26,7 +26,7 @@ int32_t init_vm_boot_info(struct acrn_vm *vm)
 	int32_t ret = -EINVAL;
 
 	if (boot_regs[0] != MULTIBOOT_INFO_MAGIC) {
-		ASSERT(false, "no multiboot info found");
+		panic("no multiboot info found");
 	} else {
 		mbi = hpa2hva((uint64_t)boot_regs[1]);
 		if (mbi != NULL) {
@@ -34,7 +34,7 @@ int32_t init_vm_boot_info(struct acrn_vm *vm)
 			dev_dbg(ACRN_DBG_BOOT, "Multiboot detected, flag=0x%x", mbi->mi_flags);
 			if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
 				clac();
-				ASSERT(false, "no kernel info found");
+				panic("no kernel info found");
 			} else {
 				dev_dbg(ACRN_DBG_BOOT, "mod counts=%d\n", mbi->mi_mods_count);
 
@@ -163,7 +163,7 @@ int32_t init_vm_boot_info(struct acrn_vm *vm)
 	int32_t ret = -EINVAL;
 
 	if (boot_regs[0] != MULTIBOOT_INFO_MAGIC) {
-		ASSERT(false, "no multiboot info found");
+		panic("no multiboot info found");
 	} else {
 		mbi = (struct multiboot_info *)hpa2hva((uint64_t)boot_regs[1]);
 
@@ -171,7 +171,7 @@ int32_t init_vm_boot_info(struct acrn_vm *vm)
 			stac();
 			dev_dbg(ACRN_DBG_BOOT, "Multiboot detected, flag=0x%x", mbi->mi_flags);
 			if ((mbi->mi_flags & MULTIBOOT_INFO_HAS_MODS) == 0U) {
-				ASSERT(false, "no sos kernel info found");
+				panic("no sos kernel info found");
 				clac();
 			} else {
 
