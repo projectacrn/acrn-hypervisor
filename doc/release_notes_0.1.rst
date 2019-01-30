@@ -71,7 +71,7 @@ Known Issues
 
 :acrn-issue:`663` - Black screen displayed after booting SOS/UOS
   The ``weston`` display server, window manager, and compositor used by ACRN
-  (from Clear Linux) may not have been properly installed and started.
+  (from Clear Linux OS) may not have been properly installed and started.
   **Workaround** is described in ACRN GitHub issue :acrn-issue:`663`.
 
 :acrn-issue:`677` - SSD Disk ID not consistent between SOS/UOS

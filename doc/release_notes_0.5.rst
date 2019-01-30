@@ -55,7 +55,7 @@ now supports APL UP2 board with slim Bootloader (SBL) firmware.
 Slim Bootloader is a modern, flexible, light-weither, open source 
 reference boot loader with key benefits such as being fast, small, 
 customizable, and secure. An end-to-end reference build with 
-ACRN hypervisor, Clear Linux as SOS, and Clear Linux as UOS has been 
+ACRN hypervisor, Clear Linux OS as SOS, and Clear Linux OS as UOS has been 
 verified on UP2/SBL board. See the :ref:`using-sbl-up2` documentation 
 for step-by-step instructions.
 
@@ -95,7 +95,7 @@ for step-by-step instructions.
 - :acrn-issue:`2079` - Replace banned API with permitted API function in a crn device-model                                  
 - :acrn-issue:`2120` - Optimize trusty logic to meet MISRA-C rules                             
 - :acrn-issue:`2145` - Reuse linux common virtio header file for virtio                                                   
-- :acrn-issue:`2170` -  For UEFI based hardware platforms, one ClearLinux E2E build binary can be used for all platform's installation 
+- :acrn-issue:`2170` -  For UEFI based hardware platforms, one Clear Linux OS E2E build binary can be used for all platform's installation 
 - :acrn-issue:`2187` - Complete the cleanup of unbounded APIs usage 
 
 Fixed Issues

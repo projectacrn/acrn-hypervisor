@@ -24,7 +24,7 @@ meter, the In-Vehicle Infotainment (IVI) system, and the rear seat
 entertainment (RSE).  For the software, there are three VMs running on
 top of ACRN:
 
-* Clear Linux runs as the service OS (SOS) to control the cluster meter,
+* Clear Linux OS runs as the service OS (SOS) to control the cluster meter,
 * an AGL instance runs as a user OS (UOS) controlling the IVI display, and
 * a second AGL UOS controls the RSE display.
 
@@ -111,9 +111,9 @@ The demo setup uses these software components and versions:
    * - ACRN hypervisor
      - 0.3
      - `ACRN project <https://github.com/projectacrn/acrn-hypervisor>`_
-   * - Clear Linux
+   * - Clear Linux OS
      - 26200
-     - `Clear Linux installer image
+     - `Clear Linux OS installer image
        <https://download.clearlinux.org/releases/26200/clear/clear-26200-installer.img.xz>`_
    * - AGL
      - Funky Flounder (6.02)
@@ -126,34 +126,34 @@ The demo setup uses these software components and versions:
 Service OS
 ==========
 
-#. Download the compressed Clear installer image from
+#. Download the compressed Clear Linux OS installer image from
    https://download.clearlinux.org/releases/26200/clear/clear-26200-installer.img.xz
-   and follow the `Clear Linux installation guide
+   and follow the `Clear Linux OS installation guide
    <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install>`_
-   as a starting point for installing Clear Linux onto your platform.
+   as a starting point for installing Clear Linux OS onto your platform.
    Follow the recommended options for choosing an Automatic installation
    type, and using the platform’s storage as the target device for
    installation (overwriting the existing data and creating three
    partitions on the platform’s storage drive).
 
-#. After installation is complete, boot into Clear Linux, login as
+#. After installation is complete, boot into Clear Linux OS, login as
    root, and set a password.
 
-#. Clear Linux is set to automatically update itself. We recommend that
+#. Clear Linux OS is set to automatically update itself. We recommend that
    you disable this feature to have more control over when the updates
    happen. Use this command (as root) to disable the autoupdate feature::
 
       # swupd autoupdate --disable
 
 #. This demo setup uses a specific release version (26200) of Clear
-   Linux which has been verified to work with ACRN. In case you
-   unintentionally update or change the Clear Linux version, you can
+   Linux OS which has been verified to work with ACRN. In case you
+   unintentionally update or change the Clear Linux OS version, you can
    fix it again using::
 
       # swupd verify --fix --picky -m 26200
 
 #. Use the ``swupd bundle-add`` command and add needed Clear Linux
-   bundles::
+   OS bundles::
 
       # swupd bundle-add openssh-server sudo network-basic \
           kernel-iot-lts2018 os-clr-on-clr os-core-dev \
@@ -186,7 +186,7 @@ Service OS
 
 
 #. Build ACRN. In this demo we use the ACRN v0.3 release.
-   Open a terminal window in Clear Linux desktop, create a workspace,
+   Open a terminal window in Clear Linux OS desktop, create a workspace,
    install needed tools, clone the ACRN Hypervisor repo source, and build ACRN::
 
       $ mkdir workspace
@@ -229,7 +229,7 @@ Service OS
       $ sudo clr-boot-manager update
 
 
-#. Reboot the system, choose "ACRN Hypervisor" and launch Clear Linux
+#. Reboot the system, choose "ACRN Hypervisor" and launch Clear Linux OS
    SOS. If the EFI boot order is not right, use :kbd:`F10`
    on boot up to enter the EFI menu and choose "ACRN Hypervisor".
 

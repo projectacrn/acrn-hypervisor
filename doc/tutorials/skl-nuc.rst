@@ -21,7 +21,7 @@ Software Configuration
   <https://github.com/projectacrn/acrn-hypervisor/releases/tag/acrn-2018w39.6-140000p>`_
 * `acrn-kernel tag acrn-2018w39.6-140000p
   <https://github.com/projectacrn/acrn-kernel/releases/tag/acrn-2018w39.6-140000p>`_
-* Clear Linux:       version: 25130 (UOS and SOS use this version)
+* Clear Linux OS: version: 25130 (UOS and SOS use this version)
 
 Source code patches are provided in `skl-patches-for-acrn.tar file
 <../_static/downloads/skl-patches-for-acrn.tar>`_ to work around or add support for
@@ -40,7 +40,7 @@ Please follow the :ref:`getting-started-apl-nuc`, with the following changes:
 
 1. Set up a Clear Linux Operating System
 
-   Clear Linux will update to the latest version during installation.
+   Clear Linux OS will update to the latest version during installation.
    Run this command (as root) to roll back to version 25130, using the
    ``–x`` switch to ignore version mismatch::
 
@@ -72,7 +72,7 @@ Please follow the :ref:`getting-started-apl-nuc`, with the following changes:
       # cp build/devicemodel/acrn-dm  /usr/bin/acrn-dm
 
 #. Put the new ``acrn.efi`` hypervisor application (included in the
-   Clear Linux release) on the EFI partition (as root)::
+   Clear Linux OS release) on the EFI partition (as root)::
 
       # mount /dev/nvme0n1p1 /mnt
       # mkdir /mnt/EFI/acrn

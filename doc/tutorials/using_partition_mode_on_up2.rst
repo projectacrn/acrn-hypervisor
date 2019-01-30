@@ -20,9 +20,9 @@ Prerequisites
 *************
 
 In this tutorial two Linux privileged VMs are started by the ACRN hypervisor.
-To set up the Linux root filesystems for each VM, follow the Clear Linux
+To set up the Linux root filesystems for each VM, follow the Clear Linux OS
 `bare metal installation guide <https://clearlinux.org/documentation/clear-linux/get-started/bare-metal-install#bare-metal-install>`_
-to install Clear Linux on a **SATA disk** and a **USB flash disk** prior the setup,
+to install Clear Linux OS on a **SATA disk** and a **USB flash disk** prior the setup,
 as the two privileged VMs will mount the root filesystems via the SATA controller
 and the USB controller respectively.
 
@@ -73,12 +73,12 @@ Build kernel and modules for partition mode UOS
 
    .. code-block:: none
 
-     # Mount the Clear Linux root filesystem on the SATA disk
+     # Mount the Clear Linux OS root filesystem on the SATA disk
      $ sudo mount /dev/sda3 /mnt
      $ sudo cp -r <kernel-modules-folder-built-in-step1>/lib/modules/* /mnt/lib/modules
      $ sudo umount /mnt
      
-     # Mount the Clear Linux root filesystem on the USB flash disk
+     # Mount the Clear Linux OS root filesystem on the USB flash disk
      $ sudo mount /dev/sdb3 /mnt
      $ sudo cp -r <path-to-kernel-module-folder-built-in-step1>/lib/modules/* /mnt/lib/modules
      $ sudo umount /mnt
@@ -257,7 +257,7 @@ Enable partition mode in ACRN hypervisor
 #. Optionally, configure the ``.bootargs`` kernel command line arguments
 
    The kernel command line arguments used to boot the privileged VMs are
-   hardcoded as ``/dev/sda3`` to meet the Clear Linux automatic installation.
+   hardcoded as ``/dev/sda3`` to meet the Clear Linux OS automatic installation.
    In case you plan to use your customized root
    filesystem, you may optionally edit the ``root=`` parameter specified
    in the ``.bootargs`` field of the ``.vm_desc_array`` structure, to

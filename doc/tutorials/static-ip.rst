@@ -12,7 +12,7 @@ address. You need ``root`` privileges to make these changes to the system.
 ACRN Network Setup
 ******************
 
-The ACRN Service OS is based on `Clear Linux`_ and it uses `systemd-networkd`_
+The ACRN Service OS is based on `Clear Linux OS`_ and it uses `systemd-networkd`_
 to set up the Service OS networking. A few files are responsible for setting up the
 ACRN bridge (``acrn-br0``), the TAP device (``acrn_tap0``), and how these are all
 connected. Those files are installed in ``/usr/lib/systemd/network``
@@ -72,7 +72,7 @@ of the configuration you are trying to set up, the modifications you have made t
 the output of ``journalctl -b -u systemd-networkd`` so we can best assist you.
 
 .. _systemd-networkd: https://www.freedesktop.org/software/systemd/man/systemd-networkd.service.html
-.. _Clear Linux: https://clearlinux.org
+.. _Clear Linux OS: https://clearlinux.org
 .. _systemd-network: https://www.freedesktop.org/software/systemd/man/systemd.network.html
 .. _ACRN-users mailing list: https://lists.projectacrn.org/g/acrn-users
 .. _ACRN hypervisor issues: https://github.com/projectacrn/acrn-hypervisor/issues

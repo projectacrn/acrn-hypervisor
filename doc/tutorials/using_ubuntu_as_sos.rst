@@ -4,7 +4,7 @@ Using Ubuntu as the Service OS
 ##############################
 
 This document builds on the :ref:`getting_started`, and explains how to use
-Ubuntu instead of using `Clear Linux`_ as the Service OS with the ACRN
+Ubuntu instead of using `Clear Linux OS`_ as the Service OS with the ACRN
 hypervisor. (Note that different OSes can be used for the Service and User OS.)
 In the following instructions we'll build on material in the
 :ref:`getting-started-apl-nuc`.
@@ -133,13 +133,13 @@ Install the Service OS kernel
 You can download latest Service OS kernel from
 `<https://download.clearlinux.org/releases/current/clear/x86_64/os/Packages/>`_
 
-1. The latest Service OS kernel from the latest Clear Linux release
+1. The latest Service OS kernel from the latest Clear Linux OS release
    from this area:
    https://download.clearlinux.org/releases/current/clear/x86_64/os/Packages.  Look for an
    ``.rpm`` file named ``linux-iot-lts2018-sos-<kernel-version>-<build-version>.x86_64.rpm``.
 
-   While we recommend using the "current" (latest) release of Clear Linux, you can download
-   a specific Clear Linux release from an area with that release number, e.g.: 
+   While we recommend using the "current" (latest) release of Clear Linux OS, you can download
+   a specific Clear Linux release from an area with that release number, e.g.:
    https://download.clearlinux.org/releases/26440/clear/x86_64/os/Packages/linux-iot-lts2018-sos-4.19.0-22.x86_64.rpm
 
 #. Download and extract the latest Service OS kernel(this guide is based on 26440 as the current example)
@@ -230,9 +230,9 @@ You can download latest Service OS kernel from
 Prepare the User OS (UOS)
 *************************
 
-For the User OS, we are using the same `Clear Linux`_ release version as the Service OS.
+For the User OS, we are using the same `Clear Linux OS`_ release version as the Service OS.
 
-* Download the Clear Linux image from `<https://download.clearlinux.org>`_
+* Download the Clear Linux OS image from `<https://download.clearlinux.org>`_
 
   .. code-block:: none
 
@@ -347,4 +347,4 @@ Please refer to :ref:`getting-started-apl-nuc` for enabling the
 USB keyboard and mouse for the UOS.
 
  
-.. _Clear Linux: https://clearlinux.org
+.. _Clear Linux OS: https://clearlinux.org

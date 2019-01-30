@@ -138,7 +138,8 @@ Known Issues
    After SOS boots up with both "desktop" and "soft-defined-cockpit" bundles installed
    or without any, there's no output on SOS screen.
    **Impact:** Cannot access SOS.
-   **Workaround:** Only install "desktop" bundle, then enable and start weston in Native Clear Linux,
+   **Workaround:** Only install "desktop" bundle, then enable and start
+   weston in Native Clear Linux OS,
    and then reboot to SOS. The issues will be fixed in the next release.
 
 :acrn-issue:`1795` - [KBL NUC] SOS fails to get IP address

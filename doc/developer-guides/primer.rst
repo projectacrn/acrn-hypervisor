@@ -90,7 +90,7 @@ ACRN Device Model source tree
   files are used to generate the :ref:`acrn_apis` documentation)
 
 **samples/**
-  scripts (included in the Clear Linux build) for setting up the network
+  scripts (included in the Clear Linux OS build) for setting up the network
   and launching the User OS on the platform.
 
 ACRN Tools source tree
