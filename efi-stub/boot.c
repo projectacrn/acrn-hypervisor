@@ -38,12 +38,54 @@
 #include "boot.h"
 #include "acrn_common.h"
 #include "uefi.h"
+#include "MpService.h"
 
 EFI_SYSTEM_TABLE *sys_table;
 EFI_BOOT_SERVICES *boot;
 char *cmdline = NULL;
 extern const uint64_t guest_entry;
 static UINT64 hv_hpa;
+
+static void
+enable_disable_all_ap(BOOLEAN enable)
+{
+	EFI_MP_SERVICES_PROTOCOL *mp = NULL;
+	EFI_STATUS err;
+	EFI_GUID mp_guid = EFI_MP_SERVICES_PROTOCOL_GUID;
+	UINTN n_proc, n_enabled_proc, bsp, i;
+
+	err = uefi_call_wrapper(boot->LocateProtocol, 3, &mp_guid, NULL, (void **)&mp);
+	if (err != EFI_SUCCESS) {
+		Print(L"Unable to locate MP service protocol: %r, skip %s all AP\n",
+				err, enable ? "enable" : "disable");
+		return;
+	}
+
+	err = uefi_call_wrapper(mp->GetNumberOfProcessors, 3, mp, &n_proc, &n_enabled_proc);
+	if (err != EFI_SUCCESS) {
+		Print(L"failed to GetNumberOfProcessors: %r\n", err);
+		return;
+	}
+	Print(L"detected %d processes, %d enabled\n", n_proc, n_enabled_proc);
+
+	err = uefi_call_wrapper(mp->WhoAmI, 2, mp, &bsp);
+	if (err != EFI_SUCCESS) {
+		Print(L"failed to WhoAmI: %r\n", err);
+		return;
+	}
+	Print(L"current on process %d\n", bsp);
+
+	for (i = 0; i < n_proc; i++) {
+		if (i == bsp) {
+			continue;
+		}
+
+		err = uefi_call_wrapper(mp->EnableDisableAP, 4, mp, i, enable, NULL);
+		if (err != EFI_SUCCESS) {
+			Print(L"failed to %s AP%d: %r\n", enable ? "enable" : "disable", i, err);
+		}
+	}
+}
 
 static inline void hv_jump(EFI_PHYSICAL_ADDRESS hv_start,
 			struct multiboot_info *mbi, struct efi_context *efi_ctx)
@@ -325,6 +367,9 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	if (CheckCrc(sys_table->Hdr.HeaderSize, &sys_table->Hdr) != TRUE)
 		return EFI_LOAD_ERROR;
 
+	/* make sure only bsp is enable before entering hv */
+	enable_disable_all_ap(FALSE);
+
 	err = handle_protocol(image, &LoadedImageProtocol, (void **)&info);
 	if (err != EFI_SUCCESS)
 		goto failed;
@@ -387,6 +432,12 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *_table)
 	err = switch_to_guest_mode(image, hv_hpa);
 	if (err != EFI_SUCCESS)
 		goto failed;
+
+	/*
+	 * enable all AP here will reset all APs,
+	 * so acrn can handle their ctx from now on.
+	 */
+	enable_disable_all_ap(TRUE);
 
 	/* load and start the default bootloader */
 	path = FileDevicePath(info->DeviceHandle, bootloader_name);
