@@ -27,6 +27,8 @@ for downloading and flashing an updated BIOS for the NUC.
 Software setup
 **************
 
+.. _set-up-CL:
+
 Set up a Clear Linux Operating System
 =====================================
 
@@ -105,6 +107,7 @@ complete this setup.
       |                    | which is enterprise-style kernel with backports   |
       +--------------------+---------------------------------------------------+
 
+.. _add-acrn-to-efi:
 
 Add the ACRN hypervisor to the EFI Partition
 ============================================
