@@ -248,15 +248,17 @@ local_parse_madt(struct acpi_table_madt *madt, uint32_t lapic_id_array[CONFIG_MA
 /* The lapic_id info gotten from madt will be returned in lapic_id_array */
 uint16_t parse_madt(uint32_t lapic_id_array[CONFIG_MAX_PCPU_NUM])
 {
-	struct acpi_table_madt *madt;
+	uint16_t ret = 0U;
 
 	acpi_rsdp = get_rsdp();
-	ASSERT(acpi_rsdp != NULL, "fail to get rsdp");
+	if (acpi_rsdp != NULL) {
+		struct acpi_table_madt *madt = (struct acpi_table_madt *)get_acpi_tbl(ACPI_SIG_MADT);
+		if (madt != NULL) {
+			ret = local_parse_madt(madt, lapic_id_array);
+		}
+	}
 
-	madt = (struct acpi_table_madt *)get_acpi_tbl(ACPI_SIG_MADT);
-	ASSERT(madt != NULL, "fail to get madt");
-
-	return local_parse_madt(madt, lapic_id_array);
+	return ret;
 }
 
 void *get_dmar_table(void)
