@@ -800,8 +800,8 @@ INPUT                  =  custom-doxygen/mainpage.md \
                           ../hypervisor/include/arch/x86/irq.h \
                           ../hypervisor/include/arch/x86/guest/vmtrr.h \
                           ../hypervisor/include/arch/x86/guest/vlapic.h \
-                          ../hypervisor/include/arch/x86/guest/vioapic.h \
-                          ../hypervisor/include/arch/x86/guest/vpic.h \
+                          ../hypervisor/include/dm/vioapic.h \
+                          ../hypervisor/include/dm/vpic.h \
                           ../hypervisor/include/arch/x86/io_req.h \
                           ../hypervisor/include/arch/x86/io_emul.h \
                           ../hypervisor/include/arch/x86/assign.h \
