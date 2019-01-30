@@ -9,6 +9,8 @@
 
 /*
  * Split a large page table into next level page table.
+ *
+ * @pre: level could only IA32E_PDPT or IA32E_PD
  */
 static void split_large_page(uint64_t *pte, enum _page_table_level level,
 		uint64_t vaddr, const struct memory_ops *mem_ops)
@@ -24,15 +26,13 @@ static void split_large_page(uint64_t *pte, enum _page_table_level level,
 		ref_prot = (*pte) & ~PDPTE_PFN_MASK;
 		pbase = (uint64_t *)mem_ops->get_pd_page(mem_ops->info, vaddr);
 		break;
-	case IA32E_PD:
+	default:	/* IA32E_PD */
 		ref_paddr = (*pte) & PDE_PFN_MASK;
 		paddrinc = PTE_SIZE;
 		ref_prot = (*pte) & ~PDE_PFN_MASK;
 		ref_prot &= ~PAGE_PSE;
 		pbase = (uint64_t *)mem_ops->get_pt_page(mem_ops->info, vaddr);
 		break;
-	default:
-		panic("invalid paging table level: %d", level);
 	}
 
 	dev_dbg(ACRN_DBG_MMU, "%s, paddr: 0x%llx, pbase: 0x%llx\n", __func__, ref_paddr, pbase);
@@ -91,13 +91,13 @@ static void modify_or_del_pte(const uint64_t *pde, uint64_t vaddr_start, uint64_
 		uint64_t *pte = pt_page + index;
 
 		if (mem_ops->pgentry_present(*pte) == 0UL) {
-			panic("invalid op, pte not present");
-		}
-
-		local_modify_or_del_pte(pte, prot_set, prot_clr, type);
-		vaddr += PTE_SIZE;
-		if (vaddr >= vaddr_end) {
-			break;
+			ASSERT(false, "invalid op, pte not present");
+		} else {
+			local_modify_or_del_pte(pte, prot_set, prot_clr, type);
+			vaddr += PTE_SIZE;
+			if (vaddr >= vaddr_end) {
+				break;
+			}
 		}
 	}
 }
@@ -122,25 +122,26 @@ static void modify_or_del_pde(const uint64_t *pdpte, uint64_t vaddr_start, uint6
 		uint64_t vaddr_next = (vaddr & PDE_MASK) + PDE_SIZE;
 
 		if (mem_ops->pgentry_present(*pde) == 0UL) {
-			panic("invalid op, pde not present");
-		}
-		if (pde_large(*pde) != 0UL) {
-			if ((vaddr_next > vaddr_end) || (!mem_aligned_check(vaddr, PDE_SIZE))) {
-				split_large_page(pde, IA32E_PD, vaddr, mem_ops);
-			} else {
-				local_modify_or_del_pte(pde, prot_set, prot_clr, type);
-				if (vaddr_next < vaddr_end) {
-					vaddr = vaddr_next;
-					continue;
+			ASSERT(false, "invalid op, pde not present");
+		} else {
+			if (pde_large(*pde) != 0UL) {
+				if ((vaddr_next > vaddr_end) || (!mem_aligned_check(vaddr, PDE_SIZE))) {
+					split_large_page(pde, IA32E_PD, vaddr, mem_ops);
+				} else {
+					local_modify_or_del_pte(pde, prot_set, prot_clr, type);
+					if (vaddr_next < vaddr_end) {
+						vaddr = vaddr_next;
+						continue;
+					}
+					break;	/* done */
 				}
+			}
+			modify_or_del_pte(pde, vaddr, vaddr_end, prot_set, prot_clr, mem_ops, type);
+			if (vaddr_next >= vaddr_end) {
 				break;	/* done */
 			}
+			vaddr = vaddr_next;
 		}
-		modify_or_del_pte(pde, vaddr, vaddr_end, prot_set, prot_clr, mem_ops, type);
-		if (vaddr_next >= vaddr_end) {
-			break;	/* done */
-		}
-		vaddr = vaddr_next;
 	}
 }
 
@@ -164,26 +165,27 @@ static void modify_or_del_pdpte(const uint64_t *pml4e, uint64_t vaddr_start, uin
 		uint64_t vaddr_next = (vaddr & PDPTE_MASK) + PDPTE_SIZE;
 
 		if (mem_ops->pgentry_present(*pdpte) == 0UL) {
-			panic("invalid op, pdpte not present");
-		}
-		if (pdpte_large(*pdpte) != 0UL) {
-			if ((vaddr_next > vaddr_end) ||
-					(!mem_aligned_check(vaddr, PDPTE_SIZE))) {
-				split_large_page(pdpte, IA32E_PDPT, vaddr, mem_ops);
-			} else {
-				local_modify_or_del_pte(pdpte, prot_set, prot_clr, type);
-				if (vaddr_next < vaddr_end) {
-					vaddr = vaddr_next;
-					continue;
+			ASSERT(false, "invalid op, pdpte not present");
+		} else {
+			if (pdpte_large(*pdpte) != 0UL) {
+				if ((vaddr_next > vaddr_end) ||
+						(!mem_aligned_check(vaddr, PDPTE_SIZE))) {
+					split_large_page(pdpte, IA32E_PDPT, vaddr, mem_ops);
+				} else {
+					local_modify_or_del_pte(pdpte, prot_set, prot_clr, type);
+					if (vaddr_next < vaddr_end) {
+						vaddr = vaddr_next;
+						continue;
+					}
+					break;	/* done */
 				}
+			}
+			modify_or_del_pde(pdpte, vaddr, vaddr_end, prot_set, prot_clr, mem_ops, type);
+			if (vaddr_next >= vaddr_end) {
 				break;	/* done */
 			}
+			vaddr = vaddr_next;
 		}
-		modify_or_del_pde(pdpte, vaddr, vaddr_end, prot_set, prot_clr, mem_ops, type);
-		if (vaddr_next >= vaddr_end) {
-			break;	/* done */
-		}
-		vaddr = vaddr_next;
 	}
 }
 
@@ -215,10 +217,11 @@ void mmu_modify_or_del(uint64_t *pml4_page, uint64_t vaddr_base, uint64_t size,
 		vaddr_next = (vaddr & PML4E_MASK) + PML4E_SIZE;
 		pml4e = pml4e_offset(pml4_page, vaddr);
 		if (mem_ops->pgentry_present(*pml4e) == 0UL) {
-			panic("invalid op, pml4e not present");
+			ASSERT(false, "invalid op, pml4e not present");
+		} else {
+			modify_or_del_pdpte(pml4e, vaddr, vaddr_end, prot_set, prot_clr, mem_ops, type);
+			vaddr = vaddr_next;
 		}
-		modify_or_del_pdpte(pml4e, vaddr, vaddr_end, prot_set, prot_clr, mem_ops, type);
-		vaddr = vaddr_next;
 	}
 }
 
@@ -240,15 +243,15 @@ static void add_pte(const uint64_t *pde, uint64_t paddr_start, uint64_t vaddr_st
 		uint64_t *pte = pt_page + index;
 
 		if (mem_ops->pgentry_present(*pte) != 0UL) {
-			panic("invalid op, pte present");
-		}
+			ASSERT(false, "invalid op, pte present");
+		} else {
+			set_pgentry(pte, paddr | prot);
+			paddr += PTE_SIZE;
+			vaddr += PTE_SIZE;
 
-		set_pgentry(pte, paddr | prot);
-		paddr += PTE_SIZE;
-		vaddr += PTE_SIZE;
-
-		if (vaddr >= vaddr_end) {
-			break;	/* done */
+			if (vaddr >= vaddr_end) {
+				break;	/* done */
+			}
 		}
 	}
 }

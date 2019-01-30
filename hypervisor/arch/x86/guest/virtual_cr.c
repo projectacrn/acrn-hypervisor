@@ -426,7 +426,7 @@ int32_t cr_access_vmexit_handler(struct acrn_vcpu *vcpu)
 		vcpu_set_gpreg(vcpu, idx, reg);
 		break;
 	default:
-		panic("Unhandled CR access");
+		ASSERT(false, "Unhandled CR access");
 		ret = -EINVAL;
 		break;
 	}
