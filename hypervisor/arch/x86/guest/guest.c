@@ -36,7 +36,7 @@ uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask)
 	for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
 		if ((vdmask & (1UL << vcpu_id)) != 0UL) {
 			vcpu = vcpu_from_vid(vm, vcpu_id);
-			bitmap_set_lock(vcpu->pcpu_id, &dmask);
+			bitmap_set_nolock(vcpu->pcpu_id, &dmask);
 		}
 	}
 

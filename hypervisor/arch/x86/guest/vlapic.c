@@ -135,7 +135,7 @@ vm_active_cpus(const struct acrn_vm *vm)
 	const struct acrn_vcpu *vcpu;
 
 	foreach_vcpu(i, vm, vcpu) {
-		bitmap_set_lock(vcpu->vcpu_id, &dmask);
+		bitmap_set_nolock(vcpu->vcpu_id, &dmask);
 	}
 
 	return dmask;
@@ -1047,7 +1047,7 @@ vlapic_calcdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys, b
 		*dmask = 0UL;
 		vcpu_id = vm_apicid2vcpu_id(vm, dest);
 		if (vcpu_id < vm->hw.created_vcpus) {
-			bitmap_set_lock(vcpu_id, dmask);
+			bitmap_set_nolock(vcpu_id, dmask);
 		}
 	} else {
 		/*
@@ -1123,14 +1123,14 @@ vlapic_calcdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys, b
 							/* target is the dest */
 						}
 					} else {
-						bitmap_set_lock(vcpu_id, dmask);
+						bitmap_set_nolock(vcpu_id, dmask);
 					}
 				}
 			}
 		}
 
 		if (lowprio && (target != NULL)) {
-			bitmap_set_lock(target->vcpu->vcpu_id, dmask);
+			bitmap_set_nolock(target->vcpu->vcpu_id, dmask);
 		}
 	}
 }
@@ -1159,7 +1159,7 @@ vlapic_calcdest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, boo
 		*dmask = 0UL;
 		vcpu_id = vm_apicid2vcpu_id(vm, dest);
 		if (vcpu_id < vm->hw.created_vcpus) {
-			bitmap_set_lock(vcpu_id, dmask);
+			bitmap_set_nolock(vcpu_id, dmask);
 		}
 		dev_dbg(ACRN_DBG_LAPICPT, "%s: phys destmod, dmask: 0x%016llx", __func__, *dmask);
 	} else {
@@ -1179,7 +1179,7 @@ vlapic_calcdest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, boo
 				continue;
 			}
 			if ((dest_logical_id & logical_id) != 0U) {
-				bitmap_set_lock(vcpu_id, dmask);
+				bitmap_set_nolock(vcpu_id, dmask);
 			}
 		}
 		dev_dbg(ACRN_DBG_LAPICPT, "%s: logical destmod, dmask: 0x%016llx", __func__, *dmask);
@@ -1322,14 +1322,14 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 			vlapic_calcdest(vlapic->vm, &dmask, dest, phys, false);
 			break;
 		case APIC_DEST_SELF:
-			bitmap_set_lock(vlapic->vcpu->vcpu_id, &dmask);
+			bitmap_set_nolock(vlapic->vcpu->vcpu_id, &dmask);
 			break;
 		case APIC_DEST_ALLISELF:
 			dmask = vm_active_cpus(vlapic->vm);
 			break;
 		case APIC_DEST_ALLESELF:
 			dmask = vm_active_cpus(vlapic->vm);
-			bitmap_clear_lock(vlapic->vcpu->vcpu_id, &dmask);
+			bitmap_clear_nolock(vlapic->vcpu->vcpu_id, &dmask);
 			break;
 		default:
 			/*
@@ -1948,7 +1948,7 @@ vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t vector)
 		if (vcpu_id == BROADCAST_CPU_ID) {
 			dmask = vm_active_cpus(vm);
 		} else {
-			bitmap_set_lock(vcpu_id, &dmask);
+			bitmap_set_nolock(vcpu_id, &dmask);
 		}
 		error = 0;
 		for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
