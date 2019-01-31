@@ -64,7 +64,7 @@ system on Intel KBL NUC with a SATA SSD as ``/dev/sda`` and an NVME SSD as
          you can ignore.
 
    #. Edit the ``kernel_config_uos`` config file: search the keyword
-      "NVME Support" and add two lines under “NVME Support” to enable
+      "NVME Support", delete "# CONFIG_BLK_DEV_NVME is not set" and add two lines under “NVME Support” to enable
       the NVME driver in RT kernel::
 
          CONFIG_NVME_CORE=y
