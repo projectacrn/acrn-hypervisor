@@ -11,6 +11,7 @@
 
 #define MAX_MSR_LIST_NUM	15U
 #define MAX_GROUP_NUM		1U
+#define MAX_VCPU_NUM		4
 
 #define COLLECT_PROFILE_DATA	0
 #define COLLECT_POWER_DATA	1
@@ -109,7 +110,7 @@ struct profiling_vm_info {
 	uint8_t guid[16];
 	char vm_name[16];
 	uint16_t num_vcpus;
-	struct profiling_vcpu_pcpu_map cpu_map[CONFIG_MAX_VCPUS_PER_VM];
+	struct profiling_vcpu_pcpu_map cpu_map[MAX_VCPU_NUM];
 };
 
 struct profiling_vm_info_list {

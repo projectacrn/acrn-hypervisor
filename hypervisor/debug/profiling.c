@@ -867,6 +867,10 @@ int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr)
 	vm_info_list.vm_list[vm_idx].vm_id_num = -1;
 	(void)memcpy_s((void *)vm_info_list.vm_list[vm_idx].vm_name, 4U, "VMM\0", 4U);
 	for (i = 0U; i < pcpu_nums; i++) {
+		if (i >= MAX_VCPU_NUM) {
+			pr_err("%s: Unable to store cpu mapping\n", __func__);
+			return -EINVAL;
+		}
 		vm_info_list.vm_list[vm_idx].cpu_map[i].vcpu_id = i;
 		vm_info_list.vm_list[vm_idx].cpu_map[i].pcpu_id = i;
 		vm_info_list.vm_list[vm_idx].cpu_map[i].apic_id
@@ -891,6 +895,10 @@ int32_t profiling_vm_list_info(struct acrn_vm *vm, uint64_t addr)
 		vm_info_list.vm_list[vm_idx].num_vcpus = 0;
 		i = 0U;
 		foreach_vcpu(i, tmp_vm, vcpu) {
+			if (i >= MAX_VCPU_NUM) {
+				pr_err("%s: Unable to store cpu mapping\n", __func__);
+				return -EINVAL;
+			}
 			vm_info_list.vm_list[vm_idx].cpu_map[i].vcpu_id
 				= vcpu->vcpu_id;
 			vm_info_list.vm_list[vm_idx].cpu_map[i].pcpu_id
