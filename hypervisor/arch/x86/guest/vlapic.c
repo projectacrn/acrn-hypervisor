@@ -2075,7 +2075,7 @@ static inline  uint32_t x2apic_msr_to_regoff(uint32_t msr)
 static int32_t
 vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 {
-	uint32_t apic_id = (uint32_t)(val >> 32U);
+	uint32_t papic_id, vapic_id = (uint32_t)(val >> 32U);
 	uint32_t icr_low = (uint32_t)val;
 	uint32_t mode = icr_low & APIC_DELMODE_MASK;
 	uint16_t vcpu_id;
@@ -2092,7 +2092,7 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 				not supported in ICR forpartition mode\n");
 		ret = -1;
 	} else {
-		vcpu_id = vm_apicid2vcpu_id(vm, apic_id);
+		vcpu_id = vm_apicid2vcpu_id(vm, vapic_id);
 		target_vcpu = vcpu_from_vid(vm, vcpu_id);
 
 		if (target_vcpu != NULL) {
@@ -2104,7 +2104,12 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 				vlapic_process_init_sipi(target_vcpu, mode, icr_low, vcpu_id);
 			break;
 			default:
-				msr_write(MSR_IA32_EXT_APIC_ICR, (((uint64_t)apic_id) << 32U) | icr_low);
+				/* convert the dest from virtual apic_id to physical apic_id */
+				papic_id = per_cpu(lapic_id, target_vcpu->pcpu_id);
+				dev_dbg(ACRN_DBG_LAPICPT,
+					"%s vapic_id: 0x%08lx papic_id: 0x%08lx icr_low:0x%08lx",
+					 __func__, vapic_id, papic_id, icr_low);
+				msr_write(MSR_IA32_EXT_APIC_ICR, (((uint64_t)papic_id) << 32U) | icr_low);
 			break;
 			}
 		}
