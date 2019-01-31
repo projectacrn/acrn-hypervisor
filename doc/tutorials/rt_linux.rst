@@ -26,6 +26,8 @@ event such as an interrupt within a defined time frame.
    :width: 400px
    :name: rt-linux-arch
 
+   Real-Time Linux (PREEMPT_RT) VM on ACRN
+
 The privileged VM exclusively owns its passthrough devices, so in
 addition to the controller and file system used by the SOS, a dedicated
 storage controller and device are needed to host the privileged VM's
