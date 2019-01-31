@@ -76,6 +76,11 @@ Build ACRN for UP2
 In Clear Linux, build out the SOS and LaaG image with these two files:
 
 * create-up2-images.sh
+
+.. code-block:: none
+
+   $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/create-up2-images.sh
+
 * uos.json
 
 An example of the configuration file ``uos.json``:
@@ -99,26 +104,14 @@ An example of the configuration file ``uos.json``:
    the "Version" argument, ``"Version": 2****`` instead
    of ``"Version": 27230`` for example.
 
-Clone the source code of ``acrn-hypervisor`` for building and use 
-``v0.5`` release for example:
-
-.. code-block:: none
-   
-   $ cd ~
-   $ git clone https://github.com/projectacrn/acrn-hypervisor
-   $ cd acrn-hypervisor
-   $ git checkout v0.5
-
-.. note::
-   You can switch to other version with the command ``git checkout`` if needed.
 
 Build SOS and LaaG image:
    
 .. code-block:: none   
 
-   $ sudo -s 
-   # ./acrn-hypervisor/devicemodel/samples/up2/create-up2-images.sh --images-type all \
-      --clearlinux-version 27230 --laag-json uos.json --acrn-code-path /path/to/acrn-hypervisor/
+   $ sudo -s
+   # chmod +x create-up2-images.sh 
+   # ./create-up2-images.sh --images-type all --clearlinux-version 27230 --laag-json uos.json
 
 .. note::
    You must have root privileges to run ``create-up2-images.sh``.
