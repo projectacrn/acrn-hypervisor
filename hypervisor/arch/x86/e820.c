@@ -232,9 +232,9 @@ uint32_t create_e820_table(struct e820_entry *param_e820)
 	uint32_t i;
 
 	for (i = 0U; i < NUM_E820_ENTRIES; i++) {
-		param_e820[i].baseaddr = e820_default_entries[i].baseaddr;
-		param_e820[i].length = e820_default_entries[i].length;
-		param_e820[i].type = e820_default_entries[i].type;
+		param_e820[i].baseaddr = ve820_entry[i].baseaddr;
+		param_e820[i].length = ve820_entry[i].length;
+		param_e820[i].type = ve820_entry[i].type;
 	}
 
 	return NUM_E820_ENTRIES;

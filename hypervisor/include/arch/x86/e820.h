@@ -62,7 +62,7 @@ const struct e820_mem_params *get_e820_mem_info(void);
  * there is reserved memory of 64K for MPtable and PCI hole of 512MB
  */
 #define NUM_E820_ENTRIES        5U
-extern const struct e820_entry e820_default_entries[NUM_E820_ENTRIES];
+extern const struct e820_entry ve820_entry[NUM_E820_ENTRIES];
 #endif
 
 #endif
