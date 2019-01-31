@@ -63,8 +63,8 @@ system on Intel KBL NUC with a SATA SSD as ``/dev/sda`` and an NVME SSD as
       .. note:: This patch will report one conflict with ``base.c`` that
          you can ignore.
 
-   #. Edit the ``kernel_config_uos`` config file: search the keyword
-      "NVME Support", delete "# CONFIG_BLK_DEV_NVME is not set" and add two lines under “NVME Support” to enable
+   #. Edit the ``kernel_config_uos`` config file: search for the keyword
+      "NVME Support", delete ``# CONFIG_BLK_DEV_NVME is not set`` and add two lines under "NVME Support" to enable
       the NVME driver in RT kernel::
 
          CONFIG_NVME_CORE=y
@@ -109,7 +109,7 @@ system on Intel KBL NUC with a SATA SSD as ``/dev/sda`` and an NVME SSD as
 
          $ sudo ./launch_hard_rt_vm.sh
 
-#. At this point, you’ve successfully launched the real-time VM and
+#. At this point, you've successfully launched the real-time VM and
    Guest OS.  You can verify a preemptible kernel was loaded using
    the ``uname -a`` command:
 
