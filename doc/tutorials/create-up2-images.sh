@@ -46,19 +46,20 @@ create_sos_images() {
         return 1
     }
 
-    SOS_BOOTARGS_DEBUG=${ACRN_HV_CODE_PATH}/devicemodel/samples/up2/sos_bootargs_debug.txt
+    SOS_BOOTARGS_DEBUG=sos_rootfs/usr/share/acrn/samples/up2/sos_bootargs_debug.txt
 
-    if [[ ! ${ACRN_SBL} && ! -f ${ACRN_SBL} ]]
-    then 
-        if [ ${ACRN_HV_CODE_PATH} ]
-        then
-            make -C ${ACRN_HV_CODE_PATH} clean || return 1
-            make -C ${ACRN_HV_CODE_PATH} hypervisor BOARD=up2 FIRMWARE=sbl || return 1
-            ACRN_SBL=${ACRN_HV_CODE_PATH}/build/hypervisor/acrn.32.out
-        else
-            echo "Need to provide acrn.sbl or acrn-hypervisor source code path"
-            return 1
-        fi
+    if [[ ! ${ACRN_SBL} || ! -f ${ACRN_SBL} ]]
+    then
+        ACRN_SBL=sos_rootfs/usr/lib/acrn/acrn.up2.sbl
+    fi
+
+    if [ ${ACRN_HV_CODE_PATH} ]
+    then
+        SOS_BOOTARGS_DEBUG=${ACRN_HV_CODE_PATH}/devicemodel/samples/up2/sos_bootargs_debug.txt
+
+        make -C ${ACRN_HV_CODE_PATH} clean || return 1
+        make -C ${ACRN_HV_CODE_PATH} hypervisor BOARD=up2 FIRMWARE=sbl || return 1
+        ACRN_SBL=${ACRN_HV_CODE_PATH}/build/hypervisor/acrn.32.out
     fi
 
     if [ ! -f ${ACRN_SBL} ]
@@ -66,6 +67,8 @@ create_sos_images() {
         echo "ACRN SBL is not found."
         return 1
     fi
+
+    echo "ACRN_SBL:"${ACRN_SBL}
 
     if [ -f ${SOS_BOOTARGS_DEBUG} ] 
     then
@@ -151,7 +154,7 @@ LAAG_BUNDLE_APPEND=""
 SOS_ROOTFS_SIZE=3584
 LAAG_IMAGE_SIZE=10240
 LAAG_VDISK_SIZE=5120
-MIRRORURL="https://cdn.download.clearlinux.org/releases/"
+MIRRORURL="https://cdn.download.clearlinux.org/update/"
 SIGN_KEY="https://download.clearlinux.org/secureboot/DefaultIASSigningPrivateKey.pem"
 IMAGE=all
 
@@ -224,10 +227,6 @@ if [[ ${IMAGE} == "sos" || ${IMAGE} == "all" ]]; then
     if [[ ! ${VERSION} ]]; then
         echo "--clearlinux-version: must be provided for SOS images building."
         exit 1
-    fi
-    if [[ ! ${ACRN_SBL} && ! ${ACRN_HV_CODE_PATH} ]]; then
-    echo "Should provide --acrn-sbl-path or --acrn-code-path for SOS images building"
-    exit 1
     fi
 fi
 
