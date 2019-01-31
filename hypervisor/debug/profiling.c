@@ -788,14 +788,6 @@ static void profiling_stop_pmu(void)
 			__func__, i, per_cpu(profiling_info.sep_state, i).samples_logged,
 			per_cpu(profiling_info.sep_state, i).samples_dropped);
 
-			per_cpu(profiling_info.sep_state, i).samples_logged = 0U;
-			per_cpu(profiling_info.sep_state, i).samples_dropped = 0U;
-			per_cpu(profiling_info.sep_state, i).valid_pmi_count = 0U;
-			per_cpu(profiling_info.sep_state, i).total_pmi_count = 0U;
-			per_cpu(profiling_info.sep_state, i).total_vmexit_count = 0U;
-			per_cpu(profiling_info.sep_state, i).frozen_well = 0U;
-			per_cpu(profiling_info.sep_state, i).frozen_delayed = 0U;
-			per_cpu(profiling_info.sep_state, i).nofrozen_pmi = 0U;
 		}
 
 		smp_call_function(get_active_pcpu_bitmap(), profiling_ipi_handler, NULL);
@@ -1269,6 +1261,43 @@ int32_t profiling_get_pcpu_id(struct acrn_vm *vm, uint64_t addr)
 }
 
 /*
+ * Update collection statictics
+ */
+int32_t profiling_get_status_info(struct acrn_vm *vm, uint64_t gpa)
+{
+	uint16_t i;
+	uint16_t pcpu_nums = get_pcpu_nums();
+	struct profiling_status pstats[pcpu_nums];
+
+	(void)memset((void *)&pstats, 0U, pcpu_nums*sizeof(struct profiling_status));
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: entering", __func__);
+
+	if (copy_from_gpa(vm, &pstats, gpa,
+		pcpu_nums*sizeof(struct profiling_status)) != 0) {
+		pr_err("%s: Unable to copy addr from vm\n", __func__);
+		return -EINVAL;
+	}
+
+	for (i = 0U; i < pcpu_nums; i++) {
+		pstats[i].samples_logged =
+			per_cpu(profiling_info.sep_state, i).samples_logged;
+		pstats[i].samples_dropped =
+			per_cpu(profiling_info.sep_state, i).samples_dropped;
+	}
+
+	if (copy_to_gpa(vm, &pstats, gpa,
+		pcpu_nums*sizeof(struct profiling_status)) != 0) {
+		pr_err("%s: Unable to copy param to vm\n", __func__);
+		return -EINVAL;
+	}
+
+	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting", __func__);
+
+	return 0;
+}
+
+/*
  * IPI interrupt handler function
  */
 void profiling_ipi_handler(__unused void *data)
@@ -1411,6 +1440,11 @@ void profiling_setup(void)
 	per_cpu(profiling_info.sep_state, cpu).total_vmexit_count = 0U;
 	per_cpu(profiling_info.sep_state, cpu).pmu_state = PMU_INITIALIZED;
 	per_cpu(profiling_info.sep_state, cpu).vmexit_msr_cnt = 0;
+	per_cpu(profiling_info.sep_state, cpu).samples_logged = 0U;
+	per_cpu(profiling_info.sep_state, cpu).samples_dropped = 0U;
+	per_cpu(profiling_info.sep_state, cpu).frozen_well = 0U;
+	per_cpu(profiling_info.sep_state, cpu).frozen_delayed = 0U;
+	per_cpu(profiling_info.sep_state, cpu).nofrozen_pmi = 0U;
 
 	msr_write(MSR_IA32_EXT_APIC_LVT_PMI,
 		VECTOR_PMI | LVT_PERFCTR_BIT_MASK);
