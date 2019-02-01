@@ -172,6 +172,12 @@ struct guest_vm_info {
 	uint16_t guest_vm_id;
 	int32_t external_vector;
 };
+
+struct profiling_status {
+	uint32_t samples_logged;
+	uint32_t samples_dropped;
+};
+
 struct sep_state {
 	sep_pmu_state pmu_state;
 
@@ -302,6 +308,7 @@ int32_t profiling_set_control(struct acrn_vm *vm, uint64_t addr);
 int32_t profiling_configure_pmi(struct acrn_vm *vm, uint64_t addr);
 int32_t profiling_configure_vmsw(struct acrn_vm *vm, uint64_t addr);
 void profiling_ipi_handler(void *data);
+int32_t profiling_get_status_info(struct acrn_vm *vm, uint64_t addr);
 
 #endif
 
