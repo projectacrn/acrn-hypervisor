@@ -90,6 +90,7 @@ static void profiling_enable_pmu(void)
 	uint32_t lvt_perf_ctr;
 	uint32_t i;
 	uint32_t group_id;
+	uint32_t size;
 	struct profiling_msr_op *msrop = NULL;
 	struct sep_state *ss = &get_cpu_var(profiling_info.sep_state);
 
@@ -116,22 +117,21 @@ static void profiling_enable_pmu(void)
 		if (ss->vmexit_msr_cnt == 0) {
 			struct acrn_vcpu *vcpu = get_ever_run_vcpu(get_cpu_id());
 
-			ss->vmexit_msr_cnt = 1 + MSR_AREA_COUNT;
-			ss->vmexit_msr_list[0].msr_num
+			size = sizeof(struct msr_store_entry) * MAX_HV_MSR_LIST_NUM;
+			(void)memcpy_s(ss->vmexit_msr_list, size, vcpu->arch.msr_area.host, size);
+			ss->vmexit_msr_cnt = MAX_HV_MSR_LIST_NUM;
+
+			ss->vmexit_msr_list[MAX_HV_MSR_LIST_NUM].msr_num
 				= MSR_IA32_DEBUGCTL;
-			ss->vmexit_msr_list[0].value
+			ss->vmexit_msr_list[MAX_HV_MSR_LIST_NUM].value
 				= ss->guest_debugctl_value &
 					VALID_DEBUGCTL_BIT_MASK;
-
-			for (i = 0; i < MSR_AREA_COUNT; i++) {
-				ss->vmexit_msr_list[i + 1].msr_num = vcpu->arch.msr_area.host[i].msr_num;
-				ss->vmexit_msr_list[i + 1].value = vcpu->arch.msr_area.host[i].value;
-			}
+			ss->vmexit_msr_cnt++;
 
 			exec_vmwrite64(VMX_EXIT_MSR_LOAD_ADDR_FULL,
 				hva2hpa(ss->vmexit_msr_list));
 			exec_vmwrite32(VMX_EXIT_MSR_LOAD_COUNT,
-				(uint64_t)ss->vmexit_msr_cnt);
+				ss->vmexit_msr_cnt);
 		}
 
 		/* VMCS GUEST field */
@@ -182,9 +182,8 @@ static void profiling_disable_pmu(void)
 			/* Restore the msr exit loading list of HV */
 			struct acrn_vcpu *vcpu = get_ever_run_vcpu(get_cpu_id());
 
-			exec_vmwrite64(VMX_EXIT_MSR_LOAD_ADDR_FULL, (uint64_t)vcpu->arch.msr_area.host);
-			exec_vmwrite32(VMX_EXIT_MSR_LOAD_COUNT, MSR_AREA_COUNT);
-
+			exec_vmwrite64(VMX_EXIT_MSR_LOAD_ADDR_FULL, hva2hpa(vcpu->arch.msr_area.host));
+			exec_vmwrite32(VMX_EXIT_MSR_LOAD_COUNT, MAX_HV_MSR_LIST_NUM);
 			ss->vmexit_msr_cnt = 0;
 		}
 
