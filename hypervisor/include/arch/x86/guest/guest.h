@@ -70,8 +70,6 @@
 #define LDTR_AR                         (0x0082U) /* LDT, type must be 2, refer to SDM Vol3 26.3.1.2 */
 #define TR_AR                           (0x008bU) /* TSS (busy), refer to SDM Vol3 26.3.1.2 */
 
-void prepare_sos_vm_memmap(struct acrn_vm *vm);
-
 /* Use # of paging level to identify paging mode */
 enum vm_paging_mode {
 	PAGING_MODE_0_LEVEL = 0U,	/* Flat */
@@ -84,8 +82,6 @@ enum vm_paging_mode {
 /*
  * VM related APIs
  */
-uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask);
-
 int32_t gva2gpa(struct acrn_vcpu *vcpu, uint64_t gva, uint64_t *gpa, uint32_t *err_code);
 
 enum vm_paging_mode get_vcpu_paging_mode(struct acrn_vcpu *vcpu);
