@@ -77,16 +77,12 @@ static bool vcpu_pending_request(struct acrn_vcpu *vcpu)
 {
 	struct acrn_vlapic *vlapic;
 	uint32_t vector = 0U;
-	int32_t ret = 0;
 
 	/* Query vLapic to get vector to inject */
 	vlapic = vcpu_vlapic(vcpu);
-	ret = vlapic_pending_intr(vlapic, &vector);
 
-	/* we need to check and raise request if we have pending event
-	 * in LAPIC IRR
-	 */
-	if (ret != 0) {
+	/* check and raise request if we have a deliverable irq in LAPIC IRR */
+	if (vlapic_find_deliverable_intr(vlapic, &vector)) {
 		/* we have pending IRR */
 		vcpu_make_request(vcpu, ACRN_REQUEST_EVENT);
 	}
@@ -124,8 +120,7 @@ static int32_t vcpu_inject_vlapic_int(struct acrn_vcpu *vcpu)
 	uint32_t vector = 0U;
 	int32_t ret = 0;
 
-	ret = vlapic_pending_intr(vlapic, &vector);
-	if (ret != 0) {
+	if (vlapic_find_deliverable_intr(vlapic, &vector)) {
 		/*
 		 * From the Intel SDM, Volume 3, 6.3.2 Section "Maskable
 		 * Hardware Interrupts":
@@ -140,7 +135,7 @@ static int32_t vcpu_inject_vlapic_int(struct acrn_vcpu *vcpu)
 			exec_vmwrite32(VMX_ENTRY_INT_INFO_FIELD, VMX_INT_INFO_VALID |
 				(vector & 0xFFU));
 
-			vlapic_intr_accepted(vlapic, vector);
+			vlapic_get_deliverable_intr(vlapic, vector);
 			ret = 1;
 		}
 	}
