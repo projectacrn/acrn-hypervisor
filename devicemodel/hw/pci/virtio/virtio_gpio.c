@@ -102,6 +102,64 @@ static FILE *dbg_file;
 /* make virtio gpio mediator a singleton mode */
 static bool virtio_gpio_is_active;
 
+/* Uses the same packed config format as generic pinconf. */
+#define PIN_CONF_UNPACKED(p) ((unsigned long) p & 0xffUL)
+enum pin_config_param {
+	PIN_CONFIG_BIAS_BUS_HOLD,
+	PIN_CONFIG_BIAS_DISABLE,
+	PIN_CONFIG_BIAS_HIGH_IMPEDANCE,
+	PIN_CONFIG_BIAS_PULL_DOWN,
+	PIN_CONFIG_BIAS_PULL_PIN_DEFAULT,
+	PIN_CONFIG_BIAS_PULL_UP,
+	PIN_CONFIG_DRIVE_OPEN_DRAIN,
+	PIN_CONFIG_DRIVE_OPEN_SOURCE,
+	PIN_CONFIG_DRIVE_PUSH_PULL,
+	PIN_CONFIG_DRIVE_STRENGTH,
+	PIN_CONFIG_INPUT_DEBOUNCE,
+	PIN_CONFIG_INPUT_ENABLE,
+	PIN_CONFIG_INPUT_SCHMITT,
+	PIN_CONFIG_INPUT_SCHMITT_ENABLE,
+	PIN_CONFIG_LOW_POWER_MODE,
+	PIN_CONFIG_OUTPUT_ENABLE,
+	PIN_CONFIG_OUTPUT,
+	PIN_CONFIG_POWER_SOURCE,
+	PIN_CONFIG_SLEEP_HARDWARE_STATE,
+	PIN_CONFIG_SLEW_RATE,
+	PIN_CONFIG_END = 0x7F,
+	PIN_CONFIG_MAX = 0xFF,
+};
+
+enum virtio_gpio_request_command {
+	GPIO_REQ_SET_VALUE		= 0,
+	GPIO_REQ_GET_VALUE		= 1,
+	GPIO_REQ_INPUT_DIRECTION	= 2,
+	GPIO_REQ_OUTPUT_DIRECTION	= 3,
+	GPIO_REQ_GET_DIRECTION		= 4,
+	GPIO_REQ_SET_CONFIG		= 5,
+
+	GPIO_REQ_MAX
+};
+
+struct virtio_gpio_request {
+	uint8_t	cmd;
+	uint8_t	offset;
+	uint64_t	data;
+} __attribute__((packed));
+
+struct virtio_gpio_response {
+	int8_t	err;
+	uint8_t	data;
+} __attribute__((packed));
+
+struct virtio_gpio_info {
+	struct virtio_gpio_request	req;
+	struct virtio_gpio_response	rsp;
+} __attribute__((packed));
+
+struct virtio_gpio_data {
+	char	name[32];
+} __attribute__((packed));
+
 struct virtio_gpio_config {
 	uint16_t	base;	/* base number */
 	uint16_t	ngpio;	/* number of gpios */
@@ -167,6 +225,34 @@ native_gpio_update_line_info(struct gpio_line *line)
 	strncpy(line->name, info.name, sizeof(line->name) - 1);
 }
 
+static void
+native_gpio_close_chip(struct native_gpio_chip *chip)
+{
+	if (chip) {
+		memset(chip->name, 0, sizeof(chip->name));
+		memset(chip->label, 0, sizeof(chip->label));
+		memset(chip->dev_name, 0, sizeof(chip->dev_name));
+		if (chip->fd > 0) {
+			close(chip->fd);
+			chip->fd = -1;
+		}
+		if (chip->lines) {
+			free(chip->lines);
+			chip->lines = NULL;
+		}
+		chip->ngpio = 0;
+	}
+}
+
+static void
+native_gpio_close_line(struct gpio_line *line)
+{
+	if (line->fd > 0) {
+		close(line->fd);
+		line->fd = -1;
+	}
+}
+
 static int
 native_gpio_open_line(struct gpio_line *line, unsigned int flags,
 		unsigned int value)
@@ -179,6 +265,14 @@ native_gpio_open_line(struct gpio_line *line, unsigned int flags,
 	req.lines = 1;
 	strncpy(req.consumer_label, "acrn_dm", sizeof(req.consumer_label) - 1);
 	if (flags) {
+
+		/*
+		 * before setting a new flag, it needs to try to close the fd
+		 * that has been opened first, otherwise it will not be ioctl
+		 * successfully.
+		 */
+		native_gpio_close_line(line);
+
 		req.flags = flags;
 		if (flags & GPIOHANDLE_REQUEST_OUTPUT)
 			req.default_values[0] = value;
@@ -191,7 +285,160 @@ native_gpio_open_line(struct gpio_line *line, unsigned int flags,
 	}
 
 	line->fd = req.fd;
+	return rc;
+}
+
+static int
+gpio_set_value(struct virtio_gpio *gpio, unsigned int offset,
+		unsigned int value)
+{
+	struct gpio_line *line;
+	struct gpiohandle_data data;
+	int rc;
+
+	line = gpio->vlines[offset];
+	if (line->busy || line->fd < 0) {
+		DPRINTF("failed to set gpio%d value, busy:%d, fd:%d\n",
+				offset, line->busy, line->fd);
+		return -1;
+	}
+
+	memset(&data, 0, sizeof(data));
+	data.values[0] = value;
+	rc = ioctl(line->fd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &data);
+	if (rc < 0) {
+		DPRINTF("ioctl GPIOHANDLE_SET_LINE_VALUES_IOCTL error %s\n",
+				strerror(errno));
+		return -1;
+	}
 	return 0;
+}
+
+static int
+gpio_get_value(struct virtio_gpio *gpio, unsigned int offset)
+{
+	struct gpio_line *line;
+	struct gpiohandle_data data;
+	int rc;
+
+	line = gpio->vlines[offset];
+	if (line->busy || line->fd < 0) {
+		DPRINTF("failed to get gpio%d value, busy %d, fd %d\n",
+				offset, line->busy, line->fd);
+		return -1;
+	}
+
+	memset(&data, 0, sizeof(data));
+	rc = ioctl(line->fd, GPIOHANDLE_GET_LINE_VALUES_IOCTL, &data);
+	if (rc < 0) {
+		DPRINTF("ioctl GPIOHANDLE_GET_LINE_VALUES_IOCTL error %s\n",
+				strerror(errno));
+		return -1;
+	}
+	return data.values[0];
+}
+
+static int
+gpio_set_direction_input(struct virtio_gpio *gpio, unsigned int offset)
+{
+	struct gpio_line *line;
+
+	line = gpio->vlines[offset];
+	return native_gpio_open_line(line, GPIOHANDLE_REQUEST_INPUT, 0);
+}
+
+static int
+gpio_set_direction_output(struct virtio_gpio *gpio, unsigned int offset,
+		int value)
+{
+	struct gpio_line *line;
+
+	line = gpio->vlines[offset];
+	return native_gpio_open_line(line, GPIOHANDLE_REQUEST_OUTPUT, value);
+}
+
+static int
+gpio_get_direction(struct virtio_gpio *gpio, unsigned int offset)
+{
+	struct gpio_line *line;
+
+	line = gpio->vlines[offset];
+	native_gpio_update_line_info(line);
+	return line->dir;
+}
+
+static int
+gpio_set_config(struct virtio_gpio *gpio, unsigned int offset,
+		unsigned long config)
+{
+	struct gpio_line *line;
+
+	line = gpio->vlines[offset];
+
+	/*
+	 * gpio userspace API can only provide GPIOLINE_FLAG_OPEN_DRAIN
+	 * and GPIOLINE_FLAG_OPEN_SOURCE settings currenlty, other
+	 * settings will return an success.
+	 */
+	config = PIN_CONF_UNPACKED(config);
+	switch (config) {
+	case PIN_CONFIG_DRIVE_OPEN_DRAIN:
+		config = GPIOLINE_FLAG_OPEN_DRAIN;
+		break;
+	case PIN_CONFIG_DRIVE_OPEN_SOURCE:
+		config = GPIOLINE_FLAG_OPEN_SOURCE;
+		break;
+	default:
+		return 0;
+	}
+
+	return native_gpio_open_line(line, config, 0);
+}
+
+static void
+gpio_request_handler(struct virtio_gpio *gpio, struct virtio_gpio_request *req,
+		struct virtio_gpio_response *rsp)
+{
+	int rc;
+
+	if (req->cmd >= GPIO_REQ_MAX || req->offset >= gpio->nvline) {
+		DPRINTF("discards the gpio request, command:%u, offset:%u\n",
+				req->cmd, req->offset);
+		rsp->err = -1;
+		return;
+	}
+
+	switch (req->cmd) {
+	case GPIO_REQ_SET_VALUE:
+		rc = gpio_set_value(gpio, req->offset, req->data);
+		break;
+	case GPIO_REQ_GET_VALUE:
+		rc = gpio_get_value(gpio, req->offset);
+		if (rc >= 0)
+			rsp->data = rc;
+		break;
+	case GPIO_REQ_OUTPUT_DIRECTION:
+		rc = gpio_set_direction_output(gpio, req->offset,
+				req->data);
+		break;
+	case GPIO_REQ_INPUT_DIRECTION:
+		rc = gpio_set_direction_input(gpio, req->offset);
+		break;
+	case GPIO_REQ_GET_DIRECTION:
+		rc = gpio_get_direction(gpio, req->offset);
+		if (rc >= 0)
+			rsp->data = rc;
+		break;
+	case GPIO_REQ_SET_CONFIG:
+		rc = gpio_set_config(gpio, req->offset, req->data);
+		break;
+	default:
+		DPRINTF("invalid gpio request command:%d\n", req->cmd);
+		rc = -1;
+		break;
+	}
+
+	rsp->err = rc < 0 ? -1 : 0;
 }
 
 static void virtio_gpio_reset(void *vdev)
@@ -229,9 +476,46 @@ static struct virtio_ops virtio_gpio_ops = {
 };
 
 static void
-virtio_gpio_proc(struct virtio_gpio *gpio, struct iovec *iov, uint16_t flag)
+virtio_gpio_proc(struct virtio_gpio *gpio, struct iovec *iov, int n)
 {
-	/* Implemented in the subsequent patch */
+	struct virtio_gpio_data *data;
+	struct virtio_gpio_request *req;
+	struct virtio_gpio_response *rsp;
+	struct gpio_line *line;
+	int i, len;
+
+	if (n == 1) { /* provide gpio names for front-end driver */
+		data = iov[0].iov_base;
+		len = iov[0].iov_len;
+		assert(len == gpio->nvline * sizeof(*data));
+
+		for (i = 0; i < gpio->nvline; i++) {
+			line = gpio->vlines[i];
+
+			/*
+			 * if the user provides the name of gpios in the
+			 * command line paremeter, then provide it to UOS,
+			 * otherwise provide the physical name of gpio to UOS.
+			 */
+			if (strlen(line->vname))
+				strncpy(data[i].name, line->vname,
+						sizeof(data[0].name) - 1);
+			else if (strlen(line->name))
+				strncpy(data[i].name, line->name,
+						sizeof(data[0].name) - 1);
+		}
+	} else if (n == 2) { /* handle gpio operations requests */
+		req = iov[0].iov_base;
+		len = iov[0].iov_len;
+		assert(len == sizeof(*req));
+
+		rsp = iov[1].iov_base;
+		len = iov[1].iov_len;
+		assert(len == sizeof(*rsp));
+
+		gpio_request_handler(gpio, req, rsp);
+	} else
+		DPRINTF("virtio gpio: number of buffer error %d\n", n);
 }
 
 static void
@@ -317,25 +601,6 @@ fail:
 	chip->fd = -1;
 	chip->ngpio = 0;
 	return -1;
-}
-
-static void
-native_gpio_close_chip(struct native_gpio_chip *chip)
-{
-	if (chip) {
-		memset(chip->name, 0, sizeof(chip->name));
-		memset(chip->label, 0, sizeof(chip->label));
-		memset(chip->dev_name, 0, sizeof(chip->dev_name));
-		if (chip->fd > 0) {
-			close(chip->fd);
-			chip->fd = -1;
-		}
-		if (chip->lines) {
-			free(chip->lines);
-			chip->lines = NULL;
-		}
-		chip->ngpio = 0;
-	}
 }
 
 static int
