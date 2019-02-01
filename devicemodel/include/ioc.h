@@ -79,6 +79,8 @@
 #define CBC_WK_RSN_DOR	(1 << 11)	/* CBC wakeup reason field cardoor */
 #define CBC_WK_RSN_FS5	(1 << 22)	/* CBC wakeup reason field force S5 */
 #define CBC_WK_RSN_SOC	(1 << 23)	/* CBC wakeup reason field soc */
+/* CBC wakeup reason field debug channel */
+#define CBC_WK_RSN_DGB  (1 << 24)
 
 /* CBC wakeup reason filed suspend or shutdown */
 #define CBC_WK_RSN_SHUTDOWN	(0)
