@@ -148,8 +148,8 @@
 /* 32-bit host-state fields */
 #define VMX_HOST_IA32_SYSENTER_CS  0x00004c00U
 /* natural-width control fields */
-#define VMX_CR0_MASK     0x00006000U
-#define VMX_CR4_MASK     0x00006002U
+#define VMX_CR0_GUEST_HOST_MASK     0x00006000U
+#define VMX_CR4_GUEST_HOST_MASK     0x00006002U
 #define VMX_CR0_READ_SHADOW    0x00006004U
 #define VMX_CR4_READ_SHADOW    0x00006006U
 #define VMX_CR3_TARGET_0    0x00006008U
