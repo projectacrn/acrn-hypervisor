@@ -10,6 +10,7 @@
 #include <vpci.h>
 #include <page.h>
 #include <cpu_caps.h>
+#include <e820.h>
 
 #ifdef CONFIG_PARTITION_MODE
 #include <mptable.h>
@@ -132,6 +133,8 @@ struct acrn_vm {
 	struct vm_hw_info hw;	/* Reference to this VM's HW information */
 	struct vm_sw_info sw;	/* Reference to SW associated with this VM */
 	struct vm_pm_info pm;	/* Reference to this VM's arch information */
+	uint32_t e820_entry_num;
+	struct e820_entry *e820_entries;
 	uint16_t vm_id;		    /* Virtual machine identifier */
 	enum vm_state state;	/* VM state */
 	struct acrn_vuart vuart;		/* Virtual UART */
@@ -291,6 +294,15 @@ struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
 struct acrn_vm *get_sos_vm(void);
 
 #ifdef CONFIG_PARTITION_MODE
+/*
+ * Default e820 mem map:
+ *
+ * Assumption is every VM launched by ACRN in partition mode uses 2G of RAM.
+ * there is reserved memory of 64K for MPtable and PCI hole of 512MB
+ */
+#define NUM_E820_ENTRIES        5U
+extern const struct e820_entry ve820_entry[NUM_E820_ENTRIES];
+
 struct vm_config_arraies {
 	int32_t                     num_vm_config;
 	struct acrn_vm_config   vm_config_array[CONFIG_MAX_VM_NUM];

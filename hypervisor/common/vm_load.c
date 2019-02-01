@@ -23,6 +23,25 @@ static void prepare_bsp_gdt(struct acrn_vm *vm)
 	return;
 }
 
+/**
+ * @pre zp != NULL && vm != NULL
+ */
+static uint32_t create_zeropage_e820(struct zero_page *zp, const struct acrn_vm *vm)
+{
+	uint32_t entry_num = vm->e820_entry_num;
+	struct e820_entry *zp_e820 = zp->entries;
+	struct e820_entry *vm_e820 = vm->e820_entries;
+
+	if ((zp_e820 == NULL) || (vm_e820 == NULL) || (entry_num == 0U) || (entry_num > E820_MAX_ENTRIES)) {
+		pr_err("e820 create error");
+		entry_num = 0U;
+	} else {
+		(void)memcpy_s((void *)zp_e820, entry_num * sizeof(struct e820_entry),
+			(void *)vm_e820, entry_num * sizeof(struct e820_entry));
+	}
+	return entry_num;
+}
+
 static uint64_t create_zero_page(struct acrn_vm *vm)
 {
 	struct zero_page *zeropage;
@@ -63,7 +82,7 @@ static uint64_t create_zero_page(struct acrn_vm *vm)
 	zeropage->hdr.load_flags |= (1U << 5U);	/* quiet */
 
 	/* Create/add e820 table entries in zeropage */
-	zeropage->e820_nentries = (uint8_t)create_e820_table(zeropage->entries);
+	zeropage->e820_nentries = (uint8_t)create_zeropage_e820(zeropage, vm);
 	clac();
 
 	/* Return Physical Base Address of zeropage */

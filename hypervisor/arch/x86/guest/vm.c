@@ -109,7 +109,91 @@ uint16_t get_vm_pcpu_nums(struct acrn_vm_config *vm_config)
 	}
 	return pcpu_num;
 }
+
+/**
+ * @pre vm != NULL
+ */
+static void create_prelaunched_vm_e820(struct acrn_vm *vm)
+{
+	vm->e820_entry_num = NUM_E820_ENTRIES;
+	vm->e820_entries = (struct e820_entry *)ve820_entry;
+}
 #endif
+
+/**
+ * before boot sos_vm(service OS), call it to hide the HV RAM entry in e820 table from sos_vm
+ *
+ * @pre vm != NULL && entry != NULL && p_e820_mem != NULL
+ */
+static void create_sos_vm_e820(struct acrn_vm *vm)
+{
+	uint32_t i;
+	uint64_t entry_start;
+	uint64_t entry_end;
+	uint64_t hv_start_pa = get_hv_image_base();
+	uint64_t hv_end_pa  = hv_start_pa + CONFIG_HV_RAM_SIZE;
+	uint32_t entries_count = get_e820_entries_count();
+	struct e820_entry *entry, new_entry = {0};
+	struct e820_entry *p_e820 = (struct e820_entry *)get_e820_entry();
+	struct e820_mem_params *p_e820_mem = (struct e820_mem_params *)get_e820_mem_info();
+
+	/* hypervisor mem need be filter out from e820 table
+	 * it's hv itself + other hv reserved mem like vgt etc
+	 */
+	for (i = 0U; i < entries_count; i++) {
+		entry = p_e820 + i;
+		entry_start = entry->baseaddr;
+		entry_end = entry->baseaddr + entry->length;
+
+		/* No need handle in these cases*/
+		if ((entry->type != E820_TYPE_RAM) || (entry_end <= hv_start_pa) || (entry_start >= hv_end_pa)) {
+			continue;
+		}
+
+		/* filter out hv mem and adjust length of this entry*/
+		if ((entry_start < hv_start_pa) && (entry_end <= hv_end_pa)) {
+			entry->length = hv_start_pa - entry_start;
+			continue;
+		}
+
+		/* filter out hv mem and need to create a new entry*/
+		if ((entry_start < hv_start_pa) && (entry_end > hv_end_pa)) {
+			entry->length = hv_start_pa - entry_start;
+			new_entry.baseaddr = hv_end_pa;
+			new_entry.length = entry_end - hv_end_pa;
+			new_entry.type = E820_TYPE_RAM;
+			continue;
+		}
+
+		/* This entry is within the range of hv mem
+		 * change to E820_TYPE_RESERVED
+		 */
+		if ((entry_start >= hv_start_pa) && (entry_end <= hv_end_pa)) {
+			entry->type = E820_TYPE_RESERVED;
+			continue;
+		}
+
+		if ((entry_start >= hv_start_pa) && (entry_start < hv_end_pa) && (entry_end > hv_end_pa)) {
+			entry->baseaddr = hv_end_pa;
+			entry->length = entry_end - hv_end_pa;
+			continue;
+		}
+	}
+
+	if (new_entry.length > 0UL) {
+		entries_count++;
+		ASSERT(entries_count <= E820_MAX_ENTRIES, "e820 entry overflow");
+		entry = p_e820 + entries_count - 1;
+		entry->baseaddr = new_entry.baseaddr;
+		entry->length = new_entry.length;
+		entry->type = new_entry.type;
+	}
+
+	p_e820_mem->total_mem_size -= CONFIG_HV_RAM_SIZE;
+
+	vm->e820_entry_num = entries_count;
+	vm->e820_entries = p_e820;
+}
 
 /**
  * @param[inout] vm pointer to a vm descriptor
@@ -127,8 +211,8 @@ static void prepare_sos_vm_memmap(struct acrn_vm *vm)
 	uint64_t *pml4_page = (uint64_t *)vm->arch_vm.nworld_eptp;
 
 	const struct e820_entry *entry;
-	uint32_t entries_count = get_e820_entries_count();
-	const struct e820_entry *p_e820 = get_e820_entry();
+	uint32_t entries_count = vm->e820_entry_num;
+	struct e820_entry *p_e820 = vm->e820_entries;
 	const struct e820_mem_params *p_e820_mem_info = get_e820_mem_info();
 
 	pr_dbg("sos_vm: bottom memory - 0x%llx, top memory - 0x%llx\n",
@@ -188,11 +272,10 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 	vm->arch_vm.nworld_eptp = vm->arch_vm.ept_mem_ops.get_pml4_page(vm->arch_vm.ept_mem_ops.info);
 	sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp);
 
-	/* Only for SOS: Configure VM software information */
-	/* For UOS: This VM software information is configure in DM */
 	if (is_sos_vm(vm)) {
+		/* Only for SOS_VM */
 		vm->snoopy_mem = false;
-		rebuild_sos_vm_e820();
+		create_sos_vm_e820(vm);
 		prepare_sos_vm_memmap(vm);
 
 		status = init_vm_boot_info(vm);
@@ -203,7 +286,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		}
 
 	} else {
-		/* populate UOS vm fields according to vm_config */
+		/* For PRE_LAUNCHED_VM and NORMAL_VM */
 		if ((vm_config->guest_flags & SECURE_WORLD_ENABLED) != 0U) {
 			vm->sworld_control.flag.supported = 1U;
 		}
@@ -222,6 +305,7 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 		(void)memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
 			&vm_config->GUID[0], sizeof(vm_config->GUID));
 #ifdef CONFIG_PARTITION_MODE
+		create_prelaunched_vm_e820(vm);
 		ept_mr_add(vm, (uint64_t *)vm->arch_vm.nworld_eptp,
 			vm_config->memory.start_hpa, 0UL, vm_config->memory.size,
 			EPT_RWX|EPT_WB);

@@ -51,71 +51,6 @@ static void obtain_e820_mem_info(void)
 	}
 }
 
-/* before boot sos_vm(service OS), call it to hide the HV RAM entry in e820 table from sos_vm */
-void rebuild_sos_vm_e820(void)
-{
-	uint32_t i;
-	uint64_t entry_start;
-	uint64_t entry_end;
-	uint64_t hv_start_pa = get_hv_image_base();
-	uint64_t hv_end_pa  = hv_start_pa + CONFIG_HV_RAM_SIZE;
-	struct e820_entry *entry, new_entry = {0};
-
-	/* hypervisor mem need be filter out from e820 table
-	 * it's hv itself + other hv reserved mem like vgt etc
-	 */
-	for (i = 0U; i < e820_entries_count; i++) {
-		entry = &e820[i];
-		entry_start = entry->baseaddr;
-		entry_end = entry->baseaddr + entry->length;
-
-		/* No need handle in these cases*/
-		if ((entry->type != E820_TYPE_RAM) || (entry_end <= hv_start_pa) || (entry_start >= hv_end_pa)) {
-			continue;
-		}
-
-		/* filter out hv mem and adjust length of this entry*/
-		if ((entry_start < hv_start_pa) && (entry_end <= hv_end_pa)) {
-			entry->length = hv_start_pa - entry_start;
-			continue;
-		}
-
-		/* filter out hv mem and need to create a new entry*/
-		if ((entry_start < hv_start_pa) && (entry_end > hv_end_pa)) {
-			entry->length = hv_start_pa - entry_start;
-			new_entry.baseaddr = hv_end_pa;
-			new_entry.length = entry_end - hv_end_pa;
-			new_entry.type = E820_TYPE_RAM;
-			continue;
-		}
-
-		/* This entry is within the range of hv mem
-		 * change to E820_TYPE_RESERVED
-		 */
-		if ((entry_start >= hv_start_pa) && (entry_end <= hv_end_pa)) {
-			entry->type = E820_TYPE_RESERVED;
-			continue;
-		}
-
-		if ((entry_start >= hv_start_pa) && (entry_start < hv_end_pa) && (entry_end > hv_end_pa)) {
-			entry->baseaddr = hv_end_pa;
-			entry->length = entry_end - hv_end_pa;
-			continue;
-		}
-	}
-
-	if (new_entry.length > 0UL) {
-		e820_entries_count++;
-		ASSERT(e820_entries_count <= E820_MAX_ENTRIES, "e820 entry overflow");
-		entry = &e820[e820_entries_count - 1];
-		entry->baseaddr = new_entry.baseaddr;
-		entry->length = new_entry.length;
-		entry->type = new_entry.type;
-	}
-
-	e820_mem.total_mem_size -= CONFIG_HV_RAM_SIZE;
-}
-
 /* get some RAM below 1MB in e820 entries, hide it from sos_vm, return its start address */
 uint64_t e820_alloc_low_memory(uint32_t size_arg)
 {
@@ -225,33 +160,3 @@ const struct e820_mem_params *get_e820_mem_info(void)
 {
 	return &e820_mem;
 }
-
-#ifdef CONFIG_PARTITION_MODE
-uint32_t create_e820_table(struct e820_entry *param_e820)
-{
-	uint32_t i;
-
-	for (i = 0U; i < NUM_E820_ENTRIES; i++) {
-		param_e820[i].baseaddr = ve820_entry[i].baseaddr;
-		param_e820[i].length = ve820_entry[i].length;
-		param_e820[i].type = ve820_entry[i].type;
-	}
-
-	return NUM_E820_ENTRIES;
-}
-#else
-uint32_t create_e820_table(struct e820_entry *param_e820)
-{
-	uint32_t i;
-
-	ASSERT(e820_entries_count > 0U, "e820 should be inited");
-
-	for (i = 0U; i < e820_entries_count; i++) {
-		param_e820[i].baseaddr = e820[i].baseaddr;
-		param_e820[i].length = e820[i].length;
-		param_e820[i].type = e820[i].type;
-	}
-
-	return e820_entries_count;
-}
-#endif
