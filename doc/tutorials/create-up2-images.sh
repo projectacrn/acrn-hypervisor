@@ -124,9 +124,9 @@ create_uos_images() {
     echo mount laag_rootfs/boot >> .cleanup
 
     kernel_version=`readlink laag_rootfs/usr/lib/kernel/default-iot-lts2018 | awk -F '2018.' '{print $2}'`
-    cmdline=`ls laag_rootfs/usr/lib/kernel | grep cmdline-$kernel_version`
 
-    iasimage create -o laag_rootfs/boot/iasImage -i 0x30300 -d tmp/bxt_dbg_priv_key.pem laag_rootfs/usr/lib/kernel/$cmdline laag_rootfs/usr/lib/kernel/default-iot-lts2018
+    echo "" > tmp/uos_cmdline
+    iasimage create -o laag_rootfs/boot/iasImage -i 0x30300 -d tmp/bxt_dbg_priv_key.pem tmp/uos_cmdline laag_rootfs/usr/lib/kernel/default-iot-lts2018
 
 }
 
