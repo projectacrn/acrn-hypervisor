@@ -600,6 +600,16 @@ void schedule_vcpu(struct acrn_vcpu *vcpu);
 int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id);
 
 /**
+ * @brief get physical destination cpu mask
+ *
+ * get the corresponding physical destination cpu mask for the vm and virtual destination cpu mask
+ *
+ * @param[in] vm pointer to vm data structure
+ * @param[in] vdmask virtual destination cpu mask
+ */
+uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask);
+
+/**
  * @}
  */
 /* End of acrn_vcpu */

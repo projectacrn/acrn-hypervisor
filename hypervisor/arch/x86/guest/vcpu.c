@@ -676,3 +676,19 @@ int32_t prepare_vcpu(struct acrn_vm *vm, uint16_t pcpu_id)
 
 	return ret;
 }
+
+uint64_t vcpumask2pcpumask(struct acrn_vm *vm, uint64_t vdmask)
+{
+	uint16_t vcpu_id;
+	uint64_t dmask = 0UL;
+	struct acrn_vcpu *vcpu;
+
+	for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
+		if ((vdmask & (1UL << vcpu_id)) != 0UL) {
+			vcpu = vcpu_from_vid(vm, vcpu_id);
+			bitmap_set_nolock(vcpu->pcpu_id, &dmask);
+		}
+	}
+
+	return dmask;
+}

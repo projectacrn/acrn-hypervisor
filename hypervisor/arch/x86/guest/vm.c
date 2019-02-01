@@ -9,6 +9,7 @@
 #include <multiboot.h>
 #include <e820.h>
 #include <vtd.h>
+#include <reloc.h>
 
 vm_sw_loader_t vm_sw_loader;
 
@@ -109,6 +110,59 @@ uint16_t get_vm_pcpu_nums(struct acrn_vm_config *vm_config)
 	return pcpu_num;
 }
 #endif
+
+/**
+ * @param[inout] vm pointer to a vm descriptor
+ *
+ * @retval 0 on success
+ *
+ * @pre vm != NULL
+ * @pre is_sos_vm(vm) == true
+ */
+static void prepare_sos_vm_memmap(struct acrn_vm *vm)
+{
+	uint32_t i;
+	uint64_t attr_uc = (EPT_RWX | EPT_UNCACHED);
+	uint64_t hv_hpa;
+	uint64_t *pml4_page = (uint64_t *)vm->arch_vm.nworld_eptp;
+
+	const struct e820_entry *entry;
+	uint32_t entries_count = get_e820_entries_count();
+	const struct e820_entry *p_e820 = get_e820_entry();
+	const struct e820_mem_params *p_e820_mem_info = get_e820_mem_info();
+
+	pr_dbg("sos_vm: bottom memory - 0x%llx, top memory - 0x%llx\n",
+		p_e820_mem_info->mem_bottom, p_e820_mem_info->mem_top);
+
+	if (p_e820_mem_info->mem_top > EPT_ADDRESS_SPACE(CONFIG_SOS_RAM_SIZE)) {
+		panic("Please configure SOS_VM_ADDRESS_SPACE correctly!\n");
+	}
+
+	/* create real ept map for all ranges with UC */
+	ept_mr_add(vm, pml4_page, p_e820_mem_info->mem_bottom, p_e820_mem_info->mem_bottom,
+			(p_e820_mem_info->mem_top - p_e820_mem_info->mem_bottom), attr_uc);
+
+	/* update ram entries to WB attr */
+	for (i = 0U; i < entries_count; i++) {
+		entry = p_e820 + i;
+		if (entry->type == E820_TYPE_RAM) {
+			ept_mr_modify(vm, pml4_page, entry->baseaddr, entry->length, EPT_WB, EPT_MT_MASK);
+		}
+	}
+
+	pr_dbg("SOS_VM e820 layout:\n");
+	for (i = 0U; i < entries_count; i++) {
+		entry = p_e820 + i;
+		pr_dbg("e820 table: %d type: 0x%x", i, entry->type);
+		pr_dbg("BaseAddress: 0x%016llx length: 0x%016llx\n", entry->baseaddr, entry->length);
+	}
+
+	/* unmap hypervisor itself for safety
+	 * will cause EPT violation if sos accesses hv memory
+	 */
+	hv_hpa = get_hv_image_base();
+	ept_mr_del(vm, pml4_page, hv_hpa, CONFIG_HV_RAM_SIZE);
+}
 
 /**
  * @pre vm_id < CONFIG_MAX_VM_NUM && vm_config != NULL && rtn_vm != NULL
