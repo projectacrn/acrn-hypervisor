@@ -196,6 +196,10 @@ struct virtio_gpio {
 	struct virtio_gpio_config	config;
 };
 
+static void print_gpio_info(struct virtio_gpio *gpio);
+static void print_virtio_gpio_info(struct virtio_gpio_request *req,
+		struct virtio_gpio_response *rsp, bool in);
+
 static void
 native_gpio_update_line_info(struct gpio_line *line)
 {
@@ -408,6 +412,7 @@ gpio_request_handler(struct virtio_gpio *gpio, struct virtio_gpio_request *req,
 		return;
 	}
 
+	print_virtio_gpio_info(req, rsp, true);
 	switch (req->cmd) {
 	case GPIO_REQ_SET_VALUE:
 		rc = gpio_set_value(gpio, req->offset, req->data);
@@ -439,6 +444,7 @@ gpio_request_handler(struct virtio_gpio *gpio, struct virtio_gpio_request *req,
 	}
 
 	rsp->err = rc < 0 ? -1 : 0;
+	print_virtio_gpio_info(req, rsp, false);
 }
 
 static void virtio_gpio_reset(void *vdev)
@@ -819,6 +825,9 @@ virtio_gpio_init(struct vmctx *ctx, struct pci_vdev *dev, char *opts)
 	virtio_set_io_bar(&gpio->base, 0);
 
 	virtio_gpio_is_active = true;
+
+	/* dump gpio information */
+	print_gpio_info(gpio);
 	return 0;
 
 fail:
@@ -864,5 +873,71 @@ struct pci_vdev_ops pci_ops_virtio_gpio = {
 	.vdev_barwrite	= virtio_pci_write,
 	.vdev_barread	= virtio_pci_read,
 };
+
+static void
+print_gpio_info(struct virtio_gpio *gpio)
+{
+	struct native_gpio_chip *chip;
+	struct gpio_line *line;
+	int i;
+
+	DPRINTF("=== virtual lines(%u) mapping ===\n", gpio->nvline);
+	for (i = 0; i < gpio->nvline; i++) {
+		line = gpio->vlines[i];
+		DPRINTF("%d: (vname %8s, name %8s) <=> %s, gpio=%d\n",
+				i,
+				line->vname,
+				line->name,
+				line->chip->dev_name,
+				line->offset);
+	}
+
+	DPRINTF("=== native gpio chips(%u) info ===\n", gpio->nchip);
+	for (i = 0; i < gpio->nchip; i++) {
+		chip = &gpio->chips[i];
+		DPRINTF("index %d, name %s, dev_name %s, label %s, ngpio %u\n",
+				i,
+				chip->name,
+				chip->dev_name,
+				chip->label,
+				chip->ngpio);
+	}
+}
+
+static void
+print_virtio_gpio_info(struct virtio_gpio_request *req,
+		struct virtio_gpio_response *rsp, bool in)
+{
+	const char *item;
+	const char *const cmd_map[] = {
+		"GPIO_REQ_SET_VALUE",
+		"GPIO_REQ_GET_VALUE",
+		"GPIO_REQ_INPUT_DIRECTION",
+		"GPIO_REQ_OUTPUT_DIRECTION",
+		"GPIO_REQ_GET_DIRECTION",
+		"GPIO_REQ_SET_CONFIG",
+	};
+
+	if (req->cmd == GPIO_REQ_SET_VALUE || req->cmd == GPIO_REQ_GET_VALUE)
+		item = "value";
+	else if (req->cmd == GPIO_REQ_SET_CONFIG)
+		item = "config";
+	else if (req->cmd == GPIO_REQ_GET_DIRECTION)
+		item = "direction";
+	else
+		item = "data";
+	if (in)
+		DPRINTF("<<<< gpio=%u, %s, %s=%lu\n",
+				req->offset,
+				cmd_map[req->cmd],
+				item,
+				req->data);
+	else
+		DPRINTF(">>>> gpio=%u, err=%d, %s=%d\n",
+				req->offset,
+				rsp->err,
+				item,
+				rsp->data);
+}
 
 DEFINE_PCI_DEVTYPE(pci_ops_virtio_gpio);
