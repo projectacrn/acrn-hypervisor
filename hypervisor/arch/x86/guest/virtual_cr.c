@@ -290,7 +290,7 @@ static void vmx_write_cr4(struct acrn_vcpu *vcpu, uint64_t cr4)
 void init_cr0_cr4_host_mask(void)
 {
 	static bool inited = false;
-	static uint64_t cr0_host_mask, cr4_host_mask;
+	static uint64_t cr0_host_owned_bits, cr4_host_owned_bits;
 	uint64_t fixed0, fixed1;
 
 	if (!inited) {
@@ -298,9 +298,9 @@ void init_cr0_cr4_host_mask(void)
 		fixed0 = msr_read(MSR_IA32_VMX_CR0_FIXED0);
 		fixed1 = msr_read(MSR_IA32_VMX_CR0_FIXED1);
 
-		cr0_host_mask = ~(fixed0 ^ fixed1);
+		cr0_host_owned_bits = ~(fixed0 ^ fixed1);
 		/* Add the bit hv wants to trap */
-		cr0_host_mask |= CR0_TRAP_MASK;
+		cr0_host_owned_bits |= CR0_TRAP_MASK;
 		/* CR0 clear PE/PG from always on bits due to "unrestructed guest" feature */
 		cr0_always_on_mask = fixed0 & (~(CR0_PE | CR0_PG));
 		cr0_always_off_mask = ~fixed1;
@@ -314,9 +314,9 @@ void init_cr0_cr4_host_mask(void)
 		fixed0 = msr_read(MSR_IA32_VMX_CR4_FIXED0);
 		fixed1 = msr_read(MSR_IA32_VMX_CR4_FIXED1);
 
-		cr4_host_mask = ~(fixed0 ^ fixed1);
+		cr4_host_owned_bits = ~(fixed0 ^ fixed1);
 		/* Add the bit hv wants to trap */
-		cr4_host_mask |= CR4_TRAP_MASK;
+		cr4_host_owned_bits |= CR4_TRAP_MASK;
 		cr4_always_on_mask = fixed0;
 		/* Record the bit fixed to 0 for CR4, including reserved bits */
 		cr4_always_off_mask = ~fixed1;
@@ -329,14 +329,14 @@ void init_cr0_cr4_host_mask(void)
 		inited = true;
 	}
 
-	exec_vmwrite(VMX_CR0_MASK, cr0_host_mask);
+	exec_vmwrite(VMX_CR0_GUEST_HOST_MASK, cr0_host_owned_bits);
 	/* Output CR0 mask value */
-	pr_dbg("CR0 mask value: 0x%016llx", cr0_host_mask);
+	pr_dbg("CR0 guest-host mask value: 0x%016llx", cr0_host_owned_bits);
 
 
-	exec_vmwrite(VMX_CR4_MASK, cr4_host_mask);
+	exec_vmwrite(VMX_CR4_GUEST_HOST_MASK, cr4_host_owned_bits);
 	/* Output CR4 mask value */
-	pr_dbg("CR4 mask value: 0x%016llx", cr4_host_mask);
+	pr_dbg("CR4 guest-host mask value: 0x%016llx", cr4_host_owned_bits);
 }
 
 uint64_t vcpu_get_cr0(struct acrn_vcpu *vcpu)
@@ -345,7 +345,7 @@ uint64_t vcpu_get_cr0(struct acrn_vcpu *vcpu)
 	struct run_context *ctx = &vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
 	if (bitmap_test_and_set_lock(CPU_REG_CR0, &vcpu->reg_cached) == 0) {
-		mask = exec_vmread(VMX_CR0_MASK);
+		mask = exec_vmread(VMX_CR0_GUEST_HOST_MASK);
 		ctx->cr0 = (exec_vmread(VMX_CR0_READ_SHADOW) & mask) |
 			(exec_vmread(VMX_GUEST_CR0) & (~mask));
 	}
@@ -373,7 +373,7 @@ uint64_t vcpu_get_cr4(struct acrn_vcpu *vcpu)
 	struct run_context *ctx = &vcpu->arch.contexts[vcpu->arch.cur_context].run_ctx;
 
 	if (bitmap_test_and_set_lock(CPU_REG_CR4, &vcpu->reg_cached) == 0) {
-		mask = exec_vmread(VMX_CR4_MASK);
+		mask = exec_vmread(VMX_CR4_GUEST_HOST_MASK);
 		ctx->cr4 = (exec_vmread(VMX_CR4_READ_SHADOW) & mask) |
 			(exec_vmread(VMX_GUEST_CR4) & (~mask));
 	}
