@@ -146,6 +146,7 @@ C_SRCS += arch/x86/configs/sharing_config.c
 else ifeq ($(CONFIG_PARTITION_MODE),y)
 C_SRCS += arch/x86/configs/partition_config.c
 C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/ve820.c
+C_SRCS += arch/x86/configs/$(CONFIG_BOARD)/pt_dev.c
 endif
 
 C_SRCS += boot/acpi.c
