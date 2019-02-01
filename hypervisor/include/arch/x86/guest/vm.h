@@ -313,7 +313,6 @@ struct pcpu_vm_config_mapping {
 	bool is_bsp;
 };
 extern const struct pcpu_vm_config_mapping pcpu_vm_config_map[];
-extern struct vm_config_arraies vm_config_partition;
 
 uint16_t get_vm_pcpu_nums(struct acrn_vm_config *vm_config);
 void vrtc_init(struct acrn_vm *vm);
@@ -324,11 +323,7 @@ void vrtc_init(struct acrn_vm *vm);
  */
 static inline struct acrn_vm_config *get_vm_config(uint16_t vm_id)
 {
-#ifdef CONFIG_PARTITION_MODE
-	return &vm_config_partition.vm_config_array[vm_id];
-#else
 	return &vm_configs[vm_id];
-#endif
 }
 
 static inline bool is_lapic_pt(const struct acrn_vm *vm)
