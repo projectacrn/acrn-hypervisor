@@ -84,7 +84,7 @@ static void ptirq_build_physical_msi(struct acrn_vm *vm, struct ptirq_msi_info *
 	dest = info->vmsi_addr.bits.dest_field;
 	phys = (info->vmsi_addr.bits.dest_mode == MSI_ADDR_DESTMODE_PHYS);
 
-	vlapic_calcdest(vm, &vdmask, dest, phys, false);
+	vlapic_calc_dest(vm, &vdmask, dest, phys, false);
 	pdmask = vcpumask2pcpumask(vm, vdmask);
 
 	/* get physical delivery mode */
@@ -178,7 +178,7 @@ ptirq_build_physical_rte(struct acrn_vm *vm, struct ptirq_remapping_info *entry)
 		/* physical destination cpu mask */
 		phys = (virt_rte.bits.dest_mode == IOAPIC_RTE_DESTMODE_PHY);
 		dest = (uint32_t)virt_rte.bits.dest_field;
-		vlapic_calcdest(vm, &vdmask, dest, phys, false);
+		vlapic_calc_dest(vm, &vdmask, dest, phys, false);
 		pdmask = vcpumask2pcpumask(vm, vdmask);
 
 		/* physical delivery mode */

@@ -122,25 +122,25 @@ uint64_t vlapic_get_cr8(const struct acrn_vlapic *vlapic);
 
 
 /**
- * @brief Get pending virtual interrupts for vLAPIC.
+ * @brief Find a deliverable virtual interrupts for vLAPIC in irr.
  *
  * @param[in]    vlapic Pointer to target vLAPIC data structure
  * @param[inout] vecptr Pointer to vector buffer and will be filled
  *               with eligible vector if any.
  *
- * @retval 0 There is no eligible pending vector.
- * @retval 1 There is pending vector.
+ * @retval false There is no deliverable pending vector.
+ * @retval true There is deliverable vector.
  *
  * @remark The vector does not automatically transition to the ISR as a
  *	   result of calling this function.
  */
-int32_t vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr);
+bool vlapic_find_deliverable_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr);
 
 /**
- * @brief Accept virtual interrupt.
+ * @brief Get a deliverable virtual interrupt from irr to isr.
  *
  * Transition 'vector' from IRR to ISR. This function is called with the
- * vector returned by 'vlapic_pending_intr()' when the guest is able to
+ * vector returned by 'vlapic_find_deliverable_intr()' when the guest is able to
  * accept this interrupt (i.e. RFLAGS.IF = 1 and no conditions exist that
  * block interrupt delivery).
  *
@@ -151,7 +151,7 @@ int32_t vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr);
  *
  * @pre vlapic != NULL
  */
-void vlapic_intr_accepted(struct acrn_vlapic *vlapic, uint32_t vector);
+void vlapic_get_deliverable_intr(struct acrn_vlapic *vlapic, uint32_t vector);
 
 /**
  * @brief Send notification vector to target pCPU.
@@ -224,7 +224,7 @@ int32_t vlapic_set_local_intr(struct acrn_vm *vm, uint16_t vcpu_id_arg, uint32_t
  */
 int32_t vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg);
 
-void vlapic_deliver_intr(struct acrn_vm *vm, bool level, uint32_t dest,
+void vlapic_receive_intr(struct acrn_vm *vm, bool level, uint32_t dest,
 		bool phys, uint32_t delmode, uint32_t vec, bool rh);
 
 uint32_t vlapic_get_apicid(const struct acrn_vlapic *vlapic);
@@ -248,8 +248,8 @@ int32_t apic_access_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t apic_write_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t veoi_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t tpr_below_threshold_vmexit_handler(__unused struct acrn_vcpu *vcpu);
-void vlapic_calcdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys, bool lowprio);
-void vlapic_calcdest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys);
+void vlapic_calc_dest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys, bool lowprio);
+void vlapic_calc_dest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys);
 
 /**
  * @}

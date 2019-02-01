@@ -1026,7 +1026,7 @@ vlapic_trigger_lvt(struct acrn_vlapic *vlapic, uint32_t vector)
  * addressing specified by the (dest, phys, lowprio) tuple.
  */
 void
-vlapic_calcdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys, bool lowprio)
+vlapic_calc_dest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys, bool lowprio)
 {
 	struct acrn_vlapic *vlapic;
 	struct acrn_vlapic *target = NULL;
@@ -1140,7 +1140,7 @@ vlapic_calcdest(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys, b
  * when lapic is passthru.
  */
 void
-vlapic_calcdest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys)
+vlapic_calc_dest_lapic_pt(struct acrn_vm *vm, uint64_t *dmask, uint32_t dest, bool phys)
 {
 	struct acrn_vlapic *vlapic;
 	struct acrn_vcpu *vcpu;
@@ -1319,7 +1319,7 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 
 		switch (shorthand) {
 		case APIC_DEST_DESTFLD:
-			vlapic_calcdest(vlapic->vm, &dmask, dest, phys, false);
+			vlapic_calc_dest(vlapic->vm, &dmask, dest, phys, false);
 			break;
 		case APIC_DEST_SELF:
 			bitmap_set_nolock(vlapic->vcpu->vcpu_id, &dmask);
@@ -1369,26 +1369,26 @@ vlapic_icrlo_write_handler(struct acrn_vlapic *vlapic)
 }
 
 /**
- * @brief Get pending virtual interrupts for vLAPIC.
+ * @brief Find a deliverable virtual interrupts for vLAPIC in irr.
  *
  * @param[in]    vlapic Pointer to target vLAPIC data structure
  * @param[inout] vecptr Pointer to vector buffer and will be filled
  *               with eligible vector if any.
  *
- * @retval 0 There is no eligible pending vector.
- * @retval 1 There is pending vector.
+ * @retval false There is no deliverable pending vector.
+ * @retval true There is deliverable vector.
  *
  * @remark The vector does not automatically transition to the ISR as a
  *	   result of calling this function.
  *	   This function is only for case that APICv/VID is NOT supported.
  */
-int32_t
-vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr)
+bool
+vlapic_find_deliverable_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr)
 {
 	const struct lapic_regs *lapic = &(vlapic->apic_page);
 	uint32_t i, vector, val, bitpos;
 	const struct lapic_reg *irrptr;
-	int32_t	ret = 0;
+	bool ret = false;
 
 	irrptr = &lapic->irr[0];
 
@@ -1403,7 +1403,7 @@ vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr)
 				if (vecptr != NULL) {
 					*vecptr = vector;
 				}
-				ret = 1;
+				ret = true;
 			}
 			break;
 		}
@@ -1412,10 +1412,10 @@ vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr)
 }
 
 /**
- * @brief Accept virtual interrupt.
+ * @brief Get a deliverable virtual interrupt from irr to isr.
  *
  * Transition 'vector' from IRR to ISR. This function is called with the
- * vector returned by 'vlapic_pending_intr()' when the guest is able to
+ * vector returned by 'vlapic_find_deliverable_intr()' when the guest is able to
  * accept this interrupt (i.e. RFLAGS.IF = 1 and no conditions exist that
  * block interrupt delivery).
  *
@@ -1427,7 +1427,7 @@ vlapic_pending_intr(const struct acrn_vlapic *vlapic, uint32_t *vecptr)
  * @pre vlapic != NULL
  */
 void
-vlapic_intr_accepted(struct acrn_vlapic *vlapic, uint32_t vector)
+vlapic_get_deliverable_intr(struct acrn_vlapic *vlapic, uint32_t vector)
 {
 	struct lapic_regs *lapic = &(vlapic->apic_page);
 	struct lapic_reg *irrptr, *isrptr;
@@ -1441,11 +1441,11 @@ vlapic_intr_accepted(struct acrn_vlapic *vlapic, uint32_t vector)
 
 	irrptr = &lapic->irr[0];
 	atomic_clear32(&irrptr[idx].v, 1U << (vector & 0x1fU));
-	vlapic_dump_irr(vlapic, "vlapic_intr_accepted");
+	vlapic_dump_irr(vlapic, "vlapic_get_deliverable_intr");
 
 	isrptr = &lapic->isr[0];
 	isrptr[idx].v |= 1U << (vector & 0x1fU);
-	vlapic_dump_isr(vlapic, "vlapic_intr_accepted");
+	vlapic_dump_isr(vlapic, "vlapic_get_deliverable_intr");
 
 	/*
 	 * Update the PPR
@@ -1842,7 +1842,7 @@ vlapic_set_apicbase(struct acrn_vlapic *vlapic, uint64_t new)
 }
 
 void
-vlapic_deliver_intr(struct acrn_vm *vm, bool level, uint32_t dest, bool phys,
+vlapic_receive_intr(struct acrn_vm *vm, bool level, uint32_t dest, bool phys,
 		uint32_t delmode, uint32_t vec, bool rh)
 {
 	bool lowprio;
@@ -1863,7 +1863,7 @@ vlapic_deliver_intr(struct acrn_vm *vm, bool level, uint32_t dest, bool phys,
 		 * all interrupts originating from the ioapic or MSI specify the
 		 * 'dest' in the legacy xAPIC format.
 		 */
-		vlapic_calcdest(vm, &dmask, dest, phys, lowprio);
+		vlapic_calc_dest(vm, &dmask, dest, phys, lowprio);
 
 		for (vcpu_id = 0U; vcpu_id < vm->hw.created_vcpus; vcpu_id++) {
 			struct acrn_vlapic *vlapic;
@@ -2013,7 +2013,7 @@ vlapic_intr_msi(struct acrn_vm *vm, uint64_t addr, uint64_t msg)
 		dev_dbg(ACRN_DBG_LAPIC, "lapic MSI %s dest %#x, vec %u",
 			phys ? "physical" : "logical", dest, vec);
 
-		vlapic_deliver_intr(vm, LAPIC_TRIG_EDGE, dest, phys, delmode, vec, rh);
+		vlapic_receive_intr(vm, LAPIC_TRIG_EDGE, dest, phys, delmode, vec, rh);
 		ret = 0;
 	} else {
 		dev_dbg(ACRN_DBG_LAPIC, "lapic MSI invalid addr %#lx", address.full);

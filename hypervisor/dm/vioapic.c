@@ -73,7 +73,7 @@ vioapic_generate_intr(struct acrn_vioapic *vioapic, uint32_t pin)
 			}
 			vector = rte.bits.vector;
 			dest = rte.bits.dest_field;
-			vlapic_deliver_intr(vioapic->vm, level, dest, phys, delmode, vector, false);
+			vlapic_receive_intr(vioapic->vm, level, dest, phys, delmode, vector, false);
 		}
 	}
 }
@@ -217,7 +217,7 @@ vioapic_update_eoi_exit(const struct acrn_vioapic *vioapic)
 			} else {
 				dest = (uint32_t)rte.bits.dest_field;
 				phys = (rte.bits.dest_mode == IOAPIC_RTE_DESTMODE_PHY);
-				vlapic_calcdest(vioapic->vm, &mask, dest, phys, false);
+				vlapic_calc_dest(vioapic->vm, &mask, dest, phys, false);
 				
 				for (vcpu_id = ffs64(mask); vcpu_id != INVALID_BIT_INDEX; vcpu_id = ffs64(mask)) {
 					vcpu = vcpu_from_vid(vioapic->vm, vcpu_id);
