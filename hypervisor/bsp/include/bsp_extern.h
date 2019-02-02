@@ -21,8 +21,6 @@
 #include "default_acpi_info.h"
 #include "platform_acpi_info.h"
 
-#define UOS_DEFAULT_START_ADDR   (0x100000000UL)
-
 /* BSP Interfaces */
 void init_bsp(void);
 uint64_t bsp_get_ap_trampoline(void);
