@@ -15,11 +15,6 @@
 #ifdef CONFIG_PARTITION_MODE
 #include <mptable.h>
 #endif
-enum vm_privilege_level {
-	VM_PRIVILEGE_LEVEL_HIGH = 0,
-	VM_PRIVILEGE_LEVEL_MEDIUM,
-	VM_PRIVILEGE_LEVEL_LOW
-};
 
 #define INVALID_VM_ID 0xffffU
 
@@ -302,17 +297,6 @@ struct acrn_vm *get_sos_vm(void);
  */
 #define NUM_E820_ENTRIES        5U
 extern const struct e820_entry ve820_entry[NUM_E820_ENTRIES];
-
-struct vm_config_arraies {
-	int32_t                     num_vm_config;
-	struct acrn_vm_config   vm_config_array[CONFIG_MAX_VM_NUM];
-};
-
-struct pcpu_vm_config_mapping {
-	struct acrn_vm_config *vm_config_ptr;
-	bool is_bsp;
-};
-extern const struct pcpu_vm_config_mapping pcpu_vm_config_map[];
 
 uint16_t get_vm_pcpu_nums(struct acrn_vm_config *vm_config);
 void vrtc_init(struct acrn_vm *vm);

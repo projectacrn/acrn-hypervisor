@@ -224,7 +224,6 @@ C_SRCS += dm/vpci/core.c
 C_SRCS += dm/vpci/vpci.c
 ifeq ($(CONFIG_PARTITION_MODE),y)
 C_SRCS += dm/vmptable.c
-C_SRCS += partition/$(CONFIG_BOARD)/vm_description.c
 C_SRCS += dm/vpci/partition_mode.c
 C_SRCS += dm/vpci/hostbridge.c
 C_SRCS += dm/vpci/pci_pt.c
