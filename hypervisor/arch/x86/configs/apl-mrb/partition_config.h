@@ -37,6 +37,10 @@
 						console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
 						consoleblank=0 tsc=reliable xapic_phys"
 
-extern struct vpci_vdev_array vpci_vdev_array0, vpci_vdev_array1;
+#define VM0_CONFIG_PCI_PTDEV_NUM		2U
+#define VM1_CONFIG_PCI_PTDEV_NUM		3U
+
+extern struct acrn_vm_pci_ptdev_config vm0_pci_ptdevs[VM0_CONFIG_PCI_PTDEV_NUM];
+extern struct acrn_vm_pci_ptdev_config vm1_pci_ptdevs[VM1_CONFIG_PCI_PTDEV_NUM];
 
 #endif /* PARTITION_CONFIG_H */
