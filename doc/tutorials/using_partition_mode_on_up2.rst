@@ -93,7 +93,7 @@ Enable partition mode in ACRN hypervisor
 ****************************************
 
 #. Before building the ACRN hypervisor, you need to figure out the I/O address
-   of the serial port, and the PCI BAR addresses of the SATA controller and
+   of the serial port, and the PCI BDF addresses of the SATA controller and
    the USB controller on your UP2 board.
 
    Enter the following command to get the I/O addresses of the serial ports.
@@ -113,12 +113,10 @@ Enable partition mode in ACRN hypervisor
    The second with ``00:18.1`` is the one on the 40-pin expansion connector.
 
    The following command prints detailed information about all PCI buses
-   and devices in the system. Look up the PCI BAR addresses of the SATA
-   controller and the USB controller, record these addresses (highlighted below) for
-   editing the source code later.
+   and devices in the system.
 
    .. code-block:: none
-     :emphasize-lines: 1,9,10,14,22
+     :emphasize-lines: 1,3,16
 
      $ sudo lspci -vv
      ...
@@ -164,136 +162,142 @@ Enable partition mode in ACRN hypervisor
       Refer to the :ref:`getting-started-building` for more information on how
       to install all the ACRN build dependencies.
 
+#. Prepare VM configurations for UP2 partition mode
+
+   The BOARD specific VM configurations should be under the folder:
+   ``hypervisor/arch/x86/configs/$(CONFIG_BOARD)/``.
+
+   For UP2 board, we can simply copy configurations of apl-mrb to the up2 folder:
+
+   .. code-block:: none
+
+     $ cp hypervisor/arch/x86/configs/apl-mrb/* hypervisor/arch/x86/configs/up2/
+
+#. Configure the partition mode configuration arguments
+
+   The partition mode configuration information is located in header file
+   ``hypervisor/arch/x86/configs/up2/partition_config.h`` and configured by
+   ``VMx_CONFIG_XXXX`` MACROs (where x is the VM id number and XXXX are arguments).
+   The most frequent configure items for end user are:
+
+   ``VMx_CONFIG_NAME``: the VMx name string, must less than 32 bytes;
+
+   ``VMx_CONFIG_PCPU_BITMAP``: assign physical CPUs to VMx by MACRO of ``PLUG_CPU(cpu_id)``;
+
+   Below is an example of partition mode configuration for UP2:
+
+   .. code-block:: none
+     :caption: hypervisor/arch/x86/configs/up2/partition_config.h
+
+     ...
+     #define	VM0_CONFIGURED
+
+     #define VM0_CONFIG_NAME			"PRE-LAUNCHED VM1 for UP2"
+     #define VM0_CONFIG_TYPE			PRE_LAUNCHED_VM
+     #define VM0_CONFIG_PCPU_BITMAP		(PLUG_CPU(0) | PLUG_CPU(2))
+     #define VM0_CONFIG_FLAGS			IO_COMPLETION_POLLING
+     #define VM0_CONFIG_MEM_START_HPA		0x100000000UL
+     #define VM0_CONFIG_MEM_SIZE		0x20000000UL
+
+     #define VM0_CONFIG_OS_NAME			"ClearLinux 26600"
+     #define VM0_CONFIG_OS_BOOTARGS		"root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
+						console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
+						consoleblank=0 tsc=reliable xapic_phys"
+
+     #define	VM1_CONFIGURED
+
+     #define VM1_CONFIG_NAME			"PRE-LAUNCHED VM2 for UP2"
+     #define VM1_CONFIG_TYPE			PRE_LAUNCHED_VM
+     #define VM1_CONFIG_PCPU_BITMAP		(PLUG_CPU(1) | PLUG_CPU(3))
+     #define VM1_CONFIG_FLAGS			IO_COMPLETION_POLLING
+     #define VM1_CONFIG_MEM_START_HPA		0x120000000UL
+     #define VM1_CONFIG_MEM_SIZE		0x20000000UL
+
+     #define VM1_CONFIG_OS_NAME			"ClearLinux 26600"
+     #define VM1_CONFIG_OS_BOOTARGS		"root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
+						console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
+						consoleblank=0 tsc=reliable xapic_phys"
+
+     #define VM0_CONFIG_PCI_PTDEV_NUM		2U
+     #define VM1_CONFIG_PCI_PTDEV_NUM		3U
+
 #. Configure the PCI device info for each VM
 
    PCI devices that are available to the privileged VMs
-   are hardcoded in the source file ``hypervisor/partition/apl-mrb/vm_description.c``.
-   You need to review and modify the ``vpci_vdev_array1`` and ``vpci_vdev_array2``
-   structures in the source code to match the PCI BAR addresses of the SATA
+   are hardcoded in the source file ``hypervisor/arch/x86/configs/up2/pt_dev.c``.
+   You need to review and modify the ``vm0_pci_ptdevs`` and ``vm1_pci_ptdevs``
+   structures in the source code to match the PCI BDF addresses of the SATA
    controller and the USB controller noted in step 1:
 
    .. code-block:: none
-     :emphasize-lines: 3,39,44,49,56,72
-     :caption: hypervisor/partition/vm_description.c
+     :emphasize-lines: 5,9,17,21,25
+     :caption: hypervisor/arch/x86/configs/up2/pt_dev.c
 
      ...
-     static struct vpci_vdev_array vpci_vdev_array1 = {
-        .num_pci_vdev = 2,
+     struct acrn_vm_pci_ptdev_config vm0_pci_ptdevs[2] = {
+	{
+		.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},
+		.pbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},
+	},
+	{
+		.vbdf.bits = {.b = 0x00U, .d = 0x01U, .f = 0x00U},
+		.pbdf.bits = {.b = 0x00U, .d = 0x12U, .f = 0x00U},
+	},
+     };
 
-        .vpci_vdev_list = {
-           {/*vdev 0: hostbridge */
-              .vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x0U},
-              .ops = &pci_ops_vdev_hostbridge,
-              .bar = {},
-              .pdev = {
-                 .bdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x0U},
-              }
-           },
+     ...
+     struct acrn_vm_pci_ptdev_config vm1_pci_ptdevs[3] = {
+	{
+		.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},
+		.pbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},
+	},
+	{
+		.vbdf.bits = {.b = 0x00U, .d = 0x01U, .f = 0x00U},
+		.pbdf.bits = {.b = 0x00U, .d = 0x15U, .f = 0x00U},
+	},
+	{
+		.vbdf.bits = {.b = 0x00U, .d = 0x02U, .f = 0x00U},
+		.pbdf.bits = {.b = 0x02U, .d = 0x00U, .f = 0x00U},
+	},
+     };
+     ...
 
-        {/*vdev 1: SATA controller*/
-           .vbdf.bits = {.b = 0x00U, .d = 0x01U, .f = 0x0U},
-           .ops = &pci_ops_vdev_pt,
-           .bar = {
-              [0] = {
-                .base = 0UL,
-                .size = 0x2000UL,
-                .type = PCIBAR_MEM32
-              },
-              [1] = {
-                .base = 0UL,
-                .size = 0x1000UL,
-                .type = PCIBAR_MEM32
-              },
-              [5] = {
-                .base = 0UL,
-                .size = 0x1000UL,
-                .type = PCIBAR_MEM32
-              },
-           },
-           .pdev = {
-              .bdf.bits = {.b = 0x00U, .d = 0x12U, .f = 0x0U},
-              .bar = {
-              [0] = {
-                .base = 0x91514000UL,
-                .size = 0x2000UL,
-                .type = PCIBAR_MEM32
-              },
-              [1] = {
-                .base = 0x91537000UL,
-                .size = 0x100UL,
-                .type = PCIBAR_MEM32
-              },
-              [5] = {
-                .base = 0x91536000UL,
-                .size = 0x800UL,
-                .type = PCIBAR_MEM32
-              },
-           }
-           ...
-           static struct vpci_vdev_array vpci_vdev_array2 = {
-              .num_pci_vdev = 3,
-              ...
-              {/*vdev 1: USB controller*/
-                 .vbdf.bits = {.b = 0x00U, .d = 0x01U, .f = 0x0U},
-                 .ops = &pci_ops_vdev_pt,
-                 .bar = {
-                    [0] = {
-                      .base = 0UL,
-                      .size = 0x10000UL,
-                      .type = PCIBAR_MEM32
-                    },
-                 },
-                 .pdev = {
-                    .bdf.bits = {.b = 0x00U, .d = 0x15U, .f = 0x0U},
-                    .bar = {
-                      [0] = {
-                        .base = 0x91500000UL,
-                        .size = 0x10000UL,
-                        .type = PCIBAR_MEM64
-                      },
-                    }
-              ...
+   .. note::
 
-#. Optionally, configure the ``.bootargs`` kernel command line arguments
+      The first BDF(0:0.0) is for host bridge;
+      ``vbdf.bits`` in each VM could be any BDF if it is valid and no confliction.
+
+#. Optionally, configure the ``VMx_CONFIG_OS_BOOTARGS`` kernel command line arguments
 
    The kernel command line arguments used to boot the privileged VMs are
    hardcoded as ``/dev/sda3`` to meet the Clear Linux OS automatic installation.
    In case you plan to use your customized root
    filesystem, you may optionally edit the ``root=`` parameter specified
-   in the ``.bootargs`` field of the ``.vm_desc_array`` structure, to
-   instruct the Linux kernel to mount the right disk partition:
+   in the ``VMx_CONFIG_OS_BOOTARGS`` MACRO, to instruct the Linux kernel to
+   mount the right disk partition:
    
    .. code-block:: none
-     :emphasize-lines: 9-11,20-22
-     :caption: hypervisor/partition/vm_description.c
+     :emphasize-lines: 12-14
+     :caption: hypervisor/arch/x86/configs/up2/partition_config.h
 
      ...
-     /* Virtual Machine descriptions */
-     .vm_desc_array = {
-        {
-           /* Internal variable, MUSTBE init to -1 */
-           .vm_hw_num_cores = VM1_NUM_CPUS,
-           .vm_pcpu_ids = &VM1_CPUS[0],
-           ...
-           .bootargs = "root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
-                        console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
-                        consoleblank=0 tsc=reliable xapic_phys",
-           .vpci_vdev_array = &vpci_vdev_array1,
-           .mptable = &mptable_vm1,
-        },
-        {
-           /* Internal variable, MUSTBE init to -1 */
-           .vm_hw_num_cores = VM2_NUM_CPUS,
-           .vm_pcpu_ids = &VM2_CPUS[0],
-           ...
-           .bootargs = "root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
-                        console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
-                        consoleblank=0 tsc=reliable xapic_phys",
-           .vpci_vdev_array = &vpci_vdev_array2,
-           .mptable = &mptable_vm2,
-           .lapic_pt = true,
-        },
-     }
+     #define	VM0_CONFIGURED
+
+     #define VM0_CONFIG_NAME			"PRE-LAUNCHED VM1 for UP2"
+     #define VM0_CONFIG_TYPE			PRE_LAUNCHED_VM
+     #define VM0_CONFIG_PCPU_BITMAP		(PLUG_CPU(0) | PLUG_CPU(2))
+     #define VM0_CONFIG_FLAGS			IO_COMPLETION_POLLING
+     #define VM0_CONFIG_MEM_START_HPA		0x100000000UL
+     #define VM0_CONFIG_MEM_SIZE		0x20000000UL
+
+     #define VM0_CONFIG_OS_NAME			"ClearLinux 26600"
+     #define VM0_CONFIG_OS_BOOTARGS		"root=/dev/sda3 rw rootwait noxsave maxcpus=2 nohpet console=hvc0 \
+						console=ttyS2 no_timer_check ignore_loglevel log_buf_len=16M \
+						consoleblank=0 tsc=reliable xapic_phys"
+
+   .. note::
+
+      The root device for VM1 is also /dev/sda3 since the USB controller is the only one seen in that VM.
 
 #. Build the ACRN hypervisor and copy the artifact ``acrn.32.out`` to the
    ``/boot`` directory:
@@ -362,18 +366,18 @@ and press :kbd:`CTRL+Space` keys to return to the ACRN serial console.
 
   ACRN Hypervisor
   calibrate_tsc, tsc_khz=1094400
-  [21017289us][cpu=0][sev=2][seq=1]:HV version 0.3-unstable-2018-11-08 12:41:24-ef974d1a-dirty DBG (daily tag:acrn-2018w45.3-140000p) build by clear, start time 20997424us
+  [21017289us][cpu=0][sev=2][seq=1]:HV version 0.6-unstable-2019-02-02 22:30:31-d0c2a88-dirty DBG (daily tag:acrn-2019w05.4-140000p) build by clear, start time 20997424us
   [21034127us][cpu=0][sev=2][seq=2]:API version 1.0
   [21039218us][cpu=0][sev=2][seq=3]:Detect processor: Intel(R) Pentium(R) CPU N4200 @ 1.10GHz
   [21048422us][cpu=0][sev=2][seq=4]:hardware support HV
   [21053897us][cpu=0][sev=1][seq=5]:SECURITY WARNING!!!!!!
   [21059672us][cpu=0][sev=1][seq=6]:Please apply the latest CPU uCode patch!
-  [21074487us][cpu=0][sev=2][seq=28]:Start VM1
-  [21074488us][cpu=3][sev=2][seq=29]:Start VM2
+  [21074487us][cpu=0][sev=2][seq=28]:Start VM id: 1 name: PRE-LAUNCHED VM2 for UP2
+  [21074488us][cpu=3][sev=2][seq=29]:Start VM id: 0 name: PRE-LAUNCHED VM1 for UP2
   [21885195us][cpu=0][sev=3][seq=34]:vlapic: Start Secondary VCPU1 for VM[1]...
   [21889889us][cpu=3][sev=3][seq=35]:vlapic: Start Secondary VCPU1 for VM[2]...
   ACRN:\>
-  ACRN:\>sos_console 1
+  ACRN:\>sos_console 0
 
   ----- Entering Guest 1 Shell -----
   [    1.997439] systemd[1]: Listening on Network Service Netlink Socket.
@@ -390,7 +394,7 @@ and press :kbd:`CTRL+Space` keys to return to the ACRN serial console.
   root@clr-932c8a3012ec4dc6af53790b7afbf6ba ~ # 
 
    ---Entering ACRN SHELL---
-  ACRN:\>sos_console 2
+  ACRN:\>sos_console 1
 
   ----- Entering Guest 2 Shell -----
   [    1.490122] usb 1-4: new full-speed USB device number 2 using xhci_hcd
