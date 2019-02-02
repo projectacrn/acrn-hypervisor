@@ -6,44 +6,32 @@
 
 #include <hypervisor.h>
 
-struct vpci_vdev_array vpci_vdev_array0 = {
-	.num_pci_vdev = 3,
-
-	.vpci_vdev_list = {
-		{/*vdev 0: hostbridge */
-			.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x0U},
-			.pbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x0U},
-		},
-
-		{/*vdev 1: Ethernet*/
-			.vbdf.bits = {.b = 0x00U, .d = 0x01U, .f = 0x0U},
-			.pbdf.bits = {.b = 0x03U, .d = 0x00U, .f = 0x1U},
-		},
-
-		{/*vdev 2: USB*/
-			.vbdf.bits = {.b = 0x00U, .d = 0x02U, .f = 0x0U},
-			.pbdf.bits = {.b = 0x00U, .d = 0x15U, .f = 0x0U},
-		},
-	}
+struct acrn_vm_pci_ptdev_config vm0_pci_ptdevs[3] = {
+	{
+		.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},
+		.pbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},
+	},
+	{
+		.vbdf.bits = {.b = 0x00U, .d = 0x01U, .f = 0x00U},
+		.pbdf.bits = {.b = 0x03U, .d = 0x00U, .f = 0x01U},
+	},
+	{
+		.vbdf.bits = {.b = 0x00U, .d = 0x02U, .f = 0x00U},
+		.pbdf.bits = {.b = 0x00U, .d = 0x15U, .f = 0x00U},
+	},
 };
 
-struct vpci_vdev_array vpci_vdev_array1 = {
-	.num_pci_vdev = 3,
-
-	.vpci_vdev_list = {
-		{/*vdev 0: hostbridge*/
-			.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x0U},
-			.pbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x0U},
-		},
-
-		{/*vdev 1: SATA controller*/
-			.vbdf.bits = {.b = 0x00U, .d = 0x05U, .f = 0x0U},
-			.pbdf.bits = {.b = 0x00U, .d = 0x14U, .f = 0x0U},
-		},
-
-		{/*vdev 2: Ethernet*/
-			.vbdf.bits = {.b = 0x00U, .d = 0x06U, .f = 0x0U},
-			.pbdf.bits = {.b = 0x03U, .d = 0x00U, .f = 0x0U},
-		},
-	}
+struct acrn_vm_pci_ptdev_config vm1_pci_ptdevs[3] = {
+	{
+		.vbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},
+		.pbdf.bits = {.b = 0x00U, .d = 0x00U, .f = 0x00U},
+	},
+	{
+		.vbdf.bits = {.b = 0x00U, .d = 0x01U, .f = 0x00U},
+		.pbdf.bits = {.b = 0x00U, .d = 0x14U, .f = 0x00U},
+	},
+	{
+		.vbdf.bits = {.b = 0x00U, .d = 0x02U, .f = 0x00U},
+		.pbdf.bits = {.b = 0x03U, .d = 0x00U, .f = 0x00U},
+	},
 };

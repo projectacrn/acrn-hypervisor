@@ -22,7 +22,8 @@
 			.bootargs = VM##idx##_CONFIG_OS_BOOTARGS,	\
 		},	\
 		.vm_vuart = true,	\
-		.vpci_vdev_array = &vpci_vdev_array##idx,	\
+		.pci_ptdev_num = VM##idx##_CONFIG_PCI_PTDEV_NUM,	\
+		.pci_ptdevs = vm##idx##_pci_ptdevs,	\
 	},
 
 struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] __aligned(PAGE_SIZE) = {

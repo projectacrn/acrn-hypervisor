@@ -154,6 +154,8 @@ struct acrn_vm {
 	struct acrn_vpci vpci;
 #ifdef CONFIG_PARTITION_MODE
 	struct mptable_info mptable;
+	struct pci_vdev pci_vdevs[CONFIG_MAX_PCI_DEV_NUM];
+	/* the valid number of pci_vdevs[] is vm_config->pci_ptdev_num */
 	uint8_t vrtc_offset;
 #endif
 
@@ -162,13 +164,6 @@ struct acrn_vm {
 	uint64_t intr_inject_delay_delta; /* delay of intr injection */
 	bool snoopy_mem;
 } __aligned(PAGE_SIZE);
-
-#ifdef CONFIG_PARTITION_MODE
-struct vpci_vdev_array {
-	int32_t num_pci_vdev;
-	struct pci_vdev vpci_vdev_list[];
-};
-#endif
 
 #define MAX_BOOTARGS_SIZE	1024U
 #define MAX_CONFIG_NAME_SIZE	32U
