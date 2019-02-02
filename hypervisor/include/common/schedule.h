@@ -6,6 +6,7 @@
 
 #ifndef SCHEDULE_H
 #define SCHEDULE_H
+#include <spinlock.h>
 
 #define	NEED_RESCHEDULE		(1U)
 #define	NEED_OFFLINE		(2U)
