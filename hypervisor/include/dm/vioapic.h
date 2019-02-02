@@ -38,6 +38,7 @@
  */
 
 #include <apicreg.h>
+#include <util.h>
 
 #define	VIOAPIC_BASE	0xFEC00000UL
 #define	VIOAPIC_SIZE	4096UL

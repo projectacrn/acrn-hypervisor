@@ -95,6 +95,13 @@
 #define NR_VPIC_PINS_PER_CHIP	8U
 #define NR_VPIC_PINS_TOTAL	16U
 
+enum vpic_wire_mode {
+	VPIC_WIRE_INTR = 0,
+	VPIC_WIRE_LAPIC,
+	VPIC_WIRE_IOAPIC,
+	VPIC_WIRE_NULL
+};
+
 enum vpic_trigger {
 	EDGE_TRIGGER,
 	LEVEL_TRIGGER

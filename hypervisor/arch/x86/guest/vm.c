@@ -4,12 +4,21 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
-#include <bsp_extern.h>
-#include <multiboot.h>
+#include <types.h>
+#include <errno.h>
+#include <sprintf.h>
+#include <vm.h>
+#include <bits.h>
 #include <e820.h>
+#include <multiboot.h>
 #include <vtd.h>
 #include <reloc.h>
+#include <ept.h>
+#include <guest_pm.h>
+#include <console.h>
+#include <ptdev.h>
+#include <vmcs.h>
+#include <logmsg.h>
 
 vm_sw_loader_t vm_sw_loader;
 

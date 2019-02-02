@@ -31,6 +31,8 @@
 #define VLAPIC_H
 
 #include <page.h>
+#include <timer.h>
+#include <apicreg.h>
 
 
 /**

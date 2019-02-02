@@ -13,9 +13,18 @@
 
 #ifndef ASSEMBLER
 
+#include <types.h>
+#include <spinlock.h>
+#include <acrn_common.h>
 #include <bsp_extern.h>
+#include <vcpu.h>
+#include <vioapic.h>
+#include <vpic.h>
+#include <io_emul.h>
+#include <vuart.h>
+#include <trusty.h>
+#include <vcpuid.h>
 #include <vpci.h>
-#include <page.h>
 #include <cpu_caps.h>
 #include <e820.h>
 
@@ -75,14 +84,6 @@ struct vm_pm_info {
 /* VM guest types */
 #define VM_LINUX_GUEST      0x02
 #define VM_MONO_GUEST       0x01
-
-enum vpic_wire_mode {
-	VPIC_WIRE_INTR = 0,
-	VPIC_WIRE_LAPIC,
-	VPIC_WIRE_IOAPIC,
-	VPIC_WIRE_NULL
-};
-
 /* Enumerated type for VM states */
 enum vm_state {
 	VM_STATE_UNKNOWN = 0,
@@ -114,20 +115,6 @@ struct vm_arch {
 
 	/* reference to virtual platform to come here (as needed) */
 } __aligned(PAGE_SIZE);
-
-
-#define CPUID_CHECK_SUBLEAF	(1U << 0U)
-#define MAX_VM_VCPUID_ENTRIES	64U
-struct vcpuid_entry {
-	uint32_t eax;
-	uint32_t ebx;
-	uint32_t ecx;
-	uint32_t edx;
-	uint32_t leaf;
-	uint32_t subleaf;
-	uint32_t flags;
-	uint32_t padding;
-};
 
 struct acrn_vm {
 	struct vm_arch arch_vm; /* Reference to this VM's arch information */
