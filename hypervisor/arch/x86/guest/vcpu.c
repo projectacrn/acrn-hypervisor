@@ -4,10 +4,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
-#include <schedule.h>
-#include <security.h>
-#include <virtual_cr.h>
+#include <types.h>
+#include <vcpu.h>
+#include <bits.h>
+#include <vmx.h>
+#include <logmsg.h>
+#include <cpu_caps.h>
+#include <per_cpu.h>
 #include <init.h>
 
 inline uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)

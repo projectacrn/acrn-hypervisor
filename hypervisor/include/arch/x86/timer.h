@@ -8,6 +8,7 @@
 #define TIMER_H
 
 #include <list.h>
+#include <rtl.h>
 
 /**
  * @brief Timer
