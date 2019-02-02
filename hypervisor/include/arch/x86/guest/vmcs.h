@@ -11,6 +11,7 @@
 #define VM_FAIL		-1
 
 #ifndef ASSEMBLER
+#include <vmx.h>
 
 #define VMX_VMENTRY_FAIL	0x80000000U
 

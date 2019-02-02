@@ -6,6 +6,7 @@
 
 #ifndef VTD_H
 #define VTD_H
+#include <ptdev.h>
 /*
  * Intel IOMMU register specification per version 1.0 public spec.
  */

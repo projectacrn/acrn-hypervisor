@@ -6,6 +6,7 @@
 
 #ifndef TRUSTY_H_
 #define TRUSTY_H_
+#include <acrn_hv_defs.h>
 
 #define BOOTLOADER_SEED_MAX_ENTRIES     10U
 #define RPMB_MAX_PARTITION_NUMBER       6U

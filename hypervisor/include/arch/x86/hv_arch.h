@@ -30,7 +30,6 @@
 #include <vioapic.h>
 #include <vm.h>
 #include <cpuid.h>
-#include <vcpuid.h>
 #include <page.h>
 #include <ept.h>
 #include <mmu.h>
