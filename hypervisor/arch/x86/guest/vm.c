@@ -265,9 +265,6 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 	vm->emul_mmio_regions = 0U;
 	vm->snoopy_mem = true;
 
-	/* gpa_lowtop are used for system start up */
-	vm->hw.gpa_lowtop = 0UL;
-
 	init_ept_mem_ops(vm);
 	vm->arch_vm.nworld_eptp = vm->arch_vm.ept_mem_ops.get_pml4_page(vm->arch_vm.ept_mem_ops.info);
 	sanitize_pte((uint64_t *)vm->arch_vm.nworld_eptp);

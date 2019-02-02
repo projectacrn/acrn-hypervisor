@@ -28,8 +28,6 @@ static void obtain_e820_mem_info(void)
 	e820_mem.mem_bottom = UINT64_MAX;
 	e820_mem.mem_top = 0x0UL;
 	e820_mem.total_mem_size = 0UL;
-	e820_mem.max_ram_blk_base = 0UL;
-	e820_mem.max_ram_blk_size = 0UL;
 
 	for (i = 0U; i < e820_entries_count; i++) {
 		entry = &e820[i];
@@ -43,10 +41,6 @@ static void obtain_e820_mem_info(void)
 
 		if (entry->type == E820_TYPE_RAM) {
 			e820_mem.total_mem_size += entry->length;
-			if (entry->baseaddr == UOS_DEFAULT_START_ADDR) {
-				e820_mem.max_ram_blk_base = entry->baseaddr;
-				e820_mem.max_ram_blk_size = entry->length;
-			}
 		}
 	}
 }

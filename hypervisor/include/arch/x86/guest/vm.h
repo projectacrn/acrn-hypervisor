@@ -24,7 +24,6 @@ struct vm_hw_info {
 	/* vcpu array of this VM */
 	struct acrn_vcpu vcpu_array[CONFIG_MAX_VCPUS_PER_VM];
 	uint16_t created_vcpus;	/* Number of created vcpus */
-	uint64_t gpa_lowtop;    /* top lowmem gpa of this VM */
 } __aligned(PAGE_SIZE);
 
 struct sw_linux {
