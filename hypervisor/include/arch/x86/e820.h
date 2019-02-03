@@ -15,6 +15,8 @@
 #define E820_TYPE_ACPI_NVS	4U	/* EFI 10 */
 #define E820_TYPE_UNUSABLE	5U	/* EFI 8 */
 
+#define E820_MAX_ENTRIES	32U
+
 /** Defines a single entry in an E820 memory map. */
 struct e820_entry {
    /** The base address of the memory range. */

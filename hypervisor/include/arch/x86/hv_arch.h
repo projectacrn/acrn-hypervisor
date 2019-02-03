@@ -41,7 +41,7 @@
 #include <assign.h>
 #include <vtd.h>
 
-#include <guest.h>
+#include <guest_memory.h>
 #include <vmexit.h>
 #include <cpufeatures.h>
 

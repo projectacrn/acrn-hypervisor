@@ -50,7 +50,7 @@
 
 #ifndef ASSEMBLER
 
-#include <guest.h>
+#include <guest_memory.h>
 #include <virtual_cr.h>
 
 /**
@@ -59,6 +59,52 @@
  * @defgroup acrn_vcpu ACRN vcpu
  * @{
  */
+
+/*
+ * VCPU related APIs
+ */
+#define ACRN_REQUEST_EXCP		0U
+#define ACRN_REQUEST_EVENT		1U
+#define ACRN_REQUEST_EXTINT		2U
+#define ACRN_REQUEST_NMI		3U
+#define ACRN_REQUEST_EOI_EXIT_UPDATE	4U
+#define ACRN_REQUEST_EPT_FLUSH		5U
+#define ACRN_REQUEST_TRP_FAULT		6U
+#define ACRN_REQUEST_VPID_FLUSH		7U /* flush vpid tlb */
+
+#define save_segment(seg, SEG_NAME)				\
+{								\
+	(seg).selector = exec_vmread16(SEG_NAME##_SEL);		\
+	(seg).base = exec_vmread(SEG_NAME##_BASE);		\
+	(seg).limit = exec_vmread32(SEG_NAME##_LIMIT);		\
+	(seg).attr = exec_vmread32(SEG_NAME##_ATTR);		\
+}
+
+#define load_segment(seg, SEG_NAME)				\
+{								\
+	exec_vmwrite16(SEG_NAME##_SEL, (seg).selector);		\
+	exec_vmwrite(SEG_NAME##_BASE, (seg).base);		\
+	exec_vmwrite32(SEG_NAME##_LIMIT, (seg).limit);		\
+	exec_vmwrite32(SEG_NAME##_ATTR, (seg).attr);		\
+}
+
+/* Define segments constants for guest */
+#define REAL_MODE_BSP_INIT_CODE_SEL     (0xf000U)
+#define REAL_MODE_DATA_SEG_AR           (0x0093U)
+#define REAL_MODE_CODE_SEG_AR           (0x009fU)
+#define PROTECTED_MODE_DATA_SEG_AR      (0xc093U)
+#define PROTECTED_MODE_CODE_SEG_AR      (0xc09bU)
+#define REAL_MODE_SEG_LIMIT             (0xffffU)
+#define PROTECTED_MODE_SEG_LIMIT        (0xffffffffU)
+#define DR7_INIT_VALUE                  (0x400UL)
+#define LDTR_AR                         (0x0082U) /* LDT, type must be 2, refer to SDM Vol3 26.3.1.2 */
+#define TR_AR                           (0x008bU) /* TSS (busy), refer to SDM Vol3 26.3.1.2 */
+
+#define foreach_vcpu(idx, vm, vcpu)				\
+	for ((idx) = 0U, (vcpu) = &((vm)->hw.vcpu_array[(idx)]);	\
+		(idx) < (vm)->hw.created_vcpus;			\
+		(idx)++, (vcpu) = &((vm)->hw.vcpu_array[(idx)])) \
+		if (vcpu->state != VCPU_OFFLINE)
 
 enum vcpu_state {
 	VCPU_INIT,
@@ -303,6 +349,8 @@ vcpu_vlapic(struct acrn_vcpu *vcpu)
 
 void default_idle(__unused struct sched_object *obj);
 void vcpu_thread(struct sched_object *obj);
+
+int32_t vmx_vmrun(struct run_context *context, int32_t ops, int32_t ibrs);
 
 /* External Interfaces */
 

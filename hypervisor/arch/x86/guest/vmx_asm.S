@@ -6,7 +6,8 @@
 
 #include <vmcs.h>
 #include <msr.h>
-#include <guest.h>
+#include <guest_memory.h>
+#include <vm.h>
 #include <vcpu.h>
 #include <cpu.h>
 #include <security.h>
