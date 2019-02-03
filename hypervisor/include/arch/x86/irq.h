@@ -16,6 +16,9 @@
 
 #include <common/irq.h>
 
+#define ACRN_DBG_PTIRQ		6U
+#define ACRN_DBG_IRQ		6U
+
 /* vectors range for dynamic allocation, usually for devices */
 #define VECTOR_DYNAMIC_START	0x20U
 #define VECTOR_DYNAMIC_END	0xDFU

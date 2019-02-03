@@ -15,6 +15,9 @@ struct vm_exit_dispatch {
 int32_t vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t vmcall_vmexit_handler(struct acrn_vcpu *vcpu);
 int32_t cpuid_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t rdmsr_vmexit_handler(struct acrn_vcpu *vcpu);
+int32_t wrmsr_vmexit_handler(struct acrn_vcpu *vcpu);
+
 extern void vm_exit(void);
 static inline uint64_t
 vm_exit_qualification_bit_mask(uint64_t exit_qual, uint32_t msb, uint32_t lsb)

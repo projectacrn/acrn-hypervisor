@@ -6,6 +6,13 @@
 
 #ifndef VM_H_
 #define VM_H_
+
+/* Defines for VM Launch and Resume */
+#define VM_RESUME		0
+#define VM_LAUNCH		1
+
+#ifndef ASSEMBLER
+
 #include <bsp_extern.h>
 #include <vpci.h>
 #include <page.h>
@@ -282,6 +289,11 @@ uint16_t find_free_vm_id(void);
 struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
 struct acrn_vm *get_sos_vm(void);
 
+int32_t general_sw_loader(struct acrn_vm *vm);
+
+typedef int32_t (*vm_sw_loader_t)(struct acrn_vm *vm);
+extern vm_sw_loader_t vm_sw_loader;
+
 #ifdef CONFIG_PARTITION_MODE
 /*
  * Default e820 mem map:
@@ -308,5 +320,7 @@ static inline bool is_lapic_pt(const struct acrn_vm *vm)
 {
 	return ((vm_configs[vm->vm_id].guest_flags & LAPIC_PASSTHROUGH) != 0U);
 }
+
+#endif /* !ASSEMBLER */
 
 #endif /* VM_H_ */
