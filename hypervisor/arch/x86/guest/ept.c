@@ -4,10 +4,17 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
-
-#include <instr_emul.h>
+#include <types.h>
+#include <errno.h>
+#include <vm.h>
+#include <irq.h>
+#include <pgtable.h>
+#include <mmu.h>
+#include <ept.h>
+#include <vmx.h>
 #include <vtd.h>
+#include <logmsg.h>
+#include <trace.h>
 
 #define ACRN_DBG_EPT	6U
 

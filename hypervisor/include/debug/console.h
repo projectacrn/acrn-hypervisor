@@ -7,6 +7,8 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
+#include <pci.h>
+
 /* Switching key combinations for shell and uart console */
 #define GUEST_CONSOLE_TO_HV_SWITCH_KEY      0       /* CTRL + SPACE */
 

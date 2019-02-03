@@ -6,9 +6,19 @@
  * this file contains vmcs operations which is vcpu related
  */
 
-#include <hypervisor.h>
-#include <cpu.h>
-#include <virtual_cr.h>
+#include <types.h>
+#include <errno.h>
+#include <vmcs.h>
+#include <vcpu.h>
+#include <vm.h>
+#include <vmx.h>
+#include <gdt.h>
+#include <pgtable.h>
+#include <per_cpu.h>
+#include <cpu_caps.h>
+#include <cpufeatures.h>
+#include <vmexit.h>
+#include <logmsg.h>
 
 uint64_t vmx_rdmsr_pat(const struct acrn_vcpu *vcpu)
 {

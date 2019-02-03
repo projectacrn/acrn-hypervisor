@@ -4,9 +4,18 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
-
+#include <types.h>
+#include <errno.h>
+#include <atomic.h>
+#include <io_req.h>
+#include <vcpu.h>
+#include <vm.h>
 #include <instr_emul.h>
+#include <vmexit.h>
+#include <vmx.h>
+#include <ept.h>
+#include <trace.h>
+#include <logmsg.h>
 
 /**
  * @brief General complete-work for port I/O emulation

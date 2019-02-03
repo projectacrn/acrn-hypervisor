@@ -4,8 +4,18 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <errno.h>
+#include <pgtable.h>
+#include <msr.h>
+#include <vcpu.h>
+#include <vm.h>
+#include <vmcs.h>
+#include <vmx.h>
+#include <guest_pm.h>
 #include <ucode.h>
+#include <trace.h>
+#include <logmsg.h>
 
 #define INTERCEPT_DISABLE		(0U)
 #define INTERCEPT_READ			(1U << 0U)

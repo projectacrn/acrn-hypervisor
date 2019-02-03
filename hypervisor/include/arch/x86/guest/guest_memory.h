@@ -13,8 +13,10 @@
 
 #ifndef ASSEMBLER
 
-#include <mmu.h>
+#include <types.h>
 
+struct acrn_vcpu;
+struct acrn_vm;
 /* Use # of paging level to identify paging mode */
 enum vm_paging_mode {
 	PAGING_MODE_0_LEVEL = 0U,	/* Flat */

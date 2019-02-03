@@ -59,6 +59,7 @@
 #include <schedule.h>
 #include <io_req.h>
 #include <msr.h>
+#include <cpu.h>
 
 /**
  * @brief vcpu

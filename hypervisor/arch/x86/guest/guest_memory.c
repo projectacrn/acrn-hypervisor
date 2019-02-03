@@ -4,10 +4,15 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
-#include <multiboot.h>
-#include <reloc.h>
-#include <e820.h>
+#include <types.h>
+#include <errno.h>
+#include <guest_memory.h>
+#include <vcpu.h>
+#include <vm.h>
+#include <vmcs.h>
+#include <mmu.h>
+#include <ept.h>
+#include <logmsg.h>
 
 #define ACRN_DBG_GUEST	6U
 

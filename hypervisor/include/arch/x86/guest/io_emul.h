@@ -7,6 +7,7 @@
 #ifndef IO_EMUL_H
 #define IO_EMUL_H
 
+#include <types.h>
 
 /* Define emulated port IO index */
 #define PIC_MASTER_PIO_IDX	0U

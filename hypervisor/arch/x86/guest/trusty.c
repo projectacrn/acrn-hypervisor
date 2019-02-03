@@ -4,9 +4,18 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <bits.h>
 #include <crypto_api.h>
+#include <trusty.h>
+#include <page.h>
+#include <pgtable.h>
+#include <mmu.h>
+#include <ept.h>
+#include <vm.h>
+#include <vmx.h>
 #include <security.h>
+#include <logmsg.h>
 
 #define TRUSTY_VERSION   1U
 #define TRUSTY_VERSION_2 2U

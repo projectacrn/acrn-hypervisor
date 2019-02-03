@@ -7,6 +7,9 @@
 #ifndef INTR_LAPIC_H
 #define INTR_LAPIC_H
 
+#include <types.h>
+#include <apicreg.h>
+
 /* intr_lapic_icr_delivery_mode */
 #define INTR_LAPIC_ICR_FIXED    0x0U
 #define INTR_LAPIC_ICR_LP          0x1U
