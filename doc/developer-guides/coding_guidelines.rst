@@ -24,7 +24,7 @@ Compliant example::
 
     #define CONCAT(x, y) x ## y
     
-    uint32_t ab = 32;
+    uint32_t ab = 32U;
     printf("%d \n", CONCAT(a, b));
 
 .. rst-class:: non-compliant-code
@@ -33,7 +33,7 @@ Compliant example::
 
        #define CONCAT(x, y, z) x ## y ## z
        
-       uint32_t abc = 32;
+       uint32_t abc = 32U;
        printf("%d \n", CONCAT(a, b, c));
 
 
@@ -80,6 +80,20 @@ Compliant example::
        
        /* header contents without any protection */
        uint32_t func_showcase(uint32_t param);
+
+
+PP-04: Parentheses shall be used when referencing a MACRO parameter
+===================================================================
+
+Compliant example::
+
+    #define NEGATING(x) -(x)
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       #define NEGATING(x) -x
 
 
 
@@ -407,6 +421,21 @@ Compliant example::
        uint32_t showcase_array[5] = {0, 1};
 
 
+DI-08: An array declaration shall use a constant for the size
+=============================================================
+
+Compliant example::
+
+    uint32_t array_showcase[10];
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t array_size = 10U;
+       uint32_t array_showcase[array_size];
+
+
 
 Functions
 *********
@@ -692,6 +721,299 @@ Compliant example::
        uint32_t func_showcase(uint32_t param)
        {
            return param;
+       }
+
+
+FN-11: The return type of a function shall be consistent
+========================================================
+
+The return type of a function shall be the same between its declaration and
+definition.
+
+Compliant example::
+
+    /* In `showcase.h`: */
+    uint32_t func_showcase(uint32_t param);
+    
+    /* In `showcase.c`: */
+    #include "showcase.h"
+    
+    uint32_t func_showcase(uint32_t param)
+    {
+        return param;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       /* In `showcase.h`: */
+       uint64_t func_showcase(uint64_t param);
+       
+       /* In `showcase.c`: */
+       #include "showcase.h"
+       
+       uint32_t func_showcase(uint32_t param)
+       {
+               return param;
+       }
+
+
+FN-12: Banned functions shall not be used
+=========================================
+
+The following cases shall be covered:
+
+a) These dynamic memory allocation functions shall not be used: ``calloc``,
+   ``malloc``, ``realloc``, and ``free``.  Dynamic memory allocation shall be
+   replaced with static memory allocation.
+b) The functions ``va_arg``, ``va_start``, and ``va_end`` shall only be used
+   within variadic functions (functions taking a variable number of parameters)
+   such as ``printf``.
+
+Compliant example::
+
+    uint32_t showcase_array[32];
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t *showcase_ptr = (uint32_t *)malloc(32U * sizeof(uint32_t));
+
+
+FN-13: All declared functions shall have a corresponding definition
+===================================================================
+
+Compliant example::
+
+    /* In `showcase.h`: */
+    /* declaration */
+    uint32_t func_showcase(uint32_t param);
+    
+    /* In `showcase.c`: */
+    #include "showcase.h"
+    
+    /* definition */
+    uint32_t func_showcase(uint32_t param)
+    {
+        return param;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       /* In `showcase.h`: */
+       /* declaration */
+       uint32_t func_showcase(uint32_t param);
+       
+       /* There is no definition of `func_showcase` anywhere in all source files */
+
+
+FN-14: All defined functions shall be used
+==========================================
+
+All defined functions shall be used, either called explicitly or indirectly via
+its address. Otherwise, the function shall be removed. The following case is an
+exception. Some extra functions may be kept in order to provide a more complete
+library of APIs. These functions may have been implemented but not used
+currently. These functions will come in handy in the future. In this case, these
+functions may remain.
+
+Compliant example::
+
+    /* In `showcase.h`: */
+    uint32_t func_showcase(uint32_t param);
+    
+    /* In `showcase.c`: */
+    #include "showcase.h"
+    
+    uint32_t func_showcase(uint32_t param)
+    {
+        return param;
+    }
+    
+    /* In `main.c`: */
+    #include "showcase.h"
+    
+    void main(void)
+    {
+        uint32_t showcase;
+    
+        showcase = func_showcase(32U);
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       /* In `showcase.h`: */
+       uint32_t func_showcase(uint32_t param);
+       
+       /* In `showcase.c`: */
+       #include "showcase.h"
+       
+       /* There is no usage of `func_showcase` anywhere in all source files */
+       uint32_t func_showcase(uint32_t param)
+       {
+           return param;
+       }
+
+
+FN-15: A function shall not return a pointer to a local object
+==============================================================
+
+A function shall not return a pointer to a local object, either directly or
+within a returned structure or array.
+
+Compliant example::
+
+    struct struct_showcase
+    {
+        uint32_t temp_32;
+        uint64_t temp_64;
+    };
+    
+    struct struct_showcase func_showcase(void)
+    {
+        struct struct_showcase showcase;
+        uint32_t showcase_u32 = 32U;
+        uint64_t showcase_u64 = 64UL;
+    
+        showcase.temp_32 = showcase_u32;
+        showcase.temp_64 = showcase_u64;
+    
+        return showcase;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       struct struct_showcase
+       {
+           uint32_t *temp_32;
+           uint64_t *temp_64;
+       };
+       
+       struct struct_showcase func_showcase(void)
+       {
+           struct struct_showcase showcase;
+           uint32_t showcase_u32 = 32U;
+           uint64_t showcase_u64 = 64UL;
+       
+           showcase.temp_32 = &showcase_u32;
+           showcase.temp_64 = &showcase_u64;
+       
+           return showcase;
+       }
+       
+
+
+FN-16: Mixed-use of C code and assembly code in a single function shall not be allowed
+======================================================================================
+
+A function with mixed-use of C code and assembly code shall be split into
+multiple sub-functions to separate the usage of C code and assembly code.
+
+Compliant example::
+
+    void asm_hlt(void)
+    {
+        asm volatile ("hlt");
+    }
+    
+    void func_showcase(void)
+    {
+        bool showcase_flag = true;
+    
+        if (showcase_flag) {
+            asm_hlt();
+        }
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       void func_showcase(void)
+       {
+           bool showcase_flag = true;
+       
+           if (showcase_flag) {
+               asm volatile ("hlt");
+           }
+       }
+
+
+FN-17: The return value of a non-void function shall either be used or discarded
+================================================================================
+
+The return value of a non-void function shall either be used or discarded
+explicitly via (void). If the return value contains the error code, this return
+value shall be checked in all possible paths.
+
+Compliant example::
+
+    /** Indicates that argument is not valid. */
+    #define EINVAL        22
+    
+    int32_t func_showcase(uint32_t param)
+    {
+        int32_t error;
+    
+        if (param < 32U) {
+            error = 0;
+        } else {
+            error = -EINVAL;
+        }
+    
+        return error;
+    }
+    
+    void main(uint32_t index)
+    {
+        int32_t error;
+        uint32_t test;
+        uint32_t array_showcase[32];
+    
+        error = func_showcase(index);
+    
+        if (error == 0) {
+            test = array_showcase[index];
+        }
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       /** Indicates that argument is not valid. */
+       #define EINVAL        22
+       
+       int32_t func_showcase(uint32_t param)
+       {
+           int32_t error;
+       
+           if (param < 32U) {
+               error = 0;
+           } else {
+               error = -EINVAL;
+           }
+       
+           return error;
+       }
+       
+       void main(uint32_t index)
+       {
+           int32_t error;
+           uint32_t test;
+           uint32_t array_showcase[32];
+       
+           error = func_showcase(index);
+       
+           test = array_showcase[index];
        }
 
 
@@ -1156,6 +1478,159 @@ Compliant example::
        char showcase = showcase_array[10];
 
 
+ST-20: The else statement shall not be empty if it is following an else if
+==========================================================================
+
+Either a non-null statement or a comment shall be included in the else
+statement. This is to guarantee that the developers have considered all of the
+possible cases.
+
+Compliant example::
+
+    uint32_t param, showcase;
+    
+    if (param < 10U) {
+        showcase = 10U;
+    } else if (param < 20U) {
+        showcase = 20U;
+    } else {
+        showcase = 30U;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t param, showcase;
+       
+       if (param < 10U) {
+           showcase = 10U;
+       } else if (param < 20U) {
+           showcase = 20U;
+       } else {
+       }
+
+
+ST-21: A switch statement shall have the default statement
+==========================================================
+
+This is to guarantee that the developers have considered all of the possible
+cases.
+
+Compliant example::
+
+    char showcase;
+    
+    switch (showcase) {
+    case 'a':
+        /* do something */
+        break;
+    case 'A':
+        /* do something */
+        break;
+    default:
+        /* do something */
+        break;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       char showcase;
+       
+       switch (showcase) {
+       case 'a':
+           /* do something */
+           break;
+       case 'A':
+           /* do something */
+           break;
+       }
+
+
+ST-22: Every switch clause shall be terminated with a break statement
+=====================================================================
+
+Falling through a case shall not be allowed.
+
+Compliant example::
+
+    char showcase;
+    
+    switch (showcase) {
+    case 'a':
+        /* do something */
+        break;
+    case 'A':
+        /* do something */
+        break;
+    default:
+        /* do something */
+        break;
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       char showcase;
+       
+       switch (showcase) {
+       case 'a':
+           /* do something */
+       case 'A':
+           /* do something */
+       default:
+           /* do something */
+           break;
+       }
+
+
+ST-23: The comma operator shall not be used
+===========================================
+
+Compliant example::
+
+    uint32_t showcase_a = 10U;
+    uint32_t showcase_b = 20U;
+    
+    showcase_a++;
+    showcase_b++;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t showcase_a = 10U;
+       uint32_t showcase_b = 20U;
+       
+       showcase_a++, showcase_b++;
+
+
+ST-24: The for loop counter shall not be changed inside the loop body
+=====================================================================
+
+Compliant example::
+
+    uint32_t i;
+    
+    for (i = 0U; i < 5U; i++) {
+        printf("count: %d \n", i);
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t i;
+       
+       for (i = 0U; i < 5U; i++) {
+           printf("count: %d \n", i);
+           i++;
+       }
+
+
 
 Expressions
 ***********
@@ -1279,6 +1754,70 @@ Compliant example::
        uint32_t showcase_u32_3;
        
        showcase_u32_3 = showcase_u32_1 * showcase_u32_2 >> 4U;
+
+
+EP-06: Overflow shall not be allowed
+====================================
+
+Compliant example::
+
+    uint8_t showcase = 255U;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint8_t showcase = 255U + 1U;
+
+
+EP-07: Negation shall not be performed on unsigned expression
+=============================================================
+
+Compliant example::
+
+    int32_t showcase = -10;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       int32_t showcase = -10U;
+
+
+EP-08: The address of an object shall not be assigned to another object whose lifetime is longer
+================================================================================================
+
+Compliant example::
+
+    void func_showcase(void)
+    {
+        uint32_t showcase_local = 32U;
+        uint32_t *showcase_ptr_local;
+    
+        showcase_ptr_local = &showcase_local;
+        printf("*showcase_ptr_local %d \n", *showcase_ptr_local);
+    }
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t *showcase_ptr_global;
+       
+       void func_showcase(void)
+       {
+           uint32_t showcase_local = 32U;
+           uint32_t *showcase_ptr_local;
+       
+           showcase_ptr_local = &showcase_local;
+           showcase_ptr_global = showcase_ptr_local;
+       }
+       
+       void main(void)
+       {
+           func_showcase();
+           printf("*showcase_ptr_global %d \n", *showcase_ptr_global);
+       }
 
 
 
@@ -1677,8 +2216,8 @@ Compliant example::
        }
 
 
-TY-16: A pointer shall not be cast to an integer
-================================================
+TY-16: A pointer shall not be cast to any other types
+=====================================================
 
 Compliant example::
 
@@ -1695,8 +2234,14 @@ Compliant example::
        uint64_t showcase = (uint64_t)showcase_ptr;
 
 
-TY-17: An integer shall not be cast to a pointer
-================================================
+TY-17: A pointer shall not be cast from any other types
+=======================================================
+
+Only the following pointer assignment shall be allowed:
+
+a) Assignment shall be allowed via the address operator &;
+b) Assignment shall be allowed if the objects pointed to by the two pointers are
+   of the same type.
 
 Compliant example::
 
@@ -1785,6 +2330,197 @@ Compliant example::
        
            func_showcase(actual_param);
        }
+
+
+TY-21: A bit-field shall be a signed integer, unsigned integer, or bool
+=======================================================================
+
+All the other types shall not be allowed.
+
+Compliant example::
+
+    struct struct_showcase
+    {
+        uint8_t function : 3;
+        uint8_t device : 5;
+        uint8_t bus;
+    };
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       struct struct_showcase
+       {
+           int function : 3;
+           int device : 5;
+           int bus;
+       };
+
+
+TY-22: Cast shall not be performed on pointers with different object type
+=========================================================================
+
+Compliant example::
+
+    struct struct_showcase
+    {
+        uint32_t *temp_32;
+        uint64_t *temp_64;
+    };
+    
+    uint32_t *showcase_ptr_u32;
+    struct struct_showcase *showcase_ptr_struct;
+    
+    showcase_ptr_u32 = showcase_ptr_struct->temp_32;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       struct struct_showcase
+       {
+           uint32_t *temp_32;
+           uint64_t *temp_64;
+       };
+       
+       uint32_t *showcase_ptr_u32;
+       struct struct_showcase *showcase_ptr_struct;
+       
+       showcase_ptr_u32 = (uint32_t *)showcase_ptr_struct;
+
+
+TY-23: Assignment on function pointers shall be performed with same type
+========================================================================
+
+Compliant example::
+
+    typedef void (*func_ptr_t)(void);
+    
+    func_ptr_t func_ptr_a;
+    func_ptr_t func_ptr_b;
+    
+    func_ptr_a = func_ptr_b;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       typedef void (*func_ptr_a_t)(void);
+       typedef uint32_t (*func_ptr_b_t)(uint32_t param);
+       
+       func_ptr_a_t func_ptr_a;
+       func_ptr_b_t func_ptr_b;
+       
+       func_ptr_a = func_ptr_b;
+
+
+TY-24: Cast shall not be performed on function pointer
+======================================================
+
+Compliant example::
+
+    typedef uint32_t (*func_ptr_t)(uint32_t param);
+    
+    uint32_t func_showcase(uint32_t param)
+    {
+        return param;
+    }
+    
+    func_ptr_t func_ptr_showcase;
+    func_ptr_showcase = func_showcase;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       typedef uint32_t (*func_ptr_t)(uint32_t param);
+       
+       void func_showcase(uint32_t param)
+       {
+           printf("param: %d \n", param);
+       }
+       
+       func_ptr_t func_ptr_showcase;
+       func_ptr_showcase = (func_ptr_t)func_showcase;
+
+
+TY-25: A string literal shall only be used as const object
+==========================================================
+
+The following operations shall be covered:
+
+a) If a string literal is assigned to a variable, this variable shall be
+   declared with const qualifier;
+b) If a string literal is passed as a function parameter, this function
+   parameter shall be declared with const qualifier;
+c) If a string literal is used as the return value of a function, this function
+   return type shall be declared with const qualifier.
+
+Compliant example::
+
+    const char *showcase = "showcase";
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       char *showcase = "showcase";
+
+
+TY-26: The basic numerical types shall not be used other than in typedefs
+=========================================================================
+
+Typedef-name shall be used to replace the usage of basic numerical types. This
+is to guarantee the code portability between different compilers and platforms.
+
+Compliant example::
+
+    typedef unsigned int uint32_t;
+    
+    uint32_t showcase = 32U;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       unsigned int showcase = 32U;
+
+
+TY-27: The operands of an assignment operator shall be the same type
+====================================================================
+
+Compliant example::
+
+    uint32_t showcase = 32U;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint32_t showcase = 32UL;
+
+
+TY-28: The operands of arithmetic operations shall be the same type
+===================================================================
+
+Compliant example::
+
+    uint16_t showcase_u16 = 16U;
+    uint32_t showcase_u32 = 32U;
+    uint64_t showcase_u64 = 64UL;
+    
+    uint32_t test = (uint32_t)showcase_u16 + showcase_u32 + (uint32_t)showcase_u64;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       uint16_t showcase_u16 = 16U;
+       uint32_t showcase_u32 = 32U;
+       uint64_t showcase_u64 = 64UL;
+       
+       uint32_t test = showcase_u16 + showcase_u32 + showcase_u64;
 
 
 
@@ -2021,5 +2757,33 @@ Compliant example::
        };
        
        uint32_t showcase;
+
+
+ID-09: The typedef name of a numerical type shall indicate the number of bits
+=============================================================================
+
+Compliant example::
+
+    typedef unsigned short uint16_t;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       typedef unsigned short ushort_t;
+
+
+ID-10: A C keyword shall not be re-defined by a MACRO
+=====================================================
+
+Compliant example::
+
+    typedef _Bool bool;
+
+.. rst-class:: non-compliant-code
+
+   Non-compliant example::
+
+       #define _Bool bool
 
 
