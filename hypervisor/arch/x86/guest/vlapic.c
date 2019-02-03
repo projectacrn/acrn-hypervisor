@@ -29,12 +29,22 @@
 
 #define pr_prefix		"vlapic: "
 
-#include <hypervisor.h>
-
-#include <instr_emul.h>
-
+#include <types.h>
+#include <errno.h>
+#include <bits.h>
+#include <atomic.h>
+#include <per_cpu.h>
+#include <pgtable.h>
+#include <lapic.h>
+#include <vmcs.h>
+#include <vlapic.h>
+#include <ptdev.h>
+#include <vmx.h>
+#include <vm.h>
+#include <ept.h>
+#include <trace.h>
+#include <logmsg.h>
 #include "vlapic_priv.h"
-#include "vlapic.h"
 
 #define VLAPIC_VERBOS 0
 

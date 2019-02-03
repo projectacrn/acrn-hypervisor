@@ -4,9 +4,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
-#include <ioapic.h>
+#include <types.h>
+#include <errno.h>
+#include <bits.h>
+#include <vm.h>
 #include <vtd.h>
+#include <per_cpu.h>
+#include <ioapic.h>
 
 /*
  * lookup a ptdev entry by sid
@@ -789,6 +793,21 @@ void ptirq_remove_intx_remapping(struct acrn_vm *vm, uint32_t virt_pin, bool pic
 	spinlock_release(&ptdev_lock);
 }
 
+/*
+ * @pre vm != NULL
+ */
+void ptirq_remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf,
+		uint32_t vector_count)
+{
+	uint32_t i;
+
+	for (i = 0U; i < vector_count; i++) {
+		spinlock_obtain(&ptdev_lock);
+		remove_msix_remapping(vm, virt_bdf, i);
+		spinlock_release(&ptdev_lock);
+	}
+}
+
 /* except sos_vm, Device Model should call this function to pre-hold ptdev msi
  * entries:
  * - the entry is identified by phys_bdf:msi_idx:
@@ -816,19 +835,4 @@ int32_t ptirq_add_msix_remapping(struct acrn_vm *vm, uint16_t virt_bdf,
 	}
 
 	return (vector_added == vector_count) ? 0 : -ENODEV;
-}
-
-/*
- * @pre vm != NULL
- */
-void ptirq_remove_msix_remapping(const struct acrn_vm *vm, uint16_t virt_bdf,
-		uint32_t vector_count)
-{
-	uint32_t i;
-
-	for (i = 0U; i < vector_count; i++) {
-		spinlock_obtain(&ptdev_lock);
-		remove_msix_remapping(vm, virt_bdf, i);
-		spinlock_release(&ptdev_lock);
-	}
 }

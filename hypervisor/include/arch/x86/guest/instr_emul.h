@@ -30,6 +30,8 @@
 #ifndef INSTR_EMUL_H
 #define INSTR_EMUL_H
 
+#include <types.h>
+#include <cpu.h>
 #include <vcpu.h>
 
 struct instr_emul_vie_op {

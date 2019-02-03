@@ -4,8 +4,15 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <errno.h>
+#include <spinlock.h>
+#include <vcpu.h>
+#include <vm.h>
+#include <acrn_hv_defs.h>
 #include <hypercall.h>
+#include <trace.h>
+#include <logmsg.h>
 
 static spinlock_t vmm_hypercall_lock = {
 	.head = 0U,

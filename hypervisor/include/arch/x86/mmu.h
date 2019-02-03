@@ -46,6 +46,7 @@
 #include <cpu.h>
 #include <page.h>
 #include <pgtable.h>
+#include <cpu_caps.h>
 
 /* Define cache line size (in bytes) */
 #define CACHE_LINE_SIZE		64U

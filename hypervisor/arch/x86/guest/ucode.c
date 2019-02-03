@@ -4,8 +4,16 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <errno.h>
+#include <spinlock.h>
+#include <cpu.h>
+#include <msr.h>
+#include <cpuid.h>
 #include <ucode.h>
+#include <guest_memory.h>
+#include <irq.h>
+#include <logmsg.h>
 
 #define MICRO_CODE_SIZE_MAX    0x40000U
 static uint8_t micro_code[MICRO_CODE_SIZE_MAX];

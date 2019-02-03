@@ -4,7 +4,17 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <errno.h>
+#include <bits.h>
+#include <irq.h>
+#include <lapic.h>
+#include <mmu.h>
+#include <vmx.h>
+#include <vcpu.h>
+#include <vm.h>
+#include <trace.h>
+#include <logmsg.h>
 
 #define EXCEPTION_ERROR_CODE_VALID  8U
 

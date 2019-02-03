@@ -4,9 +4,19 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
-#include <virtual_cr.h>
+#include <types.h>
+#include <errno.h>
+#include <vmx.h>
+#include <irq.h>
+#include <mmu.h>
+#include <vcpu.h>
+#include <vm.h>
+#include <vmexit.h>
+#include <io_emul.h>
+#include <ept.h>
 #include <vtd.h>
+#include <vcpuid.h>
+#include <trace.h>
 
 /*
  * According to "SDM APPENDIX C VMX BASIC EXIT REASONS",

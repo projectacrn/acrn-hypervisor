@@ -28,8 +28,14 @@
  * $FreeBSD$
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <errno.h>
 #include <instr_emul.h>
+#include <vmx.h>
+#include <vmcs.h>
+#include <mmu.h>
+#include <per_cpu.h>
+#include <logmsg.h>
 
 #define CPU_REG_FIRST			CPU_REG_RAX
 #define CPU_REG_LAST			CPU_REG_GDTR

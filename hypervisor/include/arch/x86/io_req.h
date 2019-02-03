@@ -9,6 +9,7 @@
 
 #include <types.h>
 #include <acrn_common.h>
+#include <list.h>
 
 /**
  * @brief I/O Emulation

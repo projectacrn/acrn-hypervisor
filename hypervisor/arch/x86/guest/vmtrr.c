@@ -3,7 +3,14 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <hypervisor.h>
+#include <types.h>
+#include <vmtrr.h>
+#include <msr.h>
+#include <pgtable.h>
+#include <ept.h>
+#include <vcpu.h>
+#include <vm.h>
+#include <logmsg.h>
 
 #ifdef CONFIG_MTRR_ENABLED
 

@@ -18,6 +18,8 @@
 #include <console.h>
 #include <ptdev.h>
 #include <vmcs.h>
+#include <pgtable.h>
+#include <mmu.h>
 #include <logmsg.h>
 
 vm_sw_loader_t vm_sw_loader;

@@ -11,6 +11,8 @@
 #ifndef PGTABLE_H
 #define PGTABLE_H
 
+#include <page.h>
+
 #define PAGE_PRESENT		(1UL << 0U)
 #define PAGE_RW			(1UL << 1U)
 #define PAGE_USER		(1UL << 2U)

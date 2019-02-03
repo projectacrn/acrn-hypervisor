@@ -6,10 +6,19 @@
  * this file contains vmcs operations which is vcpu related
  */
 
-#include <hypervisor.h>
-#include <cpu.h>
-#include <virtual_cr.h>
+#include <types.h>
+#include <errno.h>
+#include <bits.h>
+#include <irq.h>
+#include <mmu.h>
+#include <vcpu.h>
+#include <vm.h>
+#include <vmx.h>
 #include <vtd.h>
+#include <vmexit.h>
+#include <pgtable.h>
+#include <trace.h>
+#include <logmsg.h>
 
 /* CR0 bits hv want to trap to track status change */
 #define CR0_TRAP_MASK (CR0_PE | CR0_PG | CR0_WP | CR0_CD | CR0_NW)

@@ -6,6 +6,7 @@
 
 #ifndef EPT_H
 #define EPT_H
+#include <types.h>
 
 /**
  * Invalid HPA is defined for error checking,

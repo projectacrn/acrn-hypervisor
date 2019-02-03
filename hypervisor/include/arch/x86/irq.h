@@ -9,6 +9,7 @@
 
 #include <acrn_common.h>
 #include <util.h>
+#include <spinlock.h>
 
 /**
  * @file arch/x86/irq.h
@@ -62,6 +63,8 @@
 #define IRQF_NONE	(0U)
 #define IRQF_LEVEL	(1U << 1U)	/* 1: level trigger; 0: edge trigger */
 #define IRQF_PT		(1U << 2U)	/* 1: for passthrough dev */
+
+struct acrn_vcpu;
 
 /*
  * Definition of the stack frame layout

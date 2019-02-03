@@ -20,6 +20,9 @@
 
 #define NON_TRUSTY_PDPT_ENTRIES         511U
 
+struct acrn_vcpu;
+struct acrn_vm;
+
 /* Structure of seed info */
 struct seed_info {
 	uint8_t cse_svn;

@@ -16,6 +16,7 @@
 #include <atomic.h>
 #include <vm.h>
 #include <vmcs.h>
+#include <mmu.h>
 #include <sprintf.h>
 
 inline uint64_t vcpu_get_gpreg(const struct acrn_vcpu *vcpu, uint32_t reg)
