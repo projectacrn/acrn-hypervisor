@@ -32,19 +32,19 @@
 #include <logmsg.h>
 #include "pci_priv.h"
 
-static uint32_t num_pci_vdev;
-static struct pci_vdev sharing_mode_vdev_array[CONFIG_MAX_PCI_DEV_NUM];
 
-struct pci_vdev *sharing_mode_find_vdev(union pci_bdf pbdf)
+/**
+ * @pre tmp != NULL
+ */
+static struct pci_vdev *sharing_mode_find_vdev(const struct acrn_vpci *vpci, union pci_bdf pbdf)
 {
 	struct pci_vdev *vdev, *tmp;
 	uint32_t i;
 
 	vdev = NULL;
-	/* SOS_VM uses phys BDF */
-	for (i = 0U; i < num_pci_vdev; i++) {
-		tmp = &sharing_mode_vdev_array[i];
-		if ((tmp->pdev != NULL) && bdf_is_equal((union pci_bdf*)&(tmp->pdev->bdf), &pbdf)) {
+	for (i = 0U; i < vpci->pci_vdev_cnt; i++) {
+		tmp = (struct pci_vdev *)&(vpci->pci_vdevs[i]);
+		if ((tmp->pdev != NULL) && bdf_is_equal((union pci_bdf *)&(tmp->pdev->bdf), &pbdf)) {
 			vdev = tmp;
 			break;
 		}
@@ -53,6 +53,25 @@ struct pci_vdev *sharing_mode_find_vdev(union pci_bdf pbdf)
 	return vdev;
 }
 
+/**
+ * @pre vpci != NULL
+ */
+static struct pci_vdev *sharing_mode_find_vdev_sos(union pci_bdf pbdf)
+{
+	struct acrn_vm *vm;
+	struct acrn_vpci *vpci;
+	struct pci_vdev *vdev = NULL;
+
+	vm = get_sos_vm();
+	if (vm != NULL) {
+		vpci = &vm->vpci;
+		vdev = sharing_mode_find_vdev(vpci, pbdf);
+	}
+
+	return vdev;
+}
+
+
 static void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf bdf,
 	uint32_t offset, uint32_t bytes, uint32_t *val)
 {
@@ -60,13 +79,13 @@ static void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf 
 	bool handled = false;
 	uint32_t i;
 
-	vdev = sharing_mode_find_vdev(bdf);
+	vdev = sharing_mode_find_vdev_sos(bdf);
 
 	/* vdev == NULL: Could be hit for PCI enumeration from guests */
 	if ((vdev == NULL) || ((bytes != 1U) && (bytes != 2U) && (bytes != 4U))) {
 		*val = ~0U;
 	} else {
-		for (i = 0U; (i < vdev->nr_ops) && !handled; i++) {
+		for (i = 0U; (i < vdev->nr_ops) && (!handled); i++) {
 			if (vdev->ops[i].cfgread != NULL) {
 				if (vdev->ops[i].cfgread(vdev, offset, bytes, val) == 0) {
 					handled = true;
@@ -89,9 +108,9 @@ static void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf
 	uint32_t i;
 
 	if ((bytes == 1U) || (bytes == 2U) || (bytes == 4U)) {
-		vdev = sharing_mode_find_vdev(bdf);
+		vdev = sharing_mode_find_vdev_sos(bdf);
 		if (vdev != NULL) {
-			for (i = 0U; (i < vdev->nr_ops) && !handled; i++) {
+			for (i = 0U; (i < vdev->nr_ops) && (!handled); i++) {
 				if (vdev->ops[i].cfgwrite != NULL) {
 					if (vdev->ops[i].cfgwrite(vdev, offset, bytes, val) == 0) {
 						handled = true;
@@ -107,20 +126,25 @@ static void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf
 	}
 }
 
+/**
+ * @pre vm != NULL
+ * @pre pdev_ref != NULL
+ * @pre vm->vpci->pci_vdev_cnt <= CONFIG_MAX_PCI_DEV_NUM
+ * @pre vdev != NULL
+ */
 static struct pci_vdev *alloc_pci_vdev(const struct acrn_vm *vm, struct pci_pdev *pdev_ref)
 {
 	struct pci_vdev *vdev = NULL;
+	struct acrn_vpci *vpci = (struct acrn_vpci *)&(vm->vpci);
 
-	if (num_pci_vdev < CONFIG_MAX_PCI_DEV_NUM) {
-		vdev = &sharing_mode_vdev_array[num_pci_vdev];
-		num_pci_vdev++;
+	if (vpci->pci_vdev_cnt < CONFIG_MAX_PCI_DEV_NUM) {
+		vdev = &vpci->pci_vdevs[vpci->pci_vdev_cnt];
+		vpci->pci_vdev_cnt++;
 
-		if ((vm != NULL) && (vdev != NULL) && (pdev_ref != NULL)) {
-			vdev->vpci = &vm->vpci;
-			/* vbdf equals to pbdf otherwise remapped */
-			vdev->vbdf = pdev_ref->bdf;
-			vdev->pdev = pdev_ref;
-		}
+		vdev->vpci = vpci;
+		/* vbdf equals to pbdf otherwise remapped */
+		vdev->vbdf = pdev_ref->bdf;
+		vdev->pdev = pdev_ref;
 	}
 
 	return vdev;
@@ -137,6 +161,9 @@ static void init_vdev_for_pdev(struct pci_pdev *pdev, const void *cb_data)
 	}
 }
 
+/**
+ * @pre vdev != NULL
+ */
 static int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
 {
 	struct pci_vdev *vdev;
@@ -153,8 +180,8 @@ static int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
 		/* Build up vdev array for sos_vm */
 		pci_pdev_foreach(init_vdev_for_pdev, vm);
 
-		for (i = 0U; i < num_pci_vdev; i++) {
-			vdev = &sharing_mode_vdev_array[i];
+		for (i = 0U; i < vm->vpci.pci_vdev_cnt; i++) {
+			vdev = (struct pci_vdev *)&(vm->vpci.pci_vdevs[i]);
 			for (j = 0U; j < vdev->nr_ops; j++) {
 				if (vdev->ops[j].init != NULL) {
 					(void)vdev->ops[j].init(vdev);
@@ -167,14 +194,17 @@ static int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
 	return ret;
 }
 
-static void sharing_mode_vpci_deinit(__unused const struct acrn_vm *vm)
+/**
+ * @pre vdev != NULL
+ */
+static void sharing_mode_vpci_deinit(const struct acrn_vm *vm)
 {
 	struct pci_vdev *vdev;
 	uint32_t i, j;
 
 	if (is_sos_vm(vm)) {
-		for (i = 0U; i < num_pci_vdev; i++) {
-			vdev = &sharing_mode_vdev_array[i];
+		for (i = 0U; i < vm->vpci.pci_vdev_cnt; i++) {
+			vdev = (struct pci_vdev *)&(vm->vpci.pci_vdevs[i]);
 			for (j = 0U; j < vdev->nr_ops; j++) {
 				if (vdev->ops[j].deinit != NULL) {
 					(void)vdev->ops[j].deinit(vdev);
@@ -204,8 +234,10 @@ const struct vpci_ops sharing_mode_vpci_ops = {
 void vpci_set_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, uint16_t pbdf)
 {
 	struct pci_vdev *vdev;
+	union pci_bdf bdf;
 
-	vdev = sharing_mode_find_vdev((union pci_bdf)pbdf);
+	bdf.value = pbdf;
+	vdev = sharing_mode_find_vdev_sos(bdf);
 	if (vdev == NULL) {
 		pr_err("%s, can't find PCI device for vm%d, vbdf (0x%x) pbdf (0x%x)", __func__,
 			target_vm->vm_id, vbdf, pbdf);
@@ -221,8 +253,10 @@ void vpci_reset_ptdev_intr_info(const struct acrn_vm *target_vm, uint16_t vbdf, 
 {
 	struct pci_vdev *vdev;
 	struct acrn_vm *vm;
+	union pci_bdf bdf;
 
-	vdev = sharing_mode_find_vdev((union pci_bdf)pbdf);
+	bdf.value = pbdf;
+	vdev = sharing_mode_find_vdev_sos(bdf);
 	if (vdev == NULL) {
 		pr_err("%s, can't find PCI device for vm%d, vbdf (0x%x) pbdf (0x%x)", __func__,
 			target_vm->vm_id, vbdf, pbdf);
