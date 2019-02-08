@@ -38,7 +38,7 @@ struct pci_vdev *sharing_mode_find_vdev(union pci_bdf pbdf)
 	struct pci_vdev *vdev = NULL;
 	uint32_t i;
 
-	/* in SOS_VM, it uses phys BDF */
+	/* SOS_VM uses phys BDF */
 	for (i = 0U; i < num_pci_vdev; i++) {
 		if (sharing_mode_vdev_array[i].pdev->bdf.value == pbdf.value) {
 			vdev = &sharing_mode_vdev_array[i];
@@ -69,7 +69,7 @@ static void sharing_mode_cfgread(__unused struct acrn_vpci *vpci, union pci_bdf 
 			}
 		}
 
-		/* Not handled by any handlers. Passthru to physical device */
+		/* Not handled by any handlers, passthru to physical device */
 		if (!handled) {
 			*val = pci_pdev_read_cfg(vdev->pdev->bdf, offset, bytes);
 		}
@@ -94,7 +94,7 @@ static void sharing_mode_cfgwrite(__unused struct acrn_vpci *vpci, union pci_bdf
 				}
 			}
 
-			/* Not handled by any handlers. Passthru to physical device */
+			/* Not handled by any handlers, passthru to physical device */
 			if (!handled) {
 				pci_pdev_write_cfg(vdev->pdev->bdf, offset, bytes, val);
 			}
@@ -139,7 +139,7 @@ static int32_t sharing_mode_vpci_init(const struct acrn_vm *vm)
 	int32_t ret;
 
 	/*
-	 * Only setup IO bitmap for SOS.
+	 * Only set up IO bitmap for SOS.
 	 * IO/MMIO requests from non-sos_vm guests will be injected to device model.
 	 */
 	if (!is_sos_vm(vm)) {
