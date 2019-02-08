@@ -247,6 +247,7 @@ static uint8_t pci_pdev_read_bar(union pci_bdf bdf, uint8_t idx, struct pci_bar 
 	base = 0UL;
 	size = 0UL;
 	type = pci_pdev_read_bar_type(bdf, idx);
+	bar_hi = 0U;
 
 	if (type != PCIBAR_NONE) {
 		if (type == PCIBAR_IO_SPACE) {
@@ -260,14 +261,13 @@ static uint8_t pci_pdev_read_bar(union pci_bdf bdf, uint8_t idx, struct pci_bar 
 		/* Get the base address */
 		base = (uint64_t)bar_lo & bar_base_mask;
 
-		if (base != 0UL) {
-			if (type == PCIBAR_MEM64) {
-				bar_hi = pci_pdev_read_cfg(bdf, pci_bar_offset(idx + 1U), 4U);
-				base |= ((uint64_t)bar_hi << 32U);
-			}
+		if (type == PCIBAR_MEM64) {
+			bar_hi = pci_pdev_read_cfg(bdf, pci_bar_offset(idx + 1U), 4U);
+			base |= ((uint64_t)bar_hi << 32U);
+		}
 
+		if (base != 0UL) {
 			/* Sizing the BAR */
-			size = 0UL;
 			if ((type == PCIBAR_MEM64) && (idx < (PCI_BAR_COUNT - 1U))) {
 				pci_pdev_write_cfg(bdf, pci_bar_offset(idx + 1U), 4U, ~0U);
 				size = (uint64_t)pci_pdev_read_cfg(bdf, pci_bar_offset(idx + 1U), 4U);
