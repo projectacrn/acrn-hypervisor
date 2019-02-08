@@ -124,7 +124,7 @@ void vpci_init(struct acrn_vm *vm)
 
 	if ((vpci->ops->init != NULL) && (vpci->ops->init(vm) == 0)) {
 		/*
-		 * SOS: intercep port CF8 only.
+		 * SOS: intercept port CF8 only.
 		 * UOS or partition mode: register handler for CF8 only and I/O requests to CF9/CFA/CFB are
 		 *      not handled by vpci.
 		 */
