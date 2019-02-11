@@ -7,6 +7,7 @@
 #include <hypervisor.h>
 
 #include <instr_emul.h>
+#include <vtd.h>
 
 #define ACRN_DBG_EPT	6U
 
@@ -106,7 +107,7 @@ void ept_mr_add(struct acrn_vm *vm, uint64_t *pml4_page,
 	 * to force snooping of PCIe devices if the page
 	 * is cachable
 	 */
-	if (((prot & EPT_MT_MASK) != EPT_UNCACHED) && vm->snoopy_mem) {
+	if (((prot & EPT_MT_MASK) != EPT_UNCACHED) && iommu_snoop_supported(vm->iommu)) {
 		prot |= EPT_SNOOP_CTRL;
 	}
 
@@ -127,7 +128,7 @@ void ept_mr_modify(struct acrn_vm *vm, uint64_t *pml4_page,
 
 	dev_dbg(ACRN_DBG_EPT, "%s,vm[%d] gpa 0x%llx size 0x%llx\n", __func__, vm->vm_id, gpa, size);
 
-	if (((local_prot & EPT_MT_MASK) != EPT_UNCACHED) && vm->snoopy_mem) {
+	if (((local_prot & EPT_MT_MASK) != EPT_UNCACHED) && iommu_snoop_supported(vm->iommu)) {
 		local_prot |= EPT_SNOOP_CTRL;
 	}
 

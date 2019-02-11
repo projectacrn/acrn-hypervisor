@@ -272,7 +272,6 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 	vm->vm_id = vm_id;
 	vm->hw.created_vcpus = 0U;
 	vm->emul_mmio_regions = 0U;
-	vm->snoopy_mem = true;
 
 	init_ept_mem_ops(vm);
 	vm->arch_vm.nworld_eptp = vm->arch_vm.ept_mem_ops.get_pml4_page(vm->arch_vm.ept_mem_ops.info);
@@ -280,7 +279,6 @@ int32_t create_vm(uint16_t vm_id, struct acrn_vm_config *vm_config, struct acrn_
 
 	if (is_sos_vm(vm)) {
 		/* Only for SOS_VM */
-		vm->snoopy_mem = false;
 		create_sos_vm_e820(vm);
 		prepare_sos_vm_memmap(vm);
 
