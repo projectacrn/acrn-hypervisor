@@ -110,6 +110,7 @@ static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	MSR_SGXOWNEREPOCH0,
 	MSR_SGXOWNEREPOCH1,
 
+#ifdef PROFILING_ON
 	/* Performance Counters and Events: CPUID.0AH.EAX[15:8] */
 	MSR_IA32_PMC0,
 	MSR_IA32_PMC1,
@@ -138,6 +139,7 @@ static const uint32_t unsupported_msrs[NUM_UNSUPPORTED_MSRS] = {
 	MSR_IA32_PERF_GLOBAL_OVF_CTRL,
 	MSR_IA32_PERF_GLOBAL_STATUS_SET,
 	MSR_IA32_PERF_GLOBAL_INUSE,
+#endif /* PROFILING_ON */
 
 	/* QOS Configuration disabled: CPUID.10H.ECX[2] */
 	MSR_IA32_L3_QOS_CFG,
