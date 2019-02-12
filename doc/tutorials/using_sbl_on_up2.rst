@@ -117,8 +117,8 @@ Build SOS and LaaG image:
    You must have root privileges to run ``create-up2-images.sh``.
 
 .. note::
-   Please modify the ``--acrn-code-path`` argument to the diretory 
-   of ``acrn-hypervisor``.
+   If you want to build with your own ``acrn-hypervisor``,add the ``--acrn-code-path`` 
+   argument specifying the directory where your ``acrn-hypervisor`` is found.
 
 .. note::
    When building images, you can modify the ``--clearlinux-version`` argument 
