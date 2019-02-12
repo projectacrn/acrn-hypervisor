@@ -106,33 +106,33 @@ An example of the configuration file ``uos.json``:
 
 
 Build SOS and LaaG image:
-   
-.. code-block:: none   
+
+.. code-block:: none
 
    $ sudo -s
-   # chmod +x create-up2-images.sh 
+   # chmod +x create-up2-images.sh
    # ./create-up2-images.sh --images-type all --clearlinux-version 27230 --laag-json uos.json
 
 .. note::
    You must have root privileges to run ``create-up2-images.sh``.
 
 .. note::
-   If you want to build with your own ``acrn-hypervisor``,add the ``--acrn-code-path`` 
+   If you want to build with your own ``acrn-hypervisor``, add the ``--acrn-code-path``
    argument specifying the directory where your ``acrn-hypervisor`` is found.
 
 .. note::
-   When building images, you can modify the ``--clearlinux-version`` argument 
-   to a specific version (such as 26800). To generate the images of SOS only, 
+   When building images, you can modify the ``--clearlinux-version`` argument
+   to a specific version (such as 26800). To generate the images of SOS only,
    modify the ``--images-type`` argument to ``sos``.
-   
+
 This step will generate the images of SOS and LaaG:
 
 * sos_boot.img
 * sos_rootfs.img
 * up2_laag.img
 
-Build the binary image ``partition_desc.bin`` for 
-GPT partitions, and change the partition layout 
+Build the binary image ``partition_desc.bin`` for
+GPT partitions, and change the partition layout
 in ``partition_desc.ini`` if needed.
 
 .. code-block:: none
@@ -141,7 +141,7 @@ in ``partition_desc.ini`` if needed.
    $ sudo -s
    # python2 gpt_ini2bin.py partition_desc.ini>partition_desc.bin
 
-We still need the configuration file ``flash_LaaG.json`` for flashing, 
+We still need the configuration file ``flash_LaaG.json`` for flashing,
 which is also in the directory ``~/acrn-hypervisor/doc/tutorials/``.
 
 .. table::
