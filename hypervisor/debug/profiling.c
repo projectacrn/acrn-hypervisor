@@ -1446,4 +1446,39 @@ void profiling_setup(void)
 	dev_dbg(ACRN_DBG_PROFILING, "%s: exiting", __func__);
 }
 
+#else
+
+#include <hypervisor.h>
+
+void profiling_vmenter_handler(__unused struct acrn_vcpu *vcpu) {}
+void profiling_pre_vmexit_handler(__unused struct acrn_vcpu *vcpu) {}
+void profiling_post_vmexit_handler(__unused struct acrn_vcpu *vcpu) {}
+
+static void pmu_passthru_pmi_handler(__unused uint32_t irq, __unused void *data)
+{
+	struct acrn_vcpu *vcpu = get_ever_run_vcpu(get_cpu_id());
+
+	msr_write(MSR_IA32_EXT_APIC_LVT_PMI, VECTOR_PMI|LAPIC_LVT_MASK);
+	vlapic_set_local_intr(vcpu->vm, vcpu->vcpu_id, APIC_LVT_PMC);
+	msr_write(MSR_IA32_EXT_APIC_LVT_PMI, VECTOR_PMI);
+}
+
+void profiling_setup(void)
+{
+	uint16_t cpu;
+	int32_t retval;
+
+	cpu = get_cpu_id();
+	if (cpu == BOOT_CPU_ID){
+		retval = request_irq(PMI_IRQ,
+				pmu_passthru_pmi_handler, NULL, IRQF_NONE);
+		if (retval < 0) {
+			pr_err("Failed to add PMI isr");
+			return;
+		}
+	}
+
+	msr_write(MSR_IA32_EXT_APIC_LVT_PMI, VECTOR_PMI);
+}
+
 #endif

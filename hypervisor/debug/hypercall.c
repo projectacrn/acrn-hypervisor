@@ -61,6 +61,14 @@ static int32_t hcall_profiling_ops(struct acrn_vm *vm, uint64_t cmd, uint64_t pa
 	}
  	return ret;
 }
+
+#else
+
+static int32_t hcall_profiling_ops(__unused struct acrn_vm *vm, __unused uint64_t cmd, __unused uint64_t param)
+{
+	return -EPERM;
+}
+
 #endif /* PROFILING_ON */
 
 /**

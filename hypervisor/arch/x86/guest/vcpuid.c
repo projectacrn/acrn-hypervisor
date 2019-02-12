@@ -230,8 +230,10 @@ int32_t set_vcpuid_entries(struct acrn_vm *vm)
 				break;
 
 			/* These features are disabled */
+#ifdef PROFILING_ON
 			/* PMU is not supported */
 			case 0x0aU:
+#endif /* PROFILING_ON */
 			/* Intel RDT */
 			case 0x0fU:
 			case 0x10U:
